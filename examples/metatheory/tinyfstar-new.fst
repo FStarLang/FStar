@@ -9,6 +9,7 @@
  * code kdg_* to manipulate kinds with binding, wp etc …
  * simplification of TcPrecedes to compare just int ? Anyway there is still a kinding problem where TcPrecedes is used FIXME
  * understand why VPreceedsIntro in substitution lemma is checked without using subst_on_value
+ * update to finish with the adding of PsUpd, PsSel and PsFixPure
 *)
 
 (*TODO in tiny-fstar.txt
@@ -148,8 +149,7 @@ let rec is_value e =
        | EApp e11 e12 ->
          is_value e12 &&
          (match e11 with
-          | EApp (EConst EcUpd) e112 -> is_value e112
-          | EConst c             -> (is_EcFixPure c || is_EcFixOmega c || is_EcUpd c || is_EcSel c)
+          | EConst c -> (is_EcFixPure c || is_EcUpd c)
           | _ -> false)
        | EConst c -> (is_EcFixPure c || is_EcFixOmega c || is_EcUpd c || is_EcSel c || is_EcAssign c)
        | _ -> false)
@@ -833,12 +833,11 @@ and epstep : exp -> exp -> Type =
   | PsFixPure : tx:typ -> t':typ -> t'':typ -> wp:typ ->
                 d:exp -> f:exp -> v:value ->
                 epstep (eapp3 (EConst (EcFixPure tx t' t'' wp)) d f v)
-		       (eapp2 f (eapp2 (EConst (EcFixPure tx t' t'' wp)) d f) v)
+		       (eapp2 f v (eapp2 (EConst (EcFixPure tx t' t'' wp)) d f))
   | PsUpd : h:heap -> l:loc -> i:int ->
             epstep (eapp3 (EConst EcUpd) (eheap h) (eloc l) (eint i)) (eheap (upd_heap l i h))
   | PsSel : h:heap -> l:loc ->
             epstep (eapp2 (EConst EcSel) (eheap h) (eloc l)) (eint (h l))
-
 type cfg =
   | Cfg : h:heap -> e:exp -> cfg
 
@@ -4405,6 +4404,20 @@ admit()
 | _ -> admit()
   *)
 
+type stypingd_inv_arr_res : env -> typ -> typ -> cmp -> Type =
+| StypingDInvArr : #g:env -> #t:typ -> #t2:typ -> #c2:cmp ->                 
+                t1:typ -> c1:cmp{t = TArr t1 c1} ->
+                styping g t2 t1 ->
+                scmp (eextend t2 g) c1 c2 ->
+                stypingd_inv_arr_res g t t2 c2		
+
+val stypingd_inversion_arrow : #g:env -> #t:typ -> #t2:typ -> #c2:cmp -> 
+    hwf:ewf g ->
+    hst:styping g t (TArr t2 c2)->
+    Tot(either (stypingd_inv_arr_res g t t2 c2) (validity g tfalse))
+(decreases %[hst])
+let rec stypingd_inversion_arrow g t t2 c2 hwf hst = admit()
+
 val scmp_transitivity : #g:env -> #c1:cmp -> #c2:cmp -> #c3:cmp ->
                         scmp g c1 c2 ->
 			scmp g c2 c3 ->
@@ -4685,6 +4698,11 @@ match ht with
  RemoveSub #g #e #c c' hscex ht'
 )
 
+val get_styping_from_scmpex : #g:env -> #e:exp -> #c':cmp -> #c:cmp ->
+   hs:scmpex g e c' c ->
+   Tot (styping g (Cmp.t c') (Cmp.t c))
+let get_styping_from_scmpex g e c' c hs = admit()
+
 (*
 type inversion_tot_res : g:env -> e:exp -> mb:eff -> tb:typ -> wpb:typ ->
                                            ms:eff -> ts:typ -> wps:typ ->
@@ -4857,6 +4875,31 @@ val pure_to_tot : #g:env -> #e:exp -> #t:typ -> #wp:typ -> #post:typ ->
    hv : validity g (TTApp wp post) ->
    Tot (typing g e (tot t))
 let pure_to_tot g e t wp post ht hk hv = admit()
+
+type type_from_kwf_res : env -> knd -> Type =
+| TypeFromKwf : #g:env -> #k:knd ->
+                t:typ ->
+		kinding g t k ->
+		type_from_kwf_res g k
+val type_from_kwf : #g:env -> #k:knd ->
+     hkwf : kwf g k ->
+     Tot (type_from_kwf_res g k)
+(decreases %[hkwf])
+let rec type_from_kwf g k hkwf =
+match hkwf with
+| WfType _ -> TypeFromKwf #g #k (TConst TcInt) (KConst #g #TcInt (WFTcOther g TcInt))
+| WfTArr #x1 #t #k' hk hkwfbody -> 
+(
+ let TypeFromKwf tbody hktbody = type_from_kwf #(eextend t g) #k' hkwfbody in
+ TypeFromKwf #g #k (TELam t tbody) (KELam #g #t #tbody #k' hk hktbody)
+)
+| WfKArr #x1 #karg #kbody hkwfkarg hkwfkbody ->
+(
+ let TypeFromKwf tbody hktbody = type_from_kwf #(textend karg g) #kbody hkwfkbody in
+ TypeFromKwf #g #k (TTLam karg tbody) (KTLam #g #karg #tbody #kbody hkwfkarg hktbody)
+)
+
+
       
    
 
@@ -4865,13 +4908,13 @@ val pure_typing_preservation : #g:env -> #e:exp -> #e':exp -> #t:typ -> #wp:typ 
      ht:typing g e (Cmp EfPure t wp) ->
      hstep:epstep e e' ->
      hv :validity g (TTApp wp post) ->
-     Tot (typing g e' (Cmp EfPure t wp))
+     Tot (either (typing g e' (Cmp EfPure t wp)) (validity g tfalse))
 (decreases %[ht])
 val pure_kinding_preservation : #g:env -> #t:typ -> #t':typ -> #k:knd ->
      hwf:ewf g ->
      hk:kinding g t k ->
      hstep:tstep t t' ->
-     Tot (kinding g t' k)
+     Tot (either (kinding g t' k) (validity g tfalse))
 (decreases %[hk])
 
 let rec pure_typing_preservation g e e' t wp post hwf ht hstep hv = 
@@ -4881,17 +4924,27 @@ if is_TySub ht then
   let hv' : validity g (TTApp wpc' post) = 
     (*We use the implication wp ==>_PURE wpc' contained in hsc*)
     magic() in
-  let ht' : typing g e' c' = pure_typing_preservation #g #e #e' #tc' #wpc' #post hwf ht' hstep hv' in
-  TySub #g #e' #c' #c ht' hsc
+  match pure_typing_preservation #g #e #e' #tc' #wpc' #post hwf ht' hstep hv' with
+  | Inr temp -> Inr temp
+  | Inl temp -> 
+  (
+    let ht' : typing g e' c' = temp in
+    Inl (TySub #g #e' #c' #c ht' hsc)
+  )
 else if is_TyRet ht then
   let TyRet t htot = ht in
   let posttot = TELam t ttrue in
   let wp' = tot_wp t in
   let hv' : validity g (TTApp wp' posttot) = (*easy*) magic() in
-  let htot' : typing g e' (tot t) = pure_typing_preservation #g #e #e' #t #wp' #posttot hwf htot hstep hv' in
-  let ht' : typing g e' (Cmp EfPure t (return_pure t e')) = TyRet #g #e' t htot' in
-  let hsc' : scmp g (Cmp EfPure t (return_pure t e')) (Cmp EfPure t (return_pure t e)) = (*easy with VRedE, VSubstE*) magic() in
-  TySub #g #e' #(Cmp EfPure t (return_pure t e')) #(Cmp EfPure t (return_pure t e)) ht' hsc'
+  match pure_typing_preservation #g #e #e' #t #wp' #posttot hwf htot hstep hv' with
+  | Inr temp -> Inr temp
+  | Inl temp ->
+  (
+    let htot' : typing g e' (tot t) = temp in
+    let ht' : typing g e' (Cmp EfPure t (return_pure t e')) = TyRet #g #e' t htot' in
+    let hsc' : scmp g (Cmp EfPure t (return_pure t e')) (Cmp EfPure t (return_pure t e)) = (*easy with VRedE, VSubstE*) magic() in
+    Inl (TySub #g #e' #(Cmp EfPure t (return_pure t e')) #(Cmp EfPure t (return_pure t e)) ht' hsc')
+  )
 else
 match hstep with
 | PsBeta targ ebody earg ->
@@ -4900,7 +4953,7 @@ match hstep with
  let AbsInversion mb tretb wpb htbody hsttarrbs hvsub = abs_inversion #g #targ #ebody #EfPure #(TArr targs (Cmp EfPure trets wps)) #wp1 hwf htfuns in
  let res = styping_inv_arr' #g #targ #(Cmp mb tretb wpb) #targs #(Cmp EfPure trets wps) hwf hsttarrbs in
  match res with 
- | Inr hvfalse -> magic() (* What to do with an inconsistent environment ? *)
+ | Inr hvfalse -> Inr hvfalse (* What to do with an inconsistent environment ? *)
  | Inl temp -> (let Conj hsttarg hscmp = temp in
    let htbody : typing (eextend targs g) ebody (Cmp EfPure trets wps) =
      let htbody : typing (eextend targs g) ebody (Cmp mb tretb wpb) = esubst_with_sub_id (ebody); csubst_with_sub_id (Cmp mb tretb wpb); typing_substitution (sub_id) htbody (styping_hs (targs) (targ) hsttarg) in
@@ -4991,7 +5044,7 @@ match hstep with
      let TypingDerived _ hktyappwp hvmonotyapp = typing_derived hwf ht in
      SCmp #g EfPure #(tsubst_ebeta earg trets) (tsubst_ebeta earg wps) EfPure #(tsubst_ebeta earg trets) (tyapp_wp EfPure earg targs trets wps wp1 wp2) hst hktyappwp hvmonotyapp hkwpsearg hvmonowpsearg hvsub
    in
-   TySub #g #(esubst_ebeta earg ebody) #(Cmp EfPure (tsubst_ebeta earg trets) (tsubst_ebeta earg wps)) #(Cmp EfPure (tsubst_ebeta earg trets) (tyapp_wp EfPure earg targs trets wps wp1 wp2)) htred hscmp
+   Inl (TySub #g #(esubst_ebeta earg ebody) #(Cmp EfPure (tsubst_ebeta earg trets) (tsubst_ebeta earg wps)) #(Cmp EfPure (tsubst_ebeta earg trets) (tyapp_wp EfPure earg targs trets wps wp1 wp2)) htred hscmp)
  )
 )
 | PsIf0 e1 e2 -> 
@@ -5004,7 +5057,7 @@ match hstep with
    let hst : styping g t t = styping_refl #g #t hkt in
    let hvsub : validity g (sub_computation EfPure t wpite EfPure t wpt) = magic() in
    SCmp EfPure wpt EfPure wpite hst hkwpite hvmono hkwpt hvmonot hvsub in
- TySub #g #e' #(Cmp EfPure t wpt) #(Cmp EfPure t wpite) htt hsc
+ Inl (TySub #g #e' #(Cmp EfPure t wpt) #(Cmp EfPure t wpite) htt hsc)
 )
 | PsIfS i e1 e2 ->
 (
@@ -5016,7 +5069,7 @@ match hstep with
    let hst : styping g t t = styping_refl #g #t hkt in
    let hvsub : validity g (sub_computation EfPure t wpite EfPure t wpe) = magic() in
    SCmp EfPure wpe EfPure wpite hst hkwpite hvmono hkwpe hvmonoe hvsub in
- TySub #g #e2 #(Cmp EfPure t wpe) #(Cmp EfPure t wpite) hte hsc
+ Inl (TySub #g #e2 #(Cmp EfPure t wpe) #(Cmp EfPure t wpite) hte hsc)
 )
 | PsAppE1 #efun #efun' earg hstepfun ->
 (
@@ -5025,8 +5078,10 @@ match hstep with
  let wpapp = tyapp_wp EfPure earg targ tbody wpbody wp1 wp2 in
  let postfun : typ = magic() (*(fun _ -> bind wp2 (fun x -> wp) post) *)in
  let hvpost : validity g (TTApp wp1 postfun) = magic() in
- let htfun' : typing g efun' (Cmp EfPure tarr wp1) = pure_typing_preservation #g #efun #efun' #tarr #wp1 #postfun hwf ht1 hstepfun hvpost in
- TyApp #g #efun' #earg #EfPure #targ #tbody #wpbody #wp1 #wp2 htfun' ht2 htotarg hktbody
+ match pure_typing_preservation #g #efun #efun' #tarr #wp1 #postfun hwf ht1 hstepfun hvpost with
+ | Inr temp -> Inr temp
+ | Inl temp -> let htfun' : typing g efun' (Cmp EfPure tarr wp1) = temp in
+ Inl (TyApp #g #efun' #earg #EfPure #targ #tbody #wpbody #wp1 #wp2 htfun' ht2 htotarg hktbody)
 )
 | PsAppE2 efun #earg #earg' hsteparg ->
 (
@@ -5058,43 +5113,63 @@ and
   g |= wp2 (fun x -> wp post) [ = wp2 postfun ]
   *)
  in
- let htarg' : typing g earg' (Cmp EfPure targ wp2) = pure_typing_preservation #g #earg #earg' #targ #wp2 #postfun hwf ht2 hsteparg hvpost in
- let ht' : typing g (EApp efun earg') (Cmp EfPure (tsubst_ebeta earg' tbody) wpapp') = 
-   if teappears 0 tbody then
-     let Some htotargv = htotarg in
-     let postfun : typ = magic() in
-     let hvpost : validity g (TTApp (tot_wp targ) postfun) = magic() in
-     let htotarg' : h:option (typing g earg' (tot targ)){is_Some h} = Some (pure_typing_preservation #g #earg #earg' #targ #(tot_wp targ) #postfun hwf htotargv hsteparg hvpost) in
-     TyApp #g #efun #earg' #EfPure #targ #tbody #wpbody #wp1 #wp2 ht1 htarg' htotarg' None
-   else
-     TyApp #g #efun #earg' #EfPure #targ #tbody #wpbody #wp1 #wp2 ht1 htarg' None hktbody
- in
- let hsc : scmp g (Cmp EfPure (tsubst_ebeta earg' tbody) wpapp') (Cmp EfPure (tsubst_ebeta earg tbody) wpapp) = magic() (* We use VRedE and VSubstE here *) in
- TySub #g #(EApp efun earg') #(Cmp EfPure (tsubst_ebeta earg' tbody) wpapp') #(Cmp EfPure (tsubst_ebeta earg tbody) wpapp) ht' hsc
+ match pure_typing_preservation #g #earg #earg' #targ #wp2 #postfun hwf ht2 hsteparg hvpost with
+ | Inr temp -> Inr temp
+ | Inl temp ->
+ (
+   let htarg' : typing g earg' (Cmp EfPure targ wp2) = temp in
+   let ht' : either (typing g (EApp efun earg') (Cmp EfPure (tsubst_ebeta earg' tbody) wpapp')) (validity g tfalse) = 
+     if teappears 0 tbody then
+       let Some htotargv = htotarg in
+       let postfun : typ = magic() in
+       let hvpost : validity g (TTApp (tot_wp targ) postfun) = magic() in
+       (
+	 match pure_typing_preservation #g #earg #earg' #targ #(tot_wp targ) #postfun hwf htotargv hsteparg hvpost with
+	 | Inr temp -> Inr temp
+	 | Inl temp ->
+	 let htotarg' : h:option (typing g earg' (tot targ)){is_Some h} = Some temp in
+	 Inl (TyApp #g #efun #earg' #EfPure #targ #tbody #wpbody #wp1 #wp2 ht1 htarg' htotarg' None)
+       )
+     else
+       Inl (TyApp #g #efun #earg' #EfPure #targ #tbody #wpbody #wp1 #wp2 ht1 htarg' None hktbody)
+   in
+   match ht' with
+   | Inr temp -> Inr temp
+   | Inl ht'  ->
+   (
+     let hsc : scmp g (Cmp EfPure (tsubst_ebeta earg' tbody) wpapp') (Cmp EfPure (tsubst_ebeta earg tbody) wpapp) = magic() (* We use VRedE and VSubstE here *) in
+     Inl (TySub #g #(EApp efun earg') #(Cmp EfPure (tsubst_ebeta earg' tbody) wpapp') #(Cmp EfPure (tsubst_ebeta earg tbody) wpapp) ht' hsc)
+   )
+ )
 )
 | PsLamT #targ #targ' ebody htstep ->
 (
  let AbsInversion mb tretb wpb htbody hst hvwp = abs_inversion #g #targ #ebody #EfPure #t #wp hwf ht in
  let TyAbs mb tretb wpb hktarg htbody = ht in
- let hktarg' : kinding g targ' KType = pure_kinding_preservation #g #targ #targ' #KType hwf hktarg htstep in
- let hvarg : validity g (teqtype targ targ') = VRedT #g #targ #targ' #KType hktarg hktarg' htstep in
- let hstarg : styping g targ' targ = 
-   let hvarg' : validity g (teqtype targ' targ) = v_eq_symt #g #targ #targ' #KType hvarg in
-   SubConv #g #targ targ' hvarg' hktarg hktarg' in
- let htbody' : typing (eextend targ' g) ebody (Cmp mb tretb wpb) = esubst_with_sub_id ebody; csubst_with_sub_id (Cmp mb tretb wpb); typing_substitution (sub_id) (htbody) (styping_hs #g targ' targ hstarg) in
- let tarr' = TArr targ' (Cmp mb tretb wpb) in
- let tarr = TArr targ (Cmp mb tretb wpb) in
- let htfun : typing g (ELam targ' ebody) (tot tarr') = TyAbs #g #targ' #ebody mb tretb wpb hktarg' htbody' in
- let hsttarr : styping g tarr' tarr = 
-   let hstarg : styping g targ targ' = 
-     SubConv #g #targ' targ hvarg hktarg' hktarg in
-   let TypingDerived hktretb hkwpb hvmono = typing_derived (GType hwf hktarg) htbody in
-   let hscbody : scmp (eextend targ g) (Cmp mb tretb wpb) (Cmp mb tretb wpb) = scmp_refl #(eextend targ g) #mb #tretb #wpb hktretb hkwpb hvmono in
-   let hktarr' : kinding g tarr' KType =
-     let TypingDerived hktarr' _ _ = typing_derived #g #(ELam targ' ebody) #EfPure #tarr' #(tot_wp tarr') hwf htfun in hktarr' in
-   SubFun #g #targ #targ' #(Cmp mb tretb wpb) #(Cmp mb tretb wpb) hstarg hscbody hktarr' in
- let hsttot : scmp g (tot tarr') (tot tarr) = magic() in
- TySub #g #(ELam targ' ebody) #(tot tarr') #(tot tarr) htfun hsttot
+ match pure_kinding_preservation #g #targ #targ' #KType hwf hktarg htstep with
+ | Inr temp -> Inr temp
+ | Inl temp ->
+ (
+   let hktarg' : kinding g targ' KType = temp in
+   let hvarg : validity g (teqtype targ targ') = VRedT #g #targ #targ' #KType hktarg hktarg' htstep in
+   let hstarg : styping g targ' targ = 
+     let hvarg' : validity g (teqtype targ' targ) = v_eq_symt #g #targ #targ' #KType hvarg in
+     SubConv #g #targ targ' hvarg' hktarg hktarg' in
+   let htbody' : typing (eextend targ' g) ebody (Cmp mb tretb wpb) = esubst_with_sub_id ebody; csubst_with_sub_id (Cmp mb tretb wpb); typing_substitution (sub_id) (htbody) (styping_hs #g targ' targ hstarg) in
+   let tarr' = TArr targ' (Cmp mb tretb wpb) in
+   let tarr = TArr targ (Cmp mb tretb wpb) in
+   let htfun : typing g (ELam targ' ebody) (tot tarr') = TyAbs #g #targ' #ebody mb tretb wpb hktarg' htbody' in
+   let hsttarr : styping g tarr' tarr = 
+     let hstarg : styping g targ targ' = 
+       SubConv #g #targ' targ hvarg hktarg' hktarg in
+     let TypingDerived hktretb hkwpb hvmono = typing_derived (GType hwf hktarg) htbody in
+     let hscbody : scmp (eextend targ g) (Cmp mb tretb wpb) (Cmp mb tretb wpb) = scmp_refl #(eextend targ g) #mb #tretb #wpb hktretb hkwpb hvmono in
+     let hktarr' : kinding g tarr' KType =
+       let TypingDerived hktarr' _ _ = typing_derived #g #(ELam targ' ebody) #EfPure #tarr' #(tot_wp tarr') hwf htfun in hktarr' in
+     SubFun #g #targ #targ' #(Cmp mb tretb wpb) #(Cmp mb tretb wpb) hstarg hscbody hktarr' in
+   let hsttot : scmp g (tot tarr') (tot tarr) = magic() in
+   Inl (TySub #g #(ELam targ' ebody) #(tot tarr') #(tot tarr) htfun hsttot)
+ )
 )
 | PsIf0E0 #e0 #e0' ethen eelse hstep ->
 (
@@ -5113,8 +5188,13 @@ and
    g |= wpg (fun x -> (x=0 ==> wpt post) /\ (x<>0 ==> wpe post)) [= wpg postwpg] 
    *)
   in
-  let htg' : typing g e0' (Cmp EfPure tint wpg) = pure_typing_preservation #g #e0 #e0' #tint #wpg #postwpg hwf htg hstep hv' in
-  TyIf0 g e0' ethen eelse EfPure t wpg wpt wpe htg' htt hte
+  match pure_typing_preservation #g #e0 #e0' #tint #wpg #postwpg hwf htg hstep hv' with
+  | Inr temp -> Inr temp
+  | Inl temp ->
+  (
+    let htg' : typing g e0' (Cmp EfPure tint wpg) = temp in
+    Inl (TyIf0 g e0' ethen eelse EfPure t wpg wpt wpe htg' htt hte)
+  )
 )
 | PsFixPure tx t' t'' wpfix d f v ->
 (
@@ -5141,24 +5221,53 @@ and
  let htv : typing g v (return_pure_cmp tvb v) = magic() in
  (* We first build the proof that fix_pure d F has the good type to be
   the second argument of F *)
- let htfix : typing g (eapp2 (EConst EcFixPure) d f) 
-             (return_pure_cmp (TArr tx (Cmp EfPure (TEApp (tesh t'') (EVar 0)) (op_pure (TEApp (tesh t'') (EVar 0)) tand (up_pure (TEApp (tesh t'') (EVar 0)) (tprecedes (EApp d (EVar 0)) (EApp d v))) (TEApp (tesh wpfix) (EVar 0)))))) = magic() in
+ let htfix : typing g (eapp2 (EConst (EcFixPure tx t' t'' wpfix)) d f) 
+             (return_pure_cmp (TArr tx (Cmp EfPure (TEApp (tesh t'') (EVar 0)) (op_pure (TEApp (tesh t'') (EVar 0)) tand (up_pure (TEApp (tesh t'') (EVar 0)) (tprecedes (EApp d (EVar 0)) (EApp d v))) (TEApp (tesh wpfix) (EVar 0))))) (eapp2 (EConst (EcFixPure tx t' t'' wpfix)) d f)) = magic() in
  (* We now get the fact that the final expression has the good base type (the fact that we have the 'return' wp for all arguments let us reduce to the final wp directly*)
- let htappb : typing g (eapp2 f v (eapp2 (EConst EcFixPure) d f)) (Cmp EfPure (TEApp t'' v) (TEApp wpfix v)) = magic() in
+ let htappb : typing g (eapp2 f v (eapp2 (EConst (EcFixPure tx t' t'' wpfix)) d f)) (Cmp EfPure (TEApp t'' v) (TEApp wpfix v)) = magic() in
  (* We can use the different subtyping relation we have to get that the base computation and the subsumed one are related *)
- let hscmp : scmp g (eapp2 f v (eapp2 (EConst EcFixPure) d f)) (Cmp EfPure (TEApp t'' v) (TEApp wpfix v)) (Cmp EfPure t wp) = magic() in
- TySub #g #(eapp2 f v (eapp2 (EConst EcFixPure) d f)) #(Cmp EfPure (TEApp t'' v) (TEApp wpfix v)) #(Cmp EfPure t wp) htappb hscmp
+ let hscmp : scmp g (Cmp EfPure (TEApp t'' v) (TEApp wpfix v)) (Cmp EfPure t wp) = magic() in
+ magic()(*
+ Inl (TySub #g #(eapp2 f v (eapp2 (EConst (EcFixPure tx t' t'' wpfix)) d f)) #(Cmp EfPure (TEApp t'' v) (TEApp wpfix v)) #(Cmp EfPure t wp) htappb hscmp)
+ *)
+ (* SF : I will not be able to prove this with F*. 
+  It already can not go through the sketch only *)
 )
+| PsSel h l ~>
+(
+ let TyApp #x1 #x2 #x3 #x4 #targ2s #tret2s #wpbody2s #wpfun2s #wparg2s htfun2 htarg2 htotarg2 hkarg2 = ht in
+ let tfun2s = TArr targ2s (Cmp EfPure tret2s wpbody2s) in
+ let RemoveSub capp1s hscapp1 htapp1 = remove_subtyping #g #(EApp (EConst EcSel) (eheap h)) #(Cmp EfPure tfun2s wpfun2s) hwf htfun2 in
+ let TyApp #x1 #x2 #x3 #x4 #targ1s #tret1s #wpbody1s #wpfun1s #wparg1s htfun1 htarg1 htotarg1 hkarg1 = htapp1 in
+ let htotarg1 : typing g (eheap h) (tot targ1s) = magic() in
+ let tfun1s = TArr targ1s (Cmp x4 tret1s wpbody1s) in
+ let RemoveSub cfun1b hscfun1 htfun1b = remove_subtyping #g #(EConst EcSel) #(Cmp x4 tfun1s wpfun1s) hwf htfun1 in
+ (*
+ let TyConst _ _ _ = htfun1b in
+ let tfun1b = TArr theap (tot (TArr tref (tot tint))) in
+ match styping_inversion_arrow #g #theap #(tot (TArr tref (tot tint))) hwf (get_styping_from_scmpex #g #(EConst EcSel) #cfun1b #(Cmp EfPure tfun1s wpfun1s) hscfun1) with
+ | Inr temp -> magic()
+ | Inl temp ->
+ let StypingInvArr _ cfun1s hstarg1 hscbody1 = temp in
+ let hstbody1 : styping g (TArr tref (tot tint)) (tsubst_ebeta (eheap h) tret1s) = subst_on_tot (sub_elam (sub_ebeta (eheap h))) tint; styping_substitution (sub_ebeta (eheap h)) (SCmp.hs hscbody1) (ebeta_hs #g #(eheap h) #targ1s htotarg1) in
+ *)
+ magic()
+) 
 | _ -> admit()
-and ~> pure_kinding_preservation g t t' k hwf hk hstep = 
+and pure_kinding_preservation g t t' k hwf hk hstep = 
 if is_KSub hk then
 let KSub #g #t #k' #k hk' hsk = hk in
- let hkt': kinding g t' k' = pure_kinding_preservation hwf hk' hstep in
- KSub #g #t' #k' #k hkt' hsk
+ match pure_kinding_preservation hwf hk' hstep with
+ | Inr temp -> Inr temp
+ | Inl temp ->
+ (
+   let hkt': kinding g t' k' = temp in
+   Inl (KSub #g #t' #k' #k hkt' hsk)
+ )
 else
 (
  match hstep with
- | TsEBeta tx t e ~>
+ | TsEBeta tx t e ->
  (
   let KEApp #x1 #x2 #targs #kbodys  hkfun htarg hw = hk in
   let InversionTELam kbodyb hktarg hktbody hsk = inversion_telam #g #tx #t #(KTArr targs kbodys) hkfun in
@@ -5171,9 +5280,9 @@ else
       let hktbody : kinding (eextend targs g) t kbodyb = tsubst_with_sub_id t; ksubst_with_sub_id kbodyb; kinding_substitution (sub_id) hktbody (styping_hs targs tx hstarg) in
       KSub #(eextend targs g) #t #kbodyb #kbodys hktbody hskbody
   in
-  kinding_substitution (sub_ebeta e) (hktbody') (ebeta_hs #g #e #targs htarg)
+  Inl (kinding_substitution (sub_ebeta e) (hktbody') (ebeta_hs #g #e #targs htarg))
  )
- | TsTBeta karg tbody targ ~>
+ | TsTBeta karg tbody targ ->
  (
   let KTApp #x1 #x2 #x3 #kargs kbodys hkfun hkarg hw = hk in
   let InversionTTLam kbodyb hkwfkarg hktbody hsk = inversion_ttlam #g #karg #tbody #(KKArr kargs kbodys) hkfun in
@@ -5186,34 +5295,44 @@ else
       let hktbody : kinding (textend kargs g) tbody kbodyb = tsubst_with_sub_id tbody; ksubst_with_sub_id kbodyb; kinding_substitution (sub_id) hktbody (skinding_hs kargs karg hskarg) in
       KSub #(textend kargs g) #tbody #kbodyb #kbodys hktbody hskbody
   in
-  kinding_substitution (sub_tbeta targ) hktbody' (tbeta_hs #g #targ #kargs hkarg)
+  Inl (kinding_substitution (sub_tbeta targ) hktbody' (tbeta_hs #g #targ #kargs hkarg))
  )
  | TsArrT1 #t1 #t1' c hsteparg ->
  (
   let Cmp mc tc wpc = c in
   let KArr hkt1 hktc hkwp hvmono = hk in
-  let hkt1' : kinding g t1' KType = pure_kinding_preservation #g #t1 #t1' #KType hwf hkt1 hsteparg in
-  let hs : subst_typing (sub_id) (eextend t1 g) (eextend t1' g) =
-    let heq : validity g (teqtype t1 t1') = VRedT #g #t1 #t1' #KType hkt1 hkt1' hsteparg in
-    let heq : validity g (teqtype t1' t1) = v_eq_symt #g #t1 #t1' #KType heq in
-    let hst:styping g t1' t1 = SubConv #g #t1 t1' heq hkt1 hkt1' in
-    styping_hs #g t1' t1 hst
-  in
-  let hktc':kinding (eextend t1' g) tc KType = tsubst_with_sub_id tc; kinding_substitution (sub_id) (hktc) (hs) in
-  let hkwp':kinding (eextend t1' g) wpc (k_m mc tc) = tsubst_with_sub_id wpc; ksubst_with_sub_id (k_m mc tc); kinding_substitution (sub_id) (hkwp) (hs) in
-  let hvmono' : validity (eextend t1' g) (monotonic mc tc wpc) = tsubst_with_sub_id (monotonic mc tc wpc); validity_substitution (sub_id) (hvmono) (hs) in
-  let hktarr' : kinding g (TArr t1' (Cmp mc tc wpc)) KType = KArr #g #t1' #tc #wpc #mc hkt1' hktc' hkwp' hvmono' in
-  hktarr'
+  match pure_kinding_preservation #g #t1 #t1' #KType hwf hkt1 hsteparg with
+  | Inr temp -> Inr temp
+  | Inl temp ->
+  (
+    let hkt1' : kinding g t1' KType = temp in
+    let hs : subst_typing (sub_id) (eextend t1 g) (eextend t1' g) =
+      let heq : validity g (teqtype t1 t1') = VRedT #g #t1 #t1' #KType hkt1 hkt1' hsteparg in
+      let heq : validity g (teqtype t1' t1) = v_eq_symt #g #t1 #t1' #KType heq in
+      let hst:styping g t1' t1 = SubConv #g #t1 t1' heq hkt1 hkt1' in
+      styping_hs #g t1' t1 hst
+    in
+    let hktc':kinding (eextend t1' g) tc KType = tsubst_with_sub_id tc; kinding_substitution (sub_id) (hktc) (hs) in
+    let hkwp':kinding (eextend t1' g) wpc (k_m mc tc) = tsubst_with_sub_id wpc; ksubst_with_sub_id (k_m mc tc); kinding_substitution (sub_id) (hkwp) (hs) in
+    let hvmono' : validity (eextend t1' g) (monotonic mc tc wpc) = tsubst_with_sub_id (monotonic mc tc wpc); validity_substitution (sub_id) (hvmono) (hs) in
+    let hktarr' : kinding g (TArr t1' (Cmp mc tc wpc)) KType = KArr #g #t1' #tc #wpc #mc hkt1' hktc' hkwp' hvmono' in
+    Inl hktarr'
+  )
  )
  | TsTAppT1 #t1 #t1'  t2 hstepfun -> 
  (
   let KTApp #x1 #x2 #x3 #k k' hkt1 hkt2 hkw = hk in
-  let hkt1' : kinding g t1' (KKArr k k') = pure_kinding_preservation #g #t1 #t1' #(KKArr k k') hwf hkt1 hstepfun in
-  KTApp #g #t1' #t2 #k k' hkt1' hkt2 hkw
+  match pure_kinding_preservation #g #t1 #t1' #(KKArr k k') hwf hkt1 hstepfun with
+  | Inr temp -> Inr temp
+  | Inl temp ->
+  (
+    let hkt1' : kinding g t1' (KKArr k k') = temp in
+    Inl (KTApp #g #t1' #t2 #k k' hkt1' hkt2 hkw)
+  )
  )
  | TsTAppT2 t1 #t2 #t2' hsteparg ->
  (
-  admit()(*
+  magic()(*
   let KTApp #x1 #x2 #x3 #k k' hkt1 hkt2 hkw = hk in
   let hkt2': kinding g t2' k = pure_kinding_preservation #g #t2 #t2' #k hwf hkt2 hsteparg in
   let hkwfkarr : kwf g (KKArr k k') = kinding_derived hwf hkt1 in
@@ -5226,8 +5345,13 @@ else
  | TsEAppT #t #t' e hstepfun ->
  (
   let KEApp #x1 #t #targ #kbody #e hkt hte hkwf = hk in
-  let hkt' : kinding g t' (KTArr targ kbody) = pure_kinding_preservation #g #t #t' #(KTArr targ kbody) hwf hkt hstepfun in
-  KEApp #g #t' #targ #kbody #e hkt' hte hkwf
+  match pure_kinding_preservation #g #t #t' #(KTArr targ kbody) hwf hkt hstepfun with
+  | Inr temp -> Inr temp
+  | Inl temp ->
+  (
+    let hkt' : kinding g t' (KTArr targ kbody) = temp in
+    Inl (KEApp #g #t' #targ #kbody #e hkt' hte hkwf)
+  )
  )
  | TsEAppE t #e #e' hsteparg ->
  (
@@ -5238,39 +5362,172 @@ else
  (
   let KTLam #x1 #x2 #x3 #k' hkwfk hkt = hk in
   let hwfext : ewf (textend k g) = GKind hwf hkwfk in
-  let hkt' : kinding (textend k g) t' k' = pure_kinding_preservation #(textend k g) #t #t' #k' hwfext hkt hstep in
-  KTLam #g #k #t' #k' hkwfk hkt' 
+  match pure_kinding_preservation #(textend k g) #t #t' #k' hwfext hkt hstep with
+  | Inr temp -> 
+  (
+   let TypeFromKwf targ hktarg = type_from_kwf #g #k hkwfk in
+   Inr (validity_substitution (sub_tbeta targ) temp (tbeta_hs #g #targ #k hktarg))
+  )
+  | Inl temp ->
+  (
+    let hkt' : kinding (textend k g) t' k' = temp in
+    Inl (KTLam #g #k #t' #k' hkwfk hkt' )
+  )
  )
  | TsELamT1 #t1 #t1' t2 hsteparg ->
  (
   let KELam #x1 #x2 #x3 #kbody hkt1 hkt2 = hk in
-  let hkt1' : kinding g t1' KType = pure_kinding_preservation #g #t1 #t1' #KType hwf hkt1 hsteparg in
-  let hveq:validity g (teqtype t1 t1') = VRedT #g #t1 #t1' #KType hkt1 hkt1' hsteparg in
-  let hveq':validity g (teqtype t1' t1) = v_eq_symt #g #t1 #t1' #KType hveq in
-  let hst' : styping g t1' t1 = SubConv #g #t1 t1' hveq' hkt1 hkt1' in
-  let hktemp : kinding g (TELam t1' t2) (KTArr t1' kbody) = tsubst_with_sub_id t2; ksubst_with_sub_id kbody; KELam #g #t1' #t2 #kbody hkt1' (kinding_substitution (sub_id) hkt2 (styping_hs t1' t1 hst')) in
-  let hsk: skinding g (KTArr t1' kbody) (KTArr t1 kbody) = 
-    let hst : styping g t1 t1' = SubConv #g #t1' t1 hveq hkt1' hkt1 in
-    let hwfext : ewf (eextend t1 g) = GType hwf hkt1 in
-    let hkwf2 : kwf (eextend t1 g) kbody = kinding_derived #(eextend t1 g) #t2 #kbody hwfext hkt2 in
-    let hskbody : skinding (eextend t1 g) kbody kbody = KSubRefl #(eextend t1 g) #kbody hkwf2 in
-    let hkwfarr : kwf g (KTArr t1' kbody) = kinding_derived #g #(TELam t1' t2) #(KTArr t1' kbody) hwf hktemp in
-    KSubTArr #g #t1' #t1 #kbody #kbody hst hskbody hkwfarr
-  in
-  KSub #g #(TELam t1' t2) #(KTArr t1' kbody) #(KTArr t1 kbody) hktemp hsk
+  match pure_kinding_preservation #g #t1 #t1' #KType hwf hkt1 hsteparg with
+  | Inr temp -> Inr temp
+  | Inl temp ->
+  (
+    let hkt1' : kinding g t1' KType = temp in
+    let hveq:validity g (teqtype t1 t1') = VRedT #g #t1 #t1' #KType hkt1 hkt1' hsteparg in
+    let hveq':validity g (teqtype t1' t1) = v_eq_symt #g #t1 #t1' #KType hveq in
+    let hst' : styping g t1' t1 = SubConv #g #t1 t1' hveq' hkt1 hkt1' in
+    let hktemp : kinding g (TELam t1' t2) (KTArr t1' kbody) = tsubst_with_sub_id t2; ksubst_with_sub_id kbody; KELam #g #t1' #t2 #kbody hkt1' (kinding_substitution (sub_id) hkt2 (styping_hs t1' t1 hst')) in
+    let hsk: skinding g (KTArr t1' kbody) (KTArr t1 kbody) = 
+      let hst : styping g t1 t1' = SubConv #g #t1' t1 hveq hkt1' hkt1 in
+      let hwfext : ewf (eextend t1 g) = GType hwf hkt1 in
+      let hkwf2 : kwf (eextend t1 g) kbody = kinding_derived #(eextend t1 g) #t2 #kbody hwfext hkt2 in
+      let hskbody : skinding (eextend t1 g) kbody kbody = KSubRefl #(eextend t1 g) #kbody hkwf2 in
+      let hkwfarr : kwf g (KTArr t1' kbody) = kinding_derived #g #(TELam t1' t2) #(KTArr t1' kbody) hwf hktemp in
+      KSubTArr #g #t1' #t1 #kbody #kbody hst hskbody hkwfarr
+    in
+    Inl (KSub #g #(TELam t1' t2) #(KTArr t1' kbody) #(KTArr t1 kbody) hktemp hsk)
+  )
  )
- | _ -> admit()
 )
 
+type pure_progress_res : exp -> Type =
+| PureProgress : #e:exp ->
+    e' :exp ->
+    epstep e e' ->
+    pure_progress_res e
 
 
-(*
-match hstep with
-| PsLamT #t #t' ebody hstep ->
+assume val empty_consistent : validity empty tfalse -> Lemma (false)
+
+type theap_inversion_res : exp -> Type =
+| TheapInversion : e:exp -> 
+     h:heap -> 
+     heq : ceq e (EConst (EcHeap h)) ->
+     theap_inversion_res e
+val theap_inversion : #g:env -> #v:value -> #wp:typ ->
+   ht:typing g v (Cmp EfPure theap wp) ->
+   Tot (either (theap_inversion_res v) (validity g tfalse))
+let theap_inversion g v wp ht = admit()
+
+type tref_inversion_res : exp -> Type =
+| TrefInversion : e:exp ->
+    l:loc ->
+    heq : ceq e (EConst (EcLoc l)) ->
+    tref_inversion_res e
+val tref_inversion : #g:env -> #v:value -> #wp:typ ->
+   ht:typing g v (Cmp EfPure tref wp) ->
+   Tot (either (tref_inversion_res v) (validity g tfalse))
+let tref_inversion g v wp ht = admit()
+
+
+type tint_inversion_res : exp -> Type =
+| TintInversion : e:exp ->
+    i:int ->
+    heq : ceq e (EConst (EcInt i)) ->
+    tint_inversion_res e
+val tint_inversion : #g:env -> #v:value -> #wp:typ ->
+   ht:typing g v (Cmp EfPure tint wp) ->
+   Tot (either (tint_inversion_res v) (validity g tfalse))
+let tint_inversion g v wp ht = admit()
+
+val scmpex_efpure : #g:env -> #e:exp -> #c':cmp -> #c:cmp ->
+   scmpex g e c' c ->
+   Lemma (requires (Cmp.m c = EfPure)) (ensures (Cmp.m c' = EfPure))
+let scmpex_efpure g e c' c hsc = admit()
+
+
+val pure_progress : #e : exp{not (is_value e)} -> #t:typ -> #wp:typ ->
+  ht:typing empty e (Cmp EfPure t wp) ->
+  Tot (pure_progress_res e)
+(decreases %[ht])
+
+let rec pure_progress e t wp ht = 
+match ht with
+| TySub #x1 #x2 #c' #c ht hsc -> let Cmp mc' tc' wpc' = c' in 
+    pure_progress #e #tc' #wpc' ht
+| TyRet t htot -> pure_progress #e #t #(tot_wp t) htot
+| TyIf0 _ eg et ee _ _ wpg wpt wpe htg htt hte ->
 (
- admit()
+ if not (is_value eg) then
+  let PureProgress eg' hstep = pure_progress #eg #tint #wpg htg in
+  PureProgress (EIf0 eg' et ee) (PsIf0E0 #eg #eg' et ee hstep)
+ else
+  magic()
 )
-| _ -> admit()
-*)
-(*SF:^ check the error of this code *)
-//}}}
+| TyApp #x1 #e1 #e2 #x2 #targs #tbodys #wps #wp1s #wp2s ht1 ht2 htot1 hk1 ->
+(
+ let tarr = TArr targs (Cmp EfPure tbodys wps) in
+ if not (is_value e1) then
+  let PureProgress e1' hstep = pure_progress #e1 #tarr #wp1s ht1 in
+  PureProgress (EApp e1' e2) (PsAppE1 #e1 #e1' e2 hstep)
+ else if not (is_value e2) then
+  let PureProgress e2' hstep = pure_progress #e2 #targs #wp2s ht2 in
+  PureProgress (EApp e1 e2') (PsAppE2 e1 #e2 #e2' hstep)
+ else
+ (
+  let RemoveSub c' hsc ht' = remove_subtyping #empty #e1 #(Cmp EfPure tarr wp1s) (GEmpty) ht1 in
+  let hst : styping empty (Cmp.t c') tarr = get_styping_from_scmpex #empty #e1 #c' #(Cmp EfPure tarr wp1s) hsc in
+  match e1 with
+  | ELam t ebody -> PureProgress (esubst_ebeta e2 ebody) (PsBeta t ebody e2)
+  | EConst ec ->
+    (
+     let TyConst _ _ _ = ht' in
+      match stypingd_inversion_arrow #empty #(econsts ec) #targs #(Cmp EfPure tbodys wps) (GEmpty) hst with
+       | Inr temp -> (empty_consistent temp; PureProgress (eint 42) (PsIf0 (eint 42) (eint 42)))
+       | Inl temp -> (
+	 let StypingDInvArr t1 c1 _ hsc = temp in
+	 let EcBang = ec in
+	 let SCmp m' wp' m wp _ _ _ _ _ _ = hsc in
+         PureProgress (eint 42) (PsIf0 (eint 42) (eint 42))
+       )
+    )
+  | EApp e11 e12 -> 
+  (
+   scmpex_efpure #empty #e1 #c' #(Cmp EfPure tarr wp1s) hsc;
+   let TyApp #x1 #x2 #x3 #x4 #targs2 #tbodys2 #wps2 #wpfuns2 #wpargs2 htfuns2 htargs2 htotargs2 hktargs2 = ht' in
+   let tarr2 = TArr targs2 (Cmp EfPure tbodys2 wps2) in
+   let RemoveSub c2 hsc2 ht' = remove_subtyping #empty #e11 #(Cmp EfPure tarr2 wpfuns2) (GEmpty) htfuns2 in
+   match e11 with
+   | EApp e111 e112 ->
+   (
+    scmpex_efpure #empty #e11 #c2 #(Cmp EfPure tarr2 wpfuns2) hsc2;
+    let TyApp #x1 #x2 #x3 #x4 #targs3 #tbodys3 #wps3 #wpfuns3 #wpargs3 htfuns3 htargs3 htotargs3 hktargs3 = ht' in
+    let tarr3 = TArr targs3 (Cmp EfPure tbodys3 wps3) in
+    let RemoveSub c3 hsc3 ht' = remove_subtyping #empty #e111 #(Cmp EfPure tarr3 wpfuns3) (GEmpty) htfuns3 in
+    let EConst ec111 = e111 in
+    match ec111 with
+    | EcFixPure tx t' t'' wp ->
+    (
+     PureProgress (eapp2 e12 e2 (eapp2 (EConst (EcFixPure tx t' t'' wp)) e112 e12)) (PsFixPure tx t' t'' wp e112 e12 e2)
+    )
+    | EcUpd -> (
+      let TyConst _ _ _ = ht' in     
+      let hst3 : styping empty (econsts EcUpd) tarr3 = magic() in      
+      match styping_inversion_arrow #empty #theap #(tot (TArr tref (tot (TArr tint (tot theap))))) #tarr3 (GEmpty) hst3 with
+      | Inr temp -> magic() 
+      | Inl temp ->
+      (
+       let StypingInvArr x1 x2 hst3 hscbody3 = temp in
+       magic()
+      )
+    )
+   )
+   | EConst ec11 ->
+   (
+    match ec11 with
+    | EcFixOmega tx t' wp -> magic() (*contradiction with effects*)
+    | EcSel -> magic() (*PsSel*)
+    | EcAssign -> magic() (*contradiction with effects*)
+   )
+  )
+ )
+)
