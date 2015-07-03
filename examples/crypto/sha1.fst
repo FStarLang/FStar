@@ -26,14 +26,14 @@ let blocksize = keysize
 let macsize = 20
 
 type key = lbytes keysize
-type tag = lbytes macsize
+type tag = bytes //lbytes macsize
 
 val sample: n:nat -> lbytes n
 let sample n = random n
 
 let sha1 b = hash SHA1 b
 
-val hmac_sha1: key -> text -> Tot tag
+val hmac_sha1: key -> text -> tag
 let hmac_sha1 k t =
   let x5c = byte_of_int 92 in
   let x36 = byte_of_int 54 in

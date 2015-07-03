@@ -26,26 +26,23 @@ acls-cap: sha1.fst mac.fst ../security/acls2.fst acls-cap.fst
 # --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1
 rpc: formatting.fst sha1.fst mac.fst rpc.fst
 	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --admit_fsi Seq  \
-          $(addprefix $(FSTAR_HOME)/lib/, string.fst list.fst ext.fst classical.fst \
+          $(addprefix $(FSTAR_HOME)/lib/, string.fst io.fst list.fst ext.fst classical.fst \
 					set.fsi set.fst \
 					heap.fst st.fst \
-					seq.fsi seqproperties.fst ) Bytes.fst formatting.fst sha1.fst mac.fst rpc.fst
+					seq.fsi seqproperties.fst ) Bytes.fst \
+					$(addprefix $(MITLS)/CoreCrypto/, CoreCrypto.fst) \
+					sha1.fst mac.fst formatting.fst rpc.fst
 
 
 
 rpc-extract:
-	$(FSTAR) --codegen-lib Platform --codegen-lib CoreCrypto --codegen-lib Hash --codegen OCaml \
+	$(FSTAR) --codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml \
           $(addprefix $(FSTAR_HOME)/lib/, string.fst io.fst list.fst ext.fst classical.fst \
 					set.fsi set.fst \
 					heap.fst st.fst \
 					seq.fst seqproperties.fst ) Bytes.fst \
-					$(MITLS)/CoreCrypto/Hash.fst \
 					$(MITLS)/CoreCrypto/CoreCrypto.fst \
 					sha1.fst mac.fst formatting.fst rpc.fst  --debug high
-	#cp Bytes.ml Platform_Bytes.ml
-	# -I $(FSTAR_HOME)/src/support/ocaml/fstar-lib/src/evp \
-	#$(FSTAR_HOME)/src/support/ocaml/fstar-lib/src/evp/evp.ml
-	#../../../mitls-fstar/libs/ml/CoreCrypto/Hash.ml \
 	ocamlfind ocamlopt -cclib -lcrypto -o rpc.exe -package batteries -linkpkg -g -thread $(addprefix -I ../../../mitls-fstar/libs/ml/, Platform CoreCrypto) -I \
 	        $(FSTAR_HOME)/src/ocaml-output/ \
 					$(FSTAR_HOME)/src/ocaml-output/support.cmx \
