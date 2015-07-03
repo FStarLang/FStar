@@ -14,7 +14,6 @@
 module SHA1
 open Seq
 open Platform.Bytes
-open CoreCrypto.Hash
 open CoreCrypto
 
 type text  = bytes    (* a type abbreviation, for clarity *)
@@ -31,6 +30,8 @@ type tag = lbytes macsize
 
 val sample: n:nat -> lbytes n
 let sample n = random n
+
+let sha1 b = hash SHA1 b
 
 val hmac_sha1: key -> text -> Tot tag
 let hmac_sha1 k t =

@@ -34,19 +34,24 @@ rpc: formatting.fst sha1.fst mac.fst rpc.fst
 
 
 rpc-extract:
-	$(FSTAR) --codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml \
+	$(FSTAR) --codegen-lib Platform --codegen-lib CoreCrypto --codegen-lib Hash --codegen OCaml \
           $(addprefix $(FSTAR_HOME)/lib/, string.fst list.fst ext.fst classical.fst \
 					set.fsi set.fst \
 					heap.fst st.fst \
 					seq.fst seqproperties.fst ) Bytes.fst \
 					$(MITLS)/CoreCrypto/Hash.fst \
 					$(MITLS)/CoreCrypto/CoreCrypto.fst \
-					sha1.fst mac.fst formatting.fst rpc.fst --debug high
+					sha1.fst mac.fst formatting.fst rpc.fst  --debug high
 	#cp Bytes.ml Platform_Bytes.ml
+	# -I $(FSTAR_HOME)/src/support/ocaml/fstar-lib/src/evp \
+	#$(FSTAR_HOME)/src/support/ocaml/fstar-lib/src/evp/evp.ml
+	#../../../mitls-fstar/libs/ml/CoreCrypto/Hash.ml \
 	ocamlfind ocamlopt -o rpc.exe -package batteries -linkpkg -g -thread $(addprefix -I ../../../mitls-fstar/libs/ml/, Platform CoreCrypto) -I \
-	        $(FSTAR_HOME)/src/ocaml-output/ $(FSTAR_HOME)/src/ocaml-output/support.ml ../../../mitls-fstar/libs/ml/Platform/platform.ml \
-					../../../mitls-fstar/libs/ml/CoreCrypto/CoreCrypto.ml
-					Seq.ml SeqProperties.ml  SHA1.ml MAC.ml Formatting.ml RPC.ml
+	        $(FSTAR_HOME)/src/ocaml-output/ \
+					$(FSTAR_HOME)/src/ocaml-output/support.ml \
+					../../../mitls-fstar/libs/ml/Platform/platform.cmx \
+					../../../mitls-fstar/libs/ml/CoreCrypto/CoreCrypto.cmxa \
+					Seq.ml SeqProperties.ml SHA1.ml MAC.ml Formatting.ml RPC.ml
 
 cnt-protocol: cnt-format.fst cnt-format.fsi cnt-mac.fst cnt-protocol.fst
 	$(FSTAR) --admit_fsi Set $(addprefix $(FSTAR_HOME)/lib/, list.fst string.fst partialmap.fst ) cnt-format-deprecated.fst
