@@ -7,6 +7,7 @@
             $LIB/set.fsi $LIB/set.fst
             $LIB/heap.fst $LIB/st.fst
             $LIB/seq.fsi $LIB/seqproperties.fst
+            $LIB/io.fst
             Bytes.fst
             $MITLS/CoreCrypto/Hash.fst
             $MITLS/CoreCrypto/CoreCrypto.fst
@@ -19,6 +20,7 @@
 (* Copyright (c) Microsoft Corporation.  All rights reserved.  *)
 
 module RPC
+open String
 open Platform.Bytes
 (*open Seq
 open SeqProperties*)
@@ -106,10 +108,12 @@ let server () =
 
 
 let test () =
-  let query = "4 + 2?" in
-  client_send query;
-  server();
-  client_recv query;
-  print_string "\n\n"
+  let query = "4 + 2" in
+  if length (utf8 query) > 10 then failwith "Too long"
+  else
+    client_send query;
+    server();
+    client_recv query;
+    print_string "\n\n"
 
 let run = test ()
