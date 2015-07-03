@@ -29,8 +29,8 @@ rpc: formatting.fst sha1.fst mac.fst rpc.fst
           $(addprefix $(FSTAR_HOME)/lib/, string.fst io.fst list.fst ext.fst classical.fst \
 					set.fsi set.fst \
 					heap.fst st.fst \
-					seq.fsi seqproperties.fst ) Bytes.fst \
-					$(addprefix $(MITLS)/CoreCrypto/, CoreCrypto.fst) \
+					seq.fsi seqproperties.fst )  \
+					$(addprefix $(MITLS),  Platform/Bytes.fst CoreCrypto/CoreCrypto.fst) \
 					sha1.fst mac.fst formatting.fst rpc.fst
 
 
