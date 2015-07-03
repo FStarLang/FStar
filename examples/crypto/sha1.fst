@@ -7,7 +7,7 @@
             $LIB/set.fsi $LIB/set.fst
             $LIB/heap.fst $LIB/st.fst
             $LIB/seq.fsi $LIB/seqproperties.fst
-            Bytes.fst
+            $MITLS/Platform/Bytes.fst
             $MITLS/CoreCrypto/Hash.fst
             $MITLS/CoreCrypto/CoreCrypto.fst
   --*)

@@ -8,7 +8,7 @@
             $LIB/heap.fst $LIB/st.fst
             $LIB/seq.fsi $LIB/seqproperties.fst
             $LIB/io.fst
-            Bytes.fst
+            $MITLS/Platform/Bytes.fst
             $MITLS/CoreCrypto/Hash.fst
             $MITLS/CoreCrypto/CoreCrypto.fst
             formatting.fst
@@ -69,6 +69,7 @@ let client_send (s:string16) =
 
   send ( (utf8 s) @| (mac k (Formatting.request s)))
 
+
 let client_recv (s:string16) =
   recv (fun msg ->
     if length msg < macsize then failwith "Too short"
@@ -84,6 +85,8 @@ let client_recv (s:string16) =
 let client (s:string16) =
   client_send s;
   client_recv s
+
+
 
 
 let server () =
@@ -109,7 +112,7 @@ let server () =
 
 let test () =
   let query = "4 + 2" in
-  if length (utf8 query) > 10 then failwith "Too long"
+  if length (utf8 query) > 65535 then failwith "Too long"
   else
     client_send query;
     server();
