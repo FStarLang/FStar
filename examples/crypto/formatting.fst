@@ -33,8 +33,6 @@ open Seq
 open SeqProperties
 open Platform.Bytes
 
-let lemma_repr_bytes_values n = ()
-
 type message = bytes
 type msg (l:nat) = lbytes l
 
