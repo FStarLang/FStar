@@ -35,7 +35,7 @@ rpc: formatting.fst sha1.fst mac.fst rpc.fst
 
 rpc-extract:
 	$(FSTAR) --codegen-lib Platform --codegen-lib CoreCrypto --codegen-lib Hash --codegen OCaml \
-          $(addprefix $(FSTAR_HOME)/lib/, string.fst list.fst ext.fst classical.fst \
+          $(addprefix $(FSTAR_HOME)/lib/, string.fst io.fst list.fst ext.fst classical.fst \
 					set.fsi set.fst \
 					heap.fst st.fst \
 					seq.fst seqproperties.fst ) Bytes.fst \
@@ -46,9 +46,9 @@ rpc-extract:
 	# -I $(FSTAR_HOME)/src/support/ocaml/fstar-lib/src/evp \
 	#$(FSTAR_HOME)/src/support/ocaml/fstar-lib/src/evp/evp.ml
 	#../../../mitls-fstar/libs/ml/CoreCrypto/Hash.ml \
-	ocamlfind ocamlopt -o rpc.exe -package batteries -linkpkg -g -thread $(addprefix -I ../../../mitls-fstar/libs/ml/, Platform CoreCrypto) -I \
+	ocamlfind ocamlopt -cclib -lcrypto -o rpc.exe -package batteries -linkpkg -g -thread $(addprefix -I ../../../mitls-fstar/libs/ml/, Platform CoreCrypto) -I \
 	        $(FSTAR_HOME)/src/ocaml-output/ \
-					$(FSTAR_HOME)/src/ocaml-output/support.ml \
+					$(FSTAR_HOME)/src/ocaml-output/support.cmx \
 					../../../mitls-fstar/libs/ml/Platform/platform.cmx \
 					../../../mitls-fstar/libs/ml/CoreCrypto/CoreCrypto.cmxa \
 					Seq.ml SeqProperties.ml SHA1.ml MAC.ml Formatting.ml RPC.ml

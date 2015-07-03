@@ -19,8 +19,9 @@
    computational assumption *)
 
 module MAC
-open Array
+//open Array
 open SHA1
+open IO
 
 (* ---- specification *)
 
@@ -82,7 +83,8 @@ let mac k t =
 
 let verify k text tag =
   (* to verify, we simply recompute & compare *)
-  let verified = (hmac_sha1 k text = tag) in
+  let m= hmac_sha1 k text in
+  let verified = (m = tag) in
   let found =
     is_Some
       (List.find
@@ -93,7 +95,8 @@ let verify k text tag =
 //verified
 
   (* ideal, error-correcting implementation *)
-  verified && found
+//  verified && found
+  found
 
   (* error-detecting implementation for the INT-CMA game *)
 //(if verified && not found then win := Some(k,text,tag));

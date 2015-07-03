@@ -32,6 +32,8 @@ Colorizer     : fstar
 .pre-fragment : margin-bottom=0pt .framed padding=0.5ex
 
 ~ExerciseFragment : replace="~Begin Fragment {link=code/exercises/&exname;.fst}&nl;&source;&nl;~End Fragment&nl;"
+~CodeFragment : replace="~Begin Fragment {link=code/&filename;:&label;&name;}&nl;&source;&nl;~End Fragment&nl;"
+
 
 CatalinComment : replace="Can't understand why this doesn't work (it eats up the following solution. Also, why can't I write a proper <!-- comment here?"
 ~EmptyExerciseFragment : replace="~Begin Fragment {link=code/exercises/&exname;.fst}&nl;(* Write your code here *)&nl;~End Fragment&nl;"
@@ -4254,44 +4256,44 @@ the problem of scaling up the approach of the previous chapter to even slightly 
 ```
   type a = b
   ```
-  
+
 ## Flying robots
 
 ![johnnysokko]
 
 Let's have some fun with flying robots. Maybe you've seen this classic Japanese
 TV series from the 60s. <https://en.wikipedia.org/wiki/Giant_Robo_(tokusatsu)>. Let's build
-a tiny model of this flying robot. 
+a tiny model of this flying robot.
 
-Our `bot` has a 3d-point representing its position; and two arms, both in polar coordinates. 
+Our `bot` has a 3d-point representing its position; and two arms, both in polar coordinates.
 
 ```
-  type bot = {                            
-    pos:point;                                       
-    left:arm;                                        
+  type bot = {
+    pos:point;
+    left:arm;
     right:arm
-  }                                      
-  and point = {                           
-    x:ref int;                           
-    y:ref int;                           
+  }
+  and point = {
+    x:ref int;
+    y:ref int;
     z:ref int;
   }
   and arm = {
     polar:ref int;
     azim:ref int
-  }  
+  }
 ```
 
-Our bot has an invariant: whenever it is flying, it has its arms up. 
+Our bot has an invariant: whenever it is flying, it has its arms up.
 
 ![flying]
 
-We can write a function to make our robot fly, which sets its arms up and then 
+We can write a function to make our robot fly, which sets its arms up and then
 shoots the robot into the sky.
 
 ```
-  let fly b = 
-    b.left.polar := 0; 
+  let fly b =
+    b.left.polar := 0;
     b.right.polar := 0;
     b.z := 100
   ```
@@ -4299,14 +4301,14 @@ shoots the robot into the sky.
 Now, we'd like to prove properties like the following:
 
 ```
-  //initially, in h0: b1 not flying, b2 not flying 
+  //initially, in h0: b1 not flying, b2 not flying
       fly b1
   //in h1: b1 flying, b2 not flying
   ```
 
 To prove this property, and to prove that the bot's invariant is
 maintained, we need many anti-aliasing invariants, including the
-following (stated informally). 
+following (stated informally).
 
 ```
 forall r1, r2. r1 in refs_in b1
@@ -4325,10 +4327,10 @@ among the references of each bot.
 
 F\*'s effect mechanism provides an alternative to this tedium. Instead of
 working with the primitive `ST` effect (and its flat model of memory via
-the `heap` type) that we have been working with so far, we can define 
-easily define a different, more structured view of memory as a new effect. 
-One such alternative is the HyperHeap, a model of memory which provides a 
-convenient built-in notion of disjoint sets of references. 
+the `heap` type) that we have been working with so far, we can define
+easily define a different, more structured view of memory as a new effect.
+One such alternative is the HyperHeap, a model of memory which provides a
+convenient built-in notion of disjoint sets of references.
 
 [johnnysokko]: johnnysokko.jpg "Johnny Sokko" { width=300px }
 [flying]: flying.gif "Flying Bot" { width=200px }
@@ -4337,7 +4339,7 @@ convenient built-in notion of disjoint sets of references.
 
 ## Hyper-heaps
 
-So far, we have been working with the `heap` type, a flat, typed-map from 
+So far, we have been working with the `heap` type, a flat, typed-map from
 references to their contents. The `ref` type is abstract---it has no structure
 and only supports equality operations. Conceptually, it looks like this:
 
@@ -4352,9 +4354,9 @@ heaps from before. The picture below depicts the structure.
 ![hyperheap]
 
 At the top-level we have regions `R0 ... Rn`, each associated with a
-fragment of heap references. Region identifiers `R0.0 ... R0.m` are 
-within the hierarchy rooted at `R0`; each has a set of references distinct from 
-all other regions (including its parent `R0`); and so on. 
+fragment of heap references. Region identifiers `R0.0 ... R0.m` are
+within the hierarchy rooted at `R0`; each has a set of references distinct from
+all other regions (including its parent `R0`); and so on.
 
 The `HyperHeap` module in F\*'s standard library defines this structure,
 a type `rid` for region ids, and a type `rref (r:rid) (a:Type)`, which is
@@ -4405,18 +4407,18 @@ val lemma_includes_refl: i:rid
          (ensures (includes i i))
          [SMTPat (includes i i)]
 
-val lemma_disjoint_includes: i:rid -> j:rid -> k:rid 
+val lemma_disjoint_includes: i:rid -> j:rid -> k:rid
 -> Lemma (requires (disjoint i j /\ includes j k))
          (ensures (disjoint i k))
          [SMTPat (disjoint i j);
           SMTPat (includes j k)]
 
-val lemma_extends_includes: i:rid -> j:rid 
+val lemma_extends_includes: i:rid -> j:rid
 -> Lemma (requires (extends j i))
          (ensures (includes i j))
          [SMTPat (extends j i)]
 
-val lemma_extends_disjoint: i:rid -> j:rid -> k:rid 
+val lemma_extends_disjoint: i:rid -> j:rid -> k:rid
 -> Lemma (requires (extends j i /\ extends k i /\ j<>k))
          (ensures (disjoint j k))
          [SMTPat (extends j i);
@@ -4463,7 +4465,7 @@ this is crucial for good automation in proofs.
 let sel (#a:Type) (#i:rid) (m:t) (r:rref i a) = Heap.sel (Map.sel m i) (as_ref r)
 let upd (#a:Type) (#i:rid) (m:t) (r:rref i a) (v:a) = Map.upd m i (Heap.upd (Map.sel m i) (as_ref r) v)
 ```
-### Stateful operations on regions and references 
+### Stateful operations on regions and references
 
 **Creating a new region** `HyperHeap` also provides four main stateful functions. The
 first of these, `new_region r0`, allocates a new, empty region rooted at `r0`
@@ -4511,16 +4513,16 @@ of heaps. Crucially, given a region ids `r1, ..., rn`, we intend to write
 (and, as before, any other regions that are newly allocated in `h1`). As
 we will see, generalizing modifies clauses to work with hierarchical
 region names is a crucial feature, both for compactness of specifications
-and for better automation. 
+and for better automation.
 
 
 ```
 type modifies (s:Set.set rid) (m0:t) (m1:t) =
   Map.Equal m1 (Map.concat m1 (Map.restrict (Set.complement (mod_set s)) m0))
 
-where 
+where
 val mod_set : Set.set rid -> GTot (Set.set rid)
-and forall (x:rid) (s:Set.set rid). 
+and forall (x:rid) (s:Set.set rid).
            Set.mem x (mod_set s) <==> (exists (y:rid). Set.mem y s /\ includes y x)
 ```
 
@@ -4537,8 +4539,8 @@ function with the `GTot` effect.
 
 ## Robot, fly!
 
-We now look at the use of hyper-heaps to solve our problem of 
-programming our robots. 
+We now look at the use of hyper-heaps to solve our problem of
+programming our robots.
 
 The main idea is to define our data structures in a way that distinct
 components of the robot are allocated in distinct regions, thereby
@@ -4621,7 +4623,7 @@ each case, the caller specifies `r0`, the region within which the object
 is to be allocated. We create a new sub-region of `r0`, allocate the
 object within in, prove that the region is fresh (meaning the initial
 heap does not contain that region, while the final heap does), and that
-the object is initialized as expected. Inthe case of `new_robot`, we also 
+the object is initialized as expected. Inthe case of `new_robot`, we also
 prove that the the returned `bot` satisfies the robot invariant.
 
 
@@ -4714,7 +4716,7 @@ let fly_robots b0 b1 =
 Extend this example by adding a function which takes a list of robots,
 each in a region disjoint from all others, and fly all of them.
 
-~~ ExerciseFragment {exname=robot2}
+~~ CodeFragment {filename=exercises/robot2 name=ex11a-robot}
 val fly_robot_army: ...
 ~~
 
@@ -4752,11 +4754,11 @@ for some set of references `{x1...xn}`. Consider also some predicate
 we need to prove the formula:
 
 ```
-Expanding definitions: 
+Expanding definitions:
   P (sel h0 y1) ... (sel h0 ym)
   /\ h1 = concat h1 (restrict (complement {x1..xn}) h0)
   ==> P (sel h1 y1) ... (sel h1 ym)
-``` 
+```
 In general, for an arbitrary uninterpreted predicate `P`, to prove this,
 one must prove an quadratic number of inequalities, e.g., to prove that
 `sel h1 y1 = sel h0 y1`, requires proving that `y1` is not equal to any
@@ -4793,12 +4795,12 @@ performance one would get without regions at all.
 
 <!--
 
-NS: I'm removing this section for the moment. It involves explain 
-a third model of the heap, augmented with permissions to deal with information 
+NS: I'm removing this section for the moment. It involves explain
+a third model of the heap, augmented with permissions to deal with information
 hiding etc. This is getting to be extremely advanced, particularly as it also involves
-reasoning about existentially quantified invariant predicates. It was nice to have 
-as a placeholder when it was the only non-trivial stateful example available in the tutorial. 
-But, that's no longer the case. We could restore it at some point, with a full explanation 
+reasoning about existentially quantified invariant predicates. It was nice to have
+as a placeholder when it was the only non-trivial stateful example available in the tutorial.
+But, that's no longer the case. We could restore it at some point, with a full explanation
 of the permission model etc., if we think that would be useful.
 
 ## Local state in two counters
@@ -5440,10 +5442,10 @@ assume val dec: key -> cipher -> Tot plain
 assume val enc: k:key -> p:plain -> c:cipher
 ```
 
-~ Exercise
+~ Exercise {#exencrypt}
 Refine the type of the encryption function to model the *correctness* property:
 A correctly generated ciphertext, decrypts to its plaintext.
-~~ ExerciseFragment {exname=ex12a-encrypt}
+~~ CodeFragment {filename=exercises/encrypt.fst name=ex13a-encrypt}
 assume val enc: k:key -> p:plain -> c:cipher
 ~~
 
