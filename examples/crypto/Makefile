@@ -1,8 +1,8 @@
-VERFILES=cca2.fst sha1.fst mac.fst sig.fst padding.fst mac3.fst # encrypt3.fst formatting.fst rpc.fst
+VERFILES=cca2.fst #sha1.fst mac.fst sig.fst padding.fst mac3.fst # encrypt3.fst formatting.fst rpc.fst
 MITLS=../../../mitls-fstar/libs/fst/
 
 include ../Makefile.include
-all: .all.crypto.ver acls-cap rpc merkle_tree
+all: .all.crypto.ver merkle_tree # rpc acls-cap
 
 .all.crypto.ver: $(VERFILES)
 	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --admit_fsi Seq $(addprefix $(FSTAR_HOME)/lib/, string.fst list.fst ext.fst classical.fst \
