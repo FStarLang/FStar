@@ -24,11 +24,13 @@
 
 #define WORD_SZB sizeof(void*)
 
+//a stack of pages represented as a linked list with downward (popward) links 
+// One page can store many F* stack frames. One F* stack frame can span many pages?
 typedef struct _Page {
-  void* memory;
-  void* alloc_ptr;
+  void* memory; // returned by malloc. the region between thiz.memory and this.limit_ptr can be used for storing client's data
+  void* alloc_ptr; // the absolute position within this.memory where the next allocation will happen
   void* limit_ptr;
-  void** frame_ptr;
+  void** frame_ptr; //location of frame pointer?
   struct _Page *prev;
 } Page;
 
