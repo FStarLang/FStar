@@ -5418,6 +5418,11 @@ val theap_inversion : #g:env -> #v:value -> #wp:typ ->
    Tot (either (theap_inversion_res v) (validity g tfalse))
 let theap_inversion g v wp ht = admit()
 
+val theap_inversion_empty : #v:value -> #wp:typ ->
+   ht:typing empty v (Cmp EfPure theap wp) ->
+   Tot(theap_inversion_res v)
+let theap_inversion_empty v wp ht = admit()
+
 type tref_inversion_res : exp -> Type =
 | TrefInversion : e:exp ->
     l:loc ->
@@ -5428,6 +5433,10 @@ val tref_inversion : #g:env -> #v:value -> #wp:typ ->
    Tot (either (tref_inversion_res v) (validity g tfalse))
 let tref_inversion g v wp ht = admit()
 
+val tref_inversion_empty : #v:value -> #wp:typ ->
+   ht:typing empty v (Cmp EfPure tref wp) ->
+   Tot(tref_inversion_res v)
+let tref_inversion_empty v wp ht = admit()
 
 type tint_inversion_res : exp -> Type =
 | TintInversion : e:exp ->
@@ -5439,10 +5448,33 @@ val tint_inversion : #g:env -> #v:value -> #wp:typ ->
    Tot (either (tint_inversion_res v) (validity g tfalse))
 let tint_inversion g v wp ht = admit()
 
+val tint_inversion_empty : #v:value -> #wp:typ ->
+   ht:typing empty v (Cmp EfPure tint wp) ->
+   Tot(tint_inversion_res v)
+let tint_inversion_empty v wp ht = admit()
+
+val styping_inversion_arrow_empty : #t1:typ -> #c1:cmp -> #t:typ ->
+  hst:styping empty (TArr t1 c1) t ->
+  Tot (styping_inv_arr_res empty t1 c1 t)
+let styping_inversion_arrow_empty t1 c1 t hst = magic()
+
+val value_inversion_empty : #e:exp{is_value e \/ is_EVar e} -> 
+                      #m:eff -> #t:typ -> #wp:typ ->
+                      ht:typing empty e (Cmp m t wp) ->
+		      Tot (typing empty e (tot t))
+let value_inversion_empty e m t wp = admit()
+
+
 val scmpex_efpure : #g:env -> #e:exp -> #c':cmp -> #c:cmp ->
    scmpex g e c' c ->
    Lemma (requires (Cmp.m c = EfPure)) (ensures (Cmp.m c' = EfPure))
 let scmpex_efpure g e c' c hsc = admit()
+
+val tysub_derived : #g:env -> #e:exp -> #m:eff -> #t:typ -> #wp:typ -> #t':typ ->
+   ht : typing g e (Cmp m t wp) ->
+   hst : styping g t t' ->
+   Tot (typing g e (Cmp m t' wp))
+let tysub_derived g e m t wp t' ht hst = magic()
 
 
 val pure_progress : #e : exp{not (is_value e)} -> #t:typ -> #wp:typ ->
@@ -5463,7 +5495,7 @@ match ht with
  else
   magic()
 )
-| TyApp #x1 #e1 #e2 #x2 #targs #tbodys #wps #wp1s #wp2s ht1 ht2 htot1 hk1 ->
+| TyApp #x1 #e1 #e2 #x2 #targs #tbodys #wps #wp1s #wp2s ht1 ht2 htot1 hk1 ~>
 (
  let tarr = TArr targs (Cmp EfPure tbodys wps) in
  if not (is_value e1) then
@@ -5490,7 +5522,7 @@ match ht with
          PureProgress (eint 42) (PsIf0 (eint 42) (eint 42))
        )
     )
-  | EApp e11 e12 -> 
+  | EApp e11 e12 ~> 
   (
    scmpex_efpure #empty #e1 #c' #(Cmp EfPure tarr wp1s) hsc;
    let TyApp #x1 #x2 #x3 #x4 #targs2 #tbodys2 #wps2 #wpfuns2 #wpargs2 htfuns2 htargs2 htotargs2 hktargs2 = ht' in
@@ -5510,15 +5542,41 @@ match ht with
      PureProgress (eapp2 e12 e2 (eapp2 (EConst (EcFixPure tx t' t'' wp)) e112 e12)) (PsFixPure tx t' t'' wp e112 e12 e2)
     )
     | EcUpd -> (
+      magic()(* SF : works in interaction but not at compilation *)
+      (*
       let TyConst _ _ _ = ht' in     
-      let hst3 : styping empty (econsts EcUpd) tarr3 = magic() in      
-      match styping_inversion_arrow #empty #theap #(tot (TArr tref (tot (TArr tint (tot theap))))) #tarr3 (GEmpty) hst3 with
-      | Inr temp -> magic() 
-      | Inl temp ->
-      (
-       let StypingInvArr x1 x2 hst3 hscbody3 = temp in
-       magic()
-      )
+      let hst3 : styping empty (econsts EcUpd) tarr3 = get_styping_from_scmpex #empty #e111 #c3 #(Cmp EfPure tarr3 wpfuns3) hsc3 in      
+      let StypingInvArr x1 x2 hst3 hscbody3 = styping_inversion_arrow_empty #theap #(tot (TArr tref (tot (TArr tint (tot theap))))) #tarr3 hst3 in
+      let hst2 : styping empty (TArr tref (tot (TArr tint (tot theap)))) tarr2 = 
+          let htotarg3 : typing empty e112 (tot targs3) = value_inversion_empty #e112 #EfPure #targs3 #wpargs3 htargs3 in
+          let tret3 = Cmp.t c2 in
+	  let hst : styping (eextend targs3 empty) (TArr tref (tot (TArr tint (tot theap)))) tbodys3 = SCmp.hs hscbody3 in
+          let hsttemp : styping empty (TArr tref (tot (TArr tint (tot theap)))) tret3 = let s = sub_ebeta e112 in subst_on_tot (sub_elam s) (TArr tint (tot theap)); subst_on_tot (sub_elam (sub_elam s)) theap; styping_substitution (sub_ebeta e112) hst (ebeta_hs #empty #e112 #targs3 htotarg3) in 
+          let hsttemp' : styping empty tret3 tarr2 = get_styping_from_scmpex #empty #e11 #c2 #(Cmp EfPure tarr2 wpfuns2) hsc2 in
+          SubTrans #empty #(TArr tref (tot (TArr tint (tot theap)))) #tret3 #tarr2 hsttemp hsttemp' 
+      in
+      let StypingInvArr x1 x2 hst2 hscbody2 = styping_inversion_arrow_empty #tref #(tot (TArr tint (tot (theap)))) #tarr2 hst2 in
+      let htotarg2 : typing empty e12 (tot targs2) = value_inversion_empty #e12 #EfPure #targs2 #wpargs2 htargs2 in
+      let hst1 : styping empty (TArr tint (tot theap)) tarr = 
+        let tret2 = Cmp.t c' in
+	let hsttbody : styping (eextend targs2 empty) (TArr tint (tot theap)) tbodys2 = SCmp.hs hscbody2 in
+        let hsttemp : styping empty (TArr tint (tot theap)) tret2 = subst_on_tot (sub_elam (sub_ebeta e12)) theap; styping_substitution (sub_ebeta e12) hsttbody (ebeta_hs #empty #e12 #targs2 htotarg2) in
+	SubTrans #empty #(TArr tint (tot theap)) #tret2 #tarr hsttemp hst 
+      in
+      let StypingInvArr x1 x2 hst1 _ = styping_inversion_arrow_empty #tint #(tot theap) #tarr hst1 in
+      let htarg1 : typing empty e2 (Cmp EfPure tint wp2s) =  
+	tysub_derived #empty #e2 #EfPure #targs #wp2s #tint ht2 hst1 in
+      let htarg2 : typing empty e12 (Cmp EfPure tref wpargs2) =
+	tysub_derived #empty #e12 #EfPure #targs2 #wpargs2 #tref htargs2 hst2 
+      in
+      let htarg3 : typing empty e112 (Cmp EfPure theap wpargs3) =
+	tysub_derived #empty #e112 #EfPure #targs3 #wpargs3 #theap htargs3 hst3
+      in
+      let TheapInversion _ h heqh = theap_inversion_empty #e112 #(wpargs3) htarg3 in
+      let TrefInversion _ l heql = tref_inversion_empty #e12 #(wpargs2) htarg2 in
+      let TintInversion _ i heqi = tint_inversion_empty #e2 #(wp2s) htarg1 in
+      PureProgress (eheap (upd_heap l i h)) (PsUpd h l i)
+      *)
     )
    )
    | EConst ec11 ->
