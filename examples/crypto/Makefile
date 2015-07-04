@@ -40,7 +40,8 @@ rpc-extract:
           $(addprefix $(FSTAR_HOME)/lib/, string.fst io.fst list.fst ext.fst classical.fst \
 					set.fsi set.fst \
 					heap.fst st.fst \
-					seq.fst seqproperties.fst ) Bytes.fst \
+					seq.fst seqproperties.fst ) \
+					$(MITLS)/Platform/Bytes.fst \
 					$(MITLS)/CoreCrypto/CoreCrypto.fst \
 					sha1.fst mac.fst formatting.fst rpc.fst  --debug high
 	ocamlfind ocamlopt -cclib -lcrypto -o rpc.exe -package batteries -linkpkg -g -thread $(addprefix -I ../../../mitls-fstar/libs/ml/, Platform CoreCrypto) -I \
