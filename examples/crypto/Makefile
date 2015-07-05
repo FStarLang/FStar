@@ -44,7 +44,7 @@ rpc-extract:
 					seq.fst seqproperties.fst ) \
 					$(addprefix $(MITLS)/libs/fst/,  Platform/Bytes.fst CoreCrypto/CoreCrypto.fst) \
 					sha1.fst mac.fst formatting.fst rpc.fst  --debug high
-	ocamlfind ocamlopt -cclib -lcrypto -o rpc.exe -package batteries -linkpkg -g -thread $(addprefix -I $(MITLS)/libs/ml/, Platform CoreCrypto) -I \
+	ocamlfind ocamlopt -cclib -I/usr/lib -cclib -lcrypto -o rpc.exe -package batteries -linkpkg -g -thread $(addprefix -I $(MITLS)/libs/ml/, Platform CoreCrypto) -I \
 	        $(FSTAR_HOME)/src/ocaml-output/ \
 					$(FSTAR_HOME)/src/ocaml-output/support.cmx \
 					$(addprefix $(MITLS)/libs/ml/,  Platform/platform.cmx CoreCrypto/CoreCrypto.cmxa) \
