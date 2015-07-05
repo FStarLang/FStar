@@ -1,5 +1,5 @@
 VERFILES=cca2.fst #sha1.fst mac.fst sig.fst padding.fst mac3.fst # encrypt3.fst formatting.fst rpc.fst
-MITLS=../../../mitls-fstar/libs/fst/
+MITLS=../../../mitls-fstar
 
 include ../Makefile.include
 all: .all.crypto.ver merkle_tree # rpc acls-cap
@@ -23,6 +23,7 @@ acls-cap: sha1.fst mac.fst ../security/acls2.fst acls-cap.fst
 	heap.fst st.fst \
 	seq.fsi seqproperties.fst ) $^
 
+# This relies on libs/ml/Platform/Bytes.fst and libs/ml/CoreCrypto/CoreCrypto.fst from miTLS*
 # --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1
 rpc: formatting.fst sha1.fst mac.fst rpc.fst
 	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --admit_fsi Seq  \
@@ -30,25 +31,23 @@ rpc: formatting.fst sha1.fst mac.fst rpc.fst
 					set.fsi set.fst \
 					heap.fst st.fst \
 					seq.fsi seqproperties.fst )  \
-					$(addprefix $(MITLS),  Platform/Bytes.fst CoreCrypto/CoreCrypto.fst) \
+					$(addprefix $(MITLS)/libs/fst/,  Platform/Bytes.fst CoreCrypto/CoreCrypto.fst) \
 					sha1.fst mac.fst formatting.fst rpc.fst
 
-
-
+# This relies on libs/ml/Platform/Bytes.fst and libs/ml/CoreCrypto/CoreCrypto.fst from miTLS*
+# as well as libs/ml/Platform/platform.cmx and libs/ml/CoreCrypto/CoreCrypto.cmxa
 rpc-extract:
 	$(FSTAR) --codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml \
           $(addprefix $(FSTAR_HOME)/lib/, string.fst io.fst list.fst ext.fst classical.fst \
 					set.fsi set.fst \
 					heap.fst st.fst \
 					seq.fst seqproperties.fst ) \
-					$(MITLS)/Platform/Bytes.fst \
-					$(MITLS)/CoreCrypto/CoreCrypto.fst \
+					$(addprefix $(MITLS)/libs/fst/,  Platform/Bytes.fst CoreCrypto/CoreCrypto.fst) \
 					sha1.fst mac.fst formatting.fst rpc.fst  --debug high
-	ocamlfind ocamlopt -cclib -lcrypto -o rpc.exe -package batteries -linkpkg -g -thread $(addprefix -I ../../../mitls-fstar/libs/ml/, Platform CoreCrypto) -I \
+	ocamlfind ocamlopt -cclib -lcrypto -o rpc.exe -package batteries -linkpkg -g -thread $(addprefix -I $(MITLS)/libs/ml/, Platform CoreCrypto) -I \
 	        $(FSTAR_HOME)/src/ocaml-output/ \
 					$(FSTAR_HOME)/src/ocaml-output/support.cmx \
-					../../../mitls-fstar/libs/ml/Platform/platform.cmx \
-					../../../mitls-fstar/libs/ml/CoreCrypto/CoreCrypto.cmxa \
+					$(addprefix $(MITLS)/libs/ml/,  Platform/platform.cmx CoreCrypto/CoreCrypto.cmxa) \
 					Seq.ml SeqProperties.ml SHA1.ml MAC.ml Formatting.ml RPC.ml
 
 cnt-protocol: cnt-format.fst cnt-format.fsi cnt-mac.fst cnt-protocol.fst
