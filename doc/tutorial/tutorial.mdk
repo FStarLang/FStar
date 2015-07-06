@@ -4716,7 +4716,7 @@ let fly_robots b0 b1 =
 Extend this example by adding a function which takes a list of robots,
 each in a region disjoint from all others, and fly all of them.
 
-~~ CodeFragment {filename=exercises/robot2 name=ex11a-robot}
+~~ CodeFragment {filename=exercises/robot2.fst name=ex11a-robot}
 val fly_robot_army: ...
 ~~
 
