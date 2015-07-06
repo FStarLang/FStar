@@ -24,7 +24,7 @@ module RPC
 open String
 open IO
 
-let init_print = print_string "\n Initiallizing \n"
+let init_print = print_string "\ninitializing...\n\n"
 
 open Platform.Bytes
 (*open Seq
