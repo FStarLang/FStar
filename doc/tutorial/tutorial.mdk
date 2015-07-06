@@ -32,6 +32,7 @@ Colorizer     : fstar
 .pre-fragment : margin-bottom=0pt .framed padding=0.5ex
 
 ~ExerciseFragment : replace="~Begin Fragment {link=code/exercises/&exname;.fst}&nl;&source;&nl;~End Fragment&nl;"
+
 ~CodeFragment : replace="~Begin Fragment {link=code/&filename;:&label;&name;}&nl;&source;&nl;~End Fragment&nl;"
 
 
@@ -4721,7 +4722,7 @@ val fly_robot_army: ...
 ~~
 
 ~~Answer
-~~~ SolutionFragment {exname=robot2}
+~~~ CodeFragment {filename=solutions/robot2.fst name=so11a-robot}
 val fly_robot_army:  #rs:Set.set rid
                   -> bs:bots rs
                   -> ST unit
@@ -4959,7 +4960,7 @@ Relying on acls2.fst and mac.fst, implement a pair of functions with
 the following specification, and verify them by typing under the
 security assumption that HMACSHA1 is INT-CPA.
 
-~~ ExerciseFragment {exname=ex9a-acls-cap}
+~~ CodeFragment {exname=ex9a-acls-cap}
 val issue:  f:file{ canRead f } -> SHA1.tag
 val redeem: f:file -> m:SHA1.tag -> u:unit{ canRead f }
 ~~
