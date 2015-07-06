@@ -4234,12 +4234,12 @@ Change `shift_x` to the function `shift` below that moves both the `x` and `y` c
 of its argument by some amount. Prove that calling this function in
 `shift_p1` does not change `p2`.
 
-~~ ExerciseFragment {exname=ex10-shift}
+~~ ExerciseFragment {filename=exercises/ex10-shift.fst name=ex10b-shift}
 let shift p = Point.x p := 17; Point.y p := 18
 ~~
 
 ~~Answer
-~~~ SolutionFragment {exname=ex10-shift}
+~~~ SolutionFragment {filename=solutions/ex10-shift.fst name=so10b-shift}
 let shift p = Point.x p := 17; Point.y p := 18
 ~~~
 ~~
