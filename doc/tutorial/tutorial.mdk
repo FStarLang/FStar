@@ -4960,7 +4960,7 @@ Relying on acls2.fst and mac.fst, implement a pair of functions with
 the following specification, and verify them by typing under the
 security assumption that HMACSHA1 is INT-CPA.
 
-~~ CodeFragment {filename=examples/acls-cap name=ex9a-acls-cap}
+~~ CodeFragment {filename=examples/acls-cap.fst name=ex9a-acls-cap}
 val issue:  f:file{ canRead f } -> SHA1.tag
 val redeem: f:file -> m:SHA1.tag -> u:unit{ canRead f }
 ~~
