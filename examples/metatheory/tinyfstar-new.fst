@@ -1264,7 +1264,8 @@ let tfixpureF tx t'' wp = TArr (tesh tx) (tot (TArr (tfixpuref tx t'' wp) (Cmp E
 let tfixpuret tx t'' wp = TArr (teshg 2 tx) (Cmp EfPure (TEApp (teshg 3 t'') (EVar 0)) (TEApp (teshg 3 wp) (EVar 0)))
 let tfixpure tx t' t'' wp = TArr (tfixpured tx t') (tot (TArr (tfixpureF tx t'' wp) (tot (tfixpuret tx t'' wp))))
 
-let tfixomegat tx t' wp = TArr (tesh tx) (Cmp EfAll (TEApp (teshg 2 t') (EVar 0)) (TEApp (teshg 2 wp) (EVar 0)))
+let tfixomegatret tx t' wp = (Cmp EfAll (TEApp (teshg 2 t') (EVar 0)) (TEApp (teshg 2 wp) (EVar 0)))
+let tfixomegat tx t' wp = TArr (tesh tx) (tfixomegatret tx t' wp)
 let tfixomegaF tx t' wp = TArr (tx) (tot (TArr (tfixomegat tx t' wp) (Cmp EfAll (TEApp (teshg 2 t') (EVar 1)) (TEApp (teshg 2 wp) (EVar 1)))))
 let tfixomega tx t' wp = TArr (tfixomegaF tx t' wp) (tot (tfixomegat tx t' wp))
 val econsts : econst -> Tot typ
@@ -5493,9 +5494,15 @@ match ht with
   let PureProgress eg' hstep = pure_progress #eg #tint #wpg htg in
   PureProgress (EIf0 eg' et ee) (PsIf0E0 #eg #eg' et ee hstep)
  else
-  magic()
+ (
+  let TintInversion _ i heq = tint_inversion_empty #eg #wpg htg in
+  if i = 0 then
+    PureProgress (et) (PsIf0 et ee)
+  else
+    PureProgress (ee) (PsIfS i et ee)
+ )
 )
-| TyApp #x1 #e1 #e2 #x2 #targs #tbodys #wps #wp1s #wp2s ht1 ht2 htot1 hk1 ~>
+| TyApp #x1 #e1 #e2 #x2 #targs #tbodys #wps #wp1s #wp2s ht1 ht2 htot1 hk1 ->
 (
  let tarr = TArr targs (Cmp EfPure tbodys wps) in
  if not (is_value e1) then
@@ -5522,7 +5529,7 @@ match ht with
          PureProgress (eint 42) (PsIf0 (eint 42) (eint 42))
        )
     )
-  | EApp e11 e12 ~> 
+  | EApp e11 e12 -> 
   (
    scmpex_efpure #empty #e1 #c' #(Cmp EfPure tarr wp1s) hsc;
    let TyApp #x1 #x2 #x3 #x4 #targs2 #tbodys2 #wps2 #wpfuns2 #wpargs2 htfuns2 htargs2 htotargs2 hktargs2 = ht' in
@@ -5582,10 +5589,73 @@ match ht with
    | EConst ec11 ->
    (
     match ec11 with
-    | EcFixOmega tx t' wp -> magic() (*contradiction with effects*)
-    | EcSel -> magic() (*PsSel*)
-    | EcAssign -> magic() (*contradiction with effects*)
+    | EcFixOmega tx t' wp ->
+    (
+     magic()(*
+     let TyConst _ _ _ = ht' in
+     let hst2 : styping empty (econsts (EcFixOmega tx t' wp)) tarr2 = get_styping_from_scmpex #empty #e11 #c2 #(Cmp EfPure tarr2 wpfuns2) hsc2 in
+     let StypingInvArr x1 x2 hst2 hscbody2 = styping_inversion_arrow_empty #(tfixomegaF tx t' wp) #(tot (tfixomegat tx t' wp)) #tarr2 hst2 in
+     let hst1 : styping empty (TArr tx (Cmp EfAll (TEApp (tesh t') (EVar 0)) (TEApp (tesh wp) (EVar 0)))) tarr = 
+       let tret2 = Cmp.t c' in
+       let hsttbody : styping (eextend targs2 empty) (tfixomegat tx t' wp) tbodys2 = SCmp.hs hscbody2 in
+       let htot2 : typing empty e12 (tot targs2) = value_inversion_empty #e12 #EfPure #targs2 #wpargs2 htargs2 in
+       let lemma2 : unit -> Lemma (csubst (sub_elam (sub_ebeta e12)) (tfixomegatret tx t' wp) = Cmp EfAll (TEApp (tesh t') (EVar 0)) (TEApp (tesh wp) (EVar 0))) = magic() in
+       let hsttemp : styping empty (TArr tx (Cmp EfAll (TEApp (tesh t') (EVar 0)) (TEApp (tesh wp) (EVar 0)))) tret2 = tsubst_ebeta_shift e12 tx; lemma2 (); styping_substitution (sub_ebeta e12) (hsttbody) (ebeta_hs #empty #e12 #targs2 htot2) in 
+       SubTrans #empty #(TArr tx (Cmp EfAll (TEApp (tesh t') (EVar 0)) (TEApp (tesh wp) (EVar 0)))) #tret2 #tarr hsttemp hst
+     in
+     let StypingInvArr x1 x2 hst1 hscbody1 = styping_inversion_arrow_empty #tx #(Cmp EfAll (TEApp (tesh t') (EVar 0)) (TEApp (tesh wp) (EVar 0))) #tarr hst1 in
+     let SCmp x1 x2 x3 x4 _ _ _ _ _ _ = hscbody1 in
+     PureProgress (eint 42) (PsIf0 (eint 42) (eint 42))
+     *)
+    )
+    | EcSel ->
+    (
+     magic()(*
+     let TyConst _ _ _ = ht' in
+     let hst2 : styping empty (econsts (EcSel)) tarr2 = get_styping_from_scmpex #empty #e11 #c2 #(Cmp EfPure tarr2 wpfuns2) hsc2 in
+     let StypingInvArr x1 x2 hst2 hscbody2 = styping_inversion_arrow_empty #(theap) #(tot (TArr tref (tot tint))) #tarr2 hst2 in
+     let hst1 : styping empty (TArr tref (tot tint)) tarr = 
+       let tret2 = Cmp.t c' in
+       let hsttbody : styping (eextend targs2 empty) (TArr tref (tot (tint))) tbodys2 = SCmp.hs hscbody2 in
+       let htot2 : typing empty e12 (tot targs2) = value_inversion_empty #e12 #EfPure #targs2 #wpargs2 htargs2 in
+       let lemma2 : unit -> Lemma (tsubst (sub_ebeta e12) (TArr tref (tot (tint))) = TArr tref (tot tint)) = fun _ -> subst_on_tot (sub_elam (sub_ebeta e12)) tint in
+       let hsttemp : styping empty (TArr tref (tot (tint))) tret2 = lemma2 (); styping_substitution (sub_ebeta e12) (hsttbody) (ebeta_hs #empty #e12 #targs2 htot2) in 
+       SubTrans #empty #(TArr tref (tot (tint))) #tret2 #tarr hsttemp hst
+     in
+     let StypingInvArr x1 x2 hst1 hscbody1 = styping_inversion_arrow_empty #tref #(tot (tint)) #tarr hst1 in
+     let htheap : typing empty e12 (Cmp EfPure theap wpargs2) =
+       tysub_derived #empty #e12 #EfPure #targs2 #wpargs2 #theap htargs2 hst2
+     in
+     let htref : typing empty e2 (Cmp EfPure tref wp2s) =
+       tysub_derived #empty #e2 #EfPure #targs #wp2s #tref ht2 hst1
+     in
+     let TrefInversion x2 l heql = tref_inversion_empty #e2 htref in
+     let TheapInversion x1 h heqh = theap_inversion_empty #e12 #wpargs2 htheap in
+     PureProgress (eint (h l)) (PsSel h l)
+     *)
+    )
+    | EcAssign -> 
+    (
+     magic()(*
+     let TyConst _ _ _ = ht' in
+     let hst2 : styping empty (econsts EcAssign) tarr2 = get_styping_from_scmpex #empty #e11 #c2 #(Cmp EfPure tarr2 wpfuns2) hsc2 in
+     let StypingInvArr x1 x2 hst2 hscbody2 = styping_inversion_arrow_empty #tref #(tot (TArr tint (cmp_assign (EVar 1) (EVar 0)))) #tarr2 hst2 in
+     let hst1 : styping empty (TArr tint (cmp_assign e12 (EVar 0))) tarr = 
+       let tret2 = Cmp.t c' in
+       let hsttbody : styping (eextend targs2 empty) (TArr tint (cmp_assign (EVar 1) (EVar 0))) tbodys2 = SCmp.hs hscbody2 in
+       let htot2 : typing empty e12 (tot targs2) = value_inversion_empty #e12 #EfPure #targs2 #wpargs2 htargs2 in
+       let lemma2 : unit -> Lemma (csubst (sub_elam (sub_ebeta e12)) (cmp_assign (EVar 1) (EVar 0)) = cmp_assign e12 (EVar 0)) = magic() in
+       let hsttemp : styping empty (TArr tint (cmp_assign e12 (EVar 0))) tret2 = lemma2 (); styping_substitution (sub_ebeta e12) (hsttbody) (ebeta_hs #empty #e12 #targs2 htot2) in 
+       SubTrans #empty #(TArr tint (cmp_assign e12 (EVar 0))) #tret2 #tarr hsttemp hst
+     in
+     let StypingInvArr x1 x2 hst1 hscbody1 = styping_inversion_arrow_empty #tint #(cmp_assign e12 (EVar 0)) #tarr hst1 in
+     let SCmp x1 x2 x3 x4 _ _ _ _ _ _ = hscbody1 in
+     PureProgress (eint 42) (PsIf0 (eint 42) (eint 42))
+     *)
+    )
    )
   )
  )
 )
+
+
