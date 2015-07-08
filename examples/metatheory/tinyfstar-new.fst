@@ -6,14 +6,28 @@
 //    it prints a LOT of noisy debugging in the regression tests
 
 (*TODO list :
- * code kdg_* to manipulate kinds with binding, wp etc …
+ * finish the proof of preservation (KTApp and KEApp)
+ * finish the case analysis in epstep_substitution
+ * write *subst_on_neappears_all
+ * write *subst_with_sub_id
+ * write tsubst_with_almost_eq
+ * write the substitution lemma on type encodings (subst_on_bindall etc …)
+ * write the v_* validity derived judgements
+ * *subst_on_ebeta, *subst_on_tbeta
+ * write kdg_* to manipulate kinds with binding, wp etc …
+ * write kwf_*
+ * write inversion_tforalle / inversion_tforallt
+ * finish validity_derived
+ * finish styping inversion arrow lemmas
  * simplification of TcPrecedes to compare just int ? Anyway there is still a kinding problem where TcPrecedes is used FIXME
+ * add opaque to functions
  * understand why VPreceedsIntro in substitution lemma is checked without using subst_on_value
  * update to finish with the adding of PsUpd, PsSel and PsFixPure
+ * remove the useless rule about heap (since we added PsUpd and PsSel)
 *)
 
 (*TODO in tiny-fstar.txt
- * update app_inversion : strenghten the lemma to return all the content of the new T-App
+ * simplify the proof of preservation : remove the useless preservation lemmas and do an induction on typing judgement
 *)
 
 module TinyFStarNew
@@ -464,6 +478,9 @@ let sub_ebeta e = Sub (esub_ebeta e) (tsub_id)
 
 val esubst_ebeta : exp -> exp -> Tot exp
 let esubst_ebeta e = esubst (sub_ebeta e)
+
+val csubst_ebeta : exp -> cmp -> Tot cmp
+let csubst_ebeta e = csubst (sub_ebeta e)
 
 val tsubst_ebeta : exp -> typ -> Tot typ
 let tsubst_ebeta e = tsubst (sub_ebeta e)
@@ -3507,6 +3524,10 @@ let kdg_return_pure g e t ht hk =
 val kdg_tint : g:env -> Tot (kinding g tint KType)
 let kdg_tint g = KConst #g #TcInt (WFTcOther g TcInt) 
 
+val kdg_tb : g:env -> tc:tconst{is_TcInt tc \/ is_TcHeap tc \/ is_TcRefInt tc} ->
+   Tot (kinding g (TConst tc) KType)
+let kdg_tb g tc = admit()
+
 val kdg_econst : g:env -> ec:econst -> hwf : ecwf g ec -> Tot (kinding g (econsts ec) KType)
 let kdg_econst g ec hwf = admit()
 
@@ -3802,7 +3823,6 @@ match hst with
  let Conj hkt2 hkt3 = styping_derived hs23 in
  Conj hkt1 hkt3 
 )
-|_ -> admit()
 and kinding_derived g t k hwf hk =
 match hk with
 | KVar #g a -> get_kwf_from_ewf hwf a
@@ -3841,8 +3861,6 @@ match hsk with
 (
  let gext = textend k2 g in
  let Conj hkw2 hkw1 : cand (kwf g k2) (kwf g k1) = skinding_derived hs21 in
-(* SF : problem with this rule. I can not go from textend k2 g to textend k1 g so
- I am stuck*)
  let Conj hkw1' hkw2' : cand (kwf gext k1') (kwf gext k2') = skinding_derived hs12' in
  let hkwf2 : kwf g (KKArr k2 k2') = WfKArr hkw2 hkw2' in
  Conj hkwf1 hkwf2
@@ -3854,10 +3872,7 @@ match hsk with
  let Conj hkwf1' hkwf2' : cand (kwf gext k1) (kwf gext k2) = skinding_derived hs12' in
  let hkwf2 : kwf g (KTArr t2 k2) = WfTArr hk2 hkwf2' in
  Conj hkwf1 hkwf2
- (*… Here too*)
 )
-(*validity_derived seems to need a lot of inversion lemma, and is not used in the
- other proofs. So maybe I finish it later ?*)
 //}}}
 (********************************************)
 (* Subtyping/Subkinding Substitution Arrows *)
@@ -5438,10 +5453,6 @@ val theap_inversion : #g:env -> #v:value -> #wp:typ ->
    Tot (either (theap_inversion_res v) (validity g tfalse))
 let theap_inversion g v wp ht = admit()
 
-val theap_inversion_empty : #v:value -> #wp:typ ->
-   ht:typing empty v (Cmp EfPure theap wp) ->
-   Tot(theap_inversion_res v)
-let theap_inversion_empty v wp ht = admit()
 
 type tref_inversion_res : exp -> Type =
 | TrefInversion : e:exp ->
@@ -5453,10 +5464,6 @@ val tref_inversion : #g:env -> #v:value -> #wp:typ ->
    Tot (either (tref_inversion_res v) (validity g tfalse))
 let tref_inversion g v wp ht = admit()
 
-val tref_inversion_empty : #v:value -> #wp:typ ->
-   ht:typing empty v (Cmp EfPure tref wp) ->
-   Tot(tref_inversion_res v)
-let tref_inversion_empty v wp ht = admit()
 
 type tint_inversion_res : exp -> Type =
 | TintInversion : e:exp ->
@@ -5516,6 +5523,12 @@ val scmpex_efpure : #g:env -> #e:exp -> #c':cmp -> #c:cmp ->
    Lemma (requires (Cmp.m c = EfPure)) (ensures (Cmp.m c' = EfPure))
 let scmpex_efpure g e c' c hsc = admit()
 
+
+
+
+
+(*
+//{{{
 val tint_inversion_empty' : #v:value -> #t:typ -> #wp:typ ->
    ht:typing empty v (Cmp EfPure t wp) ->
    hv:validity empty (teqtype t tint) ->
@@ -5629,20 +5642,301 @@ match ht with
    | EConst ec11 ->
    (
     match ec11 with
-    | EcFixPure tx t' t'' wp -> magic()
-    | EcUpd -> magic()
+    | EcFixPure tx t' t'' wp ->
+    (
+      (* It is still the same argument, but it is still too hard to manipulate *)
+      let targ : typ = magic() in
+      let cbody : cmp = magic() in
+      let hst : styping empty (TArr targ cbody) t = magic() in
+      tint_inversion_empty_helper v targ cbody t hst hv
+    ) 
+    | EcUpd ~>
+    (
+     let TyConst _ _ _ = ht' in
+     let hst2 = get_styping_from_scmpex #empty #e11 #c2 #(Cmp EfPure tarr2 wpfuns2) hsc2 in
+     let StypingInvArr x1 x2 hstarg2 hscbody2 = styping_inversion_arrow_empty #theap #(tot (TArr tref (tot (TArr tint (tot theap))))) #tarr2 hst2 in
+     let tarrb = (TArr tref (tot (TArr tint (tot theap)))) in
+     let hst : styping (eextend targs2 empty) tarrb tbodys2 = SCmp.hs hscbody2 in
+     let htotarg2 : typing empty e12 (tot targs2) = magic() in
+     let lemma : unit -> Lemma (tsubst_ebeta e12 tarrb = tarrb) = magic() in
+     (*
+     fun x -> 
+     (
+       subst_on_tot (sub_elam (sub_ebeta e12)) (TArr tint (tot theap));
+       subst_on_tot (sub_elam (sub_elam (sub_ebeta e12))) theap
+       (* SF : this proof should be able to work … *)
+     )
+     *)
+     let hsttemp : styping empty (tarrb) (Cmp.t c1) = 
+       lemma ();
+       styping_substitution (sub_ebeta e12) hst (ebeta_hs #empty #e12 #targs2 htotarg2) 
+     in
+     let hst1 : styping empty tarrb tarr1 = 
+       SubTrans #empty #(TArr tref (tot (TArr tint (tot (theap))))) #(Cmp.t c1) #tarr1 hsttemp hst1
+     in
+     let StypingInvArr x1 x2 hstarg1 hscbody1 = styping_inversion_arrow_empty #tref #(tot (TArr tint (tot (theap)))) #tarr1 hst1 in
+     let hst : styping (eextend targs1 empty) (TArr tint (tot (theap))) tbodys1 = SCmp.hs hscbody1 in
+     let hst : styping empty (TArr tint (tot theap)) (tsubst_ebeta e2 tbodys1) = 
+       let htotarg1 : typing empty e2 (tot targs1) = magic() in
+       subst_on_tot (sub_elam (sub_ebeta e2)) theap;
+       styping_substitution (sub_ebeta e2) hst (ebeta_hs #empty #e2 #targs1 htotarg1) 
+     in
+     let targ = tint in
+     let cbody = tot theap in
+     tint_inversion_empty_helper v targ cbody t hst hv
+    )
    )
   )
  )
 )
+//}}}
+*)
+val tb_inversion_styping' : #t':typ -> #t:typ -> #tc:tconst{is_TcHeap tc \/ is_TcInt tc \/ is_TcRefInt tc} ->
+   hst : styping empty t' t ->
+   hv : validity empty (teqtype t (TConst tc)) ->
+   Tot (validity empty (teqtype t' (TConst tc)))
+(decreases %[hst])
+let rec tb_inversion_styping' t' t tc hst hv =
+match hst with
+| SubConv t' hv2 _ _ -> v_eq_trant #empty #t' #t #(TConst tc) #KType hv2 hv
+| SubTrans #x1 #t1 #t2 #t3 hs12 hs23 -> 
+(
+ let hv2 : validity empty (teqtype t2 (TConst tc)) = tb_inversion_styping' #t2 #t3 #tc hs23 hv in
+ tb_inversion_styping' #t1 #t2 #tc hs12 hv2
+)
+| SubFun #g #t #t' #c' #c hstarg hsc hk' ->
+(
+ let Conj hktarr' hktarr = styping_derived #empty #(TArr t' c') #(TArr t c) hst in
+ let hvnot : validity empty (tnot (teqtype (TArr t c) (TConst tc))) = VDistinctTH #empty #(TArr t c) #(TConst tc) hktarr (kdg_tb empty tc) in
+ let hvfalse : validity empty tfalse = v_impl_elim #empty #(teqtype (TArr t c) (TConst tc)) #tfalse hvnot hv in
+ let hv : validity empty (teqtype (TArr t' c') (TConst tc)) = empty_consistent hvfalse; hv in
+ hv
+)
+type tb_inversion_res : exp -> tconst -> Type =
+| TcHeapInversion : e : exp -> 
+                    theap_inversion_res e ->
+		    tb_inversion_res e TcHeap
+| TcIntInversion : e:exp ->
+                   tint_inversion_res e ->
+		   tb_inversion_res e TcInt
+| TcRefInversion : e:exp ->
+                    tref_inversion_res e ->
+		    tb_inversion_res e TcRefInt
+
+val tb_inversion_empty_helper :
+   e:exp -> targ : typ -> cbody : cmp -> t:typ -> tc:tconst{is_TcHeap tc \/ is_TcInt tc \/ is_TcRefInt tc} ->
+   hst : styping empty (TArr targ cbody) t ->
+   hv : validity empty (teqtype t (TConst tc)) ->
+   Tot (tb_inversion_res e tc)
+let tb_inversion_empty_helper e targ cbody t tc hst hv =
+  let Conj hktarr hk = styping_derived #empty #(TArr targ cbody) #t hst in
+  let hv : validity empty (teqtype (TArr targ cbody) (TConst tc)) = tb_inversion_styping' #(TArr targ cbody) #t #tc hst hv in
+  let hvnot : validity empty (tnot (teqtype (TArr targ cbody) (TConst tc))) = VDistinctTH #empty #(TArr targ cbody) #(TConst tc) hktarr (kdg_tb empty tc) in
+   let hvfalse : validity empty tfalse = v_impl_elim #empty #(teqtype (TArr targ cbody) (TConst tc)) #tfalse hvnot hv in
+   empty_consistent hvfalse; TcIntInversion e (TintInversion e 42 (Eq exp (EConst (EcInt 42))))
+
+val tb_inversion_empty : #v:value -> #t:typ -> #wp:typ -> #tc:tconst{is_TcHeap tc \/ is_TcInt tc \/ is_TcRefInt tc} ->
+   ht:typing empty v (Cmp EfPure t wp) ->
+   hv:validity empty (teqtype t (TConst tc)) ->
+   Tot (tb_inversion_res v tc)
+(decreases %[ht])
+let rec tb_inversion_empty v t wp tc ht hv =
+//{{{
+match ht with
+| TySub #x1 #x2 #c' #c ht' hsc ~>
+(
+ let Cmp mc typec wpc = c in
+ let Cmp mc' typec' wpc' = c' in
+ let hst : styping empty typec' typec = SCmp.hs hsc in
+ let hv : validity empty (teqtype typec' (TConst tc)) = tb_inversion_styping' #typec' #typec #tc hst hv in
+ tb_inversion_empty #v #typec' #wpc' #tc ht' hv
+)
+| TyRet #x1 #x2 t htot ->
+(
+ tb_inversion_empty #v #t #(tot_wp t) #tc htot hv
+)
+| TyConst _ c hwf ->
+(
+ match c with
+ | EcInt i -> if tc = TcInt then TcIntInversion v (TintInversion v i (Eq exp (EConst (EcInt i))))
+              else
+	      (
+	       let hk : kinding empty (econsts c) KType = kdg_econst empty c hwf in
+	       let hvnot : validity empty (tnot (teqtype t (TConst tc))) = VDistinctTH #empty #t #(TConst tc) hk (kdg_tb empty tc) in
+	       let hvfalse : validity empty tfalse = v_impl_elim #empty #(teqtype t (TConst tc)) #tfalse hvnot hv in
+	       empty_consistent hvfalse; TcIntInversion v (TintInversion v 42 (Eq exp (EConst (EcInt 42))))
+	      )
+ | EcLoc l -> if tc = TcRefInt then TcRefInversion v (TrefInversion v l (Eq exp (EConst (EcLoc l))))
+              else
+	      (
+	       let hk : kinding empty (econsts c) KType = kdg_econst empty c hwf in
+	       let hvnot : validity empty (tnot (teqtype t (TConst tc))) = VDistinctTH #empty #t #(TConst tc) hk (kdg_tb empty tc) in
+	       let hvfalse : validity empty tfalse = v_impl_elim #empty #(teqtype t (TConst tc)) #tfalse hvnot hv in
+	       empty_consistent hvfalse; TcIntInversion v (TintInversion v 42 (Eq exp (EConst (EcInt 42))))
+	      )
+ | EcHeap h -> if tc = TcHeap then TcHeapInversion v (TheapInversion v h (Eq exp (EConst (EcHeap h))))
+               else
+	       (
+	       let hk : kinding empty (econsts c) KType = kdg_econst empty c hwf in
+	       let hvnot : validity empty (tnot (teqtype t (TConst tc))) = VDistinctTH #empty #t #(TConst tc) hk (kdg_tb empty tc) in
+	       let hvfalse : validity empty tfalse = v_impl_elim #empty #(teqtype t (TConst tc)) #tfalse hvnot hv in
+	       empty_consistent hvfalse; TcIntInversion v (TintInversion v 42 (Eq exp (EConst (EcInt 42))))
+	       )
+ | EcUnit
+ | EcBang
+ | EcAssign
+ | EcSel
+ | EcUpd
+ | EcFixPure _ _ _ _
+ | EcFixOmega _ _ _ ->(
+	       let hk : kinding empty (econsts c) KType = kdg_econst empty c hwf in
+	       let hvnot : validity empty (tnot (teqtype t (TConst tc))) = VDistinctTH #empty #t #(TConst tc) hk (kdg_tb empty tc) in
+	       let hvfalse : validity empty tfalse = v_impl_elim #empty #(teqtype t (TConst tc)) #tfalse hvnot hv in
+	       empty_consistent hvfalse; TcIntInversion v (TintInversion v 42 (Eq exp (EConst (EcInt 42))))
+
+   )
+)
+| TyAbs #x1 #targ #ebody m tbody wpbody hktarg htbody ->
+(
+ let hk : kinding empty (TArr targ (Cmp m tbody wpbody)) KType = let TypingDerived hk _ _ = typing_derived #empty #(ELam targ ebody) #EfPure #(TArr targ (Cmp m tbody wpbody) ) (GEmpty) ht in hk in
+ let hvnot : validity empty (tnot (teqtype t (TConst tc))) = VDistinctTH #empty #t #(TConst tc) hk (kdg_tb empty tc) in
+ let hvfalse : validity empty tfalse = v_impl_elim #empty #(teqtype t (TConst tc)) #tfalse hvnot hv in
+ empty_consistent hvfalse; TcIntInversion v (TintInversion v 42 (Eq exp (EConst (EcInt 42))))
+)
+| TyApp #x1 #e1 #e2 #x2 #targs1 #tbodys1 #wps1 #wpfuns1 #wpargs1 htfuns1 htargs1 htotargs1 hkargs1 ->
+(
+ let tarr1 = TArr targs1 (Cmp EfPure tbodys1 wps1) in
+ (
+  let RemoveSub c1 hsc1 ht' = remove_subtyping #empty #e1 #(Cmp EfPure tarr1 wpfuns1) (GEmpty) htfuns1 in
+  let hst1 : styping empty (Cmp.t c1) tarr1 = get_styping_from_scmpex #empty #e1 #c1 #(Cmp EfPure tarr1 wpfuns1) hsc1 in
+  match e1 with
+  | EConst ec ->
+    (
+     let TyConst _ _ _ = ht' in
+     match ec with
+     | EcFixOmega _ _ _
+     | EcFixPure _ _ _ _ ->
+     (
+      (* Partially applied EcFixPure with 1 argument, so its type is a supertype of an arrow. It is too hard to manipulate the type of fixpure so I skip this part. For a more complete proof, see EcUpd. The proof is basically the same *)
+      let targ : typ = magic() in
+      let cbody : cmp = magic() in
+      let hst : styping empty (TArr targ cbody) t = magic() in
+      tb_inversion_empty_helper v targ cbody t tc hst hv
+     )
+     | EcUpd ->
+     (
+      let StypingInvArr x1 x2 hstarg1 hscbody1 = styping_inversion_arrow_empty #theap #(tot (TArr tref (tot (TArr tint (tot theap))))) #tarr1 hst1 in
+      let hst : styping (eextend targs1 empty) (TArr tref (tot (TArr tint (tot theap)))) tbodys1 = SCmp.hs hscbody1 in
+      let htotarg : typing empty e2 (tot targs1) = value_inversion_empty #e2 #EfPure #targs1 #wpargs1 htargs1 in
+      let hst : styping empty (TArr tref (csubst (sub_elam (sub_ebeta e2)) (tot (TArr tint (tot theap))))) (tsubst_ebeta e2 tbodys1) = styping_substitution (sub_ebeta e2) hst (ebeta_hs #empty #e2 #targs1 htotarg) in
+      let targ = tref in
+      let cbody = (csubst (sub_elam (sub_ebeta e2)) (tot (TArr tint (tot theap)))) in
+      tb_inversion_empty_helper v targ cbody t tc hst hv
+     )
+     | EcSel ->
+     (
+      let StypingInvArr x1 x2 hstarg1 hscbody1 = styping_inversion_arrow_empty #theap #(tot (TArr tref (tot tint))) #tarr1 hst1 in
+      let hst : styping (eextend targs1 empty) (TArr tref (tot tint)) tbodys1 = SCmp.hs hscbody1 in
+      let htotarg : typing empty e2 (tot targs1) = value_inversion_empty #e2 #EfPure #targs1 #wpargs1 htargs1 in
+      let hst : styping empty (TArr tref (tot (tint))) (tsubst_ebeta e2 tbodys1) = subst_on_tot (sub_elam (sub_ebeta e2)) tint; styping_substitution (sub_ebeta e2) hst (ebeta_hs #empty #e2 #targs1 htotarg) in
+      let targ = tref in
+      let cbody = tot tint in
+      tb_inversion_empty_helper v targ cbody t tc hst hv
+     )
+     | EcAssign ->
+     (
+      let cmpb = cmp_assign (EVar 1) (EVar 0) in
+      let StypingInvArr x1 x2 hstarg1 hscbody1 = styping_inversion_arrow_empty #tref #(tot (TArr tint (cmpb))) #tarr1 hst1 in
+      let hst : styping (eextend targs1 empty) (TArr tint cmpb) tbodys1 = SCmp.hs hscbody1 in
+      let htotarg : typing empty e2 (tot targs1) = value_inversion_empty #e2 #EfPure #targs1 #wpargs1 htargs1 in
+      let hst : styping empty (TArr tint (csubst (sub_elam (sub_ebeta e2)) cmpb)) (tsubst_ebeta e2 tbodys1) = styping_substitution (sub_ebeta e2) hst (ebeta_hs #empty #e2 #targs1 htotarg) in
+      let targ = tint in
+      let cbody = (csubst (sub_elam (sub_ebeta e2)) cmpb) in
+      tb_inversion_empty_helper v targ cbody t tc hst hv
+     )
+    )
+  | EApp e11 e12 ~> 
+  (
+   scmpex_efpure #empty #e1 #c1 #(Cmp EfPure tarr1 wpfuns1) hsc1;
+   let TyApp #x1 #x2 #x3 #x4 #targs2 #tbodys2 #wps2 #wpfuns2 #wpargs2 htfuns2 htargs2 htotargs2 hktargs2 = ht' in
+   let tarr2 = TArr targs2 (Cmp EfPure tbodys2 wps2) in
+   let RemoveSub c2 hsc2 ht' = remove_subtyping #empty #e11 #(Cmp EfPure tarr2 wpfuns2) (GEmpty) htfuns2 in
+   match e11 with
+   | EConst ec11 ->
+   (
+    match ec11 with
+    | EcFixPure tx t' t'' wp ->
+    (
+      (* It is still the same argument, but it is still too hard to manipulate *)
+      let targ : typ = magic() in
+      let cbody : cmp = magic() in
+      let hst : styping empty (TArr targ cbody) t = magic() in
+      tb_inversion_empty_helper v targ cbody t tc hst hv
+    ) 
+    | EcUpd ->
+    (
+     let TyConst _ _ _ = ht' in
+     let hst2 = get_styping_from_scmpex #empty #e11 #c2 #(Cmp EfPure tarr2 wpfuns2) hsc2 in
+     let StypingInvArr x1 x2 hstarg2 hscbody2 = styping_inversion_arrow_empty #theap #(tot (TArr tref (tot (TArr tint (tot theap))))) #tarr2 hst2 in
+     let tarrb = (TArr tref (tot (TArr tint (tot theap)))) in
+     let hst : styping (eextend targs2 empty) tarrb tbodys2 = SCmp.hs hscbody2 in
+     let htotarg2 : typing empty e12 (tot targs2) = value_inversion_empty #e12 #EfPure #targs2 #wpargs2 htargs2 in
+     let lemma : unit -> Lemma (tsubst_ebeta e12 tarrb = tarrb) = magic() in
+     (*
+     fun x -> 
+     (
+       subst_on_tot (sub_elam (sub_ebeta e12)) (TArr tint (tot theap));
+       subst_on_tot (sub_elam (sub_elam (sub_ebeta e12))) theap
+       (* SF : this proof should be able to work … *)
+     )
+     *)
+     let hsttemp : styping empty (tarrb) (Cmp.t c1) = 
+       lemma ();
+       styping_substitution (sub_ebeta e12) hst (ebeta_hs #empty #e12 #targs2 htotarg2) 
+     in
+     let hst1 : styping empty tarrb tarr1 = 
+       SubTrans #empty #(TArr tref (tot (TArr tint (tot (theap))))) #(Cmp.t c1) #tarr1 hsttemp hst1
+     in
+     let StypingInvArr x1 x2 hstarg1 hscbody1 = styping_inversion_arrow_empty #tref #(tot (TArr tint (tot (theap)))) #tarr1 hst1 in
+     let hst : styping (eextend targs1 empty) (TArr tint (tot (theap))) tbodys1 = SCmp.hs hscbody1 in
+     let hst : styping empty (TArr tint (tot theap)) (tsubst_ebeta e2 tbodys1) = 
+       let htotarg1 : typing empty e2 (tot targs1) = value_inversion_empty #e2 #EfPure #targs1 #wpargs1 htargs1 in
+       subst_on_tot (sub_elam (sub_ebeta e2)) theap;
+       styping_substitution (sub_ebeta e2) hst (ebeta_hs #empty #e2 #targs1 htotarg1) 
+     in
+     let targ = tint in
+     let cbody = tot theap in
+     tb_inversion_empty_helper v targ cbody t tc hst hv
+    )
+   )
+  )
+ )
+)
+//}}}
 
 val tint_inversion_empty : #v:value -> #wp:typ ->
    ht:typing empty v (Cmp EfPure tint wp) ->
    Tot(tint_inversion_res v)
-let tint_inversion_empty v wp ht = magic()
+let tint_inversion_empty v wp ht =
+let hv : validity empty (teqtype tint tint) = VEqReflT #empty #tint #KType (kdg_tb empty TcInt) in
+let TcIntInversion x1 h = tb_inversion_empty #v #tint #wp #TcInt ht hv in
+h
 
+val theap_inversion_empty : #v:value -> #wp:typ ->
+   ht:typing empty v (Cmp EfPure theap wp) ->
+   Tot(theap_inversion_res v)
+let theap_inversion_empty v wp ht =
+let hv : validity empty (teqtype theap theap) = VEqReflT #empty #theap #KType (kdg_tb empty TcHeap) in
+let TcHeapInversion x1 h = tb_inversion_empty #v #theap #wp #TcHeap ht hv in
+h
 
-
+val tref_inversion_empty : #v:value -> #wp:typ ->
+   ht:typing empty v (Cmp EfPure tref wp) ->
+   Tot(tref_inversion_res v)
+let tref_inversion_empty v wp ht = 
+let hv : validity empty (teqtype tref tref) = VEqReflT #empty #tref #KType (kdg_tb empty TcRefInt) in
+let TcRefInversion x1 h = tb_inversion_empty #v #tref #wp #TcRefInt ht hv in
+h
 
 
 val tysub_derived : #g:env -> #e:exp -> #m:eff -> #t:typ -> #wp:typ -> #t':typ ->
