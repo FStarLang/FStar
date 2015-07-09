@@ -1007,7 +1007,8 @@ let mlsig_of_sig (mlenv : mlenv) (modx : list<sigelt>) : mlsig =
 (* -------------------------------------------------------------------- *)
 let mlmod_of_fstar (fmod_ : modul) =
     let name = Backends.OCaml.Syntax.mlpath_of_lident fmod_.name in
-    fprint1 "OCaml: %s\n" fmod_.name.ident.idText;
+    fprint1 "OCaml extractor June 9 2015 : %s\n" fmod_.name.ident.idText;
+    printfn "%A\n" (fmod_.declarations);
     let mod_ = mlmod_of_mod (mk_mlenv name) fmod_.declarations in
     let sig_ = mlsig_of_sig (mk_mlenv name) fmod_.declarations in
     (name, sig_, mod_)
