@@ -31,17 +31,16 @@ let convIdent (id:ident) : mlident = (id.idText,(convRange id.idRange))
 (*assuming that btvar includes the name of the variable*)
 type context = env
 (*is there an F# library of associative lists?*)
-let contains (c:context) (b:btvar) = true (*  FIX!! *)
+let contains (c:context) (b:btvar) = failwith "contains is undefined"
 
 
-let deltaUnfold (i : lident) (c: context) : (option<typ>) = None (*Fix*)
+let deltaUnfold (i : lident) (c: context) : (option<typ>) = failwith "deltaUnfold is undefined"
 
 (*The thesis defines a type scheme as "something that becomes a type when enough arguments (possibly none?) are applied to it" ,  e.g. vector, list.
-    I guess in F*, these include Inductive types and type definitions *)
-let isTypeScheme (i : lident) (c: context) : (option<typ>) = None (*Fix*)
+    I guess in F*, these include Inductive types and type abbreviations  *)
+let isTypeScheme (i : lident) (c: context) : (option<typ>) =  failwith "isTypeScheme is undefined"
 
-let liftType' :  typ' -> typ =
-(*How to admit/assume a function in F#?*)
+let liftType' (t:typ') : typ = failwith "liftType is undefined"
 
 (*the \hat{\epsilon} function in the thesis (Sec. 3.3.5) *)
 let rec extractType' (c:context) (ft:typ') : mlty = 
@@ -53,21 +52,21 @@ match ft with
   | Typ_btvar _ -> extractType' c (Typ_app (liftType' ft, []))
   | Typ_const _ -> extractType' c (Typ_app (liftType' ft, []))
   | Typ_fun (bb, cm) -> 
-        let codomain = (extractComp  c cm) in 
-        if  (codomain = erasedContent) then erasedContent else  (curry (List.map (extractBinder c) bb) codomain)
-  | Typ_refine (bv,ty) -> extractType ty
+        (let codomain = (extractComp  c cm) in 
+        if  (codomain = erasedContent) then erasedContent else  (curry (List.map (extractBinder c) bb) codomain))
+  | Typ_refine (bv,ty) -> extractTyp c ty
   | Typ_app (ty, arrgs) ->
     (match ty.n with
         | Typ_btvar btv -> (if (contains c btv) then MLTY_Var (convIdent btv.v.realname) else unknownType)
             (*the args are thrown away, because in OCaml, type variables have type Type and not something like -> .. -> .. Type *)
         | Typ_const ftv -> 
-            (match  (isTypeScheme  ftv)  with
+            (match  (isTypeScheme ftv.v c)  with
              | Some tys -> 
-                 let mlargs = map getTypeFromArg args in
-                    (MLTY_App (extractType tys) (MLTY_Tuple mlargs))
+                 let mlargs = List.map (getTypeFromArg c) arrgs in
+                    (MLTY_App (extractTyp c tys, MLTY_Tuple mlargs))
              | None -> 
-                 (match  (deltaUnfold ftv ) with
-                 | Some tyu ->  extracType tyu
+                 (match  (deltaUnfold ftv.v c) with
+                 | Some tyu ->  extractTyp c tyu
                  | None -> unknownType
                  )
             )
@@ -79,9 +78,9 @@ match ft with
   | Typ_uvar _ -> unknownType
   | Typ_delayed _ -> unknownType
   | Typ_unknown  _ -> unknownType
-and getTypeFromArg (a:arg) : mlty =
+and getTypeFromArg (c:context) (a:arg) : mlty =
 match (fst a) with
-| Inl ty -> extractTyp ty
+| Inl ty -> extractTyp c ty
 | Inr _ -> erasedContent 
 (* In OCaml, there are no expressions in type applications.
    Need to make similar changes when extracting the definitions of type schemes
@@ -100,20 +99,20 @@ match  ft with
   | Comp cm -> extractTyp c (cm.result_typ)
 
 
-let binderIndent (bn:binder): ident =
+let binderIdent (bn:binder): ident =
 match bn with
 | (Inl btv,_) -> btv.v.realname
 | (Inr bvv,_) -> bvv.v.realname
 
-let extendContextWithTyVars (c:context) (idents : list<ident>) : context =
+let extendContextWithTyVars (c:context) (idents : list<ident>) : context = failwith "extendContextWithTyVars is not implemented"
 
-let extractSigElt (c:context) (s:sigelt) : mlsigl =
-match sigelt with
+let extractSigElt (c:context) (s:sigelt) : mlsig =
+match s with
 | Sig_typ_abbrev (l,bs,k,t,q,r) -> 
-    let idents = map binderindent bs in
-    let tyDecBody = MLTD_Abbrev (extractType (extendContextWithTyVars c ) t) in
-     MLS_Ty [(l.str, idents , Some tyDecBody)]
-| Sig_tycon -> [] (*this will be a list with possibly several elements, depending on the constructors. We can first ignore mutual inductives*)
+    let idents = List.map binderIdent bs in
+    let tyDecBody = MLTD_Abbrev (extractTyp (extendContextWithTyVars c idents) t) in
+     [MLS_Ty [(l.str, List.map convIdent idents , Some tyDecBody)]]
+| Sig_tycon (l,bs,k,muts,constrs,lq,r) -> [] (*this will be a list with possibly several elements, depending on the constructors. We can first ignore mutual inductives*)
 | _ -> []
 
 
