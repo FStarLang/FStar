@@ -28,6 +28,23 @@ Definition hello2  (h: nat -> nat) : nat := 0.
 Recursive Extraction hello2.
 
 
+(* homogenous, but non-type parameter *)
+
+Inductive isEven2 : nat -> Type :=
+| ev02 : isEven2 0
+| evSS2 : forall n:nat, isEven2 n -> isEven2 n.
+
+(* nat gets removed *)
+Recursive Extraction isEven2.
+
+(* sanity check *)
+Inductive isEven3 : Type -> Type :=
+| ev03 : isEven3 nat
+| evSS3 : forall n:nat, isEven3 nat -> isEven3 nat.
+
+(* the dummy type argument does not get removed*)
+Recursive Extraction isEven3.
+
 
 
 
