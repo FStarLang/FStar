@@ -32,6 +32,7 @@ Colorizer     : fstar
 .pre-fragment : margin-bottom=0pt .framed padding=0.5ex
 
 ~ExerciseFragment : replace="~Begin Fragment {link=code/exercises/&exname;.fst}&nl;&source;&nl;~End Fragment&nl;"
+
 ~CodeFragment : replace="~Begin Fragment {link=code/&filename;:&label;&name;}&nl;&source;&nl;~End Fragment&nl;"
 
 
@@ -4233,12 +4234,12 @@ Change `shift_x` to the function `shift` below that moves both the `x` and `y` c
 of its argument by some amount. Prove that calling this function in
 `shift_p1` does not change `p2`.
 
-~~ ExerciseFragment {exname=ex10-shift}
+~~ CodeFragment {filename=exercises/ex10-shift.fst name=ex10b-shift}
 let shift p = Point.x p := 17; Point.y p := 18
 ~~
 
 ~~Answer
-~~~ SolutionFragment {exname=ex10-shift}
+~~~ CodeFragment {filename=solutions/ex10-shift.fst name=so10b-shift}
 let shift p = Point.x p := 17; Point.y p := 18
 ~~~
 ~~
@@ -4721,7 +4722,7 @@ val fly_robot_army: ...
 ~~
 
 ~~Answer
-~~~ SolutionFragment {exname=robot2}
+~~~ CodeFragment {filename=solutions/robot2.fst name=so11a-robot}
 val fly_robot_army:  #rs:Set.set rid
                   -> bs:bots rs
                   -> ST unit
@@ -4959,7 +4960,7 @@ Relying on acls2.fst and mac.fst, implement a pair of functions with
 the following specification, and verify them by typing under the
 security assumption that HMACSHA1 is INT-CPA.
 
-~~ ExerciseFragment {exname=ex9a-acls-cap}
+~~ CodeFragment {filename=exercises/acls-cap.fst name=ex12a-acls-cap}
 val issue:  f:file{ canRead f } -> SHA1.tag
 val redeem: f:file -> m:SHA1.tag -> u:unit{ canRead f }
 ~~

@@ -2,7 +2,7 @@
     options:--admit_fsi Set --z3timeout 10 --logQueries;
     variables:LIB=../../lib;
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst
-    st3.fst $LIB/constr.fst word.fst $LIB/seq.fsi $LIB/seq.fst array.fsi array.fst MD5Common.fst withScope.fst
+    st3.fst $LIB/constr.fst word.fst $LIB/seq.fsi $LIB/seq.fst array.fsi array.fst MD5Common.fst withScope.fst arrayAlgos.fst
   --*)
 
 (*Why is MD5 so? Why did its designer(s) think
@@ -17,11 +17,8 @@ open Set
 open MachineWord
 open Array
 open MD5Common
+open ArrayAlgos
 open Seq
-
-type prefixEqual  (#a:Type)
-  (v1: seq a) (v2: seq a) (p:nat{p <= length v1 /\ p<= length v2})
-  = forall (n:nat). n<p ==> index v1 n = index v2 n
 
 
 assume val cloneAndPad :
