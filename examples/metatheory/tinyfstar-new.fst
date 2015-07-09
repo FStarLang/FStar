@@ -7,11 +7,7 @@
 
 (*TODO list :
  * finish the proof of preservation (KTApp and KEApp)
- * finish the case analysis in epstep_substitution
- * write *subst_on_neappears_all
- * write *subst_with_sub_id
- * write tsubst_with_almost_eq
- * write the substitution lemma on type encodings (subst_on_bindall etc …)
+ * write the substitution lemmas on type encodings (subst_on_bindall etc …)
  * write the v_* validity derived judgements
  * *subst_on_ebeta, *subst_on_tbeta
  * write kdg_* to manipulate kinds with binding, wp etc …
@@ -404,7 +400,7 @@ and ksubst s k =
   | KTArr t kbody ->
      (KTArr (tsubst s t) (ksubst (sub_elam s) kbody))
 
-val subst_on_value : s:vsub -> e:exp -> Lemma (requires (is_value e)) (ensures (is_value (esubst s e)))
+val subst_on_value : s:sub -> e:exp -> Lemma (requires (is_value e)) (ensures (is_value (esubst s e)))
 let rec subst_on_value s e =
 admit()(*
 match e with
@@ -526,19 +522,101 @@ let etshd = esubst sub_tdec
 let ttshd = tsubst sub_tdec
 let ktshd = ksubst sub_tdec
 
+
+val elam_on_sub_id : unit -> Lemma (sub_elam sub_id = sub_id)
+let elam_on_sub_id x =
+cut (FEq (Sub.es (sub_elam sub_id)) (Sub.es (sub_id)));
+cut (FEq (Sub.ts (sub_elam sub_id)) (Sub.ts (sub_id)))
+
+val tlam_on_sub_id : unit -> Lemma (sub_tlam sub_id = sub_id)
+let tlam_on_sub_id x =
+cut (FEq (Sub.es (sub_tlam sub_id)) (Sub.es (sub_id)));
+cut (FEq (Sub.ts (sub_tlam sub_id)) (Sub.ts (sub_id)))
+
 val esubst_with_sub_id : e:exp -> Lemma (esubst sub_id e = e)
-let esubst_with_sub_id e = admit()
-
-val csubst_with_sub_id : c:cmp -> Lemma (csubst sub_id c = c)
-let csubst_with_sub_id c = admit()
-
-val ksubst_with_sub_id : k:knd -> Lemma (ksubst sub_id k = k)
-let ksubst_with_sub_id k = admit()
-
+val ecsubst_with_sub_id : ec:econst -> Lemma(ecsubst sub_id ec = ec)
 val tsubst_with_sub_id : t:typ -> Lemma (tsubst sub_id t = t)
-let tsubst_with_sub_id t = admit()
-(* SF : we need a big mutual recursion to prove this ^ too, so let's wait
- until it is clear that it is necessary*)(*}}}*)
+val tcsubst_with_sub_id : tc:tconst -> Lemma (tcsubst sub_id tc = tc)
+val csubst_with_sub_id : c:cmp -> Lemma (csubst sub_id c = c)
+val ksubst_with_sub_id : k:knd -> Lemma (ksubst sub_id k = k)
+
+let rec esubst_with_sub_id e =
+match e with
+| EVar x -> ()
+| EConst ec -> ecsubst_with_sub_id ec
+| ELam t ebody -> (tsubst_with_sub_id t; 
+                   elam_on_sub_id (); 
+		   esubst_with_sub_id ebody)
+| EIf0 g ethen eelse -> (
+    esubst_with_sub_id g;
+    esubst_with_sub_id ethen;
+    esubst_with_sub_id eelse)
+| EApp e1 e2 -> (
+    esubst_with_sub_id e1;
+    esubst_with_sub_id e2
+    )
+and ecsubst_with_sub_id ec = 
+match ec with
+| EcFixPure tx t' t'' wp -> (
+    tsubst_with_sub_id tx;
+    tsubst_with_sub_id t';
+    tsubst_with_sub_id t'';
+    tsubst_with_sub_id wp
+    )
+| EcFixOmega tx t' wp -> (
+    tsubst_with_sub_id tx;
+    tsubst_with_sub_id t';
+    tsubst_with_sub_id wp
+    )
+| _ -> ()
+and tsubst_with_sub_id t = 
+match t with
+| TVar a -> ()
+| TConst tc -> tcsubst_with_sub_id tc
+| TArr t c -> (
+    tsubst_with_sub_id t;
+    elam_on_sub_id ();
+    csubst_with_sub_id c
+    )
+| TTLam k tbody -> (
+    ksubst_with_sub_id k;
+    tlam_on_sub_id ();
+    tsubst_with_sub_id tbody
+    )
+| TELam t tbody -> (
+    tsubst_with_sub_id t;
+    elam_on_sub_id ();
+    tsubst_with_sub_id tbody
+    )
+| TTApp t1 t2 -> (
+    tsubst_with_sub_id t1;
+    tsubst_with_sub_id t2
+    )
+| TEApp t e -> (
+    tsubst_with_sub_id t;
+    esubst_with_sub_id e
+    )
+and tcsubst_with_sub_id tc = 
+match tc with
+| TcEqT k 
+| TcForallT k -> ksubst_with_sub_id k
+| _ -> ()
+and csubst_with_sub_id c = 
+let Cmp m t wp = c in
+tsubst_with_sub_id t; tsubst_with_sub_id wp
+and ksubst_with_sub_id k = 
+match k with
+| KType -> ()
+| KKArr k kbody -> (
+    ksubst_with_sub_id k;
+    tlam_on_sub_id ();
+    ksubst_with_sub_id kbody
+    )
+| KTArr t kbody -> (
+    tsubst_with_sub_id t;
+    elam_on_sub_id ();
+    ksubst_with_sub_id kbody
+    )
 
 
 (********************************)
@@ -2292,45 +2370,284 @@ let einc_neappears_all =
 SubNEAppearsAll sub_einc 0 
   (fun y -> ())
   (fun a -> ())
+
+val elam_on_neappears_all : #s:sub -> #x:var -> 
+             hs:sub_neappears_all s x ->
+	     Tot (sub_neappears_all (sub_elam s) (x+1))
+let elam_on_neappears_all s x hs =
+SubNEAppearsAll (sub_elam s) (x+1)
+(fun y -> match y with
+  | 0 -> ()
+  | n -> (SubNEAppearsAll.ef hs (n-1); esubst_on_neappears (einc_neappears x) (Sub.es s (n-1)))
+)
+(fun a -> (SubNEAppearsAll.tf hs a; tsubst_on_neappears (einc_neappears x) (Sub.ts s a))
+)
+
+val tlam_on_neappears_all : #s:sub -> #x:var -> 
+             hs:sub_neappears_all s x ->
+	     Tot (sub_neappears_all (sub_tlam s) x)
+let tlam_on_neappears_all s x hs =
+SubNEAppearsAll (sub_tlam s) (x)
+(fun y -> (SubNEAppearsAll.ef hs y; esubst_on_neappears (tinc_neappears x) (Sub.es s y))
+)
+(fun a -> match a with
+ | 0 -> ()
+ | n -> (SubNEAppearsAll.tf hs (n-1); tsubst_on_neappears (tinc_neappears x) (Sub.ts s (n-1)))
+)
+
 val esubst_on_neappears_all : #s:sub -> #x:var ->
              hs:sub_neappears_all s x ->
 	     e:exp ->
 	     Lemma (not (eeappears x (esubst s e)))
+(decreases %[e])
+val ecsubst_on_neappears_all : #s:sub -> #x:var ->
+             hs:sub_neappears_all s x ->
+	     ec:econst ->
+	     Lemma (not (eceappears x (ecsubst s ec)))
+(decreases %[ec])
 val tsubst_on_neappears_all : #s:sub -> #x:var -> 
              hs:sub_neappears_all s x ->
 	     t:typ ->
 	     Lemma (not (teappears x (tsubst s t)))
+(decreases %[t])
+val tcsubst_on_neappears_all : #s:sub -> #x:var -> 
+             hs:sub_neappears_all s x ->
+	     tc:tconst ->
+	     Lemma (not (tceappears x (tcsubst s tc)))
+(decreases %[tc])
+val csubst_on_neappears_all : #s:sub -> #x:var ->
+             hs:sub_neappears_all s x ->
+	     c:cmp ->
+	     Lemma (not (ceappears x (csubst s c)))
+(decreases %[c])
 val ksubst_on_neappears_all : #s:sub -> #x:var ->
              hs:sub_neappears_all s x ->
 	     k:knd ->
 	     Lemma (not (keappears x (ksubst s k)))
+(decreases %[k])
 (*val esubst_on … *)
 (* SF : ^ essentially for elam_neappears0 at the moment *)
-let rec esubst_on_neappears_all s x hs e = admit()
-and tsubst_on_neappears_all s x hs t = admit()
-and ksubst_on_neappears_all s x hs k = admit()
-
+let rec esubst_on_neappears_all s x hs e = 
+match e with
+| EVar x -> SubNEAppearsAll.ef hs x
+| EConst ec -> ecsubst_on_neappears_all hs ec
+| ELam t ebody -> (
+    tsubst_on_neappears_all hs t;
+    esubst_on_neappears_all (elam_on_neappears_all hs) ebody
+    )
+| EIf0 g ethen eelse -> (
+    esubst_on_neappears_all hs g;
+    esubst_on_neappears_all hs ethen;
+    esubst_on_neappears_all hs eelse
+    )
+| EApp e1 e2 -> (
+    esubst_on_neappears_all hs e1;
+    esubst_on_neappears_all hs e2
+    )
+and ecsubst_on_neappears_all s x hs ec = 
+match ec with
+| EcFixPure tx t' t'' wp -> (
+    tsubst_on_neappears_all hs tx;
+    tsubst_on_neappears_all hs t';
+    tsubst_on_neappears_all hs t'';
+    tsubst_on_neappears_all hs wp
+    )
+| EcFixOmega tx t' wp -> (
+    tsubst_on_neappears_all hs tx;
+    tsubst_on_neappears_all hs t';
+    tsubst_on_neappears_all hs wp
+    )
+| _ -> ()
+and tsubst_on_neappears_all s x hs t = 
+match t with
+| TVar a -> SubNEAppearsAll.tf hs a
+| TConst tc -> tcsubst_on_neappears_all hs tc
+| TArr t c -> (
+    tsubst_on_neappears_all hs t;
+    csubst_on_neappears_all (elam_on_neappears_all hs) c
+    )
+| TTLam k tbody -> (
+    ksubst_on_neappears_all hs k;
+    tsubst_on_neappears_all (tlam_on_neappears_all hs) tbody
+    )
+| TELam t tbody -> (
+    tsubst_on_neappears_all hs t;
+    tsubst_on_neappears_all (elam_on_neappears_all hs) tbody
+    )
+| TTApp t1 t2 -> (
+    tsubst_on_neappears_all hs t1;
+    tsubst_on_neappears_all hs t2
+    )
+| TEApp t e -> (
+    tsubst_on_neappears_all hs t;
+    esubst_on_neappears_all hs e
+    )
+and tcsubst_on_neappears_all s x hs tc = 
+match tc with
+| TcEqT k
+| TcForallT k -> ksubst_on_neappears_all hs k
+| _ -> ()
+and csubst_on_neappears_all s x hs c =
+let Cmp m t wp = c in
+tsubst_on_neappears_all hs t;
+tsubst_on_neappears_all hs wp
+and ksubst_on_neappears_all s x hs k = 
+match k with
+| KType -> ()
+| KKArr karg kbody -> (
+    ksubst_on_neappears_all hs karg;
+    ksubst_on_neappears_all (tlam_on_neappears_all hs) kbody
+    )
+| KTArr targ kbody -> (
+    tsubst_on_neappears_all hs targ;
+    ksubst_on_neappears_all (elam_on_neappears_all hs) kbody
+    )
 type sub_almost_eq : s1:sub -> s2:sub -> x:var -> Type =
 | SubAlmostEq : s1:sub -> s2:sub -> x:var ->
      ef: (y:var{y<>x} -> Lemma (Sub.es s1 y = Sub.es s2 y)) ->
+     tf: (a:var -> Lemma (Sub.ts s1 a = Sub.ts s2 a)) ->
      sub_almost_eq s1 s2 x
 
+val elam_on_almost_eq : #s1:sub -> #s2:sub -> #x:var ->
+          hs:sub_almost_eq s1 s2 x ->
+	  Tot (sub_almost_eq (sub_elam s1) (sub_elam s2) (x+1))
+let elam_on_almost_eq s1 s2 x hs = 
+SubAlmostEq (sub_elam s1) (sub_elam s2) (x+1)
+(fun y -> match y with
+  | 0 -> ()
+  | n -> SubAlmostEq.ef hs (n-1)
+)
+(fun a -> SubAlmostEq.tf hs a)
 
+val tlam_on_almost_eq : #s1:sub -> #s2:sub -> #x:var ->
+          hs:sub_almost_eq s1 s2 x ->
+	  Tot (sub_almost_eq (sub_tlam s1) (sub_tlam s2) x)
+let tlam_on_almost_eq s1 s2 x hs = 
+SubAlmostEq (sub_tlam s1) (sub_tlam s2) x
+(fun y -> SubAlmostEq.ef hs y)
+(fun a -> match a with
+   | 0 -> ()
+   | n -> SubAlmostEq.tf hs (n-1)
+)
+
+val esubst_with_almost_eq : #s1:sub -> #s2:sub -> #x:var ->
+          hs:sub_almost_eq s1 s2 x ->
+	  e:exp{not (eeappears x e)} ->
+	  Lemma (esubst s1 e = esubst s2 e)
+(decreases %[e])
+val ecsubst_with_almost_eq : #s1:sub -> #s2:sub -> #x:var ->
+          hs:sub_almost_eq s1 s2 x ->
+	  ec:econst{not (eceappears x ec)} ->
+	  Lemma (ecsubst s1 ec = ecsubst s2 ec)
+(decreases %[ec])
 val tsubst_with_almost_eq : #s1:sub -> #s2:sub -> #x:var ->
           hs:sub_almost_eq s1 s2 x ->
 	  t:typ{not (teappears x t)} ->
 	  Lemma (tsubst s1 t = tsubst s2 t)
-let tsubst_with_almost_eq s2 s2 x hs t = admit()
+(decreases %[t])
+val tcsubst_with_almost_eq : #s1:sub -> #s2:sub -> #x:var ->
+          hs:sub_almost_eq s1 s2 x ->
+	  tc:tconst{not (tceappears x tc)} ->
+	  Lemma (tcsubst s1 tc = tcsubst s2 tc)
+(decreases %[tc])
+val csubst_with_almost_eq : #s1:sub -> #s2:sub -> #x:var ->
+          hs:sub_almost_eq s1 s2 x ->
+	  c:cmp{not (ceappears x c)} ->
+	  Lemma (csubst s1 c = csubst s2 c)
+(decreases %[c])
+val ksubst_with_almost_eq : #s1:sub -> #s2:sub -> #x:var ->
+          hs:sub_almost_eq s1 s2 x ->
+	  k:knd{not (keappears x k)} ->
+	  Lemma (ksubst s1 k = ksubst s2 k)
+(decreases %[k])
+let rec esubst_with_almost_eq s2 s2 x hs e = 
+match e with
+| EVar x -> SubAlmostEq.ef hs x
+| EConst ec -> ecsubst_with_almost_eq hs ec
+| ELam t ebody -> (
+    tsubst_with_almost_eq hs t;
+    esubst_with_almost_eq (elam_on_almost_eq hs) ebody
+    )
+| EIf0 g ethen eelse -> (
+    esubst_with_almost_eq hs g;
+    esubst_with_almost_eq hs ethen;
+    esubst_with_almost_eq hs eelse
+    )
+| EApp e1 e2 -> (
+    esubst_with_almost_eq hs e1;
+    esubst_with_almost_eq hs e2
+    )
+and ecsubst_with_almost_eq s2 s2 x hs ec = 
+match ec with
+| EcFixPure tx t' t'' wp -> (
+    tsubst_with_almost_eq hs tx;
+    tsubst_with_almost_eq hs t';
+    tsubst_with_almost_eq hs t'';
+    tsubst_with_almost_eq hs wp
+    )
+| EcFixOmega tx t' wp -> (
+    tsubst_with_almost_eq hs tx;
+    tsubst_with_almost_eq hs t';
+    tsubst_with_almost_eq hs wp
+    )
+| _ -> ()
+and tsubst_with_almost_eq s2 s2 x hs t = 
+match t with
+| TVar a -> SubAlmostEq.tf hs a
+| TConst tc -> tcsubst_with_almost_eq hs tc
+| TArr t c -> (
+    tsubst_with_almost_eq hs t;
+    csubst_with_almost_eq (elam_on_almost_eq hs) c
+    )
+| TTLam k tbody ->(
+    ksubst_with_almost_eq hs k;
+    tsubst_with_almost_eq (tlam_on_almost_eq hs) tbody
+    )
+| TELam t tbody ->(
+    tsubst_with_almost_eq hs t;
+    tsubst_with_almost_eq (elam_on_almost_eq hs) tbody
+    )
+| TTApp t1 t2 ->(
+    tsubst_with_almost_eq hs t1;
+    tsubst_with_almost_eq hs t2
+    )
+| TEApp t e -> (
+    tsubst_with_almost_eq hs t;
+    esubst_with_almost_eq hs e
+    )
+and tcsubst_with_almost_eq s2 s2 x hs tc = 
+match tc with
+| TcEqT k -> ksubst_with_almost_eq hs k
+| TcForallT k -> ksubst_with_almost_eq hs k
+| _ -> ()
+and csubst_with_almost_eq s2 s2 x hs c = 
+let Cmp m t wp = c in
+tsubst_with_almost_eq hs t; tsubst_with_almost_eq hs wp
+and ksubst_with_almost_eq s2 s2 x hs k =
+match k with
+| KType -> ()
+| KKArr k kbody -> (
+    ksubst_with_almost_eq hs k;
+    ksubst_with_almost_eq (tlam_on_almost_eq hs) kbody
+    )
+| KTArr t kbody -> (
+    tsubst_with_almost_eq hs t;
+    ksubst_with_almost_eq (elam_on_almost_eq hs) kbody
+    )
 
 val edec_elam_almost_eq : s:sub -> Tot (sub_almost_eq (sub_comp s sub_edec) (sub_comp sub_edec (sub_elam s)) 0)
 let edec_elam_almost_eq s =
 SubAlmostEq (sub_comp s (sub_edec)) (sub_comp sub_edec (sub_elam s)) 0
      (fun y -> eeshd_eesh (Sub.es s (y-1)))
+     (fun a -> (tsubst_comp sub_edec sub_einc (Sub.ts s a);
+            edec_einc_comp ();
+	    tsubst_with_sub_id (Sub.ts s a)))
 
 val edec_ebeta_almost_eq : e:exp -> Tot (sub_almost_eq (sub_edec) (sub_ebeta e) 0)
 let edec_ebeta_almost_eq e =
 SubAlmostEq sub_edec (sub_ebeta e) 0
      (fun y -> ())
+     (fun a -> ())
 (* SF : ^ for the TyApp case in typing_substitution for g |- teshd t' : Type *)
 
 val elam_neappears0 : s:sub -> Tot (sub_neappears (sub_elam s) 0 0)
@@ -2616,7 +2933,6 @@ val epstep_substitution : s:sub -> e:exp -> e':exp -> hs:epstep e e' -> Tot (eps
 val tstep_substitution : s:sub -> t:typ -> t':typ -> hs:tstep t t' -> Tot (tstep (tsubst s t) (tsubst s t'))
 (decreases %[hs])
 let rec epstep_substitution s e e' hs =
-admit()(*
 match hs with
 | PsBeta t ebody e -> 
 (
@@ -2633,9 +2949,17 @@ match hs with
     PsLamT (esubst (sub_elam s) ebody) htg2
     )
 | PsIf0E0 #e0 #e0' ethen eelse ht -> let htg2 : epstep (esubst s e0) (esubst s e0') = epstep_substitution s e0 e0' ht in PsIf0E0 (esubst s ethen) (esubst s eelse) htg2
-*)
+| PsFixPure tx t' t'' wp d f v -> 
+(
+ magic()(*
+ subst_on_value s v;
+ PsFixPure (tsubst s tx) (tsubst s t') (tsubst s t'') (tsubst s wp) (esubst s d) (esubst s f) (esubst s v)
+ *)
+ (*SF : this is long …*)
+)
+| PsUpd h l i -> hs
+| PsSel h l -> hs
 and tstep_substitution s t t' hs = 
-admit()(*
 match hs with
 | TsEBeta tx t e -> (
     let hr : tstep (TEApp (TELam (tsubst s tx) (tsubst (sub_elam s) t)) (esubst s e)) (tsubst_ebeta (esubst s e) (tsubst (sub_elam s) t)) = TsEBeta (tsubst s tx) (tsubst (sub_elam s) t) (esubst s e) in
@@ -2680,7 +3004,6 @@ match hs with
     let hr : tstep (tsubst s t1) (tsubst s t1') = tstep_substitution s t1 t1' ht in
     TsELamT1 #(tsubst s t1) #(tsubst s t1') (tsubst (sub_elam s) t2) hr
     )
-*)
 //}}}
 
 (*********************************)
@@ -4924,6 +5247,23 @@ match hkwf with
 )
 
 
+val skdg_eqe : #g:env -> #e:exp -> #e':exp -> #t:typ -> #k:knd ->
+   ht:typing g e (tot t) ->
+   ht':typing g e' (tot t) ->
+   hv:validity g (teqe t e e') ->
+   hkwf : kwf (eextend t g) k ->
+   Tot (skinding g (ksubst_ebeta e' k) (ksubst_ebeta e k))
+let skdg_eqe g e e' t k ht ht' hv hkwf = admit()
+
+val skdg_eqt : #g:env -> #t:typ -> #t':typ -> #karg:knd -> #kbody:knd ->
+   hk : kinding g t karg ->
+   hk': kinding g t' karg ->
+   hv:validity g (teqt karg t t') ->
+   hkwf: kwf (textend karg g) kbody ->
+   Tot (skinding g (ksubst_tbeta t' kbody) (ksubst_tbeta t kbody))
+let skdg_eqt g t t' karg kbody hk hk' hv hkwf = admit()
+
+
       
    
 
@@ -5354,17 +5694,23 @@ else
     Inl (KTApp #g #t1' #t2 #k k' hkt1' hkt2 hkw)
   )
  )
- | TsTAppT2 t1 #t2 #t2' hsteparg ->
+ | TsTAppT2 t1 #t2 #t2' hsteparg ~>
  (
-  magic()(*
   let KTApp #x1 #x2 #x3 #k k' hkt1 hkt2 hkw = hk in
-  let hkt2': kinding g t2' k = pure_kinding_preservation #g #t2 #t2' #k hwf hkt2 hsteparg in
-  let hkwfkarr : kwf g (KKArr k k') = kinding_derived hwf hkt1 in
-  let WfKArr hkwfk hkwfk' = hkwfkarr in
-  let hkw : kwf g (ksubst_tbeta t2' k') = kwf_substitution #(textend k g) (sub_tbeta t2) #g (hkwfk') (tbeta_hs #g #t2' #k hkt2') in
-  KTApp #g #t1 #t2' #k k' hkt1 hkt2' hkw
-  *)
-  (* SF : we need : t = t' => k[t/x] <:> k[t'/x]*)
+  match pure_kinding_preservation #g #t2 #t2' #k hwf hkt2 hsteparg with
+  | Inr temp -> Inr temp 
+  | Inl temp -> 
+  (
+    let hkt2': kinding g t2' k = temp in
+    let hkwfkarr : kwf g (KKArr k k') = kinding_derived hwf hkt1 in
+    let WfKArr hkwfk hkwfk' = hkwfkarr in
+    let hkw : kwf g (ksubst_tbeta t2' k') = kwf_substitution #(textend k g) (sub_tbeta t2') #g (hkwfk') (tbeta_hs #g #t2' #k hkt2') in
+    let hv : validity g (teqt k t2 t2') = VRedT #g #t2 #t2' #k hkt2 hkt2' hsteparg in
+    let hsk : skinding g (ksubst_tbeta t2' k') (ksubst_tbeta t2 k') = skdg_eqt #g #t2 #t2' #k #k' hkt2 hkt2' hv hkwfk' in
+    let hk : kinding g (TTApp t1 t2') (ksubst_tbeta t2' k') = KTApp #g #t1 #t2' #k k' hkt1 hkt2' hkw in
+    Inl (KSub #g #(TTApp t1 t2') #(ksubst_tbeta t2' k') #(ksubst_tbeta t2 k') hk hsk)
+    (* SF : we need : t = t' => k[t/x] <:> k[t'/x]*)
+  )
  )
  | TsEAppT #t #t' e hstepfun ->
  (
@@ -5377,9 +5723,24 @@ else
     Inl (KEApp #g #t' #targ #kbody #e hkt' hte hkwf)
   )
  )
- | TsEAppE t #e #e' hsteparg ->
+ | TsEAppE t #e #e' hsteparg ~>
  (
-  admit()
+  let KEApp #x1 #x2 #targ #kbody #x3 hkt hte hkwf = hk in
+  let post : typ = magic() in
+  let hv : validity g (TTApp (tot_wp targ) post) = magic() in
+  match pure_typing_preservation #g #e #e' #targ #(tot_wp targ) #post hwf hte hsteparg hv with 
+  | Inr temp -> Inr temp
+  | Inl temp ->
+  (
+   let hte' : typing g e' (tot targ) = temp in
+   let hkwfkarr : kwf g (KTArr targ kbody) = kinding_derived hwf hkt in
+   let WfTArr _ hkwfkbody = hkwfkarr in
+   let hkw : kwf g (ksubst_ebeta e' kbody) = kwf_substitution (sub_ebeta e') hkwfkbody (ebeta_hs #g #e' #targ hte') in
+   let hv : validity g (teqe targ e e') = VRedE #g #e #targ #e' hte hte' hsteparg in
+   let hsk : skinding g (ksubst_ebeta e' kbody) (ksubst_ebeta e kbody) = skdg_eqe #g #e #e' #targ #kbody hte hte' hv hkwfkbody in
+   let hk : kinding g (TEApp t e') (ksubst_ebeta e' kbody) = KEApp #g #t #targ #kbody #e' hkt hte' hkw in
+   Inl (KSub #g #(TEApp t e') #(ksubst_ebeta e' kbody) #(ksubst_ebeta e kbody) hk hsk)
+  )
   (* SF : we need : e = e' => k[e/x] <:> k[e'/x]*)
  )
  | TsTLamT k #t #t' hstep ->
