@@ -40,8 +40,7 @@ let deltaUnfold (i : lident) (c: context) : (option<typ>) = None (*Fix*)
     I guess in F*, these include Inductive types and type definitions *)
 let isTypeScheme (i : lident) (c: context) : (option<typ>) = None (*Fix*)
 
-
-let liftType' (t:typ') :typ =
+let liftType' :  typ' -> typ =
 (*How to admit/assume a function in F#?*)
 
 (*the \hat{\epsilon} function in the thesis (Sec. 3.3.5) *)
@@ -99,7 +98,24 @@ and extractComp'  (c:context) (ft:comp') : mlty =
 match  ft with
   | Total ty -> extractTyp c ty
   | Comp cm -> extractTyp c (cm.result_typ)
- 
+
+
+let binderIndent (bn:binder): ident =
+match bn with
+| (Inl btv,_) -> btv.v.realname
+| (Inr bvv,_) -> bvv.v.realname
+
+let extendContextWithTyVars (c:context) (idents : list<ident>) : context =
+
+let extractSigElt (c:context) (s:sigelt) : mlsigl =
+match sigelt with
+| Sig_typ_abbrev (l,bs,k,t,q,r) -> 
+    let idents = map binderindent bs in
+    let tyDecBody = MLTD_Abbrev (extractType (extendContextWithTyVars c ) t) in
+     MLS_Ty [(l.str, idents , Some tyDecBody)]
+| Sig_tycon -> [] (*this will be a list with possibly several elements, depending on the constructors. We can first ignore mutual inductives*)
+| _ -> []
+
 
 [<EntryPoint>]
 let main argv = 
