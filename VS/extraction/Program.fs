@@ -37,7 +37,9 @@ let contains (c:context) (b:btvar) = failwith "contains is undefined"
 let deltaUnfold (i : lident) (c: context) : (option<typ>) = failwith "deltaUnfold is undefined"
 
 (*The thesis defines a type scheme as "something that becomes a type when enough arguments (possibly none?) are applied to it" ,  e.g. vector, list.
-    I guess in F*, these include Inductive types and type abbreviations  *)
+    I guess in F*, these include Inductive types and type abbreviations.
+    Formal definition is @ Definition 8, Sec. 1.2.3
+      *)
 let isTypeScheme (i : lident) (c: context) : (option<typ>) =  failwith "isTypeScheme is undefined"
 
 let liftType' (t:typ') : typ = failwith "liftType is undefined"
@@ -51,9 +53,11 @@ let rec extractType' (c:context) (ft:typ') : mlty =
 match ft with
   | Typ_btvar _ -> extractType' c (Typ_app (liftType' ft, []))
   | Typ_const _ -> extractType' c (Typ_app (liftType' ft, []))
-  | Typ_fun (bb, cm) -> 
-        (let codomain = (extractComp  c cm) in 
-        if  (codomain = erasedContent) then erasedContent else  (curry (List.map (extractBinder c) bb) codomain))
+  | Typ_fun (bs, codomain) -> 
+        (let codomainML = (extractComp  c codomain) in 
+        if  (codomainML = erasedContent) 
+        then erasedContent 
+        else  (curry (List.map (extractBinder c) bs) codomainML))
   | Typ_refine (bv,ty) -> extractTyp c ty
   | Typ_app (ty, arrgs) ->
     (match ty.n with
@@ -104,16 +108,39 @@ match bn with
 | (Inl btv,_) -> btv.v.realname
 | (Inr bvv,_) -> bvv.v.realname
 
+(* these vars will have type Type, irrespective of that types they had in F*. This is to match the limitations of  OCaml*)
 let extendContextWithTyVars (c:context) (idents : list<ident>) : context = failwith "extendContextWithTyVars is not implemented"
 
-let extractSigElt (c:context) (s:sigelt) : mlsig =
+let lookupSigelt (c:context) (ctorname: lident) : sigelt 
+    = failwith "lookupSigelt not implemented"
+
+let mlsymbolOfLident (id : lident) : mlsymbol =
+  id.ident.idText
+
+let extractCtor (c:context) (ctorname: lident):  (mlsymbol * list<mlty>) =
+match (lookupSigelt c ctorname) with
+| Sig_datacon (l, (*codomain*) _ ,(_,cargs:binders,_),_,_,_) -> 
+        (mlsymbolOfLident l, List.map (extractBinder c) cargs)    
+| _ -> failwith "Was expecting a data constructor declaration with this name. Please report a bug."
+ 
+(*similar to the definition of the second part of \hat{\epsilon} in page 110*)
+let extractSigElt (c:context) (s:sigelt) : option<mlsig1> =
 match s with
-| Sig_typ_abbrev (l,bs,k,t,q,r) -> 
+| Sig_typ_abbrev (l,bs,_,t,_,_) -> 
     let idents = List.map binderIdent bs in
-    let tyDecBody = MLTD_Abbrev (extractTyp (extendContextWithTyVars c idents) t) in
-     [MLS_Ty [(l.str, List.map convIdent idents , Some tyDecBody)]]
-| Sig_tycon (l,bs,k,muts,constrs,lq,r) -> [] (*this will be a list with possibly several elements, depending on the constructors. We can first ignore mutual inductives*)
-| _ -> []
+    let newContext = (extendContextWithTyVars c idents) in
+    let tyDecBody = MLTD_Abbrev (extractTyp newContext t) in
+     Some (MLS_Ty [(mlsymbolOfLident l, List.map convIdent idents , Some tyDecBody)])
+     (*type l idents = tyDecBody*)
+| Sig_tycon (l,bs,_,muts,constrs,_,_) -> 
+    let idents = List.map binderIdent bs in
+    let newContext = (extendContextWithTyVars c idents) in
+    let tyDecBody = MLTD_DType (List.map (extractCtor newContext) constrs) in
+    if (0<List.length muts)
+    then failwith "not handling mutuals for now"
+    else  Some (MLS_Ty [(mlsymbolOfLident l, List.map convIdent idents , Some tyDecBody)])
+     (*type l idents = tyDecBody*)
+| _ -> None
 
 
 [<EntryPoint>]

@@ -80,7 +80,7 @@ and mlbranch = mlpattern * option<mlexpr> * mlexpr
 type mltybody =
 | MLTD_Abbrev of mlty
 | MLTD_Record of list<(mlsymbol * mlty)>
-| MLTD_DType  of list<(mlsymbol * list<mlty>)>
+| MLTD_DType  of list<(mlsymbol * list<mlty>)> (*list of constructors?*)
 
 type mltydecl = list<(mlsymbol * mlidents * option<mltybody>)>
 
@@ -94,7 +94,9 @@ type mlmodule = list<mlmodule1>
 
 type mlsig1 =
 | MLS_Mod of mlsymbol * mlsig
-| MLS_Ty  of mltydecl
+| MLS_Ty  of mltydecl 
+    (*used for both type schemes and inductive types. Even inductives are defined in OCaml using type ....,
+        unlike data in Haskell *)
 | MLS_Val of mlsymbol * mltyscheme
 | MLS_Exn of mlsymbol * list<mlty>
 
