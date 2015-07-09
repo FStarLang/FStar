@@ -5415,6 +5415,15 @@ Hint: have a look e.g. at the HMAC construction.
 
 # Advanced cryptographic examples
 
+## Stateful Encryption
+
+~ Exercise
+
+~~ CodeFragment {filename=exercises/stateful-encrypt.fst name=ex13a-stateful-encrypt}
+assume val enc: k:key -> p:plain -> c:cipher
+~~
+
+
 ## Encryption
 
 The basis of our encryption example is the interface of a symmetric encryption scheme based on a block cipher, say AES.
@@ -5442,7 +5451,7 @@ assume val dec: key -> cipher -> Tot plain
 assume val enc: k:key -> p:plain -> c:cipher
 ```
 
-~ Exercise {#exencrypt}
+~ Exercise
 Refine the type of the encryption function to model the *correctness* property:
 A correctly generated ciphertext, decrypts to its plaintext.
 ~~ CodeFragment {filename=exercises/encrypt.fst name=ex13a-encrypt}
