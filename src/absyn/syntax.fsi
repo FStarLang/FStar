@@ -154,7 +154,7 @@ and pat' =
   | Pat_dot_typ  of btvar * typ
 and pat = withinfo_t<pat',option<either<knd,typ>>>                (* the meta-data is a typ, except for Pat_dot_typ and Pat_tvar, where it is a kind (not strictly needed) *)
 and knd' =
-  | Kind_type
+  | Kind_type                                             (*Type*)
   | Kind_effect
   | Kind_abbrev of kabbrev * knd                          (* keep the abbreviation around for printing *)
   | Kind_arrow of binders * knd                           (* (ai:ki|xi:ti) => k' *)

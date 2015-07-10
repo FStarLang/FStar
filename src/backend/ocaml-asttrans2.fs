@@ -35,16 +35,18 @@ type context = env
 let contains (c:context) (b:btvar) = failwith "contains is undefined"
 
 
-let deltaUnfold (i : lident) (c: context) : (option<typ>) = failwith "deltaUnfold is undefined"
+let deltaUnfold (i : lident) (c: context) : (option<typ>) = None (*FIX!!*)
 
 (*The thesis defines a type scheme as "something that becomes a type when enough arguments (possibly none?) are applied to it" ,  e.g. vector, list.
     I guess in F*, these include Inductive types and type abbreviations.
     Formal definition is @ Definition 8, Sec. 1.2.3
       *)
-let isTypeScheme (i : lident) (c: context) : (option<typ>) =  failwith "isTypeScheme is undefined"
+let isTypeScheme (i : lident) (c: context) : bool = true  (* FIX!! *)
 
 let liftType' (t:typ') : typ = failwith "liftType is undefined"
 
+let lident2mlpath (l:lident) : mlpath =
+  (List.map (fun x -> x.idText) l.ns, l.ident.idText)
 (*the \hat{\epsilon} function in the thesis (Sec. 3.3.5) *)
 let rec extractType' (c:context) (ft:typ') : mlty = 
 (* first \beta, \iota and \zeta reduces ft. Since F* does not have SN, one has to be more careful for the termination argument.
@@ -66,10 +68,10 @@ match ft with
             (*the args are thrown away, because in OCaml, type variables have type Type and not something like -> .. -> .. Type *)
         | Typ_const ftv -> 
             (match  (isTypeScheme ftv.v c)  with
-             | Some tys -> 
+             | true -> 
                  let mlargs = List.map (getTypeFromArg c) arrgs in
-                    (MLTY_App (extractTyp c tys, MLTY_Tuple mlargs))
-             | None -> 
+                    (MLTY_App ( MLTY_Named ([ (* FIX!! *)],(lident2mlpath ftv.v)) , MLTY_Tuple mlargs))
+             | false -> 
                  (match  (deltaUnfold ftv.v c) with
                  | Some tyu ->  extractTyp c tyu
                  | None -> unknownType
@@ -81,8 +83,8 @@ match ft with
   | Typ_ascribed _  -> unknownType
   | Typ_meta _ -> unknownType
   | Typ_uvar _ -> unknownType
-  | Typ_delayed _ -> unknownType
-  | Typ_unknown  _ -> unknownType
+  | Typ_delayed ((Inr f),_) -> extractTyp c (f ())
+  |   _ -> unknownType
 and getTypeFromArg (c:context) (a:arg) : mlty =
 match (fst a) with
 | Inl ty -> extractTyp c ty
@@ -122,19 +124,21 @@ let mlsymbolOfLident (id : lident) : mlsymbol =
 (*just enough info to generate OCaml code; add more info as needed*)
 type inductiveConstructor = {
   cname: string;
-  cargs : binders
+  ctype : typ;
+  cargs : binders (*will this list always be empty? it has always been empty: tested nat, list, vec*)
 }
 type inductiveTypeFam = {
   tyName: string;
+  k : knd;
   tyBinders: binders;
   constructors : list<inductiveConstructor>
 }
 
-(*returns the unconsumed part of sigs*)
+(*the second element of the returned pair is the unconsumed part of sigs*)
 let parseInductiveConstructor (sigs : list<sigelt>) : (inductiveConstructor * list<sigelt>) =
 match sigs with
-| (Sig_datacon (l, (*codomain*) _ ,(_,cargs:binders,_),_,_,_))::tlsig ->
-     ({ cname = l.ident.idText ; cargs =[] }, tlsig)
+| (Sig_datacon (l, (*codomain*) t ,(_,cargs:binders,_),_,_,_))::tlsig ->
+     ({ cname = l.ident.idText ; ctype = t; cargs =[] }, tlsig)
 | _ -> failwith "incorrect sigelt provided to parseInductiveConstructor"
 
 let rec parseInductiveConstructors (sigs : list<sigelt>) (n: int) : (list<inductiveConstructor> * list<sigelt>) =
@@ -146,27 +150,34 @@ let rec parseInductiveConstructors (sigs : list<sigelt>) (n: int) : (list<induct
     else
         ([], sigs)
 
-(*returns the unconsumed part of \pi_1 sigs*)
+(*the second element of the returned pair is the unconsumed part of sigs*)
 let parseInductiveTypeFromSigBundle
     (sigs : list<sigelt>)  : (inductiveTypeFam * list<sigelt>)  =
 match sigs with
-| (Sig_tycon (l,bs,_,_,constrs,_,_))::tlsig -> 
+| (Sig_tycon (l,bs,kk,_,constrs,_,_))::tlsig -> 
     let (indConstrs:list<inductiveConstructor>, ttlsig) = parseInductiveConstructors tlsig (List.length constrs) in
-     ({tyName = l.ident.idText; tyBinders=bs; constructors=indConstrs}, ttlsig)
+     ({tyName = l.ident.idText; k = kk; tyBinders=bs; constructors=indConstrs}, ttlsig)
 | _ -> failwith "incorrect sif bundle provided to parseInductiveTypeFromSigBundle"
 
-(*returns the unconsumed part of \pi_1 sigs*)
 let parseFirstInductiveType
     (s : sigelt)  : inductiveTypeFam  =
 match s with
 | Sig_bundle (sigs, _, _, _) -> fst (parseInductiveTypeFromSigBundle sigs)
 | _ -> failwith "incorrect sif bundle provided to parseInductiveTypeFromSigBundle"
 
-let extractCtor (c:context) (ctorname: lident):  (mlsymbol * list<mlty>) =
-match (lookupSigelt c ctorname) with
-| Sig_datacon (l, (*codomain*) _ ,(_,cargs:binders,_),_,_,_) -> 
-        (mlsymbolOfLident l, List.map (extractBinder c) cargs)    
-| _ -> failwith "Was expecting a data constructor declaration with this name. Please report a bug."
+
+let rec argTypes  (t: mlty) : list<mlty> =
+match t with
+| MLTY_Fun (a,b) -> a::(argTypes b)
+| _ -> []
+ 
+
+let extractCtor (c:context) (ctor: inductiveConstructor):  (mlsymbol * list<mlty>) =
+   if (0< List.length ctor.cargs)
+   then (failwith "cargs is unexpectedly non-empty. This is a design-flaw, please report.")
+   else 
+        (let mlt = extractTyp c ctor.ctype in
+        (ctor.cname, argTypes mlt))
  
 (*similar to the definition of the second part of \hat{\epsilon} in page 110*)
 let extractSigElt (c:context) (s:sigelt) : option<mlsig1> =
@@ -177,13 +188,12 @@ match s with
     let tyDecBody = MLTD_Abbrev (extractTyp newContext t) in
      Some (MLS_Ty [(mlsymbolOfLident l, List.map convIdent idents , Some tyDecBody)])
      (*type l idents = tyDecBody*)
-| Sig_tycon (l,bs,_,muts,constrs,_,_) -> 
-    let idents = List.map binderIdent bs in
+| Sig_bundle _ -> 
+    let ind = parseFirstInductiveType s in
+    let idents = List.map binderIdent ind.tyBinders in
     let newContext = (extendContextWithTyVars c idents) in
-    let tyDecBody = MLTD_DType (List.map (extractCtor newContext) constrs) in
-    if (0<List.length muts)
-    then failwith "not handling mutuals for now"
-    else  Some (MLS_Ty [(mlsymbolOfLident l, List.map convIdent idents , Some tyDecBody)])
+    let tyDecBody = MLTD_DType (List.map (extractCtor newContext) ind.constructors) in
+          Some (MLS_Ty [(ind.tyName, List.map convIdent idents , Some tyDecBody)])
      (*type l idents = tyDecBody*)
 | _ -> None
 
