@@ -38,6 +38,8 @@ type context = {
     tyConstants : list<lident>
 }
 
+let emptyContext : context = {tyVars=[]; tyConstants =[]}
+
 (*is there an F# library of associative lists?*)
 let contains (c:context) (b:btvar) = List.contains b.v.realname (*why not ppname?*) c.tyVars
 

@@ -1006,20 +1006,27 @@ let mlsig_of_sig (mlenv : mlenv) (modx : list<sigelt>) : mlsig =
     let asleft = function Inl x -> x | Inr _ -> failwith "asleft" in
     List.choose (fun x -> Option.map asleft (mlmod1_of_mod1 Sig mlenv x)) modx
 
-let printIfInductive (el1:sigelt) : unit =
-    match el1 with
-    | Sig_bundle _ ->  let ind = NewExtaction.parseFirstInductiveType el1 in
-        printfn "%A\n" (ind)
-    | _ -> ()
+let rec extractInductives (c:NewExtaction.context) (sigs:list<sigelt>) : list<mlsig1> =
+    match sigs with
+    | hsig::tlsigs ->
+        (match NewExtaction.extractSigElt c hsig with
+        | Some (exportedConst, mls) ->  
+                let nc = NewExtaction.extendContext c [] [exportedConst] in
+                mls::(extractInductives nc tlsigs)
+        | None -> (extractInductives c tlsigs)
+        )
+    | _ -> []
 
 
 (* -------------------------------------------------------------------- *)
 let mlmod_of_fstar (fmod_ : modul) =
     let name = Backends.OCaml.Syntax.mlpath_of_lident fmod_.name in
-    fprint1 "OCaml extractor June 9 2015 : %s\n" fmod_.name.ident.idText;
-    printfn "%A\n" (fmod_.declarations);
-    fprint1 "%s\n\n\n\n\n\n\n\n\n" "end";
-    let _ = List.map printIfInductive (fmod_.declarations) in
+    //fprint1 "OCaml extractor June 10 2015 : %s\n" fmod_.name.ident.idText;
+    //printfn "%A\n" (fmod_.declarations);
+    //fprint1 "%s\n\n\n\n\n\n\n\n\n" "end";
+    let ms =  extractInductives NewExtaction.emptyContext (*instead of being empty, it should be initialized with the constants from the imported modules*) 
+                               (fmod_.declarations) in
+    printfn "%A\n" ms;
     let mod_ = mlmod_of_mod (mk_mlenv name) fmod_.declarations in
     let sig_ = mlsig_of_sig (mk_mlenv name) fmod_.declarations in
     (name, sig_, mod_)
