@@ -2,8 +2,6 @@
     options:--z3timeout 20 --max_fuel 8 --max_ifuel 6 --initial_fuel 4 --initial_ifuel 2;
     other-files:../../lib/classical.fst ../../lib/ext.fst ../../lib/constr.fst
   --*)
-//NS: --log_types   ... don't give this option in the file by default.
-//    it prints a LOT of noisy debugging in the regression tests
 
 (*TODO list :
  * finish the proof of preservation (KTApp and KEApp)

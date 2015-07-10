@@ -1,14 +1,11 @@
 VERFILES=stlc_cbv_db_pntsubst_nolists.fst stlc_cbv_named.fst db_subst.fst
 include ../Makefile.include
-all: .all.ver tinyfstar pars stlc_cbv_db_parsubst lo-reduced f-omega tinyfstar-new hoare_wp
+all: .all.ver pars stlc_cbv_db_parsubst lo-reduced f-omega micro-fstar hoare_wp
 
 pars:
 	$(FSTAR) ../../lib/ext.fst pars.fst --max_fuel 1 --max_ifuel 1
 
-tinyfstar: ../../lib/constr.fst tinyfstar.fst
-	$(FSTAR) $^
-
-tinyfstar-new: tinyfstar-new.fst
+micro-fstar: micro-fstar.fst
 	$(FSTAR) $^
 
 lo:
