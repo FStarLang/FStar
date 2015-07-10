@@ -1027,8 +1027,11 @@ let mlmod_of_fstar (fmod_ : modul) =
     let ms =  extractInductives NewExtaction.emptyContext (*instead of being empty, it should be initialized with the constants from the imported modules*) 
                                (fmod_.declarations) in
     printfn "%A\n" ms;
-    let mod_ = mlmod_of_mod (mk_mlenv name) fmod_.declarations in
-    let sig_ = mlsig_of_sig (mk_mlenv name) fmod_.declarations in
+    let mod_ : mlmodule = mlmod_of_mod (mk_mlenv name) fmod_.declarations in
+    let sig_ : mlsig = mlsig_of_sig (mk_mlenv name) fmod_.declarations in
+    fprint1 "%s\n\n" "original";
+    printfn "%A\n" sig_;
+
     (name, sig_, mod_)
 
 let mlmod_of_iface (fmod_ : modul) =
