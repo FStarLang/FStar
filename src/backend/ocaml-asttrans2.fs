@@ -1,12 +1,13 @@
 ﻿// Learn more about F# at http://fsharp.net
 // See the 'F# Tutorial' project for more help.
 #light "off"
-module Microsoft.FStar.Extraction
+module Microsoft.FStar.Backends.OCaml.NewExtaction
 open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Backends.OCaml.Syntax
 open Microsoft.FStar.Util
 open Microsoft.FStar.Tc.Env
+open Microsoft.FStar
 
 let rec curry (inp: (list<mlty>)) (out: mlty) =
   match inp with
@@ -154,6 +155,12 @@ match sigs with
      ({tyName = l.ident.idText; tyBinders=bs; constructors=indConstrs}, ttlsig)
 | _ -> failwith "incorrect sif bundle provided to parseInductiveTypeFromSigBundle"
 
+(*returns the unconsumed part of \pi_1 sigs*)
+let parseFirstInductiveType
+    (s : sigelt)  : inductiveTypeFam  =
+match s with
+| Sig_bundle (sigs, _, _, _) -> fst (parseInductiveTypeFromSigBundle sigs)
+| _ -> failwith "incorrect sif bundle provided to parseInductiveTypeFromSigBundle"
 
 let extractCtor (c:context) (ctorname: lident):  (mlsymbol * list<mlty>) =
 match (lookupSigelt c ctorname) with

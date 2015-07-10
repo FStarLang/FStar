@@ -13,6 +13,8 @@ open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn.Util
 open Microsoft.FStar.Backends.OCaml.Syntax
 open FSharp.Format
+open Microsoft.FStar.Backends
+
 
 (* -------------------------------------------------------------------- *)
 type mlenv = { mle_name : mlpath; }
@@ -1004,11 +1006,20 @@ let mlsig_of_sig (mlenv : mlenv) (modx : list<sigelt>) : mlsig =
     let asleft = function Inl x -> x | Inr _ -> failwith "asleft" in
     List.choose (fun x -> Option.map asleft (mlmod1_of_mod1 Sig mlenv x)) modx
 
+let printIfInductive (el1:sigelt) : unit =
+    match el1 with
+    | Sig_bundle _ ->  let ind = NewExtaction.parseFirstInductiveType el1 in
+        printfn "%A\n" (ind)
+    | _ -> ()
+
+
 (* -------------------------------------------------------------------- *)
 let mlmod_of_fstar (fmod_ : modul) =
     let name = Backends.OCaml.Syntax.mlpath_of_lident fmod_.name in
     fprint1 "OCaml extractor June 9 2015 : %s\n" fmod_.name.ident.idText;
     printfn "%A\n" (fmod_.declarations);
+    fprint1 "%s\n\n\n\n\n\n\n\n\n" "end";
+    let _ = List.map printIfInductive (fmod_.declarations) in
     let mod_ = mlmod_of_mod (mk_mlenv name) fmod_.declarations in
     let sig_ = mlsig_of_sig (mk_mlenv name) fmod_.declarations in
     (name, sig_, mod_)
