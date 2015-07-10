@@ -117,6 +117,44 @@ let lookupSigelt (c:context) (ctorname: lident) : sigelt
 let mlsymbolOfLident (id : lident) : mlsymbol =
   id.ident.idText
 
+
+(*just enough info to generate OCaml code; add more info as needed*)
+type inductiveConstructor = {
+  cname: string;
+  cargs : binders
+}
+type inductiveTypeFam = {
+  tyName: string;
+  tyBinders: binders;
+  constructors : list<inductiveConstructor>
+}
+
+(*returns the unconsumed part of sigs*)
+let parseInductiveConstructor (sigs : list<sigelt>) : (inductiveConstructor * list<sigelt>) =
+match sigs with
+| (Sig_datacon (l, (*codomain*) _ ,(_,cargs:binders,_),_,_,_))::tlsig ->
+     ({ cname = l.ident.idText ; cargs =[] }, tlsig)
+| _ -> failwith "incorrect sigelt provided to parseInductiveConstructor"
+
+let rec parseInductiveConstructors (sigs : list<sigelt>) (n: int) : (list<inductiveConstructor> * list<sigelt>) =
+    if (0<n)
+    then 
+         let (ic, tsigs) = parseInductiveConstructor sigs in 
+         let (ics, ttsig) = (parseInductiveConstructors tsigs (n-1)) in 
+            (ic::ics, ttsig)
+    else
+        ([], sigs)
+
+(*returns the unconsumed part of \pi_1 sigs*)
+let parseInductiveTypeFromSigBundle
+    (sigs : list<sigelt>)  : (inductiveTypeFam * list<sigelt>)  =
+match sigs with
+| (Sig_tycon (l,bs,_,_,constrs,_,_))::tlsig -> 
+    let (indConstrs:list<inductiveConstructor>, ttlsig) = parseInductiveConstructors tlsig (List.length constrs) in
+     ({tyName = l.ident.idText; tyBinders=bs; constructors=indConstrs}, ttlsig)
+| _ -> failwith "incorrect sif bundle provided to parseInductiveTypeFromSigBundle"
+
+
 let extractCtor (c:context) (ctorname: lident):  (mlsymbol * list<mlty>) =
 match (lookupSigelt c ctorname) with
 | Sig_datacon (l, (*codomain*) _ ,(_,cargs:binders,_),_,_,_) -> 
