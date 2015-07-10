@@ -8,6 +8,8 @@ open Microsoft.FStar.Backends.OCaml.Syntax
 open Microsoft.FStar.Util
 open Microsoft.FStar.Tc.Env
 open Microsoft.FStar
+open Microsoft.FStar.Tc.Normalize
+open Microsoft.FStar.Absyn.Print
 
 let rec curry (inp: (list<mlty>)) (out: mlty) =
   match inp with
@@ -27,7 +29,7 @@ let erasedContent : mlty = MLTY_Tuple []
 let unknownType : mlty = MLTY_Var  ("Obj.t", 0)
 
 let convRange (r:Range.range) : int = 0 (*FIX!!*)
-let convIdent (id:ident) : mlident = (id.idText,(convRange id.idRange))
+let convIdent (id:ident) : mlident = (id.idText (*FIX!! these names are of the form _n_m*) ,(convRange id.idRange))
     
 (* This is all the context is needed for extracting F* types to OCaml.
    In particular, the definition of a type constant is not needed when translating references to it.
@@ -194,6 +196,9 @@ let extractCtor (c:context) (ctor: inductiveConstructor):  (mlsymbol * list<mlty
    then (failwith "cargs is unexpectedly non-empty. This is a design-flaw, please report.")
    else 
         (let mlt = extractTyp c ctor.ctype in
+            fprint1 "extracting the type of constructor %s\n" (lident2mlsymbol ctor.cname);
+            fprint1 "%s\n" (typ_to_string ctor.ctype);
+            printfn "%A\n" (ctor.ctype);
         (lident2mlsymbol ctor.cname, argTypes mlt))
  
 (*similar to the definition of the second part of \hat{\epsilon} in page 110*)
