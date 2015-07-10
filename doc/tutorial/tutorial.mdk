@@ -5430,6 +5430,7 @@ that the sender’s counter in the message matches hers each time a message
 is received and increments her counter.
 
 ~ Exercise
+Look at the following code, what happens in case of decryption failure?
 
 ~~ CodeFragment {filename=exercises/stateful-encrypt.fst name=ex13a-stateful-encrypt}
 type statefulEntry =
@@ -5471,8 +5472,7 @@ val stateful_dec: #i:rid -> d:st_decryptor i -> c:cipher -> ST (option plain)
                    /\ (is_Some p ==>
                           ((sel h1 (StDec.ctr d) = r + 1)
                            /\ StEntry.p (Seq.index log r) = Some.v p))))))
-// note that we do not increment the counter in case of decryption failure,
-// thereby enabling retries
+
 let stateful_dec _id (StDec _ ctr d) c =
   let i = op_Bang ctr in
   cut(trigger i);
