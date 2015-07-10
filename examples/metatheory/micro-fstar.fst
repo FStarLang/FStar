@@ -3,6 +3,15 @@
     other-files:../../lib/classical.fst ../../lib/ext.fst ../../lib/constr.fst
   --*)
 
+(* Formalization of micro-fstar proofs of progress and preservation
+   for the PURE. The definitions cover most of micro-fstar, the only
+   exceptions are multi-monads, higher-order state, and dynamic
+   allocation, however, none of these are relevant here, since our
+   proofs are for the PURE effect. The proofs are mostly complete and
+   all assumed lemmas are listed and explained below. Many are not yet
+   complete because of limitations in our current F* implementation,
+   which we hope to fix soon. *)
+
 (*TODO list :
  * finish the proof of preservation (KTApp and KEApp)
  * write the substitution lemmas on type encodings (subst_on_bindall etc …)
