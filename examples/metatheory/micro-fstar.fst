@@ -4,7 +4,7 @@
   --*)
 
 (* Formalization of micro-fstar proofs of progress and preservation
-   for the PURE. The definitions cover most of micro-fstar, the only
+   for the PURE effect. The definitions cover most of micro-fstar, the only
    exceptions are multi-monads, higher-order state, and dynamic
    allocation, however, none of these are relevant here, since our
    proofs are for the PURE effect. The proofs are mostly complete and
