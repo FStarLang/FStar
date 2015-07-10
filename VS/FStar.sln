@@ -38,8 +38,6 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "jsbackend", "..\src\jsbacke
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "tests", "..\src\tests\tests.fsproj", "{5716A290-2899-478B-BEA2-1C59FA088DAD}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "extraction", "extraction\extraction.fsproj", "{B4110D1B-827E-48B5-B1FF-09451AE5358B}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -86,10 +84,6 @@ Global
 		{5716A290-2899-478B-BEA2-1C59FA088DAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5716A290-2899-478B-BEA2-1C59FA088DAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5716A290-2899-478B-BEA2-1C59FA088DAD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B4110D1B-827E-48B5-B1FF-09451AE5358B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B4110D1B-827E-48B5-B1FF-09451AE5358B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B4110D1B-827E-48B5-B1FF-09451AE5358B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B4110D1B-827E-48B5-B1FF-09451AE5358B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

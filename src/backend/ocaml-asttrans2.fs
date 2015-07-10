@@ -180,8 +180,9 @@ match s with
      (*type l idents = tyDecBody*)
 | _ -> None
 
-
+(*
 [<EntryPoint>]
 let main argv = 
     Util.print_string "hello, what can I extract for you?";
     0
+    *)
