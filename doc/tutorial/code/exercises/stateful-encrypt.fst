@@ -52,7 +52,8 @@ let gen () =
 assume val find_seq : #a:Type -> f:(a -> Tot bool) -> s:seq a
             -> Tot (o:option (i:nat{i < Seq.length s /\ f (Seq.index s i)}) { is_None o ==> (forall (i:nat{i < Seq.length s}). not (f (Seq.index s i)))})
 
-assume val enc0: s:seq cipher (* ghost *) -> ST cipher
+assume val enc0: s:seq cipher (* ghost *)
+           -> ST cipher
   (fun h -> True)
   (fun h0 c h1 -> h0=h1
                /\ find_seq (fun c' -> c=c') s = None)
