@@ -11,6 +11,10 @@ open Microsoft.FStar
 open Microsoft.FStar.Tc.Normalize
 open Microsoft.FStar.Absyn.Print
 
+
+(*copied from ocaml-strtrans.fs*)
+let prependTick (x,n) = if Util.starts_with x "'" then (x,n) else ("'"^x,n)
+
 let rec curry (inp: (list<mlty>)) (out: mlty) =
   match inp with
   | [] -> out
@@ -62,7 +66,7 @@ let rec filterImplicits (bs: binders) : binders =
                 bs
 
 let lident2mlpath (l:lident) : mlpath =
-  (List.map (fun x -> x.idText) l.ns, l.ident.idText)
+  ( (* List.map (fun x -> x.idText) l.ns *) [], l.ident.idText)
 
 
 (*the \hat{\epsilon} function in the thesis (Sec. 3.3.5) *)
@@ -73,10 +77,13 @@ let rec extractType' (c:context) (ft:typ') : mlty =
     Why not \delta? I guess the reason is that unfolding definitions will make the resultant OCaml code less readable.
     However in the Typ_app case,  \delta reduction is done as the second-last resort, just before giving up and returing unknownType;
         a bloated type is atleast as good as unknownType?
+
+    An an F* specific example, unless we unfold Mem a pre post to StState a wp wlp, we have no idea that it should be translated to a
 *)
 match ft with
 (*The next 2 cases duplicate a lot of code in the Type_app case. It will nice to share the common computations.*)
-  | Typ_btvar btv -> (if (contains c btv) then MLTY_Var (convIdent btv.v.ppname) else unknownType)
+  | Typ_btvar btv -> (if (contains c btv) then MLTY_Var (prependTick (convIdent btv.v.ppname)) else unknownType)
+  (*it is not clear whether description in the thesis covers type applications with 0 args. However, this case is needed to translate types like nnat, and so far seems to work as expected*)
   | Typ_const ftv -> 
             (match  (isTypeScheme ftv.v c)  with
              | true -> MLTY_Named ([ (* FIX!! *)],(lident2mlpath ftv.v))
@@ -95,7 +102,7 @@ match ft with
   | Typ_refine (bv,ty) -> extractTyp c ty
   | Typ_app (ty, arrgs) ->
     (match ty.n with
-        | Typ_btvar btv -> (if (contains c btv) then MLTY_Var (convIdent btv.v.ppname) else unknownType)
+        | Typ_btvar btv -> (if (contains c btv) then MLTY_Var (prependTick (convIdent btv.v.ppname)) else unknownType)
             (*the args are thrown away, because in OCaml, type variables have type Type and not something like -> .. -> .. Type *)
         | Typ_const ftv -> 
             (match  (isTypeScheme ftv.v c)  with
@@ -227,7 +234,7 @@ match k with
 | Kind_delayed (k, _ ,_) -> numIndices k.n typeName
 | _ -> failwith ("unexpected signature of inductive type" ^ typeName) 
 
-let dummyIdent (n:int) : mlident = ("dummyV"^(n.ToString ()), 0)
+let dummyIdent (n:int) : mlident = ("'dummyV"^(n.ToString ()), 0)
 
 let rec firstNNats (n:int) : list<int> =
 if (0<n)
@@ -245,7 +252,7 @@ match s with
     let idents = List.map binderIdent bs in
     let newContext = (extendContext c idents [l] ) in
     let tyDecBody = MLTD_Abbrev (extractTyp newContext t) in
-     Some (l, MLS_Ty [(mlsymbolOfLident l, List.map convIdent idents , Some tyDecBody)])
+     Some (l, MLS_Ty [(mlsymbolOfLident l, List.map (convIdent >> prependTick) idents  , Some tyDecBody)])
      (*type l idents = tyDecBody*)
 
 | Sig_bundle _ -> 
@@ -254,7 +261,7 @@ match s with
     let newContext = (extendContext c idents [ind.tyName]) in
     let nIndices = numIndices ind.k.n ind.tyName.ident.idText in
     let tyDecBody = MLTD_DType (List.map (extractCtor newContext) ind.constructors) in
-          Some (ind.tyName, MLS_Ty [(lident2mlsymbol ind.tyName, List.append (List.map convIdent idents) (dummyIndexIdents nIndices)  , Some tyDecBody)])
+          Some (ind.tyName, MLS_Ty [(lident2mlsymbol ind.tyName, List.append (List.map (convIdent >> prependTick) idents) (dummyIndexIdents nIndices)  , Some tyDecBody)])
      (*type l idents = tyDecBody*)
 | _ -> None
 
@@ -271,3 +278,9 @@ let rec extractTypeDefnsAux (c: context) (sigs:list<sigelt>) : list<mlsig1> =
 
 let extractTypeDefns (sigs:list<sigelt>) : list<mlsig1> =
    extractTypeDefnsAux emptyContext sigs
+
+
+(* Lingering questions
+  1) How to handle the lack of partial application of constructors in OCaml
+  2) What about implicit arguments?
+*)

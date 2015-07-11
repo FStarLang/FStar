@@ -1,4 +1,3 @@
-
 type nnat =
 | O
 | S of nnat
@@ -11,6 +10,7 @@ type ('a, 'b) list2 =
 | Nil2
 | Cons2 of 'a * 'b * ('a, 'b) list2
 
+(*
 type ('a, 'dummyV1) vec =
 | Nill
-| Conss of nnat * 'a * ('a, 'dummyV1) vec
+| Conss of nnat * 'a * ('a, ()) vec *)
