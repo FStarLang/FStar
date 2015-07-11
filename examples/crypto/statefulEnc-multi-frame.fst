@@ -25,7 +25,7 @@ assume Length_emp: forall (a:Type).{:pattern (Seq.length (emp #a))} Seq.length (
 assume val find_seq : #a:Type -> f:(a -> Tot bool) -> s:seq a
             -> Tot (o:option (i:nat{i < Seq.length s /\ f (Seq.index s i)}) { is_None o ==> (forall (i:nat{i < Seq.length s}). not (f (Seq.index s i)))})
 
-(* not quite typing...
+(* TODO not quite typing...
 // i is the next index to try
 val find_seq' : #a:Type -> f:(a -> Tot bool) -> s:seq a ->
   i:nat { i <= Seq.length s /\ (forall (j:nat{j<i}). not (f (Seq.index s j))) } ->
@@ -103,9 +103,9 @@ type pairwise_distinct (s:list bi) =
 *)
 let basic_fp : ref (list bi) = ref []
 
-// somewhat generic
-// could we put the separation from basic_fp above instead?
-// could we show that those refs are separated from others?
+(* TODO somewhat generic
+   could we put the separation from basic_fp above instead?
+   could we show that those refs are separated from others? *)
 type basic_fp_inv (h:heap) =
   Heap.contains h basic_fp
   /\ (forall bi.{:pattern (triggerBI bi)}
@@ -346,7 +346,7 @@ let stateful_dec (StDec _ ctr d) c =
     | None -> None
     | Some p -> ctr := !ctr + 1; Some p
 
-// what does it do? related to transient failures?
+(* TODO what does it do? related to transient failures? *)
 
 val test_st_frame : s1:sti -> s2:sti{distinct_sti s1 s2} -> ST unit
     (requires (fun h ->
@@ -369,7 +369,7 @@ let test_st_frame s1 s2 =
   let c0 = stateful_enc (STI.e s1) p in
   let c1 = stateful_enc (STI.e s1) q in
   let c2 = stateful_enc (STI.e s2) p in
-  // let oX = stateful_dec (STI.d s1) c2 in // might succeed
+  // let oX = stateful_dec (STI.d s1) c2 in  (* TODO might succeed *)
   let o0 = stateful_dec (STI.d s1) c0 in
   let o1 = stateful_dec (STI.d s1) c1 in
   assert (Some.v o0 = p);

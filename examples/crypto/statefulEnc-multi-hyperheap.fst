@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi Set --admit_fsi Seq --admit_fsi Map --max_ifuel 1 --initial_ifuel 1 --initial_fuel 0 --max_fuel 0 --z3timeout 10;
-    other-files:../../lib/ext.fst ../../lib/set.fsi ../../lib/heap.fst ../../lib/map.fsi ../../lib/hyperheap.fst ../../lib/seq.fsi
+    other-files:../../lib/ext.fst ../../lib/set.fsi ../../lib/st.fst ../../lib/heap.fst ../../lib/map.fsi ../../lib/hyperheap.fst ../../lib/seq.fsi
   --*)
 (* A standalone experiment corresponding to building a stateful encryption on
    top of a stateless one ... along the lines of StatefulLHAE on top of AEAD_GCM *)
