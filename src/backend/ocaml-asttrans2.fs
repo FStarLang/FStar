@@ -29,7 +29,7 @@ let erasedContent : mlty = MLTY_Tuple []
 let unknownType : mlty = MLTY_Var  ("Obj.t", 0)
 
 let convRange (r:Range.range) : int = 0 (*FIX!!*)
-let convIdent (id:ident) : mlident = (id.idText (*FIX!! these names are of the form _n_m*) ,(convRange id.idRange))
+let convIdent (id:ident) : mlident = (id.idText ,(convRange id.idRange))
     
 (* This is all the context is needed for extracting F* types to OCaml.
    In particular, the definition of a type constant is not needed when translating references to it.
@@ -42,7 +42,7 @@ type context = {
 
 let emptyContext : context = {tyVars=[]; tyConstants =[]}
 
-(*is there an F# library of associative lists?*)
+(*is there an F# library of associative lists? yes, Microsoft.FStar.Util.smap*)
 let contains (c:context) (b:btvar) = List.contains b.v.ppname (*why not ppname?*) c.tyVars
 
 let deltaUnfold (i : lident) (c: context) : (option<typ>) = None (*FIX!!*)
@@ -63,6 +63,8 @@ let rec filterImplicits (bs: binders) : binders =
 
 let lident2mlpath (l:lident) : mlpath =
   (List.map (fun x -> x.idText) l.ns, l.ident.idText)
+
+
 (*the \hat{\epsilon} function in the thesis (Sec. 3.3.5) *)
 let rec extractType' (c:context) (ft:typ') : mlty = 
 (* first \beta, \iota and \zeta reduces ft. Since F* does not have SN, one has to be more careful for the termination argument.
@@ -97,7 +99,7 @@ match ft with
             (match  (isTypeScheme ftv.v c)  with
              | true -> 
                  let mlargs = List.map (getTypeFromArg c) arrgs in
-                    (MLTY_App ( MLTY_Named ([ (* FIX!! *)],(lident2mlpath ftv.v)) , MLTY_Tuple mlargs))
+                    (MLTY_Named (mlargs,(lident2mlpath ftv.v)))
              | false -> 
                  (match  (deltaUnfold ftv.v c) with
                  | Some tyu ->  extractTyp c tyu
