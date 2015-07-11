@@ -227,7 +227,8 @@ type st_paired (enc:st_encryptor) (dec:st_decryptor) =
       /\ StEnc.log enc =!= StEnc.ctr enc                    //These last four are needed because seq is abstract
       /\ StEnc.log enc =!= StDec.ctr dec                    //...
       /\ Enc.log (StEnc.key enc) =!= StEnc.ctr enc          //...
-      /\ Enc.log (StEnc.key enc) =!= StDec.ctr dec          //and so potentially equal to nat ... TODO : make seq a new type
+      /\ Enc.log (StEnc.key enc) =!= StDec.ctr dec          //and so potentially equal to nat ...
+      (* TODO : make seq a new type*)
 
 (* a stateful instance *)
 type sti =
