@@ -152,7 +152,8 @@ fstar-nodeps: fstar.fs main.fs
 
 
 wc: $(BASIC_SRC) $(ABSYN_SRC) $(PARSER_NOGEN_SRC) $(TC_SRC) $(TOSMT_SRC) $(FORMAT_SRC) $(BACKEND_SRC) $(JSBACKEND_SRC) fstar.fs
-	wc -l $^
+#	wc -l $^
+	sloccount $^
 
 clean:
 	rm -rf *.exe $(addprefix $(BIN)/, $(ALL_DLLS) fstar.exe) *~ *res

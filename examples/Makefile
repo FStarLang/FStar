@@ -21,3 +21,6 @@ stdlib: $(addprefix ../lib/, list.fst string.fst partialmap.fst st.fst listprope
 
 clean:
 	rm ../cache/*.cache
+
+wc:
+	find . -name "*.fst" | grep -v -e to_be_ported | xargs sloccount

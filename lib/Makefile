@@ -6,3 +6,6 @@ mref: ext.fst set.fsi heap.fst st.fst mref.fst
 
 st2: ext.fst set.fsi heap.fst st.fst st2.fst
 	$(FSTAR) --admit_fsi Set $^
+
+wc:
+	sloccount .
