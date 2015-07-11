@@ -134,7 +134,8 @@ type st_paired (#i:rid) (enc:st_encryptor i) (dec:st_decryptor i) =
       /\ (StEnc.log enc) =!= (StEnc.ctr enc)                      //These last four are needed because seq is abstract
       /\ (StEnc.log enc) =!= (StDec.ctr dec)                      //...
       /\ (Enc.log (StEnc.key enc)) =!= (StEnc.ctr enc)            //...
-      /\ (Enc.log (StEnc.key enc)) =!= (StDec.ctr dec)            //and so potentially equal to nat ... TODO: make seq a new type
+      /\ (Enc.log (StEnc.key enc)) =!= (StDec.ctr dec)            //and so potentially equal to nat ...
+      (*TODO: make seq a new type*)
 
 type sti =
   | STI : i:rid -> e:st_encryptor i -> d:st_decryptor i{st_paired e d} -> sti
