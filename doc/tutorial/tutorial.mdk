@@ -33,7 +33,7 @@ Colorizer     : fstar
 
 ~ExerciseFragment : replace="~Begin Fragment {link=code/exercises/&exname;.fst}&nl;&source;&nl;~End Fragment&nl;"
 
-~CodeFragment : replace="~Begin Fragment {link=code/&filename;:&label;&name;}&nl;&source;&nl;~End Fragment&nl;"
+~CodeFragment : replace="~Begin Fragment {link=code/&filename;?&label;&name;}&nl;&source;&nl;~End Fragment&nl;"
 
 
 CatalinComment : replace="Can't understand why this doesn't work (it eats up the following solution. Also, why can't I write a proper <!-- comment here?"
