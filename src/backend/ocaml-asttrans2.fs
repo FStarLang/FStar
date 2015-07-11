@@ -68,6 +68,8 @@ let lident2mlpath (l:lident) : mlpath =
 (*the \hat{\epsilon} function in the thesis (Sec. 3.3.5) *)
 let rec extractType' (c:context) (ft:typ') : mlty = 
 (* first \beta, \iota and \zeta reduces ft. Since F* does not have SN, one has to be more careful for the termination argument.
+    Since OCaml does not support computations in Type, unknownType is suppored to be used if they are really unaviodable.
+    The classic example is the type : T b \def if b then nat else bool. If we dont conpute, T true will extract to unknownType.
     Why not \delta? I guess the reason is that unfolding definitions will make the resultant OCaml code less readable.
     However in the Typ_app case,  \delta reduction is done as the second-last resort, just before giving up and returing unknownType;
         a bloated type is atleast as good as unknownType?
@@ -209,7 +211,32 @@ let extractCtor (c:context) (ctor: inductiveConstructor):  (mlsymbol * list<mlty
             fprint1 "%s\n" (typ_to_string ctor.ctype);
             printfn "%A\n" (ctor.ctype);
         (lident2mlsymbol ctor.cname, argTypes mlt))
- 
+
+(*indices get collapsed to unit, so all we need is the number of index arguments.
+  We will use dummy type variables for these in the dectaration of the inductive type.
+  On each application, we will replace the argument with unit.
+  
+  Currently, no attempt is made to convert an index to a parameter.
+  It seems to be good practice for programmers to not use indices when parameters suffice.
+   *)
+
+let rec numIndices (k:knd') (typeName : string) : int =
+match k with
+| Kind_type -> 0
+| Kind_arrow (_,r) -> 1 + numIndices r.n typeName
+| Kind_delayed (k, _ ,_) -> numIndices k.n typeName
+| _ -> failwith ("unexpected signature of inductive type" ^ typeName) 
+
+let dummyIdent (n:int) : mlident = ("dummyV"^(n.ToString ()), 0)
+
+let rec firstNNats (n:int) : list<int> =
+if (0<n)
+  then (n::(firstNNats (n-1)))
+  else []
+
+let dummyIndexIdents (n:int) : list<mlident> = List.map dummyIdent (firstNNats n)
+
+
 (*similar to the definition of the second part of \hat{\epsilon} in page 110*)
 (* \pi_1 of returned value is the exported constant*)
 let extractSigElt (c:context) (s:sigelt) :  option<lident * mlsig1> =
@@ -225,8 +252,9 @@ match s with
     let ind = parseFirstInductiveType s in
     let idents = List.map binderIdent ind.tyBinders in
     let newContext = (extendContext c idents [ind.tyName]) in
+    let nIndices = numIndices ind.k.n ind.tyName.ident.idText in
     let tyDecBody = MLTD_DType (List.map (extractCtor newContext) ind.constructors) in
-          Some (ind.tyName, MLS_Ty [(lident2mlsymbol ind.tyName, List.map convIdent idents , Some tyDecBody)])
+          Some (ind.tyName, MLS_Ty [(lident2mlsymbol ind.tyName, List.append (List.map convIdent idents) (dummyIndexIdents nIndices)  , Some tyDecBody)])
      (*type l idents = tyDecBody*)
 | _ -> None
 

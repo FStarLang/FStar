@@ -12,8 +12,7 @@ type list2 'a  (b:Type) =
   | Nil2  : list2 'a b
   | Cons2 : hd:'a -> hd2:b ->  tl:list2 'a b -> list2 'a b
 
-(*
-type vec : nnat -> Type =
-| Nill : vec O
-| Conss : n:nnat -> (vec n) -> vec (S n)
-*)
+
+type vec (a:Type) : nnat -> Type =
+| Nill : vec a O
+| Conss : n:nnat -> a ->  (vec a n) -> vec a (S n)
