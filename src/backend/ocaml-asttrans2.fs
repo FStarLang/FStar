@@ -43,7 +43,7 @@ type context = {
 let emptyContext : context = {tyVars=[]; tyConstants =[]}
 
 (*is there an F# library of associative lists?*)
-let contains (c:context) (b:btvar) = List.contains b.v.realname (*why not ppname?*) c.tyVars
+let contains (c:context) (b:btvar) = List.contains b.v.ppname (*why not ppname?*) c.tyVars
 
 let deltaUnfold (i : lident) (c: context) : (option<typ>) = None (*FIX!!*)
 
@@ -54,6 +54,12 @@ let deltaUnfold (i : lident) (c: context) : (option<typ>) = None (*FIX!!*)
 let isTypeScheme (i : lident) (c: context) : bool = true  (* FIX!! *)
 
 (* let liftType' (t:typ') : typ = failwith "liftType is undefined" *)
+
+let rec filterImplicits (bs: binders) : binders =
+    List.filter (fun b -> match b with 
+                      | (_, Some Implicit) -> false
+                      | _ -> true ) 
+                bs
 
 let lident2mlpath (l:lident) : mlpath =
   (List.map (fun x -> x.idText) l.ns, l.ident.idText)
@@ -66,7 +72,7 @@ let rec extractType' (c:context) (ft:typ') : mlty =
 *)
 match ft with
 (*The next 2 cases duplicate a lot of code in the Type_app case. It will nice to share the common computations.*)
-  | Typ_btvar btv -> (if (contains c btv) then MLTY_Var (convIdent btv.v.realname) else unknownType)
+  | Typ_btvar btv -> (if (contains c btv) then MLTY_Var (convIdent btv.v.ppname) else unknownType)
   | Typ_const ftv -> 
             (match  (isTypeScheme ftv.v c)  with
              | true -> MLTY_Named ([ (* FIX!! *)],(lident2mlpath ftv.v))
@@ -80,11 +86,12 @@ match ft with
         (let codomainML = (extractComp  c codomain) in 
         if  (codomainML = erasedContent) 
         then erasedContent 
-        else  (curry (List.map (extractBinder c) bs) codomainML))
+        else  (let bsExp:binders = filterImplicits bs in  curry (List.map (extractBinder c) bsExp) codomainML))
+
   | Typ_refine (bv,ty) -> extractTyp c ty
   | Typ_app (ty, arrgs) ->
     (match ty.n with
-        | Typ_btvar btv -> (if (contains c btv) then MLTY_Var (convIdent btv.v.realname) else unknownType)
+        | Typ_btvar btv -> (if (contains c btv) then MLTY_Var (convIdent btv.v.ppname) else unknownType)
             (*the args are thrown away, because in OCaml, type variables have type Type and not something like -> .. -> .. Type *)
         | Typ_const ftv -> 
             (match  (isTypeScheme ftv.v c)  with
@@ -115,7 +122,7 @@ match (fst a) with
 *)
 and extractBinder  (c:context) (bn : binder ): mlty =
 match bn with
-| (Inl btv,_) -> extractKind (btv.sort)
+| (Inl btv,_) ->  extractKind (btv.sort)
 | (Inr bvv,_) -> extractTyp c (bvv.sort)
 and extractTyp  (c:context) (ft:typ) : mlty = extractType' c (ft.n)
 and extractKind (ft:knd) : mlty = erasedContent
@@ -128,8 +135,8 @@ match  ft with
 
 let binderIdent (bn:binder): ident =
 match bn with
-| (Inl btv,_) -> btv.v.realname
-| (Inr bvv,_) -> bvv.v.realname
+| (Inl btv,_) -> btv.v.ppname
+| (Inr bvv,_) -> bvv.v.ppname
 
 (* these vars will have type Type, irrespective of that types they had in F*. This is to match the limitations of  OCaml*)
 let extendContext (c:context) (tyVars : list<ident>) (tyConsts : list<lident>) : context = 

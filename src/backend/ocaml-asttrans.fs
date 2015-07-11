@@ -168,6 +168,7 @@ let lresolve (LEnv lenv) (x : ident) =
     | Some x -> x
 
 (* -------------------------------------------------------------------- *)
+(*what is the purpose of this smap?*)
 type tenv = | TEnv of smap< mlident>
 
 (* -------------------------------------------------------------------- *)
