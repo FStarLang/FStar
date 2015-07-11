@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi Set --admit_fsi Seq --admit_fsi Map --max_ifuel 1 --initial_ifuel 1 --initial_fuel 0 --max_fuel 0 --z3timeout 10;
-    other-files:../../lib/ext.fst ../../lib/set.fsi ../../lib/st.fst ../../lib/heap.fst ../../lib/map.fsi ../../lib/hyperheap.fst ../../lib/seq.fsi
+    other-files:../../lib/ext.fst ../../lib/set.fsi ../../lib/heap.fst ../../lib/map.fsi ../../lib/hyperheap.fst ../../lib/seq.fsi
   --*)
 (* A standalone experiment corresponding to building a stateful encryption on
    top of a stateless one ... along the lines of StatefulLHAE on top of AEAD_GCM *)
@@ -10,7 +10,7 @@ open Set
 open Seq
 open HyperHeap
 
-(* TODO: merge these next two functions and lemma/assumption with the seq library *)
+(* local to speed up verification *)
 val snoc : seq 'a -> 'a -> Tot (seq 'a)
 let snoc s x = Seq.append s (Seq.create 1 x)
 
@@ -224,7 +224,7 @@ val test_st_frame :   s1:sti
                  st_inv (STI.e s1) (STI.d s1) h
               /\ st_inv (STI.e s2) (STI.d s2) h
               /\ sel h (StEnc.ctr (STI.e s1)) = sel h (StDec.ctr (STI.d s1))
-              // /\ Heap.sel h (StEnc.ctr (STI.e s2)) = Heap.sel h (StDec.ctr (STI.d s2))
+               (* TODO /\ Heap.sel h (StEnc.ctr (STI.e s2)) = Heap.sel h (StDec.ctr (STI.d s2))*)
               ))
   (ensures (fun h0 _ h1 ->
                  st_inv (STI.e s1) (STI.d s1) h1
@@ -241,7 +241,7 @@ let test_st_frame s1 s2 =
   let c0 = stateful_enc (STI.e s1) p in
   let c1 = stateful_enc (STI.e s1) q in
   let c2 = stateful_enc (STI.e s2) p in
-  // let oX = stateful_dec (STI.d s1) c2 in // might succeed
+  let oX = stateful_dec (STI.d s1) c2 in  // TODO might succeed
   let o0 = stateful_dec (STI.d s1) c0 in
   let o1 = stateful_dec (STI.d s1) c1 in
   assert (Some.v o0 = p);

@@ -14,7 +14,7 @@ open Seq
 (* TODO: merge these functions with the standard library *)
 opaque logic type trigger (#a:Type) (x:a) = True
 
-// snoc?
+(* local to speed up verifcation *)
 val snoc : seq 'a -> 'a -> Tot (seq 'a)
 let snoc s x = Seq.append s (Seq.create 1 x)
 
@@ -55,7 +55,7 @@ type key
 // we need something possibly stateful, accounting for random sampling & pairwise distinct keys
 // similarly we should be able to instantiate the scheme to an instance that holds/updates refs in key
 
-// assume val gen0: unit -> Tot key
+// TODO assume val gen0: unit -> Tot key
 assume val gen0: unit -> ST key (fun h -> True) (fun h0 k h1 -> modifies !{} h0 h1)
 
 type plain
@@ -89,7 +89,7 @@ type bi =
   | BI : e:encryptor -> d:decryptor{paired e d} -> bi
 opaque logic type triggerBI (x:bi) = True
 
-// new concrete syntax for sets of (a & x:a) ?
+// TODO new concrete syntax for sets of (a & x:a) ?
 let bi_refs (BI e d) = !{Enc.log e}
 
 type distinct_bi (b1:bi) (b2:bi) =
@@ -144,10 +144,10 @@ val enc : e:encryptor -> i:ad -> p:plain -> ST cipher
     (ensures (fun h0 c h1 ->
                 modifies !{Enc.log e} h0 h1
                 /\ enc_in_basic_fp e h1
-                // /\ Heap.contains h1 (Enc.log e) // could we get it from the precondition?
+                // TODO /\ Heap.contains h1 (Enc.log e) // could we get it from the precondition?
                 /\ Heap.sel h1 (Enc.log e) = snoc (Heap.sel h0 (Enc.log e)) (Entry i c p)))
 let enc e i p =
-  // failing: let s = seq_map #basicEntry #cipher (fun (e:basicEntry) -> Entry.c e) !(Enc.log e) in
+  // TODO failing: let s = seq_map #basicEntry #cipher (fun (e:basicEntry) -> Entry.c e) !(Enc.log e) in
   let c = enc0 emp in
   Enc.log e := snoc !(Enc.log e) (Entry i c p);
   c
@@ -198,8 +198,8 @@ let test_basic_frame b1 b2 =
    let h0 = get() in
    let oX = dec (BI.d b1) 2 c0 in // this fails with 1, as we might have c0=c1
    let h1 = get() in
-   cut (modifies !{} h0 h1); //not yet sure why we need this hint
-   cut (trigger 0);   // what does this achieve?;
+   cut (modifies !{} h0 h1); // TODO not yet sure why we need this hint
+   cut (trigger 0);   // TODO what does this achieve?;
    assert (Some.v o0 = p);
    assert (Some.v o2 = q);
    assert (oX = None)
@@ -341,7 +341,7 @@ val stateful_dec: d:st_decryptor -> c:cipher -> ST (option plain)
 // thereby enabling retries
 let stateful_dec (StDec _ ctr d) c =
   let i = !ctr in
-  cut(trigger i); // what does it do?
+  cut(trigger i); // TODO what does it do?
   match dec d !ctr c with
     | None -> None
     | Some p -> ctr := !ctr + 1; Some p
@@ -353,7 +353,7 @@ val test_st_frame : s1:sti -> s2:sti{distinct_sti s1 s2} -> ST unit
                    in_st_fp s1 h
                 /\ in_st_fp s2 h
                 /\ Heap.sel h (StEnc.ctr (STI.e s1)) = Heap.sel h (StDec.ctr (STI.d s1))
-             // /\ Heap.sel h (StEnc.ctr (STI.e s2)) = Heap.sel h (StDec.ctr (STI.d s2))
+             // TODO /\ Heap.sel h (StEnc.ctr (STI.e s2)) = Heap.sel h (StDec.ctr (STI.d s2))
                     ))
     (ensures (fun h0 _ h1 ->
                    in_st_fp s1 h1
@@ -365,11 +365,11 @@ val test_st_frame : s1:sti -> s2:sti{distinct_sti s1 s2} -> ST unit
 let test_st_frame s1 s2 =
   let p = mk_plain () in
   let q = mk_plain () in
-  // let s3 = stateful_gen() // also type-breaking; yes, because this modifies fp, basic_fp
+  // TODO let s3 = stateful_gen() // also type-breaking; yes, because this modifies fp, basic_fp
   let c0 = stateful_enc (STI.e s1) p in
   let c1 = stateful_enc (STI.e s1) q in
   let c2 = stateful_enc (STI.e s2) p in
-  // let oX = stateful_dec (STI.d s1) c2 in  (* TODO might succeed *)
+  // TODO let oX = stateful_dec (STI.d s1) c2 in  (* TODO might succeed *)
   let o0 = stateful_dec (STI.d s1) c0 in
   let o1 = stateful_dec (STI.d s1) c1 in
   assert (Some.v o0 = p);
