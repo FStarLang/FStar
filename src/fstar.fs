@@ -22,6 +22,7 @@ open Microsoft.FStar.Util
 open Microsoft.FStar.Getopt
 open Microsoft.FStar.Tc.Util
 open Microsoft.FStar.Tc.Env
+open Microsoft.FStar.Backends
 
 let process_args () = 
   let file_list = Util.mk_ref [] in
@@ -231,6 +232,9 @@ let finished_message fmods =
 let codegen fmods = 
     if !Options.codegen = Some "OCaml" then begin
         try
+            let tyDefns = Backends.OCaml.NewExtaction.extractTypeDefns ((List.head (List.tail fmods)).declarations) in
+            let newDoc = Backends.OCaml.Code.doc_of_sig tyDefns in
+            fprint1 "%s\n" (FSharp.Format.pretty 1 newDoc);
             let mllib = Backends.OCaml.ASTTrans.mlmod_of_fstars (List.tail fmods) in
             let doc   = Backends.OCaml.Code.doc_of_mllib mllib in
             List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^".ml")) (FSharp.Format.pretty 120 d)) doc

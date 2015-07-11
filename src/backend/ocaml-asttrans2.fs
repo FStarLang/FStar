@@ -207,9 +207,9 @@ let extractCtor (c:context) (ctor: inductiveConstructor):  (mlsymbol * list<mlty
    then (failwith "cargs is unexpectedly non-empty. This is a design-flaw, please report.")
    else 
         (let mlt = extractTyp c ctor.ctype in
-            fprint1 "extracting the type of constructor %s\n" (lident2mlsymbol ctor.cname);
-            fprint1 "%s\n" (typ_to_string ctor.ctype);
-            printfn "%A\n" (ctor.ctype);
+            //fprint1 "extracting the type of constructor %s\n" (lident2mlsymbol ctor.cname);
+            //fprint1 "%s\n" (typ_to_string ctor.ctype);
+            //printfn "%A\n" (ctor.ctype);
         (lident2mlsymbol ctor.cname, argTypes mlt))
 
 (*indices get collapsed to unit, so all we need is the number of index arguments.
@@ -258,9 +258,16 @@ match s with
      (*type l idents = tyDecBody*)
 | _ -> None
 
-(*
-[<EntryPoint>]
-let main argv = 
-    Util.print_string "hello, what can I extract for you?";
-    0
-    *)
+let rec extractTypeDefnsAux (c: context) (sigs:list<sigelt>) : list<mlsig1> =
+    match sigs with
+    | hsig::tlsigs ->
+        (match extractSigElt c hsig with
+        | Some (exportedConst, mls) ->  
+                let nc = extendContext c [] [exportedConst] in
+                mls::(extractTypeDefnsAux nc tlsigs)
+        | None -> (extractTypeDefnsAux c tlsigs)
+        )
+    | _ -> []
+
+let extractTypeDefns (sigs:list<sigelt>) : list<mlsig1> =
+   extractTypeDefnsAux emptyContext sigs

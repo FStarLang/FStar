@@ -508,7 +508,7 @@ let doc_of_mltydecl (decls : mltydecl) =
     doc
 
 (* -------------------------------------------------------------------- *)
-let rec doc_of_sig1 (s : mlsig1) =
+let rec doc_of_sig1 (s : mlsig1) :doc =
     match s with
     | MLS_Mod (x, subsig) ->
         combine hardline

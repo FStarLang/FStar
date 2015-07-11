@@ -13,7 +13,6 @@ open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn.Util
 open Microsoft.FStar.Backends.OCaml.Syntax
 open FSharp.Format
-open Microsoft.FStar.Backends
 
 
 (* -------------------------------------------------------------------- *)
@@ -1007,31 +1006,20 @@ let mlsig_of_sig (mlenv : mlenv) (modx : list<sigelt>) : mlsig =
     let asleft = function Inl x -> x | Inr _ -> failwith "asleft" in
     List.choose (fun x -> Option.map asleft (mlmod1_of_mod1 Sig mlenv x)) modx
 
-let rec extractInductives (c:NewExtaction.context) (sigs:list<sigelt>) : list<mlsig1> =
-    match sigs with
-    | hsig::tlsigs ->
-        (match NewExtaction.extractSigElt c hsig with
-        | Some (exportedConst, mls) ->  
-                let nc = NewExtaction.extendContext c [] [exportedConst] in
-                mls::(extractInductives nc tlsigs)
-        | None -> (extractInductives c tlsigs)
-        )
-    | _ -> []
-
 
 (* -------------------------------------------------------------------- *)
 let mlmod_of_fstar (fmod_ : modul) =
     let name = Backends.OCaml.Syntax.mlpath_of_lident fmod_.name in
-    //fprint1 "OCaml extractor June 10 2015 : %s\n" fmod_.name.ident.idText;
+    fprint1 "OCaml extractor : %s\n" fmod_.name.ident.idText;
     //printfn "%A\n" (fmod_.declarations);
     //fprint1 "%s\n\n\n\n\n\n\n\n\n" "end";
-    let ms =  extractInductives NewExtaction.emptyContext (*instead of being empty, it should be initialized with the constants from the imported modules*) 
-                               (fmod_.declarations) in
-    printfn "%A\n" ms;
+   // let ms =  extractInductives NewExtaction.emptyContext (*instead of being empty, it should be initialized with the constants from the imported modules*) 
+    //                           (fmod_.declarations) in
+    //printfn "%A\n" ms;
     let mod_ : mlmodule = mlmod_of_mod (mk_mlenv name) fmod_.declarations in
     let sig_ : mlsig = mlsig_of_sig (mk_mlenv name) fmod_.declarations in
-    fprint1 "%s\n\n" "original";
-    printfn "%A\n" sig_;
+    //fprint1 "%s\n\n" "original";
+    //printfn "%A\n" sig_;
 
     (name, sig_, mod_)
 
