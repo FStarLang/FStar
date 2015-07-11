@@ -5480,7 +5480,6 @@ let stateful_dec _id (StDec _ ctr d) c =
     | None -> None
     | Some p -> op_Colon_Equals ctr (op_Bang ctr + 1); Some p
 
-  
 ~~
 
 ~
