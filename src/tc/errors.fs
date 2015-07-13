@@ -105,7 +105,7 @@ let constructor_builds_the_wrong_type env d t t' =
     (Print.exp_to_string d) (Normalize.typ_norm_to_string env t) (Normalize.typ_norm_to_string env t')
 
 let constructor_fails_the_positivity_check env d l = 
-  format2 "Constructor \"%s\" fails the strict positivity check; the constructed type occurs \"%s\" occurs to the left of a pure function type"
+  format2 "Constructor \"%s\" fails the strict positivity check; the constructed type \"%s\" occurs to the left of a pure function type"
     (Print.exp_to_string d) (Print.sli l)
 
 let inline_type_annotation_and_val_decl l = 
