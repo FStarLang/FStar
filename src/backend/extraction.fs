@@ -1,12 +1,12 @@
 ﻿// Learn more about F# at http://fsharp.net
 // See the 'F# Tutorial' project for more help.
 #light "off"
-module Microsoft.FStar.Backends.OCaml.NewExtaction
+module Microsoft.FStar.Backends.OCaml.Extraction
 open Microsoft.FStar.Absyn
-open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Backends.OCaml.Syntax
 open Microsoft.FStar.Util
 open Microsoft.FStar.Tc.Env
+open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar
 open Microsoft.FStar.Tc.Normalize
 open Microsoft.FStar.Absyn.Print
@@ -173,7 +173,7 @@ type inductiveTypeFam = {
 (*the second element of the returned pair is the unconsumed part of sigs*)
 let parseInductiveConstructor (sigs : list<sigelt>) : (inductiveConstructor * list<sigelt>) =
 match sigs with
-| (Sig_datacon (l, (*codomain*) t ,(_,cargs:binders,_),_,_,_))::tlsig ->
+| (Sig_datacon (l, (*codomain*) t ,(_,cargs(*binders*),_),_,_,_))::tlsig ->
      ({ cname = l ; ctype = t; cargs =[] }, tlsig)
 | _ -> failwith "incorrect sigelt provided to parseInductiveConstructor"
 
@@ -191,7 +191,7 @@ let parseInductiveTypeFromSigBundle
     (sigs : list<sigelt>)  : (inductiveTypeFam * list<sigelt>)  =
 match sigs with
 | (Sig_tycon (l,bs,kk,_,constrs,_,_))::tlsig -> 
-    let (indConstrs:list<inductiveConstructor>, ttlsig) = parseInductiveConstructors tlsig (List.length constrs) in
+    let (indConstrs(*list<inductiveConstructor>*), ttlsig) = parseInductiveConstructors tlsig (List.length constrs) in
      ({tyName = l; k = kk; tyBinders=bs; constructors=indConstrs}, ttlsig)
 | _ -> failwith "incorrect input provided to parseInductiveTypeFromSigBundle"
 
@@ -234,7 +234,7 @@ match k with
 | Kind_delayed (k, _ ,_) -> numIndices k.n typeName
 | _ -> failwith ("unexpected signature of inductive type" ^ typeName) 
 
-let dummyIdent (n:int) : mlident = ("'dummyV"^(n.ToString ()), 0)
+let dummyIdent (n:int) : mlident = ("'dummyV"^(Util.string_of_int n), 0)
 
 let rec firstNNats (n:int) : list<int> =
 if (0<n)
@@ -246,13 +246,13 @@ let dummyIndexIdents (n:int) : list<mlident> = List.map dummyIdent (firstNNats n
 
 (*similar to the definition of the second part of \hat{\epsilon} in page 110*)
 (* \pi_1 of returned value is the exported constant*)
-let extractSigElt (c:context) (s:sigelt) :  option<lident * mlsig1> =
+let extractSigElt (c:context) (s:sigelt) :  option<(lident * mlsig1)> =
 match s with
 | Sig_typ_abbrev (l,bs,_,t,_,_) -> 
     let idents = List.map binderIdent bs in
     let newContext = (extendContext c idents [l] ) in
     let tyDecBody = MLTD_Abbrev (extractTyp newContext t) in
-     Some (l, MLS_Ty [(mlsymbolOfLident l, List.map (convIdent >> prependTick) idents  , Some tyDecBody)])
+     Some (l, MLS_Ty [(mlsymbolOfLident l, List.map (fun x -> prependTick (convIdent x)) idents  , Some tyDecBody)])
      (*type l idents = tyDecBody*)
 
 | Sig_bundle _ -> 
@@ -261,7 +261,7 @@ match s with
     let newContext = (extendContext c idents [ind.tyName]) in
     let nIndices = numIndices ind.k.n ind.tyName.ident.idText in
     let tyDecBody = MLTD_DType (List.map (extractCtor newContext) ind.constructors) in
-          Some (ind.tyName, MLS_Ty [(lident2mlsymbol ind.tyName, List.append (List.map (convIdent >> prependTick) idents) (dummyIndexIdents nIndices)  , Some tyDecBody)])
+          Some (ind.tyName, MLS_Ty [(lident2mlsymbol ind.tyName, List.append (List.map (fun x -> prependTick (convIdent x)) idents) (dummyIndexIdents nIndices)  , Some tyDecBody)])
      (*type l idents = tyDecBody*)
 | _ -> None
 

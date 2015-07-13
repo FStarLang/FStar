@@ -10,7 +10,7 @@ ABSYN_SRC=$(addprefix absyn/, $(ABSYN))
 FORMAT=format.fsi format.fs
 FORMAT_SRC=$(addprefix format/, $(FORMAT))
 
-BACKEND=nameenv.fsi nameenv.fs ocaml-syntax.fs ocaml-asttrans.fsi ocaml-asttrans.fs ocaml-codegen.fsi ocaml-codegen.fs
+BACKEND=nameenv.fsi nameenv.fs ocaml-syntax.fs extraction.fs ocaml-asttrans.fsi ocaml-asttrans.fs ocaml-codegen.fsi ocaml-codegen.fs
 BACKEND_SRC=$(addprefix backend/, $(BACKEND))
 
 JSBACKEND=ast.fs print.fs translate.fs
@@ -118,7 +118,7 @@ FORMAT_DEPS=
 $(BIN)/format.dll: $(FORMAT_DEPS) $(FORMAT_SRC)
 	$(FSC) $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(FORMAT_DEPS)) $(FORMAT_SRC)
 
-BACKEND_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll format.dll)
+BACKEND_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll format.dll tc.dll)
 $(BIN)/backend.dll: $(BACKEND_DEPS) $(BACKEND_SRC)
 	$(FSC) $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(BACKEND_DEPS)) $(BACKEND_SRC)
 
@@ -176,7 +176,7 @@ BOOT_TCFILES=tcenv.fsi tcenv.fs recheck.fs normalize.fsi normalize.fs errors.fs 
 BOOT_TC=$(addprefix tc/, $(BOOT_TCFILES))
 BOOT_FORMATFILES=format.fsi formatml.fs
 BOOT_FORMAT=$(addprefix format/, $(BOOT_FORMATFILES))
-BOOT_BACKENDFILES=nameenv.fsi nameenv.fs ocaml-syntax.fs ocaml-asttrans.fsi ocaml-asttrans.fs ocaml-codegen.fsi ocaml-codegen.fs
+BOOT_BACKENDFILES=nameenv.fsi nameenv.fs ocaml-syntax.fs ocaml-asttrans.fsi ocaml-asttrans.fs ocaml-codegen.fsi ocaml-codegen.fs extraction.fs 
 BOOT_BACKEND=$(addprefix backend/, $(BOOT_BACKENDFILES))
 BOOT_JSBACKENDFILES=ast.fs translate.fs
 BOOT_JSBACKEND=$(addprefix jsbackend/, $(BOOT_JSBACKENDFILES))
