@@ -980,9 +980,9 @@ _automatic induction_ feature.
 
 Here's another proof of `factorial_is_monotone`:
 
-    let rec factorial_is_monotone n = using_induction_hyp factorial_is_monotone
+    let rec factorial_is_monotone n = by_induction_on n factorial_is_monotone
 
-Calling `using_induction_hyp` with `factorial_is_monotone` as argument
+Calling `by_induction_on` with `n` and `factorial_is_monotone` as argument
 causes F\* to encode the induction hypothesis as a quantified logical
 formula and feed it to Z3, which in simple examples can take care of
 the rest.
@@ -2494,7 +2494,7 @@ The intuitive proof of the `EIf` case is similar.
 Using the _experimental_ support for automatic induction ([#auto-ind]),
 the proof above can be written as just:
 ```
-let rec progress e = using_induction_hyp progress
+let rec progress e = by_induction_on e progress
 ```
 
 The **preservation** theorem (sometimes also called "subject reduction") states that
