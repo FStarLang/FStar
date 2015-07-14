@@ -47,7 +47,7 @@ type context = {
 let emptyContext : context = {tyVars=[]; tyConstants =[]}
 
 (*is there an F# library of associative lists? yes, Microsoft.FStar.Util.smap*)
-let contains (c:context) (b:btvar) = List.contains b.v.ppname (*why not ppname?*) c.tyVars
+let contains (c:context) (b:btvar) : bool = List.contains b.v.ppname (*why not realname?*) c.tyVars
 
 let deltaUnfold (i : lident) (c: context) : (option<typ>) = None (*FIX!!*)
 
@@ -262,7 +262,6 @@ match s with
     let nIndices = numIndices ind.k.n ind.tyName.ident.idText in
     let tyDecBody = MLTD_DType (List.map (extractCtor newContext) ind.constructors) in
           Some (ind.tyName, MLS_Ty [(lident2mlsymbol ind.tyName, List.append (List.map (fun x -> prependTick (convIdent x)) idents) (dummyIndexIdents nIndices)  , Some tyDecBody)])
-     (*type l idents = tyDecBody*)
 | _ -> None
 
 let rec extractTypeDefnsAux (c: context) (sigs:list<sigelt>) : list<mlsig1> =

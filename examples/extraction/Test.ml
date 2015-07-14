@@ -10,7 +10,14 @@ type ('a, 'b) list2 =
 | Nil2
 | Cons2 of 'a * 'b * ('a, 'b) list2
 
-(*
-type ('a, 'dummyV1) vec =
-| Nill
-| Conss of nnat * 'a * ('a, ()) vec *)
+type 'x poly =
+| Poly of nnat * 'x
+
+type 'x sh =
+Obj.t  ->  Obj.t
+
+type sh1 =
+Obj.t
+
+
+All verification conditions discharged successfully

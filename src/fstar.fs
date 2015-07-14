@@ -232,9 +232,12 @@ let finished_message fmods =
 let codegen fmods = 
     if !Options.codegen = Some "OCaml" then 
         try
-            let mllib = Backends.OCaml.ASTTrans.mlmod_of_fstars (List.tail fmods) in
+            let tyDefns = Backends.OCaml.Extraction.extractTypeDefns ((List.head (List.tail fmods)).declarations) in
+            let newDoc = Backends.OCaml.Code.doc_of_sig tyDefns in
+            fprint1 "%s\n" (FSharp.Format.pretty 1 newDoc);
+(*            let mllib = Backends.OCaml.ASTTrans.mlmod_of_fstars (List.tail fmods) in
             let doc   = Backends.OCaml.Code.doc_of_mllib mllib in
-            List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^".ml")) (FSharp.Format.pretty 120 d)) doc
+            List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^".ml")) (FSharp.Format.pretty 120 d)) doc *)
         with Backends.OCaml.ASTTrans.OCamlFailure (rg, error) -> begin
             (* FIXME: register exception and remove this block  *)
             Util.print_string (* stderr *) <|
