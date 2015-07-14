@@ -2059,20 +2059,114 @@ extracting the type of constructor Poly
  fvs = {contents = null;};
  uvs = {contents = null;};}
 
+binders are [{idText = "_1_22";
+  idRange = 360300074481582083L;}]
+
+type is {n =
+  Typ_fun
+    ([(Inr {v = {ppname = {idText = "_";
+                           idRange = 0L;};
+                 realname = {idText = "_1_221";
+                             idRange = 0L;};};
+            sort = {n = Typ_delayed (Inr <fun:aux@278-6>,{contents = null;});
+                    tk = {contents = null;};
+                    pos = 792645651594051587L;
+                    fvs = {contents = null;};
+                    uvs = {contents = null;};};
+            p = 0L;}, null)],
+     {n =
+       Total
+         {n =
+           Typ_btvar
+             {v = {ppname = {idText = "x";
+                             idRange = 1152933632521109507L;};
+                   realname = {idText = "_1_22";
+                               idRange = 1152933632521109507L;};};
+              sort =
+               {n = Kind_type;
+                tk = {contents = null;};
+                pos = 540444061723885571L;
+                fvs = {contents = Some {ftvs = ([], <fun:new_set@179>);
+                                        fxvs = ([], <fun:new_set@179>);};};
+                uvs = {contents = Some {uvars_k = ([], <fun:new_set@179>);
+                                        uvars_t = ([], <fun:new_set@179>);
+                                        uvars_e = ([], <fun:new_set@179>);};};};
+              p = 1152933632521109507L;};
+          tk =
+           {contents =
+             Some
+               {n = Kind_type;
+                tk = {contents = null;};
+                pos = 540444061723885571L;
+                fvs = {contents = Some {ftvs = ([], <fun:new_set@179>);
+                                        fxvs = ([], <fun:new_set@179>);};};
+                uvs = {contents = Some {uvars_k = ([], <fun:new_set@179>);
+                                        uvars_t = ([], <fun:new_set@179>);
+                                        uvars_e = ([], <fun:new_set@179>);};};};};
+          pos = 1152933632521109507L;
+          fvs = {contents = null;};
+          uvs = {contents = null;};};
+      tk = {contents = null;};
+      pos = 1152933632521109507L;
+      fvs = {contents = null;};
+      uvs = {contents = null;};});
+ tk =
+  {contents =
+    Some {n = Kind_type;
+          tk = {contents = null;};
+          pos = 0L;
+          fvs = {contents = Some {ftvs = ([], <fun:new_set@179>);
+                                  fxvs = ([], <fun:new_set@179>);};};
+          uvs = {contents = Some {uvars_k = ([], <fun:new_set@179>);
+                                  uvars_t = ([], <fun:new_set@179>);
+                                  uvars_e = ([], <fun:new_set@179>);};};};};
+ pos = 1188962417728913411L;
+ fvs = {contents = null;};
+ uvs = {contents = null;};}
+
+binders are []
+
+type is {n =
+  Typ_lam
+    ([(Inl
+         {v = {ppname = {idText = "x";
+                         idRange = 1297049924403593219L;};
+               realname = {idText = "_1_222";
+                           idRange = 1297049924403593219L;};};
+          sort =
+           {n = Kind_type;
+            tk = {contents = null;};
+            pos = 1477193911645896707L;
+            fvs = {contents = Some {ftvs = ([], <fun:new_set@179>);
+                                    fxvs = ([], <fun:new_set@179>);};};
+            uvs = {contents = Some {uvars_k = ([], <fun:new_set@179>);
+                                    uvars_t = ([], <fun:new_set@179>);
+                                    uvars_e = ([], <fun:new_set@179>);};};};
+          p = 1297049924403593219L;}, null)],
+     {n = Typ_delayed (Inr <fun:aux@278-6>,{contents = null;});
+      tk = {contents = null;};
+      pos = 2161741065743630339L;
+      fvs = {contents = null;};
+      uvs = {contents = null;};});
+ tk = {contents = null;};
+ pos = 2161741047490019331L;
+ fvs = {contents = null;};
+ uvs = {contents = null;};}
+
 type nnat =
 | O
 | S of nnat
 
 type 'a list =
 | Nil
-| Cons of Obj.t * Obj.t list
+| Cons of 'a * 'a list
 
 type ('a, 'b) list2 =
 | Nil2
-| Cons2 of Obj.t * Obj.t * (Obj.t, Obj.t) list2
+| Cons2 of 'a * 'b * ('a, 'b) list2
 
 type 'x poly =
-| Poly of nnat * Obj.t
+| Poly of nnat * 'x
 
 type 'x sh =
 Obj.t  ->  Obj.t
