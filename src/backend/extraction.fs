@@ -47,7 +47,7 @@ type context = {
 let emptyContext : context = {tyVars=[]; tyConstants =[]}
 
 (*is there an F# library of associative lists? yes, Microsoft.FStar.Util.smap*)
-let contains (c:context) (b:btvar) : bool = List.contains b.v.ppname (*why not realname?*) c.tyVars
+let contains (c:context) (b:btvar) : bool = List.contains b.v.realname (*why not realname?*) c.tyVars
 
 let deltaUnfold (i : lident) (c: context) : (option<typ>) = None (*FIX!!*)
 
@@ -144,10 +144,15 @@ match  ft with
   | Comp cm -> extractTyp c (cm.result_typ)
 
 
-let binderIdent (bn:binder): ident =
+let binderPPnames (bn:binder): ident =
 match bn with
 | (Inl btv,_) -> btv.v.ppname
 | (Inr bvv,_) -> bvv.v.ppname
+
+let binderRealnames (bn:binder): ident =
+match bn with
+| (Inl btv,_) -> btv.v.realname
+| (Inr bvv,_) -> bvv.v.realname
 
 (* these vars will have type Type, irrespective of that types they had in F*. This is to match the limitations of  OCaml*)
 let extendContext (c:context) (tyVars : list<ident>) (tyConsts : list<lident>) : context = 
@@ -214,9 +219,9 @@ let extractCtor (c:context) (ctor: inductiveConstructor):  (mlsymbol * list<mlty
    then (failwith "cargs is unexpectedly non-empty. This is a design-flaw, please report.")
    else 
         (let mlt = extractTyp c ctor.ctype in
-            //fprint1 "extracting the type of constructor %s\n" (lident2mlsymbol ctor.cname);
+            fprint1 "extracting the type of constructor %s\n" (lident2mlsymbol ctor.cname);
             //fprint1 "%s\n" (typ_to_string ctor.ctype);
-            //printfn "%A\n" (ctor.ctype);
+            printfn "%A\n" (ctor.ctype);
         (lident2mlsymbol ctor.cname, argTypes mlt))
 
 (*indices get collapsed to unit, so all we need is the number of index arguments.
@@ -249,19 +254,21 @@ let dummyIndexIdents (n:int) : list<mlident> = List.map dummyIdent (firstNNats n
 let extractSigElt (c:context) (s:sigelt) :  option<(lident * mlsig1)> =
 match s with
 | Sig_typ_abbrev (l,bs,_,t,_,_) -> 
-    let idents = List.map binderIdent bs in
-    let newContext = (extendContext c idents [l] ) in
+    let identsPP = List.map binderPPnames bs in
+    let identsReal = List.map binderRealnames bs in
+    let newContext = (extendContext c identsReal [l] ) in
     let tyDecBody = MLTD_Abbrev (extractTyp newContext t) in
-     Some (l, MLS_Ty [(mlsymbolOfLident l, List.map (fun x -> prependTick (convIdent x)) idents  , Some tyDecBody)])
+     Some (l, MLS_Ty [(mlsymbolOfLident l, List.map (fun x -> prependTick (convIdent x)) identsPP , Some tyDecBody)])
      (*type l idents = tyDecBody*)
 
 | Sig_bundle _ -> 
     let ind = parseFirstInductiveType s in
-    let idents = List.map binderIdent ind.tyBinders in
-    let newContext = (extendContext c idents [ind.tyName]) in
+    let identsPP = List.map binderPPnames ind.tyBinders in
+    let identsReal = List.map binderRealnames ind.tyBinders in
+    let newContext = (extendContext c identsReal [ind.tyName]) in
     let nIndices = numIndices ind.k.n ind.tyName.ident.idText in
     let tyDecBody = MLTD_DType (List.map (extractCtor newContext) ind.constructors) in
-          Some (ind.tyName, MLS_Ty [(lident2mlsymbol ind.tyName, List.append (List.map (fun x -> prependTick (convIdent x)) idents) (dummyIndexIdents nIndices)  , Some tyDecBody)])
+          Some (ind.tyName, MLS_Ty [(lident2mlsymbol ind.tyName, List.append (List.map (fun x -> prependTick (convIdent x)) identsPP) (dummyIndexIdents nIndices)  , Some tyDecBody)])
 | _ -> None
 
 let rec extractTypeDefnsAux (c: context) (sigs:list<sigelt>) : list<mlsig1> =
