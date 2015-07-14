@@ -117,6 +117,10 @@ assume logic val op_LessThanOrEqual    : int -> int -> Tot bool
 assume logic val op_GreaterThan        : int -> int -> Tot bool
 assume logic val op_GreaterThanOrEqual : int -> int -> Tot bool
 assume logic val op_LessThan           : int -> int -> Tot bool
+(* Primitive (structural) equality.
+   What about for function types? *)
+assume val op_Equality :    #a:Type -> a -> a -> Tot bool
+assume val op_disEquality : #a:Type -> a -> a -> Tot bool
 
 type int16 = i:int{i > -32769  /\ 32768 > i}
 type int32 = int
@@ -529,10 +533,9 @@ type DTuple4: a:Type
            -> _4:d _1 _2 _3
            -> DTuple4 a b c d
 
-(* Primitive (structural) equality.
-   What about for function types? *)
-assume val op_Equality :    #a:Type -> a -> a -> Tot bool
-assume val op_disEquality : #a:Type -> a -> a -> Tot bool
+
+type as_requires (#a:Type) (wp:PureWP a)  = wp (fun x -> True)
+type as_ensures  (#a:Type) (wlp:PureWP a) (x:a) = ~ (wlp (fun y -> ~(y=x)))
 
 val fst : ('a * 'b) -> Tot 'a
 let fst x = MkTuple2._1 x

@@ -135,3 +135,5 @@ let effect_GTot_lid  = pconst "GTot"
 let effect_GHOST_lid = pconst "GHOST"
 let effect_Ghost_lid = pconst "Ghost"
 
+let as_requires  = pconst "as_requires"
+let as_ensures   = pconst "as_ensures"

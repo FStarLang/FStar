@@ -1668,7 +1668,9 @@ and encode_free_var env lid tt t_norm quals =
                 | Some (args, comp) -> args, Util.comp_result comp 
                 | None -> [], t_norm in
               let vname, vtok, env = new_term_constant_and_tok_from_lid env lid in 
-              let vtok_tm = mkApp(vtok, []) in
+              let vtok_tm = match formals with 
+                | [] -> mkFreeV(vname, Term_sort) 
+                | _ -> mkApp(vtok, []) in
               let mk_disc_proj_axioms vapp vars = quals |> List.collect (function 
                 | Discriminator d -> 
                     let _, (xxsym, _) = Util.prefix vars in
@@ -1689,35 +1691,22 @@ and encode_free_var env lid tt t_norm quals =
               let vapp = Term.mkApp(vname, List.map Term.mkFreeV vars) in
               let decls2, env =
                 let vname_decl = Term.DeclFun(vname, formals |> List.map (function Inl _, _ -> Type_sort | _ -> Term_sort), Term_sort, None) in
-                    (* Generate a token and a function symbol; equate the two, and use the function symbol for full applications *)
-                    let tok_decl, env = match formals with 
-                        | [] -> 
-                            let t, decls2 = 
-                                if not(head_normal env tt) 
-                                then encode_typ_pred' None tt env (mkFreeV(vname, Term_sort))
-                                else encode_typ_pred' None t_norm env (mkFreeV(vname, Term_sort)) in
-                            let tok_typing = Term.Assume(t, Some "function token typing") in 
-                            decls2@[tok_typing], push_free_var env lid vname (Some <| mkFreeV(vname, Term_sort))
-                        | _ -> 
-                                let vtok_decl = Term.DeclFun(vtok, [], Term_sort, None) in
-                                let vtok_fresh = Term.fresh_token (vtok, Term_sort) (varops.next_id()) in
-                                let name_tok_corr = Term.Assume(mkForall([vtok_app], vars, mkEq(vtok_app, vapp)), None) in
-                                let tok_typing, decls2 = 
+                let tok_typing, decls2 = 
                                     if not(head_normal env tt) 
                                     then encode_typ_pred' None tt env vtok_tm 
                                     else encode_typ_pred' None t_norm env vtok_tm in
-                                let tok_typing = Term.Assume(tok_typing, Some "function token typing") in
+                let tok_typing = Term.Assume(tok_typing, Some "function token typing") in
+                let tok_decl, env = match formals with 
+                        | [] -> decls2@[tok_typing], push_free_var env lid vname (Some <| mkFreeV(vname, Term_sort))
+                        | _ ->  (* Generate a token and a function symbol; equate the two, and use the function symbol for full applications *)
+                                let vtok_decl = Term.DeclFun(vtok, [], Term_sort, None) in
+                                let vtok_fresh = Term.fresh_token (vtok, Term_sort) (varops.next_id()) in
+                                let name_tok_corr = Term.Assume(mkForall([vtok_app], vars, mkEq(vtok_app, vapp)), None) in
                                 decls2@[vtok_decl;vtok_fresh;name_tok_corr;tok_typing], env in
-                    vname_decl::tok_decl, env in
-              let ty_pred, decls3 = encode_typ_pred' None res env' vapp in
-              let tt_typing, decls4 = 
-                    if not(head_normal env tt) 
-                    then let tok_typing, decls4 = encode_typ_pred' None tt env vtok_tm in
-                         [Term.Assume(tok_typing, None)], decls4
-                    else [], [] in
-            
+                vname_decl::tok_decl, env in
+              let ty_pred, decls3 = encode_typ_pred' None res env' vapp in //NS: This is not sound for functions with non-trivial pre-conditions; fix
               let typingAx = Term.Assume(mkForall([vapp], vars, mkImp(guard, ty_pred)), Some "free var typing") in
-              let g = decls1@decls2@decls3@decls4@typingAx::tt_typing@mk_disc_proj_axioms vapp vars in
+              let g = decls1@decls2@decls3@typingAx::mk_disc_proj_axioms vapp vars in
               g, env
        
 

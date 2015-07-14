@@ -1,6 +1,6 @@
 module QuickSort
 open List
-
+#set-options "--initial_ifuel 2 --initial_fuel 1"
 
 (* Specification of sortedness according to some comparison function f *)
 val sorted: ('a -> 'a -> Tot bool) -> list 'a -> Tot bool
@@ -75,10 +75,9 @@ let rec sorted_app_lemma f l1 l2 pivot = match l1 with
     | [] -> ()
     | hd::tl -> sorted_app_lemma f tl l2 pivot
 
-
 val sort: f:('a -> 'a -> Tot bool){total_order 'a f}
        -> l:list 'a
-       -> Tot (m:list 'a{sorted f m /\ (forall i. count i l = count i m)})
+       -> Tot (m:list 'a{sorted f m /\ (forall i.{:pattern (count i l)} count i l = count i m)})
               (decreases (length l))
 let rec sort f = function
   | [] -> []
