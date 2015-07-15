@@ -1318,15 +1318,14 @@ let ret_sec_value_to_p #meta c p v =
   Conf l m s en (T_val (D_v.v (slice_v p v)))
 
 val ret_sec_value_to_ps:
-  #ps':prins -> #m:v_meta -> pi:tpar ps'
-  -> ps:prins{forall p. mem p ps ==> contains p pi} -> v:value m
-  -> Tot (pi':tpar ps'{(forall p. contains p pi' = contains p pi' /\
-                                  (mem p ps ==>
-                                   contains p pi' /\
-                                   Some.v (select p pi') =
-                                   ret_sec_value_to_p (Some.v (select p pi)) p v) /\
-                                  (not (mem p ps) ==> select p pi' = select p pi))})
-    (decreases (size ps))
+  #ps':prins -> #m:v_meta -> pi:tpar ps' -> ps:prins{forall p. mem p ps ==> contains p pi}
+  -> v:value m
+  -> Tot (pi':tpar ps'{forall p. (mem p ps ==>
+                                  select p pi' =
+                                  Some (ret_sec_value_to_p (Some.v (select p pi)) p v)) /\
+                                 (not (mem p ps) ==>
+                                  select p pi' = select p pi)})
+     (decreases (size ps))
 let rec ret_sec_value_to_ps #ps' #meta pi ps v =
   let Some p = choose ps in
   let ps_rest = remove p ps in
@@ -1605,7 +1604,7 @@ let rec forward_simulation_par #c #c' h ps =
 
 
 
-(*val slice_v_lem_singl_of_ps: #m:v_meta -> v:value m -> ps:prins -> p:prin{mem p ps}
+val slice_v_lem_singl_of_ps: #m:v_meta -> v:value m -> ps:prins -> p:prin{mem p ps}
                              -> Lemma (requires (True))
                                       (ensures (slice_v p (D_v.v (slice_v_sps ps v)) =
                                                 slice_v p v))
@@ -1624,7 +1623,7 @@ let rec slice_v_lem_singl_of_ps #m v ps p = match v with
   | V_const _ -> ()  
   | V_box ps' v' ->
     if intersect ps ps' = empty then
-      let _ = assert (mem p ps' ==> mem p (intersect ps ps')) in
+      let _ = cut (mem p ps' ==> mem p (intersect ps ps')) in
       ()
     else if not (mem p ps') then ()
     else slice_v_lem_singl_of_ps v' ps p  
@@ -1652,57 +1651,80 @@ val slice_v_lem_singl_of_ps_forall:
 let slice_v_lem_singl_of_ps_forall #m v ps =
   forall_intro (slice_v_lem_singl_of_ps #m v ps)
 
-assume val contains_is_some_eq_lemma: pi1:tpar -> pi2:tpar
+val sstep_sec_to_par_slice_par_others:
+  #c:config -> #c':config -> h:sstep c c'{is_C_assec_ret h /\ is_par c'}
+  -> Lemma (requires (True))
+           (ensures (forall p. not (mem p (Mode.ps (Conf.m c))) ==>
+                               slice_c p c = slice_c p c'))
+let sstep_sec_to_par_slice_par_others #c #c' _ = ()
+
+val sstep_sec_to_par_p: #c:config -> #c':config
+                        -> h:sstep c c'{is_C_assec_ret h /\ is_par c'}
+                        -> p:prin{mem p (Mode.ps (Conf.m c))}
+                        -> Tot tconfig
+let sstep_sec_to_par_p #c #c' _ p =
+  let ps = Mode.ps (Conf.m c) in
+  let v_ps = slice_v_sps ps (D_v.v (c_value c)) in
+  ret_sec_value_to_p #(D_v.meta v_ps) (slice_c p c) p (D_v.v v_ps)
+
+val sstep_sec_to_par_slice_par_mems:
+  #c:config -> #c':config -> h:sstep c c'{is_C_assec_ret h /\ is_par c'}
+  -> Lemma (requires (True))
+           (ensures (forall p. mem p (Mode.ps (Conf.m c)) ==>
+                               sstep_sec_to_par_p #c #c' h p = slice_c p c'))
+let sstep_sec_to_par_slice_par_mems #c #c' h =
+  let ps = Mode.ps (Conf.m c) in
+  let v = D_v.v (c_value c) in
+  let _ = slice_v_lem_singl_of_ps_forall v ps in
+  ()
+
+(*assume val contains_is_some_eq_lemma: pi1:tpar -> pi2:tpar
                                       -> Lemma (requires (forall p. contains p pi1 <==> contains p pi2))
                                                (ensures (forall p. is_Some (select p pi1) =
-                                                                   is_Some (select p pi2)))
+                                                                   is_Some (select p pi2)))*)
+
+assume val not_contains_lemma: #ps:prins -> pi:tpar ps
+                               -> Lemma (requires (True)) (ensures (forall p. not (mem p ps) ==> select p pi = None))
                                                                    
 val forward_simulation_exit_sec: #c:config -> #c':config
                                  -> h:sstep c c'{is_C_assec_ret h /\ is_par c'}
                                  -> ps:prins{subset (Mode.ps (Conf.m c)) ps}
-                                 -> Tot (pstep (slice_c_ps ps c) (slice_c_ps ps c'))
+                                 -> Tot (pstep #ps (slice_c_ps ps c) (slice_c_ps ps c'))
 let forward_simulation_exit_sec #c #c' h ps =
-  let Conf Source (Mode Sec ps')
-           ((Frame (Mode Par ps'') en F_assec_ret)::s) _ (T_val v) = c in
+  let ps' = Mode.ps (Conf.m c) in
   
-  let Conf Source (Mode Par ps') s en (T_val v) = c' in
-  
-  let pi = slice_c_ps ps c in
-  let _ = slice_c_ps_tpar_lemma ps c in
-  
-  let pi' = slice_c_ps ps c' in  
-  let _ = slice_c_ps_tpar_lemma ps c' in
-  
-  let _ = slice_v_lem_singl_of_ps_forall (D_v.v (c_value c)) ps' in
-  
-  let _ = assert (forall p. mem p ps' ==>
-                            Some.v (select p (fst pi')) =
-                            ret_sec_value_to_p (Some.v (select p (fst pi))) p
-                              (T_val.v (Conf.t (Some.v (snd pi))))) in
-                              
-  (*let _ = assert (forall p. contains p (fst pi) = contains p (fst pi')) in*)  
-  let _ = contains_is_some_eq_lemma (fst pi) (fst pi') in
-  (*let _ = assert (forall p. is_Some (select p (fst pi)) = is_Some (select p (fst pi'))) in*)
-  let _ = assert (forall p. not (mem p ps') ==> select p (fst pi') =
-                                                select p (fst pi)) in
-  
-  let pi'' = tstep_assec_ret pi ps' in
-  
-  let _ = assert (forall p. mem p ps' ==>
-                            Some.v (select p (fst pi'')) =
-                            ret_sec_value_to_p (Some.v (select p (fst pi))) p
-                              (T_val.v (Conf.t (Some.v (snd pi))))) in
-  let _ = assert (forall p. not (mem p ps') ==> select p (fst pi'') =
-                                                select p (fst pi)) in
-                                                
-  let _ = assert (fst pi' = fst pi'') in
-  let _ = assert (snd pi' = snd pi'') in
-  let _ = assert (pi' = pi'') in
+  let pi, s = slice_c_ps ps c in
+  let pi', s' = slice_c_ps ps c' in
+  let pi_s, s_s = tstep_assec_ret #ps (pi, s) ps' in
 
-  P_sec_exit pi ps' pi'
+  sstep_sec_to_par_slice_par_others #c #c' h;
+  sstep_sec_to_par_slice_par_mems #c #c' h;
 
+  not_contains_lemma #ps pi; not_contains_lemma #ps pi'; not_contains_lemma #ps pi_s;
+  
+  let _ = cut (forall p. mem p ps ==> select p pi = Some (slice_c p c)) in
+  let _ = cut (forall p. not (mem p ps) ==> select p pi = None) in
 
-assume val slice_clos_lemma: c:sconfig{not (pre_assec c = NA)}
+  let _ = cut (forall p. mem p ps ==> select p pi' = Some (slice_c p c')) in
+  let _ = cut (forall p. not (mem p ps) ==> select p pi' = None) in
+
+  let _ = cut (forall p. not (mem p ps') ==> select p pi_s = select p pi) in  
+  let _ = cut (forall p. mem p ps' ==> select p pi_s = Some (slice_c p c')) in
+  let _ = cut (forall p. not (mem p ps') ==> slice_c p c = slice_c p c') in
+
+  let _ = cut (forall p. mem p ps ==>
+                         ((not (mem p ps') ==> select p pi_s = Some (slice_c p c')) /\
+                          (mem p ps' ==> select p pi_s = Some (slice_c p c')))) in
+  
+  let _ = cut (forall p. mem p ps ==> select p pi_s = Some (slice_c p c')) in
+                          
+  //let _ = cut (forall p. mem p ps ==> select p pi_s = Some (slice_c p c')) in
+  //let _ = cut (forall p. not (mem p ps) ==> select p pi_s = None) in
+  
+  OrdMap.eq_lemma pi_s (fst (slice_c_ps ps c'));
+  P_sec_exit #ps (pi, s) ps' (pi_s, s_s)
+
+(*assume val slice_clos_lemma: c:sconfig{not (pre_assec c = NA)}
                              -> ps:prins{subset (Mode.ps (Conf.m c)) ps}
                              -> pi:protocol{slice_c_ps ps c = pi}
                              -> Lemma (requires (True))
