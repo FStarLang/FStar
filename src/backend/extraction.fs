@@ -104,7 +104,7 @@ match ft with
         (let codomainML = (extractComp  c codomain) in 
         if  (codomainML = erasedContent) 
         then erasedContent 
-        else  (let bsExp:binders = bs in  curry (List.map (extractBinder c) bsExp) codomainML))
+        else  (curry (List.map (extractBinderType c) bs) codomainML))
 
   | Typ_refine (bv,ty) -> extractTyp c ty
   | Typ_app (ty, arrgs) ->
@@ -138,7 +138,8 @@ match (fst a) with
    Need to make similar changes when extracting the definitions of type schemes
    In Coq, the Inr arguments are just removed in a later phase.
 *)
-and extractBinder  (c:context) (bn : binder ): mlty =
+(*possibly return the new context*)
+and extractBinderType  (c:context) (bn : binder ): mlty (* * context *) =
 match bn with
 | (Inl btv,_) ->  extractKind (btv.sort)
 | (Inr bvv,_) -> extractTyp c (bvv.sort)

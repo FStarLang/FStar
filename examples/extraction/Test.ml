@@ -22,4 +22,7 @@ Obj.t
 type idt =
 unit  ->  Obj.t  ->  Obj.t
 
+type any =
+| Any of unit * Obj.t
+
 
