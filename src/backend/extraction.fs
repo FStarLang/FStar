@@ -49,6 +49,11 @@ type context = {
 
 let emptyContext : context = {tyVars=[]; tyConstants =[]; allowTypeVars=true}
 
+(* these vars will have type Type, irrespective of that types they had in F*. This is to match the limitations of  OCaml*)
+let extendContext (c:context) (tyVars : list<ident>) (tyConsts : list<lident>) (alowTypeVars_ : bool ): context = 
+    { tyVars = List.append c.tyVars tyVars; tyConstants = List.append c.tyConstants tyConsts; allowTypeVars = alowTypeVars_}
+
+let disallowTypeVars (c:context) : context = extendContext c [] [] false
 
 let trimLastChar (x:string) : string = 
     x.Substring (0, (x.Length-1))
@@ -101,10 +106,11 @@ match ft with
                  )
             )
   | Typ_fun (bs, codomain) -> 
-        (let codomainML = (extractComp  c codomain) in 
+        let (bts, newC) = extractBindersTypes c bs in
+        (let codomainML = (extractComp  newC codomain) in 
         if  (codomainML = erasedContent) 
         then erasedContent 
-        else  (curry (List.map (extractBinderType c) bs) codomainML))
+        else  (curry bts codomainML))
 
   | Typ_refine (bv,ty) -> extractTyp c ty
   | Typ_app (ty, arrgs) ->
@@ -134,17 +140,31 @@ and getTypeFromArg (c:context) (a:arg) : mlty =
 match (fst a) with
 | Inl ty -> extractTyp c ty
 | Inr _ -> erasedContent 
+
 (* In OCaml, there are no expressions in type applications.
    Need to make similar changes when extracting the definitions of type schemes
    In Coq, the Inr arguments are just removed in a later phase.
 *)
-(*possibly return the new context*)
-and extractBinderType  (c:context) (bn : binder ): mlty (* * context *) =
+(*return the new context, where this binder might be in scope*)
+and extractBinderType  (c:context) (bn : binder): mlty * context =
 match bn with
-| (Inl btv,_) ->  extractKind (btv.sort)
-| (Inr bvv,_) -> extractTyp c (bvv.sort)
+| (Inl btv,_) ->  
+      let k = (btv.sort) in 
+      let newC = (match k.n with
+                 | Kind_type -> (if c.allowTypeVars then (extendContext c [btv.v.realname] [] c.allowTypeVars) else c)
+                 | _ ->  c)
+       in  (extractKind (disallowTypeVars c) (btv.sort), newC)
+| (Inr bvv,_) -> (extractTyp (disallowTypeVars c) (bvv.sort), c)
+
+and extractBindersTypes  (c:context) (bs : list<binder>): list<mlty> * context =
+match bs with
+| (h::tl) ->  let (t,newC) = extractBinderType c h in
+               let (lt, newNewC) = extractBindersTypes newC tl in
+               ((t::lt),newNewC)
+| [] -> ([], c)
+
 and extractTyp  (c:context) (ft:typ) : mlty = extractType' c (ft.n)
-and extractKind (ft:knd) : mlty = erasedContent
+and extractKind (c:context) (ft:knd) : mlty = erasedContent
 and extractComp  (c:context) (ft:comp) : mlty = extractComp' c (ft.n) 
 and extractComp'  (c:context) (ft:comp') : mlty =
 match  ft with
@@ -162,9 +182,6 @@ match bn with
 | (Inl btv,_) -> btv.v.realname
 | (Inr bvv,_) -> bvv.v.realname
 
-(* these vars will have type Type, irrespective of that types they had in F*. This is to match the limitations of  OCaml*)
-let extendContext (c:context) (tyVars : list<ident>) (tyConsts : list<lident>) (alowTypeVars_ : bool ): context = 
-    { tyVars = List.append c.tyVars tyVars; tyConstants = List.append c.tyConstants tyConsts; allowTypeVars = alowTypeVars_}
 
 let mlsymbolOfLident (id : lident) : mlsymbol =
   id.ident.idText
@@ -276,7 +293,7 @@ match s with
     let identsPP = List.map binderPPnames ind.tyBinders in
     let identsReal = List.map binderRealnames ind.tyBinders in
             // printfn "binders are %A\n" (identsReal);
-    let newContext = (extendContext c identsReal [ind.tyName] true) in
+    let newContext = (extendContext c identsReal [ind.tyName] false) in
     let nIndices = numIndices ind.k.n ind.tyName.ident.idText in
     let tyDecBody = MLTD_DType (List.map (extractCtor newContext) ind.constructors) in
           Some (ind.tyName, MLS_Ty [(lident2mlsymbol ind.tyName, List.append (List.map (fun x -> prependTick (convIdent x)) identsPP) (dummyIndexIdents nIndices)  , Some tyDecBody)])
