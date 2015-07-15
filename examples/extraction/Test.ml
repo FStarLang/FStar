@@ -60,5 +60,3 @@ type polyvec =
 
 type polylist =
 list poly2
-
-

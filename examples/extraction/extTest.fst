@@ -61,7 +61,6 @@ type sch3param (x:(nnat  ->  Type))  =  (x O) ->  Tot (x (S O))
 
 type idt =  (x:Type) ->  (x ->  Tot x)
 
-
 (*
 Minor changes are required to make it work.
 The idea is that nnat becomes unit.
@@ -78,5 +77,27 @@ type vecn1 = vec nnat (S O)
  *)
 type polyvec = poly (vec nnat)
 
-(*this is even more complicated. what does Coq do about it?*)
+(* This is even more complicated. what does Coq do about it?
+   What it does is similar to the above case. Instead of applying unit (to vec),
+   it applies  Obj.t (to list).
+
+  Perhaps the general theme is that we retain type parameters, even
+    if they have type other than Type.
+  Indeed, while translating type type abbreviations or inductive types,
+  we just copy the list of binders and dont even look at the types of binders.
+
+  Of course, after the translation, all binders have type Type.
+  So, one has to be careful while instantiating those binders.
+  In particular, one has to apply more arguments before instantiating.
+  If the arguments are terms, unit should usually work, because
+  term-dependencies are removed type definitions.
+
+  In case the arguments are types, Obj.t seems to be the only thing that
+  can be cooked from thin air, and it is what Coq seems to be doing.
+  Is this mentioned somewhere in the thesis?
+
+  All this seems a bit arbitrary, although is perhaps inspired by some
+  use cases in Coq, and had been heavily tested (in Coq).
+  Yet, Why is this the right way, conceptually?
+*)
 type polylist = poly2 (list)
