@@ -292,7 +292,7 @@ and comp_typ_to_string c =
       let basic = 
           if c.flags |> Util.for_some (function TOTAL -> true | _ -> false) && not !Options.print_effect_args 
           then Util.format1 "Tot %s" (typ_to_string c.result_typ)
-          else if not !Options.print_effect_args && (lid_equals c.effect_name Const.ml_effect_lid)//  || List.contains MLEFFECT c.flags) 
+          else if not !Options.print_effect_args && (lid_equals c.effect_name Const.effect_ML_lid)//  || List.contains MLEFFECT c.flags) 
           then typ_to_string c.result_typ
           else if not !Options.print_effect_args && c.flags |> Util.for_some (function MLEFFECT -> true | _ -> false)
           then Util.format1 "ALL %s" (typ_to_string c.result_typ)

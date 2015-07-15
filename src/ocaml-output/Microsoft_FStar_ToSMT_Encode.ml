@@ -153,7 +153,7 @@ type binding =
 let binder_of_eithervar = (fun v -> (v, None))
 
 type env_t =
-{bindings : binding list; depth : int; tcenv : Microsoft_FStar_Tc_Env.env; warn : bool; cache : (string * Microsoft_FStar_ToSMT_Term.sort list * Microsoft_FStar_ToSMT_Term.decl list) Support.Microsoft.FStar.Util.smap; nolabels : bool; use_zfuel_name : bool}
+{bindings : binding list; depth : int; tcenv : Microsoft_FStar_Tc_Env.env; warn : bool; cache : (string * Microsoft_FStar_ToSMT_Term.sort list * Microsoft_FStar_ToSMT_Term.decl list) Support.Microsoft.FStar.Util.smap; nolabels : bool; use_zfuel_name : bool; encode_non_total_function_typ : bool}
 
 let print_env = (fun e -> ((Support.String.concat ", ") ((Support.List.map (fun _45_2 -> (match (_45_2) with
 | Binding_var ((x, t)) -> begin
@@ -182,16 +182,16 @@ in (xsym, (Microsoft_FStar_ToSMT_Term.mkFreeV (xsym, s)))))
 
 let gen_term_var = (fun env x -> (let ysym = (Support.String.strcat "@x" (Support.Microsoft.FStar.Util.string_of_int env.depth))
 in (let y = (Microsoft_FStar_ToSMT_Term.mkFreeV (ysym, Microsoft_FStar_ToSMT_Term.Term_sort))
-in (ysym, y, (let _45_227 = env
-in {bindings = (Binding_var ((x, y)))::env.bindings; depth = (env.depth + 1); tcenv = _45_227.tcenv; warn = _45_227.warn; cache = _45_227.cache; nolabels = _45_227.nolabels; use_zfuel_name = _45_227.use_zfuel_name})))))
+in (ysym, y, (let _45_228 = env
+in {bindings = (Binding_var ((x, y)))::env.bindings; depth = (env.depth + 1); tcenv = _45_228.tcenv; warn = _45_228.warn; cache = _45_228.cache; nolabels = _45_228.nolabels; use_zfuel_name = _45_228.use_zfuel_name; encode_non_total_function_typ = _45_228.encode_non_total_function_typ})))))
 
 let new_term_constant = (fun env x -> (let ysym = (varops.new_var x.Microsoft_FStar_Absyn_Syntax.ppname x.Microsoft_FStar_Absyn_Syntax.realname)
 in (let y = (Microsoft_FStar_ToSMT_Term.mkApp (ysym, []))
-in (ysym, y, (let _45_233 = env
-in {bindings = (Binding_var ((x, y)))::env.bindings; depth = _45_233.depth; tcenv = _45_233.tcenv; warn = _45_233.warn; cache = _45_233.cache; nolabels = _45_233.nolabels; use_zfuel_name = _45_233.use_zfuel_name})))))
+in (ysym, y, (let _45_234 = env
+in {bindings = (Binding_var ((x, y)))::env.bindings; depth = _45_234.depth; tcenv = _45_234.tcenv; warn = _45_234.warn; cache = _45_234.cache; nolabels = _45_234.nolabels; use_zfuel_name = _45_234.use_zfuel_name; encode_non_total_function_typ = _45_234.encode_non_total_function_typ})))))
 
-let push_term_var = (fun env x t -> (let _45_238 = env
-in {bindings = (Binding_var ((x, t)))::env.bindings; depth = _45_238.depth; tcenv = _45_238.tcenv; warn = _45_238.warn; cache = _45_238.cache; nolabels = _45_238.nolabels; use_zfuel_name = _45_238.use_zfuel_name}))
+let push_term_var = (fun env x t -> (let _45_239 = env
+in {bindings = (Binding_var ((x, t)))::env.bindings; depth = _45_239.depth; tcenv = _45_239.tcenv; warn = _45_239.warn; cache = _45_239.cache; nolabels = _45_239.nolabels; use_zfuel_name = _45_239.use_zfuel_name; encode_non_total_function_typ = _45_239.encode_non_total_function_typ}))
 
 let lookup_term_var = (fun env a -> (match ((lookup_binding env (fun _45_3 -> (match (_45_3) with
 | Binding_var ((b, t)) when (Microsoft_FStar_Absyn_Util.bvd_eq b a.Microsoft_FStar_Absyn_Syntax.v) -> begin
@@ -209,16 +209,16 @@ end))
 
 let gen_typ_var = (fun env x -> (let ysym = (Support.String.strcat "@a" (Support.Microsoft.FStar.Util.string_of_int env.depth))
 in (let y = (Microsoft_FStar_ToSMT_Term.mkFreeV (ysym, Microsoft_FStar_ToSMT_Term.Type_sort))
-in (ysym, y, (let _45_258 = env
-in {bindings = (Binding_tvar ((x, y)))::env.bindings; depth = (env.depth + 1); tcenv = _45_258.tcenv; warn = _45_258.warn; cache = _45_258.cache; nolabels = _45_258.nolabels; use_zfuel_name = _45_258.use_zfuel_name})))))
+in (ysym, y, (let _45_259 = env
+in {bindings = (Binding_tvar ((x, y)))::env.bindings; depth = (env.depth + 1); tcenv = _45_259.tcenv; warn = _45_259.warn; cache = _45_259.cache; nolabels = _45_259.nolabels; use_zfuel_name = _45_259.use_zfuel_name; encode_non_total_function_typ = _45_259.encode_non_total_function_typ})))))
 
 let new_typ_constant = (fun env x -> (let ysym = (varops.new_var x.Microsoft_FStar_Absyn_Syntax.ppname x.Microsoft_FStar_Absyn_Syntax.realname)
 in (let y = (Microsoft_FStar_ToSMT_Term.mkApp (ysym, []))
-in (ysym, y, (let _45_264 = env
-in {bindings = (Binding_tvar ((x, y)))::env.bindings; depth = _45_264.depth; tcenv = _45_264.tcenv; warn = _45_264.warn; cache = _45_264.cache; nolabels = _45_264.nolabels; use_zfuel_name = _45_264.use_zfuel_name})))))
+in (ysym, y, (let _45_265 = env
+in {bindings = (Binding_tvar ((x, y)))::env.bindings; depth = _45_265.depth; tcenv = _45_265.tcenv; warn = _45_265.warn; cache = _45_265.cache; nolabels = _45_265.nolabels; use_zfuel_name = _45_265.use_zfuel_name; encode_non_total_function_typ = _45_265.encode_non_total_function_typ})))))
 
-let push_typ_var = (fun env x t -> (let _45_269 = env
-in {bindings = (Binding_tvar ((x, t)))::env.bindings; depth = _45_269.depth; tcenv = _45_269.tcenv; warn = _45_269.warn; cache = _45_269.cache; nolabels = _45_269.nolabels; use_zfuel_name = _45_269.use_zfuel_name}))
+let push_typ_var = (fun env x t -> (let _45_270 = env
+in {bindings = (Binding_tvar ((x, t)))::env.bindings; depth = _45_270.depth; tcenv = _45_270.tcenv; warn = _45_270.warn; cache = _45_270.cache; nolabels = _45_270.nolabels; use_zfuel_name = _45_270.use_zfuel_name; encode_non_total_function_typ = _45_270.encode_non_total_function_typ}))
 
 let lookup_typ_var = (fun env a -> (match ((lookup_binding env (fun _45_4 -> (match (_45_4) with
 | Binding_tvar ((b, t)) when (Microsoft_FStar_Absyn_Util.bvd_eq b a.Microsoft_FStar_Absyn_Syntax.v) -> begin
@@ -236,8 +236,8 @@ end))
 
 let new_term_constant_and_tok_from_lid = (fun env x -> (let fname = (varops.new_fvar x)
 in (let ftok = (Support.String.strcat fname "@tok")
-in (fname, ftok, (let _45_289 = env
-in {bindings = (Binding_fvar ((x, fname, ((fun __dataconst_1 -> Some (__dataconst_1)) (Microsoft_FStar_ToSMT_Term.mkApp (ftok, []))), None)))::env.bindings; depth = _45_289.depth; tcenv = _45_289.tcenv; warn = _45_289.warn; cache = _45_289.cache; nolabels = _45_289.nolabels; use_zfuel_name = _45_289.use_zfuel_name})))))
+in (fname, ftok, (let _45_290 = env
+in {bindings = (Binding_fvar ((x, fname, ((fun __dataconst_1 -> Some (__dataconst_1)) (Microsoft_FStar_ToSMT_Term.mkApp (ftok, []))), None)))::env.bindings; depth = _45_290.depth; tcenv = _45_290.tcenv; warn = _45_290.warn; cache = _45_290.cache; nolabels = _45_290.nolabels; use_zfuel_name = _45_290.use_zfuel_name; encode_non_total_function_typ = _45_290.encode_non_total_function_typ})))))
 
 let try_lookup_lid = (fun env a -> (lookup_binding env (fun _45_5 -> (match (_45_5) with
 | Binding_fvar ((b, t1, t2, t3)) when (Microsoft_FStar_Absyn_Syntax.lid_equals b a) -> begin
@@ -255,19 +255,19 @@ end
 s
 end))
 
-let push_free_var = (fun env x fname ftok -> (let _45_311 = env
-in {bindings = (Binding_fvar ((x, fname, ftok, None)))::env.bindings; depth = _45_311.depth; tcenv = _45_311.tcenv; warn = _45_311.warn; cache = _45_311.cache; nolabels = _45_311.nolabels; use_zfuel_name = _45_311.use_zfuel_name}))
+let push_free_var = (fun env x fname ftok -> (let _45_312 = env
+in {bindings = (Binding_fvar ((x, fname, ftok, None)))::env.bindings; depth = _45_312.depth; tcenv = _45_312.tcenv; warn = _45_312.warn; cache = _45_312.cache; nolabels = _45_312.nolabels; use_zfuel_name = _45_312.use_zfuel_name; encode_non_total_function_typ = _45_312.encode_non_total_function_typ}))
 
-let push_zfuel_name = (fun env x f -> (let _45_320 = (lookup_lid env x)
-in (match (_45_320) with
+let push_zfuel_name = (fun env x f -> (let _45_321 = (lookup_lid env x)
+in (match (_45_321) with
 | (t1, t2, _) -> begin
 (let t3 = (Microsoft_FStar_ToSMT_Term.mkApp (f, ((Microsoft_FStar_ToSMT_Term.mkApp ("ZFuel", [])))::[]))
-in (let _45_322 = env
-in {bindings = (Binding_fvar ((x, t1, t2, Some (t3))))::env.bindings; depth = _45_322.depth; tcenv = _45_322.tcenv; warn = _45_322.warn; cache = _45_322.cache; nolabels = _45_322.nolabels; use_zfuel_name = _45_322.use_zfuel_name}))
+in (let _45_323 = env
+in {bindings = (Binding_fvar ((x, t1, t2, Some (t3))))::env.bindings; depth = _45_323.depth; tcenv = _45_323.tcenv; warn = _45_323.warn; cache = _45_323.cache; nolabels = _45_323.nolabels; use_zfuel_name = _45_323.use_zfuel_name; encode_non_total_function_typ = _45_323.encode_non_total_function_typ}))
 end)))
 
-let lookup_free_var = (fun env a -> (let _45_329 = (lookup_lid env a.Microsoft_FStar_Absyn_Syntax.v)
-in (match (_45_329) with
+let lookup_free_var = (fun env a -> (let _45_330 = (lookup_lid env a.Microsoft_FStar_Absyn_Syntax.v)
+in (match (_45_330) with
 | (name, sym, zf_opt) -> begin
 (match (zf_opt) with
 | Some (f) when env.use_zfuel_name -> begin
@@ -294,14 +294,14 @@ end)
 end)
 end)))
 
-let lookup_free_var_name = (fun env a -> (let _45_353 = (lookup_lid env a.Microsoft_FStar_Absyn_Syntax.v)
-in (match (_45_353) with
+let lookup_free_var_name = (fun env a -> (let _45_354 = (lookup_lid env a.Microsoft_FStar_Absyn_Syntax.v)
+in (match (_45_354) with
 | (x, _, _) -> begin
 x
 end)))
 
-let lookup_free_var_sym = (fun env a -> (let _45_359 = (lookup_lid env a.Microsoft_FStar_Absyn_Syntax.v)
-in (match (_45_359) with
+let lookup_free_var_sym = (fun env a -> (let _45_360 = (lookup_lid env a.Microsoft_FStar_Absyn_Syntax.v)
+in (match (_45_360) with
 | (name, sym, zf_opt) -> begin
 (match (zf_opt) with
 | Some ({Microsoft_FStar_ToSMT_Term.tm = Microsoft_FStar_ToSMT_Term.App ((g, zf)); Microsoft_FStar_ToSMT_Term.hash = _; Microsoft_FStar_ToSMT_Term.freevars = _}) when env.use_zfuel_name -> begin
@@ -326,8 +326,8 @@ end)))
 
 let new_typ_constant_and_tok_from_lid = (fun env x -> (let fname = (varops.new_fvar x)
 in (let ftok = (Support.String.strcat fname "@tok")
-in (fname, ftok, (let _45_386 = env
-in {bindings = (Binding_ftvar ((x, fname, ((fun __dataconst_1 -> Some (__dataconst_1)) (Microsoft_FStar_ToSMT_Term.mkApp (ftok, []))))))::env.bindings; depth = _45_386.depth; tcenv = _45_386.tcenv; warn = _45_386.warn; cache = _45_386.cache; nolabels = _45_386.nolabels; use_zfuel_name = _45_386.use_zfuel_name})))))
+in (fname, ftok, (let _45_387 = env
+in {bindings = (Binding_ftvar ((x, fname, ((fun __dataconst_1 -> Some (__dataconst_1)) (Microsoft_FStar_ToSMT_Term.mkApp (ftok, []))))))::env.bindings; depth = _45_387.depth; tcenv = _45_387.tcenv; warn = _45_387.warn; cache = _45_387.cache; nolabels = _45_387.nolabels; use_zfuel_name = _45_387.use_zfuel_name; encode_non_total_function_typ = _45_387.encode_non_total_function_typ})))))
 
 let lookup_tlid = (fun env a -> (match ((lookup_binding env (fun _45_6 -> (match (_45_6) with
 | Binding_ftvar ((b, t1, t2)) when (Microsoft_FStar_Absyn_Syntax.lid_equals b a) -> begin
@@ -343,8 +343,8 @@ end
 s
 end))
 
-let push_free_tvar = (fun env x fname ftok -> (let _45_405 = env
-in {bindings = (Binding_ftvar ((x, fname, ftok)))::env.bindings; depth = _45_405.depth; tcenv = _45_405.tcenv; warn = _45_405.warn; cache = _45_405.cache; nolabels = _45_405.nolabels; use_zfuel_name = _45_405.use_zfuel_name}))
+let push_free_tvar = (fun env x fname ftok -> (let _45_406 = env
+in {bindings = (Binding_ftvar ((x, fname, ftok)))::env.bindings; depth = _45_406.depth; tcenv = _45_406.tcenv; warn = _45_406.warn; cache = _45_406.cache; nolabels = _45_406.nolabels; use_zfuel_name = _45_406.use_zfuel_name; encode_non_total_function_typ = _45_406.encode_non_total_function_typ}))
 
 let lookup_free_tvar = (fun env a -> (match (((Support.Prims.snd) (lookup_tlid env a.Microsoft_FStar_Absyn_Syntax.v))) with
 | None -> begin
@@ -364,17 +364,17 @@ end
 None
 end))))
 
-let mkForall_fuel' = (fun n _45_435 -> (match (_45_435) with
+let mkForall_fuel' = (fun n _45_436 -> (match (_45_436) with
 | (pats, vars, body) -> begin
-(let fallback = (fun _45_437 -> (match (_45_437) with
+(let fallback = (fun _45_438 -> (match (_45_438) with
 | () -> begin
 (Microsoft_FStar_ToSMT_Term.mkForall (pats, vars, body))
 end))
 in if (! (Microsoft_FStar_Options.unthrottle_inductives)) then begin
 (fallback ())
 end else begin
-(let _45_440 = (fresh_fvar "f" Microsoft_FStar_ToSMT_Term.Fuel_sort)
-in (match (_45_440) with
+(let _45_441 = (fresh_fvar "f" Microsoft_FStar_ToSMT_Term.Fuel_sort)
+in (match (_45_441) with
 | (fsym, fterm) -> begin
 (let pats = ((Support.List.map (fun p -> (match (p.Microsoft_FStar_ToSMT_Term.tm) with
 | Microsoft_FStar_ToSMT_Term.App ((Microsoft_FStar_ToSMT_Term.Var ("HasType"), args)) -> begin
@@ -541,12 +541,12 @@ end
 (Microsoft_FStar_ToSMT_Term.mkTrue, [])
 end
 | Microsoft_FStar_Absyn_Syntax.Kind_arrow ((bs, k)) -> begin
-(let _45_632 = (encode_binders None bs env)
-in (match (_45_632) with
+(let _45_633 = (encode_binders None bs env)
+in (match (_45_633) with
 | (vars, guards, env', decls, _) -> begin
 (let app = (mk_ApplyT t vars)
-in (let _45_636 = (encode_knd' prekind k env' app)
-in (match (_45_636) with
+in (let _45_637 = (encode_knd' prekind k env' app)
+in (match (_45_637) with
 | (k, decls') -> begin
 (let term = (Microsoft_FStar_ToSMT_Term.mkForall ((app)::[], vars, (Microsoft_FStar_ToSMT_Term.mkImp ((Microsoft_FStar_ToSMT_Term.mk_and_l guards), k))))
 in (let term = if prekind then begin
@@ -562,19 +562,19 @@ end
 (failwith (Support.Microsoft.FStar.Util.format1 "Unknown kind: %s" (Microsoft_FStar_Absyn_Print.kind_to_string k)))
 end))
 and encode_knd = (fun k env t -> (encode_knd' true k env t))
-and encode_binders = (fun fuel_opt bs env -> (let _45_647 = if (Microsoft_FStar_Tc_Env.debug env.tcenv Microsoft_FStar_Options.Low) then begin
+and encode_binders = (fun fuel_opt bs env -> (let _45_648 = if (Microsoft_FStar_Tc_Env.debug env.tcenv Microsoft_FStar_Options.Low) then begin
 (Support.Microsoft.FStar.Util.fprint1 "Encoding binders %s\n" (Microsoft_FStar_Absyn_Print.binders_to_string ", " bs))
 end
-in (let _45_695 = ((Support.List.fold_left (fun _45_654 b -> (match (_45_654) with
+in (let _45_696 = ((Support.List.fold_left (fun _45_655 b -> (match (_45_655) with
 | (vars, guards, env, decls, names) -> begin
-(let _45_689 = (match ((Support.Prims.fst b)) with
+(let _45_690 = (match ((Support.Prims.fst b)) with
 | Support.Microsoft.FStar.Util.Inl ({Microsoft_FStar_Absyn_Syntax.v = a; Microsoft_FStar_Absyn_Syntax.sort = k; Microsoft_FStar_Absyn_Syntax.p = _}) -> begin
 (let a = (unmangle a)
-in (let _45_666 = (gen_typ_var env a)
-in (match (_45_666) with
+in (let _45_667 = (gen_typ_var env a)
+in (match (_45_667) with
 | (aasym, aa, env') -> begin
-(let _45_669 = (encode_knd' false k env aa)
-in (match (_45_669) with
+(let _45_670 = (encode_knd' false k env aa)
+in (match (_45_670) with
 | (guard_a_k, decls') -> begin
 ((aasym, Microsoft_FStar_ToSMT_Term.Type_sort), guard_a_k, env', decls', Support.Microsoft.FStar.Util.Inl (a))
 end))
@@ -582,28 +582,28 @@ end)))
 end
 | Support.Microsoft.FStar.Util.Inr ({Microsoft_FStar_Absyn_Syntax.v = x; Microsoft_FStar_Absyn_Syntax.sort = t; Microsoft_FStar_Absyn_Syntax.p = _}) -> begin
 (let x = (unmangle x)
-in (let _45_680 = (gen_term_var env x)
-in (match (_45_680) with
+in (let _45_681 = (gen_term_var env x)
+in (match (_45_681) with
 | (xxsym, xx, env') -> begin
-(let _45_683 = (encode_typ_pred' fuel_opt (norm_t env t) env xx)
-in (match (_45_683) with
+(let _45_684 = (encode_typ_pred' fuel_opt (norm_t env t) env xx)
+in (match (_45_684) with
 | (guard_x_t, decls') -> begin
 ((xxsym, Microsoft_FStar_ToSMT_Term.Term_sort), guard_x_t, env', decls', Support.Microsoft.FStar.Util.Inr (x))
 end))
 end)))
 end)
-in (match (_45_689) with
+in (match (_45_690) with
 | (v, g, env, decls', n) -> begin
 ((v)::vars, (g)::guards, env, (Support.List.append decls decls'), (n)::names)
 end))
 end)) ([], [], env, [], [])) bs)
-in (match (_45_695) with
+in (match (_45_696) with
 | (vars, guards, env, decls, names) -> begin
 ((Support.List.rev vars), (Support.List.rev guards), env, decls, (Support.List.rev names))
 end))))
 and encode_typ_pred' = (fun fuel_opt t env e -> (let t = (Microsoft_FStar_Absyn_Util.compress_typ t)
-in (let _45_703 = (encode_typ_term t env)
-in (match (_45_703) with
+in (let _45_704 = (encode_typ_term t env)
+in (match (_45_704) with
 | (t, decls) -> begin
 ((Microsoft_FStar_ToSMT_Term.mk_HasTypeWithFuel fuel_opt e t), decls)
 end))))
@@ -616,18 +616,34 @@ end
 ((lookup_free_tvar env fv), [])
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_fun ((binders, res)) -> begin
-if (Microsoft_FStar_Absyn_Util.is_tot_or_gtot_comp res) then begin
-(let _45_721 = (encode_binders None binders env)
-in (match (_45_721) with
+if ((env.encode_non_total_function_typ && (Microsoft_FStar_Absyn_Util.is_pure_or_ghost_comp res)) || (Microsoft_FStar_Absyn_Util.is_tot_or_gtot_comp res)) then begin
+(let _45_722 = (encode_binders None binders env)
+in (match (_45_722) with
 | (vars, guards, env', decls, _) -> begin
 (let fsym = ((varops.fresh "f"), Microsoft_FStar_ToSMT_Term.Term_sort)
 in (let f = (Microsoft_FStar_ToSMT_Term.mkFreeV fsym)
 in (let app = (mk_ApplyE f vars)
-in (let _45_727 = (encode_typ_pred' None (Microsoft_FStar_Absyn_Util.comp_result res) env' app)
-in (match (_45_727) with
+in (let _45_728 = (Microsoft_FStar_Tc_Util.pure_or_ghost_pre_and_post env.tcenv res)
+in (match (_45_728) with
+| (pre_opt, res_t) -> begin
+(let _45_731 = (encode_typ_pred' None res_t env' app)
+in (match (_45_731) with
 | (res_pred, decls') -> begin
-(let t_interp = (Microsoft_FStar_ToSMT_Term.mkForall ((app)::[], vars, (Microsoft_FStar_ToSMT_Term.mkImp ((Microsoft_FStar_ToSMT_Term.mk_and_l guards), res_pred))))
-in (let cvars = ((Support.List.filter (fun _45_732 -> (match (_45_732) with
+(let _45_740 = (match (pre_opt) with
+| None -> begin
+((Microsoft_FStar_ToSMT_Term.mk_and_l guards), decls)
+end
+| Some (pre) -> begin
+(let _45_737 = (encode_formula pre env')
+in (match (_45_737) with
+| (guard, decls0) -> begin
+((Microsoft_FStar_ToSMT_Term.mk_and_l ((guard)::guards)), (Support.List.append decls decls0))
+end))
+end)
+in (match (_45_740) with
+| (guards, guard_decls) -> begin
+(let t_interp = (Microsoft_FStar_ToSMT_Term.mkForall ((app)::[], vars, (Microsoft_FStar_ToSMT_Term.mkImp (guards, res_pred))))
+in (let cvars = ((Support.List.filter (fun _45_745 -> (match (_45_745) with
 | (x, _) -> begin
 (x <> (Support.Prims.fst fsym))
 end))) (Microsoft_FStar_ToSMT_Term.free_variables t_interp))
@@ -652,9 +668,11 @@ in (let f_has_t = (Microsoft_FStar_ToSMT_Term.mk_HasType f t)
 in (let pre_typing = Microsoft_FStar_ToSMT_Term.Assume (((mkForall_fuel ((f_has_t)::[], (fsym)::cvars, (Microsoft_FStar_ToSMT_Term.mkImp (f_has_t, (Microsoft_FStar_ToSMT_Term.mk_tester "Typ_fun" (Microsoft_FStar_ToSMT_Term.mk_PreType f)))))), Some ("pre-typing for functions")))
 in (let t_interp = Microsoft_FStar_ToSMT_Term.Assume (((mkForall_fuel ((f_has_t)::[], (fsym)::cvars, (Microsoft_FStar_ToSMT_Term.mkIff (f_has_t, t_interp)))), Some ((Support.String.strcat tsym " interpretation"))))
 in (let t_decls = (Support.List.append (Support.List.append decls decls') ((tdecl)::(k_assumption)::(pre_typing)::(t_interp)::[]))
-in (let _45_753 = (Support.Microsoft.FStar.Util.smap_add env.cache tkey.Microsoft_FStar_ToSMT_Term.hash (tsym, cvar_sorts, t_decls))
+in (let _45_766 = (Support.Microsoft.FStar.Util.smap_add env.cache tkey.Microsoft_FStar_ToSMT_Term.hash (tsym, cvar_sorts, t_decls))
 in (t, t_decls)))))))))))))
 end))))
+end))
+end))
 end)))))
 end))
 end else begin
@@ -670,26 +688,26 @@ in (t, (tdecl)::(t_kinding)::(t_interp)::[])))))))))
 end
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_refine (_) -> begin
-(let _45_783 = (match ((Microsoft_FStar_Tc_Normalize.normalize_refinement env.tcenv t0)) with
+(let _45_796 = (match ((Microsoft_FStar_Tc_Normalize.normalize_refinement env.tcenv t0)) with
 | {Microsoft_FStar_Absyn_Syntax.n = Microsoft_FStar_Absyn_Syntax.Typ_refine ((x, f)); Microsoft_FStar_Absyn_Syntax.tk = _; Microsoft_FStar_Absyn_Syntax.pos = _; Microsoft_FStar_Absyn_Syntax.fvs = _; Microsoft_FStar_Absyn_Syntax.uvs = _} -> begin
 (x, f)
 end
 | _ -> begin
 (failwith "impossible")
 end)
-in (match (_45_783) with
+in (match (_45_796) with
 | (x, f) -> begin
-(let _45_786 = (encode_typ_term x.Microsoft_FStar_Absyn_Syntax.sort env)
-in (match (_45_786) with
+(let _45_799 = (encode_typ_term x.Microsoft_FStar_Absyn_Syntax.sort env)
+in (match (_45_799) with
 | (base_t, decls) -> begin
-(let _45_790 = (gen_term_var env x.Microsoft_FStar_Absyn_Syntax.v)
-in (match (_45_790) with
+(let _45_803 = (gen_term_var env x.Microsoft_FStar_Absyn_Syntax.v)
+in (match (_45_803) with
 | (x, xtm, env') -> begin
-(let _45_793 = (encode_formula f env')
-in (match (_45_793) with
+(let _45_806 = (encode_formula f env')
+in (match (_45_806) with
 | (refinement, decls') -> begin
 (let encoding = (Microsoft_FStar_ToSMT_Term.mkAnd ((Microsoft_FStar_ToSMT_Term.mk_HasType xtm base_t), refinement))
-in (let cvars = ((Support.List.filter (fun _45_798 -> (match (_45_798) with
+in (let cvars = ((Support.List.filter (fun _45_811 -> (match (_45_811) with
 | (y, _) -> begin
 (y <> x)
 end))) (Microsoft_FStar_ToSMT_Term.free_variables encoding))
@@ -709,7 +727,7 @@ in (let t_has_kind = (Microsoft_FStar_ToSMT_Term.mk_HasKind t Microsoft_FStar_To
 in (let t_kinding = (Microsoft_FStar_ToSMT_Term.mkForall ((t_has_kind)::[], cvars, t_has_kind))
 in (let assumption = (mkForall_fuel ((x_has_t)::[], (xfv)::cvars, (Microsoft_FStar_ToSMT_Term.mkIff (x_has_t, encoding))))
 in (let t_decls = (Support.List.append (Support.List.append decls decls') ((tdecl)::(Microsoft_FStar_ToSMT_Term.Assume ((t_kinding, None)))::(Microsoft_FStar_ToSMT_Term.Assume ((assumption, Some ((Microsoft_FStar_Absyn_Print.typ_to_string t0)))))::[]))
-in (let _45_819 = (Support.Microsoft.FStar.Util.smap_add env.cache tkey.Microsoft_FStar_ToSMT_Term.hash (tsym, cvar_sorts, t_decls))
+in (let _45_832 = (Support.Microsoft.FStar.Util.smap_add env.cache tkey.Microsoft_FStar_ToSMT_Term.hash (tsym, cvar_sorts, t_decls))
 in (t, t_decls)))))))))))
 end)))))
 end))
@@ -719,19 +737,19 @@ end))
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_uvar ((uv, k)) -> begin
 (let ttm = (Microsoft_FStar_ToSMT_Term.mk_Typ_uvar (Support.Microsoft.FStar.Unionfind.uvar_id uv))
-in (let _45_828 = (encode_knd k env ttm)
-in (match (_45_828) with
+in (let _45_841 = (encode_knd k env ttm)
+in (match (_45_841) with
 | (t_has_k, decls) -> begin
 (let d = Microsoft_FStar_ToSMT_Term.Assume ((t_has_k, None))
 in (ttm, (d)::decls))
 end)))
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_app ((head, args)) -> begin
-(let is_full_app = (fun _45_835 -> (match (_45_835) with
+(let is_full_app = (fun _45_848 -> (match (_45_848) with
 | () -> begin
 (let kk = (Microsoft_FStar_Tc_Recheck.recompute_kind head)
-in (let _45_840 = (Microsoft_FStar_Absyn_Util.kind_formals kk)
-in (match (_45_840) with
+in (let _45_853 = (Microsoft_FStar_Absyn_Util.kind_formals kk)
+in (match (_45_853) with
 | (formals, _) -> begin
 ((Support.List.length formals) = (Support.List.length args))
 end)))
@@ -740,16 +758,16 @@ in (let head = (Microsoft_FStar_Absyn_Util.compress_typ head)
 in (match (head.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Typ_btvar (a) -> begin
 (let head = (lookup_typ_var env a)
-in (let _45_847 = (encode_args args env)
-in (match (_45_847) with
+in (let _45_860 = (encode_args args env)
+in (match (_45_860) with
 | (args, decls) -> begin
 (let t = (mk_ApplyT_args head args)
 in (t, decls))
 end)))
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_const (fv) -> begin
-(let _45_853 = (encode_args args env)
-in (match (_45_853) with
+(let _45_866 = (encode_args args env)
+in (match (_45_866) with
 | (args, decls) -> begin
 if (is_full_app ()) then begin
 (let head = (lookup_free_tvar_name env fv)
@@ -767,8 +785,8 @@ end))
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_uvar ((uv, k)) -> begin
 (let ttm = (Microsoft_FStar_ToSMT_Term.mk_Typ_uvar (Support.Microsoft.FStar.Unionfind.uvar_id uv))
-in (let _45_869 = (encode_knd k env ttm)
-in (match (_45_869) with
+in (let _45_882 = (encode_knd k env ttm)
+in (match (_45_882) with
 | (t_has_k, decls) -> begin
 (let d = Microsoft_FStar_ToSMT_Term.Assume ((t_has_k, None))
 in (ttm, (d)::decls))
@@ -780,11 +798,11 @@ in (encode_typ_term t env))
 end)))
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_lam ((bs, body)) -> begin
-(let _45_884 = (encode_binders None bs env)
-in (match (_45_884) with
+(let _45_897 = (encode_binders None bs env)
+in (match (_45_897) with
 | (vars, guards, env, decls, _) -> begin
-(let _45_887 = (encode_typ_term body env)
-in (match (_45_887) with
+(let _45_900 = (encode_typ_term body env)
+in (match (_45_900) with
 | (body, decls') -> begin
 (let key_body = (Microsoft_FStar_ToSMT_Term.mkForall ([], vars, (Microsoft_FStar_ToSMT_Term.mkImp ((Microsoft_FStar_ToSMT_Term.mk_and_l guards), body))))
 in (let cvars = (Microsoft_FStar_ToSMT_Term.free_variables key_body)
@@ -805,13 +823,13 @@ in (let tdecl = Microsoft_FStar_ToSMT_Term.DeclFun ((tsym, cvar_sorts, Microsoft
 in (let t = (Microsoft_FStar_ToSMT_Term.mkApp (tsym, (Support.List.map Microsoft_FStar_ToSMT_Term.mkFreeV cvars)))
 in (let app = (mk_ApplyT t vars)
 in (let interp = Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mkForall ((app)::[], (Support.List.append vars cvars), (Microsoft_FStar_ToSMT_Term.mkImp ((Microsoft_FStar_ToSMT_Term.mk_and_l guards), (Microsoft_FStar_ToSMT_Term.mkEq (app, body)))))), Some ("Typ_lam interpretation")))
-in (let kinding = (let _45_910 = (encode_knd (Microsoft_FStar_Tc_Recheck.recompute_kind t0) env t)
-in (match (_45_910) with
+in (let kinding = (let _45_923 = (encode_knd (Microsoft_FStar_Tc_Recheck.recompute_kind t0) env t)
+in (match (_45_923) with
 | (ktm, decls'') -> begin
 (Support.List.append decls'' ((Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mkForall ((t)::[], cvars, ktm)), Some ("Typ_lam kinding"))))::[]))
 end))
 in (let t_decls = (Support.List.append (Support.List.append decls decls') ((tdecl)::(interp)::kinding))
-in (let _45_913 = (Support.Microsoft.FStar.Util.smap_add env.cache tkey.Microsoft_FStar_ToSMT_Term.hash (tsym, cvar_sorts, t_decls))
+in (let _45_926 = (Support.Microsoft.FStar.Util.smap_add env.cache tkey.Microsoft_FStar_ToSMT_Term.hash (tsym, cvar_sorts, t_decls))
 in (t, t_decls))))))))))
 end)
 end))))
@@ -844,7 +862,7 @@ end
 ((encode_const c), [])
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_ascribed ((e, t)) -> begin
-(let _45_948 = (Support.ST.op_Colon_Equals e.Microsoft_FStar_Absyn_Syntax.tk (Some (t)))
+(let _45_961 = (Support.ST.op_Colon_Equals e.Microsoft_FStar_Absyn_Syntax.tk (Some (t)))
 in (encode_exp e env))
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_meta (Microsoft_FStar_Absyn_Syntax.Meta_desugared ((e, _))) -> begin
@@ -855,7 +873,7 @@ end
 in (e, []))
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_abs ((bs, body)) -> begin
-(let fallback = (fun _45_967 -> (match (_45_967) with
+(let fallback = (fun _45_980 -> (match (_45_980) with
 | () -> begin
 (let f = (varops.fresh "Exp_abs")
 in (let decl = Microsoft_FStar_ToSMT_Term.DeclFun ((f, [], Microsoft_FStar_ToSMT_Term.Term_sort, None))
@@ -863,7 +881,7 @@ in ((Microsoft_FStar_ToSMT_Term.mkFreeV (f, Microsoft_FStar_ToSMT_Term.Term_sort
 end))
 in (match ((! (e.Microsoft_FStar_Absyn_Syntax.tk))) with
 | None -> begin
-(let _45_971 = (Microsoft_FStar_Tc_Errors.warn e.Microsoft_FStar_Absyn_Syntax.pos "Losing precision when encoding a function literal")
+(let _45_984 = (Microsoft_FStar_Tc_Errors.warn e.Microsoft_FStar_Absyn_Syntax.pos "Losing precision when encoding a function literal")
 in (fallback ()))
 end
 | Some (tfun) -> begin
@@ -875,8 +893,8 @@ in (match (tfun.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Typ_fun ((bs', c)) -> begin
 (let nformals = (Support.List.length bs')
 in if ((nformals < (Support.List.length bs)) && (Microsoft_FStar_Absyn_Util.is_total_comp c)) then begin
-(let _45_983 = (Support.Microsoft.FStar.Util.first_N nformals bs)
-in (match (_45_983) with
+(let _45_996 = (Support.Microsoft.FStar.Util.first_N nformals bs)
+in (match (_45_996) with
 | (bs0, rest) -> begin
 (let res_t = (match ((Microsoft_FStar_Absyn_Util.mk_subst_binder bs0 bs')) with
 | Some (s) -> begin
@@ -889,11 +907,11 @@ in (let e = (Microsoft_FStar_Absyn_Syntax.mk_Exp_abs (bs0, (Microsoft_FStar_Absy
 in (encode_exp e env)))
 end))
 end else begin
-(let _45_996 = (encode_binders None bs env)
-in (match (_45_996) with
+(let _45_1009 = (encode_binders None bs env)
+in (match (_45_1009) with
 | (vars, guards, envbody, decls, _) -> begin
-(let _45_999 = (encode_exp body envbody)
-in (match (_45_999) with
+(let _45_1012 = (encode_exp body envbody)
+in (match (_45_1012) with
 | (body, decls') -> begin
 (let key_body = (Microsoft_FStar_ToSMT_Term.mkForall ([], vars, (Microsoft_FStar_ToSMT_Term.mkImp ((Microsoft_FStar_ToSMT_Term.mk_and_l guards), body))))
 in (let cvars = (Microsoft_FStar_ToSMT_Term.free_variables key_body)
@@ -913,13 +931,13 @@ in (let fsym = (varops.fresh "Exp_abs")
 in (let fdecl = Microsoft_FStar_ToSMT_Term.DeclFun ((fsym, cvar_sorts, Microsoft_FStar_ToSMT_Term.Term_sort, None))
 in (let f = (Microsoft_FStar_ToSMT_Term.mkApp (fsym, (Support.List.map Microsoft_FStar_ToSMT_Term.mkFreeV cvars)))
 in (let app = (mk_ApplyE f vars)
-in (let _45_1021 = (encode_typ_pred' None tfun env f)
-in (match (_45_1021) with
+in (let _45_1034 = (encode_typ_pred' None tfun env f)
+in (match (_45_1034) with
 | (f_has_t, decls'') -> begin
 (let typing_f = Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mkForall ((f)::[], cvars, f_has_t)), Some ((Support.String.strcat fsym " typing"))))
 in (let interp_f = Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mkForall ((app)::[], (Support.List.append vars cvars), (Microsoft_FStar_ToSMT_Term.mkImp ((Microsoft_FStar_ToSMT_Term.mk_IsTyped app), (Microsoft_FStar_ToSMT_Term.mkEq (app, body)))))), Some ((Support.String.strcat fsym " interpretation"))))
 in (let f_decls = (Support.List.append (Support.List.append (Support.List.append decls decls') ((fdecl)::decls'')) ((typing_f)::(interp_f)::[]))
-in (let _45_1025 = (Support.Microsoft.FStar.Util.smap_add env.cache tkey.Microsoft_FStar_ToSMT_Term.hash (fsym, cvar_sorts, f_decls))
+in (let _45_1038 = (Support.Microsoft.FStar.Util.smap_add env.cache tkey.Microsoft_FStar_ToSMT_Term.hash (fsym, cvar_sorts, f_decls))
 in (f, f_decls)))))
 end)))))))
 end)
@@ -935,11 +953,11 @@ end
 end))
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_app (({Microsoft_FStar_Absyn_Syntax.n = Microsoft_FStar_Absyn_Syntax.Exp_fvar ((l, _)); Microsoft_FStar_Absyn_Syntax.tk = _; Microsoft_FStar_Absyn_Syntax.pos = _; Microsoft_FStar_Absyn_Syntax.fvs = _; Microsoft_FStar_Absyn_Syntax.uvs = _}, (Support.Microsoft.FStar.Util.Inl (_), _)::(Support.Microsoft.FStar.Util.Inr (v1), _)::(Support.Microsoft.FStar.Util.Inr (v2), _)::[])) when (Microsoft_FStar_Absyn_Syntax.lid_equals l.Microsoft_FStar_Absyn_Syntax.v Microsoft_FStar_Absyn_Const.lexcons_lid) -> begin
-(let _45_1064 = (encode_exp v1 env)
-in (match (_45_1064) with
+(let _45_1077 = (encode_exp v1 env)
+in (match (_45_1077) with
 | (v1, decls1) -> begin
-(let _45_1067 = (encode_exp v2 env)
-in (match (_45_1067) with
+(let _45_1080 = (encode_exp v2 env)
+in (match (_45_1080) with
 | (v2, decls2) -> begin
 ((Microsoft_FStar_ToSMT_Term.mk_LexCons v1 v2), (Support.List.append decls1 decls2))
 end))
@@ -949,11 +967,11 @@ end
 (encode_exp (whnf_e env e) env)
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_app ((head, args_e)) -> begin
-(let _45_1090 = (encode_args args_e env)
-in (match (_45_1090) with
+(let _45_1103 = (encode_args args_e env)
+in (match (_45_1103) with
 | (args, decls) -> begin
-(let encode_partial_app = (fun ht_opt -> (let _45_1095 = (encode_exp head env)
-in (match (_45_1095) with
+(let encode_partial_app = (fun ht_opt -> (let _45_1108 = (encode_exp head env)
+in (match (_45_1108) with
 | (head, decls') -> begin
 (let app_tm = (mk_ApplyE_args head args)
 in (match (ht_opt) with
@@ -961,13 +979,13 @@ in (match (ht_opt) with
 (app_tm, (Support.List.append decls decls'))
 end
 | Some ((formals, c)) -> begin
-(let _45_1104 = (Support.Microsoft.FStar.Util.first_N (Support.List.length args_e) formals)
-in (match (_45_1104) with
+(let _45_1117 = (Support.Microsoft.FStar.Util.first_N (Support.List.length args_e) formals)
+in (match (_45_1117) with
 | (formals, rest) -> begin
 (let subst = (Microsoft_FStar_Absyn_Util.formals_for_actuals formals args_e)
 in (let ty = ((Microsoft_FStar_Absyn_Util.subst_typ subst) (Microsoft_FStar_Absyn_Syntax.mk_Typ_fun (rest, c) (Some (Microsoft_FStar_Absyn_Syntax.ktype)) e0.Microsoft_FStar_Absyn_Syntax.pos))
-in (let _45_1109 = (encode_typ_pred' None ty env app_tm)
-in (match (_45_1109) with
+in (let _45_1122 = (encode_typ_pred' None ty env app_tm)
+in (match (_45_1122) with
 | (has_type, decls'') -> begin
 (let cvars = (Microsoft_FStar_ToSMT_Term.free_variables has_type)
 in (let e_typing = Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mkForall ((has_type)::[], cvars, has_type)), None))
@@ -976,8 +994,8 @@ end))))
 end))
 end))
 end)))
-in (let encode_full_app = (fun fv -> (let _45_1116 = (lookup_free_var_sym env fv)
-in (match (_45_1116) with
+in (let encode_full_app = (fun fv -> (let _45_1129 = (lookup_free_var_sym env fv)
+in (match (_45_1129) with
 | (fname, fuel_args) -> begin
 (let tm = (Microsoft_FStar_ToSMT_Term.mkApp' (fname, (Support.List.append fuel_args (Support.List.map (fun _45_11 -> (match (_45_11) with
 | (Support.Microsoft.FStar.Util.Inl (t)) | (Support.Microsoft.FStar.Util.Inr (t)) -> begin
@@ -986,11 +1004,11 @@ end)) args))))
 in (tm, decls))
 end)))
 in (let head = (Microsoft_FStar_Absyn_Util.compress_exp head)
-in (let _45_1123 = if ((Microsoft_FStar_Tc_Env.debug env.tcenv) (Microsoft_FStar_Options.Other ("186"))) then begin
+in (let _45_1136 = if ((Microsoft_FStar_Tc_Env.debug env.tcenv) (Microsoft_FStar_Options.Other ("186"))) then begin
 (Support.Microsoft.FStar.Util.fprint2 "Recomputing type for %s\nFull term is %s\n" (Microsoft_FStar_Absyn_Print.exp_to_string head) (Microsoft_FStar_Absyn_Print.exp_to_string e))
 end
 in (let head_type = (Microsoft_FStar_Absyn_Util.unrefine (whnf env (Microsoft_FStar_Absyn_Util.unrefine (Microsoft_FStar_Tc_Recheck.recompute_typ head))))
-in (let _45_1126 = if ((Microsoft_FStar_Tc_Env.debug env.tcenv) (Microsoft_FStar_Options.Other ("Encoding"))) then begin
+in (let _45_1139 = if ((Microsoft_FStar_Tc_Env.debug env.tcenv) (Microsoft_FStar_Options.Other ("Encoding"))) then begin
 (Support.Microsoft.FStar.Util.fprint3 "Recomputed type of head %s (%s) to be %s\n" (Microsoft_FStar_Absyn_Print.exp_to_string head) (Microsoft_FStar_Absyn_Print.tag_of_exp head) (Microsoft_FStar_Absyn_Print.typ_to_string head_type))
 end
 in (match ((Microsoft_FStar_Absyn_Util.function_formals head_type)) with
@@ -1016,35 +1034,35 @@ end
 (failwith "Impossible: already handled by encoding of Sig_let")
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_let (((false, (Support.Microsoft.FStar.Util.Inl (x), t1, e1)::[]), e2)) -> begin
-(let _45_1168 = (encode_exp e1 env)
-in (match (_45_1168) with
+(let _45_1181 = (encode_exp e1 env)
+in (match (_45_1181) with
 | (ee1, decls1) -> begin
 (let env' = (push_term_var env x ee1)
-in (let _45_1172 = (encode_exp e2 env')
-in (match (_45_1172) with
+in (let _45_1185 = (encode_exp e2 env')
+in (match (_45_1185) with
 | (ee2, decls2) -> begin
 (ee2, (Support.List.append decls1 decls2))
 end)))
 end))
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_let (_) -> begin
-(let _45_1176 = (Microsoft_FStar_Tc_Errors.warn e.Microsoft_FStar_Absyn_Syntax.pos "Non-top-level recursive functions are not yet fully encoded to the SMT solver; you may not be able to prove some facts")
+(let _45_1189 = (Microsoft_FStar_Tc_Errors.warn e.Microsoft_FStar_Absyn_Syntax.pos "Non-top-level recursive functions are not yet fully encoded to the SMT solver; you may not be able to prove some facts")
 in (let e = (varops.fresh "let-rec")
 in (let decl_e = Microsoft_FStar_ToSMT_Term.DeclFun ((e, [], Microsoft_FStar_ToSMT_Term.Term_sort, None))
 in ((Microsoft_FStar_ToSMT_Term.mkFreeV (e, Microsoft_FStar_ToSMT_Term.Term_sort)), (decl_e)::[]))))
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_match ((e, pats)) -> begin
-(let _45_1186 = (encode_exp e env)
-in (match (_45_1186) with
+(let _45_1199 = (encode_exp e env)
+in (match (_45_1199) with
 | (scr, decls) -> begin
-(let _45_1226 = (Support.List.fold_right (fun _45_1190 _45_1193 -> (match ((_45_1190, _45_1193)) with
+(let _45_1239 = (Support.List.fold_right (fun _45_1203 _45_1206 -> (match ((_45_1203, _45_1206)) with
 | ((p, w, br), (else_case, decls)) -> begin
 (let patterns = (encode_pat env p)
-in (Support.List.fold_right (fun _45_1197 _45_1200 -> (match ((_45_1197, _45_1200)) with
+in (Support.List.fold_right (fun _45_1210 _45_1213 -> (match ((_45_1210, _45_1213)) with
 | ((env0, pattern), (else_case, decls)) -> begin
 (let guard = (pattern.guard scr)
 in (let projections = (pattern.projections scr)
-in (let env = ((Support.List.fold_left (fun env _45_1206 -> (match (_45_1206) with
+in (let env = ((Support.List.fold_left (fun env _45_1219 -> (match (_45_1219) with
 | (x, t) -> begin
 (match (x) with
 | Support.Microsoft.FStar.Util.Inl (a) -> begin
@@ -1054,28 +1072,28 @@ end
 (push_term_var env x.Microsoft_FStar_Absyn_Syntax.v t)
 end)
 end)) env) projections)
-in (let _45_1220 = (match (w) with
+in (let _45_1233 = (match (w) with
 | None -> begin
 (guard, [])
 end
 | Some (w) -> begin
-(let _45_1217 = (encode_exp w env)
-in (match (_45_1217) with
+(let _45_1230 = (encode_exp w env)
+in (match (_45_1230) with
 | (w, decls2) -> begin
 ((Microsoft_FStar_ToSMT_Term.mkAnd (guard, (Microsoft_FStar_ToSMT_Term.mkEq (w, (Microsoft_FStar_ToSMT_Term.boxBool Microsoft_FStar_ToSMT_Term.mkTrue))))), decls2)
 end))
 end)
-in (match (_45_1220) with
+in (match (_45_1233) with
 | (guard, decls2) -> begin
-(let _45_1223 = (encode_exp br env)
-in (match (_45_1223) with
+(let _45_1236 = (encode_exp br env)
+in (match (_45_1236) with
 | (br, decls3) -> begin
 ((Microsoft_FStar_ToSMT_Term.mkITE (guard, br, else_case)), (Support.List.append (Support.List.append decls decls2) decls3))
 end))
 end)))))
 end)) patterns (else_case, decls)))
 end)) pats (Microsoft_FStar_ToSMT_Term.mk_Term_unit, decls))
-in (match (_45_1226) with
+in (match (_45_1239) with
 | (match_tm, decls) -> begin
 (match_tm, decls)
 end))
@@ -1091,31 +1109,31 @@ end
 | _ -> begin
 ((encode_one_pat env pat))::[]
 end))
-and encode_one_pat = (fun env pat -> (let _45_1238 = if (Microsoft_FStar_Tc_Env.debug env.tcenv Microsoft_FStar_Options.Low) then begin
+and encode_one_pat = (fun env pat -> (let _45_1251 = if (Microsoft_FStar_Tc_Env.debug env.tcenv Microsoft_FStar_Options.Low) then begin
 (Support.Microsoft.FStar.Util.fprint1 "Encoding pattern %s\n" (Microsoft_FStar_Absyn_Print.pat_to_string pat))
 end
-in (let _45_1242 = (Microsoft_FStar_Tc_Util.decorated_pattern_as_either pat)
-in (match (_45_1242) with
+in (let _45_1255 = (Microsoft_FStar_Tc_Util.decorated_pattern_as_either pat)
+in (match (_45_1255) with
 | (vars, pat_exp_or_typ) -> begin
-(let _45_1263 = ((Support.List.fold_left (fun _45_1245 v -> (match (_45_1245) with
+(let _45_1276 = ((Support.List.fold_left (fun _45_1258 v -> (match (_45_1258) with
 | (env, vars) -> begin
 (match (v) with
 | Support.Microsoft.FStar.Util.Inl (a) -> begin
-(let _45_1253 = (gen_typ_var env a.Microsoft_FStar_Absyn_Syntax.v)
-in (match (_45_1253) with
+(let _45_1266 = (gen_typ_var env a.Microsoft_FStar_Absyn_Syntax.v)
+in (match (_45_1266) with
 | (aa, _, env) -> begin
 (env, ((v, (aa, Microsoft_FStar_ToSMT_Term.Type_sort)))::vars)
 end))
 end
 | Support.Microsoft.FStar.Util.Inr (x) -> begin
-(let _45_1260 = (gen_term_var env x.Microsoft_FStar_Absyn_Syntax.v)
-in (match (_45_1260) with
+(let _45_1273 = (gen_term_var env x.Microsoft_FStar_Absyn_Syntax.v)
+in (match (_45_1273) with
 | (xx, _, env) -> begin
 (env, ((v, (xx, Microsoft_FStar_ToSMT_Term.Term_sort)))::vars)
 end))
 end)
 end)) (env, [])) vars)
-in (match (_45_1263) with
+in (match (_45_1276) with
 | (env, vars) -> begin
 (let rec mk_guard = (fun pat scrutinee -> (match (pat.Microsoft_FStar_Absyn_Syntax.v) with
 | Microsoft_FStar_Absyn_Syntax.Pat_disj (_) -> begin
@@ -1150,7 +1168,7 @@ end
 ((Support.List.flatten) ((Support.List.mapi (fun i arg -> (let proj = (primitive_projector_by_pos env.tcenv f.Microsoft_FStar_Absyn_Syntax.v i)
 in (mk_projections arg (Microsoft_FStar_ToSMT_Term.mkApp (proj, (scrutinee)::[])))))) args))
 end))
-in (let pat_term = (fun _45_1333 -> (match (_45_1333) with
+in (let pat_term = (fun _45_1346 -> (match (_45_1346) with
 | () -> begin
 (match (pat_exp_or_typ) with
 | Support.Microsoft.FStar.Util.Inl (t) -> begin
@@ -1164,30 +1182,30 @@ in (let pattern = {pat_vars = vars; pat_term = pat_term; guard = (mk_guard pat);
 in (env, pattern)))))
 end))
 end))))
-and encode_args = (fun l env -> (let _45_1363 = ((Support.List.fold_left (fun _45_1343 x -> (match (_45_1343) with
+and encode_args = (fun l env -> (let _45_1376 = ((Support.List.fold_left (fun _45_1356 x -> (match (_45_1356) with
 | (tms, decls) -> begin
 (match (x) with
 | (Support.Microsoft.FStar.Util.Inl (t), _) -> begin
-(let _45_1352 = (encode_typ_term t env)
-in (match (_45_1352) with
+(let _45_1365 = (encode_typ_term t env)
+in (match (_45_1365) with
 | (t, decls') -> begin
 ((Support.Microsoft.FStar.Util.Inl (t))::tms, (Support.List.append decls decls'))
 end))
 end
 | (Support.Microsoft.FStar.Util.Inr (e), _) -> begin
-(let _45_1360 = (encode_exp e env)
-in (match (_45_1360) with
+(let _45_1373 = (encode_exp e env)
+in (match (_45_1373) with
 | (t, decls') -> begin
 ((Support.Microsoft.FStar.Util.Inr (t))::tms, (Support.List.append decls decls'))
 end))
 end)
 end)) ([], [])) l)
-in (match (_45_1363) with
+in (match (_45_1376) with
 | (l, decls) -> begin
 ((Support.List.rev l), decls)
 end)))
-and encode_formula = (fun phi env -> (let _45_1369 = (encode_formula_with_labels phi env)
-in (match (_45_1369) with
+and encode_formula = (fun phi env -> (let _45_1382 = (encode_formula_with_labels phi env)
+in (match (_45_1382) with
 | (t, vars, decls) -> begin
 (match (vars) with
 | [] -> begin
@@ -1214,7 +1232,7 @@ end
 | _ -> begin
 []
 end))
-in (let _45_1465 = (match ((Microsoft_FStar_Absyn_Util.compress_typ t).Microsoft_FStar_Absyn_Syntax.n) with
+in (let _45_1478 = (match ((Microsoft_FStar_Absyn_Util.compress_typ t).Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Typ_fun ((binders, {Microsoft_FStar_Absyn_Syntax.n = Microsoft_FStar_Absyn_Syntax.Comp (ct); Microsoft_FStar_Absyn_Syntax.tk = _; Microsoft_FStar_Absyn_Syntax.pos = _; Microsoft_FStar_Absyn_Syntax.fvs = _; Microsoft_FStar_Absyn_Syntax.uvs = _})) -> begin
 (match (ct.Microsoft_FStar_Absyn_Syntax.effect_args) with
 | (Support.Microsoft.FStar.Util.Inl (pre), _)::(Support.Microsoft.FStar.Util.Inl (post), _)::(Support.Microsoft.FStar.Util.Inr (pats), _)::[] -> begin
@@ -1227,20 +1245,20 @@ end
 | _ -> begin
 (failwith "Impos")
 end)
-in (match (_45_1465) with
+in (match (_45_1478) with
 | (binders, pre, post, patterns) -> begin
-(let _45_1472 = (encode_binders None binders env)
-in (match (_45_1472) with
+(let _45_1485 = (encode_binders None binders env)
+in (match (_45_1485) with
 | (vars, guards, env, decls, _) -> begin
-(let _45_1488 = ((Support.List.unzip) ((Support.List.map (fun _45_12 -> (match (_45_12) with
+(let _45_1501 = ((Support.List.unzip) ((Support.List.map (fun _45_12 -> (match (_45_12) with
 | (Support.Microsoft.FStar.Util.Inl (t), _) -> begin
 (encode_formula t env)
 end
 | (Support.Microsoft.FStar.Util.Inr (e), _) -> begin
-(encode_exp e (let _45_1484 = env
-in {bindings = _45_1484.bindings; depth = _45_1484.depth; tcenv = _45_1484.tcenv; warn = _45_1484.warn; cache = _45_1484.cache; nolabels = _45_1484.nolabels; use_zfuel_name = true}))
+(encode_exp e (let _45_1497 = env
+in {bindings = _45_1497.bindings; depth = _45_1497.depth; tcenv = _45_1497.tcenv; warn = _45_1497.warn; cache = _45_1497.cache; nolabels = _45_1497.nolabels; use_zfuel_name = true; encode_non_total_function_typ = _45_1497.encode_non_total_function_typ}))
 end))) patterns))
-in (match (_45_1488) with
+in (match (_45_1501) with
 | (pats, decls') -> begin
 (let pats = (match (induction_on) with
 | None -> begin
@@ -1268,13 +1286,13 @@ end))
 in (aux (Microsoft_FStar_ToSMT_Term.mkFreeV ("Prims.LexTop", Microsoft_FStar_ToSMT_Term.Term_sort)) vars))
 end)
 end)
-in (let env = (let _45_1509 = env
-in {bindings = _45_1509.bindings; depth = _45_1509.depth; tcenv = _45_1509.tcenv; warn = _45_1509.warn; cache = _45_1509.cache; nolabels = true; use_zfuel_name = _45_1509.use_zfuel_name})
-in (let _45_1514 = (encode_formula (Microsoft_FStar_Absyn_Util.unmeta_typ pre) env)
-in (match (_45_1514) with
+in (let env = (let _45_1522 = env
+in {bindings = _45_1522.bindings; depth = _45_1522.depth; tcenv = _45_1522.tcenv; warn = _45_1522.warn; cache = _45_1522.cache; nolabels = true; use_zfuel_name = _45_1522.use_zfuel_name; encode_non_total_function_typ = _45_1522.encode_non_total_function_typ})
+in (let _45_1527 = (encode_formula (Microsoft_FStar_Absyn_Util.unmeta_typ pre) env)
+in (match (_45_1527) with
 | (pre, decls'') -> begin
-(let _45_1517 = (encode_formula (Microsoft_FStar_Absyn_Util.unmeta_typ post) env)
-in (match (_45_1517) with
+(let _45_1530 = (encode_formula (Microsoft_FStar_Absyn_Util.unmeta_typ post) env)
+in (match (_45_1530) with
 | (post, decls''') -> begin
 (let decls = (Support.List.append (Support.List.append (Support.List.append decls (Support.List.flatten decls')) decls'') decls''')
 in ((Microsoft_FStar_ToSMT_Term.mkForall (pats, vars, (Microsoft_FStar_ToSMT_Term.mkImp ((Microsoft_FStar_ToSMT_Term.mk_and_l ((pre)::guards)), post)))), decls))
@@ -1283,31 +1301,31 @@ end))))
 end))
 end))
 end)))))
-and encode_formula_with_labels = (fun phi env -> (let enc = (fun f l -> (let _45_1538 = (Support.Microsoft.FStar.Util.fold_map (fun decls x -> (match ((Support.Prims.fst x)) with
+and encode_formula_with_labels = (fun phi env -> (let enc = (fun f l -> (let _45_1551 = (Support.Microsoft.FStar.Util.fold_map (fun decls x -> (match ((Support.Prims.fst x)) with
 | Support.Microsoft.FStar.Util.Inl (t) -> begin
-(let _45_1530 = (encode_typ_term t env)
-in (match (_45_1530) with
+(let _45_1543 = (encode_typ_term t env)
+in (match (_45_1543) with
 | (t, decls') -> begin
 ((Support.List.append decls decls'), t)
 end))
 end
 | Support.Microsoft.FStar.Util.Inr (e) -> begin
-(let _45_1535 = (encode_exp e env)
-in (match (_45_1535) with
+(let _45_1548 = (encode_exp e env)
+in (match (_45_1548) with
 | (e, decls') -> begin
 ((Support.List.append decls decls'), e)
 end))
 end)) [] l)
-in (match (_45_1538) with
+in (match (_45_1551) with
 | (decls, args) -> begin
 ((f args), [], decls)
 end)))
-in (let enc_prop_c = (fun f l -> (let _45_1558 = (Support.List.fold_right (fun t _45_1546 -> (match (_45_1546) with
+in (let enc_prop_c = (fun f l -> (let _45_1571 = (Support.List.fold_right (fun t _45_1559 -> (match (_45_1559) with
 | (phis, labs, decls) -> begin
 (match ((Support.Prims.fst t)) with
 | Support.Microsoft.FStar.Util.Inl (t) -> begin
-(let _45_1552 = (encode_formula_with_labels t env)
-in (match (_45_1552) with
+(let _45_1565 = (encode_formula_with_labels t env)
+in (match (_45_1565) with
 | (phi, labs', decls') -> begin
 ((phi)::phis, (Support.List.append labs' labs), (Support.List.append decls' decls))
 end))
@@ -1316,11 +1334,11 @@ end
 (failwith "Expected a formula")
 end)
 end)) l ([], [], []))
-in (match (_45_1558) with
+in (match (_45_1571) with
 | (phis, labs, decls) -> begin
 ((f phis), labs, decls)
 end)))
-in (let const_op = (fun f _45_1561 -> (f, [], []))
+in (let const_op = (fun f _45_1574 -> (f, [], []))
 in (let un_op = (fun f l -> (f (Support.List.hd l)))
 in (let bin_op = (fun f _45_13 -> (match (_45_13) with
 | t1::t2::[] -> begin
@@ -1345,16 +1363,16 @@ end
 end))
 in (let mk_imp = (fun _45_16 -> (match (_45_16) with
 | (Support.Microsoft.FStar.Util.Inl (lhs), _)::(Support.Microsoft.FStar.Util.Inl (rhs), _)::[] -> begin
-(let _45_1608 = (encode_formula_with_labels rhs env)
-in (match (_45_1608) with
+(let _45_1621 = (encode_formula_with_labels rhs env)
+in (match (_45_1621) with
 | (l1, labs1, decls1) -> begin
 (match (l1.Microsoft_FStar_ToSMT_Term.tm) with
 | Microsoft_FStar_ToSMT_Term.App ((Microsoft_FStar_ToSMT_Term.True, _)) -> begin
 (l1, labs1, decls1)
 end
 | _ -> begin
-(let _45_1619 = (encode_formula_with_labels lhs env)
-in (match (_45_1619) with
+(let _45_1632 = (encode_formula_with_labels lhs env)
+in (match (_45_1632) with
 | (l2, labs2, decls2) -> begin
 ((Microsoft_FStar_ToSMT_Term.mkImp (l2, l1)), (Support.List.append labs1 labs2), (Support.List.append decls1 decls2))
 end))
@@ -1366,14 +1384,14 @@ end
 end))
 in (let mk_ite = (fun _45_17 -> (match (_45_17) with
 | (Support.Microsoft.FStar.Util.Inl (guard), _)::(Support.Microsoft.FStar.Util.Inl (_then), _)::(Support.Microsoft.FStar.Util.Inl (_else), _)::[] -> begin
-(let _45_1643 = (encode_formula_with_labels guard env)
-in (match (_45_1643) with
+(let _45_1656 = (encode_formula_with_labels guard env)
+in (match (_45_1656) with
 | (g, labs1, decls1) -> begin
-(let _45_1647 = (encode_formula_with_labels _then env)
-in (match (_45_1647) with
+(let _45_1660 = (encode_formula_with_labels _then env)
+in (match (_45_1660) with
 | (t, labs2, decls2) -> begin
-(let _45_1651 = (encode_formula_with_labels _else env)
-in (match (_45_1651) with
+(let _45_1664 = (encode_formula_with_labels _else env)
+in (match (_45_1664) with
 | (e, labs3, decls3) -> begin
 (let res = (Microsoft_FStar_ToSMT_Term.mkITE (g, t, e))
 in (res, (Support.List.append (Support.List.append labs1 labs2) labs3), (Support.List.append (Support.List.append decls1 decls2) decls3)))
@@ -1388,8 +1406,8 @@ in (let unboxInt_l = (fun f l -> (f (Support.List.map Microsoft_FStar_ToSMT_Term
 in (let connectives = ((Microsoft_FStar_Absyn_Const.and_lid, (enc_prop_c (bin_op Microsoft_FStar_ToSMT_Term.mkAnd))))::((Microsoft_FStar_Absyn_Const.or_lid, (enc_prop_c (bin_op Microsoft_FStar_ToSMT_Term.mkOr))))::((Microsoft_FStar_Absyn_Const.imp_lid, mk_imp))::((Microsoft_FStar_Absyn_Const.iff_lid, (enc_prop_c (bin_op Microsoft_FStar_ToSMT_Term.mkIff))))::((Microsoft_FStar_Absyn_Const.ite_lid, mk_ite))::((Microsoft_FStar_Absyn_Const.not_lid, (enc_prop_c (un_op Microsoft_FStar_ToSMT_Term.mkNot))))::((Microsoft_FStar_Absyn_Const.eqT_lid, (enc (bin_op Microsoft_FStar_ToSMT_Term.mkEq))))::((Microsoft_FStar_Absyn_Const.eq2_lid, eq_op))::((Microsoft_FStar_Absyn_Const.true_lid, (const_op Microsoft_FStar_ToSMT_Term.mkTrue)))::((Microsoft_FStar_Absyn_Const.false_lid, (const_op Microsoft_FStar_ToSMT_Term.mkFalse)))::[]
 in (let fallback = (fun phi -> (match (phi.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Typ_meta (Microsoft_FStar_Absyn_Syntax.Meta_labeled ((phi', msg, r, b))) -> begin
-(let _45_1672 = (encode_formula_with_labels phi' env)
-in (match (_45_1672) with
+(let _45_1685 = (encode_formula_with_labels phi' env)
+in (match (_45_1685) with
 | (phi, labs, decls) -> begin
 if env.nolabels then begin
 (phi, [], decls)
@@ -1403,11 +1421,11 @@ end))
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_app (({Microsoft_FStar_Absyn_Syntax.n = Microsoft_FStar_Absyn_Syntax.Typ_const (ih); Microsoft_FStar_Absyn_Syntax.tk = _; Microsoft_FStar_Absyn_Syntax.pos = _; Microsoft_FStar_Absyn_Syntax.fvs = _; Microsoft_FStar_Absyn_Syntax.uvs = _}, _::(Support.Microsoft.FStar.Util.Inr (l), _)::(Support.Microsoft.FStar.Util.Inl (phi), _)::[])) when (Microsoft_FStar_Absyn_Syntax.lid_equals ih.Microsoft_FStar_Absyn_Syntax.v Microsoft_FStar_Absyn_Const.using_IH) -> begin
 if (Microsoft_FStar_Absyn_Util.is_lemma phi) then begin
-(let _45_1704 = (encode_exp l env)
-in (match (_45_1704) with
+(let _45_1717 = (encode_exp l env)
+in (match (_45_1717) with
 | (e, decls) -> begin
-(let _45_1707 = (encode_function_type_as_formula (Some (e)) phi env)
-in (match (_45_1707) with
+(let _45_1720 = (encode_function_type_as_formula (Some (e)) phi env)
+in (match (_45_1720) with
 | (f, decls') -> begin
 (f, [], (Support.List.append decls decls'))
 end))
@@ -1417,33 +1435,33 @@ end else begin
 end
 end
 | _ -> begin
-(let _45_1712 = (encode_typ_term phi env)
-in (match (_45_1712) with
+(let _45_1725 = (encode_typ_term phi env)
+in (match (_45_1725) with
 | (tt, decls) -> begin
 ((Microsoft_FStar_ToSMT_Term.mk_Valid tt), [], decls)
 end))
 end))
-in (let encode_q_body = (fun env bs ps body -> (let _45_1724 = (encode_binders None bs env)
-in (match (_45_1724) with
+in (let encode_q_body = (fun env bs ps body -> (let _45_1737 = (encode_binders None bs env)
+in (match (_45_1737) with
 | (vars, guards, env, decls, _) -> begin
-(let _45_1740 = ((Support.List.unzip) ((Support.List.map (fun _45_18 -> (match (_45_18) with
+(let _45_1753 = ((Support.List.unzip) ((Support.List.map (fun _45_18 -> (match (_45_18) with
 | (Support.Microsoft.FStar.Util.Inl (t), _) -> begin
 (encode_formula t env)
 end
 | (Support.Microsoft.FStar.Util.Inr (e), _) -> begin
-(encode_exp e (let _45_1736 = env
-in {bindings = _45_1736.bindings; depth = _45_1736.depth; tcenv = _45_1736.tcenv; warn = _45_1736.warn; cache = _45_1736.cache; nolabels = _45_1736.nolabels; use_zfuel_name = true}))
+(encode_exp e (let _45_1749 = env
+in {bindings = _45_1749.bindings; depth = _45_1749.depth; tcenv = _45_1749.tcenv; warn = _45_1749.warn; cache = _45_1749.cache; nolabels = _45_1749.nolabels; use_zfuel_name = true; encode_non_total_function_typ = _45_1749.encode_non_total_function_typ}))
 end))) ps))
-in (match (_45_1740) with
+in (match (_45_1753) with
 | (pats, decls') -> begin
-(let _45_1744 = (encode_formula_with_labels body env)
-in (match (_45_1744) with
+(let _45_1757 = (encode_formula_with_labels body env)
+in (match (_45_1757) with
 | (body, labs, decls'') -> begin
 (vars, pats, (Microsoft_FStar_ToSMT_Term.mk_and_l guards), body, labs, (Support.List.append (Support.List.append decls (Support.List.flatten decls')) decls''))
 end))
 end))
 end)))
-in (let _45_1745 = if (Microsoft_FStar_Tc_Env.debug env.tcenv Microsoft_FStar_Options.Low) then begin
+in (let _45_1758 = if (Microsoft_FStar_Tc_Env.debug env.tcenv Microsoft_FStar_Options.Low) then begin
 (Support.Microsoft.FStar.Util.fprint1 ">>>> Destructing as formula ... %s\n" (Microsoft_FStar_Absyn_Print.formula_to_string phi))
 end
 in (let phi = (Microsoft_FStar_Absyn_Util.compress_typ phi)
@@ -1452,7 +1470,7 @@ in (match ((Microsoft_FStar_Absyn_Util.destruct_typ_as_formula phi)) with
 (fallback phi)
 end
 | Some (Microsoft_FStar_Absyn_Util.BaseConn ((op, arms))) -> begin
-(match (((Support.List.tryFind (fun _45_1757 -> (match (_45_1757) with
+(match (((Support.List.tryFind (fun _45_1770 -> (match (_45_1770) with
 | (l, _) -> begin
 (Microsoft_FStar_Absyn_Syntax.lid_equals op l)
 end))) connectives)) with
@@ -1464,18 +1482,18 @@ end
 end)
 end
 | Some (Microsoft_FStar_Absyn_Util.QAll ((vars, pats, body))) -> begin
-(let _45_1770 = if (Microsoft_FStar_Tc_Env.debug env.tcenv Microsoft_FStar_Options.Low) then begin
+(let _45_1783 = if (Microsoft_FStar_Tc_Env.debug env.tcenv Microsoft_FStar_Options.Low) then begin
 (Support.Microsoft.FStar.Util.fprint1 ">>>> Got QALL [%s]\n" ((Microsoft_FStar_Absyn_Print.binders_to_string "; ") vars))
 end
-in (let _45_1778 = (encode_q_body env vars pats body)
-in (match (_45_1778) with
+in (let _45_1791 = (encode_q_body env vars pats body)
+in (match (_45_1791) with
 | (vars, pats, guard, body, labs, decls) -> begin
 ((Microsoft_FStar_ToSMT_Term.mkForall (pats, vars, (Microsoft_FStar_ToSMT_Term.mkImp (guard, body)))), labs, decls)
 end)))
 end
 | Some (Microsoft_FStar_Absyn_Util.QEx ((vars, pats, body))) -> begin
-(let _45_1791 = (encode_q_body env vars pats body)
-in (match (_45_1791) with
+(let _45_1804 = (encode_q_body env vars pats body)
+in (match (_45_1804) with
 | (vars, pats, guard, body, labs, decls) -> begin
 ((Microsoft_FStar_ToSMT_Term.mkExists (pats, vars, (Microsoft_FStar_ToSMT_Term.mkAnd (guard, body)))), labs, decls)
 end))
@@ -1484,14 +1502,14 @@ end)))))))))))))))))
 type prims_t =
 {mk : Microsoft_FStar_Absyn_Syntax.lident  ->  string  ->  Microsoft_FStar_ToSMT_Term.decl list; is : Microsoft_FStar_Absyn_Syntax.lident  ->  bool}
 
-let prims = (let _45_1797 = (fresh_fvar "a" Microsoft_FStar_ToSMT_Term.Type_sort)
-in (match (_45_1797) with
+let prims = (let _45_1810 = (fresh_fvar "a" Microsoft_FStar_ToSMT_Term.Type_sort)
+in (match (_45_1810) with
 | (asym, a) -> begin
-(let _45_1800 = (fresh_fvar "x" Microsoft_FStar_ToSMT_Term.Term_sort)
-in (match (_45_1800) with
+(let _45_1813 = (fresh_fvar "x" Microsoft_FStar_ToSMT_Term.Term_sort)
+in (match (_45_1813) with
 | (xsym, x) -> begin
-(let _45_1803 = (fresh_fvar "y" Microsoft_FStar_ToSMT_Term.Term_sort)
-in (match (_45_1803) with
+(let _45_1816 = (fresh_fvar "y" Microsoft_FStar_ToSMT_Term.Term_sort)
+in (match (_45_1816) with
 | (ysym, y) -> begin
 (let deffun = (fun vars body x -> (Microsoft_FStar_ToSMT_Term.DefineFun ((x, vars, Microsoft_FStar_ToSMT_Term.Term_sort, body, None)))::[])
 in (let quant = (fun vars body x -> (let t1 = (Microsoft_FStar_ToSMT_Term.mkApp (x, (Support.List.map Microsoft_FStar_ToSMT_Term.mkFreeV vars)))
@@ -1501,14 +1519,14 @@ in (let axy = ((asym, Microsoft_FStar_ToSMT_Term.Type_sort))::((xsym, Microsoft_
 in (let xy = ((xsym, Microsoft_FStar_ToSMT_Term.Term_sort))::((ysym, Microsoft_FStar_ToSMT_Term.Term_sort))::[]
 in (let qx = ((xsym, Microsoft_FStar_ToSMT_Term.Term_sort))::[]
 in (let prims = ((Microsoft_FStar_Absyn_Const.op_Eq, (quant axy (Microsoft_FStar_ToSMT_Term.boxBool (Microsoft_FStar_ToSMT_Term.mkEq (x, y))))))::((Microsoft_FStar_Absyn_Const.op_notEq, (quant axy (Microsoft_FStar_ToSMT_Term.boxBool (Microsoft_FStar_ToSMT_Term.mkNot (Microsoft_FStar_ToSMT_Term.mkEq (x, y)))))))::((Microsoft_FStar_Absyn_Const.op_LT, (quant xy (Microsoft_FStar_ToSMT_Term.boxBool (Microsoft_FStar_ToSMT_Term.mkLT ((Microsoft_FStar_ToSMT_Term.unboxInt x), (Microsoft_FStar_ToSMT_Term.unboxInt y)))))))::((Microsoft_FStar_Absyn_Const.op_LTE, (quant xy (Microsoft_FStar_ToSMT_Term.boxBool (Microsoft_FStar_ToSMT_Term.mkLTE ((Microsoft_FStar_ToSMT_Term.unboxInt x), (Microsoft_FStar_ToSMT_Term.unboxInt y)))))))::((Microsoft_FStar_Absyn_Const.op_GT, (quant xy (Microsoft_FStar_ToSMT_Term.boxBool (Microsoft_FStar_ToSMT_Term.mkGT ((Microsoft_FStar_ToSMT_Term.unboxInt x), (Microsoft_FStar_ToSMT_Term.unboxInt y)))))))::((Microsoft_FStar_Absyn_Const.op_GTE, (quant xy (Microsoft_FStar_ToSMT_Term.boxBool (Microsoft_FStar_ToSMT_Term.mkGTE ((Microsoft_FStar_ToSMT_Term.unboxInt x), (Microsoft_FStar_ToSMT_Term.unboxInt y)))))))::((Microsoft_FStar_Absyn_Const.op_Subtraction, (quant xy (Microsoft_FStar_ToSMT_Term.boxInt (Microsoft_FStar_ToSMT_Term.mkSub ((Microsoft_FStar_ToSMT_Term.unboxInt x), (Microsoft_FStar_ToSMT_Term.unboxInt y)))))))::((Microsoft_FStar_Absyn_Const.op_Minus, (quant qx (Microsoft_FStar_ToSMT_Term.boxInt (Microsoft_FStar_ToSMT_Term.mkMinus (Microsoft_FStar_ToSMT_Term.unboxInt x))))))::((Microsoft_FStar_Absyn_Const.op_Addition, (quant xy (Microsoft_FStar_ToSMT_Term.boxInt (Microsoft_FStar_ToSMT_Term.mkAdd ((Microsoft_FStar_ToSMT_Term.unboxInt x), (Microsoft_FStar_ToSMT_Term.unboxInt y)))))))::((Microsoft_FStar_Absyn_Const.op_Multiply, (quant xy (Microsoft_FStar_ToSMT_Term.boxInt (Microsoft_FStar_ToSMT_Term.mkMul ((Microsoft_FStar_ToSMT_Term.unboxInt x), (Microsoft_FStar_ToSMT_Term.unboxInt y)))))))::((Microsoft_FStar_Absyn_Const.op_Division, (quant xy (Microsoft_FStar_ToSMT_Term.boxInt (Microsoft_FStar_ToSMT_Term.mkDiv ((Microsoft_FStar_ToSMT_Term.unboxInt x), (Microsoft_FStar_ToSMT_Term.unboxInt y)))))))::((Microsoft_FStar_Absyn_Const.op_Modulus, (quant xy (Microsoft_FStar_ToSMT_Term.boxInt (Microsoft_FStar_ToSMT_Term.mkMod ((Microsoft_FStar_ToSMT_Term.unboxInt x), (Microsoft_FStar_ToSMT_Term.unboxInt y)))))))::((Microsoft_FStar_Absyn_Const.op_And, (quant xy (Microsoft_FStar_ToSMT_Term.boxBool (Microsoft_FStar_ToSMT_Term.mkAnd ((Microsoft_FStar_ToSMT_Term.unboxBool x), (Microsoft_FStar_ToSMT_Term.unboxBool y)))))))::((Microsoft_FStar_Absyn_Const.op_Or, (quant xy (Microsoft_FStar_ToSMT_Term.boxBool (Microsoft_FStar_ToSMT_Term.mkOr ((Microsoft_FStar_ToSMT_Term.unboxBool x), (Microsoft_FStar_ToSMT_Term.unboxBool y)))))))::((Microsoft_FStar_Absyn_Const.op_Negation, (quant qx (Microsoft_FStar_ToSMT_Term.boxBool (Microsoft_FStar_ToSMT_Term.mkNot (Microsoft_FStar_ToSMT_Term.unboxBool x))))))::[]
-in (let mk = (fun l v -> ((Support.List.collect (fun _45_1827 -> (match (_45_1827) with
+in (let mk = (fun l v -> ((Support.List.collect (fun _45_1840 -> (match (_45_1840) with
 | (_, b) -> begin
 (b v)
-end))) ((Support.List.filter (fun _45_1823 -> (match (_45_1823) with
+end))) ((Support.List.filter (fun _45_1836 -> (match (_45_1836) with
 | (l', _) -> begin
 (Microsoft_FStar_Absyn_Syntax.lid_equals l l')
 end))) prims)))
-in (let is = (fun l -> ((Support.Microsoft.FStar.Util.for_some (fun _45_1833 -> (match (_45_1833) with
+in (let is = (fun l -> ((Support.Microsoft.FStar.Util.for_some (fun _45_1846 -> (match (_45_1846) with
 | (l', _) -> begin
 (Microsoft_FStar_Absyn_Syntax.lid_equals l l')
 end))) prims))
@@ -1521,13 +1539,13 @@ let primitive_type_axioms = (let xx = ("x", Microsoft_FStar_ToSMT_Term.Term_sort
 in (let x = (Microsoft_FStar_ToSMT_Term.mkFreeV xx)
 in (let yy = ("y", Microsoft_FStar_ToSMT_Term.Term_sort)
 in (let y = (Microsoft_FStar_ToSMT_Term.mkFreeV yy)
-in (let mk_unit = (fun _45_1839 tt -> (let typing_pred = (Microsoft_FStar_ToSMT_Term.mk_HasType x tt)
+in (let mk_unit = (fun _45_1852 tt -> (let typing_pred = (Microsoft_FStar_ToSMT_Term.mk_HasType x tt)
 in (Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mk_HasType Microsoft_FStar_ToSMT_Term.mk_Term_unit tt), Some ("unit typing"))))::(Microsoft_FStar_ToSMT_Term.Assume (((mkForall_fuel ((typing_pred)::[], (xx)::[], (Microsoft_FStar_ToSMT_Term.mkImp (typing_pred, (Microsoft_FStar_ToSMT_Term.mkEq (x, Microsoft_FStar_ToSMT_Term.mk_Term_unit)))))), Some ("unit inversion"))))::[]))
-in (let mk_bool = (fun _45_1844 tt -> (let typing_pred = (Microsoft_FStar_ToSMT_Term.mk_HasType x tt)
+in (let mk_bool = (fun _45_1857 tt -> (let typing_pred = (Microsoft_FStar_ToSMT_Term.mk_HasType x tt)
 in (let bb = ("b", Microsoft_FStar_ToSMT_Term.Bool_sort)
 in (let b = (Microsoft_FStar_ToSMT_Term.mkFreeV bb)
 in (Microsoft_FStar_ToSMT_Term.Assume (((mkForall_fuel ((typing_pred)::[], (xx)::[], (Microsoft_FStar_ToSMT_Term.mkImp (typing_pred, (Microsoft_FStar_ToSMT_Term.mk_tester "BoxBool" x))))), Some ("bool inversion"))))::(Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mkForall (((Microsoft_FStar_ToSMT_Term.boxBool b))::[], (bb)::[], (Microsoft_FStar_ToSMT_Term.mk_HasType (Microsoft_FStar_ToSMT_Term.boxBool b) tt))), Some ("bool typing"))))::[]))))
-in (let mk_int = (fun _45_1851 tt -> (let typing_pred = (Microsoft_FStar_ToSMT_Term.mk_HasType x tt)
+in (let mk_int = (fun _45_1864 tt -> (let typing_pred = (Microsoft_FStar_ToSMT_Term.mk_HasType x tt)
 in (let typing_pred_y = (Microsoft_FStar_ToSMT_Term.mk_HasType y tt)
 in (let aa = ("a", Microsoft_FStar_ToSMT_Term.Int_sort)
 in (let a = (Microsoft_FStar_ToSMT_Term.mkFreeV aa)
@@ -1536,12 +1554,12 @@ in (let b = (Microsoft_FStar_ToSMT_Term.mkFreeV bb)
 in (let precedes = (Microsoft_FStar_ToSMT_Term.mk_Valid (Microsoft_FStar_ToSMT_Term.mkApp ("Prims.Precedes", (tt)::(tt)::((Microsoft_FStar_ToSMT_Term.boxInt a))::((Microsoft_FStar_ToSMT_Term.boxInt b))::[])))
 in (let precedes_y_x = (Microsoft_FStar_ToSMT_Term.mk_Valid (Microsoft_FStar_ToSMT_Term.mkApp ("Precedes", (y)::(x)::[])))
 in (Microsoft_FStar_ToSMT_Term.Assume (((mkForall_fuel ((typing_pred)::[], (xx)::[], (Microsoft_FStar_ToSMT_Term.mkImp (typing_pred, (Microsoft_FStar_ToSMT_Term.mk_tester "BoxInt" x))))), Some ("int inversion"))))::(Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mkForall (((Microsoft_FStar_ToSMT_Term.boxInt b))::[], (bb)::[], (Microsoft_FStar_ToSMT_Term.mk_HasType (Microsoft_FStar_ToSMT_Term.boxInt b) tt))), Some ("int typing"))))::(Microsoft_FStar_ToSMT_Term.Assume (((mkForall_fuel ((typing_pred)::(typing_pred_y)::(precedes_y_x)::[], (xx)::(yy)::[], (Microsoft_FStar_ToSMT_Term.mkImp ((Microsoft_FStar_ToSMT_Term.mk_and_l ((typing_pred)::(typing_pred_y)::((Microsoft_FStar_ToSMT_Term.mkGT ((Microsoft_FStar_ToSMT_Term.unboxInt x), (Microsoft_FStar_ToSMT_Term.mkInteger' 0))))::((Microsoft_FStar_ToSMT_Term.mkGTE ((Microsoft_FStar_ToSMT_Term.unboxInt y), (Microsoft_FStar_ToSMT_Term.mkInteger' 0))))::((Microsoft_FStar_ToSMT_Term.mkLT ((Microsoft_FStar_ToSMT_Term.unboxInt y), (Microsoft_FStar_ToSMT_Term.unboxInt x))))::[])), precedes_y_x)))), Some ("well-founded ordering on nat (alt)"))))::[])))))))))
-in (let mk_int_alias = (fun _45_1863 tt -> (Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mkEq (tt, (Microsoft_FStar_ToSMT_Term.mkApp (Microsoft_FStar_Absyn_Const.int_lid.Microsoft_FStar_Absyn_Syntax.str, [])))), Some ("mapping to int; for now"))))::[])
-in (let mk_str = (fun _45_1867 tt -> (let typing_pred = (Microsoft_FStar_ToSMT_Term.mk_HasType x tt)
+in (let mk_int_alias = (fun _45_1876 tt -> (Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mkEq (tt, (Microsoft_FStar_ToSMT_Term.mkApp (Microsoft_FStar_Absyn_Const.int_lid.Microsoft_FStar_Absyn_Syntax.str, [])))), Some ("mapping to int; for now"))))::[])
+in (let mk_str = (fun _45_1880 tt -> (let typing_pred = (Microsoft_FStar_ToSMT_Term.mk_HasType x tt)
 in (let bb = ("b", Microsoft_FStar_ToSMT_Term.String_sort)
 in (let b = (Microsoft_FStar_ToSMT_Term.mkFreeV bb)
 in (Microsoft_FStar_ToSMT_Term.Assume (((mkForall_fuel ((typing_pred)::[], (xx)::[], (Microsoft_FStar_ToSMT_Term.mkImp (typing_pred, (Microsoft_FStar_ToSMT_Term.mk_tester "BoxString" x))))), Some ("string inversion"))))::(Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mkForall (((Microsoft_FStar_ToSMT_Term.boxString b))::[], (bb)::[], (Microsoft_FStar_ToSMT_Term.mk_HasType (Microsoft_FStar_ToSMT_Term.boxString b) tt))), Some ("string typing"))))::[]))))
-in (let mk_ref = (fun reft_name _45_1875 -> (let r = ("r", Microsoft_FStar_ToSMT_Term.Ref_sort)
+in (let mk_ref = (fun reft_name _45_1888 -> (let r = ("r", Microsoft_FStar_ToSMT_Term.Ref_sort)
 in (let aa = ("a", Microsoft_FStar_ToSMT_Term.Type_sort)
 in (let bb = ("b", Microsoft_FStar_ToSMT_Term.Type_sort)
 in (let refa = (Microsoft_FStar_ToSMT_Term.mkApp (reft_name, ((Microsoft_FStar_ToSMT_Term.mkFreeV aa))::[]))
@@ -1550,7 +1568,7 @@ in (let typing_pred = (Microsoft_FStar_ToSMT_Term.mk_HasType x refa)
 in (let typing_pred_b = (Microsoft_FStar_ToSMT_Term.mk_HasType x refb)
 in (Microsoft_FStar_ToSMT_Term.Assume (((mkForall_fuel ((typing_pred)::[], (xx)::(aa)::[], (Microsoft_FStar_ToSMT_Term.mkImp (typing_pred, (Microsoft_FStar_ToSMT_Term.mk_tester "BoxRef" x))))), Some ("ref inversion"))))::(Microsoft_FStar_ToSMT_Term.Assume (((mkForall_fuel' 2 ((typing_pred)::(typing_pred_b)::[], (xx)::(aa)::(bb)::[], (Microsoft_FStar_ToSMT_Term.mkImp ((Microsoft_FStar_ToSMT_Term.mkAnd (typing_pred, typing_pred_b)), (Microsoft_FStar_ToSMT_Term.mkEq ((Microsoft_FStar_ToSMT_Term.mkFreeV aa), (Microsoft_FStar_ToSMT_Term.mkFreeV bb))))))), Some ("ref typing is injective"))))::[]))))))))
 in (let prims = ((Microsoft_FStar_Absyn_Const.unit_lid, mk_unit))::((Microsoft_FStar_Absyn_Const.bool_lid, mk_bool))::((Microsoft_FStar_Absyn_Const.int_lid, mk_int))::((Microsoft_FStar_Absyn_Const.string_lid, mk_str))::((Microsoft_FStar_Absyn_Const.ref_lid, mk_ref))::((Microsoft_FStar_Absyn_Const.char_lid, mk_int_alias))::((Microsoft_FStar_Absyn_Const.uint8_lid, mk_int_alias))::[]
-in (fun t s tt -> (match ((Support.Microsoft.FStar.Util.find_opt (fun _45_1892 -> (match (_45_1892) with
+in (fun t s tt -> (match ((Support.Microsoft.FStar.Util.find_opt (fun _45_1905 -> (match (_45_1905) with
 | (l, _) -> begin
 (Microsoft_FStar_Absyn_Syntax.lid_equals l t)
 end)) prims)) with
@@ -1561,7 +1579,7 @@ end
 (f s tt)
 end)))))))))))))
 
-let rec encode_sigelt = (fun env se -> (let _45_1901 = if (Microsoft_FStar_Tc_Env.debug env.tcenv Microsoft_FStar_Options.Low) then begin
+let rec encode_sigelt = (fun env se -> (let _45_1914 = if (Microsoft_FStar_Tc_Env.debug env.tcenv Microsoft_FStar_Options.Low) then begin
 ((Support.Microsoft.FStar.Util.fprint1 ">>>>Encoding [%s]\n") (Microsoft_FStar_Absyn_Print.sigelt_to_string se))
 end
 in (let nm = (match ((Microsoft_FStar_Absyn_Util.lid_of_sigelt se)) with
@@ -1571,8 +1589,8 @@ end
 | Some (l) -> begin
 l.Microsoft_FStar_Absyn_Syntax.str
 end)
-in (let _45_1909 = (encode_sigelt' env se)
-in (match (_45_1909) with
+in (let _45_1922 = (encode_sigelt' env se)
+in (match (_45_1922) with
 | (g, e) -> begin
 (match (g) with
 | [] -> begin
@@ -1591,8 +1609,8 @@ end
 ([], env)
 end
 | Microsoft_FStar_Absyn_Syntax.Sig_typ_abbrev ((lid, _, _, _, _, _)) when (Microsoft_FStar_Absyn_Syntax.lid_equals lid Microsoft_FStar_Absyn_Const.b2t_lid) -> begin
-(let _45_1960 = (new_typ_constant_and_tok_from_lid env lid)
-in (match (_45_1960) with
+(let _45_1973 = (new_typ_constant_and_tok_from_lid env lid)
+in (match (_45_1973) with
 | (tname, ttok, env) -> begin
 (let xx = ("x", Microsoft_FStar_ToSMT_Term.Term_sort)
 in (let x = (Microsoft_FStar_ToSMT_Term.mkFreeV xx)
@@ -1602,20 +1620,20 @@ in (decls, env)))))
 end))
 end
 | Microsoft_FStar_Absyn_Syntax.Sig_typ_abbrev ((lid, tps, _, t, tags, _)) -> begin
-(let _45_1978 = (new_typ_constant_and_tok_from_lid env lid)
-in (match (_45_1978) with
+(let _45_1991 = (new_typ_constant_and_tok_from_lid env lid)
+in (match (_45_1991) with
 | (tname, ttok, env) -> begin
-(let _45_1987 = (match (t.Microsoft_FStar_Absyn_Syntax.n) with
+(let _45_2000 = (match (t.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Typ_lam ((tps', body)) -> begin
 ((Support.List.append tps tps'), body)
 end
 | _ -> begin
 (tps, t)
 end)
-in (match (_45_1987) with
+in (match (_45_2000) with
 | (tps, t) -> begin
-(let _45_1994 = (encode_binders None tps env)
-in (match (_45_1994) with
+(let _45_2007 = (encode_binders None tps env)
+in (match (_45_2007) with
 | (vars, guards, env', binder_decls, _) -> begin
 (let tok_app = (mk_ApplyT (Microsoft_FStar_ToSMT_Term.mkApp (ttok, [])) vars)
 in (let tok_decl = Microsoft_FStar_ToSMT_Term.DeclFun ((ttok, [], Microsoft_FStar_ToSMT_Term.Type_sort, None))
@@ -1629,7 +1647,7 @@ end
 end)
 in (let decls = (Support.List.append (Support.List.append ((Microsoft_FStar_ToSMT_Term.DeclFun ((tname, (Support.List.map (Support.Prims.snd) vars), Microsoft_FStar_ToSMT_Term.Type_sort, None)))::(tok_decl)::[]) fresh_tok) ((Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mkForall ((tok_app)::[], vars, (Microsoft_FStar_ToSMT_Term.mkEq (tok_app, app)))), Some ("name-token correspondence"))))::[]))
 in (let t = (whnf env t)
-in (let _45_2012 = if ((Support.Microsoft.FStar.Util.for_some (fun _45_19 -> (match (_45_19) with
+in (let _45_2025 = if ((Support.Microsoft.FStar.Util.for_some (fun _45_19 -> (match (_45_19) with
 | Microsoft_FStar_Absyn_Syntax.Logic -> begin
 true
 end
@@ -1640,11 +1658,11 @@ end))) tags) then begin
 end else begin
 (app, (encode_typ_term t env'))
 end
-in (match (_45_2012) with
+in (match (_45_2025) with
 | (def, (body, decls1)) -> begin
 (let abbrev_def = Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mkForall ((def)::[], vars, (Microsoft_FStar_ToSMT_Term.mkImp ((Microsoft_FStar_ToSMT_Term.mk_and_l guards), (Microsoft_FStar_ToSMT_Term.mkEq (def, body)))))), Some ("abbrev. elimination")))
-in (let kindingAx = (let _45_2016 = (encode_knd (Microsoft_FStar_Tc_Recheck.recompute_kind t) env' app)
-in (match (_45_2016) with
+in (let kindingAx = (let _45_2029 = (encode_knd (Microsoft_FStar_Tc_Recheck.recompute_kind t) env' app)
+in (match (_45_2029) with
 | (k, decls) -> begin
 (Support.List.append decls ((Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mkForall ((app)::[], vars, (Microsoft_FStar_ToSMT_Term.mkImp ((Microsoft_FStar_ToSMT_Term.mk_and_l guards), k)))), Some ("abbrev. kinding"))))::[]))
 end))
@@ -1657,8 +1675,8 @@ end))
 end
 | Microsoft_FStar_Absyn_Syntax.Sig_val_decl ((lid, t, quals, _)) -> begin
 (let tt = (whnf env t)
-in (let _45_2029 = (encode_free_var env lid t tt quals)
-in (match (_45_2029) with
+in (let _45_2042 = (encode_free_var env lid t tt quals)
+in (match (_45_2042) with
 | (decls, env) -> begin
 if ((Microsoft_FStar_Absyn_Util.is_smt_lemma t) && (((Support.List.contains Microsoft_FStar_Absyn_Syntax.Assumption) quals) || env.tcenv.Microsoft_FStar_Tc_Env.is_iface)) then begin
 ((Support.List.append decls (encode_smt_lemma env lid t)), env)
@@ -1668,16 +1686,16 @@ end
 end)))
 end
 | Microsoft_FStar_Absyn_Syntax.Sig_assume ((l, f, _, _)) -> begin
-(let _45_2040 = (encode_formula f env)
-in (match (_45_2040) with
+(let _45_2053 = (encode_formula f env)
+in (match (_45_2053) with
 | (f, decls) -> begin
 (let g = (Microsoft_FStar_ToSMT_Term.Assume ((f, Some ((Support.Microsoft.FStar.Util.format1 "Assumption: %s" (Microsoft_FStar_Absyn_Print.sli l))))))::[]
 in ((Support.List.append decls g), env))
 end))
 end
 | Microsoft_FStar_Absyn_Syntax.Sig_tycon ((t, tps, k, _, datas, quals, _)) when (Microsoft_FStar_Absyn_Syntax.lid_equals t Microsoft_FStar_Absyn_Const.precedes_lid) -> begin
-(let _45_2056 = (new_typ_constant_and_tok_from_lid env t)
-in (match (_45_2056) with
+(let _45_2069 = (new_typ_constant_and_tok_from_lid env t)
+in (match (_45_2069) with
 | (tname, ttok, env) -> begin
 ([], env)
 end))
@@ -1697,8 +1715,8 @@ end
 false
 end))) quals)
 in (let constructor_or_logic_type_decl = (fun c -> if is_logical then begin
-(let _45_2100 = c
-in (match (_45_2100) with
+(let _45_2113 = c
+in (match (_45_2113) with
 | (name, args, _, _) -> begin
 (Microsoft_FStar_ToSMT_Term.DeclFun ((name, ((Support.List.map (Support.Prims.snd)) args), Microsoft_FStar_ToSMT_Term.Type_sort, None)))::[]
 end))
@@ -1708,20 +1726,20 @@ end)
 in (let inversion_axioms = (fun tapp vars -> if (((Support.List.length datas) = 0) || ((Support.Microsoft.FStar.Util.for_some (fun l -> ((Support.Option.isNone) (Microsoft_FStar_Tc_Env.lookup_qname env.tcenv l)))) datas)) then begin
 []
 end else begin
-(let _45_2107 = (fresh_fvar "x" Microsoft_FStar_ToSMT_Term.Term_sort)
-in (match (_45_2107) with
+(let _45_2120 = (fresh_fvar "x" Microsoft_FStar_ToSMT_Term.Term_sort)
+in (match (_45_2120) with
 | (xxsym, xx) -> begin
-(let _45_2150 = ((Support.List.fold_left (fun _45_2110 l -> (match (_45_2110) with
+(let _45_2163 = ((Support.List.fold_left (fun _45_2123 l -> (match (_45_2123) with
 | (out, decls) -> begin
 (let data_t = (Microsoft_FStar_Tc_Env.lookup_datacon env.tcenv l)
-in (let _45_2120 = (match ((Microsoft_FStar_Absyn_Util.function_formals data_t)) with
+in (let _45_2133 = (match ((Microsoft_FStar_Absyn_Util.function_formals data_t)) with
 | Some ((formals, res)) -> begin
 (formals, (Microsoft_FStar_Absyn_Util.comp_result res))
 end
 | None -> begin
 ([], data_t)
 end)
-in (match (_45_2120) with
+in (match (_45_2133) with
 | (args, res) -> begin
 (let indices = (match ((Microsoft_FStar_Absyn_Util.compress_typ res).Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Typ_app ((_, indices)) -> begin
@@ -1737,10 +1755,10 @@ end
 | Support.Microsoft.FStar.Util.Inr (x) -> begin
 (push_term_var env x.Microsoft_FStar_Absyn_Syntax.v (Microsoft_FStar_ToSMT_Term.mkApp ((mk_term_projector_name l x.Microsoft_FStar_Absyn_Syntax.v), (xx)::[])))
 end)) env) args)
-in (let _45_2138 = (encode_args indices env)
-in (match (_45_2138) with
+in (let _45_2151 = (encode_args indices env)
+in (match (_45_2151) with
 | (indices, decls') -> begin
-(let _45_2139 = if ((Support.List.length indices) <> (Support.List.length vars)) then begin
+(let _45_2152 = if ((Support.List.length indices) <> (Support.List.length vars)) then begin
 (failwith "Impossible")
 end
 in (let eqs = (Microsoft_FStar_ToSMT_Term.mk_and_l (Support.List.map2 (fun v a -> (match (a) with
@@ -1754,10 +1772,10 @@ in ((Microsoft_FStar_ToSMT_Term.mkOr (out, (Microsoft_FStar_ToSMT_Term.mkAnd ((m
 end))))
 end)))
 end)) (Microsoft_FStar_ToSMT_Term.mkFalse, [])) datas)
-in (match (_45_2150) with
+in (match (_45_2163) with
 | (data_ax, decls) -> begin
-(let _45_2153 = (fresh_fvar "f" Microsoft_FStar_ToSMT_Term.Fuel_sort)
-in (match (_45_2153) with
+(let _45_2166 = (fresh_fvar "f" Microsoft_FStar_ToSMT_Term.Fuel_sort)
+in (match (_45_2166) with
 | (ffsym, ff) -> begin
 (let xx_has_type = (Microsoft_FStar_ToSMT_Term.mk_HasTypeFuel (Microsoft_FStar_ToSMT_Term.mkApp ("SFuel", (ff)::[])) xx tapp)
 in (Support.List.append decls ((Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mkForall ((xx_has_type)::[], (add_fuel (ffsym, Microsoft_FStar_ToSMT_Term.Fuel_sort) (((xxsym, Microsoft_FStar_ToSMT_Term.Term_sort))::vars)), (Microsoft_FStar_ToSMT_Term.mkImp (xx_has_type, data_ax)))), Some ("inversion axiom"))))::[])))
@@ -1766,17 +1784,17 @@ end))
 end))
 end)
 in (let k = (Microsoft_FStar_Absyn_Util.close_kind tps k)
-in (let _45_2165 = (match ((Microsoft_FStar_Absyn_Util.compress_kind k).Microsoft_FStar_Absyn_Syntax.n) with
+in (let _45_2178 = (match ((Microsoft_FStar_Absyn_Util.compress_kind k).Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Kind_arrow ((bs, res)) -> begin
 (true, bs, res)
 end
 | _ -> begin
 (false, [], k)
 end)
-in (match (_45_2165) with
+in (match (_45_2178) with
 | (is_kind_arrow, formals, res) -> begin
-(let _45_2172 = (encode_binders None formals env)
-in (match (_45_2172) with
+(let _45_2185 = (encode_binders None formals env)
+in (match (_45_2185) with
 | (vars, guards, env', binder_decls, _) -> begin
 (let projection_axioms = (fun tapp vars -> (match (((Support.Microsoft.FStar.Util.find_opt (fun _45_21 -> (match (_45_21) with
 | Microsoft_FStar_Absyn_Syntax.Projector (_) -> begin
@@ -1804,14 +1822,14 @@ end
 end)
 end))
 in (let projectee_pos = (projectee 0 formals)
-in (let _45_2211 = (match ((Support.Microsoft.FStar.Util.first_N projectee_pos vars)) with
+in (let _45_2224 = (match ((Support.Microsoft.FStar.Util.first_N projectee_pos vars)) with
 | (_, xx::suffix) -> begin
 (xx, suffix)
 end
 | _ -> begin
 (failwith "impossible")
 end)
-in (match (_45_2211) with
+in (match (_45_2224) with
 | (xx, suffix) -> begin
 (let dproj_app = (mk_ApplyT (Microsoft_FStar_ToSMT_Term.mkApp ((mk_typ_projector_name d a), ((Microsoft_FStar_ToSMT_Term.mkFreeV xx))::[])) suffix)
 in (Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mkForall ((tapp)::[], vars, (Microsoft_FStar_ToSMT_Term.mkEq (tapp, dproj_app)))), Some ("projector axiom"))))::[])
@@ -1820,27 +1838,27 @@ end
 | _ -> begin
 []
 end))
-in (let pretype_axioms = (fun tapp vars -> (let _45_2220 = (fresh_fvar "x" Microsoft_FStar_ToSMT_Term.Term_sort)
-in (match (_45_2220) with
+in (let pretype_axioms = (fun tapp vars -> (let _45_2233 = (fresh_fvar "x" Microsoft_FStar_ToSMT_Term.Term_sort)
+in (match (_45_2233) with
 | (xxsym, xx) -> begin
-(let _45_2223 = (fresh_fvar "f" Microsoft_FStar_ToSMT_Term.Fuel_sort)
-in (match (_45_2223) with
+(let _45_2236 = (fresh_fvar "f" Microsoft_FStar_ToSMT_Term.Fuel_sort)
+in (match (_45_2236) with
 | (ffsym, ff) -> begin
 (let xx_has_type = (Microsoft_FStar_ToSMT_Term.mk_HasTypeFuel ff xx tapp)
 in (Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mkForall ((xx_has_type)::[], ((xxsym, Microsoft_FStar_ToSMT_Term.Term_sort))::((ffsym, Microsoft_FStar_ToSMT_Term.Fuel_sort))::vars, (Microsoft_FStar_ToSMT_Term.mkImp (xx_has_type, (Microsoft_FStar_ToSMT_Term.mkEq (tapp, (Microsoft_FStar_ToSMT_Term.mkApp ("PreType", (xx)::[])))))))), Some ("pretyping"))))::[])
 end))
 end)))
-in (let _45_2228 = (new_typ_constant_and_tok_from_lid env t)
-in (match (_45_2228) with
+in (let _45_2241 = (new_typ_constant_and_tok_from_lid env t)
+in (match (_45_2241) with
 | (tname, ttok, env) -> begin
 (let ttok_tm = (Microsoft_FStar_ToSMT_Term.mkApp (ttok, []))
 in (let guard = (Microsoft_FStar_ToSMT_Term.mk_and_l guards)
 in (let tapp = (Microsoft_FStar_ToSMT_Term.mkApp (tname, (Support.List.map Microsoft_FStar_ToSMT_Term.mkFreeV vars)))
-in (let _45_2253 = (let tname_decl = (constructor_or_logic_type_decl (tname, ((Support.List.map (fun _45_2234 -> (match (_45_2234) with
+in (let _45_2266 = (let tname_decl = (constructor_or_logic_type_decl (tname, ((Support.List.map (fun _45_2247 -> (match (_45_2247) with
 | (n, s) -> begin
 ((Support.String.strcat tname n), s)
 end))) vars), Microsoft_FStar_ToSMT_Term.Type_sort, (varops.next_id ())))
-in (let _45_2250 = (match (vars) with
+in (let _45_2263 = (match (vars) with
 | [] -> begin
 ([], (push_free_tvar env t tname ((fun __dataconst_1 -> Some (__dataconst_1)) (Microsoft_FStar_ToSMT_Term.mkApp (tname, [])))))
 end
@@ -1862,14 +1880,14 @@ end
 in (let name_tok_corr = Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mkForall' (pats, None, vars, (Microsoft_FStar_ToSMT_Term.mkEq (ttok_app, tapp)))), Some ("name-token correspondence")))
 in ((ttok_decl)::(ttok_fresh)::(name_tok_corr)::[], env))))))
 end)
-in (match (_45_2250) with
+in (match (_45_2263) with
 | (tok_decls, env) -> begin
 ((Support.List.append tname_decl tok_decls), env)
 end)))
-in (match (_45_2253) with
+in (match (_45_2266) with
 | (decls, env) -> begin
-(let kindingAx = (let _45_2256 = (encode_knd res env' tapp)
-in (match (_45_2256) with
+(let kindingAx = (let _45_2269 = (encode_knd res env' tapp)
+in (match (_45_2269) with
 | (k, decls) -> begin
 (let karr = if is_kind_arrow then begin
 (Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mk_tester "Kind_arrow" (Microsoft_FStar_ToSMT_Term.mk_PreKind ttok_tm)), Some ("kinding"))))::[]
@@ -1894,25 +1912,25 @@ end
 ([], env)
 end
 | Microsoft_FStar_Absyn_Syntax.Sig_datacon ((d, t, _, quals, _, drange)) -> begin
-(let _45_2287 = (new_term_constant_and_tok_from_lid env d)
-in (match (_45_2287) with
+(let _45_2300 = (new_term_constant_and_tok_from_lid env d)
+in (match (_45_2300) with
 | (ddconstrsym, ddtok, env) -> begin
 (let ddtok_tm = (Microsoft_FStar_ToSMT_Term.mkApp (ddtok, []))
-in (let _45_2296 = (match ((Microsoft_FStar_Absyn_Util.function_formals t)) with
+in (let _45_2309 = (match ((Microsoft_FStar_Absyn_Util.function_formals t)) with
 | Some ((f, c)) -> begin
 (f, (Microsoft_FStar_Absyn_Util.comp_result c))
 end
 | None -> begin
 ([], t)
 end)
-in (match (_45_2296) with
+in (match (_45_2309) with
 | (formals, t_res) -> begin
-(let _45_2299 = (fresh_fvar "f" Microsoft_FStar_ToSMT_Term.Fuel_sort)
-in (match (_45_2299) with
+(let _45_2312 = (fresh_fvar "f" Microsoft_FStar_ToSMT_Term.Fuel_sort)
+in (match (_45_2312) with
 | (fuel_var, fuel_tm) -> begin
 (let s_fuel_tm = (Microsoft_FStar_ToSMT_Term.mkApp ("SFuel", (fuel_tm)::[]))
-in (let _45_2306 = (encode_binders (Some (fuel_tm)) formals env)
-in (match (_45_2306) with
+in (let _45_2319 = (encode_binders (Some (fuel_tm)) formals env)
+in (match (_45_2319) with
 | (vars, guards, env', binder_decls, names) -> begin
 (let projectors = ((Support.List.map (fun _45_24 -> (match (_45_24) with
 | Support.Microsoft.FStar.Util.Inl (a) -> begin
@@ -1926,16 +1944,16 @@ in (let app = (mk_ApplyE ddtok_tm vars)
 in (let guard = (Microsoft_FStar_ToSMT_Term.mk_and_l guards)
 in (let xvars = (Support.List.map Microsoft_FStar_ToSMT_Term.mkFreeV vars)
 in (let dapp = (Microsoft_FStar_ToSMT_Term.mkApp (ddconstrsym, xvars))
-in (let _45_2320 = (encode_typ_pred' None t env ddtok_tm)
-in (match (_45_2320) with
+in (let _45_2333 = (encode_typ_pred' None t env ddtok_tm)
+in (match (_45_2333) with
 | (tok_typing, decls3) -> begin
-(let _45_2327 = (encode_binders (Some (s_fuel_tm)) formals env)
-in (match (_45_2327) with
+(let _45_2340 = (encode_binders (Some (s_fuel_tm)) formals env)
+in (match (_45_2340) with
 | (vars', guards', env'', decls_formals, _) -> begin
-(let _45_2332 = (let xvars = (Support.List.map Microsoft_FStar_ToSMT_Term.mkFreeV vars')
+(let _45_2345 = (let xvars = (Support.List.map Microsoft_FStar_ToSMT_Term.mkFreeV vars')
 in (let dapp = (Microsoft_FStar_ToSMT_Term.mkApp (ddconstrsym, xvars))
 in (encode_typ_pred' (Some (fuel_tm)) t_res env'' dapp)))
-in (match (_45_2332) with
+in (match (_45_2345) with
 | (ty_pred', decls_pred) -> begin
 (let guard' = (Microsoft_FStar_ToSMT_Term.mk_and_l guards')
 in (let proxy_fresh = (match (formals) with
@@ -1945,36 +1963,36 @@ end
 | _ -> begin
 ((Microsoft_FStar_ToSMT_Term.fresh_token (ddtok, Microsoft_FStar_ToSMT_Term.Term_sort) (varops.next_id ())))::[]
 end)
-in (let encode_elim = (fun _45_2339 -> (match (_45_2339) with
+in (let encode_elim = (fun _45_2352 -> (match (_45_2352) with
 | () -> begin
-(let _45_2342 = (Microsoft_FStar_Absyn_Util.head_and_args t_res)
-in (match (_45_2342) with
+(let _45_2355 = (Microsoft_FStar_Absyn_Util.head_and_args t_res)
+in (match (_45_2355) with
 | (head, args) -> begin
 (match ((Microsoft_FStar_Absyn_Util.compress_typ head).Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Typ_const (fv) -> begin
 (let encoded_head = (lookup_free_tvar_name env' fv)
-in (let _45_2348 = (encode_args args env')
-in (match (_45_2348) with
+in (let _45_2361 = (encode_args args env')
+in (match (_45_2361) with
 | (encoded_args, arg_decls) -> begin
-(let _45_2372 = (Support.List.fold_left (fun _45_2352 arg -> (match (_45_2352) with
+(let _45_2385 = (Support.List.fold_left (fun _45_2365 arg -> (match (_45_2365) with
 | (env, arg_vars, eqns) -> begin
 (match (arg) with
 | Support.Microsoft.FStar.Util.Inl (targ) -> begin
-(let _45_2360 = (gen_typ_var env (Microsoft_FStar_Absyn_Util.new_bvd None))
-in (match (_45_2360) with
+(let _45_2373 = (gen_typ_var env (Microsoft_FStar_Absyn_Util.new_bvd None))
+in (match (_45_2373) with
 | (_, tv, env) -> begin
 (env, (tv)::arg_vars, ((Microsoft_FStar_ToSMT_Term.mkEq (targ, tv)))::eqns)
 end))
 end
 | Support.Microsoft.FStar.Util.Inr (varg) -> begin
-(let _45_2367 = (gen_term_var env (Microsoft_FStar_Absyn_Util.new_bvd None))
-in (match (_45_2367) with
+(let _45_2380 = (gen_term_var env (Microsoft_FStar_Absyn_Util.new_bvd None))
+in (match (_45_2380) with
 | (_, xv, env) -> begin
 (env, (xv)::arg_vars, ((Microsoft_FStar_ToSMT_Term.mkEq (varg, xv)))::eqns)
 end))
 end)
 end)) (env', [], []) encoded_args)
-in (match (_45_2372) with
+in (match (_45_2385) with
 | (_, arg_vars, eqns) -> begin
 (let arg_vars = (Support.List.rev arg_vars)
 in (let ty = (Microsoft_FStar_ToSMT_Term.mkApp (encoded_head, arg_vars))
@@ -2005,13 +2023,13 @@ end))
 end)))
 end
 | _ -> begin
-(let _45_2392 = (Microsoft_FStar_Tc_Errors.warn drange (Support.Microsoft.FStar.Util.format2 "Constructor %s builds an unexpected type %s\n" (Microsoft_FStar_Absyn_Print.sli d) (Microsoft_FStar_Absyn_Print.typ_to_string head)))
+(let _45_2405 = (Microsoft_FStar_Tc_Errors.warn drange (Support.Microsoft.FStar.Util.format2 "Constructor %s builds an unexpected type %s\n" (Microsoft_FStar_Absyn_Print.sli d) (Microsoft_FStar_Absyn_Print.typ_to_string head)))
 in ([], []))
 end)
 end))
 end))
-in (let _45_2396 = (encode_elim ())
-in (match (_45_2396) with
+in (let _45_2409 = (encode_elim ())
+in (match (_45_2409) with
 | (decls2, elim) -> begin
 (let g = (Support.List.append (Support.List.append (Support.List.append (Support.List.append (Support.List.append (Support.List.append (Support.List.append (Support.List.append binder_decls decls2) decls3) ((Microsoft_FStar_ToSMT_Term.DeclFun ((ddtok, [], Microsoft_FStar_ToSMT_Term.Term_sort, Some ((Support.Microsoft.FStar.Util.format1 "data constructor proxy: %s" (Microsoft_FStar_Absyn_Print.sli d))))))::[])) proxy_fresh) decls_formals) decls_pred) ((Microsoft_FStar_ToSMT_Term.Assume ((tok_typing, Some ("typing for data constructor proxy"))))::(Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mkForall ((app)::[], vars, (Microsoft_FStar_ToSMT_Term.mkEq (app, dapp)))), Some ("equality for proxy"))))::(Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mkForall ((ty_pred')::[], (add_fuel (fuel_var, Microsoft_FStar_ToSMT_Term.Fuel_sort) vars'), (Microsoft_FStar_ToSMT_Term.mkImp (guard', ty_pred')))), Some ("data constructor typing intro"))))::[])) elim)
 in ((Support.List.append datacons g), env))
@@ -2025,17 +2043,17 @@ end)))
 end))
 end
 | Microsoft_FStar_Absyn_Syntax.Sig_bundle ((ses, _, _, _)) -> begin
-(let _45_2409 = (encode_signature env ses)
-in (match (_45_2409) with
+(let _45_2422 = (encode_signature env ses)
+in (match (_45_2422) with
 | (g, env) -> begin
-(let _45_2421 = ((Support.List.partition (fun _45_25 -> (match (_45_25) with
+(let _45_2434 = ((Support.List.partition (fun _45_25 -> (match (_45_25) with
 | Microsoft_FStar_ToSMT_Term.Assume ((_, Some ("inversion axiom"))) -> begin
 false
 end
 | _ -> begin
 true
 end))) g)
-in (match (_45_2421) with
+in (match (_45_2434) with
 | (g', inversions) -> begin
 ((Support.List.append g' inversions), env)
 end))
@@ -2043,8 +2061,8 @@ end))
 end
 | Microsoft_FStar_Absyn_Syntax.Sig_let (((is_rec, bindings), _, _, quals)) -> begin
 (let eta_expand = (fun binders formals body t -> (let nbinders = (Support.List.length binders)
-in (let _45_2440 = (Support.Microsoft.FStar.Util.first_N nbinders formals)
-in (match (_45_2440) with
+in (let _45_2453 = (Support.Microsoft.FStar.Util.first_N nbinders formals)
+in (match (_45_2453) with
 | (formals, extra_formals) -> begin
 (let subst = (Support.List.map2 (fun formal binder -> (match (((Support.Prims.fst formal), (Support.Prims.fst binder))) with
 | (Support.Microsoft.FStar.Util.Inl (a), Support.Microsoft.FStar.Util.Inl (b)) -> begin
@@ -2068,8 +2086,8 @@ in (let destruct_bound_function = (fun flid t_norm e -> (match (e.Microsoft_FSta
 in (let nbinders = (Support.List.length binders)
 in (let tres = (Microsoft_FStar_Absyn_Util.comp_result c)
 in if ((nformals < nbinders) && (Microsoft_FStar_Absyn_Util.is_total_comp c)) then begin
-(let _45_2490 = (Support.Microsoft.FStar.Util.first_N nformals binders)
-in (match (_45_2490) with
+(let _45_2503 = (Support.Microsoft.FStar.Util.first_N nformals binders)
+in (match (_45_2503) with
 | (bs0, rest) -> begin
 (let tres = (match ((Microsoft_FStar_Absyn_Util.mk_subst_binder bs0 formals)) with
 | Some (s) -> begin
@@ -2083,8 +2101,8 @@ in (bs0, body, bs0, tres)))
 end))
 end else begin
 if (nformals > nbinders) then begin
-(let _45_2499 = (eta_expand binders formals body tres)
-in (match (_45_2499) with
+(let _45_2512 = (eta_expand binders formals body tres)
+in (match (_45_2512) with
 | (binders, body) -> begin
 (binders, body, formals, tres)
 end))
@@ -2101,8 +2119,8 @@ end
 (match (t_norm.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Typ_fun ((formals, c)) -> begin
 (let tres = (Microsoft_FStar_Absyn_Util.comp_result c)
-in (let _45_2511 = (eta_expand [] formals e tres)
-in (match (_45_2511) with
+in (let _45_2524 = (eta_expand [] formals e tres)
+in (match (_45_2524) with
 | (binders, body) -> begin
 (binders, body, formals, tres)
 end)))
@@ -2111,7 +2129,7 @@ end
 ([], e, [], t_norm)
 end)
 end))
-in (Support.Prims.try_with (fun _45_2515 -> (match (_45_2515) with
+in (Support.Prims.try_with (fun _45_2528 -> (match (_45_2528) with
 | () -> begin
 if ((Support.Microsoft.FStar.Util.for_some (fun _45_26 -> (match (_45_26) with
 | Microsoft_FStar_Absyn_Syntax.Opaque -> begin
@@ -2122,11 +2140,11 @@ false
 end))) quals) then begin
 ([], env)
 end else begin
-if ((Support.Microsoft.FStar.Util.for_some (fun _45_2537 -> (match (_45_2537) with
+if ((Support.Microsoft.FStar.Util.for_some (fun _45_2550 -> (match (_45_2550) with
 | (_, t, _) -> begin
 (Microsoft_FStar_Absyn_Util.is_smt_lemma t)
 end))) bindings) then begin
-(((Support.List.collect (fun _45_2542 -> (match (_45_2542) with
+(((Support.List.collect (fun _45_2555 -> (match (_45_2555) with
 | (flid, t, _) -> begin
 if (Microsoft_FStar_Absyn_Util.is_smt_lemma t) then begin
 (encode_smt_lemma env (Support.Microsoft.FStar.Util.right flid) t)
@@ -2135,19 +2153,19 @@ end else begin
 end
 end))) bindings), env)
 end else begin
-(let _45_2564 = ((Support.List.fold_left (fun _45_2547 _45_2552 -> (match ((_45_2547, _45_2552)) with
+(let _45_2577 = ((Support.List.fold_left (fun _45_2560 _45_2565 -> (match ((_45_2560, _45_2565)) with
 | ((toks, typs, decls, env), (flid, t, _)) -> begin
-(let _45_2553 = if (Microsoft_FStar_Absyn_Util.is_smt_lemma t) then begin
+(let _45_2566 = if (Microsoft_FStar_Absyn_Util.is_smt_lemma t) then begin
 (raise (Let_rec_unencodeable))
 end
 in (let t_norm = (Microsoft_FStar_Absyn_Util.compress_typ (whnf env t))
-in (let _45_2559 = (declare_top_level_let env (Support.Microsoft.FStar.Util.right flid) t t_norm)
-in (match (_45_2559) with
+in (let _45_2572 = (declare_top_level_let env (Support.Microsoft.FStar.Util.right flid) t t_norm)
+in (match (_45_2572) with
 | (tok, decl, env) -> begin
 ((((Support.Microsoft.FStar.Util.right flid), tok))::toks, (t_norm)::typs, (decl)::decls, env)
 end))))
 end)) ([], [], [], env)) bindings)
-in (match (_45_2564) with
+in (match (_45_2577) with
 | (toks, typs, decls, env) -> begin
 (let toks = (Support.List.rev toks)
 in (let decls = ((Support.List.flatten) (Support.List.rev decls))
@@ -2164,11 +2182,11 @@ end else begin
 if (not (is_rec)) then begin
 (match ((bindings, typs, toks)) with
 | ((_, _, e)::[], t_norm::[], (flid, (f, ftok))::[]) -> begin
-(let _45_2593 = (destruct_bound_function flid t_norm e)
-in (match (_45_2593) with
+(let _45_2606 = (destruct_bound_function flid t_norm e)
+in (match (_45_2606) with
 | (binders, body, formals, tres) -> begin
-(let _45_2600 = (encode_binders None binders env)
-in (match (_45_2600) with
+(let _45_2613 = (encode_binders None binders env)
+in (match (_45_2613) with
 | (vars, guards, env', binder_decls, _) -> begin
 (let app = (match (vars) with
 | [] -> begin
@@ -2177,8 +2195,8 @@ end
 | _ -> begin
 (Microsoft_FStar_ToSMT_Term.mkApp (f, (Support.List.map Microsoft_FStar_ToSMT_Term.mkFreeV vars)))
 end)
-in (let _45_2607 = (encode_exp body env')
-in (match (_45_2607) with
+in (let _45_2620 = (encode_exp body env')
+in (match (_45_2620) with
 | (body, decls2) -> begin
 (let eqn = Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mkForall ((app)::[], vars, (Microsoft_FStar_ToSMT_Term.mkImp ((Microsoft_FStar_ToSMT_Term.mk_and_l guards), (Microsoft_FStar_ToSMT_Term.mkEq (app, body)))))), Some ((Support.Microsoft.FStar.Util.format1 "Equation for %s" flid.Microsoft_FStar_Absyn_Syntax.str))))
 in ((Support.List.append (Support.List.append (Support.List.append decls binder_decls) decls2) ((eqn)::[])), env))
@@ -2193,23 +2211,23 @@ end else begin
 (let fuel = ((varops.fresh "fuel"), Microsoft_FStar_ToSMT_Term.Fuel_sort)
 in (let fuel_tm = (Microsoft_FStar_ToSMT_Term.mkFreeV fuel)
 in (let env0 = env
-in (let _45_2627 = ((Support.List.fold_left (fun _45_2616 _45_2621 -> (match ((_45_2616, _45_2621)) with
+in (let _45_2640 = ((Support.List.fold_left (fun _45_2629 _45_2634 -> (match ((_45_2629, _45_2634)) with
 | ((gtoks, env), (flid, (f, ftok))) -> begin
 (let g = (varops.new_fvar flid)
 in (let gtok = (varops.new_fvar flid)
 in (let env = (push_free_var env flid gtok ((fun __dataconst_1 -> Some (__dataconst_1)) (Microsoft_FStar_ToSMT_Term.mkApp (g, (fuel_tm)::[]))))
 in (((flid, f, ftok, g, gtok))::gtoks, env))))
 end)) ([], env)) toks)
-in (match (_45_2627) with
+in (match (_45_2640) with
 | (gtoks, env) -> begin
 (let gtoks = (Support.List.rev gtoks)
-in (let encode_one_binding = (fun env0 _45_2636 t_norm _45_2643 -> (match ((_45_2636, _45_2643)) with
+in (let encode_one_binding = (fun env0 _45_2649 t_norm _45_2656 -> (match ((_45_2649, _45_2656)) with
 | ((flid, f, ftok, g, gtok), (_, _, e)) -> begin
-(let _45_2648 = (destruct_bound_function flid t_norm e)
-in (match (_45_2648) with
+(let _45_2661 = (destruct_bound_function flid t_norm e)
+in (match (_45_2661) with
 | (binders, body, formals, tres) -> begin
-(let _45_2655 = (encode_binders None binders env)
-in (match (_45_2655) with
+(let _45_2668 = (encode_binders None binders env)
+in (match (_45_2668) with
 | (vars, guards, env', binder_decls, _) -> begin
 (let decl_g = Microsoft_FStar_ToSMT_Term.DeclFun ((g, (Microsoft_FStar_ToSMT_Term.Fuel_sort)::(Support.List.map (Support.Prims.snd) vars), Microsoft_FStar_ToSMT_Term.Term_sort, Some ("Fuel-instrumented function name")))
 in (let env0 = (push_zfuel_name env0 flid g)
@@ -2218,30 +2236,30 @@ in (let vars_tm = (Support.List.map Microsoft_FStar_ToSMT_Term.mkFreeV vars)
 in (let app = (Microsoft_FStar_ToSMT_Term.mkApp (f, vars_tm))
 in (let gsapp = (Microsoft_FStar_ToSMT_Term.mkApp (g, ((Microsoft_FStar_ToSMT_Term.mkApp ("SFuel", (fuel_tm)::[])))::vars_tm))
 in (let gmax = (Microsoft_FStar_ToSMT_Term.mkApp (g, ((Microsoft_FStar_ToSMT_Term.mkApp ("MaxFuel", [])))::vars_tm))
-in (let _45_2665 = (encode_exp body env')
-in (match (_45_2665) with
+in (let _45_2678 = (encode_exp body env')
+in (match (_45_2678) with
 | (body_tm, decls2) -> begin
 (let eqn_g = Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mkForall ((gsapp)::[], (fuel)::vars, (Microsoft_FStar_ToSMT_Term.mkImp ((Microsoft_FStar_ToSMT_Term.mk_and_l guards), (Microsoft_FStar_ToSMT_Term.mkEq (gsapp, body_tm)))))), Some ((Support.Microsoft.FStar.Util.format1 "Equation for fuel-instrumented recursive function: %s" flid.Microsoft_FStar_Absyn_Syntax.str))))
 in (let eqn_f = Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mkForall ((app)::[], vars, (Microsoft_FStar_ToSMT_Term.mkEq (app, gmax)))), Some ("Correspondence of recursive function to instrumented version")))
 in (let eqn_g' = Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mkForall ((gsapp)::[], (fuel)::vars, (Microsoft_FStar_ToSMT_Term.mkEq (gsapp, (Microsoft_FStar_ToSMT_Term.mkApp (g, ((Microsoft_FStar_ToSMT_Term.mkFreeV fuel))::vars_tm)))))), Some ("Fuel irrelevance")))
-in (let _45_2688 = (let _45_2675 = (encode_binders None formals env0)
-in (match (_45_2675) with
+in (let _45_2701 = (let _45_2688 = (encode_binders None formals env0)
+in (match (_45_2688) with
 | (vars, v_guards, env, binder_decls, _) -> begin
 (let vars_tm = (Support.List.map Microsoft_FStar_ToSMT_Term.mkFreeV vars)
 in (let gapp = (Microsoft_FStar_ToSMT_Term.mkApp (g, (fuel_tm)::vars_tm))
 in (let tok_corr = (let tok_app = (mk_ApplyE (Microsoft_FStar_ToSMT_Term.mkFreeV (gtok, Microsoft_FStar_ToSMT_Term.Term_sort)) ((fuel)::vars))
 in Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mkForall ((tok_app)::[], (fuel)::vars, (Microsoft_FStar_ToSMT_Term.mkEq (tok_app, gapp)))), Some ("Fuel token correspondence"))))
-in (let _45_2685 = (let _45_2682 = (encode_typ_pred' None tres env gapp)
-in (match (_45_2682) with
+in (let _45_2698 = (let _45_2695 = (encode_typ_pred' None tres env gapp)
+in (match (_45_2695) with
 | (g_typing, d3) -> begin
 (d3, (Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mkForall ((gapp)::[], (fuel)::vars, (Microsoft_FStar_ToSMT_Term.mkImp ((Microsoft_FStar_ToSMT_Term.mk_and_l v_guards), g_typing)))), None)))::[])
 end))
-in (match (_45_2685) with
+in (match (_45_2698) with
 | (aux_decls, typing_corr) -> begin
 ((Support.List.append binder_decls aux_decls), (Support.List.append typing_corr ((tok_corr)::[])))
 end)))))
 end))
-in (match (_45_2688) with
+in (match (_45_2701) with
 | (aux_decls, g_typing) -> begin
 ((Support.List.append (Support.List.append (Support.List.append binder_decls decls2) aux_decls) ((decl_g)::(decl_g_tok)::[])), (Support.List.append ((eqn_g)::(eqn_g')::(eqn_f)::[]) g_typing), env0)
 end)))))
@@ -2249,24 +2267,24 @@ end)))))))))
 end))
 end))
 end))
-in (let _45_2704 = (Support.List.fold_left (fun _45_2692 _45_2696 -> (match ((_45_2692, _45_2696)) with
+in (let _45_2717 = (Support.List.fold_left (fun _45_2705 _45_2709 -> (match ((_45_2705, _45_2709)) with
 | ((decls, eqns, env0), (gtok, ty, bs)) -> begin
-(let _45_2700 = (encode_one_binding env0 gtok ty bs)
-in (match (_45_2700) with
+(let _45_2713 = (encode_one_binding env0 gtok ty bs)
+in (match (_45_2713) with
 | (decls', eqns', env0) -> begin
 ((decls')::decls, (Support.List.append eqns' eqns), env0)
 end))
 end)) ((decls)::[], [], env0) (Support.List.zip3 gtoks typs bindings))
-in (match (_45_2704) with
+in (match (_45_2717) with
 | (decls, eqns, env0) -> begin
-(let _45_2713 = ((Support.List.partition (fun _45_28 -> (match (_45_28) with
+(let _45_2726 = ((Support.List.partition (fun _45_28 -> (match (_45_28) with
 | Microsoft_FStar_ToSMT_Term.DeclFun (_) -> begin
 true
 end
 | _ -> begin
 false
 end))) ((Support.List.flatten) decls))
-in (match (_45_2713) with
+in (match (_45_2726) with
 | (prefix_decls, rest) -> begin
 (let eqns = (Support.List.rev eqns)
 in ((Support.List.append (Support.List.append prefix_decls rest) eqns), env0))
@@ -2278,9 +2296,9 @@ end)))
 end))
 end
 end
-end)) (fun _45_2514 -> (match (_45_2514) with
+end)) (fun _45_2527 -> (match (_45_2527) with
 | Let_rec_unencodeable -> begin
-(let msg = ((Support.String.concat " and ") ((Support.List.map (fun _45_2523 -> (match (_45_2523) with
+(let msg = ((Support.String.concat " and ") ((Support.List.map (fun _45_2536 -> (match (_45_2536) with
 | (lb, _, _) -> begin
 (Microsoft_FStar_Absyn_Print.lbname_to_string lb)
 end))) bindings))
@@ -2293,11 +2311,11 @@ end
 end)))
 and declare_top_level_let = (fun env x t t_norm -> (match ((try_lookup_lid env x)) with
 | None -> begin
-(let _45_2740 = (encode_free_var env x t t_norm [])
-in (match (_45_2740) with
+(let _45_2753 = (encode_free_var env x t t_norm [])
+in (match (_45_2753) with
 | (decls, env) -> begin
-(let _45_2745 = (lookup_lid env x)
-in (match (_45_2745) with
+(let _45_2758 = (lookup_lid env x)
+in (match (_45_2758) with
 | (n, x', _) -> begin
 ((n, x'), decls, env)
 end))
@@ -2306,14 +2324,14 @@ end
 | Some ((n, x, _)) -> begin
 ((n, x), [], env)
 end))
-and encode_smt_lemma = (fun env lid t -> (let _45_2757 = (encode_function_type_as_formula None t env)
-in (match (_45_2757) with
+and encode_smt_lemma = (fun env lid t -> (let _45_2770 = (encode_function_type_as_formula None t env)
+in (match (_45_2770) with
 | (form, decls) -> begin
 (Support.List.append decls ((Microsoft_FStar_ToSMT_Term.Assume ((form, Some ((Support.String.strcat "Lemma: " lid.Microsoft_FStar_Absyn_Syntax.str)))))::[]))
 end)))
 and encode_free_var = (fun env lid tt t_norm quals -> if ((not ((Microsoft_FStar_Absyn_Util.is_pure_or_ghost_function t_norm))) || (Microsoft_FStar_Absyn_Util.is_lemma t_norm)) then begin
-(let _45_2766 = (new_term_constant_and_tok_from_lid env lid)
-in (match (_45_2766) with
+(let _45_2779 = (new_term_constant_and_tok_from_lid env lid)
+in (match (_45_2779) with
 | (vname, vtok, env) -> begin
 (let arg_sorts = (match (t_norm.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Typ_fun ((binders, _)) -> begin
@@ -2339,31 +2357,42 @@ in (let definition = (prims.mk lid vname)
 in (let env = (push_free_var env lid vname None)
 in (definition, env))))
 end else begin
-(let _45_2796 = (match ((Microsoft_FStar_Absyn_Util.function_formals t_norm)) with
+(let encode_non_total_function_typ = (lid.Microsoft_FStar_Absyn_Syntax.nsstr <> "Prims")
+in (let _45_2812 = (match ((Microsoft_FStar_Absyn_Util.function_formals t_norm)) with
 | Some ((args, comp)) -> begin
-(args, (Microsoft_FStar_Absyn_Util.comp_result comp))
+if encode_non_total_function_typ then begin
+(args, (Microsoft_FStar_Tc_Util.pure_or_ghost_pre_and_post env.tcenv comp))
+end else begin
+(args, (None, (Microsoft_FStar_Absyn_Util.comp_result comp)))
+end
 end
 | None -> begin
-([], t_norm)
+([], (None, t_norm))
 end)
-in (match (_45_2796) with
-| (formals, res) -> begin
-(let _45_2800 = (new_term_constant_and_tok_from_lid env lid)
-in (match (_45_2800) with
+in (match (_45_2812) with
+| (formals, (pre_opt, res_t)) -> begin
+(let _45_2816 = (new_term_constant_and_tok_from_lid env lid)
+in (match (_45_2816) with
 | (vname, vtok, env) -> begin
-(let vtok_tm = (Microsoft_FStar_ToSMT_Term.mkApp (vtok, []))
+(let vtok_tm = (match (formals) with
+| [] -> begin
+(Microsoft_FStar_ToSMT_Term.mkFreeV (vname, Microsoft_FStar_ToSMT_Term.Term_sort))
+end
+| _ -> begin
+(Microsoft_FStar_ToSMT_Term.mkApp (vtok, []))
+end)
 in (let mk_disc_proj_axioms = (fun vapp vars -> ((Support.List.collect (fun _45_30 -> (match (_45_30) with
 | Microsoft_FStar_Absyn_Syntax.Discriminator (d) -> begin
-(let _45_2814 = (Support.Microsoft.FStar.Util.prefix vars)
-in (match (_45_2814) with
+(let _45_2833 = (Support.Microsoft.FStar.Util.prefix vars)
+in (match (_45_2833) with
 | (_, (xxsym, _)) -> begin
 (let xx = (Microsoft_FStar_ToSMT_Term.mkFreeV (xxsym, Microsoft_FStar_ToSMT_Term.Term_sort))
 in (Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mkForall ((vapp)::[], vars, (Microsoft_FStar_ToSMT_Term.mkEq (vapp, (Microsoft_FStar_ToSMT_Term.boxBool (Microsoft_FStar_ToSMT_Term.mk_tester (escape d.Microsoft_FStar_Absyn_Syntax.str) xx)))))), None)))::[])
 end))
 end
 | Microsoft_FStar_Absyn_Syntax.Projector ((d, Support.Microsoft.FStar.Util.Inr (f))) -> begin
-(let _45_2827 = (Support.Microsoft.FStar.Util.prefix vars)
-in (match (_45_2827) with
+(let _45_2846 = (Support.Microsoft.FStar.Util.prefix vars)
+in (match (_45_2846) with
 | (_, (xxsym, _)) -> begin
 (let xx = (Microsoft_FStar_ToSMT_Term.mkFreeV (xxsym, Microsoft_FStar_ToSMT_Term.Term_sort))
 in (Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mkForall ((vapp)::[], vars, (Microsoft_FStar_ToSMT_Term.mkEq (vapp, (Microsoft_FStar_ToSMT_Term.mkApp ((mk_term_projector_name d f), (xx)::[])))))), None)))::[])
@@ -2372,97 +2401,91 @@ end
 | _ -> begin
 []
 end))) quals))
-in (let _45_2837 = (encode_binders None formals env)
-in (match (_45_2837) with
+in (let _45_2856 = (encode_binders None formals env)
+in (match (_45_2856) with
 | (vars, guards, env', decls1, _) -> begin
-(let guard = (Microsoft_FStar_ToSMT_Term.mk_and_l guards)
-in (let vtok_app = (mk_ApplyE vtok_tm vars)
+(let _45_2865 = (match (pre_opt) with
+| None -> begin
+((Microsoft_FStar_ToSMT_Term.mk_and_l guards), decls1)
+end
+| Some (p) -> begin
+(let _45_2862 = (encode_formula p env')
+in (match (_45_2862) with
+| (g, ds) -> begin
+((Microsoft_FStar_ToSMT_Term.mk_and_l ((g)::guards)), (Support.List.append decls1 ds))
+end))
+end)
+in (match (_45_2865) with
+| (guard, decls1) -> begin
+(let vtok_app = (mk_ApplyE vtok_tm vars)
 in (let vapp = (Microsoft_FStar_ToSMT_Term.mkApp (vname, (Support.List.map Microsoft_FStar_ToSMT_Term.mkFreeV vars)))
-in (let _45_2870 = (let vname_decl = Microsoft_FStar_ToSMT_Term.DeclFun ((vname, ((Support.List.map (fun _45_31 -> (match (_45_31) with
+in (let _45_2896 = (let vname_decl = Microsoft_FStar_ToSMT_Term.DeclFun ((vname, ((Support.List.map (fun _45_31 -> (match (_45_31) with
 | (Support.Microsoft.FStar.Util.Inl (_), _) -> begin
 Microsoft_FStar_ToSMT_Term.Type_sort
 end
 | _ -> begin
 Microsoft_FStar_ToSMT_Term.Term_sort
 end))) formals), Microsoft_FStar_ToSMT_Term.Term_sort, None))
-in (let _45_2867 = (match (formals) with
-| [] -> begin
-(let _45_2854 = if (not ((head_normal env tt))) then begin
-(encode_typ_pred' None tt env (Microsoft_FStar_ToSMT_Term.mkFreeV (vname, Microsoft_FStar_ToSMT_Term.Term_sort)))
+in (let _45_2883 = (let env = (let _45_2878 = env
+in {bindings = _45_2878.bindings; depth = _45_2878.depth; tcenv = _45_2878.tcenv; warn = _45_2878.warn; cache = _45_2878.cache; nolabels = _45_2878.nolabels; use_zfuel_name = _45_2878.use_zfuel_name; encode_non_total_function_typ = encode_non_total_function_typ})
+in if (not ((head_normal env tt))) then begin
+(encode_typ_pred' None tt env vtok_tm)
 end else begin
-(encode_typ_pred' None t_norm env (Microsoft_FStar_ToSMT_Term.mkFreeV (vname, Microsoft_FStar_ToSMT_Term.Term_sort)))
-end
-in (match (_45_2854) with
-| (t, decls2) -> begin
-(let tok_typing = Microsoft_FStar_ToSMT_Term.Assume ((t, Some ("function token typing")))
-in ((Support.List.append decls2 ((tok_typing)::[])), (push_free_var env lid vname ((fun __dataconst_1 -> Some (__dataconst_1)) (Microsoft_FStar_ToSMT_Term.mkFreeV (vname, Microsoft_FStar_ToSMT_Term.Term_sort))))))
-end))
+(encode_typ_pred' None t_norm env vtok_tm)
+end)
+in (match (_45_2883) with
+| (tok_typing, decls2) -> begin
+(let tok_typing = Microsoft_FStar_ToSMT_Term.Assume ((tok_typing, Some ("function token typing")))
+in (let _45_2893 = (match (formals) with
+| [] -> begin
+((Support.List.append decls2 ((tok_typing)::[])), (push_free_var env lid vname ((fun __dataconst_1 -> Some (__dataconst_1)) (Microsoft_FStar_ToSMT_Term.mkFreeV (vname, Microsoft_FStar_ToSMT_Term.Term_sort)))))
 end
 | _ -> begin
 (let vtok_decl = Microsoft_FStar_ToSMT_Term.DeclFun ((vtok, [], Microsoft_FStar_ToSMT_Term.Term_sort, None))
 in (let vtok_fresh = (Microsoft_FStar_ToSMT_Term.fresh_token (vtok, Microsoft_FStar_ToSMT_Term.Term_sort) (varops.next_id ()))
 in (let name_tok_corr = Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mkForall ((vtok_app)::[], vars, (Microsoft_FStar_ToSMT_Term.mkEq (vtok_app, vapp)))), None))
-in (let _45_2863 = if (not ((head_normal env tt))) then begin
-(encode_typ_pred' None tt env vtok_tm)
-end else begin
-(encode_typ_pred' None t_norm env vtok_tm)
-end
-in (match (_45_2863) with
-| (tok_typing, decls2) -> begin
-(let tok_typing = Microsoft_FStar_ToSMT_Term.Assume ((tok_typing, Some ("function token typing")))
-in ((Support.List.append decls2 ((vtok_decl)::(vtok_fresh)::(name_tok_corr)::(tok_typing)::[])), env))
-end)))))
+in ((Support.List.append decls2 ((vtok_decl)::(vtok_fresh)::(name_tok_corr)::(tok_typing)::[])), env))))
 end)
-in (match (_45_2867) with
+in (match (_45_2893) with
 | (tok_decl, env) -> begin
 ((vname_decl)::tok_decl, env)
 end)))
-in (match (_45_2870) with
+end)))
+in (match (_45_2896) with
 | (decls2, env) -> begin
-(let _45_2873 = (encode_typ_pred' None res env' vapp)
-in (match (_45_2873) with
+(let _45_2899 = (encode_typ_pred' None res_t env' vapp)
+in (match (_45_2899) with
 | (ty_pred, decls3) -> begin
-(let _45_2879 = if (not ((head_normal env tt))) then begin
-(let _45_2876 = (encode_typ_pred' None tt env vtok_tm)
-in (match (_45_2876) with
-| (tok_typing, decls4) -> begin
-((Microsoft_FStar_ToSMT_Term.Assume ((tok_typing, None)))::[], decls4)
-end))
-end else begin
-([], [])
-end
-in (match (_45_2879) with
-| (tt_typing, decls4) -> begin
 (let typingAx = Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mkForall ((vapp)::[], vars, (Microsoft_FStar_ToSMT_Term.mkImp (guard, ty_pred)))), Some ("free var typing")))
-in (let g = (Support.List.append (Support.List.append (Support.List.append (Support.List.append (Support.List.append decls1 decls2) decls3) decls4) ((typingAx)::tt_typing)) (mk_disc_proj_axioms vapp vars))
+in (let g = (Support.List.append (Support.List.append (Support.List.append decls1 decls2) decls3) ((typingAx)::(mk_disc_proj_axioms vapp vars)))
 in (g, env)))
 end))
-end))
-end)))))
 end))))
 end))
+end))))
 end))
+end)))
 end
 end)
-and encode_signature = (fun env ses -> ((Support.List.fold_left (fun _45_2886 se -> (match (_45_2886) with
+and encode_signature = (fun env ses -> ((Support.List.fold_left (fun _45_2906 se -> (match (_45_2906) with
 | (g, env) -> begin
-(let _45_2890 = (encode_sigelt env se)
-in (match (_45_2890) with
+(let _45_2910 = (encode_sigelt env se)
+in (match (_45_2910) with
 | (g', env) -> begin
 ((Support.List.append g g'), env)
 end))
 end)) ([], env)) ses))
 
-let encode_env_bindings = (fun env bindings -> (let encode_binding = (fun b _45_2897 -> (match (_45_2897) with
+let encode_env_bindings = (fun env bindings -> (let encode_binding = (fun b _45_2917 -> (match (_45_2917) with
 | (decls, env) -> begin
 (match (b) with
 | Microsoft_FStar_Tc_Env.Binding_var ((x, t0)) -> begin
-(let _45_2905 = (new_term_constant env x)
-in (match (_45_2905) with
+(let _45_2925 = (new_term_constant env x)
+in (match (_45_2925) with
 | (xxsym, xx, env') -> begin
 (let t1 = (Microsoft_FStar_Tc_Normalize.norm_typ ((Microsoft_FStar_Tc_Normalize.DeltaHard)::(Microsoft_FStar_Tc_Normalize.Beta)::(Microsoft_FStar_Tc_Normalize.Eta)::(Microsoft_FStar_Tc_Normalize.Simplify)::[]) env.tcenv t0)
-in (let _45_2909 = (encode_typ_pred' None t1 env xx)
-in (match (_45_2909) with
+in (let _45_2929 = (encode_typ_pred' None t1 env xx)
+in (match (_45_2929) with
 | (t, decls') -> begin
 (let caption = if (! (Microsoft_FStar_Options.logQueries)) then begin
 Some ((Support.Microsoft.FStar.Util.format3 "%s : %s (%s)" (Microsoft_FStar_Absyn_Print.strBvd x) (Microsoft_FStar_Absyn_Print.typ_to_string t0) (Microsoft_FStar_Absyn_Print.typ_to_string t1)))
@@ -2475,11 +2498,11 @@ end)))
 end))
 end
 | Microsoft_FStar_Tc_Env.Binding_typ ((a, k)) -> begin
-(let _45_2919 = (new_typ_constant env a)
-in (match (_45_2919) with
+(let _45_2939 = (new_typ_constant env a)
+in (match (_45_2939) with
 | (aasym, aa, env') -> begin
-(let _45_2922 = (encode_knd k env aa)
-in (match (_45_2922) with
+(let _45_2942 = (encode_knd k env aa)
+in (match (_45_2942) with
 | (k, decls') -> begin
 (let g = (Support.List.append (Support.List.append ((Microsoft_FStar_ToSMT_Term.DeclFun ((aasym, [], Microsoft_FStar_ToSMT_Term.Type_sort, Some ((Microsoft_FStar_Absyn_Print.strBvd a)))))::[]) decls') ((Microsoft_FStar_ToSMT_Term.Assume ((k, None)))::[]))
 in ((Support.List.append decls g), env'))
@@ -2488,15 +2511,15 @@ end))
 end
 | Microsoft_FStar_Tc_Env.Binding_lid ((x, t)) -> begin
 (let t_norm = (whnf env t)
-in (let _45_2931 = (encode_free_var env x t t_norm [])
-in (match (_45_2931) with
+in (let _45_2951 = (encode_free_var env x t t_norm [])
+in (match (_45_2951) with
 | (g, env') -> begin
 ((Support.List.append decls g), env')
 end)))
 end
 | Microsoft_FStar_Tc_Env.Binding_sig (se) -> begin
-(let _45_2936 = (encode_sigelt env se)
-in (match (_45_2936) with
+(let _45_2956 = (encode_sigelt env se)
+in (match (_45_2956) with
 | (g, env') -> begin
 ((Support.List.append decls g), env')
 end))
@@ -2504,11 +2527,11 @@ end)
 end))
 in (Support.List.fold_right encode_binding bindings ([], env))))
 
-let encode_labels = (fun labs -> (let prefix = ((Support.List.map (fun _45_2943 -> (match (_45_2943) with
+let encode_labels = (fun labs -> (let prefix = ((Support.List.map (fun _45_2963 -> (match (_45_2963) with
 | (l, _, _) -> begin
 Microsoft_FStar_ToSMT_Term.DeclFun (((Support.Prims.fst l), [], Microsoft_FStar_ToSMT_Term.Bool_sort, None))
 end))) labs)
-in (let suffix = ((Support.List.collect (fun _45_2950 -> (match (_45_2950) with
+in (let suffix = ((Support.List.collect (fun _45_2970 -> (match (_45_2970) with
 | (l, _, _) -> begin
 (Microsoft_FStar_ToSMT_Term.Echo ((Support.Prims.fst l)))::(Microsoft_FStar_ToSMT_Term.Eval ((Microsoft_FStar_ToSMT_Term.mkFreeV l)))::[]
 end))) labs)
@@ -2516,15 +2539,15 @@ in (prefix, suffix))))
 
 let last_env = (Support.Microsoft.FStar.Util.mk_ref [])
 
-let init_env = (fun tcenv -> (Support.ST.op_Colon_Equals last_env (({bindings = []; depth = 0; tcenv = tcenv; warn = true; cache = (Support.Microsoft.FStar.Util.smap_create 100); nolabels = false; use_zfuel_name = false})::[])))
+let init_env = (fun tcenv -> (Support.ST.op_Colon_Equals last_env (({bindings = []; depth = 0; tcenv = tcenv; warn = true; cache = (Support.Microsoft.FStar.Util.smap_create 100); nolabels = false; use_zfuel_name = false; encode_non_total_function_typ = true})::[])))
 
 let get_env = (fun tcenv -> (match ((! (last_env))) with
 | [] -> begin
 (failwith "No env; call init first!")
 end
 | e::_ -> begin
-(let _45_2959 = e
-in {bindings = _45_2959.bindings; depth = _45_2959.depth; tcenv = tcenv; warn = _45_2959.warn; cache = _45_2959.cache; nolabels = _45_2959.nolabels; use_zfuel_name = _45_2959.use_zfuel_name})
+(let _45_2979 = e
+in {bindings = _45_2979.bindings; depth = _45_2979.depth; tcenv = tcenv; warn = _45_2979.warn; cache = _45_2979.cache; nolabels = _45_2979.nolabels; use_zfuel_name = _45_2979.use_zfuel_name; encode_non_total_function_typ = _45_2979.encode_non_total_function_typ})
 end))
 
 let set_env = (fun env -> (match ((! (last_env))) with
@@ -2535,46 +2558,46 @@ end
 (Support.ST.op_Colon_Equals last_env ((env)::tl))
 end))
 
-let push_env = (fun _45_2967 -> (match (_45_2967) with
+let push_env = (fun _45_2987 -> (match (_45_2987) with
 | () -> begin
 (match ((! (last_env))) with
 | [] -> begin
 (failwith "Empty env stack")
 end
 | hd::tl -> begin
-(let _45_2972 = (Microsoft_FStar_ToSMT_Term.push ())
+(let _45_2992 = (Microsoft_FStar_ToSMT_Term.push ())
 in (let refs = (Support.Microsoft.FStar.Util.smap_copy hd.cache)
-in (let top = (let _45_2975 = hd
-in {bindings = _45_2975.bindings; depth = _45_2975.depth; tcenv = _45_2975.tcenv; warn = _45_2975.warn; cache = refs; nolabels = _45_2975.nolabels; use_zfuel_name = _45_2975.use_zfuel_name})
+in (let top = (let _45_2995 = hd
+in {bindings = _45_2995.bindings; depth = _45_2995.depth; tcenv = _45_2995.tcenv; warn = _45_2995.warn; cache = refs; nolabels = _45_2995.nolabels; use_zfuel_name = _45_2995.use_zfuel_name; encode_non_total_function_typ = _45_2995.encode_non_total_function_typ})
 in (Support.ST.op_Colon_Equals last_env ((top)::(hd)::tl)))))
 end)
 end))
 
-let pop_env = (fun _45_2978 -> (match (_45_2978) with
+let pop_env = (fun _45_2998 -> (match (_45_2998) with
 | () -> begin
 (match ((! (last_env))) with
 | [] -> begin
 (failwith "Popping an empty stack")
 end
 | _::tl -> begin
-(let _45_2984 = (Microsoft_FStar_ToSMT_Term.pop ())
+(let _45_3004 = (Microsoft_FStar_ToSMT_Term.pop ())
 in (Support.ST.op_Colon_Equals last_env tl))
 end)
 end))
 
-let mark_env = (fun _45_2986 -> (match (_45_2986) with
+let mark_env = (fun _45_3006 -> (match (_45_3006) with
 | () -> begin
 (push_env ())
 end))
 
-let reset_mark_env = (fun _45_2987 -> (match (_45_2987) with
+let reset_mark_env = (fun _45_3007 -> (match (_45_3007) with
 | () -> begin
 (pop_env ())
 end))
 
-let commit_mark_env = (fun _45_2988 -> (match (_45_2988) with
+let commit_mark_env = (fun _45_3008 -> (match (_45_3008) with
 | () -> begin
-(let _45_2989 = (Microsoft_FStar_ToSMT_Term.commit_mark ())
+(let _45_3009 = (Microsoft_FStar_ToSMT_Term.commit_mark ())
 in (match ((! (last_env))) with
 | hd::_::tl -> begin
 (Support.ST.op_Colon_Equals last_env ((hd)::tl))
@@ -2584,28 +2607,28 @@ end
 end))
 end))
 
-let init = (fun tcenv -> (let _45_3000 = (init_env tcenv)
-in (let _45_3002 = (Microsoft_FStar_ToSMT_Z3.init ())
+let init = (fun tcenv -> (let _45_3020 = (init_env tcenv)
+in (let _45_3022 = (Microsoft_FStar_ToSMT_Z3.init ())
 in (Microsoft_FStar_ToSMT_Z3.giveZ3 ((Microsoft_FStar_ToSMT_Term.DefPrelude)::[])))))
 
-let push = (fun msg -> (let _45_3005 = (push_env ())
-in (let _45_3007 = (varops.push ())
+let push = (fun msg -> (let _45_3025 = (push_env ())
+in (let _45_3027 = (varops.push ())
 in (Microsoft_FStar_ToSMT_Z3.push msg))))
 
-let pop = (fun msg -> (let _45_3010 = ((Support.Prims.ignore) (pop_env ()))
-in (let _45_3012 = (varops.pop ())
+let pop = (fun msg -> (let _45_3030 = ((Support.Prims.ignore) (pop_env ()))
+in (let _45_3032 = (varops.pop ())
 in (Microsoft_FStar_ToSMT_Z3.pop msg))))
 
-let mark = (fun msg -> (let _45_3015 = (mark_env ())
-in (let _45_3017 = (varops.mark ())
+let mark = (fun msg -> (let _45_3035 = (mark_env ())
+in (let _45_3037 = (varops.mark ())
 in (Microsoft_FStar_ToSMT_Z3.mark msg))))
 
-let reset_mark = (fun msg -> (let _45_3020 = (reset_mark_env ())
-in (let _45_3022 = (varops.reset_mark ())
+let reset_mark = (fun msg -> (let _45_3040 = (reset_mark_env ())
+in (let _45_3042 = (varops.reset_mark ())
 in (Microsoft_FStar_ToSMT_Z3.reset_mark msg))))
 
-let commit_mark = (fun msg -> (let _45_3025 = (commit_mark_env ())
-in (let _45_3027 = (varops.commit_mark ())
+let commit_mark = (fun msg -> (let _45_3045 = (commit_mark_env ())
+in (let _45_3047 = (varops.commit_mark ())
 in (Microsoft_FStar_ToSMT_Z3.commit_mark msg))))
 
 let encode_sig = (fun tcenv se -> (let caption = (fun decls -> if (! (Microsoft_FStar_Options.logQueries)) then begin
@@ -2614,10 +2637,10 @@ end else begin
 decls
 end)
 in (let env = (get_env tcenv)
-in (let _45_3036 = (encode_sigelt env se)
-in (match (_45_3036) with
+in (let _45_3056 = (encode_sigelt env se)
+in (match (_45_3056) with
 | (decls, env) -> begin
-(let _45_3037 = (set_env env)
+(let _45_3057 = (set_env env)
 in (Microsoft_FStar_ToSMT_Z3.giveZ3 (caption decls)))
 end)))))
 
@@ -2626,13 +2649,13 @@ let encode_modul = (fun tcenv modul -> (let name = (Support.Microsoft.FStar.Util
 end else begin
 "module"
 end) modul.Microsoft_FStar_Absyn_Syntax.name.Microsoft_FStar_Absyn_Syntax.str)
-in (let _45_3042 = if (Microsoft_FStar_Tc_Env.debug tcenv Microsoft_FStar_Options.Low) then begin
+in (let _45_3062 = if (Microsoft_FStar_Tc_Env.debug tcenv Microsoft_FStar_Options.Low) then begin
 (Support.Microsoft.FStar.Util.fprint2 "Encoding externals for %s ... %s exports\n" name (Support.Microsoft.FStar.Util.string_of_int (Support.List.length modul.Microsoft_FStar_Absyn_Syntax.exports)))
 end
 in (let env = (get_env tcenv)
-in (let _45_3049 = (encode_signature (let _45_3045 = env
-in {bindings = _45_3045.bindings; depth = _45_3045.depth; tcenv = _45_3045.tcenv; warn = false; cache = _45_3045.cache; nolabels = _45_3045.nolabels; use_zfuel_name = _45_3045.use_zfuel_name}) modul.Microsoft_FStar_Absyn_Syntax.exports)
-in (match (_45_3049) with
+in (let _45_3069 = (encode_signature (let _45_3065 = env
+in {bindings = _45_3065.bindings; depth = _45_3065.depth; tcenv = _45_3065.tcenv; warn = false; cache = _45_3065.cache; nolabels = _45_3065.nolabels; use_zfuel_name = _45_3065.use_zfuel_name; encode_non_total_function_typ = _45_3065.encode_non_total_function_typ}) modul.Microsoft_FStar_Absyn_Syntax.exports)
+in (match (_45_3069) with
 | (decls, env) -> begin
 (let caption = (fun decls -> if (! (Microsoft_FStar_Options.logQueries)) then begin
 (let msg = (Support.String.strcat "Externals for " name)
@@ -2640,39 +2663,39 @@ in (Support.List.append ((Microsoft_FStar_ToSMT_Term.Caption (msg))::decls) ((Mi
 end else begin
 decls
 end)
-in (let _45_3055 = (set_env (let _45_3053 = env
-in {bindings = _45_3053.bindings; depth = _45_3053.depth; tcenv = _45_3053.tcenv; warn = true; cache = _45_3053.cache; nolabels = _45_3053.nolabels; use_zfuel_name = _45_3053.use_zfuel_name}))
-in (let _45_3057 = if (Microsoft_FStar_Tc_Env.debug tcenv Microsoft_FStar_Options.Low) then begin
+in (let _45_3075 = (set_env (let _45_3073 = env
+in {bindings = _45_3073.bindings; depth = _45_3073.depth; tcenv = _45_3073.tcenv; warn = true; cache = _45_3073.cache; nolabels = _45_3073.nolabels; use_zfuel_name = _45_3073.use_zfuel_name; encode_non_total_function_typ = _45_3073.encode_non_total_function_typ}))
+in (let _45_3077 = if (Microsoft_FStar_Tc_Env.debug tcenv Microsoft_FStar_Options.Low) then begin
 (Support.Microsoft.FStar.Util.fprint1 "Done encoding externals for %s\n" name)
 end
 in (let decls = (caption decls)
 in (Microsoft_FStar_ToSMT_Z3.giveZ3 decls)))))
 end))))))
 
-let solve = (fun tcenv q -> (let _45_3062 = (push (Support.Microsoft.FStar.Util.format1 "Starting query at %s" (Support.Microsoft.FStar.Range.string_of_range (Microsoft_FStar_Tc_Env.get_range tcenv))))
-in (let pop = (fun _45_3065 -> (match (_45_3065) with
+let solve = (fun tcenv q -> (let _45_3082 = (push (Support.Microsoft.FStar.Util.format1 "Starting query at %s" (Support.Microsoft.FStar.Range.string_of_range (Microsoft_FStar_Tc_Env.get_range tcenv))))
+in (let pop = (fun _45_3085 -> (match (_45_3085) with
 | () -> begin
 (pop (Support.Microsoft.FStar.Util.format1 "Ending query at %s" (Support.Microsoft.FStar.Range.string_of_range (Microsoft_FStar_Tc_Env.get_range tcenv))))
 end))
-in (let _45_3095 = (let env = (get_env tcenv)
+in (let _45_3115 = (let env = (get_env tcenv)
 in (let bindings = (Microsoft_FStar_Tc_Env.fold_env tcenv (fun bs b -> (b)::bs) [])
-in (let _45_3078 = (encode_env_bindings env (Support.List.filter (fun _45_32 -> (match (_45_32) with
+in (let _45_3098 = (encode_env_bindings env (Support.List.filter (fun _45_32 -> (match (_45_32) with
 | Microsoft_FStar_Tc_Env.Binding_sig (_) -> begin
 false
 end
 | _ -> begin
 true
 end)) bindings))
-in (match (_45_3078) with
+in (match (_45_3098) with
 | (env_decls, env) -> begin
-(let _45_3079 = if (Microsoft_FStar_Tc_Env.debug tcenv Microsoft_FStar_Options.Low) then begin
+(let _45_3099 = if (Microsoft_FStar_Tc_Env.debug tcenv Microsoft_FStar_Options.Low) then begin
 (Support.Microsoft.FStar.Util.fprint1 "Encoding query formula: %s\n" (Microsoft_FStar_Absyn_Print.formula_to_string q))
 end
-in (let _45_3084 = (encode_formula_with_labels q env)
-in (match (_45_3084) with
+in (let _45_3104 = (encode_formula_with_labels q env)
+in (match (_45_3104) with
 | (phi, labels, qdecls) -> begin
-(let _45_3087 = (encode_labels labels)
-in (match (_45_3087) with
+(let _45_3107 = (encode_labels labels)
+in (match (_45_3107) with
 | (label_prefix, label_suffix) -> begin
 (let query_prelude = (Support.List.append (Support.List.append env_decls label_prefix) qdecls)
 in (let qry = Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mkNot phi), Some ("query")))
@@ -2681,21 +2704,21 @@ in (query_prelude, labels, qry, suffix))))
 end))
 end)))
 end))))
-in (match (_45_3095) with
+in (match (_45_3115) with
 | (prefix, labels, qry, suffix) -> begin
 (match (qry) with
 | Microsoft_FStar_ToSMT_Term.Assume (({Microsoft_FStar_ToSMT_Term.tm = Microsoft_FStar_ToSMT_Term.App ((Microsoft_FStar_ToSMT_Term.False, _)); Microsoft_FStar_ToSMT_Term.hash = _; Microsoft_FStar_ToSMT_Term.freevars = _}, _)) -> begin
-(let _45_3110 = (pop ())
+(let _45_3130 = (pop ())
 in ())
 end
 | _ when tcenv.Microsoft_FStar_Tc_Env.admit -> begin
-(let _45_3114 = (pop ())
+(let _45_3134 = (pop ())
 in ())
 end
 | Microsoft_FStar_ToSMT_Term.Assume ((q, _)) -> begin
 (let fresh = ((Support.String.length q.Microsoft_FStar_ToSMT_Term.hash) >= 2048)
-in (let _45_3122 = (Microsoft_FStar_ToSMT_Z3.giveZ3 prefix)
-in (let with_fuel = (fun p _45_3128 -> (match (_45_3128) with
+in (let _45_3142 = (Microsoft_FStar_ToSMT_Z3.giveZ3 prefix)
+in (let with_fuel = (fun p _45_3148 -> (match (_45_3148) with
 | (n, i) -> begin
 (Support.List.append ((Microsoft_FStar_ToSMT_Term.Caption ((Support.Microsoft.FStar.Util.format1 "<fuel=\'%s\'>" (Support.Microsoft.FStar.Util.string_of_int n))))::(Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mkEq ((Microsoft_FStar_ToSMT_Term.mkApp ("MaxFuel", [])), (Microsoft_FStar_ToSMT_Term.n_fuel n))), None)))::(Microsoft_FStar_ToSMT_Term.Assume (((Microsoft_FStar_ToSMT_Term.mkEq ((Microsoft_FStar_ToSMT_Term.mkApp ("MaxIFuel", [])), (Microsoft_FStar_ToSMT_Term.n_fuel i))), None)))::(p)::(Microsoft_FStar_ToSMT_Term.CheckSat)::[]) suffix)
 end))
@@ -2717,7 +2740,7 @@ end)::(if ((! (Microsoft_FStar_Options.min_fuel)) < (! (Microsoft_FStar_Options.
 end else begin
 []
 end)::[]))
-in (let report = (fun _45_3136 -> (match (_45_3136) with
+in (let report = (fun _45_3156 -> (match (_45_3156) with
 | (ok, errs) -> begin
 if ok then begin
 ()
@@ -2746,7 +2769,7 @@ end
 end)
 end
 | mi::tl -> begin
-(Microsoft_FStar_ToSMT_Z3.ask fresh labels (with_fuel p mi) (fun _45_3157 -> (match (_45_3157) with
+(Microsoft_FStar_ToSMT_Z3.ask fresh labels (with_fuel p mi) (fun _45_3177 -> (match (_45_3177) with
 | (ok, errs') -> begin
 (match (errs) with
 | [] -> begin
@@ -2757,7 +2780,7 @@ end
 end)
 end)))
 end))
-and cb = (fun p alt _45_3165 -> (match (_45_3165) with
+and cb = (fun p alt _45_3185 -> (match (_45_3185) with
 | (ok, errs) -> begin
 if ok then begin
 ()
@@ -2767,8 +2790,8 @@ end
 end))
 in (Microsoft_FStar_ToSMT_Z3.ask fresh labels (with_fuel p initial_config) (cb p alt_configs)))))))
 in (let process_query = (fun q -> if ((! (Microsoft_FStar_Options.split_cases)) > 0) then begin
-(let _45_3170 = (Microsoft_FStar_ToSMT_SplitQueryCases.can_handle_query (! (Microsoft_FStar_Options.split_cases)) q)
-in (match (_45_3170) with
+(let _45_3190 = (Microsoft_FStar_ToSMT_SplitQueryCases.can_handle_query (! (Microsoft_FStar_Options.split_cases)) q)
+in (match (_45_3190) with
 | (b, cb) -> begin
 if b then begin
 (Microsoft_FStar_ToSMT_SplitQueryCases.handle_query cb check)
@@ -2779,7 +2802,7 @@ end))
 end else begin
 (check q)
 end)
-in (let _45_3171 = if (! (Microsoft_FStar_Options.admit_smt_queries)) then begin
+in (let _45_3191 = if (! (Microsoft_FStar_Options.admit_smt_queries)) then begin
 ()
 end else begin
 (process_query qry)
@@ -2789,11 +2812,11 @@ end)
 end)))))
 
 let is_trivial = (fun tcenv q -> (let env = (get_env tcenv)
-in (let _45_3176 = (push "query")
-in (let _45_3183 = (encode_formula_with_labels q env)
-in (match (_45_3183) with
+in (let _45_3196 = (push "query")
+in (let _45_3203 = (encode_formula_with_labels q env)
+in (match (_45_3203) with
 | (f, _, _) -> begin
-(let _45_3184 = (pop "query")
+(let _45_3204 = (pop "query")
 in (match (f.Microsoft_FStar_ToSMT_Term.tm) with
 | Microsoft_FStar_ToSMT_Term.App ((Microsoft_FStar_ToSMT_Term.True, _)) -> begin
 true
@@ -2805,10 +2828,10 @@ end)))))
 
 let solver = {Microsoft_FStar_Tc_Env.init = init; Microsoft_FStar_Tc_Env.push = push; Microsoft_FStar_Tc_Env.pop = pop; Microsoft_FStar_Tc_Env.mark = mark; Microsoft_FStar_Tc_Env.reset_mark = reset_mark; Microsoft_FStar_Tc_Env.commit_mark = (commit_mark); Microsoft_FStar_Tc_Env.encode_modul = encode_modul; Microsoft_FStar_Tc_Env.encode_sig = encode_sig; Microsoft_FStar_Tc_Env.solve = solve; Microsoft_FStar_Tc_Env.is_trivial = is_trivial; Microsoft_FStar_Tc_Env.finish = Microsoft_FStar_ToSMT_Z3.finish; Microsoft_FStar_Tc_Env.refresh = Microsoft_FStar_ToSMT_Z3.refresh}
 
-let dummy = {Microsoft_FStar_Tc_Env.init = (fun _45_3193 -> ()); Microsoft_FStar_Tc_Env.push = (fun _45_3195 -> ()); Microsoft_FStar_Tc_Env.pop = (fun _45_3197 -> ()); Microsoft_FStar_Tc_Env.mark = (fun _45_3199 -> ()); Microsoft_FStar_Tc_Env.reset_mark = (fun _45_3201 -> ()); Microsoft_FStar_Tc_Env.commit_mark = (fun _45_3203 -> ()); Microsoft_FStar_Tc_Env.encode_modul = (fun _45_3205 _45_3207 -> ()); Microsoft_FStar_Tc_Env.encode_sig = (fun _45_3209 _45_3211 -> ()); Microsoft_FStar_Tc_Env.solve = (fun _45_3213 _45_3215 -> ()); Microsoft_FStar_Tc_Env.is_trivial = (fun _45_3217 _45_3219 -> false); Microsoft_FStar_Tc_Env.finish = (fun _45_3221 -> (match (_45_3221) with
+let dummy = {Microsoft_FStar_Tc_Env.init = (fun _45_3213 -> ()); Microsoft_FStar_Tc_Env.push = (fun _45_3215 -> ()); Microsoft_FStar_Tc_Env.pop = (fun _45_3217 -> ()); Microsoft_FStar_Tc_Env.mark = (fun _45_3219 -> ()); Microsoft_FStar_Tc_Env.reset_mark = (fun _45_3221 -> ()); Microsoft_FStar_Tc_Env.commit_mark = (fun _45_3223 -> ()); Microsoft_FStar_Tc_Env.encode_modul = (fun _45_3225 _45_3227 -> ()); Microsoft_FStar_Tc_Env.encode_sig = (fun _45_3229 _45_3231 -> ()); Microsoft_FStar_Tc_Env.solve = (fun _45_3233 _45_3235 -> ()); Microsoft_FStar_Tc_Env.is_trivial = (fun _45_3237 _45_3239 -> false); Microsoft_FStar_Tc_Env.finish = (fun _45_3241 -> (match (_45_3241) with
 | () -> begin
 ()
-end)); Microsoft_FStar_Tc_Env.refresh = (fun _45_3222 -> (match (_45_3222) with
+end)); Microsoft_FStar_Tc_Env.refresh = (fun _45_3242 -> (match (_45_3242) with
 | () -> begin
 ()
 end))}

@@ -506,7 +506,7 @@ let is_name (lid:lident) =
   Util.is_upper c
 
 let ml_comp t r =
-  mk_Comp ({effect_name=set_lid_range Const.ml_effect_lid r;
+  mk_Comp ({effect_name=set_lid_range Const.effect_ML_lid r;
          result_typ=t;
          effect_args=[];
          flags=[MLEFFECT]})
@@ -531,17 +531,17 @@ let comp_flags c = match c.n with
 
 let comp_effect_name c = match c.n with
     | Comp c  -> c.effect_name
-    | Total _ -> Const.tot_effect_lid
+    | Total _ -> Const.effect_Tot_lid
 
 let comp_to_comp_typ (c:comp) : comp_typ =
     match c.n with
     | Comp c -> c
-    | Total t -> {effect_name=Const.tot_effect_lid; result_typ=t; effect_args=[]; flags=[TOTAL]}
+    | Total t -> {effect_name=Const.effect_Tot_lid; result_typ=t; effect_args=[]; flags=[TOTAL]}
 
 let is_total_comp c =
     comp_flags c |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
 
-let is_total_lcomp c = lid_equals c.eff_name Const.tot_effect_lid || c.cflags |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
+let is_total_lcomp c = lid_equals c.eff_name Const.effect_Tot_lid || c.cflags |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
 
 let is_partial_return c = comp_flags c |> Util.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
 
@@ -554,8 +554,8 @@ let is_tot_or_gtot_comp c =
 let is_pure_comp c = match c.n with
     | Total _ -> true
     | Comp ct -> is_tot_or_gtot_comp c
-                 || Util.starts_with ct.effect_name.str "Prims.PURE"
-                 || Util.starts_with ct.effect_name.str "Prims.Pure"
+                 || lid_equals ct.effect_name Const.effect_PURE_lid
+                 || lid_equals ct.effect_name Const.effect_Pure_lid
                  || ct.flags |> Util.for_some (function LEMMA -> true | _ -> false)
 
 let is_ghost_effect l =
@@ -567,8 +567,8 @@ let is_pure_or_ghost_comp c = is_pure_comp c || is_ghost_effect (comp_effect_nam
 
 let is_pure_lcomp lc =
     is_total_lcomp lc
-    || Util.starts_with lc.eff_name.str "Prims.Pure"
-    || Util.starts_with lc.eff_name.str "Prims.PURE"
+    || lid_equals lc.eff_name Const.effect_PURE_lid
+    || lid_equals lc.eff_name Const.effect_Pure_lid
     || lc.cflags |> Util.for_some (function LEMMA -> true | _ -> false)
 
 let is_pure_or_ghost_lcomp lc =
@@ -580,14 +580,14 @@ let is_pure_or_ghost_function t = match (compress_typ t).n with
 
 let is_lemma t =  match (compress_typ t).n with
     | Typ_fun(_, c) -> (match c.n with
-        | Comp ct -> lid_equals ct.effect_name Const.lemma_lid
+        | Comp ct -> lid_equals ct.effect_name Const.effect_Lemma_lid
         | _ -> false)
     | _ -> false
 
 
 let is_smt_lemma t = match (compress_typ t).n with
     | Typ_fun(_, c) -> (match c.n with
-        | Comp ct when (lid_equals ct.effect_name Const.lemma_lid) ->
+        | Comp ct when (lid_equals ct.effect_name Const.effect_Lemma_lid) ->
             begin match ct.effect_args with
                 | _req::_ens::(Inr pats, _)::_ ->
                   begin match (unmeta_exp pats).n with
@@ -600,7 +600,7 @@ let is_smt_lemma t = match (compress_typ t).n with
     | _ -> false
 
 let is_ml_comp c = match c.n with
-  | Comp c -> lid_equals c.effect_name Const.ml_effect_lid
+  | Comp c -> lid_equals c.effect_name Const.effect_ML_lid
               || c.flags |> Util.for_some (function MLEFFECT -> true | _ -> false)
 
   | _ -> false

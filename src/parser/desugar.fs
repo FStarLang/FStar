@@ -302,7 +302,7 @@ let close_fun env t =
   else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, kind_star x.idRange)) x.idRange Type (Some Implicit)) in
        let t = match (unlabel t).tm with
         | Product _ -> t
-        | _ -> mk_term (App(mk_term (Name Const.tot_effect_lid) t.range t.level, t, Nothing)) t.range t.level in
+        | _ -> mk_term (App(mk_term (Name Const.effect_Tot_lid) t.range t.level, t, Nothing)) t.range t.level in
        let result = mk_term (Product(binders, t)) t.range t.level in
        result
 
@@ -956,12 +956,12 @@ and desugar_comp r default_ok env t =
                 | _ -> failwith "impos") in
 
           if DesugarEnv.is_effect_name env eff.v
-          then if lid_equals eff.v Const.tot_effect_lid && List.length decreases_clause=0
+          then if lid_equals eff.v Const.effect_Tot_lid && List.length decreases_clause=0
                then mk_Total result_typ
                else let flags =
-                        if      lid_equals eff.v Const.lemma_lid      then [LEMMA]
-                        else if lid_equals eff.v Const.tot_effect_lid then [TOTAL]
-                        else if lid_equals eff.v Const.ml_effect_lid  then [MLEFFECT]
+                        if      lid_equals eff.v Const.effect_Lemma_lid      then [LEMMA]
+                        else if lid_equals eff.v Const.effect_Tot_lid then [TOTAL]
+                        else if lid_equals eff.v Const.effect_ML_lid  then [MLEFFECT]
                         else [] in
     //                        decreases_clause |> List.iter (function
     //                            | DECREASES arg -> Util.fprint1 "Added decreases clause %s\n" (Print.exp_to_string arg);
@@ -1239,7 +1239,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
     | TAnnotated(a, _)
     | TVariable a -> mk_term (Tvar a) a.idRange Type
     | NoName t -> t in
-  let tot = mk_term (Name (Const.tot_effect_lid)) rng Expr in
+  let tot = mk_term (Name (Const.effect_Tot_lid)) rng Expr in
   let with_constructor_effect t = mk_term (App(tot, t, Nothing)) t.range t.level in
   let apply_binders t binders =
     List.fold_left (fun out b -> mk_term (App(out, binder_to_term b, Nothing)) out.range out.level)

@@ -474,7 +474,7 @@ false
 end))) c.Microsoft_FStar_Absyn_Syntax.flags) && (not ((! (Microsoft_FStar_Options.print_effect_args))))) then begin
 (Support.Microsoft.FStar.Util.format1 "Tot %s" (typ_to_string c.Microsoft_FStar_Absyn_Syntax.result_typ))
 end else begin
-if ((not ((! (Microsoft_FStar_Options.print_effect_args)))) && (Microsoft_FStar_Absyn_Syntax.lid_equals c.Microsoft_FStar_Absyn_Syntax.effect_name Microsoft_FStar_Absyn_Const.ml_effect_lid)) then begin
+if ((not ((! (Microsoft_FStar_Options.print_effect_args)))) && (Microsoft_FStar_Absyn_Syntax.lid_equals c.Microsoft_FStar_Absyn_Syntax.effect_name Microsoft_FStar_Absyn_Const.effect_ML_lid)) then begin
 (typ_to_string c.Microsoft_FStar_Absyn_Syntax.result_typ)
 end else begin
 if ((not ((! (Microsoft_FStar_Options.print_effect_args)))) && ((Support.Microsoft.FStar.Util.for_some (fun _19_9 -> (match (_19_9) with

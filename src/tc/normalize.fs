@@ -46,6 +46,7 @@ type step =
   | Simplify
   | SNComp
   | Unmeta
+  | Unlabel
 and steps = list<step>
 
 type config<'a> = {code:'a;
@@ -157,6 +158,7 @@ let no_eta = List.filter (function Eta -> false | _ -> true)
 let no_eta_cfg c = {c with steps=no_eta c.steps}
 let whnf_only config = config.steps |> List.contains WHNF
 let unmeta config = config.steps |> List.contains Unmeta
+let unlabel config = unmeta config || config.steps |> List.contains Unlabel
 let is_stack_empty config = match config.stack.args with 
     | [] -> true
     | _ -> false
@@ -409,7 +411,7 @@ and sn tcenv (cfg:config<typ>) : config<typ> =
                     sn tcenv ({config with code=t; close=close_with_config config pat})
     
                 | Typ_meta(Meta_labeled(t, l, r, b)) -> 
-                  if unmeta config then
+                  if unlabel config then
                     sn tcenv ({config with code=t})
                   else
                     let lab t = match t.n with 

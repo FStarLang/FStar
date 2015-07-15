@@ -192,6 +192,15 @@ let memT = mem
 let contains = mem
 let containsT = memT
 
+val existsb: #a:Type
+       -> f:(a -> Tot bool)
+       -> list a
+       -> Tot bool
+let rec existsb (a:Type) f l = match l with
+ | [] -> false
+ | hd::tl -> if f hd then true else existsb f tl
+
+
 val find: #a:Type
         -> f:(a -> Tot bool)
         -> list a

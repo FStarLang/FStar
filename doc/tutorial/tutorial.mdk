@@ -33,7 +33,7 @@ Colorizer     : fstar
 
 ~ExerciseFragment : replace="~Begin Fragment {link=code/exercises/&exname;.fst}&nl;&source;&nl;~End Fragment&nl;"
 
-~CodeFragment : replace="~Begin Fragment {link=code/&filename;:&label;&name;}&nl;&source;&nl;~End Fragment&nl;"
+~CodeFragment : replace="~Begin Fragment {link=code/&filename;?&label;&name;}&nl;&source;&nl;~End Fragment&nl;"
 
 
 CatalinComment : replace="Can't understand why this doesn't work (it eats up the following solution. Also, why can't I write a proper <!-- comment here?"
@@ -980,9 +980,9 @@ _automatic induction_ feature.
 
 Here's another proof of `factorial_is_monotone`:
 
-    let rec factorial_is_monotone n = using_induction_hyp factorial_is_monotone
+    let rec factorial_is_monotone n = by_induction_on n factorial_is_monotone
 
-Calling `using_induction_hyp` with `factorial_is_monotone` as argument
+Calling `by_induction_on` with `n` and `factorial_is_monotone` as argument
 causes F\* to encode the induction hypothesis as a quantified logical
 formula and feed it to Z3, which in simple examples can take care of
 the rest.
@@ -2494,7 +2494,7 @@ The intuitive proof of the `EIf` case is similar.
 Using the _experimental_ support for automatic induction ([#auto-ind]),
 the proof above can be written as just:
 ```
-let rec progress e = using_induction_hyp progress
+let rec progress e = by_induction_on e progress
 ```
 
 The **preservation** theorem (sometimes also called "subject reduction") states that
@@ -5418,12 +5418,71 @@ Hint: have a look e.g. at the HMAC construction.
 
 ## Stateful Encryption
 
+The additional guarantees provided by a secure channel protocol is that
+the messages are received in the same order in which they were sent. To
+achieve this, we build a stateful, authenticated encryption scheme from
+a (stateless) “authenticated encryption with additional data” (AEAD)
+scheme (Rogaway 2002). Two counters are maintained, one each for the
+sender and receiver. When a message is to be sent, the counter value is
+authenticated using the AEAD scheme along with the rest of the message
+payload and the counter is incremented. The receiver, in turn, checks
+that the sender’s counter in the message matches hers each time a message
+is received and increments her counter.
+
 ~ Exercise
+Look at the following code, what happens in case of decryption failure?
 
 ~~ CodeFragment {filename=exercises/stateful-encrypt.fst name=ex13a-stateful-encrypt}
-assume val enc: k:key -> p:plain -> c:cipher
+type statefulEntry =
+  | StEntry : c:cipher -> p:plain -> statefulEntry
+
+type st_encryptor (i:rid) =
+  | StEnc : log: rref i (seq statefulEntry) -> ctr: rref i nat -> key:encryptor i -> st_encryptor i
+
+type st_decryptor (i:rid) =
+  | StDec : log: rref i (seq statefulEntry) -> ctr: rref i nat -> key:decryptor i -> st_decryptor i
+  
+  ...
+  
+  val stateful_enc : #i:rid -> e:st_encryptor i -> p:plain -> ST cipher
+  (requires (fun h -> st_enc_inv e h))
+  (ensures (fun h0 c h1 ->
+                    st_enc_inv e h1
+                 /\ HyperHeap.modifies (Set.singleton i) h0 h1
+                 /\ Heap.modifies (refs_in_e e) (Map.sel h0 i) (Map.sel h1 i)
+                 /\ sel h1 (StEnc.log e) = snoc (sel h0 (StEnc.log e)) (StEntry c p)))
+let stateful_enc i (StEnc log ctr e) p =
+    let c = enc e (op_Bang ctr) p in
+    op_Colon_Equals log (snoc (op_Bang log) (StEntry c p));
+    op_Colon_Equals ctr (op_Bang ctr + 1);
+    c
+
+val stateful_dec: #i:rid -> d:st_decryptor i -> c:cipher -> ST (option plain)
+  (requires (fun h -> st_dec_inv d h))
+  (ensures (fun h0 p h1 ->
+                st_dec_inv d h0    //repeating pre
+                /\ st_dec_inv d h1
+                /\ HyperHeap.modifies (Set.singleton i) h0 h1
+                /\ Heap.modifies !{as_ref (StDec.ctr d)} (Map.sel h0 i) (Map.sel h1 i)
+                /\ Let (sel h0 (StDec.ctr d)) (fun (r:nat{r=sel h0 (StDec.ctr d)}) ->
+                   Let (sel h0 (StDec.log d)) (fun (log:seq statefulEntry{log=sel h0 (StDec.log d)}) ->
+                    (is_None p ==> (r = Seq.length log                     //nothing encrypted yet
+                                    || StEntry.c (Seq.index log r) <> c    //wrong cipher
+                                    ) /\ sel h1 (StDec.ctr d) = r)
+                   /\ (is_Some p ==>
+                          ((sel h1 (StDec.ctr d) = r + 1)
+                           /\ StEntry.p (Seq.index log r) = Some.v p))))))
+
+let stateful_dec _id (StDec _ ctr d) c =
+  let i = op_Bang ctr in
+  cut(trigger i);
+  match dec d (op_Bang ctr) c with
+    | None -> None
+    | Some p -> op_Colon_Equals ctr (op_Bang ctr + 1); Some p
+
 ~~
 
+~
 
 ## Encryption
 

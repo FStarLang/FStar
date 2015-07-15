@@ -145,8 +145,8 @@ let check_expected_effect env (copt:option<comp>) (e, c) : exp * comp * guard_t 
             | None -> None
             | Some l ->
                 let flags = 
-                    if lid_equals l Const.tot_effect_lid then [TOTAL]
-                    else if lid_equals l Const.ml_effect_lid then [MLEFFECT]
+                    if lid_equals l Const.effect_Tot_lid then [TOTAL]
+                    else if lid_equals l Const.effect_ML_lid then [MLEFFECT]
                     else [] in
                 let def = mk_Comp ({effect_name=l;
                                     result_typ=c1.result_typ;
@@ -332,7 +332,20 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
   | Typ_fun(bs, cod) -> 
     let bs, env, g = tc_binders env bs in 
     let cod, f = tc_comp env cod in
-    w ktype <| mk_Typ_fun(bs, cod), ktype, Rel.conj_guard g (Rel.close_guard bs f)
+    let t = w ktype <| mk_Typ_fun(bs, cod) in
+    let _ = if Util.is_smt_lemma t //check patterns cover the bound vars
+          then match cod.n with 
+            | Comp ({effect_args=[(Inl pre, _); (Inl post, _); (Inr pats, _)]}) -> 
+              let fvs = Util.freevars_exp pats in
+              begin match bs |> Util.find_opt (fun (b, _) -> match b with
+                                                    | Inl a -> not(Util.set_mem a fvs.ftvs)
+                                                    | Inr x -> not(Util.set_mem x fvs.fxvs)) with 
+                      | None -> ()
+                      | Some b -> Errors.warn t.pos (Util.format1 "Pattern misses at least one bound variables: %s" (Print.binder_to_string b)) 
+              end
+            | _ -> ()
+    in
+    t, ktype, Rel.conj_guard g (Rel.close_guard bs f)
 
   | Typ_lam(bs, t) -> 
     let bs, env, g = tc_binders env bs in

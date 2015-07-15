@@ -143,6 +143,7 @@ type env_t = {
     cache:Util.smap<(string * list<sort> * list<decl>)>;
     nolabels:bool;
     use_zfuel_name:bool;
+    encode_non_total_function_typ:bool;
 }
 let print_env e = 
     e.bindings |> List.map (function 
@@ -472,16 +473,24 @@ and encode_typ_term (t:typ) (env:env_t) : (term           (* encoding of t, expe
 
       | Typ_fun(binders, res) -> 
         (* TODO: handling non-total functions *)
-        if   Absyn.Util.is_tot_or_gtot_comp res
+        if  (env.encode_non_total_function_typ 
+             && Absyn.Util.is_pure_or_ghost_comp res)
+             || Absyn.Util.is_tot_or_gtot_comp res
         then let vars, guards, env', decls, _ = encode_binders None binders env in 
              let fsym = varops.fresh "f", Term_sort in
              let f = mkFreeV fsym in
-             let app = mk_ApplyE f vars in      
-             let res_pred, decls' = encode_typ_pred' None (Util.comp_result res) env' app in
+             let app = mk_ApplyE f vars in  
+             let pre_opt, res_t = Tc.Util.pure_or_ghost_pre_and_post env.tcenv res in
+             let res_pred, decls' = encode_typ_pred' None res_t env' app in
+             let guards, guard_decls = match pre_opt with 
+                | None -> mk_and_l guards, decls
+                | Some pre -> 
+                  let guard, decls0 = encode_formula pre env' in
+                  mk_and_l (guard::guards), decls@decls0  in
              let t_interp = 
                        mkForall([app], 
                                 vars,  
-                                mkImp(mk_and_l guards, res_pred)) in
+                                mkImp(guards, res_pred)) in
                    
              let cvars = Term.free_variables t_interp |> List.filter (fun (x, _) -> x <> fst fsym) in
              let tkey = Term.mkForall([], fsym::cvars, t_interp) in
@@ -1664,11 +1673,17 @@ and encode_free_var env lid tt t_norm quals =
               let definition = prims.mk lid vname in
               let env = push_free_var env lid vname None in
               definition, env
-         else let formals, res = match Util.function_formals t_norm with 
-                | Some (args, comp) -> args, Util.comp_result comp 
-                | None -> [], t_norm in
+         else let encode_non_total_function_typ = lid.nsstr <> "Prims" in
+              let formals, (pre_opt, res_t) = match Util.function_formals t_norm with 
+                | Some (args, comp) -> 
+                  if encode_non_total_function_typ 
+                  then args, Tc.Util.pure_or_ghost_pre_and_post env.tcenv comp 
+                  else args, (None, Util.comp_result comp)
+                | None -> [], (None, t_norm) in
               let vname, vtok, env = new_term_constant_and_tok_from_lid env lid in 
-              let vtok_tm = mkApp(vtok, []) in
+              let vtok_tm = match formals with 
+                | [] -> mkFreeV(vname, Term_sort) 
+                | _ -> mkApp(vtok, []) in
               let mk_disc_proj_axioms vapp vars = quals |> List.collect (function 
                 | Discriminator d -> 
                     let _, (xxsym, _) = Util.prefix vars in
@@ -1683,41 +1698,31 @@ and encode_free_var env lid tt t_norm quals =
                                             mkEq(vapp, Term.mkApp(mk_term_projector_name d f, [xx]))), None)]
                 | _ -> []) in
               let vars, guards, env', decls1, _ = encode_binders None formals env in
-              let guard = mk_and_l guards in
+              let guard, decls1 = match pre_opt with 
+                | None -> mk_and_l guards, decls1
+                | Some p -> let g, ds = encode_formula p env' in mk_and_l (g::guards), decls1@ds in
               let vtok_app = mk_ApplyE vtok_tm vars in
         
               let vapp = Term.mkApp(vname, List.map Term.mkFreeV vars) in
               let decls2, env =
                 let vname_decl = Term.DeclFun(vname, formals |> List.map (function Inl _, _ -> Type_sort | _ -> Term_sort), Term_sort, None) in
-                    (* Generate a token and a function symbol; equate the two, and use the function symbol for full applications *)
-                    let tok_decl, env = match formals with 
-                        | [] -> 
-                            let t, decls2 = 
-                                if not(head_normal env tt) 
-                                then encode_typ_pred' None tt env (mkFreeV(vname, Term_sort))
-                                else encode_typ_pred' None t_norm env (mkFreeV(vname, Term_sort)) in
-                            let tok_typing = Term.Assume(t, Some "function token typing") in 
-                            decls2@[tok_typing], push_free_var env lid vname (Some <| mkFreeV(vname, Term_sort))
-                        | _ -> 
+                let tok_typing, decls2 = 
+                    let env = {env with encode_non_total_function_typ=encode_non_total_function_typ} in
+                    if not(head_normal env tt) 
+                    then encode_typ_pred' None tt env vtok_tm 
+                    else encode_typ_pred' None t_norm env vtok_tm in //NS:Unfortunately, this is duplicated work --- we effectively encode the function type twice
+                let tok_typing = Term.Assume(tok_typing, Some "function token typing") in
+                let tok_decl, env = match formals with 
+                        | [] -> decls2@[tok_typing], push_free_var env lid vname (Some <| mkFreeV(vname, Term_sort))
+                        | _ ->  (* Generate a token and a function symbol; equate the two, and use the function symbol for full applications *)
                                 let vtok_decl = Term.DeclFun(vtok, [], Term_sort, None) in
                                 let vtok_fresh = Term.fresh_token (vtok, Term_sort) (varops.next_id()) in
                                 let name_tok_corr = Term.Assume(mkForall([vtok_app], vars, mkEq(vtok_app, vapp)), None) in
-                                let tok_typing, decls2 = 
-                                    if not(head_normal env tt) 
-                                    then encode_typ_pred' None tt env vtok_tm 
-                                    else encode_typ_pred' None t_norm env vtok_tm in
-                                let tok_typing = Term.Assume(tok_typing, Some "function token typing") in
                                 decls2@[vtok_decl;vtok_fresh;name_tok_corr;tok_typing], env in
-                    vname_decl::tok_decl, env in
-              let ty_pred, decls3 = encode_typ_pred' None res env' vapp in
-              let tt_typing, decls4 = 
-                    if not(head_normal env tt) 
-                    then let tok_typing, decls4 = encode_typ_pred' None tt env vtok_tm in
-                         [Term.Assume(tok_typing, None)], decls4
-                    else [], [] in
-            
+                vname_decl::tok_decl, env in
+              let ty_pred, decls3 = encode_typ_pred' None res_t env' vapp in 
               let typingAx = Term.Assume(mkForall([vapp], vars, mkImp(guard, ty_pred)), Some "free var typing") in
-              let g = decls1@decls2@decls3@decls4@typingAx::tt_typing@mk_disc_proj_axioms vapp vars in
+              let g = decls1@decls2@decls3@typingAx::mk_disc_proj_axioms vapp vars in
               g, env
        
 
@@ -1764,7 +1769,9 @@ let encode_labels labs =
 (* caching encodings of the environment and the top-level API to the encoding *)
 open Microsoft.FStar.Tc.Env
 let last_env : ref<list<env_t>> = Util.mk_ref []
-let init_env tcenv = last_env := [{bindings=[]; tcenv=tcenv; warn=true; depth=0; cache=Util.smap_create 100; nolabels=false; use_zfuel_name=false}]
+let init_env tcenv = last_env := [{bindings=[]; tcenv=tcenv; warn=true; depth=0; 
+                                   cache=Util.smap_create 100; nolabels=false; use_zfuel_name=false;
+                                   encode_non_total_function_typ=true}]
 let get_env tcenv = match !last_env with 
     | [] -> failwith "No env; call init first!"
     | e::_ -> {e with tcenv=tcenv}

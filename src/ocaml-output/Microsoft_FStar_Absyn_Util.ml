@@ -782,7 +782,7 @@ let mk_discriminator = (fun lid -> (Microsoft_FStar_Absyn_Syntax.lid_of_ids (Sup
 let is_name = (fun lid -> (let c = (Support.Microsoft.FStar.Util.char_at lid.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText 0)
 in (Support.Microsoft.FStar.Util.is_upper c)))
 
-let ml_comp = (fun t r -> (Microsoft_FStar_Absyn_Syntax.mk_Comp {Microsoft_FStar_Absyn_Syntax.effect_name = (set_lid_range Microsoft_FStar_Absyn_Const.ml_effect_lid r); Microsoft_FStar_Absyn_Syntax.result_typ = t; Microsoft_FStar_Absyn_Syntax.effect_args = []; Microsoft_FStar_Absyn_Syntax.flags = (Microsoft_FStar_Absyn_Syntax.MLEFFECT)::[]}))
+let ml_comp = (fun t r -> (Microsoft_FStar_Absyn_Syntax.mk_Comp {Microsoft_FStar_Absyn_Syntax.effect_name = (set_lid_range Microsoft_FStar_Absyn_Const.effect_ML_lid r); Microsoft_FStar_Absyn_Syntax.result_typ = t; Microsoft_FStar_Absyn_Syntax.effect_args = []; Microsoft_FStar_Absyn_Syntax.flags = (Microsoft_FStar_Absyn_Syntax.MLEFFECT)::[]}))
 
 let total_comp = (fun t r -> (Microsoft_FStar_Absyn_Syntax.mk_Total t))
 
@@ -811,7 +811,7 @@ let comp_effect_name = (fun c -> (match (c.Microsoft_FStar_Absyn_Syntax.n) with
 c.Microsoft_FStar_Absyn_Syntax.effect_name
 end
 | Microsoft_FStar_Absyn_Syntax.Total (_) -> begin
-Microsoft_FStar_Absyn_Const.tot_effect_lid
+Microsoft_FStar_Absyn_Const.effect_Tot_lid
 end))
 
 let comp_to_comp_typ = (fun c -> (match (c.Microsoft_FStar_Absyn_Syntax.n) with
@@ -819,7 +819,7 @@ let comp_to_comp_typ = (fun c -> (match (c.Microsoft_FStar_Absyn_Syntax.n) with
 c
 end
 | Microsoft_FStar_Absyn_Syntax.Total (t) -> begin
-{Microsoft_FStar_Absyn_Syntax.effect_name = Microsoft_FStar_Absyn_Const.tot_effect_lid; Microsoft_FStar_Absyn_Syntax.result_typ = t; Microsoft_FStar_Absyn_Syntax.effect_args = []; Microsoft_FStar_Absyn_Syntax.flags = (Microsoft_FStar_Absyn_Syntax.TOTAL)::[]}
+{Microsoft_FStar_Absyn_Syntax.effect_name = Microsoft_FStar_Absyn_Const.effect_Tot_lid; Microsoft_FStar_Absyn_Syntax.result_typ = t; Microsoft_FStar_Absyn_Syntax.effect_args = []; Microsoft_FStar_Absyn_Syntax.flags = (Microsoft_FStar_Absyn_Syntax.TOTAL)::[]}
 end))
 
 let is_total_comp = (fun c -> ((Support.Microsoft.FStar.Util.for_some (fun _18_13 -> (match (_18_13) with
@@ -830,7 +830,7 @@ end
 false
 end))) (comp_flags c)))
 
-let is_total_lcomp = (fun c -> ((Microsoft_FStar_Absyn_Syntax.lid_equals c.Microsoft_FStar_Absyn_Syntax.eff_name Microsoft_FStar_Absyn_Const.tot_effect_lid) || ((Support.Microsoft.FStar.Util.for_some (fun _18_14 -> (match (_18_14) with
+let is_total_lcomp = (fun c -> ((Microsoft_FStar_Absyn_Syntax.lid_equals c.Microsoft_FStar_Absyn_Syntax.eff_name Microsoft_FStar_Absyn_Const.effect_Tot_lid) || ((Support.Microsoft.FStar.Util.for_some (fun _18_14 -> (match (_18_14) with
 | (Microsoft_FStar_Absyn_Syntax.TOTAL) | (Microsoft_FStar_Absyn_Syntax.RETURN) -> begin
 true
 end
@@ -861,7 +861,7 @@ let is_pure_comp = (fun c -> (match (c.Microsoft_FStar_Absyn_Syntax.n) with
 true
 end
 | Microsoft_FStar_Absyn_Syntax.Comp (ct) -> begin
-((((is_tot_or_gtot_comp c) || (Support.Microsoft.FStar.Util.starts_with ct.Microsoft_FStar_Absyn_Syntax.effect_name.Microsoft_FStar_Absyn_Syntax.str "Prims.PURE")) || (Support.Microsoft.FStar.Util.starts_with ct.Microsoft_FStar_Absyn_Syntax.effect_name.Microsoft_FStar_Absyn_Syntax.str "Prims.Pure")) || ((Support.Microsoft.FStar.Util.for_some (fun _18_17 -> (match (_18_17) with
+((((is_tot_or_gtot_comp c) || (Microsoft_FStar_Absyn_Syntax.lid_equals ct.Microsoft_FStar_Absyn_Syntax.effect_name Microsoft_FStar_Absyn_Const.effect_PURE_lid)) || (Microsoft_FStar_Absyn_Syntax.lid_equals ct.Microsoft_FStar_Absyn_Syntax.effect_name Microsoft_FStar_Absyn_Const.effect_Pure_lid)) || ((Support.Microsoft.FStar.Util.for_some (fun _18_17 -> (match (_18_17) with
 | Microsoft_FStar_Absyn_Syntax.LEMMA -> begin
 true
 end
@@ -874,7 +874,7 @@ let is_ghost_effect = (fun l -> (((Microsoft_FStar_Absyn_Syntax.lid_equals Micro
 
 let is_pure_or_ghost_comp = (fun c -> ((is_pure_comp c) || (is_ghost_effect (comp_effect_name c))))
 
-let is_pure_lcomp = (fun lc -> ((((is_total_lcomp lc) || (Support.Microsoft.FStar.Util.starts_with lc.Microsoft_FStar_Absyn_Syntax.eff_name.Microsoft_FStar_Absyn_Syntax.str "Prims.Pure")) || (Support.Microsoft.FStar.Util.starts_with lc.Microsoft_FStar_Absyn_Syntax.eff_name.Microsoft_FStar_Absyn_Syntax.str "Prims.PURE")) || ((Support.Microsoft.FStar.Util.for_some (fun _18_18 -> (match (_18_18) with
+let is_pure_lcomp = (fun lc -> ((((is_total_lcomp lc) || (Microsoft_FStar_Absyn_Syntax.lid_equals lc.Microsoft_FStar_Absyn_Syntax.eff_name Microsoft_FStar_Absyn_Const.effect_PURE_lid)) || (Microsoft_FStar_Absyn_Syntax.lid_equals lc.Microsoft_FStar_Absyn_Syntax.eff_name Microsoft_FStar_Absyn_Const.effect_Pure_lid)) || ((Support.Microsoft.FStar.Util.for_some (fun _18_18 -> (match (_18_18) with
 | Microsoft_FStar_Absyn_Syntax.LEMMA -> begin
 true
 end
@@ -896,7 +896,7 @@ let is_lemma = (fun t -> (match ((compress_typ t).Microsoft_FStar_Absyn_Syntax.n
 | Microsoft_FStar_Absyn_Syntax.Typ_fun ((_, c)) -> begin
 (match (c.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Comp (ct) -> begin
-(Microsoft_FStar_Absyn_Syntax.lid_equals ct.Microsoft_FStar_Absyn_Syntax.effect_name Microsoft_FStar_Absyn_Const.lemma_lid)
+(Microsoft_FStar_Absyn_Syntax.lid_equals ct.Microsoft_FStar_Absyn_Syntax.effect_name Microsoft_FStar_Absyn_Const.effect_Lemma_lid)
 end
 | _ -> begin
 false
@@ -909,7 +909,7 @@ end))
 let is_smt_lemma = (fun t -> (match ((compress_typ t).Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Typ_fun ((_, c)) -> begin
 (match (c.Microsoft_FStar_Absyn_Syntax.n) with
-| Microsoft_FStar_Absyn_Syntax.Comp (ct) when (Microsoft_FStar_Absyn_Syntax.lid_equals ct.Microsoft_FStar_Absyn_Syntax.effect_name Microsoft_FStar_Absyn_Const.lemma_lid) -> begin
+| Microsoft_FStar_Absyn_Syntax.Comp (ct) when (Microsoft_FStar_Absyn_Syntax.lid_equals ct.Microsoft_FStar_Absyn_Syntax.effect_name Microsoft_FStar_Absyn_Const.effect_Lemma_lid) -> begin
 (match (ct.Microsoft_FStar_Absyn_Syntax.effect_args) with
 | _req::_ens::(Support.Microsoft.FStar.Util.Inr (pats), _)::_ -> begin
 (match ((unmeta_exp pats).Microsoft_FStar_Absyn_Syntax.n) with
@@ -934,7 +934,7 @@ end))
 
 let is_ml_comp = (fun c -> (match (c.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Comp (c) -> begin
-((Microsoft_FStar_Absyn_Syntax.lid_equals c.Microsoft_FStar_Absyn_Syntax.effect_name Microsoft_FStar_Absyn_Const.ml_effect_lid) || ((Support.Microsoft.FStar.Util.for_some (fun _18_19 -> (match (_18_19) with
+((Microsoft_FStar_Absyn_Syntax.lid_equals c.Microsoft_FStar_Absyn_Syntax.effect_name Microsoft_FStar_Absyn_Const.effect_ML_lid) || ((Support.Microsoft.FStar.Util.for_some (fun _18_19 -> (match (_18_19) with
 | Microsoft_FStar_Absyn_Syntax.MLEFFECT -> begin
 true
 end

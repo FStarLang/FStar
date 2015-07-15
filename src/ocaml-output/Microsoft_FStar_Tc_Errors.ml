@@ -86,7 +86,7 @@ let incompatible_kinds = (fun env k1 k2 -> (Support.Microsoft.FStar.Util.format2
 
 let constructor_builds_the_wrong_type = (fun env d t t' -> (Support.Microsoft.FStar.Util.format3 "Constructor \"%s\" builds a value of type \"%s\"; expected \"%s\"" (Microsoft_FStar_Absyn_Print.exp_to_string d) (Microsoft_FStar_Tc_Normalize.typ_norm_to_string env t) (Microsoft_FStar_Tc_Normalize.typ_norm_to_string env t')))
 
-let constructor_fails_the_positivity_check = (fun env d l -> (Support.Microsoft.FStar.Util.format2 "Constructor \"%s\" fails the strict positivity check; the constructed type occurs \"%s\" occurs to the left of a pure function type" (Microsoft_FStar_Absyn_Print.exp_to_string d) (Microsoft_FStar_Absyn_Print.sli l)))
+let constructor_fails_the_positivity_check = (fun env d l -> (Support.Microsoft.FStar.Util.format2 "Constructor \"%s\" fails the strict positivity check; the constructed type \"%s\" occurs to the left of a pure function type" (Microsoft_FStar_Absyn_Print.exp_to_string d) (Microsoft_FStar_Absyn_Print.sli l)))
 
 let inline_type_annotation_and_val_decl = (fun l -> (Support.Microsoft.FStar.Util.format1 "\"%s\" has a val declaration as well as an inlined type annotation; remove one" (Microsoft_FStar_Absyn_Print.sli l)))
 

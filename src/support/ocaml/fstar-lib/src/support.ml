@@ -28,6 +28,7 @@ module ST = struct
 end
 
 module String = struct
+  let make len v = BatString.init len (fun x -> char_of_int v)
   let strcat s t = s^t
   let split seps s =
     let rec repeat_split acc = function
@@ -90,6 +91,7 @@ module List = struct
   let flatten = BatList.flatten
   let split = unzip
   let choose = BatList.filter_map
+  let exists_ f l = BatList.exists f l
   let contains x l = BatList.exists (fun y -> x = y) l
   let zip = BatList.combine
   let rec zip3 l1 l2 l3 =

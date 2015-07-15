@@ -131,7 +131,7 @@ let rec mem_subset (#a:Type) #f s1 s2 = match s1 with
   | []     -> ()
   | hd::tl -> mem_subset #_ #f tl s2
 
-let choose_empty (#a:Type) #f _ = ()
+let choose_empty (#a:Type) #f = ()
 
 let choose_s (#a:Type) #f s =
   let Some e = choose #_ #f s in
@@ -145,7 +145,7 @@ let rec eq_remove (#a:Type) #f x s = match s with
   | []    -> ()
   | _::tl -> eq_remove #_ #f x tl
 
-let size_empty (#a:Type) #f _ = ()
+let size_empty (#a:Type) #f = ()
 
 let rec size_remove (#a:Type) #f x s = match s with
   | hd::tl ->
@@ -153,4 +153,5 @@ let rec size_remove (#a:Type) #f x s = match s with
 
 let rec size_singleton (#a:Type) #f x = ()
 
+let s_eq_empty (#a:Type) #f s = ()
 (**********)

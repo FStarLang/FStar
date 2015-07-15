@@ -2,25 +2,61 @@
     options:--z3timeout 20 --max_fuel 8 --max_ifuel 6 --initial_fuel 4 --initial_ifuel 2;
     other-files:../../lib/classical.fst ../../lib/ext.fst ../../lib/constr.fst
   --*)
-//NS: --log_types   ... don't give this option in the file by default.
-//    it prints a LOT of noisy debugging in the regression tests
+
+(* Formalization of micro-fstar proofs of progress and preservation
+   for the PURE effect. The definitions cover most of micro-fstar, the only
+   exceptions are multi-monads, higher-order state, and dynamic
+   allocation, however, none of these are relevant here, since our
+   proofs are for the PURE effect. The proofs are mostly complete and
+   all assumed lemmas are listed and explained below. Many are not yet
+   complete because of limitations in our current F* implementation,
+   which we hope to fix soon. *)
 
 (*TODO list :
- * finish the proof of preservation (KTApp and KEApp)
- * write the substitution lemmas on type encodings (subst_on_bindall etc …)
- * write the v_* validity derived judgements
- * *subst_on_ebeta, *subst_on_tbeta
- * write kdg_* to manipulate kinds with binding, wp etc …
- * write kwf_*
- * write inversion_tforalle / inversion_tforallt
- * finish validity_derived
- * finish styping inversion arrow lemmas
- * simplification of TcPrecedes to compare just int ? Anyway there is still a kinding problem where TcPrecedes is used FIXME
+
+ definitions 
+ * use TcPrecedes with the right number of arguments
+
+ substitution lemma
+ * write the substitution lemmas on type encodings (subst_on_bindall etc …) [F* limitations and take a lot of time to write, but easy things on paper]
+ * *subst_on_ebeta, *subst_on_tbeta [easy]
+
+ derived judgements
+ * write the v_* validity derived judgements [take a lot of time to write]
+ * write kdg_* to manipulate kinds with binding, wp etc … [F* limitations and take a lot of time to write]
+ * finish validity_derived (V-Constr, VInjTH) [easy]
+ * write kwf_* [take a lot of time to write]
+ 
+ inversion lemmas (used in preservation and progress)
+ * finish scmp_transitivity [need to write a validity proof term, which is difficult]
+ * write stypingd_inversion_arrow [easy, essentially the same than styping_inversion_arrow]
+ * correctly reorder styping inversion arrow lemmas, and write the bindings [easy]
+ * code the case of application in value_inversion [long to write and difficult]
+ * write inversion_tforalle / inversion_tforallt [long to write but easy]
+
+ preservation lemma
+ * write pure_to_tot [F* limitations and take long to write]
+ * write the code for validity judgements [F* limitations]
+ * write the PsFixPure case [F* limitation and hard to write]
+ * write skdg_eqe and skdg_eqt [hard proofs that need a lot of rewriting]
+ 
+ progress lemma
+ * write tysub_derived [easy]
+ * make the code compile without commenting some parts [F* limitations (I can not use split case here, as in other places)]
+ * remove useless code (like tint_inversion_* )
+ * write the bindings from already written code to *_empty (like styping_inversion_arrow_empty) [easy]
+
+ optimization of verification
  * add opaque to functions
- * understand why VPreceedsIntro in substitution lemma is checked without using subst_on_value
+ * add split case option where useful
  * update to finish with the adding of PsUpd, PsSel and PsFixPure
  * remove the useless rule about heap (since we added PsUpd and PsSel)
+
+ other things to do 
+ * write section names at the end
+ * remove useless code
 *)
+
 
 (*TODO in tiny-fstar.txt
  * simplify the proof of preservation : remove the useless preservation lemmas and do an induction on typing judgement
@@ -4626,9 +4662,6 @@ match hv with
 )
 | _ -> admit()
 
-(**************)
-(* The Jungle *)
-(**************)
 //{{{
 val op_pure_timpl : g:env -> t:typ -> wp1:typ -> wp2:typ ->
      validity (textend (k_post_pure t) g) (timpl (TTApp (wp1) (TVar 0)) (TTApp (wp2) (TVar 0))) ->
