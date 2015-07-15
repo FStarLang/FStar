@@ -1,0 +1,172 @@
+
+Pure t pre post
+= (definition)
+PURE t wp wlp
+  where wp = (fun p -> pre /\ forall x. post x ==> p x)
+       wlp = (fun p -> forall x. pre /\ post x ==> p x)
+
+=~ (coercion)
+  Pure t (as_requires wp) (as_ensures wlp)
+
+=  (unfolding)
+  Pure t (pre /\ (forall x. post x ==> True))
+         (fun (x:t) -> ~(forall y. pre /\ post y ==> (x<>y)))
+
+= (simplifying)
+  Pure t pre
+         (fun (x:t) -> exists y. ~(pre /\ post y ==> (x<>y)))
+
+= (simplifying)
+  Pure t pre
+         (fun (x:t) -> exists y. ~(~(pre /\ post y) \/ x<>y))
+
+= (demorgan)
+  Pure t pre
+         (fun (x:t) -> exists y. (pre /\ post y) /\ x=y)
+
+= (elim. exists with equality)
+  Pure t pre
+         (fun (x:t) -> (pre /\ post x))
+
+<: weaken post
+  Pure t pre post
+
+
+type as_ensures  (#a:Type) (wlp:PureWP a) (x:a) = ~ (wlp (fun y -> ~(y=x)))
+
+--------------------------------------
+Erasure of F* to ML
+
+
+Source:
+
+ b ::= a:k | x:t
+ k ::= Type | b -> k
+ t ::= a | b -> M t wp | T | t t | t e | x:t{t'}
+ e ::= x | \b.e | e e | e t | C
+    | let x : M t = e in e'
+    | let rec f : t = e in e'
+    | match e with {P -> e}
+    | e @ t
+ G ::= b1..bn
+ S ::=  T (b1..bn) : k { C : t }
+
+Target:
+
+ N ::= Tot | ML
+ tau ::= TT | a | tau -> N tau' | T tau1..taun
+ s ::= forall a1..an. tau
+ E ::= x <tau1..taun>
+    | \x:tau.e
+    | e e
+    | C (e1,...,en)
+    | let x:s = e in e'
+    | let rec f:s = e in e'
+    | match e with {P -> e}
+    | (e : tau ~> tau')             //Obj.magic
+ G ::= x:s | a | G, G'
+
+Define two mutually inductive judgments:
+
+  G_in |- e_in <= N tau_in  || E_out   -- type-and-effect checking, and code gen
+  G_in |- e_in => N tau_out || E_out   -- type-and-effect synthesis, and code get_gen
+
+Some aux. functions
+
+  erasable unit
+  erasable (erased tau)
+  erasable tau ==> erasable (tau' -> Tot tau)
+
+  coerce tau tau  E = E
+  coerce tau tau' E = (E : tau ~> tau'), when tau <> tau'
+  erase (N tau) E = if N=Tot /\ erasable tau then ()  else E
+
+Some shorthands:
+
+    G |- e <= N tau | E    \def=   G |- e  <= N tau || (erase (N tau) E)
+    G |- e => N tau | E    \def=   G |- e  => N tau || (erase (N tau) E)
+
+  G_in |- e_in => N tau_out || E_out
+
+
+  G(x) = tau
+ ---------------------------- [Var-Synth]
+  G |- x => Tot (G x) | x
+
+  G(x) = forall a1..an. unit -> tau
+  taui = epsilon(ti, G)
+  tau' = tau [tau1..taun/a1..an]
+ ------------------------------------------------- [InstT-Synth]
+  G |- x t1..tn => Tot tau' | x <tau1..taun> ()
+
+  G |- e => N' t1 | E'
+  t1 = unit -> N'' tau
+  N'' `join` N' \leq N
+ ---------------------------- [AppT-Check]
+  G |- e t <= N tau | E' ()
+
+  G |- e => N' (unit -> N'' tau) | E'
+  N'' `join` N' = N
+  ---------------------------------------[AppT-Synth]
+  G |- e t => N tau | E' ()
+
+  G |- e1 => N1 (tau2 -> N' tau') | E1
+  G |- e2 => N2 tau2' | E2
+  join(N1, N2, N') leq N
+  -------------------------------------------------------------------[AppE-Check]
+  G |- e1 e2 <= N tau | coerce tau' tau (E1 (coerce tau2' tau2 E2))
+
+  G |- e1 => N1 (tau2 -> N' tau) | E1
+  G |- e2 => N2 tau2' | E2
+  join(N1, N2, N') = N
+  ----------------------------------------------------[AppE-Synth]
+  G |- e1 e2 => N tau | E1 (coerce tau2' tau2 E2)
+
+  tau = epsilon(G, t)
+  G, x:tau |- e <= N' tau' | E
+  ------------------------------------------------- [LamX-Check]
+  G |- \x:t. e <= N (tau -> N' tau') | \x:tau. E
+
+  tau = epsilon(G, t)
+  G, x:tau |- e => N tau' | E
+  ------------------------------------------------- [LamX-Synth]
+  G |- \x:t. e => Tot (tau -> N tau') | \x:tau. E
+
+  G |- e <= N' tau' | E     //context not extended intentionally
+  ----------------------------------------------------- [LamT-Check]
+  G |- \a:k. e <= N (unit -> N' tau') | \_:unit. E
+
+  G |- e => N tau | E     //context not extended intentionally
+  ----------------------------------------------------- [LamT-Synth]
+  G |- \a:k. e => Tot (unit -> N tau) | \_:unit. E
+
+  N' = Tot if  M <= GHOST  else  N=ML
+  G, a1..an = G'     tau' = epsilon(t, G')
+  G' |- e <= N' tau' | E
+  G, x:forall a1..an.tau |- e' <= N tau | E'
+  ------------------------------------------------------------------ [LetGen-Check]
+  G |- let x : Tot (a1:k1 -> ... -> an:kn -> M t wp) = \a1:k1 .. an:kn. e in e' <= N tau
+     | let x : forall a1..an. unit -> tau' = \_:unit. E in E'
+
+  N' = Tot if  M <= GHOST  else  N=ML
+  G, a1..an = G'     tau = epsilon(t, G')
+  G' |- e <= N' tau | E
+  G, x:forall a1..an.tau |- e' => N tau | E'
+  ------------------------------------------------------------------ [LetGen-Synth]
+  G |- let x : Tot (a1:k1 -> ... -> an:kn -> M t wp) = \a1:k1 .. an:kn. e in e' => N tau
+     | let x : forall a1..an. unit -> tau = \_:unit. E in E'
+
+  t <> a:k -> t'
+  tau' = epsilon(t, G)
+  G' |- e <= M tau' | E
+  G, x:tau' |- e' <= N tau | E'   M leq N
+  ------------------------------------------------------------------ [Let-Check]
+  G |- let x : M t = e in e' <= N tau
+     | let x : tau' = E in E'
+
+  t <> a:k -> t'
+  tau' = epsilon(t, G)
+  G' |- e <= M tau' | E
+  G, x:tau' |- e' => N' tau | E'   N = join M N'
+  ------------------------------------------------------------------ [Let-Synth]
+  G |- let x : M t = e in e' => N tau | let x : tau' = E in E'
