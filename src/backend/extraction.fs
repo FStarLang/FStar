@@ -30,7 +30,7 @@ let rec curry (inp: (list<mlty>)) (out: mlty) =
   The actual definiton is a bit complicated, because we need \box x t to be convertible to \box.
 *)
 (* MLTY_Tuple [] extracts to (), which can represet both the unit type and the unit value. Ocaml gets confused sometimes*)
-let erasedContent : mlty = MLTY_Tuple []
+let erasedContent : mlty = MLTY_Named ([],([],"unit"))
 
 (* \mathbb{T} type in the thesis, to be used when OCaml is not expressive enough for the source type *)
 let unknownType : mlty = MLTY_Var  ("Obj.t", 0)
@@ -107,10 +107,6 @@ match ft with
                  )
             )
 
-(* needs many changes:
-  1) we may need to extend the context to allow mentions in the codomain and also possibly in later arguments. This depends on rank, polarity, the effect of comp.
-  2) Perhaps, we need to change the explicitness of arguments. Consider {n:nat} -> (t: vec nat n) -> nat. When we homogenize vec, n is no longer inferable from the type of t  
-*)
   | Typ_fun (bs, codomain) -> 
         let (bts, newC) = extractBindersTypes c bs in
         (let codomainML = (extractComp  newC codomain) in 

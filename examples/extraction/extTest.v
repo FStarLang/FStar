@@ -48,4 +48,29 @@ Recursive Extraction isEven3.
 
 
 
+Definition f := (fun (A:Type) (x:A) => x) nat 0.
+
+Recursive Extraction f.
+
+Definition fb (b:bool) := (if b then (fun (A:Type) (x:A) => x) else (fun (A:Type) (x:A)=>x) ) nat 0.
+Definition fc (b:bool) := (if b then (fun (A:Type) (x:A) (y:A) => x) else (fun (A:Type) (x:A) (y:A) =>y) ) nat 0 1.
+
+Recursive Extraction fb fc.
+
+Definition idvar := fun X:Type => X -> X.
+
+Definition idtype := forall (X:Type), X -> X.
+
+Check idvar.
+Check idtype.
+
+Definition id : idtype := fun X x => x. 
+
+
+Definition idu : unit -> idtype := fun u X x => x. 
+
+Extract Inductive unit => unit [ "()" ].
+
+Recursive Extraction idvar idtype id idu.
+
 
