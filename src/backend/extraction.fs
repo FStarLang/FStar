@@ -26,10 +26,11 @@ let rec curry (inp: (list<mlty>)) (out: mlty) =
   http://www.pps.univ-paris-diderot.fr/~letouzey/download/these_letouzey_English.ps.gz
 *)
 
-(*\box type in the thesis, to be used to denote the result of erasure of logical (computationally irrelevant) content*)
+(*\box type in the thesis, to be used to denote the result of erasure of logical (computationally irrelevant) content.
+  The actual definiton is a bit complicated, because we need \box x t to be convertible to \box.
+*)
 (* MLTY_Tuple [] extracts to (), which can represet both the unit type and the unit value. Ocaml gets confused sometimes*)
-let erasedContent : mlty = MLTY_Named ([],([],"unit"))
-
+let erasedContent : mlty = MLTY_Tuple []
 
 (* \mathbb{T} type in the thesis, to be used when OCaml is not expressive enough for the source type *)
 let unknownType : mlty = MLTY_Var  ("Obj.t", 0)
@@ -84,8 +85,8 @@ let lident2mlpath (l:lident) : mlpath =
 (*the \hat{\epsilon} function in the thesis (Sec. 3.3.5) *)
 let rec extractType' (c:context) (ft:typ') : mlty = 
 (* first \beta, \iota and \zeta reduces ft. Since F* does not have SN, one has to be more careful for the termination argument.
-    Since OCaml does not support computations in Type, unknownType is suppored to be used if they are really unaviodable.
-    The classic example is the type : T b \def if b then nat else bool. If we dont conpute, T true will extract to unknownType.
+    Because OCaml does not support computations in Type, unknownType is supposed to be used if they are really unaviodable.
+    The classic example is the type : T b \def if b then nat else bool. If we dont compute, T true will extract to unknownType.
     Why not \delta? I guess the reason is that unfolding definitions will make the resultant OCaml code less readable.
     However in the Typ_app case,  \delta reduction is done as the second-last resort, just before giving up and returing unknownType;
         a bloated type is atleast as good as unknownType?
@@ -105,6 +106,11 @@ match ft with
                  | None -> unknownType
                  )
             )
+
+(* needs many changes:
+  1) we may need to extend the context to allow mentions in the codomain and also possibly in later arguments. This depends on rank, polarity, the effect of comp.
+  2) Perhaps, we need to change the explicitness of arguments. Consider {n:nat} -> (t: vec nat n) -> nat. When we homogenize vec, n is no longer inferable from the type of t  
+*)
   | Typ_fun (bs, codomain) -> 
         let (bts, newC) = extractBindersTypes c bs in
         (let codomainML = (extractComp  newC codomain) in 
@@ -112,7 +118,9 @@ match ft with
         then erasedContent 
         else  (curry bts codomainML))
 
-  | Typ_refine (bv,ty) -> extractTyp c ty
+  | Typ_refine (bv (*var and unrefined type*) , _ (*refinement condition*)) -> extractTyp c bv.sort
+
+  (*can this be a partial type application? , i.e can the result of this application be something like Type -> Type, or nat -> Type? *)
   | Typ_app (ty, arrgs) ->
     (match ty.n with
         | Typ_btvar btv -> (if (contains c btv) then MLTY_Var (prependTick (convIdent btv.v.ppname)) else unknownType)
