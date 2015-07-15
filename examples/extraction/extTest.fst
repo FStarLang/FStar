@@ -36,8 +36,12 @@ type list3 : Type -> Type =
 | Nil3 : (a:Type) -> list3 a
 | Cons3 :  (a:Type) -> a -> list3 a -> list3 (prod a a)
 
+
 type  poly (x : nnat -> Type)  =
 | Poly :  n:nnat -> x n -> poly x
+
+type  poly2 (x : Type -> Type)  =
+| Poly2 :  t:Type -> x t -> poly2 x
 
 
 (*The type sections (new paragraph in the thesis)*)
@@ -68,3 +72,11 @@ type vec (a:Type) : nnat -> Type =
 | Conss : n:nnat -> a ->  (vec a n) -> vec a (S n)
 
 type vecn1 = vec nnat (S O)
+
+(* The last stage may also need to apply units to arguments of type Type.
+   In Coq, the last argument of vec disappers, so this might not be a problem
+ *)
+type polyvec = poly (vec nnat)
+
+(*this is even more complicated. what does Coq do about it?*)
+type polylist = poly2 (list)
