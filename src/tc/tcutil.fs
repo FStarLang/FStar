@@ -596,9 +596,9 @@ let join_effects env l1 l2 =
   let m, _, _ = Tc.Env.join env (norm_eff_name env l1) (norm_eff_name env l2) in
   m
 let join_lcomp env c1 c2 = 
-  if lid_equals c1.eff_name Const.tot_effect_lid
-  && lid_equals c2.eff_name Const.tot_effect_lid
-  then Const.tot_effect_lid
+  if lid_equals c1.eff_name Const.effect_Tot_lid
+  && lid_equals c2.eff_name Const.effect_Tot_lid
+  then Const.effect_Tot_lid
   else join_effects env c1.eff_name c2.eff_name
 
 let lift_and_destruct env c1 c2 = 
@@ -613,11 +613,11 @@ let lift_and_destruct env c1 c2 =
 
 let is_pure_effect env l =
   let l = norm_eff_name env l in 
-  lid_equals l Const.pure_effect_lid
+  lid_equals l Const.effect_PURE_lid
 
 let is_pure_or_ghost_effect env l =
   let l = norm_eff_name env l in 
-  lid_equals l Const.pure_effect_lid
+  lid_equals l Const.effect_PURE_lid
   || lid_equals l Const.effect_GHOST_lid
 
 let mk_comp md result wp wlp flags = 
@@ -643,10 +643,10 @@ let is_function t = match (compress_typ t).n with
   
 let return_value env t v = 
 //  if is_function t then failwith (Util.format1 "(%s): Returning a function!" (Range.string_of_range (Env.get_range env)));
-  let c = match Tc.Env.effect_decl_opt env Const.pure_effect_lid with 
+  let c = match Tc.Env.effect_decl_opt env Const.effect_PURE_lid with 
     | None -> mk_Total t 
     | Some m -> 
-       let a, kwp = Env.wp_signature env Const.pure_effect_lid in
+       let a, kwp = Env.wp_signature env Const.effect_PURE_lid in
        let k = Util.subst_kind [Inl(a.v, t)] kwp in
        let wp = Tc.Normalize.norm_typ [Beta] env <| mk_Typ_app(m.ret, [targ t; varg v]) (Some k) v.pos in
        let wlp = wp in
@@ -718,7 +718,7 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
      comp=bind_it}
      
 let lift_formula env t mk_wp mk_wlp f = 
-  let md_pure = Tc.Env.get_effect_decl env Const.pure_effect_lid in
+  let md_pure = Tc.Env.get_effect_decl env Const.effect_PURE_lid in
   let a, kwp = Tc.Env.wp_signature env md_pure.mname in 
   let k = Util.subst_kind [Inl(a.v, t)] kwp in
   let wp = mk_Typ_app(mk_wp, [targ t; targ f]) (Some k) f.pos in
@@ -813,7 +813,7 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:exp) (lc:lc
        {g0 with Rel.guard_f=Rel.Trivial} 
 
 let add_equality_to_post_condition env (comp:comp) (res_t:typ) = 
-    let md_pure = Tc.Env.get_effect_decl env Const.pure_effect_lid in 
+    let md_pure = Tc.Env.get_effect_decl env Const.effect_PURE_lid in 
     let x = Util.gen_bvar res_t in
     let y = Util.gen_bvar res_t in
     let xexp, yexp = Util.bvar_to_exp x, Util.bvar_to_exp y in
@@ -853,7 +853,7 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
             let post = Util.bvd_to_bvar_s (Util.new_bvd None) post_k in
             let wp = mk_Typ_lam([t_binder post], label Errors.exhaustiveness_check (Env.get_range env) <| Util.ftv Const.false_lid ktype) (Some kwp) res_t.pos in
             let wlp = mk_Typ_lam([t_binder post], Util.ftv Const.true_lid ktype) (Some kwp) res_t.pos in
-            let md = Tc.Env.get_effect_decl env Const.pure_effect_lid in
+            let md = Tc.Env.get_effect_decl env Const.effect_PURE_lid in
             mk_comp md res_t wp wlp [] in 
         let comp = List.fold_right (fun (g, cthen) celse ->
             let (md, _, _), (_, wp_then, wlp_then), (_, wp_else, wlp_else) = lift_and_destruct env (cthen.comp()) celse in
@@ -1018,7 +1018,7 @@ let weaken_result_typ env (e:exp) (lc:lcomp) (t:typ) : exp * lcomp * guard_t =
             then Util.fprint2 "Strengthening %s with guard %s\n" (Normalize.comp_typ_norm_to_string env c) (Normalize.typ_norm_to_string env f);
           
             let ct = Tc.Normalize.weak_norm_comp env c in
-            let a, kwp = Env.wp_signature env Const.pure_effect_lid in
+            let a, kwp = Env.wp_signature env Const.effect_PURE_lid in
             let k = Util.subst_kind [Inl(a.v, t)] kwp in
             let md = Tc.Env.get_effect_decl env ct.effect_name in
             let x = new_bvd None in
@@ -1228,4 +1228,37 @@ let short_circuit_typ (head:either<typ,exp>) (seen_args:args) : guard_formula =
             | Some g -> g
           end
         | _ -> Rel.Trivial
-        
+     
+let pure_or_ghost_pre_and_post env comp = 
+    let mk_post_type res_t ens = 
+        let x = Util.gen_bvar res_t in
+        mk_Typ_refine(x, mk_Typ_app(ens, [varg (Util.bvar_to_exp x)]) (Some mk_Kind_type) res_t.pos) (Some mk_Kind_type) res_t.pos in
+    let norm t = Normalize.norm_typ [Beta;Delta;Unlabel] env t in
+    if Util.is_tot_or_gtot_comp comp
+    then None, Util.comp_result comp
+    else begin match comp.n with 
+            | Total _ -> failwith "Impossible"
+            | Comp ct -> 
+              if lid_equals ct.effect_name Const.effect_Pure_lid  
+              || lid_equals ct.effect_name Const.effect_Ghost_lid  
+              then begin match ct.effect_args with 
+                      | (Inl req, _)::(Inl ens, _)::_ -> 
+                         Some (norm req), (norm <| mk_post_type ct.result_typ ens)
+                      | _ -> failwith "Impossible"
+                   end
+              else let comp = Normalize.norm_comp [Normalize.DeltaComp] env comp in
+                   begin match comp.n with 
+                    | Total _ -> failwith "Impossible"
+                    | Comp ct -> 
+                        begin match ct.effect_args with 
+                            | (Inl wp, _)::(Inl wlp, _)::_ -> 
+                              let as_req, as_ens = match Tc.Env.lookup_typ_abbrev env Const.as_requires, Tc.Env.lookup_typ_abbrev env Const.as_ensures with 
+                                | Some x, Some y -> x, y
+                                | _ -> failwith "Impossible" in
+                              let req = mk_Typ_app(as_req, [(Inl ct.result_typ, Some Implicit); targ wp]) (Some mk_Kind_type) ct.result_typ.pos in
+                              let ens = mk_Typ_app(as_ens, [(Inl ct.result_typ, Some Implicit); targ wlp]) None ct.result_typ.pos in 
+                              Some (norm req), norm (mk_post_type ct.result_typ ens)
+                            | _ -> failwith "Impossible"
+                        end
+                    end
+         end

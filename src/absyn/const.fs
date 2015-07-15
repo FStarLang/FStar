@@ -124,16 +124,16 @@ let set_singleton = p2l ["Set"; "singleton"]
 let set_union = p2l ["Set"; "union"]
 
 (* monad constants *)
-let pure_effect_lid = pconst "PURE"
-let tot_effect_lid  = pconst "Tot"
-let all_effect_lid  = pconst "ALL"
-let ml_effect_lid   = pconst "ML"
-let lemma_lid       = pconst "Lemma"
-let decreases_lid   = pconst "decreases"
-
+let effect_PURE_lid  = pconst "PURE"
+let effect_Pure_lid  = pconst "Pure"
+let effect_Tot_lid   = pconst "Tot"
+let effect_ALL_lid   = pconst "ALL"
+let effect_ML_lid    = pconst "ML"
+let effect_Lemma_lid = pconst "Lemma"
 let effect_GTot_lid  = pconst "GTot"
 let effect_GHOST_lid = pconst "GHOST"
 let effect_Ghost_lid = pconst "Ghost"
 
 let as_requires  = pconst "as_requires"
 let as_ensures   = pconst "as_ensures"
+let decreases_lid    = pconst "decreases"

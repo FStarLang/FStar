@@ -1,9 +1,9 @@
 module Bug155
 assume val pred: x:int -> Tot bool
-let test = assert (0=1)
-(* assume val test: x:int -> Pure int
+assume val test: x:int -> Pure int
     (requires (True))
-    (ensures (fun y -> pred y))*)
+    (ensures (fun y -> pred y))
+let test2 = assert (pred (test 0))
 
 (*assume val myassert: b:Type -> Pure unit (requires (b)) (ensures (fun _ -> True))
 assume val pred2: x:int -> Pure bool

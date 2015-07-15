@@ -145,8 +145,8 @@ let check_expected_effect env (copt:option<comp>) (e, c) : exp * comp * guard_t 
             | None -> None
             | Some l ->
                 let flags = 
-                    if lid_equals l Const.tot_effect_lid then [TOTAL]
-                    else if lid_equals l Const.ml_effect_lid then [MLEFFECT]
+                    if lid_equals l Const.effect_Tot_lid then [TOTAL]
+                    else if lid_equals l Const.effect_ML_lid then [MLEFFECT]
                     else [] in
                 let def = mk_Comp ({effect_name=l;
                                     result_typ=c1.result_typ;

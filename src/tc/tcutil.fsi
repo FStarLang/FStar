@@ -76,3 +76,5 @@ val short_circuit_typ: Util.either<typ,exp> -> args -> guard_formula
 
 val force_tk: syntax<'a,'b> -> 'b
 val tks_of_args: args -> list<(Util.either<knd,typ> * aqual)>
+
+val pure_or_ghost_pre_and_post: env -> comp -> (option<typ> * typ)
