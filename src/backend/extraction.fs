@@ -40,15 +40,19 @@ let convIdent (id:ident) : mlident = (id.idText ,(convRange id.idRange))
    However, enough info is needed to determine whether a type constant is a type scheme. add that.
 *)
 type context = {
-    tyVars : list<Range.range>;
+    tyVars : list<ident>;
     tyConstants : list<lident>
 }
 
 let emptyContext : context = {tyVars=[]; tyConstants =[]}
 
-(*is there an F# library of associative lists? yes, Microsoft.FStar.Util.smap*)
-let contains (c:context) (b:btvar) : bool = List.contains b.v.realname.idRange (*why not ppname?*) c.tyVars
 
+let trimLastChar (x:string) : string = 
+    x.Substring (0, (x.Length-1))
+(*is there an F# library of associative lists? yes, Microsoft.FStar.Util.smap*)
+let contains (c:context) (b:btvar) : bool =     
+    List.contains ( b.v.realname.idText)  (List.map (fun x -> x.idText) c.tyVars) (*needed for sh, its ppname is _, and range is 0*)
+    || List.contains (b.v.realname.idRange)  (List.map (fun x -> x.idRange) c.tyVars) (*needed for inductive constructors. names often have extra things appended*)
 let deltaUnfold (i : lident) (c: context) : (option<typ>) = None (*FIX!!*)
 
 (*The thesis defines a type scheme as "something that becomes a type when enough arguments (possibly none?) are applied to it" ,  e.g. vector, list.
@@ -156,7 +160,7 @@ match bn with
 
 (* these vars will have type Type, irrespective of that types they had in F*. This is to match the limitations of  OCaml*)
 let extendContext (c:context) (tyVars : list<ident>) (tyConsts : list<lident>) : context = 
-    { tyVars = List.append c.tyVars (List.map (fun x -> x.idRange) tyVars); tyConstants = List.append c.tyConstants tyConsts}
+    { tyVars = List.append c.tyVars tyVars; tyConstants = List.append c.tyConstants tyConsts}
 
 let mlsymbolOfLident (id : lident) : mlsymbol =
   id.ident.idText
@@ -219,9 +223,9 @@ let extractCtor (c:context) (ctor: inductiveConstructor):  (mlsymbol * list<mlty
    then (failwith "cargs is unexpectedly non-empty. This is a design-flaw, please report.")
    else 
         (let mlt = extractTyp c ctor.ctype in
-            fprint1 "extracting the type of constructor %s\n" (lident2mlsymbol ctor.cname);
+            // fprint1 "extracting the type of constructor %s\n" (lident2mlsymbol ctor.cname);
             //fprint1 "%s\n" (typ_to_string ctor.ctype);
-            printfn "%A\n" (ctor.ctype);
+            // printfn "%A\n" (ctor.ctype);
         (lident2mlsymbol ctor.cname, argTypes mlt))
 
 (*indices get collapsed to unit, so all we need is the number of index arguments.
@@ -256,10 +260,10 @@ match s with
 | Sig_typ_abbrev (l,bs,_,t,_,_) -> 
     let identsPP = List.map binderPPnames bs in
     let identsReal = List.map binderRealnames bs in
-            printfn "binders are %A\n" (identsReal);
+            //printfn "binders are %A\n" (identsReal);
     let newContext = (extendContext c identsReal [l] ) in
     let tyDecBody = MLTD_Abbrev (extractTyp newContext t) in
-            printfn "type is %A\n" (t);
+            //printfn "type is %A\n" (t);
      Some (l, MLS_Ty [(mlsymbolOfLident l, List.map (fun x -> prependTick (convIdent x)) identsPP , Some tyDecBody)])
      (*type l idents = tyDecBody*)
 
@@ -267,7 +271,7 @@ match s with
     let ind = parseFirstInductiveType s in
     let identsPP = List.map binderPPnames ind.tyBinders in
     let identsReal = List.map binderRealnames ind.tyBinders in
-          //  printfn "binders are %A\n" (identsReal);
+            // printfn "binders are %A\n" (identsReal);
     let newContext = (extendContext c identsReal [ind.tyName]) in
     let nIndices = numIndices ind.k.n ind.tyName.ident.idText in
     let tyDecBody = MLTD_DType (List.map (extractCtor newContext) ind.constructors) in
