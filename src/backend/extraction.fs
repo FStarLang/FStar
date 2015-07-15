@@ -27,7 +27,9 @@ let rec curry (inp: (list<mlty>)) (out: mlty) =
 *)
 
 (*\box type in the thesis, to be used to denote the result of erasure of logical (computationally irrelevant) content*)
-let erasedContent : mlty = MLTY_Tuple []
+(* MLTY_Tuple [] extracts to (), which can represet both the unit type and the unit value. Ocaml gets confused sometimes*)
+let erasedContent : mlty = MLTY_Named ([],([],"unit"))
+
 
 (* \mathbb{T} type in the thesis, to be used when OCaml is not expressive enough for the source type *)
 let unknownType : mlty = MLTY_Var  ("Obj.t", 0)
@@ -41,10 +43,11 @@ let convIdent (id:ident) : mlident = (id.idText ,(convRange id.idRange))
 *)
 type context = {
     tyVars : list<ident>;
-    tyConstants : list<lident>
+    tyConstants : list<lident>;
+    allowTypeVars : bool
 }
 
-let emptyContext : context = {tyVars=[]; tyConstants =[]}
+let emptyContext : context = {tyVars=[]; tyConstants =[]; allowTypeVars=true}
 
 
 let trimLastChar (x:string) : string = 
@@ -159,8 +162,8 @@ match bn with
 | (Inr bvv,_) -> bvv.v.realname
 
 (* these vars will have type Type, irrespective of that types they had in F*. This is to match the limitations of  OCaml*)
-let extendContext (c:context) (tyVars : list<ident>) (tyConsts : list<lident>) : context = 
-    { tyVars = List.append c.tyVars tyVars; tyConstants = List.append c.tyConstants tyConsts}
+let extendContext (c:context) (tyVars : list<ident>) (tyConsts : list<lident>) (alowTypeVars_ : bool ): context = 
+    { tyVars = List.append c.tyVars tyVars; tyConstants = List.append c.tyConstants tyConsts; allowTypeVars = alowTypeVars_}
 
 let mlsymbolOfLident (id : lident) : mlsymbol =
   id.ident.idText
@@ -261,7 +264,7 @@ match s with
     let identsPP = List.map binderPPnames bs in
     let identsReal = List.map binderRealnames bs in
             //printfn "binders are %A\n" (identsReal);
-    let newContext = (extendContext c identsReal [l] ) in
+    let newContext = (extendContext c identsReal [l] true) in
     let tyDecBody = MLTD_Abbrev (extractTyp newContext t) in
             //printfn "type is %A\n" (t);
      Some (l, MLS_Ty [(mlsymbolOfLident l, List.map (fun x -> prependTick (convIdent x)) identsPP , Some tyDecBody)])
@@ -272,7 +275,7 @@ match s with
     let identsPP = List.map binderPPnames ind.tyBinders in
     let identsReal = List.map binderRealnames ind.tyBinders in
             // printfn "binders are %A\n" (identsReal);
-    let newContext = (extendContext c identsReal [ind.tyName]) in
+    let newContext = (extendContext c identsReal [ind.tyName] true) in
     let nIndices = numIndices ind.k.n ind.tyName.ident.idText in
     let tyDecBody = MLTD_DType (List.map (extractCtor newContext) ind.constructors) in
           Some (ind.tyName, MLS_Ty [(lident2mlsymbol ind.tyName, List.append (List.map (fun x -> prependTick (convIdent x)) identsPP) (dummyIndexIdents nIndices)  , Some tyDecBody)])
@@ -283,7 +286,7 @@ let rec extractTypeDefnsAux (c: context) (sigs:list<sigelt>) : list<mlsig1> =
     | hsig::tlsigs ->
         (match extractSigElt c hsig with
         | Some (exportedConst, mls) ->  
-                let nc = extendContext c [] [exportedConst] in
+                let nc = extendContext c [] [exportedConst] true in
                 mls::(extractTypeDefnsAux nc tlsigs)
         | None -> (extractTypeDefnsAux c tlsigs)
         )

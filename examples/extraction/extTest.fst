@@ -23,6 +23,7 @@ type sh (x:Type) =  (x ->  Tot x)
 
 type sh1 : (Type  ->  Type) = fun (x:Type) ->  (x ->  Tot x)
 
+type idt =  (x:Type) ->  (x ->  Tot x)
 
 (*
 type vec (a:Type) : nnat -> Type =

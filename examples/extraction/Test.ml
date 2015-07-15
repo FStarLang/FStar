@@ -19,4 +19,7 @@ type 'x sh =
 type sh1 =
 Obj.t
 
+type idt =
+unit  ->  Obj.t  ->  Obj.t
+
 
