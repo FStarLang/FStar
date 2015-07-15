@@ -104,7 +104,7 @@ match ft with
         (let codomainML = (extractComp  c codomain) in 
         if  (codomainML = erasedContent) 
         then erasedContent 
-        else  (let bsExp:binders = filterImplicits bs in  curry (List.map (extractBinder c) bsExp) codomainML))
+        else  (let bsExp:binders = bs in  curry (List.map (extractBinder c) bsExp) codomainML))
 
   | Typ_refine (bv,ty) -> extractTyp c ty
   | Typ_app (ty, arrgs) ->

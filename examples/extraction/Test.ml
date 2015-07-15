@@ -3,15 +3,15 @@ type nnat =
 | S of nnat
 
 type 'a list =
-| Nil
-| Cons of 'a * 'a list
+| Nil of unit
+| Cons of unit * 'a * 'a list
 
 type ('a, 'b) list2 =
-| Nil2
-| Cons2 of 'a * 'b * ('a, 'b) list2
+| Nil2 of unit * unit
+| Cons2 of unit * unit * 'a * 'b * ('a, 'b) list2
 
 type 'x poly =
-| Poly of nnat * 'x
+| Poly of unit * nnat * 'x
 
 type 'x sh =
 'x  ->  'x
