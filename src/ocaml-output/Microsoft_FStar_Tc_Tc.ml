@@ -230,10 +230,10 @@ in (match ((Microsoft_FStar_Tc_Env.default_effect env md.Microsoft_FStar_Absyn_S
 None
 end
 | Some (l) -> begin
-(let flags = if (Microsoft_FStar_Absyn_Syntax.lid_equals l Microsoft_FStar_Absyn_Const.tot_effect_lid) then begin
+(let flags = if (Microsoft_FStar_Absyn_Syntax.lid_equals l Microsoft_FStar_Absyn_Const.effect_Tot_lid) then begin
 (Microsoft_FStar_Absyn_Syntax.TOTAL)::[]
 end else begin
-if (Microsoft_FStar_Absyn_Syntax.lid_equals l Microsoft_FStar_Absyn_Const.ml_effect_lid) then begin
+if (Microsoft_FStar_Absyn_Syntax.lid_equals l Microsoft_FStar_Absyn_Const.effect_ML_lid) then begin
 (Microsoft_FStar_Absyn_Syntax.MLEFFECT)::[]
 end else begin
 []
