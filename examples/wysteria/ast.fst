@@ -1,7 +1,7 @@
 (*--build-config
-    options:--admit_fsi OrdSet --admit_fsi OrdMap;
+    options:--admit_fsi OrdSet --admit_fsi OrdMap --z3timeout 10;
     variables:LIB=../../lib;
-    other-files:$LIB/ordset.fsi $LIB/ordsetproperties.fst $LIB/ordmap.fsi $LIB/list.fst $LIB/constr.fst $LIB/ext.fst $LIB/classical.fst
+    other-files:$LIB/ordset.fsi $LIB/ordmap.fsi $LIB/list.fst $LIB/constr.fst $LIB/ext.fst $LIB/classical.fst
  --*)
 
 module AST
@@ -667,7 +667,6 @@ let sstep_sec_slice_lemma c c' h = match h with
   | C_assec_ret c c'  -> Conj () (C_assec_ret (slice_c_sps c) (slice_c_sps c'))
 
 #reset-options
-
 
 (**********)
 

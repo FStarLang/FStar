@@ -30,7 +30,7 @@ type Equal (#a:Type) (#f:cmp a) (s1:ordset a f) (s2:ordset a f) =
 
 val eq_lemma: #a:Type -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
               -> Lemma (requires (Equal s1 s2))
-                       (ensures s1 = s2)
+                       (ensures (s1 = s2))
                  [SMTPat (s1 = s2)]
 
 val mem_empty: #a:Type -> #f:cmp a -> x:a
@@ -60,9 +60,9 @@ val mem_subset: #a:Type -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
                                     (forall x. mem #a #f x s1 ==> mem #a #f x s2)))
                    [SMTPat (subset #a #f s1 s2)]
 
-val choose_empty: #a:Type -> #f:cmp a //-> unit
-                  -> Lemma (requires True) (ensures (is_None (choose #a #f (empty #a #f)))) []
-                     (*[SMTPat (choose #a #f (empty #a #f))]*)
+val choose_empty: #a:Type -> #f:cmp a
+                  -> Lemma (requires True) (ensures (is_None (choose #a #f (empty #a #f))))
+                     [SMTPat (choose #a #f (empty #a #f))]
 
 (* TODO: FIXME: Pattern does not contain all quantified vars *)
 val choose_s: #a:Type -> #f:cmp a -> s:ordset a f
@@ -83,10 +83,10 @@ val eq_remove: #a:Type -> #f:cmp a -> x:a -> s:ordset a f
                         (ensures (s = remove #a #f x s))
                   [SMTPat (remove #a #f x s)]
 
-val size_empty: #a:Type -> #f:cmp a //-> unit
-                -> Lemma (requires True) (ensures (size #a #f (empty #a #f) = 0)) []
-                   (*[SMTPat (size #a #f (empty #a #f))]*)
-
+val size_empty: #a:Type -> #f:cmp a
+                -> Lemma (requires True) (ensures (size #a #f (empty #a #f) = 0))
+                   [SMTPat (size #a #f (empty #a #f))]
+                   
 val size_remove: #a:Type -> #f:cmp a -> y:a -> s:ordset a f
                  -> Lemma (requires (mem #a #f y s))
                           (ensures (size #a #f s = size #a #f (remove #a #f y s) + 1))
@@ -95,6 +95,10 @@ val size_remove: #a:Type -> #f:cmp a -> y:a -> s:ordset a f
 val size_singleton: #a:Type -> #f:cmp a -> x:a
                     -> Lemma (requires True) (ensures (size #a #f (singleton #a #f x) = 1))
                        [SMTPat (size #a #f (singleton #a #f x))]
+                       
+val s_eq_empty: #a:Type -> #f:cmp a -> s:ordset a f
+                -> Lemma (requires True) (ensures ((size #a #f s = 0) = (s = empty)))
+                   [SMTPat (s = empty)]
 
 (* TODO:FIXME: implement *)
 val size_union: #a:Type -> #f:cmp a -> s1:ordset a f -> s2:ordset a f

@@ -1,5 +1,5 @@
 (*--build-config
-    options:--verify_module MRef --admit_fsi Set;
+    options:--admit_fsi Set;
     other-files:ext.fst set.fsi heap.fst st.fst
  --*)
 module MRef
