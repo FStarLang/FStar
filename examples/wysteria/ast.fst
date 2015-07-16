@@ -876,10 +876,10 @@ val box_slice_lem: #m:v_meta -> v:value m
 let rec box_slice_lem #m v ps1 ps2 = match v with
   | V_const _        -> ()  
   | V_box #m' ps' v' ->
-    let _ = assert (subset ps' ps2) in
+    let _ = cut (b2t (subset ps' ps2)) in
     if intersect ps1 ps' = empty then ()
     else
-      let _ = assert (intersect ps1 ps' = intersect (intersect ps1 ps2) ps') in
+      let _ = cut (b2t (intersect ps1 ps' = intersect (intersect ps1 ps2) ps')) in
       box_slice_lem v' ps1 ps';
       box_slice_lem v' (intersect ps1 ps2) ps';
       ()
@@ -910,14 +910,14 @@ let rec slc_v_lem_2 #m v p1 p2 = match v with
     let p1p2 = t_union p1 p2 in
     if mem p1 ps && mem p2 ps then slc_v_lem_2 v p1 p2
     else if mem p1 ps && not (mem p2 ps) then
-      let _ = assert (intersect p1p2 ps = intersect (singleton p1) ps) in
-      let _ = assert (intersect p1p2 ps = (singleton p1)) in
+      let _ = cut (b2t (intersect p1p2 ps = intersect (singleton p1) ps)) in
+      let _ = cut (b2t (intersect p1p2 ps = (singleton p1))) in
       box_slice_lem v p1p2 ps;
       box_slice_lem v (singleton p1) ps;
       slice_lem_singl_v (V_box ps v) p1
     else if not (mem p1 ps) && mem p2 ps then
-      let _ = assert (intersect p1p2 ps = intersect (singleton p2) ps) in
-      let _ = assert (intersect p1p2 ps = (singleton p2)) in
+      let _ = cut (b2t (intersect p1p2 ps = intersect (singleton p2) ps)) in
+      let _ = cut (b2t (intersect p1p2 ps = (singleton p2))) in
       box_slice_lem v p1p2 ps;
       box_slice_lem v (singleton p2) ps;
       slice_lem_singl_v (V_box ps v) p2
@@ -1009,18 +1009,6 @@ and slc_en_lem_ps en p ps =
 
 val mempty: #key:Type -> #value:Type -> #f:cmp key -> Tot (OrdMap.ordmap key value f)
 let mempty (#k:Type) (#v:Type) #f = OrdMap.empty #k #v #f
-
-val mremove  : #key:Type -> #value:Type -> #f:cmp key -> key
-              -> OrdMap.ordmap key value f -> Tot (OrdMap.ordmap key value f)
-val mchoose  : #key:Type -> #value:Type -> #f:cmp key -> OrdMap.ordmap key value f
-              -> Tot (option (key * value))
-
-val msize    : #key:Type -> #value:Type -> #f:cmp key -> OrdMap.ordmap key value f
-              -> Tot nat
-
-let mremove (#k:Type) (#v:Type) #f = OrdMap.remove #k #v #f
-let mchoose (#k:Type) (#v:Type) #f = OrdMap.choose #k #v #f
-let msize (#k:Type) (#v:Type) #f = OrdMap.size #k #v #f
 
 type contains_ps (#v:Type) (ps:prins) (m:OrdMap.ordmap prin v p_cmp) =
   forall p. mem p ps ==> contains p m
@@ -1390,25 +1378,7 @@ let slice_c_ps ps c =
   let pi = slice_c_ps_par ps c in
   let tsec = if is_sec c then Some (slice_c_sps c) else None in
   pi, tsec
-
-(*type slice_c_ps_par_inv (ps:prins) (c:sconfig) (pi:tpar) =
-  (forall p. (mem p ps <==> contains p pi) /\
-             (is_Some (select p pi) ==> (Some.v (select p pi) = slice_c p c)))
-
-val slice_c_ps_tpar_lemma: ps:prins -> c:sconfig
-                           -> Lemma (requires (True))
-                                    (ensures (slice_c_ps_par_inv ps c (fst (slice_c_ps ps c))))
-                              (decreases (size ps))
-let rec slice_c_ps_tpar_lemma ps c =
-  let Some p = choose ps in
-  let ps_rest = remove p ps in
-  if ps_rest = empty then () else slice_c_ps_tpar_lemma ps_rest c
-                                              *)
-val pre_forward_simulation: #c:sconfig -> #c':sconfig -> h:sstep c c'
-                            -> ps:prins -> Tot bool
-let pre_forward_simulation #c #c' h ps =
-  (not (is_C_assec_beta h || is_C_assec_ret h)) || subset (Mode.ps (Conf.m c)) ps
-
+                                              
 val slice_remains_same_in_sec_step_p: #c:sconfig -> #c':sconfig
                                       -> h:sstep c c'{is_sec c /\ if_exit_sec_then_to_sec h}
                                       -> p:prin
@@ -1518,40 +1488,31 @@ let slice_c_snd_lemma ps c =
   let _, _ = slice_c_ps ps c in
   ()
 
+val if_par_and_enter_sec_from_sec_then_par: #c:sconfig -> #c':sconfig
+                                            -> h:sstep c c'{is_par c /\ if_enter_sec_then_from_sec h}
+                                            -> Lemma (requires (True))
+                                                     (ensures (is_par c'))
+let if_par_and_enter_sec_from_sec_then_par #c #c' h = match h with
+  | C_assec_beta _ _ -> ()
+  | _                -> ()
+
 val sstep_par_slc_snd_lemma: #c:sconfig -> #c':sconfig -> ps:prins
                              -> h:sstep c c'{is_par c /\ if_enter_sec_then_from_sec h}
                              -> Lemma (requires (True))
                                       (ensures (snd (slice_c_ps ps c) = snd (slice_c_ps ps c') /\
                                                 snd (slice_c_ps ps c) = None))
-#set-options "--split_cases 1"                                                
-let sstep_par_slc_snd_lemma #c #c' ps h = match h with
-  | C_aspar_ps _ _ -> let _, _ = slice_c_ps ps c in let _, _ = slice_c_ps ps c' in ()
-  | C_unbox _ _ -> let _, _  = slice_c_ps ps c in let _, _ = slice_c_ps ps c' in ()
-  | C_const _ _ -> let _, _  = slice_c_ps ps c in let _, _ = slice_c_ps ps c' in ()
-  | C_var _ _ -> let _, _  = slice_c_ps ps c in let _, _ = slice_c_ps ps c' in ()
-  | C_let_e1 _ _ -> let _, _  = slice_c_ps ps c in let _, _ = slice_c_ps ps c' in ()
-  | C_abs _ _ -> let _, _  = slice_c_ps ps c in let _, _ = slice_c_ps ps c' in ()
-  | C_empabs _ _ -> let _, _  = slice_c_ps ps c in let _, _ = slice_c_ps ps c' in ()
-  | C_app_e1 _ _ -> let _, _  = slice_c_ps ps c in let _, _ = slice_c_ps ps c' in ()
-  | C_aspar_e _ _ -> let _, _  = slice_c_ps ps c in let _, _ = slice_c_ps ps c' in ()
-  | C_app_e2 _ _ -> let _, _  = slice_c_ps ps c in let _, _ = slice_c_ps ps c' in ()
-  | C_aspar_red _ _ -> let _, _  = slice_c_ps ps c in let _, _ = slice_c_ps ps c' in ()
-  | C_box_red _ _ -> let _, _  = slice_c_ps ps c in let _, _ = slice_c_ps ps c' in ()
-  | C_unbox_red _ _ -> let _, _  = slice_c_ps ps c in let _, _ = slice_c_ps ps c' in ()
-  | C_let_red _ _ -> let _, _  = slice_c_ps ps c in let _, _ = slice_c_ps ps c' in ()
-  | C_app_red _ _ -> let _, _  = slice_c_ps ps c in let _, _ = slice_c_ps ps c' in ()
-  | C_let_beta _ _ -> let _, _  = slice_c_ps ps c in let _, _ = slice_c_ps ps c' in ()
-  | C_app_beta _ _ -> let _, _  = slice_c_ps ps c in let _, _ = slice_c_ps ps c' in ()
-  | C_aspar_beta _ _ -> let _, _  = slice_c_ps ps c in let _, _ = slice_c_ps ps c' in ()
-  | C_box_beta _ _ -> let _, _  = slice_c_ps ps c in let _, _ = slice_c_ps ps c' in ()
-  | C_unbox_beta _ _ -> let _, _  = slice_c_ps ps c in let _, _ = slice_c_ps ps c' in ()
-  | C_assec_ps _ _ -> let _, _  = slice_c_ps ps c in let _, _ = slice_c_ps ps c' in ()
-  | C_assec_e _ _ -> let _, _  = slice_c_ps ps c in let _, _ = slice_c_ps ps c' in ()
-  | C_assec_red _ _ -> let _, _  = slice_c_ps ps c in let _, _ = slice_c_ps ps c' in ()
-  | C_assec_beta _ _ -> let _, _  = slice_c_ps ps c in let _, _ = slice_c_ps ps c' in ()
-  | C_assec_ret _ _ -> let _, _ = slice_c_ps ps c in let _, _ = slice_c_ps ps c' in ()
+let sstep_par_slc_snd_lemma #c #c' ps h =
+  slice_c_snd_lemma ps c;
+  if_par_and_enter_sec_from_sec_then_par #c #c' h;
+  slice_c_snd_lemma ps c'
 
-#reset-options
+val if_par_then_exit_sec_to_sec: #c:sconfig -> #c':sconfig
+                                 -> h:sstep c c'{is_par c}
+                                 -> Lemma (requires (True))
+                                          (ensures (if_exit_sec_then_to_sec h))
+let if_par_then_exit_sec_to_sec #c #c' h = match h with
+  | C_assec_ret _ _ -> ()
+  | _               -> ()
 
 opaque val forward_simulation_par: #c:sconfig -> #c':sconfig
                                    -> h:sstep c c'{is_par c /\
@@ -1560,8 +1521,8 @@ opaque val forward_simulation_par: #c:sconfig -> #c':sconfig
                                    -> Tot (pstep_par_star #ps (slice_c_ps ps c)
                                                               (slice_c_ps ps c'))
                                       (decreases (size ps))
-let rec forward_simulation_par #c #c' h ps = admit ()
-  (*let pi, s = slice_c_ps ps c in
+let rec forward_simulation_par #c #c' h ps =
+  let pi, s = slice_c_ps ps c in
   let pi', s' = slice_c_ps ps c' in
   sstep_par_slc_snd_lemma ps h;
   let _ = cut (b2t (s = s')) in
@@ -1571,9 +1532,10 @@ let rec forward_simulation_par #c #c' h ps = admit ()
 
   let c_p = slice_c p c in
   let c_p' = slice_c p c' in
-
+  
+  if_par_then_exit_sec_to_sec #c #c' h;
   let h1 = sstep_par_slice_lemma c c' h p in
-    
+
   if ps_rest = empty then
     let _ = cut (b2t (pi = update p c_p mempty)) in
     let _ = cut (b2t (pi' = update p c_p' mempty)) in
@@ -1603,7 +1565,7 @@ let rec forward_simulation_par #c #c' h ps = admit ()
         pstep_par_star_upd_same #ps_rest #(pi_rest, s_rest) #(pi_rest', s_rest') h_ind p (slice_c p c)
       | IntroR h' ->
         pstep_par_star_upd_step #ps_rest #(pi_rest, s_rest) #(pi_rest', s_rest')
-                                         #c_p #c_p' h_ind h' p*)
+                                         #c_p #c_p' h_ind h' p
 
 val slice_v_lem_singl_of_ps: #m:v_meta -> v:value m -> ps:prins -> p:prin{mem p ps}
                              -> Lemma (requires (True))
