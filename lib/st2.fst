@@ -201,44 +201,37 @@ val noleak_ok: x1:ref int
 let noleak_ok x1 x2 b1 b2 = compose2 noleak noleak (x1,b1) (x2,b2)
 
 
-(*  First try to work on Nik's proposal of sequencing... Not working yet *)
-
-assume val sequence: c0r:Type -> c1r:Type 
-                     -> wp0:STWP_h heap2 c0r -> wp1:STWP_h heap2 c1r
-                     -> wlp0:STWP_h heap2 c0r -> wlp1:STWP_h heap2 c1r
-                     -> =c0:(unit -> STATE2 c0r wp0 wlp0)
-                     -> =c1:(unit -> STATE2 c1r wp1 wlp1)
-                     -> STATE2 c1r 
-                       ((st_bind_wp heap2) c0r c1r wp0 wlp0 (fun a-> wp1) (fun a -> wlp1))
-                       ((st_bind_wlp heap2) c0r c1r wlp0 (fun a -> wlp1))
+(* Example for Nik's proposal of sequencing (Email from 04/29/2015) *)
 
 let c0_pfx a = a := 0
-let c1_pfx b = b := !b - !b
-val equiv_pfx: a:ref int
-               -> b:ref int
-               -> ST2 (unit * unit)
-                  (requires (fun _ -> True)) 
-                  (ensures (fun _ _ h2 -> sel (fst h2) a = sel (snd h2) b)) 
+let c1_pfx b = b := 1
 let equiv_pfx a b = compose2 c0_pfx c1_pfx a b
 
-let c0_sfx c = c := !c - !c
-let c1_sfx d = d := 0
-val equiv_sfx: c:ref int
-                -> d:ref int
-                -> ST2 (unit * unit)
-                  (requires (fun _ -> True)) 
-                  (ensures (fun _ _ h2 -> sel (fst h2) c = sel (snd h2) d))
-let equiv_sfx c d = compose2 c0_sfx c1_sfx c d
+type injection (f:int -> Tot int) = (forall x y. f x = f y ==> x = y)
+type surjection (f:int -> Tot int) = (forall y. (exists x. f x = y))
+type bijection (f:int -> Tot int) = injection f /\ surjection f
 
-(* This does not work yet: Unknown assertion failed... *)
-(*
+(* sample two random values into c and d such that they are related by a
+  bijection f *)
+assume val sample : f:(int -> Tot int){bijection f}
+                    -> ST2 (int * int)
+                       (requires (fun _ -> True))
+                       (*(ensures (fun h2' (v1,v2)  h2 -> h2' = h2 /\ v1 = v2))*)
+                       (ensures (fun h2' p  h2 -> h2' = h2 /\ fst p = f (snd p)))
+                              
+
+let c0_sfx (a, c) = a := !a + c
+let c1_sfx (b, d) = b := !b + d
+let equiv_sfx a b c d = compose2 c0_sfx c1_sfx (a, c) (b, d)
+
+(* relate the programs 
+  c0_pfx ; sample ; c0_sfx  and
+  c1_pfx ; sample ; c1_sfx  using sequence *)
 val equiv_seq: a:ref int
                -> b:ref int
-               -> c:ref int
-               -> d:ref int
                -> ST2 (unit * unit)
                   (requires (fun _ -> True))
-                  (ensures (fun _ _ h2 -> sel (fst h2) a = sel (snd h2) b /\
-                                          sel (fst h2) c = sel (snd h2) d)) 
-let equiv_seq a b c d = sequence (fun () -> equiv_pfx a b) (fun () -> equiv_sfx c d)
-*)
+                  (ensures (fun _ _ h2 -> sel (fst h2) a = sel (snd h2) b))
+let equiv_seq a b = let _ = equiv_pfx a b in
+                    let c, d = sample (fun x -> x + 1) in
+                    equiv_sfx a b c d
