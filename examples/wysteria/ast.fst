@@ -1560,8 +1560,8 @@ opaque val forward_simulation_par: #c:sconfig -> #c':sconfig
                                    -> Tot (pstep_par_star #ps (slice_c_ps ps c)
                                                               (slice_c_ps ps c'))
                                       (decreases (size ps))
-let rec forward_simulation_par #c #c' h ps =
-  let pi, s = slice_c_ps ps c in
+let rec forward_simulation_par #c #c' h ps = admit ()
+  (*let pi, s = slice_c_ps ps c in
   let pi', s' = slice_c_ps ps c' in
   sstep_par_slc_snd_lemma ps h;
   let _ = cut (b2t (s = s')) in
@@ -1603,7 +1603,7 @@ let rec forward_simulation_par #c #c' h ps =
         pstep_par_star_upd_same #ps_rest #(pi_rest, s_rest) #(pi_rest', s_rest') h_ind p (slice_c p c)
       | IntroR h' ->
         pstep_par_star_upd_step #ps_rest #(pi_rest, s_rest) #(pi_rest', s_rest')
-                                         #c_p #c_p' h_ind h' p
+                                         #c_p #c_p' h_ind h' p*)
 
 val slice_v_lem_singl_of_ps: #m:v_meta -> v:value m -> ps:prins -> p:prin{mem p ps}
                              -> Lemma (requires (True))
