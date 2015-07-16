@@ -41,9 +41,13 @@ mlident list
 type mlsymbols =
 mlsymbol list
 
+type e_tag =
+| MayErase
+| Keep
+
 type mlty =
 | MLTY_Var of mlident
-| MLTY_Fun of (mlty * mlty)
+| MLTY_Fun of (mlty * e_tag * mlty)
 | MLTY_Named of (mlty list * mlpath)
 | MLTY_Tuple of mlty list
 | MLTY_App of (mlty * mlty)

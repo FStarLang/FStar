@@ -268,7 +268,7 @@ let rec specs = (fun _11_156 -> (match (_11_156) with
 | () -> begin
 (Support.ST.op_Colon_Equals trace_error true)
 end))), "Don\'t print an error message; show an exception trace instead"))::((Support.Microsoft.FStar.Getopt.noshort, "codegen", Support.Microsoft.FStar.Getopt.OneArg (((fun s -> (let _11_159 = (Support.ST.op_Colon_Equals codegen (parse_codegen s))
-in (Support.ST.op_Colon_Equals verify false))), "OCaml|F#|JavaScript")), "Generate code for execution"))::((Support.Microsoft.FStar.Getopt.noshort, "codegen-lib", Support.Microsoft.FStar.Getopt.OneArg (((fun s -> (Support.ST.op_Colon_Equals codegen_libs (((Support.Microsoft.FStar.Util.split s "."))::(! (codegen_libs))))), "namespace")), "External runtime library library"))::((Support.Microsoft.FStar.Getopt.noshort, "lax", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_162 -> (match (_11_162) with
+in (Support.ST.op_Colon_Equals verify false))), "OCaml")), "Generate code for execution"))::((Support.Microsoft.FStar.Getopt.noshort, "codegen-lib", Support.Microsoft.FStar.Getopt.OneArg (((fun s -> (Support.ST.op_Colon_Equals codegen_libs (((Support.Microsoft.FStar.Util.split s "."))::(! (codegen_libs))))), "namespace")), "External runtime library library"))::((Support.Microsoft.FStar.Getopt.noshort, "lax", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_162 -> (match (_11_162) with
 | () -> begin
 (let _11_163 = (Support.ST.op_Colon_Equals pretype true)
 in (Support.ST.op_Colon_Equals verify false))
@@ -348,12 +348,12 @@ in (('h', "help", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun x -> (let _11_20
 in (exit (0))))), "Display this information"))::specs)
 end))
 and parse_codegen = (fun s -> (match (s) with
-| ("OCaml") | ("F#") | ("JavaScript") -> begin
+| ("OCaml-experimental") | ("OCaml") -> begin
 Some (s)
 end
 | _ -> begin
-(let _11_216 = (Support.Microsoft.FStar.Util.print_string "Wrong argument to codegen flag\n")
-in (let _11_218 = (display_usage (specs ()))
+(let _11_215 = (Support.Microsoft.FStar.Util.print_string "Wrong argument to codegen flag\n")
+in (let _11_217 = (display_usage (specs ()))
 in (exit (1))))
 end))
 
@@ -365,13 +365,13 @@ end
 (Support.List.contains m l)
 end)))
 
-let set_options = (fun s -> (Support.Microsoft.FStar.Getopt.parse_string (specs ()) (fun _11_224 -> ()) s))
+let set_options = (fun s -> (Support.Microsoft.FStar.Getopt.parse_string (specs ()) (fun _11_223 -> ()) s))
 
 let reset_options_string = (ref None)
 
-let reset_options = (fun _11_226 -> (match (_11_226) with
+let reset_options = (fun _11_225 -> (match (_11_225) with
 | () -> begin
-(let _11_227 = (init_options ())
+(let _11_226 = (init_options ())
 in (match ((! (reset_options_string))) with
 | Some (x) -> begin
 (set_options x)

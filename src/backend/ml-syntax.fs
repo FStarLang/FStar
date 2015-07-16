@@ -5,7 +5,7 @@ open Microsoft.FStar.Absyn.Syntax
 
 (* -------------------------------------------------------------------- *)
 type mlsymbol = string
-type mlident  = mlsymbol * int
+type mlident  = mlsymbol * int //what is the second component? Why do we need it?
 type mlpath   = list<mlsymbol> * mlsymbol
 
 (* -------------------------------------------------------------------- *)

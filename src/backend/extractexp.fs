@@ -5,17 +5,7 @@ open Microsoft.FStar.Util
 open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Backends.ML.Syntax
-
-type binding = 
-    | Ty  of btvar * mlident
-    | Val of bvvar * mlident * mltyscheme  
-    | Fv  of fvvar * mlident * mltyscheme
-
-type env = {
-    tcenv:Tc.Env.env;
-    gamma:list<binding>;
-    tydefs:list<mltydecl>; 
-}
+open Microsoft.FStar.Backends.ML.Env
 
 let fail r msg = 
     Util.print_string <| Print.format_error r msg;
@@ -26,12 +16,6 @@ let err_uninst e =
 
 let err_ill_typed_application e args t =
     fail e.pos ("Ill-typed application")
-
-let lookup  (g:env) (x:either<bvvar,fvvar>) : mlexpr * mltyscheme = failwith "NYI"
-let lookup_var g e = match e.n with 
-    | Exp_bvar x -> lookup g (Inl x)
-    | Exp_fvar (x, _) -> lookup g (Inr x)
-    | _ -> failwith "impossible" 
     
 let translate_typ (g:env) (t:typ) : mlty = failwith "NYI"
 
@@ -79,7 +63,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
     match (Util.compress_exp e).n with 
         | Exp_bvar _
         | Exp_fvar _ -> 
-          let x, s = lookup_var g e in 
+          let x, s = must <| lookup_var g e in 
           begin match s with 
             | ([], t) -> x, MayErase, t
             | _ -> err_uninst e
@@ -106,7 +90,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
           begin match (Util.compress_exp head).n with 
             | Exp_bvar _ 
             | Exp_fvar _ -> 
-              let head, (vars, t) = lookup_var g e in
+              let head, (vars, t) = must <| lookup_var g e in
               let n = List.length vars in
               if n <= List.length args
               then let prefix, rest = Util.first_N (List.length vars) args in
