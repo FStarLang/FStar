@@ -229,12 +229,12 @@ let finished_message fmods =
          print_string "All verification conditions discharged successfully\n"
     end
 
-let codegen fmods = 
+let codegen fmods env= 
     if !Options.codegen = Some "OCaml" then 
         try
             let mllib = Backends.OCaml.ASTTrans.mlmod_of_fstars (List.tail fmods) in
             let doc   = Backends.OCaml.Code.doc_of_mllib mllib in
-            List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^".ml")) (FSharp.Format.pretty 120 d)) doc
+            List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^".ml")) (FSharp.Format.pretty 120 d)) doc 
         with Backends.OCaml.ASTTrans.OCamlFailure (rg, error) -> begin
             (* FIXME: register exception and remove this block  *)
             Util.print_string (* stderr *) <|
@@ -244,9 +244,10 @@ let codegen fmods =
             exit 1
         end
     else if !Options.codegen = Some "OCaml-experimental" then begin
-        let tyDefns = Backends.OCaml.Extraction.extractTypeDefns ((List.hd (List.tl fmods)).declarations) in
+        let tyDefns = Backends.ML.Extraction.extractTypeDefns ((List.hd (List.tl fmods)).declarations) env in
         let newDoc = Backends.OCaml.Code.doc_of_sig tyDefns in
         fprint1 "%s\n" (FSharp.Format.pretty 1 newDoc)
+       (*copy this part from above.*)
     end
 //    ;
 //    if !Options.codegen = Some "JavaScript" then begin
@@ -277,7 +278,7 @@ let go _ =
              if !Options.interactive 
              then interactive_mode dsenv env
              else begin
-                codegen fmods;
+                codegen fmods env;
                 finished_message fmods
              end
 

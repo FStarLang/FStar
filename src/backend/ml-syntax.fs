@@ -1,5 +1,5 @@
 ﻿(* -------------------------------------------------------------------- *)
-module Microsoft.FStar.Backends.OCaml.Syntax
+module Microsoft.FStar.Backends.ML.Syntax
 
 open Microsoft.FStar.Absyn.Syntax
 
@@ -66,14 +66,15 @@ type mlexpr =
 | MLE_Record of list<mlsymbol> * list<(mlsymbol * mlexpr)>
 | MLE_CTor   of mlpath * list<mlexpr>
 | MLE_Tuple  of list<mlexpr>
-| MLE_Let    of bool * list<(mlident * mlidents * mlexpr)> * mlexpr
+| MLE_Let    of bool * list<(mlident * option<mltyscheme> (* needed for polymorphic recursion *) * mlidents (* mutuals? *) * mlexpr)> * mlexpr 
 | MLE_App    of mlexpr * list<mlexpr>
 | MLE_Proj   of mlexpr * mlpath
 | MLE_Fun    of mlidents * mlexpr
 | MLE_If     of mlexpr * mlexpr * option<mlexpr>
 | MLE_Match  of mlexpr * list<mlbranch>
 | MLE_Raise  of mlpath * list<mlexpr>
-| MLE_Try    of mlexpr * list<mlbranch>
+| MLE_Try       of mlexpr * list<mlbranch>
+| MLE_Coercion  of mlexpr * mlty * mlty
 
 and mlbranch = mlpattern * option<mlexpr> * mlexpr
 

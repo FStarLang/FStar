@@ -11,7 +11,7 @@ open Microsoft.FStar.Util
 open Microsoft.FStar.Range
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn.Util
-open Microsoft.FStar.Backends.OCaml.Syntax
+open Microsoft.FStar.Backends.ML.Syntax
 open FSharp.Format
 
 
@@ -734,7 +734,7 @@ and mllets_of_lets (mlenv : mlenv) (rg : range) (lenv : lenv) (rec_, lbs) =
         let inlenv = if rec_ then lenvb else lenv in
         List.map (fun (x, e) ->
             let mlid = lresolve lenvb x.realname in
-            (mlid, [], mlexpr_of_expr mlenv rg inlenv e)) lbs
+            (mlid, None, [], mlexpr_of_expr mlenv rg inlenv e)) lbs
     in
 
     (lenvb, es)
@@ -1009,7 +1009,7 @@ let mlsig_of_sig (mlenv : mlenv) (modx : list<sigelt>) : mlsig =
 
 (* -------------------------------------------------------------------- *)
 let mlmod_of_fstar (fmod_ : modul) =
-    let name = Backends.OCaml.Syntax.mlpath_of_lident fmod_.name in
+    let name = Backends.ML.Syntax.mlpath_of_lident fmod_.name in
     fprint1 "OCaml extractor : %s\n" fmod_.name.ident.idText;
     //printfn "%A\n" (fmod_.declarations);
     //fprint1 "%s\n\n\n\n\n\n\n\n\n" "end";
@@ -1024,7 +1024,7 @@ let mlmod_of_fstar (fmod_ : modul) =
     (name, sig_, mod_)
 
 let mlmod_of_iface (fmod_ : modul) =
-    let name = Backends.OCaml.Syntax.mlpath_of_lident fmod_.name in
+    let name = Backends.ML.Syntax.mlpath_of_lident fmod_.name in
     fprint1 "OCaml skip: %s\n" fmod_.name.ident.idText;
     mlsig_of_sig (mk_mlenv name) fmod_.declarations |> ignore
     

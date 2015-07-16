@@ -48,4 +48,75 @@ Recursive Extraction isEven3.
 
 
 
+Definition f := (fun (A:Type) (x:A) => x) nat 0.
+
+Recursive Extraction f.
+
+Definition fb (b:bool) := (if b then (fun (A:Type) (x:A) => x) else (fun (A:Type) (x:A)=>x) ) nat 0.
+Definition fc (b:bool) := (if b then (fun (A:Type) (x:A) (y:A) => x) else (fun (A:Type) (x:A) (y:A) =>y) ) nat 0 1.
+
+Recursive Extraction fb fc.
+
+Definition idvar := fun X:Type => X -> X.
+
+Definition idtype := forall (X:Type), X -> X.
+
+Check idvar.
+Check idtype.
+
+Definition id : idtype := fun X x => x. 
+
+
+Definition idu : unit -> idtype := fun u X x => x. 
+
+Extract Inductive unit => unit [ "()" ].
+
+Recursive Extraction idvar idtype id idu.
+
+
+Inductive  poly (x : nat -> Type) :=
+| Poly :  forall (n:nat), x n -> poly x.
+
+Inductive vec (A:Type) : nat -> Type :=
+| vnil : vec A 0
+| vcons : forall n, A -> (vec A n) -> (vec A (S n)).
+
+
+Definition polyvec := poly (vec nat).
+
+
+Inductive  poly2 (x : Type -> Type) : Type :=
+     | Poly2 :  forall (t:Type), x t -> poly2 x.
+
+
+Definition polylist := poly2 list.
+
+Definition polylistnat : polylist.
+  exists nat. exact (cons 1 nil).
+Defined.
+
+
+Definition polylistbool : polylist.
+  exists bool. exact (cons true nil).
+Defined.
+
+
+
+Recursive Extraction polylistnat polylistbool.
+
+
+Inductive  poly3 (x : Type -> Type) : Type :=
+     | Poly3 :  x nat -> poly3 x.
+
+Recursive Extraction polyvec polylist poly3.
+
+Definition poly3list : Type := poly3 list.
+
+Recursive Extraction poly3list poly2.
+
+
+
+
+ 
+
 
