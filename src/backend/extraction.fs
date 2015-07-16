@@ -41,19 +41,26 @@ let unknownType : mlty =  MLTY_Var  ("Obj.t", 0) (*wny note MLTY_named? tried it
 let convRange (r:Range.range) : int = 0 (*FIX!!*)
 let convIdent (id:ident) : mlident = (id.idText ,(convRange id.idRange))
     
-(* This is all the context is needed for extracting F* types to OCaml.
-   In particular, the definition of a type constant is not needed when translating references to it.
-   However, enough info is needed to determine whether a type constant is a type scheme. add that.
-*)
-type context = env
+type argTransform = arg -> option<arg> (*none indicates that this argument should be deleted*)
+type nthArgTransform = int -> argTransform (* f n is the argtransform for the nth argument (of a type constant)*)
+let idArgTransform :argTransform = fun a -> Some a
+type nthArgTransforms = lident (*name of a constant*) -> nthArgTransform
+ 
+
+type context = {
+  e : env;
+  at:nthArgTransforms
+}
 
 (* vars in tyVars will have type Type, irrespective of that types they had in F*. This is to match the limitations of  OCaml*)
-let extendContext (c:env) (tyVars : list<binder>) : env = 
-  List.fold_left push_local_binding c (List.map binding_of_binder tyVars)
-
+let extendContext (c:context) (tyVars : list<binder>) : context = 
+{
+  e= List.fold push_local_binding c.e (List.map binding_of_binder tyVars);
+  at= c.at
+}
 
 let contains (c:context) (b:btvar) : bool = 
-  try (let _ = (lookup_btvar c b) in true)
+  try (let _ = (lookup_btvar c.e b) in true) (*does not work for vars mentioned in bodies of inductives. those mentions have wierd chars appended in realnames. their range matches, though*)
   with
    | _ -> false
 
@@ -99,12 +106,13 @@ match ft with
         let bts = extractBindersTypes c bs in
         (let codomainML = (extractComp  c codomain) in 
         if  (codomainML = erasedContent) 
-        then erasedContent 
+        then erasedContent (*perhaps this is not needed*)
         else  (curry bts codomainML))
 
   | Typ_refine (bv (*var and unrefined type*) , _ (*refinement condition*)) -> extractTyp c bv.sort
 
   (*can this be a partial type application? , i.e can the result of this application be something like Type -> Type, or nat -> Type? : Yes *)
+  (* should we try to apply additional arguments here? if not, where? FIX!! *)
   | Typ_app (ty, arrgs) ->
     (match ty.n with
         | Typ_btvar btv -> (if (contains c btv) then MLTY_Var (prependTick (convIdent btv.v.ppname)) else unknownType)
@@ -168,7 +176,7 @@ let mlsymbolOfLident (id : lident) : mlsymbol =
 type inductiveConstructor = {
   cname: lident;
   ctype : typ;
-  cargs : binders (*will this list always be empty? it has always been empty: tested nat, list, vec*)
+  cargs : binders (*will this list always be empty? it has always been empty so far*)
 }
 type inductiveTypeFam = {
   tyName: lident;
@@ -265,6 +273,7 @@ match s with
 
 | Sig_bundle _ -> 
     let ind = parseFirstInductiveType s in
+    //let k = lookup_typ_lid c ind.tyName in
     let identsPP = List.map binderPPnames ind.tyBinders in
     let newContext = (extendContext c ind.tyBinders) in
     let nIndices = numIndices ind.k.n ind.tyName.ident.idText in
@@ -280,6 +289,11 @@ List.fold_right (fun  x ll -> match x with
                       | Some xs -> xs::ll
                       | None -> ll) l []
 
+let mkContext (e:env) : context =
+{ e= e;
+  at= fun _ _ a -> Some a 
+}
+
 let extractTypeDefns (sigs:list<sigelt>) (e: env): list<mlsig1> =
-   pruneNones (extractTypeDefnsAux e sigs)
+   pruneNones (extractTypeDefnsAux (mkContext e) sigs)
 
