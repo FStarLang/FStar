@@ -50,7 +50,7 @@ unit  ->  Obj.t  ->  Obj.t
 
 type ('a, 'dummyV1) vec =
 | Nill of unit
-| Conss of unit * nnat * Obj.t * (Obj.t, 'dummyV1) vec
+| Conss of unit * nnat * Obj.t * (Obj.t, unit) vec
 
 type vecn1 =
 (nnat, unit) vec

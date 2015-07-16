@@ -77,9 +77,13 @@ let isTypeScheme (i : lident) (c: context) : bool = true  (* FIX!! *)
 let lident2mlpath (l:lident) : mlpath =
   ( (* List.map (fun x -> x.idText) l.ns *) [], l.ident.idText)
 
+let extractTyVar (c:context) (btv : btvar) = (if (contains c btv) then MLTY_Var (prependTick (convIdent btv.v.ppname)) else unknownType)
+
+
+let rec extractType' (c:context) (ft:typ') : mlty = 
+
 
 (*the \hat{\epsilon} function in the thesis (Sec. 3.3.5) *)
-let rec extractType' (c:context) (ft:typ') : mlty = 
 (* First \beta, \iota and \zeta reduces ft, or assume they are already reduced.
     Since F* does not have SN, one has to be more careful for the termination argument.
     Because OCaml does not support computations in Type, unknownType is supposed to be used if they are really unaviodable.
@@ -90,19 +94,9 @@ let rec extractType' (c:context) (ft:typ') : mlty =
     An an F* specific example, unless we unfold Mem x pre post to StState x wp wlp, we have no idea that it should be translated to x
 *)
 match ft with
-(*The next 2 cases duplicate a lot of code in the Type_app case. It will nice to share the common computations.*)
-  | Typ_btvar btv -> (if (contains c btv) then MLTY_Var (prependTick (convIdent btv.v.ppname)) else unknownType)
+  | Typ_btvar btv -> extractTyVar c btv
   (*it is not clear whether description in the thesis covers type applications with 0 args. However, this case is needed to translate types like nnat, and so far seems to work as expected*)
-  | Typ_const ftv -> 
-            (match  (isTypeScheme ftv.v c)  with
-             | true -> MLTY_Named ([],(lident2mlpath ftv.v))
-             | false -> 
-                 (match  (deltaUnfold ftv.v c) with
-                 | Some tyu ->  extractTyp c tyu
-                 | None -> unknownType
-                 )
-            )
-
+  | Typ_const ftv ->  extractTyConstApp c ftv []
   | Typ_fun (bs, codomain) -> 
         let bts = extractBindersTypes c bs in
         (let codomainML = (extractComp  c codomain) in 
@@ -116,19 +110,9 @@ match ft with
   (* should we try to apply additional arguments here? if not, where? FIX!! *)
   | Typ_app (ty, arrgs) ->
     (match ty.n with
-        | Typ_btvar btv -> (if (contains c btv) then MLTY_Var (prependTick (convIdent btv.v.ppname)) else unknownType)
+        | Typ_btvar btv ->  extractTyVar c btv
             (*the args are thrown away, because in OCaml, type variables have type Type and not something like -> .. -> .. Type *)
-        | Typ_const ftv -> 
-            (match  (isTypeScheme ftv.v c)  with
-             | true -> 
-                 let mlargs = List.map (getTypeFromArg c) arrgs in
-                    (MLTY_Named (mlargs,(lident2mlpath ftv.v)))
-             | false -> 
-                 (match  (deltaUnfold ftv.v c) with
-                 | Some tyu ->  extractTyp c tyu
-                 | None -> unknownType
-                 )
-            )
+        | Typ_const ftv -> extractTyConstApp c ftv arrgs            
         | _ -> unknownType)
 
   | Typ_lam  _ -> unknownType
@@ -141,7 +125,16 @@ and getTypeFromArg (c:context) (a:arg) : mlty =
 match (fst a) with
 | Inl ty -> extractTyp c ty
 | Inr _ -> erasedContent 
-
+and extractTyConstApp (c:context) (ftv:ftvar) (ags : args) =
+            match  (isTypeScheme ftv.v c)  with
+             | true -> 
+                 let mlargs = List.map (getTypeFromArg c) ags in
+                    (MLTY_Named (mlargs,(lident2mlpath ftv.v)))
+             | false -> 
+                 (match  (deltaUnfold ftv.v c) with
+                 | Some tyu ->  extractTyp c tyu
+                 | None -> unknownType
+                 )
 and extractBinderType  (c:context) (bn : binder): mlty =
 match bn with
 | (Inl btv,_) -> (extractKind c (btv.sort))

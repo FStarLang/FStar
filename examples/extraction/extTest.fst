@@ -1,7 +1,7 @@
 (*--build-config
   --*)
 
-(*fstar extTest.fst --codegen OCaml > Test.ml ; sed '$d' Test.ml > temp ; cp temp Test.ml ; ocamlc Test.ml*)
+(*fstar extTest.fst --codegen OCaml-experimental > Test.ml ; sed '$d' Test.ml > temp ; cp temp Test.ml ; ocamlc Test.ml*)
 module Test
 
 type nnat =
