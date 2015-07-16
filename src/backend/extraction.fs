@@ -36,7 +36,7 @@ let rec curry (inp: (list<mlty>)) (out: mlty) =
 let erasedContent : mlty = MLTY_Named ([],([],"unit"))
 
 (* \mathbb{T} type in the thesis, to be used when OCaml is not expressive enough for the source type *)
-let unknownType : mlty = MLTY_Named  ([],([],"Obj.t"))
+let unknownType : mlty =  MLTY_Var  ("Obj.t", 0) (*wny note MLTY_named? tried it, produces l__Obj.ty*)
 
 let convRange (r:Range.range) : int = 0 (*FIX!!*)
 let convIdent (id:ident) : mlident = (id.idText ,(convRange id.idRange))
@@ -276,9 +276,9 @@ let rec extractTypeDefnsAux (c: context) (sigs:list<sigelt>) : list<option<mlsig
   List.map  (extractSigElt c) sigs
  
 let pruneNones (l : list<option<'a>>) : list<'a> =
-List.fold (fun ll x -> match x with 
+List.foldBack (fun  x ll -> match x with 
                       | Some xs -> xs::ll
-                      | None -> ll) [] l
+                      | None -> ll) l []
 
 let extractTypeDefns (sigs:list<sigelt>) (e: env): list<mlsig1> =
    pruneNones (extractTypeDefnsAux e sigs)
