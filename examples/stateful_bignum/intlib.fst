@@ -66,6 +66,11 @@ val shift_left: v:int -> i:nat -> Tot (res:int{ res = v * (pow2 i)})
 let shift_left v i =
   v * (pow2 i)
 
+(* asr OCaml operator *)
+val arithmetic_shift_right: v:int -> i:nat -> Tot (res:int{ res = div v (pow2 i) })
+let arithmetic_shift_right v i = 
+  div v (pow2 i)
+
 (* Case of C cast functions ? *)
 (* Implemented by "mod" in OCaml *)
 val signed_modulo:
@@ -80,6 +85,16 @@ let signed_modulo v p =
 assume val xor_op: x:int -> y:int -> Tot (z:int{ z = 0 <==> x = y })
 assume val and_op: x:int -> y:int -> Tot (z:int{ z = 0 <==> (x = 0 /\ y = 0)})
 assume val or_op: x:int -> y:int -> Tot (z:int{ z = 0 <==> (x = 0 \/ y = 0) })
+
+(* Comparison *)
+(* To replace with something constant time in real code *)
+val compare : x:int -> y:int -> Tot (r:int{ (r = 0 <==> x = y)
+					    /\ (r = 1 <==> x > y)
+					    /\ (r = -1 <==> x < y) })
+let compare x y =
+  if x = y then 0
+  else if x < y then -1
+  else 1
 
 (*** Lemmas ***)
 
