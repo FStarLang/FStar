@@ -74,14 +74,6 @@ Extract Inductive unit => unit [ "()" ].
 Recursive Extraction idvar idtype id idu.
 
 
-Inductive  poly2 (x : Type -> Type) : Type :=
-     | Poly2 :  forall (t:Type), x t -> poly2 x.
-
-
-Definition polylist := poly2 list.
-
-Recursive Extraction polylist.
-
 Inductive  poly (x : nat -> Type) :=
 | Poly :  forall (n:nat), x n -> poly x.
 
@@ -92,7 +84,38 @@ Inductive vec (A:Type) : nat -> Type :=
 
 Definition polyvec := poly (vec nat).
 
-Recursive Extraction polyvec polylist.
+
+Inductive  poly2 (x : Type -> Type) : Type :=
+     | Poly2 :  forall (t:Type), x t -> poly2 x.
+
+
+Definition polylist := poly2 list.
+
+Definition polylistnat : polylist.
+  exists nat. exact (cons 1 nil).
+Defined.
+
+
+Definition polylistbool : polylist.
+  exists bool. exact (cons true nil).
+Defined.
+
+
+
+Recursive Extraction polylistnat polylistbool.
+
+
+Inductive  poly3 (x : Type -> Type) : Type :=
+     | Poly3 :  x nat -> poly3 x.
+
+Recursive Extraction polyvec polylist poly3.
+
+Definition poly3list : Type := poly3 list.
+
+Recursive Extraction poly3list poly2.
+
+
+
 
  
 

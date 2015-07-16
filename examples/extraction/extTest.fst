@@ -90,7 +90,7 @@ type polyvec = poly (vec nnat)
   So, one has to be careful while instantiating those binders.
   In particular, one has to apply more arguments before instantiating.
   If the arguments are terms, unit should usually work, because
-  term-dependencies are removed type definitions.
+  term-dependencies are removed in type definitions.
 
   In case the arguments are types, Obj.t seems to be the only thing that
   can be cooked from thin air, and it is what Coq seems to be doing.
