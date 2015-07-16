@@ -128,7 +128,6 @@ val monotonic_assign : x:ref int -> y1:int -> y2:int
                                      (ensures (fun h1 r h2 -> sel (fst h2) x <= sel (snd h2) x))
 let monotonic_assign x y1 y2 = compose2 (assign x) (assign x) y1 y2
 
-
 val id : int -> Tot int
 let id x = x
 
@@ -218,15 +217,15 @@ assume val sample : f:(int -> Tot int){bijection f}
                        (requires (fun _ -> True))
                        (*(ensures (fun h2' (v1,v2)  h2 -> h2' = h2 /\ v1 = v2))*)
                        (ensures (fun h2' p  h2 -> h2' = h2 /\ fst p = f (snd p)))
-                              
+
 
 let c0_sfx (a, c) = a := !a + c
 let c1_sfx (b, d) = b := !b + d
 let equiv_sfx a b c d = compose2 c0_sfx c1_sfx (a, c) (b, d)
 
-(* relate the programs 
+(* relate the programs
   c0_pfx ; sample ; c0_sfx  and
-  c1_pfx ; sample ; c1_sfx  using sequence *)
+  c1_pfx ; sample ; c1_sfx  *)
 val equiv_seq: a:ref int
                -> b:ref int
                -> ST2 (unit * unit)
@@ -235,3 +234,52 @@ val equiv_seq: a:ref int
 let equiv_seq a b = let _ = equiv_pfx a b in
                     let c, d = sample (fun x -> x + 1) in
                     equiv_sfx a b c d
+
+
+(* Simple recursive function:
+   The proof works by proving a pure specification for the imperative functions
+   and by proving the equality of those specifiactions *)
+
+(* Pure specifications *)
+val gauss : nat -> Tot nat
+let gauss x = (x * x + x) / 2
+
+val gauss_rec : nat -> nat -> Tot nat
+let rec gauss_rec x a = if x = 0 then a else gauss_rec (x - 1) (a + x)
+
+(* Proof of the equality for the pure specifiaction *)
+val gauss_lemma : x:nat -> a:nat -> Lemma
+                        (requires True)
+                        (ensures (gauss x + a = gauss_rec x a))
+                        [SMTPat (gauss_rec x a)]
+let rec gauss_lemma x a = if x = 0 then () else gauss_lemma (x-1) (a+x)
+
+val equiv_gauss: x : nat
+                 -> ST2 (nat * nat)
+                    (requires (fun _ -> True))
+                    (ensures (fun _ p _ -> fst p = snd p))
+let equiv_gauss x = compose2 (fun x -> gauss_rec x 0) (fun x -> gauss x) x x
+
+(* We prove, that the imperative functions fulfill the specifiaction *)
+val gauss_imp : x:ref nat -> ST nat
+                    (requires (fun h -> True))
+                    (ensures  (fun h0 r h1 -> r = gauss (sel h0 x)))
+let gauss_imp x = (!x*!x + !x)/2
+
+val gauss_imp_rec : p:(ref nat * ref nat) -> ST nat
+                    (requires (fun h -> fst p <> snd p))
+                    (ensures  (fun h0 r h1 ->
+                      r = gauss_rec ((sel h0) (fst p)) ((sel h0) (snd p)) /\
+                      sel h1 (snd p) = r ))
+let rec gauss_imp_rec (x, a) = if !x = 0 then !a
+                           else (a := !a + !x; x := !x-1; gauss_imp_rec (x, a))
+
+(* We can conclude the equality for the imperative functions *)
+val equiv_gauss_imp: x:ref nat
+                 -> a:ref nat
+                 -> ST2 (nat * nat)
+                    (requires (fun h2 -> a <> x /\
+                                        sel (fst h2) x = sel (snd h2) x /\
+                                        sel (fst h2) a = 0 ))
+                    (ensures (fun _ p h2 -> fst p = snd p))
+let equiv_gauss_imp x a = compose2 gauss_imp_rec gauss_imp (x,a) x
