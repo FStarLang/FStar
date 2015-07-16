@@ -29,14 +29,18 @@ type mlidents  = list<mlident>
 type mlsymbols = list<mlsymbol>
 
 (* -------------------------------------------------------------------- *)
+type e_tag = 
+  | MayErase
+  | Keep
+
 type mlty =
 | MLTY_Var   of mlident
-| MLTY_Fun   of mlty * mlty
+| MLTY_Fun   of mlty * e_tag * mlty //t -> MayErase t', or  t -> Keep t'
 | MLTY_Named of list<mlty> * mlpath 
 | MLTY_Tuple of list<mlty>
 | MLTY_App   of mlty * mlty         //Why do we have a type-application form? The only applications in ML are of named constructors
 
-type mltyscheme = mlidents * mlty
+type mltyscheme = mlidents * mlty   //forall a1..an. t  (the list of binders can be empty)
 
 type mlconstant =
 | MLC_Unit
@@ -66,8 +70,8 @@ type mlexpr =
 | MLE_Record of list<mlsymbol> * list<(mlsymbol * mlexpr)>
 | MLE_CTor   of mlpath * list<mlexpr>
 | MLE_Tuple  of list<mlexpr>
-| MLE_Let    of bool * list<(mlident * option<mltyscheme> (* needed for polymorphic recursion *) * mlidents (* mutuals? *) * mlexpr)> * mlexpr 
-| MLE_App    of mlexpr * list<mlexpr>
+| MLE_Let    of bool * list<(mlident * option<mltyscheme> (* needed for polymorphic recursion *) * mlidents (* mutuals? maybe remove *) * mlexpr)> * mlexpr 
+| MLE_App    of mlexpr * list<mlexpr> //why are function types curried, but the applications not curried 
 | MLE_Proj   of mlexpr * mlpath
 | MLE_Fun    of mlidents * mlexpr
 | MLE_If     of mlexpr * mlexpr * option<mlexpr>

@@ -440,7 +440,7 @@ let rec doc_of_mltype (outer : level) (ty : mlty) =
         in hbox (reduce1 [args; text name])
     end
 
-    | MLTY_Fun (t1, t2) ->
+    | MLTY_Fun (t1, _, t2) ->
         let d1 = doc_of_mltype (t_prio_fun, Left ) t1 in
         let d2 = doc_of_mltype (t_prio_fun, Right) t2 in
 

@@ -19,7 +19,7 @@ let prependTick (x,n) = if Util.starts_with x "'" then (x,n) else ("'"^x,n)
 let rec curry (inp: (list<mlty>)) (out: mlty) =
   match inp with
   | [] -> out
-  | h::tl -> (MLTY_Fun (h,(curry tl out)))
+  | h::tl -> MLTY_Fun (h, Keep, curry tl out) //TODO: Fix the e_tag
 
 (*
   Below, "the thesis" refers to:
@@ -211,7 +211,7 @@ match s with
 
 let rec argTypes  (t: mlty) : list<mlty> =
 match t with
-| MLTY_Fun (a,b) -> a::(argTypes b)
+| MLTY_Fun (a,_,b) -> a::(argTypes b)
 | _ -> []
  
 let lident2mlsymbol (l:lident) : mlsymbol = l.ident.idText

@@ -142,11 +142,10 @@ Some shorthands:
   ---------------------------------------[AppT-Synth]
   G |- e t => N tau | E' ()
 
-  G |- e1 => N1 (tau2 -> N' tau') | E1
-  G |- e2 => N2 tau2' | E2
-  join(N1, N2, N') leq N
+  G |- e1 e2 => N' tau' | E
+  N' leq N
   -------------------------------------------------------------------[AppE-Check]
-  G |- e1 e2 <= N tau | coerce tau' tau (E1 (coerce tau2' tau2 E2))
+  G |- e1 e2 <= N tau | coerce tau' tau E
 
   G |- e1 => N1 (tau2 -> N' tau) | E1
   G |- e2 => N2 tau2' | E2
