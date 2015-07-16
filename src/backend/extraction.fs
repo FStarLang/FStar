@@ -49,7 +49,7 @@ type context = env
 
 (* vars in tyVars will have type Type, irrespective of that types they had in F*. This is to match the limitations of  OCaml*)
 let extendContext (c:env) (tyVars : list<binder>) : env = 
-  List.fold push_local_binding c (List.map binding_of_binder tyVars)
+  List.fold_left push_local_binding c (List.map binding_of_binder tyVars)
 
 
 let contains (c:context) (b:btvar) : bool = 
@@ -276,7 +276,7 @@ let rec extractTypeDefnsAux (c: context) (sigs:list<sigelt>) : list<option<mlsig
   List.map  (extractSigElt c) sigs
  
 let pruneNones (l : list<option<'a>>) : list<'a> =
-List.foldBack (fun  x ll -> match x with 
+List.fold_right (fun  x ll -> match x with 
                       | Some xs -> xs::ll
                       | None -> ll) l []
 

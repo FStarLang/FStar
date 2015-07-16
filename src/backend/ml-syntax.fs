@@ -32,9 +32,9 @@ type mlsymbols = list<mlsymbol>
 type mlty =
 | MLTY_Var   of mlident
 | MLTY_Fun   of mlty * mlty
-| MLTY_Named of list<mlty> * mlpath
+| MLTY_Named of list<mlty> * mlpath 
 | MLTY_Tuple of list<mlty>
-| MLTY_App   of mlty * mlty
+| MLTY_App   of mlty * mlty         //Why do we have a type-application form? The only applications in ML are of named constructors
 
 type mltyscheme = mlidents * mlty
 

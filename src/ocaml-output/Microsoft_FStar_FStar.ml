@@ -284,30 +284,30 @@ end)) fmods)
 in (Support.Microsoft.FStar.Util.print_string "All verification conditions discharged successfully\n")))
 end)
 
-let codegen = (fun fmods -> if ((! (Microsoft_FStar_Options.codegen)) = Some ("OCaml")) then begin
-(Support.Prims.try_with (fun _56_249 -> (match (_56_249) with
+let codegen = (fun fmods env -> if ((! (Microsoft_FStar_Options.codegen)) = Some ("OCaml")) then begin
+(Support.Prims.try_with (fun _56_250 -> (match (_56_250) with
 | () -> begin
 (let mllib = (Microsoft_FStar_Backends_OCaml_ASTTrans.mlmod_of_fstars (Support.List.tail fmods))
 in (let doc = (Microsoft_FStar_Backends_OCaml_Code.doc_of_mllib mllib)
-in (Support.List.iter (fun _56_263 -> (match (_56_263) with
+in (Support.List.iter (fun _56_264 -> (match (_56_264) with
 | (n, d) -> begin
 (Support.Microsoft.FStar.Util.write_file (Microsoft_FStar_Options.prependOutputDir (Support.String.strcat n ".ml")) (FSharp_Format.pretty 120 d))
 end)) doc)))
-end)) (fun _56_248 -> (match (_56_248) with
+end)) (fun _56_249 -> (match (_56_249) with
 | Microsoft_FStar_Backends_OCaml_ASTTrans.OCamlFailure ((rg, error)) -> begin
-(let _56_255 = (Support.Microsoft.FStar.Util.print_string (Support.Microsoft.FStar.Util.format2 "OCaml Backend Error: %s %s\n" (Support.Microsoft.FStar.Range.string_of_range rg) (Microsoft_FStar_Backends_OCaml_ASTTrans.string_of_error error)))
+(let _56_256 = (Support.Microsoft.FStar.Util.print_string (Support.Microsoft.FStar.Util.format2 "OCaml Backend Error: %s %s\n" (Support.Microsoft.FStar.Range.string_of_range rg) (Microsoft_FStar_Backends_OCaml_ASTTrans.string_of_error error)))
 in (exit (1)))
 end)))
 end else begin
 if ((! (Microsoft_FStar_Options.codegen)) = Some ("OCaml-experimental")) then begin
-(let tyDefns = (Microsoft_FStar_Backends_OCaml_Extraction.extractTypeDefns (Support.List.hd (Support.List.tl fmods)).Microsoft_FStar_Absyn_Syntax.declarations)
+(let tyDefns = (Microsoft_FStar_Backends_ML_Extraction.extractTypeDefns (Support.List.hd (Support.List.tl fmods)).Microsoft_FStar_Absyn_Syntax.declarations env)
 in (let newDoc = (Microsoft_FStar_Backends_OCaml_Code.doc_of_sig tyDefns)
 in (Support.Microsoft.FStar.Util.fprint1 "%s\n" (FSharp_Format.pretty 1 newDoc))))
 end
 end)
 
-let go = (fun _56_266 -> (let _56_270 = (process_args ())
-in (match (_56_270) with
+let go = (fun _56_267 -> (let _56_271 = (process_args ())
+in (match (_56_271) with
 | (res, filenames) -> begin
 (match (res) with
 | Support.Microsoft.FStar.Getopt.Help -> begin
@@ -323,46 +323,46 @@ end
 (Microsoft_FStar_Parser_Driver.read_build_config f)
 end
 | _ -> begin
-(let _56_279 = (Support.Microsoft.FStar.Util.print_string "--use_build_config expects just a single file on the command line and no other arguments")
+(let _56_280 = (Support.Microsoft.FStar.Util.print_string "--use_build_config expects just a single file on the command line and no other arguments")
 in (exit (1)))
 end)
 end else begin
 filenames
 end
-in (let _56_285 = (batch_mode_tc filenames)
-in (match (_56_285) with
+in (let _56_286 = (batch_mode_tc filenames)
+in (match (_56_286) with
 | (fmods, dsenv, env) -> begin
-(let _56_286 = (report_errors None)
+(let _56_287 = (report_errors None)
 in if (! (Microsoft_FStar_Options.interactive)) then begin
 (interactive_mode dsenv env)
 end else begin
-(let _56_288 = (codegen fmods)
+(let _56_289 = (codegen fmods env)
 in (finished_message fmods))
 end)
 end)))
 end)
 end)))
 
-let main = (fun _56_290 -> (match (_56_290) with
+let main = (fun _56_291 -> (match (_56_291) with
 | () -> begin
-(Support.Prims.try_with (fun _56_292 -> (match (_56_292) with
+(Support.Prims.try_with (fun _56_293 -> (match (_56_293) with
 | () -> begin
-(let _56_303 = (go ())
-in (let _56_305 = (cleanup ())
+(let _56_304 = (go ())
+in (let _56_306 = (cleanup ())
 in (exit (0))))
-end)) (fun _56_291 -> (match (_56_291) with
+end)) (fun _56_292 -> (match (_56_292) with
 | e -> begin
-(let _56_295 = if (Microsoft_FStar_Absyn_Util.handleable e) then begin
+(let _56_296 = if (Microsoft_FStar_Absyn_Util.handleable e) then begin
 (Microsoft_FStar_Absyn_Util.handle_err false () e)
 end
-in (let _56_297 = if (! (Microsoft_FStar_Options.trace_error)) then begin
+in (let _56_298 = if (! (Microsoft_FStar_Options.trace_error)) then begin
 (Support.Microsoft.FStar.Util.fprint2 "\nUnexpected error\n%s\n%s\n" (Support.Microsoft.FStar.Util.message_of_exn e) (Support.Microsoft.FStar.Util.trace_of_exn e))
 end else begin
 if (not ((Microsoft_FStar_Absyn_Util.handleable e))) then begin
 (Support.Microsoft.FStar.Util.fprint1 "\nUnexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Support.Microsoft.FStar.Util.message_of_exn e))
 end
 end
-in (let _56_299 = (cleanup ())
+in (let _56_300 = (cleanup ())
 in (exit (1)))))
 end)))
 end))
