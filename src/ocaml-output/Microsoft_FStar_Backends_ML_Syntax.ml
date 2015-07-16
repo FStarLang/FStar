@@ -16,7 +16,7 @@ end))
 let ptsym = (fun _50_7 -> (match (_50_7) with
 | (p, s) -> begin
 (let s = if ((Support.Char.lowercase (Support.String.get s 0)) <> (Support.String.get s 0)) then begin
-(Support.String.strcat "l__" s)
+(Support.String.strcat "l\x5f\x5f" s)
 end else begin
 s
 end
@@ -26,7 +26,7 @@ end))
 let ptctor = (fun _50_11 -> (match (_50_11) with
 | (p, s) -> begin
 (let s = if ((Support.Char.uppercase (Support.String.get s 0)) <> (Support.String.get s 0)) then begin
-(Support.String.strcat "U__" s)
+(Support.String.strcat "U\x5f\x5f" s)
 end else begin
 s
 end
@@ -70,28 +70,28 @@ type mlpattern =
 | MLP_Wild
 | MLP_Const of mlconstant
 | MLP_Var of mlident
-| MLP_Record of (mlsymbol list * (mlsymbol * mlpattern) list)
 | MLP_CTor of (mlpath * mlpattern list)
+| MLP_Record of (mlsymbol list * (mlsymbol * mlpattern) list)
 | MLP_Tuple of mlpattern list
 | MLP_Branch of mlpattern list
 
 type mlexpr =
-| MLE_Seq of mlexpr list
 | MLE_Const of mlconstant
 | MLE_Var of mlident
 | MLE_Name of mlpath
-| MLE_Record of (mlsymbol list * (mlsymbol * mlexpr) list)
-| MLE_CTor of (mlpath * mlexpr list)
-| MLE_Tuple of mlexpr list
 | MLE_Let of (bool * (mlident * mltyscheme option * mlidents * mlexpr) list * mlexpr)
 | MLE_App of (mlexpr * mlexpr list)
-| MLE_Proj of (mlexpr * mlpath)
 | MLE_Fun of (mlidents * mlexpr)
-| MLE_If of (mlexpr * mlexpr * mlexpr option)
 | MLE_Match of (mlexpr * mlbranch list)
+| MLE_Coerce of (mlexpr * mlty * mlty)
+| MLE_CTor of (mlpath * mlexpr list)
+| MLE_Seq of mlexpr list
+| MLE_Tuple of mlexpr list
+| MLE_Record of (mlsymbol list * (mlsymbol * mlexpr) list)
+| MLE_Proj of (mlexpr * mlpath)
+| MLE_If of (mlexpr * mlexpr * mlexpr option)
 | MLE_Raise of (mlpath * mlexpr list)
-| MLE_Try of (mlexpr * mlbranch list)
-| MLE_Coercion of (mlexpr * mlty * mlty) and mlbranch =
+| MLE_Try of (mlexpr * mlbranch list) and mlbranch =
 (mlpattern * mlexpr option * mlexpr)
 
 type mltybody =

@@ -2,6 +2,7 @@
 // See the 'F# Tutorial' project for more help.
 #light "off"
 module Microsoft.FStar.Backends.ML.Extraction
+open Prims
 open Microsoft.FStar.Absyn
 open Microsoft.FStar.Backends.ML.Syntax
 open Microsoft.FStar.Util
@@ -41,10 +42,10 @@ let unknownType : mlty =  MLTY_Var  ("Obj.t", 0) (*wny note MLTY_named? tried it
 let convRange (r:Range.range) : int = 0 (*FIX!!*)
 let convIdent (id:ident) : mlident = (id.idText ,(convRange id.idRange))
     
-type argTransform = arg -> option<arg> (*none indicates that this argument should be deleted*)
-type nthArgTransform = int -> argTransform (* f n is the argtransform for the nth argument (of a type constant)*)
+type argTransform = arg -> Tot<option<arg>> (*none indicates that this argument should be deleted*)
+type nthArgTransform = int -> Tot<argTransform> (* f n is the argtransform for the nth argument (of a type constant)*)
 let idArgTransform :argTransform = fun a -> Some a
-type nthArgTransforms = lident (*name of a constant*) -> nthArgTransform
+type nthArgTransforms = lident (*name of a constant*) -> Tot<nthArgTransform>
  
 
 type context = {
@@ -55,7 +56,7 @@ type context = {
 (* vars in tyVars will have type Type, irrespective of that types they had in F*. This is to match the limitations of  OCaml*)
 let extendContext (c:context) (tyVars : list<binder>) : context = 
 {
-  e= List.fold push_local_binding c.e (List.map binding_of_binder tyVars);
+  e= List.fold_left push_local_binding c.e (List.map binding_of_binder tyVars);
   at= c.at
 }
 

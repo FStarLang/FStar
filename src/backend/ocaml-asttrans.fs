@@ -12,6 +12,7 @@ open Microsoft.FStar.Range
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn.Util
 open Microsoft.FStar.Backends.ML.Syntax
+open Microsoft.FStar.Backends.ML.Util
 open FSharp.Format
 
 
@@ -289,24 +290,6 @@ let is_ptuple (p : pat) =
     | _ -> None
     
 (* -------------------------------------------------------------------- *)
-let mlconst_of_const (rg : range) (sctt : sconst) =
-  match sctt with
-  | Const_unit         -> MLC_Unit
-  | Const_char   c     -> MLC_Char  c
-  | Const_uint8  c     -> MLC_Byte  c
-  | Const_int    c     -> MLC_Int32 (Util.int32_of_int (Util.int_of_string c))
-  | Const_int32  i     -> MLC_Int32 i
-  | Const_int64  i     -> MLC_Int64 i
-  | Const_bool   b     -> MLC_Bool  b
-  | Const_float  d     -> MLC_Float d
-
-  | Const_bytearray (bytes, _) ->
-      MLC_Bytes bytes
-
-  | Const_string (bytes, _) ->
-      MLC_String (string_of_unicode (bytes))
-
-(* -------------------------------------------------------------------- *)
 let mlkind_of_kind (tps : list<binder>) (k : knd) =
     let mltparam_of_tparam = function
         | Inl ({v=x; sort={n=Kind_type}}), _ -> Some (x.realname, x.ppname)
@@ -523,7 +506,7 @@ let rec mlpat_of_pat (mlenv : mlenv) (rg : range) (le : lenv) (p : pat) : lenv *
         (le, MLP_Var mlid)
 
     | Pat_constant c ->
-        (le, MLP_Const (mlconst_of_const rg c))
+        (le, MLP_Const (mlconst_of_const c))
 
     | Pat_disj ps ->
         let le, ps = Util.fold_map (mlpat_of_pat mlenv rg) le ps in
@@ -630,7 +613,7 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
             (* MLE_CTor (mlpath_of_lident mlenv x.v, []) *)
 
         | Exp_constant c ->
-            MLE_Const (mlconst_of_const rg c)
+            MLE_Const (mlconst_of_const c)
 
         | Exp_abs([], e) -> 
            mlexpr_of_expr mlenv rg lenv e 

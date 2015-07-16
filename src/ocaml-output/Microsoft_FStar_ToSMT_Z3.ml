@@ -80,7 +80,7 @@ in (let relevancy = if (z3v_le (get_z3version ()) (4, 3, 1)) then begin
 end else begin
 "SMT.RELEVANCY"
 end
-in (Support.Microsoft.FStar.Util.format2 "-smt2 -in %s AUTO_CONFIG=false MODEL=true %s=2" timeout relevancy))))
+in (Support.Microsoft.FStar.Util.format2 "-smt2 -in %s \nAUTO\x5fCONFIG=false \nMODEL=true \n%s=2" timeout relevancy))))
 end))
 
 type z3status =
@@ -119,13 +119,13 @@ let queries_dot_smt2 = (Support.Microsoft.FStar.Util.mk_ref None)
 
 let get_qfile = (let ctr = (Support.Microsoft.FStar.Util.mk_ref 0)
 in (fun fresh -> if fresh then begin
-(let _43_76 = (Support.Microsoft.FStar.Util.incr ctr)
+(let _43_82 = (Support.Microsoft.FStar.Util.incr ctr)
 in (Support.Microsoft.FStar.Util.open_file_for_writing (Support.Microsoft.FStar.Util.format1 "queries-%s.smt2" (Support.Microsoft.FStar.Util.string_of_int (! (ctr))))))
 end else begin
 (match ((! (queries_dot_smt2))) with
 | None -> begin
 (let fh = (Support.Microsoft.FStar.Util.open_file_for_writing "queries-bg-0.smt2")
-in (let _43_80 = (Support.ST.op_Colon_Equals queries_dot_smt2 (Some (fh)))
+in (let _43_78 = (Support.ST.op_Colon_Equals queries_dot_smt2 (Some (fh)))
 in fh))
 end
 | Some (fh) -> begin
@@ -231,11 +231,11 @@ end else begin
 "smt.mbqi"
 end
 in (let model_on_timeout = if (z3v_le (get_z3version ()) (4, 3, 1)) then begin
-"(set-option :model-on-timeout true)\n"
+"\x28set-option :model-on-timeout true\x29\n"
 end else begin
 ""
 end
-in (Support.String.strcat (Support.String.strcat (Support.String.strcat (Support.String.strcat "(set-option :global-decls false)\n" "(set-option :") mbqi) " false)\n") model_on_timeout)))
+in (Support.String.strcat (Support.String.strcat (Support.String.strcat (Support.String.strcat "\x28set-option :global-decls false\x29\n" "\x28set-option :") mbqi) " false\x29\n") model_on_timeout)))
 end))
 
 type 'a job =
@@ -271,7 +271,7 @@ end
 (let _43_197 = if ((! (Microsoft_FStar_Options.debug)) <> []) then begin
 (Support.Microsoft.FStar.Util.print_string (Support.Microsoft.FStar.Util.format1 "Z3 says: %s\n" (status_to_string status)))
 end
-in (let failing_assertions = ((Support.List.collect (fun l -> (match (((Support.List.tryFind (fun _43_205 -> (match (_43_205) with
+in (let failing_assertions = ((Support.List.collect (fun l -> (match (((Support.List.tryFind (fun _43_212 -> (match (_43_212) with
 | (m, _, _) -> begin
 ((Support.Prims.fst m) = l)
 end))) label_messages)) with

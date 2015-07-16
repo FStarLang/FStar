@@ -245,7 +245,7 @@ in (let _20_274 = (Support.Microsoft.FStar.Util.MkoWriter.write_string writer s)
 in (Support.Microsoft.FStar.Util.MkoWriter.write_bool writer b))))
 end
 | _ -> begin
-(raise (Err ("unimplemented meta_t")))
+(raise (Err ("unimplemented meta\x5ft")))
 end))
 and serialize_arg = (fun writer ast -> (let _20_280 = (serialize_either writer serialize_typ serialize_exp (Support.Prims.fst ast))
 in (Support.Microsoft.FStar.Util.MkoWriter.write_bool writer (Microsoft_FStar_Absyn_Syntax.is_implicit (Support.Prims.snd ast)))))

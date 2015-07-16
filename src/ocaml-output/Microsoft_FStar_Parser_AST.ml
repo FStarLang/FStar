@@ -151,22 +151,22 @@ end))
 
 let rec term_to_string = (fun x -> (match (x.tm) with
 | Wild -> begin
-"_"
+"\x5f"
 end
 | Requires ((t, _)) -> begin
-(Support.Microsoft.FStar.Util.format1 "(requires %s)" (term_to_string t))
+(Support.Microsoft.FStar.Util.format1 "\x28requires %s\x29" (term_to_string t))
 end
 | Ensures ((t, _)) -> begin
-(Support.Microsoft.FStar.Util.format1 "(ensures %s)" (term_to_string t))
+(Support.Microsoft.FStar.Util.format1 "\x28ensures %s\x29" (term_to_string t))
 end
 | Labeled ((t, l, _)) -> begin
-(Support.Microsoft.FStar.Util.format2 "(labeled %s %s)" l (term_to_string t))
+(Support.Microsoft.FStar.Util.format2 "\x28labeled %s %s\x29" l (term_to_string t))
 end
 | Const (c) -> begin
 (Microsoft_FStar_Absyn_Print.const_to_string c)
 end
 | Op ((s, xs)) -> begin
-(Support.Microsoft.FStar.Util.format2 "%s(%s)" s (Support.String.concat ", " (Support.List.map (fun x -> (term_to_string x)) xs)))
+(Support.Microsoft.FStar.Util.format2 "%s\x28%s\x29" s (Support.String.concat ", " (Support.List.map (fun x -> (term_to_string x)) xs)))
 end
 | Tvar (id) -> begin
 id.Microsoft_FStar_Absyn_Syntax.idText
@@ -175,16 +175,16 @@ end
 (Microsoft_FStar_Absyn_Print.sli l)
 end
 | Construct ((l, args)) -> begin
-(Support.Microsoft.FStar.Util.format2 "(%s %s)" (Microsoft_FStar_Absyn_Print.sli l) (to_string_l " " (fun _32_221 -> (match (_32_221) with
+(Support.Microsoft.FStar.Util.format2 "\x28%s %s\x29" (Microsoft_FStar_Absyn_Print.sli l) (to_string_l " " (fun _32_221 -> (match (_32_221) with
 | (a, imp) -> begin
 (Support.Microsoft.FStar.Util.format2 "%s%s" (imp_to_string imp) (term_to_string a))
 end)) args))
 end
 | Abs ((pats, t)) when (x.level = Expr) -> begin
-(Support.Microsoft.FStar.Util.format2 "(fun %s -> %s)" (to_string_l " " pat_to_string pats) (term_to_string t))
+(Support.Microsoft.FStar.Util.format2 "\x28fun %s -> %s\x29" (to_string_l " " pat_to_string pats) (term_to_string t))
 end
 | Abs ((pats, t)) when (x.level = Type) -> begin
-(Support.Microsoft.FStar.Util.format2 "(fun %s => %s)" (to_string_l " " pat_to_string pats) (term_to_string t))
+(Support.Microsoft.FStar.Util.format2 "\x28fun %s => %s\x29" (to_string_l " " pat_to_string pats) (term_to_string t))
 end
 | App ((t1, t2, imp)) -> begin
 (Support.Microsoft.FStar.Util.format3 "%s %s%s" (term_to_string t1) (imp_to_string imp) (term_to_string t2))
@@ -217,16 +217,16 @@ end) (term_to_string e))
 end)) branches))
 end
 | Ascribed ((t1, t2)) -> begin
-(Support.Microsoft.FStar.Util.format2 "(%s : %s)" (term_to_string t1) (term_to_string t2))
+(Support.Microsoft.FStar.Util.format2 "\x28%s : %s\x29" (term_to_string t1) (term_to_string t2))
 end
 | Record ((Some (e), fields)) -> begin
-(Support.Microsoft.FStar.Util.format2 "{%s with %s}" (term_to_string e) (to_string_l " " (fun _32_283 -> (match (_32_283) with
+(Support.Microsoft.FStar.Util.format2 "\x7b%s with %s\x7d" (term_to_string e) (to_string_l " " (fun _32_283 -> (match (_32_283) with
 | (l, e) -> begin
 (Support.Microsoft.FStar.Util.format2 "%s=%s" (Microsoft_FStar_Absyn_Print.sli l) (term_to_string e))
 end)) fields))
 end
 | Record ((None, fields)) -> begin
-(Support.Microsoft.FStar.Util.format1 "{%s}" (to_string_l " " (fun _32_290 -> (match (_32_290) with
+(Support.Microsoft.FStar.Util.format1 "\x7b%s\x7d" (to_string_l " " (fun _32_290 -> (match (_32_290) with
 | (l, e) -> begin
 (Support.Microsoft.FStar.Util.format2 "%s=%s" (Microsoft_FStar_Absyn_Print.sli l) (term_to_string e))
 end)) fields))
@@ -250,32 +250,32 @@ end
 (Support.Microsoft.FStar.Util.format2 "%s * %s" ((Support.String.concat " * ") ((Support.List.map binder_to_string) binders)) (term_to_string t))
 end
 | QForall ((bs, pats, t)) -> begin
-(Support.Microsoft.FStar.Util.format3 "forall %s.{:pattern %s} %s" (to_string_l " " binder_to_string bs) (to_string_l "; " term_to_string pats) (term_to_string t))
+(Support.Microsoft.FStar.Util.format3 "forall %s.\x7b:pattern %s\x7d %s" (to_string_l " " binder_to_string bs) (to_string_l "; " term_to_string pats) (term_to_string t))
 end
 | QExists ((bs, pats, t)) -> begin
-(Support.Microsoft.FStar.Util.format3 "exists %s.{:pattern %s} %s" (to_string_l " " binder_to_string bs) (to_string_l "; " term_to_string pats) (term_to_string t))
+(Support.Microsoft.FStar.Util.format3 "exists %s.\x7b:pattern %s\x7d %s" (to_string_l " " binder_to_string bs) (to_string_l "; " term_to_string pats) (term_to_string t))
 end
 | Refine ((b, t)) -> begin
-(Support.Microsoft.FStar.Util.format2 "%s:{%s}" (binder_to_string b) (term_to_string t))
+(Support.Microsoft.FStar.Util.format2 "%s:\x7b%s\x7d" (binder_to_string b) (term_to_string t))
 end
 | NamedTyp ((x, t)) -> begin
 (Support.Microsoft.FStar.Util.format2 "%s:%s" x.Microsoft_FStar_Absyn_Syntax.idText (term_to_string t))
 end
 | Paren (t) -> begin
-(Support.Microsoft.FStar.Util.format1 "(%s)" (term_to_string t))
+(Support.Microsoft.FStar.Util.format1 "\x28%s\x29" (term_to_string t))
 end
 | Product ((bs, t)) -> begin
-(Support.Microsoft.FStar.Util.format2 "Unidentified product: [%s] %s" ((Support.String.concat ",") ((Support.List.map binder_to_string) bs)) (term_to_string t))
+(Support.Microsoft.FStar.Util.format2 "Unidentified product: \x5b%s\x5d %s" ((Support.String.concat ",") ((Support.List.map binder_to_string) bs)) (term_to_string t))
 end
 | t -> begin
-(failwith "Missing case in term_to_string")
+(failwith "Missing case in term\x5fto\x5fstring")
 end))
 and binder_to_string = (fun x -> (let s = (match (x.b) with
 | Variable (i) -> begin
 i.Microsoft_FStar_Absyn_Syntax.idText
 end
 | TVariable (i) -> begin
-(Support.Microsoft.FStar.Util.format1 "%s:_" i.Microsoft_FStar_Absyn_Syntax.idText)
+(Support.Microsoft.FStar.Util.format1 "%s:\x5f" i.Microsoft_FStar_Absyn_Syntax.idText)
 end
 | (TAnnotated ((i, t))) | (Annotated ((i, t))) -> begin
 (Support.Microsoft.FStar.Util.format2 "%s:%s" i.Microsoft_FStar_Absyn_Syntax.idText (term_to_string t))
@@ -295,13 +295,13 @@ s
 end)))
 and pat_to_string = (fun x -> (match (x.pat) with
 | PatWild -> begin
-"_"
+"\x5f"
 end
 | PatConst (c) -> begin
 (Microsoft_FStar_Absyn_Print.const_to_string c)
 end
 | PatApp ((p, ps)) -> begin
-(Support.Microsoft.FStar.Util.format2 "(%s %s)" (pat_to_string p) (to_string_l " " pat_to_string ps))
+(Support.Microsoft.FStar.Util.format2 "\x28%s %s\x29" (pat_to_string p) (to_string_l " " pat_to_string ps))
 end
 | (PatTvar ((i, true))) | (PatVar ((i, true))) -> begin
 (Support.Microsoft.FStar.Util.format1 "#%s" i.Microsoft_FStar_Absyn_Syntax.idText)
@@ -313,16 +313,16 @@ end
 (Microsoft_FStar_Absyn_Print.sli l)
 end
 | PatList (l) -> begin
-(Support.Microsoft.FStar.Util.format1 "[%s]" (to_string_l "; " pat_to_string l))
+(Support.Microsoft.FStar.Util.format1 "\x5b%s\x5d" (to_string_l "; " pat_to_string l))
 end
 | PatTuple ((l, false)) -> begin
-(Support.Microsoft.FStar.Util.format1 "(%s)" (to_string_l ", " pat_to_string l))
+(Support.Microsoft.FStar.Util.format1 "\x28%s\x29" (to_string_l ", " pat_to_string l))
 end
 | PatTuple ((l, true)) -> begin
-(Support.Microsoft.FStar.Util.format1 "(|%s|)" (to_string_l ", " pat_to_string l))
+(Support.Microsoft.FStar.Util.format1 "\x28|%s|\x29" (to_string_l ", " pat_to_string l))
 end
 | PatRecord (l) -> begin
-(Support.Microsoft.FStar.Util.format1 "{%s}" (to_string_l "; " (fun _32_404 -> (match (_32_404) with
+(Support.Microsoft.FStar.Util.format1 "\x7b%s\x7d" (to_string_l "; " (fun _32_404 -> (match (_32_404) with
 | (f, e) -> begin
 (Support.Microsoft.FStar.Util.format2 "%s=%s" (Microsoft_FStar_Absyn_Print.sli f) (pat_to_string e))
 end)) l))
@@ -331,7 +331,7 @@ end
 (to_string_l "|\n " pat_to_string l)
 end
 | PatAscribed ((p, t)) -> begin
-(Support.Microsoft.FStar.Util.format2 "(%s:%s)" (pat_to_string p) (term_to_string t))
+(Support.Microsoft.FStar.Util.format2 "\x28%s:%s\x29" (pat_to_string p) (term_to_string t))
 end))
 
 let error = (fun msg tm r -> (let tm = (term_to_string tm)
@@ -414,7 +414,7 @@ end))
 
 let focusLetBindings = (fun lbs r -> (let should_filter = (Support.Microsoft.FStar.Util.for_some (Support.Prims.fst) lbs)
 in if should_filter then begin
-(let _32_489 = (Microsoft_FStar_Tc_Errors.warn r "Focusing on only some cases in this (mutually) recursive definition")
+(let _32_489 = (Microsoft_FStar_Tc_Errors.warn r "Focusing on only some cases in this \x28mutually\x29 recursive definition")
 in (Support.List.map (fun _32_493 -> (match (_32_493) with
 | (f, lb) -> begin
 if f then begin

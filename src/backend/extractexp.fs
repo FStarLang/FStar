@@ -6,6 +6,7 @@ open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Backends.ML.Syntax
 open Microsoft.FStar.Backends.ML.Env
+open Microsoft.FStar.Backends.ML.Util
 
 let fail r msg = 
     Util.print_string <| Print.format_error r msg;
@@ -50,8 +51,6 @@ let join f f' = match f, f' with
 
 let join_l fs = List.fold_left join MayErase fs
 
-let mlconst_of_const p c = failwith ""
-
 let rec check_exp (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr = 
     erase g (check_exp' g e f t) f t
 
@@ -65,7 +64,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
     match (Util.compress_exp e).n with 
         | Exp_constant c ->
           let t = Tc.Recheck.typing_const e.pos c in
-          mlconst_of_const e.pos c, MayErase, translate_typ g t
+          MLE_Const <| mlconst_of_const c, MayErase, translate_typ g t
  
         | Exp_ascribed(e, t) ->
           let t = translate_typ g t in 
@@ -74,7 +73,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
 
         | Exp_bvar _
         | Exp_fvar _ -> 
-          let x, s = must <| lookup_var g e in 
+          let x, s = lookup_var g e in 
           begin match s with 
             | ([], t) -> x, MayErase, t
             | _ -> err_uninst e
@@ -101,7 +100,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
           begin match head.n with 
             | Exp_bvar _ 
             | Exp_fvar _ -> 
-              let head, (vars, t) = must <| lookup_var g e in
+              let head, (vars, t) = lookup_var g e in
               let n = List.length vars in
               if n <= List.length args
               then let prefix, rest = Util.first_N (List.length vars) args in

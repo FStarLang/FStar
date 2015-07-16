@@ -67,7 +67,7 @@ type mlexpr =
 | MLE_Const  of mlconstant
 | MLE_Var    of mlident
 | MLE_Name   of mlpath
-| MLE_Let    of bool * list<(mlident * option<mltyscheme> (* needed for polymorphic recursion *) * mlidents (* mutuals? maybe remove *) * mlexpr)> * mlexpr 
+| MLE_Let    of bool * list<(mlident * option<mltyscheme> * mlidents * mlexpr)> * mlexpr //tyscheme for polymorphic recursion
 | MLE_App    of mlexpr * list<mlexpr> //why are function types curried, but the applications not curried 
 | MLE_Fun    of mlidents * mlexpr
 | MLE_Match  of mlexpr * list<mlbranch>
