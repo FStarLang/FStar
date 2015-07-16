@@ -15,6 +15,7 @@ open Microsoft.FStar.Absyn.Print
 (*copied from ocaml-strtrans.fs*)
 let prependTick (x,n) = if Util.starts_with x "'" then (x,n) else ("'"^x,n)
 
+(*generates inp_1 -> inp_2 -> ... inp_n -> out *)
 let rec curry (inp: (list<mlty>)) (out: mlty) =
   match inp with
   | [] -> out
@@ -27,13 +28,15 @@ let rec curry (inp: (list<mlty>)) (out: mlty) =
 *)
 
 (*\box type in the thesis, to be used to denote the result of erasure of logical (computationally irrelevant) content.
-  The actual definiton is a bit complicated, because we need \box x t to be convertible to \box.
+  The actual definiton is a bit complicated, because we need for any x, \box x to be convertible to \box.
 *)
-(* MLTY_Tuple [] extracts to (), which can represet both the unit type and the unit value. Ocaml gets confused sometimes*)
+
+(* MLTY_Tuple [] extracts to (), and is an alternate choice. 
+    However, it represets both the unit type and the unit value. Ocaml gets confused sometimes*)
 let erasedContent : mlty = MLTY_Named ([],([],"unit"))
 
 (* \mathbb{T} type in the thesis, to be used when OCaml is not expressive enough for the source type *)
-let unknownType : mlty = MLTY_Var  ("Obj.t", 0)
+let unknownType : mlty = MLTY_Named  ([],([],"Obj.t"))
 
 let convRange (r:Range.range) : int = 0 (*FIX!!*)
 let convIdent (id:ident) : mlident = (id.idText ,(convRange id.idRange))
@@ -50,18 +53,16 @@ type context = {
 
 let emptyContext : context = {tyVars=[]; tyConstants =[]; allowTypeVars=true}
 
-(* these vars will have type Type, irrespective of that types they had in F*. This is to match the limitations of  OCaml*)
+(* vars in tyVars will have type Type, irrespective of that types they had in F*. This is to match the limitations of  OCaml*)
 let extendContext (c:context) (tyVars : list<ident>) (tyConsts : list<lident>) (alowTypeVars_ : bool ): context = 
     { tyVars = List.append c.tyVars tyVars; tyConstants = List.append c.tyConstants tyConsts; allowTypeVars = alowTypeVars_}
 
 let disallowTypeVars (c:context) : context = extendContext c [] [] false
 
-let trimLastChar (x:string) : string = 
-    x.Substring (0, (x.Length-1))
-(*is there an F# library of associative lists? yes, Microsoft.FStar.Util.smap*)
 let contains (c:context) (b:btvar) : bool =     
     List.contains ( b.v.realname.idText)  (List.map (fun x -> x.idText) c.tyVars) (*needed for sh, its ppname is _, and range is 0*)
     || List.contains (b.v.realname.idRange)  (List.map (fun x -> x.idRange) c.tyVars) (*needed for inductive constructors. names often have extra things appended*)
+
 let deltaUnfold (i : lident) (c: context) : (option<typ>) = None (*FIX!!*)
 
 (*The thesis defines a type scheme as "something that becomes a type when enough arguments (possibly none?) are applied to it" ,  e.g. vector, list.
@@ -70,13 +71,6 @@ let deltaUnfold (i : lident) (c: context) : (option<typ>) = None (*FIX!!*)
       *)
 let isTypeScheme (i : lident) (c: context) : bool = true  (* FIX!! *)
 
-(* let liftType' (t:typ') : typ = failwith "liftType is undefined" *)
-
-let rec filterImplicits (bs: binders) : binders =
-    List.filter (fun b -> match b with 
-                      | (_, Some Implicit) -> false
-                      | _ -> true ) 
-                bs
 
 let lident2mlpath (l:lident) : mlpath =
   ( (* List.map (fun x -> x.idText) l.ns *) [], l.ident.idText)
@@ -84,14 +78,14 @@ let lident2mlpath (l:lident) : mlpath =
 
 (*the \hat{\epsilon} function in the thesis (Sec. 3.3.5) *)
 let rec extractType' (c:context) (ft:typ') : mlty = 
-(* first \beta, \iota and \zeta reduces ft. Since F* does not have SN, one has to be more careful for the termination argument.
+(* First \beta, \iota and \zeta reduces ft, or assume they are already reduced.
+    Since F* does not have SN, one has to be more careful for the termination argument.
     Because OCaml does not support computations in Type, unknownType is supposed to be used if they are really unaviodable.
     The classic example is the type : T b \def if b then nat else bool. If we dont compute, T true will extract to unknownType.
     Why not \delta? I guess the reason is that unfolding definitions will make the resultant OCaml code less readable.
     However in the Typ_app case,  \delta reduction is done as the second-last resort, just before giving up and returing unknownType;
         a bloated type is atleast as good as unknownType?
-
-    An an F* specific example, unless we unfold Mem a pre post to StState a wp wlp, we have no idea that it should be translated to a
+    An an F* specific example, unless we unfold Mem x pre post to StState x wp wlp, we have no idea that it should be translated to x
 *)
 match ft with
 (*The next 2 cases duplicate a lot of code in the Type_app case. It will nice to share the common computations.*)
@@ -99,7 +93,7 @@ match ft with
   (*it is not clear whether description in the thesis covers type applications with 0 args. However, this case is needed to translate types like nnat, and so far seems to work as expected*)
   | Typ_const ftv -> 
             (match  (isTypeScheme ftv.v c)  with
-             | true -> MLTY_Named ([ (* FIX!! *)],(lident2mlpath ftv.v))
+             | true -> MLTY_Named ([],(lident2mlpath ftv.v))
              | false -> 
                  (match  (deltaUnfold ftv.v c) with
                  | Some tyu ->  extractTyp c tyu
@@ -116,7 +110,7 @@ match ft with
 
   | Typ_refine (bv (*var and unrefined type*) , _ (*refinement condition*)) -> extractTyp c bv.sort
 
-  (*can this be a partial type application? , i.e can the result of this application be something like Type -> Type, or nat -> Type? *)
+  (*can this be a partial type application? , i.e can the result of this application be something like Type -> Type, or nat -> Type? : Yes *)
   | Typ_app (ty, arrgs) ->
     (match ty.n with
         | Typ_btvar btv -> (if (contains c btv) then MLTY_Var (prependTick (convIdent btv.v.ppname)) else unknownType)
@@ -145,14 +139,11 @@ match (fst a) with
 | Inl ty -> extractTyp c ty
 | Inr _ -> erasedContent 
 
-(* In OCaml, there are no expressions in type applications.
-   Need to make similar changes when extracting the definitions of type schemes
-   In Coq, the Inr arguments are just removed in a later phase.
-*)
-(*return the new context, where this binder might be in scope*)
+(* Return the new context, where this binder might be in scope. Actually this code be reverted back to the old, less complicated state
+   where c.allowTypeVars was always assumed to be false. *)
 and extractBinderType  (c:context) (bn : binder): mlty * context =
 match bn with
-| (Inl btv,_) ->  
+| (Inl btv,_) ->
       let k = (btv.sort) in 
       let newC = (match k.n with
                  | Kind_type -> (if c.allowTypeVars then (extendContext c [btv.v.realname] [] c.allowTypeVars) else c)
@@ -314,11 +305,6 @@ let rec extractTypeDefnsAux (c: context) (sigs:list<sigelt>) : list<mlsig1> =
         )
     | _ -> []
 
-let extractTypeDefns (sigs:list<sigelt>) : list<mlsig1> =
+let extractTypeDefns (sigs:list<sigelt>) (e: env): list<mlsig1> =
    extractTypeDefnsAux emptyContext sigs
 
-
-(* Lingering questions
-  1) How to handle the lack of partial application of constructors in OCaml
-  2) What about implicit arguments?
-*)

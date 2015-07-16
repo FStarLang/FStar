@@ -229,10 +229,10 @@ let finished_message fmods =
          print_string "All verification conditions discharged successfully\n"
     end
 
-let codegen fmods = 
+let codegen fmods env= 
     if !Options.codegen = Some "OCaml" then 
         try
-            let tyDefns = Backends.OCaml.Extraction.extractTypeDefns ((List.head (List.tail fmods)).declarations) in
+            let tyDefns = Backends.OCaml.Extraction.extractTypeDefns ((List.head (List.tail fmods)).declarations) env in
             let newDoc = Backends.OCaml.Code.doc_of_sig tyDefns in
             fprint1 "%s\n" (FSharp.Format.pretty 1 newDoc);
 (*            let mllib = Backends.OCaml.ASTTrans.mlmod_of_fstars (List.tail fmods) in
@@ -247,9 +247,7 @@ let codegen fmods =
             exit 1
         end
     else if !Options.codegen = Some "OCaml-experimental" then begin
-        let tyDefns = Backends.OCaml.Extraction.extractTypeDefns ((List.head (List.tail fmods)).declarations) in
-        let newDoc = Backends.OCaml.Code.doc_of_sig tyDefns in
-        fprint1 "%s\n" (FSharp.Format.pretty 1 newDoc)
+       (*copy this part from above.*)
     end
 //    ;
 //    if !Options.codegen = Some "JavaScript" then begin
@@ -280,7 +278,7 @@ let go _ =
              if !Options.interactive 
              then interactive_mode dsenv env
              else begin
-                codegen fmods;
+                codegen fmods env;
                 finished_message fmods
              end
 
