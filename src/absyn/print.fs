@@ -401,7 +401,7 @@ and uvar_e_to_string (uv, _) =
 and lbs_to_string lbs = 
     Util.format2 "let %s %s"
     (if fst lbs then "rec" else "") 
-    (Util.concat_l "\n and " (snd lbs |> List.map (fun (x, t, e) -> Util.format3 "%s:%s = %s" (lbname_to_string x) (t |> typ_to_string) (e|> exp_to_string)))) 
+    (Util.concat_l "\n and " (snd lbs |> List.map (fun lb -> Util.format3 "%s:%s = %s" (lbname_to_string lb.lbname) (lb.lbtyp |> typ_to_string) (lb.lbdef |> exp_to_string)))) 
     
 and lbname_to_string x = match x with
   | Inl bvd -> strBvd bvd 
@@ -488,24 +488,8 @@ let rec sigelt_to_string x = match x with
 
 let format_error r msg = format2 "%s: %s\n" (Range.string_of_range r) msg
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 let rec sigelt_to_string_short x = match x with 
-  | Sig_let((_, [(Inr l, t, _)]), _, _, _) -> Util.format2 "let %s : %s" l.str (typ_to_string t) 
+  | Sig_let((_, [{lbname=Inr l; lbtyp=t}]), _, _, _) -> Util.format2 "let %s : %s" l.str (typ_to_string t) 
   | _ -> lids_of_sigelt x |> List.map (fun l -> l.str) |> String.concat ", "
 
 let rec modul_to_string (m:modul) = 

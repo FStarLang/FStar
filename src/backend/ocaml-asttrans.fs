@@ -529,9 +529,9 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
       let ctr = mk_ref 0 in
       let rec bvs = function
         | 0 -> []
-        | n -> incr ctr; (("__dataconst_"^(Util.string_of_int !ctr)), !ctr) :: (bvs (n-1)) in
+        | n -> incr ctr; ((("__dataconst_"^(Util.string_of_int !ctr)), !ctr), None) :: (bvs (n-1)) in
       let vs = bvs nvars in
-      let fapp = MLE_CTor (ct, args @ (List.map (fun x -> MLE_Var(x)) vs)) in
+      let fapp = MLE_CTor (ct, args @ (List.map (fun (x,_) -> MLE_Var(x)) vs)) in
       MLE_Fun(vs, fapp)
     in
 
@@ -590,7 +590,7 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
                 let sub = Util.substring_from fid 3 in
                 let mlid = fresh "_discr_" in
                 let rid = {x.v with ident = {x.v.ident with idText = sub}; str = sub} in
-                MLE_Fun([mlid], MLE_Match(MLE_Name([], idsym mlid), [
+                MLE_Fun([(mlid, None)], MLE_Match(MLE_Name([], idsym mlid), [
                     MLP_CTor(mlpath_of_lident mlenv rid, [MLP_Wild]), None, MLE_Const(MLC_Bool true);
                     MLP_Wild, None, MLE_Const(MLC_Bool false)]))
             else begin
@@ -602,7 +602,7 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
                     let crstr = List.map (fun x->x.idText) cr in
                     let rid = {ns=cr; ident={x.v.ident with idText=cn.idText}; nsstr=String.concat "." crstr; str=x.v.nsstr} in
                     let cn = cn.idText in
-                    MLE_Fun([mlid], MLE_Match(MLE_Name([], idsym mlid), [
+                    MLE_Fun([(mlid,None)], MLE_Match(MLE_Name([], idsym mlid), [
                         MLP_CTor(mlpath_of_lident mlenv rid, cargs), None, MLE_Name ([], x.v.ident.idText);
                     ]))
                 | None -> MLE_Name (mlpath_of_lident mlenv x.v)
@@ -676,7 +676,7 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
             
         | Exp_meta (Meta_desugared (e, Sequence)) -> begin
             match e.n with
-            | Exp_let ((false, [(Inl _, _, e1)]), e2) ->
+            | Exp_let ((false, [({lbname=Inl _; lbdef=e1})]), e2) ->
                 let d1 = mlexpr_of_expr mlenv rg lenv e1 in
                 let d2 = mlexpr_of_expr mlenv rg lenv e2 in
                 mlseq d1 d2
@@ -700,9 +700,9 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
 
 (* -------------------------------------------------------------------- *)
 and mllets_of_lets (mlenv : mlenv) (rg : range) (lenv : lenv) (rec_, lbs) =    
-    let downct (x, _, e) =
-        match x with
-        | Inl x -> (x, e)
+    let downct lb =
+        match lb.lbname with
+        | Inl x -> (x, lb.lbdef)
         | Inr _ -> unexpected rg "expr-let-in-with-fvar" in
 
 
@@ -895,9 +895,9 @@ let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
         None
 
     | Sig_let ((rec_, lbs), rg, _, _) when (mode = Struct) ->
-        let downct (x, _, e) =
-            match x with
-            | Inr x -> (x, e)
+        let downct lb = 
+            match lb.lbname with
+            | Inr x -> (x, lb.lbdef)
             | Inl _ -> unexpected rg "expr-top-let-with-bvar" in
 
         let lbs = List.map downct lbs in

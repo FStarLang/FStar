@@ -104,6 +104,7 @@ let set_lid_range l r =
   let ids = (l.ns@[l.ident]) |> List.map (fun i -> mk_ident(i.idText, r)) in
   lid_of_ids ids
 let fv l = withinfo l tun (range_of_lid l)
+let fvvar_of_lid l t = withinfo l t (range_of_lid l)
 let fvar dc l r = mk_Exp_fvar(fv (set_lid_range l r), dc) None r
 let ftv l k = mk_Typ_const (withinfo l k (range_of_lid l)) None (range_of_lid l)
 let order_bvd x y = match x, y with

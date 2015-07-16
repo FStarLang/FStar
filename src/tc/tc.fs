@@ -810,11 +810,11 @@ and tc_exp env e : exp * lcomp * guard_t =
 
   | Exp_meta(Meta_desugared(e, Sequence)) -> 
     begin match (compress_exp e).n with 
-        | Exp_let((_,[(x, _, e1)]), e2) -> 
+        | Exp_let((_,[{lbname=x; lbdef=e1}]), e2) -> 
           let e1, c1, g1 = tc_exp (Env.set_expected_typ env Recheck.t_unit) e1 in 
           let e2, c2, g2 = tc_exp env e2 in 
           let c = Tc.Util.bind env (Some e1) c1 (None, c2) in
-          mk_Exp_meta(Meta_desugared(w c <| mk_Exp_let((false, [x, Recheck.t_unit, e1]), e2), Sequence)), c, Rel.conj_guard g1 g2
+          mk_Exp_meta(Meta_desugared(w c <| mk_Exp_let((false, [mk_lb (x, c1.eff_name, Recheck.t_unit, e1)]), e2), Sequence)), c, Rel.conj_guard g1 g2
         | _ -> 
           let e, c, g = tc_exp env e in
           mk_Exp_meta(Meta_desugared(e, Sequence)), c, g
@@ -1050,7 +1050,7 @@ and tc_exp env e : exp * lcomp * guard_t =
     mk_Exp_ascribed(e, cres.res_typ) e.pos,  //important to ascribe, for recomputing types
     cres, Rel.conj_guard g1 g_branches
 
-  | Exp_let((false, [(x, t, e1)]), e2) -> 
+  | Exp_let((false, [{lbname=x; lbtyp=t; lbdef=e1}]), e2) -> 
     let env = instantiate_both env in
     let env0 = env in
     let topt = Env.expected_typ env in
@@ -1090,13 +1090,13 @@ and tc_exp env e : exp * lcomp * guard_t =
                      then cres
                      else Tc.Util.bind env None (Tc.Util.lcomp_of_comp c1) (None, cres) in 
           e2.tk := Some (Recheck.t_unit);
-          w cres <| mk_Exp_let((false, [(x, Util.comp_result c1, e1)]), e2), cres, Rel.trivial_guard
+          w cres <| mk_Exp_let((false, [mk_lb (x, Util.comp_effect_name c1, Util.comp_result c1, e1)]), e2), cres, Rel.trivial_guard
          
         | Inl bvd ->  (* don't generalize inner lets *) 
             let b = binding_of_lb x c1.res_typ in
             let e2, c2, g2 = tc_exp (Env.push_local_binding env b) e2 in
             let cres = Tc.Util.bind env (Some e1) c1 (Some b, c2) in
-            let e = w cres <| mk_Exp_let((false, [(x, c1.res_typ, e1)]), e2) in
+            let e = w cres <| mk_Exp_let((false, [mk_lb (x, c1.eff_name, c1.res_typ, e1)]), e2) in
             let g2 = Rel.close_guard [v_binder (Util.bvd_to_bvar_s bvd c1.res_typ)] <|
                 (Rel.imp_guard (Rel.guard_of_guard_formula (Rel.NonTrivial <| Util.mk_eq c1.res_typ c1.res_typ (Util.bvd_to_exp bvd c1.res_typ) e1)) g2) in
             let guard = Rel.conj_guard guard_f (Rel.conj_guard g1 g2) in
@@ -1118,9 +1118,9 @@ and tc_exp env e : exp * lcomp * guard_t =
   | Exp_let((true, lbs), e1) ->
     let env = instantiate_both env in
     let env0, topt = Env.clear_expected_typ env in 
-    let is_inner_let = lbs |> Util.for_some (function (Inl _, _, _) -> true (* inner let *) | _ -> false) in
+    let is_inner_let = lbs |> Util.for_some (function {lbname=Inl _} -> true (* inner let *) | _ -> false) in
     (* build an environment with recursively bound names. refining the types of those names with decreases clauses is done in Exp_abs *)
-    let lbs, env' = lbs |> List.fold_left (fun (xts, env) (x, t, e) -> 
+    let lbs, env' = lbs |> List.fold_left (fun (xts, env) ({lbname=x; lbtyp=t; lbdef=e}) -> 
       let _, t, check_t = Tc.Util.extract_lb_annotation env t e in 
       let e = Util.unascribe e in
       let t = 
@@ -1147,11 +1147,11 @@ and tc_exp env e : exp * lcomp * guard_t =
 
     let lbs, g_lbs = 
         if not env.generalize || is_inner_let
-        then lbs, g_lbs
+        then List.map (fun (x, t, e) -> mk_lb (x, Const.effect_Tot_lid, t, e)) lbs, g_lbs
         else begin 
              Tc.Util.discharge_guard env g_lbs;
              let ecs = Tc.Util.generalize true env (lbs |> List.map (fun (x, t, e) -> (x, e, Util.total_comp t <| range_of_lb (x,t,e)))) in 
-             List.map (fun (x, e, c) -> x, Util.comp_result c, e) ecs, Rel.trivial_guard
+             List.map (fun (x, e, c) -> mk_lb (x, Const.effect_Tot_lid, Util.comp_result c, e)) ecs, Rel.trivial_guard
         end in
 
     if not is_inner_let (* the body is just unit *)
@@ -1159,7 +1159,7 @@ and tc_exp env e : exp * lcomp * guard_t =
          let _ = Tc.Util.discharge_guard env g_lbs in //may need to solve all carried unification constraints, in case not generalized
          let _ = e1.tk := Some Recheck.t_unit in
          w cres <| mk_Exp_let((true, lbs), e1), cres, Rel.trivial_guard
-    else let bindings, env = lbs |> List.fold_left (fun (bindings, env) (x, t, _) -> 
+    else let bindings, env = lbs |> List.fold_left (fun (bindings, env) ({lbname=x; lbtyp=t}) ->
              let b = binding_of_lb x t in
              let env = Env.push_local_binding env b in
              b::bindings, env) ([], env) in
@@ -1175,9 +1175,9 @@ and tc_exp env e : exp * lcomp * guard_t =
           | None -> 
              let fvs = Util.freevars_typ <| tres in
              match lbs |> List.tryFind (function 
-                    | (Inr _, _, _) -> false
-                    | (Inl x, _, _) -> Util.set_mem (bvd_to_bvar_s x tun) fvs.fxvs) with
-                | Some (Inl y, _, _) ->
+                    | ({lbname=Inr _}) -> false
+                    | ({lbname=Inl x}) -> Util.set_mem (bvd_to_bvar_s x tun) fvs.fxvs) with
+                | Some ({lbname=Inl y}) ->
                   let t' = Tc.Util.new_tvar env0 ktype in 
                   Tc.Rel.try_discharge_guard env <| Tc.Rel.teq env tres t';
                   e, cres, guard
@@ -1599,21 +1599,21 @@ and tc_decl env se deserialized = match se with
       let env = Tc.Env.set_range env r in
       let generalize, lbs' = snd lbs |> List.fold_left (fun (gen, lbs) lb -> 
         let gen, lb = match lb with 
-          | (Inl _, _, _) -> failwith "impossible"
-          | (Inr l, t, e) -> 
-            let gen, (lb, t, e) = match Tc.Env.try_lookup_val_decl env l with 
+          | {lbname=Inl _} -> failwith "impossible"
+          | {lbname=Inr l; lbtyp=t; lbdef=e} -> 
+            let gen, lb = match Tc.Env.try_lookup_val_decl env l with 
               | None -> gen, lb
               | Some (t', _) -> 
                 if debug env Options.Medium
                 then Util.fprint2 "Using annotation %s for let binding %s\n" (Print.typ_to_string t') l.str;
                 match t.n with 
                   | Typ_unknown -> 
-                    false, (Inr l, t', e) //explicit annotation provided; do not generalize
+                    false, mk_lb (Inr l, Const.effect_ALL_lid, t', e) //explicit annotation provided; do not generalize
                   | _ ->
                    if not(deserialized) 
                    then Util.print_string <| Util.format1 "%s: Warning: Annotation from val declaration overrides inline type annotation\n" (Range.string_of_range r);
-                   false, (Inr l, t', e) in
-             gen, (lb, t, e) in
+                   false, mk_lb (Inr l, Const.effect_ALL_lid, t', e) in
+             gen, lb in
         gen, lb::lbs) (true, []) in
       let lbs' = List.rev lbs' in
       let e = mk_Exp_let((fst lbs, lbs'), syn' env Recheck.t_unit <| mk_Exp_constant(Syntax.Const_unit)) None r in
@@ -1625,7 +1625,7 @@ and tc_decl env se deserialized = match se with
             Sig_let(lbs, r, lids, quals), lbs
         | _ -> failwith "impossible" in
       if log env 
-      then Util.fprint1 "%s\n" (snd lbs |> List.map (fun (lbname, t, _) -> Util.format2 "let %s : %s" (Print.lbname_to_string lbname) (Tc.Normalize.typ_norm_to_string env t)) |> String.concat "\n");
+      then Util.fprint1 "%s\n" (snd lbs |> List.map (fun lb -> Util.format2 "let %s : %s" (Print.lbname_to_string lb.lbname) (Tc.Normalize.typ_norm_to_string env lb.lbtyp)) |> String.concat "\n");
       let env = Tc.Env.push_sigelt env se in 
       se, env
 
@@ -1739,7 +1739,7 @@ and non_private env se : list<sigelt> =
    | Sig_let(lbs, r, l, _) -> 
      let check_priv lbs = 
         let is_priv = function 
-            | (Inr l, _, _) -> 
+            | {lbname=Inr l} ->
             begin match Tc.Env.try_lookup_val_decl env l with 
                     | Some (_, qs) -> List.contains Private qs
                     | _ -> false
@@ -1753,7 +1753,7 @@ and non_private env se : list<sigelt> =
         else false in
 
 
-     let pure_funs, rest = snd lbs |> List.partition (fun (_, t, _) -> Util.is_pure_or_ghost_function t && not <| Util.is_lemma t) in
+     let pure_funs, rest = snd lbs |> List.partition (fun lb -> Util.is_pure_or_ghost_function lb.lbtyp && not <| Util.is_lemma lb.lbtyp) in
      begin match pure_funs, rest with 
         | _::_, _::_ -> 
           raise (Error("Pure functions cannot be mutually recursive with impure functions", r))
@@ -1766,9 +1766,9 @@ and non_private env se : list<sigelt> =
         | [], _::_ ->
           if check_priv rest
           then []
-          else rest |> List.collect (fun (x, t, _) -> match x with 
+          else rest |> List.collect (fun lb -> match lb.lbname with 
                 | Inl _ -> failwith "impossible"
-                | Inr l -> [Sig_val_decl(l, t, [Assumption], range_of_lid l)])
+                | Inr l -> [Sig_val_decl(l, lb.lbtyp, [Assumption], range_of_lid l)])
 
         
         | [], [] -> failwith "Impossible"

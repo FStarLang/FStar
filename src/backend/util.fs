@@ -6,6 +6,11 @@ open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Backends.ML.Syntax
 
+let as_mlident (x:bvdef<'a>) = x.realname.idText, 0
+
+let mlpath_of_lident (x : lident) : mlpath =
+    x.ns |> List.map (fun id -> id.idText), x.ident.idText
+
 let mlconst_of_const (sctt : sconst) =
   match sctt with
   | Const_unit         -> MLC_Unit
@@ -22,6 +27,7 @@ let mlconst_of_const (sctt : sconst) =
 
   | Const_string (bytes, _) ->
       MLC_String (string_of_unicode (bytes))
+
 
 
 

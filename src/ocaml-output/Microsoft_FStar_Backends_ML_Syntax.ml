@@ -16,7 +16,7 @@ end))
 let ptsym = (fun _50_7 -> (match (_50_7) with
 | (p, s) -> begin
 (let s = if ((Support.Char.lowercase (Support.String.get s 0)) <> (Support.String.get s 0)) then begin
-(Support.String.strcat "l\x5f\x5f" s)
+(Support.String.strcat "l__" s)
 end else begin
 s
 end
@@ -26,7 +26,7 @@ end))
 let ptctor = (fun _50_11 -> (match (_50_11) with
 | (p, s) -> begin
 (let s = if ((Support.Char.uppercase (Support.String.get s 0)) <> (Support.String.get s 0)) then begin
-(Support.String.strcat "U\x5f\x5f" s)
+(Support.String.strcat "U__" s)
 end else begin
 s
 end
@@ -51,6 +51,7 @@ type mlty =
 | MLTY_Named of (mlty list * mlpath)
 | MLTY_Tuple of mlty list
 | MLTY_App of (mlty * mlty)
+| MLTY_Top
 
 type mltyscheme =
 (mlidents * mlty)
@@ -81,7 +82,7 @@ type mlexpr =
 | MLE_Name of mlpath
 | MLE_Let of (bool * (mlident * mltyscheme option * mlidents * mlexpr) list * mlexpr)
 | MLE_App of (mlexpr * mlexpr list)
-| MLE_Fun of (mlidents * mlexpr)
+| MLE_Fun of ((mlident * mlty option) list * mlexpr)
 | MLE_Match of (mlexpr * mlbranch list)
 | MLE_Coerce of (mlexpr * mlty * mlty)
 | MLE_CTor of (mlpath * mlexpr list)
@@ -131,10 +132,10 @@ end))
 
 let mlfun = (fun x e -> (match (e) with
 | MLE_Fun ((xs, e)) -> begin
-MLE_Fun (((x)::xs, e))
+MLE_Fun ((((x, None))::xs, e))
 end
 | _ -> begin
-MLE_Fun (((x)::[], e))
+MLE_Fun ((((x, None))::[], e))
 end))
 
 let mlif = (fun b _50_125 -> (match (_50_125) with

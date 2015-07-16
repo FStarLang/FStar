@@ -373,6 +373,8 @@ let label_conjuncts tag polarity label_opt f =
 
   aux f
 
+let mk_lb (n, t, e) = {lbname=n; lbeff=Const.effect_ALL_lid; lbtyp=t; lbdef=e}
+
 let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
   let resolvex (l:lenv_t) e x =
     match l |> Util.find_opt (function Inr y -> y.ppname.idText=x.idText | _ -> false) with
@@ -668,7 +670,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
                 | [] -> def
                 | _ -> mk_term (un_curry_abs args def) top.range top.level in
             let body = desugar_exp env def in
-            (lbname, tun, body) in
+            mk_lb (lbname, tun, body) in
         let lbs = List.map2 (desugar_one_def (if is_rec then env' else env)) fnames funs in
         let body = desugar_exp env' body in
         pos <| mk_Exp_let((is_rec, lbs), body) in
@@ -680,14 +682,14 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
           | TBinder _ -> failwith "Unexpected type binder in let"
           | LetBinder(l, t) ->
             let body = desugar_exp env t2 in
-            pos <| mk_Exp_let((false, [(Inr l, t, t1)]), body)
+            pos <| mk_Exp_let((false, [({lbname=Inr l; lbeff=Const.effect_ALL_lid; lbtyp=t; lbdef=t1})]), body)
           | VBinder (x,t,_) ->
             let body = desugar_exp env t2 in
             let body = match pat with
               | None
               | Some ({v=Pat_wild _}) -> body
               | Some pat -> mk_Exp_match(bvd_to_exp x t, [(pat, None, body)]) None body.pos in
-            pos <| mk_Exp_let((false, [(Inl x, t, t1)]), body)
+            pos <| mk_Exp_let((false, [mk_lb (Inl x, t, t1)]), body)
         end in
 
       if is_rec || is_app_pattern pat
@@ -1393,12 +1395,12 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
   | ToplevelLet(isrec, lets) ->
     begin match (compress_exp <| desugar_exp_maybe_top true env (mk_term (Let(isrec, lets, mk_term (Const Const_unit) d.drange Expr)) d.drange Expr)).n with
         | Exp_let(lbs, _) ->
-          let lids = snd lbs |> List.map (function
-            | (Inr l, _, _) -> l
+          let lids = snd lbs |> List.map (fun lb -> match lb.lbname with
+            | Inr l -> l
             | _ -> failwith "impossible") in
           let quals = snd lbs |> List.collect
-            (function (Inl _, _, _) -> []
-                     | (Inr l, _, _) -> DesugarEnv.lookup_letbinding_quals env l) in
+            (function | {lbname=Inl _} -> []
+                      | {lbname=Inr l} -> DesugarEnv.lookup_letbinding_quals env l) in
           let s = Sig_let(lbs, d.drange, lids, quals) in
           let env = push_sigelt env s in
           env, [s]

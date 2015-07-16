@@ -158,7 +158,13 @@ and uvar_k_app = uvar_k * args
 and kabbrev = lident * args
 and uvar_k = Unionfind.uvar<uvar_basis<knd>>
 and lbname = either<bvvdef, lident>
-and letbindings = bool * list<(lbname * typ * exp)> (* let recs may have more than one element; top-level lets have lidents *)
+and letbinding = {
+    lbname:lbname;
+    lbtyp:typ;
+    lbeff:lident;
+    lbdef:exp
+}
+and letbindings = bool * list<letbinding> (* let recs may have more than one element; top-level lets have lidents *)
 and subst_t = list<list<subst_elt>>
 and subst_map = Util.smap<either<typ, exp>>
 and subst_elt = either<(btvdef*typ), (bvvdef*exp)>
@@ -613,6 +619,8 @@ let mk_Exp_meta' (m:meta_e) (t:option<typ>) p =
     }
 let mk_Exp_meta (m:meta_e) = match m with
       | Meta_desugared(e, _) -> mk_Exp_meta' m (!e.tk) e.pos
+
+let mk_lb (x, eff, t, e) = {lbname=x; lbeff=eff; lbtyp=t; lbdef=e}
 
 let mk_subst (s:subst) = s
 let extend_subst x s : subst = x::s

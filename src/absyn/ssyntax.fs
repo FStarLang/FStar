@@ -261,7 +261,7 @@ and serialize_kabbrev (writer:Writer) (ast:kabbrev) :unit = serialize_lident wri
 and serialize_lbname (writer:Writer) (ast:lbname) :unit = serialize_either writer serialize_bvvdef serialize_lident ast
 
 and serialize_letbindings (writer:Writer) (ast:letbindings) :unit = 
-    let f writer (n, t, e) = serialize_lbname writer n; serialize_typ writer t; serialize_exp writer e in
+    let f writer lb = serialize_lbname writer lb.lbname; serialize_lident writer lb.lbeff; serialize_typ writer lb.lbtyp; serialize_exp writer lb.lbdef in
     writer.write_bool (fst ast); serialize_list writer f (snd ast)
 
 and serialize_fvar (writer:Writer) (ast:Syntax.fvar) :unit = serialize_either writer serialize_btvdef serialize_bvvdef ast
@@ -403,7 +403,10 @@ and deserialize_kabbrev (reader:Reader) :kabbrev = (deserialize_lident reader, d
 and deserialize_lbname (reader:Reader) :lbname = deserialize_either reader deserialize_bvvdef deserialize_lident
 
 and deserialize_letbindings (reader:Reader) :letbindings = 
-    let f reader = (deserialize_lbname reader, deserialize_typ reader, deserialize_exp reader) in
+    let f reader = {lbname=deserialize_lbname reader;
+                    lbeff=deserialize_lident reader;
+                    lbtyp=deserialize_typ reader;
+                    lbdef=deserialize_exp reader} in
     (reader.read_bool (), deserialize_list reader f)
 
 and deserialize_fvar (reader:Reader) :Syntax.fvar = deserialize_either reader deserialize_btvdef deserialize_bvvdef

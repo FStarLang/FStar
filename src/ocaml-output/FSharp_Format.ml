@@ -21,17 +21,17 @@ end))
 
 let brackets = (fun _47_11 -> (match (_47_11) with
 | Doc (d) -> begin
-(enclose (text "\x5b") (text "\x5d") (Doc (d)))
+(enclose (text "[") (text "]") (Doc (d)))
 end))
 
 let cbrackets = (fun _47_13 -> (match (_47_13) with
 | Doc (d) -> begin
-(enclose (text "\x7b") (text "\x7d") (Doc (d)))
+(enclose (text "{") (text "}") (Doc (d)))
 end))
 
 let parens = (fun _47_15 -> (match (_47_15) with
 | Doc (d) -> begin
-(enclose (text "\x28") (text "\x29") (Doc (d)))
+(enclose (text "(") (text ")") (Doc (d)))
 end))
 
 let cat = (fun _47_17 _47_19 -> (match ((_47_17, _47_19)) with

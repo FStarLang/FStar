@@ -667,7 +667,7 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
       {config with code=e} |> rebuild
 
     | Exp_let((is_rec, lbs), body) -> 
-      let env, lbs = lbs |> List.fold_left (fun (env, lbs) (x, t, e) -> 
+      let env, lbs = lbs |> List.fold_left (fun (env, lbs) ({lbname=x; lbeff=eff; lbtyp=t; lbdef=e}) -> 
         let c = wne tcenv ({config with code=e; stack=empty_stack}) in
         let t = sn tcenv (t_config t config.environment config.steps) in
         let y, env = match x with 
@@ -677,7 +677,7 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
               let y_for_x = V(x, (yexp, empty_env)) in
               Inl y.v, extend_env' env y_for_x 
             | _ -> x, env in 
-        env, (y, t.code, c.code)::lbs) (config.environment, []) in 
+        env, mk_lb (y, eff, t.code, c.code)::lbs) (config.environment, []) in 
       let lbs = List.rev lbs in
       let c_body = wne tcenv ({config with code=body; stack=empty_stack; environment=env}) in
       let e = mk_Exp_let((is_rec, lbs), c_body.code) None e.pos in

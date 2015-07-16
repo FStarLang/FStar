@@ -119,7 +119,8 @@ type typ' =
 | Kind_uvar of uvar_k_app
 | Kind_lam of (binders * knd)
 | Kind_delayed of (knd * subst_t * knd memo)
-| Kind_unknown and freevars =
+| Kind_unknown and letbinding =
+{lbname : lbname; lbtyp : typ; lbeff : lident; lbdef : exp} and freevars =
 {ftvs : btvar Support.Microsoft.FStar.Util.set; fxvs : bvvar Support.Microsoft.FStar.Util.set} and uvars =
 {uvars_k : uvar_k Support.Microsoft.FStar.Util.set; uvars_t : (uvar_t * knd) Support.Microsoft.FStar.Util.set; uvars_e : (uvar_e * typ) Support.Microsoft.FStar.Util.set} and ('a, 'b) syntax =
 {n : 'a; tk : 'b memo; pos : Support.Microsoft.FStar.Range.range; fvs : freevars memo; uvs : uvars memo} and arg =
@@ -140,7 +141,7 @@ exp bvdef and pat =
 (lident * args) and uvar_k =
 knd uvar_basis Support.Microsoft.FStar.Unionfind.uvar and lbname =
 (bvvdef, lident) Support.Microsoft.FStar.Util.either and letbindings =
-(bool * (lbname * typ * exp) list) and subst_t =
+(bool * letbinding list) and subst_t =
 subst_elt list list and subst_map =
 (typ, exp) Support.Microsoft.FStar.Util.either Support.Microsoft.FStar.Util.smap and subst_elt =
 ((btvdef * typ), (bvvdef * exp)) Support.Microsoft.FStar.Util.either and fvar =
@@ -229,7 +230,7 @@ let withinfo = (fun v s r -> {v = v; sort = s; p = r})
 
 let withsort = (fun v s -> (withinfo v s dummyRange))
 
-let mk_ident = (fun _15_253 -> (match (_15_253) with
+let mk_ident = (fun _15_258 -> (match (_15_258) with
 | (text, range) -> begin
 {idText = text; idRange = range}
 end))
@@ -248,8 +249,8 @@ let path_of_lid = (fun lid -> (Support.List.map text_of_id (Support.List.append 
 
 let ids_of_lid = (fun lid -> (Support.List.append lid.ns ((lid.ident)::[])))
 
-let lid_of_ids = (fun ids -> (let _15_264 = (Support.Microsoft.FStar.Util.prefix ids)
-in (match (_15_264) with
+let lid_of_ids = (fun ids -> (let _15_269 = (Support.Microsoft.FStar.Util.prefix ids)
+in (match (_15_269) with
 | (ns, id) -> begin
 (let nsstr = (text_of_path (Support.List.map text_of_id ns))
 in {ns = ns; ident = id; nsstr = nsstr; str = if (nsstr = "") then begin
@@ -282,10 +283,10 @@ end
 (Support.String.compare x.realname.idText y.realname.idText)
 end))
 
-let lid_with_range = (fun lid r -> (let id = (let _15_304 = lid.ident
-in {idText = _15_304.idText; idRange = r})
-in (let _15_307 = lid
-in {ns = _15_307.ns; ident = id; nsstr = _15_307.nsstr; str = _15_307.str})))
+let lid_with_range = (fun lid r -> (let id = (let _15_309 = lid.ident
+in {idText = _15_309.idText; idRange = r})
+in (let _15_312 = lid
+in {ns = _15_312.ns; ident = id; nsstr = _15_312.nsstr; str = _15_312.str})))
 
 let range_of_lid = (fun lid -> lid.ident.idRange)
 
@@ -299,32 +300,32 @@ end))
 
 let syn = (fun p k f -> (f k p))
 
-let mk_fvs = (fun _15_318 -> (match (_15_318) with
+let mk_fvs = (fun _15_323 -> (match (_15_323) with
 | () -> begin
 (Support.Microsoft.FStar.Util.mk_ref None)
 end))
 
-let mk_uvs = (fun _15_319 -> (match (_15_319) with
+let mk_uvs = (fun _15_324 -> (match (_15_324) with
 | () -> begin
 (Support.Microsoft.FStar.Util.mk_ref None)
 end))
 
-let new_ftv_set = (fun _15_320 -> (match (_15_320) with
+let new_ftv_set = (fun _15_325 -> (match (_15_325) with
 | () -> begin
 (Support.Microsoft.FStar.Util.new_set (fun x y -> (Support.Microsoft.FStar.Util.compare x.v.realname.idText y.v.realname.idText)) (fun x -> (Support.Microsoft.FStar.Util.hashcode x.v.realname.idText)))
 end))
 
-let new_uv_set = (fun _15_324 -> (match (_15_324) with
+let new_uv_set = (fun _15_329 -> (match (_15_329) with
 | () -> begin
 (Support.Microsoft.FStar.Util.new_set (fun x y -> ((Support.Microsoft.FStar.Unionfind.uvar_id x) - (Support.Microsoft.FStar.Unionfind.uvar_id y))) (Support.Microsoft.FStar.Unionfind.uvar_id))
 end))
 
-let new_uvt_set = (fun _15_327 -> (match (_15_327) with
+let new_uvt_set = (fun _15_332 -> (match (_15_332) with
 | () -> begin
-(Support.Microsoft.FStar.Util.new_set (fun _15_335 _15_339 -> (match ((_15_335, _15_339)) with
+(Support.Microsoft.FStar.Util.new_set (fun _15_340 _15_344 -> (match ((_15_340, _15_344)) with
 | ((x, _), (y, _)) -> begin
 ((Support.Microsoft.FStar.Unionfind.uvar_id x) - (Support.Microsoft.FStar.Unionfind.uvar_id y))
-end)) (fun _15_331 -> (match (_15_331) with
+end)) (fun _15_336 -> (match (_15_336) with
 | (x, _) -> begin
 (Support.Microsoft.FStar.Unionfind.uvar_id x)
 end)))
@@ -340,20 +341,20 @@ let memo_no_fvs = (Support.Microsoft.FStar.Util.mk_ref (Some (no_fvs)))
 
 let freevars_of_list = (fun l -> ((Support.List.fold_left (fun out _15_1 -> (match (_15_1) with
 | Support.Microsoft.FStar.Util.Inl (btv) -> begin
-(let _15_345 = out
-in {ftvs = (Support.Microsoft.FStar.Util.set_add btv out.ftvs); fxvs = _15_345.fxvs})
+(let _15_350 = out
+in {ftvs = (Support.Microsoft.FStar.Util.set_add btv out.ftvs); fxvs = _15_350.fxvs})
 end
 | Support.Microsoft.FStar.Util.Inr (bxv) -> begin
-(let _15_349 = out
-in {ftvs = _15_349.ftvs; fxvs = (Support.Microsoft.FStar.Util.set_add bxv out.fxvs)})
+(let _15_354 = out
+in {ftvs = _15_354.ftvs; fxvs = (Support.Microsoft.FStar.Util.set_add bxv out.fxvs)})
 end)) no_fvs) l))
 
 let list_of_freevars = (fun fvs -> (Support.List.append ((Support.List.map (fun x -> Support.Microsoft.FStar.Util.Inl (x))) (Support.Microsoft.FStar.Util.set_elements fvs.ftvs)) ((Support.List.map (fun x -> Support.Microsoft.FStar.Util.Inr (x))) (Support.Microsoft.FStar.Util.set_elements fvs.fxvs))))
 
-let get_unit_ref = (fun _15_354 -> (match (_15_354) with
+let get_unit_ref = (fun _15_359 -> (match (_15_359) with
 | () -> begin
 (let x = (Support.Microsoft.FStar.Util.mk_ref (Some (())))
-in (let _15_356 = (Support.ST.op_Colon_Equals x None)
+in (let _15_361 = (Support.ST.op_Colon_Equals x None)
 in x))
 end))
 
@@ -361,17 +362,17 @@ let mk_Kind_type = {n = Kind_type; tk = (get_unit_ref ()); pos = dummyRange; fvs
 
 let mk_Kind_effect = {n = Kind_effect; tk = (get_unit_ref ()); pos = dummyRange; fvs = (mk_fvs ()); uvs = (mk_uvs ())}
 
-let mk_Kind_abbrev = (fun _15_360 p -> (match (_15_360) with
+let mk_Kind_abbrev = (fun _15_365 p -> (match (_15_365) with
 | (kabr, k) -> begin
 {n = Kind_abbrev ((kabr, k)); tk = (get_unit_ref ()); pos = p; fvs = (mk_fvs ()); uvs = (mk_uvs ())}
 end))
 
-let mk_Kind_arrow = (fun _15_364 p -> (match (_15_364) with
+let mk_Kind_arrow = (fun _15_369 p -> (match (_15_369) with
 | (bs, k) -> begin
 {n = Kind_arrow ((bs, k)); tk = (get_unit_ref ()); pos = p; fvs = (mk_fvs ()); uvs = (mk_uvs ())}
 end))
 
-let mk_Kind_arrow' = (fun _15_368 p -> (match (_15_368) with
+let mk_Kind_arrow' = (fun _15_373 p -> (match (_15_373) with
 | (bs, k) -> begin
 (match (bs) with
 | [] -> begin
@@ -390,27 +391,27 @@ end))
 
 let mk_Kind_uvar = (fun uv p -> {n = Kind_uvar (uv); tk = (get_unit_ref ()); pos = p; fvs = (mk_fvs ()); uvs = (mk_uvs ())})
 
-let mk_Kind_lam = (fun _15_383 p -> (match (_15_383) with
+let mk_Kind_lam = (fun _15_388 p -> (match (_15_388) with
 | (vs, k) -> begin
 {n = Kind_lam ((vs, k)); tk = (get_unit_ref ()); pos = p; fvs = (mk_fvs ()); uvs = (mk_uvs ())}
 end))
 
-let mk_Kind_delayed = (fun _15_388 p -> (match (_15_388) with
+let mk_Kind_delayed = (fun _15_393 p -> (match (_15_393) with
 | (k, s, m) -> begin
 {n = Kind_delayed ((k, s, m)); tk = (get_unit_ref ()); pos = p; fvs = (mk_fvs ()); uvs = (mk_uvs ())}
 end))
 
 let mk_Kind_unknown = {n = Kind_unknown; tk = (get_unit_ref ()); pos = dummyRange; fvs = (mk_fvs ()); uvs = (mk_uvs ())}
 
-let get_knd_nref = (fun _15_390 -> (match (_15_390) with
+let get_knd_nref = (fun _15_395 -> (match (_15_395) with
 | () -> begin
 (let x = (Support.Microsoft.FStar.Util.mk_ref (Some (mk_Kind_unknown)))
-in (let _15_392 = (Support.ST.op_Colon_Equals x None)
+in (let _15_397 = (Support.ST.op_Colon_Equals x None)
 in x))
 end))
 
 let get_knd_ref = (fun k -> (let x = (Support.Microsoft.FStar.Util.mk_ref (Some (mk_Kind_unknown)))
-in (let _15_396 = (Support.ST.op_Colon_Equals x k)
+in (let _15_401 = (Support.ST.op_Colon_Equals x k)
 in x)))
 
 let mk_Typ_btvar = (fun x k p -> {n = Typ_btvar (x); tk = (get_knd_ref k); pos = p; fvs = (mk_fvs ()); uvs = (mk_uvs ())})
@@ -425,17 +426,17 @@ end
 Typ_fun ((bs, c))
 end))
 
-let mk_Typ_fun = (fun _15_412 k p -> (match (_15_412) with
+let mk_Typ_fun = (fun _15_417 k p -> (match (_15_417) with
 | (bs, c) -> begin
 {n = (check_fun bs c p); tk = (Support.Microsoft.FStar.Util.mk_ref k); pos = p; fvs = (mk_fvs ()); uvs = (mk_uvs ())}
 end))
 
-let mk_Typ_refine = (fun _15_417 k p -> (match (_15_417) with
+let mk_Typ_refine = (fun _15_422 k p -> (match (_15_422) with
 | (x, phi) -> begin
 {n = Typ_refine ((x, phi)); tk = (Support.Microsoft.FStar.Util.mk_ref k); pos = p; fvs = (mk_fvs ()); uvs = (mk_uvs ())}
 end))
 
-let mk_Typ_app = (fun _15_422 k p -> (match (_15_422) with
+let mk_Typ_app = (fun _15_427 k p -> (match (_15_427) with
 | (t1, args) -> begin
 {n = (match (args) with
 | [] -> begin
@@ -446,7 +447,7 @@ Typ_app ((t1, args))
 end); tk = (Support.Microsoft.FStar.Util.mk_ref k); pos = p; fvs = (mk_fvs ()); uvs = (mk_uvs ())}
 end))
 
-let mk_Typ_app' = (fun _15_430 k p -> (match (_15_430) with
+let mk_Typ_app' = (fun _15_435 k p -> (match (_15_435) with
 | (t1, args) -> begin
 (match (args) with
 | [] -> begin
@@ -457,7 +458,7 @@ end
 end)
 end))
 
-let extend_typ_app = (fun _15_438 k p -> (match (_15_438) with
+let extend_typ_app = (fun _15_443 k p -> (match (_15_443) with
 | (t, arg) -> begin
 (match (t.n) with
 | Typ_app ((h, args)) -> begin
@@ -468,7 +469,7 @@ end
 end)
 end))
 
-let mk_Typ_lam = (fun _15_449 k p -> (match (_15_449) with
+let mk_Typ_lam = (fun _15_454 k p -> (match (_15_454) with
 | (b, t) -> begin
 {n = (match (b) with
 | [] -> begin
@@ -479,7 +480,7 @@ Typ_lam ((b, t))
 end); tk = (Support.Microsoft.FStar.Util.mk_ref k); pos = p; fvs = (mk_fvs ()); uvs = (mk_uvs ())}
 end))
 
-let mk_Typ_lam' = (fun _15_457 k p -> (match (_15_457) with
+let mk_Typ_lam' = (fun _15_462 k p -> (match (_15_462) with
 | (bs, t) -> begin
 (match (bs) with
 | [] -> begin
@@ -490,12 +491,12 @@ end
 end)
 end))
 
-let mk_Typ_ascribed' = (fun _15_465 k' p -> (match (_15_465) with
+let mk_Typ_ascribed' = (fun _15_470 k' p -> (match (_15_470) with
 | (t, k) -> begin
 {n = Typ_ascribed ((t, k)); tk = (Support.Microsoft.FStar.Util.mk_ref k'); pos = p; fvs = (mk_fvs ()); uvs = (mk_uvs ())}
 end))
 
-let mk_Typ_ascribed = (fun _15_470 p -> (match (_15_470) with
+let mk_Typ_ascribed = (fun _15_475 p -> (match (_15_475) with
 | (t, k) -> begin
 (mk_Typ_ascribed' (t, k) (Some (k)) p)
 end))
@@ -507,17 +508,17 @@ let mk_Typ_meta = (fun m -> (match (m) with
 (mk_Typ_meta' m (! (t.tk)) t.pos)
 end))
 
-let mk_Typ_uvar' = (fun _15_507 k' p -> (match (_15_507) with
+let mk_Typ_uvar' = (fun _15_512 k' p -> (match (_15_512) with
 | (u, k) -> begin
 {n = Typ_uvar ((u, k)); tk = (get_knd_ref k'); pos = p; fvs = (mk_fvs ()); uvs = (mk_uvs ())}
 end))
 
-let mk_Typ_uvar = (fun _15_512 p -> (match (_15_512) with
+let mk_Typ_uvar = (fun _15_517 p -> (match (_15_517) with
 | (u, k) -> begin
 (mk_Typ_uvar' (u, k) (Some (k)) p)
 end))
 
-let mk_Typ_delayed = (fun _15_517 k p -> (match (_15_517) with
+let mk_Typ_delayed = (fun _15_522 k p -> (match (_15_522) with
 | (t, s, m) -> begin
 {n = (match (t.n) with
 | Typ_delayed (_) -> begin
@@ -532,15 +533,15 @@ let mk_Typ_delayed' = (fun st k p -> {n = Typ_delayed ((st, (Support.Microsoft.F
 
 let mk_Typ_unknown = {n = Typ_unknown; tk = (get_knd_nref ()); pos = dummyRange; fvs = (mk_fvs ()); uvs = (mk_uvs ())}
 
-let get_typ_nref = (fun _15_528 -> (match (_15_528) with
+let get_typ_nref = (fun _15_533 -> (match (_15_533) with
 | () -> begin
 (let x = (Support.Microsoft.FStar.Util.mk_ref (Some (mk_Typ_unknown)))
-in (let _15_530 = (Support.ST.op_Colon_Equals x None)
+in (let _15_535 = (Support.ST.op_Colon_Equals x None)
 in x))
 end))
 
 let get_typ_ref = (fun t -> (let x = (Support.Microsoft.FStar.Util.mk_ref (Some (mk_Typ_unknown)))
-in (let _15_534 = (Support.ST.op_Colon_Equals x t)
+in (let _15_539 = (Support.ST.op_Colon_Equals x t)
 in x)))
 
 let mk_Total = (fun t -> {n = Total (t); tk = (Support.Microsoft.FStar.Util.mk_ref None); pos = t.pos; fvs = (mk_fvs ()); uvs = (mk_uvs ())})
@@ -549,14 +550,14 @@ let mk_Comp = (fun ct -> {n = Comp (ct); tk = (Support.Microsoft.FStar.Util.mk_r
 
 let mk_Exp_bvar = (fun x t p -> {n = Exp_bvar (x); tk = (get_typ_ref t); pos = p; fvs = (mk_fvs ()); uvs = (mk_uvs ())})
 
-let mk_Exp_fvar = (fun _15_543 t p -> (match (_15_543) with
+let mk_Exp_fvar = (fun _15_548 t p -> (match (_15_548) with
 | (x, b) -> begin
 {n = Exp_fvar ((x, b)); tk = (get_typ_ref t); pos = p; fvs = (mk_fvs ()); uvs = (mk_uvs ())}
 end))
 
 let mk_Exp_constant = (fun s t p -> {n = Exp_constant (s); tk = (get_typ_ref t); pos = p; fvs = (mk_fvs ()); uvs = (mk_uvs ())})
 
-let mk_Exp_abs = (fun _15_551 t' p -> (match (_15_551) with
+let mk_Exp_abs = (fun _15_556 t' p -> (match (_15_556) with
 | (b, e) -> begin
 {n = (match (b) with
 | [] -> begin
@@ -567,7 +568,7 @@ Exp_abs ((b, e))
 end); tk = (get_typ_ref t'); pos = p; fvs = (mk_fvs ()); uvs = (mk_uvs ())}
 end))
 
-let mk_Exp_abs' = (fun _15_559 t' p -> (match (_15_559) with
+let mk_Exp_abs' = (fun _15_564 t' p -> (match (_15_564) with
 | (b, e) -> begin
 {n = (match ((b, e.n)) with
 | (_, Exp_abs ((binders, body))) -> begin
@@ -581,7 +582,7 @@ Exp_abs ((b, e))
 end); tk = (get_typ_ref t'); pos = p; fvs = (mk_fvs ()); uvs = (mk_uvs ())}
 end))
 
-let mk_Exp_app = (fun _15_577 t p -> (match (_15_577) with
+let mk_Exp_app = (fun _15_582 t p -> (match (_15_582) with
 | (e1, args) -> begin
 {n = (match (args) with
 | [] -> begin
@@ -592,7 +593,7 @@ Exp_app ((e1, args))
 end); tk = (get_typ_ref t); pos = p; fvs = (mk_fvs ()); uvs = (mk_uvs ())}
 end))
 
-let mk_Exp_app_flat = (fun _15_585 t p -> (match (_15_585) with
+let mk_Exp_app_flat = (fun _15_590 t p -> (match (_15_590) with
 | (e1, args) -> begin
 (match (e1.n) with
 | Exp_app ((e1', args')) -> begin
@@ -603,7 +604,7 @@ end
 end)
 end))
 
-let mk_Exp_app' = (fun _15_596 t p -> (match (_15_596) with
+let mk_Exp_app' = (fun _15_601 t p -> (match (_15_601) with
 | (e1, args) -> begin
 (match (args) with
 | [] -> begin
@@ -657,37 +658,37 @@ end
 []
 end))
 
-let mk_Exp_match = (fun _15_657 t p -> (match (_15_657) with
+let mk_Exp_match = (fun _15_662 t p -> (match (_15_662) with
 | (e, pats) -> begin
 {n = Exp_match ((e, pats)); tk = (get_typ_ref t); pos = p; fvs = (mk_fvs ()); uvs = (mk_uvs ())}
 end))
 
-let mk_Exp_ascribed' = (fun _15_662 t' p -> (match (_15_662) with
+let mk_Exp_ascribed' = (fun _15_667 t' p -> (match (_15_667) with
 | (e, t) -> begin
 {n = Exp_ascribed ((e, t)); tk = (get_typ_ref t'); pos = p; fvs = (mk_fvs ()); uvs = (mk_uvs ())}
 end))
 
-let mk_Exp_ascribed = (fun _15_667 p -> (match (_15_667) with
+let mk_Exp_ascribed = (fun _15_672 p -> (match (_15_672) with
 | (e, t) -> begin
 (mk_Exp_ascribed' (e, t) (Some (t)) p)
 end))
 
-let mk_Exp_let = (fun _15_671 t p -> (match (_15_671) with
+let mk_Exp_let = (fun _15_676 t p -> (match (_15_676) with
 | (lbs, e) -> begin
 {n = Exp_let ((lbs, e)); tk = (get_typ_ref t); pos = p; fvs = (mk_fvs ()); uvs = (mk_uvs ())}
 end))
 
-let mk_Exp_uvar' = (fun _15_676 t' p -> (match (_15_676) with
+let mk_Exp_uvar' = (fun _15_681 t' p -> (match (_15_681) with
 | (u, t) -> begin
 {n = Exp_uvar ((u, t)); tk = (get_typ_ref t'); pos = p; fvs = (mk_fvs ()); uvs = (mk_uvs ())}
 end))
 
-let mk_Exp_uvar = (fun _15_681 p -> (match (_15_681) with
+let mk_Exp_uvar = (fun _15_686 p -> (match (_15_686) with
 | (u, t) -> begin
 (mk_Exp_uvar' (u, t) (Some (t)) p)
 end))
 
-let mk_Exp_delayed = (fun _15_686 t p -> (match (_15_686) with
+let mk_Exp_delayed = (fun _15_691 t p -> (match (_15_691) with
 | (e, s, m) -> begin
 {n = Exp_delayed ((e, s, m)); tk = (get_typ_ref t); pos = p; fvs = (mk_fvs ()); uvs = (mk_uvs ())}
 end))
@@ -697,6 +698,11 @@ let mk_Exp_meta' = (fun m t p -> {n = Exp_meta (m); tk = (get_typ_ref t); pos = 
 let mk_Exp_meta = (fun m -> (match (m) with
 | Meta_desugared ((e, _)) -> begin
 (mk_Exp_meta' m (! (e.tk)) e.pos)
+end))
+
+let mk_lb = (fun _15_707 -> (match (_15_707) with
+| (x, eff, t, e) -> begin
+{lbname = x; lbtyp = t; lbeff = eff; lbdef = e}
 end))
 
 let mk_subst = (fun s -> s)
@@ -719,7 +725,7 @@ let ktype = mk_Kind_type
 
 let keffect = mk_Kind_effect
 
-let null_id = (mk_ident ("\x5f", dummyRange))
+let null_id = (mk_ident ("_", dummyRange))
 
 let null_bvd = {ppname = null_id; realname = null_id}
 
@@ -757,12 +763,12 @@ end))
 
 let freevars_of_binders = (fun bs -> ((Support.List.fold_left (fun out _15_3 -> (match (_15_3) with
 | (Support.Microsoft.FStar.Util.Inl (btv), _) -> begin
-(let _15_747 = out
-in {ftvs = (Support.Microsoft.FStar.Util.set_add btv out.ftvs); fxvs = _15_747.fxvs})
+(let _15_757 = out
+in {ftvs = (Support.Microsoft.FStar.Util.set_add btv out.ftvs); fxvs = _15_757.fxvs})
 end
 | (Support.Microsoft.FStar.Util.Inr (bxv), _) -> begin
-(let _15_754 = out
-in {ftvs = _15_754.ftvs; fxvs = (Support.Microsoft.FStar.Util.set_add bxv out.fxvs)})
+(let _15_764 = out
+in {ftvs = _15_764.ftvs; fxvs = (Support.Microsoft.FStar.Util.set_add bxv out.fxvs)})
 end)) no_fvs) bs))
 
 let binders_of_list = (fun fvs -> ((Support.List.map (fun t -> (t, None))) fvs))

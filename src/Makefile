@@ -38,7 +38,7 @@ BUILD_VERSION  =
 OTHERFLAGS    := --optimize+ --debug:full --nologo -g -O
 OTHERFLAGS    += --mlcompatibility $(addprefix --define:, $(BUILD_VERSION))
 
-ALL_DLLS    = basic.dll format.dll absyn.dll backend.dll parser.dll tc.dll tosmt.dll jsbackend.dll
+ALL_DLLS    = basic.dll format.dll absyn.dll backend.dll parser.dll tc.dll tosmt.dll #jsbackend.dll
 FSHARP_LIBS = System.Runtime.Serialization.dll System.Xml.dll $(BIN)/FSharp.PowerPack.dll $(BIN)/FSharp.PowerPack.Compatibility.dll $(BIN)/FSharp.PPrint.dll
 OTHER_DLLS  =
 BASELIBS    = $(addprefix -r , $(FSHARP_LIBS) $(OTHER_DLLS))

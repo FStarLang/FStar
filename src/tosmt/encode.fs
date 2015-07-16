@@ -824,9 +824,9 @@ and encode_exp (e:exp) (env:env_t) : (term
                         end
        end
         
-      | Exp_let((false, [(Inr _, _, _)]), _) -> failwith "Impossible: already handled by encoding of Sig_let" 
+      | Exp_let((false, [{lbname=Inr _}]), _) -> failwith "Impossible: already handled by encoding of Sig_let" 
 
-      | Exp_let((false, [(Inl x, t1, e1)]), e2) ->
+      | Exp_let((false, [{lbname=Inl x; lbtyp=t1; lbdef=e1}]), e2) ->
         let ee1, decls1 = encode_exp e1 env in
         let env' = push_term_var env x ee1 in
         let ee2, decls2 = encode_exp e2 env' in
@@ -1563,17 +1563,17 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         begin try 
                  if quals |> Util.for_some (function Opaque -> true | _ -> false)
                  then [], env
-                 else if   bindings |> Util.for_some (fun (_, t, _) -> Util.is_smt_lemma t) 
-                 then bindings |> List.collect (fun (flid, t, _) -> 
-                        if Util.is_smt_lemma t
-                        then encode_smt_lemma env (right flid) t
+                 else if   bindings |> Util.for_some (fun lb -> Util.is_smt_lemma lb.lbtyp) 
+                 then bindings |> List.collect (fun lb -> 
+                        if Util.is_smt_lemma lb.lbtyp
+                        then encode_smt_lemma env (right lb.lbname) lb.lbtyp
                         else raise Let_rec_unencodeable), env
                  else let toks, typs, decls, env = 
-                    bindings |> List.fold_left (fun (toks, typs, decls, env) (flid, t, _) -> 
-                        if Util.is_smt_lemma t then raise Let_rec_unencodeable;
-                        let t_norm = whnf env t |> Util.compress_typ in
-                        let tok, decl, env = declare_top_level_let env (right flid) t t_norm in
-                        (right flid, tok)::toks, t_norm::typs, decl::decls, env) ([], [], [], env) in
+                    bindings |> List.fold_left (fun (toks, typs, decls, env) lb ->
+                        if Util.is_smt_lemma lb.lbtyp then raise Let_rec_unencodeable;
+                        let t_norm = whnf env lb.lbtyp |> Util.compress_typ in
+                        let tok, decl, env = declare_top_level_let env (right lb.lbname) lb.lbtyp t_norm in
+                        (right lb.lbname, tok)::toks, t_norm::typs, decl::decls, env) ([], [], [], env) in
                  let toks = List.rev toks in 
                  let decls = List.rev decls |> List.flatten in
                  let typs = List.rev typs in
@@ -1582,7 +1582,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                  then decls, env
                  else if not is_rec
                  then match bindings, typs, toks with 
-                        | [(_, _, e)], [t_norm], [(flid, (f, ftok))] ->
+                        | [{lbdef=e}], [t_norm], [(flid, (f, ftok))] ->
                           let binders, body, formals, tres = destruct_bound_function flid t_norm e in
                           let vars, guards, env', binder_decls, _ = encode_binders None binders env in
                           let app = match vars with [] -> Term.mkFreeV(f, Term_sort) | _ -> Term.mkApp(f, List.map mkFreeV vars) in
@@ -1599,7 +1599,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                          let env = push_free_var env flid gtok (Some <| Term.mkApp(g, [fuel_tm])) in
                          (flid, f, ftok, g, gtok)::gtoks, env) ([], env) in
                       let gtoks = List.rev gtoks in
-                      let encode_one_binding env0 (flid, f, ftok, g, gtok) t_norm (_, _, e) = 
+                      let encode_one_binding env0 (flid, f, ftok, g, gtok) t_norm ({lbdef=e}) = 
                          let binders, body, formals, tres = destruct_bound_function flid t_norm e in
                          let vars, guards, env', binder_decls, _ = encode_binders None binders env in
                          let decl_g = Term.DeclFun(g, Fuel_sort::List.map snd vars, Term_sort, Some "Fuel-instrumented function name") in
@@ -1634,7 +1634,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                         let eqns = List.rev eqns in
                         prefix_decls@rest@eqns, env0
         with Let_rec_unencodeable -> 
-             let msg = bindings |> List.map (fun (lb, _, _) -> Print.lbname_to_string lb) |> String.concat " and " in
+             let msg = bindings |> List.map (fun lb -> Print.lbname_to_string lb.lbname) |> String.concat " and " in
              let decl = Caption ("let rec unencodeable: Skipping: " ^msg) in
              [decl], env
         end

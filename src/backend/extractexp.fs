@@ -17,18 +17,35 @@ let err_uninst e =
 
 let err_ill_typed_application e args t =
     fail e.pos ("Ill-typed application")
-    
-let translate_typ (g:env) (t:typ) : mlty = failwith "NYI"
 
+let err_value_restriction e =
+    fail e.pos ("Refusing to generalize because of the value restriction")
+    
+let is_constructor e = match (Util.compress_exp e).n with 
+    | Exp_fvar(_, b) -> b
+    | _ -> false
+
+let rec is_value (e:exp) = match (Util.compress_exp e).n with 
+    | Exp_bvar _
+    | Exp_fvar _ 
+    | Exp_abs _  -> true
+    | Exp_app(head, args) -> is_constructor head && args |> List.for_all (fun (te, _) -> 
+        match te with 
+            | Inl _ -> true
+            | Inr e -> is_value e)
+    | _ -> false
+
+let translate_typ (g:env) (t:typ) : mlty = failwith "NYI"
+let translate_eff (g:env) (l:lident) : e_tag = failwith "NYI"
 let instantiate (s:mltyscheme) (args:list<mlty>) : mlty = failwith "NYI"
 
 let equiv (g:env) (t:mlty) (t':mlty) : bool = failwith "NYI"
 
 let ml_unit = MLE_Const MLC_Unit
-let ml_tunit = MLTY_Named ([], ([], "unit")) 
+let ml_unit_ty = MLTY_Named ([], ([], "unit")) 
 
 let erasable (g:env) (t:mlty) = 
-    if t = ml_tunit then true
+    if t = ml_unit_ty then true
     else match t with 
         | MLTY_Named (_, (["Ghost"], "erased")) -> true
         | _ -> false //what about types that reduce/unfold to unit/erased t?
@@ -85,7 +102,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                 | [], _ -> MLE_App(head, List.rev args'), f, t
 
                 | (Inl _, _)::rest, MLTY_Fun (tunit, f', t) -> //non-prefix type app; this type argument gets erased to unit
-                  if equiv g tunit ml_tunit
+                  if equiv g tunit ml_unit_ty
                   then synth_app (head, ml_unit::args') (join f f', t) rest
                   else failwith "Impossible: ill-typed application" //ill-typed; should be impossible
 
@@ -118,17 +135,82 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
               synth_app (head, []) (f, t) args               
           end
 
-      | Exp_abs(bs, e) -> 
+        | Exp_abs(bs, e) -> 
+            let ml_bs, env = List.fold_left (fun (ml_bs, env) (b, _) -> match b with 
+                | Inl a -> //no first-class polymorphism; so type-binders get wiped out
+                  let env = Env.extend_ty env a (Some MLTY_Top) in 
+                  let ml_b = (Util.as_mlident a.v, Some <| ml_unit_ty) in
+                  ml_b::ml_bs, env 
+              
+                | Inr x -> 
+                  let t = translate_typ env x.sort in
+                  let env = Env.extend_bv env x ([], t) in
+                  let ml_b = (Util.as_mlident x.v, Some t) in
+                  ml_b::ml_bs, env) ([], g) bs in
+            let bs = List.rev ml_bs in
+            let e, f, t = synth_exp env e in
+            let f, tfun = List.fold_right 
+                (fun (_, targ) (f, t) -> MayErase, MLTY_Fun (must targ, f, t))
+                ml_bs (f, t) in
+            MLE_Fun(bs, e), f, tfun
+    
+        | Exp_let((false, [{lbname=lbname; lbeff=eff; lbtyp=t; lbdef=e}]), e') -> 
+          let t = Util.compress_typ t in
+          begin match t.n with 
+             | Typ_fun(bs, c) -> 
+                 begin match bs with 
+                    | (Inl _,_)::_ -> //need to generalize
+                       let tbinders, tbody = 
+                           match Util.prefix_until (function (Inr _, _) -> true | _ -> false) bs with 
+                            | None -> bs, Util.comp_result c
+                            | Some (bs, b, rest) -> bs, mk_Typ_fun(b::rest, c) None c.pos in
+
+                       let n = List.length tbinders in
+                       begin match (Util.compress_exp e).n with 
+                         | Exp_abs(bs, body) -> 
+                           if n <= List.length bs
+                           then let targs, rest_args = Util.first_N n bs in 
+                                let expected_t = match Util.mk_subst_binder tbinders targs with 
+                                    | None -> failwith "Not enough type binders"
+                                    | Some s -> Util.subst_typ s tbody in
+                                let targs = targs |> List.map (function (Inl a, _) -> a | _ -> failwith "Impossible") in
+                                let env = List.fold_left (fun env a -> Env.extend_ty env a None) g targs in
+                                let expected_t = translate_typ env expected_t in
+                                let expected_e = translate_eff env eff in
+                                let body = match rest_args with 
+                                    | [] -> 
+                                      if is_value body 
+                                      then body
+                                      else err_value_restriction body
+                                    | _ -> mk_Exp_abs(rest_args, body) None e.pos in
+                                let body = check_exp env body expected_e expected_t in
+                                let polytype = (targs |> List.map (fun a -> as_mlident a.v), expected_t) in
+                                let env, nm = Env.extend_lb g lbname t polytype in
+                                let e', f, t = synth_exp env e' in
+                                MLE_Let(false, [(nm, (Some polytype), [], body)], e'), f, t
+
+                            else failwith "Not enough type binders"
+                          
+                          | _ -> err_value_restriction e
+                        end
+
+                    | _ -> //no generalization 
+                      failwith "NYI"
+                 end
+               
+           | _ -> (* normalize and retry? *)
+                failwith "NYI"
+
+        end
+
+
+//      | Exp_let((true, lbs), e') -> 
+//  
+//      | Exp_match(e, pats) 
+//        -> failwith "NYI"
         
-        failwith "NYI" 
-      
-      | Exp_match(e, pats) 
-        -> failwith "NYI"
-      
-//      
 //      | Exp_let        of letbindings * exp                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
 //      | Exp_meta       of meta_e                                     (* No longer tag every expression with info, only selectively *)
 //      
-//      | Exp_uvar       of uvar_e * typ                               (* not present after 1st round tc *)
-//      | Exp_delayed    of exp * subst_t * memo<exp>                  (* A delayed substitution --- always force it before inspecting the first arg *)
-//  
+      | Exp_uvar _ 
+      | Exp_delayed _ -> failwith "Unexpected expression"

@@ -284,7 +284,7 @@ let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
        doc
 
     | MLE_Fun (ids, body) ->
-        let ids  = List.map (fun (x, _) -> text x) ids in
+        let ids  = List.map (fun ((x, _),_) -> text x) ids in
         let body = doc_of_expr (min_op_prec, NonAssoc) body in
         let doc  = reduce1 [text "fun"; reduce1 ids; text "->"; body] in
         parens doc

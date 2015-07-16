@@ -39,6 +39,7 @@ type mlty =
 | MLTY_Named of list<mlty> * mlpath 
 | MLTY_Tuple of list<mlty>
 | MLTY_App   of mlty * mlty         //Why do we have a type-application form? The only applications in ML are of named constructors
+| MLTY_Top
 
 type mltyscheme = mlidents * mlty   //forall a1..an. t  (the list of binders can be empty)
 
@@ -69,7 +70,7 @@ type mlexpr =
 | MLE_Name   of mlpath
 | MLE_Let    of bool * list<(mlident * option<mltyscheme> * mlidents * mlexpr)> * mlexpr //tyscheme for polymorphic recursion
 | MLE_App    of mlexpr * list<mlexpr> //why are function types curried, but the applications not curried 
-| MLE_Fun    of mlidents * mlexpr
+| MLE_Fun    of list<(mlident * (option<mlty>))> * mlexpr
 | MLE_Match  of mlexpr * list<mlbranch>
 | MLE_Coerce of mlexpr * mlty * mlty
 (* SUGAR *)
@@ -124,8 +125,8 @@ let mlseq (e1 : mlexpr) (e2 : mlexpr) =
 
 let mlfun (x : mlident) (e : mlexpr) =
     match e with
-    | MLE_Fun (xs, e) -> MLE_Fun(x :: xs, e)
-    | _ -> MLE_Fun ([x], e)
+    | MLE_Fun (xs, e) -> MLE_Fun((x,None) :: xs, e)
+    | _ -> MLE_Fun ([x,None], e)
 
 let mlif (b : mlexpr) ((e1, e2) : mlexpr * mlexpr) =
     match e2 with
