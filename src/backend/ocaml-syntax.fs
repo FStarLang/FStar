@@ -80,7 +80,10 @@ and mlbranch = mlpattern * option<mlexpr> * mlexpr
 type mltybody =
 | MLTD_Abbrev of mlty
 | MLTD_Record of list<(mlsymbol * mlty)>
-| MLTD_DType  of list<(mlsymbol * list<mlty>)> (*list of constructors?*)
+| MLTD_DType  of list<(mlsymbol * list<mlty>)> 
+    (*list of constructors? list<mlty> is the list of arguments of the constructors?
+        One could have instead used a mlty and tupled the argument types?
+     *)
 
 type mltydecl = list<(mlsymbol * mlidents * option<mltybody>)>
 

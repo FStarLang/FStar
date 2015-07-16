@@ -22,6 +22,7 @@ open Microsoft.FStar.Util
 open Microsoft.FStar.Getopt
 open Microsoft.FStar.Tc.Util
 open Microsoft.FStar.Tc.Env
+open Microsoft.FStar.Backends
 
 let process_args () = 
   let file_list = Util.mk_ref [] in
@@ -229,7 +230,7 @@ let finished_message fmods =
     end
 
 let codegen fmods = 
-    if !Options.codegen = Some "OCaml" then begin
+    if !Options.codegen = Some "OCaml" then 
         try
             let mllib = Backends.OCaml.ASTTrans.mlmod_of_fstars (List.tail fmods) in
             let doc   = Backends.OCaml.Code.doc_of_mllib mllib in
@@ -242,6 +243,10 @@ let codegen fmods =
                 (Backends.OCaml.ASTTrans.string_of_error error);
             exit 1
         end
+    else if !Options.codegen = Some "OCaml-experimental" then begin
+        let tyDefns = Backends.OCaml.Extraction.extractTypeDefns ((List.head (List.tail fmods)).declarations) in
+        let newDoc = Backends.OCaml.Code.doc_of_sig tyDefns in
+        fprint1 "%s\n" (FSharp.Format.pretty 1 newDoc)
     end
 //    ;
 //    if !Options.codegen = Some "JavaScript" then begin

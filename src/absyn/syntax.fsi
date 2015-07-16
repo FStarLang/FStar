@@ -154,7 +154,7 @@ and pat' =
   | Pat_dot_typ  of btvar * typ
 and pat = withinfo_t<pat',option<either<knd,typ>>>                (* the meta-data is a typ, except for Pat_dot_typ and Pat_tvar, where it is a kind (not strictly needed) *)
 and knd' =
-  | Kind_type
+  | Kind_type                                             (*Type*)
   | Kind_effect
   | Kind_abbrev of kabbrev * knd                          (* keep the abbreviation around for printing *)
   | Kind_arrow of binders * knd                           (* (ai:ki|xi:ti) => k' *)
@@ -271,7 +271,11 @@ and sigelt =
   | Sig_assume         of lident * formula * list<qualifier> * Range.range 
   | Sig_let            of letbindings * Range.range * list<lident> * list<qualifier>
   | Sig_main           of exp * Range.range 
-  | Sig_bundle         of list<sigelt> * list<qualifier> * list<lident> * Range.range (* an inductive type is a bundle of all mutually defined Sig_tycons and Sig_datacons *)
+  | Sig_bundle         of list<sigelt> * list<qualifier> * list<lident> * Range.range 
+    (* an inductive type is a bundle of all mutually defined Sig_tycons and Sig_datacons *)
+    (* perhaps it would be nicer to let this have a 2-level structure, e.g. list<list<sigelt>>,
+       where each higher level list represents one of the inductive types and its constructors. *)
+    (*does the sigelt corresponding to the type always come first? followed by all the constructors?*)
   | Sig_new_effect     of eff_decl * Range.range
   | Sig_sub_effect     of sub_eff * Range.range
   | Sig_effect_abbrev  of lident * binders * comp * list<qualifier> * Range.range

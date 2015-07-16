@@ -36,6 +36,7 @@ Inductive isEven2 : nat -> Type :=
 
 (* nat gets removed *)
 Recursive Extraction isEven2.
+Recursive Extraction nat.
 
 (* sanity check *)
 Inductive isEven3 : Type -> Type :=
