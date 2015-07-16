@@ -45,23 +45,17 @@ let convIdent (id:ident) : mlident = (id.idText ,(convRange id.idRange))
    In particular, the definition of a type constant is not needed when translating references to it.
    However, enough info is needed to determine whether a type constant is a type scheme. add that.
 *)
-type context = {
-    tyVars : list<ident>;
-    tyConstants : list<lident>;
-    allowTypeVars : bool
-}
-
-let emptyContext : context = {tyVars=[]; tyConstants =[]; allowTypeVars=true}
+type context = env
 
 (* vars in tyVars will have type Type, irrespective of that types they had in F*. This is to match the limitations of  OCaml*)
-let extendContext (c:context) (tyVars : list<ident>) (tyConsts : list<lident>) (alowTypeVars_ : bool ): context = 
-    { tyVars = List.append c.tyVars tyVars; tyConstants = List.append c.tyConstants tyConsts; allowTypeVars = alowTypeVars_}
+let extendContext (c:env) (tyVars : list<binder>) : env = 
+  List.fold push_local_binding c (List.map binding_of_binder tyVars)
 
-let disallowTypeVars (c:context) : context = extendContext c [] [] false
 
-let contains (c:context) (b:btvar) : bool =     
-    List.contains ( b.v.realname.idText)  (List.map (fun x -> x.idText) c.tyVars) (*needed for sh, its ppname is _, and range is 0*)
-    || List.contains (b.v.realname.idRange)  (List.map (fun x -> x.idRange) c.tyVars) (*needed for inductive constructors. names often have extra things appended*)
+let contains (c:context) (b:btvar) : bool = 
+  try (let _ = (lookup_btvar c b) in true)
+  with
+   | _ -> false
 
 let deltaUnfold (i : lident) (c: context) : (option<typ>) = None (*FIX!!*)
 
@@ -102,8 +96,8 @@ match ft with
             )
 
   | Typ_fun (bs, codomain) -> 
-        let (bts, newC) = extractBindersTypes c bs in
-        (let codomainML = (extractComp  newC codomain) in 
+        let bts = extractBindersTypes c bs in
+        (let codomainML = (extractComp  c codomain) in 
         if  (codomainML = erasedContent) 
         then erasedContent 
         else  (curry bts codomainML))
@@ -139,25 +133,13 @@ match (fst a) with
 | Inl ty -> extractTyp c ty
 | Inr _ -> erasedContent 
 
-(* Return the new context, where this binder might be in scope. Actually this code be reverted back to the old, less complicated state
-   where c.allowTypeVars was always assumed to be false. *)
-and extractBinderType  (c:context) (bn : binder): mlty * context =
+and extractBinderType  (c:context) (bn : binder): mlty =
 match bn with
-| (Inl btv,_) ->
-      let k = (btv.sort) in 
-      let newC = (match k.n with
-                 | Kind_type -> (if c.allowTypeVars then (extendContext c [btv.v.realname] [] c.allowTypeVars) else c)
-                 | _ ->  c)
-       in  (extractKind (disallowTypeVars c) (btv.sort), newC)
-| (Inr bvv,_) -> (extractTyp (disallowTypeVars c) (bvv.sort), c)
+| (Inl btv,_) -> (extractKind c (btv.sort))
+| (Inr bvv,_) -> (extractTyp c (bvv.sort))
 
-and extractBindersTypes  (c:context) (bs : list<binder>): list<mlty> * context =
-match bs with
-| (h::tl) ->  let (t,newC) = extractBinderType c h in
-               let (lt, newNewC) = extractBindersTypes newC tl in
-               ((t::lt),newNewC)
-| [] -> ([], c)
-
+and extractBindersTypes  (c:context) (bs : list<binder>): list<mlty> =
+  List.map (extractBinderType c) bs
 and extractTyp  (c:context) (ft:typ) : mlty = extractType' c (ft.n)
 and extractKind (c:context) (ft:knd) : mlty = erasedContent
 and extractComp  (c:context) (ft:comp) : mlty = extractComp' c (ft.n) 
@@ -271,40 +253,33 @@ let dummyIndexIdents (n:int) : list<mlident> = List.map dummyIdent (firstNNats n
 
 (*similar to the definition of the second part of \hat{\epsilon} in page 110*)
 (* \pi_1 of returned value is the exported constant*)
-let extractSigElt (c:context) (s:sigelt) :  option<(lident * mlsig1)> =
+let extractSigElt (c:context) (s:sigelt) :  option<(mlsig1)> =
 match s with
 | Sig_typ_abbrev (l,bs,_,t,_,_) -> 
     let identsPP = List.map binderPPnames bs in
-    let identsReal = List.map binderRealnames bs in
-            //printfn "binders are %A\n" (identsReal);
-    let newContext = (extendContext c identsReal [l] true) in
+    let newContext = (extendContext c bs) in
     let tyDecBody = MLTD_Abbrev (extractTyp newContext t) in
             //printfn "type is %A\n" (t);
-     Some (l, MLS_Ty [(mlsymbolOfLident l, List.map (fun x -> prependTick (convIdent x)) identsPP , Some tyDecBody)])
+     Some (MLS_Ty [(mlsymbolOfLident l, List.map (fun x -> prependTick (convIdent x)) identsPP , Some tyDecBody)])
      (*type l idents = tyDecBody*)
 
 | Sig_bundle _ -> 
     let ind = parseFirstInductiveType s in
     let identsPP = List.map binderPPnames ind.tyBinders in
-    let identsReal = List.map binderRealnames ind.tyBinders in
-            // printfn "binders are %A\n" (identsReal);
-    let newContext = (extendContext c identsReal [ind.tyName] false) in
+    let newContext = (extendContext c ind.tyBinders) in
     let nIndices = numIndices ind.k.n ind.tyName.ident.idText in
     let tyDecBody = MLTD_DType (List.map (extractCtor newContext) ind.constructors) in
-          Some (ind.tyName, MLS_Ty [(lident2mlsymbol ind.tyName, List.append (List.map (fun x -> prependTick (convIdent x)) identsPP) (dummyIndexIdents nIndices)  , Some tyDecBody)])
+          Some (MLS_Ty [(lident2mlsymbol ind.tyName, List.append (List.map (fun x -> prependTick (convIdent x)) identsPP) (dummyIndexIdents nIndices)  , Some tyDecBody)])
 | _ -> None
 
-let rec extractTypeDefnsAux (c: context) (sigs:list<sigelt>) : list<mlsig1> =
-    match sigs with
-    | hsig::tlsigs ->
-        (match extractSigElt c hsig with
-        | Some (exportedConst, mls) ->  
-                let nc = extendContext c [] [exportedConst] true in
-                mls::(extractTypeDefnsAux nc tlsigs)
-        | None -> (extractTypeDefnsAux c tlsigs)
-        )
-    | _ -> []
+let rec extractTypeDefnsAux (c: context) (sigs:list<sigelt>) : list<option<mlsig1>> =
+  List.map  (extractSigElt c) sigs
+ 
+let pruneNones (l : list<option<'a>>) : list<'a> =
+List.fold (fun ll x -> match x with 
+                      | Some xs -> xs::ll
+                      | None -> ll) [] l
 
 let extractTypeDefns (sigs:list<sigelt>) (e: env): list<mlsig1> =
-   extractTypeDefnsAux emptyContext sigs
+   pruneNones (extractTypeDefnsAux e sigs)
 
