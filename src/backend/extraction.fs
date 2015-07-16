@@ -1,9 +1,9 @@
 ﻿// Learn more about F# at http://fsharp.net
 // See the 'F# Tutorial' project for more help.
 #light "off"
-module Microsoft.FStar.Backends.OCaml.Extraction
+module Microsoft.FStar.Backends.ML.Extraction
 open Microsoft.FStar.Absyn
-open Microsoft.FStar.Backends.OCaml.Syntax
+open Microsoft.FStar.Backends.ML.Syntax
 open Microsoft.FStar.Util
 open Microsoft.FStar.Tc.Env
 open Microsoft.FStar.Absyn.Syntax

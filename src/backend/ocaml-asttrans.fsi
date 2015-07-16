@@ -2,7 +2,7 @@
 
 open Microsoft.FStar
 open Microsoft.FStar.Absyn.Syntax
-open Microsoft.FStar.Backends.OCaml.Syntax
+open Microsoft.FStar.Backends.ML.Syntax
 
 type error
 

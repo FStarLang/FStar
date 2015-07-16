@@ -50,8 +50,9 @@
   <ItemGroup>
     <Compile Include="nameenv.fsi" />
     <Compile Include="nameenv.fs" />
-    <Compile Include="ocaml-syntax.fs" />
+    <Compile Include="ml-syntax.fs" />
     <Compile Include="extraction.fs" />
+    <Compile Include="extractexp.fs" />
     <Compile Include="ocaml-asttrans.fsi" />
     <Compile Include="ocaml-asttrans.fs" />
     <Compile Include="ocaml-codegen.fsi" />

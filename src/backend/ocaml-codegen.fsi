@@ -1,7 +1,7 @@
 ﻿(* -------------------------------------------------------------------- *)
 module Microsoft.FStar.Backends.OCaml.Code
 
-open Microsoft.FStar.Backends.OCaml.Syntax
+open Microsoft.FStar.Backends.ML.Syntax
 
 open FSharp.Format
 

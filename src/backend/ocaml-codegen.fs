@@ -8,7 +8,7 @@ open System.Text
 
 open Microsoft.FStar.Util
 
-open Microsoft.FStar.Backends.OCaml.Syntax
+open Microsoft.FStar.Backends.ML.Syntax
 open FSharp.Format
 
 (* -------------------------------------------------------------------- *)
@@ -395,7 +395,7 @@ and doc_of_branch ((p, cond, e) : mlbranch) : doc =
 
 (* -------------------------------------------------------------------- *)
 and doc_of_lets (rec_, lets) =
-    let for1 (name, ids, e) =
+    let for1 (name, tys, ids, e) =
         let e   = doc_of_expr (min_op_prec, NonAssoc) e in
         let ids = List.map (fun (x, _) -> text x) ids in
         reduce1 [text (idsym name); reduce1 ids; text "="; e] in
@@ -552,7 +552,7 @@ let doc_of_mod1 (m : mlmodule1) =
         doc_of_mltydecl decls
 
     | MLM_Let (rec_, lets) ->
-        let lets = List.map (fun (x, y, z) -> ((x, -1), y, z)) lets in
+        let lets = List.map (fun (x, y, z) -> ((x, -1), None, y, z)) lets in
         doc_of_lets (rec_, lets)
 
     | MLM_Top e ->
