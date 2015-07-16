@@ -244,7 +244,7 @@ let codegen fmods =
             exit 1
         end
     else if !Options.codegen = Some "OCaml-experimental" then begin
-        let tyDefns = Backends.OCaml.Extraction.extractTypeDefns ((List.head (List.tail fmods)).declarations) in
+        let tyDefns = Backends.OCaml.Extraction.extractTypeDefns ((List.hd (List.tl fmods)).declarations) in
         let newDoc = Backends.OCaml.Code.doc_of_sig tyDefns in
         fprint1 "%s\n" (FSharp.Format.pretty 1 newDoc)
     end
