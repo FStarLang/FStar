@@ -233,7 +233,7 @@ let parseInductiveConstructor (sigs : list<sigelt>) : (inductiveConstructor * li
 match sigs with
 | (Sig_datacon (l, (*codomain*) t ,(_,cargs(*binders*),_),_,_,_))::tlsig ->
      ({ cname = l ; ctype = t; cargs =[] }, tlsig)
-| _ -> failwith "incorrect sigelt provided to parseInductiveConstructor"
+| h::_ -> failwith (Util.format1 "unexpected : %s\n" (Print.sigelt_to_string h)) //"incorrect sigelt provided to parseInductiveConstructor"
 
 let rec parseInductiveConstructors (sigs : list<sigelt>) (n: int) : (list<inductiveConstructor> * list<sigelt>) =
     if (0<n)
@@ -249,10 +249,11 @@ let rec parseInductiveTypesFromSigBundle
     (sigs : list<sigelt>)  : list<inductiveTypeFam>  =
 match sigs with
 | (Sig_tycon (l,bs,kk,_,constrs,_,_))::tlsig -> 
+     //printfn "%A\n" ((List.map (fun (x:lident) -> x.ident.idText) constrs));
     let (indConstrs(*list<inductiveConstructor>*), ttlsig) = parseInductiveConstructors tlsig (List.length constrs) in
-     ({tyName = l; k = kk; tyBinders=bs; constructors=indConstrs})::(parseInductiveTypesFromSigBundle tlsig)
+     ({tyName = l; k = kk; tyBinders=bs; constructors=indConstrs})::(parseInductiveTypesFromSigBundle ttlsig)
 | [] -> []
-| _::tlsig -> (parseInductiveTypesFromSigBundle tlsig) //TODO : debug and remove
+| se::tlsig -> failwith (Util.format1 "unexpected : %s\n" (Print.sigelt_to_string_short se)) //;(parseInductiveTypesFromSigBundle tlsig) //TODO : debug and remove
 | _ -> failwith "incorrect input provided to parseInductiveTypeFromSigBundle"
 
 
@@ -334,6 +335,7 @@ let extractSigElt (c:context) (s:sigelt) : context * list<mltydecl> =
          //Util.subst
 
     | Sig_bundle (sigs, _, _ ,_) -> 
+        //let xxxx = List.map (fun se -> fprint1 "%s\n" (Util.format1 "sig bundle: : %s\n" (Print.sigelt_to_string se))) sigs in
         let inds = parseInductiveTypesFromSigBundle sigs in
         c, (List.map (extractInductive c) inds)
         //let k = lookup_typ_lid c ind.tyName in
