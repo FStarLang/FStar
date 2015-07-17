@@ -33,12 +33,6 @@ let rec curry (inp: (list<mlty>)) (out: mlty) =
   The actual definiton is a bit complicated, because we need for any x, \box x to be convertible to \box.
 *)
 
-(* MLTY_Tuple [] extracts to (), and is an alternate choice. 
-    However, it represets both the unit type and the unit value. Ocaml gets confused sometimes*)
-let erasedContent : mlty = MLTY_Named ([],([],"unit"))
-
-(* \mathbb{T} type in the thesis, to be used when OCaml is not expressive enough for the source type *)
-let unknownType : mlty =  MLTY_Var  ("Obj.t", 0) (*wny note MLTY_named? tried it, produces l__Obj.ty*)
 
 let convRange (r:Range.range) : int = 0 (*FIX!!*)
 let convIdent (id:ident) : mlident = (id.idText ,(convRange id.idRange))
@@ -61,13 +55,13 @@ let bvvar2btvar (bv : bvvar) : btvar = {v=bv.v; sort = Kind_type ; p=bv.p} *)
 
 let btvar2mlident (btv: btvar) : mlident =  (prependTick (convIdent btv.v.ppname)) 
 
-let extendContextAsTyvar (availableInML : bool) (c:context) (b : binder) : context = 
+let extendContextAsTyvar (availableInML : bool) (b : either<btvar,bvvar>) (c:context): context = 
 match b with
-| (Inl bt, _) -> extend_ty c bt (if availableInML then MLTY_Var (btvar2mlident bt) else unknownType)
-| (Inr bv, _) -> extend_v c bv ([], erasedContent)
+| (Inl bt) -> extend_ty c bt (Some (if availableInML then (MLTY_Var (btvar2mlident bt)) else unknownType))
+| (Inr bv) -> extend_bv c bv ([], erasedContent)
 
-let extendContext (c:context) (tyVars : list<binder>) : context = 
-   List.fold_left (extendContextAsTyvar true) c (tyVars) (*TODO: is the fold in the right direction? check *)
+let extendContext (c:context) (tyVars : list<either<btvar,bvvar>>) : context = 
+   List.foldBack (extendContextAsTyvar true) (tyVars) c (*TODO: is the fold in the right direction? check *)
 
 
 let deltaUnfold (i : lident) (c: context) : (option<typ>) = None (*TODO: FIX!!*)
@@ -105,8 +99,8 @@ match ft with
   (*it is not clear whether description in the thesis covers type applications with 0 args. However, this case is needed to translate types like nnat, and so far seems to work as expected*)
   | Typ_const ftv ->  extractTyConstApp c ftv []
   | Typ_fun (bs, codomain) -> 
-        let bts = extractBindersTypes c bs in
-        (let codomainML = (extractComp  c codomain) in 
+        let (bts, newC) = extractBindersTypes c bs in
+        (let codomainML = (extractComp  newC codomain) in 
         if  (codomainML = erasedContent) 
         then erasedContent (*perhaps this is not needed*)
         else  (curry bts codomainML))
@@ -142,13 +136,16 @@ and extractTyConstApp (c:context) (ftv:ftvar) (ags : args) =
                  | Some tyu ->  extractTyp c tyu
                  | None -> unknownType
                  )
-and extractBinderType  (c:context) (bn : binder): mlty =
-match bn with
-| (Inl btv,_) -> (extractKind c (btv.sort))
-| (Inr bvv,_) -> (extractTyp c (bvv.sort))
 
-and extractBindersTypes  (c:context) (bs : list<binder>): list<mlty> =
-  List.map (extractBinderType c) bs
+(* Return the new context, where this binder IS in scope. Because we wish to call the F* normalizer, the context should always be up-to-date*)
+and extractBinderType  (c:context) (bn : binder): mlty * context = 
+match bn with
+| (Inl btv,_) -> (extractKind c (btv.sort), (extendContextAsTyvar false (Inl btv) c))
+| (Inr bvv,_) -> (extractTyp c (bvv.sort), (extendContextAsTyvar false (Inr bvv) c))
+
+and extractBindersTypes  (c:context) (bs : list<binder>): list<mlty> * context =
+    (fun (x,c) -> (List.rev x,c)) (List.fold (fun (lt,cp) b -> let (nt, nc)= extractBinderType cp b in ((nt::lt),nc))  ([],c) bs)
+
 and extractTyp  (c:context) (ft:typ) : mlty = extractType' c (ft.n)
 and extractKind (c:context) (ft:knd) : mlty = erasedContent
 and extractComp  (c:context) (ft:comp) : mlty = extractComp' c (ft.n) 
@@ -259,14 +256,14 @@ if (0<n)
 
 let dummyIndexIdents (n:int) : list<mlident> = List.map dummyIdent (firstNNats n)
 
-
+let mfst = List.map fst
 (*similar to the definition of the second part of \hat{\epsilon} in page 110*)
 (* \pi_1 of returned value is the exported constant*)
 let extractSigElt (c:context) (s:sigelt) :  option<(mlsig1)> =
 match s with
 | Sig_typ_abbrev (l,bs,_,t,_,_) -> 
     let identsPP = List.map binderPPnames bs in
-    let newContext = (extendContext c bs) in
+    let newContext = (extendContext c (mfst bs)) in
     let tyDecBody = MLTD_Abbrev (extractTyp newContext t) in
             //printfn "type is %A\n" (t);
      Some (MLS_Ty [(mlsymbolOfLident l, List.map (fun x -> prependTick (convIdent x)) identsPP , Some tyDecBody)])
@@ -276,7 +273,7 @@ match s with
     let ind = parseFirstInductiveType s in
     //let k = lookup_typ_lid c ind.tyName in
     let identsPP = List.map binderPPnames ind.tyBinders in
-    let newContext = (extendContext c ind.tyBinders) in
+    let newContext = (extendContext c (mfst ind.tyBinders)) in
     let nIndices = numIndices ind.k.n ind.tyName.ident.idText in
     let tyDecBody = MLTD_DType (List.map (extractCtor newContext) ind.constructors) in
           Some (MLS_Ty [(lident2mlsymbol ind.tyName, List.append (List.map (fun x -> prependTick (convIdent x)) identsPP) (dummyIndexIdents nIndices)  , Some tyDecBody)])

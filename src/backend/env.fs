@@ -19,11 +19,21 @@ type env = {
     tydefs:list<mltydecl>; 
 }
 
+
+(* MLTY_Tuple [] extracts to (), and is an alternate choice. 
+    However, it represets both the unit type and the unit value. Ocaml gets confused sometimes*)
+let erasedContent : mlty = MLTY_Named ([],([],"unit"))
+
+(* \mathbb{T} type in the thesis, to be used when OCaml is not expressive enough for the source type *)
+let unknownType : mlty =  MLTY_Var  ("Obj.t", 0) (*wny note MLTY_named? tried it, produces l__Obj.ty*)
+
+
 let rec lookup_ty_local (gamma:list<binding>) (b:btvar) : mlty = 
 match gamma with
 | (Ty (bt, mli, mlt))::tl ->  if (Util.bvd_eq bt.v b.v) then mlt else lookup_ty_local tl b
 | _::tl -> lookup_ty_local tl b
-| [] -> failwith ("extraction: unbound type var "^(b.v.ppname.idText))
+| [] -> unknownType (*TODO : replace with the line below*)
+// failwith ("extraction: unbound type var "^(b.v.ppname.idText))
 
 let lookup_ty (g:env) (x:either<btvar,ftvar>) : mlty = 
 match x with

@@ -114,9 +114,10 @@ Definition poly3list : Type := poly3 list.
 
 Recursive Extraction poly3list poly2.
 
+Definition vecn := vec nat.
+Definition vecn' := fun n => vec nat n.
 
-
-
+Recursive Extraction vecn vecn'.
  
 
 
