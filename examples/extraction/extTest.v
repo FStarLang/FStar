@@ -118,6 +118,16 @@ Definition vecn := vec nat.
 Definition vecn' := fun n => vec nat n.
 
 Recursive Extraction vecn vecn'.
+
+Inductive naryTree (T:Type) (n:nat) :=
+| leaf : naryTree T n
+| node : vec (naryTree T n) n -> (naryTree T n).
+
+
+Definition binaryTree (T:Type) := naryTree T 2.
+
+Recursive Extraction naryTree binaryTree.
+ 
  
 
 

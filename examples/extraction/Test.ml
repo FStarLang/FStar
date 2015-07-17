@@ -55,6 +55,13 @@ type ('a, 'dummyV1) vec =
 type vecn1 =
 (nnat, unit) vec
 
+type ('t, 'n) naryTree =
+| Leaf
+| Node of (('t, unit) naryTree, unit) vec
+
+type 't binaryTree =
+('t, unit) naryTree
+
 type polyvec =
 nnat vec poly
 

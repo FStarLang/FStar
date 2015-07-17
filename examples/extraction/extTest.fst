@@ -72,6 +72,13 @@ type vec (a:Type) : nnat -> Type =
 
 type vecn1 = vec nnat (S O)
 
+type naryTree (t:Type) (n:nnat) =
+| Leaf : naryTree t n
+| Node : vec (naryTree t n) n -> (naryTree t n)
+
+
+type binaryTree (t:Type) = naryTree t (S (S O))
+
 (* The last stage may also need to apply units to arguments of type Type.
    In Coq, the last argument of vec disappers, so this might not be a problem
  *)
