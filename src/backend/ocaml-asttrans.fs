@@ -658,7 +658,7 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
         | Exp_let ((rec_, lb), body) ->
             let lenv, bindings = mllets_of_lets mlenv rg lenv (rec_, lb) in
             let body = mlexpr_of_expr mlenv rg lenv body in
-            MLE_Let (rec_, bindings, body)
+            MLE_Let ((rec_, bindings), body)
 
         | Exp_meta (Meta_desugared (e, Data_app)) ->
             assert false;
@@ -902,7 +902,7 @@ let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
 
         let lbs = List.map downct lbs in
         let lbs = List.map (fun (x, e) ->
-            (x.ident.idText, [], mlexpr_of_expr mlenv rg (lenv_of_mlenv mlenv) e))
+            ((x.ident.idText, -1), None, [], mlexpr_of_expr mlenv rg (lenv_of_mlenv mlenv) e))
             lbs
         in
 

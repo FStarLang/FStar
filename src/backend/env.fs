@@ -29,20 +29,33 @@ let unknownType : mlty =  MLTY_Var  ("Obj.t", 0) (*wny note MLTY_named? tried it
 
 
 let rec lookup_ty_local (gamma:list<binding>) (b:btvar) : mlty = 
-match gamma with
-| (Ty (bt, mli, mlt))::tl ->  if (Util.bvd_eq bt.v b.v) then mlt else lookup_ty_local tl b
-| _::tl -> lookup_ty_local tl b
-| [] -> unknownType (*TODO : replace with the line below*)
-// failwith ("extraction: unbound type var "^(b.v.ppname.idText))
+    match gamma with
+        | (Ty (bt, mli, mlt))::tl ->  if (Util.bvd_eq bt.v b.v) then mlt else lookup_ty_local tl b
+        | _::tl -> lookup_ty_local tl b
+        | [] -> unknownType (*TODO : replace with the line below*)
+        // failwith ("extraction: unbound type var "^(b.v.ppname.idText))
+
+let lookup_ty_const tydefs ftv = failwith "Should not be looking up a constant"
 
 let lookup_ty (g:env) (x:either<btvar,ftvar>) : mlty = 
-match x with
-| Inl bt -> lookup_ty_local g.gamma bt
-| Inr _ -> failwith "NYI"
+    match x with
+    | Inl bt  -> lookup_ty_local g.gamma bt
+    | Inr ftv -> lookup_ty_const g.tydefs ftv
 
-let lookup  (g:env) (x:either<bvvar,fvvar>) : (mlexpr * mltyscheme) = failwith "NYI"
+let lookup_fv (g:env) (fv:fvvar) : mlpath * mltyscheme = 
+    Util.find_map g.gamma (function 
+        | Fv (fv', path, sc) when lid_equals fv.v fv'.v -> Some (path, sc)
+        | _ -> None) |> must 
 
-let lookup_fv (g:env) (x:fvvar) : mlpath = failwith "NYI"
+let lookup_bv (g:env) (bv:bvvar) : mlident * mltyscheme = 
+    Util.find_map g.gamma (function 
+        | Bv (bv', id, sc) when Util.bvar_eq bv bv' -> Some (id, sc)
+        | _ -> None) |> must 
+
+let lookup  (g:env) (x:either<bvvar,fvvar>) : (mlexpr * mltyscheme) = 
+    match x with 
+        | Inl x -> let id, t = lookup_bv g x in MLE_Var id, t
+        | Inr x -> let id, t = lookup_fv g x in MLE_Name id, t
 
 let lookup_var g e = match e.n with 
     | Exp_bvar x -> lookup g (Inl x)
@@ -53,12 +66,12 @@ let lookup_var g e = match e.n with
  An alternative solution is to remove these binders from the type of the inductive constructors
 *)
 let extend_hidden_ty (g:env) (a:btvar) (mapped_to:mlty) : env = 
-    let ml_a = Util.as_mlident a.v in 
+    let ml_a = as_mlident a.v in 
     let tcenv = Env.push_local_binding g.tcenv (Env.Binding_typ(a.v, a.sort)) in
     {g with tcenv=tcenv} 
 
 let extend_ty (g:env) (a:btvar) (mapped_to:option<mlty>) : env = 
-    let ml_a = Util.as_mlident a.v in 
+    let ml_a = as_mlident a.v in 
     let mapped_to = match mapped_to with 
         | None -> MLTY_Var ml_a
         | Some t -> t in
@@ -67,7 +80,7 @@ let extend_ty (g:env) (a:btvar) (mapped_to:option<mlty>) : env =
     {g with gamma=gamma; tcenv=tcenv} 
     
 let extend_bv (g:env) (x:bvvar) (t_x:mltyscheme) : env =
-    let gamma = Bv(x, Util.as_mlident x.v, t_x)::g.gamma in 
+    let gamma = Bv(x, as_mlident x.v, t_x)::g.gamma in 
     let tcenv = Env.push_local_binding g.tcenv (Env.Binding_var(x.v, x.sort)) in
     {g with gamma=gamma; tcenv=tcenv} 
 
@@ -77,14 +90,14 @@ let extend_fv' (g:env) (x:fvvar) (y:mlpath) (t_x:mltyscheme) : env =
     {g with gamma=gamma; tcenv=tcenv} 
 
 let extend_fv (g:env) (x:fvvar) (t_x:mltyscheme) : env =
-    extend_fv' g x (Util.mlpath_of_lident x.v) t_x
+    extend_fv' g x (mlpath_of_lident x.v) t_x
 
 let extend_lb (g:env) (l:lbname) (t:typ) (t_x:mltyscheme) : (env * mlident) = 
     match l with 
         | Inl x -> 
-          extend_bv g (Util.bvd_to_bvar_s x t) t_x, Util.as_mlident x
+          extend_bv g (Util.bvd_to_bvar_s x t) t_x, as_mlident x
         | Inr f -> 
-          let _, y = Util.mlpath_of_lident f in
+          let _, y = mlpath_of_lident f in
           extend_fv' g (Util.fvvar_of_lid f t) ([], y) t_x, (y,0)
 
-let extend_tydef (g:env) (td:mltydecl) : env = failwith "NYI"
+let extend_tydef (g:env) (td:mltydecl) : env = {g with tydefs=td::g.tydefs}

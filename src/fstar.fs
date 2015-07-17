@@ -244,9 +244,9 @@ let codegen fmods env=
             exit 1
         end
     else if !Options.codegen = Some "OCaml-experimental" then begin
-        let tyDefns = Backends.ML.Extraction.extractTypeDefns ((List.hd (List.tl fmods)).declarations) env in
-        let newDoc = Backends.OCaml.Code.doc_of_sig tyDefns in
-        fprint1 "%s\n" (FSharp.Format.pretty 1 newDoc)
+        let c, mllib = Backends.ML.ExtractMod.extract (Backends.ML.ExtractTyp.mkContext env) (List.hd (List.tl fmods)) in
+        let newDoc = Backends.OCaml.Code.doc_of_mllib mllib in
+        newDoc |> List.iter (fun (_, newDoc) -> fprint1 "%s\n" (FSharp.Format.pretty 1 newDoc))
        (*copy this part from above.*)
     end
 //    ;

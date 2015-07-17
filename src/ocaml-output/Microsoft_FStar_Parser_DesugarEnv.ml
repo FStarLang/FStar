@@ -83,7 +83,7 @@ in (finder full_name)))))
 end))
 in (aux (((current_module env))::env.open_namespaces))))
 
-let unmangleMap = (("op_ColonColon", "Cons"))::(("not", "op_Negation"))::[]
+let unmangleMap = (("op\x5fColonColon", "Cons"))::(("not", "op\x5fNegation"))::[]
 
 let unmangleOpName = (fun id -> (Support.Microsoft.FStar.Util.find_map unmangleMap (fun _34_102 -> (match (_34_102) with
 | (x, y) -> begin
@@ -290,7 +290,7 @@ end
 []
 end)))
 
-let try_lookup_module = (fun env path -> (match ((Support.List.tryFind (fun _34_338 -> (match (_34_338) with
+let try_lookup_module = (fun env path -> (match ((Support.List.tryFind (fun _34_344 -> (match (_34_344) with
 | (mlid, modul) -> begin
 ((Microsoft_FStar_Absyn_Syntax.path_of_lid mlid) = path)
 end)) env.modules)) with
@@ -550,7 +550,7 @@ end else begin
 end
 end
 | _ -> begin
-(failwith "Unexpected rec_binding")
+(failwith "Unexpected rec\x5fbinding")
 end))
 
 let push_sigelt = (fun env s -> (let err = (fun l -> (let sopt = (Support.Microsoft.FStar.Util.smap_try_find (sigmap env) l.Microsoft_FStar_Absyn_Syntax.str)
@@ -567,7 +567,7 @@ end
 | None -> begin
 "<unknown>"
 end)
-in (raise (Microsoft_FStar_Absyn_Syntax.Error (((Support.Microsoft.FStar.Util.format2 "Duplicate top-level names [%s]; previously declared at %s" (Microsoft_FStar_Absyn_Syntax.text_of_lid l) r), (Microsoft_FStar_Absyn_Syntax.range_of_lid l))))))))
+in (raise (Microsoft_FStar_Absyn_Syntax.Error (((Support.Microsoft.FStar.Util.format2 "Duplicate top-level names \x5b%s\x5d; previously declared at %s" (Microsoft_FStar_Absyn_Syntax.text_of_lid l) r), (Microsoft_FStar_Absyn_Syntax.range_of_lid l))))))))
 in (let env = (let _34_672 = (match (s) with
 | Microsoft_FStar_Absyn_Syntax.Sig_let (_) -> begin
 (false, true)
@@ -587,9 +587,9 @@ end else begin
 None
 end))) with
 | None -> begin
-(let _34_676 = (extract_record env s)
-in (let _34_678 = env
-in {curmodule = _34_678.curmodule; modules = _34_678.modules; open_namespaces = _34_678.open_namespaces; sigaccum = (s)::env.sigaccum; localbindings = _34_678.localbindings; recbindings = _34_678.recbindings; phase = _34_678.phase; sigmap = _34_678.sigmap; default_result_effect = _34_678.default_result_effect; iface = _34_678.iface; admitted_iface = _34_678.admitted_iface}))
+(let _34_675 = (extract_record env s)
+in (let _34_677 = env
+in {curmodule = _34_677.curmodule; modules = _34_677.modules; open_namespaces = _34_677.open_namespaces; sigaccum = (s)::env.sigaccum; localbindings = _34_677.localbindings; recbindings = _34_677.recbindings; phase = _34_677.phase; sigmap = _34_677.sigmap; default_result_effect = _34_677.default_result_effect; iface = _34_677.iface; admitted_iface = _34_677.admitted_iface}))
 end
 | Some (l) -> begin
 (err l)
@@ -715,7 +715,7 @@ end else begin
 end
 in (let _34_820 = env
 in {curmodule = Some (mname); modules = _34_820.modules; open_namespaces = open_ns; sigaccum = _34_820.sigaccum; localbindings = _34_820.localbindings; recbindings = _34_820.recbindings; phase = _34_820.phase; sigmap = env.sigmap; default_result_effect = _34_820.default_result_effect; iface = intf; admitted_iface = admitted})))
-in (match (((Support.Microsoft.FStar.Util.find_opt (fun _34_825 -> (match (_34_825) with
+in (match (((Support.Microsoft.FStar.Util.find_opt (fun _34_833 -> (match (_34_833) with
 | (l, _) -> begin
 (Microsoft_FStar_Absyn_Syntax.lid_equals l mname)
 end))) env.modules)) with
@@ -723,7 +723,7 @@ end))) env.modules)) with
 (prep env)
 end
 | Some ((_, m)) -> begin
-(let _34_832 = if intf then begin
+(let _34_828 = if intf then begin
 (raise (Microsoft_FStar_Absyn_Syntax.Error (((Support.Microsoft.FStar.Util.format1 "Duplicate module or interface name: %s" mname.Microsoft_FStar_Absyn_Syntax.str), (Microsoft_FStar_Absyn_Syntax.range_of_lid mname)))))
 end
 in (prep env))
@@ -751,9 +751,9 @@ in (let msg = (match (r) with
 ""
 end
 | Some (r) -> begin
-(Support.Microsoft.FStar.Util.format1 "(Possible clash with related name at %s)" (Support.Microsoft.FStar.Range.string_of_range r))
+(Support.Microsoft.FStar.Util.format1 "\x28Possible clash with related name at %s\x29" (Support.Microsoft.FStar.Range.string_of_range r))
 end)
-in (raise (Microsoft_FStar_Absyn_Syntax.Error (((Support.Microsoft.FStar.Util.format2 "Identifier not found: [%s] %s" (Microsoft_FStar_Absyn_Syntax.text_of_lid lid) msg), (Microsoft_FStar_Absyn_Syntax.range_of_lid lid)))))))
+in (raise (Microsoft_FStar_Absyn_Syntax.Error (((Support.Microsoft.FStar.Util.format2 "Identifier not found: \x5b%s\x5d %s" (Microsoft_FStar_Absyn_Syntax.text_of_lid lid) msg), (Microsoft_FStar_Absyn_Syntax.range_of_lid lid)))))))
 end
 | Some (r) -> begin
 r
@@ -761,7 +761,7 @@ end))
 
 let fail_or2 = (fun lookup id -> (match ((lookup id)) with
 | None -> begin
-(raise (Microsoft_FStar_Absyn_Syntax.Error (((Support.String.strcat (Support.String.strcat "Identifier not found [" id.Microsoft_FStar_Absyn_Syntax.idText) "]"), id.Microsoft_FStar_Absyn_Syntax.idRange))))
+(raise (Microsoft_FStar_Absyn_Syntax.Error (((Support.String.strcat (Support.String.strcat "Identifier not found \x5b" id.Microsoft_FStar_Absyn_Syntax.idText) "\x5d"), id.Microsoft_FStar_Absyn_Syntax.idRange))))
 end
 | Some (r) -> begin
 r

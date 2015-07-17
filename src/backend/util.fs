@@ -6,10 +6,11 @@ open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Backends.ML.Syntax
 
-let as_mlident (x:bvdef<'a>) = x.realname.idText, 0
+let pruneNones (l : list<option<'a>>) : list<'a> =
+    List.fold_right (fun  x ll -> match x with 
+                          | Some xs -> xs::ll
+                          | None -> ll) l []
 
-let mlpath_of_lident (x : lident) : mlpath =
-    x.ns |> List.map (fun id -> id.idText), x.ident.idText
 
 let mlconst_of_const (sctt : sconst) =
   match sctt with
@@ -28,6 +29,52 @@ let mlconst_of_const (sctt : sconst) =
   | Const_string (bytes, _) ->
       MLC_String (string_of_unicode (bytes))
 
+let rec subst_aux (subst:list<(mlident * mlty)>) (t:mlty) = 
+    match t with 
+    | MLTY_Var  x -> Util.find_opt (fun (y, _) -> y=x) subst |> must |> snd
+    | MLTY_Fun (t1, f, t2) -> MLTY_Fun(subst_aux subst t1, f, subst_aux subst t2)
+    | MLTY_Named(args, path) -> MLTY_Named(List.map (subst_aux subst) args, path)
+    | MLTY_Tuple ts -> MLTY_Tuple(List.map (subst_aux subst) ts)
+    | MLTY_App(t1, t2) -> MLTY_App(subst_aux subst t1, subst_aux subst t2)
+    | MLTY_Top -> MLTY_Top
 
+let subst ((formals, t):mltyscheme) (args:list<mlty>) : mlty = 
+    if List.length formals <> List.length args
+    then failwith "Substitution must be fully applied"
+    else subst_aux (List.zip formals args) t
+
+let delta_unfold g t = None //TODO
+
+let rec equiv (g:Env.env) (t:mlty) (t':mlty) : bool = 
+    match t, t' with 
+    | MLTY_Var  x, MLTY_Var y -> 
+      fst x = fst y
+
+    | MLTY_Fun (t1, f, t2), MLTY_Fun (t1', f', t2') ->
+      equiv g t1 t1' 
+      && f=f'
+      && equiv g t2 t2'
+
+    | MLTY_Named(args, path), MLTY_Named(args', path') when (path=path') -> 
+      List.forall2 (equiv g) args args'
+
+    | MLTY_Tuple ts, MLTY_Tuple ts' -> 
+      List.forall2 (equiv g) ts ts'
+
+    | MLTY_Top, MLTY_Top -> true
+
+    | MLTY_Named _, _ -> 
+      begin match delta_unfold g t with 
+        | Some t -> equiv g t t'
+        | _ -> false
+      end
+
+    | _, MLTY_Named _ -> 
+      begin match delta_unfold g t' with 
+        | Some t -> equiv g t t'
+        | _ -> false
+      end
+      
+    | _ -> false
 
 

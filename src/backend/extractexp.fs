@@ -42,16 +42,9 @@ let rec is_value (e:exp) = match (Util.compress_exp e).n with
             | Inr e -> is_value e)
     | _ -> false
 
-let translate_typ (g:env) (t:typ) : mlty = failwith "NYI"
+let translate_typ (g:env) (t:typ) : mlty = ExtractTyp.extractTyp g t
 
-let translate_eff g l = 
-    if lid_equals l Const.effect_PURE_lid 
-    then MayErase 
-    else Keep
-
-let instantiate (s:mltyscheme) (args:list<mlty>) : mlty = failwith "NYI"
-
-let equiv (g:env) (t:mlty) (t':mlty) : bool = failwith "NYI"
+let instantiate (s:mltyscheme) (args:list<mlty>) : mlty = Util.subst s args
 
 let ml_unit = MLE_Const MLC_Unit
 let ml_unit_ty = MLTY_Named ([], ([], "unit")) 
@@ -95,6 +88,8 @@ let is_type_abstraction = function
     | _ -> false
 
 let rec extract_pat (g:env) p : (env * list<mlpattern>) = match p.v with
+  | Pat_disj [] -> failwith "Impossible"
+
   | Pat_disj (p::pats)      ->
     let g, p = extract_pat g p in
     g, [MLP_Branch (List.collect (fun x -> snd (extract_pat g x)) pats)]
@@ -103,7 +98,7 @@ let rec extract_pat (g:env) p : (env * list<mlpattern>) = match p.v with
     g, [MLP_Const (mlconst_of_const s)]
 
   | Pat_cons (f, pats) -> 
-    let d = Env.lookup_fv g f in
+    let d, _ = Env.lookup_fv g f in
     let g, pats = Util.fold_map extract_pat g pats in
     g, [MLP_CTor (d, List.flatten pats)]
 
@@ -211,13 +206,13 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
             let ml_bs, env = List.fold_left (fun (ml_bs, env) (b, _) -> match b with 
                 | Inl a -> //no first-class polymorphism; so type-binders get wiped out
                   let env = Env.extend_ty env a (Some MLTY_Top) in 
-                  let ml_b = (Util.as_mlident a.v, Some <| ml_unit_ty) in
+                  let ml_b = (as_mlident a.v, Some <| ml_unit_ty) in
                   ml_b::ml_bs, env 
               
                 | Inr x -> 
                   let t = translate_typ env x.sort in
                   let env = Env.extend_bv env x ([], t) in
-                  let ml_b = (Util.as_mlident x.v, Some t) in
+                  let ml_b = (as_mlident x.v, Some t) in
                   ml_b::ml_bs, env) ([], g) bs in
             let bs = List.rev ml_bs in
             let e, f, t = synth_exp env e in
@@ -228,7 +223,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
     
         | Exp_let((is_rec, lbs), e') -> 
           let maybe_generalize {lbname=lbname; lbeff=lbeff; lbtyp=t; lbdef=e} = 
-              let f_e = translate_eff g lbeff in
+              let f_e = ExtractTyp.translate_eff g lbeff in
               let t = Util.compress_typ t in
               match t.n with 
                 | Typ_fun(bs, c) when is_type_abstraction bs -> 
@@ -304,7 +299,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
           
           let f = join_l (f'::List.map fst lbs) in
 
-          MLE_Let(is_rec, List.map snd lbs, e'), f', t'
+          MLE_Let((is_rec, List.map snd lbs), e'), f', t'
    
 
       | Exp_match(e, pats) -> 

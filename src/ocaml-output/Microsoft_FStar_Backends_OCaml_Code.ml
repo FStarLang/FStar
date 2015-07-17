@@ -55,20 +55,20 @@ let min_op_prec = ((- (1)), Infix (NonAssoc))
 
 let max_op_prec = (Support.Microsoft.FStar.Util.max_int, Infix (NonAssoc))
 
-let infix_prim_ops = (("op_Addition", e_bin_prio_op1, "+"))::(("op_Subtraction", e_bin_prio_op1, "-"))::(("op_Multiply", e_bin_prio_op1, "*"))::(("op_Division", e_bin_prio_op1, "/"))::(("op_Equality", e_bin_prio_eq, "="))::(("op_ColonEquals", e_bin_prio_eq, ":="))::(("op_disEquality", e_bin_prio_eq, "<>"))::(("op_AmpAmp", e_bin_prio_and, "&&"))::(("op_BarBar", e_bin_prio_or, "||"))::(("op_LessThanOrEqual", e_bin_prio_order, "<="))::(("op_GreaterThanOrEqual", e_bin_prio_order, ">="))::(("op_LessThan", e_bin_prio_order, "<"))::(("op_GreaterThan", e_bin_prio_order, ">"))::(("op_Modulus", e_bin_prio_order, "mod"))::[]
+let infix_prim_ops = (("op\x5fAddition", e_bin_prio_op1, "+"))::(("op\x5fSubtraction", e_bin_prio_op1, "-"))::(("op\x5fMultiply", e_bin_prio_op1, "*"))::(("op\x5fDivision", e_bin_prio_op1, "/"))::(("op\x5fEquality", e_bin_prio_eq, "="))::(("op\x5fColonEquals", e_bin_prio_eq, ":="))::(("op\x5fdisEquality", e_bin_prio_eq, "<>"))::(("op\x5fAmpAmp", e_bin_prio_and, "&&"))::(("op\x5fBarBar", e_bin_prio_or, "||"))::(("op\x5fLessThanOrEqual", e_bin_prio_order, "<="))::(("op\x5fGreaterThanOrEqual", e_bin_prio_order, ">="))::(("op\x5fLessThan", e_bin_prio_order, "<"))::(("op\x5fGreaterThan", e_bin_prio_order, ">"))::(("op\x5fModulus", e_bin_prio_order, "mod"))::[]
 
-let prim_uni_ops = (("op_Negation", "not"))::(("op_Minus", "-"))::(("op_Bang", "!"))::(("exit", "exit"))::(("failwith", "failwith"))::(("raise", "raise"))::[]
+let prim_uni_ops = (("op\x5fNegation", "not"))::(("op\x5fMinus", "-"))::(("op\x5fBang", "!"))::(("exit", "exit"))::(("failwith", "failwith"))::(("raise", "raise"))::[]
 
 let prim_types = (("char", "char"))::(("bool", "bool"))::(("string", "string"))::(("unit", "unit"))::(("ref", "ref"))::(("array", "array"))::(("option", "option"))::(("list", "list"))::(("int", "int"))::(("int64", "Int64.t"))::[]
 
-let prim_constructors = (("Some", "Some"))::(("None", "None"))::(("Nil", "[]"))::(("Cons", "::"))::[]
+let prim_constructors = (("Some", "Some"))::(("None", "None"))::(("Nil", "\x5b\x5d"))::(("Cons", "::"))::[]
 
 let is_prims_ns = (fun ns -> (ns = ("Support")::("Prims")::[]))
 
-let as_bin_op = (fun _58_6 -> (match (_58_6) with
+let as_bin_op = (fun _59_6 -> (match (_59_6) with
 | (ns, x) -> begin
 if (is_prims_ns ns) then begin
-(Support.List.tryFind (fun _58_12 -> (match (_58_12) with
+(Support.List.tryFind (fun _59_12 -> (match (_59_12) with
 | (y, _, _) -> begin
 (x = y)
 end)) infix_prim_ops)
@@ -79,10 +79,10 @@ end))
 
 let is_bin_op = (fun p -> ((as_bin_op p) <> None))
 
-let as_uni_op = (fun _58_16 -> (match (_58_16) with
+let as_uni_op = (fun _59_16 -> (match (_59_16) with
 | (ns, x) -> begin
 if (is_prims_ns ns) then begin
-(Support.List.tryFind (fun _58_20 -> (match (_58_20) with
+(Support.List.tryFind (fun _59_20 -> (match (_59_20) with
 | (y, _) -> begin
 (x = y)
 end)) prim_uni_ops)
@@ -93,10 +93,10 @@ end))
 
 let is_uni_op = (fun p -> ((as_uni_op p) <> None))
 
-let as_standard_type = (fun _58_24 -> (match (_58_24) with
+let as_standard_type = (fun _59_24 -> (match (_59_24) with
 | (ns, x) -> begin
 if (is_prims_ns ns) then begin
-(Support.List.tryFind (fun _58_28 -> (match (_58_28) with
+(Support.List.tryFind (fun _59_28 -> (match (_59_28) with
 | (y, _) -> begin
 (x = y)
 end)) prim_types)
@@ -107,10 +107,10 @@ end))
 
 let is_standard_type = (fun p -> ((as_standard_type p) <> None))
 
-let as_standard_constructor = (fun _58_32 -> (match (_58_32) with
+let as_standard_constructor = (fun _59_32 -> (match (_59_32) with
 | (ns, x) -> begin
 if (is_prims_ns ns) then begin
-(Support.List.tryFind (fun _58_36 -> (match (_58_36) with
+(Support.List.tryFind (fun _59_36 -> (match (_59_36) with
 | (y, _) -> begin
 (x = y)
 end)) prim_constructors)
@@ -121,13 +121,13 @@ end))
 
 let is_standard_constructor = (fun p -> ((as_standard_constructor p) <> None))
 
-let maybe_paren = (fun _58_40 inner doc -> (match (_58_40) with
+let maybe_paren = (fun _59_40 inner doc -> (match (_59_40) with
 | (outer, side) -> begin
-(let noparens = (fun _inner _outer side -> (let _58_49 = _inner
-in (match (_58_49) with
+(let noparens = (fun _inner _outer side -> (let _59_49 = _inner
+in (match (_59_49) with
 | (pi, fi) -> begin
-(let _58_52 = _outer
-in (match (_58_52) with
+(let _59_52 = _outer
+in (match (_59_52) with
 | (po, fo) -> begin
 ((pi > po) || (match ((fi, side)) with
 | (Postfix, Left) -> begin
@@ -215,7 +215,7 @@ end)
 
 let string_of_mlconstant = (fun sctt -> (match (sctt) with
 | Microsoft_FStar_Backends_ML_Syntax.MLC_Unit -> begin
-"()"
+"\x28\x29"
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLC_Bool (true) -> begin
 "true"
@@ -248,6 +248,10 @@ in (Support.String.strcat (Support.String.strcat "\"" chars) "\""))
 end))
 
 let rec doc_of_expr = (fun outer e -> (match (e) with
+| Microsoft_FStar_Backends_ML_Syntax.MLE_Coerce ((e, t, t')) -> begin
+(let doc = (doc_of_expr (min_op_prec, NonAssoc) e)
+in (FSharp_Format.parens (FSharp_Format.reduce (((FSharp_Format.text "Obj.magic"))::(doc)::[]))))
+end
 | Microsoft_FStar_Backends_ML_Syntax.MLE_Seq (es) -> begin
 (let docs = (Support.List.map (doc_of_expr (min_op_prec, NonAssoc)) es)
 in (let docs = (Support.List.map (fun d -> (FSharp_Format.reduce ((d)::((FSharp_Format.text ";"))::(FSharp_Format.hardline)::[]))) docs)
@@ -263,7 +267,7 @@ end
 (FSharp_Format.text (Microsoft_FStar_Backends_ML_Syntax.ptsym path))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLE_Record ((path, fields)) -> begin
-(let for1 = (fun _58_146 -> (match (_58_146) with
+(let for1 = (fun _59_152 -> (match (_59_152) with
 | (name, e) -> begin
 (let doc = (doc_of_expr (min_op_prec, NonAssoc) e)
 in (FSharp_Format.reduce1 (((FSharp_Format.text (Microsoft_FStar_Backends_ML_Syntax.ptsym (path, name))))::((FSharp_Format.text "="))::(doc)::[])))
@@ -299,7 +303,7 @@ end
 in (let docs = (FSharp_Format.parens (FSharp_Format.combine (FSharp_Format.text ", ") docs))
 in docs))
 end
-| Microsoft_FStar_Backends_ML_Syntax.MLE_Let ((rec_, lets, body)) -> begin
+| Microsoft_FStar_Backends_ML_Syntax.MLE_Let (((rec_, lets), body)) -> begin
 (let doc = (doc_of_lets (rec_, lets))
 in (let body = (doc_of_expr (min_op_prec, NonAssoc) body)
 in (FSharp_Format.parens (FSharp_Format.combine FSharp_Format.hardline ((doc)::((FSharp_Format.reduce1 (((FSharp_Format.text "in"))::(body)::[])))::[])))))
@@ -307,8 +311,8 @@ end
 | Microsoft_FStar_Backends_ML_Syntax.MLE_App ((e, args)) -> begin
 (match ((e, args)) with
 | (Microsoft_FStar_Backends_ML_Syntax.MLE_Name (p), e1::e2::[]) when (is_bin_op p) -> begin
-(let _58_195 = (Support.Option.get (as_bin_op p))
-in (match (_58_195) with
+(let _59_202 = (Support.Option.get (as_bin_op p))
+in (match (_59_202) with
 | (_, prio, txt) -> begin
 (let e1 = (doc_of_expr (prio, Left) e1)
 in (let e2 = (doc_of_expr (prio, Right) e2)
@@ -317,8 +321,8 @@ in (FSharp_Format.parens doc))))
 end))
 end
 | (Microsoft_FStar_Backends_ML_Syntax.MLE_Name (p), e1::[]) when (is_uni_op p) -> begin
-(let _58_207 = (Support.Option.get (as_uni_op p))
-in (match (_58_207) with
+(let _59_214 = (Support.Option.get (as_uni_op p))
+in (match (_59_214) with
 | (_, txt) -> begin
 (let e1 = (doc_of_expr (min_op_prec, NonAssoc) e1)
 in (let doc = (FSharp_Format.reduce1 (((FSharp_Format.text txt))::((FSharp_Format.parens e1))::[]))
@@ -337,7 +341,7 @@ in (let doc = (FSharp_Format.reduce ((e)::((FSharp_Format.text "."))::((FSharp_F
 in doc))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLE_Fun ((ids, body)) -> begin
-(let ids = (Support.List.map (fun _58_230 -> (match (_58_230) with
+(let ids = (Support.List.map (fun _59_237 -> (match (_59_237) with
 | ((x, _), _) -> begin
 (FSharp_Format.text x)
 end)) ids)
@@ -374,7 +378,7 @@ end
 end))
 and doc_of_pattern = (fun pattern -> (match (pattern) with
 | Microsoft_FStar_Backends_ML_Syntax.MLP_Wild -> begin
-(FSharp_Format.text "_")
+(FSharp_Format.text "\x5f")
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLP_Const (c) -> begin
 (FSharp_Format.text (string_of_mlconstant c))
@@ -383,7 +387,7 @@ end
 (FSharp_Format.text (Support.Prims.fst x))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLP_Record ((path, fields)) -> begin
-(let for1 = (fun _58_283 -> (match (_58_283) with
+(let for1 = (fun _59_290 -> (match (_59_290) with
 | (name, p) -> begin
 (FSharp_Format.reduce1 (((FSharp_Format.text (Microsoft_FStar_Backends_ML_Syntax.ptsym (path, name))))::((FSharp_Format.text "="))::((doc_of_pattern p))::[]))
 end))
@@ -422,7 +426,7 @@ end
 in (let ps = (Support.List.map FSharp_Format.parens ps)
 in (FSharp_Format.combine (FSharp_Format.text " | ") ps)))
 end))
-and doc_of_branch = (fun _58_316 -> (match (_58_316) with
+and doc_of_branch = (fun _59_323 -> (match (_59_323) with
 | (p, cond, e) -> begin
 (let case = (match (cond) with
 | None -> begin
@@ -434,12 +438,12 @@ in (FSharp_Format.reduce1 (((FSharp_Format.text "|"))::((doc_of_pattern p))::((F
 end)
 in (FSharp_Format.combine FSharp_Format.hardline (((FSharp_Format.reduce1 ((case)::((FSharp_Format.text "->"))::((FSharp_Format.text "begin"))::[])))::((doc_of_expr (min_op_prec, NonAssoc) e))::((FSharp_Format.text "end"))::[])))
 end))
-and doc_of_lets = (fun _58_324 -> (match (_58_324) with
+and doc_of_lets = (fun _59_331 -> (match (_59_331) with
 | (rec_, lets) -> begin
-(let for1 = (fun _58_330 -> (match (_58_330) with
+(let for1 = (fun _59_337 -> (match (_59_337) with
 | (name, tys, ids, e) -> begin
 (let e = (doc_of_expr (min_op_prec, NonAssoc) e)
-in (let ids = (Support.List.map (fun _58_335 -> (match (_58_335) with
+in (let ids = (Support.List.map (fun _59_342 -> (match (_59_342) with
 | (x, _) -> begin
 (FSharp_Format.text x)
 end)) ids)
@@ -496,9 +500,12 @@ end
 (let d1 = (doc_of_mltype (t_prio_fun, Left) t1)
 in (let d2 = (doc_of_mltype (t_prio_fun, Right) t2)
 in (maybe_paren outer t_prio_fun (FSharp_Format.hbox (FSharp_Format.reduce1 ((d2)::((FSharp_Format.text " "))::(d1)::[]))))))
+end
+| Microsoft_FStar_Backends_ML_Syntax.MLTY_Top -> begin
+(FSharp_Format.text "Obj.t")
 end))
 
-let doc_of_mltydecl = (fun decls -> (let for1 = (fun _58_381 -> (match (_58_381) with
+let doc_of_mltydecl = (fun decls -> (let for1 = (fun _59_389 -> (match (_59_389) with
 | (x, tparams, body) -> begin
 (let tparams = (match (tparams) with
 | [] -> begin
@@ -516,7 +523,7 @@ in (let forbody = (fun body -> (match (body) with
 (doc_of_mltype (min_op_prec, NonAssoc) ty)
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLTD_Record (fields) -> begin
-(let forfield = (fun _58_399 -> (match (_58_399) with
+(let forfield = (fun _59_407 -> (match (_59_407) with
 | (name, ty) -> begin
 (let name = (FSharp_Format.text name)
 in (let ty = (doc_of_mltype (min_op_prec, NonAssoc) ty)
@@ -525,7 +532,7 @@ end))
 in (FSharp_Format.cbrackets (FSharp_Format.combine (FSharp_Format.text "; ") (Support.List.map forfield fields))))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLTD_DType (ctors) -> begin
-(let forctor = (fun _58_407 -> (match (_58_407) with
+(let forctor = (fun _59_415 -> (match (_59_415) with
 | (name, tys) -> begin
 (match (tys) with
 | [] -> begin
@@ -591,27 +598,23 @@ end
 (doc_of_mltydecl decls)
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLM_Let ((rec_, lets)) -> begin
-(let lets = (Support.List.map (fun _58_472 -> (match (_58_472) with
-| (x, y, z) -> begin
-((x, (- (1))), None, y, z)
-end)) lets)
-in (doc_of_lets (rec_, lets)))
+(doc_of_lets (rec_, lets))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLM_Top (e) -> begin
-(FSharp_Format.reduce1 (((FSharp_Format.text "let"))::((FSharp_Format.text "_"))::((FSharp_Format.text "="))::((doc_of_expr (min_op_prec, NonAssoc) e))::[]))
+(FSharp_Format.reduce1 (((FSharp_Format.text "let"))::((FSharp_Format.text "\x5f"))::((FSharp_Format.text "="))::((doc_of_expr (min_op_prec, NonAssoc) e))::[]))
 end))
 
 let doc_of_mod = (fun m -> (let docs = (Support.List.map doc_of_mod1 m)
 in (let docs = (Support.List.map (fun x -> (FSharp_Format.reduce ((x)::(FSharp_Format.hardline)::(FSharp_Format.hardline)::[]))) docs)
 in (FSharp_Format.reduce docs))))
 
-let rec doc_of_mllib_r = (fun _58_481 -> (match (_58_481) with
+let rec doc_of_mllib_r = (fun _59_484 -> (match (_59_484) with
 | Microsoft_FStar_Backends_ML_Syntax.MLLib (mllib) -> begin
-(let rec for1_sig = (fun _58_488 -> (match (_58_488) with
+(let rec for1_sig = (fun _59_491 -> (match (_59_491) with
 | (x, sigmod, Microsoft_FStar_Backends_ML_Syntax.MLLib (sub)) -> begin
 (let head = (FSharp_Format.reduce1 (((FSharp_Format.text "module"))::((FSharp_Format.text x))::((FSharp_Format.text ":"))::((FSharp_Format.text "sig"))::[]))
 in (let tail = (FSharp_Format.reduce1 (((FSharp_Format.text "end"))::[]))
-in (let doc = (Support.Option.map (fun _58_494 -> (match (_58_494) with
+in (let doc = (Support.Option.map (fun _59_497 -> (match (_59_497) with
 | (s, _) -> begin
 (doc_of_sig s)
 end)) sigmod)
@@ -625,9 +628,9 @@ end
 (FSharp_Format.cat s FSharp_Format.hardline)
 end))::((FSharp_Format.reduce sub))::((FSharp_Format.cat tail FSharp_Format.hardline))::[])))))))
 end))
-and for1_mod = (fun istop _58_507 -> (match (_58_507) with
+and for1_mod = (fun istop _59_510 -> (match (_59_510) with
 | (x, sigmod, Microsoft_FStar_Backends_ML_Syntax.MLLib (sub)) -> begin
-(let _58_508 = (Support.Microsoft.FStar.Util.fprint1 "Gen Code: %s\n" x)
+(let _59_511 = (Support.Microsoft.FStar.Util.fprint1 "Gen Code: %s\n" x)
 in (let head = (FSharp_Format.reduce1 (if (not (istop)) then begin
 ((FSharp_Format.text "module"))::((FSharp_Format.text x))::((FSharp_Format.text "="))::((FSharp_Format.text "struct"))::[]
 end else begin
@@ -638,7 +641,7 @@ in (let tail = if (not (istop)) then begin
 end else begin
 (FSharp_Format.reduce1 [])
 end
-in (let doc = (Support.Option.map (fun _58_515 -> (match (_58_515) with
+in (let doc = (Support.Option.map (fun _59_518 -> (match (_59_518) with
 | (_, m) -> begin
 (doc_of_mod m)
 end)) sigmod)
@@ -652,7 +655,7 @@ end
 (FSharp_Format.cat s FSharp_Format.hardline)
 end))::((FSharp_Format.reduce sub))::((FSharp_Format.cat tail FSharp_Format.hardline))::[]))))))))
 end))
-in (let docs = (Support.List.map (fun _58_526 -> (match (_58_526) with
+in (let docs = (Support.List.map (fun _59_529 -> (match (_59_529) with
 | (x, s, m) -> begin
 (x, (for1_mod true (x, s, m)))
 end)) mllib)

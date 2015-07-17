@@ -74,7 +74,7 @@ end
 | '>' -> begin
 "Greater"
 end
-| '_' -> begin
+| '\x5f' -> begin
 "Underscore"
 end
 | '|' -> begin
@@ -106,7 +106,7 @@ in (let rec aux = (fun i -> if (i = (Support.String.length s)) then begin
 end else begin
 ((name_of_char (Support.Microsoft.FStar.Util.char_at s i)))::(aux (i + 1))
 end)
-in (Support.String.strcat "op_" (Support.String.concat "_" (aux 0))))))
+in (Support.String.strcat "op\x5f" (Support.String.concat "\x5f" (aux 0))))))
 
 let compile_op_lid = (fun n s r -> (Microsoft_FStar_Absyn_Syntax.lid_of_ids (((Microsoft_FStar_Absyn_Syntax.mk_ident ((compile_op n s), r)))::[])))
 
@@ -445,7 +445,7 @@ end
 []
 end
 | (Microsoft_FStar_Parser_AST.Let (_)) | (Microsoft_FStar_Parser_AST.Record (_)) | (Microsoft_FStar_Parser_AST.Match (_)) | (Microsoft_FStar_Parser_AST.TryWith (_)) | (Microsoft_FStar_Parser_AST.Seq (_)) -> begin
-(Microsoft_FStar_Parser_AST.error "Unexpected type in free_type_vars computation" t t.Microsoft_FStar_Parser_AST.range)
+(Microsoft_FStar_Parser_AST.error "Unexpected type in free\x5ftype\x5fvars computation" t t.Microsoft_FStar_Parser_AST.range)
 end))
 
 let head_and_args = (fun t -> (let rec aux = (fun args t -> (match ((unparen t).Microsoft_FStar_Parser_AST.tm) with
@@ -608,8 +608,8 @@ end))) l)) with
 (l, e, y)
 end
 | _ -> begin
-(let _36_749 = (Microsoft_FStar_Parser_DesugarEnv.push_local_vbinding e x)
-in (match (_36_749) with
+(let _36_744 = (Microsoft_FStar_Parser_DesugarEnv.push_local_vbinding e x)
+in (match (_36_744) with
 | (e, x) -> begin
 ((Support.Microsoft.FStar.Util.Inr (x))::l, e, x)
 end))
@@ -625,8 +625,8 @@ end))) l)) with
 (l, e, b)
 end
 | _ -> begin
-(let _36_766 = (Microsoft_FStar_Parser_DesugarEnv.push_local_tbinding e a)
-in (match (_36_766) with
+(let _36_761 = (Microsoft_FStar_Parser_DesugarEnv.push_local_tbinding e a)
+in (match (_36_761) with
 | (e, a) -> begin
 ((Support.Microsoft.FStar.Util.Inl (a))::l, e, a)
 end))
@@ -696,12 +696,12 @@ Some (Microsoft_FStar_Absyn_Syntax.Implicit)
 end else begin
 None
 end
-in if (a.Microsoft_FStar_Absyn_Syntax.idText = "\'_") then begin
+in if (a.Microsoft_FStar_Absyn_Syntax.idText = "\'\x5f") then begin
 (let a = ((Microsoft_FStar_Absyn_Util.new_bvd) (Some (p.Microsoft_FStar_Parser_AST.prange)))
 in (loc, env, TBinder ((a, Microsoft_FStar_Absyn_Syntax.kun, aq)), (pos (Microsoft_FStar_Absyn_Syntax.Pat_twild ((Microsoft_FStar_Absyn_Util.bvd_to_bvar_s a Microsoft_FStar_Absyn_Syntax.kun))))))
 end else begin
-(let _36_852 = (resolvea loc env a)
-in (match (_36_852) with
+(let _36_851 = (resolvea loc env a)
+in (match (_36_851) with
 | (loc, env, abvd) -> begin
 (loc, env, TBinder ((abvd, Microsoft_FStar_Absyn_Syntax.kun, aq)), (pos (Microsoft_FStar_Absyn_Syntax.Pat_tvar ((Microsoft_FStar_Absyn_Util.bvd_to_bvar_s abvd Microsoft_FStar_Absyn_Syntax.kun)))))
 end))
@@ -814,7 +814,7 @@ in (match (_36_964) with
 end))) fields)
 in (let args = ((Support.List.map (fun _36_972 -> (match (_36_972) with
 | (f, _) -> begin
-(match (((Support.List.tryFind (fun _36_976 -> (match (_36_976) with
+(match (((Support.List.tryFind (fun _36_982 -> (match (_36_982) with
 | (g, _) -> begin
 (Microsoft_FStar_Absyn_Syntax.lid_equals f g)
 end))) fields)) with
@@ -847,8 +847,8 @@ end
 (raise (Microsoft_FStar_Absyn_Syntax.Error (("Unexpected pattern at the top-level", p.Microsoft_FStar_Parser_AST.prange))))
 end)
 end else begin
-(let _36_1015 = (desugar_data_pat env p)
-in (match (_36_1015) with
+(let _36_997 = (desugar_data_pat env p)
+in (match (_36_997) with
 | (env, binder, p) -> begin
 (let p = (match (p.Microsoft_FStar_Absyn_Syntax.v) with
 | (Microsoft_FStar_Absyn_Syntax.Pat_var (_)) | (Microsoft_FStar_Absyn_Syntax.Pat_tvar (_)) | (Microsoft_FStar_Absyn_Syntax.Pat_wild (_)) -> begin
@@ -1799,11 +1799,11 @@ end
 (Some (x), Microsoft_FStar_Absyn_Syntax.tun)
 end
 | _ -> begin
-(raise (Microsoft_FStar_Absyn_Syntax.Error (("Unexpected domain of an arrow or sum (expected a type)", b.Microsoft_FStar_Parser_AST.brange))))
+(raise (Microsoft_FStar_Absyn_Syntax.Error (("Unexpected domain of an arrow or sum \x28expected a type\x29", b.Microsoft_FStar_Parser_AST.brange))))
 end))
 and desugar_type_binder = (fun env b -> (let fail = (fun _36_2073 -> (match (_36_2073) with
 | () -> begin
-(raise (Microsoft_FStar_Absyn_Syntax.Error (("Unexpected domain of an arrow or sum (expected a kind)", b.Microsoft_FStar_Parser_AST.brange))))
+(raise (Microsoft_FStar_Absyn_Syntax.Error (("Unexpected domain of an arrow or sum \x28expected a kind\x29", b.Microsoft_FStar_Parser_AST.brange))))
 end))
 in (match (b.Microsoft_FStar_Parser_AST.b) with
 | (Microsoft_FStar_Parser_AST.Annotated ((x, t))) | (Microsoft_FStar_Parser_AST.TAnnotated ((x, t))) -> begin
@@ -1878,8 +1878,8 @@ false
 end))) binders) then begin
 []
 end else begin
-(let _36_2160 = (Microsoft_FStar_Absyn_Util.mk_field_projector_name lid a i)
-in (match (_36_2160) with
+(let _36_2152 = (Microsoft_FStar_Absyn_Util.mk_field_projector_name lid a i)
+in (match (_36_2152) with
 | (field_name, _) -> begin
 (let proj = (Microsoft_FStar_Absyn_Syntax.mk_Typ_app ((Microsoft_FStar_Absyn_Util.ftv field_name Microsoft_FStar_Absyn_Syntax.kun), (arg)::[]) None p)
 in (Support.Microsoft.FStar.Util.Inl ((a.Microsoft_FStar_Absyn_Syntax.v, proj)))::[])
@@ -1896,8 +1896,8 @@ false
 end))) binders) then begin
 []
 end else begin
-(let _36_2175 = (Microsoft_FStar_Absyn_Util.mk_field_projector_name lid x i)
-in (match (_36_2175) with
+(let _36_2167 = (Microsoft_FStar_Absyn_Util.mk_field_projector_name lid x i)
+in (match (_36_2167) with
 | (field_name, _) -> begin
 (let proj = (Microsoft_FStar_Absyn_Syntax.mk_Exp_app ((Microsoft_FStar_Absyn_Util.fvar false field_name p), (arg)::[]) None p)
 in (Support.Microsoft.FStar.Util.Inr ((x.Microsoft_FStar_Absyn_Syntax.v, proj)))::[])
@@ -1939,8 +1939,8 @@ false
 end))) quals) then begin
 false
 end else begin
-(let _36_2219 = tycon
-in (match (_36_2219) with
+(let _36_2213 = tycon
+in (match (_36_2213) with
 | (l, _, _) -> begin
 (match ((Microsoft_FStar_Parser_DesugarEnv.find_all_datacons env l)) with
 | Some (l) -> begin
@@ -2376,7 +2376,7 @@ end
 | Some (t) -> begin
 t
 end))
-in (let ed = {Microsoft_FStar_Absyn_Syntax.mname = (Microsoft_FStar_Parser_DesugarEnv.qualify env0 eff_name); Microsoft_FStar_Absyn_Syntax.binders = binders; Microsoft_FStar_Absyn_Syntax.qualifiers = quals; Microsoft_FStar_Absyn_Syntax.signature = eff_k; Microsoft_FStar_Absyn_Syntax.ret = (lookup "return"); Microsoft_FStar_Absyn_Syntax.bind_wp = (lookup "bind_wp"); Microsoft_FStar_Absyn_Syntax.bind_wlp = (lookup "bind_wlp"); Microsoft_FStar_Absyn_Syntax.if_then_else = (lookup "if_then_else"); Microsoft_FStar_Absyn_Syntax.ite_wp = (lookup "ite_wp"); Microsoft_FStar_Absyn_Syntax.ite_wlp = (lookup "ite_wlp"); Microsoft_FStar_Absyn_Syntax.wp_binop = (lookup "wp_binop"); Microsoft_FStar_Absyn_Syntax.wp_as_type = (lookup "wp_as_type"); Microsoft_FStar_Absyn_Syntax.close_wp = (lookup "close_wp"); Microsoft_FStar_Absyn_Syntax.close_wp_t = (lookup "close_wp_t"); Microsoft_FStar_Absyn_Syntax.assert_p = (lookup "assert_p"); Microsoft_FStar_Absyn_Syntax.assume_p = (lookup "assume_p"); Microsoft_FStar_Absyn_Syntax.null_wp = (lookup "null_wp"); Microsoft_FStar_Absyn_Syntax.trivial = (lookup "trivial")}
+in (let ed = {Microsoft_FStar_Absyn_Syntax.mname = (Microsoft_FStar_Parser_DesugarEnv.qualify env0 eff_name); Microsoft_FStar_Absyn_Syntax.binders = binders; Microsoft_FStar_Absyn_Syntax.qualifiers = quals; Microsoft_FStar_Absyn_Syntax.signature = eff_k; Microsoft_FStar_Absyn_Syntax.ret = (lookup "return"); Microsoft_FStar_Absyn_Syntax.bind_wp = (lookup "bind\x5fwp"); Microsoft_FStar_Absyn_Syntax.bind_wlp = (lookup "bind\x5fwlp"); Microsoft_FStar_Absyn_Syntax.if_then_else = (lookup "if\x5fthen\x5felse"); Microsoft_FStar_Absyn_Syntax.ite_wp = (lookup "ite\x5fwp"); Microsoft_FStar_Absyn_Syntax.ite_wlp = (lookup "ite\x5fwlp"); Microsoft_FStar_Absyn_Syntax.wp_binop = (lookup "wp\x5fbinop"); Microsoft_FStar_Absyn_Syntax.wp_as_type = (lookup "wp\x5fas\x5ftype"); Microsoft_FStar_Absyn_Syntax.close_wp = (lookup "close\x5fwp"); Microsoft_FStar_Absyn_Syntax.close_wp_t = (lookup "close\x5fwp\x5ft"); Microsoft_FStar_Absyn_Syntax.assert_p = (lookup "assert\x5fp"); Microsoft_FStar_Absyn_Syntax.assume_p = (lookup "assume\x5fp"); Microsoft_FStar_Absyn_Syntax.null_wp = (lookup "null\x5fwp"); Microsoft_FStar_Absyn_Syntax.trivial = (lookup "trivial")}
 in (let se = Microsoft_FStar_Absyn_Syntax.Sig_new_effect ((ed, d.Microsoft_FStar_Parser_AST.drange))
 in (let env = (Microsoft_FStar_Parser_DesugarEnv.push_sigelt env0 se)
 in (env, (se)::[]))))))

@@ -16,7 +16,7 @@ end))
 let ptsym = (fun _50_7 -> (match (_50_7) with
 | (p, s) -> begin
 (let s = if ((Support.Char.lowercase (Support.String.get s 0)) <> (Support.String.get s 0)) then begin
-(Support.String.strcat "l__" s)
+(Support.String.strcat "l\x5f\x5f" s)
 end else begin
 s
 end
@@ -26,7 +26,7 @@ end))
 let ptctor = (fun _50_11 -> (match (_50_11) with
 | (p, s) -> begin
 (let s = if ((Support.Char.uppercase (Support.String.get s 0)) <> (Support.String.get s 0)) then begin
-(Support.String.strcat "U__" s)
+(Support.String.strcat "U\x5f\x5f" s)
 end else begin
 s
 end
@@ -34,6 +34,8 @@ in (Support.String.concat "." (Support.List.append p ((s)::[]))))
 end))
 
 let mlpath_of_lident = (fun x -> ((Support.List.map (fun x -> x.Microsoft_FStar_Absyn_Syntax.idText) x.Microsoft_FStar_Absyn_Syntax.ns), x.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText))
+
+let as_mlident = (fun x -> (x.Microsoft_FStar_Absyn_Syntax.realname.Microsoft_FStar_Absyn_Syntax.idText, 0))
 
 type mlidents =
 mlident list
@@ -72,15 +74,15 @@ type mlpattern =
 | MLP_Const of mlconstant
 | MLP_Var of mlident
 | MLP_CTor of (mlpath * mlpattern list)
+| MLP_Branch of mlpattern list
 | MLP_Record of (mlsymbol list * (mlsymbol * mlpattern) list)
 | MLP_Tuple of mlpattern list
-| MLP_Branch of mlpattern list
 
 type mlexpr =
 | MLE_Const of mlconstant
 | MLE_Var of mlident
 | MLE_Name of mlpath
-| MLE_Let of (bool * (mlident * mltyscheme option * mlidents * mlexpr) list * mlexpr)
+| MLE_Let of (mlletbinding * mlexpr)
 | MLE_App of (mlexpr * mlexpr list)
 | MLE_Fun of ((mlident * mlty option) list * mlexpr)
 | MLE_Match of (mlexpr * mlbranch list)
@@ -93,7 +95,8 @@ type mlexpr =
 | MLE_If of (mlexpr * mlexpr * mlexpr option)
 | MLE_Raise of (mlpath * mlexpr list)
 | MLE_Try of (mlexpr * mlbranch list) and mlbranch =
-(mlpattern * mlexpr option * mlexpr)
+(mlpattern * mlexpr option * mlexpr) and mlletbinding =
+(bool * (mlident * mltyscheme option * mlidents * mlexpr) list)
 
 type mltybody =
 | MLTD_Abbrev of mlty
@@ -105,7 +108,7 @@ type mltydecl =
 
 type mlmodule1 =
 | MLM_Ty of mltydecl
-| MLM_Let of (bool * (mlsymbol * mlidents * mlexpr) list)
+| MLM_Let of mlletbinding
 | MLM_Exn of (mlsymbol * mlty list)
 | MLM_Top of mlexpr
 
@@ -138,7 +141,7 @@ end
 MLE_Fun ((((x, None))::[], e))
 end))
 
-let mlif = (fun b _50_125 -> (match (_50_125) with
+let mlif = (fun b _50_127 -> (match (_50_127) with
 | (e1, e2) -> begin
 (match (e2) with
 | MLE_Const (MLC_Unit) -> begin

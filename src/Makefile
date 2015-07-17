@@ -10,7 +10,7 @@ ABSYN_SRC=$(addprefix absyn/, $(ABSYN))
 FORMAT=format.fsi format.fs
 FORMAT_SRC=$(addprefix format/, $(FORMAT))
 
-BACKEND=nameenv.fsi nameenv.fs ml-syntax.fs util.fs env.fs extraction.fs extractexp.fs ocaml-asttrans.fsi ocaml-asttrans.fs ocaml-codegen.fsi ocaml-codegen.fs
+BACKEND=nameenv.fsi nameenv.fs ml-syntax.fs env.fs util.fs extracttyp.fs extractexp.fs extractmod.fs ocaml-asttrans.fsi ocaml-asttrans.fs ocaml-codegen.fsi ocaml-codegen.fs
 BACKEND_SRC=$(addprefix backend/, $(BACKEND))
 
 JSBACKEND=ast.fs print.fs translate.fs
@@ -177,7 +177,7 @@ BOOT_TCFILES=tcenv.fsi tcenv.fs recheck.fs normalize.fsi normalize.fs errors.fs 
 BOOT_TC=$(addprefix tc/, $(BOOT_TCFILES))
 BOOT_FORMATFILES=format.fsi formatml.fs
 BOOT_FORMAT=$(addprefix format/, $(BOOT_FORMATFILES))
-BOOT_BACKENDFILES=nameenv.fsi nameenv.fs ml-syntax.fs util.fs env.fs extraction.fs extractexp.fs ocaml-asttrans.fsi ocaml-asttrans.fs ocaml-codegen.fsi ocaml-codegen.fs
+BOOT_BACKENDFILES=nameenv.fsi nameenv.fs ml-syntax.fs env.fs util.fs extracttyp.fs extractexp.fs extractmod.fs ocaml-asttrans.fsi ocaml-asttrans.fs ocaml-codegen.fsi ocaml-codegen.fs
 BOOT_BACKEND=$(addprefix backend/, $(BOOT_BACKENDFILES))
 BOOT_JSBACKENDFILES=ast.fs translate.fs
 BOOT_JSBACKEND=$(addprefix jsbackend/, $(BOOT_JSBACKENDFILES))

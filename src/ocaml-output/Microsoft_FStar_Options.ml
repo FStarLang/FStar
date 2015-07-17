@@ -242,7 +242,7 @@ end))
 
 let cache_dir = "cache"
 
-let display_usage = (fun specs -> (let _11_141 = (Support.Microsoft.FStar.Util.print_string "fstar [option] infile...")
+let display_usage = (fun specs -> (let _11_141 = (Support.Microsoft.FStar.Util.print_string "fstar \x5boption\x5d infile...")
 in (Support.List.iter (fun _11_148 -> (match (_11_148) with
 | (_, flag, p, doc) -> begin
 (match (p) with
@@ -264,7 +264,7 @@ end)) specs)))
 
 let rec specs = (fun _11_156 -> (match (_11_156) with
 | () -> begin
-(let specs = ((Support.Microsoft.FStar.Getopt.noshort, "trace_error", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_157 -> (match (_11_157) with
+(let specs = ((Support.Microsoft.FStar.Getopt.noshort, "trace\x5ferror", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_157 -> (match (_11_157) with
 | () -> begin
 (Support.ST.op_Colon_Equals trace_error true)
 end))), "Don\'t print an error message; show an exception trace instead"))::((Support.Microsoft.FStar.Getopt.noshort, "codegen", Support.Microsoft.FStar.Getopt.OneArg (((fun s -> (let _11_159 = (Support.ST.op_Colon_Equals codegen (parse_codegen s))
@@ -272,75 +272,75 @@ in (Support.ST.op_Colon_Equals verify false))), "OCaml")), "Generate code for ex
 | () -> begin
 (let _11_163 = (Support.ST.op_Colon_Equals pretype true)
 in (Support.ST.op_Colon_Equals verify false))
-end))), "Run the lax-type checker only (admit all verification conditions)"))::((Support.Microsoft.FStar.Getopt.noshort, "fstar_home", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (Support.ST.op_Colon_Equals fstar_home_opt (Some (x)))), "dir")), "Set the FSTAR_HOME variable to dir"))::((Support.Microsoft.FStar.Getopt.noshort, "silent", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_166 -> (match (_11_166) with
+end))), "Run the lax-type checker only \x28admit all verification conditions\x29"))::((Support.Microsoft.FStar.Getopt.noshort, "fstar\x5fhome", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (Support.ST.op_Colon_Equals fstar_home_opt (Some (x)))), "dir")), "Set the FSTAR\x5fHOME variable to dir"))::((Support.Microsoft.FStar.Getopt.noshort, "silent", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_166 -> (match (_11_166) with
 | () -> begin
 (Support.ST.op_Colon_Equals silent true)
 end))), ""))::((Support.Microsoft.FStar.Getopt.noshort, "prims", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (Support.ST.op_Colon_Equals prims_ref (Some (x)))), "file")), ""))::((Support.Microsoft.FStar.Getopt.noshort, "prn", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_168 -> (match (_11_168) with
 | () -> begin
 (Support.ST.op_Colon_Equals print_real_names true)
-end))), "Print real names---you may want to use this in conjunction with logQueries"))::((Support.Microsoft.FStar.Getopt.noshort, "debug", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (Support.ST.op_Colon_Equals debug ((x)::(! (debug))))), "module name")), "Print LOTS of debugging information while checking module [arg]"))::((Support.Microsoft.FStar.Getopt.noshort, "debug_level", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (Support.ST.op_Colon_Equals debug_level (((dlevel x))::(! (debug_level))))), "Low|Medium|High|Extreme")), "Control the verbosity of debugging info"))::((Support.Microsoft.FStar.Getopt.noshort, "log_types", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_171 -> (match (_11_171) with
+end))), "Print real names---you may want to use this in conjunction with logQueries"))::((Support.Microsoft.FStar.Getopt.noshort, "debug", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (Support.ST.op_Colon_Equals debug ((x)::(! (debug))))), "module name")), "Print LOTS of debugging information while checking module \x5barg\x5d"))::((Support.Microsoft.FStar.Getopt.noshort, "debug\x5flevel", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (Support.ST.op_Colon_Equals debug_level (((dlevel x))::(! (debug_level))))), "Low|Medium|High|Extreme")), "Control the verbosity of debugging info"))::((Support.Microsoft.FStar.Getopt.noshort, "log\x5ftypes", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_171 -> (match (_11_171) with
 | () -> begin
 (Support.ST.op_Colon_Equals log_types true)
-end))), "Print types computed for data/val/let-bindings"))::((Support.Microsoft.FStar.Getopt.noshort, "print_effect_args", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_172 -> (match (_11_172) with
+end))), "Print types computed for data/val/let-bindings"))::((Support.Microsoft.FStar.Getopt.noshort, "print\x5feffect\x5fargs", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_172 -> (match (_11_172) with
 | () -> begin
 (Support.ST.op_Colon_Equals print_effect_args true)
-end))), "Print inferred predicate transformers for all computation types"))::((Support.Microsoft.FStar.Getopt.noshort, "dump_module", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (Support.ST.op_Colon_Equals dump_module (Some (x)))), "module name")), ""))::((Support.Microsoft.FStar.Getopt.noshort, "z3timeout", Support.Microsoft.FStar.Getopt.OneArg (((fun s -> (Support.ST.op_Colon_Equals z3timeout (Support.Microsoft.FStar.Util.int_of_string s))), "t")), "Set the Z3 per-query (soft) timeout to t seconds (default 5)"))::((Support.Microsoft.FStar.Getopt.noshort, "admit_smt_queries", Support.Microsoft.FStar.Getopt.OneArg (((fun s -> (Support.ST.op_Colon_Equals admit_smt_queries (if (s = "true") then begin
+end))), "Print inferred predicate transformers for all computation types"))::((Support.Microsoft.FStar.Getopt.noshort, "dump\x5fmodule", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (Support.ST.op_Colon_Equals dump_module (Some (x)))), "module name")), ""))::((Support.Microsoft.FStar.Getopt.noshort, "z3timeout", Support.Microsoft.FStar.Getopt.OneArg (((fun s -> (Support.ST.op_Colon_Equals z3timeout (Support.Microsoft.FStar.Util.int_of_string s))), "t")), "Set the Z3 per-query \x28soft\x29 timeout to t seconds \x28default 5\x29"))::((Support.Microsoft.FStar.Getopt.noshort, "admit\x5fsmt\x5fqueries", Support.Microsoft.FStar.Getopt.OneArg (((fun s -> (Support.ST.op_Colon_Equals admit_smt_queries (if (s = "true") then begin
 true
 end else begin
 if (s = "false") then begin
 false
 end else begin
-(failwith "Invalid argument to --admit_smt_queries")
+(failwith "Invalid argument to --admit\x5fsmt\x5fqueries")
 end
-end))), "true|false")), "Admit SMT queries (UNSAFE! But, useful during development); default: \'false\'"))::((Support.Microsoft.FStar.Getopt.noshort, "logQueries", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_176 -> (match (_11_176) with
+end))), "true|false")), "Admit SMT queries \x28UNSAFE! But, useful during development\x29; default: \'false\'"))::((Support.Microsoft.FStar.Getopt.noshort, "logQueries", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_176 -> (match (_11_176) with
 | () -> begin
 (Support.ST.op_Colon_Equals logQueries true)
-end))), "Log the Z3 queries in queries.smt2"))::((Support.Microsoft.FStar.Getopt.noshort, "admit_fsi", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (Support.ST.op_Colon_Equals admit_fsi ((x)::(! (admit_fsi))))), "module name")), "Treat .fsi as a .fst"))::((Support.Microsoft.FStar.Getopt.noshort, "odir", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (Support.ST.op_Colon_Equals outputDir (Some (x)))), "dir")), "Place output in directory dir"))::((Support.Microsoft.FStar.Getopt.noshort, "smt", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (Support.ST.op_Colon_Equals z3_exe x)), "path")), "Path to the SMT solver (usually Z3, but could be any SMT2-compatible solver)"))::((Support.Microsoft.FStar.Getopt.noshort, "print_before_norm", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_180 -> (match (_11_180) with
+end))), "Log the Z3 queries in queries.smt2"))::((Support.Microsoft.FStar.Getopt.noshort, "admit\x5ffsi", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (Support.ST.op_Colon_Equals admit_fsi ((x)::(! (admit_fsi))))), "module name")), "Treat .fsi as a .fst"))::((Support.Microsoft.FStar.Getopt.noshort, "odir", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (Support.ST.op_Colon_Equals outputDir (Some (x)))), "dir")), "Place output in directory dir"))::((Support.Microsoft.FStar.Getopt.noshort, "smt", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (Support.ST.op_Colon_Equals z3_exe x)), "path")), "Path to the SMT solver \x28usually Z3, but could be any SMT2-compatible solver\x29"))::((Support.Microsoft.FStar.Getopt.noshort, "print\x5fbefore\x5fnorm", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_180 -> (match (_11_180) with
 | () -> begin
 (Support.ST.op_Colon_Equals norm_then_print false)
-end))), "Do not normalize types before printing (for debugging)"))::((Support.Microsoft.FStar.Getopt.noshort, "show_signatures", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (Support.ST.op_Colon_Equals show_signatures ((x)::(! (show_signatures))))), "module name")), "Show the checked signatures for all top-level symbols in the module"))::((Support.Microsoft.FStar.Getopt.noshort, "full_context_dependency", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_182 -> (match (_11_182) with
+end))), "Do not normalize types before printing \x28for debugging\x29"))::((Support.Microsoft.FStar.Getopt.noshort, "show\x5fsignatures", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (Support.ST.op_Colon_Equals show_signatures ((x)::(! (show_signatures))))), "module name")), "Show the checked signatures for all top-level symbols in the module"))::((Support.Microsoft.FStar.Getopt.noshort, "full\x5fcontext\x5fdependency", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_182 -> (match (_11_182) with
 | () -> begin
 (Support.ST.op_Colon_Equals full_context_dependency true)
-end))), "Introduce unification variables that are dependent on the entire context (possibly expensive, but better for type inference (on, by default)"))::((Support.Microsoft.FStar.Getopt.noshort, "MLish", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_183 -> (match (_11_183) with
+end))), "Introduce unification variables that are dependent on the entire context \x28possibly expensive, but better for type inference \x28on, by default\x29"))::((Support.Microsoft.FStar.Getopt.noshort, "MLish", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_183 -> (match (_11_183) with
 | () -> begin
 (Support.ST.op_Colon_Equals full_context_dependency false)
-end))), "Introduce unification variables that are only dependent on the type variables in the context"))::((Support.Microsoft.FStar.Getopt.noshort, "print_implicits", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_184 -> (match (_11_184) with
+end))), "Introduce unification variables that are only dependent on the type variables in the context"))::((Support.Microsoft.FStar.Getopt.noshort, "print\x5fimplicits", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_184 -> (match (_11_184) with
 | () -> begin
 (Support.ST.op_Colon_Equals print_implicits true)
-end))), "Print implicit arguments"))::((Support.Microsoft.FStar.Getopt.noshort, "hide_uvar_nums", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_185 -> (match (_11_185) with
+end))), "Print implicit arguments"))::((Support.Microsoft.FStar.Getopt.noshort, "hide\x5fuvar\x5fnums", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_185 -> (match (_11_185) with
 | () -> begin
 (Support.ST.op_Colon_Equals hide_uvar_nums true)
-end))), "Don\'t print unification variable numbers"))::((Support.Microsoft.FStar.Getopt.noshort, "hide_genident_nums", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_186 -> (match (_11_186) with
+end))), "Don\'t print unification variable numbers"))::((Support.Microsoft.FStar.Getopt.noshort, "hide\x5fgenident\x5fnums", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_186 -> (match (_11_186) with
 | () -> begin
 (Support.ST.op_Colon_Equals hide_genident_nums true)
-end))), "Don\'t print generated identifier numbers"))::((Support.Microsoft.FStar.Getopt.noshort, "serialize_mods", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_187 -> (match (_11_187) with
+end))), "Don\'t print generated identifier numbers"))::((Support.Microsoft.FStar.Getopt.noshort, "serialize\x5fmods", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_187 -> (match (_11_187) with
 | () -> begin
 (Support.ST.op_Colon_Equals serialize_mods true)
-end))), "Serialize compiled modules"))::((Support.Microsoft.FStar.Getopt.noshort, "initial_fuel", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (Support.ST.op_Colon_Equals initial_fuel (Support.Microsoft.FStar.Util.int_of_string x))), "non-negative integer")), "Number of unrolling of recursive functions to try initially (default 2)"))::((Support.Microsoft.FStar.Getopt.noshort, "max_fuel", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (Support.ST.op_Colon_Equals max_fuel (Support.Microsoft.FStar.Util.int_of_string x))), "non-negative integer")), "Number of unrolling of recursive functions to try at most (default 8)"))::((Support.Microsoft.FStar.Getopt.noshort, "min_fuel", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (Support.ST.op_Colon_Equals min_fuel (Support.Microsoft.FStar.Util.int_of_string x))), "non-negative integer")), "Minimum number of unrolling of recursive functions to try (default 1)"))::((Support.Microsoft.FStar.Getopt.noshort, "initial_ifuel", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (Support.ST.op_Colon_Equals initial_ifuel (Support.Microsoft.FStar.Util.int_of_string x))), "non-negative integer")), "Number of unrolling of inductive datatypes to try at first (default 1)"))::((Support.Microsoft.FStar.Getopt.noshort, "max_ifuel", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (Support.ST.op_Colon_Equals max_ifuel (Support.Microsoft.FStar.Util.int_of_string x))), "non-negative integer")), "Number of unrolling of inductive datatypes to try at most (default 1)"))::((Support.Microsoft.FStar.Getopt.noshort, "warn_top_level_effects", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_193 -> (match (_11_193) with
+end))), "Serialize compiled modules"))::((Support.Microsoft.FStar.Getopt.noshort, "initial\x5ffuel", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (Support.ST.op_Colon_Equals initial_fuel (Support.Microsoft.FStar.Util.int_of_string x))), "non-negative integer")), "Number of unrolling of recursive functions to try initially \x28default 2\x29"))::((Support.Microsoft.FStar.Getopt.noshort, "max\x5ffuel", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (Support.ST.op_Colon_Equals max_fuel (Support.Microsoft.FStar.Util.int_of_string x))), "non-negative integer")), "Number of unrolling of recursive functions to try at most \x28default 8\x29"))::((Support.Microsoft.FStar.Getopt.noshort, "min\x5ffuel", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (Support.ST.op_Colon_Equals min_fuel (Support.Microsoft.FStar.Util.int_of_string x))), "non-negative integer")), "Minimum number of unrolling of recursive functions to try \x28default 1\x29"))::((Support.Microsoft.FStar.Getopt.noshort, "initial\x5fifuel", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (Support.ST.op_Colon_Equals initial_ifuel (Support.Microsoft.FStar.Util.int_of_string x))), "non-negative integer")), "Number of unrolling of inductive datatypes to try at first \x28default 1\x29"))::((Support.Microsoft.FStar.Getopt.noshort, "max\x5fifuel", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (Support.ST.op_Colon_Equals max_ifuel (Support.Microsoft.FStar.Util.int_of_string x))), "non-negative integer")), "Number of unrolling of inductive datatypes to try at most \x28default 1\x29"))::((Support.Microsoft.FStar.Getopt.noshort, "warn\x5ftop\x5flevel\x5feffects", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_193 -> (match (_11_193) with
 | () -> begin
 (Support.ST.op_Colon_Equals warn_top_level_effects true)
-end))), "Top-level effects are ignored, by default; turn this flag on to be warned when this happens"))::((Support.Microsoft.FStar.Getopt.noshort, "no_slack", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_194 -> (match (_11_194) with
+end))), "Top-level effects are ignored, by default; turn this flag on to be warned when this happens"))::((Support.Microsoft.FStar.Getopt.noshort, "no\x5fslack", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_194 -> (match (_11_194) with
 | () -> begin
 (Support.ST.op_Colon_Equals no_slack true)
-end))), "Use the partially flow-insensitive variant of --rel2 (experimental)"))::((Support.Microsoft.FStar.Getopt.noshort, "eager_inference", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_195 -> (match (_11_195) with
+end))), "Use the partially flow-insensitive variant of --rel2 \x28experimental\x29"))::((Support.Microsoft.FStar.Getopt.noshort, "eager\x5finference", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_195 -> (match (_11_195) with
 | () -> begin
 (Support.ST.op_Colon_Equals eager_inference true)
-end))), "Solve all type-inference constraints eagerly; more efficient but at the cost of generality"))::((Support.Microsoft.FStar.Getopt.noshort, "unthrottle_inductives", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_196 -> (match (_11_196) with
+end))), "Solve all type-inference constraints eagerly; more efficient but at the cost of generality"))::((Support.Microsoft.FStar.Getopt.noshort, "unthrottle\x5finductives", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_196 -> (match (_11_196) with
 | () -> begin
 (Support.ST.op_Colon_Equals unthrottle_inductives true)
-end))), "Let the SMT solver unfold inductive types to arbitrary depths (may affect verifier performance)"))::((Support.Microsoft.FStar.Getopt.noshort, "use_eq_at_higher_order", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_197 -> (match (_11_197) with
+end))), "Let the SMT solver unfold inductive types to arbitrary depths \x28may affect verifier performance\x29"))::((Support.Microsoft.FStar.Getopt.noshort, "use\x5feq\x5fat\x5fhigher\x5forder", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_197 -> (match (_11_197) with
 | () -> begin
 (Support.ST.op_Colon_Equals use_eq_at_higher_order true)
-end))), "Use equality constraints when comparing higher-order types; temporary"))::((Support.Microsoft.FStar.Getopt.noshort, "fs_typ_app", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_198 -> (match (_11_198) with
+end))), "Use equality constraints when comparing higher-order types; temporary"))::((Support.Microsoft.FStar.Getopt.noshort, "fs\x5ftyp\x5fapp", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_198 -> (match (_11_198) with
 | () -> begin
 (Support.ST.op_Colon_Equals fs_typ_app true)
-end))), "Allow the use of t<t1,...,tn> syntax for type applications; brittle since it clashes with the integer less-than operator"))::((Support.Microsoft.FStar.Getopt.noshort, "no_fs_typ_app", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_199 -> (match (_11_199) with
+end))), "Allow the use of t<t1,...,tn> syntax for type applications; brittle since it clashes with the integer less-than operator"))::((Support.Microsoft.FStar.Getopt.noshort, "no\x5ffs\x5ftyp\x5fapp", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_199 -> (match (_11_199) with
 | () -> begin
 (Support.ST.op_Colon_Equals fs_typ_app false)
-end))), "Do not allow the use of t<t1,...,tn> syntax for type applications"))::((Support.Microsoft.FStar.Getopt.noshort, "n_cores", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (Support.ST.op_Colon_Equals n_cores (Support.Microsoft.FStar.Util.int_of_string x))), "positive integer")), "Maximum number of cores to use for the solver (default 1)"))::((Support.Microsoft.FStar.Getopt.noshort, "verify_module", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (Support.ST.op_Colon_Equals verify_module ((x)::(! (verify_module))))), "string")), "Name of the module to verify"))::((Support.Microsoft.FStar.Getopt.noshort, "use_build_config", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_202 -> (match (_11_202) with
+end))), "Do not allow the use of t<t1,...,tn> syntax for type applications"))::((Support.Microsoft.FStar.Getopt.noshort, "n\x5fcores", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (Support.ST.op_Colon_Equals n_cores (Support.Microsoft.FStar.Util.int_of_string x))), "positive integer")), "Maximum number of cores to use for the solver \x28default 1\x29"))::((Support.Microsoft.FStar.Getopt.noshort, "verify\x5fmodule", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (Support.ST.op_Colon_Equals verify_module ((x)::(! (verify_module))))), "string")), "Name of the module to verify"))::((Support.Microsoft.FStar.Getopt.noshort, "use\x5fbuild\x5fconfig", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_202 -> (match (_11_202) with
 | () -> begin
 (Support.ST.op_Colon_Equals use_build_config true)
-end))), "Expect just a single file on the command line and no options; will read the \'build-config\' prelude from the file"))::((Support.Microsoft.FStar.Getopt.noshort, "split_cases", Support.Microsoft.FStar.Getopt.OneArg (((fun n -> (Support.ST.op_Colon_Equals split_cases (Support.Microsoft.FStar.Util.int_of_string n))), "t")), "Partition VC of a match into groups of n cases"))::((Support.Microsoft.FStar.Getopt.noshort, "in", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_204 -> (match (_11_204) with
+end))), "Expect just a single file on the command line and no options; will read the \'build-config\' prelude from the file"))::((Support.Microsoft.FStar.Getopt.noshort, "split\x5fcases", Support.Microsoft.FStar.Getopt.OneArg (((fun n -> (Support.ST.op_Colon_Equals split_cases (Support.Microsoft.FStar.Util.int_of_string n))), "t")), "Partition VC of a match into groups of n cases"))::((Support.Microsoft.FStar.Getopt.noshort, "in", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _11_204 -> (match (_11_204) with
 | () -> begin
 (Support.ST.op_Colon_Equals interactive true)
 end))), "Interactive mode; reads input from stdin"))::((Support.Microsoft.FStar.Getopt.noshort, "include", Support.Microsoft.FStar.Getopt.OneArg (((fun s -> (Support.ST.op_Colon_Equals _include_path (Support.List.append (! (_include_path)) ((s)::[])))), "path")), "A directory in which to search for files included on the command line"))::[]

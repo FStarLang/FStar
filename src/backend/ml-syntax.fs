@@ -24,6 +24,8 @@ let ptctor ((p, s) : mlpath) : mlsymbol =
 let mlpath_of_lident (x : lident) : mlpath =
     (List.map (fun x -> x.idText) x.ns, x.ident.idText)
 
+let as_mlident (x:bvdef<'a>) = x.realname.idText, 0
+
 (* -------------------------------------------------------------------- *)
 type mlidents  = list<mlident>
 type mlsymbols = list<mlsymbol>
@@ -68,7 +70,7 @@ type mlexpr =
 | MLE_Const  of mlconstant
 | MLE_Var    of mlident
 | MLE_Name   of mlpath
-| MLE_Let    of bool * list<(mlident * option<mltyscheme> * mlidents * mlexpr)> * mlexpr //tyscheme for polymorphic recursion
+| MLE_Let    of mlletbinding * mlexpr //tyscheme for polymorphic recursion
 | MLE_App    of mlexpr * list<mlexpr> //why are function types curried, but the applications not curried 
 | MLE_Fun    of list<(mlident * (option<mlty>))> * mlexpr
 | MLE_Match  of mlexpr * list<mlbranch>
@@ -85,6 +87,8 @@ type mlexpr =
 
 and mlbranch = mlpattern * option<mlexpr> * mlexpr
 
+and mlletbinding = bool * list<(mlident * option<mltyscheme> * mlidents * mlexpr)>
+
 type mltybody =
 | MLTD_Abbrev of mlty
 | MLTD_Record of list<(mlsymbol * mlty)>
@@ -97,7 +101,7 @@ type mltydecl = list<(mlsymbol * mlidents * option<mltybody>)>
 
 type mlmodule1 =
 | MLM_Ty  of mltydecl
-| MLM_Let of bool * list<(mlsymbol * mlidents * mlexpr)>
+| MLM_Let of mlletbinding
 | MLM_Exn of mlsymbol * list<mlty>
 | MLM_Top of mlexpr
 

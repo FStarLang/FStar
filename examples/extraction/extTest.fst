@@ -8,6 +8,8 @@ type nnat =
 | O : nnat
 | S : nnat -> nnat
 
+let idnat = fun (x:nnat) -> x
+
 type prod 'a 'b =
 | Pair : fst:'a -> snd:'b -> (prod 'a 'b)
 

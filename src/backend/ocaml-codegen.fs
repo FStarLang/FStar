@@ -204,6 +204,10 @@ let string_of_mlconstant (sctt : mlconstant) =
 (* -------------------------------------------------------------------- *)
 let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
     match e with
+    | MLE_Coerce (e, t, t') -> 
+      let doc = doc_of_expr (min_op_prec, NonAssoc) e in    
+      parens (reduce [text "Obj.magic"; doc]) //TODO: rewire to a checked cast for F#; check that the doc is being generated properly ...don't really understand the API yet
+
     | MLE_Seq es ->
         let docs = List.map (doc_of_expr (min_op_prec, NonAssoc)) es in
         let docs = List.map (fun d -> reduce [d; text ";"; hardline]) docs in
@@ -252,7 +256,7 @@ let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
         let docs = parens (combine (text ", ") docs) in
         docs
 
-    | MLE_Let (rec_, lets, body) ->
+    | MLE_Let ((rec_, lets), body) ->
         let doc  = doc_of_lets (rec_, lets) in
         let body = doc_of_expr (min_op_prec, NonAssoc) body in
         parens (combine hardline [doc; reduce1 [text "in"; body]])
@@ -452,6 +456,9 @@ let rec doc_of_mltype (outer : level) (ty : mlty) =
 
         maybe_paren outer t_prio_fun (hbox (reduce1 [d2; text " "; d1]))
 
+    | MLTY_Top -> 
+      text "Obj.t" //TODO: change this to 'obj' if we're generating F#
+
 (* -------------------------------------------------------------------- *)
 let doc_of_mltydecl (decls : mltydecl) =
     let for1 (x, tparams, body) =
@@ -552,8 +559,7 @@ let doc_of_mod1 (m : mlmodule1) =
         doc_of_mltydecl decls
 
     | MLM_Let (rec_, lets) ->
-        let lets = List.map (fun (x, y, z) -> ((x, -1), None, y, z)) lets in
-        doc_of_lets (rec_, lets)
+      doc_of_lets (rec_, lets)
 
     | MLM_Top e ->
         reduce1 [

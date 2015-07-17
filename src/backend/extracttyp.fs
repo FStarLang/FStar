@@ -1,7 +1,7 @@
 ﻿// Learn more about F# at http://fsharp.net
 // See the 'F# Tutorial' project for more help.
 #light "off"
-module Microsoft.FStar.Backends.ML.Extraction
+module Microsoft.FStar.Backends.ML.ExtractTyp
 open Prims
 open Microsoft.FStar.Absyn
 open Microsoft.FStar.Backends.ML.Syntax
@@ -11,11 +11,16 @@ open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar
 open Microsoft.FStar.Tc.Normalize
 open Microsoft.FStar.Absyn.Print
-open Env
+open Microsoft.FStar.Backends.ML.Env
 
 
 (*copied from ocaml-strtrans.fs*)
 let prependTick (x,n) = if Util.starts_with x "'" then (x,n) else ("'"^x,n)
+
+let translate_eff g l = 
+    if lid_equals l Const.effect_PURE_lid 
+    then MayErase 
+    else Keep
 
 (*generates inp_1 -> inp_2 -> ... inp_n -> out *)
 let rec curry (inp: (list<mlty>)) (out: mlty) =
@@ -67,7 +72,7 @@ match b with
 
 
 let extendContextWithRepAsTyVars (b : list< (either<btvar,bvvar> * either<btvar,bvvar>) > ) (c:context): context = 
-   List.foldBack (extendContextWithRepAsTyVar) b c (*TODO: is the fold in the right direction? check *)
+   List.fold_right (extendContextWithRepAsTyVar) b c (*TODO: is the fold in the right direction? check *)
 
 let extendContextAsTyvar (availableInML : bool) (b : either<btvar,bvvar>) (c:context): context = 
 match b with
@@ -76,7 +81,7 @@ match b with
 | (Inr bv) -> extend_bv c bv ([], erasedContent)
 
 let extendContext (c:context) (tyVars : list<either<btvar,bvvar>>) : context = 
-   List.foldBack (extendContextAsTyvar true) (tyVars) c (*TODO: is the fold in the right direction? check *)
+   List.fold_right (extendContextAsTyvar true) (tyVars) c (*TODO: is the fold in the right direction? check *)
 
 
 let deltaUnfold (i : lident) (c: context) : (option<typ>) = None (*TODO: FIX!!*)
@@ -160,7 +165,7 @@ match bn with
 | (Inr bvv,_) -> (extractTyp c (bvv.sort), (extendContextAsTyvar false (Inr bvv) c))
 
 and extractBindersTypes  (c:context) (bs : list<binder>): list<mlty> * context =
-    (fun (x,c) -> (List.rev x,c)) (List.fold (fun (lt,cp) b -> let (nt, nc)= extractBinderType cp b in ((nt::lt),nc))  ([],c) bs)
+    (fun (x,c) -> (List.rev x,c)) (List.fold_left (fun (lt,cp) b -> let (nt, nc)= extractBinderType cp b in ((nt::lt),nc))  ([],c) bs)
 
 and extractTyp  (c:context) (ft:typ) : mlty = extractType' c (Util.compress_typ ft).n
 and extractKind (c:context) (ft:knd) : mlty = erasedContent
@@ -294,37 +299,35 @@ let dummyIndexIdents (n:int) : list<mlident> = List.map dummyIdent (firstNNats n
 let mfst = List.map fst
 (*similar to the definition of the second part of \hat{\epsilon} in page 110*)
 (* \pi_1 of returned value is the exported constant*)
-let extractSigElt (c:context) (s:sigelt) :  option<(mlsig1)> =
-match s with
-| Sig_typ_abbrev (l,bs,_,t,_,_) -> 
-    let identsPP = List.map binderPPnames bs in
-    let newContext = (extendContext c (mfst bs)) in
-    let tyDecBody = MLTD_Abbrev (extractTyp newContext t) in
-            //printfn "type is %A\n" (t);
-     Some (MLS_Ty [(mlsymbolOfLident l, List.map (fun x -> prependTick (convIdent x)) identsPP , Some tyDecBody)])
-     (*type l idents = tyDecBody*)
+let extractSigElt (c:context) (s:sigelt) : context * list<mltydecl> =
+    match s with
+    | Sig_typ_abbrev (l,bs,_,t,_,_) -> 
+        let identsPP = List.map binderPPnames bs in
+        let newContext = (extendContext c (mfst bs)) in
+        let tyDecBody = MLTD_Abbrev (extractTyp newContext t) in
+                //printfn "type is %A\n" (t);
+        let td = [(mlsymbolOfLident l, List.map (fun x -> prependTick (convIdent x)) identsPP , Some tyDecBody)] in
+        let c = Env.extend_tydef c td in
+        c, [td]
+         (*type l idents = tyDecBody*)
 
-| Sig_bundle _ -> 
-    let ind = parseFirstInductiveType s in
-    //let k = lookup_typ_lid c ind.tyName in
-    let identsPP = List.map binderPPnames ind.tyBinders in
-    let newContext = c in // (extendContext c (mfst ind.tyBinders)) in
-    let nIndices = numIndices (Util.compress_kind ind.k).n ind.tyName.ident.idText in
-    let tyDecBody = MLTD_DType (List.map (extractCtor newContext ind.tyBinders) ind.constructors) in
-          Some (MLS_Ty [(lident2mlsymbol ind.tyName, List.append (List.map (fun x -> prependTick (convIdent x)) identsPP) (dummyIndexIdents nIndices)  , Some tyDecBody)])
-| _ -> None
+    | Sig_bundle _ -> 
+        let ind = parseFirstInductiveType s in
+        //let k = lookup_typ_lid c ind.tyName in
+        let identsPP = List.map binderPPnames ind.tyBinders in
+        let newContext = c in // (extendContext c (mfst ind.tyBinders)) in
+        let nIndices = numIndices (Util.compress_kind ind.k).n ind.tyName.ident.idText in
+        let tyDecBody = MLTD_DType (List.map (extractCtor newContext ind.tyBinders) ind.constructors) in
+        c, [[(lident2mlsymbol ind.tyName, List.append (List.map (fun x -> prependTick (convIdent x)) identsPP) (dummyIndexIdents nIndices)  , Some tyDecBody)]]
+    | _ -> c, []
 
-let rec extractTypeDefnsAux (c: context) (sigs:list<sigelt>) : list<option<mlsig1>> =
-  List.map  (extractSigElt c) sigs
+let extractTypeDefnsAux (c: context) (sigs:list<sigelt>) : context * list<mltydecl> =
+   let c, l = Util.fold_map extractSigElt c sigs in
+   c, List.flatten l
  
-let pruneNones (l : list<option<'a>>) : list<'a> =
-List.fold_right (fun  x ll -> match x with 
-                      | Some xs -> xs::ll
-                      | None -> ll) l []
-
 let mkContext (e:Tc.Env.env) : context =
-{ tcenv = e; gamma =[] ; tydefs =[]}
+    { tcenv = e; gamma =[] ; tydefs =[]}
 
-let extractTypeDefns (sigs:list<sigelt>) (e: Tc.Env.env): list<mlsig1> =
-   pruneNones (extractTypeDefnsAux (mkContext e) sigs)
-
+let extractTypeDefns (sigs:list<sigelt>) (e: Tc.Env.env): context * list<mltydecl> =
+    extractTypeDefnsAux (mkContext e) sigs 
+    
