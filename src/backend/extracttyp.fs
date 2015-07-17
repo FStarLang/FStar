@@ -153,7 +153,7 @@ match ft with // assume ft is compressed. is there a compresser for typ'?
         | Typ_app (tyin, argsin) -> extractType' c (Typ_app (tyin,(List.append argsin arrgs)))
         | _ -> unknownType)
 
-  | Typ_lam  (bs,ty) ->  
+  | Typ_lam  (bs,ty) ->  (* (sch) rule in \hat{\epsilon} *)
          let (bts, c) = extractBindersTypes c bs in
             extractTyp c ty
 
@@ -245,18 +245,14 @@ let rec parseInductiveConstructors (sigs : list<sigelt>) (n: int) : (list<induct
         ([], sigs)
 
 (*the second element of the returned pair is the unconsumed part of sigs*)
-let parseInductiveTypeFromSigBundle
-    (sigs : list<sigelt>)  : (inductiveTypeFam * list<sigelt>)  =
+let rec parseInductiveTypesFromSigBundle
+    (sigs : list<sigelt>)  : list<inductiveTypeFam>  =
 match sigs with
 | (Sig_tycon (l,bs,kk,_,constrs,_,_))::tlsig -> 
     let (indConstrs(*list<inductiveConstructor>*), ttlsig) = parseInductiveConstructors tlsig (List.length constrs) in
-     ({tyName = l; k = kk; tyBinders=bs; constructors=indConstrs}, ttlsig)
-| _ -> failwith "incorrect input provided to parseInductiveTypeFromSigBundle"
-
-let parseFirstInductiveType
-    (s : sigelt)  : inductiveTypeFam  =
-match s with
-| Sig_bundle (sigs, _, _, _) -> fst (parseInductiveTypeFromSigBundle sigs)
+     ({tyName = l; k = kk; tyBinders=bs; constructors=indConstrs})::(parseInductiveTypesFromSigBundle tlsig)
+| [] -> []
+| _::tlsig -> (parseInductiveTypesFromSigBundle tlsig) //TODO : debug and remove
 | _ -> failwith "incorrect input provided to parseInductiveTypeFromSigBundle"
 
 
@@ -303,8 +299,6 @@ let extractCtor (c:context) (tyBinders : list<binder>) (ctor: inductiveConstruct
   Currently, no attempt is made to convert an index to a parameter.
   It seems to be good practice for programmers to not use indices when parameters suffice.
    *)
-
-
 let dummyIdent (n:int) : mlident = ("'dummyV"^(Util.string_of_int n), 0)
 
 let rec firstNNats (n:int) : list<int> =
@@ -313,6 +307,15 @@ if (0<n)
   else []
 
 let dummyIndexIdents (n:int) : list<mlident> = List.map dummyIdent (firstNNats n)
+
+let extractInductive (c:context) (ind: inductiveTypeFam ) :  mltydecl =
+        let identsPP = List.map binderPPnames ind.tyBinders in
+        let newContext = c in // (extendContext c (mfst ind.tyBinders)) in
+        let nIndices = numIndices (Util.compress_kind ind.k).n ind.tyName.ident.idText in
+        let tyDecBody = MLTD_DType (List.map (extractCtor newContext ind.tyBinders) ind.constructors) in
+        [(lident2mlsymbol ind.tyName, List.append (List.map (fun x -> prependTick (convIdent x)) identsPP) (dummyIndexIdents nIndices)  , Some tyDecBody)]
+
+
 
 let mfst = List.map fst
 (*similar to the definition of the second part of \hat{\epsilon} in page 110*)
@@ -330,14 +333,10 @@ let extractSigElt (c:context) (s:sigelt) : context * list<mltydecl> =
          (*type l idents = tyDecBody*)
          //Util.subst
 
-    | Sig_bundle _ -> 
-        let ind = parseFirstInductiveType s in
+    | Sig_bundle (sigs, _, _ ,_) -> 
+        let inds = parseInductiveTypesFromSigBundle sigs in
+        c, (List.map (extractInductive c) inds)
         //let k = lookup_typ_lid c ind.tyName in
-        let identsPP = List.map binderPPnames ind.tyBinders in
-        let newContext = c in // (extendContext c (mfst ind.tyBinders)) in
-        let nIndices = numIndices (Util.compress_kind ind.k).n ind.tyName.ident.idText in
-        let tyDecBody = MLTD_DType (List.map (extractCtor newContext ind.tyBinders) ind.constructors) in
-        c, [[(lident2mlsymbol ind.tyName, List.append (List.map (fun x -> prependTick (convIdent x)) identsPP) (dummyIndexIdents nIndices)  , Some tyDecBody)]]
     | _ -> c, []
 
 let extractTypeDefnsAux (c: context) (sigs:list<sigelt>) : context * list<mltydecl> =
