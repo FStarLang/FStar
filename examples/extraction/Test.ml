@@ -40,10 +40,10 @@ type 'x sch =
 'x  ->  'x
 
 type sch1 =
-Obj.t
+Obj.t  ->  Obj.t
 
 type sch3 =
-Obj.t
+Obj.t  ->  Obj.t
 
 type 'x sch3param =
 'x  ->  'x

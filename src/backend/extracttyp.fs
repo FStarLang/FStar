@@ -98,7 +98,9 @@ let extendContext (c:context) (tyVars : list<either<btvar,bvvar>>) : context =
    List.fold_right (extendContextAsTyvar true) (tyVars) c (*TODO: is the fold in the right direction? check *)
 
 
-let deltaUnfold (i : lident) (c: context) : (option<typ>) = None (*TODO: FIX!!*)
+let deltaUnfold (i : lident) (c: context) : (option<typ>) = 
+//lookup 
+None (*TODO: FIX!!*)
 
 (*The thesis defines a type scheme as "something that becomes a type when enough arguments (possibly none?) are applied to it" ,  e.g. vector, list.
     I guess in F*, these include Inductive types and type abbreviations.
@@ -151,7 +153,10 @@ match ft with // assume ft is compressed. is there a compresser for typ'?
         | Typ_app (tyin, argsin) -> extractType' c (Typ_app (tyin,(List.append argsin arrgs)))
         | _ -> unknownType)
 
-  | Typ_lam  _ -> unknownType
+  | Typ_lam  (bs,ty) ->  
+         let (bts, c) = extractBindersTypes c bs in
+            extractTyp c ty
+
   | Typ_ascribed _  -> unknownType
   | Typ_meta _ -> unknownType
   | Typ_uvar _ -> unknownType
@@ -323,6 +328,7 @@ let extractSigElt (c:context) (s:sigelt) : context * list<mltydecl> =
         let c = Env.extend_tydef c td in
         c, [td]
          (*type l idents = tyDecBody*)
+         //Util.subst
 
     | Sig_bundle _ -> 
         let ind = parseFirstInductiveType s in

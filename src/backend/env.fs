@@ -25,7 +25,7 @@ type env = {
 let erasedContent : mlty = MLTY_Named ([],([],"unit"))
 
 (* \mathbb{T} type in the thesis, to be used when OCaml is not expressive enough for the source type *)
-let unknownType : mlty =  MLTY_Var  ("Obj.t", 0) (*wny note MLTY_named? tried it, produces l__Obj.ty*)
+let unknownType : mlty =  MLTY_Top
 
 
 let rec lookup_ty_local (gamma:list<binding>) (b:btvar) : mlty = 
