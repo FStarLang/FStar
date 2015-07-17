@@ -55,6 +55,20 @@ let bvvar2btvar (bv : bvvar) : btvar = {v=bv.v; sort = Kind_type ; p=bv.p} *)
 
 let btvar2mlident (btv: btvar) : mlident =  (prependTick (convIdent btv.v.ppname)) 
 
+
+let extendContextWithRepAsTyVar (b : either<btvar,bvvar> * either<btvar,bvvar>) (c:context): context = 
+match b with
+| (Inl bt, Inl btr) -> 
+           //printfn "mapping from %A\n" btr.v.realname;
+           //printfn "to %A\n" bt.v.realname;
+   extend_ty c btr (Some ((MLTY_Var (btvar2mlident bt))))
+| (Inr bv, Inr _ ) -> extend_bv c bv ([], erasedContent)
+| _ -> failwith "Impossible case"
+
+
+let extendContextWithRepAsTyVars (b : list< (either<btvar,bvvar> * either<btvar,bvvar>) > ) (c:context): context = 
+   List.foldBack (extendContextWithRepAsTyVar) b c (*TODO: is the fold in the right direction? check *)
+
 let extendContextAsTyvar (availableInML : bool) (b : either<btvar,bvvar>) (c:context): context = 
 match b with
 | (Inl bt) -> extend_ty c bt (Some (if availableInML then (MLTY_Var (btvar2mlident bt)) else unknownType))
@@ -222,11 +236,27 @@ match t with
  
 let lident2mlsymbol (l:lident) : mlsymbol = l.ident.idText
 
-let extractCtor (c:context) (ctor: inductiveConstructor):  (mlsymbol * list<mlty>) =
+let bindersOfFuntype (t:typ) : list<binder> = 
+match ((Util.compress_typ t).n) with
+| Typ_fun (lb,_) -> lb
+| _ -> [] 
+    //printfn "%A\n" (ctor.ctype);
+    //failwith "was expecting a function type"
+
+let rec zipUnequal (la : list<'a>) (lb : list<'b>) : list<('a * 'b)> =
+match  (la, lb) with
+| (ha::ta, hb::tb) -> ((ha,hb)::(zipUnequal ta tb))
+| _ -> []
+
+let extractCtor (c:context) (tyBinders : list<binder>) (ctor: inductiveConstructor):  (mlsymbol * list<mlty>) =
    if (0< List.length ctor.cargs)
    then (failwith "cargs is unexpectedly non-empty. This is a design-flaw, please report.")
    else 
-        (let mlt = extractTyp c ctor.ctype in
+        (let lb= bindersOfFuntype ctor.ctype in 
+        let lp = zipUnequal tyBinders lb in
+        assert (List.length tyBinders = List.length lp);
+        let newC = extendContextWithRepAsTyVars (List.map (fun (x,y) -> (fst x, fst y)) lp) c in
+        let mlt = extractTyp newC ctor.ctype in
             // fprint1 "extracting the type of constructor %s\n" (lident2mlsymbol ctor.cname);
             //fprint1 "%s\n" (typ_to_string ctor.ctype);
             // printfn "%A\n" (ctor.ctype);
@@ -273,9 +303,9 @@ match s with
     let ind = parseFirstInductiveType s in
     //let k = lookup_typ_lid c ind.tyName in
     let identsPP = List.map binderPPnames ind.tyBinders in
-    let newContext = (extendContext c (mfst ind.tyBinders)) in
+    let newContext = c in // (extendContext c (mfst ind.tyBinders)) in
     let nIndices = numIndices ind.k.n ind.tyName.ident.idText in
-    let tyDecBody = MLTD_DType (List.map (extractCtor newContext) ind.constructors) in
+    let tyDecBody = MLTD_DType (List.map (extractCtor newContext ind.tyBinders) ind.constructors) in
           Some (MLS_Ty [(lident2mlsymbol ind.tyName, List.append (List.map (fun x -> prependTick (convIdent x)) identsPP) (dummyIndexIdents nIndices)  , Some tyDecBody)])
 | _ -> None
 
