@@ -71,7 +71,7 @@ let extendContextWithRepAsTyVars (b : list< (either<btvar,bvvar> * either<btvar,
 
 let extendContextAsTyvar (availableInML : bool) (b : either<btvar,bvvar>) (c:context): context = 
 match b with
-| (Inl bt) -> extend_ty c bt (Some (if availableInML then (MLTY_Var (btvar2mlident bt)) else unknownType))
+| (Inl bt) -> if availableInML then (extend_ty c bt (Some ( (MLTY_Var (btvar2mlident bt))))) else (extend_hidden_ty c bt unknownType)
 | (Inr bv) -> extend_bv c bv ([], erasedContent)
 
 let extendContext (c:context) (tyVars : list<either<btvar,bvvar>>) : context = 

@@ -47,6 +47,14 @@ let lookup_var g e = match e.n with
     | Exp_fvar (x, _) -> lookup g (Inr x)
     | _ -> failwith "impossible" 
 
+(* do we really need to keep gamma uptodate with hidden binders? For using F* utils, we just need to keep tcenv update.
+ An alternative solution is to remove these binders from the type of the inductive constructors
+*)
+let extend_hidden_ty (g:env) (a:btvar) (mapped_to:mlty) : env = 
+    let ml_a = Util.as_mlident a.v in 
+    let tcenv = Env.push_local_binding g.tcenv (Env.Binding_typ(a.v, a.sort)) in
+    {g with tcenv=tcenv} 
+
 let extend_ty (g:env) (a:btvar) (mapped_to:option<mlty>) : env = 
     let ml_a = Util.as_mlident a.v in 
     let mapped_to = match mapped_to with 

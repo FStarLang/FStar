@@ -3,15 +3,15 @@ type nnat =
 | S of nnat
 
 type ('a, 'b) prod =
-| Pair of unit * unit * Obj.t * Obj.t
+| Pair of unit * unit * 'a * 'b
 
 type 'a list =
 | Nil of unit
-| Cons of unit * Obj.t * Obj.t list
+| Cons of unit * 'a * 'a list
 
 type ('a, 'b) list2 =
 | Nil2 of unit * unit
-| Cons2 of unit * unit * Obj.t * Obj.t * (Obj.t, Obj.t) list2
+| Cons2 of unit * unit * 'a * 'b * ('a, 'b) list2
 
 type any =
 | Any of unit * Obj.t
@@ -21,17 +21,17 @@ type distr_pair =
 
 type 'a list2p =
 | Nil2p of unit
-| Cons2p of unit * Obj.t * (Obj.t, Obj.t) prod list2p
+| Cons2p of unit * 'a * ('a, 'a) prod list2p
 
 type 'dummyV1 list3 =
 | Nil3 of unit
 | Cons3 of unit * Obj.t * Obj.t list3
 
 type 'x poly =
-| Poly of unit * nnat * Obj.t
+| Poly of unit * nnat * 'x
 
 type 'x poly2 =
-| Poly2 of unit * unit * Obj.t
+| Poly2 of unit * unit * 'x
 
 type 'x sch =
 'x  ->  'x
@@ -50,7 +50,7 @@ unit  ->  Obj.t  ->  Obj.t
 
 type ('a, 'dummyV1) vec =
 | Nill of unit
-| Conss of unit * nnat * Obj.t * (Obj.t, unit) vec
+| Conss of unit * nnat * 'a * ('a, unit) vec
 
 type vecn1 =
 (nnat, unit) vec
