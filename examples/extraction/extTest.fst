@@ -114,3 +114,11 @@ type polylist = poly2 (list)
 type listalias 'a = list 'a
 
 type polylistalias = poly2 (listalias)
+
+(*
+type evenlist (a:Type) =
+  | ENil  : evenlist a
+  | ECons : hd:a -> tl:oddlist a -> evenlist a
+and oddlist (a:Type) =
+  | OCons : hd:a -> tl:evenlist a -> oddlist a
+*)
