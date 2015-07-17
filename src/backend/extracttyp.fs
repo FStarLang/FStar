@@ -13,6 +13,20 @@ open Microsoft.FStar.Tc.Normalize
 open Microsoft.FStar.Absyn.Print
 open Microsoft.FStar.Backends.ML.Env
 
+let binderIsExp (bn:binder): bool = is_inr (fst bn)
+
+let rec argsIsExp (k:knd') (typeName : string) : list<bool> =
+match k with
+| Kind_type -> []
+| Kind_arrow (bs,r) -> List.append (List.map binderIsExp bs) (argsIsExp r.n typeName)
+| Kind_delayed (k, _ ,_) -> failwith "extraction.numIndices : expected a compressed argument"
+| _ -> failwith ("unexpected signature of inductive type" ^ typeName) 
+
+let  numIndices (k:knd') (typeName : string) : int = List.length (argsIsExp k typeName)
+
+let mlty_of_isExp (b:bool) : mlty =
+    if b then erasedContent else unknownType
+
 
 (*copied from ocaml-strtrans.fs*)
 let prependTick (x,n) = if Util.starts_with x "'" then (x,n) else ("'"^x,n)
@@ -151,7 +165,12 @@ and extractTyConstApp (c:context) (ftv:ftvar) (ags : args) =
             match  (isTypeScheme ftv.v c)  with
              | true -> 
                  let mlargs = List.map (getTypeFromArg c) ags in
-                    (MLTY_Named (mlargs,(lident2mlpath ftv.v)))
+                 let k = ftv.sort in
+                 let ar =  argsIsExp k.n ftv.v.str in
+                 //assert (List.length ar >= List.length mlargs);
+                 let (_, missingArgs) = Util.first_N (List.length mlargs) ar in
+                 let argCompletion =  List.map mlty_of_isExp missingArgs in
+                    (MLTY_Named (List.append mlargs argCompletion,(lident2mlpath ftv.v)))
              | false -> 
                  (match  (deltaUnfold ftv.v c) with
                  | Some tyu ->  extractTyp c tyu
@@ -280,12 +299,6 @@ let extractCtor (c:context) (tyBinders : list<binder>) (ctor: inductiveConstruct
   It seems to be good practice for programmers to not use indices when parameters suffice.
    *)
 
-let rec numIndices (k:knd') (typeName : string) : int =
-match k with
-| Kind_type -> 0
-| Kind_arrow (bs,r) -> (List.length bs) + numIndices r.n typeName
-| Kind_delayed (k, _ ,_) -> failwith "extraction.numIndices : expected a compressed argument"
-| _ -> failwith ("unexpected signature of inductive type" ^ typeName) 
 
 let dummyIdent (n:int) : mlident = ("'dummyV"^(Util.string_of_int n), 0)
 

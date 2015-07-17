@@ -1,6 +1,9 @@
+
 type nnat =
 | O
 | S of nnat
+
+let idnat = (Obj.magic(fun _1_3 -> _1_3))
 
 type ('a, 'b) prod =
 | Pair of 'a * 'b
@@ -63,9 +66,17 @@ type 't binaryTree =
 ('t, unit) naryTree
 
 type polyvec =
-nnat vec poly
+(nnat, unit) vec poly
 
 type polylist =
-list poly2
+Obj.t list poly2
+
+type 'a listalias =
+'a list
+
+type polylistalias =
+Obj.t listalias poly2
+
+
 
 

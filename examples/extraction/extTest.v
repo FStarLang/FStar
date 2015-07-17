@@ -91,6 +91,11 @@ Inductive  poly2 (x : Type -> Type) : Type :=
 
 Definition polylist := poly2 list.
 
+
+Definition listalias (A:Type) := list A.
+
+Definition polylistalias := poly2 (listalias).
+
 Definition polylistnat : polylist.
   exists nat. exact (cons 1 nil).
 Defined.
@@ -102,7 +107,7 @@ Defined.
 
 
 
-Recursive Extraction polylistnat polylistbool.
+Recursive Extraction polylistnat polylistbool polylistalias.
 
 
 Inductive  poly3 (x : Type -> Type) : Type :=

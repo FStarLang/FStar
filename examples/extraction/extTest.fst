@@ -1,7 +1,7 @@
 (*--build-config
   --*)
 
-(*fstar extTest.fst --codegen OCaml-experimental > Test.ml ; sed '$d' Test.ml > temp ; cp temp Test.ml ; ocamlc Test.ml*)
+(*fstar extTest.fst --codegen OCaml-experimental > Test.ml ; sed '1d;$d' Test.ml > temp ; cp temp Test.ml ; ocamlc Test.ml*)
 module Test
 
 type nnat =
@@ -110,3 +110,7 @@ type polyvec = poly (vec nnat)
   Yet, Why is this the right way, conceptually?
 *)
 type polylist = poly2 (list)
+
+type listalias 'a = list 'a
+
+type polylistalias = poly2 (listalias)
