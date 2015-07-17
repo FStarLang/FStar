@@ -125,10 +125,11 @@ match ft with // assume ft is compressed. is there a compresser for typ'?
   (*can this be a partial type application? , i.e can the result of this application be something like Type -> Type, or nat -> Type? : Yes *)
   (* should we try to apply additional arguments here? if not, where? FIX!! *)
   | Typ_app (ty, arrgs) ->
-    (match ty.n with
+    (match (Util.compress_typ ty).n with
         | Typ_btvar btv ->  extractTyVar c btv
             (*the args are thrown away, because in OCaml, type variables have type Type and not something like -> .. -> .. Type *)
         | Typ_const ftv -> extractTyConstApp c ftv arrgs            
+        | Typ_app (tyin, argsin) -> extractType' c (Typ_app (tyin,(List.append argsin arrgs)))
         | _ -> unknownType)
 
   | Typ_lam  _ -> unknownType
