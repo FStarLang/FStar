@@ -31,16 +31,16 @@ let mlty_of_isExp (b:bool) : mlty =
 (*copied from ocaml-strtrans.fs*)
 let prependTick (x,n) = if Util.starts_with x "'" then (x,n) else ("'"^x,n)
 
-let translate_eff g l = 
-    if lid_equals l Const.effect_PURE_lid 
+let translate_eff g l : e_tag = 
+    if lid_equals l Const.effect_PURE_lid //TODO : what about effect abbreviations?
     then MayErase 
     else Keep
 
 (*generates inp_1 -> inp_2 -> ... inp_n -> out *)
-let rec curry (inp: (list<mlty>)) (out: mlty) =
+let rec curry (inp: (list<mlty>)) (erase : e_tag) (out: mlty) =
   match inp with
   | [] -> out
-  | h::tl -> MLTY_Fun (h, Keep, curry tl out) //TODO: Fix the e_tag
+  | h::tl -> MLTY_Fun (h, erase, curry tl erase out) //TODO: Fix the e_tag
 
 (*
   Below, "the thesis" refers to:
@@ -134,10 +134,10 @@ match ft with // assume ft is compressed. is there a compresser for typ'?
   | Typ_const ftv ->  extractTyConstApp c ftv []
   | Typ_fun (bs, codomain) -> 
         let (bts, newC) = extractBindersTypes c bs in
-        (let codomainML = (extractComp  newC codomain) in 
+        (let codomainML, erase = (extractComp  newC codomain) in 
         if  (codomainML = erasedContent) 
-        then erasedContent (*perhaps this is not needed*)
-        else  (curry bts codomainML))
+        then erasedContent (*perhaps this is not needed, or should be done in a later phase*)
+        else  (curry bts erase codomainML))
 
   | Typ_refine (bv (*var and unrefined type*) , _ (*refinement condition*)) -> extractTyp c bv.sort
 
@@ -188,11 +188,11 @@ and extractBindersTypes  (c:context) (bs : list<binder>): list<mlty> * context =
 
 and extractTyp  (c:context) (ft:typ) : mlty = extractType' c (Util.compress_typ ft).n
 and extractKind (c:context) (ft:knd) : mlty = erasedContent
-and extractComp  (c:context) (ft:comp) : mlty = extractComp' c (ft.n) 
-and extractComp'  (c:context) (ft:comp') : mlty =
+and extractComp  (c:context) (ft:comp) : mlty * e_tag = extractComp' c (ft.n) 
+and extractComp'  (c:context) (ft:comp') : mlty * e_tag =
 match  ft with
-  | Total ty -> extractTyp c ty
-  | Comp cm -> extractTyp c (cm.result_typ)
+  | Total ty -> (extractTyp c ty, MayErase)
+  | Comp cm -> (extractTyp c (cm.result_typ), translate_eff c cm.effect_name )
 
 
 let binderPPnames (bn:binder): ident =
