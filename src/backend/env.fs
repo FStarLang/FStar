@@ -42,6 +42,8 @@ match x with
 
 let lookup  (g:env) (x:either<bvvar,fvvar>) : (mlexpr * mltyscheme) = failwith "NYI"
 
+let lookup_fv (g:env) (x:fvvar) : mlpath = failwith "NYI"
+
 let lookup_var g e = match e.n with 
     | Exp_bvar x -> lookup g (Inl x)
     | Exp_fvar (x, _) -> lookup g (Inr x)

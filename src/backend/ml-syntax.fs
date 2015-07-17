@@ -59,10 +59,10 @@ type mlpattern =
 | MLP_Const  of mlconstant
 | MLP_Var    of mlident
 | MLP_CTor   of mlpath * list<mlpattern>
+| MLP_Branch of list<mlpattern>
 (* SUGAR *)
 | MLP_Record of list<mlsymbol> * list<(mlsymbol * mlpattern)>
 | MLP_Tuple  of list<mlpattern>
-| MLP_Branch of list<mlpattern>
 
 type mlexpr =
 | MLE_Const  of mlconstant
