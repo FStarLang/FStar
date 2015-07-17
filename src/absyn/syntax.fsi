@@ -157,7 +157,7 @@ and knd' =
   | Kind_type                                             (*Type*)
   | Kind_effect
   | Kind_abbrev of kabbrev * knd                          (* keep the abbreviation around for printing *)
-  | Kind_arrow of binders * knd                           (* (ai:ki|xi:ti) => k' *)
+  | Kind_arrow of binders * knd                           (* (ai:ki|xi:ti) => k' *) (*are they really in order, e.g. all kind args first and then the type args?*)
   | Kind_uvar of uvar_k_app                               (* not present after 1st round tc *)
   | Kind_lam of binders * knd                             (* not present after 1st round tc *)
   | Kind_delayed of knd * subst_t * memo<knd>             (* delayed substitution --- always force before inspecting first element *)

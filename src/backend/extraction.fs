@@ -278,8 +278,8 @@ let extractCtor (c:context) (tyBinders : list<binder>) (ctor: inductiveConstruct
 let rec numIndices (k:knd') (typeName : string) : int =
 match k with
 | Kind_type -> 0
-| Kind_arrow (_,r) -> 1 + numIndices r.n typeName
-| Kind_delayed (k, _ ,_) -> numIndices k.n typeName
+| Kind_arrow (bs,r) -> (List.length bs) + numIndices r.n typeName
+| Kind_delayed (k, _ ,_) -> failwith "extraction.numIndices : expected a compressed argument"
 | _ -> failwith ("unexpected signature of inductive type" ^ typeName) 
 
 let dummyIdent (n:int) : mlident = ("'dummyV"^(Util.string_of_int n), 0)
@@ -309,7 +309,7 @@ match s with
     //let k = lookup_typ_lid c ind.tyName in
     let identsPP = List.map binderPPnames ind.tyBinders in
     let newContext = c in // (extendContext c (mfst ind.tyBinders)) in
-    let nIndices = numIndices ind.k.n ind.tyName.ident.idText in
+    let nIndices = numIndices (Util.compress_kind ind.k).n ind.tyName.ident.idText in
     let tyDecBody = MLTD_DType (List.map (extractCtor newContext ind.tyBinders) ind.constructors) in
           Some (MLS_Ty [(lident2mlsymbol ind.tyName, List.append (List.map (fun x -> prependTick (convIdent x)) identsPP) (dummyIndexIdents nIndices)  , Some tyDecBody)])
 | _ -> None
