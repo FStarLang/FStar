@@ -71,7 +71,8 @@ let extendContextWithRepAsTyVars (b : list< (either<btvar,bvvar> * either<btvar,
 
 let extendContextAsTyvar (availableInML : bool) (b : either<btvar,bvvar>) (c:context): context = 
 match b with
-| (Inl bt) -> if availableInML then (extend_ty c bt (Some ( (MLTY_Var (btvar2mlident bt))))) else (extend_hidden_ty c bt unknownType)
+| (Inl bt) -> extend_ty c bt (Some (if availableInML then (MLTY_Var (btvar2mlident bt)) else unknownType))
+//if availableInML then (extend_ty c bt (Some ( (MLTY_Var (btvar2mlident bt))))) else (extend_hidden_ty c bt unknownType)
 | (Inr bv) -> extend_bv c bv ([], erasedContent)
 
 let extendContext (c:context) (tyVars : list<either<btvar,bvvar>>) : context = 
@@ -236,10 +237,13 @@ match t with
  
 let lident2mlsymbol (l:lident) : mlsymbol = l.ident.idText
 
-let bindersOfFuntype (t:typ) : list<binder> = 
-match ((Util.compress_typ t).n) with
-| Typ_fun (lb,_) -> lb
-| _ -> [] 
+let bindersOfFuntype (n:int) (t:typ) : list<binder> * (*residual type*) typ' = 
+let tc = ((Util.compress_typ t).n) in
+match tc with
+| Typ_fun (lb,cp) -> let (ll,lr)= Util.first_N n lb in  (ll, Typ_fun (lr,cp)) // is this risky? perhaps not because we will manually put the removed binders into the context, before typechecking
+// but we are removing the implicit arguments corresponding to the type binders. Is that always safe? In OCaml, is there no way to say (nil @ nat)? 
+// Perhaps it is not needed, because OCaml can implicitly put a type lambda (generalize)?
+| _ -> assert (n=0); ([],tc) 
     //printfn "%A\n" (ctor.ctype);
     //failwith "was expecting a function type"
 
@@ -252,11 +256,11 @@ let extractCtor (c:context) (tyBinders : list<binder>) (ctor: inductiveConstruct
    if (0< List.length ctor.cargs)
    then (failwith "cargs is unexpectedly non-empty. This is a design-flaw, please report.")
    else 
-        (let lb= bindersOfFuntype ctor.ctype in 
-        let lp = zipUnequal tyBinders lb in
-        assert (List.length tyBinders = List.length lp);
+        (let (lb, tr) = bindersOfFuntype (List.length tyBinders) ctor.ctype in 
+        let lp = List.zip tyBinders lb in
+        //assert (List.length tyBinders = List.length lp);
         let newC = extendContextWithRepAsTyVars (List.map (fun (x,y) -> (fst x, fst y)) lp) c in
-        let mlt = extractTyp newC ctor.ctype in
+        let mlt = extractType' newC tr in
             // fprint1 "extracting the type of constructor %s\n" (lident2mlsymbol ctor.cname);
             //fprint1 "%s\n" (typ_to_string ctor.ctype);
             // printfn "%A\n" (ctor.ctype);
