@@ -7,10 +7,22 @@ open Eval
 open Bigint
 
 (* TODO : not verified *)
-val fill_array : b:bigint -> tb:template -> v:int -> tsize:nat -> bw:nat -> len:nat -> 
-		 ST unit
-		    (requires (fun h -> True))
-		    (ensures (fun h0 u h1 -> True))
+val fill_array : 
+  b:bigint -> tb:template -> v:int -> tsize:nat -> bw:nat -> len:nat -> 
+  ST unit
+     (requires (fun h -> 
+		(inHeap h b)
+		/\ (Normalized h b)
+		/\ (tb = Bigint63.t b)
+     ))
+     (ensures (fun h0 u h1 -> 
+	       (inHeap h0 b)
+	       /\ (inHeap h1 b)
+	       /\ (Normalized h0 b)
+	       /\ (tb = Bigint63.t b)
+	       /\ (getLength h1 b = getLength h0 b)
+	       /\ (eval h1 b (getLength h1 b) = eval h0 b (getLength h0 b) + pow2 bw * v)
+     ))
 let rec fill_array b tb v tsize bw len =
   match (get_length b - len) with
   | 0 -> ()
@@ -28,41 +40,64 @@ let rec fill_array b tb v tsize bw len =
      else ();
      fill_array b tb v tsize bw (len+1)
 
-(* TODO : not verified *)
-val compute_size_aux : a:bigint -> t:template -> n:nat -> tn:nat -> wa:nat ->
-		       ST nat
-			  (requires (fun h -> True))
-			  (ensures (fun h0 n h1 -> True))
-let rec compute_size_aux a t n tn wa =
-  if tn >= wa then n+1
-  else compute_size_aux a t (n+1) (tn + t (n+1)) wa
+(* Verified *)
+val compute_size_aux : 
+  t:template -> 
+  n:nat -> 
+  tn:nat{tn = bitweight t n} -> 
+  wa:nat{ tn < wa } ->
+  Tot (size:pos{ bitweight t size >= wa /\ bitweight t (size-1) < wa })
+      (decreases (wa - tn))
+let rec compute_size_aux t n tn wa =
+  (* Compute bitweight t (n+1) *)
+  let bwnp1 = tn + t n in
+  (* Test if against the total bitweight of a, if smaller iterate *)
+  if bwnp1 >= wa then n+1
+  else compute_size_aux t (n+1) bwnp1 wa
 
-(* TODO : not verified *)
+(* Compute the required size for the new template, verified *)
 val compute_size : 
   a:bigint -> t:template ->
-  ST nat
+  ST pos
      (requires (fun h ->
 		(inHeap h a)
+		/\ (Normalized h a)
 		/\ (getLength h a > 0)
      ))
      (ensures (fun h0 n h1 ->
 	       (inHeap h0 a)
+	       /\ (Normalized h0 a)
 	       /\ (getLength h0 a > 0)
 	       /\ (modifies !{} h0 h1)
-	       /\ (t n >= bitweight (Bigint63.t a) (getLength h0 a))
-	       /\ (t (n-1) < bitweight (Bigint63.t a) (getLength h0 a))
+	       /\ (bitweight t n >= bitweight (Bigint63.t a) (getLength h0 a))
+	       /\ (n > 0)
+	       /\ (bitweight t (n-1) < bitweight (Bigint63.t a) (getLength h0 a))
      ))
 let compute_size a t =
   let n = 0 in
-  let tn = t 0 in
+  let tn = 0 in
   let weight_a = bitweight (Bigint63.t a) (get_length a) in
-  compute_size_aux a t n tn weight_a
+  compute_size_aux t n tn weight_a
 
-(* TODO : not verified *)
-val retemplate_aux : a:bigint -> ta:template -> b:bigint -> tb:template -> len:nat ->
-		     ST unit
-			(requires (fun h -> True))
-			(ensures (fun h0 u h1 -> True))
+val retemplate_aux : 
+  a:bigint -> ta:template -> b:bigint -> tb:template -> len:nat ->
+  ST unit
+     (requires (fun h -> 
+		(inHeap h a)
+		/\ (Normalized h a)
+		/\ (inHeap h b)
+		/\ (Normalized h b)
+     ))
+     (ensures (fun h0 u h1 -> 
+	       (inHeap h0 a)
+	       /\ (inHeap h0 b)
+	       /\ (inHeap h1 b)
+	       /\ (Normalized h0 a)
+	       /\ (Normalized h0 b)
+	       /\ (Normalized h1 b)
+	       /\ (modifies !{Bigint63.data b} h0 h1)
+	       /\ (eval h1 b (getLength h1 b) = eval h0 a (getLength h0 a))
+     ))
 let rec retemplate_aux a ta b tb len =
   match get_length a - len with
   | 0 -> ()
@@ -73,24 +108,26 @@ let rec retemplate_aux a ta b tb len =
      fill_array b tb v tsize bw 0;
      retemplate_aux a ta b tb (len+1)
 
-(* TODO : not verified *)
 val retemplate:
   a:bigint -> t:template ->
   ST bigint
      (requires (fun h ->
 		(inHeap h a)
 		/\ (Normalized h a)
+		/\ (getLength h a > 0)
      ))
      (ensures (fun h0 b h1 ->
 	       (inHeap h1 b)
 	       /\ (inHeap h0 a)
 	       /\ (Normalized h0 a)
+	       /\ (getLength h0 a > 0)
 	       /\ (modifies !{} h0 h1)
-	       /\ not(contains h0 (Bigint63.data b))
 	       /\ (Bigint63.t b = t)
+	       /\ (getLength h1 b > 0)
 	       /\ (eval h1 b (getLength h1 b) = eval h0 a (getLength h0 a))
      ))
 let retemplate a t =
+  (* Compute the size of the new array *)
   let new_size = compute_size a t in
   let b = Bigint.mk_zero_bigint new_size t in
   retemplate_aux a (Bigint63.t a) b t 0;
