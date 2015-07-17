@@ -98,15 +98,15 @@ let extendContext (c:context) (tyVars : list<either<btvar,bvvar>>) : context =
    List.fold_right (extendContextAsTyvar true) (tyVars) c (*TODO: is the fold in the right direction? check *)
 
 
-let deltaUnfold (i : lident) (c: context) : (option<typ>) = 
+//let deltaUnfold (i : lident) (c: context) : (option<typ>) = 
 //lookup 
-None (*TODO: FIX!!*)
+//None (*TODO: FIX!!*)
 
 (*The thesis defines a type scheme as "something that becomes a type when enough arguments (possibly none?) are applied to it" ,  e.g. vector, list.
     I guess in F*, these include Inductive types and type abbreviations.
     Formal definition is @ Definition 8, Sec. 1.2.3
       *)
-let isTypeScheme (i : lident) (c: context) : bool = true  (*TODO: FIX!! *)
+let isTypeScheme (i : lident) (c: context) : bool = true  (*TODO: FIX!! really? when would a type constant not be a type scheme? *)
 
 
 let lident2mlpath (l:lident) : mlpath =
@@ -167,7 +167,9 @@ match (fst a) with
 | Inl ty -> extractTyp c ty
 | Inr _ -> erasedContent 
 and extractTyConstApp (c:context) (ftv:ftvar) (ags : args) =
-            match  (isTypeScheme ftv.v c)  with
+            match  (isTypeScheme ftv.v c)  with // when is something not a type scheme? if None, then no need to delta unfold.
+            //Perhaps this issue is Coq specific where there is no clear distinction between terms and types, and there is no distinction b/w term and type abbreviations.
+            // So, one might need to unfold abbreviations which unfold to types.
              | true -> 
                  let mlargs = List.map (getTypeFromArg c) ags in
                  let k = ftv.sort in
@@ -176,11 +178,11 @@ and extractTyConstApp (c:context) (ftv:ftvar) (ags : args) =
                  let (_, missingArgs) = Util.first_N (List.length mlargs) ar in
                  let argCompletion =  List.map mlty_of_isExp missingArgs in
                     (MLTY_Named (List.append mlargs argCompletion,(lident2mlpath ftv.v)))
-             | false -> 
-                 (match  (deltaUnfold ftv.v c) with
+             | false -> failwith "this case was not anticipated"
+                 (* match  (deltaUnfold ftv.v c) with
                  | Some tyu ->  extractTyp c tyu
                  | None -> unknownType
-                 )
+                 *)
 
 (* Return the new context, where this binder IS in scope. Because we wish to call the F* normalizer, the context should always be up-to-date*)
 and extractBinderType  (c:context) (bn : binder): mlty * context = 
