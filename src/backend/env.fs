@@ -19,7 +19,17 @@ type env = {
     tydefs:list<mltydecl>; 
 }
 
-let lookup_ty (g:env) (x:either<btvar,ftvar>) : mlty = failwith "NYI"
+let rec lookup_ty_local (gamma:list<binding>) (b:btvar) : mlty = 
+match gamma with
+| (Ty (bt, mli, mlt))::tl ->  if (Util.bvd_eq bt.v b.v) then mlt else lookup_ty_local tl b
+| _::tl -> lookup_ty_local tl b
+| [] -> failwith ("extraction: unbound type var "^(b.v.ppname.idText))
+
+let lookup_ty (g:env) (x:either<btvar,ftvar>) : mlty = 
+match x with
+| Inl bt -> lookup_ty_local g.gamma bt
+| Inr _ -> failwith "NYI"
+
 let lookup  (g:env) (x:either<bvvar,fvvar>) : (mlexpr * mltyscheme) = failwith "NYI"
 
 let lookup_var g e = match e.n with 

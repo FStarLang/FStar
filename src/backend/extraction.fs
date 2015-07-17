@@ -11,6 +11,7 @@ open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar
 open Microsoft.FStar.Tc.Normalize
 open Microsoft.FStar.Absyn.Print
+open Env
 
 
 (*copied from ocaml-strtrans.fs*)
@@ -48,43 +49,49 @@ let idArgTransform :argTransform = fun a -> Some a
 type nthArgTransforms = lident (*name of a constant*) -> Tot<nthArgTransform>
  
 
-type context = {
-  e : env;
-  at:nthArgTransforms
-}
+type context = env
+
+(*
+let tyVarKind (bv : bvvar) : knd = {n=Kind_type; tk=None; pos= bv.p; fvs =None; uvs = None}
+let bvvar2btvar (bv : bvvar) : btvar = {v=bv.v; sort = Kind_type ; p=bv.p} *)
+
 
 (* vars in tyVars will have type Type, irrespective of that types they had in F*. This is to match the limitations of  OCaml*)
+
+
+let btvar2mlident (btv: btvar) : mlident =  (prependTick (convIdent btv.v.ppname)) 
+
+let extendContextAsTyvar (availableInML : bool) (c:context) (b : binder) : context = 
+match b with
+| (Inl bt, _) -> extend_ty c bt (if availableInML then MLTY_Var (btvar2mlident bt) else unknownType)
+| (Inr bv, _) -> extend_v c bv ([], erasedContent)
+
 let extendContext (c:context) (tyVars : list<binder>) : context = 
-{
-  e= List.fold_left push_local_binding c.e (List.map binding_of_binder tyVars);
-  at= c.at
-}
+   List.fold_left (extendContextAsTyvar true) c (tyVars) (*TODO: is the fold in the right direction? check *)
 
-let contains (c:context) (b:btvar) : bool = 
-  try (let _ = (lookup_btvar c.e b) in true) (*does not work for vars mentioned in bodies of inductives. those mentions have wierd chars appended in realnames. their range matches, though*)
-  with
-   | _ -> false
 
-let deltaUnfold (i : lident) (c: context) : (option<typ>) = None (*FIX!!*)
+let deltaUnfold (i : lident) (c: context) : (option<typ>) = None (*TODO: FIX!!*)
 
 (*The thesis defines a type scheme as "something that becomes a type when enough arguments (possibly none?) are applied to it" ,  e.g. vector, list.
     I guess in F*, these include Inductive types and type abbreviations.
     Formal definition is @ Definition 8, Sec. 1.2.3
       *)
-let isTypeScheme (i : lident) (c: context) : bool = true  (* FIX!! *)
+let isTypeScheme (i : lident) (c: context) : bool = true  (*TODO: FIX!! *)
 
 
 let lident2mlpath (l:lident) : mlpath =
   ( (* List.map (fun x -> x.idText) l.ns *) [], l.ident.idText)
 
-let extractTyVar (c:context) (btv : btvar) = (if (contains c btv) then MLTY_Var (prependTick (convIdent btv.v.ppname)) else unknownType)
+
+
+let extractTyVar (c:context) (btv : btvar) = (lookup_ty c (Inl btv))
+
+(* (if (contains c btv) then MLTY_Var (btvar2mlident btv) else unknownType) *)
 
 
 let rec extractType' (c:context) (ft:typ') : mlty = 
-
-
 (*the \hat{\epsilon} function in the thesis (Sec. 3.3.5) *)
-(* First \beta, \iota and \zeta reduces ft, or assume they are already reduced.
+(* First \beta, \iota and \zeta reduce ft. Do require the caller to do so.
     Since F* does not have SN, one has to be more careful for the termination argument.
     Because OCaml does not support computations in Type, unknownType is supposed to be used if they are really unaviodable.
     The classic example is the type : T b \def if b then nat else bool. If we dont compute, T true will extract to unknownType.
@@ -283,11 +290,9 @@ List.fold_right (fun  x ll -> match x with
                       | Some xs -> xs::ll
                       | None -> ll) l []
 
-let mkContext (e:env) : context =
-{ e= e;
-  at= fun _ _ a -> Some a 
-}
+let mkContext (e:Tc.Env.env) : context =
+{ tcenv = e; gamma =[] ; tydefs =[]}
 
-let extractTypeDefns (sigs:list<sigelt>) (e: env): list<mlsig1> =
+let extractTypeDefns (sigs:list<sigelt>) (e: Tc.Env.env): list<mlsig1> =
    pruneNones (extractTypeDefnsAux (mkContext e) sigs)
 
