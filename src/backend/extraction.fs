@@ -109,7 +109,7 @@ let rec extractType' (c:context) (ft:typ') : mlty =
         a bloated type is atleast as good as unknownType?
     An an F* specific example, unless we unfold Mem x pre post to StState x wp wlp, we have no idea that it should be translated to x
 *)
-match ft with
+match ft with // assume ft is compressed. is there a compresser for typ'?
   | Typ_btvar btv -> extractTyVar c btv
   (*it is not clear whether description in the thesis covers type applications with 0 args. However, this case is needed to translate types like nnat, and so far seems to work as expected*)
   | Typ_const ftv ->  extractTyConstApp c ftv []
@@ -135,7 +135,7 @@ match ft with
   | Typ_ascribed _  -> unknownType
   | Typ_meta _ -> unknownType
   | Typ_uvar _ -> unknownType
-  | Typ_delayed ((Inr f),_) -> extractTyp c (f ())
+  | Typ_delayed _  -> failwith "expected the argument to be compressed"
   |   _ -> unknownType
 and getTypeFromArg (c:context) (a:arg) : mlty =
 match (fst a) with
@@ -161,7 +161,7 @@ match bn with
 and extractBindersTypes  (c:context) (bs : list<binder>): list<mlty> * context =
     (fun (x,c) -> (List.rev x,c)) (List.fold (fun (lt,cp) b -> let (nt, nc)= extractBinderType cp b in ((nt::lt),nc))  ([],c) bs)
 
-and extractTyp  (c:context) (ft:typ) : mlty = extractType' c (ft.n)
+and extractTyp  (c:context) (ft:typ) : mlty = extractType' c (Util.compress_typ ft).n
 and extractKind (c:context) (ft:knd) : mlty = erasedContent
 and extractComp  (c:context) (ft:comp) : mlty = extractComp' c (ft.n) 
 and extractComp'  (c:context) (ft:comp') : mlty =
