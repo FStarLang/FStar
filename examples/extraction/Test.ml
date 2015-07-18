@@ -3,7 +3,7 @@ type nnat =
 | O
 | S of nnat
 
-let idnat = (Obj.magic(fun _1_3 -> _1_3))
+let idnat = (Obj.magic(fun x -> x))
 
 type ('a, 'b) prod =
 | Pair of 'a * 'b

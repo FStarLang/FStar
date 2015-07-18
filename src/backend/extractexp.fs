@@ -11,6 +11,7 @@ open Microsoft.FStar.Backends.ML.Util
 let eff_to_string = function
     | MayErase -> "MayErase"
     | Keep -> "Keep"
+    (*should there be a MustErase? It is unsafe to emit code marked as ghost.*)
 
 let fail r msg = 
     Util.print_string <| Print.format_error r msg;
@@ -32,19 +33,20 @@ let is_constructor e = match (Util.compress_exp e).n with
     | Exp_fvar(_, b) -> b
     | _ -> false
 
+(* something is a value iff it has no "effects"? *)
 let rec is_value (e:exp) = match (Util.compress_exp e).n with 
     | Exp_bvar _
     | Exp_fvar _ 
     | Exp_abs _  -> true
     | Exp_app(head, args) -> is_constructor head && args |> List.for_all (fun (te, _) -> 
         match te with 
-            | Inl _ -> true
+            | Inl _ -> true (* type argument *)
             | Inr e -> is_value e)
     | _ -> false
 
 let translate_typ (g:env) (t:typ) : mlty = ExtractTyp.extractTyp g t
 
-let instantiate (s:mltyscheme) (args:list<mlty>) : mlty = Util.subst s args
+let instantiate (s:mltyscheme) (args:list<mlty>) : mlty = Util.subst s args (*only handles fully applied types*)
 
 let ml_unit = MLE_Const MLC_Unit
 let ml_unit_ty = MLTY_Named ([], ([], "unit")) 
@@ -53,16 +55,16 @@ let ml_bool_ty = MLTY_Named ([], ([], "bool"))
 let erasable (g:env) (t:mlty) = 
     if t = ml_unit_ty then true
     else match t with 
-        | MLTY_Named (_, (["Ghost"], "erased")) -> true
-        | _ -> false //what about types that reduce/unfold to unit/erased t?
+        | MLTY_Named (_, (["Ghost"], "erased")) -> true //when would a named type like this be produced?
+        | _ -> false //what about types that reduce/unfold to unit/erased t? Do a syntactic check with ml_unit_ty?
 
 
 let erase (g:env) (e:mlexpr) (f:e_tag) (t:mlty) = 
     if f = MayErase && erasable g t
-    then ml_unit
+    then ml_unit (*unit value*)
     else e
 
-let coerce (g:env) (e:mlexpr) (t:mlty) (t':mlty) = 
+let (*maybe_?*) coerce (g:env) (e:mlexpr) (t:mlty) (t':mlty) = 
     if equiv g t t' 
     then e
     else MLE_Coerce (e, t, t')
@@ -144,6 +146,8 @@ and synth_exp (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
     let e, f, t = synth_exp' g e in
     erase g e f t, f, t
 
+(* Unlike the \epsilon function in the thesis, this also produced an ml type for the computed ML expression, 
+ to avoid the need to infer them later, when less info is available*)
 and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) = 
     match (Util.compress_exp e).n with 
         | Exp_constant c ->
@@ -156,14 +160,15 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
           coerce g e t' t, f, t
 
         | Exp_bvar _
-        | Exp_fvar _ -> 
-          let x, s = lookup_var g e in 
+        | Exp_fvar _ -> // how is Exp_constant different from Exp_fvar?
+          let x, s (*: mltyscheme*) = lookup_var g e in 
           begin match s with 
             | ([], t) -> x, MayErase, t
             | _ -> err_uninst e
           end
 
         | Exp_app(head, args) -> 
+        (* what is the difference bettween args' and args? *)
           let rec synth_app (head, args') (f, t) args = //if partially applied and head is a datacon, it needs to be eta-expanded
             match args, t with 
                 | [], _ -> MLE_App(head, List.rev args'), f, t
@@ -184,7 +189,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
           begin match head.n with 
             | Exp_bvar _ 
             | Exp_fvar _ -> 
-              let head, (vars, t) = lookup_var g e in
+              let head, (vars, t) = lookup_var g e (*Bug? head.n instead of e?*) in
               let n = List.length vars in
               if n <= List.length args
               then let prefix, rest = Util.first_N (List.length vars) args in
@@ -206,7 +211,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
             let ml_bs, env = List.fold_left (fun (ml_bs, env) (b, _) -> match b with 
                 | Inl a -> //no first-class polymorphism; so type-binders get wiped out
                   let env = Env.extend_ty env a (Some MLTY_Top) in 
-                  let ml_b = (as_mlident a.v, Some <| ml_unit_ty) in
+                  let ml_b = (as_mlident a.v (*name of the binder*) , Some <| ml_unit_ty (*type of the binder. correspondingly, this argument gets converted to the unit value in application *)) in
                   ml_b::ml_bs, env 
               
                 | Inr x -> 
@@ -241,7 +246,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                         if n <= List.length bs
                         then let targs, rest_args = Util.first_N n bs in 
                              let expected_t = match Util.mk_subst_binder tbinders targs with 
-                                | None -> failwith "Not enough type binders"
+                                | None -> failwith "Not enough type binders in the body of the let expression"
                                 | Some s -> Util.subst_typ s tbody in
                              let targs = targs |> List.map (function (Inl a, _) -> a | _ -> failwith "Impossible") in
                              let env = List.fold_left (fun env a -> Env.extend_ty env a None) g targs in

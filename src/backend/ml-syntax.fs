@@ -24,7 +24,7 @@ let ptctor ((p, s) : mlpath) : mlsymbol =
 let mlpath_of_lident (x : lident) : mlpath =
     (List.map (fun x -> x.idText) x.ns, x.ident.idText)
 
-let as_mlident (x:bvdef<'a>) = x.realname.idText, 0
+let as_mlident (x:bvdef<'a>) = x.ppname.idText, 0
 
 (* -------------------------------------------------------------------- *)
 type mlidents  = list<mlident>
