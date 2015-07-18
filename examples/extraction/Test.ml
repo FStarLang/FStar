@@ -5,6 +5,8 @@ type nnat =
 
 let idnat = (Obj.magic(fun x -> x))
 
+let idnat2 = (Obj.magic(fun x -> x))
+
 type ('a, 'b) prod =
 | Pair of 'a * 'b
 
