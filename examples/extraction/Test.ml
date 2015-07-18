@@ -7,6 +7,8 @@ let idnat = (Obj.magic(fun x -> x))
 
 let idnat2 = (Obj.magic(fun x -> x))
 
+let add1 = (Obj.magic(fun a -> ((*Test.l__*)S a)))
+
 type ('a, 'b) prod =
 | Pair of 'a * 'b
 

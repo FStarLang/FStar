@@ -281,7 +281,9 @@ match  (la, lb) with
 | (ha::ta, hb::tb) -> ((ha,hb)::(zipUnequal ta tb))
 | _ -> []
 
-let extractCtor (c:context) (tyBinders : list<binder>) (ctor: inductiveConstructor):  (mlsymbol * list<mlty>) =
+let mlTyIdentOfBinder (b : binder) = prependTick (convIdent (binderPPnames b))
+
+let extractCtor (tyBinders : list<binder>) (c:context) (ctor: inductiveConstructor):  context * (mlsymbol * list<mlty>) =
    if (0< List.length ctor.cargs)
    then (failwith "cargs is unexpectedly non-empty. This is a design-flaw, please report.")
    else 
@@ -290,10 +292,12 @@ let extractCtor (c:context) (tyBinders : list<binder>) (ctor: inductiveConstruct
         //assert (List.length tyBinders = List.length lp);
         let newC = extendContextWithRepAsTyVars (List.map (fun (x,y) -> (fst x, fst y)) lp) c in
         let mlt = extractType' newC tr in
+        let tys = (List.map mlTyIdentOfBinder tyBinders, mlt) in
+        let fvv = mkFvvar ctor.cname ctor.ctype in 
             // fprint1 "extracting the type of constructor %s\n" (lident2mlsymbol ctor.cname);
             //fprint1 "%s\n" (typ_to_string ctor.ctype);
             // printfn "%A\n" (ctor.ctype);
-        (lident2mlsymbol ctor.cname, argTypes mlt))
+        (extend_fv c fvv tys, (lident2mlsymbol ctor.cname, argTypes mlt)))
 
 (*indices get collapsed to unit, so all we need is the number of index arguments.
   We will use dummy type variables for these in the dectaration of the inductive type.
@@ -311,12 +315,12 @@ if (0<n)
 
 let dummyIndexIdents (n:int) : list<mlident> = List.map dummyIdent (firstNNats n)
 
-let extractInductive (c:context) (ind: inductiveTypeFam ) :  mltydecl =
-        let identsPP = List.map binderPPnames ind.tyBinders in
+let extractInductive (c:context) (ind: inductiveTypeFam ) :  context*mltydecl =
         let newContext = c in // (extendContext c (mfst ind.tyBinders)) in
         let nIndices = numIndices (Util.compress_kind ind.k).n ind.tyName.ident.idText in
-        let tyDecBody = MLTD_DType (List.map (extractCtor newContext ind.tyBinders) ind.constructors) in
-        [(lident2mlsymbol ind.tyName, List.append (List.map (fun x -> prependTick (convIdent x)) identsPP) (dummyIndexIdents nIndices)  , Some tyDecBody)]
+        let (nc, tyb) = (Util.fold_map (extractCtor ind.tyBinders) newContext ind.constructors) in
+        let mlbs = List.append (List.map mlTyIdentOfBinder ind.tyBinders) (dummyIndexIdents nIndices) in
+        nc, [(lident2mlsymbol ind.tyName,  mlbs , Some (MLTD_DType tyb))]
 
 
 
@@ -326,11 +330,10 @@ let mfst = List.map fst
 let extractSigElt (c:context) (s:sigelt) : context * list<mltydecl> =
     match s with
     | Sig_typ_abbrev (l,bs,_,t,_,_) -> 
-        let identsPP = List.map binderPPnames bs in
         let newContext = (extendContext c (mfst bs)) in
         let tyDecBody = MLTD_Abbrev (extractTyp newContext t) in
                 //printfn "type is %A\n" (t);
-        let td = [(mlsymbolOfLident l, List.map (fun x -> prependTick (convIdent x)) identsPP , Some tyDecBody)] in
+        let td = [(mlsymbolOfLident l, List.map mlTyIdentOfBinder bs , Some tyDecBody)] in
         let c = Env.extend_tydef c td in
         c, [td]
          (*type l idents = tyDecBody*)
@@ -339,7 +342,7 @@ let extractSigElt (c:context) (s:sigelt) : context * list<mltydecl> =
     | Sig_bundle (sigs, _, _ ,_) -> 
         //let xxxx = List.map (fun se -> fprint1 "%s\n" (Util.format1 "sig bundle: : %s\n" (Print.sigelt_to_string se))) sigs in
         let inds = parseInductiveTypesFromSigBundle sigs in
-        c, (List.map (extractInductive c) inds)
+         (Util.fold_map extractInductive c inds)
         //let k = lookup_typ_lid c ind.tyName in
     | _ -> c, []
 

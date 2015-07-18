@@ -19,6 +19,11 @@ type env = {
     tydefs:list<mltydecl>; 
 }
 
+let mkFvvar (l: lident) (t:typ) : fvvar =
+{ v= l;
+  sort= t;
+  p=Range.mk_range "" 0 0;
+}
 
 (* MLTY_Tuple [] extracts to (), and is an alternate choice. 
     However, it represets both the unit type and the unit value. Ocaml gets confused sometimes*)
@@ -64,11 +69,12 @@ let lookup_var g e = match e.n with
 
 (* do we really need to keep gamma uptodate with hidden binders? For using F* utils, we just need to keep tcenv update.
  An alternative solution is to remove these binders from the type of the inductive constructors
-*)
+
 let extend_hidden_ty (g:env) (a:btvar) (mapped_to:mlty) : env = 
     let ml_a = as_mlident a.v in 
     let tcenv = Env.push_local_binding g.tcenv (Env.Binding_typ(a.v, a.sort)) in
     {g with tcenv=tcenv} 
+*)
 
 let extend_ty (g:env) (a:btvar) (mapped_to:option<mlty>) : env = 
     let ml_a = as_mlident a.v in 
