@@ -52,7 +52,7 @@ let rec equiv (g:Env.env) (t:mlty) (t':mlty) : bool =
 
     | MLTY_Fun (t1, f, t2), MLTY_Fun (t1', f', t2') ->
       equiv g t1 t1' 
-      && f=f'
+      //&& f=f' NS: removing this for now, until effects are properly translated
       && equiv g t2 t2'
 
     | MLTY_Named(args, path), MLTY_Named(args', path') when (path=path') -> 
