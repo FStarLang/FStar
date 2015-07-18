@@ -242,6 +242,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                             | Some (bs, b, rest) -> bs, mk_Typ_fun(unit_binder::b::rest, c) None c.pos in
 
                    let n = List.length tbinders in
+                   let e = Util.unascribe e in
                    begin match (Util.compress_exp e).n with 
                       | Exp_abs(bs, body) -> 
                         if n <= List.length bs

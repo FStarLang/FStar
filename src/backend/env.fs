@@ -37,8 +37,7 @@ let rec lookup_ty_local (gamma:list<binding>) (b:btvar) : mlty =
     match gamma with
         | (Ty (bt, mli, mlt))::tl ->  if (Util.bvd_eq bt.v b.v) then mlt else lookup_ty_local tl b
         | _::tl -> lookup_ty_local tl b
-        | [] -> unknownType (*TODO : replace with the line below*)
-        // failwith ("extraction: unbound type var "^(b.v.ppname.idText))
+        | [] -> failwith ("extraction: unbound type var "^(b.v.ppname.idText))
 
 let lookup_ty_const tydefs ftv = failwith "Should not be looking up a constant"
 

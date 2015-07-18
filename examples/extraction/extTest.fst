@@ -11,15 +11,16 @@ type nnat =
 let idnat = fun (x:nnat) -> x
 let idnat2 (x:nnat) = x
 
+(* there's an unnecessary magic inserted for id *)
+let id : a:Type -> a -> a = fun x -> x
 (* both cases below fail *)
 
 let add1 (a : nnat) = (S a)
 
-(*
-let rec add (a : nnat) (b : nnat) = match a with
+(*let rec add (a : nnat) (b : nnat) = match a with
 | O -> b
-| S a' -> S (add a' b)
-*)
+| S a' -> S (add a' b)*)
+
 
 type prod 'a 'b =
 | Pair : fst:'a -> snd:'b -> (prod 'a 'b)
