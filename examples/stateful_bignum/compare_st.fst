@@ -96,11 +96,14 @@ let rec compare2_aux a b len tmp =
   | 0 -> tmp
   | _ -> 
      let i = get_length a - len in
-     let c = Intlib.compare (get a i) (get b i) in
+     let ai = get a i in
+     let bi = get b i in
+     let c = IntLib.compare ai bi in
+     let minus_one = -1 in
      let tmp = 
        match c with
        | 0 -> tmp
-       | -1 -> -1
+       | minus_one -> -1
        | 1 -> 1
      in
      compare2_aux a b (len+1) tmp

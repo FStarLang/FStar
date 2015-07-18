@@ -55,7 +55,8 @@ let rec compute_size_aux t n tn wa =
   if bwnp1 >= wa then n+1
   else compute_size_aux t (n+1) bwnp1 wa
 
-(* Compute the required size for the new template, verified *)
+(* Compute the required size for the new template *)
+(* Verified *)
 val compute_size : 
   a:bigint -> t:template ->
   ST pos
@@ -108,6 +109,7 @@ let rec retemplate_aux a ta b tb len =
      fill_array b tb v tsize bw 0;
      retemplate_aux a ta b tb (len+1)
 
+(* Retemplating function, returns a fresh big integer with the new template *)
 val retemplate:
   a:bigint -> t:template ->
   ST bigint

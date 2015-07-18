@@ -12,14 +12,12 @@ open Axiomatic
 open Eval
 open Array
 
-
 val aux :
   t:template -> bw_p_max:nat -> n:nat -> bwn:nat -> 
   Tot nat
 let rec aux t bw_p_max n bwn =
   if bwn >= bw_p_max then n
   else aux t bw_p_max (n+1) (bwn + t n)
-
 
 (* Compute the required array length to store the carried result *)
 val compute_size :
@@ -278,7 +276,6 @@ let rec normalized_carry_aux a len sign =
 	  Bigint.updateBigint a len aip1; 
 	  Bigint.updateBigint a i ai);
 	normalized_carry_aux a i sign
-
 
 
 (* Returns a fully normalized big int (all cells of the same sign) *)
