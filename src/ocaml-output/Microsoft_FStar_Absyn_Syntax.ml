@@ -725,7 +725,7 @@ let ktype = mk_Kind_type
 
 let keffect = mk_Kind_effect
 
-let null_id = (mk_ident ("\x5f", dummyRange))
+let null_id = (mk_ident ("_", dummyRange))
 
 let null_bvd = {ppname = null_id; realname = null_id}
 

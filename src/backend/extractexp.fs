@@ -126,12 +126,13 @@ let rec extract_pat (g:env) p : (env * list<mlpattern>) = match p.v with
    1) the return value (say r) also has type residualType and it's extraction-preimage is definitionally equal (in Fstar ) to that of mlAppExpr
    2) meets the ML requirements that the args to datacons be tupled and that the datacons be fullly applied
 *)
-let postProcIfDataCons (isDataCons : bool) (residualType : mlty)  (mlAppExpr : mlexpr) : mlexpr =
-match (mlAppExpr, isDataCons) with
-| (MLE_App (MLE_Name mlp, mlargs) , true) -> MLE_CTor (mlp,mlargs) //TODO: use residualType to determine the number of missing arguments, and eta expand accordingly
-| _ -> mlAppExpr
+let maybe_eta_data (isDataCons : bool) (residualType : mlty)  (mlAppExpr : mlexpr) : mlexpr =
+    match (mlAppExpr, isDataCons) with
+        | (MLE_App (MLE_Name mlp, mlargs) , true) -> MLE_CTor (mlp,mlargs) //TODO: use residualType to determine the number of missing arguments, and eta expand accordingly
+        | _ -> mlAppExpr
   
 let rec check_exp (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr = 
+//    printfn "Checking %s at type %A\n" (Print.exp_to_string e) t;
     erase g (check_exp' g e f t) f t    
 
 and check_exp' (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr = 
@@ -215,7 +216,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                    match rest with 
                     | [] -> head, MayErase, t
                     | _ -> let mlAppExpr, etag ,t = synth_app (head, []) (MayErase, t) rest in 
-                                (postProcIfDataCons isDataCons t mlAppExpr, etag ,t)
+                                (maybe_eta_data isDataCons t mlAppExpr, etag ,t)
               else err_uninst e
 
             | _ -> 
@@ -223,7 +224,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
               synth_app (head, []) (f, t) args               
           end
 
-        | Exp_abs(bs, e) -> 
+        | Exp_abs(bs, body) -> 
             let ml_bs, env = List.fold_left (fun (ml_bs, env) (b, _) -> match b with 
                 | Inl a -> //no first-class polymorphism; so type-binders get wiped out
                   let env = Env.extend_ty env a (Some MLTY_Top) in 
@@ -235,18 +236,21 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                   let env = Env.extend_bv env x ([], t) in
                   let ml_b = (as_mlident x.v, Some t) in
                   ml_b::ml_bs, env) ([], g) bs in
-            let bs = List.rev ml_bs in
-            let e, f, t = synth_exp env e in
+            let ml_bs = List.rev ml_bs in
+            let ml_body, f, t = synth_exp env body in
+//            printfn "Computed type of function body %s to be %A\n" (Print.exp_to_string body) t; 
             let f, tfun = List.fold_right 
                 (fun (_, targ) (f, t) -> MayErase, MLTY_Fun (must targ, f, t))
                 ml_bs (f, t) in
-            MLE_Fun(bs, e), f, tfun
+//            printfn "Computed type of abstraction %s to be %A\n" (Print.exp_to_string e) t; 
+            MLE_Fun(ml_bs, ml_body), f, tfun
     
         | Exp_let((is_rec, lbs), e') -> 
           //let _ = printfn "\n (* let \n %A \n as \n %A *) \n" lbs e' in
           let maybe_generalize {lbname=lbname; lbeff=lbeff; lbtyp=t; lbdef=e} = 
               let f_e = ExtractTyp.translate_eff g lbeff in
               let t = Util.compress_typ t in
+//              printfn "Let %s at type %s\n" (Print.lbname_to_string lbname) (Print.typ_to_string t);
               match t.n with 
                 | Typ_fun(bs, c) when is_type_abstraction bs -> 
                   //need to generalize, but will erase all the type abstractions; 
@@ -263,9 +267,13 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                       | Exp_abs(bs, body) -> 
                         if n <= List.length bs
                         then let targs, rest_args = Util.first_N n bs in 
-                             let expected_t = match Util.mk_subst_binder tbinders targs with 
+//                             printfn "tbinders are %s\n" (tbinders |> (Print.binders_to_string ", "));
+//                             printfn "tbody is %s\n" (Print.typ_to_string tbody);
+//                             printfn "targs are %s\n" (targs |> Print.binders_to_string ", ");
+                             let expected_t = match Util.mk_subst_binder targs tbinders with 
                                 | None -> failwith "Not enough type binders in the body of the let expression"
                                 | Some s -> Util.subst_typ s tbody in
+//                             printfn "After subst: expected_t is %s\n" (Print.typ_to_string expected_t);
                              let targs = targs |> List.map (function (Inl a, _) -> a | _ -> failwith "Impossible") in
                              let env = List.fold_left (fun env a -> Env.extend_ty env a None) g targs in
                              let expected_t = translate_typ env expected_t in

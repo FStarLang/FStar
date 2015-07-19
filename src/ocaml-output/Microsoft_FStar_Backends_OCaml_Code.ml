@@ -55,13 +55,13 @@ let min_op_prec = ((- (1)), Infix (NonAssoc))
 
 let max_op_prec = (Support.Microsoft.FStar.Util.max_int, Infix (NonAssoc))
 
-let infix_prim_ops = (("op\x5fAddition", e_bin_prio_op1, "+"))::(("op\x5fSubtraction", e_bin_prio_op1, "-"))::(("op\x5fMultiply", e_bin_prio_op1, "*"))::(("op\x5fDivision", e_bin_prio_op1, "/"))::(("op\x5fEquality", e_bin_prio_eq, "="))::(("op\x5fColonEquals", e_bin_prio_eq, ":="))::(("op\x5fdisEquality", e_bin_prio_eq, "<>"))::(("op\x5fAmpAmp", e_bin_prio_and, "&&"))::(("op\x5fBarBar", e_bin_prio_or, "||"))::(("op\x5fLessThanOrEqual", e_bin_prio_order, "<="))::(("op\x5fGreaterThanOrEqual", e_bin_prio_order, ">="))::(("op\x5fLessThan", e_bin_prio_order, "<"))::(("op\x5fGreaterThan", e_bin_prio_order, ">"))::(("op\x5fModulus", e_bin_prio_order, "mod"))::[]
+let infix_prim_ops = (("op_Addition", e_bin_prio_op1, "+"))::(("op_Subtraction", e_bin_prio_op1, "-"))::(("op_Multiply", e_bin_prio_op1, "*"))::(("op_Division", e_bin_prio_op1, "/"))::(("op_Equality", e_bin_prio_eq, "="))::(("op_ColonEquals", e_bin_prio_eq, ":="))::(("op_disEquality", e_bin_prio_eq, "<>"))::(("op_AmpAmp", e_bin_prio_and, "&&"))::(("op_BarBar", e_bin_prio_or, "||"))::(("op_LessThanOrEqual", e_bin_prio_order, "<="))::(("op_GreaterThanOrEqual", e_bin_prio_order, ">="))::(("op_LessThan", e_bin_prio_order, "<"))::(("op_GreaterThan", e_bin_prio_order, ">"))::(("op_Modulus", e_bin_prio_order, "mod"))::[]
 
-let prim_uni_ops = (("op\x5fNegation", "not"))::(("op\x5fMinus", "-"))::(("op\x5fBang", "!"))::(("exit", "exit"))::(("failwith", "failwith"))::(("raise", "raise"))::[]
+let prim_uni_ops = (("op_Negation", "not"))::(("op_Minus", "-"))::(("op_Bang", "!"))::(("exit", "exit"))::(("failwith", "failwith"))::(("raise", "raise"))::[]
 
 let prim_types = (("char", "char"))::(("bool", "bool"))::(("string", "string"))::(("unit", "unit"))::(("ref", "ref"))::(("array", "array"))::(("option", "option"))::(("list", "list"))::(("int", "int"))::(("int64", "Int64.t"))::[]
 
-let prim_constructors = (("Some", "Some"))::(("None", "None"))::(("Nil", "\x5b\x5d"))::(("Cons", "::"))::[]
+let prim_constructors = (("Some", "Some"))::(("None", "None"))::(("Nil", "[]"))::(("Cons", "::"))::[]
 
 let is_prims_ns = (fun ns -> (ns = ("Support")::("Prims")::[]))
 
@@ -215,7 +215,7 @@ end)
 
 let string_of_mlconstant = (fun sctt -> (match (sctt) with
 | Microsoft_FStar_Backends_ML_Syntax.MLC_Unit -> begin
-"\x28\x29"
+"()"
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLC_Bool (true) -> begin
 "true"
@@ -250,7 +250,7 @@ end))
 let rec doc_of_expr = (fun outer e -> (match (e) with
 | Microsoft_FStar_Backends_ML_Syntax.MLE_Coerce ((e, t, t')) -> begin
 (let doc = (doc_of_expr (min_op_prec, NonAssoc) e)
-in (FSharp_Format.parens (FSharp_Format.reduce (((FSharp_Format.text "Obj.magic"))::(doc)::[]))))
+in (FSharp_Format.parens (FSharp_Format.reduce (((FSharp_Format.text "Obj.magic "))::(doc)::[]))))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLE_Seq (es) -> begin
 (let docs = (Support.List.map (doc_of_expr (min_op_prec, NonAssoc)) es)
@@ -378,7 +378,7 @@ end
 end))
 and doc_of_pattern = (fun pattern -> (match (pattern) with
 | Microsoft_FStar_Backends_ML_Syntax.MLP_Wild -> begin
-(FSharp_Format.text "\x5f")
+(FSharp_Format.text "_")
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLP_Const (c) -> begin
 (FSharp_Format.text (string_of_mlconstant c))
@@ -601,7 +601,7 @@ end
 (doc_of_lets (rec_, lets))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLM_Top (e) -> begin
-(FSharp_Format.reduce1 (((FSharp_Format.text "let"))::((FSharp_Format.text "\x5f"))::((FSharp_Format.text "="))::((doc_of_expr (min_op_prec, NonAssoc) e))::[]))
+(FSharp_Format.reduce1 (((FSharp_Format.text "let"))::((FSharp_Format.text "_"))::((FSharp_Format.text "="))::((doc_of_expr (min_op_prec, NonAssoc) e))::[]))
 end))
 
 let doc_of_mod = (fun m -> (let docs = (Support.List.map doc_of_mod1 m)

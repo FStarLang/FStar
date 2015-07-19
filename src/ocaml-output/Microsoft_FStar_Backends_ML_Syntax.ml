@@ -16,7 +16,7 @@ end))
 let ptsym = (fun _50_7 -> (match (_50_7) with
 | (p, s) -> begin
 (let s = if ((Support.Char.lowercase (Support.String.get s 0)) <> (Support.String.get s 0)) then begin
-(Support.String.strcat "l\x5f\x5f" s)
+(Support.String.strcat "l__" s)
 end else begin
 s
 end
@@ -26,7 +26,7 @@ end))
 let ptctor = (fun _50_11 -> (match (_50_11) with
 | (p, s) -> begin
 (let s = if ((Support.Char.uppercase (Support.String.get s 0)) <> (Support.String.get s 0)) then begin
-(Support.String.strcat "U\x5f\x5f" s)
+(Support.String.strcat "U__" s)
 end else begin
 s
 end
@@ -35,7 +35,7 @@ end))
 
 let mlpath_of_lident = (fun x -> ((Support.List.map (fun x -> x.Microsoft_FStar_Absyn_Syntax.idText) x.Microsoft_FStar_Absyn_Syntax.ns), x.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText))
 
-let as_mlident = (fun x -> (x.Microsoft_FStar_Absyn_Syntax.realname.Microsoft_FStar_Absyn_Syntax.idText, 0))
+let as_mlident = (fun x -> (x.Microsoft_FStar_Absyn_Syntax.ppname.Microsoft_FStar_Absyn_Syntax.idText, 0))
 
 type mlidents =
 mlident list

@@ -49,7 +49,7 @@ end
 n
 end)
 in if (errs > 0) then begin
-(let _60_29 = (Support.Microsoft.FStar.Util.fprint1 "Error: %s errors were reported \x28see above\x29\n" (Support.Microsoft.FStar.Util.string_of_int errs))
+(let _60_29 = (Support.Microsoft.FStar.Util.fprint1 "Error: %s errors were reported (see above)\n" (Support.Microsoft.FStar.Util.string_of_int errs))
 in (exit (1)))
 end))
 
@@ -127,7 +127,7 @@ stack_elt list
 let interactive_mode = (fun dsenv env -> (let should_log = ((! (Microsoft_FStar_Options.debug)) <> [])
 in (let log = if should_log then begin
 (let transcript = (Support.Microsoft.FStar.Util.open_file_for_writing "transcript")
-in (fun line -> (let _60_105 = (Support.Microsoft.FStar.Util.append_to_file transcript line)
+in (fun line -> (let _60_104 = (Support.Microsoft.FStar.Util.append_to_file transcript line)
 in (Support.Microsoft.FStar.Util.flush_file transcript))))
 end else begin
 (fun line -> ())
@@ -158,22 +158,22 @@ end
 ("ok", "fail")
 end)
 in (let str = (Support.Microsoft.FStar.Util.string_of_string_builder chunk)
-in (let _60_140 = (Support.Microsoft.FStar.Util.clear_string_builder chunk)
+in (let _60_132 = (Support.Microsoft.FStar.Util.clear_string_builder chunk)
 in Code ((str, responses)))))
 end else begin
 if (Support.Microsoft.FStar.Util.starts_with l "#pop") then begin
-(let _60_129 = (Support.Microsoft.FStar.Util.clear_string_builder chunk)
+(let _60_134 = (Support.Microsoft.FStar.Util.clear_string_builder chunk)
 in Pop (l))
 end else begin
 if (Support.Microsoft.FStar.Util.starts_with l "#push") then begin
-(let _60_127 = (Support.Microsoft.FStar.Util.clear_string_builder chunk)
+(let _60_136 = (Support.Microsoft.FStar.Util.clear_string_builder chunk)
 in Push (l))
 end else begin
 if (l = "#finish") then begin
 (exit (0))
 end else begin
-(let _60_123 = (Support.Microsoft.FStar.Util.string_builder_append chunk line)
-in (let _60_125 = (Support.Microsoft.FStar.Util.string_builder_append chunk "\n")
+(let _60_138 = (Support.Microsoft.FStar.Util.string_builder_append chunk line)
+in (let _60_140 = (Support.Microsoft.FStar.Util.string_builder_append chunk "\n")
 in (fill_chunk ())))
 end
 end
@@ -285,26 +285,26 @@ in (Support.Microsoft.FStar.Util.print_string "All verification conditions disch
 end)
 
 let codegen = (fun fmods env -> if ((! (Microsoft_FStar_Options.codegen)) = Some ("OCaml")) then begin
-(Support.Prims.try_with (fun _60_258 -> (match (_60_258) with
+(Support.Prims.try_with (fun _60_250 -> (match (_60_250) with
 | () -> begin
 (let mllib = (Microsoft_FStar_Backends_OCaml_ASTTrans.mlmod_of_fstars (Support.List.tail fmods))
 in (let doc = (Microsoft_FStar_Backends_OCaml_Code.doc_of_mllib mllib)
-in (Support.List.iter (fun _60_272 -> (match (_60_272) with
+in (Support.List.iter (fun _60_264 -> (match (_60_264) with
 | (n, d) -> begin
 (Support.Microsoft.FStar.Util.write_file (Microsoft_FStar_Options.prependOutputDir (Support.String.strcat n ".ml")) (FSharp_Format.pretty 120 d))
 end)) doc)))
-end)) (fun _60_257 -> (match (_60_257) with
+end)) (fun _60_249 -> (match (_60_249) with
 | Microsoft_FStar_Backends_OCaml_ASTTrans.OCamlFailure ((rg, error)) -> begin
-(let _60_264 = (Support.Microsoft.FStar.Util.print_string (Support.Microsoft.FStar.Util.format2 "OCaml Backend Error: %s %s\n" (Support.Microsoft.FStar.Range.string_of_range rg) (Microsoft_FStar_Backends_OCaml_ASTTrans.string_of_error error)))
+(let _60_256 = (Support.Microsoft.FStar.Util.print_string (Support.Microsoft.FStar.Util.format2 "OCaml Backend Error: %s %s\n" (Support.Microsoft.FStar.Range.string_of_range rg) (Microsoft_FStar_Backends_OCaml_ASTTrans.string_of_error error)))
 in (exit (1)))
 end)))
 end else begin
 if ((! (Microsoft_FStar_Options.codegen)) = Some ("OCaml-experimental")) then begin
-(let _60_251 = (Microsoft_FStar_Backends_ML_ExtractMod.extract (Microsoft_FStar_Backends_ML_ExtractTyp.mkContext env) (Support.List.hd (Support.List.tl fmods)))
-in (match (_60_251) with
+(let _60_267 = (Microsoft_FStar_Backends_ML_ExtractMod.extract (Microsoft_FStar_Backends_ML_ExtractTyp.mkContext env) (Support.List.hd (Support.List.tl fmods)))
+in (match (_60_267) with
 | (c, mllib) -> begin
 (let newDoc = (Microsoft_FStar_Backends_OCaml_Code.doc_of_mllib mllib)
-in ((Support.List.iter (fun _60_256 -> (match (_60_256) with
+in ((Support.List.iter (fun _60_272 -> (match (_60_272) with
 | (_, newDoc) -> begin
 (Support.Microsoft.FStar.Util.fprint1 "%s\n" (FSharp_Format.pretty 1 newDoc))
 end))) newDoc))
@@ -329,7 +329,7 @@ end
 (Microsoft_FStar_Parser_Driver.read_build_config f)
 end
 | _ -> begin
-(let _60_286 = (Support.Microsoft.FStar.Util.print_string "--use\x5fbuild\x5fconfig expects just a single file on the command line and no other arguments")
+(let _60_286 = (Support.Microsoft.FStar.Util.print_string "--use_build_config expects just a single file on the command line and no other arguments")
 in (exit (1)))
 end)
 end else begin

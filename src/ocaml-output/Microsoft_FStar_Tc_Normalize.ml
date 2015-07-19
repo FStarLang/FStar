@@ -104,7 +104,7 @@ end
 (failwith "Impossible")
 end
 | Microsoft_FStar_Absyn_Syntax.Kind_unknown -> begin
-(failwith (Support.Microsoft.FStar.Util.format2 "%s: Impossible: Kind\x5funknown: %s" (Support.Microsoft.FStar.Range.string_of_range (Microsoft_FStar_Tc_Env.get_range tcenv)) (Microsoft_FStar_Absyn_Print.typ_to_string t)))
+(failwith (Support.Microsoft.FStar.Util.format2 "%s: Impossible: Kind_unknown: %s" (Support.Microsoft.FStar.Range.string_of_range (Microsoft_FStar_Tc_Env.get_range tcenv)) (Microsoft_FStar_Absyn_Print.typ_to_string t)))
 end))
 in (aux t k))))
 
@@ -357,11 +357,11 @@ end
 (f config.code)
 end)
 in if (has_eta config) then begin
-(let _25_486 = config
-in {code = (eta_expand tcenv t); environment = _25_486.environment; stack = _25_486.stack; close = _25_486.close; steps = _25_486.steps})
-end else begin
 (let _25_484 = config
-in {code = t; environment = _25_484.environment; stack = _25_484.stack; close = _25_484.close; steps = _25_484.steps})
+in {code = (eta_expand tcenv t); environment = _25_484.environment; stack = _25_484.stack; close = _25_484.close; steps = _25_484.steps})
+end else begin
+(let _25_486 = config
+in {code = t; environment = _25_486.environment; stack = _25_486.stack; close = _25_486.close; steps = _25_486.steps})
 end))))
 in (let wk = (fun f -> (match ((! (cfg.code.Microsoft_FStar_Absyn_Syntax.tk))) with
 | Some ({Microsoft_FStar_Absyn_Syntax.n = Microsoft_FStar_Absyn_Syntax.Kind_type; Microsoft_FStar_Absyn_Syntax.tk = _; Microsoft_FStar_Absyn_Syntax.pos = _; Microsoft_FStar_Absyn_Syntax.fvs = _; Microsoft_FStar_Absyn_Syntax.uvs = _}) -> begin
@@ -462,7 +462,7 @@ end
 V ((x.Microsoft_FStar_Absyn_Syntax.v, (v, env)))
 end
 | _ -> begin
-(failwith (Support.Microsoft.FStar.Util.format3 "\x28%s\x29 Impossible: ill-typed redex\n formal is %s\nactual is %s\n" (Support.Microsoft.FStar.Range.string_of_range (Microsoft_FStar_Absyn_Syntax.argpos (Support.Prims.fst actual))) (Microsoft_FStar_Absyn_Print.binder_to_string formal) (Microsoft_FStar_Absyn_Print.arg_to_string (Support.Prims.fst actual))))
+(failwith (Support.Microsoft.FStar.Util.format3 "(%s) Impossible: ill-typed redex\n formal is %s\nactual is %s\n" (Support.Microsoft.FStar.Range.string_of_range (Microsoft_FStar_Absyn_Syntax.argpos (Support.Prims.fst actual))) (Microsoft_FStar_Absyn_Print.binder_to_string formal) (Microsoft_FStar_Absyn_Print.arg_to_string (Support.Prims.fst actual))))
 end)
 in (beta ((m)::env_entries) rest rest'))
 end))
@@ -496,19 +496,19 @@ end)
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_meta (Microsoft_FStar_Absyn_Syntax.Meta_pattern ((t, ps))) -> begin
 if (unmeta config) then begin
-(sn tcenv (let _25_673 = config
-in {code = t; environment = _25_673.environment; stack = _25_673.stack; close = _25_673.close; steps = _25_673.steps}))
+(sn tcenv (let _25_668 = config
+in {code = t; environment = _25_668.environment; stack = _25_668.stack; close = _25_668.close; steps = _25_668.steps}))
 end else begin
 (let pat = (fun t -> (let ps = (sn_args true tcenv config.environment config.steps ps)
 in (wk (Microsoft_FStar_Absyn_Syntax.mk_Typ_meta' (Microsoft_FStar_Absyn_Syntax.Meta_pattern ((t, ps)))))))
-in (sn tcenv (let _25_671 = config
-in {code = t; environment = _25_671.environment; stack = _25_671.stack; close = (close_with_config config pat); steps = _25_671.steps})))
+in (sn tcenv (let _25_673 = config
+in {code = t; environment = _25_673.environment; stack = _25_673.stack; close = (close_with_config config pat); steps = _25_673.steps})))
 end
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_meta (Microsoft_FStar_Absyn_Syntax.Meta_labeled ((t, l, r, b))) -> begin
 if (unlabel config) then begin
-(sn tcenv (let _25_702 = config
-in {code = t; environment = _25_702.environment; stack = _25_702.stack; close = _25_702.close; steps = _25_702.steps}))
+(sn tcenv (let _25_682 = config
+in {code = t; environment = _25_682.environment; stack = _25_682.stack; close = _25_682.close; steps = _25_682.steps}))
 end else begin
 (let lab = (fun t -> (match (t.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Typ_const (fv) when ((Microsoft_FStar_Absyn_Syntax.lid_equals fv.Microsoft_FStar_Absyn_Syntax.v Microsoft_FStar_Absyn_Const.true_lid) && ((Support.List.contains Simplify) config.steps)) -> begin
@@ -523,7 +523,7 @@ if ((b' = None) || (Some (b) = b')) then begin
 end
 in t)
 end else begin
-(let _25_694 = if (Microsoft_FStar_Tc_Env.debug tcenv Microsoft_FStar_Options.Low) then begin
+(let _25_698 = if (Microsoft_FStar_Tc_Env.debug tcenv Microsoft_FStar_Options.Low) then begin
 (Support.Microsoft.FStar.Util.fprint1 "Normalizer refreshing label: %s\n" (Support.Microsoft.FStar.Range.string_of_range sfx))
 end
 in (wk (Microsoft_FStar_Absyn_Syntax.mk_Typ_meta' (Microsoft_FStar_Absyn_Syntax.Meta_labeled ((t, l, sfx, b))))))
@@ -533,14 +533,14 @@ end
 (wk (Microsoft_FStar_Absyn_Syntax.mk_Typ_meta' (Microsoft_FStar_Absyn_Syntax.Meta_labeled ((t, l, r, b)))))
 end)
 end))
-in (sn tcenv (let _25_700 = config
-in {code = t; environment = _25_700.environment; stack = _25_700.stack; close = (close_with_config config lab); steps = _25_700.steps})))
+in (sn tcenv (let _25_702 = config
+in {code = t; environment = _25_702.environment; stack = _25_702.stack; close = (close_with_config config lab); steps = _25_702.steps})))
 end
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_meta (Microsoft_FStar_Absyn_Syntax.Meta_refresh_label ((t, b, r))) -> begin
 if (unmeta config) then begin
-(sn tcenv (let _25_720 = config
-in {code = t; environment = _25_720.environment; stack = _25_720.stack; close = _25_720.close; steps = _25_720.steps}))
+(sn tcenv (let _25_710 = config
+in {code = t; environment = _25_710.environment; stack = _25_710.stack; close = _25_710.close; steps = _25_710.steps}))
 end else begin
 (let sfx = (match (b) with
 | Some (false) -> begin
@@ -549,25 +549,25 @@ end
 | _ -> begin
 Microsoft_FStar_Absyn_Syntax.dummyRange
 end)
-in (let config = (let _25_715 = config
-in {code = t; environment = (let _25_717 = config.environment
-in {context = _25_717.context; label_suffix = ((b, sfx))::config.environment.label_suffix}); stack = _25_715.stack; close = _25_715.close; steps = _25_715.steps})
+in (let config = (let _25_717 = config
+in {code = t; environment = (let _25_719 = config.environment
+in {context = _25_719.context; label_suffix = ((b, sfx))::config.environment.label_suffix}); stack = _25_717.stack; close = _25_717.close; steps = _25_717.steps})
 in (sn tcenv config)))
 end
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_meta (Microsoft_FStar_Absyn_Syntax.Meta_slack_formula ((t1, t2, flag))) -> begin
 if (! (flag)) then begin
-(sn tcenv (let _25_732 = config
-in {code = (Microsoft_FStar_Absyn_Util.mk_conj t1 t2); environment = _25_732.environment; stack = _25_732.stack; close = _25_732.close; steps = _25_732.steps}))
+(sn tcenv (let _25_728 = config
+in {code = (Microsoft_FStar_Absyn_Util.mk_conj t1 t2); environment = _25_728.environment; stack = _25_728.stack; close = _25_728.close; steps = _25_728.steps}))
 end else begin
 (let c1 = (sn tcenv (t_config t1 config.environment config.steps))
 in (let c2 = (sn tcenv (t_config t2 config.environment config.steps))
-in (rebuild (let _25_730 = config
-in {code = (Microsoft_FStar_Absyn_Syntax.mk_Typ_meta (Microsoft_FStar_Absyn_Syntax.Meta_slack_formula ((c1.code, c2.code, flag)))); environment = _25_730.environment; stack = _25_730.stack; close = _25_730.close; steps = _25_730.steps}))))
+in (rebuild (let _25_732 = config
+in {code = (Microsoft_FStar_Absyn_Syntax.mk_Typ_meta (Microsoft_FStar_Absyn_Syntax.Meta_slack_formula ((c1.code, c2.code, flag)))); environment = _25_732.environment; stack = _25_732.stack; close = _25_732.close; steps = _25_732.steps}))))
 end
 end
 | (Microsoft_FStar_Absyn_Syntax.Typ_meta (Microsoft_FStar_Absyn_Syntax.Meta_named (_))) | (Microsoft_FStar_Absyn_Syntax.Typ_unknown) | (_) -> begin
-(failwith (Support.Microsoft.FStar.Util.format3 "\x28%s\x29 Unexpected type \x28%s\x29: %s" (Support.Microsoft.FStar.Range.string_of_range (Microsoft_FStar_Tc_Env.get_range tcenv)) (Microsoft_FStar_Absyn_Print.tag_of_typ config.code) (Microsoft_FStar_Absyn_Print.typ_to_string config.code)))
+(failwith (Support.Microsoft.FStar.Util.format3 "(%s) Unexpected type (%s): %s" (Support.Microsoft.FStar.Range.string_of_range (Microsoft_FStar_Tc_Env.get_range tcenv)) (Microsoft_FStar_Absyn_Print.tag_of_typ config.code) (Microsoft_FStar_Absyn_Print.typ_to_string config.code)))
 end)
 end))))))
 and sn_binders = (fun tcenv binders env steps -> (let rec aux = (fun out env _25_5 -> (match (_25_5) with
@@ -770,7 +770,7 @@ end
 V ((x.Microsoft_FStar_Absyn_Syntax.v, (v, env)))
 end
 | _ -> begin
-(failwith (Support.Microsoft.FStar.Util.format3 "\x28%s\x29 Impossible: ill-typed redex\n formal is %s\nactual is %s\n" (Support.Microsoft.FStar.Range.string_of_range (Microsoft_FStar_Absyn_Syntax.argpos (Support.Prims.fst actual))) (Microsoft_FStar_Absyn_Print.binder_to_string formal) (Microsoft_FStar_Absyn_Print.arg_to_string (Support.Prims.fst actual))))
+(failwith (Support.Microsoft.FStar.Util.format3 "(%s) Impossible: ill-typed redex\n formal is %s\nactual is %s\n" (Support.Microsoft.FStar.Range.string_of_range (Microsoft_FStar_Absyn_Syntax.argpos (Support.Prims.fst actual))) (Microsoft_FStar_Absyn_Print.binder_to_string formal) (Microsoft_FStar_Absyn_Print.arg_to_string (Support.Prims.fst actual))))
 end)
 in (beta ((m)::entries) rest rest'))
 end))
