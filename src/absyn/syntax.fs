@@ -117,7 +117,7 @@ and exp' =
   | Exp_abs        of binders * exp 
   | Exp_app        of exp * args                                 (* args in order from left to right *)
   | Exp_match      of exp * list<(pat * option<exp> * exp)>      (* optional when clause in each equation *)
-  | Exp_ascribed   of exp * typ 
+  | Exp_ascribed   of exp * typ * option<lident>                 (* an effect label is the third arg, filled in by the type-checker *)
   | Exp_let        of letbindings * exp                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Exp_uvar       of uvar_e * typ                               (* not present after 1st round tc *)
   | Exp_delayed    of exp * subst_t * memo<exp>                  (* A delayed substitution --- always force it before inspecting the first arg *)
@@ -578,14 +578,12 @@ let mk_Exp_match ((e:exp),(pats:list<(pat * option<exp> * exp)>)) (t:option<typ>
        pos=p;
        uvs=mk_uvs(); fvs=mk_fvs();
     } 
-let mk_Exp_ascribed' ((e:exp),(t:typ)) (t':option<typ>) p = {
-    n=Exp_ascribed(e, t);
+let mk_Exp_ascribed ((e:exp),(t:typ),(l:option<lident>)) (t':option<typ>) p = {
+    n=Exp_ascribed(e, t, l);
     tk=get_typ_ref t';
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();
-    
 }
-let mk_Exp_ascribed ((e:exp),(t:typ)) p = mk_Exp_ascribed' (e, t) (Some t) p
 let mk_Exp_let ((lbs:letbindings),(e:exp)) (t:option<typ>) p = 
    {
     n=Exp_let(lbs, e);

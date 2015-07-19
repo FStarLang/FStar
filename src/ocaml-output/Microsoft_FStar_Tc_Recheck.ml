@@ -163,7 +163,7 @@ end
 | Microsoft_FStar_Absyn_Syntax.Exp_match (_) -> begin
 (failwith "Expect match nodes to be annotated already")
 end
-| Microsoft_FStar_Absyn_Syntax.Exp_ascribed ((_, t)) -> begin
+| Microsoft_FStar_Absyn_Syntax.Exp_ascribed ((_, t, _)) -> begin
 t
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_let ((_, e)) -> begin
@@ -181,7 +181,7 @@ t
 end
 | None -> begin
 (let t = (recompute e)
-in (let _23_203 = (Support.ST.op_Colon_Equals e.Microsoft_FStar_Absyn_Syntax.tk (Some (t)))
+in (let _23_205 = (Support.ST.op_Colon_Equals e.Microsoft_FStar_Absyn_Syntax.tk (Some (t)))
 in t))
 end)))
 

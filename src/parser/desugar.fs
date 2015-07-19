@@ -720,7 +720,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
       pos <| mk_Exp_match(desugar_exp env e, List.map desugar_branch branches)
 
     | Ascribed(e, t) ->
-      pos <| mk_Exp_ascribed'(desugar_exp env e, desugar_typ env t)
+      pos <| mk_Exp_ascribed(desugar_exp env e, desugar_typ env t, None)
 
     | Record(_, []) ->
       raise (Error("Unexpected empty record", top.range))

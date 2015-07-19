@@ -778,7 +778,7 @@ and tc_value env e : exp * lcomp * guard_t =
     then Util.fprint3 "!!!!!!!!!!!!!!!Annotating lambda with type %s (%s)\nGuard is %s\n" (Print.typ_to_string tfun) (Print.tag_of_typ tfun) (Rel.guard_to_string env guard);
 
     let e = mk_Exp_abs(bs, body) (Some tfun) e.pos  in
-    let e = mk_Exp_ascribed(e, tfun) e.pos in //Important to ascribe, since the SMT encoding requires the type of every abstraction
+    let e = mk_Exp_ascribed(e, tfun, Const.effect_Tot_lid |> Some) None e.pos in //Important to ascribe, since the SMT encoding requires the type of every abstraction
     let c = if env.top_level then mk_Total tfun else Tc.Util.return_value env tfun e in
     let c, g = Tc.Util.strengthen_precondition None env e (Tc.Util.lcomp_of_comp c) guard in
     
@@ -801,11 +801,11 @@ and tc_exp env e : exp * lcomp * guard_t =
   | Exp_constant _  
   | Exp_abs _  -> tc_value env e 
 
-  | Exp_ascribed(e1, t1) -> 
+  | Exp_ascribed(e1, t1, _) -> 
     let t1, f = tc_typ_check env t1 ktype in 
     let e1, c, g = tc_exp (Env.set_expected_typ env t1) e1 in
     let c, f = Tc.Util.strengthen_precondition (Some (fun () -> Errors.ill_kinded_type)) (Env.set_range env t1.pos) e1 c f in
-    let e, c, f2 = comp_check_expected_typ env (w c <| mk_Exp_ascribed'(e1, t1)) c in
+    let e, c, f2 = comp_check_expected_typ env (w c <| mk_Exp_ascribed(e1, t1, Some c.eff_name)) c in
     e, c, Rel.conj_guard f (Rel.conj_guard g f2)
 
   | Exp_meta(Meta_desugared(e, Sequence)) -> 
@@ -1047,7 +1047,7 @@ and tc_exp env e : exp * lcomp * guard_t =
     let cres = Tc.Util.bind env (Some e1) c1 (Some <| Env.Binding_var(guard_x, c1.res_typ), c_branches) in
     //let cres = Normalize.norm_comp [Normalize.Beta] env cres in
     let e = w cres <| mk_Exp_match(e1, List.map (fun (f, _, _, _) -> f) t_eqns) in 
-    mk_Exp_ascribed(e, cres.res_typ) e.pos,  //important to ascribe, for recomputing types
+    mk_Exp_ascribed(e, cres.res_typ, Some cres.eff_name) None e.pos,  //important to ascribe, for recomputing types
     cres, Rel.conj_guard g1 g_branches
 
   | Exp_let((false, [{lbname=x; lbtyp=t; lbdef=e1}]), e2) -> 

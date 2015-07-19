@@ -1,7 +1,8 @@
 (*--build-config
   --*)
 
-(*fstar extTest.fst --codegen OCaml-experimental > Test.ml ; sed -i '1d;$d;s/Test.l__//g;s/Test.//g' Test.ml ; ocamlc Test.ml*)
+(*fstar extTest.fst --codegen OCaml-experimental > Test.ml ; sed -i '1d;$d;s/Test.l__//g;s/Test.//g' Test.ml ; ocamlc Test.ml
+*)
 module Test
 
 type nnat =
@@ -18,11 +19,17 @@ let idnat2 (x:nnat) = x
 
   We should try move the head lambdas in the body of a let to the LHS of '=''
   This is what Coq seems to be doing.
+
+  NS: I disagree. Let bindings bind a value, period.
+      Their RHS can be any value, including a lambda.
   *)
 let id : a:Type -> a -> a = fun x -> x
 let idp (a:Type) = fun x -> x
-
 let add1 (a : nnat) = (S a)
+
+let prev = function
+  | O -> O
+  | S n -> n
 
 (*let rec add (a : nnat) (b : nnat) = match a with
 | O -> b

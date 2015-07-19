@@ -647,13 +647,13 @@ end
 end) (exp_to_string e))
 end))) pats)))
 end
-| Microsoft_FStar_Absyn_Syntax.Exp_ascribed ((e, t)) -> begin
+| Microsoft_FStar_Absyn_Syntax.Exp_ascribed ((e, t, _)) -> begin
 (Support.Microsoft.FStar.Util.format2 "(%s:%s)" (exp_to_string e) (typ_to_string t))
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_let ((lbs, e)) -> begin
 (Support.Microsoft.FStar.Util.format2 "%s in %s" (lbs_to_string lbs) (exp_to_string e))
 end))
-and uvar_e_to_string = (fun _19_611 -> (match (_19_611) with
+and uvar_e_to_string = (fun _19_613 -> (match (_19_613) with
 | (uv, _) -> begin
 (Support.String.strcat "\'e" (if (! (Microsoft_FStar_Options.hide_uvar_nums)) then begin
 "?"
@@ -731,7 +731,7 @@ and uvar_k_to_string = (fun uv -> (Support.String.strcat "\'k_" (if (! (Microsof
 end else begin
 (Support.Microsoft.FStar.Util.string_of_int (Support.Microsoft.FStar.Unionfind.uvar_id uv))
 end)))
-and uvar_k_to_string' = (fun _19_684 -> (match (_19_684) with
+and uvar_k_to_string' = (fun _19_686 -> (match (_19_686) with
 | (uv, args) -> begin
 (let str = if (! (Microsoft_FStar_Options.hide_uvar_nums)) then begin
 "?"

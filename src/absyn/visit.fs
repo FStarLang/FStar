@@ -334,7 +334,7 @@ and reduce_exp
           let el, env = map_exps_with_binders env ((binders, e1)::branches) in
           ([], [], [], el, []), env 
 
-        | Exp_ascribed(e, t) ->
+        | Exp_ascribed(e, t, _) ->
           let t, env = map_typ env binders t in
           let e, env = map_exp env binders e in
           ([], [], [t], [e], []), env
@@ -408,7 +408,7 @@ let combine_exp e (ec:exp_components) env =
     | Exp_uvar(uv, _), (_, _, [t], _, _) ->                  w <| mk_Exp_uvar'(uv, t)
     | Exp_abs _, (bs, _, _, [e], _)  ->                      w <| mk_Exp_abs(bs, e)
     | Exp_app _, (_, _, _, [e], args) ->                     w <| mk_Exp_app(e, args)
-    | Exp_ascribed _, (_, _, [t], [e], _) ->                 w <| mk_Exp_ascribed'(e, t)
+    | Exp_ascribed (_,_,l), (_, _, [t], [e], _) ->           w <| mk_Exp_ascribed(e, t, l)
     | Exp_meta(Meta_desugared(_, tag)), (_, _, _, [e], _) -> w <| mk_Exp_meta' (Meta_desugared(e, tag))
     | Exp_match (_, eqns), (_, [], [], e1::el, _) -> 
       let rec mk_eqns eqns el = match eqns, el with 

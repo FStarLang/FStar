@@ -111,7 +111,7 @@ let rec recompute_typ (e:exp) : typ =
             end
 
        | Exp_match _ -> failwith "Expect match nodes to be annotated already"
-       | Exp_ascribed(_, t) -> t
+       | Exp_ascribed(_, t, _) -> t
        | Exp_let(_, e) -> recompute_typ e  
        | Exp_uvar(_, t) -> t
        | Exp_meta(Meta_desugared(e, _)) -> recompute_typ e in

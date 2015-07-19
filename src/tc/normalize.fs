@@ -683,11 +683,11 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
       let e = mk_Exp_let((is_rec, lbs), c_body.code) None e.pos in
       {config with code=e} |> rebuild
         
-    | Exp_ascribed (e, t) -> 
+    | Exp_ascribed (e, t, l) -> 
       let c = wne tcenv ({config with code=e}) in
       if is_stack_empty config
       then let t = sn tcenv (t_config t config.environment config.steps) in
-           rebuild ({config with code=mk_Exp_ascribed(c.code, t.code) e.pos})
+           rebuild ({config with code=mk_Exp_ascribed(c.code, t.code, l) None e.pos})
       else c
 
     | Exp_meta(Meta_desugared(e, info)) -> 

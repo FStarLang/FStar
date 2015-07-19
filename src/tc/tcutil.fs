@@ -530,7 +530,7 @@ let extract_lb_annotation env t e = match t.n with
 
     let rec aux vars e : exp * typ * bool = match e.n with 
       | Exp_meta(Meta_desugared(e, _)) -> aux vars e 
-      | Exp_ascribed(e, t) -> e, t, true
+      | Exp_ascribed(e, t, _) -> e, t, true
 
       | Exp_abs(bs, body) -> 
         let scope, bs, check = bs |> List.fold_left (fun (scope, bs, check) b -> match fst b with 

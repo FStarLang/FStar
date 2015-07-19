@@ -683,7 +683,7 @@ and encode_exp (e:exp) (env:env_t) : (term
       | Exp_constant c -> 
         encode_const c, []
       
-      | Exp_ascribed(e, t) -> 
+      | Exp_ascribed(e, t, _) -> 
         e.tk := Some t;
         encode_exp e env
 
@@ -1527,7 +1527,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             binders@extra_formals, body in
 
         let destruct_bound_function flid t_norm e = match e.n with
-            | Exp_ascribed({n=Exp_abs(binders, body)}, _)
+            | Exp_ascribed({n=Exp_abs(binders, body)}, _, _)
             | Exp_abs(binders, body) -> 
                 begin match t_norm.n with 
                  | Typ_fun(formals, c) -> 

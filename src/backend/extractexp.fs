@@ -129,6 +129,7 @@ let rec extract_pat (g:env) p : (env * list<mlpattern>) = match p.v with
 let maybe_eta_data (isDataCons : bool) (residualType : mlty)  (mlAppExpr : mlexpr) : mlexpr =
     match (mlAppExpr, isDataCons) with
         | (MLE_App (MLE_Name mlp, mlargs) , true) -> MLE_CTor (mlp,mlargs) //TODO: use residualType to determine the number of missing arguments, and eta expand accordingly
+        | (MLE_Name mlp, true) -> MLE_CTor (mlp, [])
         | _ -> mlAppExpr
   
 let rec check_exp (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr = 
@@ -148,13 +149,13 @@ and check_exp' (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr =
             List.hd p, when_opt, branch) in
         if eff_leq f_e f
         then MLE_Match(e, mlbranches)
-        else err_unexpected_eff scrutinee f_e f
+        else err_unexpected_eff scrutinee f f_e
 
      | _ -> 
        let e0, f0, t0 = synth_exp g e in
        if eff_leq f0 f
        then coerce g e0 t0 t
-       else err_unexpected_eff e f0 f
+       else err_unexpected_eff e f f0
       
 and synth_exp (g:env) (e:exp) : (mlexpr * e_tag * mlty) = 
     let e, f, t = synth_exp' g e in
@@ -168,17 +169,20 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
           let t = Tc.Recheck.typing_const e.pos c in
           MLE_Const <| mlconst_of_const c, MayErase, translate_typ g t
  
-        | Exp_ascribed(e, t) ->
+        | Exp_ascribed(e0, t, f) ->
           let t = translate_typ g t in 
-          let e, f, t' = synth_exp g e in
-          coerce g e t' t, f, t
+          let f = match f with 
+            | None -> failwith "Ascription node with an empty effect label"
+            | Some l -> ExtractTyp.translate_eff g l in
+          let e = check_exp g e0 f t in
+          e, f, t
 
         | Exp_bvar _
         | Exp_fvar _ -> // how is Exp_constant different from Exp_fvar?
-          let (x, mltys), _ = lookup_var g e in 
+          let (x, mltys), is_data = lookup_var g e in 
           //let _ = printfn "\n (*looked up tyscheme of \n %A \n as \n %A *) \n" x s in
           begin match mltys with 
-            | ([], t) -> x, MayErase, t
+            | ([], t) -> maybe_eta_data is_data t x, MayErase, t
             | _ -> err_uninst e
           end
 

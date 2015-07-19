@@ -31,8 +31,22 @@ let mlty_of_isExp (b:bool) : mlty =
 (*copied from ocaml-strtrans.fs*)
 let prependTick (x,n) = if Util.starts_with x "'" then (x,n) else ("'"^x,n)
 
+let delta_norm_eff = 
+    let cache = Util.smap_create 20 in
+    let rec delta_norm_eff g (l:lident) =
+        match Util.smap_try_find cache l.str with
+            | Some l -> l
+            | None -> 
+              let res = match Tc.Env.lookup_effect_abbrev g.tcenv l with 
+                | None -> l
+                | Some (_, c) -> delta_norm_eff g (Util.comp_effect_name c) in
+              Util.smap_add cache l.str res;
+              res in
+    delta_norm_eff
+
 let translate_eff g l : e_tag = 
-    if lid_equals l Const.effect_PURE_lid //TODO : what about effect abbreviations?
+    let l = delta_norm_eff g l in
+    if lid_equals l Const.effect_PURE_lid 
     then MayErase 
     else Keep
 

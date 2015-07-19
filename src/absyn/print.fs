@@ -390,7 +390,7 @@ and exp_to_string x = match (compress_exp x).n with
       (p |> pat_to_string)
       (match wopt with | None -> "" | Some w -> Util.format1 "when %s" (w |> exp_to_string)) 
       (e |> exp_to_string))))
-  | Exp_ascribed(e, t) -> Util.format2 "(%s:%s)" (e|> exp_to_string) (t |> typ_to_string)
+  | Exp_ascribed(e, t, _) -> Util.format2 "(%s:%s)" (e|> exp_to_string) (t |> typ_to_string)
   | Exp_let(lbs, e) -> Util.format2 "%s in %s" 
     (lbs_to_string lbs)
     (e|> exp_to_string)

@@ -687,7 +687,7 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
         | Exp_meta (Meta_desugared (e, Primop)) ->
              mlexpr_of_expr mlenv rg lenv e
       
-        | Exp_ascribed (e, _) ->
+        | Exp_ascribed (e, _, _) ->
             mlexpr_of_expr mlenv rg lenv e
 
         | Exp_meta (Meta_desugared (e, MaskedEffect)) ->

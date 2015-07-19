@@ -126,7 +126,7 @@ and exp' =
   | Exp_abs        of binders * exp 
   | Exp_app        of exp * args                                 (* h tau_1 ... tau_n, args in order from left to right *)
   | Exp_match      of exp * list<(pat * option<exp> * exp)>      (* optional when clause in each equation *)
-  | Exp_ascribed   of exp * typ 
+  | Exp_ascribed   of exp * typ * option<lident>
   | Exp_let        of letbindings * exp                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Exp_uvar       of uvar_e * typ                               (* not present after 1st round tc *)
   | Exp_delayed    of exp * subst_t * memo<exp>                    (* A delayed substitution --- always force it before inspecting the first arg *)
@@ -267,12 +267,11 @@ type eff_decl = {
 }
 and sigelt =
   | Sig_tycon          of lident * binders * knd * list<lident> * list<lident> * list<qualifier> * Range.range 
-      (* bool is for a prop, list<lident> identifies mutuals, second list<lident> are all the constructors *)
+  (* list<lident> identifies mutuals, second list<lident> are all the constructors *)
   | Sig_kind_abbrev    of lident * binders * knd * Range.range
   | Sig_typ_abbrev     of lident * binders * knd * typ * list<qualifier> * Range.range 
   | Sig_datacon        of lident * typ * tycon * list<qualifier> * list<lident> (* mutuals *) * Range.range  
-  (* second lident is the name of the type this constructs *)
-  (* the comment above does not typecheck *)
+  (* the tycon is the inductive type of the value this constructs *)
   | Sig_val_decl       of lident * typ * list<qualifier> * Range.range 
   | Sig_assume         of lident * formula * list<qualifier> * Range.range 
   | Sig_let            of letbindings * Range.range * list<lident> * list<qualifier>
@@ -280,8 +279,9 @@ and sigelt =
   | Sig_bundle         of list<sigelt> * list<qualifier> * list<lident> * Range.range 
     (* an inductive type is a bundle of all mutually defined Sig_tycons and Sig_datacons *)
     (* perhaps it would be nicer to let this have a 2-level structure, e.g. list<list<sigelt>>,
-       where each higher level list represents one of the inductive types and its constructors. *)
-    (*does the sigelt corresponding to the type always come first? followed by all the constructors?*)
+       where each higher level list represents one of the inductive types and its constructors.
+       NS: the current order is convenient as it matches the type-checking order for the mutuals;
+           all the tycons and typ_abbrevs first; then all the data which may refer to the tycons/abbrevs *)
   | Sig_new_effect     of eff_decl * Range.range
   | Sig_sub_effect     of sub_eff * Range.range
   | Sig_effect_abbrev  of lident * binders * comp * list<qualifier> * Range.range
@@ -372,8 +372,7 @@ val mk_Exp_app: (exp * args) -> option<typ> -> range -> exp
 val mk_Exp_app': (exp * args) -> option<typ> -> range -> exp
 val mk_Exp_app_flat: (exp * args) -> option<typ> -> range -> exp
 val mk_Exp_match: (exp * list<(pat * option<exp> * exp)>) -> option<typ> -> range -> exp
-val mk_Exp_ascribed': (exp * typ) -> option<typ> -> range -> exp
-val mk_Exp_ascribed: (exp * typ) -> range -> exp
+val mk_Exp_ascribed: (exp * typ * option<lident>) -> option<typ> -> range -> exp
 val mk_Exp_let: (letbindings * exp) -> option<typ> -> range -> exp
 val mk_Exp_uvar': (uvar_e * typ) -> option<typ> -> range -> exp
 val mk_Exp_uvar: (uvar_e * typ) -> range -> exp

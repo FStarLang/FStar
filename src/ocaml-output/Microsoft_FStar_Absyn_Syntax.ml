@@ -93,7 +93,7 @@ type typ' =
 | Exp_abs of (binders * exp)
 | Exp_app of (exp * args)
 | Exp_match of (exp * (pat * exp option * exp) list)
-| Exp_ascribed of (exp * typ)
+| Exp_ascribed of (exp * typ * lident option)
 | Exp_let of (letbindings * exp)
 | Exp_uvar of (uvar_e * typ)
 | Exp_delayed of (exp * subst_t * exp memo)
@@ -663,32 +663,27 @@ let mk_Exp_match = (fun _15_662 t p -> (match (_15_662) with
 {n = Exp_match ((e, pats)); tk = (get_typ_ref t); pos = p; fvs = (mk_fvs ()); uvs = (mk_uvs ())}
 end))
 
-let mk_Exp_ascribed' = (fun _15_667 t' p -> (match (_15_667) with
-| (e, t) -> begin
-{n = Exp_ascribed ((e, t)); tk = (get_typ_ref t'); pos = p; fvs = (mk_fvs ()); uvs = (mk_uvs ())}
+let mk_Exp_ascribed = (fun _15_668 t' p -> (match (_15_668) with
+| (e, t, l) -> begin
+{n = Exp_ascribed ((e, t, l)); tk = (get_typ_ref t'); pos = p; fvs = (mk_fvs ()); uvs = (mk_uvs ())}
 end))
 
-let mk_Exp_ascribed = (fun _15_672 p -> (match (_15_672) with
-| (e, t) -> begin
-(mk_Exp_ascribed' (e, t) (Some (t)) p)
-end))
-
-let mk_Exp_let = (fun _15_676 t p -> (match (_15_676) with
+let mk_Exp_let = (fun _15_673 t p -> (match (_15_673) with
 | (lbs, e) -> begin
 {n = Exp_let ((lbs, e)); tk = (get_typ_ref t); pos = p; fvs = (mk_fvs ()); uvs = (mk_uvs ())}
 end))
 
-let mk_Exp_uvar' = (fun _15_681 t' p -> (match (_15_681) with
+let mk_Exp_uvar' = (fun _15_678 t' p -> (match (_15_678) with
 | (u, t) -> begin
 {n = Exp_uvar ((u, t)); tk = (get_typ_ref t'); pos = p; fvs = (mk_fvs ()); uvs = (mk_uvs ())}
 end))
 
-let mk_Exp_uvar = (fun _15_686 p -> (match (_15_686) with
+let mk_Exp_uvar = (fun _15_683 p -> (match (_15_683) with
 | (u, t) -> begin
 (mk_Exp_uvar' (u, t) (Some (t)) p)
 end))
 
-let mk_Exp_delayed = (fun _15_691 t p -> (match (_15_691) with
+let mk_Exp_delayed = (fun _15_688 t p -> (match (_15_688) with
 | (e, s, m) -> begin
 {n = Exp_delayed ((e, s, m)); tk = (get_typ_ref t); pos = p; fvs = (mk_fvs ()); uvs = (mk_uvs ())}
 end))
@@ -700,7 +695,7 @@ let mk_Exp_meta = (fun m -> (match (m) with
 (mk_Exp_meta' m (! (e.tk)) e.pos)
 end))
 
-let mk_lb = (fun _15_707 -> (match (_15_707) with
+let mk_lb = (fun _15_704 -> (match (_15_704) with
 | (x, eff, t, e) -> begin
 {lbname = x; lbtyp = t; lbeff = eff; lbdef = e}
 end))
@@ -763,12 +758,12 @@ end))
 
 let freevars_of_binders = (fun bs -> ((Support.List.fold_left (fun out _15_3 -> (match (_15_3) with
 | (Support.Microsoft.FStar.Util.Inl (btv), _) -> begin
-(let _15_757 = out
-in {ftvs = (Support.Microsoft.FStar.Util.set_add btv out.ftvs); fxvs = _15_757.fxvs})
+(let _15_754 = out
+in {ftvs = (Support.Microsoft.FStar.Util.set_add btv out.ftvs); fxvs = _15_754.fxvs})
 end
 | (Support.Microsoft.FStar.Util.Inr (bxv), _) -> begin
-(let _15_764 = out
-in {ftvs = _15_764.ftvs; fxvs = (Support.Microsoft.FStar.Util.set_add bxv out.fxvs)})
+(let _15_761 = out
+in {ftvs = _15_761.ftvs; fxvs = (Support.Microsoft.FStar.Util.set_add bxv out.fxvs)})
 end)) no_fvs) bs))
 
 let binders_of_list = (fun fvs -> ((Support.List.map (fun t -> (t, None))) fvs))

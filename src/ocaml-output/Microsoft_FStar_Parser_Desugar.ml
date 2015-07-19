@@ -1166,7 +1166,7 @@ end))
 in (pos (Microsoft_FStar_Absyn_Syntax.mk_Exp_match ((desugar_exp env e), (Support.List.map desugar_branch branches)))))
 end
 | Microsoft_FStar_Parser_AST.Ascribed ((e, t)) -> begin
-(pos (Microsoft_FStar_Absyn_Syntax.mk_Exp_ascribed' ((desugar_exp env e), (desugar_typ env t))))
+(pos (Microsoft_FStar_Absyn_Syntax.mk_Exp_ascribed ((desugar_exp env e), (desugar_typ env t), None)))
 end
 | Microsoft_FStar_Parser_AST.Record ((_, [])) -> begin
 (raise (Microsoft_FStar_Absyn_Syntax.Error (("Unexpected empty record", top.Microsoft_FStar_Parser_AST.range))))

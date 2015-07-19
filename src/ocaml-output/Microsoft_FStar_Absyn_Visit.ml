@@ -460,7 +460,7 @@ and map_kind = (fun env binders k -> (reduce_kind map_kind' map_typ' map_exp' co
 and map_typ = (fun env binders t -> (reduce_typ map_kind' map_typ' map_exp' combine_kind combine_typ combine_exp env binders t))
 and map_exp = (fun env binders e -> (map_exp' map_kind map_typ visit_exp env binders e))
 and visit_exp = (fun env binders e -> (let e = (compress_exp_uvars e)
-in (let _17_727 = (match (e.Microsoft_FStar_Absyn_Syntax.n) with
+in (let _17_729 = (match (e.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Exp_delayed (_) -> begin
 (failwith "impossible")
 end
@@ -540,20 +540,20 @@ in (match (_17_662) with
 (([], [], [], el, []), env)
 end))))
 end
-| Microsoft_FStar_Absyn_Syntax.Exp_ascribed ((e, t)) -> begin
-(let _17_669 = (map_typ env binders t)
-in (match (_17_669) with
+| Microsoft_FStar_Absyn_Syntax.Exp_ascribed ((e, t, _)) -> begin
+(let _17_671 = (map_typ env binders t)
+in (match (_17_671) with
 | (t, env) -> begin
-(let _17_672 = (map_exp env binders e)
-in (match (_17_672) with
+(let _17_674 = (map_exp env binders e)
+in (match (_17_674) with
 | (e, env) -> begin
 (([], [], (t)::[], (e)::[], []), env)
 end))
 end))
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_let (((false, lb::[]), e2)) -> begin
-(let _17_682 = (map_typ env binders lb.Microsoft_FStar_Absyn_Syntax.lbtyp)
-in (match (_17_682) with
+(let _17_684 = (map_typ env binders lb.Microsoft_FStar_Absyn_Syntax.lbtyp)
+in (match (_17_684) with
 | (t, env) -> begin
 (let binders' = (match (lb.Microsoft_FStar_Absyn_Syntax.lbname) with
 | Support.Microsoft.FStar.Util.Inl (x) -> begin
@@ -562,8 +562,8 @@ end
 | _ -> begin
 binders
 end)
-in (let _17_690 = (map_exps_with_binders env (((binders, lb.Microsoft_FStar_Absyn_Syntax.lbdef))::((binders', e2))::[]))
-in (match (_17_690) with
+in (let _17_692 = (map_exps_with_binders env (((binders, lb.Microsoft_FStar_Absyn_Syntax.lbdef))::((binders', e2))::[]))
+in (match (_17_692) with
 | (el, env) -> begin
 (([], [], (t)::[], el, []), env)
 end)))
@@ -572,15 +572,15 @@ end
 | Microsoft_FStar_Absyn_Syntax.Exp_let (((true, bvdt_tl), e)) -> begin
 (let tl = (Support.List.map (fun lb -> lb.Microsoft_FStar_Absyn_Syntax.lbtyp) bvdt_tl)
 in (let el = (Support.List.map (fun lb -> lb.Microsoft_FStar_Absyn_Syntax.lbdef) bvdt_tl)
-in (let _17_710 = ((Support.List.fold_left (fun _17_703 t -> (match (_17_703) with
+in (let _17_712 = ((Support.List.fold_left (fun _17_705 t -> (match (_17_705) with
 | (tl, env) -> begin
-(let _17_707 = (map_typ env binders t)
-in (match (_17_707) with
+(let _17_709 = (map_typ env binders t)
+in (match (_17_709) with
 | (t, env) -> begin
 ((t)::tl, env)
 end))
 end)) ([], env)) tl)
-in (match (_17_710) with
+in (match (_17_712) with
 | (tl, env) -> begin
 (let tl = (Support.List.rev tl)
 in (let binders = (Support.List.fold_left (fun binders lb -> (match (lb.Microsoft_FStar_Absyn_Syntax.lbname) with
@@ -590,8 +590,8 @@ end
 | _ -> begin
 binders
 end)) binders bvdt_tl)
-in (let _17_721 = (map_exps env binders (Support.List.append el ((e)::[])))
-in (match (_17_721) with
+in (let _17_723 = (map_exps env binders (Support.List.append el ((e)::[])))
+in (match (_17_723) with
 | (el, env) -> begin
 (([], [], tl, el, []), env)
 end))))
@@ -600,7 +600,7 @@ end
 | Microsoft_FStar_Absyn_Syntax.Exp_let (_) -> begin
 (failwith "impossible")
 end)
-in (match (_17_727) with
+in (match (_17_729) with
 | (components, env) -> begin
 (combine_exp e components env)
 end))))
@@ -683,8 +683,8 @@ end
 | (Microsoft_FStar_Absyn_Syntax.Exp_app (_), (_, _, _, e::[], args)) -> begin
 (w (Microsoft_FStar_Absyn_Syntax.mk_Exp_app (e, args)))
 end
-| (Microsoft_FStar_Absyn_Syntax.Exp_ascribed (_), (_, _, t::[], e::[], _)) -> begin
-(w (Microsoft_FStar_Absyn_Syntax.mk_Exp_ascribed' (e, t)))
+| (Microsoft_FStar_Absyn_Syntax.Exp_ascribed ((_, _, l)), (_, _, t::[], e::[], _)) -> begin
+(w (Microsoft_FStar_Absyn_Syntax.mk_Exp_ascribed (e, t, l)))
 end
 | (Microsoft_FStar_Absyn_Syntax.Exp_meta (Microsoft_FStar_Absyn_Syntax.Meta_desugared ((_, tag))), (_, _, _, e::[], _)) -> begin
 (w (Microsoft_FStar_Absyn_Syntax.mk_Exp_meta' (Microsoft_FStar_Absyn_Syntax.Meta_desugared ((e, tag)))))
@@ -708,8 +708,8 @@ end
 | (Microsoft_FStar_Absyn_Syntax.Exp_let (((is_rec, lbs), _)), (_, _, tl, el, _)) -> begin
 (match ((Support.Microsoft.FStar.Util.first_N (Support.List.length lbs) el)) with
 | (el, e'::[]) -> begin
-(let lbs' = (Support.List.map3 (fun lb t e -> (let _17_1184 = lb
-in {Microsoft_FStar_Absyn_Syntax.lbname = _17_1184.Microsoft_FStar_Absyn_Syntax.lbname; Microsoft_FStar_Absyn_Syntax.lbtyp = t; Microsoft_FStar_Absyn_Syntax.lbeff = _17_1184.Microsoft_FStar_Absyn_Syntax.lbeff; Microsoft_FStar_Absyn_Syntax.lbdef = e})) lbs tl el)
+(let lbs' = (Support.List.map3 (fun lb t e -> (let _17_1190 = lb
+in {Microsoft_FStar_Absyn_Syntax.lbname = _17_1190.Microsoft_FStar_Absyn_Syntax.lbname; Microsoft_FStar_Absyn_Syntax.lbtyp = t; Microsoft_FStar_Absyn_Syntax.lbeff = _17_1190.Microsoft_FStar_Absyn_Syntax.lbeff; Microsoft_FStar_Absyn_Syntax.lbdef = e})) lbs tl el)
 in (w (Microsoft_FStar_Absyn_Syntax.mk_Exp_let ((is_rec, lbs'), e'))))
 end
 | _ -> begin
@@ -721,14 +721,14 @@ end
 end)
 in (e', env)))))
 
-let collect_from_typ = (fun f env t -> ((Support.Prims.snd) (reduce_typ (fun _17_1236 _17_1238 _17_1240 env _17_1243 k -> (k, env)) (fun _17_1218 vt _17_1221 env bvs t -> (let env = (f env t)
+let collect_from_typ = (fun f env t -> ((Support.Prims.snd) (reduce_typ (fun _17_1242 _17_1244 _17_1246 env _17_1249 k -> (k, env)) (fun _17_1224 vt _17_1227 env bvs t -> (let env = (f env t)
 in (match ((compress_typ t).Microsoft_FStar_Absyn_Syntax.n) with
 | (Microsoft_FStar_Absyn_Syntax.Typ_unknown) | (Microsoft_FStar_Absyn_Syntax.Typ_btvar (_)) | (Microsoft_FStar_Absyn_Syntax.Typ_const (_)) -> begin
 (t, env)
 end
 | _ -> begin
 (vt env bvs t)
-end))) (fun _17_1208 _17_1210 _17_1212 env _17_1215 e -> (e, env)) (fun k _17_1205 env -> (k, env)) (fun t _17_1201 env -> (t, env)) (fun e _17_1197 env -> (e, env)) env [] t)))
+end))) (fun _17_1214 _17_1216 _17_1218 env _17_1221 e -> (e, env)) (fun k _17_1211 env -> (k, env)) (fun t _17_1207 env -> (t, env)) (fun e _17_1203 env -> (e, env)) env [] t)))
 
 
 

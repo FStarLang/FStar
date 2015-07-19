@@ -476,7 +476,7 @@ let rec unmeta_exp e =
     let e = compress_exp e in
     match e.n with
         | Exp_meta(Meta_desugared(e, _)) -> unmeta_exp e
-        | Exp_ascribed(e, _) -> unmeta_exp e
+        | Exp_ascribed(e, _, _) -> unmeta_exp e
         | _ -> e
 
 let alpha_typ t =
@@ -648,12 +648,8 @@ let is_primop f = match f.n with
   | Exp_fvar(fv,_) -> primops |> Util.for_some (lid_equals fv.v)
   | _ -> false
 
-let rec ascribe e t = match e.n with
-  | Exp_ascribed (e, _) -> ascribe e t
-  | _ -> mk_Exp_ascribed(e, t) e.pos
-
 let rec unascribe e = match e.n with
-  | Exp_ascribed (e, _) -> unascribe e
+  | Exp_ascribed (e, _, _) -> unascribe e
   | _ -> e
 
 let rec ascribe_typ t k = match t.n with
@@ -957,7 +953,7 @@ and vs_exp' (e:exp) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
         then cont (no_fvs, no_uvs)
         else cont ({no_fvs with fxvs=single_fv x}, no_uvs)
 
-      | Exp_ascribed(e, _) ->
+      | Exp_ascribed(e, _, _) ->
         vs_exp e uvonly cont
 
       | Exp_abs(bs, e) ->

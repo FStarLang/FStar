@@ -900,23 +900,23 @@ in (rebuild (let _25_1184 = config
 in {code = e; environment = _25_1184.environment; stack = _25_1184.stack; close = _25_1184.close; steps = _25_1184.steps})))))
 end))
 end
-| Microsoft_FStar_Absyn_Syntax.Exp_ascribed ((e, t)) -> begin
-(let c = (wne tcenv (let _25_1190 = config
-in {code = e; environment = _25_1190.environment; stack = _25_1190.stack; close = _25_1190.close; steps = _25_1190.steps}))
+| Microsoft_FStar_Absyn_Syntax.Exp_ascribed ((e, t, l)) -> begin
+(let c = (wne tcenv (let _25_1191 = config
+in {code = e; environment = _25_1191.environment; stack = _25_1191.stack; close = _25_1191.close; steps = _25_1191.steps}))
 in if (is_stack_empty config) then begin
 (let t = (sn tcenv (t_config t config.environment config.steps))
-in (rebuild (let _25_1194 = config
-in {code = (Microsoft_FStar_Absyn_Syntax.mk_Exp_ascribed (c.code, t.code) e.Microsoft_FStar_Absyn_Syntax.pos); environment = _25_1194.environment; stack = _25_1194.stack; close = _25_1194.close; steps = _25_1194.steps})))
+in (rebuild (let _25_1195 = config
+in {code = (Microsoft_FStar_Absyn_Syntax.mk_Exp_ascribed (c.code, t.code, l) None e.Microsoft_FStar_Absyn_Syntax.pos); environment = _25_1195.environment; stack = _25_1195.stack; close = _25_1195.close; steps = _25_1195.steps})))
 end else begin
 c
 end)
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_meta (Microsoft_FStar_Absyn_Syntax.Meta_desugared ((e, info))) -> begin
-(let c = (wne tcenv (let _25_1201 = config
-in {code = e; environment = _25_1201.environment; stack = _25_1201.stack; close = _25_1201.close; steps = _25_1201.steps}))
+(let c = (wne tcenv (let _25_1202 = config
+in {code = e; environment = _25_1202.environment; stack = _25_1202.stack; close = _25_1202.close; steps = _25_1202.steps}))
 in if (is_stack_empty config) then begin
-(rebuild (let _25_1204 = config
-in {code = (Microsoft_FStar_Absyn_Syntax.mk_Exp_meta (Microsoft_FStar_Absyn_Syntax.Meta_desugared ((c.code, info)))); environment = _25_1204.environment; stack = _25_1204.stack; close = _25_1204.close; steps = _25_1204.steps}))
+(rebuild (let _25_1205 = config
+in {code = (Microsoft_FStar_Absyn_Syntax.mk_Exp_meta (Microsoft_FStar_Absyn_Syntax.Meta_desugared ((c.code, info)))); environment = _25_1205.environment; stack = _25_1205.stack; close = _25_1205.close; steps = _25_1205.steps}))
 end else begin
 c
 end)

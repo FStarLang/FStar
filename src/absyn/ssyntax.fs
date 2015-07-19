@@ -205,7 +205,7 @@ and serialize_exp' (writer:Writer) (ast:exp') :unit =
         in
         let f writer (p, eopt, e) = serialize_pat writer p; g writer eopt; serialize_exp writer e in
         writer.write_char 'f'; serialize_exp writer e; serialize_list writer f l
-    | Exp_ascribed(e, t) -> writer.write_char 'g'; serialize_exp writer e; serialize_typ writer t
+    | Exp_ascribed(e, t, l) -> writer.write_char 'g'; serialize_exp writer e; serialize_typ writer t; serialize_option writer serialize_lident l
     | Exp_let(lbs, e) -> writer.write_char 'h'; serialize_letbindings writer lbs; serialize_exp writer e
     | Exp_meta(m) -> writer.write_char 'i'; serialize_meta_e writer m
     | _ -> raise (Err "unimplemented exp'")
@@ -346,7 +346,7 @@ and deserialize_exp' (reader:Reader) :exp' =
         
         let f reader = (deserialize_pat reader, g reader, deserialize_exp reader) in
         Exp_match(deserialize_exp reader, deserialize_list reader f)
-    | 'g' -> Exp_ascribed(deserialize_exp reader, deserialize_typ reader)
+    | 'g' -> Exp_ascribed(deserialize_exp reader, deserialize_typ reader, deserialize_option reader deserialize_lident)
     | 'h' -> Exp_let(deserialize_letbindings reader, deserialize_exp reader)
     | 'i' -> Exp_meta(deserialize_meta_e reader)
     |  _  -> parse_error()
