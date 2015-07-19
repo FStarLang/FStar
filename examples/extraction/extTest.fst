@@ -11,8 +11,14 @@ type nnat =
 let idnat = fun (x:nnat) -> x
 let idnat2 (x:nnat) = x
 
-(* do the F* ASTs of id and idp look different at all? I'm surprised that their
-   extracts are exactly the same. *)
+(* do the F* ASTs of id and idp look different at all?
+  Yes. It seems that the F* AST does not even have a place to store the
+  binders appearing before '=''.
+  It seems that there is such a place in the ML AST.
+
+  We should try move the head lambdas in the body of a let to the LHS of '=''
+  This is what Coq seems to be doing.
+  *)
 let id : a:Type -> a -> a = fun x -> x
 let idp (a:Type) = fun x -> x
 
@@ -30,7 +36,6 @@ type list (a:Type) =
   | Nil  : list a
   | Cons : hd:a -> tl:list a -> list a
 
-(*Apart from the spurious magics, we have to take care to tuplize the arguments to Cons*)
 let prepend0 (tll : list nnat) = (Cons O tll)
 
 type list2 'a  (b:Type) =
@@ -65,16 +70,16 @@ type  poly2 (x : Type -> Type)  =
 (*The type sections (new paragraph in the thesis)*)
 type sch (x:Type) =  (x ->  Tot x)
 
-(*type lambdas in a definitions should be moved leftward and made a definition *)
+(*as mentoned above, we should try to move lambdas in the body to the left of '=' *)
 type sch1 : (Type  ->  Type) = fun (x:Type) ->  (x ->  Tot x)
 
-(*again, too this differs from both options presented in the thesis. *)
+(*this extracts to his less preferred choice: Top -> Top *)
 type sch3 : (nnat  ->  Type) -> Type  = fun (x:(nnat  ->  Type)) ->  (x O) ->  Tot (x (S O))
 
-(* manual parametrization, now it extracts to his second (preferred) option *)
+(* Manual moving of lambdas to LHS of '=', now it extracts to his second (preferred) option.
+   We should do this automatically. This is near the top in the TODO list of AA.
+ *)
 type sch3param (x:(nnat  ->  Type))  =  (x O) ->  Tot (x (S O))
-
-
 
 type idt =  (x:Type) ->  (x ->  Tot x)
 
@@ -113,8 +118,10 @@ type polyvec = poly (vec nnat)
   Is this mentioned somewhere in the thesis?
 
   All this seems a bit arbitrary, although is perhaps inspired by some
-  use cases in Coq, and had been heavily tested (in Coq).
+  use cases in Coq, and haa been heavily tested (in Coq).
   Yet, Why is this the right way, conceptually?
+
+  Our current implementation makes these same choices as Coq's.
 *)
 type polylist = poly2 (list)
 
@@ -122,7 +129,8 @@ type listalias 'a = list 'a
 
 type polylistalias = poly2 (listalias)
 
-(*
+(* There is currently a glitch in parsing mutual inductives from a sigbundle.
+    Otherwise, this should be straighforward.
 type evenlist (a:Type) =
   | ENil  : evenlist a
   | ECons : hd:a -> tl:oddlist a -> evenlist a
