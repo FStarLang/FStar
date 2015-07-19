@@ -153,6 +153,7 @@ type EqualBigint (a:bigint) (b:bigint) (ha:heap) (hb:heap) =
   /\ (contains hb (Bigint63.data b))
   /\ (getLength ha a = getLength hb b)
   /\ (forall (i:nat). i < getLength ha a ==> getValue ha a i = getValue hb b i)
+  /\ (forall (i:nat). i < getLength ha a ==> getSize ha a i = getSize hb b i)
   /\ (Bigint63.t a = getTemplate b)
 
 val copy:
@@ -160,8 +161,10 @@ val copy:
   ST bigint
      (requires (fun h -> inHeap h a /\ getLength h a > 0))
      (ensures (fun h0 b h1 ->
-	       (EqualBigint a b h0 h1)
-	       /\ (modifies !{} h0 h1)
+       (inHeap h0 b)
+       /\ (inHeap h1 b)
+       /\ (EqualBigint a b h0 h1)
+       /\ (modifies !{} h0 h1)
      ))
 let copy a =
   Bigint63 (Array.copy (Bigint63.data a)) (Bigint63.t a)

@@ -85,6 +85,7 @@ let signed_modulo v p =
 assume val xor_op: x:int -> y:int -> Tot (z:int{ z = 0 <==> x = y })
 assume val and_op: x:int -> y:int -> Tot (z:int{ z = 0 <==> (x = 0 /\ y = 0)})
 assume val or_op: x:int -> y:int -> Tot (z:int{ z = 0 <==> (x = 0 \/ y = 0) })
+assume val lnot_op: int -> Tot int
 
 (* Comparison *)
 (* To replace with something constant time in real code *)

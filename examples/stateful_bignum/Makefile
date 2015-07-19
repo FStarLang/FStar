@@ -44,6 +44,12 @@ retemplate: preproc-verify retemplat
 retemplat: $(STDLIB) axiomatic.p.fst intlib.p.fst limb.fst bigint_st.fst eval_st.fst retemplate_st.fst
 	$(FSTAR) $(FSTAR_OPTIONS) $(addprefix --admit_fsi , $(ADMITS)) $^ --lax #--verify_module Retemplate
 
+neg: preproc-verify ne
+
+ne: $(STDLIB) axiomatic.p.fst intlib.p.fst limb.fst bigint_st.fst eval_st.fst neg_st.fst
+	$(FSTAR) $(FSTAR_OPTIONS) $(addprefix --admit_fsi , $(ADMITS)) $^ --verify_module Neg
+
+
 preproc-verify:
 #	rm -f *.p.fst || true
 	@echo "#define VERIFY" > preproc.h
