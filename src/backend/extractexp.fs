@@ -67,7 +67,7 @@ let erase (g:env) (e:mlexpr) (f:e_tag) (t:mlty) =
 let (*maybe_?*) coerce (g:env) (e:mlexpr) (t:mlty) (t':mlty) = 
     if equiv g t t' 
     then e
-    else let _ = printfn "\n (*needed to coerce expression \n %A \n of type \n %A \n to type \n %A *) \n" e t t' in 
+    else //let _ = printfn "\n (*needed to coerce expression \n %A \n of type \n %A \n to type \n %A *) \n" e t t' in 
             MLE_Coerce (e, t, t')
 
 let eff_leq f f' = match f, f' with 
@@ -163,6 +163,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
         | Exp_bvar _
         | Exp_fvar _ -> // how is Exp_constant different from Exp_fvar?
           let x, s (*: mltyscheme*) = lookup_var g e in 
+          //let _ = printfn "\n (*looked up tyscheme of \n %A \n as \n %A *) \n" x s in
           begin match s with 
             | ([], t) -> x, MayErase, t
             | _ -> err_uninst e
@@ -194,13 +195,14 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
             | Exp_fvar _ -> 
                //printfn "head of app is %A\n" head.n;
               let head, (vars, t) = lookup_var g head in
+              //let _ = printfn "\n (*looked up tyscheme of \n %A \n as \n %A *) \n" head (vars,t) in
               let n = List.length vars in
               if n <= List.length args
-              then let prefix, rest = Util.first_N (List.length vars) args in
-                   let tys = prefix |> List.map (function 
-                    | (Inl t, _) ->  translate_typ g t
-                    | _ -> err_uninst e) in
-                   let t = instantiate (vars, t) tys in
+              then let prefix, rest = Util.first_N n args in
+                   //let _ = (if n=1 then printfn "\n (*prefix was  \n %A \n  *) \n" prefix) in
+                   let prefixAsMLTypes = (List.map (ExtractTyp.getTypeFromArg g) prefix) in
+                   let t = instantiate (vars, t) prefixAsMLTypes in
+                //   let _ = printfn "\n (*instantiating  \n %A \n with \n %A \n produced \n %A \n *) \n" (vars,t) prefixAsMLTypes t in
                    match rest with 
                     | [] -> head, MayErase, t
                     | _ -> synth_app (head, []) (MayErase, t) rest 

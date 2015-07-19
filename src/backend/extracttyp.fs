@@ -157,11 +157,11 @@ match ft with // assume ft is compressed. is there a compresser for typ'?
          let (bts, c) = extractBindersTypes c bs in
             extractTyp c ty
 
-  | Typ_ascribed _  -> unknownType
-  | Typ_meta _ -> unknownType
-  | Typ_uvar _ -> unknownType
+  | Typ_ascribed (ty,_)  -> extractTyp c ty
+  | Typ_meta _ -> failwith "NYI"
+  | Typ_uvar _ -> failwith "NYI"
   | Typ_delayed _  -> failwith "expected the argument to be compressed"
-  |   _ -> unknownType
+  |   _ -> failwith "NYI. replace this with unknownType if you know the consequences"
 and getTypeFromArg (c:context) (a:arg) : mlty =
 match (fst a) with
 | Inl ty -> extractTyp c ty
@@ -193,7 +193,10 @@ match bn with
 and extractBindersTypes  (c:context) (bs : list<binder>): list<mlty> * context =
     (fun (x,c) -> (List.rev x,c)) (List.fold_left (fun (lt,cp) b -> let (nt, nc)= extractBinderType cp b in ((nt::lt),nc))  ([],c) bs)
 
-and extractTyp  (c:context) (ft:typ) : mlty = extractType' c (Util.compress_typ ft).n
+and extractTyp  (c:context) (ft:typ) : mlty = 
+    let ft =  (Util.compress_typ ft) in
+    let ft = Tc.Normalize.norm_typ [Tc.Normalize.Beta] c.tcenv ft in
+    extractType' c ft.n
 and extractKind (c:context) (ft:knd) : mlty = erasedContent
 and extractComp  (c:context) (ft:comp) : mlty * e_tag = extractComp' c (ft.n) 
 and extractComp'  (c:context) (ft:comp') : mlty * e_tag =
@@ -294,9 +297,9 @@ let extractCtor (tyBinders : list<binder>) (c:context) (ctor: inductiveConstruct
         let mlt = extractType' newC tr in
         let tys = (List.map mlTyIdentOfBinder tyBinders, mlt) in
         let fvv = mkFvvar ctor.cname ctor.ctype in 
-            fprint1 "(* extracting the type of constructor %s\n" (lident2mlsymbol ctor.cname);
+            // fprint1 "(* extracting the type of constructor %s\n" (lident2mlsymbol ctor.cname);
            // fprint1 "%s\n" (typ_to_string ctor.ctype);
-            printfn "%A *)\n" (tys);
+            // printfn "%A *)\n" (tys);
         (extend_fv c fvv tys, (lident2mlsymbol ctor.cname, argTypes mlt)))
 
 (*indices get collapsed to unit, so all we need is the number of index arguments.
