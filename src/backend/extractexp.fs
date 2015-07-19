@@ -136,15 +136,33 @@ let rec extract_pat (g:env) p : (env * list<mlpattern>) = match p.v with
  
 (*Preconditions : 
    1) residualType is the type of mlAppExpr 
-   2) mlAppExpr is an MLE_App and its head is a named fvar, and isDataCons is true iff it names a data constructor of a data type.
+   2) mlAppExpr is an MLE_Name or an MLE_App with its head a named fvar, and isDataCons is true iff it names a data constructor of a data type.
   Postconditions
    1) the return value (say r) also has type residualType and it's extraction-preimage is definitionally equal (in Fstar ) to that of mlAppExpr
    2) meets the ML requirements that the args to datacons be tupled and that the datacons be fullly applied
 *)
 let maybe_eta_data (isDataCons : bool) (residualType : mlty)  (mlAppExpr : mlexpr) : mlexpr =
+    let rec eta_args more_args t = match t with 
+        | MLTY_Fun (t0, _, t1) -> 
+          let x = Util.gensym (), -1 in
+          eta_args (((x, Some t0), MLE_Var x)::more_args) t1
+        | MLTY_Named (_, _) -> List.rev more_args
+        | _ -> failwith "Impossible" in
+
+    let maybe_eta e = 
+        let eargs = eta_args [] residualType in 
+        match eargs with 
+            | [] -> e 
+            | _ -> 
+                let binders, eargs = List.unzip eargs in
+                match e with 
+                    | MLE_CTor(head, args) ->
+                        MLE_Fun(binders, MLE_CTor(head, args@eargs))
+                    | _ -> failwith "Impossible" in
+    
     match (mlAppExpr, isDataCons) with
-        | (MLE_App (MLE_Name mlp, mlargs) , true) -> MLE_CTor (mlp,mlargs) //TODO: use residualType to determine the number of missing arguments, and eta expand accordingly
-        | (MLE_Name mlp, true) -> MLE_CTor (mlp, [])
+        | (MLE_App (MLE_Name mlp, mlargs) , true) -> maybe_eta <| MLE_CTor (mlp,mlargs) 
+        | (MLE_Name mlp, true) -> maybe_eta <| MLE_CTor (mlp, [])
         | _ -> mlAppExpr
   
 let rec check_exp (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr = 
@@ -202,19 +220,31 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
           end
 
         | Exp_app(head, args) -> 
-          let rec synth_app (mlhead, mlargs) (f(*:e_tag*), t (* the type of (head mlargs) *)) restArgs = //if partially applied and head is a datacon, it needs to be eta-expanded
+          let rec synth_app is_data (mlhead, mlargs_f) (f(*:e_tag*), t (* the type of (mlhead mlargs) *)) restArgs = 
             match restArgs, t with 
-                | [], _ -> MLE_App(mlhead, List.rev mlargs), f, t
+                | [], _ -> 
+                    //1. If partially applied and head is a datacon, it needs to be eta-expanded
+                    //2. If any of the arguments are impure, then evaluation order must be enforced to be L-to-R (by hoisting)
+                    let lbs, mlargs = 
+                        List.fold_left (fun (lbs, out_args) (arg, f) -> 
+                                if f=MayErase 
+                                then (lbs, arg::out_args)
+                                else let x = Util.gensym (), -1 in
+                                     (x, arg)::lbs, (MLE_Var x::out_args)) 
+                        ([], []) mlargs_f in
+                    let app = maybe_eta_data is_data t <| MLE_App(mlhead, mlargs) in
+                    let l_app = List.fold_right (fun (x, arg) out -> MLE_Let((false, [(x,None,[],arg)]), out)) lbs app in
+                    l_app, f, t
 
                 | (Inl _, _)::rest, MLTY_Fun (tunit, f', t) -> //non-prefix type app; this type argument gets erased to unit
                   if equiv g tunit ml_unit_ty
-                  then synth_app (mlhead, ml_unit::mlargs) (join f f', t) rest
+                  then synth_app is_data (mlhead, (ml_unit, MayErase)::mlargs_f) (join f f', t) rest
                   else failwith "Impossible: ill-typed application" //ill-typed; should be impossible
 
                 | (Inr e0, _)::rest, MLTY_Fun(t0, f', t) -> 
                   let e0, f0, t0' = synth_exp g e0 in 
                   let e0 = coerce g e0 t0' t0 in // coerce the arguments of application, if they dont match up
-                  synth_app (mlhead, e0::mlargs) (join_l [f;f';f0], t) rest
+                  synth_app is_data (mlhead, (e0, f0)::mlargs_f) (join_l [f;f';f0], t) rest
                   
                 | _ -> err_ill_typed_application e restArgs t in
                   
@@ -223,7 +253,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
             | Exp_bvar _ 
             | Exp_fvar _ -> 
                //printfn "head of app is %A\n" head.n;
-              let (head, (vars, t)), isDataCons = lookup_var g head in
+              let (head, (vars, t)), is_data = lookup_var g head in
               //let _ = printfn "\n (*looked up tyscheme of \n %A \n as \n %A *) \n" head (vars,t) in
               let n = List.length vars in
               if n <= List.length args
@@ -234,13 +264,12 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                 //   let _ = printfn "\n (*instantiating  \n %A \n with \n %A \n produced \n %A \n *) \n" (vars,t) prefixAsMLTypes t in
                    match rest with 
                     | [] -> head, MayErase, t
-                    | _ -> let mlAppExpr, etag ,t = synth_app (head, []) (MayErase, t) rest in 
-                                (maybe_eta_data isDataCons t mlAppExpr, etag ,t)
+                    | _  -> synth_app is_data (head, []) (MayErase, t) rest
               else err_uninst e
 
             | _ -> 
               let head, f, t = synth_exp g head in // t is the type inferred for head, the head of the app
-              synth_app (head, []) (f, t) args               
+              synth_app false (head, []) (f, t) args               
           end
 
         | Exp_abs(bs, body) -> 

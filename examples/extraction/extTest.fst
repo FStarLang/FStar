@@ -26,6 +26,10 @@ let idnat2 (x:nnat) = x
 let id : a:Type -> a -> a = fun x -> x
 let idp (a:Type) = fun x -> x
 let add1 (a : nnat) = (S a)
+let add2 = S //test eta expansion of data
+let eval_order (effectful:string -> string)
+               (f:string -> string -> string) =
+    f (effectful "first") "second"
 
 let prev = function
   | O -> O
