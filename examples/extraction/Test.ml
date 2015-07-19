@@ -3,11 +3,15 @@ type nnat =
 | O
 | S of nnat
 
-let idnat = (Obj.magic(fun x -> x))
+let idnat = (fun x -> x)
 
-let idnat2 = (Obj.magic(fun x -> x))
+let idnat2 = (fun x -> x)
 
-let add1 = (Obj.magic(fun a -> ((*Test.l__*)S a)))
+let id = (Obj.magic (fun _1_788 x -> x))
+
+let idp = (Obj.magic (fun _1_788 x -> x))
+
+let add1 = (fun a -> (S a))
 
 type ('a, 'b) prod =
 | Pair of 'a * 'b
@@ -15,6 +19,9 @@ type ('a, 'b) prod =
 type 'a list =
 | Nil
 | Cons of 'a * 'a list
+
+let prepend0 = (Obj.magic (fun tll -> 
+   (Cons (Obj.magic O (*comma was manually added *),  Obj.magic tll))))
 
 type ('a, 'b) list2 =
 | Nil2

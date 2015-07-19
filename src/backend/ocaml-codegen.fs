@@ -206,7 +206,7 @@ let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
     match e with
     | MLE_Coerce (e, t, t') -> 
       let doc = doc_of_expr (min_op_prec, NonAssoc) e in    
-      parens (reduce [text "Obj.magic"; doc]) //TODO: rewire to a checked cast for F#; check that the doc is being generated properly ...don't really understand the API yet
+      parens (reduce [text "Obj.magic "; doc]) //TODO: rewire to a checked cast for F#; check that the doc is being generated properly ...don't really understand the API yet
 
     | MLE_Seq es ->
         let docs = List.map (doc_of_expr (min_op_prec, NonAssoc)) es in

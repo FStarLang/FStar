@@ -33,7 +33,7 @@ let is_constructor e = match (Util.compress_exp e).n with
     | Exp_fvar(_, b) -> b
     | _ -> false
 
-(* something is a value iff it has no "effects"? *)
+(* something is a value iff it has no "effects"? or iff it is in a strong normal form? or head normal form? *)
 let rec is_value (e:exp) = match (Util.compress_exp e).n with 
     | Exp_bvar _
     | Exp_fvar _ 
@@ -168,22 +168,24 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
           end
 
         | Exp_app(head, args) -> 
-        (* what is the difference bettween args' and args? *)
-          let rec synth_app (head, args') (f, t) args = //if partially applied and head is a datacon, it needs to be eta-expanded
-            match args, t with 
-                | [], _ -> MLE_App(head, List.rev args'), f, t
+        (* Would tysArgs be actually printed in OCaml? They were certainly needed to produce t (by instantiation). Now, can we get rid of them.
+           In Coq's \epsilon, they did not need to handle tysArgs separately because they did not produce the ML type of the resultant ML expression. 
+        *)
+          let rec synth_app (head, tysArgs) (f(*:e_tag*), t(* the type of (head tysArgs) *)) restArgs = //if partially applied and head is a datacon, it needs to be eta-expanded
+            match restArgs, t with 
+                | [], _ -> MLE_App(head, List.rev tysArgs), f, t
 
                 | (Inl _, _)::rest, MLTY_Fun (tunit, f', t) -> //non-prefix type app; this type argument gets erased to unit
                   if equiv g tunit ml_unit_ty
-                  then synth_app (head, ml_unit::args') (join f f', t) rest
+                  then synth_app (head, ml_unit::tysArgs) (join f f', t) rest
                   else failwith "Impossible: ill-typed application" //ill-typed; should be impossible
 
                 | (Inr e0, _)::rest, MLTY_Fun(t0, f', t) -> 
                   let e0, f0, t0' = synth_exp g e0 in 
-                  let e0 = coerce g e0 t0' t0 in 
-                  synth_app (head, e0::args') (join_l [f;f';f0], t) rest
+                  let e0 = coerce g e0 t0' t0 in // coerce the arguments of application, if they dont match up
+                  synth_app (head, e0::tysArgs) (join_l [f;f';f0], t) rest
                   
-                | _ -> err_ill_typed_application e args t in
+                | _ -> err_ill_typed_application e restArgs t in
                   
           let head = Util.compress_exp head in
           begin match head.n with 
@@ -204,7 +206,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
               else err_uninst e
 
             | _ -> 
-              let head, f, t = synth_exp g head in
+              let head, f, t = synth_exp g head in // t is the type inferred for head, the head of the app
               synth_app (head, []) (f, t) args               
           end
 

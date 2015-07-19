@@ -11,9 +11,10 @@ type nnat =
 let idnat = fun (x:nnat) -> x
 let idnat2 (x:nnat) = x
 
-(* there's an unnecessary magic inserted for id *)
+(* do the F* ASTs of id and idp look different at all? I'm surprised that their
+   extracts are exactly the same. *)
 let id : a:Type -> a -> a = fun x -> x
-(* both cases below fail *)
+let idp (a:Type) = fun x -> x
 
 let add1 (a : nnat) = (S a)
 
@@ -28,6 +29,9 @@ type prod 'a 'b =
 type list (a:Type) =
   | Nil  : list a
   | Cons : hd:a -> tl:list a -> list a
+
+(*Apart from the spurious magics, we have to take care to tuplize the arguments to Cons*)
+let prepend0 (tll : list nnat) = (Cons O tll)
 
 type list2 'a  (b:Type) =
   | Nil2  : list2 'a b
@@ -71,14 +75,8 @@ type sch3 : (nnat  ->  Type) -> Type  = fun (x:(nnat  ->  Type)) ->  (x O) ->  T
 type sch3param (x:(nnat  ->  Type))  =  (x O) ->  Tot (x (S O))
 
 
-(*things that dont work:*)
 
 type idt =  (x:Type) ->  (x ->  Tot x)
-
-(*
-Minor changes are required to make it work.
-The idea is that nnat becomes unit.
-Inuitively, vec now becomes a union of all members of the family *)
 
 type vec (a:Type) : nnat -> Type =
 | Nill : vec a O
@@ -93,9 +91,6 @@ type naryTree (t:Type) (n:nnat) =
 
 type binaryTree (t:Type) = naryTree t (S (S O))
 
-(* The last stage may also need to apply units to arguments of type Type.
-   In Coq, the last argument of vec disappers, so this might not be a problem
- *)
 type polyvec = poly (vec nnat)
 
 (* This is even more complicated. what does Coq do about it?
