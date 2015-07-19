@@ -20,7 +20,7 @@ type 'a list =
 | Nil
 | Cons of 'a * 'a list
 
-let prepend0 = (fun tll -> (Cons (O (*comma was manually added*),tll)))
+let prepend0 = (fun tll -> Cons (O(*comma was manually added*),tll))
 
 type ('a, 'b) list2 =
 | Nil2

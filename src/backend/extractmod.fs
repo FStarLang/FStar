@@ -19,7 +19,7 @@ let extract (g:env) (m:modul) : env * mllib =
 
         | Sig_let (lbs, r, _, _) -> 
           let elet = mk_Exp_let(lbs, Const.exp_false_bool) None r in
-          let ml_let, _, _ = ExtractExp.synth_exp' g elet in
+          let ml_let, _, _ = ExtractExp.synth_exp g elet in
           begin match ml_let with 
             | MLE_Let(lbs, _) -> g, [MLM_Let lbs]
             | _ -> //printfn "%A\n" ml_let; 

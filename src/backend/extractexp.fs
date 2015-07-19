@@ -118,9 +118,19 @@ let rec extract_pat (g:env) p : (env * list<mlpattern>) = match p.v with
   | Pat_twild _
   | Pat_tvar _ ->
     g, []
+ 
+(*Preconditions : 
+   1) residualType is the type of mlAppExpr 
+   2) mlAppExpr is an MLE_App and its head is a named fvar, and isDataCons is true iff it names a data constructor of a data type.
+  Postconditions
+   1) the return value (say r) also has type residualType and it's extraction-preimage is definitionally equal (in Fstar ) to that of mlAppExpr
+   2) meets the ML requirements that the args to datacons be tupled and that the datacons be fullly applied
+*)
+let postProcIfDataCons (isDataCons : bool) (residualType : mlty)  (mlAppExpr : mlexpr) : mlexpr =
+    mlAppExpr //TODO: will be fixed soon
   
 let rec check_exp (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr = 
-    erase g (check_exp' g e f t) f t
+    erase g (check_exp' g e f t) f t    
 
 and check_exp' (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr = 
     match (Util.compress_exp e).n with 
@@ -162,30 +172,27 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
 
         | Exp_bvar _
         | Exp_fvar _ -> // how is Exp_constant different from Exp_fvar?
-          let x, s (*: mltyscheme*) = lookup_var g e in 
+          let (x, mltys), _ = lookup_var g e in 
           //let _ = printfn "\n (*looked up tyscheme of \n %A \n as \n %A *) \n" x s in
-          begin match s with 
+          begin match mltys with 
             | ([], t) -> x, MayErase, t
             | _ -> err_uninst e
           end
 
         | Exp_app(head, args) -> 
-        (* Would tysArgs be actually printed in OCaml? They were certainly needed to produce t (by instantiation). Now, can we get rid of them.
-           In Coq's \epsilon, they did not need to handle tysArgs separately because they did not produce the ML type of the resultant ML expression. 
-        *)
-          let rec synth_app (head, tysArgs) (f(*:e_tag*), t(* the type of (head tysArgs) *)) restArgs = //if partially applied and head is a datacon, it needs to be eta-expanded
+          let rec synth_app (mlhead, mlargs) (f(*:e_tag*), t (* the type of (head mlargs) *)) restArgs = //if partially applied and head is a datacon, it needs to be eta-expanded
             match restArgs, t with 
-                | [], _ -> MLE_App(head, List.rev tysArgs), f, t
+                | [], _ -> MLE_App(mlhead, List.rev mlargs), f, t
 
                 | (Inl _, _)::rest, MLTY_Fun (tunit, f', t) -> //non-prefix type app; this type argument gets erased to unit
                   if equiv g tunit ml_unit_ty
-                  then synth_app (head, ml_unit::tysArgs) (join f f', t) rest
+                  then synth_app (mlhead, ml_unit::mlargs) (join f f', t) rest
                   else failwith "Impossible: ill-typed application" //ill-typed; should be impossible
 
                 | (Inr e0, _)::rest, MLTY_Fun(t0, f', t) -> 
                   let e0, f0, t0' = synth_exp g e0 in 
                   let e0 = coerce g e0 t0' t0 in // coerce the arguments of application, if they dont match up
-                  synth_app (head, e0::tysArgs) (join_l [f;f';f0], t) rest
+                  synth_app (mlhead, e0::mlargs) (join_l [f;f';f0], t) rest
                   
                 | _ -> err_ill_typed_application e restArgs t in
                   
@@ -194,7 +201,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
             | Exp_bvar _ 
             | Exp_fvar _ -> 
                //printfn "head of app is %A\n" head.n;
-              let head, (vars, t) = lookup_var g head in
+              let (head, (vars, t)), isDataCons = lookup_var g head in
               //let _ = printfn "\n (*looked up tyscheme of \n %A \n as \n %A *) \n" head (vars,t) in
               let n = List.length vars in
               if n <= List.length args
@@ -205,7 +212,8 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                 //   let _ = printfn "\n (*instantiating  \n %A \n with \n %A \n produced \n %A \n *) \n" (vars,t) prefixAsMLTypes t in
                    match rest with 
                     | [] -> head, MayErase, t
-                    | _ -> synth_app (head, []) (MayErase, t) rest 
+                    | _ -> let mlAppExpr, etag ,t = synth_app (head, []) (MayErase, t) rest in 
+                                (postProcIfDataCons isDataCons t mlAppExpr, etag ,t)
               else err_uninst e
 
             | _ -> 
@@ -233,6 +241,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
             MLE_Fun(bs, e), f, tfun
     
         | Exp_let((is_rec, lbs), e') -> 
+          //let _ = printfn "\n (* let \n %A \n as \n %A *) \n" lbs e' in
           let maybe_generalize {lbname=lbname; lbeff=lbeff; lbtyp=t; lbdef=e} = 
               let f_e = ExtractTyp.translate_eff g lbeff in
               let t = Util.compress_typ t in
