@@ -11,7 +11,7 @@ let id = (Obj.magic (fun _1_790 x -> x))
 
 let idp = (Obj.magic (fun _1_790 x -> x))
 
-let add1 = (fun a -> (S a))
+let add1 = (fun a -> S (a))
 
 type ('a, 'b) prod =
 | Pair of 'a * 'b
@@ -20,7 +20,7 @@ type 'a list =
 | Nil
 | Cons of 'a * 'a list
 
-let prepend0 = (fun tll -> Cons (O(*comma was manually added*),tll))
+let prepend0 = (fun tll -> Cons (O, tll))
 
 type ('a, 'b) list2 =
 | Nil2

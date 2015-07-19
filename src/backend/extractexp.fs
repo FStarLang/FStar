@@ -127,7 +127,9 @@ let rec extract_pat (g:env) p : (env * list<mlpattern>) = match p.v with
    2) meets the ML requirements that the args to datacons be tupled and that the datacons be fullly applied
 *)
 let postProcIfDataCons (isDataCons : bool) (residualType : mlty)  (mlAppExpr : mlexpr) : mlexpr =
-    mlAppExpr //TODO: will be fixed soon
+match (mlAppExpr, isDataCons) with
+| (MLE_App (MLE_Name mlp, mlargs) , true) -> MLE_CTor (mlp,mlargs) //TODO: use residualType to determine the number of missing arguments, and eta expand accordingly
+| _ -> mlAppExpr
   
 let rec check_exp (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr = 
     erase g (check_exp' g e f t) f t    
