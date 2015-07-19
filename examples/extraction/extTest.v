@@ -133,6 +133,9 @@ Definition binaryTree (T:Type) := naryTree T 2.
 
 Recursive Extraction naryTree binaryTree.
  
- 
+Definition consalias := cons.
+Definition cons0  := cons 0.
+
+Recursive Extraction consalias cons0.
 
 
