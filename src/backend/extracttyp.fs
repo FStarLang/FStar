@@ -343,7 +343,7 @@ let extractSigElt (c:context) (s:sigelt) : context * list<mltydecl> =
     match s with
     | Sig_typ_abbrev (l,bs,_,t,_,_) -> 
         let c = (extendContext c (mfst bs)) in
-        let c, headBinders, residualType = headBinders c (preProcType c t) in
+        let c, headBinders, residualType = headBinders c t in
         let bs=List.append bs headBinders in
         let t=residualType in
         let tyDecBody = MLTD_Abbrev (extractTyp c t) in
