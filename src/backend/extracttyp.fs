@@ -113,6 +113,9 @@ let lident2mlpath (l:lident) : mlpath =
   ( List.map (fun x -> x.idText) l.ns , l.ident.idText)
 
 
+let preProcType  (c:context) (ft:typ) : typ =  
+    let ft =  (Util.compress_typ ft) in
+    Tc.Normalize.norm_typ [Tc.Normalize.Beta] c.tcenv ft
 
 let extractTyVar (c:context) (btv : btvar) = (lookup_ty c (Inl btv))
 
@@ -194,9 +197,8 @@ and extractBindersTypes  (c:context) (bs : list<binder>): list<mlty> * context =
     (fun (x,c) -> (List.rev x,c)) (List.fold_left (fun (lt,cp) b -> let (nt, nc)= extractBinderType cp b in ((nt::lt),nc))  ([],c) bs)
 
 and extractTyp  (c:context) (ft:typ) : mlty = 
-    let ft =  (Util.compress_typ ft) in
-    let ft = Tc.Normalize.norm_typ [Tc.Normalize.Beta] c.tcenv ft in
-    extractType' c ft.n
+    let ft =  (preProcType c ft) in extractType' c ft.n
+
 and extractKind (c:context) (ft:knd) : mlty = erasedContent
 and extractComp  (c:context) (ft:comp) : mlty * e_tag = extractComp' c (ft.n) 
 and extractComp'  (c:context) (ft:comp') : mlty * e_tag =
@@ -325,16 +327,26 @@ let extractInductive (c:context) (ind: inductiveTypeFam ) :  context*mltydecl =
         let mlbs = List.append (List.map mlTyIdentOfBinder ind.tyBinders) (dummyIndexIdents nIndices) in
         nc, [(lident2mlsymbol ind.tyName,  mlbs , Some (MLTD_DType tyb))]
 
-
-
 let mfst = List.map fst
+
+let rec headBinders (c:context) (t:typ) : (context * binders * typ (*residual type*)) = 
+match (preProcType c t).n with
+| Typ_lam (bs,t) -> let c,rb,rresidualType = headBinders (extendContext c (mfst bs)) t in
+                     c,(List.append bs rb), rresidualType
+| _ -> (c,[],t)
+
+
+
 (*similar to the definition of the second part of \hat{\epsilon} in page 110*)
 (* \pi_1 of returned value is the exported constant*)
 let extractSigElt (c:context) (s:sigelt) : context * list<mltydecl> =
     match s with
     | Sig_typ_abbrev (l,bs,_,t,_,_) -> 
-        let newContext = (extendContext c (mfst bs)) in
-        let tyDecBody = MLTD_Abbrev (extractTyp newContext t) in
+        let c = (extendContext c (mfst bs)) in
+        let c, headBinders, residualType = headBinders c (preProcType c t) in
+        let bs=List.append bs headBinders in
+        let t=residualType in
+        let tyDecBody = MLTD_Abbrev (extractTyp c t) in
                 //printfn "type is %A\n" (t);
         let td = [(mlsymbolOfLident l, List.map mlTyIdentOfBinder bs , Some tyDecBody)] in
         let c = Env.extend_tydef c td in

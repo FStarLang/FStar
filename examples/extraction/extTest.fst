@@ -70,14 +70,14 @@ type  poly2 (x : Type -> Type)  =
 (*The type sections (new paragraph in the thesis)*)
 type sch (x:Type) =  (x ->  Tot x)
 
-(*as mentoned above, we should try to move lambdas in the body to the left of '=' *)
+(*like Coq, we move lambdas in the body to the left of '=' *)
 type sch1 : (Type  ->  Type) = fun (x:Type) ->  (x ->  Tot x)
 
-(*this extracts to his less preferred choice: Top -> Top *)
+(*this extracts to his preferred choice: 'x -> 'x . See below*)
 type sch3 : (nnat  ->  Type) -> Type  = fun (x:(nnat  ->  Type)) ->  (x O) ->  Tot (x (S O))
 
 (* Manual moving of lambdas to LHS of '=', now it extracts to his second (preferred) option.
-   We should do this automatically. This is near the top in the TODO list of AA.
+   We now do this moving automatically.
  *)
 type sch3param (x:(nnat  ->  Type))  =  (x O) ->  Tot (x (S O))
 

@@ -49,11 +49,11 @@ type 'x poly2 =
 type 'x sch =
 'x  ->  'x
 
-type sch1 =
-Obj.t  ->  Obj.t
+type 'x sch1 =
+'x  ->  'x
 
-type sch3 =
-Obj.t  ->  Obj.t
+type 'x sch3 =
+'x  ->  'x
 
 type 'x sch3param =
 'x  ->  'x
