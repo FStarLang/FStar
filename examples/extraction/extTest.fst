@@ -140,11 +140,8 @@ type listalias 'a = list 'a
 
 type polylistalias = poly2 (listalias)
 
-(* There is currently a glitch in parsing mutual inductives from a sigbundle.
-    Otherwise, this should be straighforward.
 type evenlist (a:Type) =
   | ENil  : evenlist a
   | ECons : hd:a -> tl:oddlist a -> evenlist a
 and oddlist (a:Type) =
   | OCons : hd:a -> tl:evenlist a -> oddlist a
-*)

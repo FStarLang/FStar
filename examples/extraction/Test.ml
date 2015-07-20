@@ -7,11 +7,24 @@ let idnat = (fun x -> x)
 
 let idnat2 = (fun x -> x)
 
-let id = (Obj.magic (fun _1_790 x -> x))
+let id = (fun _1_916 x -> x)
 
-let idp = (Obj.magic (fun _1_790 x -> x))
+let idp = (fun _1_916 x -> x)
 
 let add1 = (fun a -> S (a))
+
+let add2 = (fun _1_926 -> S (_1_926))
+
+let eval_order = (fun effectful f -> (let _1_946 = (effectful "first")
+in (f _1_946 "second")))
+
+let prev = (fun _1_1 -> (match (_1_1) with
+| O -> begin
+O
+end
+| S (n) -> begin
+n
+end))
 
 type ('a, 'b) prod =
 | Pair of 'a * 'b
@@ -86,6 +99,13 @@ type 'a listalias =
 
 type polylistalias =
 Obj.t listalias poly2
+
+type 'a evenlist =
+| ENil
+| ECons of 'a * 'a oddlist
+and (*this was 'test', was manually converted to 'and'*)
+'a oddlist =
+| OCons of 'a * 'a evenlist
 
 
 

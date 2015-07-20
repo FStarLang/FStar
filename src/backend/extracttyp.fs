@@ -255,7 +255,6 @@ let mlsymbolOfLident (id : lident) : mlsymbol =
 type inductiveConstructor = {
   cname: lident;
   ctype : typ;
-  cargs : binders (*will this list always be empty? it has always been empty so far*)
 }
 type inductiveTypeFam = {
   tyName: lident;
@@ -264,33 +263,21 @@ type inductiveTypeFam = {
   constructors : list<inductiveConstructor>
 }
 
-(*the second element of the returned pair is the unconsumed part of sigs*)
-let parseInductiveConstructor (sigs : list<sigelt>) : (inductiveConstructor * list<sigelt>) =
-match sigs with
-| (Sig_datacon (l, (*codomain*) t ,(_,cargs(*binders*),_),_,_,_))::tlsig ->
-     ({ cname = l ; ctype = t; cargs =[] }, tlsig)
-| h::_ -> failwith (Util.format1 "unexpected : %s\n" (Print.sigelt_to_string h)) //"incorrect sigelt provided to parseInductiveConstructor"
 
-let rec parseInductiveConstructors (sigs : list<sigelt>) (n: int) : (list<inductiveConstructor> * list<sigelt>) =
-    if (0<n)
-    then 
-         let (ic, tsigs) = parseInductiveConstructor sigs in 
-         let (ics, ttsig) = (parseInductiveConstructors tsigs (n-1)) in 
-            (ic::ics, ttsig)
-    else
-        ([], sigs)
+let parseInductiveConstructors (c:context) (cnames: list<lident>) : (list<inductiveConstructor>) =
+    List.map (fun h -> { cname = h ; ctype = lookup_datacon c.tcenv h}) cnames
 
 (*the second element of the returned pair is the unconsumed part of sigs*)
 let rec parseInductiveTypesFromSigBundle
-    (sigs : list<sigelt>)  : list<inductiveTypeFam>  =
+    (c: context) (sigs : sigelts) : list<inductiveTypeFam>  =
 match sigs with
 | (Sig_tycon (l,bs,kk,_,constrs,_,_))::tlsig -> 
      //printfn "%A\n" ((List.map (fun (x:lident) -> x.ident.idText) constrs));
-    let (indConstrs(*list<inductiveConstructor>*), ttlsig) = parseInductiveConstructors tlsig (List.length constrs) in
-     ({tyName = l; k = kk; tyBinders=bs; constructors=indConstrs})::(parseInductiveTypesFromSigBundle ttlsig)
+    let indConstrs(*list<inductiveConstructor>*) = parseInductiveConstructors c constrs in
+     ({tyName = l; k = kk; tyBinders=bs; constructors=indConstrs})::(parseInductiveTypesFromSigBundle c tlsig)
+| (Sig_datacon _)::tlsig -> []
 | [] -> []
-| se::tlsig -> failwith (Util.format1 "unexpected : %s\n" (Print.sigelt_to_string_short se)) //;(parseInductiveTypesFromSigBundle tlsig) //TODO : debug and remove
-| _ -> failwith "incorrect input provided to parseInductiveTypeFromSigBundle"
+| se::tlsig -> failwith (Util.format1 "unexpected, or a type abbrev mutually defined with an inductive (NYI) : %s\n" (Print.sigelt_to_string_short se)) //;(parseInductiveTypesFromSigBundle tlsig) //TODO : debug and remove
 
 
 let rec argTypes  (t: mlty) : list<mlty> =
@@ -318,9 +305,6 @@ match  (la, lb) with
 let mlTyIdentOfBinder (b : binder) = prependTick (convIdent (binderPPnames b))
 
 let extractCtor (tyBinders : list<binder>) (c:context) (ctor: inductiveConstructor):  context * (mlsymbol * list<mlty>) =
-   if (0< List.length ctor.cargs)
-   then (failwith "cargs is unexpectedly non-empty. This is a design-flaw, please report.")
-   else 
         (let (lb, tr) = bindersOfFuntype (List.length tyBinders) ctor.ctype in 
         let lp = List.zip tyBinders lb in
         //assert (List.length tyBinders = List.length lp);
@@ -385,7 +369,7 @@ let extractSigElt (c:context) (s:sigelt) : context * list<mltydecl> =
 
     | Sig_bundle (sigs, _, _ ,_) -> 
         //let xxxx = List.map (fun se -> fprint1 "%s\n" (Util.format1 "sig bundle: : %s\n" (Print.sigelt_to_string se))) sigs in
-        let inds = parseInductiveTypesFromSigBundle sigs in
+        let inds = parseInductiveTypesFromSigBundle c sigs in
          (Util.fold_map extractInductive c inds)
         //let k = lookup_typ_lid c ind.tyName in
     | _ -> c, []
