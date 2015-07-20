@@ -1979,8 +1979,31 @@ let forward_simulation #c #c' h ps =
   else if is_par c && if_enter_sec_then_from_sec h then
     IntroR (forward_simulation_par #c #c' h ps)
   else IntroL (forward_simulation_enter_sec #c #c' h ps)
-(*
+
 type pstep_star: #ps:prins -> protocol ps -> protocol ps -> Type =
   | PS_refl: #ps:prins -> pi:protocol ps -> pstep_star #ps pi pi
   
-  | PS_tran: #ps:prins -> #pi:protocol ps *)
+  | PS_tran:
+    #ps:prins -> #pi:protocol ps -> #pi':protocol ps -> #pi'':protocol ps
+    -> h1:pstep #ps pi pi' -> h2:pstep_star #ps pi' pi''
+    -> pstep_star #ps pi pi''
+
+opaque val pstep_par_star_to_pstep_star:
+  #ps:prins -> #pi:protocol ps -> #pi':protocol ps
+  -> h:pstep_par_star #ps pi pi'
+  -> Tot (pstep_star #ps pi pi')
+     (decreases h)
+let rec pstep_par_star_to_pstep_star #ps #pi #pi' h = match h with
+  | PP_refl _ -> PS_refl pi
+  | PP_tran h1 h2 ->
+    PS_tran h1 (pstep_par_star_to_pstep_star h2)
+
+opaque val forward_simulation_theorem:
+  #c:sconfig -> #c':sconfig -> h:sstep c c'
+  -> ps:prins{subset (Mode.ps (Conf.m c)) ps}
+  -> Tot (pstep_star #ps (slice_c_ps ps c) (slice_c_ps ps c'))
+let forward_simulation_theorem #c #c' h ps =
+  let h1 = forward_simulation #c #c' h ps in
+  match h1 with
+    | IntroL h' -> PS_tran h' (PS_refl (slice_c_ps ps c'))
+    | IntroR h' -> pstep_par_star_to_pstep_star h'
