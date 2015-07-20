@@ -15,8 +15,8 @@ type nnat =
 let idnat = fun (x:nnat) -> x
 let idnat2 (x:nnat) = x
 
-(* do the F* ASTs of id and idp look different at all?
-  Yes. It seems that the F* AST does not even have a place to store the
+(* do the F* ASTs of id and idp' look different at all?
+  No. It seems that the F* AST does not even have a place to store the
   binders appearing before '=''.
   It seems that there is such a place in the ML AST.
 
@@ -27,7 +27,9 @@ let idnat2 (x:nnat) = x
       Their RHS can be any value, including a lambda.
   *)
 let id : a:Type -> a -> a = fun x -> x
-let idp (a:Type) = fun x -> x
+let idp (a:Type) = fun x -> x (*x does not have type a, it has a type ?uvar a*)
+let idp' (a:Type) = fun (x:a) -> x
+
 let add1 (a : nnat) = (S a)
 let add2 = S //test eta expansion of data
 let eval_order (effectful:string -> string)
@@ -38,9 +40,9 @@ let prev = function
   | O -> O
   | S n -> n
 
-(*let rec add (a : nnat) (b : nnat) = match a with
+let rec add (a : nnat) (b : nnat) = match a with
 | O -> b
-| S a' -> S (add a' b)*)
+| S a' -> S (add a' b)
 
 
 type prod 'a 'b =
@@ -158,5 +160,8 @@ and isOdd : nnat -> Type =
 val ev2 :  (isEven (S (S O)))
 let ev2 = EvSOdd (S O) (OddSEven O Ev0)
 
-type someLemmaStatement = nat -> nat -> Tot unit
+(* val evDouble : (n:nnat) -> isEven (add n n) *)
 
+(*
+type someLemmaStatement = nat -> nat -> Tot unit
+*)
