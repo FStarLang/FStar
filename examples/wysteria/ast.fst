@@ -1278,37 +1278,36 @@ type tpre_assec_ret (#ps':prins) (pi:protocol ps') (ps:prins) =
   is_value (Some.v (snd pi)) /\ (Conf.s (Some.v (snd pi)) = []) /\
   ps_sec_waiting pi ps
 
-val ret_sec_value_to_p: #meta:v_meta -> c:tconfig -> p:prin
-                        -> v:value meta -> Tot tconfig
-let ret_sec_value_to_p #meta c p v =
+val ret_sec_value_to_p: sec_c:tconfig{is_value sec_c} -> c:tconfig -> p:prin -> Tot tconfig
+let ret_sec_value_to_p sec_c c p =
   let Conf l m s en _ = c in
+  let D_v _ v = c_value sec_c in
   Conf l m s en (T_val (D_v.v (slice_v p v)))
 
 val ret_sec_value_to_ps:
-  #ps':prins -> #m:v_meta -> pi:tpar ps' -> ps:prins{forall p. mem p ps ==> contains p pi}
-  -> v:value m
+  #ps':prins -> pi:tpar ps' -> sec_c:tconfig{is_value sec_c}
+  -> ps:prins{forall p. mem p ps ==> contains p pi}
   -> Tot (pi':tpar ps'{forall p. (mem p ps ==>
                                   select p pi' =
-                                  Some (ret_sec_value_to_p (Some.v (select p pi)) p v)) /\
+                                  Some (ret_sec_value_to_p sec_c (Some.v (select p pi)) p)) /\
                                  (not (mem p ps) ==>
                                   select p pi' = select p pi)})
      (decreases (size ps))
-let rec ret_sec_value_to_ps #ps' #meta pi ps v =
+let rec ret_sec_value_to_ps #ps' pi sec_c ps =
   let Some p = choose ps in
   let ps_rest = remove p ps in
-  let c' = ret_sec_value_to_p (Some.v (select p pi)) p v in
+  let c' = ret_sec_value_to_p sec_c (Some.v (select p pi)) p in
   if ps_rest = empty then update p c' pi
   else
-    let pi' = ret_sec_value_to_ps #ps' #meta pi ps_rest v in
+    let pi' = ret_sec_value_to_ps #ps' pi sec_c ps_rest in
     update p c' pi'
 
-val tstep_assec_ret:
+(*val tstep_assec_ret:
   #ps':prins -> pi:protocol ps' -> ps:prins{tpre_assec_ret pi ps}
   -> Tot (protocol ps')
 let tstep_assec_ret #ps' pi ps =
   let pi, Some c = pi in
-  let D_v _ v = c_value c in
-  ret_sec_value_to_ps #ps' pi ps v, None
+  ret_sec_value_to_ps #ps' pi c ps, None*)
 
 type pstep: #ps:prins -> protocol ps -> protocol ps -> Type =
 
@@ -1331,7 +1330,7 @@ type pstep: #ps:prins -> protocol ps -> protocol ps -> Type =
     
   | P_sec_exit:
     #ps':prins -> pi:protocol ps' -> ps:prins{tpre_assec_ret pi ps}
-    -> pi':protocol ps'{pi' = tstep_assec_ret pi ps}
+    -> pi':protocol ps'{pi' = (ret_sec_value_to_ps #ps' (fst pi) (Some.v (snd pi)) ps, None)}
     -> pstep #ps' pi pi'
 
 val slice_c_ps_par: ps:prins -> c:sconfig
@@ -1594,20 +1593,22 @@ val sstep_sec_to_par_slice_par_others:
                                slice_c p c = slice_c p c'))
 let sstep_sec_to_par_slice_par_others #c #c' _ = ()
 
-val sstep_sec_to_par_p: #c:config -> #c':config
+
+(*val sstep_sec_to_par_p: #c:config -> #c':config
                         -> h:sstep c c'{is_C_assec_ret h /\ is_par c'}
                         -> p:prin{mem p (Mode.ps (Conf.m c))}
                         -> Tot tconfig
 let sstep_sec_to_par_p #c #c' _ p =
   let ps = Mode.ps (Conf.m c) in
   let v_ps = slice_v_sps ps (D_v.v (c_value c)) in
-  ret_sec_value_to_p #(D_v.meta v_ps) (slice_c p c) p (D_v.v v_ps)
+  ret_sec_value_to_p #(D_v.meta v_ps) (slice_c p c) p (D_v.v v_ps)*)
 
 val sstep_sec_to_par_slice_par_mems:
   #c:config -> #c':config -> h:sstep c c'{is_C_assec_ret h /\ is_par c'}
   -> Lemma (requires (True))
            (ensures (forall p. mem p (Mode.ps (Conf.m c)) ==>
-                               sstep_sec_to_par_p #c #c' h p = slice_c p c'))
+                               ret_sec_value_to_p (slice_c_sps c) (slice_c p c) p = slice_c p c'))
+                               //sstep_sec_to_par_p #c #c' h p = slice_c p c'))
 let sstep_sec_to_par_slice_par_mems #c #c' h =
   let ps = Mode.ps (Conf.m c) in
   let v = D_v.v (c_value c) in
@@ -1621,23 +1622,205 @@ let sstep_sec_to_par_slice_par_mems #c #c' h =
 
 assume val not_contains_lemma: #ps:prins -> pi:tpar ps
                                -> Lemma (requires (True)) (ensures (forall p. not (mem p ps) ==> select p pi = None))
-                                                                   
+
+(**********)
+assume val cand_intro: #a:Type -> #b:Type -> =h:(a /\ b) -> Tot (cand a b)
+assume val cand_elim : #a:Type -> #b:Type -> =h:cand a b -> Lemma (a /\ b)
+
+assume val cor_intro: #a:Type -> #b:Type -> =h:(a \/ b) -> Tot (cor a b)
+assume val cor_elim : #a:Type -> #b:Type -> =h:cor a b -> Lemma (a \/ b)
+
+assume val imp_intro: #a:Type -> #b:Type -> =h:(a ==> b) -> Tot (cimp a b)
+assume val imp_elim: #a :Type -> #b:Type -> =h:cimp a b -> Lemma (a ==> b)
+
+assume val forall_intro_t: #a:Type -> #p:(a -> Type) -> =h:(forall x. p x) -> Tot (x:a -> Tot (p x))
+assume val forall_elim   : #a:Type -> #p:(a -> Type) -> =f:(x:a -> Tot (p x)) -> Lemma (forall x. p x)
+
+assume val ceq_intro: #a:Type -> #x:a -> #y:a -> =h:b2t (x = y) -> Tot (ceq x y)
+assume val ceq_elim : #a:Type -> #x:a -> #y:a -> =h:ceq x y -> Lemma (x = y)
+
+assume val t_intro: #a:Type -> u:unit{a} -> Tot a
+assume val t_elim : #a:Type -> =h:a -> Lemma (a)
+
+assume val rewrite : #a:Type -> #p:(a -> Type) -> #x:a -> #y:a -> =h:ceq x y -> =h':p x -> Tot (p y)
+assume val ceq_symm: #a:Type -> #x:a -> #y:a -> =h:ceq x y -> Tot (ceq y x)
+(**********)
+
+val slice_c_ps_cons: ps:prins -> c:sconfig -> pi:protocol ps{pi = slice_c_ps ps c}
+                     -> Tot (p:prin -> Tot ((mem p ps       ==> select p (fst pi) = Some (slice_c p c)) /\
+                                            (not (mem p ps) ==> select p (fst pi) = None)))
+let slice_c_ps_cons ps c pi =
+  forall_intro_t #prin #(fun p -> (mem p ps       ==> select p (fst pi) = Some (slice_c p c)) /\
+                                  (not (mem p ps) ==> select p (fst pi) = None))
+                 (t_intro #(forall p. (mem p ps       ==> select p (fst pi) = Some (slice_c p c)) /\
+                                      (not (mem p ps) ==> select p (fst pi) = None)) ())
+  
+val tstep_assec_ret_cons:
+  #ps':prins -> pi:protocol ps' -> ps:prins{tpre_assec_ret pi ps}
+  -> pi':protocol ps'{pi' = (ret_sec_value_to_ps #ps' (fst pi) (Some.v (snd pi)) ps, None)}
+  -> Tot (p:prin -> Tot ((mem p ps ==> select p (fst pi') =
+                                       Some (ret_sec_value_to_p (Some.v (snd pi)) (Some.v (select p (fst pi))) p)) /\
+                         (not (mem p ps) ==> select p (fst pi') = select p (fst pi))))
+let tstep_assec_ret_cons #ps' pi ps pi' =
+  forall_intro_t #prin #(fun p -> (mem p ps ==> select p (fst pi') =
+                                                Some (ret_sec_value_to_p (Some.v (snd pi)) (Some.v (select p (fst pi))) p)) /\
+                                  (not (mem p ps) ==> select p (fst pi') = select p (fst pi)))
+                 (t_intro #(forall p. (mem p ps ==> select p (fst pi') =
+                                                    Some (ret_sec_value_to_p (Some.v (snd pi)) (Some.v (select p (fst pi))) p)) /\
+                                      (not (mem p ps) ==> select p (fst pi') = select p (fst pi))) ())
+
+val sstep_sec_to_par_slice_par_mems_cons:
+  #c:config -> #c':config -> h:sstep c c'{is_C_assec_ret h /\ is_par c'}
+  -> ps':prins{ps' = Mode.ps (Conf.m c)} -> sec_c:tconfig{sec_c = slice_c_sps c}
+  -> Tot (p:prin -> Tot (mem p ps' ==> ret_sec_value_to_p sec_c (slice_c p c) p = slice_c p c'))
+let sstep_sec_to_par_slice_par_mems_cons #c #c' h ps' sec_c =
+  sstep_sec_to_par_slice_par_mems #c #c' h;
+  forall_intro_t #prin #(fun p -> (mem p ps' ==> ret_sec_value_to_p sec_c (slice_c p c) p = slice_c p c'))
+                 #(t_intro #(forall p. (mem p ps' ==> ret_sec_value_to_p sec_c (slice_c p c) p = slice_c p c')) ())
+
+val sstep_sec_to_par_slice_par_others_cons:
+ #c:config -> #c':config -> h:sstep c c'{is_C_assec_ret h /\ is_par c'}
+ -> ps':prins{ps' = Mode.ps (Conf.m c)}
+ -> Tot (p:prin -> Tot (not (mem p ps') ==> slice_c p c = slice_c p c'))
+let sstep_sec_to_par_slice_par_others_cons #c #c' h ps' =
+  sstep_sec_to_par_slice_par_others #c #c' h;
+  forall_intro_t #prin #(fun p -> (not (mem p ps') ==> slice_c p c = slice_c p c'))
+                 #(t_intro #(forall p. (not (mem p ps') ==> slice_c p c = slice_c p c')) ())
+
 val forward_simulation_exit_sec: #c:config -> #c':config
                                  -> h:sstep c c'{is_C_assec_ret h /\ is_par c'}
                                  -> ps:prins{subset (Mode.ps (Conf.m c)) ps}
                                  -> Tot (pstep #ps (slice_c_ps ps c) (slice_c_ps ps c'))
 let forward_simulation_exit_sec #c #c' h ps =
-  let ps' = Mode.ps (Conf.m c) in
+  (*let ps' = Mode.ps (Conf.m c) in
   
   let pi, s = slice_c_ps ps c in
   let pi', s' = slice_c_ps ps c' in
-  let pi_s, s_s = tstep_assec_ret #ps (pi, s) ps' in
+  let pi_s = ret_sec_value_to_ps #ps pi (Some.v s) ps' in //writing this and next on one line does not work
+  let s_s = None in
 
+  (*sstep_sec_to_par_slice_par_others #c #c' h;
+  sstep_sec_to_par_slice_par_mems #c #c' h;
+
+  not_contains_lemma #ps pi; not_contains_lemma #ps pi'; not_contains_lemma #ps pi_s;*)
+  
+  (* p:prin -> mem p ps ==> select p pi = Some (slice_c p c) /\ ~ mem p ps ==> select p pi = None *)
+  let f1 = slice_c_ps_cons ps c (pi, s) in
+  
+  (* p:prin -> mem p ps ==> select p pi' = Some (slice_c p c') /\ ~ mem p ps ==> select p pi' = None *)
+  let f2 = slice_c_ps_cons ps c' (pi', s') in
+  
+  (* p:prin -> mem p ps' ==> select p pi_s = Some (ret_sec_value_to_p (Some.v s) (Some.v (select p pi)) p)  /\
+             ~ mem p ps' ==> select p pi_s = select p pi *)
+  let f3 = tstep_assec_ret_cons #ps (pi, s) ps' (pi_s, s_s) in
+  
+  (* p:prin -> mem p ps' ==> ret_sec_value_to_p (Some.v s) (slice_c p c) p = slice_c p c' *)
+  let f4 = sstep_sec_to_par_slice_par_mems_cons #c #c' h ps' (Some.v s) in
+  
+  (* p:prin -> ~ mem p ps' ==> slice_c p c = slice_c p c' *)
+  let f5 = sstep_sec_to_par_slice_par_others_cons #c #c' h ps' in
+
+  (* TODO: FIXME: annotations and implicits required at certain places.
+   * Marking = in assumes matters ? How about function calls everywhere ? Bind to temps ?
+   * can do more ? *)  
+  let f6: p:prin -> q1:(b2t (mem p ps)) -> q2:(b2t (not (mem p ps')))
+          -> Tot (b2t (select p pi_s = select p pi')) =
+    fun p q1 q2 ->
+      let k1 = cand_intro (f3 p) in
+      let Conj k2 k3 = k1 in
+      let k4 = imp_intro k3 in
+      let k5:(b2t (select p pi_s = select p pi)) = k4 q2 in
+      
+      let k6 = cand_intro (f1 p) in
+      let Conj k7 k8 = k6 in
+      let k9 = (imp_intro k7) q1 in
+      let k10 = rewrite (ceq_intro #_ #(select p pi) #(Some (slice_c p c)) k9) k5 in
+      let k11 = (imp_intro (f5 p)) q2 in
+      let k12 = rewrite (ceq_intro #_ #(slice_c p c) #(slice_c p c') k11) k10 in
+      let k13:(b2t (select p pi' = Some (slice_c p c'))) = (imp_intro (Conj.h1 (cand_intro (f2 p)))) q1 in
+      rewrite (ceq_symm #_ #(select p pi') #(Some (slice_c p c')) (ceq_intro #_ #(select p pi') #(Some (slice_c p c')) k13)) k12
+  in
+  
+  let f7: p:prin -> q1:(b2t (mem p ps)) -> q2:(b2t (mem p ps'))
+          -> Tot (b2t (select p pi_s = select p pi')) =
+    fun p q1 q2 ->
+      let _ = admitP (b2t (is_Some (select p pi))) in
+      let k1 = cand_intro (f3 p) in
+      let Conj k2 k3 = k1 in
+      let k4:(b2t (select p pi_s = Some (ret_sec_value_to_p (Some.v s) (Some.v (select p pi)) p))) = (imp_intro k2) q2 in
+      
+      let k5 = cand_intro (f1 p) in
+      let Conj k6 k7 = k5 in
+      let k8 = (imp_intro k6) q1 in
+      let k9:(b2t (select p pi_s = Some (ret_sec_value_to_p (Some.v s) (slice_c p c) p))) =
+        rewrite (ceq_intro #_ #(select p pi) #(Some (slice_c p c)) k8) k4 in
+      
+      let k10 = f4 p in
+      let k11 = (imp_intro k10) q2 in
+      let k12:(b2t (select p pi_s = Some (slice_c p c'))) =
+        rewrite (ceq_intro #_ #(ret_sec_value_to_p (Some.v s) (slice_c p c) p) #(slice_c p c') k11) k9 in
+
+      let k13 = cand_intro (f2 p) in
+      let Conj k14 k15 = k13 in
+      let k16:(b2t (select p pi' = Some (slice_c p c'))) = (imp_intro k14) q1 in
+      let k17:ceq #_ (select p pi') (Some (slice_c p c')) = ceq_intro k16 in
+      let k18:(b2t (select p pi_s = select p pi')) =
+        rewrite (ceq_symm #_ #(select p pi') #(Some (slice_c p c')) k17) k12 in
+      k18
+  in
+    
+  let f8: p:prin -> q:(b2t (mem p ps)) -> Tot (b2t (select p pi_s = select p pi')) =
+    fun p q ->
+      if mem p ps' then f7 p q (t_intro #(b2t (mem p ps')) ())
+      else f6 p q (t_intro #(b2t (not (mem p ps'))) ())
+  in
+  
+  let f9: p:prin -> q:(b2t (not (mem p ps))) -> Tot (b2t (select p pi_s = select p pi')) =
+    fun p q ->
+      let k1 = cand_intro (f1 p) in
+      let Conj k2 k3 = k1 in
+      let k4:(b2t (select p pi = None)) = (imp_intro k3) q in
+      
+      let k5 = cand_intro (f3 p) in
+      let Conj k6 k7 = k5 in
+      let k8:(not (mem p ps) ==> not (mem p ps')) = t_intro #(not (mem p ps) ==> not (mem p ps')) () in
+      let k9:(b2t (not (mem p ps'))) = (imp_intro k8) q in
+      let k10:(b2t (select p pi_s = select p pi)) = (imp_intro k7) k9 in
+      let k11:(b2t (select p pi_s = None)) = rewrite (ceq_intro #_ #(select p pi) #None k4) k10 in
+
+      let k12 = cand_intro (f2 p) in
+      let Conj k13 k14 = k12 in
+      let k15:(b2t (select p pi' = None)) = (imp_intro k14) q in
+      
+      let k16:(ceq #_ None (select p pi')) = ceq_symm #_ #(select p pi') #None (ceq_intro #_ #(select p pi') #None k15) in
+      
+      let k17:(b2t (select p pi_s = select p pi')) = rewrite k16 k11 in
+      
+      k17
+  in
+
+  let f10: p:prin -> Tot (b2t (select p pi_s = select p pi')) =
+    fun p -> if mem p ps then f8 p (t_intro #(b2t (mem p ps)) ())
+             else f9 p (t_intro #(b2t (not (mem p ps))) ())
+  in
+  
+  let _ = forall_elim #prin #(fun p -> b2t (select p pi_s = select p pi')) f10 in
+  
+  OrdMap.eq_lemma pi_s pi';
+  P_sec_exit #ps (pi, s) ps' (pi_s, s_s)*)
+
+  let ps' = Mode.ps (Conf.m c) in
+
+  let pi, s = slice_c_ps ps c in
+  let pi', s' = slice_c_ps ps c' in
+  let pi_s = ret_sec_value_to_ps #ps pi (Some.v s) ps' in //writing this and next on one line does not work
+  let s_s = None in
+  
   sstep_sec_to_par_slice_par_others #c #c' h;
   sstep_sec_to_par_slice_par_mems #c #c' h;
 
   not_contains_lemma #ps pi; not_contains_lemma #ps pi'; not_contains_lemma #ps pi_s;
-  
+
   let _ = cut (forall p. mem p ps ==> select p pi = Some (slice_c p c)) in
   let _ = cut (forall p. not (mem p ps) ==> select p pi = None) in
 
