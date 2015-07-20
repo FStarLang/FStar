@@ -71,8 +71,8 @@ val sel_empty: #k:Type -> #v:Type -> #f:cmp k -> x:k
                   [SMTPat (select #k #v #f x (empty #k #v #f))]
                   
 val sel_contains: #k:Type -> #v:Type -> #f:cmp k -> x:k -> m:ordmap k v f
-                  -> Lemma (requires (contains #k #v #f x m))
-                           (ensures (is_Some (select #k #v #f x m)))
+                  -> Lemma (requires (True))
+                           (ensures (contains #k #v #f x m = is_Some (select #k #v #f x m)))
                      [SMTPat (select #k #v #f x m); SMTPat (contains #k #v #f x m)]
 
 val contains_upd1: #k:Type -> #v:Type -> #f:cmp k -> x:k -> y:v -> x':k

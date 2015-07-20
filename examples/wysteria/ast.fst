@@ -1218,7 +1218,7 @@ type tpre_assec (#ps':prins) (pi:protocol ps') (ps:prins) (x:varname) (e:exp) =
                                MkTuple3._2 (get_en_b (R_assec.v (T_red.r (Conf.t c)))) = x /\
                                MkTuple3._3 (get_en_b (R_assec.v (T_red.r (Conf.t c)))) = e)))
 
-val get_env_m:
+opaque val get_env_m:
   #ps':prins -> pi:protocol ps' -> ps:prins{forall p. mem p ps ==>
                                             contains p (fst pi) /\
                                             Let (Some.v (select p (fst pi)))
@@ -1244,7 +1244,7 @@ let step_p_to_wait c p =
   let Conf l m s en _ = c in
   Conf l m s en T_sec_wait
 
-val step_ps_to_wait:
+opaque val step_ps_to_wait:
   #ps':prins -> pi:tpar ps' -> ps:prins{forall p. mem p ps ==> contains p pi}
   -> Tot (pi':tpar ps'{forall p. (mem p ps ==>
                                   select p pi' =
@@ -1284,7 +1284,7 @@ let ret_sec_value_to_p sec_c c p =
   let D_v _ v = c_value sec_c in
   Conf l m s en (T_val (D_v.v (slice_v p v)))
 
-val ret_sec_value_to_ps:
+opaque val ret_sec_value_to_ps:
   #ps':prins -> pi:tpar ps' -> sec_c:tconfig{is_value sec_c}
   -> ps:prins{forall p. mem p ps ==> contains p pi}
   -> Tot (pi':tpar ps'{forall p. (mem p ps ==>
@@ -1328,12 +1328,11 @@ type pstep: #ps:prins -> protocol ps -> protocol ps -> Type =
     -> pi':protocol ps'{pi' = (ret_sec_value_to_ps #ps' (fst pi) (Some.v (snd pi)) ps, None)}
     -> pstep #ps' pi pi'
 
-val slice_c_ps_par: ps:prins -> c:sconfig
-                    -> Tot (pi:tpar ps{forall p. (mem p ps ==>
-                                                  select p pi = Some (slice_c p c)) /\
-                                                 (not (mem p ps) ==>
-                                                  select p pi = None)})
-                       (decreases (size ps))
+opaque val slice_c_ps_par:
+  ps:prins -> c:sconfig
+  -> Tot (pi:tpar ps{forall p. (mem p ps ==> select p pi = Some (slice_c p c)) /\
+                               (not (mem p ps) ==> select p pi = None)})
+     (decreases (size ps))
 let rec slice_c_ps_par ps c =
   let Some p = choose ps in
   let ps_rest = remove p ps in
@@ -1368,10 +1367,6 @@ let slice_remains_same_in_sec_step #c #c' h =
   forall_intro #prin #(fun (p:prin) -> b2t (slice_c p c = slice_c p c'))
                (slice_remains_same_in_sec_step_p #c #c' h)
 
-assume val sel_contains_tpar: ps:prins -> pi:tpar ps
-                              -> Lemma (requires (True))
-                                       (ensures (forall p. (is_Some (select p pi) = contains p pi)))
-
 opaque val forward_simulation_sec: #c:sconfig -> #c':sconfig -> ps:prins
                                    -> h:sstep c c'{is_sec c /\ if_exit_sec_then_to_sec h}
                                    -> Tot (pstep #ps (slice_c_ps ps c)
@@ -1381,7 +1376,7 @@ let forward_simulation_sec #c #c' ps h =
   let (pi', s') = slice_c_ps ps c' in
   let Conj _ h' = sstep_sec_slice_lemma c c' h in
   slice_remains_same_in_sec_step h;
-  sel_contains_tpar ps pi; sel_contains_tpar ps pi';
+  //sel_contains_tpar ps pi; sel_contains_tpar ps pi';
   cut (forall p. select p pi = select p pi');
   OrdMap.eq_lemma pi pi';
   P_sec (pi, s) h' (pi', s')
@@ -1407,25 +1402,26 @@ opaque val pstep_par_upd: #ps:prins -> #pi:protocol ps -> #pi':protocol ps
 let pstep_par_upd #ps #pi #pi' h p c = match h with
   | P_par #d #c' _ p' h' _ -> P_par #(union (singleton p) ps) #c' (update_tpar p c pi) p' h' (update_tpar p c pi')
 
-val pstep_par_star_upd_same: #ps:prins -> #pi:protocol ps -> #pi':protocol ps
-                             -> h:pstep_par_star #ps pi pi'
-                             -> p:prin{not (contains p (fst pi))}
-                             -> c:tconfig{is_Par (Mode.m (Conf.m c))}
-                             -> Tot (pstep_par_star #(union (singleton p) ps) (update_tpar p c pi) (update_tpar p c pi'))
-                                (decreases h)
+opaque val pstep_par_star_upd_same:
+  #ps:prins -> #pi:protocol ps -> #pi':protocol ps -> h:pstep_par_star #ps pi pi'
+  -> p:prin{not (contains p (fst pi))}
+  -> c:tconfig{is_Par (Mode.m (Conf.m c))}
+  -> Tot (pstep_par_star #(union (singleton p) ps) (update_tpar p c pi) (update_tpar p c pi'))
+     (decreases h)
 let rec pstep_par_star_upd_same #ps #pi #pi' h p c = match h with
   | PP_refl #ps pi -> PP_refl #(union (singleton p) ps)(update_tpar p c pi)
   
   | PP_tran #ps #pi #pi' #pi'' h1 h2 ->
     PP_tran (pstep_par_upd h1 p c) (pstep_par_star_upd_same h2 p c)
 
-val pstep_par_star_upd_step: #ps:prins -> #pi:protocol ps -> #pi':protocol ps
-                             -> #c:tconfig{is_Par (Mode.m (Conf.m c))}
-                             -> #c':tconfig{is_Par (Mode.m (Conf.m c))}
-                             -> h1:pstep_par_star #ps pi pi' -> h2:sstep c c'
-                             -> p:prin{not (contains p (fst pi))}
-                             -> Tot (pstep_par_star #(union (singleton p) ps) (update_tpar p c pi) (update_tpar p c' pi'))
-                                (decreases h1)                                
+opaque val pstep_par_star_upd_step:
+  #ps:prins -> #pi:protocol ps -> #pi':protocol ps
+  -> #c:tconfig{is_Par (Mode.m (Conf.m c))}
+  -> #c':tconfig{is_Par (Mode.m (Conf.m c))}
+  -> h1:pstep_par_star #ps pi pi' -> h2:sstep c c'
+  -> p:prin{not (contains p (fst pi))}
+  -> Tot (pstep_par_star #(union (singleton p) ps) (update_tpar p c pi) (update_tpar p c' pi'))
+     (decreases h1)                                
 let rec pstep_par_star_upd_step #ps #pi #pi' #c #c' h1 h2 p =
   let (pi1, s1)   = update p c (fst pi), snd pi in
   let (pi1', s1') = update p c' (fst pi'), snd pi' in
@@ -1608,8 +1604,9 @@ let sstep_sec_to_par_slice_par_mems #c #c' h =
   let _ = slice_v_lem_singl_of_ps_forall v ps in
   ()
 
-assume val not_contains_lemma: #ps:prins -> pi:tpar ps
-                               -> Lemma (requires (True)) (ensures (forall p. not (mem p ps) ==> select p pi = None))
+val not_contains_lemma: #ps:prins -> pi:tpar ps
+                        -> Lemma (requires (True)) (ensures (forall p. not (mem p ps) ==> select p pi = None))
+let not_contains_lemma #ps pi = ()
 
 (**********)
 assume val cand_intro: #a:Type -> #b:Type -> =h:(a /\ b) -> Tot (cand a b)
@@ -1634,16 +1631,17 @@ assume val rewrite : #a:Type -> #p:(a -> Type) -> #x:a -> #y:a -> =h:ceq x y -> 
 assume val ceq_symm: #a:Type -> #x:a -> #y:a -> =h:ceq x y -> Tot (ceq y x)
 (**********)
 
-val slice_c_ps_cons: ps:prins -> c:sconfig -> pi:protocol ps{pi = slice_c_ps ps c}
-                     -> Tot (p:prin -> Tot ((mem p ps       ==> select p (fst pi) = Some (slice_c p c)) /\
-                                            (not (mem p ps) ==> select p (fst pi) = None)))
+opaque val slice_c_ps_cons:
+  ps:prins -> c:sconfig -> pi:protocol ps{pi = slice_c_ps ps c}
+  -> Tot (p:prin -> Tot ((mem p ps       ==> select p (fst pi) = Some (slice_c p c)) /\
+                         (not (mem p ps) ==> select p (fst pi) = None)))
 let slice_c_ps_cons ps c pi =
   forall_intro_t #prin #(fun p -> (mem p ps       ==> select p (fst pi) = Some (slice_c p c)) /\
                                   (not (mem p ps) ==> select p (fst pi) = None))
                  (t_intro #(forall p. (mem p ps       ==> select p (fst pi) = Some (slice_c p c)) /\
                                       (not (mem p ps) ==> select p (fst pi) = None)) ())
   
-val tstep_assec_ret_cons:
+opaque val tstep_assec_ret_cons:
   #ps':prins -> pi:protocol ps' -> ps:prins{tpre_assec_ret pi ps}
   -> pi':protocol ps'{pi' = (ret_sec_value_to_ps #ps' (fst pi) (Some.v (snd pi)) ps, None)}
   -> Tot (p:prin -> Tot ((mem p ps ==> select p (fst pi') =
@@ -1657,7 +1655,7 @@ let tstep_assec_ret_cons #ps' pi ps pi' =
                                                     Some (ret_sec_value_to_p (Some.v (snd pi)) (Some.v (select p (fst pi))) p)) /\
                                       (not (mem p ps) ==> select p (fst pi') = select p (fst pi))) ())
 
-val sstep_sec_to_par_slice_par_mems_cons:
+opaque val sstep_sec_to_par_slice_par_mems_cons:
   #c:config -> #c':config -> h:sstep c c'{is_C_assec_ret h /\ is_par c'}
   -> ps':prins{ps' = Mode.ps (Conf.m c)} -> sec_c:tconfig{sec_c = slice_c_sps c}
   -> Tot (p:prin -> Tot (mem p ps' ==> ret_sec_value_to_p sec_c (slice_c p c) p = slice_c p c'))
@@ -1666,7 +1664,7 @@ let sstep_sec_to_par_slice_par_mems_cons #c #c' h ps' sec_c =
   forall_intro_t #prin #(fun p -> (mem p ps' ==> ret_sec_value_to_p sec_c (slice_c p c) p = slice_c p c'))
                  #(t_intro #(forall p. (mem p ps' ==> ret_sec_value_to_p sec_c (slice_c p c) p = slice_c p c')) ())
 
-val sstep_sec_to_par_slice_par_others_cons:
+opaque val sstep_sec_to_par_slice_par_others_cons:
  #c:config -> #c':config -> h:sstep c c'{is_C_assec_ret h /\ is_par c'}
  -> ps':prins{ps' = Mode.ps (Conf.m c)}
  -> Tot (p:prin -> Tot (not (mem p ps') ==> slice_c p c = slice_c p c'))
@@ -1675,10 +1673,10 @@ let sstep_sec_to_par_slice_par_others_cons #c #c' h ps' =
   forall_intro_t #prin #(fun p -> (not (mem p ps') ==> slice_c p c = slice_c p c'))
                  #(t_intro #(forall p. (not (mem p ps') ==> slice_c p c = slice_c p c')) ())
 
-val forward_simulation_exit_sec: #c:config -> #c':config
-                                 -> h:sstep c c'{is_C_assec_ret h /\ is_par c'}
-                                 -> ps:prins{subset (Mode.ps (Conf.m c)) ps}
-                                 -> Tot (pstep #ps (slice_c_ps ps c) (slice_c_ps ps c'))
+opaque val forward_simulation_exit_sec: #c:config -> #c':config
+                                        -> h:sstep c c'{is_C_assec_ret h /\ is_par c'}
+                                        -> ps:prins{subset (Mode.ps (Conf.m c)) ps}
+                                        -> Tot (pstep #ps (slice_c_ps ps c) (slice_c_ps ps c'))
 let forward_simulation_exit_sec #c #c' h ps =
   (*let ps' = Mode.ps (Conf.m c) in
   
@@ -1831,21 +1829,21 @@ let forward_simulation_exit_sec #c #c' h ps =
   OrdMap.eq_lemma pi_s (fst (slice_c_ps ps c'));
   P_sec_exit #ps (pi, s) ps' (pi_s, s_s)
 
-val sstep_par_to_sec_slice_par_others:
+opaque val sstep_par_to_sec_slice_par_others:
   #c:config -> #c':config -> h:sstep c c'{is_C_assec_beta h /\ is_par c}
   -> Lemma (requires (True))
            (ensures (forall p. not (mem p (Mode.ps (Conf.m c))) ==>
                                slice_c p c = slice_c p c'))
 let sstep_par_to_sec_slice_par_others #c #c' h = ()
 
-val sstep_par_to_sec_slice_par_mems:
+opaque val sstep_par_to_sec_slice_par_mems:
   #c:config -> #c':config -> h:sstep c c'{is_C_assec_beta h /\ is_par c}
   -> Lemma (requires (True))
            (ensures (forall p. mem p (Mode.ps (Conf.m c)) ==>
                                step_p_to_wait (slice_c p c) p = slice_c p c'))
 let sstep_par_to_sec_slice_par_mems #c #c' h = ()
 
-val sstep_par_to_sec_slice_par:
+opaque val sstep_par_to_sec_slice_par:
   #c:config -> #c':config -> h:sstep c c'{is_C_assec_beta h /\ is_par c}
   -> ps:prins{subset (Mode.ps (Conf.m c)) ps} -> x:varname
   -> e:exp{tpre_assec #ps (slice_c_ps ps c) (Mode.ps (Conf.m c)) x e}
@@ -1882,18 +1880,29 @@ let sstep_par_to_sec_slice_par #c #c' h ps x e =
 
   OrdMap.eq_lemma pi_s pi'
 
-assume val sstep_par_to_sec_en_compose_lemma:
+opaque val slice_clos_lem: #meta:v_meta -> v:value meta{is_clos v}
+                           -> Lemma (requires (True))
+                                    (ensures (forall p.
+                                              is_clos (D_v.v (slice_v p v)) /\
+                                              MkTuple3._1 (get_en_b (D_v.v (slice_v p v))) =
+                                              slice_en p (MkTuple3._1 (get_en_b v))))
+let slice_clos_lem #meta v = ()
+
+opaque val sstep_par_to_sec_en_compose_lemma:
   #c:config -> #c':config -> h:sstep c c'{is_C_assec_beta h /\ is_par c}
   -> ps:prins{subset (Mode.ps (Conf.m c)) ps}
   -> Lemma (requires (True))
            (ensures (forall p. mem p (Mode.ps (Conf.m c)) ==>
                                select p (get_env_m #ps (slice_c_ps ps c) (Mode.ps (Conf.m c))) =
                                Some (slice_en p (MkTuple3._1 (get_en_b (R_assec.v (T_red.r (Conf.t c))))))))
-
-val forward_simulation_enter_sec: #c:config -> #c':config
-                                  -> h:sstep c c'{is_C_assec_beta h /\ is_par c}
-                                  -> ps:prins{subset (Mode.ps (Conf.m c)) ps}
-                                  -> Tot (pstep #ps (slice_c_ps ps c) (slice_c_ps ps c'))
+let sstep_par_to_sec_en_compose_lemma #c #c' h ps =
+  let Conf _ _ _ _ (T_red (R_assec _ v)) = c in
+  slice_clos_lem v
+    
+opaque val forward_simulation_enter_sec:
+  #c:config -> #c':config -> h:sstep c c'{is_C_assec_beta h /\ is_par c}
+  -> ps:prins{subset (Mode.ps (Conf.m c)) ps}
+  -> Tot (pstep #ps (slice_c_ps ps c) (slice_c_ps ps c'))
 let forward_simulation_enter_sec #c #c' h ps =
   let Conf Source (Mode Par ps') s en (T_red (R_assec _ v)) = c in
   let (en1, x, e) = get_en_b v in
@@ -1901,8 +1910,7 @@ let forward_simulation_enter_sec #c #c' h ps =
   let pi, s = slice_c_ps ps c in
   let pi', s' = slice_c_ps ps c' in
   
-  (* TODO: FIXME: this takes too long *)
-  let _ = admitP (tpre_assec #ps (pi, s) ps' x e) in
+  let _ = cut (tpre_assec #ps (pi, s) ps' x e) in
   
   (* TODO: FIXME: If I write pi_s, s_s = ... and then try to say pi_s = step_ps_to_wait, it takes long time,
    * whereas should be immediate from tstep_assec *)
@@ -1942,25 +1950,6 @@ let forward_simulation_enter_sec #c #c' h ps =
                select p env_m = Some (
                MkTuple3._1 (get_en_b (R_assec.v (T_red.r (Conf.t (slice_c p c))))))) in
   
-  (*slice_emp_en_forall ();
-  
-  if is_V_clos v then
-    let V_clos en_t x_t e_t = v in
-    let _ = cut (en_t = en1 /\ x_t = x /\ e_t = e) in
-    let _ = cut (forall p. mem p ps' ==>
-                           is_T_red (Conf.t (slice_c p c)) /\
-                           is_R_assec (T_red.r (Conf.t (slice_c p c))) /\
-                           is_clos (R_assec.v (T_red.r (Conf.t (slice_c p c)))) /\
-                           MkTuple3._2 (get_en_b (R_assec.v (T_red.r (Conf.t (slice_c p c))))) = x_t /\
-                           MkTuple3._3 (get_en_b (R_assec.v (T_red.r (Conf.t (slice_c p c))))) = e_t /\
-                           MkTuple3._1 (get_en_b (R_assec.v (T_red.r (Conf.t (slice_c p c))))) = slice_en p en_t) in
-  
-    let _ = cut (forall p. mem p ps' ==> select p env_m = Some (slice_en p en_t)) in
-    let _ = cut (forall p. mem p ps' ==> select p env_m = Some (slice_en p en1)) in
-    admit ()
-  else
-    admit ()*)
-  
   let _ = sstep_par_to_sec_en_compose_lemma #c #c' h ps in
   let _ = cut (forall p. mem p ps' ==> select p env_m = Some (slice_en p en1)) in
   
@@ -1977,11 +1966,11 @@ let forward_simulation_enter_sec #c #c' h ps =
   
   P_sec_enter #ps (pi, s) ps' x e (pi_tmp, s_s)
 
-val forward_simulation: #c:sconfig -> #c':sconfig -> h:sstep c c'
-                        -> ps:prins{subset (Mode.ps (Conf.m c)) ps}
-                        -> Tot (cor (pstep #ps (slice_c_ps ps c) (slice_c_ps ps c'))
-                                    (pstep_par_star #ps (slice_c_ps ps c)
-                                                        (slice_c_ps ps c')))
+opaque val forward_simulation: #c:sconfig -> #c':sconfig -> h:sstep c c'
+                               -> ps:prins{subset (Mode.ps (Conf.m c)) ps}
+                               -> Tot (cor (pstep #ps (slice_c_ps ps c) (slice_c_ps ps c'))
+                                           (pstep_par_star #ps (slice_c_ps ps c)
+                                                               (slice_c_ps ps c')))
 let forward_simulation #c #c' h ps =
   if is_sec c && if_exit_sec_then_to_sec h then
     IntroL (forward_simulation_sec #c #c' ps h)
@@ -1990,3 +1979,8 @@ let forward_simulation #c #c' h ps =
   else if is_par c && if_enter_sec_then_from_sec h then
     IntroR (forward_simulation_par #c #c' h ps)
   else IntroL (forward_simulation_enter_sec #c #c' h ps)
+(*
+type pstep_star: #ps:prins -> protocol ps -> protocol ps -> Type =
+  | PS_refl: #ps:prins -> pi:protocol ps -> pstep_star #ps pi pi
+  
+  | PS_tran: #ps:prins -> #pi:protocol ps *)
