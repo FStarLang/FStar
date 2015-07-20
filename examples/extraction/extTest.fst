@@ -6,6 +6,8 @@ fstar extTest.fst --codegen OCaml-experimental > Test.ml ; sed -i '1d;$d;s/Test.
 *)
 module Test
 
+let idlist (x:list int) = x//Cons 0 x
+
 type nnat =
 | O : nnat
 | S : nnat -> nnat
@@ -156,6 +158,5 @@ and isOdd : nnat -> Type =
 val ev2 :  (isEven (S (S O)))
 let ev2 = EvSOdd (S O) (OddSEven O Ev0)
 
-(*
-type someLemmaStatement = nat -> nat -> unit
-*)
+type someLemmaStatement = nat -> nat -> Tot unit
+

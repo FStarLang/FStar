@@ -23,9 +23,11 @@ open Microsoft.FStar.Backends.ML.Syntax
 open Microsoft.FStar.Backends.ML.Env
 open Microsoft.FStar.Backends.ML.Util
 
-let extract (g:env) (m:modul) : env * mllib = 
-    if m.is_interface then failwith "NYI";
-    let g, sigs = Util.fold_map (fun g se -> match se with
+let fail_exp = mk_Exp_app(Util.fvar false Const.failwith_lid dummyRange, [varg <| mk_Exp_constant (Const_string (Bytes.string_as_unicode_bytes "Not yet implemented", dummyRange)) None dummyRange]) None dummyRange 
+    
+let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> = 
+     match se with
+        | Sig_datacon _
         | Sig_bundle _
         | Sig_tycon _
         | Sig_typ_abbrev _ -> 
@@ -36,13 +38,91 @@ let extract (g:env) (m:modul) : env * mllib =
           let elet = mk_Exp_let(lbs, Const.exp_false_bool) None r in
           let ml_let, _, _ = ExtractExp.synth_exp g elet in
           begin match ml_let with 
-            | MLE_Let(lbs, _) -> g, [MLM_Let lbs]
+            | MLE_Let(ml_lbs, _) -> 
+              let g = List.fold_left2 (fun env (id, poly_t, _, _) {lbname=lbname; lbtyp=t} -> fst <| Env.extend_lb env lbname t (must poly_t))
+                      g (snd ml_lbs) (snd lbs) in 
+              g, [MLM_Let ml_lbs]
             | _ -> //printfn "%A\n" ml_let; 
                 failwith "impossible"
           end
 
-        | _ -> g, []
-        | se -> failwith (Util.format1 "NYI: %s\n" (Print.sigelt_to_string_short se))) g m.declarations in
-    let mlm : mlmodule = List.flatten sigs in
-    g, MLLib ([m.name.str, Some ([], mlm), (MLLib [])])
+       | Sig_val_decl(lid, t, quals, r) -> 
+         if quals |> List.contains Assumption  && 
+         not (quals |> Util.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
+         then let tbinders = Util.tbinder_prefix t in
+              let impl = match tbinders with
+                | [] -> fail_exp
+                | bs -> mk_Exp_abs(bs, fail_exp) None dummyRange in
+              let se = Sig_let((false, [{lbname=Inr lid; lbtyp=t; lbeff=Const.effect_Tot_lid; lbdef=impl}]), r, [], quals) in
+              extract_sig g se
+         else g, []
+     
+       | Sig_main(e, _) -> 
+         let ml_main, _, _ = ExtractExp.synth_exp g e in
+         g, [MLM_Top ml_main]
+         
+       
+       | Sig_kind_abbrev _ //not needed; we expand kind abbreviations while translating types
+       | Sig_assume _ //not needed; purely logical       
+       
+       | Sig_new_effect _
+       | Sig_sub_effect  _
+       | Sig_effect_abbrev _  //effects are all primitive; so these are not extracted; this may change as we add user-defined non-primitive effects
+       | Sig_pragma _ -> //pragmas are currently not relevant for codegen; they may be in the future
+         g, []   
+          
+let extract_prims (g:env) (m:modul) = 
+    let aux g se = match se with
+        | Sig_datacon _
+        | Sig_bundle _
+        | Sig_tycon _
+        | Sig_typ_abbrev _ -> 
+          let c, tds = ExtractTyp.extractSigElt g se in
+          c, []
+
+        | Sig_let (lbs, r, _, _) -> 
+          let elet = mk_Exp_let(lbs, Const.exp_false_bool) None r in
+          let ml_let, _, _ = ExtractExp.synth_exp g elet in
+          begin match ml_let with 
+            | MLE_Let(ml_lbs, _) -> 
+              let g = List.fold_left2 (fun env (id, poly_t, _, _) {lbname=lbname; lbtyp=t} -> fst <| Env.extend_lb env lbname t (must poly_t))
+                      g (snd ml_lbs) (snd lbs) in 
+              g, []
+            | _ -> //printfn "%A\n" ml_let; 
+                failwith "impossible"
+          end
+
+       | Sig_val_decl(lid, t, quals, r) -> 
+         if quals |> List.contains Assumption  && 
+         not (quals |> Util.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
+         then let tbinders = Util.tbinder_prefix t in
+              let impl = match tbinders with
+                | [] -> fail_exp
+                | bs -> mk_Exp_abs(bs, fail_exp) None dummyRange in
+              let se = Sig_let((false, [{lbname=Inr lid; lbtyp=t; lbeff=Const.effect_Tot_lid; lbdef=impl}]), r, [], quals) in
+              extract_sig g se
+         else g, []
+     
+       | Sig_main _          //no main in prims
+       | Sig_kind_abbrev _ //not needed; we expand kind abbreviations while translating types
+       | Sig_assume _ //not needed; purely logical      
+       | Sig_new_effect _
+       | Sig_sub_effect  _
+       | Sig_effect_abbrev _  //effects are all primitive; so these are not extracted; this may change as we add user-defined non-primitive effects
+       | Sig_pragma _ -> //pragmas are currently not relevant for codegen; they may be in the future
+         g, []   in
+    Util.fold_map aux g m.declarations
+        
+    
+
+
+
+let rec extract (g:env) (m:modul) : env * mllib = 
+    if m.is_interface then failwith "NYI";
+    if m.name.str = "Prims"
+    then let g, _ = extract_prims g m in 
+         g, MLLib(["Prims", None, MLLib []])
+    else let g, sigs = Util.fold_map extract_sig g m.declarations in
+         let mlm : mlmodule = List.flatten sigs in
+         g, MLLib ([m.name.str, Some ([], mlm), (MLLib [])])
     

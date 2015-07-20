@@ -92,4 +92,19 @@ let rec equiv (g:Env.env) (t:mlty) (t':mlty) : bool =
       
     | _ -> false
 
+let unit_binder = 
+    let x = Util.gen_bvar Tc.Recheck.t_unit in
+    v_binder x
 
+let is_type_abstraction = function 
+    | (Inl _, _)::_ -> true
+    | _ -> false
+
+let tbinder_prefix t = match (Util.compress_typ t).n with 
+    | Typ_fun(bs, c) ->
+      begin match Util.prefix_until (function (Inr _, _) -> true | _ -> false) bs with 
+        | None -> bs
+        | Some (bs, b, rest) -> bs
+      end
+
+    | _ -> []

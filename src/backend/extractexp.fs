@@ -97,14 +97,6 @@ let join f f' = match f, f' with
 
 let join_l fs = List.fold_left join MayErase fs
 
-let unit_binder = 
-    let x = Util.gen_bvar Tc.Recheck.t_unit in
-    v_binder x
-
-let is_type_abstraction = function 
-    | (Inl _, _)::_ -> true
-    | _ -> false
-
 let rec extract_pat (g:env) p : (env * list<mlpattern>) = match p.v with
   | Pat_disj [] -> failwith "Impossible"
 

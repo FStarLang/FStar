@@ -1071,7 +1071,9 @@ let rec mllib_add (MLLib mllib) ((path : mlpath), sig_, mod_) =
 (* -------------------------------------------------------------------- *)
 let mlmod_of_fstars (fmods : list<modul>) =
     let in_std_ns x = Util.for_some (fun y -> in_ns (y,x)) !Microsoft.FStar.Options.codegen_libs in
-    let fmods = List.filter (fun x -> not (in_std_ns (List.map (fun y->y.idText) x.name.ns))) fmods in
+    let fmods = List.filter (fun x -> 
+        Util.fprint1 "Extract module: %s\n" x.name.str;
+        not (in_std_ns (List.map (fun y->y.idText) x.name.ns))) fmods in
     let stdlib = List.map (fun x -> Util.concat_l "." x) outmod in
     let extlib = List.map (fun x -> Util.concat_l "." x) !Microsoft.FStar.Options.codegen_libs in
     let fmods = List.filter (fun x -> not (List.contains x.name.str stdlib)) fmods in

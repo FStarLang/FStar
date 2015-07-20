@@ -30,14 +30,15 @@ open Microsoft.FStar.Backends.ML.Env
 
 let binderIsExp (bn:binder): bool = is_inr (fst bn)
 
-let rec argsIsExp (k:knd') (typeName : string) : list<bool> =
-match k with
+let rec argIsExp (k:knd) (typeName : string) : list<bool> =
+match (Util.compress_kind k).n with
 | Kind_type -> []
-| Kind_arrow (bs,r) -> List.append (List.map binderIsExp bs) (argsIsExp r.n typeName)
+| Kind_arrow (bs,r) -> List.append (List.map binderIsExp bs) (argIsExp r typeName)
 | Kind_delayed (k, _ ,_) -> failwith "extraction.numIndices : expected a compressed argument"
+| Kind_abbrev(_, k) -> argIsExp k typeName
 | _ -> failwith ("unexpected signature of inductive type" ^ typeName) 
 
-let  numIndices (k:knd') (typeName : string) : int = List.length (argsIsExp k typeName)
+let  numIndices (k:knd) (typeName : string) : int = List.length (argIsExp k typeName)
 
 let mlty_of_isExp (b:bool) : mlty =
     if b then erasedContent else unknownType
@@ -200,7 +201,7 @@ and extractTyConstApp (c:context) (ftv:ftvar) (ags : args) =
              | true -> 
                  let mlargs = List.map (getTypeFromArg c) ags in
                  let k = ftv.sort in
-                 let ar =  argsIsExp k.n ftv.v.str in
+                 let ar =  argIsExp k ftv.v.str in
                  //assert (List.length ar >= List.length mlargs);
                  let (_, missingArgs) = Util.first_N (List.length mlargs) ar in
                  let argCompletion =  List.map mlty_of_isExp missingArgs in
@@ -330,7 +331,7 @@ let dummyIndexIdents (n:int) : list<mlident> = List.map dummyIdent (firstNNats n
 
 let extractInductive (c:context) (ind: inductiveTypeFam ) :  context* (mlsymbol * mlidents * option<mltybody>) =
         let newContext = c in // (extendContext c (mfst ind.tyBinders)) in
-        let nIndices = numIndices (Util.compress_kind ind.k).n ind.tyName.ident.idText in
+        let nIndices = numIndices ind.k ind.tyName.ident.idText in
         let (nc, tyb) = (Util.fold_map (extractCtor ind.tyBinders) newContext ind.constructors) in
         let mlbs = List.append (List.map mlTyIdentOfBinder ind.tyBinders) (dummyIndexIdents nIndices) in
         nc, (lident2mlsymbol ind.tyName,  mlbs , Some (MLTD_DType tyb))
@@ -347,7 +348,7 @@ match (preProcType c t).n with
 
 (*similar to the definition of the second part of \hat{\epsilon} in page 110*)
 (* \pi_1 of returned value is the exported constant*)
-let extractSigElt (c:context) (s:sigelt) : context * mltydecl =
+let rec extractSigElt (c:context) (s:sigelt) : context * mltydecl =
     match s with
     | Sig_typ_abbrev (l,bs,_,t,_,_) -> 
         let c = (extendContext c (mfst bs)) in
@@ -367,6 +368,10 @@ let extractSigElt (c:context) (s:sigelt) : context * mltydecl =
         let inds = parseInductiveTypesFromSigBundle c sigs in
          (Util.fold_map extractInductive c inds)
         //let k = lookup_typ_lid c ind.tyName in
+
+    | Sig_tycon _ -> 
+       extractSigElt c (Sig_bundle([s], [Assumption], [], Util.range_of_sigelt s))
+
     | _ -> c, []
 
 

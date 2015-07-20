@@ -67,14 +67,21 @@ let lookup_ty (g:env) (x:either<btvar,ftvar>) : mlty =
     | Inr ftv -> lookup_ty_const g.tydefs ftv
 
 let lookup_fv (g:env) (fv:fvvar) : mlpath * mltyscheme = 
-    Util.find_map g.gamma (function 
+    let x = Util.find_map g.gamma (function 
         | Fv (fv', path, sc) when lid_equals fv.v fv'.v -> Some (path, sc)
-        | _ -> None) |> must 
+        | _ -> None) in
+    match x with 
+        | None -> failwith (Util.format2 "(%s) Variable %s not found\n" (Range.string_of_range fv.p) (Print.sli fv.v))
+        | Some y -> y
 
 let lookup_bv (g:env) (bv:bvvar) : mlident * mltyscheme = 
-    Util.find_map g.gamma (function 
+    let x = Util.find_map g.gamma (function 
         | Bv (bv', id, sc) when Util.bvar_eq bv bv' -> Some (id, sc)
-        | _ -> None) |> must 
+        | _ -> None) in
+    match x with 
+        | None -> failwith (Util.format2 "(%s) Variable %s not found\n" (Range.string_of_range bv.p) (Print.strBvd bv.v))
+        | Some y -> y
+
 
 let lookup  (g:env) (x:either<bvvar,fvvar>) : (mlexpr * mltyscheme) = 
     match x with 
