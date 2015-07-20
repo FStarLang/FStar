@@ -973,7 +973,7 @@ let rec slc_v_lem_ps #m v p ps = match v with
     if mem p ps' && not (intersect ps ps' = empty) then
       slc_v_lem_ps v' p ps
     else if mem p ps' && intersect ps ps' = empty then
-      let _ = cut (forall p. mem p (union psp ps) = mem p psp || mem p ps) in
+      //let _ = cut (forall p. mem p (union psp ps) = mem p psp || mem p ps) in
       let _ = cut (forall p. not (mem p (intersect ps ps'))) in
       let _ = cut (forall p. mem p (intersect (union psp ps) ps') = mem p psp) in
       let _ = OrdSet.eq_lemma (intersect (union psp ps) ps') psp in
@@ -982,7 +982,7 @@ let rec slc_v_lem_ps #m v p ps = match v with
       slice_lem_singl_v v' p;
       ()
     else if not (mem p ps') && not (intersect ps ps' = empty) then
-      let _ = cut (forall p. mem p (union psp ps) = mem p psp || mem p ps) in
+      //let _ = cut (forall p. mem p (union psp ps) = mem p psp || mem p ps) in
       let _ = cut (forall p. not (mem p (intersect psp ps'))) in
       let _ = cut (forall p. mem p (intersect (union psp ps) ps') = mem p (intersect ps ps')) in
       let _ = OrdSet.eq_lemma (intersect (union psp ps) ps') (intersect ps ps') in
@@ -991,7 +991,7 @@ let rec slc_v_lem_ps #m v p ps = match v with
       box_slice_lem v' ps ps';
       ()    
     else
-      let _ = cut (forall p. mem p (union psp ps) = mem p psp || mem p ps) in
+      //let _ = cut (forall p. mem p (union psp ps) = mem p psp || mem p ps) in
       let _ = cut (forall p. not (mem p (intersect psp ps'))) in
       let _ = cut (forall p. not (mem p (intersect ps ps'))) in
       let _ = cut (forall p. not (mem p (intersect (union psp ps) ps'))) in
@@ -1301,13 +1301,6 @@ let rec ret_sec_value_to_ps #ps' pi sec_c ps =
   else
     let pi' = ret_sec_value_to_ps #ps' pi sec_c ps_rest in
     update p c' pi'
-
-(*val tstep_assec_ret:
-  #ps':prins -> pi:protocol ps' -> ps:prins{tpre_assec_ret pi ps}
-  -> Tot (protocol ps')
-let tstep_assec_ret #ps' pi ps =
-  let pi, Some c = pi in
-  ret_sec_value_to_ps #ps' pi c ps, None*)
 
 type pstep: #ps:prins -> protocol ps -> protocol ps -> Type =
 
