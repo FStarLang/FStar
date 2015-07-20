@@ -333,12 +333,12 @@ if (0<n)
 
 let dummyIndexIdents (n:int) : list<mlident> = List.map dummyIdent (firstNNats n)
 
-let extractInductive (c:context) (ind: inductiveTypeFam ) :  context*mltydecl =
+let extractInductive (c:context) (ind: inductiveTypeFam ) :  context* (mlsymbol * mlidents * option<mltybody>) =
         let newContext = c in // (extendContext c (mfst ind.tyBinders)) in
         let nIndices = numIndices (Util.compress_kind ind.k).n ind.tyName.ident.idText in
         let (nc, tyb) = (Util.fold_map (extractCtor ind.tyBinders) newContext ind.constructors) in
         let mlbs = List.append (List.map mlTyIdentOfBinder ind.tyBinders) (dummyIndexIdents nIndices) in
-        nc, [(lident2mlsymbol ind.tyName,  mlbs , Some (MLTD_DType tyb))]
+        nc, (lident2mlsymbol ind.tyName,  mlbs , Some (MLTD_DType tyb))
 
 let mfst = List.map fst
 
@@ -352,7 +352,7 @@ match (preProcType c t).n with
 
 (*similar to the definition of the second part of \hat{\epsilon} in page 110*)
 (* \pi_1 of returned value is the exported constant*)
-let extractSigElt (c:context) (s:sigelt) : context * list<mltydecl> =
+let extractSigElt (c:context) (s:sigelt) : context * mltydecl =
     match s with
     | Sig_typ_abbrev (l,bs,_,t,_,_) -> 
         let c = (extendContext c (mfst bs)) in
@@ -363,7 +363,7 @@ let extractSigElt (c:context) (s:sigelt) : context * list<mltydecl> =
                 //printfn "type is %A\n" (t);
         let td = [(mlsymbolOfLident l, List.map mlTyIdentOfBinder bs , Some tyDecBody)] in
         let c = Env.extend_tydef c td in
-        c, [td]
+        c, td
          (*type l idents = tyDecBody*)
          //Util.subst
 
@@ -374,13 +374,7 @@ let extractSigElt (c:context) (s:sigelt) : context * list<mltydecl> =
         //let k = lookup_typ_lid c ind.tyName in
     | _ -> c, []
 
-let extractTypeDefnsAux (c: context) (sigs:list<sigelt>) : context * list<mltydecl> =
-   let c, l = Util.fold_map extractSigElt c sigs in
-   c, List.flatten l
- 
+
 let mkContext (e:Tc.Env.env) : context =
     { tcenv = e; gamma =[] ; tydefs =[]}
-
-let extractTypeDefns (sigs:list<sigelt>) (e: Tc.Env.env): context * list<mltydecl> =
-    extractTypeDefnsAux (mkContext e) sigs 
     

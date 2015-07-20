@@ -511,7 +511,7 @@ let doc_of_mltydecl (decls : mltydecl) =
     in
 
     let doc = List.map for1 decls in
-    let doc = reduce1 [text "type"; combine (text " and ") doc] in
+    let doc = if (List.length doc >0) then reduce1 [text "type"; combine (text " \n and ") doc] else text "" in
     doc
 
 (* -------------------------------------------------------------------- *)

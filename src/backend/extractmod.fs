@@ -30,7 +30,7 @@ let extract (g:env) (m:modul) : env * mllib =
         | Sig_tycon _
         | Sig_typ_abbrev _ -> 
             let c, tds = ExtractTyp.extractSigElt g se in
-            c, List.map MLM_Ty tds
+            c, [MLM_Ty tds]
 
         | Sig_let (lbs, r, _, _) -> 
           let elet = mk_Exp_let(lbs, Const.exp_false_bool) None r in

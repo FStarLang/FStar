@@ -97,7 +97,7 @@ type mltybody =
         One could have instead used a mlty and tupled the argument types?
      *)
 
-type mltydecl = list<(mlsymbol * mlidents * option<mltybody>)>
+type mltydecl = list<(mlsymbol * mlidents * option<mltybody>)> // each element of this list is one among a collection of mutually defined types
 
 type mlmodule1 =
 | MLM_Ty  of mltydecl
