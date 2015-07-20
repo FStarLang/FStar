@@ -23,7 +23,9 @@ open Microsoft.FStar.Backends.ML.Syntax
 open Microsoft.FStar.Backends.ML.Env
 open Microsoft.FStar.Backends.ML.Util
 
+(*This approach assumes that failwith already exists in scope. This might be problematic, see below.*)
 let fail_exp = mk_Exp_app(Util.fvar false Const.failwith_lid dummyRange, [varg <| mk_Exp_constant (Const_string (Bytes.string_as_unicode_bytes "Not yet implemented", dummyRange)) None dummyRange]) None dummyRange 
+
     
 let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> = 
      match se with
@@ -49,7 +51,7 @@ let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> =
        | Sig_val_decl(lid, t, quals, r) -> 
          if quals |> List.contains Assumption  && 
          not (quals |> Util.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
-         then let tbinders = Util.tbinder_prefix t in
+         then let tbinders,_ = Util.tbinder_prefix t in
               let impl = match tbinders with
                 | [] -> fail_exp
                 | bs -> mk_Exp_abs(bs, fail_exp) None dummyRange in
@@ -70,9 +72,10 @@ let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> =
        | Sig_effect_abbrev _  //effects are all primitive; so these are not extracted; this may change as we add user-defined non-primitive effects
        | Sig_pragma _ -> //pragmas are currently not relevant for codegen; they may be in the future
          g, []   
-          
+
+(*TODO : remove code duplication w.r.t the above function.*)          
 let extract_prims (g:env) (m:modul) = 
-    let aux g se = match se with
+    let aux g se : env * list<mlmodule1> = match se with
         | Sig_datacon _
         | Sig_bundle _
         | Sig_tycon _
@@ -91,16 +94,16 @@ let extract_prims (g:env) (m:modul) =
             | _ -> //printfn "%A\n" ml_let; 
                 failwith "impossible"
           end
-
+          (*failwith might not yet be in scope. In Prims.fst, there are many assumptions before failwith is declared. Also assumptions in Prims MUST be realized elsewhere and cannot fail with any message.*)
        | Sig_val_decl(lid, t, quals, r) -> 
          if quals |> List.contains Assumption  && 
          not (quals |> Util.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
-         then let tbinders = Util.tbinder_prefix t in
-              let impl = match tbinders with
-                | [] -> fail_exp
-                | bs -> mk_Exp_abs(bs, fail_exp) None dummyRange in
-              let se = Sig_let((false, [{lbname=Inr lid; lbtyp=t; lbeff=Const.effect_Tot_lid; lbdef=impl}]), r, [], quals) in
-              extract_sig g se
+         then let tbinders, tresidue = Util.tbinder_prefix t in
+              let gext = ExtractTyp.extendContext g (ExtractTyp.mfst tbinders) in
+              let mltresidue = ExtractTyp.extractTyp gext tresidue in
+              let mltys = (List.map ExtractTyp.mlTyIdentOfBinder tbinders, mltresidue) in
+              let fvv = mkFvvar lid t in 
+                (extend_fv g fvv mltys), []
          else g, []
      
        | Sig_main _          //no main in prims

@@ -71,7 +71,7 @@ let lookup_fv (g:env) (fv:fvvar) : mlpath * mltyscheme =
         | Fv (fv', path, sc) when lid_equals fv.v fv'.v -> Some (path, sc)
         | _ -> None) in
     match x with 
-        | None -> failwith (Util.format2 "(%s) Variable %s not found\n" (Range.string_of_range fv.p) (Print.sli fv.v))
+        | None -> failwith (Util.format2 "(%s) free Variable %s not found\n" (Range.string_of_range fv.p) (Print.sli fv.v))
         | Some y -> y
 
 let lookup_bv (g:env) (bv:bvvar) : mlident * mltyscheme = 
@@ -79,7 +79,7 @@ let lookup_bv (g:env) (bv:bvvar) : mlident * mltyscheme =
         | Bv (bv', id, sc) when Util.bvar_eq bv bv' -> Some (id, sc)
         | _ -> None) in
     match x with 
-        | None -> failwith (Util.format2 "(%s) Variable %s not found\n" (Range.string_of_range bv.p) (Print.strBvd bv.v))
+        | None -> failwith (Util.format2 "(%s) bound Variable %s not found\n" (Range.string_of_range bv.p) (Print.strBvd bv.v))
         | Some y -> y
 
 
@@ -133,3 +133,5 @@ let extend_lb (g:env) (l:lbname) (t:typ) (t_x:mltyscheme) : (env * mlident) =
           extend_fv' g (Util.fvvar_of_lid f t) ([], y) t_x, (y,0)
 
 let extend_tydef (g:env) (td:mltydecl) : env = {g with tydefs=td::g.tydefs}
+
+//let failWithTyS (g:env) =  
