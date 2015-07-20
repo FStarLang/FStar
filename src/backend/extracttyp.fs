@@ -376,5 +376,8 @@ let rec extractSigElt (c:context) (s:sigelt) : context * mltydecl =
 
 
 let mkContext (e:Tc.Env.env) : context =
-    { tcenv = e; gamma =[] ; tydefs =[]}
+   let env = { tcenv = e; gamma =[] ; tydefs =[]} in
+   let a = "a", -1 in
+   let failwith_ty = ([a], MLTY_Fun(MLTY_Named([], (["Prims"], "string")), Keep, MLTY_Var a)) in
+   Env.extend_lb env (Inr Const.failwith_lid) tun failwith_ty |> fst
     
