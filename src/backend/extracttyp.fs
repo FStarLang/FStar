@@ -43,8 +43,6 @@ let mlty_of_isExp (b:bool) : mlty =
     if b then erasedContent else unknownType
 
 
-(*copied from ocaml-strtrans.fs*)
-let prependTick (x,n) = if Util.starts_with x "'" then (x,n) else ("'"^x,n)
 
 let delta_norm_eff = 
     let cache = Util.smap_create 20 in
@@ -82,8 +80,6 @@ let rec curry (inp: (list<mlty>)) (erase : e_tag) (out: mlty) =
 *)
 
 
-let convRange (r:Range.range) : int = 0 (*FIX!!*)
-let convIdent (id:ident) : mlident = (id.idText ,(convRange id.idRange))
     
 type argTransform = arg -> Tot<option<arg>> (*none indicates that this argument should be deleted*)
 type nthArgTransform = int -> Tot<argTransform> (* f n is the argtransform for the nth argument (of a type constant)*)
@@ -101,7 +97,6 @@ let bvvar2btvar (bv : bvvar) : btvar = {v=bv.v; sort = Kind_type ; p=bv.p} *)
 (* vars in tyVars will have type Type, irrespective of that types they had in F*. This is to match the limitations of  OCaml*)
 
 
-let btvar2mlident (btv: btvar) : mlident =  (prependTick (convIdent btv.v.ppname)) 
 
 
 let extendContextWithRepAsTyVar (b : either<btvar,bvvar> * either<btvar,bvvar>) (c:context): context = 
@@ -109,7 +104,7 @@ match b with
 | (Inl bt, Inl btr) -> 
            //printfn "mapping from %A\n" btr.v.realname;
            //printfn "to %A\n" bt.v.realname;
-   extend_ty c btr (Some ((MLTY_Var (btvar2mlident bt))))
+   extend_ty c btr (Some ((MLTY_Var (btvar_as_mlident bt))))
 | (Inr bv, Inr _ ) -> extend_bv c bv ([], erasedContent)
 | _ -> failwith "Impossible case"
 
@@ -119,7 +114,7 @@ let extendContextWithRepAsTyVars (b : list< (either<btvar,bvvar> * either<btvar,
 
 let extendContextAsTyvar (availableInML : bool) (b : either<btvar,bvvar>) (c:context): context = 
 match b with
-| (Inl bt) -> extend_ty c bt (Some (if availableInML then (MLTY_Var (btvar2mlident bt)) else unknownType))
+| (Inl bt) -> extend_ty c bt (Some (if availableInML then (MLTY_Var (btvar_as_mlident bt)) else unknownType))
 //if availableInML then (extend_ty c bt (Some ( (MLTY_Var (btvar2mlident bt))))) else (extend_hidden_ty c bt unknownType)
 | (Inr bv) -> extend_bv c bv ([], erasedContent)
 

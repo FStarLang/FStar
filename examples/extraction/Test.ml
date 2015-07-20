@@ -3,22 +3,22 @@ type nnat =
 | O
 | S of nnat
 
-let idnat = (fun x -> x)
+let idnat = (fun ( x  :  nnat ) -> x)
 
-let idnat2 = (fun x -> x)
+let idnat2 = (fun ( x  :  nnat ) -> x)
 
-let id = (fun _1_1015 x -> x)
+let id = (fun ( _1_1015  :  unit ) ( x  :  'a ) -> x)
 
-let idp = (fun _1_1015 x -> x)
+let idp = (fun ( _1_1015  :  unit ) ( x  :  Obj.t ) -> x)
 
-let add1 = (fun a -> S (a))
+let add1 = (fun ( a  :  nnat ) -> S (a))
 
-let add2 = (fun _1_1025 -> S (_1_1025))
+let add2 = (fun ( _1_1025  :  nnat ) -> S (_1_1025))
 
-let eval_order = (fun effectful f -> (let _1_1045 = (effectful "first")
+let eval_order = (fun ( effectful  :  string  ->  string ) ( f  :  string  ->  string  ->  string ) -> (let _1_1045 = (effectful "first")
 in (f _1_1045 "second")))
 
-let prev = (fun _1_1 -> (match (_1_1) with
+let prev = (fun ( _1_1  :  nnat ) -> (match (_1_1) with
 | O -> begin
 O
 end
@@ -41,7 +41,7 @@ type 'a list =
 
 
 
-let prepend0 = (fun tll -> Cons (O, tll))
+let prepend0 = (fun ( tll  :  nnat list ) -> Cons (O, tll))
 
 type ('a, 'b) list2 =
 | Nil2

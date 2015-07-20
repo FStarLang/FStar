@@ -276,7 +276,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
             let ml_bs, env = List.fold_left (fun (ml_bs, env) (b, _) -> match b with 
                 | Inl a -> //no first-class polymorphism; so type-binders get wiped out
                   let env = Env.extend_ty env a (Some MLTY_Top) in 
-                  let ml_b = (as_mlident a.v (*name of the binder*) , Some <| ml_unit_ty (*type of the binder. correspondingly, this argument gets converted to the unit value in application *)) in
+                  let ml_b = (btvar_as_mlident a (*name of the binder*) , Some <| ml_unit_ty (*type of the binder. correspondingly, this argument gets converted to the unit value in application *)) in
                   ml_b::ml_bs, env 
               
                 | Inr x -> 

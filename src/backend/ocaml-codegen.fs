@@ -201,6 +201,53 @@ let string_of_mlconstant (sctt : mlconstant) =
       let chars = String.collect encode_char chars in
       "\""^chars^"\"" 
 
+
+(* -------------------------------------------------------------------- *)
+let rec doc_of_mltype (outer : level) (ty : mlty) =
+    match ty with
+    | MLTY_Var x ->
+        text (idsym x)
+
+    | MLTY_Tuple tys ->
+        let doc = List.map (doc_of_mltype (t_prio_tpl, Left)) tys in
+        let doc = parens (hbox (combine (text " * ") doc)) in
+        doc
+
+    | MLTY_Named (args, name) -> begin
+        let args =
+            match args with
+            | []    -> empty
+            | [arg] -> doc_of_mltype (t_prio_name, Left) arg
+            | _     ->
+                let args = List.map (doc_of_mltype (min_op_prec, NonAssoc)) args in
+                parens (hbox (combine (text ", ") args))
+
+        in
+
+        let name =
+          if is_standard_type name then
+            snd (Option.get (as_standard_type name))
+          else
+            ptsym name
+
+        in hbox (reduce1 [args; text name])
+    end
+
+    | MLTY_Fun (t1, _, t2) ->
+        let d1 = doc_of_mltype (t_prio_fun, Left ) t1 in
+        let d2 = doc_of_mltype (t_prio_fun, Right) t2 in
+
+        maybe_paren outer t_prio_fun (hbox (reduce1 [d1; text " -> "; d2]))
+
+    | MLTY_App (t1, t2) ->
+        let d1 = doc_of_mltype (t_prio_fun, Left ) t1 in
+        let d2 = doc_of_mltype (t_prio_fun, Right) t2 in
+
+        maybe_paren outer t_prio_fun (hbox (reduce1 [d2; text " "; d1]))
+
+    | MLTY_Top -> 
+      text "Obj.t" //TODO: change this to 'obj' if we're generating F#
+
 (* -------------------------------------------------------------------- *)
 let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
     match e with
@@ -288,7 +335,7 @@ let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
        doc
 
     | MLE_Fun (ids, body) ->
-        let ids  = List.map (fun ((x, _),_) -> text x) ids in
+        let ids  = List.map (fun ((x, _),xt) -> reduce1 [text "("; text x ; (match xt with | Some xxt -> reduce1 [text " : "; doc_of_mltype outer xxt] | _ -> text "");text ")"]) ids in
         let body = doc_of_expr (min_op_prec, NonAssoc) body in
         let doc  = reduce1 [text "fun"; reduce1 ids; text "->"; body] in
         parens doc
@@ -412,52 +459,6 @@ and doc_of_lets (rec_, lets) =
         lets in
 
     combine hardline lets
-
-(* -------------------------------------------------------------------- *)
-let rec doc_of_mltype (outer : level) (ty : mlty) =
-    match ty with
-    | MLTY_Var x ->
-        text (idsym x)
-
-    | MLTY_Tuple tys ->
-        let doc = List.map (doc_of_mltype (t_prio_tpl, Left)) tys in
-        let doc = parens (hbox (combine (text " * ") doc)) in
-        doc
-
-    | MLTY_Named (args, name) -> begin
-        let args =
-            match args with
-            | []    -> empty
-            | [arg] -> doc_of_mltype (t_prio_name, Left) arg
-            | _     ->
-                let args = List.map (doc_of_mltype (min_op_prec, NonAssoc)) args in
-                parens (hbox (combine (text ", ") args))
-
-        in
-
-        let name =
-          if is_standard_type name then
-            snd (Option.get (as_standard_type name))
-          else
-            ptsym name
-
-        in hbox (reduce1 [args; text name])
-    end
-
-    | MLTY_Fun (t1, _, t2) ->
-        let d1 = doc_of_mltype (t_prio_fun, Left ) t1 in
-        let d2 = doc_of_mltype (t_prio_fun, Right) t2 in
-
-        maybe_paren outer t_prio_fun (hbox (reduce1 [d1; text " -> "; d2]))
-
-    | MLTY_App (t1, t2) ->
-        let d1 = doc_of_mltype (t_prio_fun, Left ) t1 in
-        let d2 = doc_of_mltype (t_prio_fun, Right) t2 in
-
-        maybe_paren outer t_prio_fun (hbox (reduce1 [d2; text " "; d1]))
-
-    | MLTY_Top -> 
-      text "Obj.t" //TODO: change this to 'obj' if we're generating F#
 
 (* -------------------------------------------------------------------- *)
 let doc_of_mltydecl (decls : mltydecl) =
