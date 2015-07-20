@@ -7,16 +7,16 @@ let idnat = (fun x -> x)
 
 let idnat2 = (fun x -> x)
 
-let id = (fun _1_916 x -> x)
+let id = (fun _1_1015 x -> x)
 
-let idp = (fun _1_916 x -> x)
+let idp = (fun _1_1015 x -> x)
 
 let add1 = (fun a -> S (a))
 
-let add2 = (fun _1_926 -> S (_1_926))
+let add2 = (fun _1_1025 -> S (_1_1025))
 
-let eval_order = (fun effectful f -> (let _1_946 = (effectful "first")
-in (f _1_946 "second")))
+let eval_order = (fun effectful f -> (let _1_1045 = (effectful "first")
+in (f _1_1045 "second")))
 
 let prev = (fun _1_1 -> (match (_1_1) with
 | O -> begin
@@ -151,6 +151,14 @@ type 'a evenlist =
 
 
 
+
+type 'dummyV1 isEven =
+| Ev0
+| EvSOdd of nnat * unit isOdd 
+ and 'dummyV1 isOdd =
+| OddSEven of nnat * unit isEven
+
+let ev2 = EvSOdd (S (O), OddSEven (O, Ev0))
 
 
 

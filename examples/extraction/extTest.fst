@@ -145,3 +145,16 @@ type evenlist (a:Type) =
   | ECons : hd:a -> tl:oddlist a -> evenlist a
 and oddlist (a:Type) =
   | OCons : hd:a -> tl:evenlist a -> oddlist a
+
+type isEven : nnat -> Type  =
+  | Ev0  : isEven O
+  | EvSOdd : n:nnat -> isOdd n -> isEven (S n)
+and isOdd : nnat -> Type =
+  | OddSEven : n:nnat -> isEven n -> isOdd (S n)
+
+val ev2 :  (isEven (S (S O)))
+let ev2 = EvSOdd (S O) (OddSEven O Ev0)
+
+(*
+type someLemmaStatement = nat -> nat -> unit
+*)
