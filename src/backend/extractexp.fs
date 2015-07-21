@@ -71,10 +71,10 @@ let erasable (g:env)  (f:e_tag) (t:mlty) =
     f = MayErase && erasableType g t
 
 
-let erase (g:env) (e:mlexpr) (f:e_tag) (t:mlty) = 
+let erase (g:env) (e:mlexpr) (f:e_tag) (t:mlty) : mlexpr * e_tag * mlty = 
     if erasable g f t
-    then ml_unit (*unit value*)
-    else e
+    then ml_unit, f , ml_unit_ty (*unit value*)
+    else e, f, t
 
 let (*maybe_?*) coerce (g:env) (e:mlexpr) (t:mlty) (t':mlty) = 
     if equiv g t t' 
@@ -156,7 +156,7 @@ let maybe_eta_data (isDataCons : bool) (residualType : mlty)  (mlAppExpr : mlexp
   
 let rec check_exp (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr = 
 //    printfn "Checking %s at type %A\n" (Print.exp_to_string e) t;
-    erase g (check_exp' g e f t) f t    
+    let e ,_ ,_ = (erase g (check_exp' g e f t) f t) in e
 
 and check_exp' (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr = 
     match (Util.compress_exp e).n with 
@@ -181,7 +181,7 @@ and check_exp' (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr =
       
 and synth_exp (g:env) (e:exp) : (mlexpr * e_tag * mlty) = 
     let e, f, t = synth_exp' g e in
-    erase g e f t, f, t 
+    erase g e f t 
     // TODO: should we first check for erasability and only then bother synthesizing an expression? Perhaps not. the type and the tag get produced during sythesis
 
 (* Unlike the \epsilon function in the thesis, this also produced an ml type for the computed ML expression, 

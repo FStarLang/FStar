@@ -153,9 +153,10 @@ match ft.n with // assume ft is compressed. is there a compresser for typ'?
   | Typ_fun (bs, codomain) -> 
         let (bts, newC) = extractBindersTypes c bs in
         (let codomainML, erase = (extractComp  newC codomain) in 
-        if false//(erasableType c codomainML) 
-        then erasedContent (*perhaps this is not needed, or should be done in a later phase*)
-        else  (curry bts erase codomainML))
+        //if false 
+        //then erasedContent // doing this here will mess with the later phase of extracting/ML-typechecking of expressions, this is done later
+        //else  
+        (curry bts erase codomainML))
 
   | Typ_refine (bv (*var and unrefined type*) , _ (*refinement condition*)) -> extractTyp c bv.sort
 
@@ -370,7 +371,7 @@ let emptyMlPath : mlpath = ([],"")
 
 (*can be moved to env.fs*)
 let mkContext (e:Tc.Env.env) : context =
-   let env = { tcenv = e; gamma =[] ; tydefs =[]; erasableTypes = erasable_init; currentModule = emptyMlPath} in
+   let env = { tcenv = e; gamma =[] ; tydefs =[]; erasableTypes = erasableType_init; currentModule = emptyMlPath} in
    let a = "a", -1 in
    let failwith_ty = ([a], MLTY_Fun(MLTY_Named([], (["Prims"], "string")), Keep, MLTY_Var a)) in
    Env.extend_lb env (Inr Const.failwith_lid) tun failwith_ty |> fst

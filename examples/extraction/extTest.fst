@@ -162,13 +162,13 @@ and isOdd : nnat -> Type =
 val ev2 :  (isEven (S (S O)))
 let ev2 = EvSOdd (S O) (OddSEven O Ev0)
 
-(* val evDouble : (n:nnat) -> isEven (add n n) *)
-
+(*the 2 types below are not erased to unit.
+structural erasure is done later,
+when it wont mess up with extraction/ML-typechecking of expressions*)
 type someLemmaStatement = nnat -> nnat -> Tot unit
-
 type trivialLemmaSatement = n:nnat -> m:nnat -> Lemma (add n m == add m n)
 
-
+(*this gets erased*)
 val add0Comm :  n:nnat -> Lemma (add n O == add O n)
 let rec add0Comm n =
 match n with

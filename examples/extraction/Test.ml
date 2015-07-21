@@ -177,7 +177,7 @@ nnat  ->  nnat  ->  unit
 type trivialLemmaSatement =
 nnat  ->  nnat  ->  unit
 
-let rec add0Comm = (fun ( n  :  nnat ) -> ())
+let rec add0Comm = ()
 
 
 

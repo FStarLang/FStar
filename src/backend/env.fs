@@ -116,7 +116,10 @@ let mkFvvar (l: lident) (t:typ) : fvvar =
 let erasedContent : mlty = MLTY_Named ([],(["Support"; "Prims"], "unit"))
 let ml_unit_ty = erasedContent
 
-let erasable_init (t:mlty) = 
+let rec erasableType_init (t:mlty) =
+match  t with
+| MLTY_Fun (l, etag ,r) -> etag = MayErase && erasableType_init r // TODO : do we need to check etag here? it is checked just before erasing 
+| _ -> 
     if t = ml_unit_ty then true
     else match t with 
         | MLTY_Named (_, (["Ghost"], "erased")) -> true //when would a named type like this be produced?
