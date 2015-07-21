@@ -60,7 +60,7 @@ let plouf1 s f =lemma (sub_elam (sub_elam s)) (eesh (eesh f));
                      = test (esubst s f))
 
 (* This takes around ~60 seconds to fail, or rarely to succeed *)
-opaque val plouf2 : s:sub -> f :exp ->
+val plouf2 : s:sub -> f :exp ->
   Lemma (esubst (sub_elam (sub_elam (sub_elam s))) (test f) = test (esubst s f))
 let plouf2 s f =lemma (sub_elam (sub_elam s)) (eesh (eesh f));
                 lemma (sub_elam s) (eesh f);
