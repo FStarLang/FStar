@@ -1,4 +1,3 @@
-
 let idlist = (fun ( x  :  int list ) -> x)
 
 type nnat =
@@ -9,18 +8,18 @@ let idnat = (fun ( x  :  nnat ) -> x)
 
 let idnat2 = (fun ( x  :  nnat ) -> x)
 
-let id = (fun ( _1_1147  :  unit ) ( x  :  'a ) -> x)
+let id = (fun ( _1_1155  :  unit ) ( x  :  'a ) -> x)
 
-let idp = (fun ( _1_1147  :  unit ) ( x  :  Obj.t ) -> x)
+let idp = (fun ( _1_1155  :  unit ) ( x  :  Obj.t ) -> x)
 
-let idp' = (fun ( _1_1147  :  unit ) ( x  :  'a ) -> x)
+let idp' = (fun ( _1_1155  :  unit ) ( x  :  'a ) -> x)
 
 let add1 = (fun ( a  :  nnat ) -> S (a))
 
-let add2 = (fun ( _1_2080  :  nnat ) -> S (_1_2080))
+let add2 = (fun ( _1_2088  :  nnat ) -> S (_1_2088))
 
-let eval_order = (fun ( effectful  :  string  ->  string ) ( f  :  string  ->  string  ->  string ) -> (let _1_2100 = (effectful "first")
-in (f _1_2100 "second")))
+let eval_order = (fun ( effectful  :  string  ->  string ) ( f  :  string  ->  string  ->  string ) -> (let _1_2108 = (effectful "first")
+in (f _1_2108 "second")))
 
 let prev = (fun ( _1_1  :  nnat ) -> (match (_1_1) with
 | O -> begin
@@ -35,8 +34,7 @@ let rec add = (fun ( a  :  nnat ) ( b  :  nnat ) -> (match (a) with
 b
 end
 | S (a') -> begin
-(let _1_2107 = (add a' b)
-in S (_1_2107))
+S ((add a' b))
 end))
 
 type ('a, 'b) prod =
@@ -54,7 +52,7 @@ type 'a list =
 
 
 
-let prepend0 = (Obj.magic (fun ( tll  :  nnat list ) -> (fun ( _1_2144  :  Obj.t list ) -> Cons ((Obj.magic O), (Obj.magic tll), _1_2144))))
+let prepend0 = (Obj.magic (fun ( tll  :  nnat list ) -> (fun ( _1_2151  :  Obj.t list ) -> Cons ((Obj.magic O), (Obj.magic tll), _1_2151))))
 
 type ('a, 'b) list2 =
 | Nil2 of unit * unit
@@ -172,6 +170,12 @@ type 'dummyV1 isEven =
 | OddSEven of nnat * unit isEven
 
 let ev2 = EvSOdd (S (O), OddSEven (O, Ev0))
+
+type someLemmaStatement =
+unit
+
+type trivialLemmaSatement =
+unit
 
 
 

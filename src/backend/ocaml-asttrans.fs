@@ -786,7 +786,7 @@ let mldtype_of_indt (mlenv : mlenv) (indt : list<sigelt>) : list<mldtype> =
                   match getRecordFieldsFromType qualif, cs with
                     | Some f, [c] ->
                        (smap_add record_constructors c.str f;
-                        Rec (x.ident.idText, f, cs, snd (tenv_of_tvmap ar), rg))
+                        Rec (x.ident.idText, f, cs, snd (tenv_of_tvmap ar), rg)) // parsing a record from a Sig_tycon. the record data lies in the qualifiers of the tycon. one can ignore the rest
                     | _, _ -> DT (x.ident.idText, cs, snd (tenv_of_tvmap ar), rg) in
                 (ty :: types, ctors)
               end
@@ -863,7 +863,7 @@ let mldtype_of_indt (mlenv : mlenv) (indt : list<sigelt>) : list<mldtype> =
 
           if List.length f <> List.length args
           then unexpected rg (Util.format4 "%s, %s, %s fields, %s args" x (List.hd tcs).str (List.map (fun f -> f.idText) f |> String.concat ", ") (List.length args |> Util.string_of_int));
-          (x, tparams, MLTD_Record (List.map2 mldproj_of_proj f args))
+          (x, tparams, MLTD_Record (List.map2 mldproj_of_proj f args)) // generation of ML code for records
         end
 
         | Abb (x, body, (tenv, tparams), rg) -> begin

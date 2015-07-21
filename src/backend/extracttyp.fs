@@ -40,6 +40,7 @@ match (Util.compress_kind k).n with
 
 let  numIndices (k:knd) (typeName : string) : int = List.length (argIsExp k typeName)
 
+(*used for completion of missing arguments to type constructors*)
 let mlty_of_isExp (b:bool) : mlty =
     if b then erasedContent else unknownType
 
@@ -152,7 +153,7 @@ match ft.n with // assume ft is compressed. is there a compresser for typ'?
   | Typ_fun (bs, codomain) -> 
         let (bts, newC) = extractBindersTypes c bs in
         (let codomainML, erase = (extractComp  newC codomain) in 
-        if  (codomainML = erasedContent) 
+        if  (erasable c codomainML) 
         then erasedContent (*perhaps this is not needed, or should be done in a later phase*)
         else  (curry bts erase codomainML))
 

@@ -66,7 +66,6 @@ let instantiate (s:mltyscheme) (args:list<mlty>) : mlty = Util.subst s args (*on
 let ml_unit = MLE_Const MLC_Unit
 let ml_bool_ty = MLTY_Named ([], ([], "bool")) 
 
-let erasable (g:env) (t:mlty) = g.erasableTypes t
 
 
 let erase (g:env) (e:mlexpr) (f:e_tag) (t:mlty) = 

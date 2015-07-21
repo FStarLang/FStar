@@ -40,7 +40,9 @@ let prev = function
   | O -> O
   | S n -> n
 
-let rec add (a : nnat) (b : nnat) = match a with
+val add : nnat -> nnat -> Tot nnat
+let rec add a b
+= match a with
 | O -> b
 | S a' -> S (add a' b)
 
@@ -162,6 +164,6 @@ let ev2 = EvSOdd (S O) (OddSEven O Ev0)
 
 (* val evDouble : (n:nnat) -> isEven (add n n) *)
 
-(*
-type someLemmaStatement = nat -> nat -> Tot unit
-*)
+type someLemmaStatement = nnat -> nnat -> Tot unit
+
+type trivialLemmaSatement = n:nnat -> m:nnat -> Lemma (add n m == add m n)
