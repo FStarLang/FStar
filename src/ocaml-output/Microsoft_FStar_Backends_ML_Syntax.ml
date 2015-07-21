@@ -8,12 +8,12 @@ type mlident =
 type mlpath =
 (mlsymbol list * mlsymbol)
 
-let idsym = (fun _50_4 -> (match (_50_4) with
+let idsym = (fun ( _50_4 ) -> (match (_50_4) with
 | (s, _) -> begin
 s
 end))
 
-let ptsym = (fun _50_7 -> (match (_50_7) with
+let ptsym = (fun ( _50_7 ) -> (match (_50_7) with
 | (p, s) -> begin
 (let s = if ((Support.Char.lowercase (Support.String.get s 0)) <> (Support.String.get s 0)) then begin
 (Support.String.strcat "l__" s)
@@ -23,7 +23,7 @@ end
 in (Support.String.concat "." (Support.List.append p ((s)::[]))))
 end))
 
-let ptctor = (fun _50_11 -> (match (_50_11) with
+let ptctor = (fun ( _50_11 ) -> (match (_50_11) with
 | (p, s) -> begin
 (let s = if ((Support.Char.uppercase (Support.String.get s 0)) <> (Support.String.get s 0)) then begin
 (Support.String.strcat "U__" s)
@@ -33,9 +33,9 @@ end
 in (Support.String.concat "." (Support.List.append p ((s)::[]))))
 end))
 
-let mlpath_of_lident = (fun x -> ((Support.List.map (fun x -> x.Microsoft_FStar_Absyn_Syntax.idText) x.Microsoft_FStar_Absyn_Syntax.ns), x.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText))
+let mlpath_of_lident = (fun ( x ) -> ((Support.List.map (fun ( x ) -> x.Microsoft_FStar_Absyn_Syntax.idText) x.Microsoft_FStar_Absyn_Syntax.ns), x.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText))
 
-let as_mlident = (fun x -> (x.Microsoft_FStar_Absyn_Syntax.ppname.Microsoft_FStar_Absyn_Syntax.idText, 0))
+let as_mlident = (fun ( x ) -> (x.Microsoft_FStar_Absyn_Syntax.ppname.Microsoft_FStar_Absyn_Syntax.idText, 0))
 
 type mlidents =
 mlident list
@@ -94,8 +94,10 @@ type mlexpr =
 | MLE_Proj of (mlexpr * mlpath)
 | MLE_If of (mlexpr * mlexpr * mlexpr option)
 | MLE_Raise of (mlpath * mlexpr list)
-| MLE_Try of (mlexpr * mlbranch list) and mlbranch =
-(mlpattern * mlexpr option * mlexpr) and mlletbinding =
+| MLE_Try of (mlexpr * mlbranch list) 
+ and mlbranch =
+(mlpattern * mlexpr option * mlexpr) 
+ and mlletbinding =
 (bool * (mlident * mltyscheme option * mlidents * mlexpr) list)
 
 type mltybody =
@@ -119,13 +121,14 @@ type mlsig1 =
 | MLS_Mod of (mlsymbol * mlsig)
 | MLS_Ty of mltydecl
 | MLS_Val of (mlsymbol * mltyscheme)
-| MLS_Exn of (mlsymbol * mlty list) and mlsig =
+| MLS_Exn of (mlsymbol * mlty list) 
+ and mlsig =
 mlsig1 list
 
 type mllib =
 | MLLib of (mlsymbol * (mlsig * mlmodule) option * mllib) list
 
-let mlseq = (fun e1 e2 -> (match (e2) with
+let mlseq = (fun ( e1 ) ( e2 ) -> (match (e2) with
 | MLE_Seq (s) -> begin
 MLE_Seq ((e1)::s)
 end
@@ -133,7 +136,7 @@ end
 MLE_Seq ((e1)::(e2)::[])
 end))
 
-let mlfun = (fun x e -> (match (e) with
+let mlfun = (fun ( x ) ( e ) -> (match (e) with
 | MLE_Fun ((xs, e)) -> begin
 MLE_Fun ((((x, None))::xs, e))
 end
@@ -141,7 +144,7 @@ end
 MLE_Fun ((((x, None))::[], e))
 end))
 
-let mlif = (fun b _50_127 -> (match (_50_127) with
+let mlif = (fun ( b ) ( _50_127 ) -> (match (_50_127) with
 | (e1, e2) -> begin
 (match (e2) with
 | MLE_Const (MLC_Unit) -> begin

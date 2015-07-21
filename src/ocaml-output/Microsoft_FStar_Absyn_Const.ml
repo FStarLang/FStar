@@ -1,7 +1,7 @@
 
-let p2l = (fun l -> (Microsoft_FStar_Absyn_Syntax.lid_of_path l Microsoft_FStar_Absyn_Syntax.dummyRange))
+let p2l = (fun ( l ) -> (Microsoft_FStar_Absyn_Syntax.lid_of_path l Microsoft_FStar_Absyn_Syntax.dummyRange))
 
-let pconst = (fun s -> (p2l (("Prims")::(s)::[])))
+let pconst = (fun ( s ) -> (p2l (("Prims")::(s)::[])))
 
 let prims_lid = (p2l (("Prims")::[]))
 
@@ -39,11 +39,11 @@ let lexcons_lid = (pconst "LexCons")
 
 let lextop_lid = (pconst "LexTop")
 
-let kunary = (fun k k' -> (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow (((Microsoft_FStar_Absyn_Syntax.null_t_binder k))::[], k') Microsoft_FStar_Absyn_Syntax.dummyRange))
+let kunary = (fun ( k ) ( k' ) -> (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow (((Microsoft_FStar_Absyn_Syntax.null_t_binder k))::[], k') Microsoft_FStar_Absyn_Syntax.dummyRange))
 
-let kbin = (fun k1 k2 k' -> (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow (((Microsoft_FStar_Absyn_Syntax.null_t_binder k1))::((Microsoft_FStar_Absyn_Syntax.null_t_binder k2))::[], k') Microsoft_FStar_Absyn_Syntax.dummyRange))
+let kbin = (fun ( k1 ) ( k2 ) ( k' ) -> (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow (((Microsoft_FStar_Absyn_Syntax.null_t_binder k1))::((Microsoft_FStar_Absyn_Syntax.null_t_binder k2))::[], k') Microsoft_FStar_Absyn_Syntax.dummyRange))
 
-let ktern = (fun k1 k2 k3 k' -> (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow (((Microsoft_FStar_Absyn_Syntax.null_t_binder k1))::((Microsoft_FStar_Absyn_Syntax.null_t_binder k2))::((Microsoft_FStar_Absyn_Syntax.null_t_binder k3))::[], k') Microsoft_FStar_Absyn_Syntax.dummyRange))
+let ktern = (fun ( k1 ) ( k2 ) ( k3 ) ( k' ) -> (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow (((Microsoft_FStar_Absyn_Syntax.null_t_binder k1))::((Microsoft_FStar_Absyn_Syntax.null_t_binder k2))::((Microsoft_FStar_Absyn_Syntax.null_t_binder k3))::[], k') Microsoft_FStar_Absyn_Syntax.dummyRange))
 
 let true_lid = (pconst "True")
 
@@ -190,6 +190,8 @@ let as_requires = (pconst "as_requires")
 let as_ensures = (pconst "as_ensures")
 
 let decreases_lid = (pconst "decreases")
+
+let failwith_lid = (pconst "failwith")
 
 
 
