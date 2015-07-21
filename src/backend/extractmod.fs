@@ -76,7 +76,6 @@ let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> =
        | Sig_pragma _ -> //pragmas are currently not relevant for codegen; they may be in the future
          g, []   
 
-(*TODO : remove code duplication w.r.t the above function.*)          
 let extract_prims (g:env) (m:modul) =  Util.fold_map extract_sig g m.declarations |> fst
     
 let rec extract (g:env) (m:modul) : env * mllib = 

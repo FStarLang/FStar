@@ -32,7 +32,9 @@ type env = {
     tcenv:Tc.Env.env;
     gamma:list<binding>;
     tydefs:list<mltydecl>; 
+    erasableTypes : mlty -> bool // Unit is not the only type that can be erased. We could erase inductive families which had only 1 element, or become so after extraction.
 }
+
 
 let mkFvvar (l: lident) (t:typ) : fvvar =
 { v= l;
@@ -43,6 +45,13 @@ let mkFvvar (l: lident) (t:typ) : fvvar =
 (* MLTY_Tuple [] extracts to (), and is an alternate choice. 
     However, it represets both the unit type and the unit value. Ocaml gets confused sometimes*)
 let erasedContent : mlty = MLTY_Named ([],([],"unit"))
+let ml_unit_ty = erasedContent
+
+let erasable_init (t:mlty) = 
+    if t = ml_unit_ty then true
+    else match t with 
+        | MLTY_Named (_, (["Ghost"], "erased")) -> true //when would a named type like this be produced?
+        | _ -> false //what about types that reduce/unfold to unit/erased t? Do a syntactic check with ml_unit_ty?
 
 (* \mathbb{T} type in the thesis, to be used when OCaml is not expressive enough for the source type *)
 let unknownType : mlty =  MLTY_Top

@@ -64,14 +64,9 @@ let translate_typ (g:env) (t:typ) : mlty = ExtractTyp.extractTyp g t
 let instantiate (s:mltyscheme) (args:list<mlty>) : mlty = Util.subst s args (*only handles fully applied types*)
 
 let ml_unit = MLE_Const MLC_Unit
-let ml_unit_ty = MLTY_Named ([], ([], "unit")) 
 let ml_bool_ty = MLTY_Named ([], ([], "bool")) 
 
-let erasable (g:env) (t:mlty) = 
-    if t = ml_unit_ty then true
-    else match t with 
-        | MLTY_Named (_, (["Ghost"], "erased")) -> true //when would a named type like this be produced?
-        | _ -> false //what about types that reduce/unfold to unit/erased t? Do a syntactic check with ml_unit_ty?
+let erasable (g:env) (t:mlty) = g.erasableTypes t
 
 
 let erase (g:env) (e:mlexpr) (f:e_tag) (t:mlty) = 
@@ -184,7 +179,7 @@ and check_exp' (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr =
       
 and synth_exp (g:env) (e:exp) : (mlexpr * e_tag * mlty) = 
     let e, f, t = synth_exp' g e in
-    erase g e f t, f, t
+    erase g e f t, f, t // TODO: should we first check for erasability and only then bother synthesizing an expression?
 
 (* Unlike the \epsilon function in the thesis, this also produced an ml type for the computed ML expression, 
  to avoid the need to infer them later, when less info is available*)
