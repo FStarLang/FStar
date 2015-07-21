@@ -100,12 +100,19 @@ let is_type_abstraction = function
     | (Inl _, _)::_ -> true
     | _ -> false
 
+let mkTypFun (bs : Syntax.binders) (c : Syntax.comp) (original : Syntax.typ) : Syntax.typ =
+     mk_Typ_fun (bs,c) None original.pos // is this right? if not, also update mkTyp* below
+
+let mkTypApp (typ : Syntax.typ) (arrgs : Syntax.args) (original : Syntax.typ) : Syntax.typ =
+     mk_Typ_app (typ,arrgs) None original.pos
+
+
 (*TODO: Do we need to recurse for c?*)
 let tbinder_prefix t = match (Util.compress_typ t).n with 
     | Typ_fun(bs, c) ->
       begin match Util.prefix_until (function (Inr _, _) -> true | _ -> false) bs with 
         | None -> bs,t
-        | Some (bs, b, rest) -> bs, (mk_Typ_fun ((b::rest),c) t.tk.contents t.pos)
+        | Some (bs, b, rest) -> bs, (mkTypFun (b::rest) c t)
       end
 
     | _ -> [],t

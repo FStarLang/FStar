@@ -127,11 +127,6 @@ let extractTyVar (c:context) (btv : btvar) = (lookup_ty c (Inl btv))
 
 (* (if (contains c btv) then MLTY_Var (btvar2mlident btv) else unknownType) *)
 
-let mkTypFun (bs : binders) (c : comp) (original : typ) : typ =
-     mk_Typ_fun (bs,c) original.tk.contents original.pos // is this right? if not, also update mkTyp* below
-
-let mkTypApp (typ : typ) (arrgs : args) (original : typ) : typ =
-     mk_Typ_app (typ,arrgs) original.tk.contents original.pos
 
 (*the \hat{\epsilon} function in the thesis (Sec. 3.3.5) *)
 (* First \beta, \iota and \zeta reduce ft.
@@ -167,7 +162,7 @@ match ft.n with // assume ft is compressed. is there a compresser for typ'?
         | Typ_btvar btv ->  extractTyVar c btv
             (*the args are thrown away, because in OCaml, type variables have type Type and not something like -> .. -> .. Type *)
         | Typ_const ftv -> extractTyConstApp c ftv arrgs            
-        | Typ_app (tyin, argsin) -> extractTyp c (mkTypApp tyin (List.append argsin arrgs) ty)
+        | Typ_app (tyin, argsin) -> extractTyp c (Util.mkTypApp tyin (List.append argsin arrgs) ty)
         | _ -> unknownType)
 
   | Typ_lam  (bs,ty) ->  (* (sch) rule in \hat{\epsilon} *)
@@ -273,7 +268,7 @@ let lident2mlsymbol (l:lident) : mlsymbol = l.ident.idText
 let bindersOfFuntype (c: context) (n:int) (t:typ) : list<binder> * (*residual type*) typ = 
 let tc = ((preProcType c t).n) in
 match tc with
-| Typ_fun (lb,cp) -> let (ll,lr)= Util.first_N n lb in  (ll, mkTypFun lb cp t) 
+| Typ_fun (lb,cp) -> let (ll,lr)= Util.first_N n lb in  (ll, Util.mkTypFun lb cp t) 
 // is this risky? perhaps not because we will manually put the removed binders into the context, before typechecking
 // but we are removing the implicit arguments corresponding to the type binders. Is that always safe? In OCaml, is there no way to say (nil @ nat)? 
 // Perhaps it is not needed, because OCaml can implicitly put a type lambda (generalize)?
