@@ -570,7 +570,13 @@ and tc_value env e : exp * lcomp * guard_t =
 
   | Exp_abs(bs, body) ->  (* This is the dual of the treatment of application ... see the Exp_app case below. *)
     let fail :string -> typ -> 'a = fun msg t -> raise (Error(Tc.Errors.expected_a_term_of_type_t_got_a_function env msg t top, top.pos)) in
-    let rec expected_function_typ env t0 = match t0 with 
+    let rec expected_function_typ env t0 : (option<(typ*bool)> (* any remaining expected type to check against; bool signals to check using teq *)
+                                            * binders   (* binders from the abstraction checked against the binders in the corresponding Typ_fun, if any *)
+                                            * binders   (* any remaining binders in the abstraction *)
+                                            * option<comp> (* the expected comp type for the body *)
+                                            * env          (* environment for the body *)
+                                            * guard_t) =   (* accumulated guard from checking the binders *)
+       match t0 with 
         | None -> (* no expected type; just build a function type from the binders in the term *)
             let _ = match env.letrecs with [] -> () | _ -> failwith "Impossible" in
             let bs, envbody, g = tc_binders env bs in
@@ -585,7 +591,7 @@ and tc_value env e : exp * lcomp * guard_t =
                   let _ = match env.letrecs with [] -> () | _ -> failwith "Impossible" in
                   let bs, envbody, g = tc_binders env bs in 
                   let envbody, _ = Env.clear_expected_typ envbody in
-                  Some t, bs, [], None, envbody, g
+                  Some (t, true), bs, [], None, envbody, g
 
                 | Typ_fun(bs', c) -> 
                     (* Two main interesting bits here;
@@ -734,10 +740,13 @@ and tc_value env e : exp * lcomp * guard_t =
                  let bs, envbody, g, c = tc_binders ([], env, Rel.trivial_guard, []) bs' c bs in
                  let envbody, letrecs = if Options.should_verify env.curmodule.str then mk_letrec_environment bs envbody else envbody, [] in
                  let envbody = Tc.Env.set_expected_typ envbody (Util.comp_result c) in
-                 Some t, bs, letrecs, Some c, envbody, g
+                 Some (t, false), bs, letrecs, Some c, envbody, g
 
                 (* CK: add this case since the type may be f:(a -> M b wp){φ}, in which case I drop the refinement *)
-                | Typ_refine (b, _) -> as_function_typ norm b.sort
+                (* NS: 07/21 dropping the refinement is not sound; we need to check that f validates phi. See Bug #284 *)
+                | Typ_refine (b, _) -> 
+                  let _, bs, bs', copt, env, g = as_function_typ norm b.sort in
+                  Some (t, false), bs, bs', copt, env, g
 
                 | _ -> (* expected type is not a function; 
                           try normalizing it first; 
@@ -745,7 +754,7 @@ and tc_value env e : exp * lcomp * guard_t =
                   if not norm
                   then as_function_typ true (whnf env t) 
                   else let _, bs, _, c_opt, envbody, g = expected_function_typ env None in
-                       Some t, bs, [], c_opt, envbody, g in
+                       Some (t, false), bs, [], c_opt, envbody, g in
            as_function_typ false t in
 
     let use_eq = env.use_eq in
@@ -762,23 +771,31 @@ and tc_value env e : exp * lcomp * guard_t =
     let guard = if env.top_level || not(Options.should_verify env.curmodule.str) 
                 then (Tc.Util.discharge_guard envbody (Rel.conj_guard g guard); {Rel.trivial_guard with implicits=guard.implicits})
                 else let guard = Rel.close_guard (bs@letrec_binders) guard in Rel.conj_guard g guard in 
-    let tfun, guard = match tfun_opt with 
-        | Some t -> 
+    
+    let tfun_computed = mk_Typ_fun(bs, cbody) (Some ktype) top.pos in
+    let e = mk_Exp_abs(bs, body) (Some tfun_computed) top.pos  in
+
+    let e, tfun, guard = match tfun_opt with 
+        | Some (t, use_teq) -> 
            let t = Util.compress_typ t in
            (match t.n with 
-                | Typ_fun _ -> t, guard
+                | Typ_fun _ -> 
+                    //we already checked the body to have the expected type; so, no need to check again
+                    //just repackage the expression with this type; t is guaranteed to be alpha equivalent to tfun_computed
+                    mk_Exp_abs(bs, body) (Some t) e.pos, t, guard
                 | _ -> 
-                    let t' = mk_Typ_fun(bs, cbody) (Some ktype) top.pos in
-                    if Env.debug env Options.Low
-                    then Util.fprint2 "Adding an additional equality constraint between\nannotated type %s\nand\ncomputed type %s\n" (Print.typ_to_string t) (Print.typ_to_string t');
-                    let guard' = Rel.teq env t t' in
-                    t', Rel.conj_guard guard guard')
-        | None -> mk_Typ_fun(bs, cbody) (Some ktype) top.pos, guard in
+                    let e, guard' = 
+                        if use_teq 
+                        then e, Rel.teq env t tfun_computed 
+                        else Tc.Util.check_and_ascribe env e tfun_computed t in
+                    e, t, Rel.conj_guard guard guard')
+
+        | None -> e, tfun_computed, guard in
+
     if Env.debug env Options.Low
     then Util.fprint3 "!!!!!!!!!!!!!!!Annotating lambda with type %s (%s)\nGuard is %s\n" (Print.typ_to_string tfun) (Print.tag_of_typ tfun) (Rel.guard_to_string env guard);
 
-    let e = mk_Exp_abs(bs, body) (Some tfun) e.pos  in
-    let e = mk_Exp_ascribed(e, tfun, Const.effect_Tot_lid |> Some) None e.pos in //Important to ascribe, since the SMT encoding requires the type of every abstraction
+    let e = mk_Exp_ascribed(e, tfun, Some Const.effect_Tot_lid) None e.pos in //Important to ascribe, since the SMT encoding requires the type of every abstraction
     let c = if env.top_level then mk_Total tfun else Tc.Util.return_value env tfun e in
     let c, g = Tc.Util.strengthen_precondition None env e (Tc.Util.lcomp_of_comp c) guard in
     
