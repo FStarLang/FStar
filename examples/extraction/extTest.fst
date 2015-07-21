@@ -177,7 +177,16 @@ match n with
 
 
 (*this gets erased*)
-val add0Commuse :  n:nnat -> Tot unit
-let add0Commuse n = add0Comm n (*why does this typecheck after extraction? add0Comm is not a function after erasure*)
+val add0CommUse :  n:nnat -> Tot unit
+let add0CommUse n = add0Comm n (*why does this typecheck after extraction? add0Comm is not a function after erasure*)
 (*Perhaps the environment stores the unerased ML type of add0Comm?*)
 (*If not, we should do structural erasure after all  modules have been extracted?*)
+
+val add0CommUse2 :  n:nnat -> Tot nnat
+let add0CommUse2 n = let x = add0Comm (S n) in n
+
+val unitAsnat : unit -> Tot nnat
+let unitAsNat u = O
+
+val add0CommUse3 :  n:nnat -> Tot nnat
+let add0CommUse3 n = unitAsNat (add0Comm (S n))

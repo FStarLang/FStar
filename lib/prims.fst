@@ -540,7 +540,7 @@ type as_ensures  (#a:Type) (wlp:PureWP a) (x:a) = ~ (wlp (fun y -> ~(y=x)))
 val fst : ('a * 'b) -> Tot 'a
 let fst x = MkTuple2._1 x
 
-(*
+
 val snd : ('a * 'b) -> Tot 'b
 let snd x = MkTuple2._2 x
 
@@ -549,7 +549,6 @@ let dfst t = MkDTuple2._1 t
 
 val dsnd : #a:Type -> #b:(a -> Type) -> t:(DTuple2 a b) -> Tot (b (MkDTuple2._1 t))
 let dsnd t = MkDTuple2._2 t
-*)
 
 type Let (#a:Type) (x:a) (body:(a -> Type)) = body x
 logic type InductionHyp : #a:Type -> a -> Type -> Type
