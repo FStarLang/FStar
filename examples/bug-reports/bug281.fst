@@ -1,6 +1,6 @@
 (*--build-config
-    options:--z3timeout 20 --max_fuel 8 --max_ifuel 6 --initial_fuel 4 --initial_ifuel 2;
-    other-files:../../lib/classical.fst ../../lib/ext.fst ../../lib/constr.fst
+    options:--z3timeout 20 --max_fuel 8 --max_ifuel 6 --initial_fuel 4 --initial_ifuel 2  --log_types --logQueries;
+    other-files:../../lib/classical.fst
   --*)
 module Test
 
@@ -19,10 +19,7 @@ type renaming (s:sub) = (forall x. is_EVar (s x))
 
 val is_renaming : s:sub -> Tot nat
 let is_renaming s =
-  if (excluded_middle (renaming s)) then
-    0
-  else 
-    1
+  if (excluded_middle (renaming s)) then 0 else 1
 
 val is_evar : exp -> Tot nat
 let is_evar e = if (is_EVar e) then 0 else 1
@@ -46,30 +43,25 @@ match e with
 | ELam ebody -> ELam (esubst (sub_elam s) ebody)
 
 let eesh = (esubst sub_einc)
-(*
-val v: exp -> Tot exp
-let v x = 
-*)
+
 let test f = EApp (EApp (EApp (eesh (eesh (eesh f))) (EVar 2)) (EVar 1)) (EVar 0)
 
-val lemma : s:sub -> e:exp -> Lemma (esubst (sub_elam s) (eesh e) = eesh (esubst s e))
+val lemma : s:sub -> e:exp -> Lemma (esubst (sub_elam s) (eesh e)
+                                   = eesh (esubst s e))
 let lemma s e = admit()
 
-(* Version without type : succeeds after a random time or fails *)
-let plouf0 s f =lemma (sub_elam (sub_elam s)) (eesh (eesh f));
-                lemma (sub_elam s) (eesh f);
-                lemma (s) (f);
-                assert(esubst (sub_elam (sub_elam (sub_elam s))) (test f) = test (esubst s f))
-
-(* Version with type : succeeds after ~2-6sec *)
-val plouf1 : s:sub -> f:exp -> Tot unit
+(* Succeeds after ~2-6sec *)
+(* Commenting this out makes plouf2 below work! *)
+opaque val plouf1 : s:sub -> f:exp -> Tot unit
 let plouf1 s f =lemma (sub_elam (sub_elam s)) (eesh (eesh f));
                 lemma (sub_elam s) (eesh f);
                 lemma (s) (f);
-                assert(esubst (sub_elam (sub_elam (sub_elam s))) (test f) = test (esubst s f))
+                assert(esubst (sub_elam (sub_elam (sub_elam s))) (test f)
+                     = test (esubst s f))
 
-(* Version with 'Lemma' instead of 'assert' : succeeds after a random time or fails *)
-val plouf2 : s:sub -> f :exp -> Lemma (esubst (sub_elam (sub_elam (sub_elam s))) (test f) = test (esubst s f))
+(* This takes around ~60 seconds to fail, or rarely to succeed *)
+opaque val plouf2 : s:sub -> f :exp ->
+  Lemma (esubst (sub_elam (sub_elam (sub_elam s))) (test f) = test (esubst s f))
 let plouf2 s f =lemma (sub_elam (sub_elam s)) (eesh (eesh f));
                 lemma (sub_elam s) (eesh f);
                 lemma (s) (f)
