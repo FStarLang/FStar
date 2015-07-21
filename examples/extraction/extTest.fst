@@ -2,7 +2,7 @@
   --*)
 
 (*
-fstar extTest.fst --codegen OCaml-experimental > Test.ml ; sed -i '1d;2d;$d;s/Test.l__//g;s/Test.//g;s/Prims.//g' Test.ml ; ocamlc Test.ml
+fstar extTest.fst --codegen OCaml-experimental > Test.ml ; sed -i '1d;$d;s/Test.l__//g;s/Test.//g;s/Prims.//g;/kdhvljkdshalfkhclklkdnfsnydufnysdkyfnklsnykweyacklnyrecynrncrewanyu/d' Test.ml ; ocamlc Test.ml
 *)
 module Test
 
