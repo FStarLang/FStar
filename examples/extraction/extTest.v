@@ -139,3 +139,16 @@ Definition cons0  := cons 0.
 Recursive Extraction consalias cons0.
 
 
+(* Coq's extraction seems to ignore the effectful OCaml reaslization of variables*)
+
+
+Variable effectfulIncr : nat -> nat.
+
+Definition someNat : nat :=
+let _ : Prop := (effectfulIncr 0 = effectfulIncr (S 0)) in 0.
+
+Recursive Extraction someNat. (*the call to effectfulIncr vanishes*)
+
+(*Can Prop be extracted as unit? It seems odd because Props may be uninhabited. 
+  It seems OCaml does not have any uninhabited type.
+  But that oddness might not matter as far as results(and possibly effects) of computation are concerned *)
