@@ -1,7 +1,7 @@
 VERFILES=unit1.fst unit2.fst testset.fst short-circuit.fst
 include ../Makefile.include
 NEGFILES=negative-tests.fst
-NEGTESTS=32
+NEGTESTS=35
 
 all: basictests testint32.vv testmref testhyperheap.vv mac2 all-neg
 
