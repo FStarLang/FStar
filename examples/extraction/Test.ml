@@ -1,4 +1,7 @@
 
+
+
+
 let idlist = (fun ( x  :  int list ) -> x)
 
 type nnat =
@@ -9,18 +12,18 @@ let idnat = (fun ( x  :  nnat ) -> x)
 
 let idnat2 = (fun ( x  :  nnat ) -> x)
 
-let id = (fun ( _1_1099  :  unit ) ( x  :  'a ) -> x)
+let id = (fun ( _1_1410  :  unit ) ( x  :  'a ) -> x)
 
-let idp = (fun ( _1_1099  :  unit ) ( x  :  Obj.t ) -> x)
+let idp = (fun ( _1_1410  :  unit ) ( x  :  Obj.t ) -> x)
 
-let idp' = (fun ( _1_1099  :  unit ) ( x  :  'a ) -> x)
+let idp' = (fun ( _1_1410  :  unit ) ( x  :  'a ) -> x)
 
 let add1 = (fun ( a  :  nnat ) -> S (a))
 
-let add2 = (fun ( _1_1113  :  nnat ) -> S (_1_1113))
+let add2 = (fun ( _1_1451  :  nnat ) -> S (_1_1451))
 
-let eval_order = (fun ( effectful  :  string  ->  string ) ( f  :  string  ->  string  ->  string ) -> (let _1_1133 = (effectful "first")
-in (f _1_1133 "second")))
+let eval_order = (fun ( effectful  :  string  ->  string ) ( f  :  string  ->  string  ->  string ) -> (let _1_1471 = (effectful "first")
+in (f _1_1471 "second")))
 
 let prev = (fun ( _1_1  :  nnat ) -> (match (_1_1) with
 | O -> begin
@@ -35,8 +38,8 @@ let rec add = (fun ( a  :  nnat ) ( b  :  nnat ) -> (match (a) with
 b
 end
 | S (a') -> begin
-(let _1_1140 = (add a' b)
-in S (_1_1140))
+(let _1_1478 = (add a' b)
+in S (_1_1478))
 end))
 
 type ('a, 'b) prod =

@@ -369,8 +369,13 @@ let rec extractSigElt (c:context) (s:sigelt) : context * mltydecl =
          (Util.fold_map extractInductive c inds)
         //let k = lookup_typ_lid c ind.tyName in
 
-    | Sig_tycon _ -> 
-       extractSigElt c (Sig_bundle([s], [Assumption], [], Util.range_of_sigelt s))
+    | Sig_tycon (_, _, _, _, _, quals, _) -> 
+        //Util.print_string ((Print.sigelt_to_string s)^"\n");
+         if quals |> List.contains Assumption  && 
+         not (quals |> Util.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
+         then        
+           extractSigElt c (Sig_bundle([s], [Assumption], [], Util.range_of_sigelt s))
+         else c,[]
 
     | _ -> c, []
 
