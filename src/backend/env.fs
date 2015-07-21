@@ -32,8 +32,83 @@ type env = {
     tcenv:Tc.Env.env;
     gamma:list<binding>;
     tydefs:list<mltydecl>; 
-    erasableTypes : mlty -> bool // Unit is not the only type that can be erased. We could erase inductive families which had only 1 element, or become so after extraction.
+    erasableTypes : mlty -> bool; // Unit is not the only type that can be erased. We could erase inductive families which had only 1 element, or become so after extraction.
+    currentModule: mlpath // needed to properly translate the definitions in the current file
 }
+
+(*copied from ocaml-asttrans.fs*)
+
+(* -------------------------------------------------------------------- *)
+let outmod = [
+    ["Prims"];
+    ["System"];
+    ["ST"];
+    ["Option"];
+    ["String"];
+    ["Char"];
+    ["Bytes"];
+    ["List"];
+    ["Array"];
+    ["Set"];
+    ["Map"];
+    ["Heap"];
+    ["DST"];
+    ["IO"];
+    ["Tcp"];
+    ["Crypto"];
+    ["Collections"];
+    ["Microsoft"; "FStar"; "Bytes"];
+    ["Microsoft"; "FStar"; "Platform"];
+    ["Microsoft"; "FStar"; "Util"];
+    ["Microsoft"; "FStar"; "Getopt"];
+    ["Microsoft"; "FStar"; "Unionfind"];
+    ["Microsoft"; "FStar"; "Range"];
+    ["Microsoft"; "FStar"; "Parser"; "Util"];
+]
+
+(* -------------------------------------------------------------------- *)
+(* A table to remember the names of the fields of constructors *)
+let record_constructors = smap_create<list<ident>>(17)
+(* A table to remember the arity of algebraic constructors *)
+let algebraic_constructors = smap_create<(int * list<string>)>(40)
+let _ign = smap_add algebraic_constructors "Prims.Some" (1, ["v"])
+
+let rec in_ns = function
+| [], _ -> true
+| x1::t1, x2::t2 when (x1 = x2) -> in_ns (t1, t2)
+| _, _ -> false
+
+(* -------------------------------------------------------------------- *)
+let path_of_ns (currentModule : mlpath) ns =
+    let ns = List.map (fun x -> x.idText) ns in
+    let outsupport = fun (ns1,ns2) -> if ns1 = ns2 then [] else [String.concat "_" ns2]
+    
+    (*function
+    | x1 :: p1, x2 :: p2 when x1 = x2 -> outsupport (p1, p2)
+    | _, p -> p
+    *)
+    in let chkin sns = if in_ns (sns, ns) then Some sns else None
+    in match List.tryPick chkin outmod with
+    | None -> 
+        (match List.tryPick chkin (!Microsoft.FStar.Options.codegen_libs) with
+         | None -> outsupport ((fst currentModule) @ [snd currentModule], ns)
+         | _ -> ns)
+    | Some sns -> "Support" :: ns
+
+let mlpath_of_lident (currentModule : mlpath) (x : lident) : mlpath =
+    match x.str with
+    | "Prims.Some" -> ([], "Some")
+    | "Prims.None" -> ([], "None")
+    | "Prims.failwith" -> ([], "failwith")
+    | "ST.alloc" -> ([], "ref")
+    | "ST.read" -> (["Support";"Prims"], "op_Bang")
+    | "ST.op_ColonEquals" -> (["Support";"Prims"], "op_ColonEquals")
+    | _ ->
+      begin
+        let ns = x.ns in
+        let x  = x.ident.idText in
+        (path_of_ns currentModule ns, x)
+      end
 
 
 let mkFvvar (l: lident) (t:typ) : fvvar =
@@ -131,14 +206,14 @@ let extend_fv' (g:env) (x:fvvar) (y:mlpath) (t_x:mltyscheme) : env =
     {g with gamma=gamma; tcenv=tcenv} 
 
 let extend_fv (g:env) (x:fvvar) (t_x:mltyscheme) : env =
-    extend_fv' g x (mlpath_of_lident x.v) t_x
+    extend_fv' g x (mlpath_of_lident g.currentModule x.v) t_x
 
 let extend_lb (g:env) (l:lbname) (t:typ) (t_x:mltyscheme) : (env * mlident) = 
     match l with 
         | Inl x -> 
           extend_bv g (Util.bvd_to_bvar_s x t) t_x, as_mlident x
         | Inr f -> 
-          let _, y = mlpath_of_lident f in
+          let _, y = mlpath_of_lident g.currentModule f in
           extend_fv' g (Util.fvvar_of_lid f t) ([], y) t_x, (y,0)
 
 let extend_tydef (g:env) (td:mltydecl) : env = {g with tydefs=td::g.tydefs}

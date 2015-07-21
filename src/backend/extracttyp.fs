@@ -117,9 +117,6 @@ let extendContext (c:context) (tyVars : list<either<btvar,bvvar>>) : context =
 let isTypeScheme (i : lident) (c: context) : bool = true  (*TODO: FIX!! really? when would a type constant not be a type scheme? *)
 
 
-let lident2mlpath (l:lident) : mlpath =
-  ( List.map (fun x -> x.idText) l.ns , l.ident.idText)
-
 
 let preProcType  (c:context) (ft:typ) : typ =  
     let ft =  (Util.compress_typ ft) in
@@ -195,7 +192,7 @@ and extractTyConstApp (c:context) (ftv:ftvar) (ags : args) =
                  //assert (List.length ar >= List.length mlargs);
                  let (_, missingArgs) = Util.first_N (List.length mlargs) ar in
                  let argCompletion =  List.map mlty_of_isExp missingArgs in
-                    (MLTY_Named (List.append mlargs argCompletion,(lident2mlpath ftv.v)))
+                    (MLTY_Named (List.append mlargs argCompletion,(mlpath_of_lident c.currentModule ftv.v)))
              | false -> failwith "this case was not anticipated"
                  (* match  (deltaUnfold ftv.v c) with
                  | Some tyu ->  extractTyp c tyu
@@ -368,9 +365,11 @@ let rec extractSigElt (c:context) (s:sigelt) : context * mltydecl =
 
     | _ -> c, []
 
+let emptyMlPath : mlpath = ([],"")
+
 (*can be moved to env.fs*)
 let mkContext (e:Tc.Env.env) : context =
-   let env = { tcenv = e; gamma =[] ; tydefs =[]; erasableTypes = erasable_init} in
+   let env = { tcenv = e; gamma =[] ; tydefs =[]; erasableTypes = erasable_init; currentModule = emptyMlPath} in
    let a = "a", -1 in
    let failwith_ty = ([a], MLTY_Fun(MLTY_Named([], (["Prims"], "string")), Keep, MLTY_Var a)) in
    Env.extend_lb env (Inr Const.failwith_lid) tun failwith_ty |> fst

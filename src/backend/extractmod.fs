@@ -79,6 +79,8 @@ let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> =
 let extract_prims (g:env) (m:modul) =  Util.fold_map extract_sig g m.declarations |> fst
     
 let rec extract (g:env) (m:modul) : env * mllib = 
+    let name = Backends.ML.Syntax.mlpath_of_lident m.name in
+    let g = {g with currentModule = name}  in
     if m.is_interface then failwith "NYI";
     if m.name.str = "Prims"
     then let g = extract_prims g m in 
