@@ -1,3 +1,7 @@
+
+
+
+
 let idlist = (fun ( x  :  int list ) -> x)
 
 type nnat =
@@ -8,18 +12,18 @@ let idnat = (fun ( x  :  nnat ) -> x)
 
 let idnat2 = (fun ( x  :  nnat ) -> x)
 
-let id = (fun ( _1_1234  :  unit ) ( x  :  'a ) -> x)
+let id = (fun ( _1_1252  :  unit ) ( x  :  'a ) -> x)
 
-let idp = (fun ( _1_1234  :  unit ) ( x  :  Obj.t ) -> x)
+let idp = (fun ( _1_1252  :  unit ) ( x  :  Obj.t ) -> x)
 
-let idp' = (fun ( _1_1234  :  unit ) ( x  :  'a ) -> x)
+let idp' = (fun ( _1_1252  :  unit ) ( x  :  'a ) -> x)
 
 let add1 = (fun ( a  :  nnat ) -> S (a))
 
-let add2 = (fun ( _1_2167  :  nnat ) -> S (_1_2167))
+let add2 = (fun ( _1_2185  :  nnat ) -> S (_1_2185))
 
-let eval_order = (fun ( effectful  :  string  ->  string ) ( f  :  string  ->  string  ->  string ) -> (let _1_2187 = (effectful "first")
-in (f _1_2187 "second")))
+let eval_order = (fun ( effectful  :  string  ->  string ) ( f  :  string  ->  string  ->  string ) -> (let _1_2205 = (effectful "first")
+in (f _1_2205 "second")))
 
 let prev = (fun ( _1_1  :  nnat ) -> (match (_1_1) with
 | O -> begin
@@ -52,7 +56,7 @@ type 'a list =
 
 
 
-let prepend0 = (Obj.magic (fun ( tll  :  nnat list ) -> (fun ( _1_2230  :  Obj.t list ) -> Cons ((Obj.magic O), (Obj.magic tll), _1_2230))))
+let prepend0 = (Obj.magic (fun ( tll  :  nnat list ) -> (fun ( _1_2248  :  Obj.t list ) -> Cons ((Obj.magic O), (Obj.magic tll), _1_2248))))
 
 type ('a, 'b) list2 =
 | Nil2 of unit * unit
@@ -178,6 +182,8 @@ type trivialLemmaSatement =
 nnat  ->  nnat  ->  unit
 
 let rec add0Comm = ()
+
+let add0Commuse = ()
 
 
 

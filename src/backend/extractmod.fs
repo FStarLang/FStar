@@ -28,7 +28,7 @@ let fail_exp = mk_Exp_app(Util.fvar false Const.failwith_lid dummyRange, [varg <
 
     
 let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> = 
-    printfn "(* %A *) " (Print.sigelt_to_string_short se);
+    printfn "(* kdhvljkdshalfkhclklkdnfsnydufnysdkyfnklsnykweyacklnyrecynrncrewanyu %A *) " (Print.sigelt_to_string_short se);
      match se with
         | Sig_datacon _
         | Sig_bundle _

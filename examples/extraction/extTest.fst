@@ -174,3 +174,10 @@ let rec add0Comm n =
 match n with
 | O -> ()
 | S n' -> add0Comm n'
+
+
+(*this gets erased*)
+val add0Commuse :  n:nnat -> Tot unit
+let add0Commuse n = add0Comm n (*why does this typecheck after extraction? add0Comm is a function after erasure*)
+(*Perhaps the environment stores the unerased ML type of add0Comm*)
+(*If not, we should do structural erasure after all  modules have been extracted?*)
