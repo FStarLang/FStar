@@ -185,8 +185,13 @@ let add0CommUse n = add0Comm n (*why does this typecheck after extraction? add0C
 val add0CommUse2 :  n:nnat -> Tot nnat
 let add0CommUse2 n = let x = add0Comm (S n) in n
 
-val unitAsnat : unit -> Tot nnat
+val unitAsNat : unit -> Tot nnat
 let unitAsNat u = O
 
+(*this example also works fine. Indeed (add0Comm (S n) gets replaced by ()
+  during term erasure*)
 val add0CommUse3 :  n:nnat -> Tot nnat
 let add0CommUse3 n = unitAsNat (add0Comm (S n))
+
+val add0CommAlias :  n:nnat -> Tot unit
+let add0CommAlias = add0Comm  (*why does this typecheck after extraction? add0Comm is not a function after erasure*)
