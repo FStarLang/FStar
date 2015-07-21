@@ -391,6 +391,17 @@ let encode_const = function
     | Const_string(bytes, _) -> varops.string_const (Util.string_of_bytes <| bytes)
     | c -> failwith (Util.format1 "Unhandled constant: %s\n" (Print.const_to_string c))
  
+let as_function_typ env t0 = 
+    let rec aux norm t =
+        let t = Util.compress_typ t in
+        match t.n with 
+            | Typ_fun _ -> t
+            | Typ_refine _ -> aux true (Util.unrefine t)
+            | _ -> if norm 
+                   then aux false (whnf env t) 
+                   else failwith (Util.format2 "(%s) Expected a function typ; got %s" (Range.string_of_range t0.pos) (Print.typ_to_string t0))
+    in aux true t0
+
 let rec encode_knd' (prekind:bool) (k:knd) (env:env_t) (t:term) : term  * decls_t = 
     match (Util.compress_kind k).n with 
         | Kind_type -> 
@@ -708,7 +719,7 @@ and encode_exp (e:exp) (env:env_t) : (term
             | Some tfun -> 
             if not <| Util.is_pure_or_ghost_function tfun
             then fallback ()
-            else let tfun = whnf env tfun |> Util.compress_typ in
+            else let tfun = as_function_typ env tfun in 
                  begin match tfun.n with 
                     | Typ_fun(bs', c) -> 
                         let nformals = List.length bs' in

@@ -200,41 +200,6 @@ val noleak_ok: x1:ref int
 let noleak_ok x1 x2 b1 b2 = compose2 noleak noleak (x1,b1) (x2,b2)
 
 
-(* Example for Nik's proposal of sequencing (Email from 04/29/2015) *)
-
-let c0_pfx a = a := 0
-let c1_pfx b = b := 1
-let equiv_pfx a b = compose2 c0_pfx c1_pfx a b
-
-type injection (f:int -> Tot int) = (forall x y. f x = f y ==> x = y)
-type surjection (f:int -> Tot int) = (forall y. (exists x. f x = y))
-type bijection (f:int -> Tot int) = injection f /\ surjection f
-
-(* sample two random values into c and d such that they are related by a
-  bijection f *)
-assume val sample : f:(int -> Tot int){bijection f}
-                    -> ST2 (int * int)
-                       (requires (fun _ -> True))
-                       (*(ensures (fun h2' (v1,v2)  h2 -> h2' = h2 /\ v1 = v2))*)
-                       (ensures (fun h2' p  h2 -> h2' = h2 /\ fst p = f (snd p)))
-
-
-let c0_sfx (a, c) = a := !a + c
-let c1_sfx (b, d) = b := !b + d
-let equiv_sfx a b c d = compose2 c0_sfx c1_sfx (a, c) (b, d)
-
-(* relate the programs
-  c0_pfx ; sample ; c0_sfx  and
-  c1_pfx ; sample ; c1_sfx  *)
-val equiv_seq: a:ref int
-               -> b:ref int
-               -> ST2 (unit * unit)
-                  (requires (fun _ -> True))
-                  (ensures (fun _ _ h2 -> sel (fst h2) a = sel (snd h2) b))
-let equiv_seq a b = let _ = equiv_pfx a b in
-                    let c, d = sample (fun x -> x + 1) in
-                    equiv_sfx a b c d
-
 
 (* Simple recursive function:
    The proof works by proving a pure specification for the imperative functions
@@ -283,3 +248,55 @@ val equiv_gauss_imp: x:ref nat
                                         sel (fst h2) a = 0 ))
                     (ensures (fun _ p h2 -> fst p = snd p))
 let equiv_gauss_imp x a = compose2 gauss_imp_rec gauss_imp (x,a) x
+
+(* Example for Nik's proposal of sequencing (Email from 04/29/2015) *)
+
+let c0_pfx a = a := 0
+let c1_pfx b = b := 1
+let equiv_pfx a b = compose2 c0_pfx c1_pfx a b
+
+
+opaque type injection (f:int -> Tot int) = (forall x y. f x = f y ==> x = y)
+opaque type surjection (f:int -> Tot int) = (forall y. (exists x. f x = y))
+opaque type bijection (f:int -> Tot int) = injection f /\ surjection f
+type bij = f:(int -> Tot int){bijection f}
+opaque type inverses (f:int -> Tot int) (g:int -> Tot int) =
+   (forall y. f (g y) = y) /\
+   (forall x. g (f x) = x)
+val lemma_inverses_bij:  f:(int -> Tot int) -> g:(int -> Tot int) ->
+  Lemma (requires (inverses f g))
+        (ensures (bijection f))
+let lemma_inverses_bij f g = ()
+
+let dec x = x - 1
+
+let inc x = x + 1
+
+
+(* sample two random values into c and d such that they are related by a
+  bijection f *)
+assume val sample : f:(int -> Tot int){bijection f}
+                    -> ST2 (int * int)
+                       (requires (fun _ -> True))
+                       (*(ensures (fun h2' (v1,v2)  h2 -> h2' = h2 /\ v1 = v2))*)
+                       (ensures (fun h2' p  h2 -> h2' = h2 /\ fst p = f (snd p)))
+
+
+let c0_sfx (a, c) = a := !a + c
+let c1_sfx (b, d) = b := !b + d
+let equiv_sfx a b c d = compose2 c0_sfx c1_sfx (a, c) (b, d)
+
+
+(* relate the programs
+  c0_pfx ; sample ; c0_sfx  and
+  c1_pfx ; sample ; c1_sfx  *)
+val equiv_seq: a:ref int
+               -> b:ref int
+               -> ST2 (unit * unit)
+                  (requires (fun _ -> True))
+                  (ensures (fun _ _ h2 -> sel (fst h2) a = sel (snd h2) b))
+let equiv_seq a b = let _ = equiv_pfx a b in
+                    cut (inverses inc dec);
+                    let c, d = sample inc in
+                    equiv_sfx a b c d
+

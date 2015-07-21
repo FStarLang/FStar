@@ -572,9 +572,9 @@ and tc_value env e : exp * lcomp * guard_t =
     let fail :string -> typ -> 'a = fun msg t -> raise (Error(Tc.Errors.expected_a_term_of_type_t_got_a_function env msg t top, top.pos)) in
     let rec expected_function_typ env t0 : (option<(typ*bool)> (* any remaining expected type to check against; bool signals to check using teq *)
                                             * binders   (* binders from the abstraction checked against the binders in the corresponding Typ_fun, if any *)
-                                            * binders   (* any remaining binders in the abstraction *)
+                                            * binders   (* let rec binders, suitably guarded with termination check, if any *)
                                             * option<comp> (* the expected comp type for the body *)
-                                            * env          (* environment for the body *)
+                                            * Env.env      (* environment for the body *)
                                             * guard_t) =   (* accumulated guard from checking the binders *)
        match t0 with 
         | None -> (* no expected type; just build a function type from the binders in the term *)
@@ -773,7 +773,8 @@ and tc_value env e : exp * lcomp * guard_t =
                 else let guard = Rel.close_guard (bs@letrec_binders) guard in Rel.conj_guard g guard in 
     
     let tfun_computed = mk_Typ_fun(bs, cbody) (Some ktype) top.pos in
-    let e = mk_Exp_abs(bs, body) (Some tfun_computed) top.pos  in
+    //Important to ascribe, since the SMT encoding requires the type of every abstraction
+    let e = mk_Exp_ascribed (mk_Exp_abs(bs, body) (Some tfun_computed) top.pos, tfun_computed, Some Const.effect_Tot_lid) None top.pos  in
 
     let e, tfun, guard = match tfun_opt with 
         | Some (t, use_teq) -> 
@@ -782,20 +783,21 @@ and tc_value env e : exp * lcomp * guard_t =
                 | Typ_fun _ -> 
                     //we already checked the body to have the expected type; so, no need to check again
                     //just repackage the expression with this type; t is guaranteed to be alpha equivalent to tfun_computed
-                    mk_Exp_abs(bs, body) (Some t) e.pos, t, guard
+                    mk_Exp_ascribed (mk_Exp_abs(bs, body) (Some t) e.pos, t, Some Const.effect_Tot_lid) None top.pos, 
+                    t, 
+                    guard
                 | _ -> 
                     let e, guard' = 
                         if use_teq 
                         then e, Rel.teq env t tfun_computed 
                         else Tc.Util.check_and_ascribe env e tfun_computed t in
-                    e, t, Rel.conj_guard guard guard')
+                    mk_Exp_ascribed (e, t, Some Const.effect_Tot_lid) None top.pos, t, Rel.conj_guard guard guard')
 
         | None -> e, tfun_computed, guard in
 
     if Env.debug env Options.Low
     then Util.fprint3 "!!!!!!!!!!!!!!!Annotating lambda with type %s (%s)\nGuard is %s\n" (Print.typ_to_string tfun) (Print.tag_of_typ tfun) (Rel.guard_to_string env guard);
 
-    let e = mk_Exp_ascribed(e, tfun, Some Const.effect_Tot_lid) None e.pos in //Important to ascribe, since the SMT encoding requires the type of every abstraction
     let c = if env.top_level then mk_Total tfun else Tc.Util.return_value env tfun e in
     let c, g = Tc.Util.strengthen_precondition None env e (Tc.Util.lcomp_of_comp c) guard in
     
