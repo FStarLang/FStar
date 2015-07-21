@@ -80,24 +80,7 @@ let rec curry (inp: (list<mlty>)) (erase : e_tag) (out: mlty) =
   The actual definiton is a bit complicated, because we need for any x, \box x to be convertible to \box.
 *)
 
-
-    
-type argTransform = arg -> Tot<option<arg>> (*none indicates that this argument should be deleted*)
-type nthArgTransform = int -> Tot<argTransform> (* f n is the argtransform for the nth argument (of a type constant)*)
-let idArgTransform :argTransform = fun a -> Some a
-type nthArgTransforms = lident (*name of a constant*) -> Tot<nthArgTransform>
- 
-
 type context = env
-
-(*
-let tyVarKind (bv : bvvar) : knd = {n=Kind_type; tk=None; pos= bv.p; fvs =None; uvs = None}
-let bvvar2btvar (bv : bvvar) : btvar = {v=bv.v; sort = Kind_type ; p=bv.p} *)
-
-
-(* vars in tyVars will have type Type, irrespective of that types they had in F*. This is to match the limitations of  OCaml*)
-
-
 
 
 let extendContextWithRepAsTyVar (b : either<btvar,bvvar> * either<btvar,bvvar>) (c:context): context = 
@@ -125,7 +108,7 @@ let extendContext (c:context) (tyVars : list<either<btvar,bvvar>>) : context =
 
 //let deltaUnfold (i : lident) (c: context) : (option<typ>) = 
 //lookup 
-//None (*TODO: FIX!!*)
+//None (*TODO: FIX!! Perhaps no need to fix*)
 
 (*The thesis defines a type scheme as "something that becomes a type when enough arguments (possibly none?) are applied to it" ,  e.g. vector, list.
     I guess in F*, these include Inductive types and type abbreviations.
@@ -146,10 +129,14 @@ let extractTyVar (c:context) (btv : btvar) = (lookup_ty c (Inl btv))
 
 (* (if (contains c btv) then MLTY_Var (btvar2mlident btv) else unknownType) *)
 
+let mkTypFun (bs : binders) (c : comp) (original : typ) : typ =
+     mk_Typ_fun (bs,c) original.tk.contents original.pos // is this right? if not, also update mkTyp* below
 
-let rec extractType' (c:context) (ft:typ') : mlty = 
+let mkTypApp (typ : typ) (arrgs : args) (original : typ) : typ =
+     mk_Typ_app (typ,arrgs) original.tk.contents original.pos
+
 (*the \hat{\epsilon} function in the thesis (Sec. 3.3.5) *)
-(* First \beta, \iota and \zeta reduce ft. Do require the caller to do so.
+(* First \beta, \iota and \zeta reduce ft.
     Since F* does not have SN, one has to be more careful for the termination argument.
     Because OCaml does not support computations in Type, unknownType is supposed to be used if they are really unaviodable.
     The classic example is the type : T b \def if b then nat else bool. If we dont compute, T true will extract to unknownType.
@@ -158,7 +145,10 @@ let rec extractType' (c:context) (ft:typ') : mlty =
         a bloated type is atleast as good as unknownType?
     An an F* specific example, unless we unfold Mem x pre post to StState x wp wlp, we have no idea that it should be translated to x
 *)
-match ft with // assume ft is compressed. is there a compresser for typ'?
+
+let rec extractTyp  (c:context) (ft:typ) : mlty = 
+    let ft =  (preProcType c ft) in
+match ft.n with // assume ft is compressed. is there a compresser for typ'?
   | Typ_btvar btv -> extractTyVar c btv
   (*it is not clear whether description in the thesis covers type applications with 0 args. However, this case is needed to translate types like nnat, and so far seems to work as expected*)
   | Typ_const ftv ->  extractTyConstApp c ftv []
@@ -178,7 +168,7 @@ match ft with // assume ft is compressed. is there a compresser for typ'?
         | Typ_btvar btv ->  extractTyVar c btv
             (*the args are thrown away, because in OCaml, type variables have type Type and not something like -> .. -> .. Type *)
         | Typ_const ftv -> extractTyConstApp c ftv arrgs            
-        | Typ_app (tyin, argsin) -> extractType' c (Typ_app (tyin,(List.append argsin arrgs)))
+        | Typ_app (tyin, argsin) -> extractTyp c (mkTypApp tyin (List.append argsin arrgs) ty)
         | _ -> unknownType)
 
   | Typ_lam  (bs,ty) ->  (* (sch) rule in \hat{\epsilon} *)
@@ -220,9 +210,6 @@ match bn with
 
 and extractBindersTypes  (c:context) (bs : list<binder>): list<mlty> * context =
     (fun (x,c) -> (List.rev x,c)) (List.fold_left (fun (lt,cp) b -> let (nt, nc)= extractBinderType cp b in ((nt::lt),nc))  ([],c) bs)
-
-and extractTyp  (c:context) (ft:typ) : mlty = 
-    let ft =  (preProcType c ft) in extractType' c ft.n
 
 and extractKind (c:context) (ft:knd) : mlty = erasedContent
 and extractComp  (c:context) (ft:comp) : mlty * e_tag = extractComp' c (ft.n) 
@@ -283,13 +270,15 @@ match t with
  
 let lident2mlsymbol (l:lident) : mlsymbol = l.ident.idText
 
-let bindersOfFuntype (n:int) (t:typ) : list<binder> * (*residual type*) typ' = 
-let tc = ((Util.compress_typ t).n) in
+
+let bindersOfFuntype (c: context) (n:int) (t:typ) : list<binder> * (*residual type*) typ = 
+let tc = ((preProcType c t).n) in
 match tc with
-| Typ_fun (lb,cp) -> let (ll,lr)= Util.first_N n lb in  (ll, Typ_fun (lr,cp)) // is this risky? perhaps not because we will manually put the removed binders into the context, before typechecking
+| Typ_fun (lb,cp) -> let (ll,lr)= Util.first_N n lb in  (ll, mkTypFun lb cp t) 
+// is this risky? perhaps not because we will manually put the removed binders into the context, before typechecking
 // but we are removing the implicit arguments corresponding to the type binders. Is that always safe? In OCaml, is there no way to say (nil @ nat)? 
 // Perhaps it is not needed, because OCaml can implicitly put a type lambda (generalize)?
-| _ -> assert (n=0); ([],tc) 
+| _ -> assert (n=0); ([],t) 
     //printfn "%A\n" (ctor.ctype);
     //failwith "was expecting a function type"
 
@@ -301,11 +290,11 @@ match  (la, lb) with
 let mlTyIdentOfBinder (b : binder) = prependTick (convIdent (binderPPnames b))
 
 let extractCtor (tyBinders : list<binder>) (c:context) (ctor: inductiveConstructor):  context * (mlsymbol * list<mlty>) =
-        (let (lb, tr) = bindersOfFuntype (List.length tyBinders) ctor.ctype in 
+        (let (lb, tr) = bindersOfFuntype c (List.length tyBinders) ctor.ctype in 
         let lp = List.zip tyBinders lb in
         //assert (List.length tyBinders = List.length lp);
         let newC = extendContextWithRepAsTyVars (List.map (fun (x,y) -> (fst x, fst y)) lp) c in
-        let mlt = extractType' newC tr in
+        let mlt = extractTyp newC tr in
         let tys = (List.map mlTyIdentOfBinder tyBinders, mlt) in
         let fvv = mkFvvar ctor.cname ctor.ctype in 
             // fprint1 "(* extracting the type of constructor %s\n" (lident2mlsymbol ctor.cname);
@@ -379,7 +368,7 @@ let rec extractSigElt (c:context) (s:sigelt) : context * mltydecl =
 
     | _ -> c, []
 
-
+(*can be moved to env.fs*)
 let mkContext (e:Tc.Env.env) : context =
    let env = { tcenv = e; gamma =[] ; tydefs =[]; erasableTypes = erasable_init} in
    let a = "a", -1 in
