@@ -153,7 +153,7 @@ match ft.n with // assume ft is compressed. is there a compresser for typ'?
   | Typ_fun (bs, codomain) -> 
         let (bts, newC) = extractBindersTypes c bs in
         (let codomainML, erase = (extractComp  newC codomain) in 
-        if  (erasable c codomainML) 
+        if false//(erasableType c codomainML) 
         then erasedContent (*perhaps this is not needed, or should be done in a later phase*)
         else  (curry bts erase codomainML))
 

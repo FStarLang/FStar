@@ -167,3 +167,10 @@ let ev2 = EvSOdd (S O) (OddSEven O Ev0)
 type someLemmaStatement = nnat -> nnat -> Tot unit
 
 type trivialLemmaSatement = n:nnat -> m:nnat -> Lemma (add n m == add m n)
+
+
+val add0Comm :  n:nnat -> Lemma (add n O == add O n)
+let rec add0Comm n =
+match n with
+| O -> ()
+| S n' -> add0Comm n'

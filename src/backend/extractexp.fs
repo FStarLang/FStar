@@ -67,9 +67,12 @@ let ml_unit = MLE_Const MLC_Unit
 let ml_bool_ty = MLTY_Named ([], ([], "bool")) 
 
 
+let erasable (g:env)  (f:e_tag) (t:mlty) = 
+    f = MayErase && erasableType g t
+
 
 let erase (g:env) (e:mlexpr) (f:e_tag) (t:mlty) = 
-    if f = MayErase && erasable g t
+    if erasable g f t
     then ml_unit (*unit value*)
     else e
 
@@ -178,7 +181,8 @@ and check_exp' (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr =
       
 and synth_exp (g:env) (e:exp) : (mlexpr * e_tag * mlty) = 
     let e, f, t = synth_exp' g e in
-    erase g e f t, f, t // TODO: should we first check for erasability and only then bother synthesizing an expression?
+    erase g e f t, f, t 
+    // TODO: should we first check for erasability and only then bother synthesizing an expression? Perhaps not. the type and the tag get produced during sythesis
 
 (* Unlike the \epsilon function in the thesis, this also produced an ml type for the computed ML expression, 
  to avoid the need to infer them later, when less info is available*)
@@ -232,7 +236,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                   let e0 = coerce g e0 t0' t0 in // coerce the arguments of application, if they dont match up
                   synth_app is_data (mlhead, (e0, f0)::mlargs_f) (join_l [f;f';f0], t) rest
                   
-                | _ -> err_ill_typed_application e restArgs t in
+                | _ -> err_ill_typed_application e restArgs t in // this case is reached if extractTyp erases function types with erasable codomains, see add0Comm
                   
           let head = Util.compress_exp head in
           begin match head.n with 
