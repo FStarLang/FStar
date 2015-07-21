@@ -244,14 +244,15 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
             | Exp_fvar _ -> 
                //printfn "head of app is %A\n" head.n;
               let (head, (vars, t)), is_data = lookup_var g head in
-              //let _ = printfn "\n (*looked up tyscheme of \n %A \n as \n %A *) \n" head (vars,t) in
+              // let _ = printfn "\n (*looked up tyscheme of \n %A \n as \n %A *) \n" head (vars,t) in
               let n = List.length vars in
               if n <= List.length args
               then let prefix, rest = Util.first_N n args in
                    //let _ = (if n=1 then printfn "\n (*prefix was  \n %A \n  *) \n" prefix) in
                    let prefixAsMLTypes = (List.map (ExtractTyp.getTypeFromArg g) prefix) in
+                   // let _ = printfn "\n (*about to instantiate  \n %A \n with \n %A \n \n *) \n" (vars,t) prefixAsMLTypes in
                    let t = instantiate (vars, t) prefixAsMLTypes in
-                //   let _ = printfn "\n (*instantiating  \n %A \n with \n %A \n produced \n %A \n *) \n" (vars,t) prefixAsMLTypes t in
+                   // let _ = printfn "\n (*instantiating  \n %A \n with \n %A \n produced \n %A \n *) \n" (vars,t) prefixAsMLTypes t in
                    match rest with 
                     | [] -> head, MayErase, t
                     | _  -> synth_app is_data (head, []) (MayErase, t) rest
@@ -315,7 +316,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                              let targs = targs |> List.map (function (Inl a, _) -> a | _ -> failwith "Impossible") in
                              let env = List.fold_left (fun env a -> Env.extend_ty env a None) g targs in
                              let expected_t = translate_typ env expected_t in
-                             let polytype = targs |> List.map (fun a -> as_mlident a.v), expected_t in
+                             let polytype = targs |> List.map btvar_as_mlident, expected_t in
                              let body = mk_Exp_abs(unit_binder::rest_args, body) None e.pos in
                              (lbname, f_e, (t, (targs, polytype)), body)
 
@@ -353,6 +354,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
               let e = check_exp env e f (snd polytype) in
               f, (nm, Some polytype, [], e) in
 
+         (*after the above definitions, here is the main code for extracting let expressions*)
           let lbs = lbs |> List.map maybe_generalize in 
         
           let env_body, lbs = List.fold_right (fun lb (env, lbs) ->

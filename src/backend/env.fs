@@ -33,6 +33,8 @@ type env = {
     gamma:list<binding>;
     tydefs:list<mltydecl>; 
     erasableTypes : mlty -> bool; // Unit is not the only type that can be erased. We could erase inductive families which had only 1 element, or become so after extraction.
+      // perhaps instead of returning a bool, we can return option mlexpr , such that if t is erasable then (erasableTypes t) is Some e, then e is a dummy expression of type t.
+      // e.g. , (erasableTypes (nnat -> nnat -> Tot unit)) could be (Some (fun _ _ -> ()))
     currentModule: mlpath // needed to properly translate the definitions in the current file
 }
 
@@ -118,7 +120,7 @@ let ml_unit_ty = erasedContent
 
 let rec erasableType_init (t:mlty) =
 match  t with
-| MLTY_Fun (l, etag ,r) -> etag = MayErase && erasableType_init r // TODO : do we need to check etag here? it is checked just before erasing 
+//| MLTY_Fun (l, etag ,r) -> etag = MayErase && erasableType_init r // TODO : do we need to check etag here? it is checked just before erasing 
 | _ -> 
     if t = ml_unit_ty then true
     else match t with 
@@ -197,10 +199,32 @@ let extend_bv (g:env) (x:bvvar) (t_x:mltyscheme) : env =
     let tcenv = Env.push_local_binding g.tcenv (Env.Binding_var(x.v, x.sort)) in
     {g with gamma=gamma; tcenv=tcenv} 
 
+let rec mltyFvars (t: mlty) : list<mlident>  = 
+    match t with 
+    | MLTY_Var  x -> [x]
+    | MLTY_Fun (t1, f, t2) -> List.append (mltyFvars t1) (mltyFvars t2)
+    | MLTY_Named(args, path) -> List.collect mltyFvars args
+    | MLTY_Tuple ts -> List.collect mltyFvars ts
+    | MLTY_App(t1, t2) -> List.append (mltyFvars t1) (mltyFvars t2)
+    | MLTY_Top -> []
+
+let rec subsetMlidents (la : list<mlident>) (lb : list<mlident>)  : bool =
+    match la with
+    | h::tla -> List.contains h lb && subsetMlidents tla lb
+    | [] -> true
+
+let tySchemeIsClosed (tys : mltyscheme) : bool =
+    subsetMlidents  (mltyFvars (snd tys)) (fst tys)
+
 let extend_fv' (g:env) (x:fvvar) (y:mlpath) (t_x:mltyscheme) : env =
-    let gamma = Fv(x, y, t_x)::g.gamma in 
-    let tcenv = Env.push_local_binding g.tcenv (Env.Binding_lid(x.v, x.sort)) in
-    {g with gamma=gamma; tcenv=tcenv} 
+    if  (tySchemeIsClosed t_x)
+    then 
+        let gamma = Fv(x, y, t_x)::g.gamma in 
+        let tcenv = Env.push_local_binding g.tcenv (Env.Binding_lid(x.v, x.sort)) in
+        {g with gamma=gamma; tcenv=tcenv} 
+    else
+        let _ = printfn  "(* type scheme of \n %A \n is not closed: \n %A *) \n"  x.v.ident t_x in
+        failwith "freevars found"
 
 let extend_fv (g:env) (x:fvvar) (t_x:mltyscheme) : env =
     extend_fv' g x (mlpath_of_lident g.currentModule x.v) t_x

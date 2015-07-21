@@ -38,12 +38,12 @@ match (Util.compress_kind k).n with
 | Kind_abbrev(_, k) -> argIsExp k typeName
 | _ -> failwith ("unexpected signature of inductive type" ^ typeName) 
 
-let  numIndices (k:knd) (typeName : string) : int = List.length (argIsExp k typeName)
+let  numIndices (k:knd) (typeName : string (*this argument is just for debugging purposes*)) 
+  : int = List.length (argIsExp k typeName)
 
 (*used for completion of missing arguments to type constructors*)
 let mlty_of_isExp (b:bool) : mlty =
     if b then erasedContent else unknownType
-
 
 
 let delta_norm_eff = 
@@ -341,7 +341,7 @@ let rec extractSigElt (c:context) (s:sigelt) : context * mltydecl =
         let tyDecBody = MLTD_Abbrev (extractTyp c t) in
                 //printfn "type is %A\n" (t);
         let td = [(mlsymbolOfLident l, List.map mlTyIdentOfBinder bs , Some tyDecBody)] in
-        let c = Env.extend_tydef c td in
+        let c = Env.extend_tydef c td in // why is this needed?
         c, td
          (*type l idents = tyDecBody*)
          //Util.subst
