@@ -227,7 +227,12 @@ let extend_fv' (g:env) (x:fvvar) (y:mlpath) (t_x:mltyscheme) : env =
         failwith "freevars found"
 
 let extend_fv (g:env) (x:fvvar) (t_x:mltyscheme) : env =
-    extend_fv' g x (mlpath_of_lident g.currentModule x.v) t_x
+    let mlp = (mlpath_of_lident g.currentModule x.v) in 
+    // the mlpath cannot be determined here. it can be determined at use site, depending on the name of the module where it is used
+    // so this conversion should be moved to lookup_fv
+
+    //let _ = printfn "(* old name  \n %A \n new name \n %A \n name in dependent module \n %A \n *) \n"  (Backends.ML.Syntax.mlpath_of_lident x.v) mlp (mlpath_of_lident ([],"SomeDepMod") x.v) in
+    extend_fv' g x mlp t_x
 
 let extend_lb (g:env) (l:lbname) (t:typ) (t_x:mltyscheme) : (env * mlident) = 
     match l with 
