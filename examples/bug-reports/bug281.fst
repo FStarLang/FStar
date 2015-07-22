@@ -50,16 +50,16 @@ val lemma : s:sub -> e:exp -> Lemma (esubst (sub_elam s) (eesh e)
                                    = eesh (esubst s e))
 let lemma s e = admit()
 
-(* Succeeds after ~2-6sec *)
-(* Commenting this out makes plouf2 below work! *)
+(* Succeeds after ~2-6sec
 opaque val plouf1 : s:sub -> f:exp -> Tot unit
 let plouf1 s f =lemma (sub_elam (sub_elam s)) (eesh (eesh f));
                 lemma (sub_elam s) (eesh f);
                 lemma (s) (f);
                 assert(esubst (sub_elam (sub_elam (sub_elam s))) (test f)
                      = test (esubst s f))
+*)
 
-(* This takes around ~60 seconds to fail, or rarely to succeed *)
+(* This takes around ~60 seconds to fail, or sometimes to succeed *)
 val plouf2 : s:sub -> f :exp ->
   Lemma (esubst (sub_elam (sub_elam (sub_elam s))) (test f) = test (esubst s f))
 let plouf2 s f =lemma (sub_elam (sub_elam s)) (eesh (eesh f));

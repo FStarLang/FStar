@@ -121,33 +121,21 @@ let unary_type_op_to_string = (fun ( t ) -> (find_lid (get_type_lid t) unary_typ
 
 let quant_to_string = (fun ( t ) -> (find_lid (get_type_lid t) quants))
 
-let rec sli = (fun ( l ) -> (match (l.Microsoft_FStar_Absyn_Syntax.ns) with
-| hd::tl when (hd.Microsoft_FStar_Absyn_Syntax.idText = "Prims") -> begin
-(match (tl) with
-| [] -> begin
-l.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText
-end
-| _ -> begin
-(Support.String.strcat (Support.String.strcat ((Support.String.concat ".") (Support.List.map (fun ( i ) -> i.Microsoft_FStar_Absyn_Syntax.idText) tl)) ".") l.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText)
-end)
-end
-| _ -> begin
-if (! (Microsoft_FStar_Options.print_real_names)) then begin
+let rec sli = (fun ( l ) -> if (! (Microsoft_FStar_Options.print_real_names)) then begin
 l.Microsoft_FStar_Absyn_Syntax.str
 end else begin
 l.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText
-end
-end))
+end)
 
 let strBvd = (fun ( bvd ) -> if (! (Microsoft_FStar_Options.print_real_names)) then begin
 (Support.String.strcat bvd.Microsoft_FStar_Absyn_Syntax.ppname.Microsoft_FStar_Absyn_Syntax.idText bvd.Microsoft_FStar_Absyn_Syntax.realname.Microsoft_FStar_Absyn_Syntax.idText)
 end else begin
 if ((! (Microsoft_FStar_Options.hide_genident_nums)) && (Support.Microsoft.FStar.Util.starts_with bvd.Microsoft_FStar_Absyn_Syntax.ppname.Microsoft_FStar_Absyn_Syntax.idText "_")) then begin
-(Support.Prims.try_with (fun ( _19_114 ) -> (match (_19_114) with
+(Support.Prims.try_with (fun ( _19_105 ) -> (match (_19_105) with
 | () -> begin
-(let _19_120 = (Support.Microsoft.FStar.Util.int_of_string (Support.Microsoft.FStar.Util.substring_from bvd.Microsoft_FStar_Absyn_Syntax.ppname.Microsoft_FStar_Absyn_Syntax.idText 1))
+(let _19_111 = (Support.Microsoft.FStar.Util.int_of_string (Support.Microsoft.FStar.Util.substring_from bvd.Microsoft_FStar_Absyn_Syntax.ppname.Microsoft_FStar_Absyn_Syntax.idText 1))
 in "_?")
-end)) (fun ( _19_113 ) -> bvd.Microsoft_FStar_Absyn_Syntax.ppname.Microsoft_FStar_Absyn_Syntax.idText))
+end)) (fun ( _19_104 ) -> bvd.Microsoft_FStar_Absyn_Syntax.ppname.Microsoft_FStar_Absyn_Syntax.idText))
 end else begin
 bvd.Microsoft_FStar_Absyn_Syntax.ppname.Microsoft_FStar_Absyn_Syntax.idText
 end
@@ -385,7 +373,7 @@ end
 (typ_to_string t)
 end)
 end)))
-and uvar_t_to_string = (fun ( _19_333 ) -> (match (_19_333) with
+and uvar_t_to_string = (fun ( _19_324 ) -> (match (_19_324) with
 | (uv, k) -> begin
 if (false && (! (Microsoft_FStar_Options.print_real_names))) then begin
 (Support.Microsoft.FStar.Util.format2 "(U%s : %s)" (if (! (Microsoft_FStar_Options.hide_uvar_nums)) then begin
@@ -511,7 +499,7 @@ end
 (formula_to_string wp)
 end))
 and formula_to_string = (fun ( phi ) -> (typ_to_string phi))
-and formula_to_string_old_now_unused = (fun ( phi ) -> (let const_op = (fun ( f ) ( _19_404 ) -> f)
+and formula_to_string_old_now_unused = (fun ( phi ) -> (let const_op = (fun ( f ) ( _19_395 ) -> f)
 in (let un_op = (fun ( f ) ( _19_11 ) -> (match (_19_11) with
 | (Support.Microsoft.FStar.Util.Inl (t), _)::[] -> begin
 (Support.Microsoft.FStar.Util.format2 "%s %s" f (formula_to_string t))
@@ -567,7 +555,7 @@ in (match ((Microsoft_FStar_Absyn_Util.destruct_typ_as_formula phi)) with
 (fallback phi)
 end
 | Some (Microsoft_FStar_Absyn_Util.BaseConn ((op, arms))) -> begin
-(match (((Support.List.tryFind (fun ( _19_523 ) -> (match (_19_523) with
+(match (((Support.List.tryFind (fun ( _19_514 ) -> (match (_19_514) with
 | (l, _) -> begin
 (Microsoft_FStar_Absyn_Syntax.lid_equals op l)
 end))) connectives)) with
@@ -636,7 +624,7 @@ end)
 end))
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_match ((e, pats)) -> begin
-(Support.Microsoft.FStar.Util.format2 "(match %s with %s)" (exp_to_string e) (Support.Microsoft.FStar.Util.concat_l "\n\t" ((Support.List.map (fun ( _19_596 ) -> (match (_19_596) with
+(Support.Microsoft.FStar.Util.format2 "(match %s with %s)" (exp_to_string e) (Support.Microsoft.FStar.Util.concat_l "\n\t" ((Support.List.map (fun ( _19_587 ) -> (match (_19_587) with
 | (p, wopt, e) -> begin
 (Support.Microsoft.FStar.Util.format3 "%s %s -> %s" (pat_to_string p) (match (wopt) with
 | None -> begin
@@ -653,7 +641,7 @@ end
 | Microsoft_FStar_Absyn_Syntax.Exp_let ((lbs, e)) -> begin
 (Support.Microsoft.FStar.Util.format2 "%s in %s" (lbs_to_string lbs) (exp_to_string e))
 end))
-and uvar_e_to_string = (fun ( _19_613 ) -> (match (_19_613) with
+and uvar_e_to_string = (fun ( _19_604 ) -> (match (_19_604) with
 | (uv, _) -> begin
 (Support.String.strcat "\'e" (if (! (Microsoft_FStar_Options.hide_uvar_nums)) then begin
 "?"
@@ -731,7 +719,7 @@ and uvar_k_to_string = (fun ( uv ) -> (Support.String.strcat "\'k_" (if (! (Micr
 end else begin
 (Support.Microsoft.FStar.Util.string_of_int (Support.Microsoft.FStar.Unionfind.uvar_id uv))
 end)))
-and uvar_k_to_string' = (fun ( _19_686 ) -> (match (_19_686) with
+and uvar_k_to_string' = (fun ( _19_677 ) -> (match (_19_677) with
 | (uv, args) -> begin
 (let str = if (! (Microsoft_FStar_Options.hide_uvar_nums)) then begin
 "?"

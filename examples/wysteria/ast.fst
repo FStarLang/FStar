@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi OrdSet --admit_fsi OrdMap --z3timeout 10;
+    options:--admit_fsi OrdSet --admit_fsi OrdMap;
     variables:LIB=../../lib;
     other-files:$LIB/ordset.fsi $LIB/ordmap.fsi $LIB/list.fst $LIB/constr.fst $LIB/ext.fst $LIB/classical.fst
  --*)
@@ -32,17 +32,18 @@ type const =
   | C_bool : c:bool -> const
 
 type exp' =
-  | E_aspar : ps:exp -> e:exp -> exp'
-  | E_assec : ps:exp -> e:exp -> exp'
-  | E_unbox : e:exp  -> exp'
-  | E_mkwire: e1:exp -> e2:exp -> exp'
+  | E_aspar   : ps:exp -> e:exp -> exp'
+  | E_assec   : ps:exp -> e:exp -> exp'
+  | E_unbox   : e:exp  -> exp'
+  | E_mkwire  : e1:exp -> e2:exp -> exp'
+  | E_projwire: e1:exp -> e2:exp -> exp'
 
-  | E_const : c:const -> exp'
-  | E_var   : x:varname -> exp'
-  | E_let   : x:varname -> e1:exp -> e2:exp -> exp'
-  | E_abs   : x:varname -> e:exp -> exp'
-  | E_empabs: x:varname -> e:exp -> exp'
-  | E_app   : e1:exp -> e2:exp -> exp'
+  | E_const   : c:const -> exp'
+  | E_var     : x:varname -> exp'
+  | E_let     : x:varname -> e1:exp -> e2:exp -> exp'
+  | E_abs     : x:varname -> e:exp -> exp'
+  | E_empabs  : x:varname -> e:exp -> exp'
+  | E_app     : e1:exp -> e2:exp -> exp'
 
 and exp =
   | Exp: e:exp' -> info:option other_info -> exp
@@ -78,14 +79,15 @@ and env = varname -> Tot (option dvalue)
 assume val preceds_axiom: en:env -> x:varname -> Lemma (ensures (en x << en))
 
 type redex =
-  | R_aspar : #meta:v_meta -> ps:prins -> v:value meta -> redex
-  | R_assec : #meta:v_meta -> ps:prins -> v:value meta -> redex
-  | R_box   : #meta:v_meta -> ps:prins -> v:value meta -> redex
-  | R_unbox : #meta:v_meta -> v:value meta -> redex
-  | R_mkwire: #mps:v_meta -> #mv:v_meta -> vps:value mps -> v:value mv -> redex
-  | R_let   : #meta:v_meta -> x:varname -> v:value meta -> e:exp -> redex
-  | R_app   : #meta1:v_meta -> #meta2:v_meta -> v1:value meta1 -> v2:value meta2
-              -> redex
+  | R_aspar   : #meta:v_meta -> ps:prins -> v:value meta -> redex
+  | R_assec   : #meta:v_meta -> ps:prins -> v:value meta -> redex
+  | R_box     : #meta:v_meta -> ps:prins -> v:value meta -> redex
+  | R_unbox   : #meta:v_meta -> v:value meta -> redex
+  | R_mkwire  : #mps:v_meta -> #mv:v_meta -> vps:value mps -> v:value mv -> redex
+  | R_projwire: #meta:v_meta -> p:prin -> v:value meta -> redex
+  | R_let     : #meta:v_meta -> x:varname -> v:value meta -> e:exp -> redex
+  | R_app     : #meta1:v_meta -> #meta2:v_meta -> v1:value meta1 -> v2:value meta2
+                -> redex
 
 val empty_env: env
 let empty_env = fun _ -> None
@@ -101,18 +103,20 @@ type mode =
   | Mode: m:as_mode -> ps:prins -> mode
 
 type frame' =
-  | F_aspar_ps : e:exp -> frame'
-  | F_aspar_e  : ps:prins -> frame'
-  | F_assec_ps : e:exp -> frame'
-  | F_assec_e  : ps:prins -> frame'
-  | F_assec_ret: frame'
-  | F_box_e    : ps:prins -> frame'
-  | F_unbox    : frame'
-  | F_mkwire_ps: e:exp -> frame'
-  | F_mkwire_e : #meta:v_meta -> v:value meta -> frame'
-  | F_let      : x:varname -> e2:exp -> frame'
-  | F_app_e1   : e2:exp -> frame'
-  | F_app_e2   : #meta:v_meta -> v:value meta -> frame'
+  | F_aspar_ps  : e:exp -> frame'
+  | F_aspar_e   : ps:prins -> frame'
+  | F_assec_ps  : e:exp -> frame'
+  | F_assec_e   : ps:prins -> frame'
+  | F_assec_ret : frame'
+  | F_box_e     : ps:prins -> frame'
+  | F_unbox     : frame'
+  | F_mkwire_ps : e:exp -> frame'
+  | F_mkwire_e  : #meta:v_meta -> v:value meta -> frame'
+  | F_projwire_p: e:exp -> frame'
+  | F_projwire_e: p:prin -> frame'
+  | F_let       : x:varname -> e2:exp -> frame'
+  | F_app_e1    : e2:exp -> frame'
+  | F_app_e2    : #meta:v_meta -> v:value meta -> frame'
 
 type frame =
   | Frame: m:mode -> en:env -> f:frame'-> frame
@@ -190,12 +194,21 @@ let is_value_ps c = match c with
   | Conf _ _ _ _ (T_val (V_const (C_prins _))) -> true
   | _                                          -> false
 
+val is_value_p: c:config -> Tot bool
+let is_value_p c = match c with
+  | Conf _ _ _ _ (T_val (V_const (C_prin _))) -> true
+  | _                                         -> false
+
 val c_value: c:config{is_value c} -> Tot dvalue
 let c_value (Conf _ _ _ _ (T_val #meta v)) = D_v meta v
 
 val c_value_ps: c:config{is_value_ps c} -> Tot prins
 let c_value_ps c = match c with
   | Conf _ _ _ _ (T_val (V_const (C_prins ps))) -> ps
+
+val c_value_p: c:config{is_value_p c} -> Tot prin
+let c_value_p c = match c with
+  | Conf _ _ _ _ (T_val (V_const (C_prin p))) -> p
 
 val is_par: config -> Tot bool
 let is_par c = is_Par (Mode.m (Conf.m c))
@@ -231,6 +244,9 @@ type pre_eunbox (c:config) =
 type pre_emkwire (c:config) =
   is_T_exp (Conf.t c) /\ is_E_mkwire (Exp.e (T_exp.e (Conf.t c)))
 
+type pre_eprojwire (c:config) =
+  is_T_exp (Conf.t c) /\ is_E_projwire (Exp.e (T_exp.e (Conf.t c)))
+
 (* pre returns comp, for src it's never Skip *)
 type comp = | Do | Skip | NA
 
@@ -245,6 +261,10 @@ let step_unbox_e (Conf l m s en (T_exp (Exp (E_unbox e) _))) =
 val step_mkwire_e1: c:config{pre_emkwire c} -> Tot config
 let step_mkwire_e1 (Conf l m s en (T_exp (Exp (E_mkwire e1 e2) _))) =
   Conf l m ((Frame m en (F_mkwire_ps e2))::s) en (T_exp e1)
+
+val step_projwire_e1: c:config{pre_eprojwire c} -> Tot config
+let step_projwire_e1 (Conf l m s en (T_exp (Exp (E_projwire e1 e2) _))) =
+  Conf l m ((Frame m en (F_projwire_p e2))::s) en (T_exp e1)
 
 val step_const: c:config{pre_econst c} -> Tot config
 let step_const (Conf l m s en (T_exp (Exp (E_const c) _))) =
@@ -283,6 +303,12 @@ let step_mkwire_e2 (Conf l _ ((Frame m en (F_mkwire_ps e))::s) _
                          (T_val v)) =
   Conf l m ((Frame m en (F_mkwire_e v))::s) en (T_exp e)
 
+val step_projwire_e2: c:config{is_value_p c /\ is_sframe c is_F_projwire_p}
+                      -> Tot config
+let step_projwire_e2 (Conf l _ ((Frame m en (F_projwire_p e))::s) _
+                           (T_val (V_const (C_prin p)))) =
+  Conf l m ((Frame m en (F_projwire_e p))::s) en (T_exp e)
+
 val step_app_e2: c:config{is_value c /\ is_sframe c is_F_app_e1}
                  -> Tot config
 let step_app_e2 (Conf l _ ((Frame m en (F_app_e1 e2))::s) _ (T_val v)) =
@@ -302,6 +328,11 @@ val step_unbox_red: c:config{is_value c /\ is_sframe c is_F_unbox}
                   -> Tot config
 let step_unbox_red (Conf l _ ((Frame m en F_unbox)::s) _ (T_val v)) =
   Conf l m s en (T_red (R_unbox v))
+
+val step_projwire_red: c:config{is_value c /\ is_sframe c is_F_projwire_e}
+                       -> Tot config
+let step_projwire_red (Conf l _ ((Frame m en (F_projwire_e p))::s) _ (T_val v)) =
+  Conf l m s en (T_red (R_projwire p v))
 
 val step_mkwire_red: c:config{is_value c /\ is_sframe c is_F_mkwire_e}
                      -> Tot config
@@ -426,6 +457,21 @@ let step_mkwire c = match c with
 
   | Conf l (Mode Sec ps) s en (T_red (R_mkwire (V_box _ (V_const (C_prins ps''))) v)) ->
     Conf l (Mode Sec ps) s en (T_val (V_wire ps'' (const_on ps'' v)))
+
+val pre_projwire: config -> Tot comp
+let pre_projwire c = match c with
+  | Conf _ (Mode as_m ps) _ _ (T_red (R_projwire p (V_wire eps _))) ->
+    if as_m = Par then
+      if ps = singleton p && mem p eps then Do else NA
+    else
+      if mem p ps && mem p eps then Do else NA
+    
+  | _ -> NA
+
+val step_projwire: c:config{pre_projwire c = Do} -> Tot config
+let step_projwire c = match c with
+  | Conf l m s en (T_red (R_projwire p (V_wire _ w))) ->
+    Conf l m s en (T_val (Some.v (select p w)))
     
 val is_let_redex: c:config -> Tot bool
 let is_let_redex c = match c with
@@ -503,6 +549,10 @@ type sstep: config -> config -> Type =
     c:config{pre_emkwire c} -> c':config{c' = step_mkwire_e1 c}
     -> sstep c c'
 
+  | C_projwire:
+    c:config{pre_eprojwire c} -> c':config{c' = step_projwire_e1 c}
+    -> sstep c c'
+
   | C_const:
     c:config{pre_econst c} -> c':config{c' = step_const c}
     -> sstep c c'
@@ -536,6 +586,11 @@ type sstep: config -> config -> Type =
     c:config{is_value c /\ is_sframe c is_F_mkwire_ps}
     -> c':config{c' = step_mkwire_e2 c}
     -> sstep c c'
+  
+  | C_projwire_e:
+    c:config{is_value_p c /\ is_sframe c is_F_projwire_p}
+    -> c':config{c' = step_projwire_e2 c}
+    -> sstep c c'
 
   | C_app_e2:
     c:config{is_value c /\ is_sframe c is_F_app_e1}
@@ -560,6 +615,11 @@ type sstep: config -> config -> Type =
   | C_mkwire_red:
     c:config{is_value c /\ is_sframe c is_F_mkwire_e}
     -> c':config{c' = step_mkwire_red c}
+    -> sstep c c'
+    
+  | C_projwire_red:
+    c:config{is_value c /\ is_sframe c is_F_projwire_e}
+    -> c':config{c' = step_projwire_red c}
     -> sstep c c'
 
   | C_let_red:
@@ -593,6 +653,10 @@ type sstep: config -> config -> Type =
     c:config{pre_mkwire c = Do} -> c':config{c' = step_mkwire c}
     -> sstep c c'
     
+  | C_projwire_beta:
+    c:config{pre_projwire c = Do} -> c':config{c' = step_projwire c}
+    -> sstep c c'
+    
   | C_assec_ps:
     c:config{pre_eassec c} -> c':config{c' = step_assec_e1 c}
     -> sstep c c'
@@ -621,37 +685,31 @@ type sstep: config -> config -> Type =
 type slice_v_meta_inv (meta:v_meta) (smeta:v_meta) =
   subset (fst smeta) (fst meta) && (snd smeta = snd meta)
 
-(*opaque val slice_wire_sps:
-  #eps:eprins -> ps:prins -> m:v_wire eps
+opaque val slice_wire_sps:
+  #eps:eprins -> ps:prins -> w:v_wire eps
   -> Tot (r:v_wire (intersect eps ps)
             {forall p. contains p r ==>
-                       Some.v (select p r) = D_v.v (slice_v_sps ps (Some.v (select p m)))})
+                       Some.v (select p r) = (Some.v (select p w))})
      (decreases (size ps))
-let rec slice_wire_sps #eps ps m =
+let rec slice_wire_sps #eps ps w =
   let Some p = choose ps in
   let ps_rest = remove p ps in
   if ps_rest = empty then
     if mem p eps then
-      update p (D_v.v (Some.v (select p m))) (OrdMap.empty)
+      update p (Some.v (select p w)) OrdMap.empty
     else OrdMap.empty
   else
-    let m' = slice_wire_sps #eps ps_rest m in
+    let w' = slice_wire_sps #eps ps_rest w in
     if mem p eps then
-      update p (Some.v (select p m)) m'
-    else m'*)
+      update p (Some.v (select p w)) w'
+    else w'
 
-assume val wire_preceds_axiom: #eps:eprins -> w:v_wire eps -> p:prin -> Lemma (ensures (select p w << w))
-
-assume val dummy_f: eps:eprins -> ps:prins -> m:v_wire eps -> Tot nat    
-
-(* TODO: FIXME: Can we make slice_wire_sps opaque somehow *)
 val slice_v_sps : #meta:v_meta -> prins -> v:value meta
-                  -> Tot (r:dvalue{slice_v_meta_inv meta (D_v.meta r)}) (decreases %[v])
-val slice_wire_sps: #eps:eprins -> ps:prins -> m:v_wire eps
-                           -> Tot (v_wire (intersect eps ps))
-                              (decreases %[m; size ps])
-val slice_en_sps: prins -> en:env -> Tot (varname -> Tot (option dvalue)) (decreases %[en])
-
+                  -> Tot (r:dvalue{slice_v_meta_inv meta (D_v.meta r)})
+                     (decreases %[v])
+val slice_en_sps: prins -> en:env
+                  -> Tot (varname -> Tot (option dvalue))
+                     (decreases %[en])
 let rec slice_v_sps #meta ps v =
   let def = D_v meta v in
   let emp = D_v (empty, Can_b) V_emp in
@@ -672,20 +730,6 @@ let rec slice_v_sps #meta ps v =
    | V_emp_clos _ _ -> def
 
    | V_emp          -> emp
-
-and slice_wire_sps #eps ps m =
-  let Some p = choose ps in
-  let ps_rest = remove p ps in
-  if ps_rest = empty then
-    if mem p eps then
-      let _ = wire_preceds_axiom #eps m p in
-      update p (D_v.v (slice_v_sps ps (Some.v (select p m)))) (OrdMap.empty)
-    else OrdMap.empty
-  else
-    let m' = slice_wire_sps #eps ps_rest m in
-    if mem p eps then
-      update p (Some.v (select p m)) m'
-    else m'
 
 and slice_en_sps ps en =
  let _ = () in
@@ -712,20 +756,23 @@ let slice_r_sps ps r = match r with
   | R_assec ps' v  -> R_assec ps' (D_v.v (slice_v_sps ps v))
   | R_unbox v      -> R_unbox (D_v.v (slice_v_sps ps v))
   | R_mkwire v1 v2 -> R_mkwire (D_v.v (slice_v_sps ps v1)) (D_v.v (slice_v_sps ps v2))
+  | R_projwire p v -> R_projwire p (D_v.v (slice_v_sps ps v))
   | R_let x v1 e2  -> R_let x (D_v.v (slice_v_sps ps v1)) e2
   | R_app v1 v2    -> R_app (D_v.v (slice_v_sps ps v1)) (D_v.v (slice_v_sps ps v2))
 
 val slice_f'_sps: ps:prins -> f:frame'{is_sec_frame f} -> Tot frame'
 let slice_f'_sps ps f = match f with
-  | F_assec_ps _  -> f
-  | F_assec_e  _  -> f
-  | F_assec_ret   -> f
-  | F_unbox       -> f
-  | F_mkwire_ps _ -> f
-  | F_mkwire_e  v -> F_mkwire_e (D_v.v (slice_v_sps ps v))
-  | F_let    _ _  -> f
-  | F_app_e1   _  -> f
-  | F_app_e2   v  -> F_app_e2  (D_v.v (slice_v_sps ps v))
+  | F_assec_ps   _ -> f
+  | F_assec_e    _ -> f
+  | F_assec_ret    -> f
+  | F_unbox        -> f
+  | F_mkwire_ps  _ -> f
+  | F_mkwire_e   v -> F_mkwire_e (D_v.v (slice_v_sps ps v))
+  | F_projwire_p _ -> f
+  | F_projwire_e _ -> f
+  | F_let      _ _ -> f
+  | F_app_e1     _ -> f
+  | F_app_e2     v -> F_app_e2  (D_v.v (slice_v_sps ps v))
 
 val slice_f_sps: ps:prins -> f:frame{Frame.m f = Mode Sec ps /\
                                      is_sec_frame (Frame.f f)}
@@ -769,72 +816,25 @@ open Constructive
 val if_exit_sec_then_to_sec: #c:sconfig -> #c':config -> h:sstep c c' -> Tot bool
 let if_exit_sec_then_to_sec #c #c' h = not (is_C_assec_ret h) || is_sec c'
 
-(*val meta_empty_can_b_same_slice: v:value (empty, Can_b) -> ps:prins
-                                 -> Lemma (requires (True))
-                                          (ensures (D_v.v (slice_v_sps ps v) = v))
-let meta_empty_can_b_same_slice v ps = ()
-
-val slice_wire_sps_lemma_no_slice:
-  ps:prins -> ps'':prins{subset ps'' ps} -> v:value (empty, Can_b)
-  -> Lemma (requires (True))
-           (ensures (slice_wire_sps #ps'' ps (const_on ps'' v) =
-                     const_on ps'' v))
-let slice_wire_sps_lemma_no_slice ps ps'' v =
-  let m = const_on ps'' v in
-  let m_s = slice_wire_sps #ps'' ps m in
-  
-  let _ = cut (forall p. mem p ps'' ==> select p m = Some v) in
-  let _ = cut (forall p. not (mem p ps'') ==> select p m = None) in
-
-  let _ = cut (b2t (intersect ps'' ps = ps'')) in
-  
-  let _ = cut (forall p. mem p ps'' ==> select p m_s = Some v) in
-  let _ = cut (forall p. not (mem p ps'') ==> select p m_s = None) in
-  
-  OrdMap.eq_lemma m m_s*)
-
-(*val slice_wire_sps_lemma:
-  ps:prins -> ps'':prins{subset ps'' ps} -> v:value (empty, Can_b)
-  -> Lemma (requires (True))
-           (ensures (slice_wire_sps #ps'' ps (const_on ps'' v) =
-                     const_on ps'' (D_v.v (slice_v_sps ps v))))
-let slice_wire_sps_lemma ps ps'' v =
-  slice_wire_sps_lemma_no_slice ps ps'' v;
-  meta_empty_can_b_same_slice v ps*)
-
-val slice_wire_sps_lemma:
-  #eps:eprins -> ps:prins -> w:v_wire eps
-  -> Lemma (requires (True))
-           (ensures (forall p. contains p (slice_wire_sps #eps ps w) ==>
-                               Some.v (select p (slice_wire_sps #eps ps w)) =
-                               D_v.v (slice_v_sps ps (Some.v (select p w)))))
-     (decreases (size ps))
-let rec slice_wire_sps_lemma #eps ps w =
-  let Some p = choose ps in
-  let ps_rest = remove p ps in
-  if ps_rest = empty then ()
-  else
-    slice_wire_sps_lemma #eps ps_rest w
-
-val slice_wire_sps_const_on_lemma:
-  ps:prins -> ps'':eprins{subset ps'' ps} -> v:value (empty, Can_b)
-  -> Lemma (requires (True))
-           (ensures (slice_wire_sps #ps'' ps (const_on ps'' v) =
-                     const_on ps'' (D_v.v (slice_v_sps ps v))))
-     (decreases (size ps''))
-     [SMTPat (slice_wire_sps #ps'' ps (const_on ps'' v))]
-let rec slice_wire_sps_const_on_lemma ps ps'' v =
-  if ps'' = empty then ()
-  else
-    let _ = slice_wire_sps_lemma #ps'' ps (const_on ps'' v) in
-    let Some p = choose ps'' in
-    slice_wire_sps_const_on_lemma ps (remove p ps'') v
-  
 val subset_intersect_lemma: ps1:prins -> ps2:prins{subset ps2 ps1}
                             -> Lemma (requires (True))
                                      (ensures (intersect ps2 ps1 = ps2))
-                               [SMTPat (subset ps2 ps1); SMTPat (intersect ps2 ps1)]
+                               //[SMTPat (subset ps2 ps1); SMTPat (intersect ps2 ps1)]
 let subset_intersect_lemma ps1 ps2 = ()
+
+val meta_empty_can_b_same_slice: v:value (empty, Can_b) -> ps:prins
+                                 -> Lemma (requires (True))
+                                          (ensures (D_v.v (slice_v_sps ps v) = v))
+                                    //[SMTPat (slice_v_sps #(empty, Can_b) ps v)]
+let meta_empty_can_b_same_slice v ps = ()
+
+val slice_wire_sps_lemma:
+  ps:prins -> ps'':prins{subset ps'' ps} -> v:value (empty, Can_b)
+  -> Lemma (requires (True))
+           (ensures (slice_wire_sps #ps'' ps (const_on ps'' v) =
+                     const_on ps'' (D_v.v (slice_v_sps ps v))))
+     //[SMTPat (slice_wire_sps #ps'' ps (const_on ps'' v))]
+let slice_wire_sps_lemma ps ps'' v = ()
 
 opaque val sstep_sec_slice_lemma: c:sconfig{is_sec c}
                                   -> c':sconfig -> h:sstep c c'{if_exit_sec_then_to_sec h}
@@ -842,40 +842,52 @@ opaque val sstep_sec_slice_lemma: c:sconfig{is_sec c}
                                                (sstep (slice_c_sps c) (slice_c_sps c')))
 #set-options "--split_cases 1"
 let sstep_sec_slice_lemma c c' h = match h with
-  | C_unbox c c'       -> Conj () (C_unbox (slice_c_sps c) (slice_c_sps c'))
-  | C_mkwire c c'      -> Conj () (C_mkwire (slice_c_sps c) (slice_c_sps c'))
-  | C_const c c'       -> Conj () (C_const (slice_c_sps c) (slice_c_sps c'))
-  | C_var c c'         -> Conj () (C_var (slice_c_sps c) (slice_c_sps c'))
-  | C_let_e1 c c'      -> Conj () (C_let_e1 (slice_c_sps c) (slice_c_sps c'))
-  | C_abs c c'         -> Conj () (C_abs (slice_c_sps c) (slice_c_sps c'))
-  | C_empabs c c'      -> Conj () (C_empabs (slice_c_sps c) (slice_c_sps c'))
-  | C_app_e1 c c'      -> Conj () (C_app_e1 (slice_c_sps c) (slice_c_sps c'))
-  | C_mkwire_e c c'    -> Conj () (C_mkwire_e (slice_c_sps c) (slice_c_sps c'))
-  | C_app_e2 c c'      -> Conj () (C_app_e2 (slice_c_sps c) (slice_c_sps c'))
-  | C_unbox_red c c'   -> Conj () (C_unbox_red (slice_c_sps c) (slice_c_sps c'))
-  | C_mkwire_red c c'  -> Conj () (C_mkwire_red (slice_c_sps c) (slice_c_sps c'))
-  | C_let_red c c'     -> Conj () (C_let_red (slice_c_sps c) (slice_c_sps c'))
-  | C_app_red c c'     -> Conj () (C_app_red (slice_c_sps c) (slice_c_sps c'))
-  | C_let_beta c c'    -> Conj () (C_let_beta (slice_c_sps c) (slice_c_sps c'))
-  | C_app_beta c c'    -> Conj () (C_app_beta (slice_c_sps c) (slice_c_sps c'))
-  | C_unbox_beta c c'  -> Conj () (C_unbox_beta (slice_c_sps c) (slice_c_sps c'))
-  | C_mkwire_beta c c' ->
-    let Conf _ (Mode _ ps) _ _
-             (T_red (R_mkwire (V_box _ (V_const (C_prins ps''))) v)) = c in
+  | C_unbox c c'         -> Conj () (C_unbox (slice_c_sps c) (slice_c_sps c'))
+  | C_mkwire c c'        -> Conj () (C_mkwire (slice_c_sps c) (slice_c_sps c'))
+  | C_projwire c c'      -> Conj () (C_projwire (slice_c_sps c) (slice_c_sps c'))
+  | C_const c c'         -> Conj () (C_const (slice_c_sps c) (slice_c_sps c'))
+  | C_var c c'           -> Conj () (C_var (slice_c_sps c) (slice_c_sps c'))
+  | C_let_e1 c c'        -> Conj () (C_let_e1 (slice_c_sps c) (slice_c_sps c'))
+  | C_abs c c'           -> Conj () (C_abs (slice_c_sps c) (slice_c_sps c'))
+  | C_empabs c c'        -> Conj () (C_empabs (slice_c_sps c) (slice_c_sps c'))
+  | C_app_e1 c c'        -> Conj () (C_app_e1 (slice_c_sps c) (slice_c_sps c'))
+  | C_mkwire_e c c'      -> Conj () (C_mkwire_e (slice_c_sps c) (slice_c_sps c'))
+  | C_projwire_e c c'    -> Conj () (C_projwire_e (slice_c_sps c) (slice_c_sps c'))
+  | C_app_e2 c c'        -> Conj () (C_app_e2 (slice_c_sps c) (slice_c_sps c'))
+  | C_unbox_red c c'     -> Conj () (C_unbox_red (slice_c_sps c) (slice_c_sps c'))
+  | C_mkwire_red c c'    -> Conj () (C_mkwire_red (slice_c_sps c) (slice_c_sps c'))
+  | C_projwire_red c c'  -> Conj () (C_projwire_red (slice_c_sps c) (slice_c_sps c'))
+  | C_let_red c c'       -> Conj () (C_let_red (slice_c_sps c) (slice_c_sps c'))
+  | C_app_red c c'       -> Conj () (C_app_red (slice_c_sps c) (slice_c_sps c'))
+  | C_let_beta c c'      -> Conj () (C_let_beta (slice_c_sps c) (slice_c_sps c'))
+  | C_app_beta c c'      -> Conj () (C_app_beta (slice_c_sps c) (slice_c_sps c'))
+  | C_unbox_beta c c'    -> Conj () (C_unbox_beta (slice_c_sps c) (slice_c_sps c'))
+  | C_mkwire_beta c c'   ->
+    let Conf _ (Mode _ ps) _ _ (T_red (R_mkwire (V_box _ (V_const (C_prins ps''))) v)) = c in
+    subset_intersect_lemma ps ps'';
+    meta_empty_can_b_same_slice v ps;
+    slice_wire_sps_lemma ps ps'' v;
     Conj () (C_mkwire_beta (slice_c_sps c) (slice_c_sps c'))
-  | C_assec_ps c c'    -> Conj () (C_assec_ps (slice_c_sps c) (slice_c_sps c'))
-  | C_assec_e c c'     -> Conj () (C_assec_e (slice_c_sps c) (slice_c_sps c'))
-  | C_assec_red c c'   -> Conj () (C_assec_red (slice_c_sps c) (slice_c_sps c'))
-  | C_assec_beta c c'  -> Conj () (C_assec_beta (slice_c_sps c) (slice_c_sps c'))
-  | C_assec_ret c c'   -> Conj () (C_assec_ret (slice_c_sps c) (slice_c_sps c'))
+  | C_projwire_beta c c' -> Conj () (C_projwire_beta (slice_c_sps c) (slice_c_sps c'))
+  | C_assec_ps c c'      -> Conj () (C_assec_ps (slice_c_sps c) (slice_c_sps c'))
+  | C_assec_e c c'       -> Conj () (C_assec_e (slice_c_sps c) (slice_c_sps c'))
+  | C_assec_red c c'     -> Conj () (C_assec_red (slice_c_sps c) (slice_c_sps c'))
+  | C_assec_beta c c'    -> Conj () (C_assec_beta (slice_c_sps c) (slice_c_sps c'))
+  | C_assec_ret c c'     -> Conj () (C_assec_ret (slice_c_sps c) (slice_c_sps c'))
 
 #reset-options
 (**********)
 
+opaque val slice_wire:
+  #eps:eprins -> p:prin -> w:v_wire eps
+  -> Tot (r:v_wire (intersect eps (singleton p)){select p r = select p w})
+let slice_wire #eps p w =
+  if mem p eps then
+    update p (Some.v (select p w)) OrdMap.empty
+  else OrdMap.empty
+
 val slice_v   : #meta:v_meta -> prin -> v:value meta
                 -> Tot (r:dvalue{slice_v_meta_inv meta (D_v.meta r)}) (decreases %[v])
-val slice_wire: #eps:eprins -> p:prin -> w:v_wire eps
-                -> Tot (v_wire (intersect eps (singleton p))) (decreases %[w])
 val slice_en  : prin -> en:env -> Tot (varname -> Tot (option dvalue)) (decreases %[en])
 
 let rec slice_v #meta p v =
@@ -888,20 +900,14 @@ let rec slice_v #meta p v =
       let D_v _ v' = if mem p ps then slice_v p v else emp in
       D_v meta (V_box ps v')
       
-    | V_wire eps w   -> D_v meta (V_wire (intersect eps (singleton p)) (slice_wire #eps p w))
+    | V_wire eps w   -> D_v meta (V_wire (intersect eps (singleton p))
+                                         (slice_wire #eps p w))
 
     | V_clos en x e  -> D_v meta (V_clos (slice_en p en) x e)
 
     | V_emp_clos _ _ -> def
 
     | V_emp          -> emp
-
-and slice_wire #eps p w =
-  wire_preceds_axiom #eps w p;
-  if mem p eps then
-    update p (D_v.v (slice_v p (Some.v (select p w)))) OrdMap.empty
-  else
-    OrdMap.empty
 
 and slice_en p en =
   let _ = () in
@@ -931,29 +937,32 @@ let slice_e p e = e
 
 val slice_r: prin -> redex -> Tot redex
 let slice_r p r = match r with
-  | R_aspar ps v   -> R_aspar ps (D_v.v (slice_v p v))
-  | R_assec ps v   -> R_assec ps (D_v.v (slice_v p v))
-  | R_box ps v     ->
+  | R_aspar ps v    -> R_aspar ps (D_v.v (slice_v p v))
+  | R_assec ps v    -> R_assec ps (D_v.v (slice_v p v))
+  | R_box ps v      ->
     let D_v _ v' = if mem p ps then slice_v p v else D_v (empty, Can_b) V_emp in
     R_box ps v'
-  | R_unbox v      -> R_unbox (D_v.v (slice_v p v))
-  | R_mkwire v1 v2 -> R_mkwire (D_v.v (slice_v p v1)) (D_v.v (slice_v p v2))
-  | R_let x v1 e2  -> R_let x (D_v.v (slice_v p v1)) e2
-  | R_app v1 v2    -> R_app (D_v.v (slice_v p v1)) (D_v.v (slice_v p v2))
+  | R_unbox v       -> R_unbox (D_v.v (slice_v p v))
+  | R_mkwire v1 v2  -> R_mkwire (D_v.v (slice_v p v1)) (D_v.v (slice_v p v2))
+  | R_projwire p' v -> R_projwire p' (D_v.v (slice_v p v))
+  | R_let x v1 e2   -> R_let x (D_v.v (slice_v p v1)) e2
+  | R_app v1 v2     -> R_app (D_v.v (slice_v p v1)) (D_v.v (slice_v p v2))
 
 val slice_f': p:prin -> f:frame'{not (is_F_assec_ret f)} -> Tot frame'
 let slice_f' p f = match f with
-  | F_aspar_ps _  -> f
-  | F_aspar_e  _  -> f
-  | F_assec_ps _  -> f
-  | F_assec_e  _  -> f
-  | F_box_e    _  -> f
-  | F_unbox       -> f
-  | F_mkwire_ps _ -> f
-  | F_mkwire_e  v -> F_mkwire_e (D_v.v (slice_v p v))
-  | F_let    _ _  -> f
-  | F_app_e1   _  -> f
-  | F_app_e2   v  -> F_app_e2  (D_v.v (slice_v p v))
+  | F_aspar_ps   _ -> f
+  | F_aspar_e    _ -> f
+  | F_assec_ps   _ -> f
+  | F_assec_e    _ -> f
+  | F_box_e      _ -> f
+  | F_unbox        -> f
+  | F_mkwire_ps  _ -> f
+  | F_mkwire_e   v -> F_mkwire_e (D_v.v (slice_v p v))
+  | F_projwire_p _ -> f
+  | F_projwire_e _ -> f
+  | F_let      _ _ -> f
+  | F_app_e1     _ -> f
+  | F_app_e2     v -> F_app_e2  (D_v.v (slice_v p v))
 
 val slice_f: p:prin -> f:frame{Mode.m (Frame.m f) = Par    /\
                                mem p (Mode.ps (Frame.m f)) /\
@@ -1000,25 +1009,43 @@ type compose_v_meta_inv (m1:v_meta) (m2:v_meta) (cmeta:v_meta) =
   subset (fst cmeta) (union (fst m1) (fst m2)) /\
   ((snd m1 = Can_b /\ snd m2 = Can_b) ==> snd cmeta = Can_b)
 
-(*val compose_wires:
-  #eps1:eprins -> #eps2:eprins -> w1:v_wire eps1 -> w2:v_wire eps2
-  -> Tot (v_wire (union eps1 eps2)) (decreases (size eps1))
-let rec compose_wires #eps1 #eps2 w1 w2 =
-  if eps1 = empty then w2
+val empty_intersection_lemma: eps1:eprins -> eps2:eprins{intersect eps1 eps2 = empty}
+                              -> p:prin
+                              -> Lemma (requires (True))
+                                       (ensures (mem p eps1 ==> not (mem p eps2)))
+let empty_intersection_lemma eps1 eps2 p =
+  let _ = mem p (intersect eps1 eps2) in
+  ()
+
+val empty_intersection_lemma_forall: eps1:eprins -> eps2:eprins{intersect eps1 eps2 = empty}
+                                     -> Lemma (requires (True))
+                                              (ensures (forall p. mem p eps1 ==> not (mem p eps2)))                                
+let empty_intersection_lemma_forall eps1 eps2 =
+  forall_intro #prin #(fun p -> mem p eps1 ==> not (mem p eps2)) (empty_intersection_lemma eps1 eps2)
+ 
+opaque val compose_wires:
+  #eps1:eprins -> #eps2:eprins{intersect eps1 eps2 = empty}
+  -> w1:v_wire eps1 -> w2:v_wire eps2
+  -> eps:eprins{subset eps eps1}
+  -> Tot (r:v_wire (union eps eps2)
+          {forall p. contains p r ==>    ((mem p eps  /\ not (mem p eps2)) \/
+                                          (mem p eps2 /\ not (mem p eps)))
+                                      /\ (mem p eps  ==> select p r = select p w1)
+                                      /\ (mem p eps2 ==> select p r = select p w2)})
+     (decreases (size eps))
+let rec compose_wires #eps1 #eps2 w1 w2 eps =
+  empty_intersection_lemma_forall eps eps2;
+  if eps = empty then w2
   else
-    let Some p = choose eps1 in
-    let w = compose_wires #(remove p eps1) #eps2 (OrdMap.remove p w1) w2 in
+    let Some p = choose eps in
+    let w = compose_wires #eps1 #eps2 w1 w2 (remove p eps) in
     update p (Some.v (select p w1)) w
-*)
 
 val compose_vals: #m1:v_meta -> #m2:v_meta -> v1:value m1 -> v2:value m2
                   -> Tot (r:dvalue{compose_v_meta_inv m1 m2 (D_v.meta r)})
                      (decreases %[v1])
-val compose_wires: #eps1:eprins -> #eps2:eprins -> w1:v_wire eps1 -> w2:v_wire eps2
-                   -> Tot (v_wire (union eps1 eps2))
-                      (decreases %[w1; size eps1])
 val compose_envs: en:env -> env -> Tot (varname -> Tot (option dvalue)) (decreases %[en])
-(*
+
 let rec compose_vals #m1 #m2 v1 v2 =
   if is_V_emp v1 then D_v m2 v2
   else if is_V_emp v2 then D_v m1 v1
@@ -1042,7 +1069,9 @@ let rec compose_vals #m1 #m2 v1 v2 =
       | V_wire eps1 w1 ->
         if is_V_wire v2 then
           let V_wire eps2 w2 = v2 in
-          D_v m1 (V_wire (union eps1 eps2) (compose_wires #eps1 #eps2 w1 w2))
+          if intersect eps1 eps2 = empty then
+            D_v m1 (V_wire (union eps1 eps2) (compose_wires #eps1 #eps2 w1 w2 eps1))
+          else emp
         else emp
 
       | V_clos en1 x1 e1 ->
@@ -1061,14 +1090,6 @@ let rec compose_vals #m1 #m2 v1 v2 =
           else emp
         else emp
 
-and compose_wires #eps1 #eps2 w1 w2 = admit ()
-  (*if eps1 = empty then w2
-  else
-    let Some p = choose eps1 in
-    let w = compose_wires #(remove p eps1) #eps2 (OrdMap.remove p w1) w2 in
-    
-    update p (Some.v (select p w1)) w*)
-
 and compose_envs en1 en2 =
   let _ = () in
   fun x -> preceds_axiom en1 x;
@@ -1085,15 +1106,17 @@ and compose_envs en1 en2 =
 
 open Classical
 
+val slice_lem_singl_wire: #eps:eprins -> w:v_wire eps -> p:prin
+                          -> Lemma (requires (True))
+                                   (ensures (slice_wire #eps p w =
+                                             slice_wire_sps #eps (singleton p) w))
+let slice_lem_singl_wire #eps w p = ()
+
 val slice_lem_singl_v: #m:v_meta -> v:value m -> p:prin
                       -> Lemma (requires (True))
                                (ensures (slice_v p v =
                                          slice_v_sps (singleton p) v))
                          (decreases %[v])
-val slice_lem_singl_wire: #eps:eprins -> w:v_wire eps -> p:prin
-                          -> Lemma (requires (True))
-                                   (ensures (slice_wire #eps p w =
-                                             slice_wire_sps #eps (singleton p) w))
 val slice_lem_singl_en_x: en:env -> p:prin -> x:varname
                           -> Lemma (requires (True))
                                    (ensures ((slice_en p en) x =
@@ -1111,8 +1134,6 @@ let rec slice_lem_singl_v #m v p = match v with
   | V_clos en _ _  -> slice_lem_singl_en en p
   | V_emp_clos _ _ -> ()
   | V_emp          -> ()
-
-and slice_lem_singl_wire #eps w p = ()
 
 and slice_lem_singl_en_x en p x =
   if en x = None then ()
@@ -1145,7 +1166,7 @@ let rec box_slice_lem #m v ps1 ps2 = match v with
   | V_emp_clos _ _   -> ()
   | V_emp            -> ()
 
-let t_union (p1:prin) (p2:prin) :prins = union (singleton p1) (singleton p2)
+(*let t_union (p1:prin) (p2:prin) :prins = union (singleton p1) (singleton p2)
 
 val de_morgan: eps:eprins -> p1:prin -> p2:prin
                -> Lemma (requires (True))
@@ -1153,17 +1174,21 @@ val de_morgan: eps:eprins -> p1:prin -> p2:prin
                                   intersect eps (t_union p1 p2)))
 let de_morgan eps p1 p2 = ()
 
+val slc_wire_lem_2: #eps:eprins -> w:v_wire eps -> p1:prin -> p2:prin
+                    -> Lemma (requires (True))
+                             (ensures (compose_wires #(intersect eps (singleton p1))
+                                                     #(intersect eps (singleton p2))
+                                                     (slice_wire #eps p1 w) (slice_wire #eps p2 w)
+                                                     (intersect eps (singleton p1)) =
+                                       slice_wire_sps #eps (t_union p1 p2) w))
+let slc_wire_lem_2 #eps w p1 p2 = admit ()
+
+
 val slc_v_lem_2: #m:v_meta -> v:value m -> p1:prin -> p2:prin
                  -> Lemma (requires (True))
                           (ensures (compose_vals (D_v.v (slice_v p1 v)) (D_v.v (slice_v p2 v)) =
                                     slice_v_sps (t_union p1 p2) v))
                     (decreases %[v])
-val slc_wire_lem_2: #eps:eprins -> w:v_wire eps -> p1:prin -> p2:prin
-                    -> Lemma (requires (True))
-                             (ensures (compose_wires #(intersect eps (singleton p1))
-                                                     #(intersect eps (singleton p2))
-                                                     (slice_wire #eps p1 w) (slice_wire #eps p2 w) =
-                                       slice_wire_sps #eps (t_union p1 p2) w))
 val slc_en_x_lem_2: en:env -> p1:prin -> p2:prin -> x:varname
                     -> Lemma (requires (True))
                              (ensures ((compose_envs (slice_en p1 en) (slice_en p2 en)) x =
@@ -1229,21 +1254,37 @@ and slc_en_lem_2 en p1 p2 =
                    (slice_en_sps (t_union p1 p2) en)) in
   ()
 
-(* check_marker *)
+*)
 
-val slc_v_lem_ps: #m:v_meta -> v:value m -> p:prin -> ps:prins
+val de_morgan: eps:eprins -> ps1:prins -> ps2:prins
+               -> Lemma (requires (True))
+                        (ensures (union (intersect eps ps1) (intersect eps ps2) =
+                                  intersect eps (union ps1 ps2)))
+let de_morgan eps ps1 ps2 = ()
+
+val slc_wire_lem_ps: #eps:eprins -> w:v_wire eps -> p:prin -> ps:prins{not (mem p ps)}
+                     -> Lemma (requires (True))
+                              (ensures (compose_wires #(intersect eps (singleton p))
+                                                      #(intersect eps ps)
+                                                      (slice_wire #eps p w)
+                                                      (slice_wire_sps #eps ps w)
+                                                      (intersect eps (singleton p)) =
+                                        slice_wire_sps #eps (union (singleton p) ps) w))
+let slc_wire_lem_ps #eps w p ps = ()
+
+val slc_v_lem_ps: #m:v_meta -> v:value m -> p:prin -> ps:prins{not (mem p ps)}
                        -> Lemma (requires (True))
                                 (ensures (compose_vals (D_v.v (slice_v p v))
-                                                       (D_v.v (slice_v_sps ps v))
-                                          = slice_v_sps (union (singleton p) ps) v))
+                                                       (D_v.v (slice_v_sps ps v)) =
+                                          slice_v_sps (union (singleton p) ps) v))
                           (decreases %[v])
-val slc_en_x_lem_ps: en:env -> p:prin -> ps:prins -> x:varname
+val slc_en_x_lem_ps: en:env -> p:prin -> ps:prins{not (mem p ps)} -> x:varname
                      -> Lemma (requires (True))
                               (ensures ((compose_envs (slice_en p en)
                                                       (slice_en_sps ps en)) x
                                         = (slice_en_sps (union (singleton p) ps) en) x))
                         (decreases %[en; 0])
-val slc_en_lem_ps: en:env -> p:prin -> ps:prins
+val slc_en_lem_ps: en:env -> p:prin -> ps:prins{not (mem p ps)}
                      -> Lemma (requires (True))
                               (ensures (compose_envs (slice_en p en)
                                                      (slice_en_sps ps en)
@@ -1282,6 +1323,7 @@ let rec slc_v_lem_ps #m v p ps = match v with
       let _ = OrdSet.eq_lemma (intersect (union psp ps) ps') empty in
 
       ()
+  | V_wire eps w   -> de_morgan eps (singleton p) ps; slc_wire_lem_ps #eps w p ps
   | V_clos en _ _  -> slc_en_lem_ps en p ps
   | V_emp_clos _ _ -> ()
   | V_emp          -> ()
@@ -1374,6 +1416,33 @@ let env_upd_slice_lemma #m p en x v =
 val if_enter_sec_then_from_sec: #c:sconfig -> #c':sconfig -> h:sstep c c' -> Tot bool
 let if_enter_sec_then_from_sec #c #c' h = not (is_C_assec_beta h) || is_sec c
 
+val slice_wire_p_lemma_mem:
+  p:prin -> ps:prins{mem p ps} -> v:value (empty, Can_b)
+  -> Lemma (requires (True))
+           (ensures (slice_wire #ps p (const_on ps v) =
+                     const_on (singleton p) (D_v.v (slice_v p v))))
+     //[SMTPat (slice_wire #ps p (const_on ps v))]
+let slice_wire_p_lemma_mem p ps v = ()
+
+val slice_wire_p_lemma_not_mem:
+  p:prin -> ps:prins{not (mem p ps)} -> v:value (empty, Can_b)
+  -> Lemma (requires (True))
+           (ensures (slice_wire #ps p (const_on ps v) = OrdMap.empty))
+     //[SMTPat (slice_wire #ps p (const_on ps v))]
+let slice_wire_p_lemma_not_mem p ps v = ()
+
+val mem_intersect_lemma_not_mem: p:prin -> eps:eprins{not (mem p eps)}
+                             -> Lemma (requires (True))
+                                      (ensures (intersect eps (singleton p) = empty))
+                                //[SMTPat (not (mem p eps)); SMTPat (intersect eps (singleton p))]
+let mem_intersect_lemma_not_mem p eps = ()
+
+val mem_intersect_lemma_mem: p:prin -> eps:eprins{mem p eps}
+                             -> Lemma (requires (True))
+                                      (ensures (intersect eps (singleton p) = singleton p))
+                                //[SMTPat (mem p eps); SMTPat (intersect eps (singleton p))]
+let mem_intersect_lemma_mem p eps = ()
+
 opaque val sstep_par_slice_lemma: c:sconfig -> c':sconfig
                                   -> h:sstep c c'{if_enter_sec_then_from_sec h /\
                                                   if_exit_sec_then_to_sec h}
@@ -1392,6 +1461,12 @@ let sstep_par_slice_lemma c c' h p =
     | C_unbox (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else IntroR (C_unbox (slice_c p c) (slice_c p c'))
+    | C_mkwire (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else IntroR (C_mkwire (slice_c p c) (slice_c p c'))
+    | C_projwire (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else IntroR (C_projwire (slice_c p c) (slice_c p c'))
     | C_const (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else IntroR (C_const (slice_c p c) (slice_c p c'))
@@ -1415,6 +1490,12 @@ let sstep_par_slice_lemma c c' h p =
     | C_aspar_e (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else IntroR (C_aspar_e (slice_c p c) (slice_c p c'))
+    | C_mkwire_e (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else IntroR (C_mkwire_e (slice_c p c) (slice_c p c'))
+    | C_projwire_e (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else IntroR (C_projwire_e (slice_c p c) (slice_c p c'))
     | C_app_e2 (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else IntroR (C_app_e2 (slice_c p c) (slice_c p c'))
@@ -1430,6 +1511,12 @@ let sstep_par_slice_lemma c c' h p =
     | C_unbox_red (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else IntroR (C_unbox_red (slice_c p c) (slice_c p c'))
+    | C_mkwire_red (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else IntroR (C_mkwire_red (slice_c p c) (slice_c p c'))
+    | C_projwire_red (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else IntroR (C_projwire_red (slice_c p c) (slice_c p c'))
     | C_let_red (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else IntroR (C_let_red (slice_c p c) (slice_c p c'))
@@ -1464,6 +1551,26 @@ let sstep_par_slice_lemma c c' h p =
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else
         IntroR (C_unbox_beta (slice_c p c) (slice_c p c'))
+    | C_mkwire_beta (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else
+        let Conf _ (Mode Par _) _ _ (T_red (R_mkwire (V_const (C_prins ps')) (V_box ps'' v))) = c in
+        if not (mem p ps') then
+          let _ =
+            slice_wire_p_lemma_not_mem p ps' v;
+            mem_intersect_lemma_not_mem p ps'
+          in 
+          IntroR (C_mkwire_beta (slice_c p c) (slice_c p c'))
+        else
+          let _ =
+            slice_wire_p_lemma_mem p ps' v;
+            mem_intersect_lemma_mem p ps'
+          in
+          IntroR (C_mkwire_beta (slice_c p c) (slice_c p c'))
+    | C_projwire_beta (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else
+          IntroR (C_projwire_beta (slice_c p c) (slice_c p c'))
     | C_assec_ps (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else
@@ -1705,35 +1812,15 @@ opaque val pstep_par_star_upd_step:
   -> h1:pstep_par_star #ps pi pi' -> h2:sstep c c'
   -> p:prin{not (contains p (fst pi))}
   -> Tot (pstep_par_star #(union (singleton p) ps) (update_tpar p c pi) (update_tpar p c' pi'))
-     (decreases h1)                                
+     (decreases h1)
 let rec pstep_par_star_upd_step #ps #pi #pi' #c #c' h1 h2 p =
   let (pi1, s1)   = update p c (fst pi), snd pi in
-  let (pi1', s1') = update p c' (fst pi'), snd pi' in
-  let ps' = union (singleton p) ps in
-  match h1 with
-    | PP_refl pi ->
-      PP_tran #ps' #(pi1, s1) #(pi1', s1') #(pi1', s1')
-              (P_par #ps' #c' (pi1, s1) p h2 (pi1', s1')) (PP_refl #ps' (pi1', s1'))
-      
-    | PP_tran #d1 #d2 #pi_t'' #d3 h h' ->
-      let pi'', s'' = pi_t'' in
-      let P_par #d4 #c1 _ p1 h'' _ = h in
-      let _ = cut (b2t (pi'' = update p1 c1 (fst pi))) in
-      let pi1'', s1'' = update p c pi'', s'' in
-      let _ = cut (b2t (pi1'' = update p c (update p1 c1 (fst pi)))) in
-      let _ = cut (b2t (not (contains p (fst pi)))) in
-      let _ = cut (b2t (contains p1 (fst pi))) in
-      let _ = cut (b2t (not (p = p1))) in
-      OrdMap.upd_order p c p1 c1 (fst pi);
-      let _ = cut (b2t (update p c (update p1 c1 (fst pi)) = update p1 c1 (update p c (fst pi)))) in
-      let _ = cut (b2t (update p c (update p1 c1 (fst pi)) = update p1 c1 pi1)) in
-      let _ = cut (b2t (pi1'' = update p1 c1 pi1)) in
-
-      let ht1:pstep #ps' (pi1, s1) (pi1'', s1'') =
-        P_par #ps' #c1 (pi1, s1) p1 h'' (update p1 c1 pi1, s1) in
-      let ht2:pstep_par_star #ps' (pi1'', s1'') (pi1', s1') =
-        pstep_par_star_upd_step #ps #(pi'', s'') #pi' #c #c' h' h2 p in
-      PP_tran #ps' #(pi1, s1) #(pi1'', s1'') #(pi1', s1') ht1 ht2
+  let (pi1', s1') = update p c' (fst pi), snd pi in
+  let ps' = union (singleton p) ps in  
+  let ht1 = P_par #ps' #c' (pi1, s1) p h2 (pi1', s1') in  
+  let (pi1'', s1'') = update p c' (fst pi'), snd pi' in
+  let ht2 = pstep_par_star_upd_same #ps #pi #pi' h1 p c' in
+  PP_tran #ps' #(pi1, s1) #(pi1', s1') #(pi1'', s1'') ht1 ht2
 
 (* TODO: FIXME: this is a weird behavior *)
 val slice_c_snd_lemma: ps:prins -> c:sconfig{is_par c}
@@ -1822,6 +1909,13 @@ let rec forward_simulation_par #c #c' h ps =
         pstep_par_star_upd_step #ps_rest #(pi_rest, s_rest) #(pi_rest', s_rest')
                                          #c_p #c_p' h_ind h' p
 
+val slice_wire_lem_singl_of_ps: #eps:eprins -> w:v_wire eps
+                                -> ps:prins -> p:prin{mem p ps}
+                                -> Lemma (requires (True))
+                                         (ensures (slice_wire #(intersect eps ps) p (slice_wire_sps #eps ps w) =
+                                                   slice_wire #eps p w))
+let slice_wire_lem_singl_of_ps #eps w ps p = ()
+
 val slice_v_lem_singl_of_ps: #m:v_meta -> v:value m -> ps:prins -> p:prin{mem p ps}
                              -> Lemma (requires (True))
                                       (ensures (slice_v p (D_v.v (slice_v_sps ps v)) =
@@ -1844,7 +1938,10 @@ let rec slice_v_lem_singl_of_ps #m v ps p = match v with
       let _ = cut (mem p ps' ==> mem p (intersect ps ps')) in
       ()
     else if not (mem p ps') then ()
-    else slice_v_lem_singl_of_ps v' ps p  
+    else slice_v_lem_singl_of_ps v' ps p
+  | V_wire eps w  ->
+    let _ = admitP (b2t (intersect (intersect eps ps) (singleton p) = intersect eps (singleton p))) in
+    slice_wire_lem_singl_of_ps #eps w ps p
   | V_clos en _ _ -> slice_en_lem_singl_of_ps en ps p
   | V_emp_clos _ _ -> ()
   | V_emp -> ()
@@ -1893,7 +1990,7 @@ val not_contains_lemma: #ps:prins -> pi:tpar ps
 let not_contains_lemma #ps pi = ()
 
 (**********)
-assume val cand_intro: #a:Type -> #b:Type -> =h:(a /\ b) -> Tot (cand a b)
+(*assume val cand_intro: #a:Type -> #b:Type -> =h:(a /\ b) -> Tot (cand a b)
 assume val cand_elim : #a:Type -> #b:Type -> =h:cand a b -> Lemma (a /\ b)
 
 assume val cor_intro: #a:Type -> #b:Type -> =h:(a \/ b) -> Tot (cor a b)
@@ -1912,10 +2009,10 @@ assume val t_intro: #a:Type -> u:unit{a} -> Tot a
 assume val t_elim : #a:Type -> =h:a -> Lemma (a)
 
 assume val rewrite : #a:Type -> #p:(a -> Type) -> #x:a -> #y:a -> =h:ceq x y -> =h':p x -> Tot (p y)
-assume val ceq_symm: #a:Type -> #x:a -> #y:a -> =h:ceq x y -> Tot (ceq y x)
+assume val ceq_symm: #a:Type -> #x:a -> #y:a -> =h:ceq x y -> Tot (ceq y x)*)
 (**********)
 
-opaque val slice_c_ps_cons:
+(*opaque val slice_c_ps_cons:
   ps:prins -> c:sconfig -> pi:protocol ps{pi = slice_c_ps ps c}
   -> Tot (p:prin -> Tot ((mem p ps       ==> select p (fst pi) = Some (slice_c p c)) /\
                          (not (mem p ps) ==> select p (fst pi) = None)))
@@ -1955,7 +2052,7 @@ opaque val sstep_sec_to_par_slice_par_others_cons:
 let sstep_sec_to_par_slice_par_others_cons #c #c' h ps' =
   sstep_sec_to_par_slice_par_others #c #c' h;
   forall_intro_t #prin #(fun p -> (not (mem p ps') ==> slice_c p c = slice_c p c'))
-                 #(t_intro #(forall p. (not (mem p ps') ==> slice_c p c = slice_c p c')) ())
+                 #(t_intro #(forall p. (not (mem p ps') ==> slice_c p c = slice_c p c')) ())*)
 
 opaque val forward_simulation_exit_sec: #c:config -> #c':config
                                         -> h:sstep c c'{is_C_assec_ret h /\ is_par c'}
@@ -2290,4 +2387,4 @@ let forward_simulation_theorem #c #c' h ps =
   let h1 = forward_simulation #c #c' h ps in
   match h1 with
     | IntroL h' -> PS_tran h' (PS_refl (slice_c_ps ps c'))
-    | IntroR h' -> pstep_par_star_to_pstep_star h'*)
+    | IntroR h' -> pstep_par_star_to_pstep_star h'

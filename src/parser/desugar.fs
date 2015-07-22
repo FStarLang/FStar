@@ -934,10 +934,19 @@ and desugar_comp r default_ok env t =
                       [unit;req_true;ens;nil_pat]
                     | [req;ens] -> [unit;req;ens;nil_pat]
                     | more -> unit::more in
-              mk_term (Construct(lemma, args@decreases_clause)) t.range t.level
-            | _ -> t
+              let t = mk_term (Construct(lemma, args@decreases_clause)) t.range t.level in
+              desugar_typ env t
+
+            | Name tot when (tot.ident.idText = "Tot" 
+                             && not (DesugarEnv.is_effect_name env Const.effect_Tot_lid)  
+                             && lid_equals (DesugarEnv.current_module env) Const.prims_lid) ->
+              //we're right at the beginning of Prims, when Tot isn't yet fully defined 
+              let args = List.map (fun (t, imp) -> arg_withimp_t imp <| desugar_typ_or_exp env t) args in
+              mk_typ_app (Util.ftv Const.effect_Tot_lid kun) args 
+
+            | _ -> desugar_typ env t
         in
-    let t = desugar_typ env (pre_process_comp_typ t) in
+    let t = pre_process_comp_typ t in
     let head, args = Util.head_and_args t in
     match (compress_typ head).n, args with
         | Typ_const eff, (Inl result_typ, _)::rest ->
@@ -956,18 +965,15 @@ and desugar_comp r default_ok env t =
                         | _ -> failwith "impos"
                     end
                 | _ -> failwith "impos") in
-
-          if DesugarEnv.is_effect_name env eff.v
+          if DesugarEnv.is_effect_name env eff.v 
+          || lid_equals eff.v Const.effect_Tot_lid  //We need the Tot effect before its definition is in scope; it is primitive
           then if lid_equals eff.v Const.effect_Tot_lid && List.length decreases_clause=0
                then mk_Total result_typ
                else let flags =
-                        if      lid_equals eff.v Const.effect_Lemma_lid      then [LEMMA]
-                        else if lid_equals eff.v Const.effect_Tot_lid then [TOTAL]
-                        else if lid_equals eff.v Const.effect_ML_lid  then [MLEFFECT]
+                        if      lid_equals eff.v Const.effect_Lemma_lid then [LEMMA]
+                        else if lid_equals eff.v Const.effect_Tot_lid   then [TOTAL]
+                        else if lid_equals eff.v Const.effect_ML_lid    then [MLEFFECT]
                         else [] in
-    //                        decreases_clause |> List.iter (function
-    //                            | DECREASES arg -> Util.fprint1 "Added decreases clause %s\n" (Print.exp_to_string arg);
-    //                            | _ -> ());
                         mk_Comp ({effect_name=eff.v;
                                   result_typ=result_typ;
                                   effect_args=rest;

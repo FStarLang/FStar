@@ -402,33 +402,61 @@ let as_function_typ env t0 =
                    else failwith (Util.format2 "(%s) Expected a function typ; got %s" (Range.string_of_range t0.pos) (Print.typ_to_string t0))
     in aux true t0
 
-let rec encode_knd' (prekind:bool) (k:knd) (env:env_t) (t:term) : term  * decls_t = 
+let rec encode_knd_term (k:knd) (env:env_t) : (term * decls_t) = 
     match (Util.compress_kind k).n with 
-        | Kind_type -> 
-           mk_HasKind t (Term.mk_Kind_type), []
+        | Kind_type -> Term.mk_Kind_type, []
 
-        | Kind_abbrev(_, k) ->
-           encode_knd' prekind k env t
+        | Kind_abbrev(_, k0) ->
+          if Tc.Env.debug env.tcenv (Options.Other "Encoding")
+          then Util.fprint2 "Encoding kind abbrev %s, expanded to %s\n" (Print.kind_to_string k) (Print.kind_to_string k0);
+          encode_knd_term k0 env
 
         | Kind_uvar (uv, _) -> (* REVIEW: warn? *)
-            Term.mkTrue, []
+          Term.mk_Kind_uvar (Unionfind.uvar_id uv), []
 
-        | Kind_arrow(bs, k) -> 
-            let vars, guards, env', decls, _ = encode_binders None bs env in 
-            let app = mk_ApplyT t vars in
-            let k, decls' = encode_knd' prekind k env' app in
-            let term = Term.mkForall([app], vars, mkImp(mk_and_l guards, k)) in
-            let term = 
-                if prekind
-                then Term.mkAnd(mk_tester "Kind_arrow" (mk_PreKind t), 
-                                term)
-                else term in 
-            term,
-            decls@decls'
+        | Kind_arrow(bs, kbody) -> 
+          let tsym = varops.fresh "t", Type_sort in
+          let t = mkFreeV tsym in
+          let vars, guards, env', decls, _ = encode_binders None bs env in 
+          let app = mk_ApplyT t vars in
+          let kbody, decls' = encode_knd kbody env' app in
+          let k_interp = Term.mkForall([app], vars, mkImp(mk_and_l guards, kbody)) in
+          let cvars = Term.free_variables k_interp |> List.filter (fun (x, _) -> x <> fst tsym) in
+          let tkey = Term.mkForall([], tsym::cvars, k_interp) in
+          begin match Util.smap_try_find env.cache tkey.hash with 
+                | Some (k', sorts, _) ->  
+                  Term.mkApp(k', cvars |> List.map mkFreeV), []
+
+                | None -> 
+                  let ksym = varops.fresh "Kind_arrow" in
+                  let cvar_sorts = List.map snd cvars in
+                  let caption = 
+                    if !Options.logQueries
+                    then Some (Normalize.kind_norm_to_string env.tcenv k)
+                    else None in
+
+
+                  let kdecl = Term.DeclFun(ksym, cvar_sorts, Kind_sort, caption) in
+                
+                  let k = Term.mkApp(ksym, List.map mkFreeV cvars) in
+                  let t_has_k = mk_HasKind t k in
+                  let k_interp = Term.Assume(mkForall([t_has_k], tsym::cvars, 
+                                                      mkIff(t_has_k, 
+                                                            mkAnd(mk_tester "Kind_arrow" (mk_PreKind t),
+                                                                  k_interp))),
+                                             Some (ksym ^ " interpretation")) in 
+
+                  let k_decls = decls@decls'@[kdecl; k_interp] in
+                  Util.smap_add env.cache tkey.hash  (ksym, cvar_sorts, k_decls);
+                  k, k_decls
+          end
 
         | _ -> failwith (Util.format1 "Unknown kind: %s" (Print.kind_to_string k))
 
-and encode_knd (k:knd) (env:env_t) (t:term) = encode_knd' true k env t
+
+and encode_knd (k:knd) (env:env_t) (t:term) = 
+    let k, decls = encode_knd_term k env in
+    mk_HasKind t k, decls
 
 and encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) : 
                             (list<fv>                       (* translated bound variables *)
@@ -444,7 +472,9 @@ and encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) :
             | Inl {v=a; sort=k} -> 
                 let a = unmangle a in
                 let aasym, aa, env' = gen_typ_var env a in 
-                let guard_a_k, decls' = encode_knd' false k env aa in
+                if Tc.Env.debug env.tcenv (Options.Other "Encoding") 
+                then Util.fprint3 "Encoding type binder %s (%s) at kind %s\n" (Print.strBvd a) aasym (Print.kind_to_string k);
+                let guard_a_k, decls' = encode_knd k env aa in //encode_knd' false k env aa in
                 (aasym, Type_sort), 
                 guard_a_k,
                 env', 
@@ -1092,7 +1122,7 @@ and encode_formula_with_labels (phi:typ) (env:env_t) : (term * labels * decls_t)
     let encode_q_body env (bs:Syntax.binders) (ps:args) body = 
         let vars, guards, env, decls, _ = encode_binders None bs env in
         let pats, decls' = ps |> List.map (function 
-            | Inl t, _ -> encode_formula t env
+            | Inl t, _ -> encode_typ_term t env 
             | Inr e, _ -> encode_exp e ({env with use_zfuel_name=true})) |> List.unzip in 
         let body, labs, decls'' = encode_formula_with_labels body env in
         vars, pats, mk_and_l guards, body, labs, decls@List.flatten decls'@decls'' in
