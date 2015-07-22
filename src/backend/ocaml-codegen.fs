@@ -108,9 +108,12 @@ let mlpath_of_mlpath (currentModule : mlpath) (x : mlpath) : mlpath =
       end
 
 let ptsym (currentModule : mlpath) (mlp : mlpath) : mlsymbol =
-    let (p, s) = mlpath_of_mlpath currentModule mlp in
-    let s = if Char.lowercase (String.get s 0) <> String.get s 0 then "l__" ^ s else s in
-    String.concat "." (p @ [s])
+    if (List.isEmpty (fst mlp))
+    then snd  mlp
+    else
+        let (p, s) = mlpath_of_mlpath currentModule mlp in
+        let s = if Char.lowercase (String.get s 0) <> String.get s 0 then "l__" ^ s else s in
+        String.concat "." (p @ [s])
 
 let ptctor (currentModule : mlpath) (mlp : mlpath) : mlsymbol =
     let (p, s) = mlpath_of_mlpath currentModule mlp in

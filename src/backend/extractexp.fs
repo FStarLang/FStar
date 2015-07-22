@@ -244,7 +244,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
             | Exp_fvar _ -> 
                //printfn "head of app is %A\n" head.n;
               let (head, (vars, t)), is_data = lookup_var g head in
-               let _ = printfn "\n (*looked up tyscheme of \n %A \n as \n %A *) \n" head (vars,t) in
+               //let _ = printfn "\n (*looked up tyscheme of \n %A \n as \n %A *) \n" head (vars,t) in
               let n = List.length vars in
               if n <= List.length args
               then let prefix, rest = Util.first_N n args in

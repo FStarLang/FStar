@@ -48,7 +48,7 @@ let mkFvvar (l: lident) (t:typ) : fvvar =
 
 (* MLTY_Tuple [] extracts to (), and is an alternate choice. 
     However, it represets both the unit type and the unit value. Ocaml gets confused sometimes*)
-let erasedContent : mlty = MLTY_Named ([],([], "unit"))
+let erasedContent : mlty = MLTY_Named ([],(["Prims"], "unit")) // do NOT remove Prims, because all mentions of unit in F* are actuall Prims.unit.
 let ml_unit_ty = erasedContent
 
 let rec erasableType_init (t:mlty) =
@@ -172,12 +172,12 @@ let extend_lb (g:env) (l:lbname) (t:typ) (t_x:mltyscheme) : (env * mlident) =
         | Inl x -> 
           extend_bv g (Util.bvd_to_bvar_s x t) t_x, as_mlident x
         | Inr f -> 
-          let _, y = mlpath_of_lident f in
-          extend_fv' g (Util.fvvar_of_lid f t) ([], y) t_x, (y,0)
+          let p, y = mlpath_of_lident f in
+          extend_fv' g (Util.fvvar_of_lid f t) (p, y) t_x, (y,0)
 
 let extend_tydef (g:env) (td:mltydecl) : env = {g with tydefs=td::g.tydefs}
 
 let erasableType (g:env) (t:mlty) = 
- //printfn "(* erasability of %A is %A *)\n" t (g.erasableTypes t);
+ printfn "(* erasability of %A is %A *)\n" t (g.erasableTypes t);
    g.erasableTypes t
   
