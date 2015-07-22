@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi OrdSet --admit_fsi OrdMap --z3timeout 15;
+    options:--admit_fsi OrdSet --admit_fsi OrdMap --z3timeout 10;
     variables:LIB=../../lib;
     other-files:$LIB/ordset.fsi $LIB/ordmap.fsi $LIB/list.fst $LIB/constr.fst $LIB/ext.fst $LIB/classical.fst
  --*)
@@ -819,13 +819,13 @@ let if_exit_sec_then_to_sec #c #c' h = not (is_C_assec_ret h) || is_sec c'
 val subset_intersect_lemma: ps1:prins -> ps2:prins{subset ps2 ps1}
                             -> Lemma (requires (True))
                                      (ensures (intersect ps2 ps1 = ps2))
-                               [SMTPat (subset ps2 ps1); SMTPat (intersect ps2 ps1)]
+                               //[SMTPat (subset ps2 ps1); SMTPat (intersect ps2 ps1)]
 let subset_intersect_lemma ps1 ps2 = ()
 
 val meta_empty_can_b_same_slice: v:value (empty, Can_b) -> ps:prins
                                  -> Lemma (requires (True))
                                           (ensures (D_v.v (slice_v_sps ps v) = v))
-                                    [SMTPat (slice_v_sps #(empty, Can_b) ps v)]
+                                    //[SMTPat (slice_v_sps #(empty, Can_b) ps v)]
 let meta_empty_can_b_same_slice v ps = ()
 
 val slice_wire_sps_lemma:
@@ -833,7 +833,7 @@ val slice_wire_sps_lemma:
   -> Lemma (requires (True))
            (ensures (slice_wire_sps #ps'' ps (const_on ps'' v) =
                      const_on ps'' (D_v.v (slice_v_sps ps v))))
-     [SMTPat (slice_wire_sps #ps'' ps (const_on ps'' v))]
+     //[SMTPat (slice_wire_sps #ps'' ps (const_on ps'' v))]
 let slice_wire_sps_lemma ps ps'' v = ()
 
 opaque val sstep_sec_slice_lemma: c:sconfig{is_sec c}
@@ -862,7 +862,12 @@ let sstep_sec_slice_lemma c c' h = match h with
   | C_let_beta c c'      -> Conj () (C_let_beta (slice_c_sps c) (slice_c_sps c'))
   | C_app_beta c c'      -> Conj () (C_app_beta (slice_c_sps c) (slice_c_sps c'))
   | C_unbox_beta c c'    -> Conj () (C_unbox_beta (slice_c_sps c) (slice_c_sps c'))
-  | C_mkwire_beta c c'   -> Conj () (C_mkwire_beta (slice_c_sps c) (slice_c_sps c'))
+  | C_mkwire_beta c c'   ->
+    let Conf _ (Mode _ ps) _ _ (T_red (R_mkwire (V_box _ (V_const (C_prins ps''))) v)) = c in
+    subset_intersect_lemma ps ps'';
+    meta_empty_can_b_same_slice v ps;
+    slice_wire_sps_lemma ps ps'' v;
+    Conj () (C_mkwire_beta (slice_c_sps c) (slice_c_sps c'))
   | C_projwire_beta c c' -> Conj () (C_projwire_beta (slice_c_sps c) (slice_c_sps c'))
   | C_assec_ps c c'      -> Conj () (C_assec_ps (slice_c_sps c) (slice_c_sps c'))
   | C_assec_e c c'       -> Conj () (C_assec_e (slice_c_sps c) (slice_c_sps c'))
@@ -1416,26 +1421,26 @@ val slice_wire_p_lemma_mem:
   -> Lemma (requires (True))
            (ensures (slice_wire #ps p (const_on ps v) =
                      const_on (singleton p) (D_v.v (slice_v p v))))
-     [SMTPat (slice_wire #ps p (const_on ps v))]
+     //[SMTPat (slice_wire #ps p (const_on ps v))]
 let slice_wire_p_lemma_mem p ps v = ()
 
 val slice_wire_p_lemma_not_mem:
   p:prin -> ps:prins{not (mem p ps)} -> v:value (empty, Can_b)
   -> Lemma (requires (True))
            (ensures (slice_wire #ps p (const_on ps v) = OrdMap.empty))
-     [SMTPat (slice_wire #ps p (const_on ps v))]
+     //[SMTPat (slice_wire #ps p (const_on ps v))]
 let slice_wire_p_lemma_not_mem p ps v = ()
 
 val mem_intersect_lemma_not_mem: p:prin -> eps:eprins{not (mem p eps)}
                              -> Lemma (requires (True))
                                       (ensures (intersect eps (singleton p) = empty))
-                                [SMTPat (not (mem p eps)); SMTPat (intersect eps (singleton p))]
+                                //[SMTPat (not (mem p eps)); SMTPat (intersect eps (singleton p))]
 let mem_intersect_lemma_not_mem p eps = ()
 
 val mem_intersect_lemma_mem: p:prin -> eps:eprins{mem p eps}
                              -> Lemma (requires (True))
                                       (ensures (intersect eps (singleton p) = singleton p))
-                                [SMTPat (mem p eps); SMTPat (intersect eps (singleton p))]
+                                //[SMTPat (mem p eps); SMTPat (intersect eps (singleton p))]
 let mem_intersect_lemma_mem p eps = ()
 
 opaque val sstep_par_slice_lemma: c:sconfig -> c':sconfig
@@ -1549,10 +1554,18 @@ let sstep_par_slice_lemma c c' h p =
     | C_mkwire_beta (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else
-        let Conf _ (Mode Par _) _ _ (T_red (R_mkwire (V_const (C_prins _)) (V_box ps'' _))) = c in
-        if not (mem p ps'') then
+        let Conf _ (Mode Par _) _ _ (T_red (R_mkwire (V_const (C_prins ps')) (V_box ps'' v))) = c in
+        if not (mem p ps') then
+          let _ =
+            slice_wire_p_lemma_not_mem p ps' v;
+            mem_intersect_lemma_not_mem p ps'
+          in 
           IntroR (C_mkwire_beta (slice_c p c) (slice_c p c'))
         else
+          let _ =
+            slice_wire_p_lemma_mem p ps' v;
+            mem_intersect_lemma_mem p ps'
+          in
           IntroR (C_mkwire_beta (slice_c p c) (slice_c p c'))
     | C_projwire_beta (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
@@ -1800,37 +1813,14 @@ opaque val pstep_par_star_upd_step:
   -> p:prin{not (contains p (fst pi))}
   -> Tot (pstep_par_star #(union (singleton p) ps) (update_tpar p c pi) (update_tpar p c' pi'))
      (decreases h1)
-#set-options "split_cases 1"                           
 let rec pstep_par_star_upd_step #ps #pi #pi' #c #c' h1 h2 p =
   let (pi1, s1)   = update p c (fst pi), snd pi in
-  let (pi1', s1') = update p c' (fst pi'), snd pi' in
-  let ps' = union (singleton p) ps in
-  match h1 with
-    | PP_refl pi ->
-      PP_tran #ps' #(pi1, s1) #(pi1', s1') #(pi1', s1')
-              (P_par #ps' #c' (pi1, s1) p h2 (pi1', s1')) (PP_refl #ps' (pi1', s1'))
-      
-    | PP_tran #d1 #d2 #pi_t'' #d3 h h' ->
-      let pi'', s'' = pi_t'' in
-      let P_par #d4 #c1 _ p1 h'' _ = h in
-      let _ = cut (b2t (pi'' = update p1 c1 (fst pi))) in
-      let pi1'', s1'' = update p c pi'', s'' in
-      let _ = cut (b2t (pi1'' = update p c (update p1 c1 (fst pi)))) in
-      let _ = cut (b2t (not (contains p (fst pi)))) in
-      let _ = cut (b2t (contains p1 (fst pi))) in
-      let _ = cut (b2t (not (p = p1))) in
-      OrdMap.upd_order p c p1 c1 (fst pi);
-      let _ = cut (b2t (update p c (update p1 c1 (fst pi)) = update p1 c1 (update p c (fst pi)))) in
-      let _ = cut (b2t (update p c (update p1 c1 (fst pi)) = update p1 c1 pi1)) in
-      let _ = cut (b2t (pi1'' = update p1 c1 pi1)) in
-
-      let ht1:pstep #ps' (pi1, s1) (pi1'', s1'') =
-        P_par #ps' #c1 (pi1, s1) p1 h'' (update p1 c1 pi1, s1) in
-      let ht2:pstep_par_star #ps' (pi1'', s1'') (pi1', s1') =
-        pstep_par_star_upd_step #ps #(pi'', s'') #pi' #c #c' h' h2 p in
-      PP_tran #ps' #(pi1, s1) #(pi1'', s1'') #(pi1', s1') ht1 ht2
-
-#reset-options
+  let (pi1', s1') = update p c' (fst pi), snd pi in
+  let ps' = union (singleton p) ps in  
+  let ht1 = P_par #ps' #c' (pi1, s1) p h2 (pi1', s1') in  
+  let (pi1'', s1'') = update p c' (fst pi'), snd pi' in
+  let ht2 = pstep_par_star_upd_same #ps #pi #pi' h1 p c' in
+  PP_tran #ps' #(pi1, s1) #(pi1', s1') #(pi1'', s1'') ht1 ht2
 
 (* TODO: FIXME: this is a weird behavior *)
 val slice_c_snd_lemma: ps:prins -> c:sconfig{is_par c}
