@@ -26,7 +26,7 @@ open Microsoft.FStar.Tc
 type binding = 
     | Ty  of btvar * mlident * mlty           //a, 'a, ('a | Top)  
     | Bv  of bvvar * mlident * mltyscheme     //x,  x, translation (typeof x)
-    | Fv  of fvvar * mltyscheme     //f, translation (typeof f). mlpath of fvvar will be computed at lookups 
+    | Fv  of fvvar * mlpath * mltyscheme     //f,  f, translation (typeof f)
 
 type env = {
     tcenv:Tc.Env.env;
@@ -38,73 +38,6 @@ type env = {
     currentModule: mlpath // needed to properly translate the definitions in the current file
 }
 
-(*copied from ocaml-asttrans.fs*)
-
-(* -------------------------------------------------------------------- *)
-let outmod = [
-    ["Prims"];
-    ["System"];
-    ["ST"];
-    ["Option"];
-    ["String"];
-    ["Char"];
-    ["Bytes"];
-    ["List"];
-    ["Array"];
-    ["Set"];
-    ["Map"];
-    ["Heap"];
-    ["DST"];
-    ["IO"];
-    ["Tcp"];
-    ["Crypto"];
-    ["Collections"];
-    ["Microsoft"; "FStar"; "Bytes"];
-    ["Microsoft"; "FStar"; "Platform"];
-    ["Microsoft"; "FStar"; "Util"];
-    ["Microsoft"; "FStar"; "Getopt"];
-    ["Microsoft"; "FStar"; "Unionfind"];
-    ["Microsoft"; "FStar"; "Range"];
-    ["Microsoft"; "FStar"; "Parser"; "Util"];
-]
-
-
-let rec in_ns = function
-| [], _ -> true
-| x1::t1, x2::t2 when (x1 = x2) -> in_ns (t1, t2)
-| _, _ -> false
-
-(* -------------------------------------------------------------------- *)
-let path_of_ns (currentModule : mlpath) ns =
-    let ns = List.map (fun x -> x.idText) ns in
-    let outsupport = fun (ns1,ns2) -> if ns1 = ns2 then [] else [String.concat "_" ns2]
-    
-    (*function
-    | x1 :: p1, x2 :: p2 when x1 = x2 -> outsupport (p1, p2)
-    | _, p -> p
-    *)
-    in let chkin sns = if in_ns (sns, ns) then Some sns else None
-    in match List.tryPick chkin outmod with
-    | None -> 
-        (match List.tryPick chkin (!Microsoft.FStar.Options.codegen_libs) with
-         | None -> outsupport ((fst currentModule) @ [snd currentModule], ns)
-         | _ -> ns)
-    | Some sns -> "Support" :: ns
-
-let mlpath_of_lident (currentModule : mlpath) (x : lident) : mlpath =
-    match x.str with
-    | "Prims.Some" -> ([], "Some")
-    | "Prims.None" -> ([], "None")
-    | "Prims.failwith" -> ([], "failwith")
-    | "ST.alloc" -> ([], "ref")
-    | "ST.read" -> (["Support";"Prims"], "op_Bang")
-    | "ST.op_ColonEquals" -> (["Support";"Prims"], "op_ColonEquals")
-    | _ ->
-      begin
-        let ns = x.ns in
-        let x  = x.ident.idText in
-        (path_of_ns currentModule ns, x)
-      end
 
 
 let mkFvvar (l: lident) (t:typ) : fvvar =
@@ -115,7 +48,7 @@ let mkFvvar (l: lident) (t:typ) : fvvar =
 
 (* MLTY_Tuple [] extracts to (), and is an alternate choice. 
     However, it represets both the unit type and the unit value. Ocaml gets confused sometimes*)
-let erasedContent : mlty = MLTY_Named ([],(["Support"; "Prims"], "unit"))
+let erasedContent : mlty = MLTY_Named ([],([], "unit"))
 let ml_unit_ty = erasedContent
 
 let rec erasableType_init (t:mlty) =
@@ -151,7 +84,7 @@ let lookup_ty (g:env) (x:either<btvar,ftvar>) : mlty =
 
 let lookup_fv (g:env) (fv:fvvar) : mlpath * mltyscheme = 
     let x = Util.find_map g.gamma (function 
-        | Fv (fv', sc) when lid_equals fv.v fv'.v -> Some (mlpath_of_lident g.currentModule fv'.v, sc)
+        | Fv (fv', path, sc) when lid_equals fv.v fv'.v -> Some (path, sc)
         | _ -> None) in
     match x with 
         | None -> failwith (Util.format2 "(%s) free Variable %s not found\n" (Range.string_of_range fv.p) (Print.sli fv.v))
@@ -216,10 +149,10 @@ let rec subsetMlidents (la : list<mlident>) (lb : list<mlident>)  : bool =
 let tySchemeIsClosed (tys : mltyscheme) : bool =
     subsetMlidents  (mltyFvars (snd tys)) (fst tys)
 
-let extend_fv' (g:env) (x:fvvar) (t_x:mltyscheme) : env =
+let extend_fv' (g:env) (x:fvvar) (y:mlpath) (t_x:mltyscheme) : env =
     if  (tySchemeIsClosed t_x)
     then 
-        let gamma = Fv(x, t_x)::g.gamma in 
+        let gamma = Fv(x, y, t_x)::g.gamma in 
         let tcenv = Env.push_local_binding g.tcenv (Env.Binding_lid(x.v, x.sort)) in
         {g with gamma=gamma; tcenv=tcenv} 
     else
@@ -227,20 +160,20 @@ let extend_fv' (g:env) (x:fvvar) (t_x:mltyscheme) : env =
         failwith "freevars found"
 
 let extend_fv (g:env) (x:fvvar) (t_x:mltyscheme) : env =
-    //let mlp = (mlpath_of_lident g.currentModule x.v) in 
+    let mlp = (mlpath_of_lident x.v) in 
     // the mlpath cannot be determined here. it can be determined at use site, depending on the name of the module where it is used
     // so this conversion should be moved to lookup_fv
 
     //let _ = printfn "(* old name  \n %A \n new name \n %A \n name in dependent module \n %A \n *) \n"  (Backends.ML.Syntax.mlpath_of_lident x.v) mlp (mlpath_of_lident ([],"SomeDepMod") x.v) in
-    extend_fv' g x t_x
+    extend_fv' g x mlp t_x
 
 let extend_lb (g:env) (l:lbname) (t:typ) (t_x:mltyscheme) : (env * mlident) = 
     match l with 
         | Inl x -> 
           extend_bv g (Util.bvd_to_bvar_s x t) t_x, as_mlident x
         | Inr f -> 
-          let _, y = mlpath_of_lident g.currentModule f in
-          extend_fv' g (Util.fvvar_of_lid f t)  t_x, (y, 0)
+          let _, y = mlpath_of_lident f in
+          extend_fv' g (Util.fvvar_of_lid f t) ([], y) t_x, (y,0)
 
 let extend_tydef (g:env) (td:mltydecl) : env = {g with tydefs=td::g.tydefs}
 

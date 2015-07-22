@@ -12,13 +12,10 @@ type mlpath   = list<mlsymbol> * mlsymbol
 let idsym ((s, _) : mlident) : mlsymbol =
     s
 
-let ptsym ((p, s) : mlpath) : mlsymbol =
-    let s = if Char.lowercase (String.get s 0) <> String.get s 0 then "l__" ^ s else s in
+let string_of_mlpath ((p, s) : mlpath) : mlsymbol =
     String.concat "." (p @ [s])
+ 
 
-let ptctor ((p, s) : mlpath) : mlsymbol =
-    let s = if Char.uppercase (String.get s 0) <> String.get s 0 then "U__" ^ s else s in
-    String.concat "." (p @ [s]) 
 
 (* -------------------------------------------------------------------- *)
 let mlpath_of_lident (x : lident) : mlpath =
@@ -119,7 +116,7 @@ and mlsig = list<mlsig1>
 
 (* -------------------------------------------------------------------- *)
 type mllib = 
-  | MLLib of list<(mlsymbol * option<(mlsig * mlmodule)> * mllib)>
+  | MLLib of list<(mlpath * option<(mlsig * mlmodule)> * mllib)>
 
 (* -------------------------------------------------------------------- *)
 let mlseq (e1 : mlexpr) (e2 : mlexpr) =

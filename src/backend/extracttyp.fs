@@ -191,7 +191,7 @@ and extractTyConstApp (c:context) (ftv:ftvar) (ags : args) =
                  //assert (List.length ar >= List.length mlargs);
                  let (_, missingArgs) = Util.first_N (List.length mlargs) ar in
                  let argCompletion =  List.map mlty_of_isExp missingArgs in
-                    (MLTY_Named (List.append mlargs argCompletion,(mlpath_of_lident c.currentModule ftv.v)))
+                    (MLTY_Named (List.append mlargs argCompletion,(mlpath_of_lident ftv.v)))
              | false -> failwith "this case was not anticipated"
                  (* match  (deltaUnfold ftv.v c) with
                  | Some tyu ->  extractTyp c tyu

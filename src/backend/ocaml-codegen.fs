@@ -39,6 +39,84 @@ let e_app_prio        = (10000, Infix Left)
 let min_op_prec = (-1, Infix NonAssoc)
 let max_op_prec = (max_int, Infix NonAssoc)
 
+
+(*copied from ocaml-asttrans.fs*)
+
+(* -------------------------------------------------------------------- *)
+let outmod = [
+    ["Prims"];
+    ["System"];
+    ["ST"];
+    ["Option"];
+    ["String"];
+    ["Char"];
+    ["Bytes"];
+    ["List"];
+    ["Array"];
+    ["Set"];
+    ["Map"];
+    ["Heap"];
+    ["DST"];
+    ["IO"];
+    ["Tcp"];
+    ["Crypto"];
+    ["Collections"];
+    ["Microsoft"; "FStar"; "Bytes"];
+    ["Microsoft"; "FStar"; "Platform"];
+    ["Microsoft"; "FStar"; "Util"];
+    ["Microsoft"; "FStar"; "Getopt"];
+    ["Microsoft"; "FStar"; "Unionfind"];
+    ["Microsoft"; "FStar"; "Range"];
+    ["Microsoft"; "FStar"; "Parser"; "Util"];
+]
+
+
+let rec in_ns = function
+| [], _ -> true
+| x1::t1, x2::t2 when (x1 = x2) -> in_ns (t1, t2)
+| _, _ -> false
+
+(* -------------------------------------------------------------------- *)
+let path_of_ns (currentModule : mlpath) ns =
+    let outsupport = fun (ns1,ns2) -> if ns1 = ns2 then [] else [String.concat "_" ns2]
+    
+    (*function
+    | x1 :: p1, x2 :: p2 when x1 = x2 -> outsupport (p1, p2)
+    | _, p -> p
+    *)
+    in let chkin sns = if in_ns (sns, ns) then Some sns else None
+    in match List.tryPick chkin outmod with
+    | None -> 
+        (match List.tryPick chkin (!Microsoft.FStar.Options.codegen_libs) with
+         | None -> outsupport ((fst currentModule) @ [snd currentModule], ns)
+         | _ -> ns)
+    | Some sns -> "Support" :: ns
+
+let mlpath_of_mlpath (currentModule : mlpath) (x : mlpath) : mlpath =
+    match string_of_mlpath x with
+    | "Prims.Some" -> ([], "Some")
+    | "Prims.None" -> ([], "None")
+    | "Prims.failwith" -> ([], "failwith")
+    | "ST.alloc" -> ([], "ref")
+    | "ST.read" -> (["Support";"Prims"], "op_Bang")
+    | "ST.op_ColonEquals" -> (["Support";"Prims"], "op_ColonEquals")
+    | _ ->
+      begin
+        let ns = fst x in
+        let x  = snd x in
+        (path_of_ns currentModule ns, x)
+      end
+
+let ptsym (currentModule : mlpath) (mlp : mlpath) : mlsymbol =
+    let (p, s) = mlpath_of_mlpath currentModule mlp in
+    let s = if Char.lowercase (String.get s 0) <> String.get s 0 then "l__" ^ s else s in
+    String.concat "." (p @ [s])
+
+let ptctor (currentModule : mlpath) (mlp : mlpath) : mlsymbol =
+    let (p, s) = mlpath_of_mlpath currentModule mlp in
+    let s = if Char.uppercase (String.get s 0) <> String.get s 0 then "U__" ^ s else s in
+    String.concat "." (p @ [s]) 
+
 (* -------------------------------------------------------------------- *)
 let infix_prim_ops = [
     ("op_Addition"       , e_bin_prio_op1   , "+" );
@@ -203,13 +281,13 @@ let string_of_mlconstant (sctt : mlconstant) =
 
 
 (* -------------------------------------------------------------------- *)
-let rec doc_of_mltype (outer : level) (ty : mlty) =
+let rec doc_of_mltype (currentModule: mlpath) (outer : level) (ty : mlty) =
     match ty with
     | MLTY_Var x ->
         text (idsym x)
 
     | MLTY_Tuple tys ->
-        let doc = List.map (doc_of_mltype (t_prio_tpl, Left)) tys in
+        let doc = List.map (doc_of_mltype currentModule (t_prio_tpl, Left)) tys in
         let doc = parens (hbox (combine (text " * ") doc)) in
         doc
 
@@ -217,9 +295,9 @@ let rec doc_of_mltype (outer : level) (ty : mlty) =
         let args =
             match args with
             | []    -> empty
-            | [arg] -> doc_of_mltype (t_prio_name, Left) arg
+            | [arg] -> doc_of_mltype currentModule (t_prio_name, Left) arg
             | _     ->
-                let args = List.map (doc_of_mltype (min_op_prec, NonAssoc)) args in
+                let args = List.map (doc_of_mltype currentModule (min_op_prec, NonAssoc)) args in
                 parens (hbox (combine (text ", ") args))
 
         in
@@ -228,20 +306,20 @@ let rec doc_of_mltype (outer : level) (ty : mlty) =
           if is_standard_type name then
             snd (Option.get (as_standard_type name))
           else
-            ptsym name
+            ptsym currentModule name
 
         in hbox (reduce1 [args; text name])
     end
 
     | MLTY_Fun (t1, _, t2) ->
-        let d1 = doc_of_mltype (t_prio_fun, Left ) t1 in
-        let d2 = doc_of_mltype (t_prio_fun, Right) t2 in
+        let d1 = doc_of_mltype currentModule (t_prio_fun, Left ) t1 in
+        let d2 = doc_of_mltype currentModule (t_prio_fun, Right) t2 in
 
         maybe_paren outer t_prio_fun (hbox (reduce1 [d1; text " -> "; d2]))
 
     | MLTY_App (t1, t2) ->
-        let d1 = doc_of_mltype (t_prio_fun, Left ) t1 in
-        let d2 = doc_of_mltype (t_prio_fun, Right) t2 in
+        let d1 = doc_of_mltype currentModule (t_prio_fun, Left ) t1 in
+        let d2 = doc_of_mltype currentModule (t_prio_fun, Right) t2 in
 
         maybe_paren outer t_prio_fun (hbox (reduce1 [d2; text " "; d1]))
 
@@ -249,14 +327,14 @@ let rec doc_of_mltype (outer : level) (ty : mlty) =
       text "Obj.t" //TODO: change this to 'obj' if we're generating F#
 
 (* -------------------------------------------------------------------- *)
-let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
+let rec doc_of_expr (currentModule: mlpath) (outer : level) (e : mlexpr) : doc =
     match e with
     | MLE_Coerce (e, t, t') -> 
-      let doc = doc_of_expr (min_op_prec, NonAssoc) e in    
+      let doc = doc_of_expr currentModule (min_op_prec, NonAssoc) e in    
       parens (reduce [text "Obj.magic "; doc]) //TODO: rewire to a checked cast for F#; check that the doc is being generated properly ...don't really understand the API yet
 
     | MLE_Seq es ->
-        let docs = List.map (doc_of_expr (min_op_prec, NonAssoc)) es in
+        let docs = List.map (doc_of_expr currentModule (min_op_prec, NonAssoc)) es in
         let docs = List.map (fun d -> reduce [d; text ";"; hardline]) docs in
         reduce docs
 
@@ -267,12 +345,12 @@ let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
         text x
 
     | MLE_Name path ->
-        text (ptsym path)
+        text (ptsym currentModule path)
 
     | MLE_Record (path, fields) ->
         let for1 (name, e) =
-            let doc = doc_of_expr (min_op_prec, NonAssoc) e in
-            reduce1 [text (ptsym (path, name)); text "="; doc] in
+            let doc = doc_of_expr currentModule (min_op_prec, NonAssoc) e in
+            reduce1 [text (ptsym currentModule (path, name)); text "="; doc] in
 
         cbrackets (combine (text "; ") (List.map for1 fields))
 
@@ -281,7 +359,7 @@ let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
          if is_standard_constructor ctor then
            snd (Option.get (as_standard_constructor ctor))
          else
-           ptctor ctor in
+           ptctor currentModule  ctor in
         text name
 
     | MLE_CTor (ctor, args) ->
@@ -289,8 +367,8 @@ let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
          if is_standard_constructor ctor then
            snd (Option.get (as_standard_constructor ctor))
          else
-           ptctor ctor in
-        let args = List.map (doc_of_expr (min_op_prec, NonAssoc)) args in
+           ptctor currentModule  ctor in
+        let args = List.map (doc_of_expr currentModule (min_op_prec, NonAssoc)) args in
         let doc =
           match name, args with
             (* Special case for Cons *)
@@ -299,103 +377,103 @@ let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
         maybe_paren outer e_app_prio doc
 
     | MLE_Tuple es ->
-        let docs = List.map (doc_of_expr (min_op_prec, NonAssoc)) es in
+        let docs = List.map (doc_of_expr currentModule (min_op_prec, NonAssoc)) es in
         let docs = parens (combine (text ", ") docs) in
         docs
 
     | MLE_Let ((rec_, lets), body) ->
-        let doc  = doc_of_lets (rec_, lets) in
-        let body = doc_of_expr (min_op_prec, NonAssoc) body in
+        let doc  = doc_of_lets currentModule (rec_, lets) in
+        let body = doc_of_expr  currentModule (min_op_prec, NonAssoc) body in
         parens (combine hardline [doc; reduce1 [text "in"; body]])
 
     | MLE_App (e, args) -> begin
         match e, args with
         | (MLE_Name p, [e1; e2]) when is_bin_op p ->
             let (_, prio, txt) = Option.get (as_bin_op p) in
-            let e1  = doc_of_expr (prio, Left ) e1 in
-            let e2  = doc_of_expr (prio, Right) e2 in
+            let e1  = doc_of_expr  currentModule (prio, Left ) e1 in
+            let e2  = doc_of_expr  currentModule (prio, Right) e2 in
             let doc = reduce1 [e1; text txt; e2] in
             parens doc
 
         | (MLE_Name p, [e1]) when is_uni_op p ->
             let (_, txt) = Option.get (as_uni_op p) in
-            let e1  = doc_of_expr (min_op_prec, NonAssoc ) e1 in
+            let e1  = doc_of_expr  currentModule  (min_op_prec, NonAssoc ) e1 in
             let doc = reduce1 [text txt; parens e1] in
             parens doc
 
         | _ ->
-            let e    = doc_of_expr (e_app_prio, ILeft) e in
-            let args = List.map (doc_of_expr (e_app_prio, IRight)) args in
+            let e    = doc_of_expr  currentModule (e_app_prio, ILeft) e in
+            let args = List.map (doc_of_expr currentModule  (e_app_prio, IRight)) args in
             parens (reduce1 (e :: args))
     end
 
     | MLE_Proj (e, f) ->
-       let e = doc_of_expr (min_op_prec, NonAssoc) e in
-       let doc = reduce [e; text "."; text (ptsym f)] in
+       let e = doc_of_expr  currentModule  (min_op_prec, NonAssoc) e in
+       let doc = reduce [e; text "."; text (ptsym currentModule f)] in
        doc
 
     | MLE_Fun (ids, body) ->
-        let ids  = List.map (fun ((x, _),xt) -> reduce1 [text "("; text x ; (match xt with | Some xxt -> reduce1 [text " : "; doc_of_mltype outer xxt] | _ -> text "");text ")"]) ids in
-        let body = doc_of_expr (min_op_prec, NonAssoc) body in
+        let ids  = List.map (fun ((x, _),xt) -> reduce1 [text "("; text x ; (match xt with | Some xxt -> reduce1 [text " : "; doc_of_mltype currentModule  outer xxt] | _ -> text "");text ")"]) ids in
+        let body = doc_of_expr currentModule (min_op_prec, NonAssoc) body in
         let doc  = reduce1 [text "fun"; reduce1 ids; text "->"; body] in
         parens doc
 
     | MLE_If (cond, e1, None) ->
-        let cond = doc_of_expr (min_op_prec, NonAssoc) cond in
+        let cond = doc_of_expr currentModule  (min_op_prec, NonAssoc) cond in
         let doc  =
             combine hardline [
                 reduce1 [text "if"; cond; text "then"; text "begin"];
-                doc_of_expr (min_op_prec, NonAssoc) e1;
+                doc_of_expr currentModule  (min_op_prec, NonAssoc) e1;
                 text "end"
             ]
 
         in maybe_paren outer e_bin_prio_if doc
 
     | MLE_If (cond, e1, Some e2) ->
-        let cond = doc_of_expr (min_op_prec, NonAssoc) cond in
+        let cond = doc_of_expr currentModule  (min_op_prec, NonAssoc) cond in
         let doc  =
             combine hardline [
                 reduce1 [text "if"; cond; text "then"; text "begin"];
-                doc_of_expr (min_op_prec, NonAssoc) e1;
+                doc_of_expr currentModule  (min_op_prec, NonAssoc) e1;
                 reduce1 [text "end"; text "else"; text "begin"];
-                doc_of_expr (min_op_prec, NonAssoc) e2;
+                doc_of_expr currentModule  (min_op_prec, NonAssoc) e2;
                 text "end"
             ]
 
         in maybe_paren outer e_bin_prio_if doc
 
     | MLE_Match (cond, pats) ->
-        let cond = doc_of_expr (min_op_prec, NonAssoc) cond in
-        let pats = List.map doc_of_branch pats in
+        let cond = doc_of_expr currentModule  (min_op_prec, NonAssoc) cond in
+        let pats = List.map (doc_of_branch currentModule) pats in
         let doc  = reduce1 [text "match"; parens cond; text "with"] :: pats in
         let doc  = combine hardline doc in
 
         parens doc
 
     | MLE_Raise (exn, []) ->
-        reduce1 [text "raise"; text (ptctor exn)]
+        reduce1 [text "raise"; text (ptctor currentModule  exn)]
 
     | MLE_Raise (exn, args) ->
-        let args = List.map (doc_of_expr (min_op_prec, NonAssoc)) args in
-        reduce1 [text "raise"; text (ptctor exn); parens (combine (text ", ") args)]
+        let args = List.map (doc_of_expr currentModule  (min_op_prec, NonAssoc)) args in
+        reduce1 [text "raise"; text (ptctor currentModule  exn); parens (combine (text ", ") args)]
 
     | MLE_Try (e, pats) ->
         combine hardline [
             reduce1 [text "try"; text "begin"];
-            doc_of_expr (min_op_prec, NonAssoc) e;
+            doc_of_expr currentModule  (min_op_prec, NonAssoc) e;
             reduce1 [text "end"; text "with"];
-            (combine hardline (List.map doc_of_branch pats))
+            (combine hardline (List.map (doc_of_branch currentModule) pats))
         ]
 
 (* -------------------------------------------------------------------- *)
-and doc_of_pattern (pattern : mlpattern) : doc =
+and doc_of_pattern (currentModule: mlpath) (pattern : mlpattern) : doc =
     match pattern with
     | MLP_Wild     -> text "_"
     | MLP_Const  c -> text (string_of_mlconstant c)
     | MLP_Var    x -> text (fst x)
 
     | MLP_Record (path, fields) ->
-        let for1 (name, p) = reduce1 [text (ptsym (path, name)); text "="; doc_of_pattern p] in
+        let for1 (name, p) = reduce1 [text (ptsym currentModule  (path, name)); text "="; doc_of_pattern currentModule p] in
         cbrackets (combine (text "; ") (List.map for1 fields))
 
     | MLP_CTor (ctor, []) ->
@@ -403,16 +481,16 @@ and doc_of_pattern (pattern : mlpattern) : doc =
          if is_standard_constructor ctor then
            snd (Option.get (as_standard_constructor ctor))
          else
-           ptctor ctor in
+           ptctor currentModule  ctor in
         text name
 
     | MLP_CTor (ctor, ps) ->
-        let ps = List.map doc_of_pattern ps in
+        let ps = List.map (doc_of_pattern currentModule) ps in
        let name =
          if is_standard_constructor ctor then
            snd (Option.get (as_standard_constructor ctor))
          else
-           ptctor ctor in
+           ptctor currentModule  ctor in
        let doc =
          match name, ps with
            (* Special case for Cons *)
@@ -421,33 +499,33 @@ and doc_of_pattern (pattern : mlpattern) : doc =
        maybe_paren (min_op_prec, NonAssoc) e_app_prio doc
 
     | MLP_Tuple ps ->
-        let ps = List.map doc_of_pattern ps in
+        let ps = List.map (doc_of_pattern currentModule) ps in
         parens (combine (text ", ") ps)
 
     | MLP_Branch ps ->
-        let ps = List.map doc_of_pattern ps in
+        let ps = List.map (doc_of_pattern currentModule) ps in
         let ps = List.map parens ps in
         combine (text " | ") ps
 
 (* -------------------------------------------------------------------- *)
-and doc_of_branch ((p, cond, e) : mlbranch) : doc =
+and doc_of_branch (currentModule: mlpath) ((p, cond, e) : mlbranch) : doc =
     let case =
         match cond with
-        | None   -> reduce1 [text "|"; doc_of_pattern p]
+        | None   -> reduce1 [text "|"; doc_of_pattern currentModule p]
         | Some c ->
-            let c = doc_of_expr (min_op_prec, NonAssoc) c in
-            reduce1 [text "|"; doc_of_pattern p; text "when"; c] in
+            let c = doc_of_expr currentModule  (min_op_prec, NonAssoc) c in
+            reduce1 [text "|"; doc_of_pattern currentModule p; text "when"; c] in
 
     combine hardline [
         reduce1 [case; text "->"; text "begin"];
-        doc_of_expr (min_op_prec, NonAssoc) e;
+        doc_of_expr currentModule  (min_op_prec, NonAssoc) e;
         text "end";
     ]
 
 (* -------------------------------------------------------------------- *)
-and doc_of_lets (rec_, lets) =
+and doc_of_lets (currentModule: mlpath) (rec_, lets) =
     let for1 (name, tys, ids, e) =
-        let e   = doc_of_expr (min_op_prec, NonAssoc) e in
+        let e   = doc_of_expr currentModule  (min_op_prec, NonAssoc) e in
         let ids = List.map (fun (x, _) -> text x) ids in
         reduce1 [text (idsym name); reduce1 ids; text "="; e] in
 
@@ -461,7 +539,7 @@ and doc_of_lets (rec_, lets) =
     combine hardline lets
 
 (* -------------------------------------------------------------------- *)
-let doc_of_mltydecl (decls : mltydecl) =
+let doc_of_mltydecl (currentModule: mlpath) (decls : mltydecl) =
     let for1 (x, tparams, body) =
         let tparams =
             match tparams with
@@ -474,12 +552,12 @@ let doc_of_mltydecl (decls : mltydecl) =
         let forbody (body : mltybody) =
             match body with
             | MLTD_Abbrev ty ->
-                doc_of_mltype (min_op_prec, NonAssoc) ty
+                doc_of_mltype currentModule  (min_op_prec, NonAssoc) ty
 
             | MLTD_Record fields -> begin
                 let forfield (name, ty) =
                     let name = text name in
-                    let ty   = doc_of_mltype (min_op_prec, NonAssoc) ty in
+                    let ty   = doc_of_mltype currentModule  (min_op_prec, NonAssoc) ty in
                     reduce1 [name; text ":"; ty]
 
                 in cbrackets (combine (text "; ") (List.map forfield fields))
@@ -490,7 +568,7 @@ let doc_of_mltydecl (decls : mltydecl) =
                     match tys with
                     | [] -> text name
                     | _  ->
-                        let tys = List.map (doc_of_mltype (t_prio_tpl, Left)) tys in
+                        let tys = List.map (doc_of_mltype currentModule  (t_prio_tpl, Left)) tys in
                         let tys = combine (text " * ") tys in
                         reduce1 [text name; text "of"; tys]
                 in
@@ -501,7 +579,7 @@ let doc_of_mltydecl (decls : mltydecl) =
 
         in
 
-        let doc = reduce1 [tparams; text (ptsym ([], x))] in
+        let doc = reduce1 [tparams; text (ptsym currentModule  ([], x))] in
 
         match body with
         | None      -> doc
@@ -516,70 +594,70 @@ let doc_of_mltydecl (decls : mltydecl) =
     doc
 
 (* -------------------------------------------------------------------- *)
-let rec doc_of_sig1 s = 
+let rec doc_of_sig1 (currentModule: mlpath) s = 
     match s with
     | MLS_Mod (x, subsig) ->
         combine hardline
             [reduce1 [text "module"; text x; text "="];
-             doc_of_sig subsig;
+             doc_of_sig currentModule subsig;
              reduce1 [text "end"]]
 
     | MLS_Exn (x, []) ->
         reduce1 [text "exception"; text x]
 
     | MLS_Exn (x, args) ->
-        let args = List.map (doc_of_mltype (min_op_prec, NonAssoc)) args in
+        let args = List.map (doc_of_mltype currentModule  (min_op_prec, NonAssoc)) args in
         let args = parens (combine (text " * ") args) in
         reduce1 [text "exception"; text x; text "of"; args]
 
     | MLS_Val (x, (_, ty)) ->
-        let ty = doc_of_mltype (min_op_prec, NonAssoc) ty in
+        let ty = doc_of_mltype currentModule  (min_op_prec, NonAssoc) ty in
         reduce1 [text "val"; text x; text ": "; ty]
 
     | MLS_Ty decls ->
-        doc_of_mltydecl decls
+        doc_of_mltydecl currentModule decls
 
 (* -------------------------------------------------------------------- *)
-and doc_of_sig (s : mlsig) =
-    let docs = List.map doc_of_sig1 s in
+and doc_of_sig (currentModule: mlpath) (s : mlsig) =
+    let docs = List.map (doc_of_sig1 currentModule) s in
     let docs = List.map (fun x -> reduce [x; hardline; hardline]) docs in
     reduce docs
 
 (* -------------------------------------------------------------------- *)
-let doc_of_mod1 (m : mlmodule1) =
+let doc_of_mod1 (currentModule: mlpath) (m : mlmodule1) =
     match m with
     | MLM_Exn (x, []) ->
         reduce1 [text "exception"; text x]
 
     | MLM_Exn (x, args) ->
-        let args = List.map (doc_of_mltype (min_op_prec, NonAssoc)) args in
+        let args = List.map (doc_of_mltype currentModule  (min_op_prec, NonAssoc)) args in
         let args = parens (combine (text " * ") args) in
         reduce1 [text "exception"; text x; text "of"; args]
 
     | MLM_Ty decls ->
-        doc_of_mltydecl decls
+        doc_of_mltydecl currentModule decls
 
     | MLM_Let (rec_, lets) ->
-      doc_of_lets (rec_, lets)
+      doc_of_lets currentModule (rec_, lets)
 
     | MLM_Top e ->
         reduce1 [
             text "let"; text "_"; text "=";
-            doc_of_expr (min_op_prec, NonAssoc) e
+            doc_of_expr currentModule  (min_op_prec, NonAssoc) e
         ]
 
 (* -------------------------------------------------------------------- *)
-let doc_of_mod (m : mlmodule) =
-    let docs = List.map doc_of_mod1 m in
+let doc_of_mod (currentModule: mlpath) (m : mlmodule) =
+    let docs = List.map (doc_of_mod1 currentModule) m in
     let docs = List.map (fun x -> reduce [x; hardline; hardline]) docs in
     reduce docs
 
 (* -------------------------------------------------------------------- *)
 let rec doc_of_mllib_r (MLLib mllib) =
     let rec for1_sig (x, sigmod, MLLib sub) =
-        let head = reduce1 [text "module"; text x; text ":"; text "sig"] in
+        let head = reduce1 [text "module"; text (string_of_mlpath x); text ":"; text "sig"] in
         let tail = reduce1 [text "end"] in
-        let doc  = Option.map (fun (s, _) -> doc_of_sig s) sigmod in
+        let doc  = Option.map (fun (s, _) -> doc_of_sig x s) sigmod in
         let sub  = List.map for1_sig sub in
         let sub  = List.map (fun x -> reduce [x; hardline; hardline]) sub in
 
@@ -592,13 +670,13 @@ let rec doc_of_mllib_r (MLLib mllib) =
             cat tail hardline;
         ]
     and for1_mod istop (x, sigmod, MLLib sub) =
-        fprint1 "Gen Code:kdhvljkdshalfkhclklkdnfsnydufnysdkyfnklsnykweyacklnyrecynrncrewanyu: %s\n" x;
+        fprint1 "Gen Code: %s\n" (string_of_mlpath x);
         let head = reduce1 (if   not istop
-                            then [text "module"; text x; text "="; text "struct"]
+                            then [text "module";  text (string_of_mlpath x); text "="; text "struct"]
                             else []) in
         let tail = if not istop then reduce1 [text "end"] else reduce1 [] in
-        let doc  = Option.map (fun (_, m) -> doc_of_mod m) sigmod in
-        let sub  = List.map (for1_mod false) sub in
+        let doc  = Option.map (fun (_, m) -> doc_of_mod x m) sigmod in
+        let sub  = List.map (for1_mod false)  sub in
         let sub  = List.map (fun x -> reduce [x; hardline; hardline]) sub in
 
         reduce [
@@ -612,7 +690,7 @@ let rec doc_of_mllib_r (MLLib mllib) =
 
     in
 
-    let docs = List.map (fun (x,s,m) -> (x,for1_mod true (x,s,m))) mllib in
+    let docs = List.map (fun (x,s,m) -> ((string_of_mlpath x) ,for1_mod true (x,s,m))) mllib in
 
 (* was:
     let docs = List.combine (List.map for1_sig mllib) (List.map (for1_mod true) mllib) in

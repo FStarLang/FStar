@@ -84,8 +84,8 @@ let rec extract (g:env) (m:modul) : env * mllib =
     if m.is_interface then failwith "NYI";
     if m.name.str = "Prims"
     then let g = extract_prims g m in 
-         g, MLLib(["Prims", None, MLLib []])
+         g, MLLib([name, None, MLLib []])
     else let g, sigs = Util.fold_map extract_sig g m.declarations in
          let mlm : mlmodule = List.flatten sigs in
-         g, MLLib ([m.name.str, Some ([], mlm), (MLLib [])])
+         g, MLLib ([name, Some ([], mlm), (MLLib [])])
     
