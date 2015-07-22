@@ -26,8 +26,6 @@ package: $(FSTARML)
 	cp ../../LICENSE fstar/
 	mkdir fstar/bin
 	cp README fstar/
-#	cp /usr/bin/ocamlopt fstar/bin/ocamlopt || true
-#	cp /usr/bin/ocamlrun fstar/bin/fsocamlrun || true
 	cp ../../setenv.sh fstar/
 	cd ../.. && git archive --format=tar --prefix=lib/ HEAD:lib/ | tar -x -C src/ocaml-output/fstar
 	cp $(FSTARML) fstar/bin/fstar.exe
@@ -35,13 +33,6 @@ package: $(FSTARML)
 	cd ../.. && git archive --format=tar --prefix=examples/ HEAD:examples/ | tar -x -C src/ocaml-output/fstar
 	cd ../.. && git archive --format=tar --prefix=doc/tutorial/ HEAD:doc/tutorial/ | tar -x -C src/ocaml-output/fstar
 	cd fstar/doc/tutorial; make
-#	mkdir fstar/mllib || true
-#	cp ~/.opam/system/lib/num/* fstar/mllib || true
-#	cp ~/.opam/system/lib/bytes/* fstar/mllib || true
-#	cp ~/.opam/system/lib/batteries/* fstar/mllib || true
-#	cp ~/.opam/system/lib/fstar/* fstar/mllib || true
-#	cp /usr/lib/ocaml/unix.cmxa /usr/lib/ocaml/nums.cmxa /usr/lib/ocaml/bigarray.cmxa /usr/lib/ocaml/str.cmxa fstar/mllib || true
-#	cp /usr/lib/ocaml/unix.a /usr/lib/ocaml/nums.a /usr/lib/ocaml/bigarray.a /usr/lib/ocaml/str.a fstar/mllib || true
 ifeq ($(OS),Windows_NT)
 	zip -r -9 fstar_`git log --pretty=format:'%h' -n 1`_`uname`_`uname -m`.zip fstar
 else
