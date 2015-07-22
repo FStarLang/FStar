@@ -402,34 +402,6 @@ let as_function_typ env t0 =
                    else failwith (Util.format2 "(%s) Expected a function typ; got %s" (Range.string_of_range t0.pos) (Print.typ_to_string t0))
     in aux true t0
 
-//let rec encode_knd' (prekind:bool) (k:knd) (env:env_t) (t:term) : term  * decls_t = 
-//    match (Util.compress_kind k).n with 
-//        | Kind_type -> 
-//           mk_HasKind t (Term.mk_Kind_type), []
-//
-//        | Kind_abbrev(_, k0) ->
-//           if Tc.Env.debug env.tcenv (Options.Other "Encoding")
-//           then Util.fprint2 "Encoding kind abbrev %s, expanded to %s\n" (Print.kind_to_string k) (Print.kind_to_string k0);
-//           encode_knd' prekind k0 env t
-//
-//        | Kind_uvar (uv, _) -> (* REVIEW: warn? *)
-//            Term.mkTrue, []
-//
-//        | Kind_arrow(bs, k) -> 
-//            let vars, guards, env', decls, _ = encode_binders None bs env in 
-//            let app = mk_ApplyT t vars in
-//            let k, decls' = encode_knd' prekind k env' app in
-//            let term = Term.mkForall([app], vars, mkImp(mk_and_l guards, k)) in
-//            let term = 
-//                if prekind
-//                then Term.mkAnd(mk_tester "Kind_arrow" (mk_PreKind t), 
-//                                term)
-//                else term in 
-//            term,
-//            decls@decls'
-//
-//        | _ -> failwith (Util.format1 "Unknown kind: %s" (Print.kind_to_string k))
-
 let rec encode_knd_term (k:knd) (env:env_t) : (term * decls_t) = 
     match (Util.compress_kind k).n with 
         | Kind_type -> Term.mk_Kind_type, []
@@ -1150,7 +1122,7 @@ and encode_formula_with_labels (phi:typ) (env:env_t) : (term * labels * decls_t)
     let encode_q_body env (bs:Syntax.binders) (ps:args) body = 
         let vars, guards, env, decls, _ = encode_binders None bs env in
         let pats, decls' = ps |> List.map (function 
-            | Inl t, _ -> encode_typ_term t env //encode_formula t env
+            | Inl t, _ -> encode_typ_term t env 
             | Inr e, _ -> encode_exp e ({env with use_zfuel_name=true})) |> List.unzip in 
         let body, labs, decls'' = encode_formula_with_labels body env in
         vars, pats, mk_and_l guards, body, labs, decls@List.flatten decls'@decls'' in
