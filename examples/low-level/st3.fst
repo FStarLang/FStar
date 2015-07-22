@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set --codegen OCaml;
+    options: --codegen OCaml-experimental --trace_error;
     variables:LIB=../../lib;
     variables:MATHS=../maths;
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst  $LIB/list.fst stack.fst listset.fst

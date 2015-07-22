@@ -172,7 +172,7 @@ match ft.n with // assume ft is compressed. is there a compresser for typ'?
             extractTyp c ty
 
   | Typ_ascribed (ty,_)  -> extractTyp c ty
-  | Typ_meta _ -> failwith "NYI"
+  | Typ_meta _ -> erasedContent //failwith ("NYI:" ^ Print.typ_to_string ft ) // what should we do wabout this? it is encountered in st3.fst
   | Typ_uvar _ -> failwith "NYI"
   | Typ_delayed _  -> failwith "expected the argument to be compressed"
   |   _ -> failwith "NYI. replace this with unknownType if you know the consequences"
