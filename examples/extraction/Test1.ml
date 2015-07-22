@@ -9,18 +9,18 @@ let idnat = (fun ( x  :  nnat ) -> x)
 
 let idnat2 = (fun ( x  :  nnat ) -> x)
 
-let id = (fun ( _2_95  :  unit ) ( x  :  'a ) -> x)
+let id = (fun ( _3_1373  :  unit ) ( x  :  'a ) -> x)
 
-let idp = (fun ( _2_95  :  unit ) ( x  :  Obj.t ) -> x)
+let idp = (fun ( _3_1373  :  unit ) ( x  :  Obj.t ) -> x)
 
-let idp' = (fun ( _2_95  :  unit ) ( x  :  'a ) -> x)
+let idp' = (fun ( _3_1373  :  unit ) ( x  :  'a ) -> x)
 
 let add1 = (fun ( a  :  nnat ) -> S (a))
 
-let add2 = (fun ( _2_1014  :  nnat ) -> S (_2_1014))
+let add2 = (fun ( _3_2292  :  nnat ) -> S (_3_2292))
 
-let eval_order = (fun ( effectful  :  string  ->  string ) ( f  :  string  ->  string  ->  string ) -> (let _2_1034 = (effectful "first")
-in (f _2_1034 "second")))
+let eval_order = (fun ( effectful  :  string  ->  string ) ( f  :  string  ->  string  ->  string ) -> (let _3_2312 = (effectful "first")
+in (f _3_2312 "second")))
 
 let prev = (fun ( _1_1  :  nnat ) -> (match (_1_1) with
 | O -> begin

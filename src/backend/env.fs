@@ -26,7 +26,7 @@ open Microsoft.FStar.Tc
 type binding = 
     | Ty  of btvar * mlident * mlty           //a, 'a, ('a | Top)  
     | Bv  of bvvar * mlident * mltyscheme     //x,  x, translation (typeof x)
-    | Fv  of fvvar * mlpath * mltyscheme     //f,  f, translation (typeof f)
+    | Fv  of fvvar * mltyscheme     //f, translation (typeof f). mlpath of fvvar will be computed at lookups 
 
 type env = {
     tcenv:Tc.Env.env;
@@ -151,7 +151,7 @@ let lookup_ty (g:env) (x:either<btvar,ftvar>) : mlty =
 
 let lookup_fv (g:env) (fv:fvvar) : mlpath * mltyscheme = 
     let x = Util.find_map g.gamma (function 
-        | Fv (fv', path, sc) when lid_equals fv.v fv'.v -> Some (path, sc)
+        | Fv (fv', sc) when lid_equals fv.v fv'.v -> Some (mlpath_of_lident g.currentModule fv'.v, sc)
         | _ -> None) in
     match x with 
         | None -> failwith (Util.format2 "(%s) free Variable %s not found\n" (Range.string_of_range fv.p) (Print.sli fv.v))
@@ -216,10 +216,10 @@ let rec subsetMlidents (la : list<mlident>) (lb : list<mlident>)  : bool =
 let tySchemeIsClosed (tys : mltyscheme) : bool =
     subsetMlidents  (mltyFvars (snd tys)) (fst tys)
 
-let extend_fv' (g:env) (x:fvvar) (y:mlpath) (t_x:mltyscheme) : env =
+let extend_fv' (g:env) (x:fvvar) (t_x:mltyscheme) : env =
     if  (tySchemeIsClosed t_x)
     then 
-        let gamma = Fv(x, y, t_x)::g.gamma in 
+        let gamma = Fv(x, t_x)::g.gamma in 
         let tcenv = Env.push_local_binding g.tcenv (Env.Binding_lid(x.v, x.sort)) in
         {g with gamma=gamma; tcenv=tcenv} 
     else
@@ -227,12 +227,12 @@ let extend_fv' (g:env) (x:fvvar) (y:mlpath) (t_x:mltyscheme) : env =
         failwith "freevars found"
 
 let extend_fv (g:env) (x:fvvar) (t_x:mltyscheme) : env =
-    let mlp = (mlpath_of_lident g.currentModule x.v) in 
+    //let mlp = (mlpath_of_lident g.currentModule x.v) in 
     // the mlpath cannot be determined here. it can be determined at use site, depending on the name of the module where it is used
     // so this conversion should be moved to lookup_fv
 
     //let _ = printfn "(* old name  \n %A \n new name \n %A \n name in dependent module \n %A \n *) \n"  (Backends.ML.Syntax.mlpath_of_lident x.v) mlp (mlpath_of_lident ([],"SomeDepMod") x.v) in
-    extend_fv' g x mlp t_x
+    extend_fv' g x t_x
 
 let extend_lb (g:env) (l:lbname) (t:typ) (t_x:mltyscheme) : (env * mlident) = 
     match l with 
@@ -240,7 +240,7 @@ let extend_lb (g:env) (l:lbname) (t:typ) (t_x:mltyscheme) : (env * mlident) =
           extend_bv g (Util.bvd_to_bvar_s x t) t_x, as_mlident x
         | Inr f -> 
           let _, y = mlpath_of_lident g.currentModule f in
-          extend_fv' g (Util.fvvar_of_lid f t) ([], y) t_x, (y,0)
+          extend_fv' g (Util.fvvar_of_lid f t)  t_x, (y, 0)
 
 let extend_tydef (g:env) (td:mltydecl) : env = {g with tydefs=td::g.tydefs}
 

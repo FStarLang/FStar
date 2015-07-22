@@ -9,20 +9,20 @@ let idnat = (fun ( x  :  nnat ) -> x)
 
 let idnat2 = (fun ( x  :  nnat ) -> x)
 
-let id = (fun ( _2_94  :  unit ) ( x  :  'a ) -> x)
+let id = (fun ( _3_1373  :  unit ) ( x  :  'a ) -> x)
 
-let idp = (fun ( _2_94  :  unit ) ( x  :  Obj.t ) -> x)
+let idp = (fun ( _3_1373  :  unit ) ( x  :  Obj.t ) -> x)
 
-let idp' = (fun ( _2_94  :  unit ) ( x  :  'a ) -> x)
+let idp' = (fun ( _3_1373  :  unit ) ( x  :  'a ) -> x)
 
 let add1 = (fun ( a  :  nnat ) -> S (a))
 
-let add2 = (fun ( _2_1037  :  nnat ) -> S (_2_1037))
+let add2 = (fun ( _3_2492  :  nnat ) -> S (_3_2492))
 
-let eval_order = (fun ( effectful  :  string  ->  string ) ( f  :  string  ->  string  ->  string ) -> (let _2_1057 = (effectful "first")
-in (f _2_1057 "second")))
+let eval_order = (fun ( effectful  :  string  ->  string ) ( f  :  string  ->  string  ->  string ) -> (let _3_2512 = (effectful "first")
+in (f _3_2512 "second")))
 
-let prev = (fun ( _1_1  :  nnat ) -> (match (_1_1) with
+let prev = (fun ( _3_1  :  nnat ) -> (match (_3_1) with
 | O -> begin
 O
 end
@@ -39,25 +39,25 @@ S ((add a' b))
 end))
 
 type ('a, 'b) prod =
-| Pair of unit * unit * Obj.t * Obj.t
+| Pair of 'a * 'b
 
 
 
 
 
 type 'a list =
-| Nil of unit
-| Cons of unit * Obj.t * Obj.t list
+| Nil
+| Cons of 'a * 'a list
 
 
 
 
 
-let prepend0 = (Obj.magic (fun ( tll  :  nnat list ) -> (fun ( _2_1100  :  Obj.t list ) -> Cons ((Obj.magic O), (Obj.magic tll), _2_1100))))
+let prepend0 = (fun ( tll  :  nnat list ) -> Cons (O, tll))
 
 type ('a, 'b) list2 =
-| Nil2 of unit * unit
-| Cons2 of unit * unit * Obj.t * Obj.t * (Obj.t, Obj.t) list2
+| Nil2
+| Cons2 of 'a * 'b * ('a, 'b) list2
 
 
 
@@ -76,8 +76,8 @@ type distr_pair =
 (unit  ->  Obj.t  ->  Obj.t)  ->  (nnat, nnat list) prod
 
 type 'a list2p =
-| Nil2p of unit
-| Cons2p of unit * Obj.t * (Obj.t, Obj.t) prod list2p
+| Nil2p
+| Cons2p of 'a * ('a, 'a) prod list2p
 
 
 
@@ -92,12 +92,12 @@ type 'dummyV1 list3 =
 
 
 type 'x poly =
-| Poly of unit * nnat * Obj.t
+| Poly of nnat * 'x
 
 
 
 type 'x poly2 =
-| Poly2 of unit * unit * Obj.t
+| Poly2 of unit * 'x
 
 
 
@@ -119,8 +119,8 @@ type idt =
 unit  ->  Obj.t  ->  Obj.t
 
 type ('a, 'dummyV1) vec =
-| Nill of unit
-| Conss of unit * nnat * Obj.t * (Obj.t, unit) vec
+| Nill
+| Conss of nnat * 'a * ('a, unit) vec
 
 
 
@@ -130,8 +130,8 @@ type vecn1 =
 (nnat, unit) vec
 
 type ('t, 'n) naryTree =
-| Leaf of unit * nnat
-| Node of unit * nnat * ((Obj.t, unit) naryTree, unit) vec
+| Leaf
+| Node of (('t, unit) naryTree, unit) vec
 
 
 
@@ -153,10 +153,10 @@ type polylistalias =
 Obj.t listalias poly2
 
 type 'a evenlist =
-| ENil of unit
-| ECons of unit * Obj.t * Obj.t oddlist 
+| ENil
+| ECons of 'a * 'a oddlist 
  and 'a oddlist =
-| OCons of unit * Obj.t * Obj.t evenlist
+| OCons of 'a * 'a evenlist
 
 
 
