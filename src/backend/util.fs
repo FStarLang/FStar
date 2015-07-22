@@ -45,9 +45,11 @@ let mlconst_of_const (sctt : sconst) =
       MLC_String (string_of_unicode (bytes))
 
 
-let rec subst_aux (subst:list<(mlident * mlty)>) (t:mlty) = 
+let rec subst_aux (subst:list<(mlident * mlty)>) (t:mlty)  : mlty = 
     match t with 
-    | MLTY_Var  x -> Util.find_opt (fun (y, _) -> y=x) subst |> must |> snd
+    | MLTY_Var  x -> (match Util.find_opt (fun (y, _) -> y=x) subst with
+                     | Some ts -> snd ts
+                     | None -> t) // TODO : previously, this case would abort. why? this case was encountered while extracting st3.fst
     | MLTY_Fun (t1, f, t2) -> MLTY_Fun(subst_aux subst t1, f, subst_aux subst t2)
     | MLTY_Named(args, path) -> MLTY_Named(List.map (subst_aux subst) args, path)
     | MLTY_Tuple ts -> MLTY_Tuple(List.map (subst_aux subst) ts)

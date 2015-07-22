@@ -28,7 +28,7 @@ let fail_exp = mk_Exp_app(Util.fvar false Const.failwith_lid dummyRange, [varg <
 
     
 let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> = 
-    //printfn "(* now extracting :  %A *) \n" (Print.sigelt_to_string_short se);
+    // printfn "(* now extracting :  %A *) \n" (Print.sigelt_to_string se);
      match se with
         | Sig_datacon _
         | Sig_bundle _
@@ -76,13 +76,13 @@ let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> =
        | Sig_pragma _ -> //pragmas are currently not relevant for codegen; they may be in the future
          g, []   
 
-let extract_prims (g:env) (m:modul) =  Util.fold_map extract_sig g m.declarations |> fst
+let extract_prims (g:env) (m:modul) =  Util.fold_map extract_sig g m.declarations |> fst // this is also being used for interfaces
     
 let rec extract (g:env) (m:modul) : env * mllib = 
     let name = Backends.ML.Syntax.mlpath_of_lident m.name in
     let g = {g with currentModule = name}  in
-    if m.is_interface then failwith "NYI";
-    if m.name.str = "Prims"
+    //if m.is_interface then failwith "NYI";
+    if m.name.str = "Prims" || m.is_interface
     then let g = extract_prims g m in 
          g, MLLib([name, None, MLLib []])
     else let g, sigs = Util.fold_map extract_sig g m.declarations in
