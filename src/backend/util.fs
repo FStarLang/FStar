@@ -105,7 +105,7 @@ let mkTypFun (bs : Syntax.binders) (c : Syntax.comp) (original : Syntax.typ) : S
      mk_Typ_fun (bs,c) None original.pos // is this right? if not, also update mkTyp* below
 
 let mkTypApp (typ : Syntax.typ) (arrgs : Syntax.args) (original : Syntax.typ) : Syntax.typ =
-     mk_Typ_app (typ,arrgs) None original.pos
+      mk_Typ_app (typ,arrgs) None original.pos
 
 
 (*TODO: Do we need to recurse for c?*)

@@ -125,6 +125,7 @@ let preProcType  (c:context) (ft:typ) : typ =
 
 let extractTyVar (c:context) (btv : btvar) = (lookup_ty c (Inl btv))
 
+
 (* (if (contains c btv) then MLTY_Var (btvar2mlident btv) else unknownType) *)
 
 
@@ -158,7 +159,8 @@ match ft.n with // assume ft is compressed. is there a compresser for typ'?
   (*can this be a partial type application? , i.e can the result of this application be something like Type -> Type, or nat -> Type? : Yes *)
   (* should we try to apply additional arguments here? if not, where? FIX!! *)
   | Typ_app (ty, arrgs) ->
-    (match (Util.compress_typ ty).n with
+    let ty = preProcType c ty in
+    (match ty.n with
         | Typ_btvar btv ->  extractTyVar c btv
             (*the args are thrown away, because in OCaml, type variables have type Type and not something like -> .. -> .. Type *)
         | Typ_const ftv -> extractTyConstApp c ftv arrgs            
@@ -264,11 +266,18 @@ match t with
  
 let lident2mlsymbol (l:lident) : mlsymbol = l.ident.idText
 
+let totalType_of_comp (ft:comp) : typ =
+match  ft.n with //TODO: is there a Util.compress for this?
+  | Total ty -> ty
+  | _ -> failwith "expected a total type. constructors of inductive types were assumed to be total"
 
 let bindersOfFuntype (c: context) (n:int) (t:typ) : list<binder> * (*residual type*) typ = 
-let tc = ((preProcType c t).n) in
-match tc with
-| Typ_fun (lb,cp) -> let (ll,lr)= Util.first_N n lb in  (ll, Util.mkTypFun lb cp t) 
+let t = (preProcType c t) in
+match t.n with
+| Typ_fun (lb,cp) -> let (ll,lr)= Util.first_N n lb in
+    if (List.isEmpty lr) 
+        then  (ll, totalType_of_comp cp)
+        else   (ll, Util.mkTypFun lr cp t) 
 // is this risky? perhaps not because we will manually put the removed binders into the context, before typechecking
 // but we are removing the implicit arguments corresponding to the type binders. Is that always safe? In OCaml, is there no way to say (nil @ nat)? 
 // Perhaps it is not needed, because OCaml can implicitly put a type lambda (generalize)?
@@ -285,6 +294,7 @@ let mlTyIdentOfBinder (b : binder) = prependTick (convIdent (binderPPnames b))
 
 let extractCtor (tyBinders : list<binder>) (c:context) (ctor: inductiveConstructor):  context * (mlsymbol * list<mlty>) =
         (let (lb, tr) = bindersOfFuntype c (List.length tyBinders) ctor.ctype in 
+        assert (List.length lb = List.length tyBinders);
         let lp = List.zip tyBinders lb in
         //assert (List.length tyBinders = List.length lp);
         let newC = extendContextWithRepAsTyVars (List.map (fun (x,y) -> (fst x, fst y)) lp) c in
@@ -322,7 +332,8 @@ let extractInductive (c:context) (ind: inductiveTypeFam ) :  context* (mlsymbol 
 let mfst = List.map fst
 
 let rec headBinders (c:context) (t:typ) : (context * binders * typ (*residual type*)) = 
-match (preProcType c t).n with
+let t = (preProcType c t) in 
+match t.n with
 | Typ_lam (bs,t) -> let c,rb,rresidualType = headBinders (extendContext c (mfst bs)) t in
                      c,(List.append bs rb), rresidualType
 | _ -> (c,[],t)
