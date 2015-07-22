@@ -1,5 +1,5 @@
 
-let idlist = (fun ( x  :  Support.Prims.int Support.Prims.list ) -> x)
+let idlist = (fun ( x  :  int list ) -> x)
 
 type nnat =
 | O
@@ -9,17 +9,17 @@ let idnat = (fun ( x  :  nnat ) -> x)
 
 let idnat2 = (fun ( x  :  nnat ) -> x)
 
-let id = (fun ( _3_1373  :  Support.Prims.unit ) ( x  :  'a ) -> x)
+let id = (fun ( _3_1373  :  unit ) ( x  :  'a ) -> x)
 
-let idp = (fun ( _3_1373  :  Support.Prims.unit ) ( x  :  Obj.t ) -> x)
+let idp = (fun ( _3_1373  :  unit ) ( x  :  Obj.t ) -> x)
 
-let idp' = (fun ( _3_1373  :  Support.Prims.unit ) ( x  :  'a ) -> x)
+let idp' = (fun ( _3_1373  :  unit ) ( x  :  'a ) -> x)
 
 let add1 = (fun ( a  :  nnat ) -> S (a))
 
 let add2 = (fun ( _3_2492  :  nnat ) -> S (_3_2492))
 
-let eval_order = (fun ( effectful  :  Support.Prims.string  ->  Support.Prims.string ) ( f  :  Support.Prims.string  ->  Support.Prims.string  ->  Support.Prims.string ) -> (let _3_2512 = (effectful "first")
+let eval_order = (fun ( effectful  :  string  ->  string ) ( f  :  string  ->  string  ->  string ) -> (let _3_2512 = (effectful "first")
 in (f _3_2512 "second")))
 
 let prev = (fun ( _3_1  :  nnat ) -> (match (_3_1) with
@@ -68,12 +68,12 @@ type ('a, 'b) list2 =
 
 
 type any =
-| Any of Support.Prims.unit * Obj.t
+| Any of unit * Obj.t
 
 
 
 type distr_pair =
-(Support.Prims.unit  ->  Obj.t  ->  Obj.t)  ->  (nnat, nnat list) prod
+(unit  ->  Obj.t  ->  Obj.t)  ->  (nnat, nnat list) prod
 
 type 'a list2p =
 | Nil2p
@@ -84,8 +84,8 @@ type 'a list2p =
 
 
 type 'dummyV1 list3 =
-| Nil3 of Support.Prims.unit
-| Cons3 of Support.Prims.unit * Obj.t * Obj.t list3
+| Nil3 of unit
+| Cons3 of unit * Obj.t * Obj.t list3
 
 
 
@@ -97,7 +97,7 @@ type 'x poly =
 
 
 type 'x poly2 =
-| Poly2 of Support.Prims.unit * 'x
+| Poly2 of unit * 'x
 
 
 
@@ -116,32 +116,32 @@ type 'x sch3param =
 'x  ->  'x
 
 type idt =
-Support.Prims.unit  ->  Obj.t  ->  Obj.t
+unit  ->  Obj.t  ->  Obj.t
 
 type ('a, 'dummyV1) vec =
 | Nill
-| Conss of nnat * 'a * ('a, Support.Prims.unit) vec
+| Conss of nnat * 'a * ('a, unit) vec
 
 
 
 
 
 type vecn1 =
-(nnat, Support.Prims.unit) vec
+(nnat, unit) vec
 
 type ('t, 'n) naryTree =
 | Leaf
-| Node of (('t, Support.Prims.unit) naryTree, Support.Prims.unit) vec
+| Node of (('t, unit) naryTree, unit) vec
 
 
 
 
 
 type 't binaryTree =
-('t, Support.Prims.unit) naryTree
+('t, unit) naryTree
 
 type polyvec =
-(nnat, Support.Prims.unit) vec poly
+(nnat, unit) vec poly
 
 type polylist =
 Obj.t list poly2
@@ -166,17 +166,17 @@ type 'a evenlist =
 
 type 'dummyV1 isEven =
 | Ev0
-| EvSOdd of nnat * Support.Prims.unit isOdd 
+| EvSOdd of nnat * unit isOdd 
  and 'dummyV1 isOdd =
-| OddSEven of nnat * Support.Prims.unit isEven
+| OddSEven of nnat * unit isEven
 
 let ev2 = EvSOdd (S (O), OddSEven (O, Ev0))
 
 type someLemmaStatement =
-nnat  ->  nnat  ->  Support.Prims.unit
+nnat  ->  nnat  ->  unit
 
 type trivialLemmaSatement =
-nnat  ->  nnat  ->  Support.Prims.unit
+nnat  ->  nnat  ->  unit
 
 let rec add0Comm = (fun ( n  :  nnat ) -> ())
 
@@ -185,7 +185,7 @@ let add0CommUse = (fun ( n  :  nnat ) -> ())
 let add0CommUse2 = (fun ( n  :  nnat ) -> (let x = ()
 in n))
 
-let unitAsNat = (fun ( u  :  Support.Prims.unit ) -> O)
+let unitAsNat = (fun ( u  :  unit ) -> O)
 
 let add0CommUse3 = (fun ( n  :  nnat ) -> (unitAsNat ()))
 
