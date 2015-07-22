@@ -1,10 +1,7 @@
 (*--build-config
   --*)
 
-(*
-fstar extTest.fst --codegen OCaml-experimental > Test.ml ; sed -i '$d;/kdhvljkdshalfkhclklkdnfsnydufnysdkyfnklsnykweyacklnyrecynrncrewanyu/d' Test.ml ; ocamlc Test.ml
-*)
-module Test
+module Test1
 
 let idlist (x:list int) = x//Cons 0 x
 
@@ -60,10 +57,6 @@ type list2 'a  (b:Type) =
   | Nil2  : list2 'a b
   | Cons2 : hd:'a -> hd2:b ->  tl:list2 'a b -> list2 'a b
 
-(*Sec 3.1.4 *)
-type any =
-| Any : a:Type -> a -> any
-
 (* "It is known that fun f → (f O, f true) is untypable in ML. And there again, no simple
 adaptation into an equivalent typable code " *)
 type distr_pair = (x:Type -> x -> Tot x) -> (prod nnat  (list nnat))
@@ -73,26 +66,12 @@ type list2p 'a  =
   | Nil2p  : list2p 'a
   | Cons2p : hd:'a  ->  tl:list2p (prod 'a 'a)  -> list2p 'a
 
-type list3 : Type -> Type =
-| Nil3 : (a:Type) -> list3 a
-| Cons3 :  (a:Type) -> a -> list3 a -> list3 (prod a a)
 
-
-type  poly (x : nnat -> Type)  =
-| Poly :  n:nnat -> x n -> poly x
-
-type  poly2 (x : Type -> Type)  =
-| Poly2 :  t:Type -> x t -> poly2 x
 
 
 (*The type sections (new paragraph in the thesis)*)
 type sch (x:Type) =  (x ->  Tot x)
 
-(*like Coq, we move lambdas in the body to the left of '=' *)
-type sch1 : (Type  ->  Type) = fun (x:Type) ->  (x ->  Tot x)
-
-(*this extracts to his preferred choice: 'x -> 'x . See below*)
-type sch3 : (nnat  ->  Type) -> Type  = fun (x:(nnat  ->  Type)) ->  (x O) ->  Tot (x (S O))
 
 (* Manual moving of lambdas to LHS of '=', now it extracts to his second (preferred) option.
    We now do this moving automatically.
@@ -101,20 +80,8 @@ type sch3param (x:(nnat  ->  Type))  =  (x O) ->  Tot (x (S O))
 
 type idt =  (x:Type) ->  (x ->  Tot x)
 
-type vec (a:Type) : nnat -> Type =
-| Nill : vec a O
-| Conss : n:nnat -> a ->  (vec a n) -> vec a (S n)
-
-type vecn1 = vec nnat (S O)
-
-type naryTree (t:Type) (n:nnat) =
-| Leaf : naryTree t n
-| Node : vec (naryTree t n) n -> (naryTree t n)
 
 
-type binaryTree (t:Type) = naryTree t (S (S O))
-
-type polyvec = poly (vec nnat)
 
 (* This is even more complicated. what does Coq do about it?
    What it does is similar to the above case. Instead of applying unit (to vec),
@@ -141,26 +108,15 @@ type polyvec = poly (vec nnat)
 
   Our current implementation makes these same choices as Coq's.
 *)
-type polylist = poly2 (list)
 
 type listalias 'a = list 'a
 
-type polylistalias = poly2 (listalias)
 
 type evenlist (a:Type) =
   | ENil  : evenlist a
   | ECons : hd:a -> tl:oddlist a -> evenlist a
 and oddlist (a:Type) =
   | OCons : hd:a -> tl:evenlist a -> oddlist a
-
-type isEven : nnat -> Type  =
-  | Ev0  : isEven O
-  | EvSOdd : n:nnat -> isOdd n -> isEven (S n)
-and isOdd : nnat -> Type =
-  | OddSEven : n:nnat -> isEven n -> isOdd (S n)
-
-val ev2 :  (isEven (S (S O)))
-let ev2 = EvSOdd (S O) (OddSEven O Ev0)
 
 (*the 2 types below are not erased to unit.
 structural erasure is done later,
