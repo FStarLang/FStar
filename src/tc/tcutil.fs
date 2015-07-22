@@ -580,16 +580,23 @@ let lift_comp c m lift =
 let norm_eff_name = 
    let cache = Util.smap_create 20 in
    fun env (l:lident) ->
-       let rec find l = 
+       let rec find l =
            match Tc.Env.lookup_effect_abbrev env l with
-            | None -> l
-            | Some (_, c) -> find (Util.comp_to_comp_typ c).effect_name in
-        match Util.smap_try_find cache l.str with 
+            | None -> None
+            | Some (_, c) -> 
+                let l = (Util.comp_to_comp_typ c).effect_name in
+                match find l with 
+                    | None -> Some l
+                    | Some l' -> Some l' in
+       let res = match Util.smap_try_find cache l.str with 
             | Some l -> l
             | None -> 
-              let m = find l in 
-              Util.smap_add cache l.str m;
-              m
+              begin match find l with 
+                        | None -> l
+                        | Some m -> Util.smap_add cache l.str m;
+                                    m
+              end in
+       res
             
 
 let join_effects env l1 l2 = 

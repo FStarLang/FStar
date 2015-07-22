@@ -73,6 +73,7 @@ type foundname =
   | Typ_name of occurrence * typ
   | Eff_name of occurrence * lident
   | Knd_name of occurrence * lident
+val current_module: env -> lident
 val try_lookup_name : bool -> bool -> env -> lident -> option<foundname> 
 val try_lookup_typ_var: env -> ident -> option<typ>
 val resolve_in_open_namespaces: env -> lident -> (lident -> option<'a>) -> option<'a>

@@ -17,25 +17,39 @@ module Prims
 
 kind Unop  = Type -> Type
 kind Binop = Type -> Type -> Type
-
-(* Primitive logical connectives *)
-logic type l_not  : Unop  (* prefix unary '~' *)
-logic type l_and  : Binop (* infix binary '/\' *)
-logic type l_or   : Binop (* infix binary '\/' *)
-logic type l_iff  : Binop (* infix binary '<==>' *)
-logic type l_imp  : Binop (* infix binary '==>' *)
-logic type Forall : #a:Type -> (a -> Type) -> Type
-logic type Exists : #a:Type -> (a -> Type) -> Type
-logic type ForallTyp : (Type -> Type) -> Type (* Handled specially to support quantification over types of arbitrary kinds *)
-logic type ExistsTyp : (Type -> Type) -> Type (* Handled specially to support quantification over types of arbitrary kinds *)
-logic type True
-logic type False
+type bool
 logic type EqTyp : Type -> Type -> Type                (* infix binary '==' *)
 logic type Eq2 : #a:Type -> #b:Type -> a -> b -> Type  (* infix binary '==' *)
+opaque logic type b2t (b:bool) = b==true
+
+//We assume the Tot effect here; its definition appears a few lines below
+(* Primitive logical connectives *)
+type True =
+  | T
+logic type False
+opaque type l_imp (p:Type) (q:Type) = p -> Tot q                (* infix binary '==>' *)
+type l_and  (p:Type) (q:Type) =
+  | And : p -> q -> p /\ q                                      (* infix binary '/\' *)
+type l_or   (p:Type) (q:Type) =                                 (* infix binary '\/' *)
+  | Left : p -> p \/ q
+  | Right : q -> p \/ q
+opaque type l_iff (p:Type) (q:Type) = p ==> q /\ q ==> p        (* infix binary '<==>' *)
+opaque type l_not (p:Type) = p ==> False                        (* prefix unary '~' *)
+opaque type Forall (#a:Type) (p:a -> Type) = x:a -> Tot (p x)   (* forall (x:a). p x *)
+type DTuple2: a:Type
+          ->  b:(a -> Type)
+          -> Type =
+  | MkDTuple2: #a:Type
+           ->  #b:(a -> Type)
+           -> _1:a
+           -> _2:b _1
+           -> DTuple2 a b
+opaque type Exists (#a:Type) (p:a -> Type) = x:a & p x          (* exists (x:a). p x *)
 logic type XOR (p:Type) (q:Type) = (p \/ q) /\ ~(p /\ q)
-logic type ITE : Type -> Type -> Type -> Type (* written if/then/else in concrete syntax *)
+opaque type ITE (p:Type) (q:Type) (r:Type) = (p ==> q) /\ (~p ==> r) (* if/then/else in concrete syntax *)
+logic type ForallTyp : (Type -> Type) -> Type (* Handled specially to support quantification over types of arbitrary kinds *)
+logic type ExistsTyp : (Type -> Type) -> Type (* Handled specially to support quantification over types of arbitrary kinds *)
 logic type Precedes : #a:Type -> #b:Type -> a -> b -> Type  (* a built-in well-founded partial order over all terms *)
-type bool
 
 (* PURE effect *)
 kind PurePre = Type
@@ -103,7 +117,6 @@ effect Ghost (a:Type) (pre:Type) (post:PurePost a) =
            (fun (p:PurePost a) -> pre /\ (forall (x:a). post x ==> p x))
            (fun (p:PurePost a) -> forall (x:a). pre /\ post x ==> p x)
 
-opaque logic type b2t (b:bool) = b==true
 type unit
 type int
 assume logic val op_AmpAmp             : bool -> bool -> Tot bool
@@ -497,16 +510,7 @@ type Tuple8 'a 'b 'c 'd 'e 'f 'g 'h =
            -> _8:'h
            -> Tuple8 'a 'b 'c 'd 'e 'f 'g 'h
 
-type DTuple2: a:Type
-          ->  b:(a -> Type)
-          -> Type =
-  | MkDTuple2: #a:Type
-           ->  #b:(a -> Type)
-           -> _1:a
-           -> _2:b _1
-           -> DTuple2 a b
-
- type DTuple3: a:Type
+type DTuple3: a:Type
             -> b:(a -> Type)
             -> c:(x:a -> b x -> Type)
             -> Type =
