@@ -242,21 +242,32 @@ type inductiveTypeFam = {
   constructors : list<inductiveConstructor>
 }
 
+type typeAbbrev = {
+  abTyName: lident; // this name cant just be tyName. make test gets confused with inductiveTypeFam because if the name of fields is same
+  abTyBinders: binders;
+  abBody : typ 
+}
 
 let parseInductiveConstructors (c:context) (cnames: list<lident>) : (list<inductiveConstructor>) =
     List.map (fun h -> { cname = h ; ctype = lookup_datacon c.tcenv h}) cnames
 
 (*the second element of the returned pair is the unconsumed part of sigs*)
 let rec parseInductiveTypesFromSigBundle
-    (c: context) (sigs : sigelts) : list<inductiveTypeFam>  =
+    (c: context) (sigs : sigelts) : list<inductiveTypeFam> * list<typeAbbrev> =
 match sigs with
 | (Sig_tycon (l,bs,kk,_,constrs,_,_))::tlsig -> 
      //printfn "%A\n" ((List.map (fun (x:lident) -> x.ident.idText) constrs));
     let indConstrs(*list<inductiveConstructor>*) = parseInductiveConstructors c constrs in
-     ({tyName = l; k = kk; tyBinders=bs; constructors=indConstrs})::(parseInductiveTypesFromSigBundle c tlsig)
-| (Sig_datacon _)::tlsig -> []
-| [] -> []
-| se::tlsig -> failwith (Util.format1 "unexpected, or a type abbrev mutually defined with an inductive (NYI) : %s\n" (Print.sigelt_to_string_short se)) //;(parseInductiveTypesFromSigBundle tlsig) //TODO : debug and remove
+    let inds,abbs=(parseInductiveTypesFromSigBundle c tlsig) in
+     ({tyName = l; k = kk; tyBinders=bs; constructors=indConstrs})::inds, abbs
+| (Sig_datacon _)::tlsig -> [],[] // at this point we can stop because Nik said that all type type declarations come before data constructors.
+| [] -> [],[] 
+| (Sig_typ_abbrev (l,bs,_,t,_,_))::tlsig -> 
+    let inds,abbs=(parseInductiveTypesFromSigBundle c tlsig) in
+     inds, ({abTyName=l; abTyBinders=bs; abBody=t})::abbs
+| se::tlsig -> failwith (Util.format1 "unexpected content in a  sig bundle : %s\n" (Print.sigelt_to_string se)) 
+
+//failwith (Util.format1 "unexpected content in a  sig bundle : %s\n" (Print.sigelt_to_string se)) 
 
 
 let rec argTypes  (t: mlty) : list<mlty> =
@@ -339,28 +350,33 @@ match t.n with
 | _ -> (c,[],t)
 
 
-
-(*similar to the definition of the second part of \hat{\epsilon} in page 110*)
-(* \pi_1 of returned value is the exported constant*)
-let rec extractSigElt (c:context) (s:sigelt) : context * mltydecl =
-    match s with
-    | Sig_typ_abbrev (l,bs,_,t,_,_) -> 
+let extractTypeAbbrev (c:context) (tyab:typeAbbrev) : context * (mlsymbol  * mlidents * option<mltybody>) =
+        let bs = tyab.abTyBinders in
+        let t = tyab.abBody in
+        let l = tyab.abTyName in
         let c = (extendContext c (mfst bs)) in
         let c, headBinders, residualType = headBinders c t in
         let bs=List.append bs headBinders in
         let t=residualType in
         let tyDecBody = MLTD_Abbrev (extractTyp c t) in
                 //printfn "type is %A\n" (t);
-        let td = [(mlsymbolOfLident l, List.map mlTyIdentOfBinder bs , Some tyDecBody)] in
-        let c = Env.extend_tydef c td in // why is this needed?
+        let td = (mlsymbolOfLident l, List.map mlTyIdentOfBinder bs , Some tyDecBody) in
+        let c = Env.extend_tydef c [td] in // why is this needed?
         c, td
-         (*type l idents = tyDecBody*)
-         //Util.subst
+
+(*similar to the definition of the second part of \hat{\epsilon} in page 110*)
+(* \pi_1 of returned value is the exported constant*)
+let rec extractSigElt (c:context) (s:sigelt) : context * mltydecl =
+    match s with
+    | Sig_typ_abbrev (l,bs,_,t,_,_) -> 
+        let c, tds = extractTypeAbbrev c ({abTyName=l; abTyBinders=bs; abBody=t}) in (c, [tds])
 
     | Sig_bundle (sigs, _, _ ,_) -> 
         //let xxxx = List.map (fun se -> fprint1 "%s\n" (Util.format1 "sig bundle: : %s\n" (Print.sigelt_to_string se))) sigs in
-        let inds = parseInductiveTypesFromSigBundle c sigs in
-         (Util.fold_map extractInductive c inds)
+        let inds,abbs = parseInductiveTypesFromSigBundle c sigs in
+        let c, indDecls = (Util.fold_map extractInductive c inds) in
+        let c, tyAbDecls = (Util.fold_map extractTypeAbbrev c abbs) in
+        (c, List.append indDecls tyAbDecls)
         //let k = lookup_typ_lid c ind.tyName in
 
     | Sig_tycon (_, _, _, _, _, quals, _) -> 

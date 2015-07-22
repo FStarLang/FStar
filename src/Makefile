@@ -190,7 +190,7 @@ boot: $(BOOT_ALL)
 	../bin/fstar.exe --debug yes --fs_typ_app --lax $(FSTAROPTS) $(ADMITS) $^
 
 ocaml: $(BOOT_ALL)
-	../bin/fstar.exe --eager_inference --MLish --lax --fs_typ_app --odir ocaml-output $(FSTAROPTS) --codegen OCaml $(ADMITS) $^
+	../bin/fstar.exe --eager_inference --MLish --lax --fs_typ_app --odir ocaml-output $(FSTAROPTS) --codegen OCaml-experimental $(ADMITS) $^
 
 fstarml:
 	@echo "Building parser and lexer filex..."
