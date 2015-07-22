@@ -34,6 +34,7 @@ package: $(FSTARML)
 	@cp ../../bin/*z3* fstar/bin || cp `which z3` fstar/bin || echo " ********** WARNING: you don't have Z3 in \\$FSTAR_HOME/bin or in your \\$PATH, skipped from package ************** "
 	cd ../.. && git archive --format=tar --prefix=examples/ HEAD:examples/ | tar -x -C src/ocaml-output/fstar
 	cd ../.. && git archive --format=tar --prefix=doc/tutorial/ HEAD:doc/tutorial/ | tar -x -C src/ocaml-output/fstar
+	cd fstar/doc/tutorial; make
 #	mkdir fstar/mllib || true
 #	cp ~/.opam/system/lib/num/* fstar/mllib || true
 #	cp ~/.opam/system/lib/bytes/* fstar/mllib || true
