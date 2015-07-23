@@ -62,14 +62,14 @@ let delta_norm_eff =
 let translate_eff g l : e_tag = 
     let l = delta_norm_eff g l in
     if lid_equals l Const.effect_PURE_lid 
-    then MayErase 
-    else Keep
+    then E_PURE 
+    else E_IMPURE
 
 (*generates inp_1 -> inp_2 -> ... inp_n -> out *)
 let rec curry (inp: (list<mlty>)) (erase : e_tag) (out: mlty) =
   match inp with
   | [] -> out
-  | h::tl -> MLTY_Fun (h, erase, curry tl erase out) //TODO: Fix the e_tag
+  | h::tl -> MLTY_Fun (h, erase, curry tl erase out) 
 
 (*
   Below, "the thesis" refers to:
@@ -123,7 +123,7 @@ let preProcType  (c:context) (ft:typ) : typ =
     let ft =  (Util.compress_typ ft) in
     Tc.Normalize.norm_typ [Tc.Normalize.Beta] c.tcenv ft
 
-let extractTyVar (c:context) (btv : btvar) = (lookup_ty c (Inl btv))
+let extractTyVar (c:context) (btv : btvar) = (lookup_tyvar c btv)
 
 
 (* (if (contains c btv) then MLTY_Var (btvar2mlident btv) else unknownType) *)
@@ -211,7 +211,7 @@ and extractKind (c:context) (ft:knd) : mlty = erasedContent
 and extractComp  (c:context) (ft:comp) : mlty * e_tag = extractComp' c (ft.n) 
 and extractComp'  (c:context) (ft:comp') : mlty * e_tag =
 match  ft with
-  | Total ty -> (extractTyp c ty, MayErase)
+  | Total ty -> (extractTyp c ty, E_PURE)
   | Comp cm -> (extractTyp c (cm.result_typ), translate_eff c cm.effect_name )
 
 
@@ -312,6 +312,10 @@ match  (la, lb) with
 
 let mlTyIdentOfBinder (b : binder) = prependTick (convIdent (binderPPnames b))
 
+let maybe_add_unit tybs t = match tybs with
+    | [] -> t
+    | _ -> MLTY_Fun(ml_unit_ty, E_PURE, t) 
+
 let extractCtor (tyBinders : list<binder>) (c:context) (ctor: inductiveConstructor):  context * (mlsymbol * list<mlty>) =
         (let (lb, tr) = bindersOfFuntype c (List.length tyBinders) ctor.ctype in 
         assert (List.length lb = List.length tyBinders);
@@ -319,7 +323,7 @@ let extractCtor (tyBinders : list<binder>) (c:context) (ctor: inductiveConstruct
         //assert (List.length tyBinders = List.length lp);
         let newC = extendContextWithRepAsTyVars (List.map (fun (x,y) -> (fst x, fst y)) lp) c in
         let mlt = extractTyp newC tr in
-        let tys = (List.map mlTyIdentOfBinder tyBinders, mlt) in
+        let tys = (List.map mlTyIdentOfBinder tyBinders, maybe_add_unit tyBinders mlt) in //MayErase, because constructors are always pure
         let fvv = mkFvvar ctor.cname ctor.ctype in 
             // fprint1 "(* extracting the type of constructor %s\n" (lident2mlsymbol ctor.cname);
            // fprint1 "%s\n" (typ_to_string ctor.ctype);
@@ -351,12 +355,16 @@ let extractInductive (c:context) (ind: inductiveTypeFam ) :  context* (mlsymbol 
 
 let mfst = List.map fst
 
+(* 
+  Source: type t (a:Type) = fun (x:a) -> (a -> t' a x)
+  ML:     type ('a, 'dummy) t = unit -> 'a -> ('a, 'dummy) t' 
+*)
 let rec headBinders (c:context) (t:typ) : (context * binders * typ (*residual type*)) = 
-let t = (preProcType c t) in 
-match t.n with
-| Typ_lam (bs,t) -> let c,rb,rresidualType = headBinders (extendContext c (mfst bs)) t in
-                     c,(List.append bs rb), rresidualType
-| _ -> (c,[],t)
+    let t = (preProcType c t) in 
+        match t.n with
+        | Typ_lam (bs,t) -> let c,rb,rresidualType = headBinders (extendContext c (mfst bs)) t in
+                             c,(List.append bs rb), rresidualType
+        | _ -> (c,[],t)
 
 
 let extractTypeAbbrev (c:context) (tyab:typeAbbrev) : context * (mlsymbol  * mlidents * option<mltybody>) =
@@ -427,12 +435,4 @@ let rec extractSigElt (c:context) (s:sigelt) : context * mltydecl =
             c, []
     | _ -> c, []
 
-let emptyMlPath : mlpath = ([],"")
-
-(*can be moved to env.fs*)
-let mkContext (e:Tc.Env.env) : context =
-   let env = { tcenv = e; gamma =[] ; tydefs =[]; erasableTypes = erasableType_init; currentModule = emptyMlPath} in
-   let a = "'a", -1 in
-   let failwith_ty = ([a], MLTY_Fun(MLTY_Named([], (["Prims"], "string")), Keep, MLTY_Var a)) in
-   Env.extend_lb env (Inr Const.failwith_lid) tun failwith_ty |> fst
     

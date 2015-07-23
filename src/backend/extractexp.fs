@@ -24,8 +24,8 @@ open Microsoft.FStar.Backends.ML.Env
 open Microsoft.FStar.Backends.ML.Util
 
 let eff_to_string = function
-    | MayErase -> "MayErase"
-    | Keep -> "Keep"
+    | E_PURE -> "MayErase"
+    | E_IMPURE -> "Keep"
     (*should there be a MustErase? It is unsafe to emit code marked as ghost.*)
 
 let fail r msg = 
@@ -63,36 +63,31 @@ let translate_typ (g:env) (t:typ) : mlty = ExtractTyp.extractTyp g t
 
 let instantiate (s:mltyscheme) (args:list<mlty>) : mlty = Util.subst s args (*only handles fully applied types*)
 
-let ml_unit = MLE_Const MLC_Unit
-let ml_bool_ty = MLTY_Named ([], ([], "bool")) 
-
-
 let erasable (g:env)  (f:e_tag) (t:mlty) = 
-    f = MayErase && erasableType g t
-
+    f = E_PURE && erasableType g t
 
 let erase (g:env) (e:mlexpr) (f:e_tag) (t:mlty) : mlexpr * e_tag * mlty = 
     if erasable g f t
     then ml_unit, f , ml_unit_ty (*unit value*)
     else e, f, t
 
-let (*maybe_?*) coerce (g:env) (e:mlexpr) (t:mlty) (t':mlty) = 
+let maybe_coerce (g:env) (e:mlexpr) (t:mlty) (t':mlty) = 
     if equiv g t t' 
     then e
-    else //let _ = printfn "\n (*needed to coerce expression \n %A \n of type \n %A \n to type \n %A *) \n" e t t' in 
-            MLE_Coerce (e, t, t')
+    else (debug g (fun () -> printfn "\n (*needed to coerce expression \n %A \n of type \n %A \n to type \n %A *) \n" e t t');
+          MLE_Coerce (e, t, t'))
 
 let eff_leq f f' = match f, f' with 
-    | MayErase, _ 
-    | _, Keep -> true
+    | E_PURE, _ 
+    | _, E_IMPURE -> true
     | _ -> false
 
 let join f f' = match f, f' with 
-    | Keep, _
-    | _ , Keep -> Keep
-    | _ -> MayErase
+    | E_IMPURE, _
+    | _ , E_IMPURE -> E_IMPURE
+    | _ -> E_PURE
 
-let join_l fs = List.fold_left join MayErase fs
+let join_l fs = List.fold_left join E_PURE fs
 
 let rec extract_pat (g:env) p : (env * list<mlpattern>) = match p.v with
   | Pat_disj [] -> failwith "Impossible"
@@ -153,9 +148,9 @@ let maybe_eta_data (isDataCons : bool) (residualType : mlty)  (mlAppExpr : mlexp
         | (MLE_App (MLE_Name mlp, mlargs) , true) -> maybe_eta <| MLE_CTor (mlp,mlargs) 
         | (MLE_Name mlp, true) -> maybe_eta <| MLE_CTor (mlp, [])
         | _ -> mlAppExpr
-  
+ 
 let rec check_exp (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr = 
-//    printfn "Checking %s at type %A\n" (Print.exp_to_string e) t;
+    debug g (fun () -> printfn "Checking %s at type %A\n" (Print.exp_to_string e) t);
     let e ,_ ,_ = (erase g (check_exp' g e f t) f t) in e
 
 and check_exp' (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr = 
@@ -166,7 +161,7 @@ and check_exp' (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr =
             let env, p = extract_pat g pat in 
             let when_opt = match when_opt with 
                 | None -> None
-                | Some w -> Some (check_exp env w MayErase ml_bool_ty) in //when clauses are Pure in F*
+                | Some w -> Some (check_exp env w E_PURE ml_bool_ty) in //when clauses are Pure in F*
             let branch = check_exp env branch f t in
             List.hd p, when_opt, branch) in
         if eff_leq f_e f
@@ -176,7 +171,7 @@ and check_exp' (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr =
      | _ -> 
        let e0, f0, t0 = synth_exp g e in
        if eff_leq f0 f
-       then coerce g e0 t0 t
+       then maybe_coerce g e0 t0 t
        else err_unexpected_eff e f f0
       
 and synth_exp (g:env) (e:exp) : (mlexpr * e_tag * mlty) = 
@@ -190,7 +185,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
     match (Util.compress_exp e).n with 
         | Exp_constant c ->
           let t = Tc.Recheck.typing_const e.pos c in
-          MLE_Const <| mlconst_of_const c, MayErase, translate_typ g t
+          MLE_Const <| mlconst_of_const c, E_PURE, translate_typ g t
  
         | Exp_ascribed(e0, t, f) ->
           let t = translate_typ g t in 
@@ -205,7 +200,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
           let (x, mltys), is_data = lookup_var g e in 
           //let _ = printfn "\n (*looked up tyscheme of \n %A \n as \n %A *) \n" x s in
           begin match mltys with 
-            | ([], t) -> maybe_eta_data is_data t x, MayErase, t
+            | ([], t) -> maybe_eta_data is_data t x, E_PURE, t
             | _ -> err_uninst e
           end
 
@@ -217,7 +212,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                     //2. If any of the arguments are impure, then evaluation order must be enforced to be L-to-R (by hoisting)
                     let lbs, mlargs = 
                         List.fold_left (fun (lbs, out_args) (arg, f) -> 
-                                if f=MayErase 
+                                if f=E_PURE 
                                 then (lbs, arg::out_args)
                                 else let x = Util.gensym (), -1 in
                                      (x, arg)::lbs, (MLE_Var x::out_args)) 
@@ -228,12 +223,12 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
 
                 | (Inl _, _)::rest, MLTY_Fun (tunit, f', t) -> //non-prefix type app; this type argument gets erased to unit
                   if equiv g tunit ml_unit_ty
-                  then synth_app is_data (mlhead, (ml_unit, MayErase)::mlargs_f) (join f f', t) rest
+                  then synth_app is_data (mlhead, (ml_unit, E_PURE)::mlargs_f) (join f f', t) rest
                   else failwith "Impossible: ill-typed application" //ill-typed; should be impossible
 
                 | (Inr e0, _)::rest, MLTY_Fun(t0, f', t) -> 
                   let e0, f0, t0' = synth_exp g e0 in 
-                  let e0 = coerce g e0 t0' t0 in // coerce the arguments of application, if they dont match up
+                  let e0 = maybe_coerce g e0 t0' t0 in // coerce the arguments of application, if they dont match up
                   synth_app is_data (mlhead, (e0, f0)::mlargs_f) (join_l [f;f';f0], t) rest
                   
                 | _ -> err_ill_typed_application e restArgs t in // this case is reached if extractTyp erases function types with erasable codomains, see add0Comm
@@ -242,9 +237,9 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
           begin match head.n with 
             | Exp_bvar _ 
             | Exp_fvar _ -> 
-               //printfn "head of app is %A\n" head.n;
+              debug g (fun () -> printfn "head of app is %s\n" (Print.exp_to_string head));
               let (head, (vars, t)), is_data = lookup_var g head in
-               //let _ = printfn "\n (*looked up tyscheme of \n %A \n as \n %A *) \n" head (vars,t) in
+              debug g (fun () -> printfn "\n (*looked up tyscheme \n %A *) \n" (vars,t));
               let n = List.length vars in
               if n <= List.length args
               then let prefix, rest = Util.first_N n args in
@@ -252,10 +247,22 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                    let prefixAsMLTypes = (List.map (ExtractTyp.getTypeFromArg g) prefix) in
                    // let _ = printfn "\n (*about to instantiate  \n %A \n with \n %A \n \n *) \n" (vars,t) prefixAsMLTypes in
                    let t = instantiate (vars, t) prefixAsMLTypes in
-                   // let _ = printfn "\n (*instantiating  \n %A \n with \n %A \n produced \n %A \n *) \n" (vars,t) prefixAsMLTypes t in
+                   debug g (fun () -> printfn "\n (*instantiating  \n %A \n with \n %A \n produced \n %A \n *) \n" (vars,t) prefixAsMLTypes t);
+                   let t, ml_args = match vars with 
+                    | [] -> //there were no type abstractions; so no additional unit to eliminate
+                      t, []
+                    | _ ->
+                      begin match t with 
+                        | MLTY_Fun(_unit, _, t') when (_unit = ml_unit_ty) ->
+                          t', [(ml_unit, E_PURE)]
+                        
+                        | _ -> 
+                            //if we reach here, then either the translation of Exp_let is broken; or the translation of types is 
+                          failwith "Type abstractions in the context should always be erased to an ML type with a initial unit argument" 
+                      end in
                    match rest with 
-                    | [] -> head, MayErase, t
-                    | _  -> synth_app is_data (head, []) (MayErase, t) rest
+                    | [] -> head, E_PURE, t
+                    | _  -> synth_app is_data (head, ml_args) (E_PURE, t) rest
               else err_uninst e
 
             | _ -> 
@@ -279,13 +286,13 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
             let ml_body, f, t = synth_exp env body in
 //            printfn "Computed type of function body %s to be %A\n" (Print.exp_to_string body) t; 
             let f, tfun = List.fold_right 
-                (fun (_, targ) (f, t) -> MayErase, MLTY_Fun (must targ, f, t))
+                (fun (_, targ) (f, t) -> E_PURE, MLTY_Fun (must targ, f, t))
                 ml_bs (f, t) in
 //            printfn "Computed type of abstraction %s to be %A\n" (Print.exp_to_string e) t; 
             MLE_Fun(ml_bs, ml_body), f, tfun
     
         | Exp_let((is_rec, lbs), e') -> 
-          //let _ = printfn "\n (* let \n %A \n as \n %A *) \n" lbs e' in
+//          let _ = printfn "\n (* let \n %s \n in \n %s *) \n" (Print.lbs_to_string (is_rec, lbs)) (Print.exp_to_string e') in
           let maybe_generalize {lbname=lbname; lbeff=lbeff; lbtyp=t; lbdef=e} = 
               let f_e = ExtractTyp.translate_eff g lbeff in
               let t = Util.compress_typ t in
@@ -297,7 +304,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                   //and to circumvent the value restriction
                    let tbinders, tbody = 
                         match Util.prefix_until (function (Inr _, _) -> true | _ -> false) bs with 
-                            | None -> bs, Util.comp_result c
+                            | None -> bs, mk_Typ_fun([unit_binder], c) None c.pos
                             | Some (bs, b, rest) -> bs, mk_Typ_fun(unit_binder::b::rest, c) None c.pos in
 
                    let n = List.length tbinders in

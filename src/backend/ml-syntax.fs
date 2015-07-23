@@ -29,8 +29,8 @@ type mlsymbols = list<mlsymbol>
 
 (* -------------------------------------------------------------------- *)
 type e_tag = 
-  | MayErase
-  | Keep
+  | E_PURE
+  | E_IMPURE
 
 type mlty =
 | MLTY_Var   of mlident
@@ -133,3 +133,10 @@ let mlif (b : mlexpr) ((e1, e2) : mlexpr * mlexpr) =
     match e2 with
     | MLE_Const MLC_Unit -> MLE_If (b, e1, None)
     | _ -> MLE_If (b, e1, Some e2)
+
+
+let ml_unit    = MLE_Const MLC_Unit
+
+// do NOT remove Prims, because all mentions of unit/bool in F* are actually Prims.unit/bool.
+let ml_bool_ty = MLTY_Named ([], (["Prims"], "bool")) 
+let ml_unit_ty = MLTY_Named ([], (["Prims"], "unit")) 

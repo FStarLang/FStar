@@ -347,7 +347,7 @@ let rec mlty_of_ty_core (mlenv : mlenv) (tenv : tenv) ((rg, ty) : range * typ) =
             | _ -> mk_Typ_fun(rest, c) None ty.pos in
         let mlt1 = mlty_of_ty mlenv tenv (rg, t1) in
         let mlt2 = mlty_of_ty mlenv tenv (rg, t2) in
-        MLTY_Fun (mlt1, Keep, mlt2)
+        MLTY_Fun (mlt1, E_IMPURE, mlt2)
     | Typ_fun((Inl _, _)::rest, c) ->
         let r = match rest with
             | [] -> comp_result c

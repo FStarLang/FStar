@@ -61,7 +61,15 @@ let subst ((formals, t):mltyscheme) (args:list<mlty>) : mlty =
     then failwith "Substitution must be fully applied"
     else subst_aux (List.zip formals args) t
 
-let delta_unfold g t = None //TODO
+//pre: t' is a MLTY_Named
+let delta_unfold g = function 
+    | MLTY_Named(args, n) -> 
+      begin match Env.lookup_ty_const g n with 
+        | Some ts -> Some (subst ts args)
+        | _ -> None
+      end
+    | _ -> failwith "impossible"
+    
 
 let rec equiv (g:Env.env) (t:mlty) (t':mlty) : bool = 
     match t, t' with 
@@ -73,8 +81,15 @@ let rec equiv (g:Env.env) (t:mlty) (t':mlty) : bool =
       //&& f=f' NS: removing this for now, until effects are properly translated
       && equiv g t2 t2'
 
-    | MLTY_Named(args, path), MLTY_Named(args', path') when (path=path') -> 
-      List.forall2 (equiv g) args args'
+    | MLTY_Named(args, path), MLTY_Named(args', path') -> 
+      if path=path'
+      then List.forall2 (equiv g) args args'
+      else begin match delta_unfold g t with 
+                    | Some t -> equiv g t t'
+                    | None -> (match delta_unfold g t' with 
+                                 | None -> false
+                                 | Some t' -> equiv g t t')
+          end
 
     | MLTY_Tuple ts, MLTY_Tuple ts' -> 
       List.forall2 (equiv g) ts ts'
@@ -84,12 +99,12 @@ let rec equiv (g:Env.env) (t:mlty) (t':mlty) : bool =
     | MLTY_Named _, _ -> 
       begin match delta_unfold g t with 
         | Some t -> equiv g t t'
-        | _ -> false
+        | _ ->  false
       end
 
     | _, MLTY_Named _ -> 
       begin match delta_unfold g t' with 
-        | Some t -> equiv g t t'
+        | Some t' -> equiv g t t'
         | _ -> false
       end
       

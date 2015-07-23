@@ -15,14 +15,13 @@
 *)
 module List
 
-
 (** Base operations **)
 
 val isEmpty: list 'a -> Tot bool
 let isEmpty l = match l with | [] -> true | _ -> false
 let isEmptyT = isEmpty
 
-(* val hd: list 'a -> 'a *)
+val hd: list 'a -> 'a
 let hd = function
   | hd::tl -> hd
   | _ -> failwith "head of empty list"

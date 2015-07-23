@@ -171,7 +171,7 @@ STDLIBEXP=$(addprefix ../lib/, $(STDFILES))
 
 BOOT_BASICFILES=bytes.fst platform.fsi util.fsi getoptsimple.fst options.fs range.fst unionfind.fst
 BOOT_BASIC=$(addprefix basic/, $(BOOT_BASICFILES))
-BOOT_SYNTAXFILES=syntax.fsi syntax.fs const.fs visit.fs util.fs print.fs ssyntax.fs
+BOOT_SYNTAXFILES=syntax.fsi syntax.fs const.fs #visit.fs util.fs print.fs ssyntax.fs
 BOOT_SYNTAX=$(addprefix absyn/, $(BOOT_SYNTAXFILES))
 BOOT_PARSERFILES=ast.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs parse.fst lexhelp.fs parseit.fsi driver.fs
 BOOT_PARSER=$(addprefix parser/, $(BOOT_PARSERFILES))
@@ -184,7 +184,7 @@ BOOT_BACKEND=$(addprefix backend/, $(BOOT_BACKENDFILES))
 BOOT_JSBACKENDFILES=ast.fs translate.fs
 BOOT_JSBACKEND=$(addprefix jsbackend/, $(BOOT_JSBACKENDFILES))
 BOOT_MAIN=fstar.fs
-BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_TC) $(BOOT_PARSER) $(TOSMT_SRC) $(BOOT_FORMAT) $(BOOT_BACKEND) fstar.fs
+BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) #$(BOOT_TC) $(BOOT_PARSER) $(TOSMT_SRC) $(BOOT_FORMAT) $(BOOT_BACKEND) fstar.fs
 
 ADMITTED_MODULES=Microsoft.FStar.Util Microsoft.FStar.Platform Microsoft.FStar.Parser.ParseIt
 ADMITS=$(addprefix --admit_fsi , $(ADMITTED_MODULES))
@@ -194,8 +194,8 @@ boot: $(BOOT_ALL)
 ocaml: $(BOOT_ALL)
 	../bin/fstar.exe --eager_inference --MLish --lax --fs_typ_app --odir ocaml-output $(FSTAROPTS) --codegen OCaml $(ADMITS) $^
 
+	# wget https://raw.githubusercontent.com/FStarLang/FStar/3871a0209a67996ca381d054c171b5dac6178eb6/lib/prims.fst -O ../lib/prims.fst # remove this when prims is fixed
 ocaml-experimental: $(BOOT_ALL)
-	wget https://raw.githubusercontent.com/FStarLang/FStar/3871a0209a67996ca381d054c171b5dac6178eb6/lib/prims.fst -O ../lib/prims.fst # remove this when prims is fixed
 	../bin/fstar.exe --eager_inference --MLish --lax --fs_typ_app --trace_error --odir ocaml-output $(FSTAROPTS) --codegen OCaml-experimental $(ADMITS) $^
 
 fstarml:
