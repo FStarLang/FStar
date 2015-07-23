@@ -79,7 +79,7 @@ let erase (g:env) (e:mlexpr) (f:e_tag) (t:mlty) : mlexpr * e_tag * mlty =
 let (*maybe_?*) coerce (g:env) (e:mlexpr) (t:mlty) (t':mlty) = 
     if equiv g t t' 
     then e
-    else let _ = printfn "\n (*needed to coerce expression \n %A \n of type \n %A \n to type \n %A *) \n" e t t' in 
+    else //let _ = printfn "\n (*needed to coerce expression \n %A \n of type \n %A \n to type \n %A *) \n" e t t' in 
             MLE_Coerce (e, t, t')
 
 let eff_leq f f' = match f, f' with 

@@ -28,7 +28,7 @@ let fail_exp = mk_Exp_app(Util.fvar false Const.failwith_lid dummyRange, [varg <
 
     
 let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> = 
-    printfn "(* now extracting :  %A *) \n" (Print.sigelt_to_string se);
+   // printfn "(* now extracting :  %A *) \n" (Print.sigelt_to_string se);
      match se with
         | Sig_datacon _
         | Sig_bundle _
@@ -80,6 +80,7 @@ let extract_prims (g:env) (m:modul) =  Util.fold_map extract_sig g m.declaration
     
 let rec extract (g:env) (m:modul) : env * mllib = 
     let name = Backends.ML.Syntax.mlpath_of_lident m.name in
+    let _ = Util.print_string ("extracting: "^m.name.str^"\n") in
     let g = {g with currentModule = name}  in
     //if m.is_interface then failwith "NYI";
     if m.name.str = "Prims" || m.is_interface

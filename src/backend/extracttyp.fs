@@ -253,18 +253,27 @@ let parseInductiveConstructors (c:context) (cnames: list<lident>) : (list<induct
 
 (*the second element of the returned pair is the unconsumed part of sigs*)
 let rec parseInductiveTypesFromSigBundle
-    (c: context) (sigs : sigelts) : list<inductiveTypeFam> * list<typeAbbrev> =
+    (c: context) (sigs : sigelts) : list<inductiveTypeFam> * list<typeAbbrev> * list<inductiveConstructor> (*last item contains only the constructors for exceptions *) 
+     =
 match sigs with
 | (Sig_tycon (l,bs,kk,_,constrs,_,_))::tlsig -> 
      //printfn "%A\n" ((List.map (fun (x:lident) -> x.ident.idText) constrs));
     let indConstrs(*list<inductiveConstructor>*) = parseInductiveConstructors c constrs in
-    let inds,abbs=(parseInductiveTypesFromSigBundle c tlsig) in
-     ({tyName = l; k = kk; tyBinders=bs; constructors=indConstrs})::inds, abbs
-| (Sig_datacon _)::tlsig -> [],[] // at this point we can stop because Nik said that all type type declarations come before data constructors.
-| [] -> [],[] 
+    let inds,abbs,exns=(parseInductiveTypesFromSigBundle c tlsig) in
+     ({tyName = l; k = kk; tyBinders=bs; constructors=indConstrs})::inds, abbs,exns
+| (Sig_datacon (l,t,tc,quals,lids,_))::tlsig -> 
+        if (List.contains  ExceptionConstructor quals)
+        then             
+            let t = (lookup_datacon c.tcenv l) in // ignoring the type in the bundle. the typechecker env often has syntactically better types
+                (assert (List.isEmpty tlsig) ;([],[], [{cname=l; ctype=t}])) 
+        else
+            [],[],[]      // unless this is an exception constructor, at this point we can stop because Nik said that all type type declarations come before data constructors.
+
+
+| [] -> [],[],[]
 | (Sig_typ_abbrev (l,bs,_,t,_,_))::tlsig -> 
-    let inds,abbs=(parseInductiveTypesFromSigBundle c tlsig) in
-     inds, ({abTyName=l; abTyBinders=bs; abBody=t})::abbs
+    let inds,abbs, exns=(parseInductiveTypesFromSigBundle c tlsig) in
+     inds, ({abTyName=l; abTyBinders=bs; abBody=t})::abbs, exns
 | se::tlsig -> failwith (Util.format1 "unexpected content in a  sig bundle : %s\n" (Print.sigelt_to_string se)) 
 
 //failwith (Util.format1 "unexpected content in a  sig bundle : %s\n" (Print.sigelt_to_string se)) 
@@ -364,6 +373,18 @@ let extractTypeAbbrev (c:context) (tyab:typeAbbrev) : context * (mlsymbol  * mli
         let c = Env.extend_tydef c [td] in // why is this needed?
         c, td
 
+let extractExn (c:context) (exnConstr : inductiveConstructor) : context  =
+            let mlt = extractTyp c exnConstr.ctype in
+            let tys = [],mlt in
+            let fvv = mkFvvar exnConstr.cname exnConstr.ctype in 
+            let tydecl  : mlmodule1 = MLM_Exn (lident2mlsymbol exnConstr.cname, argTypes mlt) in
+            // fprint1 "(* extracting the type of constructor %s\n" (lident2mlsymbol ctor.cname);
+           // fprint1 "%s\n" (typ_to_string ctor.ctype);
+             //print1 "(* datacon : %A *)\n" (tys);
+            (extend_fv c fvv tys) //this might need to be translated to OCaml exceptions
+             //Util.print_string ("\n"^(Print.sigelt_to_string s)^"\n");
+            // failwith "not yet enabled"
+
 (*similar to the definition of the second part of \hat{\epsilon} in page 110*)
 (* \pi_1 of returned value is the exported constant*)
 let rec extractSigElt (c:context) (s:sigelt) : context * mltydecl =
@@ -373,9 +394,10 @@ let rec extractSigElt (c:context) (s:sigelt) : context * mltydecl =
 
     | Sig_bundle (sigs, _, _ ,_) -> 
         //let xxxx = List.map (fun se -> fprint1 "%s\n" (Util.format1 "sig bundle: : %s\n" (Print.sigelt_to_string se))) sigs in
-        let inds,abbs = parseInductiveTypesFromSigBundle c sigs in
+        let inds,abbs, exConstrs = parseInductiveTypesFromSigBundle c sigs in
         let c, indDecls = (Util.fold_map extractInductive c inds) in
         let c, tyAbDecls = (Util.fold_map extractTypeAbbrev c abbs) in
+        let c = (List.fold_left extractExn c exConstrs) in // so far, exception declarations are only for the typechecker in extractexp
         (c, List.append indDecls tyAbDecls)
         //let k = lookup_typ_lid c ind.tyName in
 
