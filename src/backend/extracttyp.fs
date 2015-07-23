@@ -387,6 +387,22 @@ let rec extractSigElt (c:context) (s:sigelt) : context * mltydecl =
            extractSigElt c (Sig_bundle([s], [Assumption], [], Util.range_of_sigelt s))
          else c,[]
 
+    | (Sig_datacon (l,t,tc,quals,lids,_)) -> 
+        if (List.contains  ExceptionConstructor quals)
+        then 
+            let t = (lookup_datacon c.tcenv l) in // ignoring the type in the bundle
+            let mlt = extractTyp c (lookup_datacon c.tcenv l) in
+            let tys = [],mlt in
+            let fvv = mkFvvar l t in 
+            let tydecl = MLM_Exn (lident2mlsymbol l, argTypes mlt) in
+            // fprint1 "(* extracting the type of constructor %s\n" (lident2mlsymbol ctor.cname);
+           // fprint1 "%s\n" (typ_to_string ctor.ctype);
+             //print1 "(* datacon : %A *)\n" (tys);
+             Util.print_string ("\n"^(Print.sigelt_to_string s)^"\n");
+             failwith "NYI"
+            //(extend_fv c fvv tys, []) //this might need to be translated to OCaml exceptions
+        else
+            c, []
     | _ -> c, []
 
 let emptyMlPath : mlpath = ([],"")
