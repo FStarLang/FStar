@@ -311,6 +311,10 @@ and formula_to_string_old_now_unused phi =
     let bin_top f = function 
         | [(Inl t1, _); (Inl t2, _)] -> format3 "%s %s %s" (formula_to_string t1) f (formula_to_string t2)
         | _ -> failwith "Impos" in
+    //Note: bin_eop is inferred to have type : string -> list (either<string, ?u>) -> string
+    //This ?u leads to the emission of an Obj.t in the generated OCaml code
+    //Note, bin_eop is actually never called, which is why we have the ?u lingering
+    //We might consider removing the function : ) ... but it's nice in that it revealed a corner case in extraction
     let bin_eop f = function
         | [(Inr e1, _);(Inr e2, _)] -> format3 "%s %s %s" (exp_to_string e1) f (exp_to_string e2)
         | _ -> failwith "impos" in

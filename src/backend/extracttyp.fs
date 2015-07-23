@@ -65,12 +65,13 @@ let translate_eff g l : e_tag =
     then E_PURE 
     else E_IMPURE
 
-(*generates inp_1 -> inp_2 -> ... inp_n -> out *)
-let rec curry (inp: (list<mlty>)) (erase : e_tag) (out: mlty) =
+(*generates inp_1 -> E_PURE (inp_2 -> ...  E_PURE (inp_n -> f out)) *)
+let rec curry (inp: (list<mlty>)) (f : e_tag) (out: mlty) =
   match inp with
   | [] -> out
-  | h::tl -> MLTY_Fun (h, erase, curry tl erase out) 
-
+  | [h] -> MLTY_Fun (h, f, out) 
+  | h1::h2::tl -> MLTY_Fun(h1, E_PURE, curry (h2::tl) f out)
+  
 (*
   Below, "the thesis" refers to:
   Letouzey, P. “Programmation Fonctionnelle Certifiée – L’extraction de Programmes Dans L’assistant Coq.” Université Paris-Sud, 2004.
@@ -172,9 +173,10 @@ match ft.n with // assume ft is compressed. is there a compresser for typ'?
             extractTyp c ty
 
   | Typ_ascribed (ty,_)  -> extractTyp c ty
-  | Typ_meta _ -> erasedContent //failwith ("NYI:" ^ Print.typ_to_string ft ) // what should we do wabout this? it is encountered in st3.fst
-  | Typ_uvar _ -> failwith "NYI"
+  | Typ_meta (Meta_named(t, _)) -> extractTyp c t
+  | Typ_uvar _ -> unknownType 
   | Typ_delayed _  -> failwith "expected the argument to be compressed"
+  | Typ_meta _ -> failwith (Util.format1 "Unexpected meta in type at %s\n" (Range.string_of_range ft.pos))
   |   _ -> failwith "NYI. replace this with unknownType if you know the consequences"
 and getTypeFromArg (c:context) (a:arg) : mlty =
 match (fst a) with

@@ -24,7 +24,9 @@ open Microsoft.FStar.Backends.ML.Env
 open Microsoft.FStar.Backends.ML.Util
 
 (*This approach assumes that failwith already exists in scope. This might be problematic, see below.*)
-let fail_exp = mk_Exp_app(Util.fvar false Const.failwith_lid dummyRange, [varg <| mk_Exp_constant (Const_string (Bytes.string_as_unicode_bytes "Not yet implemented", dummyRange)) None dummyRange]) None dummyRange 
+let fail_exp t = mk_Exp_app(Util.fvar false Const.failwith_lid dummyRange, 
+                          [ targ t
+                          ; varg <| mk_Exp_constant (Const_string (Bytes.string_as_unicode_bytes "Not yet implemented", dummyRange)) None dummyRange]) None dummyRange 
 
     
 let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> = 
@@ -51,11 +53,11 @@ let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> =
 
        | Sig_val_decl(lid, t, quals, r) -> 
          if quals |> List.contains Assumption 
-         then let tbinders,_ = Util.tbinder_prefix t in
+         then let tbinders,t' = Util.tbinder_prefix t in
               let impl = match tbinders with
-                | [] -> fail_exp
-                | bs -> mk_Exp_abs(bs, fail_exp) None dummyRange in
-              let se = Sig_let((false, [{lbname=Inr lid; lbtyp=t; lbeff=Const.effect_Tot_lid; lbdef=impl}]), r, [], quals) in
+                | [] -> fail_exp t'
+                | bs -> mk_Exp_abs(bs, fail_exp t') None dummyRange in
+              let se = Sig_let((false, [{lbname=Inr lid; lbtyp=t; lbeff=Const.effect_ML_lid; lbdef=impl}]), r, [], quals) in
               let g, mlm = extract_sig g se in
               if quals |> Util.for_some (function Projector _ | Discriminator _ -> true | _ -> false)
               then g, [] //TODO: generate a proper projector/discriminator

@@ -39,7 +39,9 @@ type env = {
 }
 
 let debug g f = 
-    if !Options.debug <> [] && g.currentModule <> ([], "Prims")
+    if !Options.debug <> [] 
+    && (List.contains "Prims" (!Options.debug) || 
+        g.currentModule <> ([], "Prims"))
     then f ()
 
 let mkFvvar (l: lident) (t:typ) : fvvar =

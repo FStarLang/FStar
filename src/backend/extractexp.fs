@@ -24,8 +24,8 @@ open Microsoft.FStar.Backends.ML.Env
 open Microsoft.FStar.Backends.ML.Util
 
 let eff_to_string = function
-    | E_PURE -> "MayErase"
-    | E_IMPURE -> "Keep"
+    | E_PURE -> "Pure"
+    | E_IMPURE -> "Impure"
     (*should there be a MustErase? It is unsafe to emit code marked as ghost.*)
 
 let fail r msg = 
@@ -36,7 +36,11 @@ let err_uninst e =
     fail e.pos (Util.format1 "Variable %s has a polymorphic type; expected it to be fully instantiated" (Print.exp_to_string e))
 
 let err_ill_typed_application e args t =
-    fail e.pos ("Ill-typed application")
+    fail e.pos (Printf.sprintf "Ill-typed application: application is %s\n head type is %A\n remaining args are %s\n"
+                (Print.exp_to_string e)
+                t
+                (Print.args_to_string args))
+                
 
 let err_value_restriction e =
     fail e.pos ("Refusing to generalize because of the value restriction")
@@ -231,7 +235,11 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                   let e0 = maybe_coerce g e0 t0' t0 in // coerce the arguments of application, if they dont match up
                   synth_app is_data (mlhead, (e0, f0)::mlargs_f) (join_l [f;f';f0], t) rest
                   
-                | _ -> err_ill_typed_application e restArgs t in // this case is reached if extractTyp erases function types with erasable codomains, see add0Comm
+                | _ -> 
+                  begin match Util.delta_unfold g t with
+                    | Some t -> synth_app is_data (mlhead, mlargs_f) (f, t) restArgs
+                    | None -> err_ill_typed_application e restArgs t
+                  end in 
                   
           let head = Util.compress_exp head in
           begin match head.n with 
@@ -246,8 +254,9 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                    //let _ = (if n=1 then printfn "\n (*prefix was  \n %A \n  *) \n" prefix) in
                    let prefixAsMLTypes = (List.map (ExtractTyp.getTypeFromArg g) prefix) in
                    // let _ = printfn "\n (*about to instantiate  \n %A \n with \n %A \n \n *) \n" (vars,t) prefixAsMLTypes in
+                   let t0 = t in 
                    let t = instantiate (vars, t) prefixAsMLTypes in
-                   debug g (fun () -> printfn "\n (*instantiating  \n %A \n with \n %A \n produced \n %A \n *) \n" (vars,t) prefixAsMLTypes t);
+                   debug g (fun () -> printfn "\n (*instantiating  \n %A \n with \n %A \n produced \n %A \n *) \n" (vars,t0) prefixAsMLTypes t);
                    let t, ml_args = match vars with 
                     | [] -> //there were no type abstractions; so no additional unit to eliminate
                       t, []

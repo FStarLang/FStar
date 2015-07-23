@@ -61,14 +61,13 @@ let subst ((formals, t):mltyscheme) (args:list<mlty>) : mlty =
     then failwith "Substitution must be fully applied"
     else subst_aux (List.zip formals args) t
 
-//pre: t' is a MLTY_Named
 let delta_unfold g = function 
     | MLTY_Named(args, n) -> 
       begin match Env.lookup_ty_const g n with 
         | Some ts -> Some (subst ts args)
         | _ -> None
       end
-    | _ -> failwith "impossible"
+    | _ -> None
     
 
 let rec equiv (g:Env.env) (t:mlty) (t':mlty) : bool = 

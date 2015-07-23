@@ -171,11 +171,11 @@ STDLIBEXP=$(addprefix ../lib/, $(STDFILES))
 
 BOOT_BASICFILES=bytes.fst platform.fsi util.fsi getoptsimple.fst options.fs range.fst unionfind.fst
 BOOT_BASIC=$(addprefix basic/, $(BOOT_BASICFILES))
-BOOT_SYNTAXFILES=syntax.fsi syntax.fs const.fs #visit.fs util.fs print.fs ssyntax.fs
+BOOT_SYNTAXFILES=syntax.fsi syntax.fs const.fs visit.fs util.fs print.fs ssyntax.fs
 BOOT_SYNTAX=$(addprefix absyn/, $(BOOT_SYNTAXFILES))
 BOOT_PARSERFILES=ast.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs parse.fst lexhelp.fs parseit.fsi driver.fs
 BOOT_PARSER=$(addprefix parser/, $(BOOT_PARSERFILES))
-BOOT_TCFILES=tcenv.fsi tcenv.fs recheck.fs normalize.fsi normalize.fs errors.fs rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs
+BOOT_TCFILES=tcenv.fsi tcenv.fs recheck.fs #normalize.fsi normalize.fs errors.fs rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs
 BOOT_TC=$(addprefix tc/, $(BOOT_TCFILES))
 BOOT_FORMATFILES=format.fsi formatml.fs
 BOOT_FORMAT=$(addprefix format/, $(BOOT_FORMATFILES))
@@ -184,7 +184,7 @@ BOOT_BACKEND=$(addprefix backend/, $(BOOT_BACKENDFILES))
 BOOT_JSBACKENDFILES=ast.fs translate.fs
 BOOT_JSBACKEND=$(addprefix jsbackend/, $(BOOT_JSBACKENDFILES))
 BOOT_MAIN=fstar.fs
-BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) #$(BOOT_TC) $(BOOT_PARSER) $(TOSMT_SRC) $(BOOT_FORMAT) $(BOOT_BACKEND) fstar.fs
+BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_TC) #$(BOOT_PARSER) $(TOSMT_SRC) $(BOOT_FORMAT) #$(BOOT_BACKEND) fstar.fs
 
 ADMITTED_MODULES=Microsoft.FStar.Util Microsoft.FStar.Platform Microsoft.FStar.Parser.ParseIt
 ADMITS=$(addprefix --admit_fsi , $(ADMITTED_MODULES))
