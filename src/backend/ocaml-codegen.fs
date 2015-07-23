@@ -78,23 +78,20 @@ let rec in_ns = function
 
 (* -------------------------------------------------------------------- *)
 let path_of_ns (currentModule : mlpath) ns =
-    let outsupport = fun (ns1,ns2) -> if ns1 = ns2 then [] else [String.concat "_" ns2]
+    let outsupport = fun (ns1,ns2) -> if ns1 = ns2 then [] else [String.concat "_" ns2] 
+    in outsupport ((fst currentModule) @ [snd currentModule], ns)
     
-    (*function
-    | x1 :: p1, x2 :: p2 when x1 = x2 -> outsupport (p1, p2)
-    | _, p -> p
-    *)
-    in let chkin sns = if in_ns (sns, ns) then Some sns else None
-    in match List.tryPick chkin outmod with
+   (* in let chkin sns = if in_ns (sns, ns) then Some sns else None
+    in match List.tryPick chkin  outmod  with
     | None -> 
         (match List.tryPick chkin (!Microsoft.FStar.Options.codegen_libs) with
          | None -> outsupport ((fst currentModule) @ [snd currentModule], ns)
          | _ -> ns)
-    | Some sns -> "Support" :: ns
+    | Some sns -> "Support" :: ns *)
 
 let mlpath_of_mlpath (currentModule : mlpath) (x : mlpath) : mlpath =
     match string_of_mlpath x with
-    | "Prims.Some" -> ([], "Some")
+   (* | "Prims.Some" -> ([], "Some")
     | "Prims.None" -> ([], "None")
     | "Prims.list" -> ([], "list") // was not there in old code
     | "Prims.int" -> ([], "int") // was not there in old code
@@ -103,8 +100,8 @@ let mlpath_of_mlpath (currentModule : mlpath) (x : mlpath) : mlpath =
     | "Prims.failwith" -> ([], "failwith")
     | "ST.alloc" -> ([], "ref")
     | "ST.read" -> (["Support";"Prims"], "op_Bang")
-    | "ST.op_ColonEquals" -> (["Support";"Prims"], "op_ColonEquals")
-    | _ ->
+    | "ST.op_ColonEquals" -> (["Support";"Prims"], "op_ColonEquals") *)
+    | _ -> 
       begin
         let ns = fst x in
         let x  = snd x in

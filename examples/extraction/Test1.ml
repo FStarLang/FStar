@@ -1,5 +1,5 @@
 
-let idlist = (fun ( x  :  int list ) -> x)
+let idlist = (fun ( x  :  Prims.int Prims.list ) -> x)
 
 type nnat =
 | O
@@ -9,20 +9,20 @@ let idnat = (fun ( x  :  nnat ) -> x)
 
 let idnat2 = (fun ( x  :  nnat ) -> x)
 
-let id = (fun ( _3_1373  :  unit ) ( x  :  'a ) -> x)
+let id = (fun ( _3_95  :  Prims.unit ) ( x  :  'a ) -> x)
 
-let idp = (fun ( _3_1373  :  unit ) ( x  :  Obj.t ) -> x)
+let idp = (fun ( _3_95  :  Prims.unit ) ( x  :  Obj.t ) -> x)
 
-let idp' = (fun ( _3_1373  :  unit ) ( x  :  'a ) -> x)
+let idp' = (fun ( _3_95  :  Prims.unit ) ( x  :  'a ) -> x)
 
 let add1 = (fun ( a  :  nnat ) -> S (a))
 
-let add2 = (fun ( _3_2292  :  nnat ) -> S (_3_2292))
+let add2 = (fun ( _3_1386  :  nnat ) -> S (_3_1386))
 
-let eval_order = (fun ( effectful  :  string  ->  string ) ( f  :  string  ->  string  ->  string ) -> (let _3_2312 = (effectful "first")
-in (f _3_2312 "second")))
+let eval_order = (fun ( effectful  :  Prims.string  ->  Prims.string ) ( f  :  Prims.string  ->  Prims.string  ->  Prims.string ) -> (let _3_1406 = (effectful "first")
+in (f _3_1406 "second")))
 
-let prev = (fun ( _1_1  :  nnat ) -> (match (_1_1) with
+let prev = (fun ( _2_1  :  nnat ) -> (match (_2_1) with
 | O -> begin
 O
 end
@@ -68,7 +68,7 @@ type ('a, 'b) list2 =
 
 
 type distr_pair =
-(unit  ->  Obj.t  ->  Obj.t)  ->  (nnat, nnat list) prod
+(Prims.unit  ->  Obj.t  ->  Obj.t)  ->  (nnat, nnat list) prod
 
 type 'a list2p =
 | Nil2p
@@ -85,7 +85,7 @@ type 'x sch3param =
 'x  ->  'x
 
 type idt =
-unit  ->  Obj.t  ->  Obj.t
+Prims.unit  ->  Obj.t  ->  Obj.t
 
 type 'a listalias =
 'a list
@@ -103,10 +103,10 @@ type 'a evenlist =
 
 
 type someLemmaStatement =
-nnat  ->  nnat  ->  unit
+nnat  ->  nnat  ->  Prims.unit
 
 type trivialLemmaSatement =
-nnat  ->  nnat  ->  unit
+nnat  ->  nnat  ->  Prims.unit
 
 let rec add0Comm = (fun ( n  :  nnat ) -> ())
 
@@ -115,7 +115,7 @@ let add0CommUse = (fun ( n  :  nnat ) -> ())
 let add0CommUse2 = (fun ( n  :  nnat ) -> (let x = ()
 in n))
 
-let unitAsNat = (fun ( u  :  unit ) -> O)
+let unitAsNat = (fun ( u  :  Prims.unit ) -> O)
 
 let add0CommUse3 = (fun ( n  :  nnat ) -> (unitAsNat ()))
 
