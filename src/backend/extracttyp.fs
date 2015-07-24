@@ -250,8 +250,15 @@ type typeAbbrev = {
   abBody : typ 
 }
 
-let parseInductiveConstructors (c:context) (cnames: list<lident>) : (list<inductiveConstructor>) =
-    List.map (fun h -> { cname = h ; ctype = lookup_datacon c.tcenv h}) cnames
+let lookupDataConType (c:context) (sigb : sigelts) (l:lident)(*this sigbundle contains the constructors, but we look inside iff Tc.Env.lookpu_datacon fails*) : typ =
+try (lookup_datacon c.tcenv l) 
+with
+_ -> failwith "couldnt find the constructor in Tc.Env"
+
+
+let parseInductiveConstructors (c:context) (cnames: list<lident>) (sigb : sigelts) (*this sigbundle contains the constructors, but we look inside iff Tc.Env.lookpu_datacon fails*) 
+    : (list<inductiveConstructor>) =
+    List.map (fun h -> { cname = h ; ctype = lookupDataConType c sigb h }) cnames
 
 (*the second element of the returned pair is the unconsumed part of sigs*)
 let rec parseInductiveTypesFromSigBundle
@@ -260,7 +267,7 @@ let rec parseInductiveTypesFromSigBundle
 match sigs with
 | (Sig_tycon (l,bs,kk,_,constrs,_,_))::tlsig -> 
      //printfn "%A\n" ((List.map (fun (x:lident) -> x.ident.idText) constrs));
-    let indConstrs(*list<inductiveConstructor>*) = parseInductiveConstructors c constrs in
+    let indConstrs(*list<inductiveConstructor>*) = parseInductiveConstructors c constrs tlsig in
     let inds,abbs,exns=(parseInductiveTypesFromSigBundle c tlsig) in
      ({tyName = l; k = kk; tyBinders=bs; constructors=indConstrs})::inds, abbs,exns
 | (Sig_datacon (l,t,tc,quals,lids,_))::tlsig -> 
