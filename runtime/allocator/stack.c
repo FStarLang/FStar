@@ -78,6 +78,7 @@ static void add_page(int sz_b, int is_ext) {
 }
 
 void push_frame(int sz_b) {
+  assert(sz_b >= 0);  
   sz_b = word_align(sz_b);
   if (top != NULL && have_space(sz_b+sizeof(void*))) { // can continue with current page
     //printf("push frame in page\n");
@@ -92,7 +93,8 @@ void push_frame(int sz_b) {
   }
 }
 
-void pop_frame() {
+int pop_frame() {
+  if (top == NULL) return -1;
   if (top->frame_ptr != NULL && top->frame_ptr != EXT_MARKER) {
     //printf ("pop frame on page\n");
     top->alloc_ptr = top->frame_ptr;
@@ -113,10 +115,11 @@ void pop_frame() {
       pop_frame();
     }
   }
+  return 0;
 }
 
 void *stack_alloc_maskp(int sz_b, int nbits, int *mask) {
-  assert(top != NULL);
+  if (top == NULL) return NULL;
   sz_b = word_align(sz_b);
  retry: if (have_space(sz_b)) { // can continue with current page
     void *res = top->alloc_ptr;

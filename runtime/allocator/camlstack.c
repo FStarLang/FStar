@@ -2,8 +2,8 @@
 #include <string.h>
 #include <caml/mlvalues.h>
 #include <caml/memory.h>
+#include <caml/fail.h>
 #include "stack.h"
-
 
 #define check(_p) if (!(_p)) { fprintf(stderr,"Failed check %s:%d\n",__FILE__,__LINE__); fflush(stdout); exit(1); }
 #define Assert check
@@ -35,7 +35,7 @@ value stack_caml_alloc(mlsize_t wosize, tag_t tag, int nbits, int *mask) {
     in should index words starting at 1, so as to skip over the header
     word. */
   tmp = (value)stack_alloc_maskp(Bhsize_wosize(wosize),nbits,mask);
-  Assert (tmp != 0);
+  if (tmp == (value)0) return tmp;
   Hd_hp (tmp) = Make_header (wosize, tag, Caml_black);
   result = Val_hp (tmp);
   if (tag < No_scan_tag){
@@ -50,6 +50,7 @@ value stack_caml_alloc_string (mlsize_t lenb)
   mlsize_t offset_index;
   mlsize_t wosize = (lenb + sizeof (value)) / sizeof (value);
   result = stack_caml_alloc (wosize, String_tag, 0, NULL);
+  if (result == (value)0) return result;
   Field (result, wosize - 1) = 0;
   offset_index = Bsize_wsize (wosize) - 1;
   Byte (result, offset_index) = offset_index - lenb;
@@ -93,23 +94,32 @@ static void scan_stack_roots(scanning_action action)
 /* FFI */
 /***********************************************************************/
 
+static int already_initialized = 0;
+
 CAMLprim value stack_push_frame(value v) 
 {
-  int szb = Val_int(v);
-  static int already_initialized = 0;
-  if (!already_initialized) {
-    already_initialized = 1;
-    prev_scan_roots_hook = caml_scan_roots_hook;
-    caml_scan_roots_hook = scan_stack_roots;
+  CAMLparam1 (v);
+  int szb = Int_val(v);
+  if (szb < 0)
+    caml_invalid_argument("Camlstack.push_frame");
+  else {
+    if (!already_initialized) {
+      already_initialized = 1;
+      prev_scan_roots_hook = caml_scan_roots_hook;
+      caml_scan_roots_hook = scan_stack_roots;
+    }
+    push_frame(szb);
+    CAMLreturn(Val_unit);
   }
-  push_frame(szb);
-  return Val_unit;
 }
 
-CAMLprim value stack_pop_frame() 
+CAMLprim value stack_pop_frame(value unit) 
 {
-  pop_frame();
-  return Val_unit;
+  CAMLparam1 (unit);
+  if (pop_frame() == -1)
+    caml_failwith ("Camlstack.pop_frame");
+  else
+    CAMLreturn(Val_unit);
 }
 
 CAMLprim value stack_mkpair(value v1, value v2) 
@@ -126,9 +136,13 @@ CAMLprim value stack_mkpair(value v1, value v2)
     nbits++;
   }
   value tuple = stack_caml_alloc_tuple(2,nbits,mask);
-  Field(tuple, 0) = v1;
-  Field(tuple, 1) = v2;
-  CAMLreturn(tuple);
+  if (tuple == (value)0)
+    caml_failwith ("Camlstack.mkpair");
+  else {
+    Field(tuple, 0) = v1;
+    Field(tuple, 1) = v2;
+    CAMLreturn(tuple);
+  }
 }
 
 CAMLprim value stack_mktuple3(value v1, value v2, value v3) {
@@ -148,10 +162,14 @@ CAMLprim value stack_mktuple3(value v1, value v2, value v3) {
     nbits++;
   }
   value tuple = stack_caml_alloc_tuple(3,nbits,mask);
-  Field(tuple, 0) = v1;
-  Field(tuple, 1) = v2;
-  Field(tuple, 2) = v3;
-  CAMLreturn(tuple);
+  if (tuple == (value)0)
+    caml_failwith ("Camlstack.mktuple3");
+  else {
+    Field(tuple, 0) = v1;
+    Field(tuple, 1) = v2;
+    Field(tuple, 2) = v3;
+    CAMLreturn(tuple);
+  }
 }
 
 CAMLprim value stack_mktuple4(value v1, value v2, value v3, value v4) {
@@ -175,54 +193,34 @@ CAMLprim value stack_mktuple4(value v1, value v2, value v3, value v4) {
     nbits++;
   }
   value tuple = stack_caml_alloc_tuple(4,nbits,mask);
-  Field(tuple, 0) = v1;
-  Field(tuple, 1) = v2;
-  Field(tuple, 2) = v3;
-  Field(tuple, 3) = v4;
-  CAMLreturn(tuple);
+  if (tuple == (value)0)
+    caml_failwith ("Camlstack.mktuple4");    
+  else {
+    Field(tuple, 0) = v1;
+    Field(tuple, 1) = v2;
+    Field(tuple, 2) = v3;
+    Field(tuple, 3) = v4;
+    CAMLreturn(tuple);
+  }
 }
 
+/*
 CAMLprim value stack_mkemptystring(value vallen) {
   CAMLparam1 (vallen);
   int len = Int_val(vallen);
   CAMLreturn(stack_caml_alloc_string(len));
 }
-
-/***********************************************************************/
-/* Tests */
-/***********************************************************************/
-
-static char *s = "This is a string!";
-CAMLprim value make_string(value unit)
-{
-  int len;
-  value res;
-
-  len = strlen(s);
-  res = stack_caml_alloc_string(len);
-  memmove(String_val(res), s, len);
-  return res;
-}
+*/
 
 void printptrs(void *ign, void **ptr) {
   printf("  live pointer addr=%p, val=%p\n",ptr,*ptr);
 }
 
-CAMLprim void print_mask(value unit) 
+CAMLprim value print_mask(value unit) 
 {
   CAMLparam1 (unit);
   printf("identifying marked pointers\n");
   each_marked_pointer(printptrs,0);
-  CAMLreturn0;
+  CAMLreturn(Val_unit);
 }
 
-CAMLprim void inspect(value v) 
-{
-  CAMLparam1 (v);
-  if (Is_long(v)) {
-    printf("is long %d (%ld)\n", Int_val(v), Long_val(v));
-  } else {
-    printf("is block: Wosize=%lu, Tag=%hhu\n", Wosize_val(v), Tag_val(v));
-  }
-  CAMLreturn0;
-}
