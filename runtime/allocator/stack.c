@@ -83,6 +83,8 @@ void push_frame(int sz_b) {
     //printf("push frame in page\n");
     *((void **)top->alloc_ptr) = top->frame_ptr;
     top->frame_ptr = top->alloc_ptr;
+    int bit = (void **)top->frame_ptr - (void **)top->memory; 
+    unsetbit(top->pointermap, bit);
     top->alloc_ptr = (void *)((unsigned long)top->alloc_ptr + WORD_SZB);
   } else {
     //printf("push frame on new page\n");
@@ -100,7 +102,9 @@ void pop_frame() {
     void **fp = top->frame_ptr;
     //printf ("pop frame and free page\n");
     //for debugging:
-    //memset(top->memory, 255, ((unsigned long)top->limit_ptr - (unsigned long)top->memory));
+#ifndef NDEBUG
+    memset(top->memory, 255, ((unsigned long)top->limit_ptr - (unsigned long)top->memory));
+#endif
     free(top->memory);
     free(top);
     top = prev;
@@ -118,13 +122,12 @@ void *stack_alloc_mask(int sz_b, int nbits, ...) {
  retry: if (have_space(sz_b)) { // can continue with current page
     void *res = top->alloc_ptr;
     //printf("allocated %d bytes\n", sz_b);
-    int ofs = res - top->memory; // #words into the page
-    int i;
+    int ofs = (void **)res - (void **)top->memory; // #words into the page
     top->alloc_ptr = (void *)((unsigned long)top->alloc_ptr + sz_b);
     unsetbit_rng(top->pointermap, ofs, sz_b / WORD_SZB);
     va_start(argp, nbits);
     while (nbits != 0) {
-      i = va_arg(argp, int);
+      int i = va_arg(argp, int);
       setbit(top->pointermap, i+ofs);
       nbits--;
     }
@@ -168,20 +171,9 @@ void each_marked_pointer(ptrfun f, void *env) {
   Page *tmp = top;
   struct ptrenv penv = { 0, f, env };
   while (tmp != NULL) {
-    int maxbit = tmp->alloc_ptr - tmp->memory; // XXX is this right?
+    int maxbit = (void **)tmp->alloc_ptr - (void **)tmp->memory; 
     penv.memory = (void**)tmp->memory;
     eachbit(tmp->pointermap, maxbit, ptrbitfun, (void *)&penv);
     tmp = tmp->prev;
   }
 }
-
-/* To Test:
-
-- See that it marks the right pointers
-- See that clears the map properly
-
-To implement:
-
-- Scanning in terms of each_marked_pointer
-
-*/

@@ -1,5 +1,8 @@
-test: ffitest.o stack.o ffitest.ml
-	 ocamlc -custom -o $@ $^
+stacktest: stack.o bitmask.o test.o
+	$(CC) $^ -o $@
+
+ffitest: ffitest.o stack.o bitmask.o ffitest.ml
+	ocamlc -custom -o $@ $^
 
 %.o: %.c
-	$(CC) -c -I`ocamlc -where` $^ -o $@
+	$(CC) -g -c -I`ocamlc -where` $^ -o $@
