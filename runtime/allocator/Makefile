@@ -1,3 +1,5 @@
+all: stacktest ffitest
+
 stacktest: stack.o bitmask.o test.o
 	$(CC) $^ -o $@
 

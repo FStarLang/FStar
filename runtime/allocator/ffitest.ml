@@ -1,4 +1,5 @@
 external inspect : 'a -> unit = "inspect";;
+external print_mask : unit -> unit = "print_mask";;
 
 external push_frame : int -> unit = "stack_push_frame";;
 external pop_frame : unit -> unit = "stack_pop_frame";;
@@ -8,6 +9,7 @@ external stack_mktuple3 : 'a -> 'b -> 'c -> 'a*'b*'c = "stack_mktuple3";;
 external stack_mktuple4 : 'a -> 'b -> 'c -> 'd -> 'a*'b*'c*'d = "stack_mktuple4";;
 
 external stack_cons: 'a -> 'a list -> 'a list = "stack_mkpair";;
+
 
 (*
 external stack_string_init: int -> (int -> char) -> string = "stack_init_string";;
@@ -19,7 +21,7 @@ let rec mklist n =
   if n = 0 then []
   else
     let l = mklist (n-1) in
-    stack_cons n l
+    stack_cons "hoy" l
 
 let rec string_of_list l p =
   match l with
@@ -29,7 +31,7 @@ let rec string_of_list l p =
       (p h)^"::"^s
 ;;
 
-Printf.printf "List result = %s\n" (string_of_list (mklist 10) string_of_int);;
+Printf.printf "List result = %s\n" (string_of_list (mklist 10) (fun s->s));;
 
 (*
 type mytype =
@@ -44,8 +46,12 @@ inspect (B 1);;
 inspect C;;
 inspect (D "hello");;
 *)
+
+print_mask ();;
+
 pop_frame ();;
 
+print_mask ();;
 
 (*
 push_frame 0;;

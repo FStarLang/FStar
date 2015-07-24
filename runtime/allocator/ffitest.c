@@ -274,7 +274,7 @@ CAMLprim value stack_mkemptystring(value vallen) {
 /***********************************************************************/
 
 static char *s = "This is a string!";
-CAMLprim value make_string()
+CAMLprim value make_string(value unit)
 {
   int len;
   value res;
@@ -283,6 +283,18 @@ CAMLprim value make_string()
   res = stack_caml_alloc_string(len);
   memmove(String_val(res), s, len);
   return res;
+}
+
+void printptrs(void *ign, void **ptr) {
+  printf("  live pointer addr=%p, val=%p\n",ptr,*ptr);
+}
+
+CAMLprim void print_mask(value unit) 
+{
+  CAMLparam1 (unit);
+  printf("identifying marked pointers\n");
+  each_marked_pointer(printptrs,0);
+  CAMLreturn0;
 }
 
 CAMLprim void inspect(value v) 
