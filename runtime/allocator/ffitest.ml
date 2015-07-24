@@ -10,7 +10,6 @@ external stack_mktuple4 : 'a -> 'b -> 'c -> 'd -> 'a*'b*'c*'d = "stack_mktuple4"
 
 external stack_cons: 'a -> 'a list -> 'a list = "stack_mkpair";;
 
-
 (*
 external stack_string_init: int -> (int -> char) -> string = "stack_init_string";;
 *)
@@ -21,7 +20,7 @@ let rec mklist n =
   if n = 0 then []
   else
     let l = mklist (n-1) in
-    stack_cons "hoy" l
+    stack_cons (n::[1;2;3]) l
 
 let rec string_of_list l p =
   match l with
@@ -31,7 +30,9 @@ let rec string_of_list l p =
       (p h)^"::"^s
 ;;
 
-Printf.printf "List result = %s\n" (string_of_list (mklist 10) (fun s->s));;
+let ex = mklist 10;;
+
+Printf.printf "List result = %s\n" (string_of_list ex (fun l -> "("^(string_of_list l string_of_int)^")"));;
 
 (*
 type mytype =
@@ -50,12 +51,15 @@ inspect (D "hello");;
 print_mask ();;
 
 Gc.full_major();;
-Gc.compact();;
 Gc.print_stat (Pervasives.stdout);;
+
+Printf.printf "List result = %s\n" (string_of_list ex (fun l -> "("^(string_of_list l string_of_int)^")"));;
 
 pop_frame ();;
 
 print_mask ();;
+
+Gc.full_major();;
 
 (*
 push_frame 0;;

@@ -31,6 +31,9 @@ value stack_caml_alloc(mlsize_t wosize, tag_t tag, int nbits, int *mask) {
   Assert (tag < 256);
   Assert (tag != Infix_tag);
   Assert (wosize != 0);
+  /*NOTE: for the below call to make sense, the mask that was passed
+    in should index words starting at 1, so as to skip over the header
+    word. */
   tmp = (value)stack_alloc_maskp(Bhsize_wosize(wosize),nbits,mask);
   Assert (tmp != 0);
   Hd_hp (tmp) = Make_header (wosize, tag, Caml_black);
@@ -67,8 +70,16 @@ void (*prev_scan_roots_hook) (scanning_action a) = NULL;
 static void scanfun(void *env, void **ptr) {
   scanning_action action = (scanning_action)env;
   value *root = (value *)ptr;
-  printf("  scanning=%p, val=%p\n",ptr,*ptr);
-  action (*root, root);
+  value v = *root;
+#ifndef NDEBUG
+  printf("  scanning=%p, val=%p\n",root,(void *)v);
+  if (Is_long(v)) {
+    printf("   is long %d (%ld)\n", Int_val(v), Long_val(v));
+  } else {
+    printf("   is block: Wosize=%lu, Tag=%hhu\n", Wosize_val(v), Tag_val(v));
+  }
+#endif
+  action (v, root);
 }
 
 static void scan_stack_roots(scanning_action action)
@@ -107,11 +118,11 @@ CAMLprim value stack_mkpair(value v1, value v2)
   int mask[2];
   int nbits = 0;
   if (!(Is_long(v1) || is_stack_pointer((void *)v1))) {
-    mask[0] = 0;
+    mask[0] = 1;
     nbits++;
   }
   if (!(Is_long(v2) || is_stack_pointer((void *)v2))) {
-    mask[nbits] = 0;
+    mask[nbits] = 2;
     nbits++;
   }
   value tuple = stack_caml_alloc_tuple(2,nbits,mask);
@@ -125,15 +136,15 @@ CAMLprim value stack_mktuple3(value v1, value v2, value v3) {
   int mask[3];
   int nbits = 0;
   if (!(Is_long(v1) || is_stack_pointer((void *)v1))) {
-    mask[0] = 0;
+    mask[0] = 1;
     nbits++;
   }
   if (!(Is_long(v2) || is_stack_pointer((void *)v2))) {
-    mask[nbits] = 0;
+    mask[nbits] = 2;
     nbits++;
   }
   if (!(Is_long(v3) || is_stack_pointer((void *)v3))) {
-    mask[nbits] = 0;
+    mask[nbits] = 3;
     nbits++;
   }
   value tuple = stack_caml_alloc_tuple(3,nbits,mask);
@@ -148,19 +159,19 @@ CAMLprim value stack_mktuple4(value v1, value v2, value v3, value v4) {
   int mask[4];
   int nbits = 0;
   if (!(Is_long(v1) || is_stack_pointer((void *)v1))) {
-    mask[0] = 0;
+    mask[0] = 1;
     nbits++;
   }
   if (!(Is_long(v2) || is_stack_pointer((void *)v2))) {
-    mask[nbits] = 0;
+    mask[nbits] = 2;
     nbits++;
   }
   if (!(Is_long(v3) || is_stack_pointer((void *)v3))) {
-    mask[nbits] = 0;
+    mask[nbits] = 3;
     nbits++;
   }
   if (!(Is_long(v4) || is_stack_pointer((void *)v4))) {
-    mask[nbits] = 0;
+    mask[nbits] = 4;
     nbits++;
   }
   value tuple = stack_caml_alloc_tuple(4,nbits,mask);
