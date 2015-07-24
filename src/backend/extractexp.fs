@@ -46,7 +46,7 @@ let err_value_restriction e =
     fail e.pos ("Refusing to generalize because of the value restriction")
     
 let err_unexpected_eff e f0 f1 =
-    fail e.pos (Util.format2 "Expected effect %s; got effect %s" (eff_to_string f0) (eff_to_string f1))
+    fail e.pos (Util.format3 "for expression %s, Expected effect %s; got effect %s" (Print.exp_to_string e) (eff_to_string f0) (eff_to_string f1))
     
 let is_constructor e = match (Util.compress_exp e).n with 
     | Exp_fvar(_, b) -> b
@@ -245,9 +245,9 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
           begin match head.n with 
             | Exp_bvar _ 
             | Exp_fvar _ -> 
-              debug g (fun () -> printfn "head of app is %s\n" (Print.exp_to_string head));
+              //debug g (fun () -> printfn "head of app is %s\n" (Print.exp_to_string head));
               let (head, (vars, t)), is_data = lookup_var g head in
-              debug g (fun () -> printfn "\n (*looked up tyscheme \n %A *) \n" (vars,t));
+              //debug g (fun () -> printfn "\n (*looked up tyscheme \n %A *) \n" (vars,t));
               let n = List.length vars in
               if n <= List.length args
               then let prefix, rest = Util.first_N n args in
@@ -256,7 +256,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                    // let _ = printfn "\n (*about to instantiate  \n %A \n with \n %A \n \n *) \n" (vars,t) prefixAsMLTypes in
                    let t0 = t in 
                    let t = instantiate (vars, t) prefixAsMLTypes in
-                   debug g (fun () -> printfn "\n (*instantiating  \n %A \n with \n %A \n produced \n %A \n *) \n" (vars,t0) prefixAsMLTypes t);
+                   //debug g (fun () -> printfn "\n (*instantiating  \n %A \n with \n %A \n produced \n %A \n *) \n" (vars,t0) prefixAsMLTypes t);
                    let t, ml_args = match vars with 
                     | [] -> //there were no type abstractions; so no additional unit to eliminate
                       t, []

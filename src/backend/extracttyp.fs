@@ -176,7 +176,7 @@ match ft.n with // assume ft is compressed. is there a compresser for typ'?
   | Typ_meta (Meta_named(t, _)) -> extractTyp c t
   | Typ_uvar _ -> unknownType 
   | Typ_delayed _  -> failwith "expected the argument to be compressed"
-  | Typ_meta _ -> failwith (Util.format1 "Unexpected meta in type at %s\n" (Range.string_of_range ft.pos))
+  | Typ_meta _ -> failwith (Util.format2 "Unexpected meta in type (%s) at %s\n" (Print.typ_to_string ft) (Range.string_of_range ft.pos))
   |   _ -> failwith "NYI. replace this with unknownType if you know the consequences"
 and getTypeFromArg (c:context) (a:arg) : mlty =
 match (fst a) with
