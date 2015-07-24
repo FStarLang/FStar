@@ -115,29 +115,45 @@ void pop_frame() {
   }
 }
 
-void *stack_alloc_mask(int sz_b, int nbits, ...) {
-  va_list argp;
+void *stack_alloc_maskp(int sz_b, int nbits, int *mask) {
   assert(top != NULL);
   sz_b = word_align(sz_b);
  retry: if (have_space(sz_b)) { // can continue with current page
     void *res = top->alloc_ptr;
     //printf("allocated %d bytes\n", sz_b);
     int ofs = (void **)res - (void **)top->memory; // #words into the page
+    int i;
     top->alloc_ptr = (void *)((unsigned long)top->alloc_ptr + sz_b);
     unsetbit_rng(top->pointermap, ofs, sz_b / WORD_SZB);
-    va_start(argp, nbits);
-    while (nbits != 0) {
-      int i = va_arg(argp, int);
-      setbit(top->pointermap, i+ofs);
-      nbits--;
+    for (i = 0; i<nbits; i++) {
+      setbit(top->pointermap, mask[i]+ofs);
     }
-    va_end(argp);
     return res;
   } else {
     //printf("adding page on demand\n");
     add_page(sz_b,1);
     goto retry;
   }
+}
+
+void *vstack_alloc_mask(int sz_b, int nbits, va_list argp) {
+  int buf[256];
+  int i;
+  assert(nbits < 256);
+  for (i=0; i<nbits; i++) {
+    int n = va_arg(argp,int);
+    buf[i] = n;
+  }
+  return stack_alloc_maskp(sz_b,nbits,buf);
+}  
+
+void *stack_alloc_mask(int sz_b, int nbits, ...) {
+  va_list argp;
+  void *result;
+  va_start(argp, nbits);
+  result = vstack_alloc_mask(sz_b, nbits, argp);
+  va_end(argp);
+  return result;
 }
 
 void *stack_alloc(int sz_b) {

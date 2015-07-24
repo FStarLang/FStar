@@ -21,13 +21,13 @@
                     + (tag_t) (tag)))                                         \
       )
 
-value stack_caml_alloc(mlsize_t wosize, tag_t tag) {
+value stack_caml_alloc(mlsize_t wosize, tag_t tag, int nbits, int *mask) {
   value tmp, result;
   mlsize_t i;
   Assert (tag < 256);
   Assert (tag != Infix_tag);
   Assert (wosize != 0);
-  tmp = (value)stack_alloc(Bhsize_wosize(wosize));
+  tmp = (value)stack_alloc_maskp(Bhsize_wosize(wosize),nbits,mask);
   Assert (tmp != 0);
   Hd_hp (tmp) = Make_header (wosize, tag, Caml_black);
   result = Val_hp (tmp);
@@ -42,16 +42,16 @@ value stack_caml_alloc_string (mlsize_t lenb)
   value result;
   mlsize_t offset_index;
   mlsize_t wosize = (lenb + sizeof (value)) / sizeof (value);
-  result = stack_caml_alloc (wosize, String_tag);
+  result = stack_caml_alloc (wosize, String_tag, 0, NULL);
   Field (result, wosize - 1) = 0;
   offset_index = Bsize_wsize (wosize) - 1;
   Byte (result, offset_index) = offset_index - lenb;
   return result;
 }
 
-value stack_caml_alloc_tuple (mlsize_t n)
+value stack_caml_alloc_tuple (mlsize_t n, int nbits, int *mask)
 {
-  return stack_caml_alloc(n, 0);
+  return stack_caml_alloc(n, 0, nbits, mask);
 }
 
 /***********************************************************************/
@@ -196,9 +196,17 @@ CAMLprim value stack_pop_frame()
 CAMLprim value stack_mkpair(value v1, value v2) 
 {
   CAMLparam2 (v1, v2);
-  Assert (Is_long(v1) || is_stack_pointer((void *)v1));
-  Assert (Is_long(v2) || is_stack_pointer((void *)v2));
-  value tuple = stack_caml_alloc_tuple(2);
+  int mask[2];
+  int nbits = 0;
+  if (!(Is_long(v1) || is_stack_pointer((void *)v1))) {
+    mask[0] = 0;
+    nbits++;
+  }
+  if (!(Is_long(v2) || is_stack_pointer((void *)v2))) {
+    mask[nbits] = 0;
+    nbits++;
+  }
+  value tuple = stack_caml_alloc_tuple(2,nbits,mask);
   Field(tuple, 0) = v1;
   Field(tuple, 1) = v2;
   CAMLreturn(tuple);
@@ -206,10 +214,21 @@ CAMLprim value stack_mkpair(value v1, value v2)
 
 CAMLprim value stack_mktuple3(value v1, value v2, value v3) {
   CAMLparam3 (v1, v2, v3);
-  Assert (Is_long(v1) || is_stack_pointer((void *)v1));
-  Assert (Is_long(v2) || is_stack_pointer((void *)v2));
-  Assert (Is_long(v3) || is_stack_pointer((void *)v3));
-  value tuple = stack_caml_alloc_tuple(3);
+  int mask[3];
+  int nbits = 0;
+  if (!(Is_long(v1) || is_stack_pointer((void *)v1))) {
+    mask[0] = 0;
+    nbits++;
+  }
+  if (!(Is_long(v2) || is_stack_pointer((void *)v2))) {
+    mask[nbits] = 0;
+    nbits++;
+  }
+  if (!(Is_long(v3) || is_stack_pointer((void *)v3))) {
+    mask[nbits] = 0;
+    nbits++;
+  }
+  value tuple = stack_caml_alloc_tuple(3,nbits,mask);
   Field(tuple, 0) = v1;
   Field(tuple, 1) = v2;
   Field(tuple, 2) = v3;
@@ -218,11 +237,25 @@ CAMLprim value stack_mktuple3(value v1, value v2, value v3) {
 
 CAMLprim value stack_mktuple4(value v1, value v2, value v3, value v4) {
   CAMLparam4 (v1, v2, v3, v4);
-  Assert (Is_long(v1) || is_stack_pointer((void *)v1));
-  Assert (Is_long(v2) || is_stack_pointer((void *)v2));
-  Assert (Is_long(v3) || is_stack_pointer((void *)v3));
-  Assert (Is_long(v4) || is_stack_pointer((void *)v4));
-  value tuple = stack_caml_alloc_tuple(4);
+  int mask[4];
+  int nbits = 0;
+  if (!(Is_long(v1) || is_stack_pointer((void *)v1))) {
+    mask[0] = 0;
+    nbits++;
+  }
+  if (!(Is_long(v2) || is_stack_pointer((void *)v2))) {
+    mask[nbits] = 0;
+    nbits++;
+  }
+  if (!(Is_long(v3) || is_stack_pointer((void *)v3))) {
+    mask[nbits] = 0;
+    nbits++;
+  }
+  if (!(Is_long(v4) || is_stack_pointer((void *)v4))) {
+    mask[nbits] = 0;
+    nbits++;
+  }
+  value tuple = stack_caml_alloc_tuple(4,nbits,mask);
   Field(tuple, 0) = v1;
   Field(tuple, 1) = v2;
   Field(tuple, 2) = v3;

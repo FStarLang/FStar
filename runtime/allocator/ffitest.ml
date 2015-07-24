@@ -31,13 +31,6 @@ let rec string_of_list l p =
 
 Printf.printf "List result = %s\n" (string_of_list (mklist 10) string_of_int);;
 
-let s = 
-  let s' = stack_mkemptystring 10 in
-  let rec aux n =
-    if n = 10 then s'
-    else 
-
-
 (*
 type mytype =
     A 

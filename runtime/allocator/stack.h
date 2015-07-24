@@ -33,6 +33,8 @@ void *stack_alloc(int sz_b);
 /* Allocates sz_b bytes on the topmost frame. Will add new pages as
    needed. Sets the bitmask at word-sized offsets given by the varargs. */ 
 void *stack_alloc_mask(int sz_b, int nbits, ...);
+void *vstack_alloc_mask(int sz_b, int nbits, va_list argp);
+void *stack_alloc_maskp(int sz_b, int nbits, int *mask);
 
 /* Returns 1 if the given pointer is one managed by the stack; 
    0 otherwise. */
