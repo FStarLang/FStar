@@ -59,9 +59,11 @@ let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> =
                 | bs -> mk_Exp_abs(bs, fail_exp t') None dummyRange in
               let se = Sig_let((false, [{lbname=Inr lid; lbtyp=t; lbeff=Const.effect_ML_lid; lbdef=impl}]), r, [], quals) in
               let g, mlm = extract_sig g se in
-              if quals |> Util.for_some (function Projector _ | Discriminator _ -> true | _ -> false)
-              then g, [] //TODO: generate a proper projector/discriminator
-              else g, mlm
+              match Util.find_map quals (function  Discriminator l  -> Some l |  _ -> None) with
+              | Some l -> g, [ExtractExp.ind_discriminator_body lid l]
+              | None -> match Util.find_map quals (function  Projector (l,_)  -> Some l |  _ -> None) with
+                        | Some l -> g, []
+                        | None -> g, mlm
          else g, []
      
        | Sig_main(e, _) -> 

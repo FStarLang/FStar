@@ -396,3 +396,19 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
       
       | Exp_uvar _ 
       | Exp_delayed _ -> failwith "Unexpected expression"
+
+
+
+(*copied from ocaml-asttrans.fs*)
+let fresh = let c = mk_ref 0 in                                            
+            fun x -> (incr c; (x, !c))
+
+
+let ind_discriminator_body (discName:lident) (constrName:lident) : mlmodule1 = 
+                let mlid = fresh "_discr_" in
+                let rid = constrName in
+                let discrBody= 
+                MLE_Fun([(mlid, None)], MLE_Match(MLE_Name([], idsym mlid), [
+                    MLP_CTor(mlpath_of_lident rid, [MLP_Wild]), None, MLE_Const(MLC_Bool true);
+                    MLP_Wild, None, MLE_Const(MLC_Bool false)])) in
+                MLM_Let (false,[((convIdent discName.ident), None, [], discrBody) ] )
