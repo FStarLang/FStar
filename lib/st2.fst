@@ -128,7 +128,6 @@ val monotonic_assign : x:ref int -> y1:int -> y2:int
                                      (ensures (fun h1 r h2 -> sel (fst h2) x <= sel (snd h2) x))
 let monotonic_assign x y1 y2 = compose2 (assign x) (assign x) y1 y2
 
-
 val id : int -> Tot int
 let id x = x
 
@@ -201,44 +200,103 @@ val noleak_ok: x1:ref int
 let noleak_ok x1 x2 b1 b2 = compose2 noleak noleak (x1,b1) (x2,b2)
 
 
-(*  First try to work on Nik's proposal of sequencing... Not working yet *)
 
-assume val sequence: c0r:Type -> c1r:Type 
-                     -> wp0:STWP_h heap2 c0r -> wp1:STWP_h heap2 c1r
-                     -> wlp0:STWP_h heap2 c0r -> wlp1:STWP_h heap2 c1r
-                     -> =c0:(unit -> STATE2 c0r wp0 wlp0)
-                     -> =c1:(unit -> STATE2 c1r wp1 wlp1)
-                     -> STATE2 c1r 
-                       ((st_bind_wp heap2) c0r c1r wp0 wlp0 (fun a-> wp1) (fun a -> wlp1))
-                       ((st_bind_wlp heap2) c0r c1r wlp0 (fun a -> wlp1))
+(* Simple recursive function:
+   The proof works by proving a pure specification for the imperative functions
+   and by proving the equality of those specifiactions *)
+
+(* Pure specifications *)
+val gauss : nat -> Tot nat
+let gauss x = (x * x + x) / 2
+
+val gauss_rec : nat -> nat -> Tot nat
+let rec gauss_rec x a = if x = 0 then a else gauss_rec (x - 1) (a + x)
+
+(* Proof of the equality for the pure specifiaction *)
+val gauss_lemma : x:nat -> a:nat -> Lemma
+                        (requires True)
+                        (ensures (gauss x + a = gauss_rec x a))
+                        [SMTPat (gauss_rec x a)]
+let rec gauss_lemma x a = if x = 0 then () else gauss_lemma (x-1) (a+x)
+
+val equiv_gauss: x : nat
+                 -> ST2 (nat * nat)
+                    (requires (fun _ -> True))
+                    (ensures (fun _ p _ -> fst p = snd p))
+let equiv_gauss x = compose2 (fun x -> gauss_rec x 0) (fun x -> gauss x) x x
+
+(* We prove, that the imperative functions fulfill the specifiaction *)
+val gauss_imp : x:ref nat -> ST nat
+                    (requires (fun h -> True))
+                    (ensures  (fun h0 r h1 -> r = gauss (sel h0 x)))
+let gauss_imp x = (!x*!x + !x)/2
+
+val gauss_imp_rec : p:(ref nat * ref nat) -> ST nat
+                    (requires (fun h -> fst p <> snd p))
+                    (ensures  (fun h0 r h1 ->
+                      r = gauss_rec ((sel h0) (fst p)) ((sel h0) (snd p)) /\
+                      sel h1 (snd p) = r ))
+let rec gauss_imp_rec (x, a) = if !x = 0 then !a
+                           else (a := !a + !x; x := !x-1; gauss_imp_rec (x, a))
+
+(* We can conclude the equality for the imperative functions *)
+val equiv_gauss_imp: x:ref nat
+                 -> a:ref nat
+                 -> ST2 (nat * nat)
+                    (requires (fun h2 -> a <> x /\
+                                        sel (fst h2) x = sel (snd h2) x /\
+                                        sel (fst h2) a = 0 ))
+                    (ensures (fun _ p h2 -> fst p = snd p))
+let equiv_gauss_imp x a = compose2 gauss_imp_rec gauss_imp (x,a) x
+
+(* Example for Nik's proposal of sequencing (Email from 04/29/2015) *)
 
 let c0_pfx a = a := 0
-let c1_pfx b = b := !b - !b
-val equiv_pfx: a:ref int
-               -> b:ref int
-               -> ST2 (unit * unit)
-                  (requires (fun _ -> True)) 
-                  (ensures (fun _ _ h2 -> sel (fst h2) a = sel (snd h2) b)) 
+let c1_pfx b = b := 1
 let equiv_pfx a b = compose2 c0_pfx c1_pfx a b
 
-let c0_sfx c = c := !c - !c
-let c1_sfx d = d := 0
-val equiv_sfx: c:ref int
-                -> d:ref int
-                -> ST2 (unit * unit)
-                  (requires (fun _ -> True)) 
-                  (ensures (fun _ _ h2 -> sel (fst h2) c = sel (snd h2) d))
-let equiv_sfx c d = compose2 c0_sfx c1_sfx c d
 
-(* This does not work yet: Unknown assertion failed... *)
-(*
+opaque type injection (f:int -> Tot int) = (forall x y. f x = f y ==> x = y)
+opaque type surjection (f:int -> Tot int) = (forall y. (exists x. f x = y))
+opaque type bijection (f:int -> Tot int) = injection f /\ surjection f
+type bij = f:(int -> Tot int){bijection f}
+opaque type inverses (f:int -> Tot int) (g:int -> Tot int) =
+   (forall y. f (g y) = y) /\
+   (forall x. g (f x) = x)
+val lemma_inverses_bij:  f:(int -> Tot int) -> g:(int -> Tot int) ->
+  Lemma (requires (inverses f g))
+        (ensures (bijection f))
+let lemma_inverses_bij f g = ()
+
+let dec x = x - 1
+
+let inc x = x + 1
+
+
+(* sample two random values into c and d such that they are related by a
+  bijection f *)
+assume val sample : f:(int -> Tot int){bijection f}
+                    -> ST2 (int * int)
+                       (requires (fun _ -> True))
+                       (*(ensures (fun h2' (v1,v2)  h2 -> h2' = h2 /\ v1 = v2))*)
+                       (ensures (fun h2' p  h2 -> h2' = h2 /\ fst p = f (snd p)))
+
+
+let c0_sfx (a, c) = a := !a + c
+let c1_sfx (b, d) = b := !b + d
+let equiv_sfx a b c d = compose2 c0_sfx c1_sfx (a, c) (b, d)
+
+
+(* relate the programs
+  c0_pfx ; sample ; c0_sfx  and
+  c1_pfx ; sample ; c1_sfx  *)
 val equiv_seq: a:ref int
                -> b:ref int
-               -> c:ref int
-               -> d:ref int
                -> ST2 (unit * unit)
                   (requires (fun _ -> True))
-                  (ensures (fun _ _ h2 -> sel (fst h2) a = sel (snd h2) b /\
-                                          sel (fst h2) c = sel (snd h2) d)) 
-let equiv_seq a b c d = sequence (fun () -> equiv_pfx a b) (fun () -> equiv_sfx c d)
-*)
+                  (ensures (fun _ _ h2 -> sel (fst h2) a = sel (snd h2) b))
+let equiv_seq a b = let _ = equiv_pfx a b in
+                    cut (inverses inc dec);
+                    let c, d = sample inc in
+                    equiv_sfx a b c d
+

@@ -22,6 +22,7 @@ open Microsoft.FStar.Util
 open Microsoft.FStar.Getopt
 open Microsoft.FStar.Tc.Util
 open Microsoft.FStar.Tc.Env
+open Microsoft.FStar.Backends
 
 let process_args () = 
   let file_list = Util.mk_ref [] in
@@ -228,12 +229,12 @@ let finished_message fmods =
          print_string "All verification conditions discharged successfully\n"
     end
 
-let codegen fmods = 
-    if !Options.codegen = Some "OCaml" then begin
+let codegen fmods env= 
+    if !Options.codegen = Some "OCaml" then 
         try
             let mllib = Backends.OCaml.ASTTrans.mlmod_of_fstars (List.tail fmods) in
             let doc   = Backends.OCaml.Code.doc_of_mllib mllib in
-            List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^".ml")) (FSharp.Format.pretty 120 d)) doc
+            List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^".ml")) (FSharp.Format.pretty 120 d)) doc 
         with Backends.OCaml.ASTTrans.OCamlFailure (rg, error) -> begin
             (* FIXME: register exception and remove this block  *)
             Util.print_string (* stderr *) <|
@@ -242,6 +243,10 @@ let codegen fmods =
                 (Backends.OCaml.ASTTrans.string_of_error error);
             exit 1
         end
+    else if !Options.codegen = Some "OCaml-experimental" then begin
+        let c, mllibs = Util.fold_map Backends.ML.ExtractMod.extract (Backends.ML.ExtractTyp.mkContext env) fmods in
+        let newDocs = List.collect Backends.OCaml.Code.doc_of_mllib mllibs in
+            List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^".ml")) (FSharp.Format.pretty 120 d)) newDocs
     end
 //    ;
 //    if !Options.codegen = Some "JavaScript" then begin
@@ -272,7 +277,7 @@ let go _ =
              if !Options.interactive 
              then interactive_mode dsenv env
              else begin
-                codegen fmods;
+                codegen fmods env;
                 finished_message fmods
              end
 

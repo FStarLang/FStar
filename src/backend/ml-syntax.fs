@@ -1,11 +1,11 @@
 ﻿(* -------------------------------------------------------------------- *)
-module Microsoft.FStar.Backends.OCaml.Syntax
+module Microsoft.FStar.Backends.ML.Syntax
 
 open Microsoft.FStar.Absyn.Syntax
 
 (* -------------------------------------------------------------------- *)
 type mlsymbol = string
-type mlident  = mlsymbol * int
+type mlident  = mlsymbol * int //what is the second component? Why do we need it?
 type mlpath   = list<mlsymbol> * mlsymbol
 
 (* -------------------------------------------------------------------- *)
@@ -24,19 +24,26 @@ let ptctor ((p, s) : mlpath) : mlsymbol =
 let mlpath_of_lident (x : lident) : mlpath =
     (List.map (fun x -> x.idText) x.ns, x.ident.idText)
 
+let as_mlident (x:bvdef<'a>) = x.ppname.idText, 0
+
 (* -------------------------------------------------------------------- *)
 type mlidents  = list<mlident>
 type mlsymbols = list<mlsymbol>
 
 (* -------------------------------------------------------------------- *)
+type e_tag = 
+  | MayErase
+  | Keep
+
 type mlty =
 | MLTY_Var   of mlident
-| MLTY_Fun   of mlty * mlty
-| MLTY_Named of list<mlty> * mlpath
+| MLTY_Fun   of mlty * e_tag * mlty //t -> MayErase t', or  t -> Keep t'
+| MLTY_Named of list<mlty> * mlpath 
 | MLTY_Tuple of list<mlty>
-| MLTY_App   of mlty * mlty
+| MLTY_App   of mlty * mlty         //Why do we have a type-application form? The only applications in ML are of named constructors
+| MLTY_Top
 
-type mltyscheme = mlidents * mlty
+type mltyscheme = mlidents * mlty   //forall a1..an. t  (the list of binders can be empty)
 
 type mlconstant =
 | MLC_Unit
@@ -53,40 +60,48 @@ type mlpattern =
 | MLP_Wild
 | MLP_Const  of mlconstant
 | MLP_Var    of mlident
-| MLP_Record of list<mlsymbol> * list<(mlsymbol * mlpattern)>
 | MLP_CTor   of mlpath * list<mlpattern>
-| MLP_Tuple  of list<mlpattern>
 | MLP_Branch of list<mlpattern>
+(* SUGAR *)
+| MLP_Record of list<mlsymbol> * list<(mlsymbol * mlpattern)>
+| MLP_Tuple  of list<mlpattern>
 
 type mlexpr =
-| MLE_Seq    of list<mlexpr>
 | MLE_Const  of mlconstant
 | MLE_Var    of mlident
 | MLE_Name   of mlpath
-| MLE_Record of list<mlsymbol> * list<(mlsymbol * mlexpr)>
-| MLE_CTor   of mlpath * list<mlexpr>
-| MLE_Tuple  of list<mlexpr>
-| MLE_Let    of bool * list<(mlident * mlidents * mlexpr)> * mlexpr
-| MLE_App    of mlexpr * list<mlexpr>
-| MLE_Proj   of mlexpr * mlpath
-| MLE_Fun    of mlidents * mlexpr
-| MLE_If     of mlexpr * mlexpr * option<mlexpr>
+| MLE_Let    of mlletbinding * mlexpr //tyscheme for polymorphic recursion
+| MLE_App    of mlexpr * list<mlexpr> //why are function types curried, but the applications not curried 
+| MLE_Fun    of list<(mlident * (option<mlty>))> * mlexpr
 | MLE_Match  of mlexpr * list<mlbranch>
-| MLE_Raise  of mlpath * list<mlexpr>
+| MLE_Coerce of mlexpr * mlty * mlty
+(* SUGAR *)
+| MLE_CTor   of mlpath * list<mlexpr>
+| MLE_Seq    of list<mlexpr> 
+| MLE_Tuple  of list<mlexpr> 
+| MLE_Record of list<mlsymbol> * list<(mlsymbol * mlexpr)> 
+| MLE_Proj   of mlexpr * mlpath 
+| MLE_If     of mlexpr * mlexpr * option<mlexpr> 
+| MLE_Raise  of mlpath * list<mlexpr> 
 | MLE_Try    of mlexpr * list<mlbranch>
 
 and mlbranch = mlpattern * option<mlexpr> * mlexpr
 
+and mlletbinding = bool * list<(mlident * option<mltyscheme> * mlidents * mlexpr)>
+
 type mltybody =
 | MLTD_Abbrev of mlty
 | MLTD_Record of list<(mlsymbol * mlty)>
-| MLTD_DType  of list<(mlsymbol * list<mlty>)>
+| MLTD_DType  of list<(mlsymbol * list<mlty>)> 
+    (*list of constructors? list<mlty> is the list of arguments of the constructors?
+        One could have instead used a mlty and tupled the argument types?
+     *)
 
-type mltydecl = list<(mlsymbol * mlidents * option<mltybody>)>
+type mltydecl = list<(mlsymbol * mlidents * option<mltybody>)> // each element of this list is one among a collection of mutually defined types
 
 type mlmodule1 =
 | MLM_Ty  of mltydecl
-| MLM_Let of bool * list<(mlsymbol * mlidents * mlexpr)>
+| MLM_Let of mlletbinding
 | MLM_Exn of mlsymbol * list<mlty>
 | MLM_Top of mlexpr
 
@@ -94,7 +109,9 @@ type mlmodule = list<mlmodule1>
 
 type mlsig1 =
 | MLS_Mod of mlsymbol * mlsig
-| MLS_Ty  of mltydecl
+| MLS_Ty  of mltydecl 
+    (*used for both type schemes and inductive types. Even inductives are defined in OCaml using type ....,
+        unlike data in Haskell *)
 | MLS_Val of mlsymbol * mltyscheme
 | MLS_Exn of mlsymbol * list<mlty>
 
@@ -112,8 +129,8 @@ let mlseq (e1 : mlexpr) (e2 : mlexpr) =
 
 let mlfun (x : mlident) (e : mlexpr) =
     match e with
-    | MLE_Fun (xs, e) -> MLE_Fun(x :: xs, e)
-    | _ -> MLE_Fun ([x], e)
+    | MLE_Fun (xs, e) -> MLE_Fun((x,None) :: xs, e)
+    | _ -> MLE_Fun ([x,None], e)
 
 let mlif (b : mlexpr) ((e1, e2) : mlexpr * mlexpr) =
     match e2 with

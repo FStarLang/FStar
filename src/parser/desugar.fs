@@ -302,7 +302,7 @@ let close_fun env t =
   else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, kind_star x.idRange)) x.idRange Type (Some Implicit)) in
        let t = match (unlabel t).tm with
         | Product _ -> t
-        | _ -> mk_term (App(mk_term (Name Const.tot_effect_lid) t.range t.level, t, Nothing)) t.range t.level in
+        | _ -> mk_term (App(mk_term (Name Const.effect_Tot_lid) t.range t.level, t, Nothing)) t.range t.level in
        let result = mk_term (Product(binders, t)) t.range t.level in
        result
 
@@ -372,6 +372,8 @@ let label_conjuncts tag polarity label_opt f =
       label f in
 
   aux f
+
+let mk_lb (n, t, e) = {lbname=n; lbeff=Const.effect_ALL_lid; lbtyp=t; lbdef=e}
 
 let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
   let resolvex (l:lenv_t) e x =
@@ -668,7 +670,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
                 | [] -> def
                 | _ -> mk_term (un_curry_abs args def) top.range top.level in
             let body = desugar_exp env def in
-            (lbname, tun, body) in
+            mk_lb (lbname, tun, body) in
         let lbs = List.map2 (desugar_one_def (if is_rec then env' else env)) fnames funs in
         let body = desugar_exp env' body in
         pos <| mk_Exp_let((is_rec, lbs), body) in
@@ -680,14 +682,14 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
           | TBinder _ -> failwith "Unexpected type binder in let"
           | LetBinder(l, t) ->
             let body = desugar_exp env t2 in
-            pos <| mk_Exp_let((false, [(Inr l, t, t1)]), body)
+            pos <| mk_Exp_let((false, [({lbname=Inr l; lbeff=Const.effect_ALL_lid; lbtyp=t; lbdef=t1})]), body)
           | VBinder (x,t,_) ->
             let body = desugar_exp env t2 in
             let body = match pat with
               | None
               | Some ({v=Pat_wild _}) -> body
               | Some pat -> mk_Exp_match(bvd_to_exp x t, [(pat, None, body)]) None body.pos in
-            pos <| mk_Exp_let((false, [(Inl x, t, t1)]), body)
+            pos <| mk_Exp_let((false, [mk_lb (Inl x, t, t1)]), body)
         end in
 
       if is_rec || is_app_pattern pat
@@ -718,7 +720,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
       pos <| mk_Exp_match(desugar_exp env e, List.map desugar_branch branches)
 
     | Ascribed(e, t) ->
-      pos <| mk_Exp_ascribed'(desugar_exp env e, desugar_typ env t)
+      pos <| mk_Exp_ascribed(desugar_exp env e, desugar_typ env t, None)
 
     | Record(_, []) ->
       raise (Error("Unexpected empty record", top.range))
@@ -932,10 +934,19 @@ and desugar_comp r default_ok env t =
                       [unit;req_true;ens;nil_pat]
                     | [req;ens] -> [unit;req;ens;nil_pat]
                     | more -> unit::more in
-              mk_term (Construct(lemma, args@decreases_clause)) t.range t.level
-            | _ -> t
+              let t = mk_term (Construct(lemma, args@decreases_clause)) t.range t.level in
+              desugar_typ env t
+
+            | Name tot when (tot.ident.idText = "Tot" 
+                             && not (DesugarEnv.is_effect_name env Const.effect_Tot_lid)  
+                             && lid_equals (DesugarEnv.current_module env) Const.prims_lid) ->
+              //we're right at the beginning of Prims, when Tot isn't yet fully defined 
+              let args = List.map (fun (t, imp) -> arg_withimp_t imp <| desugar_typ_or_exp env t) args in
+              mk_typ_app (Util.ftv Const.effect_Tot_lid kun) args 
+
+            | _ -> desugar_typ env t
         in
-    let t = desugar_typ env (pre_process_comp_typ t) in
+    let t = pre_process_comp_typ t in
     let head, args = Util.head_and_args t in
     match (compress_typ head).n, args with
         | Typ_const eff, (Inl result_typ, _)::rest ->
@@ -954,18 +965,15 @@ and desugar_comp r default_ok env t =
                         | _ -> failwith "impos"
                     end
                 | _ -> failwith "impos") in
-
-          if DesugarEnv.is_effect_name env eff.v
-          then if lid_equals eff.v Const.tot_effect_lid && List.length decreases_clause=0
+          if DesugarEnv.is_effect_name env eff.v 
+          || lid_equals eff.v Const.effect_Tot_lid  //We need the Tot effect before its definition is in scope; it is primitive
+          then if lid_equals eff.v Const.effect_Tot_lid && List.length decreases_clause=0
                then mk_Total result_typ
                else let flags =
-                        if      lid_equals eff.v Const.lemma_lid      then [LEMMA]
-                        else if lid_equals eff.v Const.tot_effect_lid then [TOTAL]
-                        else if lid_equals eff.v Const.ml_effect_lid  then [MLEFFECT]
+                        if      lid_equals eff.v Const.effect_Lemma_lid then [LEMMA]
+                        else if lid_equals eff.v Const.effect_Tot_lid   then [TOTAL]
+                        else if lid_equals eff.v Const.effect_ML_lid    then [MLEFFECT]
                         else [] in
-    //                        decreases_clause |> List.iter (function
-    //                            | DECREASES arg -> Util.fprint1 "Added decreases clause %s\n" (Print.exp_to_string arg);
-    //                            | _ -> ());
                         mk_Comp ({effect_name=eff.v;
                                   result_typ=result_typ;
                                   effect_args=rest;
@@ -1239,7 +1247,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
     | TAnnotated(a, _)
     | TVariable a -> mk_term (Tvar a) a.idRange Type
     | NoName t -> t in
-  let tot = mk_term (Name (Const.tot_effect_lid)) rng Expr in
+  let tot = mk_term (Name (Const.effect_Tot_lid)) rng Expr in
   let with_constructor_effect t = mk_term (App(tot, t, Nothing)) t.range t.level in
   let apply_binders t binders =
     List.fold_left (fun out b -> mk_term (App(out, binder_to_term b, Nothing)) out.range out.level)
@@ -1393,12 +1401,12 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
   | ToplevelLet(isrec, lets) ->
     begin match (compress_exp <| desugar_exp_maybe_top true env (mk_term (Let(isrec, lets, mk_term (Const Const_unit) d.drange Expr)) d.drange Expr)).n with
         | Exp_let(lbs, _) ->
-          let lids = snd lbs |> List.map (function
-            | (Inr l, _, _) -> l
+          let lids = snd lbs |> List.map (fun lb -> match lb.lbname with
+            | Inr l -> l
             | _ -> failwith "impossible") in
           let quals = snd lbs |> List.collect
-            (function (Inl _, _, _) -> []
-                     | (Inr l, _, _) -> DesugarEnv.lookup_letbinding_quals env l) in
+            (function | {lbname=Inl _} -> []
+                      | {lbname=Inr l} -> DesugarEnv.lookup_letbinding_quals env l) in
           let s = Sig_let(lbs, d.drange, lids, quals) in
           let env = push_sigelt env s in
           env, [s]

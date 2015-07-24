@@ -123,16 +123,9 @@ let unary_type_op_to_string t = find_lid (get_type_lid t) unary_type_ops
 let quant_to_string t = find_lid (get_type_lid t) quants
 
 let rec sli (l:lident) : string = 
-   match l.ns with 
-      | hd::tl when (hd.idText="Prims") ->
-        begin match tl with 
-          | [] -> l.ident.idText
-          | _ -> (List.map (fun i -> i.idText) tl |> String.concat ".") ^  "." ^ l.ident.idText
-        end
-      | _ -> 
-        if !Options.print_real_names
-        then l.str
-        else l.ident.idText
+   if !Options.print_real_names
+   then l.str
+   else l.ident.idText
 
 let strBvd bvd = 
     if !Options.print_real_names
@@ -292,7 +285,7 @@ and comp_typ_to_string c =
       let basic = 
           if c.flags |> Util.for_some (function TOTAL -> true | _ -> false) && not !Options.print_effect_args 
           then Util.format1 "Tot %s" (typ_to_string c.result_typ)
-          else if not !Options.print_effect_args && (lid_equals c.effect_name Const.ml_effect_lid)//  || List.contains MLEFFECT c.flags) 
+          else if not !Options.print_effect_args && (lid_equals c.effect_name Const.effect_ML_lid)//  || List.contains MLEFFECT c.flags) 
           then typ_to_string c.result_typ
           else if not !Options.print_effect_args && c.flags |> Util.for_some (function MLEFFECT -> true | _ -> false)
           then Util.format1 "ALL %s" (typ_to_string c.result_typ)
@@ -390,7 +383,7 @@ and exp_to_string x = match (compress_exp x).n with
       (p |> pat_to_string)
       (match wopt with | None -> "" | Some w -> Util.format1 "when %s" (w |> exp_to_string)) 
       (e |> exp_to_string))))
-  | Exp_ascribed(e, t) -> Util.format2 "(%s:%s)" (e|> exp_to_string) (t |> typ_to_string)
+  | Exp_ascribed(e, t, _) -> Util.format2 "(%s:%s)" (e|> exp_to_string) (t |> typ_to_string)
   | Exp_let(lbs, e) -> Util.format2 "%s in %s" 
     (lbs_to_string lbs)
     (e|> exp_to_string)
@@ -401,7 +394,7 @@ and uvar_e_to_string (uv, _) =
 and lbs_to_string lbs = 
     Util.format2 "let %s %s"
     (if fst lbs then "rec" else "") 
-    (Util.concat_l "\n and " (snd lbs |> List.map (fun (x, t, e) -> Util.format3 "%s:%s = %s" (lbname_to_string x) (t |> typ_to_string) (e|> exp_to_string)))) 
+    (Util.concat_l "\n and " (snd lbs |> List.map (fun lb -> Util.format3 "%s:%s = %s" (lbname_to_string lb.lbname) (lb.lbtyp |> typ_to_string) (lb.lbdef |> exp_to_string)))) 
     
 and lbname_to_string x = match x with
   | Inl bvd -> strBvd bvd 
@@ -488,24 +481,8 @@ let rec sigelt_to_string x = match x with
 
 let format_error r msg = format2 "%s: %s\n" (Range.string_of_range r) msg
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 let rec sigelt_to_string_short x = match x with 
-  | Sig_let((_, [(Inr l, t, _)]), _, _, _) -> Util.format2 "let %s : %s" l.str (typ_to_string t) 
+  | Sig_let((_, [{lbname=Inr l; lbtyp=t}]), _, _, _) -> Util.format2 "let %s : %s" l.str (typ_to_string t) 
   | _ -> lids_of_sigelt x |> List.map (fun l -> l.str) |> String.concat ", "
 
 let rec modul_to_string (m:modul) = 

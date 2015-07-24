@@ -1,23 +1,23 @@
-(*--build-config
-    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module Platform.Bytes --admit_fsi Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
-    variables:LIB=../../lib;
-    other-files:$LIB/string.fst $LIB/list.fst
-            $LIB/ext.fst $LIB/classical.fst
-            $LIB/set.fsi $LIB/set.fst
-            $LIB/heap.fst $LIB/st.fst
-            $LIB/seq.fsi $LIB/seqproperties.fst
-  --*)
-
 module Platform.Bytes
-open Seq
-
 assume val repr_bytes : nat -> Tot nat (* TODO: define this! *)
-assume Repr_bytes_values: forall (n:nat).{:pattern (repr_bytes n)}
-			      ( n < 256 <==> repr_bytes n = 1 )
-                              /\ ( (n < 65536 /\ n >= 256 ) <==> repr_bytes n = 2 )
-	                      /\ ( (n >= 65536 /\ n < 16777216) <==> repr_bytes n = 3 )
-assume Repr_bytes_monotone: forall (a:nat) (b:nat).{:pattern (repr_bytes a); (repr_bytes b)}
-       (a <= b) ==> (repr_bytes a <= repr_bytes b)
+(* NS:
+   The two assumes below were previously defined as axioms.
+	 They are evil! They pollute the global environment and
+	 slow down verification enormously.
+	 I've made them assumed lemmas; if you want to
+	 make use of these axioms, call the lemmas as needed in the context.
+*)
+assume val lemma_repr_bytes_values: n:nat ->
+	     Lemma (ensures
+			      			( n < 256 <==> repr_bytes n = 1 )
+               /\ ( (n < 65536 /\ n >= 256 ) <==> repr_bytes n = 2 )
+               /\ ( (n >= 65536 /\ n < 16777216) <==> repr_bytes n = 3 ))
+
+assume val lemma_repr_bytes_monotone: a:nat -> b:nat ->
+	     Lemma (ensures ((a <= b) ==> (repr_bytes a <= repr_bytes b)))
+
+
+(*assume val repr_bytes : nat -> Tot nat (* TODO: define this! *)*)
 
 type byte = uint8
 type cbytes = string
@@ -107,4 +107,4 @@ assume val iutf8_opt : bytes -> Tot (option string)
 assume val iutf8 : m:bytes -> s:string{utf8 s == m}
 (*@  assume (!x. (!y. Utf8 (x) = Utf8 (y) => x = y)) @*)
 
-assume val byte_of_int: i:int{0 <= i /\ i < 256} -> Tot byte //NS REVIEW: size constraints on int?
+assume val byte_of_int: i:int{0 <= i /\ i < 256} -> Tot byte

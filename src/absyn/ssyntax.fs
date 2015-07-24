@@ -205,7 +205,7 @@ and serialize_exp' (writer:Writer) (ast:exp') :unit =
         in
         let f writer (p, eopt, e) = serialize_pat writer p; g writer eopt; serialize_exp writer e in
         writer.write_char 'f'; serialize_exp writer e; serialize_list writer f l
-    | Exp_ascribed(e, t) -> writer.write_char 'g'; serialize_exp writer e; serialize_typ writer t
+    | Exp_ascribed(e, t, l) -> writer.write_char 'g'; serialize_exp writer e; serialize_typ writer t; serialize_option writer serialize_lident l
     | Exp_let(lbs, e) -> writer.write_char 'h'; serialize_letbindings writer lbs; serialize_exp writer e
     | Exp_meta(m) -> writer.write_char 'i'; serialize_meta_e writer m
     | _ -> raise (Err "unimplemented exp'")
@@ -261,7 +261,7 @@ and serialize_kabbrev (writer:Writer) (ast:kabbrev) :unit = serialize_lident wri
 and serialize_lbname (writer:Writer) (ast:lbname) :unit = serialize_either writer serialize_bvvdef serialize_lident ast
 
 and serialize_letbindings (writer:Writer) (ast:letbindings) :unit = 
-    let f writer (n, t, e) = serialize_lbname writer n; serialize_typ writer t; serialize_exp writer e in
+    let f writer lb = serialize_lbname writer lb.lbname; serialize_lident writer lb.lbeff; serialize_typ writer lb.lbtyp; serialize_exp writer lb.lbdef in
     writer.write_bool (fst ast); serialize_list writer f (snd ast)
 
 and serialize_fvar (writer:Writer) (ast:Syntax.fvar) :unit = serialize_either writer serialize_btvdef serialize_bvvdef ast
@@ -346,7 +346,7 @@ and deserialize_exp' (reader:Reader) :exp' =
         
         let f reader = (deserialize_pat reader, g reader, deserialize_exp reader) in
         Exp_match(deserialize_exp reader, deserialize_list reader f)
-    | 'g' -> Exp_ascribed(deserialize_exp reader, deserialize_typ reader)
+    | 'g' -> Exp_ascribed(deserialize_exp reader, deserialize_typ reader, deserialize_option reader deserialize_lident)
     | 'h' -> Exp_let(deserialize_letbindings reader, deserialize_exp reader)
     | 'i' -> Exp_meta(deserialize_meta_e reader)
     |  _  -> parse_error()
@@ -403,7 +403,10 @@ and deserialize_kabbrev (reader:Reader) :kabbrev = (deserialize_lident reader, d
 and deserialize_lbname (reader:Reader) :lbname = deserialize_either reader deserialize_bvvdef deserialize_lident
 
 and deserialize_letbindings (reader:Reader) :letbindings = 
-    let f reader = (deserialize_lbname reader, deserialize_typ reader, deserialize_exp reader) in
+    let f reader = {lbname=deserialize_lbname reader;
+                    lbeff=deserialize_lident reader;
+                    lbtyp=deserialize_typ reader;
+                    lbdef=deserialize_exp reader} in
     (reader.read_bool (), deserialize_list reader f)
 
 and deserialize_fvar (reader:Reader) :Syntax.fvar = deserialize_either reader deserialize_btvdef deserialize_bvvdef

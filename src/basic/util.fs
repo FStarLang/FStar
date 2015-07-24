@@ -401,8 +401,9 @@ let add_unique f x l =
   if l |> for_some (f x) 
   then l 
   else x::l
-   
-let first_N n l =
+
+(**split the list at index n and return the 2 parts *)   
+let first_N n l (*: list 'a * list 'a*)=
   let rec f acc i l =
     if i = n then List.rev acc,l else
     match l with

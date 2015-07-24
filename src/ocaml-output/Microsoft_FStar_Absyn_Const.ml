@@ -1,7 +1,7 @@
 
-let p2l = (fun l -> (Microsoft_FStar_Absyn_Syntax.lid_of_path l Microsoft_FStar_Absyn_Syntax.dummyRange))
+let p2l = (fun ( l ) -> (Microsoft_FStar_Absyn_Syntax.lid_of_path l Microsoft_FStar_Absyn_Syntax.dummyRange))
 
-let pconst = (fun s -> (p2l (("Prims")::(s)::[])))
+let pconst = (fun ( s ) -> (p2l (("Prims")::(s)::[])))
 
 let prims_lid = (p2l (("Prims")::[]))
 
@@ -39,11 +39,11 @@ let lexcons_lid = (pconst "LexCons")
 
 let lextop_lid = (pconst "LexTop")
 
-let kunary = (fun k k' -> (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow (((Microsoft_FStar_Absyn_Syntax.null_t_binder k))::[], k') Microsoft_FStar_Absyn_Syntax.dummyRange))
+let kunary = (fun ( k ) ( k' ) -> (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow (((Microsoft_FStar_Absyn_Syntax.null_t_binder k))::[], k') Microsoft_FStar_Absyn_Syntax.dummyRange))
 
-let kbin = (fun k1 k2 k' -> (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow (((Microsoft_FStar_Absyn_Syntax.null_t_binder k1))::((Microsoft_FStar_Absyn_Syntax.null_t_binder k2))::[], k') Microsoft_FStar_Absyn_Syntax.dummyRange))
+let kbin = (fun ( k1 ) ( k2 ) ( k' ) -> (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow (((Microsoft_FStar_Absyn_Syntax.null_t_binder k1))::((Microsoft_FStar_Absyn_Syntax.null_t_binder k2))::[], k') Microsoft_FStar_Absyn_Syntax.dummyRange))
 
-let ktern = (fun k1 k2 k3 k' -> (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow (((Microsoft_FStar_Absyn_Syntax.null_t_binder k1))::((Microsoft_FStar_Absyn_Syntax.null_t_binder k2))::((Microsoft_FStar_Absyn_Syntax.null_t_binder k3))::[], k') Microsoft_FStar_Absyn_Syntax.dummyRange))
+let ktern = (fun ( k1 ) ( k2 ) ( k3 ) ( k' ) -> (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow (((Microsoft_FStar_Absyn_Syntax.null_t_binder k1))::((Microsoft_FStar_Absyn_Syntax.null_t_binder k2))::((Microsoft_FStar_Absyn_Syntax.null_t_binder k3))::[], k') Microsoft_FStar_Absyn_Syntax.dummyRange))
 
 let true_lid = (pconst "True")
 
@@ -167,23 +167,31 @@ let set_singleton = (p2l (("Set")::("singleton")::[]))
 
 let set_union = (p2l (("Set")::("union")::[]))
 
-let pure_effect_lid = (pconst "PURE")
+let effect_PURE_lid = (pconst "PURE")
 
-let tot_effect_lid = (pconst "Tot")
+let effect_Pure_lid = (pconst "Pure")
 
-let all_effect_lid = (pconst "ALL")
+let effect_Tot_lid = (pconst "Tot")
 
-let ml_effect_lid = (pconst "ML")
+let effect_ALL_lid = (pconst "ALL")
 
-let lemma_lid = (pconst "Lemma")
+let effect_ML_lid = (pconst "ML")
 
-let decreases_lid = (pconst "decreases")
+let effect_Lemma_lid = (pconst "Lemma")
 
 let effect_GTot_lid = (pconst "GTot")
 
 let effect_GHOST_lid = (pconst "GHOST")
 
 let effect_Ghost_lid = (pconst "Ghost")
+
+let as_requires = (pconst "as_requires")
+
+let as_ensures = (pconst "as_ensures")
+
+let decreases_lid = (pconst "decreases")
+
+let failwith_lid = (pconst "failwith")
 
 
 

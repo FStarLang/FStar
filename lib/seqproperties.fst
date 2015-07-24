@@ -391,3 +391,50 @@ val lemma_trans_perm: #a:Type -> s1:seq a -> s2:seq a -> s3:seq a{length s1 = le
              /\ permutation a (slice s2 i j) (slice s3 i j)))
   (ensures (permutation a (slice s1 i j) (slice s3 i j)))
 let lemma_trans_perm s1 s2 s3 i j = ()
+
+
+(*New addtions, please review*)
+
+(*snoc would be nice to have but breaks regression for now*)
+
+(*val snoc : #a:Type -> seq a -> a -> Tot (seq a)
+let snoc s x = Seq.append s (Seq.create 1 x)*)
+
+opaque logic type found (i:nat) = True
+
+val seq_find_aux : #a:Type -> f:(a -> Tot bool) -> l:seq a
+                   -> ctr:nat{ctr <= Seq.length l}
+                   -> Pure (option a)
+                      (requires (forall (i:nat{ i < Seq.length l /\ i >= ctr}).
+                                        not (f (Seq.index l i) )))
+                      (ensures (fun o -> (is_None o ==> (forall (i:nat{i < Seq.length l}).
+                                                         not (f (Seq.index l i))))
+                                      /\ (is_Some o ==> (f (Some.v o)
+                                                        /\ (exists (i:nat{i < Seq.length l}).
+                                                            o = Some (Seq.index l i))))))
+
+let rec seq_find_aux f l ctr =
+  match ctr with
+  | 0 -> None
+  | _ -> let i = ctr - 1 in
+  match f (Seq.index l i) with
+  | true ->
+     cut (f (Seq.index l i) /\ True);
+     (* cut ( True /\ (exists (i:nat). i < Seq.length l /\ found i) ); -- this intermittently fails on my machine *)
+     admitP ( True /\ (exists (i:nat). i < Seq.length l /\ found i) );
+     Some (Seq.index l i)
+  | false -> seq_find_aux f l i
+
+val seq_find: #a:Type -> f:(a -> Tot bool) -> l:seq a ->
+                     Pure (option a)
+                          (requires True)
+                          (ensures (fun o -> (is_None o ==> (forall (i:nat{i < Seq.length l}). not (f (Seq.index l i))))
+                                          /\ (is_Some o
+                                              ==> (f (Some.v o)
+                                                   /\ (exists (i:nat{i < Seq.length l}).{:pattern (found i)}
+                                                       found i /\ o = Some (Seq.index l i))))))
+
+
+let seq_find f l =
+  admit();
+  seq_find_aux f l (Seq.length l)

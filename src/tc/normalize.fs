@@ -46,6 +46,7 @@ type step =
   | Simplify
   | SNComp
   | Unmeta
+  | Unlabel
 and steps = list<step>
 
 type config<'a> = {code:'a;
@@ -157,6 +158,7 @@ let no_eta = List.filter (function Eta -> false | _ -> true)
 let no_eta_cfg c = {c with steps=no_eta c.steps}
 let whnf_only config = config.steps |> List.contains WHNF
 let unmeta config = config.steps |> List.contains Unmeta
+let unlabel config = unmeta config || config.steps |> List.contains Unlabel
 let is_stack_empty config = match config.stack.args with 
     | [] -> true
     | _ -> false
@@ -409,7 +411,7 @@ and sn tcenv (cfg:config<typ>) : config<typ> =
                     sn tcenv ({config with code=t; close=close_with_config config pat})
     
                 | Typ_meta(Meta_labeled(t, l, r, b)) -> 
-                  if unmeta config then
+                  if unlabel config then
                     sn tcenv ({config with code=t})
                   else
                     let lab t = match t.n with 
@@ -665,7 +667,7 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
       {config with code=e} |> rebuild
 
     | Exp_let((is_rec, lbs), body) -> 
-      let env, lbs = lbs |> List.fold_left (fun (env, lbs) (x, t, e) -> 
+      let env, lbs = lbs |> List.fold_left (fun (env, lbs) ({lbname=x; lbeff=eff; lbtyp=t; lbdef=e}) -> 
         let c = wne tcenv ({config with code=e; stack=empty_stack}) in
         let t = sn tcenv (t_config t config.environment config.steps) in
         let y, env = match x with 
@@ -675,17 +677,17 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
               let y_for_x = V(x, (yexp, empty_env)) in
               Inl y.v, extend_env' env y_for_x 
             | _ -> x, env in 
-        env, (y, t.code, c.code)::lbs) (config.environment, []) in 
+        env, mk_lb (y, eff, t.code, c.code)::lbs) (config.environment, []) in 
       let lbs = List.rev lbs in
       let c_body = wne tcenv ({config with code=body; stack=empty_stack; environment=env}) in
       let e = mk_Exp_let((is_rec, lbs), c_body.code) None e.pos in
       {config with code=e} |> rebuild
         
-    | Exp_ascribed (e, t) -> 
+    | Exp_ascribed (e, t, l) -> 
       let c = wne tcenv ({config with code=e}) in
       if is_stack_empty config
       then let t = sn tcenv (t_config t config.environment config.steps) in
-           rebuild ({config with code=mk_Exp_ascribed(c.code, t.code) e.pos})
+           rebuild ({config with code=mk_Exp_ascribed(c.code, t.code, l) None e.pos})
       else c
 
     | Exp_meta(Meta_desugared(e, info)) -> 

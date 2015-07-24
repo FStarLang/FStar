@@ -19,7 +19,7 @@ let t_float = ((Microsoft_FStar_Absyn_Syntax.syn Microsoft_FStar_Absyn_Syntax.du
 
 let t_char = ((Microsoft_FStar_Absyn_Syntax.syn Microsoft_FStar_Absyn_Syntax.dummyRange oktype) (Microsoft_FStar_Absyn_Syntax.mk_Typ_const (Microsoft_FStar_Absyn_Util.withsort Microsoft_FStar_Absyn_Const.char_lid Microsoft_FStar_Absyn_Syntax.ktype)))
 
-let typing_const = (fun r s -> (match (s) with
+let typing_const = (fun ( r ) ( s ) -> (match (s) with
 | Microsoft_FStar_Absyn_Syntax.Const_unit -> begin
 t_unit
 end
@@ -51,7 +51,7 @@ end
 (raise (Microsoft_FStar_Absyn_Syntax.Error (("Unsupported constant", r))))
 end))
 
-let rec recompute_kind = (fun t -> (let recompute = (fun t -> (match (t.Microsoft_FStar_Absyn_Syntax.n) with
+let rec recompute_kind = (fun ( t ) -> (let recompute = (fun ( t ) -> (match (t.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Typ_delayed (_) -> begin
 (recompute_kind (Microsoft_FStar_Absyn_Util.compress_typ t))
 end
@@ -89,7 +89,7 @@ end
 in (let _23_96 = (Microsoft_FStar_Absyn_Util.kind_formals k1)
 in (match (_23_96) with
 | (bs, k) -> begin
-(let rec aux = (fun subst bs args -> (match ((bs, args)) with
+(let rec aux = (fun ( subst ) ( bs ) ( args ) -> (match ((bs, args)) with
 | ([], []) -> begin
 (Microsoft_FStar_Absyn_Util.subst_kind subst k)
 end
@@ -120,7 +120,7 @@ in (let _23_123 = (Support.ST.op_Colon_Equals t.Microsoft_FStar_Absyn_Syntax.tk 
 in k))
 end)))
 
-let rec recompute_typ = (fun e -> (let recompute = (fun e -> (match (e.Microsoft_FStar_Absyn_Syntax.n) with
+let rec recompute_typ = (fun ( e ) -> (let recompute = (fun ( e ) -> (match (e.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Exp_delayed (_) -> begin
 (recompute_typ (Microsoft_FStar_Absyn_Util.compress_exp e))
 end
@@ -143,7 +143,7 @@ in (match ((Microsoft_FStar_Absyn_Util.function_formals t1)) with
 Microsoft_FStar_Absyn_Syntax.tun
 end
 | Some ((bs, c)) -> begin
-(let rec aux = (fun subst bs args -> (match ((bs, args)) with
+(let rec aux = (fun ( subst ) ( bs ) ( args ) -> (match ((bs, args)) with
 | ([], []) -> begin
 (Microsoft_FStar_Absyn_Util.subst_typ subst (Microsoft_FStar_Absyn_Util.comp_result c))
 end
@@ -163,7 +163,7 @@ end
 | Microsoft_FStar_Absyn_Syntax.Exp_match (_) -> begin
 (failwith "Expect match nodes to be annotated already")
 end
-| Microsoft_FStar_Absyn_Syntax.Exp_ascribed ((_, t)) -> begin
+| Microsoft_FStar_Absyn_Syntax.Exp_ascribed ((_, t, _)) -> begin
 t
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_let ((_, e)) -> begin
@@ -181,7 +181,7 @@ t
 end
 | None -> begin
 (let t = (recompute e)
-in (let _23_203 = (Support.ST.op_Colon_Equals e.Microsoft_FStar_Absyn_Syntax.tk (Some (t)))
+in (let _23_205 = (Support.ST.op_Colon_Equals e.Microsoft_FStar_Absyn_Syntax.tk (Some (t)))
 in t))
 end)))
 

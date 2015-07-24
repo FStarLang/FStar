@@ -20,14 +20,18 @@
 (* Copyright (c) Microsoft Corporation.  All rights reserved.  *)
 
 module RPC
+
 open String
+open IO
+
+let init_print = print_string "\ninitializing...\n\n"
+
 open Platform.Bytes
 (*open Seq
 open SeqProperties*)
 open SHA1
 open Formatting
 open MAC
-open IO
 
 
 (* some basic, untrusted network controlled by the adversary *)
@@ -35,7 +39,7 @@ open IO
 
 (*let log_prot = ST.alloc []*)
 val msg_buffer: ref message
-let msg_buffer = ST.alloc (createBytes 10 (byte_of_int 0))
+let msg_buffer = ST.alloc (empty_bytes)
 
 val send: message -> unit
 let send m = msg_buffer := m

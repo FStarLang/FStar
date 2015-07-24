@@ -11,8 +11,10 @@ open Microsoft.FStar.Util
 open Microsoft.FStar.Range
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn.Util
-open Microsoft.FStar.Backends.OCaml.Syntax
+open Microsoft.FStar.Backends.ML.Syntax
+open Microsoft.FStar.Backends.ML.Util
 open FSharp.Format
+
 
 (* -------------------------------------------------------------------- *)
 type mlenv = { mle_name : mlpath; }
@@ -166,6 +168,7 @@ let lresolve (LEnv lenv) (x : ident) =
     | Some x -> x
 
 (* -------------------------------------------------------------------- *)
+(*what is the purpose of this smap?*)
 type tenv = | TEnv of smap< mlident>
 
 (* -------------------------------------------------------------------- *)
@@ -287,24 +290,6 @@ let is_ptuple (p : pat) =
     | _ -> None
     
 (* -------------------------------------------------------------------- *)
-let mlconst_of_const (rg : range) (sctt : sconst) =
-  match sctt with
-  | Const_unit         -> MLC_Unit
-  | Const_char   c     -> MLC_Char  c
-  | Const_uint8  c     -> MLC_Byte  c
-  | Const_int    c     -> MLC_Int32 (Util.int32_of_int (Util.int_of_string c))
-  | Const_int32  i     -> MLC_Int32 i
-  | Const_int64  i     -> MLC_Int64 i
-  | Const_bool   b     -> MLC_Bool  b
-  | Const_float  d     -> MLC_Float d
-
-  | Const_bytearray (bytes, _) ->
-      MLC_Bytes bytes
-
-  | Const_string (bytes, _) ->
-      MLC_String (string_of_unicode (bytes))
-
-(* -------------------------------------------------------------------- *)
 let mlkind_of_kind (tps : list<binder>) (k : knd) =
     let mltparam_of_tparam = function
         | Inl ({v=x; sort={n=Kind_type}}), _ -> Some (x.realname, x.ppname)
@@ -362,7 +347,7 @@ let rec mlty_of_ty_core (mlenv : mlenv) (tenv : tenv) ((rg, ty) : range * typ) =
             | _ -> mk_Typ_fun(rest, c) None ty.pos in
         let mlt1 = mlty_of_ty mlenv tenv (rg, t1) in
         let mlt2 = mlty_of_ty mlenv tenv (rg, t2) in
-        MLTY_Fun (mlt1, mlt2)
+        MLTY_Fun (mlt1, Keep, mlt2)
     | Typ_fun((Inl _, _)::rest, c) ->
         let r = match rest with
             | [] -> comp_result c
@@ -465,7 +450,7 @@ and mlty_of_ty (mlenv : mlenv) (tenv : tenv) (rgty : range * typ) : mlty =
 let mltycons_of_mlty (ty : mlty) =
     let rec aux acc ty =
         match ty with
-        | MLTY_Fun (dom, codom) ->
+        | MLTY_Fun (dom, _, codom) ->
             aux (dom :: acc) codom
         | _ ->
             (List.rev acc, ty)
@@ -521,7 +506,7 @@ let rec mlpat_of_pat (mlenv : mlenv) (rg : range) (le : lenv) (p : pat) : lenv *
         (le, MLP_Var mlid)
 
     | Pat_constant c ->
-        (le, MLP_Const (mlconst_of_const rg c))
+        (le, MLP_Const (mlconst_of_const c))
 
     | Pat_disj ps ->
         let le, ps = Util.fold_map (mlpat_of_pat mlenv rg) le ps in
@@ -544,9 +529,9 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
       let ctr = mk_ref 0 in
       let rec bvs = function
         | 0 -> []
-        | n -> incr ctr; (("__dataconst_"^(Util.string_of_int !ctr)), !ctr) :: (bvs (n-1)) in
+        | n -> incr ctr; ((("__dataconst_"^(Util.string_of_int !ctr)), !ctr), None) :: (bvs (n-1)) in
       let vs = bvs nvars in
-      let fapp = MLE_CTor (ct, args @ (List.map (fun x -> MLE_Var(x)) vs)) in
+      let fapp = MLE_CTor (ct, args @ (List.map (fun (x,_) -> MLE_Var(x)) vs)) in
       MLE_Fun(vs, fapp)
     in
 
@@ -605,7 +590,7 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
                 let sub = Util.substring_from fid 3 in
                 let mlid = fresh "_discr_" in
                 let rid = {x.v with ident = {x.v.ident with idText = sub}; str = sub} in
-                MLE_Fun([mlid], MLE_Match(MLE_Name([], idsym mlid), [
+                MLE_Fun([(mlid, None)], MLE_Match(MLE_Name([], idsym mlid), [
                     MLP_CTor(mlpath_of_lident mlenv rid, [MLP_Wild]), None, MLE_Const(MLC_Bool true);
                     MLP_Wild, None, MLE_Const(MLC_Bool false)]))
             else begin
@@ -617,7 +602,7 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
                     let crstr = List.map (fun x->x.idText) cr in
                     let rid = {ns=cr; ident={x.v.ident with idText=cn.idText}; nsstr=String.concat "." crstr; str=x.v.nsstr} in
                     let cn = cn.idText in
-                    MLE_Fun([mlid], MLE_Match(MLE_Name([], idsym mlid), [
+                    MLE_Fun([(mlid,None)], MLE_Match(MLE_Name([], idsym mlid), [
                         MLP_CTor(mlpath_of_lident mlenv rid, cargs), None, MLE_Name ([], x.v.ident.idText);
                     ]))
                 | None -> MLE_Name (mlpath_of_lident mlenv x.v)
@@ -628,7 +613,7 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
             (* MLE_CTor (mlpath_of_lident mlenv x.v, []) *)
 
         | Exp_constant c ->
-            MLE_Const (mlconst_of_const rg c)
+            MLE_Const (mlconst_of_const c)
 
         | Exp_abs([], e) -> 
            mlexpr_of_expr mlenv rg lenv e 
@@ -673,7 +658,7 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
         | Exp_let ((rec_, lb), body) ->
             let lenv, bindings = mllets_of_lets mlenv rg lenv (rec_, lb) in
             let body = mlexpr_of_expr mlenv rg lenv body in
-            MLE_Let (rec_, bindings, body)
+            MLE_Let ((rec_, bindings), body)
 
         | Exp_meta (Meta_desugared (e, Data_app)) ->
             assert false;
@@ -691,7 +676,7 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
             
         | Exp_meta (Meta_desugared (e, Sequence)) -> begin
             match e.n with
-            | Exp_let ((false, [(Inl _, _, e1)]), e2) ->
+            | Exp_let ((false, [({lbname=Inl _; lbdef=e1})]), e2) ->
                 let d1 = mlexpr_of_expr mlenv rg lenv e1 in
                 let d2 = mlexpr_of_expr mlenv rg lenv e2 in
                 mlseq d1 d2
@@ -702,7 +687,7 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
         | Exp_meta (Meta_desugared (e, Primop)) ->
              mlexpr_of_expr mlenv rg lenv e
       
-        | Exp_ascribed (e, _) ->
+        | Exp_ascribed (e, _, _) ->
             mlexpr_of_expr mlenv rg lenv e
 
         | Exp_meta (Meta_desugared (e, MaskedEffect)) ->
@@ -715,9 +700,9 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
 
 (* -------------------------------------------------------------------- *)
 and mllets_of_lets (mlenv : mlenv) (rg : range) (lenv : lenv) (rec_, lbs) =    
-    let downct (x, _, e) =
-        match x with
-        | Inl x -> (x, e)
+    let downct lb =
+        match lb.lbname with
+        | Inl x -> (x, lb.lbdef)
         | Inr _ -> unexpected rg "expr-let-in-with-fvar" in
 
 
@@ -732,7 +717,7 @@ and mllets_of_lets (mlenv : mlenv) (rg : range) (lenv : lenv) (rec_, lbs) =
         let inlenv = if rec_ then lenvb else lenv in
         List.map (fun (x, e) ->
             let mlid = lresolve lenvb x.realname in
-            (mlid, [], mlexpr_of_expr mlenv rg inlenv e)) lbs
+            (mlid, None, [], mlexpr_of_expr mlenv rg inlenv e)) lbs
     in
 
     (lenvb, es)
@@ -801,7 +786,7 @@ let mldtype_of_indt (mlenv : mlenv) (indt : list<sigelt>) : list<mldtype> =
                   match getRecordFieldsFromType qualif, cs with
                     | Some f, [c] ->
                        (smap_add record_constructors c.str f;
-                        Rec (x.ident.idText, f, cs, snd (tenv_of_tvmap ar), rg))
+                        Rec (x.ident.idText, f, cs, snd (tenv_of_tvmap ar), rg)) // parsing a record from a Sig_tycon. the record data lies in the qualifiers of the tycon. one can ignore the rest
                     | _, _ -> DT (x.ident.idText, cs, snd (tenv_of_tvmap ar), rg) in
                 (ty :: types, ctors)
               end
@@ -878,7 +863,7 @@ let mldtype_of_indt (mlenv : mlenv) (indt : list<sigelt>) : list<mldtype> =
 
           if List.length f <> List.length args
           then unexpected rg (Util.format4 "%s, %s, %s fields, %s args" x (List.hd tcs).str (List.map (fun f -> f.idText) f |> String.concat ", ") (List.length args |> Util.string_of_int));
-          (x, tparams, MLTD_Record (List.map2 mldproj_of_proj f args))
+          (x, tparams, MLTD_Record (List.map2 mldproj_of_proj f args)) // generation of ML code for records
         end
 
         | Abb (x, body, (tenv, tparams), rg) -> begin
@@ -910,14 +895,14 @@ let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
         None
 
     | Sig_let ((rec_, lbs), rg, _, _) when (mode = Struct) ->
-        let downct (x, _, e) =
-            match x with
-            | Inr x -> (x, e)
+        let downct lb = 
+            match lb.lbname with
+            | Inr x -> (x, lb.lbdef)
             | Inl _ -> unexpected rg "expr-top-let-with-bvar" in
 
         let lbs = List.map downct lbs in
         let lbs = List.map (fun (x, e) ->
-            (x.ident.idText, [], mlexpr_of_expr mlenv rg (lenv_of_mlenv mlenv) e))
+            ((x.ident.idText, -1), None, [], mlexpr_of_expr mlenv rg (lenv_of_mlenv mlenv) e))
             lbs
         in
 
@@ -956,8 +941,7 @@ let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
     | Sig_new_effect _
     | Sig_kind_abbrev _
     | Sig_effect_abbrev _
-    | Sig_sub_effect _ ->
-        unsupported (Absyn.Util.range_of_sigelt modx) "mod1-effect/kind"
+    | Sig_sub_effect _ -> None
 
     | Sig_bundle ([Sig_datacon (_, _, _, qal, _, _)], _, _, _) when (not (export_val qal)) -> None
     | Sig_bundle ([Sig_datacon (x, ty, (tx, _, _), qal, _, rg)], _, _, _) when (as_tprims tx = Some Exn) -> begin
@@ -1005,16 +989,25 @@ let mlsig_of_sig (mlenv : mlenv) (modx : list<sigelt>) : mlsig =
     let asleft = function Inl x -> x | Inr _ -> failwith "asleft" in
     List.choose (fun x -> Option.map asleft (mlmod1_of_mod1 Sig mlenv x)) modx
 
+
 (* -------------------------------------------------------------------- *)
 let mlmod_of_fstar (fmod_ : modul) =
-    let name = Backends.OCaml.Syntax.mlpath_of_lident fmod_.name in
-    fprint1 "OCaml: %s\n" fmod_.name.ident.idText;
-    let mod_ = mlmod_of_mod (mk_mlenv name) fmod_.declarations in
-    let sig_ = mlsig_of_sig (mk_mlenv name) fmod_.declarations in
+    let name = Backends.ML.Syntax.mlpath_of_lident fmod_.name in
+    fprint1 "OCaml extractor : %s\n" fmod_.name.ident.idText;
+    //printfn "%A\n" (fmod_.declarations);
+    //fprint1 "%s\n\n\n\n\n\n\n\n\n" "end";
+   // let ms =  extractInductives NewExtaction.emptyContext (*instead of being empty, it should be initialized with the constants from the imported modules*) 
+    //                           (fmod_.declarations) in
+    //printfn "%A\n" ms;
+    let mod_ : mlmodule = mlmod_of_mod (mk_mlenv name) fmod_.declarations in
+    let sig_ : mlsig = mlsig_of_sig (mk_mlenv name) fmod_.declarations in
+    //fprint1 "%s\n\n" "original";
+    //printfn "%A\n" sig_;
+
     (name, sig_, mod_)
 
 let mlmod_of_iface (fmod_ : modul) =
-    let name = Backends.OCaml.Syntax.mlpath_of_lident fmod_.name in
+    let name = Backends.ML.Syntax.mlpath_of_lident fmod_.name in
     fprint1 "OCaml skip: %s\n" fmod_.name.ident.idText;
     mlsig_of_sig (mk_mlenv name) fmod_.declarations |> ignore
     
@@ -1078,7 +1071,9 @@ let rec mllib_add (MLLib mllib) ((path : mlpath), sig_, mod_) =
 (* -------------------------------------------------------------------- *)
 let mlmod_of_fstars (fmods : list<modul>) =
     let in_std_ns x = Util.for_some (fun y -> in_ns (y,x)) !Microsoft.FStar.Options.codegen_libs in
-    let fmods = List.filter (fun x -> not (in_std_ns (List.map (fun y->y.idText) x.name.ns))) fmods in
+    let fmods = List.filter (fun x -> 
+        Util.fprint1 "Extract module: %s\n" x.name.str;
+        not (in_std_ns (List.map (fun y->y.idText) x.name.ns))) fmods in
     let stdlib = List.map (fun x -> Util.concat_l "." x) outmod in
     let extlib = List.map (fun x -> Util.concat_l "." x) !Microsoft.FStar.Options.codegen_libs in
     let fmods = List.filter (fun x -> not (List.contains x.name.str stdlib)) fmods in

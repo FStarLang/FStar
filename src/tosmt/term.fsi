@@ -132,6 +132,7 @@ val termToSmt: term -> string
 val declToSmt: string -> decl -> string
 
 val mk_Kind_type : term
+val mk_Kind_uvar : int -> term
 val mk_Typ_app : term -> term -> term
 val mk_Typ_dep : term -> term -> term
 val mk_Typ_uvar: int -> term

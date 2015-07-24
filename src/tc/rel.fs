@@ -2244,10 +2244,10 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
         else giveup env "no SMT solution permitted" orig  in
 
     match e1.n, e2.n with 
-    | Exp_ascribed(e1, _), _ -> 
+    | Exp_ascribed(e1, _, _), _ -> 
       solve_e env ({problem with lhs=e1}) wl
 
-    | _, Exp_ascribed(e2, _) -> 
+    | _, Exp_ascribed(e2, _, _) -> 
       solve_e env ({problem with rhs=e2}) wl
 
     | Exp_uvar _,                 Exp_uvar _ 
@@ -2324,8 +2324,8 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
       let rec match_head_and_args head1 head2 = match (Util.compress_exp head1).n, (Util.compress_exp head2).n with 
         | Exp_bvar x, Exp_bvar y           when (bvar_eq x y && List.length args1 = List.length args2) -> solve_args [] wl args1 args2
         | Exp_fvar (f, _), Exp_fvar (g, _) when (fvar_eq f g && not (Util.is_interpreted f.v) && List.length args1 = List.length args2) -> solve_args [] wl args1 args2
-        | Exp_ascribed(e, _), _ -> match_head_and_args e head2
-        | _, Exp_ascribed(e, _) -> match_head_and_args head1 e
+        | Exp_ascribed(e, _, _), _ -> match_head_and_args e head2
+        | _, Exp_ascribed(e, _, _) -> match_head_and_args head1 e
         | Exp_abs _, _ -> 
           solve_e env ({problem with lhs=whnf_e env e1}) wl
         | _, Exp_abs _ -> 

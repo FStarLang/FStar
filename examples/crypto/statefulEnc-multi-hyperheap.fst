@@ -10,7 +10,7 @@ open Set
 open Seq
 open HyperHeap
 
-(* TODO: merge these next two functions and lemma/assumption with the seq library *)
+(* local to speed up verification *)
 val snoc : seq 'a -> 'a -> Tot (seq 'a)
 let snoc s x = Seq.append s (Seq.create 1 x)
 
@@ -134,7 +134,8 @@ type st_paired (#i:rid) (enc:st_encryptor i) (dec:st_decryptor i) =
       /\ (StEnc.log enc) =!= (StEnc.ctr enc)                      //These last four are needed because seq is abstract
       /\ (StEnc.log enc) =!= (StDec.ctr dec)                      //...
       /\ (Enc.log (StEnc.key enc)) =!= (StEnc.ctr enc)            //...
-      /\ (Enc.log (StEnc.key enc)) =!= (StDec.ctr dec)            //and so potentially equal to nat ... TODO: make seq a new type
+      /\ (Enc.log (StEnc.key enc)) =!= (StDec.ctr dec)            //and so potentially equal to nat ...
+      (*TODO: make seq a new type*)
 
 type sti =
   | STI : i:rid -> e:st_encryptor i -> d:st_decryptor i{st_paired e d} -> sti
@@ -224,7 +225,7 @@ val test_st_frame :   s1:sti
                  st_inv (STI.e s1) (STI.d s1) h
               /\ st_inv (STI.e s2) (STI.d s2) h
               /\ sel h (StEnc.ctr (STI.e s1)) = sel h (StDec.ctr (STI.d s1))
-              // /\ Heap.sel h (StEnc.ctr (STI.e s2)) = Heap.sel h (StDec.ctr (STI.d s2))
+               (* TODO /\ Heap.sel h (StEnc.ctr (STI.e s2)) = Heap.sel h (StDec.ctr (STI.d s2))*)
               ))
   (ensures (fun h0 _ h1 ->
                  st_inv (STI.e s1) (STI.d s1) h1
@@ -241,7 +242,7 @@ let test_st_frame s1 s2 =
   let c0 = stateful_enc (STI.e s1) p in
   let c1 = stateful_enc (STI.e s1) q in
   let c2 = stateful_enc (STI.e s2) p in
-  // let oX = stateful_dec (STI.d s1) c2 in // might succeed
+  let oX = stateful_dec (STI.d s1) c2 in  // TODO might succeed
   let o0 = stateful_dec (STI.d s1) c0 in
   let o1 = stateful_dec (STI.d s1) c1 in
   assert (Some.v o0 = p);

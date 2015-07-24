@@ -334,27 +334,27 @@ and reduce_exp
           let el, env = map_exps_with_binders env ((binders, e1)::branches) in
           ([], [], [], el, []), env 
 
-        | Exp_ascribed(e, t) ->
+        | Exp_ascribed(e, t, _) ->
           let t, env = map_typ env binders t in
           let e, env = map_exp env binders e in
           ([], [], [t], [e], []), env
         
-        | Exp_let((false, [(x,t,e1)]), e2) -> 
-          let t, env = map_typ env binders t in
-          let binders' = match x with 
+        | Exp_let((false, [lb]), e2) -> 
+          let t, env = map_typ env binders lb.lbtyp in
+          let binders' = match lb.lbname with 
             | Inl x -> push_vbinder binders (Some x)
             | _ -> binders in
-          let el, env = map_exps_with_binders env [(binders, e1); (binders', e2)] in 
+          let el, env = map_exps_with_binders env [(binders, lb.lbdef); (binders', e2)] in 
           ([], [], [t], el, []), env 
         
         | Exp_let((true, bvdt_tl), e) ->
-          let tl = List.map (fun (_, t, _) -> t) bvdt_tl in
-          let el = List.map (fun (_, _, e) -> e) bvdt_tl in
+          let tl = List.map (fun lb -> lb.lbtyp) bvdt_tl in
+          let el = List.map (fun lb -> lb.lbdef) bvdt_tl in
           let tl, env = tl |> List.fold_left (fun (tl, env) t -> 
             let t, env = map_typ env binders t in 
             t::tl, env) ([], env) in 
           let tl = List.rev tl in
-          let binders = List.fold_left (fun binders (x, _, _) -> match x with 
+          let binders = List.fold_left (fun binders lb -> match lb.lbname with 
             | Inl x -> push_vbinder binders (Some x)
             | _ -> binders) binders bvdt_tl in 
           let el, env = map_exps env binders (el@[e]) in
@@ -408,7 +408,7 @@ let combine_exp e (ec:exp_components) env =
     | Exp_uvar(uv, _), (_, _, [t], _, _) ->                  w <| mk_Exp_uvar'(uv, t)
     | Exp_abs _, (bs, _, _, [e], _)  ->                      w <| mk_Exp_abs(bs, e)
     | Exp_app _, (_, _, _, [e], args) ->                     w <| mk_Exp_app(e, args)
-    | Exp_ascribed _, (_, _, [t], [e], _) ->                 w <| mk_Exp_ascribed'(e, t)
+    | Exp_ascribed (_,_,l), (_, _, [t], [e], _) ->           w <| mk_Exp_ascribed(e, t, l)
     | Exp_meta(Meta_desugared(_, tag)), (_, _, _, [e], _) -> w <| mk_Exp_meta' (Meta_desugared(e, tag))
     | Exp_match (_, eqns), (_, [], [], e1::el, _) -> 
       let rec mk_eqns eqns el = match eqns, el with 
@@ -420,8 +420,8 @@ let combine_exp e (ec:exp_components) env =
     | Exp_let((is_rec, lbs), _), (_, _, tl, el, _) ->
       begin match Util.first_N (List.length lbs) el with 
         | el, [e'] -> 
-          let lbs' = List.map3 (fun (lbname, _, _) t e -> (lbname, t, e)) lbs tl el in
-                                                             w <| mk_Exp_let((is_rec, lbs'), e')
+          let lbs' = List.map3 (fun lb t e -> {lb with lbtyp=t; lbdef=e}) lbs tl el in
+          w <| mk_Exp_let((is_rec, lbs'), e')
         | _ -> failwith "impossible"
       end
 

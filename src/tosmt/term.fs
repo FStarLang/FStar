@@ -469,6 +469,7 @@ and mkPrelude z3options =
    let constrs : constructors = [("String_const", ["String_const_proj_0", Int_sort], String_sort, 0);
                                  ("Kind_type",  [], Kind_sort, 0);
                                  ("Kind_arrow", ["Kind_arrow_id", Int_sort], Kind_sort, 1);
+                                 ("Kind_uvar",  [("Kind_uvar_fst", Int_sort)], Kind_sort, 2);
                                  ("Typ_fun",    ["Typ_fun_id", Int_sort], Type_sort, 1);
                                  ("Typ_app",    [("Typ_app_fst", Type_sort);
                                                  ("Typ_app_snd", Type_sort)], Type_sort, 2);
@@ -493,6 +494,7 @@ and mkPrelude z3options =
    basic ^ bcons ^ lex_ordering
 
 let mk_Kind_type        = mkApp("Kind_type", [])
+let mk_Kind_uvar i      = mkApp("Kind_uvar", [mkInteger' i])
 let mk_Typ_app t1 t2    = mkApp("Typ_app", [t1;t2])
 let mk_Typ_dep t1 t2    = mkApp("Typ_dep", [t1;t2])
 let mk_Typ_uvar i       = mkApp("Typ_uvar", [mkInteger' i])

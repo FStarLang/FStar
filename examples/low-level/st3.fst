@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set;
+    options:--admit_fsi Set --codegen OCaml;
     variables:LIB=../../lib;
     variables:MATHS=../maths;
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst  $LIB/list.fst stack.fst listset.fst
@@ -604,10 +604,10 @@ effect WNSC (a:Type) (pre:(smem -> Type))  (post: (smem -> SSTPost a)) (mod:set 
       mod
 
 val withNewScope : #a:Type -> #pre:(smem -> Type) -> #post:(smem -> SSTPost a)
-  -> #mod:set aref
-  -> body:(unit -> WNSC a pre post mod)
-      -> Mem a pre post mod
-let withNewScope 'a 'pre 'post #mod body =
+  -> #mods:set aref
+  -> body:(unit -> WNSC a pre post mods)
+      -> Mem a pre post mods
+let withNewScope 'a 'pre 'post #mods body =
     pushStackFrame ();
     let v = body () in
     popStackFrame (); v
@@ -636,18 +636,18 @@ effect whileBody (loopInv:smem -> Type) (lc:smem  -> Type) (mod:set aref)
 val scopedWhile : loopInv:(smem -> Type)
   -> wglc:(smem -> Type)
   -> wg:(unit -> whileGuard loopInv wglc)
-  -> mod:(set aref)
-  -> bd:(unit -> whileBody loopInv wglc mod)
+  -> mods:(set aref)
+  -> bd:(unit -> whileBody loopInv wglc mods)
   -> Mem unit (requires (fun m -> loopInv m))
               (ensures (fun m0 _ m1 -> loopInv m1 /\ (~(wglc m1))))
-              mod
+              mods
 let rec scopedWhile
-   'loopInv 'wglc wg mod bd =
+   'loopInv 'wglc wg mods bd =
    if (wg ())
       then
         ((withNewScope #unit
-            #(fun m -> 'loopInv m /\ ('wglc m)) #(fun _ _ m1 -> 'loopInv m1) #mod bd);
-        (scopedWhile 'loopInv 'wglc wg mod bd))
+            #(fun m -> 'loopInv m /\ ('wglc m)) #(fun _ _ m1 -> 'loopInv m1) #mods bd);
+        (scopedWhile 'loopInv 'wglc wg mods bd))
       else ()
 
 
@@ -656,20 +656,20 @@ val scopedWhile1 :
   -> r:(ref a)
   -> lc : (a -> Tot bool)
   -> loopInv:(smem -> Type)
-  -> mod:(set aref)
+  -> mods:(set aref)
   -> bd:(unit -> whileBody
                       (fun m -> loopInv m /\ refExistsInMem r m)
-                      (fun m -> refExistsInMem r m /\ lc (loopkupRef r m))  mod)
+                      (fun m -> refExistsInMem r m /\ lc (loopkupRef r m))  mods)
   -> Mem unit ((fun m -> loopInv m /\ refExistsInMem r m))
               ((fun m0 _ m1 -> loopInv m1 /\ refExistsInMem r m1 /\ ~(lc (loopkupRef r m1))))
-              mod
-let scopedWhile1 'a r lc 'loopInv mod bd =
+              mods
+let scopedWhile1 'a r lc 'loopInv mods bd =
   scopedWhile
   (*augment the loop invariant to include the precondition for evaluating the guard*)
     (fun m -> 'loopInv m /\ refExistsInMem r m)
     (fun m -> refExistsInMem r m /\ (lc (loopkupRef r m)))
     (fun u -> lc (memread r))
-    mod
+    mods
     bd
 
 val scopedWhile2 :
@@ -679,21 +679,21 @@ val scopedWhile2 :
   -> rb:(ref b)
   -> lc : (a -> b ->  Tot bool)
   -> loopInv:(smem -> Type)
-  -> mod:(set aref)
+  -> mods:(set aref)
   -> bd:(unit -> whileBody
                       (fun m -> loopInv m /\ refExistsInMem ra m /\ refExistsInMem rb m)
                       (fun m -> refExistsInMem ra m /\ refExistsInMem rb m /\ lc (loopkupRef ra m) (loopkupRef rb m))
-                      mod)
+                      mods)
   -> Mem unit (requires (fun m -> loopInv m /\ refExistsInMem ra m /\ refExistsInMem rb m))
               (ensures (fun m0 _ m1 -> loopInv m1 /\ refExistsInMem ra m1 /\ refExistsInMem rb m1 /\ ~(lc (loopkupRef ra m1) (loopkupRef rb m1)) ))
-              mod
-let scopedWhile2 'a ra rb lc 'loopInv mod bd =
+              mods
+let scopedWhile2 'a ra rb lc 'loopInv mods bd =
   scopedWhile
   (*augment the loop invariant to include the precondition for evaluating the guard*)
     (fun m -> 'loopInv m /\ refExistsInMem ra m /\ refExistsInMem rb m)
     (fun m -> refExistsInMem ra m /\ refExistsInMem rb m /\ (lc (loopkupRef ra m) (loopkupRef rb m))  )
     (fun u -> lc (memread ra) (memread rb))
-    mod
+    mods
     bd
 
 (*effect SSTS (a:Type) (wlp: Post a -> Pre) = StSTATE a wlp wlp*)

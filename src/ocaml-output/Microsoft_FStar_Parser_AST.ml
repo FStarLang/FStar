@@ -41,14 +41,18 @@ type term' =
 | Paren of term
 | Requires of (term * string option)
 | Ensures of (term * string option)
-| Labeled of (term * string * bool) and term =
-{tm : term'; range : Support.Microsoft.FStar.Range.range; level : level} and binder' =
+| Labeled of (term * string * bool) 
+ and term =
+{tm : term'; range : Support.Microsoft.FStar.Range.range; level : level} 
+ and binder' =
 | Variable of Microsoft_FStar_Absyn_Syntax.ident
 | TVariable of Microsoft_FStar_Absyn_Syntax.ident
 | Annotated of (Microsoft_FStar_Absyn_Syntax.ident * term)
 | TAnnotated of (Microsoft_FStar_Absyn_Syntax.ident * term)
-| NoName of term and binder =
-{b : binder'; brange : Support.Microsoft.FStar.Range.range; blevel : level; aqual : Microsoft_FStar_Absyn_Syntax.aqual} and pattern' =
+| NoName of term 
+ and binder =
+{b : binder'; brange : Support.Microsoft.FStar.Range.range; blevel : level; aqual : Microsoft_FStar_Absyn_Syntax.aqual} 
+ and pattern' =
 | PatWild
 | PatConst of Microsoft_FStar_Absyn_Syntax.sconst
 | PatApp of (pattern * pattern list)
@@ -59,8 +63,10 @@ type term' =
 | PatTuple of (pattern list * bool)
 | PatRecord of (lid * pattern) list
 | PatAscribed of (pattern * term)
-| PatOr of pattern list and pattern =
-{pat : pattern'; prange : Support.Microsoft.FStar.Range.range} and branch =
+| PatOr of pattern list 
+ and pattern =
+{pat : pattern'; prange : Support.Microsoft.FStar.Range.range} 
+ and branch =
 (pattern * term option * term)
 
 type knd =
@@ -95,8 +101,10 @@ type decl' =
 | Exception of (Microsoft_FStar_Absyn_Syntax.ident * term option)
 | NewEffect of (qualifiers * effect_decl)
 | SubEffect of lift
-| Pragma of Microsoft_FStar_Absyn_Syntax.pragma and decl =
-{d : decl'; drange : Support.Microsoft.FStar.Range.range} and effect_decl =
+| Pragma of Microsoft_FStar_Absyn_Syntax.pragma 
+ and decl =
+{d : decl'; drange : Support.Microsoft.FStar.Range.range} 
+ and effect_decl =
 | DefineEffect of (Microsoft_FStar_Absyn_Syntax.ident * binder list * term * decl list)
 | RedefineEffect of (Microsoft_FStar_Absyn_Syntax.ident * binder list * term)
 
@@ -110,15 +118,15 @@ modul list
 type inputFragment =
 (file, decl list) Support.Microsoft.FStar.Util.either
 
-let mk_decl = (fun d r -> {d = d; drange = r})
+let mk_decl = (fun ( d ) ( r ) -> {d = d; drange = r})
 
-let mk_binder = (fun b r l i -> {b = b; brange = r; blevel = l; aqual = i})
+let mk_binder = (fun ( b ) ( r ) ( l ) ( i ) -> {b = b; brange = r; blevel = l; aqual = i})
 
-let mk_term = (fun t r l -> {tm = t; range = r; level = l})
+let mk_term = (fun ( t ) ( r ) ( l ) -> {tm = t; range = r; level = l})
 
-let mk_pattern = (fun p r -> {pat = p; prange = r})
+let mk_pattern = (fun ( p ) ( r ) -> {pat = p; prange = r})
 
-let un_curry_abs = (fun ps body -> (match (body.tm) with
+let un_curry_abs = (fun ( ps ) ( body ) -> (match (body.tm) with
 | Abs ((p', body')) -> begin
 Abs (((Support.List.append ps p'), body'))
 end
@@ -126,10 +134,10 @@ end
 Abs ((ps, body))
 end))
 
-let mk_function = (fun branches r1 r2 -> (let x = (Microsoft_FStar_Absyn_Util.genident (Some (r1)))
+let mk_function = (fun ( branches ) ( r1 ) ( r2 ) -> (let x = (Microsoft_FStar_Absyn_Util.genident (Some (r1)))
 in (mk_term (Abs ((((mk_pattern (PatVar ((x, false))) r1))::[], (mk_term (Match (((mk_term (Var ((Microsoft_FStar_Absyn_Syntax.lid_of_ids ((x)::[])))) r1 Expr), branches))) r2 Expr)))) r2 Expr)))
 
-let un_function = (fun p tm -> (match ((p.pat, tm.tm)) with
+let un_function = (fun ( p ) ( tm ) -> (match ((p.pat, tm.tm)) with
 | (PatVar (_), Abs ((pats, body))) -> begin
 Some (((mk_pattern (PatApp ((p, pats))) p.prange), body))
 end
@@ -137,11 +145,11 @@ end
 None
 end))
 
-let lid_with_range = (fun lid r -> (Microsoft_FStar_Absyn_Syntax.lid_of_path (Microsoft_FStar_Absyn_Syntax.path_of_lid lid) r))
+let lid_with_range = (fun ( lid ) ( r ) -> (Microsoft_FStar_Absyn_Syntax.lid_of_path (Microsoft_FStar_Absyn_Syntax.path_of_lid lid) r))
 
-let to_string_l = (fun sep f l -> (Support.String.concat sep (Support.List.map f l)))
+let to_string_l = (fun ( sep ) ( f ) ( l ) -> (Support.String.concat sep (Support.List.map f l)))
 
-let imp_to_string = (fun _32_1 -> (match (_32_1) with
+let imp_to_string = (fun ( _32_1 ) -> (match (_32_1) with
 | Hash -> begin
 "#"
 end
@@ -149,7 +157,7 @@ end
 ""
 end))
 
-let rec term_to_string = (fun x -> (match (x.tm) with
+let rec term_to_string = (fun ( x ) -> (match (x.tm) with
 | Wild -> begin
 "_"
 end
@@ -166,7 +174,7 @@ end
 (Microsoft_FStar_Absyn_Print.const_to_string c)
 end
 | Op ((s, xs)) -> begin
-(Support.Microsoft.FStar.Util.format2 "%s(%s)" s (Support.String.concat ", " (Support.List.map (fun x -> (term_to_string x)) xs)))
+(Support.Microsoft.FStar.Util.format2 "%s(%s)" s (Support.String.concat ", " (Support.List.map (fun ( x ) -> (term_to_string x)) xs)))
 end
 | Tvar (id) -> begin
 id.Microsoft_FStar_Absyn_Syntax.idText
@@ -175,7 +183,7 @@ end
 (Microsoft_FStar_Absyn_Print.sli l)
 end
 | Construct ((l, args)) -> begin
-(Support.Microsoft.FStar.Util.format2 "(%s %s)" (Microsoft_FStar_Absyn_Print.sli l) (to_string_l " " (fun _32_221 -> (match (_32_221) with
+(Support.Microsoft.FStar.Util.format2 "(%s %s)" (Microsoft_FStar_Absyn_Print.sli l) (to_string_l " " (fun ( _32_221 ) -> (match (_32_221) with
 | (a, imp) -> begin
 (Support.Microsoft.FStar.Util.format2 "%s%s" (imp_to_string imp) (term_to_string a))
 end)) args))
@@ -193,7 +201,7 @@ end
 (Support.Microsoft.FStar.Util.format3 "let %s = %s in %s" (pat_to_string pat) (term_to_string tm) (term_to_string body))
 end
 | Let ((_, lbs, body)) -> begin
-(Support.Microsoft.FStar.Util.format2 "let rec %s in %s" (to_string_l " and " (fun _32_251 -> (match (_32_251) with
+(Support.Microsoft.FStar.Util.format2 "let rec %s in %s" (to_string_l " and " (fun ( _32_251 ) -> (match (_32_251) with
 | (p, b) -> begin
 (Support.Microsoft.FStar.Util.format2 "%s=%s" (pat_to_string p) (term_to_string b))
 end)) lbs) (term_to_string body))
@@ -205,7 +213,7 @@ end
 (Support.Microsoft.FStar.Util.format3 "if %s then %s else %s" (term_to_string t1) (term_to_string t2) (term_to_string t3))
 end
 | Match ((t, branches)) -> begin
-(Support.Microsoft.FStar.Util.format2 "match %s with %s" (term_to_string t) (to_string_l " | " (fun _32_268 -> (match (_32_268) with
+(Support.Microsoft.FStar.Util.format2 "match %s with %s" (term_to_string t) (to_string_l " | " (fun ( _32_268 ) -> (match (_32_268) with
 | (p, w, e) -> begin
 (Support.Microsoft.FStar.Util.format3 "%s %s -> %s" (pat_to_string p) (match (w) with
 | None -> begin
@@ -220,13 +228,13 @@ end
 (Support.Microsoft.FStar.Util.format2 "(%s : %s)" (term_to_string t1) (term_to_string t2))
 end
 | Record ((Some (e), fields)) -> begin
-(Support.Microsoft.FStar.Util.format2 "{%s with %s}" (term_to_string e) (to_string_l " " (fun _32_283 -> (match (_32_283) with
+(Support.Microsoft.FStar.Util.format2 "{%s with %s}" (term_to_string e) (to_string_l " " (fun ( _32_283 ) -> (match (_32_283) with
 | (l, e) -> begin
 (Support.Microsoft.FStar.Util.format2 "%s=%s" (Microsoft_FStar_Absyn_Print.sli l) (term_to_string e))
 end)) fields))
 end
 | Record ((None, fields)) -> begin
-(Support.Microsoft.FStar.Util.format1 "{%s}" (to_string_l " " (fun _32_290 -> (match (_32_290) with
+(Support.Microsoft.FStar.Util.format1 "{%s}" (to_string_l " " (fun ( _32_290 ) -> (match (_32_290) with
 | (l, e) -> begin
 (Support.Microsoft.FStar.Util.format2 "%s=%s" (Microsoft_FStar_Absyn_Print.sli l) (term_to_string e))
 end)) fields))
@@ -270,7 +278,7 @@ end
 | t -> begin
 (failwith "Missing case in term_to_string")
 end))
-and binder_to_string = (fun x -> (let s = (match (x.b) with
+and binder_to_string = (fun ( x ) -> (let s = (match (x.b) with
 | Variable (i) -> begin
 i.Microsoft_FStar_Absyn_Syntax.idText
 end
@@ -293,7 +301,7 @@ end
 | _ -> begin
 s
 end)))
-and pat_to_string = (fun x -> (match (x.pat) with
+and pat_to_string = (fun ( x ) -> (match (x.pat) with
 | PatWild -> begin
 "_"
 end
@@ -322,7 +330,7 @@ end
 (Support.Microsoft.FStar.Util.format1 "(|%s|)" (to_string_l ", " pat_to_string l))
 end
 | PatRecord (l) -> begin
-(Support.Microsoft.FStar.Util.format1 "{%s}" (to_string_l "; " (fun _32_404 -> (match (_32_404) with
+(Support.Microsoft.FStar.Util.format1 "{%s}" (to_string_l "; " (fun ( _32_404 ) -> (match (_32_404) with
 | (f, e) -> begin
 (Support.Microsoft.FStar.Util.format2 "%s=%s" (Microsoft_FStar_Absyn_Print.sli f) (pat_to_string e))
 end)) l))
@@ -334,7 +342,7 @@ end
 (Support.Microsoft.FStar.Util.format2 "(%s:%s)" (pat_to_string p) (term_to_string t))
 end))
 
-let error = (fun msg tm r -> (let tm = (term_to_string tm)
+let error = (fun ( msg ) ( tm ) ( r ) -> (let tm = (term_to_string tm)
 in (let tm = if ((Support.String.length tm) >= 80) then begin
 (Support.String.strcat (Support.Microsoft.FStar.Util.substring tm 0 77) "...")
 end else begin
@@ -342,19 +350,19 @@ tm
 end
 in (raise (Microsoft_FStar_Absyn_Syntax.Error (((Support.String.strcat (Support.String.strcat msg "\n") tm), r)))))))
 
-let consPat = (fun r hd tl -> PatApp (((mk_pattern (PatName (Microsoft_FStar_Absyn_Const.cons_lid)) r), (hd)::(tl)::[])))
+let consPat = (fun ( r ) ( hd ) ( tl ) -> PatApp (((mk_pattern (PatName (Microsoft_FStar_Absyn_Const.cons_lid)) r), (hd)::(tl)::[])))
 
-let consTerm = (fun r hd tl -> (mk_term (Construct ((Microsoft_FStar_Absyn_Const.cons_lid, ((hd, Nothing))::((tl, Nothing))::[]))) r Expr))
+let consTerm = (fun ( r ) ( hd ) ( tl ) -> (mk_term (Construct ((Microsoft_FStar_Absyn_Const.cons_lid, ((hd, Nothing))::((tl, Nothing))::[]))) r Expr))
 
-let lexConsTerm = (fun r hd tl -> (mk_term (Construct ((Microsoft_FStar_Absyn_Const.lexcons_lid, ((hd, Nothing))::((tl, Nothing))::[]))) r Expr))
+let lexConsTerm = (fun ( r ) ( hd ) ( tl ) -> (mk_term (Construct ((Microsoft_FStar_Absyn_Const.lexcons_lid, ((hd, Nothing))::((tl, Nothing))::[]))) r Expr))
 
-let mkConsList = (fun r elts -> (let nil = (mk_term (Construct ((Microsoft_FStar_Absyn_Const.nil_lid, []))) r Expr)
-in (Support.List.fold_right (fun e tl -> (consTerm r e tl)) elts nil)))
+let mkConsList = (fun ( r ) ( elts ) -> (let nil = (mk_term (Construct ((Microsoft_FStar_Absyn_Const.nil_lid, []))) r Expr)
+in (Support.List.fold_right (fun ( e ) ( tl ) -> (consTerm r e tl)) elts nil)))
 
-let mkLexList = (fun r elts -> (let nil = (mk_term (Construct ((Microsoft_FStar_Absyn_Const.lextop_lid, []))) r Expr)
-in (Support.List.fold_right (fun e tl -> (lexConsTerm r e tl)) elts nil)))
+let mkLexList = (fun ( r ) ( elts ) -> (let nil = (mk_term (Construct ((Microsoft_FStar_Absyn_Const.lextop_lid, []))) r Expr)
+in (Support.List.fold_right (fun ( e ) ( tl ) -> (lexConsTerm r e tl)) elts nil)))
 
-let mkApp = (fun t args r -> (match (args) with
+let mkApp = (fun ( t ) ( args ) ( r ) -> (match (args) with
 | [] -> begin
 t
 end
@@ -364,36 +372,36 @@ end
 (mk_term (Construct ((s, args))) r Un)
 end
 | _ -> begin
-(Support.List.fold_left (fun t _32_448 -> (match (_32_448) with
+(Support.List.fold_left (fun ( t ) ( _32_448 ) -> (match (_32_448) with
 | (a, imp) -> begin
 (mk_term (App ((t, a, imp))) r Un)
 end)) t args)
 end)
 end))
 
-let mkRefSet = (fun r elts -> (let empty = (mk_term (Var ((Microsoft_FStar_Absyn_Util.set_lid_range Microsoft_FStar_Absyn_Const.set_empty r))) r Expr)
+let mkRefSet = (fun ( r ) ( elts ) -> (let empty = (mk_term (Var ((Microsoft_FStar_Absyn_Util.set_lid_range Microsoft_FStar_Absyn_Const.set_empty r))) r Expr)
 in (let ref_constr = (mk_term (Var ((Microsoft_FStar_Absyn_Util.set_lid_range Microsoft_FStar_Absyn_Const.heap_ref r))) r Expr)
 in (let singleton = (mk_term (Var ((Microsoft_FStar_Absyn_Util.set_lid_range Microsoft_FStar_Absyn_Const.set_singleton r))) r Expr)
 in (let union = (mk_term (Var ((Microsoft_FStar_Absyn_Util.set_lid_range Microsoft_FStar_Absyn_Const.set_union r))) r Expr)
-in (Support.List.fold_right (fun e tl -> (let e = (mkApp ref_constr (((e, Nothing))::[]) r)
+in (Support.List.fold_right (fun ( e ) ( tl ) -> (let e = (mkApp ref_constr (((e, Nothing))::[]) r)
 in (let single_e = (mkApp singleton (((e, Nothing))::[]) r)
 in (mkApp union (((single_e, Nothing))::((tl, Nothing))::[]) r)))) elts empty))))))
 
-let mkExplicitApp = (fun t args r -> (match (args) with
+let mkExplicitApp = (fun ( t ) ( args ) ( r ) -> (match (args) with
 | [] -> begin
 t
 end
 | _ -> begin
 (match (t.tm) with
 | Name (s) -> begin
-(mk_term (Construct ((s, (Support.List.map (fun a -> (a, Nothing)) args)))) r Un)
+(mk_term (Construct ((s, (Support.List.map (fun ( a ) -> (a, Nothing)) args)))) r Un)
 end
 | _ -> begin
-(Support.List.fold_left (fun t a -> (mk_term (App ((t, a, Nothing))) r Un)) t args)
+(Support.List.fold_left (fun ( t ) ( a ) -> (mk_term (App ((t, a, Nothing))) r Un)) t args)
 end)
 end))
 
-let mkAdmitMagic = (fun r -> (let unit_const = (mk_term (Const (Microsoft_FStar_Absyn_Syntax.Const_unit)) r Expr)
+let mkAdmitMagic = (fun ( r ) -> (let unit_const = (mk_term (Const (Microsoft_FStar_Absyn_Syntax.Const_unit)) r Expr)
 in (let admit = (let admit_name = (mk_term (Var ((Microsoft_FStar_Absyn_Util.set_lid_range Microsoft_FStar_Absyn_Const.admit_lid r))) r Expr)
 in (mkExplicitApp admit_name ((unit_const)::[]) r))
 in (let magic = (let magic_name = (mk_term (Var ((Microsoft_FStar_Absyn_Util.set_lid_range Microsoft_FStar_Absyn_Const.magic_lid r))) r Expr)
@@ -401,9 +409,9 @@ in (mkExplicitApp magic_name ((unit_const)::[]) r))
 in (let admit_magic = (mk_term (Seq ((admit, magic))) r Expr)
 in admit_magic)))))
 
-let mkWildAdmitMagic = (fun r -> ((mk_pattern PatWild r), None, (mkAdmitMagic r)))
+let mkWildAdmitMagic = (fun ( r ) -> ((mk_pattern PatWild r), None, (mkAdmitMagic r)))
 
-let focusBranches = (fun branches r -> (let should_filter = (Support.Microsoft.FStar.Util.for_some (Support.Prims.fst) branches)
+let focusBranches = (fun ( branches ) ( r ) -> (let should_filter = (Support.Microsoft.FStar.Util.for_some (Support.Prims.fst) branches)
 in if should_filter then begin
 (let _32_483 = (Microsoft_FStar_Tc_Errors.warn r "Focusing on only some cases")
 in (let focussed = ((Support.List.map (Support.Prims.snd)) (Support.List.filter (Support.Prims.fst) branches))
@@ -412,10 +420,10 @@ end else begin
 ((Support.List.map (Support.Prims.snd)) branches)
 end))
 
-let focusLetBindings = (fun lbs r -> (let should_filter = (Support.Microsoft.FStar.Util.for_some (Support.Prims.fst) lbs)
+let focusLetBindings = (fun ( lbs ) ( r ) -> (let should_filter = (Support.Microsoft.FStar.Util.for_some (Support.Prims.fst) lbs)
 in if should_filter then begin
 (let _32_489 = (Microsoft_FStar_Tc_Errors.warn r "Focusing on only some cases in this (mutually) recursive definition")
-in (Support.List.map (fun _32_493 -> (match (_32_493) with
+in (Support.List.map (fun ( _32_493 ) -> (match (_32_493) with
 | (f, lb) -> begin
 if f then begin
 lb
@@ -427,15 +435,15 @@ end else begin
 ((Support.List.map (Support.Prims.snd)) lbs)
 end))
 
-let mkFsTypApp = (fun t args r -> (mkApp t (Support.List.map (fun a -> (a, FsTypApp)) args) r))
+let mkFsTypApp = (fun ( t ) ( args ) ( r ) -> (mkApp t (Support.List.map (fun ( a ) -> (a, FsTypApp)) args) r))
 
-let mkTuple = (fun args r -> (let cons = (Microsoft_FStar_Absyn_Util.mk_tuple_data_lid (Support.List.length args) r)
-in (mkApp (mk_term (Name (cons)) r Expr) (Support.List.map (fun x -> (x, Nothing)) args) r)))
+let mkTuple = (fun ( args ) ( r ) -> (let cons = (Microsoft_FStar_Absyn_Util.mk_tuple_data_lid (Support.List.length args) r)
+in (mkApp (mk_term (Name (cons)) r Expr) (Support.List.map (fun ( x ) -> (x, Nothing)) args) r)))
 
-let mkDTuple = (fun args r -> (let cons = (Microsoft_FStar_Absyn_Util.mk_dtuple_data_lid (Support.List.length args) r)
-in (mkApp (mk_term (Name (cons)) r Expr) (Support.List.map (fun x -> (x, Nothing)) args) r)))
+let mkDTuple = (fun ( args ) ( r ) -> (let cons = (Microsoft_FStar_Absyn_Util.mk_dtuple_data_lid (Support.List.length args) r)
+in (mkApp (mk_term (Name (cons)) r Expr) (Support.List.map (fun ( x ) -> (x, Nothing)) args) r)))
 
-let mkRefinedBinder = (fun id t refopt m implicit -> (let b = (mk_binder (Annotated ((id, t))) m Type implicit)
+let mkRefinedBinder = (fun ( id ) ( t ) ( refopt ) ( m ) ( implicit ) -> (let b = (mk_binder (Annotated ((id, t))) m Type implicit)
 in (match (refopt) with
 | None -> begin
 b
@@ -444,7 +452,7 @@ end
 (mk_binder (Annotated ((id, (mk_term (Refine ((b, t))) m Type)))) m Type implicit)
 end)))
 
-let rec extract_named_refinement = (fun t1 -> (match (t1.tm) with
+let rec extract_named_refinement = (fun ( t1 ) -> (match (t1.tm) with
 | NamedTyp ((x, t)) -> begin
 Some ((x, t, None))
 end

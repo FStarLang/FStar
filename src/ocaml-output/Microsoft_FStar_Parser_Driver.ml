@@ -1,9 +1,9 @@
 
-let print_error = (fun msg r -> (Support.Microsoft.FStar.Util.print_string (Support.Microsoft.FStar.Util.format2 "ERROR %s: %s\n" (Support.Microsoft.FStar.Range.string_of_range r) msg)))
+let print_error = (fun ( msg ) ( r ) -> (Support.Microsoft.FStar.Util.print_string (Support.Microsoft.FStar.Util.format2 "ERROR %s: %s\n" (Support.Microsoft.FStar.Range.string_of_range r) msg)))
 
-let is_cache_file = (fun fn -> ((Support.Microsoft.FStar.Util.get_file_extension fn) = ".cache"))
+let is_cache_file = (fun ( fn ) -> ((Support.Microsoft.FStar.Util.get_file_extension fn) = ".cache"))
 
-let parse_fragment = (fun curmod env frag -> (match ((Microsoft_FStar_Parser_ParseIt.parse (Support.Microsoft.FStar.Util.Inr (frag)))) with
+let parse_fragment = (fun ( curmod ) ( env ) ( frag ) -> (match ((Microsoft_FStar_Parser_ParseIt.parse (Support.Microsoft.FStar.Util.Inr (frag)))) with
 | Support.Microsoft.FStar.Util.Inl (Support.Microsoft.FStar.Util.Inl (modul::[])) -> begin
 (let _40_13 = (Microsoft_FStar_Parser_Desugar.desugar_partial_modul curmod env modul)
 in (match (_40_13) with
@@ -21,7 +21,7 @@ end
 (raise (Microsoft_FStar_Absyn_Syntax.Error ((msg, r))))
 end))
 
-let parse_file = (fun env fn -> if (is_cache_file fn) then begin
+let parse_file = (fun ( env ) ( fn ) -> if (is_cache_file fn) then begin
 (let full_name = (Support.String.strcat (Support.String.strcat (Support.String.strcat (Support.String.strcat (Microsoft_FStar_Options.get_fstar_home ()) "/") Microsoft_FStar_Options.cache_dir) "/") fn)
 in (let m = (Microsoft_FStar_Absyn_SSyntax.deserialize_modul (Support.Microsoft.FStar.Util.get_oreader full_name))
 in ((Microsoft_FStar_Parser_Desugar.add_modul_to_env m env), (m)::[])))
@@ -40,7 +40,7 @@ in (exit (1)))
 end)
 end)
 
-let read_build_config = (fun file -> (Microsoft_FStar_Parser_ParseIt.read_build_config file))
+let read_build_config = (fun ( file ) -> (Microsoft_FStar_Parser_ParseIt.read_build_config file))
 
 
 

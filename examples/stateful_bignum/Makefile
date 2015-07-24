@@ -3,7 +3,7 @@ CPP=cpp -ffreestanding
 
 FSTAR_HOME=../..
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe
-FSTAR_OPTIONS=--z3timeout 200 --prims prims.fst --max_fuel 10 --max_ifuel 10 --initial_ifuel 2 --initial_fuel 2
+FSTAR_OPTIONS=--z3timeout 50 --prims prims.fst --max_fuel 10 --max_ifuel 10 --initial_ifuel 2 --initial_fuel 2
 
 OCAMLC=ocamlfind ocamlc -thread -package batteries -linkpkg -g
 OCAMLOPT=ocamlfind ocamlopt -thread -package batteries -linkpkg -g
@@ -31,8 +31,24 @@ verify: $(STDLIB) $(FSTAR_ST_FILES)
 
 work: preproc-verify wo
 
-wo: $(STDLIB) axiomatic.p.fst intlib.p.fst limb.fst bigint_st.fst eval_st.fst addition_st.fst substraction_st.fst scalar_multiplication_st.fst multiplication_st.fst
-	$(FSTAR) $(FSTAR_OPTIONS) $(addprefix --admit_fsi , $(ADMITS)) $^ --verify_module Substraction
+wo: $(STDLIB) axiomatic.p.fst intlib.p.fst limb.fst bigint_st.fst eval_st.fst addition_st.fst substraction_st.fst scalar_multiplication_st.fst multiplication_st.fst compare_st.fst
+	$(FSTAR) $(FSTAR_OPTIONS) $(addprefix --admit_fsi , $(ADMITS)) $^ --verify_module Compare
+
+carry: preproc-verify carr
+
+carr: $(STDLIB) axiomatic.p.fst intlib.p.fst limb.fst bigint_st.fst eval_st.fst carry_st.fst
+	$(FSTAR) $(FSTAR_OPTIONS) $(addprefix --admit_fsi , $(ADMITS)) $^ --lax #--verify_module Carry
+
+retemplate: preproc-verify retemplat
+
+retemplat: $(STDLIB) axiomatic.p.fst intlib.p.fst limb.fst bigint_st.fst eval_st.fst retemplate_st.fst
+	$(FSTAR) $(FSTAR_OPTIONS) $(addprefix --admit_fsi , $(ADMITS)) $^ --lax #--verify_module Retemplate
+
+neg: preproc-verify ne
+
+ne: $(STDLIB) axiomatic.p.fst intlib.p.fst limb.fst bigint_st.fst eval_st.fst neg_st.fst
+	$(FSTAR) $(FSTAR_OPTIONS) $(addprefix --admit_fsi , $(ADMITS)) $^ --verify_module Neg
+
 
 preproc-verify:
 #	rm -f *.p.fst || true

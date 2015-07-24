@@ -69,7 +69,47 @@ let compare a b =
   r
   
 (* This is supposed to be a constant time comparison operation, returning -1 if a < b, 0 if a == b and 1 if a > b *)
-assume val compare2: a:bigint -> b:bigint ->
+(* TODO : Not verified *)
+val compare2_aux:
+  a:bigint -> b:bigint -> len:nat -> tmp:int ->
+  ST nat
+     (requires (fun h -> 
+		(inHeap h a)
+		/\ (inHeap h b)
+		/\ (SameFormat h h a b)
+		/\ (Normalized h a)
+		/\ (Normalized h b)
+		/\ (len <= getLength h a)
+     ))
+     (ensures (fun h0 n h1 ->
+	       (inHeap h0 a)
+	       /\ (inHeap h0 b)
+	       /\ (SameFormat h0 h0 a b)
+	       /\ (Normalized h0 a)
+	       /\ (Normalized h0 b)
+	       /\ (n = 0 <==> (forall (i:nat). i < getLength h0 b
+			       ==> getValue h0 b i = getValue h0 a i))
+	       /\ (n = 0 <==> eval h0 a (getLength h0 a) = eval h0 b (getLength h0 b))
+     ))
+let rec compare2_aux a b len tmp =
+  match len with
+  | 0 -> tmp
+  | _ -> 
+     let i = get_length a - len in
+     let ai = get a i in
+     let bi = get b i in
+     let c = IntLib.compare ai bi in
+     let minus_one = -1 in
+     let tmp = 
+       match c with
+       | 0 -> tmp
+       | minus_one -> -1
+       | 1 -> 1
+     in
+     compare2_aux a b (len+1) tmp
+     
+
+val compare2: a:bigint -> b:bigint ->
 	      ST nat
 		 (requires (fun h -> 
 			    (inHeap h a)
@@ -77,12 +117,16 @@ assume val compare2: a:bigint -> b:bigint ->
 			    /\ (SameFormat h h a b)
 		 ))
 		 (ensures (fun h0 r h1 ->
-			  (inHeap h0 a)
-			  /\ (inHeap h0 b)
-			  /\ (getLength h0 a = getLength h0 b)
-			  /\ (modifies !{} h0 h1)
-			  /\ (r = 0 <==> (forall (i:nat). i < getLength h0 b
-					  ==> getValue h0 b i = getValue h0 a i))
-			  /\ (r < 0 <==> eval h0 a (getLength h0 a) < eval h0 b (getLength h0 b))
-			  /\ (r > 0 <==> eval h0 a (getLength h0 a) > eval h0 b (getLength h0 b))
+			   (inHeap h0 a)
+			   /\ (inHeap h0 b)
+			   /\ (getLength h0 a = getLength h0 b)
+			   /\ (modifies !{} h0 h1)
+			   /\ (r = 0 \/ r = -1 \/ r = 1)
+			   /\ (r = 0 <==> (forall (i:nat). i < getLength h0 b
+					   ==> getValue h0 b i = getValue h0 a i))
+			   /\ (r = 0 <==> eval h0 a (getLength h0 a) = eval h0 b (getLength h0 b))
+			   /\ (r < 0 <==> eval h0 a (getLength h0 a) < eval h0 b (getLength h0 b))
+			   /\ (r > 0 <==> eval h0 a (getLength h0 a) > eval h0 b (getLength h0 b))
 		 ))
+let compare2 a b =
+  compare2_aux a b (get_length a) 0

@@ -126,7 +126,7 @@ and exp' =
   | Exp_abs        of binders * exp 
   | Exp_app        of exp * args                                 (* h tau_1 ... tau_n, args in order from left to right *)
   | Exp_match      of exp * list<(pat * option<exp> * exp)>      (* optional when clause in each equation *)
-  | Exp_ascribed   of exp * typ 
+  | Exp_ascribed   of exp * typ * option<lident>
   | Exp_let        of letbindings * exp                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Exp_uvar       of uvar_e * typ                               (* not present after 1st round tc *)
   | Exp_delayed    of exp * subst_t * memo<exp>                    (* A delayed substitution --- always force it before inspecting the first arg *)
@@ -154,10 +154,10 @@ and pat' =
   | Pat_dot_typ  of btvar * typ
 and pat = withinfo_t<pat',option<either<knd,typ>>>                (* the meta-data is a typ, except for Pat_dot_typ and Pat_tvar, where it is a kind (not strictly needed) *)
 and knd' =
-  | Kind_type
+  | Kind_type                                             (*Type*)
   | Kind_effect
   | Kind_abbrev of kabbrev * knd                          (* keep the abbreviation around for printing *)
-  | Kind_arrow of binders * knd                           (* (ai:ki|xi:ti) => k' *)
+  | Kind_arrow of binders * knd                           (* (ai:ki|xi:ti) => k' *) (*are they really in order, e.g. all kind args first and then the type args?*)
   | Kind_uvar of uvar_k_app                               (* not present after 1st round tc *)
   | Kind_lam of binders * knd                             (* not present after 1st round tc *)
   | Kind_delayed of knd * subst_t * memo<knd>             (* delayed substitution --- always force before inspecting first element *)
@@ -167,7 +167,13 @@ and uvar_k_app = uvar_k * args
 and kabbrev = lident * args
 and uvar_k = Unionfind.uvar<uvar_basis<knd>>
 and lbname = either<bvvdef, lident>
-and letbindings = bool * list<(lbname * typ * exp)> (* let recs may have more than one element; top-level lets have lidents *)
+and letbinding = {
+    lbname:lbname;
+    lbtyp:typ;
+    lbeff:lident;
+    lbdef:exp
+}
+and letbindings = bool * list<letbinding> (* let recs may have more than one element; top-level lets have lidents *)
 and subst_t = list<list<subst_elt>>
 //and subst_map = Util.smap<either<typ, exp>>
 and subst_elt = either<(btvdef*typ), (bvvdef*exp)>
@@ -260,15 +266,22 @@ type eff_decl = {
     trivial:typ;
 }
 and sigelt =
-  | Sig_tycon          of lident * binders * knd * list<lident> * list<lident> * list<qualifier> * Range.range (* bool is for a prop, list<lident> identifies mutuals, second list<lident> are all the constructors *)
+  | Sig_tycon          of lident * binders * knd * list<lident> * list<lident> * list<qualifier> * Range.range 
+  (* list<lident> identifies mutuals, second list<lident> are all the constructors *)
   | Sig_kind_abbrev    of lident * binders * knd * Range.range
   | Sig_typ_abbrev     of lident * binders * knd * typ * list<qualifier> * Range.range 
-  | Sig_datacon        of lident * typ * tycon * list<qualifier> * list<lident> (* mutuals *) * Range.range  (* second lident is the name of the type this constructs *)
+  | Sig_datacon        of lident * typ * tycon * list<qualifier> * list<lident> (* mutuals *) * Range.range  
+  (* the tycon is the inductive type of the value this constructs *)
   | Sig_val_decl       of lident * typ * list<qualifier> * Range.range 
   | Sig_assume         of lident * formula * list<qualifier> * Range.range 
   | Sig_let            of letbindings * Range.range * list<lident> * list<qualifier>
   | Sig_main           of exp * Range.range 
-  | Sig_bundle         of list<sigelt> * list<qualifier> * list<lident> * Range.range (* an inductive type is a bundle of all mutually defined Sig_tycons and Sig_datacons *)
+  | Sig_bundle         of list<sigelt> * list<qualifier> * list<lident> * Range.range 
+    (* an inductive type is a bundle of all mutually defined Sig_tycons and Sig_datacons *)
+    (* perhaps it would be nicer to let this have a 2-level structure, e.g. list<list<sigelt>>,
+       where each higher level list represents one of the inductive types and its constructors.
+       NS: the current order is convenient as it matches the type-checking order for the mutuals;
+           all the tycons and typ_abbrevs first; then all the data which may refer to the tycons/abbrevs *)
   | Sig_new_effect     of eff_decl * Range.range
   | Sig_sub_effect     of sub_eff * Range.range
   | Sig_effect_abbrev  of lident * binders * comp * list<qualifier> * Range.range
@@ -359,14 +372,14 @@ val mk_Exp_app: (exp * args) -> option<typ> -> range -> exp
 val mk_Exp_app': (exp * args) -> option<typ> -> range -> exp
 val mk_Exp_app_flat: (exp * args) -> option<typ> -> range -> exp
 val mk_Exp_match: (exp * list<(pat * option<exp> * exp)>) -> option<typ> -> range -> exp
-val mk_Exp_ascribed': (exp * typ) -> option<typ> -> range -> exp
-val mk_Exp_ascribed: (exp * typ) -> range -> exp
+val mk_Exp_ascribed: (exp * typ * option<lident>) -> option<typ> -> range -> exp
 val mk_Exp_let: (letbindings * exp) -> option<typ> -> range -> exp
 val mk_Exp_uvar': (uvar_e * typ) -> option<typ> -> range -> exp
 val mk_Exp_uvar: (uvar_e * typ) -> range -> exp
 val mk_Exp_delayed: (exp * subst_t * memo<exp>) -> option<typ> -> range -> exp
 val mk_Exp_meta' : meta_e -> option<typ> -> range -> exp
 val mk_Exp_meta: meta_e -> exp
+val mk_lb : (lbname * lident * typ * exp) -> letbinding
 
 //val mk_subst: subst -> subst
 //val extend_subst: subst_elt -> subst -> subst
