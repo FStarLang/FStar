@@ -173,16 +173,26 @@ match ft.n with // assume ft is compressed. is there a compresser for typ'?
             extractTyp c ty
 
   | Typ_ascribed (ty,_)  -> extractTyp c ty
-  | Typ_meta (Meta_named(t, _)) -> extractTyp c t
+  | Typ_meta mt -> extractMeta c mt
   | Typ_uvar _ -> unknownType 
   | Typ_delayed _  -> failwith "expected the argument to be compressed"
-  | Typ_meta _ -> failwith (Util.format2 "Unexpected meta in type (%s) at %s\n" (Print.typ_to_string ft) (Range.string_of_range ft.pos))
+//  | Typ_meta (Meta_named(t, _)) -> extractTyp c t
+//  | Typ_meta _ -> failwith (Util.format2 "Unexpected meta in type (%s) at %s\n" (Print.typ_to_string ft) (Range.string_of_range ft.pos))
   |   _ -> failwith "NYI. replace this with unknownType if you know the consequences"
 and getTypeFromArg (c:context) (a:arg) : mlty =
 match (fst a) with
 | Inl ty -> extractTyp c ty
 | Inr _ -> erasedContent 
-and extractTyConstApp (c:context) (ftv:ftvar) (ags : args) =
+and extractMeta (c:context) (mt:meta_t) : mlty =
+match mt with
+  | Meta_pattern (t,_) 
+  | Meta_named (t,_)
+  | Meta_labeled (t,_,_, _)
+  | Meta_refresh_label (t,_,_) 
+  | Meta_slack_formula (t,_,_) -> extractTyp c t
+    
+
+and extractTyConstApp (c:context) (ftv:ftvar) (ags : args) : mlty =
             match  (isTypeScheme ftv.v c)  with // when is something not a type scheme? if None, then no need to delta unfold.
             //Perhaps this issue is Coq specific where there is no clear distinction between terms and types, and there is no distinction b/w term and type abbreviations.
             // So, one might need to unfold abbreviations which unfold to types.

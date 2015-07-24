@@ -52,7 +52,7 @@ let is_constructor e = match (Util.compress_exp e).n with
     | Exp_fvar(_, b) -> b
     | _ -> false
 
-(* something is a value iff it has no "effects"? or iff it is in a strong normal form? or head normal form? *)
+(* something is a value iff it qualifies for the OCaml's "value restriction", which determines when a definition can be generalized *)
 let rec is_value (e:exp) = match (Util.compress_exp e).n with 
     | Exp_bvar _
     | Exp_fvar _ 
