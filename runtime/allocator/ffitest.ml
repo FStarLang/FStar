@@ -49,6 +49,10 @@ inspect (D "hello");;
 
 print_mask ();;
 
+Gc.full_major();;
+Gc.compact();;
+Gc.print_stat (Pervasives.stdout);;
+
 pop_frame ();;
 
 print_mask ();;

@@ -4,9 +4,6 @@
 #include <caml/memory.h>
 #include "stack.h"
 
-/***********************************************************************/
-/* Allocating OCaml values on the stack */
-/***********************************************************************/
 
 #define check(_p) if (!(_p)) { fprintf(stderr,"Failed check %s:%d\n",__FILE__,__LINE__); fflush(stdout); exit(1); }
 #define Assert check
@@ -20,6 +17,13 @@
                     + (color)                                                 \
                     + (tag_t) (tag)))                                         \
       )
+//#include <caml/roots.h> /* The below is copied from this file */
+typedef void (*scanning_action) (value, value *);
+extern void (*caml_scan_roots_hook) (scanning_action);
+
+/***********************************************************************/
+/* Allocating OCaml values on the stack */
+/***********************************************************************/
 
 value stack_caml_alloc(mlsize_t wosize, tag_t tag, int nbits, int *mask) {
   value tmp, result;
@@ -58,123 +62,21 @@ value stack_caml_alloc_tuple (mlsize_t n, int nbits, int *mask)
 /* GC scanning */
 /***********************************************************************/
 
-#if 0
-/** TAKEN FROM OLEG'S DELIMCC STUFF */
-/*
-   Custom root-scanning function, to scan the captured delimited
-   continuation, the body of the custom data type ekfragment.
-   The function delimcc_scan_roots_ekfragments should be installed 
-   as a GC's root-scanning hook. The function is a simple
-   iterator that invokes delimcc_scan_roots_ekfragment
-   on each ekfragment_struct in the list.
+void (*prev_scan_roots_hook) (scanning_action a) = NULL;
 
-   The function delimcc_scan_roots_ekfragment is a minor adjustment
-   of the function `caml_do_local_roots' in asmrun/roots.c.
-   The adjustment is needed to install a scanning termination
-   criterion. The function caml_do_local_roots assumes that
-   there is a C-stack frame with the NULL Callback_link underneath
-   the very first ML stack frame. Encountering that C-stack frame
-   terminates the scan. Since we have captured only the part of
-   ML stack, we do not have the dedicated C-stack frame to terminate
-   the stack. We need a different criterion to end the scanning
-   action.
- */
-
-static void stack_scan_roots_page(scanning_action action,
-					  const  ekp)
-{
-  char * sp       = (char*)(ekp->stack_fragment);
-  uintnat retaddr = ekp->last_retaddr;
-
-  const frame_descr * d;
-  uintnat h;
-#ifdef Stack_grows_upwards
-  const short * p;  /* PR#4339: stack offsets are negative in this case */
-#else
-  const unsigned short * p;
-#endif
-
-#if defined(DEBUG) && DEBUG
-  fprintf(stderr, 
-	  "\ndelimcc_scan_roots_ekfragment for retaddr %lx\n",
-	  retaddr);
-#endif
-
-  while (sp != NULL) {
-    #if defined(DEBUG) && DEBUG
-    fprintf(stderr, "sp       %p\n",sp);
-    fprintf(stderr, "retaddr  %lx\n",retaddr);
-    #endif
-    /* Find the descriptor corresponding to the return address */
-    h = Hash_retaddr(retaddr);
-    while(1) {
-      d = caml_frame_descriptors[h];
-      if (d == NULL) 
-	fprintf(stderr, 
-		"Failed to find the descriptor for retaddr %lx; sp is %p\n",
-		retaddr,sp), exit(8);
-      if (d->retaddr == retaddr) break;
-      h = (h+1) & caml_frame_descriptors_mask;
-    }
-    if (d->frame_size != 0xFFFF) {
-      /* Scan the roots in this frame */
-      int n;
-      for (p = d->live_ofs, n = d->num_live; n > 0; n--, p++) {
-	const int ofs = *p;
-	value * root;
-	if (ofs & 1) {
-	  fprintf(stderr, 
-		  "ekfragment scan: found live register %d, retaddr %lx\n",
-		  ofs >> 1,retaddr), exit(8);
-	  /*             root = regs + (ofs >> 1); */
-	} else {
-	  root = (value *)(sp + ofs);
-	}
-	action (*root, root);
-      }
-      /* Move to next frame */
-#ifndef Stack_grows_upwards
-      sp += (d->frame_size & 0xFFFC);
-#else
-      sp -= (d->frame_size & 0xFFFC);
-#endif
-
-      /* Custom termination: scanned the whole stack fragment */
-      if (sp == ekp->top_of_stack)
-	break;
-
-      retaddr = RetAddr_from_frame(sp);
-    } else {
-      /* This marks the top of a stack chunk for an ML callback.
-	 Skip C portion of stack and continue with next ML stack chunk.
-	 We must report an error. Otherwise, we should have adjusted the
-	 Callback_link pointers when we captured the fragment!
-      */
-      fprintf(stderr, "Found a C stack frame in the captured fragment!"
-	      "retaddr %lx, sp (copied) %p\n",retaddr,sp);
-      /*
-        struct caml_context * next_context = Callback_link(sp);
-        sp = next_context->bottom_of_stack;
-        retaddr = next_context->last_retaddr;
-        regs = next_context->gc_regs;
-      */
-      /* A null sp means no more ML stack chunks; stop here. */
-    }
-  }
+static void scanfun(void *env, void **ptr) {
+  scanning_action action = (scanning_action)env;
+  value *root = (value *)ptr;
+  printf("  scanning=%p, val=%p\n",ptr,*ptr);
+  action (*root, root);
 }
 
-static void delimcc_scan_roots_ekfragments(scanning_action action)
+static void scan_stack_roots(scanning_action action)
 {
-  ekfragment_t ekp = NULL;
-
-  for(ekp = ekfragments; ekp != NULL; ekp = ekp->next)
-    delimcc_scan_roots_ekfragment(action,ekp);
-
+  each_marked_pointer(scanfun,action);
   /* Run the previous hook if any */
   if (prev_scan_roots_hook != NULL) (*prev_scan_roots_hook)(action);
 }
-
-#endif
 
 /***********************************************************************/
 /* FFI */
@@ -183,6 +85,12 @@ static void delimcc_scan_roots_ekfragments(scanning_action action)
 CAMLprim value stack_push_frame(value v) 
 {
   int szb = Val_int(v);
+  static int already_initialized = 0;
+  if (!already_initialized) {
+    already_initialized = 1;
+    prev_scan_roots_hook = caml_scan_roots_hook;
+    caml_scan_roots_hook = scan_stack_roots;
+  }
   push_frame(szb);
   return Val_unit;
 }
