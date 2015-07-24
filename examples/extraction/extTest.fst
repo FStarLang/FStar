@@ -6,6 +6,11 @@ fstar extTest.fst --codegen OCaml-experimental > Test.ml ; sed -i '$d;/kdhvljkds
 *)
 module Test
 
+type prod 'a 'b =
+| Pair : pfst:'a -> psnd:'b -> (prod 'a 'b)
+
+let ffst = Pair.pfst
+
 let idlist (x:list int) = x//Cons 0 x
 
 type nnat =
@@ -46,9 +51,6 @@ let rec add a b
 | O -> b
 | S a' -> S (add a' b)
 
-
-type prod 'a 'b =
-| Pair : fst:'a -> snd:'b -> (prod 'a 'b)
 
 type list (a:Type) =
   | Nil  : list a
@@ -202,3 +204,15 @@ let rec mult2 a b =
 match a with
 | O -> O
 | S a' -> add b (mult2 a' b)
+
+(*
+type bTree (t:Type)=
+| BLeaf : ldata:t -> bTree t
+| BNode : left:(bTree t) -> right:(bTree t) -> bTree t
+
+val leftmostLeaf : t:Type ->  (bTree t) -> t
+let rec leftmostLeaf 't bt =
+match bt with
+| BLeaf d -> d
+| BNode l r -> leftmostLeaf 't l
+*)

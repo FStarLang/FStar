@@ -91,7 +91,7 @@ let path_of_ns (currentModule : mlpath) ns =
 
 let mlpath_of_mlpath (currentModule : mlpath) (x : mlpath) : mlpath =
     match string_of_mlpath x with
-   (* | "Prims.Some" -> ([], "Some")
+    | "Prims.Some" -> ([], "Some")
     | "Prims.None" -> ([], "None")
     | "Prims.list" -> ([], "list") // was not there in old code
     | "Prims.int" -> ([], "int") // was not there in old code
@@ -100,7 +100,7 @@ let mlpath_of_mlpath (currentModule : mlpath) (x : mlpath) : mlpath =
     | "Prims.failwith" -> ([], "failwith")
     | "ST.alloc" -> ([], "ref")
     | "ST.read" -> (["Support";"Prims"], "op_Bang")
-    | "ST.op_ColonEquals" -> (["Support";"Prims"], "op_ColonEquals") *)
+    | "ST.op_ColonEquals" -> (["Support";"Prims"], "op_ColonEquals")
     | _ -> 
       begin
         let ns = fst x in
