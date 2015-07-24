@@ -3,11 +3,17 @@
     The functions here are for allocating Caml values on a
     manually-managed, growable stack. 
 
-    No allocation can take place until the first stack frame is
-    pushed, via [Camlstack.push_frame n]. All data allocated on a
-    frame is freed when a frame is popped, via [Camlstack.pop_frame
-    ()], and it is the program's responsibility to no longer access it
-    (or data in the OCaml heap that can only be reached from it).
+    This library in unsafe. To avoid memory errors, programs must
+    satisfy two constraints:
+
+    1) No data allocated on a frame, and no data in the OCaml heap
+    reachable from the frame, will be used by the program after the
+    frame is popped. (To do so would result in a dangling pointer
+    dereference.)
+
+    2) No pointers into the OCaml heap will be installed by mutation
+    of a stack-allocated object. (To do so would create a GC root into
+    the OCaml heap that is not tracked by the stack implementation.)
 *)
 
 external push_frame : int -> unit = "stack_push_frame";;
