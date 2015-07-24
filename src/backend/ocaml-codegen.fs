@@ -94,6 +94,8 @@ let mlpath_of_mlpath (currentModule : mlpath) (x : mlpath) : mlpath =
     | "Prims.Some" -> ([], "Some")
     | "Prims.None" -> ([], "None")
     | "Prims.list" -> ([], "list") // was not there in old code
+    | "Prims.Nil" -> ([], "Nil") // was not there in old code
+    | "Prims.Cons" -> ([], "Cons") // was not there in old code
     | "Prims.int" -> ([], "int") // was not there in old code
     | "Prims.unit" -> ([], "unit") // was not there in old code
     | "Prims.string" -> ([], "string") // was not there in old code

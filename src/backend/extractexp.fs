@@ -412,3 +412,18 @@ let ind_discriminator_body (discName:lident) (constrName:lident) : mlmodule1 =
                     MLP_CTor(mlpath_of_lident rid, [MLP_Wild]), None, MLE_Const(MLC_Bool true);
                     MLP_Wild, None, MLE_Const(MLC_Bool false)])) in
                 MLM_Let (false,[((convIdent discName.ident), None, [], discrBody) ] )
+
+
+(*
+let ind_projector_body (c:context) (discName:lident) (constrName:lident) (x: either<btvdef, bvvdef>) : mlmodule1 = 
+                    let mlid = fresh "_proj_" in
+                    let projs = 
+                    let cargs = List.map (fun x -> MLP_Var(fresh x)) projs in
+                    let cn::cr = List.rev x.v.ns in
+                    let crstr = List.map (fun x->x.idText) cr in
+                    let rid = {ns=cr; ident={x.v.ident with idText=cn.idText}; nsstr=String.concat "." crstr; str=x.v.nsstr} in
+                    let cn = cn.idText in
+                    MLE_Fun([(mlid,None)], MLE_Match(MLE_Name([], idsym mlid), [
+                        MLP_CTor(mlpath_of_lident mlenv rid, cargs), None, MLE_Name ([], x.v.ident.idText);
+                    ]))
+                    *)

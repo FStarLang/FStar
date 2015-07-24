@@ -307,6 +307,16 @@ match  ft.n with //TODO: is there a Util.compress for this?
   | Total ty -> ty
   | _ -> failwith "expected a total type. constructors of inductive types were assumed to be total"
 
+let allBindersOfFuntype (c: context)  (t:typ) : list<binder> = 
+let t = (preProcType c t) in
+match t.n with
+| Typ_fun (lb,cp) -> lb
+| _ -> []
+
+//let allBindersOfInductiveCtor (c: context)  (ctorName: lident) : list<binder> = 
+    //allBindersOfFuntype ()
+
+
 let bindersOfFuntype (c: context) (n:int) (t:typ) : list<binder> * (*residual type*) typ = 
 let t = (preProcType c t) in
 match t.n with
