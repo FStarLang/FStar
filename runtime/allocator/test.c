@@ -32,10 +32,14 @@ void foo(int n) {
     *y = n+1;
     *z = n+2;
     foo(n-1);
+    assert(is_stack_pointer(x) && is_stack_pointer(y) && is_stack_pointer(z));
     assert(*x == n);
     assert(*y == n+1);
     assert(*z == n+2);
-    if (n % 3 == 0) pop_frame();
+    if (n % 3 == 0) { 
+      pop_frame();
+      assert(!is_stack_pointer(x) && !is_stack_pointer(y) && !is_stack_pointer(z));
+    }
   }
 }
 

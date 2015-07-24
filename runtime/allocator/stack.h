@@ -30,4 +30,17 @@ void pop_frame();
    needed. */
 void *stack_alloc(int sz_b);
 
+/* Allocates sz_b bytes on the topmost frame. Will add new pages as
+   needed. Sets the bitmask at word-sized offsets given by the varargs. */ 
+void *stack_alloc_mask(int sz_b, int nbits, ...);
+
+/* Returns 1 if the given pointer is one managed by the stack; 
+   0 otherwise. */
+int is_stack_pointer(void *ptr);
+
+/* Executes the ptrfun on each marked word in the stack.
+   The function receives the address of the marked word */
+typedef void (*ptrfun)(void *env, void **ptr);
+void each_marked_pointer(ptrfun f, void *env);
+
 #endif
