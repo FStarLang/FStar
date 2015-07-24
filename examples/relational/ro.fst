@@ -63,16 +63,26 @@ let rec ok_adv_eq l0 l1 p k = match p with
         | ConsH _ _ _ _ tl0 tl1 p' -> ok_adv_eq tl0 tl1 p' k
         | ConsA _ _ tl0 tl1 p' -> ok_adv_eq tl0 tl1 p' k
 
-assume val ok_witness : l0:log -> l1:log {Ok l0 l1} -> Ok l0 l1
+assume val ok_witness : l0:log -> l1:log {Ok l0 l1} -> Tot (Ok l0 l1)
 
-(* Is there any way to show this using the previous lemma? *)
+val ok_adv_eq' : l0:log -> l1:log{Ok l0 l1} ->  k:key
+                -> Lemma
+                   (requires True)
+                   (ensures (forall t. assoc k l0 = Some(Adv, t) <==>
+                                       assoc k l1 = Some(Adv, t)))
+                  [SMTPat (assoc k l0); SMTPat (assoc k l1)]
+let ok_adv_eq' l0 l1 k = ok_adv_eq l0 l1 (ok_witness l0 l1) k
+
+(* SMTPat make this lemma unnecessary *)
+(*
 val ok_adv_eq' : k:key
                 -> Lemma
                    (requires True)
                    (ensures (forall (l0:log) (l1:log).Ok l0 l1 ==>
                               (forall t. assoc k l0 = Some(Adv, t) <==>
                                          assoc k l1 = Some(Adv, t))))
-let ok_adv_eq' k = admit ()
+let ok_adv_eq' k = ()
+*)
 
 val ok_hon_safe : k0:key -> k1:key -> l0:log -> l1:log -> p:Ok l0 l1
                 -> Lemma
@@ -84,32 +94,22 @@ let rec ok_hon_safe k0 k1 l0 l1 p = match p with
         | ConsH k0' k1' t01 t1' tl0 tl1 p' -> ok_hon_safe k0 k1 tl0 tl1 p'
         | ConsA k' t' tl0 tl1 p' -> ok_hon_safe k0 k1 tl0 tl1 p'
 
+val ok_hon_safe'': k0:key -> k1:key -> l0:log -> l1:log {p:Ok l0 l1}
+                -> Lemma
+                   (requires (safe_key k0 k1))
+                   (ensures ( (is_Some(assoc k0 l0) /\ is_Hon(fst (Some.v(assoc k0 l0)))) <==>
+                               is_Some(assoc k1 l1) /\ is_Hon(fst (Some.v(assoc k1 l1)))))
+                               [SMTPat (assoc k0 l0); SMTPat (assoc k1 l1)]
+let ok_hon_safe'' k0 k1 l0 l1 = ok_hon_safe k0 k1 l0 l1 (ok_witness l0 l1)
+
+
 val ok_hon_safe' : k0:key -> k1:key
                 -> Lemma
                    (requires (safe_key k0 k1))
                    (ensures (forall (l0:log) (l1:log). Ok l0 l1 ==>
                               (is_Some(assoc k0 l0) /\ is_Hon(fst (Some.v(assoc k0 l0)))) <==>
                                is_Some(assoc k1 l1) /\ is_Hon(fst (Some.v(assoc k1 l1)))))
-let ok_hon_safe' k0 k1 = admit ()
-
-val ok_hon_safe2 : k0:key -> k1:key -> l0:log -> l1:log -> p:Ok l0 l1
-                -> Lemma
-                   (requires (safe_key k0 k1))
-                   (ensures (is_Some(assoc k0 l0) /\ is_Hon(fst(Some.v(assoc k0 l0))) ==>
-                               is_Some(assoc k1 l1) /\
-                               safe k0 k1 (snd(Some.v(assoc k0 l0))) (snd(Some.v(assoc k1 l1)))))
-let rec ok_hon_safe2 k0 k1 l0 l1 p = match p with
-        | Null -> ()
-        | ConsH k0' k1' t01 t1' tl0 tl1 p' -> ok_hon_safe2 k0 k1 tl0 tl1 p'
-        | ConsA k' t' tl0 tl1 p' -> ok_hon_safe2 k0 k1 tl0 tl1 p'
-
-assume val ok_hon_safe'' : k0:key -> k1:key
-                -> Lemma
-                   (requires (safe_key k0 k1))
-                   (ensures (forall (l0:log) (l1:log). Ok l0 l1 ==>
-                                (is_Some(assoc k0 l0) /\ is_Hon(fst(Some.v(assoc k0 l0))) ==>
-                                  is_Some(assoc k1 l1) /\
-                                  safe k0 k1 (snd(Some.v(assoc k0 l0))) (snd(Some.v(assoc k1 l1))))))
+let ok_hon_safe' k0 k1 =  admit()
 
 type goodstate (s1:state) (s2:state) =
             s1.bad = true \/ s2.bad = true \/ Ok s1.l s2.l
@@ -162,7 +162,6 @@ assume val sample_single : unit -> Tot tag
 
 let hash_hon2 k0 k1 =
   ok_hon_safe' k0 k1;
-  ok_hon_safe'' k0 k1;
   let l0, l1 = compose2 (fun _ -> (!s).l) (fun _ -> (!s).l) () () in
   match assoc k0 l0, assoc k1 l1 with
   | Some (Hon,t0), Some (Hon,t1) -> compose2 (fun x -> case_Hon x) (fun x -> case_Hon x) t0 t1
@@ -188,7 +187,6 @@ let hash_hon' k r = match assoc k (!s).l with
                     add_some t
 
 let hash_hon k0 k1  = ok_hon_safe' k0 k1;
-                      ok_hon_safe'' k0 k1;
                       let r0, r1 = sample_hon k0 k1 in
                       (compose2 (fun k -> hash_hon' k r0)
                                 (fun k -> hash_hon' k r1)
@@ -202,8 +200,7 @@ let hash_adv' k r =  match assoc k (!s).l with
                     add_some t
 
 
-let hash_adv k  = ok_adv_eq' k;
-                  let r0, r1 = sample_adv () in
+let hash_adv k  = let r0, r1 = sample_adv () in
                   compose2 (fun k -> hash_adv' k r0)
                            (fun k -> hash_adv' k r1)
                            k k
