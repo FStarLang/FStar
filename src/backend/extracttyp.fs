@@ -253,7 +253,14 @@ type typeAbbrev = {
 let lookupDataConType (c:context) (sigb : sigelts) (l:lident)(*this sigbundle contains the constructors, but we look inside iff Tc.Env.lookpu_datacon fails*) : typ =
 try (lookup_datacon c.tcenv l) 
 with
-_ -> failwith "couldnt find the constructor in Tc.Env"
+_ -> let tr = 
+      Util.find_map sigb (fun s ->
+                    match s with
+                    | (Sig_datacon (l',t,tc,quals,lids,_)) -> if l=l' then Some t else None
+                    | _ -> None
+                    )  in must tr
+
+//failwith "couldnt find the constructor in Tc.Env"
 
 
 let parseInductiveConstructors (c:context) (cnames: list<lident>) (sigb : sigelts) (*this sigbundle contains the constructors, but we look inside iff Tc.Env.lookpu_datacon fails*) 
