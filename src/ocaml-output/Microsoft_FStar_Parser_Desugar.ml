@@ -2415,7 +2415,7 @@ in (match (_36_2775) with
 end))
 end)) (env, []) decls))
 
-let desugar_partial_modul = (fun ( curmod ) ( env ) ( m ) -> (let open_ns = (fun ( mname ) ( d ) -> if ((Support.List.length mname.Microsoft_FStar_Absyn_Syntax.ns) <> 0) then begin
+let desugar_modul_common = (fun ( curmod ) ( env ) ( m ) -> (let open_ns = (fun ( mname ) ( d ) -> if ((Support.List.length mname.Microsoft_FStar_Absyn_Syntax.ns) <> 0) then begin
 ((Microsoft_FStar_Parser_AST.mk_decl (Microsoft_FStar_Parser_AST.Open ((Microsoft_FStar_Absyn_Syntax.lid_of_ids mname.Microsoft_FStar_Absyn_Syntax.ns))) (Microsoft_FStar_Absyn_Syntax.range_of_lid mname)))::d
 end else begin
 d
@@ -2444,32 +2444,45 @@ in (env, modul))
 end))
 end)))))
 
-let desugar_modul = (fun ( env ) ( m ) -> (let _36_2811 = (desugar_partial_modul None env m)
-in (match (_36_2811) with
+let desugar_partial_modul = (fun ( curmod ) ( env ) ( m ) -> (let m = if (! (Microsoft_FStar_Options.interactive_fsi)) then begin
+(match (m) with
+| Microsoft_FStar_Parser_AST.Module ((mname, decls)) -> begin
+Microsoft_FStar_Parser_AST.Interface ((mname, decls, (Support.Microsoft.FStar.Util.for_some (fun ( m ) -> (m = mname.Microsoft_FStar_Absyn_Syntax.str)) (! (Microsoft_FStar_Options.admit_fsi)))))
+end
+| Microsoft_FStar_Parser_AST.Interface ((mname, _, _)) -> begin
+(failwith (Support.String.strcat "Impossible: " mname.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText))
+end)
+end else begin
+m
+end
+in (desugar_modul_common curmod env m)))
+
+let desugar_modul = (fun ( env ) ( m ) -> (let _36_2827 = (desugar_modul_common None env m)
+in (match (_36_2827) with
 | (env, modul) -> begin
 (let env = (Microsoft_FStar_Parser_DesugarEnv.finish_module_or_interface env modul)
-in (let _36_2813 = if (Microsoft_FStar_Options.should_dump modul.Microsoft_FStar_Absyn_Syntax.name.Microsoft_FStar_Absyn_Syntax.str) then begin
+in (let _36_2829 = if (Microsoft_FStar_Options.should_dump modul.Microsoft_FStar_Absyn_Syntax.name.Microsoft_FStar_Absyn_Syntax.str) then begin
 (Support.Microsoft.FStar.Util.fprint1 "%s\n" (Microsoft_FStar_Absyn_Print.modul_to_string modul))
 end
 in (env, modul)))
 end)))
 
-let desugar_file = (fun ( env ) ( f ) -> (let _36_2826 = (Support.List.fold_left (fun ( _36_2819 ) ( m ) -> (match (_36_2819) with
+let desugar_file = (fun ( env ) ( f ) -> (let _36_2842 = (Support.List.fold_left (fun ( _36_2835 ) ( m ) -> (match (_36_2835) with
 | (env, mods) -> begin
-(let _36_2823 = (desugar_modul env m)
-in (match (_36_2823) with
+(let _36_2839 = (desugar_modul env m)
+in (match (_36_2839) with
 | (env, m) -> begin
 (env, (m)::mods)
 end))
 end)) (env, []) f)
-in (match (_36_2826) with
+in (match (_36_2842) with
 | (env, mods) -> begin
 (env, (Support.List.rev mods))
 end)))
 
 let add_modul_to_env = (fun ( m ) ( en ) -> (let en = (Microsoft_FStar_Parser_DesugarEnv.prepare_module_or_interface false false en m.Microsoft_FStar_Absyn_Syntax.name)
-in (let en = (Support.List.fold_left Microsoft_FStar_Parser_DesugarEnv.push_sigelt (let _36_2830 = en
-in {Microsoft_FStar_Parser_DesugarEnv.curmodule = Some (m.Microsoft_FStar_Absyn_Syntax.name); Microsoft_FStar_Parser_DesugarEnv.modules = _36_2830.Microsoft_FStar_Parser_DesugarEnv.modules; Microsoft_FStar_Parser_DesugarEnv.open_namespaces = _36_2830.Microsoft_FStar_Parser_DesugarEnv.open_namespaces; Microsoft_FStar_Parser_DesugarEnv.sigaccum = _36_2830.Microsoft_FStar_Parser_DesugarEnv.sigaccum; Microsoft_FStar_Parser_DesugarEnv.localbindings = _36_2830.Microsoft_FStar_Parser_DesugarEnv.localbindings; Microsoft_FStar_Parser_DesugarEnv.recbindings = _36_2830.Microsoft_FStar_Parser_DesugarEnv.recbindings; Microsoft_FStar_Parser_DesugarEnv.phase = _36_2830.Microsoft_FStar_Parser_DesugarEnv.phase; Microsoft_FStar_Parser_DesugarEnv.sigmap = _36_2830.Microsoft_FStar_Parser_DesugarEnv.sigmap; Microsoft_FStar_Parser_DesugarEnv.default_result_effect = _36_2830.Microsoft_FStar_Parser_DesugarEnv.default_result_effect; Microsoft_FStar_Parser_DesugarEnv.iface = _36_2830.Microsoft_FStar_Parser_DesugarEnv.iface; Microsoft_FStar_Parser_DesugarEnv.admitted_iface = _36_2830.Microsoft_FStar_Parser_DesugarEnv.admitted_iface}) m.Microsoft_FStar_Absyn_Syntax.exports)
+in (let en = (Support.List.fold_left Microsoft_FStar_Parser_DesugarEnv.push_sigelt (let _36_2846 = en
+in {Microsoft_FStar_Parser_DesugarEnv.curmodule = Some (m.Microsoft_FStar_Absyn_Syntax.name); Microsoft_FStar_Parser_DesugarEnv.modules = _36_2846.Microsoft_FStar_Parser_DesugarEnv.modules; Microsoft_FStar_Parser_DesugarEnv.open_namespaces = _36_2846.Microsoft_FStar_Parser_DesugarEnv.open_namespaces; Microsoft_FStar_Parser_DesugarEnv.sigaccum = _36_2846.Microsoft_FStar_Parser_DesugarEnv.sigaccum; Microsoft_FStar_Parser_DesugarEnv.localbindings = _36_2846.Microsoft_FStar_Parser_DesugarEnv.localbindings; Microsoft_FStar_Parser_DesugarEnv.recbindings = _36_2846.Microsoft_FStar_Parser_DesugarEnv.recbindings; Microsoft_FStar_Parser_DesugarEnv.phase = _36_2846.Microsoft_FStar_Parser_DesugarEnv.phase; Microsoft_FStar_Parser_DesugarEnv.sigmap = _36_2846.Microsoft_FStar_Parser_DesugarEnv.sigmap; Microsoft_FStar_Parser_DesugarEnv.default_result_effect = _36_2846.Microsoft_FStar_Parser_DesugarEnv.default_result_effect; Microsoft_FStar_Parser_DesugarEnv.iface = _36_2846.Microsoft_FStar_Parser_DesugarEnv.iface; Microsoft_FStar_Parser_DesugarEnv.admitted_iface = _36_2846.Microsoft_FStar_Parser_DesugarEnv.admitted_iface}) m.Microsoft_FStar_Absyn_Syntax.exports)
 in (Microsoft_FStar_Parser_DesugarEnv.finish_module_or_interface en m))))
 
 
