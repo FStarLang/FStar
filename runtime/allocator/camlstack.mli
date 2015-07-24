@@ -1,7 +1,13 @@
 (** Stack operations
 
-  The functions here are for allocating Caml values on a manually-managed,
-  growable stack.
+    The functions here are for allocating Caml values on a
+    manually-managed, growable stack. 
+
+    No allocation can take place until the first stack frame is
+    pushed, via [Camlstack.push_frame n]. All data allocated on a
+    frame is freed when a frame is popped, via [Camlstack.pop_frame
+    ()], and it is the program's responsibility to no longer access it
+    (or data in the OCaml heap that can only be reached from it).
 *)
 
 external push_frame : int -> unit = "stack_push_frame";;
@@ -11,7 +17,10 @@ external push_frame : int -> unit = "stack_push_frame";;
     Raise [Invalid_argument "Camlstack.push_frame"] if [n] is negative. *)
 
 external pop_frame : unit -> unit = "stack_pop_frame";;
-(** Pops the topmost stackframe. 
+(** Pops the topmost stackframe. This means that all of that data is
+    now free, and the program must take care not to access it.
+    In addition, Caml heap data reachable only from that data will be
+    subsequently GCed.
     Raise [Failure "Camlstack.pop_frame"] if the stack has no frames. *)
 
 external mkpair : 'a -> 'b -> 'a*'b = "stack_mkpair";;

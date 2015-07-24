@@ -36,3 +36,26 @@ pop_frame ();;
 print_mask ();;
 
 Gc.full_major();;
+
+(* test error handling *)
+let _ = 
+  try 
+    ignore(cons "hello" [])
+  with Failure s -> 
+    Printf.printf "Tried to allocate with no frames pushed\n"
+;;
+
+let _ = 
+  try 
+    ignore(pop_frame ())
+  with Failure s -> 
+    Printf.printf "Tried to pop a frame with no frames pushed\n"
+;;
+
+let _ = 
+  try 
+    ignore(push_frame (-1))
+  with Invalid_argument s -> 
+    Printf.printf "Tried to allocate negatively-sized frame\n"
+;;
+
