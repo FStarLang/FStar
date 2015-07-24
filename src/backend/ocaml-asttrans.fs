@@ -717,7 +717,7 @@ and mllets_of_lets (mlenv : mlenv) (rg : range) (lenv : lenv) (rec_, lbs) =
         let inlenv = if rec_ then lenvb else lenv in
         List.map (fun (x, e) ->
             let mlid = lresolve lenvb x.realname in
-            (mlid, None, [], mlexpr_of_expr mlenv rg inlenv e)) lbs
+            {mllb_name=mlid; mllb_tysc=None; mllb_def=mlexpr_of_expr mlenv rg inlenv e; mllb_add_unit=false}) lbs
     in
 
     (lenvb, es)
@@ -902,7 +902,10 @@ let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
 
         let lbs = List.map downct lbs in
         let lbs = List.map (fun (x, e) ->
-            ((x.ident.idText, -1), None, [], mlexpr_of_expr mlenv rg (lenv_of_mlenv mlenv) e))
+            {mllb_name=(x.ident.idText, -1);
+             mllb_tysc=None;
+             mllb_add_unit=false;
+             mllb_def=mlexpr_of_expr mlenv rg (lenv_of_mlenv mlenv) e})
             lbs
         in
 

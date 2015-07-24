@@ -91,7 +91,7 @@ match b with
            //printfn "mapping from %A\n" btr.v.realname;
            //printfn "to %A\n" bt.v.realname;
    extend_ty c btr (Some ((MLTY_Var (btvar_as_mlident bt))))
-| (Inr bv, Inr _ ) -> extend_bv c bv ([], erasedContent)
+| (Inr bv, Inr _ ) -> extend_bv c bv ([], erasedContent) false
 | _ -> failwith "Impossible case"
 
 
@@ -102,7 +102,7 @@ let extendContextAsTyvar (availableInML : bool) (b : either<btvar,bvvar>) (c:con
 match b with
 | (Inl bt) -> extend_ty c bt (Some (if availableInML then (MLTY_Var (btvar_as_mlident bt)) else unknownType))
 //if availableInML then (extend_ty c bt (Some ( (MLTY_Var (btvar2mlident bt))))) else (extend_hidden_ty c bt unknownType)
-| (Inr bv) -> extend_bv c bv ([], erasedContent)
+| (Inr bv) -> extend_bv c bv ([], erasedContent) false
 
 let extendContext (c:context) (tyVars : list<either<btvar,bvvar>>) : context = 
    List.fold_right (extendContextAsTyvar true) (tyVars) c (*TODO: is the fold in the right direction? check *)
@@ -260,10 +260,8 @@ type typeAbbrev = {
   abBody : typ 
 }
 
-let lookupDataConType (c:context) (sigb : sigelts) (l:lident)(*this sigbundle contains the constructors, but we look inside iff Tc.Env.lookpu_datacon fails*) : typ =
-try (lookup_datacon c.tcenv l) 
-with
-_ -> let tr = 
+let lookupDataConType (c:context) (sigb : sigelts) (l:lident)(*this sigbundle contains the constructors *) : typ =
+    let tr = 
       Util.find_map sigb (fun s ->
                     match s with
                     | (Sig_datacon (l',t,tc,quals,lids,_)) -> if l=l' then Some t else None
@@ -348,10 +346,6 @@ match  (la, lb) with
 
 let mlTyIdentOfBinder (b : binder) = prependTick (convIdent (binderPPnames b))
 
-let maybe_add_unit tybs t = match tybs with
-    | [] -> t
-    | _ -> MLTY_Fun(ml_unit_ty, E_PURE, t) 
-
 let extractCtor (tyBinders : list<binder>) (c:context) (ctor: inductiveConstructor):  context * (mlsymbol * list<mlty>) =
         (let (lb, tr) = bindersOfFuntype c (List.length tyBinders) ctor.ctype in 
         assert (List.length lb = List.length tyBinders);
@@ -359,13 +353,12 @@ let extractCtor (tyBinders : list<binder>) (c:context) (ctor: inductiveConstruct
         //assert (List.length tyBinders = List.length lp);
         let newC = extendContextWithRepAsTyVars (List.map (fun (x,y) -> (fst x, fst y)) lp) c in
         let mlt = extractTyp newC tr in
-        let mlt = maybe_add_unit tyBinders mlt in
         let tys = (List.map mlTyIdentOfBinder tyBinders, mlt) in //MayErase, because constructors are always pure
         let fvv = mkFvvar ctor.cname ctor.ctype in 
             // fprint1 "(* extracting the type of constructor %s\n" (lident2mlsymbol ctor.cname);
            // fprint1 "%s\n" (typ_to_string ctor.ctype);
             // printfn "%A *)\n" (tys);
-        (extend_fv c fvv tys, (lident2mlsymbol ctor.cname, argTypes mlt)))
+        (extend_fv c fvv tys false, (lident2mlsymbol ctor.cname, argTypes mlt)))
 
 (*indices get collapsed to unit, so all we need is the number of index arguments.
   We will use dummy type variables for these in the dectaration of the inductive type.
@@ -426,7 +419,7 @@ let extractExn (c:context) (exnConstr : inductiveConstructor) : context  =
             // fprint1 "(* extracting the type of constructor %s\n" (lident2mlsymbol ctor.cname);
            // fprint1 "%s\n" (typ_to_string ctor.ctype);
              //print1 "(* datacon : %A *)\n" (tys);
-            (extend_fv c fvv tys) //this might need to be translated to OCaml exceptions
+            (extend_fv c fvv tys false) //this might need to be translated to OCaml exceptions
              //Util.print_string ("\n"^(Print.sigelt_to_string s)^"\n");
             // failwith "not yet enabled"
 

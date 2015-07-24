@@ -104,13 +104,15 @@ let rec extract_pat (g:env) p : (env * list<mlpattern>) = match p.v with
     g, [MLP_Const (mlconst_of_const s)]
 
   | Pat_cons (f, pats) -> 
-    let d, _ = Env.lookup_fv g f in
+    let d = match Env.lookup_fv g f with 
+        | MLE_Name n, _ -> n
+        | _ -> failwith "Expected a constructor" in
     let g, pats = Util.fold_map extract_pat g pats in
     g, [MLP_CTor (d, List.flatten pats)]
 
   | Pat_var(x, _) ->
     let mlty = translate_typ g x.sort in 
-    let g = Env.extend_bv g x ([], mlty) in
+    let g = Env.extend_bv g x ([], mlty) false in
     g, [MLP_Var (as_mlident x.v)]
 
   | Pat_wild _ 
@@ -165,7 +167,7 @@ and check_exp' (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr =
             let env, p = extract_pat g pat in 
             let when_opt = match when_opt with 
                 | None -> None
-                | Some w -> Some (check_exp env w E_PURE ml_bool_ty) in //when clauses are Pure in F*
+                | Some w -> Some (check_exp env w E_IMPURE ml_bool_ty) in //when clauses used to be Pure in F*; they no longer are required to be pure
             let branch = check_exp env branch f t in
             List.hd p, when_opt, branch) in
         if eff_leq f_e f
@@ -222,7 +224,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                                      (x, arg)::lbs, (MLE_Var x::out_args)) 
                         ([], []) mlargs_f in
                     let app = maybe_eta_data is_data t <| MLE_App(mlhead, mlargs) in
-                    let l_app = List.fold_right (fun (x, arg) out -> MLE_Let((false, [(x,None,[],arg)]), out)) lbs app in
+                    let l_app = List.fold_right (fun (x, arg) out -> MLE_Let((false, [{mllb_name=x; mllb_tysc=None; mllb_add_unit=false; mllb_def=arg}]), out)) lbs app in
                     l_app, f, t
 
                 | (Inl _, _)::rest, MLTY_Fun (tunit, f', t) -> //non-prefix type app; this type argument gets erased to unit
@@ -257,21 +259,9 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                    let t0 = t in 
                    let t = instantiate (vars, t) prefixAsMLTypes in
                    //debug g (fun () -> printfn "\n (*instantiating  \n %A \n with \n %A \n produced \n %A \n *) \n" (vars,t0) prefixAsMLTypes t);
-                   let t, ml_args = match vars with 
-                    | [] -> //there were no type abstractions; so no additional unit to eliminate
-                      t, []
-                    | _ ->
-                      begin match t with 
-                        | MLTY_Fun(_unit, _, t') when (_unit = ml_unit_ty) ->
-                          t', [(ml_unit, E_PURE)]
-                        
-                        | _ -> 
-                            //if we reach here, then either the translation of Exp_let is broken; or the translation of types is 
-                          failwith "Type abstractions in the context should always be erased to an ML type with a initial unit argument" 
-                      end in
                    match rest with 
                     | [] -> head, E_PURE, t
-                    | _  -> synth_app is_data (head, ml_args) (E_PURE, t) rest
+                    | _  -> synth_app is_data (head, []) (E_PURE, t) rest
               else err_uninst e
 
             | _ -> 
@@ -288,7 +278,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
               
                 | Inr x -> 
                   let t = translate_typ env x.sort in
-                  let env = Env.extend_bv env x ([], t) in
+                  let env = Env.extend_bv env x ([], t) false in
                   let ml_b = (as_mlident x.v, Some t) in
                   ml_b::ml_bs, env) ([], g) bs in
             let ml_bs = List.rev ml_bs in
@@ -309,12 +299,12 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
               match t.n with 
                 | Typ_fun(bs, c) when is_type_abstraction bs -> 
                   //need to generalize, but will erase all the type abstractions; 
-                  //so, always add an extra unit arg. to preserve order of evaluation/generativity 
+                  //If, after erasure, what remains is not a value, then add an extra unit arg. to preserve order of evaluation/generativity 
                   //and to circumvent the value restriction
                    let tbinders, tbody = 
                         match Util.prefix_until (function (Inr _, _) -> true | _ -> false) bs with 
-                            | None -> bs, mk_Typ_fun([unit_binder], c) None c.pos
-                            | Some (bs, b, rest) -> bs, mk_Typ_fun(unit_binder::b::rest, c) None c.pos in
+                            | None -> bs, Util.comp_result c
+                            | Some (bs, b, rest) -> bs, mk_Typ_fun(b::rest, c) None c.pos in
 
                    let n = List.length tbinders in
                    let e = Util.unascribe e in
@@ -333,8 +323,10 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                              let env = List.fold_left (fun env a -> Env.extend_ty env a None) g targs in
                              let expected_t = translate_typ env expected_t in
                              let polytype = targs |> List.map btvar_as_mlident, expected_t in
-                             let body = mk_Exp_abs(unit_binder::rest_args, body) None e.pos in
-                             (lbname, f_e, (t, (targs, polytype)), body)
+                             let add_unit = not (is_value body) in 
+                             let rest_args = if add_unit then unit_binder::rest_args else rest_args in
+                             let body = match rest_args with [] -> body | _ -> mk_Exp_abs(rest_args, body) None e.pos in
+                             (lbname, f_e, (t, (targs, polytype)), add_unit, body)
 
                         else (* fails to handle:
                                 let f : a:Type -> b:Type -> a -> b -> Tot (nat * a * b) = 
@@ -363,19 +355,20 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
 
                 | _ ->  (* no generalizations; TODO: normalize and retry? *)
                   let expected_t = translate_typ g t in
-                  (lbname, f_e, (t, ([], ([],expected_t))), e) in
+                  (lbname, f_e, (t, ([], ([],expected_t))), false, e) in
          
-          let check_lb env (nm, (lbname, f, (t, (targs, polytype)), e)) =
+          let check_lb env (nm, (lbname, f, (t, (targs, polytype)), add_unit, e)) =
               let env = List.fold_left (fun env a -> Env.extend_ty env a None) env targs in
-              let e = check_exp env e f (snd polytype) in
-              f, (nm, Some polytype, [], e) in
+              let expected_t = if add_unit then MLTY_Fun(ml_unit_ty, E_PURE, snd polytype) else snd polytype in
+              let e = check_exp env e f expected_t in
+              f, {mllb_name=nm; mllb_tysc=Some polytype; mllb_add_unit=add_unit; mllb_def=e} in
 
          (*after the above definitions, here is the main code for extracting let expressions*)
           let lbs = lbs |> List.map maybe_generalize in 
         
           let env_body, lbs = List.fold_right (fun lb (env, lbs) ->
-              let (lbname, _, (t, (_, polytype)), _) = lb in
-              let env, nm = Env.extend_lb env lbname t polytype in
+              let (lbname, _, (t, (_, polytype)), add_unit, _) = lb in
+              let env, nm = Env.extend_lb env lbname t polytype add_unit in
               env, (nm,lb)::lbs) lbs (g, []) in 
 
           let env_def = if is_rec then env_body else g in 
@@ -411,7 +404,7 @@ let ind_discriminator_body (discName:lident) (constrName:lident) : mlmodule1 =
                 MLE_Fun([(mlid, None)], MLE_Match(MLE_Name([], idsym mlid), [
                     MLP_CTor(mlpath_of_lident rid, [MLP_Wild]), None, MLE_Const(MLC_Bool true);
                     MLP_Wild, None, MLE_Const(MLC_Bool false)])) in
-                MLM_Let (false,[((convIdent discName.ident), None, [], discrBody) ] )
+                MLM_Let (false,[{mllb_name=convIdent discName.ident; mllb_tysc=None; mllb_add_unit=false; mllb_def=discrBody}] )
 
 
 (*

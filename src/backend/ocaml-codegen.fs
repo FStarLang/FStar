@@ -79,15 +79,15 @@ let rec in_ns = function
 (* -------------------------------------------------------------------- *)
 let path_of_ns (currentModule : mlpath) ns =
     let outsupport = fun (ns1,ns2) -> if ns1 = ns2 then [] else [String.concat "_" ns2] 
-    in outsupport ((fst currentModule) @ [snd currentModule], ns)
+//    in outsupport ((fst currentModule) @ [snd currentModule], ns)
     
-   (* in let chkin sns = if in_ns (sns, ns) then Some sns else None
+   in let chkin sns = if in_ns (sns, ns) then Some sns else None
     in match List.tryPick chkin  outmod  with
     | None -> 
         (match List.tryPick chkin (!Microsoft.FStar.Options.codegen_libs) with
          | None -> outsupport ((fst currentModule) @ [snd currentModule], ns)
          | _ -> ns)
-    | Some sns -> "Support" :: ns *)
+    | Some sns -> "Support" :: ns 
 
 let mlpath_of_mlpath (currentModule : mlpath) (x : mlpath) : mlpath =
     match string_of_mlpath x with
@@ -167,15 +167,16 @@ let prim_types = [
 
 (* -------------------------------------------------------------------- *)
 let prim_constructors = [
-    ("Some", "Some");
-    ("None", "None");
-    ("Nil", "[]");
-    ("Cons", "::");
+    ("Prims.Some", "Some");
+    ("Prims.None", "None");
+    ("Prims.Nil", "[]");
+    ("Prims.Cons", "::");
 ]
 
 (* -------------------------------------------------------------------- *)
 let is_prims_ns (ns : list<mlsymbol>) =
-    ns = [(*"Fstar";*) "Support"; "Prims"]
+    ns = [(*"Fstar";*) //"Support";
+         "Prims"]
 
 (* -------------------------------------------------------------------- *)
 let as_bin_op ((ns, x) : mlpath) =
@@ -530,8 +531,12 @@ and doc_of_branch (currentModule: mlpath) ((p, cond, e) : mlbranch) : doc =
 
 (* -------------------------------------------------------------------- *)
 and doc_of_lets (currentModule: mlpath) (rec_, lets) =
-    let for1 (name, tys, ids, e) =
+    let for1 {mllb_name=name; mllb_tysc=tys; mllb_def=e} =
         let e   = doc_of_expr currentModule  (min_op_prec, NonAssoc) e in
+        let ids = [] in //TODO: maybe extract the top-level binders from e and print it alongside name
+        //let f x = x
+        //let f = fun x -> x
+        //i.e., print the latter as the former
         let ids = List.map (fun (x, _) -> text x) ids in
         reduce1 [text (idsym name); reduce1 ids; text "="; e] in
 

@@ -44,7 +44,7 @@ let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> =
           let ml_let, _, _ = ExtractExp.synth_exp g elet in
           begin match ml_let with 
             | MLE_Let(ml_lbs, _) -> 
-              let g = List.fold_left2 (fun env (id, poly_t, _, _) {lbname=lbname; lbtyp=t} -> fst <| Env.extend_lb env lbname t (must poly_t))
+              let g = List.fold_left2 (fun env mllb {lbname=lbname; lbtyp=t} -> fst <| Env.extend_lb env lbname t (must mllb.mllb_tysc) mllb.mllb_add_unit)
                       g (snd ml_lbs) (snd lbs) in 
               g, [MLM_Let ml_lbs]
             | _ -> //printfn "%A\n" ml_let; 

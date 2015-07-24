@@ -25,8 +25,8 @@ open Microsoft.FStar.Tc
 
 type binding = 
     | Ty  of btvar * mlident * mlty           //a, 'a, ('a | Top)  
-    | Bv  of bvvar * mlident * mltyscheme     //x,  x, translation (typeof x)
-    | Fv  of fvvar * mlpath * mltyscheme     //f,  f, translation (typeof f)
+    | Bv  of bvvar * mlexpr * mltyscheme     //x,  x, translation (typeof x)
+    | Fv  of fvvar * mlexpr * mltyscheme     //f,  f, translation (typeof f)
 
 type env = {
     tcenv:Tc.Env.env;
@@ -95,7 +95,7 @@ let lookup_ty_const (env:env) ((module_name, ty_name):mlpath) : option<mltyschem
 
 let lookup_tyvar (g:env) (bt:btvar) : mlty = lookup_ty_local g.gamma bt
 
-let lookup_fv (g:env) (fv:fvvar) : mlpath * mltyscheme = 
+let lookup_fv (g:env) (fv:fvvar) : mlexpr * mltyscheme = 
     let x = Util.find_map g.gamma (function 
         | Fv (fv', path, sc) when lid_equals fv.v fv'.v -> Some (path, sc)
         | _ -> None) in
@@ -103,7 +103,7 @@ let lookup_fv (g:env) (fv:fvvar) : mlpath * mltyscheme =
         | None -> failwith (Util.format2 "(%s) free Variable %s not found\n" (Range.string_of_range fv.p) (Print.sli fv.v))
         | Some y -> y
 
-let lookup_bv (g:env) (bv:bvvar) : mlident * mltyscheme = 
+let lookup_bv (g:env) (bv:bvvar) : mlexpr * mltyscheme = 
     let x = Util.find_map g.gamma (function 
         | Bv (bv', id, sc) when Util.bvar_eq bv bv' -> Some (id, sc)
         | _ -> None) in
@@ -114,8 +114,8 @@ let lookup_bv (g:env) (bv:bvvar) : mlident * mltyscheme =
 
 let lookup  (g:env) (x:either<bvvar,fvvar>) : (mlexpr * mltyscheme) = 
     match x with 
-        | Inl x -> let id, t = lookup_bv g x in MLE_Var id, t
-        | Inr x -> let id, t = lookup_fv g x in MLE_Name id, t
+        | Inl x -> lookup_bv g x
+        | Inr x -> lookup_fv g x 
 
 let lookup_var g e = match e.n with 
     | Exp_bvar x -> (lookup g (Inl x),false)
@@ -140,8 +140,10 @@ let extend_ty (g:env) (a:btvar) (mapped_to:option<mlty>) : env =
     let tcenv = Env.push_local_binding g.tcenv (Env.Binding_typ(a.v, a.sort)) in
     {g with gamma=gamma; tcenv=tcenv} 
     
-let extend_bv (g:env) (x:bvvar) (t_x:mltyscheme) : env =
-    let gamma = Bv(x, as_mlident x.v, t_x)::g.gamma in 
+let extend_bv (g:env) (x:bvvar) (t_x:mltyscheme) (add_unit:bool) : env =
+    let mlx = MLE_Var (as_mlident x.v) in
+    let mlx = if add_unit then MLE_App(mlx, [ml_unit]) else mlx in
+    let gamma = Bv(x, mlx, t_x)::g.gamma in 
     let tcenv = Env.push_local_binding g.tcenv (Env.Binding_var(x.v, x.sort)) in
     {g with gamma=gamma; tcenv=tcenv} 
 
@@ -159,39 +161,35 @@ let rec subsetMlidents (la : list<mlident>) (lb : list<mlident>)  : bool =
     | h::tla -> List.contains h lb && subsetMlidents tla lb
     | [] -> true
 
-let tySchemeIsOk (tys : mltyscheme) : bool =
-    let is_closed = subsetMlidents  (mltyFvars (snd tys)) (fst tys) in
-    let is_unit_abstraction = match fst tys with 
-        | [] -> true
-        | _ -> (match snd tys with 
-                    | MLTY_Fun(u, _, _) -> u = ml_unit_ty
-                    | _ -> false) in
-   is_closed && is_unit_abstraction
-                     
-let extend_fv' (g:env) (x:fvvar) (y:mlpath) (t_x:mltyscheme) : env =
-    if  tySchemeIsOk t_x
+let tySchemeIsClosed (tys : mltyscheme) : bool =
+    subsetMlidents  (mltyFvars (snd tys)) (fst tys) 
+                   
+let extend_fv' (g:env) (x:fvvar) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) : env =
+    if  tySchemeIsClosed t_x
     then 
-        let gamma = Fv(x, y, t_x)::g.gamma in 
+        let mly = MLE_Name y in 
+        let mly = if add_unit then MLE_App(mly, [ml_unit]) else mly in
+        let gamma = Fv(x, mly, t_x)::g.gamma in 
         let tcenv = Env.push_local_binding g.tcenv (Env.Binding_lid(x.v, x.sort)) in
         {g with gamma=gamma; tcenv=tcenv} 
     else let _ = printfn  "(* type scheme of \n %A \n is not closed or misses an unit argument: \n %A *) \n"  x.v.ident t_x in
          failwith "freevars found"
 
-let extend_fv (g:env) (x:fvvar) (t_x:mltyscheme) : env =
+let extend_fv (g:env) (x:fvvar) (t_x:mltyscheme) (add_unit:bool) : env =
     let mlp = (mlpath_of_lident x.v) in 
     // the mlpath cannot be determined here. it can be determined at use site, depending on the name of the module where it is used
     // so this conversion should be moved to lookup_fv
 
     //let _ = printfn "(* old name  \n %A \n new name \n %A \n name in dependent module \n %A \n *) \n"  (Backends.ML.Syntax.mlpath_of_lident x.v) mlp (mlpath_of_lident ([],"SomeDepMod") x.v) in
-    extend_fv' g x mlp t_x
+    extend_fv' g x mlp t_x add_unit
 
-let extend_lb (g:env) (l:lbname) (t:typ) (t_x:mltyscheme) : (env * mlident) = 
+let extend_lb (g:env) (l:lbname) (t:typ) (t_x:mltyscheme) (add_unit:bool) : (env * mlident) = 
     match l with 
         | Inl x -> 
-          extend_bv g (Util.bvd_to_bvar_s x t) t_x, as_mlident x
+          extend_bv g (Util.bvd_to_bvar_s x t) t_x add_unit, as_mlident x
         | Inr f -> 
           let p, y = mlpath_of_lident f in
-          extend_fv' g (Util.fvvar_of_lid f t) (p, y) t_x, (y,0)
+          extend_fv' g (Util.fvvar_of_lid f t) (p, y) t_x add_unit, (y,0)
 
 let extend_tydef (g:env) (td:mltydecl) : env = 
     let m = fst (g.currentModule) @ [snd g.currentModule] in
@@ -206,5 +204,5 @@ let emptyMlPath : mlpath = ([],"")
 let mkContext (e:Tc.Env.env) : env =
    let env = { tcenv = e; gamma =[] ; tydefs =[]; erasableTypes = erasableType_init; currentModule = emptyMlPath} in
    let a = "'a", -1 in
-   let failwith_ty = ([a], MLTY_Fun(ml_unit_ty, E_PURE, MLTY_Fun(MLTY_Named([], (["Prims"], "string")), E_IMPURE, MLTY_Var a))) in
-   extend_lb env (Inr Const.failwith_lid) tun failwith_ty |> fst
+   let failwith_ty = ([a], MLTY_Fun(MLTY_Named([], (["Prims"], "string")), E_IMPURE, MLTY_Var a)) in
+   extend_lb env (Inr Const.failwith_lid) tun failwith_ty false |> fst

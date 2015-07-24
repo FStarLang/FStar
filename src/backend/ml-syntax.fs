@@ -84,7 +84,14 @@ type mlexpr =
 
 and mlbranch = mlpattern * option<mlexpr> * mlexpr
 
-and mlletbinding = bool * list<(mlident * option<mltyscheme> * mlidents * mlexpr)>
+and mllb = {
+    mllb_name:mlident;
+    mllb_tysc:option<mltyscheme>;
+    mllb_add_unit:bool;
+    mllb_def:mlexpr;
+}
+
+and mlletbinding = bool * list<mllb>
 
 type mltybody =
 | MLTD_Abbrev of mlty
