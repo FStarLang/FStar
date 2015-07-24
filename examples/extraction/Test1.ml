@@ -21,22 +21,24 @@ end
 false
 end))
 
+let isPositive = is_S
+
 let idnat = (fun ( x  :  nnat ) -> x)
 
 let idnat2 = (fun ( x  :  nnat ) -> x)
 
-let id = (fun ( _1_741  :  unit ) ( x  :  'a ) -> x)
+let id = (fun ( _1_746  :  unit ) ( x  :  'a ) -> x)
 
-let idp = (fun ( _1_741  :  unit ) ( x  :  Obj.t ) -> x)
+let idp = (fun ( _1_746  :  unit ) ( x  :  Obj.t ) -> x)
 
-let idp' = (fun ( _1_741  :  unit ) ( x  :  'a ) -> x)
+let idp' = (fun ( _1_746  :  unit ) ( x  :  'a ) -> x)
 
 let add1 = (fun ( a  :  nnat ) -> S (a))
 
-let add2 = (fun ( _1_2095  :  nnat ) -> S (_1_2095))
+let add2 = (fun ( _1_2101  :  nnat ) -> S (_1_2101))
 
-let eval_order = (fun ( effectful  :  string  ->  string ) ( f  :  string  ->  string  ->  string ) -> (let _1_2115 = (effectful "first")
-in (f _1_2115 "second")))
+let eval_order = (fun ( effectful  :  string  ->  string ) ( f  :  string  ->  string  ->  string ) -> (let _1_2121 = (effectful "first")
+in (f _1_2121 "second")))
 
 let prev = (fun ( _1_1  :  nnat ) -> (match (_1_1) with
 | O -> begin
