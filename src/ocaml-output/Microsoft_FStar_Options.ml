@@ -139,6 +139,8 @@ let split_cases = (Support.Microsoft.FStar.Util.mk_ref 0)
 
 let _include_path = (Support.Microsoft.FStar.Util.mk_ref [])
 
+let interactive_fsi = (Support.Microsoft.FStar.Util.mk_ref false)
+
 let init_options = (fun ( _11_25 ) -> (match (_11_25) with
 | () -> begin
 (let _11_26 = (Support.ST.op_Colon_Equals show_signatures [])
@@ -343,8 +345,11 @@ end))), "Do not allow the use of t<t1,...,tn> syntax for type applications"))::(
 end))), "Expect just a single file on the command line and no options; will read the \'build-config\' prelude from the file"))::((Support.Microsoft.FStar.Getopt.noshort, "split_cases", Support.Microsoft.FStar.Getopt.OneArg (((fun ( n ) -> (Support.ST.op_Colon_Equals split_cases (Support.Microsoft.FStar.Util.int_of_string n))), "t")), "Partition VC of a match into groups of n cases"))::((Support.Microsoft.FStar.Getopt.noshort, "in", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun ( _11_204 ) -> (match (_11_204) with
 | () -> begin
 (Support.ST.op_Colon_Equals interactive true)
-end))), "Interactive mode; reads input from stdin"))::((Support.Microsoft.FStar.Getopt.noshort, "include", Support.Microsoft.FStar.Getopt.OneArg (((fun ( s ) -> (Support.ST.op_Colon_Equals _include_path (Support.List.append (! (_include_path)) ((s)::[])))), "path")), "A directory in which to search for files included on the command line"))::[]
-in (('h', "help", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun ( x ) -> (let _11_208 = (display_usage specs)
+end))), "Interactive mode; reads input from stdin"))::((Support.Microsoft.FStar.Getopt.noshort, "include", Support.Microsoft.FStar.Getopt.OneArg (((fun ( s ) -> (Support.ST.op_Colon_Equals _include_path (Support.List.append (! (_include_path)) ((s)::[])))), "path")), "A directory in which to search for files included on the command line"))::((Support.Microsoft.FStar.Getopt.noshort, "fsi", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun ( _11_206 ) -> (match (_11_206) with
+| () -> begin
+(set_interactive_fsi ())
+end))), "fsi flag; A flag to indicate if type checking a fsi in the interactive mode"))::[]
+in (('h', "help", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun ( x ) -> (let _11_209 = (display_usage specs)
 in (exit (0))))), "Display this information"))::specs)
 end))
 and parse_codegen = (fun ( s ) -> (match (s) with
@@ -352,10 +357,17 @@ and parse_codegen = (fun ( s ) -> (match (s) with
 Some (s)
 end
 | _ -> begin
-(let _11_215 = (Support.Microsoft.FStar.Util.print_string "Wrong argument to codegen flag\n")
-in (let _11_217 = (display_usage (specs ()))
+(let _11_216 = (Support.Microsoft.FStar.Util.print_string "Wrong argument to codegen flag\n")
+in (let _11_218 = (display_usage (specs ()))
 in (exit (1))))
 end))
+and set_interactive_fsi = (fun ( _11_220 ) -> if (! (interactive)) then begin
+(Support.ST.op_Colon_Equals interactive_fsi true)
+end else begin
+(let _11_222 = (Support.Microsoft.FStar.Util.print_string "Set interactive flag first before setting interactive fsi flag\n")
+in (let _11_224 = (display_usage (specs ()))
+in (exit (1))))
+end)
 
 let should_verify = (fun ( m ) -> ((! (verify)) && (match ((! (verify_module))) with
 | [] -> begin
@@ -365,13 +377,13 @@ end
 (Support.List.contains m l)
 end)))
 
-let set_options = (fun ( s ) -> (Support.Microsoft.FStar.Getopt.parse_string (specs ()) (fun ( _11_223 ) -> ()) s))
+let set_options = (fun ( s ) -> (Support.Microsoft.FStar.Getopt.parse_string (specs ()) (fun ( _11_230 ) -> ()) s))
 
 let reset_options_string = (ref None)
 
-let reset_options = (fun ( _11_225 ) -> (match (_11_225) with
+let reset_options = (fun ( _11_232 ) -> (match (_11_232) with
 | () -> begin
-(let _11_226 = (init_options ())
+(let _11_233 = (init_options ())
 in (match ((! (reset_options_string))) with
 | Some (x) -> begin
 (set_options x)
