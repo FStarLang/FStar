@@ -79,20 +79,22 @@ let rec in_ns = function
 (* -------------------------------------------------------------------- *)
 let path_of_ns (currentModule : mlpath) ns =
     let outsupport = fun (ns1,ns2) -> if ns1 = ns2 then [] else [String.concat "_" ns2] 
-//    in outsupport ((fst currentModule) @ [snd currentModule], ns)
-    
+    //in outsupport ((fst currentModule) @ [snd currentModule], ns)
+
    in let chkin sns = if in_ns (sns, ns) then Some sns else None
     in match List.tryPick chkin  outmod  with
     | None -> 
         (match List.tryPick chkin (!Microsoft.FStar.Options.codegen_libs) with
          | None -> outsupport ((fst currentModule) @ [snd currentModule], ns)
          | _ -> ns)
-    | Some sns -> "Support" :: ns 
+    | Some sns ->  "Support" :: ns 
+
 
 let mlpath_of_mlpath (currentModule : mlpath) (x : mlpath) : mlpath =
     match string_of_mlpath x with
     | "Prims.Some" -> ([], "Some")
     | "Prims.None" -> ([], "None")
+//    | "Prims.nat" -> ([], "int")
 //    | "Prims.list" -> ([], "list") // was not there in old code
 //    | "Prims.Nil" -> ([], "Nil") // was not there in old code
 //   | "Prims.Cons" -> ([], "Cons") // was not there in old code
@@ -110,13 +112,16 @@ let mlpath_of_mlpath (currentModule : mlpath) (x : mlpath) : mlpath =
         (path_of_ns currentModule ns, x)
       end
 
+let ptsym_of_symbol (s : mlsymbol) : mlsymbol =
+        if Char.lowercase (String.get s 0) <> String.get s 0 then "l__" ^ s else s
+
 let ptsym (currentModule : mlpath) (mlp : mlpath) : mlsymbol =
     if (List.isEmpty (fst mlp))
-    then snd  mlp
+    then ptsym_of_symbol (snd  mlp)
     else
         let (p, s) = mlpath_of_mlpath currentModule mlp in
-        let s = if Char.lowercase (String.get s 0) <> String.get s 0 then "l__" ^ s else s in
-        String.concat "." (p @ [s])
+        String.concat "." (p @ [ptsym_of_symbol s])
+
 
 let ptctor (currentModule : mlpath) (mlp : mlpath) : mlsymbol =
     let (p, s) = mlpath_of_mlpath currentModule mlp in
