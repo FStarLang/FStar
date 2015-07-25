@@ -1,5 +1,7 @@
 #include "bitmask.h"
 
+/* See bitmask.h for explanations of the functions. */
+
 void eachbit(unsigned char *map, int maxbit, bitfun f, void *env) {
   int i;
   int maplen = maxbit / 8;
@@ -13,7 +15,7 @@ void eachbit(unsigned char *map, int maxbit, bitfun f, void *env) {
       k = k << 1;
     }
   }
-  /* The last fraction of the mask; probably could do this
+  /* XXX: The last fraction of the mask; probably could do this
      with less code duplication ... */
   if ((maxbit % 8) != 0) {
     unsigned char v = map[maplen];
