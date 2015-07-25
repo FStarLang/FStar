@@ -20,30 +20,13 @@
 #include "stack.h"
 #include "bitmask.h"
 
+/* Utility routines */
+
 #define check(_p) if (!(_p)) { fprintf(stderr,"Failed check %s:%d\n",__FILE__,__LINE__); fflush(stdout); exit(1); }
 #define assert check
 #define max(a,b) (a>b?a:b)
 
 #define WORD_SZB sizeof(void*)
-
-//a stack of pages represented as a linked list with downward (popward) links 
-// One page can store many F* stack frames. One F* stack frame can span many pages?
-typedef struct _Page {
-  void* memory; // returned by malloc. the region between thiz.memory and this.limit_ptr can be used for storing client's data
-  void* alloc_ptr; // the absolute position within this.memory where the next allocation will happen
-  void* limit_ptr;
-  void** frame_ptr; //location of frame pointer?
-  struct _Page *prev;
-  unsigned char pointermap[0];
-} Page;
-
-#define EXT_MARKER (void **)0x1
-
-/* INVARIANTS:
-   frame_ptr == NULL || frame_ptr == EXT_MARKER || location of stored frameptr
- */
-
-static Page *top = NULL;
 
 static inline int align(int n, int blocksize) {
   return n % blocksize == 0 ? n : blocksize * ((n / blocksize) + 1);
@@ -57,10 +40,39 @@ static inline int byte_align(int bits) {
   return align(bits,8);
 }
 
+/* 
+   A stack is implemented as a list of pages, where the front of the list
+   is the top of the stack. One page can store many frames and a frame
+   can span multiple pages. Allocation is always word aligned.
+*/
+
+typedef struct _Page {
+  void* memory; /* contains the memory for this page; returned by malloc() */
+  void* alloc_ptr; /* the allocation pointer (within the page memory) */
+  void* limit_ptr; /* the limit pointer (points to the end of memory) */
+  void** frame_ptr; /* points to the base of the current frame, in the memory */
+    /* frame_ptr == NULL implies this is the topmost frame of the current page */
+    /* frame_ptr == EXT_MARKER implies this frame begins on the prior page */
+    /* frame_ptr == p implies p points to the base of the frame in the page's memory */
+  struct _Page *prev; /* points to the previous page on the stack */
+  unsigned char pointermap[0]; /* contains a bitmask that identifies all pointers on this page. */
+    /* this map is only valid for memory in the range [memory -- alloc_ptr]; outside
+       that range it is garbage. Also, the map is at word granularity. */
+} Page;
+
+#define EXT_MARKER (void **)0x1
+
+/* The top of the stack */
+static Page *top = NULL;
+
+/* [have_space(b)] returns 1 iff there exist [b] bytes available to allocate on the current page */
 static inline int have_space(int sz_b) {
   return (((unsigned long)top->limit_ptr - (unsigned long)top->alloc_ptr) >= sz_b);
 }
 
+/* [add_page(b,e)] pushes a new page on the stack, where the page should have at least
+   [b] bytes. If [e] is 1, then this page is extending a frame begun on the previous page.
+   Otherwise the page coincides with the start of a new frame. */
 static void add_page(int sz_b, int is_ext) {
   sz_b = word_align(max(2*sz_b,DEFAULT_PAGE_SZB));
   int mapsz_b = byte_align(sz_b/WORD_SZB)/8;
@@ -77,6 +89,13 @@ static void add_page(int sz_b, int is_ext) {
   top = region;
 }
 
+/* [push_frame(b)] pushes a new frame on the stack. It attempts to add that
+   frame to the current page, if there is space. In that case, it stores the current
+   frame pointers at the allocation pointer, updates the frame pointer to point to
+   that location, and then advances the allocation pointer (as in a C function call). 
+   It also clears the pointermap for the frame pointer's storage. If insufficient
+   space exists on the current page to support the frame, then a new page is 
+   allocated, establishing the new frame. */
 void push_frame(int sz_b) {
   assert(sz_b >= 0);  
   sz_b = word_align(sz_b);
