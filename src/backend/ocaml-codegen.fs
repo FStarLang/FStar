@@ -51,7 +51,7 @@ let outmod = [
     ["String"];
     ["Char"];
     ["Bytes"];
-    ["List"];
+   // ["List"]; this was not commented before
     ["Array"];
     ["Set"];
     ["Map"];
@@ -93,12 +93,12 @@ let mlpath_of_mlpath (currentModule : mlpath) (x : mlpath) : mlpath =
     match string_of_mlpath x with
     | "Prims.Some" -> ([], "Some")
     | "Prims.None" -> ([], "None")
-    | "Prims.list" -> ([], "list") // was not there in old code
-    | "Prims.Nil" -> ([], "Nil") // was not there in old code
-    | "Prims.Cons" -> ([], "Cons") // was not there in old code
-    | "Prims.int" -> ([], "int") // was not there in old code
-    | "Prims.unit" -> ([], "unit") // was not there in old code
-    | "Prims.string" -> ([], "string") // was not there in old code
+//    | "Prims.list" -> ([], "list") // was not there in old code
+//    | "Prims.Nil" -> ([], "Nil") // was not there in old code
+//   | "Prims.Cons" -> ([], "Cons") // was not there in old code
+//    | "Prims.int" -> ([], "int") // was not there in old code
+//    | "Prims.unit" -> ([], "unit") // was not there in old code
+//    | "Prims.string" -> ([], "string") // was not there in old code
     | "Prims.failwith" -> ([], "failwith")
     | "ST.alloc" -> ([], "ref")
     | "ST.read" -> (["Support";"Prims"], "op_Bang")
@@ -167,10 +167,10 @@ let prim_types = [
 
 (* -------------------------------------------------------------------- *)
 let prim_constructors = [
-    ("Prims.Some", "Some");
-    ("Prims.None", "None");
-    ("Prims.Nil", "[]");
-    ("Prims.Cons", "::");
+    ("Some", "Some");
+    ("None", "None");
+    ("Nil", "[]");
+    ("Cons", "::");
 ]
 
 (* -------------------------------------------------------------------- *)
@@ -396,6 +396,13 @@ let rec doc_of_expr (currentModule: mlpath) (outer : level) (e : mlexpr) : doc =
     | MLE_App (e, args) -> begin
         match e, args with
         | (MLE_Name p, [e1; e2]) when is_bin_op p ->
+            let (_, prio, txt) = Option.get (as_bin_op p) in
+            let e1  = doc_of_expr  currentModule (prio, Left ) e1 in
+            let e2  = doc_of_expr  currentModule (prio, Right) e2 in
+            let doc = reduce1 [e1; text txt; e2] in
+            parens doc
+
+        | (MLE_App ((MLE_Name p),[unitVal]), [e1; e2]) when (is_bin_op p && unitVal=ml_unit) ->
             let (_, prio, txt) = Option.get (as_bin_op p) in
             let e1  = doc_of_expr  currentModule (prio, Left ) e1 in
             let e2  = doc_of_expr  currentModule (prio, Right) e2 in
