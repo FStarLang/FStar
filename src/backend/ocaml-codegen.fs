@@ -333,6 +333,7 @@ let rec doc_of_mltype (currentModule: mlpath) (outer : level) (ty : mlty) =
     | MLTY_Top -> 
       text "Obj.t" //TODO: change this to 'obj' if we're generating F#
 
+
 (* -------------------------------------------------------------------- *)
 let rec doc_of_expr (currentModule: mlpath) (outer : level) (e : mlexpr) : doc =
     match e with
@@ -395,25 +396,14 @@ let rec doc_of_expr (currentModule: mlpath) (outer : level) (e : mlexpr) : doc =
 
     | MLE_App (e, args) -> begin
         match e, args with
-        | (MLE_Name p, [e1; e2]) when is_bin_op p ->
-            let (_, prio, txt) = Option.get (as_bin_op p) in
-            let e1  = doc_of_expr  currentModule (prio, Left ) e1 in
-            let e2  = doc_of_expr  currentModule (prio, Right) e2 in
-            let doc = reduce1 [e1; text txt; e2] in
-            parens doc
+        | (MLE_Name p, [e1; e2]) when is_bin_op p -> doc_of_binop currentModule p e1 e2
 
         | (MLE_App ((MLE_Name p),[unitVal]), [e1; e2]) when (is_bin_op p && unitVal=ml_unit) ->
-            let (_, prio, txt) = Option.get (as_bin_op p) in
-            let e1  = doc_of_expr  currentModule (prio, Left ) e1 in
-            let e2  = doc_of_expr  currentModule (prio, Right) e2 in
-            let doc = reduce1 [e1; text txt; e2] in
-            parens doc
+                     doc_of_binop currentModule p e1 e2
 
-        | (MLE_Name p, [e1]) when is_uni_op p ->
-            let (_, txt) = Option.get (as_uni_op p) in
-            let e1  = doc_of_expr  currentModule  (min_op_prec, NonAssoc ) e1 in
-            let doc = reduce1 [text txt; parens e1] in
-            parens doc
+        | (MLE_Name p, [e1]) when is_uni_op p -> doc_of_uniop currentModule p e1
+
+        | (MLE_App ((MLE_Name p),[unitVal]), [e1]) when (is_uni_op p  && unitVal=ml_unit) -> doc_of_uniop currentModule p e1
 
         | _ ->
             let e    = doc_of_expr  currentModule (e_app_prio, ILeft) e in
@@ -478,7 +468,18 @@ let rec doc_of_expr (currentModule: mlpath) (outer : level) (e : mlexpr) : doc =
             reduce1 [text "end"; text "with"];
             (combine hardline (List.map (doc_of_branch currentModule) pats))
         ]
+and  doc_of_binop currentModule p e1 e2 : doc =
+        let (_, prio, txt) = Option.get (as_bin_op p) in
+        let e1  = doc_of_expr  currentModule (prio, Left ) e1 in
+        let e2  = doc_of_expr  currentModule (prio, Right) e2 in
+        let doc = reduce1 [e1; text txt; e2] in
+        parens doc
 
+and  doc_of_uniop currentModule p e1  : doc =
+        let (_, txt) = Option.get (as_uni_op p) in
+        let e1  = doc_of_expr  currentModule  (min_op_prec, NonAssoc ) e1 in
+        let doc = reduce1 [text txt; parens e1] in
+        parens doc
 (* -------------------------------------------------------------------- *)
 and doc_of_pattern (currentModule: mlpath) (pattern : mlpattern) : doc =
     match pattern with

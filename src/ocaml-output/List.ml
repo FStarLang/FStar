@@ -14,7 +14,7 @@ let hd = (fun ( _47_392  :  unit ) ( _3_1  :  'a list ) -> (match (_3_1) with
 hd
 end
 | _ -> begin
-((failwith (())) "head of empty list")
+(failwith ("head of empty list"))
 end))
 
 let tail = (fun ( _47_392  :  unit ) -> (fun ( _3_2  :  '_3_748 list ) -> (match (_3_2) with
@@ -22,7 +22,7 @@ let tail = (fun ( _47_392  :  unit ) -> (fun ( _3_2  :  '_3_748 list ) -> (match
 tl
 end
 | _ -> begin
-((failwith (())) "tail of empty list")
+(failwith ("tail of empty list"))
 end)))
 
 let tl = (fun ( _47_392  :  unit ) -> (tail ()))
@@ -39,14 +39,14 @@ let lengthT = (fun ( _47_392  :  unit ) -> (length ()))
 
 let rec nth = (fun ( _47_392  :  unit ) ( l  :  'a list ) ( n  :  int ) -> (match ((n < 0)) with
 | true -> begin
-((failwith (())) "nth takes a non-negative integer as input")
+(failwith ("nth takes a non-negative integer as input"))
 end
 | false -> begin
 (match ((n = 0)) with
 | true -> begin
 (match (l) with
 | [] -> begin
-((failwith (())) "not enough elements")
+(failwith ("not enough elements"))
 end
 | hd::_ -> begin
 hd
@@ -55,7 +55,7 @@ end
 | false -> begin
 (match (l) with
 | [] -> begin
-((failwith (())) "not enough elements")
+(failwith ("not enough elements"))
 end
 | _::tl -> begin
 ((nth ()) tl n)
@@ -212,7 +212,7 @@ in (let _47_1737 = ((map2 ()) f tl1 tl2)
 in (_47_1738)::_47_1737))
 end
 | Support.Prims.MkTuple2 (_, _) -> begin
-((failwith (())) "The lists do not have the same length")
+(failwith ("The lists do not have the same length"))
 end))
 
 let rec map3 = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b  ->  'c  ->  'd ) ( l1  :  'a list ) ( l2  :  'b list ) ( l3  :  'c list ) -> (match (Support.Prims.MkTuple3 (l1, l2, l3)) with
@@ -225,7 +225,7 @@ in (let _47_1752 = ((map3 ()) f tl1 tl2 tl3)
 in (_47_1753)::_47_1752))
 end
 | Support.Prims.MkTuple3 (_, _, _) -> begin
-((failwith (())) "The lists do not have the same length")
+(failwith ("The lists do not have the same length"))
 end))
 
 let rec fold_left = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b  ->  'a ) ( x  :  'a ) ( y  :  'b list ) -> (match (y) with
@@ -254,7 +254,7 @@ end
 in ((fold_left2 ()) f _47_1786 tl1 tl2))
 end
 | Support.Prims.MkTuple2 (_, _) -> begin
-((failwith (())) "The lists do not have the same length")
+(failwith ("The lists do not have the same length"))
 end))
 
 let rec fold_right = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b  ->  'b ) ( l  :  'a list ) ( x  :  'b ) -> (match (l) with
@@ -395,7 +395,7 @@ false
 end)
 end
 | Support.Prims.MkTuple2 (_, _) -> begin
-((failwith (())) "The lists do not have the same length")
+(failwith ("The lists do not have the same length"))
 end))
 
 let rec collect = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b list ) ( l  :  'a list ) -> (match (l) with
@@ -594,7 +594,7 @@ end
 in (Support.Prims.MkTuple2 (hd1, hd2))::_47_1950)
 end
 | Support.Prims.MkTuple2 (_, _) -> begin
-((failwith (())) "The lists do not have the same length")
+(failwith ("The lists do not have the same length"))
 end))
 
 let rec zip3 = (fun ( _47_392  :  unit ) ( l1  :  'a list ) ( l2  :  'b list ) ( l3  :  'c list ) -> (match (Support.Prims.MkTuple3 (l1, l2, l3)) with
@@ -606,7 +606,7 @@ end
 in (Support.Prims.MkTuple3 (hd1, hd2, hd3))::_47_1954)
 end
 | Support.Prims.MkTuple3 (_, _, _) -> begin
-((failwith (())) "The lists do not have the same length")
+(failwith ("The lists do not have the same length"))
 end))
 
 let rec sortWith = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'a  ->  int ) ( _3_12  :  'a list ) -> (match (_3_12) with
