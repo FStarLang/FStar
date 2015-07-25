@@ -10,7 +10,7 @@ let rec mklist n =
   if n = 0 then []
   else
     let l = mklist (n-1) in
-    cons (n::[1;2;3]) l
+    cons (n::[1;2;3]) l (* allocates a list on the stack, where the list elements point to heap-allocated lists *)
 
 let rec string_of_list l p =
   match l with

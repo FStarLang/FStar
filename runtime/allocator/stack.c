@@ -112,6 +112,16 @@ void push_frame(int sz_b) {
   }
 }
 
+/* [pop_frame()] pops the current frame. If this is the last frame on
+   the page, then there is one of two situations. If the frame is not
+   the last on this page, then we reset the frame pointer to the saved
+   one, a change the allocation pointer to the frame pointer (as when
+   returning from a C function call). Otherwise, the frame is the last
+   on the page and either started on the page (in which case
+   top->frame_ptr is NULL), or started on a previous page (in which
+   case top->frame is EXT_MARKER). In this case, we free the page and
+   the associated memory, and pop it from the stack. If the frame is a
+   continuation, we also have to pop it on the previous page.  */
 int pop_frame() {
   if (top == NULL) return -1;
   if (top->frame_ptr != NULL && top->frame_ptr != EXT_MARKER) {
@@ -137,6 +147,16 @@ int pop_frame() {
   return 0;
 }
 
+/* [stack_alloc_maskp(s,n,m)] allocates [s] bytes in the current
+   frame. Of these bytes, there are [n] words that contain pointers,
+   as defined by the mask [m]. This mask is an array of integers
+   indicating the word-sized offsets in the memory that begin the
+   pointers. If the current page has enough memory, we simply
+   bump the allocation pointer; otherwise, we allocate another
+   page and extend the frame onto that page. The pointermap for
+   the allocated memory is set to 0, and then the bits in the mask
+   are set.
+ */
 void *stack_alloc_maskp(int sz_b, int nbits, int *mask) {
   if (top == NULL) return NULL;
   sz_b = word_align(sz_b);
@@ -158,6 +178,8 @@ void *stack_alloc_maskp(int sz_b, int nbits, int *mask) {
   }
 }
 
+/* vstack_alloc_mask variable-argument wrapper around the stack
+   allocation routine. */
 void *vstack_alloc_mask(int sz_b, int nbits, va_list argp) {
   int buf[256];
   int i;
@@ -169,6 +191,8 @@ void *vstack_alloc_mask(int sz_b, int nbits, va_list argp) {
   return stack_alloc_maskp(sz_b,nbits,buf);
 }  
 
+/* vstack_alloc_mask variable-argument wrapper around the stack
+   allocation routine. */
 void *stack_alloc_mask(int sz_b, int nbits, ...) {
   va_list argp;
   void *result;
@@ -178,10 +202,14 @@ void *stack_alloc_mask(int sz_b, int nbits, ...) {
   return result;
 }
 
+/* stack_alloc is a special case of stack allocation that allocates
+   memory that contains no pointers. */
 void *stack_alloc(int sz_b) {
   return stack_alloc_mask(sz_b, 0);
 }
 
+/* [is_stack_pointer(p)] returns 1 if p is a valid (allocated) stack
+   address, and 0 otherwise. */
 int is_stack_pointer(void *ptr) {
   Page *tmp = top;
   while (tmp != NULL) {
@@ -192,7 +220,18 @@ int is_stack_pointer(void *ptr) {
   return 0;
 }
 
-// running a callback on each marked word
+/* [each_marked_pointer(f,e)] is an interator over all marked pointers
+   on the stack. Here, [f] is a function of type [ptrfun] (see
+   stack.h), which takes as its argument an environment and the
+   address of a marked pointer on the stack. We implement this using
+   the bitmask iterator, passing to it the function ptrbitfun. This
+   function, converts the bit index it is given into the address of
+   the relevant stack pointer. It does this using an environment
+   struct ptrenv, which contains a pointer to the relevant page's
+   memory, and then the function [f], and the environment [e] it was
+   called with.
+ */
+
 struct ptrenv { 
   void **memory; 
   ptrfun f;
