@@ -65,7 +65,7 @@ end))
 
 let rec total_nth = (fun ( _47_392  :  unit ) ( l  :  'a list ) ( n  :  Support.Prims.nat ) -> (match (l) with
 | [] -> begin
-l__None
+None
 end
 | hd::tl -> begin
 (match ((n = 0)) with
@@ -103,7 +103,7 @@ end))
 
 let rev_append = (fun ( _47_392  :  unit ) -> (rev_acc ()))
 
-let rev = (fun ( _47_392  :  unit ) ( l  :  'a list ) -> ((rev_acc ()) l Support.Prims.l__Nil))
+let rev = (fun ( _47_392  :  unit ) ( l  :  'a list ) -> ((rev_acc ()) l []))
 
 let revT = (fun ( _47_392  :  unit ) -> (rev ()))
 
@@ -119,7 +119,7 @@ let appendT = (fun ( _47_392  :  unit ) -> (append ()))
 
 let rec flatten = (fun ( _47_392  :  unit ) ( l  :  'a list list ) -> (match (l) with
 | [] -> begin
-Support.Prims.l__Nil
+[]
 end
 | hd::tl -> begin
 ((append ()) hd ((flatten ()) tl))
@@ -144,7 +144,7 @@ let rec iterT = (fun ( _47_392  :  unit ) ( f  :  'a  ->  unit ) ( x  :  'a list
 
 let rec map = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b ) ( x  :  'a list ) -> (match (x) with
 | [] -> begin
-Support.Prims.l__Nil
+[]
 end
 | a::tl -> begin
 (let _47_1676 = (f a)
@@ -154,7 +154,7 @@ end))
 
 let rec mapT = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b ) ( x  :  'a list ) -> (match (x) with
 | [] -> begin
-Support.Prims.l__Nil
+[]
 end
 | a::tl -> begin
 ((f a))::((mapT ()) f tl)
@@ -162,7 +162,7 @@ end))
 
 let rec mapi_init = (fun ( _47_392  :  unit ) ( f  :  int  ->  'a  ->  'b ) ( l  :  'a list ) ( i  :  int ) -> (match (l) with
 | [] -> begin
-Support.Prims.l__Nil
+[]
 end
 | hd::tl -> begin
 (let _47_1692 = (f i hd)
@@ -172,7 +172,7 @@ end))
 
 let rec mapi_initT = (fun ( _47_392  :  unit ) ( f  :  int  ->  'a  ->  'b ) ( l  :  'a list ) ( i  :  int ) -> (match (l) with
 | [] -> begin
-Support.Prims.l__Nil
+[]
 end
 | hd::tl -> begin
 ((f i hd))::((mapi_initT ()) f tl (i + 1))
@@ -184,7 +184,7 @@ let mapiT = (fun ( _47_392  :  unit ) ( f  :  int  ->  'a  ->  'b ) ( l  :  'a l
 
 let rec concatMap = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b list ) ( _3_5  :  'a list ) -> (match (_3_5) with
 | [] -> begin
-Support.Prims.l__Nil
+[]
 end
 | a::tl -> begin
 (let fa = (f a)
@@ -194,7 +194,7 @@ end))
 
 let rec concatMapT = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b list ) ( _3_6  :  'a list ) -> (match (_3_6) with
 | [] -> begin
-Support.Prims.l__Nil
+[]
 end
 | a::tl -> begin
 (let fa = (f a)
@@ -204,7 +204,7 @@ end))
 
 let rec map2 = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b  ->  'c ) ( l1  :  'a list ) ( l2  :  'b list ) -> (match (Support.Prims.MkTuple2 (l1, l2)) with
 | Support.Prims.MkTuple2 ([], []) -> begin
-Support.Prims.l__Nil
+[]
 end
 | Support.Prims.MkTuple2 (hd1::tl1, hd2::tl2) -> begin
 (let _47_1738 = (f hd1 hd2)
@@ -217,7 +217,7 @@ end))
 
 let rec map3 = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b  ->  'c  ->  'd ) ( l1  :  'a list ) ( l2  :  'b list ) ( l3  :  'c list ) -> (match (Support.Prims.MkTuple3 (l1, l2, l3)) with
 | Support.Prims.MkTuple3 ([], [], []) -> begin
-Support.Prims.l__Nil
+[]
 end
 | Support.Prims.MkTuple3 (hd1::tl1, hd2::tl2, hd3::tl3) -> begin
 (let _47_1753 = (f hd1 hd2 hd3)
@@ -310,7 +310,7 @@ end))
 
 let rec find = (fun ( _47_392  :  unit ) ( f  :  'a  ->  bool ) ( l  :  'a list ) -> (match (l) with
 | [] -> begin
-l__None
+None
 end
 | hd::tl -> begin
 (match ((f hd)) with
@@ -326,7 +326,7 @@ let findT = (fun ( _47_392  :  unit ) -> (find ()))
 
 let rec filter = (fun ( _47_392  :  unit ) ( f  :  'a  ->  bool ) ( _3_8  :  'a list ) -> (match (_3_8) with
 | [] -> begin
-Support.Prims.l__Nil
+[]
 end
 | hd::tl -> begin
 (match ((f hd)) with
@@ -341,7 +341,7 @@ end))
 
 let rec filterT = (fun ( _47_392  :  unit ) ( f  :  'a  ->  bool ) ( _3_9  :  'a list ) -> (match (_3_9) with
 | [] -> begin
-Support.Prims.l__Nil
+[]
 end
 | hd::tl -> begin
 (match ((f hd)) with
@@ -400,7 +400,7 @@ end))
 
 let rec collect = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b list ) ( l  :  'a list ) -> (match (l) with
 | [] -> begin
-Support.Prims.l__Nil
+[]
 end
 | hd::tl -> begin
 (let _47_1891 = (f hd)
@@ -410,7 +410,7 @@ end))
 
 let rec collectT = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b list ) ( l  :  'a list ) -> (match (l) with
 | [] -> begin
-Support.Prims.l__Nil
+[]
 end
 | hd::tl -> begin
 ((appendT ()) (f hd) ((collectT ()) f tl))
@@ -418,7 +418,7 @@ end))
 
 let rec tryFind = (fun ( _47_392  :  unit ) ( p  :  'a  ->  bool ) ( l  :  'a list ) -> (match (l) with
 | [] -> begin
-l__None
+None
 end
 | hd::tl -> begin
 (match ((p hd)) with
@@ -432,7 +432,7 @@ end))
 
 let rec tryFindT = (fun ( _47_392  :  unit ) ( p  :  'a  ->  bool ) ( l  :  'a list ) -> (match (l) with
 | [] -> begin
-l__None
+None
 end
 | hd::tl -> begin
 (match ((p hd)) with
@@ -446,7 +446,7 @@ end))
 
 let rec tryPick = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b option ) ( l  :  'a list ) -> (match (l) with
 | [] -> begin
-l__None
+None
 end
 | hd::tl -> begin
 (match ((f hd)) with
@@ -460,7 +460,7 @@ end))
 
 let rec tryPickT = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b option ) ( l  :  'a list ) -> (match (l) with
 | [] -> begin
-l__None
+None
 end
 | hd::tl -> begin
 (match ((f hd)) with
@@ -474,7 +474,7 @@ end))
 
 let rec choose = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b option ) ( l  :  'a list ) -> (match (l) with
 | [] -> begin
-Support.Prims.l__Nil
+[]
 end
 | hd::tl -> begin
 (match ((f hd)) with
@@ -489,7 +489,7 @@ end))
 
 let rec chooseT = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b option ) ( l  :  'a list ) -> (match (l) with
 | [] -> begin
-Support.Prims.l__Nil
+[]
 end
 | hd::tl -> begin
 (match ((f hd)) with
@@ -503,7 +503,7 @@ end))
 
 let rec partition = (fun ( _47_392  :  unit ) ( f  :  'a  ->  bool ) ( _3_10  :  'a list ) -> (match (_3_10) with
 | [] -> begin
-Support.Prims.MkTuple2 (Support.Prims.l__Nil, Support.Prims.l__Nil)
+Support.Prims.MkTuple2 ([], [])
 end
 | hd::tl -> begin
 (let _3_439 = ((partition ()) f tl)
@@ -521,7 +521,7 @@ end))
 
 let rec partitionT = (fun ( _47_392  :  unit ) ( f  :  'a  ->  bool ) ( _3_11  :  'a list ) -> (match (_3_11) with
 | [] -> begin
-Support.Prims.MkTuple2 (Support.Prims.l__Nil, Support.Prims.l__Nil)
+Support.Prims.MkTuple2 ([], [])
 end
 | hd::tl -> begin
 (let _3_450 = ((partitionT ()) f tl)
@@ -539,7 +539,7 @@ end))
 
 let rec assoc = (fun ( _47_392  :  unit ) ( a  :  'a ) ( x  :  ('a, 'b) Support.Prims.l__Tuple2 list ) -> (match (x) with
 | [] -> begin
-l__None
+None
 end
 | Support.Prims.MkTuple2 (a', b)::tl -> begin
 (match ((a = a')) with
@@ -555,7 +555,7 @@ let assocT = (fun ( _47_392  :  unit ) -> (assoc ()))
 
 let rec split = (fun ( _47_392  :  unit ) ( l  :  ('a, 'b) Support.Prims.l__Tuple2 list ) -> (match (l) with
 | [] -> begin
-Support.Prims.MkTuple2 (Support.Prims.l__Nil, Support.Prims.l__Nil)
+Support.Prims.MkTuple2 ([], [])
 end
 | Support.Prims.MkTuple2 (hd1, hd2)::tl -> begin
 (let _3_472 = ((split ()) tl)
@@ -573,7 +573,7 @@ let unzipT = (fun ( _47_392  :  unit ) -> (splitT ()))
 
 let rec unzip3 = (fun ( _47_392  :  unit ) ( l  :  ('a, 'b, 'c) Support.Prims.l__Tuple3 list ) -> (match (l) with
 | [] -> begin
-Support.Prims.MkTuple3 (Support.Prims.l__Nil, Support.Prims.l__Nil, Support.Prims.l__Nil)
+Support.Prims.MkTuple3 ([], [], [])
 end
 | Support.Prims.MkTuple3 (hd1, hd2, hd3)::tl -> begin
 (let _3_487 = ((unzip3 ()) tl)
@@ -587,7 +587,7 @@ let unzip3T = (fun ( _47_392  :  unit ) -> (unzip3 ()))
 
 let rec zip = (fun ( _47_392  :  unit ) ( l1  :  'a list ) ( l2  :  'b list ) -> (match (Support.Prims.MkTuple2 (l1, l2)) with
 | Support.Prims.MkTuple2 ([], []) -> begin
-Support.Prims.l__Nil
+[]
 end
 | Support.Prims.MkTuple2 (hd1::tl1, hd2::tl2) -> begin
 (let _47_1950 = ((zip ()) tl1 tl2)
@@ -599,7 +599,7 @@ end))
 
 let rec zip3 = (fun ( _47_392  :  unit ) ( l1  :  'a list ) ( l2  :  'b list ) ( l3  :  'c list ) -> (match (Support.Prims.MkTuple3 (l1, l2, l3)) with
 | Support.Prims.MkTuple3 ([], [], []) -> begin
-Support.Prims.l__Nil
+[]
 end
 | Support.Prims.MkTuple3 (hd1::tl1, hd2::tl2, hd3::tl3) -> begin
 (let _47_1954 = ((zip3 ()) tl1 tl2 tl3)
@@ -611,7 +611,7 @@ end))
 
 let rec sortWith = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'a  ->  int ) ( _3_12  :  'a list ) -> (match (_3_12) with
 | [] -> begin
-Support.Prims.l__Nil
+[]
 end
 | pivot::tl -> begin
 (let _3_544 = ((partition ()) (fun ( x  :  'a ) -> (let _47_1964 = (f pivot x)
@@ -631,7 +631,7 @@ let bool_of_compare = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'a  ->  int ) ( 
 
 let rec sortWithT = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'a  ->  int ) ( _3_13  :  'a list ) -> (match (_3_13) with
 | [] -> begin
-Support.Prims.l__Nil
+[]
 end
 | pivot::tl -> begin
 (let _3_568 = ((partitionT ()) ((bool_of_compare ()) f pivot) tl)

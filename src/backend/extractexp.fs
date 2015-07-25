@@ -260,7 +260,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                    let t = instantiate (vars, t) prefixAsMLTypes in
                    //debug g (fun () -> printfn "\n (*instantiating  \n %A \n with \n %A \n produced \n %A \n *) \n" (vars,t0) prefixAsMLTypes t);
                    match rest with 
-                    | [] -> head, E_PURE, t
+                    | [] -> maybe_eta_data is_data t head, E_PURE, t
                     | _  -> synth_app is_data (head, []) (E_PURE, t) rest
               else err_uninst e
 
