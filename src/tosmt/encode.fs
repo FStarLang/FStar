@@ -420,7 +420,19 @@ let rec encode_knd_term (k:knd) (env:env_t) : (term * decls_t) =
           let vars, guards, env', decls, _ = encode_binders None bs env in 
           let app = mk_ApplyT t vars in
           let kbody, decls' = encode_knd kbody env' app in
-          let k_interp = Term.mkForall([app], vars, mkImp(mk_and_l guards, kbody)) in
+          //this gives kinds to every partial application of t
+          let rec aux app vars guards = match vars, guards with 
+            | [], [] -> kbody
+            | x::vars, g::guards -> 
+              let app = mk_ApplyT app [x] in
+              let body = aux app vars guards in
+              let body = match vars with 
+                | [] -> body 
+                | _ -> Term.mkAnd(mk_tester "Kind_arrow" (mk_PreKind app), body) in
+              Term.mkForall([app], [x], mkImp(g, body))
+              
+            | _ -> failwith "Impossible: vars and guards are in 1-1 correspondence" in
+          let k_interp = aux t vars guards in
           let cvars = Term.free_variables k_interp |> List.filter (fun (x, _) -> x <> fst tsym) in
           let tkey = Term.mkForall([], tsym::cvars, k_interp) in
           begin match Util.smap_try_find env.cache tkey.hash with 
@@ -1254,6 +1266,97 @@ let primitive_type_axioms : lident -> string -> term -> list<decl> =
         [Term.Assume(mkForall_fuel([typing_pred], [xx;aa], mkImp(typing_pred, Term.mk_tester "BoxRef" x)), Some "ref inversion");
          Term.Assume(mkForall_fuel' 2 ([typing_pred; typing_pred_b], [xx;aa;bb], mkImp(mkAnd(typing_pred, typing_pred_b), mkEq(mkFreeV aa, mkFreeV bb))), Some "ref typing is injective")] in
 
+    let mk_false_interp : string -> term -> decls_t = fun _ false_tm -> 
+        let valid = Term.mkApp("Valid", [false_tm]) in
+        [Term.Assume(mkIff(mkFalse, valid), Some "False interpretation")] in
+    let mk_and_interp : string -> term -> decls_t = fun conj _ -> 
+        let aa = ("a", Type_sort) in
+        let bb = ("b", Type_sort) in
+        let a = mkFreeV aa in
+        let b = mkFreeV bb in
+        let valid = Term.mkApp("Valid", [Term.mkApp(conj, [a;b])]) in
+        let valid_a = Term.mkApp("Valid", [a]) in
+        let valid_b = Term.mkApp("Valid", [b]) in
+        [Term.Assume(mkForall([valid], [aa;bb], mkIff(mkAnd(valid_a, valid_b), valid)), Some "/\ interpretation")] in
+    let mk_or_interp : string -> term -> decls_t = fun disj _ -> 
+        let aa = ("a", Type_sort) in
+        let bb = ("b", Type_sort) in
+        let a = mkFreeV aa in
+        let b = mkFreeV bb in
+        let valid = Term.mkApp("Valid", [Term.mkApp(disj, [a;b])]) in
+        let valid_a = Term.mkApp("Valid", [a]) in
+        let valid_b = Term.mkApp("Valid", [b]) in
+        [Term.Assume(mkForall([valid], [aa;bb], mkIff(mkOr(valid_a, valid_b), valid)), Some "\/ interpretation")] in
+    let mk_eq2_interp : string -> term -> decls_t = fun eq2 tt -> 
+        let aa = ("a", Type_sort) in
+        let bb = ("b", Type_sort) in
+        let xx = ("x", Term_sort) in
+        let yy = ("y", Term_sort) in
+        let a = mkFreeV aa in
+        let b = mkFreeV bb in
+        let x = mkFreeV xx in
+        let y = mkFreeV yy in
+        let valid = Term.mkApp("Valid", [Term.mkApp(eq2, [a;b;x;y])]) in
+        [Term.Assume(mkForall([valid], [aa;bb;xx;yy], mkIff(mkEq(x, y), valid)), Some "Eq2 interpretation")] in
+    let mk_imp_interp : string -> term -> decls_t = fun imp tt -> 
+        let aa = ("a", Type_sort) in
+        let bb = ("b", Type_sort) in
+        let a = mkFreeV aa in
+        let b = mkFreeV bb in
+        let valid = Term.mkApp("Valid", [Term.mkApp(imp, [a;b])]) in
+        let valid_a = Term.mkApp("Valid", [a]) in
+        let valid_b = Term.mkApp("Valid", [b]) in
+        [Term.Assume(mkForall([valid], [aa;bb], mkIff(mkImp(valid_a, valid_b), valid)), Some "==> interpretation")] in
+    let mk_iff_interp : string -> term -> decls_t = fun iff tt -> 
+        let aa = ("a", Type_sort) in
+        let bb = ("b", Type_sort) in
+        let a = mkFreeV aa in
+        let b = mkFreeV bb in
+        let valid = Term.mkApp("Valid", [Term.mkApp(iff, [a;b])]) in
+        let valid_a = Term.mkApp("Valid", [a]) in
+        let valid_b = Term.mkApp("Valid", [b]) in
+        [Term.Assume(mkForall([valid], [aa;bb], mkIff(mkIff(valid_a, valid_b), valid)), Some "<==> interpretation")] in
+    let mk_forall_interp : string -> term -> decls_t = fun for_all tt -> 
+        let aa = ("a", Type_sort) in
+        let bb = ("b", Type_sort) in
+        let xx = ("x", Term_sort) in
+        let a = mkFreeV aa in
+        let b = mkFreeV bb in
+        let x = mkFreeV xx in
+        let valid = Term.mkApp("Valid", [Term.mkApp(for_all, [a;b])]) in
+        let valid_b_x = Term.mkApp("Valid", [mk_ApplyTE b x]) in
+        [Term.Assume(mkForall([valid], [aa;bb], mkIff(mkForall([mk_HasType x a], [xx], mkImp(mk_HasType x a, valid_b_x)), valid)), Some "forall interpretation")] in
+    let mk_exists_interp : string -> term -> decls_t = fun for_all tt -> 
+        let aa = ("a", Type_sort) in
+        let bb = ("b", Type_sort) in
+        let xx = ("x", Term_sort) in
+        let a = mkFreeV aa in
+        let b = mkFreeV bb in
+        let x = mkFreeV xx in
+        let valid = Term.mkApp("Valid", [Term.mkApp(for_all, [a;b])]) in
+        let valid_b_x = Term.mkApp("Valid", [mk_ApplyTE b x]) in
+        [Term.Assume(mkForall([valid], [aa;bb], mkIff(mkExists([mk_HasType x a], [xx], mkImp(mk_HasType x a, valid_b_x)), valid)), Some "exists interpretation")] in
+    let mk_foralltyp_interp : string -> term -> decls_t = fun for_all tt -> 
+        let kk = ("k", Kind_sort) in
+        let aa = ("aa", Type_sort) in
+        let bb = ("bb", Term_sort) in
+        let k = mkFreeV kk in
+        let a = mkFreeV aa in
+        let b = mkFreeV bb in
+        let valid = Term.mkApp("Valid", [Term.mkApp(for_all, [k;a])]) in
+        let valid_a_b = Term.mkApp("Valid", [mk_ApplyTE a b]) in
+        [Term.Assume(mkForall([valid], [kk;aa], mkIff(mkForall([mk_HasKind b k], [bb], mkImp(mk_HasKind b k, valid_a_b)), valid)), Some "ForallTyp interpretation")] in
+    let mk_existstyp_interp : string -> term -> decls_t = fun for_some tt -> 
+        let kk = ("k", Kind_sort) in
+        let aa = ("aa", Type_sort) in
+        let bb = ("bb", Term_sort) in
+        let k = mkFreeV kk in
+        let a = mkFreeV aa in
+        let b = mkFreeV bb in
+        let valid = Term.mkApp("Valid", [Term.mkApp(for_some, [k;a])]) in
+        let valid_a_b = Term.mkApp("Valid", [mk_ApplyTE a b]) in
+        [Term.Assume(mkForall([valid], [kk;aa], mkIff(mkExists([mk_HasKind b k], [bb], mkImp(mk_HasKind b k, valid_a_b)), valid)), Some "ExistsTyp interpretation")] in  
+    
     let prims = [(Const.unit_lid,   mk_unit);
                  (Const.bool_lid,   mk_bool);
                  (Const.int_lid,    mk_int);
@@ -1261,6 +1364,16 @@ let primitive_type_axioms : lident -> string -> term -> list<decl> =
                  (Const.ref_lid,    mk_ref);
                  (Const.char_lid,   mk_int_alias);
                  (Const.uint8_lid,  mk_int_alias);
+                 (Const.false_lid,  mk_false_interp);
+                 (Const.and_lid,    mk_and_interp);
+                 (Const.or_lid,     mk_or_interp);
+                 (Const.eq2_lid,    mk_eq2_interp);
+                 (Const.imp_lid,    mk_imp_interp);
+                 (Const.iff_lid,    mk_iff_interp);
+                 (Const.forall_lid, mk_forall_interp);
+                 (Const.exists_lid, mk_exists_interp);
+//                 (Const.allTyp_lid, mk_foralltyp_interp);
+//                 (Const.exTyp_lid,  mk_existstyp_interp)
                 ] in
     (fun (t:lident) (s:string) (tt:term) -> 
         match Util.find_opt (fun (l, _) -> lid_equals l t) prims with 
@@ -1326,7 +1439,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let kindingAx = 
             let k, decls = encode_knd (Recheck.recompute_kind t) env' app in
             decls@[Term.Assume(mkForall([app], vars, mkImp(mk_and_l guards, k)), Some "abbrev. kinding")] in
-        let g = binder_decls@decls@decls1@abbrev_def::kindingAx in
+        let g = binder_decls@decls@decls1@abbrev_def::kindingAx@(primitive_type_axioms lid tname app)
+               in
         g, env
 
      | Sig_val_decl(lid, t, quals, _) -> 
@@ -1553,7 +1667,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
       let g', inversions = g |> List.partition (function
         | Term.Assume(_, Some "inversion axiom") -> false
         | _ -> true) in
-      g'@inversions, env
+      let decls, rest = g' |> List.partition (function 
+        | Term.DeclFun _ -> true
+        | _ -> false) in
+      decls@rest@inversions, env
 
     | Sig_let((is_rec, bindings), _, _, quals) ->
         let eta_expand binders formals body t =
