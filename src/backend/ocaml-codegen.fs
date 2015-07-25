@@ -592,7 +592,7 @@ let rec doc_of_mllib_r (MLLib mllib) =
             cat tail hardline;
         ]
     and for1_mod istop (x, sigmod, MLLib sub) =
-        fprint1 "Gen Code:kdhvljkdshalfkhclklkdnfsnydufnysdkyfnklsnykweyacklnyrecynrncrewanyu: %s\n" x;
+        fprint1 "Gen Code: %s\n" x;
         let head = reduce1 (if   not istop
                             then [text "module"; text x; text "="; text "struct"]
                             else []) in
