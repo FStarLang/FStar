@@ -118,6 +118,7 @@ type goodstate (s1:state) (s2:state) =
             s1.bad = true \/ s2.bad = true \/ Ok s1.l s2.l
 
 assume val s : ref state
+
 assume val sample_hon : k0:key -> k1:key ->
                  ST2 (tag * tag)
                    (requires (fun _ -> True))
@@ -126,6 +127,17 @@ assume val sample_adv : unit ->
                  ST2 (tag * tag)
                    (requires (fun _ -> True))
                    (ensures (fun h2' p h2 -> h2' = h2 /\ fst p = snd p))
+
+(* Actual non-relational code of hash_hon : *)
+(*
+let hash_hon k = match assoc k (!s),l with
+  | Some (Hon,t) -> Some t
+  | Some (Adv,t) -> s := {bad = true; l = (!s).l}; None
+  | None         -> let t = samle_hon k in
+                    s := {bad = (!s).bad; l= (k,(Hon,t))::(!s).l} ;
+                    add_some t
+*)
+
 
 val hash_hon:  k0:key -> k1:key ->
                ST2 (option tag * option tag)
@@ -160,31 +172,8 @@ val hash_adv:  k:key ->
 val add_some : tag -> Tot (option tag)
 let add_some t = Some t
 
-let case_Hon  t     = Some t
-let case_Adv  _     = s:={bad = true; l=(!s).l}; None
-let case_None (k,t) = s:={bad = (!s).bad; l = (k,(Hon,t))::(!s).l}; add_some t
-
-assume val sample_single : unit -> Tot tag
-
-let hash_hon2 k0 k1 =
-  ok_hon_safe' k0 k1;
-  let l0, l1 = compose2 (fun _ -> (!s).l) (fun _ -> (!s).l) () () in
-  match assoc k0 l0, assoc k1 l1 with
-  | Some (Hon,t0), Some (Hon,t1) -> compose2 (fun x -> case_Hon x) (fun x -> case_Hon x) t0 t1
-  | Some (Hon,t0), Some (Adv,t1) -> compose2 (fun x -> case_Hon x) (fun x -> case_Adv x) t0 ()
-  | Some (Hon,t0), None          -> let t1 = sample_single () in
-                                    compose2 (fun x -> case_Hon x) (fun x -> case_None x) t0 (k1,t1)
-  | Some (Adv,t0), Some (Hon,t1) -> compose2 (fun x -> case_Adv x) (fun x -> case_Hon x) () t0
-  | Some (Adv,t0), Some (Adv,t1) -> compose2 (fun x -> case_Adv x) (fun x -> case_Adv x) () ()
-  | Some (Adv,t0), None          -> let t1 = sample_single () in
-                                    compose2 (fun x -> case_Adv x) (fun x -> case_None x) () (k1,t1)
-  | None         , Some (Hon,t1) -> let t0 = sample_single () in
-                                    compose2 (fun x -> case_None x) (fun x -> case_Hon x) (k0,t0) t1
-  | None         , Some (Adv,t1) -> let t0 = sample_single () in
-                                    compose2 (fun x -> case_None x) (fun x -> case_Adv x) (k0,t0) ()
-  | None         , None          -> let t0, t1 = sample_hon k0 k1 in
-                                    compose2 (fun x -> case_None x) (fun x -> case_None x) (k0,t0) (k1,t1)
-
+(* reordered version of the original program: We do not sample, but we get the
+   sampled value as an argument. *)
 let hash_hon' k r = match assoc k (!s).l with
   | Some (Hon,t) -> Some t
   | Some (Adv,t) -> s := {bad = true; l = (!s).l}; None
@@ -197,6 +186,35 @@ let hash_hon k0 k1  = ok_hon_safe' k0 k1;
                       (compose2 (fun k -> hash_hon' k r0)
                                 (fun k -> hash_hon' k r1)
                                 k0 k1)
+
+let case_Hon  t     = Some t
+let case_Adv  _     = s:={bad = true; l=(!s).l}; None
+let case_None (k,t) = s:={bad = (!s).bad; l = (k,(Hon,t))::(!s).l}; add_some t
+
+assume val sample_single : unit -> Tot tag
+
+let hash_hon2 k0 k1 =
+  ok_hon_safe' k0 k1;
+  let l0, l1 = compose2 (fun _ -> (!s).l) (fun _ -> (!s).l) () () in
+  match assoc k0 l0, assoc k1 l1 with
+  | Some (Hon,t0), Some (Hon,t1) -> compose2 (fun x -> case_Hon x) (fun x -> case_Hon x) t0 t1
+  | Some (Hon,t0), Some (Adv,t1) -> compose2 (fun x -> case_Hon x) (fun x -> case_Adv x) t0 ()
+(*
+  | Some (Hon,t0), None          -> let t1 = sample_single () in
+                                    compose2 (fun x -> case_Hon x) (fun x -> case_None x) t0 (k1,t1)
+*)
+  | Some (Adv,t0), Some (Hon,t1) -> compose2 (fun x -> case_Adv x) (fun x -> case_Hon x) () t0
+  | Some (Adv,t0), Some (Adv,t1) -> compose2 (fun x -> case_Adv x) (fun x -> case_Adv x) () ()
+  | Some (Adv,t0), None          -> let t1 = sample_single () in
+                                    compose2 (fun x -> case_Adv x) (fun x -> case_None x) () (k1,t1)
+  | None         , Some (Hon,t1) -> let t0 = sample_single () in
+                                    compose2 (fun x -> case_None x) (fun x -> case_Hon x) (k0,t0) t1
+(*
+  | None         , Some (Adv,t1) -> let t0 = sample_single () in
+                                    compose2 (fun x -> case_None x) (fun x -> case_Adv x) (k0,t0) ()
+*)
+  | None         , None          -> let t0, t1 = sample_hon k0 k1 in
+                                    compose2 (fun x -> case_None x) (fun x -> case_None x) (k0,t0) (k1,t1)
 
 let hash_adv' k r =  match assoc k (!s).l with
   | Some (Adv,t) -> Some t
@@ -213,6 +231,7 @@ let hash_adv k  = let r0, r1 = sample_adv () in
 
 (* Simple Encryption Scheme based on ro *)
 
+(*
 type injection (#a:Type) (f:a -> Tot a) = (forall x y. f x = f y ==> x = y)
 type surjection (#a:Type) (f:a -> Tot a) = (forall y. (exists x. f x = y))
 type bijection (#a:Type) (f:a -> Tot a) = injection f /\ surjection f
@@ -229,29 +248,30 @@ type block = b:bytes{length(b)=eta}
 
 assume val xor : block -> block -> Tot block
 
-let xor_sym = assume(forall a b. xor a b = xor b a) 
+let xor_sym = assume(forall a b. xor a b = xor b a)
 let xor_inv = assume(forall a b. xor (xor a b) a = b)
 let xor_ass = assume(forall a b c. xor (xor a b) c = xor a (xor b c))
-val xor_inj : a:block -> b:block -> c:block 
-              -> Lemma 
+val xor_inj : a:block -> b:block -> c:block
+              -> Lemma
               (requires (xor a b = xor a c))
               (ensures (b = c))
               [SMTPat (xor a b = xor a c)]
 let xor_inj a b c = cut (b2t (xor (xor a b) a = xor (xor a c) a))
 
 val encrypt : block -> block -> Tot block
-let encrypt p k = xor p k 
+let encrypt p k = xor p k
 val decrypt : block -> block -> Tot block
-let decrypt c k = xor c k 
+let decrypt c k = xor c k
 
 val encrypt_hon : k0:bytes ->  k1:bytes -> p0:block -> p1:block ->
               ST2 (option(block * block) * option(block * block))
-                  (requires (fun h2 -> goodstate (sel (fst h2) s) (sel (snd h2) s))) 
+                  (requires (fun h2 -> goodstate (sel (fst h2) s) (sel (snd h2) s)))
                   (ensures  (fun h2' p h2 -> goodstate (sel (fst h2) s) (sel (snd h2) s) /\
                                              fst p = snd p))
+*)
 (*
 let encrypt_hon k0 k1 p0 p1 = let r0, r1 = sample (fun x ->  x) in
-                  let h0, h1 = hash_hon (append k0 r0) (append k1 r1) in 
+                  let h0, h1 = hash_hon (append k0 r0) (append k1 r1) in
                   compose2 (fun (p,h,r) -> if is_Some h then Some ((encrypt p (Some.v h)),r) else None)
                            (fun (p,h,r) -> if is_Some h then Some ((encrypt p (Some.v h)),r) else None)
                            (p0, h0, r0) (p1, h1, r1)
