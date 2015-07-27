@@ -2,7 +2,6 @@
     options:--admit_fsi Set;
     variables:LIB=../../lib;
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/st2.fst $LIB/bytes.fst $LIB/list.fst
-
   --*)
 
 module Ro
@@ -28,7 +27,6 @@ let safe_key_unique' = assume (forall k0 k0' k1.
                                (safe_key k0 k1 /\ safe_key k0' k1 ==> k0 = k0'))
 assume logic type safe (k0:key) (k1:key) (t0:tag) (t1:tag)
 
-
 type alloc =
   | Hon: alloc
   | Adv: alloc (* a "ghost" field recording the first allocator for a given key *)
@@ -38,7 +36,6 @@ type log = map key (alloc * tag)
 type state_hash =
   { bad: bool; (* set iff any allocation has failed, e.g. bumped into the other's table *)
     l:log }    (* the map ensures at most one entry per key *)
-
 
 
 type Ok : log -> log -> Type =
@@ -54,17 +51,24 @@ type Ok : log -> log -> Type =
            -> p: Ok log0 log1
            -> Ok ((k ,(Adv,t ))::log0) ((k, (Adv,t ))::log1)
 
-let ok_consH = assume(forall (k0:key) (k1:key) (t0:tag) (t1:tag) (l0:log) (l1:log).
-                          Ok l0 l1 /\ safe_key k0 k1 /\ safe k0 k1 t0 t1 /\
-                          is_None(assoc k0 l0) /\ is_None(assoc k1 l1) ==>
-                            Ok ((k0,(Hon,t0))::l0) ((k1,(Hon,t1))::l1))
-let ok_consA = assume(forall (k:key) (t:tag) (l0:log) (l1:log).
-                          Ok l0 l1 /\
-                          is_None(assoc k l0) /\ is_None(assoc k l1) ==>
-                            Ok ((k,(Adv,t))::l0) ((k,(Adv,t))::l1))
+assume val ok_as_proof : l0:log -> l1:log {Ok l0 l1} -> Tot (Ok l0 l1)
+assume val ok_as_refinement : #l0:log -> #l1:log  -> p:Ok l0 l1 -> Tot (u:unit{Ok l0 l1})
 
+val ok_consH : k0:key -> k1:key{safe_key k0 k1} -> t0:tag
+              -> t1:tag{safe k0 k1 t0 t1}
+              -> l0:log{is_None (assoc k0 l0)}
+              -> l1:log{is_None (assoc k1 l1) /\ Ok l0 l1} ->
+               Lemma (requires True)
+                     (ensures Ok ((k0,(Hon,t0))::l0) ((k1,(Hon,t1))::l1))
+                     [SMTPat (assoc k0 l0);SMTPat (assoc k1 l1)]
+let ok_consH k0 k1 t0 t1 l0 l1 = ok_as_refinement(ConsH k0 k1 t0 t1 l0 l1 (ok_as_proof l0 l1))
 
-
+val ok_consA : k:key -> t:tag -> l0:log{is_None(assoc k l0)}
+               -> l1:log{is_None(assoc k l1) /\ Ok l0 l1}
+               -> Lemma (requires True)
+                        (ensures Ok ((k,(Adv,t))::l0) ((k,(Adv,t))::l1))
+                        [SMTPat (assoc k l0);SMTPat (assoc k l1)]
+let ok_consA k t l0 l1 = ok_as_refinement (ConsA k t l0 l1 (ok_as_proof l0 l1))
 
 val ok_adv_eq' : l0:log -> l1:log -> p:Ok l0 l1 -> k:key
                 -> Lemma
@@ -76,7 +80,6 @@ let rec ok_adv_eq' l0 l1 p k = match p with
         | ConsH _ _ _ _ tl0 tl1 p' -> ok_adv_eq' tl0 tl1 p' k
         | ConsA _ _ tl0 tl1 p' -> ok_adv_eq' tl0 tl1 p' k
 
-assume val ok_witness : l0:log -> l1:log {Ok l0 l1} -> Tot (Ok l0 l1)
 
 val ok_adv_eq : l0:log -> l1:log{Ok l0 l1} ->  k:key
                 -> Lemma
@@ -84,7 +87,7 @@ val ok_adv_eq : l0:log -> l1:log{Ok l0 l1} ->  k:key
                    (ensures (forall t. assoc k l0 = Some(Adv, t) <==>
                                        assoc k l1 = Some(Adv, t)))
                   [SMTPat (assoc k l0); SMTPat (assoc k l1)]
-let ok_adv_eq l0 l1 k = ok_adv_eq' l0 l1 (ok_witness l0 l1) k
+let ok_adv_eq l0 l1 k = ok_adv_eq' l0 l1 (ok_as_proof l0 l1) k
 
 
 val ok_hon_safe' : k0:key -> k1:key -> l0:log -> l1:log -> p:Ok l0 l1
@@ -103,14 +106,14 @@ val ok_hon_safe: k0:key -> k1:key -> l0:log -> l1:log {p:Ok l0 l1}
                    (ensures ( ((is_Some(assoc k0 l0) /\ is_Hon(fst (Some.v(assoc k0 l0)))) <==>
                                is_Some(assoc k1 l1) /\ is_Hon(fst (Some.v(assoc k1 l1))))))
                                [SMTPat (assoc k0 l0); SMTPat (assoc k1 l1)]
-let ok_hon_safe k0 k1 l0 l1 = ok_hon_safe' k0 k1 l0 l1 (ok_witness l0 l1)
+let ok_hon_safe k0 k1 l0 l1 = ok_hon_safe' k0 k1 l0 l1 (ok_as_proof l0 l1)
 
 
 val ok_hon_safe2' : k0:key -> k1:key -> l0:log -> l1:log -> p:Ok l0 l1
                 -> Lemma
                    (requires (safe_key k0 k1))
-                   (ensures (is_Some(assoc k0 l0) /\ is_Some(assoc k1 l1) /\ 
-                             is_Hon(fst(Some.v (assoc k0 l0))) /\ 
+                   (ensures (is_Some(assoc k0 l0) /\ is_Some(assoc k1 l1) /\
+                             is_Hon(fst(Some.v (assoc k0 l0))) /\
                              is_Hon(fst(Some.v (assoc k0 l0))) ==>
                                safe k0 k1 (snd(Some.v (assoc k0 l0))) (snd(Some.v (assoc k1 l1)))))
 let rec ok_hon_safe2' k0 k1 l0 l1 p = match p with
@@ -122,12 +125,12 @@ let rec ok_hon_safe2' k0 k1 l0 l1 p = match p with
 val ok_hon_safe2 : k0:key -> k1:key -> l0:log -> l1:log{Ok l0 l1}
                  -> Lemma
                     (requires (safe_key k0 k1))
-                    (ensures (is_Some(assoc k0 l0) /\ is_Some(assoc k1 l1) /\ 
-                              is_Hon(fst(Some.v (assoc k0 l0))) /\ 
+                    (ensures (is_Some(assoc k0 l0) /\ is_Some(assoc k1 l1) /\
+                              is_Hon(fst(Some.v (assoc k0 l0))) /\
                               is_Hon(fst(Some.v (assoc k0 l0))) ==>
                                 safe k0 k1 (snd(Some.v (assoc k0 l0))) (snd(Some.v (assoc k1 l1)))))
                                 [SMTPat (assoc k0 l0); SMTPat (assoc k1 l1)]
-let ok_hon_safe2 k0 k1 l0 l1 = ok_hon_safe2' k0 k1 l0 l1 (ok_witness l0 l1)
+let ok_hon_safe2 k0 k1 l0 l1 = ok_hon_safe2' k0 k1 l0 l1 (ok_as_proof l0 l1)
 
 type goodstate_hash (s1:state_hash) (s2:state_hash) =
             s1.bad = true \/ s2.bad = true \/ Ok s1.l s2.l
@@ -272,7 +275,7 @@ val decrypt : block -> block -> Tot block
 let decrypt c k = xor c k
 
 type state_enc =
-  { bad': bool; (* set iff a nonce was sampled twice *)  
+  { bad': bool; (* set iff a nonce was sampled twice *)
     l':log }    (* the log keeps track of returned nonces *)
 
 type good_state_enc (s:state_enc) = s.bad' = false
@@ -281,8 +284,8 @@ type good_state_enc (s:state_enc) = s.bad' = false
 val encrypt_hon : k0:bytes ->  k1:bytes -> p0:block -> p1:block ->
               ST2 (option(block * block) * option(block * block))
                   (requires (fun h2 -> goodstate_hash (sel (fst h2) s) (sel (snd h2) s)))
-                  (ensures  (fun h2' p h2 -> (sel (fst h2) s).bad  \/ 
-                                             (sel (snd h2) s).bad  \/ 
+                  (ensures  (fun h2' p h2 -> (sel (fst h2) s).bad  \/
+                                             (sel (snd h2) s).bad  \/
                                              Ok (sel (fst h2) s).l (sel (snd h2) s).l /\
                                              is_Some (fst p) /\ is_Some (snd p) /\
                                              fst p = snd p))
