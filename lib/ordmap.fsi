@@ -1,5 +1,6 @@
 (*--build-config
-
+  options:--admit_fsi OrdSet;
+  other-files:ordset.fsi
  --*)
 module OrdMap
 

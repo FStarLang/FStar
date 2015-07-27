@@ -52,10 +52,20 @@ and exp =
 
 type canbox = | Can_b | Cannot_b
 
+val canbox_const: c:const -> Tot canbox
+let canbox_const c = match c with
+  | C_prin _
+  | C_prins _ -> Cannot_b
+  
+  | C_unit
+  | C_nat _
+  | C_bool _  -> Can_b
+
+(* if empty, Can_b then can_wire *)
 type v_meta = eprins * canbox
 
 type value: v_meta -> Type =
-  | V_const   : c:const -> value (empty, Can_b)
+  | V_const   : c:const -> value (empty, canbox_const c)
 
   | V_box     : #meta:v_meta -> ps:prins
                 -> v:value meta{subset (fst meta) ps /\ (snd meta) = Can_b}
@@ -463,12 +473,11 @@ let pre_mkwire c = match c with
       else Do
     else NA
   
-  | Conf _ (Mode Sec ps) _ _
-         (T_red (R_mkwire #mps #mv (V_box ps' (V_const (C_prins ps''))) _)) ->
+  | Conf l (Mode Sec ps) _ _ (T_red (R_mkwire #mps #mv (V_const (C_prins ps')) _)) ->
     if fst mv = empty && snd mv = Can_b then
-      if subset ps'' ps && subset ps ps' then Do else NA
+      if subset ps' ps then Do else NA
     else NA
-
+  
   | _ -> NA
 
 assume val const_on:
@@ -488,8 +497,8 @@ let step_mkwire c = match c with
     in
     Conf l (Mode Par ps) s en (T_val (V_wire eps w))
 
-  | Conf l (Mode Sec ps) s en (T_red (R_mkwire (V_box _ (V_const (C_prins ps''))) v)) ->
-    Conf l (Mode Sec ps) s en (T_val (V_wire ps'' (const_on ps'' v)))
+  | Conf l (Mode Sec ps) s en (T_red (R_mkwire (V_const (C_prins ps')) v)) ->
+    Conf l (Mode Sec ps) s en (T_val (V_wire ps' (const_on ps' v)))
 
 val pre_projwire: config -> Tot comp
 let pre_projwire c = match c with
@@ -1009,10 +1018,10 @@ let sstep_sec_slice_lemma c c' h = match h with
     Conj () (C_app_beta (slice_c_sps c) (slice_c_sps c'))
   | C_unbox_beta c c'      -> Conj () (C_unbox_beta (slice_c_sps c) (slice_c_sps c'))
   | C_mkwire_beta c c'     ->
-    let Conf _ (Mode _ ps) _ _ (T_red (R_mkwire (V_box _ (V_const (C_prins ps''))) v)) = c in
-    subset_intersect_lemma ps ps'';
+    let Conf _ (Mode _ ps) _ _ (T_red (R_mkwire (V_const (C_prins ps')) v)) = c in
+    subset_intersect_lemma ps ps';
     meta_empty_can_b_same_slice v ps;
-    slice_const_wire_sps_lemma ps ps'' v;
+    slice_const_wire_sps_lemma ps ps' v;
     Conj () (C_mkwire_beta (slice_c_sps c) (slice_c_sps c'))
   | C_projwire_beta c c'   -> Conj () (C_projwire_beta (slice_c_sps c) (slice_c_sps c'))
   | C_concatwire_beta c c' ->
