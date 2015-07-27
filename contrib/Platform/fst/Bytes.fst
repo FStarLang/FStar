@@ -1,5 +1,17 @@
+(*--build-config
+    options:--admit_fsi Set --admit_fsi Seq;
+    variables:LIB=../../../lib;
+    other-files:$LIB/classical.fst $LIB/ext.fst $LIB/set.fsi $LIB/seq.fsi $LIB/seqproperties.fst
+  --*)
+
 module Platform.Bytes
-assume val repr_bytes : nat -> Tot nat (* TODO: define this! *)
+
+val repr_bytes : nat -> Tot nat
+let repr_bytes n =
+    if n < 256 then 1
+    else if n < 65536 then 2
+    else if n < 16777216 then 3
+    else 4
 (* NS:
    The two assumes below were previously defined as axioms.
 	 They are evil! They pollute the global environment and
@@ -15,9 +27,6 @@ assume val lemma_repr_bytes_values: n:nat ->
 
 assume val lemma_repr_bytes_monotone: a:nat -> b:nat ->
 	     Lemma (ensures ((a <= b) ==> (repr_bytes a <= repr_bytes b)))
-
-
-(*assume val repr_bytes : nat -> Tot nat (* TODO: define this! *)*)
 
 type byte = uint8
 type cbytes = string
@@ -73,11 +82,12 @@ assume val equalBytes : bytes -> bytes -> Tot bool
 (*@ assume val xor : (bytes -> (bytes -> (nb:nat -> (b3:bytes){Length (b3) = nb}))) @*)
 assume val xor : bytes -> bytes -> nat -> Tot bytes
 
-val split: b:bytes -> n:nat{n <= Seq.length b} -> Tot (bytes * bytes)
-let split b n = SeqProperties.split b n
+val split: b:bytes -> n:nat{n <= Seq.length b} -> Tot (x:(bytes * bytes) {Seq.length (fst (x))= n /\ Seq.length (snd (x)) == (Seq.length b) - n }) //(lbytes n * lbytes (length b - n))
+let split b n =
+  SeqProperties.split b n
 
 (*@ assume val split2 : (b:bytes -> (i:nat -> ((j:nat){C_pr_GreaterThanOrEqual(Length (b), C_bop_Addition (i, j))} -> (b1:bytes * b2:bytes * b3:bytes){Length (b1) = i /\ Length (b2) = j /\ B (b) = C_bop_ArrayAppend (B (b1), C_bop_ArrayAppend (B (b2), B (b3)))}))) @*)
-assume val split2 : bytes -> nat -> nat -> Tot (bytes * bytes * bytes)
+assume val split2 : b:bytes -> n1:nat{n1 <= Seq.length b} -> n2:nat{n1 + n2 <= Seq.length b} -> Tot (lbytes n1 * lbytes n2 * lbytes (length b - n1 - n2))
 (*@  assume (!x. C_bop_ArrayAppend (x, C_array_of_list C_op_Nil ()) = x) @*)
 
 (*@  assume (!b1. (!b2. (!c1. (!c2. C_bop_ArrayAppend (b1, b2) = C_bop_ArrayAppend (c1, c2) /\ BLength (b1) = BLength (c1) => b1 = c1 /\ b2 = c2)))) @*)
