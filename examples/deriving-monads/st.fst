@@ -1,5 +1,5 @@
 (*--build-config
-    options:--max_fuel 1 --initial_fuel 1 --max_ifuel 1 --initial_ifuel 1 --logQueries;
+    options:--max_fuel 1 --initial_fuel 1 --max_ifuel 1 --initial_ifuel 1;
     other-files:
   --*)
 (*
@@ -27,7 +27,7 @@
    The basic idea is to use define a computation type
       DST (a:Type) (wp:WP a)
    using the function type
-      m:mem -> PURE (a * mem:Type) (wp' m: PureWP (a * mem))
+      m:mem -> PURE (a * mem) (wp m: PureWP (a * mem))
 
    I.e,. this is the usual implementation of the state monad as a
    state-passing function
@@ -41,9 +41,9 @@ module Deriving.ST
 effect P (a:Type) (wp:PureWP a) = PURE a wp wp
 
 (* The signature of the to-be-constructed Dijkstra state monad *)
-kind Pre (mem:Type) = mem -> Type
+kind Pre (mem:Type)           = mem -> Type
 kind Post (mem:Type) (a:Type) = (a * mem) -> Type
-kind WP (mem:Type) (a:Type) = Post mem a -> Pre mem
+kind WP (mem:Type) (a:Type)   = Post mem a -> Pre mem
 
 (* A new computation type *)
 type DST (mem:Type) (a:Type) (wp:WP mem a) = m0:mem -> P (a * mem) (fun 'p -> wp 'p m0)
@@ -73,7 +73,7 @@ let test_monotone2 (mem:Type) (a:Type) (wp:WP mem a) (m0:mem) (p:Type) (q:Type) 
 (* The return (aka unit) of WP *)
 type wp_return (#mem:Type) (#a:Type) (x:a) (post:Post mem a) (m0:mem) = post (x, m0)
 val return : #mem:Type -> #a:Type -> x:a -> Tot (DST mem a (wp_return x))
-//we simply it as a pure function, and prove that it has the type wp_return
+//we simply implement it as a pure function, and prove that it has the type wp_return
 let return x m0 = (x, m0)
 
 (* The bind of WP *)
@@ -126,16 +126,31 @@ val lemma_right_unit: mem:Type -> a:Type
                                          wp1 post m0))
 let lemma_right_unit (mem:Type) (a:Type) (wp1:WP mem a) = () (* a little bit of logical reasoning with monotonicity *)
 
-(* TODO: MORPHISMS *)
-(* Finally, we define a lifting from Pure_WP to WP, and prove that it is a morphism *)
-(*opaque type implies_Pure (#a:Type) (p1:PurePost a) (p2:PurePost a) =
-  forall x. p1 x ==> p2 x
+(* Finally, we define a lifting from PureWP to WP, and prove that it is a morphism *)
+(* First, we need a notion of monotonicity for PureWP *)
 opaque type monotone_PureWP (#a:Type) (wp:PureWP a) =
    (forall (p1:PurePost a) (p2:PurePost a).{:pattern (wp p1); (wp p2)}
-            implies_Pure p1 p2
+           (forall x. p1 x ==> p2 x)
         ==> (wp p1 ==> wp p2))
 
+(* Here's the lift from Pure to ST *)
 type wp_lift (#mem:Type) (#a:Type) (wp:PureWP a) : WP mem a = (fun (post:Post mem a) (m0:mem) -> wp (fun x -> post (x, m0)))
 val lift: mem:Type -> a:Type -> wp:PureWP a -> f:(unit -> P a wp){monotone_PureWP wp} -> Tot (DST mem a (wp_lift wp))
-#reset-options
-let lift f m0 = f(), m0*)
+let lift 'mem 'a 'wp f m0 = f(), m0
+
+(* We prove the two morphism laws *)
+val lift_unit: #mem:Type -> #a:Type -> x:a -> p:Post mem a -> m0:mem
+  -> Lemma (wp_return x p m0 <==> wp_lift (pure_return a x) p m0)
+let lift_unit 'mem 'a x 'p m0 = ()
+
+val lemma_lift_bind: mem:Type -> a:Type -> b:Type
+                  -> wp1: PureWP a
+                  -> wp2: (a -> PureWP b)
+                  -> post:Post mem b
+                  -> m0:mem
+                  -> Lemma
+    (requires (monotone_PureWP wp1 /\ (forall x. monotone_PureWP (wp2 x))))
+    (ensures  (wp_bind (wp_lift wp1) (fun x -> wp_lift (wp2 x)) post m0
+               <==>
+               wp_lift (pure_bind_wlp a b wp1 wp2) post m0))
+let lemma_lift_bind 'mem 'a 'b 'wp1 'wp2 'post m0 = ()
