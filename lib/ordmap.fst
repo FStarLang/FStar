@@ -24,6 +24,10 @@ let empty (#k:Type) (#v:Type) #f =
   let g = (fun x -> None) in
   Mk_map d g
 
+let const_on (#k:Type) (#v:Type) #f d x =
+  let g = (fun y -> if mem y d then Some x else None) in
+  Mk_map d g
+
 let select (#k:Type) (#v:Type) #f x (Mk_map d m) = m x
 
 let update (#k:Type) (#v:Type) #f x y (Mk_map s g ) =
@@ -119,3 +123,7 @@ let size_empty (#k:Type) (#v:Type) #f = ()
 let size_remove (#k:Type) (#v:Type) #f y m = ()
 
 let dom_lemma (#k:Type) (#v:Type) #f x m = ()
+
+let contains_const_on (#k:Type) (#v:Type) #f d x y = ()
+
+let select_const_on (#k:Type) (#v:Type) #f d x y = ()

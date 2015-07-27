@@ -480,25 +480,26 @@ let pre_mkwire c = match c with
   
   | _ -> NA
 
-assume val const_on:
+val mconst_on:
   eps:eprins -> v:value (empty, Can_b)
   -> Tot (w:v_wire eps{forall p. (mem p eps ==> select p w = Some v)})
+let mconst_on eps v = const_on eps v
 
 val step_mkwire: c:config{pre_mkwire c = Do} -> Tot config
 let step_mkwire c = match c with
   | Conf l (Mode Par ps) s en (T_red (R_mkwire (V_const (C_prins ps'))
                                                         (V_box _ v))) ->
     let eps, w =
-      if src l then ps', const_on ps' v
+      if src l then ps', mconst_on ps' v
       else
         if subset ps ps' then
-          ps, const_on ps v
+          ps, mconst_on ps v
         else empty, OrdMap.empty
     in
     Conf l (Mode Par ps) s en (T_val (V_wire eps w))
 
   | Conf l (Mode Sec ps) s en (T_red (R_mkwire (V_const (C_prins ps')) v)) ->
-    Conf l (Mode Sec ps) s en (T_val (V_wire ps' (const_on ps' v)))
+    Conf l (Mode Sec ps) s en (T_val (V_wire ps' (mconst_on ps' v)))
 
 val pre_projwire: config -> Tot comp
 let pre_projwire c = match c with
@@ -957,9 +958,9 @@ let meta_empty_can_b_same_slice v ps = ()
 val slice_const_wire_sps_lemma:
   ps:prins -> ps'':prins{subset ps'' ps} -> v:value (empty, Can_b)
   -> Lemma (requires (True))
-           (ensures (slice_wire_sps #ps'' ps (const_on ps'' v) =
-                     const_on ps'' (D_v.v (slice_v_sps ps v))))
-     //[SMTPat (slice_wire_sps #ps'' ps (const_on ps'' v))]
+           (ensures (slice_wire_sps #ps'' ps (mconst_on ps'' v) =
+                     mconst_on ps'' (D_v.v (slice_v_sps ps v))))
+     //[SMTPat (slice_wire_sps #ps'' ps (mconst_on ps'' v))]
 let slice_const_wire_sps_lemma ps ps'' v = ()
 
 val get_en_b_slice_lemma_ps:
@@ -1485,16 +1486,16 @@ let if_enter_sec_then_from_sec #c #c' h = not (is_C_assec_beta h) || is_sec c
 val slice_wire_p_lemma_mem:
   p:prin -> ps:prins{mem p ps} -> v:value (empty, Can_b)
   -> Lemma (requires (True))
-           (ensures (slice_wire #ps p (const_on ps v) =
-                     const_on (singleton p) (D_v.v (slice_v p v))))
-     //[SMTPat (slice_wire #ps p (const_on ps v))]
+           (ensures (slice_wire #ps p (mconst_on ps v) =
+                     mconst_on (singleton p) (D_v.v (slice_v p v))))
+     //[SMTPat (slice_wire #ps p (mconst_on ps v))]
 let slice_wire_p_lemma_mem p ps v = ()
 
 val slice_wire_p_lemma_not_mem:
   p:prin -> ps:prins{not (mem p ps)} -> v:value (empty, Can_b)
   -> Lemma (requires (True))
-           (ensures (slice_wire #ps p (const_on ps v) = OrdMap.empty))
-     //[SMTPat (slice_wire #ps p (const_on ps v))]
+           (ensures (slice_wire #ps p (mconst_on ps v) = OrdMap.empty))
+     //[SMTPat (slice_wire #ps p (mconst_on ps v))]
 let slice_wire_p_lemma_not_mem p ps v = ()
 
 val mem_intersect_lemma_not_mem: p:prin -> eps:eprins{not (mem p eps)}
