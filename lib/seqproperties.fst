@@ -177,7 +177,7 @@ let rec sorted_concat_lemma f lo pivot hi =
         lemma_append_cons lo (cons pivot hi);
         lemma_tl (head lo) (append (tail lo) (cons pivot hi)))
 
-#set-options "--max_fuel 0 --initial_fuel 0"
+#set-options " --max_fuel 0 --initial_fuel 0"
 opaque val split_5 : #a:Type -> s:seq a -> i:nat -> j:nat{i < j && j < length s} -> Pure (seq (seq a))
   (requires True)
   (ensures (fun x ->
@@ -410,20 +410,18 @@ val seq_find_aux : #a:Type -> f:(a -> Tot bool) -> l:seq a
                       (ensures (fun o -> (is_None o ==> (forall (i:nat{i < Seq.length l}).
                                                          not (f (Seq.index l i))))
                                       /\ (is_Some o ==> (f (Some.v o)
-                                                        /\ (exists (i:nat{i < Seq.length l}).
+                                                        /\ (exists (i:nat{i < Seq.length l}). //{:pattern (found i)}
                                                             o = Some (Seq.index l i))))))
 
 let rec seq_find_aux f l ctr =
   match ctr with
   | 0 -> None
   | _ -> let i = ctr - 1 in
-  match f (Seq.index l i) with
-  | true ->
-     cut (f (Seq.index l i) /\ True);
-     //cut ( True /\ (exists (i:nat). i < Seq.length l /\ found i) ); //CH: this intermittently fails on my machine 
-     admitP ( True /\ (exists (i:nat). i < Seq.length l /\ found i) );
-     Some (Seq.index l i)
-  | false -> seq_find_aux f l i
+  if f (Seq.index l i)
+  then (
+     cut (found i);
+     Some (Seq.index l i))
+  else seq_find_aux f l i
 
 val seq_find: #a:Type -> f:(a -> Tot bool) -> l:seq a ->
                      Pure (option a)
@@ -434,7 +432,6 @@ val seq_find: #a:Type -> f:(a -> Tot bool) -> l:seq a ->
                                                    /\ (exists (i:nat{i < Seq.length l}).{:pattern (found i)}
                                                        found i /\ o = Some (Seq.index l i))))))
 
-
 let seq_find f l =
-  admit();
+  admit ();
   seq_find_aux f l (Seq.length l)
