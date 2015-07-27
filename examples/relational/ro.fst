@@ -35,7 +35,7 @@ type alloc =
 
 type log = map key (alloc * tag)
 
-type state =
+type state_hash =
   { bad: bool; (* set iff any allocation has failed, e.g. bumped into the other's table *)
     l:log }    (* the map ensures at most one entry per key *)
 
@@ -66,58 +66,80 @@ let ok_consA = assume(forall (k:key) (t:tag) (l0:log) (l1:log).
 
 
 
-val ok_adv_eq : l0:log -> l1:log -> p:Ok l0 l1 -> k:key
+val ok_adv_eq' : l0:log -> l1:log -> p:Ok l0 l1 -> k:key
                 -> Lemma
                    (requires True)
                    (ensures (forall t. assoc k l0 = Some(Adv, t) <==>
                                        assoc k l1 = Some(Adv, t)))
-let rec ok_adv_eq l0 l1 p k = match p with
+let rec ok_adv_eq' l0 l1 p k = match p with
         | Null -> ()
-        | ConsH _ _ _ _ tl0 tl1 p' -> ok_adv_eq tl0 tl1 p' k
-        | ConsA _ _ tl0 tl1 p' -> ok_adv_eq tl0 tl1 p' k
+        | ConsH _ _ _ _ tl0 tl1 p' -> ok_adv_eq' tl0 tl1 p' k
+        | ConsA _ _ tl0 tl1 p' -> ok_adv_eq' tl0 tl1 p' k
 
 assume val ok_witness : l0:log -> l1:log {Ok l0 l1} -> Tot (Ok l0 l1)
 
-val ok_adv_eq' : l0:log -> l1:log{Ok l0 l1} ->  k:key
+val ok_adv_eq : l0:log -> l1:log{Ok l0 l1} ->  k:key
                 -> Lemma
                    (requires True)
                    (ensures (forall t. assoc k l0 = Some(Adv, t) <==>
                                        assoc k l1 = Some(Adv, t)))
                   [SMTPat (assoc k l0); SMTPat (assoc k l1)]
-let ok_adv_eq' l0 l1 k = ok_adv_eq l0 l1 (ok_witness l0 l1) k
+let ok_adv_eq l0 l1 k = ok_adv_eq' l0 l1 (ok_witness l0 l1) k
 
 
-val ok_hon_safe : k0:key -> k1:key -> l0:log -> l1:log -> p:Ok l0 l1
+val ok_hon_safe' : k0:key -> k1:key -> l0:log -> l1:log -> p:Ok l0 l1
                 -> Lemma
                    (requires (safe_key k0 k1))
                    (ensures ( (is_Some(assoc k0 l0) /\ is_Hon(fst (Some.v(assoc k0 l0)))) <==>
                                is_Some(assoc k1 l1) /\ is_Hon(fst (Some.v(assoc k1 l1)))))
-let rec ok_hon_safe k0 k1 l0 l1 p = match p with
+let rec ok_hon_safe' k0 k1 l0 l1 p = match p with
         | Null -> ()
-        | ConsH k0' k1' t01 t1' tl0 tl1 p' -> ok_hon_safe k0 k1 tl0 tl1 p'
-        | ConsA k' t' tl0 tl1 p' -> ok_hon_safe k0 k1 tl0 tl1 p'
+        | ConsH k0' k1' t01 t1' tl0 tl1 p' -> ok_hon_safe' k0 k1 tl0 tl1 p'
+        | ConsA k' t' tl0 tl1 p' -> ok_hon_safe' k0 k1 tl0 tl1 p'
 
 val ok_hon_safe'': k0:key -> k1:key -> l0:log -> l1:log {p:Ok l0 l1}
                 -> Lemma
                    (requires (safe_key k0 k1))
-                   (ensures ( (is_Some(assoc k0 l0) /\ is_Hon(fst (Some.v(assoc k0 l0)))) <==>
-                               is_Some(assoc k1 l1) /\ is_Hon(fst (Some.v(assoc k1 l1)))))
+                   (ensures ( ((is_Some(assoc k0 l0) /\ is_Hon(fst (Some.v(assoc k0 l0)))) <==>
+                               is_Some(assoc k1 l1) /\ is_Hon(fst (Some.v(assoc k1 l1))))))
                                [SMTPat (assoc k0 l0); SMTPat (assoc k1 l1)]
-let ok_hon_safe'' k0 k1 l0 l1 = ok_hon_safe k0 k1 l0 l1 (ok_witness l0 l1)
+let ok_hon_safe'' k0 k1 l0 l1 = ok_hon_safe' k0 k1 l0 l1 (ok_witness l0 l1)
 
 
-val ok_hon_safe' : k0:key -> k1:key
+val ok_hon_safe : k0:key -> k1:key
                 -> Lemma
                    (requires (safe_key k0 k1))
                    (ensures (forall (l0:log) (l1:log). Ok l0 l1 ==>
-                              (is_Some(assoc k0 l0) /\ is_Hon(fst (Some.v(assoc k0 l0)))) <==>
-                               is_Some(assoc k1 l1) /\ is_Hon(fst (Some.v(assoc k1 l1)))))
-let ok_hon_safe' k0 k1 = admit ()
+                              ((is_Some(assoc k0 l0) /\ is_Hon(fst (Some.v(assoc k0 l0)))) <==>
+                               is_Some(assoc k1 l1) /\ is_Hon(fst (Some.v(assoc k1 l1))))))
+let ok_hon_safe k0 k1 = admit ()
 
-type goodstate (s1:state) (s2:state) =
+val ok_hon_safe2' : k0:key -> k1:key -> l0:log -> l1:log -> p:Ok l0 l1
+                -> Lemma
+                   (requires (safe_key k0 k1))
+                   (ensures (is_Some(assoc k0 l0) /\ is_Some(assoc k1 l1) /\ 
+                             is_Hon(fst(Some.v (assoc k0 l0))) /\ 
+                             is_Hon(fst(Some.v (assoc k0 l0))) ==>
+                               safe k0 k1 (snd(Some.v (assoc k0 l0))) (snd(Some.v (assoc k1 l1)))))
+let rec ok_hon_safe2' k0 k1 l0 l1 p = match p with
+        | Null -> ()
+        | ConsH k0' k1' t01 t1' tl0 tl1 p' -> ok_hon_safe2' k0 k1 tl0 tl1 p'
+        | ConsA k' t' tl0 tl1 p' -> ok_hon_safe2' k0 k1 tl0 tl1 p'
+
+
+assume val ok_hon_safe2 : k0:key -> k1:key
+                 -> Lemma
+                    (requires (safe_key k0 k1))
+                    (ensures (forall (l0:log) (l1:log). Ok l0 l1 ==>
+                              (is_Some(assoc k0 l0) /\ is_Some(assoc k1 l1) /\ 
+                               is_Hon(fst(Some.v (assoc k0 l0))) /\ 
+                               is_Hon(fst(Some.v (assoc k0 l0))) ==>
+                                 safe k0 k1 (snd(Some.v (assoc k0 l0))) (snd(Some.v (assoc k1 l1))))))
+
+type goodstate_hash (s1:state_hash) (s2:state_hash) =
             s1.bad = true \/ s2.bad = true \/ Ok s1.l s2.l
 
-assume val s : ref state
+assume val s : ref state_hash
 
 assume val sample_hon : k0:key -> k1:key ->
                  ST2 (tag * tag)
@@ -141,7 +163,7 @@ let hash_hon k = match assoc k (!s),l with
 
 val hash_hon:  k0:key -> k1:key ->
                ST2 (option tag * option tag)
-               (requires (fun h2 -> goodstate (sel (fst h2) s) (sel (snd h2) s) /\
+               (requires (fun h2 -> goodstate_hash (sel (fst h2) s) (sel (snd h2) s) /\
                           safe_key k0 k1))
                (ensures (fun _ p h2 -> (sel (fst h2) s).bad \/
                                        (sel (snd h2) s).bad \/
@@ -151,7 +173,7 @@ val hash_hon:  k0:key -> k1:key ->
 
 val hash_hon2: k0:key -> k1:key ->
                ST2 (option tag * option tag)
-               (requires (fun h2 -> goodstate (sel (fst h2) s) (sel (snd h2) s) /\
+               (requires (fun h2 -> goodstate_hash (sel (fst h2) s) (sel (snd h2) s) /\
                           safe_key k0 k1))
                (ensures (fun _ p h2 -> (sel (fst h2) s).bad \/
                                        (sel (snd h2) s).bad \/
@@ -161,7 +183,7 @@ val hash_hon2: k0:key -> k1:key ->
 
 val hash_adv:  k:key ->
                ST2 (option tag * option tag)
-               (requires (fun h2 -> goodstate (sel (fst h2) s) (sel (snd h2) s)))
+               (requires (fun h2 -> goodstate_hash (sel (fst h2) s) (sel (snd h2) s)))
                (ensures (fun _ p h2 -> (sel (fst h2) s).bad \/
                                        (sel (snd h2) s).bad \/
                                        is_Some (fst p) /\ is_Some (snd p) /\
@@ -181,7 +203,8 @@ let hash_hon' k r = match assoc k (!s).l with
                     s := {bad = (!s).bad; l= (k,(Hon,t))::(!s).l} ;
                     add_some t
 
-let hash_hon k0 k1  = ok_hon_safe' k0 k1;
+let hash_hon k0 k1  = ok_hon_safe k0 k1;
+                      ok_hon_safe2 k0 k1;
                       let r0, r1 = sample_hon k0 k1 in
                       (compose2 (fun k -> hash_hon' k r0)
                                 (fun k -> hash_hon' k r1)
@@ -194,25 +217,22 @@ let case_None (k,t) = s:={bad = (!s).bad; l = (k,(Hon,t))::(!s).l}; add_some t
 assume val sample_single : unit -> Tot tag
 
 let hash_hon2 k0 k1 =
-  ok_hon_safe' k0 k1;
+  ok_hon_safe k0 k1;
+  ok_hon_safe2 k0 k1;
   let l0, l1 = compose2 (fun _ -> (!s).l) (fun _ -> (!s).l) () () in
   match assoc k0 l0, assoc k1 l1 with
   | Some (Hon,t0), Some (Hon,t1) -> compose2 (fun x -> case_Hon x) (fun x -> case_Hon x) t0 t1
   | Some (Hon,t0), Some (Adv,t1) -> compose2 (fun x -> case_Hon x) (fun x -> case_Adv x) t0 ()
-(*
   | Some (Hon,t0), None          -> let t1 = sample_single () in
                                     compose2 (fun x -> case_Hon x) (fun x -> case_None x) t0 (k1,t1)
-*)
   | Some (Adv,t0), Some (Hon,t1) -> compose2 (fun x -> case_Adv x) (fun x -> case_Hon x) () t0
   | Some (Adv,t0), Some (Adv,t1) -> compose2 (fun x -> case_Adv x) (fun x -> case_Adv x) () ()
   | Some (Adv,t0), None          -> let t1 = sample_single () in
                                     compose2 (fun x -> case_Adv x) (fun x -> case_None x) () (k1,t1)
   | None         , Some (Hon,t1) -> let t0 = sample_single () in
                                     compose2 (fun x -> case_None x) (fun x -> case_Hon x) (k0,t0) t1
-(*
   | None         , Some (Adv,t1) -> let t0 = sample_single () in
                                     compose2 (fun x -> case_None x) (fun x -> case_Adv x) (k0,t0) ()
-*)
   | None         , None          -> let t0, t1 = sample_hon k0 k1 in
                                     compose2 (fun x -> case_None x) (fun x -> case_None x) (k0,t0) (k1,t1)
 
@@ -231,7 +251,6 @@ let hash_adv k  = let r0, r1 = sample_adv () in
 
 (* Simple Encryption Scheme based on ro *)
 
-(*
 type injection (#a:Type) (f:a -> Tot a) = (forall x y. f x = f y ==> x = y)
 type surjection (#a:Type) (f:a -> Tot a) = (forall y. (exists x. f x = y))
 type bijection (#a:Type) (f:a -> Tot a) = injection f /\ surjection f
@@ -263,12 +282,23 @@ let encrypt p k = xor p k
 val decrypt : block -> block -> Tot block
 let decrypt c k = xor c k
 
+type state_enc =
+  { bad': bool; (* set iff a nonce was sampled twice *)  
+    l':log }    (* the log keeps track of returned nonces *)
+
+type good_state_enc (s:state_enc) = s.bad' = false
+(*
+
 val encrypt_hon : k0:bytes ->  k1:bytes -> p0:block -> p1:block ->
               ST2 (option(block * block) * option(block * block))
-                  (requires (fun h2 -> goodstate (sel (fst h2) s) (sel (snd h2) s)))
-                  (ensures  (fun h2' p h2 -> goodstate (sel (fst h2) s) (sel (snd h2) s) /\
+                  (requires (fun h2 -> goodstate_hash (sel (fst h2) s) (sel (snd h2) s)))
+                  (ensures  (fun h2' p h2 -> (sel (fst h2) s).bad  \/ 
+                                             (sel (snd h2) s).bad  \/ 
+                                             Ok (sel (fst h2) s).l (sel (snd h2) s).l /\
+                                             is_Some (fst p) /\ is_Some (snd p) /\
                                              fst p = snd p))
 *)
+
 (*
 let encrypt_hon k0 k1 p0 p1 = let r0, r1 = sample (fun x ->  x) in
                   let h0, h1 = hash_hon (append k0 r0) (append k1 r1) in
