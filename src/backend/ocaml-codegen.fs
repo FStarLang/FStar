@@ -5,9 +5,9 @@ module Microsoft.FStar.Backends.OCaml.Code
 
 open System
 open System.Text
-
+open Microsoft.FStar
 open Microsoft.FStar.Util
-
+open Microsoft.FStar.Backends.ML
 open Microsoft.FStar.Backends.ML.Syntax
 open FSharp.Format
 
@@ -94,13 +94,6 @@ let mlpath_of_mlpath (currentModule : mlpath) (x : mlpath) : mlpath =
     match string_of_mlpath x with
     | "Prims.Some" -> ([], "Some")
     | "Prims.None" -> ([], "None")
-//    | "Prims.nat" -> ([], "int")
-//    | "Prims.list" -> ([], "list") // was not there in old code
-//    | "Prims.Nil" -> ([], "Nil") // was not there in old code
-//   | "Prims.Cons" -> ([], "Cons") // was not there in old code
-//    | "Prims.int" -> ([], "int") // was not there in old code
-//    | "Prims.unit" -> ([], "unit") // was not there in old code
-//    | "Prims.string" -> ([], "string") // was not there in old code
     | "Prims.failwith" -> ([], "failwith")
     | "ST.alloc" -> ([], "ref")
     | "ST.read" -> (["Support";"Prims"], "op_Bang")
@@ -293,10 +286,14 @@ let string_of_mlconstant (sctt : mlconstant) =
 
 
 (* -------------------------------------------------------------------- *)
-let rec doc_of_mltype (currentModule: mlpath) (outer : level) (ty : mlty) =
+let rec doc_of_mltype' (currentModule: mlpath) (outer : level) (ty : mlty) =
     match ty with
     | MLTY_Var x ->
-        text (idsym x)
+        let escape_tyvar s = 
+            if Util.starts_with s "'_" //this denotes a weak type variable in OCaml; it cannot be written in source programs
+            then Util.replace_char s '_' 'u'
+            else s in
+        text (escape_tyvar <| idsym x)
 
     | MLTY_Tuple tys ->
         let doc = List.map (doc_of_mltype currentModule (t_prio_tpl, Left)) tys in
@@ -337,6 +334,9 @@ let rec doc_of_mltype (currentModule: mlpath) (outer : level) (ty : mlty) =
 
     | MLTY_Top -> 
       text "Obj.t" //TODO: change this to 'obj' if we're generating F#
+
+and doc_of_mltype (currentModule: mlpath) (outer : level) (ty : mlty) =
+    doc_of_mltype' currentModule outer (Util.resugar_mlty ty)
 
 
 (* -------------------------------------------------------------------- *)

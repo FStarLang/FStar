@@ -31,12 +31,12 @@ open Microsoft.FStar.Backends.ML.Env
 let binderIsExp (bn:binder): bool = is_inr (fst bn)
 
 let rec argIsExp (k:knd) (typeName : string) : list<bool> =
-match (Util.compress_kind k).n with
-| Kind_type -> []
-| Kind_arrow (bs,r) -> List.append (List.map binderIsExp bs) (argIsExp r typeName)
-| Kind_delayed (k, _ ,_) -> failwith "extraction.numIndices : expected a compressed argument"
-| Kind_abbrev(_, k) -> argIsExp k typeName
-| _ -> failwith ("unexpected signature of inductive type" ^ typeName) 
+    match (Util.compress_kind k).n with
+        | Kind_type -> []
+        | Kind_arrow (bs,r) -> List.append (List.map binderIsExp bs) (argIsExp r typeName)
+        | Kind_delayed (k, _ ,_) -> failwith "extraction.numIndices : expected a compressed argument"
+        | Kind_abbrev(_, k) -> argIsExp k typeName
+        | _ -> failwith ("unexpected signature of inductive type" ^ typeName) 
 
 let  numIndices (k:knd) (typeName : string (*this argument is just for debugging purposes*)) 
   : int = List.length (argIsExp k typeName)
@@ -68,9 +68,9 @@ let translate_eff g l : e_tag =
 (*generates inp_1 -> E_PURE (inp_2 -> ...  E_PURE (inp_n -> f out)) *)
 let rec curry (inp: (list<mlty>)) (f : e_tag) (out: mlty) =
   match inp with
-  | [] -> out
-  | [h] -> MLTY_Fun (h, f, out) 
-  | h1::h2::tl -> MLTY_Fun(h1, E_PURE, curry (h2::tl) f out)
+    | [] -> out
+    | [h] -> MLTY_Fun (h, f, out) 
+    | h1::h2::tl -> MLTY_Fun(h1, E_PURE, curry (h2::tl) f out)
   
 (*
   Below, "the thesis" refers to:
@@ -86,23 +86,23 @@ type context = env
 
 
 let extendContextWithRepAsTyVar (b : either<btvar,bvvar> * either<btvar,bvvar>) (c:context): context = 
-match b with
-| (Inl bt, Inl btr) -> 
-           //printfn "mapping from %A\n" btr.v.realname;
-           //printfn "to %A\n" bt.v.realname;
-   extend_ty c btr (Some ((MLTY_Var (btvar_as_mlident bt))))
-| (Inr bv, Inr _ ) -> extend_bv c bv ([], erasedContent) false
-| _ -> failwith "Impossible case"
+    match b with
+        | (Inl bt, Inl btr) -> 
+                   //printfn "mapping from %A\n" btr.v.realname;
+                   //printfn "to %A\n" bt.v.realname;
+           extend_ty c btr (Some ((MLTY_Var (btvar_as_mlident bt))))
+        | (Inr bv, Inr _ ) -> extend_bv c bv ([], erasedContent) false
+        | _ -> failwith "Impossible case"
 
 
 let extendContextWithRepAsTyVars (b : list< (either<btvar,bvvar> * either<btvar,bvvar>) > ) (c:context): context = 
    List.fold_right (extendContextWithRepAsTyVar) b c (*TODO: is the fold in the right direction? check *)
 
 let extendContextAsTyvar (availableInML : bool) (b : either<btvar,bvvar>) (c:context): context = 
-match b with
-| (Inl bt) -> extend_ty c bt (Some (if availableInML then (MLTY_Var (btvar_as_mlident bt)) else unknownType))
-//if availableInML then (extend_ty c bt (Some ( (MLTY_Var (btvar2mlident bt))))) else (extend_hidden_ty c bt unknownType)
-| (Inr bv) -> extend_bv c bv ([], erasedContent) false
+    match b with
+        | (Inl bt) -> extend_ty c bt (Some (if availableInML then (MLTY_Var (btvar_as_mlident bt)) else unknownType))
+        //if availableInML then (extend_ty c bt (Some ( (MLTY_Var (btvar2mlident bt))))) else (extend_hidden_ty c bt unknownType)
+        | (Inr bv) -> extend_bv c bv ([], erasedContent) false
 
 let extendContext (c:context) (tyVars : list<either<btvar,bvvar>>) : context = 
    List.fold_right (extendContextAsTyvar true) (tyVars) c (*TODO: is the fold in the right direction? check *)
@@ -119,15 +119,11 @@ let extendContext (c:context) (tyVars : list<either<btvar,bvvar>>) : context =
 let isTypeScheme (i : lident) (c: context) : bool = true  (*TODO: FIX!! really? when would a type constant not be a type scheme? *)
 
 
-
 let preProcType  (c:context) (ft:typ) : typ =  
     let ft =  (Util.compress_typ ft) in
     Tc.Normalize.norm_typ [Tc.Normalize.Beta] c.tcenv ft
 
-let extractTyVar (c:context) (btv : btvar) = (lookup_tyvar c btv)
-
-
-(* (if (contains c btv) then MLTY_Var (btvar2mlident btv) else unknownType) *)
+let extractTyVar (c:context) (btv : btvar) = lookup_tyvar c btv
 
 
 (*the \hat{\epsilon} function in the thesis (Sec. 3.3.5) *)
@@ -143,53 +139,56 @@ let extractTyVar (c:context) (btv : btvar) = (lookup_tyvar c btv)
 
 let rec extractTyp  (c:context) (ft:typ) : mlty = 
     let ft =  (preProcType c ft) in
-match ft.n with // assume ft is compressed. is there a compresser for typ'?
-  | Typ_btvar btv -> extractTyVar c btv
-  (*it is not clear whether description in the thesis covers type applications with 0 args. However, this case is needed to translate types like nnat, and so far seems to work as expected*)
-  | Typ_const ftv ->  extractTyConstApp c ftv []
-  | Typ_fun (bs, codomain) -> 
-        let (bts, newC) = extractBindersTypes c bs in
-        (let codomainML, erase = (extractComp  newC codomain) in 
-        //if false 
-        //then erasedContent // doing this here will mess with the later phase of extracting/ML-typechecking of expressions, this is done later
-        //else  
-        (curry bts erase codomainML))
+    match ft.n with // assume ft is compressed. is there a compresser for typ'?
+      | Typ_btvar btv -> extractTyVar c btv
+      (*it is not clear whether description in the thesis covers type applications with 0 args. However, this case is needed to translate types like nnat, and so far seems to work as expected*)
+      | Typ_const ftv ->  extractTyConstApp c ftv []
+      | Typ_fun (bs, codomain) -> 
+            let (bts, newC) = extractBindersTypes c bs in
+            (let codomainML, erase = (extractComp  newC codomain) in 
+            //if false 
+            //then erasedContent // doing this here will mess with the later phase of extracting/ML-typechecking of expressions, this is done later
+            //else  
+            (curry bts erase codomainML))
 
-  | Typ_refine (bv (*var and unrefined type*) , _ (*refinement condition*)) -> extractTyp c bv.sort
+      | Typ_refine (bv (*var and unrefined type*) , _ (*refinement condition*)) -> extractTyp c bv.sort
 
-  (*can this be a partial type application? , i.e can the result of this application be something like Type -> Type, or nat -> Type? : Yes *)
-  (* should we try to apply additional arguments here? if not, where? FIX!! *)
-  | Typ_app (ty, arrgs) ->
-    let ty = preProcType c ty in
-    (match ty.n with
-        | Typ_btvar btv ->  extractTyVar c btv
-            (*the args are thrown away, because in OCaml, type variables have type Type and not something like -> .. -> .. Type *)
-        | Typ_const ftv -> extractTyConstApp c ftv arrgs            
-        | Typ_app (tyin, argsin) -> extractTyp c (Util.mkTypApp tyin (List.append argsin arrgs) ty)
-        | _ -> unknownType)
+      (*can this be a partial type application? , i.e can the result of this application be something like Type -> Type, or nat -> Type? : Yes *)
+      (* should we try to apply additional arguments here? if not, where? FIX!! *)
+      | Typ_app (ty, arrgs) ->
+        let ty = preProcType c ty in
+        let res = match ty.n with
+            | Typ_btvar btv ->  extractTyVar c btv
+                (*the args are thrown away, because in OCaml, type variables have type Type and not something like -> .. -> .. Type *)
+            | Typ_const ftv -> extractTyConstApp c ftv arrgs            
+            | Typ_app (tyin, argsin) -> extractTyp c (Util.mkTypApp tyin (List.append argsin arrgs) ty)
+            | _ -> unknownType in 
+        res
 
-  | Typ_lam  (bs,ty) ->  (* (sch) rule in \hat{\epsilon} *)
-         let (bts, c) = extractBindersTypes c bs in
-            extractTyp c ty
+      | Typ_lam  (bs,ty) ->  (* (sch) rule in \hat{\epsilon} *)
+             let (bts, c) = extractBindersTypes c bs in
+                extractTyp c ty
 
-  | Typ_ascribed (ty,_)  -> extractTyp c ty
-  | Typ_meta mt -> extractMeta c mt
-  | Typ_uvar _ -> unknownType 
-  | Typ_delayed _  -> failwith "expected the argument to be compressed"
-//  | Typ_meta (Meta_named(t, _)) -> extractTyp c t
-//  | Typ_meta _ -> failwith (Util.format2 "Unexpected meta in type (%s) at %s\n" (Print.typ_to_string ft) (Range.string_of_range ft.pos))
-  |   _ -> failwith "NYI. replace this with unknownType if you know the consequences"
+      | Typ_ascribed (ty,_)  -> extractTyp c ty
+      | Typ_meta mt -> extractMeta c mt
+      | Typ_uvar _ -> unknownType 
+      | Typ_delayed _  -> failwith "expected the argument to be compressed"
+    //  | Typ_meta (Meta_named(t, _)) -> extractTyp c t
+    //  | Typ_meta _ -> failwith (Util.format2 "Unexpected meta in type (%s) at %s\n" (Print.typ_to_string ft) (Range.string_of_range ft.pos))
+      |   _ -> failwith "NYI. replace this with unknownType if you know the consequences"
+
 and getTypeFromArg (c:context) (a:arg) : mlty =
-match (fst a) with
-| Inl ty -> extractTyp c ty
-| Inr _ -> erasedContent 
+    match (fst a) with
+      | Inl ty -> extractTyp c ty
+      | Inr _ -> erasedContent 
+
 and extractMeta (c:context) (mt:meta_t) : mlty =
-match mt with
-  | Meta_pattern (t,_) 
-  | Meta_named (t,_)
-  | Meta_labeled (t,_,_, _)
-  | Meta_refresh_label (t,_,_) 
-  | Meta_slack_formula (t,_,_) -> extractTyp c t
+    match mt with
+      | Meta_pattern (t,_) 
+      | Meta_named (t,_)
+      | Meta_labeled (t,_,_, _)
+      | Meta_refresh_label (t,_,_) 
+      | Meta_slack_formula (t,_,_) -> extractTyp c t
     
 
 and extractTyConstApp (c:context) (ftv:ftvar) (ags : args) : mlty =

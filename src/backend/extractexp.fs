@@ -108,7 +108,7 @@ let rec extract_pat (g:env) p : (env * list<mlpattern>) = match p.v with
         | MLE_Name n, _ -> n
         | _ -> failwith "Expected a constructor" in
     let g, pats = Util.fold_map extract_pat g pats in
-    g, [MLP_CTor (d, List.flatten pats)]
+    g, [Util.resugar_pat <| MLP_CTor (d, List.flatten pats)]
 
   | Pat_var(x, _) ->
     let mlty = translate_typ g x.sort in 
@@ -139,20 +139,20 @@ let maybe_eta_data (isDataCons : bool) (residualType : mlty)  (mlAppExpr : mlexp
         | MLTY_Named (_, _) -> List.rev more_args
         | _ -> failwith "Impossible" in
 
-    let maybe_eta e = 
+    let resugar_and_maybe_eta e = 
         let eargs = eta_args [] residualType in 
         match eargs with 
-            | [] -> e 
+            | [] -> Util.resugar_exp e 
             | _ -> 
                 let binders, eargs = List.unzip eargs in
                 match e with 
                     | MLE_CTor(head, args) ->
-                        MLE_Fun(binders, MLE_CTor(head, args@eargs))
+                        MLE_Fun(binders, Util.resugar_exp <| MLE_CTor(head, args@eargs))
                     | _ -> failwith "Impossible" in
     
     match (mlAppExpr, isDataCons) with
-        | (MLE_App (MLE_Name mlp, mlargs) , true) -> maybe_eta <| MLE_CTor (mlp,mlargs) 
-        | (MLE_Name mlp, true) -> maybe_eta <| MLE_CTor (mlp, [])
+        | (MLE_App (MLE_Name mlp, mlargs) , true) -> resugar_and_maybe_eta <| MLE_CTor (mlp,mlargs) 
+        | (MLE_Name mlp, true) -> resugar_and_maybe_eta <| MLE_CTor (mlp, [])
         | _ -> mlAppExpr
  
 let rec check_exp (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr = 

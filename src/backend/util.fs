@@ -135,3 +135,50 @@ let tbinder_prefix t = match (Util.compress_typ t).n with
     | _ -> [],t
 
 
+let is_xtuple (ns, n) =
+    if ns = ["Prims"]
+    then match n with 
+        | "MkTuple2" -> Some 2
+        | "MkTuple3" -> Some 3
+        | "MkTuple4" -> Some 4
+        | "MkTuple5" -> Some 5
+        | "MkTuple6" -> Some 6
+        | "MkTuple7" -> Some 7
+        | _ -> None
+    else None 
+
+let resugar_exp e = match e with 
+    | MLE_CTor(mlp, args) -> 
+        (match is_xtuple mlp with 
+        | Some n -> MLE_Tuple args
+        | _ -> e)
+    | _ -> e
+
+let resugar_pat p = match p with 
+    | MLP_CTor(d, pats) -> 
+      begin match is_xtuple d with 
+        | Some n -> MLP_Tuple(pats)
+        | _ -> p
+      end
+    | _ -> p
+
+
+let is_xtuple_ty (ns, n) = 
+    if ns = ["Prims"]
+    then match n with 
+        | "Tuple2" -> Some 2
+        | "Tuple3" -> Some 3
+        | "Tuple4" -> Some 4
+        | "Tuple5" -> Some 5
+        | "Tuple6" -> Some 6
+        | "Tuple7" -> Some 7
+        | _ -> None
+    else None 
+
+let resugar_mlty t = match t with 
+    | MLTY_Named (args, mlp) -> 
+      begin match is_xtuple_ty mlp with 
+        | Some n -> MLTY_Tuple args
+        | _ -> t
+      end
+    | _ -> t

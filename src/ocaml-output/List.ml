@@ -1,5 +1,5 @@
 
-let isEmpty = (fun ( _47_392  :  unit ) ( l  :  'a list ) -> (match (l) with
+let isEmpty = (fun ( _6_18  :  unit ) ( l  :  'a list ) -> (match (l) with
 | [] -> begin
 true
 end
@@ -7,9 +7,9 @@ end
 false
 end))
 
-let isEmptyT = (fun ( _47_392  :  unit ) -> (isEmpty ()))
+let isEmptyT = (fun ( _6_18  :  unit ) -> (isEmpty ()))
 
-let hd = (fun ( _47_392  :  unit ) ( _3_1  :  'a list ) -> (match (_3_1) with
+let hd = (fun ( _6_18  :  unit ) ( _3_1  :  'a list ) -> (match (_3_1) with
 | hd::tl -> begin
 hd
 end
@@ -17,7 +17,7 @@ end
 (failwith ("head of empty list"))
 end))
 
-let tail = (fun ( _47_392  :  unit ) -> (fun ( _3_2  :  '_3_748 list ) -> (match (_3_2) with
+let tail = (fun ( _6_18  :  unit ) -> (fun ( _3_2  :  'u3u748 list ) -> (match (_3_2) with
 | hd::tl -> begin
 tl
 end
@@ -25,9 +25,9 @@ end
 (failwith ("tail of empty list"))
 end)))
 
-let tl = (fun ( _47_392  :  unit ) -> (tail ()))
+let tl = (fun ( _6_18  :  unit ) -> (tail ()))
 
-let rec length = (fun ( _47_392  :  unit ) ( _3_3  :  'a list ) -> (match (_3_3) with
+let rec length = (fun ( _6_18  :  unit ) ( _3_3  :  'a list ) -> (match (_3_3) with
 | [] -> begin
 0
 end
@@ -35,9 +35,9 @@ end
 (1 + ((length ()) tl))
 end))
 
-let lengthT = (fun ( _47_392  :  unit ) -> (length ()))
+let lengthT = (fun ( _6_18  :  unit ) -> (length ()))
 
-let rec nth = (fun ( _47_392  :  unit ) ( l  :  'a list ) ( n  :  int ) -> (match ((n < 0)) with
+let rec nth = (fun ( _6_18  :  unit ) ( l  :  'a list ) ( n  :  int ) -> (match ((n < 0)) with
 | true -> begin
 (failwith ("nth takes a non-negative integer as input"))
 end
@@ -63,7 +63,7 @@ end)
 end)
 end))
 
-let rec total_nth = (fun ( _47_392  :  unit ) ( l  :  'a list ) ( n  :  Support.Prims.nat ) -> (match (l) with
+let rec total_nth = (fun ( _6_18  :  unit ) ( l  :  'a list ) ( n  :  Support.Prims.nat ) -> (match (l) with
 | [] -> begin
 None
 end
@@ -77,7 +77,7 @@ end
 end)
 end))
 
-let rec count = (fun ( _47_392  :  unit ) ( x  :  'a ) ( _3_4  :  'a list ) -> (match (_3_4) with
+let rec count = (fun ( _6_18  :  unit ) ( x  :  'a ) ( _3_4  :  'a list ) -> (match (_3_4) with
 | [] -> begin
 0
 end
@@ -91,9 +91,9 @@ end
 end)
 end))
 
-let countT = (fun ( _47_392  :  unit ) -> (count ()))
+let countT = (fun ( _6_18  :  unit ) -> (count ()))
 
-let rec rev_acc = (fun ( _47_392  :  unit ) ( l  :  'a list ) ( acc  :  'a list ) -> (match (l) with
+let rec rev_acc = (fun ( _6_18  :  unit ) ( l  :  'a list ) ( acc  :  'a list ) -> (match (l) with
 | [] -> begin
 acc
 end
@@ -101,13 +101,13 @@ end
 ((rev_acc ()) tl ((hd)::acc))
 end))
 
-let rev_append = (fun ( _47_392  :  unit ) -> (rev_acc ()))
+let rev_append = (fun ( _6_18  :  unit ) -> (rev_acc ()))
 
-let rev = (fun ( _47_392  :  unit ) ( l  :  'a list ) -> ((rev_acc ()) l []))
+let rev = (fun ( _6_18  :  unit ) ( l  :  'a list ) -> ((rev_acc ()) l []))
 
-let revT = (fun ( _47_392  :  unit ) -> (rev ()))
+let revT = (fun ( _6_18  :  unit ) -> (rev ()))
 
-let rec append = (fun ( _47_392  :  unit ) ( x  :  'a list ) ( y  :  'a list ) -> (match (x) with
+let rec append = (fun ( _6_18  :  unit ) ( x  :  'a list ) ( y  :  'a list ) -> (match (x) with
 | [] -> begin
 y
 end
@@ -115,9 +115,9 @@ end
 (a)::((append ()) tl y)
 end))
 
-let appendT = (fun ( _47_392  :  unit ) -> (append ()))
+let appendT = (fun ( _6_18  :  unit ) -> (append ()))
 
-let rec flatten = (fun ( _47_392  :  unit ) ( l  :  'a list list ) -> (match (l) with
+let rec flatten = (fun ( _6_18  :  unit ) ( l  :  'a list list ) -> (match (l) with
 | [] -> begin
 []
 end
@@ -125,13 +125,13 @@ end
 ((append ()) hd ((flatten ()) tl))
 end))
 
-let flattenT = (fun ( _47_392  :  unit ) -> (flatten ()))
+let flattenT = (fun ( _6_18  :  unit ) -> (flatten ()))
 
-let concat = (fun ( _47_392  :  unit ) -> (flatten ()))
+let concat = (fun ( _6_18  :  unit ) -> (flatten ()))
 
-let concatT = (fun ( _47_392  :  unit ) -> (flattenT ()))
+let concatT = (fun ( _6_18  :  unit ) -> (flattenT ()))
 
-let rec iter = (fun ( _47_392  :  unit ) ( f  :  'a  ->  unit ) ( x  :  'a list ) -> (match (x) with
+let rec iter = (fun ( _6_18  :  unit ) ( f  :  'a  ->  unit ) ( x  :  'a list ) -> (match (x) with
 | [] -> begin
 ()
 end
@@ -140,19 +140,19 @@ end
 in ((iter ()) f tl))
 end))
 
-let rec iterT = (fun ( _47_392  :  unit ) ( f  :  'a  ->  unit ) ( x  :  'a list ) -> ())
+let rec iterT = (fun ( _6_18  :  unit ) ( f  :  'a  ->  unit ) ( x  :  'a list ) -> ())
 
-let rec map = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b ) ( x  :  'a list ) -> (match (x) with
+let rec map = (fun ( _6_18  :  unit ) ( f  :  'a  ->  'b ) ( x  :  'a list ) -> (match (x) with
 | [] -> begin
 []
 end
 | a::tl -> begin
-(let _47_1676 = (f a)
-in (let _47_1675 = ((map ()) f tl)
-in (_47_1676)::_47_1675))
+(let _6_1302 = (f a)
+in (let _6_1301 = ((map ()) f tl)
+in (_6_1302)::_6_1301))
 end))
 
-let rec mapT = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b ) ( x  :  'a list ) -> (match (x) with
+let rec mapT = (fun ( _6_18  :  unit ) ( f  :  'a  ->  'b ) ( x  :  'a list ) -> (match (x) with
 | [] -> begin
 []
 end
@@ -160,17 +160,17 @@ end
 ((f a))::((mapT ()) f tl)
 end))
 
-let rec mapi_init = (fun ( _47_392  :  unit ) ( f  :  int  ->  'a  ->  'b ) ( l  :  'a list ) ( i  :  int ) -> (match (l) with
+let rec mapi_init = (fun ( _6_18  :  unit ) ( f  :  int  ->  'a  ->  'b ) ( l  :  'a list ) ( i  :  int ) -> (match (l) with
 | [] -> begin
 []
 end
 | hd::tl -> begin
-(let _47_1692 = (f i hd)
-in (let _47_1691 = ((mapi_init ()) f tl (i + 1))
-in (_47_1692)::_47_1691))
+(let _6_1318 = (f i hd)
+in (let _6_1317 = ((mapi_init ()) f tl (i + 1))
+in (_6_1318)::_6_1317))
 end))
 
-let rec mapi_initT = (fun ( _47_392  :  unit ) ( f  :  int  ->  'a  ->  'b ) ( l  :  'a list ) ( i  :  int ) -> (match (l) with
+let rec mapi_initT = (fun ( _6_18  :  unit ) ( f  :  int  ->  'a  ->  'b ) ( l  :  'a list ) ( i  :  int ) -> (match (l) with
 | [] -> begin
 []
 end
@@ -178,11 +178,11 @@ end
 ((f i hd))::((mapi_initT ()) f tl (i + 1))
 end))
 
-let mapi = (fun ( _47_392  :  unit ) ( f  :  int  ->  'a  ->  'b ) ( l  :  'a list ) -> ((mapi_init ()) f l 0))
+let mapi = (fun ( _6_18  :  unit ) ( f  :  int  ->  'a  ->  'b ) ( l  :  'a list ) -> ((mapi_init ()) f l 0))
 
-let mapiT = (fun ( _47_392  :  unit ) ( f  :  int  ->  'a  ->  'b ) ( l  :  'a list ) -> ((mapi_initT ()) f l 0))
+let mapiT = (fun ( _6_18  :  unit ) ( f  :  int  ->  'a  ->  'b ) ( l  :  'a list ) -> ((mapi_initT ()) f l 0))
 
-let rec concatMap = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b list ) ( _3_5  :  'a list ) -> (match (_3_5) with
+let rec concatMap = (fun ( _6_18  :  unit ) ( f  :  'a  ->  'b list ) ( _3_5  :  'a list ) -> (match (_3_5) with
 | [] -> begin
 []
 end
@@ -192,7 +192,7 @@ in (let ftl = ((concatMap ()) f tl)
 in ((append ()) fa ftl)))
 end))
 
-let rec concatMapT = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b list ) ( _3_6  :  'a list ) -> (match (_3_6) with
+let rec concatMapT = (fun ( _6_18  :  unit ) ( f  :  'a  ->  'b list ) ( _3_6  :  'a list ) -> (match (_3_6) with
 | [] -> begin
 []
 end
@@ -202,42 +202,42 @@ in (let ftl = ((concatMapT ()) f tl)
 in ((appendT ()) fa ftl)))
 end))
 
-let rec map2 = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b  ->  'c ) ( l1  :  'a list ) ( l2  :  'b list ) -> (match (Support.Prims.MkTuple2 (l1, l2)) with
-| Support.Prims.MkTuple2 ([], []) -> begin
+let rec map2 = (fun ( _6_18  :  unit ) ( f  :  'a  ->  'b  ->  'c ) ( l1  :  'a list ) ( l2  :  'b list ) -> (match ((l1, l2)) with
+| ([], []) -> begin
 []
 end
-| Support.Prims.MkTuple2 (hd1::tl1, hd2::tl2) -> begin
-(let _47_1738 = (f hd1 hd2)
-in (let _47_1737 = ((map2 ()) f tl1 tl2)
-in (_47_1738)::_47_1737))
+| (hd1::tl1, hd2::tl2) -> begin
+(let _6_1364 = (f hd1 hd2)
+in (let _6_1363 = ((map2 ()) f tl1 tl2)
+in (_6_1364)::_6_1363))
 end
-| Support.Prims.MkTuple2 (_, _) -> begin
+| (_, _) -> begin
 (failwith ("The lists do not have the same length"))
 end))
 
-let rec map3 = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b  ->  'c  ->  'd ) ( l1  :  'a list ) ( l2  :  'b list ) ( l3  :  'c list ) -> (match (Support.Prims.MkTuple3 (l1, l2, l3)) with
-| Support.Prims.MkTuple3 ([], [], []) -> begin
+let rec map3 = (fun ( _6_18  :  unit ) ( f  :  'a  ->  'b  ->  'c  ->  'd ) ( l1  :  'a list ) ( l2  :  'b list ) ( l3  :  'c list ) -> (match ((l1, l2, l3)) with
+| ([], [], []) -> begin
 []
 end
-| Support.Prims.MkTuple3 (hd1::tl1, hd2::tl2, hd3::tl3) -> begin
-(let _47_1753 = (f hd1 hd2 hd3)
-in (let _47_1752 = ((map3 ()) f tl1 tl2 tl3)
-in (_47_1753)::_47_1752))
+| (hd1::tl1, hd2::tl2, hd3::tl3) -> begin
+(let _6_1379 = (f hd1 hd2 hd3)
+in (let _6_1378 = ((map3 ()) f tl1 tl2 tl3)
+in (_6_1379)::_6_1378))
 end
-| Support.Prims.MkTuple3 (_, _, _) -> begin
+| (_, _, _) -> begin
 (failwith ("The lists do not have the same length"))
 end))
 
-let rec fold_left = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b  ->  'a ) ( x  :  'a ) ( y  :  'b list ) -> (match (y) with
+let rec fold_left = (fun ( _6_18  :  unit ) ( f  :  'a  ->  'b  ->  'a ) ( x  :  'a ) ( y  :  'b list ) -> (match (y) with
 | [] -> begin
 x
 end
 | hd::tl -> begin
-(let _47_1763 = (f x hd)
-in ((fold_left ()) f _47_1763 tl))
+(let _6_1389 = (f x hd)
+in ((fold_left ()) f _6_1389 tl))
 end))
 
-let rec fold_leftT = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b  ->  'a ) ( x  :  'a ) ( y  :  'b list ) -> (match (y) with
+let rec fold_leftT = (fun ( _6_18  :  unit ) ( f  :  'a  ->  'b  ->  'a ) ( x  :  'a ) ( y  :  'b list ) -> (match (y) with
 | [] -> begin
 x
 end
@@ -245,28 +245,28 @@ end
 ((fold_leftT ()) f (f x hd) tl)
 end))
 
-let rec fold_left2 = (fun ( _47_392  :  unit ) ( f  :  's  ->  'a  ->  'b  ->  's ) ( a  :  's ) ( l1  :  'a list ) ( l2  :  'b list ) -> (match (Support.Prims.MkTuple2 (l1, l2)) with
-| Support.Prims.MkTuple2 ([], []) -> begin
+let rec fold_left2 = (fun ( _6_18  :  unit ) ( f  :  's  ->  'a  ->  'b  ->  's ) ( a  :  's ) ( l1  :  'a list ) ( l2  :  'b list ) -> (match ((l1, l2)) with
+| ([], []) -> begin
 a
 end
-| Support.Prims.MkTuple2 (hd1::tl1, hd2::tl2) -> begin
-(let _47_1786 = (f a hd1 hd2)
-in ((fold_left2 ()) f _47_1786 tl1 tl2))
+| (hd1::tl1, hd2::tl2) -> begin
+(let _6_1412 = (f a hd1 hd2)
+in ((fold_left2 ()) f _6_1412 tl1 tl2))
 end
-| Support.Prims.MkTuple2 (_, _) -> begin
+| (_, _) -> begin
 (failwith ("The lists do not have the same length"))
 end))
 
-let rec fold_right = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b  ->  'b ) ( l  :  'a list ) ( x  :  'b ) -> (match (l) with
+let rec fold_right = (fun ( _6_18  :  unit ) ( f  :  'a  ->  'b  ->  'b ) ( l  :  'a list ) ( x  :  'b ) -> (match (l) with
 | [] -> begin
 x
 end
 | hd::tl -> begin
-(let _47_1796 = ((fold_right ()) f tl x)
-in (f hd _47_1796))
+(let _6_1422 = ((fold_right ()) f tl x)
+in (f hd _6_1422))
 end))
 
-let rec fold_rightT = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b  ->  'b ) ( l  :  'a list ) ( x  :  'b ) -> (match (l) with
+let rec fold_rightT = (fun ( _6_18  :  unit ) ( f  :  'a  ->  'b  ->  'b ) ( l  :  'a list ) ( x  :  'b ) -> (match (l) with
 | [] -> begin
 x
 end
@@ -274,7 +274,7 @@ end
 (f hd ((fold_rightT ()) f tl x))
 end))
 
-let rec mem = (fun ( _47_392  :  unit ) ( x  :  'a ) ( _3_7  :  'a list ) -> (match (_3_7) with
+let rec mem = (fun ( _6_18  :  unit ) ( x  :  'a ) ( _3_7  :  'a list ) -> (match (_3_7) with
 | [] -> begin
 false
 end
@@ -288,13 +288,13 @@ end
 end)
 end))
 
-let memT = (fun ( _47_392  :  unit ) -> (mem ()))
+let memT = (fun ( _6_18  :  unit ) -> (mem ()))
 
-let contains = (fun ( _47_392  :  unit ) -> (mem ()))
+let contains = (fun ( _6_18  :  unit ) -> (mem ()))
 
-let containsT = (fun ( _47_392  :  unit ) -> (memT ()))
+let containsT = (fun ( _6_18  :  unit ) -> (memT ()))
 
-let rec existsb = (fun ( _47_392  :  unit ) ( f  :  'a  ->  bool ) ( l  :  'a list ) -> (match (l) with
+let rec existsb = (fun ( _6_18  :  unit ) ( f  :  'a  ->  bool ) ( l  :  'a list ) -> (match (l) with
 | [] -> begin
 false
 end
@@ -308,7 +308,7 @@ end
 end)
 end))
 
-let rec find = (fun ( _47_392  :  unit ) ( f  :  'a  ->  bool ) ( l  :  'a list ) -> (match (l) with
+let rec find = (fun ( _6_18  :  unit ) ( f  :  'a  ->  bool ) ( l  :  'a list ) -> (match (l) with
 | [] -> begin
 None
 end
@@ -322,24 +322,24 @@ end
 end)
 end))
 
-let findT = (fun ( _47_392  :  unit ) -> (find ()))
+let findT = (fun ( _6_18  :  unit ) -> (find ()))
 
-let rec filter = (fun ( _47_392  :  unit ) ( f  :  'a  ->  bool ) ( _3_8  :  'a list ) -> (match (_3_8) with
+let rec filter = (fun ( _6_18  :  unit ) ( f  :  'a  ->  bool ) ( _3_8  :  'a list ) -> (match (_3_8) with
 | [] -> begin
 []
 end
 | hd::tl -> begin
 (match ((f hd)) with
 | true -> begin
-(let _47_1852 = ((filter ()) f tl)
-in (hd)::_47_1852)
+(let _6_1478 = ((filter ()) f tl)
+in (hd)::_6_1478)
 end
 | false -> begin
 ((filter ()) f tl)
 end)
 end))
 
-let rec filterT = (fun ( _47_392  :  unit ) ( f  :  'a  ->  bool ) ( _3_9  :  'a list ) -> (match (_3_9) with
+let rec filterT = (fun ( _6_18  :  unit ) ( f  :  'a  ->  bool ) ( _3_9  :  'a list ) -> (match (_3_9) with
 | [] -> begin
 []
 end
@@ -353,7 +353,7 @@ end
 end)
 end))
 
-let rec for_all = (fun ( _47_392  :  unit ) ( f  :  'a  ->  bool ) ( l  :  'a list ) -> (match (l) with
+let rec for_all = (fun ( _6_18  :  unit ) ( f  :  'a  ->  bool ) ( l  :  'a list ) -> (match (l) with
 | [] -> begin
 true
 end
@@ -367,7 +367,7 @@ false
 end)
 end))
 
-let rec for_allT = (fun ( _47_392  :  unit ) ( f  :  'a  ->  bool ) ( l  :  'a list ) -> (match (l) with
+let rec for_allT = (fun ( _6_18  :  unit ) ( f  :  'a  ->  bool ) ( l  :  'a list ) -> (match (l) with
 | [] -> begin
 true
 end
@@ -381,11 +381,11 @@ false
 end)
 end))
 
-let rec forall2 = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b  ->  bool ) ( l1  :  'a list ) ( l2  :  'b list ) -> (match (Support.Prims.MkTuple2 (l1, l2)) with
-| Support.Prims.MkTuple2 ([], []) -> begin
+let rec forall2 = (fun ( _6_18  :  unit ) ( f  :  'a  ->  'b  ->  bool ) ( l1  :  'a list ) ( l2  :  'b list ) -> (match ((l1, l2)) with
+| ([], []) -> begin
 true
 end
-| Support.Prims.MkTuple2 (hd1::tl1, hd2::tl2) -> begin
+| (hd1::tl1, hd2::tl2) -> begin
 (match ((f hd1 hd2)) with
 | true -> begin
 ((forall2 ()) f tl1 tl2)
@@ -394,21 +394,21 @@ end
 false
 end)
 end
-| Support.Prims.MkTuple2 (_, _) -> begin
+| (_, _) -> begin
 (failwith ("The lists do not have the same length"))
 end))
 
-let rec collect = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b list ) ( l  :  'a list ) -> (match (l) with
+let rec collect = (fun ( _6_18  :  unit ) ( f  :  'a  ->  'b list ) ( l  :  'a list ) -> (match (l) with
 | [] -> begin
 []
 end
 | hd::tl -> begin
-(let _47_1891 = (f hd)
-in (let _47_1890 = ((collect ()) f tl)
-in ((append ()) _47_1891 _47_1890)))
+(let _6_1517 = (f hd)
+in (let _6_1516 = ((collect ()) f tl)
+in ((append ()) _6_1517 _6_1516)))
 end))
 
-let rec collectT = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b list ) ( l  :  'a list ) -> (match (l) with
+let rec collectT = (fun ( _6_18  :  unit ) ( f  :  'a  ->  'b list ) ( l  :  'a list ) -> (match (l) with
 | [] -> begin
 []
 end
@@ -416,7 +416,7 @@ end
 ((appendT ()) (f hd) ((collectT ()) f tl))
 end))
 
-let rec tryFind = (fun ( _47_392  :  unit ) ( p  :  'a  ->  bool ) ( l  :  'a list ) -> (match (l) with
+let rec tryFind = (fun ( _6_18  :  unit ) ( p  :  'a  ->  bool ) ( l  :  'a list ) -> (match (l) with
 | [] -> begin
 None
 end
@@ -430,7 +430,7 @@ end
 end)
 end))
 
-let rec tryFindT = (fun ( _47_392  :  unit ) ( p  :  'a  ->  bool ) ( l  :  'a list ) -> (match (l) with
+let rec tryFindT = (fun ( _6_18  :  unit ) ( p  :  'a  ->  bool ) ( l  :  'a list ) -> (match (l) with
 | [] -> begin
 None
 end
@@ -444,7 +444,7 @@ end
 end)
 end))
 
-let rec tryPick = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b option ) ( l  :  'a list ) -> (match (l) with
+let rec tryPick = (fun ( _6_18  :  unit ) ( f  :  'a  ->  'b option ) ( l  :  'a list ) -> (match (l) with
 | [] -> begin
 None
 end
@@ -458,7 +458,7 @@ end
 end)
 end))
 
-let rec tryPickT = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b option ) ( l  :  'a list ) -> (match (l) with
+let rec tryPickT = (fun ( _6_18  :  unit ) ( f  :  'a  ->  'b option ) ( l  :  'a list ) -> (match (l) with
 | [] -> begin
 None
 end
@@ -472,22 +472,22 @@ end
 end)
 end))
 
-let rec choose = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b option ) ( l  :  'a list ) -> (match (l) with
+let rec choose = (fun ( _6_18  :  unit ) ( f  :  'a  ->  'b option ) ( l  :  'a list ) -> (match (l) with
 | [] -> begin
 []
 end
 | hd::tl -> begin
 (match ((f hd)) with
 | Some (x) -> begin
-(let _47_1922 = ((choose ()) f tl)
-in (x)::_47_1922)
+(let _6_1548 = ((choose ()) f tl)
+in (x)::_6_1548)
 end
 | None -> begin
 ((choose ()) f tl)
 end)
 end))
 
-let rec chooseT = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'b option ) ( l  :  'a list ) -> (match (l) with
+let rec chooseT = (fun ( _6_18  :  unit ) ( f  :  'a  ->  'b option ) ( l  :  'a list ) -> (match (l) with
 | [] -> begin
 []
 end
@@ -501,47 +501,47 @@ end
 end)
 end))
 
-let rec partition = (fun ( _47_392  :  unit ) ( f  :  'a  ->  bool ) ( _3_10  :  'a list ) -> (match (_3_10) with
+let rec partition = (fun ( _6_18  :  unit ) ( f  :  'a  ->  bool ) ( _3_10  :  'a list ) -> (match (_3_10) with
 | [] -> begin
-Support.Prims.MkTuple2 ([], [])
+([], [])
 end
 | hd::tl -> begin
 (let _3_439 = ((partition ()) f tl)
 in (match (_3_439) with
-| Support.Prims.MkTuple2 (l1, l2) -> begin
+| (l1, l2) -> begin
 (match ((f hd)) with
 | true -> begin
-Support.Prims.MkTuple2 ((hd)::l1, l2)
+((hd)::l1, l2)
 end
 | false -> begin
-Support.Prims.MkTuple2 (l1, (hd)::l2)
+(l1, (hd)::l2)
 end)
 end))
 end))
 
-let rec partitionT = (fun ( _47_392  :  unit ) ( f  :  'a  ->  bool ) ( _3_11  :  'a list ) -> (match (_3_11) with
+let rec partitionT = (fun ( _6_18  :  unit ) ( f  :  'a  ->  bool ) ( _3_11  :  'a list ) -> (match (_3_11) with
 | [] -> begin
-Support.Prims.MkTuple2 ([], [])
+([], [])
 end
 | hd::tl -> begin
 (let _3_450 = ((partitionT ()) f tl)
 in (match (_3_450) with
-| Support.Prims.MkTuple2 (l1, l2) -> begin
+| (l1, l2) -> begin
 (match ((f hd)) with
 | true -> begin
-Support.Prims.MkTuple2 ((hd)::l1, l2)
+((hd)::l1, l2)
 end
 | false -> begin
-Support.Prims.MkTuple2 (l1, (hd)::l2)
+(l1, (hd)::l2)
 end)
 end))
 end))
 
-let rec assoc = (fun ( _47_392  :  unit ) ( a  :  'a ) ( x  :  ('a, 'b) Support.Prims.l__Tuple2 list ) -> (match (x) with
+let rec assoc = (fun ( _6_18  :  unit ) ( a  :  'a ) ( x  :  ('a * 'b) list ) -> (match (x) with
 | [] -> begin
 None
 end
-| Support.Prims.MkTuple2 (a', b)::tl -> begin
+| (a', b)::tl -> begin
 (match ((a = a')) with
 | true -> begin
 Some (b)
@@ -551,92 +551,92 @@ end
 end)
 end))
 
-let assocT = (fun ( _47_392  :  unit ) -> (assoc ()))
+let assocT = (fun ( _6_18  :  unit ) -> (assoc ()))
 
-let rec split = (fun ( _47_392  :  unit ) ( l  :  ('a, 'b) Support.Prims.l__Tuple2 list ) -> (match (l) with
+let rec split = (fun ( _6_18  :  unit ) ( l  :  ('a * 'b) list ) -> (match (l) with
 | [] -> begin
-Support.Prims.MkTuple2 ([], [])
+([], [])
 end
-| Support.Prims.MkTuple2 (hd1, hd2)::tl -> begin
+| (hd1, hd2)::tl -> begin
 (let _3_472 = ((split ()) tl)
 in (match (_3_472) with
-| Support.Prims.MkTuple2 (tl1, tl2) -> begin
-Support.Prims.MkTuple2 ((hd1)::tl1, (hd2)::tl2)
+| (tl1, tl2) -> begin
+((hd1)::tl1, (hd2)::tl2)
 end))
 end))
 
-let splitT = (fun ( _47_392  :  unit ) -> (split ()))
+let splitT = (fun ( _6_18  :  unit ) -> (split ()))
 
-let unzip = (fun ( _47_392  :  unit ) -> (split ()))
+let unzip = (fun ( _6_18  :  unit ) -> (split ()))
 
-let unzipT = (fun ( _47_392  :  unit ) -> (splitT ()))
+let unzipT = (fun ( _6_18  :  unit ) -> (splitT ()))
 
-let rec unzip3 = (fun ( _47_392  :  unit ) ( l  :  ('a, 'b, 'c) Support.Prims.l__Tuple3 list ) -> (match (l) with
+let rec unzip3 = (fun ( _6_18  :  unit ) ( l  :  ('a * 'b * 'c) list ) -> (match (l) with
 | [] -> begin
-Support.Prims.MkTuple3 ([], [], [])
+([], [], [])
 end
-| Support.Prims.MkTuple3 (hd1, hd2, hd3)::tl -> begin
+| (hd1, hd2, hd3)::tl -> begin
 (let _3_487 = ((unzip3 ()) tl)
 in (match (_3_487) with
-| Support.Prims.MkTuple3 (tl1, tl2, tl3) -> begin
-Support.Prims.MkTuple3 ((hd1)::tl1, (hd2)::tl2, (hd3)::tl3)
+| (tl1, tl2, tl3) -> begin
+((hd1)::tl1, (hd2)::tl2, (hd3)::tl3)
 end))
 end))
 
-let unzip3T = (fun ( _47_392  :  unit ) -> (unzip3 ()))
+let unzip3T = (fun ( _6_18  :  unit ) -> (unzip3 ()))
 
-let rec zip = (fun ( _47_392  :  unit ) ( l1  :  'a list ) ( l2  :  'b list ) -> (match (Support.Prims.MkTuple2 (l1, l2)) with
-| Support.Prims.MkTuple2 ([], []) -> begin
+let rec zip = (fun ( _6_18  :  unit ) ( l1  :  'a list ) ( l2  :  'b list ) -> (match ((l1, l2)) with
+| ([], []) -> begin
 []
 end
-| Support.Prims.MkTuple2 (hd1::tl1, hd2::tl2) -> begin
-(let _47_1950 = ((zip ()) tl1 tl2)
-in (Support.Prims.MkTuple2 (hd1, hd2))::_47_1950)
+| (hd1::tl1, hd2::tl2) -> begin
+(let _6_1576 = ((zip ()) tl1 tl2)
+in ((hd1, hd2))::_6_1576)
 end
-| Support.Prims.MkTuple2 (_, _) -> begin
+| (_, _) -> begin
 (failwith ("The lists do not have the same length"))
 end))
 
-let rec zip3 = (fun ( _47_392  :  unit ) ( l1  :  'a list ) ( l2  :  'b list ) ( l3  :  'c list ) -> (match (Support.Prims.MkTuple3 (l1, l2, l3)) with
-| Support.Prims.MkTuple3 ([], [], []) -> begin
+let rec zip3 = (fun ( _6_18  :  unit ) ( l1  :  'a list ) ( l2  :  'b list ) ( l3  :  'c list ) -> (match ((l1, l2, l3)) with
+| ([], [], []) -> begin
 []
 end
-| Support.Prims.MkTuple3 (hd1::tl1, hd2::tl2, hd3::tl3) -> begin
-(let _47_1954 = ((zip3 ()) tl1 tl2 tl3)
-in (Support.Prims.MkTuple3 (hd1, hd2, hd3))::_47_1954)
+| (hd1::tl1, hd2::tl2, hd3::tl3) -> begin
+(let _6_1580 = ((zip3 ()) tl1 tl2 tl3)
+in ((hd1, hd2, hd3))::_6_1580)
 end
-| Support.Prims.MkTuple3 (_, _, _) -> begin
+| (_, _, _) -> begin
 (failwith ("The lists do not have the same length"))
 end))
 
-let rec sortWith = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'a  ->  int ) ( _3_12  :  'a list ) -> (match (_3_12) with
+let rec sortWith = (fun ( _6_18  :  unit ) ( f  :  'a  ->  'a  ->  int ) ( _3_12  :  'a list ) -> (match (_3_12) with
 | [] -> begin
 []
 end
 | pivot::tl -> begin
-(let _3_544 = ((partition ()) (fun ( x  :  'a ) -> (let _47_1964 = (f pivot x)
-in (_47_1964 > 0))) tl)
+(let _3_544 = ((partition ()) (fun ( x  :  'a ) -> (let _6_1590 = (f pivot x)
+in (_6_1590 > 0))) tl)
 in (match (_3_544) with
-| Support.Prims.MkTuple2 (hi, lo) -> begin
-(let _47_1967 = ((sortWith ()) f lo)
-in (let _47_1966 = (let _47_1965 = ((sortWith ()) f hi)
-in (pivot)::_47_1965)
-in ((append ()) _47_1967 _47_1966)))
+| (hi, lo) -> begin
+(let _6_1593 = ((sortWith ()) f lo)
+in (let _6_1592 = (let _6_1591 = ((sortWith ()) f hi)
+in (pivot)::_6_1591)
+in ((append ()) _6_1593 _6_1592)))
 end))
 end))
 
-let rec partition_length = (fun ( _47_392  :  unit ) ( f  :  'a  ->  bool ) ( l  :  'a list ) -> ())
+let rec partition_length = (fun ( _6_18  :  unit ) ( f  :  'a  ->  bool ) ( l  :  'a list ) -> ())
 
-let bool_of_compare = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'a  ->  int ) ( x  :  'a ) ( y  :  'a ) -> ((f x y) >= 0))
+let bool_of_compare = (fun ( _6_18  :  unit ) ( f  :  'a  ->  'a  ->  int ) ( x  :  'a ) ( y  :  'a ) -> ((f x y) >= 0))
 
-let rec sortWithT = (fun ( _47_392  :  unit ) ( f  :  'a  ->  'a  ->  int ) ( _3_13  :  'a list ) -> (match (_3_13) with
+let rec sortWithT = (fun ( _6_18  :  unit ) ( f  :  'a  ->  'a  ->  int ) ( _3_13  :  'a list ) -> (match (_3_13) with
 | [] -> begin
 []
 end
 | pivot::tl -> begin
 (let _3_568 = ((partitionT ()) ((bool_of_compare ()) f pivot) tl)
 in (match (_3_568) with
-| Support.Prims.MkTuple2 (hi, lo) -> begin
+| (hi, lo) -> begin
 (let _3_569 = ()
 in ((append ()) ((sortWithT ()) f lo) ((pivot)::((sortWithT ()) f hi))))
 end))
