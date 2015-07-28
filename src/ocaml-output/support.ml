@@ -15,7 +15,6 @@ module Prims = struct
   let failwith = failwith
   let try_with f1 f2 = try f1 () with | e -> f2 e
   let admit () = ()
-  let admitP () = ()
   let _assume () = ()
   let _assert x = ()
   let magic () = failwith "no magic"
@@ -171,16 +170,16 @@ module Microsoft = struct
 
       let ask_process (p:proc) (stdin:string) : string =
         let out = Buffer.create 16 in
-
+        
         let rec read_out _ =
           let s = BatString.trim (input_line p.inc) in
           if s = "Done!" then ()
           else
             (Buffer.add_string out (s ^ "\n"); read_out ())
         in
-
+        
         let child_thread = Thread.create (fun _ -> read_out ()) () in
-
+        
         output_string p.outc stdin;
         flush p.outc;
         Thread.join child_thread;
