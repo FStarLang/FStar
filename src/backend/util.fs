@@ -182,3 +182,7 @@ let resugar_mlty t = match t with
         | _ -> t
       end
     | _ -> t
+
+let flatten_ns ns = String.concat "_" ns
+let flatten_mlpath (ns, n) = String.concat "_" (ns@[n])
+  

@@ -86,11 +86,10 @@ let rec extract (g:env) (m:modul) : env * mllib =
     let name = Backends.ML.Syntax.mlpath_of_lident m.name in
     let _ = Util.print_string ("extracting: "^m.name.str^"\n") in
     let g = {g with currentModule = name}  in
-    //if m.is_interface then failwith "NYI";
     if m.name.str = "Prims" || m.is_interface
     then let g = extract_prims g m in 
-         g, MLLib([name, None, MLLib []])
+         g, MLLib([Util.flatten_mlpath name, None, MLLib []])
     else let g, sigs = Util.fold_map extract_sig g m.declarations in
          let mlm : mlmodule = List.flatten sigs in
-         g, MLLib ([name, Some ([], mlm), (MLLib [])])
+         g, MLLib ([Util.flatten_mlpath name, Some ([], mlm), (MLLib [])])
     

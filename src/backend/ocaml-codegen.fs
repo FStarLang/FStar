@@ -77,20 +77,23 @@ let rec in_ns = function
 | _, _ -> false
 
 (* -------------------------------------------------------------------- *)
-let path_of_ns (currentModule : mlpath) ns =
-    let outsupport = fun (ns1,ns2) -> if ns1 = ns2 then [] else [String.concat "_" ns2] 
+let path_of_ns (currentModule : mlsymbol) ns =
+   let outsupport ns = 
+    let ns' = Util.flatten_ns ns in
+    if ns' = currentModule then [] else [ns'] in
+
     //in outsupport ((fst currentModule) @ [snd currentModule], ns)
 
-   in let chkin sns = if in_ns (sns, ns) then Some sns else None
+   let chkin sns = if in_ns (sns, ns) then Some sns else None
     in match List.tryPick chkin  outmod  with
     | None -> 
         (match List.tryPick chkin (!Microsoft.FStar.Options.codegen_libs) with
-         | None -> outsupport ((fst currentModule) @ [snd currentModule], ns)
+         | None -> outsupport ns
          | _ -> ns)
     | Some sns ->  "Support" :: ns 
 
 
-let mlpath_of_mlpath (currentModule : mlpath) (x : mlpath) : mlpath =
+let mlpath_of_mlpath (currentModule : mlsymbol) (x : mlpath) : mlpath =
     match string_of_mlpath x with
     | "Prims.Some" -> ([], "Some")
     | "Prims.None" -> ([], "None")
@@ -100,15 +103,14 @@ let mlpath_of_mlpath (currentModule : mlpath) (x : mlpath) : mlpath =
     | "ST.op_ColonEquals" -> (["Support";"Prims"], "op_ColonEquals")
     | _ -> 
       begin
-        let ns = fst x in
-        let x  = snd x in
+        let ns, x = x in 
         (path_of_ns currentModule ns, x)
       end
 
 let ptsym_of_symbol (s : mlsymbol) : mlsymbol =
         if Char.lowercase (String.get s 0) <> String.get s 0 then "l__" ^ s else s
 
-let ptsym (currentModule : mlpath) (mlp : mlpath) : mlsymbol =
+let ptsym (currentModule : mlsymbol) (mlp : mlpath) : mlsymbol =
     if (List.isEmpty (fst mlp))
     then ptsym_of_symbol (snd  mlp)
     else
@@ -116,7 +118,7 @@ let ptsym (currentModule : mlpath) (mlp : mlpath) : mlsymbol =
         String.concat "." (p @ [ptsym_of_symbol s])
 
 
-let ptctor (currentModule : mlpath) (mlp : mlpath) : mlsymbol =
+let ptctor (currentModule : mlsymbol) (mlp : mlpath) : mlsymbol =
     let (p, s) = mlpath_of_mlpath currentModule mlp in
     let s = if Char.uppercase (String.get s 0) <> String.get s 0 then "U__" ^ s else s in
     String.concat "." (p @ [s]) 
@@ -286,7 +288,7 @@ let string_of_mlconstant (sctt : mlconstant) =
 
 
 (* -------------------------------------------------------------------- *)
-let rec doc_of_mltype' (currentModule: mlpath) (outer : level) (ty : mlty) =
+let rec doc_of_mltype' (currentModule : mlsymbol) (outer : level) (ty : mlty) =
     match ty with
     | MLTY_Var x ->
         let escape_tyvar s = 
@@ -335,12 +337,12 @@ let rec doc_of_mltype' (currentModule: mlpath) (outer : level) (ty : mlty) =
     | MLTY_Top -> 
       text "Obj.t" //TODO: change this to 'obj' if we're generating F#
 
-and doc_of_mltype (currentModule: mlpath) (outer : level) (ty : mlty) =
+and doc_of_mltype (currentModule : mlsymbol) (outer : level) (ty : mlty) =
     doc_of_mltype' currentModule outer (Util.resugar_mlty ty)
 
 
 (* -------------------------------------------------------------------- *)
-let rec doc_of_expr (currentModule: mlpath) (outer : level) (e : mlexpr) : doc =
+let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : doc =
     match e with
     | MLE_Coerce (e, t, t') -> 
       let doc = doc_of_expr currentModule (min_op_prec, NonAssoc) e in    
@@ -486,7 +488,7 @@ and  doc_of_uniop currentModule p e1  : doc =
         let doc = reduce1 [text txt; parens e1] in
         parens doc
 (* -------------------------------------------------------------------- *)
-and doc_of_pattern (currentModule: mlpath) (pattern : mlpattern) : doc =
+and doc_of_pattern (currentModule : mlsymbol) (pattern : mlpattern) : doc =
     match pattern with
     | MLP_Wild     -> text "_"
     | MLP_Const  c -> text (string_of_mlconstant c)
@@ -528,7 +530,7 @@ and doc_of_pattern (currentModule: mlpath) (pattern : mlpattern) : doc =
         combine (text " | ") ps
 
 (* -------------------------------------------------------------------- *)
-and doc_of_branch (currentModule: mlpath) ((p, cond, e) : mlbranch) : doc =
+and doc_of_branch (currentModule : mlsymbol) ((p, cond, e) : mlbranch) : doc =
     let case =
         match cond with
         | None   -> reduce1 [text "|"; doc_of_pattern currentModule p]
@@ -543,7 +545,7 @@ and doc_of_branch (currentModule: mlpath) ((p, cond, e) : mlbranch) : doc =
     ]
 
 (* -------------------------------------------------------------------- *)
-and doc_of_lets (currentModule: mlpath) (rec_, lets) =
+and doc_of_lets (currentModule : mlsymbol) (rec_, lets) =
     let for1 {mllb_name=name; mllb_tysc=tys; mllb_def=e} =
         let e   = doc_of_expr currentModule  (min_op_prec, NonAssoc) e in
         let ids = [] in //TODO: maybe extract the top-level binders from e and print it alongside name
@@ -563,7 +565,7 @@ and doc_of_lets (currentModule: mlpath) (rec_, lets) =
     combine hardline lets
 
 (* -------------------------------------------------------------------- *)
-let doc_of_mltydecl (currentModule: mlpath) (decls : mltydecl) =
+let doc_of_mltydecl (currentModule : mlsymbol) (decls : mltydecl) =
     let for1 (x, tparams, body) =
         let tparams =
             match tparams with
@@ -618,7 +620,7 @@ let doc_of_mltydecl (currentModule: mlpath) (decls : mltydecl) =
     doc
 
 (* -------------------------------------------------------------------- *)
-let rec doc_of_sig1 (currentModule: mlpath) s = 
+let rec doc_of_sig1 (currentModule : mlsymbol) s = 
     match s with
     | MLS_Mod (x, subsig) ->
         combine hardline
@@ -642,13 +644,13 @@ let rec doc_of_sig1 (currentModule: mlpath) s =
         doc_of_mltydecl currentModule decls
 
 (* -------------------------------------------------------------------- *)
-and doc_of_sig (currentModule: mlpath) (s : mlsig) =
+and doc_of_sig (currentModule : mlsymbol) (s : mlsig) =
     let docs = List.map (doc_of_sig1 currentModule) s in
     let docs = List.map (fun x -> reduce [x; hardline; hardline]) docs in
     reduce docs
 
 (* -------------------------------------------------------------------- *)
-let doc_of_mod1 (currentModule: mlpath) (m : mlmodule1) =
+let doc_of_mod1 (currentModule : mlsymbol) (m : mlmodule1) =
     match m with
     | MLM_Exn (x, []) ->
         reduce1 [text "exception"; text x]
@@ -671,7 +673,7 @@ let doc_of_mod1 (currentModule: mlpath) (m : mlmodule1) =
         ]
 
 (* -------------------------------------------------------------------- *)
-let doc_of_mod (currentModule: mlpath) (m : mlmodule) =
+let doc_of_mod (currentModule : mlsymbol) (m : mlmodule) =
     let docs = List.map (doc_of_mod1 currentModule) m in
     let docs = List.map (fun x -> reduce [x; hardline; hardline]) docs in
     reduce docs
@@ -679,7 +681,7 @@ let doc_of_mod (currentModule: mlpath) (m : mlmodule) =
 (* -------------------------------------------------------------------- *)
 let rec doc_of_mllib_r (MLLib mllib) =
     let rec for1_sig (x, sigmod, MLLib sub) =
-        let head = reduce1 [text "module"; text (string_of_mlpath x); text ":"; text "sig"] in
+        let head = reduce1 [text "module"; text x; text ":"; text "sig"] in
         let tail = reduce1 [text "end"] in
         let doc  = Option.map (fun (s, _) -> doc_of_sig x s) sigmod in
         let sub  = List.map for1_sig sub in
@@ -694,9 +696,9 @@ let rec doc_of_mllib_r (MLLib mllib) =
             cat tail hardline;
         ]
     and for1_mod istop (x, sigmod, MLLib sub) =
-        fprint1 "Gen Code: %s\n" (string_of_mlpath x);
+        fprint1 "Gen Code: %s\n" x;
         let head = reduce1 (if   not istop
-                            then [text "module";  text (string_of_mlpath x); text "="; text "struct"]
+                            then [text "module";  text x; text "="; text "struct"]
                             else []) in
         let tail = if not istop then reduce1 [text "end"] else reduce1 [] in
         let doc  = Option.map (fun (_, m) -> doc_of_mod x m) sigmod in
@@ -714,7 +716,7 @@ let rec doc_of_mllib_r (MLLib mllib) =
 
     in
 
-    let docs = List.map (fun (x,s,m) -> ((string_of_mlpath x) ,for1_mod true (x,s,m))) mllib in
+    let docs = List.map (fun (x,s,m) -> (x,for1_mod true (x,s,m))) mllib in
 
 (* was:
     let docs = List.combine (List.map for1_sig mllib) (List.map (for1_mod true) mllib) in

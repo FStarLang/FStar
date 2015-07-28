@@ -123,7 +123,7 @@ and mlsig = list<mlsig1>
 
 (* -------------------------------------------------------------------- *)
 type mllib = 
-  | MLLib of list<(mlpath * option<(mlsig * mlmodule)> * mllib)>
+  | MLLib of list<(mlsymbol * option<(mlsig * mlmodule)> * mllib)>
 
 (* -------------------------------------------------------------------- *)
 let mlseq (e1 : mlexpr) (e2 : mlexpr) =
