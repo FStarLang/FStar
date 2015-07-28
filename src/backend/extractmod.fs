@@ -59,7 +59,7 @@ let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> =
               let se = Sig_let((false, [{lbname=Inr lid; lbtyp=t; lbeff=Const.effect_ML_lid; lbdef=impl}]), r, [], quals) in
               let g, mlm = extract_sig g se in
               match Util.find_map quals (function  Discriminator l  -> Some l |  _ -> None) with
-              | Some l -> g, [ExtractExp.ind_discriminator_body lid l]
+              | Some l -> g, [ExtractExp.ind_discriminator_body g lid l]
               | None -> match Util.find_map quals (function  Projector (l,_)  -> Some l |  _ -> None) with
                         | Some l -> g, []
                         | None -> g, mlm

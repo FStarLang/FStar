@@ -411,15 +411,18 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
 let fresh = let c = mk_ref 0 in                                            
             fun x -> (incr c; (x, !c))
 
-
-let ind_discriminator_body (discName:lident) (constrName:lident) : mlmodule1 = 
-                let mlid = fresh "_discr_" in
-                let rid = constrName in
-                let discrBody= 
-                MLE_Fun([(mlid, None)], MLE_Match(MLE_Name([], idsym mlid), [
-                    MLP_CTor(mlpath_of_lident rid, [MLP_Wild]), None, MLE_Const(MLC_Bool true);
-                    MLP_Wild, None, MLE_Const(MLC_Bool false)])) in
-                MLM_Let (false,[{mllb_name=convIdent discName.ident; mllb_tysc=None; mllb_add_unit=false; mllb_def=discrBody}] )
+let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1 = 
+    let mlid = fresh "_discr_" in
+    let _, ts = Env.lookup_fv env (Util.fv constrName) in
+    let arg_pat = match snd ts with 
+        | MLTY_Fun _ -> [MLP_Wild]
+        | _ -> [] in
+    let rid = constrName in
+    let discrBody= 
+    MLE_Fun([(mlid, None)], MLE_Match(MLE_Name([], idsym mlid), [
+        MLP_CTor(mlpath_of_lident rid, arg_pat), None, MLE_Const(MLC_Bool true);
+        MLP_Wild, None, MLE_Const(MLC_Bool false)])) in
+    MLM_Let (false,[{mllb_name=convIdent discName.ident; mllb_tysc=None; mllb_add_unit=false; mllb_def=discrBody}] )
 
 
 (*
