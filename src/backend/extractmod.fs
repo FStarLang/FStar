@@ -53,10 +53,9 @@ let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> =
 
        | Sig_val_decl(lid, t, quals, r) -> 
          if quals |> List.contains Assumption 
-         then let tbinders,t' = Util.tbinder_prefix t in
-              let impl = match tbinders with
-                | [] -> fail_exp t'
-                | bs -> mk_Exp_abs(bs, fail_exp t') None dummyRange in
+         then let impl = match Util.function_formals t with 
+                | Some (bs, c) -> mk_Exp_abs(bs, fail_exp (Util.comp_result c)) None dummyRange 
+                | _ -> fail_exp t in 
               let se = Sig_let((false, [{lbname=Inr lid; lbtyp=t; lbeff=Const.effect_ML_lid; lbdef=impl}]), r, [], quals) in
               let g, mlm = extract_sig g se in
               match Util.find_map quals (function  Discriminator l  -> Some l |  _ -> None) with
@@ -80,14 +79,14 @@ let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> =
        | Sig_pragma _ -> //pragmas are currently not relevant for codegen; they may be in the future
          g, []   
 
-let extract_prims (g:env) (m:modul) =  Util.fold_map extract_sig g m.declarations |> fst // this is also being used for interfaces
+let extract_iface (g:env) (m:modul) =  Util.fold_map extract_sig g m.declarations |> fst 
     
 let rec extract (g:env) (m:modul) : env * mllib = 
     let name = Backends.ML.Syntax.mlpath_of_lident m.name in
     let _ = Util.print_string ("extracting: "^m.name.str^"\n") in
     let g = {g with currentModule = name}  in
     if m.name.str = "Prims" || m.is_interface
-    then let g = extract_prims g m in 
+    then let g = extract_iface g m in 
          g, MLLib([Util.flatten_mlpath name, None, MLLib []])
     else let g, sigs = Util.fold_map extract_sig g m.declarations in
          let mlm : mlmodule = List.flatten sigs in

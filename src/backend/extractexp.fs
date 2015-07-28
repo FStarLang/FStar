@@ -323,7 +323,9 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                              let env = List.fold_left (fun env a -> Env.extend_ty env a None) g targs in
                              let expected_t = translate_typ env expected_t in
                              let polytype = targs |> List.map btvar_as_mlident, expected_t in
-                             let add_unit = not (is_value body) in 
+                             let add_unit = match rest_args with 
+                                | [] -> not (is_value body)
+                                | _ -> false in 
                              let rest_args = if add_unit then unit_binder::rest_args else rest_args in
                              let body = match rest_args with [] -> body | _ -> mk_Exp_abs(rest_args, body) None e.pos in
                              (lbname, f_e, (t, (targs, polytype)), add_unit, body)
