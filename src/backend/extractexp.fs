@@ -53,14 +53,20 @@ let is_constructor e = match (Util.compress_exp e).n with
     | _ -> false
 
 (* something is a value iff it qualifies for the OCaml's "value restriction", which determines when a definition can be generalized *)
-let rec is_value (e:exp) = match (Util.compress_exp e).n with 
+let rec is_value_or_type_app (e:exp) = match (Util.compress_exp e).n with 
     | Exp_bvar _
     | Exp_fvar _ 
     | Exp_abs _  -> true
-    | Exp_app(head, args) -> is_constructor head && args |> List.for_all (fun (te, _) -> 
-        match te with 
-            | Inl _ -> true (* type argument *)
-            | Inr e -> is_value e)
+    | Exp_app(head, args) -> 
+        if is_constructor head
+        then args |> List.for_all (fun (te, _) -> 
+                match te with 
+                    | Inl _ -> true (* type argument *)
+                    | Inr e -> is_value_or_type_app e)
+        else (match (Util.compress_exp head).n with 
+                 | Exp_bvar _
+                 | Exp_fvar _ -> args |> List.for_all (function (Inl te, _) -> true | _ -> false)
+                 | _ -> false)
     | _ -> false
 
 let rec is_ml_value e = match e with 
@@ -346,10 +352,10 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                              let env = List.fold_left (fun env a -> Env.extend_ty env a None) g targs in
                              let expected_t = translate_typ env expected_t in
                              let polytype = targs |> List.map btvar_as_mlident, expected_t in
-//                             let add_unit = match rest_args with 
-//                                | [] -> not (is_value body)
-//                                | _ -> false in 
-//                             let rest_args = if add_unit then unit_binder::rest_args else rest_args in
+                             let add_unit = match rest_args with 
+                                | [] -> not (is_value_or_type_app body)
+                                | _ -> false in 
+                             let rest_args = if add_unit then unit_binder::rest_args else rest_args in
                              let body = match rest_args with [] -> body | _ -> mk_Exp_abs(rest_args, body) None e.pos in
                              (lbname, f_e, (t, (targs, polytype)), false (*add_unit*), body)
 
@@ -382,14 +388,10 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                   let expected_t = translate_typ g t in
                   (lbname, f_e, (t, ([], ([],expected_t))), false, e) in
          
-          let check_lb env (nm, (lbname, f, (t, (targs, polytype)), _, e)) =
+          let check_lb env (nm, (lbname, f, (t, (targs, polytype)), add_unit, e)) =
               let env = List.fold_left (fun env a -> Env.extend_ty env a None) env targs in
-              let expected_t = snd polytype in //if add_unit then MLTY_Fun(ml_unit_ty, E_PURE, snd polytype) else snd polytype in
+              let expected_t = if add_unit then MLTY_Fun(ml_unit_ty, E_PURE, snd polytype) else snd polytype in
               let e = check_exp env e f expected_t in
-              let add_unit = match targs with 
-                | [] -> false
-                | _ -> not (is_ml_value e) in
-              let e = if add_unit then MLE_Fun([("_", 0), Some ml_unit_ty], e) else e in
               f, {mllb_name=nm; mllb_tysc=Some polytype; mllb_add_unit=add_unit; mllb_def=e} in
 
          (*after the above definitions, here is the main code for extracting let expressions*)
