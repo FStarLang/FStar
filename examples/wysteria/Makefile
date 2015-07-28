@@ -5,3 +5,4 @@ all:
 	#$(FSTAR) ast.fst
 	#$(FSTAR) sem.fst
 	$(FSTAR) theory.fst
+	$(FSTAR) sinterpreter.fst

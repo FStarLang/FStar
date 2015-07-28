@@ -11,42 +11,42 @@ open OrdSet
 
 open AST
 
-type pre_easpar (c:config) =
- is_T_exp (Conf.t c) /\ is_E_aspar (Exp.e (T_exp.e (Conf.t c))) /\ is_par c
+let pre_easpar (c:config) =
+ is_T_exp (Conf.t c) && is_E_aspar (Exp.e (T_exp.e (Conf.t c))) && is_par c
 
-type pre_eapp (c:config) =
- is_T_exp (Conf.t c) /\ is_E_app (Exp.e (T_exp.e (Conf.t c)))
+let pre_eapp (c:config) =
+ is_T_exp (Conf.t c) && is_E_app (Exp.e (T_exp.e (Conf.t c)))
 
-type pre_eabs (c:config) =
- is_T_exp (Conf.t c) /\ is_E_abs (Exp.e (T_exp.e (Conf.t c)))
+let pre_eabs (c:config) =
+ is_T_exp (Conf.t c) && is_E_abs (Exp.e (T_exp.e (Conf.t c)))
  
-type pre_efix (c:config) =
- is_T_exp (Conf.t c) /\ is_E_fix (Exp.e (T_exp.e (Conf.t c)))
+let pre_efix (c:config) =
+ is_T_exp (Conf.t c) && is_E_fix (Exp.e (T_exp.e (Conf.t c)))
 
-type pre_eempabs (c:config) =
- is_T_exp (Conf.t c) /\ is_E_empabs (Exp.e (T_exp.e (Conf.t c)))
+let pre_eempabs (c:config) =
+ is_T_exp (Conf.t c) && is_E_empabs (Exp.e (T_exp.e (Conf.t c)))
 
-type pre_elet (c:config) =
- is_T_exp (Conf.t c) /\ is_E_let (Exp.e (T_exp.e (Conf.t c)))
+let pre_elet (c:config) =
+ is_T_exp (Conf.t c) && is_E_let (Exp.e (T_exp.e (Conf.t c)))
 
-type pre_evar (c:config) =
- is_T_exp (Conf.t c) /\ is_E_var (Exp.e (T_exp.e (Conf.t c))) /\
+let pre_evar (c:config) =
+ is_T_exp (Conf.t c) && is_E_var (Exp.e (T_exp.e (Conf.t c))) &&
  is_Some ((Conf.en c) (E_var.x (Exp.e (T_exp.e (Conf.t c)))))
 
-type pre_econst (c:config) =
- is_T_exp (Conf.t c) /\ is_E_const (Exp.e (T_exp.e (Conf.t c)))
+let pre_econst (c:config) =
+ is_T_exp (Conf.t c) && is_E_const (Exp.e (T_exp.e (Conf.t c)))
 
-type pre_eunbox (c:config) =
- is_T_exp (Conf.t c) /\ is_E_unbox (Exp.e (T_exp.e (Conf.t c)))
+let pre_eunbox (c:config) =
+ is_T_exp (Conf.t c) && is_E_unbox (Exp.e (T_exp.e (Conf.t c)))
  
-type pre_emkwire (c:config) =
- is_T_exp (Conf.t c) /\ is_E_mkwire (Exp.e (T_exp.e (Conf.t c)))
+let pre_emkwire (c:config) =
+ is_T_exp (Conf.t c) && is_E_mkwire (Exp.e (T_exp.e (Conf.t c)))
 
-type pre_eprojwire (c:config) =
- is_T_exp (Conf.t c) /\ is_E_projwire (Exp.e (T_exp.e (Conf.t c)))
+let pre_eprojwire (c:config) =
+ is_T_exp (Conf.t c) && is_E_projwire (Exp.e (T_exp.e (Conf.t c)))
  
-type pre_econcatwire (c:config) =
- is_T_exp (Conf.t c) /\ is_E_concatwire (Exp.e (T_exp.e (Conf.t c)))
+let pre_econcatwire (c:config) =
+ is_T_exp (Conf.t c) && is_E_concatwire (Exp.e (T_exp.e (Conf.t c)))
 
 (* pre returns comp, for src it's never Skip *)
 type comp = | Do | Skip | NA
@@ -362,8 +362,8 @@ let step_app c = match c with
    let (en, x, e) = get_en_b f in
    Conf l m s (update_env en x v) (T_exp e)
 
-type pre_eassec (c:config) =
- is_T_exp (Conf.t c) /\ is_E_assec (Exp.e (T_exp.e (Conf.t c)))
+let pre_eassec (c:config) =
+ is_T_exp (Conf.t c) && is_E_assec (Exp.e (T_exp.e (Conf.t c)))
 
 val step_assec_e1: c:config{pre_eassec c} -> Tot config
 let step_assec_e1 (Conf l m s en (T_exp (Exp (E_assec e1 e2) _))) =
