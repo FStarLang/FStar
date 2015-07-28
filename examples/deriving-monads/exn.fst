@@ -49,3 +49,60 @@ let bind (#a:Type) (#b:Type) (#wp1:WP a) (#wp2: (a -> WP b)) f g (y:unit) =
   match r with
     | V x -> g x ()
     | E x -> E x
+
+val lemma_return_monotone: a:Type -> x:a -> Lemma (monotone_WP (wp_return #a x))
+let lemma_return_monotone x = ()
+
+val lemma_bind_preserves_monotonicity:
+  a:Type -> b:Type -> wp1:WP a -> wp2:(a -> WP b)
+  -> Lemma (requires (monotone_WP wp1 /\ (forall x. monotone_WP (wp2 x))))
+           (ensures (monotone_WP (wp_bind wp1 wp2)))
+let lemma_bind_preserves_monotonicity (a:Type) (b:Type) (wp1:WP a) (wp2:a -> WP b) = ()
+
+val lemma_bind_assoc: a:Type -> b:Type -> c:Type
+                      -> wp1:WP a
+                      -> wp2:(a -> WP b)
+                      -> wp3:(b -> WP c)
+                      -> Lemma (forall (post:Post c).
+                                wp_bind wp1 (fun x -> wp_bind (wp2 x) wp3) post
+                                <==>
+                                wp_bind (wp_bind wp1 wp2) wp3 post)
+let lemma_bind_assoc (a:Type) (b:Type) (c:Type)
+                     (wp1:WP a) (wp2:(a -> WP b)) (wp3:(b -> WP c)) = admit ()
+
+val lemma_left_unit: a:Type -> b:Type
+                     -> x:a
+                     -> wp2:(a -> WP b)
+                     -> Lemma (forall (post:Post b).
+                                   wp_bind (wp_return x) wp2 post
+                                   <==>
+                                   wp2 x post)
+let lemma_left_unit (a:Type) (b:Type) (x:a) (wp2: a -> WP b) = ()
+
+val lemma_right_unit: a:Type -> wp1:WP a
+                      -> Lemma (requires (monotone_WP wp1))
+                               (ensures (forall (post:Post a).
+                                         wp_bind wp1 (wp_return #a) post
+                                         <==>
+                                         wp1 post))
+let lemma_right_unit (a:Type) (wp1:WP a) = ()
+
+opaque type monotone_PureWP (#a:Type) (wp:PureWP a) =
+   (forall (p1:PurePost a) (p2:PurePost a).{:pattern (wp p1); (wp p2)}
+           (forall x. p1 x ==> p2 x) ==> (wp p1 ==> wp p2))
+
+type wp_lift (#a:Type) (wp:PureWP a) : WP a = (fun (post:Post a) -> wp (fun x -> post (V x)))
+val lift: a:Type -> wp:PureWP a -> f:(unit -> P a wp){monotone_PureWP wp} -> Tot (DExn a (wp_lift wp))
+let lift 'a 'wp f (y:unit) = V (f ())
+
+val lift_unit: #a:Type -> x:a -> p:Post a
+               -> Lemma (wp_return x p <==> wp_lift (pure_return a x) p)
+let lift_unit 'a x 'p = ()
+
+val lemma_lift_bind:
+  a:Type -> b:Type -> wp1:PureWP a -> wp2:(a -> PureWP b) -> post:Post b
+  -> Lemma (requires (monotone_PureWP wp1 /\ (forall x. monotone_PureWP (wp2 x))))
+           (ensures  (wp_bind (wp_lift wp1) (fun x -> wp_lift (wp2 x)) post
+                      <==>
+                      wp_lift (pure_bind_wlp a b wp1 wp2) post))
+let lemma_lift_bind 'a 'b 'wp1 'wp2 'post = admit ()
