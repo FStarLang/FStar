@@ -51,7 +51,7 @@ let outmod = [
     ["String"];
     ["Char"];
     ["Bytes"];
-   // ["List"]; this was not commented before
+    ["List"]; 
     ["Array"];
     ["Set"];
     ["Map"];
@@ -99,7 +99,7 @@ let mlpath_of_mlpath (currentModule : mlsymbol) (x : mlpath) : mlpath =
     | "Prims.None" -> ([], "None")
     | "Prims.failwith" -> ([], "failwith")
     | "ST.alloc" -> ([], "ref")
-    | "ST.read" -> (["Support";"Prims"], "op_Bang")
+    | "ST.read" ->  ([], "!")
     | "ST.op_ColonEquals" -> (["Support";"Prims"], "op_ColonEquals")
     | _ -> 
       begin
