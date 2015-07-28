@@ -193,7 +193,7 @@ and serialize_cflags (writer:Writer) (ast:cflags) :unit =
 and serialize_exp' (writer:Writer) (ast:exp') :unit = 
     match ast with
     | Exp_bvar(v) -> writer.write_char 'a'; serialize_bvvar writer v
-    | Exp_fvar(v, b) -> writer.write_char 'b'; serialize_fvvar writer v; writer.write_bool b
+    | Exp_fvar(v, b) -> writer.write_char 'b'; serialize_fvvar writer v; writer.write_bool false//NS: FIXME!
     | Exp_constant(c) -> writer.write_char 'c'; serialize_sconst writer c
     | Exp_abs(bs, e) -> writer.write_char 'd'; serialize_binders writer bs; serialize_exp writer e
     | Exp_app(e, ars) -> writer.write_char 'e'; serialize_exp writer e; serialize_args writer ars
@@ -333,7 +333,7 @@ and deserialize_cflags (reader:Reader) :cflags =
 and deserialize_exp' (reader:Reader) :exp' = 
     match (reader.read_char ()) with
     | 'a' -> Exp_bvar(deserialize_bvvar reader)
-    | 'b' -> Exp_fvar(deserialize_fvvar reader, reader.read_bool ())
+    | 'b' -> Exp_fvar(deserialize_fvvar reader, (ignore <| reader.read_bool (); None)) //FIXME
     | 'c' -> Exp_constant(deserialize_sconst reader)
     | 'd' -> Exp_abs(deserialize_binders reader, deserialize_exp reader)
     | 'e' -> Exp_app(deserialize_exp reader, deserialize_args reader)

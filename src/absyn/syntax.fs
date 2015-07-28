@@ -112,7 +112,7 @@ and uvar_basis<'a> =
   | Fixed of 'a
 and exp' =
   | Exp_bvar       of bvvar
-  | Exp_fvar       of fvvar * bool                               (* flag indicates a constructor *)
+  | Exp_fvar       of fvvar * option<fv_qual>                    
   | Exp_constant   of sconst
   | Exp_abs        of binders * exp 
   | Exp_app        of exp * args                                 (* args in order from left to right *)
@@ -130,6 +130,10 @@ and meta_source_info =
   | Sequence                   
   | Primop                                  (* ... add more cases here as needed for better code generation *)
   | MaskedEffect                            
+and fv_qual = 
+  | Data_ctor
+  | Record_projector of lident                  (* the fully qualified (unmangled) name of the field being projected *)
+  | Record_ctor of lident * list<ident> (* the type of the record being constructed and its (unmangled) fields in order *)
 and uvar_e = Unionfind.uvar<uvar_basis<exp>>
 and btvdef = bvdef<typ>
 and bvvdef = bvdef<exp>
@@ -503,7 +507,7 @@ let mk_Exp_bvar (x:bvvar) (t:option<typ>) p = {
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();
 }
-let mk_Exp_fvar ((x:fvvar),(b:bool)) (t:option<typ>) p = {
+let mk_Exp_fvar ((x:fvvar),(b:option<fv_qual>)) (t:option<typ>) p = {
     n=Exp_fvar(x, b);
     tk=get_typ_ref t;
     pos=p;

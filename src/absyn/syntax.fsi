@@ -121,7 +121,7 @@ and uvar_basis<'a> =
   | Fixed of 'a
 and exp' =
   | Exp_bvar       of bvvar
-  | Exp_fvar       of fvvar * bool                               (* flag indicates a constructor *)
+  | Exp_fvar       of fvvar * option<fv_qual>                    
   | Exp_constant   of sconst
   | Exp_abs        of binders * exp 
   | Exp_app        of exp * args                                 (* h tau_1 ... tau_n, args in order from left to right *)
@@ -139,6 +139,10 @@ and meta_source_info =
   | Sequence                   
   | Primop                                  (* ... add more cases here as needed for better code generation *)
   | MaskedEffect
+and fv_qual = 
+  | Data_ctor
+  | Record_projector of lident                  (* the fully qualified (unmangled) name of the field being projected *)
+  | Record_ctor of lident * list<ident>  (* the type of the record being constructed and its (unmangled) fields in order *)
 and uvar_e = Unionfind.uvar<uvar_basis<exp>>
 and btvdef = bvdef<typ>
 and bvvdef = bvdef<exp>
@@ -364,7 +368,7 @@ val mk_Total: typ -> comp
 val mk_Comp: comp_typ -> comp
 
 val mk_Exp_bvar: bvvar -> option<typ> -> range -> exp
-val mk_Exp_fvar: (fvvar * bool) -> option<typ> -> range -> exp 
+val mk_Exp_fvar: (fvvar * option<fv_qual>) -> option<typ> -> range -> exp 
 val mk_Exp_constant: sconst -> option<typ> -> range -> exp
 val mk_Exp_abs: (binders * exp) -> option<typ> -> range -> exp
 val mk_Exp_abs': (binders * exp) -> option<typ> -> range -> exp

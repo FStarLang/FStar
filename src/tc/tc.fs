@@ -559,7 +559,7 @@ and tc_value env e : exp * lcomp * guard_t =
     let e, t, implicits = Tc.Util.maybe_instantiate env e t in 
     //printfn "Instantiated type of %s to %s\n" (Print.exp_to_string e) (Print.typ_to_string t);
     let tc = if Options.should_verify env.curmodule.str then Inl t else Inr (Tc.Util.lcomp_of_comp <| mk_Total t) in
-    if dc && not(Env.is_datacon env v.v)
+    if dc=Some Data_ctor && not(Env.is_datacon env v.v)
     then raise (Error(Util.format1 "Expected a data constructor; got %s" v.v.str, Tc.Env.get_range env))
     else with_implicits implicits <| value_check_expected_typ env e tc
 
@@ -1286,7 +1286,7 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
     Tc.Util.close_comp env bindings c in
 
   let discriminate scrutinee f = 
-    let disc = Util.fvar false (Util.mk_discriminator f.v) <| range_of_lid f.v in 
+    let disc = Util.fvar None (Util.mk_discriminator f.v) <| range_of_lid f.v in 
     let disc = mk_Exp_app(disc, [varg <| scrutinee]) None scrutinee.pos in
     Util.mk_eq Util.t_bool Util.t_bool disc Const.exp_true_bool in
 
@@ -1304,8 +1304,8 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
             let sub_term_guards = args |> List.mapi (fun i arg -> match fst arg with 
                 | Inl _ -> (* no patterns on type arguments *) []
                 | Inr ei ->
-                    let projector = Tc.Env.lookup_projector env f.v i in
-                    let sub_term = mk_Exp_app(Util.fvar false projector f.p, [varg scrutinee]) None f.p in
+                    let projector = Tc.Env.lookup_projector env f.v i in //NS: TODO ... should this be a marked as a record projector?
+                    let sub_term = mk_Exp_app(Util.fvar None projector f.p, [varg scrutinee]) None f.p in
                     [mk_guard sub_term ei]) |> List.flatten in
             Util.mk_conj_l (head::sub_term_guards)
         | _ -> failwith (Util.format2 "tc_eqn: Impossible (%s) %s" (Range.string_of_range pat_exp.pos) (Print.exp_to_string pat_exp)) in
@@ -1581,7 +1581,7 @@ and tc_decl env se deserialized = match se with
                       begin match List.tryFind (lid_equals f.v) mutuals with 
                         | None -> ()
                         | Some tname -> 
-                          raise (Error (Tc.Errors.constructor_fails_the_positivity_check env (Util.fvar true lid (range_of_lid lid)) tname, range_of_lid lid))
+                          raise (Error (Tc.Errors.constructor_fails_the_positivity_check env (Util.fvar (Some Data_ctor) lid (range_of_lid lid)) tname, range_of_lid lid))
                       end 
                     | _ -> ()) () t) in
       
@@ -1590,7 +1590,7 @@ and tc_decl env se deserialized = match se with
       (* TODO: check that the tps in tname are the same as here *)
       let _ = match destruct result_t tname with 
         | Some _ -> ()
-        | _ -> raise (Error (Tc.Errors.constructor_builds_the_wrong_type env (Util.fvar true lid (range_of_lid lid)) result_t (Util.ftv tname kun), range_of_lid lid)) in
+        | _ -> raise (Error (Tc.Errors.constructor_builds_the_wrong_type env (Util.fvar (Some Data_ctor) lid (range_of_lid lid)) result_t (Util.ftv tname kun), range_of_lid lid)) in
       let se = Sig_datacon(lid, t, tycon, quals, mutuals, r) in 
       let env = Tc.Env.push_sigelt env se in 
       if log env then Util.print_string <| Util.format2 "data %s : %s\n" lid.str (Tc.Normalize.typ_norm_to_string env t);

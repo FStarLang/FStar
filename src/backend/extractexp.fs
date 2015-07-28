@@ -49,7 +49,7 @@ let err_unexpected_eff e f0 f1 =
     fail e.pos (Util.format3 "for expression %s, Expected effect %s; got effect %s" (Print.exp_to_string e) (eff_to_string f0) (eff_to_string f1))
     
 let is_constructor e = match (Util.compress_exp e).n with 
-    | Exp_fvar(_, b) -> b
+    | Exp_fvar(_, Some Data_ctor) -> true
     | _ -> false
 
 (* something is a value iff it qualifies for the OCaml's "value restriction", which determines when a definition can be generalized *)
@@ -353,7 +353,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                              let expected_t = translate_typ env expected_t in
                              let polytype = targs |> List.map btvar_as_mlident, expected_t in
                              let add_unit = match rest_args with 
-                                | [] -> not (is_value_or_type_app body)
+                                | [] -> not (is_value_or_type_app body) //if it's a pure type app, then it will be extracted to a value in ML; so don't add a unit
                                 | _ -> false in 
                              let rest_args = if add_unit then unit_binder::rest_args else rest_args in
                              let body = match rest_args with [] -> body | _ -> mk_Exp_abs(rest_args, body) None e.pos in

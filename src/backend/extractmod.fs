@@ -24,7 +24,7 @@ open Microsoft.FStar.Backends.ML.Env
 open Microsoft.FStar.Backends.ML.Util
 
 (*This approach assumes that failwith already exists in scope. This might be problematic, see below.*)
-let fail_exp t = mk_Exp_app(Util.fvar false Const.failwith_lid dummyRange, 
+let fail_exp t = mk_Exp_app(Util.fvar None Const.failwith_lid dummyRange, 
                           [ targ t
                           ; varg <| mk_Exp_constant (Const_string (Bytes.string_as_unicode_bytes "Not yet implemented", dummyRange)) None dummyRange]) None dummyRange 
 
@@ -37,7 +37,7 @@ let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> =
         | Sig_tycon _
         | Sig_typ_abbrev _ -> 
             let c, tds = ExtractTyp.extractSigElt g se in
-            c, [MLM_Ty tds]
+            c, tds
 
         | Sig_let (lbs, r, _, _) -> 
           let elet = mk_Exp_let(lbs, Const.exp_false_bool) None r in

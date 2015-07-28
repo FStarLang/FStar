@@ -550,11 +550,11 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
     | Exp_app(sube, args) ->
 (*       (match sube.n with Exp_fvar (c, false) -> Util.print_string (c.v.str^"\n") | _ -> ()); *)
        (match sube.n, args with
-          | Exp_fvar (c, false), [_;_;(Inr a1,_);a2] when (c.v.ident.idText = "pipe_left") ->
+          | Exp_fvar (c, None), [_;_;(Inr a1,_);a2] when (c.v.ident.idText = "pipe_left") ->
              mlexpr_of_expr mlenv rg lenv ({e with n = Exp_app (a1, [a2])})
-          | Exp_fvar (c, false), [_;_;a1;(Inr a2,_)] when (c.v.ident.idText = "pipe_right") ->
+          | Exp_fvar (c, None), [_;_;a1;(Inr a2,_)] when (c.v.ident.idText = "pipe_right") ->
              mlexpr_of_expr mlenv rg lenv ({e with n = Exp_app (a2, [a1])})
-          | Exp_fvar (c, false), _ when (c.v.str = "Prims.Assume" || c.v.str = "Prims.Assert" || c.v.str = "Prims.erase" || Util.starts_with c.v.ident.idText "l__") ->
+          | Exp_fvar (c, None), _ when (c.v.str = "Prims.Assume" || c.v.str = "Prims.Assert" || c.v.str = "Prims.erase" || Util.starts_with c.v.ident.idText "l__") ->
              MLE_Const (MLC_Unit)
           | _, _ ->
        begin
@@ -566,8 +566,8 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
             let args = List.collect (function (Inl _, _) -> [] | Inr e, _ -> [mlexpr_of_expr mlenv rg lenv e]) args in
 
             match sube with
-            | { n = Exp_fvar (c, true) } -> mkCTor c.v args
-            | { n = Exp_fvar (c, false) } ->
+            | { n = Exp_fvar (c, Some Data_ctor) } -> mkCTor c.v args
+            | { n = Exp_fvar (c, _) } ->
                 let subns = String.concat "." (List.map (fun x -> x.idText) c.v.ns) in
                 let rn, subnsl = match List.rev c.v.ns with [] -> "", [] | h::t -> h.idText, List.rev t in
                 (match smap_try_find record_constructors subns, args with
@@ -584,7 +584,11 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
         | Exp_bvar x ->
             MLE_Var (lresolve lenv x.v.realname)
 
-        | Exp_fvar (x, false) ->
+        | Exp_fvar (x, Some Data_ctor) ->
+           mkCTor x.v []
+            (* MLE_CTor (mlpath_of_lident mlenv x.v, []) *)
+
+        | Exp_fvar (x, _) ->
             let fid = x.v.ident.idText in
             if Util.starts_with fid "is_" && String.length fid > 3 && Util.is_upper (Util.char_at fid 3) then
                 let sub = Util.substring_from fid 3 in
@@ -608,9 +612,6 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
                 | None -> MLE_Name (mlpath_of_lident mlenv x.v)
             end
 
-        | Exp_fvar (x, true) ->
-           mkCTor x.v []
-            (* MLE_CTor (mlpath_of_lident mlenv x.v, []) *)
 
         | Exp_constant c ->
             MLE_Const (mlconst_of_const c)
@@ -664,7 +665,7 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
             assert false;
             let (c, args) =
                 match e.n with
-                | Exp_app({n=Exp_fvar (c, true)}, args) -> (c, args)
+                | Exp_app({n=Exp_fvar (c, Some Data_ctor)}, args) -> (c, args)
                 | _ -> unexpected rg "meta-data-app-without-fvar"
             in
             

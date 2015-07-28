@@ -215,7 +215,7 @@ let pat_as_exps allow_implicits env p
                let (b, a, w, env, args, pats) = pats |> List.fold_left (fun (b, a, w, env, args, pats) p ->
                    let (b', a', w', env, arg, pat) = pat_as_arg_with_env allow_wc_dependence env p in
                     (b'::b, a'::a, w'::w, env, arg::args, pat::pats))  ([], [], [], env, [], []) in
-               let e = mk_Exp_meta(Meta_desugared(mk_Exp_app'(Util.fvar true fv.v fv.p, args |> List.rev) None p.p, Data_app)) in
+               let e = mk_Exp_meta(Meta_desugared(mk_Exp_app'(Util.fvar (Some Data_ctor) fv.v fv.p, args |> List.rev) None p.p, Data_app)) in
                (List.rev b |> List.flatten, 
                 List.rev a |> List.flatten, 
                 List.rev w |> List.flatten,
@@ -446,7 +446,7 @@ let decorate_pattern env p exps =
         | Pat_cons(fv, pats) -> 
             let vars, args = pats |> List.map pat_as_arg |> List.unzip in
             let vars = List.flatten vars in
-            vars,  mk_Exp_app'(mk_Exp_fvar(fv, true) (Some fv.sort) fv.p, args) |> pkg
+            vars,  mk_Exp_app'(mk_Exp_fvar(fv, Some Data_ctor) (Some fv.sort) fv.p, args) |> pkg
 
         | Pat_dot_term(x, e) -> 
             [], e
