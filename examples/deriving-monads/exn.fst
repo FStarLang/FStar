@@ -9,9 +9,9 @@ effect P (a:Type) (wp:PureWP a) = PURE a wp wp
 
 type exn
 
-type result (a:Type) =
-  | V: v:a   -> result a
-  | E: e:exn -> result a
+type result: Type -> Type =
+  | V: #a:Type -> v:a   -> result a
+  | E: #a:Type -> e:exn -> result a
 
 kind Pre           = Type
 kind Post (a:Type) = result a -> Type
@@ -37,8 +37,8 @@ type wp_return (#a:Type) (x:a) (post:Post a) = post (V x)
 val return: #a:Type -> x:a -> Tot (DExn a (wp_return x))
 let return (#a:Type) x _ = V x
 
-type wp_bind (#a:Type) (#b:Type) (f:WP a) (g:a -> WP b) =
-  fun (post:Post b) -> f (fun r -> (is_E r ==> post (E (E.e r))) /\
+type wp_bind (#a:Type) (#b:Type) (f:WP a) (g:a -> WP b) : WP b =
+  fun (post:Post b) -> f (fun r -> (is_E r ==> post (E #b (E.e r))) /\
                                    (is_V r ==> (g (V.v r)) post))
 val bind: #a:Type -> #b:Type -> #wp1:WP a -> #wp2:(a -> WP b)
           -> f:DExn a wp1{monotone_WP wp1 /\ (forall x. monotone_WP (wp2 x))}
@@ -48,7 +48,7 @@ let bind (#a:Type) (#b:Type) (#wp1:WP a) (#wp2: (a -> WP b)) f g (y:unit) =
   let r = f () in
   match r with
     | V x -> g x ()
-    | E x -> E x
+    | E x -> E #b x
 
 val lemma_return_monotone: a:Type -> x:a -> Lemma (monotone_WP (wp_return #a x))
 let lemma_return_monotone x = ()
@@ -64,11 +64,26 @@ val lemma_bind_assoc: a:Type -> b:Type -> c:Type
                       -> wp2:(a -> WP b)
                       -> wp3:(b -> WP c)
                       -> Lemma (forall (post:Post c).
-                                wp_bind wp1 (fun x -> wp_bind (wp2 x) wp3) post
+                                wp_bind wp1 (fun (x:a) -> wp_bind (wp2 x) wp3) post
                                 <==>
                                 wp_bind (wp_bind wp1 wp2) wp3 post)
 let lemma_bind_assoc (a:Type) (b:Type) (c:Type)
-                     (wp1:WP a) (wp2:(a -> WP b)) (wp3:(b -> WP c)) = admit ()
+                     (wp1:WP a) (wp2:(a -> WP b)) (wp3:(b -> WP c)) =
+  let _ = assert (forall (post:Post c).
+                  wp_bind wp1 (fun (x:a) -> wp_bind (wp2 x) wp3) post <==>
+                  wp1 (fun (r:result a) -> (is_E r ==> post (E #c (E.e r))) /\
+                                           (is_V r ==> wp2 (V.v r) (fun (r':result b) -> (is_E r' ==> post (E #c (E.e r'))) /\
+                                                                                         (is_V r' ==> wp3 (V.v r') post))))) in
+                                                                                         
+  let _ = cut (forall (a:Type) (r:result a{is_E r}) (b:Type). E.e (E #b (E.e r)) = E.e r) in
+  
+  (*let _ = assert (forall (post:Post c).
+                  wp_bind (wp_bind wp1 wp2) wp3 post ==>
+                  wp1 (fun (r:result a) -> (is_E r ==> post (E #c (E.e r))) /\
+                                           (is_V r ==> wp2 (V.v r) (fun (r':result b) -> (is_E r' ==> post (E #c (E.e r'))) /\
+                                                                                         (is_V r' ==> wp3 (V.v r') post))))) in
+*)
+  admit ()
 
 val lemma_left_unit: a:Type -> b:Type
                      -> x:a
@@ -106,3 +121,4 @@ val lemma_lift_bind:
                       <==>
                       wp_lift (pure_bind_wlp a b wp1 wp2) post))
 let lemma_lift_bind 'a 'b 'wp1 'wp2 'post = admit ()
+
