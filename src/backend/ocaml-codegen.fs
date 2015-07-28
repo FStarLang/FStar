@@ -507,7 +507,7 @@ and doc_of_pattern (currentModule : mlsymbol) (pattern : mlpattern) : doc =
         text name
 
     | MLP_CTor (ctor, ps) ->
-        let ps = List.map (doc_of_pattern currentModule) ps in
+       let ps = List.map (doc_of_pattern currentModule) ps in
        let name =
          if is_standard_constructor ctor then
            snd (Option.get (as_standard_constructor ctor))

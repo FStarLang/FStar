@@ -123,7 +123,20 @@ let rec extract_pat (g:env) p : (env * list<mlpattern>) = match p.v with
   | Pat_twild _
   | Pat_tvar _ ->
     g, []
- 
+
+let normalize_abs e0 = 
+    let rec aux bs e = 
+        let e = Util.compress_exp e in
+        match e.n with 
+            | Exp_abs(bs', body) -> aux (bs@bs') body 
+            | _ -> 
+              let e' = Util.unascribe e in 
+              if Util.is_fun e' 
+              then aux bs e'
+              else mk_Exp_abs(bs, e) None e0.pos in
+   aux [] e0
+
+    
 (*Preconditions : 
    1) residualType is the type of mlAppExpr 
    2) mlAppExpr is an MLE_Name or an MLE_App with its head a named fvar, and isDataCons is true iff it names a data constructor of a data type.
@@ -307,8 +320,8 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                             | Some (bs, b, rest) -> bs, mk_Typ_fun(b::rest, c) None c.pos in
 
                    let n = List.length tbinders in
-                   let e = Util.unascribe e in
-                   begin match (Util.compress_exp e).n with 
+                   let e = normalize_abs e in
+                   begin match e.n with
                       | Exp_abs(bs, body) -> 
                         if n <= List.length bs
                         then let targs, rest_args = Util.first_N n bs in 
