@@ -35,10 +35,10 @@ let fail r msg =
 let err_uninst e = 
     fail e.pos (Util.format1 "Variable %s has a polymorphic type; expected it to be fully instantiated" (Print.exp_to_string e))
 
-let err_ill_typed_application e args t =
-    fail e.pos (Printf.sprintf "Ill-typed application: application is %s\n head type is %A\n remaining args are %s\n"
+let err_ill_typed_application (e : exp) args (t : mlty) =
+    fail e.pos (Util.format2 "Ill-typed application: application is %s \n remaining args are %s\n"
                 (Print.exp_to_string e)
-                t
+                 // t
                 (Print.args_to_string args))
                 
 
@@ -94,7 +94,7 @@ let erase (g:env) (e:mlexpr) (f:e_tag) (t:mlty) : mlexpr * e_tag * mlty =
 let maybe_coerce (g:env) (e:mlexpr) (t:mlty) (t':mlty) = 
     if equiv g t t' 
     then e
-    else (debug g (fun () -> printfn "\n (*needed to coerce expression \n %A \n of type \n %A \n to type \n %A *) \n" e t t');
+    else (//debug g (fun () -> printfn "\n (*needed to coerce expression \n %A \n of type \n %A \n to type \n %A *) \n" e t t');
           MLE_Coerce (e, t, t'))
 
 let eff_leq f f' = match f, f' with 
@@ -203,7 +203,7 @@ let maybe_eta_data (qual : option<fv_qual>) (residualType : mlty)  (mlAppExpr : 
         | _ -> mlAppExpr
  
 let rec check_exp (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr = 
-    debug g (fun () -> printfn "Checking %s at type %A\n" (Print.exp_to_string e) t);
+    // debug g (fun () -> printfn "Checking %s at type %A\n" (Print.exp_to_string e) t);
     let e ,_ ,_ = (erase g (check_exp' g e f t) f t) in e
 
 and check_exp' (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr = 

@@ -172,7 +172,7 @@ let extend_fv' (g:env) (x:fvvar) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) : e
         let gamma = Fv(x, mly, t_x)::g.gamma in 
         let tcenv = Env.push_local_binding g.tcenv (Env.Binding_lid(x.v, x.sort)) in
         {g with gamma=gamma; tcenv=tcenv} 
-    else let _ = printfn  "(* type scheme of \n %A \n is not closed or misses an unit argument: \n %A *) \n"  x.v.ident t_x in
+    else //let _ = printfn  "(* type scheme of \n %A \n is not closed or misses an unit argument: \n %A *) \n"  x.v.ident t_x in
          failwith "freevars found"
 
 let extend_fv (g:env) (x:fvvar) (t_x:mltyscheme) (add_unit:bool) : env =
