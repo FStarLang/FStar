@@ -169,7 +169,7 @@ STDFILES=system.fsi system.io.fsi system.text.fsi system.diagnostics.fsi system.
 STDLIB=$(addprefix ../lib/, $(STDFILES))
 STDLIBEXP=$(addprefix ../lib/, $(STDFILES))
 
-BOOT_BASICFILES=bytes.fst platform.fsi util.fsi getoptsimple.fst options.fs range.fst unionfind.fst
+BOOT_BASICFILES=bytes.fsti platform.fsi util.fsi getoptsimple.fsti range.fsti unionfind.fsti options.fs 
 BOOT_BASIC=$(addprefix basic/, $(BOOT_BASICFILES))
 BOOT_SYNTAXFILES=syntax.fsi syntax.fs const.fs visit.fs util.fs print.fs ssyntax.fs
 BOOT_SYNTAX=$(addprefix absyn/, $(BOOT_SYNTAXFILES))
@@ -186,7 +186,7 @@ BOOT_JSBACKEND=$(addprefix jsbackend/, $(BOOT_JSBACKENDFILES))
 BOOT_MAIN=fstar.fs
 BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_TC) $(BOOT_PARSER) $(TOSMT_SRC) $(BOOT_FORMAT) #$(BOOT_BACKEND) fstar.fs
 
-ADMITTED_MODULES=System System.IO System.Text System.Diagnostics System.Collections.Generic Collections ST List Option String Char Microsoft.FStar.Util Microsoft.FStar.Platform Microsoft.FStar.Parser.ParseIt
+ADMITTED_MODULES=System System.IO System.Text System.Diagnostics System.Collections.Generic Collections ST List Option String Char Microsoft.FStar.Bytes Microsoft.FStar.Platform Microsoft.FStar.Util Microsoft.FStar.Getopt Microsoft.FStar.Range Microsoft.FStar.Unionfind Microsoft.FStar.Parser.ParseIt
 ADMITS=$(addprefix --admit_fsi , $(ADMITTED_MODULES))
 boot: $(BOOT_ALL)
 	../bin/fstar.exe --debug yes --fs_typ_app --lax $(FSTAROPTS) $(ADMITS) $^
