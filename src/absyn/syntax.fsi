@@ -44,8 +44,7 @@ type withinfo_t<'a,'t> = {
 
 (* Free term and type variables *)
 type var<'t>  = withinfo_t<lident,'t>
-type fieldname = lident //TODO:remove
-type inst<'a> = ref<option<'a>> //TODO: remove
+type fieldname = lident 
 (* Bound variables. 'a is a phantom type to distinguish between term and
    type bound variables. 't is the type or the kind of the variable. *)
 type bvdef<'a> = {ppname:ident; realname:ident}
@@ -142,14 +141,14 @@ and meta_source_info =
 and fv_qual = 
   | Data_ctor
   | Record_projector of lident                  (* the fully qualified (unmangled) name of the field being projected *)
-  | Record_ctor of lident * list<ident>  (* the type of the record being constructed and its (unmangled) fields in order *)
+  | Record_ctor of lident * list<fieldname>     (* the type of the record being constructed and its (unmangled) fields in order *)
 and uvar_e = Unionfind.uvar<uvar_basis<exp>>
 and btvdef = bvdef<typ>
 and bvvdef = bvdef<exp>
 and pat' = 
   | Pat_disj     of list<pat>
   | Pat_constant of sconst
-  | Pat_cons     of fvvar * list<pat>
+  | Pat_cons     of fvvar * option<fv_qual> * list<pat>
   | Pat_var      of bvvar * bool                          (* flag marks an explicitly provided implicit *)
   | Pat_tvar     of btvar
   | Pat_wild     of bvvar                                 (* need stable names for even the wild patterns *)
@@ -230,8 +229,8 @@ type qualifier =
   | Logic
   | Discriminator of lident                          (* discriminator for a datacon l *)
   | Projector of lident * either<btvdef, bvvdef>     (* projector for datacon l's argument 'a or x *)
-  | RecordType of list<ident>                        (* unmangled field names *)
-  | RecordConstructor of list<ident>                 (* unmangled field names *)
+  | RecordType of list<fieldname>                    (* unmangled field names *)
+  | RecordConstructor of list<fieldname>             (* unmangled field names *)
   | ExceptionConstructor
   | DefaultEffect of option<lident>
   | TotalEffect

@@ -278,7 +278,7 @@ let is_etuple (e : exp) =
 (* -------------------------------------------------------------------- *)
 let is_ptuple (p : pat) =
     match p.v with
-    | Pat_cons (x, args) ->
+    | Pat_cons (x, _, args) ->
         let args = args |> List.collect (fun p -> match p.v with 
             | Pat_dot_term _ | Pat_dot_typ _ -> []
             | _ -> [p])
@@ -483,7 +483,7 @@ let mlscheme_of_ty (mlenv : mlenv) (rg : range) (ty : typ) : mltyscheme =
 (* -------------------------------------------------------------------- *)
 let rec mlpat_of_pat (mlenv : mlenv) (rg : range) (le : lenv) (p : pat) : lenv * mlpattern =
     match p.v with
-    | Pat_cons (x, ps) -> begin
+    | Pat_cons (x, _, ps) -> begin
         let ps = ps |> List.filter (fun p -> match p.v with 
             | Pat_dot_term _ | Pat_dot_typ _ -> false
             | _ -> true)
@@ -786,8 +786,9 @@ let mldtype_of_indt (mlenv : mlenv) (indt : list<sigelt>) : list<mldtype> =
                 let ty =
                   match getRecordFieldsFromType qualif, cs with
                     | Some f, [c] ->
-                       (smap_add record_constructors c.str f;
-                        Rec (x.ident.idText, f, cs, snd (tenv_of_tvmap ar), rg)) // parsing a record from a Sig_tycon. the record data lies in the qualifiers of the tycon. one can ignore the rest
+                        let fns = List.map (fun x -> x.ident) f in
+                       (smap_add record_constructors c.str fns;
+                        Rec (x.ident.idText, fns, cs, snd (tenv_of_tvmap ar), rg)) // parsing a record from a Sig_tycon. the record data lies in the qualifiers of the tycon. one can ignore the rest
                     | _, _ -> DT (x.ident.idText, cs, snd (tenv_of_tvmap ar), rg) in
                 (ty :: types, ctors)
               end

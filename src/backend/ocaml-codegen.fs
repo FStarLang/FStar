@@ -99,8 +99,8 @@ let mlpath_of_mlpath (currentModule : mlsymbol) (x : mlpath) : mlpath =
     | "Prims.None" -> ([], "None")
     | "Prims.failwith" -> ([], "failwith")
     | "ST.alloc" -> ([], "ref")
-    | "ST.read" ->  ([], "!")
-    | "ST.op_ColonEquals" -> (["Support";"Prims"], "op_ColonEquals")
+    | "ST.read" ->  (["Support";"ST"], "read")
+    | "ST.op_ColonEquals" -> (["Support";"ST"], "op_ColonEquals")
     | _ -> 
       begin
         let ns, x = x in 
@@ -145,7 +145,7 @@ let infix_prim_ops = [
 let prim_uni_ops = [
     ("op_Negation", "not");
     ("op_Minus", "-");
-    ("op_Bang","!");
+    ("op_Bang","Support.ST.read");
     ("exit", "exit");
     ("failwith", "failwith");
     ("raise", "raise");

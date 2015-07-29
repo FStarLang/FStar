@@ -443,7 +443,7 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
       | PatName l ->
         let l = fail_or env (try_lookup_datacon env) l in
         let x = new_bvd (Some p.prange) in
-        loc, env, VBinder(x, tun, None), pos <| Pat_cons(l, [])
+        loc, env, VBinder(x, tun, None), pos <| Pat_cons(l, Some Data_ctor, [])
 
       | PatApp({pat=PatName l}, args) ->
         let loc, env, args = List.fold_right (fun arg (loc,env,args) ->
@@ -451,7 +451,7 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
           (loc, env, arg::args)) args (loc, env, []) in
         let l = fail_or env  (try_lookup_datacon env) l in
         let x = new_bvd (Some p.prange) in
-        loc, env, VBinder(x, tun, None), pos <| Pat_cons(l, args)
+        loc, env, VBinder(x, tun, None), pos <| Pat_cons(l, Some Data_ctor, args)
 
       | PatApp _ -> raise (Error ("Unexpected pattern", p.prange))
 
@@ -461,7 +461,8 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
           loc, env, pat::pats) pats (loc, env, []) in
         let pat = List.fold_right (fun hd tl ->
             let r = Range.union_ranges hd.p tl.p in
-            pos_r r <| Pat_cons(Util.fv Const.cons_lid, [hd;tl])) pats (pos_r (Range.end_range p.prange) <| Pat_cons(Util.fv Const.nil_lid, [])) in
+            pos_r r <| Pat_cons(Util.fv Const.cons_lid, Some Data_ctor, [hd;tl])) pats 
+                        (pos_r (Range.end_range p.prange) <| Pat_cons(Util.fv Const.nil_lid, Some Data_ctor, [])) in
         let x = new_bvd (Some p.prange) in
         loc, env, VBinder(x, tun, None), pat
 
@@ -477,7 +478,7 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
           | Exp_fvar (v, _) -> v
           | _ -> failwith "impossible" in
         let x = new_bvd (Some p.prange) in
-        loc, env, VBinder(x, tun, None), pos <| Pat_cons(l, args)
+        loc, env, VBinder(x, tun, None), pos <| Pat_cons(l, Some Data_ctor, args)
 
       | PatRecord ([]) ->
         raise (Error ("Unexpected pattern", p.prange))
@@ -492,7 +493,12 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
             | None -> mk_pattern PatWild p.prange
             | Some (_, p) -> p) in
         let app = mk_pattern (PatApp(mk_pattern (PatName record.constrname) p.prange, args)) p.prange in
-        aux loc env app in
+        let env, e, b, p = aux loc env app in
+        let p = match p.v with 
+            | Pat_cons(fv, _, args) -> pos <| Pat_cons(fv, Some (Record_ctor (record.typename, record.fields |> List.map fst)), args)
+            | _ -> p in
+        env, e, b, p in
+
   let _, env, b, p = aux [] env p in
   env, b, p
 
@@ -598,12 +604,12 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
                                 | Exp_bvar _, _ ->
                                   let tup = Util.mk_tuple_data_lid 2 top.range in
                                   let sc = Syntax.mk_Exp_app(Util.fvar (Some Data_ctor) tup top.range, [varg sc; varg <| Util.bvar_to_exp b]) None top.range in
-                                  let p = withinfo (Pat_cons(Util.fv tup, [p';p])) None (Range.union_ranges p'.p p.p) in
+                                  let p = withinfo (Pat_cons(Util.fv tup, Some Data_ctor, [p';p])) None (Range.union_ranges p'.p p.p) in
                                   Some(sc, p)
-                                | Exp_app(_, args), Pat_cons(_, pats) ->
+                                | Exp_app(_, args), Pat_cons(_, _, pats) ->
                                   let tup = Util.mk_tuple_data_lid (1 + List.length args) top.range in
                                   let sc = Syntax.mk_Exp_app(Util.fvar (Some Data_ctor) tup top.range, args@[(varg <| Util.bvar_to_exp b)]) None top.range in
-                                  let p = withinfo (Pat_cons(Util.fv tup, pats@[p])) None (Range.union_ranges p'.p p.p) in
+                                  let p = withinfo (Pat_cons(Util.fv tup, Some Data_ctor, pats@[p])) None (Range.union_ranges p'.p p.p) in
                                   Some(sc, p)
                                 | _ -> failwith "Impossible"
                               end in
@@ -727,6 +733,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
 
     | Record(eopt, fields) ->
       let f, _ = List.hd fields in
+      let qfn g = lid_of_ids (f.ns@[g]) in
       let record, _ = fail_or env  (try_lookup_record_by_field_name env) f in
       let get_field xopt f =
         let fn = f.ident in
@@ -734,35 +741,40 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
           let gn = g.ident in
           fn.idText = gn.idText) in
         match found with
-          | Some (_, e) -> e
+          | Some (_, e) -> qfn fn, e
           | None ->
             match xopt with
               | None ->
                 raise (Error (Util.format1 "Field %s is missing" (text_of_lid f), top.range))
               | Some x ->
-                mk_term (Project(x, f)) x.range x.level in
+                qfn fn, mk_term (Project(x, f)) x.range x.level in
       let recterm = match eopt with
         | None ->
           Construct(record.constrname,
                     record.fields |> List.map (fun (f, _) ->
-                      get_field None f, Nothing))
+                    snd <| get_field None f, Nothing))
 
         | Some e ->
           let x = genident (Some e.range) in
           let xterm = mk_term (Var (lid_of_ids [x])) x.idRange Expr in
-          let record = Construct(record.constrname,
-                                 record.fields |> List.map (fun (f, _) ->
-                                    get_field (Some xterm) f, Nothing)) in
+          let record = Record(None, record.fields |> List.map (fun (f, _) -> get_field (Some xterm) f)) in
           Let(false, [(mk_pattern (PatVar (x, false)) x.idRange, e)], mk_term record top.range top.level) in
+
       let recterm = mk_term recterm top.range top.level in
-      desugar_exp env recterm
+      let e = desugar_exp env recterm in 
+      begin match e.n with 
+        | Exp_meta(Meta_desugared({n=Exp_app({n=Exp_fvar(fv, _)}, args)}, Data_app)) -> 
+          let e = pos <| mk_Exp_app(mk_Exp_fvar(fv, Some (Record_ctor(record.typename, record.fields |> List.map fst))) None e.pos,
+                                    args)  in
+          mk_Exp_meta(Meta_desugared(e, Data_app))
+
+        | _ -> e
+      end
 
     | Project(e, f) ->
-     // let _ = Util.print_string (Util.format1 "Looking up field name %s\n" (Print.sli f)) in
       let _, fieldname = fail_or env  (try_lookup_record_by_field_name env) f in
-      //let _ = Util.print_string (Util.format2 "resolved %s as %s\n" (Print.sli f) (Print.sli fieldname)) in
-      let proj = mk_term (App(mk_term (Var fieldname) (range_of_lid f) Expr, e, Nothing)) top.range top.level in
-      desugar_exp env proj
+      let e = desugar_exp env e in 
+      pos <| mk_Exp_app(Util.fvar (Some (Record_projector (lid_of_ids [f.ident]))) fieldname (range_of_lid f), [varg e]) 
 
     | Paren e ->
       desugar_exp env e
@@ -1160,9 +1172,9 @@ let gather_tc_binders tps k =
     aux tps k |> Util.name_binders
 
 
-let mk_data_discriminators env t tps k datas =
+let mk_data_discriminators quals env t tps k datas =
 //    if env.iface && not env.admitted_iface then [] else
-    let quals q = if not <| env.iface || env.admitted_iface then Assumption::q else q in
+    let quals q = if not <| env.iface || env.admitted_iface then Assumption::q@quals else q@quals in
     let binders = gather_tc_binders tps k in
     let p = range_of_lid t in
     let imp_binders = binders |> List.map (fun (x, _) -> x, Some Implicit) in
@@ -1259,7 +1271,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
       let result = apply_binders (mk_term (Var (lid_of_ids [id])) id.idRange Type) parms in
       let constrTyp = mk_term (Product(mfields, with_constructor_effect result)) id.idRange Type in
       //let _ = Util.print_string (Util.format2 "Translated record %s to constructor %s\n" (id.idText) (term_to_string constrTyp)) in
-      TyconVariant(id, parms, kopt, [(constrName, Some constrTyp, false)]), fields |> List.map fst
+      TyconVariant(id, parms, kopt, [(constrName, Some constrTyp, false)]), fields |> List.map (fun (x, _) -> DesugarEnv.qualify env x)
     | _ -> failwith "impossible" in
   let desugar_abstract_tc quals _env mutuals = function
     | TyconAbstract(id, binders, kopt) ->
@@ -1364,7 +1376,8 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
       let env = push_sigelt env0 bundle in
       let data_ops = sigelts |> List.collect (mk_data_projectors env) in
       let discs = sigelts |> List.collect (function
-        | Sig_tycon(tname, tps, k, _, constrs, _, _) -> mk_data_discriminators env tname tps k constrs
+        | Sig_tycon(tname, tps, k, _, constrs, quals, _) -> 
+          mk_data_discriminators quals env tname tps k constrs
         | _ -> []) in
       let ops = discs@data_ops in
       let env = List.fold_left push_sigelt env ops in
@@ -1436,7 +1449,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
     let se' = Sig_bundle([se], [ExceptionConstructor], [l], d.drange) in
     let env = push_sigelt env se' in
     let data_ops = mk_data_projectors env se in
-    let discs = mk_data_discriminators env  Const.exn_lid [] ktype [l] in
+    let discs = mk_data_discriminators [] env Const.exn_lid [] ktype [l] in
     let env = List.fold_left push_sigelt env (discs@data_ops) in
     env, se'::discs@data_ops
 
@@ -1448,7 +1461,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
     let se' = Sig_bundle([se], [ExceptionConstructor], [l], d.drange) in
     let env = push_sigelt env se' in
     let data_ops = mk_data_projectors env se in
-    let discs = mk_data_discriminators env Const.exn_lid [] ktype [l] in
+    let discs = mk_data_discriminators [] env Const.exn_lid [] ktype [l] in
     let env = List.fold_left push_sigelt env (discs@data_ops) in
     env, se'::discs@data_ops
 

@@ -932,7 +932,7 @@ and encode_one_pat (env:env_t) pat : (env_t * pattern) =
             | Pat_dot_typ _ -> Term.mkTrue
             | Pat_constant c -> 
                Term.mkEq(scrutinee, encode_const c)
-            | Pat_cons(f, args) -> 
+            | Pat_cons(f, _, args) -> 
                 let is_f = mk_data_tester env f.v scrutinee in
                 let sub_term_guards = args |> List.mapi (fun i arg -> 
                     let proj = primitive_projector_by_pos env.tcenv f.v i in
@@ -952,7 +952,7 @@ and encode_one_pat (env:env_t) pat : (env_t * pattern) =
 
             | Pat_constant _ -> []
 
-            | Pat_cons(f, args) -> 
+            | Pat_cons(f, _, args) -> 
                 args 
                 |> List.mapi (fun i arg -> 
                     let proj = primitive_projector_by_pos env.tcenv f.v i in

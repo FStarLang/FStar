@@ -559,7 +559,11 @@ and tc_value env e : exp * lcomp * guard_t =
     let e, t, implicits = Tc.Util.maybe_instantiate env e t in 
     //printfn "Instantiated type of %s to %s\n" (Print.exp_to_string e) (Print.typ_to_string t);
     let tc = if Options.should_verify env.curmodule.str then Inl t else Inr (Tc.Util.lcomp_of_comp <| mk_Total t) in
-    if dc=Some Data_ctor && not(Env.is_datacon env v.v)
+    let is_data_ctor = function 
+        | Some Data_ctor
+        | Some (Record_ctor _) -> true
+        | _ -> false in
+    if is_data_ctor dc && not(Env.is_datacon env v.v)
     then raise (Error(Util.format1 "Expected a data constructor; got %s" v.v.str, Tc.Env.get_range env))
     else with_implicits implicits <| value_check_expected_typ env e tc
 

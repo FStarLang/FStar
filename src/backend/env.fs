@@ -118,8 +118,8 @@ let lookup  (g:env) (x:either<bvvar,fvvar>) : (mlexpr * mltyscheme) =
         | Inr x -> lookup_fv g x 
 
 let lookup_var g e = match e.n with 
-    | Exp_bvar x -> (lookup g (Inl x),false)
-    | Exp_fvar (x, b) -> (lookup g (Inr x), b=Some Data_ctor)
+    | Exp_bvar x -> (lookup g (Inl x), None)
+    | Exp_fvar (x, b) -> (lookup g (Inr x), b)
     | _ -> failwith "impossible" 
 
 (* do we really need to keep gamma uptodate with hidden binders? For using F* utils, we just need to keep tcenv update.

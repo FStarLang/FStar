@@ -154,11 +154,25 @@ let resugar_exp e = match e with
         | _ -> e)
     | _ -> e
 
-let resugar_pat p = match p with 
+let record_field_path = function
+    | f::_ -> 
+        let ns, _ = Util.prefix f.ns in 
+        ns |> List.map (fun id -> id.idText)
+    | _ -> failwith "impos" 
+
+let record_fields fs vs = List.map2 (fun (f:lident) e -> f.ident.idText, e) fs vs
+
+let resugar_pat q p = match p with 
     | MLP_CTor(d, pats) -> 
       begin match is_xtuple d with 
         | Some n -> MLP_Tuple(pats)
-        | _ -> p
+        | _ ->
+          match q with 
+            | Some (Record_ctor (_, fns)) -> 
+              let p = record_field_path fns in
+              let fs = record_fields fns pats in
+              MLP_Record(p, fs)
+            | _ -> p
       end
     | _ -> p
 
@@ -185,4 +199,5 @@ let resugar_mlty t = match t with
 
 let flatten_ns ns = String.concat "_" ns
 let flatten_mlpath (ns, n) = String.concat "_" (ns@[n])
+let mlpath_of_lid (l:lident) = (l.ns |> List.map (fun i -> i.idText),  l.str)
   

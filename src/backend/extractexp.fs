@@ -119,12 +119,12 @@ let rec extract_pat (g:env) p : (env * list<mlpattern>) = match p.v with
   | Pat_constant s     -> 
     g, [MLP_Const (mlconst_of_const s)]
 
-  | Pat_cons (f, pats) -> 
+  | Pat_cons (f, q, pats) -> 
     let d = match Env.lookup_fv g f with 
         | MLE_Name n, _ -> n
         | _ -> failwith "Expected a constructor" in
     let g, pats = Util.fold_map extract_pat g pats in
-    g, [Util.resugar_pat <| MLP_CTor (d, List.flatten pats)]
+    g, [Util.resugar_pat q <| MLP_CTor (d, List.flatten pats)]
 
   | Pat_var(x, _) ->
     let mlty = translate_typ g x.sort in 
@@ -160,28 +160,41 @@ let normalize_abs e0 =
    1) the return value (say r) also has type residualType and it's extraction-preimage is definitionally equal (in Fstar ) to that of mlAppExpr
    2) meets the ML requirements that the args to datacons be tupled and that the datacons be fullly applied
 *)
-let maybe_eta_data (isDataCons : bool) (residualType : mlty)  (mlAppExpr : mlexpr) : mlexpr =
+let maybe_eta_data (qual : option<fv_qual>) (residualType : mlty)  (mlAppExpr : mlexpr) : mlexpr =
     let rec eta_args more_args t = match t with 
         | MLTY_Fun (t0, _, t1) -> 
           let x = Util.gensym (), -1 in
           eta_args (((x, Some t0), MLE_Var x)::more_args) t1
         | MLTY_Named (_, _) -> List.rev more_args
         | _ -> failwith "Impossible" in
-
-    let resugar_and_maybe_eta e = 
+   let as_record qual e = 
+        match e, qual with 
+            | MLE_CTor(_, args), Some (Record_ctor(_, fields)) -> 
+               let path = Util.record_field_path fields in 
+               let fields = Util.record_fields fields args in
+               MLE_Record(path, fields)
+            | _ -> e in
+              
+    let resugar_and_maybe_eta qual e = 
         let eargs = eta_args [] residualType in 
         match eargs with 
-            | [] -> Util.resugar_exp e 
+            | [] -> Util.resugar_exp (as_record qual e) 
             | _ -> 
                 let binders, eargs = List.unzip eargs in
                 match e with 
                     | MLE_CTor(head, args) ->
-                        MLE_Fun(binders, Util.resugar_exp <| MLE_CTor(head, args@eargs))
+                      let body = Util.resugar_exp <| (as_record qual <| MLE_CTor(head, args@eargs)) in
+                      MLE_Fun(binders, body)
                     | _ -> failwith "Impossible" in
     
-    match (mlAppExpr, isDataCons) with
-        | (MLE_App (MLE_Name mlp, mlargs) , true) -> resugar_and_maybe_eta <| MLE_CTor (mlp,mlargs) 
-        | (MLE_Name mlp, true) -> resugar_and_maybe_eta <| MLE_CTor (mlp, [])
+    match (mlAppExpr, qual) with
+        | _, None -> mlAppExpr
+        | MLE_App(MLE_Name mlp, [mle]), Some (Record_projector f) -> 
+          MLE_Proj(mle, Util.mlpath_of_lid f)
+        | (MLE_App (MLE_Name mlp, mlargs), Some Data_ctor)
+        | (MLE_App (MLE_Name mlp, mlargs), Some (Record_ctor _)) -> resugar_and_maybe_eta qual <| MLE_CTor (mlp,mlargs) 
+        | (MLE_Name mlp, Some Data_ctor)
+        | (MLE_Name mlp, Some (Record_ctor _)) -> resugar_and_maybe_eta qual <| MLE_CTor (mlp, [])
         | _ -> mlAppExpr
  
 let rec check_exp (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr = 
@@ -231,11 +244,11 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
           e, f, t
 
         | Exp_bvar _
-        | Exp_fvar _ -> // how is Exp_constant different from Exp_fvar?
-          let (x, mltys), is_data = lookup_var g e in 
+        | Exp_fvar _ -> 
+          let (x, mltys), qual = lookup_var g e in 
           //let _ = printfn "\n (*looked up tyscheme of \n %A \n as \n %A *) \n" x s in
           begin match mltys with 
-            | ([], t) -> maybe_eta_data is_data t x, E_PURE, t
+            | ([], t) -> maybe_eta_data qual t x, E_PURE, t
             | _ -> err_uninst e
           end
 
@@ -277,7 +290,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
             | Exp_bvar _ 
             | Exp_fvar _ -> 
               //debug g (fun () -> printfn "head of app is %s\n" (Print.exp_to_string head));
-              let (head, (vars, t)), is_data = lookup_var g head in
+              let (head, (vars, t)), qual = lookup_var g head in
               //debug g (fun () -> printfn "\n (*looked up tyscheme \n %A *) \n" (vars,t));
               let n = List.length vars in
               if n <= List.length args
@@ -289,13 +302,13 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                    let t = instantiate (vars, t) prefixAsMLTypes in
                    //debug g (fun () -> printfn "\n (*instantiating  \n %A \n with \n %A \n produced \n %A \n *) \n" (vars,t0) prefixAsMLTypes t);
                    match rest with 
-                    | [] -> maybe_eta_data is_data t head, E_PURE, t
-                    | _  -> synth_app is_data (head, []) (E_PURE, t) rest
+                    | [] -> maybe_eta_data qual t head, E_PURE, t
+                    | _  -> synth_app qual (head, []) (E_PURE, t) rest
               else err_uninst e
 
             | _ -> 
               let head, f, t = synth_exp g head in // t is the type inferred for head, the head of the app
-              synth_app false (head, []) (f, t) args               
+              synth_app None (head, []) (f, t) args               
           end
 
         | Exp_abs(bs, body) -> 

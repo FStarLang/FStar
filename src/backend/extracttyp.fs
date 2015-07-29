@@ -381,12 +381,12 @@ let extractInductive (c:context) (ind: inductiveTypeFam ) :  context* (mlsymbol 
         let nIndices = numIndices ind.k ind.tyName.ident.idText in
         let (nc, tyb) = (Util.fold_map (extractCtor ind.tyBinders) newContext ind.constructors) in
         let mlbs = List.append (List.map mlTyIdentOfBinder ind.tyBinders) (dummyIndexIdents nIndices) in
-        let tbody = match Util.find_opt (function RecordConstructor _ -> true | _ -> false) ind.qualifiers with 
-            | Some (RecordConstructor ids) -> 
+        let tbody = match Util.find_opt (function RecordType _ -> true | _ -> false) ind.qualifiers with 
+            | Some (RecordType ids) -> 
               assert (List.length tyb = 1);
               let _, c_ty = List.hd tyb in 
               assert (List.length ids = List.length c_ty);
-              let fields = List.map2 (fun id ty -> (id.idText, ty)) ids c_ty in
+              let fields = List.map2 (fun lid ty -> (lid.ident.idText, ty)) ids c_ty in
               MLTD_Record fields
             | _ -> MLTD_DType tyb in
         nc, (lident2mlsymbol ind.tyName,  mlbs , Some tbody)

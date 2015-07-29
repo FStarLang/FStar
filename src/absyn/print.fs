@@ -439,7 +439,7 @@ and uvar_k_to_string' (uv,args) =
    format2 "('k_%s %s)" str (args_to_string args)
 
 and pat_to_string x = match x.v with
-  | Pat_cons(l, pats) -> Util.format2 "(%s %s)" (sli l.v) (List.map pat_to_string pats |> String.concat " ") 
+  | Pat_cons(l, _, pats) -> Util.format2 "(%s %s)" (sli l.v) (List.map pat_to_string pats |> String.concat " ") 
   | Pat_dot_term (x, _) -> Util.format1 ".%s" (strBvd x.v)
   | Pat_dot_typ (x, _) -> Util.format1 ".'%s" (strBvd x.v)
   | Pat_var (x, true) -> Util.format1 "#%s" (strBvd x.v)
@@ -464,7 +464,7 @@ let qual_to_string = function
     | Opaque -> "opaque"
     | Discriminator _ -> "discriminator"
     | Projector _ -> "projector"
-    | RecordType ids -> Util.format1 "record(%s)" (ids |> List.map (fun id -> id.idText) |> String.concat ", ")
+    | RecordType ids -> Util.format1 "record(%s)" (ids |> List.map (fun lid -> lid.ident.idText) |> String.concat ", ")
     | _ -> "other"
 let quals_to_string quals = quals |> List.map qual_to_string |> String.concat " " 
 let rec sigelt_to_string x = match x with 
