@@ -23,6 +23,20 @@ module Prims = struct
   let min x y = if x < y then x else y
   let pipe_right a f = f a
   let pipe_left f a = f a
+  let op_Negation x = not x
+  let op_Addition x y = x + y
+  let op_Subtraction x y = x - y
+  let op_Multiply x y = x * y
+  let op_Division x y = x / y
+  let op_Equality x y = x = y
+  let op_disEquality x y = x<>y
+  let op_AmpAmp x y = x && y
+  let op_BarBar x y  = x || y
+  let op_LessThanOrEqual x y = x <= y
+  let op_GreaterThanOrEqual x y = x >= y
+  let op_LessThan x y = x < y
+  let op_GreaterThan x y = x > y
+  let op_Modulus x y = x mod y
 end
 
 module ST = struct
