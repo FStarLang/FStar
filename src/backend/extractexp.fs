@@ -114,7 +114,7 @@ let rec extract_pat (g:env) p : (env * list<mlpattern>) = match p.v with
 
   | Pat_disj (p::pats)      ->
     let g, p = extract_pat g p in
-    g, [MLP_Branch (List.collect (fun x -> snd (extract_pat g x)) pats)]
+    g, [MLP_Branch (p@List.collect (fun x -> snd (extract_pat g x)) pats)]
 
   | Pat_constant s     -> 
     g, [MLP_Const (mlconst_of_const s)]

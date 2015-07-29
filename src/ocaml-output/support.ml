@@ -8,6 +8,8 @@ module Prims = struct
   type nat = int
   type byte = char
   type uint8 = char
+  type _exn = exn
+  type exn = _exn
   let ignore _ = ()
   let cut = ()
   let fst = fst
@@ -19,6 +21,8 @@ module Prims = struct
   let _assert x = ()
   let magic () = failwith "no magic"
   let min x y = if x < y then x else y
+  let pipe_right a f = f a
+  let pipe_left f a = f a
 end
 
 module ST = struct

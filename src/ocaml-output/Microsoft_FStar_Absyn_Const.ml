@@ -1,7 +1,7 @@
 
-let p2l = (fun ( l ) -> (Microsoft_FStar_Absyn_Syntax.lid_of_path l Microsoft_FStar_Absyn_Syntax.dummyRange))
+let p2l = (fun ( l  :  Microsoft_FStar_Absyn_Syntax.path ) -> (Microsoft_FStar_Absyn_Syntax.lid_of_path l Microsoft_FStar_Absyn_Syntax.dummyRange))
 
-let pconst = (fun ( s ) -> (p2l (("Prims")::(s)::[])))
+let pconst = (fun ( s  :  string ) -> (p2l (("Prims")::(s)::[])))
 
 let prims_lid = (p2l (("Prims")::[]))
 
@@ -39,11 +39,26 @@ let lexcons_lid = (pconst "LexCons")
 
 let lextop_lid = (pconst "LexTop")
 
-let kunary = (fun ( k ) ( k' ) -> (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow (((Microsoft_FStar_Absyn_Syntax.null_t_binder k))::[], k') Microsoft_FStar_Absyn_Syntax.dummyRange))
+let kunary = (fun ( k  :  Microsoft_FStar_Absyn_Syntax.knd ) ( k'  :  Microsoft_FStar_Absyn_Syntax.knd ) -> (let _52_4326 = (let _52_4325 = (let _52_4324 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k)
+in (_52_4324)::[])
+in (_52_4325, k'))
+in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _52_4326 Microsoft_FStar_Absyn_Syntax.dummyRange)))
 
-let kbin = (fun ( k1 ) ( k2 ) ( k' ) -> (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow (((Microsoft_FStar_Absyn_Syntax.null_t_binder k1))::((Microsoft_FStar_Absyn_Syntax.null_t_binder k2))::[], k') Microsoft_FStar_Absyn_Syntax.dummyRange))
+let kbin = (fun ( k1  :  Microsoft_FStar_Absyn_Syntax.knd ) ( k2  :  Microsoft_FStar_Absyn_Syntax.knd ) ( k'  :  Microsoft_FStar_Absyn_Syntax.knd ) -> (let _52_4337 = (let _52_4336 = (let _52_4335 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k1)
+in (let _52_4334 = (let _52_4333 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k2)
+in (_52_4333)::[])
+in (_52_4335)::_52_4334))
+in (_52_4336, k'))
+in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _52_4337 Microsoft_FStar_Absyn_Syntax.dummyRange)))
 
-let ktern = (fun ( k1 ) ( k2 ) ( k3 ) ( k' ) -> (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow (((Microsoft_FStar_Absyn_Syntax.null_t_binder k1))::((Microsoft_FStar_Absyn_Syntax.null_t_binder k2))::((Microsoft_FStar_Absyn_Syntax.null_t_binder k3))::[], k') Microsoft_FStar_Absyn_Syntax.dummyRange))
+let ktern = (fun ( k1  :  Microsoft_FStar_Absyn_Syntax.knd ) ( k2  :  Microsoft_FStar_Absyn_Syntax.knd ) ( k3  :  Microsoft_FStar_Absyn_Syntax.knd ) ( k'  :  Microsoft_FStar_Absyn_Syntax.knd ) -> (let _52_4352 = (let _52_4351 = (let _52_4350 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k1)
+in (let _52_4349 = (let _52_4348 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k2)
+in (let _52_4347 = (let _52_4346 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k3)
+in (_52_4346)::[])
+in (_52_4348)::_52_4347))
+in (_52_4350)::_52_4349))
+in (_52_4351, k'))
+in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _52_4352 Microsoft_FStar_Absyn_Syntax.dummyRange)))
 
 let true_lid = (pconst "True")
 
