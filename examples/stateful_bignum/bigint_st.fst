@@ -21,7 +21,7 @@ type template = nat -> Tot pos
 type template_const = t:template{ forall (n:nat). t n = t 0 }
 
 (* Sized integer *)
-type tint (max:nat) = (size:nat{ size < max } & content:int{ Bitsize content size })
+logic type tint (max:nat) = (size:nat{ size < max } & content:int{ Bitsize content size })
 
 (* Sized ST array *)
 type tarray (max:nat) = array (tint max)
@@ -203,6 +203,56 @@ let mk_tint a size value =
   match a with
   | Bigint63 _ _ -> 
      (|size, value|)
+
+
+val populate_tarray : 
+  t:array int -> templ:template -> max:nat -> len:nat -> a:tarray max ->
+  ST unit
+    (requires (fun h -> True))
+    (ensures (fun h0 _ h1 -> True))
+let rec populate_tarray t templ max len a = 
+  match len with
+  | 0 -> ()
+  | _ -> 
+     let i = len - 1 in
+     Array.upd a i (|templ i, Array.index t i|);
+     populate_tarray t templ max (len-1) a
+
+val mk_tarray : 
+  t:array int -> templ:template -> max:nat ->
+  ST (tarray max)
+    (requires (fun h -> True))
+    (ensures (fun h0 s h1 -> True))
+let mk_tarray t tmpl max =
+  let len = Array.length t in
+  let a = Array.create len zero_tint in
+  populate_tarray t tmpl max 0 a;
+  a
+
+val populate_array : 
+  max:pos -> t:tarray max -> len:nat -> a:array int ->
+  ST unit
+    (requires (fun h -> True))
+    (ensures (fun h0 _ h1 -> True))
+let rec populate_array max t len a =
+  match len with
+  | 0 -> ()
+  | _ -> 
+     let i = len - 1 in
+     let ti = Array.index t i in
+     Array.upd a i (dsnd ti);
+     populate_array max t (len-1) a
+
+val mk_array : 
+  max:pos -> t:tarray max ->
+  ST (array int)
+    (requires (fun h -> True))
+    (ensures (fun h0 s h1 -> True))
+let mk_array max t =
+  let len = Array.length t in
+  let a = Array.create len 0 in
+  populate_array ocaml63 t 0 a;
+  a
 
 (* Pool of free arrays for temporary computation *)
 type array_pool = { free_arrays: ref (list (tarray ocaml63));

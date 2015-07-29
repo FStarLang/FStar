@@ -65,9 +65,9 @@ let neg b =
   let c = Bigint.copy b in
   let h0' = erase (ST.get()) in
   //cut (modifies !{} h0 h0');
-  neg_aux c (Array.to_seq (Bigint63.data c)) 0;
+  neg_aux c (erase (Array.to_seq (Bigint63.data c))) 0;
   let h1 = erase (ST.get()) in
-  cut (True /\ inHeap h1 c);
+  erase (cut (True /\ inHeap h1 c));
   //cut (True /\ getLength h0 b = getLength h1 c);
   //cut (modifies !{Bigint63.data c} h0' h1);
   //cut (modifies!{} h0 h1);

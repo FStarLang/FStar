@@ -16,11 +16,11 @@ OCAMLOPTFLAGS=$(INCLUDES) # add other options for ocamlopt here
 STDLIB=$(addprefix $(FSTAR_HOME)/lib/, classical.fst ext.fst set.fsi heap.fst st.fst seq.fsi seqproperties.fst arr.fst)
 ADMITS=Set Seq
 
-FSTAR_ST_FILES=axiomatic.p.fst intlib.p.fst limb.fst bigint_st.fst eval_st.fst addition_st.fst scalar_multiplication_st.fst multiplication_st.fst
+FSTAR_ST_FILES=axiomatic.p.fst intlib.p.fst limb.fst bigint_st.fst eval_st.fst addition_st.fst substraction_st.fst scalar_multiplication_st.fst multiplication_st.fst
 
-LAX_ST_FILES=carry_st.fsi retemplate.fsi
+LAX_ST_FILES=carry_st.fst retemplate_st.fst compare_st.fst shift_st.fst neg_st.fst modulo_st.fst 
 
-#OCAML_FILES=support.cmx Axiomatic.cmx IntLib.cmx Seq.cmx Limb.cmx Bigint.cmx Eval.cmx Addition.cmx ScalarMultiplication.cmx Resize.cmx Multiplication.cmx Carry.cmx
+OCAML_FILES=support.cmx  IntLib.cmx Seq.cmx Limb.cmx Bigint.cmx Eval.cmx Addition.cmx Substraction.cmx ScalarMultiplication.cmx Retemplate.cmx Multiplication.cmx Carry.cmx Compare.cmx Neg.cmx Shift.cmx Modulo.cmx
 
 .PHONY: preproc-verify wo work
 
@@ -49,26 +49,25 @@ neg: preproc-verify ne
 ne: $(STDLIB) axiomatic.p.fst intlib.p.fst limb.fst bigint_st.fst eval_st.fst neg_st.fst
 	$(FSTAR) $(FSTAR_OPTIONS) $(addprefix --admit_fsi , $(ADMITS)) $^ --verify_module Neg
 
-
 preproc-verify:
 #	rm -f *.p.fst || true
 	@echo "#define VERIFY" > preproc.h
 	@echo "#define RESET #reset-options" >> preproc.h
 	@echo "#define SET #set-options" >> preproc.h
 
-#preproc-codegen:
-##	rm -f *.p.fst || true
-#	@echo "#define COMPILE" > preproc.h
-#	@echo "#define RESET #reset-options" >> preproc.h
-#	@echo "#define SET #set-options" >> preproc.h
-#
-#OCAML_LIB_FILES=./ml/Seq.ml ./ml/Ghost.ml ./ml/Bigint.ml
-#codeg: $(STDLIB) $(FSTAR_ST_FILES) $(LAX_ST_FILES)
-#	$(FSTAR) $(FSTAR_OPTIONS) $(addprefix --admit_fsi , $(ADMITS)) $^ --codegen OCaml
-#	cp $(OCAML_LIB_FILES) .
-#
-#codegen: preproc-codegen codeg
-#
+preproc-codegen:
+#	rm -f *.p.fst || true
+	@echo "#define COMPILE" > preproc.h
+	@echo "#define RESET #reset-options" >> preproc.h
+	@echo "#define SET #set-options" >> preproc.h
+
+OCAML_LIB_FILES=./ml/Seq.ml ./ml/Bigint.ml ./ml/IntLib.ml
+codeg: $(STDLIB) $(FSTAR_ST_FILES) $(LAX_ST_FILES)
+	$(FSTAR) $(FSTAR_OPTIONS) $(addprefix --admit_fsi , $(ADMITS)) $^ --codegen OCaml
+	cp $(OCAML_LIB_FILES) .
+
+codegen: preproc-codegen codeg
+
 auxlax: $(STDLIB) $(FSTAR_ST_FILES) $(LAX_FILES)
 	$(FSTAR) $(FSTAR_OPTIONS) $(addprefix --admit_fsi , $(ADMITS)) $^ --lax
 
@@ -79,14 +78,14 @@ clean:
 	rm -f *.cmo *.cmx *.cmi *.o *.out ml/*.cmx ml/*.o ml/*.cmi ml/*.cmo || true
 	rm -f *.ml || true
 
-#ml: $(OCAML_FILES) 
-#
-#compile: ml
-#
-#test: ml
-#	ocamlfind ocamlopt -thread -package batteries,zarith -linkpkg -g -p -I +zarith -I /home/jkz/fs#tar/FStar/src/ocaml-output/Support $(OCAML_FILES)  ./ml/unit_test.ml -o a.out
-#	./a.out
-#
+ml: $(OCAML_FILES) 
+
+compile: ml
+
+test: ml
+	ocamlfind ocamlopt -thread -package batteries,zarith -linkpkg -g -p -I +zarith -I /home/jkz/fs#tar/FStar/src/ocaml-output/Support $(OCAML_FILES)  ./ml/unit_test.ml -o a.out
+	./a.out
+
 
 %.p.fsi: %.fsi
 	$(CPP)  -C $^ 2>/dev/null | sed '/^[#] 1 "<.*/d' > $@

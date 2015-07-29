@@ -161,3 +161,23 @@ val blit:
 		     (Seq.index (sel h1 t) i = Seq.index (sel h0 t) i)) ))
 let rec blit s s_idx t t_idx len =
   blit_aux s s_idx t t_idx len 0
+
+val sub :
+  #a:Type -> s:array a -> idx:nat -> len:nat ->
+  ST (array a)
+    (requires (fun h ->
+      (contains h s)
+      /\ (Seq.length (sel h s) > 0)
+      /\ (idx + len <= Seq.length (sel h s))))
+    (ensures (fun h0 t h1 ->
+      (contains h1 t)
+      /\ (contains h0 s)
+      /\ not(contains h0 t)
+      /\ (modifies !{} h0 h1)
+      /\ (Seq.length (sel h0 s) > 0)
+      /\ (idx + len <= Seq.length (sel h0 s))
+      /\ (Seq.Eq (Seq.slice (sel h0 s) idx (idx+len)) (sel h1 t))))
+let sub s idx len =
+  let t = Array.create len (index s 0) in
+  Array.blit s idx t 0 len;
+  t
