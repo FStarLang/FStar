@@ -774,7 +774,10 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
     | Project(e, f) ->
       let _, fieldname = fail_or env  (try_lookup_record_by_field_name env) f in
       let e = desugar_exp env e in 
-      pos <| mk_Exp_app(Util.fvar (Some (Record_projector (lid_of_ids [f.ident]))) fieldname (range_of_lid f), [varg e]) 
+      let fn =
+        let ns, _ = Util.prefix fieldname.ns in
+        lid_of_ids (ns@[f.ident]) in
+      pos <| mk_Exp_app(Util.fvar (Some (Record_projector fn)) fieldname (range_of_lid f), [varg e]) 
 
     | Paren e ->
       desugar_exp env e

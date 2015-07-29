@@ -190,7 +190,8 @@ let maybe_eta_data (qual : option<fv_qual>) (residualType : mlty)  (mlAppExpr : 
     match (mlAppExpr, qual) with
         | _, None -> mlAppExpr
         | MLE_App(MLE_Name mlp, [mle]), Some (Record_projector f) -> 
-          MLE_Proj(mle, Util.mlpath_of_lid f)
+          let fn = Util.mlpath_of_lid f in
+          MLE_Proj(mle, fn)
         | (MLE_App (MLE_Name mlp, mlargs), Some Data_ctor)
         | (MLE_App (MLE_Name mlp, mlargs), Some (Record_ctor _)) -> resugar_and_maybe_eta qual <| MLE_CTor (mlp,mlargs) 
         | (MLE_Name mlp, Some Data_ctor)

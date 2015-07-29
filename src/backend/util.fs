@@ -199,5 +199,5 @@ let resugar_mlty t = match t with
 
 let flatten_ns ns = String.concat "_" ns
 let flatten_mlpath (ns, n) = String.concat "_" (ns@[n])
-let mlpath_of_lid (l:lident) = (l.ns |> List.map (fun i -> i.idText),  l.str)
+let mlpath_of_lid (l:lident) = (l.ns |> List.map (fun i -> i.idText),  l.ident.idText)
   
