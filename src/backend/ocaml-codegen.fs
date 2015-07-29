@@ -424,7 +424,10 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
        doc
 
     | MLE_Fun (ids, body) ->
-        let ids  = List.map (fun ((x, _),xt) -> reduce1 [text "("; text x ; (match xt with | Some xxt -> reduce1 [text " : "; doc_of_mltype currentModule  outer xxt] | _ -> text "");text ")"]) ids in
+        let ids  = List.map (fun ((x, _),xt) -> reduce1 [text "("; 
+                                                         text x ; 
+//                                                         (match xt with | Some xxt -> reduce1 [text " : "; doc_of_mltype currentModule  outer xxt] | _ -> text "");
+                                                         text ")"]) ids in
         let body = doc_of_expr currentModule (min_op_prec, NonAssoc) body in
         let doc  = reduce1 [text "fun"; reduce1 ids; text "->"; body] in
         parens doc

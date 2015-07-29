@@ -32,12 +32,12 @@ end))
 type ident =
 {idText : string; idRange : Support.Microsoft.FStar.Range.range}
 
-let is_Mkident = (fun ( _  :  ident ) -> (failwith ("Not yet implemented")))
+let is_Mkident = (fun ( _ ) -> (failwith ("Not yet implemented")))
 
 type l__LongIdent =
 {ns : ident list; ident : ident; nsstr : string; str : string}
 
-let is_MkLongIdent = (fun ( _  :  l__LongIdent ) -> (failwith ("Not yet implemented")))
+let is_MkLongIdent = (fun ( _ ) -> (failwith ("Not yet implemented")))
 
 type lident =
 l__LongIdent
@@ -45,7 +45,7 @@ l__LongIdent
 type ('a, 't) withinfo_t =
 {v : 'a; sort : 't; p : Support.Microsoft.FStar.Range.range}
 
-let is_Mkwithinfo_t = (fun ( _  :  ('a, 't) withinfo_t ) -> (failwith ("Not yet implemented")))
+let is_Mkwithinfo_t = (fun ( _ ) -> (failwith ("Not yet implemented")))
 
 type 't var =
 (lident, 't) withinfo_t
@@ -56,7 +56,7 @@ lident
 type 'a bvdef =
 {ppname : ident; realname : ident}
 
-let is_Mkbvdef = (fun ( _  :  'a bvdef ) -> (failwith ("Not yet implemented")))
+let is_Mkbvdef = (fun ( _ ) -> (failwith ("Not yet implemented")))
 
 type ('a, 't) bvar =
 ('a bvdef, 't) withinfo_t
@@ -424,7 +424,7 @@ end
 false
 end))
 
-let is_Mkcomp_typ = (fun ( _  :  comp_typ ) -> (failwith ("Not yet implemented")))
+let is_Mkcomp_typ = (fun ( _ ) -> (failwith ("Not yet implemented")))
 
 let is_Total = (fun ( _discr_ ) -> (match (_discr_) with
 | Total (_) -> begin
@@ -842,13 +842,13 @@ end
 false
 end))
 
-let is_Mkletbinding = (fun ( _  :  letbinding ) -> (failwith ("Not yet implemented")))
+let is_Mkletbinding = (fun ( _ ) -> (failwith ("Not yet implemented")))
 
-let is_Mkfreevars = (fun ( _  :  freevars ) -> (failwith ("Not yet implemented")))
+let is_Mkfreevars = (fun ( _ ) -> (failwith ("Not yet implemented")))
 
-let is_Mkuvars = (fun ( _  :  uvars ) -> (failwith ("Not yet implemented")))
+let is_Mkuvars = (fun ( _ ) -> (failwith ("Not yet implemented")))
 
-let is_Mksyntax = (fun ( _  :  ('a, 'b) syntax ) -> (failwith ("Not yet implemented")))
+let is_Mksyntax = (fun ( _ ) -> (failwith ("Not yet implemented")))
 
 type subst =
 subst_elt list
@@ -990,12 +990,12 @@ type tycon =
 type monad_abbrev =
 {mabbrev : lident; parms : binders; def : typ}
 
-let is_Mkmonad_abbrev = (fun ( _  :  monad_abbrev ) -> (failwith ("Not yet implemented")))
+let is_Mkmonad_abbrev = (fun ( _ ) -> (failwith ("Not yet implemented")))
 
 type sub_eff =
 {source : lident; target : lident; lift : typ}
 
-let is_Mksub_eff = (fun ( _  :  sub_eff ) -> (failwith ("Not yet implemented")))
+let is_Mksub_eff = (fun ( _ ) -> (failwith ("Not yet implemented")))
 
 type eff_decl =
 {mname : lident; binders : binders; qualifiers : qualifier list; signature : knd; ret : typ; bind_wp : typ; bind_wlp : typ; if_then_else : typ; ite_wp : typ; ite_wlp : typ; wp_binop : typ; wp_as_type : typ; close_wp : typ; close_wp_t : typ; assert_p : typ; assume_p : typ; null_wp : typ; trivial : typ} 
@@ -1014,7 +1014,7 @@ type eff_decl =
 | Sig_effect_abbrev of (lident * binders * comp * qualifier list * Support.Microsoft.FStar.Range.range)
 | Sig_pragma of (pragma * Support.Microsoft.FStar.Range.range)
 
-let is_Mkeff_decl = (fun ( _  :  eff_decl ) -> (failwith ("Not yet implemented")))
+let is_Mkeff_decl = (fun ( _ ) -> (failwith ("Not yet implemented")))
 
 let is_Sig_tycon = (fun ( _discr_ ) -> (match (_discr_) with
 | Sig_tycon (_) -> begin
@@ -1126,7 +1126,7 @@ sigelt list
 type modul =
 {name : lident; declarations : sigelts; exports : sigelts; is_interface : bool; is_deserialized : bool}
 
-let is_Mkmodul = (fun ( _  :  modul ) -> (failwith ("Not yet implemented")))
+let is_Mkmodul = (fun ( _ ) -> (failwith ("Not yet implemented")))
 
 type ktec =
 | K of knd
@@ -1169,37 +1169,37 @@ end))
 type lcomp =
 {eff_name : lident; res_typ : typ; cflags : cflags list; comp : unit  ->  comp}
 
-let is_Mklcomp = (fun ( _  :  lcomp ) -> (failwith ("Not yet implemented")))
+let is_Mklcomp = (fun ( _ ) -> (failwith ("Not yet implemented")))
 
 type path =
 string list
 
 let dummyRange = 0L
 
-let withinfo = (fun ( v  :  'a ) ( s  :  'b ) ( r  :  Support.Microsoft.FStar.Range.range ) -> {v = v; sort = s; p = r})
+let withinfo = (fun ( v ) ( s ) ( r ) -> {v = v; sort = s; p = r})
 
-let withsort = (fun ( v  :  'a ) ( s  :  'b ) -> (withinfo v s dummyRange))
+let withsort = (fun ( v ) ( s ) -> (withinfo v s dummyRange))
 
-let mk_ident = (fun ( _20_261  :  (string * Support.Microsoft.FStar.Range.range) ) -> (match (_20_261) with
+let mk_ident = (fun ( _20_261 ) -> (match (_20_261) with
 | (text, range) -> begin
 {idText = text; idRange = range}
 end))
 
-let id_of_text = (fun ( str  :  string ) -> (mk_ident (str, dummyRange)))
+let id_of_text = (fun ( str ) -> (mk_ident (str, dummyRange)))
 
-let text_of_id = (fun ( id  :  ident ) -> id.idText)
+let text_of_id = (fun ( id ) -> id.idText)
 
-let text_of_path = (fun ( path  :  path ) -> (Support.Microsoft.FStar.Util.concat_l "." path))
+let text_of_path = (fun ( path ) -> (Support.Microsoft.FStar.Util.concat_l "." path))
 
-let path_of_text = (fun ( text  :  string ) -> (Support.String.split (('.')::[]) text))
+let path_of_text = (fun ( text ) -> (Support.String.split (('.')::[]) text))
 
-let path_of_ns = (fun ( ns  :  ident list ) -> (Support.List.map text_of_id ns))
+let path_of_ns = (fun ( ns ) -> (Support.List.map text_of_id ns))
 
-let path_of_lid = (fun ( lid  :  lident ) -> (Support.List.map text_of_id (Support.List.append lid.ns ((lid.ident)::[]))))
+let path_of_lid = (fun ( lid ) -> (Support.List.map text_of_id (Support.List.append lid.ns ((lid.ident)::[]))))
 
-let ids_of_lid = (fun ( lid  :  lident ) -> (Support.List.append lid.ns ((lid.ident)::[])))
+let ids_of_lid = (fun ( lid ) -> (Support.List.append lid.ns ((lid.ident)::[])))
 
-let lid_of_ids = (fun ( ids  :  ident list ) -> (let _20_272 = (Support.Microsoft.FStar.Util.prefix ids)
+let lid_of_ids = (fun ( ids ) -> (let _20_272 = (Support.Microsoft.FStar.Util.prefix ids)
 in (match (_20_272) with
 | (ns, id) -> begin
 (let nsstr = (let _52_3821 = (Support.List.map text_of_id ns)
@@ -1213,16 +1213,16 @@ end
 end)})
 end)))
 
-let lid_of_path = (fun ( path  :  path ) ( pos  :  Support.Microsoft.FStar.Range.range ) -> (let ids = (Support.List.map (fun ( s  :  string ) -> (mk_ident (s, pos))) path)
+let lid_of_path = (fun ( path ) ( pos ) -> (let ids = (Support.List.map (fun ( s ) -> (mk_ident (s, pos))) path)
 in (lid_of_ids ids)))
 
-let text_of_lid = (fun ( lid  :  lident ) -> lid.str)
+let text_of_lid = (fun ( lid ) -> lid.str)
 
-let lid_equals = (fun ( l1  :  lident ) ( l2  :  lident ) -> (l1.str = l2.str))
+let lid_equals = (fun ( l1 ) ( l2 ) -> (l1.str = l2.str))
 
-let bvd_eq = (fun ( bvd1  :  'a bvdef ) ( bvd2  :  'a bvdef ) -> (bvd1.realname.idText = bvd2.realname.idText))
+let bvd_eq = (fun ( bvd1 ) ( bvd2 ) -> (bvd1.realname.idText = bvd2.realname.idText))
 
-let order_bvd = (fun ( x  :  ('a bvdef, 'b bvdef) Support.Microsoft.FStar.Util.either ) ( y  :  ('c bvdef, 'd bvdef) Support.Microsoft.FStar.Util.either ) -> (match ((x, y)) with
+let order_bvd = (fun ( x ) ( y ) -> (match ((x, y)) with
 | (Support.Microsoft.FStar.Util.Inl (_), Support.Microsoft.FStar.Util.Inr (_)) -> begin
 (- (1))
 end
@@ -1236,14 +1236,14 @@ end
 (Support.String.compare x.realname.idText y.realname.idText)
 end))
 
-let lid_with_range = (fun ( lid  :  l__LongIdent ) ( r  :  Support.Microsoft.FStar.Range.range ) -> (let id = (let _20_312 = lid.ident
+let lid_with_range = (fun ( lid ) ( r ) -> (let id = (let _20_312 = lid.ident
 in {idText = _20_312.idText; idRange = r})
 in (let _20_315 = lid
 in {ns = _20_315.ns; ident = id; nsstr = _20_315.nsstr; str = _20_315.str})))
 
-let range_of_lid = (fun ( lid  :  l__LongIdent ) -> lid.ident.idRange)
+let range_of_lid = (fun ( lid ) -> lid.ident.idRange)
 
-let range_of_lbname = (fun ( l  :  lbname ) -> (match (l) with
+let range_of_lbname = (fun ( l ) -> (match (l) with
 | Support.Microsoft.FStar.Util.Inl (x) -> begin
 x.ppname.idRange
 end
@@ -1251,38 +1251,38 @@ end
 (range_of_lid l)
 end))
 
-let syn = (fun ( p  :  'a ) ( k  :  'b ) ( f  :  'b  ->  'a  ->  'c ) -> (f k p))
+let syn = (fun ( p ) ( k ) ( f ) -> (f k p))
 
-let mk_fvs = (fun ( _20_326  :  unit ) -> (match (()) with
+let mk_fvs = (fun ( _20_326 ) -> (match (()) with
 | () -> begin
 (Support.Microsoft.FStar.Util.mk_ref None)
 end))
 
-let mk_uvs = (fun ( _20_327  :  unit ) -> (match (()) with
+let mk_uvs = (fun ( _20_327 ) -> (match (()) with
 | () -> begin
 (Support.Microsoft.FStar.Util.mk_ref None)
 end))
 
-let new_ftv_set = (fun ( _20_328  :  unit ) -> (match (()) with
+let new_ftv_set = (fun ( _20_328 ) -> (match (()) with
 | () -> begin
-(Support.Microsoft.FStar.Util.new_set (fun ( x  :  ('a bvdef, 'b) withinfo_t ) ( y  :  ('a bvdef, 'b) withinfo_t ) -> (Support.Microsoft.FStar.Util.compare x.v.realname.idText y.v.realname.idText)) (fun ( x  :  ('a bvdef, 'b) withinfo_t ) -> (Support.Microsoft.FStar.Util.hashcode x.v.realname.idText)))
+(Support.Microsoft.FStar.Util.new_set (fun ( x ) ( y ) -> (Support.Microsoft.FStar.Util.compare x.v.realname.idText y.v.realname.idText)) (fun ( x ) -> (Support.Microsoft.FStar.Util.hashcode x.v.realname.idText)))
 end))
 
-let new_uv_set = (fun ( _20_332  :  unit ) -> (match (()) with
+let new_uv_set = (fun ( _20_332 ) -> (match (()) with
 | () -> begin
-(Support.Microsoft.FStar.Util.new_set (fun ( x  :  'a Support.Microsoft.FStar.Unionfind.uvar ) ( y  :  'a Support.Microsoft.FStar.Unionfind.uvar ) -> (let _52_3866 = (Support.Microsoft.FStar.Unionfind.uvar_id x)
+(Support.Microsoft.FStar.Util.new_set (fun ( x ) ( y ) -> (let _52_3866 = (Support.Microsoft.FStar.Unionfind.uvar_id x)
 in (let _52_3865 = (Support.Microsoft.FStar.Unionfind.uvar_id y)
 in (_52_3866 - _52_3865)))) Support.Microsoft.FStar.Unionfind.uvar_id)
 end))
 
-let new_uvt_set = (fun ( _20_335  :  unit ) -> (match (()) with
+let new_uvt_set = (fun ( _20_335 ) -> (match (()) with
 | () -> begin
-(Support.Microsoft.FStar.Util.new_set (fun ( _20_343  :  ('a Support.Microsoft.FStar.Unionfind.uvar * 'b) ) ( _20_347  :  ('a Support.Microsoft.FStar.Unionfind.uvar * 'b) ) -> (match ((_20_343, _20_347)) with
+(Support.Microsoft.FStar.Util.new_set (fun ( _20_343 ) ( _20_347 ) -> (match ((_20_343, _20_347)) with
 | ((x, _), (y, _)) -> begin
 (let _52_3871 = (Support.Microsoft.FStar.Unionfind.uvar_id x)
 in (let _52_3870 = (Support.Microsoft.FStar.Unionfind.uvar_id y)
 in (_52_3871 - _52_3870)))
-end)) (fun ( _20_339  :  ('a Support.Microsoft.FStar.Unionfind.uvar * 'b) ) -> (match (_20_339) with
+end)) (fun ( _20_339 ) -> (match (_20_339) with
 | (x, _) -> begin
 (Support.Microsoft.FStar.Unionfind.uvar_id x)
 end)))
@@ -1301,7 +1301,7 @@ let memo_no_uvs = (Support.Microsoft.FStar.Util.mk_ref (Some (no_uvs)))
 
 let memo_no_fvs = (Support.Microsoft.FStar.Util.mk_ref (Some (no_fvs)))
 
-let freevars_of_list = (fun ( l  :  (btvar, bvvar) Support.Microsoft.FStar.Util.either list ) -> (Support.Prims.pipe_right l (Support.List.fold_left (fun ( out  :  freevars ) ( _20_1  :  (btvar, bvvar) Support.Microsoft.FStar.Util.either ) -> (match (_20_1) with
+let freevars_of_list = (fun ( l ) -> (Support.Prims.pipe_right l (Support.List.fold_left (fun ( out ) ( _20_1 ) -> (match (_20_1) with
 | Support.Microsoft.FStar.Util.Inl (btv) -> begin
 (let _20_353 = out
 in (let _52_3882 = (Support.Microsoft.FStar.Util.set_add btv out.ftvs)
@@ -1313,13 +1313,13 @@ in (let _52_3883 = (Support.Microsoft.FStar.Util.set_add bxv out.fxvs)
 in {ftvs = _20_357.ftvs; fxvs = _52_3883}))
 end)) no_fvs)))
 
-let list_of_freevars = (fun ( fvs  :  freevars ) -> (let _52_3891 = (let _52_3887 = (Support.Microsoft.FStar.Util.set_elements fvs.ftvs)
-in (Support.Prims.pipe_right _52_3887 (Support.List.map (fun ( x  :  btvar ) -> Support.Microsoft.FStar.Util.Inl (x)))))
+let list_of_freevars = (fun ( fvs ) -> (let _52_3891 = (let _52_3887 = (Support.Microsoft.FStar.Util.set_elements fvs.ftvs)
+in (Support.Prims.pipe_right _52_3887 (Support.List.map (fun ( x ) -> Support.Microsoft.FStar.Util.Inl (x)))))
 in (let _52_3890 = (let _52_3889 = (Support.Microsoft.FStar.Util.set_elements fvs.fxvs)
-in (Support.Prims.pipe_right _52_3889 (Support.List.map (fun ( x  :  bvvar ) -> Support.Microsoft.FStar.Util.Inr (x)))))
+in (Support.Prims.pipe_right _52_3889 (Support.List.map (fun ( x ) -> Support.Microsoft.FStar.Util.Inr (x)))))
 in (Support.List.append _52_3891 _52_3890))))
 
-let get_unit_ref = (fun ( _20_362  :  unit ) -> (match (()) with
+let get_unit_ref = (fun ( _20_362 ) -> (match (()) with
 | () -> begin
 (let x = (Support.Microsoft.FStar.Util.mk_ref (Some (())))
 in (let _20_364 = (Support.ST.op_Colon_Equals x None)
@@ -1336,7 +1336,7 @@ in (let _52_3898 = (mk_fvs ())
 in (let _52_3897 = (mk_uvs ())
 in {n = Kind_effect; tk = _52_3899; pos = dummyRange; fvs = _52_3898; uvs = _52_3897})))
 
-let mk_Kind_abbrev = (fun ( _20_368  :  (kabbrev * knd) ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (match (_20_368) with
+let mk_Kind_abbrev = (fun ( _20_368 ) ( p ) -> (match (_20_368) with
 | (kabr, k) -> begin
 (let _52_3906 = (get_unit_ref ())
 in (let _52_3905 = (mk_fvs ())
@@ -1344,7 +1344,7 @@ in (let _52_3904 = (mk_uvs ())
 in {n = Kind_abbrev ((kabr, k)); tk = _52_3906; pos = p; fvs = _52_3905; uvs = _52_3904})))
 end))
 
-let mk_Kind_arrow = (fun ( _20_372  :  (binders * knd) ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (match (_20_372) with
+let mk_Kind_arrow = (fun ( _20_372 ) ( p ) -> (match (_20_372) with
 | (bs, k) -> begin
 (let _52_3913 = (get_unit_ref ())
 in (let _52_3912 = (mk_fvs ())
@@ -1352,7 +1352,7 @@ in (let _52_3911 = (mk_uvs ())
 in {n = Kind_arrow ((bs, k)); tk = _52_3913; pos = p; fvs = _52_3912; uvs = _52_3911})))
 end))
 
-let mk_Kind_arrow' = (fun ( _20_376  :  (binders * knd) ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (match (_20_376) with
+let mk_Kind_arrow' = (fun ( _20_376 ) ( p ) -> (match (_20_376) with
 | (bs, k) -> begin
 (match (bs) with
 | [] -> begin
@@ -1369,12 +1369,12 @@ end)
 end)
 end))
 
-let mk_Kind_uvar = (fun ( uv  :  uvar_k_app ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (let _52_3924 = (get_unit_ref ())
+let mk_Kind_uvar = (fun ( uv ) ( p ) -> (let _52_3924 = (get_unit_ref ())
 in (let _52_3923 = (mk_fvs ())
 in (let _52_3922 = (mk_uvs ())
 in {n = Kind_uvar (uv); tk = _52_3924; pos = p; fvs = _52_3923; uvs = _52_3922}))))
 
-let mk_Kind_lam = (fun ( _20_391  :  (binders * knd) ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (match (_20_391) with
+let mk_Kind_lam = (fun ( _20_391 ) ( p ) -> (match (_20_391) with
 | (vs, k) -> begin
 (let _52_3931 = (get_unit_ref ())
 in (let _52_3930 = (mk_fvs ())
@@ -1382,7 +1382,7 @@ in (let _52_3929 = (mk_uvs ())
 in {n = Kind_lam ((vs, k)); tk = _52_3931; pos = p; fvs = _52_3930; uvs = _52_3929})))
 end))
 
-let mk_Kind_delayed = (fun ( _20_396  :  (knd * subst_t * knd memo) ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (match (_20_396) with
+let mk_Kind_delayed = (fun ( _20_396 ) ( p ) -> (match (_20_396) with
 | (k, s, m) -> begin
 (let _52_3938 = (get_unit_ref ())
 in (let _52_3937 = (mk_fvs ())
@@ -1395,26 +1395,26 @@ in (let _52_3940 = (mk_fvs ())
 in (let _52_3939 = (mk_uvs ())
 in {n = Kind_unknown; tk = _52_3941; pos = dummyRange; fvs = _52_3940; uvs = _52_3939})))
 
-let get_knd_nref = (fun ( _20_398  :  unit ) -> (match (()) with
+let get_knd_nref = (fun ( _20_398 ) -> (match (()) with
 | () -> begin
 (let x = (Support.Microsoft.FStar.Util.mk_ref (Some (mk_Kind_unknown)))
 in (let _20_400 = (Support.ST.op_Colon_Equals x None)
 in x))
 end))
 
-let get_knd_ref = (fun ( k  :  (knd', unit) syntax option ) -> (let x = (Support.Microsoft.FStar.Util.mk_ref (Some (mk_Kind_unknown)))
+let get_knd_ref = (fun ( k ) -> (let x = (Support.Microsoft.FStar.Util.mk_ref (Some (mk_Kind_unknown)))
 in (let _20_404 = (Support.ST.op_Colon_Equals x k)
 in x)))
 
-let mk_Typ_btvar = (fun ( x  :  btvar ) ( k  :  knd option ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (let _52_3954 = (get_knd_ref k)
+let mk_Typ_btvar = (fun ( x ) ( k ) ( p ) -> (let _52_3954 = (get_knd_ref k)
 in (let _52_3953 = (mk_fvs ())
 in (let _52_3952 = (mk_uvs ())
 in {n = Typ_btvar (x); tk = _52_3954; pos = p; fvs = _52_3953; uvs = _52_3952}))))
 
-let mk_Typ_const = (fun ( x  :  ftvar ) ( k  :  knd option ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (let _52_3961 = (get_knd_ref k)
+let mk_Typ_const = (fun ( x ) ( k ) ( p ) -> (let _52_3961 = (get_knd_ref k)
 in {n = Typ_const (x); tk = _52_3961; pos = p; fvs = memo_no_fvs; uvs = memo_no_uvs}))
 
-let rec check_fun = (fun ( bs  :  binders ) ( c  :  comp ) ( p  :  'u20u4079 ) -> (match (bs) with
+let rec check_fun = (fun ( bs ) ( c ) ( p ) -> (match (bs) with
 | [] -> begin
 (failwith ("Empty binders"))
 end
@@ -1422,7 +1422,7 @@ end
 Typ_fun ((bs, c))
 end))
 
-let mk_Typ_fun = (fun ( _20_420  :  (binders * comp) ) ( k  :  knd option ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (match (_20_420) with
+let mk_Typ_fun = (fun ( _20_420 ) ( k ) ( p ) -> (match (_20_420) with
 | (bs, c) -> begin
 (let _52_3974 = (check_fun bs c p)
 in (let _52_3973 = (Support.Microsoft.FStar.Util.mk_ref k)
@@ -1431,7 +1431,7 @@ in (let _52_3971 = (mk_uvs ())
 in {n = _52_3974; tk = _52_3973; pos = p; fvs = _52_3972; uvs = _52_3971}))))
 end))
 
-let mk_Typ_refine = (fun ( _20_425  :  (bvvar * formula) ) ( k  :  knd option ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (match (_20_425) with
+let mk_Typ_refine = (fun ( _20_425 ) ( k ) ( p ) -> (match (_20_425) with
 | (x, phi) -> begin
 (let _52_3983 = (Support.Microsoft.FStar.Util.mk_ref k)
 in (let _52_3982 = (mk_fvs ())
@@ -1439,7 +1439,7 @@ in (let _52_3981 = (mk_uvs ())
 in {n = Typ_refine ((x, phi)); tk = _52_3983; pos = p; fvs = _52_3982; uvs = _52_3981})))
 end))
 
-let mk_Typ_app = (fun ( _20_430  :  (typ * args) ) ( k  :  knd option ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (match (_20_430) with
+let mk_Typ_app = (fun ( _20_430 ) ( k ) ( p ) -> (match (_20_430) with
 | (t1, args) -> begin
 (let _52_3993 = (match (args) with
 | [] -> begin
@@ -1454,7 +1454,7 @@ in (let _52_3990 = (mk_uvs ())
 in {n = _52_3993; tk = _52_3992; pos = p; fvs = _52_3991; uvs = _52_3990}))))
 end))
 
-let mk_Typ_app' = (fun ( _20_438  :  (typ * args) ) ( k  :  knd option ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (match (_20_438) with
+let mk_Typ_app' = (fun ( _20_438 ) ( k ) ( p ) -> (match (_20_438) with
 | (t1, args) -> begin
 (match (args) with
 | [] -> begin
@@ -1465,7 +1465,7 @@ end
 end)
 end))
 
-let extend_typ_app = (fun ( _20_446  :  (typ * arg) ) ( k  :  knd option ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (match (_20_446) with
+let extend_typ_app = (fun ( _20_446 ) ( k ) ( p ) -> (match (_20_446) with
 | (t, arg) -> begin
 (match (t.n) with
 | Typ_app ((h, args)) -> begin
@@ -1476,7 +1476,7 @@ end
 end)
 end))
 
-let mk_Typ_lam = (fun ( _20_457  :  (binders * typ) ) ( k  :  knd option ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (match (_20_457) with
+let mk_Typ_lam = (fun ( _20_457 ) ( k ) ( p ) -> (match (_20_457) with
 | (b, t) -> begin
 (let _52_4015 = (match (b) with
 | [] -> begin
@@ -1491,7 +1491,7 @@ in (let _52_4012 = (mk_uvs ())
 in {n = _52_4015; tk = _52_4014; pos = p; fvs = _52_4013; uvs = _52_4012}))))
 end))
 
-let mk_Typ_lam' = (fun ( _20_465  :  (binders * typ) ) ( k  :  knd option ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (match (_20_465) with
+let mk_Typ_lam' = (fun ( _20_465 ) ( k ) ( p ) -> (match (_20_465) with
 | (bs, t) -> begin
 (match (bs) with
 | [] -> begin
@@ -1502,7 +1502,7 @@ end
 end)
 end))
 
-let mk_Typ_ascribed' = (fun ( _20_473  :  (typ * knd) ) ( k'  :  knd option ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (match (_20_473) with
+let mk_Typ_ascribed' = (fun ( _20_473 ) ( k' ) ( p ) -> (match (_20_473) with
 | (t, k) -> begin
 (let _52_4030 = (Support.Microsoft.FStar.Util.mk_ref k')
 in (let _52_4029 = (mk_fvs ())
@@ -1510,23 +1510,23 @@ in (let _52_4028 = (mk_uvs ())
 in {n = Typ_ascribed ((t, k)); tk = _52_4030; pos = p; fvs = _52_4029; uvs = _52_4028})))
 end))
 
-let mk_Typ_ascribed = (fun ( _20_478  :  (typ * knd) ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (match (_20_478) with
+let mk_Typ_ascribed = (fun ( _20_478 ) ( p ) -> (match (_20_478) with
 | (t, k) -> begin
 (mk_Typ_ascribed' (t, k) (Some (k)) p)
 end))
 
-let mk_Typ_meta' = (fun ( m  :  meta_t ) ( k  :  knd option ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (let _52_4043 = (Support.Microsoft.FStar.Util.mk_ref k)
+let mk_Typ_meta' = (fun ( m ) ( k ) ( p ) -> (let _52_4043 = (Support.Microsoft.FStar.Util.mk_ref k)
 in (let _52_4042 = (mk_fvs ())
 in (let _52_4041 = (mk_uvs ())
 in {n = Typ_meta (m); tk = _52_4043; pos = p; fvs = _52_4042; uvs = _52_4041}))))
 
-let mk_Typ_meta = (fun ( m  :  meta_t ) -> (match (m) with
+let mk_Typ_meta = (fun ( m ) -> (match (m) with
 | (Meta_pattern ((t, _))) | (Meta_named ((t, _))) | (Meta_labeled ((t, _, _, _))) | (Meta_refresh_label ((t, _, _))) | (Meta_slack_formula ((t, _, _))) -> begin
 (let _52_4046 = (Support.ST.read t.tk)
 in (mk_Typ_meta' m _52_4046 t.pos))
 end))
 
-let mk_Typ_uvar' = (fun ( _20_515  :  (uvar_t * knd) ) ( k'  :  knd option ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (match (_20_515) with
+let mk_Typ_uvar' = (fun ( _20_515 ) ( k' ) ( p ) -> (match (_20_515) with
 | (u, k) -> begin
 (let _52_4055 = (get_knd_ref k')
 in (let _52_4054 = (mk_fvs ())
@@ -1534,12 +1534,12 @@ in (let _52_4053 = (mk_uvs ())
 in {n = Typ_uvar ((u, k)); tk = _52_4055; pos = p; fvs = _52_4054; uvs = _52_4053})))
 end))
 
-let mk_Typ_uvar = (fun ( _20_520  :  (uvar_t * knd) ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (match (_20_520) with
+let mk_Typ_uvar = (fun ( _20_520 ) ( p ) -> (match (_20_520) with
 | (u, k) -> begin
 (mk_Typ_uvar' (u, k) (Some (k)) p)
 end))
 
-let mk_Typ_delayed = (fun ( _20_525  :  (typ * subst_t * typ memo) ) ( k  :  knd option ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (match (_20_525) with
+let mk_Typ_delayed = (fun ( _20_525 ) ( k ) ( p ) -> (match (_20_525) with
 | (t, s, m) -> begin
 (let _52_4072 = (match (t.n) with
 | Typ_delayed (_) -> begin
@@ -1554,7 +1554,7 @@ in (let _52_4069 = (mk_uvs ())
 in {n = _52_4072; tk = _52_4071; pos = p; fvs = _52_4070; uvs = _52_4069}))))
 end))
 
-let mk_Typ_delayed' = (fun ( st  :  ((typ * subst_t), unit  ->  typ) Support.Microsoft.FStar.Util.either ) ( k  :  knd option ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (let _52_4094 = (let _52_4090 = (let _52_4089 = (Support.Microsoft.FStar.Util.mk_ref None)
+let mk_Typ_delayed' = (fun ( st ) ( k ) ( p ) -> (let _52_4094 = (let _52_4090 = (let _52_4089 = (Support.Microsoft.FStar.Util.mk_ref None)
 in (st, _52_4089))
 in Typ_delayed (_52_4090))
 in (let _52_4093 = (Support.Microsoft.FStar.Util.mk_ref k)
@@ -1567,33 +1567,33 @@ in (let _52_4096 = (mk_fvs ())
 in (let _52_4095 = (mk_uvs ())
 in {n = Typ_unknown; tk = _52_4097; pos = dummyRange; fvs = _52_4096; uvs = _52_4095})))
 
-let get_typ_nref = (fun ( _20_536  :  unit ) -> (match (()) with
+let get_typ_nref = (fun ( _20_536 ) -> (match (()) with
 | () -> begin
 (let x = (Support.Microsoft.FStar.Util.mk_ref (Some (mk_Typ_unknown)))
 in (let _20_538 = (Support.ST.op_Colon_Equals x None)
 in x))
 end))
 
-let get_typ_ref = (fun ( t  :  (typ', (knd', unit) syntax) syntax option ) -> (let x = (Support.Microsoft.FStar.Util.mk_ref (Some (mk_Typ_unknown)))
+let get_typ_ref = (fun ( t ) -> (let x = (Support.Microsoft.FStar.Util.mk_ref (Some (mk_Typ_unknown)))
 in (let _20_542 = (Support.ST.op_Colon_Equals x t)
 in x)))
 
-let mk_Total = (fun ( t  :  typ ) -> (let _52_4106 = (Support.Microsoft.FStar.Util.mk_ref None)
+let mk_Total = (fun ( t ) -> (let _52_4106 = (Support.Microsoft.FStar.Util.mk_ref None)
 in (let _52_4105 = (mk_fvs ())
 in (let _52_4104 = (mk_uvs ())
 in {n = Total (t); tk = _52_4106; pos = t.pos; fvs = _52_4105; uvs = _52_4104}))))
 
-let mk_Comp = (fun ( ct  :  comp_typ ) -> (let _52_4111 = (Support.Microsoft.FStar.Util.mk_ref None)
+let mk_Comp = (fun ( ct ) -> (let _52_4111 = (Support.Microsoft.FStar.Util.mk_ref None)
 in (let _52_4110 = (mk_fvs ())
 in (let _52_4109 = (mk_uvs ())
 in {n = Comp (ct); tk = _52_4111; pos = ct.result_typ.pos; fvs = _52_4110; uvs = _52_4109}))))
 
-let mk_Exp_bvar = (fun ( x  :  bvvar ) ( t  :  typ option ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (let _52_4120 = (get_typ_ref t)
+let mk_Exp_bvar = (fun ( x ) ( t ) ( p ) -> (let _52_4120 = (get_typ_ref t)
 in (let _52_4119 = (mk_fvs ())
 in (let _52_4118 = (mk_uvs ())
 in {n = Exp_bvar (x); tk = _52_4120; pos = p; fvs = _52_4119; uvs = _52_4118}))))
 
-let mk_Exp_fvar = (fun ( _20_551  :  (fvvar * fv_qual option) ) ( t  :  typ option ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (match (_20_551) with
+let mk_Exp_fvar = (fun ( _20_551 ) ( t ) ( p ) -> (match (_20_551) with
 | (x, b) -> begin
 (let _52_4129 = (get_typ_ref t)
 in (let _52_4128 = (mk_fvs ())
@@ -1601,12 +1601,12 @@ in (let _52_4127 = (mk_uvs ())
 in {n = Exp_fvar ((x, b)); tk = _52_4129; pos = p; fvs = _52_4128; uvs = _52_4127})))
 end))
 
-let mk_Exp_constant = (fun ( s  :  sconst ) ( t  :  typ option ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (let _52_4138 = (get_typ_ref t)
+let mk_Exp_constant = (fun ( s ) ( t ) ( p ) -> (let _52_4138 = (get_typ_ref t)
 in (let _52_4137 = (mk_fvs ())
 in (let _52_4136 = (mk_uvs ())
 in {n = Exp_constant (s); tk = _52_4138; pos = p; fvs = _52_4137; uvs = _52_4136}))))
 
-let mk_Exp_abs = (fun ( _20_559  :  (binders * exp) ) ( t'  :  typ option ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (match (_20_559) with
+let mk_Exp_abs = (fun ( _20_559 ) ( t' ) ( p ) -> (match (_20_559) with
 | (b, e) -> begin
 (let _52_4148 = (match (b) with
 | [] -> begin
@@ -1621,7 +1621,7 @@ in (let _52_4145 = (mk_uvs ())
 in {n = _52_4148; tk = _52_4147; pos = p; fvs = _52_4146; uvs = _52_4145}))))
 end))
 
-let mk_Exp_abs' = (fun ( _20_567  :  (binders * exp) ) ( t'  :  typ option ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (match (_20_567) with
+let mk_Exp_abs' = (fun ( _20_567 ) ( t' ) ( p ) -> (match (_20_567) with
 | (b, e) -> begin
 (let _52_4158 = (match ((b, e.n)) with
 | (_, Exp_abs ((binders, body))) -> begin
@@ -1639,7 +1639,7 @@ in (let _52_4155 = (mk_uvs ())
 in {n = _52_4158; tk = _52_4157; pos = p; fvs = _52_4156; uvs = _52_4155}))))
 end))
 
-let mk_Exp_app = (fun ( _20_585  :  (exp * args) ) ( t  :  typ option ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (match (_20_585) with
+let mk_Exp_app = (fun ( _20_585 ) ( t ) ( p ) -> (match (_20_585) with
 | (e1, args) -> begin
 (let _52_4168 = (match (args) with
 | [] -> begin
@@ -1654,7 +1654,7 @@ in (let _52_4165 = (mk_uvs ())
 in {n = _52_4168; tk = _52_4167; pos = p; fvs = _52_4166; uvs = _52_4165}))))
 end))
 
-let mk_Exp_app_flat = (fun ( _20_593  :  (exp * args) ) ( t  :  typ option ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (match (_20_593) with
+let mk_Exp_app_flat = (fun ( _20_593 ) ( t ) ( p ) -> (match (_20_593) with
 | (e1, args) -> begin
 (match (e1.n) with
 | Exp_app ((e1', args')) -> begin
@@ -1665,7 +1665,7 @@ end
 end)
 end))
 
-let mk_Exp_app' = (fun ( _20_604  :  (exp * args) ) ( t  :  typ option ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (match (_20_604) with
+let mk_Exp_app' = (fun ( _20_604 ) ( t ) ( p ) -> (match (_20_604) with
 | (e1, args) -> begin
 (match (args) with
 | [] -> begin
@@ -1676,10 +1676,10 @@ end
 end)
 end))
 
-let rec pat_vars = (fun ( p  :  pat ) -> (match (p.v) with
+let rec pat_vars = (fun ( p ) -> (match (p.v) with
 | Pat_cons ((_, _, ps)) -> begin
 (let vars = (Support.List.collect pat_vars ps)
-in (match ((Support.Prims.pipe_right vars (Support.Microsoft.FStar.Util.nodups (fun ( x  :  ((typ', (knd', unit) syntax) syntax bvdef, (exp', (typ', (knd', unit) syntax) syntax) syntax bvdef) Support.Microsoft.FStar.Util.either ) ( y  :  ((typ', (knd', unit) syntax) syntax bvdef, (exp', (typ', (knd', unit) syntax) syntax) syntax bvdef) Support.Microsoft.FStar.Util.either ) -> (match ((x, y)) with
+in (match ((Support.Prims.pipe_right vars (Support.Microsoft.FStar.Util.nodups (fun ( x ) ( y ) -> (match ((x, y)) with
 | (Support.Microsoft.FStar.Util.Inl (x), Support.Microsoft.FStar.Util.Inl (y)) -> begin
 (bvd_eq x y)
 end
@@ -1711,7 +1711,7 @@ in (Support.Microsoft.FStar.Util.for_all _52_4186))
 in (Support.Prims.pipe_right _52_4188 _52_4187)))
 in (not (_52_4189)))) with
 | true -> begin
-(let vars = (let _52_4193 = (Support.Prims.pipe_right vars (Support.List.map (fun ( v  :  ((typ', (knd', unit) syntax) syntax bvdef, (exp', (typ', (knd', unit) syntax) syntax) syntax bvdef) Support.Microsoft.FStar.Util.either list ) -> (let _52_4192 = (Support.List.map (fun ( _20_2  :  ((typ', (knd', unit) syntax) syntax bvdef, (exp', (typ', (knd', unit) syntax) syntax) syntax bvdef) Support.Microsoft.FStar.Util.either ) -> (match (_20_2) with
+(let vars = (let _52_4193 = (Support.Prims.pipe_right vars (Support.List.map (fun ( v ) -> (let _52_4192 = (Support.List.map (fun ( _20_2 ) -> (match (_20_2) with
 | Support.Microsoft.FStar.Util.Inr (x) -> begin
 x.ppname.idText
 end
@@ -1733,7 +1733,7 @@ end
 []
 end))
 
-let mk_Exp_match = (fun ( _20_667  :  (exp * (pat * exp option * exp) list) ) ( t  :  typ option ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (match (_20_667) with
+let mk_Exp_match = (fun ( _20_667 ) ( t ) ( p ) -> (match (_20_667) with
 | (e, pats) -> begin
 (let _52_4205 = (get_typ_ref t)
 in (let _52_4204 = (mk_fvs ())
@@ -1741,7 +1741,7 @@ in (let _52_4203 = (mk_uvs ())
 in {n = Exp_match ((e, pats)); tk = _52_4205; pos = p; fvs = _52_4204; uvs = _52_4203})))
 end))
 
-let mk_Exp_ascribed = (fun ( _20_673  :  (exp * typ * lident option) ) ( t'  :  typ option ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (match (_20_673) with
+let mk_Exp_ascribed = (fun ( _20_673 ) ( t' ) ( p ) -> (match (_20_673) with
 | (e, t, l) -> begin
 (let _52_4214 = (get_typ_ref t')
 in (let _52_4213 = (mk_fvs ())
@@ -1749,7 +1749,7 @@ in (let _52_4212 = (mk_uvs ())
 in {n = Exp_ascribed ((e, t, l)); tk = _52_4214; pos = p; fvs = _52_4213; uvs = _52_4212})))
 end))
 
-let mk_Exp_let = (fun ( _20_678  :  (letbindings * exp) ) ( t  :  typ option ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (match (_20_678) with
+let mk_Exp_let = (fun ( _20_678 ) ( t ) ( p ) -> (match (_20_678) with
 | (lbs, e) -> begin
 (let _52_4223 = (get_typ_ref t)
 in (let _52_4222 = (mk_fvs ())
@@ -1757,7 +1757,7 @@ in (let _52_4221 = (mk_uvs ())
 in {n = Exp_let ((lbs, e)); tk = _52_4223; pos = p; fvs = _52_4222; uvs = _52_4221})))
 end))
 
-let mk_Exp_uvar' = (fun ( _20_683  :  (uvar_e * typ) ) ( t'  :  typ option ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (match (_20_683) with
+let mk_Exp_uvar' = (fun ( _20_683 ) ( t' ) ( p ) -> (match (_20_683) with
 | (u, t) -> begin
 (let _52_4232 = (get_typ_ref t')
 in (let _52_4231 = (mk_fvs ())
@@ -1765,12 +1765,12 @@ in (let _52_4230 = (mk_uvs ())
 in {n = Exp_uvar ((u, t)); tk = _52_4232; pos = p; fvs = _52_4231; uvs = _52_4230})))
 end))
 
-let mk_Exp_uvar = (fun ( _20_688  :  (uvar_e * typ) ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (match (_20_688) with
+let mk_Exp_uvar = (fun ( _20_688 ) ( p ) -> (match (_20_688) with
 | (u, t) -> begin
 (mk_Exp_uvar' (u, t) (Some (t)) p)
 end))
 
-let mk_Exp_delayed = (fun ( _20_693  :  (exp * subst_t * exp memo) ) ( t  :  typ option ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (match (_20_693) with
+let mk_Exp_delayed = (fun ( _20_693 ) ( t ) ( p ) -> (match (_20_693) with
 | (e, s, m) -> begin
 (let _52_4245 = (get_typ_ref t)
 in (let _52_4244 = (mk_fvs ())
@@ -1778,27 +1778,27 @@ in (let _52_4243 = (mk_uvs ())
 in {n = Exp_delayed ((e, s, m)); tk = _52_4245; pos = p; fvs = _52_4244; uvs = _52_4243})))
 end))
 
-let mk_Exp_meta' = (fun ( m  :  meta_e ) ( t  :  typ option ) ( p  :  Support.Microsoft.FStar.Range.range ) -> (let _52_4254 = (get_typ_ref t)
+let mk_Exp_meta' = (fun ( m ) ( t ) ( p ) -> (let _52_4254 = (get_typ_ref t)
 in (let _52_4253 = (mk_fvs ())
 in (let _52_4252 = (mk_uvs ())
 in {n = Exp_meta (m); tk = _52_4254; pos = p; fvs = _52_4253; uvs = _52_4252}))))
 
-let mk_Exp_meta = (fun ( m  :  meta_e ) -> (match (m) with
+let mk_Exp_meta = (fun ( m ) -> (match (m) with
 | Meta_desugared ((e, _)) -> begin
 (let _52_4257 = (Support.ST.read e.tk)
 in (mk_Exp_meta' m _52_4257 e.pos))
 end))
 
-let mk_lb = (fun ( _20_709  :  (lbname * lident * typ * exp) ) -> (match (_20_709) with
+let mk_lb = (fun ( _20_709 ) -> (match (_20_709) with
 | (x, eff, t, e) -> begin
 {lbname = x; lbtyp = t; lbeff = eff; lbdef = e}
 end))
 
-let mk_subst = (fun ( s  :  subst ) -> s)
+let mk_subst = (fun ( s ) -> s)
 
-let extend_subst = (fun ( x  :  (((typ', (knd', unit) syntax) syntax bvdef * (typ', (knd', unit) syntax) syntax), ((exp', (typ', (knd', unit) syntax) syntax) syntax bvdef * (exp', (typ', (knd', unit) syntax) syntax) syntax)) Support.Microsoft.FStar.Util.either ) ( s  :  (((typ', (knd', unit) syntax) syntax bvdef * (typ', (knd', unit) syntax) syntax), ((exp', (typ', (knd', unit) syntax) syntax) syntax bvdef * (exp', (typ', (knd', unit) syntax) syntax) syntax)) Support.Microsoft.FStar.Util.either list ) -> (x)::s)
+let extend_subst = (fun ( x ) ( s ) -> (x)::s)
 
-let argpos = (fun ( x  :  arg ) -> (match (x) with
+let argpos = (fun ( x ) -> (match (x) with
 | (Support.Microsoft.FStar.Util.Inl (t), _) -> begin
 t.pos
 end
@@ -1816,37 +1816,37 @@ let keffect = mk_Kind_effect
 
 let null_id = (mk_ident ("_", dummyRange))
 
-let null_bvd = (Obj.magic (fun ( _52_1353  :  unit ) -> {ppname = null_id; realname = null_id}))
+let null_bvd = (Obj.magic (fun ( _52_1353 ) -> {ppname = null_id; realname = null_id}))
 
-let null_bvar = (fun ( k  :  'b ) -> {v = null_bvd; sort = k; p = dummyRange})
+let null_bvar = (fun ( k ) -> {v = null_bvd; sort = k; p = dummyRange})
 
-let t_binder = (fun ( a  :  btvar ) -> (Support.Microsoft.FStar.Util.Inl (a), None))
+let t_binder = (fun ( a ) -> (Support.Microsoft.FStar.Util.Inl (a), None))
 
-let v_binder = (fun ( a  :  bvvar ) -> (Support.Microsoft.FStar.Util.Inr (a), None))
+let v_binder = (fun ( a ) -> (Support.Microsoft.FStar.Util.Inr (a), None))
 
-let null_t_binder = (fun ( t  :  knd ) -> (let _52_4276 = (let _52_4275 = (null_bvar t)
+let null_t_binder = (fun ( t ) -> (let _52_4276 = (let _52_4275 = (null_bvar t)
 in Support.Microsoft.FStar.Util.Inl (_52_4275))
 in (_52_4276, None)))
 
-let null_v_binder = (fun ( t  :  typ ) -> (let _52_4280 = (let _52_4279 = (null_bvar t)
+let null_v_binder = (fun ( t ) -> (let _52_4280 = (let _52_4279 = (null_bvar t)
 in Support.Microsoft.FStar.Util.Inr (_52_4279))
 in (_52_4280, None)))
 
-let itarg = (fun ( t  :  typ ) -> (Support.Microsoft.FStar.Util.Inl (t), Some (Implicit)))
+let itarg = (fun ( t ) -> (Support.Microsoft.FStar.Util.Inl (t), Some (Implicit)))
 
-let ivarg = (fun ( v  :  exp ) -> (Support.Microsoft.FStar.Util.Inr (v), Some (Implicit)))
+let ivarg = (fun ( v ) -> (Support.Microsoft.FStar.Util.Inr (v), Some (Implicit)))
 
-let targ = (fun ( t  :  typ ) -> (Support.Microsoft.FStar.Util.Inl (t), None))
+let targ = (fun ( t ) -> (Support.Microsoft.FStar.Util.Inl (t), None))
 
-let varg = (fun ( v  :  exp ) -> (Support.Microsoft.FStar.Util.Inr (v), None))
+let varg = (fun ( v ) -> (Support.Microsoft.FStar.Util.Inr (v), None))
 
-let is_null_pp = (fun ( b  :  'a bvdef ) -> (b.ppname.idText = null_id.idText))
+let is_null_pp = (fun ( b ) -> (b.ppname.idText = null_id.idText))
 
-let is_null_bvd = (fun ( b  :  'a bvdef ) -> (b.realname.idText = null_id.idText))
+let is_null_bvd = (fun ( b ) -> (b.realname.idText = null_id.idText))
 
-let is_null_bvar = (fun ( b  :  ('a, 'b) bvar ) -> (is_null_bvd b.v))
+let is_null_bvar = (fun ( b ) -> (is_null_bvd b.v))
 
-let is_null_binder = (fun ( b  :  binder ) -> (match (b) with
+let is_null_binder = (fun ( b ) -> (match (b) with
 | (Support.Microsoft.FStar.Util.Inl (a), _) -> begin
 (is_null_bvar a)
 end
@@ -1854,7 +1854,7 @@ end
 (is_null_bvar x)
 end))
 
-let freevars_of_binders = (fun ( bs  :  binders ) -> (Support.Prims.pipe_right bs (Support.List.fold_left (fun ( out  :  freevars ) ( _20_3  :  ((btvar, bvvar) Support.Microsoft.FStar.Util.either * arg_qualifier option) ) -> (match (_20_3) with
+let freevars_of_binders = (fun ( bs ) -> (Support.Prims.pipe_right bs (Support.List.fold_left (fun ( out ) ( _20_3 ) -> (match (_20_3) with
 | (Support.Microsoft.FStar.Util.Inl (btv), _) -> begin
 (let _20_759 = out
 in (let _52_4301 = (Support.Microsoft.FStar.Util.set_add btv out.ftvs)
@@ -1866,15 +1866,15 @@ in (let _52_4302 = (Support.Microsoft.FStar.Util.set_add bxv out.fxvs)
 in {ftvs = _20_766.ftvs; fxvs = _52_4302}))
 end)) no_fvs)))
 
-let binders_of_list = (fun ( fvs  :  (btvar, bvvar) Support.Microsoft.FStar.Util.either list ) -> (Support.Prims.pipe_right fvs (Support.List.map (fun ( t  :  (btvar, bvvar) Support.Microsoft.FStar.Util.either ) -> (t, None)))))
+let binders_of_list = (fun ( fvs ) -> (Support.Prims.pipe_right fvs (Support.List.map (fun ( t ) -> (t, None)))))
 
-let binders_of_freevars = (fun ( fvs  :  freevars ) -> (let _52_4311 = (let _52_4308 = (Support.Microsoft.FStar.Util.set_elements fvs.ftvs)
+let binders_of_freevars = (fun ( fvs ) -> (let _52_4311 = (let _52_4308 = (Support.Microsoft.FStar.Util.set_elements fvs.ftvs)
 in (Support.Prims.pipe_right _52_4308 (Support.List.map t_binder)))
 in (let _52_4310 = (let _52_4309 = (Support.Microsoft.FStar.Util.set_elements fvs.fxvs)
 in (Support.Prims.pipe_right _52_4309 (Support.List.map v_binder)))
 in (Support.List.append _52_4311 _52_4310))))
 
-let is_implicit = (fun ( _20_4  :  aqual ) -> (match (_20_4) with
+let is_implicit = (fun ( _20_4 ) -> (match (_20_4) with
 | Some (Implicit) -> begin
 true
 end
@@ -1882,7 +1882,7 @@ end
 false
 end))
 
-let as_implicit = (fun ( _20_5  :  bool ) -> (match (_20_5) with
+let as_implicit = (fun ( _20_5 ) -> (match (_20_5) with
 | true -> begin
 Some (Implicit)
 end

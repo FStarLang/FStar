@@ -1,12 +1,12 @@
 
-let print_error = (fun ( msg  :  string ) ( r  :  Support.Microsoft.FStar.Range.range ) -> (let _52_16921 = (let _52_16920 = (Support.Microsoft.FStar.Range.string_of_range r)
+let print_error = (fun ( msg ) ( r ) -> (let _52_16921 = (let _52_16920 = (Support.Microsoft.FStar.Range.string_of_range r)
 in (Support.Microsoft.FStar.Util.format2 "ERROR %s: %s\n" _52_16920 msg))
 in (Support.Microsoft.FStar.Util.print_string _52_16921)))
 
-let is_cache_file = (fun ( fn  :  string ) -> (let _52_16924 = (Support.Microsoft.FStar.Util.get_file_extension fn)
+let is_cache_file = (fun ( fn ) -> (let _52_16924 = (Support.Microsoft.FStar.Util.get_file_extension fn)
 in (_52_16924 = ".cache")))
 
-let parse_fragment = (fun ( curmod  :  (Microsoft_FStar_Absyn_Syntax.modul * 'u45u234) option ) ( env  :  Microsoft_FStar_Parser_DesugarEnv.env ) ( frag  :  string ) -> (match ((Microsoft_FStar_Parser_ParseIt.parse (Support.Microsoft.FStar.Util.Inr (frag)))) with
+let parse_fragment = (fun ( curmod ) ( env ) ( frag ) -> (match ((Microsoft_FStar_Parser_ParseIt.parse (Support.Microsoft.FStar.Util.Inr (frag)))) with
 | Support.Microsoft.FStar.Util.Inl (Support.Microsoft.FStar.Util.Inl (modul::[])) -> begin
 (let _45_13 = (Microsoft_FStar_Parser_Desugar.desugar_partial_modul curmod env modul)
 in (match (_45_13) with
@@ -16,7 +16,7 @@ end))
 end
 | Support.Microsoft.FStar.Util.Inl (Support.Microsoft.FStar.Util.Inr (decls)) -> begin
 (let _52_16929 = (Microsoft_FStar_Parser_Desugar.desugar_decls env decls)
-in (Support.Prims.pipe_left (fun ( _52_16928  :  (Microsoft_FStar_Parser_DesugarEnv.env * Microsoft_FStar_Absyn_Syntax.sigelts) ) -> Support.Microsoft.FStar.Util.Inr (_52_16928)) _52_16929))
+in (Support.Prims.pipe_left (fun ( _52_16928 ) -> Support.Microsoft.FStar.Util.Inr (_52_16928)) _52_16929))
 end
 | Support.Microsoft.FStar.Util.Inl (Support.Microsoft.FStar.Util.Inl (_)) -> begin
 (raise (Microsoft_FStar_Absyn_Syntax.Err ("Refusing to check more than one module at a time incrementally")))
@@ -25,7 +25,7 @@ end
 (raise (Microsoft_FStar_Absyn_Syntax.Error ((msg, r))))
 end))
 
-let parse_file = (fun ( env  :  Microsoft_FStar_Parser_DesugarEnv.env ) ( fn  :  string ) -> (match ((is_cache_file fn)) with
+let parse_file = (fun ( env ) ( fn ) -> (match ((is_cache_file fn)) with
 | true -> begin
 (let full_name = (let _52_16937 = (let _52_16936 = (let _52_16935 = (let _52_16934 = (Microsoft_FStar_Options.get_fstar_home ())
 in (Support.String.strcat _52_16934 "/"))
@@ -53,7 +53,7 @@ in (exit (1)))
 end)
 end))
 
-let read_build_config = (fun ( file  :  string ) -> (Microsoft_FStar_Parser_ParseIt.read_build_config file))
+let read_build_config = (fun ( file ) -> (Microsoft_FStar_Parser_ParseIt.read_build_config file))
 
 
 
