@@ -60,7 +60,7 @@ let tc_one_file dsenv env fn =
     let dsenv, fmods = Parser.Driver.parse_file dsenv fn in
     let env, all_mods = fmods |> List.fold_left (fun (env, all_mods) m -> 
         let ms, env = Tc.Tc.check_module env m in
-        env, ms) (env, []) in
+        env, ms@all_mods) (env, []) in
     dsenv, env, List.rev all_mods
 
 let tc_one_fragment curmod dsenv env frag = 
@@ -245,6 +245,7 @@ let codegen fmods env=
         end
     else if !Options.codegen = Some "OCaml-experimental" then begin
         let c, mllibs = Util.fold_map Backends.ML.ExtractMod.extract (Backends.ML.Env.mkContext env) fmods in
+        let mllibs = List.flatten mllibs in
         let newDocs = List.collect Backends.OCaml.Code.doc_of_mllib mllibs in
             List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^".ml")) (FSharp.Format.pretty 120 d)) newDocs
     end

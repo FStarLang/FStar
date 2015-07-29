@@ -165,7 +165,7 @@ clean:
 # --------------------------------------------------------------------
 
 STDFILESEXP=system.fst
-STDFILES=system.fst stboot.fst list.fst option.fst string.fst char.fst
+STDFILES=system.fsi system.io.fsi system.text.fsi system.diagnostics.fsi system.collections.generic.fsi collections.fsi stboot.fsi list.fsi option.fsi string.fsi char.fsi
 STDLIB=$(addprefix ../lib/, $(STDFILES))
 STDLIBEXP=$(addprefix ../lib/, $(STDFILES))
 
@@ -186,7 +186,7 @@ BOOT_JSBACKEND=$(addprefix jsbackend/, $(BOOT_JSBACKENDFILES))
 BOOT_MAIN=fstar.fs
 BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_TC) $(BOOT_PARSER) $(TOSMT_SRC) $(BOOT_FORMAT) #$(BOOT_BACKEND) fstar.fs
 
-ADMITTED_MODULES=Microsoft.FStar.Util Microsoft.FStar.Platform Microsoft.FStar.Parser.ParseIt
+ADMITTED_MODULES=System System.IO System.Text System.Diagnostics System.Collections.Generic Collections ST List Option String Char Microsoft.FStar.Util Microsoft.FStar.Platform Microsoft.FStar.Parser.ParseIt
 ADMITS=$(addprefix --admit_fsi , $(ADMITTED_MODULES))
 boot: $(BOOT_ALL)
 	../bin/fstar.exe --debug yes --fs_typ_app --lax $(FSTAROPTS) $(ADMITS) $^

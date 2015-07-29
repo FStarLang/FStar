@@ -1648,7 +1648,13 @@ and tc_decl env se deserialized = match se with
             Sig_let(lbs, r, lids, quals), lbs
         | _ -> failwith "impossible" in
       if log env 
-      then Util.fprint1 "%s\n" (snd lbs |> List.map (fun lb -> Util.format2 "let %s : %s" (Print.lbname_to_string lb.lbname) (Tc.Normalize.typ_norm_to_string env lb.lbtyp)) |> String.concat "\n");
+      then Util.fprint1 "%s\n" (snd lbs |> List.map (fun lb -> 
+            let should_log = match Tc.Env.try_lookup_val_decl env (right lb.lbname) with 
+                | None -> true
+                | _ -> false in
+            if should_log 
+            then Util.format2 "let %s : %s" (Print.lbname_to_string lb.lbname) (Tc.Normalize.typ_norm_to_string env lb.lbtyp)
+            else "") |> String.concat "\n");
       let env = Tc.Env.push_sigelt env se in 
       se, env
 

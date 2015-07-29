@@ -82,14 +82,14 @@ let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> =
 
 let extract_iface (g:env) (m:modul) =  Util.fold_map extract_sig g m.declarations |> fst 
     
-let rec extract (g:env) (m:modul) : env * mllib = 
+let rec extract (g:env) (m:modul) : env * list<mllib> = 
     let name = Backends.ML.Syntax.mlpath_of_lident m.name in
     let _ = Util.print_string ("extracting: "^m.name.str^"\n") in
     let g = {g with currentModule = name}  in
     if m.name.str = "Prims" || m.is_interface
     then let g = extract_iface g m in 
-         g, MLLib([Util.flatten_mlpath name, None, MLLib []])
+         g, [] //MLLib([Util.flatten_mlpath name, None, MLLib []])
     else let g, sigs = Util.fold_map extract_sig g m.declarations in
          let mlm : mlmodule = List.flatten sigs in
-         g, MLLib ([Util.flatten_mlpath name, Some ([], mlm), (MLLib [])])
+         g, [MLLib ([Util.flatten_mlpath name, Some ([], mlm), (MLLib [])])]
     
