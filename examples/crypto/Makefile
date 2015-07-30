@@ -44,9 +44,8 @@ rpc: formatting.fst sha1.fst mac.fst rpc.fst
 					set.fsi set.fst \
 					heap.fst st.fst \
 					seq.fsi seqproperties.fst )  \
-					$(addprefix ./,  Platform/Bytes.fst CoreCrypto/CoreCrypto.fst) \
+					$(addprefix $(FSTAR_HOME)/contrib/,  Platform/fst/Bytes.fst CoreCrypto/fst/CoreCrypto.fst) \
 					sha1.fst mac.fst formatting.fst rpc.fst
-					#$(addprefix $(MITLS)/libs/fst/,  Platform/Bytes.fst CoreCrypto/CoreCrypto.fst) \
 
 # This relies on libs/ml/Platform/Bytes.fst and libs/ml/CoreCrypto/CoreCrypto.fst from miTLS*
 # as well as libs/ml/Platform/platform.cmx and libs/ml/CoreCrypto/CoreCrypto.cmxa

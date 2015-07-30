@@ -1,5 +1,6 @@
 (*--build-config
-
+  options:--admit_fsi OrdSet;
+  other-files:ordset.fsi
  --*)
 module OrdMap
 
@@ -15,6 +16,7 @@ type cmp (a:Type) = f:(a -> a -> Tot bool){total_order a f}
 type ordmap: key:Type -> value:Type -> cmp key -> Type
 
 val empty   : #key:Type -> #value:Type -> #f:cmp key -> Tot (ordmap key value f)
+val const_on: #key:Type -> #value:Type -> #f:cmp key -> d:ordset key f -> x:value -> Tot (ordmap key value f)
 val select  : #key:Type -> #value:Type -> #f:cmp key -> k:key
               -> m:ordmap key value f -> Tot (option value)
 val update  : #key:Type -> #value:Type -> #f:cmp key -> key -> value
@@ -135,3 +137,14 @@ val dom_lemma: #k:Type -> #v:Type -> #f:cmp k -> x:k -> m:ordmap k v f
                         (ensures (contains #k #v #f x m <==>
                                   OrdSet.mem #k #f x (dom #k #v #f m)))
                   [SMTPat (mem #k #f x (dom #k #v #f m))]
+
+val contains_const_on: #k:Type -> #v:Type -> #f:cmp k -> d:ordset k f -> x:v -> y:k
+                  -> Lemma (requires (True))
+                           (ensures (mem y d = contains y (const_on d x)))
+                                    //(contains y (const_on d x) ==> Some.v (select p w) = x)))
+                     [SMTPat (contains #k #v #f y (const_on #k #v #f d x))]
+                     
+val select_const_on: #k:Type -> #v:Type -> #f:cmp k -> d:ordset k f -> x:v -> y:k
+                     -> Lemma (requires (True))
+                              (ensures (mem y d ==> (contains y (const_on d x) /\ Some.v (select y (const_on d x)) = x)))
+                    [SMTPat (select #k #v #f y (const_on #k #v #f d x))]

@@ -12,12 +12,12 @@ open Axiomatic
 open Eval
 open Array
 
-val aux :
+val compute_size_aux :
   t:template -> bw_p_max:nat -> n:nat -> bwn:nat -> 
   Tot nat
-let rec aux t bw_p_max n bwn =
+let rec compute_size_aux t bw_p_max n bwn =
   if bwn >= bw_p_max then n
-  else aux t bw_p_max (n+1) (bwn + t n)
+  else compute_size_aux t bw_p_max (n+1) (bwn + t n)
 
 (* Compute the required array length to store the carried result *)
 val compute_size :
@@ -28,7 +28,7 @@ let compute_size a =
   let bw = bitweight (Bigint63.t a) (get_length a) in
   let max = wordSize a in
   let bw_p_max = bw + max in
-  aux (Bigint63.t a) bw_p_max (get_length a) bw
+  compute_size_aux (Bigint63.t a) bw_p_max (get_length a) bw
 
 val carry_aux :
   a:bigint -> i:nat -> 
@@ -47,7 +47,7 @@ let rec carry_aux a i =
      let size_v = erase (wordSize a - t i) in
      let size_carry = erase (t i) in
      let tl = Bigint.mk_tint a size_v v in
-     let th = Bigint.mk_tint a (wordSize a - 1) (carry + get a (i+1)) in
+     let th = Bigint.mk_tint a (erase (wordSize a - 1)) (carry + get a (i+1)) in
      updateBigint a i tl;
      updateBigint a (i+1) th;
      carry_aux a (i+1)		  
@@ -55,12 +55,12 @@ let rec carry_aux a i =
 (* Perform a carry operations : the array is normalized but cells can have different sizes *)
 val carry : 
   a:bigint -> 
-  ST unit
+  ST bigint
      (requires (fun h -> 
 		(inHeap h a)
 		/\ (maxSize h a < wordSize a - 1)
      ))
-     (ensures (fun h0 u h1 ->
+     (ensures (fun h0 b h1 ->
 	       (inHeap h0 a)
 	       /\ (inHeap h1 a)
 	       /\ (modifies !{Bigint63.data a} h0 h1)
@@ -69,10 +69,26 @@ val carry :
      ))
 let carry a = 
   let size = compute_size a in
-  let new_array = Array.create size zero_tint in
-  Array.blit (Bigint63.data a) 0 new_array 0 (get_length a);
-  Bigint63.data a := !new_array;
-  carry_aux a 0
+    (* This is not working in OCaml because an array is not a reference *)
+  (* TODO : find a workaround *)
+  (* 
+     let new_array = Array.create size zero_tint in
+     Array.blit (Bigint63.data a) 0 new_array 0 (get_length a);
+     Bigint63.data a := !new_array; 
+  *)
+  let len = get_length a in
+  let a = 
+    if size >= len then Bigint63 ((Bigint63.data a) @| (Array.create (size - len) zero_tint)) (Bigint63.t a)
+    else a in
+  carry_aux a 0;
+  let a = 
+    if size < len then (
+      let tmp = Array.create size zero_tint in
+      Array.blit (Bigint63.data a) 0 tmp 0 size;
+      Bigint63 tmp (Bigint63.t a) )
+    else a in
+  a
+    
 
 (* Carry modulo value *)	    
 assume val carry_mod:
@@ -120,8 +136,8 @@ let rec one_pass_carry_aux a len =
      let low = signed_modulo ai (pow2 (t i)) in
      let aip1 = get a (i+1) in
      let aip1 = Limb.add (t i) high (t (i+1)) aip1 in
-     let th = mk_tint a (max size_aip (wordSize a - t i) + 1) aip1 in
-     let tl = mk_tint a (min size_ai (t i)) low in
+     let th = mk_tint a (erase (max size_aip (wordSize a - t i) + 1)) aip1 in
+     let tl = mk_tint a (erase ((min size_ai (t i)))) low in
      updateBigint a (i+1) th;
      updateBigint a i tl;
      one_pass_carry_aux a (len-1)

@@ -70,8 +70,6 @@ let or_lid = (pconst "l_or")
 
 let not_lid = (pconst "l_not")
 
-let lbl_lid = (pconst "LBL")
-
 let imp_lid = (pconst "l_imp")
 
 let iff_lid = (pconst "l_iff")

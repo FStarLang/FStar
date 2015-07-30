@@ -1880,7 +1880,5 @@ let check_module env m =
       end
     in 
     if Options.should_dump m.name.str then Util.fprint1 "%s\n" (Print.modul_to_string m);
-    if m.is_interface  //TODO: admit interfaces to the solver also?
-    then [m], env //TODO: add interfaces to the output once the codegen knows how to emit it properly
-    else [m], env
-
+    [m], env 
+    

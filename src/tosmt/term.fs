@@ -452,6 +452,10 @@ and mkPrelude z3options =
                 (declare-fun ConsType (Type Term) Term)\n\
                 (declare-fun ConsFuel (Fuel Term) Term)\n\
                 (declare-fun Precedes (Term Term) Type)\n\
+                (assert (forall ((t Type))\n\
+                            (! (implies (exists ((e Term)) (HasType e t))\n\
+                                        (Valid t))\n\
+                                :pattern ((Valid t)))))\n\
                 (assert (forall ((e Term) (t Type))\n\
                            (!  (= (HasType e t)\n\
                                   (HasTypeFuel MaxIFuel e t))\n\

@@ -234,7 +234,7 @@ val helper_lemma_2:
 	    (requires (True))
 	    (ensures (forall a b c. abs a * abs c <= abs b * abs c ==> abs a <= abs b ))
 let helper_lemma_2 () = 
-  ineq_axiom ()
+  erase (ineq_axiom ())
 
 val scalar_multiplication_max_value_lemma:
   h0:heap -> 

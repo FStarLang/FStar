@@ -40,8 +40,10 @@ assume val hmac : hash_alg -> bytes -> bytes -> bytes
 
 assume val block_encrypt : block_cipher -> bytes -> bytes -> bytes -> bytes
 assume val block_decrypt : block_cipher -> bytes -> bytes -> bytes -> bytes
-assume val aead_encrypt : aead_cipher -> bytes -> bytes -> bytes -> bytes -> 'a
-assume val aead_decrypt : aead_cipher -> bytes -> bytes -> bytes -> bytes -> 'a
+assume val aead_encrypt : aead_cipher -> bytes -> bytes -> bytes -> bytes -> Tot 'a
+//should become St 'a
+assume val aead_decrypt : aead_cipher -> bytes -> bytes -> bytes -> bytes -> Tot 'a
+//should become St 'a
 
 type cipher_stream
 assume val stream_encryptor : stream_cipher -> bytes -> cipher_stream
@@ -80,7 +82,7 @@ type ec_key = {
      ec_priv : option bytes;
 }
 
-assume val ec_point_serialize: ec_point -> bytes
+assume val ec_point_serialize: ec_point -> Tot bytes
 assume val ec_is_on_curve: ec_params -> ec_point -> bool
 assume val ecdh_agreement: ec_key -> ec_point -> bytes
 

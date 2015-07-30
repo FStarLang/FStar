@@ -1,43 +1,40 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Map;
+    options:--admit_fsi OrdSet --admit_fsi OrdMap --admit_fsi Set;
     variables:LIB=../../lib;
-    other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/map.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst
+    other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/ordset.fsi $LIB/ordmap.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst
  --*)
 
 module Wysteria
 
-open Set
+open OrdSet
 open Heap
 
 open Prims.STATE
 
+(**********)
+
 type prin
 
-type prins = set prin
+val p_cmp: f:(prin -> prin -> Tot bool){total_order prin f}
 
-type p_or_s =
+type prins = s:ordset prin p_cmp{not (s = empty)}
+
+type eprins = ordset prin p_cmp
+
+(* TODO: FIXME: Implement these *)
+val prin_to_nat: prin -> Tot nat
+
+val injective_prin_to_nat_mapping:
+  unit -> Lemma (requires (True)) (ensures (forall p1 p2. prin_to_nat p1 = prin_to_nat p2 ==> p1 = p2))
+
+type as_mode =
   | Par
   | Sec
 
 type mode =
-  | Mode: p_or_s:p_or_s -> ps:prins -> mode
+  | Mode: m:as_mode -> ps:prins -> mode
 
 assume val moderef : ref mode
-
-(* TODO: make it abstract to the clients *)
-type Wire (a:Type) = Map.t prin a
-
-type Box: Type -> Type
-(*= //needed for type checking
-  |Mk_box: #a:Type -> v:a -> ps:prins -> Box a*)
-
-val v_of_box: #a:Type -> x:Box a -> GTot a
-
-val ps_of_box: #a:Type -> x:Box a -> GTot prins
-
-
-(*let v_of_box x = Mk_box.v x //needed for type checking
-let ps_of_box x = Mk_box.ps x*)
 
 kind Requires         = mode -> Type
 kind Ensures (a:Type) = mode -> a -> Type
@@ -46,122 +43,173 @@ effect Wys (a:Type) (req:Requires) (ens:Ensures a) =
   STATE a (fun (p:a -> heap -> Type) (h0:heap) -> req (sel h0 moderef) /\ (forall x h1. sel h1 moderef = sel h0 moderef /\ ens (sel h0 moderef) x ==> p x h1))
           (fun (p:a -> heap -> Type) (h0:heap) -> req (sel h0 moderef) /\ (forall x h1. sel h1 moderef = sel h0 moderef /\ ens (sel h0 moderef) x ==> p x h1))
 
+(**********)
 
-(*****)
+type Box: Type -> prins -> Type
 
-type DelPar (m:mode) (ps:prins) =
-  Mode.p_or_s m = Par /\ subset ps (Mode.ps m)
+val v_of_box : #a:Type -> #ps:prins -> x:Box a ps -> GTot a
+
+(* if a Type value can be boxed for ps  *)
+type can_box: a:Type -> ps:prins -> Type
+
+assume Canbox_nat : (forall ps. can_box nat ps)
+assume Canbox_bool: (forall ps. can_box bool ps)
+assume Canbox_box : (forall (a:Type) (ps':prins) ps.
+                     subset ps' ps ==> can_box (Box a ps') ps)
+assume Canbox_option: (forall (a:Type) ps. can_box a ps ==>
+                                           can_box (option a) ps)
+assume Canbox_prod: (forall (a:Type) (b:Type) ps.
+                     (can_box a ps /\ can_box b ps) ==> can_box (a * b) ps)
+(* TODO: FIXME: how ? *)
+(*assume Canbox_refinement: (forall (a:Type) (b:a -> Type) ps.
+                           can_box a ps ==> can_box (y:a{b y}) ps)*)
+
+(**********)
+
+type Wire: Type -> Type
+
+val w_contains: #a:Type -> prin -> Wire a -> Tot bool
+val w_empty   : #a:Type -> Tot (w:Wire a{forall p. not (w_contains p w)})
+val w_select  : #a:Type -> p:prin -> w:Wire a{w_contains p w} -> Tot a
+(* TODO: FIXME: implement const_on *)
+val w_const_on: #a:Type -> eps:eprins -> x:a
+                -> Tot (w:Wire a{forall p. (mem p eps <==> w_contains p w) /\
+                                           (w_contains p w ==> w_select p w = x)})
+
+val w_concat  :
+  #a:Type -> w1:Wire a -> w2:Wire a{forall p. w_contains p w1 ==> not (w_contains p w2)}
+  -> Tot (w:Wire a
+          {forall p. (w_contains p w1 ==> (w_contains p w /\ w_select p w = w_select p w1)) /\
+                     (w_contains p w2 ==> (w_contains p w /\ w_select p w = w_select p w2)) /\
+                     (w_contains p w  ==> (w_contains p w1 \/ w_contains p w2))})
+
+val w_dom: #a:Type -> w:Wire a -> Tot (ps:prins{forall p. mem p ps <==> w_contains p w})
+
+
+(* if type can be wired *)
+type can_wire: Type -> Type
+
+assume Canwire_nat : can_wire nat
+assume Canwire_bool: can_wire bool
+assume Canwire_prod: forall (a:Type) (b:Type). (can_wire a /\ can_wire b) ==>
+                                               can_wire (a * b)
+
+
+(**********)
+
+type DelPar (m:mode) (ps:prins) = Mode.m m = Par /\ subset ps (Mode.ps m)
 
 val as_par: #a:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> a -> Type)
             -> ps:prins
             -> =f:(unit -> Wys a req_f ens_f)
-            -> Wys (Box a) (fun m0   -> DelPar m0 ps /\ req_f (Mode Par ps))
-                           (fun m0 r -> ps_of_box r = ps /\
-                                        ens_f (Mode Par ps) (v_of_box r))
-
+            -> Wys (Box a ps) (fun m0   -> req_f (Mode Par ps) /\
+                                           DelPar m0 ps        /\
+                                           can_box a ps)
+                              (fun m0 r -> ens_f (Mode Par ps) (v_of_box r))
+  
 (*****)
 
-type DelSec (m:mode) (ps:prins) = ps = (Mode.ps m)
+type DelSec (m:mode) (ps:prins) = ps = Mode.ps m
 
 val as_sec: #a:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> a -> Type)
             -> ps:prins
             -> =f:(unit -> Wys a req_f ens_f)
-            -> Wys a (fun m0   -> DelSec m0 ps /\ req_f (Mode Sec ps))
+            -> Wys a (fun m0   -> req_f (Mode Sec ps) /\ DelSec m0 ps)
                      (fun m0 r -> ens_f (Mode Sec ps) r)
 
 (*****)
 
-type CanUnboxP (#a:Type) (x:Box a) (mode_ps:prins) = b2t (subset mode_ps (ps_of_box x))
+type CanUnboxPC (mode_ps:eprins) (ps:prins) = b2t (subset mode_ps ps)
 
-val unbox_p: #a:Type -> x:Box a
-             -> Wys a (fun m0   -> Mode.p_or_s m0 = Par /\ CanUnboxP x (Mode.ps m0))
+type CanUnboxP (m:mode) (ps:prins) = Mode.m m = Par /\ CanUnboxPC (Mode.ps m) ps
+
+val unbox_p: #a:Type -> #ps:prins -> x:Box a ps
+             -> Wys a (fun m0   -> CanUnboxP m0 ps)
                       (fun m0 r -> b2t (r = v_of_box x))
 
 (*****)
 
-(*
- * we could afford intersection of ps_of_box x and Mode.ps m0 to be non-empty,
- * since it's enough for one party to provide the value, all need not be present
- *)
+(* TODO: FIXME: ideally we can do with not (intersect (Mode.ps m) ps = empty 
+ * but that requires examples to have to help prove this *)
 
-type CanUnboxS (#a:Type) (x:Box a) (mode_ps:prins) = b2t (subset (ps_of_box x) mode_ps)
+type CanUnboxS (m:mode)(ps:prins) =
+  Mode.m m = Sec /\ subset ps (Mode.ps m)
 
-val unbox_s: #a:Type -> x:Box a
-             -> Wys a (fun m0   -> Mode.p_or_s m0 = Sec /\ CanUnboxS x (Mode.ps m0))
+val unbox_s: #a:Type -> #ps:prins -> x:Box a ps
+             -> Wys a (fun m0   -> CanUnboxS m0 ps)
                       (fun m0 r -> b2t (r = v_of_box x))
 
 (*****)
 
-type CanBoxP (#a:Type) (ps:prins) (mode_ps:prins) = b2t (subset ps mode_ps)
+type CanBoxP (a:Type) (m:mode) (ps:prins) =
+  Mode.m m = Par /\ can_box a ps /\ subset ps (Mode.ps m)
 
 val box_p: #a:Type -> x:a -> ps:prins
-           -> Wys (Box a) (fun m0   -> Mode.p_or_s m0 = Par /\ CanBoxP ps (Mode.ps m0))
-                          (fun m0 r -> ps_of_box r = ps /\ v_of_box r = x)
+           -> Wys (Box a ps) (fun m0   -> CanBoxP a m0 ps)
+                             (fun m0 r -> b2t (v_of_box r = x))
 
 (*****)
 
-open Map
+type CanMkWireP (a:Type) (m:mode) (ps':prins) (eps:eprins) =
+  Mode.m m = Par /\ can_wire a /\ CanUnboxPC eps ps' /\ subset eps (Mode.ps m)
 
-(*****)
-
-type CanMkWireP (#a:Type) (ps:prins) (x:Box a) (mode_ps: prins) =
-  CanUnboxP x ps /\ subset ps mode_ps
-
-val mkwire_p: #a:Type -> ps:prins -> x:Box a
-              -> Wys (Wire a) (fun m0   -> Mode.p_or_s m0 = Par /\ CanMkWireP ps x (Mode.ps m0))
-                              (fun m0 r -> b2t (r = const_on ps (v_of_box x)))
+val mkwire_p: #a:Type -> #ps':prins -> eps:eprins -> x:Box a ps'
+              -> Wys (Wire a) (fun m0   -> CanMkWireP a m0 ps' eps)
+                              (fun m0 r -> Let (v_of_box #a #ps' x) (fun y -> b2t (r = w_const_on #a eps y)))
 
 (*****)
 
 (*
  * CanUnboxP since all parties must know the domain of wire bundle
  *)
+type CanMkWireS (a:Type) (m:mode) (eps:eprins) =
+  Mode.m m = Sec /\ can_wire a /\ subset eps (Mode.ps m)
 
-type CanMkWireS (ps:Box prins) (mode_ps:prins) =
-  CanUnboxP ps mode_ps /\ subset (v_of_box ps) mode_ps
+val mkwire_s: #a:Type -> eps:eprins -> x:a
+              -> Wys (Wire a) (fun m0   -> CanMkWireS a m0 eps)
+                              (fun m0 r -> b2t (r = w_const_on #a eps x))
 
-val mkwire_s: #a:Type -> ps:Box prins -> x:a
-              -> Wys (Wire a) (fun m0   -> Mode.p_or_s m0 = Sec /\ CanMkWireS ps (Mode.ps m0))
-                              (fun m0 r -> b2t (r = const_on (v_of_box ps) x))
-
-type CanMkWireSS (ps:Box prin) (mode_ps:prins) =
+(*type CanMkWireSS (ps:Box prin) (mode_ps:prins) =
   CanUnboxP ps mode_ps /\ mem (v_of_box ps) mode_ps
 
 val mkwire_ss: #a:Type -> ps:Box prin -> x:a
                -> Wys (Wire a) (fun m0   -> Mode.p_or_s m0 = Sec /\ CanMkWireSS ps (Mode.ps m0))
-                               (fun m0 r -> b2t (r = const_on (singleton (v_of_box ps)) x))
+                               (fun m0 r -> b2t (r = const_on (singleton (v_of_box ps)) x))*)
 
 (*****)
 
-type CanProjWireP (#a:Type) (x:Wire a) (p:prin) (mode_ps:prins) =
-  mode_ps = singleton p /\ contains x p
+type CanProjWireP (#a:Type) (m:mode) (x:Wire a) (p:prin) =
+  Mode.m m = Par /\ Mode.ps m = singleton p /\ w_contains p x
 
-val projwire_p: #a:Type -> x:Wire a -> p:prin
-                -> Wys a (fun m0   -> Mode.p_or_s m0 = Par /\ CanProjWireP x p (Mode.ps m0))
-                         (fun m0 r -> b2t (r = sel x p))
+val projwire_p: #a:Type -> x:Wire a -> p:prin{w_contains p x}
+                -> Wys a (fun m0   -> CanProjWireP m0 x p)
+                         (fun m0 r -> b2t (r = w_select p x))
 
 (*****)
 
-type CanProjWireS (#a:Type) (x:Wire a) (p:prin) (mode_ps:prins) =
-  mem p mode_ps /\ contains x p
+type CanProjWireS (#a:Type) (m:mode) (x:Wire a) (p:prin) =
+  Mode.m m = Sec /\ mem p (Mode.ps m) /\ w_contains p x
 
-val projwire_s: #a:Type -> x:Wire a -> p:prin
-                -> Wys a (fun m0   -> Mode.p_or_s m0 = Sec /\ CanProjWireS x p (Mode.ps m0))
-                         (fun m0 r -> b2t (r = sel x p))
+val projwire_s: #a:Type -> x:Wire a -> p:prin{w_contains p x}
+                -> Wys a (fun m0   -> CanProjWireS m0 x p)
+                         (fun m0 r -> b2t (r = w_select p x))
 
 (*****)
 
 (*
  * DisjointDom ?
  *)
-
-val concat_wire: #a:Type -> x:Wire a -> y:Wire a
-                 -> Wys (Wire a) (fun m0   -> True)
-                                 (fun m0 r -> b2t (r = concat x y))
+ 
+type CanConcatWire (#a:Type) (x:Wire a) (y:Wire a) =
+  forall p. w_contains p x ==> not (w_contains p y)
+ 
+val concat_wire: #a:Type -> x:Wire a -> y:Wire a{CanConcatWire x y}
+                 -> Wys (Wire a) (fun m0   -> CanConcatWire x y)
+                                 (fun m0 r -> b2t (r = w_concat x y))
 
 (*****)
 
-type Share: Type -> Type
+(*type Share: Type -> Type
 
 val v_of_sh: #a:Type -> Share a -> GTot a
 
@@ -173,16 +221,17 @@ val mk_share: #a:Type -> x:a -> Wys (Share a) (fun m0   -> b2t (Mode.p_or_s m0 =
 
 val comb_share: #a:Type -> x:Share a -> Wys a (fun m0   -> Mode.p_or_s m0 = Sec /\
                                                            Mode.ps m0 = ps_of_sh x)
-                                              (fun m0 r -> b2t (r = v_of_sh x))
+                                              (fun m0 r -> b2t (r = v_of_sh x))*)
 
 (*********************************)
 
-val read: #a:Type -> unit -> Wys a (fun m0 -> Mode.p_or_s m0 = Par /\
-                                              (exists p. Mode.ps m0 = singleton p))
+val read: #a:Type -> unit -> Wys a (fun m0 -> Mode.m m0 = Par /\
+                                              (exists p. Mode.ps m0 = singleton #prin #p_cmp p))
                                    (fun m0 r -> True)
 
-val read_p: #a:Type -> unit -> Wys (Wire a) (fun m0 -> b2t (Mode.p_or_s m0 = Par))
+(*val read_p: #a:Type -> unit -> Wys (Wire a) (fun m0 -> b2t (Mode.m m0 = Par))
                                             (fun m0 r -> HasDom r (Mode.ps m0))
+*)
 
 val alice  : prin
 val bob    : prin
@@ -190,9 +239,9 @@ val charlie: prin
 
 assume PrinsAxiom: alice =!= bob /\ bob =!= charlie /\ charlie =!= alice
 
-let alice_s   = singleton alice
-let bob_s     = singleton bob
-let charlie_s = singleton charlie
+let alice_s   = singleton #prin #p_cmp alice
+let bob_s     = singleton #prin #p_cmp bob
+let charlie_s = singleton #prin #p_cmp charlie
 
 let ab   = union alice_s bob_s
 let bc   = union bob_s charlie_s
@@ -208,14 +257,13 @@ let p_abc = Mode Par abc
 let s_ab  = Mode Sec ab
 let s_abc = Mode Sec abc
 
-val list_to_set: #a:Type -> l:list a
+(*val list_to_set: #a:Type -> l:list a
                  -> Pure (set a) True (fun r -> (forall x. List.mem x l <==> mem x r))
 
-(* unimplemented *)
 val set_to_list: #a:Type -> s:set a
                  -> Pure (list a) True (fun r -> (forall x. List.mem x r <==> mem x s))
 
 val dom_of_wire: #a:Type -> w:Wire a
                  -> Pure (list prin) True (fun r -> (forall x. List.mem x r <==> Map.contains w x))
 
-val empty_wire: (w:Wire 'a{HasDom w Set.empty})
+val empty_wire: (w:Wire 'a{HasDom w Set.empty})*)

@@ -34,6 +34,11 @@ assume val modulo:
 	       /\ (eval h1 a (getLength h1 a) = eval h0 a (getLength h0 a) % eval h0 b (getLength h0 b))
      ))
 
+val modulo_bit:
+  a:bigint -> modulus:bigint -> shift:nat ->
+  ST unit
+    (requires (fun h -> True))
+    (ensures (fun h0 b h1 -> True))
 let rec modulo_bit a modulus shift =
   (* Shift the modulus by "shift" bits *)
   let s = shift_over_by_bits modulus shift in
@@ -51,6 +56,11 @@ let rec modulo_bit a modulus shift =
       ()
   ) 
 
+val modulo_cell :
+  a:bigint -> modulus:bigint -> offset:nat ->
+  ST bigint
+    (requires (fun h -> True))
+    (ensures (fun h0 b h1 -> True))
 let rec modulo_cell a modulus offset =
   match offset with
   | 0 ->
@@ -62,8 +72,9 @@ let rec modulo_cell a modulus offset =
      (* Shift it bits by bits and subtract when required *)
      modulo_bit a modulus 0;
      (* a smaller than modulus, do final carry *)
-     carry a;
-     normalized_carry a
+     let a = carry a in
+     normalized_carry a;
+     a
   | _ ->
      (* Align modulus on the sign of a *)
      let modulus = 
@@ -75,15 +86,21 @@ let rec modulo_cell a modulus offset =
      (* Shift and subtract bit by bit *)
      modulo_bit a m 0;
      (* Carry *)
-     carry a;
+     let a = carry a in
      normalized_carry a;
      (* Iterate *)
      modulo_cell a modulus offset
 
 (* A signed version of the modulo *)
+val signed_modulo : 
+  a:bigint -> modulus:bigint ->
+  ST bigint
+    (requires (fun h -> True))
+    (ensures (fun h0 b h1 -> True))  
 let signed_modulo a modulus =
   (* Assume that the top cell of the modulus is not empty *)
   (* Assume that the modulus is positive *)
+  let a = carry a in
   normalized_carry a;
   normalized_carry modulus;
   let lmod = get_length modulus in
@@ -96,13 +113,21 @@ let signed_modulo a modulus =
     let a = if sign = -1 then Neg.neg a else a in
     let b = Bigint.mk_zero_bigint (la + 1) (Bigint63.t a) in
     Array.blit (Bigint63.data a) 0 (Bigint63.data b) 0 la;
-    modulo_cell b modulus (la - lmod);
+    let b = modulo_cell b modulus (la - lmod) in
     let c = Array.create lmod zero_tint in
     Array.blit (Bigint63.data b) 0 c 0 lmod;
-    Bigint63.data b := !c;
+    (* Does not work for OCaml arrays *)
+    (* Bigint63.data b := !c; *)
+    let b = Bigint63 c (Bigint63.t b) in
     if sign = -1 then Neg.neg b else b
 
 (* An unsigned version of the modulo *)
+
+val unsigned_modulo :
+  a:bigint -> modulus:bigint ->
+  ST bigint
+    (requires (fun h -> True))
+    (ensures (fun h0 b h1 -> True))
 let unsigned_modulo a modulus =
   let b = signed_modulo a modulus in
   if Compare.compare b zero_bigint = -1 then (

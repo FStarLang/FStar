@@ -1569,7 +1569,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
 (* Most important function: from AST to a module
    Keeps track of the name of variables and so on (in the context)
  *)
-let desugar_partial_modul curmod env (m:AST.modul) : env_t * Syntax.modul =
+let desugar_modul_common curmod env (m:AST.modul) : env_t * Syntax.modul =
   let open_ns (mname:lident) d =
     if List.length mname.ns <> 0
     then (AST.mk_decl (AST.Open (Syntax.lid_of_ids mname.ns)) (Syntax.range_of_lid mname))  :: d
@@ -1591,8 +1591,18 @@ let desugar_partial_modul curmod env (m:AST.modul) : env_t * Syntax.modul =
   } in
   env, modul
 
+let desugar_partial_modul curmod env (m:AST.modul) : env_t * Syntax.modul =
+  let m =
+    if !Options.interactive_fsi then
+        match m with
+            | Module(mname, decls) -> AST.Interface(mname, decls, Util.for_some (fun m -> m=mname.str) !Options.admit_fsi)
+            | Interface(mname, _, _) -> failwith ("Impossible: " ^ mname.ident.idText)
+    else m
+  in
+  desugar_modul_common curmod env m
+
 let desugar_modul env (m:AST.modul) : env_t * Syntax.modul =
-  let env, modul = desugar_partial_modul None env m in
+  let env, modul = desugar_modul_common None env m in
   let env = DesugarEnv.finish_module_or_interface env modul in
   if Options.should_dump modul.name.str then Util.fprint1 "%s\n" (Print.modul_to_string modul);
   env, modul

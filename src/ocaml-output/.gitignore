@@ -39,3 +39,8 @@ parse.ml
 parse.mli
 parse.mly
 Microsoft_FStar_ToSMT_SplitQueryCases.ml
+Microsoft_FStar_Backends_ML_Env.ml
+Microsoft_FStar_Backends_ML_ExtractExp.ml
+Microsoft_FStar_Backends_ML_ExtractMod.ml
+Microsoft_FStar_Backends_ML_ExtractTyp.ml
+Microsoft_FStar_Backends_ML_Util.ml

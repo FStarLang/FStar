@@ -6,6 +6,7 @@ module Prims = struct
   type uint16 = int
   type int32 = int
   type nat = int
+  type pos = int
   type byte = char
   type uint8 = char
   type _exn = exn
@@ -1332,44 +1333,50 @@ module Tcp = struct
 end
 
 module Array = struct
-  type 'a contents =
-    | Const of 'a
-    | Upd of int * 'a * 'a contents
-    | Append of 'a seq * 'a seq
-   and 'a seq =
-    | Seq of 'a contents * Prims.nat * Prims.nat
+type 'a seq = 'a array
 
-  let create = (fun n init -> Seq (Const (init), 0, n))
-  let length (Seq(x,s,e)) = e - s
+let length = Array.length
+let create = Array.make
+let index = Array.get
+let upd a i v = 
+  Array.set a i v;
+  a  
+let append = Array.append
+let op_At_Bar = append
 
-  let rec __index__ c i = match (c) with
-  | Const (v) -> v
-  | Upd (j, v, tl) -> if i = j then v else (__index__ tl i)
-  | Append (Seq(a1,s1,e1), Seq(a2,s2,e2)) ->
-      let l1 = e1 - s1 in
-      if i < l1 then __index__ a1 i else __index__ a2 (i-l1)
+let slice a i j = Array.sub a i (j-i)
+let print s =
+  Array.iter (fun x -> print_string (string_of_int x); print_string " ") s;
+  print_string "\n"
+let copy = Array.copy
 
-  let index x i = match x with
-    | Seq (c, j, k) -> __index__ c (i + j)
+let blit = Array.blit
 
-  let rec __update__ c i v = match c with
-    | (Const (_)) | (Upd (_, _, _)) -> Upd (i, v, c)
-    | Append (s1, s2) ->
-        match (s1, s2) with
-        | Seq(a1,b1,e1), Seq(a2,b2,e2) ->
-          if (i < e1 - b1) then
-            Append (Seq ((__update__ a1 i v), b1, e1), s2)
-          else
-            Append (s1, Seq ((__update__ a2 (i - (length s1)) v), b2, e2))
+let lemma_create_len = (fun n i -> ())
 
-  let update x i v = match x with
-    | Seq (c, j, k) -> Seq ((__update__ c (i + j) v), j, k)
+let lemma_len_upd = (fun n v s -> ())
 
-  let slice x i j = match x with
-    | Seq (c, start_i, end_i) -> Seq (c, (start_i + i), (start_i + j))
+let lemma_len_append = (fun s1 s2 -> ())
 
-  let split = (fun s i -> ((slice s 0 i), (slice s i (length s))))
-  let append = (fun s1 s2 -> Seq (Append (s1, s2), 0, ((length s1) + (length s2))))
+let lemma_len_slice = (fun s i j -> ())
+
+let lemma_index_create = (fun n v i -> ())
+
+let lemma_index_upd1 = (fun n v s -> ())
+
+let lemma_index_upd2 = (fun n v s i -> ())
+
+let lemma_index_app1 = (fun s1 s2 i -> ())
+
+let lemma_index_app2 = (fun s2 s2 i -> ())
+
+let lemma_index_slice = (fun s i j k -> ())
+
+let lemma_eq_intro = (fun s1 s2 -> ())
+
+let lemma_eq_refl = (fun s1 s2 -> ())
+
+let lemma_eq_elim = (fun s1 s2 -> ())
 end
 
 module Set = struct
