@@ -49,11 +49,13 @@ let err_unexpected_eff e f0 f1 =
     fail e.pos (Util.format3 "for expression %s, Expected effect %s; got effect %s" (Print.exp_to_string e) (eff_to_string f0) (eff_to_string f1))
     
 let is_constructor e = match (Util.compress_exp e).n with 
-    | Exp_fvar(_, Some Data_ctor) -> true
+    | Exp_fvar(_, Some Data_ctor)
+    | Exp_fvar(_, Some (Record_ctor _)) -> true
     | _ -> false
 
 (* something is a value iff it qualifies for the OCaml's "value restriction", which determines when a definition can be generalized *)
 let rec is_value_or_type_app (e:exp) = match (Util.compress_exp e).n with 
+    | Exp_constant _ 
     | Exp_bvar _
     | Exp_fvar _ 
     | Exp_abs _  -> true
@@ -67,6 +69,8 @@ let rec is_value_or_type_app (e:exp) = match (Util.compress_exp e).n with
                  | Exp_bvar _
                  | Exp_fvar _ -> args |> List.for_all (function (Inl te, _) -> true | _ -> false)
                  | _ -> false)
+    | Exp_meta(Meta_desugared(e, _)) 
+    | Exp_ascribed(e, _, _) -> is_value_or_type_app e
     | _ -> false
 
 let rec is_ml_value e = match e with 
@@ -262,9 +266,11 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
             match restArgs, t with 
                 | [], _ -> 
                     //1. If partially applied and head is a datacon, it needs to be eta-expanded
-                    //2. If any of the arguments are impure, then evaluation order must be enforced to be L-to-R (by hoisting)
+                    //2. If any of the arguments are impure, and the head is not a primitive short-circuiting op, then evaluation order must be enforced to be L-to-R (by hoisting)
                     let lbs, mlargs = 
-                        List.fold_left (fun (lbs, out_args) (arg, f) -> 
+                        if Util.is_primop head
+                        then [], List.rev mlargs_f |> List.map fst
+                        else List.fold_left (fun (lbs, out_args) (arg, f) -> 
                                 if f=E_PURE 
                                 then (lbs, arg::out_args)
                                 else let x = Util.gensym (), -1 in
@@ -373,9 +379,9 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                              let add_unit = match rest_args with 
                                 | [] -> not (is_value_or_type_app body) //if it's a pure type app, then it will be extracted to a value in ML; so don't add a unit
                                 | _ -> false in 
-                             let rest_args = if add_unit then unit_binder::rest_args else rest_args in
+                             let rest_args = if add_unit then (unit_binder::rest_args) else rest_args in
                              let body = match rest_args with [] -> body | _ -> mk_Exp_abs(rest_args, body) None e.pos in
-                             (lbname, f_e, (t, (targs, polytype)), false (*add_unit*), body)
+                             (lbname, f_e, (t, (targs, polytype)), add_unit, body)
 
                         else (* fails to handle:
                                 let f : a:Type -> b:Type -> a -> b -> Tot (nat * a * b) = 

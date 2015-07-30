@@ -108,7 +108,7 @@ let rec reconstruct_lex (e:exp) =
   | _ -> if is_lex_top e then Some [] else None
 
 (* CH: F# List.find has a different type from find in list.fst ... so just a hack for now *)
-let rec find f l = match l with 
+let rec find  (f:'a -> bool) (l:list<'a>) : 'a = match l with 
   | [] -> failwith "blah"
   | hd::tl -> if f hd then hd else find f tl
 

@@ -196,7 +196,7 @@ ocaml: $(BOOT_ALL)
 
 	# wget https://raw.githubusercontent.com/FStarLang/FStar/3871a0209a67996ca381d054c171b5dac6178eb6/lib/prims.fst -O ../lib/prims.fst # remove this when prims is fixed
 ocaml-experimental: $(BOOT_ALL)
-	../bin/fstar.exe --eager_inference --MLish --lax --fs_typ_app --trace_error --odir ocaml-output $(FSTAROPTS) --codegen OCaml-experimental $(ADMITS) $^
+	../bin/fstar.exe --eager_inference --MLish --lax --fs_typ_app --odir ocaml-output $(FSTAROPTS) --codegen OCaml-experimental $(ADMITS) $^
 
 fstarml:
 	@echo "Building parser and lexer filex..."

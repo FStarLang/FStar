@@ -526,7 +526,7 @@ let mk_Exp_abs ((b:binders),(e:exp)) (t':option<typ>) p = {
 }
 let mk_Exp_abs' ((b:binders),(e:exp)) (t':option<typ>) p = {
     n=(match b, e.n with 
-        | _, Exp_abs(binders, body) -> Exp_abs(b@binders, body) 
+        | _, Exp_abs(b0::bs, body) -> Exp_abs(b@b0::bs, body) 
         | [], _ -> failwith "abstraction with no binders!"
         | _ -> Exp_abs(b, e));
     tk=get_typ_ref t';

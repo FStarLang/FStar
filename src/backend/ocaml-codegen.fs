@@ -70,11 +70,10 @@ let outmod = [
     ["Microsoft"; "FStar"; "Parser"; "Util"];
 ]
 
-
-let rec in_ns = function
-| [], _ -> true
-| x1::t1, x2::t2 when (x1 = x2) -> in_ns (t1, t2)
-| _, _ -> false
+let rec in_ns (x: (list<'a> * list<'a>)) : bool = match x with 
+    | [], _ -> true
+    | x1::t1, x2::t2 when (x1 = x2) -> in_ns (t1, t2)
+    | _, _ -> false
 
 (* -------------------------------------------------------------------- *)
 let path_of_ns (currentModule : mlsymbol) ns =

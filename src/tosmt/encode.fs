@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
+#light "off" 
  
 module Microsoft.FStar.ToSMT.Encode
 

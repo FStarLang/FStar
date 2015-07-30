@@ -29,23 +29,23 @@ end))
 
 let brackets = (fun ( _52_11 ) -> (match (_52_11) with
 | Doc (d) -> begin
-(let _52_20184 = (text "[")
-in (let _52_20183 = (text "]")
-in (enclose _52_20184 _52_20183 (Doc (d)))))
+(let _65_23402 = (text "[")
+in (let _65_23401 = (text "]")
+in (enclose _65_23402 _65_23401 (Doc (d)))))
 end))
 
 let cbrackets = (fun ( _52_13 ) -> (match (_52_13) with
 | Doc (d) -> begin
-(let _52_20188 = (text "{")
-in (let _52_20187 = (text "}")
-in (enclose _52_20188 _52_20187 (Doc (d)))))
+(let _65_23406 = (text "{")
+in (let _65_23405 = (text "}")
+in (enclose _65_23406 _65_23405 (Doc (d)))))
 end))
 
 let parens = (fun ( _52_15 ) -> (match (_52_15) with
 | Doc (d) -> begin
-(let _52_20192 = (text "(")
-in (let _52_20191 = (text ")")
-in (enclose _52_20192 _52_20191 (Doc (d)))))
+(let _65_23410 = (text "(")
+in (let _65_23409 = (text ")")
+in (enclose _65_23410 _65_23409 (Doc (d)))))
 end))
 
 let cat = (fun ( _52_17 ) ( _52_19 ) -> (match ((_52_17, _52_19)) with
@@ -60,8 +60,8 @@ let group = (fun ( _52_22 ) -> (match (_52_22) with
 Doc (d)
 end))
 
-let groups = (fun ( docs ) -> (let _52_20203 = (reduce docs)
-in (group _52_20203)))
+let groups = (fun ( docs ) -> (let _65_23421 = (reduce docs)
+in (group _65_23421)))
 
 let combine = (fun ( _52_25 ) ( docs ) -> (match (_52_25) with
 | Doc (sep) -> begin

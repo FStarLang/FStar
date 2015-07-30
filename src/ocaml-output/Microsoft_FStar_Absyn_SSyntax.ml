@@ -35,8 +35,8 @@ in (match ((n = 'n')) with
 None
 end
 | false -> begin
-(let _52_7063 = (f reader)
-in Some (_52_7063))
+(let _65_10486 = (f reader)
+in Some (_65_10486))
 end)))
 
 let serialize_list = (fun ( writer ) ( f ) ( l ) -> (let _25_21 = (writer.Support.Microsoft.FStar.Util.write_int (Support.List.length l))
@@ -48,26 +48,26 @@ in (let rec helper = (fun ( accum ) ( n ) -> (match ((n = 0)) with
 accum
 end
 | false -> begin
-(let _52_7084 = (let _52_7083 = (f reader)
-in (_52_7083)::accum)
-in (helper _52_7084 (n - 1)))
+(let _65_10507 = (let _65_10506 = (f reader)
+in (_65_10506)::accum)
+in (helper _65_10507 (n - 1)))
 end))
 in (helper [] n))))
 
 let serialize_ident = (fun ( writer ) ( ast ) -> (writer.Support.Microsoft.FStar.Util.write_string ast.Microsoft_FStar_Absyn_Syntax.idText))
 
-let deserialize_ident = (fun ( reader ) -> (let _52_7092 = (let _52_7091 = (reader.Support.Microsoft.FStar.Util.read_string ())
-in (_52_7091, Microsoft_FStar_Absyn_Syntax.dummyRange))
-in (Microsoft_FStar_Absyn_Syntax.mk_ident _52_7092)))
+let deserialize_ident = (fun ( reader ) -> (let _65_10515 = (let _65_10514 = (reader.Support.Microsoft.FStar.Util.read_string ())
+in (_65_10514, Microsoft_FStar_Absyn_Syntax.dummyRange))
+in (Microsoft_FStar_Absyn_Syntax.mk_ident _65_10515)))
 
 let serialize_LongIdent = (fun ( writer ) ( ast ) -> (let _25_36 = (serialize_list writer serialize_ident ast.Microsoft_FStar_Absyn_Syntax.ns)
 in (serialize_ident writer ast.Microsoft_FStar_Absyn_Syntax.ident)))
 
-let deserialize_LongIdent = (fun ( reader ) -> (let _52_7102 = (let _52_7101 = (deserialize_list reader deserialize_ident)
-in (let _52_7100 = (let _52_7099 = (deserialize_ident reader)
-in (_52_7099)::[])
-in (Support.List.append _52_7101 _52_7100)))
-in (Microsoft_FStar_Absyn_Syntax.lid_of_ids _52_7102)))
+let deserialize_LongIdent = (fun ( reader ) -> (let _65_10525 = (let _65_10524 = (deserialize_list reader deserialize_ident)
+in (let _65_10523 = (let _65_10522 = (deserialize_ident reader)
+in (_65_10522)::[])
+in (Support.List.append _65_10524 _65_10523)))
+in (Microsoft_FStar_Absyn_Syntax.lid_of_ids _65_10525)))
 
 let serialize_lident = serialize_LongIdent
 
@@ -76,9 +76,9 @@ let deserialize_lident = deserialize_LongIdent
 let serialize_withinfo_t = (fun ( writer ) ( s_v ) ( s_sort ) ( ast ) -> (let _25_45 = (s_v writer ast.Microsoft_FStar_Absyn_Syntax.v)
 in (s_sort writer ast.Microsoft_FStar_Absyn_Syntax.sort)))
 
-let deserialize_withinfo_t = (fun ( reader ) ( ds_v ) ( ds_sort ) -> (let _52_7132 = (ds_v reader)
-in (let _52_7131 = (ds_sort reader)
-in {Microsoft_FStar_Absyn_Syntax.v = _52_7132; Microsoft_FStar_Absyn_Syntax.sort = _52_7131; Microsoft_FStar_Absyn_Syntax.p = Microsoft_FStar_Absyn_Syntax.dummyRange})))
+let deserialize_withinfo_t = (fun ( reader ) ( ds_v ) ( ds_sort ) -> (let _65_10555 = (ds_v reader)
+in (let _65_10554 = (ds_sort reader)
+in {Microsoft_FStar_Absyn_Syntax.v = _65_10555; Microsoft_FStar_Absyn_Syntax.sort = _65_10554; Microsoft_FStar_Absyn_Syntax.p = Microsoft_FStar_Absyn_Syntax.dummyRange})))
 
 let serialize_var = (fun ( writer ) ( s_sort ) ( ast ) -> (serialize_withinfo_t writer serialize_lident s_sort ast))
 
@@ -87,9 +87,9 @@ let deserialize_var = (fun ( reader ) ( ds_sort ) -> (deserialize_withinfo_t rea
 let serialize_bvdef = (fun ( writer ) ( ast ) -> (let _25_62 = (serialize_ident writer ast.Microsoft_FStar_Absyn_Syntax.ppname)
 in (serialize_ident writer ast.Microsoft_FStar_Absyn_Syntax.realname)))
 
-let deserialize_bvdef = (fun ( ghost ) ( reader ) -> (let _52_7152 = (deserialize_ident reader)
-in (let _52_7151 = (deserialize_ident reader)
-in {Microsoft_FStar_Absyn_Syntax.ppname = _52_7152; Microsoft_FStar_Absyn_Syntax.realname = _52_7151})))
+let deserialize_bvdef = (fun ( ghost ) ( reader ) -> (let _65_10575 = (deserialize_ident reader)
+in (let _65_10574 = (deserialize_ident reader)
+in {Microsoft_FStar_Absyn_Syntax.ppname = _65_10575; Microsoft_FStar_Absyn_Syntax.realname = _65_10574})))
 
 let serialize_bvar = (fun ( writer ) ( s_sort ) ( ast ) -> (serialize_withinfo_t writer serialize_bvdef s_sort ast))
 
@@ -141,42 +141,42 @@ let deserialize_sconst = (fun ( reader ) -> (match ((reader.Support.Microsoft.FS
 Microsoft_FStar_Absyn_Syntax.Const_unit
 end
 | 'b' -> begin
-(let _52_7174 = (reader.Support.Microsoft.FStar.Util.read_byte ())
-in Microsoft_FStar_Absyn_Syntax.Const_uint8 (_52_7174))
+(let _65_10597 = (reader.Support.Microsoft.FStar.Util.read_byte ())
+in Microsoft_FStar_Absyn_Syntax.Const_uint8 (_65_10597))
 end
 | 'c' -> begin
-(let _52_7175 = (reader.Support.Microsoft.FStar.Util.read_bool ())
-in Microsoft_FStar_Absyn_Syntax.Const_bool (_52_7175))
+(let _65_10598 = (reader.Support.Microsoft.FStar.Util.read_bool ())
+in Microsoft_FStar_Absyn_Syntax.Const_bool (_65_10598))
 end
 | 'd' -> begin
-(let _52_7176 = (reader.Support.Microsoft.FStar.Util.read_int32 ())
-in Microsoft_FStar_Absyn_Syntax.Const_int32 (_52_7176))
+(let _65_10599 = (reader.Support.Microsoft.FStar.Util.read_int32 ())
+in Microsoft_FStar_Absyn_Syntax.Const_int32 (_65_10599))
 end
 | 'e' -> begin
-(let _52_7177 = (reader.Support.Microsoft.FStar.Util.read_int64 ())
-in Microsoft_FStar_Absyn_Syntax.Const_int64 (_52_7177))
+(let _65_10600 = (reader.Support.Microsoft.FStar.Util.read_int64 ())
+in Microsoft_FStar_Absyn_Syntax.Const_int64 (_65_10600))
 end
 | 'f' -> begin
-(let _52_7178 = (reader.Support.Microsoft.FStar.Util.read_char ())
-in Microsoft_FStar_Absyn_Syntax.Const_char (_52_7178))
+(let _65_10601 = (reader.Support.Microsoft.FStar.Util.read_char ())
+in Microsoft_FStar_Absyn_Syntax.Const_char (_65_10601))
 end
 | 'g' -> begin
-(let _52_7179 = (reader.Support.Microsoft.FStar.Util.read_double ())
-in Microsoft_FStar_Absyn_Syntax.Const_float (_52_7179))
+(let _65_10602 = (reader.Support.Microsoft.FStar.Util.read_double ())
+in Microsoft_FStar_Absyn_Syntax.Const_float (_65_10602))
 end
 | 'h' -> begin
-(let _52_7181 = (let _52_7180 = (reader.Support.Microsoft.FStar.Util.read_bytearray ())
-in (_52_7180, Microsoft_FStar_Absyn_Syntax.dummyRange))
-in Microsoft_FStar_Absyn_Syntax.Const_bytearray (_52_7181))
+(let _65_10604 = (let _65_10603 = (reader.Support.Microsoft.FStar.Util.read_bytearray ())
+in (_65_10603, Microsoft_FStar_Absyn_Syntax.dummyRange))
+in Microsoft_FStar_Absyn_Syntax.Const_bytearray (_65_10604))
 end
 | 'i' -> begin
-(let _52_7183 = (let _52_7182 = (reader.Support.Microsoft.FStar.Util.read_bytearray ())
-in (_52_7182, Microsoft_FStar_Absyn_Syntax.dummyRange))
-in Microsoft_FStar_Absyn_Syntax.Const_string (_52_7183))
+(let _65_10606 = (let _65_10605 = (reader.Support.Microsoft.FStar.Util.read_bytearray ())
+in (_65_10605, Microsoft_FStar_Absyn_Syntax.dummyRange))
+in Microsoft_FStar_Absyn_Syntax.Const_string (_65_10606))
 end
 | 'j' -> begin
-(let _52_7184 = (reader.Support.Microsoft.FStar.Util.read_string ())
-in Microsoft_FStar_Absyn_Syntax.Const_int (_52_7184))
+(let _65_10607 = (reader.Support.Microsoft.FStar.Util.read_string ())
+in Microsoft_FStar_Absyn_Syntax.Const_int (_65_10607))
 end
 | _ -> begin
 (parse_error ())
@@ -194,12 +194,12 @@ end))
 
 let deserialize_either = (fun ( reader ) ( ds_l ) ( ds_r ) -> (match ((reader.Support.Microsoft.FStar.Util.read_char ())) with
 | 'a' -> begin
-(let _52_7210 = (ds_l reader)
-in Support.Microsoft.FStar.Util.Inl (_52_7210))
+(let _65_10633 = (ds_l reader)
+in Support.Microsoft.FStar.Util.Inl (_65_10633))
 end
 | 'b' -> begin
-(let _52_7211 = (ds_r reader)
-in Support.Microsoft.FStar.Util.Inr (_52_7211))
+(let _65_10634 = (ds_r reader)
+in Support.Microsoft.FStar.Util.Inr (_65_10634))
 end
 | _ -> begin
 (parse_error ())
@@ -207,11 +207,11 @@ end))
 
 let serialize_syntax = (fun ( writer ) ( s_a ) ( ast ) -> (s_a writer ast.Microsoft_FStar_Absyn_Syntax.n))
 
-let deserialize_syntax = (fun ( reader ) ( ds_a ) ( ds_b ) -> (let _52_7230 = (ds_a reader)
-in (let _52_7229 = (Support.Microsoft.FStar.Util.mk_ref None)
-in (let _52_7228 = (Support.Microsoft.FStar.Util.mk_ref None)
-in (let _52_7227 = (Support.Microsoft.FStar.Util.mk_ref None)
-in {Microsoft_FStar_Absyn_Syntax.n = _52_7230; Microsoft_FStar_Absyn_Syntax.tk = _52_7229; Microsoft_FStar_Absyn_Syntax.pos = Microsoft_FStar_Absyn_Syntax.dummyRange; Microsoft_FStar_Absyn_Syntax.fvs = _52_7228; Microsoft_FStar_Absyn_Syntax.uvs = _52_7227})))))
+let deserialize_syntax = (fun ( reader ) ( ds_a ) ( ds_b ) -> (let _65_10653 = (ds_a reader)
+in (let _65_10652 = (Support.Microsoft.FStar.Util.mk_ref None)
+in (let _65_10651 = (Support.Microsoft.FStar.Util.mk_ref None)
+in (let _65_10650 = (Support.Microsoft.FStar.Util.mk_ref None)
+in {Microsoft_FStar_Absyn_Syntax.n = _65_10653; Microsoft_FStar_Absyn_Syntax.tk = _65_10652; Microsoft_FStar_Absyn_Syntax.pos = Microsoft_FStar_Absyn_Syntax.dummyRange; Microsoft_FStar_Absyn_Syntax.fvs = _65_10651; Microsoft_FStar_Absyn_Syntax.uvs = _65_10650})))))
 
 let rec serialize_typ' = (fun ( writer ) ( ast ) -> (match (ast) with
 | Microsoft_FStar_Absyn_Syntax.Typ_btvar (v) -> begin
@@ -236,8 +236,7 @@ end
 (let _25_198 = (writer.Support.Microsoft.FStar.Util.write_char 'e')
 in (let _25_200 = (serialize_typ writer t)
 in (let _25_202 = (serialize_args writer ars)
-in (match ((let _52_7291 = (Support.ST.read Microsoft_FStar_Options.debug)
-in (_52_7291 <> []))) with
+in (match (((Support.ST.read Microsoft_FStar_Options.debug) <> [])) with
 | true -> begin
 (match (t.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Typ_lam ((_, _)) -> begin
@@ -295,15 +294,15 @@ end
 (raise (Err ("unimplemented meta_t")))
 end))
 and serialize_arg = (fun ( writer ) ( ast ) -> (let _25_280 = (serialize_either writer serialize_typ serialize_exp (Support.Prims.fst ast))
-in (let _52_7296 = (Support.Prims.pipe_left Microsoft_FStar_Absyn_Syntax.is_implicit (Support.Prims.snd ast))
-in (writer.Support.Microsoft.FStar.Util.write_bool _52_7296))))
+in (let _65_10718 = (Support.Prims.pipe_left Microsoft_FStar_Absyn_Syntax.is_implicit (Support.Prims.snd ast))
+in (writer.Support.Microsoft.FStar.Util.write_bool _65_10718))))
 and serialize_args = (fun ( writer ) ( ast ) -> (serialize_list writer serialize_arg ast))
 and serialize_binder = (fun ( writer ) ( ast ) -> (let _25_286 = (serialize_either writer serialize_btvar serialize_bvvar (Support.Prims.fst ast))
-in (let _52_7301 = (Support.Prims.pipe_left Microsoft_FStar_Absyn_Syntax.is_implicit (Support.Prims.snd ast))
-in (writer.Support.Microsoft.FStar.Util.write_bool _52_7301))))
+in (let _65_10723 = (Support.Prims.pipe_left Microsoft_FStar_Absyn_Syntax.is_implicit (Support.Prims.snd ast))
+in (writer.Support.Microsoft.FStar.Util.write_bool _65_10723))))
 and serialize_binders = (fun ( writer ) ( ast ) -> (serialize_list writer serialize_binder ast))
-and serialize_typ = (fun ( writer ) ( ast ) -> (let _52_7306 = (Microsoft_FStar_Absyn_Util.compress_typ ast)
-in (serialize_syntax writer serialize_typ' _52_7306)))
+and serialize_typ = (fun ( writer ) ( ast ) -> (let _65_10728 = (Microsoft_FStar_Absyn_Util.compress_typ ast)
+in (serialize_syntax writer serialize_typ' _65_10728)))
 and serialize_comp_typ = (fun ( writer ) ( ast ) -> (let _25_294 = (serialize_lident writer ast.Microsoft_FStar_Absyn_Syntax.effect_name)
 in (let _25_296 = (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.result_typ)
 in (let _25_298 = (serialize_args writer ast.Microsoft_FStar_Absyn_Syntax.effect_args)
@@ -421,8 +420,8 @@ end
 | Microsoft_FStar_Absyn_Syntax.MaskedEffect -> begin
 (writer.Support.Microsoft.FStar.Util.write_char 'd')
 end))
-and serialize_exp = (fun ( writer ) ( ast ) -> (let _52_7331 = (Microsoft_FStar_Absyn_Util.compress_exp ast)
-in (serialize_syntax writer serialize_exp' _52_7331)))
+and serialize_exp = (fun ( writer ) ( ast ) -> (let _65_10753 = (Microsoft_FStar_Absyn_Util.compress_exp ast)
+in (serialize_syntax writer serialize_exp' _65_10753)))
 and serialize_btvdef = (fun ( writer ) ( ast ) -> (serialize_bvdef writer ast))
 and serialize_bvvdef = (fun ( writer ) ( ast ) -> (serialize_bvdef writer ast))
 and serialize_pat' = (fun ( writer ) ( ast ) -> (match (ast) with
@@ -498,8 +497,8 @@ end
 | Microsoft_FStar_Absyn_Syntax.Kind_delayed ((_, _, _)) -> begin
 (raise (Err ("knd\' serialization unimplemented:2")))
 end))
-and serialize_knd = (fun ( writer ) ( ast ) -> (let _52_7346 = (Microsoft_FStar_Absyn_Util.compress_kind ast)
-in (serialize_syntax writer serialize_knd' _52_7346)))
+and serialize_knd = (fun ( writer ) ( ast ) -> (let _65_10768 = (Microsoft_FStar_Absyn_Util.compress_kind ast)
+in (serialize_syntax writer serialize_knd' _65_10768)))
 and serialize_kabbrev = (fun ( writer ) ( ast ) -> (let _25_536 = (serialize_lident writer (Support.Prims.fst ast))
 in (serialize_args writer (Support.Prims.snd ast))))
 and serialize_lbname = (fun ( writer ) ( ast ) -> (serialize_either writer serialize_bvvdef serialize_lident ast))
@@ -517,46 +516,46 @@ and serialize_fvvar = (fun ( writer ) ( ast ) -> (serialize_var writer serialize
 
 let rec deserialize_typ' = (fun ( reader ) -> (match ((reader.Support.Microsoft.FStar.Util.read_char ())) with
 | 'a' -> begin
-(let _52_7397 = (deserialize_btvar reader)
-in Microsoft_FStar_Absyn_Syntax.Typ_btvar (_52_7397))
+(let _65_10819 = (deserialize_btvar reader)
+in Microsoft_FStar_Absyn_Syntax.Typ_btvar (_65_10819))
 end
 | 'b' -> begin
-(let _52_7398 = (deserialize_ftvar reader)
-in Microsoft_FStar_Absyn_Syntax.Typ_const (_52_7398))
+(let _65_10820 = (deserialize_ftvar reader)
+in Microsoft_FStar_Absyn_Syntax.Typ_const (_65_10820))
 end
 | 'c' -> begin
-(let _52_7401 = (let _52_7400 = (deserialize_binders reader)
-in (let _52_7399 = (deserialize_comp reader)
-in (_52_7400, _52_7399)))
-in Microsoft_FStar_Absyn_Syntax.Typ_fun (_52_7401))
+(let _65_10823 = (let _65_10822 = (deserialize_binders reader)
+in (let _65_10821 = (deserialize_comp reader)
+in (_65_10822, _65_10821)))
+in Microsoft_FStar_Absyn_Syntax.Typ_fun (_65_10823))
 end
 | 'd' -> begin
-(let _52_7404 = (let _52_7403 = (deserialize_bvvar reader)
-in (let _52_7402 = (deserialize_typ reader)
-in (_52_7403, _52_7402)))
-in Microsoft_FStar_Absyn_Syntax.Typ_refine (_52_7404))
+(let _65_10826 = (let _65_10825 = (deserialize_bvvar reader)
+in (let _65_10824 = (deserialize_typ reader)
+in (_65_10825, _65_10824)))
+in Microsoft_FStar_Absyn_Syntax.Typ_refine (_65_10826))
 end
 | 'e' -> begin
-(let _52_7407 = (let _52_7406 = (deserialize_typ reader)
-in (let _52_7405 = (deserialize_args reader)
-in (_52_7406, _52_7405)))
-in Microsoft_FStar_Absyn_Syntax.Typ_app (_52_7407))
+(let _65_10829 = (let _65_10828 = (deserialize_typ reader)
+in (let _65_10827 = (deserialize_args reader)
+in (_65_10828, _65_10827)))
+in Microsoft_FStar_Absyn_Syntax.Typ_app (_65_10829))
 end
 | 'f' -> begin
-(let _52_7410 = (let _52_7409 = (deserialize_binders reader)
-in (let _52_7408 = (deserialize_typ reader)
-in (_52_7409, _52_7408)))
-in Microsoft_FStar_Absyn_Syntax.Typ_lam (_52_7410))
+(let _65_10832 = (let _65_10831 = (deserialize_binders reader)
+in (let _65_10830 = (deserialize_typ reader)
+in (_65_10831, _65_10830)))
+in Microsoft_FStar_Absyn_Syntax.Typ_lam (_65_10832))
 end
 | 'g' -> begin
-(let _52_7413 = (let _52_7412 = (deserialize_typ reader)
-in (let _52_7411 = (deserialize_knd reader)
-in (_52_7412, _52_7411)))
-in Microsoft_FStar_Absyn_Syntax.Typ_ascribed (_52_7413))
+(let _65_10835 = (let _65_10834 = (deserialize_typ reader)
+in (let _65_10833 = (deserialize_knd reader)
+in (_65_10834, _65_10833)))
+in Microsoft_FStar_Absyn_Syntax.Typ_ascribed (_65_10835))
 end
 | 'h' -> begin
-(let _52_7414 = (deserialize_meta_t reader)
-in Microsoft_FStar_Absyn_Syntax.Typ_meta (_52_7414))
+(let _65_10836 = (deserialize_meta_t reader)
+in Microsoft_FStar_Absyn_Syntax.Typ_meta (_65_10836))
 end
 | 'i' -> begin
 Microsoft_FStar_Absyn_Syntax.Typ_unknown
@@ -566,51 +565,51 @@ end
 end))
 and deserialize_meta_t = (fun ( reader ) -> (match ((reader.Support.Microsoft.FStar.Util.read_char ())) with
 | 'a' -> begin
-(let _52_7418 = (let _52_7417 = (deserialize_typ reader)
-in (let _52_7416 = (deserialize_list reader deserialize_arg)
-in (_52_7417, _52_7416)))
-in Microsoft_FStar_Absyn_Syntax.Meta_pattern (_52_7418))
+(let _65_10840 = (let _65_10839 = (deserialize_typ reader)
+in (let _65_10838 = (deserialize_list reader deserialize_arg)
+in (_65_10839, _65_10838)))
+in Microsoft_FStar_Absyn_Syntax.Meta_pattern (_65_10840))
 end
 | 'b' -> begin
-(let _52_7421 = (let _52_7420 = (deserialize_typ reader)
-in (let _52_7419 = (deserialize_lident reader)
-in (_52_7420, _52_7419)))
-in Microsoft_FStar_Absyn_Syntax.Meta_named (_52_7421))
+(let _65_10843 = (let _65_10842 = (deserialize_typ reader)
+in (let _65_10841 = (deserialize_lident reader)
+in (_65_10842, _65_10841)))
+in Microsoft_FStar_Absyn_Syntax.Meta_named (_65_10843))
 end
 | 'c' -> begin
-(let _52_7425 = (let _52_7424 = (deserialize_typ reader)
-in (let _52_7423 = (reader.Support.Microsoft.FStar.Util.read_string ())
-in (let _52_7422 = (reader.Support.Microsoft.FStar.Util.read_bool ())
-in (_52_7424, _52_7423, Microsoft_FStar_Absyn_Syntax.dummyRange, _52_7422))))
-in Microsoft_FStar_Absyn_Syntax.Meta_labeled (_52_7425))
+(let _65_10847 = (let _65_10846 = (deserialize_typ reader)
+in (let _65_10845 = (reader.Support.Microsoft.FStar.Util.read_string ())
+in (let _65_10844 = (reader.Support.Microsoft.FStar.Util.read_bool ())
+in (_65_10846, _65_10845, Microsoft_FStar_Absyn_Syntax.dummyRange, _65_10844))))
+in Microsoft_FStar_Absyn_Syntax.Meta_labeled (_65_10847))
 end
 | _ -> begin
 (parse_error ())
 end))
-and deserialize_arg = (fun ( reader ) -> (let _52_7429 = (deserialize_either reader deserialize_typ deserialize_exp)
-in (let _52_7428 = (let _52_7427 = (reader.Support.Microsoft.FStar.Util.read_bool ())
-in (Support.Prims.pipe_left Microsoft_FStar_Absyn_Syntax.as_implicit _52_7427))
-in (_52_7429, _52_7428))))
+and deserialize_arg = (fun ( reader ) -> (let _65_10851 = (deserialize_either reader deserialize_typ deserialize_exp)
+in (let _65_10850 = (let _65_10849 = (reader.Support.Microsoft.FStar.Util.read_bool ())
+in (Support.Prims.pipe_left Microsoft_FStar_Absyn_Syntax.as_implicit _65_10849))
+in (_65_10851, _65_10850))))
 and deserialize_args = (fun ( reader ) -> (deserialize_list reader deserialize_arg))
-and deserialize_binder = (fun ( reader ) -> (let _52_7434 = (deserialize_either reader deserialize_btvar deserialize_bvvar)
-in (let _52_7433 = (let _52_7432 = (reader.Support.Microsoft.FStar.Util.read_bool ())
-in (Support.Prims.pipe_left Microsoft_FStar_Absyn_Syntax.as_implicit _52_7432))
-in (_52_7434, _52_7433))))
+and deserialize_binder = (fun ( reader ) -> (let _65_10856 = (deserialize_either reader deserialize_btvar deserialize_bvvar)
+in (let _65_10855 = (let _65_10854 = (reader.Support.Microsoft.FStar.Util.read_bool ())
+in (Support.Prims.pipe_left Microsoft_FStar_Absyn_Syntax.as_implicit _65_10854))
+in (_65_10856, _65_10855))))
 and deserialize_binders = (fun ( reader ) -> (deserialize_list reader deserialize_binder))
 and deserialize_typ = (fun ( reader ) -> (deserialize_syntax reader deserialize_typ' Microsoft_FStar_Absyn_Syntax.mk_Kind_unknown))
-and deserialize_comp_typ = (fun ( reader ) -> (let _52_7441 = (deserialize_lident reader)
-in (let _52_7440 = (deserialize_typ reader)
-in (let _52_7439 = (deserialize_args reader)
-in (let _52_7438 = (deserialize_list reader deserialize_cflags)
-in {Microsoft_FStar_Absyn_Syntax.effect_name = _52_7441; Microsoft_FStar_Absyn_Syntax.result_typ = _52_7440; Microsoft_FStar_Absyn_Syntax.effect_args = _52_7439; Microsoft_FStar_Absyn_Syntax.flags = _52_7438})))))
+and deserialize_comp_typ = (fun ( reader ) -> (let _65_10863 = (deserialize_lident reader)
+in (let _65_10862 = (deserialize_typ reader)
+in (let _65_10861 = (deserialize_args reader)
+in (let _65_10860 = (deserialize_list reader deserialize_cflags)
+in {Microsoft_FStar_Absyn_Syntax.effect_name = _65_10863; Microsoft_FStar_Absyn_Syntax.result_typ = _65_10862; Microsoft_FStar_Absyn_Syntax.effect_args = _65_10861; Microsoft_FStar_Absyn_Syntax.flags = _65_10860})))))
 and deserialize_comp' = (fun ( reader ) -> (match ((reader.Support.Microsoft.FStar.Util.read_char ())) with
 | 'a' -> begin
-(let _52_7443 = (deserialize_typ reader)
-in Microsoft_FStar_Absyn_Syntax.Total (_52_7443))
+(let _65_10865 = (deserialize_typ reader)
+in Microsoft_FStar_Absyn_Syntax.Total (_65_10865))
 end
 | 'b' -> begin
-(let _52_7444 = (deserialize_comp_typ reader)
-in Microsoft_FStar_Absyn_Syntax.Comp (_52_7444))
+(let _65_10866 = (deserialize_comp_typ reader)
+in Microsoft_FStar_Absyn_Syntax.Comp (_65_10866))
 end
 | _ -> begin
 (parse_error ())
@@ -636,45 +635,45 @@ end
 Microsoft_FStar_Absyn_Syntax.LEMMA
 end
 | 'g' -> begin
-(let _52_7447 = (deserialize_exp reader)
-in Microsoft_FStar_Absyn_Syntax.DECREASES (_52_7447))
+(let _65_10869 = (deserialize_exp reader)
+in Microsoft_FStar_Absyn_Syntax.DECREASES (_65_10869))
 end
 | _ -> begin
 (parse_error ())
 end))
 and deserialize_exp' = (fun ( reader ) -> (match ((reader.Support.Microsoft.FStar.Util.read_char ())) with
 | 'a' -> begin
-(let _52_7449 = (deserialize_bvvar reader)
-in Microsoft_FStar_Absyn_Syntax.Exp_bvar (_52_7449))
+(let _65_10871 = (deserialize_bvvar reader)
+in Microsoft_FStar_Absyn_Syntax.Exp_bvar (_65_10871))
 end
 | 'b' -> begin
-(let _52_7452 = (let _52_7451 = (deserialize_fvvar reader)
-in (_52_7451, (let _25_606 = (let _52_7450 = (reader.Support.Microsoft.FStar.Util.read_bool ())
-in (Support.Prims.pipe_left Support.Prims.ignore _52_7450))
+(let _65_10874 = (let _65_10873 = (deserialize_fvvar reader)
+in (_65_10873, (let _25_606 = (let _65_10872 = (reader.Support.Microsoft.FStar.Util.read_bool ())
+in (Support.Prims.pipe_left Support.Prims.ignore _65_10872))
 in None)))
-in Microsoft_FStar_Absyn_Syntax.Exp_fvar (_52_7452))
+in Microsoft_FStar_Absyn_Syntax.Exp_fvar (_65_10874))
 end
 | 'c' -> begin
-(let _52_7453 = (deserialize_sconst reader)
-in Microsoft_FStar_Absyn_Syntax.Exp_constant (_52_7453))
+(let _65_10875 = (deserialize_sconst reader)
+in Microsoft_FStar_Absyn_Syntax.Exp_constant (_65_10875))
 end
 | 'd' -> begin
-(let _52_7456 = (let _52_7455 = (deserialize_binders reader)
-in (let _52_7454 = (deserialize_exp reader)
-in (_52_7455, _52_7454)))
-in Microsoft_FStar_Absyn_Syntax.Exp_abs (_52_7456))
+(let _65_10878 = (let _65_10877 = (deserialize_binders reader)
+in (let _65_10876 = (deserialize_exp reader)
+in (_65_10877, _65_10876)))
+in Microsoft_FStar_Absyn_Syntax.Exp_abs (_65_10878))
 end
 | 'e' -> begin
-(let _52_7459 = (let _52_7458 = (deserialize_exp reader)
-in (let _52_7457 = (deserialize_args reader)
-in (_52_7458, _52_7457)))
-in Microsoft_FStar_Absyn_Syntax.Exp_app (_52_7459))
+(let _65_10881 = (let _65_10880 = (deserialize_exp reader)
+in (let _65_10879 = (deserialize_args reader)
+in (_65_10880, _65_10879)))
+in Microsoft_FStar_Absyn_Syntax.Exp_app (_65_10881))
 end
 | 'f' -> begin
 (let g = (fun ( reader ) -> (match ((reader.Support.Microsoft.FStar.Util.read_char ())) with
 | 'a' -> begin
-(let _52_7462 = (deserialize_exp reader)
-in Some (_52_7462))
+(let _65_10884 = (deserialize_exp reader)
+in Some (_65_10884))
 end
 | 'b' -> begin
 None
@@ -682,41 +681,41 @@ end
 | _ -> begin
 (parse_error ())
 end))
-in (let f = (fun ( reader ) -> (let _52_7467 = (deserialize_pat reader)
-in (let _52_7466 = (g reader)
-in (let _52_7465 = (deserialize_exp reader)
-in (_52_7467, _52_7466, _52_7465)))))
-in (let _52_7470 = (let _52_7469 = (deserialize_exp reader)
-in (let _52_7468 = (deserialize_list reader f)
-in (_52_7469, _52_7468)))
-in Microsoft_FStar_Absyn_Syntax.Exp_match (_52_7470))))
+in (let f = (fun ( reader ) -> (let _65_10889 = (deserialize_pat reader)
+in (let _65_10888 = (g reader)
+in (let _65_10887 = (deserialize_exp reader)
+in (_65_10889, _65_10888, _65_10887)))))
+in (let _65_10892 = (let _65_10891 = (deserialize_exp reader)
+in (let _65_10890 = (deserialize_list reader f)
+in (_65_10891, _65_10890)))
+in Microsoft_FStar_Absyn_Syntax.Exp_match (_65_10892))))
 end
 | 'g' -> begin
-(let _52_7474 = (let _52_7473 = (deserialize_exp reader)
-in (let _52_7472 = (deserialize_typ reader)
-in (let _52_7471 = (deserialize_option reader deserialize_lident)
-in (_52_7473, _52_7472, _52_7471))))
-in Microsoft_FStar_Absyn_Syntax.Exp_ascribed (_52_7474))
+(let _65_10896 = (let _65_10895 = (deserialize_exp reader)
+in (let _65_10894 = (deserialize_typ reader)
+in (let _65_10893 = (deserialize_option reader deserialize_lident)
+in (_65_10895, _65_10894, _65_10893))))
+in Microsoft_FStar_Absyn_Syntax.Exp_ascribed (_65_10896))
 end
 | 'h' -> begin
-(let _52_7477 = (let _52_7476 = (deserialize_letbindings reader)
-in (let _52_7475 = (deserialize_exp reader)
-in (_52_7476, _52_7475)))
-in Microsoft_FStar_Absyn_Syntax.Exp_let (_52_7477))
+(let _65_10899 = (let _65_10898 = (deserialize_letbindings reader)
+in (let _65_10897 = (deserialize_exp reader)
+in (_65_10898, _65_10897)))
+in Microsoft_FStar_Absyn_Syntax.Exp_let (_65_10899))
 end
 | 'i' -> begin
-(let _52_7478 = (deserialize_meta_e reader)
-in Microsoft_FStar_Absyn_Syntax.Exp_meta (_52_7478))
+(let _65_10900 = (deserialize_meta_e reader)
+in Microsoft_FStar_Absyn_Syntax.Exp_meta (_65_10900))
 end
 | _ -> begin
 (parse_error ())
 end))
 and deserialize_meta_e = (fun ( reader ) -> (match ((reader.Support.Microsoft.FStar.Util.read_char ())) with
 | 'a' -> begin
-(let _52_7482 = (let _52_7481 = (deserialize_exp reader)
-in (let _52_7480 = (deserialize_meta_source_info reader)
-in (_52_7481, _52_7480)))
-in Microsoft_FStar_Absyn_Syntax.Meta_desugared (_52_7482))
+(let _65_10904 = (let _65_10903 = (deserialize_exp reader)
+in (let _65_10902 = (deserialize_meta_source_info reader)
+in (_65_10903, _65_10902)))
+in Microsoft_FStar_Absyn_Syntax.Meta_desugared (_65_10904))
 end
 | _ -> begin
 (parse_error ())
@@ -742,48 +741,48 @@ and deserialize_btvdef = (fun ( reader ) -> (deserialize_bvdef None reader))
 and deserialize_bvvdef = (fun ( reader ) -> (deserialize_bvdef None reader))
 and deserialize_pat' = (fun ( reader ) -> (match ((reader.Support.Microsoft.FStar.Util.read_char ())) with
 | 'a' -> begin
-(let _52_7488 = (deserialize_list reader deserialize_pat)
-in Microsoft_FStar_Absyn_Syntax.Pat_disj (_52_7488))
+(let _65_10910 = (deserialize_list reader deserialize_pat)
+in Microsoft_FStar_Absyn_Syntax.Pat_disj (_65_10910))
 end
 | 'b' -> begin
-(let _52_7489 = (deserialize_sconst reader)
-in Microsoft_FStar_Absyn_Syntax.Pat_constant (_52_7489))
+(let _65_10911 = (deserialize_sconst reader)
+in Microsoft_FStar_Absyn_Syntax.Pat_constant (_65_10911))
 end
 | 'c' -> begin
-(let _52_7492 = (let _52_7491 = (deserialize_fvvar reader)
-in (let _52_7490 = (deserialize_list reader deserialize_pat)
-in (_52_7491, None, _52_7490)))
-in Microsoft_FStar_Absyn_Syntax.Pat_cons (_52_7492))
+(let _65_10914 = (let _65_10913 = (deserialize_fvvar reader)
+in (let _65_10912 = (deserialize_list reader deserialize_pat)
+in (_65_10913, None, _65_10912)))
+in Microsoft_FStar_Absyn_Syntax.Pat_cons (_65_10914))
 end
 | 'd' -> begin
-(let _52_7495 = (let _52_7494 = (deserialize_bvvar reader)
-in (let _52_7493 = (reader.Support.Microsoft.FStar.Util.read_bool ())
-in (_52_7494, _52_7493)))
-in Microsoft_FStar_Absyn_Syntax.Pat_var (_52_7495))
+(let _65_10917 = (let _65_10916 = (deserialize_bvvar reader)
+in (let _65_10915 = (reader.Support.Microsoft.FStar.Util.read_bool ())
+in (_65_10916, _65_10915)))
+in Microsoft_FStar_Absyn_Syntax.Pat_var (_65_10917))
 end
 | 'e' -> begin
-(let _52_7496 = (deserialize_btvar reader)
-in Microsoft_FStar_Absyn_Syntax.Pat_tvar (_52_7496))
+(let _65_10918 = (deserialize_btvar reader)
+in Microsoft_FStar_Absyn_Syntax.Pat_tvar (_65_10918))
 end
 | 'f' -> begin
-(let _52_7497 = (deserialize_bvvar reader)
-in Microsoft_FStar_Absyn_Syntax.Pat_wild (_52_7497))
+(let _65_10919 = (deserialize_bvvar reader)
+in Microsoft_FStar_Absyn_Syntax.Pat_wild (_65_10919))
 end
 | 'g' -> begin
-(let _52_7498 = (deserialize_btvar reader)
-in Microsoft_FStar_Absyn_Syntax.Pat_twild (_52_7498))
+(let _65_10920 = (deserialize_btvar reader)
+in Microsoft_FStar_Absyn_Syntax.Pat_twild (_65_10920))
 end
 | 'h' -> begin
-(let _52_7501 = (let _52_7500 = (deserialize_bvvar reader)
-in (let _52_7499 = (deserialize_exp reader)
-in (_52_7500, _52_7499)))
-in Microsoft_FStar_Absyn_Syntax.Pat_dot_term (_52_7501))
+(let _65_10923 = (let _65_10922 = (deserialize_bvvar reader)
+in (let _65_10921 = (deserialize_exp reader)
+in (_65_10922, _65_10921)))
+in Microsoft_FStar_Absyn_Syntax.Pat_dot_term (_65_10923))
 end
 | 'i' -> begin
-(let _52_7504 = (let _52_7503 = (deserialize_btvar reader)
-in (let _52_7502 = (deserialize_typ reader)
-in (_52_7503, _52_7502)))
-in Microsoft_FStar_Absyn_Syntax.Pat_dot_typ (_52_7504))
+(let _65_10926 = (let _65_10925 = (deserialize_btvar reader)
+in (let _65_10924 = (deserialize_typ reader)
+in (_65_10925, _65_10924)))
+in Microsoft_FStar_Absyn_Syntax.Pat_dot_typ (_65_10926))
 end
 | _ -> begin
 (parse_error ())
@@ -797,22 +796,22 @@ end
 Microsoft_FStar_Absyn_Syntax.Kind_effect
 end
 | 'c' -> begin
-(let _52_7510 = (let _52_7509 = (deserialize_kabbrev reader)
-in (let _52_7508 = (deserialize_knd reader)
-in (_52_7509, _52_7508)))
-in Microsoft_FStar_Absyn_Syntax.Kind_abbrev (_52_7510))
+(let _65_10932 = (let _65_10931 = (deserialize_kabbrev reader)
+in (let _65_10930 = (deserialize_knd reader)
+in (_65_10931, _65_10930)))
+in Microsoft_FStar_Absyn_Syntax.Kind_abbrev (_65_10932))
 end
 | 'd' -> begin
-(let _52_7513 = (let _52_7512 = (deserialize_binders reader)
-in (let _52_7511 = (deserialize_knd reader)
-in (_52_7512, _52_7511)))
-in Microsoft_FStar_Absyn_Syntax.Kind_arrow (_52_7513))
+(let _65_10935 = (let _65_10934 = (deserialize_binders reader)
+in (let _65_10933 = (deserialize_knd reader)
+in (_65_10934, _65_10933)))
+in Microsoft_FStar_Absyn_Syntax.Kind_arrow (_65_10935))
 end
 | 'e' -> begin
-(let _52_7516 = (let _52_7515 = (deserialize_binders reader)
-in (let _52_7514 = (deserialize_knd reader)
-in (_52_7515, _52_7514)))
-in Microsoft_FStar_Absyn_Syntax.Kind_lam (_52_7516))
+(let _65_10938 = (let _65_10937 = (deserialize_binders reader)
+in (let _65_10936 = (deserialize_knd reader)
+in (_65_10937, _65_10936)))
+in Microsoft_FStar_Absyn_Syntax.Kind_lam (_65_10938))
 end
 | 'f' -> begin
 Microsoft_FStar_Absyn_Syntax.Kind_unknown
@@ -821,18 +820,18 @@ end
 (parse_error ())
 end))
 and deserialize_knd = (fun ( reader ) -> (deserialize_syntax reader deserialize_knd' ()))
-and deserialize_kabbrev = (fun ( reader ) -> (let _52_7520 = (deserialize_lident reader)
-in (let _52_7519 = (deserialize_args reader)
-in (_52_7520, _52_7519))))
+and deserialize_kabbrev = (fun ( reader ) -> (let _65_10942 = (deserialize_lident reader)
+in (let _65_10941 = (deserialize_args reader)
+in (_65_10942, _65_10941))))
 and deserialize_lbname = (fun ( reader ) -> (deserialize_either reader deserialize_bvvdef deserialize_lident))
-and deserialize_letbindings = (fun ( reader ) -> (let f = (fun ( reader ) -> (let _52_7528 = (deserialize_lbname reader)
-in (let _52_7527 = (deserialize_typ reader)
-in (let _52_7526 = (deserialize_lident reader)
-in (let _52_7525 = (deserialize_exp reader)
-in {Microsoft_FStar_Absyn_Syntax.lbname = _52_7528; Microsoft_FStar_Absyn_Syntax.lbtyp = _52_7527; Microsoft_FStar_Absyn_Syntax.lbeff = _52_7526; Microsoft_FStar_Absyn_Syntax.lbdef = _52_7525})))))
-in (let _52_7530 = (reader.Support.Microsoft.FStar.Util.read_bool ())
-in (let _52_7529 = (deserialize_list reader f)
-in (_52_7530, _52_7529)))))
+and deserialize_letbindings = (fun ( reader ) -> (let f = (fun ( reader ) -> (let _65_10950 = (deserialize_lbname reader)
+in (let _65_10949 = (deserialize_typ reader)
+in (let _65_10948 = (deserialize_lident reader)
+in (let _65_10947 = (deserialize_exp reader)
+in {Microsoft_FStar_Absyn_Syntax.lbname = _65_10950; Microsoft_FStar_Absyn_Syntax.lbtyp = _65_10949; Microsoft_FStar_Absyn_Syntax.lbeff = _65_10948; Microsoft_FStar_Absyn_Syntax.lbdef = _65_10947})))))
+in (let _65_10952 = (reader.Support.Microsoft.FStar.Util.read_bool ())
+in (let _65_10951 = (deserialize_list reader f)
+in (_65_10952, _65_10951)))))
 and deserialize_fvar = (fun ( reader ) -> (deserialize_either reader deserialize_btvdef deserialize_bvvdef))
 and deserialize_btvar = (fun ( reader ) -> (deserialize_bvar None reader deserialize_knd))
 and deserialize_bvvar = (fun ( reader ) -> (deserialize_bvar None reader deserialize_typ))
@@ -904,22 +903,22 @@ end
 Microsoft_FStar_Absyn_Syntax.Opaque
 end
 | 'i' -> begin
-(let _52_7545 = (deserialize_lident reader)
-in Microsoft_FStar_Absyn_Syntax.Discriminator (_52_7545))
+(let _65_10967 = (deserialize_lident reader)
+in Microsoft_FStar_Absyn_Syntax.Discriminator (_65_10967))
 end
 | 'j' -> begin
-(let _52_7548 = (let _52_7547 = (deserialize_lident reader)
-in (let _52_7546 = (deserialize_either reader deserialize_btvdef deserialize_bvvdef)
-in (_52_7547, _52_7546)))
-in Microsoft_FStar_Absyn_Syntax.Projector (_52_7548))
+(let _65_10970 = (let _65_10969 = (deserialize_lident reader)
+in (let _65_10968 = (deserialize_either reader deserialize_btvdef deserialize_bvvdef)
+in (_65_10969, _65_10968)))
+in Microsoft_FStar_Absyn_Syntax.Projector (_65_10970))
 end
 | 'k' -> begin
-(let _52_7549 = (deserialize_list reader deserialize_lident)
-in Microsoft_FStar_Absyn_Syntax.RecordType (_52_7549))
+(let _65_10971 = (deserialize_list reader deserialize_lident)
+in Microsoft_FStar_Absyn_Syntax.RecordType (_65_10971))
 end
 | 'l' -> begin
-(let _52_7550 = (deserialize_list reader deserialize_lident)
-in Microsoft_FStar_Absyn_Syntax.RecordConstructor (_52_7550))
+(let _65_10972 = (deserialize_list reader deserialize_lident)
+in Microsoft_FStar_Absyn_Syntax.RecordConstructor (_65_10972))
 end
 | 'm' -> begin
 Microsoft_FStar_Absyn_Syntax.ExceptionConstructor
@@ -928,8 +927,8 @@ end
 Microsoft_FStar_Absyn_Syntax.HasMaskedEffect
 end
 | 'p' -> begin
-(let _52_7552 = (deserialize_option reader deserialize_lident)
-in (Support.Prims.pipe_right _52_7552 (fun ( _52_7551 ) -> Microsoft_FStar_Absyn_Syntax.DefaultEffect (_52_7551))))
+(let _65_10974 = (deserialize_option reader deserialize_lident)
+in (Support.Prims.pipe_right _65_10974 (fun ( _65_10973 ) -> Microsoft_FStar_Absyn_Syntax.DefaultEffect (_65_10973))))
 end
 | 'q' -> begin
 Microsoft_FStar_Absyn_Syntax.TotalEffect
@@ -945,28 +944,28 @@ in (let _25_730 = (serialize_binders writer bs)
 in (serialize_knd writer k)))
 end))
 
-let deserialize_tycon = (fun ( reader ) -> (let _52_7561 = (deserialize_lident reader)
-in (let _52_7560 = (deserialize_binders reader)
-in (let _52_7559 = (deserialize_knd reader)
-in (_52_7561, _52_7560, _52_7559)))))
+let deserialize_tycon = (fun ( reader ) -> (let _65_10983 = (deserialize_lident reader)
+in (let _65_10982 = (deserialize_binders reader)
+in (let _65_10981 = (deserialize_knd reader)
+in (_65_10983, _65_10982, _65_10981)))))
 
 let serialize_monad_abbrev = (fun ( writer ) ( ast ) -> (let _25_735 = (serialize_lident writer ast.Microsoft_FStar_Absyn_Syntax.mabbrev)
 in (let _25_737 = (serialize_binders writer ast.Microsoft_FStar_Absyn_Syntax.parms)
 in (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.def))))
 
-let deserialize_monad_abbrev = (fun ( reader ) -> (let _52_7570 = (deserialize_lident reader)
-in (let _52_7569 = (deserialize_binders reader)
-in (let _52_7568 = (deserialize_typ reader)
-in {Microsoft_FStar_Absyn_Syntax.mabbrev = _52_7570; Microsoft_FStar_Absyn_Syntax.parms = _52_7569; Microsoft_FStar_Absyn_Syntax.def = _52_7568}))))
+let deserialize_monad_abbrev = (fun ( reader ) -> (let _65_10992 = (deserialize_lident reader)
+in (let _65_10991 = (deserialize_binders reader)
+in (let _65_10990 = (deserialize_typ reader)
+in {Microsoft_FStar_Absyn_Syntax.mabbrev = _65_10992; Microsoft_FStar_Absyn_Syntax.parms = _65_10991; Microsoft_FStar_Absyn_Syntax.def = _65_10990}))))
 
 let serialize_sub_effect = (fun ( writer ) ( ast ) -> (let _25_742 = (serialize_lident writer ast.Microsoft_FStar_Absyn_Syntax.source)
 in (let _25_744 = (serialize_lident writer ast.Microsoft_FStar_Absyn_Syntax.target)
 in (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.lift))))
 
-let deserialize_sub_effect = (fun ( reader ) -> (let _52_7579 = (deserialize_lident reader)
-in (let _52_7578 = (deserialize_lident reader)
-in (let _52_7577 = (deserialize_typ reader)
-in {Microsoft_FStar_Absyn_Syntax.source = _52_7579; Microsoft_FStar_Absyn_Syntax.target = _52_7578; Microsoft_FStar_Absyn_Syntax.lift = _52_7577}))))
+let deserialize_sub_effect = (fun ( reader ) -> (let _65_11001 = (deserialize_lident reader)
+in (let _65_11000 = (deserialize_lident reader)
+in (let _65_10999 = (deserialize_typ reader)
+in {Microsoft_FStar_Absyn_Syntax.source = _65_11001; Microsoft_FStar_Absyn_Syntax.target = _65_11000; Microsoft_FStar_Absyn_Syntax.lift = _65_10999}))))
 
 let rec serialize_new_effect = (fun ( writer ) ( ast ) -> (let _25_749 = (serialize_lident writer ast.Microsoft_FStar_Absyn_Syntax.mname)
 in (let _25_751 = (serialize_list writer serialize_binder ast.Microsoft_FStar_Absyn_Syntax.binders)
@@ -1010,9 +1009,9 @@ end
 | Microsoft_FStar_Absyn_Syntax.Sig_datacon ((lid1, t, tyc, qs, mutuals, _)) -> begin
 (let t' = (match ((Microsoft_FStar_Absyn_Util.function_formals t)) with
 | Some ((f, c)) -> begin
-(let _52_7589 = (let _52_7588 = (Microsoft_FStar_Absyn_Syntax.mk_Total (Microsoft_FStar_Absyn_Util.comp_result c))
-in (f, _52_7588))
-in (Microsoft_FStar_Absyn_Syntax.mk_Typ_fun _52_7589 None Microsoft_FStar_Absyn_Syntax.dummyRange))
+(let _65_11011 = (let _65_11010 = (Microsoft_FStar_Absyn_Syntax.mk_Total (Microsoft_FStar_Absyn_Util.comp_result c))
+in (f, _65_11010))
+in (Microsoft_FStar_Absyn_Syntax.mk_Typ_fun _65_11011 None Microsoft_FStar_Absyn_Syntax.dummyRange))
 end
 | None -> begin
 t
@@ -1040,14 +1039,14 @@ end
 (let _25_887 = (writer.Support.Microsoft.FStar.Util.write_char 'f')
 in (let _25_889 = (serialize_letbindings writer lbs)
 in (let _25_891 = (serialize_list writer serialize_lident l)
-in (let _52_7591 = (Support.Prims.pipe_right quals (Support.Microsoft.FStar.Util.for_some (fun ( _25_1 ) -> (match (_25_1) with
+in (let _65_11013 = (Support.Prims.pipe_right quals (Support.Microsoft.FStar.Util.for_some (fun ( _25_1 ) -> (match (_25_1) with
 | Microsoft_FStar_Absyn_Syntax.HasMaskedEffect -> begin
 true
 end
 | _ -> begin
 false
 end))))
-in (writer.Support.Microsoft.FStar.Util.write_bool _52_7591)))))
+in (writer.Support.Microsoft.FStar.Util.write_bool _65_11013)))))
 end
 | Microsoft_FStar_Absyn_Syntax.Sig_main ((e, _)) -> begin
 (let _25_902 = (writer.Support.Microsoft.FStar.Util.write_char 'g')
@@ -1081,97 +1080,97 @@ in (let _25_957 = (serialize_list writer serialize_binder binders)
 in (serialize_knd writer k))))
 end))
 
-let rec deserialize_new_effect = (fun ( reader ) -> (let _52_7612 = (deserialize_lident reader)
-in (let _52_7611 = (deserialize_list reader deserialize_binder)
-in (let _52_7610 = (deserialize_list reader deserialize_qualifier)
-in (let _52_7609 = (deserialize_knd reader)
-in (let _52_7608 = (deserialize_typ reader)
-in (let _52_7607 = (deserialize_typ reader)
-in (let _52_7606 = (deserialize_typ reader)
-in (let _52_7605 = (deserialize_typ reader)
-in (let _52_7604 = (deserialize_typ reader)
-in (let _52_7603 = (deserialize_typ reader)
-in (let _52_7602 = (deserialize_typ reader)
-in (let _52_7601 = (deserialize_typ reader)
-in (let _52_7600 = (deserialize_typ reader)
-in (let _52_7599 = (deserialize_typ reader)
-in (let _52_7598 = (deserialize_typ reader)
-in (let _52_7597 = (deserialize_typ reader)
-in (let _52_7596 = (deserialize_typ reader)
-in (let _52_7595 = (deserialize_typ reader)
-in {Microsoft_FStar_Absyn_Syntax.mname = _52_7612; Microsoft_FStar_Absyn_Syntax.binders = _52_7611; Microsoft_FStar_Absyn_Syntax.qualifiers = _52_7610; Microsoft_FStar_Absyn_Syntax.signature = _52_7609; Microsoft_FStar_Absyn_Syntax.ret = _52_7608; Microsoft_FStar_Absyn_Syntax.bind_wp = _52_7607; Microsoft_FStar_Absyn_Syntax.bind_wlp = _52_7606; Microsoft_FStar_Absyn_Syntax.if_then_else = _52_7605; Microsoft_FStar_Absyn_Syntax.ite_wp = _52_7604; Microsoft_FStar_Absyn_Syntax.ite_wlp = _52_7603; Microsoft_FStar_Absyn_Syntax.wp_binop = _52_7602; Microsoft_FStar_Absyn_Syntax.wp_as_type = _52_7601; Microsoft_FStar_Absyn_Syntax.close_wp = _52_7600; Microsoft_FStar_Absyn_Syntax.close_wp_t = _52_7599; Microsoft_FStar_Absyn_Syntax.assert_p = _52_7598; Microsoft_FStar_Absyn_Syntax.assume_p = _52_7597; Microsoft_FStar_Absyn_Syntax.null_wp = _52_7596; Microsoft_FStar_Absyn_Syntax.trivial = _52_7595})))))))))))))))))))
+let rec deserialize_new_effect = (fun ( reader ) -> (let _65_11034 = (deserialize_lident reader)
+in (let _65_11033 = (deserialize_list reader deserialize_binder)
+in (let _65_11032 = (deserialize_list reader deserialize_qualifier)
+in (let _65_11031 = (deserialize_knd reader)
+in (let _65_11030 = (deserialize_typ reader)
+in (let _65_11029 = (deserialize_typ reader)
+in (let _65_11028 = (deserialize_typ reader)
+in (let _65_11027 = (deserialize_typ reader)
+in (let _65_11026 = (deserialize_typ reader)
+in (let _65_11025 = (deserialize_typ reader)
+in (let _65_11024 = (deserialize_typ reader)
+in (let _65_11023 = (deserialize_typ reader)
+in (let _65_11022 = (deserialize_typ reader)
+in (let _65_11021 = (deserialize_typ reader)
+in (let _65_11020 = (deserialize_typ reader)
+in (let _65_11019 = (deserialize_typ reader)
+in (let _65_11018 = (deserialize_typ reader)
+in (let _65_11017 = (deserialize_typ reader)
+in {Microsoft_FStar_Absyn_Syntax.mname = _65_11034; Microsoft_FStar_Absyn_Syntax.binders = _65_11033; Microsoft_FStar_Absyn_Syntax.qualifiers = _65_11032; Microsoft_FStar_Absyn_Syntax.signature = _65_11031; Microsoft_FStar_Absyn_Syntax.ret = _65_11030; Microsoft_FStar_Absyn_Syntax.bind_wp = _65_11029; Microsoft_FStar_Absyn_Syntax.bind_wlp = _65_11028; Microsoft_FStar_Absyn_Syntax.if_then_else = _65_11027; Microsoft_FStar_Absyn_Syntax.ite_wp = _65_11026; Microsoft_FStar_Absyn_Syntax.ite_wlp = _65_11025; Microsoft_FStar_Absyn_Syntax.wp_binop = _65_11024; Microsoft_FStar_Absyn_Syntax.wp_as_type = _65_11023; Microsoft_FStar_Absyn_Syntax.close_wp = _65_11022; Microsoft_FStar_Absyn_Syntax.close_wp_t = _65_11021; Microsoft_FStar_Absyn_Syntax.assert_p = _65_11020; Microsoft_FStar_Absyn_Syntax.assume_p = _65_11019; Microsoft_FStar_Absyn_Syntax.null_wp = _65_11018; Microsoft_FStar_Absyn_Syntax.trivial = _65_11017})))))))))))))))))))
 and deserialize_sigelt = (fun ( reader ) -> (match ((reader.Support.Microsoft.FStar.Util.read_char ())) with
 | 'a' -> begin
-(let _52_7620 = (let _52_7619 = (deserialize_lident reader)
-in (let _52_7618 = (deserialize_binders reader)
-in (let _52_7617 = (deserialize_knd reader)
-in (let _52_7616 = (deserialize_list reader deserialize_lident)
-in (let _52_7615 = (deserialize_list reader deserialize_lident)
-in (let _52_7614 = (deserialize_list reader deserialize_qualifier)
-in (_52_7619, _52_7618, _52_7617, _52_7616, _52_7615, _52_7614, Microsoft_FStar_Absyn_Syntax.dummyRange)))))))
-in Microsoft_FStar_Absyn_Syntax.Sig_tycon (_52_7620))
+(let _65_11042 = (let _65_11041 = (deserialize_lident reader)
+in (let _65_11040 = (deserialize_binders reader)
+in (let _65_11039 = (deserialize_knd reader)
+in (let _65_11038 = (deserialize_list reader deserialize_lident)
+in (let _65_11037 = (deserialize_list reader deserialize_lident)
+in (let _65_11036 = (deserialize_list reader deserialize_qualifier)
+in (_65_11041, _65_11040, _65_11039, _65_11038, _65_11037, _65_11036, Microsoft_FStar_Absyn_Syntax.dummyRange)))))))
+in Microsoft_FStar_Absyn_Syntax.Sig_tycon (_65_11042))
 end
 | 'b' -> begin
-(let _52_7626 = (let _52_7625 = (deserialize_lident reader)
-in (let _52_7624 = (deserialize_binders reader)
-in (let _52_7623 = (deserialize_knd reader)
-in (let _52_7622 = (deserialize_typ reader)
-in (let _52_7621 = (deserialize_list reader deserialize_qualifier)
-in (_52_7625, _52_7624, _52_7623, _52_7622, _52_7621, Microsoft_FStar_Absyn_Syntax.dummyRange))))))
-in Microsoft_FStar_Absyn_Syntax.Sig_typ_abbrev (_52_7626))
+(let _65_11048 = (let _65_11047 = (deserialize_lident reader)
+in (let _65_11046 = (deserialize_binders reader)
+in (let _65_11045 = (deserialize_knd reader)
+in (let _65_11044 = (deserialize_typ reader)
+in (let _65_11043 = (deserialize_list reader deserialize_qualifier)
+in (_65_11047, _65_11046, _65_11045, _65_11044, _65_11043, Microsoft_FStar_Absyn_Syntax.dummyRange))))))
+in Microsoft_FStar_Absyn_Syntax.Sig_typ_abbrev (_65_11048))
 end
 | 'c' -> begin
-(let _52_7632 = (let _52_7631 = (deserialize_lident reader)
-in (let _52_7630 = (deserialize_typ reader)
-in (let _52_7629 = (deserialize_tycon reader)
-in (let _52_7628 = (deserialize_list reader deserialize_qualifier)
-in (let _52_7627 = (deserialize_list reader deserialize_lident)
-in (_52_7631, _52_7630, _52_7629, _52_7628, _52_7627, Microsoft_FStar_Absyn_Syntax.dummyRange))))))
-in Microsoft_FStar_Absyn_Syntax.Sig_datacon (_52_7632))
+(let _65_11054 = (let _65_11053 = (deserialize_lident reader)
+in (let _65_11052 = (deserialize_typ reader)
+in (let _65_11051 = (deserialize_tycon reader)
+in (let _65_11050 = (deserialize_list reader deserialize_qualifier)
+in (let _65_11049 = (deserialize_list reader deserialize_lident)
+in (_65_11053, _65_11052, _65_11051, _65_11050, _65_11049, Microsoft_FStar_Absyn_Syntax.dummyRange))))))
+in Microsoft_FStar_Absyn_Syntax.Sig_datacon (_65_11054))
 end
 | 'd' -> begin
-(let _52_7636 = (let _52_7635 = (deserialize_lident reader)
-in (let _52_7634 = (deserialize_typ reader)
-in (let _52_7633 = (deserialize_list reader deserialize_qualifier)
-in (_52_7635, _52_7634, _52_7633, Microsoft_FStar_Absyn_Syntax.dummyRange))))
-in Microsoft_FStar_Absyn_Syntax.Sig_val_decl (_52_7636))
+(let _65_11058 = (let _65_11057 = (deserialize_lident reader)
+in (let _65_11056 = (deserialize_typ reader)
+in (let _65_11055 = (deserialize_list reader deserialize_qualifier)
+in (_65_11057, _65_11056, _65_11055, Microsoft_FStar_Absyn_Syntax.dummyRange))))
+in Microsoft_FStar_Absyn_Syntax.Sig_val_decl (_65_11058))
 end
 | 'e' -> begin
-(let _52_7640 = (let _52_7639 = (deserialize_lident reader)
-in (let _52_7638 = (deserialize_formula reader)
-in (let _52_7637 = (deserialize_list reader deserialize_qualifier)
-in (_52_7639, _52_7638, _52_7637, Microsoft_FStar_Absyn_Syntax.dummyRange))))
-in Microsoft_FStar_Absyn_Syntax.Sig_assume (_52_7640))
+(let _65_11062 = (let _65_11061 = (deserialize_lident reader)
+in (let _65_11060 = (deserialize_formula reader)
+in (let _65_11059 = (deserialize_list reader deserialize_qualifier)
+in (_65_11061, _65_11060, _65_11059, Microsoft_FStar_Absyn_Syntax.dummyRange))))
+in Microsoft_FStar_Absyn_Syntax.Sig_assume (_65_11062))
 end
 | 'f' -> begin
-(let _52_7644 = (let _52_7643 = (deserialize_letbindings reader)
-in (let _52_7642 = (deserialize_list reader deserialize_lident)
-in (let _52_7641 = (match ((reader.Support.Microsoft.FStar.Util.read_bool ())) with
+(let _65_11066 = (let _65_11065 = (deserialize_letbindings reader)
+in (let _65_11064 = (deserialize_list reader deserialize_lident)
+in (let _65_11063 = (match ((reader.Support.Microsoft.FStar.Util.read_bool ())) with
 | true -> begin
 (Microsoft_FStar_Absyn_Syntax.HasMaskedEffect)::[]
 end
 | false -> begin
 []
 end)
-in (_52_7643, Microsoft_FStar_Absyn_Syntax.dummyRange, _52_7642, _52_7641))))
-in Microsoft_FStar_Absyn_Syntax.Sig_let (_52_7644))
+in (_65_11065, Microsoft_FStar_Absyn_Syntax.dummyRange, _65_11064, _65_11063))))
+in Microsoft_FStar_Absyn_Syntax.Sig_let (_65_11066))
 end
 | 'g' -> begin
-(let _52_7646 = (let _52_7645 = (deserialize_exp reader)
-in (_52_7645, Microsoft_FStar_Absyn_Syntax.dummyRange))
-in Microsoft_FStar_Absyn_Syntax.Sig_main (_52_7646))
+(let _65_11068 = (let _65_11067 = (deserialize_exp reader)
+in (_65_11067, Microsoft_FStar_Absyn_Syntax.dummyRange))
+in Microsoft_FStar_Absyn_Syntax.Sig_main (_65_11068))
 end
 | 'h' -> begin
-(let _52_7650 = (let _52_7649 = (deserialize_list reader deserialize_sigelt)
-in (let _52_7648 = (deserialize_list reader deserialize_qualifier)
-in (let _52_7647 = (deserialize_list reader deserialize_lident)
-in (_52_7649, _52_7648, _52_7647, Microsoft_FStar_Absyn_Syntax.dummyRange))))
-in Microsoft_FStar_Absyn_Syntax.Sig_bundle (_52_7650))
+(let _65_11072 = (let _65_11071 = (deserialize_list reader deserialize_sigelt)
+in (let _65_11070 = (deserialize_list reader deserialize_qualifier)
+in (let _65_11069 = (deserialize_list reader deserialize_lident)
+in (_65_11071, _65_11070, _65_11069, Microsoft_FStar_Absyn_Syntax.dummyRange))))
+in Microsoft_FStar_Absyn_Syntax.Sig_bundle (_65_11072))
 end
 | 'i' -> begin
-(let _52_7652 = (let _52_7651 = (deserialize_new_effect reader)
-in (_52_7651, Microsoft_FStar_Absyn_Syntax.dummyRange))
-in Microsoft_FStar_Absyn_Syntax.Sig_new_effect (_52_7652))
+(let _65_11074 = (let _65_11073 = (deserialize_new_effect reader)
+in (_65_11073, Microsoft_FStar_Absyn_Syntax.dummyRange))
+in Microsoft_FStar_Absyn_Syntax.Sig_new_effect (_65_11074))
 end
 | ('j') | ('k') | ('l') -> begin
 (failwith ("TODO"))
@@ -1189,11 +1188,11 @@ in (let _25_982 = (serialize_sigelts writer [])
 in (let _25_984 = (serialize_sigelts writer ast.Microsoft_FStar_Absyn_Syntax.exports)
 in (writer.Support.Microsoft.FStar.Util.write_bool ast.Microsoft_FStar_Absyn_Syntax.is_interface)))))
 
-let deserialize_modul = (fun ( reader ) -> (let m = (let _52_7668 = (deserialize_lident reader)
-in (let _52_7667 = (deserialize_sigelts reader)
-in (let _52_7666 = (deserialize_sigelts reader)
-in (let _52_7665 = (reader.Support.Microsoft.FStar.Util.read_bool ())
-in {Microsoft_FStar_Absyn_Syntax.name = _52_7668; Microsoft_FStar_Absyn_Syntax.declarations = _52_7667; Microsoft_FStar_Absyn_Syntax.exports = _52_7666; Microsoft_FStar_Absyn_Syntax.is_interface = _52_7665; Microsoft_FStar_Absyn_Syntax.is_deserialized = true}))))
+let deserialize_modul = (fun ( reader ) -> (let m = (let _65_11090 = (deserialize_lident reader)
+in (let _65_11089 = (deserialize_sigelts reader)
+in (let _65_11088 = (deserialize_sigelts reader)
+in (let _65_11087 = (reader.Support.Microsoft.FStar.Util.read_bool ())
+in {Microsoft_FStar_Absyn_Syntax.name = _65_11090; Microsoft_FStar_Absyn_Syntax.declarations = _65_11089; Microsoft_FStar_Absyn_Syntax.exports = _65_11088; Microsoft_FStar_Absyn_Syntax.is_interface = _65_11087; Microsoft_FStar_Absyn_Syntax.is_deserialized = true}))))
 in (let _25_988 = m
 in {Microsoft_FStar_Absyn_Syntax.name = _25_988.Microsoft_FStar_Absyn_Syntax.name; Microsoft_FStar_Absyn_Syntax.declarations = m.Microsoft_FStar_Absyn_Syntax.exports; Microsoft_FStar_Absyn_Syntax.exports = _25_988.Microsoft_FStar_Absyn_Syntax.exports; Microsoft_FStar_Absyn_Syntax.is_interface = _25_988.Microsoft_FStar_Absyn_Syntax.is_interface; Microsoft_FStar_Absyn_Syntax.is_deserialized = _25_988.Microsoft_FStar_Absyn_Syntax.is_deserialized})))
 

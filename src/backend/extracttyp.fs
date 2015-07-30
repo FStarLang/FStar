@@ -391,7 +391,7 @@ let extractInductive (c:context) (ind: inductiveTypeFam ) :  context* (mlsymbol 
             | _ -> MLTD_DType tyb in
         nc, (lident2mlsymbol ind.tyName,  mlbs , Some tbody)
 
-let mfst = List.map fst
+let mfst x = List.map fst x
 
 (* 
   Source: type t (a:Type) = fun (x:a) -> (a -> t' a x)
