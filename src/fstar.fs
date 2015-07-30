@@ -285,7 +285,6 @@ let go _ =
 
 let main () =
     try 
-      Util.print_string "This is clean F*\n";
       go ();
       cleanup ();
       exit 0
