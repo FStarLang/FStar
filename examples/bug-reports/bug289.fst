@@ -1,12 +1,10 @@
 module Bug289
 
-val foo : unit -> ST unit 
-                     (requires (fun _ -> True))
-                     (ensures  (fun _ r _  -> True)) 
-let foo  () = ()
+val foo : unit -> St unit 
+let foo () = ()
 
-val test : unit -> unit
-let test () = ()
+(* val test : unit -> unit *)
+(* let test () = () *)
 
-(* val bar : unit -> unit *)
-let bar () = let u = foo () in assert(False) //; test ()
+(* val bar : unit -> St unit -- adding this causes assertion failure *)
+let bar () = let u = foo () in assert(False) (*; test () -- this too *)
