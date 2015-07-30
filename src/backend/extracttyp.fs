@@ -13,8 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-// Learn more about F# at http://fsharp.net
-// See the 'F# Tutorial' project for more help.
 #light "off"
 module Microsoft.FStar.Backends.ML.ExtractTyp
 open Prims
@@ -107,11 +105,6 @@ let extendContextAsTyvar (availableInML : bool) (b : either<btvar,bvvar>) (c:con
 let extendContext (c:context) (tyVars : list<either<btvar,bvvar>>) : context = 
    List.fold_right (extendContextAsTyvar true) (tyVars) c (*TODO: is the fold in the right direction? check *)
 
-
-//let deltaUnfold (i : lident) (c: context) : (option<typ>) = 
-//lookup 
-//None (*TODO: FIX!! Perhaps no need to fix*)
-
 (*The thesis defines a type scheme as "something that becomes a type when enough arguments (possibly none?) are applied to it" ,  e.g. vector, list.
     I guess in F*, these include Inductive types and type abbreviations.
     Formal definition is @ Definition 8, Sec. 1.2.3
@@ -142,14 +135,13 @@ let rec extractTyp  (c:context) (ft:typ) : mlty =
     match ft.n with // assume ft is compressed. is there a compresser for typ'?
       | Typ_btvar btv -> extractTyVar c btv
       (*it is not clear whether description in the thesis covers type applications with 0 args. However, this case is needed to translate types like nnat, and so far seems to work as expected*)
+      
       | Typ_const ftv ->  extractTyConstApp c ftv []
+      
       | Typ_fun (bs, codomain) -> 
-            let (bts, newC) = extractBindersTypes c bs in
-            (let codomainML, erase = (extractComp  newC codomain) in 
-            //if false 
-            //then erasedContent // doing this here will mess with the later phase of extracting/ML-typechecking of expressions, this is done later
-            //else  
-            (curry bts erase codomainML))
+        let (bts, newC) = extractBindersTypes c bs in
+        let codomainML, erase = extractComp  newC codomain in 
+        curry bts erase codomainML
 
       | Typ_refine (bv (*var and unrefined type*) , _ (*refinement condition*)) -> extractTyp c bv.sort
 
@@ -166,15 +158,13 @@ let rec extractTyp  (c:context) (ft:typ) : mlty =
         res
 
       | Typ_lam  (bs,ty) ->  (* (sch) rule in \hat{\epsilon} *)
-             let (bts, c) = extractBindersTypes c bs in
-                extractTyp c ty
+        let (bts, c) = extractBindersTypes c bs in
+        extractTyp c ty
 
       | Typ_ascribed (ty,_)  -> extractTyp c ty
       | Typ_meta mt -> extractMeta c mt
       | Typ_uvar _ -> unknownType 
       | Typ_delayed _  -> failwith "expected the argument to be compressed"
-    //  | Typ_meta (Meta_named(t, _)) -> extractTyp c t
-    //  | Typ_meta _ -> failwith (Util.format2 "Unexpected meta in type (%s) at %s\n" (Print.typ_to_string ft) (Range.string_of_range ft.pos))
       |   _ -> failwith "NYI. replace this with unknownType if you know the consequences"
 
 and getTypeFromArg (c:context) (a:arg) : mlty =
@@ -192,28 +182,28 @@ and extractMeta (c:context) (mt:meta_t) : mlty =
     
 
 and extractTyConstApp (c:context) (ftv:ftvar) (ags : args) : mlty =
-            match  (isTypeScheme ftv.v c)  with // when is something not a type scheme? if None, then no need to delta unfold.
-            //Perhaps this issue is Coq specific where there is no clear distinction between terms and types, and there is no distinction b/w term and type abbreviations.
-            // So, one might need to unfold abbreviations which unfold to types.
-             | true -> 
-                 let mlargs = List.map (getTypeFromArg c) ags in
-                 let k = ftv.sort in
-                 let ar =  argIsExp k ftv.v.str in
-                 //assert (List.length ar >= List.length mlargs);
-                 let (_, missingArgs) = Util.first_N (List.length mlargs) ar in
-                 let argCompletion =  List.map mlty_of_isExp missingArgs in
-                    (MLTY_Named (List.append mlargs argCompletion,(mlpath_of_lident ftv.v)))
-             | false -> failwith "this case was not anticipated"
-                 (* match  (deltaUnfold ftv.v c) with
-                 | Some tyu ->  extractTyp c tyu
-                 | None -> unknownType
-                 *)
+    if isTypeScheme ftv.v c
+    then // when is something not a type scheme? if None, then no need to delta unfold.
+         //Perhaps this issue is Coq specific where there is no clear distinction between terms and types, and there is no distinction b/w term and type abbreviations.
+         // So, one might need to unfold abbreviations which unfold to types.
+        let mlargs = List.map (getTypeFromArg c) ags in
+        let k = ftv.sort in
+        let ar =  argIsExp k ftv.v.str in
+        //assert (List.length ar >= List.length mlargs);
+        let (_, missingArgs) = Util.first_N (List.length mlargs) ar in
+        let argCompletion =  List.map mlty_of_isExp missingArgs in
+        (MLTY_Named (List.append mlargs argCompletion,(mlpath_of_lident ftv.v)))
+    else failwith "this case was not anticipated"
+            (* match  (deltaUnfold ftv.v c) with
+            | Some tyu ->  extractTyp c tyu
+            | None -> unknownType
+            *)
 
 (* Return the new context, where this binder IS in scope. Because we wish to call the F* normalizer, the context should always be up-to-date*)
 and extractBinderType  (c:context) (bn : binder): mlty * context = 
-match bn with
-| (Inl btv,_) -> (extractKind c (btv.sort), (extendContextAsTyvar false (Inl btv) c))
-| (Inr bvv,_) -> (extractTyp c (bvv.sort), (extendContextAsTyvar false (Inr bvv) c))
+    match bn with
+    | (Inl btv,_) -> (extractKind c (btv.sort), extendContextAsTyvar false (Inl btv) c)
+    | (Inr bvv,_) -> (extractTyp c (bvv.sort), extendContextAsTyvar false (Inr bvv) c)
 
 and extractBindersTypes  (c:context) (bs : list<binder>): list<mlty> * context =
     (fun (x,c) -> (List.rev x,c)) (List.fold_left (fun (lt,cp) b -> let (nt, nc)= extractBinderType cp b in ((nt::lt),nc))  ([],c) bs)
@@ -221,20 +211,20 @@ and extractBindersTypes  (c:context) (bs : list<binder>): list<mlty> * context =
 and extractKind (c:context) (ft:knd) : mlty = erasedContent
 and extractComp  (c:context) (ft:comp) : mlty * e_tag = extractComp' c (ft.n) 
 and extractComp'  (c:context) (ft:comp') : mlty * e_tag =
-match  ft with
-  | Total ty -> (extractTyp c ty, E_PURE)
-  | Comp cm -> (extractTyp c (cm.result_typ), translate_eff c cm.effect_name )
+    match ft with
+      | Total ty -> (extractTyp c ty, E_PURE)
+      | Comp cm -> (extractTyp c (cm.result_typ), translate_eff c cm.effect_name )
 
 
 let binderPPnames (bn:binder): ident =
-match bn with
-| (Inl btv,_) -> btv.v.ppname
-| (Inr bvv,_) -> bvv.v.ppname
+    match bn with
+      | (Inl btv,_) -> btv.v.ppname
+      | (Inr bvv,_) -> bvv.v.ppname
 
 let binderRealnames (bn:binder): ident =
-match bn with
-| (Inl btv,_) -> btv.v.realname
-| (Inr bvv,_) -> bvv.v.realname
+    match bn with
+      | (Inl btv,_) -> btv.v.realname
+      | (Inr bvv,_) -> bvv.v.realname
 
 
 let mlsymbolOfLident (id : lident) : mlsymbol =
@@ -268,9 +258,6 @@ let lookupDataConType (c:context) (sigb : sigelts) (l:lident)(*this sigbundle co
                     | _ -> None
                     )  in must tr
 
-//failwith "couldnt find the constructor in Tc.Env"
-
-
 let parseInductiveConstructors (c:context) (cnames: list<lident>) (sigb : sigelts) (*this sigbundle contains the constructors, but we look inside iff Tc.Env.lookpu_datacon fails*) 
     : (list<inductiveConstructor>) =
     List.map (fun h -> { cname = h ; ctype = lookupDataConType c sigb h }) cnames
@@ -279,70 +266,70 @@ let parseInductiveConstructors (c:context) (cnames: list<lident>) (sigb : sigelt
 let rec parseInductiveTypesFromSigBundle
     (c: context) (sigs : sigelts) : list<inductiveTypeFam> * list<typeAbbrev> * list<inductiveConstructor> (*last item contains only the constructors for exceptions *) 
      =
-match sigs with
-| (Sig_tycon (l,bs,kk,_,constrs,qs,_))::tlsig -> 
-     //printfn "%A\n" ((List.map (fun (x:lident) -> x.ident.idText) constrs));
-    let indConstrs(*list<inductiveConstructor>*) = parseInductiveConstructors c constrs tlsig in
-    let inds,abbs,exns=(parseInductiveTypesFromSigBundle c tlsig) in
-     ({tyName = l; k = kk; tyBinders=bs; constructors=indConstrs; qualifiers=qs})::inds, abbs,exns
-| (Sig_datacon (l,t,tc,quals,lids,_))::tlsig -> 
-        if (List.contains  ExceptionConstructor quals)
-        then             
-            let t = (lookup_datacon c.tcenv l) in // ignoring the type in the bundle. the typechecker env often has syntactically better types
-                (assert (List.isEmpty tlsig) ;([],[], [{cname=l; ctype=t}])) 
-        else
-            [],[],[]      // unless this is an exception constructor, at this point we can stop because Nik said that all type type declarations come before data constructors.
+    match sigs with
+        | [] -> [],[],[]
 
+        | (Sig_tycon (l,bs,kk,_,constrs,qs,_))::tlsig -> 
+             //printfn "%A\n" ((List.map (fun (x:lident) -> x.ident.idText) constrs));
+            let indConstrs(*list<inductiveConstructor>*) = parseInductiveConstructors c constrs tlsig in
+            let inds,abbs,exns=(parseInductiveTypesFromSigBundle c tlsig) in
+             ({tyName = l; k = kk; tyBinders=bs; constructors=indConstrs; qualifiers=qs})::inds, abbs,exns
 
-| [] -> [],[],[]
-| (Sig_typ_abbrev (l,bs,_,t,_,_))::tlsig -> 
-    let inds,abbs, exns=(parseInductiveTypesFromSigBundle c tlsig) in
-     inds, ({abTyName=l; abTyBinders=bs; abBody=t})::abbs, exns
-| se::tlsig -> failwith (Util.format1 "unexpected content in a  sig bundle : %s\n" (Print.sigelt_to_string se)) 
+        | (Sig_datacon (l,t,tc,quals,lids,_))::tlsig -> 
+            if (List.contains  ExceptionConstructor quals)
+            then let t = (lookup_datacon c.tcenv l) in // ignoring the type in the bundle. the typechecker env often has syntactically better types
+                 (assert (List.isEmpty tlsig) ;([],[], [{cname=l; ctype=t}])) 
+            else [],[],[]      // unless this is an exception constructor, at this point we can stop because Nik said that all type type declarations come before data constructors.
+
+        | (Sig_typ_abbrev (l,bs,_,t,_,_))::tlsig -> 
+           let inds,abbs, exns=(parseInductiveTypesFromSigBundle c tlsig) in
+           inds, ({abTyName=l; abTyBinders=bs; abBody=t})::abbs, exns
+
+        | se::tlsig -> failwith (Util.format1 "unexpected content in a  sig bundle : %s\n" (Print.sigelt_to_string se)) 
 
 //failwith (Util.format1 "unexpected content in a  sig bundle : %s\n" (Print.sigelt_to_string se)) 
 
 
 let rec argTypes  (t: mlty) : list<mlty> =
-match t with
-| MLTY_Fun (a,_,b) -> a::(argTypes b)
-| _ -> []
+    match t with
+      | MLTY_Fun (a,_,b) -> a::(argTypes b)
+      | _ -> []
  
 let lident2mlsymbol (l:lident) : mlsymbol = l.ident.idText
 
 let totalType_of_comp (ft:comp) : typ =
-match  ft.n with //TODO: is there a Util.compress for this?
-  | Total ty -> ty
-  | _ -> failwith "expected a total type. constructors of inductive types were assumed to be total"
+    match ft.n with 
+      | Total ty -> ty
+      | _ -> failwith "expected a total type. constructors of inductive types were assumed to be total"
 
 let allBindersOfFuntype (c: context)  (t:typ) : list<binder> = 
-let t = (preProcType c t) in
-match t.n with
-| Typ_fun (lb,cp) -> lb
-| _ -> []
+    let t = (preProcType c t) in
+    match t.n with
+        | Typ_fun (lb,cp) -> lb
+        | _ -> []
 
 //let allBindersOfInductiveCtor (c: context)  (ctorName: lident) : list<binder> = 
     //allBindersOfFuntype ()
 
 
 let bindersOfFuntype (c: context) (n:int) (t:typ) : list<binder> * (*residual type*) typ = 
-let t = (preProcType c t) in
-match t.n with
-| Typ_fun (lb,cp) -> let (ll,lr)= Util.first_N n lb in
-    if (List.isEmpty lr) 
-        then  (ll, totalType_of_comp cp)
-        else   (ll, Util.mkTypFun lr cp t) 
-// is this risky? perhaps not because we will manually put the removed binders into the context, before typechecking
-// but we are removing the implicit arguments corresponding to the type binders. Is that always safe? In OCaml, is there no way to say (nil @ nat)? 
-// Perhaps it is not needed, because OCaml can implicitly put a type lambda (generalize)?
-| _ -> assert (n=0); ([],t) 
-    //printfn "%A\n" (ctor.ctype);
-    //failwith "was expecting a function type"
+    let t = (preProcType c t) in
+    match t.n with
+        | Typ_fun (lb,cp) -> let (ll,lr)= Util.first_N n lb in
+            if (List.isEmpty lr) 
+                then  (ll, totalType_of_comp cp)
+                else   (ll, Util.mkTypFun lr cp t) 
+        // is this risky? perhaps not because we will manually put the removed binders into the context, before typechecking
+        // but we are removing the implicit arguments corresponding to the type binders. Is that always safe? In OCaml, is there no way to say (nil @ nat)? 
+        // Perhaps it is not needed, because OCaml can implicitly put a type lambda (generalize)?
+        | _ -> assert (n=0); ([],t) 
+        //printfn "%A\n" (ctor.ctype);
+        //failwith "was expecting a function type"
 
 let rec zipUnequal (la : list<'a>) (lb : list<'b>) : list<('a * 'b)> =
-match  (la, lb) with
-| (ha::ta, hb::tb) -> ((ha,hb)::(zipUnequal ta tb))
-| _ -> []
+    match (la, lb) with
+        | (ha::ta, hb::tb) -> ((ha,hb)::(zipUnequal ta tb))
+        | _ -> []
 
 let mlTyIdentOfBinder (b : binder) = prependTick (convIdent (binderPPnames b))
 
@@ -370,9 +357,9 @@ let extractCtor (tyBinders : list<binder>) (c:context) (ctor: inductiveConstruct
 let dummyIdent (n:int) : mlident = ("'dummyV"^(Util.string_of_int n), 0)
 
 let rec firstNNats (n:int) : list<int> =
-if (0<n)
-  then (n::(firstNNats (n-1)))
-  else []
+    if (0<n)
+    then (n::(firstNNats (n-1)))
+    else []
 
 let dummyIndexIdents (n:int) : list<mlident> = List.map dummyIdent (firstNNats n)
 
@@ -406,18 +393,18 @@ let rec headBinders (c:context) (t:typ) : (context * binders * typ (*residual ty
 
 
 let extractTypeAbbrev (c:context) (tyab:typeAbbrev) : context * (mlsymbol  * mlidents * option<mltybody>) =
-        let bs = tyab.abTyBinders in
-        let t = tyab.abBody in
-        let l = tyab.abTyName in
-        let c = (extendContext c (mfst bs)) in
-        let c, headBinders, residualType = headBinders c t in
-        let bs=List.append bs headBinders in
-        let t=residualType in
-        let tyDecBody = MLTD_Abbrev (extractTyp c t) in
-                //printfn "type is %A\n" (t);
-        let td = (mlsymbolOfLident l, List.map mlTyIdentOfBinder bs , Some tyDecBody) in
-        let c = Env.extend_tydef c [td] in // why is this needed?
-        c, td
+    let bs = tyab.abTyBinders in
+    let t = tyab.abBody in
+    let l = tyab.abTyName in
+    let c = (extendContext c (mfst bs)) in
+    let c, headBinders, residualType = headBinders c t in
+    let bs=List.append bs headBinders in
+    let t=residualType in
+    let tyDecBody = MLTD_Abbrev (extractTyp c t) in
+            //printfn "type is %A\n" (t);
+    let td = (mlsymbolOfLident l, List.map mlTyIdentOfBinder bs , Some tyDecBody) in
+    let c = Env.extend_tydef c [td] in // why is this needed?
+    c, td
 
 let extractExn (c:context) (exnConstr : inductiveConstructor) : (context * mlmodule1) =
     let mlt = extractTyp c exnConstr.ctype in

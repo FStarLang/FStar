@@ -6,8 +6,8 @@ let is_Mkenv = (fun ( _ ) -> (failwith ("Not yet implemented")))
 
 let root = (fun ( env ) -> env.env_root)
 
-let create = (fun ( nm ) -> (let _65_23457 = (Support.Microsoft.FStar.Util.smap_create 0)
-in {env_root = nm; env_map = _65_23457}))
+let create = (fun ( nm ) -> (let _65_23454 = (Support.Microsoft.FStar.Util.smap_create 0)
+in {env_root = nm; env_map = _65_23454}))
 
 let push = (fun ( env ) ( x ) ( pp ) -> (let m = env.env_map
 in (let _54_10 = (Support.Microsoft.FStar.Util.smap_add m x pp)

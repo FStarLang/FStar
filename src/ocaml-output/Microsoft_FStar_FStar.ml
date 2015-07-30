@@ -2,20 +2,20 @@
 let process_args = (fun ( _65_1 ) -> (match (()) with
 | () -> begin
 (let file_list = (Support.Microsoft.FStar.Util.mk_ref [])
-in (let res = (let _65_25687 = (Microsoft_FStar_Options.specs ())
-in (Support.Microsoft.FStar.Getopt.parse_cmdline _65_25687 (fun ( i ) -> (let _65_25686 = (let _65_25685 = (Support.ST.read file_list)
-in (Support.List.append _65_25685 ((i)::[])))
-in (Support.ST.op_Colon_Equals file_list _65_25686)))))
+in (let res = (let _65_25695 = (Microsoft_FStar_Options.specs ())
+in (Support.Microsoft.FStar.Getopt.parse_cmdline _65_25695 (fun ( i ) -> (let _65_25694 = (let _65_25693 = (Support.ST.read file_list)
+in (Support.List.append _65_25693 ((i)::[])))
+in (Support.ST.op_Colon_Equals file_list _65_25694)))))
 in (let _65_8 = (match (res) with
 | Support.Microsoft.FStar.Getopt.GoOn -> begin
-(let _65_25688 = (Microsoft_FStar_Options.set_fstar_home ())
-in (Support.Prims.ignore _65_25688))
+(let _65_25696 = (Microsoft_FStar_Options.set_fstar_home ())
+in (Support.Prims.ignore _65_25696))
 end
 | _ -> begin
 ()
 end)
-in (let _65_25689 = (Support.ST.read file_list)
-in (res, _65_25689)))))
+in (let _65_25697 = (Support.ST.read file_list)
+in (res, _65_25697)))))
 end))
 
 let cleanup = (fun ( _65_10 ) -> (match (()) with
@@ -37,12 +37,12 @@ end)
 in (let env = (Microsoft_FStar_Tc_Env.initial_env solver Microsoft_FStar_Absyn_Const.prims_lid)
 in (let _65_15 = (env.Microsoft_FStar_Tc_Env.solver.Microsoft_FStar_Tc_Env.init env)
 in (let p = (Microsoft_FStar_Options.prims ())
-in (let _65_20 = (let _65_25696 = (Microsoft_FStar_Parser_DesugarEnv.empty_env ())
-in (Microsoft_FStar_Parser_Driver.parse_file _65_25696 p))
+in (let _65_20 = (let _65_25704 = (Microsoft_FStar_Parser_DesugarEnv.empty_env ())
+in (Microsoft_FStar_Parser_Driver.parse_file _65_25704 p))
 in (match (_65_20) with
 | (dsenv, prims_mod) -> begin
-(let _65_23 = (let _65_25697 = (Support.List.hd prims_mod)
-in (Microsoft_FStar_Tc_Tc.check_module env _65_25697))
+(let _65_23 = (let _65_25705 = (Support.List.hd prims_mod)
+in (Microsoft_FStar_Tc_Tc.check_module env _65_25705))
 in (match (_65_23) with
 | (prims_mod, env) -> begin
 (prims_mod, dsenv, env)
@@ -59,8 +59,8 @@ n
 end)
 in (match ((errs > 0)) with
 | true -> begin
-(let _65_29 = (let _65_25700 = (Support.Microsoft.FStar.Util.string_of_int errs)
-in (Support.Microsoft.FStar.Util.fprint1 "Error: %s errors were reported (see above)\n" _65_25700))
+(let _65_29 = (let _65_25708 = (Support.Microsoft.FStar.Util.string_of_int errs)
+in (Support.Microsoft.FStar.Util.fprint1 "Error: %s errors were reported (see above)\n" _65_25708))
 in (exit (1)))
 end
 | false -> begin
@@ -172,8 +172,8 @@ end
 | false -> begin
 (fun ( line ) -> ())
 end)
-in (let _65_110 = (match ((let _65_25747 = (Support.ST.read Microsoft_FStar_Options.codegen)
-in (Support.Option.isSome _65_25747))) with
+in (let _65_110 = (match ((let _65_25755 = (Support.ST.read Microsoft_FStar_Options.codegen)
+in (Support.Option.isSome _65_25755))) with
 | true -> begin
 (let _65_108 = (Support.Microsoft.FStar.Util.print_string "Code-generation is not supported in interactive mode")
 in (exit (1)))
@@ -235,11 +235,11 @@ end))))
 end))
 in (let rec go = (fun ( stack ) ( curmod ) ( dsenv ) ( env ) -> (match ((fill_chunk ())) with
 | Pop (msg) -> begin
-(let _65_149 = (let _65_25758 = (Microsoft_FStar_Tc_Env.pop env msg)
-in (Support.Prims.pipe_right _65_25758 Support.Prims.ignore))
+(let _65_149 = (let _65_25766 = (Microsoft_FStar_Tc_Env.pop env msg)
+in (Support.Prims.pipe_right _65_25766 Support.Prims.ignore))
 in (let _65_151 = (env.Microsoft_FStar_Tc_Env.solver.Microsoft_FStar_Tc_Env.refresh ())
-in (let _65_153 = (let _65_25759 = (Microsoft_FStar_Options.reset_options ())
-in (Support.Prims.pipe_right _65_25759 Support.Prims.ignore))
+in (let _65_153 = (let _65_25767 = (Microsoft_FStar_Options.reset_options ())
+in (Support.Prims.pipe_right _65_25767 Support.Prims.ignore))
 in (let _65_164 = (match (stack) with
 | [] -> begin
 (failwith ("Too many pops"))
@@ -268,8 +268,8 @@ in (dsenv, env))))
 in (let commit_mark = (fun ( dsenv ) ( env ) -> (let dsenv = (Microsoft_FStar_Parser_DesugarEnv.commit_mark dsenv)
 in (let env = (Microsoft_FStar_Tc_Env.commit_mark env)
 in (dsenv, env))))
-in (let fail = (fun ( curmod ) ( dsenv_mark ) ( env_mark ) -> (let _65_195 = (let _65_25778 = (Microsoft_FStar_Tc_Errors.report_all ())
-in (Support.Prims.pipe_right _65_25778 Support.Prims.ignore))
+in (let fail = (fun ( curmod ) ( dsenv_mark ) ( env_mark ) -> (let _65_195 = (let _65_25786 = (Microsoft_FStar_Tc_Errors.report_all ())
+in (Support.Prims.pipe_right _65_25786 Support.Prims.ignore))
 in (let _65_197 = (Support.ST.op_Colon_Equals Microsoft_FStar_Tc_Errors.num_errs 0)
 in (let _65_199 = (Support.Microsoft.FStar.Util.fprint1 "%s\n" fail)
 in (let _65_203 = (reset_mark dsenv_mark env_mark)
@@ -345,9 +345,9 @@ end)
 end)
 in (let _65_245 = (Support.Prims.pipe_right fmods (Support.List.iter (fun ( m ) -> (match ((Microsoft_FStar_Options.should_verify m.Microsoft_FStar_Absyn_Syntax.name.Microsoft_FStar_Absyn_Syntax.str)) with
 | true -> begin
-(let _65_25787 = (let _65_25786 = (Microsoft_FStar_Absyn_Syntax.text_of_lid m.Microsoft_FStar_Absyn_Syntax.name)
-in (Support.Microsoft.FStar.Util.format2 "%s module: %s\n" msg _65_25786))
-in (Support.Microsoft.FStar.Util.print_string _65_25787))
+(let _65_25795 = (let _65_25794 = (Microsoft_FStar_Absyn_Syntax.text_of_lid m.Microsoft_FStar_Absyn_Syntax.name)
+in (Support.Microsoft.FStar.Util.format2 "%s module: %s\n" msg _65_25794))
+in (Support.Microsoft.FStar.Util.print_string _65_25795))
 end
 | false -> begin
 ()
@@ -362,38 +362,38 @@ let codegen = (fun ( fmods ) ( env ) -> (match (((Support.ST.read Microsoft_FSta
 | true -> begin
 (Support.Prims.try_with (fun ( _65_250 ) -> (match (()) with
 | () -> begin
-(let mllib = (let _65_25793 = (Support.List.tail fmods)
-in (Microsoft_FStar_Backends_OCaml_ASTTrans.mlmod_of_fstars _65_25793))
+(let mllib = (let _65_25801 = (Support.List.tail fmods)
+in (Microsoft_FStar_Backends_OCaml_ASTTrans.mlmod_of_fstars _65_25801))
 in (let doc = (Microsoft_FStar_Backends_OCaml_Code.doc_of_mllib mllib)
 in (Support.List.iter (fun ( _65_264 ) -> (match (_65_264) with
 | (n, d) -> begin
-(let _65_25796 = (Microsoft_FStar_Options.prependOutputDir (Support.String.strcat n ".ml"))
-in (let _65_25795 = (FSharp_Format.pretty 120 d)
-in (Support.Microsoft.FStar.Util.write_file _65_25796 _65_25795)))
+(let _65_25804 = (Microsoft_FStar_Options.prependOutputDir (Support.String.strcat n ".ml"))
+in (let _65_25803 = (FSharp_Format.pretty 120 d)
+in (Support.Microsoft.FStar.Util.write_file _65_25804 _65_25803)))
 end)) doc)))
 end)) (fun ( _65_249 ) -> (match (_65_249) with
 | Microsoft_FStar_Backends_OCaml_ASTTrans.OCamlFailure ((rg, error)) -> begin
-(let _65_256 = (let _65_25800 = (let _65_25799 = (Support.Microsoft.FStar.Range.string_of_range rg)
-in (let _65_25798 = (Microsoft_FStar_Backends_OCaml_ASTTrans.string_of_error error)
-in (Support.Microsoft.FStar.Util.format2 "OCaml Backend Error: %s %s\n" _65_25799 _65_25798)))
-in (Support.Prims.pipe_left Support.Microsoft.FStar.Util.print_string _65_25800))
+(let _65_256 = (let _65_25808 = (let _65_25807 = (Support.Microsoft.FStar.Range.string_of_range rg)
+in (let _65_25806 = (Microsoft_FStar_Backends_OCaml_ASTTrans.string_of_error error)
+in (Support.Microsoft.FStar.Util.format2 "OCaml Backend Error: %s %s\n" _65_25807 _65_25806)))
+in (Support.Prims.pipe_left Support.Microsoft.FStar.Util.print_string _65_25808))
 in (exit (1)))
 end)))
 end
 | false -> begin
 (match (((Support.ST.read Microsoft_FStar_Options.codegen) = Some ("OCaml-experimental"))) with
 | true -> begin
-(let _65_267 = (let _65_25801 = (Microsoft_FStar_Backends_ML_Env.mkContext env)
-in (Support.Microsoft.FStar.Util.fold_map Microsoft_FStar_Backends_ML_ExtractMod.extract _65_25801 fmods))
+(let _65_267 = (let _65_25809 = (Microsoft_FStar_Backends_ML_Env.mkContext env)
+in (Support.Microsoft.FStar.Util.fold_map Microsoft_FStar_Backends_ML_ExtractMod.extract _65_25809 fmods))
 in (match (_65_267) with
 | (c, mllibs) -> begin
 (let mllibs = (Support.List.flatten mllibs)
 in (let newDocs = (Support.List.collect Microsoft_FStar_Backends_OCaml_Code.doc_of_mllib mllibs)
 in (Support.List.iter (fun ( _65_272 ) -> (match (_65_272) with
 | (n, d) -> begin
-(let _65_25804 = (Microsoft_FStar_Options.prependOutputDir (Support.String.strcat n ".ml"))
-in (let _65_25803 = (FSharp_Format.pretty 120 d)
-in (Support.Microsoft.FStar.Util.write_file _65_25804 _65_25803)))
+(let _65_25812 = (Microsoft_FStar_Options.prependOutputDir (Support.String.strcat n ".ml"))
+in (let _65_25811 = (FSharp_Format.pretty 120 d)
+in (Support.Microsoft.FStar.Util.write_file _65_25812 _65_25811)))
 end)) newDocs)))
 end))
 end
@@ -407,8 +407,8 @@ in (match (_65_277) with
 | (res, filenames) -> begin
 (match (res) with
 | Support.Microsoft.FStar.Getopt.Help -> begin
-(let _65_25806 = (Microsoft_FStar_Options.specs ())
-in (Microsoft_FStar_Options.display_usage _65_25806))
+(let _65_25814 = (Microsoft_FStar_Options.specs ())
+in (Microsoft_FStar_Options.display_usage _65_25814))
 end
 | Support.Microsoft.FStar.Getopt.Die (msg) -> begin
 (Support.Microsoft.FStar.Util.print_string msg)
@@ -448,9 +448,10 @@ let main = (fun ( _65_297 ) -> (match (()) with
 | () -> begin
 (Support.Prims.try_with (fun ( _65_299 ) -> (match (()) with
 | () -> begin
-(let _65_310 = (go ())
-in (let _65_312 = (cleanup ())
-in (exit (0))))
+(let _65_310 = (Support.Microsoft.FStar.Util.print_string "This is clean F*\n")
+in (let _65_312 = (go ())
+in (let _65_314 = (cleanup ())
+in (exit (0)))))
 end)) (fun ( _65_298 ) -> (match (_65_298) with
 | e -> begin
 (let _65_302 = (match ((Microsoft_FStar_Absyn_Util.handleable e)) with
@@ -462,15 +463,15 @@ end
 end)
 in (let _65_304 = (match ((Support.ST.read Microsoft_FStar_Options.trace_error)) with
 | true -> begin
-(let _65_25811 = (Support.Microsoft.FStar.Util.message_of_exn e)
-in (let _65_25810 = (Support.Microsoft.FStar.Util.trace_of_exn e)
-in (Support.Microsoft.FStar.Util.fprint2 "\nUnexpected error\n%s\n%s\n" _65_25811 _65_25810)))
+(let _65_25819 = (Support.Microsoft.FStar.Util.message_of_exn e)
+in (let _65_25818 = (Support.Microsoft.FStar.Util.trace_of_exn e)
+in (Support.Microsoft.FStar.Util.fprint2 "\nUnexpected error\n%s\n%s\n" _65_25819 _65_25818)))
 end
 | false -> begin
 (match ((not ((Microsoft_FStar_Absyn_Util.handleable e)))) with
 | true -> begin
-(let _65_25812 = (Support.Microsoft.FStar.Util.message_of_exn e)
-in (Support.Microsoft.FStar.Util.fprint1 "\nUnexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" _65_25812))
+(let _65_25820 = (Support.Microsoft.FStar.Util.message_of_exn e)
+in (Support.Microsoft.FStar.Util.fprint1 "\nUnexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" _65_25820))
 end
 | false -> begin
 ()

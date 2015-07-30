@@ -19,6 +19,7 @@ open Microsoft.FStar
 open Microsoft.FStar.Util
 open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
+open Microsoft.FStar.Backends
 open Microsoft.FStar.Backends.ML.Syntax
 open Microsoft.FStar.Backends.ML.Env
 open Microsoft.FStar.Backends.ML.Util
@@ -92,7 +93,8 @@ let erasable (g:env)  (f:e_tag) (t:mlty) =
 
 let erase (g:env) (e:mlexpr) (f:e_tag) (t:mlty) : mlexpr * e_tag * mlty = 
     if erasable g f t
-    then ml_unit, f , ml_unit_ty (*unit value*)
+    then (debug g (fun () -> Util.fprint2 "Erasing %s at type %s\n" (OCaml.Code.string_of_mlexpr g e) (OCaml.Code.string_of_mlty g t));
+          ml_unit, f , ml_unit_ty) (*unit value*)
     else e, f, t
 
 let maybe_coerce (g:env) (e:mlexpr) (t:mlty) (t':mlty) = 
@@ -348,7 +350,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
           let maybe_generalize {lbname=lbname; lbeff=lbeff; lbtyp=t; lbdef=e} = 
               let f_e = ExtractTyp.translate_eff g lbeff in
               let t = Util.compress_typ t in
-//              printfn "Let %s at type %s\n" (Print.lbname_to_string lbname) (Print.typ_to_string t);
+//              debug g (fun () -> printfn "Let %s at type %s; expected effect is %A\n" (Print.lbname_to_string lbname) (Print.typ_to_string t) f_e);
               match t.n with 
                 | Typ_fun(bs, c) when is_type_abstraction bs -> 
                   //need to generalize, but will erase all the type abstractions; 
@@ -434,7 +436,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
           
           let f = join_l (f'::List.map fst lbs) in
 
-          MLE_Let((is_rec, List.map snd lbs), e'), f', t'
+          MLE_Let((is_rec, List.map snd lbs), e'), f, t'
    
 
       | Exp_match(e, pats) -> 

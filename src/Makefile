@@ -10,7 +10,7 @@ ABSYN_SRC=$(addprefix absyn/, $(ABSYN))
 FORMAT=format.fsi format.fs
 FORMAT_SRC=$(addprefix format/, $(FORMAT))
 
-BACKEND=nameenv.fsi nameenv.fs ml-syntax.fs env.fs util.fs extracttyp.fs extractexp.fs extractmod.fs ocaml-asttrans.fsi ocaml-asttrans.fs ocaml-codegen.fsi ocaml-codegen.fs
+BACKEND=nameenv.fsi nameenv.fs ml-syntax.fs env.fs util.fs ocaml-codegen.fsi ocaml-codegen.fs extracttyp.fs extractexp.fs extractmod.fs ocaml-asttrans.fsi ocaml-asttrans.fs 
 BACKEND_SRC=$(addprefix backend/, $(BACKEND))
 
 JSBACKEND=ast.fs print.fs translate.fs
@@ -173,20 +173,20 @@ BOOT_BASICFILES=bytes.fsti platform.fsi util.fsi getoptsimple.fsti range.fsti un
 BOOT_BASIC=$(addprefix basic/, $(BOOT_BASICFILES))
 BOOT_SYNTAXFILES=syntax.fsi syntax.fs const.fs visit.fs util.fs print.fs ssyntax.fs
 BOOT_SYNTAX=$(addprefix absyn/, $(BOOT_SYNTAXFILES))
-BOOT_PARSERFILES=ast.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs parse.fst lexhelp.fs parseit.fsi driver.fs
+BOOT_PARSERFILES=ast.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs parse.fsti lexhelp.fs parseit.fsi driver.fs
 BOOT_PARSER=$(addprefix parser/, $(BOOT_PARSERFILES))
 BOOT_TCFILES=tcenv.fsi tcenv.fs recheck.fs normalize.fsi normalize.fs errors.fs rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs
 BOOT_TC=$(addprefix tc/, $(BOOT_TCFILES))
 BOOT_FORMATFILES=format.fsi formatml.fs
 BOOT_FORMAT=$(addprefix format/, $(BOOT_FORMATFILES))
-BOOT_BACKENDFILES=nameenv.fsi nameenv.fs ml-syntax.fs env.fs util.fs extracttyp.fs extractexp.fs extractmod.fs ocaml-asttrans.fsi ocaml-asttrans.fs ocaml-codegen.fsi ocaml-codegen.fs
+BOOT_BACKENDFILES=nameenv.fsi nameenv.fs ml-syntax.fs env.fs util.fs ocaml-codegen.fsi ocaml-codegen.fs extracttyp.fs extractexp.fs extractmod.fs ocaml-asttrans.fsi ocaml-asttrans.fs 
 BOOT_BACKEND=$(addprefix backend/, $(BOOT_BACKENDFILES))
 BOOT_JSBACKENDFILES=ast.fs translate.fs
 BOOT_JSBACKEND=$(addprefix jsbackend/, $(BOOT_JSBACKENDFILES))
 BOOT_MAIN=fstar.fs
 BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_TC) $(BOOT_PARSER) $(TOSMT_SRC) $(BOOT_FORMAT) $(BOOT_BACKEND) fstar.fs
 
-ADMITTED_MODULES=System System.IO System.Text System.Diagnostics System.Collections.Generic Collections ST List Option String Char Microsoft.FStar.Bytes Microsoft.FStar.Platform Microsoft.FStar.Util Microsoft.FStar.Getopt Microsoft.FStar.Range Microsoft.FStar.Unionfind Microsoft.FStar.Parser.ParseIt
+ADMITTED_MODULES=System System.IO System.Text System.Diagnostics System.Collections.Generic Collections ST List Option String Char Microsoft.FStar.Bytes Microsoft.FStar.Platform Microsoft.FStar.Util Microsoft.FStar.Getopt Microsoft.FStar.Range Microsoft.FStar.Unionfind Microsoft.FStar.Parser.ParseIt Microsoft.FStar.Parser.Parse
 ADMITS=$(addprefix --admit_fsi , $(ADMITTED_MODULES))
 boot: $(BOOT_ALL)
 	../bin/fstar.exe --debug yes --fs_typ_app --lax $(FSTAROPTS) $(ADMITS) $^
@@ -194,7 +194,6 @@ boot: $(BOOT_ALL)
 ocaml: $(BOOT_ALL)
 	../bin/fstar.exe --eager_inference --MLish --lax --fs_typ_app --odir ocaml-output $(FSTAROPTS) --codegen OCaml $(ADMITS) $^
 
-	# wget https://raw.githubusercontent.com/FStarLang/FStar/3871a0209a67996ca381d054c171b5dac6178eb6/lib/prims.fst -O ../lib/prims.fst # remove this when prims is fixed
 ocaml-experimental: $(BOOT_ALL)
 	../bin/fstar.exe --eager_inference --MLish --lax --fs_typ_app --odir ocaml-output $(FSTAROPTS) --codegen OCaml-experimental $(ADMITS) $^
 

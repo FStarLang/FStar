@@ -22,5 +22,5 @@ val uvar_id: uvar 'a -> int
 val fresh : 'a -> uvar 'a
 val find : uvar 'a -> 'a
 val change : uvar 'a -> 'a -> unit
-val equivalent : uvar 'a -> uvar 'a -> Tot bool (* Cheating a bit? *)
+val equivalent : uvar 'a -> uvar 'a -> bool
 val union : uvar 'a -> uvar 'a -> unit

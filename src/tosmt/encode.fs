@@ -1056,9 +1056,6 @@ and encode_formula_with_labels (phi:typ) (env:env_t) : (term * labels * decls_t)
     let bin_op : ((term * term) -> term) -> list<term> -> term = fun f -> function 
         | [t1;t2] -> f(t1,t2)
         | _ -> failwith "Impossible" in
-    let tri_op : ((term * term * term) -> term) -> list<term> -> term = fun f -> function
-        | [t1;t2;t3] -> f(t1,t2,t3)
-        | _ -> failwith "Impossible" in
     let eq_op : args -> (term * labels * decls_t) = function 
         | [_;_;e1;e2] -> enc (bin_op mkEq) [e1;e2]
         | l ->  enc (bin_op mkEq) l in

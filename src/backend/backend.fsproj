@@ -53,13 +53,13 @@
     <Compile Include="ml-syntax.fs" />
     <Compile Include="env.fs" />
     <Compile Include="util.fs" />
+    <Compile Include="ocaml-codegen.fsi" />
+    <Compile Include="ocaml-codegen.fs" />
     <Compile Include="extracttyp.fs" />
     <Compile Include="extractexp.fs" />
     <Compile Include="extractmod.fs" />
     <Compile Include="ocaml-asttrans.fsi" />
     <Compile Include="ocaml-asttrans.fs" />
-    <Compile Include="ocaml-codegen.fsi" />
-    <Compile Include="ocaml-codegen.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\absyn\absyn.fsproj">

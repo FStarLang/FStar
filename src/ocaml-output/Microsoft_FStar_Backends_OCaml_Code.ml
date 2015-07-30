@@ -149,8 +149,8 @@ None
 end))
 in (match ((Support.List.tryPick chkin outmod)) with
 | None -> begin
-(match ((let _65_25174 = (Support.ST.read Microsoft_FStar_Options.codegen_libs)
-in (Support.List.tryPick chkin _65_25174))) with
+(match ((let _65_24111 = (Support.ST.read Microsoft_FStar_Options.codegen_libs)
+in (Support.List.tryPick chkin _65_24111))) with
 | None -> begin
 (outsupport ns)
 end
@@ -182,16 +182,16 @@ end
 (("Support")::("ST")::[], "op_ColonEquals")
 end
 | _ -> begin
-(let _64_46 = x
-in (match (_64_46) with
+(let _59_46 = x
+in (match (_59_46) with
 | (ns, x) -> begin
-(let _65_25179 = (path_of_ns currentModule ns)
-in (_65_25179, x))
+(let _65_24116 = (path_of_ns currentModule ns)
+in (_65_24116, x))
 end))
 end))
 
-let ptsym_of_symbol = (fun ( s ) -> (match (((let _65_25182 = (Support.String.get s 0)
-in (Support.Char.lowercase _65_25182)) <> (Support.String.get s 0))) with
+let ptsym_of_symbol = (fun ( s ) -> (match (((let _65_24119 = (Support.String.get s 0)
+in (Support.Char.lowercase _65_24119)) <> (Support.String.get s 0))) with
 | true -> begin
 (Support.String.strcat "l__" s)
 end
@@ -204,21 +204,21 @@ let ptsym = (fun ( currentModule ) ( mlp ) -> (match ((Support.List.isEmpty (Sup
 (ptsym_of_symbol (Support.Prims.snd mlp))
 end
 | false -> begin
-(let _64_52 = (mlpath_of_mlpath currentModule mlp)
-in (match (_64_52) with
+(let _59_52 = (mlpath_of_mlpath currentModule mlp)
+in (match (_59_52) with
 | (p, s) -> begin
-(let _65_25189 = (let _65_25188 = (let _65_25187 = (ptsym_of_symbol s)
-in (_65_25187)::[])
-in (Support.List.append p _65_25188))
-in (Support.String.concat "." _65_25189))
+(let _65_24126 = (let _65_24125 = (let _65_24124 = (ptsym_of_symbol s)
+in (_65_24124)::[])
+in (Support.List.append p _65_24125))
+in (Support.String.concat "." _65_24126))
 end))
 end))
 
-let ptctor = (fun ( currentModule ) ( mlp ) -> (let _64_57 = (mlpath_of_mlpath currentModule mlp)
-in (match (_64_57) with
+let ptctor = (fun ( currentModule ) ( mlp ) -> (let _59_57 = (mlpath_of_mlpath currentModule mlp)
+in (match (_59_57) with
 | (p, s) -> begin
-(let s = (match (((let _65_25194 = (Support.String.get s 0)
-in (Support.Char.uppercase _65_25194)) <> (Support.String.get s 0))) with
+(let s = (match (((let _65_24131 = (Support.String.get s 0)
+in (Support.Char.uppercase _65_24131)) <> (Support.String.get s 0))) with
 | true -> begin
 (Support.String.strcat "U__" s)
 end
@@ -238,11 +238,11 @@ let prim_constructors = (("Some", "Some"))::(("None", "None"))::(("Nil", "[]")):
 
 let is_prims_ns = (fun ( ns ) -> (ns = ("Prims")::[]))
 
-let as_bin_op = (fun ( _64_62 ) -> (match (_64_62) with
+let as_bin_op = (fun ( _59_62 ) -> (match (_59_62) with
 | (ns, x) -> begin
 (match ((is_prims_ns ns)) with
 | true -> begin
-(Support.List.tryFind (fun ( _64_68 ) -> (match (_64_68) with
+(Support.List.tryFind (fun ( _59_68 ) -> (match (_59_68) with
 | (y, _, _) -> begin
 (x = y)
 end)) infix_prim_ops)
@@ -254,11 +254,11 @@ end))
 
 let is_bin_op = (fun ( p ) -> ((as_bin_op p) <> None))
 
-let as_uni_op = (fun ( _64_72 ) -> (match (_64_72) with
+let as_uni_op = (fun ( _59_72 ) -> (match (_59_72) with
 | (ns, x) -> begin
 (match ((is_prims_ns ns)) with
 | true -> begin
-(Support.List.tryFind (fun ( _64_76 ) -> (match (_64_76) with
+(Support.List.tryFind (fun ( _59_76 ) -> (match (_59_76) with
 | (y, _) -> begin
 (x = y)
 end)) prim_uni_ops)
@@ -270,11 +270,11 @@ end))
 
 let is_uni_op = (fun ( p ) -> ((as_uni_op p) <> None))
 
-let as_standard_type = (fun ( _64_80 ) -> (match (_64_80) with
+let as_standard_type = (fun ( _59_80 ) -> (match (_59_80) with
 | (ns, x) -> begin
 (match ((is_prims_ns ns)) with
 | true -> begin
-(Support.List.tryFind (fun ( _64_84 ) -> (match (_64_84) with
+(Support.List.tryFind (fun ( _59_84 ) -> (match (_59_84) with
 | (y, _) -> begin
 (x = y)
 end)) prim_types)
@@ -286,11 +286,11 @@ end))
 
 let is_standard_type = (fun ( p ) -> ((as_standard_type p) <> None))
 
-let as_standard_constructor = (fun ( _64_88 ) -> (match (_64_88) with
+let as_standard_constructor = (fun ( _59_88 ) -> (match (_59_88) with
 | (ns, x) -> begin
 (match ((is_prims_ns ns)) with
 | true -> begin
-(Support.List.tryFind (fun ( _64_92 ) -> (match (_64_92) with
+(Support.List.tryFind (fun ( _59_92 ) -> (match (_59_92) with
 | (y, _) -> begin
 (x = y)
 end)) prim_constructors)
@@ -302,13 +302,13 @@ end))
 
 let is_standard_constructor = (fun ( p ) -> ((as_standard_constructor p) <> None))
 
-let maybe_paren = (fun ( _64_96 ) ( inner ) ( doc ) -> (match (_64_96) with
+let maybe_paren = (fun ( _59_96 ) ( inner ) ( doc ) -> (match (_59_96) with
 | (outer, side) -> begin
-(let noparens = (fun ( _inner ) ( _outer ) ( side ) -> (let _64_105 = _inner
-in (match (_64_105) with
+(let noparens = (fun ( _inner ) ( _outer ) ( side ) -> (let _59_105 = _inner
+in (match (_59_105) with
 | (pi, fi) -> begin
-(let _64_108 = _outer
-in (match (_64_108) with
+(let _59_108 = _outer
+in (match (_59_108) with
 | (po, fo) -> begin
 ((pi > po) || (match ((fi, side)) with
 | (Postfix, Left) -> begin
@@ -411,9 +411,9 @@ end
 "false"
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLC_Char (c) -> begin
-(let _65_25236 = (let _65_25235 = (encode_char c)
-in (Support.String.strcat "\'" _65_25235))
-in (Support.String.strcat _65_25236 "\'"))
+(let _65_24173 = (let _65_24172 = (encode_char c)
+in (Support.String.strcat "\'" _65_24172))
+in (Support.String.strcat _65_24173 "\'"))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLC_Byte (c) -> begin
 (Support.String.strcat (Support.String.strcat "\'" (ocaml_u8_codepoint c)) "\'")
@@ -445,15 +445,15 @@ end
 | false -> begin
 s
 end))
-in (let _65_25248 = (Support.Prims.pipe_left escape_tyvar (Microsoft_FStar_Backends_ML_Syntax.idsym x))
-in (FSharp_Format.text _65_25248)))
+in (let _65_24185 = (Support.Prims.pipe_left escape_tyvar (Microsoft_FStar_Backends_ML_Syntax.idsym x))
+in (FSharp_Format.text _65_24185)))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLTY_Tuple (tys) -> begin
 (let doc = (Support.List.map (doc_of_mltype currentModule (t_prio_tpl, Left)) tys)
-in (let doc = (let _65_25251 = (let _65_25250 = (let _65_25249 = (FSharp_Format.text " * ")
-in (FSharp_Format.combine _65_25249 doc))
-in (FSharp_Format.hbox _65_25250))
-in (FSharp_Format.parens _65_25251))
+in (let doc = (let _65_24188 = (let _65_24187 = (let _65_24186 = (FSharp_Format.text " * ")
+in (FSharp_Format.combine _65_24186 doc))
+in (FSharp_Format.hbox _65_24187))
+in (FSharp_Format.parens _65_24188))
 in doc))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLTY_Named ((args, name)) -> begin
@@ -466,45 +466,45 @@ end
 end
 | _ -> begin
 (let args = (Support.List.map (doc_of_mltype currentModule (min_op_prec, NonAssoc)) args)
-in (let _65_25254 = (let _65_25253 = (let _65_25252 = (FSharp_Format.text ", ")
-in (FSharp_Format.combine _65_25252 args))
-in (FSharp_Format.hbox _65_25253))
-in (FSharp_Format.parens _65_25254)))
+in (let _65_24191 = (let _65_24190 = (let _65_24189 = (FSharp_Format.text ", ")
+in (FSharp_Format.combine _65_24189 args))
+in (FSharp_Format.hbox _65_24190))
+in (FSharp_Format.parens _65_24191)))
 end)
 in (let name = (match ((is_standard_type name)) with
 | true -> begin
-(let _65_25256 = (let _65_25255 = (as_standard_type name)
-in (Support.Option.get _65_25255))
-in (Support.Prims.snd _65_25256))
+(let _65_24193 = (let _65_24192 = (as_standard_type name)
+in (Support.Option.get _65_24192))
+in (Support.Prims.snd _65_24193))
 end
 | false -> begin
 (ptsym currentModule name)
 end)
-in (let _65_25260 = (let _65_25259 = (let _65_25258 = (let _65_25257 = (FSharp_Format.text name)
-in (_65_25257)::[])
-in (args)::_65_25258)
-in (FSharp_Format.reduce1 _65_25259))
-in (FSharp_Format.hbox _65_25260))))
+in (let _65_24197 = (let _65_24196 = (let _65_24195 = (let _65_24194 = (FSharp_Format.text name)
+in (_65_24194)::[])
+in (args)::_65_24195)
+in (FSharp_Format.reduce1 _65_24196))
+in (FSharp_Format.hbox _65_24197))))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLTY_Fun ((t1, _, t2)) -> begin
 (let d1 = (doc_of_mltype currentModule (t_prio_fun, Left) t1)
 in (let d2 = (doc_of_mltype currentModule (t_prio_fun, Right) t2)
-in (let _65_25265 = (let _65_25264 = (let _65_25263 = (let _65_25262 = (let _65_25261 = (FSharp_Format.text " -> ")
-in (_65_25261)::(d2)::[])
-in (d1)::_65_25262)
-in (FSharp_Format.reduce1 _65_25263))
-in (FSharp_Format.hbox _65_25264))
-in (maybe_paren outer t_prio_fun _65_25265))))
+in (let _65_24202 = (let _65_24201 = (let _65_24200 = (let _65_24199 = (let _65_24198 = (FSharp_Format.text " -> ")
+in (_65_24198)::(d2)::[])
+in (d1)::_65_24199)
+in (FSharp_Format.reduce1 _65_24200))
+in (FSharp_Format.hbox _65_24201))
+in (maybe_paren outer t_prio_fun _65_24202))))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLTY_App ((t1, t2)) -> begin
 (let d1 = (doc_of_mltype currentModule (t_prio_fun, Left) t1)
 in (let d2 = (doc_of_mltype currentModule (t_prio_fun, Right) t2)
-in (let _65_25270 = (let _65_25269 = (let _65_25268 = (let _65_25267 = (let _65_25266 = (FSharp_Format.text " ")
-in (_65_25266)::(d1)::[])
-in (d2)::_65_25267)
-in (FSharp_Format.reduce1 _65_25268))
-in (FSharp_Format.hbox _65_25269))
-in (maybe_paren outer t_prio_fun _65_25270))))
+in (let _65_24207 = (let _65_24206 = (let _65_24205 = (let _65_24204 = (let _65_24203 = (FSharp_Format.text " ")
+in (_65_24203)::(d1)::[])
+in (d2)::_65_24204)
+in (FSharp_Format.reduce1 _65_24205))
+in (FSharp_Format.hbox _65_24206))
+in (maybe_paren outer t_prio_fun _65_24207))))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLTY_Top -> begin
 (FSharp_Format.text "Obj.t")
@@ -514,52 +514,52 @@ and doc_of_mltype = (fun ( currentModule ) ( outer ) ( ty ) -> (doc_of_mltype' c
 let rec doc_of_expr = (fun ( currentModule ) ( outer ) ( e ) -> (match (e) with
 | Microsoft_FStar_Backends_ML_Syntax.MLE_Coerce ((e, t, t')) -> begin
 (let doc = (doc_of_expr currentModule (min_op_prec, NonAssoc) e)
-in (let _65_25295 = (let _65_25294 = (let _65_25293 = (FSharp_Format.text "Obj.magic ")
-in (_65_25293)::(doc)::[])
-in (FSharp_Format.reduce _65_25294))
-in (FSharp_Format.parens _65_25295)))
+in (let _65_24232 = (let _65_24231 = (let _65_24230 = (FSharp_Format.text "Obj.magic ")
+in (_65_24230)::(doc)::[])
+in (FSharp_Format.reduce _65_24231))
+in (FSharp_Format.parens _65_24232)))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLE_Seq (es) -> begin
 (let docs = (Support.List.map (doc_of_expr currentModule (min_op_prec, NonAssoc)) es)
-in (let docs = (Support.List.map (fun ( d ) -> (let _65_25299 = (let _65_25298 = (let _65_25297 = (FSharp_Format.text ";")
-in (_65_25297)::(FSharp_Format.hardline)::[])
-in (d)::_65_25298)
-in (FSharp_Format.reduce _65_25299))) docs)
+in (let docs = (Support.List.map (fun ( d ) -> (let _65_24236 = (let _65_24235 = (let _65_24234 = (FSharp_Format.text ";")
+in (_65_24234)::(FSharp_Format.hardline)::[])
+in (d)::_65_24235)
+in (FSharp_Format.reduce _65_24236))) docs)
 in (FSharp_Format.reduce docs)))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLE_Const (c) -> begin
-(let _65_25300 = (string_of_mlconstant c)
-in (FSharp_Format.text _65_25300))
+(let _65_24237 = (string_of_mlconstant c)
+in (FSharp_Format.text _65_24237))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLE_Var ((x, _)) -> begin
 (FSharp_Format.text x)
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLE_Name (path) -> begin
-(let _65_25301 = (ptsym currentModule path)
-in (FSharp_Format.text _65_25301))
+(let _65_24238 = (ptsym currentModule path)
+in (FSharp_Format.text _65_24238))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLE_Record ((path, fields)) -> begin
-(let for1 = (fun ( _64_250 ) -> (match (_64_250) with
+(let for1 = (fun ( _59_250 ) -> (match (_59_250) with
 | (name, e) -> begin
 (let doc = (doc_of_expr currentModule (min_op_prec, NonAssoc) e)
-in (let _65_25308 = (let _65_25307 = (let _65_25304 = (ptsym currentModule (path, name))
-in (FSharp_Format.text _65_25304))
-in (let _65_25306 = (let _65_25305 = (FSharp_Format.text "=")
-in (_65_25305)::(doc)::[])
-in (_65_25307)::_65_25306))
-in (FSharp_Format.reduce1 _65_25308)))
+in (let _65_24245 = (let _65_24244 = (let _65_24241 = (ptsym currentModule (path, name))
+in (FSharp_Format.text _65_24241))
+in (let _65_24243 = (let _65_24242 = (FSharp_Format.text "=")
+in (_65_24242)::(doc)::[])
+in (_65_24244)::_65_24243))
+in (FSharp_Format.reduce1 _65_24245)))
 end))
-in (let _65_25311 = (let _65_25310 = (FSharp_Format.text "; ")
-in (let _65_25309 = (Support.List.map for1 fields)
-in (FSharp_Format.combine _65_25310 _65_25309)))
-in (FSharp_Format.cbrackets _65_25311)))
+in (let _65_24248 = (let _65_24247 = (FSharp_Format.text "; ")
+in (let _65_24246 = (Support.List.map for1 fields)
+in (FSharp_Format.combine _65_24247 _65_24246)))
+in (FSharp_Format.cbrackets _65_24248)))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLE_CTor ((ctor, [])) -> begin
 (let name = (match ((is_standard_constructor ctor)) with
 | true -> begin
-(let _65_25313 = (let _65_25312 = (as_standard_constructor ctor)
-in (Support.Option.get _65_25312))
-in (Support.Prims.snd _65_25313))
+(let _65_24250 = (let _65_24249 = (as_standard_constructor ctor)
+in (Support.Option.get _65_24249))
+in (Support.Prims.snd _65_24250))
 end
 | false -> begin
 (ptctor currentModule ctor)
@@ -569,9 +569,9 @@ end
 | Microsoft_FStar_Backends_ML_Syntax.MLE_CTor ((ctor, args)) -> begin
 (let name = (match ((is_standard_constructor ctor)) with
 | true -> begin
-(let _65_25315 = (let _65_25314 = (as_standard_constructor ctor)
-in (Support.Option.get _65_25314))
-in (Support.Prims.snd _65_25315))
+(let _65_24252 = (let _65_24251 = (as_standard_constructor ctor)
+in (Support.Option.get _65_24251))
+in (Support.Prims.snd _65_24252))
 end
 | false -> begin
 (ptctor currentModule ctor)
@@ -579,40 +579,40 @@ end)
 in (let args = (Support.List.map (doc_of_expr currentModule (min_op_prec, NonAssoc)) args)
 in (let doc = (match ((name, args)) with
 | ("::", x::xs::[]) -> begin
-(let _65_25319 = (let _65_25318 = (FSharp_Format.parens x)
-in (let _65_25317 = (let _65_25316 = (FSharp_Format.text "::")
-in (_65_25316)::(xs)::[])
-in (_65_25318)::_65_25317))
-in (FSharp_Format.reduce _65_25319))
+(let _65_24256 = (let _65_24255 = (FSharp_Format.parens x)
+in (let _65_24254 = (let _65_24253 = (FSharp_Format.text "::")
+in (_65_24253)::(xs)::[])
+in (_65_24255)::_65_24254))
+in (FSharp_Format.reduce _65_24256))
 end
 | (_, _) -> begin
-(let _65_25325 = (let _65_25324 = (FSharp_Format.text name)
-in (let _65_25323 = (let _65_25322 = (let _65_25321 = (let _65_25320 = (FSharp_Format.text ", ")
-in (FSharp_Format.combine _65_25320 args))
-in (FSharp_Format.parens _65_25321))
-in (_65_25322)::[])
-in (_65_25324)::_65_25323))
-in (FSharp_Format.reduce1 _65_25325))
+(let _65_24262 = (let _65_24261 = (FSharp_Format.text name)
+in (let _65_24260 = (let _65_24259 = (let _65_24258 = (let _65_24257 = (FSharp_Format.text ", ")
+in (FSharp_Format.combine _65_24257 args))
+in (FSharp_Format.parens _65_24258))
+in (_65_24259)::[])
+in (_65_24261)::_65_24260))
+in (FSharp_Format.reduce1 _65_24262))
 end)
 in (maybe_paren outer e_app_prio doc))))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLE_Tuple (es) -> begin
 (let docs = (Support.List.map (doc_of_expr currentModule (min_op_prec, NonAssoc)) es)
-in (let docs = (let _65_25327 = (let _65_25326 = (FSharp_Format.text ", ")
-in (FSharp_Format.combine _65_25326 docs))
-in (FSharp_Format.parens _65_25327))
+in (let docs = (let _65_24264 = (let _65_24263 = (FSharp_Format.text ", ")
+in (FSharp_Format.combine _65_24263 docs))
+in (FSharp_Format.parens _65_24264))
 in docs))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLE_Let (((rec_, lets), body)) -> begin
 (let doc = (doc_of_lets currentModule (rec_, lets))
 in (let body = (doc_of_expr currentModule (min_op_prec, NonAssoc) body)
-in (let _65_25333 = (let _65_25332 = (let _65_25331 = (let _65_25330 = (let _65_25329 = (let _65_25328 = (FSharp_Format.text "in")
-in (_65_25328)::(body)::[])
-in (FSharp_Format.reduce1 _65_25329))
-in (_65_25330)::[])
-in (doc)::_65_25331)
-in (FSharp_Format.combine FSharp_Format.hardline _65_25332))
-in (FSharp_Format.parens _65_25333))))
+in (let _65_24270 = (let _65_24269 = (let _65_24268 = (let _65_24267 = (let _65_24266 = (let _65_24265 = (FSharp_Format.text "in")
+in (_65_24265)::(body)::[])
+in (FSharp_Format.reduce1 _65_24266))
+in (_65_24267)::[])
+in (doc)::_65_24268)
+in (FSharp_Format.combine FSharp_Format.hardline _65_24269))
+in (FSharp_Format.parens _65_24270))))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLE_App ((e, args)) -> begin
 (match ((e, args)) with
@@ -631,165 +631,165 @@ end
 | _ -> begin
 (let e = (doc_of_expr currentModule (e_app_prio, ILeft) e)
 in (let args = (Support.List.map (doc_of_expr currentModule (e_app_prio, IRight)) args)
-in (let _65_25334 = (FSharp_Format.reduce1 ((e)::args))
-in (FSharp_Format.parens _65_25334))))
+in (let _65_24271 = (FSharp_Format.reduce1 ((e)::args))
+in (FSharp_Format.parens _65_24271))))
 end)
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLE_Proj ((e, f)) -> begin
 (let e = (doc_of_expr currentModule (min_op_prec, NonAssoc) e)
-in (let doc = (let _65_25340 = (let _65_25339 = (let _65_25338 = (FSharp_Format.text ".")
-in (let _65_25337 = (let _65_25336 = (let _65_25335 = (ptsym currentModule f)
-in (FSharp_Format.text _65_25335))
-in (_65_25336)::[])
-in (_65_25338)::_65_25337))
-in (e)::_65_25339)
-in (FSharp_Format.reduce _65_25340))
+in (let doc = (let _65_24277 = (let _65_24276 = (let _65_24275 = (FSharp_Format.text ".")
+in (let _65_24274 = (let _65_24273 = (let _65_24272 = (ptsym currentModule f)
+in (FSharp_Format.text _65_24272))
+in (_65_24273)::[])
+in (_65_24275)::_65_24274))
+in (e)::_65_24276)
+in (FSharp_Format.reduce _65_24277))
 in doc))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLE_Fun ((ids, body)) -> begin
-(let ids = (Support.List.map (fun ( _64_339 ) -> (match (_64_339) with
+(let ids = (Support.List.map (fun ( _59_339 ) -> (match (_59_339) with
 | ((x, _), xt) -> begin
-(let _65_25347 = (let _65_25346 = (FSharp_Format.text "(")
-in (let _65_25345 = (let _65_25344 = (FSharp_Format.text x)
-in (let _65_25343 = (let _65_25342 = (FSharp_Format.text ")")
-in (_65_25342)::[])
-in (_65_25344)::_65_25343))
-in (_65_25346)::_65_25345))
-in (FSharp_Format.reduce1 _65_25347))
+(let _65_24284 = (let _65_24283 = (FSharp_Format.text "(")
+in (let _65_24282 = (let _65_24281 = (FSharp_Format.text x)
+in (let _65_24280 = (let _65_24279 = (FSharp_Format.text ")")
+in (_65_24279)::[])
+in (_65_24281)::_65_24280))
+in (_65_24283)::_65_24282))
+in (FSharp_Format.reduce1 _65_24284))
 end)) ids)
 in (let body = (doc_of_expr currentModule (min_op_prec, NonAssoc) body)
-in (let doc = (let _65_25353 = (let _65_25352 = (FSharp_Format.text "fun")
-in (let _65_25351 = (let _65_25350 = (FSharp_Format.reduce1 ids)
-in (let _65_25349 = (let _65_25348 = (FSharp_Format.text "->")
-in (_65_25348)::(body)::[])
-in (_65_25350)::_65_25349))
-in (_65_25352)::_65_25351))
-in (FSharp_Format.reduce1 _65_25353))
+in (let doc = (let _65_24290 = (let _65_24289 = (FSharp_Format.text "fun")
+in (let _65_24288 = (let _65_24287 = (FSharp_Format.reduce1 ids)
+in (let _65_24286 = (let _65_24285 = (FSharp_Format.text "->")
+in (_65_24285)::(body)::[])
+in (_65_24287)::_65_24286))
+in (_65_24289)::_65_24288))
+in (FSharp_Format.reduce1 _65_24290))
 in (FSharp_Format.parens doc))))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLE_If ((cond, e1, None)) -> begin
 (let cond = (doc_of_expr currentModule (min_op_prec, NonAssoc) cond)
-in (let doc = (let _65_25366 = (let _65_25365 = (let _65_25360 = (let _65_25359 = (FSharp_Format.text "if")
-in (let _65_25358 = (let _65_25357 = (let _65_25356 = (FSharp_Format.text "then")
-in (let _65_25355 = (let _65_25354 = (FSharp_Format.text "begin")
-in (_65_25354)::[])
-in (_65_25356)::_65_25355))
-in (cond)::_65_25357)
-in (_65_25359)::_65_25358))
-in (FSharp_Format.reduce1 _65_25360))
-in (let _65_25364 = (let _65_25363 = (doc_of_expr currentModule (min_op_prec, NonAssoc) e1)
-in (let _65_25362 = (let _65_25361 = (FSharp_Format.text "end")
-in (_65_25361)::[])
-in (_65_25363)::_65_25362))
-in (_65_25365)::_65_25364))
-in (FSharp_Format.combine FSharp_Format.hardline _65_25366))
+in (let doc = (let _65_24303 = (let _65_24302 = (let _65_24297 = (let _65_24296 = (FSharp_Format.text "if")
+in (let _65_24295 = (let _65_24294 = (let _65_24293 = (FSharp_Format.text "then")
+in (let _65_24292 = (let _65_24291 = (FSharp_Format.text "begin")
+in (_65_24291)::[])
+in (_65_24293)::_65_24292))
+in (cond)::_65_24294)
+in (_65_24296)::_65_24295))
+in (FSharp_Format.reduce1 _65_24297))
+in (let _65_24301 = (let _65_24300 = (doc_of_expr currentModule (min_op_prec, NonAssoc) e1)
+in (let _65_24299 = (let _65_24298 = (FSharp_Format.text "end")
+in (_65_24298)::[])
+in (_65_24300)::_65_24299))
+in (_65_24302)::_65_24301))
+in (FSharp_Format.combine FSharp_Format.hardline _65_24303))
 in (maybe_paren outer e_bin_prio_if doc)))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLE_If ((cond, e1, Some (e2))) -> begin
 (let cond = (doc_of_expr currentModule (min_op_prec, NonAssoc) cond)
-in (let doc = (let _65_25389 = (let _65_25388 = (let _65_25373 = (let _65_25372 = (FSharp_Format.text "if")
-in (let _65_25371 = (let _65_25370 = (let _65_25369 = (FSharp_Format.text "then")
-in (let _65_25368 = (let _65_25367 = (FSharp_Format.text "begin")
-in (_65_25367)::[])
-in (_65_25369)::_65_25368))
-in (cond)::_65_25370)
-in (_65_25372)::_65_25371))
-in (FSharp_Format.reduce1 _65_25373))
-in (let _65_25387 = (let _65_25386 = (doc_of_expr currentModule (min_op_prec, NonAssoc) e1)
-in (let _65_25385 = (let _65_25384 = (let _65_25379 = (let _65_25378 = (FSharp_Format.text "end")
-in (let _65_25377 = (let _65_25376 = (FSharp_Format.text "else")
-in (let _65_25375 = (let _65_25374 = (FSharp_Format.text "begin")
-in (_65_25374)::[])
-in (_65_25376)::_65_25375))
-in (_65_25378)::_65_25377))
-in (FSharp_Format.reduce1 _65_25379))
-in (let _65_25383 = (let _65_25382 = (doc_of_expr currentModule (min_op_prec, NonAssoc) e2)
-in (let _65_25381 = (let _65_25380 = (FSharp_Format.text "end")
-in (_65_25380)::[])
-in (_65_25382)::_65_25381))
-in (_65_25384)::_65_25383))
-in (_65_25386)::_65_25385))
-in (_65_25388)::_65_25387))
-in (FSharp_Format.combine FSharp_Format.hardline _65_25389))
+in (let doc = (let _65_24326 = (let _65_24325 = (let _65_24310 = (let _65_24309 = (FSharp_Format.text "if")
+in (let _65_24308 = (let _65_24307 = (let _65_24306 = (FSharp_Format.text "then")
+in (let _65_24305 = (let _65_24304 = (FSharp_Format.text "begin")
+in (_65_24304)::[])
+in (_65_24306)::_65_24305))
+in (cond)::_65_24307)
+in (_65_24309)::_65_24308))
+in (FSharp_Format.reduce1 _65_24310))
+in (let _65_24324 = (let _65_24323 = (doc_of_expr currentModule (min_op_prec, NonAssoc) e1)
+in (let _65_24322 = (let _65_24321 = (let _65_24316 = (let _65_24315 = (FSharp_Format.text "end")
+in (let _65_24314 = (let _65_24313 = (FSharp_Format.text "else")
+in (let _65_24312 = (let _65_24311 = (FSharp_Format.text "begin")
+in (_65_24311)::[])
+in (_65_24313)::_65_24312))
+in (_65_24315)::_65_24314))
+in (FSharp_Format.reduce1 _65_24316))
+in (let _65_24320 = (let _65_24319 = (doc_of_expr currentModule (min_op_prec, NonAssoc) e2)
+in (let _65_24318 = (let _65_24317 = (FSharp_Format.text "end")
+in (_65_24317)::[])
+in (_65_24319)::_65_24318))
+in (_65_24321)::_65_24320))
+in (_65_24323)::_65_24322))
+in (_65_24325)::_65_24324))
+in (FSharp_Format.combine FSharp_Format.hardline _65_24326))
 in (maybe_paren outer e_bin_prio_if doc)))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLE_Match ((cond, pats)) -> begin
 (let cond = (doc_of_expr currentModule (min_op_prec, NonAssoc) cond)
 in (let pats = (Support.List.map (doc_of_branch currentModule) pats)
-in (let doc = (let _65_25396 = (let _65_25395 = (let _65_25394 = (FSharp_Format.text "match")
-in (let _65_25393 = (let _65_25392 = (FSharp_Format.parens cond)
-in (let _65_25391 = (let _65_25390 = (FSharp_Format.text "with")
-in (_65_25390)::[])
-in (_65_25392)::_65_25391))
-in (_65_25394)::_65_25393))
-in (FSharp_Format.reduce1 _65_25395))
-in (_65_25396)::pats)
+in (let doc = (let _65_24333 = (let _65_24332 = (let _65_24331 = (FSharp_Format.text "match")
+in (let _65_24330 = (let _65_24329 = (FSharp_Format.parens cond)
+in (let _65_24328 = (let _65_24327 = (FSharp_Format.text "with")
+in (_65_24327)::[])
+in (_65_24329)::_65_24328))
+in (_65_24331)::_65_24330))
+in (FSharp_Format.reduce1 _65_24332))
+in (_65_24333)::pats)
 in (let doc = (FSharp_Format.combine FSharp_Format.hardline doc)
 in (FSharp_Format.parens doc)))))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLE_Raise ((exn, [])) -> begin
-(let _65_25401 = (let _65_25400 = (FSharp_Format.text "raise")
-in (let _65_25399 = (let _65_25398 = (let _65_25397 = (ptctor currentModule exn)
-in (FSharp_Format.text _65_25397))
-in (_65_25398)::[])
-in (_65_25400)::_65_25399))
-in (FSharp_Format.reduce1 _65_25401))
+(let _65_24338 = (let _65_24337 = (FSharp_Format.text "raise")
+in (let _65_24336 = (let _65_24335 = (let _65_24334 = (ptctor currentModule exn)
+in (FSharp_Format.text _65_24334))
+in (_65_24335)::[])
+in (_65_24337)::_65_24336))
+in (FSharp_Format.reduce1 _65_24338))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLE_Raise ((exn, args)) -> begin
 (let args = (Support.List.map (doc_of_expr currentModule (min_op_prec, NonAssoc)) args)
-in (let _65_25410 = (let _65_25409 = (FSharp_Format.text "raise")
-in (let _65_25408 = (let _65_25407 = (let _65_25402 = (ptctor currentModule exn)
-in (FSharp_Format.text _65_25402))
-in (let _65_25406 = (let _65_25405 = (let _65_25404 = (let _65_25403 = (FSharp_Format.text ", ")
-in (FSharp_Format.combine _65_25403 args))
-in (FSharp_Format.parens _65_25404))
-in (_65_25405)::[])
-in (_65_25407)::_65_25406))
-in (_65_25409)::_65_25408))
-in (FSharp_Format.reduce1 _65_25410)))
+in (let _65_24347 = (let _65_24346 = (FSharp_Format.text "raise")
+in (let _65_24345 = (let _65_24344 = (let _65_24339 = (ptctor currentModule exn)
+in (FSharp_Format.text _65_24339))
+in (let _65_24343 = (let _65_24342 = (let _65_24341 = (let _65_24340 = (FSharp_Format.text ", ")
+in (FSharp_Format.combine _65_24340 args))
+in (FSharp_Format.parens _65_24341))
+in (_65_24342)::[])
+in (_65_24344)::_65_24343))
+in (_65_24346)::_65_24345))
+in (FSharp_Format.reduce1 _65_24347)))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLE_Try ((e, pats)) -> begin
-(let _65_25427 = (let _65_25426 = (let _65_25414 = (let _65_25413 = (FSharp_Format.text "try")
-in (let _65_25412 = (let _65_25411 = (FSharp_Format.text "begin")
-in (_65_25411)::[])
-in (_65_25413)::_65_25412))
-in (FSharp_Format.reduce1 _65_25414))
-in (let _65_25425 = (let _65_25424 = (doc_of_expr currentModule (min_op_prec, NonAssoc) e)
-in (let _65_25423 = (let _65_25422 = (let _65_25418 = (let _65_25417 = (FSharp_Format.text "end")
-in (let _65_25416 = (let _65_25415 = (FSharp_Format.text "with")
-in (_65_25415)::[])
-in (_65_25417)::_65_25416))
-in (FSharp_Format.reduce1 _65_25418))
-in (let _65_25421 = (let _65_25420 = (let _65_25419 = (Support.List.map (doc_of_branch currentModule) pats)
-in (FSharp_Format.combine FSharp_Format.hardline _65_25419))
-in (_65_25420)::[])
-in (_65_25422)::_65_25421))
-in (_65_25424)::_65_25423))
-in (_65_25426)::_65_25425))
-in (FSharp_Format.combine FSharp_Format.hardline _65_25427))
+(let _65_24364 = (let _65_24363 = (let _65_24351 = (let _65_24350 = (FSharp_Format.text "try")
+in (let _65_24349 = (let _65_24348 = (FSharp_Format.text "begin")
+in (_65_24348)::[])
+in (_65_24350)::_65_24349))
+in (FSharp_Format.reduce1 _65_24351))
+in (let _65_24362 = (let _65_24361 = (doc_of_expr currentModule (min_op_prec, NonAssoc) e)
+in (let _65_24360 = (let _65_24359 = (let _65_24355 = (let _65_24354 = (FSharp_Format.text "end")
+in (let _65_24353 = (let _65_24352 = (FSharp_Format.text "with")
+in (_65_24352)::[])
+in (_65_24354)::_65_24353))
+in (FSharp_Format.reduce1 _65_24355))
+in (let _65_24358 = (let _65_24357 = (let _65_24356 = (Support.List.map (doc_of_branch currentModule) pats)
+in (FSharp_Format.combine FSharp_Format.hardline _65_24356))
+in (_65_24357)::[])
+in (_65_24359)::_65_24358))
+in (_65_24361)::_65_24360))
+in (_65_24363)::_65_24362))
+in (FSharp_Format.combine FSharp_Format.hardline _65_24364))
 end))
-and doc_of_binop = (fun ( currentModule ) ( p ) ( e1 ) ( e2 ) -> (let _64_387 = (let _65_25432 = (as_bin_op p)
-in (Support.Option.get _65_25432))
-in (match (_64_387) with
+and doc_of_binop = (fun ( currentModule ) ( p ) ( e1 ) ( e2 ) -> (let _59_387 = (let _65_24369 = (as_bin_op p)
+in (Support.Option.get _65_24369))
+in (match (_59_387) with
 | (_, prio, txt) -> begin
 (let e1 = (doc_of_expr currentModule (prio, Left) e1)
 in (let e2 = (doc_of_expr currentModule (prio, Right) e2)
-in (let doc = (let _65_25435 = (let _65_25434 = (let _65_25433 = (FSharp_Format.text txt)
-in (_65_25433)::(e2)::[])
-in (e1)::_65_25434)
-in (FSharp_Format.reduce1 _65_25435))
+in (let doc = (let _65_24372 = (let _65_24371 = (let _65_24370 = (FSharp_Format.text txt)
+in (_65_24370)::(e2)::[])
+in (e1)::_65_24371)
+in (FSharp_Format.reduce1 _65_24372))
 in (FSharp_Format.parens doc))))
 end)))
-and doc_of_uniop = (fun ( currentModule ) ( p ) ( e1 ) -> (let _64_397 = (let _65_25439 = (as_uni_op p)
-in (Support.Option.get _65_25439))
-in (match (_64_397) with
+and doc_of_uniop = (fun ( currentModule ) ( p ) ( e1 ) -> (let _59_397 = (let _65_24376 = (as_uni_op p)
+in (Support.Option.get _65_24376))
+in (match (_59_397) with
 | (_, txt) -> begin
 (let e1 = (doc_of_expr currentModule (min_op_prec, NonAssoc) e1)
-in (let doc = (let _65_25443 = (let _65_25442 = (FSharp_Format.text txt)
-in (let _65_25441 = (let _65_25440 = (FSharp_Format.parens e1)
-in (_65_25440)::[])
-in (_65_25442)::_65_25441))
-in (FSharp_Format.reduce1 _65_25443))
+in (let doc = (let _65_24380 = (let _65_24379 = (FSharp_Format.text txt)
+in (let _65_24378 = (let _65_24377 = (FSharp_Format.parens e1)
+in (_65_24377)::[])
+in (_65_24379)::_65_24378))
+in (FSharp_Format.reduce1 _65_24380))
 in (FSharp_Format.parens doc)))
 end)))
 and doc_of_pattern = (fun ( currentModule ) ( pattern ) -> (match (pattern) with
@@ -797,35 +797,35 @@ and doc_of_pattern = (fun ( currentModule ) ( pattern ) -> (match (pattern) with
 (FSharp_Format.text "_")
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLP_Const (c) -> begin
-(let _65_25446 = (string_of_mlconstant c)
-in (FSharp_Format.text _65_25446))
+(let _65_24383 = (string_of_mlconstant c)
+in (FSharp_Format.text _65_24383))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLP_Var (x) -> begin
 (FSharp_Format.text (Support.Prims.fst x))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLP_Record ((path, fields)) -> begin
-(let for1 = (fun ( _64_414 ) -> (match (_64_414) with
+(let for1 = (fun ( _59_414 ) -> (match (_59_414) with
 | (name, p) -> begin
-(let _65_25455 = (let _65_25454 = (let _65_25449 = (ptsym currentModule (path, name))
-in (FSharp_Format.text _65_25449))
-in (let _65_25453 = (let _65_25452 = (FSharp_Format.text "=")
-in (let _65_25451 = (let _65_25450 = (doc_of_pattern currentModule p)
-in (_65_25450)::[])
-in (_65_25452)::_65_25451))
-in (_65_25454)::_65_25453))
-in (FSharp_Format.reduce1 _65_25455))
+(let _65_24392 = (let _65_24391 = (let _65_24386 = (ptsym currentModule (path, name))
+in (FSharp_Format.text _65_24386))
+in (let _65_24390 = (let _65_24389 = (FSharp_Format.text "=")
+in (let _65_24388 = (let _65_24387 = (doc_of_pattern currentModule p)
+in (_65_24387)::[])
+in (_65_24389)::_65_24388))
+in (_65_24391)::_65_24390))
+in (FSharp_Format.reduce1 _65_24392))
 end))
-in (let _65_25458 = (let _65_25457 = (FSharp_Format.text "; ")
-in (let _65_25456 = (Support.List.map for1 fields)
-in (FSharp_Format.combine _65_25457 _65_25456)))
-in (FSharp_Format.cbrackets _65_25458)))
+in (let _65_24395 = (let _65_24394 = (FSharp_Format.text "; ")
+in (let _65_24393 = (Support.List.map for1 fields)
+in (FSharp_Format.combine _65_24394 _65_24393)))
+in (FSharp_Format.cbrackets _65_24395)))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLP_CTor ((ctor, [])) -> begin
 (let name = (match ((is_standard_constructor ctor)) with
 | true -> begin
-(let _65_25460 = (let _65_25459 = (as_standard_constructor ctor)
-in (Support.Option.get _65_25459))
-in (Support.Prims.snd _65_25460))
+(let _65_24397 = (let _65_24396 = (as_standard_constructor ctor)
+in (Support.Option.get _65_24396))
+in (Support.Prims.snd _65_24397))
 end
 | false -> begin
 (ptctor currentModule ctor)
@@ -836,119 +836,119 @@ end
 (let ps = (Support.List.map (doc_of_pattern currentModule) ps)
 in (let name = (match ((is_standard_constructor ctor)) with
 | true -> begin
-(let _65_25462 = (let _65_25461 = (as_standard_constructor ctor)
-in (Support.Option.get _65_25461))
-in (Support.Prims.snd _65_25462))
+(let _65_24399 = (let _65_24398 = (as_standard_constructor ctor)
+in (Support.Option.get _65_24398))
+in (Support.Prims.snd _65_24399))
 end
 | false -> begin
 (ptctor currentModule ctor)
 end)
 in (let doc = (match ((name, ps)) with
 | ("::", x::xs::[]) -> begin
-(let _65_25465 = (let _65_25464 = (let _65_25463 = (FSharp_Format.text "::")
-in (_65_25463)::(xs)::[])
-in (x)::_65_25464)
-in (FSharp_Format.reduce _65_25465))
+(let _65_24402 = (let _65_24401 = (let _65_24400 = (FSharp_Format.text "::")
+in (_65_24400)::(xs)::[])
+in (x)::_65_24401)
+in (FSharp_Format.reduce _65_24402))
 end
 | (_, _) -> begin
-(let _65_25471 = (let _65_25470 = (FSharp_Format.text name)
-in (let _65_25469 = (let _65_25468 = (let _65_25467 = (let _65_25466 = (FSharp_Format.text ", ")
-in (FSharp_Format.combine _65_25466 ps))
-in (FSharp_Format.parens _65_25467))
-in (_65_25468)::[])
-in (_65_25470)::_65_25469))
-in (FSharp_Format.reduce1 _65_25471))
+(let _65_24408 = (let _65_24407 = (FSharp_Format.text name)
+in (let _65_24406 = (let _65_24405 = (let _65_24404 = (let _65_24403 = (FSharp_Format.text ", ")
+in (FSharp_Format.combine _65_24403 ps))
+in (FSharp_Format.parens _65_24404))
+in (_65_24405)::[])
+in (_65_24407)::_65_24406))
+in (FSharp_Format.reduce1 _65_24408))
 end)
 in (maybe_paren (min_op_prec, NonAssoc) e_app_prio doc))))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLP_Tuple (ps) -> begin
 (let ps = (Support.List.map (doc_of_pattern currentModule) ps)
-in (let _65_25473 = (let _65_25472 = (FSharp_Format.text ", ")
-in (FSharp_Format.combine _65_25472 ps))
-in (FSharp_Format.parens _65_25473)))
+in (let _65_24410 = (let _65_24409 = (FSharp_Format.text ", ")
+in (FSharp_Format.combine _65_24409 ps))
+in (FSharp_Format.parens _65_24410)))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLP_Branch (ps) -> begin
 (let ps = (Support.List.map (doc_of_pattern currentModule) ps)
 in (let ps = (Support.List.map FSharp_Format.parens ps)
-in (let _65_25474 = (FSharp_Format.text " | ")
-in (FSharp_Format.combine _65_25474 ps))))
+in (let _65_24411 = (FSharp_Format.text " | ")
+in (FSharp_Format.combine _65_24411 ps))))
 end))
-and doc_of_branch = (fun ( currentModule ) ( _64_448 ) -> (match (_64_448) with
+and doc_of_branch = (fun ( currentModule ) ( _59_448 ) -> (match (_59_448) with
 | (p, cond, e) -> begin
 (let case = (match (cond) with
 | None -> begin
-(let _65_25480 = (let _65_25479 = (FSharp_Format.text "|")
-in (let _65_25478 = (let _65_25477 = (doc_of_pattern currentModule p)
-in (_65_25477)::[])
-in (_65_25479)::_65_25478))
-in (FSharp_Format.reduce1 _65_25480))
+(let _65_24417 = (let _65_24416 = (FSharp_Format.text "|")
+in (let _65_24415 = (let _65_24414 = (doc_of_pattern currentModule p)
+in (_65_24414)::[])
+in (_65_24416)::_65_24415))
+in (FSharp_Format.reduce1 _65_24417))
 end
 | Some (c) -> begin
 (let c = (doc_of_expr currentModule (min_op_prec, NonAssoc) c)
-in (let _65_25486 = (let _65_25485 = (FSharp_Format.text "|")
-in (let _65_25484 = (let _65_25483 = (doc_of_pattern currentModule p)
-in (let _65_25482 = (let _65_25481 = (FSharp_Format.text "when")
-in (_65_25481)::(c)::[])
-in (_65_25483)::_65_25482))
-in (_65_25485)::_65_25484))
-in (FSharp_Format.reduce1 _65_25486)))
+in (let _65_24423 = (let _65_24422 = (FSharp_Format.text "|")
+in (let _65_24421 = (let _65_24420 = (doc_of_pattern currentModule p)
+in (let _65_24419 = (let _65_24418 = (FSharp_Format.text "when")
+in (_65_24418)::(c)::[])
+in (_65_24420)::_65_24419))
+in (_65_24422)::_65_24421))
+in (FSharp_Format.reduce1 _65_24423)))
 end)
-in (let _65_25497 = (let _65_25496 = (let _65_25491 = (let _65_25490 = (let _65_25489 = (FSharp_Format.text "->")
-in (let _65_25488 = (let _65_25487 = (FSharp_Format.text "begin")
-in (_65_25487)::[])
-in (_65_25489)::_65_25488))
-in (case)::_65_25490)
-in (FSharp_Format.reduce1 _65_25491))
-in (let _65_25495 = (let _65_25494 = (doc_of_expr currentModule (min_op_prec, NonAssoc) e)
-in (let _65_25493 = (let _65_25492 = (FSharp_Format.text "end")
-in (_65_25492)::[])
-in (_65_25494)::_65_25493))
-in (_65_25496)::_65_25495))
-in (FSharp_Format.combine FSharp_Format.hardline _65_25497)))
+in (let _65_24434 = (let _65_24433 = (let _65_24428 = (let _65_24427 = (let _65_24426 = (FSharp_Format.text "->")
+in (let _65_24425 = (let _65_24424 = (FSharp_Format.text "begin")
+in (_65_24424)::[])
+in (_65_24426)::_65_24425))
+in (case)::_65_24427)
+in (FSharp_Format.reduce1 _65_24428))
+in (let _65_24432 = (let _65_24431 = (doc_of_expr currentModule (min_op_prec, NonAssoc) e)
+in (let _65_24430 = (let _65_24429 = (FSharp_Format.text "end")
+in (_65_24429)::[])
+in (_65_24431)::_65_24430))
+in (_65_24433)::_65_24432))
+in (FSharp_Format.combine FSharp_Format.hardline _65_24434)))
 end))
-and doc_of_lets = (fun ( currentModule ) ( _64_457 ) -> (match (_64_457) with
+and doc_of_lets = (fun ( currentModule ) ( _59_457 ) -> (match (_59_457) with
 | (rec_, lets) -> begin
-(let for1 = (fun ( _64_464 ) -> (match (_64_464) with
+(let for1 = (fun ( _59_464 ) -> (match (_59_464) with
 | {Microsoft_FStar_Backends_ML_Syntax.mllb_name = name; Microsoft_FStar_Backends_ML_Syntax.mllb_tysc = tys; Microsoft_FStar_Backends_ML_Syntax.mllb_add_unit = _; Microsoft_FStar_Backends_ML_Syntax.mllb_def = e} -> begin
 (let e = (doc_of_expr currentModule (min_op_prec, NonAssoc) e)
 in (let ids = []
-in (let ids = (Support.List.map (fun ( _64_470 ) -> (match (_64_470) with
+in (let ids = (Support.List.map (fun ( _59_470 ) -> (match (_59_470) with
 | (x, _) -> begin
 (FSharp_Format.text x)
 end)) ids)
-in (let _65_25508 = (let _65_25507 = (FSharp_Format.text (Microsoft_FStar_Backends_ML_Syntax.idsym name))
-in (let _65_25506 = (let _65_25505 = (FSharp_Format.reduce1 ids)
-in (let _65_25504 = (let _65_25503 = (FSharp_Format.text "=")
-in (_65_25503)::(e)::[])
-in (_65_25505)::_65_25504))
-in (_65_25507)::_65_25506))
-in (FSharp_Format.reduce1 _65_25508)))))
+in (let _65_24445 = (let _65_24444 = (FSharp_Format.text (Microsoft_FStar_Backends_ML_Syntax.idsym name))
+in (let _65_24443 = (let _65_24442 = (FSharp_Format.reduce1 ids)
+in (let _65_24441 = (let _65_24440 = (FSharp_Format.text "=")
+in (_65_24440)::(e)::[])
+in (_65_24442)::_65_24441))
+in (_65_24444)::_65_24443))
+in (FSharp_Format.reduce1 _65_24445)))))
 end))
 in (let letdoc = (match (rec_) with
 | true -> begin
-(let _65_25512 = (let _65_25511 = (FSharp_Format.text "let")
-in (let _65_25510 = (let _65_25509 = (FSharp_Format.text "rec")
-in (_65_25509)::[])
-in (_65_25511)::_65_25510))
-in (FSharp_Format.reduce1 _65_25512))
+(let _65_24449 = (let _65_24448 = (FSharp_Format.text "let")
+in (let _65_24447 = (let _65_24446 = (FSharp_Format.text "rec")
+in (_65_24446)::[])
+in (_65_24448)::_65_24447))
+in (FSharp_Format.reduce1 _65_24449))
 end
 | false -> begin
 (FSharp_Format.text "let")
 end)
 in (let lets = (Support.List.map for1 lets)
-in (let lets = (Support.List.mapi (fun ( i ) ( doc ) -> (let _65_25516 = (let _65_25515 = (match ((i = 0)) with
+in (let lets = (Support.List.mapi (fun ( i ) ( doc ) -> (let _65_24453 = (let _65_24452 = (match ((i = 0)) with
 | true -> begin
 letdoc
 end
 | false -> begin
 (FSharp_Format.text "and")
 end)
-in (_65_25515)::(doc)::[])
-in (FSharp_Format.reduce1 _65_25516))) lets)
+in (_65_24452)::(doc)::[])
+in (FSharp_Format.reduce1 _65_24453))) lets)
 in (FSharp_Format.combine FSharp_Format.hardline lets)))))
 end))
 
-let doc_of_mltydecl = (fun ( currentModule ) ( decls ) -> (let for1 = (fun ( _64_483 ) -> (match (_64_483) with
+let doc_of_mltydecl = (fun ( currentModule ) ( decls ) -> (let for1 = (fun ( _59_483 ) -> (match (_59_483) with
 | (x, tparams, body) -> begin
 (let tparams = (match (tparams) with
 | [] -> begin
@@ -959,31 +959,31 @@ end
 end
 | _ -> begin
 (let doc = (Support.List.map (fun ( x ) -> (FSharp_Format.text (Microsoft_FStar_Backends_ML_Syntax.idsym x))) tparams)
-in (let _65_25525 = (let _65_25524 = (FSharp_Format.text ", ")
-in (FSharp_Format.combine _65_25524 doc))
-in (FSharp_Format.parens _65_25525)))
+in (let _65_24462 = (let _65_24461 = (FSharp_Format.text ", ")
+in (FSharp_Format.combine _65_24461 doc))
+in (FSharp_Format.parens _65_24462)))
 end)
 in (let forbody = (fun ( body ) -> (match (body) with
 | Microsoft_FStar_Backends_ML_Syntax.MLTD_Abbrev (ty) -> begin
 (doc_of_mltype currentModule (min_op_prec, NonAssoc) ty)
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLTD_Record (fields) -> begin
-(let forfield = (fun ( _64_501 ) -> (match (_64_501) with
+(let forfield = (fun ( _59_501 ) -> (match (_59_501) with
 | (name, ty) -> begin
 (let name = (FSharp_Format.text name)
 in (let ty = (doc_of_mltype currentModule (min_op_prec, NonAssoc) ty)
-in (let _65_25532 = (let _65_25531 = (let _65_25530 = (FSharp_Format.text ":")
-in (_65_25530)::(ty)::[])
-in (name)::_65_25531)
-in (FSharp_Format.reduce1 _65_25532))))
+in (let _65_24469 = (let _65_24468 = (let _65_24467 = (FSharp_Format.text ":")
+in (_65_24467)::(ty)::[])
+in (name)::_65_24468)
+in (FSharp_Format.reduce1 _65_24469))))
 end))
-in (let _65_25535 = (let _65_25534 = (FSharp_Format.text "; ")
-in (let _65_25533 = (Support.List.map forfield fields)
-in (FSharp_Format.combine _65_25534 _65_25533)))
-in (FSharp_Format.cbrackets _65_25535)))
+in (let _65_24472 = (let _65_24471 = (FSharp_Format.text "; ")
+in (let _65_24470 = (Support.List.map forfield fields)
+in (FSharp_Format.combine _65_24471 _65_24470)))
+in (FSharp_Format.cbrackets _65_24472)))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLTD_DType (ctors) -> begin
-(let forctor = (fun ( _64_509 ) -> (match (_64_509) with
+(let forctor = (fun ( _59_509 ) -> (match (_59_509) with
 | (name, tys) -> begin
 (match (tys) with
 | [] -> begin
@@ -991,49 +991,49 @@ end
 end
 | _ -> begin
 (let tys = (Support.List.map (doc_of_mltype currentModule (t_prio_tpl, Left)) tys)
-in (let tys = (let _65_25538 = (FSharp_Format.text " * ")
-in (FSharp_Format.combine _65_25538 tys))
-in (let _65_25542 = (let _65_25541 = (FSharp_Format.text name)
-in (let _65_25540 = (let _65_25539 = (FSharp_Format.text "of")
-in (_65_25539)::(tys)::[])
-in (_65_25541)::_65_25540))
-in (FSharp_Format.reduce1 _65_25542))))
+in (let tys = (let _65_24475 = (FSharp_Format.text " * ")
+in (FSharp_Format.combine _65_24475 tys))
+in (let _65_24479 = (let _65_24478 = (FSharp_Format.text name)
+in (let _65_24477 = (let _65_24476 = (FSharp_Format.text "of")
+in (_65_24476)::(tys)::[])
+in (_65_24478)::_65_24477))
+in (FSharp_Format.reduce1 _65_24479))))
 end)
 end))
 in (let ctors = (Support.List.map forctor ctors)
-in (let ctors = (Support.List.map (fun ( d ) -> (let _65_25545 = (let _65_25544 = (FSharp_Format.text "|")
-in (_65_25544)::(d)::[])
-in (FSharp_Format.reduce1 _65_25545))) ctors)
+in (let ctors = (Support.List.map (fun ( d ) -> (let _65_24482 = (let _65_24481 = (FSharp_Format.text "|")
+in (_65_24481)::(d)::[])
+in (FSharp_Format.reduce1 _65_24482))) ctors)
 in (FSharp_Format.combine FSharp_Format.hardline ctors))))
 end))
-in (let doc = (let _65_25549 = (let _65_25548 = (let _65_25547 = (let _65_25546 = (ptsym currentModule ([], x))
-in (FSharp_Format.text _65_25546))
-in (_65_25547)::[])
-in (tparams)::_65_25548)
-in (FSharp_Format.reduce1 _65_25549))
+in (let doc = (let _65_24486 = (let _65_24485 = (let _65_24484 = (let _65_24483 = (ptsym currentModule ([], x))
+in (FSharp_Format.text _65_24483))
+in (_65_24484)::[])
+in (tparams)::_65_24485)
+in (FSharp_Format.reduce1 _65_24486))
 in (match (body) with
 | None -> begin
 doc
 end
 | Some (body) -> begin
 (let body = (forbody body)
-in (let _65_25554 = (let _65_25553 = (let _65_25552 = (let _65_25551 = (let _65_25550 = (FSharp_Format.text "=")
-in (_65_25550)::[])
-in (doc)::_65_25551)
-in (FSharp_Format.reduce1 _65_25552))
-in (_65_25553)::(body)::[])
-in (FSharp_Format.combine FSharp_Format.hardline _65_25554)))
+in (let _65_24491 = (let _65_24490 = (let _65_24489 = (let _65_24488 = (let _65_24487 = (FSharp_Format.text "=")
+in (_65_24487)::[])
+in (doc)::_65_24488)
+in (FSharp_Format.reduce1 _65_24489))
+in (_65_24490)::(body)::[])
+in (FSharp_Format.combine FSharp_Format.hardline _65_24491)))
 end))))
 end))
 in (let doc = (Support.List.map for1 decls)
 in (let doc = (match (((Support.List.length doc) > 0)) with
 | true -> begin
-(let _65_25559 = (let _65_25558 = (FSharp_Format.text "type")
-in (let _65_25557 = (let _65_25556 = (let _65_25555 = (FSharp_Format.text " \n and ")
-in (FSharp_Format.combine _65_25555 doc))
-in (_65_25556)::[])
-in (_65_25558)::_65_25557))
-in (FSharp_Format.reduce1 _65_25559))
+(let _65_24496 = (let _65_24495 = (FSharp_Format.text "type")
+in (let _65_24494 = (let _65_24493 = (let _65_24492 = (FSharp_Format.text " \n and ")
+in (FSharp_Format.combine _65_24492 doc))
+in (_65_24493)::[])
+in (_65_24495)::_65_24494))
+in (FSharp_Format.reduce1 _65_24496))
 end
 | false -> begin
 (FSharp_Format.text "")
@@ -1042,51 +1042,51 @@ in doc))))
 
 let rec doc_of_sig1 = (fun ( currentModule ) ( s ) -> (match (s) with
 | Microsoft_FStar_Backends_ML_Syntax.MLS_Mod ((x, subsig)) -> begin
-(let _65_25579 = (let _65_25578 = (let _65_25571 = (let _65_25570 = (FSharp_Format.text "module")
-in (let _65_25569 = (let _65_25568 = (FSharp_Format.text x)
-in (let _65_25567 = (let _65_25566 = (FSharp_Format.text "=")
-in (_65_25566)::[])
-in (_65_25568)::_65_25567))
-in (_65_25570)::_65_25569))
-in (FSharp_Format.reduce1 _65_25571))
-in (let _65_25577 = (let _65_25576 = (doc_of_sig currentModule subsig)
-in (let _65_25575 = (let _65_25574 = (let _65_25573 = (let _65_25572 = (FSharp_Format.text "end")
-in (_65_25572)::[])
-in (FSharp_Format.reduce1 _65_25573))
-in (_65_25574)::[])
-in (_65_25576)::_65_25575))
-in (_65_25578)::_65_25577))
-in (FSharp_Format.combine FSharp_Format.hardline _65_25579))
+(let _65_24516 = (let _65_24515 = (let _65_24508 = (let _65_24507 = (FSharp_Format.text "module")
+in (let _65_24506 = (let _65_24505 = (FSharp_Format.text x)
+in (let _65_24504 = (let _65_24503 = (FSharp_Format.text "=")
+in (_65_24503)::[])
+in (_65_24505)::_65_24504))
+in (_65_24507)::_65_24506))
+in (FSharp_Format.reduce1 _65_24508))
+in (let _65_24514 = (let _65_24513 = (doc_of_sig currentModule subsig)
+in (let _65_24512 = (let _65_24511 = (let _65_24510 = (let _65_24509 = (FSharp_Format.text "end")
+in (_65_24509)::[])
+in (FSharp_Format.reduce1 _65_24510))
+in (_65_24511)::[])
+in (_65_24513)::_65_24512))
+in (_65_24515)::_65_24514))
+in (FSharp_Format.combine FSharp_Format.hardline _65_24516))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLS_Exn ((x, [])) -> begin
-(let _65_25583 = (let _65_25582 = (FSharp_Format.text "exception")
-in (let _65_25581 = (let _65_25580 = (FSharp_Format.text x)
-in (_65_25580)::[])
-in (_65_25582)::_65_25581))
-in (FSharp_Format.reduce1 _65_25583))
+(let _65_24520 = (let _65_24519 = (FSharp_Format.text "exception")
+in (let _65_24518 = (let _65_24517 = (FSharp_Format.text x)
+in (_65_24517)::[])
+in (_65_24519)::_65_24518))
+in (FSharp_Format.reduce1 _65_24520))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLS_Exn ((x, args)) -> begin
 (let args = (Support.List.map (doc_of_mltype currentModule (min_op_prec, NonAssoc)) args)
-in (let args = (let _65_25585 = (let _65_25584 = (FSharp_Format.text " * ")
-in (FSharp_Format.combine _65_25584 args))
-in (FSharp_Format.parens _65_25585))
-in (let _65_25591 = (let _65_25590 = (FSharp_Format.text "exception")
-in (let _65_25589 = (let _65_25588 = (FSharp_Format.text x)
-in (let _65_25587 = (let _65_25586 = (FSharp_Format.text "of")
-in (_65_25586)::(args)::[])
-in (_65_25588)::_65_25587))
-in (_65_25590)::_65_25589))
-in (FSharp_Format.reduce1 _65_25591))))
+in (let args = (let _65_24522 = (let _65_24521 = (FSharp_Format.text " * ")
+in (FSharp_Format.combine _65_24521 args))
+in (FSharp_Format.parens _65_24522))
+in (let _65_24528 = (let _65_24527 = (FSharp_Format.text "exception")
+in (let _65_24526 = (let _65_24525 = (FSharp_Format.text x)
+in (let _65_24524 = (let _65_24523 = (FSharp_Format.text "of")
+in (_65_24523)::(args)::[])
+in (_65_24525)::_65_24524))
+in (_65_24527)::_65_24526))
+in (FSharp_Format.reduce1 _65_24528))))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLS_Val ((x, (_, ty))) -> begin
 (let ty = (doc_of_mltype currentModule (min_op_prec, NonAssoc) ty)
-in (let _65_25597 = (let _65_25596 = (FSharp_Format.text "val")
-in (let _65_25595 = (let _65_25594 = (FSharp_Format.text x)
-in (let _65_25593 = (let _65_25592 = (FSharp_Format.text ": ")
-in (_65_25592)::(ty)::[])
-in (_65_25594)::_65_25593))
-in (_65_25596)::_65_25595))
-in (FSharp_Format.reduce1 _65_25597)))
+in (let _65_24534 = (let _65_24533 = (FSharp_Format.text "val")
+in (let _65_24532 = (let _65_24531 = (FSharp_Format.text x)
+in (let _65_24530 = (let _65_24529 = (FSharp_Format.text ": ")
+in (_65_24529)::(ty)::[])
+in (_65_24531)::_65_24530))
+in (_65_24533)::_65_24532))
+in (FSharp_Format.reduce1 _65_24534)))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLS_Ty (decls) -> begin
 (doc_of_mltydecl currentModule decls)
@@ -1097,24 +1097,24 @@ in (FSharp_Format.reduce docs))))
 
 let doc_of_mod1 = (fun ( currentModule ) ( m ) -> (match (m) with
 | Microsoft_FStar_Backends_ML_Syntax.MLM_Exn ((x, [])) -> begin
-(let _65_25608 = (let _65_25607 = (FSharp_Format.text "exception")
-in (let _65_25606 = (let _65_25605 = (FSharp_Format.text x)
-in (_65_25605)::[])
-in (_65_25607)::_65_25606))
-in (FSharp_Format.reduce1 _65_25608))
+(let _65_24545 = (let _65_24544 = (FSharp_Format.text "exception")
+in (let _65_24543 = (let _65_24542 = (FSharp_Format.text x)
+in (_65_24542)::[])
+in (_65_24544)::_65_24543))
+in (FSharp_Format.reduce1 _65_24545))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLM_Exn ((x, args)) -> begin
 (let args = (Support.List.map (doc_of_mltype currentModule (min_op_prec, NonAssoc)) args)
-in (let args = (let _65_25610 = (let _65_25609 = (FSharp_Format.text " * ")
-in (FSharp_Format.combine _65_25609 args))
-in (FSharp_Format.parens _65_25610))
-in (let _65_25616 = (let _65_25615 = (FSharp_Format.text "exception")
-in (let _65_25614 = (let _65_25613 = (FSharp_Format.text x)
-in (let _65_25612 = (let _65_25611 = (FSharp_Format.text "of")
-in (_65_25611)::(args)::[])
-in (_65_25613)::_65_25612))
-in (_65_25615)::_65_25614))
-in (FSharp_Format.reduce1 _65_25616))))
+in (let args = (let _65_24547 = (let _65_24546 = (FSharp_Format.text " * ")
+in (FSharp_Format.combine _65_24546 args))
+in (FSharp_Format.parens _65_24547))
+in (let _65_24553 = (let _65_24552 = (FSharp_Format.text "exception")
+in (let _65_24551 = (let _65_24550 = (FSharp_Format.text x)
+in (let _65_24549 = (let _65_24548 = (FSharp_Format.text "of")
+in (_65_24548)::(args)::[])
+in (_65_24550)::_65_24549))
+in (_65_24552)::_65_24551))
+in (FSharp_Format.reduce1 _65_24553))))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLM_Ty (decls) -> begin
 (doc_of_mltydecl currentModule decls)
@@ -1123,117 +1123,123 @@ end
 (doc_of_lets currentModule (rec_, lets))
 end
 | Microsoft_FStar_Backends_ML_Syntax.MLM_Top (e) -> begin
-(let _65_25624 = (let _65_25623 = (FSharp_Format.text "let")
-in (let _65_25622 = (let _65_25621 = (FSharp_Format.text "_")
-in (let _65_25620 = (let _65_25619 = (FSharp_Format.text "=")
-in (let _65_25618 = (let _65_25617 = (doc_of_expr currentModule (min_op_prec, NonAssoc) e)
-in (_65_25617)::[])
-in (_65_25619)::_65_25618))
-in (_65_25621)::_65_25620))
-in (_65_25623)::_65_25622))
-in (FSharp_Format.reduce1 _65_25624))
+(let _65_24561 = (let _65_24560 = (FSharp_Format.text "let")
+in (let _65_24559 = (let _65_24558 = (FSharp_Format.text "_")
+in (let _65_24557 = (let _65_24556 = (FSharp_Format.text "=")
+in (let _65_24555 = (let _65_24554 = (doc_of_expr currentModule (min_op_prec, NonAssoc) e)
+in (_65_24554)::[])
+in (_65_24556)::_65_24555))
+in (_65_24558)::_65_24557))
+in (_65_24560)::_65_24559))
+in (FSharp_Format.reduce1 _65_24561))
 end))
 
 let doc_of_mod = (fun ( currentModule ) ( m ) -> (let docs = (Support.List.map (doc_of_mod1 currentModule) m)
 in (let docs = (Support.List.map (fun ( x ) -> (FSharp_Format.reduce ((x)::(FSharp_Format.hardline)::(FSharp_Format.hardline)::[]))) docs)
 in (FSharp_Format.reduce docs))))
 
-let rec doc_of_mllib_r = (fun ( _64_582 ) -> (match (_64_582) with
+let rec doc_of_mllib_r = (fun ( _59_582 ) -> (match (_59_582) with
 | Microsoft_FStar_Backends_ML_Syntax.MLLib (mllib) -> begin
-(let rec for1_sig = (fun ( _64_589 ) -> (match (_64_589) with
+(let rec for1_sig = (fun ( _59_589 ) -> (match (_59_589) with
 | (x, sigmod, Microsoft_FStar_Backends_ML_Syntax.MLLib (sub)) -> begin
-(let head = (let _65_25643 = (let _65_25642 = (FSharp_Format.text "module")
-in (let _65_25641 = (let _65_25640 = (FSharp_Format.text x)
-in (let _65_25639 = (let _65_25638 = (FSharp_Format.text ":")
-in (let _65_25637 = (let _65_25636 = (FSharp_Format.text "sig")
-in (_65_25636)::[])
-in (_65_25638)::_65_25637))
-in (_65_25640)::_65_25639))
-in (_65_25642)::_65_25641))
-in (FSharp_Format.reduce1 _65_25643))
-in (let tail = (let _65_25645 = (let _65_25644 = (FSharp_Format.text "end")
-in (_65_25644)::[])
-in (FSharp_Format.reduce1 _65_25645))
-in (let doc = (Support.Option.map (fun ( _64_595 ) -> (match (_64_595) with
+(let head = (let _65_24580 = (let _65_24579 = (FSharp_Format.text "module")
+in (let _65_24578 = (let _65_24577 = (FSharp_Format.text x)
+in (let _65_24576 = (let _65_24575 = (FSharp_Format.text ":")
+in (let _65_24574 = (let _65_24573 = (FSharp_Format.text "sig")
+in (_65_24573)::[])
+in (_65_24575)::_65_24574))
+in (_65_24577)::_65_24576))
+in (_65_24579)::_65_24578))
+in (FSharp_Format.reduce1 _65_24580))
+in (let tail = (let _65_24582 = (let _65_24581 = (FSharp_Format.text "end")
+in (_65_24581)::[])
+in (FSharp_Format.reduce1 _65_24582))
+in (let doc = (Support.Option.map (fun ( _59_595 ) -> (match (_59_595) with
 | (s, _) -> begin
 (doc_of_sig x s)
 end)) sigmod)
 in (let sub = (Support.List.map for1_sig sub)
 in (let sub = (Support.List.map (fun ( x ) -> (FSharp_Format.reduce ((x)::(FSharp_Format.hardline)::(FSharp_Format.hardline)::[]))) sub)
-in (let _65_25655 = (let _65_25654 = (FSharp_Format.cat head FSharp_Format.hardline)
-in (let _65_25653 = (let _65_25652 = (match (doc) with
+in (let _65_24592 = (let _65_24591 = (FSharp_Format.cat head FSharp_Format.hardline)
+in (let _65_24590 = (let _65_24589 = (match (doc) with
 | None -> begin
 FSharp_Format.empty
 end
 | Some (s) -> begin
 (FSharp_Format.cat s FSharp_Format.hardline)
 end)
-in (let _65_25651 = (let _65_25650 = (FSharp_Format.reduce sub)
-in (let _65_25649 = (let _65_25648 = (FSharp_Format.cat tail FSharp_Format.hardline)
-in (_65_25648)::[])
-in (_65_25650)::_65_25649))
-in (_65_25652)::_65_25651))
-in (_65_25654)::_65_25653))
-in (FSharp_Format.reduce _65_25655)))))))
+in (let _65_24588 = (let _65_24587 = (FSharp_Format.reduce sub)
+in (let _65_24586 = (let _65_24585 = (FSharp_Format.cat tail FSharp_Format.hardline)
+in (_65_24585)::[])
+in (_65_24587)::_65_24586))
+in (_65_24589)::_65_24588))
+in (_65_24591)::_65_24590))
+in (FSharp_Format.reduce _65_24592)))))))
 end))
-and for1_mod = (fun ( istop ) ( _64_608 ) -> (match (_64_608) with
+and for1_mod = (fun ( istop ) ( _59_608 ) -> (match (_59_608) with
 | (x, sigmod, Microsoft_FStar_Backends_ML_Syntax.MLLib (sub)) -> begin
-(let _64_609 = (Support.Microsoft.FStar.Util.fprint1 "Gen Code: %s\n" x)
-in (let head = (let _65_25665 = (match ((not (istop))) with
+(let _59_609 = (Support.Microsoft.FStar.Util.fprint1 "Gen Code: %s\n" x)
+in (let head = (let _65_24602 = (match ((not (istop))) with
 | true -> begin
-(let _65_25664 = (FSharp_Format.text "module")
-in (let _65_25663 = (let _65_25662 = (FSharp_Format.text x)
-in (let _65_25661 = (let _65_25660 = (FSharp_Format.text "=")
-in (let _65_25659 = (let _65_25658 = (FSharp_Format.text "struct")
-in (_65_25658)::[])
-in (_65_25660)::_65_25659))
-in (_65_25662)::_65_25661))
-in (_65_25664)::_65_25663))
+(let _65_24601 = (FSharp_Format.text "module")
+in (let _65_24600 = (let _65_24599 = (FSharp_Format.text x)
+in (let _65_24598 = (let _65_24597 = (FSharp_Format.text "=")
+in (let _65_24596 = (let _65_24595 = (FSharp_Format.text "struct")
+in (_65_24595)::[])
+in (_65_24597)::_65_24596))
+in (_65_24599)::_65_24598))
+in (_65_24601)::_65_24600))
 end
 | false -> begin
 []
 end)
-in (FSharp_Format.reduce1 _65_25665))
+in (FSharp_Format.reduce1 _65_24602))
 in (let tail = (match ((not (istop))) with
 | true -> begin
-(let _65_25667 = (let _65_25666 = (FSharp_Format.text "end")
-in (_65_25666)::[])
-in (FSharp_Format.reduce1 _65_25667))
+(let _65_24604 = (let _65_24603 = (FSharp_Format.text "end")
+in (_65_24603)::[])
+in (FSharp_Format.reduce1 _65_24604))
 end
 | false -> begin
 (FSharp_Format.reduce1 [])
 end)
-in (let doc = (Support.Option.map (fun ( _64_616 ) -> (match (_64_616) with
+in (let doc = (Support.Option.map (fun ( _59_616 ) -> (match (_59_616) with
 | (_, m) -> begin
 (doc_of_mod x m)
 end)) sigmod)
 in (let sub = (Support.List.map (for1_mod false) sub)
 in (let sub = (Support.List.map (fun ( x ) -> (FSharp_Format.reduce ((x)::(FSharp_Format.hardline)::(FSharp_Format.hardline)::[]))) sub)
-in (let _65_25677 = (let _65_25676 = (FSharp_Format.cat head FSharp_Format.hardline)
-in (let _65_25675 = (let _65_25674 = (match (doc) with
+in (let _65_24614 = (let _65_24613 = (FSharp_Format.cat head FSharp_Format.hardline)
+in (let _65_24612 = (let _65_24611 = (match (doc) with
 | None -> begin
 FSharp_Format.empty
 end
 | Some (s) -> begin
 (FSharp_Format.cat s FSharp_Format.hardline)
 end)
-in (let _65_25673 = (let _65_25672 = (FSharp_Format.reduce sub)
-in (let _65_25671 = (let _65_25670 = (FSharp_Format.cat tail FSharp_Format.hardline)
-in (_65_25670)::[])
-in (_65_25672)::_65_25671))
-in (_65_25674)::_65_25673))
-in (_65_25676)::_65_25675))
-in (FSharp_Format.reduce _65_25677))))))))
+in (let _65_24610 = (let _65_24609 = (FSharp_Format.reduce sub)
+in (let _65_24608 = (let _65_24607 = (FSharp_Format.cat tail FSharp_Format.hardline)
+in (_65_24607)::[])
+in (_65_24609)::_65_24608))
+in (_65_24611)::_65_24610))
+in (_65_24613)::_65_24612))
+in (FSharp_Format.reduce _65_24614))))))))
 end))
-in (let docs = (Support.List.map (fun ( _64_627 ) -> (match (_64_627) with
+in (let docs = (Support.List.map (fun ( _59_627 ) -> (match (_59_627) with
 | (x, s, m) -> begin
-(let _65_25679 = (for1_mod true (x, s, m))
-in (x, _65_25679))
+(let _65_24616 = (for1_mod true (x, s, m))
+in (x, _65_24616))
 end)) mllib)
 in docs))
 end))
 
 let doc_of_mllib = (fun ( mllib ) -> (doc_of_mllib_r mllib))
+
+let string_of_mlexpr = (fun ( env ) ( e ) -> (let doc = (doc_of_expr (Microsoft_FStar_Backends_ML_Util.flatten_mlpath env.Microsoft_FStar_Backends_ML_Env.currentModule) (min_op_prec, NonAssoc) e)
+in (FSharp_Format.pretty 0 doc)))
+
+let string_of_mlty = (fun ( env ) ( e ) -> (let doc = (doc_of_mltype (Microsoft_FStar_Backends_ML_Util.flatten_mlpath env.Microsoft_FStar_Backends_ML_Env.currentModule) (min_op_prec, NonAssoc) e)
+in (FSharp_Format.pretty 0 doc)))
 
 
 

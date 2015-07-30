@@ -729,3 +729,12 @@ let rec doc_of_mllib_r (MLLib mllib) =
 (* -------------------------------------------------------------------- *)
 let doc_of_mllib mllib =
     doc_of_mllib_r mllib
+
+open Microsoft.FStar.Backends.ML.Env
+let string_of_mlexpr (env:env) (e:mlexpr) = 
+    let doc = doc_of_expr (Util.flatten_mlpath env.currentModule) (min_op_prec, NonAssoc) e in
+    FSharp.Format.pretty 0 doc
+
+let string_of_mlty (env:env) (e:mlty) = 
+    let doc = doc_of_mltype (Util.flatten_mlpath env.currentModule) (min_op_prec, NonAssoc) e in
+    FSharp.Format.pretty 0 doc

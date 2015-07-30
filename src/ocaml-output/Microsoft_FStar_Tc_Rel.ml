@@ -4,14 +4,14 @@ let new_kvar = (fun ( r ) ( binders ) -> (let wf = (fun ( k ) ( _33_39 ) -> (mat
 true
 end))
 in (let u = (Support.Microsoft.FStar.Unionfind.fresh Microsoft_FStar_Absyn_Syntax.Uvar)
-in (let _65_12875 = (let _65_12874 = (let _65_12873 = (Microsoft_FStar_Absyn_Util.args_of_non_null_binders binders)
-in (u, _65_12873))
-in (Microsoft_FStar_Absyn_Syntax.mk_Kind_uvar _65_12874 r))
-in (_65_12875, u)))))
+in (let _65_12881 = (let _65_12880 = (let _65_12879 = (Microsoft_FStar_Absyn_Util.args_of_non_null_binders binders)
+in (u, _65_12879))
+in (Microsoft_FStar_Absyn_Syntax.mk_Kind_uvar _65_12880 r))
+in (_65_12881, u)))))
 
 let new_tvar = (fun ( r ) ( binders ) ( k ) -> (let wf = (fun ( t ) ( tk ) -> true)
-in (let binders = (Support.Prims.pipe_right binders (Support.List.filter (fun ( x ) -> (let _65_12887 = (Microsoft_FStar_Absyn_Syntax.is_null_binder x)
-in (Support.Prims.pipe_right _65_12887 Support.Prims.op_Negation)))))
+in (let binders = (Support.Prims.pipe_right binders (Support.List.filter (fun ( x ) -> (let _65_12893 = (Microsoft_FStar_Absyn_Syntax.is_null_binder x)
+in (Support.Prims.pipe_right _65_12893 Support.Prims.op_Negation)))))
 in (let uv = (Support.Microsoft.FStar.Unionfind.fresh Microsoft_FStar_Absyn_Syntax.Uvar)
 in (match (binders) with
 | [] -> begin
@@ -22,13 +22,13 @@ end
 (let args = (Microsoft_FStar_Absyn_Util.args_of_non_null_binders binders)
 in (let k' = (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow (binders, k) r)
 in (let uv = (Microsoft_FStar_Absyn_Syntax.mk_Typ_uvar' (uv, k') None r)
-in (let _65_12888 = (Microsoft_FStar_Absyn_Syntax.mk_Typ_app (uv, args) None r)
-in (_65_12888, uv)))))
+in (let _65_12894 = (Microsoft_FStar_Absyn_Syntax.mk_Typ_app (uv, args) None r)
+in (_65_12894, uv)))))
 end)))))
 
 let new_evar = (fun ( r ) ( binders ) ( t ) -> (let wf = (fun ( e ) ( t ) -> true)
-in (let binders = (Support.Prims.pipe_right binders (Support.List.filter (fun ( x ) -> (let _65_12900 = (Microsoft_FStar_Absyn_Syntax.is_null_binder x)
-in (Support.Prims.pipe_right _65_12900 Support.Prims.op_Negation)))))
+in (let binders = (Support.Prims.pipe_right binders (Support.List.filter (fun ( x ) -> (let _65_12906 = (Microsoft_FStar_Absyn_Syntax.is_null_binder x)
+in (Support.Prims.pipe_right _65_12906 Support.Prims.op_Negation)))))
 in (let uv = (Support.Microsoft.FStar.Unionfind.fresh Microsoft_FStar_Absyn_Syntax.Uvar)
 in (match (binders) with
 | [] -> begin
@@ -37,17 +37,17 @@ in (uv, uv))
 end
 | _ -> begin
 (let args = (Microsoft_FStar_Absyn_Util.args_of_non_null_binders binders)
-in (let t' = (let _65_12902 = (let _65_12901 = (Microsoft_FStar_Absyn_Syntax.mk_Total t)
-in (binders, _65_12901))
-in (Microsoft_FStar_Absyn_Syntax.mk_Typ_fun _65_12902 None r))
+in (let t' = (let _65_12908 = (let _65_12907 = (Microsoft_FStar_Absyn_Syntax.mk_Total t)
+in (binders, _65_12907))
+in (Microsoft_FStar_Absyn_Syntax.mk_Typ_fun _65_12908 None r))
 in (let uv = (Microsoft_FStar_Absyn_Syntax.mk_Exp_uvar' (uv, t') None r)
 in (match (args) with
 | [] -> begin
 (uv, uv)
 end
 | _ -> begin
-(let _65_12903 = (Microsoft_FStar_Absyn_Syntax.mk_Exp_app (uv, args) None r)
-in (_65_12903, uv))
+(let _65_12909 = (Microsoft_FStar_Absyn_Syntax.mk_Exp_app (uv, args) None r)
+in (_65_12909, uv))
 end))))
 end)))))
 
@@ -232,35 +232,35 @@ end))
 
 let prob_to_string = (fun ( env ) ( _33_2 ) -> (match (_33_2) with
 | KProb (p) -> begin
-(let _65_13042 = (Microsoft_FStar_Absyn_Print.kind_to_string p.lhs)
-in (let _65_13041 = (Microsoft_FStar_Absyn_Print.kind_to_string p.rhs)
-in (Support.Microsoft.FStar.Util.format3 "\t%s\n\t\t%s\n\t%s" _65_13042 (rel_to_string p.relation) _65_13041)))
+(let _65_13048 = (Microsoft_FStar_Absyn_Print.kind_to_string p.lhs)
+in (let _65_13047 = (Microsoft_FStar_Absyn_Print.kind_to_string p.rhs)
+in (Support.Microsoft.FStar.Util.format3 "\t%s\n\t\t%s\n\t%s" _65_13048 (rel_to_string p.relation) _65_13047)))
 end
 | TProb (p) -> begin
-(let _65_13055 = (let _65_13054 = (Microsoft_FStar_Tc_Normalize.typ_norm_to_string env p.lhs)
-in (let _65_13053 = (let _65_13052 = (Microsoft_FStar_Absyn_Print.tag_of_typ p.lhs)
-in (let _65_13051 = (let _65_13050 = (let _65_13049 = (Support.Prims.pipe_right p.reason Support.List.hd)
-in (let _65_13048 = (let _65_13047 = (Microsoft_FStar_Tc_Normalize.typ_norm_to_string env p.rhs)
-in (let _65_13046 = (let _65_13045 = (Microsoft_FStar_Absyn_Print.tag_of_typ p.rhs)
-in (let _65_13044 = (let _65_13043 = (Microsoft_FStar_Tc_Normalize.formula_norm_to_string env (Support.Prims.fst p.logical_guard))
-in (_65_13043)::[])
-in (_65_13045)::_65_13044))
-in (_65_13047)::_65_13046))
-in (_65_13049)::_65_13048))
-in ((rel_to_string p.relation))::_65_13050)
-in (_65_13052)::_65_13051))
-in (_65_13054)::_65_13053))
-in (Support.Microsoft.FStar.Util.format "\t%s (%s) \n\t\t%s(%s)\n\t%s (%s) (guard %s)" _65_13055))
+(let _65_13061 = (let _65_13060 = (Microsoft_FStar_Tc_Normalize.typ_norm_to_string env p.lhs)
+in (let _65_13059 = (let _65_13058 = (Microsoft_FStar_Absyn_Print.tag_of_typ p.lhs)
+in (let _65_13057 = (let _65_13056 = (let _65_13055 = (Support.Prims.pipe_right p.reason Support.List.hd)
+in (let _65_13054 = (let _65_13053 = (Microsoft_FStar_Tc_Normalize.typ_norm_to_string env p.rhs)
+in (let _65_13052 = (let _65_13051 = (Microsoft_FStar_Absyn_Print.tag_of_typ p.rhs)
+in (let _65_13050 = (let _65_13049 = (Microsoft_FStar_Tc_Normalize.formula_norm_to_string env (Support.Prims.fst p.logical_guard))
+in (_65_13049)::[])
+in (_65_13051)::_65_13050))
+in (_65_13053)::_65_13052))
+in (_65_13055)::_65_13054))
+in ((rel_to_string p.relation))::_65_13056)
+in (_65_13058)::_65_13057))
+in (_65_13060)::_65_13059))
+in (Support.Microsoft.FStar.Util.format "\t%s (%s) \n\t\t%s(%s)\n\t%s (%s) (guard %s)" _65_13061))
 end
 | EProb (p) -> begin
-(let _65_13057 = (Microsoft_FStar_Tc_Normalize.exp_norm_to_string env p.lhs)
-in (let _65_13056 = (Microsoft_FStar_Tc_Normalize.exp_norm_to_string env p.rhs)
-in (Support.Microsoft.FStar.Util.format3 "\t%s \n\t\t%s\n\t%s" _65_13057 (rel_to_string p.relation) _65_13056)))
+(let _65_13063 = (Microsoft_FStar_Tc_Normalize.exp_norm_to_string env p.lhs)
+in (let _65_13062 = (Microsoft_FStar_Tc_Normalize.exp_norm_to_string env p.rhs)
+in (Support.Microsoft.FStar.Util.format3 "\t%s \n\t\t%s\n\t%s" _65_13063 (rel_to_string p.relation) _65_13062)))
 end
 | CProb (p) -> begin
-(let _65_13059 = (Microsoft_FStar_Tc_Normalize.comp_typ_norm_to_string env p.lhs)
-in (let _65_13058 = (Microsoft_FStar_Tc_Normalize.comp_typ_norm_to_string env p.rhs)
-in (Support.Microsoft.FStar.Util.format3 "\t%s \n\t\t%s\n\t%s" _65_13059 (rel_to_string p.relation) _65_13058)))
+(let _65_13065 = (Microsoft_FStar_Tc_Normalize.comp_typ_norm_to_string env p.lhs)
+in (let _65_13064 = (Microsoft_FStar_Tc_Normalize.comp_typ_norm_to_string env p.rhs)
+in (Support.Microsoft.FStar.Util.format3 "\t%s \n\t\t%s\n\t%s" _65_13065 (rel_to_string p.relation) _65_13064)))
 end))
 
 let uvi_to_string = (fun ( env ) ( uvi ) -> (let str = (fun ( u ) -> (match ((Support.ST.read Microsoft_FStar_Options.hide_uvar_nums)) with
@@ -268,22 +268,22 @@ let uvi_to_string = (fun ( env ) ( uvi ) -> (let str = (fun ( u ) -> (match ((Su
 "?"
 end
 | false -> begin
-(let _65_13065 = (Support.Microsoft.FStar.Unionfind.uvar_id u)
-in (Support.Prims.pipe_right _65_13065 Support.Microsoft.FStar.Util.string_of_int))
+(let _65_13071 = (Support.Microsoft.FStar.Unionfind.uvar_id u)
+in (Support.Prims.pipe_right _65_13071 Support.Microsoft.FStar.Util.string_of_int))
 end))
 in (match (uvi) with
 | UK ((u, _)) -> begin
-(let _65_13066 = (str u)
-in (Support.Prims.pipe_right _65_13066 (Support.Microsoft.FStar.Util.format1 "UK %s")))
+(let _65_13072 = (str u)
+in (Support.Prims.pipe_right _65_13072 (Support.Microsoft.FStar.Util.format1 "UK %s")))
 end
 | UT (((u, _), t)) -> begin
-(let _65_13069 = (str u)
-in (Support.Prims.pipe_right _65_13069 (fun ( x ) -> (let _65_13068 = (Microsoft_FStar_Tc_Normalize.typ_norm_to_string env t)
-in (Support.Microsoft.FStar.Util.format2 "UT %s %s" x _65_13068)))))
+(let _65_13075 = (str u)
+in (Support.Prims.pipe_right _65_13075 (fun ( x ) -> (let _65_13074 = (Microsoft_FStar_Tc_Normalize.typ_norm_to_string env t)
+in (Support.Microsoft.FStar.Util.format2 "UT %s %s" x _65_13074)))))
 end
 | UE (((u, _), _)) -> begin
-(let _65_13070 = (str u)
-in (Support.Prims.pipe_right _65_13070 (Support.Microsoft.FStar.Util.format1 "UE %s")))
+(let _65_13076 = (str u)
+in (Support.Prims.pipe_right _65_13076 (Support.Microsoft.FStar.Util.format1 "UE %s")))
 end)))
 
 let invert_rel = (fun ( _33_3 ) -> (match (_33_3) with
@@ -310,16 +310,16 @@ end))
 
 let maybe_invert_p = (fun ( _33_4 ) -> (match (_33_4) with
 | KProb (p) -> begin
-(Support.Prims.pipe_right (maybe_invert p) (fun ( _65_13077 ) -> KProb (_65_13077)))
+(Support.Prims.pipe_right (maybe_invert p) (fun ( _65_13083 ) -> KProb (_65_13083)))
 end
 | TProb (p) -> begin
-(Support.Prims.pipe_right (maybe_invert p) (fun ( _65_13078 ) -> TProb (_65_13078)))
+(Support.Prims.pipe_right (maybe_invert p) (fun ( _65_13084 ) -> TProb (_65_13084)))
 end
 | EProb (p) -> begin
-(Support.Prims.pipe_right (maybe_invert p) (fun ( _65_13079 ) -> EProb (_65_13079)))
+(Support.Prims.pipe_right (maybe_invert p) (fun ( _65_13085 ) -> EProb (_65_13085)))
 end
 | CProb (p) -> begin
-(Support.Prims.pipe_right (maybe_invert p) (fun ( _65_13080 ) -> CProb (_65_13080)))
+(Support.Prims.pipe_right (maybe_invert p) (fun ( _65_13086 ) -> CProb (_65_13086)))
 end))
 
 let vary_rel = (fun ( rel ) ( _33_5 ) -> (match (_33_5) with
@@ -419,35 +419,35 @@ end))
 
 let p_invert = (fun ( _33_12 ) -> (match (_33_12) with
 | KProb (p) -> begin
-(Support.Prims.pipe_left (fun ( _65_13099 ) -> KProb (_65_13099)) (invert p))
+(Support.Prims.pipe_left (fun ( _65_13105 ) -> KProb (_65_13105)) (invert p))
 end
 | TProb (p) -> begin
-(Support.Prims.pipe_left (fun ( _65_13100 ) -> TProb (_65_13100)) (invert p))
+(Support.Prims.pipe_left (fun ( _65_13106 ) -> TProb (_65_13106)) (invert p))
 end
 | EProb (p) -> begin
-(Support.Prims.pipe_left (fun ( _65_13101 ) -> EProb (_65_13101)) (invert p))
+(Support.Prims.pipe_left (fun ( _65_13107 ) -> EProb (_65_13107)) (invert p))
 end
 | CProb (p) -> begin
-(Support.Prims.pipe_left (fun ( _65_13102 ) -> CProb (_65_13102)) (invert p))
+(Support.Prims.pipe_left (fun ( _65_13108 ) -> CProb (_65_13108)) (invert p))
 end))
 
 let is_top_level_prob = (fun ( p ) -> ((Support.Prims.pipe_right (p_reason p) Support.List.length) = 1))
 
-let mk_problem = (fun ( scope ) ( orig ) ( lhs ) ( rel ) ( rhs ) ( elt ) ( reason ) -> (let _65_13112 = (new_tvar (p_loc orig) scope Microsoft_FStar_Absyn_Syntax.ktype)
-in {lhs = lhs; relation = rel; rhs = rhs; element = elt; logical_guard = _65_13112; scope = []; reason = (reason)::(p_reason orig); loc = (p_loc orig); rank = None}))
+let mk_problem = (fun ( scope ) ( orig ) ( lhs ) ( rel ) ( rhs ) ( elt ) ( reason ) -> (let _65_13118 = (new_tvar (p_loc orig) scope Microsoft_FStar_Absyn_Syntax.ktype)
+in {lhs = lhs; relation = rel; rhs = rhs; element = elt; logical_guard = _65_13118; scope = []; reason = (reason)::(p_reason orig); loc = (p_loc orig); rank = None}))
 
-let new_problem = (fun ( env ) ( lhs ) ( rel ) ( rhs ) ( elt ) ( loc ) ( reason ) -> (let _65_13122 = (let _65_13121 = (Microsoft_FStar_Tc_Env.get_range env)
-in (let _65_13120 = (Microsoft_FStar_Tc_Env.binders env)
-in (new_tvar _65_13121 _65_13120 Microsoft_FStar_Absyn_Syntax.ktype)))
-in {lhs = lhs; relation = rel; rhs = rhs; element = elt; logical_guard = _65_13122; scope = []; reason = (reason)::[]; loc = loc; rank = None}))
+let new_problem = (fun ( env ) ( lhs ) ( rel ) ( rhs ) ( elt ) ( loc ) ( reason ) -> (let _65_13128 = (let _65_13127 = (Microsoft_FStar_Tc_Env.get_range env)
+in (let _65_13126 = (Microsoft_FStar_Tc_Env.binders env)
+in (new_tvar _65_13127 _65_13126 Microsoft_FStar_Absyn_Syntax.ktype)))
+in {lhs = lhs; relation = rel; rhs = rhs; element = elt; logical_guard = _65_13128; scope = []; reason = (reason)::[]; loc = loc; rank = None}))
 
 let problem_using_guard = (fun ( orig ) ( lhs ) ( rel ) ( rhs ) ( elt ) ( reason ) -> {lhs = lhs; relation = rel; rhs = rhs; element = elt; logical_guard = (p_guard orig); scope = []; reason = (reason)::(p_reason orig); loc = (p_loc orig); rank = None})
 
 let guard_on_element = (fun ( problem ) ( x ) ( phi ) -> (match (problem.element) with
 | None -> begin
-(let _65_13133 = (let _65_13132 = (Microsoft_FStar_Absyn_Syntax.v_binder x)
-in (_65_13132)::[])
-in (Microsoft_FStar_Absyn_Util.close_forall _65_13133 phi))
+(let _65_13139 = (let _65_13138 = (Microsoft_FStar_Absyn_Syntax.v_binder x)
+in (_65_13138)::[])
+in (Microsoft_FStar_Absyn_Util.close_forall _65_13139 phi))
 end
 | Some (e) -> begin
 (Microsoft_FStar_Absyn_Util.subst_typ ((Support.Microsoft.FStar.Util.Inr ((x.Microsoft_FStar_Absyn_Syntax.v, e)))::[]) phi)
@@ -463,8 +463,8 @@ end)
 in (let _33_284 = (p_guard prob)
 in (match (_33_284) with
 | (_, uv) -> begin
-(let _33_292 = (match ((let _65_13144 = (Microsoft_FStar_Absyn_Util.compress_typ uv)
-in _65_13144.Microsoft_FStar_Absyn_Syntax.n)) with
+(let _33_292 = (match ((let _65_13150 = (Microsoft_FStar_Absyn_Util.compress_typ uv)
+in _65_13150.Microsoft_FStar_Absyn_Syntax.n)) with
 | Microsoft_FStar_Absyn_Syntax.Typ_uvar ((uvar, k)) -> begin
 (let phi = (Microsoft_FStar_Absyn_Util.close_for_kind phi k)
 in (Microsoft_FStar_Absyn_Util.unchecked_unify uvar phi))
@@ -485,9 +485,9 @@ end
 | _ -> begin
 (let _33_297 = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug wl.tcenv) (Microsoft_FStar_Options.Other ("Rel")))) with
 | true -> begin
-(let _65_13146 = (let _65_13145 = (Support.List.map (uvi_to_string wl.tcenv) uvis)
-in (Support.Prims.pipe_right _65_13145 (Support.String.concat ", ")))
-in (Support.Microsoft.FStar.Util.fprint1 "Extending solution: %s\n" _65_13146))
+(let _65_13152 = (let _65_13151 = (Support.List.map (uvi_to_string wl.tcenv) uvis)
+in (Support.Prims.pipe_right _65_13151 (Support.String.concat ", ")))
+in (Support.Microsoft.FStar.Util.fprint1 "Extending solution: %s\n" _65_13152))
 end
 | false -> begin
 ()
@@ -502,10 +502,10 @@ in {attempting = _33_303.attempting; deferred = _33_303.deferred; subst = (sol):
 
 let solve_prob = (fun ( prob ) ( logical_guard ) ( uvis ) ( wl ) -> (solve_prob' false prob logical_guard uvis wl))
 
-let explain = (fun ( env ) ( d ) ( s ) -> (let _65_13167 = (Support.Prims.pipe_left Support.Microsoft.FStar.Range.string_of_range (p_loc d))
-in (let _65_13166 = (prob_to_string env d)
-in (let _65_13165 = (Support.Prims.pipe_right (p_reason d) (Support.String.concat "\n\t>"))
-in (Support.Microsoft.FStar.Util.format4 "(%s) Failed to solve the sub-problem\n%s\nWhich arose because:\n\t%s\nFailed because:%s\n" _65_13167 _65_13166 _65_13165 s)))))
+let explain = (fun ( env ) ( d ) ( s ) -> (let _65_13173 = (Support.Prims.pipe_left Support.Microsoft.FStar.Range.string_of_range (p_loc d))
+in (let _65_13172 = (prob_to_string env d)
+in (let _65_13171 = (Support.Prims.pipe_right (p_reason d) (Support.String.concat "\n\t>"))
+in (Support.Microsoft.FStar.Util.format4 "(%s) Failed to solve the sub-problem\n%s\nWhich arose because:\n\t%s\nFailed because:%s\n" _65_13173 _65_13172 _65_13171 s)))))
 
 let empty_worklist = (fun ( env ) -> {attempting = []; deferred = []; subst = []; ctr = 0; slack_vars = []; defer_ok = true; smt_ok = true; tcenv = env})
 
@@ -513,8 +513,8 @@ let singleton = (fun ( env ) ( prob ) -> (let _33_315 = (empty_worklist env)
 in {attempting = (prob)::[]; deferred = _33_315.deferred; subst = _33_315.subst; ctr = _33_315.ctr; slack_vars = _33_315.slack_vars; defer_ok = _33_315.defer_ok; smt_ok = _33_315.smt_ok; tcenv = _33_315.tcenv}))
 
 let wl_of_guard = (fun ( env ) ( g ) -> (let _33_319 = (empty_worklist env)
-in (let _65_13178 = (Support.List.map Support.Prims.snd g.carry)
-in {attempting = _65_13178; deferred = _33_319.deferred; subst = _33_319.subst; ctr = _33_319.ctr; slack_vars = g.slack; defer_ok = false; smt_ok = _33_319.smt_ok; tcenv = _33_319.tcenv})))
+in (let _65_13184 = (Support.List.map Support.Prims.snd g.carry)
+in {attempting = _65_13184; deferred = _33_319.deferred; subst = _33_319.subst; ctr = _33_319.ctr; slack_vars = g.slack; defer_ok = false; smt_ok = _33_319.smt_ok; tcenv = _33_319.tcenv})))
 
 let defer = (fun ( reason ) ( prob ) ( wl ) -> (let _33_324 = wl
 in {attempting = _33_324.attempting; deferred = ((wl.ctr, reason, prob))::wl.deferred; subst = _33_324.subst; ctr = _33_324.ctr; slack_vars = _33_324.slack_vars; defer_ok = _33_324.defer_ok; smt_ok = _33_324.smt_ok; tcenv = _33_324.tcenv}))
@@ -530,8 +530,8 @@ in {attempting = _33_336.attempting; deferred = _33_336.deferred; subst = _33_33
 
 let giveup = (fun ( env ) ( reason ) ( prob ) -> (let _33_341 = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("Rel")))) with
 | true -> begin
-(let _65_13203 = (prob_to_string env prob)
-in (Support.Microsoft.FStar.Util.fprint2 "Failed %s:\n%s\n" reason _65_13203))
+(let _65_13209 = (prob_to_string env prob)
+in (Support.Microsoft.FStar.Util.fprint2 "Failed %s:\n%s\n" reason _65_13209))
 end
 | false -> begin
 ()
@@ -597,43 +597,43 @@ let norm_targ = (fun ( env ) ( t ) -> (Microsoft_FStar_Tc_Normalize.norm_typ ((M
 
 let norm_arg = (fun ( env ) ( a ) -> (match ((Support.Prims.fst a)) with
 | Support.Microsoft.FStar.Util.Inl (t) -> begin
-(let _65_13234 = (let _65_13233 = (norm_targ env t)
-in (Support.Prims.pipe_left (fun ( _65_13232 ) -> Support.Microsoft.FStar.Util.Inl (_65_13232)) _65_13233))
-in (_65_13234, (Support.Prims.snd a)))
+(let _65_13240 = (let _65_13239 = (norm_targ env t)
+in (Support.Prims.pipe_left (fun ( _65_13238 ) -> Support.Microsoft.FStar.Util.Inl (_65_13238)) _65_13239))
+in (_65_13240, (Support.Prims.snd a)))
 end
 | Support.Microsoft.FStar.Util.Inr (v) -> begin
-(let _65_13237 = (let _65_13236 = (Microsoft_FStar_Tc_Normalize.norm_exp ((Microsoft_FStar_Tc_Normalize.Beta)::[]) env v)
-in (Support.Prims.pipe_left (fun ( _65_13235 ) -> Support.Microsoft.FStar.Util.Inr (_65_13235)) _65_13236))
-in (_65_13237, (Support.Prims.snd a)))
+(let _65_13243 = (let _65_13242 = (Microsoft_FStar_Tc_Normalize.norm_exp ((Microsoft_FStar_Tc_Normalize.Beta)::[]) env v)
+in (Support.Prims.pipe_left (fun ( _65_13241 ) -> Support.Microsoft.FStar.Util.Inr (_65_13241)) _65_13242))
+in (_65_13243, (Support.Prims.snd a)))
 end))
 
-let whnf = (fun ( env ) ( t ) -> (let _65_13242 = (Microsoft_FStar_Tc_Normalize.whnf env t)
-in (Support.Prims.pipe_right _65_13242 Microsoft_FStar_Absyn_Util.compress_typ)))
+let whnf = (fun ( env ) ( t ) -> (let _65_13248 = (Microsoft_FStar_Tc_Normalize.whnf env t)
+in (Support.Prims.pipe_right _65_13248 Microsoft_FStar_Absyn_Util.compress_typ)))
 
-let sn = (fun ( env ) ( t ) -> (let _65_13247 = (Microsoft_FStar_Tc_Normalize.norm_typ ((Microsoft_FStar_Tc_Normalize.Beta)::(Microsoft_FStar_Tc_Normalize.Eta)::[]) env t)
-in (Support.Prims.pipe_right _65_13247 Microsoft_FStar_Absyn_Util.compress_typ)))
+let sn = (fun ( env ) ( t ) -> (let _65_13253 = (Microsoft_FStar_Tc_Normalize.norm_typ ((Microsoft_FStar_Tc_Normalize.Beta)::(Microsoft_FStar_Tc_Normalize.Eta)::[]) env t)
+in (Support.Prims.pipe_right _65_13253 Microsoft_FStar_Absyn_Util.compress_typ)))
 
 let sn_binders = (fun ( env ) ( binders ) -> (Support.Prims.pipe_right binders (Support.List.map (fun ( _33_17 ) -> (match (_33_17) with
 | (Support.Microsoft.FStar.Util.Inl (a), imp) -> begin
-(let _65_13253 = (let _65_13252 = (let _33_417 = a
-in (let _65_13251 = (Microsoft_FStar_Tc_Normalize.norm_kind ((Microsoft_FStar_Tc_Normalize.Beta)::[]) env a.Microsoft_FStar_Absyn_Syntax.sort)
-in {Microsoft_FStar_Absyn_Syntax.v = _33_417.Microsoft_FStar_Absyn_Syntax.v; Microsoft_FStar_Absyn_Syntax.sort = _65_13251; Microsoft_FStar_Absyn_Syntax.p = _33_417.Microsoft_FStar_Absyn_Syntax.p}))
-in Support.Microsoft.FStar.Util.Inl (_65_13252))
-in (_65_13253, imp))
+(let _65_13259 = (let _65_13258 = (let _33_417 = a
+in (let _65_13257 = (Microsoft_FStar_Tc_Normalize.norm_kind ((Microsoft_FStar_Tc_Normalize.Beta)::[]) env a.Microsoft_FStar_Absyn_Syntax.sort)
+in {Microsoft_FStar_Absyn_Syntax.v = _33_417.Microsoft_FStar_Absyn_Syntax.v; Microsoft_FStar_Absyn_Syntax.sort = _65_13257; Microsoft_FStar_Absyn_Syntax.p = _33_417.Microsoft_FStar_Absyn_Syntax.p}))
+in Support.Microsoft.FStar.Util.Inl (_65_13258))
+in (_65_13259, imp))
 end
 | (Support.Microsoft.FStar.Util.Inr (x), imp) -> begin
-(let _65_13256 = (let _65_13255 = (let _33_423 = x
-in (let _65_13254 = (norm_targ env x.Microsoft_FStar_Absyn_Syntax.sort)
-in {Microsoft_FStar_Absyn_Syntax.v = _33_423.Microsoft_FStar_Absyn_Syntax.v; Microsoft_FStar_Absyn_Syntax.sort = _65_13254; Microsoft_FStar_Absyn_Syntax.p = _33_423.Microsoft_FStar_Absyn_Syntax.p}))
-in Support.Microsoft.FStar.Util.Inr (_65_13255))
-in (_65_13256, imp))
+(let _65_13262 = (let _65_13261 = (let _33_423 = x
+in (let _65_13260 = (norm_targ env x.Microsoft_FStar_Absyn_Syntax.sort)
+in {Microsoft_FStar_Absyn_Syntax.v = _33_423.Microsoft_FStar_Absyn_Syntax.v; Microsoft_FStar_Absyn_Syntax.sort = _65_13260; Microsoft_FStar_Absyn_Syntax.p = _33_423.Microsoft_FStar_Absyn_Syntax.p}))
+in Support.Microsoft.FStar.Util.Inr (_65_13261))
+in (_65_13262, imp))
 end)))))
 
-let whnf_k = (fun ( env ) ( k ) -> (let _65_13261 = (Microsoft_FStar_Tc_Normalize.norm_kind ((Microsoft_FStar_Tc_Normalize.Beta)::(Microsoft_FStar_Tc_Normalize.Eta)::(Microsoft_FStar_Tc_Normalize.WHNF)::[]) env k)
-in (Support.Prims.pipe_right _65_13261 Microsoft_FStar_Absyn_Util.compress_kind)))
+let whnf_k = (fun ( env ) ( k ) -> (let _65_13267 = (Microsoft_FStar_Tc_Normalize.norm_kind ((Microsoft_FStar_Tc_Normalize.Beta)::(Microsoft_FStar_Tc_Normalize.Eta)::(Microsoft_FStar_Tc_Normalize.WHNF)::[]) env k)
+in (Support.Prims.pipe_right _65_13267 Microsoft_FStar_Absyn_Util.compress_kind)))
 
-let whnf_e = (fun ( env ) ( e ) -> (let _65_13266 = (Microsoft_FStar_Tc_Normalize.norm_exp ((Microsoft_FStar_Tc_Normalize.Beta)::(Microsoft_FStar_Tc_Normalize.Eta)::(Microsoft_FStar_Tc_Normalize.WHNF)::[]) env e)
-in (Support.Prims.pipe_right _65_13266 Microsoft_FStar_Absyn_Util.compress_exp)))
+let whnf_e = (fun ( env ) ( e ) -> (let _65_13272 = (Microsoft_FStar_Tc_Normalize.norm_exp ((Microsoft_FStar_Tc_Normalize.Beta)::(Microsoft_FStar_Tc_Normalize.Eta)::(Microsoft_FStar_Tc_Normalize.WHNF)::[]) env e)
+in (Support.Prims.pipe_right _65_13272 Microsoft_FStar_Absyn_Util.compress_exp)))
 
 let rec compress_k = (fun ( env ) ( wl ) ( k ) -> (let k = (Microsoft_FStar_Absyn_Util.compress_kind k)
 in (match (k.Microsoft_FStar_Absyn_Syntax.n) with
@@ -645,8 +645,8 @@ end
 | Some (k') -> begin
 (match (k'.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Kind_lam ((formals, body)) -> begin
-(let k = (let _65_13273 = (Microsoft_FStar_Absyn_Util.subst_of_list formals actuals)
-in (Microsoft_FStar_Absyn_Util.subst_kind _65_13273 body))
+(let k = (let _65_13279 = (Microsoft_FStar_Absyn_Util.subst_of_list formals actuals)
+in (Microsoft_FStar_Absyn_Util.subst_kind _65_13279 body))
 in (compress_k env wl k))
 end
 | _ -> begin
@@ -664,8 +664,8 @@ end
 k
 end)))
 
-let rec compress = (fun ( env ) ( wl ) ( t ) -> (let t = (let _65_13280 = (Microsoft_FStar_Absyn_Util.unmeta_typ t)
-in (whnf env _65_13280))
+let rec compress = (fun ( env ) ( wl ) ( t ) -> (let t = (let _65_13286 = (Microsoft_FStar_Absyn_Util.unmeta_typ t)
+in (whnf env _65_13286))
 in (match (t.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Typ_uvar ((uv, _)) -> begin
 (match ((find_uvar_t uv wl.subst)) with
@@ -715,8 +715,8 @@ end
 e
 end)))
 
-let normalize_refinement = (fun ( env ) ( wl ) ( t0 ) -> (let _65_13293 = (compress env wl t0)
-in (Microsoft_FStar_Tc_Normalize.normalize_refinement env _65_13293)))
+let normalize_refinement = (fun ( env ) ( wl ) ( t0 ) -> (let _65_13299 = (compress env wl t0)
+in (Microsoft_FStar_Tc_Normalize.normalize_refinement env _65_13299)))
 
 let base_and_refinement = (fun ( env ) ( wl ) ( t1 ) -> (let rec aux = (fun ( norm ) ( t1 ) -> (match (t1.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Typ_refine ((x, phi)) -> begin
@@ -730,10 +730,10 @@ end
 (x.Microsoft_FStar_Absyn_Syntax.sort, Some ((x, phi)))
 end
 | tt -> begin
-(let _65_13306 = (let _65_13305 = (Microsoft_FStar_Absyn_Print.typ_to_string tt)
-in (let _65_13304 = (Microsoft_FStar_Absyn_Print.tag_of_typ tt)
-in (Support.Microsoft.FStar.Util.format2 "impossible: Got %s ... %s\n" _65_13305 _65_13304)))
-in (failwith (_65_13306)))
+(let _65_13312 = (let _65_13311 = (Microsoft_FStar_Absyn_Print.typ_to_string tt)
+in (let _65_13310 = (Microsoft_FStar_Absyn_Print.tag_of_typ tt)
+in (Support.Microsoft.FStar.Util.format2 "impossible: Got %s ... %s\n" _65_13311 _65_13310)))
+in (failwith (_65_13312)))
 end)
 end)
 end
@@ -743,8 +743,8 @@ end
 (t1, None)
 end
 | false -> begin
-(let _33_554 = (let _65_13307 = (normalize_refinement env wl t1)
-in (aux true _65_13307))
+(let _33_554 = (let _65_13313 = (normalize_refinement env wl t1)
+in (aux true _65_13313))
 in (match (_33_554) with
 | (t2', refinement) -> begin
 (match (refinement) with
@@ -761,19 +761,19 @@ end
 (t1, None)
 end
 | (Microsoft_FStar_Absyn_Syntax.Typ_ascribed (_)) | (Microsoft_FStar_Absyn_Syntax.Typ_delayed (_)) | (Microsoft_FStar_Absyn_Syntax.Typ_meta (_)) | (Microsoft_FStar_Absyn_Syntax.Typ_unknown) -> begin
-(let _65_13310 = (let _65_13309 = (Microsoft_FStar_Absyn_Print.typ_to_string t1)
-in (let _65_13308 = (Microsoft_FStar_Absyn_Print.tag_of_typ t1)
-in (Support.Microsoft.FStar.Util.format2 "impossible (outer): Got %s ... %s\n" _65_13309 _65_13308)))
-in (failwith (_65_13310)))
+(let _65_13316 = (let _65_13315 = (Microsoft_FStar_Absyn_Print.typ_to_string t1)
+in (let _65_13314 = (Microsoft_FStar_Absyn_Print.tag_of_typ t1)
+in (Support.Microsoft.FStar.Util.format2 "impossible (outer): Got %s ... %s\n" _65_13315 _65_13314)))
+in (failwith (_65_13316)))
 end))
-in (let _65_13311 = (compress env wl t1)
-in (aux false _65_13311))))
+in (let _65_13317 = (compress env wl t1)
+in (aux false _65_13317))))
 
-let unrefine = (fun ( env ) ( t ) -> (let _65_13316 = (base_and_refinement env (empty_worklist env) t)
-in (Support.Prims.pipe_right _65_13316 Support.Prims.fst)))
+let unrefine = (fun ( env ) ( t ) -> (let _65_13322 = (base_and_refinement env (empty_worklist env) t)
+in (Support.Prims.pipe_right _65_13322 Support.Prims.fst)))
 
-let trivial_refinement = (fun ( t ) -> (let _65_13318 = (Microsoft_FStar_Absyn_Util.gen_bvar_p t.Microsoft_FStar_Absyn_Syntax.pos t)
-in (_65_13318, Microsoft_FStar_Absyn_Util.t_true)))
+let trivial_refinement = (fun ( t ) -> (let _65_13324 = (Microsoft_FStar_Absyn_Util.gen_bvar_p t.Microsoft_FStar_Absyn_Syntax.pos t)
+in (_65_13324, Microsoft_FStar_Absyn_Util.t_true)))
 
 let as_refinement = (fun ( env ) ( wl ) ( t ) -> (let _33_588 = (base_and_refinement env wl t)
 in (match (_33_588) with
@@ -803,8 +803,8 @@ end))
 end))
 
 let rec occurs = (fun ( env ) ( wl ) ( uk ) ( t ) -> (let uvs = (Microsoft_FStar_Absyn_Util.uvars_in_typ t)
-in (let _65_13338 = (Support.Prims.pipe_right uvs.Microsoft_FStar_Absyn_Syntax.uvars_t Support.Microsoft.FStar.Util.set_elements)
-in (Support.Prims.pipe_right _65_13338 (Support.Microsoft.FStar.Util.for_some (fun ( _33_615 ) -> (match (_33_615) with
+in (let _65_13344 = (Support.Prims.pipe_right uvs.Microsoft_FStar_Absyn_Syntax.uvars_t Support.Microsoft.FStar.Util.set_elements)
+in (Support.Prims.pipe_right _65_13344 (Support.Microsoft.FStar.Util.for_some (fun ( _33_615 ) -> (match (_33_615) with
 | (uvt, _) -> begin
 (match ((find_uvar_t uvt wl.subst)) with
 | None -> begin
@@ -828,12 +828,12 @@ in (let msg = (match (occurs_ok) with
 None
 end
 | false -> begin
-(let _65_13351 = (let _65_13350 = (Microsoft_FStar_Absyn_Print.uvar_t_to_string uk)
-in (let _65_13349 = (Microsoft_FStar_Absyn_Print.typ_to_string t)
-in (let _65_13348 = (let _65_13347 = (Support.Prims.pipe_right wl.subst (Support.List.map (uvi_to_string env)))
-in (Support.Prims.pipe_right _65_13347 (Support.String.concat ", ")))
-in (Support.Microsoft.FStar.Util.format3 "occurs-check failed (%s occurs in %s) (with substitution %s)" _65_13350 _65_13349 _65_13348))))
-in Some (_65_13351))
+(let _65_13357 = (let _65_13356 = (Microsoft_FStar_Absyn_Print.uvar_t_to_string uk)
+in (let _65_13355 = (Microsoft_FStar_Absyn_Print.typ_to_string t)
+in (let _65_13354 = (let _65_13353 = (Support.Prims.pipe_right wl.subst (Support.List.map (uvi_to_string env)))
+in (Support.Prims.pipe_right _65_13353 (Support.String.concat ", ")))
+in (Support.Microsoft.FStar.Util.format3 "occurs-check failed (%s occurs in %s) (with substitution %s)" _65_13356 _65_13355 _65_13354))))
+in Some (_65_13357))
 end)
 in (occurs_ok, msg))))
 
@@ -841,8 +841,8 @@ let occurs_and_freevars_check = (fun ( env ) ( wl ) ( uk ) ( fvs ) ( t ) -> (let
 in (let _33_649 = (occurs_check env wl uk t)
 in (match (_33_649) with
 | (occurs_ok, msg) -> begin
-(let _65_13362 = (Microsoft_FStar_Absyn_Util.fvs_included fvs_t fvs)
-in (occurs_ok, _65_13362, (msg, fvs, fvs_t)))
+(let _65_13368 = (Microsoft_FStar_Absyn_Util.fvs_included fvs_t fvs)
+in (occurs_ok, _65_13368, (msg, fvs, fvs_t)))
 end))))
 
 let occurs_check_e = (fun ( env ) ( ut ) ( e ) -> (let uvs = (Microsoft_FStar_Absyn_Util.uvars_in_exp e)
@@ -852,22 +852,22 @@ in (let msg = (match (occurs_ok) with
 None
 end
 | false -> begin
-(let _65_13374 = (let _65_13373 = (Microsoft_FStar_Absyn_Print.uvar_e_to_string ut)
-in (let _65_13372 = (let _65_13370 = (let _65_13369 = (Support.Microsoft.FStar.Util.set_elements uvs.Microsoft_FStar_Absyn_Syntax.uvars_e)
-in (Support.Prims.pipe_right _65_13369 (Support.List.map Microsoft_FStar_Absyn_Print.uvar_e_to_string)))
-in (Support.Prims.pipe_right _65_13370 (Support.String.concat ", ")))
-in (let _65_13371 = (Microsoft_FStar_Tc_Normalize.exp_norm_to_string env e)
-in (Support.Microsoft.FStar.Util.format3 "occurs-check failed (%s occurs in {%s} uvars of %s)" _65_13373 _65_13372 _65_13371))))
-in Some (_65_13374))
+(let _65_13380 = (let _65_13379 = (Microsoft_FStar_Absyn_Print.uvar_e_to_string ut)
+in (let _65_13378 = (let _65_13376 = (let _65_13375 = (Support.Microsoft.FStar.Util.set_elements uvs.Microsoft_FStar_Absyn_Syntax.uvars_e)
+in (Support.Prims.pipe_right _65_13375 (Support.List.map Microsoft_FStar_Absyn_Print.uvar_e_to_string)))
+in (Support.Prims.pipe_right _65_13376 (Support.String.concat ", ")))
+in (let _65_13377 = (Microsoft_FStar_Tc_Normalize.exp_norm_to_string env e)
+in (Support.Microsoft.FStar.Util.format3 "occurs-check failed (%s occurs in {%s} uvars of %s)" _65_13379 _65_13378 _65_13377))))
+in Some (_65_13380))
 end)
 in (occurs_ok, msg)))))
 
 let intersect_vars = (fun ( v1 ) ( v2 ) -> (let fvs1 = (Microsoft_FStar_Absyn_Syntax.freevars_of_binders v1)
 in (let fvs2 = (Microsoft_FStar_Absyn_Syntax.freevars_of_binders v2)
-in (let _65_13381 = (let _65_13380 = (Support.Microsoft.FStar.Util.set_intersect fvs1.Microsoft_FStar_Absyn_Syntax.ftvs fvs2.Microsoft_FStar_Absyn_Syntax.ftvs)
-in (let _65_13379 = (Support.Microsoft.FStar.Util.set_intersect fvs1.Microsoft_FStar_Absyn_Syntax.fxvs fvs2.Microsoft_FStar_Absyn_Syntax.fxvs)
-in {Microsoft_FStar_Absyn_Syntax.ftvs = _65_13380; Microsoft_FStar_Absyn_Syntax.fxvs = _65_13379}))
-in (Microsoft_FStar_Absyn_Syntax.binders_of_freevars _65_13381)))))
+in (let _65_13387 = (let _65_13386 = (Support.Microsoft.FStar.Util.set_intersect fvs1.Microsoft_FStar_Absyn_Syntax.ftvs fvs2.Microsoft_FStar_Absyn_Syntax.ftvs)
+in (let _65_13385 = (Support.Microsoft.FStar.Util.set_intersect fvs1.Microsoft_FStar_Absyn_Syntax.fxvs fvs2.Microsoft_FStar_Absyn_Syntax.fxvs)
+in {Microsoft_FStar_Absyn_Syntax.ftvs = _65_13386; Microsoft_FStar_Absyn_Syntax.fxvs = _65_13385}))
+in (Microsoft_FStar_Absyn_Syntax.binders_of_freevars _65_13387)))))
 
 let binders_eq = (fun ( v1 ) ( v2 ) -> (((Support.List.length v1) = (Support.List.length v2)) && (Support.List.forall2 (fun ( ax1 ) ( ax2 ) -> (match (((Support.Prims.fst ax1), (Support.Prims.fst ax2))) with
 | (Support.Microsoft.FStar.Util.Inl (a), Support.Microsoft.FStar.Util.Inl (b)) -> begin
@@ -925,8 +925,8 @@ end
 | None -> begin
 (let _33_730 = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("Rel")))) with
 | true -> begin
-(let _65_13397 = (Microsoft_FStar_Absyn_Print.arg_to_string hd)
-in (Support.Microsoft.FStar.Util.fprint1 "Not a pattern: %s\n" _65_13397))
+(let _65_13403 = (Microsoft_FStar_Absyn_Print.arg_to_string hd)
+in (Support.Microsoft.FStar.Util.fprint1 "Not a pattern: %s\n" _65_13403))
 end
 | false -> begin
 ()
@@ -1009,11 +1009,11 @@ end
 HeadMatch
 end))
 
-let rec head_matches = (fun ( t1 ) ( t2 ) -> (match ((let _65_13414 = (let _65_13411 = (Microsoft_FStar_Absyn_Util.unmeta_typ t1)
-in _65_13411.Microsoft_FStar_Absyn_Syntax.n)
-in (let _65_13413 = (let _65_13412 = (Microsoft_FStar_Absyn_Util.unmeta_typ t2)
-in _65_13412.Microsoft_FStar_Absyn_Syntax.n)
-in (_65_13414, _65_13413)))) with
+let rec head_matches = (fun ( t1 ) ( t2 ) -> (match ((let _65_13420 = (let _65_13417 = (Microsoft_FStar_Absyn_Util.unmeta_typ t1)
+in _65_13417.Microsoft_FStar_Absyn_Syntax.n)
+in (let _65_13419 = (let _65_13418 = (Microsoft_FStar_Absyn_Util.unmeta_typ t2)
+in _65_13418.Microsoft_FStar_Absyn_Syntax.n)
+in (_65_13420, _65_13419)))) with
 | (Microsoft_FStar_Absyn_Syntax.Typ_btvar (x), Microsoft_FStar_Absyn_Syntax.Typ_btvar (y)) -> begin
 (match ((Microsoft_FStar_Absyn_Util.bvar_eq x y)) with
 | true -> begin
@@ -1036,16 +1036,16 @@ end
 MisMatch
 end
 | (Microsoft_FStar_Absyn_Syntax.Typ_refine ((x, _)), Microsoft_FStar_Absyn_Syntax.Typ_refine ((y, _))) -> begin
-(let _65_13415 = (head_matches x.Microsoft_FStar_Absyn_Syntax.sort y.Microsoft_FStar_Absyn_Syntax.sort)
-in (Support.Prims.pipe_right _65_13415 head_match))
+(let _65_13421 = (head_matches x.Microsoft_FStar_Absyn_Syntax.sort y.Microsoft_FStar_Absyn_Syntax.sort)
+in (Support.Prims.pipe_right _65_13421 head_match))
 end
 | (Microsoft_FStar_Absyn_Syntax.Typ_refine ((x, _)), _) -> begin
-(let _65_13416 = (head_matches x.Microsoft_FStar_Absyn_Syntax.sort t2)
-in (Support.Prims.pipe_right _65_13416 head_match))
+(let _65_13422 = (head_matches x.Microsoft_FStar_Absyn_Syntax.sort t2)
+in (Support.Prims.pipe_right _65_13422 head_match))
 end
 | (_, Microsoft_FStar_Absyn_Syntax.Typ_refine ((x, _))) -> begin
-(let _65_13417 = (head_matches t1 x.Microsoft_FStar_Absyn_Syntax.sort)
-in (Support.Prims.pipe_right _65_13417 head_match))
+(let _65_13423 = (head_matches t1 x.Microsoft_FStar_Absyn_Syntax.sort)
+in (Support.Prims.pipe_right _65_13423 head_match))
 end
 | (Microsoft_FStar_Absyn_Syntax.Typ_fun (_), Microsoft_FStar_Absyn_Syntax.Typ_fun (_)) -> begin
 HeadMatch
@@ -1154,8 +1154,8 @@ end)
 in (mk_b_ktecs (binders', (b_ktec)::b_ktecs) rest))))
 end)
 end))
-in (let _65_13471 = (mk_b_ktecs ([], []) bs)
-in (rebuild, _65_13471))))))
+in (let _65_13477 = (mk_b_ktecs ([], []) bs)
+in (rebuild, _65_13477))))))
 
 let rec decompose_kind = (fun ( env ) ( k ) -> (let fail = (fun ( _33_989 ) -> (match (()) with
 | () -> begin
@@ -1265,9 +1265,9 @@ in (let sub_prob = (fun ( scope ) ( args ) ( q ) -> (match (q) with
 in (match (_33_1121) with
 | (gi_xs, gi) -> begin
 (let gi_ps = (Microsoft_FStar_Absyn_Syntax.mk_Kind_uvar (gi, args) r)
-in (let _65_13554 = (let _65_13553 = (mk_problem scope orig gi_ps (vary_rel rel variance) ki None "kind subterm")
-in (Support.Prims.pipe_left (fun ( _65_13552 ) -> KProb (_65_13552)) _65_13553))
-in (Microsoft_FStar_Absyn_Syntax.K (gi_xs), _65_13554)))
+in (let _65_13560 = (let _65_13559 = (mk_problem scope orig gi_ps (vary_rel rel variance) ki None "kind subterm")
+in (Support.Prims.pipe_left (fun ( _65_13558 ) -> KProb (_65_13558)) _65_13559))
+in (Microsoft_FStar_Absyn_Syntax.K (gi_xs), _65_13560)))
 end))
 end
 | (_, variance, Microsoft_FStar_Absyn_Syntax.T ((ti, kopt))) -> begin
@@ -1282,9 +1282,9 @@ in (let _33_1137 = (new_tvar r scope k)
 in (match (_33_1137) with
 | (gi_xs, gi) -> begin
 (let gi_ps = (Microsoft_FStar_Absyn_Syntax.mk_Typ_app' (gi, args) None r)
-in (let _65_13557 = (let _65_13556 = (mk_problem scope orig gi_ps (vary_rel rel variance) ti None "type subterm")
-in (Support.Prims.pipe_left (fun ( _65_13555 ) -> TProb (_65_13555)) _65_13556))
-in (Microsoft_FStar_Absyn_Syntax.T ((gi_xs, Some (k))), _65_13557)))
+in (let _65_13563 = (let _65_13562 = (mk_problem scope orig gi_ps (vary_rel rel variance) ti None "type subterm")
+in (Support.Prims.pipe_left (fun ( _65_13561 ) -> TProb (_65_13561)) _65_13562))
+in (Microsoft_FStar_Absyn_Syntax.T ((gi_xs, Some (k))), _65_13563)))
 end)))
 end
 | (_, variance, Microsoft_FStar_Absyn_Syntax.E (ei)) -> begin
@@ -1293,9 +1293,9 @@ in (let _33_1148 = (new_evar r scope t)
 in (match (_33_1148) with
 | (gi_xs, gi) -> begin
 (let gi_ps = (Microsoft_FStar_Absyn_Syntax.mk_Exp_app' (gi, args) (Some (t)) r)
-in (let _65_13560 = (let _65_13559 = (mk_problem scope orig gi_ps (vary_rel rel variance) ei None "expression subterm")
-in (Support.Prims.pipe_left (fun ( _65_13558 ) -> EProb (_65_13558)) _65_13559))
-in (Microsoft_FStar_Absyn_Syntax.E (gi_xs), _65_13560)))
+in (let _65_13566 = (let _65_13565 = (mk_problem scope orig gi_ps (vary_rel rel variance) ei None "expression subterm")
+in (Support.Prims.pipe_left (fun ( _65_13564 ) -> EProb (_65_13564)) _65_13565))
+in (Microsoft_FStar_Absyn_Syntax.E (gi_xs), _65_13566)))
 end)))
 end
 | (_, _, Microsoft_FStar_Absyn_Syntax.C (_)) -> begin
@@ -1310,9 +1310,9 @@ end
 | (bopt, variance, Microsoft_FStar_Absyn_Syntax.C ({Microsoft_FStar_Absyn_Syntax.n = Microsoft_FStar_Absyn_Syntax.Total (ti); Microsoft_FStar_Absyn_Syntax.tk = _; Microsoft_FStar_Absyn_Syntax.pos = _; Microsoft_FStar_Absyn_Syntax.fvs = _; Microsoft_FStar_Absyn_Syntax.uvs = _})) -> begin
 (match ((sub_prob scope args (bopt, variance, Microsoft_FStar_Absyn_Syntax.T ((ti, Some (Microsoft_FStar_Absyn_Syntax.ktype)))))) with
 | (Microsoft_FStar_Absyn_Syntax.T ((gi_xs, _)), prob) -> begin
-(let _65_13569 = (let _65_13568 = (Microsoft_FStar_Absyn_Syntax.mk_Total gi_xs)
-in (Support.Prims.pipe_left (fun ( _65_13567 ) -> Microsoft_FStar_Absyn_Syntax.C (_65_13567)) _65_13568))
-in (_65_13569, (prob)::[]))
+(let _65_13575 = (let _65_13574 = (Microsoft_FStar_Absyn_Syntax.mk_Total gi_xs)
+in (Support.Prims.pipe_left (fun ( _65_13573 ) -> Microsoft_FStar_Absyn_Syntax.C (_65_13573)) _65_13574))
+in (_65_13575, (prob)::[]))
 end
 | _ -> begin
 (failwith ("impossible"))
@@ -1327,16 +1327,16 @@ end
 (None, INVARIANT, Microsoft_FStar_Absyn_Syntax.E (e))
 end))))
 in (let components = ((None, COVARIANT, Microsoft_FStar_Absyn_Syntax.T ((c.Microsoft_FStar_Absyn_Syntax.result_typ, Some (Microsoft_FStar_Absyn_Syntax.ktype)))))::components
-in (let _33_1222 = (let _65_13571 = (Support.List.map (sub_prob scope args) components)
-in (Support.Prims.pipe_right _65_13571 Support.List.unzip))
+in (let _33_1222 = (let _65_13577 = (Support.List.map (sub_prob scope args) components)
+in (Support.Prims.pipe_right _65_13577 Support.List.unzip))
 in (match (_33_1222) with
 | (ktecs, sub_probs) -> begin
-(let gi_xs = (let _65_13576 = (let _65_13575 = (let _65_13572 = (Support.List.hd ktecs)
-in (Support.Prims.pipe_right _65_13572 un_T))
-in (let _65_13574 = (let _65_13573 = (Support.List.tl ktecs)
-in (Support.Prims.pipe_right _65_13573 (Support.List.map arg_of_ktec)))
-in {Microsoft_FStar_Absyn_Syntax.effect_name = c.Microsoft_FStar_Absyn_Syntax.effect_name; Microsoft_FStar_Absyn_Syntax.result_typ = _65_13575; Microsoft_FStar_Absyn_Syntax.effect_args = _65_13574; Microsoft_FStar_Absyn_Syntax.flags = c.Microsoft_FStar_Absyn_Syntax.flags}))
-in (Support.Prims.pipe_left Microsoft_FStar_Absyn_Syntax.mk_Comp _65_13576))
+(let gi_xs = (let _65_13582 = (let _65_13581 = (let _65_13578 = (Support.List.hd ktecs)
+in (Support.Prims.pipe_right _65_13578 un_T))
+in (let _65_13580 = (let _65_13579 = (Support.List.tl ktecs)
+in (Support.Prims.pipe_right _65_13579 (Support.List.map arg_of_ktec)))
+in {Microsoft_FStar_Absyn_Syntax.effect_name = c.Microsoft_FStar_Absyn_Syntax.effect_name; Microsoft_FStar_Absyn_Syntax.result_typ = _65_13581; Microsoft_FStar_Absyn_Syntax.effect_args = _65_13580; Microsoft_FStar_Absyn_Syntax.flags = c.Microsoft_FStar_Absyn_Syntax.flags}))
+in (Support.Prims.pipe_left Microsoft_FStar_Absyn_Syntax.mk_Comp _65_13582))
 in (Microsoft_FStar_Absyn_Syntax.C (gi_xs), sub_probs))
 end))))
 end
@@ -1351,9 +1351,9 @@ in (match (_33_1231) with
 | (ktec, probs) -> begin
 (let _33_1244 = (match (q) with
 | (Some (b), _, _) -> begin
-(let _65_13578 = (let _65_13577 = (Microsoft_FStar_Absyn_Util.arg_of_non_null_binder b)
-in (_65_13577)::args)
-in (Some (b), (b)::scope, _65_13578))
+(let _65_13584 = (let _65_13583 = (Microsoft_FStar_Absyn_Util.arg_of_non_null_binder b)
+in (_65_13583)::args)
+in (Some (b), (b)::scope, _65_13584))
 end
 | _ -> begin
 (None, scope, args)
@@ -1365,15 +1365,15 @@ in (match (_33_1248) with
 | (sub_probs, ktecs, f) -> begin
 (let f = (match (bopt) with
 | None -> begin
-(let _65_13581 = (let _65_13580 = (Support.Prims.pipe_right probs (Support.List.map (fun ( prob ) -> (Support.Prims.pipe_right (p_guard prob) Support.Prims.fst))))
-in (f)::_65_13580)
-in (Microsoft_FStar_Absyn_Util.mk_conj_l _65_13581))
+(let _65_13587 = (let _65_13586 = (Support.Prims.pipe_right probs (Support.List.map (fun ( prob ) -> (Support.Prims.pipe_right (p_guard prob) Support.Prims.fst))))
+in (f)::_65_13586)
+in (Microsoft_FStar_Absyn_Util.mk_conj_l _65_13587))
 end
 | Some (b) -> begin
-(let _65_13585 = (let _65_13584 = (Microsoft_FStar_Absyn_Util.close_forall ((b)::[]) f)
-in (let _65_13583 = (Support.Prims.pipe_right probs (Support.List.map (fun ( prob ) -> (Support.Prims.pipe_right (p_guard prob) Support.Prims.fst))))
-in (_65_13584)::_65_13583))
-in (Microsoft_FStar_Absyn_Util.mk_conj_l _65_13585))
+(let _65_13591 = (let _65_13590 = (Microsoft_FStar_Absyn_Util.close_forall ((b)::[]) f)
+in (let _65_13589 = (Support.Prims.pipe_right probs (Support.List.map (fun ( prob ) -> (Support.Prims.pipe_right (p_guard prob) Support.Prims.fst))))
+in (_65_13590)::_65_13589))
+in (Microsoft_FStar_Absyn_Util.mk_conj_l _65_13591))
 end)
 in ((Support.List.append probs sub_probs), (ktec)::ktecs, f))
 end))
@@ -1401,8 +1401,8 @@ end))
 
 let fix_slack_vars = (fun ( slack ) -> (Support.Prims.pipe_right slack (Support.List.iter (fun ( _33_1267 ) -> (match (_33_1267) with
 | (mul, s) -> begin
-(match ((let _65_13603 = (Microsoft_FStar_Absyn_Util.compress_typ s)
-in _65_13603.Microsoft_FStar_Absyn_Syntax.n)) with
+(match ((let _65_13609 = (Microsoft_FStar_Absyn_Util.compress_typ s)
+in _65_13609.Microsoft_FStar_Absyn_Syntax.n)) with
 | Microsoft_FStar_Absyn_Syntax.Typ_uvar ((uv, k)) -> begin
 (fix_slack_uv (uv, k) mul)
 end
@@ -1424,11 +1424,11 @@ in (Microsoft_FStar_Absyn_Util.mk_conj (Support.Prims.fst slack.lower) (Support.
 end))
 end)))
 
-let new_slack_var = (fun ( env ) ( slack ) -> (let xs = (let _65_13611 = (let _65_13610 = (destruct_flex_pattern env (Support.Prims.snd slack.lower))
-in (Support.Prims.pipe_right _65_13610 Support.Prims.snd))
-in (Support.Prims.pipe_right _65_13611 Support.Microsoft.FStar.Util.must))
-in (let _65_13612 = (new_tvar (Support.Prims.fst slack.lower).Microsoft_FStar_Absyn_Syntax.pos xs Microsoft_FStar_Absyn_Syntax.ktype)
-in (_65_13612, xs))))
+let new_slack_var = (fun ( env ) ( slack ) -> (let xs = (let _65_13617 = (let _65_13616 = (destruct_flex_pattern env (Support.Prims.snd slack.lower))
+in (Support.Prims.pipe_right _65_13616 Support.Prims.snd))
+in (Support.Prims.pipe_right _65_13617 Support.Microsoft.FStar.Util.must))
+in (let _65_13618 = (new_tvar (Support.Prims.fst slack.lower).Microsoft_FStar_Absyn_Syntax.pos xs Microsoft_FStar_Absyn_Syntax.ktype)
+in (_65_13618, xs))))
 
 let new_slack_formula = (fun ( p ) ( env ) ( wl ) ( xs ) ( low ) ( high ) -> (let _33_1306 = (new_tvar p xs Microsoft_FStar_Absyn_Syntax.ktype)
 in (match (_33_1306) with
@@ -1452,11 +1452,11 @@ end
 | Some (f) -> begin
 (Microsoft_FStar_Absyn_Util.mk_conj f high_var)
 end)
-in (let _65_13622 = (let _65_13621 = (let _65_13620 = (let _65_13619 = (Support.Microsoft.FStar.Util.mk_ref false)
-in (low, high, _65_13619))
-in Microsoft_FStar_Absyn_Syntax.Meta_slack_formula (_65_13620))
-in (Microsoft_FStar_Absyn_Syntax.mk_Typ_meta _65_13621))
-in (_65_13622, wl)))))
+in (let _65_13628 = (let _65_13627 = (let _65_13626 = (let _65_13625 = (Support.Microsoft.FStar.Util.mk_ref false)
+in (low, high, _65_13625))
+in Microsoft_FStar_Absyn_Syntax.Meta_slack_formula (_65_13626))
+in (Microsoft_FStar_Absyn_Syntax.mk_Typ_meta _65_13627))
+in (_65_13628, wl)))))
 end)))
 end)))
 
@@ -1473,9 +1473,9 @@ end
 None
 end
 | Some ((rest, uvar)) -> begin
-(let _65_13646 = (let _65_13645 = (mk_conn lhs rest)
-in (_65_13645, uvar))
-in Some (_65_13646))
+(let _65_13652 = (let _65_13651 = (mk_conn lhs rest)
+in (_65_13651, uvar))
+in Some (_65_13652))
 end)
 end))
 end
@@ -1487,19 +1487,19 @@ in (match (phi.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Typ_meta (Microsoft_FStar_Absyn_Syntax.Meta_slack_formula ((phi1, phi2, flag))) -> begin
 (match ((Support.ST.read flag)) with
 | true -> begin
-(let _65_13647 = (Microsoft_FStar_Absyn_Util.unmeta_typ phi)
-in Support.Microsoft.FStar.Util.Inl (_65_13647))
+(let _65_13653 = (Microsoft_FStar_Absyn_Util.unmeta_typ phi)
+in Support.Microsoft.FStar.Util.Inl (_65_13653))
 end
 | false -> begin
-(let low = (let _65_13648 = (compress env wl phi1)
-in (Support.Prims.pipe_left (destruct Microsoft_FStar_Absyn_Const.or_lid Microsoft_FStar_Absyn_Util.mk_disj) _65_13648))
-in (let hi = (let _65_13649 = (compress env wl phi2)
-in (Support.Prims.pipe_left (destruct Microsoft_FStar_Absyn_Const.and_lid Microsoft_FStar_Absyn_Util.mk_disj) _65_13649))
+(let low = (let _65_13654 = (compress env wl phi1)
+in (Support.Prims.pipe_left (destruct Microsoft_FStar_Absyn_Const.or_lid Microsoft_FStar_Absyn_Util.mk_disj) _65_13654))
+in (let hi = (let _65_13655 = (compress env wl phi2)
+in (Support.Prims.pipe_left (destruct Microsoft_FStar_Absyn_Const.and_lid Microsoft_FStar_Absyn_Util.mk_disj) _65_13655))
 in (match ((low, hi)) with
 | (None, None) -> begin
 (let _33_1392 = (Support.ST.op_Colon_Equals flag true)
-in (let _65_13650 = (Microsoft_FStar_Absyn_Util.unmeta_typ phi)
-in Support.Microsoft.FStar.Util.Inl (_65_13650)))
+in (let _65_13656 = (Microsoft_FStar_Absyn_Util.unmeta_typ phi)
+in Support.Microsoft.FStar.Util.Inl (_65_13656)))
 end
 | ((Some (_), None)) | ((None, Some (_))) -> begin
 (failwith ("Impossible"))
@@ -1590,32 +1590,32 @@ let flex_flex = 7
 
 let compress_prob = (fun ( wl ) ( p ) -> (match (p) with
 | KProb (p) -> begin
-(let _65_13680 = (let _33_1515 = p
-in (let _65_13678 = (compress_k wl.tcenv wl p.lhs)
-in (let _65_13677 = (compress_k wl.tcenv wl p.rhs)
-in {lhs = _65_13678; relation = _33_1515.relation; rhs = _65_13677; element = _33_1515.element; logical_guard = _33_1515.logical_guard; scope = _33_1515.scope; reason = _33_1515.reason; loc = _33_1515.loc; rank = _33_1515.rank})))
-in (Support.Prims.pipe_right _65_13680 (fun ( _65_13679 ) -> KProb (_65_13679))))
+(let _65_13686 = (let _33_1515 = p
+in (let _65_13684 = (compress_k wl.tcenv wl p.lhs)
+in (let _65_13683 = (compress_k wl.tcenv wl p.rhs)
+in {lhs = _65_13684; relation = _33_1515.relation; rhs = _65_13683; element = _33_1515.element; logical_guard = _33_1515.logical_guard; scope = _33_1515.scope; reason = _33_1515.reason; loc = _33_1515.loc; rank = _33_1515.rank})))
+in (Support.Prims.pipe_right _65_13686 (fun ( _65_13685 ) -> KProb (_65_13685))))
 end
 | TProb (p) -> begin
-(let _65_13684 = (let _33_1519 = p
-in (let _65_13682 = (compress wl.tcenv wl p.lhs)
-in (let _65_13681 = (compress wl.tcenv wl p.rhs)
-in {lhs = _65_13682; relation = _33_1519.relation; rhs = _65_13681; element = _33_1519.element; logical_guard = _33_1519.logical_guard; scope = _33_1519.scope; reason = _33_1519.reason; loc = _33_1519.loc; rank = _33_1519.rank})))
-in (Support.Prims.pipe_right _65_13684 (fun ( _65_13683 ) -> TProb (_65_13683))))
+(let _65_13690 = (let _33_1519 = p
+in (let _65_13688 = (compress wl.tcenv wl p.lhs)
+in (let _65_13687 = (compress wl.tcenv wl p.rhs)
+in {lhs = _65_13688; relation = _33_1519.relation; rhs = _65_13687; element = _33_1519.element; logical_guard = _33_1519.logical_guard; scope = _33_1519.scope; reason = _33_1519.reason; loc = _33_1519.loc; rank = _33_1519.rank})))
+in (Support.Prims.pipe_right _65_13690 (fun ( _65_13689 ) -> TProb (_65_13689))))
 end
 | EProb (p) -> begin
-(let _65_13688 = (let _33_1523 = p
-in (let _65_13686 = (compress_e wl.tcenv wl p.lhs)
-in (let _65_13685 = (compress_e wl.tcenv wl p.rhs)
-in {lhs = _65_13686; relation = _33_1523.relation; rhs = _65_13685; element = _33_1523.element; logical_guard = _33_1523.logical_guard; scope = _33_1523.scope; reason = _33_1523.reason; loc = _33_1523.loc; rank = _33_1523.rank})))
-in (Support.Prims.pipe_right _65_13688 (fun ( _65_13687 ) -> EProb (_65_13687))))
+(let _65_13694 = (let _33_1523 = p
+in (let _65_13692 = (compress_e wl.tcenv wl p.lhs)
+in (let _65_13691 = (compress_e wl.tcenv wl p.rhs)
+in {lhs = _65_13692; relation = _33_1523.relation; rhs = _65_13691; element = _33_1523.element; logical_guard = _33_1523.logical_guard; scope = _33_1523.scope; reason = _33_1523.reason; loc = _33_1523.loc; rank = _33_1523.rank})))
+in (Support.Prims.pipe_right _65_13694 (fun ( _65_13693 ) -> EProb (_65_13693))))
 end
 | CProb (_) -> begin
 p
 end))
 
-let rank = (fun ( wl ) ( prob ) -> (let prob = (let _65_13693 = (compress_prob wl prob)
-in (Support.Prims.pipe_right _65_13693 maybe_invert_p))
+let rank = (fun ( wl ) ( prob ) -> (let prob = (let _65_13699 = (compress_prob wl prob)
+in (Support.Prims.pipe_right _65_13699 maybe_invert_p))
 in (match (prob) with
 | KProb (kp) -> begin
 (let rank = (match ((kp.lhs.Microsoft_FStar_Absyn_Syntax.n, kp.rhs.Microsoft_FStar_Absyn_Syntax.n)) with
@@ -1643,9 +1643,9 @@ end
 | (_, _) -> begin
 rigid_rigid
 end)
-in (let _65_13695 = (Support.Prims.pipe_right (let _33_1558 = kp
-in {lhs = _33_1558.lhs; relation = _33_1558.relation; rhs = _33_1558.rhs; element = _33_1558.element; logical_guard = _33_1558.logical_guard; scope = _33_1558.scope; reason = _33_1558.reason; loc = _33_1558.loc; rank = Some (rank)}) (fun ( _65_13694 ) -> KProb (_65_13694)))
-in (rank, _65_13695)))
+in (let _65_13701 = (Support.Prims.pipe_right (let _33_1558 = kp
+in {lhs = _33_1558.lhs; relation = _33_1558.relation; rhs = _33_1558.rhs; element = _33_1558.element; logical_guard = _33_1558.logical_guard; scope = _33_1558.scope; reason = _33_1558.reason; loc = _33_1558.loc; rank = Some (rank)}) (fun ( _65_13700 ) -> KProb (_65_13700)))
+in (rank, _65_13701)))
 end
 | TProb (tp) -> begin
 (let _33_1565 = (Microsoft_FStar_Absyn_Util.head_and_args tp.lhs)
@@ -1677,10 +1677,10 @@ end
 | false -> begin
 flex_refine_inner
 end)
-in (let _65_13697 = (let _33_1602 = tp
-in (let _65_13696 = (force_refinement (b, ref_opt))
-in {lhs = _33_1602.lhs; relation = _33_1602.relation; rhs = _65_13696; element = _33_1602.element; logical_guard = _33_1602.logical_guard; scope = _33_1602.scope; reason = _33_1602.reason; loc = _33_1602.loc; rank = _33_1602.rank}))
-in (rank, _65_13697)))
+in (let _65_13703 = (let _33_1602 = tp
+in (let _65_13702 = (force_refinement (b, ref_opt))
+in {lhs = _33_1602.lhs; relation = _33_1602.relation; rhs = _65_13702; element = _33_1602.element; logical_guard = _33_1602.logical_guard; scope = _33_1602.scope; reason = _33_1602.reason; loc = _33_1602.loc; rank = _33_1602.rank}))
+in (rank, _65_13703)))
 end)
 end))
 end
@@ -1693,10 +1693,10 @@ in (match (_33_1612) with
 (rigid_flex, tp)
 end
 | _ -> begin
-(let _65_13699 = (let _33_1616 = tp
-in (let _65_13698 = (force_refinement (b, ref_opt))
-in {lhs = _65_13698; relation = _33_1616.relation; rhs = _33_1616.rhs; element = _33_1616.element; logical_guard = _33_1616.logical_guard; scope = _33_1616.scope; reason = _33_1616.reason; loc = _33_1616.loc; rank = _33_1616.rank}))
-in (refine_flex, _65_13699))
+(let _65_13705 = (let _33_1616 = tp
+in (let _65_13704 = (force_refinement (b, ref_opt))
+in {lhs = _65_13704; relation = _33_1616.relation; rhs = _33_1616.rhs; element = _33_1616.element; logical_guard = _33_1616.logical_guard; scope = _33_1616.scope; reason = _33_1616.reason; loc = _33_1616.loc; rank = _33_1616.rank}))
+in (refine_flex, _65_13705))
 end)
 end))
 end
@@ -1705,9 +1705,9 @@ end
 end)
 in (match (_33_1625) with
 | (rank, tp) -> begin
-(let _65_13701 = (Support.Prims.pipe_right (let _33_1626 = tp
-in {lhs = _33_1626.lhs; relation = _33_1626.relation; rhs = _33_1626.rhs; element = _33_1626.element; logical_guard = _33_1626.logical_guard; scope = _33_1626.scope; reason = _33_1626.reason; loc = _33_1626.loc; rank = Some (rank)}) (fun ( _65_13700 ) -> TProb (_65_13700)))
-in (rank, _65_13701))
+(let _65_13707 = (Support.Prims.pipe_right (let _33_1626 = tp
+in {lhs = _33_1626.lhs; relation = _33_1626.relation; rhs = _33_1626.rhs; element = _33_1626.element; logical_guard = _33_1626.logical_guard; scope = _33_1626.scope; reason = _33_1626.reason; loc = _33_1626.loc; rank = Some (rank)}) (fun ( _65_13706 ) -> TProb (_65_13706)))
+in (rank, _65_13707))
 end))
 end))
 end))
@@ -1729,16 +1729,16 @@ end
 | (_, _) -> begin
 rigid_rigid
 end)
-in (let _65_13703 = (Support.Prims.pipe_right (let _33_1663 = ep
-in {lhs = _33_1663.lhs; relation = _33_1663.relation; rhs = _33_1663.rhs; element = _33_1663.element; logical_guard = _33_1663.logical_guard; scope = _33_1663.scope; reason = _33_1663.reason; loc = _33_1663.loc; rank = Some (rank)}) (fun ( _65_13702 ) -> EProb (_65_13702)))
-in (rank, _65_13703)))
+in (let _65_13709 = (Support.Prims.pipe_right (let _33_1663 = ep
+in {lhs = _33_1663.lhs; relation = _33_1663.relation; rhs = _33_1663.rhs; element = _33_1663.element; logical_guard = _33_1663.logical_guard; scope = _33_1663.scope; reason = _33_1663.reason; loc = _33_1663.loc; rank = Some (rank)}) (fun ( _65_13708 ) -> EProb (_65_13708)))
+in (rank, _65_13709)))
 end))
 end))
 end
 | CProb (cp) -> begin
-(let _65_13705 = (Support.Prims.pipe_right (let _33_1667 = cp
-in {lhs = _33_1667.lhs; relation = _33_1667.relation; rhs = _33_1667.rhs; element = _33_1667.element; logical_guard = _33_1667.logical_guard; scope = _33_1667.scope; reason = _33_1667.reason; loc = _33_1667.loc; rank = Some (rigid_rigid)}) (fun ( _65_13704 ) -> CProb (_65_13704)))
-in (rigid_rigid, _65_13705))
+(let _65_13711 = (Support.Prims.pipe_right (let _33_1667 = cp
+in {lhs = _33_1667.lhs; relation = _33_1667.relation; rhs = _33_1667.rhs; element = _33_1667.element; logical_guard = _33_1667.logical_guard; scope = _33_1667.scope; reason = _33_1667.reason; loc = _33_1667.loc; rank = Some (rigid_rigid)}) (fun ( _65_13710 ) -> CProb (_65_13710)))
+in (rigid_rigid, _65_13711))
 end)))
 
 let next_prob = (fun ( wl ) -> (let rec aux = (fun ( _33_1674 ) ( probs ) -> (match (_33_1674) with
@@ -1785,8 +1785,8 @@ let is_flex_rigid = (fun ( rank ) -> ((flex_refine_inner <= rank) && (rank <= fl
 
 let rec solve_flex_rigid_join = (fun ( env ) ( tp ) ( wl ) -> (let _33_1693 = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("Rel")))) with
 | true -> begin
-(let _65_13755 = (prob_to_string env (TProb (tp)))
-in (Support.Microsoft.FStar.Util.fprint1 "Trying to solve by joining refinements:%s\n" _65_13755))
+(let _65_13761 = (prob_to_string env (TProb (tp)))
+in (Support.Microsoft.FStar.Util.fprint1 "Trying to solve by joining refinements:%s\n" _65_13761))
 end
 | false -> begin
 ()
@@ -1819,10 +1819,10 @@ in (match (_33_1716) with
 Some ([])
 end
 | false -> begin
-(let _65_13767 = (let _65_13766 = (let _65_13765 = (new_problem env t1 EQ t2 None t1.Microsoft_FStar_Absyn_Syntax.pos "joining refinements")
-in (Support.Prims.pipe_left (fun ( _65_13764 ) -> TProb (_65_13764)) _65_13765))
-in (_65_13766)::[])
-in Some (_65_13767))
+(let _65_13773 = (let _65_13772 = (let _65_13771 = (new_problem env t1 EQ t2 None t1.Microsoft_FStar_Absyn_Syntax.pos "joining refinements")
+in (Support.Prims.pipe_left (fun ( _65_13770 ) -> TProb (_65_13770)) _65_13771))
+in (_65_13772)::[])
+in Some (_65_13773))
 end)
 end
 | false -> begin
@@ -1851,15 +1851,15 @@ in (match (m) with
 None
 end
 | Some (m) -> begin
-(let phi2 = (let _65_13774 = (let _65_13773 = (Microsoft_FStar_Absyn_Syntax.v_binder x)
-in (let _65_13772 = (Microsoft_FStar_Absyn_Syntax.v_binder y)
-in (Microsoft_FStar_Absyn_Util.mk_subst_one_binder _65_13773 _65_13772)))
-in (Microsoft_FStar_Absyn_Util.subst_typ _65_13774 phi2))
-in (let _65_13778 = (let _65_13777 = (let _65_13776 = (let _65_13775 = (Microsoft_FStar_Absyn_Util.mk_conj phi1 phi2)
-in (x, _65_13775))
-in (Microsoft_FStar_Absyn_Syntax.mk_Typ_refine _65_13776 (Some (Microsoft_FStar_Absyn_Syntax.ktype)) t1.Microsoft_FStar_Absyn_Syntax.pos))
-in (_65_13777, m))
-in Some (_65_13778)))
+(let phi2 = (let _65_13780 = (let _65_13779 = (Microsoft_FStar_Absyn_Syntax.v_binder x)
+in (let _65_13778 = (Microsoft_FStar_Absyn_Syntax.v_binder y)
+in (Microsoft_FStar_Absyn_Util.mk_subst_one_binder _65_13779 _65_13778)))
+in (Microsoft_FStar_Absyn_Util.subst_typ _65_13780 phi2))
+in (let _65_13784 = (let _65_13783 = (let _65_13782 = (let _65_13781 = (Microsoft_FStar_Absyn_Util.mk_conj phi1 phi2)
+in (x, _65_13781))
+in (Microsoft_FStar_Absyn_Syntax.mk_Typ_refine _65_13782 (Some (Microsoft_FStar_Absyn_Syntax.ktype)) t1.Microsoft_FStar_Absyn_Syntax.pos))
+in (_65_13783, m))
+in Some (_65_13784)))
 end))
 end
 | (_, Microsoft_FStar_Absyn_Syntax.Typ_refine ((y, _))) -> begin
@@ -1902,8 +1902,8 @@ in (match (tt.Microsoft_FStar_Absyn_Syntax.n) with
 (let _33_1790 = (Microsoft_FStar_Absyn_Util.head_and_args tp.lhs)
 in (match (_33_1790) with
 | (u', _) -> begin
-(match ((let _65_13780 = (compress env wl u')
-in _65_13780.Microsoft_FStar_Absyn_Syntax.n)) with
+(match ((let _65_13786 = (compress env wl u')
+in _65_13786.Microsoft_FStar_Absyn_Syntax.n)) with
 | Microsoft_FStar_Absyn_Syntax.Typ_uvar ((uv', _)) -> begin
 (Support.Microsoft.FStar.Unionfind.equivalent uv uv')
 end
@@ -1928,8 +1928,8 @@ in (match (_33_1804) with
 Some ((bound, sub_probs))
 end
 | TProb (hd)::tl -> begin
-(match ((let _65_13785 = (compress env wl hd.rhs)
-in (conjoin bound _65_13785))) with
+(match ((let _65_13791 = (compress env wl hd.rhs)
+in (conjoin bound _65_13791))) with
 | Some ((bound, sub)) -> begin
 (make_upper_bound (bound, (Support.List.append sub sub_probs)) tl)
 end
@@ -1941,9 +1941,9 @@ end
 None
 end)
 end))
-in (match ((let _65_13787 = (let _65_13786 = (compress env wl tp.rhs)
-in (_65_13786, []))
-in (make_upper_bound _65_13787 upper_bounds))) with
+in (match ((let _65_13793 = (let _65_13792 = (compress env wl tp.rhs)
+in (_65_13792, []))
+in (make_upper_bound _65_13793 upper_bounds))) with
 | None -> begin
 (let _33_1823 = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("Rel")))) with
 | true -> begin
@@ -2020,22 +2020,22 @@ in (match (_33_1887) with
 | (attempt, rest) -> begin
 (match (attempt) with
 | [] -> begin
-(let _65_13796 = (let _65_13795 = (let _65_13794 = (Support.List.map (fun ( _33_1893 ) -> (match (_33_1893) with
+(let _65_13802 = (let _65_13801 = (let _65_13800 = (Support.List.map (fun ( _33_1893 ) -> (match (_33_1893) with
 | (_, x, y) -> begin
 (x, y)
 end)) probs.deferred)
-in {carry = _65_13794; slack = probs.slack_vars})
-in (probs.subst, _65_13795))
-in Success (_65_13796))
+in {carry = _65_13800; slack = probs.slack_vars})
+in (probs.subst, _65_13801))
+in Success (_65_13802))
 end
 | _ -> begin
-(let _65_13799 = (let _33_1896 = probs
-in (let _65_13798 = (Support.Prims.pipe_right attempt (Support.List.map (fun ( _33_1903 ) -> (match (_33_1903) with
+(let _65_13805 = (let _33_1896 = probs
+in (let _65_13804 = (Support.Prims.pipe_right attempt (Support.List.map (fun ( _33_1903 ) -> (match (_33_1903) with
 | (_, _, y) -> begin
 y
 end))))
-in {attempting = _65_13798; deferred = rest; subst = _33_1896.subst; ctr = _33_1896.ctr; slack_vars = _33_1896.slack_vars; defer_ok = _33_1896.defer_ok; smt_ok = _33_1896.smt_ok; tcenv = _33_1896.tcenv}))
-in (solve env _65_13799))
+in {attempting = _65_13804; deferred = rest; subst = _33_1896.subst; ctr = _33_1896.ctr; slack_vars = _33_1896.slack_vars; defer_ok = _33_1896.defer_ok; smt_ok = _33_1896.smt_ok; tcenv = _33_1896.tcenv}))
+in (solve env _65_13805))
 end)
 end))
 end)
@@ -2050,22 +2050,22 @@ end
 Support.Microsoft.FStar.Util.Inr ("sort mismatch")
 end
 | (hd1::xs, hd2::ys) -> begin
-(let subst = (let _65_13825 = (Microsoft_FStar_Absyn_Util.mk_subst_one_binder hd2 hd1)
-in (Support.List.append _65_13825 subst))
-in (let env = (let _65_13826 = (Microsoft_FStar_Tc_Env.binding_of_binder hd2)
-in (Microsoft_FStar_Tc_Env.push_local_binding env _65_13826))
+(let subst = (let _65_13831 = (Microsoft_FStar_Absyn_Util.mk_subst_one_binder hd2 hd1)
+in (Support.List.append _65_13831 subst))
+in (let env = (let _65_13832 = (Microsoft_FStar_Tc_Env.binding_of_binder hd2)
+in (Microsoft_FStar_Tc_Env.push_local_binding env _65_13832))
 in (let prob = (match (((Support.Prims.fst hd1), (Support.Prims.fst hd2))) with
 | (Support.Microsoft.FStar.Util.Inl (a), Support.Microsoft.FStar.Util.Inl (b)) -> begin
-(let _65_13830 = (let _65_13829 = (Microsoft_FStar_Absyn_Util.subst_kind subst a.Microsoft_FStar_Absyn_Syntax.sort)
-in (let _65_13828 = (Support.Prims.pipe_left invert_rel (p_rel orig))
-in (mk_problem ((hd2)::scope) orig _65_13829 _65_13828 b.Microsoft_FStar_Absyn_Syntax.sort None "Formal type parameter")))
-in (Support.Prims.pipe_left (fun ( _65_13827 ) -> KProb (_65_13827)) _65_13830))
+(let _65_13836 = (let _65_13835 = (Microsoft_FStar_Absyn_Util.subst_kind subst a.Microsoft_FStar_Absyn_Syntax.sort)
+in (let _65_13834 = (Support.Prims.pipe_left invert_rel (p_rel orig))
+in (mk_problem ((hd2)::scope) orig _65_13835 _65_13834 b.Microsoft_FStar_Absyn_Syntax.sort None "Formal type parameter")))
+in (Support.Prims.pipe_left (fun ( _65_13833 ) -> KProb (_65_13833)) _65_13836))
 end
 | (Support.Microsoft.FStar.Util.Inr (x), Support.Microsoft.FStar.Util.Inr (y)) -> begin
-(let _65_13834 = (let _65_13833 = (Microsoft_FStar_Absyn_Util.subst_typ subst x.Microsoft_FStar_Absyn_Syntax.sort)
-in (let _65_13832 = (Support.Prims.pipe_left invert_rel (p_rel orig))
-in (mk_problem ((hd2)::scope) orig _65_13833 _65_13832 y.Microsoft_FStar_Absyn_Syntax.sort None "Formal value parameter")))
-in (Support.Prims.pipe_left (fun ( _65_13831 ) -> TProb (_65_13831)) _65_13834))
+(let _65_13840 = (let _65_13839 = (Microsoft_FStar_Absyn_Util.subst_typ subst x.Microsoft_FStar_Absyn_Syntax.sort)
+in (let _65_13838 = (Support.Prims.pipe_left invert_rel (p_rel orig))
+in (mk_problem ((hd2)::scope) orig _65_13839 _65_13838 y.Microsoft_FStar_Absyn_Syntax.sort None "Formal value parameter")))
+in (Support.Prims.pipe_left (fun ( _65_13837 ) -> TProb (_65_13837)) _65_13840))
 end
 | _ -> begin
 (failwith ("impos"))
@@ -2075,9 +2075,9 @@ in (match ((aux ((hd2)::scope) env subst xs ys)) with
 Support.Microsoft.FStar.Util.Inr (msg)
 end
 | Support.Microsoft.FStar.Util.Inl ((sub_probs, phi)) -> begin
-(let phi = (let _65_13836 = (Support.Prims.pipe_right (p_guard prob) Support.Prims.fst)
-in (let _65_13835 = (Microsoft_FStar_Absyn_Util.close_forall ((hd2)::[]) phi)
-in (Microsoft_FStar_Absyn_Util.mk_conj _65_13836 _65_13835)))
+(let phi = (let _65_13842 = (Support.Prims.pipe_right (p_guard prob) Support.Prims.fst)
+in (let _65_13841 = (Microsoft_FStar_Absyn_Util.close_forall ((hd2)::[]) phi)
+in (Microsoft_FStar_Absyn_Util.mk_conj _65_13842 _65_13841)))
 in Support.Microsoft.FStar.Util.Inl (((prob)::sub_probs, phi)))
 end))))
 end
@@ -2103,16 +2103,16 @@ end))
 and solve_k' = (fun ( env ) ( problem ) ( wl ) -> (let orig = KProb (problem)
 in (match ((Support.Microsoft.FStar.Util.physical_equality problem.lhs problem.rhs)) with
 | true -> begin
-(let _65_13843 = (solve_prob orig None [] wl)
-in (solve env _65_13843))
+(let _65_13849 = (solve_prob orig None [] wl)
+in (solve env _65_13849))
 end
 | false -> begin
 (let k1 = problem.lhs
 in (let k2 = problem.rhs
 in (match ((Support.Microsoft.FStar.Util.physical_equality k1 k2)) with
 | true -> begin
-(let _65_13844 = (solve_prob orig None [] wl)
-in (solve env _65_13844))
+(let _65_13850 = (solve_prob orig None [] wl)
+in (solve env _65_13850))
 end
 | false -> begin
 (let r = (Microsoft_FStar_Tc_Env.get_range env)
@@ -2122,9 +2122,9 @@ in (let imitate_k = (fun ( _33_2020 ) -> (match (_33_2020) with
 in (let _33_2025 = (imitation_sub_probs orig env xs ps qs)
 in (match (_33_2025) with
 | (sub_probs, gs_xs, f) -> begin
-(let im = (let _65_13860 = (let _65_13859 = (h gs_xs)
-in (xs, _65_13859))
-in (Microsoft_FStar_Absyn_Syntax.mk_Kind_lam _65_13860 r))
+(let im = (let _65_13866 = (let _65_13865 = (h gs_xs)
+in (xs, _65_13865))
+in (Microsoft_FStar_Absyn_Syntax.mk_Kind_lam _65_13866 r))
 in (let wl = (solve_prob orig (Some (f)) ((UK ((u, im)))::[]) wl)
 in (solve env (attempt sub_probs wl))))
 end)))
@@ -2138,14 +2138,14 @@ in (let uvs2 = (Microsoft_FStar_Absyn_Util.uvars_in_kind k2)
 in (match ((((Support.Microsoft.FStar.Util.set_is_subset_of fvs2.Microsoft_FStar_Absyn_Syntax.ftvs fvs1.Microsoft_FStar_Absyn_Syntax.ftvs) && (Support.Microsoft.FStar.Util.set_is_subset_of fvs2.Microsoft_FStar_Absyn_Syntax.fxvs fvs1.Microsoft_FStar_Absyn_Syntax.fxvs)) && (not ((Support.Microsoft.FStar.Util.set_mem u uvs2.Microsoft_FStar_Absyn_Syntax.uvars_k))))) with
 | true -> begin
 (let k1 = (Microsoft_FStar_Absyn_Syntax.mk_Kind_lam (xs, k2) r)
-in (let _65_13869 = (solve_prob orig None ((UK ((u, k1)))::[]) wl)
-in (solve env _65_13869)))
+in (let _65_13875 = (solve_prob orig None ((UK ((u, k1)))::[]) wl)
+in (solve env _65_13875)))
 end
 | false -> begin
-(let _65_13874 = (let _65_13873 = (Support.Prims.pipe_right xs Microsoft_FStar_Absyn_Util.args_of_non_null_binders)
-in (let _65_13872 = (decompose_kind env k)
-in (rel, u, _65_13873, xs, _65_13872)))
-in (imitate_k _65_13874))
+(let _65_13880 = (let _65_13879 = (Support.Prims.pipe_right xs Microsoft_FStar_Absyn_Util.args_of_non_null_binders)
+in (let _65_13878 = (decompose_kind env k)
+in (rel, u, _65_13879, xs, _65_13878)))
+in (imitate_k _65_13880))
 end))))
 end
 | None -> begin
@@ -2153,8 +2153,8 @@ end
 end)))
 in (match ((k1.Microsoft_FStar_Absyn_Syntax.n, k2.Microsoft_FStar_Absyn_Syntax.n)) with
 | ((Microsoft_FStar_Absyn_Syntax.Kind_type, Microsoft_FStar_Absyn_Syntax.Kind_type)) | ((Microsoft_FStar_Absyn_Syntax.Kind_effect, Microsoft_FStar_Absyn_Syntax.Kind_effect)) -> begin
-(let _65_13875 = (solve_prob orig None [] wl)
-in (Support.Prims.pipe_left (solve env) _65_13875))
+(let _65_13881 = (solve_prob orig None [] wl)
+in (Support.Prims.pipe_left (solve env) _65_13881))
 end
 | (Microsoft_FStar_Absyn_Syntax.Kind_abbrev ((_, k1)), _) -> begin
 (solve_k env (let _33_2055 = problem
@@ -2165,9 +2165,9 @@ end
 in {lhs = _33_2065.lhs; relation = _33_2065.relation; rhs = k2; element = _33_2065.element; logical_guard = _33_2065.logical_guard; scope = _33_2065.scope; reason = _33_2065.reason; loc = _33_2065.loc; rank = _33_2065.rank}) wl)
 end
 | (Microsoft_FStar_Absyn_Syntax.Kind_arrow ((bs1, k1')), Microsoft_FStar_Absyn_Syntax.Kind_arrow ((bs2, k2'))) -> begin
-(let sub_prob = (fun ( scope ) ( env ) ( subst ) -> (let _65_13884 = (let _65_13883 = (Microsoft_FStar_Absyn_Util.subst_kind subst k1')
-in (mk_problem scope orig _65_13883 problem.relation k2' None "Arrow-kind result"))
-in (Support.Prims.pipe_left (fun ( _65_13882 ) -> KProb (_65_13882)) _65_13884)))
+(let sub_prob = (fun ( scope ) ( env ) ( subst ) -> (let _65_13890 = (let _65_13889 = (Microsoft_FStar_Absyn_Util.subst_kind subst k1')
+in (mk_problem scope orig _65_13889 problem.relation k2' None "Arrow-kind result"))
+in (Support.Prims.pipe_left (fun ( _65_13888 ) -> KProb (_65_13888)) _65_13890)))
 in (solve_binders env bs1 bs2 orig wl sub_prob))
 end
 | (Microsoft_FStar_Absyn_Syntax.Kind_uvar ((u1, args1)), Microsoft_FStar_Absyn_Syntax.Kind_uvar ((u2, args2))) -> begin
@@ -2221,8 +2221,8 @@ and solve_t' = (fun ( env ) ( problem ) ( wl ) -> (let giveup_or_defer = (fun ( 
 | true -> begin
 (let _33_2162 = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("Rel")))) with
 | true -> begin
-(let _65_13895 = (prob_to_string env orig)
-in (Support.Microsoft.FStar.Util.fprint2 "\n\t\tDeferring %s\n\t\tBecause %s\n" _65_13895 msg))
+(let _65_13901 = (prob_to_string env orig)
+in (Support.Microsoft.FStar.Util.fprint2 "\n\t\tDeferring %s\n\t\tBecause %s\n" _65_13901 msg))
 end
 | false -> begin
 ()
@@ -2240,17 +2240,17 @@ in (let r = (Microsoft_FStar_Tc_Env.get_range env)
 in (let _33_2185 = (imitation_sub_probs orig env xs ps qs)
 in (match (_33_2185) with
 | (sub_probs, gs_xs, formula) -> begin
-(let im = (let _65_13906 = (let _65_13905 = (h gs_xs)
-in (xs, _65_13905))
-in (Microsoft_FStar_Absyn_Syntax.mk_Typ_lam' _65_13906 None r))
+(let im = (let _65_13912 = (let _65_13911 = (h gs_xs)
+in (xs, _65_13911))
+in (Microsoft_FStar_Absyn_Syntax.mk_Typ_lam' _65_13912 None r))
 in (let _33_2187 = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("Rel")))) with
 | true -> begin
-(let _65_13911 = (Microsoft_FStar_Absyn_Print.typ_to_string im)
-in (let _65_13910 = (Microsoft_FStar_Absyn_Print.tag_of_typ im)
-in (let _65_13909 = (let _65_13907 = (Support.List.map (prob_to_string env) sub_probs)
-in (Support.Prims.pipe_right _65_13907 (Support.String.concat ", ")))
-in (let _65_13908 = (Microsoft_FStar_Tc_Normalize.formula_norm_to_string env formula)
-in (Support.Microsoft.FStar.Util.fprint4 "Imitating %s (%s)\nsub_probs = %s\nformula=%s\n" _65_13911 _65_13910 _65_13909 _65_13908)))))
+(let _65_13917 = (Microsoft_FStar_Absyn_Print.typ_to_string im)
+in (let _65_13916 = (Microsoft_FStar_Absyn_Print.tag_of_typ im)
+in (let _65_13915 = (let _65_13913 = (Support.List.map (prob_to_string env) sub_probs)
+in (Support.Prims.pipe_right _65_13913 (Support.String.concat ", ")))
+in (let _65_13914 = (Microsoft_FStar_Tc_Normalize.formula_norm_to_string env formula)
+in (Support.Microsoft.FStar.Util.fprint4 "Imitating %s (%s)\nsub_probs = %s\nformula=%s\n" _65_13917 _65_13916 _65_13915 _65_13914)))))
 end
 | false -> begin
 ()
@@ -2287,9 +2287,9 @@ end
 | false -> begin
 (Support.Microsoft.FStar.Util.Inl ((a.Microsoft_FStar_Absyn_Syntax.v, gi_xs)))::subst
 end)
-in (let _65_13931 = (Microsoft_FStar_Absyn_Syntax.targ gi_xs)
-in (let _65_13930 = (Microsoft_FStar_Absyn_Syntax.targ gi_ps)
-in (_65_13931, _65_13930, subst))))))
+in (let _65_13937 = (Microsoft_FStar_Absyn_Syntax.targ gi_xs)
+in (let _65_13936 = (Microsoft_FStar_Absyn_Syntax.targ gi_ps)
+in (_65_13937, _65_13936, subst))))))
 end)))
 end
 | Support.Microsoft.FStar.Util.Inr (x) -> begin
@@ -2306,9 +2306,9 @@ end
 | false -> begin
 (Support.Microsoft.FStar.Util.Inr ((x.Microsoft_FStar_Absyn_Syntax.v, gi_xs)))::subst
 end)
-in (let _65_13933 = (Microsoft_FStar_Absyn_Syntax.varg gi_xs)
-in (let _65_13932 = (Microsoft_FStar_Absyn_Syntax.varg gi_ps)
-in (_65_13933, _65_13932, subst))))))
+in (let _65_13939 = (Microsoft_FStar_Absyn_Syntax.varg gi_xs)
+in (let _65_13938 = (Microsoft_FStar_Absyn_Syntax.varg gi_ps)
+in (_65_13939, _65_13938, subst))))))
 end)))
 end)
 in (match (_33_2239) with
@@ -2322,12 +2322,12 @@ end))
 end))
 in (aux [] bs))
 end)))
-in (match ((let _65_13935 = (let _65_13934 = (Support.List.nth xs i)
-in (Support.Prims.pipe_left Support.Prims.fst _65_13934))
-in ((Support.Prims.fst pi), _65_13935))) with
+in (match ((let _65_13941 = (let _65_13940 = (Support.List.nth xs i)
+in (Support.Prims.pipe_left Support.Prims.fst _65_13940))
+in ((Support.Prims.fst pi), _65_13941))) with
 | (Support.Microsoft.FStar.Util.Inl (pi), Support.Microsoft.FStar.Util.Inl (xi)) -> begin
-(match ((let _65_13936 = (matches pi)
-in (Support.Prims.pipe_left Support.Prims.op_Negation _65_13936))) with
+(match ((let _65_13942 = (matches pi)
+in (Support.Prims.pipe_left Support.Prims.op_Negation _65_13942))) with
 | true -> begin
 None
 end
@@ -2336,31 +2336,31 @@ end
 in (match (_33_2251) with
 | (g_xs, _) -> begin
 (let xi = (Microsoft_FStar_Absyn_Util.btvar_to_typ xi)
-in (let proj = (let _65_13938 = (let _65_13937 = (Microsoft_FStar_Absyn_Syntax.mk_Typ_app' (xi, g_xs) (Some (Microsoft_FStar_Absyn_Syntax.ktype)) r)
-in (xs, _65_13937))
-in (Microsoft_FStar_Absyn_Syntax.mk_Typ_lam _65_13938 None r))
-in (let sub = (let _65_13944 = (let _65_13943 = (Microsoft_FStar_Absyn_Syntax.mk_Typ_app' (proj, ps) (Some (Microsoft_FStar_Absyn_Syntax.ktype)) r)
-in (let _65_13942 = (let _65_13941 = (Support.List.map (fun ( _33_2259 ) -> (match (_33_2259) with
+in (let proj = (let _65_13944 = (let _65_13943 = (Microsoft_FStar_Absyn_Syntax.mk_Typ_app' (xi, g_xs) (Some (Microsoft_FStar_Absyn_Syntax.ktype)) r)
+in (xs, _65_13943))
+in (Microsoft_FStar_Absyn_Syntax.mk_Typ_lam _65_13944 None r))
+in (let sub = (let _65_13950 = (let _65_13949 = (Microsoft_FStar_Absyn_Syntax.mk_Typ_app' (proj, ps) (Some (Microsoft_FStar_Absyn_Syntax.ktype)) r)
+in (let _65_13948 = (let _65_13947 = (Support.List.map (fun ( _33_2259 ) -> (match (_33_2259) with
 | (_, _, y) -> begin
 y
 end)) qs)
-in (Support.Prims.pipe_left h _65_13941))
-in (mk_problem (p_scope orig) orig _65_13943 (p_rel orig) _65_13942 None "projection")))
-in (Support.Prims.pipe_left (fun ( _65_13939 ) -> TProb (_65_13939)) _65_13944))
+in (Support.Prims.pipe_left h _65_13947))
+in (mk_problem (p_scope orig) orig _65_13949 (p_rel orig) _65_13948 None "projection")))
+in (Support.Prims.pipe_left (fun ( _65_13945 ) -> TProb (_65_13945)) _65_13950))
 in (let _33_2261 = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("Rel")))) with
 | true -> begin
-(let _65_13946 = (Microsoft_FStar_Absyn_Print.typ_to_string proj)
-in (let _65_13945 = (prob_to_string env sub)
-in (Support.Microsoft.FStar.Util.fprint2 "Projecting %s\n\tsubprob=%s\n" _65_13946 _65_13945)))
+(let _65_13952 = (Microsoft_FStar_Absyn_Print.typ_to_string proj)
+in (let _65_13951 = (prob_to_string env sub)
+in (Support.Microsoft.FStar.Util.fprint2 "Projecting %s\n\tsubprob=%s\n" _65_13952 _65_13951)))
 end
 | false -> begin
 ()
 end)
-in (let wl = (let _65_13948 = (let _65_13947 = (Support.Prims.pipe_left Support.Prims.fst (p_guard sub))
-in Some (_65_13947))
-in (solve_prob orig _65_13948 ((UT ((u, proj)))::[]) wl))
-in (let _65_13950 = (solve env (attempt ((sub)::[]) wl))
-in (Support.Prims.pipe_left (fun ( _65_13949 ) -> Some (_65_13949)) _65_13950)))))))
+in (let wl = (let _65_13954 = (let _65_13953 = (Support.Prims.pipe_left Support.Prims.fst (p_guard sub))
+in Some (_65_13953))
+in (solve_prob orig _65_13954 ((UT ((u, proj)))::[]) wl))
+in (let _65_13956 = (solve env (attempt ((sub)::[]) wl))
+in (Support.Prims.pipe_left (fun ( _65_13955 ) -> Some (_65_13955)) _65_13956)))))))
 end))
 end)
 end
@@ -2371,11 +2371,11 @@ end)))
 in (let solve_t_flex_rigid = (fun ( orig ) ( lhs ) ( t2 ) ( wl ) -> (let _33_2277 = lhs
 in (match (_33_2277) with
 | ((t1, uv, k, args_lhs), maybe_pat_vars) -> begin
-(let subterms = (fun ( ps ) -> (let xs = (let _65_13977 = (Microsoft_FStar_Absyn_Util.kind_formals k)
-in (Support.Prims.pipe_right _65_13977 Support.Prims.fst))
+(let subterms = (fun ( ps ) -> (let xs = (let _65_13983 = (Microsoft_FStar_Absyn_Util.kind_formals k)
+in (Support.Prims.pipe_right _65_13983 Support.Prims.fst))
 in (let xs = (Microsoft_FStar_Absyn_Util.name_binders xs)
-in (let _65_13982 = (decompose_typ env t2)
-in ((uv, k), ps, xs, _65_13982)))))
+in (let _65_13988 = (decompose_typ env t2)
+in ((uv, k), ps, xs, _65_13988)))))
 in (let rec imitate_or_project = (fun ( n ) ( st ) ( i ) -> (match ((i >= n)) with
 | true -> begin
 (giveup env "flex-rigid case failed all backtracking attempts" orig)
@@ -2417,8 +2417,8 @@ end
 | false -> begin
 (let _33_2316 = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("Rel")))) with
 | true -> begin
-(let _65_13993 = (Microsoft_FStar_Absyn_Print.freevars_to_string fvs_hd)
-in (Support.Microsoft.FStar.Util.fprint1 "Free variables are %s" _65_13993))
+(let _65_13999 = (Microsoft_FStar_Absyn_Print.freevars_to_string fvs_hd)
+in (Support.Microsoft.FStar.Util.fprint1 "Free variables are %s" _65_13999))
 end
 | false -> begin
 ()
@@ -2427,9 +2427,9 @@ in false)
 end))
 end)
 end)))
-in (let imitate_ok = (fun ( t2 ) -> (let fvs_hd = (let _65_13997 = (let _65_13996 = (Microsoft_FStar_Absyn_Util.head_and_args t2)
-in (Support.Prims.pipe_right _65_13996 Support.Prims.fst))
-in (Support.Prims.pipe_right _65_13997 Microsoft_FStar_Absyn_Util.freevars_typ))
+in (let imitate_ok = (fun ( t2 ) -> (let fvs_hd = (let _65_14003 = (let _65_14002 = (Microsoft_FStar_Absyn_Util.head_and_args t2)
+in (Support.Prims.pipe_right _65_14002 Support.Prims.fst))
+in (Support.Prims.pipe_right _65_14003 Microsoft_FStar_Absyn_Util.freevars_typ))
 in (match ((Support.Microsoft.FStar.Util.set_is_empty fvs_hd.Microsoft_FStar_Absyn_Syntax.ftvs)) with
 | true -> begin
 (- (1))
@@ -2448,25 +2448,25 @@ in (match (_33_2329) with
 | (occurs_ok, msg) -> begin
 (match ((not (occurs_ok))) with
 | true -> begin
-(let _65_13999 = (let _65_13998 = (Support.Option.get msg)
-in (Support.String.strcat "occurs-check failed: " _65_13998))
-in (giveup_or_defer orig _65_13999))
+(let _65_14005 = (let _65_14004 = (Support.Option.get msg)
+in (Support.String.strcat "occurs-check failed: " _65_14004))
+in (giveup_or_defer orig _65_14005))
 end
 | false -> begin
 (match ((Microsoft_FStar_Absyn_Util.fvs_included fvs2 fvs1)) with
 | true -> begin
 (match (((Microsoft_FStar_Absyn_Util.is_function_typ t2) && ((p_rel orig) <> EQ))) with
 | true -> begin
-(let _65_14000 = (subterms args_lhs)
-in (imitate_t orig env wl _65_14000))
+(let _65_14006 = (subterms args_lhs)
+in (imitate_t orig env wl _65_14006))
 end
 | false -> begin
 (let _33_2330 = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("Rel")))) with
 | true -> begin
-(let _65_14003 = (Microsoft_FStar_Absyn_Print.typ_to_string t1)
-in (let _65_14002 = (Microsoft_FStar_Absyn_Print.freevars_to_string fvs1)
-in (let _65_14001 = (Microsoft_FStar_Absyn_Print.freevars_to_string fvs2)
-in (Support.Microsoft.FStar.Util.fprint3 "Pattern %s with fvars=%s succeeded fvar check: %s\n" _65_14003 _65_14002 _65_14001))))
+(let _65_14009 = (Microsoft_FStar_Absyn_Print.typ_to_string t1)
+in (let _65_14008 = (Microsoft_FStar_Absyn_Print.freevars_to_string fvs1)
+in (let _65_14007 = (Microsoft_FStar_Absyn_Print.freevars_to_string fvs2)
+in (Support.Microsoft.FStar.Util.fprint3 "Pattern %s with fvars=%s succeeded fvar check: %s\n" _65_14009 _65_14008 _65_14007))))
 end
 | false -> begin
 ()
@@ -2476,9 +2476,9 @@ in (let sol = (match (vars) with
 t2
 end
 | _ -> begin
-(let _65_14005 = (let _65_14004 = (sn_binders env vars)
-in (_65_14004, t2))
-in (Microsoft_FStar_Absyn_Syntax.mk_Typ_lam _65_14005 None t1.Microsoft_FStar_Absyn_Syntax.pos))
+(let _65_14011 = (let _65_14010 = (sn_binders env vars)
+in (_65_14010, t2))
+in (Microsoft_FStar_Absyn_Syntax.mk_Typ_lam _65_14011 None t1.Microsoft_FStar_Absyn_Syntax.pos))
 end)
 in (let wl = (solve_prob orig None ((UT (((uv, k), sol)))::[]) wl)
 in (solve env wl))))
@@ -2494,16 +2494,16 @@ end
 | true -> begin
 (let _33_2337 = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("Rel")))) with
 | true -> begin
-(let _65_14008 = (Microsoft_FStar_Absyn_Print.typ_to_string t1)
-in (let _65_14007 = (Microsoft_FStar_Absyn_Print.freevars_to_string fvs1)
-in (let _65_14006 = (Microsoft_FStar_Absyn_Print.freevars_to_string fvs2)
-in (Support.Microsoft.FStar.Util.fprint3 "Pattern %s with fvars=%s failed fvar check: %s ... imitating\n" _65_14008 _65_14007 _65_14006))))
+(let _65_14014 = (Microsoft_FStar_Absyn_Print.typ_to_string t1)
+in (let _65_14013 = (Microsoft_FStar_Absyn_Print.freevars_to_string fvs1)
+in (let _65_14012 = (Microsoft_FStar_Absyn_Print.freevars_to_string fvs2)
+in (Support.Microsoft.FStar.Util.fprint3 "Pattern %s with fvars=%s failed fvar check: %s ... imitating\n" _65_14014 _65_14013 _65_14012))))
 end
 | false -> begin
 ()
 end)
-in (let _65_14009 = (subterms args_lhs)
-in (imitate_or_project (Support.List.length args_lhs) _65_14009 (- (1)))))
+in (let _65_14015 = (subterms args_lhs)
+in (imitate_or_project (Support.List.length args_lhs) _65_14015 (- (1)))))
 end
 | false -> begin
 (giveup env "free-variable check failed on a non-redex" orig)
@@ -2519,14 +2519,14 @@ end
 (solve env (defer "not a pattern" orig wl))
 end
 | false -> begin
-(match ((let _65_14010 = (Microsoft_FStar_Absyn_Util.freevars_typ t1)
-in (check_head _65_14010 t2))) with
+(match ((let _65_14016 = (Microsoft_FStar_Absyn_Util.freevars_typ t1)
+in (check_head _65_14016 t2))) with
 | true -> begin
 (let im_ok = (imitate_ok t2)
 in (let _33_2341 = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("Rel")))) with
 | true -> begin
-(let _65_14011 = (Microsoft_FStar_Absyn_Print.typ_to_string t1)
-in (Support.Microsoft.FStar.Util.fprint2 "Not a pattern (%s) ... %s\n" _65_14011 (match ((im_ok < 0)) with
+(let _65_14017 = (Microsoft_FStar_Absyn_Print.typ_to_string t1)
+in (Support.Microsoft.FStar.Util.fprint2 "Not a pattern (%s) ... %s\n" _65_14017 (match ((im_ok < 0)) with
 | true -> begin
 "imitating"
 end
@@ -2537,8 +2537,8 @@ end
 | false -> begin
 ()
 end)
-in (let _65_14012 = (subterms args_lhs)
-in (imitate_or_project (Support.List.length args_lhs) _65_14012 im_ok))))
+in (let _65_14018 = (subterms args_lhs)
+in (imitate_or_project (Support.List.length args_lhs) _65_14018 im_ok))))
 end
 | false -> begin
 (giveup env "head-symbol is free" orig)
@@ -2564,9 +2564,9 @@ in (match (_33_2365) with
 (let _33_2371 = (destruct_flex_t t')
 in (match (_33_2371) with
 | (u1_ys, u1, k1, _) -> begin
-(let sol = (let _65_14030 = (let _65_14029 = (Microsoft_FStar_Absyn_Syntax.mk_Typ_lam (binders, u1_ys) (Some (k)) t.Microsoft_FStar_Absyn_Syntax.pos)
-in ((u, k), _65_14029))
-in UT (_65_14030))
+(let sol = (let _65_14036 = (let _65_14035 = (Microsoft_FStar_Absyn_Syntax.mk_Typ_lam (binders, u1_ys) (Some (k)) t.Microsoft_FStar_Absyn_Syntax.pos)
+in ((u, k), _65_14035))
+in UT (_65_14036))
 in (sol, (t', u, k1, ys)))
 end))
 end)))))
@@ -2574,19 +2574,19 @@ end
 | hd::tl -> begin
 (let new_binder = (fun ( hd ) -> (match ((Support.Prims.fst hd)) with
 | Support.Microsoft.FStar.Util.Inl (a) -> begin
-(let _65_14034 = (let _65_14033 = (Microsoft_FStar_Tc_Recheck.recompute_kind a)
-in (Support.Prims.pipe_right _65_14033 (Microsoft_FStar_Absyn_Util.gen_bvar_p a.Microsoft_FStar_Absyn_Syntax.pos)))
-in (Support.Prims.pipe_right _65_14034 Microsoft_FStar_Absyn_Syntax.t_binder))
+(let _65_14040 = (let _65_14039 = (Microsoft_FStar_Tc_Recheck.recompute_kind a)
+in (Support.Prims.pipe_right _65_14039 (Microsoft_FStar_Absyn_Util.gen_bvar_p a.Microsoft_FStar_Absyn_Syntax.pos)))
+in (Support.Prims.pipe_right _65_14040 Microsoft_FStar_Absyn_Syntax.t_binder))
 end
 | Support.Microsoft.FStar.Util.Inr (x) -> begin
-(let _65_14036 = (let _65_14035 = (Microsoft_FStar_Tc_Recheck.recompute_typ x)
-in (Support.Prims.pipe_right _65_14035 (Microsoft_FStar_Absyn_Util.gen_bvar_p x.Microsoft_FStar_Absyn_Syntax.pos)))
-in (Support.Prims.pipe_right _65_14036 Microsoft_FStar_Absyn_Syntax.v_binder))
+(let _65_14042 = (let _65_14041 = (Microsoft_FStar_Tc_Recheck.recompute_typ x)
+in (Support.Prims.pipe_right _65_14041 (Microsoft_FStar_Absyn_Util.gen_bvar_p x.Microsoft_FStar_Absyn_Syntax.pos)))
+in (Support.Prims.pipe_right _65_14042 Microsoft_FStar_Absyn_Syntax.v_binder))
 end))
 in (let _33_2390 = (match ((pat_var_opt env ys hd)) with
 | None -> begin
-(let _65_14037 = (new_binder hd)
-in (_65_14037, ys))
+(let _65_14043 = (new_binder hd)
+in (_65_14043, ys))
 end
 | Some (y) -> begin
 (match (xs_opt) with
@@ -2599,8 +2599,8 @@ end
 (y, (y)::ys)
 end
 | false -> begin
-(let _65_14038 = (new_binder hd)
-in (_65_14038, ys))
+(let _65_14044 = (new_binder hd)
+in (_65_14044, ys))
 end)
 end)
 end)
@@ -2615,8 +2615,8 @@ in (let solve_both_pats = (fun ( wl ) ( _33_2396 ) ( _33_2400 ) ( k ) ( r ) -> (
 | ((u1, k1, xs), (u2, k2, ys)) -> begin
 (match (((Support.Microsoft.FStar.Unionfind.equivalent u1 u2) && (binders_eq xs ys))) with
 | true -> begin
-(let _65_14049 = (solve_prob orig None [] wl)
-in (solve env _65_14049))
+(let _65_14055 = (solve_prob orig None [] wl)
+in (solve env _65_14055))
 end
 | false -> begin
 (let xs = (sn_binders env xs)
@@ -2665,9 +2665,9 @@ in (let solve_one_pat = (fun ( _33_2427 ) ( _33_2432 ) -> (match ((_33_2427, _33
 | ((t1, u1, k1, xs), (t2, u2, k2, args2)) -> begin
 (let _33_2433 = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("Rel")))) with
 | true -> begin
-(let _65_14055 = (Microsoft_FStar_Absyn_Print.typ_to_string t1)
-in (let _65_14054 = (Microsoft_FStar_Absyn_Print.typ_to_string t2)
-in (Support.Microsoft.FStar.Util.fprint2 "Trying flex-flex one pattern (%s) with %s\n" _65_14055 _65_14054)))
+(let _65_14061 = (Microsoft_FStar_Absyn_Print.typ_to_string t1)
+in (let _65_14060 = (Microsoft_FStar_Absyn_Print.typ_to_string t2)
+in (Support.Microsoft.FStar.Util.fprint2 "Trying flex-flex one pattern (%s) with %s\n" _65_14061 _65_14060)))
 end
 | false -> begin
 ()
@@ -2677,18 +2677,18 @@ in (match ((Support.Microsoft.FStar.Unionfind.equivalent u1 u2)) with
 (let sub_probs = (Support.List.map2 (fun ( a ) ( b ) -> (let a = (Microsoft_FStar_Absyn_Util.arg_of_non_null_binder a)
 in (match (((Support.Prims.fst a), (Support.Prims.fst b))) with
 | (Support.Microsoft.FStar.Util.Inl (t1), Support.Microsoft.FStar.Util.Inl (t2)) -> begin
-(let _65_14059 = (mk_problem (p_scope orig) orig t1 EQ t2 None "flex-flex index")
-in (Support.Prims.pipe_right _65_14059 (fun ( _65_14058 ) -> TProb (_65_14058))))
+(let _65_14065 = (mk_problem (p_scope orig) orig t1 EQ t2 None "flex-flex index")
+in (Support.Prims.pipe_right _65_14065 (fun ( _65_14064 ) -> TProb (_65_14064))))
 end
 | (Support.Microsoft.FStar.Util.Inr (t1), Support.Microsoft.FStar.Util.Inr (t2)) -> begin
-(let _65_14061 = (mk_problem (p_scope orig) orig t1 EQ t2 None "flex-flex index")
-in (Support.Prims.pipe_right _65_14061 (fun ( _65_14060 ) -> EProb (_65_14060))))
+(let _65_14067 = (mk_problem (p_scope orig) orig t1 EQ t2 None "flex-flex index")
+in (Support.Prims.pipe_right _65_14067 (fun ( _65_14066 ) -> EProb (_65_14066))))
 end
 | _ -> begin
 (failwith ("Impossible"))
 end))) xs args2)
-in (let guard = (let _65_14063 = (Support.List.map (fun ( p ) -> (Support.Prims.pipe_right (p_guard p) Support.Prims.fst)) sub_probs)
-in (Microsoft_FStar_Absyn_Util.mk_conj_l _65_14063))
+in (let guard = (let _65_14069 = (Support.List.map (fun ( p ) -> (Support.Prims.pipe_right (p_guard p) Support.Prims.fst)) sub_probs)
+in (Microsoft_FStar_Absyn_Util.mk_conj_l _65_14069))
 in (let wl = (solve_prob orig (Some (guard)) [] wl)
 in (solve env (attempt sub_probs wl)))))
 end
@@ -2701,9 +2701,9 @@ in (match (_33_2459) with
 (let lhs_vars = (Microsoft_FStar_Absyn_Syntax.freevars_of_binders xs)
 in (match ((occurs_ok && (Microsoft_FStar_Absyn_Util.fvs_included rhs_vars lhs_vars))) with
 | true -> begin
-(let sol = (let _65_14065 = (let _65_14064 = (Microsoft_FStar_Absyn_Syntax.mk_Typ_lam' (xs, t2) (Some (k1)) t1.Microsoft_FStar_Absyn_Syntax.pos)
-in ((u1, k1), _65_14064))
-in UT (_65_14065))
+(let sol = (let _65_14071 = (let _65_14070 = (Microsoft_FStar_Absyn_Syntax.mk_Typ_lam' (xs, t2) (Some (k1)) t1.Microsoft_FStar_Absyn_Syntax.pos)
+in ((u1, k1), _65_14070))
+in UT (_65_14071))
 in (let wl = (solve_prob orig None ((sol)::[]) wl)
 in (solve env wl)))
 end
@@ -2716,8 +2716,8 @@ in (match (_33_2470) with
 (let wl = (extend_solution sol wl)
 in (let _33_2472 = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("QuasiPattern")))) with
 | true -> begin
-(let _65_14066 = (uvi_to_string env sol)
-in (Support.Microsoft.FStar.Util.fprint1 "flex-flex quasi pattern (2): %s\n" _65_14066))
+(let _65_14072 = (uvi_to_string env sol)
+in (Support.Microsoft.FStar.Util.fprint1 "flex-flex quasi pattern (2): %s\n" _65_14072))
 end
 | false -> begin
 ()
@@ -2749,8 +2749,8 @@ in (let maybe_pat_vars2 = (pat_vars env [] args2)
 in (let r = t2.Microsoft_FStar_Absyn_Syntax.pos
 in (match ((maybe_pat_vars1, maybe_pat_vars2)) with
 | (Some (xs), Some (ys)) -> begin
-(let _65_14067 = (Microsoft_FStar_Tc_Recheck.recompute_kind t2)
-in (solve_both_pats wl (u1, k1, xs) (u2, k2, ys) _65_14067 t2.Microsoft_FStar_Absyn_Syntax.pos))
+(let _65_14073 = (Microsoft_FStar_Tc_Recheck.recompute_kind t2)
+in (solve_both_pats wl (u1, k1, xs) (u2, k2, ys) _65_14073 t2.Microsoft_FStar_Absyn_Syntax.pos))
 end
 | (Some (xs), None) -> begin
 (solve_one_pat (t1, u1, k1, xs) rhs)
@@ -2770,8 +2770,8 @@ in (match (_33_2509) with
 (let wl = (extend_solution sol wl)
 in (let _33_2511 = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("QuasiPattern")))) with
 | true -> begin
-(let _65_14068 = (uvi_to_string env sol)
-in (Support.Microsoft.FStar.Util.fprint1 "flex-flex quasi pattern (1): %s\n" _65_14068))
+(let _65_14074 = (uvi_to_string env sol)
+in (Support.Microsoft.FStar.Util.fprint1 "flex-flex quasi pattern (1): %s\n" _65_14074))
 end
 | false -> begin
 ()
@@ -2792,24 +2792,24 @@ end))
 in (let orig = TProb (problem)
 in (match ((Support.Microsoft.FStar.Util.physical_equality problem.lhs problem.rhs)) with
 | true -> begin
-(let _65_14069 = (solve_prob orig None [] wl)
-in (solve env _65_14069))
+(let _65_14075 = (solve_prob orig None [] wl)
+in (solve env _65_14075))
 end
 | false -> begin
 (let t1 = problem.lhs
 in (let t2 = problem.rhs
 in (match ((Support.Microsoft.FStar.Util.physical_equality t1 t2)) with
 | true -> begin
-(let _65_14070 = (solve_prob orig None [] wl)
-in (solve env _65_14070))
+(let _65_14076 = (solve_prob orig None [] wl)
+in (solve env _65_14076))
 end
 | false -> begin
 (let _33_2520 = (match ((Microsoft_FStar_Tc_Env.debug env (Microsoft_FStar_Options.Other ("Rel")))) with
 | true -> begin
-(let _65_14073 = (prob_to_string env orig)
-in (let _65_14072 = (let _65_14071 = (Support.List.map (uvi_to_string wl.tcenv) wl.subst)
-in (Support.Prims.pipe_right _65_14071 (Support.String.concat "; ")))
-in (Support.Microsoft.FStar.Util.fprint2 "Attempting %s\n\tSubst is %s\n" _65_14073 _65_14072)))
+(let _65_14079 = (prob_to_string env orig)
+in (let _65_14078 = (let _65_14077 = (Support.List.map (uvi_to_string wl.tcenv) wl.subst)
+in (Support.Prims.pipe_right _65_14077 (Support.String.concat "; ")))
+in (Support.Microsoft.FStar.Util.fprint2 "Attempting %s\n\tSubst is %s\n" _65_14079 _65_14078)))
 end
 | false -> begin
 ()
@@ -2820,32 +2820,32 @@ in (let match_num_binders = (fun ( _33_2525 ) ( _33_2528 ) -> (match ((_33_2525,
 (let curry = (fun ( n ) ( bs ) ( mk_cod ) -> (let _33_2535 = (Support.Microsoft.FStar.Util.first_N n bs)
 in (match (_33_2535) with
 | (bs, rest) -> begin
-(let _65_14103 = (mk_cod rest)
-in (bs, _65_14103))
+(let _65_14109 = (mk_cod rest)
+in (bs, _65_14109))
 end)))
 in (let l1 = (Support.List.length bs1)
 in (let l2 = (Support.List.length bs2)
 in (match ((l1 = l2)) with
 | true -> begin
-(let _65_14107 = (let _65_14104 = (mk_cod1 [])
-in (bs1, _65_14104))
-in (let _65_14106 = (let _65_14105 = (mk_cod2 [])
-in (bs2, _65_14105))
-in (_65_14107, _65_14106)))
+(let _65_14113 = (let _65_14110 = (mk_cod1 [])
+in (bs1, _65_14110))
+in (let _65_14112 = (let _65_14111 = (mk_cod2 [])
+in (bs2, _65_14111))
+in (_65_14113, _65_14112)))
 end
 | false -> begin
 (match ((l1 > l2)) with
 | true -> begin
-(let _65_14110 = (curry l2 bs1 mk_cod1)
-in (let _65_14109 = (let _65_14108 = (mk_cod2 [])
-in (bs2, _65_14108))
-in (_65_14110, _65_14109)))
+(let _65_14116 = (curry l2 bs1 mk_cod1)
+in (let _65_14115 = (let _65_14114 = (mk_cod2 [])
+in (bs2, _65_14114))
+in (_65_14116, _65_14115)))
 end
 | false -> begin
-(let _65_14113 = (let _65_14111 = (mk_cod1 [])
-in (bs1, _65_14111))
-in (let _65_14112 = (curry l1 bs2 mk_cod2)
-in (_65_14113, _65_14112)))
+(let _65_14119 = (let _65_14117 = (mk_cod1 [])
+in (bs1, _65_14117))
+in (let _65_14118 = (curry l1 bs2 mk_cod2)
+in (_65_14119, _65_14118)))
 end)
 end))))
 end))
@@ -2853,14 +2853,14 @@ in (match ((t1.Microsoft_FStar_Absyn_Syntax.n, t2.Microsoft_FStar_Absyn_Syntax.n
 | (Microsoft_FStar_Absyn_Syntax.Typ_btvar (a), Microsoft_FStar_Absyn_Syntax.Typ_btvar (b)) -> begin
 (match ((Microsoft_FStar_Absyn_Util.bvd_eq a.Microsoft_FStar_Absyn_Syntax.v b.Microsoft_FStar_Absyn_Syntax.v)) with
 | true -> begin
-(let _65_14114 = (solve_prob orig None [] wl)
-in (solve env _65_14114))
+(let _65_14120 = (solve_prob orig None [] wl)
+in (solve env _65_14120))
 end
 | false -> begin
-(let _65_14118 = (let _65_14117 = (let _65_14116 = (Microsoft_FStar_Absyn_Util.mk_eq_typ t1 t2)
-in (Support.Prims.pipe_left (fun ( _65_14115 ) -> Some (_65_14115)) _65_14116))
-in (solve_prob orig _65_14117 [] wl))
-in (solve env _65_14118))
+(let _65_14124 = (let _65_14123 = (let _65_14122 = (Microsoft_FStar_Absyn_Util.mk_eq_typ t1 t2)
+in (Support.Prims.pipe_left (fun ( _65_14121 ) -> Some (_65_14121)) _65_14122))
+in (solve_prob orig _65_14123 [] wl))
+in (solve env _65_14124))
 end)
 end
 | (Microsoft_FStar_Absyn_Syntax.Typ_fun ((bs1, c1)), Microsoft_FStar_Absyn_Syntax.Typ_fun ((bs2, c2))) -> begin
@@ -2869,8 +2869,8 @@ end
 c
 end
 | bs -> begin
-(let _65_14123 = (Microsoft_FStar_Absyn_Syntax.mk_Typ_fun (bs, c) None c.Microsoft_FStar_Absyn_Syntax.pos)
-in (Microsoft_FStar_Absyn_Syntax.mk_Total _65_14123))
+(let _65_14129 = (Microsoft_FStar_Absyn_Syntax.mk_Typ_fun (bs, c) None c.Microsoft_FStar_Absyn_Syntax.pos)
+in (Microsoft_FStar_Absyn_Syntax.mk_Total _65_14129))
 end))
 in (let _33_2566 = (match_num_binders (bs1, (mk_c c1)) (bs2, (mk_c c2)))
 in (match (_33_2566) with
@@ -2885,15 +2885,15 @@ problem.relation
 end)
 in (let _33_2572 = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("EQ")))) with
 | true -> begin
-(let _65_14130 = (let _65_14129 = (Microsoft_FStar_Tc_Env.get_range env)
-in (Support.Prims.pipe_right _65_14129 Support.Microsoft.FStar.Range.string_of_range))
-in (Support.Microsoft.FStar.Util.fprint2 "(%s) Using relation %s at higher order\n" _65_14130 (rel_to_string rel)))
+(let _65_14136 = (let _65_14135 = (Microsoft_FStar_Tc_Env.get_range env)
+in (Support.Prims.pipe_right _65_14135 Support.Microsoft.FStar.Range.string_of_range))
+in (Support.Microsoft.FStar.Util.fprint2 "(%s) Using relation %s at higher order\n" _65_14136 (rel_to_string rel)))
 end
 | false -> begin
 ()
 end)
-in (let _65_14132 = (mk_problem scope orig c1 rel c2 None "function co-domain")
-in (Support.Prims.pipe_left (fun ( _65_14131 ) -> CProb (_65_14131)) _65_14132)))))))
+in (let _65_14138 = (mk_problem scope orig c1 rel c2 None "function co-domain")
+in (Support.Prims.pipe_left (fun ( _65_14137 ) -> CProb (_65_14137)) _65_14138)))))))
 end)))
 end
 | (Microsoft_FStar_Absyn_Syntax.Typ_lam ((bs1, t1')), Microsoft_FStar_Absyn_Syntax.Typ_lam ((bs2, t2'))) -> begin
@@ -2908,8 +2908,8 @@ in (let _33_2594 = (match_num_binders (bs1, (mk_t t1')) (bs2, (mk_t t2')))
 in (match (_33_2594) with
 | ((bs1, t1'), (bs2, t2')) -> begin
 (solve_binders env bs1 bs2 orig wl (fun ( scope ) ( env ) ( subst ) -> (let t1' = (Microsoft_FStar_Absyn_Util.subst_typ subst t1')
-in (let _65_14143 = (mk_problem scope orig t1' problem.relation t2' None "lambda co-domain")
-in (Support.Prims.pipe_left (fun ( _65_14142 ) -> TProb (_65_14142)) _65_14143)))))
+in (let _65_14149 = (mk_problem scope orig t1' problem.relation t2' None "lambda co-domain")
+in (Support.Prims.pipe_left (fun ( _65_14148 ) -> TProb (_65_14148)) _65_14149)))))
 end)))
 end
 | (Microsoft_FStar_Absyn_Syntax.Typ_refine (_), Microsoft_FStar_Absyn_Syntax.Typ_refine (_)) -> begin
@@ -2919,14 +2919,14 @@ in (match (_33_2608) with
 (let _33_2611 = (as_refinement env wl t2)
 in (match (_33_2611) with
 | (x2, phi2) -> begin
-(let base_prob = (let _65_14145 = (mk_problem (p_scope orig) orig x1.Microsoft_FStar_Absyn_Syntax.sort problem.relation x2.Microsoft_FStar_Absyn_Syntax.sort problem.element "refinement base type")
-in (Support.Prims.pipe_left (fun ( _65_14144 ) -> TProb (_65_14144)) _65_14145))
-in (let x1_for_x2 = (let _65_14147 = (Microsoft_FStar_Absyn_Syntax.v_binder x1)
-in (let _65_14146 = (Microsoft_FStar_Absyn_Syntax.v_binder x2)
-in (Microsoft_FStar_Absyn_Util.mk_subst_one_binder _65_14147 _65_14146)))
+(let base_prob = (let _65_14151 = (mk_problem (p_scope orig) orig x1.Microsoft_FStar_Absyn_Syntax.sort problem.relation x2.Microsoft_FStar_Absyn_Syntax.sort problem.element "refinement base type")
+in (Support.Prims.pipe_left (fun ( _65_14150 ) -> TProb (_65_14150)) _65_14151))
+in (let x1_for_x2 = (let _65_14153 = (Microsoft_FStar_Absyn_Syntax.v_binder x1)
+in (let _65_14152 = (Microsoft_FStar_Absyn_Syntax.v_binder x2)
+in (Microsoft_FStar_Absyn_Util.mk_subst_one_binder _65_14153 _65_14152)))
 in (let phi2 = (Microsoft_FStar_Absyn_Util.subst_typ x1_for_x2 phi2)
-in (let mk_imp = (fun ( imp ) ( phi1 ) ( phi2 ) -> (let _65_14164 = (imp phi1 phi2)
-in (Support.Prims.pipe_right _65_14164 (guard_on_element problem x1))))
+in (let mk_imp = (fun ( imp ) ( phi1 ) ( phi2 ) -> (let _65_14170 = (imp phi1 phi2)
+in (Support.Prims.pipe_right _65_14170 (guard_on_element problem x1))))
 in (let fallback = (fun ( _33_2620 ) -> (match (()) with
 | () -> begin
 (let impl = (match ((problem.relation = EQ)) with
@@ -2936,25 +2936,25 @@ end
 | false -> begin
 (mk_imp Microsoft_FStar_Absyn_Util.mk_imp phi1 phi2)
 end)
-in (let guard = (let _65_14167 = (Support.Prims.pipe_right (p_guard base_prob) Support.Prims.fst)
-in (Microsoft_FStar_Absyn_Util.mk_conj _65_14167 impl))
+in (let guard = (let _65_14173 = (Support.Prims.pipe_right (p_guard base_prob) Support.Prims.fst)
+in (Microsoft_FStar_Absyn_Util.mk_conj _65_14173 impl))
 in (let wl = (solve_prob orig (Some (guard)) [] wl)
 in (solve env (attempt ((base_prob)::[]) wl)))))
 end))
 in (match ((problem.relation = EQ)) with
 | true -> begin
-(let ref_prob = (let _65_14169 = (mk_problem (p_scope orig) orig phi1 EQ phi2 None "refinement formula")
-in (Support.Prims.pipe_left (fun ( _65_14168 ) -> TProb (_65_14168)) _65_14169))
+(let ref_prob = (let _65_14175 = (mk_problem (p_scope orig) orig phi1 EQ phi2 None "refinement formula")
+in (Support.Prims.pipe_left (fun ( _65_14174 ) -> TProb (_65_14174)) _65_14175))
 in (match ((solve env (let _33_2625 = wl
 in {attempting = (ref_prob)::[]; deferred = []; subst = _33_2625.subst; ctr = _33_2625.ctr; slack_vars = _33_2625.slack_vars; defer_ok = false; smt_ok = _33_2625.smt_ok; tcenv = _33_2625.tcenv}))) with
 | Failed (_) -> begin
 (fallback ())
 end
 | Success ((subst, _)) -> begin
-(let guard = (let _65_14172 = (Support.Prims.pipe_right (p_guard base_prob) Support.Prims.fst)
-in (let _65_14171 = (let _65_14170 = (Support.Prims.pipe_right (p_guard ref_prob) Support.Prims.fst)
-in (Support.Prims.pipe_right _65_14170 (guard_on_element problem x1)))
-in (Microsoft_FStar_Absyn_Util.mk_conj _65_14172 _65_14171)))
+(let guard = (let _65_14178 = (Support.Prims.pipe_right (p_guard base_prob) Support.Prims.fst)
+in (let _65_14177 = (let _65_14176 = (Support.Prims.pipe_right (p_guard ref_prob) Support.Prims.fst)
+in (Support.Prims.pipe_right _65_14176 (guard_on_element problem x1)))
+in (Microsoft_FStar_Absyn_Util.mk_conj _65_14178 _65_14177)))
 in (let wl = (solve_prob orig (Some (guard)) [] wl)
 in (solve env (attempt ((base_prob)::[]) wl))))
 end))
@@ -2966,13 +2966,13 @@ end))
 end))
 end
 | ((Microsoft_FStar_Absyn_Syntax.Typ_uvar (_), Microsoft_FStar_Absyn_Syntax.Typ_uvar (_))) | ((Microsoft_FStar_Absyn_Syntax.Typ_app (({Microsoft_FStar_Absyn_Syntax.n = Microsoft_FStar_Absyn_Syntax.Typ_uvar (_); Microsoft_FStar_Absyn_Syntax.tk = _; Microsoft_FStar_Absyn_Syntax.pos = _; Microsoft_FStar_Absyn_Syntax.fvs = _; Microsoft_FStar_Absyn_Syntax.uvs = _}, _)), Microsoft_FStar_Absyn_Syntax.Typ_uvar (_))) | ((Microsoft_FStar_Absyn_Syntax.Typ_uvar (_), Microsoft_FStar_Absyn_Syntax.Typ_app (({Microsoft_FStar_Absyn_Syntax.n = Microsoft_FStar_Absyn_Syntax.Typ_uvar (_); Microsoft_FStar_Absyn_Syntax.tk = _; Microsoft_FStar_Absyn_Syntax.pos = _; Microsoft_FStar_Absyn_Syntax.fvs = _; Microsoft_FStar_Absyn_Syntax.uvs = _}, _)))) | ((Microsoft_FStar_Absyn_Syntax.Typ_app (({Microsoft_FStar_Absyn_Syntax.n = Microsoft_FStar_Absyn_Syntax.Typ_uvar (_); Microsoft_FStar_Absyn_Syntax.tk = _; Microsoft_FStar_Absyn_Syntax.pos = _; Microsoft_FStar_Absyn_Syntax.fvs = _; Microsoft_FStar_Absyn_Syntax.uvs = _}, _)), Microsoft_FStar_Absyn_Syntax.Typ_app (({Microsoft_FStar_Absyn_Syntax.n = Microsoft_FStar_Absyn_Syntax.Typ_uvar (_); Microsoft_FStar_Absyn_Syntax.tk = _; Microsoft_FStar_Absyn_Syntax.pos = _; Microsoft_FStar_Absyn_Syntax.fvs = _; Microsoft_FStar_Absyn_Syntax.uvs = _}, _)))) -> begin
-(let _65_14174 = (destruct_flex_t t1)
-in (let _65_14173 = (destruct_flex_t t2)
-in (flex_flex orig _65_14174 _65_14173)))
+(let _65_14180 = (destruct_flex_t t1)
+in (let _65_14179 = (destruct_flex_t t2)
+in (flex_flex orig _65_14180 _65_14179)))
 end
 | ((Microsoft_FStar_Absyn_Syntax.Typ_uvar (_), _)) | ((Microsoft_FStar_Absyn_Syntax.Typ_app (({Microsoft_FStar_Absyn_Syntax.n = Microsoft_FStar_Absyn_Syntax.Typ_uvar (_); Microsoft_FStar_Absyn_Syntax.tk = _; Microsoft_FStar_Absyn_Syntax.pos = _; Microsoft_FStar_Absyn_Syntax.fvs = _; Microsoft_FStar_Absyn_Syntax.uvs = _}, _)), _)) when (problem.relation = EQ) -> begin
-(let _65_14175 = (destruct_flex_pattern env t1)
-in (solve_t_flex_rigid orig _65_14175 t2 wl))
+(let _65_14181 = (destruct_flex_pattern env t1)
+in (solve_t_flex_rigid orig _65_14181 t2 wl))
 end
 | ((_, Microsoft_FStar_Absyn_Syntax.Typ_uvar (_))) | ((_, Microsoft_FStar_Absyn_Syntax.Typ_app (({Microsoft_FStar_Absyn_Syntax.n = Microsoft_FStar_Absyn_Syntax.Typ_uvar (_); Microsoft_FStar_Absyn_Syntax.tk = _; Microsoft_FStar_Absyn_Syntax.pos = _; Microsoft_FStar_Absyn_Syntax.fvs = _; Microsoft_FStar_Absyn_Syntax.uvs = _}, _)))) when (problem.relation = EQ) -> begin
 (solve_t env (invert problem) wl)
@@ -2990,13 +2990,13 @@ end
 | false -> begin
 problem.relation
 end)
-in (match ((let _65_14176 = (is_top_level_prob orig)
-in (Support.Prims.pipe_left Support.Prims.op_Negation _65_14176))) with
+in (match ((let _65_14182 = (is_top_level_prob orig)
+in (Support.Prims.pipe_left Support.Prims.op_Negation _65_14182))) with
 | true -> begin
-(let _65_14179 = (Support.Prims.pipe_left (fun ( _65_14177 ) -> TProb (_65_14177)) (let _33_2793 = problem
+(let _65_14185 = (Support.Prims.pipe_left (fun ( _65_14183 ) -> TProb (_65_14183)) (let _33_2793 = problem
 in {lhs = _33_2793.lhs; relation = new_rel; rhs = _33_2793.rhs; element = _33_2793.element; logical_guard = _33_2793.logical_guard; scope = _33_2793.scope; reason = _33_2793.reason; loc = _33_2793.loc; rank = _33_2793.rank}))
-in (let _65_14178 = (destruct_flex_pattern env t1)
-in (solve_t_flex_rigid _65_14179 _65_14178 t2 wl)))
+in (let _65_14184 = (destruct_flex_pattern env t1)
+in (solve_t_flex_rigid _65_14185 _65_14184 t2 wl)))
 end
 | false -> begin
 (let _33_2797 = (base_and_refinement env wl t2)
@@ -3004,19 +3004,19 @@ in (match (_33_2797) with
 | (t_base, ref_opt) -> begin
 (match (ref_opt) with
 | None -> begin
-(let _65_14182 = (Support.Prims.pipe_left (fun ( _65_14180 ) -> TProb (_65_14180)) (let _33_2799 = problem
+(let _65_14188 = (Support.Prims.pipe_left (fun ( _65_14186 ) -> TProb (_65_14186)) (let _33_2799 = problem
 in {lhs = _33_2799.lhs; relation = new_rel; rhs = _33_2799.rhs; element = _33_2799.element; logical_guard = _33_2799.logical_guard; scope = _33_2799.scope; reason = _33_2799.reason; loc = _33_2799.loc; rank = _33_2799.rank}))
-in (let _65_14181 = (destruct_flex_pattern env t1)
-in (solve_t_flex_rigid _65_14182 _65_14181 t_base wl)))
+in (let _65_14187 = (destruct_flex_pattern env t1)
+in (solve_t_flex_rigid _65_14188 _65_14187 t_base wl)))
 end
 | Some ((y, phi)) -> begin
 (let y' = (let _33_2805 = y
 in {Microsoft_FStar_Absyn_Syntax.v = _33_2805.Microsoft_FStar_Absyn_Syntax.v; Microsoft_FStar_Absyn_Syntax.sort = t1; Microsoft_FStar_Absyn_Syntax.p = _33_2805.Microsoft_FStar_Absyn_Syntax.p})
 in (let impl = (guard_on_element problem y' phi)
-in (let base_prob = (let _65_14184 = (mk_problem problem.scope orig t1 new_rel y.Microsoft_FStar_Absyn_Syntax.sort problem.element "flex-rigid: base type")
-in (Support.Prims.pipe_left (fun ( _65_14183 ) -> TProb (_65_14183)) _65_14184))
-in (let guard = (let _65_14185 = (Support.Prims.pipe_right (p_guard base_prob) Support.Prims.fst)
-in (Microsoft_FStar_Absyn_Util.mk_conj _65_14185 impl))
+in (let base_prob = (let _65_14190 = (mk_problem problem.scope orig t1 new_rel y.Microsoft_FStar_Absyn_Syntax.sort problem.element "flex-rigid: base type")
+in (Support.Prims.pipe_left (fun ( _65_14189 ) -> TProb (_65_14189)) _65_14190))
+in (let guard = (let _65_14191 = (Support.Prims.pipe_right (p_guard base_prob) Support.Prims.fst)
+in (Microsoft_FStar_Absyn_Util.mk_conj _65_14191 impl))
 in (let wl = (solve_prob orig (Some (guard)) [] wl)
 in (solve env (attempt ((base_prob)::[]) wl)))))))
 end)
@@ -3039,14 +3039,14 @@ end))
 end)
 end
 | (Microsoft_FStar_Absyn_Syntax.Typ_refine (_), _) -> begin
-(let t2 = (let _65_14186 = (base_and_refinement env wl t2)
-in (Support.Prims.pipe_left force_refinement _65_14186))
+(let t2 = (let _65_14192 = (base_and_refinement env wl t2)
+in (Support.Prims.pipe_left force_refinement _65_14192))
 in (solve_t env (let _33_2850 = problem
 in {lhs = _33_2850.lhs; relation = _33_2850.relation; rhs = t2; element = _33_2850.element; logical_guard = _33_2850.logical_guard; scope = _33_2850.scope; reason = _33_2850.reason; loc = _33_2850.loc; rank = _33_2850.rank}) wl))
 end
 | (_, Microsoft_FStar_Absyn_Syntax.Typ_refine (_)) -> begin
-(let t1 = (let _65_14187 = (base_and_refinement env wl t1)
-in (Support.Prims.pipe_left force_refinement _65_14187))
+(let t1 = (let _65_14193 = (base_and_refinement env wl t1)
+in (Support.Prims.pipe_left force_refinement _65_14193))
 in (solve_t env (let _33_2859 = problem
 in {lhs = t1; relation = _33_2859.relation; rhs = _33_2859.rhs; element = _33_2859.element; logical_guard = _33_2859.logical_guard; scope = _33_2859.scope; reason = _33_2859.reason; loc = _33_2859.loc; rank = _33_2859.rank}) wl))
 end
@@ -3056,10 +3056,10 @@ in (match (_33_2899) with
 | (m, o) -> begin
 (match ((m, o)) with
 | (MisMatch, _) -> begin
-(let head1 = (let _65_14188 = (Microsoft_FStar_Absyn_Util.head_and_args t1)
-in (Support.Prims.pipe_right _65_14188 Support.Prims.fst))
-in (let head2 = (let _65_14189 = (Microsoft_FStar_Absyn_Util.head_and_args t2)
-in (Support.Prims.pipe_right _65_14189 Support.Prims.fst))
+(let head1 = (let _65_14194 = (Microsoft_FStar_Absyn_Util.head_and_args t1)
+in (Support.Prims.pipe_right _65_14194 Support.Prims.fst))
+in (let head2 = (let _65_14195 = (Microsoft_FStar_Absyn_Util.head_and_args t2)
+in (Support.Prims.pipe_right _65_14195 Support.Prims.fst))
 in (let may_equate = (fun ( head ) -> (match (head.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Typ_btvar (_) -> begin
 true
@@ -3072,10 +3072,10 @@ false
 end))
 in (match ((((may_equate head1) || (may_equate head2)) && wl.smt_ok)) with
 | true -> begin
-(let _65_14195 = (let _65_14194 = (let _65_14193 = (Microsoft_FStar_Absyn_Util.mk_eq_typ t1 t2)
-in (Support.Prims.pipe_left (fun ( _65_14192 ) -> Some (_65_14192)) _65_14193))
-in (solve_prob orig _65_14194 [] wl))
-in (solve env _65_14195))
+(let _65_14201 = (let _65_14200 = (let _65_14199 = (Microsoft_FStar_Absyn_Util.mk_eq_typ t1 t2)
+in (Support.Prims.pipe_left (fun ( _65_14198 ) -> Some (_65_14198)) _65_14199))
+in (solve_prob orig _65_14200 [] wl))
+in (solve env _65_14201))
 end
 | false -> begin
 (giveup env "head mismatch" orig)
@@ -3088,9 +3088,9 @@ end
 | (_, None) -> begin
 (let _33_2928 = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("Rel")))) with
 | true -> begin
-(let _65_14197 = (Microsoft_FStar_Absyn_Print.typ_to_string t1)
-in (let _65_14196 = (Microsoft_FStar_Absyn_Print.typ_to_string t2)
-in (Support.Microsoft.FStar.Util.fprint2 "Head matches: %s and %s\n" _65_14197 _65_14196)))
+(let _65_14203 = (Microsoft_FStar_Absyn_Print.typ_to_string t1)
+in (let _65_14202 = (Microsoft_FStar_Absyn_Print.typ_to_string t2)
+in (Support.Microsoft.FStar.Util.fprint2 "Head matches: %s and %s\n" _65_14203 _65_14202)))
 end
 | false -> begin
 ()
@@ -3104,18 +3104,18 @@ in (match (_33_2935) with
 (let nargs = (Support.List.length args)
 in (match ((nargs <> (Support.List.length args'))) with
 | true -> begin
-(let _65_14202 = (let _65_14201 = (Microsoft_FStar_Absyn_Print.typ_to_string head)
-in (let _65_14200 = (Microsoft_FStar_Absyn_Print.args_to_string args)
-in (let _65_14199 = (Microsoft_FStar_Absyn_Print.typ_to_string head')
-in (let _65_14198 = (Microsoft_FStar_Absyn_Print.args_to_string args')
-in (Support.Microsoft.FStar.Util.format4 "unequal number of arguments: %s[%s] and %s[%s]" _65_14201 _65_14200 _65_14199 _65_14198)))))
-in (giveup env _65_14202 orig))
+(let _65_14208 = (let _65_14207 = (Microsoft_FStar_Absyn_Print.typ_to_string head)
+in (let _65_14206 = (Microsoft_FStar_Absyn_Print.args_to_string args)
+in (let _65_14205 = (Microsoft_FStar_Absyn_Print.typ_to_string head')
+in (let _65_14204 = (Microsoft_FStar_Absyn_Print.args_to_string args')
+in (Support.Microsoft.FStar.Util.format4 "unequal number of arguments: %s[%s] and %s[%s]" _65_14207 _65_14206 _65_14205 _65_14204)))))
+in (giveup env _65_14208 orig))
 end
 | false -> begin
 (match (((nargs = 0) || (eq_args args args'))) with
 | true -> begin
-(let _65_14203 = (solve_prob orig None [] wl)
-in (solve env _65_14203))
+(let _65_14209 = (solve_prob orig None [] wl)
+in (solve env _65_14209))
 end
 | false -> begin
 (let _33_2939 = (base_and_refinement env wl t1)
@@ -3128,28 +3128,28 @@ in (match (_33_2942) with
 | (None, None) -> begin
 (let _33_2946 = (match (((head_matches head head) <> FullMatch)) with
 | true -> begin
-(let _65_14206 = (let _65_14205 = (Microsoft_FStar_Absyn_Print.typ_to_string head)
-in (let _65_14204 = (Microsoft_FStar_Absyn_Print.typ_to_string head')
-in (Support.Microsoft.FStar.Util.format2 "Assertion failed: expected full match of %s and %s\n" _65_14205 _65_14204)))
-in (failwith (_65_14206)))
+(let _65_14212 = (let _65_14211 = (Microsoft_FStar_Absyn_Print.typ_to_string head)
+in (let _65_14210 = (Microsoft_FStar_Absyn_Print.typ_to_string head')
+in (Support.Microsoft.FStar.Util.format2 "Assertion failed: expected full match of %s and %s\n" _65_14211 _65_14210)))
+in (failwith (_65_14212)))
 end
 | false -> begin
 ()
 end)
 in (let subprobs = (Support.List.map2 (fun ( a ) ( a' ) -> (match (((Support.Prims.fst a), (Support.Prims.fst a'))) with
 | (Support.Microsoft.FStar.Util.Inl (t), Support.Microsoft.FStar.Util.Inl (t')) -> begin
-(let _65_14210 = (mk_problem (p_scope orig) orig t EQ t' None "type index")
-in (Support.Prims.pipe_left (fun ( _65_14209 ) -> TProb (_65_14209)) _65_14210))
+(let _65_14216 = (mk_problem (p_scope orig) orig t EQ t' None "type index")
+in (Support.Prims.pipe_left (fun ( _65_14215 ) -> TProb (_65_14215)) _65_14216))
 end
 | (Support.Microsoft.FStar.Util.Inr (v), Support.Microsoft.FStar.Util.Inr (v')) -> begin
-(let _65_14212 = (mk_problem (p_scope orig) orig v EQ v' None "term index")
-in (Support.Prims.pipe_left (fun ( _65_14211 ) -> EProb (_65_14211)) _65_14212))
+(let _65_14218 = (mk_problem (p_scope orig) orig v EQ v' None "term index")
+in (Support.Prims.pipe_left (fun ( _65_14217 ) -> EProb (_65_14217)) _65_14218))
 end
 | _ -> begin
 (failwith ("Impossible"))
 end)) args args')
-in (let formula = (let _65_14214 = (Support.List.map (fun ( p ) -> (Support.Prims.fst (p_guard p))) subprobs)
-in (Microsoft_FStar_Absyn_Util.mk_conj_l _65_14214))
+in (let formula = (let _65_14220 = (Support.List.map (fun ( p ) -> (Support.Prims.fst (p_guard p))) subprobs)
+in (Microsoft_FStar_Absyn_Util.mk_conj_l _65_14220))
 in (let wl = (solve_prob orig (Some (formula)) [] wl)
 in (solve env (attempt subprobs wl))))))
 end
@@ -3189,31 +3189,31 @@ end
 end)
 in (let sub_probs = (Support.List.map2 (fun ( arg1 ) ( arg2 ) -> (match (((Support.Prims.fst arg1), (Support.Prims.fst arg2))) with
 | (Support.Microsoft.FStar.Util.Inl (t1), Support.Microsoft.FStar.Util.Inl (t2)) -> begin
-(let _65_14229 = (sub_prob t1 EQ t2 "effect arg")
-in (Support.Prims.pipe_left (fun ( _65_14228 ) -> TProb (_65_14228)) _65_14229))
+(let _65_14235 = (sub_prob t1 EQ t2 "effect arg")
+in (Support.Prims.pipe_left (fun ( _65_14234 ) -> TProb (_65_14234)) _65_14235))
 end
 | (Support.Microsoft.FStar.Util.Inr (e1), Support.Microsoft.FStar.Util.Inr (e2)) -> begin
-(let _65_14231 = (sub_prob e1 EQ e2 "effect arg")
-in (Support.Prims.pipe_left (fun ( _65_14230 ) -> EProb (_65_14230)) _65_14231))
+(let _65_14237 = (sub_prob e1 EQ e2 "effect arg")
+in (Support.Prims.pipe_left (fun ( _65_14236 ) -> EProb (_65_14236)) _65_14237))
 end
 | _ -> begin
 (failwith ("impossible"))
 end)) c1_comp.Microsoft_FStar_Absyn_Syntax.effect_args c2_comp.Microsoft_FStar_Absyn_Syntax.effect_args)
-in (let guard = (let _65_14233 = (Support.List.map (fun ( p ) -> (Support.Prims.pipe_right (p_guard p) Support.Prims.fst)) sub_probs)
-in (Microsoft_FStar_Absyn_Util.mk_conj_l _65_14233))
+in (let guard = (let _65_14239 = (Support.List.map (fun ( p ) -> (Support.Prims.pipe_right (p_guard p) Support.Prims.fst)) sub_probs)
+in (Microsoft_FStar_Absyn_Util.mk_conj_l _65_14239))
 in (let wl = (solve_prob orig (Some (guard)) [] wl)
 in (solve env (attempt sub_probs wl)))))))
 in (match ((Support.Microsoft.FStar.Util.physical_equality c1 c2)) with
 | true -> begin
-(let _65_14234 = (solve_prob orig None [] wl)
-in (solve env _65_14234))
+(let _65_14240 = (solve_prob orig None [] wl)
+in (solve env _65_14240))
 end
 | false -> begin
 (let _33_3046 = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("Rel")))) with
 | true -> begin
-(let _65_14236 = (Microsoft_FStar_Absyn_Print.comp_typ_to_string c1)
-in (let _65_14235 = (Microsoft_FStar_Absyn_Print.comp_typ_to_string c2)
-in (Support.Microsoft.FStar.Util.fprint3 "solve_c %s %s %s\n" _65_14236 (rel_to_string problem.relation) _65_14235)))
+(let _65_14242 = (Microsoft_FStar_Absyn_Print.comp_typ_to_string c1)
+in (let _65_14241 = (Microsoft_FStar_Absyn_Print.comp_typ_to_string c2)
+in (Support.Microsoft.FStar.Util.fprint3 "solve_c %s %s %s\n" _65_14242 (rel_to_string problem.relation) _65_14241)))
 end
 | false -> begin
 ()
@@ -3227,16 +3227,16 @@ in (match (_33_3051) with
 (solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl)
 end
 | (Microsoft_FStar_Absyn_Syntax.Total (_), Microsoft_FStar_Absyn_Syntax.Comp (_)) -> begin
-(let _65_14238 = (let _33_3064 = problem
-in (let _65_14237 = (Support.Prims.pipe_left Microsoft_FStar_Absyn_Syntax.mk_Comp (Microsoft_FStar_Absyn_Util.comp_to_comp_typ c1))
-in {lhs = _65_14237; relation = _33_3064.relation; rhs = _33_3064.rhs; element = _33_3064.element; logical_guard = _33_3064.logical_guard; scope = _33_3064.scope; reason = _33_3064.reason; loc = _33_3064.loc; rank = _33_3064.rank}))
-in (solve_c env _65_14238 wl))
+(let _65_14244 = (let _33_3064 = problem
+in (let _65_14243 = (Support.Prims.pipe_left Microsoft_FStar_Absyn_Syntax.mk_Comp (Microsoft_FStar_Absyn_Util.comp_to_comp_typ c1))
+in {lhs = _65_14243; relation = _33_3064.relation; rhs = _33_3064.rhs; element = _33_3064.element; logical_guard = _33_3064.logical_guard; scope = _33_3064.scope; reason = _33_3064.reason; loc = _33_3064.loc; rank = _33_3064.rank}))
+in (solve_c env _65_14244 wl))
 end
 | (Microsoft_FStar_Absyn_Syntax.Comp (_), Microsoft_FStar_Absyn_Syntax.Total (_)) -> begin
-(let _65_14240 = (let _33_3073 = problem
-in (let _65_14239 = (Support.Prims.pipe_left Microsoft_FStar_Absyn_Syntax.mk_Comp (Microsoft_FStar_Absyn_Util.comp_to_comp_typ c2))
-in {lhs = _33_3073.lhs; relation = _33_3073.relation; rhs = _65_14239; element = _33_3073.element; logical_guard = _33_3073.logical_guard; scope = _33_3073.scope; reason = _33_3073.reason; loc = _33_3073.loc; rank = _33_3073.rank}))
-in (solve_c env _65_14240 wl))
+(let _65_14246 = (let _33_3073 = problem
+in (let _65_14245 = (Support.Prims.pipe_left Microsoft_FStar_Absyn_Syntax.mk_Comp (Microsoft_FStar_Absyn_Util.comp_to_comp_typ c2))
+in {lhs = _33_3073.lhs; relation = _33_3073.relation; rhs = _65_14245; element = _33_3073.element; logical_guard = _33_3073.logical_guard; scope = _33_3073.scope; reason = _33_3073.reason; loc = _33_3073.loc; rank = _33_3073.rank}))
+in (solve_c env _65_14246 wl))
 end
 | (Microsoft_FStar_Absyn_Syntax.Comp (_), Microsoft_FStar_Absyn_Syntax.Comp (_)) -> begin
 (match ((((Microsoft_FStar_Absyn_Util.is_ml_comp c1) && (Microsoft_FStar_Absyn_Util.is_ml_comp c2)) || ((Microsoft_FStar_Absyn_Util.is_total_comp c1) && ((Microsoft_FStar_Absyn_Util.is_total_comp c2) || (Microsoft_FStar_Absyn_Util.is_ml_comp c2))))) with
@@ -3262,10 +3262,10 @@ end
 end)
 in (match ((Microsoft_FStar_Tc_Env.monad_leq env c1.Microsoft_FStar_Absyn_Syntax.effect_name c2.Microsoft_FStar_Absyn_Syntax.effect_name)) with
 | None -> begin
-(let _65_14243 = (let _65_14242 = (Microsoft_FStar_Absyn_Print.sli c1.Microsoft_FStar_Absyn_Syntax.effect_name)
-in (let _65_14241 = (Microsoft_FStar_Absyn_Print.sli c2.Microsoft_FStar_Absyn_Syntax.effect_name)
-in (Support.Microsoft.FStar.Util.format2 "incompatible monad ordering: %s </: %s" _65_14242 _65_14241)))
-in (giveup env _65_14243 orig))
+(let _65_14249 = (let _65_14248 = (Microsoft_FStar_Absyn_Print.sli c1.Microsoft_FStar_Absyn_Syntax.effect_name)
+in (let _65_14247 = (Microsoft_FStar_Absyn_Print.sli c2.Microsoft_FStar_Absyn_Syntax.effect_name)
+in (Support.Microsoft.FStar.Util.format2 "incompatible monad ordering: %s </: %s" _65_14248 _65_14247)))
+in (giveup env _65_14249 orig))
 end
 | Some (edge) -> begin
 (match ((problem.relation = EQ)) with
@@ -3275,20 +3275,20 @@ end
 (wp1, wlp1)
 end
 | _ -> begin
-(let _65_14246 = (let _65_14245 = (let _65_14244 = (Microsoft_FStar_Absyn_Syntax.range_of_lid c1.Microsoft_FStar_Absyn_Syntax.effect_name)
-in (Support.Microsoft.FStar.Range.string_of_range _65_14244))
-in (Support.Microsoft.FStar.Util.format1 "Unexpected number of indices on a normalized effect (%s)" _65_14245))
-in (failwith (_65_14246)))
+(let _65_14252 = (let _65_14251 = (let _65_14250 = (Microsoft_FStar_Absyn_Syntax.range_of_lid c1.Microsoft_FStar_Absyn_Syntax.effect_name)
+in (Support.Microsoft.FStar.Range.string_of_range _65_14250))
+in (Support.Microsoft.FStar.Util.format1 "Unexpected number of indices on a normalized effect (%s)" _65_14251))
+in (failwith (_65_14252)))
 end)
 in (match (_33_3106) with
 | (wp, wlp) -> begin
-(let c1 = (let _65_14252 = (let _65_14251 = (let _65_14247 = (edge.Microsoft_FStar_Tc_Env.mlift c1.Microsoft_FStar_Absyn_Syntax.result_typ wp)
-in (Microsoft_FStar_Absyn_Syntax.targ _65_14247))
-in (let _65_14250 = (let _65_14249 = (let _65_14248 = (edge.Microsoft_FStar_Tc_Env.mlift c1.Microsoft_FStar_Absyn_Syntax.result_typ wlp)
-in (Microsoft_FStar_Absyn_Syntax.targ _65_14248))
-in (_65_14249)::[])
-in (_65_14251)::_65_14250))
-in {Microsoft_FStar_Absyn_Syntax.effect_name = c2.Microsoft_FStar_Absyn_Syntax.effect_name; Microsoft_FStar_Absyn_Syntax.result_typ = c1.Microsoft_FStar_Absyn_Syntax.result_typ; Microsoft_FStar_Absyn_Syntax.effect_args = _65_14252; Microsoft_FStar_Absyn_Syntax.flags = c1.Microsoft_FStar_Absyn_Syntax.flags})
+(let c1 = (let _65_14258 = (let _65_14257 = (let _65_14253 = (edge.Microsoft_FStar_Tc_Env.mlift c1.Microsoft_FStar_Absyn_Syntax.result_typ wp)
+in (Microsoft_FStar_Absyn_Syntax.targ _65_14253))
+in (let _65_14256 = (let _65_14255 = (let _65_14254 = (edge.Microsoft_FStar_Tc_Env.mlift c1.Microsoft_FStar_Absyn_Syntax.result_typ wlp)
+in (Microsoft_FStar_Absyn_Syntax.targ _65_14254))
+in (_65_14255)::[])
+in (_65_14257)::_65_14256))
+in {Microsoft_FStar_Absyn_Syntax.effect_name = c2.Microsoft_FStar_Absyn_Syntax.effect_name; Microsoft_FStar_Absyn_Syntax.result_typ = c1.Microsoft_FStar_Absyn_Syntax.result_typ; Microsoft_FStar_Absyn_Syntax.effect_args = _65_14258; Microsoft_FStar_Absyn_Syntax.flags = c1.Microsoft_FStar_Absyn_Syntax.flags})
 in (solve_eq c1 c2))
 end))
 end
@@ -3305,10 +3305,10 @@ in (let _33_3136 = (match ((c1.Microsoft_FStar_Absyn_Syntax.effect_args, c2.Micr
 (wp1, wp2)
 end
 | _ -> begin
-(let _65_14256 = (let _65_14255 = (Microsoft_FStar_Absyn_Print.sli c1.Microsoft_FStar_Absyn_Syntax.effect_name)
-in (let _65_14254 = (Microsoft_FStar_Absyn_Print.sli c2.Microsoft_FStar_Absyn_Syntax.effect_name)
-in (Support.Microsoft.FStar.Util.format2 "Got effects %s and %s, expected normalized effects" _65_14255 _65_14254)))
-in (failwith (_65_14256)))
+(let _65_14262 = (let _65_14261 = (Microsoft_FStar_Absyn_Print.sli c1.Microsoft_FStar_Absyn_Syntax.effect_name)
+in (let _65_14260 = (Microsoft_FStar_Absyn_Print.sli c2.Microsoft_FStar_Absyn_Syntax.effect_name)
+in (Support.Microsoft.FStar.Util.format2 "Got effects %s and %s, expected normalized effects" _65_14261 _65_14260)))
+in (failwith (_65_14262)))
 end)
 in (match (_33_3136) with
 | (wpc1, wpc2) -> begin
@@ -3327,41 +3327,41 @@ end
 | false -> begin
 ()
 end)
-in (let _65_14262 = (let _65_14261 = (let _65_14260 = (Microsoft_FStar_Absyn_Syntax.targ c1.Microsoft_FStar_Absyn_Syntax.result_typ)
-in (let _65_14259 = (let _65_14258 = (let _65_14257 = (edge.Microsoft_FStar_Tc_Env.mlift c1.Microsoft_FStar_Absyn_Syntax.result_typ wpc1)
-in (Support.Prims.pipe_left Microsoft_FStar_Absyn_Syntax.targ _65_14257))
-in (_65_14258)::[])
-in (_65_14260)::_65_14259))
-in (c2_decl.Microsoft_FStar_Absyn_Syntax.trivial, _65_14261))
-in (Microsoft_FStar_Absyn_Syntax.mk_Typ_app _65_14262 (Some (Microsoft_FStar_Absyn_Syntax.ktype)) r)))
+in (let _65_14268 = (let _65_14267 = (let _65_14266 = (Microsoft_FStar_Absyn_Syntax.targ c1.Microsoft_FStar_Absyn_Syntax.result_typ)
+in (let _65_14265 = (let _65_14264 = (let _65_14263 = (edge.Microsoft_FStar_Tc_Env.mlift c1.Microsoft_FStar_Absyn_Syntax.result_typ wpc1)
+in (Support.Prims.pipe_left Microsoft_FStar_Absyn_Syntax.targ _65_14263))
+in (_65_14264)::[])
+in (_65_14266)::_65_14265))
+in (c2_decl.Microsoft_FStar_Absyn_Syntax.trivial, _65_14267))
+in (Microsoft_FStar_Absyn_Syntax.mk_Typ_app _65_14268 (Some (Microsoft_FStar_Absyn_Syntax.ktype)) r)))
 end
 | false -> begin
-(let wp2_imp_wp1 = (let _65_14274 = (let _65_14273 = (let _65_14272 = (Microsoft_FStar_Absyn_Syntax.targ c2.Microsoft_FStar_Absyn_Syntax.result_typ)
-in (let _65_14271 = (let _65_14270 = (Microsoft_FStar_Absyn_Syntax.targ wpc2)
-in (let _65_14269 = (let _65_14268 = (let _65_14264 = (let _65_14263 = (Microsoft_FStar_Absyn_Const.kbin Microsoft_FStar_Absyn_Syntax.ktype Microsoft_FStar_Absyn_Syntax.ktype Microsoft_FStar_Absyn_Syntax.ktype)
-in (Microsoft_FStar_Absyn_Util.ftv Microsoft_FStar_Absyn_Const.imp_lid _65_14263))
-in (Support.Prims.pipe_left Microsoft_FStar_Absyn_Syntax.targ _65_14264))
-in (let _65_14267 = (let _65_14266 = (let _65_14265 = (edge.Microsoft_FStar_Tc_Env.mlift c1.Microsoft_FStar_Absyn_Syntax.result_typ wpc1)
-in (Support.Prims.pipe_left Microsoft_FStar_Absyn_Syntax.targ _65_14265))
-in (_65_14266)::[])
-in (_65_14268)::_65_14267))
-in (_65_14270)::_65_14269))
-in (_65_14272)::_65_14271))
-in (c2_decl.Microsoft_FStar_Absyn_Syntax.wp_binop, _65_14273))
-in (Microsoft_FStar_Absyn_Syntax.mk_Typ_app _65_14274 None r))
-in (let _65_14279 = (let _65_14278 = (let _65_14277 = (Microsoft_FStar_Absyn_Syntax.targ c2.Microsoft_FStar_Absyn_Syntax.result_typ)
-in (let _65_14276 = (let _65_14275 = (Microsoft_FStar_Absyn_Syntax.targ wp2_imp_wp1)
-in (_65_14275)::[])
-in (_65_14277)::_65_14276))
-in (c2_decl.Microsoft_FStar_Absyn_Syntax.wp_as_type, _65_14278))
-in (Microsoft_FStar_Absyn_Syntax.mk_Typ_app _65_14279 (Some (Microsoft_FStar_Absyn_Syntax.ktype)) r)))
+(let wp2_imp_wp1 = (let _65_14280 = (let _65_14279 = (let _65_14278 = (Microsoft_FStar_Absyn_Syntax.targ c2.Microsoft_FStar_Absyn_Syntax.result_typ)
+in (let _65_14277 = (let _65_14276 = (Microsoft_FStar_Absyn_Syntax.targ wpc2)
+in (let _65_14275 = (let _65_14274 = (let _65_14270 = (let _65_14269 = (Microsoft_FStar_Absyn_Const.kbin Microsoft_FStar_Absyn_Syntax.ktype Microsoft_FStar_Absyn_Syntax.ktype Microsoft_FStar_Absyn_Syntax.ktype)
+in (Microsoft_FStar_Absyn_Util.ftv Microsoft_FStar_Absyn_Const.imp_lid _65_14269))
+in (Support.Prims.pipe_left Microsoft_FStar_Absyn_Syntax.targ _65_14270))
+in (let _65_14273 = (let _65_14272 = (let _65_14271 = (edge.Microsoft_FStar_Tc_Env.mlift c1.Microsoft_FStar_Absyn_Syntax.result_typ wpc1)
+in (Support.Prims.pipe_left Microsoft_FStar_Absyn_Syntax.targ _65_14271))
+in (_65_14272)::[])
+in (_65_14274)::_65_14273))
+in (_65_14276)::_65_14275))
+in (_65_14278)::_65_14277))
+in (c2_decl.Microsoft_FStar_Absyn_Syntax.wp_binop, _65_14279))
+in (Microsoft_FStar_Absyn_Syntax.mk_Typ_app _65_14280 None r))
+in (let _65_14285 = (let _65_14284 = (let _65_14283 = (Microsoft_FStar_Absyn_Syntax.targ c2.Microsoft_FStar_Absyn_Syntax.result_typ)
+in (let _65_14282 = (let _65_14281 = (Microsoft_FStar_Absyn_Syntax.targ wp2_imp_wp1)
+in (_65_14281)::[])
+in (_65_14283)::_65_14282))
+in (c2_decl.Microsoft_FStar_Absyn_Syntax.wp_as_type, _65_14284))
+in (Microsoft_FStar_Absyn_Syntax.mk_Typ_app _65_14285 (Some (Microsoft_FStar_Absyn_Syntax.ktype)) r)))
 end)
-in (let base_prob = (let _65_14281 = (sub_prob c1.Microsoft_FStar_Absyn_Syntax.result_typ problem.relation c2.Microsoft_FStar_Absyn_Syntax.result_typ "result type")
-in (Support.Prims.pipe_left (fun ( _65_14280 ) -> TProb (_65_14280)) _65_14281))
-in (let wl = (let _65_14285 = (let _65_14284 = (let _65_14283 = (Support.Prims.pipe_right (p_guard base_prob) Support.Prims.fst)
-in (Microsoft_FStar_Absyn_Util.mk_conj _65_14283 g))
-in (Support.Prims.pipe_left (fun ( _65_14282 ) -> Some (_65_14282)) _65_14284))
-in (solve_prob orig _65_14285 [] wl))
+in (let base_prob = (let _65_14287 = (sub_prob c1.Microsoft_FStar_Absyn_Syntax.result_typ problem.relation c2.Microsoft_FStar_Absyn_Syntax.result_typ "result type")
+in (Support.Prims.pipe_left (fun ( _65_14286 ) -> TProb (_65_14286)) _65_14287))
+in (let wl = (let _65_14291 = (let _65_14290 = (let _65_14289 = (Support.Prims.pipe_right (p_guard base_prob) Support.Prims.fst)
+in (Microsoft_FStar_Absyn_Util.mk_conj _65_14289 g))
+in (Support.Prims.pipe_left (fun ( _65_14288 ) -> Some (_65_14288)) _65_14290))
+in (solve_prob orig _65_14291 [] wl))
 in (solve env (attempt ((base_prob)::[]) wl))))))
 end)
 end)))
@@ -3387,8 +3387,8 @@ in (let orig = EProb (problem)
 in (let sub_prob = (fun ( lhs ) ( rhs ) ( reason ) -> (mk_problem (p_scope orig) orig lhs EQ rhs None reason))
 in (let _33_3166 = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("Rel")))) with
 | true -> begin
-(let _65_14295 = (prob_to_string env orig)
-in (Support.Microsoft.FStar.Util.fprint1 "Attempting:\n%s\n" _65_14295))
+(let _65_14301 = (prob_to_string env orig)
+in (Support.Microsoft.FStar.Util.fprint1 "Attempting:\n%s\n" _65_14301))
 end
 | false -> begin
 ()
@@ -3396,16 +3396,16 @@ end)
 in (let flex_rigid = (fun ( _33_3173 ) ( e2 ) -> (match (_33_3173) with
 | (e1, u1, t1, args1) -> begin
 (let maybe_vars1 = (pat_vars env [] args1)
-in (let sub_problems = (fun ( xs ) ( args2 ) -> (let _33_3200 = (let _65_14311 = (Support.Prims.pipe_right args2 (Support.List.map (fun ( _33_34 ) -> (match (_33_34) with
+in (let sub_problems = (fun ( xs ) ( args2 ) -> (let _33_3200 = (let _65_14317 = (Support.Prims.pipe_right args2 (Support.List.map (fun ( _33_34 ) -> (match (_33_34) with
 | (Support.Microsoft.FStar.Util.Inl (t), imp) -> begin
 (let kk = (Microsoft_FStar_Tc_Recheck.recompute_kind t)
 in (let _33_3187 = (new_tvar t.Microsoft_FStar_Absyn_Syntax.pos xs kk)
 in (match (_33_3187) with
 | (gi_xi, gi) -> begin
 (let gi_pi = (Microsoft_FStar_Absyn_Syntax.mk_Typ_app (gi, args1) (Some (kk)) t.Microsoft_FStar_Absyn_Syntax.pos)
-in (let _65_14307 = (let _65_14306 = (sub_prob gi_pi t "type index")
-in (Support.Prims.pipe_left (fun ( _65_14305 ) -> TProb (_65_14305)) _65_14306))
-in ((Support.Microsoft.FStar.Util.Inl (gi_xi), imp), _65_14307)))
+in (let _65_14313 = (let _65_14312 = (sub_prob gi_pi t "type index")
+in (Support.Prims.pipe_left (fun ( _65_14311 ) -> TProb (_65_14311)) _65_14312))
+in ((Support.Microsoft.FStar.Util.Inl (gi_xi), imp), _65_14313)))
 end)))
 end
 | (Support.Microsoft.FStar.Util.Inr (v), imp) -> begin
@@ -3414,22 +3414,22 @@ in (let _33_3196 = (new_evar v.Microsoft_FStar_Absyn_Syntax.pos xs tt)
 in (match (_33_3196) with
 | (gi_xi, gi) -> begin
 (let gi_pi = (Microsoft_FStar_Absyn_Syntax.mk_Exp_app (gi, args1) (Some (tt)) v.Microsoft_FStar_Absyn_Syntax.pos)
-in (let _65_14310 = (let _65_14309 = (sub_prob gi_pi v "expression index")
-in (Support.Prims.pipe_left (fun ( _65_14308 ) -> EProb (_65_14308)) _65_14309))
-in ((Support.Microsoft.FStar.Util.Inr (gi_xi), imp), _65_14310)))
+in (let _65_14316 = (let _65_14315 = (sub_prob gi_pi v "expression index")
+in (Support.Prims.pipe_left (fun ( _65_14314 ) -> EProb (_65_14314)) _65_14315))
+in ((Support.Microsoft.FStar.Util.Inr (gi_xi), imp), _65_14316)))
 end)))
 end))))
-in (Support.Prims.pipe_right _65_14311 Support.List.unzip))
+in (Support.Prims.pipe_right _65_14317 Support.List.unzip))
 in (match (_33_3200) with
 | (gi_xi, gi_pi) -> begin
-(let formula = (let _65_14313 = (Support.List.map (fun ( p ) -> (Support.Prims.pipe_right (p_guard p) Support.Prims.fst)) gi_pi)
-in (Microsoft_FStar_Absyn_Util.mk_conj_l _65_14313))
+(let formula = (let _65_14319 = (Support.List.map (fun ( p ) -> (Support.Prims.pipe_right (p_guard p) Support.Prims.fst)) gi_pi)
+in (Microsoft_FStar_Absyn_Util.mk_conj_l _65_14319))
 in (gi_xi, gi_pi, formula))
 end)))
-in (let project_e = (fun ( head2 ) ( args2 ) -> (let giveup = (fun ( reason ) -> (let _65_14320 = (Support.Microsoft.FStar.Util.format1 "flex-rigid: refusing to project expressions (%s)" reason)
-in (giveup env _65_14320 orig)))
-in (match ((let _65_14321 = (Microsoft_FStar_Absyn_Util.compress_exp head2)
-in _65_14321.Microsoft_FStar_Absyn_Syntax.n)) with
+in (let project_e = (fun ( head2 ) ( args2 ) -> (let giveup = (fun ( reason ) -> (let _65_14326 = (Support.Microsoft.FStar.Util.format1 "flex-rigid: refusing to project expressions (%s)" reason)
+in (giveup env _65_14326 orig)))
+in (match ((let _65_14327 = (Microsoft_FStar_Absyn_Util.compress_exp head2)
+in _65_14327.Microsoft_FStar_Absyn_Syntax.n)) with
 | Microsoft_FStar_Absyn_Syntax.Exp_bvar (y) -> begin
 (let _33_3217 = (match ((Microsoft_FStar_Absyn_Util.function_formals t1)) with
 | None -> begin
@@ -3442,10 +3442,10 @@ in (match (_33_3217) with
 | (all_xs, tres) -> begin
 (match (((Support.List.length all_xs) <> (Support.List.length args1))) with
 | true -> begin
-(let _65_14324 = (let _65_14323 = (Microsoft_FStar_Absyn_Print.binders_to_string ", " all_xs)
-in (let _65_14322 = (Microsoft_FStar_Absyn_Print.args_to_string args2)
-in (Support.Microsoft.FStar.Util.format2 "unequal arity:\n\texpetced binders %s\n\tgot args {%s}" _65_14323 _65_14322)))
-in (giveup _65_14324))
+(let _65_14330 = (let _65_14329 = (Microsoft_FStar_Absyn_Print.binders_to_string ", " all_xs)
+in (let _65_14328 = (Microsoft_FStar_Absyn_Print.args_to_string args2)
+in (Support.Microsoft.FStar.Util.format2 "unequal arity:\n\texpetced binders %s\n\tgot args {%s}" _65_14329 _65_14328)))
+in (giveup _65_14330))
 end
 | false -> begin
 (let rec aux = (fun ( xs ) ( args ) -> (match ((xs, args)) with
@@ -3459,33 +3459,33 @@ end
 (aux xs args)
 end
 | ((Support.Microsoft.FStar.Util.Inr (xi), _)::xs, (Support.Microsoft.FStar.Util.Inr (arg), _)::args) -> begin
-(match ((let _65_14329 = (Microsoft_FStar_Absyn_Util.compress_exp arg)
-in _65_14329.Microsoft_FStar_Absyn_Syntax.n)) with
+(match ((let _65_14335 = (Microsoft_FStar_Absyn_Util.compress_exp arg)
+in _65_14335.Microsoft_FStar_Absyn_Syntax.n)) with
 | Microsoft_FStar_Absyn_Syntax.Exp_bvar (z) -> begin
 (match ((Microsoft_FStar_Absyn_Util.bvar_eq y z)) with
 | true -> begin
 (let _33_3269 = (sub_problems all_xs args2)
 in (match (_33_3269) with
 | (gi_xi, gi_pi, f) -> begin
-(let sol = (let _65_14333 = (let _65_14332 = (let _65_14331 = (let _65_14330 = (Microsoft_FStar_Absyn_Util.bvar_to_exp xi)
-in (_65_14330, gi_xi))
-in (Microsoft_FStar_Absyn_Syntax.mk_Exp_app' _65_14331 None e1.Microsoft_FStar_Absyn_Syntax.pos))
-in (all_xs, _65_14332))
-in (Microsoft_FStar_Absyn_Syntax.mk_Exp_abs _65_14333 None e1.Microsoft_FStar_Absyn_Syntax.pos))
+(let sol = (let _65_14339 = (let _65_14338 = (let _65_14337 = (let _65_14336 = (Microsoft_FStar_Absyn_Util.bvar_to_exp xi)
+in (_65_14336, gi_xi))
+in (Microsoft_FStar_Absyn_Syntax.mk_Exp_app' _65_14337 None e1.Microsoft_FStar_Absyn_Syntax.pos))
+in (all_xs, _65_14338))
+in (Microsoft_FStar_Absyn_Syntax.mk_Exp_abs _65_14339 None e1.Microsoft_FStar_Absyn_Syntax.pos))
 in (let _33_3271 = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("Rel")))) with
 | true -> begin
-(let _65_14337 = (Microsoft_FStar_Absyn_Print.uvar_e_to_string (u1, t1))
-in (let _65_14336 = (Microsoft_FStar_Absyn_Print.exp_to_string sol)
-in (let _65_14335 = (let _65_14334 = (Support.Prims.pipe_right gi_pi (Support.List.map (prob_to_string env)))
-in (Support.Prims.pipe_right _65_14334 (Support.String.concat "\n")))
-in (Support.Microsoft.FStar.Util.fprint3 "Projected: %s -> %s\nSubprobs=\n%s\n" _65_14337 _65_14336 _65_14335))))
+(let _65_14343 = (Microsoft_FStar_Absyn_Print.uvar_e_to_string (u1, t1))
+in (let _65_14342 = (Microsoft_FStar_Absyn_Print.exp_to_string sol)
+in (let _65_14341 = (let _65_14340 = (Support.Prims.pipe_right gi_pi (Support.List.map (prob_to_string env)))
+in (Support.Prims.pipe_right _65_14340 (Support.String.concat "\n")))
+in (Support.Microsoft.FStar.Util.fprint3 "Projected: %s -> %s\nSubprobs=\n%s\n" _65_14343 _65_14342 _65_14341))))
 end
 | false -> begin
 ()
 end)
-in (let _65_14339 = (let _65_14338 = (solve_prob orig (Some (f)) ((UE (((u1, t1), sol)))::[]) wl)
-in (attempt gi_pi _65_14338))
-in (solve env _65_14339))))
+in (let _65_14345 = (let _65_14344 = (solve_prob orig (Some (f)) ((UE (((u1, t1), sol)))::[]) wl)
+in (attempt gi_pi _65_14344))
+in (solve env _65_14345))))
 end))
 end
 | false -> begin
@@ -3497,10 +3497,10 @@ end
 end)
 end
 | (x::xs, arg::args) -> begin
-(let _65_14342 = (let _65_14341 = (Microsoft_FStar_Absyn_Print.binder_to_string x)
-in (let _65_14340 = (Microsoft_FStar_Absyn_Print.arg_to_string arg)
-in (Support.Microsoft.FStar.Util.format2 "type incorrect term---impossible: expected %s; got %s\n" _65_14341 _65_14340)))
-in (giveup _65_14342))
+(let _65_14348 = (let _65_14347 = (Microsoft_FStar_Absyn_Print.binder_to_string x)
+in (let _65_14346 = (Microsoft_FStar_Absyn_Print.arg_to_string arg)
+in (Support.Microsoft.FStar.Util.format2 "type incorrect term---impossible: expected %s; got %s\n" _65_14347 _65_14346)))
+in (giveup _65_14348))
 end))
 in (aux (Support.List.rev all_xs) (Support.List.rev args1)))
 end)
@@ -3518,9 +3518,9 @@ end
 | false -> begin
 (let _33_3286 = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("Rel")))) with
 | true -> begin
-(let _65_14346 = (Microsoft_FStar_Absyn_Print.exp_to_string e1)
-in (let _65_14345 = (Microsoft_FStar_Absyn_Print.exp_to_string e2)
-in (Support.Microsoft.FStar.Util.fprint2 "Imitating expressions: %s =?= %s\n" _65_14346 _65_14345)))
+(let _65_14352 = (Microsoft_FStar_Absyn_Print.exp_to_string e1)
+in (let _65_14351 = (Microsoft_FStar_Absyn_Print.exp_to_string e2)
+in (Support.Microsoft.FStar.Util.fprint2 "Imitating expressions: %s =?= %s\n" _65_14352 _65_14351)))
 end
 | false -> begin
 ()
@@ -3552,24 +3552,24 @@ in (match (xs) with
 body
 end
 | _ -> begin
-(let _65_14348 = (let _65_14347 = (Microsoft_FStar_Absyn_Syntax.mk_Exp_app' (head2, gi_xi) None e1.Microsoft_FStar_Absyn_Syntax.pos)
-in (xs, _65_14347))
-in (Microsoft_FStar_Absyn_Syntax.mk_Exp_abs _65_14348 None e1.Microsoft_FStar_Absyn_Syntax.pos))
+(let _65_14354 = (let _65_14353 = (Microsoft_FStar_Absyn_Syntax.mk_Exp_app' (head2, gi_xi) None e1.Microsoft_FStar_Absyn_Syntax.pos)
+in (xs, _65_14353))
+in (Microsoft_FStar_Absyn_Syntax.mk_Exp_abs _65_14354 None e1.Microsoft_FStar_Absyn_Syntax.pos))
 end))
 in (let _33_3313 = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("Rel")))) with
 | true -> begin
-(let _65_14352 = (Microsoft_FStar_Absyn_Print.uvar_e_to_string (u1, t1))
-in (let _65_14351 = (Microsoft_FStar_Absyn_Print.exp_to_string sol)
-in (let _65_14350 = (let _65_14349 = (Support.Prims.pipe_right gi_pi (Support.List.map (prob_to_string env)))
-in (Support.Prims.pipe_right _65_14349 (Support.String.concat "\n")))
-in (Support.Microsoft.FStar.Util.fprint3 "Imitated: %s -> %s\nSubprobs=\n%s\n" _65_14352 _65_14351 _65_14350))))
+(let _65_14358 = (Microsoft_FStar_Absyn_Print.uvar_e_to_string (u1, t1))
+in (let _65_14357 = (Microsoft_FStar_Absyn_Print.exp_to_string sol)
+in (let _65_14356 = (let _65_14355 = (Support.Prims.pipe_right gi_pi (Support.List.map (prob_to_string env)))
+in (Support.Prims.pipe_right _65_14355 (Support.String.concat "\n")))
+in (Support.Microsoft.FStar.Util.fprint3 "Imitated: %s -> %s\nSubprobs=\n%s\n" _65_14358 _65_14357 _65_14356))))
 end
 | false -> begin
 ()
 end)
-in (let _65_14354 = (let _65_14353 = (solve_prob orig (Some (f)) ((UE (((u1, t1), sol)))::[]) wl)
-in (attempt gi_pi _65_14353))
-in (solve env _65_14354))))
+in (let _65_14360 = (let _65_14359 = (solve_prob orig (Some (f)) ((UE (((u1, t1), sol)))::[]) wl)
+in (attempt gi_pi _65_14359))
+in (solve env _65_14360))))
 end))
 end))
 end
@@ -3599,8 +3599,8 @@ in (match (_33_3325) with
 (match ((((Support.Microsoft.FStar.Util.set_is_subset_of fvs2.Microsoft_FStar_Absyn_Syntax.ftvs fvs1.Microsoft_FStar_Absyn_Syntax.ftvs) && (Support.Microsoft.FStar.Util.set_is_subset_of fvs2.Microsoft_FStar_Absyn_Syntax.fxvs fvs1.Microsoft_FStar_Absyn_Syntax.fxvs)) && occurs_ok)) with
 | true -> begin
 (let sol = (Microsoft_FStar_Absyn_Syntax.mk_Exp_abs' (xs, e2) None e1.Microsoft_FStar_Absyn_Syntax.pos)
-in (let _65_14355 = (solve_prob orig None ((UE (((u1, t1), sol)))::[]) wl)
-in (solve env _65_14355)))
+in (let _65_14361 = (solve_prob orig None ((UE (((u1, t1), sol)))::[]) wl)
+in (solve env _65_14361)))
 end
 | false -> begin
 (imitate_or_project_e ())
@@ -3630,14 +3630,14 @@ end
 | false -> begin
 (let zs = (intersect_vars xs ys)
 in (let tt = (Microsoft_FStar_Tc_Recheck.recompute_typ e2)
-in (let _33_3358 = (let _65_14360 = (Microsoft_FStar_Tc_Env.get_range env)
-in (new_evar _65_14360 zs tt))
+in (let _33_3358 = (let _65_14366 = (Microsoft_FStar_Tc_Env.get_range env)
+in (new_evar _65_14366 zs tt))
 in (match (_33_3358) with
 | (u, _) -> begin
 (let sub1 = (Microsoft_FStar_Absyn_Syntax.mk_Exp_abs (xs, u) (Some (t1)) e1.Microsoft_FStar_Absyn_Syntax.pos)
 in (let sub2 = (Microsoft_FStar_Absyn_Syntax.mk_Exp_abs (ys, u) (Some (t2)) e1.Microsoft_FStar_Absyn_Syntax.pos)
-in (let _65_14361 = (solve_prob orig None ((UE (((u1, t1), sub1)))::(UE (((u2, t2), sub2)))::[]) wl)
-in (solve env _65_14361))))
+in (let _65_14367 = (solve_prob orig None ((UE (((u1, t1), sub1)))::(UE (((u2, t2), sub2)))::[]) wl)
+in (solve env _65_14367))))
 end))))
 end)
 end)))
@@ -3646,21 +3646,21 @@ in (let smt_fallback = (fun ( e1 ) ( e2 ) -> (match (wl.smt_ok) with
 | true -> begin
 (let _33_3364 = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("Rel")))) with
 | true -> begin
-(let _65_14366 = (prob_to_string env orig)
-in (Support.Microsoft.FStar.Util.fprint1 "Using SMT to solve:\n%s\n" _65_14366))
+(let _65_14372 = (prob_to_string env orig)
+in (Support.Microsoft.FStar.Util.fprint1 "Using SMT to solve:\n%s\n" _65_14372))
 end
 | false -> begin
 ()
 end)
-in (let _33_3369 = (let _65_14368 = (Microsoft_FStar_Tc_Env.get_range env)
-in (let _65_14367 = (Microsoft_FStar_Tc_Env.binders env)
-in (new_tvar _65_14368 _65_14367 Microsoft_FStar_Absyn_Syntax.ktype)))
+in (let _33_3369 = (let _65_14374 = (Microsoft_FStar_Tc_Env.get_range env)
+in (let _65_14373 = (Microsoft_FStar_Tc_Env.binders env)
+in (new_tvar _65_14374 _65_14373 Microsoft_FStar_Absyn_Syntax.ktype)))
 in (match (_33_3369) with
 | (t, _) -> begin
-(let _65_14372 = (let _65_14371 = (let _65_14370 = (Microsoft_FStar_Absyn_Util.mk_eq t t e1 e2)
-in (Support.Prims.pipe_left (fun ( _65_14369 ) -> Some (_65_14369)) _65_14370))
-in (solve_prob orig _65_14371 [] wl))
-in (solve env _65_14372))
+(let _65_14378 = (let _65_14377 = (let _65_14376 = (Microsoft_FStar_Absyn_Util.mk_eq t t e1 e2)
+in (Support.Prims.pipe_left (fun ( _65_14375 ) -> Some (_65_14375)) _65_14376))
+in (solve_prob orig _65_14377 [] wl))
+in (solve env _65_14378))
 end)))
 end
 | false -> begin
@@ -3676,38 +3676,38 @@ end
 in {lhs = _33_3392.lhs; relation = _33_3392.relation; rhs = e2; element = _33_3392.element; logical_guard = _33_3392.logical_guard; scope = _33_3392.scope; reason = _33_3392.reason; loc = _33_3392.loc; rank = _33_3392.rank}) wl)
 end
 | ((Microsoft_FStar_Absyn_Syntax.Exp_uvar (_), Microsoft_FStar_Absyn_Syntax.Exp_uvar (_))) | ((Microsoft_FStar_Absyn_Syntax.Exp_app (({Microsoft_FStar_Absyn_Syntax.n = Microsoft_FStar_Absyn_Syntax.Exp_uvar (_); Microsoft_FStar_Absyn_Syntax.tk = _; Microsoft_FStar_Absyn_Syntax.pos = _; Microsoft_FStar_Absyn_Syntax.fvs = _; Microsoft_FStar_Absyn_Syntax.uvs = _}, _)), Microsoft_FStar_Absyn_Syntax.Exp_uvar (_))) | ((Microsoft_FStar_Absyn_Syntax.Exp_uvar (_), Microsoft_FStar_Absyn_Syntax.Exp_app (({Microsoft_FStar_Absyn_Syntax.n = Microsoft_FStar_Absyn_Syntax.Exp_uvar (_); Microsoft_FStar_Absyn_Syntax.tk = _; Microsoft_FStar_Absyn_Syntax.pos = _; Microsoft_FStar_Absyn_Syntax.fvs = _; Microsoft_FStar_Absyn_Syntax.uvs = _}, _)))) | ((Microsoft_FStar_Absyn_Syntax.Exp_app (({Microsoft_FStar_Absyn_Syntax.n = Microsoft_FStar_Absyn_Syntax.Exp_uvar (_); Microsoft_FStar_Absyn_Syntax.tk = _; Microsoft_FStar_Absyn_Syntax.pos = _; Microsoft_FStar_Absyn_Syntax.fvs = _; Microsoft_FStar_Absyn_Syntax.uvs = _}, _)), Microsoft_FStar_Absyn_Syntax.Exp_app (({Microsoft_FStar_Absyn_Syntax.n = Microsoft_FStar_Absyn_Syntax.Exp_uvar (_); Microsoft_FStar_Absyn_Syntax.tk = _; Microsoft_FStar_Absyn_Syntax.pos = _; Microsoft_FStar_Absyn_Syntax.fvs = _; Microsoft_FStar_Absyn_Syntax.uvs = _}, _)))) -> begin
-(let _65_14374 = (destruct_flex_e e1)
-in (let _65_14373 = (destruct_flex_e e2)
-in (flex_flex _65_14374 _65_14373)))
+(let _65_14380 = (destruct_flex_e e1)
+in (let _65_14379 = (destruct_flex_e e2)
+in (flex_flex _65_14380 _65_14379)))
 end
 | ((Microsoft_FStar_Absyn_Syntax.Exp_uvar (_), _)) | ((Microsoft_FStar_Absyn_Syntax.Exp_app (({Microsoft_FStar_Absyn_Syntax.n = Microsoft_FStar_Absyn_Syntax.Exp_uvar (_); Microsoft_FStar_Absyn_Syntax.tk = _; Microsoft_FStar_Absyn_Syntax.pos = _; Microsoft_FStar_Absyn_Syntax.fvs = _; Microsoft_FStar_Absyn_Syntax.uvs = _}, _)), _)) -> begin
-(let _65_14375 = (destruct_flex_e e1)
-in (flex_rigid _65_14375 e2))
+(let _65_14381 = (destruct_flex_e e1)
+in (flex_rigid _65_14381 e2))
 end
 | ((_, Microsoft_FStar_Absyn_Syntax.Exp_uvar (_))) | ((_, Microsoft_FStar_Absyn_Syntax.Exp_app (({Microsoft_FStar_Absyn_Syntax.n = Microsoft_FStar_Absyn_Syntax.Exp_uvar (_); Microsoft_FStar_Absyn_Syntax.tk = _; Microsoft_FStar_Absyn_Syntax.pos = _; Microsoft_FStar_Absyn_Syntax.fvs = _; Microsoft_FStar_Absyn_Syntax.uvs = _}, _)))) -> begin
-(let _65_14376 = (destruct_flex_e e2)
-in (flex_rigid _65_14376 e1))
+(let _65_14382 = (destruct_flex_e e2)
+in (flex_rigid _65_14382 e1))
 end
 | (Microsoft_FStar_Absyn_Syntax.Exp_bvar (x1), Microsoft_FStar_Absyn_Syntax.Exp_bvar (x1')) -> begin
 (match ((Microsoft_FStar_Absyn_Util.bvd_eq x1.Microsoft_FStar_Absyn_Syntax.v x1'.Microsoft_FStar_Absyn_Syntax.v)) with
 | true -> begin
-(let _65_14377 = (solve_prob orig None [] wl)
-in (solve env _65_14377))
+(let _65_14383 = (solve_prob orig None [] wl)
+in (solve env _65_14383))
 end
 | false -> begin
-(let _65_14383 = (let _65_14382 = (let _65_14381 = (let _65_14380 = (Microsoft_FStar_Tc_Recheck.recompute_typ e1)
-in (let _65_14379 = (Microsoft_FStar_Tc_Recheck.recompute_typ e2)
-in (Microsoft_FStar_Absyn_Util.mk_eq _65_14380 _65_14379 e1 e2)))
-in (Support.Prims.pipe_left (fun ( _65_14378 ) -> Some (_65_14378)) _65_14381))
-in (solve_prob orig _65_14382 [] wl))
-in (solve env _65_14383))
+(let _65_14389 = (let _65_14388 = (let _65_14387 = (let _65_14386 = (Microsoft_FStar_Tc_Recheck.recompute_typ e1)
+in (let _65_14385 = (Microsoft_FStar_Tc_Recheck.recompute_typ e2)
+in (Microsoft_FStar_Absyn_Util.mk_eq _65_14386 _65_14385 e1 e2)))
+in (Support.Prims.pipe_left (fun ( _65_14384 ) -> Some (_65_14384)) _65_14387))
+in (solve_prob orig _65_14388 [] wl))
+in (solve env _65_14389))
 end)
 end
 | (Microsoft_FStar_Absyn_Syntax.Exp_fvar ((fv1, _)), Microsoft_FStar_Absyn_Syntax.Exp_fvar ((fv1', _))) -> begin
 (match ((Microsoft_FStar_Absyn_Syntax.lid_equals fv1.Microsoft_FStar_Absyn_Syntax.v fv1'.Microsoft_FStar_Absyn_Syntax.v)) with
 | true -> begin
-(let _65_14384 = (solve_prob orig None [] wl)
-in (solve env _65_14384))
+(let _65_14390 = (solve_prob orig None [] wl)
+in (solve env _65_14390))
 end
 | false -> begin
 (giveup env "free-variables unequal" orig)
@@ -3726,63 +3726,63 @@ end
 end))
 in (match ((const_eq s1 s1')) with
 | true -> begin
-(let _65_14389 = (solve_prob orig None [] wl)
-in (solve env _65_14389))
+(let _65_14395 = (solve_prob orig None [] wl)
+in (solve env _65_14395))
 end
 | false -> begin
 (giveup env "constants unequal" orig)
 end))
 end
 | (Microsoft_FStar_Absyn_Syntax.Exp_app (({Microsoft_FStar_Absyn_Syntax.n = Microsoft_FStar_Absyn_Syntax.Exp_abs (_); Microsoft_FStar_Absyn_Syntax.tk = _; Microsoft_FStar_Absyn_Syntax.pos = _; Microsoft_FStar_Absyn_Syntax.fvs = _; Microsoft_FStar_Absyn_Syntax.uvs = _}, _)), _) -> begin
-(let _65_14391 = (let _33_3591 = problem
-in (let _65_14390 = (whnf_e env e1)
-in {lhs = _65_14390; relation = _33_3591.relation; rhs = _33_3591.rhs; element = _33_3591.element; logical_guard = _33_3591.logical_guard; scope = _33_3591.scope; reason = _33_3591.reason; loc = _33_3591.loc; rank = _33_3591.rank}))
-in (solve_e env _65_14391 wl))
+(let _65_14397 = (let _33_3591 = problem
+in (let _65_14396 = (whnf_e env e1)
+in {lhs = _65_14396; relation = _33_3591.relation; rhs = _33_3591.rhs; element = _33_3591.element; logical_guard = _33_3591.logical_guard; scope = _33_3591.scope; reason = _33_3591.reason; loc = _33_3591.loc; rank = _33_3591.rank}))
+in (solve_e env _65_14397 wl))
 end
 | (_, Microsoft_FStar_Absyn_Syntax.Exp_app (({Microsoft_FStar_Absyn_Syntax.n = Microsoft_FStar_Absyn_Syntax.Exp_abs (_); Microsoft_FStar_Absyn_Syntax.tk = _; Microsoft_FStar_Absyn_Syntax.pos = _; Microsoft_FStar_Absyn_Syntax.fvs = _; Microsoft_FStar_Absyn_Syntax.uvs = _}, _))) -> begin
-(let _65_14393 = (let _33_3612 = problem
-in (let _65_14392 = (whnf_e env e2)
-in {lhs = _33_3612.lhs; relation = _33_3612.relation; rhs = _65_14392; element = _33_3612.element; logical_guard = _33_3612.logical_guard; scope = _33_3612.scope; reason = _33_3612.reason; loc = _33_3612.loc; rank = _33_3612.rank}))
-in (solve_e env _65_14393 wl))
+(let _65_14399 = (let _33_3612 = problem
+in (let _65_14398 = (whnf_e env e2)
+in {lhs = _33_3612.lhs; relation = _33_3612.relation; rhs = _65_14398; element = _33_3612.element; logical_guard = _33_3612.logical_guard; scope = _33_3612.scope; reason = _33_3612.reason; loc = _33_3612.loc; rank = _33_3612.rank}))
+in (solve_e env _65_14399 wl))
 end
 | (Microsoft_FStar_Absyn_Syntax.Exp_app ((head1, args1)), Microsoft_FStar_Absyn_Syntax.Exp_app ((head2, args2))) -> begin
 (let orig_wl = wl
 in (let rec solve_args = (fun ( sub_probs ) ( wl ) ( args1 ) ( args2 ) -> (match ((args1, args2)) with
 | ([], []) -> begin
-(let guard = (let _65_14403 = (let _65_14402 = (Support.List.map p_guard sub_probs)
-in (Support.Prims.pipe_right _65_14402 (Support.List.map Support.Prims.fst)))
-in (Microsoft_FStar_Absyn_Util.mk_conj_l _65_14403))
+(let guard = (let _65_14409 = (let _65_14408 = (Support.List.map p_guard sub_probs)
+in (Support.Prims.pipe_right _65_14408 (Support.List.map Support.Prims.fst)))
+in (Microsoft_FStar_Absyn_Util.mk_conj_l _65_14409))
 in (let g = (simplify_formula env guard)
 in (let g = (Microsoft_FStar_Absyn_Util.compress_typ g)
 in (match (g.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Typ_const (fv) when (Microsoft_FStar_Absyn_Syntax.lid_equals fv.Microsoft_FStar_Absyn_Syntax.v Microsoft_FStar_Absyn_Const.true_lid) -> begin
-(let _65_14404 = (solve_prob orig None wl.subst (let _33_3637 = orig_wl
+(let _65_14410 = (solve_prob orig None wl.subst (let _33_3637 = orig_wl
 in {attempting = _33_3637.attempting; deferred = _33_3637.deferred; subst = []; ctr = _33_3637.ctr; slack_vars = _33_3637.slack_vars; defer_ok = _33_3637.defer_ok; smt_ok = _33_3637.smt_ok; tcenv = _33_3637.tcenv}))
-in (solve env _65_14404))
+in (solve env _65_14410))
 end
 | _ -> begin
-(let _33_3644 = (let _65_14406 = (Microsoft_FStar_Tc_Env.get_range env)
-in (let _65_14405 = (Microsoft_FStar_Tc_Env.binders env)
-in (new_tvar _65_14406 _65_14405 Microsoft_FStar_Absyn_Syntax.ktype)))
+(let _33_3644 = (let _65_14412 = (Microsoft_FStar_Tc_Env.get_range env)
+in (let _65_14411 = (Microsoft_FStar_Tc_Env.binders env)
+in (new_tvar _65_14412 _65_14411 Microsoft_FStar_Absyn_Syntax.ktype)))
 in (match (_33_3644) with
 | (t, _) -> begin
-(let guard = (let _65_14407 = (Microsoft_FStar_Absyn_Util.mk_eq t t e1 e2)
-in (Microsoft_FStar_Absyn_Util.mk_disj g _65_14407))
-in (let _65_14408 = (solve_prob orig (Some (guard)) wl.subst (let _33_3646 = orig_wl
+(let guard = (let _65_14413 = (Microsoft_FStar_Absyn_Util.mk_eq t t e1 e2)
+in (Microsoft_FStar_Absyn_Util.mk_disj g _65_14413))
+in (let _65_14414 = (solve_prob orig (Some (guard)) wl.subst (let _33_3646 = orig_wl
 in {attempting = _33_3646.attempting; deferred = _33_3646.deferred; subst = []; ctr = _33_3646.ctr; slack_vars = _33_3646.slack_vars; defer_ok = _33_3646.defer_ok; smt_ok = _33_3646.smt_ok; tcenv = _33_3646.tcenv}))
-in (solve env _65_14408)))
+in (solve env _65_14414)))
 end))
 end))))
 end
 | (arg1::rest1, arg2::rest2) -> begin
 (let prob = (match (((Support.Prims.fst arg1), (Support.Prims.fst arg2))) with
 | (Support.Microsoft.FStar.Util.Inl (t1), Support.Microsoft.FStar.Util.Inl (t2)) -> begin
-(let _65_14410 = (mk_problem (p_scope orig) orig t1 EQ t2 None "expression type arg")
-in (Support.Prims.pipe_left (fun ( _65_14409 ) -> TProb (_65_14409)) _65_14410))
+(let _65_14416 = (mk_problem (p_scope orig) orig t1 EQ t2 None "expression type arg")
+in (Support.Prims.pipe_left (fun ( _65_14415 ) -> TProb (_65_14415)) _65_14416))
 end
 | (Support.Microsoft.FStar.Util.Inr (e1), Support.Microsoft.FStar.Util.Inr (e2)) -> begin
-(let _65_14412 = (mk_problem (p_scope orig) orig e1 EQ e2 None "expression arg")
-in (Support.Prims.pipe_left (fun ( _65_14411 ) -> EProb (_65_14411)) _65_14412))
+(let _65_14418 = (mk_problem (p_scope orig) orig e1 EQ e2 None "expression arg")
+in (Support.Prims.pipe_left (fun ( _65_14417 ) -> EProb (_65_14417)) _65_14418))
 end
 | _ -> begin
 (failwith ("Impossible: ill-typed expression"))
@@ -3800,11 +3800,11 @@ end
 | _ -> begin
 (failwith ("Impossible: lengths defer"))
 end))
-in (let rec match_head_and_args = (fun ( head1 ) ( head2 ) -> (match ((let _65_14420 = (let _65_14417 = (Microsoft_FStar_Absyn_Util.compress_exp head1)
-in _65_14417.Microsoft_FStar_Absyn_Syntax.n)
-in (let _65_14419 = (let _65_14418 = (Microsoft_FStar_Absyn_Util.compress_exp head2)
-in _65_14418.Microsoft_FStar_Absyn_Syntax.n)
-in (_65_14420, _65_14419)))) with
+in (let rec match_head_and_args = (fun ( head1 ) ( head2 ) -> (match ((let _65_14426 = (let _65_14423 = (Microsoft_FStar_Absyn_Util.compress_exp head1)
+in _65_14423.Microsoft_FStar_Absyn_Syntax.n)
+in (let _65_14425 = (let _65_14424 = (Microsoft_FStar_Absyn_Util.compress_exp head2)
+in _65_14424.Microsoft_FStar_Absyn_Syntax.n)
+in (_65_14426, _65_14425)))) with
 | (Microsoft_FStar_Absyn_Syntax.Exp_bvar (x), Microsoft_FStar_Absyn_Syntax.Exp_bvar (y)) when ((Microsoft_FStar_Absyn_Util.bvar_eq x y) && ((Support.List.length args1) = (Support.List.length args2))) -> begin
 (solve_args [] wl args1 args2)
 end
@@ -3818,16 +3818,16 @@ end
 (match_head_and_args head1 e)
 end
 | (Microsoft_FStar_Absyn_Syntax.Exp_abs (_), _) -> begin
-(let _65_14422 = (let _33_3727 = problem
-in (let _65_14421 = (whnf_e env e1)
-in {lhs = _65_14421; relation = _33_3727.relation; rhs = _33_3727.rhs; element = _33_3727.element; logical_guard = _33_3727.logical_guard; scope = _33_3727.scope; reason = _33_3727.reason; loc = _33_3727.loc; rank = _33_3727.rank}))
-in (solve_e env _65_14422 wl))
+(let _65_14428 = (let _33_3727 = problem
+in (let _65_14427 = (whnf_e env e1)
+in {lhs = _65_14427; relation = _33_3727.relation; rhs = _33_3727.rhs; element = _33_3727.element; logical_guard = _33_3727.logical_guard; scope = _33_3727.scope; reason = _33_3727.reason; loc = _33_3727.loc; rank = _33_3727.rank}))
+in (solve_e env _65_14428 wl))
 end
 | (_, Microsoft_FStar_Absyn_Syntax.Exp_abs (_)) -> begin
-(let _65_14424 = (let _33_3735 = problem
-in (let _65_14423 = (whnf_e env e2)
-in {lhs = _33_3735.lhs; relation = _33_3735.relation; rhs = _65_14423; element = _33_3735.element; logical_guard = _33_3735.logical_guard; scope = _33_3735.scope; reason = _33_3735.reason; loc = _33_3735.loc; rank = _33_3735.rank}))
-in (solve_e env _65_14424 wl))
+(let _65_14430 = (let _33_3735 = problem
+in (let _65_14429 = (whnf_e env e2)
+in {lhs = _33_3735.lhs; relation = _33_3735.relation; rhs = _65_14429; element = _33_3735.element; logical_guard = _33_3735.logical_guard; scope = _33_3735.scope; reason = _33_3735.reason; loc = _33_3735.loc; rank = _33_3735.rank}))
+in (solve_e env _65_14430 wl))
 end
 | _ -> begin
 (smt_fallback e1 e2)
@@ -3835,24 +3835,24 @@ end))
 in (match_head_and_args head1 head2))))
 end
 | _ -> begin
-(let _33_3744 = (let _65_14426 = (Microsoft_FStar_Tc_Env.get_range env)
-in (let _65_14425 = (Microsoft_FStar_Tc_Env.binders env)
-in (new_tvar _65_14426 _65_14425 Microsoft_FStar_Absyn_Syntax.ktype)))
+(let _33_3744 = (let _65_14432 = (Microsoft_FStar_Tc_Env.get_range env)
+in (let _65_14431 = (Microsoft_FStar_Tc_Env.binders env)
+in (new_tvar _65_14432 _65_14431 Microsoft_FStar_Absyn_Syntax.ktype)))
 in (match (_33_3744) with
 | (t, _) -> begin
 (let guard = (Microsoft_FStar_Absyn_Util.mk_eq t t e1 e2)
 in (let _33_3746 = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("Rel")))) with
 | true -> begin
-(let _65_14427 = (Microsoft_FStar_Absyn_Print.typ_to_string guard)
-in (Support.Microsoft.FStar.Util.fprint1 "Emitting guard %s\n" _65_14427))
+(let _65_14433 = (Microsoft_FStar_Absyn_Print.typ_to_string guard)
+in (Support.Microsoft.FStar.Util.fprint1 "Emitting guard %s\n" _65_14433))
 end
 | false -> begin
 ()
 end)
-in (let _65_14431 = (let _65_14430 = (let _65_14429 = (Microsoft_FStar_Absyn_Util.mk_eq t t e1 e2)
-in (Support.Prims.pipe_left (fun ( _65_14428 ) -> Some (_65_14428)) _65_14429))
-in (solve_prob orig _65_14430 [] wl))
-in (solve env _65_14431))))
+in (let _65_14437 = (let _65_14436 = (let _65_14435 = (Microsoft_FStar_Absyn_Util.mk_eq t t e1 e2)
+in (Support.Prims.pipe_left (fun ( _65_14434 ) -> Some (_65_14434)) _65_14435))
+in (solve_prob orig _65_14436 [] wl))
+in (solve env _65_14437))))
 end))
 end)))))))))))
 
@@ -3897,11 +3897,11 @@ end
 "non-trivial"
 end)
 end)
-in (let carry = (let _65_14455 = (Support.List.map (fun ( _33_3763 ) -> (match (_33_3763) with
+in (let carry = (let _65_14461 = (Support.List.map (fun ( _33_3763 ) -> (match (_33_3763) with
 | (_, x) -> begin
 (prob_to_string env x)
 end)) g.deferred.carry)
-in (Support.Prims.pipe_right _65_14455 (Support.String.concat ",\n")))
+in (Support.Prims.pipe_right _65_14461 (Support.String.concat ",\n")))
 in (Support.Microsoft.FStar.Util.format2 "\n\t{guard_f=%s;\n\t deferred={\n%s};}\n" form carry))))
 
 let guard_of_guard_formula = (fun ( g ) -> {guard_f = g; deferred = {carry = []; slack = []}; implicits = []})
@@ -3930,14 +3930,14 @@ end
 | _ -> begin
 (failwith ("impossible"))
 end)
-in (let _65_14472 = (let _33_3794 = g
-in (let _65_14471 = (let _65_14470 = (let _65_14469 = (let _65_14468 = (let _65_14467 = (Microsoft_FStar_Absyn_Syntax.v_binder x)
-in (_65_14467)::[])
-in (_65_14468, f))
-in (Microsoft_FStar_Absyn_Syntax.mk_Typ_lam _65_14469 None f.Microsoft_FStar_Absyn_Syntax.pos))
-in (Support.Prims.pipe_left (fun ( _65_14466 ) -> NonTrivial (_65_14466)) _65_14470))
-in {guard_f = _65_14471; deferred = _33_3794.deferred; implicits = _33_3794.implicits}))
-in Some (_65_14472)))
+in (let _65_14478 = (let _33_3794 = g
+in (let _65_14477 = (let _65_14476 = (let _65_14475 = (let _65_14474 = (let _65_14473 = (Microsoft_FStar_Absyn_Syntax.v_binder x)
+in (_65_14473)::[])
+in (_65_14474, f))
+in (Microsoft_FStar_Absyn_Syntax.mk_Typ_lam _65_14475 None f.Microsoft_FStar_Absyn_Syntax.pos))
+in (Support.Prims.pipe_left (fun ( _65_14472 ) -> NonTrivial (_65_14472)) _65_14476))
+in {guard_f = _65_14477; deferred = _33_3794.deferred; implicits = _33_3794.implicits}))
+in Some (_65_14478)))
 end))
 
 let apply_guard = (fun ( g ) ( e ) -> (match (g.guard_f) with
@@ -3946,13 +3946,13 @@ g
 end
 | NonTrivial (f) -> begin
 (let _33_3801 = g
-in (let _65_14484 = (let _65_14483 = (let _65_14482 = (let _65_14481 = (let _65_14480 = (let _65_14479 = (Microsoft_FStar_Absyn_Syntax.varg e)
-in (_65_14479)::[])
-in (f, _65_14480))
-in (Microsoft_FStar_Absyn_Syntax.mk_Typ_app _65_14481))
-in (Support.Prims.pipe_left (Microsoft_FStar_Absyn_Syntax.syn f.Microsoft_FStar_Absyn_Syntax.pos (Some (Microsoft_FStar_Absyn_Syntax.ktype))) _65_14482))
-in NonTrivial (_65_14483))
-in {guard_f = _65_14484; deferred = _33_3801.deferred; implicits = _33_3801.implicits}))
+in (let _65_14490 = (let _65_14489 = (let _65_14488 = (let _65_14487 = (let _65_14486 = (let _65_14485 = (Microsoft_FStar_Absyn_Syntax.varg e)
+in (_65_14485)::[])
+in (f, _65_14486))
+in (Microsoft_FStar_Absyn_Syntax.mk_Typ_app _65_14487))
+in (Support.Prims.pipe_left (Microsoft_FStar_Absyn_Syntax.syn f.Microsoft_FStar_Absyn_Syntax.pos (Some (Microsoft_FStar_Absyn_Syntax.ktype))) _65_14488))
+in NonTrivial (_65_14489))
+in {guard_f = _65_14490; deferred = _33_3801.deferred; implicits = _33_3801.implicits}))
 end))
 
 let trivial = (fun ( t ) -> (match (t) with
@@ -3968,8 +3968,8 @@ let conj_guard_f = (fun ( g1 ) ( g2 ) -> (match ((g1, g2)) with
 g
 end
 | (NonTrivial (f1), NonTrivial (f2)) -> begin
-(let _65_14491 = (Microsoft_FStar_Absyn_Util.mk_conj f1 f2)
-in NonTrivial (_65_14491))
+(let _65_14497 = (Microsoft_FStar_Absyn_Util.mk_conj f1 f2)
+in NonTrivial (_65_14497))
 end))
 
 let check_trivial = (fun ( t ) -> (match (t.Microsoft_FStar_Absyn_Syntax.n) with
@@ -3992,8 +3992,8 @@ end
 in (check_trivial imp))
 end))
 
-let binop_guard = (fun ( f ) ( g1 ) ( g2 ) -> (let _65_14514 = (f g1.guard_f g2.guard_f)
-in {guard_f = _65_14514; deferred = {carry = (Support.List.append g1.deferred.carry g2.deferred.carry); slack = (Support.List.append g1.deferred.slack g2.deferred.slack)}; implicits = (Support.List.append g1.implicits g2.implicits)}))
+let binop_guard = (fun ( f ) ( g1 ) ( g2 ) -> (let _65_14520 = (f g1.guard_f g2.guard_f)
+in {guard_f = _65_14520; deferred = {carry = (Support.List.append g1.deferred.carry g2.deferred.carry); slack = (Support.List.append g1.deferred.slack g2.deferred.slack)}; implicits = (Support.List.append g1.implicits g2.implicits)}))
 
 let conj_guard = (fun ( g1 ) ( g2 ) -> (binop_guard conj_guard_f g1 g2))
 
@@ -4005,18 +4005,18 @@ g
 end
 | NonTrivial (f) -> begin
 (let _33_3851 = g
-in (let _65_14529 = (let _65_14528 = (Microsoft_FStar_Absyn_Util.close_forall binders f)
-in (Support.Prims.pipe_right _65_14528 (fun ( _65_14527 ) -> NonTrivial (_65_14527))))
-in {guard_f = _65_14529; deferred = _33_3851.deferred; implicits = _33_3851.implicits}))
+in (let _65_14535 = (let _65_14534 = (Microsoft_FStar_Absyn_Util.close_forall binders f)
+in (Support.Prims.pipe_right _65_14534 (fun ( _65_14533 ) -> NonTrivial (_65_14533))))
+in {guard_f = _65_14535; deferred = _33_3851.deferred; implicits = _33_3851.implicits}))
 end))
 
 let mk_guard = (fun ( g ) ( ps ) ( slack ) ( locs ) -> {guard_f = g; deferred = {carry = ps; slack = slack}; implicits = []})
 
 let new_t_problem = (fun ( env ) ( lhs ) ( rel ) ( rhs ) ( elt ) ( loc ) -> (let reason = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("ExplainRel")))) with
 | true -> begin
-(let _65_14541 = (Microsoft_FStar_Tc_Normalize.typ_norm_to_string env lhs)
-in (let _65_14540 = (Microsoft_FStar_Tc_Normalize.typ_norm_to_string env rhs)
-in (Support.Microsoft.FStar.Util.format3 "Top-level:\n%s\n\t%s\n%s" _65_14541 (rel_to_string rel) _65_14540)))
+(let _65_14547 = (Microsoft_FStar_Tc_Normalize.typ_norm_to_string env lhs)
+in (let _65_14546 = (Microsoft_FStar_Tc_Normalize.typ_norm_to_string env rhs)
+in (Support.Microsoft.FStar.Util.format3 "Top-level:\n%s\n\t%s\n%s" _65_14547 (rel_to_string rel) _65_14546)))
 end
 | false -> begin
 "TOP"
@@ -4024,20 +4024,20 @@ end)
 in (let p = (new_problem env lhs rel rhs elt loc reason)
 in p)))
 
-let new_t_prob = (fun ( env ) ( t1 ) ( rel ) ( t2 ) -> (let x = (let _65_14550 = (Microsoft_FStar_Tc_Env.get_range env)
-in (Microsoft_FStar_Absyn_Util.gen_bvar_p _65_14550 t1))
+let new_t_prob = (fun ( env ) ( t1 ) ( rel ) ( t2 ) -> (let x = (let _65_14556 = (Microsoft_FStar_Tc_Env.get_range env)
+in (Microsoft_FStar_Absyn_Util.gen_bvar_p _65_14556 t1))
 in (let env = (Microsoft_FStar_Tc_Env.push_local_binding env (Microsoft_FStar_Tc_Env.Binding_var ((x.Microsoft_FStar_Absyn_Syntax.v, x.Microsoft_FStar_Absyn_Syntax.sort))))
-in (let p = (let _65_14554 = (let _65_14552 = (Microsoft_FStar_Absyn_Util.bvar_to_exp x)
-in (Support.Prims.pipe_left (fun ( _65_14551 ) -> Some (_65_14551)) _65_14552))
-in (let _65_14553 = (Microsoft_FStar_Tc_Env.get_range env)
-in (new_t_problem env t1 rel t2 _65_14554 _65_14553)))
+in (let p = (let _65_14560 = (let _65_14558 = (Microsoft_FStar_Absyn_Util.bvar_to_exp x)
+in (Support.Prims.pipe_left (fun ( _65_14557 ) -> Some (_65_14557)) _65_14558))
+in (let _65_14559 = (Microsoft_FStar_Tc_Env.get_range env)
+in (new_t_problem env t1 rel t2 _65_14560 _65_14559)))
 in (TProb (p), x)))))
 
 let new_k_problem = (fun ( env ) ( lhs ) ( rel ) ( rhs ) ( elt ) ( loc ) -> (let reason = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("ExplainRel")))) with
 | true -> begin
-(let _65_14562 = (Microsoft_FStar_Tc_Normalize.kind_norm_to_string env lhs)
-in (let _65_14561 = (Microsoft_FStar_Tc_Normalize.kind_norm_to_string env rhs)
-in (Support.Microsoft.FStar.Util.format3 "Top-level:\n%s\n\t%s\n%s" _65_14562 (rel_to_string rel) _65_14561)))
+(let _65_14568 = (Microsoft_FStar_Tc_Normalize.kind_norm_to_string env lhs)
+in (let _65_14567 = (Microsoft_FStar_Tc_Normalize.kind_norm_to_string env rhs)
+in (Support.Microsoft.FStar.Util.format3 "Top-level:\n%s\n\t%s\n%s" _65_14568 (rel_to_string rel) _65_14567)))
 end
 | false -> begin
 "TOP"
@@ -4052,8 +4052,8 @@ end
 | NonTrivial (f) -> begin
 (let _33_3885 = (match ((Microsoft_FStar_Tc_Env.debug env Microsoft_FStar_Options.High)) with
 | true -> begin
-(let _65_14567 = (Microsoft_FStar_Absyn_Print.typ_to_string f)
-in (Support.Microsoft.FStar.Util.fprint1 "Simplifying guard %s\n" _65_14567))
+(let _65_14573 = (Microsoft_FStar_Absyn_Print.typ_to_string f)
+in (Support.Microsoft.FStar.Util.fprint1 "Simplifying guard %s\n" _65_14573))
 end
 | false -> begin
 ()
@@ -4087,8 +4087,8 @@ end
 | Failed ((d, s)) -> begin
 (let _33_3912 = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("ExplainRel")))) with
 | true -> begin
-(let _65_14579 = (explain env d s)
-in (Support.Prims.pipe_left Support.Microsoft.FStar.Util.print_string _65_14579))
+(let _65_14585 = (explain env d s)
+in (Support.Prims.pipe_left Support.Microsoft.FStar.Util.print_string _65_14585))
 end
 | false -> begin
 ()
@@ -4101,29 +4101,29 @@ let with_guard = (fun ( env ) ( prob ) ( dopt ) -> (match (dopt) with
 None
 end
 | Some (d) -> begin
-(let _65_14591 = (let _65_14590 = (let _65_14589 = (let _65_14588 = (Support.Prims.pipe_right (p_guard prob) Support.Prims.fst)
-in (Support.Prims.pipe_right _65_14588 (fun ( _65_14587 ) -> NonTrivial (_65_14587))))
-in {guard_f = _65_14589; deferred = d; implicits = []})
-in (simplify_guard env _65_14590))
-in (Support.Prims.pipe_left (fun ( _65_14586 ) -> Some (_65_14586)) _65_14591))
+(let _65_14597 = (let _65_14596 = (let _65_14595 = (let _65_14594 = (Support.Prims.pipe_right (p_guard prob) Support.Prims.fst)
+in (Support.Prims.pipe_right _65_14594 (fun ( _65_14593 ) -> NonTrivial (_65_14593))))
+in {guard_f = _65_14595; deferred = d; implicits = []})
+in (simplify_guard env _65_14596))
+in (Support.Prims.pipe_left (fun ( _65_14592 ) -> Some (_65_14592)) _65_14597))
 end))
 
 let try_keq = (fun ( env ) ( k1 ) ( k2 ) -> (let _33_3923 = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("Rel")))) with
 | true -> begin
-(let _65_14599 = (Microsoft_FStar_Absyn_Print.kind_to_string k1)
-in (let _65_14598 = (Microsoft_FStar_Absyn_Print.kind_to_string k2)
-in (Support.Microsoft.FStar.Util.fprint2 "try_keq of %s and %s\n" _65_14599 _65_14598)))
+(let _65_14605 = (Microsoft_FStar_Absyn_Print.kind_to_string k1)
+in (let _65_14604 = (Microsoft_FStar_Absyn_Print.kind_to_string k2)
+in (Support.Microsoft.FStar.Util.fprint2 "try_keq of %s and %s\n" _65_14605 _65_14604)))
 end
 | false -> begin
 ()
 end)
-in (let prob = (let _65_14604 = (let _65_14603 = (Microsoft_FStar_Tc_Normalize.norm_kind ((Microsoft_FStar_Tc_Normalize.Beta)::[]) env k1)
-in (let _65_14602 = (Microsoft_FStar_Tc_Normalize.norm_kind ((Microsoft_FStar_Tc_Normalize.Beta)::[]) env k2)
-in (let _65_14601 = (Microsoft_FStar_Tc_Env.get_range env)
-in (new_k_problem env _65_14603 EQ _65_14602 None _65_14601))))
-in (Support.Prims.pipe_left (fun ( _65_14600 ) -> KProb (_65_14600)) _65_14604))
-in (let _65_14606 = (solve_and_commit env (singleton env prob) (fun ( _33_3926 ) -> None))
-in (Support.Prims.pipe_left (with_guard env prob) _65_14606)))))
+in (let prob = (let _65_14610 = (let _65_14609 = (Microsoft_FStar_Tc_Normalize.norm_kind ((Microsoft_FStar_Tc_Normalize.Beta)::[]) env k1)
+in (let _65_14608 = (Microsoft_FStar_Tc_Normalize.norm_kind ((Microsoft_FStar_Tc_Normalize.Beta)::[]) env k2)
+in (let _65_14607 = (Microsoft_FStar_Tc_Env.get_range env)
+in (new_k_problem env _65_14609 EQ _65_14608 None _65_14607))))
+in (Support.Prims.pipe_left (fun ( _65_14606 ) -> KProb (_65_14606)) _65_14610))
+in (let _65_14612 = (solve_and_commit env (singleton env prob) (fun ( _33_3926 ) -> None))
+in (Support.Prims.pipe_left (with_guard env prob) _65_14612)))))
 
 let keq = (fun ( env ) ( t ) ( k1 ) ( k2 ) -> (match ((try_keq env k1 k2)) with
 | None -> begin
@@ -4136,16 +4136,16 @@ t.Microsoft_FStar_Absyn_Syntax.pos
 end)
 in (match (t) with
 | None -> begin
-(let _65_14617 = (let _65_14616 = (let _65_14615 = (Microsoft_FStar_Tc_Errors.incompatible_kinds env k2 k1)
-in (_65_14615, r))
-in Microsoft_FStar_Absyn_Syntax.Error (_65_14616))
-in (raise (_65_14617)))
+(let _65_14623 = (let _65_14622 = (let _65_14621 = (Microsoft_FStar_Tc_Errors.incompatible_kinds env k2 k1)
+in (_65_14621, r))
+in Microsoft_FStar_Absyn_Syntax.Error (_65_14622))
+in (raise (_65_14623)))
 end
 | Some (t) -> begin
-(let _65_14620 = (let _65_14619 = (let _65_14618 = (Microsoft_FStar_Tc_Errors.expected_typ_of_kind env k2 t k1)
-in (_65_14618, r))
-in Microsoft_FStar_Absyn_Syntax.Error (_65_14619))
-in (raise (_65_14620)))
+(let _65_14626 = (let _65_14625 = (let _65_14624 = (Microsoft_FStar_Tc_Errors.expected_typ_of_kind env k2 t k1)
+in (_65_14624, r))
+in Microsoft_FStar_Absyn_Syntax.Error (_65_14625))
+in (raise (_65_14626)))
 end))
 end
 | Some (g) -> begin
@@ -4154,60 +4154,60 @@ end))
 
 let subkind = (fun ( env ) ( k1 ) ( k2 ) -> (let _33_3945 = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("Rel")))) with
 | true -> begin
-(let _65_14630 = (let _65_14627 = (Microsoft_FStar_Tc_Env.get_range env)
-in (Support.Prims.pipe_left Support.Microsoft.FStar.Range.string_of_range _65_14627))
-in (let _65_14629 = (Microsoft_FStar_Absyn_Print.kind_to_string k1)
-in (let _65_14628 = (Microsoft_FStar_Absyn_Print.kind_to_string k2)
-in (Support.Microsoft.FStar.Util.fprint3 "(%s) subkind of %s and %s\n" _65_14630 _65_14629 _65_14628))))
+(let _65_14636 = (let _65_14633 = (Microsoft_FStar_Tc_Env.get_range env)
+in (Support.Prims.pipe_left Support.Microsoft.FStar.Range.string_of_range _65_14633))
+in (let _65_14635 = (Microsoft_FStar_Absyn_Print.kind_to_string k1)
+in (let _65_14634 = (Microsoft_FStar_Absyn_Print.kind_to_string k2)
+in (Support.Microsoft.FStar.Util.fprint3 "(%s) subkind of %s and %s\n" _65_14636 _65_14635 _65_14634))))
 end
 | false -> begin
 ()
 end)
-in (let prob = (let _65_14635 = (let _65_14634 = (whnf_k env k1)
-in (let _65_14633 = (whnf_k env k2)
-in (let _65_14632 = (Microsoft_FStar_Tc_Env.get_range env)
-in (new_k_problem env _65_14634 SUB _65_14633 None _65_14632))))
-in (Support.Prims.pipe_left (fun ( _65_14631 ) -> KProb (_65_14631)) _65_14635))
-in (let res = (let _65_14642 = (let _65_14641 = (solve_and_commit env (singleton env prob) (fun ( _33_3948 ) -> (let _65_14640 = (let _65_14639 = (let _65_14638 = (Microsoft_FStar_Tc_Errors.incompatible_kinds env k1 k2)
-in (let _65_14637 = (Microsoft_FStar_Tc_Env.get_range env)
-in (_65_14638, _65_14637)))
-in Microsoft_FStar_Absyn_Syntax.Error (_65_14639))
-in (raise (_65_14640)))))
-in (Support.Prims.pipe_left (with_guard env prob) _65_14641))
-in (Support.Microsoft.FStar.Util.must _65_14642))
+in (let prob = (let _65_14641 = (let _65_14640 = (whnf_k env k1)
+in (let _65_14639 = (whnf_k env k2)
+in (let _65_14638 = (Microsoft_FStar_Tc_Env.get_range env)
+in (new_k_problem env _65_14640 SUB _65_14639 None _65_14638))))
+in (Support.Prims.pipe_left (fun ( _65_14637 ) -> KProb (_65_14637)) _65_14641))
+in (let res = (let _65_14648 = (let _65_14647 = (solve_and_commit env (singleton env prob) (fun ( _33_3948 ) -> (let _65_14646 = (let _65_14645 = (let _65_14644 = (Microsoft_FStar_Tc_Errors.incompatible_kinds env k1 k2)
+in (let _65_14643 = (Microsoft_FStar_Tc_Env.get_range env)
+in (_65_14644, _65_14643)))
+in Microsoft_FStar_Absyn_Syntax.Error (_65_14645))
+in (raise (_65_14646)))))
+in (Support.Prims.pipe_left (with_guard env prob) _65_14647))
+in (Support.Microsoft.FStar.Util.must _65_14648))
 in res))))
 
 let try_teq = (fun ( env ) ( t1 ) ( t2 ) -> (let _33_3954 = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("Rel")))) with
 | true -> begin
-(let _65_14650 = (Microsoft_FStar_Absyn_Print.typ_to_string t1)
-in (let _65_14649 = (Microsoft_FStar_Absyn_Print.typ_to_string t2)
-in (Support.Microsoft.FStar.Util.fprint2 "try_teq of %s and %s\n" _65_14650 _65_14649)))
+(let _65_14656 = (Microsoft_FStar_Absyn_Print.typ_to_string t1)
+in (let _65_14655 = (Microsoft_FStar_Absyn_Print.typ_to_string t2)
+in (Support.Microsoft.FStar.Util.fprint2 "try_teq of %s and %s\n" _65_14656 _65_14655)))
 end
 | false -> begin
 ()
 end)
-in (let prob = (let _65_14653 = (let _65_14652 = (Microsoft_FStar_Tc_Env.get_range env)
-in (new_t_problem env t1 EQ t2 None _65_14652))
-in (Support.Prims.pipe_left (fun ( _65_14651 ) -> TProb (_65_14651)) _65_14653))
-in (let g = (let _65_14655 = (solve_and_commit env (singleton env prob) (fun ( _33_3957 ) -> None))
-in (Support.Prims.pipe_left (with_guard env prob) _65_14655))
+in (let prob = (let _65_14659 = (let _65_14658 = (Microsoft_FStar_Tc_Env.get_range env)
+in (new_t_problem env t1 EQ t2 None _65_14658))
+in (Support.Prims.pipe_left (fun ( _65_14657 ) -> TProb (_65_14657)) _65_14659))
+in (let g = (let _65_14661 = (solve_and_commit env (singleton env prob) (fun ( _33_3957 ) -> None))
+in (Support.Prims.pipe_left (with_guard env prob) _65_14661))
 in g))))
 
 let teq = (fun ( env ) ( t1 ) ( t2 ) -> (match ((try_teq env t1 t2)) with
 | None -> begin
-(let _65_14665 = (let _65_14664 = (let _65_14663 = (Microsoft_FStar_Tc_Errors.basic_type_error env None t2 t1)
-in (let _65_14662 = (Microsoft_FStar_Tc_Env.get_range env)
-in (_65_14663, _65_14662)))
-in Microsoft_FStar_Absyn_Syntax.Error (_65_14664))
-in (raise (_65_14665)))
+(let _65_14671 = (let _65_14670 = (let _65_14669 = (Microsoft_FStar_Tc_Errors.basic_type_error env None t2 t1)
+in (let _65_14668 = (Microsoft_FStar_Tc_Env.get_range env)
+in (_65_14669, _65_14668)))
+in Microsoft_FStar_Absyn_Syntax.Error (_65_14670))
+in (raise (_65_14671)))
 end
 | Some (g) -> begin
 (let _33_3966 = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("Rel")))) with
 | true -> begin
-(let _65_14668 = (Microsoft_FStar_Absyn_Print.typ_to_string t1)
-in (let _65_14667 = (Microsoft_FStar_Absyn_Print.typ_to_string t2)
-in (let _65_14666 = (guard_to_string env g)
-in (Support.Microsoft.FStar.Util.fprint3 "teq of %s and %s succeeded with guard %s\n" _65_14668 _65_14667 _65_14666))))
+(let _65_14674 = (Microsoft_FStar_Absyn_Print.typ_to_string t1)
+in (let _65_14673 = (Microsoft_FStar_Absyn_Print.typ_to_string t2)
+in (let _65_14672 = (guard_to_string env g)
+in (Support.Microsoft.FStar.Util.fprint3 "teq of %s and %s succeeded with guard %s\n" _65_14674 _65_14673 _65_14672))))
 end
 | false -> begin
 ()
@@ -4217,9 +4217,9 @@ end))
 
 let try_subtype = (fun ( env ) ( t1 ) ( t2 ) -> (let _33_3971 = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("Rel")))) with
 | true -> begin
-(let _65_14676 = (Microsoft_FStar_Tc_Normalize.typ_norm_to_string env t1)
-in (let _65_14675 = (Microsoft_FStar_Tc_Normalize.typ_norm_to_string env t2)
-in (Support.Microsoft.FStar.Util.fprint2 "try_subtype of %s and %s\n" _65_14676 _65_14675)))
+(let _65_14682 = (Microsoft_FStar_Tc_Normalize.typ_norm_to_string env t1)
+in (let _65_14681 = (Microsoft_FStar_Tc_Normalize.typ_norm_to_string env t2)
+in (Support.Microsoft.FStar.Util.fprint2 "try_subtype of %s and %s\n" _65_14682 _65_14681)))
 end
 | false -> begin
 ()
@@ -4227,15 +4227,15 @@ end)
 in (let _33_3975 = (new_t_prob env t1 SUB t2)
 in (match (_33_3975) with
 | (prob, x) -> begin
-(let g = (let _65_14678 = (solve_and_commit env (singleton env prob) (fun ( _33_3976 ) -> None))
-in (Support.Prims.pipe_left (with_guard env prob) _65_14678))
+(let g = (let _65_14684 = (solve_and_commit env (singleton env prob) (fun ( _33_3976 ) -> None))
+in (Support.Prims.pipe_left (with_guard env prob) _65_14684))
 in (let _33_3979 = (match (((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("Rel"))) && (Support.Microsoft.FStar.Util.is_some g))) with
 | true -> begin
-(let _65_14682 = (Microsoft_FStar_Tc_Normalize.typ_norm_to_string env t1)
-in (let _65_14681 = (Microsoft_FStar_Tc_Normalize.typ_norm_to_string env t2)
-in (let _65_14680 = (let _65_14679 = (Support.Microsoft.FStar.Util.must g)
-in (guard_to_string env _65_14679))
-in (Support.Microsoft.FStar.Util.fprint3 "try_subtype succeeded: %s <: %s\n\tguard is %s\n" _65_14682 _65_14681 _65_14680))))
+(let _65_14688 = (Microsoft_FStar_Tc_Normalize.typ_norm_to_string env t1)
+in (let _65_14687 = (Microsoft_FStar_Tc_Normalize.typ_norm_to_string env t2)
+in (let _65_14686 = (let _65_14685 = (Support.Microsoft.FStar.Util.must g)
+in (guard_to_string env _65_14685))
+in (Support.Microsoft.FStar.Util.fprint3 "try_subtype succeeded: %s <: %s\n\tguard is %s\n" _65_14688 _65_14687 _65_14686))))
 end
 | false -> begin
 ()
@@ -4243,11 +4243,11 @@ end)
 in (abstract_guard x g)))
 end))))
 
-let subtype_fail = (fun ( env ) ( t1 ) ( t2 ) -> (let _65_14689 = (let _65_14688 = (let _65_14687 = (Microsoft_FStar_Tc_Errors.basic_type_error env None t2 t1)
-in (let _65_14686 = (Microsoft_FStar_Tc_Env.get_range env)
-in (_65_14687, _65_14686)))
-in Microsoft_FStar_Absyn_Syntax.Error (_65_14688))
-in (raise (_65_14689))))
+let subtype_fail = (fun ( env ) ( t1 ) ( t2 ) -> (let _65_14695 = (let _65_14694 = (let _65_14693 = (Microsoft_FStar_Tc_Errors.basic_type_error env None t2 t1)
+in (let _65_14692 = (Microsoft_FStar_Tc_Env.get_range env)
+in (_65_14693, _65_14692)))
+in Microsoft_FStar_Absyn_Syntax.Error (_65_14694))
+in (raise (_65_14695))))
 
 let subtype = (fun ( env ) ( t1 ) ( t2 ) -> (match ((try_subtype env t1 t2)) with
 | Some (f) -> begin
@@ -4259,9 +4259,9 @@ end))
 
 let sub_comp = (fun ( env ) ( c1 ) ( c2 ) -> (let _33_3993 = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("Rel")))) with
 | true -> begin
-(let _65_14703 = (Microsoft_FStar_Absyn_Print.comp_typ_to_string c1)
-in (let _65_14702 = (Microsoft_FStar_Absyn_Print.comp_typ_to_string c2)
-in (Support.Microsoft.FStar.Util.fprint2 "sub_comp of %s and %s\n" _65_14703 _65_14702)))
+(let _65_14709 = (Microsoft_FStar_Absyn_Print.comp_typ_to_string c1)
+in (let _65_14708 = (Microsoft_FStar_Absyn_Print.comp_typ_to_string c2)
+in (Support.Microsoft.FStar.Util.fprint2 "sub_comp of %s and %s\n" _65_14709 _65_14708)))
 end
 | false -> begin
 ()
@@ -4273,11 +4273,11 @@ end
 | false -> begin
 SUB
 end)
-in (let prob = (let _65_14706 = (let _65_14705 = (Microsoft_FStar_Tc_Env.get_range env)
-in (new_problem env c1 rel c2 None _65_14705 "sub_comp"))
-in (Support.Prims.pipe_left (fun ( _65_14704 ) -> CProb (_65_14704)) _65_14706))
-in (let _65_14708 = (solve_and_commit env (singleton env prob) (fun ( _33_3997 ) -> None))
-in (Support.Prims.pipe_left (with_guard env prob) _65_14708))))))
+in (let prob = (let _65_14712 = (let _65_14711 = (Microsoft_FStar_Tc_Env.get_range env)
+in (new_problem env c1 rel c2 None _65_14711 "sub_comp"))
+in (Support.Prims.pipe_left (fun ( _65_14710 ) -> CProb (_65_14710)) _65_14712))
+in (let _65_14714 = (solve_and_commit env (singleton env prob) (fun ( _33_3997 ) -> None))
+in (Support.Prims.pipe_left (with_guard env prob) _65_14714))))))
 
 let solve_deferred_constraints = (fun ( env ) ( g ) -> (let fail = (fun ( _33_4004 ) -> (match (_33_4004) with
 | (d, s) -> begin
@@ -4286,22 +4286,22 @@ in (raise (Microsoft_FStar_Absyn_Syntax.Error ((msg, (p_loc d))))))
 end))
 in (let _33_4009 = (match (((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("Rel"))) && ((Support.List.length g.deferred.carry) <> 0))) with
 | true -> begin
-(let _65_14721 = (let _65_14720 = (Support.Prims.pipe_right g.deferred.carry (Support.List.map (fun ( _33_4008 ) -> (match (_33_4008) with
+(let _65_14727 = (let _65_14726 = (Support.Prims.pipe_right g.deferred.carry (Support.List.map (fun ( _33_4008 ) -> (match (_33_4008) with
 | (msg, x) -> begin
-(let _65_14719 = (Support.Prims.pipe_left Support.Microsoft.FStar.Range.string_of_range (p_loc x))
-in (let _65_14718 = (prob_to_string env x)
-in (let _65_14717 = (let _65_14716 = (Support.Prims.pipe_right (p_guard x) Support.Prims.fst)
-in (Microsoft_FStar_Tc_Normalize.formula_norm_to_string env _65_14716))
-in (Support.Microsoft.FStar.Util.format4 "(At %s) %s\n%s\nguard is %s\n" _65_14719 msg _65_14718 _65_14717))))
+(let _65_14725 = (Support.Prims.pipe_left Support.Microsoft.FStar.Range.string_of_range (p_loc x))
+in (let _65_14724 = (prob_to_string env x)
+in (let _65_14723 = (let _65_14722 = (Support.Prims.pipe_right (p_guard x) Support.Prims.fst)
+in (Microsoft_FStar_Tc_Normalize.formula_norm_to_string env _65_14722))
+in (Support.Microsoft.FStar.Util.format4 "(At %s) %s\n%s\nguard is %s\n" _65_14725 msg _65_14724 _65_14723))))
 end))))
-in (Support.Prims.pipe_right _65_14720 (Support.String.concat "\n")))
-in (Support.Prims.pipe_left (Support.Microsoft.FStar.Util.fprint1 "Trying to solve carried problems: begin\n%s\nend\n") _65_14721))
+in (Support.Prims.pipe_right _65_14726 (Support.String.concat "\n")))
+in (Support.Prims.pipe_left (Support.Microsoft.FStar.Util.fprint1 "Trying to solve carried problems: begin\n%s\nend\n") _65_14727))
 end
 | false -> begin
 ()
 end)
-in (let gopt = (let _65_14722 = (wl_of_guard env g.deferred)
-in (solve_and_commit env _65_14722 fail))
+in (let gopt = (let _65_14728 = (wl_of_guard env g.deferred)
+in (solve_and_commit env _65_14728 fail))
 in (match (gopt) with
 | Some ({carry = _; slack = slack}) -> begin
 (let _33_4017 = (fix_slack_vars slack)
@@ -4331,10 +4331,10 @@ end
 | NonTrivial (vc) -> begin
 (let _33_4033 = (match ((Support.Prims.pipe_left (Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("Rel")))) with
 | true -> begin
-(let _65_14729 = (Microsoft_FStar_Tc_Env.get_range env)
-in (let _65_14728 = (let _65_14727 = (Microsoft_FStar_Absyn_Print.formula_to_string vc)
-in (Support.Microsoft.FStar.Util.format1 "Checking VC=\n%s\n" _65_14727))
-in (Microsoft_FStar_Tc_Errors.diag _65_14729 _65_14728)))
+(let _65_14735 = (Microsoft_FStar_Tc_Env.get_range env)
+in (let _65_14734 = (let _65_14733 = (Microsoft_FStar_Absyn_Print.formula_to_string vc)
+in (Support.Microsoft.FStar.Util.format1 "Checking VC=\n%s\n" _65_14733))
+in (Microsoft_FStar_Tc_Errors.diag _65_14735 _65_14734)))
 end
 | false -> begin
 ()

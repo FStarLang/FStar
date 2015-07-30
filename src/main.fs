@@ -1,4 +1,4 @@
 ﻿#light "off"
 module Microsoft.FStar.Main
-let _ = FStar.main ()
+let _ = printfn "THIS IS CLEAN FSTAR!"; FStar.main ()
 
