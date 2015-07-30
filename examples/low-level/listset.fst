@@ -14,11 +14,10 @@ val lsubset :#a:Type -> list a -> list a -> Tot bool
 let rec lsubset la lb =
 match la with
 | [] -> true
-| h :: tl ->  ((memT h lb) && (lsubset tl lb))
-
+| h :: tl ->  ((mem h lb) && (lsubset tl lb))
 
 val notIn : #a:Type -> a-> list a  -> Tot bool
-let notIn id l = not (memT id l)
+let notIn id l = not (mem id l)
 
 val noRepeats :#a:Type -> list a  -> Tot bool
 let rec noRepeats la =

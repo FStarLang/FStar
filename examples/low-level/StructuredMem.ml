@@ -1,47 +1,47 @@
 
 type sidt =
-Prims.nat
+Support.Prims.nat
 
 type memblock =
-Prims.heap
+Support.Prims.heap
 
 type memStackAux =
-(sidt, memblock) Prims.l__Tuple2 Stack.l__Stack
+(sidt * memblock) Stack.l__Stack
 
-let ssids = (fun ( ms  :  memStackAux ) -> (List.mapT () Prims.fst ms))
+let ssids = (fun ( ms ) -> (Support.List.mapT Support.Prims.fst ms))
 
-let wellFormed = (fun ( ms  :  memStackAux ) -> (ListSet.noRepeats () (ssids ms)))
+let wellFormed = (fun ( ms ) -> (ListSet.noRepeats (ssids ms)))
 
 type memStack =
 memStackAux
 
 type smem =
-(memblock, memStack) Prims.l__Tuple2
+(memblock * memStack)
 
-let hp = (fun ( s  :  smem ) -> (Prims.fst () s))
+let hp = (fun ( s ) -> (Support.Prims.fst s))
 
-let st = (fun ( s  :  smem ) -> (Prims.snd () s))
+let st = (fun ( s ) -> (Support.Prims.snd s))
 
-let mtail = (fun ( s  :  smem ) -> Prims.MkTuple2 ((), (hp s), (Stack.stail () (st s))))
+let mtail = (fun ( s ) -> ((hp s), (Stack.stail (st s))))
 
-let mstail = (fun ( s  :  smem ) -> (Stack.stail () (st s)))
+let mstail = (fun ( s ) -> (Stack.stail (st s)))
 
-let sids = (fun ( m  :  smem ) -> (ssids (st m)))
+let sids = (fun ( m ) -> (ssids (st m)))
 
-let sid = (fun ( s  :  (sidt, memblock) Prims.l__Tuple2 ) -> (Prims.fst () s))
+let sid = (fun ( s ) -> (Support.Prims.fst s))
 
-let topst = (fun ( ss  :  smem ) -> (Stack.top () (st ss)))
+let topst = (fun ( ss ) -> (Stack.top (st ss)))
 
-let topstb = (fun ( ss  :  smem ) -> (Prims.snd () (topst ss)))
+let topstb = (fun ( ss ) -> (Support.Prims.snd (topst ss)))
 
-let topstid = (fun ( ss  :  smem ) -> (Prims.fst () (topst ss)))
+let topstid = (fun ( ss ) -> (Support.Prims.fst (topst ss)))
 
 type refLocType =
 | InHeap
 | InStack of sidt
 
 let is_InHeap = (fun ( _discr_ ) -> (match (_discr_) with
-| InHeap (_) -> begin
+| InHeap -> begin
 true
 end
 | _ -> begin
@@ -56,196 +56,196 @@ end
 false
 end))
 
-let refLoc = (fun ( _7_16450  :  unit ) -> (failwith () "Not yet implemented"))
+let refLoc = (fun ( _ ) -> (failwith ("Not yet implemented")))
 
-let rec stackBlockAtLoc = (fun ( id  :  sidt ) ( sp  :  (sidt, memblock) Prims.l__Tuple2 Stack.l__Stack ) -> (match (sp) with
-| Nil -> begin
-l__None
+let rec stackBlockAtLoc = (fun ( id ) ( sp ) -> (match (sp) with
+| [] -> begin
+None
 end
-| Cons (h, tl) -> begin
-(match ((Prims.op_Equality () id (Prims.fst () h))) with
+| h::tl -> begin
+(match ((id = (Support.Prims.fst h))) with
 | true -> begin
-Some ((), (Prims.snd () h))
+Some ((Support.Prims.snd h))
 end
 | false -> begin
 (stackBlockAtLoc id tl)
 end)
 end))
 
-let blockAtLoc = (fun ( m  :  smem ) ( rl  :  refLocType ) -> (match (rl) with
+let blockAtLoc = (fun ( m ) ( rl ) -> (match (rl) with
 | InHeap -> begin
-Some ((), (hp m))
+Some ((hp m))
 end
 | InStack (id) -> begin
 (stackBlockAtLoc id (st m))
 end))
 
-let writeInBlock = (fun ( _7_16450  :  unit ) ( r  :  'a Prims.ref ) ( v  :  'a ) ( mb  :  memblock ) -> (Heap.upd () mb r v))
+let writeInBlock = (fun ( r ) ( v ) ( mb ) -> (Support.Heap.upd mb r v))
 
-let rec changeStackBlockWithId = (fun ( f  :  memblock  ->  memblock ) ( s  :  sidt ) ( ms  :  (sidt, memblock) Prims.l__Tuple2 Stack.l__Stack ) -> (match (ms) with
-| Nil -> begin
-l__Nil
+let rec changeStackBlockWithId = (fun ( f ) ( s ) ( ms ) -> (match (ms) with
+| [] -> begin
+[]
 end
-| Cons (h, tl) -> begin
-(match ((Prims.op_Equality () (Prims.fst () h) s)) with
+| h::tl -> begin
+(match (((Support.Prims.fst h) = s)) with
 | true -> begin
-Cons ((), Prims.MkTuple2 ((), (Prims.fst () h), (f (Prims.snd () h))), tl)
+(((Support.Prims.fst h), (f (Support.Prims.snd h))))::tl
 end
 | false -> begin
-Cons ((), h, (changeStackBlockWithId f s tl))
+(h)::(changeStackBlockWithId f s tl)
 end)
 end))
 
-let rec writeInMemStack = (fun ( _7_16450  :  unit ) ( r  :  'a Prims.ref ) ( ms  :  (sidt, memblock) Prims.l__Tuple2 Stack.l__Stack ) ( s  :  sidt ) ( v  :  'a ) -> (changeStackBlockWithId (writeInBlock () r v) s ms))
+let rec writeInMemStack = (fun ( r ) ( ms ) ( s ) ( v ) -> (changeStackBlockWithId (writeInBlock r v) s ms))
 
-let rec changeStackBlockSameIDs = (fun ( f  :  memblock  ->  memblock ) ( s  :  sidt ) ( ms  :  (sidt, memblock) Prims.l__Tuple2 Stack.l__Stack ) -> ())
+let rec changeStackBlockSameIDs = (fun ( f ) ( s ) ( ms ) -> ())
 
-let changeStackBlockWellFormed = (fun ( f  :  memblock  ->  memblock ) ( s  :  sidt ) ( ms  :  (sidt, memblock) Prims.l__Tuple2 Stack.l__Stack ) -> ())
+let changeStackBlockWellFormed = (fun ( f ) ( s ) ( ms ) -> ())
 
-let writeMemStackSameIDs = (fun ( _7_16450  :  unit ) ( r  :  'a Prims.ref ) ( ms  :  (sidt, memblock) Prims.l__Tuple2 Stack.l__Stack ) ( s  :  sidt ) ( v  :  'a ) -> ())
+let writeMemStackSameIDs = (fun ( r ) ( ms ) ( s ) ( v ) -> ())
 
-let writeMemStackWellFormed = (fun ( _7_16450  :  unit ) ( r  :  'a Prims.ref ) ( ms  :  (sidt, memblock) Prims.l__Tuple2 Stack.l__Stack ) ( s  :  sidt ) ( v  :  'a ) -> ())
+let writeMemStackWellFormed = (fun ( r ) ( ms ) ( s ) ( v ) -> ())
 
-let rec refExistsInStack = (fun ( _7_16450  :  unit ) ( r  :  'a Prims.ref ) ( id  :  sidt ) ( ms  :  (sidt, memblock) Prims.l__Tuple2 Stack.l__Stack ) -> (match (ms) with
-| Nil -> begin
+let rec refExistsInStack = (fun ( r ) ( id ) ( ms ) -> (match (ms) with
+| [] -> begin
 false
 end
-| Cons (h, tl) -> begin
-(match ((Prims.op_Equality () (Prims.fst () h) id)) with
+| h::tl -> begin
+(match (((Support.Prims.fst h) = id)) with
 | true -> begin
-(Heap.contains () (Prims.snd () h) r)
+(Support.Heap.contains (Support.Prims.snd h) r)
 end
 | false -> begin
-(refExistsInStack () r id tl)
+(refExistsInStack r id tl)
 end)
 end))
 
-let rec refExistsInStackId = (fun ( _7_16450  :  unit ) ( r  :  'a Prims.ref ) ( id  :  sidt ) ( ms  :  (sidt, memblock) Prims.l__Tuple2 Stack.l__Stack ) -> ())
+let rec refExistsInStackId = (fun ( r ) ( id ) ( ms ) -> ())
 
-let memIdUniq = (fun ( h  :  (sidt, memblock) Prims.l__Tuple2 ) ( tl  :  memStackAux ) -> ())
+let memIdUniq = (fun ( h ) ( tl ) -> ())
 
-let refExistsInStackTail = (fun ( _7_16450  :  unit ) ( r  :  'a Prims.ref ) ( id  :  sidt ) ( ms  :  memStack ) -> ())
+let refExistsInStackTail = (fun ( r ) ( id ) ( ms ) -> ())
 
-let refExistsInMem = (fun ( _7_16450  :  unit ) ( r  :  'a Prims.ref ) ( m  :  smem ) -> (match ((refLoc () r)) with
+let refExistsInMem = (fun ( r ) ( m ) -> (match ((refLoc r)) with
 | InHeap -> begin
-(Heap.contains () (hp m) r)
+(Support.Heap.contains (hp m) r)
 end
 | InStack (id) -> begin
-(refExistsInStack () r id (st m))
+(refExistsInStack r id (st m))
 end))
 
-let rec writeMemStackExists = (fun ( _7_16450  :  unit ) ( rw  :  'a Prims.ref ) ( r  :  'b Prims.ref ) ( ms  :  (sidt, memblock) Prims.l__Tuple2 Stack.l__Stack ) ( id  :  sidt ) ( idw  :  sidt ) ( v  :  'a ) -> ())
+let rec writeMemStackExists = (fun ( rw ) ( r ) ( ms ) ( id ) ( idw ) ( v ) -> ())
 
-let writeMemAux = (fun ( _7_16450  :  unit ) ( r  :  'a Prims.ref ) ( m  :  smem ) ( v  :  'a ) -> (match ((refLoc () r)) with
+let writeMemAux = (fun ( r ) ( m ) ( v ) -> (match ((refLoc r)) with
 | InHeap -> begin
-Prims.MkTuple2 ((), (Heap.upd () (hp m) r v), (Prims.snd () m))
+((Support.Heap.upd (hp m) r v), (Support.Prims.snd m))
 end
 | InStack (id) -> begin
-Prims.MkTuple2 ((), (hp m), (writeInMemStack () r (st m) id v))
+((hp m), (writeInMemStack r (st m) id v))
 end))
 
-let writeMemAuxPreservesExists = (fun ( _7_16450  :  unit ) ( rw  :  'a Prims.ref ) ( r  :  'b Prims.ref ) ( m  :  smem ) ( v  :  'a ) -> ())
+let writeMemAuxPreservesExists = (fun ( rw ) ( r ) ( m ) ( v ) -> ())
 
-let writeMemAuxPreservesSids = (fun ( _7_16450  :  unit ) ( rw  :  'a Prims.ref ) ( m  :  smem ) ( v  :  'a ) -> ())
+let writeMemAuxPreservesSids = (fun ( rw ) ( m ) ( v ) -> ())
 
-let rec loopkupRefStack = (fun ( _7_16450  :  unit ) ( r  :  'a Prims.ref ) ( id  :  sidt ) ( ms  :  (sidt, memblock) Prims.l__Tuple2 Stack.l__Stack ) -> (match (ms) with
-| Cons (h, tl) -> begin
-(match ((Prims.op_Equality () (Prims.fst () h) id)) with
+let rec loopkupRefStack = (fun ( r ) ( id ) ( ms ) -> (match (ms) with
+| h::tl -> begin
+(match (((Support.Prims.fst h) = id)) with
 | true -> begin
-(Heap.sel () (Prims.snd () h) r)
+(Support.Heap.sel (Support.Prims.snd h) r)
 end
 | false -> begin
-(loopkupRefStack () r id tl)
+(loopkupRefStack r id tl)
 end)
 end))
 
-let loopkupRef = (fun ( _7_16450  :  unit ) ( r  :  'a Prims.ref ) ( m  :  smem ) -> (match ((refLoc () r)) with
+let loopkupRef = (fun ( r ) ( m ) -> (match ((refLoc r)) with
 | InHeap -> begin
-(Heap.sel () (hp m) r)
+(Support.Heap.sel (hp m) r)
 end
 | InStack (id) -> begin
-(loopkupRefStack () r id (st m))
+(loopkupRefStack r id (st m))
 end))
 
 type ('b, 'tc, 'fc) ifthenelseT =
-(('b, 'tc) Prims.l_imp, ('b Prims.l_not, 'fc) Prims.l_imp) Prims.l_and
+(('b, 'tc) Support.Prims.l_imp, ('b Support.Prims.l_not, 'fc) Support.Prims.l_imp) Support.Prims.l_and
 
-let rec readAfterWriteStack = (fun ( _7_16450  :  unit ) ( rw  :  'a Prims.ref ) ( r  :  'b Prims.ref ) ( v  :  'a ) ( id  :  sidt ) ( idw  :  sidt ) ( m  :  (sidt, memblock) Prims.l__Tuple2 Stack.l__Stack ) -> ())
+let rec readAfterWriteStack = (fun ( rw ) ( r ) ( v ) ( id ) ( idw ) ( m ) -> ())
 
-let readAfterWriteStackSameType = (fun ( _7_16450  :  unit ) ( rw  :  'a Prims.ref ) ( r  :  'a Prims.ref ) ( v  :  'a ) ( id  :  sidt ) ( idw  :  sidt ) ( m  :  (sidt, memblock) Prims.l__Tuple2 Stack.l__Stack ) -> ())
+let readAfterWriteStackSameType = (fun ( rw ) ( r ) ( v ) ( id ) ( idw ) ( m ) -> ())
 
-let readAfterWrite = (fun ( _7_16450  :  unit ) ( rw  :  'a Prims.ref ) ( r  :  'b Prims.ref ) ( v  :  'a ) ( m  :  smem ) -> ())
+let readAfterWrite = (fun ( rw ) ( r ) ( v ) ( m ) -> ())
 
-let readAfterWriteTrue = (fun ( _7_16450  :  unit ) ( rw  :  'a Prims.ref ) ( r  :  'b Prims.ref ) ( v  :  'a ) ( m  :  smem ) -> ())
+let readAfterWriteTrue = (fun ( rw ) ( r ) ( v ) ( m ) -> ())
 
-let readAfterWriteFalse = (fun ( _7_16450  :  unit ) ( rw  :  'a Prims.ref ) ( r  :  'b Prims.ref ) ( v  :  'a ) ( m  :  smem ) -> ())
+let readAfterWriteFalse = (fun ( rw ) ( r ) ( v ) ( m ) -> ())
 
-let readAfterWriteSameType = (fun ( _7_16450  :  unit ) ( rw  :  'a Prims.ref ) ( r  :  'a Prims.ref ) ( v  :  'a ) ( m  :  smem ) -> ())
+let readAfterWriteSameType = (fun ( rw ) ( r ) ( v ) ( m ) -> ())
 
-let refExistsInMemTail = (fun ( _7_16450  :  unit ) ( r  :  'a Prims.ref ) ( m  :  smem ) -> ())
+let refExistsInMemTail = (fun ( r ) ( m ) -> ())
 
-let loopkupRefStackTail = (fun ( _7_16450  :  unit ) ( r  :  'a Prims.ref ) ( id  :  sidt ) ( ms  :  memStack ) -> ())
+let loopkupRefStackTail = (fun ( r ) ( id ) ( ms ) -> ())
 
-let readTailRef = (fun ( _7_16450  :  unit ) ( r  :  'a Prims.ref ) ( m  :  smem ) -> ())
+let readTailRef = (fun ( r ) ( m ) -> ())
 
-let writeStackTail = (fun ( _7_16450  :  unit ) ( r  :  'a Prims.ref ) ( id  :  sidt ) ( v  :  'a ) ( ms  :  memStack ) -> ())
+let writeStackTail = (fun ( r ) ( id ) ( v ) ( ms ) -> ())
 
-let writeTailRef = (fun ( _7_16450  :  unit ) ( r  :  'a Prims.ref ) ( m  :  smem ) ( v  :  'a ) -> ())
+let writeTailRef = (fun ( r ) ( m ) ( v ) -> ())
 
-let refExistsInMemSTailSids = (fun ( _7_16450  :  unit ) ( r  :  'a Prims.ref ) ( id  :  sidt ) ( m0  :  memStack ) ( m1  :  memStack ) -> ())
+let refExistsInMemSTailSids = (fun ( r ) ( id ) ( m0 ) ( m1 ) -> ())
 
-let refExistsInMemTailSids = (fun ( _7_16450  :  unit ) ( r  :  'a Prims.ref ) ( m0  :  smem ) ( m1  :  smem ) -> ())
+let refExistsInMemTailSids = (fun ( r ) ( m0 ) ( m1 ) -> ())
 
 type ('m0, 'm1, 'rs) canModify =
-(Obj.t Prims.ref, (unit Prims.b2t, (unit Prims.b2t Prims.l_not, (unit Prims.b2t, unit Prims.b2t) Prims.l_and) Prims.l_imp) Prims.l_imp) Prims.l__Forall Prims.l__ForallTyp
+(Obj.t ref, (unit Support.Prims.b2t, (unit Support.Prims.b2t Support.Prims.l_not, (unit Support.Prims.b2t, unit Support.Prims.b2t) Support.Prims.l_and) Support.Prims.l_imp) Support.Prims.l_imp) Support.Prims.l__Forall Support.Prims.l__ForallTyp
 
 type ('a, 'r, 'v, 'm) mreads =
-(unit Prims.b2t, unit Prims.b2t) Prims.l_and
+(unit Support.Prims.b2t, unit Support.Prims.b2t) Support.Prims.l_and
 
-let canModifyNone = (fun ( m  :  smem ) -> ())
+let canModifyNone = (fun ( m ) -> ())
 
-let canModifyWrite = (fun ( _7_16450  :  unit ) ( r  :  'a Prims.ref ) ( v  :  'a ) ( m  :  smem ) -> ())
+let canModifyWrite = (fun ( r ) ( v ) ( m ) -> ())
 
 type ('a, 'r, 'h0, 'h1, 'init) allocateInBlock =
-((unit Prims.b2t, unit Prims.b2t) Prims.l_and, (memblock, Prims.heap, unit, unit) Prims.l__Eq2) Prims.l_and
+((unit Support.Prims.b2t, unit Support.Prims.b2t) Support.Prims.l_and, (memblock, Support.Prims.heap, unit, unit) Support.Prims.l__Eq2) Support.Prims.l_and
 
-let halloc = (fun ( _7_16450  :  unit ) -> (failwith () "Not yet implemented"))
+let halloc = (fun ( init ) -> (failwith ("Not yet implemented")))
 
-let salloc = (fun ( _7_16450  :  unit ) -> (failwith () "Not yet implemented"))
+let salloc = (fun ( init ) -> (failwith ("Not yet implemented")))
 
-let memread = (fun ( _7_16450  :  unit ) -> (failwith () "Not yet implemented"))
+let memread = (fun ( r ) -> (failwith ("Not yet implemented")))
 
-let memwrite = (fun ( _7_16450  :  unit ) -> (failwith () "Not yet implemented"))
+let memwrite = (fun ( r ) ( v ) -> (failwith ("Not yet implemented")))
 
-let pushStackFrame = (failwith () "Not yet implemented")
+let pushStackFrame = (fun ( _ ) -> (failwith ("Not yet implemented")))
 
-let popStackFrame = (failwith () "Not yet implemented")
+let popStackFrame = (fun ( _ ) -> (failwith ("Not yet implemented")))
 
 type 'm mStackNonEmpty =
-unit Prims.b2t
+unit Support.Prims.b2t
 
-let allRefs = (Set.complement () Set.empty)
+let allRefs = (Support.Set.complement (Support.Set.empty ()))
 
-let withNewScope = (fun ( _7_16450  :  unit ) ( mods  :  Heap.aref Set.set ) ( body  :  unit  ->  'a ) -> (let _7_457 = (pushStackFrame ())
+let withNewScope = (fun ( mods ) ( body ) -> (let _7_457 = (pushStackFrame ())
 in (let v = (body ())
 in (let _7_460 = (popStackFrame ())
 in v))))
 
-let rec scopedWhile = (fun ( _7_16450  :  unit ) ( wg  :  unit  ->  'loopInv ) ( mods  :  Heap.aref Set.set ) ( bd  :  unit  ->  'loopInv ) -> (match ((wg ())) with
+let rec scopedWhile = (fun ( wg ) ( mods ) ( bd ) -> (match ((wg ())) with
 | true -> begin
-(let _7_499 = (withNewScope () mods (Obj.magic bd))
-in (scopedWhile () wg mods bd))
+(let _7_499 = (withNewScope mods (Obj.magic bd))
+in (scopedWhile wg mods bd))
 end
 | false -> begin
 ()
 end))
 
-let scopedWhile1 = (fun ( _7_16450  :  unit ) ( r  :  'a Prims.ref ) ( lc  :  'a  ->  Prims.bool ) ( 'loopInv  :  unit ) ( mods  :  Heap.aref Set.set ) ( bd  :  unit  ->  (Obj.t, unit Prims.b2t) Prims.l_and ) -> (scopedWhile () (Obj.magic (fun ( u  :  unit ) -> (let _7_18838 = (memread () r)
-in (lc _7_18838)))) mods bd))
+let scopedWhile1 = (fun ( r ) ( lc ) ( 'loopInv ) ( mods ) ( bd ) -> (scopedWhile (Obj.magic (fun ( u ) -> (let _7_18302 = (memread r)
+in (lc _7_18302)))) mods bd))
 
-let scopedWhile2 = (fun ( _7_16450  :  unit ) ( ra  :  'a Prims.ref ) ( rb  :  'b Prims.ref ) ( lc  :  'a  ->  'b  ->  Prims.bool ) ( 'loopInv  :  unit ) ( mods  :  Heap.aref Set.set ) ( bd  :  unit  ->  ((Obj.t, unit Prims.b2t) Prims.l_and, unit Prims.b2t) Prims.l_and ) -> (scopedWhile () (Obj.magic (fun ( u  :  unit ) -> (let _7_18878 = (memread () ra)
-in (let _7_18877 = (memread () rb)
-in (lc _7_18878 _7_18877))))) mods bd))
+let scopedWhile2 = (fun ( ra ) ( rb ) ( lc ) ( 'loopInv ) ( mods ) ( bd ) -> (scopedWhile (Obj.magic (fun ( u ) -> (let _7_18340 = (memread ra)
+in (let _7_18339 = (memread rb)
+in (lc _7_18340 _7_18339))))) mods bd))
 
 
 

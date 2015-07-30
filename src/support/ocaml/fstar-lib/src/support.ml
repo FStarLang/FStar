@@ -37,6 +37,8 @@ module Prims = struct
   let op_LessThan x y = x < y
   let op_GreaterThan x y = x > y
   let op_Modulus x y = x mod y
+  let is_Nil l = l = [] (*consider redefining List.isEmpty as this function*)
+  let is_Cons l = not (is_Nil l)
 end
 
 module ST = struct
@@ -71,6 +73,7 @@ end
 module List = struct
   let isEmpty l = l = []
   let mem = List.mem
+  let memT = List.mem
   let hd = BatList.hd
   let tl = BatList.tl
   let tail = BatList.tl
