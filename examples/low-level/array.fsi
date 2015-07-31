@@ -1,11 +1,14 @@
 (*--build-config
     options:--admit_fsi Set --z3timeout 10;
     variables:LIB=../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst st3.fst $LIB/constr.fst word.fst $LIB/seq.fsi $LIB/seq.fst
+    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst
+    stackAndHeap.fst sst.fst sstCombinators.fst $LIB/constr.fst word.fst $LIB/seq.fsi $LIB/seq.fst
   --*)
 
 module Array
-open StructuredMem
+open SSTCombinators
+open StackAndHeap
+open SST
 open MachineWord
 open Heap
 open Set

@@ -7,7 +7,7 @@
 
 
 
-module StructuredMem
+module StackAndHeap
 open Heap
 open Stack
 open Set
@@ -483,17 +483,13 @@ val canModifyWrite : #a:Type -> r:(ref a) -> v:a -> m:smem
   -> Lemma (canModify m (writeMemAux r m v) (singleton (Ref r)))
 let canModifyWrite r v m = ()
 
+type mStackNonEmpty (m:smem) = b2t (isNonEmpty (st m))
 
 (*val canModifySalloc : #a:Type -> r:(ref a) -> v:a -> m:smem
   -> Lemma (canModify m (writeMemAux r m v) (singleton (Ref r)))
 let canModifyWrite r v m = ()*)
 
 
-(*perhaps we also need canModify version of the while combinator.
-Currently it is annoying to carry around non-modification properties in
-loop invariants. One has to carry around an extra parameter denoting the value
-at the beginning of the loop. canModify an perhaps alleviate this problem
-*)
 
 (*should extend to types with decidable equality*)
 (*val is1SuffixOf : list sidt -> list sidt -> Tot bool
@@ -504,201 +500,7 @@ match lbig with
 
 type allocateInBlock (#a:Type) (r: ref a) (h0 : memblock) (h1 : memblock) (init : a)   = not(Heap.contains h0 r) /\ Heap.contains h1 r /\  h1 == upd h0 r init
 
-kind Pre  = smem -> Type
-kind Post (a:Type) = a -> smem -> Type
-
-effect SST (a:Type) (pre:Pre) (post: (smem -> Post a)) =
-        StSTATE a
-              (fun (p:Post a) (h:smem) -> pre h /\ (forall a h1. (pre h  /\ post h a h1) ==> p a h1)) (* WP *)
-              (fun (p:Post a) (h:smem) -> (forall a h1. (pre h  /\ post h a h1) ==> p a h1))          (* WLP *)
-
-assume val halloc:  #a:Type -> init:a -> SST (ref a)
-                                         (fun m -> True)
-                                         (fun m0 r m1 -> allocateInBlock r (hp m0)  (hp m1) init /\ (snd m0 = snd m1) /\ refLoc r == InHeap)
-
-assume val salloc:  #a:Type -> init:a -> SST (ref a)
-     (fun m -> b2t (isNonEmpty (st m))) (*why is "== true" required here, but not at other places? : *)
-     (*Does F* have (user defined?) implicit coercions? : Not yet *)
-     (fun m0 r m1 ->
-          (isNonEmpty (st m0)) /\ (isNonEmpty (st m1))
-          /\ allocateInBlock r (topstb m0) (topstb m1) init
-          /\ refLoc r = InStack (topstid m0) /\ (topstid m0 = topstid m1)
-          /\ mtail m0 = mtail m1)
-
-assume val memread:  #a:Type -> r:(ref a) -> SST a
-	  (fun m -> b2t (refExistsInMem r m))
-    (fun m0 a m1 -> m0=m1 /\ (refExistsInMem r m0) /\ loopkupRef r m0 = a)
-
-assume val memwrite:  #a:Type -> r:(ref a) -> v:a ->
-  SST unit
-	    (fun m -> b2t (refExistsInMem r m))
-      (fun m0 _ m1 -> (refExistsInMem r m1)
-        /\ (writeMemAux r m0 v) =  m1)
-
-(*
-Free can only deallocate a heap-allocated ref. The implementation
-below doesn't make sense becasue it allows even deallocation of stack
-references
-
-assume val freeRef:  #a:Type -> r:(ref a)  ->
-  SST unit
-	    (fun m -> b2t (refExistsInMem r m))
-      (fun m0 _ m1 -> (freeMemAux r m0) ==  m1)
-*)
-
-(*make sure that the ids are monotone *)
-assume val pushStackFrame:  unit -> SST unit
-    (fun m -> True)
-    (fun m0 _ m1 ->
-             (mtail m1 = m0)
-          /\ (isNonEmpty (st m1))
-          /\ topstb m1 = emp)
-
-assume val popStackFrame:  unit -> SST unit
-    (fun m -> b2t (isNonEmpty (st m)))
-    (fun m0 _ m1 -> mtail m0 ==  m1)
-
-
-(** Injection of DIV effect into the new effect, mostly copied from prims.fst*)
-kind SSTPost (a:Type) = STPost_h smem a
-
-
-sub_effect
-  DIV  ~> StSTATE = fun (a:Type) (wp:PureWP a) (p : SSTPost a) (h:smem)
-            -> wp (fun a -> p a h)
-
-(*
-sub_effect
-  PURE  ~> StSTATE = fun (a:Type) (wp:PureWP a) (p : SSTPost a) (h:smem)
-            -> wp (fun a -> p a h)
-*)
-
-(* should we have an SSTP  for pure SST which has a lifting from PURE,
-   and a lifting from SSTP and DIV to SST?
-    It seems like a bad idea to have a blank check for non-termination.
-    One can carefully restrict and explicitly identify the programs that
-    really need non-termination *)
-
-type mStackNonEmpty (m:smem) = b2t (isNonEmpty (st m))
-
-
-
-
-(*Sane SST*)
-effect Mem (a:Type) (pre:Pre) (post: (smem -> Post a)) (mod:set aref) =
-        SST a pre (fun m0 a m1 -> post m0 a m1 /\ sids m0 = sids m1 /\ canModify m0 m1 mod)
-
-effect PureMem (a:Type) (pre:Pre) (post: (smem -> Post a)) =
-        SST a pre (fun m0 a m1 -> post m0 a m1 /\ m0=m1)
-
 (*incase one does not want to reason about changed references*)
 (* TODO: allRefs does not extract properly. Set.empty has an extra unit which is not there in Support.ml
   on adding the extra unit, Ocaml complaisn about inability to generalize*)
 let allRefs : set aref = complement empty
-
-(** withNewStackFrame combinator *)
-(*adding requires/ensures here causes the definition of scopedWhile below to not typecheck.
-Hope this is not a concert w.r.t. soundness*)
-effect WNSC (a:Type) (pre:(smem -> Type))  (post: (smem -> SSTPost a)) (mod:set aref) =
-  Mem a
-      ( (*requires *) (fun m -> isNonEmpty (st m) /\ topstb m = emp /\ pre (mtail m)))
-      ( (* ensures *) (fun m0 a m1 -> post (mtail m0) a (mtail m1)))
-      mod
-
-val withNewScope : #a:Type -> #pre:(smem -> Type) -> #post:(smem -> SSTPost a)
-  -> #mods:set aref
-  -> body:(unit -> WNSC a pre post mods)
-      -> Mem a pre post mods
-let withNewScope 'a 'pre 'post #mods body =
-    pushStackFrame ();
-    let v = body () in
-    popStackFrame (); v
-
-(*SMTPat could be used to implement something similar to Coq's type-class mechanism.
-Coq's typeclass resolution is based on proof search using Hint databases, which is similar to SMTPat.
-Can implicit arguments be inferred automatically by the SMT solver using proof seach with SMTPat hints?
-*)
-
-
-(*a combinator for writing while loops*)
-
-(*Mem restriction is not needed, because there is a even stronger condition here that the memory is unchanges*)
-effect whileGuard (pre :(smem -> Type))
-  (lc : (smem -> Type))
-  = PureMem bool  pre (fun m0 b _ ->   (lc m0 <==> b = true))
-(* the guard of a while loop is not supposed to change the memory*)
-
-effect whileBody (loopInv:smem -> Type) (lc:smem  -> Type) (mod:set aref)
-  = WNSC unit (fun m -> loopInv m /\ lc m)
-              (fun m0 _ m1 -> (* (loopInv m0 /\ canModify m0 m1 mod) ==> *) loopInv m1)
-              mod
-
-
-
-val scopedWhile : loopInv:(smem -> Type)
-  -> wglc:(smem -> Type)
-  -> wg:(unit -> whileGuard loopInv wglc)
-  -> mods:(set aref)
-  -> bd:(unit -> whileBody loopInv wglc mods)
-  -> Mem unit (requires (fun m -> loopInv m))
-              (ensures (fun m0 _ m1 -> loopInv m1 /\ (~(wglc m1))))
-              mods
-let rec scopedWhile
-   'loopInv 'wglc wg mods bd =
-   if (wg ())
-      then
-        ((withNewScope #unit
-            #(fun m -> 'loopInv m /\ ('wglc m)) #(fun _ _ m1 -> 'loopInv m1) #mods bd);
-        (scopedWhile 'loopInv 'wglc wg mods bd))
-      else ()
-
-(*The 2 definitions below do not extract properly. 'loopInv is a type var and
-OCaml complains "operator expected" . Removing 'loopInv manually in the extract
-fixes the problem. 'loopInv is not used anyway in the extract. *)
-
-(*
-val scopedWhile1 :
-  #a:Type
-  -> r:(ref a)
-  -> lc : (a -> Tot bool)
-  -> loopInv:(smem -> Type)
-  -> mods:(set aref)
-  -> bd:(unit -> whileBody
-                      (fun m -> loopInv m /\ refExistsInMem r m)
-                      (fun m -> refExistsInMem r m /\ lc (loopkupRef r m))  mods)
-  -> Mem unit ((fun m -> loopInv m /\ refExistsInMem r m))
-              ((fun m0 _ m1 -> loopInv m1 /\ refExistsInMem r m1 /\ ~(lc (loopkupRef r m1))))
-              mods
-let scopedWhile1 'a r lc 'loopInv mods bd =
-  scopedWhile
-  (*augment the loop invariant to include the precondition for evaluating the guard*)
-    (fun m -> 'loopInv m /\ refExistsInMem r m)
-    (fun m -> refExistsInMem r m /\ (lc (loopkupRef r m)))
-    (fun u -> lc (memread r))
-    mods
-    bd
-
-val scopedWhile2 :
-  #a:Type
-  -> #b:Type
-  -> ra:(ref a)
-  -> rb:(ref b)
-  -> lc : (a -> b ->  Tot bool)
-  -> loopInv:(smem -> Type)
-  -> mods:(set aref)
-  -> bd:(unit -> whileBody
-                      (fun m -> loopInv m /\ refExistsInMem ra m /\ refExistsInMem rb m)
-                      (fun m -> refExistsInMem ra m /\ refExistsInMem rb m /\ lc (loopkupRef ra m) (loopkupRef rb m))
-                      mods)
-  -> Mem unit (requires (fun m -> loopInv m /\ refExistsInMem ra m /\ refExistsInMem rb m))
-              (ensures (fun m0 _ m1 -> loopInv m1 /\ refExistsInMem ra m1 /\ refExistsInMem rb m1 /\ ~(lc (loopkupRef ra m1) (loopkupRef rb m1)) ))
-              mods
-let scopedWhile2 'a ra rb lc 'loopInv mods bd =
-  scopedWhile
-  (*augment the loop invariant to include the precondition for evaluating the guard*)
-    (fun m -> 'loopInv m /\ refExistsInMem ra m /\ refExistsInMem rb m)
-    (fun m -> refExistsInMem ra m /\ refExistsInMem rb m /\ (lc (loopkupRef ra m) (loopkupRef rb m))  )
-    (fun u -> lc (memread ra) (memread rb))
-    mods
-    bd
-*)

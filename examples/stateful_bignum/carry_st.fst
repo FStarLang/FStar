@@ -42,10 +42,10 @@ let rec carry_aux a i =
      let ai = get a i in
      let t = Bigint63.t a in
      let moduli = pow2 (t i) in
-     let v = div ai moduli in
-     let carry = signed_modulo ai moduli in
-     let size_v = erase (wordSize a - t i) in
-     let size_carry = erase (t i) in
+     let carry = div_non_eucl ai moduli in
+     let v = signed_modulo ai moduli in
+     let size_carry = erase (wordSize a - t i) in
+     let size_v = erase (t i) in
      let tl = Bigint.mk_tint a size_v v in
      let th = Bigint.mk_tint a (erase (wordSize a - 1)) (carry + get a (i+1)) in
      updateBigint a i tl;
