@@ -1,5 +1,5 @@
 ﻿(* -------------------------------------------------------------------- *)
-module Microsoft.FStar.Backends.ML.Syntax
+module Microsoft.FStar.Extraction.ML.Syntax
 
 open Microsoft.FStar.Absyn.Syntax
 
@@ -12,13 +12,10 @@ type mlpath   = list<mlsymbol> * mlsymbol
 let idsym ((s, _) : mlident) : mlsymbol =
     s
 
-let ptsym ((p, s) : mlpath) : mlsymbol =
-    let s = if Char.lowercase (String.get s 0) <> String.get s 0 then "l__" ^ s else s in
+let string_of_mlpath ((p, s) : mlpath) : mlsymbol =
     String.concat "." (p @ [s])
+ 
 
-let ptctor ((p, s) : mlpath) : mlsymbol =
-    let s = if Char.uppercase (String.get s 0) <> String.get s 0 then "U__" ^ s else s in
-    String.concat "." (p @ [s]) 
 
 (* -------------------------------------------------------------------- *)
 let mlpath_of_lident (x : lident) : mlpath =
@@ -32,8 +29,8 @@ type mlsymbols = list<mlsymbol>
 
 (* -------------------------------------------------------------------- *)
 type e_tag = 
-  | MayErase
-  | Keep
+  | E_PURE
+  | E_IMPURE
 
 type mlty =
 | MLTY_Var   of mlident
@@ -87,7 +84,14 @@ type mlexpr =
 
 and mlbranch = mlpattern * option<mlexpr> * mlexpr
 
-and mlletbinding = bool * list<(mlident * option<mltyscheme> * mlidents * mlexpr)>
+and mllb = {
+    mllb_name:mlident;
+    mllb_tysc:option<mltyscheme>;
+    mllb_add_unit:bool;
+    mllb_def:mlexpr;
+}
+
+and mlletbinding = bool * list<mllb>
 
 type mltybody =
 | MLTD_Abbrev of mlty
@@ -136,3 +140,10 @@ let mlif (b : mlexpr) ((e1, e2) : mlexpr * mlexpr) =
     match e2 with
     | MLE_Const MLC_Unit -> MLE_If (b, e1, None)
     | _ -> MLE_If (b, e1, Some e2)
+
+
+let ml_unit    = MLE_Const MLC_Unit
+
+// do NOT remove Prims, because all mentions of unit/bool in F* are actually Prims.unit/bool.
+let ml_bool_ty = MLTY_Named ([], (["Prims"], "bool")) 
+let ml_unit_ty = MLTY_Named ([], (["Prims"], "unit")) 

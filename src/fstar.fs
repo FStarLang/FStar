@@ -244,9 +244,9 @@ let codegen fmods env=
             exit 1
         end
     else if !Options.codegen = Some "OCaml-experimental" then begin
-        let c, mllibs = Util.fold_map Backends.ML.ExtractMod.extract (Backends.ML.Env.mkContext env) fmods in
+        let c, mllibs = Util.fold_map Extraction.ML.ExtractMod.extract (Extraction.ML.Env.mkContext env) fmods in
         let mllibs = List.flatten mllibs in
-        let newDocs = List.collect Backends.OCaml.Code.doc_of_mllib mllibs in
+        let newDocs = List.collect Extraction.OCaml.Code.doc_of_mllib mllibs in
             List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^".ml")) (FSharp.Format.pretty 120 d)) newDocs
     end
 //    ;

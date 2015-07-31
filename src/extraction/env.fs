@@ -14,13 +14,13 @@
    limitations under the License.
 *)
 #light "off"
-module Microsoft.FStar.Backends.ML.Env
+module Microsoft.FStar.Extraction.ML.Env
 open Microsoft.FStar
 open Microsoft.FStar.Util
 open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
-open Microsoft.FStar.Backends.ML.Syntax
-open Microsoft.FStar.Backends.ML
+open Microsoft.FStar.Extraction.ML.Syntax
+open Microsoft.FStar.Extraction.ML
 open Microsoft.FStar.Tc
 
 type binding = 

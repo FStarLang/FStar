@@ -12,7 +12,6 @@ open Microsoft.FStar.Range
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn.Util
 open Microsoft.FStar.Backends.ML.Syntax
-open Microsoft.FStar.Backends.ML.Util
 open FSharp.Format
 
 
@@ -56,10 +55,10 @@ let record_constructors = smap_create<list<ident>>(17)
 let algebraic_constructors = smap_create<(int * list<string>)>(40)
 let _ign = smap_add algebraic_constructors "Prims.Some" (1, ["v"])
 
-let rec in_ns (x: (list<'a> * list<'a>)) : bool = match x with 
-    | [], _ -> true
-    | x1::t1, x2::t2 when (x1 = x2) -> in_ns (t1, t2)
-    | _, _ -> false
+let rec in_ns = function
+| [], _ -> true
+| x1::t1, x2::t2 when (x1 = x2) -> in_ns (t1, t2)
+| _, _ -> false
 
 (* -------------------------------------------------------------------- *)
 let path_of_ns mlenv ns =
@@ -347,7 +346,7 @@ let rec mlty_of_ty_core (mlenv : mlenv) (tenv : tenv) ((rg, ty) : range * typ) =
             | _ -> mk_Typ_fun(rest, c) None ty.pos in
         let mlt1 = mlty_of_ty mlenv tenv (rg, t1) in
         let mlt2 = mlty_of_ty mlenv tenv (rg, t2) in
-        MLTY_Fun (mlt1, E_IMPURE, mlt2)
+        MLTY_Fun (mlt1, Keep, mlt2)
     | Typ_fun((Inl _, _)::rest, c) ->
         let r = match rest with
             | [] -> comp_result c
@@ -481,6 +480,25 @@ let mlscheme_of_ty (mlenv : mlenv) (rg : range) (ty : typ) : mltyscheme =
     (tparams, mlty_of_ty mlenv tenv (rg, ty))
 
 (* -------------------------------------------------------------------- *)
+let mlconst_of_const (sctt : sconst) =
+  match sctt with
+  | Const_unit         -> MLC_Unit
+  | Const_char   c     -> MLC_Char  c
+  | Const_uint8  c     -> MLC_Byte  c
+  | Const_int    c     -> MLC_Int32 (Util.int32_of_int (Util.int_of_string c))
+  | Const_int32  i     -> MLC_Int32 i
+  | Const_int64  i     -> MLC_Int64 i
+  | Const_bool   b     -> MLC_Bool  b
+  | Const_float  d     -> MLC_Float d
+
+  | Const_bytearray (bytes, _) ->
+      MLC_Bytes bytes
+
+  | Const_string (bytes, _) ->
+      MLC_String (string_of_unicode (bytes))
+
+
+(* -------------------------------------------------------------------- *)
 let rec mlpat_of_pat (mlenv : mlenv) (rg : range) (le : lenv) (p : pat) : lenv * mlpattern =
     match p.v with
     | Pat_cons (x, _, ps) -> begin
@@ -566,7 +584,8 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
             let args = List.collect (function (Inl _, _) -> [] | Inr e, _ -> [mlexpr_of_expr mlenv rg lenv e]) args in
 
             match sube with
-            | { n = Exp_fvar (c, Some Data_ctor) } -> mkCTor c.v args
+            | { n = Exp_fvar (c, Some Data_ctor) } 
+            | { n = Exp_fvar (c, Some (Record_ctor _)) } -> mkCTor c.v args
             | { n = Exp_fvar (c, _) } ->
                 let subns = String.concat "." (List.map (fun x -> x.idText) c.v.ns) in
                 let rn, subnsl = match List.rev c.v.ns with [] -> "", [] | h::t -> h.idText, List.rev t in
@@ -665,7 +684,8 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
             assert false;
             let (c, args) =
                 match e.n with
-                | Exp_app({n=Exp_fvar (c, Some Data_ctor)}, args) -> (c, args)
+                | Exp_app({n=Exp_fvar (c, Some Data_ctor)}, args)
+                | Exp_app({n=Exp_fvar (c, Some (Record_ctor _))}, args) -> (c, args)
                 | _ -> unexpected rg "meta-data-app-without-fvar"
             in
             
@@ -718,7 +738,7 @@ and mllets_of_lets (mlenv : mlenv) (rg : range) (lenv : lenv) (rec_, lbs) =
         let inlenv = if rec_ then lenvb else lenv in
         List.map (fun (x, e) ->
             let mlid = lresolve lenvb x.realname in
-            {mllb_name=mlid; mllb_tysc=None; mllb_def=mlexpr_of_expr mlenv rg inlenv e; mllb_add_unit=false}) lbs
+            (mlid, None, [], mlexpr_of_expr mlenv rg inlenv e)) lbs
     in
 
     (lenvb, es)
@@ -752,7 +772,7 @@ type fstypes = | DT of string * list<lident> * list<mlident> * range | Rec of st
 let mldtype_of_indt (mlenv : mlenv) (indt : list<sigelt>) : list<mldtype> =
   let rec getRecordFieldsFromType = function
     | [] -> None
-    | (RecordType f)::_ -> Some f
+    | (RecordType f)::_ -> Some (f |> List.map (fun l -> l.ident))
     | _::qualif -> getRecordFieldsFromType qualif in
 
   let rec comp_vars ct = match ct with
@@ -786,9 +806,8 @@ let mldtype_of_indt (mlenv : mlenv) (indt : list<sigelt>) : list<mldtype> =
                 let ty =
                   match getRecordFieldsFromType qualif, cs with
                     | Some f, [c] ->
-                        let fns = List.map (fun x -> x.ident) f in
-                       (smap_add record_constructors c.str fns;
-                        Rec (x.ident.idText, fns, cs, snd (tenv_of_tvmap ar), rg)) // parsing a record from a Sig_tycon. the record data lies in the qualifiers of the tycon. one can ignore the rest
+                       (smap_add record_constructors c.str f;
+                        Rec (x.ident.idText, f, cs, snd (tenv_of_tvmap ar), rg)) // parsing a record from a Sig_tycon. the record data lies in the qualifiers of the tycon. one can ignore the rest
                     | _, _ -> DT (x.ident.idText, cs, snd (tenv_of_tvmap ar), rg) in
                 (ty :: types, ctors)
               end
@@ -904,10 +923,7 @@ let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
 
         let lbs = List.map downct lbs in
         let lbs = List.map (fun (x, e) ->
-            {mllb_name=(x.ident.idText, -1);
-             mllb_tysc=None;
-             mllb_add_unit=false;
-             mllb_def=mlexpr_of_expr mlenv rg (lenv_of_mlenv mlenv) e})
+            ((x.ident.idText, -1), None, [], mlexpr_of_expr mlenv rg (lenv_of_mlenv mlenv) e))
             lbs
         in
 
@@ -1040,8 +1056,7 @@ let rec mllib_add (MLLib mllib) ((path : mlpath), sig_, mod_) =
             end else
                 the :: (aux tl)
 
-        in failwith "to be fixed" 
-        //MLLib (aux mllib)
+        in MLLib (aux mllib)
    
 
 (*

@@ -66,6 +66,11 @@
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="extraction\extraction.fsproj">
+      <Name>extraction</Name>
+      <Project>{55398b56-03cf-4e11-adb0-a4274b7dbb35}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="tosmt\tosmt.fsproj">
       <Name>tosmt</Name>
       <Project>{670da3f6-7e41-4c1d-ab17-1f59e0317f52}</Project>

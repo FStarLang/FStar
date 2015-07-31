@@ -14,15 +14,15 @@
    limitations under the License.
 *)
 #light "off"
-module Microsoft.FStar.Backends.ML.ExtractExp
+module Microsoft.FStar.Extraction.ML.ExtractExp
 open Microsoft.FStar
 open Microsoft.FStar.Util
 open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
-open Microsoft.FStar.Backends
-open Microsoft.FStar.Backends.ML.Syntax
-open Microsoft.FStar.Backends.ML.Env
-open Microsoft.FStar.Backends.ML.Util
+open Microsoft.FStar.Extraction
+open Microsoft.FStar.Extraction.ML.Syntax
+open Microsoft.FStar.Extraction.ML.Env
+open Microsoft.FStar.Extraction.ML.Util
 
 let eff_to_string = function
     | E_PURE -> "Pure"

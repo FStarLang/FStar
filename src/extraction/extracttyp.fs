@@ -14,17 +14,17 @@
    limitations under the License.
 *)
 #light "off"
-module Microsoft.FStar.Backends.ML.ExtractTyp
+module Microsoft.FStar.Extraction.ML.ExtractTyp
 open Prims
 open Microsoft.FStar.Absyn
-open Microsoft.FStar.Backends.ML.Syntax
+open Microsoft.FStar.Extraction.ML.Syntax
 open Microsoft.FStar.Util
 open Microsoft.FStar.Tc.Env
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar
 open Microsoft.FStar.Tc.Normalize
 open Microsoft.FStar.Absyn.Print
-open Microsoft.FStar.Backends.ML.Env
+open Microsoft.FStar.Extraction.ML.Env
 
 let binderIsExp (bn:binder): bool = is_inr (fst bn)
 

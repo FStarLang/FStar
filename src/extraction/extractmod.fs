@@ -14,14 +14,14 @@
    limitations under the License.
 *)
 #light "off"
-module Microsoft.FStar.Backends.ML.ExtractMod
+module Microsoft.FStar.Extraction.ML.ExtractMod
 open Microsoft.FStar
 open Microsoft.FStar.Util
 open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
-open Microsoft.FStar.Backends.ML.Syntax
-open Microsoft.FStar.Backends.ML.Env
-open Microsoft.FStar.Backends.ML.Util
+open Microsoft.FStar.Extraction.ML.Syntax
+open Microsoft.FStar.Extraction.ML.Env
+open Microsoft.FStar.Extraction.ML.Util
 
 (*This approach assumes that failwith already exists in scope. This might be problematic, see below.*)
 let fail_exp t = mk_Exp_app(Util.fvar None Const.failwith_lid dummyRange, 
@@ -85,7 +85,7 @@ let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> =
 let extract_iface (g:env) (m:modul) =  Util.fold_map extract_sig g m.declarations |> fst 
     
 let rec extract (g:env) (m:modul) : env * list<mllib> = 
-    let name = Backends.ML.Syntax.mlpath_of_lident m.name in
+    let name = Extraction.ML.Syntax.mlpath_of_lident m.name in
     let _ = Util.print_string ("extracting: "^m.name.str^"\n") in
     let g = {g with currentModule = name}  in
     if m.name.str = "Prims" || m.is_interface
