@@ -33,13 +33,13 @@ type (' refs, ' h0, ' h1) fresh =
 type (' mods, ' h, ' h') modifies =
 unit Support.Prims.b2t
 
-let only = (fun ( x ) -> (Support.Set.singleton (Ref ((), (Obj.magic x)))))
+let only = (fun ( x ) -> (Set.singleton (Ref ((), (Obj.magic x)))))
 
-let op_Hat_Plus_Plus = (fun ( r ) ( s ) -> (Support.Set.union (Support.Set.singleton (Ref ((), (Obj.magic r)))) s))
+let op_Hat_Plus_Plus = (fun ( r ) ( s ) -> (Set.union (Set.singleton (Ref ((), (Obj.magic r)))) s))
 
-let op_Plus_Plus_Hat = (fun ( s ) ( r ) -> (Support.Set.union s (Support.Set.singleton (Ref ((), (Obj.magic r))))))
+let op_Plus_Plus_Hat = (fun ( s ) ( r ) -> (Set.union s (Set.singleton (Ref ((), (Obj.magic r))))))
 
-let op_Hat_Plus_Hat = (fun ( r1 ) ( r2 ) -> (Support.Set.union (Support.Set.singleton (Ref ((), (Obj.magic r1)))) (Support.Set.singleton (Ref ((), (Obj.magic r2))))))
+let op_Hat_Plus_Hat = (fun ( r1 ) ( r2 ) -> (Set.union (Set.singleton (Ref ((), (Obj.magic r1)))) (Set.singleton (Ref ((), (Obj.magic r2))))))
 
 
 

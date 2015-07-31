@@ -1,8 +1,8 @@
 (*--build-config
-    options: --admit_fsi Set --codegen OCaml-experimental --trace_error;
+    options: --codegen OCaml-experimental --trace_error;
     variables:LIB=../../lib;
     variables:MATHS=../maths;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst  $LIB/list.fst stack.fst listset.fst
+    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst  $LIB/list.fst stack.fst listset.fst
   --*)
 
 
@@ -594,7 +594,7 @@ effect PureMem (a:Type) (pre:Pre) (post: (smem -> Post a)) =
 (*incase one does not want to reason about changed references*)
 (* TODO: allRefs does not extract properly. Set.empty has an extra unit which is not there in Support.ml
   on adding the extra unit, Ocaml complaisn about inability to generalize*)
-(* let allRefs : set aref = complement empty *)
+let allRefs : set aref = complement empty
 
 (** withNewStackFrame combinator *)
 (*adding requires/ensures here causes the definition of scopedWhile below to not typecheck.

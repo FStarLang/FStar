@@ -224,14 +224,16 @@ let popStackFrame = (fun ( _ ) -> (failwith ("Not yet implemented")))
 type ' m mStackNonEmpty =
 unit Support.Prims.b2t
 
-let withNewScope = (fun ( mods ) ( body ) -> (let _7_457 = (pushStackFrame ())
+let allRefs (*this type annotation was manually added*):  Heap.aref Set.set = (Set.complement Set.empty)
+
+let withNewScope = (fun ( mods ) ( body ) -> (let _8_457 = (pushStackFrame ())
 in (let v = (body ())
-in (let _7_460 = (popStackFrame ())
+in (let _8_460 = (popStackFrame ())
 in v))))
 
 let rec scopedWhile = (fun ( wg ) ( mods ) ( bd ) -> (match ((wg ())) with
 | true -> begin
-(let _7_499 = (withNewScope mods (Obj.magic bd))
+(let _8_499 = (withNewScope mods (Obj.magic bd))
 in (scopedWhile wg mods bd))
 end
 | false -> begin
