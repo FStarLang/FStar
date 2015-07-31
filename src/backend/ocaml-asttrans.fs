@@ -12,7 +12,6 @@ open Microsoft.FStar.Range
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn.Util
 open Microsoft.FStar.Backends.ML.Syntax
-open Microsoft.FStar.Backends.ML.Util
 open FSharp.Format
 
 
@@ -278,7 +277,7 @@ let is_etuple (e : exp) =
 (* -------------------------------------------------------------------- *)
 let is_ptuple (p : pat) =
     match p.v with
-    | Pat_cons (x, args) ->
+    | Pat_cons (x, _, args) ->
         let args = args |> List.collect (fun p -> match p.v with 
             | Pat_dot_term _ | Pat_dot_typ _ -> []
             | _ -> [p])
@@ -481,9 +480,28 @@ let mlscheme_of_ty (mlenv : mlenv) (rg : range) (ty : typ) : mltyscheme =
     (tparams, mlty_of_ty mlenv tenv (rg, ty))
 
 (* -------------------------------------------------------------------- *)
+let mlconst_of_const (sctt : sconst) =
+  match sctt with
+  | Const_unit         -> MLC_Unit
+  | Const_char   c     -> MLC_Char  c
+  | Const_uint8  c     -> MLC_Byte  c
+  | Const_int    c     -> MLC_Int32 (Util.int32_of_int (Util.int_of_string c))
+  | Const_int32  i     -> MLC_Int32 i
+  | Const_int64  i     -> MLC_Int64 i
+  | Const_bool   b     -> MLC_Bool  b
+  | Const_float  d     -> MLC_Float d
+
+  | Const_bytearray (bytes, _) ->
+      MLC_Bytes bytes
+
+  | Const_string (bytes, _) ->
+      MLC_String (string_of_unicode (bytes))
+
+
+(* -------------------------------------------------------------------- *)
 let rec mlpat_of_pat (mlenv : mlenv) (rg : range) (le : lenv) (p : pat) : lenv * mlpattern =
     match p.v with
-    | Pat_cons (x, ps) -> begin
+    | Pat_cons (x, _, ps) -> begin
         let ps = ps |> List.filter (fun p -> match p.v with 
             | Pat_dot_term _ | Pat_dot_typ _ -> false
             | _ -> true)
@@ -550,11 +568,11 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
     | Exp_app(sube, args) ->
 (*       (match sube.n with Exp_fvar (c, false) -> Util.print_string (c.v.str^"\n") | _ -> ()); *)
        (match sube.n, args with
-          | Exp_fvar (c, false), [_;_;(Inr a1,_);a2] when (c.v.ident.idText = "pipe_left") ->
+          | Exp_fvar (c, None), [_;_;(Inr a1,_);a2] when (c.v.ident.idText = "pipe_left") ->
              mlexpr_of_expr mlenv rg lenv ({e with n = Exp_app (a1, [a2])})
-          | Exp_fvar (c, false), [_;_;a1;(Inr a2,_)] when (c.v.ident.idText = "pipe_right") ->
+          | Exp_fvar (c, None), [_;_;a1;(Inr a2,_)] when (c.v.ident.idText = "pipe_right") ->
              mlexpr_of_expr mlenv rg lenv ({e with n = Exp_app (a2, [a1])})
-          | Exp_fvar (c, false), _ when (c.v.str = "Prims.Assume" || c.v.str = "Prims.Assert" || c.v.str = "Prims.erase" || Util.starts_with c.v.ident.idText "l__") ->
+          | Exp_fvar (c, None), _ when (c.v.str = "Prims.Assume" || c.v.str = "Prims.Assert" || c.v.str = "Prims.erase" || Util.starts_with c.v.ident.idText "l__") ->
              MLE_Const (MLC_Unit)
           | _, _ ->
        begin
@@ -566,8 +584,9 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
             let args = List.collect (function (Inl _, _) -> [] | Inr e, _ -> [mlexpr_of_expr mlenv rg lenv e]) args in
 
             match sube with
-            | { n = Exp_fvar (c, true) } -> mkCTor c.v args
-            | { n = Exp_fvar (c, false) } ->
+            | { n = Exp_fvar (c, Some Data_ctor) } 
+            | { n = Exp_fvar (c, Some (Record_ctor _)) } -> mkCTor c.v args
+            | { n = Exp_fvar (c, _) } ->
                 let subns = String.concat "." (List.map (fun x -> x.idText) c.v.ns) in
                 let rn, subnsl = match List.rev c.v.ns with [] -> "", [] | h::t -> h.idText, List.rev t in
                 (match smap_try_find record_constructors subns, args with
@@ -584,7 +603,11 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
         | Exp_bvar x ->
             MLE_Var (lresolve lenv x.v.realname)
 
-        | Exp_fvar (x, false) ->
+        | Exp_fvar (x, Some Data_ctor) ->
+           mkCTor x.v []
+            (* MLE_CTor (mlpath_of_lident mlenv x.v, []) *)
+
+        | Exp_fvar (x, _) ->
             let fid = x.v.ident.idText in
             if Util.starts_with fid "is_" && String.length fid > 3 && Util.is_upper (Util.char_at fid 3) then
                 let sub = Util.substring_from fid 3 in
@@ -608,9 +631,6 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
                 | None -> MLE_Name (mlpath_of_lident mlenv x.v)
             end
 
-        | Exp_fvar (x, true) ->
-           mkCTor x.v []
-            (* MLE_CTor (mlpath_of_lident mlenv x.v, []) *)
 
         | Exp_constant c ->
             MLE_Const (mlconst_of_const c)
@@ -664,7 +684,8 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
             assert false;
             let (c, args) =
                 match e.n with
-                | Exp_app({n=Exp_fvar (c, true)}, args) -> (c, args)
+                | Exp_app({n=Exp_fvar (c, Some Data_ctor)}, args)
+                | Exp_app({n=Exp_fvar (c, Some (Record_ctor _))}, args) -> (c, args)
                 | _ -> unexpected rg "meta-data-app-without-fvar"
             in
             
@@ -751,7 +772,7 @@ type fstypes = | DT of string * list<lident> * list<mlident> * range | Rec of st
 let mldtype_of_indt (mlenv : mlenv) (indt : list<sigelt>) : list<mldtype> =
   let rec getRecordFieldsFromType = function
     | [] -> None
-    | (RecordType f)::_ -> Some f
+    | (RecordType f)::_ -> Some (f |> List.map (fun l -> l.ident))
     | _::qualif -> getRecordFieldsFromType qualif in
 
   let rec comp_vars ct = match ct with

@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
+#light "off" 
  
 module Microsoft.FStar.ToSMT.Encode
 
@@ -944,7 +944,7 @@ and encode_one_pat (env:env_t) pat : (env_t * pattern) =
             | Pat_dot_typ _ -> Term.mkTrue
             | Pat_constant c -> 
                Term.mkEq(scrutinee, encode_const c)
-            | Pat_cons(f, args) -> 
+            | Pat_cons(f, _, args) -> 
                 let is_f = mk_data_tester env f.v scrutinee in
                 let sub_term_guards = args |> List.mapi (fun i arg -> 
                     let proj = primitive_projector_by_pos env.tcenv f.v i in
@@ -964,7 +964,7 @@ and encode_one_pat (env:env_t) pat : (env_t * pattern) =
 
             | Pat_constant _ -> []
 
-            | Pat_cons(f, args) -> 
+            | Pat_cons(f, _, args) -> 
                 args 
                 |> List.mapi (fun i arg -> 
                     let proj = primitive_projector_by_pos env.tcenv f.v i in
@@ -1067,9 +1067,6 @@ and encode_formula_with_labels (phi:typ) (env:env_t) : (term * labels * decls_t)
     let un_op f l = f <| List.hd l in
     let bin_op : ((term * term) -> term) -> list<term> -> term = fun f -> function 
         | [t1;t2] -> f(t1,t2)
-        | _ -> failwith "Impossible" in
-    let tri_op : ((term * term * term) -> term) -> list<term> -> term = fun f -> function
-        | [t1;t2;t3] -> f(t1,t2,t3)
         | _ -> failwith "Impossible" in
     let eq_op : args -> (term * labels * decls_t) = function 
         | [_;_;e1;e2] -> enc (bin_op mkEq) [e1;e2]

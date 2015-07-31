@@ -193,7 +193,7 @@ and serialize_cflags (writer:Writer) (ast:cflags) :unit =
 and serialize_exp' (writer:Writer) (ast:exp') :unit = 
     match ast with
     | Exp_bvar(v) -> writer.write_char 'a'; serialize_bvvar writer v
-    | Exp_fvar(v, b) -> writer.write_char 'b'; serialize_fvvar writer v; writer.write_bool b
+    | Exp_fvar(v, b) -> writer.write_char 'b'; serialize_fvvar writer v; writer.write_bool false//NS: FIXME!
     | Exp_constant(c) -> writer.write_char 'c'; serialize_sconst writer c
     | Exp_abs(bs, e) -> writer.write_char 'd'; serialize_binders writer bs; serialize_exp writer e
     | Exp_app(e, ars) -> writer.write_char 'e'; serialize_exp writer e; serialize_args writer ars
@@ -232,7 +232,7 @@ and serialize_pat' (writer:Writer) (ast:pat') :unit =
     match ast with
     | Pat_disj(l) -> writer.write_char 'a'; serialize_list writer serialize_pat l
     | Pat_constant(c) -> writer.write_char 'b'; serialize_sconst writer c
-    | Pat_cons(v, l) -> writer.write_char 'c'; serialize_fvvar writer v; serialize_list writer serialize_pat l
+    | Pat_cons(v, _, l) -> writer.write_char 'c'; serialize_fvvar writer v; serialize_list writer serialize_pat l
     | Pat_var(v, b) -> writer.write_char 'd'; serialize_bvvar writer v; writer.write_bool b
     | Pat_tvar(v) -> writer.write_char 'e'; serialize_btvar writer v
     | Pat_wild(v) -> writer.write_char 'f';  serialize_bvvar writer v
@@ -333,7 +333,7 @@ and deserialize_cflags (reader:Reader) :cflags =
 and deserialize_exp' (reader:Reader) :exp' = 
     match (reader.read_char ()) with
     | 'a' -> Exp_bvar(deserialize_bvvar reader)
-    | 'b' -> Exp_fvar(deserialize_fvvar reader, reader.read_bool ())
+    | 'b' -> Exp_fvar(deserialize_fvvar reader, (ignore <| reader.read_bool (); None)) //FIXME
     | 'c' -> Exp_constant(deserialize_sconst reader)
     | 'd' -> Exp_abs(deserialize_binders reader, deserialize_exp reader)
     | 'e' -> Exp_app(deserialize_exp reader, deserialize_args reader)
@@ -374,7 +374,7 @@ and deserialize_pat' (reader:Reader) :pat' =
     match (reader.read_char ()) with
     | 'a' -> Pat_disj(deserialize_list reader deserialize_pat)
     | 'b' -> Pat_constant(deserialize_sconst reader)
-    | 'c' -> Pat_cons(deserialize_fvvar reader, deserialize_list reader deserialize_pat)
+    | 'c' -> Pat_cons(deserialize_fvvar reader, None, deserialize_list reader deserialize_pat)//FIXME
     | 'd' -> Pat_var(deserialize_bvvar reader, reader.read_bool ())
     | 'e' -> Pat_tvar(deserialize_btvar reader)
     | 'f' -> Pat_wild(deserialize_bvvar reader)
@@ -430,8 +430,8 @@ let serialize_qualifier (writer:Writer)(ast:qualifier) :unit =
     | Opaque -> writer.write_char 'h'
     | Discriminator(lid) -> writer.write_char 'i'; serialize_lident writer lid
     | Projector(lid, v) -> writer.write_char 'j'; serialize_lident writer lid; serialize_either writer serialize_btvdef serialize_bvvdef v
-    | RecordType(l) -> writer.write_char 'k'; serialize_list writer serialize_ident l
-    | RecordConstructor(l) -> writer.write_char 'l'; serialize_list writer serialize_ident l
+    | RecordType(l) -> writer.write_char 'k'; serialize_list writer serialize_lident l
+    | RecordConstructor(l) -> writer.write_char 'l'; serialize_list writer serialize_lident l
     | ExceptionConstructor -> writer.write_char 'm'
     | HasMaskedEffect -> writer.write_char 'o'
     | DefaultEffect l -> writer.write_char 'p'; serialize_option writer serialize_lident l 
@@ -446,8 +446,8 @@ let deserialize_qualifier (reader:Reader) :qualifier =
     | 'h' -> Opaque
     | 'i' -> Discriminator(deserialize_lident reader)
     | 'j' -> Projector(deserialize_lident reader, deserialize_either reader deserialize_btvdef deserialize_bvvdef)
-    | 'k' -> RecordType(deserialize_list reader deserialize_ident)
-    | 'l' -> RecordConstructor(deserialize_list reader deserialize_ident)
+    | 'k' -> RecordType(deserialize_list reader deserialize_lident)
+    | 'l' -> RecordConstructor(deserialize_list reader deserialize_lident)
     | 'm' -> ExceptionConstructor
     | 'o' -> HasMaskedEffect
     | 'p' -> deserialize_option reader deserialize_lident |> DefaultEffect

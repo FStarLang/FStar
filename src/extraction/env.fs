@@ -14,98 +14,35 @@
    limitations under the License.
 *)
 #light "off"
-module Microsoft.FStar.Backends.ML.Env
+module Microsoft.FStar.Extraction.ML.Env
 open Microsoft.FStar
 open Microsoft.FStar.Util
 open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
-open Microsoft.FStar.Backends.ML.Syntax
-open Microsoft.FStar.Backends.ML
+open Microsoft.FStar.Extraction.ML.Syntax
+open Microsoft.FStar.Extraction.ML
 open Microsoft.FStar.Tc
 
 type binding = 
     | Ty  of btvar * mlident * mlty           //a, 'a, ('a | Top)  
-    | Bv  of bvvar * mlident * mltyscheme     //x,  x, translation (typeof x)
-    | Fv  of fvvar * mltyscheme     //f, translation (typeof f). mlpath of fvvar will be computed at lookups 
+    | Bv  of bvvar * mlexpr * mltyscheme     //x,  x, translation (typeof x)
+    | Fv  of fvvar * mlexpr * mltyscheme     //f,  f, translation (typeof f)
 
 type env = {
     tcenv:Tc.Env.env;
     gamma:list<binding>;
-    tydefs:list<mltydecl>; 
+    tydefs:list<(list<mlsymbol> * mltydecl)>; 
     erasableTypes : mlty -> bool; // Unit is not the only type that can be erased. We could erase inductive families which had only 1 element, or become so after extraction.
       // perhaps instead of returning a bool, we can return option mlexpr , such that if t is erasable then (erasableTypes t) is Some e, then e is a dummy expression of type t.
       // e.g. , (erasableTypes (nnat -> nnat -> Tot unit)) could be (Some (fun _ _ -> ()))
     currentModule: mlpath // needed to properly translate the definitions in the current file
 }
 
-(*copied from ocaml-asttrans.fs*)
-
-(* -------------------------------------------------------------------- *)
-let outmod = [
-    ["Prims"];
-    ["System"];
-    ["ST"];
-    ["Option"];
-    ["String"];
-    ["Char"];
-    ["Bytes"];
-    ["List"];
-    ["Array"];
-    ["Set"];
-    ["Map"];
-    ["Heap"];
-    ["DST"];
-    ["IO"];
-    ["Tcp"];
-    ["Crypto"];
-    ["Collections"];
-    ["Microsoft"; "FStar"; "Bytes"];
-    ["Microsoft"; "FStar"; "Platform"];
-    ["Microsoft"; "FStar"; "Util"];
-    ["Microsoft"; "FStar"; "Getopt"];
-    ["Microsoft"; "FStar"; "Unionfind"];
-    ["Microsoft"; "FStar"; "Range"];
-    ["Microsoft"; "FStar"; "Parser"; "Util"];
-]
-
-
-let rec in_ns = function
-| [], _ -> true
-| x1::t1, x2::t2 when (x1 = x2) -> in_ns (t1, t2)
-| _, _ -> false
-
-(* -------------------------------------------------------------------- *)
-let path_of_ns (currentModule : mlpath) ns =
-    let ns = List.map (fun x -> x.idText) ns in
-    let outsupport = fun (ns1,ns2) -> if ns1 = ns2 then [] else [String.concat "_" ns2]
-    
-    (*function
-    | x1 :: p1, x2 :: p2 when x1 = x2 -> outsupport (p1, p2)
-    | _, p -> p
-    *)
-    in let chkin sns = if in_ns (sns, ns) then Some sns else None
-    in match List.tryPick chkin outmod with
-    | None -> 
-        (match List.tryPick chkin (!Microsoft.FStar.Options.codegen_libs) with
-         | None -> outsupport ((fst currentModule) @ [snd currentModule], ns)
-         | _ -> ns)
-    | Some sns -> "Support" :: ns
-
-let mlpath_of_lident (currentModule : mlpath) (x : lident) : mlpath =
-    match x.str with
-    | "Prims.Some" -> ([], "Some")
-    | "Prims.None" -> ([], "None")
-    | "Prims.failwith" -> ([], "failwith")
-    | "ST.alloc" -> ([], "ref")
-    | "ST.read" -> (["Support";"Prims"], "op_Bang")
-    | "ST.op_ColonEquals" -> (["Support";"Prims"], "op_ColonEquals")
-    | _ ->
-      begin
-        let ns = x.ns in
-        let x  = x.ident.idText in
-        (path_of_ns currentModule ns, x)
-      end
-
+let debug g f = 
+    if !Options.debug <> [] 
+    && (List.contains "Prims" (!Options.debug) || 
+        g.currentModule <> ([], "Prims"))
+    then f ()
 
 let mkFvvar (l: lident) (t:typ) : fvvar =
 { v= l;
@@ -115,8 +52,7 @@ let mkFvvar (l: lident) (t:typ) : fvvar =
 
 (* MLTY_Tuple [] extracts to (), and is an alternate choice. 
     However, it represets both the unit type and the unit value. Ocaml gets confused sometimes*)
-let erasedContent : mlty = MLTY_Named ([],(["Support"; "Prims"], "unit"))
-let ml_unit_ty = erasedContent
+let erasedContent : mlty = ml_unit_ty
 
 let rec erasableType_init (t:mlty) =
 match  t with
@@ -125,15 +61,29 @@ match  t with
     if t = ml_unit_ty then true
     else match t with 
         | MLTY_Named (_, (["Ghost"], "erased")) -> true //when would a named type like this be produced?
-        | _ -> false //what about types that reduce/unfold to unit/erased t? Do a syntactic check with ml_unit_ty?
+        | _ -> false //TODO: what about types that reduce/unfold to unit/erased t? Do a syntactic check with ml_unit_ty?
 
 (* \mathbb{T} type in the thesis, to be used when OCaml is not expressive enough for the source type *)
 let unknownType : mlty =  MLTY_Top
 
 (*copied from ocaml-strtrans.fs*)
-let prependTick (x,n) = if Util.starts_with x "'" then (x,n) else ("'"^x,n)
+let prependTick (x,n) = if Util.starts_with x "'" then (x,n) else ("' "^x,n)
 let convRange (r:Range.range) : int = 0 (*FIX!!*)
 let convIdent (id:ident) : mlident = (id.idText ,(convRange id.idRange))
+
+(* TODO : need to make sure that the result of this name change does not collide with a variable already in the context. That might cause a change in semantics.
+   E.g. , consider the following in F*
+   let mkPair (a:Type) ('a:Type) (ta : a) (ta' : a') = (ta, ta')
+
+   Perhaps this function also needs to look at env.Gamma*)
+
+(* TODO : if there is a single quote in the name of the type variable, the additional tick in the beginning causes issues with the lexer/parser of OCaml (syntax error).
+  Perhaps the type variable is interpreted as a string literal.
+  For an example, see https://github.com/FStarLang/FStar/blob/f53844512c76bd67b21b4cf68d774393391eac75/lib/heap.fst#L49  
+  
+   Coq seems to add a space after the tick in such cases. Always adding a space for now
+  *)
+
 let btvar_as_mlident (btv: btvar) : mlident =  (prependTick (convIdent btv.v.ppname))
 
 let rec lookup_ty_local (gamma:list<binding>) (b:btvar) : mlty = 
@@ -142,22 +92,32 @@ let rec lookup_ty_local (gamma:list<binding>) (b:btvar) : mlty =
         | _::tl -> lookup_ty_local tl b
         | [] -> failwith ("extraction: unbound type var "^(b.v.ppname.idText))
 
-let lookup_ty_const tydefs ftv = failwith "Should not be looking up a constant"
+let tyscheme_of_td (_, vars, body_opt) : option<mltyscheme> = match body_opt with 
+    | Some (MLTD_Abbrev t) -> Some (vars, t)
+    | _ -> None
 
-let lookup_ty (g:env) (x:either<btvar,ftvar>) : mlty = 
-    match x with
-    | Inl bt  -> lookup_ty_local g.gamma bt
-    | Inr ftv -> lookup_ty_const g.tydefs ftv
+//TODO: this two-level search is pretty inefficient: we should optimize it
+let lookup_ty_const (env:env) ((module_name, ty_name):mlpath) : option<mltyscheme> = 
+    Util.find_map env.tydefs  (fun (m, tds) -> 
+        if module_name = m
+        then Util.find_map tds (fun td -> 
+             let (n, _, _) = td in 
+             if n=ty_name
+             then tyscheme_of_td td 
+             else None)
+        else None)
 
-let lookup_fv (g:env) (fv:fvvar) : mlpath * mltyscheme = 
+let lookup_tyvar (g:env) (bt:btvar) : mlty = lookup_ty_local g.gamma bt
+
+let lookup_fv (g:env) (fv:fvvar) : mlexpr * mltyscheme = 
     let x = Util.find_map g.gamma (function 
-        | Fv (fv', sc) when lid_equals fv.v fv'.v -> Some (mlpath_of_lident g.currentModule fv'.v, sc)
+        | Fv (fv', path, sc) when lid_equals fv.v fv'.v -> Some (path, sc)
         | _ -> None) in
     match x with 
         | None -> failwith (Util.format2 "(%s) free Variable %s not found\n" (Range.string_of_range fv.p) (Print.sli fv.v))
         | Some y -> y
 
-let lookup_bv (g:env) (bv:bvvar) : mlident * mltyscheme = 
+let lookup_bv (g:env) (bv:bvvar) : mlexpr * mltyscheme = 
     let x = Util.find_map g.gamma (function 
         | Bv (bv', id, sc) when Util.bvar_eq bv bv' -> Some (id, sc)
         | _ -> None) in
@@ -168,11 +128,11 @@ let lookup_bv (g:env) (bv:bvvar) : mlident * mltyscheme =
 
 let lookup  (g:env) (x:either<bvvar,fvvar>) : (mlexpr * mltyscheme) = 
     match x with 
-        | Inl x -> let id, t = lookup_bv g x in MLE_Var id, t
-        | Inr x -> let id, t = lookup_fv g x in MLE_Name id, t
+        | Inl x -> lookup_bv g x
+        | Inr x -> lookup_fv g x 
 
 let lookup_var g e = match e.n with 
-    | Exp_bvar x -> (lookup g (Inl x),false)
+    | Exp_bvar x -> (lookup g (Inl x), None)
     | Exp_fvar (x, b) -> (lookup g (Inr x), b)
     | _ -> failwith "impossible" 
 
@@ -194,8 +154,10 @@ let extend_ty (g:env) (a:btvar) (mapped_to:option<mlty>) : env =
     let tcenv = Env.push_local_binding g.tcenv (Env.Binding_typ(a.v, a.sort)) in
     {g with gamma=gamma; tcenv=tcenv} 
     
-let extend_bv (g:env) (x:bvvar) (t_x:mltyscheme) : env =
-    let gamma = Bv(x, as_mlident x.v, t_x)::g.gamma in 
+let extend_bv (g:env) (x:bvvar) (t_x:mltyscheme) (add_unit:bool) : env =
+    let mlx = MLE_Var (as_mlident x.v) in
+    let mlx = if add_unit then MLE_App(mlx, [ml_unit]) else mlx in
+    let gamma = Bv(x, mlx, t_x)::g.gamma in 
     let tcenv = Env.push_local_binding g.tcenv (Env.Binding_var(x.v, x.sort)) in
     {g with gamma=gamma; tcenv=tcenv} 
 
@@ -214,37 +176,47 @@ let rec subsetMlidents (la : list<mlident>) (lb : list<mlident>)  : bool =
     | [] -> true
 
 let tySchemeIsClosed (tys : mltyscheme) : bool =
-    subsetMlidents  (mltyFvars (snd tys)) (fst tys)
-
-let extend_fv' (g:env) (x:fvvar) (t_x:mltyscheme) : env =
-    if  (tySchemeIsClosed t_x)
+    subsetMlidents  (mltyFvars (snd tys)) (fst tys) 
+                   
+let extend_fv' (g:env) (x:fvvar) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) : env =
+    if  tySchemeIsClosed t_x
     then 
-        let gamma = Fv(x, t_x)::g.gamma in 
+        let mly = MLE_Name y in 
+        let mly = if add_unit then MLE_App(mly, [ml_unit]) else mly in
+        let gamma = Fv(x, mly, t_x)::g.gamma in 
         let tcenv = Env.push_local_binding g.tcenv (Env.Binding_lid(x.v, x.sort)) in
         {g with gamma=gamma; tcenv=tcenv} 
-    else
-        // let _ = printfn  "(* type scheme of \n %A \n is not closed: \n %A *) \n"  x.v.ident t_x in
-        failwith "freevars found"
+    else //let _ = printfn  "(* type scheme of \n %A \n is not closed or misses an unit argument: \n %A *) \n"  x.v.ident t_x in
+         failwith "freevars found"
 
-let extend_fv (g:env) (x:fvvar) (t_x:mltyscheme) : env =
-    //let mlp = (mlpath_of_lident g.currentModule x.v) in 
+let extend_fv (g:env) (x:fvvar) (t_x:mltyscheme) (add_unit:bool) : env =
+    let mlp = (mlpath_of_lident x.v) in 
     // the mlpath cannot be determined here. it can be determined at use site, depending on the name of the module where it is used
     // so this conversion should be moved to lookup_fv
 
     //let _ = printfn "(* old name  \n %A \n new name \n %A \n name in dependent module \n %A \n *) \n"  (Backends.ML.Syntax.mlpath_of_lident x.v) mlp (mlpath_of_lident ([],"SomeDepMod") x.v) in
-    extend_fv' g x t_x
+    extend_fv' g x mlp t_x add_unit
 
-let extend_lb (g:env) (l:lbname) (t:typ) (t_x:mltyscheme) : (env * mlident) = 
+let extend_lb (g:env) (l:lbname) (t:typ) (t_x:mltyscheme) (add_unit:bool) : (env * mlident) = 
     match l with 
         | Inl x -> 
-          extend_bv g (Util.bvd_to_bvar_s x t) t_x, as_mlident x
+          extend_bv g (Util.bvd_to_bvar_s x t) t_x add_unit, as_mlident x
         | Inr f -> 
-          let _, y = mlpath_of_lident g.currentModule f in
-          extend_fv' g (Util.fvvar_of_lid f t)  t_x, (y, 0)
+          let p, y = mlpath_of_lident f in
+          extend_fv' g (Util.fvvar_of_lid f t) (p, y) t_x add_unit, (y,0)
 
-let extend_tydef (g:env) (td:mltydecl) : env = {g with tydefs=td::g.tydefs}
+let extend_tydef (g:env) (td:mltydecl) : env = 
+    let m = fst (g.currentModule) @ [snd g.currentModule] in
+    {g with tydefs=(m,td)::g.tydefs}
 
 let erasableType (g:env) (t:mlty) = 
- //printfn "(* erasability of %A is %A *)\n" t (g.erasableTypes t);
+   // printfn "(* erasability of %A is %A *)\n" t (g.erasableTypes t);
    g.erasableTypes t
   
+let emptyMlPath : mlpath = ([],"")
+
+let mkContext (e:Tc.Env.env) : env =
+   let env = { tcenv = e; gamma =[] ; tydefs =[]; erasableTypes = erasableType_init; currentModule = emptyMlPath} in
+   let a = "'a", -1 in
+   let failwith_ty = ([a], MLTY_Fun(MLTY_Named([], (["Prims"], "string")), E_IMPURE, MLTY_Var a)) in
+   extend_lb env (Inr Const.failwith_lid) tun failwith_ty false |> fst

@@ -44,8 +44,7 @@ type withinfo_t<'a,'t> = {
 
 (* Free term and type variables *)
 type var<'t>  = withinfo_t<lident,'t>
-type fieldname = lident //TODO:remove
-type inst<'a> = ref<option<'a>> //TODO: remove
+type fieldname = lident 
 (* Bound variables. 'a is a phantom type to distinguish between term and
    type bound variables. 't is the type or the kind of the variable. *)
 type bvdef<'a> = {ppname:ident; realname:ident}
@@ -121,7 +120,7 @@ and uvar_basis<'a> =
   | Fixed of 'a
 and exp' =
   | Exp_bvar       of bvvar
-  | Exp_fvar       of fvvar * bool                               (* flag indicates a constructor *)
+  | Exp_fvar       of fvvar * option<fv_qual>                    
   | Exp_constant   of sconst
   | Exp_abs        of binders * exp 
   | Exp_app        of exp * args                                 (* h tau_1 ... tau_n, args in order from left to right *)
@@ -139,13 +138,17 @@ and meta_source_info =
   | Sequence                   
   | Primop                                  (* ... add more cases here as needed for better code generation *)
   | MaskedEffect
+and fv_qual = 
+  | Data_ctor
+  | Record_projector of lident                  (* the fully qualified (unmangled) name of the field being projected *)
+  | Record_ctor of lident * list<fieldname>     (* the type of the record being constructed and its (unmangled) fields in order *)
 and uvar_e = Unionfind.uvar<uvar_basis<exp>>
 and btvdef = bvdef<typ>
 and bvvdef = bvdef<exp>
 and pat' = 
   | Pat_disj     of list<pat>
   | Pat_constant of sconst
-  | Pat_cons     of fvvar * list<pat>
+  | Pat_cons     of fvvar * option<fv_qual> * list<pat>
   | Pat_var      of bvvar * bool                          (* flag marks an explicitly provided implicit *)
   | Pat_tvar     of btvar
   | Pat_wild     of bvvar                                 (* need stable names for even the wild patterns *)
@@ -226,8 +229,8 @@ type qualifier =
   | Logic
   | Discriminator of lident                          (* discriminator for a datacon l *)
   | Projector of lident * either<btvdef, bvvdef>     (* projector for datacon l's argument 'a or x *)
-  | RecordType of list<ident>                        (* unmangled field names *)
-  | RecordConstructor of list<ident>                 (* unmangled field names *)
+  | RecordType of list<fieldname>                    (* unmangled field names *)
+  | RecordConstructor of list<fieldname>             (* unmangled field names *)
   | ExceptionConstructor
   | DefaultEffect of option<lident>
   | TotalEffect
@@ -364,7 +367,7 @@ val mk_Total: typ -> comp
 val mk_Comp: comp_typ -> comp
 
 val mk_Exp_bvar: bvvar -> option<typ> -> range -> exp
-val mk_Exp_fvar: (fvvar * bool) -> option<typ> -> range -> exp 
+val mk_Exp_fvar: (fvvar * option<fv_qual>) -> option<typ> -> range -> exp 
 val mk_Exp_constant: sconst -> option<typ> -> range -> exp
 val mk_Exp_abs: (binders * exp) -> option<typ> -> range -> exp
 val mk_Exp_abs': (binders * exp) -> option<typ> -> range -> exp

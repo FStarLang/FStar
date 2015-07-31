@@ -211,22 +211,22 @@ let pat_as_exps allow_implicits env p
              ([b], [b], [], env, targ t, p)
 
 
-           | Pat_cons(fv, pats) -> 
+           | Pat_cons(fv, q, pats) -> 
                let (b, a, w, env, args, pats) = pats |> List.fold_left (fun (b, a, w, env, args, pats) p ->
                    let (b', a', w', env, arg, pat) = pat_as_arg_with_env allow_wc_dependence env p in
                     (b'::b, a'::a, w'::w, env, arg::args, pat::pats))  ([], [], [], env, [], []) in
-               let e = mk_Exp_meta(Meta_desugared(mk_Exp_app'(Util.fvar true fv.v fv.p, args |> List.rev) None p.p, Data_app)) in
+               let e = mk_Exp_meta(Meta_desugared(mk_Exp_app'(Util.fvar (Some Data_ctor) fv.v fv.p, args |> List.rev) None p.p, Data_app)) in
                (List.rev b |> List.flatten, 
                 List.rev a |> List.flatten, 
                 List.rev w |> List.flatten,
                 env,
                 varg e,
-                {p with v=Pat_cons(fv, List.rev pats)})
+                {p with v=Pat_cons(fv, q, List.rev pats)})
 
            | Pat_disj _ -> failwith "impossible" in
     let rec elaborate_pat env p = //Adds missing implicit patterns to constructor patterns
         match p.v with 
-           | Pat_cons(fv, pats) -> 
+           | Pat_cons(fv, q, pats) -> 
                let pats = List.map (elaborate_pat env) pats in
                let t = Tc.Env.lookup_datacon env fv.v in
                let pats = match Util.function_formals t with 
@@ -278,7 +278,7 @@ let pat_as_exps allow_implicits env p
                                   p::aux formals' pats' 
                             end in
                       aux f pats in
-               {p with v=Pat_cons(fv, pats)} 
+               {p with v=Pat_cons(fv, q, pats)} 
 
         | _ -> p in
 
@@ -350,18 +350,18 @@ let decorate_pattern env p exps =
               let x = {x with sort=force_tk e} in
               pkg (Pat_dot_term(x, e)) x.sort
 
-            | Pat_cons(fv, []), Exp_fvar (fv',_) -> 
+            | Pat_cons(fv, q, []), Exp_fvar (fv',_) -> 
               if Util.fvar_eq fv fv' |> not
               then failwith (Util.format2 "Expected pattern constructor %s; got %s" fv.v.str fv'.v.str);
-              pkg (Pat_cons(fv', [])) fv'.sort
+              pkg (Pat_cons(fv', q, [])) fv'.sort
 
-            | Pat_cons(fv, argpats), Exp_app({n=Exp_fvar(fv', _)}, args) -> 
+            | Pat_cons(fv, q, argpats), Exp_app({n=Exp_fvar(fv', _)}, args) -> 
               if Util.fvar_eq fv fv' |> not
               then failwith (Util.format2 "Expected pattern constructor %s; got %s" fv.v.str fv'.v.str);
               let fv = fv' in
 
               let rec match_args matched_pats args argpats = match args, argpats with 
-                | [], [] -> pkg (Pat_cons(fv, List.rev matched_pats)) (force_tk e)
+                | [], [] -> pkg (Pat_cons(fv, q, List.rev matched_pats)) (force_tk e)
                 | arg::args, argpat::argpats -> 
                   begin match arg, argpat.v with 
                         | (Inl t, Some Implicit), Pat_dot_typ _ -> (* implicit type argument *)
@@ -443,10 +443,10 @@ let decorate_pattern env p exps =
         | Pat_var (x, _)  ->
             [Inr x], mk_Exp_bvar x |> pkg
 
-        | Pat_cons(fv, pats) -> 
+        | Pat_cons(fv, q, pats) -> 
             let vars, args = pats |> List.map pat_as_arg |> List.unzip in
             let vars = List.flatten vars in
-            vars,  mk_Exp_app'(mk_Exp_fvar(fv, true) (Some fv.sort) fv.p, args) |> pkg
+            vars,  mk_Exp_app'(mk_Exp_fvar(fv, q) (Some fv.sort) fv.p, args) |> pkg
 
         | Pat_dot_term(x, e) -> 
             [], e

@@ -14,35 +14,39 @@
    limitations under the License.
 *)
 #light "off"
-module Microsoft.FStar.Backends.ML.ExtractMod
+module Microsoft.FStar.Extraction.ML.ExtractMod
 open Microsoft.FStar
 open Microsoft.FStar.Util
 open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
-open Microsoft.FStar.Backends.ML.Syntax
-open Microsoft.FStar.Backends.ML.Env
-open Microsoft.FStar.Backends.ML.Util
+open Microsoft.FStar.Extraction.ML.Syntax
+open Microsoft.FStar.Extraction.ML.Env
+open Microsoft.FStar.Extraction.ML.Util
 
 (*This approach assumes that failwith already exists in scope. This might be problematic, see below.*)
-let fail_exp = mk_Exp_app(Util.fvar false Const.failwith_lid dummyRange, [varg <| mk_Exp_constant (Const_string (Bytes.string_as_unicode_bytes "Not yet implemented", dummyRange)) None dummyRange]) None dummyRange 
+let fail_exp t = mk_Exp_app(Util.fvar None Const.failwith_lid dummyRange, 
+                          [ targ t
+                          ; varg <| mk_Exp_constant (Const_string (Bytes.string_as_unicode_bytes "Not yet implemented", dummyRange)) None dummyRange]) None dummyRange 
 
     
 let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> = 
-    //printfn "(* now extracting :  %A *) \n" (Print.sigelt_to_string_short se);
+   // printfn "(* now extracting :  %A *) \n" (Print.sigelt_to_string se);
      match se with
         | Sig_datacon _
         | Sig_bundle _
         | Sig_tycon _
         | Sig_typ_abbrev _ -> 
             let c, tds = ExtractTyp.extractSigElt g se in
-            c, [MLM_Ty tds]
+            c, tds
 
         | Sig_let (lbs, r, _, _) -> 
           let elet = mk_Exp_let(lbs, Const.exp_false_bool) None r in
           let ml_let, _, _ = ExtractExp.synth_exp g elet in
           begin match ml_let with 
             | MLE_Let(ml_lbs, _) -> 
-              let g = List.fold_left2 (fun env (id, poly_t, _, _) {lbname=lbname; lbtyp=t} -> fst <| Env.extend_lb env lbname t (must poly_t))
+              let g = List.fold_left2 (fun env mllb {lbname=lbname; lbtyp=t} -> 
+//              debug g (fun () -> printfn "Translating source lb %s at type %s to %A" (Print.lbname_to_string lbname) (Print.typ_to_string t) (must (mllb.mllb_tysc)));
+              fst <| Env.extend_lb env lbname t (must mllb.mllb_tysc) mllb.mllb_add_unit)
                       g (snd ml_lbs) (snd lbs) in 
               g, [MLM_Let ml_lbs]
             | _ -> //printfn "%A\n" ml_let; 
@@ -51,15 +55,17 @@ let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> =
 
        | Sig_val_decl(lid, t, quals, r) -> 
          if quals |> List.contains Assumption 
-         then let tbinders,_ = Util.tbinder_prefix t in
-              let impl = match tbinders with
-                | [] -> fail_exp
-                | bs -> mk_Exp_abs(bs, fail_exp) None dummyRange in
-              let se = Sig_let((false, [{lbname=Inr lid; lbtyp=t; lbeff=Const.effect_Tot_lid; lbdef=impl}]), r, [], quals) in
+         then let impl = match Util.function_formals t with 
+                | Some (bs, c) -> mk_Exp_abs(bs, fail_exp (Util.comp_result c)) None dummyRange 
+                | _ -> fail_exp t in 
+              let se = Sig_let((false, [{lbname=Inr lid; lbtyp=t; lbeff=Const.effect_ML_lid; lbdef=impl}]), r, [], quals) in
               let g, mlm = extract_sig g se in
-              if quals |> Util.for_some (function Projector _ | Discriminator _ -> true | _ -> false)
-              then g, [] //TODO: generate a proper projector/discriminator
-              else g, mlm
+              let is_record = Util.for_some (function RecordType _ -> true | _ -> false) quals in
+              match Util.find_map quals (function Discriminator l -> Some l |  _ -> None) with
+              | Some l when (not is_record) -> g, [ExtractExp.ind_discriminator_body g lid l]
+              | _ -> match Util.find_map quals (function  Projector (l,_)  -> Some l |  _ -> None) with
+                        | Some l -> g, []
+                        | None -> g, mlm
          else g, []
      
        | Sig_main(e, _) -> 
@@ -76,16 +82,16 @@ let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> =
        | Sig_pragma _ -> //pragmas are currently not relevant for codegen; they may be in the future
          g, []   
 
-let extract_prims (g:env) (m:modul) =  Util.fold_map extract_sig g m.declarations |> fst
+let extract_iface (g:env) (m:modul) =  Util.fold_map extract_sig g m.declarations |> fst 
     
-let rec extract (g:env) (m:modul) : env * mllib = 
-    let name = Backends.ML.Syntax.mlpath_of_lident m.name in
+let rec extract (g:env) (m:modul) : env * list<mllib> = 
+    let name = Extraction.ML.Syntax.mlpath_of_lident m.name in
+    let _ = Util.print_string ("extracting: "^m.name.str^"\n") in
     let g = {g with currentModule = name}  in
-    if m.is_interface then failwith "NYI";
-    if m.name.str = "Prims"
-    then let g = extract_prims g m in 
-         g, MLLib(["Prims", None, MLLib []])
+    if m.name.str = "Prims" || m.is_interface
+    then let g = extract_iface g m in 
+         g, [] //MLLib([Util.flatten_mlpath name, None, MLLib []])
     else let g, sigs = Util.fold_map extract_sig g m.declarations in
          let mlm : mlmodule = List.flatten sigs in
-         g, MLLib ([m.name.str, Some ([], mlm), (MLLib [])])
+         g, [MLLib ([Util.flatten_mlpath name, Some ([], mlm), (MLLib [])])]
     

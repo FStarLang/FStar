@@ -1,8 +1,8 @@
 (*--build-config
-    options:--admit_fsi Set --codegen OCaml;
+    options: --codegen OCaml-experimental --trace_error --debug yes;
     variables:LIB=../../lib;
     variables:MATHS=../maths;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst  $LIB/list.fst stack.fst listset.fst
+    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst  $LIB/list.fst stack.fst listset.fst
   --*)
 
 
@@ -592,6 +592,8 @@ effect PureMem (a:Type) (pre:Pre) (post: (smem -> Post a)) =
         SST a pre (fun m0 a m1 -> post m0 a m1 /\ m0=m1)
 
 (*incase one does not want to reason about changed references*)
+(* TODO: allRefs does not extract properly. Set.empty has an extra unit which is not there in Support.ml
+  on adding the extra unit, Ocaml complaisn about inability to generalize*)
 let allRefs : set aref = complement empty
 
 (** withNewStackFrame combinator *)
@@ -650,7 +652,11 @@ let rec scopedWhile
         (scopedWhile 'loopInv 'wglc wg mods bd))
       else ()
 
+(*The 2 definitions below do not extract properly. 'loopInv is a type var and
+OCaml complains "operator expected" . Removing 'loopInv manually in the extract
+fixes the problem. 'loopInv is not used anyway in the extract. *)
 
+(*
 val scopedWhile1 :
   #a:Type
   -> r:(ref a)
@@ -695,29 +701,4 @@ let scopedWhile2 'a ra rb lc 'loopInv mods bd =
     (fun u -> lc (memread ra) (memread rb))
     mods
     bd
-
-(*effect SSTS (a:Type) (wlp: Post a -> Pre) = StSTATE a wlp wlp*)
-
-(*type whilePre (wpg:(Post bool -> Pre))
-              (wpb:(Post unit -> Pre))
-              (inv:(smem -> Type)) =
-  (forall h. forall h2. wpg (fun b h1 -> h1 == h) h2 ==> h=h2) (*computation of the guard does not change the memory*)
-  /\ (forall h1. inv h1 ==> wpg (fun b h2 -> b=true ==> wpb (fun _ -> inv) h2) h1)
-
-val scopedWhile2 : #wpg:(Post bool -> Pre) -> #wpb:(Post unit -> Pre)
-  -> wg:(unit -> SSTS bool wpg)
-  -> bd:(unit -> SSTS unit wpb)
-  -> loopInv:(smem -> Type)
-  -> SST unit
-  (requires (fun m -> loopInv m /\ whilePre wpg wpb loopInv))
-              (ensures (fun m0 _ m1 -> (loopInv m1) (* /\ sids m0 = sids m1 *)
-                (*/\ (wpg (fun b _ -> b==false) m1)*)
-              ))*)
-
-(*let scopedWhile2
- (#wpg:(Post bool -> Pre))
- (#wpb:(Post unit -> Pre))
- (wg:(unit -> SSTS bool wpg))
- (bd:(unit -> SSTS unit wpb))
- (loopInv:(smem -> Type))
-= let v=wg () in ()*)
+*)

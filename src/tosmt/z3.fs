@@ -229,7 +229,7 @@ let rec dequeue' () =
     Util.monitor_exit job_queue;
     run_job j;
     with_monitor job_queue (fun () -> decr pending_jobs);
-    dequeue()
+    dequeue(); ()
 
 and dequeue () = 
     Util.monitor_enter (job_queue);

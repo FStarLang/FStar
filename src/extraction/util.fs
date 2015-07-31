@@ -14,12 +14,12 @@
    limitations under the License.
 *)
 #light "off"
-module Microsoft.FStar.Backends.ML.Util
+module Microsoft.FStar.Extraction.ML.Util
 open Microsoft.FStar
 open Microsoft.FStar.Util
 open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
-open Microsoft.FStar.Backends.ML.Syntax
+open Microsoft.FStar.Extraction.ML.Syntax
 
 let pruneNones (l : list<option<'a>>) : list<'a> =
     List.fold_right (fun  x ll -> match x with 
@@ -45,9 +45,11 @@ let mlconst_of_const (sctt : sconst) =
       MLC_String (string_of_unicode (bytes))
 
 
-let rec subst_aux (subst:list<(mlident * mlty)>) (t:mlty) = 
+let rec subst_aux (subst:list<(mlident * mlty)>) (t:mlty)  : mlty = 
     match t with 
-    | MLTY_Var  x -> Util.find_opt (fun (y, _) -> y=x) subst |> must |> snd
+    | MLTY_Var  x -> (match Util.find_opt (fun (y, _) -> y=x) subst with
+                     | Some ts -> snd ts
+                     | None -> t) // TODO : previously, this case would abort. why? this case was encountered while extracting st3.fst
     | MLTY_Fun (t1, f, t2) -> MLTY_Fun(subst_aux subst t1, f, subst_aux subst t2)
     | MLTY_Named(args, path) -> MLTY_Named(List.map (subst_aux subst) args, path)
     | MLTY_Tuple ts -> MLTY_Tuple(List.map (subst_aux subst) ts)
@@ -59,7 +61,14 @@ let subst ((formals, t):mltyscheme) (args:list<mlty>) : mlty =
     then failwith "Substitution must be fully applied"
     else subst_aux (List.zip formals args) t
 
-let delta_unfold g t = None //TODO
+let delta_unfold g = function 
+    | MLTY_Named(args, n) -> 
+      begin match Env.lookup_ty_const g n with 
+        | Some ts -> Some (subst ts args)
+        | _ -> None
+      end
+    | _ -> None
+    
 
 let rec equiv (g:Env.env) (t:mlty) (t':mlty) : bool = 
     match t, t' with 
@@ -71,8 +80,15 @@ let rec equiv (g:Env.env) (t:mlty) (t':mlty) : bool =
       //&& f=f' NS: removing this for now, until effects are properly translated
       && equiv g t2 t2'
 
-    | MLTY_Named(args, path), MLTY_Named(args', path') when (path=path') -> 
-      List.forall2 (equiv g) args args'
+    | MLTY_Named(args, path), MLTY_Named(args', path') -> 
+      if path=path'
+      then List.forall2 (equiv g) args args'
+      else begin match delta_unfold g t with 
+                    | Some t -> equiv g t t'
+                    | None -> (match delta_unfold g t' with 
+                                 | None -> false
+                                 | Some t' -> equiv g t t')
+          end
 
     | MLTY_Tuple ts, MLTY_Tuple ts' -> 
       List.forall2 (equiv g) ts ts'
@@ -82,12 +98,12 @@ let rec equiv (g:Env.env) (t:mlty) (t':mlty) : bool =
     | MLTY_Named _, _ -> 
       begin match delta_unfold g t with 
         | Some t -> equiv g t t'
-        | _ -> false
+        | _ ->  false
       end
 
     | _, MLTY_Named _ -> 
       begin match delta_unfold g t' with 
-        | Some t -> equiv g t t'
+        | Some t' -> equiv g t t'
         | _ -> false
       end
       
@@ -119,3 +135,69 @@ let tbinder_prefix t = match (Util.compress_typ t).n with
     | _ -> [],t
 
 
+let is_xtuple (ns, n) =
+    if ns = ["Prims"]
+    then match n with 
+        | "MkTuple2" -> Some 2
+        | "MkTuple3" -> Some 3
+        | "MkTuple4" -> Some 4
+        | "MkTuple5" -> Some 5
+        | "MkTuple6" -> Some 6
+        | "MkTuple7" -> Some 7
+        | _ -> None
+    else None 
+
+let resugar_exp e = match e with 
+    | MLE_CTor(mlp, args) -> 
+        (match is_xtuple mlp with 
+        | Some n -> MLE_Tuple args
+        | _ -> e)
+    | _ -> e
+
+let record_field_path = function
+    | f::_ -> 
+        let ns, _ = Util.prefix f.ns in 
+        ns |> List.map (fun id -> id.idText)
+    | _ -> failwith "impos" 
+
+let record_fields fs vs = List.map2 (fun (f:lident) e -> f.ident.idText, e) fs vs
+
+let resugar_pat q p = match p with 
+    | MLP_CTor(d, pats) -> 
+      begin match is_xtuple d with 
+        | Some n -> MLP_Tuple(pats)
+        | _ ->
+          match q with 
+            | Some (Record_ctor (_, fns)) -> 
+              let p = record_field_path fns in
+              let fs = record_fields fns pats in
+              MLP_Record(p, fs)
+            | _ -> p
+      end
+    | _ -> p
+
+
+let is_xtuple_ty (ns, n) = 
+    if ns = ["Prims"]
+    then match n with 
+        | "Tuple2" -> Some 2
+        | "Tuple3" -> Some 3
+        | "Tuple4" -> Some 4
+        | "Tuple5" -> Some 5
+        | "Tuple6" -> Some 6
+        | "Tuple7" -> Some 7
+        | _ -> None
+    else None 
+
+let resugar_mlty t = match t with 
+    | MLTY_Named (args, mlp) -> 
+      begin match is_xtuple_ty mlp with 
+        | Some n -> MLTY_Tuple args
+        | _ -> t
+      end
+    | _ -> t
+
+let flatten_ns ns = String.concat "_" ns
+let flatten_mlpath (ns, n) = String.concat "_" (ns@[n])
+let mlpath_of_lid (l:lident) = (l.ns |> List.map (fun i -> i.idText),  l.ident.idText)
+  

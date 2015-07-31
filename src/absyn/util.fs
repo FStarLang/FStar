@@ -745,9 +745,9 @@ let mk_exp_app f args =
 let mk_data l args =
   match args with
     | [] ->
-      mk_Exp_meta(Meta_desugared(fvar true l (range_of_lid l), Data_app))
+      mk_Exp_meta(Meta_desugared(fvar (Some Data_ctor) l (range_of_lid l), Data_app))
     | _ ->
-      mk_Exp_meta(Meta_desugared(mk_exp_app (fvar true l (range_of_lid l)) args, Data_app))
+      mk_Exp_meta(Meta_desugared(mk_exp_app (fvar (Some Data_ctor) l (range_of_lid l)) args, Data_app))
 
 let mangle_field_name x = mk_ident("^fname^" ^ x.idText, x.idRange)
 let unmangle_field_name x =
@@ -1277,12 +1277,12 @@ let mk_eq_typ t1 t2 = mk_Typ_app(eq_typ, [targ t1; targ t2]) None (Range.union_r
 let lex_t = ftv Const.lex_t_lid ktype
 let lex_top =
     let lexnil = withinfo Const.lextop_lid lex_t dummyRange in
-    mk_Exp_fvar(lexnil, true) None dummyRange
+    mk_Exp_fvar(lexnil, Some Data_ctor) None dummyRange
 
 let lex_pair =
     let a = gen_bvar ktype in
     let lexcons = withinfo Const.lexcons_lid (mk_Typ_fun([t_binder a; null_v_binder (btvar_to_typ a); null_v_binder lex_t], mk_Total lex_t) None dummyRange) dummyRange in
-    mk_Exp_fvar(lexcons, true) None dummyRange
+    mk_Exp_fvar(lexcons, Some Data_ctor) None dummyRange
 
 let forall_kind =
   let a = bvd_to_bvar_s (new_bvd None) ktype in

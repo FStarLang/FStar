@@ -108,7 +108,7 @@ let rec reconstruct_lex (e:exp) =
   | _ -> if is_lex_top e then Some [] else None
 
 (* CH: F# List.find has a different type from find in list.fst ... so just a hack for now *)
-let rec find f l = match l with 
+let rec find  (f:'a -> bool) (l:list<'a>) : 'a = match l with 
   | [] -> failwith "blah"
   | hd::tl -> if f hd then hd else find f tl
 
@@ -311,6 +311,10 @@ and formula_to_string_old_now_unused phi =
     let bin_top f = function 
         | [(Inl t1, _); (Inl t2, _)] -> format3 "%s %s %s" (formula_to_string t1) f (formula_to_string t2)
         | _ -> failwith "Impos" in
+    //Note: bin_eop is inferred to have type : string -> list (either<string, ?u>) -> string
+    //This ?u leads to the emission of an Obj.t in the generated OCaml code
+    //Note, bin_eop is actually never called, which is why we have the ?u lingering
+    //We might consider removing the function : ) ... but it's nice in that it revealed a corner case in extraction
     let bin_eop f = function
         | [(Inr e1, _);(Inr e2, _)] -> format3 "%s %s %s" (exp_to_string e1) f (exp_to_string e2)
         | _ -> failwith "impos" in
@@ -435,7 +439,7 @@ and uvar_k_to_string' (uv,args) =
    format2 "('k_%s %s)" str (args_to_string args)
 
 and pat_to_string x = match x.v with
-  | Pat_cons(l, pats) -> Util.format2 "(%s %s)" (sli l.v) (List.map pat_to_string pats |> String.concat " ") 
+  | Pat_cons(l, _, pats) -> Util.format2 "(%s %s)" (sli l.v) (List.map pat_to_string pats |> String.concat " ") 
   | Pat_dot_term (x, _) -> Util.format1 ".%s" (strBvd x.v)
   | Pat_dot_typ (x, _) -> Util.format1 ".'%s" (strBvd x.v)
   | Pat_var (x, true) -> Util.format1 "#%s" (strBvd x.v)
@@ -460,7 +464,7 @@ let qual_to_string = function
     | Opaque -> "opaque"
     | Discriminator _ -> "discriminator"
     | Projector _ -> "projector"
-    | RecordType ids -> Util.format1 "record(%s)" (ids |> List.map (fun id -> id.idText) |> String.concat ", ")
+    | RecordType ids -> Util.format1 "record(%s)" (ids |> List.map (fun lid -> lid.ident.idText) |> String.concat ", ")
     | _ -> "other"
 let quals_to_string quals = quals |> List.map qual_to_string |> String.concat " " 
 let rec sigelt_to_string x = match x with 

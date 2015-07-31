@@ -38,7 +38,6 @@ type withinfo_t<'a,'t> = {
 } 
 type var<'t>  = withinfo_t<lident,'t>
 type fieldname = lident
-type inst<'a> = ref<option<'a>>
 type bvdef<'a> = {ppname:ident; realname:ident}
 type bvar<'a,'t> = withinfo_t<bvdef<'a>,'t> 
 (* Bound vars have a name for pretty printing, 
@@ -112,7 +111,7 @@ and uvar_basis<'a> =
   | Fixed of 'a
 and exp' =
   | Exp_bvar       of bvvar
-  | Exp_fvar       of fvvar * bool                               (* flag indicates a constructor *)
+  | Exp_fvar       of fvvar * option<fv_qual>                    
   | Exp_constant   of sconst
   | Exp_abs        of binders * exp 
   | Exp_app        of exp * args                                 (* args in order from left to right *)
@@ -130,13 +129,17 @@ and meta_source_info =
   | Sequence                   
   | Primop                                  (* ... add more cases here as needed for better code generation *)
   | MaskedEffect                            
+and fv_qual = 
+  | Data_ctor
+  | Record_projector of lident                  (* the fully qualified (unmangled) name of the field being projected *)
+  | Record_ctor of lident * list<fieldname> (* the type of the record being constructed and its (unmangled) fields in order *)
 and uvar_e = Unionfind.uvar<uvar_basis<exp>>
 and btvdef = bvdef<typ>
 and bvvdef = bvdef<exp>
 and pat' = 
   | Pat_disj     of list<pat>
   | Pat_constant of sconst
-  | Pat_cons     of fvvar * list<pat>
+  | Pat_cons     of fvvar * option<fv_qual> * list<pat>
   | Pat_var      of bvvar * bool                          (* flag marks an explicitly provided implicit *)
   | Pat_tvar     of btvar
   | Pat_wild     of bvvar                                 (* need stable names for even the wild patterns *)
@@ -202,8 +205,8 @@ type qualifier =
   | Logic
   | Discriminator of lident                          (* discriminator for a datacon l *)
   | Projector of lident * either<btvdef, bvvdef>     (* projector for datacon l's argument 'a or x *)
-  | RecordType of list<ident>                        (* unmangled field names *)
-  | RecordConstructor of list<ident>                 (* unmangled field names *)
+  | RecordType of list<fieldname>                    (* unmangled field names *)
+  | RecordConstructor of list<fieldname>             (* unmangled field names *)
   | ExceptionConstructor
   | DefaultEffect of option<lident>
   | TotalEffect
@@ -503,7 +506,7 @@ let mk_Exp_bvar (x:bvvar) (t:option<typ>) p = {
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();
 }
-let mk_Exp_fvar ((x:fvvar),(b:bool)) (t:option<typ>) p = {
+let mk_Exp_fvar ((x:fvvar),(b:option<fv_qual>)) (t:option<typ>) p = {
     n=Exp_fvar(x, b);
     tk=get_typ_ref t;
     pos=p;
@@ -523,7 +526,7 @@ let mk_Exp_abs ((b:binders),(e:exp)) (t':option<typ>) p = {
 }
 let mk_Exp_abs' ((b:binders),(e:exp)) (t':option<typ>) p = {
     n=(match b, e.n with 
-        | _, Exp_abs(binders, body) -> Exp_abs(b@binders, body) 
+        | _, Exp_abs(b0::bs, body) -> Exp_abs(b@b0::bs, body) 
         | [], _ -> failwith "abstraction with no binders!"
         | _ -> Exp_abs(b, e));
     tk=get_typ_ref t';
@@ -545,7 +548,7 @@ let mk_Exp_app' ((e1:exp), (args:list<arg>)) (t:option<typ>) (p:range) =
         | [] -> e1
         | _ -> mk_Exp_app (e1, args) t p
 let rec pat_vars p = match p.v with
-  | Pat_cons(_, ps) -> 
+  | Pat_cons(_, _, ps) -> 
     let vars = List.collect pat_vars ps in 
     if vars |> nodups (fun x y -> match x, y with 
       | Inl x, Inl y -> bvd_eq x y
