@@ -45,7 +45,18 @@ external cons: 'a -> 'a list -> 'a list = "stack_mkpair";;
 (** [Camlstack.cons x y] allocates a cons cell [x::y] on the stack.
     Raise [Failure "Camlstack.cons"] if the stack has no frames. *)
 
+external mkref: 'a -> 'a ref = "stack_mkref";;
+(** [Camlstack.mkref x] allocates a ref cell on the stack,
+    initializing it with x.  Raise [Failure "Camlstack.cons"] if the
+    stack has no frames. *)
+
+(** DEBUGGING **)
+
 external print_mask : unit -> unit = "print_mask";;
 (** [Camlstack.print_mask ()] is a debugging function. It prints
     a list of Caml heap pointers that occur on the stack, and should
     be scanned by the GC. *)
+
+external inspect : 'a -> unit = "inspect";;
+(** [Camlstack.inspect x] is a debugging function. It prints
+    out the structure of the run-time value x that is passed to it. *)
