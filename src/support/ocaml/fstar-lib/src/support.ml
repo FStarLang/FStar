@@ -10,6 +10,7 @@ module Prims = struct
   type uint8 = char
   type _exn = exn
   type exn = _exn
+  type 'dummy b2t = unit
   let ignore _ = ()
   let cut = ()
   let fst = fst

@@ -152,3 +152,8 @@ Recursive Extraction someNat. (*the call to effectfulIncr vanishes*)
 (*Can Prop be extracted as unit? It seems odd because Props may be uninhabited. 
   It seems OCaml does not have any uninhabited type.
   But that oddness might not matter as far as results(and possibly effects) of computation are concerned *)
+
+
+Definition pair (a:Type) (a':Type) := prod a a'.
+
+Recursive Extraction pair.

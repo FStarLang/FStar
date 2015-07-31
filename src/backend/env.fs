@@ -67,7 +67,7 @@ match  t with
 let unknownType : mlty =  MLTY_Top
 
 (*copied from ocaml-strtrans.fs*)
-let prependTick (x,n) = if Util.starts_with x "'" then (x,n) else ("'"^x,n)
+let prependTick (x,n) = if Util.starts_with x "'" then (x,n) else ("' "^x,n)
 let convRange (r:Range.range) : int = 0 (*FIX!!*)
 let convIdent (id:ident) : mlident = (id.idText ,(convRange id.idRange))
 
@@ -76,6 +76,14 @@ let convIdent (id:ident) : mlident = (id.idText ,(convRange id.idRange))
    let mkPair (a:Type) ('a:Type) (ta : a) (ta' : a') = (ta, ta')
 
    Perhaps this function also needs to look at env.Gamma*)
+
+(* TODO : if there is a single quote in the name of the type variable, the additional tick in the beginning causes issues with the lexer/parser of OCaml (syntax error).
+  Perhaps the type variable is interpreted as a string literal.
+  For an example, see https://github.com/FStarLang/FStar/blob/f53844512c76bd67b21b4cf68d774393391eac75/lib/heap.fst#L49  
+  
+   Coq seems to add a space after the tick in such cases. Always adding a space for now
+  *)
+
 let btvar_as_mlident (btv: btvar) : mlident =  (prependTick (convIdent btv.v.ppname))
 
 let rec lookup_ty_local (gamma:list<binding>) (b:btvar) : mlty = 
