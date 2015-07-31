@@ -1,5 +1,5 @@
 (*--build-config
-    options: --codegen OCaml-experimental --trace_error;
+    options: --codegen OCaml-experimental --trace_error --debug yes;
     variables:LIB=../../lib;
     variables:MATHS=../maths;
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst  $LIB/list.fst stack.fst listset.fst

@@ -97,11 +97,11 @@ let erase (g:env) (e:mlexpr) (f:e_tag) (t:mlty) : mlexpr * e_tag * mlty =
           ml_unit, f , ml_unit_ty) (*unit value*)
     else e, f, t
 
-let maybe_coerce (g:env) (e:mlexpr) (t:mlty) (t':mlty) = 
-    if equiv g t t' 
+let maybe_coerce (g:env) (e:mlexpr) (tInferred:mlty) (tExpected:mlty) = 
+    if equiv g tInferred tExpected 
     then e
-    else (//debug g (fun () -> printfn "\n (*needed to coerce expression \n %A \n of type \n %A \n to type \n %A *) \n" e t t');
-          MLE_Coerce (e, t, t'))
+    else (//debug g (fun () -> printfn "\n (*needed to coerce expression \n %A \n of type \n %A \n to type \n %A *) \n" e tInferred tExpected);
+          MLE_Coerce (e, tInferred, tExpected))
 
 let eff_leq f f' = match f, f' with 
     | E_PURE, _ 
@@ -287,9 +287,9 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                   then synth_app is_data (mlhead, (ml_unit, E_PURE)::mlargs_f) (join f f', t) rest
                   else failwith "Impossible: ill-typed application" //ill-typed; should be impossible
 
-                | (Inr e0, _)::rest, MLTY_Fun(t0, f', t) -> 
-                  let e0, f0, t0' = synth_exp g e0 in 
-                  let e0 = maybe_coerce g e0 t0' t0 in // coerce the arguments of application, if they dont match up
+                | (Inr e0, _)::rest, MLTY_Fun(tExpected, f', t) -> 
+                  let e0, f0, tInferred = synth_exp g e0 in 
+                  let e0 = maybe_coerce g e0 tInferred tExpected in // coerce the arguments of application, if they dont match up
                   synth_app is_data (mlhead, (e0, f0)::mlargs_f) (join_l [f;f';f0], t) rest
                   
                 | _ -> 

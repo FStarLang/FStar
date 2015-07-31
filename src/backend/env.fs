@@ -61,7 +61,7 @@ match  t with
     if t = ml_unit_ty then true
     else match t with 
         | MLTY_Named (_, (["Ghost"], "erased")) -> true //when would a named type like this be produced?
-        | _ -> false //what about types that reduce/unfold to unit/erased t? Do a syntactic check with ml_unit_ty?
+        | _ -> false //TODO: what about types that reduce/unfold to unit/erased t? Do a syntactic check with ml_unit_ty?
 
 (* \mathbb{T} type in the thesis, to be used when OCaml is not expressive enough for the source type *)
 let unknownType : mlty =  MLTY_Top
