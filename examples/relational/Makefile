@@ -1,9 +1,9 @@
 FSTAR = ../../bin/fstar.exe
 
-all:
-	$(FSTAR) noninterference.fst
-	$(FSTAR) sample.fst
-	$(FSTAR) ro.fst
+all: noninterference\
+		 sample\
+		 ro\
+		 spdz\
 
 noninterference:
 	$(FSTAR) noninterference.fst
@@ -13,3 +13,6 @@ sample:
 
 ro:
 	$(FSTAR) ro.fst
+
+spdz:
+	$(FSTAR) spdz.fst
