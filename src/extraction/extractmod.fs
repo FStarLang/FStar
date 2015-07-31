@@ -24,9 +24,9 @@ open Microsoft.FStar.Extraction.ML.Env
 open Microsoft.FStar.Extraction.ML.Util
 
 (*This approach assumes that failwith already exists in scope. This might be problematic, see below.*)
-let fail_exp t = mk_Exp_app(Util.fvar None Const.failwith_lid dummyRange, 
+let fail_exp (lid:lident) (t:typ) = mk_Exp_app(Util.fvar None Const.failwith_lid dummyRange, 
                           [ targ t
-                          ; varg <| mk_Exp_constant (Const_string (Bytes.string_as_unicode_bytes "Not yet implemented", dummyRange)) None dummyRange]) None dummyRange 
+                          ; varg <| mk_Exp_constant (Const_string (Bytes.string_as_unicode_bytes ("Not yet implemented:"^(Print.sli lid)), dummyRange)) None dummyRange]) None dummyRange 
 
     
 let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> = 
@@ -56,8 +56,8 @@ let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> =
        | Sig_val_decl(lid, t, quals, r) -> 
          if quals |> List.contains Assumption 
          then let impl = match Util.function_formals t with 
-                | Some (bs, c) -> mk_Exp_abs(bs, fail_exp (Util.comp_result c)) None dummyRange 
-                | _ -> fail_exp t in 
+                | Some (bs, c) -> mk_Exp_abs(bs, fail_exp lid (Util.comp_result c)) None dummyRange 
+                | _ -> fail_exp lid t in 
               let se = Sig_let((false, [{lbname=Inr lid; lbtyp=t; lbeff=Const.effect_ML_lid; lbdef=impl}]), r, [], quals) in
               let g, mlm = extract_sig g se in
               let is_record = Util.for_some (function RecordType _ -> true | _ -> false) quals in
