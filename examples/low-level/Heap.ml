@@ -10,19 +10,19 @@ end
 false
 end))
 
-let sel = (fun ( _ ) ( _ ) -> (failwith ("Not yet implemented")))
+let sel = (fun ( _ ) ( _ ) -> (failwith ("Not yet implemented:Heap.sel")))
 
-let upd = (fun ( _ ) ( _ ) ( _ ) -> (failwith ("Not yet implemented")))
+let upd = (fun ( _ ) ( _ ) ( _ ) -> (failwith ("Not yet implemented:Heap.upd")))
 
-let emp = (failwith ("Not yet implemented"))
+let emp = ()
 
-let contains = (fun ( _ ) ( _ ) -> (failwith ("Not yet implemented")))
+let contains = (fun ( _ ) ( _ ) -> (failwith ("Not yet implemented:Heap.contains")))
 
-let equal = (fun ( _ ) ( _ ) -> (failwith ("Not yet implemented")))
+let equal = (fun ( _ ) ( _ ) -> (failwith ("Not yet implemented:Heap.equal")))
 
-let restrict = (fun ( _ ) ( _ ) -> (failwith ("Not yet implemented")))
+let restrict = (fun ( _ ) ( _ ) -> (failwith ("Not yet implemented:Heap.restrict")))
 
-let concat = (fun ( _ ) ( _ ) -> (failwith ("Not yet implemented")))
+let concat = (fun ( _ ) ( _ ) -> (failwith ("Not yet implemented:Heap.concat")))
 
 type (' r, ' p, ' h) l__On =
 ' p

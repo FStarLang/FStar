@@ -1,3 +1,3 @@
 open Factorial
 
-let _ = loopyFactorial2 3;;
+let _ = print_int (loopyFactorial2 3);;
