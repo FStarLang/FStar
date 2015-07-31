@@ -144,11 +144,17 @@ static void scanfun(void *env, void **ptr) {
     printf("   is block: Wosize=%lu, Tag=%hhu\n", Wosize_val(v), Tag_val(v));
   }
 #endif
+  /* NOTE: We assume that the scanning action will ignore
+     values v that are not blocks; caml_oldify_one seems to check,
+     so I'll assume that non-block [v] values are safe. */
   action (v, root);
 }
 
 static void scan_stack_roots(scanning_action action)
 {
+#ifndef NDEBUG
+  printf("DOING SCAN\n");
+#endif
   each_marked_pointer(scanfun,action);
   if (prev_scan_roots_hook != NULL) (*prev_scan_roots_hook)(action);
 }
@@ -273,13 +279,21 @@ CAMLprim value stack_mktuple4(value v1, value v2, value v3, value v4) {
   }
 }
 
-/*
-CAMLprim value stack_mkemptystring(value vallen) {
-  CAMLparam1 (vallen);
-  int len = Int_val(vallen);
-  CAMLreturn(stack_caml_alloc_string(len));
+CAMLprim value stack_mkref(value v) 
+{
+  CAMLparam1 (v);
+  int mask[1];
+  mask[0] = 1; /* Assume it could always be a pointer, since it could be mutated to one */
+  value ref = stack_caml_alloc_tuple(1,1,mask);
+  if (ref == (value)0)
+    caml_failwith ("Camlstack.mkref");
+  else {
+    Field(ref, 0) = v;
+    CAMLreturn(ref);
+  }
 }
-*/
+
+/** DEBUGGING **/
 
 void printptrs(void *ign, void **ptr) {
   printf("  live pointer addr=%p, val=%p\n",ptr,*ptr);
@@ -293,3 +307,30 @@ CAMLprim value print_mask(value unit)
   CAMLreturn(Val_unit);
 }
 
+char *nextpad(char *pad) {
+  if (strlen(pad) == 0) return "  ";
+  if (strlen(pad) == 2) return "    ";
+  if (strlen(pad) == 4) return "      ";
+  return "        ";
+}
+
+void aux_inspect(value v, int level, char *pad) {
+  if (Is_long(v)) {
+    printf("%sis long %d (%ld)\n", pad, Int_val(v), Long_val(v));
+  } else {
+    int i;
+    printf("%sis block: Wosize=%lu, Tag=%hhu\n", pad, Wosize_val(v), Tag_val(v));
+    if (level == 0) return;
+    for (i=0;i<Wosize_val(v); i++) {
+      printf ("%sfield %d: ",pad, i);
+      aux_inspect(Field(v,i),level-1,nextpad(pad));
+    }
+  }
+}
+
+CAMLprim value inspect(value v)
+{
+  CAMLparam1 (v);
+  aux_inspect(v,2,"");
+  CAMLreturn(Val_unit);
+}

@@ -31,9 +31,12 @@ let rec fill_array b tb v tsize bw len =
      let tsize2 = tb len in
      if bw + tsize > bw2 && bw2 + tsize2 > bw then
        let v2 = 
-	 if bw < bw2 then div v (pow2 (bw2 - bw))
-	 else pow2 (bw - bw2) * v in
-       let v2 = signed_modulo v2 tsize2 in
+	 if bw < bw2 then div_non_eucl v (pow2 (bw2 - bw))
+         else (
+	   let m = signed_modulo v (pow2 (bw2 + tsize2 - bw)) in
+	   (pow2 (bw - bw2)) * m
+	 ) in
+       let v2 = signed_modulo v2 (pow2 tsize2) in
        let v2 = v2 + get b len in
        let t2 = mk_tint b (erase (tsize2)) v2 in
        updateBigint b len t2

@@ -1,17 +1,31 @@
+open Camlstack;;
+
+(* DEBUG *)
 (*
-external inspect : 'a -> unit = "inspect";;
+type recd = { mutable field1: int; mutable field2: int };;
+
+inspect ((1,ref 1));;
+inspect ({ field1 = 1; field2 = 2 });;
 *)
 
-open Camlstack;;
+let doGC() =
+  print_mask ();
+  Gc.full_major()
+  (* Gc.print_stat (Pervasives.stdout) *)
+;;
+
+(* LISTS *)
 
 push_frame 0;;
 
+(* allocates a list on the stack, where the list elements point to heap-allocated lists *)
 let rec mklist n =
   if n = 0 then []
   else
     let l = mklist (n-1) in
-    cons (n::[1;2;3]) l (* allocates a list on the stack, where the list elements point to heap-allocated lists *)
+    cons (n::[1;2;3]) l 
 
+(* makes a (heap-allocated) pretty-printed string of a list *)
 let rec string_of_list l p =
   match l with
       [] -> "[]"
@@ -23,21 +37,37 @@ let rec string_of_list l p =
 let ex = mklist 10;;
 
 Printf.printf "List result = %s\n" (string_of_list ex (fun l -> "("^(string_of_list l string_of_int)^")"));;
-
-print_mask ();;
-
-Gc.full_major();;
-Gc.print_stat (Pervasives.stdout);;
-
+doGC();;
 Printf.printf "List result = %s\n" (string_of_list ex (fun l -> "("^(string_of_list l string_of_int)^")"));;
 
 pop_frame ();;
 
-print_mask ();;
+(* REFERENCES *)
 
-Gc.full_major();;
+push_frame 0;;
 
-(* test error handling *)
+let rec mkrefs n =
+  if n = 0 then []
+  else
+    let l = mkrefs (n-1) in
+    (mkref [])::l 
+
+let rec modrefs l =
+  match l with
+      [] -> ()
+    | h::t -> h := [1;2]; modrefs t
+
+let ex = mkrefs 10;;
+doGC();;
+let ex = modrefs ex;;
+doGC();;
+
+pop_frame ();;
+
+(* ERROR HANDLING *)
+
+doGC();;
+
 let _ = 
   try 
     ignore(cons "hello" [])
@@ -58,4 +88,3 @@ let _ =
   with Invalid_argument s -> 
     Printf.printf "Tried to allocate negatively-sized frame\n"
 ;;
-
