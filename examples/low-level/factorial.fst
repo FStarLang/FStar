@@ -1,9 +1,9 @@
 (*--build-config
-    options:--admit_fsi Set;
-    variables:LIB=../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst stack.fst listset.fst  stackAndHeap.fst sst.fst sstCombinators.fst
+options: --codegen OCaml-experimental --trace_error --debug yes;
+variables:LIB=../../lib;
+other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/list.fst stack.fst listset.fst  stackAndHeap.fst sst.fst sstCombinators.fst
   --*)
-module Example1
+module Factorial
 open SSTCombinators
 open StackAndHeap
 open SST
