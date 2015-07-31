@@ -2,7 +2,8 @@
     options:--admit_fsi Set --z3timeout 10 --logQueries;
     variables:LIB=../../lib;
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst
-    st3.fst $LIB/constr.fst word.fst $LIB/seq.fsi $LIB/seq.fst array.fsi array.fst MD5Common.fst withScope.fst arrayAlgos.fst
+    stackAndHeap.fst sst.fst sstCombinators.fst $LIB/constr.fst word.fst $LIB/seq.fsi $LIB/seq.fst array.fsi
+     array.fst MD5Common.fst withScope.fst arrayAlgos.fst
   --*)
 
 (*Why is MD5 so? Why did its designer(s) think
@@ -10,7 +11,9 @@
   Is there a principle behind its design? or just random convolutery?
   *)
 module MD5
-open StructuredMem
+open SSTCombinators
+open StackAndHeap
+open SST
 open MVector
 open Heap
 open Set
