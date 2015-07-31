@@ -10,7 +10,80 @@ module Prims = struct
   type uint8 = char
   type _exn = exn
   type exn = _exn
+
+
+
+
+
+
   type 'dummy b2t = unit
+
+  type (' p, ' q) l_or =
+  | Left of ' p
+  | Right of ' q
+
+  let is_Left = (fun ( _discr_ ) -> (match (_discr_) with
+  | Left (_) -> begin
+  true
+  end
+  | _ -> begin
+  false
+  end))
+
+  let is_Right = (fun ( _discr_ ) -> (match (_discr_) with
+  | Right (_) -> begin
+  true
+  end
+  | _ -> begin
+  false
+  end))
+
+  type (' p, ' q) l_and =
+  | And of ' p * ' q
+
+  let is_And = (fun ( _discr_ ) -> (match (_discr_) with
+  | And (_) -> begin
+  true
+  end
+  | _ -> begin
+  false
+  end))
+
+
+  type l__True =
+  | T
+
+  let is_T = (fun ( _discr_ ) -> (match (_discr_) with
+  | T -> begin
+  true
+  end
+  | _ -> begin
+  false
+  end))
+
+  type l__False = unit 
+  (*This is how Coq extracts Inductive void := . Our extraction needs to be fixed to recognize when there
+    are no constructors and generate this type abbreviation*)
+
+  type (' p, ' q) l_imp =
+  ' p  ->  ' q
+
+  type (' p, ' q) l_iff =
+  ((' p, ' q) l_imp, (' q, ' p) l_imp) l_and
+
+  type ' p l_not =
+  (' p, l__False) l_imp
+
+  type (' a, ' p) l__Forall =
+  ' a  ->  ' p
+
+  type ' f l__ForallTyp =
+  unit  ->  ' f
+
+
+
+
+
   let ignore _ = ()
   let cut = ()
   let fst = fst

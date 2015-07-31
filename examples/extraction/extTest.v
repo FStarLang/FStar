@@ -157,3 +157,6 @@ Recursive Extraction someNat. (*the call to effectfulIncr vanishes*)
 Definition pair (a:Type) (a':Type) := prod a a'.
 
 Recursive Extraction pair.
+
+Inductive void := .
+Recursive Extraction void.
