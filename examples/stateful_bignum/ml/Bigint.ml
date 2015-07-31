@@ -86,6 +86,10 @@ in one)))
 
 let mk_tint a size value = (value)
 
+let mk_tarray t tmpl max = t
+
+let mk_array max t = t
+
 type array_pool =
 {free_arrays : tarray list ref; array_size : Support.Prims.pos ref; pool_size : Support.Prims.nat ref}
 
