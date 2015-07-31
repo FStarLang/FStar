@@ -503,4 +503,4 @@ type allocateInBlock (#a:Type) (r: ref a) (h0 : memblock) (h1 : memblock) (init 
 (*incase one does not want to reason about changed references*)
 (* TODO: allRefs does not extract properly. Set.empty has an extra unit which is not there in Support.ml
   on adding the extra unit, Ocaml complaisn about inability to generalize*)
-let allRefs : set aref = complement empty
+(* let allRefs : set aref = complement empty *)

@@ -88,7 +88,7 @@ let extendContextWithRepAsTyVar (b : either<btvar,bvvar> * either<btvar,bvvar>) 
         | (Inl bt, Inl btr) -> 
                    //printfn "mapping from %A\n" btr.v.realname;
                    //printfn "to %A\n" bt.v.realname;
-           extend_ty c btr (Some ((MLTY_Var (btvar_as_mlident bt))))
+           extend_ty c btr (Some ((MLTY_Var (btvar_as_mltyvar bt))))
         | (Inr bv, Inr _ ) -> extend_bv c bv ([], erasedContent) false
         | _ -> failwith "Impossible case"
 
@@ -98,7 +98,7 @@ let extendContextWithRepAsTyVars (b : list< (either<btvar,bvvar> * either<btvar,
 
 let extendContextAsTyvar (availableInML : bool) (b : either<btvar,bvvar>) (c:context): context = 
     match b with
-        | (Inl bt) -> extend_ty c bt (Some (if availableInML then (MLTY_Var (btvar_as_mlident bt)) else unknownType))
+        | (Inl bt) -> extend_ty c bt (Some (if availableInML then (MLTY_Var (btvar_as_mltyvar bt)) else unknownType))
         //if availableInML then (extend_ty c bt (Some ( (MLTY_Var (btvar2mlident bt))))) else (extend_hidden_ty c bt unknownType)
         | (Inr bv) -> extend_bv c bv ([], erasedContent) false
 
@@ -172,7 +172,7 @@ and getTypeFromArg (c:context) (a:arg) : mlty =
       | Inl ty -> extractTyp c ty
       | Inr _ -> erasedContent 
 
-and extractMeta (c:context) (mt:meta_t) : mlty =
+and extractMeta (c:context) (mt:meta_t) : mlty = // TODO: check if this is the right way to extract metas
     match mt with
       | Meta_pattern (t,_) 
       | Meta_named (t,_)

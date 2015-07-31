@@ -84,7 +84,6 @@ let rec scopedWhile
 OCaml complains "operator expected" . Removing 'loopInv manually in the extract
 fixes the problem. 'loopInv is not used anyway in the extract. *)
 
-(*
 val scopedWhile1 :
   #a:Type
   -> r:(ref a)
@@ -106,6 +105,7 @@ let scopedWhile1 'a r lc 'loopInv mods bd =
     mods
     bd
 
+(*
 val scopedWhile2 :
   #a:Type
   -> #b:Type
