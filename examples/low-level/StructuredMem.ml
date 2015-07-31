@@ -80,7 +80,7 @@ end
 (stackBlockAtLoc id (st m))
 end))
 
-let writeInBlock = (fun ( r ) ( v ) ( mb ) -> (Support.Heap.upd mb r v))
+let writeInBlock = (fun ( r ) ( v ) ( mb ) -> (Heap.upd mb r v))
 
 let rec changeStackBlockWithId = (fun ( f ) ( s ) ( ms ) -> (match (ms) with
 | [] -> begin
@@ -113,7 +113,7 @@ end
 | h::tl -> begin
 (match (((Support.Prims.fst h) = id)) with
 | true -> begin
-(Support.Heap.contains (Support.Prims.snd h) r)
+(Heap.contains (Support.Prims.snd h) r)
 end
 | false -> begin
 (refExistsInStack r id tl)
@@ -128,7 +128,7 @@ let refExistsInStackTail = (fun ( r ) ( id ) ( ms ) -> ())
 
 let refExistsInMem = (fun ( r ) ( m ) -> (match ((refLoc r)) with
 | InHeap -> begin
-(Support.Heap.contains (hp m) r)
+(Heap.contains (hp m) r)
 end
 | InStack (id) -> begin
 (refExistsInStack r id (st m))
@@ -138,7 +138,7 @@ let rec writeMemStackExists = (fun ( rw ) ( r ) ( ms ) ( id ) ( idw ) ( v ) -> (
 
 let writeMemAux = (fun ( r ) ( m ) ( v ) -> (match ((refLoc r)) with
 | InHeap -> begin
-((Support.Heap.upd (hp m) r v), (Support.Prims.snd m))
+((Heap.upd (hp m) r v), (Support.Prims.snd m))
 end
 | InStack (id) -> begin
 ((hp m), (writeInMemStack r (st m) id v))
@@ -152,7 +152,7 @@ let rec loopkupRefStack = (fun ( r ) ( id ) ( ms ) -> (match (ms) with
 | h::tl -> begin
 (match (((Support.Prims.fst h) = id)) with
 | true -> begin
-(Support.Heap.sel (Support.Prims.snd h) r)
+(Heap.sel (Support.Prims.snd h) r)
 end
 | false -> begin
 (loopkupRefStack r id tl)
@@ -161,14 +161,14 @@ end))
 
 let loopkupRef = (fun ( r ) ( m ) -> (match ((refLoc r)) with
 | InHeap -> begin
-(Support.Heap.sel (hp m) r)
+(Heap.sel (hp m) r)
 end
 | InStack (id) -> begin
 (loopkupRefStack r id (st m))
 end))
 
-type ('b, 'tc, 'fc) ifthenelseT =
-(('b, 'tc) Support.Prims.l_imp, ('b Support.Prims.l_not, 'fc) Support.Prims.l_imp) Support.Prims.l_and
+type (' b, ' tc, ' fc) ifthenelseT =
+((' b, ' tc) Support.Prims.l_imp, (' b Support.Prims.l_not, ' fc) Support.Prims.l_imp) Support.Prims.l_and
 
 let rec readAfterWriteStack = (fun ( rw ) ( r ) ( v ) ( id ) ( idw ) ( m ) -> ())
 
@@ -196,17 +196,17 @@ let refExistsInMemSTailSids = (fun ( r ) ( id ) ( m0 ) ( m1 ) -> ())
 
 let refExistsInMemTailSids = (fun ( r ) ( m0 ) ( m1 ) -> ())
 
-type ('m0, 'm1, 'rs) canModify =
+type (' m0, ' m1, ' rs) canModify =
 (Obj.t ref, (unit Support.Prims.b2t, (unit Support.Prims.b2t Support.Prims.l_not, (unit Support.Prims.b2t, unit Support.Prims.b2t) Support.Prims.l_and) Support.Prims.l_imp) Support.Prims.l_imp) Support.Prims.l__Forall Support.Prims.l__ForallTyp
 
-type ('a, 'r, 'v, 'm) mreads =
+type (' a, ' r, ' v, ' m) mreads =
 (unit Support.Prims.b2t, unit Support.Prims.b2t) Support.Prims.l_and
 
 let canModifyNone = (fun ( m ) -> ())
 
 let canModifyWrite = (fun ( r ) ( v ) ( m ) -> ())
 
-type ('a, 'r, 'h0, 'h1, 'init) allocateInBlock =
+type (' a, ' r, ' h0, ' h1, ' init) allocateInBlock =
 ((unit Support.Prims.b2t, unit Support.Prims.b2t) Support.Prims.l_and, (memblock, Support.Prims.heap, unit, unit) Support.Prims.l__Eq2) Support.Prims.l_and
 
 let halloc = (fun ( init ) -> (failwith ("Not yet implemented")))
@@ -221,10 +221,8 @@ let pushStackFrame = (fun ( _ ) -> (failwith ("Not yet implemented")))
 
 let popStackFrame = (fun ( _ ) -> (failwith ("Not yet implemented")))
 
-type 'm mStackNonEmpty =
+type ' m mStackNonEmpty =
 unit Support.Prims.b2t
-
-let allRefs = (Support.Set.complement (Support.Set.empty ()))
 
 let withNewScope = (fun ( mods ) ( body ) -> (let _7_457 = (pushStackFrame ())
 in (let v = (body ())
@@ -239,13 +237,6 @@ end
 | false -> begin
 ()
 end))
-
-let scopedWhile1 = (fun ( r ) ( lc ) ( 'loopInv ) ( mods ) ( bd ) -> (scopedWhile (Obj.magic (fun ( u ) -> (let _7_18302 = (memread r)
-in (lc _7_18302)))) mods bd))
-
-let scopedWhile2 = (fun ( ra ) ( rb ) ( lc ) ( 'loopInv ) ( mods ) ( bd ) -> (scopedWhile (Obj.magic (fun ( u ) -> (let _7_18340 = (memread ra)
-in (let _7_18339 = (memread rb)
-in (lc _7_18340 _7_18339))))) mods bd))
 
 
 

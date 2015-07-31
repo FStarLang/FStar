@@ -83,6 +83,9 @@ module Prims = struct
 
 
 
+  type heap = unit (*perhaps implement Heap concretely, and hence get it extracted fully automatically?
+    We shoud get rid of this plethora of assumed primitives! *)
+  type (' p, ' q, 'dummyP, 'dummyQ) l__Eq2 =  unit
 
   let ignore _ = ()
   let cut = ()
@@ -155,6 +158,7 @@ module List = struct
   let length = BatList.length
   let rev = BatList.rev
   let map = BatList.map
+  let mapT = map
   let mapi = BatList.mapi
   let map2 = BatList.map2
   let rec map3 f l1 l2 l3 =
@@ -1451,7 +1455,7 @@ end
 
 module Set = struct
   type 'a set = 'a BatSet.t
-  let empty = BatSet.empty
+  let empty =  BatSet.empty
   let singleton = BatSet.singleton
   let union = BatSet.union
   let intersect = BatSet.intersect
