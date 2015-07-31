@@ -68,6 +68,8 @@ let unknownType : mlty =  MLTY_Top
 
 (*copied from ocaml-strtrans.fs*)
 let prependTick (x,n) = if Util.starts_with x "'" then (x,n) else ("' "^x,n)
+let removeTick (x,n) = if Util.starts_with x "'" then (Util.substring_from x 1,n) else (x,n)
+
 let convRange (r:Range.range) : int = 0 (*FIX!!*)
 let convIdent (id:ident) : mlident = (id.idText ,(convRange id.idRange))
 
@@ -84,7 +86,9 @@ let convIdent (id:ident) : mlident = (id.idText ,(convRange id.idRange))
    Coq seems to add a space after the tick in such cases. Always adding a space for now
   *)
 
-let btvar_as_mlident (btv: btvar) : mlident =  (prependTick (convIdent btv.v.ppname))
+let btvar_as_mltyvar (btv: btvar) : mlident =  (prependTick (convIdent btv.v.ppname))
+
+let btvar_as_mlTermVar (btv: btvar) : mlident =  (removeTick (convIdent btv.v.ppname))
 
 let rec lookup_ty_local (gamma:list<binding>) (b:btvar) : mlty = 
     match gamma with
@@ -146,7 +150,7 @@ let extend_hidden_ty (g:env) (a:btvar) (mapped_to:mlty) : env =
 *)
 
 let extend_ty (g:env) (a:btvar) (mapped_to:option<mlty>) : env = 
-    let ml_a =  btvar_as_mlident a in 
+    let ml_a =  btvar_as_mltyvar a in 
     let mapped_to = match mapped_to with 
         | None -> MLTY_Var ml_a
         | Some t -> t in

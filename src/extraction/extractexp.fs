@@ -328,8 +328,8 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
             let ml_bs, env = List.fold_left (fun (ml_bs, env) (b, _) -> match b with 
                 | Inl a -> //no first-class polymorphism; so type-binders get wiped out
                   let env = Env.extend_ty env a (Some MLTY_Top) in 
-                  let ml_b = (btvar_as_mlident a (*name of the binder*) , Some <| ml_unit_ty (*type of the binder. correspondingly, this argument gets converted to the unit value in application *)) in
-                  ml_b::ml_bs, env 
+                  let ml_b = (btvar_as_mlTermVar a (*name of the binder*) , Some <| ml_unit_ty (*type of the binder. correspondingly, this argument gets converted to the unit value in application *)) in
+                        ml_b::ml_bs, env 
               
                 | Inr x -> 
                   let t = translate_typ env x.sort in
@@ -377,7 +377,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                              let targs = targs |> List.map (function (Inl a, _) -> a | _ -> failwith "Impossible") in
                              let env = List.fold_left (fun env a -> Env.extend_ty env a None) g targs in
                              let expected_t = translate_typ env expected_t in
-                             let polytype = targs |> List.map btvar_as_mlident, expected_t in
+                             let polytype = targs |> List.map btvar_as_mltyvar, expected_t in
                              let add_unit = match rest_args with 
                                 | [] -> not (is_value_or_type_app body) //if it's a pure type app, then it will be extracted to a value in ML; so don't add a unit
                                 | _ -> false in 
