@@ -8,39 +8,18 @@ type mlident =
 type mlpath =
 (mlsymbol list * mlsymbol)
 
-let idsym = (fun ( _63_4 ) -> (match (_63_4) with
+let idsym = (fun ( _53_4 ) -> (match (_53_4) with
 | (s, _) -> begin
 s
 end))
 
-let ptsym = (fun ( _63_7 ) -> (match (_63_7) with
+let string_of_mlpath = (fun ( _53_7 ) -> (match (_53_7) with
 | (p, s) -> begin
-(let s = (match (((let _68_25378 = (Support.String.get s 0)
-in (Support.Char.lowercase _68_25378)) <> (Support.String.get s 0))) with
-| true -> begin
-(Support.String.strcat "l__" s)
-end
-| false -> begin
-s
-end)
-in (Support.String.concat "." (Support.List.append p ((s)::[]))))
+(Support.String.concat "." (Support.List.append p ((s)::[])))
 end))
 
-let ptctor = (fun ( _63_11 ) -> (match (_63_11) with
-| (p, s) -> begin
-(let s = (match (((let _68_25381 = (Support.String.get s 0)
-in (Support.Char.uppercase _68_25381)) <> (Support.String.get s 0))) with
-| true -> begin
-(Support.String.strcat "U__" s)
-end
-| false -> begin
-s
-end)
-in (Support.String.concat "." (Support.List.append p ((s)::[]))))
-end))
-
-let mlpath_of_lident = (fun ( x ) -> (let _68_25385 = (Support.List.map (fun ( x ) -> x.Microsoft_FStar_Absyn_Syntax.idText) x.Microsoft_FStar_Absyn_Syntax.ns)
-in (_68_25385, x.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText)))
+let mlpath_of_lident = (fun ( x ) -> (let _68_23682 = (Support.List.map (fun ( x ) -> x.Microsoft_FStar_Absyn_Syntax.idText) x.Microsoft_FStar_Absyn_Syntax.ns)
+in (_68_23682, x.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText)))
 
 let as_mlident = (fun ( x ) -> (x.Microsoft_FStar_Absyn_Syntax.ppname.Microsoft_FStar_Absyn_Syntax.idText, 0))
 
@@ -51,19 +30,19 @@ type mlsymbols =
 mlsymbol list
 
 type e_tag =
-| MayErase
-| Keep
+| E_PURE
+| E_IMPURE
 
-let is_MayErase = (fun ( _discr_ ) -> (match (_discr_) with
-| MayErase -> begin
+let is_E_PURE = (fun ( _discr_ ) -> (match (_discr_) with
+| E_PURE -> begin
 true
 end
 | _ -> begin
 false
 end))
 
-let is_Keep = (fun ( _discr_ ) -> (match (_discr_) with
-| Keep -> begin
+let is_E_IMPURE = (fun ( _discr_ ) -> (match (_discr_) with
+| E_IMPURE -> begin
 true
 end
 | _ -> begin
@@ -294,10 +273,12 @@ type mlexpr =
 | MLE_If of (mlexpr * mlexpr * mlexpr option)
 | MLE_Raise of (mlpath * mlexpr list)
 | MLE_Try of (mlexpr * mlbranch list) 
+ and mllb =
+{mllb_name : mlident; mllb_tysc : mltyscheme option; mllb_add_unit : bool; mllb_def : mlexpr} 
  and mlbranch =
 (mlpattern * mlexpr option * mlexpr) 
  and mlletbinding =
-(bool * (mlident * mltyscheme option * mlidents * mlexpr) list)
+(bool * mllb list)
 
 let is_MLE_Const = (fun ( _discr_ ) -> (match (_discr_) with
 | MLE_Const (_) -> begin
@@ -426,6 +407,8 @@ end
 | _ -> begin
 false
 end))
+
+let is_Mkmllb = (fun ( _ ) -> (failwith ("Not yet implemented")))
 
 type mltybody =
 | MLTD_Abbrev of mlty
@@ -567,7 +550,7 @@ end
 MLE_Fun ((((x, None))::[], e))
 end))
 
-let mlif = (fun ( b ) ( _63_127 ) -> (match (_63_127) with
+let mlif = (fun ( b ) ( _53_127 ) -> (match (_53_127) with
 | (e1, e2) -> begin
 (match (e2) with
 | MLE_Const (MLC_Unit) -> begin
@@ -577,6 +560,12 @@ end
 MLE_If ((b, e1, Some (e2)))
 end)
 end))
+
+let ml_unit = MLE_Const (MLC_Unit)
+
+let ml_bool_ty = MLTY_Named (([], (("Prims")::[], "bool")))
+
+let ml_unit_ty = MLTY_Named (([], (("Prims")::[], "unit")))
 
 
 

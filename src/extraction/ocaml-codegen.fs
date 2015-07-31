@@ -622,7 +622,7 @@ let doc_of_mltydecl (currentModule : mlsymbol) (decls : mltydecl) =
     doc
 
 (* -------------------------------------------------------------------- *)
-let rec doc_of_sig1 (currentModule : mlsymbol) s = 
+let rec doc_of_sig1 currentModule s = 
     match s with
     | MLS_Mod (x, subsig) ->
         combine hardline
