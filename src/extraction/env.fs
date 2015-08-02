@@ -215,7 +215,7 @@ let extend_tydef (g:env) (td:mltydecl) : env =
     {g with tydefs=(m,td)::g.tydefs}
 
 let erasableType (g:env) (t:mlty) = 
-    printfn "(* erasability of %A is %A *)\n" t (g.erasableTypes t);
+    //printfn "(* erasability of %A is %A *)\n" t (g.erasableTypes t);
    g.erasableTypes t
   
 let emptyMlPath : mlpath = ([],"")
