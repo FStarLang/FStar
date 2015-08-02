@@ -467,14 +467,15 @@ Also, why does it's definition have to be so procedural, unlike the more declara
 *)
 type modset = ghost (set aref)
 
+(* TODO: why are these not erased? why are these iota unfolded*)
 val ghostUnfoldTest : unit -> GTot (ghost (set aref))
-let ghostUnfoldTest () = hide empty
+let ghostUnfoldTest u = hide empty
 
 val ghostUnfoldTest3 : r:(ref int) -> GTot (ghost (set aref))
 let ghostUnfoldTest3 r = hide (singleton (Ref r))
 
 val ghostUnfoldTest2 : unit -> GTot (modset)
-let ghostUnfoldTest2 () = hide empty
+let ghostUnfoldTest2 u = hide empty
 
 type canModify  (m0 : smem)  (m1: smem) (rs: set aref ) =
   forall (a:Type) (r: ref a).

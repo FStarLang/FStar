@@ -203,7 +203,7 @@ let mlpath_of_lid (l:lident) = (l.ns |> List.map (fun i -> i.idText),  l.ident.i
 
 let rec erasableType (g:Env.env) (t:mlty) :bool = 
     //printfn "(* erasability of %A is %A *)\n" t (g.erasableTypes t);
-   if g.erasableTypes t 
+   if Env.erasableTypeNoDelta t 
    then true 
    else 
    ( match delta_unfold g t with
