@@ -94,11 +94,11 @@ let erasable (g:env)  (f:e_tag) (t:mlty) =
 let erase (g:env) (e:mlexpr) (f:e_tag) (t:mlty) : mlexpr * e_tag * mlty = 
     if erasable g f t
     then (debug g (fun () -> Util.fprint2 "Erasing %s at type %s\n" (OCaml.Code.string_of_mlexpr g e) (OCaml.Code.string_of_mlty g t));
-          ml_unit, f , ml_unit_ty) (*unit value*)
+          ml_unit, f , erasedContent) (*unit value*)
     else e, f, t
 
-let maybe_coerce (g:env) (e:mlexpr) (tInferred:mlty) (tExpected:mlty) = 
-    if equiv g tInferred tExpected 
+let maybe_coerce (g:env) (e:mlexpr) (tInferred:mlty) (etag : e_tag) (tExpected:mlty) = 
+    if equiv g tInferred (if (erasable g etag tExpected) then erasedContent else tExpected)
     then e
     else (//debug g (fun () -> printfn "\n (*needed to coerce expression \n %A \n of type \n %A \n to type \n %A *) \n" e tInferred tExpected);
           MLE_Coerce (e, tInferred, tExpected))
@@ -230,7 +230,7 @@ and check_exp' (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr =
      | _ -> 
        let e0, f0, t0 = synth_exp g e in
        if eff_leq f0 f
-       then maybe_coerce g e0 t0 t
+       then maybe_coerce g e0 t0 f t
        else err_unexpected_eff e f f0
       
 and synth_exp (g:env) (e:exp) : (mlexpr * e_tag * mlty) = 
@@ -289,7 +289,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
 
                 | (Inr e0, _)::rest, MLTY_Fun(tExpected, f', t) -> 
                   let e0, f0, tInferred = synth_exp g e0 in 
-                  let e0 = maybe_coerce g e0 tInferred tExpected in // coerce the arguments of application, if they dont match up
+                  let e0 = maybe_coerce g e0 tInferred f' tExpected in // coerce the arguments of application, if they dont match up
                   synth_app is_data (mlhead, (e0, f0)::mlargs_f) (join_l [f;f';f0], t) rest
                   
                 | _ -> 

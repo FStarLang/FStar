@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi Set --z3timeout 10;
     variables:LIB=../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst st3.fst $LIB/constr.fst  stackAndHeap.fst sst.fst sstCombinators.fst
+    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst st3.fst $LIB/constr.fst  $LIB/ghost.fst stackAndHeap.fst sst.fst sstCombinators.fst
   --*)
 
 module ScopedWhile3

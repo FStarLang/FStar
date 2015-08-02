@@ -77,7 +77,7 @@ static void add_page(int sz_b, int is_ext) {
   sz_b = word_align(max(2*sz_b,DEFAULT_PAGE_SZB));
   int mapsz_b = byte_align(sz_b/WORD_SZB)/8;
   Page *region = malloc(sizeof(Page)+mapsz_b);
-  printf ("add page size = %d, ext = %d, map size = %d\n", sz_b, is_ext, mapsz_b);
+  //printf ("add page size = %d, ext = %d, map size = %d\n", sz_b, is_ext, mapsz_b);
   void* memory = malloc(sz_b);
   check (region != NULL);
   check (memory != NULL);
@@ -151,11 +151,11 @@ int pop_frame() {
    frame. Of these bytes, there are [n] words that contain pointers,
    as defined by the mask [m]. This mask is an array of integers
    indicating the word-sized offsets in the memory that begin the
-   pointers. If the current page has enough memory, we simply
-   bump the allocation pointer; otherwise, we allocate another
-   page and extend the frame onto that page. The pointermap for
-   the allocated memory is set to 0, and then the bits in the mask
-   are set.
+   pointers. If [n] is -1 then all words are potential pointers. If
+   the current page has enough memory, we simply bump the allocation
+   pointer; otherwise, we allocate another page and extend the frame
+   onto that page. The pointermap for the allocated memory is set to
+   0, and then the bits in the mask are set.
  */
 void *stack_alloc_maskp(int sz_b, int nbits, int *mask) {
   if (top == NULL) return NULL;
@@ -167,8 +167,14 @@ void *stack_alloc_maskp(int sz_b, int nbits, int *mask) {
     int i;
     top->alloc_ptr = (void *)((unsigned long)top->alloc_ptr + sz_b);
     unsetbit_rng(top->pointermap, ofs, sz_b / WORD_SZB);
-    for (i = 0; i<nbits; i++) {
-      setbit(top->pointermap, mask[i]+ofs);
+    if (nbits < 0) { /* set all words in object as possibly pointerful */
+      for (i = 0; i<sz_b/WORD_SZB; i++) {
+	setbit(top->pointermap, i+1+ofs);
+      }
+    } else { /* set just words in the mask */
+      for (i = 0; i<nbits; i++) {
+	setbit(top->pointermap, mask[i]+ofs);
+      }
     }
     return res;
   } else {
@@ -183,7 +189,7 @@ void *stack_alloc_maskp(int sz_b, int nbits, int *mask) {
 void *vstack_alloc_mask(int sz_b, int nbits, va_list argp) {
   int buf[256];
   int i;
-  assert(nbits < 256);
+  assert(nbits >= -1 && nbits < 256);
   for (i=0; i<nbits; i++) {
     int n = va_arg(argp,int);
     buf[i] = n;

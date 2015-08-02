@@ -6,15 +6,15 @@ in v))))
 
 let rec scopedWhile = (fun ( wg ) ( mods ) ( bd ) -> (match ((wg ())) with
 | true -> begin
-(let _11_77 = (withNewScope mods (Obj.magic bd))
-in (scopedWhile wg mods bd))
+(let _11_77 = (withNewScope () (Obj.magic bd))
+in (scopedWhile wg () bd))
 end
 | false -> begin
 ()
 end))
 
-let scopedWhile1 = (fun ( r ) ( lc ) ( loopInv ) ( mods ) ( bd ) -> (scopedWhile (Obj.magic (fun ( u ) -> (let _12_3640 = (SST.memread r)
-in (lc _12_3640)))) mods bd))
+let scopedWhile1 = (fun ( r ) ( lc ) ( loopInv ) ( mods ) ( bd ) -> (scopedWhile (Obj.magic (fun ( u ) -> (let _11_4158 = (SST.memread r)
+in (lc _11_4158)))) () bd))
 
 
 

@@ -32,9 +32,8 @@ type env = {
     tcenv:Tc.Env.env;
     gamma:list<binding>;
     tydefs:list<(list<mlsymbol> * mltydecl)>; 
-    erasableTypes : mlty -> bool; // Unit is not the only type that can be erased. We could erase inductive families which had only 1 element, or become so after extraction.
-      // perhaps instead of returning a bool, we can return option mlexpr , such that if t is erasable then (erasableTypes t) is Some e, then e is a dummy expression of type t.
-      // e.g. , (erasableTypes (nnat -> nnat -> Tot unit)) could be (Some (fun _ _ -> ()))
+    //erasableTypes : mlty -> bool; // Unit is not the only type that can be erased. We could erase inductive families which had only 1 element, or become so after extraction.
+    //if so, just convert them to type abbreviations returning unit.
     currentModule: mlpath // needed to properly translate the definitions in the current file
 }
 
@@ -54,14 +53,14 @@ let mkFvvar (l: lident) (t:typ) : fvvar =
     However, it represets both the unit type and the unit value. Ocaml gets confused sometimes*)
 let erasedContent : mlty = ml_unit_ty
 
-let rec erasableType_init (t:mlty) =
+let erasableTypeNoDelta (t:mlty) =
 match  t with
 //| MLTY_Fun (l, etag ,r) -> etag = MayErase && erasableType_init r // TODO : do we need to check etag here? it is checked just before erasing 
 | _ -> 
     if t = ml_unit_ty then true
     else match t with 
-        | MLTY_Named (_, (["Ghost"], "erased")) -> true //when would a named type like this be produced?
-        | _ -> false //TODO: what about types that reduce/unfold to unit/erased t? Do a syntactic check with ml_unit_ty?
+        | MLTY_Named (_, (["Ghost"], "ghost")) -> true
+        | _ -> false // this function is used by another function which does delta unfolding
 
 (* \mathbb{T} type in the thesis, to be used when OCaml is not expressive enough for the source type *)
 let unknownType : mlty =  MLTY_Top
@@ -213,14 +212,11 @@ let extend_tydef (g:env) (td:mltydecl) : env =
     let m = fst (g.currentModule) @ [snd g.currentModule] in
     {g with tydefs=(m,td)::g.tydefs}
 
-let erasableType (g:env) (t:mlty) = 
-   // printfn "(* erasability of %A is %A *)\n" t (g.erasableTypes t);
-   g.erasableTypes t
   
 let emptyMlPath : mlpath = ([],"")
 
 let mkContext (e:Tc.Env.env) : env =
-   let env = { tcenv = e; gamma =[] ; tydefs =[]; erasableTypes = erasableType_init; currentModule = emptyMlPath} in
+   let env = { tcenv = e; gamma =[] ; tydefs =[]; currentModule = emptyMlPath} in
    let a = "'a", -1 in
    let failwith_ty = ([a], MLTY_Fun(MLTY_Named([], (["Prims"], "string")), E_IMPURE, MLTY_Var a)) in
    extend_lb env (Inr Const.failwith_lid) tun failwith_ty false |> fst

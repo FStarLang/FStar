@@ -1,7 +1,7 @@
 (*--build-config
 options: --codegen OCaml-experimental --trace_error --debug yes --prn;
 variables:LIB=../../lib;
-other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/list.fst stack.fst listset.fst  stackAndHeap.fst sst.fst sstCombinators.fst
+other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/list.fst stack.fst listset.fst  $LIB/ghost.fst stackAndHeap.fst sst.fst sstCombinators.fst
   --*)
 module Factorial
 open SSTCombinators
