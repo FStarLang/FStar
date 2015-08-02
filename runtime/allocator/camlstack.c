@@ -1,9 +1,26 @@
+/*
+   Copyright 2015 Michael Hicks, Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
 #include <stdio.h>
 #include <string.h>
 #include <caml/mlvalues.h>
 #include <caml/memory.h>
 #include <caml/fail.h>
 #include "stack.h"
+#include "camlstack.h"
 
 #define check(_p) if (!(_p)) { fprintf(stderr,"Failed check %s:%d\n",__FILE__,__LINE__); fflush(stdout); exit(1); }
 #define Assert check
@@ -55,15 +72,16 @@ extern void (*caml_scan_roots_hook) (scanning_action);
 /* [stack_caml_alloc s t n m] allocates an OCaml value that is [s]
    words in length and has OCaml tag [t]. There are [n] words among
    the [s] allocated that will contain pointers, once the value is
-   initialized.  Which pointers are defined by offset, in [m]. That
-   is, [m] is an integer array of length (at least) [n], and each
-   element of the array indicates the offset of the word in the
-   allocated memory that will contain an allocated pointer. IMPORTANT:
-   these offsets begin at 1, not 0.  As an example, suppose we wanted
-   to allocate a pair of values, where the second one is a pointer to
-   the OCaml heap. Then the call might be [stack_caml_alloc(2,0,1,m)]
-   where [m] is an array of length 1, and its single element is the
-   integer 2.
+   initialized. Which pointers are defined by offset, in [m]. (If [n]
+   is set to -1, then all words will be deemed as potentially
+   pointerful, regardless of the contents of [m].) That is, [m] is an
+   integer array of length (at least) [n], and each element of the
+   array indicates the offset of the word in the allocated memory that
+   will contain an allocated pointer. IMPORTANT: these offsets begin
+   at 1, not 0.  As an example, suppose we wanted to allocate a pair
+   of values, where the second one is a pointer to the OCaml
+   heap. Then the call might be [stack_caml_alloc(2,0,1,m)] where [m]
+   is an array of length 1, and its single element is the integer 2.
  */
 value stack_caml_alloc(mlsize_t wosize, tag_t tag, int nbits, int *mask) {
   value tmp, result;
@@ -197,6 +215,11 @@ CAMLprim value stack_pop_frame(value unit)
     CAMLreturn(Val_unit);
 }
 
+/* The next set of functions allocate immutable tuples.
+   As such, they determine whether a field in the tuple
+   may contain an OCaml pointer by examing the initializer.
+   If the tuples were mutable, this would not be sufficient. */
+
 CAMLprim value stack_mkpair(value v1, value v2) 
 {
   CAMLparam2 (v1, v2);
@@ -290,6 +313,25 @@ CAMLprim value stack_mkref(value v)
   else {
     Field(ref, 0) = v;
     CAMLreturn(ref);
+  }
+}
+
+CAMLprim value stack_mkarray(value lenv, value initv) {
+  CAMLparam2 (lenv, initv);
+  int len = Int_val(lenv);
+  if (len <= 0) 
+    caml_invalid_argument ("Camlstack.mkarray");
+  else {
+    value tuple = stack_caml_alloc_tuple(len,-1,NULL); /* default: all elements are possibly pointers */
+    if (tuple == (value)0)
+      caml_failwith ("Camlstack.mkarray");    
+    else {
+      int i;
+      for (i=0;i<len;i++) {
+	Field(tuple, i) = initv;
+      }
+      CAMLreturn(tuple);
+    }
   }
 }
 

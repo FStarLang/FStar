@@ -14,6 +14,19 @@ let doGC() =
   (* Gc.print_stat (Pervasives.stdout) *)
 ;;
 
+(* ARRAYS *)
+
+push_frame 0;;
+
+let arr = Camlstack.mkarray 10 [1;2];;
+doGC();;
+arr.(0) <- [];
+arr.(1) <- [];
+arr.(2) <- [];
+doGC();;
+
+pop_frame ();;
+
 (* LISTS *)
 
 push_frame 0;;

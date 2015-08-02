@@ -1,9 +1,25 @@
+(*
+   Copyright 2015 Michael Hicks, Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 (** Stack operations
 
     The functions here are for allocating Caml values on a
     manually-managed, growable stack. 
 
-    This library in unsafe. To avoid memory errors, programs must
+    This library is unsafe. To avoid memory errors, programs must
     satisfy two constraints:
 
     1) No data allocated on a frame, and no data in the OCaml heap
@@ -12,8 +28,10 @@
     dereference.)
 
     2) No pointers into the OCaml heap will be installed by mutation
-    of a stack-allocated object. (To do so would create a GC root into
-    the OCaml heap that is not tracked by the stack implementation.)
+    of a stack-allocated object UNLESS the location that was mutated
+    was initially registered, when created, as possibly
+    pointer-containing.  (To do so would create a GC root into the
+    OCaml heap that is not tracked by the stack implementation.)
 *)
 
 external push_frame : int -> unit = "stack_push_frame";;
@@ -49,6 +67,12 @@ external mkref: 'a -> 'a ref = "stack_mkref";;
 (** [Camlstack.mkref x] allocates a ref cell on the stack,
     initializing it with x.  Raise [Failure "Camlstack.cons"] if the
     stack has no frames. *)
+
+external mkarray : int -> 'a -> 'a array = "stack_mkarray";;
+(** [Camlstack.mkarray n v] allocates an array of length [n] with each
+    element initialized to [v]. 
+    Raise [Failure "Camlstack.mkarray"] if the stack has no frames. 
+    Raise [Invalid_argument "Camlstack.mkarray"] if [n] is non-positive. *)
 
 (** DEBUGGING **)
 
