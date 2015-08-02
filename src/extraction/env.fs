@@ -54,15 +54,14 @@ let mkFvvar (l: lident) (t:typ) : fvvar =
     However, it represets both the unit type and the unit value. Ocaml gets confused sometimes*)
 let erasedContent : mlty = ml_unit_ty
 
-let rec erasableType_init (t:mlty) =
+let erasableType_init (t:mlty) =
 match  t with
 //| MLTY_Fun (l, etag ,r) -> etag = MayErase && erasableType_init r // TODO : do we need to check etag here? it is checked just before erasing 
 | _ -> 
     if t = ml_unit_ty then true
     else match t with 
         | MLTY_Named (_, (["Ghost"], "ghost")) -> true
-        | _ -> //match 
-        false //TODO: what about types that reduce/unfold to unit/erased t? Do a syntactic check with ml_unit_ty?
+        | _ -> false // this function is used by another function which does delta unfolding
 
 (* \mathbb{T} type in the thesis, to be used when OCaml is not expressive enough for the source type *)
 let unknownType : mlty =  MLTY_Top
@@ -214,9 +213,6 @@ let extend_tydef (g:env) (td:mltydecl) : env =
     let m = fst (g.currentModule) @ [snd g.currentModule] in
     {g with tydefs=(m,td)::g.tydefs}
 
-let erasableType (g:env) (t:mlty) = 
-    //printfn "(* erasability of %A is %A *)\n" t (g.erasableTypes t);
-   g.erasableTypes t
   
 let emptyMlPath : mlpath = ([],"")
 
