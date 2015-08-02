@@ -60,8 +60,9 @@ match  t with
 | _ -> 
     if t = ml_unit_ty then true
     else match t with 
-        | MLTY_Named (_, (["Ghost"], "erased")) -> true //when would a named type like this be produced?
-        | _ -> false //TODO: what about types that reduce/unfold to unit/erased t? Do a syntactic check with ml_unit_ty?
+        | MLTY_Named (_, (["Ghost"], "ghost")) -> true
+        | _ -> //match 
+        false //TODO: what about types that reduce/unfold to unit/erased t? Do a syntactic check with ml_unit_ty?
 
 (* \mathbb{T} type in the thesis, to be used when OCaml is not expressive enough for the source type *)
 let unknownType : mlty =  MLTY_Top
@@ -214,7 +215,7 @@ let extend_tydef (g:env) (td:mltydecl) : env =
     {g with tydefs=(m,td)::g.tydefs}
 
 let erasableType (g:env) (t:mlty) = 
-   // printfn "(* erasability of %A is %A *)\n" t (g.erasableTypes t);
+    printfn "(* erasability of %A is %A *)\n" t (g.erasableTypes t);
    g.erasableTypes t
   
 let emptyMlPath : mlpath = ([],"")
