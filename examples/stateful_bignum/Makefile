@@ -18,9 +18,9 @@ ADMITS=Set Seq
 
 FSTAR_ST_FILES=axiomatic.p.fst intlib.p.fst limb.fst bigint_st.fst eval_st.fst addition_st.fst substraction_st.fst scalar_multiplication_st.fst multiplication_st.fst
 
-LAX_ST_FILES=carry_st.fst retemplate_st.fst compare_st.fst shift_st.fst neg_st.fst modulo_st.fst 
+LAX_ST_FILES=carry_st.fst retemplate_st.fst compare_st.fst shift_st.fst neg_st.fst modulo_st.fst division_st.fst
 
-OCAML_FILES=support.cmx  IntLib.cmx Seq.cmx Limb.cmx Bigint.cmx Eval.cmx Addition.cmx Substraction.cmx ScalarMultiplication.cmx Retemplate.cmx Multiplication.cmx Carry.cmx Compare.cmx Neg.cmx Shift.cmx Modulo.cmx
+OCAML_FILES=support.cmx IntLib.cmx Seq.cmx Limb.cmx Bigint.cmx Eval.cmx Addition.cmx Substraction.cmx ScalarMultiplication.cmx Retemplate.cmx Multiplication.cmx Carry.cmx Compare.cmx Neg.cmx Shift.cmx Modulo.cmx Division.cmx
 
 .PHONY: preproc-verify wo work
 
@@ -68,7 +68,7 @@ codeg: $(STDLIB) $(FSTAR_ST_FILES) $(LAX_ST_FILES)
 
 codegen: preproc-codegen codeg
 
-auxlax: $(STDLIB) $(FSTAR_ST_FILES) $(LAX_FILES)
+auxlax: $(STDLIB) $(FSTAR_ST_FILES) $(LAX_ST_FILES)
 	$(FSTAR) $(FSTAR_OPTIONS) $(addprefix --admit_fsi , $(ADMITS)) $^ --lax
 
 lax: preproc-verify auxlax
@@ -86,6 +86,9 @@ test: ml
 	ocamlfind ocamlopt -thread -package batteries,zarith -linkpkg -g -p -I +zarith -I /home/jkz/fs#tar/FStar/src/ocaml-output/Support $(OCAML_FILES)  ./ml/unit_test.ml -o a.out
 	./a.out
 
+debug : support.ml IntLib.ml Seq.ml Limb.ml Bigint.ml Eval.ml Addition.ml Substraction.ml ScalarMultiplication.ml Retemplate.ml Multiplication.ml Carry.ml Compare.ml Neg.ml Shift.ml Modulo.ml Division.ml
+	ocamlfind ocamlc -thread -package batteries,zarith -linkpkg -g -I +zarith $^ ./ml/unit_test.ml -o a.out
+	ocamldebug a.out
 
 %.p.fsi: %.fsi
 	$(CPP)  -C $^ 2>/dev/null | sed '/^[#] 1 "<.*/d' > $@

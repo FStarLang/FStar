@@ -3,7 +3,7 @@ open Addition
 open Seq
 open Eval
 (* open Carry *)
-open Resize
+(* open Resize *)
 (* open Z *)
 
 let size = 26
@@ -25,6 +25,13 @@ let rnd_bigint max len =
     b := Seq.upd !b i r
   done;
   (a,b)
+
+let mk_bigint max len templ =
+  let a = Array.make len 0 in
+  for i = 0 to len - 1 do
+    a.(i) <- Random.int (max)
+  done;
+  Bigint.Bigint63(a, fun x -> templ)
 
 let array_of_seq s =
   let a = Array.make (Seq.length s) 0 in
@@ -52,12 +59,12 @@ let print_array a =
   Array.iter (fun x -> print_string ((string_of_int x) ^ " ")) a;
   print_string "\n"
 
-let bigint_of_seq s size =
-  Bigint64 (s, (fun x -> size), (fun x -> size), true)
+let bigint_of_seq s template =
+  Bigint.Bigint63(s, template)
 
 (* Converts from fstar bigint to sequence of ints *)
 let seq_of_bigint = fun 
-    (Bigint64 (s, _, _, _)) -> s
+    (Bigint.Bigint63 (s, _)) -> s
 
 (* Converts from seq of int and size to fstar bigint *)
 let ocaml_bigint_of_array a size =
@@ -81,11 +88,12 @@ let array_of_ocaml_bigint b size =
     done;
     Array.of_list (List.rev !l)
 
+(*
 let resize s size =
   array_of_ocaml_bigint (ocaml_bigint_of_array (array_of_seq  s) size) size
 
 let carry_test a size =
-  let a = Eval.getData a in
+  let a = (fun x -> match x with | Bigint.Bigint63(data,_) -> data) a in
   let len = Array.length a in
   let b = Array.make (len+1) 0 in
   Array.blit a 0 b 0 len;
@@ -94,15 +102,15 @@ let carry_test a size =
     b.(i+1) <- b.(i+1) + b.(i) / mask;
     b.(i) <- (b.(i) mod mask)
   done;
-  Eval.Bigint64 (b, (fun x -> 0), (fun x -> 0), true)
+  Bigint.Bigint63 (b, (fun x -> 26))
 
 let test size =
   Random.self_init ();
   let a1, s1 = rnd_bigint (pow2 size) 10 in
   let a2, s2 = rnd_bigint (pow2 size) 10 in
   
-  let our_res = multiplication (bigint_of_seq !s1 size) (bigint_of_seq !s2 size) in
-  let our_res_normalized = carry_test our_res size in
+  let our_res = multiplication (bigint_of_seq !s1 (fun x -> size)) (bigint_of_seq !s2 (fun x -> size)) in
+  let our_res_normalized = carry_test our_res (fun x -> size) in
   let our_res_array = array_of_seq (seq_of_bigint our_res_normalized) in
 
   let our_res_realigned = realign our_res_normalized (fun x -> if x mod 2 = 0 then 25 else 15) in
@@ -214,4 +222,37 @@ let _ =
   run_benchmark ();
   print_string "\nEnd of benchmark\n"
 
-	     
+*)
+
+let print_bigint b =
+  match b with
+  | Bigint.Bigint63(data,_) ->
+     begin
+       Array.iter (Printf.printf "%d ") data;
+       print_string "\n"
+     end 
+
+let _ =
+  Random.self_init();
+  let a = mk_bigint 67108864 10 26 in
+  let b = mk_bigint 67108864 5 26 in
+  let c = Division.division a b in
+  print_bigint a;
+  print_bigint b;
+  print_bigint c;
+  let d = Bigint.mk_zero_bigint 10 (fun x -> 26) in
+  Multiplication.multiplication2 d b c;
+  let d = Carry.carry d in
+  let d = Bigint.Bigint63(Array.sub ((fun x -> match x with Bigint.Bigint63(data,_) -> data) d) 0 10, fun x -> 26) in
+  print_bigint d;
+  let r = Bigint.copy a in
+  Substraction.substraction_with_lemma r d 10;
+  Carry.normalized_carry r;
+  print_bigint r;
+  
+  print_string "\n";
+  print_bigint a;
+  print_bigint b;
+  let r = Division.modulo a b in
+  print_bigint r
+    
