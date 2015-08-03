@@ -328,7 +328,7 @@ end
 end))
 
 type sizedList =
-| MkSList of Support.Prims.nat Ghost.ghost * int list
+| MkSList of unit * int list
 
 let is_MkSList = (fun ( _discr_ ) -> (match (_discr_) with
 | MkSList (_) -> begin
