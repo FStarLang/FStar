@@ -1,10 +1,14 @@
 (*--build-config
+  variables:LIB=../../lib;
+  other-files: $LIB/ghost.fst $LIB/list.fst
   --*)
+
 
 (*
 fstar extTest.fst --codegen OCaml-experimental > Test.ml ; sed -i '$d;/kdhvljkdshalfkhclklkdnfsnydufnysdkyfnklsnykweyacklnyrecynrncrewanyu/d' Test.ml ; ocamlc Test.ml
 *)
 module Test
+open Ghost
 
 type prod 'a 'b =
 | Pair : pfst:'a -> psnd:'b -> (prod 'a 'b)
@@ -51,10 +55,11 @@ let rec add a b
 | O -> b
 | S a' -> S (add a' b)
 
-
+(*
 type list (a:Type) =
   | Nil  : list a
   | Cons : hd:a -> tl:list a -> list a
+*)
 
 let prepend0 (tll : list nnat) = (Cons O tll)
 
@@ -204,6 +209,10 @@ let rec mult2 a b =
 match a with
 | O -> O
 | S a' -> add b (mult2 a' b)
+
+open List
+type sizedList =
+| MkSList: maxsize:(ghost nat){reveal maxsize > 2} ->  cont:(list int){length cont < (reveal maxsize)} -> sizedList
 
 (*
 type bTree (t:Type)=
