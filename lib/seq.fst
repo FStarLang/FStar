@@ -37,15 +37,15 @@ let exFalso0 'a n = ()
 
 let createEmpty 'a =  (MkSeq 0 (fun i -> (exFalso0 'a i)))
 
-let index s i = MkSeq.contents s i
+let index 'a s i = MkSeq.contents s i
 
-let upd s n v =
+let upd 'a s n v =
  MkSeq (length s) (fun i -> if i=n then v else (MkSeq.contents s) i)
 
-let append s1 s2 =
+let append 'a s1 s2 =
   MkSeq (length s1 + length s2) (fun x -> if x < (length s1) then index s1 x else index s2 (x - (length s1)))
 
-let slice s i j =
+let slice 'a s i j =
   MkSeq (j-i) (fun x -> index s (x + i))
 
 
