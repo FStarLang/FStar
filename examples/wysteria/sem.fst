@@ -47,6 +47,9 @@ let pre_eprojwire (c:config) =
  
 let pre_econcatwire (c:config) =
  is_T_exp (Conf.t c) && is_E_concatwire (Exp.e (T_exp.e (Conf.t c)))
+ 
+ let pre_effi (c:config) =
+  is_T_exp (Conf.t c) && is_E_ffi (Exp.e (T_exp.e (Conf.t c)))
 
 (* pre returns comp, for src it's never Skip *)
 type comp = | Do | Skip | NA
@@ -99,6 +102,11 @@ let step_empabs (Conf l m s en (T_exp (Exp (E_empabs x e) _))) =
 val step_app_e1: c:config{pre_eapp c} -> Tot config
 let step_app_e1 (Conf l m s en (T_exp (Exp (E_app e1 e2) _))) =
  Conf l m ((Frame m en (F_app_e1 e2))::s) en (T_exp e1)
+ 
+val step_ffi_e: c:config{pre_effi c} -> Tot config
+let step_ffi_e (Conf l m s en (T_exp (Exp (E_ffi fn es) _))) = match es with
+  | []    -> Conf l m s en (T_red (R_ffi fn []))
+  | e::tl -> Conf l m ((Frame m en (F_ffi fn tl []))::s) en (T_exp e)
 
 val step_aspar_e2: c:config{is_value_ps c /\ is_sframe c is_F_aspar_ps}
                   -> Tot config
@@ -129,6 +137,12 @@ val step_app_e2: c:config{is_value c /\ is_sframe c is_F_app_e1}
 let step_app_e2 (Conf l _ ((Frame m en (F_app_e1 e2))::s) _ (T_val v)) =
  Conf l m ((Frame m en (F_app_e2 v))::s) en (T_exp e2)
 
+val step_ffi_l: c:config{is_value c /\ is_sframe c is_F_ffi} -> Tot config
+let step_ffi_l (Conf l _ ((Frame m en (F_ffi fn es vs))::s) _ (T_val #meta v)) =
+  match es with
+    | []    -> Conf l m s en (T_red (R_ffi fn ((D_v meta v)::vs)))
+    | e::tl -> Conf l m ((Frame m en (F_ffi fn tl ((D_v meta v)::vs)))::s) en (T_exp e) 
+  
 val step_aspar_red: c:config{is_value c /\ is_sframe c is_F_aspar_e}
                    -> Tot config
 let step_aspar_red (Conf l _ ((Frame m en (F_aspar_e ps))::s) _ (T_val v)) =
@@ -362,6 +376,35 @@ let step_app c = match c with
    let (en, x, e) = get_en_b f in
    Conf l m s (update_env en x v) (T_exp e)
 
+val is_valid_ffi_v: #meta:v_meta -> v:value meta -> Tot bool
+let is_valid_ffi_v #meta v = match v with
+  | V_const _          -> true
+  | V_box _ _          -> false
+  | V_wire _ _         -> false
+  | V_clos _ _ _       -> false
+  | V_fix_clos _ _ _ _ -> false
+  | V_emp_clos _ _     -> false
+  | V_emp              -> false
+
+val is_valid_ffi_vs: list dvalue -> Tot bool
+let rec is_valid_ffi_vs vs = match vs with
+  | []            -> true
+  | (D_v _ v)::tl -> is_valid_ffi_v v && is_valid_ffi_vs tl
+
+val pre_ffi: config -> Tot comp
+let pre_ffi c = match c with
+  | Conf _ _ _ _ (T_red (R_ffi _ vs)) ->
+    if is_valid_ffi_vs vs then Do else NA
+  
+  | _ -> NA
+
+assume val exec_ffi: string -> list dvalue -> Tot dvalue
+
+val step_ffi: c:config{pre_ffi c = Do} -> Tot config
+let step_ffi (Conf l m s en (T_red (R_ffi fn vs))) =
+  let D_v _ v = exec_ffi fn vs in
+  Conf l m s en (T_val v)
+
 let pre_eassec (c:config) =
  is_T_exp (Conf.t c) && is_E_assec (Exp.e (T_exp.e (Conf.t c)))
 
@@ -451,6 +494,9 @@ type sstep: config -> config -> Type =
  | C_app_e1:
    c:config{pre_eapp c} -> c':config{c' = step_app_e1 c}
    -> sstep c c'
+   
+ | C_ffi_e:
+   c:config{pre_effi c} -> c':config{c' = step_ffi_e c} -> sstep c c'
 
  | C_aspar_e:
    c:config{is_value_ps c /\ is_sframe c is_F_aspar_ps}
@@ -476,6 +522,10 @@ type sstep: config -> config -> Type =
    c:config{is_value c /\ is_sframe c is_F_app_e1}
    -> c':config{c' = step_app_e2 c}
    -> sstep c c'
+   
+ | C_ffi_l:
+   c:config{is_value c /\ is_sframe c is_F_ffi}
+   -> c':config{c' = step_ffi_l c} -> sstep c c'
 
  | C_aspar_red:
    c:config{is_value c /\ is_sframe c is_F_aspar_e}
@@ -522,6 +572,9 @@ type sstep: config -> config -> Type =
 
  | C_app_beta:
    c:config{is_app_redex c} -> c':config{c' = step_app c} -> sstep c c'
+   
+ | C_ffi_beta:
+   c:config{pre_ffi c = Do} -> c':config{c' = step_ffi c} -> sstep c c'
 
  | C_aspar_beta:
    c:config{not (pre_aspar c = NA)} -> c':config{c' = step_aspar c}
