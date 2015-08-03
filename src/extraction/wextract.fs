@@ -8,6 +8,38 @@ open Microsoft.FStar.Absyn.Print
 
 exception NYI of string
 
+let is_valid_prims_ffi (s:string) :bool = match s with
+    | "op_Addition"
+    | "op_Subtraction"
+    | "op_Multiply"
+    | "op_Division"
+    | "op_Equality"
+    | "op_disEquality"
+    | "op_AmpAmp"
+    | "op_BarBar"
+    | "op_LessThanOrEqual"
+    | "op_GreaterThanOrEqual"
+    | "op_LessThan"
+    | "op_GreaterThan"
+    | "op_Modulus"             -> true
+
+    | _                        -> false
+
+let is_ffi_fn (e:exp) (args:args) :(bool * string * args) = match (Util.compress_exp e).n with
+    | Exp_fvar (fvar, _) ->
+      let fn_name = fvar.v.ident.idText in
+      let mlid = lid_of_ids fvar.v.ns in
+
+      if List.length (mlid.ns) = 0 && mlid.ident.idText = "OrdSet" then
+        true, fn_name, List.tl args
+
+      else if List.length (mlid.ns) = 0 && mlid.ident.idText = "Prims" then
+        is_valid_prims_ffi fn_name, fn_name, args
+
+      else false, "", args
+
+    | _                  -> false, "", args
+
 let process_wysteria_lib_fun_app_args (s:string) (args:list<arg>) :list<arg> = match s with
     | "unbox_p"
     | "unbox_s"
@@ -36,10 +68,15 @@ let rec extract_exp (e:exp) :string = match (Util.compress_exp e).n with
       let s' = extract_exp e in
       bs_str ^ s'
     | Exp_app (e, args)      ->
-      let s = extract_exp e in
-      let args = List.filter (fun a -> match a with | Inl _, _ -> false | Inr _, _ -> true) args in
-      let args = process_wysteria_lib_fun_app_args s args in
-      List.fold (fun s a -> s ^ (extract_arg a) ^ " ") (s ^ " ") args
+      let args = List.filter (fun a -> match a with | Inl _, _ -> false | Inr _, _ -> true) args in    // filter type arguments
+      let b, fn, args = is_ffi_fn e args in    // see if it's a ffi call
+      if b then
+        let args_s = List.fold (fun s a -> s ^ (extract_arg a) ^ "; ") "" args in
+        "sysop \"" ^ fn ^ "\" [ " ^ args_s ^ " ]"
+      else
+        let s = extract_exp e in
+        let args = process_wysteria_lib_fun_app_args s args in
+        List.fold (fun s a -> s ^ (extract_arg a) ^ " ") (s ^ " ") args
     | Exp_match (e, pats)    ->
       let s = extract_exp e in
       s ^ "\n" ^ (extract_pats pats)
