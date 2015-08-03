@@ -1,14 +1,12 @@
 (*--build-config
   variables:LIB=../../lib;
-  other-files: $LIB/ghost.fst $LIB/list.fst
+  other-files: $LIB/list.fst
   --*)
-
 
 (*
 fstar extTest.fst --codegen OCaml-experimental > Test.ml ; sed -i '$d;/kdhvljkdshalfkhclklkdnfsnydufnysdkyfnklsnykweyacklnyrecynrncrewanyu/d' Test.ml ; ocamlc Test.ml
 *)
 module Test
-open Ghost
 
 type prod 'a 'b =
 | Pair : pfst:'a -> psnd:'b -> (prod 'a 'b)
@@ -210,19 +208,6 @@ match a with
 | O -> O
 | S a' -> add b (mult2 a' b)
 
-
-open List
-type sizedListNonGhost =
-| MkSListNG: maxsize:nat->  cont:(list int){length cont < (maxsize)} -> sizedListNonGhost
-
-val aSizedListNG :  sizedListNonGhost
-let aSizedListNG = MkSListNG ( 2) [1]
-
-type sizedList =
-| MkSList: maxsize:(ghost nat)->  cont:(list int){length cont < (reveal maxsize)} -> sizedList
-
-val aSizedList : unit -> GTot sizedList
-let aSizedList u = let h2 = (hide 2) in MkSList h2 [1]
 
 (*
 type bTree (t:Type)=
