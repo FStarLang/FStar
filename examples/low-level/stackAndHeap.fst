@@ -1,8 +1,8 @@
 (*--build-config
-    options: --codegen OCaml-experimental --trace_error --debug yes;
+    options: --codegen OCaml-experimental --trace_error --debug yes --prn;
     variables:LIB=../../lib;
     variables:MATHS=../maths;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst  $LIB/list.fst stack.fst listset.fst
+    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst  $LIB/list.fst stack.fst listset.fst $LIB/ghost.fst
   --*)
 
 
@@ -14,7 +14,7 @@ open Set
 open Prims
 open List
 open ListSet
-
+open Ghost
 type sidt = nat
 
 (*type MemStorable : Type -> Type =
@@ -465,6 +465,17 @@ match (refLoc r) with
 (** cannot just uses ST.modifies. That was on heap; has to be lifted to smem.
 Also, why does it's definition have to be so procedural, unlike the more declarative one below?
 *)
+type modset = ghost (set aref)
+
+(* TODO: why are these not erased? why are these iota unfolded*)
+val ghostUnfoldTest : unit -> GTot (ghost (set aref))
+let ghostUnfoldTest u = hide empty
+
+val ghostUnfoldTest3 : r:(ref int) -> GTot (ghost (set aref))
+let ghostUnfoldTest3 r = hide (singleton (Ref r))
+
+val ghostUnfoldTest2 : unit -> GTot (modset)
+let ghostUnfoldTest2 u = hide empty
 
 type canModify  (m0 : smem)  (m1: smem) (rs: set aref ) =
   forall (a:Type) (r: ref a).
@@ -488,7 +499,6 @@ type mStackNonEmpty (m:smem) = b2t (isNonEmpty (st m))
 (*val canModifySalloc : #a:Type -> r:(ref a) -> v:a -> m:smem
   -> Lemma (canModify m (writeMemAux r m v) (singleton (Ref r)))
 let canModifyWrite r v m = ()*)
-
 
 
 (*should extend to types with decidable equality*)

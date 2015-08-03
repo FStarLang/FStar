@@ -200,4 +200,14 @@ let resugar_mlty t = match t with
 let flatten_ns ns = String.concat "_" ns
 let flatten_mlpath (ns, n) = String.concat "_" (ns@[n])
 let mlpath_of_lid (l:lident) = (l.ns |> List.map (fun i -> i.idText),  l.ident.idText)
+
+let rec erasableType (g:Env.env) (t:mlty) :bool = 
+    //printfn "(* erasability of %A is %A *)\n" t (g.erasableTypes t);
+   if Env.erasableTypeNoDelta t 
+   then true 
+   else 
+   ( match delta_unfold g t with
+     | Some t -> (erasableType g t)
+     | None  -> false
+   )
   
