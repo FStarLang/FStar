@@ -28,12 +28,14 @@ let step c =
   else if pre_eempabs c then Some (step_empabs c)
   else if pre_eapp c then Some (step_app_e1 c)
   else if pre_effi c then Some (step_ffi_e c)
+  else if pre_ematch c then Some (step_match_e c)
   else if is_value_ps c && is_sframe c is_F_aspar_ps then Some (step_aspar_e2 c)
   else if is_value c && is_sframe c is_F_mkwire_ps then Some (step_mkwire_e2 c)
   else if is_value_p c && is_sframe c is_F_projwire_p then Some (step_projwire_e2 c)
   else if is_value c && is_sframe c is_F_concatwire_e1 then Some (step_concatwire_e2 c)
   else if is_value c && is_sframe c is_F_app_e1 then Some (step_app_e2 c)
   else if is_value c && is_sframe c is_F_ffi then Some (step_ffi_l c)
+  else if is_value c && is_sframe c is_F_match then Some (step_match_red c)
   else if is_value c && is_sframe c is_F_aspar_e then Some (step_aspar_red c)
   else if is_value c && is_sframe c is_F_box_e then Some (step_box_red c)
   else if is_value c && is_sframe c is_F_unbox then Some (step_unbox_red c)
@@ -45,6 +47,7 @@ let step c =
   else if is_let_redex c then Some (step_let c)
   else if is_app_redex c then Some (step_app c)
   else if pre_ffi c = Do then Some (step_ffi c)
+  else if pre_match c = Do then Some (step_match c)
   else if not (pre_aspar c = NA) then Some (step_aspar c)
   else if pre_box c = Do then Some (step_box c)
   else if pre_unbox c = Do then Some (step_unbox c)
@@ -75,12 +78,14 @@ let step_correctness c =
   else if pre_eempabs c then C_empabs c c'
   else if pre_eapp c then C_app_e1 c c'
   else if pre_effi c then C_ffi_e c c'
+  else if pre_ematch c then C_match_e c c'
   else if is_value_ps c && is_sframe c is_F_aspar_ps then C_aspar_e c c'
   else if is_value c && is_sframe c is_F_mkwire_ps then C_mkwire_e2 c c'
   else if is_value_p c && is_sframe c is_F_projwire_p then C_projwire_e c c'
   else if is_value c && is_sframe c is_F_concatwire_e1 then C_concatwire_e2 c c'
   else if is_value c && is_sframe c is_F_app_e1 then C_app_e2 c c'
   else if is_value c && is_sframe c is_F_ffi then C_ffi_l c c'
+  else if is_value c && is_sframe c is_F_match then C_match_red c c'
   else if is_value c && is_sframe c is_F_aspar_e then C_aspar_red c c'
   else if is_value c && is_sframe c is_F_box_e then C_box_red c c'
   else if is_value c && is_sframe c is_F_unbox then C_unbox_red c c'
@@ -92,6 +97,7 @@ let step_correctness c =
   else if is_let_redex c then C_let_beta c c'
   else if is_app_redex c then C_app_beta c c'
   else if pre_ffi c = Do then C_ffi_beta c c'
+  else if pre_match c = Do then C_match_beta c c'
   else if not (pre_aspar c = NA) then C_aspar_beta c c'
   else if pre_box c = Do then C_box_beta c c'
   else if pre_unbox c = Do then C_unbox_beta c c'

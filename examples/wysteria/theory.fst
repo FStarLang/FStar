@@ -98,6 +98,7 @@ let slice_r_sps ps r = match r with
   | R_let x v1 e2      -> R_let x (D_v.v (slice_v_sps ps v1)) e2
   | R_app v1 v2        -> R_app (D_v.v (slice_v_sps ps v1)) (D_v.v (slice_v_sps ps v2))
   | R_ffi fn vs        -> R_ffi fn (slice_vs_sps ps vs)
+  | R_match v pats     -> R_match (D_v.v (slice_v_sps ps v)) pats
 
 val slice_f'_sps: ps:prins -> f:frame'{is_sec_frame f} -> Tot frame'
 let slice_f'_sps ps f = match f with
@@ -115,6 +116,7 @@ let slice_f'_sps ps f = match f with
   | F_app_e1     _    -> f
   | F_app_e2     v    -> F_app_e2  (D_v.v (slice_v_sps ps v))
   | F_ffi fn es vs    -> F_ffi fn es (slice_vs_sps ps vs)
+  | F_match      _    -> f
 
 val slice_f_sps: ps:prins -> f:frame{Frame.m f = Mode Sec ps /\
                                      is_sec_frame (Frame.f f)}
@@ -223,7 +225,16 @@ val valid_ffi_vs_slice_lemma_ps:
 let rec valid_ffi_vs_slice_lemma_ps ps vs = match vs with
   | []    -> ()
   | v::tl -> valid_ffi_vs_slice_lemma_ps ps tl
-                              
+
+val get_next_match_exp_lemma_ps:
+  #meta:v_meta -> ps:prins -> pats:list (pat * exp) -> v:value meta
+  -> Lemma (requires (True))
+           (ensures (get_next_exp pats v = get_next_exp pats (D_v.v (slice_v_sps ps v))))
+     (decreases pats)
+let rec get_next_match_exp_lemma_ps #meta ps pats v = match pats with
+  | []    -> ()
+  | _::tl -> get_next_match_exp_lemma_ps #meta ps tl v
+
 opaque val sstep_sec_slice_lemma: c:sconfig{is_sec c}
                                   -> c':sconfig -> h:sstep c c'{if_exit_sec_then_to_sec h}
                                   -> Tot (cand (u:unit{Conf.m c' = Conf.m c})
@@ -242,6 +253,7 @@ let sstep_sec_slice_lemma c c' h = match h with
   | C_empabs c c'          -> Conj () (C_empabs (slice_c_sps c) (slice_c_sps c'))
   | C_app_e1 c c'          -> Conj () (C_app_e1 (slice_c_sps c) (slice_c_sps c'))
   | C_ffi_e c c'           -> Conj () (C_ffi_e (slice_c_sps c) (slice_c_sps c'))
+  | C_match_e c c'         -> Conj () (C_match_e (slice_c_sps c) (slice_c_sps c'))
   | C_mkwire_e2 c c'       -> Conj () (C_mkwire_e2 (slice_c_sps c) (slice_c_sps c'))
   | C_projwire_e c c'      -> Conj () (C_projwire_e (slice_c_sps c) (slice_c_sps c'))
   | C_concatwire_e2 c c'   -> Conj () (C_concatwire_e2 (slice_c_sps c) (slice_c_sps c'))
@@ -250,6 +262,7 @@ let sstep_sec_slice_lemma c c' h = match h with
     let Conf l (Mode Sec ps) ((Frame _ _ (F_ffi _ _ vs))::_) _ (T_val #meta v) = c in
     let _ = cut (b2t (slice_vs_sps ps ((D_v meta v)::vs) = (slice_v_sps ps v)::(slice_vs_sps ps vs))) in
     Conj () (C_ffi_l (slice_c_sps c) (slice_c_sps c'))
+  | C_match_red c c'       -> Conj () (C_match_red (slice_c_sps c) (slice_c_sps c'))
   | C_unbox_red c c'       -> Conj () (C_unbox_red (slice_c_sps c) (slice_c_sps c'))
   | C_mkwire_red c c'      -> Conj () (C_mkwire_red (slice_c_sps c) (slice_c_sps c'))
   | C_projwire_red c c'    -> Conj () (C_projwire_red (slice_c_sps c) (slice_c_sps c'))
@@ -266,6 +279,10 @@ let sstep_sec_slice_lemma c c' h = match h with
     valid_ffi_vs_slice_lemma_ps ps vs;
     exec_ffi_axiom_ps ps fn vs;
     Conj () (C_ffi_beta (slice_c_sps c) (slice_c_sps c'))
+  | C_match_beta c c'      ->
+    let Conf _ (Mode Sec ps) _ _ (T_red (R_match v pats)) = c in
+    get_next_match_exp_lemma_ps ps pats v;
+    Conj () (C_match_beta (slice_c_sps c) (slice_c_sps c'))
   | C_unbox_beta c c'      -> Conj () (C_unbox_beta (slice_c_sps c) (slice_c_sps c'))
   | C_mkwire_beta c c'     ->
     let Conf _ (Mode _ ps) _ _ (T_red (R_mkwire (V_const (C_prins ps')) v)) = c in
@@ -367,6 +384,7 @@ let slice_r p r = match r with
   | R_let x v1 e2      -> R_let x (D_v.v (slice_v p v1)) e2
   | R_app v1 v2        -> R_app (D_v.v (slice_v p v1)) (D_v.v (slice_v p v2))
   | R_ffi fn vs        -> R_ffi fn (slice_vs p vs)
+  | R_match v pats     -> R_match (D_v.v (slice_v p v)) pats
 
 val slice_f': p:prin -> f:frame'{not (is_F_assec_ret f)} -> Tot frame'
 let slice_f' p f = match f with
@@ -386,6 +404,7 @@ let slice_f' p f = match f with
   | F_app_e1        _ -> f
   | F_app_e2        v -> F_app_e2  (D_v.v (slice_v p v))
   | F_ffi    fn es vs -> F_ffi fn es (slice_vs p vs)
+  | F_match         _ -> f
 
 val slice_f: p:prin -> f:frame{Mode.m (Frame.m f) = Par    /\
                                mem p (Mode.ps (Frame.m f)) /\
@@ -796,6 +815,15 @@ val valid_ffi_vs_slice_lemma:
 let rec valid_ffi_vs_slice_lemma p vs = match vs with
   | []    -> ()
   | v::tl -> valid_ffi_vs_slice_lemma p tl
+
+val get_next_match_exp_lemma:
+  #meta:v_meta -> p:prin -> pats:list (pat * exp) -> v:value meta
+  -> Lemma (requires (True))
+           (ensures (get_next_exp pats v = get_next_exp pats (D_v.v (slice_v p v))))
+     (decreases pats)
+let rec get_next_match_exp_lemma #meta p pats v = match pats with
+  | []    -> ()
+  | _::tl -> get_next_match_exp_lemma #meta p tl v
                               
 opaque val sstep_par_slice_lemma: c:sconfig -> c':sconfig
                                   -> h:sstep c c'{if_enter_sec_then_from_sec h /\
@@ -851,6 +879,9 @@ let sstep_par_slice_lemma c c' h p =
     | C_ffi_e (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else IntroR (C_ffi_e (slice_c p c) (slice_c p c'))
+    | C_match_e (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else IntroR (C_match_e (slice_c p c) (slice_c p c'))
     | C_aspar_e (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else IntroR (C_aspar_e (slice_c p c) (slice_c p c'))
@@ -869,6 +900,9 @@ let sstep_par_slice_lemma c c' h p =
     | C_ffi_l (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else IntroR (C_ffi_l (slice_c p c) (slice_c p c'))
+    | C_match_red (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else IntroR (C_match_red (slice_c p c) (slice_c p c'))
     | C_aspar_red (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else IntroR (C_aspar_red (slice_c p c) (slice_c p c'))
@@ -916,6 +950,12 @@ let sstep_par_slice_lemma c c' h p =
         valid_ffi_vs_slice_lemma p vs;
         exec_ffi_axiom p fn vs;
         IntroR (C_ffi_beta (slice_c p c) (slice_c p c'))
+    | C_match_beta (Conf _ m _ _ _) c' ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else
+        let Conf _ _ _ _ (T_red (R_match v pats)) = c in
+        get_next_match_exp_lemma p pats v;
+        IntroR (C_match_beta (slice_c p c) (slice_c p c'))
     | C_aspar_beta (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else
