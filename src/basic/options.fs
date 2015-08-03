@@ -228,6 +228,7 @@ let rec specs () : list<Getopt.opt> =
      ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs
 and parse_codegen s =
   match s with
+  | "Wysteria"
   | "OCaml-experimental"
   | "OCaml"  -> Some s
   | _ ->

@@ -53,6 +53,7 @@
     <Compile Include="extracttyp.fs" />
     <Compile Include="extractexp.fs" />
     <Compile Include="extractmod.fs" />
+    <Compile Include="wextract.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\absyn\absyn.fsproj">

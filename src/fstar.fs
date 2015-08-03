@@ -249,6 +249,9 @@ let codegen fmods env=
         let newDocs = List.collect Extraction.OCaml.Code.doc_of_mllib mllibs in
             List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^".ml")) (FSharp.Format.pretty 120 d)) newDocs
     end
+    else if !Options.codegen = Some "Wysteria" then begin
+        List.iter (fun m -> Extraction.Wysteria.Extract.extract m) fmods
+    end
 //    ;
 //    if !Options.codegen = Some "JavaScript" then begin
 //        let js = Backends.JS.Translate.js_of_fstars (List.tail fmods) in

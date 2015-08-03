@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi OrdSet --admit_fsi OrdMap --admit_fsi Set --admit_fsi Wysteria;
+    options:--admit_fsi OrdSet --admit_fsi OrdMap --admit_fsi Set --admit_fsi Wysteria --codegen Wysteria --trace_error;
     variables:LIB=../../lib;
     other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/ordset.fsi $LIB/ordmap.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst wysteria.fsi lib.fst
  --*)
@@ -19,8 +19,8 @@ type post (#a:Type) = fun (m:mode) (x:a) -> True
 type pre_with (m:mode) (t:Type) = fun m0 -> m0 = m /\ t
 
 let to_s1 p1       = singleton #prin #p_cmp p1
-let to_s2 p1 p2    = union (to_s1 p1) (to_s1 p2)
-let to_s3 p1 p2 p3 = union (to_s2 p1 p2) (to_s1 p3)
+let to_s2 p1 p2    = union #prin #p_cmp (to_s1 p1) (to_s1 p2)
+let to_s3 p1 p2 p3 = union #prin #p_cmp (to_s2 p1 p2) (to_s1 p3)
 
 (**********)
 
@@ -36,6 +36,7 @@ let mill1 _ =
   in
 
   as_sec ab g
+
 
 (**********)
 
@@ -63,7 +64,7 @@ val mill3_sec: #p1:prin -> #p2:prin
                -> unit
                -> Wys bool (pre (Mode Par (union (singleton p1) (singleton p2)))) post
 let mill3_sec #p1 #p2 x y _ =
-  let s = union (singleton p1) (singleton p2) in
+  let s = to_s2 p1 p2 in
   let g:unit -> Wys bool (pre (Mode Sec s)) post =
    fun _ -> (unbox_s x) > (unbox_s y)
   in
@@ -178,6 +179,8 @@ let mill7 _ =
   as_sec ab g
 
 (**********)
+
+(*
 
 (* generic in number of parties *)
 
@@ -374,4 +377,4 @@ let two_round_bidding p1 p2 =
 
   as_sec (to_s2 p1 p2) r2*)
 
-(**********)
+(**********)*)

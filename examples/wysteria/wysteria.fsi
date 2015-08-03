@@ -68,6 +68,7 @@ assume Canbox_prod: (forall (a:Type) (b:Type) ps.
 
 type Wire: Type -> Type
 
+(* TODO: FIXME: make these ghost *)
 val w_contains: #a:Type -> prin -> Wire a -> Tot bool
 val w_empty   : #a:Type -> Tot (w:Wire a{forall p. not (w_contains p w)})
 val w_select  : #a:Type -> p:prin -> w:Wire a{w_contains p w} -> Tot a
