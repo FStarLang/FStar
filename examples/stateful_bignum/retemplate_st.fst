@@ -30,16 +30,27 @@ let rec fill_array b tb v tsize bw len =
      let bw2 = bitweight tb len in
      let tsize2 = tb len in
      if bw + tsize > bw2 && bw2 + tsize2 > bw then
+       (* v2 fits the new cell, v3 is whatever is left and needs to be propagated above,
+	  except when the last cell is reached *)
        let v2 = 
 	 if bw < bw2 then div_non_eucl v (pow2 (bw2 - bw))
          else (
 	   let m = signed_modulo v (pow2 (bw2 + tsize2 - bw)) in
-	   (pow2 (bw - bw2)) * m
+	   (pow2 (bw - bw2)) * m (* , div_non_eucl v (pow2 (bw2 + tsize2 - bw)) *)
 	 ) in
+       (* let v3 = v3 + div_non_eucl v2 (pow2 tsize2) in *)
        let v2 = signed_modulo v2 (pow2 tsize2) in
        let v2 = v2 + get b len in
        let t2 = mk_tint b (erase (tsize2)) v2 in
        updateBigint b len t2
+       (* if len = get_length b - 1 then (
+	 let v3 = v3 + get b len in
+	 let t3 = mk_tint b (erase (tsize2)) v3 in
+	 updateBigint b len t3)
+       else (
+ 	 let v3 = v3 + get b (len+1) in
+	 let t3 = mk_tint b (erase (tb (len+1))) v3 in
+	 updateBigint b (len+1) t3) *)
      else ();
      fill_array b tb v tsize bw (len+1)
 

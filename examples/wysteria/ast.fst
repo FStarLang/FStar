@@ -46,6 +46,11 @@ type exp' =
   | E_fix       : f:varname -> x:varname -> e:exp -> exp'
   | E_empabs    : x:varname -> e:exp -> exp'
   | E_app       : e1:exp -> e2:exp -> exp'
+  | E_ffi       : fn:string -> args:list exp -> exp'
+  | E_match     : e:exp -> pats:list (pat * exp) -> exp'
+
+and pat =
+  | P_const: c:const -> pat
 
 and exp =
   | Exp: e:exp' -> info:option other_info -> exp
@@ -103,6 +108,8 @@ type redex =
   | R_let       : #meta:v_meta -> x:varname -> v:value meta -> e:exp -> redex
   | R_app       : #meta1:v_meta -> #meta2:v_meta -> v1:value meta1 -> v2:value meta2
                   -> redex
+  | R_ffi       : fn:string -> args:list dvalue -> redex
+  | R_match     : #meta:v_meta -> v:value meta -> pats:list (pat * exp) -> redex
 
 val empty_env: env
 let empty_env = fun _ -> None
@@ -134,6 +141,8 @@ type frame' =
   | F_let          : x:varname -> e2:exp -> frame'
   | F_app_e1       : e2:exp -> frame'
   | F_app_e2       : #meta:v_meta -> v:value meta -> frame'
+  | F_ffi          : fn:string -> es:list exp -> vs:list dvalue -> frame'
+  | F_match        : pats:list (pat * exp) -> frame'
 
 type frame =
   | Frame: m:mode -> en:env -> f:frame'-> frame

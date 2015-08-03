@@ -160,3 +160,33 @@ Recursive Extraction pair.
 
 Inductive void := .
 Recursive Extraction void.
+
+Inductive Ghost (T:Type) : Prop := 
+| hide : T -> Ghost T.
+
+Definition unhide (T :Type) (R:Prop) (g : Ghost T) (f: T -> R) : R.
+  destruct g.
+  apply f. assumption.
+Defined.
+
+Definition GS : Ghost nat -> Ghost nat.
+  intros n.
+  destruct n as [n].
+  exact (hide _ (S n)).
+Defined.
+
+Inductive listOfSize {C:Type} : (list C) -> (Ghost nat) -> Prop :=
+| lsnil : listOfSize nil (hide _ 0)
+| lscons : forall (l: list C) (c:C) (n: Ghost nat), listOfSize l n -> (listOfSize (c::l) (GS n)) .
+
+Definition sizedList (C:Type): Type := {size : Ghost nat & {l : list C | listOfSize l size}}.
+
+
+Definition aSizedList : sizedList nat.
+  exists (GS (hide _ 0)).
+  exists (cons 1 nil).
+  constructor. constructor.
+Defined.
+
+Recursive Extraction aSizedList.
+ 

@@ -27,7 +27,6 @@ open Microsoft.FStar.Extraction.ML.Util
 let eff_to_string = function
     | E_PURE -> "Pure"
     | E_IMPURE -> "Impure"
-    (*should there be a MustErase? It is unsafe to emit code marked as ghost.*)
 
 let fail r msg = 
     Util.print_string <| Print.format_error r msg;
@@ -84,7 +83,8 @@ let rec is_ml_value e = match e with
     | MLE_Record (_, fields) -> Util.for_all (fun (_, e) -> is_ml_value e) fields
     | _ -> false
 
-let translate_typ (g:env) (t:typ) : mlty = ExtractTyp.extractTyp g t
+let translate_typ (g:env) (t:typ) : mlty = eraseTypeDeep g (ExtractTyp.extractTyp g t) 
+// erasing here is better because if we need to generate OCaml types for binders and return values, they will be accurate. By the time we reach maybe_coerce, we cant change those
 
 let instantiate (s:mltyscheme) (args:list<mlty>) : mlty = Util.subst s args (*only handles fully applied types*)
 
@@ -97,11 +97,12 @@ let erase (g:env) (e:mlexpr) (f:e_tag) (t:mlty) : mlexpr * e_tag * mlty =
           ml_unit, f , erasedContent) (*unit value*)
     else e, f, t
 
-let maybe_coerce (g:env) (e:mlexpr) (tInferred:mlty) (etag : e_tag) (tExpected:mlty) = 
-    if equiv g tInferred (if (erasable g etag tExpected) then erasedContent else tExpected)
+let maybe_coerce (g:env) (e:mlexpr) (tInferred:mlty) (etag : e_tag) (tExpected:mlty) : mlexpr = 
+    // let tExpected = eraseTypeDeep g tExpected in // is this needed? see translate_typ. Even if we coerce here, there is no way to change the type of the generate expression
+    if equiv g tInferred tExpected
     then e
     else (//debug g (fun () -> printfn "\n (*needed to coerce expression \n %A \n of type \n %A \n to type \n %A *) \n" e tInferred tExpected);
-          MLE_Coerce (e, tInferred, tExpected))
+          MLE_Coerce (e, tInferred, tExpected)) //TODO: should we go inside lambdas and put coercions at more specific places? test using aref to see if it places coercion inside
 
 let eff_leq f f' = match f, f' with 
     | E_PURE, _ 

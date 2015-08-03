@@ -284,7 +284,7 @@ let rec normalized_carry_aux a len sign =
 	normalized_carry_aux a i sign
 
      | minus_one -> 
-	if sign = 1 then ()
+	if sign = -1 then ()
 	else (
 	  let aip1 = get a len in
 	  let aip1 = Bigint.mk_tint a (Bigint63.t a len) (aip1 - 1) in

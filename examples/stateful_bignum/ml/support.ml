@@ -1345,6 +1345,7 @@ let append = Array.append
 let op_At_Bar = append
 
 let slice a i j = Array.sub a i (j-i)
+let sub a i j = Array.sub a i j
 let print s =
   Array.iter (fun x -> print_string (string_of_int x); print_string " ") s;
   print_string "\n"
