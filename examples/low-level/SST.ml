@@ -1,15 +1,15 @@
 
-let halloc = (fun ( init ) -> (failwith ("Not yet implemented:SST.halloc")))
+let halloc = (fun ( init ) -> ref init)
 
-let salloc = (fun ( init ) -> (failwith ("Not yet implemented:SST.salloc")))
+let salloc = (fun ( init ) ->  ref init)
 
-let memread = (fun ( r ) -> (failwith ("Not yet implemented:SST.memread")))
+let memread = (fun ( r ) -> !r )
 
-let memwrite = (fun ( r ) ( v ) -> (failwith ("Not yet implemented:SST.memwrite")))
+let memwrite = (fun ( r ) ( v ) -> r := v )
 
-let pushStackFrame = (fun ( _ ) -> (failwith ("Not yet implemented:SST.pushStackFrame")))
+let pushStackFrame = (fun ( _ ) -> ())
 
-let popStackFrame = (fun ( _ ) -> (failwith ("Not yet implemented:SST.popStackFrame")))
+let popStackFrame = (fun ( _ ) -> ())
 
 
 
