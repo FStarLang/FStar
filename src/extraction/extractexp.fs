@@ -101,7 +101,7 @@ let maybe_coerce (g:env) (e:mlexpr) (tInferred:mlty) (etag : e_tag) (tExpected:m
     if equiv g tInferred (if (erasable g etag tExpected) then erasedContent else tExpected)
     then e
     else (//debug g (fun () -> printfn "\n (*needed to coerce expression \n %A \n of type \n %A \n to type \n %A *) \n" e tInferred tExpected);
-          MLE_Coerce (e, tInferred, tExpected))
+          MLE_Coerce (e, tInferred, tExpected)) //TODO: should we go inside lambdas and put coercions at more specific places? test using aref to see if it places coercion inside
 
 let eff_leq f f' = match f, f' with 
     | E_PURE, _ 
