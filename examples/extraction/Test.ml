@@ -46,10 +46,10 @@ let idp' = (fun ( x ) -> x)
 
 let add1 = (fun ( a ) -> S (a))
 
-let add2 = (fun ( _3_2823 ) -> S (_3_2823))
+let add2 = (fun ( _3_2855 ) -> S (_3_2855))
 
-let eval_order = (fun ( effectful ) ( f ) -> (let _3_2843 = (effectful "first")
-in (f _3_2843 "second")))
+let eval_order = (fun ( effectful ) ( f ) -> (let _3_2875 = (effectful "first")
+in (f _3_2875 "second")))
 
 let prev = (fun ( _3_1 ) -> (match (_3_1) with
 | O -> begin
@@ -327,6 +327,19 @@ end
 (add b (mult2 a' b))
 end))
 
+type sizedListNonGhost =
+| MkSListNG of Support.Prims.nat * int list
+
+let is_MkSListNG = (fun ( _discr_ ) -> (match (_discr_) with
+| MkSListNG (_) -> begin
+true
+end
+| _ -> begin
+false
+end))
+
+let aSizedListNG = MkSListNG (2, (1)::[])
+
 type sizedList =
 | MkSList of unit * int list
 
@@ -337,6 +350,9 @@ end
 | _ -> begin
 false
 end))
+
+let aSizedList = (fun ( u ) -> (let h2 = ()
+in MkSList ((), (1)::[])))
 
 
 

@@ -215,20 +215,14 @@ open List
 type sizedListNonGhost =
 | MkSListNG: maxsize:nat->  cont:(list int){length cont < (maxsize)} -> sizedListNonGhost
 
-val aSizedListNG : unit -> GTot sizedListNonGhost
-let aSizedListNG u = MkSListNG ( 2) [1]
+val aSizedListNG :  sizedListNonGhost
+let aSizedListNG = MkSListNG ( 2) [1]
 
 type sizedList =
 | MkSList: maxsize:(ghost nat)->  cont:(list int){length cont < (reveal maxsize)} -> sizedList
 
-val lemma_reveal_hide: #a:Type
-                   -> x: a
-                   -> Lemma (requires True) (ensures (reveal (hide x) = x))
-                   [SMTPat (reveal (hide x))]
-let lemma_reveal_hide x = ()
-
 val aSizedList : unit -> GTot sizedList
-let aSizedList u = MkSList (hide 2) [1]
+let aSizedList u = let h2 = (hide 2) in MkSList h2 [1]
 
 (*
 type bTree (t:Type)=
