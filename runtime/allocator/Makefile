@@ -3,7 +3,7 @@ all: stacktest ffitest
 stacktest: stack.o bitmask.o test.o
 	$(CC) $^ -o $@
 
-ffitest: camlstack.o stack.o bitmask.o camlstack.mli ffitest.ml 
+ffitest: camlstack.o stack.o bitmask.o camlstack.mli ffitest.o ffitest.ml 
 	ocamlc -custom -o $@ $^
 
 %.o: %.c
