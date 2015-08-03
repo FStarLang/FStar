@@ -19,15 +19,3 @@ type sizedList =
 
 val aSizedList : unit -> GTot sizedList
 let aSizedList u = let h2 = (hide 2) in MkSList h2 [1]
-
-(*
-type bTree (t:Type)=
-| BLeaf : ldata:t -> bTree t
-| BNode : left:(bTree t) -> right:(bTree t) -> bTree t
-
-val leftmostLeaf : t:Type ->  (bTree t) -> t
-let rec leftmostLeaf 't bt =
-match bt with
-| BLeaf d -> d
-| BNode l r -> leftmostLeaf 't l
-*)
