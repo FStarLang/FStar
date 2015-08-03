@@ -215,7 +215,7 @@ let rec erasableType (g:Env.env) (t:mlty) :bool =
 let rec eraseTypeDeep (g:Env.env) (t:mlty) : mlty = 
 match t with
 | MLTY_Fun (tyd, etag, tycd) -> if (etag=E_PURE) then (MLTY_Fun (eraseTypeDeep g tyd, etag, eraseTypeDeep g tycd)) else t
-| MLTY_Named (lty, mlp) -> MLTY_Named (List.map (eraseTypeDeep g) lty, mlp)
+| MLTY_Named (lty, mlp) -> if (erasableType g t) then Env.erasedContent else (MLTY_Named (List.map (eraseTypeDeep g) lty, mlp))  // only some named constants are erased to unit.
 | MLTY_Tuple lty ->  MLTY_Tuple (List.map (eraseTypeDeep g) lty)
 | MLTY_App  (tyf, tyarg) -> MLTY_App  (eraseTypeDeep g tyf, eraseTypeDeep g  tyarg)
-| _ ->  if (erasableType g t) then Env.erasedContent else t
+| _ ->  t
