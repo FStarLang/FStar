@@ -952,10 +952,10 @@ and tc_exp env e : exp * lcomp * guard_t =
                       let g = Rel.conj_guard g g_e in
                       if debug env Options.High then Util.fprint2 "Guard on this arg is %s;\naccumulated guard is %s\n" (Rel.guard_to_string env g_e) (Rel.guard_to_string env g);
                       let arg = Inr e, aq in 
-                      if Util.is_total_lcomp c 
+                      if Util.is_tot_or_gtot_lcomp c 
                       then let subst = maybe_extend_subst subst (List.hd bs) arg in
                            tc_args (subst, arg::outargs, arg::arg_rets, comps, g, fvs) rest cres rest'
-                      else if Tc.Util.is_pure_effect env c.eff_name 
+                      else if Tc.Util.is_pure_or_ghost_effect env c.eff_name 
                       then let subst = maybe_extend_subst subst (List.hd bs) arg in
                            let comps, guard =
                               (Some (Env.Binding_var(x.v, targ)), c)::comps, g in

@@ -15,6 +15,8 @@
 *)
 module String
 
+assume val make: int -> char -> Tot string
+
 assume val split:   list char -> string -> Tot (list string)
 assume val strcat:  string -> string -> Tot string
 assume val concat:  string -> list string -> Tot string
@@ -24,5 +26,5 @@ assume val length:  string -> Tot nat
 
 (* may fail with index out of bounds *)
 assume val substring: string -> int -> int -> string
-assume val get: string -> int -> char 
+assume val get: string -> int -> char
 assume val collect: (char -> string) -> string -> string

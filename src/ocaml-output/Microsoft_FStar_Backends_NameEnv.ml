@@ -2,12 +2,12 @@
 type env =
 {env_root : string list; env_map : string Support.Microsoft.FStar.Util.smap}
 
-let is_Mkenv = (fun ( _ ) -> (failwith ("Not yet implemented")))
+let is_Mkenv = (fun ( _ ) -> (failwith ("Not yet implemented:is_Mkenv")))
 
 let root = (fun ( env ) -> env.env_root)
 
-let create = (fun ( nm ) -> (let _68_25363 = (Support.Microsoft.FStar.Util.smap_create 0)
-in {env_root = nm; env_map = _68_25363}))
+let create = (fun ( nm ) -> (let _68_25389 = (Support.Microsoft.FStar.Util.smap_create 0)
+in {env_root = nm; env_map = _68_25389}))
 
 let push = (fun ( env ) ( x ) ( pp ) -> (let m = env.env_map
 in (let _62_10 = (Support.Microsoft.FStar.Util.smap_add m x pp)
