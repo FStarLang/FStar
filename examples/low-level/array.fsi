@@ -5,6 +5,7 @@
     $LIB/ghost.fst stackAndHeap.fst sst.fst sstCombinators.fst $LIB/constr.fst word.fst $LIB/seq.fsi $LIB/seq.fst
   --*)
 
+
 module Array
 open SSTCombinators
 open StackAndHeap
@@ -28,7 +29,7 @@ val asRef : #a:Type  -> va:(array a) -> Tot (ref (seq a))
 
 val length: #a:Type -> x:array a -> PureMem nat
   (requires (fun h -> refExistsInMem (asRef x) h))
-  (ensures  (fun h y _ -> refExistsInMem (asRef x) h /\ y=Seq.length (loopkupRef (asRef x) h)))
+  (ensures  (fun h y _ ->  (refExistsInMem (asRef x) h /\ y=Seq.length (loopkupRef (asRef x) h))))
 
 (*using the 2 definitions below causes a strange error in readIndex amd updIndex*)
 (*val arrayExistsInMem : #a:Type -> (array a) -> smem -> GTot bool

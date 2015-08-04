@@ -26,3 +26,7 @@ type l_not (p:Type) = l_imp p  False                        (* prefix unary '~' 
 type Forall (#a:Type) (p:a -> Type) = x:a -> Tot (p x)   (* forall (x:a). p x *)
 
 type ForallTyp (f : Type -> Type) = (t:Type) -> Tot (f t)
+
+type Exists (#a:Type) (p:a -> Type) =
+| MkExists : av:a -> pr:(p av) -> Exists p
+   (* forall (x:a). p x *)
