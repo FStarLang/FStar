@@ -133,12 +133,12 @@ let rec extract_pat (g:env) p : (env * list<mlpattern>) = match p.v with
     let g, pats = Util.fold_map extract_pat g pats in
     g, [Util.resugar_pat q <| MLP_CTor (d, List.flatten pats)]
 
-  | Pat_var(x, _) ->
+  | Pat_var(x, _) 
+  | Pat_wild x -> 
     let mlty = translate_typ g x.sort in 
     let g = Env.extend_bv g x ([], mlty) false in
     g, [MLP_Var (as_mlident x.v)]
 
-  | Pat_wild _ 
   | Pat_dot_term _ -> 
     g, [MLP_Wild]
 
