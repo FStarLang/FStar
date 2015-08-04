@@ -30,7 +30,7 @@ let fail_exp (lid:lident) (t:typ) = mk_Exp_app(Util.fvar None Const.failwith_lid
 
     
 let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> = 
-   // printfn "(* now extracting :  %A *) \n" (Print.sigelt_to_string se);
+   (debug g (fun u -> Util.print_string (Util.format1 "now extracting :  %s \n" (Print.sigelt_to_string se))));
      match se with
         | Sig_datacon _
         | Sig_bundle _
