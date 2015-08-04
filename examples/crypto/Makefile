@@ -8,7 +8,7 @@ CC = flexlink -chain mingw -v -v -exe -lgdi32
 #LIB = /cygdrive/c/msys32/usr/lib
 LIB = $(FSTAR_HOME)/../openssl-1.0.1p
 else
-CC = gcc
+CC = gcc-5
 LIB = /usr/lib #place to look for libcrypto.a
 endif
 
