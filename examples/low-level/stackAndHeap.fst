@@ -465,33 +465,43 @@ match (refLoc r) with
 (** cannot just uses ST.modifies. That was on heap; has to be lifted to smem.
 Also, why does it's definition have to be so procedural, unlike the more declarative one below?
 *)
-type modset = ghost (set aref)
+type modset = erased (set aref)
 
-(* TODO: why are these not erased? why are these iota unfolded*)
-val ghostUnfoldTest : unit -> GTot (ghost (set aref))
+val ghostUnfoldTest : unit -> GTot (modset)
 let ghostUnfoldTest u = hide empty
 
-val ghostUnfoldTest3 : r:(ref int) -> GTot (ghost (set aref))
+val ghostUnfoldTest3 : r:(ref int) -> GTot (modset)
 let ghostUnfoldTest3 r = hide (singleton (Ref r))
 
 val ghostUnfoldTest2 : unit -> GTot (modset)
 let ghostUnfoldTest2 u = hide empty
 
-type canModify  (m0 : smem)  (m1: smem) (rs: set aref ) =
+val gonly : #a:Type -> r:(ref a) -> GTot (modset)
+let gonly r = hide ((singleton (Ref r)))
+
+val gunion : #a:Type -> s1:modset -> s2:modset -> GTot (modset)
+let gunion s1 s2 = hide (union (reveal s1) (reveal s2))
+
+val gunionUnion : #a:Type  -> r1:(ref a) -> r2:(ref a) ->
+  Lemma (requires True) (ensures (reveal (gunion (gonly r1) (gonly r2)) = union (singleton (Ref r1)) (singleton (Ref r2))))
+  [SMTPat (gunion (gonly r1) (gonly r2))]
+let gunionUnion r1 r2 = (admit ())
+
+type canModify  (m0 : smem)  (m1: smem) (rs: modset ) =
   forall (a:Type) (r: ref a).
       refExistsInMem r m0
-      ==> (~(Set.mem (Ref r) rs))
+      ==> (~(Set.mem (Ref r) (reveal rs)))
       ==> (refExistsInMem r m1 /\ (loopkupRef r m0 = loopkupRef r m1))
 
 
 type  mreads (#a:Type) (r: ref a) (v:a) (m:smem) = refExistsInMem r m /\ loopkupRef r m = v
 
 (*lemmas needed for automatic inference*)
-val canModifyNone : m:smem -> Lemma (canModify m m empty)
+val canModifyNone : m:smem -> Lemma (canModify m m (hide empty))
 let canModifyNone m = ()
 
 val canModifyWrite : #a:Type -> r:(ref a) -> v:a -> m:smem
-  -> Lemma (canModify m (writeMemAux r m v) (singleton (Ref r)))
+  -> Lemma (canModify m (writeMemAux r m v) (gonly  r))
 let canModifyWrite r v m = ()
 
 type mStackNonEmpty (m:smem) = b2t (isNonEmpty (st m))

@@ -1,9 +1,9 @@
-factorial.ml: factorial.fst
+Factorial.ml: factorial.fst
 	fstar factorial.fst
 	./revertManualMLs.sh
 
-factorial:
-	ocamlfind ocamlc -o factorial -package batteries -linkpkg -thread -I ../../src/ocaml-output/ ../../src/ocaml-output/support.ml ListSet.ml Stack.ml FunctionalExtensionality.ml Set.ml Heap.ml Ghost.ml StackAndHeap.ml SST.ml SSTCombinators.ml Factorial.ml Test.ml
+factorial: Factorial.ml
+	ocamlfind ocamlc -g -o factorial -package batteries -linkpkg -thread -I ../../src/ocaml-output/ ../../src/ocaml-output/support.ml ListSet.ml Stack.ml FunctionalExtensionality.ml Set.ml Ghost.ml StackAndHeap.ml SST.ml SSTCombinators.ml Factorial.ml Test.ml
 
 MD5.ml: md5.fst
 	fstar MD5.fst
