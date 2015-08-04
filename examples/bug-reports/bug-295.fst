@@ -21,3 +21,4 @@ type s =
 
 val test: x:t nat{length x = 2} -> GTot s
 let test x = MkS (hide 2) x
+
