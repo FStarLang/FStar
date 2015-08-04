@@ -470,16 +470,24 @@ let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1
     MLM_Let (false,[{mllb_name=convIdent discName.ident; mllb_tysc=None; mllb_add_unit=false; mllb_def=discrBody}] )
 
 
-(*
-let ind_projector_body (c:context) (discName:lident) (constrName:lident) (x: either<btvdef, bvvdef>) : mlmodule1 = 
+let dummyPatIdent (n:int) : mlident = ("dummyPat"^(Util.string_of_int n), 0)
+let dummyPatIdents (n:int) : list<mlident> = List.map dummyPatIdent (ExtractTyp.firstNNats n)
+
+(*TODO : need to put this inside a submodule with the same name as the name of the construcor*)
+let ind_projector_body (c:env) (discName:lident) (constrName:lident) : mlmodule1 = 
                     let mlid = fresh "_proj_" in
-                    let projs = 
-                    let cargs = List.map (fun x -> MLP_Var(fresh x)) projs in
-                    let cn::cr = List.rev x.v.ns in
+                    let _,(_,ctype) = lookup_fv_by_lid c constrName in
+                    let cargs = ExtractTyp.argTypes ctype in
+                    let projs = dummyPatIdents (List.length cargs) in
+                    let cargs = List.map (fun x -> MLP_Var x) projs in
+                    let cn::cr = List.rev discName.ns in
                     let crstr = List.map (fun x->x.idText) cr in
-                    let rid = {ns=cr; ident={x.v.ident with idText=cn.idText}; nsstr=String.concat "." crstr; str=x.v.nsstr} in
+                    let rid = {ns=cr; ident={discName.ident with idText=cn.idText}; nsstr=String.concat "." crstr; str=discName.nsstr} in
                     let cn = cn.idText in
+                    let discrBody= 
                     MLE_Fun([(mlid,None)], MLE_Match(MLE_Name([], idsym mlid), [
-                        MLP_CTor(mlpath_of_lident mlenv rid, cargs), None, MLE_Name ([], x.v.ident.idText);
-                    ]))
-                    *)
+                        MLP_CTor(mlpath_of_lident rid, cargs), None, MLE_Name ([], discName.ident.idText);
+                    ])) in
+                MLM_Let (false,[{mllb_name=convIdent discName.ident; mllb_tysc=None; mllb_add_unit=false; mllb_def=discrBody}] )
+
+

@@ -28,7 +28,20 @@ type seq (a:Type) =
 | MkSeq: length:nat -> contents:(n:nat{n<length} -> Tot a) -> seq a
 
 (* Primitive operations on sequences *)
+
 let length s = MkSeq.length s
+(*
+(match s with
+  | MkSeq l c -> l)
+*)
+
+
+val mkSeqContents : s:(seq 'a) -> n:nat{n<length s} -> Tot 'a
+let mkSeqContents s n = MkSeq.contents s n
+(*
+(match s with
+| MkSeq l c -> c n)
+*)
 
 let create len v =  MkSeq len (fun i -> v)
 
@@ -37,10 +50,11 @@ let exFalso0 'a n = ()
 
 let createEmpty 'a =  (MkSeq 0 (fun i -> (exFalso0 'a i)))
 
-let index s i = MkSeq.contents s i
+
+let index s i = mkSeqContents s i
 
 let upd s n v =
- MkSeq (length s) (fun i -> if i=n then v else (MkSeq.contents s) i)
+ MkSeq (length s) (fun i -> if i=n then v else (mkSeqContents s) i)
 
 let append s1 s2 =
   MkSeq (length s1 + length s2) (fun x -> if x < (length s1) then index s1 x else index s2 (x - (length s1)))

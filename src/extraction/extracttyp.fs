@@ -354,13 +354,13 @@ let extractCtor (tyBinders : list<binder>) (c:context) (ctor: inductiveConstruct
   Currently, no attempt is made to convert an index to a parameter.
   It seems to be good practice for programmers to not use indices when parameters suffice.
    *)
-let dummyIdent (n:int) : mlident = ("'dummyV"^(Util.string_of_int n), 0)
 
 let rec firstNNats (n:int) : list<int> =
     if (0<n)
     then (n::(firstNNats (n-1)))
     else []
 
+let dummyIdent (n:int) : mlident = ("'dummyV"^(Util.string_of_int n), 0)
 let dummyIndexIdents (n:int) : list<mlident> = List.map dummyIdent (firstNNats n)
 
 let extractInductive (c:context) (ind: inductiveTypeFam ) :  context* (mlsymbol * mlidents * option<mltybody>) =
