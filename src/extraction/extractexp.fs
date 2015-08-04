@@ -241,7 +241,9 @@ and synth_exp (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
 
 (* Unlike the \epsilon function in the thesis, this also produced an ml type for the computed ML expression, 
  to avoid the need to infer them later, when less info is available*)
-and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) = 
+and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
+   (debug g (fun u -> Util.print_string (Util.format1 "now synthesizing expression :  %s \n" (Print.exp_to_string e))));
+ 
     match (Util.compress_exp e).n with 
         | Exp_constant c ->
           let t = Tc.Recheck.typing_const e.pos c in

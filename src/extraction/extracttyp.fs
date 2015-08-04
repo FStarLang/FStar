@@ -339,7 +339,7 @@ let extractCtor (tyBinders : list<binder>) (c:context) (ctor: inductiveConstruct
         let lp = List.zip tyBinders lb in
         //assert (List.length tyBinders = List.length lp);
         let newC = extendContextWithRepAsTyVars (List.map (fun (x,y) -> (fst x, fst y)) lp) c in
-        let mlt = extractTyp newC tr in
+        let mlt = Util.eraseTypeDeep c (extractTyp newC tr) in
         let tys = (List.map mlTyIdentOfBinder tyBinders, mlt) in //MayErase, because constructors are always pure
         let fvv = mkFvvar ctor.cname ctor.ctype in 
             // fprint1 "(* extracting the type of constructor %s\n" (lident2mlsymbol ctor.cname);

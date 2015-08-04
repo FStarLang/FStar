@@ -1,9 +1,9 @@
 (*--build-config
-    options:--admit_fsi Set --z3timeout 10 --logQueries;
+    options: --codegen OCaml-experimental --trace_error --debug yes --prn;
     variables:LIB=../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst
+    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst
     $LIB/ghost.fst stackAndHeap.fst sst.fst sstCombinators.fst $LIB/constr.fst word.fst $LIB/seq.fsi $LIB/seq.fst array.fsi
-     array.fst MD5Common.fst withScope.fst arrayAlgos.fst
+     array.fst MD5Common.fst arrayAlgos.fst
   --*)
 
 (*Why is MD5 so? Why did its designer(s) think
@@ -22,7 +22,6 @@ open Array
 open MD5Common
 open ArrayAlgos
 open Seq
-
 
 assume val cloneAndPad :
   r:(array word)

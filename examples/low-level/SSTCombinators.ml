@@ -13,8 +13,8 @@ end
 ()
 end))
 
-let scopedWhile1 = (fun ( r ) ( lc ) ( loopInv ) ( mods ) ( bd ) -> (scopedWhile (Obj.magic (fun ( u ) -> (let _13_3652 = (SST.memread r)
-in (lc _13_3652)))) mods bd))
+let scopedWhile1 = (fun ( r ) ( lc ) ( loopInv ) ( mods ) ( bd ) -> (scopedWhile (Obj.magic (fun ( u ) -> (let _21_6208 = (SST.memread r)
+in (lc _21_6208)))) mods bd))
 
 
 
