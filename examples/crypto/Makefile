@@ -2,11 +2,15 @@ VERFILES=cca2.fst #sha1.fst mac.fst sig.fst padding.fst mac3.fst # encrypt3.fst 
 MITLS=../../../mitls-fstar
 
 ifeq ($(OS),Windows_NT)
-CC = i686-w64-mingw32-gcc
+#CC = i686-w64-mingw32-gcc.exe
+CC = flexlink -chain mingw -v -v -exe -lgdi32
+# flexlink is needed to link in	/cygdrive/c/OCaml/bin/flexdll_initer_mingw.o /cygdrive/c/OCaml/bin/flexdll_mingw.o
+#LIB = /cygdrive/c/msys32/usr/lib
+LIB = $(FSTAR_HOME)/../openssl-1.0.1p
 else
 CC = gcc
+LIB = /usr/lib #place to look for libcrypto.a
 endif
-
 
 include ../Makefile.include
 all: .all.crypto.ver merkle_tree # rpc acls-cap
@@ -30,13 +34,6 @@ acls-cap: sha1.fst mac.fst ../security/acls2.fst acls-cap.fst
 	heap.fst st.fst \
 	seq.fsi seqproperties.fst ) $^
 
-# This relies on libs/ml/Platform/Bytes.fst and libs/ml/CoreCrypto/CoreCrypto.fst from miTLS*
-
-install-libs:
-	rm -fr Platform
-	rm -fr CoreCrypto
-	cp -r $(MITLS)/libs/fst/Platform Platform
-	cp -r $(MITLS)/libs/fst/CoreCrypto CoreCrypto
 
 rpc: formatting.fst sha1.fst mac.fst rpc.fst
 	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --admit_fsi Seq  \
@@ -47,20 +44,24 @@ rpc: formatting.fst sha1.fst mac.fst rpc.fst
 					$(addprefix $(FSTAR_HOME)/contrib/,  Platform/fst/Bytes.fst CoreCrypto/fst/CoreCrypto.fst) \
 					sha1.fst mac.fst formatting.fst rpc.fst
 
-# This relies on libs/ml/Platform/Bytes.fst and libs/ml/CoreCrypto/CoreCrypto.fst from miTLS*
-# as well as libs/ml/Platform/platform.cmx and libs/ml/CoreCrypto/CoreCrypto.cmxa
+
+mllibs:
+	make -C $(FSTAR_HOME)/contrib/Platform/ml clean all
+	make -C $(FSTAR_HOME)/contrib/CoreCrypto/ml clean all
+
+
 rpc-extract:
 	$(FSTAR) --codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml \
           $(addprefix $(FSTAR_HOME)/lib/, string.fst io.fst list.fst ext.fst classical.fst \
 					set.fsi set.fst \
 					heap.fst st.fst \
 					seq.fst seqproperties.fst ) \
-					$(addprefix $(MITLS)/libs/fst/,  Platform/Bytes.fst CoreCrypto/CoreCrypto.fst) \
+					$(addprefix $(FSTAR_HOME)/contrib/,  Platform/fst/Bytes.fst CoreCrypto/fst/CoreCrypto.fst) \
 					sha1.fst mac.fst formatting.fst rpc.fst  --debug high
-	ocamlfind ocamlopt -cc $(CC) -cclib -I/usr/lib -cclib -lcrypto -o rpc.exe -package batteries -linkpkg -g -thread $(addprefix -I $(MITLS)/libs/ml/, Platform CoreCrypto) -I \
+	ocamlfind ocamlopt -cc "$(CC)" -cclib -L$(LIB) -cclib -lcrypto -o rpc.exe -package batteries -linkpkg -g -thread -I $(FSTAR_HOME)/contrib/Platform/ml -I $(FSTAR_HOME)/contrib/CoreCrypto/ml -I \
 	        $(FSTAR_HOME)/src/ocaml-output/ \
 					$(FSTAR_HOME)/src/ocaml-output/support.cmx \
-					$(addprefix $(MITLS)/libs/ml/,  Platform/platform.cmx CoreCrypto/CoreCrypto.cmxa) \
+					$(addprefix $(FSTAR_HOME)/contrib/,  Platform/ml/platform.cmx CoreCrypto/ml/CoreCrypto.cmxa) \
 					Seq.ml SeqProperties.ml SHA1.ml MAC.ml Formatting.ml RPC.ml
 
 cnt-protocol: cnt-format.fst cnt-format.fsi cnt-mac.fst cnt-protocol.fst
@@ -73,5 +74,3 @@ cnt-protocol: cnt-format.fst cnt-format.fsi cnt-mac.fst cnt-protocol.fst
 
 clean:
 	rm -fr rpc *.ml *.cmi *.cmx *.o *~
-	rm -fr Platform
-	rm -fr CoreCrypto
