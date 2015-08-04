@@ -557,7 +557,7 @@ let dsnd t = MkDTuple2._2 t
 type Let (#a:Type) (x:a) (body:(a -> Type)) = body x
 logic type InductionHyp : #a:Type -> a -> Type -> Type
 assume val by_induction_on: #a:Type -> #p:Type -> induction_on:a -> proving:p -> Lemma (ensures (InductionHyp induction_on p))
-assume val _assume : p:Type -> unit -> (y:unit{p})
+assume val _assume : p:Type -> unit -> Pure unit (requires (True)) (ensures (fun x -> p))
 assume val admit   : #a:Type -> unit -> Admit a
 assume val magic   : #a:Type -> unit -> Tot a
 assume val admitP  : p:Type -> Pure unit True (fun x -> p)

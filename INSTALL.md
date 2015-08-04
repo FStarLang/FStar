@@ -109,9 +109,15 @@ The current version of F* requires OCaml 4.02.
 1. `make -C src/ocaml-output`
 
 (Side note: this procedure generates a native F* binary, that is, a binary that
-does *not* depend on `cygwin1.dll`, as since the installer above uses a
+does *not* depend on `cygwin1.dll`, since the installer above uses a
 *native* Windows port of OCaml.  Cygwin is just there to provide `make` and
-other utilities required for the build.)
+other utilities required for the build.
+
+This also means that when linking C libraries with OCaml compiled objects one
+needs to use the *correct* mingw libraries and *not* the Cygwin ones. OCaml uses
+special `flexlink` technology for this. See `contrib/CoreCrypto/ml` and
+`examples/crypto` for examples.
+)
 
 #### Instructions for Linux and Mac OS X ####
 
