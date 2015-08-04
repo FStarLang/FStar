@@ -1,10 +1,10 @@
 (*--build-config
-    options:--admit_fsi Set --z3timeout 10;
     variables:LIB=../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst st3.fst $LIB/constr.fst  $LIB/ghost.fst stackAndHeap.fst sst.fst sstCombinators.fst
+    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst
+    $LIB/ghost.fst stackAndHeap.fst sst.fst sstCombinators.fst
   --*)
 
-module ScopedWhile3
+module Sieve
 open SSTCombinators
 open StackAndHeap
 open SST
@@ -14,7 +14,6 @@ open Set
 open Prims
 open List
 open ListSet
-open Constructive
 
 (*val divides : pos -> nat -> Tot bool
 let divides divisor n = ((n % divisor) = 0)*)
@@ -93,10 +92,10 @@ match upto with
 | _ -> markMultiplesUpto n lo (upto-1) (mark n f ((upto-1)*lo))*)
 
 type markedIffMultipleOrInit (n:nat) (lo:nat) (upto:nat{lo*(upto-1)<n})
-  (init:((k:nat{k<n}) -> Tot bool)) (new:((k:nat{k<n}) -> Tot bool)) =
-  (forall (k:nat{k < upto}). marked n new (lo*k))
-  /\ (forall (k:nat{k < n}). (marked n init k ==> marked n new k))
-  /\ (forall (k:nat{k < n}). (marked n new k ==> (marked n init k \/ divides lo k)))
+  (init:((k:nat{k<n}) -> Tot bool)) (neww:((k:nat{k<n}) -> Tot bool)) =
+  (forall (k:nat{k < upto}). marked n neww (lo*k))
+  /\ (forall (k:nat{k < n}). (marked n init k ==> marked n neww k))
+  /\ (forall (k:nat{k < n}). (marked n neww k ==> (marked n init k \/ divides lo k)))
 
 type  innerLoopInv (n:nat) (lo: ref nat)  (li : ref nat) (res:ref ((k:nat{k<n}) -> Tot bool))
     (initres: ((k:nat{k<n}) -> Tot bool)) (m:smem) =
@@ -115,15 +114,15 @@ type multiplesMarked2 (n:nat) (bitv : (k:nat{k<n}) -> Tot bool) (lo:nat) =
 
 
 type markedIffDividesOrInit2 (n:nat) (lo:nat)
-  (init:((k:nat{k<n}) -> Tot bool)) (new:((k:nat{k<n}) -> Tot bool)) =
-  (forall (k:nat{k * lo < n}). marked n new (lo*k))
-  /\ (forall (k:nat{k < n}). (marked n init k ==> marked n new k))
-  /\ (forall (k:nat{k < n}). (marked n new k ==> (marked n init k \/ divides lo k)))
+  (init:((k:nat{k<n}) -> Tot bool)) (neww:((k:nat{k<n}) -> Tot bool)) =
+  (forall (k:nat{k * lo < n}). marked n neww (lo*k))
+  /\ (forall (k:nat{k < n}). (marked n init k ==> marked n neww k))
+  /\ (forall (k:nat{k < n}). (marked n neww k ==> (marked n init k \/ divides lo k)))
 
 
 type markedIffDividesOrInit (n:nat) (lo:nat)
-   (init:((k:nat{k<n}) -> Tot bool)) (new:((k:nat{k<n}) -> Tot bool)) =
-    (forall (k:nat{k < n}). (marked n new k <==> (marked n init k \/ divides lo k)))
+   (init:((k:nat{k<n}) -> Tot bool)) (neww:((k:nat{k<n}) -> Tot bool)) =
+    (forall (k:nat{k < n}). (marked n neww k <==> (marked n init k \/ divides lo k)))
 
 type multiplesMarked (n:nat) (bitv : (k:nat{k<n}) -> Tot bool) (lo:nat) =
 (forall (m:nat{m<n}). (divides lo m) ==> marked n bitv m)
@@ -186,30 +185,30 @@ type outerGuardLC (n:nat) (lo : ref nat) (m:smem) =
 
 
 type markedIffHasDivisorSmallerThan (n:nat) (lo:nat)
-    (new:((k:nat{k<n}) -> Tot bool)) =
-    (forall (k:nat{k < n}). (marked n new k <==> (exists (d:nat{1<d}). d<lo /\ divides d k)))
+    (neww:((k:nat{k<n}) -> Tot bool)) =
+    (forall (k:nat{k < n}). (marked n neww k <==> (exists (d:nat{1<d}). d<lo /\ divides d k)))
 
 
 val markedIffHasDivisorSmallerThanInc :
-  n:nat -> lo:nat{1<lo} -> old:((k:nat{k<n}) -> Tot bool) -> new:((k:nat{k<n}) -> Tot bool)
+  n:nat -> lo:nat{1<lo} -> old:((k:nat{k<n}) -> Tot bool) -> neww:((k:nat{k<n}) -> Tot bool)
   -> Lemma
       (requires (markedIffHasDivisorSmallerThan n lo old)
-              /\ markedIffDividesOrInit n lo old new)
-      (ensures (markedIffHasDivisorSmallerThan n (lo+1) new))
-      (*[SMTPatT (markedIffHasDivisorSmallerThan n (lo+1) new)]*)
-let markedIffHasDivisorSmallerThanInc n lo old new  = ()
+              /\ markedIffDividesOrInit n lo old neww)
+      (ensures (markedIffHasDivisorSmallerThan n (lo+1) neww))
+      (*[SMTPatT (markedIffHasDivisorSmallerThan n (lo+1) neww)]*)
+let markedIffHasDivisorSmallerThanInc n lo old neww  = ()
 
 type allUnmarked
-   (n:nat) (new:((k:nat{k<n}) -> Tot bool)) =
-   forall (m:nat{m<n}). not (marked n new m)
+   (n:nat) (neww:((k:nat{k<n}) -> Tot bool)) =
+   forall (m:nat{m<n}). not (marked n neww m)
 
 
 val markedIffHasDivisorSmallerThan2 :
- n:nat -> new:((k:nat{k<n}) -> Tot bool)
+ n:nat -> neww:((k:nat{k<n}) -> Tot bool)
  -> Lemma
-     (requires (allUnmarked n new))
-     (ensures (markedIffHasDivisorSmallerThan n 2 new))
-let markedIffHasDivisorSmallerThan2 n new = ()
+     (requires (allUnmarked n neww))
+     (ensures (markedIffHasDivisorSmallerThan n 2 neww))
+let markedIffHasDivisorSmallerThan2 n neww = ()
 
 
 type  outerLoopInv (n:nat) (lo: ref nat) (res:ref ((k:nat{k<n}) -> Tot bool)) (m:smem) =
@@ -265,8 +264,8 @@ let outerLoop n lo res =
     (outerLoopBody n lo res)
 
 type markedIffNotPrime
-   (n:nat) (new:((k:nat{k<n}) -> Tot bool)) =
-   (forall (m:nat{m<n}). (marked n new m <==>  ((isNotPrime m))))
+   (n:nat) (neww:((k:nat{k<n}) -> Tot bool)) =
+   (forall (m:nat{m<n}). (marked n neww m <==>  ((isNotPrime m))))
 
 
 val lessTrans : m:nat -> n:nat -> d:nat ->
@@ -287,11 +286,11 @@ let isNotPrimeIf n m = ()
 (*how can one manually provide a witness to an existential? switch to cexists completely?*)
 
 val markedIffHasDivisorSmallerThan3 :
-n:nat -> new:((k:nat{k<n}) -> Tot bool)
+n:nat -> neww:((k:nat{k<n}) -> Tot bool)
 -> Lemma
-    (requires (markedIffHasDivisorSmallerThan n n new))
-    (ensures (markedIffNotPrime n new))
-(*let markedIffHasDivisorSmallerThan3 n new = ()*)
+    (requires (markedIffHasDivisorSmallerThan n n neww))
+    (ensures (markedIffNotPrime n neww))
+(*let markedIffHasDivisorSmallerThan3 n neww = ()*)
 
 
 val sieve : n:nat{n>1} -> unit
@@ -311,8 +310,26 @@ val sieveFull : n:nat{n>1}
         (requires (fun m -> True))
         (ensures (fun _ resv _ -> markedIffHasDivisorSmallerThan n n resv))
         empty
-(*let sieveFullTypeInfFail n= withNewScope #empty (sieve n)*)
+let sieveFull n =
+  pushStackFrame ();
+  let res= sieve n () in
+  popStackFrame (); res
 
+(*let sieveFullTypeInfFail n= withNewScope #empty (sieve n)*)
+val listOfTruesAux : n:nat -> max:nat{max<=n} -> f:((k:nat{k<n}) -> Tot bool) -> Tot (list nat)
+let rec listOfTruesAux n max f = if (max<=2) then [] else
+  ( if not (f (max-1)) then ((max-1)::(listOfTruesAux n (max - 1) f)) else (listOfTruesAux n (max - 1) f))
+
+val listOfTrues : n:nat  -> f:((k:nat{k<n}) -> Tot bool) -> Tot (list nat)
+let listOfTrues n f = listOfTruesAux n n f
+
+val sieveAsList : n:nat{n>1}
+  -> Mem (list nat)
+        (requires (fun m -> True))
+        (ensures (fun _ resv _ -> True))
+        empty
+let sieveAsList n =
+  listOfTrues n (sieveFull n)
 
 val sieveUnfolded : n:nat{n>1} -> unit
   -> WNSC ((k:nat{k<n}) -> Tot bool)
@@ -353,6 +370,7 @@ type  outerLoopInv2 (n:nat) (lo: ref nat) (res:ref ((k:nat{k<n}) -> Tot bool)) (
   /\ (1<(loopkupRef lo m))
   /\ (markedIffHasDivisorSmallerThan n (loopkupRef lo m) (loopkupRef res m))
 
+(*
 val sieveUnfolded3 : n:nat{n>1} -> unit
   -> WNSC ((k:nat{k<n}) -> Tot bool)
         (requires (fun m -> True))
@@ -434,3 +452,4 @@ let sieveUnfolded2 n u =
     (*the part below has no computational content*)
       (markedIffHasDivisorSmallerThanInc n lov initres newres));
   memread res
+*)

@@ -80,6 +80,8 @@ module Prims = struct
   type ' f l__ForallTyp =
   unit  ->  ' f
 
+  type (' a, ' p) l__Exists =
+  | MkExists of ' a * ' p
 
 
 

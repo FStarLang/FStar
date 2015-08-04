@@ -105,7 +105,6 @@ let scopedWhile1 'a r lc 'loopInv mods bd =
     mods
     bd
 
-(*
 val scopedWhile2 :
   #a:Type
   -> #b:Type
@@ -129,4 +128,3 @@ let scopedWhile2 'a ra rb lc 'loopInv mods bd =
     (fun u -> lc (memread ra) (memread rb))
     mods
     bd
-*)
