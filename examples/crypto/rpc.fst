@@ -1,16 +1,15 @@
 (*--build-config
     options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module RPC --admit_fsi Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
     variables:LIB=../../lib
-              MITLS=../../../mitls-fstar/libs/fst/;
+              CONTRIB=../../contrib;
     other-files:$LIB/string.fst $LIB/list.fst
             $LIB/ext.fst $LIB/classical.fst
             $LIB/set.fsi $LIB/set.fst
             $LIB/heap.fst $LIB/st.fst
             $LIB/seq.fsi $LIB/seqproperties.fst
             $LIB/io.fst
-            $MITLS/Platform/Bytes.fst
-            $MITLS/CoreCrypto/Hash.fst
-            $MITLS/CoreCrypto/CoreCrypto.fst
+            $CONTRIB/Platform/fst/Bytes.fst
+            $CONTRIB/CoreCrypto/fst/CoreCrypto.fst
             formatting.fst
             sha1.fst
             mac.fst
