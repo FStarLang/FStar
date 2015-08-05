@@ -1,10 +1,10 @@
 (*--build-config
     options:--admit_fsi Set --admit_fsi Map --logQueries;
-    other-files:../../lib/set.fsi ../../lib/heap.fst ../../lib/map.fsi ../../lib/hyperheap.fst
+    other-files:../../lib/set.fsi ../../lib/heap.fst ../../lib/st.fst ../../lib/all.fst ../../lib/map.fsi ../../lib/twoLevelHeap.fst
  --*)
 
-module TestHyperHeap
-open HyperHeap
+module TestTwoLevelHeap
+open TwoLevelHeap
 
 val test0: #r:rid -> i:int -> v:rref r int -> ST int
   (requires (fun m0 -> Map.contains m0 r))
