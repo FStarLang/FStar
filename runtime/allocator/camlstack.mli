@@ -68,6 +68,14 @@ external mkref: 'a -> 'a ref = "stack_mkref";;
     initializing it with x.  Raise [Failure "Camlstack.cons"] if the
     stack has no frames. *)
 
+external mkbytes : int -> bytes = "stack_mkbytes";;
+(** [Camlstack.mkbytes n] constructs a byte array of length n.
+    The contents are uninitialized. Note that a byte array can be 
+    coerced to a string by Bytes.unsafe_to_string (but only after
+    it's fully initialized and won't change anymore).
+    Raise [Failure "Camlstack.mkbytes"] if the stack has no frames. 
+    Raise [Invalid_argument "Camlstack.mkbytes"] if [n] is non-positive. *)
+
 external mkarray : int -> 'a -> 'a array = "stack_mkarray";;
 (** [Camlstack.mkarray n v] allocates an array of length [n] with each
     element initialized to [v]. 
