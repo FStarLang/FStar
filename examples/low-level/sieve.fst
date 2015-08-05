@@ -22,10 +22,8 @@ let divides divisor n = ((n % divisor) = 0)*)
 
 opaque type divides  (divisor :nat) (n:nat) =
 exists (k:nat). k*divisor=n
-(*cexists (fun (k:nat) -> b2t (k*divisor=n))*)
-(*switching to cexists breaks many lemmas.
- I guess the SMT solver does not know anything about cexists.*)
 
+(*this lemma is bogus: divisor could be n*)
 val divisorSmall : n:nat{1<n} -> divisor:nat
   ->
    Lemma
