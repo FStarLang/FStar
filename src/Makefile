@@ -13,7 +13,7 @@ FORMAT_SRC=$(addprefix format/, $(FORMAT))
 BACKEND=nameenv.fsi nameenv.fs ml-syntax.fs ocaml-codegen.fsi ocaml-codegen.fs ocaml-asttrans.fsi ocaml-asttrans.fs 
 BACKEND_SRC=$(addprefix backend/, $(BACKEND))
 
-EXTRACTION=ml-syntax.fs env.fs util.fs ocaml-codegen.fsi ocaml-codegen.fs extracttyp.fs extractexp.fs extractmod.fs
+EXTRACTION=ml-syntax.fs env.fs util.fs ocaml-codegen.fsi ocaml-codegen.fs extracttyp.fs extractexp.fs extractmod.fs wextract.fs
 EXTRACTION_SRC=$(addprefix extraction/, $(EXTRACTION))
 
 JSBACKEND=ast.fs print.fs translate.fs
@@ -188,7 +188,7 @@ BOOT_FORMATFILES=format.fsi formatml.fs
 BOOT_FORMAT=$(addprefix format/, $(BOOT_FORMATFILES))
 BOOT_BACKENDFILES=nameenv.fsi nameenv.fs ml-syntax.fs ocaml-codegen.fsi ocaml-codegen.fs ocaml-asttrans.fsi ocaml-asttrans.fs 
 BOOT_BACKEND=$(addprefix backend/, $(BOOT_BACKENDFILES))
-BOOT_EXTRACTIONFILES=ml-syntax.fs env.fs util.fs ocaml-codegen.fsi ocaml-codegen.fs extracttyp.fs extractexp.fs extractmod.fs
+BOOT_EXTRACTIONFILES=ml-syntax.fs env.fs util.fs ocaml-codegen.fsi ocaml-codegen.fs extracttyp.fs extractexp.fs extractmod.fs wextract.fs
 BOOT_EXTRACTION=$(addprefix extraction/, $(BOOT_EXTRACTIONFILES))
 
 BOOT_JSBACKENDFILES=ast.fs translate.fs
