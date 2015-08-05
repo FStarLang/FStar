@@ -1,5 +1,5 @@
 Factorial.ml: factorial.fst
-	fstar factorial.fst
+	fstar --codegen OCaml-experimental factorial.fst
 	./revertManualMLs.sh
 
 factorial: Factorial.ml

@@ -50,7 +50,6 @@ let elift2 f ga gc = f ga gc
 val elift3 : #a:Type -> #b:Type -> #c:Type-> #d:Type  -> f:(a-> c -> d ->Tot b) -> erased a -> erased c ->  erased d -> Tot (erased b)
 let elift3 f ga gc gd = f ga gc gd
 
-
 (*
 Privateness seems to have no effect on Z3. So perhaps we dont need any postconditions
 

@@ -56,6 +56,8 @@ let copy s scp =
   let ctr = salloc #nat 0 in
   let len = Array.length s in
   let lenscp = Array.length scp in
+  admitP (b2t (reveal ((elift1 only) (asRef scp)) = only (reveal (asRef scp))));
+  admitP (b2t (reveal (gunion ((elift1 only) (asRef scp)) (gonly ctr)) = union (only (reveal (asRef scp))) (only ctr)));
   scopedWhile1
     ctr
     (fun ctrv -> ctrv < len)

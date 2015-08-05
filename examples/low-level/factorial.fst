@@ -1,5 +1,4 @@
 (*--build-config
-options: --codegen OCaml-experimental --trace_error --debug yes --prn;
 variables:LIB=../../lib;
 other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/list.fst stack.fst listset.fst  $LIB/ghost.fst stackAndHeap.fst sst.fst sstCombinators.fst
   --*)
@@ -41,15 +40,14 @@ val factorialLoopBody :
   n:nat -> li:(ref nat) -> res:(ref nat)
   -> unit ->
   whileBody (loopInv li res) (factorialGuardLC n li)
-    (* (gunion (gonly li) (gonly res)) *)
- (hide (union (singleton (Ref li)) (singleton (Ref res))))
+  (hide (union (singleton (Ref li)) (singleton (Ref res))))
       (*SST unit (fun m -> loopInv li res (mtail m)) (fun m0 _ m1 -> loopInv li res (mtail m1))*)
 let factorialLoopBody (n:nat) (li:(ref nat)) (res:(ref nat)) u =
   let liv = memread li in
   let resv = memread res in
   memwrite li (liv + 1);
   memwrite res ((liv+1) * resv)
-
+ (*  (gunionUnion li res)*)
 val factorialLoop : n:nat -> li:(ref nat) -> res:(ref nat)
   -> Mem unit (fun m -> mreads li 0 m /\ mreads res 1 m  /\ ~(li=res))
               (fun m0 _ m1 -> mreads res (factorial n) m1)
