@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi OrdSet --admit_fsi OrdMap;
     variables:LIB=../../lib;
-    other-files:$LIB/ordset.fsi $LIB/ordmap.fsi $LIB/list.fst $LIB/classical.fst ast.fst
+    other-files:$LIB/ordset.fsi $LIB/ordmap.fsi $LIB/classical.fst ast.fst
  --*)
 
 module Semantics
