@@ -9,7 +9,7 @@ type mlpath =
 (mlsymbol list * mlsymbol)
 
 let idsym = (fun ( _53_4 ) -> (match (_53_4) with
-| (s, _) -> begin
+| (s, _53_3) -> begin
 s
 end))
 
@@ -18,8 +18,8 @@ let string_of_mlpath = (fun ( _53_7 ) -> (match (_53_7) with
 (Support.String.concat "." (Support.List.append p ((s)::[])))
 end))
 
-let mlpath_of_lident = (fun ( x ) -> (let _68_23685 = (Support.List.map (fun ( x ) -> x.Microsoft_FStar_Absyn_Syntax.idText) x.Microsoft_FStar_Absyn_Syntax.ns)
-in (_68_23685, x.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText)))
+let mlpath_of_lident = (fun ( x ) -> (let _68_23718 = (Support.List.map (fun ( x ) -> x.Microsoft_FStar_Absyn_Syntax.idText) x.Microsoft_FStar_Absyn_Syntax.ns)
+in (_68_23718, x.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText)))
 
 let as_mlident = (fun ( x ) -> (x.Microsoft_FStar_Absyn_Syntax.ppname.Microsoft_FStar_Absyn_Syntax.idText, 0))
 
@@ -538,7 +538,7 @@ let mlseq = (fun ( e1 ) ( e2 ) -> (match (e2) with
 | MLE_Seq (s) -> begin
 MLE_Seq ((e1)::s)
 end
-| _ -> begin
+| _53_115 -> begin
 MLE_Seq ((e1)::(e2)::[])
 end))
 
@@ -546,7 +546,7 @@ let mlfun = (fun ( x ) ( e ) -> (match (e) with
 | MLE_Fun ((xs, e)) -> begin
 MLE_Fun ((((x, None))::xs, e))
 end
-| _ -> begin
+| _53_123 -> begin
 MLE_Fun ((((x, None))::[], e))
 end))
 
@@ -556,7 +556,7 @@ let mlif = (fun ( b ) ( _53_127 ) -> (match (_53_127) with
 | MLE_Const (MLC_Unit) -> begin
 MLE_If ((b, e1, None))
 end
-| _ -> begin
+| _53_131 -> begin
 MLE_If ((b, e1, Some (e2)))
 end)
 end))
