@@ -23,9 +23,8 @@ type array (a:Type) = ref (seq a)
  (*val length : #a:Type -> (array a) -> Tot string
  let length v = "cat"*)
 
-
-(*val asRef : #a:Type  -> va:(array a) -> GTot (ref (vector a (length va)))*)
-let asRef va = va
+open Ghost
+let asRef va = hide va
 
 let readIndex 'a r index =
   let rv = (memread (r)) in (Seq.index rv index)

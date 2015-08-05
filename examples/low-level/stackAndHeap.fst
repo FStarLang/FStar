@@ -476,11 +476,11 @@ let ghostUnfoldTest3 r = hide (singleton (Ref r))
 val ghostUnfoldTest2 : unit -> GTot (modset)
 let ghostUnfoldTest2 u = hide empty
 
-val gonly : #a:Type -> r:(ref a) -> GTot (modset)
+val gonly : #a:Type -> r:(ref a) -> Tot (modset)
 let gonly r = hide ((singleton (Ref r)))
 
-val gunion : #a:Type -> s1:modset -> s2:modset -> GTot (modset)
-let gunion s1 s2 = hide (union (reveal s1) (reveal s2))
+val gunion : #a:Type -> s1:modset -> s2:modset -> Tot (modset)
+let gunion s1 s2 = (elift2 union) s1 s2
 
 val gunionUnion : #a:Type  -> r1:(ref a) -> r2:(ref a) ->
   Lemma (requires True) (ensures (reveal (gunion (gonly r1) (gonly r2)) = union (singleton (Ref r1)) (singleton (Ref r2))))

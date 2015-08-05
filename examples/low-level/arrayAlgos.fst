@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set --z3timeout 10;
+    options:--admit_fsi Set --z3timeout 100;
     variables:LIB=../../lib;
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst
     $LIB/ghost.fst stackAndHeap.fst sst.fst sstCombinators.fst $LIB/constr.fst word.fst $LIB/seq.fsi $LIB/seq.fst array.fsi array.fst
@@ -19,10 +19,10 @@ open Seq
 open Ghost
 
 val contains : #a:Type -> smem -> array a -> GTot bool
-let contains m v = refExistsInMem (asRef v) m
+let contains m v = refExistsInMem (reveal (asRef v)) m
 
 val sel : #a:Type -> m:smem -> v:(array a){contains m v} -> GTot (seq a)
-let sel m v = loopkupRef (asRef v) m
+let sel m v = loopkupRef (reveal (asRef v)) m
 
 val glength : #a:Type -> v:(array a) -> m:smem{contains m v} -> GTot nat
 let glength v m = Seq.length (sel m v)
@@ -34,10 +34,11 @@ type prefixEqual  (#a:Type)
 (*val prefixInc: a#Type -> n:nat->
   (m1 = (writeMemAux (asRef r) m0 (Seq.upd (loopkupRef (asRef r) m0) index newV)))*)
 
+#set-options "--initial_fuel 100 --max_fuel 400 --initial_ifuel 100 --max_ifuel 400"
+
 type prefixEqualL  (#a:Type)
   (v1: seq a) (v2:(seq a))
   = length v1 <= length v2 /\ (forall (n:nat{n<length v1}). index v1 n = index v2 n)
-
 
 (* Helper functions for stateful array manipulation *)
 val copy:
@@ -49,7 +50,7 @@ val copy:
                 /\ prefixEqualL (sel h1 s) (sel h1 scp)
                 /\ (contains h0 scp) /\ glength scp h0 = glength scp h1
               ))
-     (gonly (asRef scp))
+     ((elift1 only) (asRef scp))
 
 let copy s scp =
   let ctr = salloc #nat 0 in
@@ -64,7 +65,7 @@ let copy s scp =
           /\ (loopkupRef ctr m) <=len
           /\ prefixEqual (sel m s) (sel m scp) (loopkupRef ctr m)
           )
-    ((gunion (gonly (asRef scp)) (gonly ctr)))
+    (gunion ((elift1 only) (asRef scp)) (gonly ctr))
     (fun u -> let ctrv = memread ctr in
               writeIndex scp ctrv (readIndex s ctrv);
               memwrite ctr (ctrv +1 ))
@@ -78,7 +79,7 @@ val hcloneAux:
                 /\ (glength s h1) = (glength scp h1)
                 /\ Seq.Eq (sel h1 s) (sel h1 scp)
               ))
-     (empty)
+     (hide empty)
 
 let hcloneAux s =
   let scp = hcreate (Seq.create (Array.length s) (readIndex s 0)) in
@@ -126,7 +127,7 @@ val hclone:
                 /\ (glength s h1) = (glength scp h1)
                 /\ Seq.Eq (sel h1 s) (sel h1 scp)
               ))
-     (empty)
+     (hide empty)
 
 let hclone 'a s =
   if (Array.length s = 0)

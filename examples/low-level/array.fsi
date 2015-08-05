@@ -24,16 +24,16 @@ type array : Type -> Type
 open Ghost
 
 (*making it GTot causes a strange error in the postcondition of readIndex *)
-val asRef : #a:Type  -> va:(array a) -> erased (ref (seq a))
+val asRef : #a:Type  -> va:(array a) -> Tot (erased (ref (seq a)))
 
 
 val length: #a:Type -> x:array a -> PureMem nat
   (requires (fun h -> refExistsInMem (reveal (asRef x)) h))
-  (ensures  (fun h y _ ->  (refExistsInMem (reveal (asRef x)) h /\ y=Seq.length (loopkupRef (reveal (asRef x)) h))))
+  (ensures  (fun h y _ ->  (refExistsInMem (reveal (asRef x)) h /\ y= ((Seq.length) ((loopkupRef) (reveal (asRef x)) h)))))
 
 (*using the 2 definitions below causes a strange error in readIndex amd updIndex*)
 (*val arrayExistsInMem : #a:Type -> (array a) -> smem -> GTot bool
-let arrayExistsInMem v sm = refExistsInMem (asRef v) sm
+let arrayExistsInMem v sm = refExistsInMem (reveal (asRef v)) sm
 
 val lookup : #a:Type  -> va:(array a) -> m:smem{(arrayExistsInMem va m)} -> GTot ((vector a (length va)))
 let lookup 'a va m = (admit ())*)
@@ -63,8 +63,8 @@ val screate :  #a:Type -> init:(seq a)
         (requires  (fun m -> (isNonEmpty (st m))))
         (ensures (fun m0 vv m1->
             (isNonEmpty (st m0)) /\ (isNonEmpty (st m1))
-            /\ allocateInBlock (asRef vv) (topstb m0) (topstb m1) init
-            /\ refLoc (asRef vv) = InStack (topstid m0) /\ (topstid m0 = topstid m1)
+            /\ allocateInBlock (reveal (asRef vv)) (topstb m0) (topstb m1) init
+            /\ refLoc (reveal (asRef vv)) = InStack (topstid m0) /\ (topstid m0 = topstid m1)
             /\ mtail m0 = mtail m1))
         (hide empty)
 
@@ -73,8 +73,8 @@ val hcreate :  #a:Type -> init:(seq a)
   -> Mem (array a)
         (requires  (fun m -> True))
         (ensures (fun m0 v m1->
-            allocateInBlock (asRef v) (hp m0) (hp m1) init
-            /\ refLoc (asRef v) = InHeap /\ (snd m0 = snd m1)))
+            allocateInBlock (reveal (asRef v)) (hp m0) (hp m1) init
+            /\ refLoc (reveal (asRef v)) = InHeap /\ (snd m0 = snd m1)))
         (hide empty)
 
 (* This should be removed?*)
