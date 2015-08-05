@@ -15,9 +15,10 @@ open Prims
 open List
 open ListSet
 
+open Ghost
 
 (*Sane SST*)
-effect Mem (a:Type) (pre: smem -> Type) (post: (smem -> SSTPost a)) (mod:set aref) =
+effect Mem (a:Type) (pre: smem -> Type) (post: (smem -> SSTPost a)) (mod: modset) =
         SST a pre (fun m0 a m1 -> post m0 a m1 /\ sids m0 = sids m1 /\ canModify m0 m1 mod)
 
 effect PureMem (a:Type) (pre:smem -> Type) (post: (smem -> Post a)) =
@@ -27,14 +28,14 @@ effect PureMem (a:Type) (pre:smem -> Type) (post: (smem -> Post a)) =
 (** withNewStackFrame combinator *)
 (*adding requires/ensures here causes the definition of scopedWhile below to not typecheck.
 Hope this is not a concert w.r.t. soundness*)
-effect WNSC (a:Type) (pre:(smem -> Type))  (post: (smem -> SSTPost a)) (mod:set aref) =
+effect WNSC (a:Type) (pre:(smem -> Type))  (post: (smem -> SSTPost a)) (mod:modset) =
   Mem a
       ( (*requires *) (fun m -> isNonEmpty (st m) /\ topstb m = emp /\ pre (mtail m)))
       ( (* ensures *) (fun m0 a m1 -> post (mtail m0) a (mtail m1)))
       mod
 
 val withNewScope : #a:Type -> #pre:(smem -> Type) -> #post:(smem -> SSTPost a)
-  -> #mods:set aref
+  -> #mods:modset
   -> body:(unit -> WNSC a pre post mods)
       -> Mem a pre post mods
 let withNewScope 'a 'pre 'post #mods body =
@@ -56,7 +57,7 @@ effect whileGuard (pre :(smem -> Type))
   = PureMem bool  pre (fun m0 b _ ->   (lc m0 <==> b = true))
 (* the guard of a while loop is not supposed to change the memory*)
 
-effect whileBody (loopInv:smem -> Type) (lc:smem  -> Type) (mod:set aref)
+effect whileBody (loopInv:smem -> Type) (lc:smem  -> Type) (mod:modset)
   = WNSC unit (fun m -> loopInv m /\ lc m)
               (fun m0 _ m1 -> (* (loopInv m0 /\ canModify m0 m1 mod) ==> *) loopInv m1)
               mod
@@ -66,7 +67,7 @@ effect whileBody (loopInv:smem -> Type) (lc:smem  -> Type) (mod:set aref)
 val scopedWhile : loopInv:(smem -> Type)
   -> wglc:(smem -> Type)
   -> wg:(unit -> whileGuard loopInv wglc)
-  -> mods:(set aref)
+  -> mods:(modset)
   -> bd:(unit -> whileBody loopInv wglc mods)
   -> Mem unit (requires (fun m -> loopInv m))
               (ensures (fun m0 _ m1 -> loopInv m1 /\ (~(wglc m1))))
@@ -89,7 +90,7 @@ val scopedWhile1 :
   -> r:(ref a)
   -> lc : (a -> Tot bool)
   -> loopInv:(smem -> Type)
-  -> mods:(set aref)
+  -> mods:(modset)
   -> bd:(unit -> whileBody
                       (fun m -> loopInv m /\ refExistsInMem r m)
                       (fun m -> refExistsInMem r m /\ lc (loopkupRef r m))  mods)
@@ -112,7 +113,7 @@ val scopedWhile2 :
   -> rb:(ref b)
   -> lc : (a -> b ->  Tot bool)
   -> loopInv:(smem -> Type)
-  -> mods:(set aref)
+  -> mods:(modset)
   -> bd:(unit -> whileBody
                       (fun m -> loopInv m /\ refExistsInMem ra m /\ refExistsInMem rb m)
                       (fun m -> refExistsInMem ra m /\ refExistsInMem rb m /\ lc (loopkupRef ra m) (loopkupRef rb m))

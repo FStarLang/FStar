@@ -36,11 +36,13 @@ type  loopInv (li : ref nat) (res : ref nat) (m:smem) =
     /\ (loopkupRef res m = factorial (loopkupRef li m))
     /\ (~ (li = res))
 
+open Ghost
 val factorialLoopBody :
   n:nat -> li:(ref nat) -> res:(ref nat)
   -> unit ->
   whileBody (loopInv li res) (factorialGuardLC n li)
-    (union (singleton (Ref li)) (singleton (Ref res)))
+    (* (gunion (gonly li) (gonly res)) *)
+ (hide (union (singleton (Ref li)) (singleton (Ref res))))
       (*SST unit (fun m -> loopInv li res (mtail m)) (fun m0 _ m1 -> loopInv li res (mtail m1))*)
 let factorialLoopBody (n:nat) (li:(ref nat)) (res:(ref nat)) u =
   let liv = memread li in
@@ -48,17 +50,16 @@ let factorialLoopBody (n:nat) (li:(ref nat)) (res:(ref nat)) u =
   memwrite li (liv + 1);
   memwrite res ((liv+1) * resv)
 
-
 val factorialLoop : n:nat -> li:(ref nat) -> res:(ref nat)
   -> Mem unit (fun m -> mreads li 0 m /\ mreads res 1 m  /\ ~(li=res))
               (fun m0 _ m1 -> mreads res (factorial n) m1)
-              (union (singleton (Ref li)) (singleton (Ref res)))
+              (hide (union (singleton (Ref li)) (singleton (Ref res))))
 let factorialLoop (n:nat) (li:(ref nat)) (res:(ref nat)) =
   scopedWhile
     (loopInv li res)
     (factorialGuardLC n li)
     (factorialGuard n li)
-    (union (singleton (Ref li)) (singleton (Ref res)))
+    (hide (union (singleton (Ref li)) (singleton (Ref res))))
     (factorialLoopBody n li res)
 
 (*val factorialLoop2 : n:nat -> li:(ref nat) -> res:(ref nat)
@@ -75,7 +76,7 @@ let factorialLoop2 (n:nat) (li:(ref nat)) (res:(ref nat)) =
 val loopyFactorial : n:nat
   -> WNSC nat (fun m -> True)
               (fun _ rv _ -> (rv == (factorial n)))
-              empty
+              (hide empty)
 let loopyFactorial n =
   let li = salloc 0 in
   let res = salloc 1 in
@@ -86,13 +87,13 @@ let loopyFactorial n =
 val loopyFactorial2 : n:nat
   -> Mem nat (fun m -> True)
               (fun _ rv _ -> rv == (factorial n))
-              empty
+              (hide empty)
 let loopyFactorial2 n =
   withNewScope
   #nat
   #(fun m -> True) (*same as the comment below. F* should certainly try this precondition*)
   #(fun _ rv _ -> rv == (factorial n)) (*this is the same as that of the conclusion, why cant it be inferred?*)
-  #empty
+  #(hide empty)
   (fun u ->
     let li:(ref nat) = salloc 0 in
     let res:(ref nat) = salloc 1 in
@@ -100,7 +101,7 @@ let loopyFactorial2 n =
       li
       (fun liv -> not (liv = n))
       (loopInv li res)
-      (union (singleton (Ref li)) (singleton (Ref res)))
+      (hide (union (singleton (Ref li)) (singleton (Ref res))))
       (fun u ->
         let liv = memread li in
         let resv = memread res in
