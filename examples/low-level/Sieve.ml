@@ -14,7 +14,8 @@ end))
 
 let innerLoop = (fun ( n ) ( lo ) ( li ) ( res ) ( initres ) -> 
 	(let _13_178 = (SSTCombinators.scopedWhile 
-	((fun ( u ) -> (((SST.memread li) * (SST.memread lo)) < n))) () ((fun ( u ) -> (let liv = (SST.memread li)
+	((fun ( u ) -> (((SST.memread li) * (SST.memread lo)) < n))) () 
+	((fun ( u ) -> (let liv = (SST.memread li)
 in (let lov = (SST.memread lo)
 in (let resv = (SST.memread res)
 in (let _13_175 = (SST.memwrite li (liv + 1))
@@ -27,7 +28,7 @@ in (SST.memwrite res (mark n resv (lov * liv))
 
 let outerLoopBody = ((fun ( n ) ( lo ) ( res ) ( u ) -> (let initres = (SST.memread res)
 in (let lov = (SST.memread lo)
-in (let li = (SST.salloc 0)
+in (let li = (SST.salloc 2)
 in (let liv = (SST.memread li)
 in (let _13_244 = (innerLoop n lo li res initres)
 in (let newres = (SST.memread res)
