@@ -80,7 +80,8 @@ external mkarray : int -> 'a -> 'a array = "stack_mkarray";;
 (** [Camlstack.mkarray n v] allocates an array of length [n] with each
     element initialized to [v]. 
     Raise [Failure "Camlstack.mkarray"] if the stack has no frames. 
-    Raise [Invalid_argument "Camlstack.mkarray"] if [n] is non-positive. *)
+    Raise [Invalid_argument "Camlstack.mkarray"] if [n] is non-positive,
+    or if you try to make an array of floats, which is not yet supported. *)
 
 (** DEBUGGING **)
 

@@ -43,6 +43,10 @@ arr.(2) <- [];
 try 
   (arr.(11) <- [])
 with Invalid_argument(_) -> print_string "out of bounds access handled\n";;
+try 
+  ignore(Camlstack.mkarray 10 1.0)
+with Invalid_argument(_) -> print_string "illegal array contents handled\n";;
+
 doGC();;
 
 pop_frame ();;
