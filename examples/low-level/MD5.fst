@@ -18,7 +18,7 @@ open MVector
 open Heap
 open Set
 open MachineWord
-open Array
+open SSTArray
 open MD5Common
 open ArrayAlgos
 open Seq
@@ -96,8 +96,8 @@ val mainLoop :
 
 let mainLoop ch u =
   let offset = salloc #nat 0 in
-  let acc =  screate initAcc in
-  let chl = Array.length ch in
+  let acc =  screateSeq initAcc in
+  let chl = SSTArray.length ch in
   scopedWhile1
     offset
     (fun offsetv-> offsetv +16 <= chl)
@@ -126,8 +126,9 @@ val mD5 :
     (hide empty)
 
 let mD5 ch =
-  let chl = Array.length ch in
-  let clonedCh = screate (allZeros (psize chl)) in
+  let chl = SSTArray.length ch in
+  let z:nat =0 in
+  let clonedCh = screate  (psize chl) w0 in
   cloneAndPad ch clonedCh;
   withNewScope
     #_
@@ -161,7 +162,7 @@ val mD52 : n:nat
     (hide empty)
 
 let mD52 n ch =
-  let clonedCh = screate (allZeros (psize n)) in
+  let clonedCh = screate (psize n) w0 in
   cloneAndPad ch clonedCh;
     pushStackFrame ();
       let mdd5 = mainLoop clonedCh () in

@@ -13,7 +13,7 @@ open MVector
 open Heap
 open Set
 open MachineWord
-open Array
+open SSTArray
 open MD5Common
 open Seq
 open Ghost
@@ -54,8 +54,8 @@ val copy:
 
 let copy s scp =
   let ctr = salloc #nat 0 in
-  let len = Array.length s in
-  let lenscp = Array.length scp in
+  let len = SSTArray.length s in
+  let lenscp = SSTArray.length scp in
   admitP (b2t (reveal ((elift1 only) (asRef scp)) = only (reveal (asRef scp))));
   admitP (b2t (reveal (gunion ((elift1 only) (asRef scp)) (gonly ctr)) = union (only (reveal (asRef scp))) (only ctr)));
   scopedWhile1
@@ -84,7 +84,7 @@ val hcloneAux:
      (hide empty)
 
 let hcloneAux s =
-  let scp = hcreate (Seq.create (Array.length s) (readIndex s 0)) in
+  let scp = hcreate  (SSTArray.length s) (readIndex s 0) in
     pushStackFrame ();
       copy s scp;
     popStackFrame ();
@@ -98,7 +98,7 @@ let hcloneAux s =
   *)
 
     (*let hcloneAux s =
-      let scp = hcreate (Seq.create (Array.length s) (readIndex s 0)) in
+      let scp = hcreate (Seq.create (SSTArray.length s) (readIndex s 0)) in
         withNewScope
           #_ (*the pre/post conditions below just come from the definition of copy. It is annoying that they cannot be inferred*)
           #((fun h -> contains h s /\ contains h scp /\ glength s h <= glength scp h))
@@ -132,6 +132,6 @@ val hclone:
      (hide empty)
 
 let hclone 'a s =
-  if (Array.length s = 0)
-  then  hcreate (Seq.createEmpty #'a)
+  if (SSTArray.length s = 0)
+  then  s
   else hcloneAux s

@@ -6,7 +6,7 @@
   --*)
 
 
-module Array
+module SSTArray
 open SSTCombinators
 open StackAndHeap
 open SST
@@ -56,9 +56,8 @@ val writeIndex :  #a:Type -> r:((array a))
           (m1 = (writeMemAux (reveal (asRef r)) m0 (Seq.upd (loopkupRef (reveal (asRef r)) m0) index newV)))))
       (gonly (reveal (asRef r)))
 
-(*There is no way to read or write a whole vector in non-ghost mode *)
 (*create an array on stack*)
-val screate :  #a:Type -> init:(seq a)
+val screateSeq :  #a:Type -> init:(seq a)
   -> Mem (array a)
         (requires  (fun m -> (isNonEmpty (st m))))
         (ensures (fun m0 vv m1->
@@ -69,7 +68,7 @@ val screate :  #a:Type -> init:(seq a)
         (hide empty)
 
 (*create an array on the heap*)
-val hcreate :  #a:Type -> init:(seq a)
+val hcreateSeq :  #a:Type -> init:(seq a)
   -> Mem (array a)
         (requires  (fun m -> True))
         (ensures (fun m0 v m1->
@@ -77,7 +76,27 @@ val hcreate :  #a:Type -> init:(seq a)
             /\ refLoc (reveal (asRef v)) = InHeap /\ (snd m0 = snd m1)))
         (hide empty)
 
-(* This should be removed?*)
+val screate :  #a:Type -> len:nat -> init:a
+  -> Mem (array a)
+        (requires  (fun m -> (isNonEmpty (st m))))
+        (ensures (fun m0 vv m1->
+            (isNonEmpty (st m0)) /\ (isNonEmpty (st m1))
+            /\ allocateInBlock (reveal (asRef vv)) (topstb m0) (topstb m1) (Seq.create len init)
+            /\ refLoc (reveal (asRef vv)) = InStack (topstid m0) /\ (topstid m0 = topstid m1)
+            /\ mtail m0 = mtail m1))
+        (hide empty)
+
+val hcreate :  #a:Type -> len:nat -> init:a
+  -> Mem (array a)
+        (requires  (fun m -> True))
+        (ensures (fun m0 v m1->
+            allocateInBlock (reveal (asRef v)) (hp m0) (hp m1) (Seq.create len init)
+            /\ refLoc (reveal (asRef v)) = InHeap /\ (snd m0 = snd m1)))
+        (hide empty)
+
+
+(* This is convenient. It need not be a Primitive, but can be implemented.
+   For short arrays, such as the MD5 checksum (4 words), it might not be too inefficient*)
 val to_seq :  #a:Type  -> r:(array a)
   -> PureMem (seq a)
         (requires (fun m -> b2t (refExistsInMem (reveal (asRef r)) m)))

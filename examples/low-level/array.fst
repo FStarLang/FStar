@@ -5,7 +5,7 @@
   --*)
 
 (*rename mvector to vector. The word array is used for memory-stored vectors *)
-module Array
+module SSTArray
 open SSTCombinators
 open StackAndHeap
 open SST
@@ -33,9 +33,13 @@ let writeIndex 'a r index newV =
   let rv = (memread (r) ) in
   memwrite (r) (Seq.upd rv index newV)
 
-let screate  init = (salloc init)
+let screateSeq init = (salloc init)
 
-let hcreate init = (halloc init)
+let hcreateSeq init = (halloc init)
+
+let screate len init = (salloc (Seq.create len init))
+
+let hcreate len init = (halloc (Seq.create len init))
 
 let to_seq  r = memread (r)
 
