@@ -21,14 +21,15 @@ open Seq
 let testf v = v 1*)
 
 type array : Type -> Type
+open Ghost
 
 (*making it GTot causes a strange error in the postcondition of readIndex *)
-val asRef : #a:Type  -> va:(array a) -> GTot (ref (seq a))
+val asRef : #a:Type  -> va:(array a) -> erased (ref (seq a))
 
 
 val length: #a:Type -> x:array a -> PureMem nat
-  (requires (fun h -> refExistsInMem (asRef x) h))
-  (ensures  (fun h y _ ->  (refExistsInMem (asRef x) h /\ y=Seq.length (loopkupRef (asRef x) h))))
+  (requires (fun h -> refExistsInMem (reveal (asRef x)) h))
+  (ensures  (fun h y _ ->  (refExistsInMem (reveal (asRef x)) h /\ y=Seq.length (loopkupRef (reveal (asRef x)) h))))
 
 (*using the 2 definitions below causes a strange error in readIndex amd updIndex*)
 (*val arrayExistsInMem : #a:Type -> (array a) -> smem -> GTot bool
@@ -42,21 +43,20 @@ let lookup 'a va m = (admit ())*)
 val readIndex :  #a:Type  -> r:(array a)
   -> index:nat
   -> PureMem a
-        (requires (fun m ->  (refExistsInMem (asRef r) m) /\ index < Seq.length (loopkupRef (asRef r) m) ) )
+        (requires (fun m ->  (refExistsInMem (reveal (asRef r)) m) /\ index < Seq.length (loopkupRef (reveal (asRef r)) m) ) )
         (ensures (fun m v _->
-          (refExistsInMem (asRef r) m) /\ index < Seq.length (loopkupRef (asRef r) m) /\ v = Seq.index (loopkupRef (asRef r) m) index ))
+          (refExistsInMem (reveal (asRef r)) m) /\ index < Seq.length (loopkupRef (reveal (asRef r)) m) /\ v = Seq.index (loopkupRef (reveal (asRef r)) m) index ))
 
 val writeIndex :  #a:Type -> r:((array a))
   -> index:nat -> newV:a ->
  Mem unit
-    (requires (fun m ->  (refExistsInMem (asRef r) m) /\ index < Seq.length (loopkupRef (asRef r) m) ) )
+    (requires (fun m ->  (refExistsInMem (reveal (asRef r)) m) /\ index < Seq.length (loopkupRef (reveal (asRef r)) m) ) )
     (ensures ( fun m0 _ m1 ->
-        (refExistsInMem (asRef r) m0) /\ index < Seq.length (loopkupRef (asRef r) m0) /\
-          (m1 = (writeMemAux (asRef r) m0 (Seq.upd (loopkupRef (asRef r) m0) index newV)))))
-      (gonly (asRef r))
+        (refExistsInMem (reveal (asRef r)) m0) /\ index < Seq.length (loopkupRef (reveal (asRef r)) m0) /\
+          (m1 = (writeMemAux (reveal (asRef r)) m0 (Seq.upd (loopkupRef (reveal (asRef r)) m0) index newV)))))
+      (gonly (reveal (asRef r)))
 
 (*There is no way to read or write a whole vector in non-ghost mode *)
-open Ghost
 (*create an array on stack*)
 val screate :  #a:Type -> init:(seq a)
   -> Mem (array a)
@@ -80,5 +80,5 @@ val hcreate :  #a:Type -> init:(seq a)
 (* This should be removed?*)
 val to_seq :  #a:Type  -> r:(array a)
   -> PureMem (seq a)
-        (requires (fun m -> b2t (refExistsInMem (asRef r) m)))
-        (ensures (fun m v _-> (refExistsInMem (asRef r) m) /\ v = (loopkupRef (asRef r) m)))
+        (requires (fun m -> b2t (refExistsInMem (reveal (asRef r)) m)))
+        (ensures (fun m v _-> (refExistsInMem (reveal (asRef r)) m) /\ v = (loopkupRef (reveal (asRef r)) m)))
