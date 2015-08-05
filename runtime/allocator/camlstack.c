@@ -159,7 +159,7 @@ static void scanfun(void *env, void **ptr) {
   if (Is_long(v)) {
     printf("   is long %d (%ld)\n", Int_val(v), Long_val(v));
   } else {
-    printf("   is block: Wosize=%lu, Tag=%hhu\n", Wosize_val(v), Tag_val(v));
+    printf("   is block: Wosize=%lu, Tag=%u\n", Wosize_val(v), Tag_val(v));
   }
 #endif
   /* NOTE: We assume that the scanning action will ignore
@@ -375,7 +375,7 @@ void aux_inspect(value v, int level, char *pad) {
     printf("%sis long %d (%ld)\n", pad, Int_val(v), Long_val(v));
   } else {
     int i;
-    printf("%sis block: Wosize=%lu, Tag=%hhu\n", pad, Wosize_val(v), Tag_val(v));
+    printf("%sis block: Wosize=%lu, Tag=%u\n", pad, Wosize_val(v), Tag_val(v));
     if (level == 0) return;
     if (Tag_val(v) == Double_array_tag) {
       return;

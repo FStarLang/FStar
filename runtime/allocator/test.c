@@ -102,4 +102,5 @@ int main(int argc, char *argv[]) {
   printf("===> redoing, with no marking\n");
   bar(10);
   pop_frame();
+  return 0;
 }
