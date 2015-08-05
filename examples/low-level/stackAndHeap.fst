@@ -483,15 +483,13 @@ let gonly r = hide (only  r)
 val eonly : #a:Type -> erased (ref a) -> Tot (modset)
 let eonly r = (elift1 only) r
 
-val gunion : #a:Type -> s1:modset -> s2:modset -> Tot (modset)
+val gunion : s1:modset -> s2:modset -> Tot (modset)
 let gunion s1 s2 = (elift2 union) s1 s2
-
-
 
 val gunionUnion : #a:Type  -> #b:Type  -> r1:(ref a) -> r2:(ref b) ->
   Lemma (requires True) (ensures ((gunion (gonly r1) (gonly r2)) = hide (union (singleton (Ref r1)) (singleton (Ref r2)))))
-  [SMTPat (gunion (gonly r1) (gonly r2))]
-let gunionUnion r1 r2 = (admit ()) (*TODO fix : this is just definitional equality*)
+  (* [SMTPat (gunion (gonly r1) (gonly r2))] *)
+let gunionUnion r1 r2 = ()
 
 type canModify  (m0 : smem)  (m1: smem) (rs: modset ) =
   forall (a:Type) (r: ref a).
