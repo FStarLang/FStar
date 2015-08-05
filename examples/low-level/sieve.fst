@@ -14,7 +14,7 @@ open Set
 open Prims
 open List
 open ListSet
-
+open Ghost
 (*val divides : pos -> nat -> Tot bool
 let divides divisor n = ((n % divisor) = 0)*)
 (*Instead, below is a definition from first principles*)
@@ -155,14 +155,14 @@ val innerLoop : n:nat{n>1}
       (ensures (fun m0 _ m1 -> distinctRefsExists3 m1 lo res li
                       /\ markedIffDividesOrInit n (loopkupRef lo m1) initres (loopkupRef res m1)
       ))
-      (union (singleton (Ref li)) (singleton (Ref res)))
+      (hide (union (singleton (Ref li)) (singleton (Ref res))))
 
 let innerLoop n lo li res initres =
   (scopedWhile
     (innerLoopInv n lo li res initres)
     (innerGuardLC n lo li)
     (fun u -> (memread li * memread lo < n))
-    (union (singleton (Ref li)) (singleton (Ref res)))
+    (hide (union (singleton (Ref li)) (singleton (Ref res))))
     (fun u ->
       let liv = memread li in
       let lov = memread lo in
@@ -228,7 +228,7 @@ val outerLoopBody :
   whileBody
     (outerLoopInv n lo res)
     (outerGuardLC n lo)
-    (union (singleton (Ref lo)) (singleton (Ref res)))
+    (hide (union (singleton (Ref lo)) (singleton (Ref res))))
 
 
 let outerLoopBody n lo res u =
@@ -253,14 +253,14 @@ val outerLoop : n:nat{n>1}
             /\ sids m0 = sids m1
            /\ (markedIffHasDivisorSmallerThan n n (loopkupRef res m1))
       )
-      (union (singleton (Ref lo)) (singleton (Ref res)))
+      (hide (union (singleton (Ref lo)) (singleton (Ref res))))
 
 let outerLoop n lo res =
   scopedWhile
     (outerLoopInv n lo res)
     (outerGuardLC n lo)
     (fun u -> (memread lo < n))
-    (union (singleton (Ref lo)) (singleton (Ref res)))
+    (hide (union (singleton (Ref lo)) (singleton (Ref res))))
     (outerLoopBody n lo res)
 
 type markedIffNotPrime
@@ -297,7 +297,7 @@ val sieve : n:nat{n>1} -> unit
   -> WNSC ((k:nat{k<n}) -> Tot bool)
         (requires (fun m -> True))
         (ensures (fun _ resv _ -> markedIffHasDivisorSmallerThan n n resv))
-        empty
+        (hide empty)
 let sieve n u =
   let lo = salloc 2 in
   let f:((k:nat{k<n}) -> Tot bool) = (fun x -> false) in
@@ -309,7 +309,7 @@ val sieveFull : n:nat{n>1}
   -> Mem ((k:nat{k<n}) -> Tot bool)
         (requires (fun m -> True))
         (ensures (fun _ resv _ -> markedIffHasDivisorSmallerThan n n resv))
-        empty
+        (hide empty)
 let sieveFull n =
   pushStackFrame ();
   let res= sieve n () in
@@ -327,7 +327,7 @@ val sieveAsList : n:nat{n>1}
   -> Mem (list nat)
         (requires (fun m -> True))
         (ensures (fun _ resv _ -> True))
-        empty
+        (hide empty)
 let sieveAsList n =
   listOfTrues n (sieveFull n)
 
@@ -335,7 +335,7 @@ val sieveUnfolded : n:nat{n>1} -> unit
   -> WNSC ((k:nat{k<n}) -> Tot bool)
         (requires (fun m -> True))
         (ensures (fun _ resv _ -> markedIffHasDivisorSmallerThan n n resv))
-        empty
+        (hide empty)
 let sieveUnfolded n u =
   let lo = salloc 2 in
   let f:((k:nat{k<n}) -> Tot bool) = (fun x -> false) in
@@ -344,7 +344,7 @@ let sieveUnfolded n u =
     (outerLoopInv n lo res)
     (outerGuardLC n lo)
     (fun u -> (memread lo < n))
-    (union (singleton (Ref lo)) (singleton (Ref res)))
+    (hide (union (singleton (Ref lo)) (singleton (Ref res))))
     (fun u ->
         let initres = memread res in
         let lov = memread lo in

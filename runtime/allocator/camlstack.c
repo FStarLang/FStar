@@ -159,7 +159,7 @@ static void scanfun(void *env, void **ptr) {
   if (Is_long(v)) {
     printf("   is long %d (%ld)\n", Int_val(v), Long_val(v));
   } else {
-    printf("   is block: Wosize=%lu, Tag=%hhu\n", Wosize_val(v), Tag_val(v));
+    printf("   is block: Wosize=%lu, Tag=%u\n", Wosize_val(v), Tag_val(v));
   }
 #endif
   /* NOTE: We assume that the scanning action will ignore
@@ -333,7 +333,7 @@ CAMLprim value stack_mkbytes(value lenv) {
 CAMLprim value stack_mkarray(value lenv, value initv) {
   CAMLparam2 (lenv, initv);
   int len = Int_val(lenv);
-  if (len <= 0) 
+  if (len <= 0 || Tag_val(initv) == Double_tag)
     caml_invalid_argument ("Camlstack.mkarray");
   else {
     value tuple = stack_caml_alloc_tuple(len,-1,NULL); /* default: all elements are possibly pointers */
@@ -375,11 +375,17 @@ void aux_inspect(value v, int level, char *pad) {
     printf("%sis long %d (%ld)\n", pad, Int_val(v), Long_val(v));
   } else {
     int i;
-    printf("%sis block: Wosize=%lu, Tag=%hhu\n", pad, Wosize_val(v), Tag_val(v));
+    printf("%sis block: Wosize=%lu, Tag=%u\n", pad, Wosize_val(v), Tag_val(v));
     if (level == 0) return;
-    for (i=0;i<Wosize_val(v); i++) {
-      printf ("%sfield %d: ",pad, i);
-      aux_inspect(Field(v,i),level-1,nextpad(pad));
+    if (Tag_val(v) == Double_array_tag) {
+      return;
+    } else if (Tag_val(v) == Custom_tag) {
+      return;
+    } else {
+      for (i=0;i<Wosize_val(v); i++) {
+	printf ("%sfield %d: ",pad, i);
+	aux_inspect(Field(v,i),level-1,nextpad(pad));
+      }
     }
   }
 }

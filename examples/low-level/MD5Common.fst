@@ -121,7 +121,10 @@ exists (k:nat). k*divisor=n
 
 
 val leastMultipleGeq : n:nat -> div:pos -> Tot (m:nat{divides div m /\ m < n+ div /\ n<=m})
-let leastMultipleGeq n div = admit ()
+let leastMultipleGeq n div =
+let m = (if (n%div = 0) then n else ((div - (n % div)) + n)) in
+let ad = (admitP (divides div m /\ m < n+ div /\ n<=m)) in m
+
 (*(div - (n % div)) + n*)
 (*(ceil (n/div))*div*)
 

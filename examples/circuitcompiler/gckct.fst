@@ -43,17 +43,19 @@ let rec bton_snoc nl l b =
  match l with
  | [] -> ()
  | hd::tl ->
-   (*let _ = assert ((snoc #_ #nl (hd::tl) b) == hd::(snoc #_ #(nl-1) tl b)) in
-     let _ = assert ((bintonat (nl+1) (hd::(snoc #_ #(nl-1) tl b))) ==
-                     ((b2i hd)*(exp2 nl) + (bintonat #nl (snoc #_ #(nl-1) tl b)))) in*)
+   let _ = assert ((snoc #_ #nl (hd::tl) b) == hd::(snoc #_ #(nl-1) tl b)) in
+   let _ = assert ((bintonat (nl+1) (hd::(snoc #_ #(nl-1) tl b))) ==
+                     ((b2i hd)*(exp2 nl) + (bintonat #nl (snoc #_ #(nl-1) tl b)))) in
    let _ = bton_snoc (nl-1) tl b in
    let _ = assert (((b2i hd)*(exp2 nl) + (bintonat (nl-1) tl)*2 + (b2i b)) ==
                    ((b2i hd)*(exp2 (nl-1))*2 + (bintonat (nl-1) tl)*2 + (b2i b))) in
-   admit()
-   (*
-     (* TODO: Z3 can't prove the following assertion, which is just distributivity *)
+                   (* TODO: Doesn't verify the following, but should *)
+                   (*
    let _ = assert (((b2i hd)*(exp2 (nl-1))*2 + (bintonat (nl-1) tl)*2 + (b2i b)) ==
                    (((b2i hd)*(exp2 (nl-1)) + (bintonat (nl-1) tl))*2 + (b2i b))) in
+                   *)
+                   admit()
+(*
    let _ = assert ((((b2i hd)*(exp2 (nl-1)) + (bintonat (nl-1) tl))*2 + (b2i b)) ==
                    (bintonat nl l)*2 + (b2i b)) (* QED *)
 *)

@@ -18,41 +18,42 @@ open MVector
 open Heap
 open Set
 open MachineWord
-open Array
+open SSTArray
 open MD5Common
 open ArrayAlgos
 open Seq
+open Ghost
 
 assume val cloneAndPad :
   r:(array word)
   -> rcloned :(array word)
   -> Mem unit
-      (fun m -> refExistsInMem (asRef r) m /\ refExistsInMem (asRef rcloned) m)
-      (fun m0 rp m1  -> refExistsInMem (asRef r) m0 /\ refExistsInMem (asRef rcloned) m1
-          /\ refExistsInMem (asRef r) m1
-          /\ Seq.length (loopkupRef (asRef rcloned) m1) = psize (Seq.length (loopkupRef (asRef r) m0))
+      (fun m -> refExistsInMem (reveal (asRef r)) m /\ refExistsInMem (reveal (asRef rcloned)) m)
+      (fun m0 rp m1  -> refExistsInMem (reveal (asRef r)) m0 /\ refExistsInMem (reveal (asRef rcloned)) m1
+          /\ refExistsInMem (reveal (asRef r)) m1
+          /\ Seq.length (loopkupRef (reveal (asRef rcloned)) m1) = psize (Seq.length (loopkupRef (reveal (asRef r)) m0))
           /\ prefixEqual
-                (loopkupRef (asRef r) m0)
-                (loopkupRef (asRef rcloned) m1)
-                (Seq.length (loopkupRef (asRef r) m0)))
-        (empty)
+                (loopkupRef (reveal (asRef r)) m0)
+                (loopkupRef (reveal (asRef rcloned)) m1)
+                (Seq.length (loopkupRef (reveal (asRef r)) m0)))
+        (hide empty)
 
 val processChunk :
  ch:(array word)
  -> offset:nat
  -> acc:(array word)
  -> WNSC unit
-    (requires (fun m -> refExistsInMem (asRef ch) m
-              /\ refExistsInMem (asRef acc) m /\ ch =!= acc
-              /\ offset + 16 <= (Seq.length (loopkupRef (asRef ch) m))
-              /\ 4 = (length (loopkupRef (asRef acc) m))
+    (requires (fun m -> refExistsInMem (reveal (asRef ch)) m
+              /\ refExistsInMem (reveal (asRef acc)) m /\ ch =!= acc
+              /\ offset + 16 <= (Seq.length (loopkupRef (reveal (asRef ch)) m))
+              /\ 4 = (length (loopkupRef (reveal (asRef acc)) m))
               ))
-    (ensures (fun m0 _ m1 -> refExistsInMem (asRef ch) m1
-              /\ refExistsInMem (asRef acc) m1 /\ ch =!= acc
-              /\ 4 = (Seq.length (loopkupRef (asRef acc) m1))
+    (ensures (fun m0 _ m1 -> refExistsInMem (reveal (asRef ch)) m1
+              /\ refExistsInMem (reveal (asRef acc)) m1 /\ ch =!= acc
+              /\ 4 = (Seq.length (loopkupRef (reveal (asRef acc)) m1))
               (*/\ loopkupRef  ch m0 = loopkupRef ch m1*)
               ))
-    (singleton (Ref (asRef acc)))
+    (eonly ((asRef acc)))
 
 
 let processChunk ch offset acc =
@@ -61,13 +62,13 @@ let processChunk ch offset acc =
     li
     (fun liv -> liv < 64)
     (fun m -> True
-              /\ refExistsInMem (asRef ch) m
-              /\ refExistsInMem (asRef acc) m
-              /\ offset + 16 <= (Seq.length (loopkupRef (asRef ch) m))
-              /\ 4 = (length (loopkupRef (asRef acc) m))
+              /\ refExistsInMem (reveal (asRef ch)) m
+              /\ refExistsInMem (reveal (asRef acc)) m
+              /\ offset + 16 <= (Seq.length (loopkupRef (reveal (asRef ch)) m))
+              /\ 4 = (length (loopkupRef (reveal (asRef acc)) m))
               /\ refExistsInMem li m /\ loopkupRef li m < 65
               )
-    (union (singleton (Ref li)) (singleton (Ref (asRef acc))))
+    ((elift2 union) (gonly li) (eonly (asRef acc)))
     (*allRefs ; why does this not work?*)
     (fun u ->
       let liv = memread li in
@@ -88,26 +89,26 @@ val mainLoop :
  ch:(array word)
  -> un:unit
  -> WNSC (s:(seq word){Seq.length s = 4})
-    (requires (fun m -> refExistsInMem (asRef ch) m
-          /\ divides 16 (Seq.length (loopkupRef (asRef ch) m))))
-    (ensures (fun m0 _ m1 -> True /\ refExistsInMem (asRef ch) m1))
-    (empty)
+    (requires (fun m -> refExistsInMem (reveal (asRef ch)) m
+          /\ divides 16 (Seq.length (loopkupRef (reveal (asRef ch)) m))))
+    (ensures (fun m0 _ m1 -> True /\ refExistsInMem (reveal (asRef ch)) m1))
+    (hide empty)
 
 let mainLoop ch u =
   let offset = salloc #nat 0 in
-  let acc =  screate initAcc in
-  let chl = Array.length ch in
+  let acc =  screateSeq initAcc in
+  let chl = SSTArray.length ch in
   scopedWhile1
     offset
     (fun offsetv-> offsetv +16 <= chl)
     (fun m -> True
-              /\ refExistsInMem (asRef ch) m
-              /\ refExistsInMem (asRef acc) m
+              /\ refExistsInMem (reveal (asRef ch)) m
+              /\ refExistsInMem (reveal (asRef acc)) m
               /\ refExistsInMem offset m
-              /\ Seq.length (loopkupRef (asRef ch) m) = chl
-              /\ 4 = (Seq.length (loopkupRef (asRef acc) m))
+              /\ Seq.length (loopkupRef (reveal (asRef ch)) m) = chl
+              /\ 4 = (Seq.length (loopkupRef (reveal (asRef acc)) m))
               )
-    (union (singleton (Ref offset)) (singleton (Ref (asRef acc))))
+    ((elift2 union) (gonly  offset) (eonly (asRef acc)))
     (fun u ->
         let offsetv = memread offset in
         processChunk ch offsetv acc;
@@ -120,20 +121,21 @@ let allZeros n = Seq.create n w0
 val mD5 :
  ch:(array word)
  -> WNSC (s:(seq word){Seq.length s = 4})
-    (fun m -> True /\ refExistsInMem (asRef ch) m)
-    (fun m0 _ m1 -> True /\ refExistsInMem (asRef ch) m1)
-    (empty)
+    (fun m -> True /\ refExistsInMem (reveal (asRef ch)) m)
+    (fun m0 _ m1 -> True /\ refExistsInMem (reveal (asRef ch)) m1)
+    (hide empty)
 
 let mD5 ch =
-  let chl = Array.length ch in
-  let clonedCh = screate (allZeros (psize chl)) in
+  let chl = SSTArray.length ch in
+  let z:nat =0 in
+  let clonedCh = screate  (psize chl) w0 in
   cloneAndPad ch clonedCh;
   withNewScope
     #_
-    #(fun m -> refExistsInMem (asRef ch) (m) /\ refExistsInMem (asRef clonedCh) (m)
-        /\ divides 16 (Seq.length (loopkupRef (asRef clonedCh) m)) )
-    #(fun m0 _ m1 -> True /\ refExistsInMem (asRef ch) (m1))
-    #(empty)
+    #(fun m -> refExistsInMem (reveal (asRef ch)) (m) /\ refExistsInMem (reveal (asRef clonedCh)) (m)
+        /\ divides 16 (Seq.length (loopkupRef (reveal (asRef clonedCh)) m)) )
+    #(fun m0 _ m1 -> True /\ refExistsInMem (reveal (asRef ch)) (m1))
+    #(hide empty)
     (mainLoop clonedCh)
 
 (*open Example2
@@ -155,12 +157,12 @@ let mD53 n ch =
 val mD52 : n:nat
  -> ch:(array word)
  -> WNSC  (s:(seq word){Seq.length s = 4})
-    (fun m -> True /\ refExistsInMem (asRef ch) m)
-    (fun m0 _ m1 -> True /\ refExistsInMem (asRef ch) m1)
-    (empty)
+    (fun m -> True /\ refExistsInMem (reveal (asRef ch)) m)
+    (fun m0 _ m1 -> True /\ refExistsInMem (reveal (asRef ch)) m1)
+    (hide empty)
 
 let mD52 n ch =
-  let clonedCh = screate (allZeros (psize n)) in
+  let clonedCh = screate (psize n) w0 in
   cloneAndPad ch clonedCh;
     pushStackFrame ();
       let mdd5 = mainLoop clonedCh () in

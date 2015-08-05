@@ -1,11 +1,10 @@
 (*--build-config
-    options: --codegen OCaml-experimental --trace_error --debug yes --prn;
     variables:LIB=../../lib;
     variables:MATHS=../maths;
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst  $LIB/list.fst stack.fst listset.fst $LIB/ghost.fst
   --*)
 
-
+(*     options: --codegen OCaml-experimental --trace_error --debug yes --prn; *)
 
 module StackAndHeap
 open Heap
@@ -467,6 +466,7 @@ Also, why does it's definition have to be so procedural, unlike the more declara
 *)
 type modset = erased (set aref)
 
+(*
 val ghostUnfoldTest : unit -> GTot (modset)
 let ghostUnfoldTest u = hide empty
 
@@ -475,17 +475,21 @@ let ghostUnfoldTest3 r = hide (singleton (Ref r))
 
 val ghostUnfoldTest2 : unit -> GTot (modset)
 let ghostUnfoldTest2 u = hide empty
+*)
 
-val gonly : #a:Type -> r:(ref a) -> GTot (modset)
-let gonly r = hide ((singleton (Ref r)))
+val gonly : #a:Type -> r:(ref a) -> Tot (modset)
+let gonly r = hide (only  r)
 
-val gunion : #a:Type -> s1:modset -> s2:modset -> GTot (modset)
-let gunion s1 s2 = hide (union (reveal s1) (reveal s2))
+val eonly : #a:Type -> erased (ref a) -> Tot (modset)
+let eonly r = (elift1 only) r
 
-val gunionUnion : #a:Type  -> r1:(ref a) -> r2:(ref a) ->
-  Lemma (requires True) (ensures (reveal (gunion (gonly r1) (gonly r2)) = union (singleton (Ref r1)) (singleton (Ref r2))))
-  [SMTPat (gunion (gonly r1) (gonly r2))]
-let gunionUnion r1 r2 = (admit ())
+val gunion : s1:modset -> s2:modset -> Tot (modset)
+let gunion s1 s2 = (elift2 union) s1 s2
+
+val gunionUnion : #a:Type  -> #b:Type  -> r1:(ref a) -> r2:(ref b) ->
+  Lemma (requires True) (ensures ((gunion (gonly r1) (gonly r2)) = hide (union (singleton (Ref r1)) (singleton (Ref r2)))))
+  (* [SMTPat (gunion (gonly r1) (gonly r2))] *)
+let gunionUnion r1 r2 = ()
 
 type canModify  (m0 : smem)  (m1: smem) (rs: modset ) =
   forall (a:Type) (r: ref a).
