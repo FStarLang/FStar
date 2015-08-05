@@ -14,6 +14,23 @@ let doGC() =
   (* Gc.print_stat (Pervasives.stdout) *)
 ;;
 
+(* BYTE ARRAYS *)
+
+let make n c =
+  let str = mkbytes n in
+  for i = 0 to (n-1) do
+    Bytes.set str i c
+  done;
+  str;;
+
+push_frame 0;;
+
+let s = make 10 'a';;
+let s2 = make 35 '<';;
+Printf.printf "|%s| |%s|\n" (Bytes.unsafe_to_string s) (Bytes.unsafe_to_string s2);;
+
+pop_frame ();;
+
 (* ARRAYS *)
 
 push_frame 0;;

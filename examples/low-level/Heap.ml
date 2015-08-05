@@ -14,7 +14,7 @@ let sel = (fun ( _ ) ( _ ) -> (failwith ("Not yet implemented:Heap.sel")))
 
 let upd = (fun ( _ ) ( _ ) ( _ ) -> (failwith ("Not yet implemented:Heap.upd")))
 
-let emp = ()
+let emp = (failwith ("Not yet implemented:Heap.emp"))
 
 let contains = (fun ( _ ) ( _ ) -> (failwith ("Not yet implemented:Heap.contains")))
 

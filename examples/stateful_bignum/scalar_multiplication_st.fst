@@ -212,7 +212,6 @@ val scalar_multiplication_with_lemma:
 			      /\ (getLength h0 res = getLength h0 a)
 			      /\ (getLength h1 res = getLength h0 res)
 			      /\ (eval h1 res len = eval h0 a len * s) 
- 
      ))
 let scalar_multiplication_with_lemma res a n s len =
   let h0 = 

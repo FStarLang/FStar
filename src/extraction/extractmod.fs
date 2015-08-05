@@ -30,7 +30,7 @@ let fail_exp (lid:lident) (t:typ) = mk_Exp_app(Util.fvar None Const.failwith_lid
 
     
 let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> = 
-   // printfn "(* now extracting :  %A *) \n" (Print.sigelt_to_string se);
+   (debug g (fun u -> Util.print_string (Util.format1 "now extracting :  %s \n" (Print.sigelt_to_string se))));
      match se with
         | Sig_datacon _
         | Sig_bundle _
@@ -62,10 +62,10 @@ let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> =
               let g, mlm = extract_sig g se in
               let is_record = Util.for_some (function RecordType _ -> true | _ -> false) quals in
               match Util.find_map quals (function Discriminator l -> Some l |  _ -> None) with
-              | Some l when (not is_record) -> g, [ExtractExp.ind_discriminator_body g lid l]
+              | Some l when (not is_record) -> g, [ExtractExp.ind_discriminator_body g lid l] // what happens for records?
               | _ -> match Util.find_map quals (function  Projector (l,_)  -> Some l |  _ -> None) with
-                        | Some l -> g, []
-                        | None -> g, mlm
+                        | Some l when (not is_record) -> g, [(*ExtractExp.ind_projector_body g lid l*)] // remove the when clause if exracting F* records as ML inductives
+                        | _ -> g, mlm
          else g, []
      
        | Sig_main(e, _) -> 

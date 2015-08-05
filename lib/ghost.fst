@@ -20,21 +20,21 @@
   It relies on the GHOST effect defined in Prims
 *)
 module Ghost
-private type ghost (a:Type) = a
-val reveal: #a:Type -> ghost a -> GTot a
+private type erased (a:Type) = a
+val reveal: #a:Type -> erased a -> GTot a
 let reveal x = x
 
-val hide: #a:Type -> a -> GTot (ghost a)
+val hide: #a:Type -> a -> Tot (erased a)
 let hide x = x
 
 val lemma_hide_reveal: #a:Type
-                   -> x:ghost a
+                   -> x:erased a
                    -> Lemma (ensures (hide (reveal x) = x))
 let lemma_hide_reveal x = ()
 
 val as_ghost: #a:Type
           -> f:(unit -> Tot a)
-          -> Pure (ghost a)
+          -> Pure (erased a)
                   (requires True)
                   (ensures (fun x -> reveal x = f ()))
 let as_ghost f = f ()

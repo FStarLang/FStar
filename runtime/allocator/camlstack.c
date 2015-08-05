@@ -316,6 +316,20 @@ CAMLprim value stack_mkref(value v)
   }
 }
 
+CAMLprim value stack_mkbytes(value lenv) {
+  CAMLparam1 (lenv);
+  mlsize_t len = Long_val(lenv);
+  if (len <= 0) 
+    caml_invalid_argument ("Camlstack.mkbytes");
+  else {
+    value str = stack_caml_alloc_string(len);
+    if (str == (value)0)
+      caml_failwith ("Camlstack.mkbytes");    
+    else
+      CAMLreturn(str);
+  }
+}
+
 CAMLprim value stack_mkarray(value lenv, value initv) {
   CAMLparam2 (lenv, initv);
   int len = Int_val(lenv);

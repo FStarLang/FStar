@@ -544,6 +544,10 @@ let is_total_comp c =
 
 let is_total_lcomp c = lid_equals c.eff_name Const.effect_Tot_lid || c.cflags |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
 
+let is_tot_or_gtot_lcomp c = lid_equals c.eff_name Const.effect_Tot_lid 
+                             || lid_equals c.eff_name Const.effect_GTot_lid 
+                             || c.cflags |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
+
 let is_partial_return c = comp_flags c |> Util.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
 
 let is_lcomp_partial_return c = c.cflags |> Util.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)

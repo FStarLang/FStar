@@ -513,7 +513,7 @@ val multiplication_step_p1:
 	       /\ (getLength h1 tmp = getLength h0 tmp)
 	       /\ (getLength h0 a > 0)
 	       /\ (getLength h1 c = 2 * getLength h0 a - 1)
-	       /\ (ctr < getLength h0 a)
+	       /\ (ctr < getLength h0 b)
 	       /\ (Bigint63.t a = Bigint63.t b)
 	       /\ (Bigint63.t a = Bigint63.t c)
 	       /\ (Bigint63.t a = Bigint63.t tmp)
@@ -778,7 +778,7 @@ let rec multiplication_aux a b ctr c tmp =
   | _ -> 
      let h0 = 
        erase (ST.get()) in
-     multiplication_step a b (get_length a - ctr) c tmp;
+     multiplication_step a b (get_length b - ctr) c tmp;
      let h1 = 
        erase (ST.get()) in
      erase (
@@ -958,3 +958,117 @@ let multiplication c a b =
     ()
   )
 
+(* Code : core multiplication function *)
+val multiplication2:
+  c:norm_bigint -> a:norm_bigint -> b:norm_bigint -> 
+  ST unit
+     (requires (fun h -> 
+		(inHeap h a)
+		/\ (inHeap h b)
+		/\ (inHeap h c)
+		/\ (getLength h b > 0)
+		/\ (getLength h a > 0)
+		/\ (getLength h c = getLength h a + getLength h b - 1)
+		/\ (maxSize h c <= wordSize a - 2)
+		/\ (IsNull h c)
+		/\ (Bigint63.t a = Bigint63.t b)
+		/\ (Bigint63.t a = Bigint63.t c)
+		/\ (Bigint63.data c <> Bigint63.data a)
+		/\ (Bigint63.data b <> Bigint63.data c)
+                /\ (wordSize a  - 2 >= log (getLength h a))
+		/\ (maxSize h a <= (wordSize a - log (getLength h a) - 2) / 2)
+		/\ (maxSize h b <= (wordSize b - log (getLength h a) - 2) / 2)
+     ))
+     (ensures (fun h0 u h1 ->
+	       (inHeap h0 a) /\ (inHeap h1 a)
+	       /\ (inHeap h0 b) /\ (inHeap h1 b)
+	       /\ (inHeap h0 c) /\ (inHeap h1 c)
+	       /\ (getLength h0 b > 0)
+	       /\ (getLength h0 a > 0)
+	       /\ (getLength h1 c = getLength h0 a + getLength h0 b - 1)
+	       /\ (IsNull h0 c)
+	       /\ (Bigint63.t a = Bigint63.t b)
+	       /\ (Bigint63.t a = Bigint63.t c)
+	       /\ (Bigint63.data c <> Bigint63.data a)
+	       /\ (Bigint63.data b <> Bigint63.data c)
+	       /\ (modifies !{Bigint63.data c} h0 h1)
+               /\ (wordSize a  - 2 >= log (getLength h0 a))
+	       /\ (maxSize h0 a <= (wordSize a - log (getLength h0 a) - 2) / 2)
+	       /\ (maxSize h0 b <= (wordSize b - log (getLength h0 a) - 2) / 2)
+	       /\ (maxSize h0 c <= wordSize a - 2)
+	       /\ (maxSize h1 c <= wordSize a - 2)
+	       /\ (eval h1 c (getLength h1 c) = eval h0 a (getLength h0 a) * eval h0 b (getLength h0 b))
+     ))
+let multiplication2 c a b =
+  //let tmp = get_from_pool (get_length a) in
+  let h0 = 
+    erase (ST.get()) in
+  let tmp = Array.create (get_length a) zero_tint in
+  let tmp2 = Bigint63 tmp (Bigint63.t a) in
+  let h1 = 
+    erase (ST.get()) in
+  erase (
+    eval_null h1 c (getLength h1 c);
+    max_value_of_null_lemma h1 c;
+    auxiliary_lemma_8 ();
+    auxiliary_lemma_9 (getLength h1 a);
+  
+    cut (eval h1 c (getLength h1 c) = 0 /\ True);
+    cut (eval h1 a (getLength h1 a) * eval h1 b (getLength h1 a - (getLength h1 a)) = 0 /\ True);
+    cut (eval h1 c (getLength h1 c) = eval h1 a (getLength h1 a) * eval h1 b (getLength h1 a - (getLength h1 a)) /\ True);
+    cut (maxValue h1 c = 0 /\ True);
+    cut ((getLength h1 a - (getLength h1 a)) * (maxValue h1 a * maxValue h1 b) = 0 /\ True);
+    cut (maxValue h1 c <= (getLength h1 a - (getLength h1 a)) * (maxValue h1 a * maxValue h1 b) /\ True);
+    cut (inHeap h1 a /\ inHeap h1 b /\ inHeap h1 c /\ inHeap h1 tmp2);
+    cut (getLength h1 a = getLength h1 b /\ getLength h1 tmp2 = getLength h1 a);
+    cut (getLength h1 a > 0 /\ getLength h1 c = 2 * getLength h1 a - 1)
+  );
+  let len = get_length b in
+  erase (
+    cut (getLength h1 a = len /\ True);
+    cut ( (Bigint63.t a = Bigint63.t b) 
+	  /\ (Bigint63.t a = Bigint63.t c) 
+	  /\ (Bigint63.t tmp2 = Bigint63.t a)
+	  /\ (Bigint63.data c <> Bigint63.data a)	
+	  /\ (Bigint63.data b <> Bigint63.data c)
+	  /\ (Bigint63.data tmp2 <> Bigint63.data a) 
+	  /\ (Bigint63.data tmp2 <> Bigint63.data b) 
+	  /\ (Bigint63.data tmp2 <> Bigint63.data c) );
+    cut ( log (getLength h1 a) <= wordSize a - 2 /\ True);
+    cut ( maxSize h1 a <= (wordSize a - log (getLength h1 a) - 2) / 2
+	  /\ maxSize h1 b <= (wordSize b - log (getLength h1 a) - 2) / 2);
+    cut (len <= getLength h1 a /\ True);
+    cut (maxSize h1 c <= wordSize a - 2 /\ True);
+    cut (maxValue h1 c <= (getLength h1 a - len) * (maxValue h1 a * maxValue h1 b) /\ True);
+    cut (eval h1 c (getLength h1 c) = eval h1 a (getLength h1 a) * eval h1 b (getLength h1 a - len) /\ True)
+  );
+  
+  multiplication_aux a b len c tmp2;
+  let h2 = 
+    erase (ST.get() ) in
+  //cut (modifies !{Bigint63.data c} h0 h2);
+  erase (
+    cut ((inHeap h0 a) /\ (inHeap h2 a)
+	 /\ (inHeap h0 b) /\ (inHeap h2 b)
+	 /\ (inHeap h0 c) /\ (inHeap h2 c) );
+    cut (getLength h0 a = getLength h0 b    /\ (getLength h0 a > 0) /\ (getLength h2 c = 2 * getLength h0 a - 1));
+    cut (IsNull h0 c  /\ (Bigint63.t a = Bigint63.t b)
+	 /\ (Bigint63.t a = Bigint63.t c)
+	 /\ (Bigint63.data c <> Bigint63.data a)
+	 /\ (Bigint63.data b <> Bigint63.data c) );
+    
+    cut ( (wordSize a  - 2 >= log (getLength h0 a))
+	  /\ (maxSize h0 a <= (wordSize a - log (getLength h0 a) - 2) / 2)
+	  /\ (maxSize h0 b <= (wordSize b - log (getLength h0 a) - 2) / 2)
+	  /\ (maxSize h0 c <= wordSize a - 2)
+	  /\ (maxSize h2 c <= wordSize a - 2) );
+    
+    eval_eq_lemma h0 h1 a a (getLength h0 a);
+    eval_eq_lemma h0 h1 b b (getLength h0 b);
+    
+    cut ( eval h2 c (getLength h2 c) = eval h0 a (getLength h0 a) * eval h0 b (getLength h0 b) /\ True);
+    
+    cut ( modifies !{Bigint63.data c} h0 h2 );
+    //return_to_pool (Bigint63.data tmp2);
+    ()
+  )

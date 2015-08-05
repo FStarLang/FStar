@@ -18,8 +18,8 @@ let string_of_mlpath = (fun ( _53_7 ) -> (match (_53_7) with
 (Support.String.concat "." (Support.List.append p ((s)::[])))
 end))
 
-let mlpath_of_lident = (fun ( x ) -> (let _68_23682 = (Support.List.map (fun ( x ) -> x.Microsoft_FStar_Absyn_Syntax.idText) x.Microsoft_FStar_Absyn_Syntax.ns)
-in (_68_23682, x.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText)))
+let mlpath_of_lident = (fun ( x ) -> (let _68_23685 = (Support.List.map (fun ( x ) -> x.Microsoft_FStar_Absyn_Syntax.idText) x.Microsoft_FStar_Absyn_Syntax.ns)
+in (_68_23685, x.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText)))
 
 let as_mlident = (fun ( x ) -> (x.Microsoft_FStar_Absyn_Syntax.ppname.Microsoft_FStar_Absyn_Syntax.idText, 0))
 
@@ -408,7 +408,7 @@ end
 false
 end))
 
-let is_Mkmllb = (fun ( _ ) -> (failwith ("Not yet implemented")))
+let is_Mkmllb = (fun ( _ ) -> (failwith ("Not yet implemented:is_Mkmllb")))
 
 type mltybody =
 | MLTD_Abbrev of mlty

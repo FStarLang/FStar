@@ -2,10 +2,13 @@
     options:--admit_fsi Set --z3timeout 10;
     variables:LIB=../../lib;
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst
-    st3.fst $LIB/constr.fst word.fst $LIB/seq.fsi $LIB/seq.fst array.fsi array.fst withScope.fst
+    $LIB/ghost.fst stackAndHeap.fst sst.fst sstCombinators.fst $LIB/constr.fst word.fst $LIB/seq.fsi $LIB/seq.fst array.fsi array.fst
   --*)
+
 module ArrayAlgos
-open StructuredMem
+open SSTCombinators
+open StackAndHeap
+open SST
 open MVector
 open Heap
 open Set
@@ -13,6 +16,7 @@ open MachineWord
 open Array
 open MD5Common
 open Seq
+open Ghost
 
 val contains : #a:Type -> smem -> array a -> GTot bool
 let contains m v = refExistsInMem (asRef v) m
@@ -45,7 +49,7 @@ val copy:
                 /\ prefixEqualL (sel h1 s) (sel h1 scp)
                 /\ (contains h0 scp) /\ glength scp h0 = glength scp h1
               ))
-     (only (asRef scp))
+     (gonly (asRef scp))
 
 let copy s scp =
   let ctr = salloc #nat 0 in
@@ -60,7 +64,7 @@ let copy s scp =
           /\ (loopkupRef ctr m) <=len
           /\ prefixEqual (sel m s) (sel m scp) (loopkupRef ctr m)
           )
-    (union (only (asRef scp)) (only ctr))
+    ((gunion (gonly (asRef scp)) (gonly ctr)))
     (fun u -> let ctrv = memread ctr in
               writeIndex scp ctrv (readIndex s ctrv);
               memwrite ctr (ctrv +1 ))

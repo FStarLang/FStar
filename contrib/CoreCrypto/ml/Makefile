@@ -2,12 +2,16 @@ all: CoreCrypto.cmxa
 
 ifeq ($(OS),Windows_NT)
 CC = i686-w64-mingw32-gcc
+INCLUDE = ../../../../openssl-1.0.1p/include
 else
 CC = gcc-5
+INCLUDE = /usr/include
 endif
 
 openssl_stub.o: openssl_stub.c
-	ocamlopt -c -cc "$(CC) -I /usr/local/lib/ocaml -I /usr/include -lcrypto -lopenssl -fPIC -c" $<
+	ocamlopt -c -cc $(CC) -ccopt '-I /usr/local/lib/ocaml' -ccopt "-I $(INCLUDE)" -cclib -lcrypto -cclib -c $<
+# haven't decided yet which style is better. It may interact slightly differently with flexlink.
+#	ocamlopt -c -cc "$(CC) -I /usr/local/lib/ocaml -I ../../../../openssl-1.0.1p/include -lcrypto -c" $<
 #	ocamlopt -c -cclib -lcrypto -cclib -lopenssl $< -ccopt -static
 
 dllopenssl_wrap.so: openssl_stub.o
@@ -26,7 +30,7 @@ CoreCrypto.cmx: CoreCrypto.ml CoreCrypto.cmi
 	ocamlopt -I ../../Platform/ml -c $<
 
 CoreCrypto.cmxa: CoreCrypto.cmx  dllopenssl_wrap.so
-	ocamlopt -I ../../Platform/ml -a  -o $@  $<  -cclib -lopenssl_wrap 
+	ocamlopt -I ../../Platform/ml -a  -o $@  $<  -cclib -lopenssl_wrap
 
 clean:
 	rm -f *.[oa] *.so *.cm[ixoa] *.cmxa

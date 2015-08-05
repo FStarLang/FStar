@@ -1,4 +1,6 @@
 (*--build-config
+  variables:LIB=../../lib;
+  other-files: $LIB/list.fst
   --*)
 
 (*
@@ -51,10 +53,11 @@ let rec add a b
 | O -> b
 | S a' -> S (add a' b)
 
-
+(*
 type list (a:Type) =
   | Nil  : list a
   | Cons : hd:a -> tl:list a -> list a
+*)
 
 let prepend0 (tll : list nnat) = (Cons O tll)
 
@@ -204,6 +207,7 @@ let rec mult2 a b =
 match a with
 | O -> O
 | S a' -> add b (mult2 a' b)
+
 
 (*
 type bTree (t:Type)=

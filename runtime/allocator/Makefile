@@ -1,3 +1,10 @@
+ifdef WINDIR
+OCAMLLIB :=`ocamlc -where`
+OCAMLLIB :=`cygpath -p $(OCAMLLIB)`
+else
+OCAMLLIB :=`ocamlc -where`
+endif
+
 all: stacktest ffitest
 
 stacktest: stack.o bitmask.o test.o

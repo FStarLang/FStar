@@ -16,6 +16,8 @@
 #ifndef _STACK_H_
 #define _STACK_H_
 
+#include <stdarg.h>
+
 /* Default size of contiguous memory in a frame */
 #define DEFAULT_PAGE_SZB 4096
 

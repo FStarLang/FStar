@@ -339,7 +339,7 @@ let extractCtor (tyBinders : list<binder>) (c:context) (ctor: inductiveConstruct
         let lp = List.zip tyBinders lb in
         //assert (List.length tyBinders = List.length lp);
         let newC = extendContextWithRepAsTyVars (List.map (fun (x,y) -> (fst x, fst y)) lp) c in
-        let mlt = extractTyp newC tr in
+        let mlt = Util.eraseTypeDeep c (extractTyp newC tr) in
         let tys = (List.map mlTyIdentOfBinder tyBinders, mlt) in //MayErase, because constructors are always pure
         let fvv = mkFvvar ctor.cname ctor.ctype in 
             // fprint1 "(* extracting the type of constructor %s\n" (lident2mlsymbol ctor.cname);
@@ -354,13 +354,13 @@ let extractCtor (tyBinders : list<binder>) (c:context) (ctor: inductiveConstruct
   Currently, no attempt is made to convert an index to a parameter.
   It seems to be good practice for programmers to not use indices when parameters suffice.
    *)
-let dummyIdent (n:int) : mlident = ("'dummyV"^(Util.string_of_int n), 0)
 
 let rec firstNNats (n:int) : list<int> =
     if (0<n)
     then (n::(firstNNats (n-1)))
     else []
 
+let dummyIdent (n:int) : mlident = ("'dummyV"^(Util.string_of_int n), 0)
 let dummyIndexIdents (n:int) : list<mlident> = List.map dummyIdent (firstNNats n)
 
 let extractInductive (c:context) (ind: inductiveTypeFam ) :  context* (mlsymbol * mlidents * option<mltybody>) =

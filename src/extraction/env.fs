@@ -59,7 +59,7 @@ match  t with
 | _ -> 
     if t = ml_unit_ty then true
     else match t with 
-        | MLTY_Named (_, (["Ghost"], "ghost")) -> true
+        | MLTY_Named (_, (["Ghost"], "erased")) -> true
         | _ -> false // this function is used by another function which does delta unfolding
 
 (* \mathbb{T} type in the thesis, to be used when OCaml is not expressive enough for the source type *)
@@ -112,6 +112,15 @@ let lookup_ty_const (env:env) ((module_name, ty_name):mlpath) : option<mltyschem
 
 let lookup_tyvar (g:env) (bt:btvar) : mlty = lookup_ty_local g.gamma bt
 
+let lookup_fv_by_lid (g:env) (fv:lident) : mlexpr * mltyscheme = 
+    let x = Util.find_map g.gamma (function 
+        | Fv (fv', path, sc) when lid_equals fv fv'.v -> Some (path, sc)
+        | _ -> None) in
+    match x with 
+        | None -> failwith (Util.format1 "free Variable %s not found\n" (Print.sli fv))
+        | Some y -> y
+
+(*keep this in sync with lookup_fv_by_lid, or call it here. lid does not have position information*)
 let lookup_fv (g:env) (fv:fvvar) : mlexpr * mltyscheme = 
     let x = Util.find_map g.gamma (function 
         | Fv (fv', path, sc) when lid_equals fv.v fv'.v -> Some (path, sc)

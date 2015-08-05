@@ -5,6 +5,7 @@
     $LIB/ghost.fst stackAndHeap.fst sst.fst sstCombinators.fst $LIB/constr.fst word.fst $LIB/seq.fsi $LIB/seq.fst
   --*)
 
+
 module Array
 open SSTCombinators
 open StackAndHeap
@@ -15,7 +16,6 @@ open Set
 open Stack
 open Seq
 
-
 (*to make vector opaque, just include vector.fsi*)
 (*val testf : vector nat 10 -> nat
 let testf v = v 1*)
@@ -23,12 +23,12 @@ let testf v = v 1*)
 type array : Type -> Type
 
 (*making it GTot causes a strange error in the postcondition of readIndex *)
-val asRef : #a:Type  -> va:(array a) -> Tot (ref (seq a))
+val asRef : #a:Type  -> va:(array a) -> GTot (ref (seq a))
 
 
 val length: #a:Type -> x:array a -> PureMem nat
   (requires (fun h -> refExistsInMem (asRef x) h))
-  (ensures  (fun h y _ -> refExistsInMem (asRef x) h /\ y=Seq.length (loopkupRef (asRef x) h)))
+  (ensures  (fun h y _ ->  (refExistsInMem (asRef x) h /\ y=Seq.length (loopkupRef (asRef x) h))))
 
 (*using the 2 definitions below causes a strange error in readIndex amd updIndex*)
 (*val arrayExistsInMem : #a:Type -> (array a) -> smem -> GTot bool
@@ -53,10 +53,10 @@ val writeIndex :  #a:Type -> r:((array a))
     (ensures ( fun m0 _ m1 ->
         (refExistsInMem (asRef r) m0) /\ index < Seq.length (loopkupRef (asRef r) m0) /\
           (m1 = (writeMemAux (asRef r) m0 (Seq.upd (loopkupRef (asRef r) m0) index newV)))))
-      (singleton (Ref (asRef r)))
+      (gonly (asRef r))
 
 (*There is no way to read or write a whole vector in non-ghost mode *)
-
+open Ghost
 (*create an array on stack*)
 val screate :  #a:Type -> init:(seq a)
   -> Mem (array a)
@@ -66,7 +66,7 @@ val screate :  #a:Type -> init:(seq a)
             /\ allocateInBlock (asRef vv) (topstb m0) (topstb m1) init
             /\ refLoc (asRef vv) = InStack (topstid m0) /\ (topstid m0 = topstid m1)
             /\ mtail m0 = mtail m1))
-        (empty)
+        (hide empty)
 
 (*create an array on the heap*)
 val hcreate :  #a:Type -> init:(seq a)
@@ -75,8 +75,9 @@ val hcreate :  #a:Type -> init:(seq a)
         (ensures (fun m0 v m1->
             allocateInBlock (asRef v) (hp m0) (hp m1) init
             /\ refLoc (asRef v) = InHeap /\ (snd m0 = snd m1)))
-        (empty)
+        (hide empty)
 
+(* This should be removed?*)
 val to_seq :  #a:Type  -> r:(array a)
   -> PureMem (seq a)
         (requires (fun m -> b2t (refExistsInMem (asRef r) m)))
