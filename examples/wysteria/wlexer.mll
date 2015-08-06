@@ -2,30 +2,30 @@
 open Lexing
 open Wparser
 
+exception Eof
+
 let incr_linenum lexbuf =
   let pos = lexbuf.Lexing.lex_curr_p in
-  lexbuf.Lexing.lex_curr_p <- 
+  lexbuf.Lexing.lex_curr_p <-
   { pos with
     Lexing.pos_lnum = pos.Lexing.pos_lnum + 1;
     Lexing.pos_bol = pos.Lexing.pos_cnum;
   }
 }
 
-let var_head = ['a'-'z' '_'] 
+let var_head = ['a'-'z' '_']
 let var_num = ['a'-'z' 'A'-'Z' '0'-'9' '_']
-let var = var_head var_num* 
+let var = var_head var_num*
 
 let num = ['0'-'9']+
 
 let bang = ['!']
 
-let noteol = [^'\n']
-
-let eol = ['\n'] 
+let eol = '\n' | '\r' | "\r\n"
 
 rule token = parse
-  | [' ' '\t' '\r'] { token lexbuf                       }
-  | eol             { incr_linenum lexbuf ; token lexbuf } 
+  | [' ' '\t']      { token lexbuf                       }
+  | eol             { incr_linenum lexbuf ; token lexbuf }
   | '.'             { DOT                                }
   | '|'             { BAR                                }
   | ';'             { SEMICOLON                          }
@@ -51,6 +51,7 @@ rule token = parse
   | "concat_wire"   { CONCATWIRE                         }
   | "fun"           { FUN                                }
   | "fix"           { FIX                                }
+  | "apply"         { APPLY                              }
   | "match"         { MATCH                              }
   | "with"          { WITH                               }
   | "end"           { END                                }

@@ -42,7 +42,7 @@ patandexp:
 
 patandexplist:
 | patandexp                                { [ $1 ]   }
-| patandexp SEMICOLON patandexplist        { ($1::$3) }        
+| patandexp patandexplist                  { ($1::$2) }        
 
 exp:
 | const                                           { (mk_exp (E_const $1))             }
@@ -60,11 +60,10 @@ exp:
 | PROJWIRE exp exp                                { (mk_exp (E_projwire ($2, $3)))    }
 | CONCATWIRE exp exp                              { (mk_exp (E_concatwire ($2, $3)))  }
 | LPAREN exp RPAREN                               { $2                                }
+| EOF                                             { Exp (E_const C_unit, None)        }
 ;
 
 explist:
 |                              { []       }
 | exp                          { [ $1 ]   }
 | exp SEMICOLON explist        { ($1::$3) }        
-
-// Notes: Apply before app, END after match

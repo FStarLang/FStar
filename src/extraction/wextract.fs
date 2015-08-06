@@ -38,17 +38,12 @@ let is_ffi_fn (e:exp) (args_l:args) :(bool * string * args) =
             else if List.length (mlid.ns) = 0 && mlid.ident.idText = "Prims" then
                 is_valid_prims_ffi fn_name, fn_name, args_l
 
+            else if fn_name = "read" then
+                true, fn_name, []
+
             else false, "", args_l
 
         | _                  -> false, "", args_l
-
-let process_wysteria_lib_fun_app_args (s:string) (args:list<arg>) :list<arg> =
-    match s with
-        | "unbox_p"
-        | "unbox_s"
-        | "mkwire_p" -> List.tl args    // first argument is an implicit
- 
-        | _          -> args
 
 let extract_const (c:sconst) :string =
     match c with
@@ -78,14 +73,16 @@ let rec extract_exp (e:exp) :string =
             let b, fn, args = is_ffi_fn e args in    // see if it's a ffi call
             if b then
                 let args_s = List.fold_left (fun s a -> s ^ (extract_arg a) ^ "; ") "" args in
-                "sysop \"" ^ fn ^ "\" [ " ^ args_s ^ " ]"
+                "ffi " ^ fn ^ " [ " ^ args_s ^ " ]"
             else
                 let s = extract_exp e in
-                let args = process_wysteria_lib_fun_app_args s args in
-                List.fold_left (fun s a -> s ^ (extract_arg a) ^ " ") (s ^ " ") args
+                let b, s' = extract_wysteria_lib_fn s args in
+                if b then s'
+                else
+                    List.fold_left (fun s a -> "(apply " ^ s ^ " " ^ (extract_arg a) ^ ")") s args
         | Exp_match (e, pats)    ->
             let s = extract_exp e in
-            s ^ "\n" ^ (extract_pats pats)
+            "match " ^ s ^ " with\n" ^ (extract_pats pats) ^ "\nend"
         | Exp_ascribed (e, _, _) -> extract_exp e
         | Exp_let (lbs, e)       ->
             if fst lbs then raise (NYI "Recursive let not expected")
@@ -95,6 +92,26 @@ let rec extract_exp (e:exp) :string =
         | Exp_uvar _
         | _ -> Util.print_string ("Expression not expected " ^ (tag_of_exp e)); raise (NYI "")
 
+and extract_wysteria_lib_fn (s:string) (args:list<arg>) :(bool * string) =
+    let b, args =
+        match s with
+            | "unbox_p"
+            | "unbox_s"
+            | "mkwire_p" -> true, List.tl args    // first argument is an implicit
+            | "as_par"
+            | "as_sec"
+            | "mkwire_s"
+            | "projwire_p"
+            | "projwire_s"
+            | "concat_wire" -> true, args
+
+            | _ -> false, args
+    in
+    if b then
+        b, List.fold_left (fun s a -> s ^ " " ^ (extract_arg a)) s args
+    else
+        b, ""
+
 and extract_arg (a:arg) :string =
     match a with
         | Inl _, _ -> raise (NYI "This should not have happened")
@@ -103,7 +120,7 @@ and extract_arg (a:arg) :string =
 and extract_pats (pats: list<(pat * option<exp> * exp)>) :string =
     List.fold_left (fun s (p, w, e) ->
                let s' = "| " ^ (extract_pat p) ^ " -> " ^ (extract_exp e) in
-               s ^ "\n" ^ s) "" pats
+               s ^ "\n" ^ s') "" pats
 
 and extract_pat (p:pat) :string =
     match p.v with
@@ -118,6 +135,8 @@ let extract_sigelt (s:sigelt) :string =
             else
                 let lb = List.hd (snd lbs) in
                 "let " ^ (lbname_to_string lb.lbname) ^ " = " ^ (extract_exp lb.lbdef) ^ " in"
+
+        | Sig_main (e, _) -> extract_exp e
 
         | _ -> ""
 

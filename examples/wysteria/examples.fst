@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi OrdSet --admit_fsi OrdMap --admit_fsi Set --admit_fsi Wysteria;
+    options:--admit_fsi OrdSet --admit_fsi OrdMap --admit_fsi Set --admit_fsi Wysteria --codegen Wysteria;
     variables:LIB=../../lib;
     other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/ordset.fsi $LIB/ordmap.fsi $LIB/list.fst wysteria.fsi lib.fst
  --*)
@@ -26,7 +26,7 @@ let to_s3 p1 p2 p3 = union #prin #p_cmp (to_s2 p1 p2) (to_s1 p3)
 
 (* millionaire's straightforward, inlined secure block *)
 
-val mill1: unit -> Wys bool (pre p_ab) post
+(*val mill1: unit -> Wys bool (pre p_ab) post
 let mill1 _ =
   let x = as_par alice_s (read #nat) in
   let y = as_par bob_s (read #nat) in
@@ -35,7 +35,7 @@ let mill1 _ =
     fun _ -> (unbox_s x) > (unbox_s y)
   in
 
-  as_sec ab g
+  as_sec ab g*)
 
 
 (**********)
@@ -45,7 +45,10 @@ let mill1 _ =
 val mill2_sec: x:Box nat alice_s -> y:Box nat bob_s -> Wys bool (pre p_ab) post
 let mill2_sec x y =
   let g:unit -> Wys bool (pre s_ab) post =
-    fun _ -> (unbox_s x) > (unbox_s y)
+    fun _ ->
+      let b = (unbox_s x) > (unbox_s y) in
+      let c = if b then 1 + 2 else 3 + 4 in
+      b
   in
   as_sec ab g
 
@@ -55,8 +58,11 @@ let mill2 _ =
   let y = as_par bob_s (read #nat) in
   mill2_sec x y
 
-(**********)
+;;
 
+let t = as_par ab mill2 in ()
+(**********)
+(*
 (* millionaire's secure block for any two parties *)
 (* only unification, so p1 and p2 can only be inferred if type indices *)
 val mill3_sec: #p1:prin -> #p2:prin
@@ -377,4 +383,4 @@ let two_round_bidding p1 p2 =
 
   as_sec (to_s2 p1 p2) r2*)
 
-(**********)*)
+(**********)*)*)
