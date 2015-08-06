@@ -11,48 +11,70 @@ open OrdSet
 
 open AST
 
+(* TODO: FIXME: workaround for projectors *)
+val e_of_t_exp: t:term{is_T_exp t} -> Tot exp
+let e_of_t_exp (T_exp e) = e
+
+(* TODO: FIXME: workaround for projectors *)
+val e_of_exp: exp -> Tot exp'
+let e_of_exp (Exp e _) = e
+
 let pre_easpar (c:config) =
-  is_T_exp (Conf.t c) && is_E_aspar (Exp.e (T_exp.e (Conf.t c))) && is_par c
+  is_T_exp (t_of_conf c) && is_E_aspar (e_of_exp (e_of_t_exp (t_of_conf c))) && is_par c
 
 let pre_eapp (c:config) =
-  is_T_exp (Conf.t c) && is_E_app (Exp.e (T_exp.e (Conf.t c)))
+  is_T_exp (t_of_conf c) && is_E_app (e_of_exp (e_of_t_exp (t_of_conf c)))
 
 let pre_eabs (c:config) =
-  is_T_exp (Conf.t c) && is_E_abs (Exp.e (T_exp.e (Conf.t c)))
+  is_T_exp (t_of_conf c) && is_E_abs (e_of_exp (e_of_t_exp (t_of_conf c)))
  
 let pre_efix (c:config) =
-  is_T_exp (Conf.t c) && is_E_fix (Exp.e (T_exp.e (Conf.t c)))
+  is_T_exp (t_of_conf c) && is_E_fix (e_of_exp (e_of_t_exp (t_of_conf c)))
 
 let pre_eempabs (c:config) =
-  is_T_exp (Conf.t c) && is_E_empabs (Exp.e (T_exp.e (Conf.t c)))
+  is_T_exp (t_of_conf c) && is_E_empabs (e_of_exp (e_of_t_exp (t_of_conf c)))
 
 let pre_elet (c:config) =
-  is_T_exp (Conf.t c) && is_E_let (Exp.e (T_exp.e (Conf.t c)))
+  is_T_exp (t_of_conf c) && is_E_let (e_of_exp (e_of_t_exp (t_of_conf c)))
+
+(* TODO: FIXME: workaround for projectors *)
+val x_of_e_var: e:exp'{is_E_var e} -> Tot varname
+let x_of_e_var (E_var x) = x
+
+(* TODO: FIXME: workaround for projectors *)
+val is_Some: option 'a -> Tot bool
+let is_Some x = match x with
+  | Some _ -> true
+  | _      -> false
+
+(* TODO: FIXME: workaround for projectors *)
+val en_of_conf: config -> Tot env
+let en_of_conf (Conf _ _ _ en _) = en
 
 let pre_evar (c:config) =
-  is_T_exp (Conf.t c) && is_E_var (Exp.e (T_exp.e (Conf.t c))) &&
-  is_Some ((Conf.en c) (E_var.x (Exp.e (T_exp.e (Conf.t c)))))
+  is_T_exp (t_of_conf c) && is_E_var (e_of_exp (e_of_t_exp (t_of_conf c))) &&
+  is_Some ((en_of_conf c) (x_of_e_var (e_of_exp (e_of_t_exp (t_of_conf c)))))
 
 let pre_econst (c:config) =
-  is_T_exp (Conf.t c) && is_E_const (Exp.e (T_exp.e (Conf.t c)))
+  is_T_exp (t_of_conf c) && is_E_const (e_of_exp (e_of_t_exp (t_of_conf c)))
 
 let pre_eunbox (c:config) =
-  is_T_exp (Conf.t c) && is_E_unbox (Exp.e (T_exp.e (Conf.t c)))
+  is_T_exp (t_of_conf c) && is_E_unbox (e_of_exp (e_of_t_exp (t_of_conf c)))
  
 let pre_emkwire (c:config) =
-  is_T_exp (Conf.t c) && is_E_mkwire (Exp.e (T_exp.e (Conf.t c)))
+  is_T_exp (t_of_conf c) && is_E_mkwire (e_of_exp (e_of_t_exp (t_of_conf c)))
 
 let pre_eprojwire (c:config) =
-  is_T_exp (Conf.t c) && is_E_projwire (Exp.e (T_exp.e (Conf.t c)))
+  is_T_exp (t_of_conf c) && is_E_projwire (e_of_exp (e_of_t_exp (t_of_conf c)))
  
 let pre_econcatwire (c:config) =
-  is_T_exp (Conf.t c) && is_E_concatwire (Exp.e (T_exp.e (Conf.t c)))
+  is_T_exp (t_of_conf c) && is_E_concatwire (e_of_exp (e_of_t_exp (t_of_conf c)))
  
 let pre_effi (c:config) =
-  is_T_exp (Conf.t c) && is_E_ffi (Exp.e (T_exp.e (Conf.t c)))
+  is_T_exp (t_of_conf c) && is_E_ffi (e_of_exp (e_of_t_exp (t_of_conf c)))
 
 let pre_ematch (c:config) =
-  is_T_exp (Conf.t c) && is_E_match (Exp.e (T_exp.e (Conf.t c)))
+  is_T_exp (t_of_conf c) && is_E_match (e_of_exp (e_of_t_exp (t_of_conf c)))
 
 (* pre returns comp, for src it's never Skip *)
 type comp = | Do | Skip | NA
@@ -194,8 +216,13 @@ val step_app_red: c:config{is_value c /\ is_sframe c is_F_app_e2}
 let step_app_red (Conf l _ ((Frame m en (F_app_e2 v1))::s) _ (T_val v2)) =
   Conf l m s en (T_red (R_app v1 v2))
 
+(* TODO: FIXME: the discriminators should take extra args for type indices *)
 val is_clos: #meta:v_meta -> value meta -> Tot bool
-let is_clos #meta v = is_V_clos v || is_V_fix_clos v || is_V_emp_clos v
+let is_clos #meta v = match v with//is_V_clos v || is_V_fix_clos v || is_V_emp_clos v
+  | V_clos _ _ _
+  | V_emp_clos _ _
+  | V_fix_clos _ _ _ _ -> true
+  | _                  -> false
 
 val get_en_b: #meta:v_meta -> v:value meta{is_clos v} -> Tot (env * varname * exp)
 let get_en_b #meta v = match v with
@@ -314,10 +341,14 @@ let pre_projwire c = match c with
    
   | _ -> NA
 
+(* TODO: FIXME: workaround for projectors *)
+val v_of_some: x:option 'a{is_Some x} -> Tot 'a
+let v_of_some (Some x) = x
+
 val step_projwire: c:config{pre_projwire c = Do} -> Tot config
 let step_projwire c = match c with
   | Conf l m s en (T_red (R_projwire p (V_wire _ w))) ->
-    Conf l m s en (T_val (Some.v (select p w)))
+    Conf l m s en (T_val (v_of_some (select p w)))
 
 val pre_concatwire: config -> Tot comp
 let pre_concatwire c = match c with
@@ -358,7 +389,7 @@ let rec compose_wires #eps1 #eps2 w1 w2 eps =
   else
     let Some p = choose eps in
     let w = compose_wires #eps1 #eps2 w1 w2 (remove p eps) in
-    update p (Some.v (select p w1)) w
+    update p (v_of_some (select p w1)) w
 
 val step_concatwire: c:config{pre_concatwire c = Do} -> Tot config
 let step_concatwire c = match c with
@@ -443,7 +474,7 @@ let step_match (Conf l m s en (T_red (R_match v pats))) =
   Conf l m s en (T_exp (get_next_exp pats v))
 
 let pre_eassec (c:config) =
-  is_T_exp (Conf.t c) && is_E_assec (Exp.e (T_exp.e (Conf.t c)))
+  is_T_exp (t_of_conf c) && is_E_assec (e_of_exp (e_of_t_exp (t_of_conf c)))
 
 val step_assec_e1: c:config{pre_eassec c} -> Tot config
 let step_assec_e1 (Conf l m s en (T_exp (Exp (E_assec e1 e2) _))) =

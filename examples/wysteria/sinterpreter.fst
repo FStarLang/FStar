@@ -64,7 +64,7 @@ let step c =
 
 val step_correctness: c:sconfig{is_Some (step c)} -> Tot (sstep c (Some.v (step c)))
 let step_correctness c = 
-  let c' = Some.v (step c) in
+  let c' = v_of_some (step c) in
   if pre_easpar c then C_aspar_ps c c'  
   else if pre_eunbox c then C_unbox c c'
   else if pre_emkwire c then C_mkwire_e1 c c'
