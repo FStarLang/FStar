@@ -1,28 +1,29 @@
 
-type ' a sstarray =
-' a Seq.seq ref
+type ' a sstarray = 'a array
 
 let asRef = (fun ( va ) -> ())
 
-let readIndex = (fun ( r ) ( index ) -> (let rv = (SST.memread r)
-in (Seq.index rv index)))
+let readIndex = (fun ( r ) ( index ) 
+		-> Array.get r index)
 
-let writeIndex = (fun ( r ) ( index ) ( newV ) -> (let rv = (SST.memread r)
-in (SST.memwrite r (Seq.upd rv index newV))))
+let writeIndex = (fun ( r ) ( index ) ( newV ) 
+		-> Array.set r index newV)
 
-let screateSeq = (fun ( init ) -> (SST.salloc init))
+let screateSeq = (fun ( init ) 
+		-> failwith "NYI:screateSeq")
 
-let hcreateSeq = (fun ( init ) -> (SST.halloc init))
+let hcreateSeq = (fun ( init ) 
+		-> failwith "NYI:hcreateSeq")
 
-let screate = (fun ( len ) ( init ) -> (SST.salloc (Seq.create len init)))
+let screate = (fun ( len ) ( init ) 
+	-> Camlstack.mkarray len init)
 
-let hcreate = (fun ( len ) ( init ) -> (SST.halloc (Seq.create len init)))
+let hcreate = (fun ( len ) ( init ) 
+	-> Array.make len init)
 
-let to_seq = (fun ( r ) -> (SST.memread r))
+let to_seq = (fun ( r ) 
+		-> failwith "deprecated : to_seq. implement it using readIndex and a loop")
 
-let length = (fun ( r ) -> (let _22_6254 = (SST.memread r)
-in (Seq.length _22_6254)))
-
-
+let length = (fun ( r ) -> Array.length r)
 
 
