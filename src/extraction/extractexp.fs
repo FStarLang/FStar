@@ -117,12 +117,12 @@ let join f f' = match f, f' with
 let join_l fs = List.fold_left join E_PURE fs
 
 let extract_pat (g:env) p : (env * list<mlpattern>) = 
-    let rec extract_pat disj g p = match p.v with
+    let rec extract_pat disj imp g p = match p.v with
       | Pat_disj [] -> failwith "Impossible"
 
       | Pat_disj (p::pats)      ->
-        let g, p = extract_pat true g p in
-        g, [MLP_Branch (p@List.collect (fun x -> snd (extract_pat true g x)) pats)]
+        let g, p = extract_pat true false g p in
+        g, [MLP_Branch (p@List.collect (fun x -> snd (extract_pat true false g x)) pats)]
 
       | Pat_constant s     -> 
         g, [MLP_Const (mlconst_of_const s)]
@@ -131,10 +131,10 @@ let extract_pat (g:env) p : (env * list<mlpattern>) =
         let d = match Env.lookup_fv g f with 
             | MLE_Name n, _ -> n
             | _ -> failwith "Expected a constructor" in
-        let g, pats = Util.fold_map (extract_pat disj) g pats in
+        let g, pats = Util.fold_map (fun g (p, imp) -> extract_pat disj imp g p) g pats in
         g, [Util.resugar_pat q <| MLP_CTor (d, List.flatten pats)]
 
-      | Pat_var(x, _) ->
+      | Pat_var x ->
         let mlty = translate_typ g x.sort in 
         let g = Env.extend_bv g x ([], mlty) false in
         g, [MLP_Var (as_mlident x.v)]
@@ -150,12 +150,16 @@ let extract_pat (g:env) p : (env * list<mlpattern>) =
       | Pat_dot_term _ -> 
         g, [MLP_Wild]
 
+      | Pat_tvar a ->
+        let mlty = MLTY_Top in
+        let g = Env.extend_ty g a (Some mlty) in
+        g, if imp then [] else [MLP_Wild]
+
       | Pat_dot_typ _
-      | Pat_twild _
-      | Pat_tvar _ ->
+      | Pat_twild _ ->
         g, [] in
 
-   extract_pat false g p
+   extract_pat false false g p
 
 let normalize_abs e0 = 
     let rec aux bs e = 
@@ -482,22 +486,3 @@ let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1
 
 let dummyPatIdent (n:int) : mlident = ("dummyPat"^(Util.string_of_int n), 0)
 let dummyPatIdents (n:int) : list<mlident> = List.map dummyPatIdent (ExtractTyp.firstNNats n)
-
-(*TODO : need to put this inside a submodule with the same name as the name of the construcor*)
-let ind_projector_body (c:env) (discName:lident) (constrName:lident) : mlmodule1 = 
-                    let mlid = fresh "_proj_" in
-                    let _,(_,ctype) = lookup_fv_by_lid c constrName in
-                    let cargs = ExtractTyp.argTypes ctype in
-                    let projs = dummyPatIdents (List.length cargs) in
-                    let cargs = List.map (fun x -> MLP_Var x) projs in
-                    let cn::cr = List.rev discName.ns in
-                    let crstr = List.map (fun x->x.idText) cr in
-                    let rid = {ns=cr; ident={discName.ident with idText=cn.idText}; nsstr=String.concat "." crstr; str=discName.nsstr} in
-                    let cn = cn.idText in
-                    let discrBody= 
-                    MLE_Fun([(mlid,None)], MLE_Match(MLE_Name([], idsym mlid), [
-                        MLP_CTor(mlpath_of_lident rid, cargs), None, MLE_Name ([], discName.ident.idText);
-                    ])) in
-                MLM_Let (false,[{mllb_name=convIdent discName.ident; mllb_tysc=None; mllb_add_unit=false; mllb_def=discrBody}] )
-
-

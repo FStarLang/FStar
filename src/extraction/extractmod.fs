@@ -28,7 +28,12 @@ let fail_exp (lid:lident) (t:typ) = mk_Exp_app(Util.fvar None Const.failwith_lid
                           [ targ t
                           ; varg <| mk_Exp_constant (Const_string (Bytes.string_as_unicode_bytes ("Not yet implemented:"^(Print.sli lid)), dummyRange)) None dummyRange]) None dummyRange 
 
-    
+let mangle_projector_lid (x: lident) : lident =
+    let projecteeName = x.ident in
+    let prefix, constrName = Util.prefix x.ns in
+    let mangledName = Syntax.id_of_text ("___"^constrName.idText^"___"^projecteeName.idText) in
+    lid_of_ids (prefix@[mangledName]) 
+
 let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> = 
    (debug g (fun u -> Util.print_string (Util.format1 "now extracting :  %s \n" (Print.sigelt_to_string se))));
      match se with
@@ -39,22 +44,30 @@ let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> =
             let c, tds = ExtractTyp.extractSigElt g se in
             c, tds
 
-        | Sig_let (lbs, r, _, _) -> 
+        | Sig_let (lbs, r, _, quals) -> 
           let elet = mk_Exp_let(lbs, Const.exp_false_bool) None r in
           let ml_let, _, _ = ExtractExp.synth_exp g elet in
           begin match ml_let with 
             | MLE_Let(ml_lbs, _) -> 
-              let g = List.fold_left2 (fun env mllb {lbname=lbname; lbtyp=t} -> 
+              let g, ml_lbs' = List.fold_left2 (fun (env, ml_lbs) (ml_lb:mllb) {lbname=lbname; lbtyp=t} -> 
 //              debug g (fun () -> printfn "Translating source lb %s at type %s to %A" (Print.lbname_to_string lbname) (Print.typ_to_string t) (must (mllb.mllb_tysc)));
-              fst <| Env.extend_lb env lbname t (must mllb.mllb_tysc) mllb.mllb_add_unit)
-                      g (snd ml_lbs) (snd lbs) in 
-              g, [MLM_Let ml_lbs]
+                  let g, ml_lb = 
+                    if quals |> Util.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
+                    then let mname = mangle_projector_lid (right lbname) |> mlpath_of_lident in
+                         let env = Env.extend_fv' env (Util.fv <| right lbname) mname (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit in
+                         env, {ml_lb with mllb_name=(snd mname, 0)}
+                    else fst <| Env.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit, ml_lb in
+                 g, ml_lb::ml_lbs)
+              (g, []) (snd ml_lbs) (snd lbs) in 
+              g, [MLM_Let (fst ml_lbs, List.rev ml_lbs')]
+
             | _ -> //printfn "%A\n" ml_let; 
                 failwith "impossible"
           end
 
        | Sig_val_decl(lid, t, quals, r) -> 
          if quals |> List.contains Assumption 
+         //&& not (quals |> Util.for_some (function Projector _ -> true | _ -> false))
          then let impl = match Util.function_formals t with 
                 | Some (bs, c) -> mk_Exp_abs(bs, fail_exp lid (Util.comp_result c)) None dummyRange 
                 | _ -> fail_exp lid t in 
@@ -62,10 +75,12 @@ let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> =
               let g, mlm = extract_sig g se in
               let is_record = Util.for_some (function RecordType _ -> true | _ -> false) quals in
               match Util.find_map quals (function Discriminator l -> Some l |  _ -> None) with
-              | Some l when (not is_record) -> g, [ExtractExp.ind_discriminator_body g lid l] // what happens for records?
-              | _ -> match Util.find_map quals (function  Projector (l,_)  -> Some l |  _ -> None) with
-                        | Some l when (not is_record) -> g, [(*ExtractExp.ind_projector_body g lid l*)] // remove the when clause if exracting F* records as ML inductives
+                  | Some l when (not is_record) -> g, [ExtractExp.ind_discriminator_body g lid l] //records are single constructor types; there should be no discriminators for them
+                  | _ -> 
+                    begin match Util.find_map quals (function  Projector (l,_)  -> Some l |  _ -> None) with
+                        | Some _ -> g, [] //records are extracted as ML records; no projectors for them 
                         | _ -> g, mlm
+                    end
          else g, []
      
        | Sig_main(e, _) -> 

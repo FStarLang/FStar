@@ -439,11 +439,10 @@ and uvar_k_to_string' (uv,args) =
    format2 "('k_%s %s)" str (args_to_string args)
 
 and pat_to_string x = match x.v with
-  | Pat_cons(l, _, pats) -> Util.format2 "(%s %s)" (sli l.v) (List.map pat_to_string pats |> String.concat " ") 
+  | Pat_cons(l, _, pats) -> Util.format2 "(%s %s)" (sli l.v) (List.map (fun (x, b) -> let p = pat_to_string x in if b then "#"^p else p) pats |> String.concat " ") 
   | Pat_dot_term (x, _) -> Util.format1 ".%s" (strBvd x.v)
   | Pat_dot_typ (x, _) -> Util.format1 ".'%s" (strBvd x.v)
-  | Pat_var (x, true) -> Util.format1 "#%s" (strBvd x.v)
-  | Pat_var (x, false) -> strBvd x.v
+  | Pat_var x -> strBvd x.v
   | Pat_tvar a -> strBvd a.v
   | Pat_constant c -> const_to_string c
   | Pat_wild _ -> "_"
