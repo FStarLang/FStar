@@ -22,16 +22,23 @@ open Heap
 opaque logic type modifies (mods:set aref) (h:heap) (h':heap) =
     b2t (Heap.equal h' (concat h' (restrict h (complement mods))))
 
-kind Pre  = heap -> Type
-kind Post (a:Type) = a -> heap -> Type
-effect ST (a:Type) (pre:Pre) (post: (heap -> Post a)) = STATE a
-  (fun (p:Post a) (h:heap) ->
-     pre h /\ (forall a h1. (pre h /\ post h a h1) ==> p a h1)) (* WP *)
-  (fun (p:Post a) (h:heap) ->
-     (forall a h1. (pre h /\ post h a h1) ==> p a h1))          (* WLP *)
+kind STPre = STPre_h heap
+kind STPost (a:Type) = STPost_h heap a
+kind STWP (a:Type) = STWP_h heap a
+new_effect STATE = STATE_h heap
+effect State (a:Type) (wp:STWP a) =
+       STATE a wp wp
+effect ST (a:Type) (pre:STPre) (post: (heap -> STPost a)) =
+       STATE a
+             (fun (p:STPost a) (h:heap) -> pre h /\ (forall a h1. (pre h /\ post h a h1) ==> p a h1)) (* WP *)
+             (fun (p:STPost a) (h:heap) -> (forall a h1. (pre h /\ post h a h1) ==> p a h1))          (* WLP *)
+effect St (a:Type) =
+       ST a (fun h -> True) (fun h0 r h1 -> True)
+sub_effect
+  DIV   ~> STATE = fun (a:Type) (wp:PureWP a) (p:STPost a) (h:heap) -> wp (fun a -> p a h)
 
 (* signatures WITH permissions *)
-assume val alloc: #a:Type -> init:a -> Prims.ST (ref a)
+assume val alloc: #a:Type -> init:a -> ST (ref a)
                                          (fun h -> True)
                                          (fun h0 r h1 -> not(contains h0 r) /\ contains h1 r /\ h1==upd h0 r init)
 

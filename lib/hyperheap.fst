@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi Set --admit_fsi Map;
-    other-files:set.fsi heap.fst map.fsi list.fst
+    other-files:set.fsi heap.fst map.fsi listTot.fst
  --*)
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
@@ -20,6 +20,7 @@
 module HyperHeap
 open Map
 open Heap
+
 type rid = list int
 type t = Map.t rid heap
 opaque val root : rid
@@ -56,7 +57,7 @@ let lemma_as_ref_inj i r = ()
 val includes : rid -> rid -> Tot bool
 let rec includes r1 r2 =
   if r1=r2 then true
-  else if List.length r2 > List.length r1
+  else if List.Tot.length r2 > List.Tot.length r1
   then includes r1 (Cons.tl r2)
   else false
 
@@ -65,25 +66,25 @@ let disjoint (i:rid) (j:rid) =
 
 private val lemma_aux: k:rid -> i:rid
       -> Lemma  (requires
-                    List.length k > 0
-                    /\ List.length k <= List.length i
+                    List.Tot.length k > 0
+                    /\ List.Tot.length k <= List.Tot.length i
                     /\ includes k i
                     /\ not (includes (Cons.tl k) i))
                  (ensures False)
-                 (decreases (List.length i))
+                 (decreases (List.Tot.length i))
 let rec lemma_aux k i = lemma_aux k (Cons.tl i)
 
 val lemma_disjoint_includes: i:rid -> j:rid -> k:rid ->
   Lemma (requires (disjoint i j /\ includes j k))
         (ensures (disjoint i k))
-        (decreases (List.length k))
+        (decreases (List.Tot.length k))
         [SMTPat (disjoint i j);
          SMTPat (includes j k)]
 let rec lemma_disjoint_includes i j k =
-  if List.length k <= List.length j
+  if List.Tot.length k <= List.Tot.length j
   then ()
   else (lemma_disjoint_includes i j (Cons.tl k);
-        if List.length i <= List.length (Cons.tl k)
+        if List.Tot.length i <= List.Tot.length (Cons.tl k)
         then ()
         else (if includes k i
               then lemma_aux k i
@@ -96,7 +97,7 @@ val lemma_includes_refl: i:rid
                       -> Lemma (requires (True))
                                (ensures (includes i i))
                                [SMTPat (includes i i)]
-let lemma_includes refl i = ()
+let lemma_includes_refl i = ()
 
 val lemma_extends_includes: i:rid -> j:rid ->
   Lemma (requires (extends j i))
