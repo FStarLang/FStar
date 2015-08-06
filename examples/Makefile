@@ -4,6 +4,7 @@ all:
 	make -C bug-reports
 	make -C data_structures
 	make -C algorithms
+	make -C ../contrib/Platform/ml/
 	make -C crypto
 	make -C security
 	make -C termination
@@ -13,8 +14,7 @@ all:
 	make -C wysteria
 	make -C ../doc/tutorial/code/solutions
 	make -C unit-tests
-	make -C ../contrib/Platform/ml/
-	make -C ../contrib/CoreCrypto/ml/
+
 
 test: all
 
