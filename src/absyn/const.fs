@@ -79,7 +79,6 @@ let exp_false_bool  = mk_Exp_constant (Const_bool false) None dummyRange
 let exp_unit        = mk_Exp_constant (Const_unit) None dummyRange
 let cons_lid        = pconst  "Cons"
 let nil_lid         = pconst  "Nil"
-let ref_lid         = pconst  "ref"
 let assume_lid      = pconst  "_assume"
 let assert_lid      = pconst  "_assert"
 let list_append_lid = p2l ["List"; "append"]
@@ -114,6 +113,7 @@ let alloc_lid    = p2l ["ST"; "alloc"]
 let op_ColonEq   = p2l ["ST"; "op_Colon_Equals"]
 
 (* Constants for sets and ref sets *)
+let ref_lid       = p2l ["Heap"; "ref"]
 let heap_ref      = p2l ["Heap"; "Ref"]
 let set_empty     = p2l ["Set"; "empty"]
 let set_singleton = p2l ["Set"; "singleton"]

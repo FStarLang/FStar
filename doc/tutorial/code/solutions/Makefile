@@ -3,7 +3,6 @@ include ../Makefile.include
 verify-ex8a-acls:  ex8a-acls.fst
 	$(FSTAR) $(addprefix $(FSTAR_HOME)/lib/, string.fst partialmap.fst st.fst list.fst ) $^
 
-
 verify-ex9a-acls-cap: ../solutions/ex9a-mac.fst ../solutions/ex9a-acls2.fst ex9a-acls-cap.fst
 	$(FSTAR) $(addprefix $(FSTAR_HOME)/lib/, string.fst partialmap.fst st.fst list.fst ) $^
 
@@ -22,6 +21,9 @@ verify-ex9defgh-padding: ex9defgh-padding.fst
 verify-ex10-shift: ex10-shift.fst
 	$(FSTAR) $(addprefix $(FSTAR_HOME)/lib/, ext.fst set.fsi heap.fst st.fst) --admit_fsi Set $^
 
+verify-robots:
+	$(FSTAR) robot2.fst
+	
 verify-%: __force__
 	$(FSTAR) $*.fst
 

@@ -33,8 +33,8 @@ type env =
 
 let is_Mkenv = (fun ( _ ) -> (Support.All.failwith "Not yet implemented:is_Mkenv"))
 
-let debug = (fun ( g ) ( f ) -> (match ((((Support.ST.read Microsoft_FStar_Options.debug) <> []) && ((let _70_24239 = (Support.ST.read Microsoft_FStar_Options.debug)
-in (Support.List.contains "Prims" _70_24239)) || (g.currentModule <> ([], "Prims"))))) with
+let debug = (fun ( g ) ( f ) -> (match ((((Support.ST.read Microsoft_FStar_Options.debug) <> []) && ((let _70_24241 = (Support.ST.read Microsoft_FStar_Options.debug)
+in (Support.List.contains "Prims" _70_24241)) || (g.currentModule <> ([], "Prims"))))) with
 | true -> begin
 (f ())
 end
@@ -42,8 +42,8 @@ end
 ()
 end))
 
-let mkFvvar = (fun ( l ) ( t ) -> (let _70_24244 = (Support.Microsoft.FStar.Range.mk_range "" 0 0)
-in {Microsoft_FStar_Absyn_Syntax.v = l; Microsoft_FStar_Absyn_Syntax.sort = t; Microsoft_FStar_Absyn_Syntax.p = _70_24244}))
+let mkFvvar = (fun ( l ) ( t ) -> (let _70_24246 = (Support.Microsoft.FStar.Range.mk_range "" 0 0)
+in {Microsoft_FStar_Absyn_Syntax.v = l; Microsoft_FStar_Absyn_Syntax.sort = t; Microsoft_FStar_Absyn_Syntax.p = _70_24246}))
 
 let erasedContent = Microsoft_FStar_Extraction_ML_Syntax.ml_unit_ty
 
@@ -81,8 +81,8 @@ let removeTick = (fun ( _56_37 ) -> (match (_56_37) with
 | (x, n) -> begin
 (match ((Support.Microsoft.FStar.Util.starts_with x "\'")) with
 | true -> begin
-(let _70_24249 = (Support.Microsoft.FStar.Util.substring_from x 1)
-in (_70_24249, n))
+(let _70_24251 = (Support.Microsoft.FStar.Util.substring_from x 1)
+in (_70_24251, n))
 end
 | false -> begin
 (x, n)
@@ -160,9 +160,9 @@ None
 end)))
 in (match (x) with
 | None -> begin
-(let _70_24279 = (let _70_24278 = (Microsoft_FStar_Absyn_Print.sli fv)
-in (Support.Microsoft.FStar.Util.format1 "free Variable %s not found\n" _70_24278))
-in (Support.All.failwith _70_24279))
+(let _70_24281 = (let _70_24280 = (Microsoft_FStar_Absyn_Print.sli fv)
+in (Support.Microsoft.FStar.Util.format1 "free Variable %s not found\n" _70_24280))
+in (Support.All.failwith _70_24281))
 end
 | Some (y) -> begin
 y
@@ -177,10 +177,10 @@ None
 end)))
 in (match (x) with
 | None -> begin
-(let _70_24287 = (let _70_24286 = (Support.Microsoft.FStar.Range.string_of_range fv.Microsoft_FStar_Absyn_Syntax.p)
-in (let _70_24285 = (Microsoft_FStar_Absyn_Print.sli fv.Microsoft_FStar_Absyn_Syntax.v)
-in (Support.Microsoft.FStar.Util.format2 "(%s) free Variable %s not found\n" _70_24286 _70_24285)))
-in (Support.All.failwith _70_24287))
+(let _70_24289 = (let _70_24288 = (Support.Microsoft.FStar.Range.string_of_range fv.Microsoft_FStar_Absyn_Syntax.p)
+in (let _70_24287 = (Microsoft_FStar_Absyn_Print.sli fv.Microsoft_FStar_Absyn_Syntax.v)
+in (Support.Microsoft.FStar.Util.format2 "(%s) free Variable %s not found\n" _70_24288 _70_24287)))
+in (Support.All.failwith _70_24289))
 end
 | Some (y) -> begin
 y
@@ -195,10 +195,10 @@ None
 end)))
 in (match (x) with
 | None -> begin
-(let _70_24295 = (let _70_24294 = (Support.Microsoft.FStar.Range.string_of_range bv.Microsoft_FStar_Absyn_Syntax.p)
-in (let _70_24293 = (Microsoft_FStar_Absyn_Print.strBvd bv.Microsoft_FStar_Absyn_Syntax.v)
-in (Support.Microsoft.FStar.Util.format2 "(%s) bound Variable %s not found\n" _70_24294 _70_24293)))
-in (Support.All.failwith _70_24295))
+(let _70_24297 = (let _70_24296 = (Support.Microsoft.FStar.Range.string_of_range bv.Microsoft_FStar_Absyn_Syntax.p)
+in (let _70_24295 = (Microsoft_FStar_Absyn_Print.strBvd bv.Microsoft_FStar_Absyn_Syntax.v)
+in (Support.Microsoft.FStar.Util.format2 "(%s) bound Variable %s not found\n" _70_24296 _70_24295)))
+in (Support.All.failwith _70_24297))
 end
 | Some (y) -> begin
 y
@@ -214,12 +214,12 @@ end))
 
 let lookup_var = (fun ( g ) ( e ) -> (match (e.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Exp_bvar (x) -> begin
-(let _70_24302 = (lookup g (Support.Microsoft.FStar.Util.Inl (x)))
-in (_70_24302, None))
+(let _70_24304 = (lookup g (Support.Microsoft.FStar.Util.Inl (x)))
+in (_70_24304, None))
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_fvar ((x, b)) -> begin
-(let _70_24303 = (lookup g (Support.Microsoft.FStar.Util.Inr (x)))
-in (_70_24303, b))
+(let _70_24305 = (lookup g (Support.Microsoft.FStar.Util.Inr (x)))
+in (_70_24305, b))
 end
 | _56_139 -> begin
 (Support.All.failwith "impossible")
@@ -256,9 +256,9 @@ let rec mltyFvars = (fun ( t ) -> (match (t) with
 (x)::[]
 end
 | Microsoft_FStar_Extraction_ML_Syntax.MLTY_Fun ((t1, f, t2)) -> begin
-(let _70_24321 = (mltyFvars t1)
-in (let _70_24320 = (mltyFvars t2)
-in (Support.List.append _70_24321 _70_24320)))
+(let _70_24323 = (mltyFvars t1)
+in (let _70_24322 = (mltyFvars t2)
+in (Support.List.append _70_24323 _70_24322)))
 end
 | Microsoft_FStar_Extraction_ML_Syntax.MLTY_Named ((args, path)) -> begin
 (Support.List.collect mltyFvars args)
@@ -267,9 +267,9 @@ end
 (Support.List.collect mltyFvars ts)
 end
 | Microsoft_FStar_Extraction_ML_Syntax.MLTY_App ((t1, t2)) -> begin
-(let _70_24323 = (mltyFvars t1)
-in (let _70_24322 = (mltyFvars t2)
-in (Support.List.append _70_24323 _70_24322)))
+(let _70_24325 = (mltyFvars t1)
+in (let _70_24324 = (mltyFvars t2)
+in (Support.List.append _70_24325 _70_24324)))
 end
 | Microsoft_FStar_Extraction_ML_Syntax.MLTY_Top -> begin
 []
@@ -283,8 +283,8 @@ end
 true
 end))
 
-let tySchemeIsClosed = (fun ( tys ) -> (let _70_24330 = (mltyFvars (Support.Prims.snd tys))
-in (subsetMlidents _70_24330 (Support.Prims.fst tys))))
+let tySchemeIsClosed = (fun ( tys ) -> (let _70_24332 = (mltyFvars (Support.Prims.snd tys))
+in (subsetMlidents _70_24332 (Support.Prims.fst tys))))
 
 let extend_fv' = (fun ( g ) ( x ) ( y ) ( t_x ) ( add_unit ) -> (match ((tySchemeIsClosed t_x)) with
 | true -> begin
@@ -310,16 +310,16 @@ in (extend_fv' g x mlp t_x add_unit)))
 
 let extend_lb = (fun ( g ) ( l ) ( t ) ( t_x ) ( add_unit ) -> (match (l) with
 | Support.Microsoft.FStar.Util.Inl (x) -> begin
-(let _70_24359 = (extend_bv g (Microsoft_FStar_Absyn_Util.bvd_to_bvar_s x t) t_x add_unit)
-in (_70_24359, (Microsoft_FStar_Extraction_ML_Syntax.as_mlident x)))
+(let _70_24361 = (extend_bv g (Microsoft_FStar_Absyn_Util.bvd_to_bvar_s x t) t_x add_unit)
+in (_70_24361, (Microsoft_FStar_Extraction_ML_Syntax.as_mlident x)))
 end
 | Support.Microsoft.FStar.Util.Inr (f) -> begin
 (let _56_215 = (Microsoft_FStar_Extraction_ML_Syntax.mlpath_of_lident f)
 in (match (_56_215) with
 | (p, y) -> begin
-(let _70_24361 = (let _70_24360 = (Microsoft_FStar_Absyn_Util.fvvar_of_lid f t)
-in (extend_fv' g _70_24360 (p, y) t_x add_unit))
-in (_70_24361, (y, 0)))
+(let _70_24363 = (let _70_24362 = (Microsoft_FStar_Absyn_Util.fvvar_of_lid f t)
+in (extend_fv' g _70_24362 (p, y) t_x add_unit))
+in (_70_24363, (y, 0)))
 end))
 end))
 
@@ -332,8 +332,8 @@ let emptyMlPath = ([], "")
 let mkContext = (fun ( e ) -> (let env = {tcenv = e; gamma = []; tydefs = []; currentModule = emptyMlPath}
 in (let a = ("\'a", (- (1)))
 in (let failwith_ty = ((a)::[], Microsoft_FStar_Extraction_ML_Syntax.MLTY_Fun ((Microsoft_FStar_Extraction_ML_Syntax.MLTY_Named (([], (("Prims")::[], "string"))), Microsoft_FStar_Extraction_ML_Syntax.E_IMPURE, Microsoft_FStar_Extraction_ML_Syntax.MLTY_Var (a))))
-in (let _70_24368 = (extend_lb env (Support.Microsoft.FStar.Util.Inr (Microsoft_FStar_Absyn_Const.failwith_lid)) Microsoft_FStar_Absyn_Syntax.tun failwith_ty false)
-in (Support.All.pipe_right _70_24368 Support.Prims.fst))))))
+in (let _70_24370 = (extend_lb env (Support.Microsoft.FStar.Util.Inr (Microsoft_FStar_Absyn_Const.failwith_lid)) Microsoft_FStar_Absyn_Syntax.tun failwith_ty false)
+in (Support.All.pipe_right _70_24370 Support.Prims.fst))))))
 
 
 

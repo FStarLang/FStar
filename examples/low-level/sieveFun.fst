@@ -1,7 +1,7 @@
 (*--build-config
     variables:LIB=../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst  stack.fst listset.fst
-    $LIB/ghost.fst stackAndHeap.fst sst.fst sstCombinators.fst $LIB/seq.fsi $LIB/seq.fst array.fsi array.fst arrayalgos.fst
+    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst
+    $LIB/ghost.fst stackAndHeap.fst sst.fst sstCombinators.fst
   --*)
 
 module Sieve
@@ -18,7 +18,7 @@ open Ghost
 (*val divides : pos -> nat -> Tot bool
 let divides divisor n = ((n % divisor) = 0)*)
 (*Instead, below is a definition from first principles*)
-open ArrayAlgos
+
 
 opaque type divides  (divisor :nat) (n:nat) =
 exists (k:nat). k*divisor=n
@@ -27,17 +27,17 @@ exists (k:nat). k*divisor=n
 val divisorSmall : n:nat{1<n} -> divisor:nat
   ->
    Lemma
-       ( requires (divides divisor n /\ 1<divisor))
-       (ensures (divisor < n))
+       ( requires (divides divisor n))
+       (ensures (divisor <= n))
        [SMTPatT (divides divisor n)]
-let divisorSmall n divisor = (admit ())
+let divisorSmall n divisor = ()
 
 
  val isNotPrimeIf2 :
    n:nat{1<n} -> m:nat{1<m /\ m<n}
    -> Lemma
    (requires (exists (d:nat{1<d}). d<n /\ divides d m))
-   (ensures (exists (d:nat{1<d}).{:pattern (divides d m)} d<m /\ divides d m))
+   (ensures (exists (d:nat{1<d}).{:pattern (divides d m)} d<=m /\ divides d m))
 
  let isNotPrimeIf2 n m = ()
 
@@ -55,12 +55,11 @@ type innerGuardLC (n:nat) (lo : ref nat) (li : ref nat)
   (refExistsInMem li m) && (refExistsInMem lo m) &&
     (((loopkupRef li m) * (loopkupRef lo m) < n))
 
+type vector (a:Type) (n:nat) = (k:nat{k<n}) -> Tot a
 
-open SSTArray
 (*cannot make n implcit, because the typechecker usually canNOT figure it out from f*)
-
-val marked : n:nat -> a:(Seq.seq bool) -> m:nat{m<Seq.length a} -> Tot bool
-let marked n a m = (Seq.index a m)
+val marked : n:nat -> (vector bool n) -> m:nat{m<n} -> Tot bool
+let marked n f m = (f m)
 
 (*#set-options "--initial_fuel 100 --max_fuel 10000 --initial_ifuel 100 --max_ifuel 10000"*)
 (*delta-folding vector creates a wierd error; see below*)
@@ -70,6 +69,9 @@ let marked n a m = (Seq.index a m)
 
 (*#set-options "--initial_fuel 100 --max_fuel 100 --initial_ifuel 100 --max_ifuel 100"*)
 
+val mark : n:nat -> ((k:nat{k<n}) -> Tot bool) -> index:nat{index<n} -> Tot ((k:nat{k<n}) -> Tot bool)
+let mark n f index =
+  (fun indx -> if (indx= index) then true else f indx)
 
 (*using hetrogeneous lists, one can extend this to the general (n-ary) case*)
 (*previosly, mtail was need; verify*)
@@ -79,18 +81,23 @@ type distinctRefsExists3
   (refExistsInMem ra (m)) /\ (refExistsInMem rb (m)) /\ (refExistsInMem rc m)
   /\ (ra=!=rb) /\ (rb=!=rc) /\ (ra=!=rc)
 
-
-type bitv n = b:(Seq.seq bool){Seq.length b =n}
+val markMultiplesUpto : n:nat -> lo:nat -> upto:nat{lo*(upto-1)<n}
+  ->((k:nat{k<n}) -> Tot bool) -> Tot ((k:nat{k<n}) -> Tot bool)
+let rec markMultiplesUpto n lo upto f =
+match upto with
+| 0 -> f
+| _ -> (mark n (markMultiplesUpto n lo (upto-1) f) ((upto-1)*lo))
+(* in below, markings are done in a reverse order as that of the while loop
+| _ -> markMultiplesUpto n lo (upto-1) (mark n f ((upto-1)*lo))*)
 
 type markedIffMultipleOrInit (n:nat) (lo:nat) (upto:nat{lo*(upto-1)<n})
-  (init:bitv n) (neww:bitv n) =
+  (init:((k:nat{k<n}) -> Tot bool)) (neww:((k:nat{k<n}) -> Tot bool)) =
   (forall (k:nat{k < upto}). marked n neww (lo*k))
   /\ (forall (k:nat{k < n}). (marked n init k ==> marked n neww k))
   /\ (forall (k:nat{k < n}). (marked n neww k ==> (marked n init k \/ divides lo k)))
 
-type mbitv = sstarray bool
-type  innerLoopInv (n:nat) (lo: ref nat)  (li : ref nat) (res: )
-    (initres: bitv n) (m:smem) =
+type  innerLoopInv (n:nat) (lo: ref nat)  (li : ref nat) (res:ref ((k:nat{k<n}) -> Tot bool))
+    (initres: ((k:nat{k<n}) -> Tot bool)) (m:smem) =
  distinctRefsExists3 m lo res li
   /\ ((loopkupRef li m)-1)*(loopkupRef lo m) < n
   /\ markedIffMultipleOrInit n (loopkupRef lo m) (loopkupRef li m) initres (loopkupRef res m)

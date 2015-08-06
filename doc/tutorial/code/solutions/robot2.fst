@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi Set --admit_fsi Map --admit_fsi HyperHeap --max_fuel 0 --initial_ifuel 0 --logQueries --z3timeout 20;
-    other-files:ext.fst set.fsi heap.fst map.fsi hyperheap2.fsi util.fst list.fst
+    other-files:ext.fst set.fsi heap.fst map.fsi listTot.fst hyperHeap.fsi stHyperHeap.fst allHyperHeap.fst util.fst list.fst
 --*)
 module Robot
 #set-options "--initial_fuel 0 --max_ifuel 0"
