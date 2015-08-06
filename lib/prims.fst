@@ -146,7 +146,6 @@ type char
 type float
 type string
 type array : Type -> Type
-type ref : Type -> Type
 assume logic type LBL : string -> Type -> Type
 type exn
 type HashMultiMap : Type -> Type -> Type //needed for bootstrapping

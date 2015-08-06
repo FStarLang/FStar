@@ -18,8 +18,8 @@ let string_of_mlpath = (fun ( _55_7 ) -> (match (_55_7) with
 (Support.String.concat "." (Support.List.append p ((s)::[])))
 end))
 
-let mlpath_of_lident = (fun ( x ) -> (let _70_23838 = (Support.List.map (fun ( x ) -> x.Microsoft_FStar_Absyn_Syntax.idText) x.Microsoft_FStar_Absyn_Syntax.ns)
-in (_70_23838, x.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText)))
+let mlpath_of_lident = (fun ( x ) -> (let _70_23840 = (Support.List.map (fun ( x ) -> x.Microsoft_FStar_Absyn_Syntax.idText) x.Microsoft_FStar_Absyn_Syntax.ns)
+in (_70_23840, x.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText)))
 
 let as_mlident = (fun ( x ) -> (x.Microsoft_FStar_Absyn_Syntax.ppname.Microsoft_FStar_Absyn_Syntax.idText, 0))
 

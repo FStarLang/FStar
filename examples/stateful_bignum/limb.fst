@@ -18,6 +18,8 @@ open Axiomatic
 open Ghost
 open Seq
 
+let max_size = 63
+
 (* Represents the number of bits (-1) the integer fits in *)
 type Bitsize (x:int) (n:nat) = -(pow2 n) < x /\ x < pow2 n
 
@@ -181,7 +183,7 @@ let size_of_signed_modulo_lemma v n = ()
 
 (* Safe addition taking the integer size into account *)
 val add:
-  n:nat -> a:lint n -> m:nat -> b:lint m ->
+  n:nat -> a:lint n -> m:nat -> b:lint m{ (max n m)+1 <= max_size } ->
   Tot (c:lint ((max n m)+1){ c = a + b })
 let add n a m b = 
   erase (size_of_add_lemma n a m b);
@@ -189,7 +191,7 @@ let add n a m b =
 
 (* Safe substraction taking the integer size into account *)
 val sub:
-  n:nat -> a:lint n -> m:nat -> b:lint m ->
+  n:nat -> a:lint n -> m:nat -> b:lint m{ (max n m)+1 <= max_size } ->
   Tot (c:lint ((max n m) +1){ c = a - b })
 let sub n a m b = 
   erase (size_of_sub_lemma n a m b);
@@ -197,11 +199,15 @@ let sub n a m b =
 
 (* Safe multiplication taking the integer size into account *)
 val mul :
-  n:nat -> a:lint n -> m:nat -> b:lint m ->
+  n:nat -> a:lint n -> m:nat -> b:lint m{ (n+m) <= max_size } ->
   Tot (c:lint (n+m){ c = a * b })
 let mul  n a m b =
   erase (size_of_mul_lemma n a m b);
   a * b
+
+assume val shift_left :
+  n:nat -> a:lint n -> shift:nat{ n + shift <= max_size } ->
+  Tot (c:lint (n+shift){ c = pow2 shift * a })
 
 val one: one:lint 1{ one = 1 }
 let one = 1
