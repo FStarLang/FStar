@@ -47,6 +47,7 @@ let outmod = [
     ["Prims"];
     ["System"];
     ["ST"];
+    ["All"];
     ["Option"];
     ["String"];
     ["Char"];

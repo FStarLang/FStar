@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi Set;
     variables:LIB=../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst
+    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst
   --*)
 module Comp
 open Heap
@@ -299,4 +299,3 @@ let equiv_seq a b = let _ = equiv_pfx a b in
                     cut (inverses inc dec);
                     let c, d = sample inc in
                     equiv_sfx a b c d
-

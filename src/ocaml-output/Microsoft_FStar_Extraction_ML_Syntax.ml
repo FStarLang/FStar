@@ -8,18 +8,18 @@ type mlident =
 type mlpath =
 (mlsymbol list * mlsymbol)
 
-let idsym = (fun ( _53_4 ) -> (match (_53_4) with
-| (s, _53_3) -> begin
+let idsym = (fun ( _55_4 ) -> (match (_55_4) with
+| (s, _55_3) -> begin
 s
 end))
 
-let string_of_mlpath = (fun ( _53_7 ) -> (match (_53_7) with
+let string_of_mlpath = (fun ( _55_7 ) -> (match (_55_7) with
 | (p, s) -> begin
 (Support.String.concat "." (Support.List.append p ((s)::[])))
 end))
 
-let mlpath_of_lident = (fun ( x ) -> (let _68_23718 = (Support.List.map (fun ( x ) -> x.Microsoft_FStar_Absyn_Syntax.idText) x.Microsoft_FStar_Absyn_Syntax.ns)
-in (_68_23718, x.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText)))
+let mlpath_of_lident = (fun ( x ) -> (let _70_23838 = (Support.List.map (fun ( x ) -> x.Microsoft_FStar_Absyn_Syntax.idText) x.Microsoft_FStar_Absyn_Syntax.ns)
+in (_70_23838, x.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText)))
 
 let as_mlident = (fun ( x ) -> (x.Microsoft_FStar_Absyn_Syntax.ppname.Microsoft_FStar_Absyn_Syntax.idText, 0))
 
@@ -408,7 +408,7 @@ end
 false
 end))
 
-let is_Mkmllb = (fun ( _ ) -> (failwith ("Not yet implemented:is_Mkmllb")))
+let is_Mkmllb = (fun ( _ ) -> (Support.All.failwith "Not yet implemented:is_Mkmllb"))
 
 type mltybody =
 | MLTD_Abbrev of mlty
@@ -538,7 +538,7 @@ let mlseq = (fun ( e1 ) ( e2 ) -> (match (e2) with
 | MLE_Seq (s) -> begin
 MLE_Seq ((e1)::s)
 end
-| _53_115 -> begin
+| _55_115 -> begin
 MLE_Seq ((e1)::(e2)::[])
 end))
 
@@ -546,17 +546,17 @@ let mlfun = (fun ( x ) ( e ) -> (match (e) with
 | MLE_Fun ((xs, e)) -> begin
 MLE_Fun ((((x, None))::xs, e))
 end
-| _53_123 -> begin
+| _55_123 -> begin
 MLE_Fun ((((x, None))::[], e))
 end))
 
-let mlif = (fun ( b ) ( _53_127 ) -> (match (_53_127) with
+let mlif = (fun ( b ) ( _55_127 ) -> (match (_55_127) with
 | (e1, e2) -> begin
 (match (e2) with
 | MLE_Const (MLC_Unit) -> begin
 MLE_If ((b, e1, None))
 end
-| _53_131 -> begin
+| _55_131 -> begin
 MLE_If ((b, e1, Some (e2)))
 end)
 end))

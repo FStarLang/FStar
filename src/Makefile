@@ -10,7 +10,7 @@ ABSYN_SRC=$(addprefix absyn/, $(ABSYN))
 FORMAT=format.fsi format.fs
 FORMAT_SRC=$(addprefix format/, $(FORMAT))
 
-BACKEND=nameenv.fsi nameenv.fs ml-syntax.fs ocaml-codegen.fsi ocaml-codegen.fs ocaml-asttrans.fsi ocaml-asttrans.fs 
+BACKEND=nameenv.fsi nameenv.fs ml-syntax.fs ocaml-codegen.fsi ocaml-codegen.fs ocaml-asttrans.fsi ocaml-asttrans.fs
 BACKEND_SRC=$(addprefix backend/, $(BACKEND))
 
 EXTRACTION=ml-syntax.fs env.fs util.fs ocaml-codegen.fsi ocaml-codegen.fs extracttyp.fs extractexp.fs extractmod.fs wextract.fs
@@ -172,11 +172,11 @@ clean:
 # --------------------------------------------------------------------
 
 STDFILESEXP=system.fst
-STDFILES=system.fsi system.io.fsi system.text.fsi system.diagnostics.fsi system.collections.generic.fsi collections.fsi stboot.fsi list.fsi option.fsi string.fsi char.fsi
+STDFILES=system.fsi system.io.fsi system.text.fsi system.diagnostics.fsi system.collections.generic.fsi collections.fsi set.fsi allboot.fsti stboot.fsi list.fsi option.fsi string.fsi char.fsi
 STDLIB=$(addprefix ../lib/, $(STDFILES))
 STDLIBEXP=$(addprefix ../lib/, $(STDFILES))
 
-BOOT_BASICFILES=bytes.fsti platform.fsi util.fsi getoptsimple.fsti range.fsti unionfind.fsti options.fs 
+BOOT_BASICFILES=bytes.fsti platform.fsi util.fsi getoptsimple.fsti range.fsti unionfind.fsti options.fs
 BOOT_BASIC=$(addprefix basic/, $(BOOT_BASICFILES))
 BOOT_SYNTAXFILES=syntax.fsi syntax.fs const.fs visit.fs util.fs print.fs ssyntax.fs
 BOOT_SYNTAX=$(addprefix absyn/, $(BOOT_SYNTAXFILES))
@@ -186,7 +186,7 @@ BOOT_TCFILES=tcenv.fsi tcenv.fs recheck.fs normalize.fsi normalize.fs errors.fs 
 BOOT_TC=$(addprefix tc/, $(BOOT_TCFILES))
 BOOT_FORMATFILES=format.fsi formatml.fs
 BOOT_FORMAT=$(addprefix format/, $(BOOT_FORMATFILES))
-BOOT_BACKENDFILES=nameenv.fsi nameenv.fs ml-syntax.fs ocaml-codegen.fsi ocaml-codegen.fs ocaml-asttrans.fsi ocaml-asttrans.fs 
+BOOT_BACKENDFILES=nameenv.fsi nameenv.fs ml-syntax.fs ocaml-codegen.fsi ocaml-codegen.fs ocaml-asttrans.fsi ocaml-asttrans.fs
 BOOT_BACKEND=$(addprefix backend/, $(BOOT_BACKENDFILES))
 BOOT_EXTRACTIONFILES=ml-syntax.fs env.fs util.fs ocaml-codegen.fsi ocaml-codegen.fs extracttyp.fs extractexp.fs extractmod.fs wextract.fs
 BOOT_EXTRACTION=$(addprefix extraction/, $(BOOT_EXTRACTIONFILES))
@@ -196,7 +196,7 @@ BOOT_JSBACKEND=$(addprefix jsbackend/, $(BOOT_JSBACKENDFILES))
 BOOT_MAIN=fstar.fs
 BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_TC) $(BOOT_PARSER) $(TOSMT_SRC) $(BOOT_FORMAT) $(BOOT_EXTRACTION) $(BOOT_BACKEND) fstar.fs
 
-ADMITTED_MODULES=System System.IO System.Text System.Diagnostics System.Collections.Generic Collections ST List Option String Char Microsoft.FStar.Bytes Microsoft.FStar.Platform Microsoft.FStar.Util Microsoft.FStar.Getopt Microsoft.FStar.Range Microsoft.FStar.Unionfind Microsoft.FStar.Parser.ParseIt Microsoft.FStar.Parser.Parse
+ADMITTED_MODULES=System System.IO System.Text System.Diagnostics System.Collections.Generic Collections Set Heap ST All List Option String Char Microsoft.FStar.Bytes Microsoft.FStar.Platform Microsoft.FStar.Util Microsoft.FStar.Getopt Microsoft.FStar.Range Microsoft.FStar.Unionfind Microsoft.FStar.Parser.ParseIt Microsoft.FStar.Parser.Parse
 ADMITS=$(addprefix --admit_fsi , $(ADMITTED_MODULES))
 boot: $(BOOT_ALL)
 	../bin/fstar.exe --debug yes --fs_typ_app --lax $(FSTAROPTS) $(ADMITS) $^

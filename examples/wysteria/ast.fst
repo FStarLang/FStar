@@ -161,12 +161,20 @@ type level = | Source | Target
 val src: level -> Tot bool
 let src = is_Source
 
+(* TODO: FIXME: workaround for projectors *)
+val m_of_mode: mode -> Tot as_mode
+let m_of_mode (Mode m _) = m
+
 type mode_inv (m:mode) (l:level) =
-  (is_Target l /\ Mode.m m = Par) ==> is_singleton (Mode.ps m)
+  (is_Target l /\ m_of_mode m = Par) ==> is_singleton (Mode.ps m)
 
 val is_sec_frame: f':frame' -> Tot bool
 let is_sec_frame f' =
   not (is_F_aspar_ps f' || is_F_aspar_e f' || is_F_box_e f')
+
+(* TODO: FIXME: workaround for projectors *)
+val ps_of_box_e_frame: f':frame'{is_F_box_e f'} -> Tot prins
+let ps_of_box_e_frame (F_box_e ps) = ps
 
 val stack_source_inv: stack -> mode -> Tot bool
 let rec stack_source_inv s (Mode as_m ps) = match s with
@@ -177,7 +185,7 @@ let rec stack_source_inv s (Mode as_m ps) = match s with
     (not (as_m = Par) || not (is_F_assec_ret f'))                  &&
     (not (as_m = Sec) || (not (as_m' = Par) || is_F_assec_ret f')) &&
     (not (as_m' = Sec) || (is_sec_frame f' && is_Cons tl))         &&
-    (not (is_F_box_e f') || (ps = F_box_e.ps f'))                  &&
+    (not (is_F_box_e f') || (ps = ps_of_box_e_frame f'))                  &&
     (ps = ps' || (subset ps ps' && is_F_box_e f'))                 &&
     stack_source_inv tl m'
 
@@ -186,8 +194,8 @@ let rec stack_target_inv s m = match s with
   | []                  -> true
   | (Frame m' _ f')::tl ->
     m = m'                                             &&
-    (not (Mode.m m' = Par) || not (is_F_assec_ret f')) &&
-    (not (Mode.m m' = Sec) || is_sec_frame f')         &&
+    (not (m_of_mode m' = Par) || not (is_F_assec_ret f')) &&
+    (not (m_of_mode m' = Sec) || is_sec_frame f')         &&
     stack_target_inv tl m
 
 val stack_inv: stack -> mode -> level -> Tot bool
@@ -197,10 +205,14 @@ let rec stack_inv s m l =
 val is_sec_redex: redex -> Tot bool
 let is_sec_redex r = not (is_R_aspar r || is_R_box r)
 
+(* TODO: FIXME: workaround for projectors *)
+val r_of_t_red: t:term{is_T_red t} -> Tot redex
+let r_of_t_red (T_red r) = r
+
 val term_inv: term -> mode -> level -> Tot bool
 let term_inv t m l =
   (not (is_Source l) || not (t = T_sec_wait)) &&
-  (not (is_T_red t && Mode.m m = Sec) || is_sec_redex (T_red.r t))
+  (not (is_T_red t && m_of_mode m = Sec) || is_sec_redex (r_of_t_red t))
 
 type config =
   | Conf: l:level -> m:mode{mode_inv m l} -> s:stack{stack_inv s m l}
@@ -209,11 +221,23 @@ type config =
 type sconfig = c:config{is_Source (Conf.l c)}
 type tconfig = c:config{is_Target (Conf.l c)}
 
+(* TODO: FIXME: workaround for projectors *)
+val f_of_frame: frame -> Tot frame'
+let f_of_frame (Frame _ _ f) = f
+
+(* TODO: FIXME: workaround for projectors *)
+val hd_of_list: l:list 'a{is_Cons l} -> Tot 'a
+let hd_of_list (Cons hd _) = hd
+
 val is_sframe: c:config -> f:(frame' -> Tot bool) -> Tot bool
-let is_sframe (Conf _ _ s _ _) f = is_Cons s && f (Frame.f (Cons.hd s))
+let is_sframe (Conf _ _ s _ _) f = is_Cons s && f (f_of_frame (hd_of_list s))
+
+(* TODO: FIXME: workaround for projectors *)
+val t_of_conf: config -> Tot term
+let t_of_conf (Conf _ _ _ _ t) = t
 
 val is_value: c:config -> Tot bool
-let is_value c = is_T_val (Conf.t c)
+let is_value c = is_T_val (t_of_conf c)
 
 val is_value_ps: c:config -> Tot bool
 let is_value_ps c = match c with
@@ -236,8 +260,12 @@ val c_value_p: c:config{is_value_p c} -> Tot prin
 let c_value_p c = match c with
   | Conf _ _ _ _ (T_val (V_const (C_prin p))) -> p
 
+(* TODO: FIXME: workaround for projectors *)
+val m_of_conf: config-> Tot mode
+let m_of_conf (Conf _ m _ _ _) = m
+
 val is_par: config -> Tot bool
-let is_par c = is_Par (Mode.m (Conf.m c))
+let is_par c = is_Par (m_of_mode (m_of_conf c))
 
 val is_sec: config -> Tot bool
-let is_sec c = is_Sec (Mode.m (Conf.m c))
+let is_sec c = is_Sec (m_of_mode (m_of_conf c))
