@@ -27,14 +27,15 @@ let sel m v = loopkupRef (reveal (asRef v)) m
 val glength : #a:Type -> v:(sstarray a) -> m:smem{contains m v} -> GTot nat
 let glength v m = Seq.length (sel m v)
 
+val haslength : #a:Type -> smem -> sstarray a -> n:nat -> GTot bool
+let haslength m v n = contains m v && glength v m = n
+
 type prefixEqual  (#a:Type)
   (v1: seq a) (v2: seq a) (p:nat{p <= length v1 /\ p<= length v2})
   = forall (n:nat{n<p}). index v1 n = index v2 n
 
 (*val prefixInc: a#Type -> n:nat->
   (m1 = (writeMemAux (asRef r) m0 (Seq.upd (loopkupRef (asRef r) m0) index newV)))*)
-
-#set-options "--initial_fuel 100 --max_fuel 400 --initial_ifuel 100 --max_ifuel 400"
 
 type prefixEqualL  (#a:Type)
   (v1: seq a) (v2:(seq a))
@@ -56,8 +57,6 @@ let copy s scp =
   let ctr = salloc #nat 0 in
   let len = SSTArray.length s in
   let lenscp = SSTArray.length scp in
-  admitP (b2t (reveal ((elift1 only) (asRef scp)) = only (reveal (asRef scp))));
-  admitP (b2t (reveal (gunion ((elift1 only) (asRef scp)) (gonly ctr)) = union (only (reveal (asRef scp))) (only ctr)));
   scopedWhile1
     ctr
     (fun ctrv -> ctrv < len)
