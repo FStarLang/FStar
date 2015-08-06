@@ -26,21 +26,6 @@ type t = Map.t rid heap
 opaque val root : rid
 let root = []
 
-kind STPre = STPre_h t
-kind STPost (a:Type) = STPost_h t a
-kind STWP (a:Type) = STWP_h t a
-new_effect STATE = STATE_h t
-effect State (a:Type) (wp:STWP a) =
-       STATE a wp wp
-effect ST (a:Type) (pre:STPre) (post: (t -> STPost a)) =
-       STATE a
-             (fun (p:STPost a) (h:t) -> pre h /\ (forall a h1. post h a h1 ==> p a h1)) (* WP *)
-             (fun (p:STPost a) (h:t) -> (forall a h1. (pre h /\ post h a h1) ==> p a h1))          (* WLP *)
-effect St (a:Type) =
-       ST a (fun h -> True) (fun h0 r h1 -> True)
-sub_effect
-  DIV   ~> STATE = fun (a:Type) (wp:PureWP a) (p:STPost a) (h:t) -> wp (fun a -> p a h)
-
 private type rref (id:rid) (a:Type) = Prims.ref a
 val as_ref : #a:Type -> #id:rid -> r:rref id a -> GTot (ref a)
 let as_ref id r = r
@@ -119,32 +104,6 @@ type fresh_region (i:rid) (m0:t) (m1:t) =
 
 let sel (#a:Type) (#i:rid) (m:t) (r:rref i a) = Heap.sel (Map.sel m i) (as_ref r)
 let upd (#a:Type) (#i:rid) (m:t) (r:rref i a) (v:a) = Map.upd m i (Heap.upd (Map.sel m i) (as_ref r) v)
-
-assume val new_region: r0:rid -> ST rid
-      (requires (fun m -> True))
-      (ensures (fun (m0:t) (r1:rid) (m1:t) ->
-                           extends r1 r0
-                        /\ fresh_region r1 m0 m1
-                        /\ m1=Map.upd m0 r1 Heap.emp))
-
-assume val ralloc: #a:Type -> i:rid -> init:a -> ST (rref i a)
-    (requires (fun m -> True))
-    (ensures (fun m0 x m1 ->
-                    Let (Map.sel m0 i) (fun region_i ->
-                    not (Heap.contains region_i (as_ref x))
-                    /\ m1=Map.upd m0 i (Heap.upd region_i (as_ref x) init))))
-
-assume val op_Colon_Equals: #a:Type -> #i:rid -> r:rref i a -> v:a -> ST unit
-  (requires (fun m -> True))
-  (ensures (fun m0 _u m1 -> m1=Map.upd m0 i (Heap.upd (Map.sel m0 i) (as_ref r) v)))
-
-assume val op_Bang:#a:Type -> #i:rid -> r:rref i a -> ST a
-  (requires (fun m -> True))
-  (ensures (fun m0 x m1 -> m1=m0 /\ x=Heap.sel (Map.sel m0 i) (as_ref r)))
-
-assume val get: unit -> ST t
-  (requires (fun m -> True))
-  (ensures (fun m0 x m1 -> m0=x /\ m1=m0))
 
 assume val mod_set : Set.set rid -> Tot (Set.set rid)
 assume Mod_set_def: forall (x:rid) (s:Set.set rid). {:pattern Set.mem x (mod_set s)}

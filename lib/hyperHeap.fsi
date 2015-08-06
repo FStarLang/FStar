@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi Set --admit_fsi Map;
-    other-files:set.fsi heap.fst map.fsi list.fst
+    other-files:set.fsi heap.fst map.fsi listTot.fst
  --*)
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
@@ -22,8 +22,8 @@ open Map
 open Heap
 type rid
 type t = Map.t rid heap
-new_effect STATE = STATE_h t
 val root : rid
+
 type rref : rid -> Type -> Type
 val as_ref      : #a:Type -> #id:rid -> r:rref id a -> GTot (ref a)
 val ref_as_rref : #a:Type -> i:rid -> r:ref a -> GTot (rref i a)
@@ -37,9 +37,6 @@ val lemma_proj_typ_inj: #a:Type -> #i:rid -> r:rref i a
     -> Lemma (requires True)
              (ensures ((rref i (proj_type r) == rref i a)))
              [SMTPat (as_ref r)]
-effect ST (a:Type) (pre:t -> Type) (post:t -> a -> t -> Type) =
-       STATE a (fun 'p m0 -> pre m0 /\ (forall x m1. post m0 x m1 ==> 'p x m1))
-               (fun 'p m0 ->  (forall x m1. pre m0 /\ post m0 x m1 ==> 'p x m1))
 
 val includes : rid -> rid -> Tot bool
 val extends  : rid -> rid -> Tot bool
@@ -80,39 +77,6 @@ type fresh_region (i:rid) (m0:t) (m1:t) =
 let sel (#a:Type) (#i:rid) (m:t) (r:rref i a) = Heap.sel (Map.sel m i) (as_ref r)
 let upd (#a:Type) (#i:rid) (m:t) (r:rref i a) (v:a) = Map.upd m i (Heap.upd (Map.sel m i) (as_ref r) v)
 
-val new_region: r0:rid -> ST rid
-      (requires (fun m -> True))
-      (ensures (fun (m0:t) (r1:rid) (m1:t) ->
-                           extends r1 r0
-                        /\ fresh_region r1 m0 m1
-                        /\ m1=Map.upd m0 r1 Heap.emp))
-
-val ralloc: #a:Type -> i:rid -> init:a -> ST (rref i a)
-    (requires (fun m -> True))
-    (ensures (fun m0 x m1 ->
-                    Let (Map.sel m0 i) (fun region_i ->
-                    not (Heap.contains region_i (as_ref x))
-                    /\ m1=Map.upd m0 i (Heap.upd region_i (as_ref x) init))))
-
-val op_Colon_Equals: #a:Type -> #i:rid -> r:rref i a -> v:a -> ST unit
-  (requires (fun m -> True))
-  (ensures (fun m0 _u m1 -> m1=Map.upd m0 i (Heap.upd (Map.sel m0 i) (as_ref r) v)))
-
-val op_Bang:#a:Type -> #i:rid -> r:rref i a -> ST a
-  (requires (fun m -> True))
-  (ensures (fun m0 x m1 -> m1=m0 /\ x=Heap.sel (Map.sel m0 i) (as_ref r)))
-
-val get: unit -> ST t
-  (requires (fun m -> True))
-  (ensures (fun m0 x m1 -> m0=x /\ m1=m0))
-
-val recall: #r:rid -> x:rref r 'a -> ST unit
-  (requires (fun h -> True))
-  (ensures (fun h0 _ h1 ->
-              h0=h1
-              /\ Map.contains h1 r
-              /\ Heap.contains (Map.sel h1 r) (as_ref x)))
-
 val mod_set : Set.set rid -> Tot (Set.set rid)
 assume Mod_set_def: forall (x:rid) (s:Set.set rid). {:pattern Set.mem x (mod_set s)}
                     Set.mem x (mod_set s) <==> (exists (y:rid). Set.mem y s /\ includes y x)
@@ -133,16 +97,3 @@ type fresh_rref (#a:Type) (#i:rid) (r:rref i a) (m0:t) (m1:t) =
   /\  (Heap.contains (Map.sel m1 i) (as_ref r))
 
 type modifies_rref (r:rid) (s:Set.set aref) h0 h1 = Heap.modifies s (Map.sel h0 r) (Map.sel h1 r)
-
-kind STPost (a:Type) = a -> t -> Type
-kind STWP (a:Type) = STPost a -> t -> Type
-
-sub_effect
-  DIV   ~> STATE = fun (a:Type) (wp:PureWP a) (p:STPost a) (h:t) -> wp (fun a -> p a h)
-
-  (*opaque type modifies1 (s:Set.set rid) (m0:t) (m1:t) =
-    (forall (id:rid). Map.contains m0 id ==> Map.contains m1 id)
-    /\ (forall (id:rid).//{:pattern (Map.sel m1 id)}
-              Map.contains m0 id
-              /\ (forall (mod:rid). Set.mem mod s ==> not (includes mod id))
-              ==> Map.sel m1 id = Map.sel m0 id)*)
