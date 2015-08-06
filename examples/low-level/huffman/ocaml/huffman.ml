@@ -1,20 +1,33 @@
 type symbol_type = int
 type code_type = char
 
-let num_symbol_values = 10;;
+let num_symbol_values = 257;;
+
+let bits_per_symbol =
+  let rec aux n b =
+    let n' = n lsr 1 in
+    if n' = 0 then b
+    else aux n' (b+1) in
+  aux (num_symbol_values-1) 1
+
+let bytes_per_symbol = 
+  if (bits_per_symbol mod 8) = 0 then bits_per_symbol / 8 
+  else (bits_per_symbol / 8) + 1
 
 type node =
     { mutable frequency: int; 
       mutable next: node;
-      mutable children: (node*node);
-      mutable symbol: symbol_type;
+      zero_child: node;
+      one_child: node; 
+      symbol: symbol_type;
       mutable code: string;
     };;
 
 let rec null_node = 
   { frequency = -1;
     next = null_node;
-    children = (null_node, null_node);
+    zero_child = null_node;
+    one_child = null_node;
     symbol = 0;
     code = "" } 
 
@@ -78,13 +91,13 @@ module NodeList : NODE_LIST =
   end
 
 let rec count_leaves (tree:node) :int =
-  match tree.children with
-      (ndzero, ndone) ->
-	if is_null ndzero then 1
-	else 
-	  let x = count_leaves ndzero in
-	  let y = count_leaves ndone in 
-	  x+y
+  let ndzero = tree.zero_child in
+  let ndone = tree.one_child in
+  if is_null ndzero then 1
+  else 
+    let x = count_leaves ndzero in
+    let y = count_leaves ndone in 
+    x+y
 
 let compute_histogram
     (symbol_stream: symbol_type array)
@@ -98,7 +111,8 @@ let compute_histogram
 	  let the_leaf = 
 	    { frequency = 1;
 	      next = null_node;
-	      children = (null_node,null_node);
+	      zero_child = null_node;
+	      one_child = null_node;
 	      symbol = sym;
 	      code = "" } in
 	  histogram.(sym) <- Some the_leaf
@@ -112,15 +126,15 @@ let rec compute_code_strings
     (tree:node)
     (code_string:bytes)
     (code_string_pos:int) =
-  match (tree.children) with
-      (zc_nd, one_nd) ->
-	if is_null zc_nd then
-	  tree.code <- Bytes.unsafe_to_string (Bytes.sub code_string 0 code_string_pos)
-	else
-	  (Bytes.set code_string code_string_pos '0';
-	   compute_code_strings zc_nd code_string (code_string_pos+1);
-	   Bytes.set code_string code_string_pos '1';
-	   compute_code_strings one_nd code_string (code_string_pos+1))
+  let zc_nd = tree.zero_child in
+  let one_nd = tree.one_child in
+  if is_null zc_nd then
+    tree.code <- Bytes.unsafe_to_string (Bytes.sub code_string 0 code_string_pos)
+  else
+    (Bytes.set code_string code_string_pos '0';
+     compute_code_strings zc_nd code_string (code_string_pos+1);
+     Bytes.set code_string code_string_pos '1';
+     compute_code_strings one_nd code_string (code_string_pos+1))
 ;;
 
 let build_huffman_tree
@@ -139,7 +153,8 @@ let build_huffman_tree
     let (n1,n2) = NodeList.pop_two tree in
     let new_nd = 
       { frequency = n1.frequency + n2.frequency;
-	children = (n1,n2);
+	zero_child = n1;
+	one_child = n2;
 	next = null_node;
 	symbol = -1; (* don't care *)
 	code = "" (* don't care *) } in
@@ -159,10 +174,8 @@ let encode_stream
     (symbol_stream:symbol_type array)
     (histogram:node option array)
     (encoded_stream:bytes) =
-
   let symbol_stream_length = Array.length symbol_stream in
   Bytes.set encoded_stream 0 (Char.chr 0);
-
   let rec aux sym_idx ofs mask =
     if sym_idx = symbol_stream_length then ofs+1 (* length of the code string *)
     else
@@ -189,18 +202,76 @@ let encode_stream
 	  aux (sym_idx+1) ofs' mask') in
   aux 0 0 1
 
+let rec pack_tree_iter (tree:node) (packed_tree:bytes) (ofs:int) : int =
+  let rec write_sym sym nb sofs =
+    if nb = 0 then sofs
+    else
+      (let the_sym = sym land 0xFF in
+       Bytes.set packed_tree sofs (Char.chr the_sym);
+       write_sym (sym lsr 8) (nb-1) (sofs+1)) in
+  (* leaf tag *)
+  if is_null tree.zero_child then 
+    (Bytes.set packed_tree ofs (Char.chr 1);
+     write_sym tree.symbol bytes_per_symbol (ofs+1))
+  (* node tag *)
+  else 
+    (Bytes.set packed_tree ofs (Char.chr 0);
+     let ofs' = pack_tree_iter tree.zero_child packed_tree (ofs+1) in
+     pack_tree_iter tree.one_child packed_tree ofs')
 
+let pack_huffman_tree (tree:node) : bytes*int =
+  let num_leaves = count_leaves tree in
+  let packed_tree_sz = 2*num_leaves+bytes_per_symbol*num_leaves-1 in
+  let packed_tree = Bytes.create packed_tree_sz in
+  let len = pack_tree_iter tree packed_tree 0 in
+  packed_tree,len
+
+(*
 let huffman_encode 
     (symbol_stream:symbol_type array)
     (encoded_stream:bytes) =
   (* XXX return packed tree too *)
-
   let histogram = Array.make num_symbol_values None in
   compute_histogram symbol_stream histogram;
   let tree = build_huffman_tree histogram in
   Printf.printf "leaves in tree = %d\n" (count_leaves tree);
   let encoded_len = encode_stream symbol_stream histogram encoded_stream in
   (encoded_len,tree,histogram)
+*)
+
+let print_stream 
+    (encoded_stream:bytes)
+    (stream_len:int) =
+  Printf.printf "Code: ";
+  let rec aux i =
+    if i = stream_len then ()
+    else
+      let b = Bytes.get encoded_stream i in
+      let rec aux2 mask =
+	if (mask <> 0 && mask < 256) then
+	  (let b' = (Char.code b) land mask in
+	   Printf.printf "%d " (if b' <> 0 then 1 else 0);
+	   aux2 (mask lsl 1))
+	else () in
+      aux2 1;
+      aux (i+1) in
+  aux 0
+
+let print_tree (packed_tree:bytes) (tree_size:int) =
+  Printf.printf "\nTree (%d): " tree_size;
+  let rec aux i =
+    if i >= tree_size then ()
+    else
+      let b = Bytes.get packed_tree i in
+      if (Char.code b) = 0 then
+	(Printf.printf "%d " (Char.code b);
+	 aux (i+1))
+      else
+	(let b1 = Bytes.get packed_tree (i+1) in
+	let b2 = Bytes.get packed_tree (i+2) in
+	Printf.printf "%d:%02x%02x " (Char.code b) (Char.code b1) (Char.code b2);
+	aux (i+3)) in
+  aux 0
 
 let test_inp = [| 1;1;2;2;3;1;5;4;1;8 |];;
 let test_oup = Bytes.create 10;;
@@ -209,6 +280,10 @@ compute_histogram test_inp test_hist;;
 let tree = build_huffman_tree test_hist;;
 Printf.printf "leaves in tree = %d\n" (count_leaves tree);;
 let encoded_len = encode_stream test_inp test_hist test_oup;;
+print_stream test_oup encoded_len;;
+let packed_tree,packed_len = pack_huffman_tree tree;;
+print_tree packed_tree packed_len;;
+
 
 (*    
 int huffman_encode (SymbolType *symbol_stream, int symbol_stream_length, Byte **packed_huffman_tree, int *huffman_tree_size, CodeType *encoded_stream)
