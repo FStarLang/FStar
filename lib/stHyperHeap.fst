@@ -19,7 +19,7 @@
 *)
 module ST
 open HyperHeap
-
+type ref (t:Type) = rref root t
 kind STPre = STPre_h t
 kind STPost (a:Type) = STPost_h t a
 kind STWP (a:Type) = STWP_h t a
@@ -48,6 +48,13 @@ assume val ralloc: #a:Type -> i:rid -> init:a -> ST (rref i a)
                     Let (Map.sel m0 i) (fun region_i ->
                     not (Heap.contains region_i (as_ref x))
                     /\ m1=Map.upd m0 i (Heap.upd region_i (as_ref x) init))))
+
+assume val alloc: #a:Type -> init:a -> ST (ref a)
+    (requires (fun m -> True))
+    (ensures (fun m0 x m1 ->
+                    Let (Map.sel m0 root) (fun region_i ->
+                    not (Heap.contains region_i (as_ref x))
+                    /\ m1=Map.upd m0 root (Heap.upd region_i (as_ref x) init))))
 
 assume val op_Colon_Equals: #a:Type -> #i:rid -> r:rref i a -> v:a -> ST unit
   (requires (fun m -> True))
