@@ -20,7 +20,7 @@
 module ST
 open Set
 open Heap
-type ref = Heap.ref
+type ref (a:Type) = Heap.ref a
 // this intentionally does not preclude h' extending h with fresh refs
 opaque logic type modifies (mods:set aref) (h:heap) (h':heap) =
     b2t (Heap.equal h' (concat h' (restrict h (complement mods))))

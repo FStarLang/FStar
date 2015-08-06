@@ -26,7 +26,7 @@ type t = Map.t rid heap
 opaque val root : rid
 let root = []
 
-private type rref (id:rid) (a:Type) = Prims.ref a
+private type rref (id:rid) (a:Type) = Heap.ref a
 val as_ref : #a:Type -> #id:rid -> r:rref id a -> GTot (ref a)
 let as_ref id r = r
 
