@@ -1,7 +1,7 @@
 (*--build-config
     options: --codegen OCaml-experimental --trace_error --debug yes --prn;
     variables:LIB=../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst
+    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst  stack.fst listset.fst
     $LIB/ghost.fst stackAndHeap.fst sst.fst sstCombinators.fst $LIB/constr.fst word.fst $LIB/seq.fsi $LIB/seq.fst array.fsi
      array.fst MD5Common.fst arrayAlgos.fst
   --*)
@@ -25,8 +25,8 @@ open Seq
 open Ghost
 
 assume val cloneAndPad :
-  r:(array word)
-  -> rcloned :(array word)
+  r:(sstarray word)
+  -> rcloned :(sstarray word)
   -> Mem unit
       (fun m -> refExistsInMem (reveal (asRef r)) m /\ refExistsInMem (reveal (asRef rcloned)) m)
       (fun m0 rp m1  -> refExistsInMem (reveal (asRef r)) m0 /\ refExistsInMem (reveal (asRef rcloned)) m1
@@ -39,9 +39,9 @@ assume val cloneAndPad :
         (hide empty)
 
 val processChunk :
- ch:(array word)
+ ch:(sstarray word)
  -> offset:nat
- -> acc:(array word)
+ -> acc:(sstarray word)
  -> WNSC unit
     (requires (fun m -> refExistsInMem (reveal (asRef ch)) m
               /\ refExistsInMem (reveal (asRef acc)) m /\ ch =!= acc
@@ -86,7 +86,7 @@ let processChunk ch offset acc =
       memwrite li (liv+1))
 
 val mainLoop :
- ch:(array word)
+ ch:(sstarray word)
  -> un:unit
  -> WNSC (s:(seq word){Seq.length s = 4})
     (requires (fun m -> refExistsInMem (reveal (asRef ch)) m
@@ -119,7 +119,7 @@ val allZeros : n:nat -> Tot (s:(seq word){length s = n})
 let allZeros n = Seq.create n w0
 
 val mD5 :
- ch:(array word)
+ ch:(sstarray word)
  -> WNSC (s:(seq word){Seq.length s = 4})
     (fun m -> True /\ refExistsInMem (reveal (asRef ch)) m)
     (fun m0 _ m1 -> True /\ refExistsInMem (reveal (asRef ch)) m1)
@@ -141,7 +141,7 @@ let mD5 ch =
 (*open Example2
 
 val mD53 : n:nat
- -> ch:(array word)
+ -> ch:(sstarray word)
  -> WNSC (vector word 4)
     (fun m -> True /\ refExistsInMem (asRef ch) m)
     (fun m0 _ m1 -> True /\ refExistsInMem (asRef ch) m1)
@@ -155,7 +155,7 @@ let mD53 n ch =
 
 
 val mD52 : n:nat
- -> ch:(array word)
+ -> ch:(sstarray word)
  -> WNSC  (s:(seq word){Seq.length s = 4})
     (fun m -> True /\ refExistsInMem (reveal (asRef ch)) m)
     (fun m0 _ m1 -> True /\ refExistsInMem (reveal (asRef ch)) m1)

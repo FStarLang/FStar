@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module ST
+type ref: Type -> Type
 assume val alloc: 'a -> ref 'a
 assume val read:  ref 'a -> 'a
 assume val op_Colon_Equals: ref 'a -> 'a -> unit

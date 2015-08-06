@@ -1566,21 +1566,27 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
         let env, se = desugar_decl env d in
         env, sigelts@se) (env, []) decls
 
+let open_prims_all = 
+    [AST.mk_decl (AST.Open Const.prims_lid) dummyRange;
+     AST.mk_decl (AST.Open Const.all_lid) dummyRange]
+     
 (* Most important function: from AST to a module
    Keeps track of the name of variables and so on (in the context)
  *)
 let desugar_modul_common curmod env (m:AST.modul) : env_t * Syntax.modul =
   let open_ns (mname:lident) d =
-    if List.length mname.ns <> 0
-    then (AST.mk_decl (AST.Open (Syntax.lid_of_ids mname.ns)) (Syntax.range_of_lid mname))  :: d
-    else d in
+    let d = if List.length mname.ns <> 0
+            then (AST.mk_decl (AST.Open (Syntax.lid_of_ids mname.ns)) (Syntax.range_of_lid mname))  :: d
+            else d in
+    d in
   let env = match curmod with
     | None -> env
     | Some(prev_mod, _) ->  DesugarEnv.finish_module_or_interface env prev_mod in
   let env, mname, decls, intf = match m with
     | Interface(mname, decls, admitted) ->
       DesugarEnv.prepare_module_or_interface true admitted env mname, mname, open_ns mname decls, true
-    | Module(mname, decls) -> DesugarEnv.prepare_module_or_interface false false env mname, mname, open_ns mname decls, false in
+    | Module(mname, decls) -> 
+      DesugarEnv.prepare_module_or_interface false false env mname, mname, open_ns mname decls, false in
   let env, sigelts = desugar_decls env decls in
   let modul = {
     name = mname;

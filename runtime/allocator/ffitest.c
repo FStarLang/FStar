@@ -31,7 +31,6 @@ CAMLprim value stack_mkdt_D(value v)
 {
   CAMLparam1 (v);
   int mask[1] = { 1 };
-  int nbits = 1;
   value tuple = stack_caml_alloc(1,2,1,mask);
   if (tuple == (value)0)
     caml_failwith ("Camlstack.stack_mkdt_D");

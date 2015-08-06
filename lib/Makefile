@@ -7,6 +7,7 @@ all:
 	$(FSTAR) ordset.fst
 	$(FSTAR) ordsetproperties.fst
 	$(FSTAR) ordmap.fst
+	$(FSTAR) hyperHeap.fst
 
 wc:
 	sloccount .

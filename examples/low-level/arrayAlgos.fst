@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi Set --z3timeout 100;
     variables:LIB=../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst
+    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst  stack.fst listset.fst
     $LIB/ghost.fst stackAndHeap.fst sst.fst sstCombinators.fst $LIB/constr.fst word.fst $LIB/seq.fsi $LIB/seq.fst array.fsi array.fst
   --*)
 
@@ -18,13 +18,13 @@ open MD5Common
 open Seq
 open Ghost
 
-val contains : #a:Type -> smem -> array a -> GTot bool
+val contains : #a:Type -> smem -> sstarray a -> GTot bool
 let contains m v = refExistsInMem (reveal (asRef v)) m
 
-val sel : #a:Type -> m:smem -> v:(array a){contains m v} -> GTot (seq a)
+val sel : #a:Type -> m:smem -> v:(sstarray a){contains m v} -> GTot (seq a)
 let sel m v = loopkupRef (reveal (asRef v)) m
 
-val glength : #a:Type -> v:(array a) -> m:smem{contains m v} -> GTot nat
+val glength : #a:Type -> v:(sstarray a) -> m:smem{contains m v} -> GTot nat
 let glength v m = Seq.length (sel m v)
 
 type prefixEqual  (#a:Type)
@@ -40,9 +40,9 @@ type prefixEqualL  (#a:Type)
   (v1: seq a) (v2:(seq a))
   = length v1 <= length v2 /\ (forall (n:nat{n<length v1}). index v1 n = index v2 n)
 
-(* Helper functions for stateful array manipulation *)
+(* Helper functions for stateful sstarray manipulation *)
 val copy:
-  #a:Type -> s:array a -> scp :array a
+  #a:Type -> s:sstarray a -> scp :sstarray a
   -> WNSC unit
      (requires (fun h -> contains h s /\ contains h scp /\ glength s h <= glength scp h))
      (ensures (fun h0 _ h1 -> (contains h1 s) /\  (contains h1 scp)
@@ -74,8 +74,8 @@ let copy s scp =
 
 (* sclone does not make sense*)
 val hcloneAux:
-  #a:Type -> s:array a
-  -> Mem (array a)
+  #a:Type -> s:sstarray a
+  -> Mem (sstarray a)
      (requires (fun h -> contains h s /\ 0 < glength s h ))
      (ensures (fun h0 scp h1 -> (contains h1 s) /\  (contains h1 scp)
                 /\ (glength s h1) = (glength scp h1)
@@ -122,8 +122,8 @@ let hcloneAux s =
 
 
 val hclone:
-  #a:Type -> s:array a
-  -> Mem (array a)
+  #a:Type -> s:sstarray a
+  -> Mem (sstarray a)
      (requires (fun h -> contains h s))
      (ensures (fun h0 scp h1 -> (contains h1 s) /\  (contains h1 scp)
                 /\ (glength s h1) = (glength scp h1)

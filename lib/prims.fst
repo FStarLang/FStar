@@ -146,7 +146,6 @@ type char
 type float
 type string
 type array : Type -> Type
-type ref : Type -> Type
 assume logic type LBL : string -> Type -> Type
 type exn
 type HashMultiMap : Type -> Type -> Type //needed for bootstrapping
@@ -276,20 +275,6 @@ new_effect {
      ; null_wp      = st_null_wp heap
      ; trivial      = st_trivial heap
 }
-
-type heap
-kind STPre = STPre_h heap
-kind STPost (a:Type) = STPost_h heap a
-kind STWP (a:Type) = STWP_h heap a
-new_effect STATE = STATE_h heap
-effect State (a:Type) (wp:STWP a) =
-       STATE a wp wp
-effect ST (a:Type) (pre:STPre) (post: (heap -> STPost a)) =
-       STATE a
-             (fun (p:STPost a) (h:heap) -> pre h /\ (forall a h1. (pre h /\ post h a h1) ==> p a h1)) (* STWP_h *)
-             (fun (p:STPost a) (h:heap) -> (forall a h1. (pre h /\ post h a h1) ==> p a h1))          (* WLP *)
-effect St (a:Type) =
-       ST a (fun h -> True) (fun h0 r h1 -> True)
 
 (* Effect EXCEPTION *)
 kind ExPre  = Type
@@ -426,27 +411,10 @@ new_effect {
 
 }
 
-kind AllPre = AllPre_h heap
-kind AllPost (a:Type) = AllPost_h heap a
-kind AllWP (a:Type) = AllWP_h heap a
-new_effect ALL = ALL_h heap
-effect All (a:Type) (pre:AllPre) (post: (heap -> AllPost a)) =
-       ALL a
-           (fun (p:AllPost a) (h:heap) -> pre h /\ (forall ra h1. post h ra h1 ==> p ra h1)) (* AllWP *)
-           (fun (p:AllPost a) (h:heap) -> forall ra h1. (pre h /\ post h ra h1) ==> p ra h1) (* WLP *)
-default effect ML (a:Type) =
-         ALL a (all_null_wp heap a) (all_null_wp heap a)
-
 sub_effect
   PURE  ~> DIV   = fun (a:Type) (wp:PureWP a) (p:PurePost a) -> wp (fun a -> p a)
 sub_effect
-  DIV   ~> STATE = fun (a:Type) (wp:PureWP a) (p:STPost a) (h:heap) -> wp (fun a -> p a h)
-sub_effect
-  STATE ~> ALL   = fun (a:Type) (wp:STWP a)   (p:AllPost a) -> wp (fun a -> p (V a))
-sub_effect
   DIV   ~> EXN   = fun (a:Type) (wp:PureWP a) (p:ExPost a) -> wp (fun a -> p (V a))
-sub_effect
-  EXN   ~> ALL   = fun (a:Type) (wp:ExWP a)   (p:AllPost a) (h:heap) -> wp (fun ra -> p ra h)
 
 type lex_t =
   | LexTop  : lex_t
@@ -564,16 +532,14 @@ assume val admitP  : p:Type -> Pure unit True (fun x -> p)
 assume val _assert : p:Type -> unit -> Pure unit (requires $"assertion failed" p) (ensures (fun x -> True))
 assume val cut     : p:Type -> Pure unit (requires $"assertion failed" p) (fun x -> p)
 assume val qintro  : #a:Type -> #p:(a -> Type) -> =f:(x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
-assume val failwith: string -> All 'a (fun h -> True) (fun h a h' -> is_Err a /\ h==h')
 assume val raise: exn -> Ex 'a       (* TODO: refine with the Exn monad *)
-assume val pipe_right: 'a -> ('a -> 'b) -> 'b
-assume val pipe_left: ('a -> 'b) -> 'a -> 'b
 val ignore: 'a -> Tot unit
 let ignore x = ()
+
+//TODO: REMOVE THIS!
 val erase: 'a -> Tot unit
 let erase x = ()
-assume val exit: int -> 'a
-assume val try_with: (unit -> 'a) -> (exn -> 'a) -> 'a
+
 assume val min: int -> int -> Tot int
 assume val max: int -> int -> Tot int
 
@@ -593,5 +559,3 @@ type nonzero = i:int{i<>0}
    soundly map F* ints to something in F#/OCaml. *)
 assume val op_Modulus            : int -> nonzero -> Tot int
 assume val op_Division           : nat -> nonzero -> Tot int
-
-assume type Boxed : Type -> Type

@@ -1,7 +1,8 @@
 module Heap
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 open Set
-
+type heap
+type ref : Type -> Type
 type aref =
   | Ref : #a:Type -> r:ref a -> aref
 assume logic val sel :       #a:Type -> heap -> ref a -> Tot a

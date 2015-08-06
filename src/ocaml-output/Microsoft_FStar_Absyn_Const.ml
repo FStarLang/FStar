@@ -5,8 +5,6 @@ let pconst = (fun ( s ) -> (p2l (("Prims")::(s)::[])))
 
 let prims_lid = (p2l (("Prims")::[]))
 
-let heap_lid = (pconst "heap")
-
 let bool_lid = (pconst "bool")
 
 let unit_lid = (pconst "unit")
@@ -20,10 +18,6 @@ let char_lid = (pconst "char")
 let int_lid = (pconst "int")
 
 let uint8_lid = (pconst "uint8")
-
-let int32_lid = (p2l (("Int32")::("int32")::[]))
-
-let int31_lid = (p2l (("Int31")::("int31")::[]))
 
 let int64_lid = (pconst "int64")
 
@@ -39,26 +33,32 @@ let lexcons_lid = (pconst "LexCons")
 
 let lextop_lid = (pconst "LexTop")
 
-let kunary = (fun ( k ) ( k' ) -> (let _68_7807 = (let _68_7806 = (let _68_7805 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k)
-in (_68_7805)::[])
-in (_68_7806, k'))
-in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _68_7807 Microsoft_FStar_Absyn_Syntax.dummyRange)))
+let int32_lid = (p2l (("Int32")::("int32")::[]))
 
-let kbin = (fun ( k1 ) ( k2 ) ( k' ) -> (let _68_7818 = (let _68_7817 = (let _68_7816 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k1)
-in (let _68_7815 = (let _68_7814 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k2)
-in (_68_7814)::[])
-in (_68_7816)::_68_7815))
-in (_68_7817, k'))
-in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _68_7818 Microsoft_FStar_Absyn_Syntax.dummyRange)))
+let int31_lid = (p2l (("Int31")::("int31")::[]))
 
-let ktern = (fun ( k1 ) ( k2 ) ( k3 ) ( k' ) -> (let _68_7833 = (let _68_7832 = (let _68_7831 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k1)
-in (let _68_7830 = (let _68_7829 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k2)
-in (let _68_7828 = (let _68_7827 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k3)
-in (_68_7827)::[])
-in (_68_7829)::_68_7828))
-in (_68_7831)::_68_7830))
-in (_68_7832, k'))
-in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _68_7833 Microsoft_FStar_Absyn_Syntax.dummyRange)))
+let heap_lid = (p2l (("Heap")::("heap")::[]))
+
+let kunary = (fun ( k ) ( k' ) -> (let _70_7930 = (let _70_7929 = (let _70_7928 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k)
+in (_70_7928)::[])
+in (_70_7929, k'))
+in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _70_7930 Microsoft_FStar_Absyn_Syntax.dummyRange)))
+
+let kbin = (fun ( k1 ) ( k2 ) ( k' ) -> (let _70_7941 = (let _70_7940 = (let _70_7939 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k1)
+in (let _70_7938 = (let _70_7937 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k2)
+in (_70_7937)::[])
+in (_70_7939)::_70_7938))
+in (_70_7940, k'))
+in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _70_7941 Microsoft_FStar_Absyn_Syntax.dummyRange)))
+
+let ktern = (fun ( k1 ) ( k2 ) ( k3 ) ( k' ) -> (let _70_7956 = (let _70_7955 = (let _70_7954 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k1)
+in (let _70_7953 = (let _70_7952 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k2)
+in (let _70_7951 = (let _70_7950 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k3)
+in (_70_7950)::[])
+in (_70_7952)::_70_7951))
+in (_70_7954)::_70_7953))
+in (_70_7955, k'))
+in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _70_7956 Microsoft_FStar_Absyn_Syntax.dummyRange)))
 
 let true_lid = (pconst "True")
 
@@ -114,15 +114,9 @@ let cons_lid = (pconst "Cons")
 
 let nil_lid = (pconst "Nil")
 
-let ref_lid = (pconst "ref")
-
 let assume_lid = (pconst "_assume")
 
 let assert_lid = (pconst "_assert")
-
-let pipe_right_lid = (pconst "pipe_right")
-
-let pipe_left_lid = (pconst "pipe_left")
 
 let list_append_lid = (p2l (("List")::("append")::[]))
 
@@ -158,11 +152,11 @@ let op_Or = (pconst "op_BarBar")
 
 let op_Negation = (pconst "op_Negation")
 
-let try_with_lid = (pconst "try_with")
-
 let array_lid = (p2l (("Array")::("array")::[]))
 
 let array_mk_array_lid = (p2l (("Array")::("mk_array")::[]))
+
+let st_lid = (p2l (("ST")::[]))
 
 let write_lid = (p2l (("ST")::("write")::[]))
 
@@ -172,9 +166,11 @@ let alloc_lid = (p2l (("ST")::("alloc")::[]))
 
 let op_ColonEq = (p2l (("ST")::("op_Colon_Equals")::[]))
 
-let set_empty = (p2l (("Set")::("empty")::[]))
+let ref_lid = (p2l (("Heap")::("ref")::[]))
 
 let heap_ref = (p2l (("Heap")::("Ref")::[]))
+
+let set_empty = (p2l (("Set")::("empty")::[]))
 
 let set_singleton = (p2l (("Set")::("singleton")::[]))
 
@@ -186,10 +182,6 @@ let effect_Pure_lid = (pconst "Pure")
 
 let effect_Tot_lid = (pconst "Tot")
 
-let effect_ALL_lid = (pconst "ALL")
-
-let effect_ML_lid = (pconst "ML")
-
 let effect_Lemma_lid = (pconst "Lemma")
 
 let effect_GTot_lid = (pconst "GTot")
@@ -198,13 +190,25 @@ let effect_GHOST_lid = (pconst "GHOST")
 
 let effect_Ghost_lid = (pconst "Ghost")
 
+let all_lid = (p2l (("All")::[]))
+
+let effect_ALL_lid = (p2l (("All")::("ALL")::[]))
+
+let effect_ML_lid = (p2l (("All")::("ML")::[]))
+
+let failwith_lid = (p2l (("All")::("failwith")::[]))
+
+let pipe_right_lid = (p2l (("All")::("pipe_right")::[]))
+
+let pipe_left_lid = (p2l (("All")::("pipe_left")::[]))
+
+let try_with_lid = (p2l (("All")::("try_with")::[]))
+
 let as_requires = (pconst "as_requires")
 
 let as_ensures = (pconst "as_ensures")
 
 let decreases_lid = (pconst "decreases")
-
-let failwith_lid = (pconst "failwith")
 
 
 

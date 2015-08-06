@@ -1,6 +1,6 @@
 (*--build-config
-    options:--admit_fsi OrdSet;
-    other-files:ext.fst list.fst ordset.fsi ordmap.fsi
+    options:--admit_fsi OrdSet --admit_fsi Set;
+    other-files:ext.fst set.fsi heap.fst st.fst all.fst list.fst ordset.fsi ordmap.fsi
  --*)
 module OrdMap
 

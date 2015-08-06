@@ -1,6 +1,6 @@
 (*--build-config
     variables:LIB=../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst
+    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst  stack.fst listset.fst
     $LIB/ghost.fst stackAndHeap.fst sst.fst sstCombinators.fst
   --*)
 
@@ -18,6 +18,7 @@ open Ghost
 (*val divides : pos -> nat -> Tot bool
 let divides divisor n = ((n % divisor) = 0)*)
 (*Instead, below is a definition from first principles*)
+
 
 opaque type divides  (divisor :nat) (n:nat) =
 exists (k:nat). k*divisor=n
@@ -303,6 +304,7 @@ let sieve n u =
   let f:((k:nat{k<n}) -> Tot bool) = (fun x -> false) in
   let res = salloc f in
   (outerLoop n lo res);
+  //assert (False);
   memread res
 
 val sieveFull : n:nat{n>1}
@@ -315,6 +317,15 @@ let sieveFull n =
   let res= sieve n () in
   popStackFrame (); res
 
+
+val firstN : n:nat -> Tot (list nat)
+let rec firstN n = match n with
+| 0 -> []
+| _ -> (n-1)::(firstN (n-1))
+
+val toBool : n:nat{n>1} -> ((k:nat{k<n}) -> Tot bool) -> Tot (list bool)
+let toBool n f = mapT (fun (x:nat) -> if x < n then f x else false) (firstN n)
+
 (*let sieveFullTypeInfFail n= withNewScope #empty (sieve n)*)
 val listOfTruesAux : n:nat -> max:nat{max<=n} -> f:((k:nat{k<n}) -> Tot bool) -> Tot (list nat)
 let rec listOfTruesAux n max f = if (max<=2) then [] else
@@ -324,12 +335,13 @@ val listOfTrues : n:nat  -> f:((k:nat{k<n}) -> Tot bool) -> Tot (list nat)
 let listOfTrues n f = listOfTruesAux n n f
 
 val sieveAsList : n:nat{n>1}
-  -> Mem (list nat)
+  -> Mem (list bool)
         (requires (fun m -> True))
         (ensures (fun _ resv _ -> True))
         (hide empty)
 let sieveAsList n =
-  listOfTrues n (sieveFull n)
+  let sieveRes = (sieveFull n) in
+  toBool n sieveRes
 
 val sieveUnfolded : n:nat{n>1} -> unit
   -> WNSC ((k:nat{k<n}) -> Tot bool)

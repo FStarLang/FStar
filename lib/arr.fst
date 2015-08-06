@@ -18,11 +18,10 @@
 module Array
 #set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 open Seq
-open ST
 open Heap
 (* private *) type array (t:Type) = ref (seq t)
 
-assume val op_At_Bar: #a:Type -> array a -> array a -> Prims.St (array a)
+assume val op_At_Bar: #a:Type -> array a -> array a -> St (array a)
 
 assume val of_seq: #a:Type -> s:seq a -> ST (array a)
   (requires (fun h -> True))
@@ -96,8 +95,8 @@ let rec copy_aux s cpy ctr =
   | _ -> Array.upd cpy ctr (Array.index s ctr);
 	 copy_aux s cpy (ctr+1)
 
-val copy: 
-  #a:Type -> s:array a -> 
+val copy:
+  #a:Type -> s:array a ->
   ST (array a)
      (requires (fun h -> contains h s
 			 /\ Seq.length (sel h s) > 0))
@@ -113,24 +112,24 @@ let copy s =
 val blit_aux:
   #a:Type -> s:array a -> s_idx:nat -> t:array a -> t_idx:nat -> len:nat -> ctr:nat ->
   ST unit
-     (requires (fun h -> 
+     (requires (fun h ->
 		(contains h s /\ contains h t /\ s <> t)
 		/\ (Seq.length (sel h s) >= s_idx + len)
 		/\ (Seq.length (sel h t) >= t_idx + len)
 		/\ (ctr <= len)
-		/\ (forall (i:nat). 
+		/\ (forall (i:nat).
 		    i < ctr ==> Seq.index (sel h s) (s_idx+i) = Seq.index (sel h t) (t_idx+i))))
-     (ensures (fun h0 u h1 -> 
+     (ensures (fun h0 u h1 ->
 	       (contains h1 s /\ contains h1 t /\ s <> t )
 	       /\ (modifies !{t} h0 h1)
 	       /\ (Seq.length (sel h1 s) >= s_idx + len)
 	       /\ (Seq.length (sel h1 t) >= t_idx + len)
 	       /\ (Seq.length (sel h0 s) = Seq.length (sel h1 s))
 	       /\ (Seq.length (sel h0 t) = Seq.length (sel h1 t))
-	       /\ (forall (i:nat). 
+	       /\ (forall (i:nat).
 		   i < len ==> Seq.index (sel h1 s) (s_idx+i) = Seq.index (sel h1 t) (t_idx+i))
 	       /\ (forall (i:nat).
-		   (i < Seq.length (sel h1 t) /\ (i < t_idx \/ i >= t_idx + len)) ==> 
+		   (i < Seq.length (sel h1 t) /\ (i < t_idx \/ i >= t_idx + len)) ==>
 		     Seq.index (sel h1 t) i = Seq.index (sel h0 t) i) ))
 let rec blit_aux s s_idx t t_idx len ctr =
   match len - ctr with
@@ -141,23 +140,23 @@ let rec blit_aux s s_idx t t_idx len ctr =
 val blit:
   #a:Type -> s:array a -> s_idx:nat -> t:array a -> t_idx:nat -> len:nat ->
   ST unit
-     (requires (fun h -> 
-		(contains h s) 
+     (requires (fun h ->
+		(contains h s)
 		/\ (contains h t)
 		/\ (s <> t)
 		/\ (Seq.length (sel h s) >= s_idx + len)
 		/\ (Seq.length (sel h t) >= t_idx + len)))
-     (ensures (fun h0 u h1 -> 
+     (ensures (fun h0 u h1 ->
 	       (contains h1 s /\ contains h1 t /\ s <> t )
 	       /\ (Seq.length (sel h1 s) >= s_idx + len)
 	       /\ (Seq.length (sel h1 t) >= t_idx + len)
 	       /\ (Seq.length (sel h0 s) = Seq.length (sel h1 s))
 	       /\ (Seq.length (sel h0 t) = Seq.length (sel h1 t))
 	       /\ (modifies !{t} h0 h1)
-	       /\ (forall (i:nat). 
+	       /\ (forall (i:nat).
 		   i < len ==> Seq.index (sel h1 s) (s_idx+i) = Seq.index (sel h1 t) (t_idx+i))
 	       /\ (forall (i:nat).
-		   (i < Seq.length (sel h1 t) /\ (i < t_idx \/ i >= t_idx + len)) ==> 
+		   (i < Seq.length (sel h1 t) /\ (i < t_idx \/ i >= t_idx + len)) ==>
 		     (Seq.index (sel h1 t) i = Seq.index (sel h0 t) i)) ))
 let rec blit s s_idx t t_idx len =
   blit_aux s s_idx t t_idx len 0

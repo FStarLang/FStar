@@ -1,5 +1,7 @@
 (*--build-config
-    other-files:../../lib/int32.fst
+    options:--admit_fsi Set;
+    variables:LIB=../../lib/;
+    other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst ../../lib/int32.fst
  --*)
 (*
    Copyright 2008-2015 Nikhil Swamy and Microsoft Research

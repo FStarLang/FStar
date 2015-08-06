@@ -17,15 +17,28 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module HyperHeap
+module TwoLevelHeap
 open Map
 open Heap
 type rid = int  //region id
 type t = Map.t rid heap
 
+kind STPre = STPre_h t
+kind STPost (a:Type) = STPost_h t a
+kind STWP (a:Type) = STWP_h t a
 new_effect STATE = STATE_h t
+effect State (a:Type) (wp:STWP a) =
+       STATE a wp wp
+effect ST (a:Type) (pre:STPre) (post: (t -> STPost a)) =
+       STATE a
+             (fun (p:STPost a) (h:t) -> pre h /\ (forall a h1. post h a h1 ==> p a h1)) (* WP *)
+             (fun (p:STPost a) (h:t) -> (forall a h1. (pre h /\ post h a h1) ==> p a h1))          (* WLP *)
+effect St (a:Type) =
+       ST a (fun h -> True) (fun h0 r h1 -> True)
+sub_effect
+  DIV   ~> STATE = fun (a:Type) (wp:PureWP a) (p:STPost a) (h:t) -> wp (fun a -> p a h)
 
-private type rref (id:rid) (a:Type) = Prims.ref a
+private type rref (id:rid) (a:Type) = ref a
 val as_ref : #a:Type -> #id:rid -> r:rref id a -> Tot (ref a)
 let as_ref id r = r
 
@@ -37,11 +50,6 @@ val lemma_as_ref_inj: #a:Type -> #i:rid -> r:rref i a
              (ensures ((ref_as_rref i (as_ref r) = r)))
        [SMTPat (as_ref r)]
 let lemma_as_ref_inj i r = ()
-
-
-effect ST (a:Type) (pre:t -> Type) (post:t -> a -> t -> Type) =
-       STATE a (fun 'p m0 -> pre m0 /\ (forall x m1. post m0 x m1 ==> 'p x m1))
-               (fun 'p m0 ->  (forall x m1. pre m0 /\ post m0 x m1 ==> 'p x m1))
 
 assume val new_region: unit -> ST rid
       (requires (fun m -> True))
@@ -84,9 +92,3 @@ type contains_ref (#a:Type) (#i:rid) (r:rref i a) (m:t) =
 type fresh_rref (#a:Type) (#i:rid) (r:rref i a) (m0:t) (m1:t) =
   not (Heap.contains (Map.sel m0 i) (as_ref r))
   /\  (Heap.contains (Map.sel m1 i) (as_ref r))
-
-kind STPost (a:Type) = a -> t -> Type
-kind STWP (a:Type) = STPost a -> t -> Type
-
-sub_effect
-  DIV   ~> STATE = fun (a:Type) (wp:PureWP a) (p:STPost a) (h:t) -> wp (fun a -> p a h)
