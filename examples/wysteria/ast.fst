@@ -158,8 +158,11 @@ type term =
 
 type level = | Source | Target
 
+(* TODO: FIXME: error if just write = is_Source *)
 val src: level -> Tot bool
-let src = is_Source
+let src l = match l with
+  | Source -> true
+  | Target -> false
 
 (* TODO: FIXME: workaround for projectors *)
 val m_of_mode: mode -> Tot as_mode

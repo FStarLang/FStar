@@ -10,9 +10,16 @@ all:
 
 OCAMLOPT=ocamlfind ocamlopt -thread -package batteries -linkpkg -g
 
-codegen:
+interpreter:
 	$(FSTAR) --admit_fsi OrdSet --admit_fsi OrdMap --codegen OCaml-experimental ../../lib/ordset.fsi ../../lib/ordmap.fsi ../../lib/classical.fst ast.fst sem.fst sinterpreter.fst
-	$(OCAMLOPT) support.ml ordSet.ml ordMap.ml AST.ml Semantics.ml SourceInterpreter.ml -o a.out
+	$(OCAMLOPT) support.ml ordSet.ml ordMap.ml AST.ml Semantics.ml SourceInterpreter.ml -o interpreter.exe
+
+parser: interpreter
+	ocamlyacc -v wparser.mly
+	ocamllex wlexer.mll
+	$(OCAMLOPT) wparser.mli
+	$(OCAMLOPT) wlexer.ml
+	$(OCAMLOPT) wparser.ml 
 
 clean:
-	rm -f Classical.ml AST.ml Semantics.ml SourceInterpreter.ml *.cmi *.cmx *.o *.exe a.out
+	rm -f Classical.ml AST.ml Semantics.ml SourceInterpreter.ml *.cmi *.cmx *.o *.exe a.out wlexer.ml wparser.ml wparser.mli wparser.output 
