@@ -1,6 +1,8 @@
 (*--build-config
     options:--admit_fsi Set --admit_fsi Seq;
-    other-files:../../lib/ext.fst ../../lib/set.fsi ../../lib/heap.fst ../../lib/st.fst ../../lib/seq.fsi
+    other-files:../../lib/ext.fst ../../lib/set.fsi
+    ../../lib/heap.fst ../../lib/st.fst ../../lib/all.fst
+    ../../lib/seq.fsi
   --*)
 module StatefulEncryption.SingleInstance
 open ST

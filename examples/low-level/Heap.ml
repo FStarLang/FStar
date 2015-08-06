@@ -1,3 +1,4 @@
+type heap = unit
 
 type aref =
 | Ref of unit * Obj.t ref
@@ -10,19 +11,19 @@ end
 false
 end))
 
-let sel = (fun ( _ ) ( _ ) -> (failwith ("Not yet implemented:Heap.sel")))
+let sel = (fun ( _ ) ( _ ) -> (Support.All.failwith "Not yet implemented:sel"))
 
-let upd = (fun ( _ ) ( _ ) ( _ ) -> (failwith ("Not yet implemented:Heap.upd")))
+let upd = (fun ( _ ) ( _ ) ( _ ) -> (Support.All.failwith "Not yet implemented:upd"))
 
 let emp = ()
 
-let contains = (fun ( _ ) ( _ ) -> (failwith ("Not yet implemented:Heap.contains")))
+let contains = (fun ( _ ) ( _ ) -> (Support.All.failwith "Not yet implemented:contains"))
 
-let equal = (fun ( _ ) ( _ ) -> (failwith ("Not yet implemented:Heap.equal")))
+let equal = (fun ( _ ) ( _ ) -> (Support.All.failwith "Not yet implemented:equal"))
 
-let restrict = (fun ( _ ) ( _ ) -> (failwith ("Not yet implemented:Heap.restrict")))
+let restrict = (fun ( _ ) ( _ ) -> (Support.All.failwith "Not yet implemented:restrict"))
 
-let concat = (fun ( _ ) ( _ ) -> (failwith ("Not yet implemented:Heap.concat")))
+let concat = (fun ( _ ) ( _ ) -> (Support.All.failwith "Not yet implemented:concat"))
 
 type (' r, ' p, ' h) l__On =
 ' p

@@ -17,7 +17,7 @@ lo-reduced:
 	$(FSTAR) $(_STDLIB_) lambda_omega_reduced.fst
 
 f-omega:
-	$(FSTAR) $(_STDLIB_) f-omega.fst --max_fuel 1 --max_ifuel 1 --initial_fuel 1 --z3timeout 15
+	$(FSTAR) $(_STDLIB_) f-omega.fst --max_fuel 1 --max_ifuel 1 --initial_fuel 1 --z3timeout 25
 
 micro-fstar: micro-fstar.fst
 	$(FSTAR) $^

@@ -38,7 +38,7 @@ effect St (a:Type) =
 sub_effect
   DIV   ~> STATE = fun (a:Type) (wp:PureWP a) (p:STPost a) (h:t) -> wp (fun a -> p a h)
 
-private type rref (id:rid) (a:Type) = Prims.ref a
+private type rref (id:rid) (a:Type) = ref a
 val as_ref : #a:Type -> #id:rid -> r:rref id a -> Tot (ref a)
 let as_ref id r = r
 
