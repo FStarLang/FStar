@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi OrdSet --admit_fsi OrdMap --admit_fsi Set;
     variables:LIB=../../lib;
-    other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/ordset.fsi $LIB/ordmap.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst wysteria.fsi
+    other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/ordset.fsi $LIB/ordmap.fsi $LIB/list.fst wysteria.fsi
  --*)
 
 module Wysteria
@@ -44,7 +44,7 @@ val w_concat_helper:
   -> Tot (w:Wire a
           {forall p.(mem p ps ==> (w_contains p w /\ w_select p w = w_select p w1)) /\
                     (w_contains p w2 ==> (w_contains p w /\ w_select p w = w_select p w2)) /\
-                    (w_contains p w  ==> (mem p ps \/ w_contains p w2))})            
+                    (w_contains p w  ==> (mem p ps \/ w_contains p w2))})
      (decreases (size ps))
 let rec w_concat_helper w1 w2 eps =
   if eps = empty then w2

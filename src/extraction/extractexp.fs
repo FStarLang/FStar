@@ -116,41 +116,46 @@ let join f f' = match f, f' with
 
 let join_l fs = List.fold_left join E_PURE fs
 
-let rec extract_pat (g:env) p : (env * list<mlpattern>) = match p.v with
-  | Pat_disj [] -> failwith "Impossible"
+let extract_pat (g:env) p : (env * list<mlpattern>) = 
+    let rec extract_pat disj g p = match p.v with
+      | Pat_disj [] -> failwith "Impossible"
 
-  | Pat_disj (p::pats)      ->
-    let g, p = extract_pat g p in
-    g, [MLP_Branch (p@List.collect (fun x -> snd (extract_pat g x)) pats)]
+      | Pat_disj (p::pats)      ->
+        let g, p = extract_pat true g p in
+        g, [MLP_Branch (p@List.collect (fun x -> snd (extract_pat true g x)) pats)]
 
-  | Pat_constant s     -> 
-    g, [MLP_Const (mlconst_of_const s)]
+      | Pat_constant s     -> 
+        g, [MLP_Const (mlconst_of_const s)]
 
-  | Pat_cons (f, q, pats) -> 
-    let d = match Env.lookup_fv g f with 
-        | MLE_Name n, _ -> n
-        | _ -> failwith "Expected a constructor" in
-    let g, pats = Util.fold_map extract_pat g pats in
-    g, [Util.resugar_pat q <| MLP_CTor (d, List.flatten pats)]
+      | Pat_cons (f, q, pats) -> 
+        let d = match Env.lookup_fv g f with 
+            | MLE_Name n, _ -> n
+            | _ -> failwith "Expected a constructor" in
+        let g, pats = Util.fold_map (extract_pat disj) g pats in
+        g, [Util.resugar_pat q <| MLP_CTor (d, List.flatten pats)]
 
-  | Pat_var(x, _) ->
-    let mlty = translate_typ g x.sort in 
-    let g = Env.extend_bv g x ([], mlty) false in
-    g, [MLP_Var (as_mlident x.v)]
+      | Pat_var(x, _) ->
+        let mlty = translate_typ g x.sort in 
+        let g = Env.extend_bv g x ([], mlty) false in
+        g, [MLP_Var (as_mlident x.v)]
 
-  | Pat_wild x -> 
-    let mlty = translate_typ g x.sort in 
-    let g = Env.extend_bv g x ([], mlty) false in
-    g, [MLP_Wild]
+      | Pat_wild x when disj -> 
+        g, [MLP_Wild]
 
+      | Pat_wild x ->
+        let mlty = translate_typ g x.sort in 
+        let g = Env.extend_bv g x ([], mlty) false in
+        g, [MLP_Var (as_mlident x.v)]
 
-  | Pat_dot_term _ -> 
-    g, [MLP_Wild]
+      | Pat_dot_term _ -> 
+        g, [MLP_Wild]
 
-  | Pat_dot_typ _
-  | Pat_twild _
-  | Pat_tvar _ ->
-    g, []
+      | Pat_dot_typ _
+      | Pat_twild _
+      | Pat_tvar _ ->
+        g, [] in
+
+   extract_pat false g p
 
 let normalize_abs e0 = 
     let rec aux bs e = 

@@ -1,5 +1,6 @@
 (*--build-config
-    other-files:list.fst listproperties.fst ordset.fsi
+    options:--admit_fsi Set;
+    other-files:set.fsi heap.fst st.fst all.fst list.fst listproperties.fst ordset.fsi
  --*)
 
 module OrdSet
@@ -23,7 +24,7 @@ let empty (#a:Type) #f = []
 
 val insert': #a:Type -> #f:cmp a -> x:a -> s:ordset a f
              -> Tot (l:(ordset a f){is_Cons l /\
-                                    (Cons.hd l = x \/ 
+                                    (Cons.hd l = x \/
                                     (is_Cons s /\ Cons.hd l = Cons.hd s))})
 let rec insert' (#a:Type) #f x s = match s with
   | []     -> [x]
@@ -123,7 +124,7 @@ let rec mem_union (#a:Type) #f x s1 s2 = match s1 with
 
 let rec mem_intersect (#a:Type) #f x s1 s2 = match s1 with
   | []     -> ()
-  | hd::tl -> 
+  | hd::tl ->
     let _ = mem_intersect #_ #f x tl s2 in
     if mem #_ #f hd s2 then insert_mem #_ #f hd x (intersect #_ #f tl s2) else ()
 

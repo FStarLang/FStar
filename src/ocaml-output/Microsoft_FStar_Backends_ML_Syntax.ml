@@ -8,15 +8,15 @@ type mlident =
 type mlpath =
 (mlsymbol list * mlsymbol)
 
-let idsym = (fun ( _63_4 ) -> (match (_63_4) with
-| (s, _) -> begin
+let idsym = (fun ( _65_4 ) -> (match (_65_4) with
+| (s, _65_3) -> begin
 s
 end))
 
-let ptsym = (fun ( _63_7 ) -> (match (_63_7) with
+let ptsym = (fun ( _65_7 ) -> (match (_65_7) with
 | (p, s) -> begin
-(let s = (match (((let _68_25404 = (Support.String.get s 0)
-in (Support.Char.lowercase _68_25404)) <> (Support.String.get s 0))) with
+(let s = (match (((let _70_25596 = (Support.String.get s 0)
+in (Support.Char.lowercase _70_25596)) <> (Support.String.get s 0))) with
 | true -> begin
 (Support.String.strcat "l__" s)
 end
@@ -26,10 +26,10 @@ end)
 in (Support.String.concat "." (Support.List.append p ((s)::[]))))
 end))
 
-let ptctor = (fun ( _63_11 ) -> (match (_63_11) with
+let ptctor = (fun ( _65_11 ) -> (match (_65_11) with
 | (p, s) -> begin
-(let s = (match (((let _68_25407 = (Support.String.get s 0)
-in (Support.Char.uppercase _68_25407)) <> (Support.String.get s 0))) with
+(let s = (match (((let _70_25599 = (Support.String.get s 0)
+in (Support.Char.uppercase _70_25599)) <> (Support.String.get s 0))) with
 | true -> begin
 (Support.String.strcat "U__" s)
 end
@@ -39,8 +39,8 @@ end)
 in (Support.String.concat "." (Support.List.append p ((s)::[]))))
 end))
 
-let mlpath_of_lident = (fun ( x ) -> (let _68_25411 = (Support.List.map (fun ( x ) -> x.Microsoft_FStar_Absyn_Syntax.idText) x.Microsoft_FStar_Absyn_Syntax.ns)
-in (_68_25411, x.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText)))
+let mlpath_of_lident = (fun ( x ) -> (let _70_25603 = (Support.List.map (fun ( x ) -> x.Microsoft_FStar_Absyn_Syntax.idText) x.Microsoft_FStar_Absyn_Syntax.ns)
+in (_70_25603, x.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText)))
 
 let as_mlident = (fun ( x ) -> (x.Microsoft_FStar_Absyn_Syntax.ppname.Microsoft_FStar_Absyn_Syntax.idText, 0))
 
@@ -555,7 +555,7 @@ let mlseq = (fun ( e1 ) ( e2 ) -> (match (e2) with
 | MLE_Seq (s) -> begin
 MLE_Seq ((e1)::s)
 end
-| _ -> begin
+| _65_115 -> begin
 MLE_Seq ((e1)::(e2)::[])
 end))
 
@@ -563,17 +563,17 @@ let mlfun = (fun ( x ) ( e ) -> (match (e) with
 | MLE_Fun ((xs, e)) -> begin
 MLE_Fun ((((x, None))::xs, e))
 end
-| _ -> begin
+| _65_123 -> begin
 MLE_Fun ((((x, None))::[], e))
 end))
 
-let mlif = (fun ( b ) ( _63_127 ) -> (match (_63_127) with
+let mlif = (fun ( b ) ( _65_127 ) -> (match (_65_127) with
 | (e1, e2) -> begin
 (match (e2) with
 | MLE_Const (MLC_Unit) -> begin
 MLE_If ((b, e1, None))
 end
-| _ -> begin
+| _65_131 -> begin
 MLE_If ((b, e1, Some (e2)))
 end)
 end))

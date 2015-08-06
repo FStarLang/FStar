@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi OrdSet --admit_fsi OrdMap --admit_fsi Set --admit_fsi Wysteria;
     variables:LIB=../../lib;
-    other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/ordset.fsi $LIB/ordmap.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst wysteria.fsi lib.fst
+    other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/ordset.fsi $LIB/ordmap.fsi $LIB/list.fst wysteria.fsi lib.fst
  --*)
 
 module Examples
@@ -218,7 +218,7 @@ let mill8 _ =
 
   let w1 = concat_wire wa wb in
   let w2 = concat_wire w1 wc in
-  
+
   (* call mill for 2 parties *)
   let _ = as_par ab (mill8_sec #ab w1) in
 

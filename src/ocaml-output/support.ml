@@ -61,7 +61,7 @@ module Prims = struct
   false
   end))
 
-  type l__False = unit 
+  type l__False = unit
   (*This is how Coq extracts Inductive void := . Our extraction needs to be fixed to recognize when there
     are no constructors and generate this type abbreviation*)
 
@@ -93,15 +93,11 @@ module Prims = struct
   let cut = ()
   let fst = fst
   let snd = snd
-  let failwith = failwith
-  let try_with f1 f2 = try f1 () with | e -> f2 e
   let admit () = ()
   let _assume () = ()
   let _assert x = ()
   let magic () = failwith "no magic"
   let min x y = if x < y then x else y
-  let pipe_right a f = f a
-  let pipe_left f a = f a
   let op_Negation x = not x
   let op_Addition x y = x + y
   let op_Subtraction x y = x - y
@@ -124,6 +120,14 @@ module ST = struct
   let read x = !x
   let op_Colon_Equals x y = x := y
   let alloc x = ref x
+end
+
+module All = struct
+  let failwith x = failwith x
+  let exit i = exit i
+  let pipe_right a f = f a
+  let pipe_left f a = f a
+  let try_with f1 f2 = try f1 () with | e -> f2 e
 end
 
 module String = struct
@@ -271,16 +275,16 @@ module Microsoft = struct
 
       let ask_process (p:proc) (stdin:string) : string =
         let out = Buffer.create 16 in
-        
+
         let rec read_out _ =
           let s = BatString.trim (input_line p.inc) in
           if s = "Done!" then ()
           else
             (Buffer.add_string out (s ^ "\n"); read_out ())
         in
-        
+
         let child_thread = Thread.create (fun _ -> read_out ()) () in
-        
+
         output_string p.outc stdin;
         flush p.outc;
         Thread.join child_thread;

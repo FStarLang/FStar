@@ -10,16 +10,6 @@ end
 false
 end))
 
-let pfst = (fun ( _proj_ ) -> (match (_proj_) with
-| Pair (dummyPat2, dummyPat1) -> begin
-pfst
-end))
-
-let psnd = (fun ( _proj_ ) -> (match (_proj_) with
-| Pair (dummyPat2, dummyPat1) -> begin
-psnd
-end))
-
 let ffst = Test_Pair.pfst
 
 let idlist = (fun ( x ) -> x)
@@ -44,11 +34,6 @@ end
 false
 end))
 
-let _0 = (fun ( _proj_ ) -> (match (_proj_) with
-| S (dummyPat1) -> begin
-_0
-end))
-
 let idnat = (fun ( x ) -> x)
 
 let idnat2 = (fun ( x ) -> x)
@@ -61,10 +46,10 @@ let idp' = (fun ( x ) -> x)
 
 let add1 = (fun ( a ) -> S (a))
 
-let add2 = (fun ( _2_2684 ) -> S (_2_2684))
+let add2 = (fun ( _2_2680 ) -> S (_2_2680))
 
-let eval_order = (fun ( effectful ) ( f ) -> (let _2_2704 = (effectful "first")
-in (f _2_2704 "second")))
+let eval_order = (fun ( effectful ) ( f ) -> (let _2_2700 = (effectful "first")
+in (f _2_2700 "second")))
 
 let prev = (fun ( _2_1 ) -> (match (_2_1) with
 | O -> begin
@@ -104,21 +89,6 @@ end
 false
 end))
 
-let hd = (fun ( _proj_ ) -> (match (_proj_) with
-| Cons2 (dummyPat3, dummyPat2, dummyPat1) -> begin
-hd
-end))
-
-let hd2 = (fun ( _proj_ ) -> (match (_proj_) with
-| Cons2 (dummyPat3, dummyPat2, dummyPat1) -> begin
-hd2
-end))
-
-let tl = (fun ( _proj_ ) -> (match (_proj_) with
-| Cons2 (dummyPat3, dummyPat2, dummyPat1) -> begin
-tl
-end))
-
 type any =
 | Any of unit * Obj.t
 
@@ -128,11 +98,6 @@ true
 end
 | _ -> begin
 false
-end))
-
-let _1 = (fun ( _proj_ ) -> (match (_proj_) with
-| Any (dummyPat2, dummyPat1) -> begin
-_1
 end))
 
 type distr_pair =
@@ -158,16 +123,6 @@ end
 false
 end))
 
-let hd = (fun ( _proj_ ) -> (match (_proj_) with
-| Cons2p (dummyPat2, dummyPat1) -> begin
-hd
-end))
-
-let tl = (fun ( _proj_ ) -> (match (_proj_) with
-| Cons2p (dummyPat2, dummyPat1) -> begin
-tl
-end))
-
 type 'dummyV1 list3 =
 | Nil3 of unit
 | Cons3 of unit * Obj.t * Obj.t list3
@@ -188,16 +143,6 @@ end
 false
 end))
 
-let _1 = (fun ( _proj_ ) -> (match (_proj_) with
-| Cons3 (dummyPat3, dummyPat2, dummyPat1) -> begin
-_1
-end))
-
-let _2 = (fun ( _proj_ ) -> (match (_proj_) with
-| Cons3 (dummyPat3, dummyPat2, dummyPat1) -> begin
-_2
-end))
-
 type ' x poly =
 | Poly of nnat * ' x
 
@@ -209,16 +154,6 @@ end
 false
 end))
 
-let n = (fun ( _proj_ ) -> (match (_proj_) with
-| Poly (dummyPat2, dummyPat1) -> begin
-n
-end))
-
-let _2 = (fun ( _proj_ ) -> (match (_proj_) with
-| Poly (dummyPat2, dummyPat1) -> begin
-_2
-end))
-
 type ' x poly2 =
 | Poly2 of unit * ' x
 
@@ -228,11 +163,6 @@ true
 end
 | _ -> begin
 false
-end))
-
-let _2 = (fun ( _proj_ ) -> (match (_proj_) with
-| Poly2 (dummyPat2, dummyPat1) -> begin
-_2
 end))
 
 type ' x sch =
@@ -270,21 +200,6 @@ end
 false
 end))
 
-let n = (fun ( _proj_ ) -> (match (_proj_) with
-| Conss (dummyPat3, dummyPat2, dummyPat1) -> begin
-n
-end))
-
-let _2 = (fun ( _proj_ ) -> (match (_proj_) with
-| Conss (dummyPat3, dummyPat2, dummyPat1) -> begin
-_2
-end))
-
-let _3 = (fun ( _proj_ ) -> (match (_proj_) with
-| Conss (dummyPat3, dummyPat2, dummyPat1) -> begin
-_3
-end))
-
 type vecn1 =
 (nnat, unit) vec
 
@@ -306,21 +221,6 @@ true
 end
 | _ -> begin
 false
-end))
-
-let n = (fun ( _proj_ ) -> (match (_proj_) with
-| Leaf -> begin
-n
-end))
-
-let n = (fun ( _proj_ ) -> (match (_proj_) with
-| Node (dummyPat1) -> begin
-n
-end))
-
-let _2 = (fun ( _proj_ ) -> (match (_proj_) with
-| Node (dummyPat1) -> begin
-_2
 end))
 
 type ' t binaryTree =
@@ -368,26 +268,6 @@ end
 false
 end))
 
-let hd = (fun ( _proj_ ) -> (match (_proj_) with
-| ECons (dummyPat2, dummyPat1) -> begin
-hd
-end))
-
-let tl = (fun ( _proj_ ) -> (match (_proj_) with
-| ECons (dummyPat2, dummyPat1) -> begin
-tl
-end))
-
-let hd = (fun ( _proj_ ) -> (match (_proj_) with
-| OCons (dummyPat2, dummyPat1) -> begin
-hd
-end))
-
-let tl = (fun ( _proj_ ) -> (match (_proj_) with
-| OCons (dummyPat2, dummyPat1) -> begin
-tl
-end))
-
 type 'dummyV1 isEven =
 | Ev0
 | EvSOdd of nnat * unit isOdd 
@@ -416,26 +296,6 @@ true
 end
 | _ -> begin
 false
-end))
-
-let n = (fun ( _proj_ ) -> (match (_proj_) with
-| EvSOdd (dummyPat2, dummyPat1) -> begin
-n
-end))
-
-let _1 = (fun ( _proj_ ) -> (match (_proj_) with
-| EvSOdd (dummyPat2, dummyPat1) -> begin
-_1
-end))
-
-let n = (fun ( _proj_ ) -> (match (_proj_) with
-| OddSEven (dummyPat2, dummyPat1) -> begin
-n
-end))
-
-let _1 = (fun ( _proj_ ) -> (match (_proj_) with
-| OddSEven (dummyPat2, dummyPat1) -> begin
-_1
 end))
 
 let ev2 = EvSOdd (S (O), OddSEven (O, Ev0))

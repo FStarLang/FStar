@@ -14,19 +14,17 @@ endif
 
 include ../Makefile.include
 all: .all.crypto.ver merkle_tree # rpc acls-cap
+STDLIB_ADMITS=--admit_fsi Seq --admit_fsi Set --admit_fsi SeqProperties
+STDLIB=$(addprefix $(FSTAR_HOME)/lib/, classical.fst ext.fst set.fsi heap.fst st.fst all.fst string.fst list.fst seq.fsi seqproperties.fst) $(STDLIB_ADMITS)
 
 .all.crypto.ver: $(VERFILES)
-	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --admit_fsi Seq $(addprefix $(FSTAR_HOME)/lib/, string.fst list.fst ext.fst classical.fst \
-	set.fsi set.fst \
-	heap.fst st.fst \
-	seq.fsi seqproperties.fst ) $^
-
+	$(FSTAR) --z3timeout 10 $(STDLIB) $^
 
 mac:
 	$(FSTAR) $(FSTAR_HOME)/lib/partialmap.fst $(FSTAR_HOME)/lib/st.fst sha1.fst mac.fst
 
 merkle_tree:
-	$(FSTAR) $(FSTAR_HOME)/lib/list.fst $(FSTAR_HOME)/lib/constr.fst merkle_tree.fst
+	$(FSTAR) $(STDLIB) $(FSTAR_HOME)/lib/constr.fst merkle_tree.fst
 
 acls-cap: sha1.fst mac.fst ../security/acls2.fst acls-cap.fst
 	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --admit_fsi Seq $(addprefix $(FSTAR_HOME)/lib/, string.fst list.fst ext.fst classical.fst \

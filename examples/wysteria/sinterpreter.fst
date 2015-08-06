@@ -1,7 +1,7 @@
 (*--build-config
-    options:--admit_fsi OrdSet --admit_fsi OrdMap;
+    options:--admit_fsi OrdSet --admit_fsi OrdMap --admit_fsi Set;
     variables:LIB=../../lib;
-    other-files:$LIB/ordset.fsi $LIB/ordmap.fsi $LIB/list.fst $LIB/classical.fst ast.fst sem.fst
+    other-files:set.fsi heap.fst st.fst all.fst $LIB/ordset.fsi $LIB/ordmap.fsi $LIB/classical.fst ast.fst sem.fst
  --*)
 
 module SourceInterpreter
@@ -63,9 +63,9 @@ let step c =
   else None
 
 val step_correctness: c:sconfig{is_Some (step c)} -> Tot (sstep c (Some.v (step c)))
-let step_correctness c = 
-  let c' = Some.v (step c) in
-  if pre_easpar c then C_aspar_ps c c'  
+let step_correctness c =
+  let c' = v_of_some (step c) in
+  if pre_easpar c then C_aspar_ps c c'
   else if pre_eunbox c then C_unbox c c'
   else if pre_emkwire c then C_mkwire_e1 c c'
   else if pre_eprojwire c then C_projwire_p c c'
