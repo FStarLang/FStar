@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set --z3timeout 300;
+    options:--admit_fsi Set --z3timeout 300 --verify_module Encryption;
     variables:LIB=../../lib;
     other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/st2.fst $LIB/bytes.fst $LIB/list.fst sample.fst xor.fst
   --*)
@@ -59,7 +59,8 @@ type Ok : log -> log -> Type =
            -> p: Ok log0 log1
            -> Ok ((k ,(Adv,t ))::log0) ((k, (Adv,t ))::log1)
 
-type fresh_keys (k0:key) (k1:key) (l0:log) (l1:log) = is_None (assoc k0 l0) /\ is_None (assoc k1 l1)
+val fresh_keys : k0:key -> k1:key -> l0:log -> l1:log -> Tot bool
+let fresh_keys k0 k1 l0 l1 = is_None (assoc k0 l0) && is_None (assoc k1 l1)
 
 assume val ok_as_refinement : #l0:log -> #l1:log  -> p:Ok l0 l1 -> Tot (u:unit{Ok l0 l1})
 assume val ok_as_proof : l0:log -> l1:log{Ok l0 l1} -> Tot (Ok l0 l1)
@@ -161,9 +162,11 @@ opaque val hash_hon:  k0:key -> k1:key -> f:bij #tag #tag ->
                ST2 (option tag * option tag)
                (requires (fun h2 -> goodstate_hash (sel (fst h2) s) (sel (snd h2) s) /\
                           safe_key k0 k1))
-               (ensures (fun h2' p h2 -> (sel (fst h2) s).bad \/
+               (ensures (fun h2' p h2 -> (sel (fst h2) s).bad  \/
                                        (sel (snd h2) s).bad \/
-                                       (is_Some (fst p) /\ is_Some (snd p) /\
+                                       (~ ((sel (fst h2) s).bad \/
+                                         (sel (snd h2) s).bad) /\
+                                       is_Some (fst p) /\ is_Some (snd p) /\
                                           safe (Some.v(fst p)) (Some.v(snd p))
                                           /\ (fresh_keys k0 k1 ((sel (fst h2') s).l) ((sel (snd h2') s).l)
                                               ==> Some.v (snd p) = f (Some.v (fst p)))
@@ -269,29 +272,24 @@ let encrypt p k = xor p k
 val decrypt : block -> block -> Tot block
 let decrypt c k = xor c k
 
-(*
-type state_enc =
-  { bad': bool; (* set iff a nonce was sampled twice *)
-    l':log }    (* the log keeps track of returned nonces *)
-*)
-
-(* type good_state_enc (s:state_enc) = s.bad' = false *)
-
 opaque type safe_key_pre (k0:bytes) (k1:bytes) = (forall (r:block). safe_key (append k0 r) (append k1 r))
 
 val lemma_safe_key_pre : k0:bytes -> k1:bytes{safe_key_pre k0 k1} -> r0:block -> r1:block{r0=r1}
                          -> Lemma (safe_key (append k0 r0) (append k1 r1))
 let lemma_safe_key_pre k0 k1 r0 r1 = ()
 
+(* using this pair at a fixed type because of problems probably related to #290 *)
 type mp : Type =
   | MkMP : a:block -> b:block -> mp
 
 
 #reset-options
 
-val xor_inverse_lemma : a:block -> Lemma (bijection #block #block (fun x -> xor a x))
+opaque val xor_inverse_lemma : a:block -> Lemma (bijection #block #block (fun x -> xor a x))
 let xor_inverse_lemma a = ()
 
+opaque val encrypt_equal_lemma: x:block -> y:block ->  p0:block -> p1:block -> Lemma (y = xor (xor p0 p1) x ==> encrypt p0 x = encrypt p1 y)
+let encrypt_equal_lemma x y p0 p1 = ()
 
 #reset-options
 
@@ -299,17 +297,15 @@ val encrypt_hon : k0:bytes ->  k1:bytes{safe_key_pre k0 k1}
                   -> p0:block-> p1:block ->
                   ST2 (option mp * option mp)
                   (requires (fun h2 -> goodstate_hash (sel (fst h2) s) (sel (snd h2) s)))
-                  (ensures  (fun h2' p h2 -> (sel (fst h2) s).bad  \/
-                                             (sel (snd h2) s).bad  \/
+                  (ensures  (fun h2' p h2 -> ~((sel (fst h2) s).bad  \/
+                                             (sel (snd h2) s).bad)  ==>
                                              Ok (sel (fst h2) s).l (sel (snd h2) s).l /\
-                                             is_Some (fst p) /\ is_Some (snd p)))
-(*
-                                             (fresh_keys (append k0 (MkMP.a(Some.v (fst p))))
-                                                         (append k1 (MkMP.a(Some.v (snd p))))
-                                                         (sel (fst h2') s).l
-                                                         (sel (snd h2') s).l ==>
-                                                  fst p = snd p)
-*)
+                                             is_Some (fst p) /\ is_Some (snd p)   /\
+                                             (fresh_keys (append k0 (MkMP.b(Some.v (fst p))))
+                                                         (append k1 (MkMP.b(Some.v (snd p))))
+                                                         ((sel (fst h2') s).l)
+                                                         ((sel (snd h2') s).l) ==>
+                                                  fst p = snd p)))
 let encrypt_hon k0 k1 p0 p1 =
                   let sample_fun = (fun x -> xor (xor p0 p1) x) in
                   xor_inverse_lemma (xor p0 p1);
@@ -318,7 +314,16 @@ let encrypt_hon k0 k1 p0 p1 =
                   let kh0, kh1 = append k0 r0, append k1 r1 in
                   lemma_safe_key_pre k0 k1 r0 r1;
                   cut (safe_key kh0 kh1);
+                  let l0, l1 = compose2 (fun () -> (!s).l) (fun () -> (!s).l) () () in
                   let h0, h1 = hash_hon kh0 kh1 (sample_fun)  in
+                  let s0, s1 = compose2 (fun () -> (!s)) (fun () -> (!s)) () () in
                   let a = if is_Some h0 then Some (MkMP (encrypt p0 (Some.v h0)) r0) else None in
                   let b = if is_Some h1 then Some (MkMP (encrypt p1 (Some.v h1)) r1) else None in
+                  if not (s0.bad || s1.bad) then
+                    if (fresh_keys kh0 kh1 l0 l1) then(
+                      cut (b2t(Some.v h1 = sample_fun (Some.v h0)));
+                      encrypt_equal_lemma (Some.v h0) (Some.v h1) p0 p1;
+                      cut (b2t(encrypt p0 (Some.v h0) = encrypt p1 (Some.v h1)));
+                      cut (b2t(a = b))
+                      );
                   a,b
