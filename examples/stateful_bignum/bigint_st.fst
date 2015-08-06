@@ -17,11 +17,11 @@ type u8 = int
 let ocaml63 = 63
 
 (* Maps the index of the integer data to the theoretic bit size of the cell *)
-type template = nat -> Tot pos
+type template = nat -> Tot (n:pos{ n < ocaml63 })
 type template_const = t:template{ forall (n:nat). t n = t 0 }
 
 (* Sized integer *)
-logic type tint (max:nat) = (size:nat{ size < max } & content:int{ Bitsize content size })
+type tint (max:nat) = (size:nat{ size < max } & content:int{ Bitsize content size })
 
 (* Sized ST array *)
 type tarray (max:nat) = array (tint max)
@@ -163,6 +163,7 @@ val copy:
      (ensures (fun h0 b h1 ->
        (inHeap h0 b)
        /\ (inHeap h1 b)
+       /\ not(contains h0 (Bigint63.data b))
        /\ (EqualBigint a b h0 h1)
        /\ (modifies !{} h0 h1)
      ))
