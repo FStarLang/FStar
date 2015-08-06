@@ -58,8 +58,10 @@ rpc: formatting.fst sha1.fst mac.fst rpc.fst
 					$(addprefix $(FSTAR_HOME)/contrib/,  Platform/fst/Bytes.fst CoreCrypto/fst/CoreCrypto.fst) \
 					sha1.fst mac.fst formatting.fst rpc.fst
 
-statefulEnc: statefulEnc-multi-hyperheap.fst
-	$(FSTAR) $^
+statefulEnc: statefulEnc-single.fst statefulEnc-twoLevelHeap.fst
+	$(FSTAR) statefulEnc-single.fst
+	$(FSTAR) statefulEnc-twoLevelHeap.fst
+
 
 mllibs:
 	make -C $(FSTAR_HOME)/contrib/Platform/ml clean all

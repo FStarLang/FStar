@@ -4,7 +4,7 @@
   --*)
 (* A standalone experiment corresponding to building a stateful encryption on
    top of a stateless one ... along the lines of StatefulLHAE on top of AEAD_GCM *)
-module StatefulEncryption.MultiInstance.HyperHeap
+module StatefulEncryption.TwoLevelHeap
 open ST
 open Set
 open Seq
