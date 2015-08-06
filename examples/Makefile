@@ -13,6 +13,9 @@ all:
 	make -C wysteria
 	make -C ../doc/tutorial/code/solutions
 	make -C unit-tests
+	make -C ../contrib/Platform/ml/ clean all
+	make -C ../contrib/CoreCrypto/ml/ clean all
+
 
 stdlib: $(addprefix ../lib/, list.fst string.fst partialmap.fst st.fst listproperties.fst)
 	mkdir -p ../cache

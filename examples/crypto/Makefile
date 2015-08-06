@@ -13,15 +13,24 @@ LIB = /usr/lib #place to look for libcrypto.a
 endif
 
 include ../Makefile.include
-all: .all.crypto.ver merkle_tree rpc acls-cap
+all: .all.crypto.ver merkle_tree mac rpc acls-cap statefulEnc
 STDLIB_ADMITS=--admit_fsi Seq --admit_fsi Set --admit_fsi SeqProperties
-STDLIB=$(addprefix $(FSTAR_HOME)/lib/, classical.fst ext.fst set.fsi heap.fst st.fst all.fst string.fst list.fst seq.fsi seqproperties.fst) $(STDLIB_ADMITS)
+STDLIB=$(addprefix $(FSTAR_HOME)/lib/, classical.fst ext.fst set.fsi \
+       heap.fst st.fst all.fst string.fst list.fst seq.fsi seqproperties.fst) \
+			 $(STDLIB_ADMITS)
 
 .all.crypto.ver: $(VERFILES)
 	$(FSTAR) --z3timeout 20 $(STDLIB) $^
 
-mac:
-	$(FSTAR) $(FSTAR_HOME)/lib/partialmap.fst $(FSTAR_HOME)/lib/st.fst sha1.fst mac.fst
+mac: sha1.fst mac.fst
+	$(FSTAR) --verify_module SHA1 --verify_module MAC --admit_fsi Seq $(addprefix $(FSTAR_HOME)/lib/, \
+	ext.fst classical.fst \
+	set.fsi set.fst \
+	heap.fst st.fst all.fst \
+	list.fst \
+	seq.fsi seqproperties.fst ) \
+	$(addprefix $(FSTAR_HOME)/contrib/,  Platform/fst/Bytes.fst CoreCrypto/fst/CoreCrypto.fst) \
+	$^
 
 merkle_tree:
 	$(FSTAR) $(STDLIB) $(FSTAR_HOME)/lib/constr.fst merkle_tree.fst
@@ -49,6 +58,8 @@ rpc: formatting.fst sha1.fst mac.fst rpc.fst
 					$(addprefix $(FSTAR_HOME)/contrib/,  Platform/fst/Bytes.fst CoreCrypto/fst/CoreCrypto.fst) \
 					sha1.fst mac.fst formatting.fst rpc.fst
 
+statefulEnc: statefulEnc-multi-hyperheap.fst
+	$(FSTAR) $^
 
 mllibs:
 	make -C $(FSTAR_HOME)/contrib/Platform/ml clean all
@@ -57,9 +68,10 @@ mllibs:
 
 rpc-extract:
 	$(FSTAR) --codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml \
-          $(addprefix $(FSTAR_HOME)/lib/, string.fst io.fst list.fst ext.fst classical.fst \
+          $(addprefix $(FSTAR_HOME)/lib/, ext.fst classical.fst \
 					set.fsi set.fst \
-					heap.fst st.fst \
+					heap.fst st.fst all.fst \
+					string.fst io.fst list.fst \
 					seq.fst seqproperties.fst ) \
 					$(addprefix $(FSTAR_HOME)/contrib/,  Platform/fst/Bytes.fst CoreCrypto/fst/CoreCrypto.fst) \
 					sha1.fst mac.fst formatting.fst rpc.fst  --debug high
