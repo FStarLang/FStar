@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set --z3timeout 300 --verify_module Encryption;
+    options:--admit_fsi Set --z3timeout 30;
     variables:LIB=../../lib;
     other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/st2.fst $LIB/bytes.fst $LIB/list.fst sample.fst xor.fst
   --*)
@@ -162,38 +162,37 @@ opaque val hash_hon:  k0:key -> k1:key -> f:bij #tag #tag ->
                ST2 (option tag * option tag)
                (requires (fun h2 -> goodstate_hash (sel (fst h2) s) (sel (snd h2) s) /\
                           safe_key k0 k1))
-               (ensures (fun h2' p h2 -> (sel (fst h2) s).bad  \/
+               (ensures (fun h2' p h2 -> goodstate_hash (sel (fst h2) s) (sel (snd h2) s) /\
+                                       ((sel (fst h2) s).bad  \/
                                        (sel (snd h2) s).bad \/
-                                       (~ ((sel (fst h2) s).bad \/
-                                         (sel (snd h2) s).bad) /\
-                                       is_Some (fst p) /\ is_Some (snd p) /\
+                                       (is_Some (fst p) /\ is_Some (snd p) /\
                                           safe (Some.v(fst p)) (Some.v(snd p))
                                           /\ (fresh_keys k0 k1 ((sel (fst h2') s).l) ((sel (snd h2') s).l)
                                               ==> Some.v (snd p) = f (Some.v (fst p)))
-                                          /\ Ok (sel (fst h2) s).l (sel (snd h2) s).l)))
+                                          /\ Ok (sel (fst h2) s).l (sel (snd h2) s).l))))
 
                                   (* Why does (f:bij #tag #tag) not work here?*)
 opaque val hash_hon2: k0:key -> k1:key -> f:(tag -> Tot tag){bijection f} ->
                ST2 (option tag * option tag)
                (requires (fun h2 -> goodstate_hash (sel (fst h2) s) (sel (snd h2) s) /\
                           safe_key k0 k1))
-               (ensures (fun h2' p h2 -> (sel (fst h2) s).bad \/
+               (ensures (fun h2' p h2 -> goodstate_hash (sel (fst h2) s) (sel (snd h2) s) /\
+                                       ((sel (fst h2) s).bad  \/
                                        (sel (snd h2) s).bad \/
                                        (is_Some (fst p) /\ is_Some (snd p) /\
                                           safe (Some.v(fst p)) (Some.v(snd p))
                                           /\ (fresh_keys k0 k1 ((sel (fst h2') s).l) ((sel (snd h2') s).l)
                                               ==> Some.v (snd p) = f (Some.v (fst p)))
-                                          /\ Ok (sel (fst h2) s).l (sel (snd h2) s).l)))
-
-
+                                          /\ Ok (sel (fst h2) s).l (sel (snd h2) s).l))))
 opaque val hash_adv:  k:key ->
                ST2 (option tag * option tag)
                (requires (fun h2 -> goodstate_hash (sel (fst h2) s) (sel (snd h2) s)))
-               (ensures (fun _ p h2 -> (sel (fst h2) s).bad \/
+               (ensures (fun h2' p h2 -> goodstate_hash (sel (fst h2) s) (sel (snd h2) s) /\
+                                       ((sel (fst h2) s).bad  \/
                                        (sel (snd h2) s).bad \/
                                        is_Some (fst p) /\ is_Some (snd p) /\
                                           Some.v(fst p) = Some.v(snd p)
-                                          /\ Ok (sel (fst h2) s).l (sel (snd h2) s).l))
+                                          /\ Ok (sel (fst h2) s).l (sel (snd h2) s).l)))
 
 (* workaround for some typing problems... *)
 val add_some : tag -> Tot (option tag)
@@ -218,7 +217,6 @@ let case_Adv  _     = s:={bad = true; l=(!s).l}; None
 let case_None (k,t) = s:={bad = (!s).bad; l = (k,(Hon,t))::(!s).l}; add_some t
 
 assume val sample_single : unit -> Tot tag
-#reset-options
 
 let hash_hon2 k0 k1 f =
   let l0, l1 = compose2 (fun _ -> (!s).l) (fun _ -> (!s).l) () () in
@@ -283,7 +281,6 @@ type mp : Type =
   | MkMP : a:block -> b:block -> mp
 
 
-#reset-options
 
 opaque val xor_inverse_lemma : a:block -> Lemma (bijection #block #block (fun x -> xor a x))
 let xor_inverse_lemma a = ()
@@ -291,13 +288,13 @@ let xor_inverse_lemma a = ()
 opaque val encrypt_equal_lemma: x:block -> y:block ->  p0:block -> p1:block -> Lemma (y = xor (xor p0 p1) x ==> encrypt p0 x = encrypt p1 y)
 let encrypt_equal_lemma x y p0 p1 = ()
 
-#reset-options
 
 val encrypt_hon : k0:bytes ->  k1:bytes{safe_key_pre k0 k1}
                   -> p0:block-> p1:block ->
                   ST2 (option mp * option mp)
                   (requires (fun h2 -> goodstate_hash (sel (fst h2) s) (sel (snd h2) s)))
-                  (ensures  (fun h2' p h2 -> ~((sel (fst h2) s).bad  \/
+                  (ensures  (fun h2' p h2 -> goodstate_hash (sel (fst h2) s) (sel (snd h2) s) /\
+                                             (~((sel (fst h2) s).bad  \/
                                              (sel (snd h2) s).bad)  ==>
                                              Ok (sel (fst h2) s).l (sel (snd h2) s).l /\
                                              is_Some (fst p) /\ is_Some (snd p)   /\
@@ -305,7 +302,7 @@ val encrypt_hon : k0:bytes ->  k1:bytes{safe_key_pre k0 k1}
                                                          (append k1 (MkMP.b(Some.v (snd p))))
                                                          ((sel (fst h2') s).l)
                                                          ((sel (snd h2') s).l) ==>
-                                                  fst p = snd p)))
+                                                  fst p = snd p))))
 let encrypt_hon k0 k1 p0 p1 =
                   let sample_fun = (fun x -> xor (xor p0 p1) x) in
                   xor_inverse_lemma (xor p0 p1);
@@ -327,3 +324,17 @@ let encrypt_hon k0 k1 p0 p1 =
                       cut (b2t(a = b))
                       );
                   a,b
+
+(*
+val decrypt_hon : k0:bytes -> k1:bytes{safe_key_pre k0 k1} ->
+                  c0:mp -> c1:mp{c0 = c1} ->
+                  ST2 (option block * option block)
+                  (requires (fun h2 -> goodstate_hash (sel (fst h2) s) (sel (snd h2) s)))
+                  (ensures  (fun h2' p h2 -> goodstate_hash (sel (fst h2) s) (sel (snd h2) s)))
+let decrypt_hon k0 k1 (MkMP c0 r0) (MkMP c1 r1) = 
+                  let kh0, kh1 = append k0 r0, append k1 r1 in
+                  let h0, h1 = hash_hon kh0 kh1 (fun x -> x) in
+                  let a = if is_Some h0 then Some (decrypt c0 (Some.v h0)) else None in
+                  let b = if is_Some h1 then Some (decrypt c0 (Some.v h1)) else None in
+                  a, b
+*)
