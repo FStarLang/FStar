@@ -67,3 +67,7 @@ assume val op_Bang:#a:Type -> #i:rid -> r:rref i a -> ST a
 assume val get: unit -> ST t
   (requires (fun m -> True))
   (ensures (fun m0 x m1 -> m0=x /\ m1=m0))
+
+assume val recall: #a:Type -> #i:rid -> r:rref i a -> STATE unit
+   (fun 'p m0 -> Map.contains m0 i /\ Heap.contains (Map.sel m0 i) (as_ref r) ==> 'p () m0)
+   (fun 'p m0 -> Map.contains m0 i /\ Heap.contains (Map.sel m0 i) (as_ref r) ==> 'p () m0)
