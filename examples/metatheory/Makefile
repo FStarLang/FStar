@@ -23,7 +23,7 @@ micro-fstar: micro-fstar.fst
 	$(FSTAR) $^
 
 hoare_wp:
-	$(FSTAR) $(STDLIB) hoare_wp.fst --max_fuel 1 --max_ifuel 1
+	$(FSTAR) $(_STDLIB_) hoare_wp.fst --max_fuel 1 --max_ifuel 1
 
 ###################################
 #old
