@@ -13,12 +13,12 @@ LIB = /usr/lib #place to look for libcrypto.a
 endif
 
 include ../Makefile.include
-all: .all.crypto.ver merkle_tree # rpc acls-cap
+all: .all.crypto.ver merkle_tree rpc acls-cap
 STDLIB_ADMITS=--admit_fsi Seq --admit_fsi Set --admit_fsi SeqProperties
 STDLIB=$(addprefix $(FSTAR_HOME)/lib/, classical.fst ext.fst set.fsi heap.fst st.fst all.fst string.fst list.fst seq.fsi seqproperties.fst) $(STDLIB_ADMITS)
 
 .all.crypto.ver: $(VERFILES)
-	$(FSTAR) --z3timeout 10 $(STDLIB) $^
+	$(FSTAR) --z3timeout 20 $(STDLIB) $^
 
 mac:
 	$(FSTAR) $(FSTAR_HOME)/lib/partialmap.fst $(FSTAR_HOME)/lib/st.fst sha1.fst mac.fst
@@ -27,17 +27,24 @@ merkle_tree:
 	$(FSTAR) $(STDLIB) $(FSTAR_HOME)/lib/constr.fst merkle_tree.fst
 
 acls-cap: sha1.fst mac.fst ../security/acls2.fst acls-cap.fst
-	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --admit_fsi Seq $(addprefix $(FSTAR_HOME)/lib/, string.fst list.fst ext.fst classical.fst \
+	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --admit_fsi Seq \
+	--verify_module Platform.Bytes --verify_module CoreCrypto --verify_module ACLs2 --verify_module Cap \
+	$(addprefix $(FSTAR_HOME)/lib/, \
+	ext.fst classical.fst \
 	set.fsi set.fst \
-	heap.fst st.fst \
-	seq.fsi seqproperties.fst ) $^
+	heap.fst st.fst all.fst \
+	string.fst list.fst \
+	seq.fsi seqproperties.fst ) \
+	$(addprefix $(FSTAR_HOME)/contrib/,  Platform/fst/Bytes.fst CoreCrypto/fst/CoreCrypto.fst) \
+  $^
 
 
 rpc: formatting.fst sha1.fst mac.fst rpc.fst
-	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --admit_fsi Seq  \
-          $(addprefix $(FSTAR_HOME)/lib/, string.fst io.fst list.fst ext.fst classical.fst \
+	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC --admit_fsi Seq  \
+          $(addprefix $(FSTAR_HOME)/lib/, ext.fst classical.fst \
 					set.fsi set.fst \
-					heap.fst st.fst \
+					heap.fst st.fst all.fst \
+					string.fst io.fst list.fst \
 					seq.fsi seqproperties.fst )  \
 					$(addprefix $(FSTAR_HOME)/contrib/,  Platform/fst/Bytes.fst CoreCrypto/fst/CoreCrypto.fst) \
 					sha1.fst mac.fst formatting.fst rpc.fst

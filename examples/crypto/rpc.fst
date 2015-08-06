@@ -2,10 +2,11 @@
     options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module RPC --admit_fsi Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
     variables:LIB=../../lib
               CONTRIB=../../contrib;
-    other-files:$LIB/string.fst $LIB/list.fst
+    other-files:
             $LIB/ext.fst $LIB/classical.fst
             $LIB/set.fsi $LIB/set.fst
-            $LIB/heap.fst $LIB/st.fst
+            $LIB/heap.fst $LIB/st.fst $LIB/all.fst
+            $LIB/string.fst $LIB/list.fst
             $LIB/seq.fsi $LIB/seqproperties.fst
             $LIB/io.fst
             $CONTRIB/Platform/fst/Bytes.fst
@@ -20,8 +21,10 @@
 
 module RPC
 
+open All
 open String
 open IO
+
 
 let init_print = print_string "\ninitializing...\n\n"
 
@@ -32,6 +35,10 @@ open SHA1
 open Formatting
 open MAC
 
+//does it verify for trivial reasons, like a bug in the build-config?
+(*let testme () =
+   assert False*)
+   
 
 (* some basic, untrusted network controlled by the adversary *)
 
@@ -123,3 +130,4 @@ let test () =
     print_string "\n\n"
 
 let run = test ()
+(* check_marker *)
