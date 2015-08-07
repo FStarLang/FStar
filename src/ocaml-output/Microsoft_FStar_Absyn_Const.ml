@@ -39,26 +39,26 @@ let int31_lid = (p2l (("Int31")::("int31")::[]))
 
 let heap_lid = (p2l (("Heap")::("heap")::[]))
 
-let kunary = (fun ( k ) ( k' ) -> (let _70_7928 = (let _70_7927 = (let _70_7926 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k)
-in (_70_7926)::[])
-in (_70_7927, k'))
-in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _70_7928 Microsoft_FStar_Absyn_Syntax.dummyRange)))
+let kunary = (fun ( k ) ( k' ) -> (let _70_7930 = (let _70_7929 = (let _70_7928 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k)
+in (_70_7928)::[])
+in (_70_7929, k'))
+in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _70_7930 Microsoft_FStar_Absyn_Syntax.dummyRange)))
 
-let kbin = (fun ( k1 ) ( k2 ) ( k' ) -> (let _70_7939 = (let _70_7938 = (let _70_7937 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k1)
-in (let _70_7936 = (let _70_7935 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k2)
-in (_70_7935)::[])
-in (_70_7937)::_70_7936))
-in (_70_7938, k'))
-in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _70_7939 Microsoft_FStar_Absyn_Syntax.dummyRange)))
+let kbin = (fun ( k1 ) ( k2 ) ( k' ) -> (let _70_7941 = (let _70_7940 = (let _70_7939 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k1)
+in (let _70_7938 = (let _70_7937 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k2)
+in (_70_7937)::[])
+in (_70_7939)::_70_7938))
+in (_70_7940, k'))
+in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _70_7941 Microsoft_FStar_Absyn_Syntax.dummyRange)))
 
-let ktern = (fun ( k1 ) ( k2 ) ( k3 ) ( k' ) -> (let _70_7954 = (let _70_7953 = (let _70_7952 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k1)
-in (let _70_7951 = (let _70_7950 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k2)
-in (let _70_7949 = (let _70_7948 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k3)
-in (_70_7948)::[])
-in (_70_7950)::_70_7949))
+let ktern = (fun ( k1 ) ( k2 ) ( k3 ) ( k' ) -> (let _70_7956 = (let _70_7955 = (let _70_7954 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k1)
+in (let _70_7953 = (let _70_7952 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k2)
+in (let _70_7951 = (let _70_7950 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k3)
+in (_70_7950)::[])
 in (_70_7952)::_70_7951))
-in (_70_7953, k'))
-in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _70_7954 Microsoft_FStar_Absyn_Syntax.dummyRange)))
+in (_70_7954)::_70_7953))
+in (_70_7955, k'))
+in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _70_7956 Microsoft_FStar_Absyn_Syntax.dummyRange)))
 
 let true_lid = (pconst "True")
 
@@ -114,8 +114,6 @@ let cons_lid = (pconst "Cons")
 
 let nil_lid = (pconst "Nil")
 
-let ref_lid = (pconst "ref")
-
 let assume_lid = (pconst "_assume")
 
 let assert_lid = (pconst "_assert")
@@ -167,6 +165,8 @@ let read_lid = (p2l (("ST")::("read")::[]))
 let alloc_lid = (p2l (("ST")::("alloc")::[]))
 
 let op_ColonEq = (p2l (("ST")::("op_Colon_Equals")::[]))
+
+let ref_lid = (p2l (("Heap")::("ref")::[]))
 
 let heap_ref = (p2l (("Heap")::("Ref")::[]))
 

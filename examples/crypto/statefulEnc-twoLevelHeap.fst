@@ -1,14 +1,16 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Seq --admit_fsi Map --max_ifuel 1 --initial_ifuel 1 --initial_fuel 0 --max_fuel 0 --z3timeout 10;
-    other-files:../../lib/ext.fst ../../lib/set.fsi ../../lib/heap.fst ../../lib/map.fsi ../../lib/hyperheap.fst ../../lib/seq.fsi
+    options:--admit_fsi Set --admit_fsi Seq --admit_fsi Map --max_ifuel 1 --initial_ifuel 1 --initial_fuel 0 --max_fuel 0 --z3timeout 20;
+    other-files:../../lib/ext.fst ../../lib/set.fsi ../../lib/heap.fst ../../lib/st.fst ../../lib/all.fst ../../lib/map.fsi ../../lib/twoLevelHeap.fst ../../lib/seq.fsi
   --*)
 (* A standalone experiment corresponding to building a stateful encryption on
    top of a stateless one ... along the lines of StatefulLHAE on top of AEAD_GCM *)
-module StatefulEncryption.MultiInstance.HyperHeap
+module StatefulEncryption.TwoLevelHeap
 open ST
 open Set
 open Seq
-open HyperHeap
+open TwoLevelHeap
+
+(* check_marker *)
 
 (* local to speed up verification *)
 val snoc : seq 'a -> 'a -> Tot (seq 'a)
@@ -39,7 +41,7 @@ type both =
 val gen: unit -> ST both
   (requires (fun h -> True))
   (ensures (fun h0 b h1 ->
-      HyperHeap.modifies Set.empty h0 h1
+      TwoLevelHeap.modifies Set.empty h0 h1
       /\ fresh_region (Both.i b) h0 h1
       /\ contains_ref (Enc.log (Both.e b)) h1
       /\ sel h1 (Enc.log (Both.e b)) = emp))
@@ -60,7 +62,7 @@ assume val enc0: s:seq cipher (* ghost *) -> ST cipher
 val enc : #i:rid -> e:encryptor i -> ad:ad -> p:plain -> ST cipher
     (requires (fun h -> True))
     (ensures (fun h0 c h1 ->
-                HyperHeap.modifies (Set.singleton i) h0 h1
+                TwoLevelHeap.modifies (Set.singleton i) h0 h1
                 /\ Heap.modifies !{as_ref (Enc.log e)} (Map.sel h0 i) (Map.sel h1 i)
                 /\ h1 = upd h0 (Enc.log e) (snoc (sel h0 (Enc.log e)) (Entry ad c p))))
 let enc i e ad p =
@@ -73,7 +75,7 @@ opaque logic type trigger (i:nat) = True
 val dec: #i:rid -> d:decryptor i -> a:ad -> c:cipher -> ST (option plain)
   (requires (fun h -> True))
   (ensures (fun h0 o h1 ->
-              HyperHeap.modifies Set.empty h0 h1
+              TwoLevelHeap.modifies Set.empty h0 h1
               /\ (Let (sel h0 (Dec.log d))
                       (fun log ->
                           (is_None o ==> (forall (i:nat{i < Seq.length log}).{:pattern (trigger i)}
@@ -88,6 +90,10 @@ let dec i d a c =
     | None -> None
     | Some j -> cut (trigger j); Some (Entry.p (Seq.index s j))
 
+
+assume val mk_plain : unit -> ST plain (requires (fun h -> True))
+                                       (ensures (fun h0 x h1 -> h0=h1))
+
 (* A test of multiple basic instances:
    proves that use of one instance doesn't mess with another
 *)
@@ -97,10 +103,9 @@ val test_basic_frame : b1:both -> b2:both{Both.i b1 <> Both.i b2} -> ST unit
                         /\ sel h (Enc.log (Both.e b1)) = emp
                         /\ sel h (Enc.log (Both.e b2)) = emp))
     (ensures (fun h0 _ h1 ->
-                  HyperHeap.modifies (Set.union (Set.singleton (Both.i b1))
+                  TwoLevelHeap.modifies (Set.union (Set.singleton (Both.i b1))
                                                 (Set.singleton (Both.i b2)))
                             h0 h1))
-assume val mk_plain : unit -> ST plain (requires (fun h -> True)) (ensures (fun h0 x h1 -> h0=h1))
 let test_basic_frame b1 b2 =
  let b3 = gen() in
  let p = mk_plain () in
@@ -140,7 +145,7 @@ type st_paired (#i:rid) (enc:st_encryptor i) (dec:st_decryptor i) =
 type sti =
   | STI : i:rid -> e:st_encryptor i -> d:st_decryptor i{st_paired e d} -> sti
 
-type st_inv (#i:rid) (e:st_encryptor i) (d:st_decryptor i) (h:HyperHeap.t) =
+type st_inv (#i:rid) (e:st_encryptor i) (d:st_decryptor i) (h:TwoLevelHeap.t) =
   st_paired e d
   /\ Map.contains h i
   /\ contains_ref (StEnc.log e) h
@@ -158,10 +163,10 @@ type st_inv (#i:rid) (e:st_encryptor i) (d:st_decryptor i) (h:HyperHeap.t) =
           Let (Seq.index st i) (fun st_en ->
               b2t (Seq.index basic i = Entry i (StEntry.c st_en) (StEntry.p st_en))))))))
 
-type st_enc_inv (#i:rid) (e:st_encryptor i) (h:HyperHeap.t) =
+type st_enc_inv (#i:rid) (e:st_encryptor i) (h:TwoLevelHeap.t) =
   exists (d:st_decryptor i). st_inv e d h
 
-type st_dec_inv (#i:rid) (d:st_decryptor i) (h:HyperHeap.t) =
+type st_dec_inv (#i:rid) (d:st_decryptor i) (h:TwoLevelHeap.t) =
   exists (e:st_encryptor i). st_inv e d h
 
 let refs_in_e (#i:rid) (e:st_encryptor i) = !{as_ref (StEnc.log e), as_ref (StEnc.ctr e), as_ref (Enc.log (StEnc.key e))}
@@ -171,7 +176,7 @@ val stateful_gen : unit -> ST sti
   (requires (fun h -> True))
   (ensures (fun h0 b h1 ->
               st_inv (STI.e b) (STI.d b) h1
-              /\ HyperHeap.modifies Set.empty h0 h1
+              /\ TwoLevelHeap.modifies Set.empty h0 h1
               /\ fresh_region (STI.i b) h0 h1))
 let stateful_gen () =
   let Both i e d = gen () in
@@ -184,7 +189,7 @@ val stateful_enc : #i:rid -> e:st_encryptor i -> p:plain -> ST cipher
   (requires (fun h -> st_enc_inv e h))
   (ensures (fun h0 c h1 ->
                     st_enc_inv e h1
-                 /\ HyperHeap.modifies (Set.singleton i) h0 h1
+                 /\ TwoLevelHeap.modifies (Set.singleton i) h0 h1
                  /\ Heap.modifies (refs_in_e e) (Map.sel h0 i) (Map.sel h1 i)
                  /\ sel h1 (StEnc.log e) = snoc (sel h0 (StEnc.log e)) (StEntry c p)))
 let stateful_enc i (StEnc log ctr e) p =
@@ -198,7 +203,7 @@ val stateful_dec: #i:rid -> d:st_decryptor i -> c:cipher -> ST (option plain)
   (ensures (fun h0 p h1 ->
                 st_dec_inv d h0    //repeating pre
                 /\ st_dec_inv d h1
-                /\ HyperHeap.modifies (Set.singleton i) h0 h1
+                /\ TwoLevelHeap.modifies (Set.singleton i) h0 h1
                 /\ Heap.modifies !{as_ref (StDec.ctr d)} (Map.sel h0 i) (Map.sel h1 i)
                 /\ Let (sel h0 (StDec.ctr d)) (fun (r:nat{r=sel h0 (StDec.ctr d)}) ->
                    Let (sel h0 (StDec.log d)) (fun (log:seq statefulEntry{log=sel h0 (StDec.log d)}) ->
@@ -230,7 +235,7 @@ val test_st_frame :   s1:sti
   (ensures (fun h0 _ h1 ->
                  st_inv (STI.e s1) (STI.d s1) h1
               /\ st_inv (STI.e s2) (STI.d s2) h1
-              /\ HyperHeap.modifies (Set.union (Set.singleton (STI.i s1)) (Set.singleton (STI.i s2))) h0 h1))
+              /\ TwoLevelHeap.modifies (Set.union (Set.singleton (STI.i s1)) (Set.singleton (STI.i s2))) h0 h1))
 
 // note that we do not require new encryptor/decryptors,
 // just that those in s1 are in sync, so that decryption cancels encryption
@@ -242,8 +247,12 @@ let test_st_frame s1 s2 =
   let c0 = stateful_enc (STI.e s1) p in
   let c1 = stateful_enc (STI.e s1) q in
   let c2 = stateful_enc (STI.e s2) p in
-  let oX = stateful_dec (STI.d s1) c2 in  // TODO might succeed
   let o0 = stateful_dec (STI.d s1) c0 in
   let o1 = stateful_dec (STI.d s1) c1 in
   assert (Some.v o0 = p);
-  assert (Some.v o1 = q)
+  // TODO might succeed
+  let oX = stateful_dec (STI.d s1) c2 in
+  assert (Some.v o1 = q);
+  ()
+
+(* check_marker *)

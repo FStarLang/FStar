@@ -12,7 +12,7 @@ open ST
 open Seq
 open Heap
 open Array
-
+open Ghost
 
 (* Bit weight of each of the cells of the array of the big integer *)
 val bitweight : t:template -> n:nat -> Tot nat

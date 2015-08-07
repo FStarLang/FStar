@@ -4,6 +4,7 @@ all:
 	make -C bug-reports
 	make -C data_structures
 	make -C algorithms
+	make -C ../contrib/Platform/ml/
 	make -C crypto
 	make -C security
 	make -C termination
@@ -13,6 +14,9 @@ all:
 	make -C wysteria
 	make -C ../doc/tutorial/code/solutions
 	make -C unit-tests
+
+
+test: all
 
 stdlib: $(addprefix ../lib/, list.fst string.fst partialmap.fst st.fst listproperties.fst)
 	mkdir -p ../cache

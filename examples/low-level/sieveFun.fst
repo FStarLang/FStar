@@ -1,7 +1,7 @@
 (*--build-config
     variables:LIB=../../lib;
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst  stack.fst listset.fst
-    $LIB/ghost.fst stackAndHeap.fst sst.fst sstCombinators.fst $LIB/seq.fsi $LIB/seq.fst array.fsi array.fst arrayalgos.fst
+    $LIB/ghost.fst stackAndHeap.fst sst.fst sstCombinators.fst
   --*)
 
 module Sieve
@@ -18,32 +18,36 @@ open Ghost
 (*val divides : pos -> nat -> Tot bool
 let divides divisor n = ((n % divisor) = 0)*)
 (*Instead, below is a definition from first principles*)
-open ArrayAlgos
+
 
 opaque type divides  (divisor :nat) (n:nat) =
 exists (k:nat). k*divisor=n
+
+opaque type nonTrivialDivides  (divisor :nat) (n:nat) =
+divides divisor n /\ divisor < n /\ 1 < divisor
 
 (*this lemma is bogus: divisor could be n*)
 val divisorSmall : n:nat{1<n} -> divisor:nat
   ->
    Lemma
-       ( requires (divides divisor n /\ 1<divisor))
-       (ensures (divisor < n))
+       ( requires (divides divisor n))
+       (ensures (divisor <= n))
        [SMTPatT (divides divisor n)]
-let divisorSmall n divisor = (admit ())
+let divisorSmall n divisor = ()
 
 
  val isNotPrimeIf2 :
    n:nat{1<n} -> m:nat{1<m /\ m<n}
    -> Lemma
    (requires (exists (d:nat{1<d}). d<n /\ divides d m))
-   (ensures (exists (d:nat{1<d}).{:pattern (divides d m)} d<m /\ divides d m))
+   (ensures (exists (d:nat{1<d}).{:pattern (divides d m)} d<=m /\ divides d m))
 
  let isNotPrimeIf2 n m = ()
 
 
 type isNotPrime n =
-exists (d:nat). (1<d /\ d<n /\ (divides d n))
+  exists (d:nat). nonTrivialDivides d n
+
 (*cexists (fun (d:nat) -> (1<d /\ d<n /\ (divides d n)))*)
 
 (*this program has nested loops. first, we define the inner loop*)
@@ -55,12 +59,11 @@ type innerGuardLC (n:nat) (lo : ref nat) (li : ref nat)
   (refExistsInMem li m) && (refExistsInMem lo m) &&
     (((loopkupRef li m) * (loopkupRef lo m) < n))
 
+type vector (a:Type) (n:nat) = (k:nat{k<n}) -> Tot a
 
-open SSTArray
 (*cannot make n implcit, because the typechecker usually canNOT figure it out from f*)
-
-val marked : n:nat -> a:(Seq.seq bool) -> m:nat{m<Seq.length a} -> Tot bool
-let marked n a m = (Seq.index a m)
+val marked : n:nat -> (vector bool n) -> m:nat{m<n} -> Tot bool
+let marked n f m = (f m)
 
 (*#set-options "--initial_fuel 100 --max_fuel 10000 --initial_ifuel 100 --max_ifuel 10000"*)
 (*delta-folding vector creates a wierd error; see below*)
@@ -70,6 +73,9 @@ let marked n a m = (Seq.index a m)
 
 (*#set-options "--initial_fuel 100 --max_fuel 100 --initial_ifuel 100 --max_ifuel 100"*)
 
+val mark : n:nat -> ((k:nat{k<n}) -> Tot bool) -> index:nat{index<n} -> Tot ((k:nat{k<n}) -> Tot bool)
+let mark n f index =
+  (fun indx -> if (indx= index) then true else f indx)
 
 (*using hetrogeneous lists, one can extend this to the general (n-ary) case*)
 (*previosly, mtail was need; verify*)
@@ -79,21 +85,21 @@ type distinctRefsExists3
   (refExistsInMem ra (m)) /\ (refExistsInMem rb (m)) /\ (refExistsInMem rc m)
   /\ (ra=!=rb) /\ (rb=!=rc) /\ (ra=!=rc)
 
+val markMultiplesUpto : n:nat -> lo:nat -> upto:nat{lo*(upto-1)<n}
+  ->((k:nat{k<n}) -> Tot bool) -> Tot ((k:nat{k<n}) -> Tot bool)
+let rec markMultiplesUpto n lo upto f =
+match upto with
+| 0 -> f
+| _ -> (mark n (markMultiplesUpto n lo (upto-1) f) ((upto-1)*lo))
+(* in below, markings are done in a reverse order as that of the while loop
+| _ -> markMultiplesUpto n lo (upto-1) (mark n f ((upto-1)*lo))*)
 
-type bitv n = b:(Seq.seq bool){Seq.length b =n}
-
-type markedIffMultipleOrInit (n:nat) (lo:nat) (upto:nat{lo*(upto-1)<n})
-  (init:bitv n) (neww:bitv n) =
-  (forall (k:nat{k < upto}). marked n neww (lo*k))
+type markedIffMultipleOrInit (n:nat) (lo:nat) (upto:nat)
+  (init:((k:nat{k<n}) -> Tot bool)) (neww:((k:nat{k<n}) -> Tot bool)) =
+  (forall (k:nat{k < upto /\ 1<k /\ lo*k<n}). marked n neww (lo*k))
   /\ (forall (k:nat{k < n}). (marked n init k ==> marked n neww k))
   /\ (forall (k:nat{k < n}). (marked n neww k ==> (marked n init k \/ divides lo k)))
 
-type mbitv = sstarray bool
-type  innerLoopInv (n:nat) (lo: ref nat)  (li : ref nat) (res: )
-    (initres: bitv n) (m:smem) =
- distinctRefsExists3 m lo res li
-  /\ ((loopkupRef li m)-1)*(loopkupRef lo m) < n
-  /\ markedIffMultipleOrInit n (loopkupRef lo m) (loopkupRef li m) initres (loopkupRef res m)
 
   (* this works, is totally precise, but is hard to use
   /\ loopkupRef res m = markMultiplesUpto n lov (loopkupRef li m) initres*)
@@ -102,22 +108,21 @@ type  innerLoopInv (n:nat) (lo: ref nat)  (li : ref nat) (res: )
             ==> (marked n (loopkupRef res m) ((loopkupRef lo m)*k)))*)
 
 type multiplesMarked2 (n:nat) (bitv : (k:nat{k<n}) -> Tot bool) (lo:nat) =
-(forall (k:nat). (k * lo < n)  ==> marked n bitv (lo*k))
-
+  (forall (k:nat). (k * lo < n /\ 1<k)  ==> marked n bitv (lo*k))
 
 type markedIffDividesOrInit2 (n:nat) (lo:nat)
-  (init:((k:nat{k<n}) -> Tot bool)) (neww:((k:nat{k<n}) -> Tot bool)) =
-  (forall (k:nat{k * lo < n}). marked n neww (lo*k))
-  /\ (forall (k:nat{k < n}). (marked n init k ==> marked n neww k))
-  /\ (forall (k:nat{k < n}). (marked n neww k ==> (marked n init k \/ divides lo k)))
+  (init:((k:nat{k<n}) -> Tot bool)) (newres:((k:nat{k<n}) -> Tot bool)) =
+  (forall (k:nat{k * lo < n /\ 1<k}). marked n newres (lo*k))
+  /\ (forall (k:nat{k < n}). (marked n init k ==> marked n newres k))
+  /\ (forall (k:nat{k < n}). (marked n newres k ==> (marked n init k \/ nonTrivialDivides lo k)))
 
 
 type markedIffDividesOrInit (n:nat) (lo:nat)
    (init:((k:nat{k<n}) -> Tot bool)) (neww:((k:nat{k<n}) -> Tot bool)) =
-    (forall (k:nat{k < n}). (marked n neww k <==> (marked n init k \/ divides lo k)))
+    (forall (k:nat{k < n}). (marked n neww k <==> (marked n init k \/ nonTrivialDivides lo k)))
 
 type multiplesMarked (n:nat) (bitv : (k:nat{k<n}) -> Tot bool) (lo:nat) =
-(forall (m:nat{m<n}). (divides lo m) ==> marked n bitv m)
+  (forall (m:nat{m<n}). (nonTrivialDivides lo m) ==> marked n bitv m)
 
 val multiplesMarkedAsDivides :
   n:nat -> bitv:((k:nat{k<n}) -> Tot bool) -> lo:pos
@@ -125,6 +130,7 @@ val multiplesMarkedAsDivides :
     (requires (multiplesMarked2 n bitv lo))
     (ensures (multiplesMarked n bitv lo))
 let multiplesMarkedAsDivides n bitv lo = ()
+
 
 val multiplesMarkedAsDividesIff :
   n:nat -> initv:((k:nat{k<n}) -> Tot bool) -> newv:((k:nat{k<n}) -> Tot bool) -> lo:pos
@@ -134,18 +140,27 @@ val multiplesMarkedAsDividesIff :
     (*[SMTPatT (markedIffDividesOrInit2 n lo initv newv)]*)
 let multiplesMarkedAsDividesIff n bitv newv lo = (multiplesMarkedAsDivides n newv lo)
 
+
+type  innerLoopInv (n:nat) (lo: ref nat)  (li : ref nat) (res:ref ((k:nat{k<n}) -> Tot bool))
+    (initres: ((k:nat{k<n}) -> Tot bool)) (m:smem) =
+ distinctRefsExists3 m lo res li
+  /\ 1 < (loopkupRef li m)
+  /\ markedIffMultipleOrInit n (loopkupRef lo m) (loopkupRef li m) initres (loopkupRef res m)
+
 val innerLoop : n:nat{n>1}
   -> lo: ref nat
   -> li : ref nat
   -> res : ref ((k:nat{k<n}) -> Tot bool)
   -> initres : ((k:nat{k<n}) -> Tot bool)
   -> Mem unit
-      (requires (fun m ->
+      (requires (fun m -> innerLoopInv n lo li res initres m/\
         (*(refExistsInMem li m) /\ (refExistsInMem lo m) /\ (refExistsInMem res m) /\ (li=!=lo) /\ (lo=!=res) /\ (li=!=res)*)
-        distinctRefsExists3 m lo res li /\ loopkupRef li m = 0
+        loopkupRef li m = 2  /\ 1 < (loopkupRef lo m)
                     /\ loopkupRef res m= initres))
-      (ensures (fun m0 _ m1 -> distinctRefsExists3 m1 lo res li
-                      /\ markedIffDividesOrInit n (loopkupRef lo m1) initres (loopkupRef res m1)
+      (ensures (fun _ _ m -> distinctRefsExists3 m lo res li
+                      /\ (forall (k:nat{k * (loopkupRef lo m) < n /\ 1<k}). marked n (loopkupRef res m) (((loopkupRef lo m))*k))
+                      /\ (forall (k:nat{k < n}). (marked n initres k ==> marked n (loopkupRef res m) k))
+                      /\ (forall (k:nat{k < n}). (marked n (loopkupRef res m) k ==> (marked n initres k \/ divides ((loopkupRef lo m)) k)))
       ))
       (hide (union (singleton (Ref li)) (singleton (Ref res))))
 
@@ -160,7 +175,10 @@ let innerLoop n lo li res initres =
       let lov = memread lo in
       let resv = memread res in
       memwrite li (liv+1);
-      memwrite res (mark n resv (lov * liv))));
+      memwrite res (mark n resv (lov * liv))))
+
+
+
 
     (*the part below has no computaional content; why does SMTPatT not work?*)
       let newv = memread res in
@@ -174,7 +192,6 @@ type distinctRefsExists2
 
 type outerGuardLC (n:nat) (lo : ref nat) (m:smem) =
   (refExistsInMem lo m) && ((loopkupRef lo m) < n)
-
 
 type markedIffHasDivisorSmallerThan (n:nat) (lo:nat)
     (neww:((k:nat{k<n}) -> Tot bool)) =
@@ -227,7 +244,7 @@ let outerLoopBody n lo res u =
   (*pushStackFrame ();*)
   let initres = memread res in
   let lov = memread lo in
-  let li = salloc 0 in
+  let li = salloc 2 in
   let liv = memread li in
   innerLoop n lo li res initres;
   let newres = memread res in

@@ -1,8 +1,7 @@
 (*--build-config
-    options: --codegen OCaml-experimental --trace_error --debug yes;
     variables:LIB=../../lib;
     variables:MATHS=../maths;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst  $LIB/list.fst stack.fst listset.fst $LIB/ghost.fst stackAndHeap.fst sst.fst
+    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst  $LIB/st.fst $LIB/all.fst $LIB/heap.fst  $LIB/list.fst stack.fst listset.fst $LIB/ghost.fst stackAndHeap.fst sst.fst
   --*)
 
 module SSTCombinators

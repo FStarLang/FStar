@@ -1,3 +1,8 @@
+(*--build-config
+    options:--z3timeout 10;
+    other-files: sample.fst 
+  --*)
+
 module Fp
 
 assume type prime (p:pos)
@@ -30,32 +35,10 @@ let mod_laws5 = assume(forall a b.((a % p) - b) % p = (a - b) %p)
 let mod_laws6 = assume(forall a b.(a - (b % p)) % p = (a - b) %p)
 *)
 
-module Sample
-open Fp
-
-type injection (#a:Type) (f:a -> Tot a) = (forall x y. f x = f y ==> x = y)
-type surjection (#a:Type) (f:a -> Tot a) = (forall y. (exists x. f x = y))
-type bijection (#a:Type) (f:a -> Tot a) = injection f /\ surjection f
-type bij = f:(fp -> Tot fp){bijection f}
-opaque type inverses (f:fp -> Tot fp) (g:fp -> Tot fp) =
-   (forall y. f (g y) = y) /\
-   (forall x. g (f x) = x)
-val lemma_inverses_bij:  f:(fp -> Tot fp) -> g:(fp -> Tot fp) ->
-  Lemma (requires (inverses f g))
-        (ensures (bijection f))
-let lemma_inverses_bij f g = ()
-
-assume val sample : #a:Type
-                    -> f:(a -> Tot a){bijection f}
-                    -> Pure (a * a)
-                       (requires ( True))
-                       (ensures (fun p -> snd p = f (fst p)))
-
-
-
 module Triples
 open Fp
 open Sample
+open Bijection
 
 let fst3 = MkTuple3._1
 let snd3 = MkTuple3._2
@@ -76,8 +59,8 @@ opaque val triple_a : sl0:(fp*fp) -> sr0:(fp*fp)
 let triple_a sl0 sr0 =
                        let sample_fun = (fun x -> add_fp (minus_fp x (snd sl0)) (snd sr0)) in
                        let sample_fun'= (fun x -> add_fp (minus_fp x (snd sr0)) (snd sl0)) in
-                       cut(inverses sample_fun sample_fun');
-                       lemma_inverses_bij sample_fun sample_fun';
+                       cut(inverses #fp #fp sample_fun sample_fun');
+                       lemma_inverses_bij #fp #fp sample_fun sample_fun';
                        let asl0, asr0 = sample (fun x -> x) in
                        let asl1, asr1 = sample  sample_fun in
                        let al = add_fp asl0 asl1 in

@@ -1,11 +1,15 @@
 (*--build-config
-    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module Pad --admit_fsi Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
-    variables:LIB=../../lib;
-    other-files:$LIB/string.fst $LIB/list.fst
+    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module Cap --admit_fsi Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
+    variables:LIB=../../lib
+              CONTRIB=../../contrib;
+    other-files:
             $LIB/ext.fst $LIB/classical.fst
             $LIB/set.fsi $LIB/set.fst
-            $LIB/heap.fst $LIB/st.fst
+            $LIB/heap.fst $LIB/st.fst $LIB/all.fst
+            $LIB/string.fst $LIB/list.fst
             $LIB/seq.fsi $LIB/seqproperties.fst
+            $CONTRIB/Platform/fst/Bytes.fst
+            $CONTRIB/CoreCrypto/fst/CoreCrypto.fst
             sha1.fst
             mac.fst
             ../security/acls2.fst
@@ -19,6 +23,11 @@ open Seq
 open SeqProperties
 open ACLs2
 open MAC
+
+//does it verify for trivial reasons, like a bug in the build-config?
+(*let testme () =
+   assert False*)
+
 
 assume val utf8: s:string  -> Tot (seq byte)
 
@@ -36,3 +45,4 @@ val redeem: f:file -> m:SHA1.tag -> u:unit{ canRead f }
 
 let issue f = MAC.mac k (utf8 f)
 let redeem f t = if MAC.verify k (utf8 f) t then () else failwith "bad capability"
+(* check_marker *)

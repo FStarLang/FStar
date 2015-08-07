@@ -15,8 +15,8 @@ end))
 
 let ptsym = (fun ( _65_7 ) -> (match (_65_7) with
 | (p, s) -> begin
-(let s = (match (((let _70_25596 = (Support.String.get s 0)
-in (Support.Char.lowercase _70_25596)) <> (Support.String.get s 0))) with
+(let s = (match (((let _70_25598 = (Support.String.get s 0)
+in (Support.Char.lowercase _70_25598)) <> (Support.String.get s 0))) with
 | true -> begin
 (Support.String.strcat "l__" s)
 end
@@ -28,8 +28,8 @@ end))
 
 let ptctor = (fun ( _65_11 ) -> (match (_65_11) with
 | (p, s) -> begin
-(let s = (match (((let _70_25599 = (Support.String.get s 0)
-in (Support.Char.uppercase _70_25599)) <> (Support.String.get s 0))) with
+(let s = (match (((let _70_25601 = (Support.String.get s 0)
+in (Support.Char.uppercase _70_25601)) <> (Support.String.get s 0))) with
 | true -> begin
 (Support.String.strcat "U__" s)
 end
@@ -39,8 +39,8 @@ end)
 in (Support.String.concat "." (Support.List.append p ((s)::[]))))
 end))
 
-let mlpath_of_lident = (fun ( x ) -> (let _70_25603 = (Support.List.map (fun ( x ) -> x.Microsoft_FStar_Absyn_Syntax.idText) x.Microsoft_FStar_Absyn_Syntax.ns)
-in (_70_25603, x.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText)))
+let mlpath_of_lident = (fun ( x ) -> (let _70_25605 = (Support.List.map (fun ( x ) -> x.Microsoft_FStar_Absyn_Syntax.idText) x.Microsoft_FStar_Absyn_Syntax.ns)
+in (_70_25605, x.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText)))
 
 let as_mlident = (fun ( x ) -> (x.Microsoft_FStar_Absyn_Syntax.ppname.Microsoft_FStar_Absyn_Syntax.idText, 0))
 

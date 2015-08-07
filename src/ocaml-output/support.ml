@@ -117,6 +117,8 @@ module Prims = struct
 end
 
 module ST = struct
+  type 'a __ref = 'a ref
+  type 'a ref = 'a __ref
   let read x = !x
   let op_Colon_Equals x y = x := y
   let alloc x = ref x
@@ -151,6 +153,8 @@ end
 module Char = struct
   let lowercase = BatChar.lowercase
   let uppercase = BatChar.uppercase
+  let int_of_char x = BatChar.code x
+  let char_of_int x = BatChar.chr x
 end
 
 module List = struct
