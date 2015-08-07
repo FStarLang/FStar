@@ -29,20 +29,18 @@ let sel m v = loopkupRef (reveal (asRef v)) m
 val loopkupRefR : a:Type -> m:smem -> r:(ref a) ->
   Pure a (requires (refExistsInMem r m)) (ensures (fun _ -> True))
 let loopkupRefR (a:Type) m r = loopkupRef r m
-(*
-val eloopkupRef : #a:Type -> m:smem -> r:(erased (ref a)) ->
-  Pure (erased a) (requires (refExistsInMem (reveal r) m))
-                  (ensures (fun _ -> True))
-let eloopkupRef  (#a:Type) m v = (elift1 (loopkupRefR a m)) v
-*)
 
-(*  (elift1 (fun (r:(ref a){refExistsInMem r m}) -> loopkupRefR r m)) v *)
+val loopkupRefR2 : a:Type -> m:smem -> r:(ref a){(refExistsInMem r m)} ->Tot a
+let loopkupRefR2 (a:Type) m r = loopkupRef r m
 
 
-(*
+val eloopkupRef : #a:Type -> m:smem -> r:(erased (ref a)){(refExistsInMem (reveal r) m)} ->
+  Tot (erased a)
+let eloopkupRef  (#a:Type) m v = (elift1_p #(ref a) #a #(fun r -> b2t (refExistsInMem r m)) (loopkupRefR2 a m)) v
+
+
 val esel : #a:Type -> m:smem -> v:(sstarray a){refExistsInMem (reveal (asRef v)) m} -> Tot (erased (seq a))
 let esel (#a:Type) m v = eloopkupRef m (asRef v)
-*)
 
 val glength : #a:Type -> v:(sstarray a) -> m:smem{contains m v} -> GTot nat
 let glength v m = Seq.length (sel m v)
@@ -53,7 +51,6 @@ let haslength m v n = contains m v && glength v m = n
 val seqAsFun : a:Type -> n:nat -> s:(seq a){Seq.length s= n}
   -> Tot ((k:nat{k<n}) -> Tot a)
 let seqAsFun (a:Type) n s = (fun k -> index s k)
-
 
 type prefixEqual  (#a:Type)
   (v1: seq a) (v2: seq a) (p:nat{p <= length v1 /\ p<= length v2})
