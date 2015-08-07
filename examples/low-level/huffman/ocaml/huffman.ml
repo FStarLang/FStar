@@ -2,6 +2,8 @@
 (* BASICS *)
 (**********)
 
+let debug = false
+
 type symbol_type = int
 
 (* maximum value in input stream *)
@@ -168,7 +170,8 @@ let build_huffman_tree
       | None -> ()
   done;
   (* debug *)
-  NodeList.print_list_nodes tree true;
+  if debug then
+    NodeList.print_list_nodes tree true;
   (* Build the tree recursively combining the first two (lowest freq) nodes *)
   while not (NodeList.is_singleton tree) do
     let (n1,n2) = NodeList.pop_two tree in
@@ -313,7 +316,7 @@ let huffman_encode
   let histogram = Array.make symbol_value_bound None in
   compute_histogram symbol_stream histogram;
   let tree = build_huffman_tree histogram in
-  Printf.printf "leaves in tree = %d\n" (count_leaves tree);
+  if debug then Printf.printf "leaves in tree = %d\n" (count_leaves tree);
   let encoded_len = encode_stream symbol_stream histogram encoded_stream in
   let packed_tree,packed_len = pack_huffman_tree tree in
   packed_tree,packed_len,encoded_len
@@ -405,6 +408,30 @@ let print_int_arr arr =
   done;
   print_endline "";;
 
+(* Run a test: encode, store, decode, and then check the results match *)
+let run test_inp test_oup =
+  let test_len = Array.length test_inp in
+  (* Encode it *)
+  let packed_tree,packed_len,encoded_len = huffman_encode test_inp test_oup in
+  if debug then
+    (print_int_arr test_inp;
+     print_stream test_oup encoded_len;
+     print_tree packed_tree packed_len;
+     print_endline "");
+  (* Store it *)
+  let outbytes = Bytes.create (packed_len+encoded_len) in
+  Bytes.blit packed_tree 0 outbytes 0 packed_len;
+  Bytes.blit test_oup 0 outbytes packed_len encoded_len;
+  (* Decode it *)
+  let f = Reader.make_reader outbytes in
+  let cn_tree = read_huffman_tree f in
+  let test_res = Array.make test_len 0 in
+  read_and_huffman_decode f cn_tree test_res;
+  if debug then 
+    (print_int_arr test_res);
+  (* Check it *)
+  (test_res = test_inp)
+
 (* generate random array, but with lots of clusters *)
 let gen_arr len =
   let count = ref (Random.int len) in
@@ -424,26 +451,34 @@ let gen_arr len =
   done;
   arr
 
-(* Encode it *)
-let test_len = 1000;;
-let test_inp = gen_arr test_len;;
-let test_oup = Bytes.create test_len;;
-let packed_tree,packed_len,encoded_len = huffman_encode test_inp test_oup;;
-print_int_arr test_inp;;
-print_stream test_oup encoded_len;;
-print_tree packed_tree packed_len;;
-print_endline "";;
+(* MAIN *)
 
-(* Store it *)
-let outbytes = Bytes.create (packed_len+encoded_len);;
-Bytes.blit packed_tree 0 outbytes 0 packed_len;;
-Bytes.blit test_oup 0 outbytes packed_len encoded_len;;
+(* arguments: [size] [num runs] [seed] *)
+let test_len, num =
+  if (Array.length Sys.argv) = 1 then
+    1000, 1
+  else if (Array.length Sys.argv) = 2 then
+    (int_of_string Sys.argv.(1)), 1
+  else if (Array.length Sys.argv) = 3 then
+    (int_of_string Sys.argv.(1)), 
+    (int_of_string Sys.argv.(2))
+ else
+    let _ = Random.init (int_of_string (Sys.argv.(3))) in
+    (int_of_string Sys.argv.(1)), 
+    (int_of_string Sys.argv.(2))
+;;
 
-(* Decode it *)
-let f = Reader.make_reader outbytes;;
-let cn_tree = read_huffman_tree f;;
-let test_res = Array.make test_len 0;;
-read_and_huffman_decode f cn_tree test_res;;
-print_int_arr test_res;;
+for i = 0 to (num-1) do
+  (* Generate input *)
+  let test_inp = gen_arr test_len in
+  let test_oup = Bytes.create test_len in
+  let res = run test_inp test_oup in
+  if not res then failwith "Encode/decode loop failed!"
+  else ()
+done
+;;
 
-assert (test_res = test_inp);;
+Printf.printf "Success sz=%d n=%d %s\n" test_len num 
+  (if (Array.length Sys.argv) = 4 then ("seed="^(Sys.argv.(3))) else "");;
+Pervasives.flush stdout;;
+
