@@ -154,7 +154,7 @@ static void scanfun(void *env, void **ptr) {
   scanning_action action = (scanning_action)env;
   value *root = (value *)ptr;
   value v = *root;
-#ifndef NDEBUG
+#ifdef DEBUG
   printf("  scanning=%p, val=%p\n",root,(void *)v);
   if (Is_long(v)) {
     printf("   is long %d (%ld)\n", Int_val(v), Long_val(v));
@@ -170,7 +170,7 @@ static void scanfun(void *env, void **ptr) {
 
 static void scan_stack_roots(scanning_action action)
 {
-#ifndef NDEBUG
+#ifdef DEBUG
   printf("DOING SCAN\n");
 #endif
   each_marked_pointer(scanfun,action);
