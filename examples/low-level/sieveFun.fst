@@ -24,7 +24,8 @@ opaque type divides  (divisor :nat) (n:nat) =
 exists (k:nat). k*divisor=n
 
 opaque type nonTrivialDivides  (divisor :nat) (n:nat) =
-divides divisor n /\ divisor < n /\ 1 < divisor
+exists (k:nat). k*divisor=n /\ 1<k
+
 
 (*this lemma is bogus: divisor could be n*)
 val divisorSmall : n:nat{1<n} -> divisor:nat
@@ -46,7 +47,7 @@ let divisorSmall n divisor = ()
 
 
 type isNotPrime n =
-  exists (d:nat). nonTrivialDivides d n
+  exists (d:nat). divides d n /\ 1<d /\ d<n
 
 (*cexists (fun (d:nat) -> (1<d /\ d<n /\ (divides d n)))*)
 
@@ -85,20 +86,12 @@ type distinctRefsExists3
   (refExistsInMem ra (m)) /\ (refExistsInMem rb (m)) /\ (refExistsInMem rc m)
   /\ (ra=!=rb) /\ (rb=!=rc) /\ (ra=!=rc)
 
-val markMultiplesUpto : n:nat -> lo:nat -> upto:nat{lo*(upto-1)<n}
-  ->((k:nat{k<n}) -> Tot bool) -> Tot ((k:nat{k<n}) -> Tot bool)
-let rec markMultiplesUpto n lo upto f =
-match upto with
-| 0 -> f
-| _ -> (mark n (markMultiplesUpto n lo (upto-1) f) ((upto-1)*lo))
-(* in below, markings are done in a reverse order as that of the while loop
-| _ -> markMultiplesUpto n lo (upto-1) (mark n f ((upto-1)*lo))*)
-
 type markedIffMultipleOrInit (n:nat) (lo:nat) (upto:nat)
   (init:((k:nat{k<n}) -> Tot bool)) (neww:((k:nat{k<n}) -> Tot bool)) =
   (forall (k:nat{k < upto /\ 1<k /\ lo*k<n}). marked n neww (lo*k))
-  /\ (forall (k:nat{k < n}). (marked n init k ==> marked n neww k))
-  /\ (forall (k:nat{k < n}). (marked n neww k ==> (marked n init k \/ divides lo k)))
+  /\ (forall (m:nat{m < n}). (marked n init m ==> marked n neww m))
+  /\ (forall (m:nat{m < n}). (marked n neww m ==> (marked n init m \/
+       nonTrivialDivides lo m) ))
 
 
   (* this works, is totally precise, but is hard to use
@@ -113,8 +106,10 @@ type multiplesMarked2 (n:nat) (bitv : (k:nat{k<n}) -> Tot bool) (lo:nat) =
 type markedIffDividesOrInit2 (n:nat) (lo:nat)
   (init:((k:nat{k<n}) -> Tot bool)) (newres:((k:nat{k<n}) -> Tot bool)) =
   (forall (k:nat{k * lo < n /\ 1<k}). marked n newres (lo*k))
-  /\ (forall (k:nat{k < n}). (marked n init k ==> marked n newres k))
-  /\ (forall (k:nat{k < n}). (marked n newres k ==> (marked n init k \/ nonTrivialDivides lo k)))
+  /\ (forall (m:nat{m < n}). (marked n init m ==> marked n newres m))
+  /\ (forall (m:nat{m < n}). (marked n newres m ==> (marked n init m \/
+        nonTrivialDivides lo m
+    )))
 
 
 type markedIffDividesOrInit (n:nat) (lo:nat)
@@ -158,9 +153,7 @@ val innerLoop : n:nat{n>1}
         loopkupRef li m = 2  /\ 1 < (loopkupRef lo m)
                     /\ loopkupRef res m= initres))
       (ensures (fun _ _ m -> distinctRefsExists3 m lo res li
-                      /\ (forall (k:nat{k * (loopkupRef lo m) < n /\ 1<k}). marked n (loopkupRef res m) (((loopkupRef lo m))*k))
-                      /\ (forall (k:nat{k < n}). (marked n initres k ==> marked n (loopkupRef res m) k))
-                      /\ (forall (k:nat{k < n}). (marked n (loopkupRef res m) k ==> (marked n initres k \/ divides ((loopkupRef lo m)) k)))
+                /\ markedIffDividesOrInit n (loopkupRef lo m) initres (loopkupRef res m)
       ))
       (hide (union (singleton (Ref li)) (singleton (Ref res))))
 
@@ -175,11 +168,7 @@ let innerLoop n lo li res initres =
       let lov = memread lo in
       let resv = memread res in
       memwrite li (liv+1);
-      memwrite res (mark n resv (lov * liv))))
-
-
-
-
+      memwrite res (mark n resv (lov * liv))));
     (*the part below has no computaional content; why does SMTPatT not work?*)
       let newv = memread res in
       let lov = memread lo in
@@ -195,7 +184,7 @@ type outerGuardLC (n:nat) (lo : ref nat) (m:smem) =
 
 type markedIffHasDivisorSmallerThan (n:nat) (lo:nat)
     (neww:((k:nat{k<n}) -> Tot bool)) =
-    (forall (k:nat{k < n}). (marked n neww k <==> (exists (d:nat{1<d}). d<lo /\ divides d k)))
+    (forall (k:nat{k < n}). (marked n neww k <==> (exists (d:nat{1<d}). d<lo /\ nonTrivialDivides d k)))
 
 
 val markedIffHasDivisorSmallerThanInc :
@@ -294,13 +283,14 @@ let isNotPrimeIf n m = ()
 
 (*how can one manually provide a witness to an existential? switch to cexists completely?*)
 
+(*
 val markedIffHasDivisorSmallerThan3 :
 n:nat -> neww:((k:nat{k<n}) -> Tot bool)
 -> Lemma
     (requires (markedIffHasDivisorSmallerThan n n neww))
     (ensures (markedIffNotPrime n neww))
-(*let markedIffHasDivisorSmallerThan3 n neww = ()*)
-
+let markedIffHasDivisorSmallerThan3 n neww = ()
+*)
 
 val sieve : n:nat{n>1} -> unit
   -> WNSC ((k:nat{k<n}) -> Tot bool)
@@ -368,7 +358,7 @@ let sieveUnfolded n u =
     (fun u ->
         let initres = memread res in
         let lov = memread lo in
-        let li = salloc 0 in
+        let li = salloc 2 in
         let liv = memread li in
         innerLoop n lo li res initres;
         let newres = memread res in
