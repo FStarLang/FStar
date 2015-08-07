@@ -18,8 +18,8 @@ let string_of_mlpath = (fun ( _55_7 ) -> (match (_55_7) with
 (Support.String.concat "." (Support.List.append p ((s)::[])))
 end))
 
-let mlpath_of_lident = (fun ( x ) -> (let _70_23840 = (Support.List.map (fun ( x ) -> x.Microsoft_FStar_Absyn_Syntax.idText) x.Microsoft_FStar_Absyn_Syntax.ns)
-in (_70_23840, x.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText)))
+let mlpath_of_lident = (fun ( x ) -> (let _70_26374 = (Support.List.map (fun ( x ) -> x.Microsoft_FStar_Absyn_Syntax.idText) x.Microsoft_FStar_Absyn_Syntax.ns)
+in (_70_26374, x.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText)))
 
 let as_mlident = (fun ( x ) -> (x.Microsoft_FStar_Absyn_Syntax.ppname.Microsoft_FStar_Absyn_Syntax.idText, 0))
 
@@ -103,6 +103,31 @@ true
 end
 | _ -> begin
 false
+end))
+
+let ___MLTY_Var____0 = (fun ( projectee ) -> (match (projectee) with
+| MLTY_Var (_55_14) -> begin
+_55_14
+end))
+
+let ___MLTY_Fun____0 = (fun ( projectee ) -> (match (projectee) with
+| MLTY_Fun (_55_17) -> begin
+_55_17
+end))
+
+let ___MLTY_Named____0 = (fun ( projectee ) -> (match (projectee) with
+| MLTY_Named (_55_20) -> begin
+_55_20
+end))
+
+let ___MLTY_Tuple____0 = (fun ( projectee ) -> (match (projectee) with
+| MLTY_Tuple (_55_23) -> begin
+_55_23
+end))
+
+let ___MLTY_App____0 = (fun ( projectee ) -> (match (projectee) with
+| MLTY_App (_55_26) -> begin
+_55_26
 end))
 
 type mltyscheme =
@@ -191,6 +216,46 @@ end
 false
 end))
 
+let ___MLC_Bool____0 = (fun ( projectee ) -> (match (projectee) with
+| MLC_Bool (_55_29) -> begin
+_55_29
+end))
+
+let ___MLC_Byte____0 = (fun ( projectee ) -> (match (projectee) with
+| MLC_Byte (_55_32) -> begin
+_55_32
+end))
+
+let ___MLC_Int32____0 = (fun ( projectee ) -> (match (projectee) with
+| MLC_Int32 (_55_35) -> begin
+_55_35
+end))
+
+let ___MLC_Int64____0 = (fun ( projectee ) -> (match (projectee) with
+| MLC_Int64 (_55_38) -> begin
+_55_38
+end))
+
+let ___MLC_Float____0 = (fun ( projectee ) -> (match (projectee) with
+| MLC_Float (_55_41) -> begin
+_55_41
+end))
+
+let ___MLC_Char____0 = (fun ( projectee ) -> (match (projectee) with
+| MLC_Char (_55_44) -> begin
+_55_44
+end))
+
+let ___MLC_String____0 = (fun ( projectee ) -> (match (projectee) with
+| MLC_String (_55_47) -> begin
+_55_47
+end))
+
+let ___MLC_Bytes____0 = (fun ( projectee ) -> (match (projectee) with
+| MLC_Bytes (_55_50) -> begin
+_55_50
+end))
+
 type mlpattern =
 | MLP_Wild
 | MLP_Const of mlconstant
@@ -254,6 +319,36 @@ true
 end
 | _ -> begin
 false
+end))
+
+let ___MLP_Const____0 = (fun ( projectee ) -> (match (projectee) with
+| MLP_Const (_55_53) -> begin
+_55_53
+end))
+
+let ___MLP_Var____0 = (fun ( projectee ) -> (match (projectee) with
+| MLP_Var (_55_56) -> begin
+_55_56
+end))
+
+let ___MLP_CTor____0 = (fun ( projectee ) -> (match (projectee) with
+| MLP_CTor (_55_59) -> begin
+_55_59
+end))
+
+let ___MLP_Branch____0 = (fun ( projectee ) -> (match (projectee) with
+| MLP_Branch (_55_62) -> begin
+_55_62
+end))
+
+let ___MLP_Record____0 = (fun ( projectee ) -> (match (projectee) with
+| MLP_Record (_55_65) -> begin
+_55_65
+end))
+
+let ___MLP_Tuple____0 = (fun ( projectee ) -> (match (projectee) with
+| MLP_Tuple (_55_68) -> begin
+_55_68
 end))
 
 type mlexpr =
@@ -410,6 +505,86 @@ end))
 
 let is_Mkmllb = (fun ( _ ) -> (Support.All.failwith "Not yet implemented:is_Mkmllb"))
 
+let ___MLE_Const____0 = (fun ( projectee ) -> (match (projectee) with
+| MLE_Const (_55_75) -> begin
+_55_75
+end))
+
+let ___MLE_Var____0 = (fun ( projectee ) -> (match (projectee) with
+| MLE_Var (_55_78) -> begin
+_55_78
+end))
+
+let ___MLE_Name____0 = (fun ( projectee ) -> (match (projectee) with
+| MLE_Name (_55_81) -> begin
+_55_81
+end))
+
+let ___MLE_Let____0 = (fun ( projectee ) -> (match (projectee) with
+| MLE_Let (_55_84) -> begin
+_55_84
+end))
+
+let ___MLE_App____0 = (fun ( projectee ) -> (match (projectee) with
+| MLE_App (_55_87) -> begin
+_55_87
+end))
+
+let ___MLE_Fun____0 = (fun ( projectee ) -> (match (projectee) with
+| MLE_Fun (_55_90) -> begin
+_55_90
+end))
+
+let ___MLE_Match____0 = (fun ( projectee ) -> (match (projectee) with
+| MLE_Match (_55_93) -> begin
+_55_93
+end))
+
+let ___MLE_Coerce____0 = (fun ( projectee ) -> (match (projectee) with
+| MLE_Coerce (_55_96) -> begin
+_55_96
+end))
+
+let ___MLE_CTor____0 = (fun ( projectee ) -> (match (projectee) with
+| MLE_CTor (_55_99) -> begin
+_55_99
+end))
+
+let ___MLE_Seq____0 = (fun ( projectee ) -> (match (projectee) with
+| MLE_Seq (_55_102) -> begin
+_55_102
+end))
+
+let ___MLE_Tuple____0 = (fun ( projectee ) -> (match (projectee) with
+| MLE_Tuple (_55_105) -> begin
+_55_105
+end))
+
+let ___MLE_Record____0 = (fun ( projectee ) -> (match (projectee) with
+| MLE_Record (_55_108) -> begin
+_55_108
+end))
+
+let ___MLE_Proj____0 = (fun ( projectee ) -> (match (projectee) with
+| MLE_Proj (_55_111) -> begin
+_55_111
+end))
+
+let ___MLE_If____0 = (fun ( projectee ) -> (match (projectee) with
+| MLE_If (_55_114) -> begin
+_55_114
+end))
+
+let ___MLE_Raise____0 = (fun ( projectee ) -> (match (projectee) with
+| MLE_Raise (_55_117) -> begin
+_55_117
+end))
+
+let ___MLE_Try____0 = (fun ( projectee ) -> (match (projectee) with
+| MLE_Try (_55_120) -> begin
+_55_120
+end))
+
 type mltybody =
 | MLTD_Abbrev of mlty
 | MLTD_Record of (mlsymbol * mlty) list
@@ -437,6 +612,21 @@ true
 end
 | _ -> begin
 false
+end))
+
+let ___MLTD_Abbrev____0 = (fun ( projectee ) -> (match (projectee) with
+| MLTD_Abbrev (_55_124) -> begin
+_55_124
+end))
+
+let ___MLTD_Record____0 = (fun ( projectee ) -> (match (projectee) with
+| MLTD_Record (_55_127) -> begin
+_55_127
+end))
+
+let ___MLTD_DType____0 = (fun ( projectee ) -> (match (projectee) with
+| MLTD_DType (_55_130) -> begin
+_55_130
 end))
 
 type mltydecl =
@@ -478,6 +668,26 @@ true
 end
 | _ -> begin
 false
+end))
+
+let ___MLM_Ty____0 = (fun ( projectee ) -> (match (projectee) with
+| MLM_Ty (_55_133) -> begin
+_55_133
+end))
+
+let ___MLM_Let____0 = (fun ( projectee ) -> (match (projectee) with
+| MLM_Let (_55_136) -> begin
+_55_136
+end))
+
+let ___MLM_Exn____0 = (fun ( projectee ) -> (match (projectee) with
+| MLM_Exn (_55_139) -> begin
+_55_139
+end))
+
+let ___MLM_Top____0 = (fun ( projectee ) -> (match (projectee) with
+| MLM_Top (_55_142) -> begin
+_55_142
 end))
 
 type mlmodule =
@@ -523,6 +733,26 @@ end
 false
 end))
 
+let ___MLS_Mod____0 = (fun ( projectee ) -> (match (projectee) with
+| MLS_Mod (_55_145) -> begin
+_55_145
+end))
+
+let ___MLS_Ty____0 = (fun ( projectee ) -> (match (projectee) with
+| MLS_Ty (_55_148) -> begin
+_55_148
+end))
+
+let ___MLS_Val____0 = (fun ( projectee ) -> (match (projectee) with
+| MLS_Val (_55_151) -> begin
+_55_151
+end))
+
+let ___MLS_Exn____0 = (fun ( projectee ) -> (match (projectee) with
+| MLS_Exn (_55_154) -> begin
+_55_154
+end))
+
 type mllib =
 | MLLib of (mlsymbol * (mlsig * mlmodule) option * mllib) list
 
@@ -534,11 +764,16 @@ end
 false
 end))
 
+let ___MLLib____0 = (fun ( projectee ) -> (match (projectee) with
+| MLLib (_55_156) -> begin
+_55_156
+end))
+
 let mlseq = (fun ( e1 ) ( e2 ) -> (match (e2) with
 | MLE_Seq (s) -> begin
 MLE_Seq ((e1)::s)
 end
-| _55_115 -> begin
+| _55_162 -> begin
 MLE_Seq ((e1)::(e2)::[])
 end))
 
@@ -546,17 +781,17 @@ let mlfun = (fun ( x ) ( e ) -> (match (e) with
 | MLE_Fun ((xs, e)) -> begin
 MLE_Fun ((((x, None))::xs, e))
 end
-| _55_123 -> begin
+| _55_170 -> begin
 MLE_Fun ((((x, None))::[], e))
 end))
 
-let mlif = (fun ( b ) ( _55_127 ) -> (match (_55_127) with
+let mlif = (fun ( b ) ( _55_174 ) -> (match (_55_174) with
 | (e1, e2) -> begin
 (match (e2) with
 | MLE_Const (MLC_Unit) -> begin
 MLE_If ((b, e1, None))
 end
-| _55_131 -> begin
+| _55_178 -> begin
 MLE_If ((b, e1, Some (e2)))
 end)
 end))

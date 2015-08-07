@@ -1234,7 +1234,9 @@ let mk_indexed_projectors fvq refine_domain env (tc, tps, k) lid (formals:list<b
             let quals q = if not env.iface || env.admitted_iface then Assumption::q else q in
             let quals = quals [Logic; Projector(lid, Inr x.v)] in
             let impl = 
-                if lid_equals Const.prims_lid  (DesugarEnv.current_module env) || fvq<>Data_ctor
+                if lid_equals Const.prims_lid  (DesugarEnv.current_module env) 
+                || fvq<>Data_ctor
+                || !Options.__temp_no_proj
                 then []
                 else let projection = Util.gen_bvar tun in
                      let as_imp = function 
