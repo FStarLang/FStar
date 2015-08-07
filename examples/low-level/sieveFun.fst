@@ -4,7 +4,7 @@
     $LIB/ghost.fst stackAndHeap.fst sst.fst sstCombinators.fst
   --*)
 
-module Sieve
+module SieveFun
 open SSTCombinators
 open StackAndHeap
 open SST
@@ -26,34 +26,8 @@ exists (k:nat). k*divisor=n
 opaque type nonTrivialDivides  (divisor :nat) (n:nat) =
 exists (k:nat). k*divisor=n /\ 1<k
 
-
-(*this lemma is bogus: divisor could be n*)
-val divisorSmall : n:nat{1<n} -> divisor:nat
-  ->
-   Lemma
-       ( requires (divides divisor n))
-       (ensures (divisor <= n))
-       [SMTPatT (divides divisor n)]
-let divisorSmall n divisor = ()
-
-
- val isNotPrimeIf2 :
-   n:nat{1<n} -> m:nat{1<m /\ m<n}
-   -> Lemma
-   (requires (exists (d:nat{1<d}). d<n /\ divides d m))
-   (ensures (exists (d:nat{1<d}).{:pattern (divides d m)} d<=m /\ divides d m))
-
- let isNotPrimeIf2 n m = ()
-
-
 type isNotPrime n =
   exists (d:nat). divides d n /\ 1<d /\ d<n
-
-(*cexists (fun (d:nat) -> (1<d /\ d<n /\ (divides d n)))*)
-
-(*this program has nested loops. first, we define the inner loop*)
-(*The program will be asked to compute first n primes. *)
-(*Suppose we are at the m^th iteration in the outer loop*)
 
 type innerGuardLC (n:nat) (lo : ref nat) (li : ref nat)
 (m:smem) =
@@ -66,11 +40,9 @@ type vector (a:Type) (n:nat) = (k:nat{k<n}) -> Tot a
 val marked : n:nat -> (vector bool n) -> m:nat{m<n} -> Tot bool
 let marked n f m = (f m)
 
-(*#set-options "--initial_fuel 100 --max_fuel 10000 --initial_ifuel 100 --max_ifuel 10000"*)
-(*delta-folding vector creates a wierd error; see below*)
 
 (*li is the counter for the inner loop; lo is for the outer one*)
-(*the inner loop invariant says that cells lo*0, lo*1, lo*2 ....lo*(li-1) (first li multiples of lo) are marked.*)
+(*the inner loop invariant says that cells lo*2, lo*3, lo*4 ....lo*(li-1) (first li non-trivial multiples of lo) are marked.*)
 
 (*#set-options "--initial_fuel 100 --max_fuel 100 --initial_ifuel 100 --max_ifuel 100"*)
 
@@ -94,14 +66,6 @@ type markedIffMultipleOrInit (n:nat) (lo:nat) (upto:nat)
        nonTrivialDivides lo m) ))
 
 
-  (* this works, is totally precise, but is hard to use
-  /\ loopkupRef res m = markMultiplesUpto n lov (loopkupRef li m) initres*)
-
-        (*(k < (loopkupRef li m))
-            ==> (marked n (loopkupRef res m) ((loopkupRef lo m)*k)))*)
-
-type multiplesMarked2 (n:nat) (bitv : (k:nat{k<n}) -> Tot bool) (lo:nat) =
-  (forall (k:nat). (k * lo < n /\ 1<k)  ==> marked n bitv (lo*k))
 
 type markedIffDividesOrInit2 (n:nat) (lo:nat)
   (init:((k:nat{k<n}) -> Tot bool)) (newres:((k:nat{k<n}) -> Tot bool)) =
@@ -116,8 +80,17 @@ type markedIffDividesOrInit (n:nat) (lo:nat)
    (init:((k:nat{k<n}) -> Tot bool)) (neww:((k:nat{k<n}) -> Tot bool)) =
     (forall (k:nat{k < n}). (marked n neww k <==> (marked n init k \/ nonTrivialDivides lo k)))
 
+
 type multiplesMarked (n:nat) (bitv : (k:nat{k<n}) -> Tot bool) (lo:nat) =
   (forall (m:nat{m<n}). (nonTrivialDivides lo m) ==> marked n bitv m)
+  (* this works, is totally precise, but is hard to use
+  /\ loopkupRef res m = markMultiplesUpto n lov (loopkupRef li m) initres*)
+
+        (*(k < (loopkupRef li m))
+            ==> (marked n (loopkupRef res m) ((loopkupRef lo m)*k)))*)
+
+type multiplesMarked2 (n:nat) (bitv : (k:nat{k<n}) -> Tot bool) (lo:nat) =
+  (forall (k:nat). (k * lo < n /\ 1<k)  ==> marked n bitv (lo*k))
 
 val multiplesMarkedAsDivides :
   n:nat -> bitv:((k:nat{k<n}) -> Tot bool) -> lo:pos
@@ -266,23 +239,6 @@ type markedIffNotPrime
    (forall (m:nat{m<n}). (marked n neww m <==>  ((isNotPrime m))))
 
 
-val lessTrans : m:nat -> n:nat -> d:nat ->
-  Lemma (requires (d<n /\ m <n))
-          (ensures (d<n))
-let lessTrans n m d = ()
-
-
-val isNotPrimeIf :
-  n:nat -> m:nat{m<n}
-  -> Lemma
-  ((exists (d:nat{1<d}). d<m /\ divides d m))
-  (((isNotPrime m)))
-let isNotPrimeIf n m = ()
-
-
-
-(*how can one manually provide a witness to an existential? switch to cexists completely?*)
-
 (*
 val markedIffHasDivisorSmallerThan3 :
 n:nat -> neww:((k:nat{k<n}) -> Tot bool)
@@ -315,7 +271,6 @@ let sieveFull n =
   let res= sieve n () in
   popStackFrame (); res
 
-
 val firstN : n:nat -> Tot (list nat)
 let rec firstN n = match n with
 | 0 -> []
@@ -333,13 +288,13 @@ val listOfTrues : n:nat  -> f:((k:nat{k<n}) -> Tot bool) -> Tot (list nat)
 let listOfTrues n f = listOfTruesAux n n f
 
 val sieveAsList : n:nat{n>1}
-  -> Mem (list bool)
+  -> Mem (list nat)
         (requires (fun m -> True))
         (ensures (fun _ resv _ -> True))
         (hide empty)
 let sieveAsList n =
   let sieveRes = (sieveFull n) in
-  toBool n sieveRes
+  listOfTrues n sieveRes
 
 val sieveUnfolded : n:nat{n>1} -> unit
   -> WNSC ((k:nat{k<n}) -> Tot bool)

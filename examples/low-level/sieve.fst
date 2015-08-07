@@ -1,7 +1,7 @@
 (*--build-config
     variables:LIB=../../lib;
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst  stack.fst listset.fst
-    $LIB/ghost.fst stackAndHeap.fst sst.fst sstCombinators.fst $LIB/seq.fsi $LIB/seq.fst array.fsi array.fst arrayalgos.fst
+    $LIB/ghost.fst stackAndHeap.fst sst.fst sstCombinators.fst $LIB/seq.fsi $LIB/seq.fst array.fsi array.fst arrayalgos.fst sieveFun.fst
   --*)
 
 module Sieve
@@ -19,6 +19,10 @@ open Ghost
 let divides divisor n = ((n % divisor) = 0)*)
 (*Instead, below is a definition from first principles*)
 open ArrayAlgos
+open SSTArray
+
+type bitarray = sstarray bool
+
 
 opaque type divides  (divisor :nat) (n:nat) =
 exists (k:nat). k*divisor=n
