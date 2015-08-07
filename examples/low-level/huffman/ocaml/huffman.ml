@@ -1,5 +1,8 @@
+(**********)
+(* BASICS *)
+(**********)
+
 type symbol_type = int
-type code_type = char
 
 (* maximum value in input stream *)
 let symbol_value_bound = 257;;
@@ -16,6 +19,10 @@ let bits_per_symbol =
 let bytes_per_symbol = 
   if (bits_per_symbol mod 8) = 0 then bits_per_symbol / 8 
   else (bits_per_symbol / 8) + 1
+
+(***************)
+(* ENCODING *)
+(***************)
 
 (* main data structure. A node is part of a Huffman tree, and it's what is in the histogram.
    The algorithm will construct a histogram of nodes, then construct a tree out of these, 
@@ -312,11 +319,110 @@ let huffman_encode
   packed_tree,packed_len,encoded_len
 ;;
 
+(***************)
+(* DECODING *)
+(***************)
+
+type code_node = (* used for decoding *)
+    { cn_zero_child : code_node;
+      cn_one_child : code_node;
+      cn_symbol : symbol_type }
+
+let rec null_code_node = 
+  { cn_zero_child = null_code_node;
+    cn_one_child = null_code_node;
+    cn_symbol = -1; }
+
+let is_null_cn cn = cn.cn_symbol = (-1)
+
+module Reader =
+  struct
+    type t = (bytes * int) ref (* bytearray and offset *)
+    let make_reader arr = ref (arr,0)
+    let read_byte x =
+      let (arr,ofs) = !x in
+      if (ofs >= Bytes.length arr) then failwith "no more data"
+      else 
+	(let b = Bytes.get arr ofs in
+	 x := (arr,ofs + 1);
+	 b)
+    let get_ofs x = let (arr,ofs) = !x in ofs
+  end
+
+let rec read_huffman_tree (file:Reader.t) : code_node =
+  let the_byte = Reader.read_byte file in
+  (* Printf.printf "%d " (Char.code the_byte); *)
+  if (Char.code the_byte) = 0 then
+    let zero_child = read_huffman_tree file in
+    let one_child = read_huffman_tree file in
+    { cn_zero_child = zero_child;
+      cn_one_child = one_child;
+      cn_symbol = 0; }
+  else if (Char.code the_byte) = 1 then
+    (let rec read_sym sym nb exp =
+      if nb = 0 then sym
+      else
+	(let the_byte = Reader.read_byte file in
+	 let sym' = sym + (Char.code the_byte) * exp in
+	 read_sym sym' (nb-1) (exp lsl 8)) in
+     let sym = read_sym 0 bytes_per_symbol 1 in
+     (* Printf.printf "%04x " sym; *)
+     { cn_zero_child = null_code_node; 
+       cn_one_child = null_code_node;
+       cn_symbol = sym })
+  else
+    failwith "Error reading Huffman Tree!"
+
+let read_and_huffman_decode
+    (file:Reader.t) 
+    (t:code_node)
+    (symbol_stream:symbol_type array) =
+  let rec find_sym tree mask (b:char) =
+    if is_null_cn tree.cn_zero_child then (tree.cn_symbol,mask,b)
+    else
+      if (mask <> 0 && mask < 256) then
+	(if (mask land (Char.code b)) <> 0 then
+	  find_sym tree.cn_one_child (mask lsl 1) b
+	else
+	  find_sym tree.cn_zero_child (mask lsl 1) b)
+      else
+	find_sym tree 1 (Reader.read_byte file) in
+  let count = Array.length symbol_stream in
+  let rec iter i len mask (b:char) =
+    if (i >= len) then ()
+    else
+      (let sym,mask',b' = find_sym t mask b in
+       Array.set symbol_stream i sym;
+       iter (i+1) count mask' b') in
+  iter 0 count 0 '0';;
+
 (* TEST *)
 
+let print_int_arr arr =
+  let len = Array.length arr in
+  for i=0 to (len-1) do
+    Printf.printf "%d " arr.(i)
+  done;
+  print_endline "";;
+
+(* Encode it *)
 let test_inp = [| 1;1;2;2;3;1;5;4;1;8 |];;
+let test_len = Array.length test_inp;;
 let test_oup = Bytes.create 10;;
 let packed_tree,packed_len,encoded_len = huffman_encode test_inp test_oup;;
+print_int_arr test_inp;;
 print_stream test_oup encoded_len;;
 print_tree packed_tree packed_len;;
 print_endline "";;
+
+(* Store it *)
+let outbytes = Bytes.create (packed_len+encoded_len);;
+Bytes.blit packed_tree 0 outbytes 0 packed_len;;
+Bytes.blit test_oup 0 outbytes packed_len encoded_len;;
+
+(* Decode it *)
+let f = Reader.make_reader outbytes;;
+let cn_tree = read_huffman_tree f;;
+let test_res = Array.make test_len 0;;
+read_and_huffman_decode f cn_tree test_res;;
+print_int_arr test_res;;
