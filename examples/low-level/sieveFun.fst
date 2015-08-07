@@ -108,7 +108,6 @@ val multiplesMarkedAsDividesIff :
     (*[SMTPatT (markedIffDividesOrInit2 n lo initv newv)]*)
 let multiplesMarkedAsDividesIff n bitv newv lo = (multiplesMarkedAsDivides n newv lo)
 
-
 type  innerLoopInv (n:nat) (lo: ref nat)  (li : ref nat) (res:ref ((k:nat{k<n}) -> Tot bool))
     (initres: ((k:nat{k<n}) -> Tot bool)) (m:smem) =
  distinctRefsExists3 m lo res li
@@ -353,7 +352,7 @@ let sieveUnfolded3 n u =
     (fun u ->
         let initres = memread res in
         let lov = memread lo in
-        let li:(ref nat) = salloc 0 in
+        let li:(ref nat) = salloc 2 in
         let liv = memread li in
         (scopedWhile2
             lo
@@ -395,7 +394,7 @@ let sieveUnfolded2 n u =
     (fun u ->
         let initres = memread res in
         let lov = memread lo in
-        let li = salloc 0 in
+        let li = salloc 2 in
         let liv = memread li in
         (scopedWhile
             (innerLoopInv2 n lo li res initres)

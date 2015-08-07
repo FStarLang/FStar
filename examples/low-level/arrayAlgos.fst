@@ -22,6 +22,9 @@ val contains : #a:Type -> smem -> sstarray a -> GTot bool
 let contains m v =
 refExistsInMem (reveal (asRef v)) m
 
+val eonly :  #a:Type -> sstarray a -> Tot modset
+let eonly s = (eonly (asRef s))
+
 
 val sel : #a:Type -> m:smem -> v:(sstarray a){contains m v} -> GTot (seq a)
 let sel m v = loopkupRef (reveal (asRef v)) m
@@ -48,9 +51,13 @@ let glength v m = Seq.length (sel m v)
 val haslength : #a:Type -> smem -> sstarray a -> n:nat -> GTot bool
 let haslength m v n = contains m v && glength v m = n
 
-val seqAsFun : a:Type -> n:nat -> s:(seq a){Seq.length s= n}
+val seqAsFun : #a:Type -> n:nat -> s:(seq a){Seq.length s= n}
   -> Tot ((k:nat{k<n}) -> Tot a)
-let seqAsFun (a:Type) n s = (fun k -> index s k)
+let seqAsFun n s = (fun k -> index s k)
+
+val arrayAsFun : #a:Type -> n:nat -> m:smem -> v:(sstarray a){haslength m v n}
+  -> Tot (erased ((k:nat{k<n}) -> Tot a))
+let arrayAsFun (#a:Type) n m v = (elift1_p #_ #_ #(fun sq -> Seq.length sq ==n) (seqAsFun #a n)) (esel m v)
 
 type prefixEqual  (#a:Type)
   (v1: seq a) (v2: seq a) (p:nat{p <= length v1 /\ p<= length v2})
