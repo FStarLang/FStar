@@ -405,10 +405,29 @@ let print_int_arr arr =
   done;
   print_endline "";;
 
+(* generate random array, but with lots of clusters *)
+let gen_arr len =
+  let count = ref (Random.int len) in
+  let v = ref (Random.int symbol_value_bound) in
+  let f i = 
+    if !count = 0 then
+      (count := (Random.int (len-i));
+       v := (Random.int symbol_value_bound));
+    decr count;
+    !v in
+  let arr = Array.init len f in
+  for i = 0 to (len-1) do
+    let idx = Random.int len in
+    let tmp = arr.(i) in
+    arr.(i) <- arr.(idx);
+    arr.(idx) <- tmp
+  done;
+  arr
+
 (* Encode it *)
-let test_inp = [| 1;1;2;2;3;1;5;4;1;8 |];;
-let test_len = Array.length test_inp;;
-let test_oup = Bytes.create 10;;
+let test_len = 1000;;
+let test_inp = gen_arr test_len;;
+let test_oup = Bytes.create test_len;;
 let packed_tree,packed_len,encoded_len = huffman_encode test_inp test_oup;;
 print_int_arr test_inp;;
 print_stream test_oup encoded_len;;
@@ -426,3 +445,5 @@ let cn_tree = read_huffman_tree f;;
 let test_res = Array.make test_len 0;;
 read_and_huffman_decode f cn_tree test_res;;
 print_int_arr test_res;;
+
+assert (test_res = test_inp);;
