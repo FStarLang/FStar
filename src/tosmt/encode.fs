@@ -1893,7 +1893,9 @@ let encode_env_bindings (env:env_t) (bindings:list<Tc.Env.binding>) : (decls_t *
     let encode_binding b (decls, env) = match b with
         | Env.Binding_var(x, t0) -> 
             let xxsym, xx, env' = new_term_constant env x in 
-            let t1 = Normalize.norm_typ [Normalize.DeltaHard; Normalize.Beta; Normalize.Eta; Normalize.Simplify] env.tcenv t0 in//whnf env t0 in
+            let t1 = Normalize.norm_typ [Normalize.DeltaHard; Normalize.Beta; Normalize.Eta; Normalize.EtaArgs; Normalize.Simplify] env.tcenv t0 in
+            if Tc.Env.debug env.tcenv <| Options.Other "Encoding"
+            then (Util.fprint3 "Normalized %s : %s to %s\n" (Print.strBvd x) (Print.typ_to_string t0) (Print.typ_to_string t1));
             let t, decls' = encode_typ_pred' None t1 env xx in
             let caption = 
                 if !Options.logQueries 
@@ -1902,7 +1904,7 @@ let encode_env_bindings (env:env_t) (bindings:list<Tc.Env.binding>) : (decls_t *
             let g = [Term.DeclFun(xxsym, [], Term_sort, caption)]
                     @decls'
                     @[Term.Assume(t, None)] in
-            decls@g, env'
+            decls@g, env' 
         | Env.Binding_typ(a, k) -> 
             let aasym, aa, env' = new_typ_constant env a in 
             let k, decls' = encode_knd k env aa in

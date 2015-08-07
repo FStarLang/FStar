@@ -39,6 +39,7 @@ open Microsoft.FStar.Tc.Env
 type step = 
   | WHNF
   | Eta
+  | EtaArgs
   | Delta
   | DeltaHard
   | Beta
@@ -154,7 +155,7 @@ let rec eta_expand_exp (tcenv:Tc.Env.env) (e:exp) : exp =
             end
         | _ -> e
 
-let no_eta = List.filter (function Eta -> false | _ -> true)
+let no_eta s = s |> List.filter (function Eta -> false | _ -> true)
 let no_eta_cfg c = {c with steps=no_eta c.steps}
 let whnf_only config = config.steps |> List.contains WHNF
 let unmeta config = config.steps |> List.contains Unmeta
@@ -285,7 +286,9 @@ and sn tcenv (cfg:config<typ>) : config<typ> =
     let rebuild config  = 
         let rebuild_stack config = 
             if is_stack_empty config then config
-            else let s' = no_eta config.steps in
+            else let s' = if List.contains EtaArgs config.steps 
+                          then config.steps
+                          else no_eta config.steps in
                  let args = config.stack.args |> List.map (function 
                         | (Inl t, imp), env -> Inl <| (sn tcenv (t_config t env s')).code, imp
                         | (Inr v, imp), env -> Inr <| (wne tcenv (e_config v env s')).code, imp) in
@@ -539,7 +542,10 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
   let config = {cfg with code = e} in
    let rebuild config  = 
         if is_stack_empty config then config
-        else let s' = no_eta config.steps in
+        else let s' = 
+                if List.contains EtaArgs config.steps 
+                then config.steps
+                else no_eta config.steps in
              let args = 
                  config.stack.args |> List.map (function 
                     | (Inl t, imp), env -> Inl <| (sn  tcenv (t_config t env s')).code, imp
