@@ -1221,7 +1221,7 @@ let mk_indexed_projectors fvq refine_domain env (tc, tps, k) lid (formals:list<b
                  [Inr (x.v, proj)]) |> List.flatten in
 
     let ntps = List.length tps in
-    let pattern_fields = Util.nth_tail ntps formals in
+//    let pattern_fields = Util.nth_tail ntps formals in
     formals |> List.mapi (fun i ax -> match fst ax with
         | Inl a ->
             let field_name, _ = Util.mk_field_projector_name lid a i in
@@ -1240,10 +1240,11 @@ let mk_indexed_projectors fvq refine_domain env (tc, tps, k) lid (formals:list<b
                      let as_imp = function 
                         | Some Implicit -> true
                         | _ -> false in
-                     let arg_pats = pattern_fields |> List.mapi (fun j by -> match by with 
-                        | Inl _, imp -> [pos (Pat_tvar (Util.gen_bvar kun)), as_imp imp]
+                     let arg_pats = formals |> List.mapi (fun j by -> match by with 
+                        | Inl _, imp -> 
+                          if j < ntps then [] else [pos (Pat_tvar (Util.gen_bvar kun)), as_imp imp]
                         | Inr _, imp -> 
-                            if i=j + ntps //this is the one to project
+                            if i=j  //this is the one to project
                             then [pos (Pat_var projection), as_imp imp]
                             else [pos (Pat_wild (Util.gen_bvar tun)), as_imp imp]) |> List.flatten in
                      let pat = (Syntax.Pat_cons(Util.fv lid, Some fvq, arg_pats) |> pos, None, Util.bvar_to_exp projection) in
