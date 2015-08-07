@@ -1,7 +1,7 @@
 
-let print_error = (fun ( msg ) ( r ) -> (let _70_20343 = (let _70_20342 = (Support.Microsoft.FStar.Range.string_of_range r)
-in (Support.Microsoft.FStar.Util.format2 "ERROR %s: %s\n" _70_20342 msg))
-in (Support.Microsoft.FStar.Util.print_string _70_20343)))
+let print_error = (fun ( msg ) ( r ) -> (let _70_22629 = (let _70_22628 = (Support.Microsoft.FStar.Range.string_of_range r)
+in (Support.Microsoft.FStar.Util.format2 "ERROR %s: %s\n" _70_22628 msg))
+in (Support.Microsoft.FStar.Util.print_string _70_22629)))
 
 let is_cache_file = (fun ( fn ) -> ((Support.Microsoft.FStar.Util.get_file_extension fn) = ".cache"))
 
@@ -14,8 +14,8 @@ Support.Microsoft.FStar.Util.Inl ((env, modul))
 end))
 end
 | Support.Microsoft.FStar.Util.Inl (Support.Microsoft.FStar.Util.Inr (decls)) -> begin
-(let _70_20350 = (Microsoft_FStar_Parser_Desugar.desugar_decls env decls)
-in (Support.All.pipe_left (fun ( _70_20349 ) -> Support.Microsoft.FStar.Util.Inr (_70_20349)) _70_20350))
+(let _70_22636 = (Microsoft_FStar_Parser_Desugar.desugar_decls env decls)
+in (Support.All.pipe_left (fun ( _70_22635 ) -> Support.Microsoft.FStar.Util.Inr (_70_22635)) _70_22636))
 end
 | Support.Microsoft.FStar.Util.Inl (Support.Microsoft.FStar.Util.Inl (_47_18)) -> begin
 (raise (Microsoft_FStar_Absyn_Syntax.Err ("Refusing to check more than one module at a time incrementally")))
@@ -26,15 +26,15 @@ end))
 
 let parse_file = (fun ( env ) ( fn ) -> (match ((is_cache_file fn)) with
 | true -> begin
-(let full_name = (let _70_20358 = (let _70_20357 = (let _70_20356 = (let _70_20355 = (Microsoft_FStar_Options.get_fstar_home ())
-in (Support.String.strcat _70_20355 "/"))
-in (Support.String.strcat _70_20356 Microsoft_FStar_Options.cache_dir))
-in (Support.String.strcat _70_20357 "/"))
-in (Support.String.strcat _70_20358 fn))
-in (let m = (let _70_20359 = (Support.Microsoft.FStar.Util.get_oreader full_name)
-in (Microsoft_FStar_Absyn_SSyntax.deserialize_modul _70_20359))
-in (let _70_20360 = (Microsoft_FStar_Parser_Desugar.add_modul_to_env m env)
-in (_70_20360, (m)::[]))))
+(let full_name = (let _70_22644 = (let _70_22643 = (let _70_22642 = (let _70_22641 = (Microsoft_FStar_Options.get_fstar_home ())
+in (Support.String.strcat _70_22641 "/"))
+in (Support.String.strcat _70_22642 Microsoft_FStar_Options.cache_dir))
+in (Support.String.strcat _70_22643 "/"))
+in (Support.String.strcat _70_22644 fn))
+in (let m = (let _70_22645 = (Support.Microsoft.FStar.Util.get_oreader full_name)
+in (Microsoft_FStar_Absyn_SSyntax.deserialize_modul _70_22645))
+in (let _70_22646 = (Microsoft_FStar_Parser_Desugar.add_modul_to_env m env)
+in (_70_22646, (m)::[]))))
 end
 | false -> begin
 (match ((Microsoft_FStar_Parser_ParseIt.parse (Support.Microsoft.FStar.Util.Inl (fn)))) with
@@ -46,8 +46,8 @@ end
 in (Support.All.exit 1))
 end
 | Support.Microsoft.FStar.Util.Inr ((msg, r)) -> begin
-(let _47_42 = (let _70_20361 = (Microsoft_FStar_Absyn_Print.format_error r msg)
-in (Support.All.pipe_left Support.Microsoft.FStar.Util.print_string _70_20361))
+(let _47_42 = (let _70_22647 = (Microsoft_FStar_Absyn_Print.format_error r msg)
+in (Support.All.pipe_left Support.Microsoft.FStar.Util.print_string _70_22647))
 in (Support.All.exit 1))
 end)
 end))

@@ -139,14 +139,14 @@ and bvvdef = bvdef<exp>
 and pat' = 
   | Pat_disj     of list<pat>
   | Pat_constant of sconst
-  | Pat_cons     of fvvar * option<fv_qual> * list<pat>
-  | Pat_var      of bvvar * bool                          (* flag marks an explicitly provided implicit *)
-  | Pat_tvar     of btvar
-  | Pat_wild     of bvvar                                 (* need stable names for even the wild patterns *)
-  | Pat_twild    of btvar
-  | Pat_dot_term of bvvar * exp
-  | Pat_dot_typ  of btvar * typ
-and pat = withinfo_t<pat',option<either<knd,typ>>>                (* the meta-data is a typ, except for Pat_dot_typ and Pat_tvar, where it is a kind (not strictly needed) *)
+  | Pat_cons     of fvvar * option<fv_qual> * list<(pat * bool)> (* flag marks an explicitly provided implicit *)
+  | Pat_var      of bvvar                           
+  | Pat_tvar     of btvar 
+  | Pat_wild     of bvvar                                        (* need stable names for even the wild patterns *)
+  | Pat_twild    of btvar 
+  | Pat_dot_term of bvvar * exp 
+  | Pat_dot_typ  of btvar * typ 
+and pat = withinfo_t<pat',option<either<knd,typ>>>               (* the meta-data is a typ, except for Pat_dot_typ and Pat_tvar, where it is a kind (not strictly needed) *)
 and knd' =
   | Kind_type
   | Kind_effect
@@ -549,14 +549,14 @@ let mk_Exp_app' ((e1:exp), (args:list<arg>)) (t:option<typ>) (p:range) =
         | _ -> mk_Exp_app (e1, args) t p
 let rec pat_vars p = match p.v with
   | Pat_cons(_, _, ps) -> 
-    let vars = List.collect pat_vars ps in 
+    let vars = List.collect (fun (x, _) -> pat_vars x) ps in 
     if vars |> nodups (fun x y -> match x, y with 
       | Inl x, Inl y -> bvd_eq x y
       | Inr x, Inr y -> bvd_eq x y
       | _ -> false) 
     then vars
     else raise (Error("Pattern variables may not occur more than once", p.p))
-  | Pat_var (x, _) -> [Inr x.v]
+  | Pat_var x -> [Inr x.v]
   | Pat_tvar a -> [Inl a.v]
   | Pat_disj ps -> 
     let vars = List.map pat_vars ps in 

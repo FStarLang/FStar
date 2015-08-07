@@ -278,7 +278,7 @@ let is_etuple (e : exp) =
 let is_ptuple (p : pat) =
     match p.v with
     | Pat_cons (x, _, args) ->
-        let args = args |> List.collect (fun p -> match p.v with 
+        let args = args |> List.collect (fun p -> match (fst p).v with 
             | Pat_dot_term _ | Pat_dot_typ _ -> []
             | _ -> [p])
         in
@@ -502,16 +502,16 @@ let mlconst_of_const (sctt : sconst) =
 let rec mlpat_of_pat (mlenv : mlenv) (rg : range) (le : lenv) (p : pat) : lenv * mlpattern =
     match p.v with
     | Pat_cons (x, _, ps) -> begin
-        let ps = ps |> List.filter (fun p -> match p.v with 
+        let ps = ps |> List.filter (fun p -> match (fst p).v with 
             | Pat_dot_term _ | Pat_dot_typ _ -> false
             | _ -> true)
         in
 
         if is_xtuple x.v = Some (List.length ps) then
-            let le, ps = Util.fold_map (fun le pat -> mlpat_of_pat mlenv pat.p le pat) le ps in
+            let le, ps = Util.fold_map (fun le (pat, _) -> mlpat_of_pat mlenv pat.p le pat) le ps in
             (le, MLP_Tuple ps)
         else
-          let le, ps = Util.fold_map (mlpat_of_pat mlenv rg) le ps in
+          let le, ps = Util.fold_map (fun le (pat, _) -> mlpat_of_pat mlenv rg le pat) le ps in
           let p =
             match smap_try_find record_constructors x.v.str with
               | Some f -> MLP_Record (path_of_ns mlenv x.v.ns, List.zip (List.map (fun x -> x.idText) f) ps)
@@ -519,7 +519,7 @@ let rec mlpat_of_pat (mlenv : mlenv) (rg : range) (le : lenv) (p : pat) : lenv *
           (le, p)
     end
 
-    | Pat_var (x, _) ->
+    | Pat_var x ->
         let le, mlid = lpush le x.v.realname x.v.ppname in
         (le, MLP_Var mlid)
 

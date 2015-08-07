@@ -19,16 +19,41 @@ open Seq
 open Ghost
 
 val contains : #a:Type -> smem -> sstarray a -> GTot bool
-let contains m v = refExistsInMem (reveal (asRef v)) m
+let contains m v =
+refExistsInMem (reveal (asRef v)) m
+
 
 val sel : #a:Type -> m:smem -> v:(sstarray a){contains m v} -> GTot (seq a)
 let sel m v = loopkupRef (reveal (asRef v)) m
+
+val loopkupRefR : a:Type -> m:smem -> r:(ref a) ->
+  Pure a (requires (refExistsInMem r m)) (ensures (fun _ -> True))
+let loopkupRefR (a:Type) m r = loopkupRef r m
+(*
+val eloopkupRef : #a:Type -> m:smem -> r:(erased (ref a)) ->
+  Pure (erased a) (requires (refExistsInMem (reveal r) m))
+                  (ensures (fun _ -> True))
+let eloopkupRef  (#a:Type) m v = (elift1 (loopkupRefR a m)) v
+*)
+
+(*  (elift1 (fun (r:(ref a){refExistsInMem r m}) -> loopkupRefR r m)) v *)
+
+
+(*
+val esel : #a:Type -> m:smem -> v:(sstarray a){refExistsInMem (reveal (asRef v)) m} -> Tot (erased (seq a))
+let esel (#a:Type) m v = eloopkupRef m (asRef v)
+*)
 
 val glength : #a:Type -> v:(sstarray a) -> m:smem{contains m v} -> GTot nat
 let glength v m = Seq.length (sel m v)
 
 val haslength : #a:Type -> smem -> sstarray a -> n:nat -> GTot bool
 let haslength m v n = contains m v && glength v m = n
+
+val seqAsFun : a:Type -> n:nat -> s:(seq a){Seq.length s= n}
+  -> Tot ((k:nat{k<n}) -> Tot a)
+let seqAsFun (a:Type) n s = (fun k -> index s k)
+
 
 type prefixEqual  (#a:Type)
   (v1: seq a) (v2: seq a) (p:nat{p <= length v1 /\ p<= length v2})
