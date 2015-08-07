@@ -1188,7 +1188,7 @@ let mk_data_discriminators quals env t tps k datas =
         //Util.fprint1 "Making discriminator %s\n" disc_name.str;
         Sig_val_decl(disc_name, disc_type, quals [Logic; Discriminator d], range_of_lid disc_name))
 
-let mk_indexed_projectors refine_domain env (tc, tps, k) lid (formals:list<binder>) t =
+let mk_indexed_projectors fvq refine_domain env (tc, tps, k) lid (formals:list<binder>) t =
     let binders = gather_tc_binders tps k in
     let p = range_of_lid lid in
     let pos q = Syntax.withinfo q None p in
@@ -1220,6 +1220,8 @@ let mk_indexed_projectors refine_domain env (tc, tps, k) lid (formals:list<binde
                  let proj = mk_Exp_app(Util.fvar None field_name p, [arg]) None p in //TODO: Mark the projector with an fv_qual?
                  [Inr (x.v, proj)]) |> List.flatten in
 
+    let ntps = List.length tps in
+    let pattern_fields = Util.nth_tail ntps formals in
     formals |> List.mapi (fun i ax -> match fst ax with
         | Inl a ->
             let field_name, _ = Util.mk_field_projector_name lid a i in
@@ -1230,19 +1232,21 @@ let mk_indexed_projectors refine_domain env (tc, tps, k) lid (formals:list<binde
             let field_name, _ = Util.mk_field_projector_name lid x i in
             let t = mk_Typ_fun(binders, Util.total_comp (Util.subst_typ subst x.sort) p) None p in
             let quals q = if not env.iface || env.admitted_iface then Assumption::q else q in
-            let projection = Util.gen_bvar tun in
-            let bind_tvars = formals |> Util.for_some (function (Inl _, Some Implicit) | (Inr _, _) -> false | _ -> true) in
-            let arg_pats = formals |> List.mapi (fun j by -> match by with 
-                | Inl _, _ -> if bind_tvars then [pos (Pat_tvar (Util.gen_bvar kun)), false] else []
-                | Inr _, _ -> 
-                  if i=j //this is the one to project
-                  then [pos (Pat_var projection), false]
-                  else [pos (Pat_wild (Util.gen_bvar tun)), false]) |> List.flatten in
             let quals = quals [Logic; Projector(lid, Inr x.v)] in
             let impl = 
-                if lid_equals Const.prims_lid  (DesugarEnv.current_module env)
+                if lid_equals Const.prims_lid  (DesugarEnv.current_module env) || fvq<>Data_ctor
                 then []
-                else let pat = (Syntax.Pat_cons(Util.fv lid, Some Data_ctor, arg_pats) |> pos, None, Util.bvar_to_exp projection) in
+                else let projection = Util.gen_bvar tun in
+                     let as_imp = function 
+                        | Some Implicit -> true
+                        | _ -> false in
+                     let arg_pats = pattern_fields |> List.mapi (fun j by -> match by with 
+                        | Inl _, imp -> [pos (Pat_tvar (Util.gen_bvar kun)), as_imp imp]
+                        | Inr _, imp -> 
+                            if i=j + ntps //this is the one to project
+                            then [pos (Pat_var projection), as_imp imp]
+                            else [pos (Pat_wild (Util.gen_bvar tun)), as_imp imp]) |> List.flatten in
+                     let pat = (Syntax.Pat_cons(Util.fv lid, Some fvq, arg_pats) |> pos, None, Util.bvar_to_exp projection) in
                      let body = mk_Exp_match(arg_exp, [pat]) None p in
                      let imp = mk_Exp_abs(binders, body) None (range_of_lid field_name) in
                      let lb = {
@@ -1267,7 +1271,10 @@ let mk_data_projectors env = function
         begin match Util.function_formals t with
         | Some(formals, cod) ->
           let cod = Util.comp_result cod in
-          mk_indexed_projectors refine_domain env tycon lid formals cod
+          let qual = match Util.find_map quals (function RecordConstructor fns -> Some (Record_ctor(lid, fns)) | _ -> None) with
+            | None -> Data_ctor
+            | Some q -> q in
+          mk_indexed_projectors qual refine_domain env tycon lid formals cod
 
         | _ -> [] //no fields to project
     end

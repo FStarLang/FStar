@@ -153,7 +153,7 @@ let extract_pat (g:env) p : (env * list<mlpattern>) =
       | Pat_tvar a ->
         let mlty = MLTY_Top in
         let g = Env.extend_ty g a (Some mlty) in
-        g, if imp then [] else [MLP_Wild]
+        g, (if imp then [] else [MLP_Wild])
 
       | Pat_dot_typ _
       | Pat_twild _ ->

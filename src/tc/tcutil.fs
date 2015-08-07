@@ -259,7 +259,7 @@ let pat_as_exps allow_implicits env p
 
                             | _ -> raise (Error(Util.format1 "Insufficient pattern arguments (%s)" (Print.pat_to_string p), range_of_lid fv.v)))
 
-                        | f::formals', (p, _)::pats' -> 
+                        | f::formals', (p, p_imp)::pats' -> 
                             begin match f, p.v with 
                                 | (Inl _, imp), Pat_tvar _
                                 | (Inl _, imp), Pat_twild _ -> (p, as_imp imp)::aux formals' pats'
@@ -274,7 +274,7 @@ let pat_as_exps allow_implicits env p
                                         | Pat_dot_typ _ -> pats'
                                         | _ -> pats in
                                     (p1, as_imp imp)::aux formals' pats'
-                                | (Inr _, Some Implicit), Pat_var _ -> 
+                                | (Inr _, Some Implicit), _ when p_imp -> 
                                     (p, true)::aux formals' pats'
                                 | (Inr _, Some Implicit), _ ->
                                     let a = Util.gen_bvar tun in

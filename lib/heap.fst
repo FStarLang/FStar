@@ -1,5 +1,5 @@
 module Heap
-#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
 open Set
 type heap
 type ref : Type -> Type
