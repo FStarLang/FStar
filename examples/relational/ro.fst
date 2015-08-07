@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set --z3timeout 30;
+    options:--admit_fsi Set --z3timeout 60 --log_types -; 
     variables:LIB=../../lib;
     other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/st2.fst $LIB/bytes.fst $LIB/list.fst sample.fst xor.fst
   --*)
@@ -29,11 +29,6 @@ assume Safe_key_unique  : (forall k0 k0' k1.
                                {:pattern (safe_key k0 k1); (safe_key k0' k1)}
                                (safe_key k0 k1 /\ safe_key k0' k1 ==> k0 = k0'))
 opaque type safe (t0:tag) (t1:tag) = (exists (f:bij #tag #tag). t1 = f t0)
-
- val bij2safe : f:bij #tag #tag -> t0:tag -> t1:tag ->
-               Lemma (requires (t1 = f t0))
-                     (ensures  (safe t0 t1))
-let bij2safe f t0 t1 = ()
 
 type alloc =
   | Hon: alloc
@@ -142,8 +137,16 @@ val ok_hon_safe2 : k0:key -> k1:key -> l0:log -> l1:log{Ok l0 l1}
                                 safe (snd(Some.v (assoc k0 l0))) (snd(Some.v (assoc k1 l1)))))
                                 [SMTPat (assoc k0 l0); SMTPat (assoc k1 l1)]
 let ok_hon_safe2 k0 k1 l0 l1 = ok_hon_safe2' k0 k1 l0 l1 (ok_as_proof l0 l1)
+
 type goodstate_hash (s1:state_hash) (s2:state_hash) =
             s1.bad = true \/ s2.bad = true \/ Ok s1.l s2.l
+
+(*
+opaque type log_monotone (l':log) (l:log) =
+            (forall x. is_Some (assoc x l') ==> 
+                    is_Some (assoc x l) /\ Some.v (assoc x l) = Some.v (assoc x l'))
+                              
+*)
 
 assume val s : ref state_hash
 
@@ -163,6 +166,8 @@ opaque val hash_hon:  k0:key -> k1:key -> f:bij #tag #tag ->
                (requires (fun h2 -> goodstate_hash (sel (fst h2) s) (sel (snd h2) s) /\
                           safe_key k0 k1))
                (ensures (fun h2' p h2 -> goodstate_hash (sel (fst h2) s) (sel (snd h2) s) /\
+(*                                          log_monotone (sel (fst h2') s).l (sel (fst h2) s).l /\ *)
+(*                                          log_monotone (sel (snd h2') s).l (sel (snd h2) s).l /\ *)
                                        ((sel (fst h2) s).bad  \/
                                        (sel (snd h2) s).bad \/
                                        (is_Some (fst p) /\ is_Some (snd p) /\
@@ -177,6 +182,8 @@ opaque val hash_hon2: k0:key -> k1:key -> f:(tag -> Tot tag){bijection f} ->
                (requires (fun h2 -> goodstate_hash (sel (fst h2) s) (sel (snd h2) s) /\
                           safe_key k0 k1))
                (ensures (fun h2' p h2 -> goodstate_hash (sel (fst h2) s) (sel (snd h2) s) /\
+(*                                          log_monotone (sel (fst h2') s).l (sel (fst h2) s).l /\ *)
+(*                                          log_monotone (sel (snd h2') s).l (sel (snd h2) s).l /\ *)
                                        ((sel (fst h2) s).bad  \/
                                        (sel (snd h2) s).bad \/
                                        (is_Some (fst p) /\ is_Some (snd p) /\
@@ -188,6 +195,8 @@ opaque val hash_adv:  k:key ->
                ST2 (option tag * option tag)
                (requires (fun h2 -> goodstate_hash (sel (fst h2) s) (sel (snd h2) s)))
                (ensures (fun h2' p h2 -> goodstate_hash (sel (fst h2) s) (sel (snd h2) s) /\
+(*                                          log_monotone (sel (fst h2') s).l (sel (fst h2) s).l /\ *)
+(*                                          log_monotone (sel (snd h2') s).l (sel (snd h2) s).l /\ *)
                                        ((sel (fst h2) s).bad  \/
                                        (sel (snd h2) s).bad \/
                                        is_Some (fst p) /\ is_Some (snd p) /\
@@ -276,12 +285,6 @@ val lemma_safe_key_pre : k0:bytes -> k1:bytes{safe_key_pre k0 k1} -> r0:block ->
                          -> Lemma (safe_key (append k0 r0) (append k1 r1))
 let lemma_safe_key_pre k0 k1 r0 r1 = ()
 
-(* using this pair at a fixed type because of problems probably related to #290 *)
-type mp : Type =
-  | MkMP : a:block -> b:block -> mp
-
-
-
 opaque val xor_inverse_lemma : a:block -> Lemma (bijection #block #block (fun x -> xor a x))
 let xor_inverse_lemma a = ()
 
@@ -289,20 +292,23 @@ opaque val encrypt_equal_lemma: x:block -> y:block ->  p0:block -> p1:block -> L
 let encrypt_equal_lemma x y p0 p1 = ()
 
 
-val encrypt_hon : k0:bytes ->  k1:bytes{safe_key_pre k0 k1}
+opaque val encrypt_hon : k0:bytes ->  k1:bytes{safe_key_pre k0 k1}
                   -> p0:block-> p1:block ->
-                  ST2 (option mp * option mp)
+                  ST2 (option (block * block) * option (block * block))
                   (requires (fun h2 -> goodstate_hash (sel (fst h2) s) (sel (snd h2) s)))
                   (ensures  (fun h2' p h2 -> goodstate_hash (sel (fst h2) s) (sel (snd h2) s) /\
+(*                                              log_monotone (sel (fst h2') s).l (sel (fst h2) s).l /\ *)
+(*                                              log_monotone (sel (snd h2') s).l (sel (snd h2) s).l /\ *)
                                              (~((sel (fst h2) s).bad  \/
                                              (sel (snd h2) s).bad)  ==>
                                              Ok (sel (fst h2) s).l (sel (snd h2) s).l /\
                                              is_Some (fst p) /\ is_Some (snd p)   /\
-                                             (fresh_keys (append k0 (MkMP.b(Some.v (fst p))))
-                                                         (append k1 (MkMP.b(Some.v (snd p))))
+                                             snd (Some.v (fst p)) = snd (Some.v (snd p)) /\
+                                             (fresh_keys (append k0 (snd(Some.v #(block * block) (fst p))))
+                                                         (append k1 (snd(Some.v #(block * block) (snd p))))
                                                          ((sel (fst h2') s).l)
-                                                         ((sel (snd h2') s).l) ==>
-                                                  fst p = snd p))))
+                                                         ((sel (snd h2') s).l) ==> 
+                                                      fst p = snd p))))
 let encrypt_hon k0 k1 p0 p1 =
                   let sample_fun = (fun x -> xor (xor p0 p1) x) in
                   xor_inverse_lemma (xor p0 p1);
@@ -314,8 +320,8 @@ let encrypt_hon k0 k1 p0 p1 =
                   let l0, l1 = compose2 (fun () -> (!s).l) (fun () -> (!s).l) () () in
                   let h0, h1 = hash_hon kh0 kh1 (sample_fun)  in
                   let s0, s1 = compose2 (fun () -> (!s)) (fun () -> (!s)) () () in
-                  let a = if is_Some h0 then Some (MkMP (encrypt p0 (Some.v h0)) r0) else None in
-                  let b = if is_Some h1 then Some (MkMP (encrypt p1 (Some.v h1)) r1) else None in
+                  let a = if is_Some h0 then Some ((encrypt p0 (Some.v h0)), r0) else None in
+                  let b = if is_Some h1 then Some ((encrypt p1 (Some.v h1)), r1) else None in
                   if not (s0.bad || s1.bad) then
                     if (fresh_keys kh0 kh1 l0 l1) then(
                       cut (b2t(Some.v h1 = sample_fun (Some.v h0)));
@@ -325,16 +331,17 @@ let encrypt_hon k0 k1 p0 p1 =
                       );
                   a,b
 
-(*
-val decrypt_hon : k0:bytes -> k1:bytes{safe_key_pre k0 k1} ->
-                  c0:mp -> c1:mp{c0 = c1} ->
+#reset-options
+opaque val decrypt_hon : k0:bytes -> k1:bytes{safe_key_pre k0 k1} ->
+                  c0:(block * block) -> c1:(block * block){snd c0 = snd c1} ->
                   ST2 (option block * option block)
                   (requires (fun h2 -> goodstate_hash (sel (fst h2) s) (sel (snd h2) s)))
                   (ensures  (fun h2' p h2 -> goodstate_hash (sel (fst h2) s) (sel (snd h2) s)))
-let decrypt_hon k0 k1 (MkMP c0 r0) (MkMP c1 r1) = 
+(*                                              log_monotone (sel (fst h2') s).l (sel (fst h2) s).l /\ *)
+(*                                              log_monotone (sel (snd h2') s).l (sel (snd h2) s).l)) *)
+let decrypt_hon k0 k1 (c0, r0) (c1, r1) = 
                   let kh0, kh1 = append k0 r0, append k1 r1 in
                   let h0, h1 = hash_hon kh0 kh1 (fun x -> x) in
                   let a = if is_Some h0 then Some (decrypt c0 (Some.v h0)) else None in
                   let b = if is_Some h1 then Some (decrypt c0 (Some.v h1)) else None in
                   a, b
-*)

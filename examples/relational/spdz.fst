@@ -1,5 +1,5 @@
 (*--build-config
-    options:--z3timeout 10;
+    options:--z3timeout 20;
     other-files: sample.fst 
   --*)
 
