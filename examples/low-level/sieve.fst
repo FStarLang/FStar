@@ -39,7 +39,6 @@ val bvAsFun2 : n:nat -> m:smem -> b:bitarray{haslength m b n} -> k:nat{k<n} -> T
 let bvAsFun2 n m b k = elift1 (fun (f:((k:nat{k<n}) -> Tot bool)) -> f k) (bvAsFun n m b)
 
 
-
 type bitv n = b:(Seq.seq bool){Seq.length b =n}
 
 val marked : n:nat -> b:(bitv n) -> m:nat{m<n} -> Tot bool
@@ -54,10 +53,10 @@ type markedIffMultipleOrInit (n:nat) (lo:nat) (upto:nat)
       SieveFun.nonTrivialDivides lo m) ))
 
 type  innerLoopInv (n:nat) (lo: ref nat)  (li : ref nat) (res: bitarray)
-    (initres: bitv n) (m:smem) =
+    (initres: erased (bitv n)) (m:smem) =
  SieveFun.distinctRefsExists3 m lo (reveal (asRef res)) li
   /\ 1 < (loopkupRef li m) /\  haslength m res n
-   /\ markedIffMultipleOrInit n (loopkupRef lo m) (loopkupRef li m) initres (reveal (esel m res))
+   /\ markedIffMultipleOrInit n (loopkupRef lo m) (loopkupRef li m) (reveal initres) (reveal (esel m res))
 
 
 type markedIffDividesOrInit2 (n:nat) (lo:nat)
@@ -93,12 +92,12 @@ let multiplesMarkedAsDivides n bitv lo = ()
 
 
 val multiplesMarkedAsDividesIff :
- n:nat -> initv:(bitv n) -> newv:(erased (bitv n)) -> lo:pos
+ n:nat -> initv:(erased (bitv n)) -> newv:(erased (bitv n)) -> lo:pos
  -> Lemma
-   (requires (markedIffDividesOrInit2 n lo initv (reveal newv)))
-   (ensures (markedIffDividesOrInit n lo initv (reveal newv)))
+   (requires (markedIffDividesOrInit2 n lo (reveal initv) (reveal newv)))
+   (ensures (markedIffDividesOrInit n lo (reveal initv) (reveal newv)))
 
-      [SMTPatT (markedIffDividesOrInit n lo initv (reveal newv))]
+      [SMTPatT (markedIffDividesOrInit n lo (reveal initv) (reveal newv))]
 
 let multiplesMarkedAsDividesIff n initv newv lo = (multiplesMarkedAsDivides n newv lo)
 
@@ -106,15 +105,15 @@ val innerLoop : n:nat{n>1}
   -> lo: ref nat
   -> li : ref nat
   -> res : bitarray
-  -> initres : (bitv n)
+  -> initres : (erased (bitv n))
   -> Mem unit
       (requires (fun m -> innerLoopInv n lo li res initres m /\
         haslength m res n /\
         loopkupRef li m = 2  /\ 1 < (loopkupRef lo m)
-                    /\ reveal (esel m res)  = initres ))
+                    /\ reveal (esel m res)  = reveal initres ))
       (ensures (fun _ _ m -> SieveFun.distinctRefsExists3 m lo (reveal (asRef res)) li
                 /\ haslength m res n
-                /\ markedIffDividesOrInit2 n (loopkupRef lo m) initres (reveal (esel m res))
+                /\ markedIffDividesOrInit2 n (loopkupRef lo m) (reveal initres) (reveal (esel m res))
                 (* markedIffDividesOrInit n (loopkupRef lo m) initres (reveal (esel m res)) *)
       ))
       ((elift2 union) (gonly li)  (ArrayAlgos.eonly res))
@@ -143,10 +142,10 @@ type markedIffHasDivisorSmallerThan (n:nat) (lo:nat)
 
 
 val markedIffHasDivisorSmallerThanInc :
-  n:nat -> lo:nat{1<lo} -> old:(bitv n) -> neww:(erased (bitv n))
+  n:nat -> lo:nat{1<lo} -> old:(erased (bitv n)) -> neww:(erased (bitv n))
   -> Lemma
-      (requires (markedIffHasDivisorSmallerThan n lo old)
-              /\ markedIffDividesOrInit2 n lo old (reveal neww))
+      (requires (markedIffHasDivisorSmallerThan n lo (reveal old))
+              /\ markedIffDividesOrInit2 n lo (reveal old) (reveal neww))
       (ensures (markedIffHasDivisorSmallerThan n (lo+1) (reveal neww)))
       (*[SMTPatT (markedIffHasDivisorSmallerThan n (lo+1) neww)]*)
 let markedIffHasDivisorSmallerThanInc n lo old neww  = ((multiplesMarkedAsDividesIff n old neww lo))
@@ -182,15 +181,15 @@ val outerLoopBody :
 
 
 let outerLoopBody n lo res u =
-  let initres = memread res in
+  let initMem = memreadAll () in
   let lov = memread lo in
   let li = salloc 2 in
   let liv = memread li in
-  innerLoop n lo li res initres;
-  let newres = memread res in
+  innerLoop n lo li res (eesel initMem res);
+  let fMem = memreadAll () in
   memwrite lo (lov+1);
   (*the part below has no computational content*)
-  (markedIffHasDivisorSmallerThanInc n lov initres newres)
+  (markedIffHasDivisorSmallerThanInc n lov (eesel initMem res) (eesel initMem res))
 
 val outerLoop : n:nat{n>1}
   -> lo: ref nat

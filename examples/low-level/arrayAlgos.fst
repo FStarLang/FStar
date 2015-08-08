@@ -45,11 +45,25 @@ let eloopkupRef  (#a:Type) m v = (elift1_p #(ref a) #a #(fun r -> b2t (refExists
 val esel : #a:Type -> m:smem -> v:(sstarray a){refExistsInMem (reveal (asRef v)) m} -> Tot (erased (seq a))
 let esel (#a:Type) m v = eloopkupRef m (asRef v)
 
+val eeloopkupRef : #a:Type -> m:(erased smem) -> r:(erased (ref a)){(refExistsInMem (reveal r) (reveal m))} ->
+  Tot (erased a)
+let eeloopkupRef  (#a:Type) m v = (elift2_p #smem #(ref a) #(fun m r -> b2t (refExistsInMem r m)) #a (loopkupRefR2)) m v
+
+val eesel : #a:Type -> m:(erased smem) -> v:(sstarray a){refExistsInMem (reveal (asRef v)) (reveal m)} -> Tot (erased (seq a))
+let eesel (#a:Type) m v = eeloopkupRef m (asRef v)
+
+
 val glength : #a:Type -> v:(sstarray a) -> m:smem{contains m v} -> GTot nat
 let glength v m = Seq.length (sel m v)
 
 val haslength : #a:Type -> smem -> sstarray a -> n:nat -> GTot bool
 let haslength m v n = contains m v && glength v m = n
+
+type lseq (a:Type) (n:nat) = x:(seq a){Seq.length x =n}
+
+val eeseln : #a:Type -> n:nat -> m:(erased smem) -> v:(sstarray a){haslength (reveal m) v n} -> Tot (erased (lseq a n))
+let eeseln (#a:Type) n m v = (elift2_p #smem #(ref a) #(fun m r -> refExistsInMem r m /\ Seq.length (loopkupRef r m) = n)
+  #(lseq a n) (loopkupRefR2)) m (asRef v)
 
 val seqAsFun : #a:Type -> n:nat -> s:(seq a){Seq.length s= n}
   -> Tot ((k:nat{k<n}) -> Tot a)
