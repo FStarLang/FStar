@@ -179,50 +179,46 @@ val outerLoopBody :
     (SieveFun.outerGuardLC n lo)
     ((elift2 union) (gonly lo)  (ArrayAlgos.eonly res))
 
-
 let outerLoopBody n lo res u =
   let initMem = memreadAll () in
   let lov = memread lo in
   let li = salloc 2 in
   let liv = memread li in
-  innerLoop n lo li res (eesel initMem res);
-  let fMem = memreadAll () in
+  innerLoop n lo li res (eeseln n initMem res);
   memwrite lo (lov+1);
+  let fMem = memreadAll () in
   (*the part below has no computational content*)
-  (markedIffHasDivisorSmallerThanInc n lov (eesel initMem res) (eesel initMem res))
+  (markedIffHasDivisorSmallerThanInc n lov (eeseln n initMem res) (eeseln n fMem res))
 
 val outerLoop : n:nat{n>1}
   -> lo: ref nat
-  -> res : ref ((k:nat{k<n}) -> Tot bool)
+  -> res : bitarray
   -> Mem unit
-      (fun m -> distinctRefsExists2 m lo res /\ loopkupRef lo m =2 /\ allUnmarked n (loopkupRef res m))
-      (fun m0 _ m1 ->
-            distinctRefsExists2 m1 lo res
-            /\ sids m0 = sids m1
-           /\ (markedIffHasDivisorSmallerThan n n (loopkupRef res m1))
+      (fun m -> outerLoopInv n lo res m /\ loopkupRef lo m =2 /\ allUnmarked n (sel m res))
+      (fun _ _ m1 -> outerLoopInv n lo res m1 /\ loopkupRef lo m1 = n
+        /\ markedIffHasDivisorSmallerThan n n (sel m1 res)
       )
-      (hide (union (singleton (Ref lo)) (singleton (Ref res))))
+      ((elift2 union) (gonly lo)  (ArrayAlgos.eonly res))
 
 let outerLoop n lo res =
   scopedWhile
     (outerLoopInv n lo res)
-    (outerGuardLC n lo)
+    (SieveFun.outerGuardLC n lo)
     (fun u -> (memread lo < n))
-    (hide (union (singleton (Ref lo)) (singleton (Ref res))))
+    ((elift2 union) (gonly lo)  (ArrayAlgos.eonly res))
     (outerLoopBody n lo res)
 
 val sieve : n:nat{n>1} -> unit
-  -> WNSC ((k:nat{k<n}) -> Tot bool)
+  -> WNSC bitarray
         (requires (fun m -> True))
-        (ensures (fun _ resv _ -> markedIffHasDivisorSmallerThan n n resv))
+        (ensures (fun _ resv m -> haslength m resv n /\ markedIffHasDivisorSmallerThan n n (sel m resv)))
         (hide empty)
 let sieve n u =
   let lo = salloc 2 in
-  let f:((k:nat{k<n}) -> Tot bool) = (fun x -> false) in
-  let res = salloc f in
-  (outerLoop n lo res);
+  let res = screate n false in
+  (outerLoop n lo res); res // ths post condition does not hold, becasue the frame containing res will be popped
   //assert (False);
-  memread res
+  //memread res
 
 val sieveFull : n:nat{n>1}
   -> Mem ((k:nat{k<n}) -> Tot bool)
