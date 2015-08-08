@@ -50,6 +50,14 @@ let elift2 f ga gc = f ga gc
 val elift3 : #a:Type -> #b:Type -> #c:Type-> #d:Type  -> f:(a-> c -> d ->Tot b) -> erased a -> erased c ->  erased d -> Tot (erased b)
 let elift3 f ga gc gd = f ga gc gd
 
+val elift1_p : #a:Type -> #b:Type -> #p:(a->Type) -> =f:(x:a{p x} ->Tot b) -> r:(erased a){p (reveal r) } -> Tot (erased b)
+let elift1_p f ga = f ga
+
+(*perhaps replace elift1_p with this*)
+val elift1_pd : #a:Type -> #b:(a->Type) -> #p:(a->Type) -> f:(x:a->Tot (b x)) -> r:(erased a){p (reveal r)} -> Tot (erased (b (reveal r)))
+let elift1_pd f ga = f ga
+
+
 (*
 Privateness seems to have no effect on Z3. So perhaps we dont need any postconditions
 

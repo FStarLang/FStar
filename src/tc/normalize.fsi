@@ -25,6 +25,7 @@ type step =
   | WHNF         (* reduce to weak head normal form only -- CH: adding this removes behaviors, quite unintuitive; NS: Not sure what this comment means. *)
                  (* without WHNF, all the strategies reduce under lambdas *)
   | Eta          (* eta expansion (of type functions) *)
+  | EtaArgs      (* eta expand arguments of functions also *)
   | Delta        (* expand type abbreviations only if reduction is blocked *)
   | DeltaHard    (* expand all type abbreviations *)
   | Beta         (* beta reduction -- CH: currently adding this changes nothing, seems that Beta always performed *)
