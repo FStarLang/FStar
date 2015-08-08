@@ -374,15 +374,20 @@ CAMLprim value stack_mkarray_prim(value lenv, value initv) {
 
 /** DEBUGGING **/
 
+static int nptrs = 0;
+
 void printptrs(void *ign, void **ptr) {
   printf("  live pointer addr=%p, val=%p\n",ptr,*ptr);
+  nptrs++;
 }
 
 CAMLprim value print_mask(value unit) 
 {
   CAMLparam1 (unit);
   printf("identifying marked pointers\n");
+  nptrs = 0;
   each_marked_pointer(printptrs,0);
+  printf("%d pointers marked, in total\n", nptrs);
   CAMLreturn(Val_unit);
 }
 

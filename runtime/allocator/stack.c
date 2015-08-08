@@ -23,7 +23,11 @@
 /* Utility routines */
 
 #define check(_p) if (!(_p)) { fprintf(stderr,"Failed check %s:%d\n",__FILE__,__LINE__); fflush(stdout); exit(1); }
+#ifdef DEBUG
 #define assert check
+#else
+#define assert(x) 
+#endif
 #define max(a,b) (a>b?a:b)
 
 #define WORD_SZB sizeof(void*)
@@ -132,8 +136,7 @@ int pop_frame() {
     Page *prev = top->prev;
     void **fp = top->frame_ptr;
     //printf ("pop frame and free page\n");
-    //for debugging:
-#ifndef NDEBUG
+#ifdef DEBUG
     memset(top->memory, 255, ((unsigned long)top->limit_ptr - (unsigned long)top->memory));
 #endif
     free(top->memory);

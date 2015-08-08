@@ -1,10 +1,22 @@
+(* TODO:
+   - Make symbol-bound 65535 (and debug)
+   - Make histogram array not scanned
+   - Profile stack vs. heap -- where is the time going?
+   - Augment stack code to print diagnostics of use?
+   - Opts:
+     - Is is_stack_pointer(p) call too expensive?
+     - Setrng fun in bitmask code -- optimize this?
+*)
+let do_stack = true
+let debug = ref false
+let no_check = true;;
+
+if do_stack then
+  Camlstack.push_frame 0;;
+
 (**********)
 (* BASICS *)
 (**********)
-
-let do_stack = true
-let debug = ref false
-let no_check = true
 
 type symbol_type = int
 
@@ -78,34 +90,35 @@ type node =
       mutable code: string;
     };;
 
-(* dummy "null" node, so that we don't have to use option types. *)
+external stack_mknode: int -> node -> node -> node -> symbol_type -> node = "stack_mknode";;
 
-let rec null_node = 
-  { frequency = -1;
-    next = null_node;
-    zero_child = null_node;
-    one_child = null_node;
-    symbol = 0;
-    code = "" } 
-
-let is_null n =
-  match n with
-      { frequency = -1 } -> true
-    | _ -> false 
-
-external stack_mknode: node -> node -> node -> symbol_type -> string -> node = "stack_mknode";;
-
-let make_node nx zc oc sym cd = (* ALLOCATE *)
+let make_node freq nx zc oc sym = (* ALLOCATE *)
   if do_stack then
-    stack_mknode nx zc oc sym cd
+    stack_mknode freq nx zc oc sym
   else
-    { frequency = 1; 
-        (* frequency is 1 by default (set in caller to change - works around FFI bug) *)
+    { frequency = freq; 
       next = nx;
       zero_child = zc;
       one_child = oc;
       symbol = sym;
-      code = cd } 
+      code = "" } 
+        (* code is "" by default (set in caller to change - works around FFI bug) *)
+
+(* dummy "null" node, so that we don't have to use option types. *)
+
+let null_node = make_node (-1) (Obj.magic 1) (Obj.magic 1) (Obj.magic 1) 0;;
+(*
+  { frequency = -1;
+    next = Obj.magic 1; (* null_node; *)
+    zero_child = Obj.magic 1; (* null_node; *)
+    one_child = Obj.magic 1; (* null_node; *)
+    symbol = 0;
+    code = "" } 
+*)
+let is_null n =
+  match n with
+      { frequency = -1 } -> true
+    | _ -> false 
       
 (* Maintains a mutable list of nodes, sorted by the node.frequency field *)
 
@@ -178,7 +191,7 @@ let compute_histogram
     let sym = symbol_stream.(i) in
     let the_leaf = histogram.(sym)  in (* index into histogram from symbol *)
     if (is_null the_leaf) then
-      (let the_leaf' = make_node null_node null_node null_node sym "" in (* ALLOCATE stack *)
+      (let the_leaf' = make_node 1 null_node null_node null_node sym in (* ALLOCATE stack *)
        histogram.(sym) <- the_leaf') 
     else
       the_leaf.frequency <- the_leaf.frequency + 1
@@ -223,8 +236,7 @@ let build_huffman_tree
   (* Build the tree recursively combining the first two (lowest freq) nodes *)
   while not (NodeList.is_singleton tree) do
     let (n1,n2) = NodeList.pop_two tree in
-    let new_nd = make_node null_node n1 n2 (-1) "" in (* ALLOCATE stack *)
-    new_nd.frequency <- (n1.frequency + n2.frequency); (* workaround FFI bug *)
+    let new_nd = make_node (n1.frequency + n2.frequency) null_node n1 n2 (-1) in (* ALLOCATE stack *)
     NodeList.insert_in_ordered_list new_nd tree
   done;
   (* compute codes *)
@@ -355,6 +367,7 @@ let print_tree (packed_tree:bytes) (tree_size:int) =
 let huffman_encode 
     (symbol_stream:symbol_type array)
     (encoded_stream:bytes) : bytes*int*int =
+  (* XXX if we are doing this for the stack, then no need to mark these array pointers *)
   let histogram = make_array true symbol_value_bound null_node in (* ALLOCATE stack *)
   compute_histogram symbol_stream histogram;
   let tree = build_huffman_tree histogram in
@@ -373,13 +386,6 @@ type code_node = (* used for decoding *)
       cn_one_child : code_node;
       cn_symbol : symbol_type }
 
-let rec null_code_node = 
-  { cn_zero_child = null_code_node;
-    cn_one_child = null_code_node;
-    cn_symbol = -1; }
-
-let is_null_cn cn = cn.cn_symbol = (-1)
-
 external stack_mknode_cn: code_node -> code_node -> symbol_type -> code_node = "stack_mktuple3";;
 
 let make_node_cn zc oc sym = (* ALLOCATE stack *)
@@ -389,6 +395,15 @@ let make_node_cn zc oc sym = (* ALLOCATE stack *)
     { cn_zero_child = zc;
       cn_one_child = oc;
       cn_symbol = sym; }
+
+let null_code_node = make_node_cn (Obj.magic 1) (Obj.magic 1) (-1)
+(*
+  { cn_zero_child = Obj.magic 1;
+    cn_one_child = Obj.magic 1;
+    cn_symbol = -1; }
+*)
+
+let is_null_cn cn = cn.cn_symbol = (-1)
 
 module Reader =
   struct
@@ -494,7 +509,8 @@ let run test_inp test_oup test_res =
   let cn_tree = read_huffman_tree f in
   read_and_huffman_decode f cn_tree test_res;
   if do_stack then
-    Camlstack.pop_frame ();
+    ((* Camlstack.print_mask (); *)
+     Camlstack.pop_frame ());
   if !debug then 
     (print_int_arr test_res);
   (* Check it *)
@@ -555,6 +571,9 @@ for i = 0 to (num-1) do
     Camlstack.pop_frame ()
 done
 ;;
+
+if do_stack then
+  Camlstack.pop_frame ();;
 
 Printf.printf "\nSuccess (%s) sz=%d n=%d %s\n" 
   (if do_stack then "stack" else "heap")
