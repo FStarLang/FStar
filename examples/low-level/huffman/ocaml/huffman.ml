@@ -21,7 +21,7 @@ if do_stack then
 type symbol_type = int
 
 (* maximum value in input stream *)
-let symbol_value_bound = 257;;
+let symbol_value_bound = 65535;;
 
 (* bits needed to represent symbols up to the bound *)
 let bits_per_symbol =
@@ -373,6 +373,7 @@ let huffman_encode
   let tree = build_huffman_tree histogram in
   if !debug then Printf.printf "leaves in tree = %d\n" (count_leaves tree);
   let encoded_len = encode_stream symbol_stream histogram encoded_stream in
+  if !debug then Printf.printf "encoded len = %d\n" encoded_len;
   let packed_tree,packed_len = pack_huffman_tree tree in
   packed_tree,packed_len,encoded_len
 ;;
@@ -561,7 +562,7 @@ for i = 0 to (num-1) do
   if do_stack then
     Camlstack.push_frame 0;
   let test_inp = make_array_prim true test_len 0 in (* ALLOCATE stack *)
-  let test_oup = make_bytearray true test_len in (* ALLOCATE stack *)
+  let test_oup = make_bytearray true (test_len*bytes_per_symbol) in (* ALLOCATE stack *)
   let test_res = make_array_prim true test_len 0 in (* ALLOCATE stack *)
   rnd_arr test_inp;
   (* Printf.printf "%d " i; *)
