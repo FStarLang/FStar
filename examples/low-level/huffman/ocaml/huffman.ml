@@ -1,5 +1,4 @@
 (* TODO:
-   - Make symbol-bound 65535 (and debug)
    - Make histogram array not scanned
    - Profile stack vs. heap -- where is the time going?
    - Augment stack code to print diagnostics of use?
@@ -7,11 +6,28 @@
      - Is is_stack_pointer(p) call too expensive?
      - Setrng fun in bitmask code -- optimize this?
 *)
-let do_stack = true
+let do_stack = ref true
 let debug = ref false
-let no_check = true;;
+let no_check = ref true;;
+let test_len = ref 1000;;
+let num = ref 1;;
 
-if do_stack then
+let arg_specs =
+  [
+    ("-l", (Arg.Int (fun l -> test_len := l)), 
+     "Set length of stream to compress (default is "^(string_of_int !test_len)^")");
+    ("-n", (Arg.Int (fun n -> num := n)), 
+     "Set number of tests to run (default is "^(string_of_int !num)^")");
+    ("-s", Arg.Set do_stack, "Use stack allocation (default is "^(string_of_bool !do_stack)^")");
+    ("-h", Arg.Clear do_stack, "Use heap allocation (default is "^(string_of_bool (not !do_stack))^")");
+    ("-r", Arg.Int (fun s -> Random.init s), "Set random seed");
+    ("-v", Arg.Set debug, "Verbose output");
+    ("-c", Arg.Clear no_check, "Check that decoded output matches input (default is "^(string_of_bool (not !no_check))^")")
+  ];;
+
+Arg.parse arg_specs (fun _ -> ()) "Performs huffman coding on random input, decodes the result";;
+
+if !do_stack then
   Camlstack.push_frame 0;;
 
 (**********)
@@ -41,23 +57,23 @@ let bytes_per_symbol =
 (*************)
 
 let make_array onstack n v =
-  if do_stack && onstack then
+  if !do_stack && onstack then
     Camlstack.mkarray n v 
   else Array.make n v
 
 let make_array_prim onstack n v =
-  if do_stack && onstack then
+  if !do_stack && onstack then
     Camlstack.mkarray_prim n v 
   else Array.make n v
 
 let make_bytearray onstack n = (* ALLOCATE *)
-  if do_stack && onstack then
+  if !do_stack && onstack then
     Camlstack.mkbytes n
   else
     Bytes.create n
 
 let bytearray_substr s ofs len =
-  if do_stack then
+  if !do_stack then
     (let d = Camlstack.mkbytes len in
     Bytes.blit s ofs d 0 len;
     d)
@@ -65,9 +81,9 @@ let bytearray_substr s ofs len =
     Bytes.sub s ofs len
 
 let eq_array arr1 arr2 =
-  if no_check then true
+  if !no_check then true
   else
-    if do_stack then
+    if !do_stack then
       let ok = ref true in
       (Array.length arr1) = (Array.length arr2) &&
 	  (Array.iteri (fun i x -> ok := !ok && (x = arr2.(i))) arr1; !ok)
@@ -93,7 +109,7 @@ type node =
 external stack_mknode: int -> node -> node -> node -> symbol_type -> node = "stack_mknode";;
 
 let make_node freq nx zc oc sym = (* ALLOCATE *)
-  if do_stack then
+  if !do_stack then
     stack_mknode freq nx zc oc sym
   else
     { frequency = freq; 
@@ -390,7 +406,7 @@ type code_node = (* used for decoding *)
 external stack_mknode_cn: code_node -> code_node -> symbol_type -> code_node = "stack_mktuple3";;
 
 let make_node_cn zc oc sym = (* ALLOCATE stack *)
-  if do_stack then
+  if !do_stack then
     stack_mknode_cn zc oc sym
   else
     { cn_zero_child = zc;
@@ -485,7 +501,7 @@ let print_int_arr arr =
 (* Run a test: encode, store, decode, and then check the results match *)
 let run test_inp test_oup test_res =
   (* Encode it *)
-  if do_stack then
+  if !do_stack then
     Camlstack.push_frame 0;
   let packed_tree,packed_len,encoded_len = huffman_encode test_inp test_oup in
   if !debug then
@@ -498,18 +514,18 @@ let run test_inp test_oup test_res =
   Bytes.blit packed_tree 0 outbytes 0 packed_len;
   Bytes.blit test_oup 0 outbytes packed_len encoded_len;
 (*
-  if do_stack then
+  if !do_stack then
     Camlstack.pop_frame ();
 *)
   (* Decode it *)
   let f = Reader.make_reader outbytes in
 (*
-  if do_stack then
+  if !do_stack then
     Camlstack.push_frame 0;
 *)
   let cn_tree = read_huffman_tree f in
   read_and_huffman_decode f cn_tree test_res;
-  if do_stack then
+  if !do_stack then
     ((* Camlstack.print_mask (); *)
      Camlstack.pop_frame ());
   if !debug then 
@@ -542,45 +558,29 @@ let rnd_arr arr =
 
 (* MAIN *)
 
-(* arguments: [size] [num runs] [seed] *)
-let test_len, num =
-  if (Array.length Sys.argv) = 1 then
-    1000, 1
-  else if (Array.length Sys.argv) = 2 then
-    (int_of_string Sys.argv.(1)), 1
-  else if (Array.length Sys.argv) = 3 then
-    (int_of_string Sys.argv.(1)), 
-    (int_of_string Sys.argv.(2))
- else
-    let _ = Random.init (int_of_string (Sys.argv.(3))) in
-    (int_of_string Sys.argv.(1)), 
-    (int_of_string Sys.argv.(2))
-;;
-
-for i = 0 to (num-1) do
+for i = 0 to (!num-1) do
   (* Generate input *)
-  if do_stack then
+  if !do_stack then
     Camlstack.push_frame 0;
-  let test_inp = make_array_prim true test_len 0 in (* ALLOCATE stack *)
-  let test_oup = make_bytearray true (test_len*bytes_per_symbol) in (* ALLOCATE stack *)
-  let test_res = make_array_prim true test_len 0 in (* ALLOCATE stack *)
+  let test_inp = make_array_prim true !test_len 0 in (* ALLOCATE stack *)
+  let test_oup = make_bytearray true (!test_len*bytes_per_symbol) in (* ALLOCATE stack *)
+  let test_res = make_array_prim true !test_len 0 in (* ALLOCATE stack *)
   rnd_arr test_inp;
   (* Printf.printf "%d " i; *)
   let res = run test_inp test_oup test_res in
   if not res then failwith "Encode/decode loop failed!";
-  if do_stack then
+  if !do_stack then
     Camlstack.pop_frame ()
 done
 ;;
 
-if do_stack then
+if !do_stack then
   Camlstack.pop_frame ();;
 
-Printf.printf "\nSuccess (%s) sz=%d n=%d %s\n" 
-  (if do_stack then "stack" else "heap")
-  test_len 
-  num 
-  (if (Array.length Sys.argv) = 4 then ("seed="^(Sys.argv.(3))) else "");;
+Printf.printf "\nSuccess (%s) sz=%d n=%d\n" 
+  (if !do_stack then "stack" else "heap")
+  !test_len 
+  !num;;
 Pervasives.flush stdout;;
 
 Gc.print_stat (Pervasives.stdout);;
