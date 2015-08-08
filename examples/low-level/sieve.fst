@@ -8,6 +8,7 @@ module Sieve
 open SSTCombinators
 open StackAndHeap
 open SST
+
 open Heap
 open Stack
 open Set
@@ -38,25 +39,83 @@ val bvAsFun2 : n:nat -> m:smem -> b:bitarray{haslength m b n} -> k:nat{k<n} -> T
 let bvAsFun2 n m b k = elift1 (fun (f:((k:nat{k<n}) -> Tot bool)) -> f k) (bvAsFun n m b)
 
 
-type  innerLoopInv (n:nat) (lo: ref nat)  (li : ref nat) (res: (sstarray bool))
-    (initres: ((k:nat{k<n}) -> Tot bool)) (m:smem) =
+
+type bitv n = b:(Seq.seq bool){Seq.length b =n}
+
+val marked : n:nat -> b:(bitv n) -> m:nat{m<n} -> Tot bool
+let marked n f m = (Seq.index f m)
+
+
+type markedIffMultipleOrInit (n:nat) (lo:nat) (upto:nat)
+  (init:bitv n) (neww:bitv n) =
+  (forall (k:nat{k < upto /\ 1<k /\ lo*k<n}). marked n neww (lo*k))
+  /\ (forall (m:nat{m < n}). (marked n init m ==> marked n neww m))
+  /\ (forall (m:nat{m < n}). (marked n neww m ==> (marked n init m \/
+      SieveFun.nonTrivialDivides lo m) ))
+
+type  innerLoopInv (n:nat) (lo: ref nat)  (li : ref nat) (res: bitarray)
+    (initres: bitv n) (m:smem) =
  SieveFun.distinctRefsExists3 m lo (reveal (asRef res)) li
   /\ 1 < (loopkupRef li m) /\  haslength m res n
-  /\ SieveFun.markedIffMultipleOrInit n (loopkupRef lo m) (loopkupRef li m) initres (reveal (bvAsFun n m res))
+   /\ markedIffMultipleOrInit n (loopkupRef lo m) (loopkupRef li m) initres (reveal (esel m res))
+
+
+type markedIffDividesOrInit2 (n:nat) (lo:nat)
+   (init:bitv n) (newres: bitv n) =
+   (forall (k:nat{k * lo < n /\ 1<k}). marked n newres (lo*k))
+   /\ (forall (m:nat{m < n}). (marked n init m ==> marked n newres m))
+   /\ (forall (m:nat{m < n}). (marked n newres m ==> (marked n init m \/
+         SieveFun.nonTrivialDivides lo m
+     )))
+
+type markedIffDividesOrInit (n:nat) (lo:nat)
+  (init: bitv n) (neww:bitv n) =
+   (forall (k:nat{k < n}). (marked n neww k <==> (marked n init k \/ SieveFun.nonTrivialDivides lo k)))
+
+
+type multiplesMarked (n:nat) (biv : bitv n) (lo:nat) =
+  (forall (m:nat{m<n}). (SieveFun.nonTrivialDivides lo m) ==> marked n biv m)
+ (* this works, is totally precise, but is hard to use
+ /\ loopkupRef res m = markMultiplesUpto n lov (loopkupRef li m) initres*)
+
+       (*(k < (loopkupRef li m))
+           ==> (marked n (loopkupRef res m) ((loopkupRef lo m)*k)))*)
+
+type multiplesMarked2 (n:nat) (bv : bitv n) (lo:nat) =
+ (forall (k:nat). (k * lo < n /\ 1<k)  ==> marked n bv (lo*k))
+
+val multiplesMarkedAsDivides :
+ n:nat -> bitv:(erased (bitv n)) -> lo:pos
+ -> Lemma
+   (requires (multiplesMarked2 n (reveal bitv) lo))
+   (ensures (multiplesMarked n (reveal bitv) lo))
+let multiplesMarkedAsDivides n bitv lo = ()
+
+
+val multiplesMarkedAsDividesIff :
+ n:nat -> initv:(bitv n) -> newv:(erased (bitv n)) -> lo:pos
+ -> Lemma
+   (requires (markedIffDividesOrInit2 n lo initv (reveal newv)))
+   (ensures (markedIffDividesOrInit n lo initv (reveal newv)))
+
+      [SMTPatT (markedIffDividesOrInit n lo initv (reveal newv))]
+
+let multiplesMarkedAsDividesIff n initv newv lo = (multiplesMarkedAsDivides n newv lo)
 
 val innerLoop : n:nat{n>1}
   -> lo: ref nat
   -> li : ref nat
   -> res : bitarray
-  -> initres : ((k:nat{k<n}) -> Tot bool)
+  -> initres : (bitv n)
   -> Mem unit
       (requires (fun m -> innerLoopInv n lo li res initres m /\
         haslength m res n /\
         loopkupRef li m = 2  /\ 1 < (loopkupRef lo m)
-                    /\ (forall k. (reveal (bvAsFun2 n m res k)  = initres k)) ))
+                    /\ reveal (esel m res)  = initres ))
       (ensures (fun _ _ m -> SieveFun.distinctRefsExists3 m lo (reveal (asRef res)) li
                 /\ haslength m res n
-                /\ SieveFun.markedIffDividesOrInit2 n (loopkupRef lo m) initres (reveal (bvAsFun n m res))
+                /\ markedIffDividesOrInit2 n (loopkupRef lo m) initres (reveal (esel m res))
+                (* markedIffDividesOrInit n (loopkupRef lo m) initres (reveal (esel m res)) *)
       ))
       ((elift2 union) (gonly li)  (ArrayAlgos.eonly res))
 
@@ -73,32 +132,56 @@ let innerLoop n lo li res initres =
       mark res (lov * liv)))
 
     (*the part below has no computaional content; why does SMTPatT not work?*)
-      let newv = memread res in
-      let lov = memread lo in
-      (SieveFun.multiplesMarkedAsDividesIff n initres newv lov)
+      //let newv = memread res in
+      //let lov = memread lo in
+    (*      (multiplesMarkedAsDividesIff n initres newv lo) // how to invoke this lemma now? unlike previously, we cannot read a full Seq from an array
+    *)
 
-type  outerLoopInv (n:nat) (lo: ref nat) (res:ref ((k:nat{k<n}) -> Tot bool)) (m:smem) =
- distinctRefsExists2 m lo res
+type markedIffHasDivisorSmallerThan (n:nat) (lo:nat)
+    (neww: bitv n) =
+    (forall (k:nat{k < n}). (marked n neww k <==> (exists (d:nat{1<d}). d<lo /\ SieveFun.nonTrivialDivides d k)))
+
+
+val markedIffHasDivisorSmallerThanInc :
+  n:nat -> lo:nat{1<lo} -> old:(bitv n) -> neww:(erased (bitv n))
+  -> Lemma
+      (requires (markedIffHasDivisorSmallerThan n lo old)
+              /\ markedIffDividesOrInit2 n lo old (reveal neww))
+      (ensures (markedIffHasDivisorSmallerThan n (lo+1) (reveal neww)))
+      (*[SMTPatT (markedIffHasDivisorSmallerThan n (lo+1) neww)]*)
+let markedIffHasDivisorSmallerThanInc n lo old neww  = ((multiplesMarkedAsDividesIff n old neww lo))
+
+type allUnmarked
+   (n:nat) (neww: bitv n) =
+   forall (m:nat{m<n}). not (marked n neww m)
+
+type  outerLoopInv (n:nat) (lo: ref nat) (res: bitarray) (m:smem) =
+ SieveFun.distinctRefsExists2 m lo (reveal (asRef res))
   /\ (((loopkupRef lo m) - 1) < n)
-  /\ (1<(loopkupRef lo m))
-  /\ (markedIffHasDivisorSmallerThan n (loopkupRef lo m) (loopkupRef res m))
+  /\ (1<(loopkupRef lo m)) /\  haslength m res n
+  /\ (markedIffHasDivisorSmallerThan n (loopkupRef lo m) (reveal (esel m res)))
 
 
 (*#set-options "--initial_fuel 100 --max_fuel 10000 --initial_ifuel 100 --max_ifuel 10000"*)
 
+(*Danger!! this function is highly experimental*)
+assume val memreadAll : unit -> PureMem (erased smem)
+      (requires (fun m -> true))
+      (ensures (fun _ v m -> reveal v = m))
+
+
 val outerLoopBody :
   n:nat{n>1}
   -> lo:(ref nat)
-  -> res : ref ((k:nat{k<n}) -> Tot bool)
+  -> res : bitarray
   -> unit ->
   whileBody
     (outerLoopInv n lo res)
-    (outerGuardLC n lo)
-    (hide (union (singleton (Ref lo)) (singleton (Ref res))))
+    (SieveFun.outerGuardLC n lo)
+    ((elift2 union) (gonly lo)  (ArrayAlgos.eonly res))
 
 
 let outerLoopBody n lo res u =
-  (*pushStackFrame ();*)
   let initres = memread res in
   let lov = memread lo in
   let li = salloc 2 in
