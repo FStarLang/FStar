@@ -79,6 +79,10 @@ let signed_modulo v p =
   if v >= 0 then v % p
   else - ( (-v) % p)
 
+val op_Question_Modulo : a:int -> p:pos -> 
+  Tot (res:int{ (a >= 0 ==> res = a % p) /\ (a < 0 ==> res = -((-a) % p)) }) 
+let op_Question_Modulo a p = signed_modulo a p
+
 (* Bitwize operations *)
 assume val xor_op: x:int -> y:int -> Tot (z:int{ z = 0 <==> x = y })
 assume val and_op: x:int -> y:int -> Tot (z:int{ z = 0 <==> (x = 0 /\ y = 0)})
