@@ -3,7 +3,8 @@
 (**********)
 
 let do_stack = true
-let debug = false
+let debug = ref false
+let no_check = true
 
 type symbol_type = int
 
@@ -22,6 +23,10 @@ let bits_per_symbol =
 let bytes_per_symbol = 
   if (bits_per_symbol mod 8) = 0 then bits_per_symbol / 8 
   else (bits_per_symbol / 8) + 1
+
+(*************)
+(* UTILITIES *)
+(*************)
 
 let make_array onstack n v =
   if do_stack && onstack then
@@ -46,6 +51,16 @@ let bytearray_substr s ofs len =
     d)
   else
     Bytes.sub s ofs len
+
+let eq_array arr1 arr2 =
+  if no_check then true
+  else
+    if do_stack then
+      let ok = ref true in
+      (Array.length arr1) = (Array.length arr2) &&
+	  (Array.iteri (fun i x -> ok := !ok && (x = arr2.(i))) arr1; !ok)
+    else
+      arr1 = arr2
 
 (***************)
 (* ENCODING *)
@@ -178,7 +193,8 @@ let rec compute_code_strings
   let zc_nd = tree.zero_child in
   let one_nd = tree.one_child in
   if is_null zc_nd then
-    tree.code <- Bytes.unsafe_to_string (bytearray_substr code_string 0 code_string_pos) (* ALLOCATE stack *)
+    if code_string_pos = 0 then failwith "weird" else
+      tree.code <- Bytes.unsafe_to_string (bytearray_substr code_string 0 code_string_pos) (* ALLOCATE stack *)
   else
     (Bytes.set code_string code_string_pos '0';
      compute_code_strings zc_nd code_string (code_string_pos+1);
@@ -202,7 +218,7 @@ let build_huffman_tree
     else ()
   done;
   (* debug *)
-  if debug then
+  if !debug then
     NodeList.print_list_nodes tree true;
   (* Build the tree recursively combining the first two (lowest freq) nodes *)
   while not (NodeList.is_singleton tree) do
@@ -342,7 +358,7 @@ let huffman_encode
   let histogram = make_array true symbol_value_bound null_node in (* ALLOCATE stack *)
   compute_histogram symbol_stream histogram;
   let tree = build_huffman_tree histogram in
-  if debug then Printf.printf "leaves in tree = %d\n" (count_leaves tree);
+  if !debug then Printf.printf "leaves in tree = %d\n" (count_leaves tree);
   let encoded_len = encode_stream symbol_stream histogram encoded_stream in
   let packed_tree,packed_len = pack_huffman_tree tree in
   packed_tree,packed_len,encoded_len
@@ -456,7 +472,7 @@ let run test_inp test_oup test_res =
   if do_stack then
     Camlstack.push_frame 0;
   let packed_tree,packed_len,encoded_len = huffman_encode test_inp test_oup in
-  if debug then
+  if !debug then
     (print_int_arr test_inp;
      print_stream test_oup encoded_len;
      print_tree packed_tree packed_len;
@@ -479,24 +495,26 @@ let run test_inp test_oup test_res =
   read_and_huffman_decode f cn_tree test_res;
   if do_stack then
     Camlstack.pop_frame ();
-  if debug then 
+  if !debug then 
     (print_int_arr test_res);
   (* Check it *)
-  (test_res = test_inp)
+  eq_array test_res test_inp
 
 (* generate random contents for the given array, but with lots of clusters *)
 let rnd_arr arr =
   let len = Array.length arr in
-  let max_count = Random.int len + 1 in
-  let count = ref (Random.int max_count) in
+  let max_count = (Random.int (len/2)) + 1 in
+  let count = ref ((Random.int max_count) + 1) in
   let v = ref (Random.int symbol_value_bound) in
   let f i = 
     if !count = 0 then
-      (count := (Random.int max_count);
-       v := (Random.int symbol_value_bound));
+      (count := (Random.int max_count) + 1;
+       v := (Random.int symbol_value_bound);
+       if !debug then Printf.printf "count=%d, v=%d; " !count !v);
     decr count;
     !v in
   for i = 0 to (len-1) do arr.(i) <- f i done;
+  if !debug then print_endline "";
   for i = 0 to (len-1) do
     let idx = Random.int len in
     let tmp = arr.(i) in
@@ -526,10 +544,11 @@ for i = 0 to (num-1) do
   (* Generate input *)
   if do_stack then
     Camlstack.push_frame 0;
-  let test_inp = make_array_prim false test_len 0 in (* ALLOCATE stack *)
+  let test_inp = make_array_prim true test_len 0 in (* ALLOCATE stack *)
   let test_oup = make_bytearray true test_len in (* ALLOCATE stack *)
-  let test_res = make_array_prim false test_len 0 in (* ALLOCATE stack *)
+  let test_res = make_array_prim true test_len 0 in (* ALLOCATE stack *)
   rnd_arr test_inp;
+  (* Printf.printf "%d " i; *)
   let res = run test_inp test_oup test_res in
   if not res then failwith "Encode/decode loop failed!";
   if do_stack then
@@ -537,7 +556,7 @@ for i = 0 to (num-1) do
 done
 ;;
 
-Printf.printf "Success (%s) sz=%d n=%d %s\n" 
+Printf.printf "\nSuccess (%s) sz=%d n=%d %s\n" 
   (if do_stack then "stack" else "heap")
   test_len 
   num 

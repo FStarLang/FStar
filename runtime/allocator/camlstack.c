@@ -85,7 +85,6 @@ extern void (*caml_scan_roots_hook) (scanning_action);
  */
 value stack_caml_alloc(mlsize_t wosize, tag_t tag, int nbits, int *mask) {
   value tmp, result;
-  mlsize_t i;
   Assert (tag < 256);
   Assert (tag != Infix_tag);
   Assert (wosize != 0);
@@ -95,11 +94,14 @@ value stack_caml_alloc(mlsize_t wosize, tag_t tag, int nbits, int *mask) {
   if (tmp == (value)0) return tmp;
   Hd_hp (tmp) = Make_header (wosize, tag, Caml_black);
   result = Val_hp (tmp);
-  /*XXX: this initializes the object preliminarily, but probably this
+#ifdef DEBUG
+  /*this initializes the object preliminarily, but probably this
     code could be removed, since the caller will initialize.*/
+  { mlsize_t i;
   if (tag < No_scan_tag){
     for (i = 0; i < wosize; i++) Field (result, i) = Val_unit;
-  }
+  } }
+#endif
   return result;
 }
 
@@ -318,9 +320,11 @@ CAMLprim value stack_mkref(value v)
 
 CAMLprim value stack_mkbytes(value lenv) {
   CAMLparam1 (lenv);
-  mlsize_t len = Long_val(lenv);
-  if (len <= 0) 
+  mlsize_t len = Int_val(lenv);
+  if (len <= 0) {
+    printf ("got len = %lu\n", len);
     caml_invalid_argument ("Camlstack.mkbytes");
+  }
   else {
     value str = stack_caml_alloc_string(len);
     if (str == (value)0)
@@ -333,7 +337,7 @@ CAMLprim value stack_mkbytes(value lenv) {
 CAMLprim value stack_mkarray(value lenv, value initv) {
   CAMLparam2 (lenv, initv);
   int len = Int_val(lenv);
-  if (len <= 0 || Tag_val(initv) == Double_tag)
+  if (len <= 0 || (Is_block(initv) && Tag_val(initv) == Double_tag))
     caml_invalid_argument ("Camlstack.mkarray");
   else {
     value tuple = stack_caml_alloc_tuple(len,-1,NULL); /* all pointers by default */
@@ -352,7 +356,7 @@ CAMLprim value stack_mkarray(value lenv, value initv) {
 CAMLprim value stack_mkarray_prim(value lenv, value initv) {
   CAMLparam2 (lenv, initv);
   int len = Int_val(lenv);
-  if (len <= 0 || Tag_val(initv) == Double_tag)
+  if (len <= 0 || Is_block(initv))
     caml_invalid_argument ("Camlstack.mkarray");
   else {
     value tuple = stack_caml_alloc_tuple(len,0,NULL); /* assume no pointers */
