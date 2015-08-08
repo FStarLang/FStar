@@ -8,6 +8,7 @@ module Sieve
 open SSTCombinators
 open StackAndHeap
 open SST
+
 open Heap
 open Stack
 open Set
@@ -52,7 +53,7 @@ type markedIffMultipleOrInit (n:nat) (lo:nat) (upto:nat)
   /\ (forall (m:nat{m < n}). (marked n neww m ==> (marked n init m \/
       SieveFun.nonTrivialDivides lo m) ))
 
-type  innerLoopInv (n:nat) (lo: ref nat)  (li : ref nat) (res: (sstarray bool))
+type  innerLoopInv (n:nat) (lo: ref nat)  (li : ref nat) (res: bitarray)
     (initres: bitv n) (m:smem) =
  SieveFun.distinctRefsExists3 m lo (reveal (asRef res)) li
   /\ 1 < (loopkupRef li m) /\  haslength m res n
@@ -133,31 +134,54 @@ let innerLoop n lo li res initres =
     (*the part below has no computaional content; why does SMTPatT not work?*)
       //let newv = memread res in
       //let lov = memread lo in
-    (*  (multiplesMarkedAsDividesIff n initres newv lo) // how to invoke this lemma now? unlike previously, we cannot read a full Seq from an array
+    (*      (multiplesMarkedAsDividesIff n initres newv lo) // how to invoke this lemma now? unlike previously, we cannot read a full Seq from an array
     *)
 
-type  outerLoopInv (n:nat) (lo: ref nat) (res:ref ((k:nat{k<n}) -> Tot bool)) (m:smem) =
- distinctRefsExists2 m lo res
+type markedIffHasDivisorSmallerThan (n:nat) (lo:nat)
+    (neww: bitv n) =
+    (forall (k:nat{k < n}). (marked n neww k <==> (exists (d:nat{1<d}). d<lo /\ SieveFun.nonTrivialDivides d k)))
+
+
+val markedIffHasDivisorSmallerThanInc :
+  n:nat -> lo:nat{1<lo} -> old:(bitv n) -> neww:(erased (bitv n))
+  -> Lemma
+      (requires (markedIffHasDivisorSmallerThan n lo old)
+              /\ markedIffDividesOrInit2 n lo old (reveal neww))
+      (ensures (markedIffHasDivisorSmallerThan n (lo+1) (reveal neww)))
+      (*[SMTPatT (markedIffHasDivisorSmallerThan n (lo+1) neww)]*)
+let markedIffHasDivisorSmallerThanInc n lo old neww  = ((multiplesMarkedAsDividesIff n old neww lo))
+
+type allUnmarked
+   (n:nat) (neww: bitv n) =
+   forall (m:nat{m<n}). not (marked n neww m)
+
+type  outerLoopInv (n:nat) (lo: ref nat) (res: bitarray) (m:smem) =
+ SieveFun.distinctRefsExists2 m lo (reveal (asRef res))
   /\ (((loopkupRef lo m) - 1) < n)
-  /\ (1<(loopkupRef lo m))
-  /\ (markedIffHasDivisorSmallerThan n (loopkupRef lo m) (loopkupRef res m))
+  /\ (1<(loopkupRef lo m)) /\  haslength m res n
+  /\ (markedIffHasDivisorSmallerThan n (loopkupRef lo m) (reveal (esel m res)))
 
 
 (*#set-options "--initial_fuel 100 --max_fuel 10000 --initial_ifuel 100 --max_ifuel 10000"*)
 
+(*Danger!! this function is highly experimental*)
+assume val memreadAll : unit -> PureMem (erased smem)
+      (requires (fun m -> true))
+      (ensures (fun _ v m -> reveal v = m))
+
+
 val outerLoopBody :
   n:nat{n>1}
   -> lo:(ref nat)
-  -> res : ref ((k:nat{k<n}) -> Tot bool)
+  -> res : bitarray
   -> unit ->
   whileBody
     (outerLoopInv n lo res)
-    (outerGuardLC n lo)
-    (hide (union (singleton (Ref lo)) (singleton (Ref res))))
+    (SieveFun.outerGuardLC n lo)
+    ((elift2 union) (gonly lo)  (ArrayAlgos.eonly res))
 
 
 let outerLoopBody n lo res u =
-  (*pushStackFrame ();*)
   let initres = memread res in
   let lov = memread lo in
   let li = salloc 2 in
