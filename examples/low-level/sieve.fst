@@ -24,7 +24,6 @@ open SSTArray
 
 type bitarray = sstarray bool
 
-
 open SSTArray
 
 (* val mark : n:nat -> ((k:nat{k<n}) -> Tot bool) -> index:nat{index<n} -> Tot ((k:nat{k<n}) -> Tot bool) *)
@@ -138,7 +137,8 @@ let innerLoop n lo li res initres =
 
 type markedIffHasDivisorSmallerThan (n:nat) (lo:nat)
     (neww: bitv n) =
-    (forall (k:nat{k < n}). (marked n neww k <==> (exists (d:nat{1<d}). d<lo /\ SieveFun.nonTrivialDivides d k)))
+    (forall (k:nat{k < n}).
+      (marked n neww k <==> (exists (d:nat{1<d}). d<lo /\ SieveFun.nonTrivialDivides d k) ))
 
 
 val markedIffHasDivisorSmallerThanInc :
@@ -163,10 +163,8 @@ type  outerLoopInv (n:nat) (lo: ref nat) (res: bitarray) (m:smem) =
 
 (*#set-options "--initial_fuel 100 --max_fuel 10000 --initial_ifuel 100 --max_ifuel 10000"*)
 
+
 (*Danger!! this function is highly experimental*)
-assume val memreadAll : unit -> PureMem (erased smem)
-      (requires (fun m -> true))
-      (ensures (fun _ v m -> reveal v = m))
 
 
 val outerLoopBody :
@@ -179,82 +177,102 @@ val outerLoopBody :
     (SieveFun.outerGuardLC n lo)
     ((elift2 union) (gonly lo)  (ArrayAlgos.eonly res))
 
-
 let outerLoopBody n lo res u =
-  let initMem = memreadAll () in
+  let initMem : erased smem  = get () in
   let lov = memread lo in
   let li = salloc 2 in
   let liv = memread li in
-  innerLoop n lo li res (eesel initMem res);
-  let fMem = memreadAll () in
+  innerLoop n lo li res (eeseln n initMem res);
   memwrite lo (lov+1);
+  let fMem : erased smem = get () in
   (*the part below has no computational content*)
-  (markedIffHasDivisorSmallerThanInc n lov (eesel initMem res) (eesel initMem res))
+  (markedIffHasDivisorSmallerThanInc n lov (eeseln n initMem res) (eeseln n fMem res))
 
 val outerLoop : n:nat{n>1}
   -> lo: ref nat
-  -> res : ref ((k:nat{k<n}) -> Tot bool)
+  -> res : bitarray
   -> Mem unit
-      (fun m -> distinctRefsExists2 m lo res /\ loopkupRef lo m =2 /\ allUnmarked n (loopkupRef res m))
-      (fun m0 _ m1 ->
-            distinctRefsExists2 m1 lo res
-            /\ sids m0 = sids m1
-           /\ (markedIffHasDivisorSmallerThan n n (loopkupRef res m1))
+      (fun m -> outerLoopInv n lo res m /\ loopkupRef lo m =2 /\ allUnmarked n (sel m res))
+      (fun _ _ m1 -> outerLoopInv n lo res m1 /\ loopkupRef lo m1 = n
+        /\ markedIffHasDivisorSmallerThan n n (sel m1 res)
       )
-      (hide (union (singleton (Ref lo)) (singleton (Ref res))))
+      ((elift2 union) (gonly lo)  (ArrayAlgos.eonly res))
 
 let outerLoop n lo res =
   scopedWhile
     (outerLoopInv n lo res)
-    (outerGuardLC n lo)
+    (SieveFun.outerGuardLC n lo)
     (fun u -> (memread lo < n))
-    (hide (union (singleton (Ref lo)) (singleton (Ref res))))
+    ((elift2 union) (gonly lo)  (ArrayAlgos.eonly res))
     (outerLoopBody n lo res)
 
+(*to work around type inference issues*)
+val nmem : nat -> list nat -> Tot bool
+let nmem n l = memT n l
+
+val listOfUnmarkedAux : n:nat -> max:nat{max<=n} -> f:bitarray
+  -> PureMem (list nat)
+        (requires (fun m -> haslength m f n))
+        (ensures (fun m l -> haslength m f n /\ (forall (k:nat). (nmem k l) <==> (k<max /\ not (marked n (sel m f) k) ) ) ))
+
+let rec listOfUnmarkedAux n max f = if (max=0) then [] else
+  ( if (not (readIndex f (max-1))) then ((max-1)::(listOfUnmarkedAux n (max - 1) f)) else (listOfUnmarkedAux n (max - 1) f))
+
+val listOfUnmarked : n:nat  -> f:bitarray
+-> PureMem (list nat)
+      (requires (fun m -> haslength m f n))
+      (ensures (fun m l -> haslength m f n /\ (forall (k:nat). (nmem k l) <==> (k<n /\ not (marked n (sel m f) k) ) ) ))
+let listOfUnmarked n f = listOfUnmarkedAux n n f
+
 val sieve : n:nat{n>1} -> unit
-  -> WNSC ((k:nat{k<n}) -> Tot bool)
+  -> WNSC (list nat)
         (requires (fun m -> True))
-        (ensures (fun _ resv _ -> markedIffHasDivisorSmallerThan n n resv))
+        (ensures (fun _ l m -> forall (k:nat). (nmem k l) <==> ((k<n) /\ (~ (exists (d:nat{1<d}). d<n /\ SieveFun.nonTrivialDivides d k))) ))
+        //  markedIffHasDivisorSmallerThan n n (sel m resv)))
         (hide empty)
+
 let sieve n u =
   let lo = salloc 2 in
-  let f:((k:nat{k<n}) -> Tot bool) = (fun x -> false) in
-  let res = salloc f in
+  let res = screate n false in
   (outerLoop n lo res);
-  //assert (False);
-  memread res
+  (listOfUnmarked n res)
+
 
 val sieveFull : n:nat{n>1}
-  -> Mem ((k:nat{k<n}) -> Tot bool)
-        (requires (fun m -> True))
-        (ensures (fun _ resv _ -> markedIffHasDivisorSmallerThan n n resv))
+  -> Mem (list nat)
+  (requires (fun m -> True))
+  (ensures (fun _ l m -> forall (k:nat). (nmem k l) <==> ((k<n) /\ (~ (exists (d:nat{1<d}). d<n /\ SieveFun.nonTrivialDivides d k))) ))
         (hide empty)
 let sieveFull n =
   pushStackFrame ();
   let res= sieve n () in
   popStackFrame (); res
 
-val firstN : n:nat -> Tot (list nat)
-let rec firstN n = match n with
-| 0 -> []
-| _ -> (n-1)::(firstN (n-1))
+  val maxUnmarkedAux : n:nat -> max:nat{max<=n} -> f:bitarray
+    -> PureMem (nat)
+          (requires (fun m -> haslength m f n))
+          (ensures (fun m l -> True ))
 
-val toBool : n:nat{n>1} -> ((k:nat{k<n}) -> Tot bool) -> Tot (list bool)
-let toBool n f = mapT (fun (x:nat) -> if x < n then f x else false) (firstN n)
+  let rec maxUnmarkedAux n max f = if (max=0) then 0 else
+    ( if (not (readIndex f (max-1))) then (max-1) else (maxUnmarkedAux n (max - 1) f))
 
-(*let sieveFullTypeInfFail n= withNewScope #empty (sieve n)*)
-val listOfTruesAux : n:nat -> max:nat{max<=n} -> f:((k:nat{k<n}) -> Tot bool) -> Tot (list nat)
-let rec listOfTruesAux n max f = if (max<=2) then [] else
-  ( if not (f (max-1)) then ((max-1)::(listOfTruesAux n (max - 1) f)) else (listOfTruesAux n (max - 1) f))
+  val maxUnmarked : n:nat  -> f:bitarray
+  -> PureMem nat
+        (requires (fun m -> haslength m f n))
+        (ensures (fun m l ->True  ))
+  let maxUnmarked n f = maxUnmarkedAux n n f
 
-val listOfTrues : n:nat  -> f:((k:nat{k<n}) -> Tot bool) -> Tot (list nat)
-let listOfTrues n f = listOfTruesAux n n f
 
-val sieveAsList : n:nat{n>1}
-  -> Mem (list nat)
-        (requires (fun m -> True))
-        (ensures (fun _ resv _ -> True))
+
+val sieveJustMax : n:nat{n>1}
+  -> Mem nat
+  (requires (fun m -> True))
+  (ensures (fun _ l m -> True ))
         (hide empty)
-let sieveAsList n =
-  let sieveRes = (sieveFull n) in
-  listOfTrues n sieveRes
+let sieveJustMax n =
+  pushStackFrame ();
+  let lo = salloc 2 in
+  let res = screate n false in
+  (outerLoop n lo res);
+  let res = (maxUnmarked n res) in
+  popStackFrame (); res

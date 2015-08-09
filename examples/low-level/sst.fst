@@ -1,8 +1,7 @@
 (*--build-config
-    options: --codegen OCaml-experimental --trace_error --debug yes --prn;
     variables:LIB=../../lib;
     variables:MATHS=../maths;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst  $LIB/list.fst stack.fst listset.fst $LIB/ghost.fst stackAndHeap.fst
+    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst stack.fst listset.fst $LIB/ghost.fst stackAndHeap.fst
   --*)
 
 (*perhaps this should be an interface file?*)
@@ -78,3 +77,15 @@ kind SSTPost (a:Type) = STPost_h smem a
 sub_effect
   DIV  ~> StSTATE = fun (a:Type) (wp:PureWP a) (p : SSTPost a) (h:smem)
                 -> wp (fun a -> p a h)
+
+
+effect Mem (a:Type) (pre: smem -> Type) (post: (smem -> SSTPost a)) (mod: modset) =
+        SST a pre (fun m0 a m1 -> post m0 a m1 /\ sids m0 = sids m1 /\ canModify m0 m1 mod)
+
+effect PureMem (a:Type) (pre:smem -> Type) (post: ( smem -> a -> Type)) =
+        SST a pre (fun m0 a m1 -> post m1 a /\ m0=m1)
+
+open Ghost
+assume val get : unit -> PureMem (erased smem)
+      (requires (fun m -> true))
+      (ensures (fun m v -> reveal v = m))

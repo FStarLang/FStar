@@ -23,7 +23,12 @@ Sieve.ml: sieve.fst
 	fstar --codegen OCaml-experimental $^
 	./revertManualMLs.sh
 
-sieve: ListSet.ml Stack.ml FunctionalExtensionality.ml Set.ml Heap.ml Ghost.ml StackAndHeap.ml SST.ml SSTCombinators.ml Sieve.ml TestSieve.ml
+SIEVE_FILES = ListSet.ml Stack.ml FunctionalExtensionality.ml Set.ml Heap.ml Ghost.ml StackAndHeap.ml SST.ml SSTCombinators.ml Seq.ml SSTArray.ml ArrayAlgos.ml SieveFun.ml Sieve.ml
+
+sieve: $(SIEVE_FILES) TestSieve.ml
+	$(OCAML) -o $@ $^
+
+sieveLoop: $(SIEVE_FILES) TestSieveInLoop.ml
 	$(OCAML) -o $@ $^
 
 SieveFun.ml: sieveFun.fst
@@ -37,4 +42,4 @@ support: #run this whenever the src file of cp is updated. It is tracked in git.
 	cp ../../src/support/ocaml/fstar-lib/src/support.ml  ../../src/ocaml-output/
 
 clean:
-	rm *.cmi *.cmo MD5.ml Sieve.ml Factorial.ml md5 factorial sieve
+	rm *.cmi *.cmo MD5.ml Sieve.ml Factorial.ml md5 factorial sieve SieveFun.ml ListSet.ml Stack.ml FunctionalExtensionality.ml Set.ml Ghost.ml StackAndHeap.ml SSTCombinators.ml MachineWord.ml Seq.ml ArrayAlgos.ml MD5Common.ml All.ml

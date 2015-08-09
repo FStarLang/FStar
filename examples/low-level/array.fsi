@@ -29,7 +29,7 @@ val asRef : #a:Type  -> va:(sstarray a) -> Tot (erased (ref (seq a)))
 
 val length: #a:Type -> x:sstarray a -> PureMem nat
   (requires (fun h -> refExistsInMem (reveal (asRef x)) h))
-  (ensures  (fun h y _ ->  (refExistsInMem (reveal (asRef x)) h /\ y= ((Seq.length) ((loopkupRef) (reveal (asRef x)) h)))))
+  (ensures  (fun h y ->  (refExistsInMem (reveal (asRef x)) h /\ y= ((Seq.length) ((loopkupRef) (reveal (asRef x)) h)))))
 
 (*using the 2 definitions below causes a strange error in readIndex amd updIndex*)
 (*val arrayExistsInMem : #a:Type -> (sstarray a) -> smem -> GTot bool
@@ -44,7 +44,7 @@ val readIndex :  #a:Type  -> r:(sstarray a)
   -> index:nat
   -> PureMem a
         (requires (fun m ->  (refExistsInMem (reveal (asRef r)) m) /\ index < Seq.length (loopkupRef (reveal (asRef r)) m) ) )
-        (ensures (fun m v _->
+        (ensures (fun m v->
           (refExistsInMem (reveal (asRef r)) m) /\ index < Seq.length (loopkupRef (reveal (asRef r)) m)
           /\ v = Seq.index (loopkupRef (reveal (asRef r)) m) index ))
 
@@ -101,4 +101,4 @@ val hcreate :  #a:Type -> len:nat -> init:a
 val to_seq :  #a:Type  -> r:(sstarray a)
   -> PureMem (seq a)
         (requires (fun m -> b2t (refExistsInMem (reveal (asRef r)) m)))
-        (ensures (fun m v _-> (refExistsInMem (reveal (asRef r)) m) /\ v = (loopkupRef (reveal (asRef r)) m)))
+        (ensures (fun m v-> (refExistsInMem (reveal (asRef r)) m) /\ v = (loopkupRef (reveal (asRef r)) m)))
