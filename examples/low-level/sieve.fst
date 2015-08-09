@@ -138,7 +138,8 @@ let innerLoop n lo li res initres =
 
 type markedIffHasDivisorSmallerThan (n:nat) (lo:nat)
     (neww: bitv n) =
-    (forall (k:nat{k < n}). (marked n neww k <==> (exists (d:nat{1<d}). d<lo /\ SieveFun.nonTrivialDivides d k)))
+    (forall (k:nat{k < n}).
+      (marked n neww k <==> (exists (d:nat{1<d}). d<lo /\ SieveFun.nonTrivialDivides d k) ))
 
 
 val markedIffHasDivisorSmallerThanInc :
@@ -180,13 +181,13 @@ val outerLoopBody :
     ((elift2 union) (gonly lo)  (ArrayAlgos.eonly res))
 
 let outerLoopBody n lo res u =
-  let initMem = memreadAll () in
+  let initMem : erased smem  = memreadAll () in
   let lov = memread lo in
   let li = salloc 2 in
   let liv = memread li in
   innerLoop n lo li res (eeseln n initMem res);
   memwrite lo (lov+1);
-  let fMem = memreadAll () in
+  let fMem : erased smem = memreadAll () in
   (*the part below has no computational content*)
   (markedIffHasDivisorSmallerThanInc n lov (eeseln n initMem res) (eeseln n fMem res))
 
@@ -208,49 +209,44 @@ let outerLoop n lo res =
     ((elift2 union) (gonly lo)  (ArrayAlgos.eonly res))
     (outerLoopBody n lo res)
 
+(*to work around type inference issues*)
+val nmem : nat -> list nat -> Tot bool
+let nmem n l = memT n l
+
+val listOfUnmarkedAux : n:nat -> max:nat{max<=n} -> f:bitarray
+  -> PureMem (list nat)
+        (requires (fun m -> haslength m f n))
+        (ensures (fun _ l m -> haslength m f n /\ (forall (k:nat). (nmem k l) <==> (k<max /\ not (marked n (sel m f) k) ) ) ))
+
+let rec listOfUnmarkedAux n max f = if (max=0) then [] else
+  ( if (not (readIndex f (max-1))) then ((max-1)::(listOfUnmarkedAux n (max - 1) f)) else (listOfUnmarkedAux n (max - 1) f))
+
+val listOfUnmarked : n:nat  -> f:bitarray
+-> PureMem (list nat)
+      (requires (fun m -> haslength m f n))
+      (ensures (fun _ l m -> haslength m f n /\ (forall (k:nat). (nmem k l) <==> (k<n /\ not (marked n (sel m f) k) ) ) ))
+let listOfUnmarked n f = listOfUnmarkedAux n n f
+
 val sieve : n:nat{n>1} -> unit
-  -> WNSC bitarray
+  -> WNSC (list nat)
         (requires (fun m -> True))
-        (ensures (fun _ resv m -> haslength m resv n /\ markedIffHasDivisorSmallerThan n n (sel m resv)))
+        (ensures (fun _ l m -> forall (k:nat). (nmem k l) <==> ((k<n) /\ (~ (exists (d:nat{1<d}). d<n /\ SieveFun.nonTrivialDivides d k))) ))
+        //  markedIffHasDivisorSmallerThan n n (sel m resv)))
         (hide empty)
+
 let sieve n u =
   let lo = salloc 2 in
   let res = screate n false in
-  (outerLoop n lo res); res // ths post condition does not hold, becasue the frame containing res will be popped
-  //assert (False);
-  //memread res
+  (outerLoop n lo res);
+  (listOfUnmarked n res)
+
 
 val sieveFull : n:nat{n>1}
-  -> Mem ((k:nat{k<n}) -> Tot bool)
-        (requires (fun m -> True))
-        (ensures (fun _ resv _ -> markedIffHasDivisorSmallerThan n n resv))
+  -> Mem (list nat)
+  (requires (fun m -> True))
+  (ensures (fun _ l m -> forall (k:nat). (nmem k l) <==> ((k<n) /\ (~ (exists (d:nat{1<d}). d<n /\ SieveFun.nonTrivialDivides d k))) ))
         (hide empty)
 let sieveFull n =
   pushStackFrame ();
   let res= sieve n () in
   popStackFrame (); res
-
-val firstN : n:nat -> Tot (list nat)
-let rec firstN n = match n with
-| 0 -> []
-| _ -> (n-1)::(firstN (n-1))
-
-val toBool : n:nat{n>1} -> ((k:nat{k<n}) -> Tot bool) -> Tot (list bool)
-let toBool n f = mapT (fun (x:nat) -> if x < n then f x else false) (firstN n)
-
-(*let sieveFullTypeInfFail n= withNewScope #empty (sieve n)*)
-val listOfTruesAux : n:nat -> max:nat{max<=n} -> f:((k:nat{k<n}) -> Tot bool) -> Tot (list nat)
-let rec listOfTruesAux n max f = if (max<=2) then [] else
-  ( if not (f (max-1)) then ((max-1)::(listOfTruesAux n (max - 1) f)) else (listOfTruesAux n (max - 1) f))
-
-val listOfTrues : n:nat  -> f:((k:nat{k<n}) -> Tot bool) -> Tot (list nat)
-let listOfTrues n f = listOfTruesAux n n f
-
-val sieveAsList : n:nat{n>1}
-  -> Mem (list nat)
-        (requires (fun m -> True))
-        (ensures (fun _ resv _ -> True))
-        (hide empty)
-let sieveAsList n =
-  let sieveRes = (sieveFull n) in
-  listOfTrues n sieveRes
