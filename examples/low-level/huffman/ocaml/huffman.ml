@@ -61,9 +61,9 @@ let make_array onstack n v =
     Camlstack.mkarray n v 
   else Array.make n v
 
-let make_array_prim onstack n v =
+let make_array_noscan onstack n v =
   if !do_stack && onstack then
-    Camlstack.mkarray_prim n v 
+    Camlstack.mkarray_noscan n v 
   else Array.make n v
 
 let make_bytearray onstack n = (* ALLOCATE *)
@@ -383,8 +383,7 @@ let print_tree (packed_tree:bytes) (tree_size:int) =
 let huffman_encode 
     (symbol_stream:symbol_type array)
     (encoded_stream:bytes) : bytes*int*int =
-  (* XXX if we are doing this for the stack, then no need to mark these array pointers *)
-  let histogram = make_array true symbol_value_bound null_node in (* ALLOCATE stack *)
+  let histogram = make_array_noscan true symbol_value_bound null_node in (* ALLOCATE stack *)
   compute_histogram symbol_stream histogram;
   let tree = build_huffman_tree histogram in
   if !debug then Printf.printf "leaves in tree = %d\n" (count_leaves tree);
@@ -562,9 +561,9 @@ for i = 0 to (!num-1) do
   (* Generate input *)
   if !do_stack then
     Camlstack.push_frame 0;
-  let test_inp = make_array_prim true !test_len 0 in (* ALLOCATE stack *)
+  let test_inp = make_array_noscan true !test_len 0 in (* ALLOCATE stack *)
   let test_oup = make_bytearray true (!test_len*bytes_per_symbol) in (* ALLOCATE stack *)
-  let test_res = make_array_prim true !test_len 0 in (* ALLOCATE stack *)
+  let test_res = make_array_noscan true !test_len 0 in (* ALLOCATE stack *)
   rnd_arr test_inp;
   (* Printf.printf "%d " i; *)
   let res = run test_inp test_oup test_res in

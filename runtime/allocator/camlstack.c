@@ -340,7 +340,7 @@ CAMLprim value stack_mkarray(value lenv, value initv) {
   if (len <= 0 || (Is_block(initv) && Tag_val(initv) == Double_tag))
     caml_invalid_argument ("Camlstack.mkarray");
   else {
-    value tuple = stack_caml_alloc_tuple(len,-1,NULL); /* all pointers by default */
+    value tuple = stack_caml_alloc_tuple(len,-1,NULL); /* all possible heap pointers */
     if (tuple == (value)0)
       caml_failwith ("Camlstack.mkarray");    
     else {
@@ -353,13 +353,13 @@ CAMLprim value stack_mkarray(value lenv, value initv) {
   }
 }
 
-CAMLprim value stack_mkarray_prim(value lenv, value initv) {
+CAMLprim value stack_mkarray_noscan(value lenv, value initv) {
   CAMLparam2 (lenv, initv);
   int len = Int_val(lenv);
-  if (len <= 0 || Is_block(initv))
+  if (len <= 0 || (Is_block(initv) && !is_stack_pointer((void *)initv)))
     caml_invalid_argument ("Camlstack.mkarray");
   else {
-    value tuple = stack_caml_alloc_tuple(len,0,NULL); /* assume no pointers */
+    value tuple = stack_caml_alloc_tuple(len,0,NULL); /* assumes no heap pointers */
     if (tuple == (value)0)
       caml_failwith ("Camlstack.mkarray");    
     else {
