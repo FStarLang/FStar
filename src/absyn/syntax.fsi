@@ -148,10 +148,10 @@ and bvvdef = bvdef<exp>
 and pat' = 
   | Pat_disj     of list<pat>
   | Pat_constant of sconst
-  | Pat_cons     of fvvar * option<fv_qual> * list<pat>
-  | Pat_var      of bvvar * bool                          (* flag marks an explicitly provided implicit *)
+  | Pat_cons     of fvvar * option<fv_qual> * list<(pat * bool)>  (* flag marks an explicitly provided implicit *)
+  | Pat_var      of bvvar 
   | Pat_tvar     of btvar
-  | Pat_wild     of bvvar                                 (* need stable names for even the wild patterns *)
+  | Pat_wild     of bvvar                                         (* need stable names for even the wild patterns *)
   | Pat_twild    of btvar
   | Pat_dot_term of bvvar * exp
   | Pat_dot_typ  of btvar * typ

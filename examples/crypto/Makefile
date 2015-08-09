@@ -33,7 +33,7 @@ mac: sha1.fst mac.fst
 	$^
 
 merkle_tree:
-	$(FSTAR) $(STDLIB) $(FSTAR_HOME)/lib/constr.fst merkle_tree.fst
+	$(FSTAR) --verify_module MerkleTree $(STDLIB) $(FSTAR_HOME)/lib/constr.fst merkle_tree.fst
 
 acls-cap: sha1.fst mac.fst ../security/acls2.fst acls-cap.fst
 	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --admit_fsi Seq \

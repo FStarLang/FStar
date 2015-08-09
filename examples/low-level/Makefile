@@ -4,7 +4,7 @@ ALLOCATOR_FILES = $(ALLOCATOR_DIR)/camlstack.o $(ALLOCATOR_DIR)/stack.o $(ALLOCA
 OCAML = ocamlfind ocamlc -custom -g -package batteries -linkpkg -thread -I ../../src/ocaml-output/ -I $(ALLOCATOR_DIR) $(ALLOCATOR_FILES) ../../src/ocaml-output/support.ml
 
 Factorial.ml: factorial.fst
-	fstar --codegen OCaml-experimental factorial.fst
+	fstar --codegen OCaml-experimental $^
 	./revertManualMLs.sh
 
 # make Factorial.ml should build all the remailing .ml files
@@ -20,10 +20,17 @@ md5: ListSet.ml Stack.ml FunctionalExtensionality.ml Set.ml Heap.ml Ghost.ml Sta
 	$(OCAML) -o $@ $^
 
 Sieve.ml: sieve.fst
-	fstar --codegen OCaml-experimental sieve.fst
+	fstar --codegen OCaml-experimental $^
 	./revertManualMLs.sh
 
 sieve: ListSet.ml Stack.ml FunctionalExtensionality.ml Set.ml Heap.ml Ghost.ml StackAndHeap.ml SST.ml SSTCombinators.ml Sieve.ml TestSieve.ml
+	$(OCAML) -o $@ $^
+
+SieveFun.ml: sieveFun.fst
+	fstar --codegen OCaml-experimental $^
+	./revertManualMLs.sh
+
+sieveFun: ListSet.ml Stack.ml FunctionalExtensionality.ml Set.ml Heap.ml Ghost.ml StackAndHeap.ml SST.ml SSTCombinators.ml SieveFun.ml TestSieve.ml
 	$(OCAML) -o $@ $^
 
 support: #run this whenever the src file of cp is updated. It is tracked in git.

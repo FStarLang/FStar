@@ -601,8 +601,8 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
         let rec pat_vars p = match p.v with 
             | Pat_disj [] -> []
             | Pat_disj (p::_) -> pat_vars p
-            | Pat_cons (_, _, pats) -> List.collect pat_vars pats
-            | Pat_var(x, _) -> [v_binder x]
+            | Pat_cons (_, _, pats) -> List.collect (fun (x, _) -> pat_vars x) pats
+            | Pat_var x  -> [v_binder x]
             | Pat_tvar a -> [t_binder a]
             | Pat_wild _
             | Pat_twild _ 
@@ -622,10 +622,10 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
         let rec norm_pat p = match p.v with 
             | Pat_disj pats -> withinfo (Pat_disj (List.map norm_pat pats)) None p.p
             
-            | Pat_cons (fv, q, pats) -> withinfo (Pat_cons(fv, q, List.map norm_pat pats)) None p.p
+            | Pat_cons (fv, q, pats) -> withinfo (Pat_cons(fv, q, List.map (fun (x, i) -> norm_pat x, i) pats)) None p.p
             
-            | Pat_var(x, b) ->
-              withinfo (Pat_var(norm_bvvar x, b)) None p.p
+            | Pat_var x ->
+              withinfo (Pat_var(norm_bvvar x)) None p.p
 
             | Pat_tvar a -> 
               withinfo (Pat_tvar (norm_btvar a)) None p.p

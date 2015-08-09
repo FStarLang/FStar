@@ -154,7 +154,7 @@ static void scanfun(void *env, void **ptr) {
   scanning_action action = (scanning_action)env;
   value *root = (value *)ptr;
   value v = *root;
-#ifndef NDEBUG
+#ifdef DEBUG
   printf("  scanning=%p, val=%p\n",root,(void *)v);
   if (Is_long(v)) {
     printf("   is long %d (%ld)\n", Int_val(v), Long_val(v));
@@ -170,7 +170,7 @@ static void scanfun(void *env, void **ptr) {
 
 static void scan_stack_roots(scanning_action action)
 {
-#ifndef NDEBUG
+#ifdef DEBUG
   printf("DOING SCAN\n");
 #endif
   each_marked_pointer(scanfun,action);
@@ -336,7 +336,26 @@ CAMLprim value stack_mkarray(value lenv, value initv) {
   if (len <= 0 || Tag_val(initv) == Double_tag)
     caml_invalid_argument ("Camlstack.mkarray");
   else {
-    value tuple = stack_caml_alloc_tuple(len,-1,NULL); /* default: all elements are possibly pointers */
+    value tuple = stack_caml_alloc_tuple(len,-1,NULL); /* all pointers by default */
+    if (tuple == (value)0)
+      caml_failwith ("Camlstack.mkarray");    
+    else {
+      int i;
+      for (i=0;i<len;i++) {
+	Field(tuple, i) = initv;
+      }
+      CAMLreturn(tuple);
+    }
+  }
+}
+
+CAMLprim value stack_mkarray_prim(value lenv, value initv) {
+  CAMLparam2 (lenv, initv);
+  int len = Int_val(lenv);
+  if (len <= 0 || Tag_val(initv) == Double_tag)
+    caml_invalid_argument ("Camlstack.mkarray");
+  else {
+    value tuple = stack_caml_alloc_tuple(len,0,NULL); /* assume no pointers */
     if (tuple == (value)0)
       caml_failwith ("Camlstack.mkarray");    
     else {

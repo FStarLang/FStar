@@ -368,7 +368,7 @@ int main(int argc, char *argv[])
   printf("Huffman coded to %d bytes.\n", encoded_stream_length);
 
   printf("Code: ");
-  for (i=0; i<length; i++)
+  for (i=0; i<encoded_stream_length; i++)
     for (bit_mask=1; bit_mask; bit_mask<<=1)
       printf("%d ", ( ((encoded_stream[i])&bit_mask) ? 1 : 0));
   printf("\nTree (%d): ",tree_size);

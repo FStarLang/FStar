@@ -946,7 +946,7 @@ and encode_one_pat (env:env_t) pat : (env_t * pattern) =
                Term.mkEq(scrutinee, encode_const c)
             | Pat_cons(f, _, args) -> 
                 let is_f = mk_data_tester env f.v scrutinee in
-                let sub_term_guards = args |> List.mapi (fun i arg -> 
+                let sub_term_guards = args |> List.mapi (fun i (arg, _) -> 
                     let proj = primitive_projector_by_pos env.tcenv f.v i in
                     mk_guard arg (Term.mkApp(proj, [scrutinee]))) in
                 Term.mk_and_l (is_f::sub_term_guards) in
@@ -955,7 +955,7 @@ and encode_one_pat (env:env_t) pat : (env_t * pattern) =
             | Pat_disj _ -> failwith "Impossible"
             
             | Pat_dot_term (x, _)
-            | Pat_var (x, _)
+            | Pat_var x
             | Pat_wild x -> [Inr x, scrutinee] 
 
             | Pat_dot_typ (a, _)
@@ -966,7 +966,7 @@ and encode_one_pat (env:env_t) pat : (env_t * pattern) =
 
             | Pat_cons(f, _, args) -> 
                 args 
-                |> List.mapi (fun i arg -> 
+                |> List.mapi (fun i (arg, _) -> 
                     let proj = primitive_projector_by_pos env.tcenv f.v i in
                     mk_projections arg (Term.mkApp(proj, [scrutinee]))) 
                 |> List.flatten in
@@ -1668,6 +1668,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         | Term.DeclFun _ -> true
         | _ -> false) in
       decls@rest@inversions, env
+
+    | Sig_let(_, _, _, quals) when (quals |> Util.for_some (function Projector _ | Discriminator _ -> true | _ -> false)) -> 
+      [], env
 
     | Sig_let((is_rec, bindings), _, _, quals) ->
         let eta_expand binders formals body t =

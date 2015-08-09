@@ -10,6 +10,11 @@ end
 false
 end))
 
+let ___Doc____0 = (fun ( projectee ) -> (match (projectee) with
+| Doc (_54_2) -> begin
+_54_2
+end))
+
 let empty = Doc ("")
 
 let hardline = Doc ("\n")
@@ -22,50 +27,50 @@ let break0 = (break_ 0)
 
 let break1 = (text " ")
 
-let enclose = (fun ( _54_5 ) ( _54_7 ) ( _54_9 ) -> (match ((_54_5, _54_7, _54_9)) with
+let enclose = (fun ( _54_6 ) ( _54_8 ) ( _54_10 ) -> (match ((_54_6, _54_8, _54_10)) with
 | (Doc (l), Doc (r), Doc (x)) -> begin
 Doc ((Support.String.strcat (Support.String.strcat l x) r))
 end))
 
-let brackets = (fun ( _54_11 ) -> (match (_54_11) with
+let brackets = (fun ( _54_12 ) -> (match (_54_12) with
 | Doc (d) -> begin
-(let _70_23789 = (text "[")
-in (let _70_23788 = (text "]")
-in (enclose _70_23789 _70_23788 (Doc (d)))))
+(let _70_26323 = (text "[")
+in (let _70_26322 = (text "]")
+in (enclose _70_26323 _70_26322 (Doc (d)))))
 end))
 
-let cbrackets = (fun ( _54_13 ) -> (match (_54_13) with
+let cbrackets = (fun ( _54_14 ) -> (match (_54_14) with
 | Doc (d) -> begin
-(let _70_23793 = (text "{")
-in (let _70_23792 = (text "}")
-in (enclose _70_23793 _70_23792 (Doc (d)))))
+(let _70_26327 = (text "{")
+in (let _70_26326 = (text "}")
+in (enclose _70_26327 _70_26326 (Doc (d)))))
 end))
 
-let parens = (fun ( _54_15 ) -> (match (_54_15) with
+let parens = (fun ( _54_16 ) -> (match (_54_16) with
 | Doc (d) -> begin
-(let _70_23797 = (text "(")
-in (let _70_23796 = (text ")")
-in (enclose _70_23797 _70_23796 (Doc (d)))))
+(let _70_26331 = (text "(")
+in (let _70_26330 = (text ")")
+in (enclose _70_26331 _70_26330 (Doc (d)))))
 end))
 
-let cat = (fun ( _54_17 ) ( _54_19 ) -> (match ((_54_17, _54_19)) with
+let cat = (fun ( _54_18 ) ( _54_20 ) -> (match ((_54_18, _54_20)) with
 | (Doc (d1), Doc (d2)) -> begin
 Doc ((Support.String.strcat d1 d2))
 end))
 
 let reduce = (fun ( docs ) -> (Support.List.fold_left cat empty docs))
 
-let group = (fun ( _54_22 ) -> (match (_54_22) with
+let group = (fun ( _54_23 ) -> (match (_54_23) with
 | Doc (d) -> begin
 Doc (d)
 end))
 
-let groups = (fun ( docs ) -> (let _70_23808 = (reduce docs)
-in (group _70_23808)))
+let groups = (fun ( docs ) -> (let _70_26342 = (reduce docs)
+in (group _70_26342)))
 
-let combine = (fun ( _54_25 ) ( docs ) -> (match (_54_25) with
+let combine = (fun ( _54_26 ) ( docs ) -> (match (_54_26) with
 | Doc (sep) -> begin
-(let select = (fun ( _54_29 ) -> (match (_54_29) with
+(let select = (fun ( _54_30 ) -> (match (_54_30) with
 | Doc (d) -> begin
 (match ((d = "")) with
 | true -> begin
@@ -83,20 +88,20 @@ let cat1 = (fun ( d1 ) ( d2 ) -> (reduce ((d1)::(break1)::(d2)::[])))
 
 let reduce1 = (fun ( docs ) -> (combine break1 docs))
 
-let nest = (fun ( i ) ( _54_36 ) -> (match (_54_36) with
+let nest = (fun ( i ) ( _54_37 ) -> (match (_54_37) with
 | Doc (d) -> begin
 Doc (d)
 end))
 
-let align = (fun ( docs ) -> (let _54_39 = (combine hardline docs)
-in (match (_54_39) with
+let align = (fun ( docs ) -> (let _54_40 = (combine hardline docs)
+in (match (_54_40) with
 | Doc (doc) -> begin
 Doc (doc)
 end)))
 
 let hbox = (fun ( d ) -> d)
 
-let pretty = (fun ( sz ) ( _54_43 ) -> (match (_54_43) with
+let pretty = (fun ( sz ) ( _54_44 ) -> (match (_54_44) with
 | Doc (doc) -> begin
 doc
 end))

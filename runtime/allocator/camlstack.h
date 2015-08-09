@@ -19,5 +19,7 @@
 #include <caml/mlvalues.h>
 
 value stack_caml_alloc(mlsize_t wosize, tag_t tag, int nbits, int *mask);
+value stack_caml_alloc_string (mlsize_t lenb);
+value stack_caml_alloc_tuple (mlsize_t n, int nbits, int *mask);
 
 #endif

@@ -19,13 +19,38 @@ open Seq
 open Ghost
 
 val contains : #a:Type -> smem -> sstarray a -> GTot bool
-let contains m v = refExistsInMem (reveal (asRef v)) m
+let contains m v =
+refExistsInMem (reveal (asRef v)) m
+
 
 val sel : #a:Type -> m:smem -> v:(sstarray a){contains m v} -> GTot (seq a)
 let sel m v = loopkupRef (reveal (asRef v)) m
 
+val loopkupRefR : a:Type -> m:smem -> r:(ref a) ->
+  Pure a (requires (refExistsInMem r m)) (ensures (fun _ -> True))
+let loopkupRefR (a:Type) m r = loopkupRef r m
+
+val loopkupRefR2 : a:Type -> m:smem -> r:(ref a){(refExistsInMem r m)} ->Tot a
+let loopkupRefR2 (a:Type) m r = loopkupRef r m
+
+
+val eloopkupRef : #a:Type -> m:smem -> r:(erased (ref a)){(refExistsInMem (reveal r) m)} ->
+  Tot (erased a)
+let eloopkupRef  (#a:Type) m v = (elift1_p #(ref a) #a #(fun r -> b2t (refExistsInMem r m)) (loopkupRefR2 a m)) v
+
+
+val esel : #a:Type -> m:smem -> v:(sstarray a){refExistsInMem (reveal (asRef v)) m} -> Tot (erased (seq a))
+let esel (#a:Type) m v = eloopkupRef m (asRef v)
+
 val glength : #a:Type -> v:(sstarray a) -> m:smem{contains m v} -> GTot nat
 let glength v m = Seq.length (sel m v)
+
+val haslength : #a:Type -> smem -> sstarray a -> n:nat -> GTot bool
+let haslength m v n = contains m v && glength v m = n
+
+val seqAsFun : a:Type -> n:nat -> s:(seq a){Seq.length s= n}
+  -> Tot ((k:nat{k<n}) -> Tot a)
+let seqAsFun (a:Type) n s = (fun k -> index s k)
 
 type prefixEqual  (#a:Type)
   (v1: seq a) (v2: seq a) (p:nat{p <= length v1 /\ p<= length v2})
@@ -33,8 +58,6 @@ type prefixEqual  (#a:Type)
 
 (*val prefixInc: a#Type -> n:nat->
   (m1 = (writeMemAux (asRef r) m0 (Seq.upd (loopkupRef (asRef r) m0) index newV)))*)
-
-#set-options "--initial_fuel 100 --max_fuel 400 --initial_ifuel 100 --max_ifuel 400"
 
 type prefixEqualL  (#a:Type)
   (v1: seq a) (v2:(seq a))
@@ -56,8 +79,6 @@ let copy s scp =
   let ctr = salloc #nat 0 in
   let len = SSTArray.length s in
   let lenscp = SSTArray.length scp in
-  admitP (b2t (reveal ((elift1 only) (asRef scp)) = only (reveal (asRef scp))));
-  admitP (b2t (reveal (gunion ((elift1 only) (asRef scp)) (gonly ctr)) = union (only (reveal (asRef scp))) (only ctr)));
   scopedWhile1
     ctr
     (fun ctrv -> ctrv < len)

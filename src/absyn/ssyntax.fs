@@ -232,8 +232,8 @@ and serialize_pat' (writer:Writer) (ast:pat') :unit =
     match ast with
     | Pat_disj(l) -> writer.write_char 'a'; serialize_list writer serialize_pat l
     | Pat_constant(c) -> writer.write_char 'b'; serialize_sconst writer c
-    | Pat_cons(v, _, l) -> writer.write_char 'c'; serialize_fvvar writer v; serialize_list writer serialize_pat l
-    | Pat_var(v, b) -> writer.write_char 'd'; serialize_bvvar writer v; writer.write_bool b
+    | Pat_cons(v, _, l) -> writer.write_char 'c'; serialize_fvvar writer v; serialize_list writer (fun w (p,b) -> serialize_pat w p; w.write_bool b) l
+    | Pat_var v -> writer.write_char 'd'; serialize_bvvar writer v
     | Pat_tvar(v) -> writer.write_char 'e'; serialize_btvar writer v
     | Pat_wild(v) -> writer.write_char 'f';  serialize_bvvar writer v
     | Pat_twild(v) -> writer.write_char 'g';  serialize_btvar writer v
@@ -374,8 +374,8 @@ and deserialize_pat' (reader:Reader) :pat' =
     match (reader.read_char ()) with
     | 'a' -> Pat_disj(deserialize_list reader deserialize_pat)
     | 'b' -> Pat_constant(deserialize_sconst reader)
-    | 'c' -> Pat_cons(deserialize_fvvar reader, None, deserialize_list reader deserialize_pat)//FIXME
-    | 'd' -> Pat_var(deserialize_bvvar reader, reader.read_bool ())
+    | 'c' -> Pat_cons(deserialize_fvvar reader, None(* fixme *), deserialize_list reader (fun r -> (deserialize_pat r, r.read_bool ())))
+    | 'd' -> Pat_var(deserialize_bvvar reader)
     | 'e' -> Pat_tvar(deserialize_btvar reader)
     | 'f' -> Pat_wild(deserialize_bvvar reader)
     | 'g' -> Pat_twild(deserialize_btvar reader)
