@@ -23,7 +23,7 @@ Sieve.ml: sieve.fst
 	fstar --codegen OCaml-experimental $^
 	./revertManualMLs.sh
 
-sieve: ListSet.ml Stack.ml FunctionalExtensionality.ml Set.ml Heap.ml Ghost.ml StackAndHeap.ml SST.ml SSTCombinators.ml Sieve.ml TestSieve.ml
+sieve: ListSet.ml Stack.ml FunctionalExtensionality.ml Set.ml Heap.ml Ghost.ml StackAndHeap.ml SST.ml SSTCombinators.ml Seq.ml SSTArray.ml ArrayAlgos.ml SieveFun.ml Sieve.ml TestSieve.ml
 	$(OCAML) -o $@ $^
 
 SieveFun.ml: sieveFun.fst
