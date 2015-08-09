@@ -247,3 +247,32 @@ let sieveFull n =
   pushStackFrame ();
   let res= sieve n () in
   popStackFrame (); res
+
+  val maxUnmarkedAux : n:nat -> max:nat{max<=n} -> f:bitarray
+    -> PureMem (nat)
+          (requires (fun m -> haslength m f n))
+          (ensures (fun m l -> True ))
+
+  let rec maxUnmarkedAux n max f = if (max=0) then 0 else
+    ( if (not (readIndex f (max-1))) then (max-1) else (maxUnmarkedAux n (max - 1) f))
+
+  val maxUnmarked : n:nat  -> f:bitarray
+  -> PureMem nat
+        (requires (fun m -> haslength m f n))
+        (ensures (fun m l ->True  ))
+  let maxUnmarked n f = maxUnmarkedAux n n f
+
+
+
+val sieveJustMax : n:nat{n>1}
+  -> Mem nat
+  (requires (fun m -> True))
+  (ensures (fun _ l m -> True ))
+        (hide empty)
+let sieveJustMax n =
+  pushStackFrame ();
+  let lo = salloc 2 in
+  let res = screate n false in
+  (outerLoop n lo res);
+  let res = (maxUnmarked n res) in
+  popStackFrame (); res

@@ -7,7 +7,7 @@ let memread = (fun ( r ) -> !r )
 
 let memwrite = (fun ( r ) ( v ) -> r := v )
 
-let pushStackFrame = (fun ( _ ) -> Camlstack.push_frame 100)
+let pushStackFrame = (fun ( _ ) -> Camlstack.push_frame 100000)
 
 let popStackFrame = (fun ( _ ) -> Camlstack.pop_frame)
 
