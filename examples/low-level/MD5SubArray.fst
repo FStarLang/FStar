@@ -1,11 +1,15 @@
 (*--build-config
     options:--admit_fsi Set --z3timeout 50;
     variables:LIB=../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst
-    st3.fst $LIB/constr.fst word.fst mvector.fsi mvector.fst MD5Common.fst
+    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst  stack.fst listset.fst
+    $LIB/ghost.fst $LIB/seq.fst stackAndHeap.fst sst.fst sstCombinators.fst  $LIB/constr.fst word.fst mvector.fsi mvector.fst MD5Common.fst
   --*)
+
+(*this file is not being maintained anymore*)
 module MD5SubArray
-open StructuredMem
+open SSTCombinators
+open StackAndHeap
+open SST
 open MVector
 open Heap
 open Set

@@ -37,4 +37,4 @@ support: #run this whenever the src file of cp is updated. It is tracked in git.
 	cp ../../src/support/ocaml/fstar-lib/src/support.ml  ../../src/ocaml-output/
 
 clean:
-	rm *.cmi *.cmo MD5.ml Sieve.ml Factorial.ml md5 factorial sieve
+	rm *.cmi *.cmo MD5.ml Sieve.ml Factorial.ml md5 factorial sieve SieveFun.ml ListSet.ml Stack.ml FunctionalExtensionality.ml Set.ml Ghost.ml StackAndHeap.ml SSTCombinators.ml MachineWord.ml Seq.ml ArrayAlgos.ml MD5Common.ml All.ml

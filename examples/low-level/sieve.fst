@@ -24,7 +24,6 @@ open SSTArray
 
 type bitarray = sstarray bool
 
-
 open SSTArray
 
 (* val mark : n:nat -> ((k:nat{k<n}) -> Tot bool) -> index:nat{index<n} -> Tot ((k:nat{k<n}) -> Tot bool) *)
@@ -164,10 +163,8 @@ type  outerLoopInv (n:nat) (lo: ref nat) (res: bitarray) (m:smem) =
 
 (*#set-options "--initial_fuel 100 --max_fuel 10000 --initial_ifuel 100 --max_ifuel 10000"*)
 
+
 (*Danger!! this function is highly experimental*)
-assume val memreadAll : unit -> PureMem (erased smem)
-      (requires (fun m -> true))
-      (ensures (fun _ v m -> reveal v = m))
 
 
 val outerLoopBody :
@@ -181,13 +178,13 @@ val outerLoopBody :
     ((elift2 union) (gonly lo)  (ArrayAlgos.eonly res))
 
 let outerLoopBody n lo res u =
-  let initMem : erased smem  = memreadAll () in
+  let initMem : erased smem  = get () in
   let lov = memread lo in
   let li = salloc 2 in
   let liv = memread li in
   innerLoop n lo li res (eeseln n initMem res);
   memwrite lo (lov+1);
-  let fMem : erased smem = memreadAll () in
+  let fMem : erased smem = get () in
   (*the part below has no computational content*)
   (markedIffHasDivisorSmallerThanInc n lov (eeseln n initMem res) (eeseln n fMem res))
 
@@ -216,7 +213,7 @@ let nmem n l = memT n l
 val listOfUnmarkedAux : n:nat -> max:nat{max<=n} -> f:bitarray
   -> PureMem (list nat)
         (requires (fun m -> haslength m f n))
-        (ensures (fun _ l m -> haslength m f n /\ (forall (k:nat). (nmem k l) <==> (k<max /\ not (marked n (sel m f) k) ) ) ))
+        (ensures (fun m l -> haslength m f n /\ (forall (k:nat). (nmem k l) <==> (k<max /\ not (marked n (sel m f) k) ) ) ))
 
 let rec listOfUnmarkedAux n max f = if (max=0) then [] else
   ( if (not (readIndex f (max-1))) then ((max-1)::(listOfUnmarkedAux n (max - 1) f)) else (listOfUnmarkedAux n (max - 1) f))
@@ -224,7 +221,7 @@ let rec listOfUnmarkedAux n max f = if (max=0) then [] else
 val listOfUnmarked : n:nat  -> f:bitarray
 -> PureMem (list nat)
       (requires (fun m -> haslength m f n))
-      (ensures (fun _ l m -> haslength m f n /\ (forall (k:nat). (nmem k l) <==> (k<n /\ not (marked n (sel m f) k) ) ) ))
+      (ensures (fun m l -> haslength m f n /\ (forall (k:nat). (nmem k l) <==> (k<n /\ not (marked n (sel m f) k) ) ) ))
 let listOfUnmarked n f = listOfUnmarkedAux n n f
 
 val sieve : n:nat{n>1} -> unit
