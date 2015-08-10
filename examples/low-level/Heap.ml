@@ -3,6 +3,11 @@ type heap = unit
 type aref =
 | Ref of unit * Obj.t ref
 
+type 'a ref43584385 = 'a ref
+
+type 'a ref = 'a ref43584385
+
+
 let is_Ref = (fun ( _discr_ ) -> (match (_discr_) with
 | Ref (_) -> begin
 true
@@ -10,6 +15,7 @@ end
 | _ -> begin
 false
 end))
+
 
 let sel = (fun ( _ ) ( _ ) -> (Support.All.failwith "Not yet implemented:sel"))
 

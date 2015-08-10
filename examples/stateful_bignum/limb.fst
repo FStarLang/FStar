@@ -100,7 +100,7 @@ val size_of_mul_by_pow2_lemma:
   n:nat -> a:lint n -> m:nat ->
   Lemma
     (requires (True))
-    (ensures (Bitsize (a * (pow2 m)) (n+m)))
+    (ensures (Bitsize (a * (pow2 m)) (n+m) /\ Bitsize ((pow2 m) * a) (n+m)))
 let size_of_mul_by_pow2_lemma n a m = 
   erase (pow2_exp_lemma n m)
 
@@ -141,6 +141,13 @@ val size_of_modulo_pow2:
     (ensures (Bitsize (a % (pow2 n)) n))
     [SMTPat (a % (pow2 n))]
 let size_of_modulo_pow2 a n = ()
+
+assume val size_of_signed_modulo_by_pow2:
+    a:int -> n:nat -> 
+	 Lemma
+	   (requires (True))
+	   (ensures (Bitsize (signed_modulo a (pow2 n)) n))
+	   [SMTPat (signed_modulo a (pow2 n))]
 
 (* True but big loss of precision *)
 val bits_of_pow2:
