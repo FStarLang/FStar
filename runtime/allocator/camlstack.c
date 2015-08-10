@@ -188,7 +188,7 @@ static void scan_stack_roots(scanning_action action)
   Please see that file for descriptions of these routines.
  */
 
-static int already_initialized = 0; /* tracks whether GC scanner initialized */
+static int already_initialized = 1; /* tracks whether GC scanner initialized */
 
 CAMLprim value stack_push_frame(value v) 
 {
