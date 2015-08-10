@@ -18,6 +18,8 @@
 
 #include <stdarg.h>
 
+//#define DOGC
+
 /* Default size of contiguous memory in a frame */
 #define DEFAULT_PAGE_SZB 4096
 

@@ -18,9 +18,10 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include "stack.h"
-#include "bitmask.h"
+//#include "bitmask.h"
 
 /* Utility routines */
+
 
 #define check(_p) if (!(_p)) { fprintf(stderr,"Failed check %s:%d\n",__FILE__,__LINE__); fflush(stdout); exit(1); }
 #ifdef DEBUG
@@ -79,7 +80,13 @@ static inline int have_space(int sz_b) {
    Otherwise the page coincides with the start of a new frame. */
 static void add_page(int sz_b, int is_ext) {
   sz_b = word_align(max(2*sz_b,DEFAULT_PAGE_SZB));
+  
+#ifdef DOGC  
   int mapsz_b = byte_align(sz_b/WORD_SZB)/8;
+#else 
+  int mapsz_b = 0;
+#endif
+  
   Page *region = malloc(sizeof(Page)+mapsz_b);
   //printf ("add page size = %d, ext = %d, map size = %d\n", sz_b, is_ext, mapsz_b);
   void* memory = malloc(sz_b);
@@ -107,8 +114,10 @@ void push_frame(int sz_b) {
     //printf("push frame in page\n");
     *((void **)top->alloc_ptr) = top->frame_ptr;
     top->frame_ptr = top->alloc_ptr;
+#ifdef DOGC
     int bit = (void **)top->frame_ptr - (void **)top->memory; 
     unsetbit(top->pointermap, bit);
+#endif    
     top->alloc_ptr = (void *)((unsigned long)top->alloc_ptr + WORD_SZB);
   } else {
     //printf("push frame on new page\n");
@@ -173,6 +182,7 @@ void *stack_alloc_maskp(int sz_b, int nbits, int *mask) {
     int ofs = (void **)res - (void **)top->memory; // #words into the page
     int i;
     top->alloc_ptr = (void *)((unsigned long)top->alloc_ptr + sz_b);
+#ifdef DOGC
     unsetbit_rng(top->pointermap, ofs, sz_b / WORD_SZB);
     if (nbits < 0) { /* set all words in object as possibly pointerful */
       for (i = 0; i<sz_b/WORD_SZB; i++) {
@@ -183,6 +193,7 @@ void *stack_alloc_maskp(int sz_b, int nbits, int *mask) {
 	setbit(top->pointermap, mask[i]+ofs);
       }
     }
+#endif    
     return res;
   } else {
     //printf("adding page on demand\n");
@@ -257,6 +268,7 @@ void ptrbitfun(void *env, int index) {
   penv->f(penv->env,ptr);
 }
 
+#ifdef DOGC
 void each_marked_pointer(ptrfun f, void *env) {
   Page *tmp = top;
   struct ptrenv penv = { 0, f, env };
@@ -266,4 +278,11 @@ void each_marked_pointer(ptrfun f, void *env) {
     eachbit(tmp->pointermap, maxbit, ptrbitfun, (void *)&penv);
     tmp = tmp->prev;
   }
-}
+#else
+void each_marked_pointer(ptrfun f, void *env) {
+    printf("this should not be getting called\n");    
+    assert(false);
+  }
+#endif
+  
+
