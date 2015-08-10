@@ -141,14 +141,14 @@ end
 "Fuel"
 end
 | Array ((s1, s2)) -> begin
-(let _70_22844 = (strSort s1)
-in (let _70_22843 = (strSort s2)
-in (Support.Microsoft.FStar.Util.format2 "(Array %s %s)" _70_22844 _70_22843)))
-end
-| Arrow ((s1, s2)) -> begin
 (let _70_22846 = (strSort s1)
 in (let _70_22845 = (strSort s2)
-in (Support.Microsoft.FStar.Util.format2 "(%s -> %s)" _70_22846 _70_22845)))
+in (Support.Microsoft.FStar.Util.format2 "(Array %s %s)" _70_22846 _70_22845)))
+end
+| Arrow ((s1, s2)) -> begin
+(let _70_22848 = (strSort s1)
+in (let _70_22847 = (strSort s2)
+in (Support.Microsoft.FStar.Util.format2 "(%s -> %s)" _70_22848 _70_22847)))
 end
 | Sort (s) -> begin
 s
@@ -490,8 +490,8 @@ let free_variables = (fun ( t ) -> (match ((Support.ST.read t.freevars)) with
 b
 end
 | None -> begin
-(let fvs = (let _70_22979 = (freevars t)
-in (Support.Microsoft.FStar.Util.remove_dups fv_eq _70_22979))
+(let fvs = (let _70_22981 = (freevars t)
+in (Support.Microsoft.FStar.Util.remove_dups fv_eq _70_22981))
 in (let _49_120 = (Support.ST.op_Colon_Equals t.freevars (Some (fvs)))
 in fvs))
 end))
@@ -571,8 +571,8 @@ let weightToSmt = (fun ( _49_5 ) -> (match (_49_5) with
 ""
 end
 | Some (i) -> begin
-(let _70_22986 = (Support.Microsoft.FStar.Util.string_of_int i)
-in (Support.Microsoft.FStar.Util.format1 ":weight %s\n" _70_22986))
+(let _70_22988 = (Support.Microsoft.FStar.Util.string_of_int i)
+in (Support.Microsoft.FStar.Util.format1 ":weight %s\n" _70_22988))
 end))
 
 let rec hash_of_term' = (fun ( t ) -> (match (t) with
@@ -580,37 +580,37 @@ let rec hash_of_term' = (fun ( t ) -> (match (t) with
 i
 end
 | BoundV (i) -> begin
-(let _70_22989 = (Support.Microsoft.FStar.Util.string_of_int i)
-in (Support.String.strcat "@" _70_22989))
+(let _70_22991 = (Support.Microsoft.FStar.Util.string_of_int i)
+in (Support.String.strcat "@" _70_22991))
 end
 | FreeV (x) -> begin
-(let _70_22990 = (strSort (Support.Prims.snd x))
-in (Support.String.strcat (Support.String.strcat (Support.Prims.fst x) ":") _70_22990))
+(let _70_22992 = (strSort (Support.Prims.snd x))
+in (Support.String.strcat (Support.String.strcat (Support.Prims.fst x) ":") _70_22992))
 end
 | App ((op, tms)) -> begin
-(let _70_22994 = (let _70_22993 = (let _70_22992 = (Support.List.map (fun ( t ) -> t.hash) tms)
-in (Support.All.pipe_right _70_22992 (Support.String.concat " ")))
-in (Support.String.strcat (Support.String.strcat "(" (op_to_string op)) _70_22993))
-in (Support.String.strcat _70_22994 ")"))
+(let _70_22996 = (let _70_22995 = (let _70_22994 = (Support.List.map (fun ( t ) -> t.hash) tms)
+in (Support.All.pipe_right _70_22994 (Support.String.concat " ")))
+in (Support.String.strcat (Support.String.strcat "(" (op_to_string op)) _70_22995))
+in (Support.String.strcat _70_22996 ")"))
 end
 | Quant ((qop, pats, wopt, sorts, body)) -> begin
-(let _70_23002 = (let _70_22995 = (Support.List.map strSort sorts)
-in (Support.All.pipe_right _70_22995 (Support.String.concat " ")))
-in (let _70_23001 = (weightToSmt wopt)
-in (let _70_23000 = (let _70_22999 = (Support.All.pipe_right pats (Support.List.map (fun ( pats ) -> (let _70_22998 = (Support.List.map (fun ( p ) -> p.hash) pats)
-in (Support.All.pipe_right _70_22998 (Support.String.concat " "))))))
-in (Support.All.pipe_right _70_22999 (Support.String.concat "; ")))
-in (Support.Microsoft.FStar.Util.format5 "(%s (%s)(! %s %s %s))" (qop_to_string qop) _70_23002 body.hash _70_23001 _70_23000))))
+(let _70_23004 = (let _70_22997 = (Support.List.map strSort sorts)
+in (Support.All.pipe_right _70_22997 (Support.String.concat " ")))
+in (let _70_23003 = (weightToSmt wopt)
+in (let _70_23002 = (let _70_23001 = (Support.All.pipe_right pats (Support.List.map (fun ( pats ) -> (let _70_23000 = (Support.List.map (fun ( p ) -> p.hash) pats)
+in (Support.All.pipe_right _70_23000 (Support.String.concat " "))))))
+in (Support.All.pipe_right _70_23001 (Support.String.concat "; ")))
+in (Support.Microsoft.FStar.Util.format5 "(%s (%s)(! %s %s %s))" (qop_to_string qop) _70_23004 body.hash _70_23003 _70_23002))))
 end))
 
-let all_terms_l = (let _70_23004 = (let _70_23003 = (Support.Microsoft.FStar.Util.smap_create 10000)
-in (_70_23003)::[])
-in (ref _70_23004))
+let all_terms_l = (let _70_23006 = (let _70_23005 = (Support.Microsoft.FStar.Util.smap_create 10000)
+in (_70_23005)::[])
+in (ref _70_23006))
 
 let all_terms = (fun ( _49_172 ) -> (match (()) with
 | () -> begin
-(let _70_23007 = (Support.ST.read all_terms_l)
-in (Support.List.hd _70_23007))
+(let _70_23009 = (Support.ST.read all_terms_l)
+in (Support.List.hd _70_23009))
 end))
 
 let push = (fun ( _49_173 ) -> ())
@@ -620,16 +620,16 @@ let pop = (fun ( _49_174 ) -> ())
 let commit_mark = (fun ( _49_175 ) -> ())
 
 let mk = (fun ( t ) -> (let key = (hash_of_term' t)
-in (match ((let _70_23016 = (all_terms ())
-in (Support.Microsoft.FStar.Util.smap_try_find _70_23016 key))) with
+in (match ((let _70_23018 = (all_terms ())
+in (Support.Microsoft.FStar.Util.smap_try_find _70_23018 key))) with
 | Some (tm) -> begin
 tm
 end
 | None -> begin
-(let tm = (let _70_23017 = (Support.Microsoft.FStar.Util.mk_ref None)
-in {tm = t; hash = key; freevars = _70_23017})
-in (let _49_182 = (let _70_23018 = (all_terms ())
-in (Support.Microsoft.FStar.Util.smap_add _70_23018 key tm))
+(let tm = (let _70_23019 = (Support.Microsoft.FStar.Util.mk_ref None)
+in {tm = t; hash = key; freevars = _70_23019})
+in (let _49_182 = (let _70_23020 = (all_terms ())
+in (Support.Microsoft.FStar.Util.smap_add _70_23020 key tm))
 in tm))
 end)))
 
@@ -639,8 +639,8 @@ let mkFalse = (mk (App ((False, []))))
 
 let mkInteger = (fun ( i ) -> (mk (Integer (i))))
 
-let mkInteger' = (fun ( i ) -> (let _70_23023 = (Support.Microsoft.FStar.Util.string_of_int i)
-in (mkInteger _70_23023)))
+let mkInteger' = (fun ( i ) -> (let _70_23025 = (Support.Microsoft.FStar.Util.string_of_int i)
+in (mkInteger _70_23025)))
 
 let mkBoundV = (fun ( i ) -> (mk (BoundV (i))))
 
@@ -726,10 +726,10 @@ end
 t2
 end
 | (_49_345, App ((Imp, t1'::t2'::[]))) -> begin
-(let _70_23042 = (let _70_23041 = (let _70_23040 = (mkAnd (t1, t1'))
-in (_70_23040)::(t2')::[])
-in (Imp, _70_23041))
-in (mkApp' _70_23042))
+(let _70_23044 = (let _70_23043 = (let _70_23042 = (mkAnd (t1, t1'))
+in (_70_23042)::(t2')::[])
+in (Imp, _70_23043))
+in (mkApp' _70_23044))
 end
 | _49_354 -> begin
 (mkApp' (Imp, (t1)::(t2)::[]))
@@ -772,9 +772,9 @@ let mkITE = (fun ( _49_363 ) -> (match (_49_363) with
 mkTrue
 end
 | (App ((True, _49_377)), _49_381) -> begin
-(let _70_23063 = (let _70_23062 = (mkNot t1)
-in (_70_23062, t3))
-in (mkImp _70_23063))
+(let _70_23065 = (let _70_23064 = (mkNot t1)
+in (_70_23064, t3))
+in (mkImp _70_23065))
 end
 | (_49_384, App ((True, _49_387))) -> begin
 (mkImp (t1, t2))
@@ -836,16 +836,16 @@ end
 end)
 end
 | App ((op, tms)) -> begin
-(let _70_23081 = (let _70_23080 = (Support.List.map (aux ix) tms)
-in (op, _70_23080))
-in (mkApp' _70_23081))
+(let _70_23083 = (let _70_23082 = (Support.List.map (aux ix) tms)
+in (op, _70_23082))
+in (mkApp' _70_23083))
 end
 | Quant ((qop, pats, wopt, vars, body)) -> begin
 (let n = (Support.List.length vars)
-in (let _70_23084 = (let _70_23083 = (Support.All.pipe_right pats (Support.List.map (Support.List.map (aux (ix + n)))))
-in (let _70_23082 = (aux (ix + n) body)
-in (qop, _70_23083, wopt, vars, _70_23082)))
-in (mkQuant _70_23084)))
+in (let _70_23086 = (let _70_23085 = (Support.All.pipe_right pats (Support.List.map (Support.List.map (aux (ix + n)))))
+in (let _70_23084 = (aux (ix + n) body)
+in (qop, _70_23085, wopt, vars, _70_23084)))
+in (mkQuant _70_23086)))
 end)
 end))
 in (aux 0 t)))))
@@ -865,27 +865,27 @@ t
 end)
 end
 | App ((op, tms)) -> begin
-(let _70_23094 = (let _70_23093 = (Support.List.map (aux shift) tms)
-in (op, _70_23093))
-in (mkApp' _70_23094))
+(let _70_23096 = (let _70_23095 = (Support.List.map (aux shift) tms)
+in (op, _70_23095))
+in (mkApp' _70_23096))
 end
 | Quant ((qop, pats, wopt, vars, body)) -> begin
 (let m = (Support.List.length vars)
 in (let shift = (shift + m)
-in (let _70_23097 = (let _70_23096 = (Support.All.pipe_right pats (Support.List.map (Support.List.map (aux shift))))
-in (let _70_23095 = (aux shift body)
-in (qop, _70_23096, wopt, vars, _70_23095)))
-in (mkQuant _70_23097))))
+in (let _70_23099 = (let _70_23098 = (Support.All.pipe_right pats (Support.List.map (Support.List.map (aux shift))))
+in (let _70_23097 = (aux shift body)
+in (qop, _70_23098, wopt, vars, _70_23097)))
+in (mkQuant _70_23099))))
 end))
 in (aux 0 t))))
 
 let mkQuant' = (fun ( _49_486 ) -> (match (_49_486) with
 | (qop, pats, wopt, vars, body) -> begin
-(let _70_23103 = (let _70_23102 = (Support.All.pipe_right pats (Support.List.map (Support.List.map (abstr vars))))
-in (let _70_23101 = (Support.List.map fv_sort vars)
-in (let _70_23100 = (abstr vars body)
-in (qop, _70_23102, wopt, _70_23101, _70_23100))))
-in (mkQuant _70_23103))
+(let _70_23105 = (let _70_23104 = (Support.All.pipe_right pats (Support.List.map (Support.List.map (abstr vars))))
+in (let _70_23103 = (Support.List.map fv_sort vars)
+in (let _70_23102 = (abstr vars body)
+in (qop, _70_23104, wopt, _70_23103, _70_23102))))
+in (mkQuant _70_23105))
 end))
 
 let mkForall'' = (fun ( _49_491 ) -> (match (_49_491) with
@@ -1050,98 +1050,98 @@ decl list
 
 let mkDefineFun = (fun ( _49_528 ) -> (match (_49_528) with
 | (nm, vars, s, tm, c) -> begin
-(let _70_23204 = (let _70_23203 = (Support.List.map fv_sort vars)
-in (let _70_23202 = (abstr vars tm)
-in (nm, _70_23203, s, _70_23202, c)))
-in DefineFun (_70_23204))
+(let _70_23206 = (let _70_23205 = (Support.List.map fv_sort vars)
+in (let _70_23204 = (abstr vars tm)
+in (nm, _70_23205, s, _70_23204, c)))
+in DefineFun (_70_23206))
 end))
 
-let constr_id_of_sort = (fun ( sort ) -> (let _70_23207 = (strSort sort)
-in (Support.Microsoft.FStar.Util.format1 "%s_constr_id" _70_23207)))
+let constr_id_of_sort = (fun ( sort ) -> (let _70_23209 = (strSort sort)
+in (Support.Microsoft.FStar.Util.format1 "%s_constr_id" _70_23209)))
 
 let fresh_token = (fun ( _49_532 ) ( id ) -> (match (_49_532) with
 | (tok_name, sort) -> begin
-(let _70_23220 = (let _70_23219 = (let _70_23218 = (let _70_23217 = (mkInteger' id)
-in (let _70_23216 = (let _70_23215 = (let _70_23214 = (constr_id_of_sort sort)
-in (let _70_23213 = (let _70_23212 = (mkApp (tok_name, []))
-in (_70_23212)::[])
-in (_70_23214, _70_23213)))
-in (mkApp _70_23215))
-in (_70_23217, _70_23216)))
-in (mkEq _70_23218))
-in (_70_23219, Some ("fresh token")))
-in Assume (_70_23220))
+(let _70_23222 = (let _70_23221 = (let _70_23220 = (let _70_23219 = (mkInteger' id)
+in (let _70_23218 = (let _70_23217 = (let _70_23216 = (constr_id_of_sort sort)
+in (let _70_23215 = (let _70_23214 = (mkApp (tok_name, []))
+in (_70_23214)::[])
+in (_70_23216, _70_23215)))
+in (mkApp _70_23217))
+in (_70_23219, _70_23218)))
+in (mkEq _70_23220))
+in (_70_23221, Some ("fresh token")))
+in Assume (_70_23222))
 end))
 
 let constructor_to_decl = (fun ( _49_538 ) -> (match (_49_538) with
 | (name, projectors, sort, id) -> begin
 (let id = (Support.Microsoft.FStar.Util.string_of_int id)
-in (let cdecl = (let _70_23224 = (let _70_23223 = (Support.All.pipe_right projectors (Support.List.map Support.Prims.snd))
-in (name, _70_23223, sort, Some ("Constructor")))
-in DeclFun (_70_23224))
+in (let cdecl = (let _70_23226 = (let _70_23225 = (Support.All.pipe_right projectors (Support.List.map Support.Prims.snd))
+in (name, _70_23225, sort, Some ("Constructor")))
+in DeclFun (_70_23226))
 in (let n_bvars = (Support.List.length projectors)
-in (let bvar_name = (fun ( i ) -> (let _70_23227 = (Support.Microsoft.FStar.Util.string_of_int i)
-in (Support.String.strcat "x_" _70_23227)))
+in (let bvar_name = (fun ( i ) -> (let _70_23229 = (Support.Microsoft.FStar.Util.string_of_int i)
+in (Support.String.strcat "x_" _70_23229)))
 in (let bvar_index = (fun ( i ) -> (n_bvars - (i + 1)))
-in (let bvar = (fun ( i ) ( s ) -> (let _70_23235 = (let _70_23234 = (bvar_name i)
-in (_70_23234, s))
-in (mkFreeV _70_23235)))
+in (let bvar = (fun ( i ) ( s ) -> (let _70_23237 = (let _70_23236 = (bvar_name i)
+in (_70_23236, s))
+in (mkFreeV _70_23237)))
 in (let bvars = (Support.All.pipe_right projectors (Support.List.mapi (fun ( i ) ( _49_553 ) -> (match (_49_553) with
 | (_49_551, s) -> begin
 (bvar i s)
 end))))
 in (let bvar_names = (Support.List.map fv_of_term bvars)
 in (let capp = (mkApp (name, bvars))
-in (let cid_app = (let _70_23239 = (let _70_23238 = (constr_id_of_sort sort)
-in (_70_23238, (capp)::[]))
-in (mkApp _70_23239))
-in (let cid = (let _70_23245 = (let _70_23244 = (let _70_23243 = (let _70_23242 = (let _70_23241 = (let _70_23240 = (mkInteger id)
-in (_70_23240, cid_app))
-in (mkEq _70_23241))
-in ([], bvar_names, _70_23242))
-in (mkForall _70_23243))
-in (_70_23244, Some ("Constructor distinct")))
-in Assume (_70_23245))
+in (let cid_app = (let _70_23241 = (let _70_23240 = (constr_id_of_sort sort)
+in (_70_23240, (capp)::[]))
+in (mkApp _70_23241))
+in (let cid = (let _70_23247 = (let _70_23246 = (let _70_23245 = (let _70_23244 = (let _70_23243 = (let _70_23242 = (mkInteger id)
+in (_70_23242, cid_app))
+in (mkEq _70_23243))
+in ([], bvar_names, _70_23244))
+in (mkForall _70_23245))
+in (_70_23246, Some ("Constructor distinct")))
+in Assume (_70_23247))
 in (let disc_name = (Support.String.strcat "is-" name)
 in (let xfv = ("x", sort)
 in (let xx = (mkFreeV xfv)
-in (let disc_eq = (let _70_23250 = (let _70_23249 = (let _70_23247 = (let _70_23246 = (constr_id_of_sort sort)
-in (_70_23246, (xx)::[]))
-in (mkApp _70_23247))
-in (let _70_23248 = (mkInteger id)
-in (_70_23249, _70_23248)))
-in (mkEq _70_23250))
+in (let disc_eq = (let _70_23252 = (let _70_23251 = (let _70_23249 = (let _70_23248 = (constr_id_of_sort sort)
+in (_70_23248, (xx)::[]))
+in (mkApp _70_23249))
+in (let _70_23250 = (mkInteger id)
+in (_70_23251, _70_23250)))
+in (mkEq _70_23252))
 in (let proj_terms = (Support.All.pipe_right projectors (Support.List.map (fun ( _49_565 ) -> (match (_49_565) with
 | (proj, s) -> begin
 (mkApp (proj, (xx)::[]))
 end))))
-in (let disc_inv_body = (let _70_23253 = (let _70_23252 = (mkApp (name, proj_terms))
-in (xx, _70_23252))
-in (mkEq _70_23253))
+in (let disc_inv_body = (let _70_23255 = (let _70_23254 = (mkApp (name, proj_terms))
+in (xx, _70_23254))
+in (mkEq _70_23255))
 in (let disc_ax = (mkAnd (disc_eq, disc_inv_body))
 in (let disc = (mkDefineFun (disc_name, (xfv)::[], Bool_sort, disc_ax, Some ("Discriminator definition")))
-in (let projs = (let _70_23264 = (Support.All.pipe_right projectors (Support.List.mapi (fun ( i ) ( _49_573 ) -> (match (_49_573) with
+in (let projs = (let _70_23266 = (Support.All.pipe_right projectors (Support.List.mapi (fun ( i ) ( _49_573 ) -> (match (_49_573) with
 | (name, s) -> begin
 (let cproj_app = (mkApp (name, (capp)::[]))
-in (let _70_23263 = (let _70_23262 = (let _70_23261 = (let _70_23260 = (let _70_23259 = (let _70_23258 = (let _70_23257 = (let _70_23256 = (bvar i s)
-in (cproj_app, _70_23256))
-in (mkEq _70_23257))
-in ((capp)::[], bvar_names, _70_23258))
-in (mkForall _70_23259))
-in (_70_23260, Some ("Projection inverse")))
-in Assume (_70_23261))
-in (_70_23262)::[])
-in (DeclFun ((name, (sort)::[], s, Some ("Projector"))))::_70_23263))
+in (let _70_23265 = (let _70_23264 = (let _70_23263 = (let _70_23262 = (let _70_23261 = (let _70_23260 = (let _70_23259 = (let _70_23258 = (bvar i s)
+in (cproj_app, _70_23258))
+in (mkEq _70_23259))
+in ((capp)::[], bvar_names, _70_23260))
+in (mkForall _70_23261))
+in (_70_23262, Some ("Projection inverse")))
+in Assume (_70_23263))
+in (_70_23264)::[])
+in (DeclFun ((name, (sort)::[], s, Some ("Projector"))))::_70_23265))
 end))))
-in (Support.All.pipe_right _70_23264 Support.List.flatten))
-in (let _70_23271 = (let _70_23267 = (let _70_23266 = (let _70_23265 = (Support.Microsoft.FStar.Util.format1 "<start constructor %s>" name)
-in Caption (_70_23265))
-in (_70_23266)::(cdecl)::(cid)::projs)
-in (Support.List.append _70_23267 ((disc)::[])))
-in (let _70_23270 = (let _70_23269 = (let _70_23268 = (Support.Microsoft.FStar.Util.format1 "</end constructor %s>" name)
-in Caption (_70_23268))
-in (_70_23269)::[])
-in (Support.List.append _70_23271 _70_23270)))))))))))))))))))))))
+in (Support.All.pipe_right _70_23266 Support.List.flatten))
+in (let _70_23273 = (let _70_23269 = (let _70_23268 = (let _70_23267 = (Support.Microsoft.FStar.Util.format1 "<start constructor %s>" name)
+in Caption (_70_23267))
+in (_70_23268)::(cdecl)::(cid)::projs)
+in (Support.List.append _70_23269 ((disc)::[])))
+in (let _70_23272 = (let _70_23271 = (let _70_23270 = (Support.Microsoft.FStar.Util.format1 "</end constructor %s>" name)
+in Caption (_70_23270))
+in (_70_23271)::[])
+in (Support.List.append _70_23273 _70_23272)))))))))))))))))))))))
 end))
 
 let name_binders_inner = (fun ( outer_names ) ( start ) ( sorts ) -> (let _49_595 = (Support.All.pipe_right sorts (Support.List.fold_left (fun ( _49_582 ) ( s ) -> (match (_49_582) with
@@ -1156,11 +1156,11 @@ end
 | _49_587 -> begin
 "@u"
 end)
-in (let nm = (let _70_23280 = (Support.Microsoft.FStar.Util.string_of_int n)
-in (Support.String.strcat prefix _70_23280))
+in (let nm = (let _70_23282 = (Support.Microsoft.FStar.Util.string_of_int n)
+in (Support.String.strcat prefix _70_23282))
 in (let names = ((nm, s))::names
-in (let b = (let _70_23281 = (strSort s)
-in (Support.Microsoft.FStar.Util.format2 "(%s %s)" nm _70_23281))
+in (let b = (let _70_23283 = (strSort s)
+in (Support.Microsoft.FStar.Util.format2 "(%s %s)" nm _70_23283))
 in (names, (b)::binders, (n + 1))))))
 end)) (outer_names, [], start)))
 in (match (_49_595) with
@@ -1179,8 +1179,8 @@ let termToSmt = (fun ( t ) -> (let rec aux = (fun ( n ) ( names ) ( t ) -> (matc
 i
 end
 | BoundV (i) -> begin
-(let _70_23292 = (Support.List.nth names i)
-in (Support.All.pipe_right _70_23292 Support.Prims.fst))
+(let _70_23294 = (Support.List.nth names i)
+in (Support.All.pipe_right _70_23294 Support.Prims.fst))
 end
 | FreeV (x) -> begin
 (Support.Prims.fst x)
@@ -1189,9 +1189,9 @@ end
 (op_to_string op)
 end
 | App ((op, tms)) -> begin
-(let _70_23294 = (let _70_23293 = (Support.List.map (aux n names) tms)
-in (Support.All.pipe_right _70_23293 (Support.String.concat "\n")))
-in (Support.Microsoft.FStar.Util.format2 "(%s %s)" (op_to_string op) _70_23294))
+(let _70_23296 = (let _70_23295 = (Support.List.map (aux n names) tms)
+in (Support.All.pipe_right _70_23295 (Support.String.concat "\n")))
+in (Support.Microsoft.FStar.Util.format2 "(%s %s)" (op_to_string op) _70_23296))
 end
 | Quant ((qop, pats, wopt, sorts, body)) -> begin
 (let _49_630 = (name_binders_inner names n sorts)
@@ -1203,21 +1203,21 @@ in (let pats_str = (match (pats) with
 ""
 end
 | _49_636 -> begin
-(let _70_23300 = (Support.All.pipe_right pats (Support.List.map (fun ( pats ) -> (let _70_23299 = (let _70_23298 = (Support.List.map (fun ( p ) -> (let _70_23297 = (aux n names p)
-in (Support.Microsoft.FStar.Util.format1 "%s" _70_23297))) pats)
-in (Support.String.concat " " _70_23298))
-in (Support.Microsoft.FStar.Util.format1 "\n:pattern (%s)" _70_23299)))))
-in (Support.All.pipe_right _70_23300 (Support.String.concat "\n")))
+(let _70_23302 = (Support.All.pipe_right pats (Support.List.map (fun ( pats ) -> (let _70_23301 = (let _70_23300 = (Support.List.map (fun ( p ) -> (let _70_23299 = (aux n names p)
+in (Support.Microsoft.FStar.Util.format1 "%s" _70_23299))) pats)
+in (Support.String.concat " " _70_23300))
+in (Support.Microsoft.FStar.Util.format1 "\n:pattern (%s)" _70_23301)))))
+in (Support.All.pipe_right _70_23302 (Support.String.concat "\n")))
 end)
 in (match ((pats, wopt)) with
 | (([]::[], None)) | (([], None)) -> begin
-(let _70_23301 = (aux n names body)
-in (Support.Microsoft.FStar.Util.format3 "(%s (%s)\n %s)" (qop_to_string qop) binders _70_23301))
+(let _70_23303 = (aux n names body)
+in (Support.Microsoft.FStar.Util.format3 "(%s (%s)\n %s)" (qop_to_string qop) binders _70_23303))
 end
 | _49_648 -> begin
-(let _70_23303 = (aux n names body)
-in (let _70_23302 = (weightToSmt wopt)
-in (Support.Microsoft.FStar.Util.format5 "(%s (%s)\n (! %s\n %s %s))" (qop_to_string qop) binders _70_23303 _70_23302 pats_str)))
+(let _70_23305 = (aux n names body)
+in (let _70_23304 = (weightToSmt wopt)
+in (Support.Microsoft.FStar.Util.format5 "(%s (%s)\n (! %s\n %s %s))" (qop_to_string qop) binders _70_23305 _70_23304 pats_str)))
 end)))
 end))
 end))
@@ -1247,41 +1247,41 @@ let rec declToSmt = (fun ( z3options ) ( decl ) -> (match (decl) with
 (mkPrelude z3options)
 end
 | Caption (c) -> begin
-(let _70_23312 = (Support.All.pipe_right (Support.Microsoft.FStar.Util.splitlines c) (fun ( _49_7 ) -> (match (_49_7) with
+(let _70_23314 = (Support.All.pipe_right (Support.Microsoft.FStar.Util.splitlines c) (fun ( _49_7 ) -> (match (_49_7) with
 | [] -> begin
 ""
 end
 | h::t -> begin
 h
 end)))
-in (Support.Microsoft.FStar.Util.format1 "\n; %s" _70_23312))
+in (Support.Microsoft.FStar.Util.format1 "\n; %s" _70_23314))
 end
 | DeclFun ((f, argsorts, retsort, c)) -> begin
 (let l = (Support.List.map strSort argsorts)
-in (let _70_23314 = (caption_to_string c)
-in (let _70_23313 = (strSort retsort)
-in (Support.Microsoft.FStar.Util.format4 "%s(declare-fun %s (%s) %s)" _70_23314 f (Support.String.concat " " l) _70_23313))))
+in (let _70_23316 = (caption_to_string c)
+in (let _70_23315 = (strSort retsort)
+in (Support.Microsoft.FStar.Util.format4 "%s(declare-fun %s (%s) %s)" _70_23316 f (Support.String.concat " " l) _70_23315))))
 end
 | DefineFun ((f, arg_sorts, retsort, body, c)) -> begin
 (let _49_686 = (name_binders arg_sorts)
 in (match (_49_686) with
 | (names, binders) -> begin
-(let body = (let _70_23315 = (Support.List.map mkFreeV names)
-in (inst _70_23315 body))
-in (let _70_23318 = (caption_to_string c)
-in (let _70_23317 = (strSort retsort)
-in (let _70_23316 = (termToSmt body)
-in (Support.Microsoft.FStar.Util.format5 "%s(define-fun %s (%s) %s\n %s)" _70_23318 f (Support.String.concat " " binders) _70_23317 _70_23316)))))
+(let body = (let _70_23317 = (Support.List.map mkFreeV names)
+in (inst _70_23317 body))
+in (let _70_23320 = (caption_to_string c)
+in (let _70_23319 = (strSort retsort)
+in (let _70_23318 = (termToSmt body)
+in (Support.Microsoft.FStar.Util.format5 "%s(define-fun %s (%s) %s\n %s)" _70_23320 f (Support.String.concat " " binders) _70_23319 _70_23318)))))
 end))
 end
 | Assume ((t, c)) -> begin
-(let _70_23320 = (caption_to_string c)
-in (let _70_23319 = (termToSmt t)
-in (Support.Microsoft.FStar.Util.format2 "%s(assert %s)" _70_23320 _70_23319)))
+(let _70_23322 = (caption_to_string c)
+in (let _70_23321 = (termToSmt t)
+in (Support.Microsoft.FStar.Util.format2 "%s(assert %s)" _70_23322 _70_23321)))
 end
 | Eval (t) -> begin
-(let _70_23321 = (termToSmt t)
-in (Support.Microsoft.FStar.Util.format1 "(eval %s)" _70_23321))
+(let _70_23323 = (termToSmt t)
+in (Support.Microsoft.FStar.Util.format1 "(eval %s)" _70_23323))
 end
 | Echo (s) -> begin
 (Support.Microsoft.FStar.Util.format1 "(echo \"%s\")" s)
@@ -1297,32 +1297,32 @@ end
 end))
 and mkPrelude = (fun ( z3options ) -> (let basic = (Support.String.strcat z3options "(declare-sort Ref)\n(declare-fun Ref_constr_id (Ref) Int)\n\n(declare-sort String)\n(declare-fun String_constr_id (String) Int)\n\n(declare-sort Kind)\n(declare-fun Kind_constr_id (Kind) Int)\n\n(declare-sort Type)\n(declare-fun Type_constr_id (Type) Int)\n\n(declare-sort Term)\n(declare-fun Term_constr_id (Term) Int)\n(declare-datatypes () ((Fuel \n(ZFuel) \n(SFuel (prec Fuel)))))\n(declare-fun MaxIFuel () Fuel)\n(declare-fun MaxFuel () Fuel)\n(declare-fun PreKind (Type) Kind)\n(declare-fun PreType (Term) Type)\n(declare-fun Valid (Type) Bool)\n(declare-fun HasKind (Type Kind) Bool)\n(declare-fun HasType (Term Type) Bool)\n(define-fun  IsTyped ((x Term)) Bool\n(exists ((t Type)) (HasType x t)))\n(declare-fun HasTypeFuel (Fuel Term Type) Bool)\n(declare-fun ApplyEF (Term Fuel) Term)\n(declare-fun ApplyEE (Term Term) Term)\n(declare-fun ApplyET (Term Type) Term)\n(declare-fun ApplyTE (Type Term) Type)\n(declare-fun ApplyTT (Type Type) Type)\n(declare-fun Rank (Term) Int)\n(declare-fun Closure (Term) Term)\n(declare-fun ConsTerm (Term Term) Term)\n(declare-fun ConsType (Type Term) Term)\n(declare-fun ConsFuel (Fuel Term) Term)\n(declare-fun Precedes (Term Term) Type)\n(assert (forall ((t Type))\n(! (implies (exists ((e Term)) (HasType e t))\n(Valid t))\n:pattern ((Valid t)))))\n(assert (forall ((e Term) (t Type))\n(!  (= (HasType e t)\n(HasTypeFuel MaxIFuel e t))\n:pattern ((HasType e t)))))\n(assert (forall ((f Fuel) (e Term) (t Type)) \n(! (= (HasTypeFuel (SFuel f) e t)\n(HasTypeFuel f e t))\n:pattern ((HasTypeFuel (SFuel f) e t)))))\n(assert (forall ((t1 Term) (t2 Term))\n(! (iff (Valid (Precedes t1 t2)) \n(< (Rank t1) (Rank t2)))\n:pattern ((Precedes t1 t2)))))\n(define-fun Prims.Precedes ((a Type) (b Type) (t1 Term) (t2 Term)) Type\n(Precedes t1 t2))\n")
 in (let constrs = (("String_const", (("String_const_proj_0", Int_sort))::[], String_sort, 0))::(("Kind_type", [], Kind_sort, 0))::(("Kind_arrow", (("Kind_arrow_id", Int_sort))::[], Kind_sort, 1))::(("Kind_uvar", (("Kind_uvar_fst", Int_sort))::[], Kind_sort, 2))::(("Typ_fun", (("Typ_fun_id", Int_sort))::[], Type_sort, 1))::(("Typ_app", (("Typ_app_fst", Type_sort))::(("Typ_app_snd", Type_sort))::[], Type_sort, 2))::(("Typ_dep", (("Typ_dep_fst", Type_sort))::(("Typ_dep_snd", Term_sort))::[], Type_sort, 3))::(("Typ_uvar", (("Typ_uvar_fst", Int_sort))::[], Type_sort, 4))::(("Term_unit", [], Term_sort, 0))::(("BoxInt", (("BoxInt_proj_0", Int_sort))::[], Term_sort, 1))::(("BoxBool", (("BoxBool_proj_0", Bool_sort))::[], Term_sort, 2))::(("BoxString", (("BoxString_proj_0", String_sort))::[], Term_sort, 3))::(("BoxRef", (("BoxRef_proj_0", Ref_sort))::[], Term_sort, 4))::(("Exp_uvar", (("Exp_uvar_fst", Int_sort))::[], Term_sort, 5))::(("LexCons", (("LexCons_0", Term_sort))::(("LexCons_1", Term_sort))::[], Term_sort, 6))::[]
-in (let bcons = (let _70_23324 = (let _70_23323 = (Support.All.pipe_right constrs (Support.List.collect constructor_to_decl))
-in (Support.All.pipe_right _70_23323 (Support.List.map (declToSmt z3options))))
-in (Support.All.pipe_right _70_23324 (Support.String.concat "\n")))
+in (let bcons = (let _70_23326 = (let _70_23325 = (Support.All.pipe_right constrs (Support.List.collect constructor_to_decl))
+in (Support.All.pipe_right _70_23325 (Support.List.map (declToSmt z3options))))
+in (Support.All.pipe_right _70_23326 (Support.String.concat "\n")))
 in (let lex_ordering = "\n(define-fun is-Prims.LexCons ((t Term)) Bool \n(is-LexCons t))\n(assert (forall ((x1 Term) (x2 Term) (y1 Term) (y2 Term))\n(iff (Valid (Precedes (LexCons x1 x2) (LexCons y1 y2)))\n(or (Valid (Precedes x1 y1))\n(and (= x1 y1)\n(Valid (Precedes x2 y2)))))))\n"
 in (Support.String.strcat (Support.String.strcat basic bcons) lex_ordering))))))
 
 let mk_Kind_type = (mkApp ("Kind_type", []))
 
-let mk_Kind_uvar = (fun ( i ) -> (let _70_23329 = (let _70_23328 = (let _70_23327 = (mkInteger' i)
-in (_70_23327)::[])
-in ("Kind_uvar", _70_23328))
-in (mkApp _70_23329)))
+let mk_Kind_uvar = (fun ( i ) -> (let _70_23331 = (let _70_23330 = (let _70_23329 = (mkInteger' i)
+in (_70_23329)::[])
+in ("Kind_uvar", _70_23330))
+in (mkApp _70_23331)))
 
 let mk_Typ_app = (fun ( t1 ) ( t2 ) -> (mkApp ("Typ_app", (t1)::(t2)::[])))
 
 let mk_Typ_dep = (fun ( t1 ) ( t2 ) -> (mkApp ("Typ_dep", (t1)::(t2)::[])))
 
-let mk_Typ_uvar = (fun ( i ) -> (let _70_23342 = (let _70_23341 = (let _70_23340 = (mkInteger' i)
-in (_70_23340)::[])
-in ("Typ_uvar", _70_23341))
-in (mkApp _70_23342)))
+let mk_Typ_uvar = (fun ( i ) -> (let _70_23344 = (let _70_23343 = (let _70_23342 = (mkInteger' i)
+in (_70_23342)::[])
+in ("Typ_uvar", _70_23343))
+in (mkApp _70_23344)))
 
-let mk_Exp_uvar = (fun ( i ) -> (let _70_23347 = (let _70_23346 = (let _70_23345 = (mkInteger' i)
-in (_70_23345)::[])
-in ("Exp_uvar", _70_23346))
-in (mkApp _70_23347)))
+let mk_Exp_uvar = (fun ( i ) -> (let _70_23349 = (let _70_23348 = (let _70_23347 = (mkInteger' i)
+in (_70_23347)::[])
+in ("Exp_uvar", _70_23348))
+in (mkApp _70_23349)))
 
 let mk_Term_unit = (mkApp ("Term_unit", []))
 
@@ -1420,13 +1420,13 @@ let mk_ApplyEE = (fun ( e ) ( e' ) -> (mkApp ("ApplyEE", (e)::(e')::[])))
 
 let mk_ApplyEF = (fun ( e ) ( f ) -> (mkApp ("ApplyEF", (e)::(f)::[])))
 
-let mk_String_const = (fun ( i ) -> (let _70_23432 = (let _70_23431 = (let _70_23430 = (mkInteger' i)
-in (_70_23430)::[])
-in ("String_const", _70_23431))
-in (mkApp _70_23432)))
+let mk_String_const = (fun ( i ) -> (let _70_23434 = (let _70_23433 = (let _70_23432 = (mkInteger' i)
+in (_70_23432)::[])
+in ("String_const", _70_23433))
+in (mkApp _70_23434)))
 
-let mk_Precedes = (fun ( x1 ) ( x2 ) -> (let _70_23437 = (mkApp ("Precedes", (x1)::(x2)::[]))
-in (Support.All.pipe_right _70_23437 mk_Valid)))
+let mk_Precedes = (fun ( x1 ) ( x2 ) -> (let _70_23439 = (mkApp ("Precedes", (x1)::(x2)::[]))
+in (Support.All.pipe_right _70_23439 mk_Valid)))
 
 let mk_LexCons = (fun ( x1 ) ( x2 ) -> (mkApp ("LexCons", (x1)::(x2)::[])))
 
@@ -1435,10 +1435,10 @@ let rec n_fuel = (fun ( n ) -> (match ((n = 0)) with
 (mkApp ("ZFuel", []))
 end
 | false -> begin
-(let _70_23446 = (let _70_23445 = (let _70_23444 = (n_fuel (n - 1))
-in (_70_23444)::[])
-in ("SFuel", _70_23445))
-in (mkApp _70_23446))
+(let _70_23448 = (let _70_23447 = (let _70_23446 = (n_fuel (n - 1))
+in (_70_23446)::[])
+in ("SFuel", _70_23447))
+in (mkApp _70_23448))
 end))
 
 let fuel_2 = (n_fuel 2)
@@ -1447,8 +1447,8 @@ let fuel_100 = (n_fuel 100)
 
 let mk_and_opt = (fun ( p1 ) ( p2 ) -> (match ((p1, p2)) with
 | (Some (p1), Some (p2)) -> begin
-(let _70_23451 = (mkAnd (p1, p2))
-in Some (_70_23451))
+(let _70_23453 = (mkAnd (p1, p2))
+in Some (_70_23453))
 end
 | ((Some (p), None)) | ((None, Some (p))) -> begin
 Some (p)
@@ -1480,26 +1480,26 @@ let rec print_smt_term = (fun ( t ) -> (match (t.tm) with
 (Support.Microsoft.FStar.Util.format1 "Integer %s" n)
 end
 | BoundV (n) -> begin
-(let _70_23468 = (Support.Microsoft.FStar.Util.string_of_int n)
-in (Support.Microsoft.FStar.Util.format1 "BoundV %s" _70_23468))
+(let _70_23470 = (Support.Microsoft.FStar.Util.string_of_int n)
+in (Support.Microsoft.FStar.Util.format1 "BoundV %s" _70_23470))
 end
 | FreeV (fv) -> begin
 (Support.Microsoft.FStar.Util.format1 "FreeV %s" (Support.Prims.fst fv))
 end
 | App ((op, l)) -> begin
-(let _70_23469 = (print_smt_term_list l)
-in (Support.Microsoft.FStar.Util.format2 "App %s [ %s ]" (op_to_string op) _70_23469))
+(let _70_23471 = (print_smt_term_list l)
+in (Support.Microsoft.FStar.Util.format2 "App %s [ %s ]" (op_to_string op) _70_23471))
 end
 | Quant ((qop, l, _49_820, _49_822, t)) -> begin
-(let _70_23471 = (print_smt_term_list_list l)
-in (let _70_23470 = (print_smt_term t)
-in (Support.Microsoft.FStar.Util.format3 "Quant %s %s %s" (qop_to_string qop) _70_23471 _70_23470)))
+(let _70_23473 = (print_smt_term_list_list l)
+in (let _70_23472 = (print_smt_term t)
+in (Support.Microsoft.FStar.Util.format3 "Quant %s %s %s" (qop_to_string qop) _70_23473 _70_23472)))
 end))
-and print_smt_term_list = (fun ( l ) -> (Support.List.fold_left (fun ( s ) ( t ) -> (let _70_23475 = (print_smt_term t)
-in (Support.String.strcat (Support.String.strcat s "; ") _70_23475))) "" l))
-and print_smt_term_list_list = (fun ( l ) -> (Support.List.fold_left (fun ( s ) ( l ) -> (let _70_23480 = (let _70_23479 = (print_smt_term_list l)
-in (Support.String.strcat (Support.String.strcat s "; [ ") _70_23479))
-in (Support.String.strcat _70_23480 " ] "))) "" l))
+and print_smt_term_list = (fun ( l ) -> (Support.List.fold_left (fun ( s ) ( t ) -> (let _70_23477 = (print_smt_term t)
+in (Support.String.strcat (Support.String.strcat s "; ") _70_23477))) "" l))
+and print_smt_term_list_list = (fun ( l ) -> (Support.List.fold_left (fun ( s ) ( l ) -> (let _70_23482 = (let _70_23481 = (print_smt_term_list l)
+in (Support.String.strcat (Support.String.strcat s "; [ ") _70_23481))
+in (Support.String.strcat _70_23482 " ] "))) "" l))
 
 
 
