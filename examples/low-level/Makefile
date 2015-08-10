@@ -11,31 +11,35 @@ Factorial.ml: factorial.fst
 factorial:  ListSet.ml Stack.ml FunctionalExtensionality.ml Set.ml Ghost.ml Heap.ml StackAndHeap.ml SST.ml SSTCombinators.ml Factorial.ml Test.ml
 	$(OCAML) -o $@ $^
 
+PRE_SST_FILES=ListSet.ml Stack.ml FunctionalExtensionality.ml Set.ml Heap.ml Ghost.ml StackAndHeap.ml
 
 MD5.ml: md5.fst
 	fstar MD5.fst
 	./revertManualMLs.sh
 
-md5: ListSet.ml Stack.ml FunctionalExtensionality.ml Set.ml Heap.ml Ghost.ml StackAndHeap.ml SST.ml SSTCombinators.ml MachineWord.ml Seq.ml SSTArray.ml ArrayAlgos.ml MD5Common.ml MD5.ml
+md5: $(PRE_SST_FILES) SST.ml SSTCombinators.ml MachineWord.ml Seq.ml SSTArray.ml ArrayAlgos.ml MD5Common.ml MD5.ml
 	$(OCAML) -o $@ $^
 
 Sieve.ml: sieve.fst
 	fstar --codegen OCaml-experimental $^
 	./revertManualMLs.sh
 
-SIEVE_FILES = ListSet.ml Stack.ml FunctionalExtensionality.ml Set.ml Heap.ml Ghost.ml StackAndHeap.ml SST.ml SSTCombinators.ml Seq.ml SSTArray.ml ArrayAlgos.ml SieveFun.ml Sieve.ml
+ARRAY_FILES=Seq.ml SSTArray.ml ArrayAlgos.ml
 
-sieve: $(SIEVE_FILES) TestSieve.ml
+sieve: $(PRE_SST_FILES)  SST.ml SSTCombinators.ml $(ARRAY_FILES) SieveFun.ml Sieve.ml TestSieve.ml
 	$(OCAML) -o $@ $^
 
-sieveLoop: $(SIEVE_FILES) TestSieveInLoop.ml
+sieveLoop: $(PRE_SST_FILES)  SST.ml SSTCombinators.ml $(ARRAY_FILES) SieveFun.ml Sieve.ml TestSieveInLoop.ml
+	$(OCAML) -o $@ $^
+
+sieveLoopHeap: $(PRE_SST_FILES)  SSTAllHeap.ml SSTCombinators.ml $(ARRAY_FILES) SieveFun.ml Sieve.ml TestSieveInLoop.ml
 	$(OCAML) -o $@ $^
 
 SieveFun.ml: sieveFun.fst
 	fstar --codegen OCaml-experimental $^
 	./revertManualMLs.sh
 
-sieveFun: ListSet.ml Stack.ml FunctionalExtensionality.ml Set.ml Heap.ml Ghost.ml StackAndHeap.ml SST.ml SSTCombinators.ml SieveFun.ml TestSieve.ml
+sieveFun: SSTCombinators.ml $(ARRAY_FILES) SieveFun.ml TestSieve.ml
 	$(OCAML) -o $@ $^
 
 support: #run this whenever the src file of cp is updated. It is tracked in git.
