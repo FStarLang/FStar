@@ -13,7 +13,7 @@ LIB = /usr/lib #place to look for libcrypto.a
 endif
 
 include ../Makefile.include
-all: .all.crypto.ver merkle_tree mac rpc acls-cap statefulEnc
+all: .all.crypto.ver merkle_tree mac rpc rpc-extract acls-cap statefulEnc
 STDLIB_ADMITS=--admit_fsi Seq --admit_fsi Set --admit_fsi SeqProperties
 STDLIB=$(addprefix $(FSTAR_HOME)/lib/, classical.fst ext.fst set.fsi \
        heap.fst st.fst all.fst string.fst list.fst seq.fsi seqproperties.fst) \
@@ -69,17 +69,20 @@ mllibs:
 
 
 rpc-extract:
-	$(FSTAR) --codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml \
+	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC --admit_fsi Seq  \
           $(addprefix $(FSTAR_HOME)/lib/, ext.fst classical.fst \
 					set.fsi set.fst \
 					heap.fst st.fst all.fst \
 					string.fst io.fst list.fst \
 					seq.fst seqproperties.fst ) \
 					$(addprefix $(FSTAR_HOME)/contrib/,  Platform/fst/Bytes.fst CoreCrypto/fst/CoreCrypto.fst) \
-					sha1.fst mac.fst formatting.fst rpc.fst  --debug high
+					sha1.fst mac.fst formatting.fst rpc.fst  \
+					--codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml-experimental --debug high
+
+rpc-ml: rpc-extract
 	ocamlfind ocamlopt -cc "$(CC)" -cclib -L$(LIB) -cclib -lcrypto -o rpc.exe -package batteries -linkpkg -g -thread -I $(FSTAR_HOME)/contrib/Platform/ml -I $(FSTAR_HOME)/contrib/CoreCrypto/ml -I \
 	        $(FSTAR_HOME)/src/ocaml-output/ \
-					$(FSTAR_HOME)/src/ocaml-output/support.cmx \
+					$(FSTAR_HOME)/src/ocaml-output/support.ml \
 					$(addprefix $(FSTAR_HOME)/contrib/,  Platform/ml/platform.cmx CoreCrypto/ml/CoreCrypto.cmxa) \
 					Seq.ml SeqProperties.ml SHA1.ml MAC.ml Formatting.ml RPC.ml
 

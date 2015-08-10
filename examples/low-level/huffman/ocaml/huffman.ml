@@ -1,14 +1,43 @@
+(* TODO:
+   - Make histogram array not scanned
+   - Profile stack vs. heap -- where is the time going?
+   - Augment stack code to print diagnostics of use?
+   - Opts:
+     - Is is_stack_pointer(p) call too expensive?
+     - Setrng fun in bitmask code -- optimize this?
+*)
+let do_stack = ref true
+let debug = ref false
+let no_check = ref true;;
+let test_len = ref 1000;;
+let num = ref 1;;
+
+let arg_specs =
+  [
+    ("-l", (Arg.Int (fun l -> test_len := l)), 
+     "Set length of stream to compress (default is "^(string_of_int !test_len)^")");
+    ("-n", (Arg.Int (fun n -> num := n)), 
+     "Set number of tests to run (default is "^(string_of_int !num)^")");
+    ("-s", Arg.Set do_stack, "Use stack allocation (default is "^(string_of_bool !do_stack)^")");
+    ("-h", Arg.Clear do_stack, "Use heap allocation (default is "^(string_of_bool (not !do_stack))^")");
+    ("-r", Arg.Int (fun s -> Random.init s), "Set random seed");
+    ("-v", Arg.Set debug, "Verbose output");
+    ("-c", Arg.Clear no_check, "Check that decoded output matches input (default is "^(string_of_bool (not !no_check))^")")
+  ];;
+
+Arg.parse arg_specs (fun _ -> ()) "Performs huffman coding on random input, decodes the result";;
+
+if !do_stack then
+  Camlstack.push_frame 0;;
+
 (**********)
 (* BASICS *)
 (**********)
 
-let do_stack = true
-let debug = false
-
 type symbol_type = int
 
 (* maximum value in input stream *)
-let symbol_value_bound = 257;;
+let symbol_value_bound = 65535;;
 
 (* bits needed to represent symbols up to the bound *)
 let bits_per_symbol =
@@ -23,29 +52,43 @@ let bytes_per_symbol =
   if (bits_per_symbol mod 8) = 0 then bits_per_symbol / 8 
   else (bits_per_symbol / 8) + 1
 
+(*************)
+(* UTILITIES *)
+(*************)
+
 let make_array onstack n v =
-  if do_stack && onstack then
+  if !do_stack && onstack then
     Camlstack.mkarray n v 
   else Array.make n v
 
-let make_array_prim onstack n v =
-  if do_stack && onstack then
-    Camlstack.mkarray_prim n v 
+let make_array_noscan onstack n v =
+  if !do_stack && onstack then
+    Camlstack.mkarray_noscan n v 
   else Array.make n v
 
 let make_bytearray onstack n = (* ALLOCATE *)
-  if do_stack && onstack then
+  if !do_stack && onstack then
     Camlstack.mkbytes n
   else
     Bytes.create n
 
 let bytearray_substr s ofs len =
-  if do_stack then
+  if !do_stack then
     (let d = Camlstack.mkbytes len in
     Bytes.blit s ofs d 0 len;
     d)
   else
     Bytes.sub s ofs len
+
+let eq_array arr1 arr2 =
+  if !no_check then true
+  else
+    if !do_stack then
+      let ok = ref true in
+      (Array.length arr1) = (Array.length arr2) &&
+	  (Array.iteri (fun i x -> ok := !ok && (x = arr2.(i))) arr1; !ok)
+    else
+      arr1 = arr2
 
 (***************)
 (* ENCODING *)
@@ -63,34 +106,35 @@ type node =
       mutable code: string;
     };;
 
-(* dummy "null" node, so that we don't have to use option types. *)
+external stack_mknode: int -> node -> node -> node -> symbol_type -> node = "stack_mknode";;
 
-let rec null_node = 
-  { frequency = -1;
-    next = null_node;
-    zero_child = null_node;
-    one_child = null_node;
-    symbol = 0;
-    code = "" } 
-
-let is_null n =
-  match n with
-      { frequency = -1 } -> true
-    | _ -> false 
-
-external stack_mknode: node -> node -> node -> symbol_type -> string -> node = "stack_mknode";;
-
-let make_node nx zc oc sym cd = (* ALLOCATE *)
-  if do_stack then
-    stack_mknode nx zc oc sym cd
+let make_node freq nx zc oc sym = (* ALLOCATE *)
+  if !do_stack then
+    stack_mknode freq nx zc oc sym
   else
-    { frequency = 1; 
-        (* frequency is 1 by default (set in caller to change - works around FFI bug) *)
+    { frequency = freq; 
       next = nx;
       zero_child = zc;
       one_child = oc;
       symbol = sym;
-      code = cd } 
+      code = "" } 
+        (* code is "" by default (set in caller to change - works around FFI bug) *)
+
+(* dummy "null" node, so that we don't have to use option types. *)
+
+let null_node = make_node (-1) (Obj.magic 1) (Obj.magic 1) (Obj.magic 1) 0;;
+(*
+  { frequency = -1;
+    next = Obj.magic 1; (* null_node; *)
+    zero_child = Obj.magic 1; (* null_node; *)
+    one_child = Obj.magic 1; (* null_node; *)
+    symbol = 0;
+    code = "" } 
+*)
+let is_null n =
+  match n with
+      { frequency = -1 } -> true
+    | _ -> false 
       
 (* Maintains a mutable list of nodes, sorted by the node.frequency field *)
 
@@ -163,7 +207,7 @@ let compute_histogram
     let sym = symbol_stream.(i) in
     let the_leaf = histogram.(sym)  in (* index into histogram from symbol *)
     if (is_null the_leaf) then
-      (let the_leaf' = make_node null_node null_node null_node sym "" in (* ALLOCATE stack *)
+      (let the_leaf' = make_node 1 null_node null_node null_node sym in (* ALLOCATE stack *)
        histogram.(sym) <- the_leaf') 
     else
       the_leaf.frequency <- the_leaf.frequency + 1
@@ -178,7 +222,8 @@ let rec compute_code_strings
   let zc_nd = tree.zero_child in
   let one_nd = tree.one_child in
   if is_null zc_nd then
-    tree.code <- Bytes.unsafe_to_string (bytearray_substr code_string 0 code_string_pos) (* ALLOCATE stack *)
+    if code_string_pos = 0 then failwith "weird" else
+      tree.code <- Bytes.unsafe_to_string (bytearray_substr code_string 0 code_string_pos) (* ALLOCATE stack *)
   else
     (Bytes.set code_string code_string_pos '0';
      compute_code_strings zc_nd code_string (code_string_pos+1);
@@ -202,13 +247,12 @@ let build_huffman_tree
     else ()
   done;
   (* debug *)
-  if debug then
+  if !debug then
     NodeList.print_list_nodes tree true;
   (* Build the tree recursively combining the first two (lowest freq) nodes *)
   while not (NodeList.is_singleton tree) do
     let (n1,n2) = NodeList.pop_two tree in
-    let new_nd = make_node null_node n1 n2 (-1) "" in (* ALLOCATE stack *)
-    new_nd.frequency <- (n1.frequency + n2.frequency); (* workaround FFI bug *)
+    let new_nd = make_node (n1.frequency + n2.frequency) null_node n1 n2 (-1) in (* ALLOCATE stack *)
     NodeList.insert_in_ordered_list new_nd tree
   done;
   (* compute codes *)
@@ -339,11 +383,12 @@ let print_tree (packed_tree:bytes) (tree_size:int) =
 let huffman_encode 
     (symbol_stream:symbol_type array)
     (encoded_stream:bytes) : bytes*int*int =
-  let histogram = make_array true symbol_value_bound null_node in (* ALLOCATE stack *)
+  let histogram = make_array_noscan true symbol_value_bound null_node in (* ALLOCATE stack *)
   compute_histogram symbol_stream histogram;
   let tree = build_huffman_tree histogram in
-  if debug then Printf.printf "leaves in tree = %d\n" (count_leaves tree);
+  if !debug then Printf.printf "leaves in tree = %d\n" (count_leaves tree);
   let encoded_len = encode_stream symbol_stream histogram encoded_stream in
+  if !debug then Printf.printf "encoded len = %d\n" encoded_len;
   let packed_tree,packed_len = pack_huffman_tree tree in
   packed_tree,packed_len,encoded_len
 ;;
@@ -357,22 +402,24 @@ type code_node = (* used for decoding *)
       cn_one_child : code_node;
       cn_symbol : symbol_type }
 
-let rec null_code_node = 
-  { cn_zero_child = null_code_node;
-    cn_one_child = null_code_node;
-    cn_symbol = -1; }
-
-let is_null_cn cn = cn.cn_symbol = (-1)
-
 external stack_mknode_cn: code_node -> code_node -> symbol_type -> code_node = "stack_mktuple3";;
 
 let make_node_cn zc oc sym = (* ALLOCATE stack *)
-  if do_stack then
+  if !do_stack then
     stack_mknode_cn zc oc sym
   else
     { cn_zero_child = zc;
       cn_one_child = oc;
       cn_symbol = sym; }
+
+let null_code_node = make_node_cn (Obj.magic 1) (Obj.magic 1) (-1)
+(*
+  { cn_zero_child = Obj.magic 1;
+    cn_one_child = Obj.magic 1;
+    cn_symbol = -1; }
+*)
+
+let is_null_cn cn = cn.cn_symbol = (-1)
 
 module Reader =
   struct
@@ -453,10 +500,10 @@ let print_int_arr arr =
 (* Run a test: encode, store, decode, and then check the results match *)
 let run test_inp test_oup test_res =
   (* Encode it *)
-  if do_stack then
+  if !do_stack then
     Camlstack.push_frame 0;
   let packed_tree,packed_len,encoded_len = huffman_encode test_inp test_oup in
-  if debug then
+  if !debug then
     (print_int_arr test_inp;
      print_stream test_oup encoded_len;
      print_tree packed_tree packed_len;
@@ -466,37 +513,40 @@ let run test_inp test_oup test_res =
   Bytes.blit packed_tree 0 outbytes 0 packed_len;
   Bytes.blit test_oup 0 outbytes packed_len encoded_len;
 (*
-  if do_stack then
+  if !do_stack then
     Camlstack.pop_frame ();
 *)
   (* Decode it *)
   let f = Reader.make_reader outbytes in
 (*
-  if do_stack then
+  if !do_stack then
     Camlstack.push_frame 0;
 *)
   let cn_tree = read_huffman_tree f in
   read_and_huffman_decode f cn_tree test_res;
-  if do_stack then
-    Camlstack.pop_frame ();
-  if debug then 
+  if !do_stack then
+    ((* Camlstack.print_mask (); *)
+     Camlstack.pop_frame ());
+  if !debug then 
     (print_int_arr test_res);
   (* Check it *)
-  (test_res = test_inp)
+  eq_array test_res test_inp
 
 (* generate random contents for the given array, but with lots of clusters *)
 let rnd_arr arr =
   let len = Array.length arr in
-  let max_count = Random.int len + 1 in
-  let count = ref (Random.int max_count) in
+  let max_count = (Random.int (len/2)) + 1 in
+  let count = ref ((Random.int max_count) + 1) in
   let v = ref (Random.int symbol_value_bound) in
   let f i = 
     if !count = 0 then
-      (count := (Random.int max_count);
-       v := (Random.int symbol_value_bound));
+      (count := (Random.int max_count) + 1;
+       v := (Random.int symbol_value_bound);
+       if !debug then Printf.printf "count=%d, v=%d; " !count !v);
     decr count;
     !v in
   for i = 0 to (len-1) do arr.(i) <- f i done;
+  if !debug then print_endline "";
   for i = 0 to (len-1) do
     let idx = Random.int len in
     let tmp = arr.(i) in
@@ -507,41 +557,29 @@ let rnd_arr arr =
 
 (* MAIN *)
 
-(* arguments: [size] [num runs] [seed] *)
-let test_len, num =
-  if (Array.length Sys.argv) = 1 then
-    1000, 1
-  else if (Array.length Sys.argv) = 2 then
-    (int_of_string Sys.argv.(1)), 1
-  else if (Array.length Sys.argv) = 3 then
-    (int_of_string Sys.argv.(1)), 
-    (int_of_string Sys.argv.(2))
- else
-    let _ = Random.init (int_of_string (Sys.argv.(3))) in
-    (int_of_string Sys.argv.(1)), 
-    (int_of_string Sys.argv.(2))
-;;
-
-for i = 0 to (num-1) do
+for i = 0 to (!num-1) do
   (* Generate input *)
-  if do_stack then
+  if !do_stack then
     Camlstack.push_frame 0;
-  let test_inp = make_array_prim false test_len 0 in (* ALLOCATE stack *)
-  let test_oup = make_bytearray true test_len in (* ALLOCATE stack *)
-  let test_res = make_array_prim false test_len 0 in (* ALLOCATE stack *)
+  let test_inp = make_array_noscan true !test_len 0 in (* ALLOCATE stack *)
+  let test_oup = make_bytearray true (!test_len*bytes_per_symbol) in (* ALLOCATE stack *)
+  let test_res = make_array_noscan true !test_len 0 in (* ALLOCATE stack *)
   rnd_arr test_inp;
+  (* Printf.printf "%d " i; *)
   let res = run test_inp test_oup test_res in
   if not res then failwith "Encode/decode loop failed!";
-  if do_stack then
+  if !do_stack then
     Camlstack.pop_frame ()
 done
 ;;
 
-Printf.printf "Success (%s) sz=%d n=%d %s\n" 
-  (if do_stack then "stack" else "heap")
-  test_len 
-  num 
-  (if (Array.length Sys.argv) = 4 then ("seed="^(Sys.argv.(3))) else "");;
+if !do_stack then
+  Camlstack.pop_frame ();;
+
+Printf.printf "\nSuccess (%s) sz=%d n=%d\n" 
+  (if !do_stack then "stack" else "heap")
+  !test_len 
+  !num;;
 Pervasives.flush stdout;;
 
 Gc.print_stat (Pervasives.stdout);;

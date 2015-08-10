@@ -6,7 +6,7 @@ VERFILES=bug015.fst bug019.fst\
   bug111.fst bug116.fst bug117.fst bug122.fst bug124.fst\
   bug148.fst bug155.fst bug161.fst bug162.fst bug170.fst bug175.fst bug178.fst\
   bug179.fst bug181.fst bug186.fst bug189.fst bug192.fst bug195.fst\
-  bug212.fst bug213.fst bug-295.fst\
+  bug203.fst bug212.fst bug213.fst bug-295.fst\
   bugWildcardTelescopes.fst
 ##bug190.fst
 

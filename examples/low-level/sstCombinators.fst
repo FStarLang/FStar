@@ -17,11 +17,6 @@ open ListSet
 open Ghost
 
 (*Sane SST*)
-effect Mem (a:Type) (pre: smem -> Type) (post: (smem -> SSTPost a)) (mod: modset) =
-        SST a pre (fun m0 a m1 -> post m0 a m1 /\ sids m0 = sids m1 /\ canModify m0 m1 mod)
-
-effect PureMem (a:Type) (pre:smem -> Type) (post: (smem -> Post a)) =
-        SST a pre (fun m0 a m1 -> post m0 a m1 /\ m0=m1)
 
 
 (** withNewStackFrame combinator *)
@@ -53,7 +48,7 @@ Can implicit arguments be inferred automatically by the SMT solver using proof s
 (*Mem restriction is not needed, because there is a even stronger condition here that the memory is unchanges*)
 effect whileGuard (pre :(smem -> Type))
   (lc : (smem -> Type))
-  = PureMem bool  pre (fun m0 b _ ->   (lc m0 <==> b = true))
+  = PureMem bool  pre (fun m0 b  ->   (lc m0 <==> b = true))
 (* the guard of a while loop is not supposed to change the memory*)
 
 effect whileBody (loopInv:smem -> Type) (lc:smem  -> Type) (mod:modset)
@@ -69,7 +64,7 @@ val scopedWhile : loopInv:(smem -> Type)
   -> mods:(modset)
   -> bd:(unit -> whileBody loopInv wglc mods)
   -> Mem unit (requires (fun m -> loopInv m))
-              (ensures (fun m0 _ m1 -> loopInv m1 /\ (~(wglc m1))))
+              (ensures (fun _ _ m1 -> loopInv m1 /\ (~(wglc m1))))
               mods
 let rec scopedWhile
    'loopInv 'wglc wg mods bd =

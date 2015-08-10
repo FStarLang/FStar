@@ -160,9 +160,7 @@ type level = | Source | Target
 
 (* TODO: FIXME: error if just write = is_Source *)
 val src: level -> Tot bool
-let src l = match l with
-  | Source -> true
-  | Target -> false
+let src l = is_Source l
 
 (* TODO: FIXME: workaround for projectors *)
 val m_of_mode: mode -> Tot as_mode

@@ -1,21 +1,21 @@
 
 let rec get_next_n_ite = (fun ( n ) ( t ) ( negs ) ( f ) -> (match ((n <= 0)) with
 | true -> begin
-(let _70_23728 = (f Microsoft_FStar_ToSMT_Term.mkTrue)
-in (true, _70_23728, negs, t))
+(let _122_14 = (f Microsoft_FStar_ToSMT_Term.mkTrue)
+in (true, _122_14, negs, t))
 end
 | false -> begin
 (match (t.Microsoft_FStar_ToSMT_Term.tm) with
 | Microsoft_FStar_ToSMT_Term.App ((Microsoft_FStar_ToSMT_Term.ITE, g::t::e::_51_7)) -> begin
-(let _70_23733 = (let _70_23730 = (let _70_23729 = (Microsoft_FStar_ToSMT_Term.mkNot g)
-in (negs, _70_23729))
-in (Microsoft_FStar_ToSMT_Term.mkAnd _70_23730))
-in (get_next_n_ite (n - 1) e _70_23733 (fun ( x ) -> (let _70_23732 = (Microsoft_FStar_ToSMT_Term.mkITE (g, t, x))
-in (f _70_23732)))))
+(let _122_19 = (let _122_16 = (let _122_15 = (Microsoft_FStar_ToSMT_Term.mkNot g)
+in (negs, _122_15))
+in (Microsoft_FStar_ToSMT_Term.mkAnd _122_16))
+in (get_next_n_ite (n - 1) e _122_19 (fun ( x ) -> (let _122_18 = (Microsoft_FStar_ToSMT_Term.mkITE (g, t, x))
+in (f _122_18)))))
 end
 | Microsoft_FStar_ToSMT_Term.FreeV (_51_18) -> begin
-(let _70_23734 = (f Microsoft_FStar_ToSMT_Term.mkTrue)
-in (true, _70_23734, negs, t))
+(let _122_20 = (f Microsoft_FStar_ToSMT_Term.mkTrue)
+in (true, _122_20, negs, t))
 end
 | _51_21 -> begin
 (false, Microsoft_FStar_ToSMT_Term.mkFalse, Microsoft_FStar_ToSMT_Term.mkFalse, Microsoft_FStar_ToSMT_Term.mkFalse)
@@ -29,10 +29,10 @@ end
 | false -> begin
 (match (t.Microsoft_FStar_ToSMT_Term.tm) with
 | Microsoft_FStar_ToSMT_Term.FreeV (_51_27) -> begin
-(let _70_23745 = (let _70_23744 = (let _70_23743 = (Microsoft_FStar_ToSMT_Term.mkNot t)
-in (negs, _70_23743))
-in (Microsoft_FStar_ToSMT_Term.mkAnd _70_23744))
-in (true, l, _70_23745))
+(let _122_31 = (let _122_30 = (let _122_29 = (Microsoft_FStar_ToSMT_Term.mkNot t)
+in (negs, _122_29))
+in (Microsoft_FStar_ToSMT_Term.mkAnd _122_30))
+in (true, l, _122_31))
 end
 | _51_30 -> begin
 (let _51_36 = (get_next_n_ite n t negs (fun ( x ) -> x))
@@ -40,9 +40,9 @@ in (match (_51_36) with
 | (b, t, negs', rest) -> begin
 (match (b) with
 | true -> begin
-(let _70_23748 = (let _70_23747 = (Microsoft_FStar_ToSMT_Term.mkImp (negs, t))
-in (_70_23747)::l)
-in (is_ite_all_the_way n rest negs' _70_23748))
+(let _122_34 = (let _122_33 = (Microsoft_FStar_ToSMT_Term.mkImp (negs, t))
+in (_122_33)::l)
+in (is_ite_all_the_way n rest negs' _122_34))
 end
 | false -> begin
 (false, [], Microsoft_FStar_ToSMT_Term.mkFalse)
@@ -53,21 +53,21 @@ end))
 
 let rec parse_query_for_split_cases = (fun ( n ) ( t ) ( f ) -> (match (t.Microsoft_FStar_ToSMT_Term.tm) with
 | Microsoft_FStar_ToSMT_Term.Quant ((Microsoft_FStar_ToSMT_Term.Forall, l, opt, l', t)) -> begin
-(parse_query_for_split_cases n t (fun ( x ) -> (let _70_23775 = (Microsoft_FStar_ToSMT_Term.mkForall'' (l, opt, l', x))
-in (f _70_23775))))
+(parse_query_for_split_cases n t (fun ( x ) -> (let _122_61 = (Microsoft_FStar_ToSMT_Term.mkForall'' (l, opt, l', x))
+in (f _122_61))))
 end
 | Microsoft_FStar_ToSMT_Term.App ((Microsoft_FStar_ToSMT_Term.Imp, t1::t2::_51_50)) -> begin
 (let r = (match (t2.Microsoft_FStar_ToSMT_Term.tm) with
 | Microsoft_FStar_ToSMT_Term.Quant ((Microsoft_FStar_ToSMT_Term.Forall, _51_59, _51_61, _51_63, _51_65)) -> begin
-(parse_query_for_split_cases n t2 (fun ( x ) -> (let _70_23783 = (Microsoft_FStar_ToSMT_Term.mkImp (t1, x))
-in (f _70_23783))))
+(parse_query_for_split_cases n t2 (fun ( x ) -> (let _122_69 = (Microsoft_FStar_ToSMT_Term.mkImp (t1, x))
+in (f _122_69))))
 end
 | Microsoft_FStar_ToSMT_Term.App ((Microsoft_FStar_ToSMT_Term.ITE, _51_71)) -> begin
 (let _51_77 = (is_ite_all_the_way n t2 Microsoft_FStar_ToSMT_Term.mkTrue [])
 in (match (_51_77) with
 | (b, l, negs) -> begin
-(b, ((fun ( x ) -> (let _70_23792 = (Microsoft_FStar_ToSMT_Term.mkImp (t1, x))
-in (f _70_23792))), l, negs))
+(b, ((fun ( x ) -> (let _122_78 = (Microsoft_FStar_ToSMT_Term.mkImp (t1, x))
+in (f _122_78))), l, negs))
 end))
 end
 | _51_80 -> begin
@@ -94,18 +94,18 @@ end
 t
 end))
 
-let rec check_split_cases = (fun ( f ) ( l ) ( check ) -> (Support.List.iter (fun ( t ) -> (let _70_23831 = (let _70_23830 = (let _70_23829 = (let _70_23828 = (f t)
-in (Microsoft_FStar_ToSMT_Term.mkNot _70_23828))
-in (_70_23829, None))
-in Microsoft_FStar_ToSMT_Term.Assume (_70_23830))
-in (check _70_23831))) (Support.List.rev l)))
+let rec check_split_cases = (fun ( f ) ( l ) ( check ) -> (Support.List.iter (fun ( t ) -> (let _122_117 = (let _122_116 = (let _122_115 = (let _122_114 = (f t)
+in (Microsoft_FStar_ToSMT_Term.mkNot _122_114))
+in (_122_115, None))
+in Microsoft_FStar_ToSMT_Term.Assume (_122_116))
+in (check _122_117))) (Support.List.rev l)))
 
-let check_exhaustiveness = (fun ( f ) ( negs ) ( check ) -> (let _70_23852 = (let _70_23851 = (let _70_23850 = (let _70_23849 = (let _70_23848 = (Microsoft_FStar_ToSMT_Term.mkNot negs)
-in (f _70_23848))
-in (Microsoft_FStar_ToSMT_Term.mkNot _70_23849))
-in (_70_23850, None))
-in Microsoft_FStar_ToSMT_Term.Assume (_70_23851))
-in (check _70_23852)))
+let check_exhaustiveness = (fun ( f ) ( negs ) ( check ) -> (let _122_138 = (let _122_137 = (let _122_136 = (let _122_135 = (let _122_134 = (Microsoft_FStar_ToSMT_Term.mkNot negs)
+in (f _122_134))
+in (Microsoft_FStar_ToSMT_Term.mkNot _122_135))
+in (_122_136, None))
+in Microsoft_FStar_ToSMT_Term.Assume (_122_137))
+in (check _122_138)))
 
 let can_handle_query = (fun ( n ) ( q ) -> (match (q) with
 | Microsoft_FStar_ToSMT_Term.Assume ((q', _51_118)) -> begin

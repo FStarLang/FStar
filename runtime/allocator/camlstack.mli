@@ -83,9 +83,11 @@ external mkarray : int -> 'a -> 'a array = "stack_mkarray";;
     Raise [Invalid_argument "Camlstack.mkarray"] if [n] is non-positive,
     or if you try to make an array of floats, which is not yet supported. *)
 
-external mkarray_prim : int -> 'a -> 'a array = "stack_mkarray_prim";;
+external mkarray_noscan : int -> 'a -> 'a array = "stack_mkarray_noscan";;
 (** [Camlstack.mkarray_prim n v] allocates an array of length [n] with each
-    element initialized to [v]. ONLY USE THIS FOR PRIMITIVES [v].
+    element initialized to [v]. Use this when the values 'a that you install
+    in the array are either primitives, or they are pointers to the stack, and
+    you can be sure that you will never mutate the array to point to the heap.
     Raise [Failure "Camlstack.mkarray"] if the stack has no frames. 
     Raise [Invalid_argument "Camlstack.mkarray"] if [n] is non-positive,
     or if you try to make an array of floats, which is not yet supported. *)
