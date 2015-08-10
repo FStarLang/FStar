@@ -1,9 +1,12 @@
 include ../Makefile.include
 all:
-	$(FSTAR) examples.fst
 	$(FSTAR) wysteria.fst
-	#$(FSTAR) ast.fst
-	#$(FSTAR) sem.fst
+	$(FSTAR) mill1.fst
+	$(FSTAR) mill2.fst
+	$(FSTAR) mill3.fst
+	$(FSTAR) mill4.fst
+	$(FSTAR) mill5.fst
+	$(FSTAR) lib.fst    # remove once some example uses it
 	$(FSTAR) theory.fst
 	$(FSTAR) sinterpreter.fst
 

@@ -48,21 +48,40 @@ void eachbit(unsigned char *map, int maxbit, bitfun f, void *env) {
 
 void setbit(unsigned char *map, int bit) {
   unsigned char v = map[bit / 8];
-  int idx = 1 << (bit % 8);
-  map[bit / 8] = v | idx;
+  int m = 1 << (bit % 8);
+  map[bit / 8] = v | m;
 }
 
 void unsetbit(unsigned char *map, int bit) {
   unsigned char v = map[bit / 8];
-  int idx = (1 << (bit % 8)) ^ 0xff ;
-  map[bit / 8] = v & idx;
+  int m = (1 << (bit % 8)) ^ 0xff ;
+  map[bit / 8] = v & m;
 }
 
+#define MIN(x,y) (x) < (y) ? (x) : (y)
+
 void unsetbit_rng(unsigned char *map, int bit, int len) {
-  /* XXX optimize this to not do it a bit at a time */
-  int i;
-  for (i=0; i<len; i++) 
-    unsetbit(map,bit+i);
+  /* up to first byte boundary */
+  if (bit % 8 != 0) {
+    int i; /* XXX: create the mask all at once */
+    int l = MIN(8-(bit % 8), len);
+    for (i=0; i<l; i++) 
+      unsetbit(map,bit+i);
+    bit += l;
+    len -= l;
+  }
+  /* series of bytes */
+  while (len >= 8) {
+    map[bit / 8] = (unsigned char)0;
+    len -= 8; 
+    bit += 8;
+  }
+  /* last fractional byte */
+  if (len > 0) {
+    unsigned char v = map[bit / 8];
+    int m = 0xff ^ ((1 << len) - 1);
+    map[bit / 8] = v & m;
+  }
 }
 
 /* TEST
@@ -77,11 +96,17 @@ int main() {
   unsigned char x[4] = { 0,1,1,1 };
   unsigned char y[4] = { 1,0, 1, 0 };
   unsigned char z[4] = { 3,3,255,0 };
+
+  printf ("x:\n");
   setbit(x,9);
   unsetbit(x,16);
-  //unsetbit_rng(z,0,2);
   eachbit(x,4*8,printidx,0);
+
+  printf ("y:\n");
   eachbit(y,4*8,printidx,0);
+
+  printf ("z:\n");
+  unsetbit_rng(z,8,12);
   eachbit(z,24,printidx,0);
   return 0;
 }
