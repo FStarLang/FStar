@@ -1,25 +1,25 @@
 
 let handle_err = (fun ( warning ) ( ret ) ( e ) -> (match (e) with
 | Microsoft_FStar_Absyn_Syntax.Error ((msg, r)) -> begin
-(let _25_34 = (let _70_9833 = (let _70_9832 = (Support.Microsoft.FStar.Range.string_of_range r)
-in (Support.Microsoft.FStar.Util.format3 "%s : %s\n%s\n" _70_9832 (match (warning) with
+(let _25_34 = (let _96_8 = (let _96_7 = (Support.Microsoft.FStar.Range.string_of_range r)
+in (Support.Microsoft.FStar.Util.format3 "%s : %s\n%s\n" _96_7 (match (warning) with
 | true -> begin
 "Warning"
 end
 | false -> begin
 "Error"
 end) msg))
-in (Support.Microsoft.FStar.Util.print_string _70_9833))
+in (Support.Microsoft.FStar.Util.print_string _96_8))
 in ())
 end
 | Support.Microsoft.FStar.Util.NYI (s) -> begin
-(let _25_38 = (let _70_9834 = (Support.Microsoft.FStar.Util.format1 "Feature not yet implemented: %s" s)
-in (Support.Microsoft.FStar.Util.print_string _70_9834))
+(let _25_38 = (let _96_9 = (Support.Microsoft.FStar.Util.format1 "Feature not yet implemented: %s" s)
+in (Support.Microsoft.FStar.Util.print_string _96_9))
 in ())
 end
 | Microsoft_FStar_Absyn_Syntax.Err (s) -> begin
-(let _70_9835 = (Support.Microsoft.FStar.Util.format1 "Error: %s" s)
-in (Support.Microsoft.FStar.Util.print_string _70_9835))
+(let _96_10 = (Support.Microsoft.FStar.Util.format1 "Error: %s" s)
+in (Support.Microsoft.FStar.Util.print_string _96_10))
 end
 | _25_43 -> begin
 (raise (e))
@@ -42,14 +42,14 @@ let gs = (let ctr = (Support.Microsoft.FStar.Util.mk_ref 0)
 in (let n_resets = (Support.Microsoft.FStar.Util.mk_ref 0)
 in {gensym = (fun ( _25_61 ) -> (match (()) with
 | () -> begin
-(let _70_9863 = (let _70_9860 = (let _70_9859 = (let _70_9858 = (Support.ST.read n_resets)
-in (Support.Microsoft.FStar.Util.string_of_int _70_9858))
-in (Support.String.strcat "_" _70_9859))
-in (Support.String.strcat _70_9860 "_"))
-in (let _70_9862 = (let _70_9861 = (let _25_62 = (Support.Microsoft.FStar.Util.incr ctr)
+(let _96_38 = (let _96_35 = (let _96_34 = (let _96_33 = (Support.ST.read n_resets)
+in (Support.Microsoft.FStar.Util.string_of_int _96_33))
+in (Support.String.strcat "_" _96_34))
+in (Support.String.strcat _96_35 "_"))
+in (let _96_37 = (let _96_36 = (let _25_62 = (Support.Microsoft.FStar.Util.incr ctr)
 in (Support.ST.read ctr))
-in (Support.Microsoft.FStar.Util.string_of_int _70_9861))
-in (Support.String.strcat _70_9863 _70_9862)))
+in (Support.Microsoft.FStar.Util.string_of_int _96_36))
+in (Support.String.strcat _96_38 _96_37)))
 end)); reset = (fun ( _25_64 ) -> (match (()) with
 | () -> begin
 (let _25_65 = (Support.ST.op_Colon_Equals ctr 0)
@@ -71,9 +71,9 @@ let rec gensyms = (fun ( x ) -> (match (x) with
 []
 end
 | n -> begin
-(let _70_9872 = (gensym ())
-in (let _70_9871 = (gensyms (n - 1))
-in (_70_9872)::_70_9871))
+(let _96_47 = (gensym ())
+in (let _96_46 = (gensyms (n - 1))
+in (_96_47)::_96_46))
 end))
 
 let genident = (fun ( r ) -> (let sym = (gensym ())
@@ -135,12 +135,12 @@ let new_bvd = (fun ( ropt ) -> (let f = (fun ( ropt ) -> (let id = (genident rop
 in (mkbvd (id, id))))
 in (f ropt)))
 
-let freshen_bvd = (fun ( bvd' ) -> (let _70_9913 = (let _70_9912 = (genident (Some ((range_of_bvd bvd'))))
-in (bvd'.Microsoft_FStar_Absyn_Syntax.ppname, _70_9912))
-in (mkbvd _70_9913)))
+let freshen_bvd = (fun ( bvd' ) -> (let _96_88 = (let _96_87 = (genident (Some ((range_of_bvd bvd'))))
+in (bvd'.Microsoft_FStar_Absyn_Syntax.ppname, _96_87))
+in (mkbvd _96_88)))
 
-let freshen_bvar = (fun ( b ) -> (let _70_9915 = (freshen_bvd b.Microsoft_FStar_Absyn_Syntax.v)
-in (bvd_to_bvar_s _70_9915 b.Microsoft_FStar_Absyn_Syntax.sort)))
+let freshen_bvar = (fun ( b ) -> (let _96_90 = (freshen_bvd b.Microsoft_FStar_Absyn_Syntax.v)
+in (bvd_to_bvar_s _96_90 b.Microsoft_FStar_Absyn_Syntax.sort)))
 
 let gen_bvar = (fun ( sort ) -> (let bvd = (new_bvd None)
 in (bvd_to_bvar_s bvd sort)))
@@ -152,28 +152,28 @@ let bvdef_of_str = (fun ( s ) -> (let f = (fun ( s ) -> (let id = (Microsoft_FSt
 in (mkbvd (id, id))))
 in (f s)))
 
-let set_bvd_range = (fun ( bvd ) ( r ) -> (let _70_9924 = (Microsoft_FStar_Absyn_Syntax.mk_ident (bvd.Microsoft_FStar_Absyn_Syntax.ppname.Microsoft_FStar_Absyn_Syntax.idText, r))
-in (let _70_9923 = (Microsoft_FStar_Absyn_Syntax.mk_ident (bvd.Microsoft_FStar_Absyn_Syntax.realname.Microsoft_FStar_Absyn_Syntax.idText, r))
-in {Microsoft_FStar_Absyn_Syntax.ppname = _70_9924; Microsoft_FStar_Absyn_Syntax.realname = _70_9923})))
+let set_bvd_range = (fun ( bvd ) ( r ) -> (let _96_99 = (Microsoft_FStar_Absyn_Syntax.mk_ident (bvd.Microsoft_FStar_Absyn_Syntax.ppname.Microsoft_FStar_Absyn_Syntax.idText, r))
+in (let _96_98 = (Microsoft_FStar_Absyn_Syntax.mk_ident (bvd.Microsoft_FStar_Absyn_Syntax.realname.Microsoft_FStar_Absyn_Syntax.idText, r))
+in {Microsoft_FStar_Absyn_Syntax.ppname = _96_99; Microsoft_FStar_Absyn_Syntax.realname = _96_98})))
 
 let set_lid_range = (fun ( l ) ( r ) -> (let ids = (Support.All.pipe_right (Support.List.append l.Microsoft_FStar_Absyn_Syntax.ns ((l.Microsoft_FStar_Absyn_Syntax.ident)::[])) (Support.List.map (fun ( i ) -> (Microsoft_FStar_Absyn_Syntax.mk_ident (i.Microsoft_FStar_Absyn_Syntax.idText, r)))))
 in (Microsoft_FStar_Absyn_Syntax.lid_of_ids ids)))
 
-let fv = (fun ( l ) -> (let _70_9932 = (Microsoft_FStar_Absyn_Syntax.range_of_lid l)
-in (withinfo l Microsoft_FStar_Absyn_Syntax.tun _70_9932)))
+let fv = (fun ( l ) -> (let _96_107 = (Microsoft_FStar_Absyn_Syntax.range_of_lid l)
+in (withinfo l Microsoft_FStar_Absyn_Syntax.tun _96_107)))
 
-let fvvar_of_lid = (fun ( l ) ( t ) -> (let _70_9935 = (Microsoft_FStar_Absyn_Syntax.range_of_lid l)
-in (withinfo l t _70_9935)))
+let fvvar_of_lid = (fun ( l ) ( t ) -> (let _96_110 = (Microsoft_FStar_Absyn_Syntax.range_of_lid l)
+in (withinfo l t _96_110)))
 
-let fvar = (fun ( dc ) ( l ) ( r ) -> (let _70_9944 = (let _70_9943 = (let _70_9942 = (set_lid_range l r)
-in (fv _70_9942))
-in (_70_9943, dc))
-in (Microsoft_FStar_Absyn_Syntax.mk_Exp_fvar _70_9944 None r)))
+let fvar = (fun ( dc ) ( l ) ( r ) -> (let _96_119 = (let _96_118 = (let _96_117 = (set_lid_range l r)
+in (fv _96_117))
+in (_96_118, dc))
+in (Microsoft_FStar_Absyn_Syntax.mk_Exp_fvar _96_119 None r)))
 
-let ftv = (fun ( l ) ( k ) -> (let _70_9951 = (let _70_9949 = (Microsoft_FStar_Absyn_Syntax.range_of_lid l)
-in (withinfo l k _70_9949))
-in (let _70_9950 = (Microsoft_FStar_Absyn_Syntax.range_of_lid l)
-in (Microsoft_FStar_Absyn_Syntax.mk_Typ_const _70_9951 None _70_9950))))
+let ftv = (fun ( l ) ( k ) -> (let _96_126 = (let _96_124 = (Microsoft_FStar_Absyn_Syntax.range_of_lid l)
+in (withinfo l k _96_124))
+in (let _96_125 = (Microsoft_FStar_Absyn_Syntax.range_of_lid l)
+in (Microsoft_FStar_Absyn_Syntax.mk_Typ_const _96_126 None _96_125))))
 
 let order_bvd = (fun ( x ) ( y ) -> (match ((x, y)) with
 | (Support.Microsoft.FStar.Util.Inl (_25_155), Support.Microsoft.FStar.Util.Inr (_25_158)) -> begin
@@ -193,14 +193,14 @@ let arg_of_non_null_binder = (fun ( _25_180 ) -> (match (_25_180) with
 | (b, imp) -> begin
 (match (b) with
 | Support.Microsoft.FStar.Util.Inl (a) -> begin
-(let _70_9956 = (let _70_9955 = (btvar_to_typ a)
-in Support.Microsoft.FStar.Util.Inl (_70_9955))
-in (_70_9956, imp))
+(let _96_131 = (let _96_130 = (btvar_to_typ a)
+in Support.Microsoft.FStar.Util.Inl (_96_130))
+in (_96_131, imp))
 end
 | Support.Microsoft.FStar.Util.Inr (x) -> begin
-(let _70_9958 = (let _70_9957 = (bvar_to_exp x)
-in Support.Microsoft.FStar.Util.Inr (_70_9957))
-in (_70_9958, imp))
+(let _96_133 = (let _96_132 = (bvar_to_exp x)
+in Support.Microsoft.FStar.Util.Inr (_96_132))
+in (_96_133, imp))
 end)
 end))
 
@@ -209,46 +209,46 @@ let args_of_non_null_binders = (fun ( binders ) -> (Support.All.pipe_right binde
 []
 end
 | false -> begin
-(let _70_9962 = (arg_of_non_null_binder b)
-in (_70_9962)::[])
+(let _96_137 = (arg_of_non_null_binder b)
+in (_96_137)::[])
 end)))))
 
-let args_of_binders = (fun ( binders ) -> (let _70_9972 = (Support.All.pipe_right binders (Support.List.map (fun ( b ) -> (match ((Microsoft_FStar_Absyn_Syntax.is_null_binder b)) with
+let args_of_binders = (fun ( binders ) -> (let _96_147 = (Support.All.pipe_right binders (Support.List.map (fun ( b ) -> (match ((Microsoft_FStar_Absyn_Syntax.is_null_binder b)) with
 | true -> begin
 (let b = (match ((Support.Prims.fst b)) with
 | Support.Microsoft.FStar.Util.Inl (a) -> begin
-(let _70_9967 = (let _70_9966 = (gen_bvar a.Microsoft_FStar_Absyn_Syntax.sort)
-in Support.Microsoft.FStar.Util.Inl (_70_9966))
-in (_70_9967, (Support.Prims.snd b)))
+(let _96_142 = (let _96_141 = (gen_bvar a.Microsoft_FStar_Absyn_Syntax.sort)
+in Support.Microsoft.FStar.Util.Inl (_96_141))
+in (_96_142, (Support.Prims.snd b)))
 end
 | Support.Microsoft.FStar.Util.Inr (x) -> begin
-(let _70_9969 = (let _70_9968 = (gen_bvar x.Microsoft_FStar_Absyn_Syntax.sort)
-in Support.Microsoft.FStar.Util.Inr (_70_9968))
-in (_70_9969, (Support.Prims.snd b)))
+(let _96_144 = (let _96_143 = (gen_bvar x.Microsoft_FStar_Absyn_Syntax.sort)
+in Support.Microsoft.FStar.Util.Inr (_96_143))
+in (_96_144, (Support.Prims.snd b)))
 end)
-in (let _70_9970 = (arg_of_non_null_binder b)
-in (b, _70_9970)))
+in (let _96_145 = (arg_of_non_null_binder b)
+in (b, _96_145)))
 end
 | false -> begin
-(let _70_9971 = (arg_of_non_null_binder b)
-in (b, _70_9971))
+(let _96_146 = (arg_of_non_null_binder b)
+in (b, _96_146))
 end))))
-in (Support.All.pipe_right _70_9972 Support.List.unzip)))
+in (Support.All.pipe_right _96_147 Support.List.unzip)))
 
 let name_binders = (fun ( binders ) -> (Support.All.pipe_right binders (Support.List.mapi (fun ( i ) ( b ) -> (match ((Microsoft_FStar_Absyn_Syntax.is_null_binder b)) with
 | true -> begin
 (match (b) with
 | (Support.Microsoft.FStar.Util.Inl (a), imp) -> begin
-(let b = (let _70_9978 = (let _70_9977 = (Support.Microsoft.FStar.Util.string_of_int i)
-in (Support.String.strcat "_" _70_9977))
-in (Microsoft_FStar_Absyn_Syntax.id_of_text _70_9978))
+(let b = (let _96_153 = (let _96_152 = (Support.Microsoft.FStar.Util.string_of_int i)
+in (Support.String.strcat "_" _96_152))
+in (Microsoft_FStar_Absyn_Syntax.id_of_text _96_153))
 in (let b = (bvd_to_bvar_s (mkbvd (b, b)) a.Microsoft_FStar_Absyn_Syntax.sort)
 in (Support.Microsoft.FStar.Util.Inl (b), imp)))
 end
 | (Support.Microsoft.FStar.Util.Inr (y), imp) -> begin
-(let x = (let _70_9980 = (let _70_9979 = (Support.Microsoft.FStar.Util.string_of_int i)
-in (Support.String.strcat "_" _70_9979))
-in (Microsoft_FStar_Absyn_Syntax.id_of_text _70_9980))
+(let x = (let _96_155 = (let _96_154 = (Support.Microsoft.FStar.Util.string_of_int i)
+in (Support.String.strcat "_" _96_154))
+in (Microsoft_FStar_Absyn_Syntax.id_of_text _96_155))
 in (let x = (bvd_to_bvar_s (mkbvd (x, x)) y.Microsoft_FStar_Absyn_Syntax.sort)
 in (Support.Microsoft.FStar.Util.Inr (x), imp)))
 end)
@@ -259,9 +259,9 @@ end)))))
 
 let name_function_binders = (fun ( t ) -> (match (t.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Typ_fun ((binders, comp)) -> begin
-(let _70_9984 = (let _70_9983 = (name_binders binders)
-in (_70_9983, comp))
-in (Microsoft_FStar_Absyn_Syntax.mk_Typ_fun _70_9984 None t.Microsoft_FStar_Absyn_Syntax.pos))
+(let _96_159 = (let _96_158 = (name_binders binders)
+in (_96_158, comp))
+in (Microsoft_FStar_Absyn_Syntax.mk_Typ_fun _96_159 None t.Microsoft_FStar_Absyn_Syntax.pos))
 end
 | _25_215 -> begin
 t
@@ -269,42 +269,42 @@ end))
 
 let null_binders_of_tks = (fun ( tks ) -> (Support.All.pipe_right tks (Support.List.map (fun ( _25_2 ) -> (match (_25_2) with
 | (Support.Microsoft.FStar.Util.Inl (k), imp) -> begin
-(let _70_9989 = (let _70_9988 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k)
-in (Support.All.pipe_left Support.Prims.fst _70_9988))
-in (_70_9989, imp))
+(let _96_164 = (let _96_163 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k)
+in (Support.All.pipe_left Support.Prims.fst _96_163))
+in (_96_164, imp))
 end
 | (Support.Microsoft.FStar.Util.Inr (t), imp) -> begin
-(let _70_9991 = (let _70_9990 = (Microsoft_FStar_Absyn_Syntax.null_v_binder t)
-in (Support.All.pipe_left Support.Prims.fst _70_9990))
-in (_70_9991, imp))
+(let _96_166 = (let _96_165 = (Microsoft_FStar_Absyn_Syntax.null_v_binder t)
+in (Support.All.pipe_left Support.Prims.fst _96_165))
+in (_96_166, imp))
 end)))))
 
 let binders_of_tks = (fun ( tks ) -> (Support.All.pipe_right tks (Support.List.map (fun ( _25_3 ) -> (match (_25_3) with
 | (Support.Microsoft.FStar.Util.Inl (k), imp) -> begin
-(let _70_9996 = (let _70_9995 = (gen_bvar_p k.Microsoft_FStar_Absyn_Syntax.pos k)
-in Support.Microsoft.FStar.Util.Inl (_70_9995))
-in (_70_9996, imp))
+(let _96_171 = (let _96_170 = (gen_bvar_p k.Microsoft_FStar_Absyn_Syntax.pos k)
+in Support.Microsoft.FStar.Util.Inl (_96_170))
+in (_96_171, imp))
 end
 | (Support.Microsoft.FStar.Util.Inr (t), imp) -> begin
-(let _70_9998 = (let _70_9997 = (gen_bvar_p t.Microsoft_FStar_Absyn_Syntax.pos t)
-in Support.Microsoft.FStar.Util.Inr (_70_9997))
-in (_70_9998, imp))
+(let _96_173 = (let _96_172 = (gen_bvar_p t.Microsoft_FStar_Absyn_Syntax.pos t)
+in Support.Microsoft.FStar.Util.Inr (_96_172))
+in (_96_173, imp))
 end)))))
 
-let binders_of_freevars = (fun ( fvs ) -> (let _70_10004 = (let _70_10001 = (Support.Microsoft.FStar.Util.set_elements fvs.Microsoft_FStar_Absyn_Syntax.ftvs)
-in (Support.All.pipe_right _70_10001 (Support.List.map Microsoft_FStar_Absyn_Syntax.t_binder)))
-in (let _70_10003 = (let _70_10002 = (Support.Microsoft.FStar.Util.set_elements fvs.Microsoft_FStar_Absyn_Syntax.fxvs)
-in (Support.All.pipe_right _70_10002 (Support.List.map Microsoft_FStar_Absyn_Syntax.v_binder)))
-in (Support.List.append _70_10004 _70_10003))))
+let binders_of_freevars = (fun ( fvs ) -> (let _96_179 = (let _96_176 = (Support.Microsoft.FStar.Util.set_elements fvs.Microsoft_FStar_Absyn_Syntax.ftvs)
+in (Support.All.pipe_right _96_176 (Support.List.map Microsoft_FStar_Absyn_Syntax.t_binder)))
+in (let _96_178 = (let _96_177 = (Support.Microsoft.FStar.Util.set_elements fvs.Microsoft_FStar_Absyn_Syntax.fxvs)
+in (Support.All.pipe_right _96_177 (Support.List.map Microsoft_FStar_Absyn_Syntax.v_binder)))
+in (Support.List.append _96_179 _96_178))))
 
-let subst_to_string = (fun ( s ) -> (let _70_10007 = (Support.All.pipe_right s (Support.List.map (fun ( _25_4 ) -> (match (_25_4) with
+let subst_to_string = (fun ( s ) -> (let _96_182 = (Support.All.pipe_right s (Support.List.map (fun ( _25_4 ) -> (match (_25_4) with
 | Support.Microsoft.FStar.Util.Inl ((b, _25_241)) -> begin
 b.Microsoft_FStar_Absyn_Syntax.realname.Microsoft_FStar_Absyn_Syntax.idText
 end
 | Support.Microsoft.FStar.Util.Inr ((x, _25_246)) -> begin
 x.Microsoft_FStar_Absyn_Syntax.realname.Microsoft_FStar_Absyn_Syntax.idText
 end))))
-in (Support.All.pipe_right _70_10007 (Support.String.concat ", "))))
+in (Support.All.pipe_right _96_182 (Support.String.concat ", "))))
 
 let subst_tvar = (fun ( s ) ( a ) -> (Support.Microsoft.FStar.Util.find_map s (fun ( _25_5 ) -> (match (_25_5) with
 | Support.Microsoft.FStar.Util.Inl ((b, t)) when (bvd_eq b a.Microsoft_FStar_Absyn_Syntax.v) -> begin
@@ -330,10 +330,10 @@ end
 (let t0 = (Microsoft_FStar_Absyn_Visit.compress_typ t)
 in (match (t0.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Typ_delayed ((Support.Microsoft.FStar.Util.Inl ((t', s')), m)) -> begin
-(let _70_10032 = (let _70_10031 = (compose_subst s' s)
-in (let _70_10030 = (Support.Microsoft.FStar.Util.mk_ref None)
-in (t', _70_10031, _70_10030)))
-in (Microsoft_FStar_Absyn_Syntax.mk_Typ_delayed _70_10032 None t.Microsoft_FStar_Absyn_Syntax.pos))
+(let _96_207 = (let _96_206 = (compose_subst s' s)
+in (let _96_205 = (Support.Microsoft.FStar.Util.mk_ref None)
+in (t', _96_206, _96_205)))
+in (Microsoft_FStar_Absyn_Syntax.mk_Typ_delayed _96_207 None t.Microsoft_FStar_Absyn_Syntax.pos))
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_delayed ((Support.Microsoft.FStar.Util.Inr (mk_t), m)) -> begin
 (let t = (mk_t ())
@@ -360,9 +360,9 @@ end
 t0
 end
 | _25_311 -> begin
-(let _70_10037 = (let _70_10036 = (Support.Microsoft.FStar.Util.mk_ref None)
-in (t0, s, _70_10036))
-in (Microsoft_FStar_Absyn_Syntax.mk_Typ_delayed _70_10037 None t.Microsoft_FStar_Absyn_Syntax.pos))
+(let _96_212 = (let _96_211 = (Support.Microsoft.FStar.Util.mk_ref None)
+in (t0, s, _96_211))
+in (Microsoft_FStar_Absyn_Syntax.mk_Typ_delayed _96_212 None t.Microsoft_FStar_Absyn_Syntax.pos))
 end))
 end))
 and subst_exp' = (fun ( s ) ( e ) -> (match (s) with
@@ -373,10 +373,10 @@ end
 (let e0 = (Microsoft_FStar_Absyn_Visit.compress_exp e)
 in (match (e0.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Exp_delayed ((e, s', m)) -> begin
-(let _70_10042 = (let _70_10041 = (compose_subst s' s)
-in (let _70_10040 = (Support.Microsoft.FStar.Util.mk_ref None)
-in (e, _70_10041, _70_10040)))
-in (Microsoft_FStar_Absyn_Syntax.mk_Exp_delayed _70_10042 None e.Microsoft_FStar_Absyn_Syntax.pos))
+(let _96_217 = (let _96_216 = (compose_subst s' s)
+in (let _96_215 = (Support.Microsoft.FStar.Util.mk_ref None)
+in (e, _96_216, _96_215)))
+in (Microsoft_FStar_Absyn_Syntax.mk_Exp_delayed _96_217 None e.Microsoft_FStar_Absyn_Syntax.pos))
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_bvar (x) -> begin
 (let rec aux = (fun ( s ) -> (match (s) with
@@ -398,9 +398,9 @@ end
 e0
 end
 | _25_345 -> begin
-(let _70_10046 = (let _70_10045 = (Support.Microsoft.FStar.Util.mk_ref None)
-in (e0, s, _70_10045))
-in (Microsoft_FStar_Absyn_Syntax.mk_Exp_delayed _70_10046 None e0.Microsoft_FStar_Absyn_Syntax.pos))
+(let _96_221 = (let _96_220 = (Support.Microsoft.FStar.Util.mk_ref None)
+in (e0, s, _96_220))
+in (Microsoft_FStar_Absyn_Syntax.mk_Exp_delayed _96_221 None e0.Microsoft_FStar_Absyn_Syntax.pos))
 end))
 end))
 and subst_kind' = (fun ( s ) ( k ) -> (match (s) with
@@ -414,21 +414,21 @@ in (match (k0.Microsoft_FStar_Absyn_Syntax.n) with
 k0
 end
 | Microsoft_FStar_Absyn_Syntax.Kind_delayed ((k, s', m)) -> begin
-(let _70_10051 = (let _70_10050 = (compose_subst s' s)
-in (let _70_10049 = (Support.Microsoft.FStar.Util.mk_ref None)
-in (k, _70_10050, _70_10049)))
-in (Microsoft_FStar_Absyn_Syntax.mk_Kind_delayed _70_10051 k0.Microsoft_FStar_Absyn_Syntax.pos))
+(let _96_226 = (let _96_225 = (compose_subst s' s)
+in (let _96_224 = (Support.Microsoft.FStar.Util.mk_ref None)
+in (k, _96_225, _96_224)))
+in (Microsoft_FStar_Absyn_Syntax.mk_Kind_delayed _96_226 k0.Microsoft_FStar_Absyn_Syntax.pos))
 end
 | _25_363 -> begin
-(let _70_10053 = (let _70_10052 = (Support.Microsoft.FStar.Util.mk_ref None)
-in (k0, s, _70_10052))
-in (Microsoft_FStar_Absyn_Syntax.mk_Kind_delayed _70_10053 k0.Microsoft_FStar_Absyn_Syntax.pos))
+(let _96_228 = (let _96_227 = (Support.Microsoft.FStar.Util.mk_ref None)
+in (k0, s, _96_227))
+in (Microsoft_FStar_Absyn_Syntax.mk_Kind_delayed _96_228 k0.Microsoft_FStar_Absyn_Syntax.pos))
 end))
 end))
 and subst_flags' = (fun ( s ) ( flags ) -> (Support.All.pipe_right flags (Support.List.map (fun ( _25_7 ) -> (match (_25_7) with
 | Microsoft_FStar_Absyn_Syntax.DECREASES (a) -> begin
-(let _70_10057 = (subst_exp' s a)
-in Microsoft_FStar_Absyn_Syntax.DECREASES (_70_10057))
+(let _96_232 = (subst_exp' s a)
+in Microsoft_FStar_Absyn_Syntax.DECREASES (_96_232))
 end
 | f -> begin
 f
@@ -439,20 +439,20 @@ t
 end
 | _25_376 -> begin
 (let _25_377 = t
-in (let _70_10067 = (subst_typ' s t.Microsoft_FStar_Absyn_Syntax.result_typ)
-in (let _70_10066 = (Support.List.map (fun ( _25_8 ) -> (match (_25_8) with
+in (let _96_242 = (subst_typ' s t.Microsoft_FStar_Absyn_Syntax.result_typ)
+in (let _96_241 = (Support.List.map (fun ( _25_8 ) -> (match (_25_8) with
 | (Support.Microsoft.FStar.Util.Inl (t), imp) -> begin
-(let _70_10062 = (let _70_10061 = (subst_typ' s t)
-in Support.Microsoft.FStar.Util.Inl (_70_10061))
-in (_70_10062, imp))
+(let _96_237 = (let _96_236 = (subst_typ' s t)
+in Support.Microsoft.FStar.Util.Inl (_96_236))
+in (_96_237, imp))
 end
 | (Support.Microsoft.FStar.Util.Inr (e), imp) -> begin
-(let _70_10064 = (let _70_10063 = (subst_exp' s e)
-in Support.Microsoft.FStar.Util.Inr (_70_10063))
-in (_70_10064, imp))
+(let _96_239 = (let _96_238 = (subst_exp' s e)
+in Support.Microsoft.FStar.Util.Inr (_96_238))
+in (_96_239, imp))
 end)) t.Microsoft_FStar_Absyn_Syntax.effect_args)
-in (let _70_10065 = (subst_flags' s t.Microsoft_FStar_Absyn_Syntax.flags)
-in {Microsoft_FStar_Absyn_Syntax.effect_name = _25_377.Microsoft_FStar_Absyn_Syntax.effect_name; Microsoft_FStar_Absyn_Syntax.result_typ = _70_10067; Microsoft_FStar_Absyn_Syntax.effect_args = _70_10066; Microsoft_FStar_Absyn_Syntax.flags = _70_10065}))))
+in (let _96_240 = (subst_flags' s t.Microsoft_FStar_Absyn_Syntax.flags)
+in {Microsoft_FStar_Absyn_Syntax.effect_name = _25_377.Microsoft_FStar_Absyn_Syntax.effect_name; Microsoft_FStar_Absyn_Syntax.result_typ = _96_242; Microsoft_FStar_Absyn_Syntax.effect_args = _96_241; Microsoft_FStar_Absyn_Syntax.flags = _96_240}))))
 end))
 and subst_comp' = (fun ( s ) ( t ) -> (match (s) with
 | ([]) | ([]::[]) -> begin
@@ -461,12 +461,12 @@ end
 | _25_394 -> begin
 (match (t.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Total (t) -> begin
-(let _70_10070 = (subst_typ' s t)
-in (Microsoft_FStar_Absyn_Syntax.mk_Total _70_10070))
+(let _96_245 = (subst_typ' s t)
+in (Microsoft_FStar_Absyn_Syntax.mk_Total _96_245))
 end
 | Microsoft_FStar_Absyn_Syntax.Comp (ct) -> begin
-(let _70_10071 = (subst_comp_typ' s ct)
-in (Microsoft_FStar_Absyn_Syntax.mk_Comp _70_10071))
+(let _96_246 = (subst_comp_typ' s ct)
+in (Microsoft_FStar_Absyn_Syntax.mk_Comp _96_246))
 end)
 end))
 and compose_subst = (fun ( s1 ) ( s2 ) -> (Support.List.append s1 s2))
@@ -485,30 +485,30 @@ let subst_comp = (fun ( s ) ( t ) -> (subst_comp' (mk_subst s) t))
 
 let subst_binder = (fun ( s ) ( _25_9 ) -> (match (_25_9) with
 | (Support.Microsoft.FStar.Util.Inl (a), imp) -> begin
-(let _70_10099 = (let _70_10098 = (let _25_418 = a
-in (let _70_10097 = (subst_kind s a.Microsoft_FStar_Absyn_Syntax.sort)
-in {Microsoft_FStar_Absyn_Syntax.v = _25_418.Microsoft_FStar_Absyn_Syntax.v; Microsoft_FStar_Absyn_Syntax.sort = _70_10097; Microsoft_FStar_Absyn_Syntax.p = _25_418.Microsoft_FStar_Absyn_Syntax.p}))
-in Support.Microsoft.FStar.Util.Inl (_70_10098))
-in (_70_10099, imp))
+(let _96_274 = (let _96_273 = (let _25_418 = a
+in (let _96_272 = (subst_kind s a.Microsoft_FStar_Absyn_Syntax.sort)
+in {Microsoft_FStar_Absyn_Syntax.v = _25_418.Microsoft_FStar_Absyn_Syntax.v; Microsoft_FStar_Absyn_Syntax.sort = _96_272; Microsoft_FStar_Absyn_Syntax.p = _25_418.Microsoft_FStar_Absyn_Syntax.p}))
+in Support.Microsoft.FStar.Util.Inl (_96_273))
+in (_96_274, imp))
 end
 | (Support.Microsoft.FStar.Util.Inr (x), imp) -> begin
-(let _70_10102 = (let _70_10101 = (let _25_424 = x
-in (let _70_10100 = (subst_typ s x.Microsoft_FStar_Absyn_Syntax.sort)
-in {Microsoft_FStar_Absyn_Syntax.v = _25_424.Microsoft_FStar_Absyn_Syntax.v; Microsoft_FStar_Absyn_Syntax.sort = _70_10100; Microsoft_FStar_Absyn_Syntax.p = _25_424.Microsoft_FStar_Absyn_Syntax.p}))
-in Support.Microsoft.FStar.Util.Inr (_70_10101))
-in (_70_10102, imp))
+(let _96_277 = (let _96_276 = (let _25_424 = x
+in (let _96_275 = (subst_typ s x.Microsoft_FStar_Absyn_Syntax.sort)
+in {Microsoft_FStar_Absyn_Syntax.v = _25_424.Microsoft_FStar_Absyn_Syntax.v; Microsoft_FStar_Absyn_Syntax.sort = _96_275; Microsoft_FStar_Absyn_Syntax.p = _25_424.Microsoft_FStar_Absyn_Syntax.p}))
+in Support.Microsoft.FStar.Util.Inr (_96_276))
+in (_96_277, imp))
 end))
 
 let subst_arg = (fun ( s ) ( _25_10 ) -> (match (_25_10) with
 | (Support.Microsoft.FStar.Util.Inl (t), imp) -> begin
-(let _70_10106 = (let _70_10105 = (subst_typ s t)
-in Support.Microsoft.FStar.Util.Inl (_70_10105))
-in (_70_10106, imp))
+(let _96_281 = (let _96_280 = (subst_typ s t)
+in Support.Microsoft.FStar.Util.Inl (_96_280))
+in (_96_281, imp))
 end
 | (Support.Microsoft.FStar.Util.Inr (e), imp) -> begin
-(let _70_10108 = (let _70_10107 = (subst_exp s e)
-in Support.Microsoft.FStar.Util.Inr (_70_10107))
-in (_70_10108, imp))
+(let _96_283 = (let _96_282 = (subst_exp s e)
+in Support.Microsoft.FStar.Util.Inr (_96_282))
+in (_96_283, imp))
 end))
 
 let subst_binders = (fun ( s ) ( bs ) -> (match (s) with
@@ -550,10 +550,10 @@ end
 []
 end
 | false -> begin
-(let _70_10123 = (let _70_10122 = (let _70_10121 = (btvar_to_typ a)
-in (b.Microsoft_FStar_Absyn_Syntax.v, _70_10121))
-in Support.Microsoft.FStar.Util.Inl (_70_10122))
-in (_70_10123)::[])
+(let _96_298 = (let _96_297 = (let _96_296 = (btvar_to_typ a)
+in (b.Microsoft_FStar_Absyn_Syntax.v, _96_296))
+in Support.Microsoft.FStar.Util.Inl (_96_297))
+in (_96_298)::[])
 end)
 end
 | (Support.Microsoft.FStar.Util.Inr (x), Support.Microsoft.FStar.Util.Inr (y)) -> begin
@@ -562,10 +562,10 @@ end
 []
 end
 | false -> begin
-(let _70_10126 = (let _70_10125 = (let _70_10124 = (bvar_to_exp x)
-in (y.Microsoft_FStar_Absyn_Syntax.v, _70_10124))
-in Support.Microsoft.FStar.Util.Inr (_70_10125))
-in (_70_10126)::[])
+(let _96_301 = (let _96_300 = (let _96_299 = (bvar_to_exp x)
+in (y.Microsoft_FStar_Absyn_Syntax.v, _96_299))
+in Support.Microsoft.FStar.Util.Inr (_96_300))
+in (_96_301)::[])
 end)
 end
 | _25_485 -> begin
@@ -578,9 +578,9 @@ let mk_subst_binder = (fun ( bs1 ) ( bs2 ) -> (let rec aux = (fun ( out ) ( bs1 
 Some (out)
 end
 | (b1::bs1, b2::bs2) -> begin
-(let _70_10138 = (let _70_10137 = (mk_subst_one_binder b1 b2)
-in (Support.List.append _70_10137 out))
-in (aux _70_10138 bs1 bs2))
+(let _96_313 = (let _96_312 = (mk_subst_one_binder b1 b2)
+in (Support.List.append _96_312 out))
+in (aux _96_313 bs1 bs2))
 end
 | _25_503 -> begin
 None
@@ -608,20 +608,20 @@ let null_ctrl = {stop_if_empty_subst = true; descend = false}
 
 let extend_subst = (fun ( e ) ( s ) -> (Support.List.append (((mk_subst e))::[]) s))
 
-let map_knd = (fun ( s ) ( vk ) ( mt ) ( me ) ( descend ) ( binders ) ( k ) -> (let _70_10159 = (subst_kind' s k)
-in (_70_10159, descend)))
+let map_knd = (fun ( s ) ( vk ) ( mt ) ( me ) ( descend ) ( binders ) ( k ) -> (let _96_334 = (subst_kind' s k)
+in (_96_334, descend)))
 
-let map_typ = (fun ( s ) ( mk ) ( vt ) ( me ) ( descend ) ( binders ) ( t ) -> (let _70_10167 = (subst_typ' s t)
-in (_70_10167, descend)))
+let map_typ = (fun ( s ) ( mk ) ( vt ) ( me ) ( descend ) ( binders ) ( t ) -> (let _96_342 = (subst_typ' s t)
+in (_96_342, descend)))
 
-let map_exp = (fun ( s ) ( mk ) ( me ) ( ve ) ( descend ) ( binders ) ( e ) -> (let _70_10175 = (subst_exp' s e)
-in (_70_10175, descend)))
+let map_exp = (fun ( s ) ( mk ) ( me ) ( ve ) ( descend ) ( binders ) ( e ) -> (let _96_350 = (subst_exp' s e)
+in (_96_350, descend)))
 
 let map_flags = (fun ( s ) ( map_exp ) ( descend ) ( binders ) ( flags ) -> (Support.All.pipe_right flags (Support.List.map (fun ( _25_11 ) -> (match (_25_11) with
 | Microsoft_FStar_Absyn_Syntax.DECREASES (e) -> begin
-(let _70_10192 = (let _70_10191 = (map_exp descend binders e)
-in (Support.All.pipe_right _70_10191 Support.Prims.fst))
-in Microsoft_FStar_Absyn_Syntax.DECREASES (_70_10192))
+(let _96_367 = (let _96_366 = (map_exp descend binders e)
+in (Support.All.pipe_right _96_366 Support.Prims.fst))
+in Microsoft_FStar_Absyn_Syntax.DECREASES (_96_367))
 end
 | f -> begin
 f
@@ -632,8 +632,8 @@ let map_comp = (fun ( s ) ( mk ) ( map_typ ) ( map_exp ) ( descend ) ( binders )
 (let _25_552 = (map_typ descend binders t)
 in (match (_25_552) with
 | (t, descend) -> begin
-(let _70_10215 = (Microsoft_FStar_Absyn_Syntax.mk_Total t)
-in (_70_10215, descend))
+(let _96_390 = (Microsoft_FStar_Absyn_Syntax.mk_Total t)
+in (_96_390, descend))
 end))
 end
 | Microsoft_FStar_Absyn_Syntax.Comp (ct) -> begin
@@ -643,11 +643,11 @@ in (match (_25_557) with
 (let _25_560 = (Microsoft_FStar_Absyn_Visit.map_args map_typ map_exp descend binders ct.Microsoft_FStar_Absyn_Syntax.effect_args)
 in (match (_25_560) with
 | (args, descend) -> begin
-(let _70_10218 = (let _70_10217 = (let _25_561 = ct
-in (let _70_10216 = (map_flags s map_exp descend binders ct.Microsoft_FStar_Absyn_Syntax.flags)
-in {Microsoft_FStar_Absyn_Syntax.effect_name = _25_561.Microsoft_FStar_Absyn_Syntax.effect_name; Microsoft_FStar_Absyn_Syntax.result_typ = t; Microsoft_FStar_Absyn_Syntax.effect_args = args; Microsoft_FStar_Absyn_Syntax.flags = _70_10216}))
-in (Microsoft_FStar_Absyn_Syntax.mk_Comp _70_10217))
-in (_70_10218, descend))
+(let _96_393 = (let _96_392 = (let _25_561 = ct
+in (let _96_391 = (map_flags s map_exp descend binders ct.Microsoft_FStar_Absyn_Syntax.flags)
+in {Microsoft_FStar_Absyn_Syntax.effect_name = _25_561.Microsoft_FStar_Absyn_Syntax.effect_name; Microsoft_FStar_Absyn_Syntax.result_typ = t; Microsoft_FStar_Absyn_Syntax.effect_args = args; Microsoft_FStar_Absyn_Syntax.flags = _96_391}))
+in (Microsoft_FStar_Absyn_Syntax.mk_Comp _96_392))
+in (_96_393, descend))
 end))
 end))
 end))
@@ -668,8 +668,8 @@ end)))
 let rec compress_kind = (fun ( k ) -> (let k = (Microsoft_FStar_Absyn_Visit.compress_kind k)
 in (match (k.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Kind_delayed ((k', s, m)) -> begin
-(let k' = (let _70_10264 = (Microsoft_FStar_Absyn_Visit.reduce_kind (visit_knd s) (map_typ s) (map_exp s) Microsoft_FStar_Absyn_Visit.combine_kind Microsoft_FStar_Absyn_Visit.combine_typ Microsoft_FStar_Absyn_Visit.combine_exp subst_ctrl [] k')
-in (Support.All.pipe_left Support.Prims.fst _70_10264))
+(let k' = (let _96_439 = (Microsoft_FStar_Absyn_Visit.reduce_kind (visit_knd s) (map_typ s) (map_exp s) Microsoft_FStar_Absyn_Visit.combine_kind Microsoft_FStar_Absyn_Visit.combine_typ Microsoft_FStar_Absyn_Visit.combine_exp subst_ctrl [] k')
+in (Support.All.pipe_left Support.Prims.fst _96_439))
 in (let k' = (compress_kind k')
 in (let _25_584 = (Support.ST.op_Colon_Equals m (Some (k')))
 in k')))
@@ -679,9 +679,9 @@ end
 | Microsoft_FStar_Absyn_Syntax.Fixed (k) -> begin
 (match (k.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Kind_lam ((formals, k')) -> begin
-(let _70_10266 = (let _70_10265 = (subst_of_list formals actuals)
-in (subst_kind _70_10265 k'))
-in (compress_kind _70_10266))
+(let _96_441 = (let _96_440 = (subst_of_list formals actuals)
+in (subst_kind _96_440 k'))
+in (compress_kind _96_441))
 end
 | _25_597 -> begin
 (match (((Support.List.length actuals) = 0)) with
@@ -721,12 +721,12 @@ in (let _25_637 = (match (s) with
 (Support.Microsoft.FStar.Util.Inl (a), s, boundvars')
 end
 | _25_631 -> begin
-(let b = (let _70_10343 = (freshen_bvd a.Microsoft_FStar_Absyn_Syntax.v)
-in (bvd_to_bvar_s _70_10343 k))
-in (let s = (let _70_10346 = (let _70_10345 = (let _70_10344 = (btvar_to_typ b)
-in (a.Microsoft_FStar_Absyn_Syntax.v, _70_10344))
-in Support.Microsoft.FStar.Util.Inl (_70_10345))
-in (extend_subst _70_10346 s))
+(let b = (let _96_518 = (freshen_bvd a.Microsoft_FStar_Absyn_Syntax.v)
+in (bvd_to_bvar_s _96_518 k))
+in (let s = (let _96_521 = (let _96_520 = (let _96_519 = (btvar_to_typ b)
+in (a.Microsoft_FStar_Absyn_Syntax.v, _96_519))
+in Support.Microsoft.FStar.Util.Inl (_96_520))
+in (extend_subst _96_521 s))
 in (Support.Microsoft.FStar.Util.Inl (b), s, (Support.Microsoft.FStar.Util.Inl (b.Microsoft_FStar_Absyn_Syntax.v))::boundvars)))
 end)
 in (match (_25_637) with
@@ -753,12 +753,12 @@ in (let _25_658 = (match (s) with
 (Support.Microsoft.FStar.Util.Inr (x), s, boundvars')
 end
 | _25_652 -> begin
-(let y = (let _70_10356 = (freshen_bvd x.Microsoft_FStar_Absyn_Syntax.v)
-in (bvd_to_bvar_s _70_10356 t))
-in (let s = (let _70_10359 = (let _70_10358 = (let _70_10357 = (bvar_to_exp y)
-in (x.Microsoft_FStar_Absyn_Syntax.v, _70_10357))
-in Support.Microsoft.FStar.Util.Inr (_70_10358))
-in (extend_subst _70_10359 s))
+(let y = (let _96_531 = (freshen_bvd x.Microsoft_FStar_Absyn_Syntax.v)
+in (bvd_to_bvar_s _96_531 t))
+in (let s = (let _96_534 = (let _96_533 = (let _96_532 = (bvar_to_exp y)
+in (x.Microsoft_FStar_Absyn_Syntax.v, _96_532))
+in Support.Microsoft.FStar.Util.Inr (_96_533))
+in (extend_subst _96_534 s))
 in (Support.Microsoft.FStar.Util.Inr (y), s, (Support.Microsoft.FStar.Util.Inr (y.Microsoft_FStar_Absyn_Syntax.v))::boundvars)))
 end)
 in (match (_25_658) with
@@ -776,23 +776,23 @@ in (match (_25_662) with
 tc
 end
 | (_25_668, Support.Microsoft.FStar.Util.Inl (t)) -> begin
-(let _70_10370 = (let _70_10369 = (map_typ s mk vt me null_ctrl boundvars t)
-in (Support.All.pipe_left Support.Prims.fst _70_10369))
-in Support.Microsoft.FStar.Util.Inl (_70_10370))
+(let _96_545 = (let _96_544 = (map_typ s mk vt me null_ctrl boundvars t)
+in (Support.All.pipe_left Support.Prims.fst _96_544))
+in Support.Microsoft.FStar.Util.Inl (_96_545))
 end
 | (_25_673, Support.Microsoft.FStar.Util.Inr (c)) -> begin
-(let _70_10393 = (let _70_10392 = (map_comp s mk (map_typ s mk vt me) (map_exp s mk vt me) null_ctrl boundvars c)
-in (Support.All.pipe_left Support.Prims.fst _70_10392))
-in Support.Microsoft.FStar.Util.Inr (_70_10393))
+(let _96_568 = (let _96_567 = (map_comp s mk (map_typ s mk vt me) (map_exp s mk vt me) null_ctrl boundvars c)
+in (Support.All.pipe_left Support.Prims.fst _96_567))
+in Support.Microsoft.FStar.Util.Inr (_96_568))
 end)
 in ((Support.List.rev bs), tc))
 end)))
 in (let t0 = t
 in (match (t0.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Typ_btvar (_25_680) -> begin
-(let _70_10395 = (let _70_10394 = (subst_typ' s t0)
-in (Support.All.pipe_left compress_typ _70_10394))
-in (_70_10395, ctrl))
+(let _96_570 = (let _96_569 = (subst_typ' s t0)
+in (Support.All.pipe_left compress_typ _96_569))
+in (_96_570, ctrl))
 end
 | _25_683 when (not (ctrl.descend)) -> begin
 (map_typ s mk vt me null_ctrl boundvars t)
@@ -800,8 +800,8 @@ end
 | Microsoft_FStar_Absyn_Syntax.Typ_fun ((bs, c)) -> begin
 (match ((visit_prod bs (Support.Microsoft.FStar.Util.Inr (c)))) with
 | (bs, Support.Microsoft.FStar.Util.Inr (c)) -> begin
-(let _70_10405 = (Microsoft_FStar_Absyn_Syntax.mk_Typ_fun (bs, c) None t0.Microsoft_FStar_Absyn_Syntax.pos)
-in (_70_10405, ctrl))
+(let _96_580 = (Microsoft_FStar_Absyn_Syntax.mk_Typ_fun (bs, c) None t0.Microsoft_FStar_Absyn_Syntax.pos)
+in (_96_580, ctrl))
 end
 | _25_693 -> begin
 (Support.All.failwith "Impossible")
@@ -810,8 +810,8 @@ end
 | Microsoft_FStar_Absyn_Syntax.Typ_refine ((x, t)) -> begin
 (match ((visit_prod (((Support.Microsoft.FStar.Util.Inr (x), None))::[]) (Support.Microsoft.FStar.Util.Inl (t)))) with
 | ((Support.Microsoft.FStar.Util.Inr (x), _25_701)::[], Support.Microsoft.FStar.Util.Inl (t)) -> begin
-(let _70_10406 = (Microsoft_FStar_Absyn_Syntax.mk_Typ_refine (x, t) None t0.Microsoft_FStar_Absyn_Syntax.pos)
-in (_70_10406, ctrl))
+(let _96_581 = (Microsoft_FStar_Absyn_Syntax.mk_Typ_refine (x, t) None t0.Microsoft_FStar_Absyn_Syntax.pos)
+in (_96_581, ctrl))
 end
 | _25_708 -> begin
 (Support.All.failwith "Impossible")
@@ -820,8 +820,8 @@ end
 | Microsoft_FStar_Absyn_Syntax.Typ_lam ((bs, t)) -> begin
 (match ((visit_prod bs (Support.Microsoft.FStar.Util.Inl (t)))) with
 | (bs, Support.Microsoft.FStar.Util.Inl (t)) -> begin
-(let _70_10407 = (Microsoft_FStar_Absyn_Syntax.mk_Typ_lam (bs, t) None t0.Microsoft_FStar_Absyn_Syntax.pos)
-in (_70_10407, ctrl))
+(let _96_582 = (Microsoft_FStar_Absyn_Syntax.mk_Typ_lam (bs, t) None t0.Microsoft_FStar_Absyn_Syntax.pos)
+in (_96_582, ctrl))
 end
 | _25_718 -> begin
 (Support.All.failwith "Impossible")
@@ -837,15 +837,15 @@ end))))
 and compress_typ' = (fun ( t ) -> (let t = (Microsoft_FStar_Absyn_Visit.compress_typ t)
 in (match (t.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Typ_delayed ((Support.Microsoft.FStar.Util.Inl ((t', s)), m)) -> begin
-(let res = (let _70_10427 = (Microsoft_FStar_Absyn_Visit.reduce_typ (map_knd s) (visit_typ s) (map_exp s) Microsoft_FStar_Absyn_Visit.combine_kind Microsoft_FStar_Absyn_Visit.combine_typ Microsoft_FStar_Absyn_Visit.combine_exp subst_ctrl [] t')
-in (Support.All.pipe_left Support.Prims.fst _70_10427))
+(let res = (let _96_602 = (Microsoft_FStar_Absyn_Visit.reduce_typ (map_knd s) (visit_typ s) (map_exp s) Microsoft_FStar_Absyn_Visit.combine_kind Microsoft_FStar_Absyn_Visit.combine_typ Microsoft_FStar_Absyn_Visit.combine_exp subst_ctrl [] t')
+in (Support.All.pipe_left Support.Prims.fst _96_602))
 in (let res = (compress_typ' res)
 in (let _25_736 = (Support.ST.op_Colon_Equals m (Some (res)))
 in res)))
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_delayed ((Support.Microsoft.FStar.Util.Inr (mk_t), m)) -> begin
-(let t = (let _70_10429 = (mk_t ())
-in (compress_typ' _70_10429))
+(let t = (let _96_604 = (mk_t ())
+in (compress_typ' _96_604))
 in (let _25_744 = (Support.ST.op_Colon_Equals m (Some (t)))
 in t))
 end
@@ -864,9 +864,9 @@ end)))
 let rec visit_exp = (fun ( s ) ( mk ) ( me ) ( ve ) ( ctrl ) ( binders ) ( e ) -> (let e = (Microsoft_FStar_Absyn_Visit.compress_exp e)
 in (match (e.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Exp_bvar (_25_764) -> begin
-(let _70_10495 = (let _70_10494 = (subst_exp' s e)
-in (Support.All.pipe_left compress_exp _70_10494))
-in (_70_10495, ctrl))
+(let _96_670 = (let _96_669 = (subst_exp' s e)
+in (Support.All.pipe_left compress_exp _96_669))
+in (_96_670, ctrl))
 end
 | _25_767 when (not (ctrl.descend)) -> begin
 (map_exp s mk me ve ctrl binders e)
@@ -881,8 +881,8 @@ end)))
 and compress_exp = (fun ( e ) -> (let e = (Microsoft_FStar_Absyn_Visit.compress_exp e)
 in (match (e.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Exp_delayed ((e', s, m)) -> begin
-(let e = (let _70_10524 = (Microsoft_FStar_Absyn_Visit.reduce_exp (map_knd s) (map_typ s) (visit_exp s) Microsoft_FStar_Absyn_Visit.combine_kind Microsoft_FStar_Absyn_Visit.combine_typ Microsoft_FStar_Absyn_Visit.combine_exp subst_ctrl [] e')
-in (Support.All.pipe_left Support.Prims.fst _70_10524))
+(let e = (let _96_699 = (Microsoft_FStar_Absyn_Visit.reduce_exp (map_knd s) (map_typ s) (visit_exp s) Microsoft_FStar_Absyn_Visit.combine_kind Microsoft_FStar_Absyn_Visit.combine_typ Microsoft_FStar_Absyn_Visit.combine_exp subst_ctrl [] e')
+in (Support.All.pipe_left Support.Prims.fst _96_699))
 in (let res = (compress_exp e)
 in (let _25_783 = (Support.ST.op_Colon_Equals m (Some (res)))
 in res)))
@@ -905,8 +905,8 @@ end)))
 
 let alpha_typ = (fun ( t ) -> (let t = (compress_typ t)
 in (let s = (mk_subst [])
-in (let doit = (fun ( t ) -> (let _70_10549 = (Microsoft_FStar_Absyn_Visit.reduce_typ (map_knd s) (visit_typ s) (map_exp s) Microsoft_FStar_Absyn_Visit.combine_kind Microsoft_FStar_Absyn_Visit.combine_typ Microsoft_FStar_Absyn_Visit.combine_exp alpha_ctrl [] t)
-in (Support.All.pipe_left Support.Prims.fst _70_10549)))
+in (let doit = (fun ( t ) -> (let _96_724 = (Microsoft_FStar_Absyn_Visit.reduce_typ (map_knd s) (visit_typ s) (map_exp s) Microsoft_FStar_Absyn_Visit.combine_kind Microsoft_FStar_Absyn_Visit.combine_typ Microsoft_FStar_Absyn_Visit.combine_exp alpha_ctrl [] t)
+in (Support.All.pipe_left Support.Prims.fst _96_724)))
 in (match (t.Microsoft_FStar_Absyn_Syntax.n) with
 | (Microsoft_FStar_Absyn_Syntax.Typ_lam ((bs, _))) | (Microsoft_FStar_Absyn_Syntax.Typ_fun ((bs, _))) -> begin
 (match ((Support.Microsoft.FStar.Util.for_all Microsoft_FStar_Absyn_Syntax.is_null_binder bs)) with
@@ -940,21 +940,21 @@ let compress_typ_opt = (fun ( _25_12 ) -> (match (_25_12) with
 None
 end
 | Some (t) -> begin
-(let _70_10556 = (compress_typ t)
-in Some (_70_10556))
+(let _96_731 = (compress_typ t)
+in Some (_96_731))
 end))
 
-let mk_discriminator = (fun ( lid ) -> (let _70_10561 = (let _70_10560 = (let _70_10559 = (Microsoft_FStar_Absyn_Syntax.mk_ident ((Support.String.strcat "is_" lid.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText), lid.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idRange))
-in (_70_10559)::[])
-in (Support.List.append lid.Microsoft_FStar_Absyn_Syntax.ns _70_10560))
-in (Microsoft_FStar_Absyn_Syntax.lid_of_ids _70_10561)))
+let mk_discriminator = (fun ( lid ) -> (let _96_736 = (let _96_735 = (let _96_734 = (Microsoft_FStar_Absyn_Syntax.mk_ident ((Support.String.strcat "is_" lid.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText), lid.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idRange))
+in (_96_734)::[])
+in (Support.List.append lid.Microsoft_FStar_Absyn_Syntax.ns _96_735))
+in (Microsoft_FStar_Absyn_Syntax.lid_of_ids _96_736)))
 
 let is_name = (fun ( lid ) -> (let c = (Support.Microsoft.FStar.Util.char_at lid.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText 0)
 in (Support.Microsoft.FStar.Util.is_upper c)))
 
-let ml_comp = (fun ( t ) ( r ) -> (let _70_10569 = (let _70_10568 = (set_lid_range Microsoft_FStar_Absyn_Const.effect_ML_lid r)
-in {Microsoft_FStar_Absyn_Syntax.effect_name = _70_10568; Microsoft_FStar_Absyn_Syntax.result_typ = t; Microsoft_FStar_Absyn_Syntax.effect_args = []; Microsoft_FStar_Absyn_Syntax.flags = (Microsoft_FStar_Absyn_Syntax.MLEFFECT)::[]})
-in (Microsoft_FStar_Absyn_Syntax.mk_Comp _70_10569)))
+let ml_comp = (fun ( t ) ( r ) -> (let _96_744 = (let _96_743 = (set_lid_range Microsoft_FStar_Absyn_Const.effect_ML_lid r)
+in {Microsoft_FStar_Absyn_Syntax.effect_name = _96_743; Microsoft_FStar_Absyn_Syntax.result_typ = t; Microsoft_FStar_Absyn_Syntax.effect_args = []; Microsoft_FStar_Absyn_Syntax.flags = (Microsoft_FStar_Absyn_Syntax.MLEFFECT)::[]})
+in (Microsoft_FStar_Absyn_Syntax.mk_Comp _96_744)))
 
 let total_comp = (fun ( t ) ( r ) -> (Microsoft_FStar_Absyn_Syntax.mk_Total t))
 
@@ -1064,8 +1064,8 @@ end))))))
 
 let is_pure_or_ghost_lcomp = (fun ( lc ) -> ((is_pure_lcomp lc) || (is_ghost_effect lc.Microsoft_FStar_Absyn_Syntax.eff_name)))
 
-let is_pure_or_ghost_function = (fun ( t ) -> (match ((let _70_10608 = (compress_typ t)
-in _70_10608.Microsoft_FStar_Absyn_Syntax.n)) with
+let is_pure_or_ghost_function = (fun ( t ) -> (match ((let _96_783 = (compress_typ t)
+in _96_783.Microsoft_FStar_Absyn_Syntax.n)) with
 | Microsoft_FStar_Absyn_Syntax.Typ_fun ((_25_930, c)) -> begin
 (is_pure_or_ghost_comp c)
 end
@@ -1073,8 +1073,8 @@ end
 true
 end))
 
-let is_lemma = (fun ( t ) -> (match ((let _70_10611 = (compress_typ t)
-in _70_10611.Microsoft_FStar_Absyn_Syntax.n)) with
+let is_lemma = (fun ( t ) -> (match ((let _96_786 = (compress_typ t)
+in _96_786.Microsoft_FStar_Absyn_Syntax.n)) with
 | Microsoft_FStar_Absyn_Syntax.Typ_fun ((_25_938, c)) -> begin
 (match (c.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Comp (ct) -> begin
@@ -1088,15 +1088,15 @@ end
 false
 end))
 
-let is_smt_lemma = (fun ( t ) -> (match ((let _70_10614 = (compress_typ t)
-in _70_10614.Microsoft_FStar_Absyn_Syntax.n)) with
+let is_smt_lemma = (fun ( t ) -> (match ((let _96_789 = (compress_typ t)
+in _96_789.Microsoft_FStar_Absyn_Syntax.n)) with
 | Microsoft_FStar_Absyn_Syntax.Typ_fun ((_25_950, c)) -> begin
 (match (c.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Comp (ct) when (Microsoft_FStar_Absyn_Syntax.lid_equals ct.Microsoft_FStar_Absyn_Syntax.effect_name Microsoft_FStar_Absyn_Const.effect_Lemma_lid) -> begin
 (match (ct.Microsoft_FStar_Absyn_Syntax.effect_args) with
 | _req::_ens::(Support.Microsoft.FStar.Util.Inr (pats), _25_961)::_25_957 -> begin
-(match ((let _70_10615 = (unmeta_exp pats)
-in _70_10615.Microsoft_FStar_Absyn_Syntax.n)) with
+(match ((let _96_790 = (unmeta_exp pats)
+in _96_790.Microsoft_FStar_Absyn_Syntax.n)) with
 | Microsoft_FStar_Absyn_Syntax.Exp_app (({Microsoft_FStar_Absyn_Syntax.n = Microsoft_FStar_Absyn_Syntax.Exp_fvar ((fv, _25_978)); Microsoft_FStar_Absyn_Syntax.tk = _25_975; Microsoft_FStar_Absyn_Syntax.pos = _25_973; Microsoft_FStar_Absyn_Syntax.fvs = _25_971; Microsoft_FStar_Absyn_Syntax.uvs = _25_969}, _25_983)) -> begin
 (Microsoft_FStar_Absyn_Syntax.lid_equals fv.Microsoft_FStar_Absyn_Syntax.v Microsoft_FStar_Absyn_Const.cons_lid)
 end
@@ -1155,8 +1155,8 @@ end
 false
 end)))))
 
-let rec is_atom = (fun ( e ) -> (match ((let _70_10625 = (compress_exp e)
-in _70_10625.Microsoft_FStar_Absyn_Syntax.n)) with
+let rec is_atom = (fun ( e ) -> (match ((let _96_800 = (compress_exp e)
+in _96_800.Microsoft_FStar_Absyn_Syntax.n)) with
 | (Microsoft_FStar_Absyn_Syntax.Exp_bvar (_)) | (Microsoft_FStar_Absyn_Syntax.Exp_fvar (_)) | (Microsoft_FStar_Absyn_Syntax.Exp_constant (_)) -> begin
 true
 end
@@ -1213,8 +1213,8 @@ end
 t
 end)))
 
-let is_fun = (fun ( e ) -> (match ((let _70_10639 = (compress_exp e)
-in _70_10639.Microsoft_FStar_Absyn_Syntax.n)) with
+let is_fun = (fun ( e ) -> (match ((let _96_814 = (compress_exp e)
+in _96_814.Microsoft_FStar_Absyn_Syntax.n)) with
 | Microsoft_FStar_Absyn_Syntax.Exp_abs (_25_1092) -> begin
 true
 end
@@ -1222,8 +1222,8 @@ end
 false
 end))
 
-let is_function_typ = (fun ( t ) -> (match ((let _70_10642 = (compress_typ t)
-in _70_10642.Microsoft_FStar_Absyn_Syntax.n)) with
+let is_function_typ = (fun ( t ) -> (match ((let _96_817 = (compress_typ t)
+in _96_817.Microsoft_FStar_Absyn_Syntax.n)) with
 | Microsoft_FStar_Absyn_Syntax.Typ_fun (_25_1098) -> begin
 true
 end
@@ -1308,28 +1308,28 @@ in (Microsoft_FStar_Absyn_Syntax.mk_Exp_app (f, args) None r)))
 
 let mk_data = (fun ( l ) ( args ) -> (match (args) with
 | [] -> begin
-(let _70_10676 = (let _70_10675 = (let _70_10674 = (let _70_10673 = (Microsoft_FStar_Absyn_Syntax.range_of_lid l)
-in (fvar (Some (Microsoft_FStar_Absyn_Syntax.Data_ctor)) l _70_10673))
-in (_70_10674, Microsoft_FStar_Absyn_Syntax.Data_app))
-in Microsoft_FStar_Absyn_Syntax.Meta_desugared (_70_10675))
-in (Microsoft_FStar_Absyn_Syntax.mk_Exp_meta _70_10676))
+(let _96_851 = (let _96_850 = (let _96_849 = (let _96_848 = (Microsoft_FStar_Absyn_Syntax.range_of_lid l)
+in (fvar (Some (Microsoft_FStar_Absyn_Syntax.Data_ctor)) l _96_848))
+in (_96_849, Microsoft_FStar_Absyn_Syntax.Data_app))
+in Microsoft_FStar_Absyn_Syntax.Meta_desugared (_96_850))
+in (Microsoft_FStar_Absyn_Syntax.mk_Exp_meta _96_851))
 end
 | _25_1393 -> begin
-(let _70_10681 = (let _70_10680 = (let _70_10679 = (let _70_10678 = (let _70_10677 = (Microsoft_FStar_Absyn_Syntax.range_of_lid l)
-in (fvar (Some (Microsoft_FStar_Absyn_Syntax.Data_ctor)) l _70_10677))
-in (mk_exp_app _70_10678 args))
-in (_70_10679, Microsoft_FStar_Absyn_Syntax.Data_app))
-in Microsoft_FStar_Absyn_Syntax.Meta_desugared (_70_10680))
-in (Microsoft_FStar_Absyn_Syntax.mk_Exp_meta _70_10681))
+(let _96_856 = (let _96_855 = (let _96_854 = (let _96_853 = (let _96_852 = (Microsoft_FStar_Absyn_Syntax.range_of_lid l)
+in (fvar (Some (Microsoft_FStar_Absyn_Syntax.Data_ctor)) l _96_852))
+in (mk_exp_app _96_853 args))
+in (_96_854, Microsoft_FStar_Absyn_Syntax.Data_app))
+in Microsoft_FStar_Absyn_Syntax.Meta_desugared (_96_855))
+in (Microsoft_FStar_Absyn_Syntax.mk_Exp_meta _96_856))
 end))
 
 let mangle_field_name = (fun ( x ) -> (Microsoft_FStar_Absyn_Syntax.mk_ident ((Support.String.strcat "^fname^" x.Microsoft_FStar_Absyn_Syntax.idText), x.Microsoft_FStar_Absyn_Syntax.idRange)))
 
 let unmangle_field_name = (fun ( x ) -> (match ((Support.Microsoft.FStar.Util.starts_with x.Microsoft_FStar_Absyn_Syntax.idText "^fname^")) with
 | true -> begin
-(let _70_10687 = (let _70_10686 = (Support.Microsoft.FStar.Util.substring_from x.Microsoft_FStar_Absyn_Syntax.idText 7)
-in (_70_10686, x.Microsoft_FStar_Absyn_Syntax.idRange))
-in (Microsoft_FStar_Absyn_Syntax.mk_ident _70_10687))
+(let _96_862 = (let _96_861 = (Support.Microsoft.FStar.Util.substring_from x.Microsoft_FStar_Absyn_Syntax.idText 7)
+in (_96_861, x.Microsoft_FStar_Absyn_Syntax.idRange))
+in (Microsoft_FStar_Absyn_Syntax.mk_ident _96_862))
 end
 | false -> begin
 x
@@ -1337,29 +1337,29 @@ end))
 
 let mk_field_projector_name = (fun ( lid ) ( x ) ( i ) -> (let nm = (match ((Microsoft_FStar_Absyn_Syntax.is_null_bvar x)) with
 | true -> begin
-(let _70_10693 = (let _70_10692 = (let _70_10691 = (Support.Microsoft.FStar.Util.string_of_int i)
-in (Support.String.strcat "_" _70_10691))
-in (_70_10692, x.Microsoft_FStar_Absyn_Syntax.p))
-in (Microsoft_FStar_Absyn_Syntax.mk_ident _70_10693))
+(let _96_868 = (let _96_867 = (let _96_866 = (Support.Microsoft.FStar.Util.string_of_int i)
+in (Support.String.strcat "_" _96_866))
+in (_96_867, x.Microsoft_FStar_Absyn_Syntax.p))
+in (Microsoft_FStar_Absyn_Syntax.mk_ident _96_868))
 end
 | false -> begin
 x.Microsoft_FStar_Absyn_Syntax.v.Microsoft_FStar_Absyn_Syntax.ppname
 end)
 in (let y = (let _25_1402 = x.Microsoft_FStar_Absyn_Syntax.v
 in {Microsoft_FStar_Absyn_Syntax.ppname = nm; Microsoft_FStar_Absyn_Syntax.realname = _25_1402.Microsoft_FStar_Absyn_Syntax.realname})
-in (let _70_10698 = (let _70_10697 = (let _70_10696 = (Microsoft_FStar_Absyn_Syntax.ids_of_lid lid)
-in (let _70_10695 = (let _70_10694 = (unmangle_field_name nm)
-in (_70_10694)::[])
-in (Support.List.append _70_10696 _70_10695)))
-in (Microsoft_FStar_Absyn_Syntax.lid_of_ids _70_10697))
-in (_70_10698, y)))))
+in (let _96_873 = (let _96_872 = (let _96_871 = (Microsoft_FStar_Absyn_Syntax.ids_of_lid lid)
+in (let _96_870 = (let _96_869 = (unmangle_field_name nm)
+in (_96_869)::[])
+in (Support.List.append _96_871 _96_870)))
+in (Microsoft_FStar_Absyn_Syntax.lid_of_ids _96_872))
+in (_96_873, y)))))
 
 let unchecked_unify = (fun ( uv ) ( t ) -> (match ((Support.Microsoft.FStar.Unionfind.find uv)) with
 | Microsoft_FStar_Absyn_Syntax.Fixed (_25_1408) -> begin
-(let _70_10703 = (let _70_10702 = (let _70_10701 = (Support.Microsoft.FStar.Unionfind.uvar_id uv)
-in (Support.All.pipe_left Support.Microsoft.FStar.Util.string_of_int _70_10701))
-in (Support.Microsoft.FStar.Util.format1 "Changing a fixed uvar! U%s\n" _70_10702))
-in (Support.All.failwith _70_10703))
+(let _96_878 = (let _96_877 = (let _96_876 = (Support.Microsoft.FStar.Unionfind.uvar_id uv)
+in (Support.All.pipe_left Support.Microsoft.FStar.Util.string_of_int _96_876))
+in (Support.Microsoft.FStar.Util.format1 "Changing a fixed uvar! U%s\n" _96_877))
+in (Support.All.failwith _96_878))
 end
 | _25_1411 -> begin
 (Support.Microsoft.FStar.Unionfind.change uv (Microsoft_FStar_Absyn_Syntax.Fixed (t)))
@@ -1399,29 +1399,29 @@ let uv_eq = (fun ( _25_1445 ) ( _25_1449 ) -> (match ((_25_1445, _25_1449)) with
 (Support.Microsoft.FStar.Unionfind.equivalent uv1 uv2)
 end))
 
-let union_uvs = (fun ( uvs1 ) ( uvs2 ) -> (let _70_10732 = (Support.Microsoft.FStar.Util.set_union uvs1.Microsoft_FStar_Absyn_Syntax.uvars_k uvs2.Microsoft_FStar_Absyn_Syntax.uvars_k)
-in (let _70_10731 = (Support.Microsoft.FStar.Util.set_union uvs1.Microsoft_FStar_Absyn_Syntax.uvars_t uvs2.Microsoft_FStar_Absyn_Syntax.uvars_t)
-in (let _70_10730 = (Support.Microsoft.FStar.Util.set_union uvs1.Microsoft_FStar_Absyn_Syntax.uvars_e uvs2.Microsoft_FStar_Absyn_Syntax.uvars_e)
-in {Microsoft_FStar_Absyn_Syntax.uvars_k = _70_10732; Microsoft_FStar_Absyn_Syntax.uvars_t = _70_10731; Microsoft_FStar_Absyn_Syntax.uvars_e = _70_10730}))))
+let union_uvs = (fun ( uvs1 ) ( uvs2 ) -> (let _96_907 = (Support.Microsoft.FStar.Util.set_union uvs1.Microsoft_FStar_Absyn_Syntax.uvars_k uvs2.Microsoft_FStar_Absyn_Syntax.uvars_k)
+in (let _96_906 = (Support.Microsoft.FStar.Util.set_union uvs1.Microsoft_FStar_Absyn_Syntax.uvars_t uvs2.Microsoft_FStar_Absyn_Syntax.uvars_t)
+in (let _96_905 = (Support.Microsoft.FStar.Util.set_union uvs1.Microsoft_FStar_Absyn_Syntax.uvars_e uvs2.Microsoft_FStar_Absyn_Syntax.uvars_e)
+in {Microsoft_FStar_Absyn_Syntax.uvars_k = _96_907; Microsoft_FStar_Absyn_Syntax.uvars_t = _96_906; Microsoft_FStar_Absyn_Syntax.uvars_e = _96_905}))))
 
-let union_fvs = (fun ( fvs1 ) ( fvs2 ) -> (let _70_10738 = (Support.Microsoft.FStar.Util.set_union fvs1.Microsoft_FStar_Absyn_Syntax.ftvs fvs2.Microsoft_FStar_Absyn_Syntax.ftvs)
-in (let _70_10737 = (Support.Microsoft.FStar.Util.set_union fvs1.Microsoft_FStar_Absyn_Syntax.fxvs fvs2.Microsoft_FStar_Absyn_Syntax.fxvs)
-in {Microsoft_FStar_Absyn_Syntax.ftvs = _70_10738; Microsoft_FStar_Absyn_Syntax.fxvs = _70_10737})))
+let union_fvs = (fun ( fvs1 ) ( fvs2 ) -> (let _96_913 = (Support.Microsoft.FStar.Util.set_union fvs1.Microsoft_FStar_Absyn_Syntax.ftvs fvs2.Microsoft_FStar_Absyn_Syntax.ftvs)
+in (let _96_912 = (Support.Microsoft.FStar.Util.set_union fvs1.Microsoft_FStar_Absyn_Syntax.fxvs fvs2.Microsoft_FStar_Absyn_Syntax.fxvs)
+in {Microsoft_FStar_Absyn_Syntax.ftvs = _96_913; Microsoft_FStar_Absyn_Syntax.fxvs = _96_912})))
 
 let union_fvs_uvs = (fun ( _25_1456 ) ( _25_1459 ) -> (match ((_25_1456, _25_1459)) with
 | ((fvs1, uvs1), (fvs2, uvs2)) -> begin
-(let _70_10744 = (union_fvs fvs1 fvs2)
-in (let _70_10743 = (union_uvs uvs1 uvs2)
-in (_70_10744, _70_10743)))
+(let _96_919 = (union_fvs fvs1 fvs2)
+in (let _96_918 = (union_uvs uvs1 uvs2)
+in (_96_919, _96_918)))
 end))
 
 let sub_fv = (fun ( _25_1462 ) ( _25_1465 ) -> (match ((_25_1462, _25_1465)) with
 | ((fvs, uvs), (tvars, vvars)) -> begin
-(let _70_10765 = (let _25_1466 = fvs
-in (let _70_10764 = (Support.Microsoft.FStar.Util.set_difference fvs.Microsoft_FStar_Absyn_Syntax.ftvs tvars)
-in (let _70_10763 = (Support.Microsoft.FStar.Util.set_difference fvs.Microsoft_FStar_Absyn_Syntax.fxvs vvars)
-in {Microsoft_FStar_Absyn_Syntax.ftvs = _70_10764; Microsoft_FStar_Absyn_Syntax.fxvs = _70_10763})))
-in (_70_10765, uvs))
+(let _96_940 = (let _25_1466 = fvs
+in (let _96_939 = (Support.Microsoft.FStar.Util.set_difference fvs.Microsoft_FStar_Absyn_Syntax.ftvs tvars)
+in (let _96_938 = (Support.Microsoft.FStar.Util.set_difference fvs.Microsoft_FStar_Absyn_Syntax.fxvs vvars)
+in {Microsoft_FStar_Absyn_Syntax.ftvs = _96_939; Microsoft_FStar_Absyn_Syntax.fxvs = _96_938})))
+in (_96_940, uvs))
 end))
 
 let stash = (fun ( uvonly ) ( s ) ( _25_1474 ) -> (match (_25_1474) with
@@ -1436,14 +1436,14 @@ end
 end))
 end))
 
-let single_fv = (fun ( x ) -> (let _70_10776 = (Microsoft_FStar_Absyn_Syntax.new_ftv_set ())
-in (Support.Microsoft.FStar.Util.set_add x _70_10776)))
+let single_fv = (fun ( x ) -> (let _96_951 = (Microsoft_FStar_Absyn_Syntax.new_ftv_set ())
+in (Support.Microsoft.FStar.Util.set_add x _96_951)))
 
-let single_uv = (fun ( u ) -> (let _70_10784 = (Microsoft_FStar_Absyn_Syntax.new_uv_set ())
-in (Support.Microsoft.FStar.Util.set_add u _70_10784)))
+let single_uv = (fun ( u ) -> (let _96_959 = (Microsoft_FStar_Absyn_Syntax.new_uv_set ())
+in (Support.Microsoft.FStar.Util.set_add u _96_959)))
 
-let single_uvt = (fun ( u ) -> (let _70_10792 = (Microsoft_FStar_Absyn_Syntax.new_uvt_set ())
-in (Support.Microsoft.FStar.Util.set_add u _70_10792)))
+let single_uvt = (fun ( u ) -> (let _96_967 = (Microsoft_FStar_Absyn_Syntax.new_uvt_set ())
+in (Support.Microsoft.FStar.Util.set_add u _96_967)))
 
 let rec vs_typ' = (fun ( t ) ( uvonly ) ( cont ) -> (let t = (compress_typ t)
 in (match (t.Microsoft_FStar_Absyn_Syntax.n) with
@@ -1456,19 +1456,19 @@ end
 (cont (Microsoft_FStar_Absyn_Syntax.no_fvs, Microsoft_FStar_Absyn_Syntax.no_uvs))
 end
 | false -> begin
-(let _70_10907 = (let _70_10906 = (let _25_1490 = Microsoft_FStar_Absyn_Syntax.no_fvs
-in (let _70_10905 = (single_fv a)
-in {Microsoft_FStar_Absyn_Syntax.ftvs = _70_10905; Microsoft_FStar_Absyn_Syntax.fxvs = _25_1490.Microsoft_FStar_Absyn_Syntax.fxvs}))
-in (_70_10906, Microsoft_FStar_Absyn_Syntax.no_uvs))
-in (cont _70_10907))
+(let _96_1082 = (let _96_1081 = (let _25_1490 = Microsoft_FStar_Absyn_Syntax.no_fvs
+in (let _96_1080 = (single_fv a)
+in {Microsoft_FStar_Absyn_Syntax.ftvs = _96_1080; Microsoft_FStar_Absyn_Syntax.fxvs = _25_1490.Microsoft_FStar_Absyn_Syntax.fxvs}))
+in (_96_1081, Microsoft_FStar_Absyn_Syntax.no_uvs))
+in (cont _96_1082))
 end)
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_uvar ((uv, k)) -> begin
-(let _70_10910 = (let _70_10909 = (let _25_1496 = Microsoft_FStar_Absyn_Syntax.no_uvs
-in (let _70_10908 = (single_uvt (uv, k))
-in {Microsoft_FStar_Absyn_Syntax.uvars_k = _25_1496.Microsoft_FStar_Absyn_Syntax.uvars_k; Microsoft_FStar_Absyn_Syntax.uvars_t = _70_10908; Microsoft_FStar_Absyn_Syntax.uvars_e = _25_1496.Microsoft_FStar_Absyn_Syntax.uvars_e}))
-in (Microsoft_FStar_Absyn_Syntax.no_fvs, _70_10909))
-in (cont _70_10910))
+(let _96_1085 = (let _96_1084 = (let _25_1496 = Microsoft_FStar_Absyn_Syntax.no_uvs
+in (let _96_1083 = (single_uvt (uv, k))
+in {Microsoft_FStar_Absyn_Syntax.uvars_k = _25_1496.Microsoft_FStar_Absyn_Syntax.uvars_k; Microsoft_FStar_Absyn_Syntax.uvars_t = _96_1083; Microsoft_FStar_Absyn_Syntax.uvars_e = _25_1496.Microsoft_FStar_Absyn_Syntax.uvars_e}))
+in (Microsoft_FStar_Absyn_Syntax.no_fvs, _96_1084))
+in (cont _96_1085))
 end
 | (Microsoft_FStar_Absyn_Syntax.Typ_unknown) | (Microsoft_FStar_Absyn_Syntax.Typ_const (_)) -> begin
 (cont (Microsoft_FStar_Absyn_Syntax.no_fvs, Microsoft_FStar_Absyn_Syntax.no_uvs))
@@ -1476,37 +1476,37 @@ end
 | Microsoft_FStar_Absyn_Syntax.Typ_fun ((bs, c)) -> begin
 (vs_binders bs uvonly (fun ( _25_1508 ) -> (match (_25_1508) with
 | (bvs, vs1) -> begin
-(vs_comp c uvonly (fun ( vs2 ) -> (let _70_10914 = (let _70_10913 = (union_fvs_uvs vs1 vs2)
-in (sub_fv _70_10913 bvs))
-in (cont _70_10914))))
+(vs_comp c uvonly (fun ( vs2 ) -> (let _96_1089 = (let _96_1088 = (union_fvs_uvs vs1 vs2)
+in (sub_fv _96_1088 bvs))
+in (cont _96_1089))))
 end)))
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_lam ((bs, t)) -> begin
 (vs_binders bs uvonly (fun ( _25_1516 ) -> (match (_25_1516) with
 | (bvs, vs1) -> begin
-(vs_typ t uvonly (fun ( vs2 ) -> (let _70_10918 = (let _70_10917 = (union_fvs_uvs vs1 vs2)
-in (sub_fv _70_10917 bvs))
-in (cont _70_10918))))
+(vs_typ t uvonly (fun ( vs2 ) -> (let _96_1093 = (let _96_1092 = (union_fvs_uvs vs1 vs2)
+in (sub_fv _96_1092 bvs))
+in (cont _96_1093))))
 end)))
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_refine ((x, t)) -> begin
 (vs_binders (((Support.Microsoft.FStar.Util.Inr (x), None))::[]) uvonly (fun ( _25_1524 ) -> (match (_25_1524) with
 | (bvs, vs1) -> begin
-(vs_typ t uvonly (fun ( vs2 ) -> (let _70_10922 = (let _70_10921 = (union_fvs_uvs vs1 vs2)
-in (sub_fv _70_10921 bvs))
-in (cont _70_10922))))
+(vs_typ t uvonly (fun ( vs2 ) -> (let _96_1097 = (let _96_1096 = (union_fvs_uvs vs1 vs2)
+in (sub_fv _96_1096 bvs))
+in (cont _96_1097))))
 end)))
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_app ((t, args)) -> begin
-(vs_typ t uvonly (fun ( vs1 ) -> (vs_args args uvonly (fun ( vs2 ) -> (let _70_10925 = (union_fvs_uvs vs1 vs2)
-in (cont _70_10925))))))
+(vs_typ t uvonly (fun ( vs1 ) -> (vs_args args uvonly (fun ( vs2 ) -> (let _96_1100 = (union_fvs_uvs vs1 vs2)
+in (cont _96_1100))))))
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_ascribed ((t, _25_1534)) -> begin
 (vs_typ t uvonly cont)
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_meta (Microsoft_FStar_Absyn_Syntax.Meta_slack_formula ((t1, t2, _25_1540))) -> begin
-(vs_typ t1 uvonly (fun ( vs1 ) -> (vs_typ t2 uvonly (fun ( vs2 ) -> (let _70_10928 = (union_fvs_uvs vs1 vs2)
-in (cont _70_10928))))))
+(vs_typ t1 uvonly (fun ( vs1 ) -> (vs_typ t2 uvonly (fun ( vs2 ) -> (let _96_1103 = (union_fvs_uvs vs1 vs2)
+in (cont _96_1103))))))
 end
 | (Microsoft_FStar_Absyn_Syntax.Typ_meta (Microsoft_FStar_Absyn_Syntax.Meta_refresh_label ((t, _, _)))) | (Microsoft_FStar_Absyn_Syntax.Typ_meta (Microsoft_FStar_Absyn_Syntax.Meta_labeled ((t, _, _, _)))) | (Microsoft_FStar_Absyn_Syntax.Typ_meta (Microsoft_FStar_Absyn_Syntax.Meta_named ((t, _)))) | (Microsoft_FStar_Absyn_Syntax.Typ_meta (Microsoft_FStar_Absyn_Syntax.Meta_pattern ((t, _)))) -> begin
 (vs_typ t uvonly cont)
@@ -1518,21 +1518,21 @@ end
 | (Support.Microsoft.FStar.Util.Inl (a), _25_1582)::rest -> begin
 (vs_kind a.Microsoft_FStar_Absyn_Syntax.sort uvonly (fun ( vs ) -> (vs_binders rest uvonly (fun ( _25_1590 ) -> (match (_25_1590) with
 | ((tvars, vvars), vs2) -> begin
-(let _70_10965 = (let _70_10964 = (let _70_10962 = (Support.Microsoft.FStar.Util.set_add a tvars)
-in (_70_10962, vvars))
-in (let _70_10963 = (union_fvs_uvs vs vs2)
-in (_70_10964, _70_10963)))
-in (cont _70_10965))
+(let _96_1140 = (let _96_1139 = (let _96_1137 = (Support.Microsoft.FStar.Util.set_add a tvars)
+in (_96_1137, vvars))
+in (let _96_1138 = (union_fvs_uvs vs vs2)
+in (_96_1139, _96_1138)))
+in (cont _96_1140))
 end)))))
 end
 | (Support.Microsoft.FStar.Util.Inr (x), _25_1595)::rest -> begin
 (vs_typ x.Microsoft_FStar_Absyn_Syntax.sort uvonly (fun ( vs ) -> (vs_binders rest uvonly (fun ( _25_1603 ) -> (match (_25_1603) with
 | ((tvars, vvars), vs2) -> begin
-(let _70_10989 = (let _70_10988 = (let _70_10986 = (Support.Microsoft.FStar.Util.set_add x vvars)
-in (tvars, _70_10986))
-in (let _70_10987 = (union_fvs_uvs vs vs2)
-in (_70_10988, _70_10987)))
-in (cont _70_10989))
+(let _96_1164 = (let _96_1163 = (let _96_1161 = (Support.Microsoft.FStar.Util.set_add x vvars)
+in (tvars, _96_1161))
+in (let _96_1162 = (union_fvs_uvs vs vs2)
+in (_96_1163, _96_1162)))
+in (cont _96_1164))
 end)))))
 end))
 and vs_args = (fun ( args ) ( uvonly ) ( cont ) -> (match (args) with
@@ -1540,16 +1540,16 @@ and vs_args = (fun ( args ) ( uvonly ) ( cont ) -> (match (args) with
 (cont (Microsoft_FStar_Absyn_Syntax.no_fvs, Microsoft_FStar_Absyn_Syntax.no_uvs))
 end
 | (Support.Microsoft.FStar.Util.Inl (t), _25_1613)::tl -> begin
-(vs_typ t uvonly (fun ( ft1 ) -> (vs_args tl uvonly (fun ( ft2 ) -> (let _70_10993 = (union_fvs_uvs ft1 ft2)
-in (cont _70_10993))))))
+(vs_typ t uvonly (fun ( ft1 ) -> (vs_args tl uvonly (fun ( ft2 ) -> (let _96_1168 = (union_fvs_uvs ft1 ft2)
+in (cont _96_1168))))))
 end
 | (Support.Microsoft.FStar.Util.Inr (e), _25_1622)::tl -> begin
-(vs_exp e uvonly (fun ( ft1 ) -> (vs_args tl uvonly (fun ( ft2 ) -> (let _70_10996 = (union_fvs_uvs ft1 ft2)
-in (cont _70_10996))))))
+(vs_exp e uvonly (fun ( ft1 ) -> (vs_args tl uvonly (fun ( ft2 ) -> (let _96_1171 = (union_fvs_uvs ft1 ft2)
+in (cont _96_1171))))))
 end))
-and vs_typ = (fun ( t ) ( uvonly ) ( cont ) -> (match ((let _70_10999 = (Support.ST.read t.Microsoft_FStar_Absyn_Syntax.fvs)
-in (let _70_10998 = (Support.ST.read t.Microsoft_FStar_Absyn_Syntax.uvs)
-in (_70_10999, _70_10998)))) with
+and vs_typ = (fun ( t ) ( uvonly ) ( cont ) -> (match ((let _96_1174 = (Support.ST.read t.Microsoft_FStar_Absyn_Syntax.fvs)
+in (let _96_1173 = (Support.ST.read t.Microsoft_FStar_Absyn_Syntax.uvs)
+in (_96_1174, _96_1173)))) with
 | (Some (_25_1632), None) -> begin
 (Support.All.failwith "Impossible")
 end
@@ -1573,9 +1573,9 @@ end))
 and vs_kind' = (fun ( k ) ( uvonly ) ( cont ) -> (let k = (compress_kind k)
 in (match (k.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Kind_lam ((_25_1660, k)) -> begin
-(let _70_11004 = (let _70_11003 = (Support.Microsoft.FStar.Range.string_of_range k.Microsoft_FStar_Absyn_Syntax.pos)
-in (Support.Microsoft.FStar.Util.format1 "%s: Impossible ... found a Kind_lam bare" _70_11003))
-in (Support.All.failwith _70_11004))
+(let _96_1179 = (let _96_1178 = (Support.Microsoft.FStar.Range.string_of_range k.Microsoft_FStar_Absyn_Syntax.pos)
+in (Support.Microsoft.FStar.Util.format1 "%s: Impossible ... found a Kind_lam bare" _96_1178))
+in (Support.All.failwith _96_1179))
 end
 | Microsoft_FStar_Absyn_Syntax.Kind_delayed (_25_1665) -> begin
 (Support.All.failwith "Impossible")
@@ -1586,11 +1586,11 @@ end
 | Microsoft_FStar_Absyn_Syntax.Kind_uvar ((uv, args)) -> begin
 (vs_args args uvonly (fun ( _25_1676 ) -> (match (_25_1676) with
 | (fvs, uvs) -> begin
-(let _70_11008 = (let _70_11007 = (let _25_1677 = uvs
-in (let _70_11006 = (Support.Microsoft.FStar.Util.set_add uv uvs.Microsoft_FStar_Absyn_Syntax.uvars_k)
-in {Microsoft_FStar_Absyn_Syntax.uvars_k = _70_11006; Microsoft_FStar_Absyn_Syntax.uvars_t = _25_1677.Microsoft_FStar_Absyn_Syntax.uvars_t; Microsoft_FStar_Absyn_Syntax.uvars_e = _25_1677.Microsoft_FStar_Absyn_Syntax.uvars_e}))
-in (fvs, _70_11007))
-in (cont _70_11008))
+(let _96_1183 = (let _96_1182 = (let _25_1677 = uvs
+in (let _96_1181 = (Support.Microsoft.FStar.Util.set_add uv uvs.Microsoft_FStar_Absyn_Syntax.uvars_k)
+in {Microsoft_FStar_Absyn_Syntax.uvars_k = _96_1181; Microsoft_FStar_Absyn_Syntax.uvars_t = _25_1677.Microsoft_FStar_Absyn_Syntax.uvars_t; Microsoft_FStar_Absyn_Syntax.uvars_e = _25_1677.Microsoft_FStar_Absyn_Syntax.uvars_e}))
+in (fvs, _96_1182))
+in (cont _96_1183))
 end)))
 end
 | Microsoft_FStar_Absyn_Syntax.Kind_abbrev ((_25_1680, k)) -> begin
@@ -1599,14 +1599,14 @@ end
 | Microsoft_FStar_Absyn_Syntax.Kind_arrow ((bs, k)) -> begin
 (vs_binders bs uvonly (fun ( _25_1690 ) -> (match (_25_1690) with
 | (bvs, vs1) -> begin
-(vs_kind k uvonly (fun ( vs2 ) -> (let _70_11012 = (let _70_11011 = (union_fvs_uvs vs1 vs2)
-in (sub_fv _70_11011 bvs))
-in (cont _70_11012))))
+(vs_kind k uvonly (fun ( vs2 ) -> (let _96_1187 = (let _96_1186 = (union_fvs_uvs vs1 vs2)
+in (sub_fv _96_1186 bvs))
+in (cont _96_1187))))
 end)))
 end)))
-and vs_kind = (fun ( k ) ( uvonly ) ( cont ) -> (match ((let _70_11015 = (Support.ST.read k.Microsoft_FStar_Absyn_Syntax.fvs)
-in (let _70_11014 = (Support.ST.read k.Microsoft_FStar_Absyn_Syntax.uvs)
-in (_70_11015, _70_11014)))) with
+and vs_kind = (fun ( k ) ( uvonly ) ( cont ) -> (match ((let _96_1190 = (Support.ST.read k.Microsoft_FStar_Absyn_Syntax.fvs)
+in (let _96_1189 = (Support.ST.read k.Microsoft_FStar_Absyn_Syntax.uvs)
+in (_96_1190, _96_1189)))) with
 | (Some (_25_1697), None) -> begin
 (Support.All.failwith "Impossible")
 end
@@ -1636,11 +1636,11 @@ end
 (cont (Microsoft_FStar_Absyn_Syntax.no_fvs, Microsoft_FStar_Absyn_Syntax.no_uvs))
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_uvar ((uv, t)) -> begin
-(let _70_11021 = (let _70_11020 = (let _25_1737 = Microsoft_FStar_Absyn_Syntax.no_uvs
-in (let _70_11019 = (single_uvt (uv, t))
-in {Microsoft_FStar_Absyn_Syntax.uvars_k = _25_1737.Microsoft_FStar_Absyn_Syntax.uvars_k; Microsoft_FStar_Absyn_Syntax.uvars_t = _25_1737.Microsoft_FStar_Absyn_Syntax.uvars_t; Microsoft_FStar_Absyn_Syntax.uvars_e = _70_11019}))
-in (Microsoft_FStar_Absyn_Syntax.no_fvs, _70_11020))
-in (cont _70_11021))
+(let _96_1196 = (let _96_1195 = (let _25_1737 = Microsoft_FStar_Absyn_Syntax.no_uvs
+in (let _96_1194 = (single_uvt (uv, t))
+in {Microsoft_FStar_Absyn_Syntax.uvars_k = _25_1737.Microsoft_FStar_Absyn_Syntax.uvars_k; Microsoft_FStar_Absyn_Syntax.uvars_t = _25_1737.Microsoft_FStar_Absyn_Syntax.uvars_t; Microsoft_FStar_Absyn_Syntax.uvars_e = _96_1194}))
+in (Microsoft_FStar_Absyn_Syntax.no_fvs, _96_1195))
+in (cont _96_1196))
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_bvar (x) -> begin
 (match (uvonly) with
@@ -1648,11 +1648,11 @@ end
 (cont (Microsoft_FStar_Absyn_Syntax.no_fvs, Microsoft_FStar_Absyn_Syntax.no_uvs))
 end
 | false -> begin
-(let _70_11024 = (let _70_11023 = (let _25_1741 = Microsoft_FStar_Absyn_Syntax.no_fvs
-in (let _70_11022 = (single_fv x)
-in {Microsoft_FStar_Absyn_Syntax.ftvs = _25_1741.Microsoft_FStar_Absyn_Syntax.ftvs; Microsoft_FStar_Absyn_Syntax.fxvs = _70_11022}))
-in (_70_11023, Microsoft_FStar_Absyn_Syntax.no_uvs))
-in (cont _70_11024))
+(let _96_1199 = (let _96_1198 = (let _25_1741 = Microsoft_FStar_Absyn_Syntax.no_fvs
+in (let _96_1197 = (single_fv x)
+in {Microsoft_FStar_Absyn_Syntax.ftvs = _25_1741.Microsoft_FStar_Absyn_Syntax.ftvs; Microsoft_FStar_Absyn_Syntax.fxvs = _96_1197}))
+in (_96_1198, Microsoft_FStar_Absyn_Syntax.no_uvs))
+in (cont _96_1199))
 end)
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_ascribed ((e, _25_1745, _25_1747)) -> begin
@@ -1661,14 +1661,14 @@ end
 | Microsoft_FStar_Absyn_Syntax.Exp_abs ((bs, e)) -> begin
 (vs_binders bs uvonly (fun ( _25_1756 ) -> (match (_25_1756) with
 | (bvs, vs1) -> begin
-(vs_exp e uvonly (fun ( vs2 ) -> (let _70_11028 = (let _70_11027 = (union_fvs_uvs vs1 vs2)
-in (sub_fv _70_11027 bvs))
-in (cont _70_11028))))
+(vs_exp e uvonly (fun ( vs2 ) -> (let _96_1203 = (let _96_1202 = (union_fvs_uvs vs1 vs2)
+in (sub_fv _96_1202 bvs))
+in (cont _96_1203))))
 end)))
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_app ((e, args)) -> begin
-(vs_exp e uvonly (fun ( ft1 ) -> (vs_args args uvonly (fun ( ft2 ) -> (let _70_11031 = (union_fvs_uvs ft1 ft2)
-in (cont _70_11031))))))
+(vs_exp e uvonly (fun ( ft1 ) -> (vs_args args uvonly (fun ( ft2 ) -> (let _96_1206 = (union_fvs_uvs ft1 ft2)
+in (cont _96_1206))))))
 end
 | (Microsoft_FStar_Absyn_Syntax.Exp_match (_)) | (Microsoft_FStar_Absyn_Syntax.Exp_let (_)) -> begin
 (cont (Microsoft_FStar_Absyn_Syntax.no_fvs, Microsoft_FStar_Absyn_Syntax.no_uvs))
@@ -1676,9 +1676,9 @@ end
 | Microsoft_FStar_Absyn_Syntax.Exp_meta (Microsoft_FStar_Absyn_Syntax.Meta_desugared ((e, _25_1772))) -> begin
 (vs_exp e uvonly cont)
 end)))
-and vs_exp = (fun ( e ) ( uvonly ) ( cont ) -> (match ((let _70_11034 = (Support.ST.read e.Microsoft_FStar_Absyn_Syntax.fvs)
-in (let _70_11033 = (Support.ST.read e.Microsoft_FStar_Absyn_Syntax.uvs)
-in (_70_11034, _70_11033)))) with
+and vs_exp = (fun ( e ) ( uvonly ) ( cont ) -> (match ((let _96_1209 = (Support.ST.read e.Microsoft_FStar_Absyn_Syntax.fvs)
+in (let _96_1208 = (Support.ST.read e.Microsoft_FStar_Absyn_Syntax.uvs)
+in (_96_1209, _96_1208)))) with
 | (Some (_25_1781), None) -> begin
 (Support.All.failwith "Impossible")
 end
@@ -1709,13 +1709,13 @@ end
 (vs_typ ct.Microsoft_FStar_Absyn_Syntax.result_typ uvonly k)
 end
 | false -> begin
-(vs_typ ct.Microsoft_FStar_Absyn_Syntax.result_typ uvonly (fun ( vs1 ) -> (vs_args ct.Microsoft_FStar_Absyn_Syntax.effect_args uvonly (fun ( vs2 ) -> (let _70_11040 = (union_fvs_uvs vs1 vs2)
-in (k _70_11040))))))
+(vs_typ ct.Microsoft_FStar_Absyn_Syntax.result_typ uvonly (fun ( vs1 ) -> (vs_args ct.Microsoft_FStar_Absyn_Syntax.effect_args uvonly (fun ( vs2 ) -> (let _96_1215 = (union_fvs_uvs vs1 vs2)
+in (k _96_1215))))))
 end)
 end))
-and vs_comp = (fun ( c ) ( uvonly ) ( cont ) -> (match ((let _70_11043 = (Support.ST.read c.Microsoft_FStar_Absyn_Syntax.fvs)
-in (let _70_11042 = (Support.ST.read c.Microsoft_FStar_Absyn_Syntax.uvs)
-in (_70_11043, _70_11042)))) with
+and vs_comp = (fun ( c ) ( uvonly ) ( cont ) -> (match ((let _96_1218 = (Support.ST.read c.Microsoft_FStar_Absyn_Syntax.fvs)
+in (let _96_1217 = (Support.ST.read c.Microsoft_FStar_Absyn_Syntax.uvs)
+in (_96_1218, _96_1217)))) with
 | (Some (_25_1818), None) -> begin
 (Support.All.failwith "Impossible")
 end
@@ -1748,8 +1748,8 @@ and vs_either_l = (fun ( tes ) ( uvonly ) ( cont ) -> (match (tes) with
 (cont (Microsoft_FStar_Absyn_Syntax.no_fvs, Microsoft_FStar_Absyn_Syntax.no_uvs))
 end
 | hd::tl -> begin
-(vs_either hd uvonly (fun ( ft1 ) -> (vs_either_l tl uvonly (fun ( ft2 ) -> (let _70_11050 = (union_fvs_uvs ft1 ft2)
-in (cont _70_11050))))))
+(vs_either hd uvonly (fun ( ft1 ) -> (vs_either_l tl uvonly (fun ( ft2 ) -> (let _96_1225 = (union_fvs_uvs ft1 ft2)
+in (cont _96_1225))))))
 end))
 
 let freevars_kind = (fun ( k ) -> (vs_kind k false (fun ( _25_1862 ) -> (match (_25_1862) with
@@ -1774,12 +1774,12 @@ end))))
 
 let freevars_args = (fun ( args ) -> (Support.All.pipe_right args (Support.List.fold_left (fun ( out ) ( a ) -> (match ((Support.Prims.fst a)) with
 | Support.Microsoft.FStar.Util.Inl (t) -> begin
-(let _70_11066 = (freevars_typ t)
-in (Support.All.pipe_left (union_fvs out) _70_11066))
+(let _96_1241 = (freevars_typ t)
+in (Support.All.pipe_left (union_fvs out) _96_1241))
 end
 | Support.Microsoft.FStar.Util.Inr (e) -> begin
-(let _70_11067 = (freevars_exp e)
-in (Support.All.pipe_left (union_fvs out) _70_11067))
+(let _96_1242 = (freevars_exp e)
+in (Support.All.pipe_left (union_fvs out) _96_1242))
 end)) Microsoft_FStar_Absyn_Syntax.no_fvs)))
 
 let is_free = (fun ( axs ) ( fvs ) -> (Support.All.pipe_right axs (Support.Microsoft.FStar.Util.for_some (fun ( _25_24 ) -> (match (_25_24) with
@@ -1848,43 +1848,43 @@ let ___SynSumComp____0 = (fun ( projectee ) -> (match (projectee) with
 _25_1903
 end))
 
-let rec update_uvars = (fun ( s ) ( uvs ) -> (let out = (let _70_11141 = (Support.Microsoft.FStar.Util.set_elements uvs.Microsoft_FStar_Absyn_Syntax.uvars_k)
-in (Support.All.pipe_right _70_11141 (Support.List.fold_left (fun ( out ) ( u ) -> (match ((Support.Microsoft.FStar.Unionfind.find u)) with
+let rec update_uvars = (fun ( s ) ( uvs ) -> (let out = (let _96_1316 = (Support.Microsoft.FStar.Util.set_elements uvs.Microsoft_FStar_Absyn_Syntax.uvars_k)
+in (Support.All.pipe_right _96_1316 (Support.List.fold_left (fun ( out ) ( u ) -> (match ((Support.Microsoft.FStar.Unionfind.find u)) with
 | Microsoft_FStar_Absyn_Syntax.Fixed (k) -> begin
-(let _70_11139 = (uvars_in_kind k)
-in (union_uvs _70_11139 out))
+(let _96_1314 = (uvars_in_kind k)
+in (union_uvs _96_1314 out))
 end
 | _25_1911 -> begin
 (let _25_1912 = out
-in (let _70_11140 = (Support.Microsoft.FStar.Util.set_add u out.Microsoft_FStar_Absyn_Syntax.uvars_k)
-in {Microsoft_FStar_Absyn_Syntax.uvars_k = _70_11140; Microsoft_FStar_Absyn_Syntax.uvars_t = _25_1912.Microsoft_FStar_Absyn_Syntax.uvars_t; Microsoft_FStar_Absyn_Syntax.uvars_e = _25_1912.Microsoft_FStar_Absyn_Syntax.uvars_e}))
+in (let _96_1315 = (Support.Microsoft.FStar.Util.set_add u out.Microsoft_FStar_Absyn_Syntax.uvars_k)
+in {Microsoft_FStar_Absyn_Syntax.uvars_k = _96_1315; Microsoft_FStar_Absyn_Syntax.uvars_t = _25_1912.Microsoft_FStar_Absyn_Syntax.uvars_t; Microsoft_FStar_Absyn_Syntax.uvars_e = _25_1912.Microsoft_FStar_Absyn_Syntax.uvars_e}))
 end)) Microsoft_FStar_Absyn_Syntax.no_uvs)))
-in (let out = (let _70_11146 = (Support.Microsoft.FStar.Util.set_elements uvs.Microsoft_FStar_Absyn_Syntax.uvars_t)
-in (Support.All.pipe_right _70_11146 (Support.List.fold_left (fun ( out ) ( _25_1918 ) -> (match (_25_1918) with
+in (let out = (let _96_1321 = (Support.Microsoft.FStar.Util.set_elements uvs.Microsoft_FStar_Absyn_Syntax.uvars_t)
+in (Support.All.pipe_right _96_1321 (Support.List.fold_left (fun ( out ) ( _25_1918 ) -> (match (_25_1918) with
 | (u, t) -> begin
 (match ((Support.Microsoft.FStar.Unionfind.find u)) with
 | Microsoft_FStar_Absyn_Syntax.Fixed (t) -> begin
-(let _70_11144 = (uvars_in_typ t)
-in (union_uvs _70_11144 out))
+(let _96_1319 = (uvars_in_typ t)
+in (union_uvs _96_1319 out))
 end
 | _25_1922 -> begin
 (let _25_1923 = out
-in (let _70_11145 = (Support.Microsoft.FStar.Util.set_add (u, t) out.Microsoft_FStar_Absyn_Syntax.uvars_t)
-in {Microsoft_FStar_Absyn_Syntax.uvars_k = _25_1923.Microsoft_FStar_Absyn_Syntax.uvars_k; Microsoft_FStar_Absyn_Syntax.uvars_t = _70_11145; Microsoft_FStar_Absyn_Syntax.uvars_e = _25_1923.Microsoft_FStar_Absyn_Syntax.uvars_e}))
+in (let _96_1320 = (Support.Microsoft.FStar.Util.set_add (u, t) out.Microsoft_FStar_Absyn_Syntax.uvars_t)
+in {Microsoft_FStar_Absyn_Syntax.uvars_k = _25_1923.Microsoft_FStar_Absyn_Syntax.uvars_k; Microsoft_FStar_Absyn_Syntax.uvars_t = _96_1320; Microsoft_FStar_Absyn_Syntax.uvars_e = _25_1923.Microsoft_FStar_Absyn_Syntax.uvars_e}))
 end)
 end)) out)))
-in (let out = (let _70_11151 = (Support.Microsoft.FStar.Util.set_elements uvs.Microsoft_FStar_Absyn_Syntax.uvars_e)
-in (Support.All.pipe_right _70_11151 (Support.List.fold_left (fun ( out ) ( _25_1929 ) -> (match (_25_1929) with
+in (let out = (let _96_1326 = (Support.Microsoft.FStar.Util.set_elements uvs.Microsoft_FStar_Absyn_Syntax.uvars_e)
+in (Support.All.pipe_right _96_1326 (Support.List.fold_left (fun ( out ) ( _25_1929 ) -> (match (_25_1929) with
 | (u, t) -> begin
 (match ((Support.Microsoft.FStar.Unionfind.find u)) with
 | Microsoft_FStar_Absyn_Syntax.Fixed (e) -> begin
-(let _70_11149 = (uvars_in_exp e)
-in (union_uvs _70_11149 out))
+(let _96_1324 = (uvars_in_exp e)
+in (union_uvs _96_1324 out))
 end
 | _25_1933 -> begin
 (let _25_1934 = out
-in (let _70_11150 = (Support.Microsoft.FStar.Util.set_add (u, t) out.Microsoft_FStar_Absyn_Syntax.uvars_e)
-in {Microsoft_FStar_Absyn_Syntax.uvars_k = _25_1934.Microsoft_FStar_Absyn_Syntax.uvars_k; Microsoft_FStar_Absyn_Syntax.uvars_t = _25_1934.Microsoft_FStar_Absyn_Syntax.uvars_t; Microsoft_FStar_Absyn_Syntax.uvars_e = _70_11150}))
+in (let _96_1325 = (Support.Microsoft.FStar.Util.set_add (u, t) out.Microsoft_FStar_Absyn_Syntax.uvars_e)
+in {Microsoft_FStar_Absyn_Syntax.uvars_k = _25_1934.Microsoft_FStar_Absyn_Syntax.uvars_k; Microsoft_FStar_Absyn_Syntax.uvars_t = _25_1934.Microsoft_FStar_Absyn_Syntax.uvars_t; Microsoft_FStar_Absyn_Syntax.uvars_e = _96_1325}))
 end)
 end)) out)))
 in (let _25_1945 = (match (s) with
@@ -1901,26 +1901,26 @@ end
 (Support.ST.op_Colon_Equals c.Microsoft_FStar_Absyn_Syntax.uvs (Some (out)))
 end)
 in out)))))
-and uvars_in_kind = (fun ( k ) -> (let _70_11154 = (vs_kind k true (fun ( _25_1951 ) -> (match (_25_1951) with
+and uvars_in_kind = (fun ( k ) -> (let _96_1329 = (vs_kind k true (fun ( _25_1951 ) -> (match (_25_1951) with
 | (_25_1949, x) -> begin
 x
 end)))
-in (Support.All.pipe_left (update_uvars (SynSumKind (k))) _70_11154)))
-and uvars_in_typ = (fun ( t ) -> (let _70_11157 = (vs_typ t true (fun ( _25_1956 ) -> (match (_25_1956) with
+in (Support.All.pipe_left (update_uvars (SynSumKind (k))) _96_1329)))
+and uvars_in_typ = (fun ( t ) -> (let _96_1332 = (vs_typ t true (fun ( _25_1956 ) -> (match (_25_1956) with
 | (_25_1954, x) -> begin
 x
 end)))
-in (Support.All.pipe_left (update_uvars (SynSumType (t))) _70_11157)))
-and uvars_in_exp = (fun ( e ) -> (let _70_11160 = (vs_exp e true (fun ( _25_1961 ) -> (match (_25_1961) with
+in (Support.All.pipe_left (update_uvars (SynSumType (t))) _96_1332)))
+and uvars_in_exp = (fun ( e ) -> (let _96_1335 = (vs_exp e true (fun ( _25_1961 ) -> (match (_25_1961) with
 | (_25_1959, x) -> begin
 x
 end)))
-in (Support.All.pipe_left (update_uvars (SynSumExp (e))) _70_11160)))
-and uvars_in_comp = (fun ( c ) -> (let _70_11163 = (vs_comp c true (fun ( _25_1966 ) -> (match (_25_1966) with
+in (Support.All.pipe_left (update_uvars (SynSumExp (e))) _96_1335)))
+and uvars_in_comp = (fun ( c ) -> (let _96_1338 = (vs_comp c true (fun ( _25_1966 ) -> (match (_25_1966) with
 | (_25_1964, x) -> begin
 x
 end)))
-in (Support.All.pipe_left (update_uvars (SynSumComp (c))) _70_11163)))
+in (Support.All.pipe_left (update_uvars (SynSumComp (c))) _96_1338)))
 
 let uvars_included_in = (fun ( u1 ) ( u2 ) -> (((Support.Microsoft.FStar.Util.set_is_subset_of u1.Microsoft_FStar_Absyn_Syntax.uvars_k u2.Microsoft_FStar_Absyn_Syntax.uvars_k) && (Support.Microsoft.FStar.Util.set_is_subset_of u1.Microsoft_FStar_Absyn_Syntax.uvars_t u2.Microsoft_FStar_Absyn_Syntax.uvars_t)) && (Support.Microsoft.FStar.Util.set_is_subset_of u1.Microsoft_FStar_Absyn_Syntax.uvars_e u2.Microsoft_FStar_Absyn_Syntax.uvars_e)))
 
@@ -1985,8 +1985,8 @@ end
 ((Support.List.append tps bs'), c)
 end
 | _25_2028 -> begin
-(let _70_11184 = (Microsoft_FStar_Absyn_Syntax.mk_Total t)
-in (tps, _70_11184))
+(let _96_1359 = (Microsoft_FStar_Absyn_Syntax.mk_Total t)
+in (tps, _96_1359))
 end)
 in (match (_25_2031) with
 | (bs, c) -> begin
@@ -2012,18 +2012,18 @@ end
 false
 end))
 
-let mk_tuple_lid = (fun ( n ) ( r ) -> (let t = (let _70_11197 = (Support.Microsoft.FStar.Util.string_of_int n)
-in (Support.Microsoft.FStar.Util.format1 "Tuple%s" _70_11197))
-in (let _70_11198 = (Microsoft_FStar_Absyn_Const.pconst t)
-in (set_lid_range _70_11198 r))))
+let mk_tuple_lid = (fun ( n ) ( r ) -> (let t = (let _96_1372 = (Support.Microsoft.FStar.Util.string_of_int n)
+in (Support.Microsoft.FStar.Util.format1 "Tuple%s" _96_1372))
+in (let _96_1373 = (Microsoft_FStar_Absyn_Const.pconst t)
+in (set_lid_range _96_1373 r))))
 
-let mk_tuple_data_lid = (fun ( n ) ( r ) -> (let t = (let _70_11203 = (Support.Microsoft.FStar.Util.string_of_int n)
-in (Support.Microsoft.FStar.Util.format1 "MkTuple%s" _70_11203))
-in (let _70_11204 = (Microsoft_FStar_Absyn_Const.pconst t)
-in (set_lid_range _70_11204 r))))
+let mk_tuple_data_lid = (fun ( n ) ( r ) -> (let t = (let _96_1378 = (Support.Microsoft.FStar.Util.string_of_int n)
+in (Support.Microsoft.FStar.Util.format1 "MkTuple%s" _96_1378))
+in (let _96_1379 = (Microsoft_FStar_Absyn_Const.pconst t)
+in (set_lid_range _96_1379 r))))
 
-let is_tuple_data_lid = (fun ( f ) ( n ) -> (let _70_11209 = (mk_tuple_data_lid n Microsoft_FStar_Absyn_Syntax.dummyRange)
-in (Microsoft_FStar_Absyn_Syntax.lid_equals f _70_11209)))
+let is_tuple_data_lid = (fun ( f ) ( n ) -> (let _96_1384 = (mk_tuple_data_lid n Microsoft_FStar_Absyn_Syntax.dummyRange)
+in (Microsoft_FStar_Absyn_Syntax.lid_equals f _96_1384)))
 
 let is_dtuple_constructor = (fun ( t ) -> (match (t.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Typ_const (l) -> begin
@@ -2033,15 +2033,15 @@ end
 false
 end))
 
-let mk_dtuple_lid = (fun ( n ) ( r ) -> (let t = (let _70_11216 = (Support.Microsoft.FStar.Util.string_of_int n)
-in (Support.Microsoft.FStar.Util.format1 "DTuple%s" _70_11216))
-in (let _70_11217 = (Microsoft_FStar_Absyn_Const.pconst t)
-in (set_lid_range _70_11217 r))))
+let mk_dtuple_lid = (fun ( n ) ( r ) -> (let t = (let _96_1391 = (Support.Microsoft.FStar.Util.string_of_int n)
+in (Support.Microsoft.FStar.Util.format1 "DTuple%s" _96_1391))
+in (let _96_1392 = (Microsoft_FStar_Absyn_Const.pconst t)
+in (set_lid_range _96_1392 r))))
 
-let mk_dtuple_data_lid = (fun ( n ) ( r ) -> (let t = (let _70_11222 = (Support.Microsoft.FStar.Util.string_of_int n)
-in (Support.Microsoft.FStar.Util.format1 "MkDTuple%s" _70_11222))
-in (let _70_11223 = (Microsoft_FStar_Absyn_Const.pconst t)
-in (set_lid_range _70_11223 r))))
+let mk_dtuple_data_lid = (fun ( n ) ( r ) -> (let t = (let _96_1397 = (Support.Microsoft.FStar.Util.string_of_int n)
+in (Support.Microsoft.FStar.Util.format1 "MkDTuple%s" _96_1397))
+in (let _96_1398 = (Microsoft_FStar_Absyn_Const.pconst t)
+in (set_lid_range _96_1398 r))))
 
 let is_lid_equality = (fun ( x ) -> ((((Microsoft_FStar_Absyn_Syntax.lid_equals x Microsoft_FStar_Absyn_Const.eq_lid) || (Microsoft_FStar_Absyn_Syntax.lid_equals x Microsoft_FStar_Absyn_Const.eq2_lid)) || (Microsoft_FStar_Absyn_Syntax.lid_equals x Microsoft_FStar_Absyn_Const.eqA_lid)) || (Microsoft_FStar_Absyn_Syntax.lid_equals x Microsoft_FStar_Absyn_Const.eqT_lid)))
 
@@ -2056,8 +2056,8 @@ let is_equality = (fun ( x ) -> (is_lid_equality x.Microsoft_FStar_Absyn_Syntax.
 let lid_is_connective = (let lst = (Microsoft_FStar_Absyn_Const.and_lid)::(Microsoft_FStar_Absyn_Const.or_lid)::(Microsoft_FStar_Absyn_Const.not_lid)::(Microsoft_FStar_Absyn_Const.iff_lid)::(Microsoft_FStar_Absyn_Const.imp_lid)::[]
 in (fun ( lid ) -> (Support.Microsoft.FStar.Util.for_some (Microsoft_FStar_Absyn_Syntax.lid_equals lid) lst)))
 
-let is_constructor = (fun ( t ) ( lid ) -> (match ((let _70_11239 = (pre_typ t)
-in _70_11239.Microsoft_FStar_Absyn_Syntax.n)) with
+let is_constructor = (fun ( t ) ( lid ) -> (match ((let _96_1414 = (pre_typ t)
+in _96_1414.Microsoft_FStar_Absyn_Syntax.n)) with
 | Microsoft_FStar_Absyn_Syntax.Typ_const (tc) -> begin
 (Microsoft_FStar_Absyn_Syntax.lid_equals tc.Microsoft_FStar_Absyn_Syntax.v lid)
 end
@@ -2065,8 +2065,8 @@ end
 false
 end))
 
-let rec is_constructed_typ = (fun ( t ) ( lid ) -> (match ((let _70_11244 = (pre_typ t)
-in _70_11244.Microsoft_FStar_Absyn_Syntax.n)) with
+let rec is_constructed_typ = (fun ( t ) ( lid ) -> (match ((let _96_1419 = (pre_typ t)
+in _96_1419.Microsoft_FStar_Absyn_Syntax.n)) with
 | Microsoft_FStar_Absyn_Syntax.Typ_const (_25_2077) -> begin
 (is_constructor t lid)
 end
@@ -2099,9 +2099,9 @@ end))
 
 let sortByFieldName = (fun ( fn_a_l ) -> (Support.All.pipe_right fn_a_l (Support.List.sortWith (fun ( _25_2110 ) ( _25_2114 ) -> (match ((_25_2110, _25_2114)) with
 | ((fn1, _25_2109), (fn2, _25_2113)) -> begin
-(let _70_11253 = (Microsoft_FStar_Absyn_Syntax.text_of_lid fn1)
-in (let _70_11252 = (Microsoft_FStar_Absyn_Syntax.text_of_lid fn2)
-in (Support.String.compare _70_11253 _70_11252)))
+(let _96_1428 = (Microsoft_FStar_Absyn_Syntax.text_of_lid fn1)
+in (let _96_1427 = (Microsoft_FStar_Absyn_Syntax.text_of_lid fn2)
+in (Support.String.compare _96_1428 _96_1427)))
 end)))))
 
 let kt_kt = (Microsoft_FStar_Absyn_Const.kunary Microsoft_FStar_Absyn_Syntax.ktype Microsoft_FStar_Absyn_Syntax.ktype)
@@ -2122,40 +2122,40 @@ let t_false = (ftv Microsoft_FStar_Absyn_Const.false_lid Microsoft_FStar_Absyn_S
 
 let t_true = (ftv Microsoft_FStar_Absyn_Const.true_lid Microsoft_FStar_Absyn_Syntax.ktype)
 
-let b2t_v = (let _70_11257 = (let _70_11256 = (let _70_11255 = (let _70_11254 = (Support.All.pipe_left Microsoft_FStar_Absyn_Syntax.null_v_binder t_bool)
-in (_70_11254)::[])
-in (_70_11255, Microsoft_FStar_Absyn_Syntax.ktype))
-in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _70_11256 Microsoft_FStar_Absyn_Syntax.dummyRange))
-in (ftv Microsoft_FStar_Absyn_Const.b2t_lid _70_11257))
+let b2t_v = (let _96_1432 = (let _96_1431 = (let _96_1430 = (let _96_1429 = (Support.All.pipe_left Microsoft_FStar_Absyn_Syntax.null_v_binder t_bool)
+in (_96_1429)::[])
+in (_96_1430, Microsoft_FStar_Absyn_Syntax.ktype))
+in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _96_1431 Microsoft_FStar_Absyn_Syntax.dummyRange))
+in (ftv Microsoft_FStar_Absyn_Const.b2t_lid _96_1432))
 
 let mk_conj_opt = (fun ( phi1 ) ( phi2 ) -> (match (phi1) with
 | None -> begin
 Some (phi2)
 end
 | Some (phi1) -> begin
-(let _70_11268 = (let _70_11267 = (let _70_11265 = (let _70_11264 = (Microsoft_FStar_Absyn_Syntax.targ phi1)
-in (let _70_11263 = (let _70_11262 = (Microsoft_FStar_Absyn_Syntax.targ phi2)
-in (_70_11262)::[])
-in (_70_11264)::_70_11263))
-in (tand, _70_11265))
-in (let _70_11266 = (Support.Microsoft.FStar.Range.union_ranges phi1.Microsoft_FStar_Absyn_Syntax.pos phi2.Microsoft_FStar_Absyn_Syntax.pos)
-in (Microsoft_FStar_Absyn_Syntax.mk_Typ_app _70_11267 None _70_11266)))
-in Some (_70_11268))
+(let _96_1443 = (let _96_1442 = (let _96_1440 = (let _96_1439 = (Microsoft_FStar_Absyn_Syntax.targ phi1)
+in (let _96_1438 = (let _96_1437 = (Microsoft_FStar_Absyn_Syntax.targ phi2)
+in (_96_1437)::[])
+in (_96_1439)::_96_1438))
+in (tand, _96_1440))
+in (let _96_1441 = (Support.Microsoft.FStar.Range.union_ranges phi1.Microsoft_FStar_Absyn_Syntax.pos phi2.Microsoft_FStar_Absyn_Syntax.pos)
+in (Microsoft_FStar_Absyn_Syntax.mk_Typ_app _96_1442 None _96_1441)))
+in Some (_96_1443))
 end))
 
-let mk_binop = (fun ( op_t ) ( phi1 ) ( phi2 ) -> (let _70_11280 = (let _70_11278 = (let _70_11277 = (Microsoft_FStar_Absyn_Syntax.targ phi1)
-in (let _70_11276 = (let _70_11275 = (Microsoft_FStar_Absyn_Syntax.targ phi2)
-in (_70_11275)::[])
-in (_70_11277)::_70_11276))
-in (op_t, _70_11278))
-in (let _70_11279 = (Support.Microsoft.FStar.Range.union_ranges phi1.Microsoft_FStar_Absyn_Syntax.pos phi2.Microsoft_FStar_Absyn_Syntax.pos)
-in (Microsoft_FStar_Absyn_Syntax.mk_Typ_app _70_11280 None _70_11279))))
+let mk_binop = (fun ( op_t ) ( phi1 ) ( phi2 ) -> (let _96_1455 = (let _96_1453 = (let _96_1452 = (Microsoft_FStar_Absyn_Syntax.targ phi1)
+in (let _96_1451 = (let _96_1450 = (Microsoft_FStar_Absyn_Syntax.targ phi2)
+in (_96_1450)::[])
+in (_96_1452)::_96_1451))
+in (op_t, _96_1453))
+in (let _96_1454 = (Support.Microsoft.FStar.Range.union_ranges phi1.Microsoft_FStar_Absyn_Syntax.pos phi2.Microsoft_FStar_Absyn_Syntax.pos)
+in (Microsoft_FStar_Absyn_Syntax.mk_Typ_app _96_1455 None _96_1454))))
 
-let mk_neg = (fun ( phi ) -> (let _70_11286 = (let _70_11285 = (ftv Microsoft_FStar_Absyn_Const.not_lid kt_kt)
-in (let _70_11284 = (let _70_11283 = (Microsoft_FStar_Absyn_Syntax.targ phi)
-in (_70_11283)::[])
-in (_70_11285, _70_11284)))
-in (Microsoft_FStar_Absyn_Syntax.mk_Typ_app _70_11286 None phi.Microsoft_FStar_Absyn_Syntax.pos)))
+let mk_neg = (fun ( phi ) -> (let _96_1461 = (let _96_1460 = (ftv Microsoft_FStar_Absyn_Const.not_lid kt_kt)
+in (let _96_1459 = (let _96_1458 = (Microsoft_FStar_Absyn_Syntax.targ phi)
+in (_96_1458)::[])
+in (_96_1460, _96_1459)))
+in (Microsoft_FStar_Absyn_Syntax.mk_Typ_app _96_1461 None phi.Microsoft_FStar_Absyn_Syntax.pos)))
 
 let mk_conj = (fun ( phi1 ) ( phi2 ) -> (mk_binop tand phi1 phi2))
 
@@ -2177,8 +2177,8 @@ end
 (Support.List.fold_right mk_disj tl hd)
 end))
 
-let mk_imp = (fun ( phi1 ) ( phi2 ) -> (match ((let _70_11303 = (compress_typ phi1)
-in _70_11303.Microsoft_FStar_Absyn_Syntax.n)) with
+let mk_imp = (fun ( phi1 ) ( phi2 ) -> (match ((let _96_1478 = (compress_typ phi1)
+in _96_1478.Microsoft_FStar_Absyn_Syntax.n)) with
 | Microsoft_FStar_Absyn_Syntax.Typ_const (tc) when (Microsoft_FStar_Absyn_Syntax.lid_equals tc.Microsoft_FStar_Absyn_Syntax.v Microsoft_FStar_Absyn_Const.false_lid) -> begin
 t_true
 end
@@ -2186,8 +2186,8 @@ end
 phi2
 end
 | _25_2145 -> begin
-(match ((let _70_11304 = (compress_typ phi2)
-in _70_11304.Microsoft_FStar_Absyn_Syntax.n)) with
+(match ((let _96_1479 = (compress_typ phi2)
+in _96_1479.Microsoft_FStar_Absyn_Syntax.n)) with
 | Microsoft_FStar_Absyn_Syntax.Typ_const (tc) when ((Microsoft_FStar_Absyn_Syntax.lid_equals tc.Microsoft_FStar_Absyn_Syntax.v Microsoft_FStar_Absyn_Const.true_lid) || (Microsoft_FStar_Absyn_Syntax.lid_equals tc.Microsoft_FStar_Absyn_Syntax.v Microsoft_FStar_Absyn_Const.false_lid)) -> begin
 phi2
 end
@@ -2198,10 +2198,10 @@ end))
 
 let mk_iff = (fun ( phi1 ) ( phi2 ) -> (mk_binop tiff phi1 phi2))
 
-let b2t = (fun ( e ) -> (let _70_11313 = (let _70_11312 = (let _70_11311 = (Support.All.pipe_left Microsoft_FStar_Absyn_Syntax.varg e)
-in (_70_11311)::[])
-in (b2t_v, _70_11312))
-in (Microsoft_FStar_Absyn_Syntax.mk_Typ_app _70_11313 None e.Microsoft_FStar_Absyn_Syntax.pos)))
+let b2t = (fun ( e ) -> (let _96_1488 = (let _96_1487 = (let _96_1486 = (Support.All.pipe_left Microsoft_FStar_Absyn_Syntax.varg e)
+in (_96_1486)::[])
+in (b2t_v, _96_1487))
+in (Microsoft_FStar_Absyn_Syntax.mk_Typ_app _96_1488 None e.Microsoft_FStar_Absyn_Syntax.pos)))
 
 let rec unmeta_typ = (fun ( t ) -> (let t = (compress_typ t)
 in (match (t.Microsoft_FStar_Absyn_Syntax.n) with
@@ -2215,20 +2215,20 @@ end
 t
 end)))
 
-let eq_k = (let a = (let _70_11316 = (new_bvd None)
-in (bvd_to_bvar_s _70_11316 Microsoft_FStar_Absyn_Syntax.ktype))
+let eq_k = (let a = (let _96_1491 = (new_bvd None)
+in (bvd_to_bvar_s _96_1491 Microsoft_FStar_Absyn_Syntax.ktype))
 in (let atyp = (btvar_to_typ a)
-in (let b = (let _70_11317 = (new_bvd None)
-in (bvd_to_bvar_s _70_11317 Microsoft_FStar_Absyn_Syntax.ktype))
+in (let b = (let _96_1492 = (new_bvd None)
+in (bvd_to_bvar_s _96_1492 Microsoft_FStar_Absyn_Syntax.ktype))
 in (let btyp = (btvar_to_typ b)
-in (let _70_11324 = (let _70_11323 = (let _70_11322 = (let _70_11321 = (let _70_11320 = (Microsoft_FStar_Absyn_Syntax.null_v_binder atyp)
-in (let _70_11319 = (let _70_11318 = (Microsoft_FStar_Absyn_Syntax.null_v_binder btyp)
-in (_70_11318)::[])
-in (_70_11320)::_70_11319))
-in ((Support.Microsoft.FStar.Util.Inl (b), Some (Microsoft_FStar_Absyn_Syntax.Implicit)))::_70_11321)
-in ((Support.Microsoft.FStar.Util.Inl (a), Some (Microsoft_FStar_Absyn_Syntax.Implicit)))::_70_11322)
-in (_70_11323, Microsoft_FStar_Absyn_Syntax.ktype))
-in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _70_11324 Microsoft_FStar_Absyn_Syntax.dummyRange))))))
+in (let _96_1499 = (let _96_1498 = (let _96_1497 = (let _96_1496 = (let _96_1495 = (Microsoft_FStar_Absyn_Syntax.null_v_binder atyp)
+in (let _96_1494 = (let _96_1493 = (Microsoft_FStar_Absyn_Syntax.null_v_binder btyp)
+in (_96_1493)::[])
+in (_96_1495)::_96_1494))
+in ((Support.Microsoft.FStar.Util.Inl (b), Some (Microsoft_FStar_Absyn_Syntax.Implicit)))::_96_1496)
+in ((Support.Microsoft.FStar.Util.Inl (a), Some (Microsoft_FStar_Absyn_Syntax.Implicit)))::_96_1497)
+in (_96_1498, Microsoft_FStar_Absyn_Syntax.ktype))
+in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _96_1499 Microsoft_FStar_Absyn_Syntax.dummyRange))))))
 
 let teq = (ftv Microsoft_FStar_Absyn_Const.eq2_lid eq_k)
 
@@ -2237,28 +2237,28 @@ let mk_eq = (fun ( t1 ) ( t2 ) ( e1 ) ( e2 ) -> (match ((t1.Microsoft_FStar_Absy
 (Support.All.failwith "DIE! mk_eq with tun")
 end
 | _25_2212 -> begin
-(let _70_11342 = (let _70_11340 = (let _70_11339 = (Microsoft_FStar_Absyn_Syntax.itarg t1)
-in (let _70_11338 = (let _70_11337 = (Microsoft_FStar_Absyn_Syntax.itarg t2)
-in (let _70_11336 = (let _70_11335 = (Microsoft_FStar_Absyn_Syntax.varg e1)
-in (let _70_11334 = (let _70_11333 = (Microsoft_FStar_Absyn_Syntax.varg e2)
-in (_70_11333)::[])
-in (_70_11335)::_70_11334))
-in (_70_11337)::_70_11336))
-in (_70_11339)::_70_11338))
-in (teq, _70_11340))
-in (let _70_11341 = (Support.Microsoft.FStar.Range.union_ranges e1.Microsoft_FStar_Absyn_Syntax.pos e2.Microsoft_FStar_Absyn_Syntax.pos)
-in (Microsoft_FStar_Absyn_Syntax.mk_Typ_app _70_11342 None _70_11341)))
+(let _96_1517 = (let _96_1515 = (let _96_1514 = (Microsoft_FStar_Absyn_Syntax.itarg t1)
+in (let _96_1513 = (let _96_1512 = (Microsoft_FStar_Absyn_Syntax.itarg t2)
+in (let _96_1511 = (let _96_1510 = (Microsoft_FStar_Absyn_Syntax.varg e1)
+in (let _96_1509 = (let _96_1508 = (Microsoft_FStar_Absyn_Syntax.varg e2)
+in (_96_1508)::[])
+in (_96_1510)::_96_1509))
+in (_96_1512)::_96_1511))
+in (_96_1514)::_96_1513))
+in (teq, _96_1515))
+in (let _96_1516 = (Support.Microsoft.FStar.Range.union_ranges e1.Microsoft_FStar_Absyn_Syntax.pos e2.Microsoft_FStar_Absyn_Syntax.pos)
+in (Microsoft_FStar_Absyn_Syntax.mk_Typ_app _96_1517 None _96_1516)))
 end))
 
 let eq_typ = (ftv Microsoft_FStar_Absyn_Const.eqT_lid Microsoft_FStar_Absyn_Syntax.kun)
 
-let mk_eq_typ = (fun ( t1 ) ( t2 ) -> (let _70_11352 = (let _70_11350 = (let _70_11349 = (Microsoft_FStar_Absyn_Syntax.targ t1)
-in (let _70_11348 = (let _70_11347 = (Microsoft_FStar_Absyn_Syntax.targ t2)
-in (_70_11347)::[])
-in (_70_11349)::_70_11348))
-in (eq_typ, _70_11350))
-in (let _70_11351 = (Support.Microsoft.FStar.Range.union_ranges t1.Microsoft_FStar_Absyn_Syntax.pos t2.Microsoft_FStar_Absyn_Syntax.pos)
-in (Microsoft_FStar_Absyn_Syntax.mk_Typ_app _70_11352 None _70_11351))))
+let mk_eq_typ = (fun ( t1 ) ( t2 ) -> (let _96_1527 = (let _96_1525 = (let _96_1524 = (Microsoft_FStar_Absyn_Syntax.targ t1)
+in (let _96_1523 = (let _96_1522 = (Microsoft_FStar_Absyn_Syntax.targ t2)
+in (_96_1522)::[])
+in (_96_1524)::_96_1523))
+in (eq_typ, _96_1525))
+in (let _96_1526 = (Support.Microsoft.FStar.Range.union_ranges t1.Microsoft_FStar_Absyn_Syntax.pos t2.Microsoft_FStar_Absyn_Syntax.pos)
+in (Microsoft_FStar_Absyn_Syntax.mk_Typ_app _96_1527 None _96_1526))))
 
 let lex_t = (ftv Microsoft_FStar_Absyn_Const.lex_t_lid Microsoft_FStar_Absyn_Syntax.ktype)
 
@@ -2266,72 +2266,72 @@ let lex_top = (let lexnil = (withinfo Microsoft_FStar_Absyn_Const.lextop_lid lex
 in (Microsoft_FStar_Absyn_Syntax.mk_Exp_fvar (lexnil, Some (Microsoft_FStar_Absyn_Syntax.Data_ctor)) None Microsoft_FStar_Absyn_Syntax.dummyRange))
 
 let lex_pair = (let a = (gen_bvar Microsoft_FStar_Absyn_Syntax.ktype)
-in (let lexcons = (let _70_11362 = (let _70_11361 = (let _70_11360 = (let _70_11358 = (Microsoft_FStar_Absyn_Syntax.t_binder a)
-in (let _70_11357 = (let _70_11356 = (let _70_11353 = (btvar_to_typ a)
-in (Microsoft_FStar_Absyn_Syntax.null_v_binder _70_11353))
-in (let _70_11355 = (let _70_11354 = (Microsoft_FStar_Absyn_Syntax.null_v_binder lex_t)
-in (_70_11354)::[])
-in (_70_11356)::_70_11355))
-in (_70_11358)::_70_11357))
-in (let _70_11359 = (Microsoft_FStar_Absyn_Syntax.mk_Total lex_t)
-in (_70_11360, _70_11359)))
-in (Microsoft_FStar_Absyn_Syntax.mk_Typ_fun _70_11361 None Microsoft_FStar_Absyn_Syntax.dummyRange))
-in (withinfo Microsoft_FStar_Absyn_Const.lexcons_lid _70_11362 Microsoft_FStar_Absyn_Syntax.dummyRange))
+in (let lexcons = (let _96_1537 = (let _96_1536 = (let _96_1535 = (let _96_1533 = (Microsoft_FStar_Absyn_Syntax.t_binder a)
+in (let _96_1532 = (let _96_1531 = (let _96_1528 = (btvar_to_typ a)
+in (Microsoft_FStar_Absyn_Syntax.null_v_binder _96_1528))
+in (let _96_1530 = (let _96_1529 = (Microsoft_FStar_Absyn_Syntax.null_v_binder lex_t)
+in (_96_1529)::[])
+in (_96_1531)::_96_1530))
+in (_96_1533)::_96_1532))
+in (let _96_1534 = (Microsoft_FStar_Absyn_Syntax.mk_Total lex_t)
+in (_96_1535, _96_1534)))
+in (Microsoft_FStar_Absyn_Syntax.mk_Typ_fun _96_1536 None Microsoft_FStar_Absyn_Syntax.dummyRange))
+in (withinfo Microsoft_FStar_Absyn_Const.lexcons_lid _96_1537 Microsoft_FStar_Absyn_Syntax.dummyRange))
 in (Microsoft_FStar_Absyn_Syntax.mk_Exp_fvar (lexcons, Some (Microsoft_FStar_Absyn_Syntax.Data_ctor)) None Microsoft_FStar_Absyn_Syntax.dummyRange)))
 
-let forall_kind = (let a = (let _70_11363 = (new_bvd None)
-in (bvd_to_bvar_s _70_11363 Microsoft_FStar_Absyn_Syntax.ktype))
+let forall_kind = (let a = (let _96_1538 = (new_bvd None)
+in (bvd_to_bvar_s _96_1538 Microsoft_FStar_Absyn_Syntax.ktype))
 in (let atyp = (btvar_to_typ a)
-in (let _70_11371 = (let _70_11370 = (let _70_11369 = (let _70_11368 = (let _70_11367 = (let _70_11366 = (let _70_11365 = (let _70_11364 = (Microsoft_FStar_Absyn_Syntax.null_v_binder atyp)
-in (_70_11364)::[])
-in (_70_11365, Microsoft_FStar_Absyn_Syntax.ktype))
-in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _70_11366 Microsoft_FStar_Absyn_Syntax.dummyRange))
-in (Support.All.pipe_left Microsoft_FStar_Absyn_Syntax.null_t_binder _70_11367))
-in (_70_11368)::[])
-in ((Support.Microsoft.FStar.Util.Inl (a), Some (Microsoft_FStar_Absyn_Syntax.Implicit)))::_70_11369)
-in (_70_11370, Microsoft_FStar_Absyn_Syntax.ktype))
-in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _70_11371 Microsoft_FStar_Absyn_Syntax.dummyRange))))
+in (let _96_1546 = (let _96_1545 = (let _96_1544 = (let _96_1543 = (let _96_1542 = (let _96_1541 = (let _96_1540 = (let _96_1539 = (Microsoft_FStar_Absyn_Syntax.null_v_binder atyp)
+in (_96_1539)::[])
+in (_96_1540, Microsoft_FStar_Absyn_Syntax.ktype))
+in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _96_1541 Microsoft_FStar_Absyn_Syntax.dummyRange))
+in (Support.All.pipe_left Microsoft_FStar_Absyn_Syntax.null_t_binder _96_1542))
+in (_96_1543)::[])
+in ((Support.Microsoft.FStar.Util.Inl (a), Some (Microsoft_FStar_Absyn_Syntax.Implicit)))::_96_1544)
+in (_96_1545, Microsoft_FStar_Absyn_Syntax.ktype))
+in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _96_1546 Microsoft_FStar_Absyn_Syntax.dummyRange))))
 
 let tforall = (ftv Microsoft_FStar_Absyn_Const.forall_lid forall_kind)
 
-let allT_k = (fun ( k ) -> (let _70_11380 = (let _70_11379 = (let _70_11378 = (let _70_11377 = (let _70_11376 = (let _70_11375 = (let _70_11374 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k)
-in (_70_11374)::[])
-in (_70_11375, Microsoft_FStar_Absyn_Syntax.ktype))
-in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _70_11376 Microsoft_FStar_Absyn_Syntax.dummyRange))
-in (Support.All.pipe_left Microsoft_FStar_Absyn_Syntax.null_t_binder _70_11377))
-in (_70_11378)::[])
-in (_70_11379, Microsoft_FStar_Absyn_Syntax.ktype))
-in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _70_11380 Microsoft_FStar_Absyn_Syntax.dummyRange)))
+let allT_k = (fun ( k ) -> (let _96_1555 = (let _96_1554 = (let _96_1553 = (let _96_1552 = (let _96_1551 = (let _96_1550 = (let _96_1549 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k)
+in (_96_1549)::[])
+in (_96_1550, Microsoft_FStar_Absyn_Syntax.ktype))
+in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _96_1551 Microsoft_FStar_Absyn_Syntax.dummyRange))
+in (Support.All.pipe_left Microsoft_FStar_Absyn_Syntax.null_t_binder _96_1552))
+in (_96_1553)::[])
+in (_96_1554, Microsoft_FStar_Absyn_Syntax.ktype))
+in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _96_1555 Microsoft_FStar_Absyn_Syntax.dummyRange)))
 
-let eqT_k = (fun ( k ) -> (let _70_11387 = (let _70_11386 = (let _70_11385 = (Support.All.pipe_left Microsoft_FStar_Absyn_Syntax.null_t_binder k)
-in (let _70_11384 = (let _70_11383 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k)
-in (_70_11383)::[])
-in (_70_11385)::_70_11384))
-in (_70_11386, Microsoft_FStar_Absyn_Syntax.ktype))
-in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _70_11387 Microsoft_FStar_Absyn_Syntax.dummyRange)))
+let eqT_k = (fun ( k ) -> (let _96_1562 = (let _96_1561 = (let _96_1560 = (Support.All.pipe_left Microsoft_FStar_Absyn_Syntax.null_t_binder k)
+in (let _96_1559 = (let _96_1558 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k)
+in (_96_1558)::[])
+in (_96_1560)::_96_1559))
+in (_96_1561, Microsoft_FStar_Absyn_Syntax.ktype))
+in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _96_1562 Microsoft_FStar_Absyn_Syntax.dummyRange)))
 
-let tforall_typ = (fun ( k ) -> (let _70_11390 = (allT_k k)
-in (ftv Microsoft_FStar_Absyn_Const.allTyp_lid _70_11390)))
+let tforall_typ = (fun ( k ) -> (let _96_1565 = (allT_k k)
+in (ftv Microsoft_FStar_Absyn_Const.allTyp_lid _96_1565)))
 
-let mk_forallT = (fun ( a ) ( b ) -> (let _70_11402 = (let _70_11401 = (tforall_typ a.Microsoft_FStar_Absyn_Syntax.sort)
-in (let _70_11400 = (let _70_11399 = (let _70_11398 = (let _70_11397 = (let _70_11396 = (let _70_11395 = (Microsoft_FStar_Absyn_Syntax.t_binder a)
-in (_70_11395)::[])
-in (_70_11396, b))
-in (Microsoft_FStar_Absyn_Syntax.mk_Typ_lam _70_11397 None b.Microsoft_FStar_Absyn_Syntax.pos))
-in (Support.All.pipe_left Microsoft_FStar_Absyn_Syntax.targ _70_11398))
-in (_70_11399)::[])
-in (_70_11401, _70_11400)))
-in (Microsoft_FStar_Absyn_Syntax.mk_Typ_app _70_11402 None b.Microsoft_FStar_Absyn_Syntax.pos)))
+let mk_forallT = (fun ( a ) ( b ) -> (let _96_1577 = (let _96_1576 = (tforall_typ a.Microsoft_FStar_Absyn_Syntax.sort)
+in (let _96_1575 = (let _96_1574 = (let _96_1573 = (let _96_1572 = (let _96_1571 = (let _96_1570 = (Microsoft_FStar_Absyn_Syntax.t_binder a)
+in (_96_1570)::[])
+in (_96_1571, b))
+in (Microsoft_FStar_Absyn_Syntax.mk_Typ_lam _96_1572 None b.Microsoft_FStar_Absyn_Syntax.pos))
+in (Support.All.pipe_left Microsoft_FStar_Absyn_Syntax.targ _96_1573))
+in (_96_1574)::[])
+in (_96_1576, _96_1575)))
+in (Microsoft_FStar_Absyn_Syntax.mk_Typ_app _96_1577 None b.Microsoft_FStar_Absyn_Syntax.pos)))
 
 let mk_forall = (fun ( x ) ( body ) -> (let r = Microsoft_FStar_Absyn_Syntax.dummyRange
-in (let _70_11413 = (let _70_11412 = (let _70_11411 = (let _70_11410 = (let _70_11409 = (let _70_11408 = (let _70_11407 = (Microsoft_FStar_Absyn_Syntax.v_binder x)
-in (_70_11407)::[])
-in (_70_11408, body))
-in (Microsoft_FStar_Absyn_Syntax.mk_Typ_lam _70_11409 None r))
-in (Support.All.pipe_left Microsoft_FStar_Absyn_Syntax.targ _70_11410))
-in (_70_11411)::[])
-in (tforall, _70_11412))
-in (Microsoft_FStar_Absyn_Syntax.mk_Typ_app _70_11413 None r))))
+in (let _96_1588 = (let _96_1587 = (let _96_1586 = (let _96_1585 = (let _96_1584 = (let _96_1583 = (let _96_1582 = (Microsoft_FStar_Absyn_Syntax.v_binder x)
+in (_96_1582)::[])
+in (_96_1583, body))
+in (Microsoft_FStar_Absyn_Syntax.mk_Typ_lam _96_1584 None r))
+in (Support.All.pipe_left Microsoft_FStar_Absyn_Syntax.targ _96_1585))
+in (_96_1586)::[])
+in (tforall, _96_1587))
+in (Microsoft_FStar_Absyn_Syntax.mk_Typ_app _96_1588 None r))))
 
 let rec close_forall = (fun ( bs ) ( f ) -> (Support.List.fold_right (fun ( b ) ( f ) -> (match ((Microsoft_FStar_Absyn_Syntax.is_null_binder b)) with
 | true -> begin
@@ -2341,18 +2341,18 @@ end
 (let body = (Microsoft_FStar_Absyn_Syntax.mk_Typ_lam ((b)::[], f) None f.Microsoft_FStar_Absyn_Syntax.pos)
 in (match ((Support.Prims.fst b)) with
 | Support.Microsoft.FStar.Util.Inl (a) -> begin
-(let _70_11423 = (let _70_11422 = (tforall_typ a.Microsoft_FStar_Absyn_Syntax.sort)
-in (let _70_11421 = (let _70_11420 = (Microsoft_FStar_Absyn_Syntax.targ body)
-in (_70_11420)::[])
-in (_70_11422, _70_11421)))
-in (Microsoft_FStar_Absyn_Syntax.mk_Typ_app _70_11423 None f.Microsoft_FStar_Absyn_Syntax.pos))
+(let _96_1598 = (let _96_1597 = (tforall_typ a.Microsoft_FStar_Absyn_Syntax.sort)
+in (let _96_1596 = (let _96_1595 = (Microsoft_FStar_Absyn_Syntax.targ body)
+in (_96_1595)::[])
+in (_96_1597, _96_1596)))
+in (Microsoft_FStar_Absyn_Syntax.mk_Typ_app _96_1598 None f.Microsoft_FStar_Absyn_Syntax.pos))
 end
 | Support.Microsoft.FStar.Util.Inr (x) -> begin
-(let _70_11427 = (let _70_11426 = (let _70_11425 = (let _70_11424 = (Microsoft_FStar_Absyn_Syntax.targ body)
-in (_70_11424)::[])
-in ((Support.Microsoft.FStar.Util.Inl (x.Microsoft_FStar_Absyn_Syntax.sort), Some (Microsoft_FStar_Absyn_Syntax.Implicit)))::_70_11425)
-in (tforall, _70_11426))
-in (Microsoft_FStar_Absyn_Syntax.mk_Typ_app _70_11427 None f.Microsoft_FStar_Absyn_Syntax.pos))
+(let _96_1602 = (let _96_1601 = (let _96_1600 = (let _96_1599 = (Microsoft_FStar_Absyn_Syntax.targ body)
+in (_96_1599)::[])
+in ((Support.Microsoft.FStar.Util.Inl (x.Microsoft_FStar_Absyn_Syntax.sort), Some (Microsoft_FStar_Absyn_Syntax.Implicit)))::_96_1600)
+in (tforall, _96_1601))
+in (Microsoft_FStar_Absyn_Syntax.mk_Typ_app _96_1602 None f.Microsoft_FStar_Absyn_Syntax.pos))
 end))
 end)) bs f))
 
@@ -2474,12 +2474,12 @@ end)))
 in (let patterns = (fun ( t ) -> (let t = (compress_typ t)
 in (match (t.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Typ_meta (Microsoft_FStar_Absyn_Syntax.Meta_pattern ((t, pats))) -> begin
-(let _70_11491 = (compress_typ t)
-in (pats, _70_11491))
+(let _96_1666 = (compress_typ t)
+in (pats, _96_1666))
 end
 | _25_2320 -> begin
-(let _70_11492 = (compress_typ t)
-in ([], _70_11492))
+(let _96_1667 = (compress_typ t)
+in ([], _96_1667))
 end)))
 in (let destruct_q_conn = (fun ( t ) -> (let is_q = (fun ( fa ) ( l ) -> (match (fa) with
 | true -> begin
@@ -2491,21 +2491,21 @@ end))
 in (let flat = (fun ( t ) -> (let _25_2330 = (head_and_args t)
 in (match (_25_2330) with
 | (t, args) -> begin
-(let _70_11506 = (Support.All.pipe_right args (Support.List.map (fun ( _25_26 ) -> (match (_25_26) with
+(let _96_1681 = (Support.All.pipe_right args (Support.List.map (fun ( _25_26 ) -> (match (_25_26) with
 | (Support.Microsoft.FStar.Util.Inl (t), imp) -> begin
-(let _70_11503 = (let _70_11502 = (compress_typ t)
-in Support.Microsoft.FStar.Util.Inl (_70_11502))
-in (_70_11503, imp))
+(let _96_1678 = (let _96_1677 = (compress_typ t)
+in Support.Microsoft.FStar.Util.Inl (_96_1677))
+in (_96_1678, imp))
 end
 | (Support.Microsoft.FStar.Util.Inr (e), imp) -> begin
-(let _70_11505 = (let _70_11504 = (compress_exp e)
-in Support.Microsoft.FStar.Util.Inr (_70_11504))
-in (_70_11505, imp))
+(let _96_1680 = (let _96_1679 = (compress_exp e)
+in Support.Microsoft.FStar.Util.Inr (_96_1679))
+in (_96_1680, imp))
 end))))
-in (t, _70_11506))
+in (t, _96_1681))
 end)))
-in (let rec aux = (fun ( qopt ) ( out ) ( t ) -> (match ((let _70_11513 = (flat t)
-in (qopt, _70_11513))) with
+in (let rec aux = (fun ( qopt ) ( out ) ( t ) -> (match ((let _96_1688 = (flat t)
+in (qopt, _96_1688))) with
 | ((Some (fa), ({Microsoft_FStar_Absyn_Syntax.n = Microsoft_FStar_Absyn_Syntax.Typ_const (tc); Microsoft_FStar_Absyn_Syntax.tk = _; Microsoft_FStar_Absyn_Syntax.pos = _; Microsoft_FStar_Absyn_Syntax.fvs = _; Microsoft_FStar_Absyn_Syntax.uvs = _}, (Support.Microsoft.FStar.Util.Inl ({Microsoft_FStar_Absyn_Syntax.n = Microsoft_FStar_Absyn_Syntax.Typ_lam ((b::[], t2)); Microsoft_FStar_Absyn_Syntax.tk = _; Microsoft_FStar_Absyn_Syntax.pos = _; Microsoft_FStar_Absyn_Syntax.fvs = _; Microsoft_FStar_Absyn_Syntax.uvs = _}), _)::[]))) | ((Some (fa), ({Microsoft_FStar_Absyn_Syntax.n = Microsoft_FStar_Absyn_Syntax.Typ_const (tc); Microsoft_FStar_Absyn_Syntax.tk = _; Microsoft_FStar_Absyn_Syntax.pos = _; Microsoft_FStar_Absyn_Syntax.fvs = _; Microsoft_FStar_Absyn_Syntax.uvs = _}, _::(Support.Microsoft.FStar.Util.Inl ({Microsoft_FStar_Absyn_Syntax.n = Microsoft_FStar_Absyn_Syntax.Typ_lam ((b::[], t2)); Microsoft_FStar_Absyn_Syntax.tk = _; Microsoft_FStar_Absyn_Syntax.pos = _; Microsoft_FStar_Absyn_Syntax.fvs = _; Microsoft_FStar_Absyn_Syntax.uvs = _}), _)::[]))) when (is_q fa tc.Microsoft_FStar_Absyn_Syntax.v) -> begin
 (aux qopt ((b)::out) t2)
 end

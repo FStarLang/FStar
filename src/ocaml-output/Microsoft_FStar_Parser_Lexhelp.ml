@@ -11,11 +11,11 @@ end)))
 
 let default_string_finish = (fun ( endm ) ( b ) ( s ) -> Microsoft_FStar_Parser_Parse.STRING (s))
 
-let call_string_finish = (fun ( fin ) ( buf ) ( endm ) ( b ) -> (let _70_22505 = (Support.Microsoft.FStar.Bytes.close buf)
-in (fin endm b _70_22505)))
+let call_string_finish = (fun ( fin ) ( buf ) ( endm ) ( b ) -> (let _116_19 = (Support.Microsoft.FStar.Bytes.close buf)
+in (fin endm b _116_19)))
 
-let add_string = (fun ( buf ) ( x ) -> (let _70_22510 = (Support.Microsoft.FStar.Bytes.string_as_unicode_bytes x)
-in (Support.Microsoft.FStar.Bytes.emit_bytes buf _70_22510)))
+let add_string = (fun ( buf ) ( x ) -> (let _116_24 = (Support.Microsoft.FStar.Bytes.string_as_unicode_bytes x)
+in (Support.Microsoft.FStar.Bytes.emit_bytes buf _116_24)))
 
 let add_int_char = (fun ( buf ) ( c ) -> (let _45_19 = (Support.Microsoft.FStar.Bytes.emit_int_as_byte buf (c mod 256))
 in (Support.Microsoft.FStar.Bytes.emit_int_as_byte buf (c / 256))))
@@ -25,13 +25,13 @@ let add_unichar = (fun ( buf ) ( c ) -> (add_int_char buf c))
 let add_byte_char = (fun ( buf ) ( c ) -> (add_int_char buf ((Support.Microsoft.FStar.Util.int_of_char c) mod 256)))
 
 let stringbuf_as_bytes = (fun ( buf ) -> (let bytes = (Support.Microsoft.FStar.Bytes.close buf)
-in (let _70_22526 = ((Support.Microsoft.FStar.Bytes.length bytes) / 2)
-in (Support.Microsoft.FStar.Bytes.make (fun ( i ) -> (Support.Microsoft.FStar.Bytes.get bytes (i * 2))) _70_22526))))
+in (let _116_40 = ((Support.Microsoft.FStar.Bytes.length bytes) / 2)
+in (Support.Microsoft.FStar.Bytes.make (fun ( i ) -> (Support.Microsoft.FStar.Bytes.get bytes (i * 2))) _116_40))))
 
 let stringbuf_is_bytes = (fun ( buf ) -> (let bytes = (Support.Microsoft.FStar.Bytes.close buf)
 in (let ok = (Support.Microsoft.FStar.Util.mk_ref true)
-in (let _45_32 = (let _70_22530 = (((Support.Microsoft.FStar.Bytes.length bytes) / 2) - 1)
-in (Support.Microsoft.FStar.Util.for_range 0 _70_22530 (fun ( i ) -> (match (((Support.Microsoft.FStar.Bytes.get bytes ((i * 2) + 1)) <> 0)) with
+in (let _45_32 = (let _116_44 = (((Support.Microsoft.FStar.Bytes.length bytes) / 2) - 1)
+in (Support.Microsoft.FStar.Util.for_range 0 _116_44 (fun ( i ) -> (match (((Support.Microsoft.FStar.Bytes.get bytes ((i * 2) + 1)) <> 0)) with
 | true -> begin
 (Support.ST.op_Colon_Equals ok false)
 end
@@ -78,12 +78,12 @@ let unicodegraph_short = (fun ( s ) -> (match (((Support.String.length s) <> 4))
 (Support.All.failwith "unicodegraph")
 end
 | false -> begin
-(let _70_22549 = (((let _70_22545 = (Support.Microsoft.FStar.Util.char_at s 0)
-in (hexdigit _70_22545)) * 4096) + (((let _70_22546 = (Support.Microsoft.FStar.Util.char_at s 1)
-in (hexdigit _70_22546)) * 256) + (((let _70_22547 = (Support.Microsoft.FStar.Util.char_at s 2)
-in (hexdigit _70_22547)) * 16) + (let _70_22548 = (Support.Microsoft.FStar.Util.char_at s 3)
-in (hexdigit _70_22548)))))
-in (Support.Microsoft.FStar.Util.uint16_of_int _70_22549))
+(let _116_63 = (((let _116_59 = (Support.Microsoft.FStar.Util.char_at s 0)
+in (hexdigit _116_59)) * 4096) + (((let _116_60 = (Support.Microsoft.FStar.Util.char_at s 1)
+in (hexdigit _116_60)) * 256) + (((let _116_61 = (Support.Microsoft.FStar.Util.char_at s 2)
+in (hexdigit _116_61)) * 16) + (let _116_62 = (Support.Microsoft.FStar.Util.char_at s 3)
+in (hexdigit _116_62)))))
+in (Support.Microsoft.FStar.Util.uint16_of_int _116_63))
 end))
 
 let hexgraph_short = (fun ( s ) -> (match (((Support.String.length s) <> 2)) with
@@ -91,10 +91,10 @@ let hexgraph_short = (fun ( s ) -> (match (((Support.String.length s) <> 2)) wit
 (Support.All.failwith "hexgraph")
 end
 | false -> begin
-(let _70_22554 = (((let _70_22552 = (Support.Microsoft.FStar.Util.char_at s 0)
-in (hexdigit _70_22552)) * 16) + (let _70_22553 = (Support.Microsoft.FStar.Util.char_at s 1)
-in (hexdigit _70_22553)))
-in (Support.Microsoft.FStar.Util.uint16_of_int _70_22554))
+(let _116_68 = (((let _116_66 = (Support.Microsoft.FStar.Util.char_at s 0)
+in (hexdigit _116_66)) * 16) + (let _116_67 = (Support.Microsoft.FStar.Util.char_at s 1)
+in (hexdigit _116_67)))
+in (Support.Microsoft.FStar.Util.uint16_of_int _116_68))
 end))
 
 let unicodegraph_long = (fun ( s ) -> (match (((Support.String.length s) <> 8)) with
@@ -102,16 +102,16 @@ let unicodegraph_long = (fun ( s ) -> (match (((Support.String.length s) <> 8)) 
 (Support.All.failwith "unicodegraph_long")
 end
 | false -> begin
-(let high = (((let _70_22557 = (Support.Microsoft.FStar.Util.char_at s 0)
-in (hexdigit _70_22557)) * 4096) + (((let _70_22558 = (Support.Microsoft.FStar.Util.char_at s 1)
-in (hexdigit _70_22558)) * 256) + (((let _70_22559 = (Support.Microsoft.FStar.Util.char_at s 2)
-in (hexdigit _70_22559)) * 16) + (let _70_22560 = (Support.Microsoft.FStar.Util.char_at s 3)
-in (hexdigit _70_22560)))))
-in (let low = (((let _70_22561 = (Support.Microsoft.FStar.Util.char_at s 4)
-in (hexdigit _70_22561)) * 4096) + (((let _70_22562 = (Support.Microsoft.FStar.Util.char_at s 5)
-in (hexdigit _70_22562)) * 256) + (((let _70_22563 = (Support.Microsoft.FStar.Util.char_at s 6)
-in (hexdigit _70_22563)) * 16) + (let _70_22564 = (Support.Microsoft.FStar.Util.char_at s 7)
-in (hexdigit _70_22564)))))
+(let high = (((let _116_71 = (Support.Microsoft.FStar.Util.char_at s 0)
+in (hexdigit _116_71)) * 4096) + (((let _116_72 = (Support.Microsoft.FStar.Util.char_at s 1)
+in (hexdigit _116_72)) * 256) + (((let _116_73 = (Support.Microsoft.FStar.Util.char_at s 2)
+in (hexdigit _116_73)) * 16) + (let _116_74 = (Support.Microsoft.FStar.Util.char_at s 3)
+in (hexdigit _116_74)))))
+in (let low = (((let _116_75 = (Support.Microsoft.FStar.Util.char_at s 4)
+in (hexdigit _116_75)) * 4096) + (((let _116_76 = (Support.Microsoft.FStar.Util.char_at s 5)
+in (hexdigit _116_76)) * 256) + (((let _116_77 = (Support.Microsoft.FStar.Util.char_at s 6)
+in (hexdigit _116_77)) * 16) + (let _116_78 = (Support.Microsoft.FStar.Util.char_at s 7)
+in (hexdigit _116_78)))))
 in (match ((high = 0)) with
 | true -> begin
 (None, (Support.Microsoft.FStar.Util.uint16_of_int low))
@@ -164,8 +164,8 @@ end
 false
 end))
 
-let keywords = (let _70_22570 = (Support.List.map (fun ( s ) -> (FSHARP, s, Microsoft_FStar_Parser_Parse.RESERVED)) (("atomic")::("break")::("checked")::("component")::("constraint")::("constructor")::("continue")::("eager")::("fixed")::("functor")::("global")::("include")::("mixin")::("parallel")::("process")::("protected")::("pure")::("sealed")::("trait")::("tailcall")::("volatile")::[]))
-in (Support.List.append (((ALWAYS, "and", Microsoft_FStar_Parser_Parse.AND))::((ALWAYS, "as", Microsoft_FStar_Parser_Parse.AS))::((ALWAYS, "assert", Microsoft_FStar_Parser_Parse.ASSERT))::((ALWAYS, "assume", Microsoft_FStar_Parser_Parse.ASSUME))::((ALWAYS, "begin", Microsoft_FStar_Parser_Parse.BEGIN))::((FSHARP, "default", Microsoft_FStar_Parser_Parse.DEFAULT))::((ALWAYS, "effect", Microsoft_FStar_Parser_Parse.EFFECT))::((ALWAYS, "else", Microsoft_FStar_Parser_Parse.ELSE))::((ALWAYS, "end", Microsoft_FStar_Parser_Parse.END))::((ALWAYS, "ensures", Microsoft_FStar_Parser_Parse.ENSURES))::((ALWAYS, "exception", Microsoft_FStar_Parser_Parse.EXCEPTION))::((ALWAYS, "exists", Microsoft_FStar_Parser_Parse.EXISTS))::((ALWAYS, "false", Microsoft_FStar_Parser_Parse.FALSE))::((ALWAYS, "finally", Microsoft_FStar_Parser_Parse.FINALLY))::((ALWAYS, "for", Microsoft_FStar_Parser_Parse.FOR))::((ALWAYS, "forall", Microsoft_FStar_Parser_Parse.FORALL))::((ALWAYS, "fun", Microsoft_FStar_Parser_Parse.FUN))::((ALWAYS, "function", Microsoft_FStar_Parser_Parse.FUNCTION))::((ALWAYS, "if", Microsoft_FStar_Parser_Parse.IF))::((ALWAYS, "in", Microsoft_FStar_Parser_Parse.IN))::((ALWAYS, "lazy", Microsoft_FStar_Parser_Parse.LAZY))::((ALWAYS, "let", Microsoft_FStar_Parser_Parse.LET (false)))::((ALWAYS, "logic", Microsoft_FStar_Parser_Parse.LOGIC))::((ALWAYS, "match", Microsoft_FStar_Parser_Parse.MATCH))::((ALWAYS, "module", Microsoft_FStar_Parser_Parse.MODULE))::((ALWAYS, "of", Microsoft_FStar_Parser_Parse.OF))::((ALWAYS, "open", Microsoft_FStar_Parser_Parse.OPEN))::((ALWAYS, "or", Microsoft_FStar_Parser_Parse.OR))::((ALWAYS, "opaque", Microsoft_FStar_Parser_Parse.OPAQUE))::((ALWAYS, "private", Microsoft_FStar_Parser_Parse.PRIVATE))::((FSHARP, "public", Microsoft_FStar_Parser_Parse.PUBLIC))::((ALWAYS, "rec", Microsoft_FStar_Parser_Parse.REC))::((ALWAYS, "requires", Microsoft_FStar_Parser_Parse.REQUIRES))::((ALWAYS, "then", Microsoft_FStar_Parser_Parse.THEN))::((ALWAYS, "to", Microsoft_FStar_Parser_Parse.TO))::((ALWAYS, "true", Microsoft_FStar_Parser_Parse.TRUE))::((ALWAYS, "try", Microsoft_FStar_Parser_Parse.TRY))::((ALWAYS, "type", Microsoft_FStar_Parser_Parse.TYPE))::((ALWAYS, "val", Microsoft_FStar_Parser_Parse.VAL))::((ALWAYS, "when", Microsoft_FStar_Parser_Parse.WHEN))::((ALWAYS, "with", Microsoft_FStar_Parser_Parse.WITH))::((ALWAYS, "new_effect", Microsoft_FStar_Parser_Parse.NEW_EFFECT))::((ALWAYS, "sub_effect", Microsoft_FStar_Parser_Parse.SUB_EFFECT))::((ALWAYS, "total", Microsoft_FStar_Parser_Parse.TOTAL))::((ALWAYS, "kind", Microsoft_FStar_Parser_Parse.KIND))::((ALWAYS, "_", Microsoft_FStar_Parser_Parse.UNDERSCORE))::[]) _70_22570))
+let keywords = (let _116_84 = (Support.List.map (fun ( s ) -> (FSHARP, s, Microsoft_FStar_Parser_Parse.RESERVED)) (("atomic")::("break")::("checked")::("component")::("constraint")::("constructor")::("continue")::("eager")::("fixed")::("functor")::("global")::("include")::("mixin")::("parallel")::("process")::("protected")::("pure")::("sealed")::("trait")::("tailcall")::("volatile")::[]))
+in (Support.List.append (((ALWAYS, "and", Microsoft_FStar_Parser_Parse.AND))::((ALWAYS, "as", Microsoft_FStar_Parser_Parse.AS))::((ALWAYS, "assert", Microsoft_FStar_Parser_Parse.ASSERT))::((ALWAYS, "assume", Microsoft_FStar_Parser_Parse.ASSUME))::((ALWAYS, "begin", Microsoft_FStar_Parser_Parse.BEGIN))::((FSHARP, "default", Microsoft_FStar_Parser_Parse.DEFAULT))::((ALWAYS, "effect", Microsoft_FStar_Parser_Parse.EFFECT))::((ALWAYS, "else", Microsoft_FStar_Parser_Parse.ELSE))::((ALWAYS, "end", Microsoft_FStar_Parser_Parse.END))::((ALWAYS, "ensures", Microsoft_FStar_Parser_Parse.ENSURES))::((ALWAYS, "exception", Microsoft_FStar_Parser_Parse.EXCEPTION))::((ALWAYS, "exists", Microsoft_FStar_Parser_Parse.EXISTS))::((ALWAYS, "false", Microsoft_FStar_Parser_Parse.FALSE))::((ALWAYS, "finally", Microsoft_FStar_Parser_Parse.FINALLY))::((ALWAYS, "for", Microsoft_FStar_Parser_Parse.FOR))::((ALWAYS, "forall", Microsoft_FStar_Parser_Parse.FORALL))::((ALWAYS, "fun", Microsoft_FStar_Parser_Parse.FUN))::((ALWAYS, "function", Microsoft_FStar_Parser_Parse.FUNCTION))::((ALWAYS, "if", Microsoft_FStar_Parser_Parse.IF))::((ALWAYS, "in", Microsoft_FStar_Parser_Parse.IN))::((ALWAYS, "lazy", Microsoft_FStar_Parser_Parse.LAZY))::((ALWAYS, "let", Microsoft_FStar_Parser_Parse.LET (false)))::((ALWAYS, "logic", Microsoft_FStar_Parser_Parse.LOGIC))::((ALWAYS, "match", Microsoft_FStar_Parser_Parse.MATCH))::((ALWAYS, "module", Microsoft_FStar_Parser_Parse.MODULE))::((ALWAYS, "of", Microsoft_FStar_Parser_Parse.OF))::((ALWAYS, "open", Microsoft_FStar_Parser_Parse.OPEN))::((ALWAYS, "or", Microsoft_FStar_Parser_Parse.OR))::((ALWAYS, "opaque", Microsoft_FStar_Parser_Parse.OPAQUE))::((ALWAYS, "private", Microsoft_FStar_Parser_Parse.PRIVATE))::((FSHARP, "public", Microsoft_FStar_Parser_Parse.PUBLIC))::((ALWAYS, "rec", Microsoft_FStar_Parser_Parse.REC))::((ALWAYS, "requires", Microsoft_FStar_Parser_Parse.REQUIRES))::((ALWAYS, "then", Microsoft_FStar_Parser_Parse.THEN))::((ALWAYS, "to", Microsoft_FStar_Parser_Parse.TO))::((ALWAYS, "true", Microsoft_FStar_Parser_Parse.TRUE))::((ALWAYS, "try", Microsoft_FStar_Parser_Parse.TRY))::((ALWAYS, "type", Microsoft_FStar_Parser_Parse.TYPE))::((ALWAYS, "val", Microsoft_FStar_Parser_Parse.VAL))::((ALWAYS, "when", Microsoft_FStar_Parser_Parse.WHEN))::((ALWAYS, "with", Microsoft_FStar_Parser_Parse.WITH))::((ALWAYS, "new_effect", Microsoft_FStar_Parser_Parse.NEW_EFFECT))::((ALWAYS, "sub_effect", Microsoft_FStar_Parser_Parse.SUB_EFFECT))::((ALWAYS, "total", Microsoft_FStar_Parser_Parse.TOTAL))::((ALWAYS, "kind", Microsoft_FStar_Parser_Parse.KIND))::((ALWAYS, "_", Microsoft_FStar_Parser_Parse.UNDERSCORE))::[]) _116_84))
 
 let stringKeywords = (Support.List.map (fun ( _45_62 ) -> (match (_45_62) with
 | (_45_58, w, _45_61) -> begin
@@ -236,11 +236,11 @@ let kwd_or_id = (fun ( args ) ( r ) ( s ) -> (match ((kwd s)) with
 | Some (v) -> begin
 (match ((v = Microsoft_FStar_Parser_Parse.RESERVED)) with
 | true -> begin
-(let _45_92 = (let _70_22613 = (let _70_22612 = (Support.Microsoft.FStar.Range.string_of_range r)
-in (Support.Microsoft.FStar.Util.format2 "The keyword \'%s\' is reserved for future use by F#. (%s)" s _70_22612))
-in (Support.Microsoft.FStar.Util.print_string _70_22613))
-in (let _70_22614 = (intern_string s)
-in Microsoft_FStar_Parser_Parse.IDENT (_70_22614)))
+(let _45_92 = (let _116_127 = (let _116_126 = (Support.Microsoft.FStar.Range.string_of_range r)
+in (Support.Microsoft.FStar.Util.format2 "The keyword \'%s\' is reserved for future use by F#. (%s)" s _116_126))
+in (Support.Microsoft.FStar.Util.print_string _116_127))
+in (let _116_128 = (intern_string s)
+in Microsoft_FStar_Parser_Parse.IDENT (_116_128)))
 end
 | false -> begin
 v
@@ -249,25 +249,25 @@ end
 | None -> begin
 (match (s) with
 | "__SOURCE_DIRECTORY__" -> begin
-(let _70_22616 = (let _70_22615 = (args.getSourceDirectory ())
-in (Support.Microsoft.FStar.Bytes.string_as_unicode_bytes _70_22615))
-in Microsoft_FStar_Parser_Parse.STRING (_70_22616))
+(let _116_130 = (let _116_129 = (args.getSourceDirectory ())
+in (Support.Microsoft.FStar.Bytes.string_as_unicode_bytes _116_129))
+in Microsoft_FStar_Parser_Parse.STRING (_116_130))
 end
 | "__SOURCE_FILE__" -> begin
-(let _70_22618 = (let _70_22617 = (Support.Microsoft.FStar.Range.file_of_range r)
-in (Support.Microsoft.FStar.Bytes.string_as_unicode_bytes _70_22617))
-in Microsoft_FStar_Parser_Parse.STRING (_70_22618))
+(let _116_132 = (let _116_131 = (Support.Microsoft.FStar.Range.file_of_range r)
+in (Support.Microsoft.FStar.Bytes.string_as_unicode_bytes _116_131))
+in Microsoft_FStar_Parser_Parse.STRING (_116_132))
 end
 | "__LINE__" -> begin
-(let _70_22622 = (let _70_22621 = (let _70_22620 = (let _70_22619 = (Support.Microsoft.FStar.Range.start_of_range r)
-in (Support.Microsoft.FStar.Range.line_of_pos _70_22619))
-in (Support.All.pipe_left Support.Microsoft.FStar.Util.string_of_int _70_22620))
-in (_70_22621, false))
-in Microsoft_FStar_Parser_Parse.INT (_70_22622))
+(let _116_136 = (let _116_135 = (let _116_134 = (let _116_133 = (Support.Microsoft.FStar.Range.start_of_range r)
+in (Support.Microsoft.FStar.Range.line_of_pos _116_133))
+in (Support.All.pipe_left Support.Microsoft.FStar.Util.string_of_int _116_134))
+in (_116_135, false))
+in Microsoft_FStar_Parser_Parse.INT (_116_136))
 end
 | _45_99 -> begin
-(let _70_22623 = (intern_string s)
-in Microsoft_FStar_Parser_Parse.IDENT (_70_22623))
+(let _116_137 = (intern_string s)
+in Microsoft_FStar_Parser_Parse.IDENT (_116_137))
 end)
 end))
 
