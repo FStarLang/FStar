@@ -12,15 +12,15 @@
   *)
 module MD5
 open SSTCombinators
-open StackAndHeap
 open SST
 open MVector
 open Heap
 open Set
 open MachineWord
-open SSTArray
 open MD5Common
 open ArrayAlgos
+open SSTArray
+open StackAndHeap
 open Seq
 open Ghost
 
