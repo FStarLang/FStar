@@ -46,8 +46,8 @@ type arrayExixtsInMem (#a:Type) (#n:nat) (v: vector (ref  a) n) (m:smem) =
 
 
  type allocateVectorInBlock (#a:Type) (#n:nat) (rv: vector (ref a) n)
-  (h0 : memblock)
-  (h1 : memblock) (init : a)  (rl: refLocType) =
+  (h0 : region)
+  (h1 : region) (init : a)  (rl: refLocType) =
   (forall (r:(r:(ref a){mem (Ref r) (flattenRefs rv)})).
         {:pattern (mem (Ref r) (flattenRefs rv))}
            refLoc r = rl

@@ -24,7 +24,7 @@ type sidt = nat
 (*let test u = ()*)
 
 
-type memblock = heap
+type region = heap
 (*Can we ever define a memRep for a ref type?*)
 
 (*How does List.memT work? is equality always decidable?*)
@@ -39,7 +39,7 @@ This is similar to the case of freshness of references in ST.
 The axiomatization is agnostic about whether a reference can be reused after it
 is freed.
 *)
-type memStackAux = Stack (sidt * memblock)
+type memStackAux = Stack (sidt * region)
 
 val ssids : memStackAux ->  Tot (list sidt)
 let ssids ms = mapT fst ms
@@ -54,29 +54,29 @@ type memStack = x:memStackAux{wellFormed x}
 (* What is the size of functions? Does it make even make sense to store a function at a reference? Would it be possible to transpile such a construct? *)
 
 (* Free only makes sense for heaps. We can already reason about (absense of) memory leaks because one can talk about the domain of the heap*)
-type smem = memblock * memStack
+type smem = region * memStack
 
 
 let hp (s : smem) = fst s
 
-val st : smem -> Tot (Stack (sidt * memblock))
+val st : smem -> Tot (Stack (sidt * region))
 let st (s : smem) = (snd s)
 
 val mtail : smem -> Tot smem
 let mtail (s : smem) = (hp s, stail (st s))
 
-val mstail : smem -> Tot ((Stack (sidt * memblock)))
+val mstail : smem -> Tot ((Stack (sidt * region)))
 let mstail (s : smem) = stail (st s)
 
 val sids : smem -> Tot (list sidt)
 let sids (m : smem) = ssids (st m)
 
-let sid (s : (sidt * memblock)) = fst s
+let sid (s : (sidt * region)) = fst s
 
-val topst : (s:smem{isNonEmpty (st s)}) -> Tot  (sidt * memblock)
+val topst : (s:smem{isNonEmpty (st s)}) -> Tot  (sidt * region)
 let topst ss = (top (st ss))
 
-val topstb : (s:smem{isNonEmpty (st s)}) ->  Tot memblock
+val topstb : (s:smem{isNonEmpty (st s)}) ->  Tot region
 let topstb ss = snd (topst ss)
 
 
@@ -92,44 +92,44 @@ assume val refLoc : #a:Type -> ref a -> Tot refLocType
 
 new_effect StSTATE = STATE_h smem
 
-val stackBlockAtLoc : sidt  -> (Stack (sidt * memblock)) -> Tot (option memblock)
+val stackBlockAtLoc : sidt  -> (Stack (sidt * region)) -> Tot (option region)
 let rec stackBlockAtLoc id sp =
   match sp with
   | Nil -> None
   | h::tl -> if (id=(fst h)) then Some (snd h) else stackBlockAtLoc id tl
 
 
-val blockAtLoc : smem -> refLocType  -> Tot (option memblock)
+val blockAtLoc : smem -> refLocType  -> Tot (option region)
 let blockAtLoc m rl =
 match rl with
 | InHeap -> Some (hp m)
 | InStack id -> stackBlockAtLoc id (st m)
 
-val writeInBlock : #a:Type -> r:(ref a) -> v:a -> memblock -> Tot memblock
+val writeInBlock : #a:Type -> r:(ref a) -> v:a -> region -> Tot region
 let writeInBlock r v mb= upd mb r v
 
 (* are there associative maps in FStar? *)
 (*  proof by computation *)
 
-val changeStackBlockWithId  : (memblock -> Tot memblock)
+val changeStackBlockWithId  : (region -> Tot region)
   -> sidt
-  -> (Stack (sidt * memblock))
-        -> Tot (Stack (sidt * memblock))
+  -> (Stack (sidt * region))
+        -> Tot (Stack (sidt * region))
 let rec changeStackBlockWithId f s ms=
 match ms with
 | [] -> []
 | h::tl ->
   (if (fst h = s) then ((fst h, (f (snd h)))::tl) else h::(changeStackBlockWithId f s tl))
 
-val writeInMemStack : #a:Type -> (ref a) -> (Stack (sidt * memblock)) -> sidt -> a -> Tot (Stack (sidt * memblock))
+val writeInMemStack : #a:Type -> (ref a) -> (Stack (sidt * region)) -> sidt -> a -> Tot (Stack (sidt * region))
 let rec writeInMemStack r ms s v = changeStackBlockWithId (writeInBlock r v) s ms
 
-(*val freeInMemStack : #a:Type -> (ref a) -> (Stack (sidt * memblock)) -> sidt -> Tot (Stack (sidt * memblock))
+(*val freeInMemStack : #a:Type -> (ref a) -> (Stack (sidt * region)) -> sidt -> Tot (Stack (sidt * region))
 let rec freeInMemStack r ms s = changeStackBlockWithId (freeRefInBlock r) s ms*)
 
 
 val changeStackBlockSameIDs :
-    f:(memblock -> Tot memblock) -> s:sidt -> ms:(Stack (sidt * memblock))
+    f:(region -> Tot region) -> s:sidt -> ms:(Stack (sidt * region))
   -> Lemma (ensures ((ssids ms) = (ssids (changeStackBlockWithId f s ms))))
 let rec changeStackBlockSameIDs f s ms =
 match ms with
@@ -137,19 +137,19 @@ match ms with
 | h::tl ->   if (fst h = s) then () else (changeStackBlockSameIDs f s tl)
 
 val changeStackBlockWellFormed :
- f:(memblock -> Tot memblock) -> s:sidt -> ms:(Stack (sidt * memblock))
+ f:(region -> Tot region) -> s:sidt -> ms:(Stack (sidt * region))
   -> Lemma
       (requires (wellFormed ms))
       (ensures (wellFormed (changeStackBlockWithId f s ms)))
 let changeStackBlockWellFormed  f s ms = (changeStackBlockSameIDs f s ms)
 
-val writeMemStackSameIDs : #a:Type -> r:(ref a) -> ms:(Stack (sidt * memblock))
+val writeMemStackSameIDs : #a:Type -> r:(ref a) -> ms:(Stack (sidt * region))
   -> s:sidt -> v:a
   -> Lemma (ensures ((ssids ms) = (ssids (writeInMemStack r ms s v))))
 let writeMemStackSameIDs r ms s v = (changeStackBlockSameIDs (writeInBlock r v) s ms)
 
 val writeMemStackWellFormed : #a:Type -> r:(ref a)
-  -> ms:(Stack (sidt * memblock))
+  -> ms:(Stack (sidt * region))
   -> s:sidt -> v:a
   -> Lemma
       (requires (wellFormed (ms)))
@@ -157,13 +157,13 @@ val writeMemStackWellFormed : #a:Type -> r:(ref a)
       [SMTPat (writeInMemStack r ms s v)]
 let writeMemStackWellFormed r ms s v = (changeStackBlockWellFormed (writeInBlock r v) s ms)
 
-(*val freeInMemStackSameIDs : #a:Type -> r:(ref a) -> ms:(Stack (sidt * memblock))
+(*val freeInMemStackSameIDs : #a:Type -> r:(ref a) -> ms:(Stack (sidt * region))
   -> s:sidt
   -> Lemma (ensures ((ssids ms) = (ssids (freeInMemStack r ms s))))
 let freeInMemStackSameIDs r ms s = (changeStackBlockSameIDs (freeRefInBlock r) s ms)
 
 val freeInMemStackWellFormed : #a:Type -> r:(ref a)
-  -> ms:(Stack (sidt * memblock))
+  -> ms:(Stack (sidt * region))
   -> s:sidt
   -> Lemma
       (requires (wellFormed (ms)))
@@ -174,7 +174,7 @@ let freeInMemStackWellFormed r ms s = (changeStackBlockWellFormed (freeRefInBloc
 (* what is the analog of transport / eq_ind?*)
 
 (*
-val writeMemStackSameStail : #a:Type -> r:(ref a) -> ms:(Stack (sidt * memblock))
+val writeMemStackSameStail : #a:Type -> r:(ref a) -> ms:(Stack (sidt * region))
   -> s:sidt -> v:a
   -> Lemma (ensures ((stail ms) = (stail (writeInMemStack r ms s v))))
          (*  [SMTPat (writeMemStack r ms s v)] *)
@@ -183,7 +183,7 @@ let rec writeMemStackSameStail r ms s v = ()
 
 
 val refExistsInStack : #a:Type -> (ref a)
-  -> id:sidt -> (Stack (sidt * memblock)) -> Tot bool
+  -> id:sidt -> (Stack (sidt * region)) -> Tot bool
 let rec refExistsInStack r id ms =
 match ms with
 | [] -> false
@@ -191,7 +191,7 @@ match ms with
 
 
 val refExistsInStackId : #a:Type -> r:(ref a)
-  -> id:sidt -> ms:(Stack (sidt * memblock))
+  -> id:sidt -> ms:(Stack (sidt * region))
   -> Lemma (requires (refExistsInStack r id ms))
           (ensures (memT id (ssids ms)))
 let rec refExistsInStackId r id ms =
@@ -199,7 +199,7 @@ match ms with
 | [] -> ()
 | h::tl -> if (fst h=id) then () else (refExistsInStackId r id tl)
 
-val memIdUniq:  h:(sidt * memblock) -> tl:memStackAux
+val memIdUniq:  h:(sidt * region) -> tl:memStackAux
   -> Lemma (requires (wellFormed (h::tl)))
         (ensures (notIn (fst h) (ssids tl)))
 let memIdUniq h tl = ()
@@ -224,7 +224,7 @@ match (refLoc r) with
 
 
 val writeMemStackExists : #a:Type -> #b:Type -> rw:(ref a) -> r: (ref b)
-  -> ms:(Stack (sidt * memblock))
+  -> ms:(Stack (sidt * region))
   -> id:sidt -> idw:sidt -> v:a
   -> Lemma
       (requires (refExistsInStack r id ms))
@@ -282,7 +282,7 @@ Lemma (requires (is_InStack (refLoc r)))
 let rec writeMemAuxPreservesStail r m v =  ()
 *)
 
-val loopkupRefStack : #a:Type -> r:(ref a) -> id:sidt -> ms:(Stack (sidt * memblock)){refExistsInStack r id ms}  ->  Tot a
+val loopkupRefStack : #a:Type -> r:(ref a) -> id:sidt -> ms:(Stack (sidt * region)){refExistsInStack r id ms}  ->  Tot a
 let rec loopkupRefStack r id ms =
 match ms with
 | h::tl ->
@@ -302,7 +302,7 @@ match (refLoc r) with
 
 
 val readAfterWriteStack :
-  #a:Type -> rw:(ref a) -> r:(ref a) -> v:a -> id:sidt -> idw:sidt -> m:(Stack (sidt * memblock)) ->
+  #a:Type -> rw:(ref a) -> r:(ref a) -> v:a -> id:sidt -> idw:sidt -> m:(Stack (sidt * region)) ->
   Lemma (requires (refExistsInStack r id m))
         (ensures true)
         (*  (ensures ((refExistsInStack r id m)
@@ -312,7 +312,7 @@ type ifthenelseT (b:Type) (tc : Type) (fc: Type) =
  (b ==>  tc) /\ ((~b) ==> fc )
 
 val readAfterWriteStack :
-  #a:Type  -> #b:Type -> rw:(ref a) -> r:(ref b) -> v:a -> id:sidt -> idw:sidt -> m:(Stack (sidt * memblock)) ->
+  #a:Type  -> #b:Type -> rw:(ref a) -> r:(ref b) -> v:a -> id:sidt -> idw:sidt -> m:(Stack (sidt * region)) ->
   Lemma (requires (refExistsInStack r id m))
         (ensures ((refExistsInStack r id m)
             /\ ifthenelseT (r==rw /\ id=idw)
@@ -330,7 +330,7 @@ match m with
 
 (*perhaps this specialization is not requires anymore*)
 val readAfterWriteStackSameType :
-  #a:Type -> rw:(ref a) -> r:(ref a) -> v:a -> id:sidt -> idw:sidt -> m:(Stack (sidt * memblock)) ->
+  #a:Type -> rw:(ref a) -> r:(ref a) -> v:a -> id:sidt -> idw:sidt -> m:(Stack (sidt * region)) ->
   Lemma (requires (refExistsInStack r id m))
         (ensures ((refExistsInStack r id m)
             /\ loopkupRefStack r id (writeInMemStack rw m idw v) = (if (r=rw && id=idw) then v else (loopkupRefStack r id m))))
@@ -522,7 +522,7 @@ match lbig with
 | [] -> false
 | h::tl -> tl=lsmall*)
 
-type allocateInBlock (#a:Type) (r: ref a) (h0 : memblock) (h1 : memblock) (init : a)   = not(Heap.contains h0 r) /\ Heap.contains h1 r /\  h1 == upd h0 r init
+type allocateInBlock (#a:Type) (r: ref a) (h0 : region) (h1 : region) (init : a)   = not(Heap.contains h0 r) /\ Heap.contains h1 r /\  h1 == upd h0 r init
 
 (*incase one does not want to reason about changed references*)
 (* TODO: allRefs does not extract properly. Set.empty has an extra unit which is not there in Support.ml
