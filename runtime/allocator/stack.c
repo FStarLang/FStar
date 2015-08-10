@@ -140,6 +140,10 @@ int pop_frame() {
     memset(top->memory, 255, ((unsigned long)top->limit_ptr - (unsigned long)top->memory));
 #endif
     free(top->memory);
+    /* Should we free memory, or keep it so that we dont have to malloc
+     * at the next pushFrame?
+     * Recall that we started by saying that mallocs are expensive.
+     */
     free(top);
     top = prev;
     if (fp == EXT_MARKER) {
