@@ -36,8 +36,15 @@ let op_At_Bar (b1:bytes) (b2:bytes) = Seq.append b1 b2
 
 (*@ function val B : (bytes -> byte array) @*)
 
+(*@ assume val length : (b:bytes -> (l:nat){Length (b) = l}) @*)
+val length : bytes -> Tot nat
+let length b = Seq.length b
+
+(*@ type (l:nat) lbytes = (b:bytes){Length (b) = l} @*)
+type lbytes (l:nat) = b:bytes{length b = l}
+
 (*@ val empty_bytes : (b:bytes){B (b) = C_array_of_list C_op_Nil ()} @*)
-val empty_bytes : bytes
+val empty_bytes : lbytes 0
 let empty_bytes = Seq.create 0 0uy
 
 (*@ assume val abytes : (b:cbytes -> (a:bytes){B (a) = b}) @*)
@@ -67,12 +74,6 @@ let cbyte2 b = (Seq.index b 0, Seq.index b 1)
 
 (*@  assume (!x. Length (x) = BLength (B (x))) @*)
 
-(*@ assume val length : (b:bytes -> (l:nat){Length (b) = l}) @*)
-val length : bytes -> Tot nat
-let length b = Seq.length b
-
-(*@ type (l:nat) lbytes = (b:bytes){Length (b) = l} @*)
-type lbytes (l:nat) = b:bytes{length b = l}
 (*@ assume val createBytes : (l:int -> ((v:int){C_pr_LessThanOrEqual(0, v) /\ C_pr_LessThan(v, 256)} -> (;l) lbytes)) @*)
 val createBytes : nat -> byte -> Tot bytes
 let createBytes l b = Seq.create l b
