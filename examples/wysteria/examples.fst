@@ -24,144 +24,14 @@ let to_s3 p1 p2 p3 = union (to_s2 p1 p2) (to_s1 p3)
 
 (**********)
 
-(* millionaire's straightforward, inlined secure block *)
-
-val mill1: unit -> Wys bool (pre p_ab) post
-let mill1 _ =
-  let x = as_par alice_s (read #nat) in
-  let y = as_par bob_s (read #nat) in
-
-  let g:unit -> Wys bool (pre s_ab) post =
-    fun _ -> (unbox_s x) > (unbox_s y)
-  in
-
-  as_sec ab g
-
-(**********)
-
-(* factoring out secure computation in a separate function *)
-
-val mill2_sec: x:Box nat alice_s -> y:Box nat bob_s -> Wys bool (pre p_ab) post
-let mill2_sec x y =
-  let g:unit -> Wys bool (pre s_ab) post =
-    fun _ -> (unbox_s x) > (unbox_s y)
-  in
-  as_sec ab g
-
-val mill2: unit -> Wys bool (pre p_ab) post
-let mill2 _ =
-  let x = as_par alice_s (read #nat) in
-  let y = as_par bob_s (read #nat) in
-  mill2_sec x y
-
-(**********)
 
 (* millionaire's secure block for any two parties *)
 (* only unification, so p1 and p2 can only be inferred if type indices *)
-val mill3_sec: #p1:prin -> #p2:prin
-               -> x:Box nat (singleton p1) -> y:Box nat (singleton p2)
-               -> unit
-               -> Wys bool (pre (Mode Par (union (singleton p1) (singleton p2)))) post
-let mill3_sec #p1 #p2 x y _ =
-  let s = union (singleton p1) (singleton p2) in
-  let g:unit -> Wys bool (pre (Mode Sec s)) post =
-   fun _ -> (unbox_s x) > (unbox_s y)
-  in
-  as_sec s g
-
-val mill3: unit -> Wys bool (pre p_abc) post
-let mill3 _ =
-  let x = as_par alice_s (read #nat) in
-  let y = as_par bob_s (read #nat) in
-  let z = as_par charlie_s (read #nat) in
-
-  let _ = as_par ab (mill3_sec #alice #bob x y) in
-  let _ = as_par bc (mill3_sec #bob #charlie y z) in
-
-  true
-
 (**********)
 
 (* millionaire's using wires, secure block inlined *)
 
 (* assert (forall s v. const_on s v = restrict s (const v)) fails unless annotated *)
-
-val mill4: unit -> Wys bool (pre p_ab) post
-let mill4 _ =
-  (* because of the above assert problem, here annotations are needed *)
-  let x:Box nat alice_s = as_par alice_s (read #nat) in
-  let y:Box nat bob_s = as_par bob_s (read #nat) in
-
-  let w1 = mkwire_p alice_s x in
-  let w2 = mkwire_p bob_s y in
-
-  let w = concat_wire #nat w1 w2 in
-
-  let g:unit -> Wys bool (pre s_ab) post =
-    fun _ -> (projwire_s w alice) > (projwire_s w bob)
-  in
-
-  as_sec ab g
-
-(**********)
-
-(* using wire bundles, secure block a separate function *)
-
-type HasDom (#a:Type) (w:Wire a) (ps:prins) = forall p. mem p ps <==> w_contains p w
-
-val mill5_sec: w:Wire nat -> Wys bool (pre_with p_ab (HasDom w ab)) post
-let mill5_sec w =
-  let g:unit -> Wys bool (pre s_ab) post =
-    fun _ -> (projwire_s w alice) > (projwire_s w bob)
-  in
-  as_sec ab g
-
-val mill5: unit -> Wys bool (pre p_ab) post
-let mill5 _ =
-  let x:Box nat alice_s = as_par alice_s (read #nat) in
-  let y:Box nat bob_s = as_par bob_s (read #nat) in
-
-  (* TODO: FIXME: this doesn't work if inlined in concat_wire *)
-  let w1 = mkwire_p alice_s x in
-  let w2 = mkwire_p bob_s y in
-
-  let w = concat_wire w1 w2 in
-
-  mill5_sec w
-
-(**********)
-
-(* for any two principals using wires *)
-
-val mill6_sec: #p1:prin -> #p2:prin -> w:Wire nat
-               -> unit
-               -> Wys bool (pre_with (Mode Par (to_s2 p1 p2))
-                                     (HasDom w (to_s2 p1 p2))) post
-let mill6_sec #p1 #p2 w _ =
-  let g:unit -> Wys bool (pre (Mode Sec (to_s2 p1 p2))) post =
-    fun _ -> (projwire_s w p1) > (projwire_s w p2)
-  in
-  as_sec (to_s2 p1 p2) g
-
-val mill6: unit -> Wys bool (pre p_abc) post
-let mill6 _ =
-  let x:Box nat alice_s = as_par alice_s (read #nat) in
-  let y:Box nat bob_s = as_par bob_s (read #nat) in
-  let z:Box nat charlie_s = as_par charlie_s (read #nat) in
-
-  let wa = mkwire_p alice_s x in
-  let wb = mkwire_p bob_s y in
-  let wc = mkwire_p charlie_s z in
-
-  let w1 = concat_wire wa wb in
-  let w2 = concat_wire wb wc in
-
-  let _ = as_par ab (mill6_sec #alice #bob w1) in
-  let _ = as_par bc (mill6_sec #bob #charlie w2) in
-
-  true
-
-(**********)
 
 (* return result only to alice *)
 
