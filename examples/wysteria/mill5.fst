@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Wysteria;
+    options:--admit_fsi Set --admit_fsi Wysteria --codegen Wysteria;
     variables:LIB=../../lib;
     other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst wysteria.fsi
  --*)
@@ -24,7 +24,12 @@ type pre_with (m:mode) (t:Type) = fun m0 -> m0 = m /\ t
 
 let to_s2 p1 p2 = union (singleton p1) (singleton p2)
 
-val mill5_sec: #p1:prin -> #p2:prin -> w:Wire nat
+val read_fn: unit -> Wys nat (fun m0 -> Mode.m m0 = Par /\
+                                        (exists p. Mode.ps m0 = singleton p))
+                             (fun m0 r -> True)
+let read_fn x = read #nat ()
+
+val mill5_sec: #p1:prin -> #p2:prin -> w:Wire int
                -> unit
                -> Wys bool (pre_with (Mode Par (to_s2 p1 p2))
                                      (w_dom w = to_s2 p1 p2)) post
@@ -36,9 +41,9 @@ let mill5_sec #p1 #p2 w _ =
 
 val mill5: unit -> Wys bool (pre (Mode Par abc)) post
 let mill5 _ =
-  let x:Box nat alice_s = as_par alice_s (read #nat) in
-  let y:Box nat bob_s = as_par bob_s (read #nat) in
-  let z:Box nat charlie_s = as_par charlie_s (read #nat) in
+  let x = as_par alice_s read_fn in
+  let y = as_par bob_s read_fn in
+  let z = as_par charlie_s read_fn in
 
   let wa = mkwire_p alice_s x in
   let wb = mkwire_p bob_s y in
