@@ -160,7 +160,7 @@ module NodeList : NODE_LIST =
     let new_list () = ref null_node (* ALLOCATE (small) heap *)
     let contents l = !l
     (* Insert by mutation. The order is according to the frequency field. *)
-    let rec insert_in_ordered_list (the_node:node) (the_list:node_list) =
+    let insert_in_ordered_list (the_node:node) (the_list:node_list) =
       if is_null !the_list then 
 	the_list := the_node
       else
@@ -435,7 +435,7 @@ module Reader =
 	(let b = Bytes.get arr ofs in
 	 x := (arr,ofs + 1);
 	 b)
-    let get_ofs x = let (arr,ofs) = !x in ofs
+    let get_ofs x = let (_,ofs) = !x in ofs
   end
 
 let rec read_huffman_tree (file:Reader.t) : code_node =
@@ -541,7 +541,7 @@ let rnd_arr arr =
   let max_count = (Random.int (len/2)) + 1 in
   let count = ref ((Random.int max_count) + 1) in
   let v = ref (Random.int symbol_value_bound) in
-  let f i = 
+  let f _ = 
     if !count = 0 then
       (count := (Random.int max_count) + 1;
        v := (Random.int symbol_value_bound);
@@ -560,7 +560,7 @@ let rnd_arr arr =
 
 (* MAIN *)
 
-for i = 0 to (!num-1) do
+for _ = 0 to (!num-1) do
   (* Generate input *)
   if !do_stack then
     Camlstack.push_frame 0;
