@@ -1,7 +1,7 @@
 (*--build-config
-    options:--admit_fsi OrdSet --admit_fsi OrdMap;
+    options:--admit_fsi OrdSet --admit_fsi OrdMap --admit_fsi FFI;
     variables:LIB=../../lib;
-    other-files:$LIB/ordset.fsi $LIB/ordmap.fsi $LIB/classical.fst ast.fst
+    other-files:$LIB/ordset.fsi $LIB/ordmap.fsi $LIB/classical.fst ast.fst ffi.fsi
  --*)
 
 module Semantics
@@ -440,11 +440,9 @@ let pre_ffi c = match c with
   
   | _ -> NA
 
-assume val exec_ffi: string -> list dvalue -> Tot dvalue
-
 val step_ffi: c:config{pre_ffi c = Do} -> Tot config
 let step_ffi (Conf l m s en (T_red (R_ffi fn vs))) =
-  let D_v _ v = exec_ffi fn vs in
+  let D_v _ v = FFI.exec_ffi fn vs in
   Conf l m s en (T_val v)
 
 val pre_match: config -> Tot comp
