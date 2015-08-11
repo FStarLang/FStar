@@ -10,9 +10,9 @@ module SMC
 
 open Wysteria
 
-(*let alice_s = singleton alice
+let alice_s = singleton alice
 let bob_s = singleton bob
-let ab = union alice_s bob_s*)
+let ab = union alice_s bob_s
 
 type pre  (m:mode)  = fun m0 -> b2t (m0 = m)
 type post (#a:Type) = fun (m:mode) (x:a) -> True
@@ -31,10 +31,7 @@ let mill1 _ =
    fun _ -> (unbox_s x) > (unbox_s y)
  in
 
- as_sec ab g*)
-
-let g x = x - 2 
-
+ as_sec ab g
 ;;
 
 let x = main ab mill1 in
