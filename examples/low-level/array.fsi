@@ -8,7 +8,7 @@
 
 module SSTArray
 open SSTCombinators
-open StackAndHeap
+open StackAndHeap  open Located
 open SST
 open MachineWord
 open Heap

@@ -17,4 +17,4 @@ huffman$(EXE): huffman.ml huffman_ffi.o
 	$(OCAMLC) $(FLAGS) -c  $^ -o $@
 
 clean: 
-	$(RM) huffman$(EXE) *.o *.cmo *.cmi
+	$(RM) huffman$(EXE) *.o *.cm*

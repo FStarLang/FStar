@@ -2,7 +2,7 @@
     options: --codegen OCaml-experimental --trace_error --debug yes --prn;
     variables:LIB=../../lib;
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst  stack.fst listset.fst
-    $LIB/ghost.fst stackAndHeap.fst sst.fst sstCombinators.fst $LIB/constr.fst word.fst $LIB/seq.fsi $LIB/seq.fst array.fsi
+    $LIB/ghost.fst located.fst stackAndHeap.fst sst.fst sstCombinators.fst $LIB/constr.fst word.fst $LIB/seq.fsi $LIB/seq.fst array.fsi
      array.fst MD5Common.fst arrayAlgos.fst
   --*)
 
@@ -12,15 +12,15 @@
   *)
 module MD5
 open SSTCombinators
-open StackAndHeap
 open SST
 open MVector
 open Heap
 open Set
 open MachineWord
-open SSTArray
 open MD5Common
 open ArrayAlgos
+open SSTArray
+open StackAndHeap  open Located
 open Seq
 open Ghost
 

@@ -1,10 +1,10 @@
 (*--build-config
 variables:LIB=../../lib;
-other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst stack.fst listset.fst  $LIB/ghost.fst stackAndHeap.fst sst.fst sstCombinators.fst
+other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst stack.fst listset.fst  $LIB/ghost.fst located.fst stackAndHeap.fst sst.fst sstCombinators.fst
   --*)
 module Factorial
 open SSTCombinators
-open StackAndHeap
+open StackAndHeap  open Located
 open SST
 open Heap
 open Stack

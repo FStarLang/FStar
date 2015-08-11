@@ -318,6 +318,18 @@ CAMLprim value stack_mkref(value v)
   }
 }
 
+CAMLprim value stack_mkref_noscan(value v) 
+{
+  CAMLparam1 (v);
+  value ref = stack_caml_alloc_tuple(1,0,NULL); /* Assume it will never contain a pointer */
+  if (ref == (value)0)
+    caml_failwith ("Camlstack.mkref");
+  else {
+    Field(ref, 0) = v;
+    CAMLreturn(ref);
+  }
+}
+
 CAMLprim value stack_mkbytes(value lenv) {
   CAMLparam1 (lenv);
   mlsize_t len = Int_val(lenv);
@@ -356,16 +368,27 @@ CAMLprim value stack_mkarray(value lenv, value initv) {
 CAMLprim value stack_mkarray_noscan(value lenv, value initv) {
   CAMLparam2 (lenv, initv);
   int len = Int_val(lenv);
-  if (len <= 0 || (Is_block(initv) && !is_stack_pointer((void *)initv)))
+  if (len <= 0 
+      || (Is_block(initv) 
+	  && !(is_stack_pointer((void *)initv) || Tag_val(initv) == Double_tag)))
     caml_invalid_argument ("Camlstack.mkarray");
   else {
-    value tuple = stack_caml_alloc_tuple(len,0,NULL); /* assumes no heap pointers */
+    int tag, n = len;
+    if (Is_block(initv) && Tag_val(initv) == Double_tag) {
+      tag = Double_array_tag;
+      if (sizeof(value) == 4) n *= 2; /* if 32-bit words */
+    } else tag = 0;
+    value tuple = stack_caml_alloc(n,tag,0,NULL); /* no heap pointers */
     if (tuple == (value)0)
       caml_failwith ("Camlstack.mkarray");    
     else {
       int i;
-      for (i=0;i<len;i++) {
-	Field(tuple, i) = initv;
+      if (tag == Double_array_tag) {
+	for (i=0;i<len;i++)
+	  Store_double_field(tuple, i, Double_val(initv));
+      }	else {
+	for (i=0;i<len;i++)
+	  Field(tuple, i) = initv;
       }
       CAMLreturn(tuple);
     }

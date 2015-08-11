@@ -65,8 +65,15 @@ external cons: 'a -> 'a list -> 'a list = "stack_mkpair";;
 
 external mkref: 'a -> 'a ref = "stack_mkref";;
 (** [Camlstack.mkref x] allocates a ref cell on the stack,
-    initializing it with x.  Raise [Failure "Camlstack.cons"] if the
-    stack has no frames. *)
+    initializing it with x. Assumes that [x] may point to the
+    OCaml heap, and so will scan it. 
+    Raise [Failure "Camlstack.cons"] if the stack has no frames. *)
+
+external mkref_noscan: 'a -> 'a ref = "stack_mkref_noscan";;
+(** [Camlstack.mkref x] allocates a ref cell on the stack,
+    initializing it with x. Assumes [x] will never point to the OCaml
+    heap, and so never needs to be scanned.
+    Raise [Failure "Camlstack.cons"] if the stack has no frames. *)
 
 external mkbytes : int -> bytes = "stack_mkbytes";;
 (** [Camlstack.mkbytes n] constructs a byte array of length n.
@@ -81,7 +88,8 @@ external mkarray : int -> 'a -> 'a array = "stack_mkarray";;
     element initialized to [v]. 
     Raise [Failure "Camlstack.mkarray"] if the stack has no frames. 
     Raise [Invalid_argument "Camlstack.mkarray"] if [n] is non-positive,
-    or if you try to make an array of floats, which is not yet supported. *)
+    or if you try to make an array of floats (for which you should use
+    mkarray_noscan instead). *)
 
 external mkarray_noscan : int -> 'a -> 'a array = "stack_mkarray_noscan";;
 (** [Camlstack.mkarray_prim n v] allocates an array of length [n] with each
@@ -89,8 +97,8 @@ external mkarray_noscan : int -> 'a -> 'a array = "stack_mkarray_noscan";;
     in the array are either primitives, or they are pointers to the stack, and
     you can be sure that you will never mutate the array to point to the heap.
     Raise [Failure "Camlstack.mkarray"] if the stack has no frames. 
-    Raise [Invalid_argument "Camlstack.mkarray"] if [n] is non-positive,
-    or if you try to make an array of floats, which is not yet supported. *)
+    Raise [Invalid_argument "Camlstack.mkarray"] if [n] is non-positive
+    or [v] is boxed and not a float, and not a pointer to the stack. *)
 
 (** DEBUGGING **)
 

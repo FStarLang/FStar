@@ -16,76 +16,76 @@
 
 #include "bitmask.h"
 
+
 /* See bitmask.h for explanations of the functions. */
 
-void eachbit(unsigned char *map, int maxbit, bitfun f, void *env) {
+void eachbit(MASK_TYPE *map, int maxbit, bitfun f, void *env) {
   int i;
-  int maplen = maxbit / 8;
+  int maplen = maxbit / BITS_PER_ELEM;
   for (i = 0; i<maplen; i++) {
     int j, k = 1;
-    unsigned char v = map[i];
+    MASK_TYPE v = map[i];
     if (v == 0)  continue;
-    for (j = 0; j<sizeof(unsigned char)*8; j++) {
+    for (j = 0; j<BITS_PER_ELEM; j++) {
       if ((v & k) == k)
-	f(env,i*sizeof(unsigned char)*8 + j);
+	f(env,i*BITS_PER_ELEM + j);
       k = k << 1;
     }
   }
   /* XXX: The last fraction of the mask; probably could do this
      with less code duplication ... */
-  if ((maxbit % 8) != 0) {
-    unsigned char v = map[maplen];
+  if ((maxbit % BITS_PER_ELEM) != 0) {
+    MASK_TYPE v = map[maplen];
     int j, k = 1;
     if (v != 0) {
-      for (j = 0; j<(maxbit % 8); j++) {
+      for (j = 0; j<(maxbit % BITS_PER_ELEM); j++) {
 	if ((v & k) == k)
-	  f(env, maplen*sizeof(unsigned char)*8 + j);
+	  f(env, maplen*BITS_PER_ELEM + j);
 	k = k << 1;
       }    
     }
   }
 }
 
-void setbit(unsigned char *map, int bit) {
-  unsigned char v = map[bit / 8];
-  int m = 1 << (bit % 8);
-  map[bit / 8] = v | m;
+void setbit(MASK_TYPE *map, int bit) {
+  MASK_TYPE v = map[bit / BITS_PER_ELEM];
+  int m = 1 << (bit % BITS_PER_ELEM);
+  map[bit / BITS_PER_ELEM] = v | m;
 }
 
-void unsetbit(unsigned char *map, int bit) {
-  unsigned char v = map[bit / 8];
-  int m = (1 << (bit % 8)) ^ 0xff ;
-  map[bit / 8] = v & m;
+void unsetbit(MASK_TYPE *map, int bit) {
+  MASK_TYPE v = map[bit / BITS_PER_ELEM];
+  int m = (1 << (bit % BITS_PER_ELEM)) ^ ((MASK_TYPE)-1) ;
+  map[bit / BITS_PER_ELEM] = v & m;
 }
 
 #define MIN(x,y) (x) < (y) ? (x) : (y)
 
-void unsetbit_rng(unsigned char *map, int bit, int len) {
+void unsetbit_rng(MASK_TYPE *map, int bit, int len) {
   /* up to first byte boundary */
-  if (bit % 8 != 0) {
+  if (bit % BITS_PER_ELEM != 0) {
     int i; /* XXX: create the mask all at once */
-    int l = MIN(8-(bit % 8), len);
+    int l = MIN(BITS_PER_ELEM-(bit % BITS_PER_ELEM), len);
     for (i=0; i<l; i++) 
       unsetbit(map,bit+i);
     bit += l;
     len -= l;
   }
   /* series of bytes */
-  while (len >= 8) {
-    map[bit / 8] = (unsigned char)0;
-    len -= 8; 
-    bit += 8;
+  while (len >= BITS_PER_ELEM) {
+    map[bit / BITS_PER_ELEM] = (MASK_TYPE)0;
+    len -= BITS_PER_ELEM; 
+    bit += BITS_PER_ELEM;
   }
   /* last fractional byte */
   if (len > 0) {
-    unsigned char v = map[bit / 8];
-    int m = 0xff ^ ((1 << len) - 1);
-    map[bit / 8] = v & m;
+    MASK_TYPE v = map[bit / BITS_PER_ELEM];
+    int m = ((MASK_TYPE)-1) ^ ((1 << len) - 1); 
+    map[bit / BITS_PER_ELEM] = v & m;
   }
 }
 
 /* TEST
-
 #include <stdio.h>
 
 void printidx(void *ign, int idx) {
@@ -93,22 +93,21 @@ void printidx(void *ign, int idx) {
 }
 
 int main() {
-  unsigned char x[4] = { 0,1,1,1 };
-  unsigned char y[4] = { 1,0, 1, 0 };
-  unsigned char z[4] = { 3,3,255,0 };
+  unsigned int x[5];
+
+  unsetbit_rng(x,0,5*BITS_PER_ELEM);
 
   printf ("x:\n");
+  setbit(x,1);
+  setbit(x,8);
   setbit(x,9);
-  unsetbit(x,16);
-  eachbit(x,4*8,printidx,0);
-
-  printf ("y:\n");
-  eachbit(y,4*8,printidx,0);
-
-  printf ("z:\n");
-  unsetbit_rng(z,8,12);
-  eachbit(z,24,printidx,0);
+  setbit(x,10);
+  setbit(x,33);
+  setbit(x,34);
+  setbit(x,73);
+  eachbit(x,96,printidx,0); 
+  unsetbit_rng(x,9,70);
+  eachbit(x,96,printidx,0); 
   return 0;
 }
- 
 */

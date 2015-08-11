@@ -59,7 +59,7 @@ typedef struct _Page {
     /* frame_ptr == EXT_MARKER implies this frame begins on the prior page */
     /* frame_ptr == p implies p points to the base of the frame in the page's memory */
   struct _Page *prev; /* points to the previous page on the stack */
-  unsigned char pointermap[0]; /* contains a bitmask that identifies all pointers on this page. */
+  MASK_TYPE pointermap[0]; /* contains a bitmask that identifies all pointers on this page. */
     /* this map is only valid for memory in the range [memory -- alloc_ptr]; outside
        that range it is garbage. Also, the map is at word granularity. */
 } Page;
@@ -79,7 +79,7 @@ static inline int have_space(int sz_b) {
    Otherwise the page coincides with the start of a new frame. */
 static void add_page(int sz_b, int is_ext) {
   sz_b = word_align(max(2*sz_b,DEFAULT_PAGE_SZB));
-  int mapsz_b = byte_align(sz_b/WORD_SZB)/8;
+  int mapsz_b = word_align(MASK_SZB(sz_b/WORD_SZB));
   Page *region = malloc(sizeof(Page)+mapsz_b);
   //printf ("add page size = %d, ext = %d, map size = %d\n", sz_b, is_ext, mapsz_b);
   void* memory = malloc(sz_b);
