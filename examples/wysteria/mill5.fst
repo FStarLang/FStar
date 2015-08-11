@@ -30,7 +30,7 @@ val mill5_sec: #p1:prin -> #p2:prin -> w:Wire nat
                                      (w_dom w = to_s2 p1 p2)) post
 let mill5_sec #p1 #p2 w _ =
   let g:unit -> Wys bool (pre (Mode Sec (to_s2 p1 p2))) post =
-    fun _ -> (projwire_s w p1) > (projwire_s w p2)
+    fun _ -> (projwire_s p1 w) > (projwire_s p2 w)
   in
   as_sec (to_s2 p1 p2) g
 
