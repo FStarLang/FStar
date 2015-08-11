@@ -139,12 +139,12 @@ let mkwire_s (#a:Type) eps x =
   assert (CanMkWireS a (Some.v m0) eps);
   OrdMap.const_on eps x
 
-let projwire_p (#a:Type) x p =
+let projwire_p (#a:Type) p x =
   let m0 = ST.read moderef in
   assert (CanProjWireP (Some.v m0) x p);
   Some.v (OrdMap.select p x)
 
-let projwire_s (#a:Type) x p =
+let projwire_s (#a:Type) p x =
   let m0 = ST.read moderef in
   assert (CanProjWireS (Some.v m0) x p);
   Some.v (OrdMap.select p x)
