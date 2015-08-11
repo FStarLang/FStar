@@ -2,7 +2,6 @@
    - Augment stack code to print diagnostics of use?
    - Opts:
      - Is is_stack_pointer(p) call too expensive?
-     - make bitmasks arrays of words, not arrays of bytes
 *)
 let do_stack = ref true
 let debug = ref false
