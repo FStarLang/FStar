@@ -1,13 +1,13 @@
 (*--build-config
     variables:LIB=../../lib;
     variables:MATHS=../maths;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst stack.fst listset.fst $LIB/ghost.fst located.fst stackAndHeap.fst
+    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst stack.fst listset.fst $LIB/ghost.fst located.fst lref.fst stackAndHeap.fst
   --*)
 
 (*perhaps this should be an interface file?*)
 
 module SST
-open StackAndHeap  open Located
+open StackAndHeap  open Lref  open Located
 open Located
 open Heap
 open Stack
@@ -24,11 +24,11 @@ effect SST (a:Type) (pre:Pre) (post: (smem -> Post a)) =
               (fun (p:Post a) (h:smem) -> pre h /\ (forall a h1. (pre h  /\ post h a h1) ==> p a h1)) (* WP *)
               (fun (p:Post a) (h:smem) -> (forall a h1. (pre h  /\ post h a h1) ==> p a h1))          (* WLP *)
 
-assume val halloc:  #a:Type -> init:a -> SST (ref a)
+assume val halloc:  #a:Type -> init:a -> SST (lref a)
                                          (fun m -> True)
                                          (fun m0 r m1 -> allocateInBlock r (hp m0)  (hp m1) init /\ (snd m0 = snd m1) /\ refLoc r == InHeap)
 
-assume val salloc:  #a:Type -> init:a -> SST (ref a)
+assume val salloc:  #a:Type -> init:a -> SST (lref a)
      (fun m -> b2t (isNonEmpty (st m))) (*why is "== true" required here, but not at other places? : *)
      (*Does F* have (user defined?) implicit coercions? : Not yet *)
      (fun m0 r m1 ->
@@ -37,22 +37,22 @@ assume val salloc:  #a:Type -> init:a -> SST (ref a)
           /\ refLoc r = InStack (topstid m0) /\ (topstid m0 = topstid m1)
           /\ mtail m0 = mtail m1)
 
-assume val memread:  #a:Type -> r:(ref a) -> SST a
+assume val memread:  #a:Type -> r:(lref a) -> SST a
 	  (fun m -> b2t (refExistsInMem r m))
     (fun m0 a m1 -> m0=m1 /\ (refExistsInMem r m0) /\ loopkupRef r m0 = a)
 
-assume val memwrite:  #a:Type -> r:(ref a) -> v:a ->
+assume val memwrite:  #a:Type -> r:(lref a) -> v:a ->
   SST unit
 	    (fun m -> b2t (refExistsInMem r m))
       (fun m0 _ m1 -> (refExistsInMem r m1)
         /\ (writeMemAux r m0 v) =  m1)
 
 (*
-Free can only deallocate a heap-allocated ref. The implementation
+Free can only deallocate a heap-allocated lref. The implementation
 below doesn't make sense becasue it allows even deallocation of stack
 references
 
-assume val freeRef:  #a:Type -> r:(ref a)  ->
+assume val freeRef:  #a:Type -> r:(lref a)  ->
   SST unit
 	    (fun m -> b2t (refExistsInMem r m))
       (fun m0 _ m1 -> (freeMemAux r m0) ==  m1)

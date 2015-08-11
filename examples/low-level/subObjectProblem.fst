@@ -3,7 +3,7 @@ type point = nat * nat
 val transpose : point -> Tot point
 let tr>anspose pt = (snd pt, fst pt)
 
-val transposeST : ref point -> Mem unit ..
+val transposeST : lref point -> Mem unit ..
 
 type robot = point * point
 

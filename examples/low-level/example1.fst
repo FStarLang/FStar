@@ -18,7 +18,7 @@ only matters at the time of allocation. Functions like increment can be
 defined without without bothering about that distinction*)
 
 (*ideally, the refExistsInMem clauses should not be needed in the postcondition*)
-val incrementRef : r:(ref int) -> SST unit
+val incrementRef : r:(lref int) -> SST unit
   (requires (fun m -> (refExistsInMem r m)==true))
   (ensures (fun m0 a m1 -> (refExistsInMem r m0) /\ (refExistsInMem r m1) /\ (loopkupRef r m1 = (loopkupRef r m0) + 1)))
 let incrementRef r =
@@ -43,7 +43,7 @@ let incrementUsingStack vi =
   v
 
 
-val incrementRef2 : r:(ref int) -> SST unit
+val incrementRef2 : r:(lref int) -> SST unit
 (fun m -> (refExistsInMem r m)
               /\ (isNonEmpty (st m))
               /\ (refLoc r = InStack (topstid m)))
@@ -55,7 +55,7 @@ let incrementRef2 r =
   memwrite r (oldv + 1)
 
 (* an example illustrating a typical C idiom :
-  caller allocates memory and passes the ref to callee to get some work done *)
+  caller allocates memory and passes the lref to callee to get some work done *)
 val incrementUsingStack2 : vi:int -> SST int  (fun _ -> True)
     (fun m0 vo m1 -> m0 = m1 /\ vo=vi+1)
 let incrementUsingStack2 vi =
@@ -82,7 +82,7 @@ let incrementUsingStack3 vi =
 (* Why am I able to write this if then else with effectful computations in the brances?
    What is going on under the hood?
    Is this because of the ite_wp in the definition of an effect? *)
-val incrementIfNot2 : r:(ref int) -> SST int  (fun m -> (refExistsInMem r m)==true)
+val incrementIfNot2 : r:(lref int) -> SST int  (fun m -> (refExistsInMem r m)==true)
 (fun m0 a m1 -> (refExistsInMem r m0) /\ (refExistsInMem r m1))
 let incrementIfNot2 r =
   let oldv = memread r in
@@ -102,8 +102,8 @@ let incrementIfNot2 r =
 val testAliasing : n:nat -> ((k:nat{k<n}) -> Tot bool) -> SST unit (fun  _  -> True) (fun _ _ _ -> True)
 let testAliasing n initv =
   pushStackFrame ();
-  let li: ref nat = salloc 1 in
-  let res : ref ((k:nat{k<n}) -> Tot bool) = salloc initv in
+  let li: lref nat = salloc 1 in
+  let res : lref ((k:nat{k<n}) -> Tot bool) = salloc initv in
   let resv=memread res in
     memwrite li 2;
     let resv2=memread res in
@@ -111,8 +111,8 @@ let testAliasing n initv =
       popStackFrame ()
 
 val testAliasing2 : n:nat
- -> li : ref nat
- -> res : ref ((k:nat{k<n}) -> Tot bool)
+ -> li : lref nat
+ -> res : lref ((k:nat{k<n}) -> Tot bool)
  -> SST unit
           (requires (fun  m  -> refExistsInMem res m /\ refExistsInMem li m /\ (li=!=res)))
           (ensures (fun _ _ _ -> True))
@@ -131,7 +131,7 @@ let testSalloc1 () =
   pushStackFrame ();
   memwrite xi 1
 
-val testSalloc2 : xi:ref int -> SST unit (fun m -> b2t (refExistsInMem xi m)) (fun _ _ m1 -> b2t (refExistsInMem xi m1))
+val testSalloc2 : xi:lref int -> SST unit (fun m -> b2t (refExistsInMem xi m)) (fun _ _ m1 -> b2t (refExistsInMem xi m1))
 let testSalloc2 xi =
   pushStackFrame ();
   memwrite xi 1;
