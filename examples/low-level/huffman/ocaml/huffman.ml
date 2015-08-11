@@ -2,6 +2,12 @@
    - Augment stack code to print diagnostics of use?
    - Opts:
      - Is is_stack_pointer(p) call too expensive?
+     - Unchecked version of Bytes.get/set?
+
+  NOTES:
+   - I abstracted out the array_get and set operations into functions
+   that switch on whether checks are disabled, and this added 20% overhead.
+   So: Seems like it inhibits compiler optimization.
 *)
 let do_stack = ref true
 let debug = ref false
