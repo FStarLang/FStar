@@ -31,7 +31,7 @@ and print_exp' (e:exp') :string =
     | E_concatwire (e1, e2) -> "concatwire (" ^ print_exp e1 ^ ") (" ^ print_exp e2 ^ ")"
     | E_const c -> print_const c
     | E_var v -> v
-    | E_let (x, e1, e2) -> "let " ^ x ^ " = " ^ print_exp e1 ^ "in\n" ^ print_exp e2
+    | E_let (x, e1, e2) -> "let " ^ x ^ " = " ^ print_exp e1 ^ " in\n" ^ print_exp e2
     | E_abs (x, e) -> "fun " ^ x ^ ". " ^ print_exp e
     | E_fix (f, x, e) -> "fix " ^ f ^ ". " ^ x ^ ". " ^ print_exp e
     | E_empabs (x, e) -> "fun " ^ x ^ ". " ^ print_exp e
