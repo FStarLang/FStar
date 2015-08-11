@@ -20,7 +20,8 @@ open MachineWord
 open MD5Common
 open ArrayAlgos
 open SSTArray
-open StackAndHeap  open Lref  open Located
+open StackAndHeap
+open Lref  open Located
 open Seq
 open Ghost
 

@@ -7,13 +7,14 @@
 (*perhaps this should be an interface file?*)
 
 module SST
-open StackAndHeap  open Lref  open Located
+open StackAndHeap
 open Located
 open Heap
 open Stack
 open Set
 open Prims
 open List
+open Lref  open Located
 open ListSet
 
 kind Pre  = smem -> Type

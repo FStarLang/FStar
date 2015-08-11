@@ -7,10 +7,11 @@
 
 module ArrayAlgos
 open SSTCombinators
-open StackAndHeap  open Lref  open Located
+open StackAndHeap
 open SST
 open MVector
 open Heap
+open Lref  open Located
 open Set
 open MachineWord
 open SSTArray

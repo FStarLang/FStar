@@ -4,9 +4,10 @@ other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LI
   --*)
 module Factorial
 open SSTCombinators
-open StackAndHeap  open Lref  open Located
+open StackAndHeap
 open SST
 open Heap
+open Lref  open Located
 open Stack
 open Set
 open Prims
