@@ -1,13 +1,14 @@
 (*--build-config
     variables:LIB=../../lib;
     variables:MATHS=../maths;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst stack.fst listset.fst $LIB/ghost.fst stackAndHeap.fst
+    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst stack.fst listset.fst $LIB/ghost.fst located.fst stackAndHeap.fst
   --*)
 
 (*perhaps this should be an interface file?*)
 
 module SST
-open StackAndHeap
+open StackAndHeap  open Located
+open Located
 open Heap
 open Stack
 open Set

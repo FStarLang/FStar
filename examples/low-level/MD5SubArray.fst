@@ -2,13 +2,13 @@
     options:--admit_fsi Set --z3timeout 50;
     variables:LIB=../../lib;
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst  stack.fst listset.fst
-    $LIB/ghost.fst $LIB/seq.fst stackAndHeap.fst sst.fst sstCombinators.fst  $LIB/constr.fst word.fst mvector.fsi mvector.fst MD5Common.fst
+    $LIB/ghost.fst $LIB/seq.fst located.fst stackAndHeap.fst sst.fst sstCombinators.fst  $LIB/constr.fst word.fst mvector.fsi mvector.fst MD5Common.fst
   --*)
 
 (*this file is not being maintained anymore*)
 module MD5SubArray
 open SSTCombinators
-open StackAndHeap
+open StackAndHeap  open Located
 open SST
 open MVector
 open Heap
@@ -47,7 +47,7 @@ type arrayExixtsInMem (#a:Type) (#n:nat) (v: vector (ref  a) n) (m:smem) =
 
  type allocateVectorInBlock (#a:Type) (#n:nat) (rv: vector (ref a) n)
   (h0 : region)
-  (h1 : region) (init : a)  (rl: refLocType) =
+  (h1 : region) (init : a)  (rl: regionLoc) =
   (forall (r:(r:(ref a){mem (Ref r) (flattenRefs rv)})).
         {:pattern (mem (Ref r) (flattenRefs rv))}
            refLoc r = rl

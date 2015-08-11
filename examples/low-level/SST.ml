@@ -1,17 +1,17 @@
 
-let halloc = (fun ( init ) -> ref init)
+let halloc = (fun ( init ) -> (Support.All.failwith "Not yet implemented:SST.halloc"))
 
-let salloc = (fun ( init ) ->  Camlstack.mkref init)
+let salloc = (fun ( init ) -> (Support.All.failwith "Not yet implemented:SST.salloc"))
 
-let memread = (fun ( r ) -> !r )
+let memread = (fun ( r ) -> (Support.All.failwith "Not yet implemented:SST.memread"))
 
-let memwrite = (fun ( r ) ( v ) -> r := v )
+let memwrite = (fun ( r ) ( v ) -> (Support.All.failwith "Not yet implemented:SST.memwrite"))
 
-let pushStackFrame = (fun ( _ ) -> Camlstack.push_frame 100000) (*in some performance tests, this number had little effect on running time.*)
+let pushStackFrame = (fun ( _ ) -> (Support.All.failwith "Not yet implemented:SST.pushStackFrame"))
 
-let popStackFrame = (fun ( _ ) -> Camlstack.pop_frame ())
+let popStackFrame = (fun ( _ ) -> (Support.All.failwith "Not yet implemented:SST.popStackFrame"))
 
-let get = (fun ( _ ) -> ())
+let get = (fun ( _ ) -> (Support.All.failwith "Not yet implemented:SST.get"))
 
 
 

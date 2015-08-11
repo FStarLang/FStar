@@ -2,7 +2,7 @@
     options:--admit_fsi Set --z3timeout 10;
     variables:LIB=../../lib;
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst
-    $LIB/ghost.fst stackAndHeap.fst sst.fst sstCombinators.fst $LIB/seq.fsi $LIB/seq.fst word.fst
+    $LIB/ghost.fst located.fst stackAndHeap.fst sst.fst sstCombinators.fst $LIB/seq.fsi $LIB/seq.fst word.fst
   --*)
 
 (*Why is MD5 so? Why did its designer(s) think
@@ -11,7 +11,7 @@
   *)
 module MD5Common
 open SSTCombinators
-open StackAndHeap
+open StackAndHeap  open Located
 open SST
 open MVector
 open Heap

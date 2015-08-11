@@ -1,20 +1,18 @@
 (*--build-config
     variables:LIB=../../lib;
     variables:MATHS=../maths;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst  $LIB/list.fst stack.fst listset.fst $LIB/ghost.fst
+    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst stack.fst listset.fst $LIB/ghost.fst located.fst
   --*)
 
 (*     options: --codegen OCaml-experimental --trace_error --debug yes --prn; *)
 
 module StackAndHeap
-open Heap
-open Stack
+open Heap open Stack
 open Set
 open Prims
 open List
 open ListSet
 open Ghost
-type sidt = nat
 
 (*type MemStorable : Type -> Type =
  | StoreInt : MemStorable int*)
@@ -23,7 +21,7 @@ type sidt = nat
 (*val test : unit ->  Lemma (requires True) (ensures (MemStorable int))*)
 (*let test u = ()*)
 
-
+open Located
 type region = heap
 (*Can we ever define a memRep for a ref type?*)
 
@@ -84,11 +82,7 @@ val topstid : (s:smem{isNonEmpty (st s)}) ->  Tot sidt
 let topstid ss = fst (topst ss)
 
 
-type refLocType =
-  | InHeap : refLocType
-  | InStack : id:sidt -> refLocType
-
-assume val refLoc : #a:Type -> ref a -> Tot refLocType
+assume val refLoc : #a:Type -> ref a -> Tot regionLoc
 
 new_effect StSTATE = STATE_h smem
 
@@ -99,7 +93,7 @@ let rec stackBlockAtLoc id sp =
   | h::tl -> if (id=(fst h)) then Some (snd h) else stackBlockAtLoc id tl
 
 
-val blockAtLoc : smem -> refLocType  -> Tot (option region)
+val blockAtLoc : smem -> regionLoc  -> Tot (option region)
 let blockAtLoc m rl =
 match rl with
 | InHeap -> Some (hp m)

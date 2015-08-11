@@ -2,12 +2,12 @@
     options:--admit_fsi Set --z3timeout 100;
     variables:LIB=../../lib;
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst  stack.fst listset.fst
-    $LIB/ghost.fst stackAndHeap.fst sst.fst sstCombinators.fst $LIB/constr.fst word.fst $LIB/seq.fsi $LIB/seq.fst array.fsi array.fst
+    $LIB/ghost.fst located.fst stackAndHeap.fst sst.fst sstCombinators.fst $LIB/constr.fst word.fst $LIB/seq.fsi $LIB/seq.fst array.fsi array.fst
   --*)
 
 module ArrayAlgos
 open SSTCombinators
-open StackAndHeap
+open StackAndHeap  open Located
 open SST
 open MVector
 open Heap

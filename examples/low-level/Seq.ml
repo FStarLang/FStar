@@ -10,15 +10,19 @@ end
 false
 end))
 
-let length = (fun ( s ) -> 
-match s with
-| MkSeq (l,_) ->l 
-)
+let ___MkSeq___length = (fun ( projectee ) -> (match (projectee) with
+| MkSeq (_18_7, _18_8) -> begin
+_18_7
+end))
 
-let mkSeqContents = (fun ( s ) ( n ) -> 
-match s with
-| MkSeq (_,c) -> c n
-)
+let ___MkSeq___contents = (fun ( projectee ) -> (match (projectee) with
+| MkSeq (_18_10, _18_9) -> begin
+_18_9
+end))
+
+let length = (fun ( s ) -> (___MkSeq___length s))
+
+let mkSeqContents = (fun ( s ) ( n ) -> (___MkSeq___contents s n))
 
 let create = (fun ( len ) ( v ) -> MkSeq (len, (fun ( i ) -> v)))
 
