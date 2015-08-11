@@ -182,7 +182,7 @@ val mkwire_s: #a:Type -> eps:eprins -> x:a
 type CanProjWireP (#a:Type) (m:mode) (x:Wire a) (p:prin) =
   Mode.m m = Par /\ Mode.ps m = singleton p /\ w_contains p x
 
-val projwire_p: #a:Type -> x:Wire a -> p:prin{w_contains p x}
+val projwire_p: #a:Type -> p:prin -> x:Wire a{w_contains p x}
                 -> Wys a (fun m0   -> CanProjWireP m0 x p)
                          (fun m0 r -> b2t (r = w_select p x))
 
@@ -191,7 +191,7 @@ val projwire_p: #a:Type -> x:Wire a -> p:prin{w_contains p x}
 type CanProjWireS (#a:Type) (m:mode) (x:Wire a) (p:prin) =
   Mode.m m = Sec /\ mem p (Mode.ps m) /\ w_contains p x
 
-val projwire_s: #a:Type -> x:Wire a -> p:prin{w_contains p x}
+val projwire_s: #a:Type -> p:prin -> x:Wire a{w_contains p x}
                 -> Wys a (fun m0   -> CanProjWireS m0 x p)
                          (fun m0 r -> b2t (r = w_select p x))
 
