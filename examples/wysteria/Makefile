@@ -14,12 +14,12 @@ all:
 OCAMLC=ocamlfind ocamlc -thread -package batteries -linkpkg -g
 OCAMLOPT=ocamlfind ocamlopt -thread -package batteries -linkpkg -g
 
-gen: ast.fst sem.fst sinterpreter.fst support.ml ordSet.ml ordMap.ml wparser.mly wlexer.mll
-	$(FSTAR) --admit_fsi OrdSet --admit_fsi OrdMap --codegen OCaml-experimental --z3timeout 15 ../../lib/ordset.fsi ../../lib/ordmap.fsi ../../lib/classical.fst ast.fst sem.fst sinterpreter.fst
+gen: ast.fst ffi.fsi sem.fst sinterpreter.fst support.ml ordSet.ml ordMap.ml wparser.mly wlexer.mll
+	$(FSTAR) --admit_fsi OrdSet --admit_fsi OrdMap --admit_fsi FFI --codegen OCaml-experimental --z3timeout 15 ../../lib/ordset.fsi ../../lib/ordmap.fsi ../../lib/classical.fst ast.fst ffi.fsi sem.fst sinterpreter.fst
 	ocamlyacc -v wparser.mly
 	ocamllex wlexer.mll
 
-INTERPRETER_OBJS=support.cmx ordSet.cmx ordMap.cmx AST.cmx Semantics.cmx SourceInterpreter.cmx
+INTERPRETER_OBJS=support.cmx ordSet.cmx ordMap.cmx AST.cmx FFI.cmx Semantics.cmx SourceInterpreter.cmx
 
 PARSER_OBJS=wparser.cmi wparser.cmx wlexer.cmx main.cmx
 
