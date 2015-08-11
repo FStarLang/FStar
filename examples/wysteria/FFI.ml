@@ -46,6 +46,23 @@ let meta = (OrdSet.empty (), Can_b)
 
 let get_two_values (l:dvalue list) :(dvalue * dvalue) = List.hd l, List.hd (List.tl l)
 
+let print_ps (ps:prins) :string =
+  OrdSet.fold () (fun p s -> s ^ (string_of_int p) ^ "; ") ps ""
+
+let rec print_value (v:unit value) :string = match v with
+  | V_const c -> begin
+    match c with
+      | C_nat n -> "nat: " ^ (string_of_int n)
+      | C_bool b -> "bool: " ^ (string_of_bool b)
+      | C_prin p -> "prin: " ^ (string_of_int p)
+      | C_prins ps -> "prins constant: " ^ print_ps ps
+      | C_unit -> "unit"
+    end
+
+  | V_box (_, ps, v) -> "boxed value: " ^ print_ps ps ^ " " ^ print_value v
+
+  | _ -> raise (FFI_error "Value print not implemented")
+
 let exec_ffi (s:string) (l:dvalue list) =
   let l = List.rev l in
   match s with
@@ -143,21 +160,7 @@ let exec_ffi (s:string) (l:dvalue list) =
       
     | "wprint" ->
       let (D_v (_, v)) = List.hd l in
-      begin
-        match v with
-          | V_const c -> begin
-            match c with
-              | C_nat n -> print_string ("nat constant: " ^ (string_of_int n))
-              | C_bool b -> print_string ("bool constant: " ^ (string_of_bool b))
-              | C_prin p -> print_string ("prin constant: " ^ (string_of_int p))
-              | C_prins ps -> begin
-                print_string ("prins constant: ");
-                print_string (OrdSet.fold () (fun p s -> s ^ (string_of_int p) ^ "; ") ps "")
-                end
-              | C_unit -> print_string ("unit constant")
-            end
-          | _ -> raise (FFI_error "Value print not implemented")
-      end;
+      print_string (print_value v);
       D_v (meta, V_const C_unit)
       
     | _ -> raise (FFI_error ("FFI " ^ s ^ " not implemented"))
