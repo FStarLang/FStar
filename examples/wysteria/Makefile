@@ -39,4 +39,7 @@ a.out: $(INTERPRETER_OBJS) $(PARSER_OBJS)
 	$(OCAMLOPT) $(OCAMLOPTFLAGS) -c $<
 
 clean:
-	rm -f Classical.ml AST.ml Semantics.ml SourceInterpreter.ml *.cmi *.cmx *.o *.exe a.out wlexer.ml wparser.ml wparser.mli wparser.output
+	rm -f *.cmi *.cmx *.o *.exe a.out
+
+distclean: clean
+	rm -f Classical.ml AST.ml Semantics.ml SourceInterpreter.ml wlexer.ml wparser.ml wparser.mli wparser.output
