@@ -1,20 +1,14 @@
 (*--build-config
-    variables:LIB=../../lib;
-    variables:MATHS=../maths;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst stack.fst listset.fst $LIB/ghost.fst
   --*)
 
-(*     options: --codegen OCaml-experimental --trace_error --debug yes --prn; *)
 
 module Located
 
 
-open Ghost
 type located : Type -> Type
 
 type sidt = nat
 
-(* TODO : use these in stackAndHeap.fst *)
 type regionLoc =
   | InHeap : regionLoc
   | InStack : id:sidt -> regionLoc

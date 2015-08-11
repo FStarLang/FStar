@@ -14,18 +14,10 @@ open List
 open ListSet
 open Ghost
 
-(*type MemStorable : Type -> Type =
- | StoreInt : MemStorable int*)
-
-(*What is the analog of Coq's "Hint Constructors MemStorable" ?*)
-(*val test : unit ->  Lemma (requires True) (ensures (MemStorable int))*)
-(*let test u = ()*)
 
 open Located
 type region = heap
-(*Can we ever define a memRep for a ref type?*)
 
-(*How does List.memT work? is equality always decidable?*)
 
 (* The axiomatization is agnostic
 about resuse of memory ids, i.e. it should (provably) have both kind of models.
@@ -48,12 +40,7 @@ let wellFormed ms = noRepeats (ssids ms)
 type memStack = x:memStackAux{wellFormed x}
 
 
-(* Should we also include sizes of refs in order to enable reasoninag about memory usage of programs?*)
-(* What is the size of functions? Does it make even make sense to store a function at a reference? Would it be possible to transpile such a construct? *)
-
-(* Free only makes sense for heaps. We can already reason about (absense of) memory leaks because one can talk about the domain of the heap*)
 type smem = region * memStack
-
 
 let hp (s : smem) = fst s
 
@@ -102,9 +89,6 @@ match rl with
 val writeInBlock : #a:Type -> r:(ref a) -> v:a -> region -> Tot region
 let writeInBlock r v mb= upd mb r v
 
-(* are there associative maps in FStar? *)
-(*  proof by computation *)
-
 val changeStackBlockWithId  : (region -> Tot region)
   -> sidt
   -> (Stack (sidt * region))
@@ -118,8 +102,6 @@ match ms with
 val writeInMemStack : #a:Type -> (ref a) -> (Stack (sidt * region)) -> sidt -> a -> Tot (Stack (sidt * region))
 let rec writeInMemStack r ms s v = changeStackBlockWithId (writeInBlock r v) s ms
 
-(*val freeInMemStack : #a:Type -> (ref a) -> (Stack (sidt * region)) -> sidt -> Tot (Stack (sidt * region))
-let rec freeInMemStack r ms s = changeStackBlockWithId (freeRefInBlock r) s ms*)
 
 
 val changeStackBlockSameIDs :
@@ -165,7 +147,6 @@ val freeInMemStackWellFormed : #a:Type -> r:(ref a)
       [SMTPat (freeInMemStack r ms s)]
 let freeInMemStackWellFormed r ms s = (changeStackBlockWellFormed (freeRefInBlock r) s ms)*)
 
-(* what is the analog of transport / eq_ind?*)
 
 (*
 val writeMemStackSameStail : #a:Type -> r:(ref a) -> ms:(Stack (sidt * region))
@@ -206,9 +187,6 @@ val refExistsInStackTail : #a:Type -> r:(ref a)
           [SMTPat (refExistsInStack r id (stail ms))]
 let refExistsInStackTail r id ms = (refExistsInStackId r id (stail ms))
 
-(*match  (stackBlockAtLoc id ms)  with
-                | Some b -> Heap.contains b r
-                | None -> false*)
 
 val refExistsInMem : #a:Type -> (ref a) -> smem ->  Tot bool
 let refExistsInMem (#a:Type) (r:ref a) (m:smem) =
@@ -229,7 +207,6 @@ match ms with
 | Nil -> ()
 | h::tl ->   if (fst h = id) then () else ((writeMemStackExists rw r tl id idw v))
 
-(* ((writeMemStackLem r ms s v)) *)
 
 val writeMemAux : #a:Type -> (ref a) -> m:smem -> a -> Tot smem
 let writeMemAux r m v =
@@ -294,13 +271,6 @@ match (refLoc r) with
 | InHeap -> (sel (hp m) r)
 | InStack id -> loopkupRefStack r id (st m)
 
-
-val readAfterWriteStack :
-  #a:Type -> rw:(ref a) -> r:(ref a) -> v:a -> id:sidt -> idw:sidt -> m:(Stack (sidt * region)) ->
-  Lemma (requires (refExistsInStack r id m))
-        (ensures true)
-        (*  (ensures ((refExistsInStack r id m)
-            /\ loopkupRefStack r id (writeInMemStack rw m idw v) = (if (r=rw) then v else (loopkupRefStack r id m)))) *)
 
 type ifthenelseT (b:Type) (tc : Type) (fc: Type) =
  (b ==>  tc) /\ ((~b) ==> fc )
@@ -460,16 +430,6 @@ Also, why does it's definition have to be so procedural, unlike the more declara
 *)
 type modset = erased (set aref)
 
-(*
-val ghostUnfoldTest : unit -> GTot (modset)
-let ghostUnfoldTest u = hide empty
-
-val ghostUnfoldTest3 : r:(ref int) -> GTot (modset)
-let ghostUnfoldTest3 r = hide (singleton (Ref r))
-
-val ghostUnfoldTest2 : unit -> GTot (modset)
-let ghostUnfoldTest2 u = hide empty
-*)
 
 val gonly : #a:Type -> r:(ref a) -> Tot (modset)
 let gonly r = hide (only  r)
@@ -509,16 +469,4 @@ type mStackNonEmpty (m:smem) = b2t (isNonEmpty (st m))
 let canModifyWrite r v m = ()*)
 
 
-(*should extend to types with decidable equality*)
-(*val is1SuffixOf : list sidt -> list sidt -> Tot bool
-let is1SuffixOf lsmall lbig =
-match lbig with
-| [] -> false
-| h::tl -> tl=lsmall*)
-
 type allocateInBlock (#a:Type) (r: ref a) (h0 : region) (h1 : region) (init : a)   = not(Heap.contains h0 r) /\ Heap.contains h1 r /\  h1 == upd h0 r init
-
-(*incase one does not want to reason about changed references*)
-(* TODO: allRefs does not extract properly. Set.empty has an extra unit which is not there in Support.ml
-  on adding the extra unit, Ocaml complaisn about inability to generalize*)
-(* let allRefs : set aref = complement empty *)
