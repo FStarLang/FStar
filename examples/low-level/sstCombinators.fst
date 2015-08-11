@@ -5,9 +5,10 @@
   --*)
 
 module SSTCombinators
-open StackAndHeap  open Lref  open Located
+open StackAndHeap
 open SST
 open Heap
+open Lref  open Located
 open Stack
 open Set
 open Prims

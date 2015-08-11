@@ -69,7 +69,8 @@ val topstid : (s:smem{isNonEmpty (st s)}) ->  Tot sidt
 let topstid ss = fst (topst ss)
 
 
-assume val refLoc : #a:Type -> lref a -> Tot regionLoc
+val refLoc : #a:Type -> lref a -> Tot regionLoc
+let refLoc r = regionOf r
 
 new_effect StSTATE = STATE_h smem
 
@@ -162,7 +163,7 @@ val refExistsInStack : #a:Type -> (lref a)
 let rec refExistsInStack r id ms =
 match ms with
 | [] -> false
-| h::tl -> if (fst h=id) then (Heap.contains (snd h) r) else refExistsInStack r id tl
+| h::tl -> if (fst h=id) then (contains (snd h) r) else refExistsInStack r id tl
 
 
 val refExistsInStackId : #a:Type -> r:(lref a)
@@ -191,7 +192,7 @@ let refExistsInStackTail r id ms = (refExistsInStackId r id (stail ms))
 val refExistsInMem : #a:Type -> (lref a) -> smem ->  Tot bool
 let refExistsInMem (#a:Type) (r:lref a) (m:smem) =
 match (refLoc r) with
-| InHeap -> Heap.contains (hp m) r
+| InHeap -> contains (hp m) r
 | InStack id -> refExistsInStack r id (st m)
 
 
@@ -469,4 +470,4 @@ type mStackNonEmpty (m:smem) = b2t (isNonEmpty (st m))
 let canModifyWrite r v m = ()*)
 
 
-type allocateInBlock (#a:Type) (r: lref a) (h0 : region) (h1 : region) (init : a)   = not(Heap.contains h0 r) /\ Heap.contains h1 r /\  h1 == upd h0 r init
+type allocateInBlock (#a:Type) (r: lref a) (h0 : region) (h1 : region) (init : a)   = not(contains h0 r) /\ contains h1 r /\  h1 == upd h0 r init

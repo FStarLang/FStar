@@ -51,10 +51,10 @@ type arrayExixtsInMem (#a:Type) (#n:nat) (v: vector (lref  a) n) (m:smem) =
   (forall (r:(r:(lref a){mem (Ref r) (flattenRefs rv)})).
         {:pattern (mem (Ref r) (flattenRefs rv))}
            refLoc r = rl
-          /\ not (Heap.contains h0 r)
-          /\ Heap.contains h1 r
+          /\ not (contains h0 r)
+          /\ contains h1 r
           /\  init = sel h0 r)
-/\ Heap.equal h1 (concat h0 (restrict h1 (flattenRefs rv)))
+/\ equal h1 (concat h0 (restrict h1 (flattenRefs rv)))
 
 (*tj*)
 assume val sallocateVector :  a:Type -> n:nat

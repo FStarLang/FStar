@@ -11,13 +11,13 @@ false
 end))
 
 let ___MkSeq___length = (fun ( projectee ) -> (match (projectee) with
-| MkSeq (_18_7, _18_8) -> begin
-_18_7
+| MkSeq (_19_7, _19_8) -> begin
+_19_7
 end))
 
 let ___MkSeq___contents = (fun ( projectee ) -> (match (projectee) with
-| MkSeq (_18_10, _18_9) -> begin
-_18_9
+| MkSeq (_19_10, _19_9) -> begin
+_19_9
 end))
 
 let length = (fun ( s ) -> (___MkSeq___length s))
