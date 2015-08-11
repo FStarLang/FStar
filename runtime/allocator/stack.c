@@ -79,7 +79,7 @@ static inline int have_space(int sz_b) {
    Otherwise the page coincides with the start of a new frame. */
 static void add_page(int sz_b, int is_ext) {
   sz_b = word_align(max(2*sz_b,DEFAULT_PAGE_SZB));
-  int mapsz_b = byte_align(sz_b/WORD_SZB)/8;
+  int mapsz_b = word_align(MASK_SZB(sz_b/WORD_SZB));
   Page *region = malloc(sizeof(Page)+mapsz_b);
   //printf ("add page size = %d, ext = %d, map size = %d\n", sz_b, is_ext, mapsz_b);
   void* memory = malloc(sz_b);
