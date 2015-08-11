@@ -49,8 +49,19 @@ let parse_channel :string -> in_channel -> exp =
   Parser.exp Lexer.token lexbuf
 
 let init_mode =
-  let ps = BatSet.union (BatSet.singleton 0) (BatSet.singleton 1) in
+  let s = Sys.argv.(1) in
+  let s = String.sub s 1 (String.length s - 2) in    (* cut out brackets *)
+  let ps_list = Str.split (Str.regexp ";") s in
+  let ps = List.fold_left (fun ps p -> OrdSet.union () ps (OrdSet.singleton () (int_of_string p))) (OrdSet.empty ()) ps_list in
   Mode (Par, ps)
+  
+let init_env =
+  let meta = (OrdSet.empty (), Can_b) in
+  fun x ->
+    if x = "alice" then Some (D_v (meta, V_const (C_prin 0)))
+    else if x = "bob" then Some (D_v (meta, V_const (C_prin 1)))
+    else if x = "charlie" then Some (D_v (meta, V_const (C_prin 2)))
+    else None
 
 let print_terminal (c:config) = match c with
   | Conf (_, _, _, _, t) ->
@@ -62,13 +73,29 @@ let print_terminal (c:config) = match c with
         end
       | _ -> print_string "Not a terminal configuration"
 
+let is_terminal (c:config) :bool = match c with
+  | Conf (_, _, s, _, t) ->
+    s = [] &&
+      match t with
+        | T_val _ -> true
+        | _       -> false
+
+let rec run (c:config) :unit =
+  if is_terminal c then print_string "\nTerminal\n"
+  else
+    let c' = SourceInterpreter.step c in
+    match c' with
+      | None    -> print_string "Error in interpreter\n"
+      | Some c' -> run c'
+
 let _ =
   let f = "SMC.wy" in
   let i = open_in f in
   let e = parse_channel f i in
-  print_string ((print_exp e) ^ "\n");
-  let init_config = Conf (Source, init_mode, [], empty_env, T_exp e) in
-  let c_opt = SourceInterpreter.step_star init_config in
+  print_string ((print_exp e) ^ "\n\n");
+  let init_config = Conf (Source, init_mode, [], init_env, T_exp e) in
+  run init_config
+  (* let c_opt = SourceInterpreter.step_star init_config in
   match c_opt with
     | None -> print_string "Error in interpreter\n"
-    | Some c -> ()
+    | Some c -> () *)
