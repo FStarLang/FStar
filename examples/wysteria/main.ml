@@ -48,8 +48,27 @@ let parse_channel :string -> in_channel -> exp =
   let lexbuf = Lexing.from_channel i in
   Parser.exp Lexer.token lexbuf
 
+let init_mode =
+  let ps = BatSet.union (BatSet.singleton 0) (BatSet.singleton 1) in
+  Mode (Par, ps)
+
+let print_terminal (c:config) = match c with
+  | Conf (_, _, _, _, t) ->
+    match t with
+      | T_val (_, v) -> begin
+          match v with
+            | V_const c -> print_string (print_const c); print_newline ()
+            | _ -> print_string "Value print not supported\n"
+        end
+      | _ -> print_string "Not a terminal configuration"
+
 let _ =
   let f = "SMC.wy" in
   let i = open_in f in
   let e = parse_channel f i in
-  print_string ((print_exp e) ^ "\n")
+  print_string ((print_exp e) ^ "\n");
+  let init_config = Conf (Source, init_mode, [], empty_env, T_exp e) in
+  let c_opt = SourceInterpreter.step_star init_config in
+  match c_opt with
+    | None -> print_string "Error in interpreter\n"
+    | Some c -> print_terminal c
