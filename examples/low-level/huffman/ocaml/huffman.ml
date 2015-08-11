@@ -1,10 +1,8 @@
 (* TODO:
-   - Make histogram array not scanned
-   - Profile stack vs. heap -- where is the time going?
    - Augment stack code to print diagnostics of use?
    - Opts:
      - Is is_stack_pointer(p) call too expensive?
-     - Setrng fun in bitmask code -- optimize this?
+     - make bitmasks arrays of words, not arrays of bytes
 *)
 let do_stack = ref true
 let debug = ref false
