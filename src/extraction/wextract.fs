@@ -11,7 +11,7 @@ exception NYI of string
 let prims_ffi_names = [ "op_Addition"; "op_Subtraction"; "op_Multiply"; "op_Division"; "op_Equality"; "op_disEquality"; "op_AmpAmp";
                         "op_BarBar"; "op_LessThanOrEqual"; "op_GreaterThanOrEqual"; "op_LessThan"; "op_GreaterThan"; "op_Modulus"]
 
-let wys_ffi_names = [ "mem"; "singleton"; "subset"; "union"; "size"; "choose"; "remove"; "read"; "main" ]
+let wys_ffi_names = [ "mem"; "singleton"; "subset"; "union"; "size"; "choose"; "remove"; "read"; "main"; "wprint" ]
 
 let extract_const (c:sconst) :string =
     match c with

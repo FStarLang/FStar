@@ -223,3 +223,14 @@ val bob    : prin
 val charlie: prin
 
 assume PrinsAxiom: alice =!= bob /\ bob =!= charlie /\ charlie =!= alice
+
+(*****)
+
+type can_print: Type -> Type
+
+assume Canprint_nat  : can_print nat
+assume Canprint_bool : can_print bool
+assume Canprint_prin : can_print prin
+assume Canprint_prins: can_print prins
+
+val wprint: #a:Type -> x:a{can_print a} -> ML unit

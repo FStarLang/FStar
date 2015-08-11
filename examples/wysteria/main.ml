@@ -71,4 +71,4 @@ let _ =
   let c_opt = SourceInterpreter.step_star init_config in
   match c_opt with
     | None -> print_string "Error in interpreter\n"
-    | Some c -> print_terminal c
+    | Some c -> ()

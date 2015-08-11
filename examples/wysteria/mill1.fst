@@ -27,8 +27,12 @@ let mill1 _ =
  in
 
  as_sec ab g*)
+
+let g x = x - 2 
+
 ;;
 
-let _ = 2 in ()
+let f x = (g x) + 2 in
+wprint #nat (f 2)
 
 //let _ = main ab mill1 in ()
