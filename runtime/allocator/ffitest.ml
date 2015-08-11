@@ -47,6 +47,14 @@ try
   ignore(Camlstack.mkarray 10 1.0)
 with Invalid_argument(_) -> print_string "illegal array contents handled\n";;
 
+let darr = Camlstack.mkarray_noscan 10 1.0;;
+doGC();;
+darr.(0) <- 2.0;;
+darr.(1) <- 3.0;;
+darr.(2) <- 4.0;;
+
+Printf.printf "%f %f %f %f\n" darr.(0) darr.(1) darr.(2) darr.(9);;
+
 doGC();;
 
 pop_frame ();;
