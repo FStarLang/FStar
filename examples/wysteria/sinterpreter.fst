@@ -13,7 +13,7 @@ open AST
 
 open Semantics
 
-val step: c:sconfig -> Tot (option sconfig)
+val step: c:config -> Tot (option config)
 let step c =
   if pre_easpar c then Some (step_aspar_e1 c)
   else if pre_eunbox c then Some (step_unbox_e c)
@@ -62,7 +62,7 @@ let step c =
 
   else None
 
-val step_correctness: c:sconfig{is_Some (step c)} -> Tot (sstep c (Some.v (step c)))
+val step_correctness: c:config{is_Some (step c)} -> Tot (sstep c (Some.v (step c)))
 let step_correctness c =
   let c' = v_of_some (step c) in
   if pre_easpar c then C_aspar_ps c c'
@@ -109,3 +109,14 @@ let step_correctness c =
   else if is_value c && is_sframe c is_F_assec_e then C_assec_red c c'
   else if not (pre_assec c = NA) then C_assec_beta c c'
   else C_assec_ret c c'
+
+val is_terminal: config -> Tot bool
+let is_terminal (Conf _ _ s _ t) = s = [] && is_T_val t
+
+val step_star: config -> Dv (option config)
+let rec step_star c =
+  if is_terminal c then Some c
+  else
+    match step c with
+      | Some c' -> step_star c'
+      | None    -> None

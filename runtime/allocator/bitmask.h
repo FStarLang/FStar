@@ -19,7 +19,7 @@
 
 #define MASK_TYPE unsigned int
 #define BITS_PER_ELEM (sizeof(MASK_TYPE)*8)
-#define MASK_SZB(n) ((((n)/BITS_PER_ELEM)+1)*sizeof(MASK_TYPE))
+#define MASK_SZB(n) ((n)/8)
 
 /*
   This file implements a library for implementing sets of natural
