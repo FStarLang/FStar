@@ -1879,6 +1879,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
 //                      then Util.fprint1 "Got guard %s\n" (Normalize.formula_norm_to_string env <| (fst <| p_guard ref_prob));
                       let guard = Util.mk_conj (p_guard base_prob |> fst) (p_guard ref_prob |> fst |> guard_on_element problem x1) in
                       let wl = solve_prob orig (Some guard) [] wl in
+                      let wl = {wl with subst=subst; ctr=wl.ctr+1} in
                       solve env (attempt [base_prob] wl)
              end
         else fallback()

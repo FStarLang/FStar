@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi Set --admit_fsi OrdSet --admit_fsi OrdMap --z3timeout 10 --__temp_no_proj;
     variables:LIB=../../lib;
-    other-files:set.fsi heap.fst st.fst all.fst $LIB/ordset.fsi $LIB/ordmap.fsi $LIB/list.fst $LIB/constr.fst $LIB/ext.fst $LIB/classical.fst ast.fst sem.fst
+    other-files:set.fsi $LIB/ordset.fsi $LIB/ordmap.fsi $LIB/constr.fst $LIB/ext.fst $LIB/classical.fst ast.fst sem.fst
  --*)
 
 module Metatheory

@@ -224,6 +224,17 @@ val rev_ind: p:(list 'a -> Tot bool) -> l:list 'a ->
         (ensures (p l))
 let rev_ind p l = rev'_involutive l; rev'_list_ind p (rev' l)
 
+(** Properties about iterators **)
+
+val mapT_lemma: f:('a -> Tot 'b)
+             -> l:(list 'a)
+             -> Lemma (requires True)
+                      (ensures (length (mapT f l)) = length l)
+                      [SMTPat (mapT f l)]
+let rec mapT_lemma f l =
+    match l with
+    | [] -> ()
+    | h::t -> mapT_lemma f t
 
 (** Properties about partition **)
 

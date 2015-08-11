@@ -100,6 +100,7 @@ let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> =
 let extract_iface (g:env) (m:modul) =  Util.fold_map extract_sig g m.declarations |> fst 
     
 let rec extract (g:env) (m:modul) : env * list<mllib> = 
+    Util.reset_gensym();
     let name = Extraction.ML.Syntax.mlpath_of_lident m.name in
     let _ = Util.print_string ("extracting: "^m.name.str^"\n") in
     let g = {g with currentModule = name}  in

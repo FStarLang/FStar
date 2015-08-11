@@ -159,7 +159,7 @@ type term =
 type level = | Source | Target
 
 val src: level -> Tot bool
-let src = is_Source
+let src l = is_Source l
 
 (* TODO: FIXME: workaround for projectors *)
 val m_of_mode: mode -> Tot as_mode
