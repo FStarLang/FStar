@@ -95,6 +95,7 @@ let rec modrefs l =
     | h::t -> h := [1;2]; modrefs t
 
 let ex = mkrefs 10;;
+let p = mkref_noscan 1;;
 doGC();;
 let ex = modrefs ex;;
 doGC();;

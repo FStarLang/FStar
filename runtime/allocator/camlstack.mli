@@ -65,8 +65,15 @@ external cons: 'a -> 'a list -> 'a list = "stack_mkpair";;
 
 external mkref: 'a -> 'a ref = "stack_mkref";;
 (** [Camlstack.mkref x] allocates a ref cell on the stack,
-    initializing it with x.  Raise [Failure "Camlstack.cons"] if the
-    stack has no frames. *)
+    initializing it with x. Assumes that [x] may point to the
+    OCaml heap, and so will scan it. 
+    Raise [Failure "Camlstack.cons"] if the stack has no frames. *)
+
+external mkref_noscan: 'a -> 'a ref = "stack_mkref_noscan";;
+(** [Camlstack.mkref x] allocates a ref cell on the stack,
+    initializing it with x. Assumes [x] will never point to the OCaml
+    heap, and so never needs to be scanned.
+    Raise [Failure "Camlstack.cons"] if the stack has no frames. *)
 
 external mkbytes : int -> bytes = "stack_mkbytes";;
 (** [Camlstack.mkbytes n] constructs a byte array of length n.

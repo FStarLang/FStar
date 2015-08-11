@@ -318,6 +318,18 @@ CAMLprim value stack_mkref(value v)
   }
 }
 
+CAMLprim value stack_mkref_noscan(value v) 
+{
+  CAMLparam1 (v);
+  value ref = stack_caml_alloc_tuple(1,0,NULL); /* Assume it will never contain a pointer */
+  if (ref == (value)0)
+    caml_failwith ("Camlstack.mkref");
+  else {
+    Field(ref, 0) = v;
+    CAMLreturn(ref);
+  }
+}
+
 CAMLprim value stack_mkbytes(value lenv) {
   CAMLparam1 (lenv);
   mlsize_t len = Int_val(lenv);
