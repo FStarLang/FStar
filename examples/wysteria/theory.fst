@@ -1,7 +1,7 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi OrdSet --admit_fsi OrdMap --z3timeout 10 --__temp_no_proj;
+    options:--admit_fsi Set --admit_fsi OrdSet --admit_fsi OrdMap --admit_fsi FFI --z3timeout 10 --__temp_no_proj;
     variables:LIB=../../lib;
-    other-files:set.fsi $LIB/ordset.fsi $LIB/ordmap.fsi $LIB/constr.fst $LIB/ext.fst $LIB/classical.fst ast.fst sem.fst
+    other-files:set.fsi $LIB/ordset.fsi $LIB/ordmap.fsi $LIB/constr.fst $LIB/ext.fst $LIB/classical.fst ast.fst ffi.fsi sem.fst
  --*)
 
 module Metatheory
@@ -216,7 +216,7 @@ let de_morgan_intersect_over_union eps1 eps2 ps = ()
 assume val exec_ffi_axiom_ps:
   ps:prins -> fn:string -> vs:list dvalue{is_valid_ffi_vs vs}
   -> Lemma (requires (True))
-           (ensures (slice_v_sps ps (D_v.v (exec_ffi fn vs)) = exec_ffi fn vs))
+           (ensures (slice_v_sps ps (D_v.v (FFI.exec_ffi fn vs)) = FFI.exec_ffi fn vs))
 
 val valid_ffi_vs_slice_lemma_ps:
   ps:prins -> vs:list dvalue{is_valid_ffi_vs vs}
@@ -806,7 +806,7 @@ let slice_wire_compose_lemma #eps1 #eps2 w1 w2 p = ()
 assume val exec_ffi_axiom:
   p:prin -> fn:string -> vs:list dvalue{is_valid_ffi_vs vs}
   -> Lemma (requires (True))
-           (ensures (slice_v p (D_v.v (exec_ffi fn vs)) = exec_ffi fn vs))
+           (ensures (slice_v p (D_v.v (FFI.exec_ffi fn vs)) = FFI.exec_ffi fn vs))
 
 val valid_ffi_vs_slice_lemma:
   p:prin -> vs:list dvalue{is_valid_ffi_vs vs}

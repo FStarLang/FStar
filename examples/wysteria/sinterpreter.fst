@@ -1,7 +1,7 @@
 (*--build-config
-    options:--admit_fsi OrdSet --admit_fsi OrdMap --admit_fsi Set;
+    options:--admit_fsi OrdSet --admit_fsi OrdMap --admit_fsi Set --admit_fsi FFI;
     variables:LIB=../../lib;
-    other-files:set.fsi $LIB/ordset.fsi $LIB/ordmap.fsi $LIB/classical.fst ast.fst sem.fst
+    other-files:set.fsi $LIB/ordset.fsi $LIB/ordmap.fsi $LIB/classical.fst ast.fst ffi.fsi sem.fst
  --*)
 
 module SourceInterpreter

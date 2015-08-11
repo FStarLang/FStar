@@ -1,12 +1,12 @@
 (*--build-config
     variables:LIB=../../lib;
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst  stack.fst listset.fst
-    $LIB/ghost.fst located.fst stackAndHeap.fst sst.fst sstCombinators.fst $LIB/seq.fsi $LIB/seq.fst array.fsi array.fst arrayalgos.fst sieveFun.fst
+    $LIB/ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst sstCombinators.fst $LIB/seq.fsi $LIB/seq.fst array.fsi array.fst arrayalgos.fst sieveFun.fst
   --*)
 
 module Sieve
 open SSTCombinators
-open StackAndHeap  open Located
+open StackAndHeap  open Lref  open Located
 open SST
 
 open Heap
@@ -51,7 +51,7 @@ type markedIffMultipleOrInit (n:nat) (lo:nat) (upto:nat)
   /\ (forall (m:nat{m < n}). (marked n neww m ==> (marked n init m \/
       SieveFun.nonTrivialDivides lo m) ))
 
-type  innerLoopInv (n:nat) (lo: ref nat)  (li : ref nat) (res: bitarray)
+type  innerLoopInv (n:nat) (lo: lref nat)  (li : lref nat) (res: bitarray)
     (initres: erased (bitv n)) (m:smem) =
  SieveFun.distinctRefsExists3 m lo (reveal (asRef res)) li
   /\ 1 < (loopkupRef li m) /\  haslength m res n
@@ -101,8 +101,8 @@ val multiplesMarkedAsDividesIff :
 let multiplesMarkedAsDividesIff n initv newv lo = (multiplesMarkedAsDivides n newv lo)
 
 val innerLoop : n:nat{n>1}
-  -> lo: ref nat
-  -> li : ref nat
+  -> lo: lref nat
+  -> li : lref nat
   -> res : bitarray
   -> initres : (erased (bitv n))
   -> Mem unit
@@ -154,7 +154,7 @@ type allUnmarked
    (n:nat) (neww: bitv n) =
    forall (m:nat{m<n}). not (marked n neww m)
 
-type  outerLoopInv (n:nat) (lo: ref nat) (res: bitarray) (m:smem) =
+type  outerLoopInv (n:nat) (lo: lref nat) (res: bitarray) (m:smem) =
  SieveFun.distinctRefsExists2 m lo (reveal (asRef res))
   /\ (((loopkupRef lo m) - 1) < n)
   /\ (1<(loopkupRef lo m)) /\  haslength m res n
@@ -169,7 +169,7 @@ type  outerLoopInv (n:nat) (lo: ref nat) (res: bitarray) (m:smem) =
 
 val outerLoopBody :
   n:nat{n>1}
-  -> lo:(ref nat)
+  -> lo:(lref nat)
   -> res : bitarray
   -> unit ->
   whileBody
@@ -189,7 +189,7 @@ let outerLoopBody n lo res u =
   (markedIffHasDivisorSmallerThanInc n lov (eeseln n initMem res) (eeseln n fMem res))
 
 val outerLoop : n:nat{n>1}
-  -> lo: ref nat
+  -> lo: lref nat
   -> res : bitarray
   -> Mem unit
       (fun m -> outerLoopInv n lo res m /\ loopkupRef lo m =2 /\ allUnmarked n (sel m res))

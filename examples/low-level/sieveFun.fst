@@ -1,14 +1,15 @@
 (*--build-config
     variables:LIB=../../lib;
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst  stack.fst listset.fst
-    $LIB/ghost.fst located.fst stackAndHeap.fst sst.fst sstCombinators.fst
+    $LIB/ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst sstCombinators.fst
   --*)
 
 module SieveFun
 open SSTCombinators
-open StackAndHeap  open Located
+open StackAndHeap
 open SST
 open Heap
+open Lref  open Located
 open Stack
 open Set
 open Prims
@@ -29,7 +30,7 @@ exists (k:nat). k*divisor=n /\ 1<k
 type isNotPrime n =
   exists (d:nat). divides d n /\ 1<d /\ d<n
 
-type innerGuardLC (n:nat) (lo : ref nat) (li : ref nat)
+type innerGuardLC (n:nat) (lo : lref nat) (li : lref nat)
 (m:smem) =
   (refExistsInMem li m) && (refExistsInMem lo m) &&
     (((loopkupRef li m) * (loopkupRef lo m) < n))
@@ -54,7 +55,7 @@ let mark n f index =
 (*previosly, mtail was need; verify*)
 type distinctRefsExists3
   (#a:Type) (#b:Type) (#c:Type) (m:smem)
-  (ra:ref a) (rb: ref b) (rc: ref c)  =
+  (ra:lref a) (rb: lref b) (rc: lref c)  =
   (refExistsInMem ra (m)) /\ (refExistsInMem rb (m)) /\ (refExistsInMem rc m)
   /\ (ra=!=rb) /\ (rb=!=rc) /\ (ra=!=rc)
 
@@ -108,16 +109,16 @@ val multiplesMarkedAsDividesIff :
     (*[SMTPatT (markedIffDividesOrInit2 n lo initv newv)]*)
 let multiplesMarkedAsDividesIff n bitv newv lo = (multiplesMarkedAsDivides n newv lo)
 
-type  innerLoopInv (n:nat) (lo: ref nat)  (li : ref nat) (res:ref ((k:nat{k<n}) -> Tot bool))
+type  innerLoopInv (n:nat) (lo: lref nat)  (li : lref nat) (res:lref ((k:nat{k<n}) -> Tot bool))
     (initres: ((k:nat{k<n}) -> Tot bool)) (m:smem) =
  distinctRefsExists3 m lo res li
   /\ 1 < (loopkupRef li m)
   /\ markedIffMultipleOrInit n (loopkupRef lo m) (loopkupRef li m) initres (loopkupRef res m)
 
 val innerLoop : n:nat{n>1}
-  -> lo: ref nat
-  -> li : ref nat
-  -> res : ref ((k:nat{k<n}) -> Tot bool)
+  -> lo: lref nat
+  -> li : lref nat
+  -> res : lref ((k:nat{k<n}) -> Tot bool)
   -> initres : ((k:nat{k<n}) -> Tot bool)
   -> Mem unit
       (requires (fun m -> innerLoopInv n lo li res initres m/\
@@ -148,10 +149,10 @@ let innerLoop n lo li res initres =
 
 type distinctRefsExists2
   (#a:Type) (#b:Type) (m:smem)
-  (ra:ref a) (rb: ref b)  =
+  (ra:lref a) (rb: lref b)  =
   (refExistsInMem ra m) /\ (refExistsInMem rb m)  /\ (ra=!=rb)
 
-type outerGuardLC (n:nat) (lo : ref nat) (m:smem) =
+type outerGuardLC (n:nat) (lo : lref nat) (m:smem) =
   (refExistsInMem lo m) && ((loopkupRef lo m) < n)
 
 type markedIffHasDivisorSmallerThan (n:nat) (lo:nat)
@@ -181,7 +182,7 @@ val markedIffHasDivisorSmallerThan2 :
 let markedIffHasDivisorSmallerThan2 n neww = ()
 
 
-type  outerLoopInv (n:nat) (lo: ref nat) (res:ref ((k:nat{k<n}) -> Tot bool)) (m:smem) =
+type  outerLoopInv (n:nat) (lo: lref nat) (res:lref ((k:nat{k<n}) -> Tot bool)) (m:smem) =
  distinctRefsExists2 m lo res
   /\ (((loopkupRef lo m) - 1) < n)
   /\ (1<(loopkupRef lo m))
@@ -192,8 +193,8 @@ type  outerLoopInv (n:nat) (lo: ref nat) (res:ref ((k:nat{k<n}) -> Tot bool)) (m
 
 val outerLoopBody :
   n:nat{n>1}
-  -> lo:(ref nat)
-  -> res : ref ((k:nat{k<n}) -> Tot bool)
+  -> lo:(lref nat)
+  -> res : lref ((k:nat{k<n}) -> Tot bool)
   -> unit ->
   whileBody
     (outerLoopInv n lo res)
@@ -214,8 +215,8 @@ let outerLoopBody n lo res u =
   (markedIffHasDivisorSmallerThanInc n lov initres newres)
 
 val outerLoop : n:nat{n>1}
-  -> lo: ref nat
-  -> res : ref ((k:nat{k<n}) -> Tot bool)
+  -> lo: lref nat
+  -> res : lref ((k:nat{k<n}) -> Tot bool)
   -> Mem unit
       (fun m -> distinctRefsExists2 m lo res /\ loopkupRef lo m =2 /\ allUnmarked n (loopkupRef res m))
       (fun m0 _ m1 ->
@@ -322,13 +323,13 @@ let sieveUnfolded n u =
   memread res
 
 
-type  innerLoopInv2 (n:nat) (lo: ref nat) (li : ref nat) (res:ref ((k:nat{k<n}) -> Tot bool))
+type  innerLoopInv2 (n:nat) (lo: lref nat) (li : lref nat) (res:lref ((k:nat{k<n}) -> Tot bool))
     (initres: ((k:nat{k<n}) -> Tot bool)) (m:smem) =
   (refExistsInMem li m) /\ (refExistsInMem lo m) /\ (refExistsInMem res m)
   /\ ((loopkupRef li m)-1)*(loopkupRef lo m) < n
   /\ markedIffMultipleOrInit n (loopkupRef lo m) (loopkupRef li m) initres (loopkupRef res m)
 
-type  outerLoopInv2 (n:nat) (lo: ref nat) (res:ref ((k:nat{k<n}) -> Tot bool)) (m:smem) =
+type  outerLoopInv2 (n:nat) (lo: lref nat) (res:lref ((k:nat{k<n}) -> Tot bool)) (m:smem) =
   refExistsInMem lo m /\ refExistsInMem res m
   /\ (((loopkupRef lo m) - 1) < n)
   /\ (1<(loopkupRef lo m))
@@ -341,7 +342,7 @@ val sieveUnfolded3 : n:nat{n>1} -> unit
         (ensures (fun _ resv _ -> markedIffHasDivisorSmallerThan n n resv))
         empty
 let sieveUnfolded3 n u =
-  let lo:(ref nat) = salloc 2 in
+  let lo:(lref nat) = salloc 2 in
   let f:((k:nat{k<n}) -> Tot bool) = (fun x -> false) in
   let res = salloc f in
   scopedWhile1
@@ -352,7 +353,7 @@ let sieveUnfolded3 n u =
     (fun u ->
         let initres = memread res in
         let lov = memread lo in
-        let li:(ref nat) = salloc 2 in
+        let li:(lref nat) = salloc 2 in
         let liv = memread li in
         (scopedWhile2
             lo

@@ -1,13 +1,14 @@
 (*--build-config
     variables:LIB=../../lib;
     variables:MATHS=../maths;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst  $LIB/heap.fst $LIB/st.fst $LIB/all.fst   $LIB/list.fst stack.fst listset.fst $LIB/ghost.fst located.fst stackAndHeap.fst sst.fst
+    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst  $LIB/heap.fst $LIB/st.fst $LIB/all.fst   $LIB/list.fst stack.fst listset.fst $LIB/ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst
   --*)
 
 module SSTCombinators
-open StackAndHeap  open Located
+open StackAndHeap
 open SST
 open Heap
+open Lref  open Located
 open Stack
 open Set
 open Prims
@@ -81,7 +82,7 @@ fixes the problem. 'loopInv is not used anyway in the extract. *)
 
 val scopedWhile1 :
   #a:Type
-  -> r:(ref a)
+  -> r:(lref a)
   -> lc : (a -> Tot bool)
   -> loopInv:(smem -> Type)
   -> mods:(modset)
@@ -103,8 +104,8 @@ let scopedWhile1 'a r lc 'loopInv mods bd =
 val scopedWhile2 :
   #a:Type
   -> #b:Type
-  -> ra:(ref a)
-  -> rb:(ref b)
+  -> ra:(lref a)
+  -> rb:(lref b)
   -> lc : (a -> b ->  Tot bool)
   -> loopInv:(smem -> Type)
   -> mods:(modset)

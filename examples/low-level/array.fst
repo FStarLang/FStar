@@ -1,13 +1,13 @@
 (*--build-config
     options:--admit_fsi Set --z3timeout 10;
     variables:LIB=../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst  stack.fst listset.fst $LIB/constr.fst word.fst $LIB/seq.fsi $LIB/seq.fst  $LIB/ghost.fst located.fst stackAndHeap.fst sst.fst sstCombinators.fst array.fsi
+    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst  stack.fst listset.fst $LIB/constr.fst word.fst $LIB/seq.fsi $LIB/seq.fst  $LIB/ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst sstCombinators.fst array.fsi
   --*)
 
 (*rename mvector to vector. The word sstarray is used for memory-stored vectors *)
 module SSTArray
 open SSTCombinators
-open StackAndHeap  open Located
+open StackAndHeap  open Lref  open Located
 open SST
 open MachineWord
 open Heap
@@ -15,7 +15,7 @@ open Stack
 open Set
 open Seq
 
-type sstarray (a:Type) = ref (seq a)
+type sstarray (a:Type) = lref (seq a)
 
 
 (*Can we reinclude the types here, even when they are included in .fsi?

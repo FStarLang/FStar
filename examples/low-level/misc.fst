@@ -22,8 +22,8 @@ type inverseLR (#a:Type) (#b:Type) (fab:(a -> Tot b)) (fba:(b -> Tot a)) =
        (forall (x:a). fba (fab x) = x) /\ (forall (y:b). fab (fba y) = y)
 
 (*It should be possible to implement it using the existing assumptions in Heap,
-    perhaps using Heap.restrict?
-val freeRefInBlock : #a:Type -> r:(ref a) -> h:heap (*{Heap.contains h r} *) -> Tot heap
+    perhaps using restrict?
+val freeRefInBlock : #a:Type -> r:(lref a) -> h:heap (*{contains h r} *) -> Tot heap
 let freeRefInBlock r h = restrict h *)
 
 (*it seems that F* does not have dependent records
