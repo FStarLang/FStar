@@ -11,16 +11,32 @@ all:
 	$(FSTAR) sinterpreter.fst
 
 
+OCAMLC=ocamlfind ocamlc -thread -package batteries -linkpkg -g
 OCAMLOPT=ocamlfind ocamlopt -thread -package batteries -linkpkg -g
 
-interpreter: ast.fst sem.fst sinterpreter.fst support.ml ordSet.ml ordMap.ml
-	$(FSTAR) --admit_fsi OrdSet --admit_fsi OrdMap --codegen OCaml-experimental ../../lib/ordset.fsi ../../lib/ordmap.fsi ../../lib/classical.fst ast.fst sem.fst sinterpreter.fst
-	$(OCAMLOPT) support.ml ordSet.ml ordMap.ml AST.ml Semantics.ml SourceInterpreter.ml -o interpreter.exe
-
-parser: interpreter wparser.mly wlexer.mll main.ml
+gen: ast.fst sem.fst sinterpreter.fst support.ml ordSet.ml ordMap.ml wparser.mly wlexer.mll
+	$(FSTAR) --admit_fsi OrdSet --admit_fsi OrdMap --codegen OCaml-experimental --z3timeout 15 ../../lib/ordset.fsi ../../lib/ordmap.fsi ../../lib/classical.fst ast.fst sem.fst sinterpreter.fst
 	ocamlyacc -v wparser.mly
 	ocamllex wlexer.mll
-	$(OCAMLOPT) support.ml ordSet.ml ordMap.ml AST.ml wparser.mli wparser.ml wlexer.ml main.ml -o parser.exe
+
+INTERPRETER_OBJS=support.cmx ordSet.cmx ordMap.cmx AST.cmx Semantics.cmx SourceInterpreter.cmx
+
+PARSER_OBJS=wparser.cmi wparser.cmx wlexer.cmx main.cmx
+
+a.out: $(INTERPRETER_OBJS) $(PARSER_OBJS)
+	$(OCAMLOPT) -o a.out $(INTERPRETER_OBJS) wparser.cmx wlexer.cmx main.cmx
+
+# Common rules
+.SUFFIXES: .ml .mli .cmo .cmi .cmx
+
+.ml.cmo:
+	$(OCAMLC) $(OCAMLFLAGS) -c $<
+
+.mli.cmi:
+	$(OCAMLC) $(OCAMLFLAGS) -c $<
+
+.ml.cmx:
+	$(OCAMLOPT) $(OCAMLOPTFLAGS) -c $<
 
 clean:
-	rm -f Classical.ml AST.ml Semantics.ml SourceInterpreter.ml *.cmi *.cmx *.o *.exe a.out wlexer.ml wparser.ml wparser.mli wparser.output parser.exe
+	rm -f Classical.ml AST.ml Semantics.ml SourceInterpreter.ml *.cmi *.cmx *.o *.exe a.out wlexer.ml wparser.ml wparser.mli wparser.output

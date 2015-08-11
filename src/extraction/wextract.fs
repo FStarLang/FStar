@@ -8,42 +8,10 @@ open Microsoft.FStar.Absyn.Print
 
 exception NYI of string
 
-let is_valid_prims_ffi (s:string) :bool =
-    match s with
-        | "op_Addition"
-        | "op_Subtraction"
-        | "op_Multiply"
-        | "op_Division"
-        | "op_Equality"
-        | "op_disEquality"
-        | "op_AmpAmp"
-        | "op_BarBar"
-        | "op_LessThanOrEqual"
-        | "op_GreaterThanOrEqual"
-        | "op_LessThan"
-        | "op_GreaterThan"
-        | "op_Modulus"             -> true
+let prims_ffi_names = [ "op_Addition"; "op_Subtraction"; "op_Multiply"; "op_Division"; "op_Equality"; "op_disEquality"; "op_AmpAmp";
+                        "op_BarBar"; "op_LessThanOrEqual"; "op_GreaterThanOrEqual"; "op_LessThan"; "op_GreaterThan"; "op_Modulus"]
 
-        | _                        -> false
-
-let is_ffi_fn (e:exp) (args_l:args) :(bool * string * args) =
-    match (Util.compress_exp e).n with
-        | Exp_fvar (fvar, _) ->
-            let fn_name = fvar.v.ident.idText in
-            let mlid = lid_of_ids fvar.v.ns in
-
-            if List.length (mlid.ns) = 0 && mlid.ident.idText = "OrdSet" then
-                true, fn_name, List.tl args_l
-
-            else if List.length (mlid.ns) = 0 && mlid.ident.idText = "Prims" then
-                is_valid_prims_ffi fn_name, fn_name, args_l
-
-            else if fn_name = "read" then
-                true, fn_name, []
-
-            else false, "", args_l
-
-        | _                  -> false, "", args_l
+let wys_ffi_names = [ "mem"; "singleton"; "subset"; "union"; "size"; "choose"; "remove"; "read"; "main" ]
 
 let extract_const (c:sconst) :string =
     match c with
@@ -66,20 +34,21 @@ let rec extract_exp (e:exp) :string =
         | Exp_constant c         -> extract_const c
         | Exp_abs (bs, e)        ->
             let bs_str = List.fold_left (fun s b -> s ^ "fun " ^ (extract_binder b) ^ ". ") "" bs in
-            let s' = extract_exp e in
-            bs_str ^ s'
+            bs_str ^ (extract_exp e)
         | Exp_app (e, args)      ->
             let args = List.filter (fun a -> match a with | Inl _, _ -> false | Inr _, _ -> true) args in    // filter type arguments
-            let b, fn, args = is_ffi_fn e args in    // see if it's a ffi call
-            if b then
-                let args_s = List.fold_left (fun s a -> s ^ (extract_arg a) ^ "; ") "" args in
-                "ffi " ^ fn ^ " [ " ^ args_s ^ " ]"
+            let b, s = extract_prims_ffi e args in
+            if b then s
             else
-                let s = extract_exp e in
-                let b, s' = extract_wysteria_lib_fn s args in
-                if b then s'
+                let b, s = extract_wys_ffi e args in
+                if b then s
                 else
-                    List.fold_left (fun s a -> "(apply " ^ s ^ " " ^ (extract_arg a) ^ ")") s args
+                    let s = extract_exp e in
+                    let b, s' = extract_wysteria_specific_ast s args in
+                    if b then s'
+                    else
+                        List.fold_left (fun s a -> "(apply " ^ s ^ " " ^ (extract_arg a) ^ ")") s args
+                
         | Exp_match (e, pats)    ->
             let s = extract_exp e in
             "match " ^ s ^ " with\n" ^ (extract_pats pats) ^ "\nend"
@@ -92,7 +61,42 @@ let rec extract_exp (e:exp) :string =
         | Exp_uvar _
         | _ -> Util.print_string ("Expression not expected " ^ (tag_of_exp e)); raise (NYI "")
 
-and extract_wysteria_lib_fn (s:string) (args:list<arg>) :(bool * string) =
+and extract_prims_ffi (e:exp) (args_l:args) :(bool * string) =
+    match (Util.compress_exp e).n with
+        | Exp_fvar (fvar, _) ->
+            let fn_name = fvar.v.ident.idText in
+            let mlid = lid_of_ids fvar.v.ns in
+
+            if List.length (mlid.ns) = 0 && mlid.ident.idText = "Prims" && Util.for_some (fun s -> s = fn_name) prims_ffi_names then
+                let args_s = List.fold_left (fun s a -> s ^ (extract_arg a) ^ "; ") "" args_l in
+                true, "ffi " ^ fn_name ^ " [ " ^ args_s ^ " ]"
+            else
+                false, ""
+
+        | _ -> false, ""
+
+and extract_wys_ffi (e:exp) (args_l:args) :(bool * string) =
+    match (Util.compress_exp e).n with
+        | Exp_fvar (fvar, _) ->
+            let fn_name = fvar.v.ident.idText in
+            if Util.for_some (fun s -> s = fn_name) wys_ffi_names then
+                if fn_name = "main" then
+                    let f = List.hd (List.tl args_l) in
+                    let b, s = 
+                        match f with
+                            | Inl _, _ -> false, ""
+                            | Inr f, _ -> true, extract_exp (mk_Exp_app (f, [varg (mk_Exp_constant Const_unit None dummyRange)]) None dummyRange)
+                    in
+                    b, s
+                else 
+                    let args_s = List.fold_left (fun s a -> s ^ (extract_arg a) ^ "; ") "" args_l in
+                    true, "ffi " ^ fn_name ^ " [ " ^ args_s ^ " ]"
+            else
+                false, ""
+
+        | _ -> false, ""
+
+and extract_wysteria_specific_ast (s:string) (args:list<arg>) :(bool * string) =
     let b, args =
         match s with
             | "unbox_p"
@@ -114,7 +118,7 @@ and extract_wysteria_lib_fn (s:string) (args:list<arg>) :(bool * string) =
 
 and extract_arg (a:arg) :string =
     match a with
-        | Inl _, _ -> raise (NYI "This should not have happened")
+        | Inl _, _ -> raise (NYI "Type arguments should already have been filtered")
         | Inr e, _ -> "( " ^ extract_exp e ^ " )"
 
 and extract_pats (pats: list<(pat * option<exp> * exp)>) :string =
@@ -143,7 +147,8 @@ let extract_sigelt (s:sigelt) :string =
 let extract (m:modul) : unit =
     let name = m.name.str in
     Util.print_string ("Extracting module: " ^ name ^ "\n");
-    if name = "Examples" then
+    if name = "SMC" then
         let s = List.fold_left (fun s sigelt -> s ^ "\n" ^ (extract_sigelt sigelt)) "" m.declarations in
-        Util.print_string (s ^ "\n")
+        Util.write_file "SMC.wy" s
+        //Util.print_string (s ^ "\n")
     else ()

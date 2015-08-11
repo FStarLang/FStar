@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Wysteria;
+    options:--admit_fsi Set --admit_fsi Wysteria --codegen Wysteria;
     variables:LIB=../../lib;
     other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst wysteria.fsi
  --*)
