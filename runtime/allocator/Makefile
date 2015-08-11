@@ -1,6 +1,7 @@
-OCAMLC := ocamlfind ocamlc
-OCAMLLINK := ocamlfind ocamlc -custom
+OCAMLC := ocamlfind ocamlopt
+OCAMLLINK := ocamlfind ocamlopt
 FLAGS := -g
+CMO := cmx
 
 # If for some weird reason, you don't have ocamlfind installed, override it in
 # your local config file.
@@ -11,8 +12,16 @@ all: stacktest ffitest
 stacktest: stack.o bitmask.o test.o
 	$(OCAMLC) $(FLAGS) $^ -o $@
 
-ffitest: camlstack.o stack.o bitmask.o camlstack.mli ffitest.o ffitest.ml
+ffitest.$(CMO): camlstack.cmi
+
+ffitest: camlstack.o stack.o bitmask.o ffitest_C.o ffitest.$(CMO)
 	$(OCAMLLINK) $(FLAGS) -o $@ $^
+
+%.cmi: %.mli
+	$(OCAMLC) $(FLAGS) -c  $^ -o $@
+
+%.$(CMO): %.ml
+	$(OCAMLC) $(FLAGS) -c  $< -o $@
 
 %.o: %.c
 	$(OCAMLC) $(FLAGS) -c  $^ -o $@

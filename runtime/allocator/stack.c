@@ -59,7 +59,7 @@ typedef struct _Page {
     /* frame_ptr == EXT_MARKER implies this frame begins on the prior page */
     /* frame_ptr == p implies p points to the base of the frame in the page's memory */
   struct _Page *prev; /* points to the previous page on the stack */
-  unsigned char pointermap[0]; /* contains a bitmask that identifies all pointers on this page. */
+  MASK_TYPE pointermap[0]; /* contains a bitmask that identifies all pointers on this page. */
     /* this map is only valid for memory in the range [memory -- alloc_ptr]; outside
        that range it is garbage. Also, the map is at word granularity. */
 } Page;

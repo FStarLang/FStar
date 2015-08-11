@@ -17,13 +17,18 @@
 #ifndef __BITMASK_H__
 #define __BITMASK_H__
 
+#define MASK_TYPE unsigned int
+#define BITS_PER_ELEM (sizeof(MASK_TYPE)*8)
+#define MASK_SZB(n) ((((n)/BITS_PER_ELEM)+1)*sizeof(MASK_TYPE))
+
 /*
   This file implements a library for implementing sets of natural
   numbers via bitmasks (bits are numbered starting at 0).  A bitmask
-  is represented as an array of unsigned characters.  
+  is represented as an array of MASK_TYPE, where MASK_TYPE is 
+  an unsigned integer type (e.g., unsigned char).
 
   As an example usage:
-  unsigned char m[4] = {0,0,0,0}; // set = {}
+  MASK_TYPE m[1] = { 0 }; // set = {}
   setbit(m,0);  // set = {0}
   setbit(m,1);  // set = {0,1}
   unsetbit(m,1); // set = {0}
@@ -37,20 +42,20 @@
 
 /* [setbit m b] sets bit [b] in the given map [m]. We assume [m] has
    sufficient memory allocated to it to set [b]. */
-void setbit(unsigned char *map, int bit);
+void setbit(MASK_TYPE *map, int bit);
 
 /* [unsetbit m b] unsets bit [b] in the given map [m]. We assume [m]
    has sufficient memory allocated to it to unset [b]. */
-void unsetbit(unsigned char *map, int bit);
+void unsetbit(MASK_TYPE *map, int bit);
 
 /* [unsetbit_rng m b l] unsets bits [b] up to [b+l-1] in the given map
    [m]. We assume [m] has sufficient memory allocated to it to unset this range. */
-void unsetbit_rng(unsigned char *map, int bit, int len);
+void unsetbit_rng(MASK_TYPE *map, int bit, int len);
 
 /* [eachbit m f e] invokes function [f] on each set bit in [m]. In
    particular, for each bit b that is set in [m], this routine will
    call [f(e,b)].  */
 typedef void (*bitfun)(void *env, int index);
-void eachbit(unsigned char *map, int maxbit, bitfun f, void *env);
+void eachbit(MASK_TYPE *map, int maxbit, bitfun f, void *env);
 
 #endif
