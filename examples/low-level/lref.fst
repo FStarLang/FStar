@@ -64,4 +64,18 @@ opaque type fresh (lrefs:set aref) (h0:heap) (h1:heap) =
 opaque logic type modifies (mods:set aref) (h:heap) (h':heap) =
     b2t (equal h' (concat h' (restrict h (complement mods))))
 
-let only x = Set.singleton (Ref x)
+type modset = erased (set aref)
+
+val gonly : #a:Type -> (lref a) -> Tot (modset)
+let gonly x = hide (Set.singleton (Ref x))
+
+val eonly : #a:Type -> erased (lref a) -> Tot (modset)
+let eonly r = (elift1 (fun x -> (Set.singleton (Ref x)))) r
+
+val gunion : s1:modset -> s2:modset -> Tot (modset)
+let gunion s1 s2 = (elift2 union) s1 s2
+
+val gunionUnion : #a:Type  -> #b:Type  -> r1:(lref a) -> r2:(lref b) ->
+  Lemma (requires True) (ensures ((gunion (gonly r1) (gonly r2)) = hide (union (singleton (Ref r1)) (singleton (Ref r2)))))
+  (* [SMTPat (gunion (gonly r1) (gonly r2))] *)
+let gunionUnion r1 r2 = ()

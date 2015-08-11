@@ -122,7 +122,7 @@ val copy:
                 /\ prefixEqualL (sel h1 s) (sel h1 scp)
                 /\ (contains h0 scp) /\ glength scp h0 = glength scp h1
               ))
-     ((elift1 only) (asRef scp))
+     (eonly scp)
 
 let copy s scp =
   let ctr = salloc #nat 0 in
@@ -137,7 +137,7 @@ let copy s scp =
           /\ (loopkupRef ctr m) <=len
           /\ prefixEqual (sel m s) (sel m scp) (loopkupRef ctr m)
           )
-    (gunion ((elift1 only) (asRef scp)) (gonly ctr))
+    (gunion (eonly scp) (gonly ctr))
     (fun u -> let ctrv = memread ctr in
               writeIndex scp ctrv (readIndex s ctrv);
               memwrite ctr (ctrv +1 ))

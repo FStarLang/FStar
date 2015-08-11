@@ -429,23 +429,6 @@ match (refLoc r) with
 (** cannot just uses ST.modifies. That was on heap; has to be lifted to smem.
 Also, why does it's definition have to be so procedural, unlike the more declarative one below?
 *)
-type modset = erased (set aref)
-
-
-val gonly : #a:Type -> r:(lref a) -> Tot (modset)
-let gonly r = hide (only  r)
-
-val eonly : #a:Type -> erased (lref a) -> Tot (modset)
-let eonly r = (elift1 only) r
-
-val gunion : s1:modset -> s2:modset -> Tot (modset)
-let gunion s1 s2 = (elift2 union) s1 s2
-
-val gunionUnion : #a:Type  -> #b:Type  -> r1:(lref a) -> r2:(lref b) ->
-  Lemma (requires True) (ensures ((gunion (gonly r1) (gonly r2)) = hide (union (singleton (Ref r1)) (singleton (Ref r2)))))
-  (* [SMTPat (gunion (gonly r1) (gonly r2))] *)
-let gunionUnion r1 r2 = ()
-
 type canModify  (m0 : smem)  (m1: smem) (rs: modset ) =
   forall (a:Type) (r: lref a).
       refExistsInMem r m0

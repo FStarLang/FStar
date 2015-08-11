@@ -115,14 +115,14 @@ val innerLoop : n:nat{n>1}
                 /\ markedIffDividesOrInit2 n (loopkupRef lo m) (reveal initres) (reveal (esel m res))
                 (* markedIffDividesOrInit n (loopkupRef lo m) initres (reveal (esel m res)) *)
       ))
-      ((elift2 union) (gonly li)  (ArrayAlgos.eonly res))
+      (gunion (gonly li)  (ArrayAlgos.eonly res))
 
 let innerLoop n lo li res initres =
   (scopedWhile
     (innerLoopInv n lo li res initres)
     (SieveFun.innerGuardLC n lo li)
     (fun u -> (memread li * memread lo < n))
-      ((elift2 union) (gonly li)  (ArrayAlgos.eonly res))
+      (gunion (gonly li)  (ArrayAlgos.eonly res))
     (fun u ->
       let liv = memread li in
       let lov = memread lo in
@@ -175,7 +175,7 @@ val outerLoopBody :
   whileBody
     (outerLoopInv n lo res)
     (SieveFun.outerGuardLC n lo)
-    ((elift2 union) (gonly lo)  (ArrayAlgos.eonly res))
+    (gunion (gonly lo)  (ArrayAlgos.eonly res))
 
 let outerLoopBody n lo res u =
   let initMem : erased smem  = get () in
@@ -196,14 +196,14 @@ val outerLoop : n:nat{n>1}
       (fun _ _ m1 -> outerLoopInv n lo res m1 /\ loopkupRef lo m1 = n
         /\ markedIffHasDivisorSmallerThan n n (sel m1 res)
       )
-      ((elift2 union) (gonly lo)  (ArrayAlgos.eonly res))
+      (gunion (gonly lo)  (ArrayAlgos.eonly res))
 
 let outerLoop n lo res =
   scopedWhile
     (outerLoopInv n lo res)
     (SieveFun.outerGuardLC n lo)
     (fun u -> (memread lo < n))
-    ((elift2 union) (gonly lo)  (ArrayAlgos.eonly res))
+    (gunion (gonly lo)  (ArrayAlgos.eonly res))
     (outerLoopBody n lo res)
 
 (*to work around type inference issues*)
