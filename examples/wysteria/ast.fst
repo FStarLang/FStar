@@ -57,20 +57,20 @@ and exp =
 
 type canbox = | Can_b | Cannot_b
 
-val canbox_const: c:const -> Tot canbox
+(*val canbox_const: c:const -> Tot canbox
 let canbox_const c = match c with
   | C_prin _
   | C_prins _ -> Cannot_b
   
   | C_unit
   | C_nat _
-  | C_bool _  -> Can_b
+  | C_bool _  -> Can_b*)
 
 (* if empty, Can_b then can_wire *)
 type v_meta = eprins * canbox
 
 type value: v_meta -> Type =
-  | V_const   : c:const -> value (empty, canbox_const c)
+  | V_const   : c:const -> value (empty, Can_b)
 
   | V_box     : #meta:v_meta -> ps:prins
                 -> v:value meta{subset (fst meta) ps /\ (snd meta) = Can_b}
