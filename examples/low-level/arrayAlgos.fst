@@ -2,12 +2,12 @@
     options:--admit_fsi Set --z3timeout 100;
     variables:LIB=../../lib;
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst  stack.fst listset.fst
-    $LIB/ghost.fst located.fst stackAndHeap.fst sst.fst sstCombinators.fst $LIB/constr.fst word.fst $LIB/seq.fsi $LIB/seq.fst array.fsi array.fst
+    $LIB/ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst sstCombinators.fst $LIB/constr.fst word.fst $LIB/seq.fsi $LIB/seq.fst array.fsi array.fst
   --*)
 
 module ArrayAlgos
 open SSTCombinators
-open StackAndHeap  open Located
+open StackAndHeap  open Lref  open Located
 open SST
 open MVector
 open Heap
@@ -29,28 +29,28 @@ let eonly s = (eonly (asRef s))
 val sel : #a:Type -> m:smem -> v:(sstarray a){contains m v} -> GTot (seq a)
 let sel m v = loopkupRef (reveal (asRef v)) m
 
-val loopkupRefR : #a:Type -> #post:(a->Type) -> m:smem -> r:(ref a) ->
+val loopkupRefR : #a:Type -> #post:(a->Type) -> m:smem -> r:(lref a) ->
 
   Pure a (requires (refExistsInMem r m /\ post (loopkupRef r m)))
     (ensures (fun ret -> post ret))
 let loopkupRefR m r = loopkupRef r m
 
-val loopkupRefR2 : a:Type -> m:smem -> r:(ref a){(refExistsInMem r m)} ->Tot a
+val loopkupRefR2 : a:Type -> m:smem -> r:(lref a){(refExistsInMem r m)} ->Tot a
 let loopkupRefR2 (a:Type) m r = loopkupRef r m
 
 
-val eloopkupRef : #a:Type -> m:smem -> r:(erased (ref a)){(refExistsInMem (reveal r) m)} ->
+val eloopkupRef : #a:Type -> m:smem -> r:(erased (lref a)){(refExistsInMem (reveal r) m)} ->
   Tot (erased a)
-let eloopkupRef  (#a:Type) m v = (elift1_p #(ref a) #a #(fun r -> b2t (refExistsInMem r m)) (loopkupRefR2 a m)) v
+let eloopkupRef  (#a:Type) m v = (elift1_p #(lref a) #a #(fun r -> b2t (refExistsInMem r m)) (loopkupRefR2 a m)) v
 
 
 val esel : #a:Type -> m:smem -> v:(sstarray a){refExistsInMem (reveal (asRef v)) m} -> Tot (erased (seq a))
 let esel (#a:Type) m v = eloopkupRef m (asRef v)
 
-val eeloopkupRef : #a:Type -> m:(erased smem) -> r:(erased (ref a)){(refExistsInMem (reveal r) (reveal m))} ->
+val eeloopkupRef : #a:Type -> m:(erased smem) -> r:(erased (lref a)){(refExistsInMem (reveal r) (reveal m))} ->
   Tot (erased a)
 let eeloopkupRef  (#a:Type) m v =
-  (elift2_p #smem #(ref a) #(fun m r -> b2t (refExistsInMem r m)) #a (loopkupRefR2)) m v
+  (elift2_p #smem #(lref a) #(fun m r -> b2t (refExistsInMem r m)) #a (loopkupRefR2)) m v
 
 val eesel : #a:Type -> m:(erased smem)
 -> v:(sstarray a){refExistsInMem (reveal (asRef v)) (reveal m)} -> Tot (erased (seq a))
@@ -89,7 +89,7 @@ let eeseln (#a:Type) n m v =
   let s = eesel m v in
   admitP (b2t (Seq.length (reveal s)=n)); s
 
-(elift2_wp #smem #(ref (seq a)) #(seq a)
+(elift2_wp #smem #(lref (seq a)) #(seq a)
   #(fun m r -> refExistsInMem r m
         /\  Seq.length (loopkupRef r m) = n
           )

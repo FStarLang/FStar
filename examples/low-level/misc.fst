@@ -23,7 +23,7 @@ type inverseLR (#a:Type) (#b:Type) (fab:(a -> Tot b)) (fba:(b -> Tot a)) =
 
 (*It should be possible to implement it using the existing assumptions in Heap,
     perhaps using Heap.restrict?
-val freeRefInBlock : #a:Type -> r:(ref a) -> h:heap (*{Heap.contains h r} *) -> Tot heap
+val freeRefInBlock : #a:Type -> r:(lref a) -> h:heap (*{Heap.contains h r} *) -> Tot heap
 let freeRefInBlock r h = restrict h *)
 
 (*it seems that F* does not have dependent records
