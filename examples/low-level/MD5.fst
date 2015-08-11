@@ -1,5 +1,4 @@
 (*--build-config
-    options: --codegen OCaml-experimental --trace_error --debug yes --prn;
     variables:LIB=../../lib;
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst  stack.fst listset.fst
     $LIB/ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst sstCombinators.fst $LIB/constr.fst word.fst $LIB/seq.fsi $LIB/seq.fst array.fsi
@@ -14,29 +13,29 @@ module MD5
 open SSTCombinators
 open SST
 open MVector
-open Heap
 open Set
 open MachineWord
 open MD5Common
-open ArrayAlgos
-open SSTArray
 open StackAndHeap
 open Lref  open Located
 open Seq
+open SSTArray
+open ArrayAlgos
 open Ghost
+
 
 assume val cloneAndPad :
   r:(sstarray word)
   -> rcloned :(sstarray word)
   -> Mem unit
-      (fun m -> refExistsInMem (reveal (asRef r)) m /\ refExistsInMem (reveal (asRef rcloned)) m)
-      (fun m0 rp m1  -> refExistsInMem (reveal (asRef r)) m0 /\ refExistsInMem (reveal (asRef rcloned)) m1
-          /\ refExistsInMem (reveal (asRef r)) m1
-          /\ Seq.length (loopkupRef (reveal (asRef rcloned)) m1) = psize (Seq.length (loopkupRef (reveal (asRef r)) m0))
+      (fun m -> (contains m r) /\ (contains m rcloned))
+      (fun m0 rp m1  -> (contains m0 r) /\ (contains m1 rcloned)
+          /\ (contains m1 r)
+          /\ (glength rcloned m1) = psize ((glength r m0))
           /\ prefixEqual
                 (loopkupRef (reveal (asRef r)) m0)
                 (loopkupRef (reveal (asRef rcloned)) m1)
-                (Seq.length (loopkupRef (reveal (asRef r)) m0)))
+                ((glength r m0)))
         (hide empty)
 
 val processChunk :
@@ -44,17 +43,17 @@ val processChunk :
  -> offset:nat
  -> acc:(sstarray word)
  -> WNSC unit
-    (requires (fun m -> refExistsInMem (reveal (asRef ch)) m
-              /\ refExistsInMem (reveal (asRef acc)) m /\ ch =!= acc
-              /\ offset + 16 <= (Seq.length (loopkupRef (reveal (asRef ch)) m))
-              /\ 4 = (length (loopkupRef (reveal (asRef acc)) m))
+    (requires (fun m -> (contains m ch)
+              /\ (contains m acc) /\ ch =!= acc
+              /\ offset + 16 <= ((glength ch m))
+              /\ 4 = ((glength acc m))
               ))
-    (ensures (fun m0 _ m1 -> refExistsInMem (reveal (asRef ch)) m1
-              /\ refExistsInMem (reveal (asRef acc)) m1 /\ ch =!= acc
-              /\ 4 = (Seq.length (loopkupRef (reveal (asRef acc)) m1))
+    (ensures (fun m0 _ m1 -> (contains m1 ch)
+              /\ (contains m1 acc) /\ ch =!= acc
+              /\ 4 = ((glength acc m1))
               (*/\ loopkupRef  ch m0 = loopkupRef ch m1*)
               ))
-    (eonly ((asRef acc)))
+    (eonly acc)
 
 
 let processChunk ch offset acc =
@@ -63,13 +62,13 @@ let processChunk ch offset acc =
     li
     (fun liv -> liv < 64)
     (fun m -> True
-              /\ refExistsInMem (reveal (asRef ch)) m
-              /\ refExistsInMem (reveal (asRef acc)) m
-              /\ offset + 16 <= (Seq.length (loopkupRef (reveal (asRef ch)) m))
-              /\ 4 = (length (loopkupRef (reveal (asRef acc)) m))
+              /\ (contains m ch)
+              /\ (contains m acc)
+              /\ offset + 16 <= ((glength ch m))
+              /\ 4 = ((glength acc m))
               /\ refExistsInMem li m /\ loopkupRef li m < 65
               )
-    ((elift2 union) (gonly li) (eonly (asRef acc)))
+    (gunion (gonly li) (eonly acc))
     (*allRefs ; why does this not work?*)
     (fun u ->
       let liv = memread li in
@@ -90,9 +89,9 @@ val mainLoop :
  ch:(sstarray word)
  -> un:unit
  -> WNSC (s:(seq word){Seq.length s = 4})
-    (requires (fun m -> refExistsInMem (reveal (asRef ch)) m
-          /\ divides 16 (Seq.length (loopkupRef (reveal (asRef ch)) m))))
-    (ensures (fun m0 _ m1 -> True /\ refExistsInMem (reveal (asRef ch)) m1))
+    (requires (fun m -> (contains m ch)
+          /\ divides 16 ((glength ch m))))
+    (ensures (fun m0 _ m1 -> True /\ (contains m1 ch)))
     (hide empty)
 
 let mainLoop ch u =
@@ -103,27 +102,27 @@ let mainLoop ch u =
     offset
     (fun offsetv-> offsetv +16 <= chl)
     (fun m -> True
-              /\ refExistsInMem (reveal (asRef ch)) m
-              /\ refExistsInMem (reveal (asRef acc)) m
+              /\ (contains m ch)
+              /\ (contains m acc)
               /\ refExistsInMem offset m
-              /\ Seq.length (loopkupRef (reveal (asRef ch)) m) = chl
-              /\ 4 = (Seq.length (loopkupRef (reveal (asRef acc)) m))
+              /\ (glength ch m) = chl
+              /\ 4 = ((glength acc m))
               )
-    ((elift2 union) (gonly  offset) (eonly (asRef acc)))
+    (gunion (gonly  offset) (eonly acc))
     (fun u ->
         let offsetv = memread offset in
         processChunk ch offsetv acc;
         memwrite offset (offsetv + 16));
   (to_seq acc)
 
-val allZeros : n:nat -> Tot (s:(seq word){length s = n})
+val allZeros : n:nat -> Tot (s:(seq word){Seq.length s = n})
 let allZeros n = Seq.create n w0
 
 val mD5 :
  ch:(sstarray word)
  -> WNSC (s:(seq word){Seq.length s = 4})
-    (fun m -> True /\ refExistsInMem (reveal (asRef ch)) m)
-    (fun m0 _ m1 -> True /\ refExistsInMem (reveal (asRef ch)) m1)
+    (fun m -> True /\ (contains m ch))
+    (fun m0 _ m1 -> True /\ (contains m1 ch))
     (hide empty)
 
 let mD5 ch =
@@ -133,9 +132,9 @@ let mD5 ch =
   cloneAndPad ch clonedCh;
   withNewScope
     #_
-    #(fun m -> refExistsInMem (reveal (asRef ch)) (m) /\ refExistsInMem (reveal (asRef clonedCh)) (m)
-        /\ divides 16 (Seq.length (loopkupRef (reveal (asRef clonedCh)) m)) )
-    #(fun m0 _ m1 -> True /\ refExistsInMem (reveal (asRef ch)) (m1))
+    #(fun m -> (contains m ch) /\ (contains m clonedCh)
+        /\ divides 16 ((glength clonedCh m)) )
+    #(fun m0 _ m1 -> True /\ contains m1 ch)
     #(hide empty)
     (mainLoop clonedCh)
 
@@ -158,8 +157,8 @@ let mD53 n ch =
 val mD52 : n:nat
  -> ch:(sstarray word)
  -> WNSC  (s:(seq word){Seq.length s = 4})
-    (fun m -> True /\ refExistsInMem (reveal (asRef ch)) m)
-    (fun m0 _ m1 -> True /\ refExistsInMem (reveal (asRef ch)) m1)
+    (fun m -> True /\ (contains m ch))
+    (fun m0 _ m1 -> True /\ (contains m1 ch))
     (hide empty)
 
 let mD52 n ch =
