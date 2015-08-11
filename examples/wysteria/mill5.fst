@@ -58,4 +58,4 @@ let mill5 _ =
   true
 ;;
 
-let _ = main abc mill5 in ()
+let x = main abc mill5 in wprint x
