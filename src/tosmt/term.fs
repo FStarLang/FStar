@@ -437,10 +437,11 @@ and mkPrelude z3options =
                 (declare-fun PreType (Term) Type)\n\
                 (declare-fun Valid (Type) Bool)\n\
                 (declare-fun HasKind (Type Kind) Bool)\n\
-                (declare-fun HasType (Term Type) Bool)\n\
+                (declare-fun HasTypeFuel (Fuel Term Type) Bool)\n\
+                (define-fun HasType ((x Term) (t Type)) Bool\n\
+                    (HasTypeFuel MaxIFuel x t))\n
                 (define-fun  IsTyped ((x Term)) Bool\n\
                         (exists ((t Type)) (HasType x t)))\n\
-                (declare-fun HasTypeFuel (Fuel Term Type) Bool)\n\
                 (declare-fun ApplyEF (Term Fuel) Term)\n\
                 (declare-fun ApplyEE (Term Term) Term)\n\
                 (declare-fun ApplyET (Term Type) Term)\n\
@@ -456,14 +457,6 @@ and mkPrelude z3options =
                             (! (implies (exists ((e Term)) (HasType e t))\n\
                                         (Valid t))\n\
                                 :pattern ((Valid t)))))\n\
-                (assert (forall ((e Term) (t Type))\n\
-                           (!  (= (HasType e t)\n\
-                                  (HasTypeFuel MaxIFuel e t))\n\
-                               :pattern ((HasType e t)))))\n\
-                (assert (forall ((f Fuel) (e Term) (t Type)) \n\
-                                (! (= (HasTypeFuel (SFuel f) e t)\n\
-                                      (HasTypeFuel f e t))\n\
-                                    :pattern ((HasTypeFuel (SFuel f) e t)))))\n\
                 (assert (forall ((t1 Term) (t2 Term))\n\
                      (! (iff (Valid (Precedes t1 t2)) \n\
                              (< (Rank t1) (Rank t2)))\n\

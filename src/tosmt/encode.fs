@@ -1591,7 +1591,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
         let tok_typing, decls3 = encode_typ_pred' None t env ddtok_tm in
 
-        let vars', guards', env'', decls_formals, _ = encode_binders (Some s_fuel_tm) formals env in
+        let vars', guards', env'', decls_formals, _ = encode_binders (Some fuel_tm) formals env in //NS/CH: used to be s_fuel_tm
         let ty_pred', decls_pred = 
              let xvars = List.map mkFreeV vars' in
              let dapp =  mkApp(ddconstrsym, xvars) in
@@ -1842,18 +1842,26 @@ and encode_free_var env lid tt t_norm quals =
               let vtok_tm = match formals with 
                 | [] -> mkFreeV(vname, Term_sort) 
                 | _ -> mkApp(vtok, []) in
-              let mk_disc_proj_axioms vapp vars = quals |> List.collect (function 
+              let mk_disc_proj_axioms guard encoded_res_t vapp vars = quals |> List.collect (function 
                 | Discriminator d -> 
                     let _, (xxsym, _) = Util.prefix vars in
                     let xx = mkFreeV(xxsym, Term_sort) in
                     [Term.Assume(mkForall([vapp], vars,
-                                            mkEq(vapp, Term.boxBool <| Term.mk_tester (escape d.str) xx)), None)]
+                                            mkEq(vapp, Term.boxBool <| Term.mk_tester (escape d.str) xx)), Some "Discriminator equation")]
 
                 | Projector(d, Inr f) -> 
                     let _, (xxsym, _) = Util.prefix vars in
                     let xx = mkFreeV(xxsym, Term_sort) in
+                    let prim_app = Term.mkApp(mk_term_projector_name d f, [xx]) in
+                    let prim_app_typing = mk_HasTypeWithFuel None prim_app encoded_res_t in
+                    let pattern = 
+                        let fv_prim_app_typing = Term.free_variables prim_app_typing in
+                        if vars |> List.for_all (fun x -> Util.for_some (fun y -> x=y) fv_prim_app_typing)
+                        then [prim_app_typing]
+                        else [] in
                     [Term.Assume(mkForall([vapp], vars,
-                                            mkEq(vapp, Term.mkApp(mk_term_projector_name d f, [xx]))), None)]
+                                            mkEq(vapp, prim_app)), Some "Projector equation");
+                     Term.Assume(mkForall(pattern, vars, mkImp(guard, prim_app_typing)), Some "Primitive projector typing")]
                 | _ -> []) in
               let vars, guards, env', decls1, _ = encode_binders None formals env in
               let guard, decls1 = match pre_opt with 
@@ -1878,9 +1886,12 @@ and encode_free_var env lid tt t_norm quals =
                                 let name_tok_corr = Term.Assume(mkForall([vtok_app], vars, mkEq(vtok_app, vapp)), None) in
                                 decls2@[vtok_decl;vtok_fresh;name_tok_corr;tok_typing], env in
                 vname_decl::tok_decl, env in
-              let ty_pred, decls3 = encode_typ_pred' None res_t env' vapp in 
+              let encoded_res_t, ty_pred, decls3 = 
+                   let res_t = Util.compress_typ res_t in 
+                   let encoded_res_t, decls = encode_typ_term res_t env' in 
+                   encoded_res_t, mk_HasTypeWithFuel None vapp encoded_res_t, decls in
               let typingAx = Term.Assume(mkForall([vapp], vars, mkImp(guard, ty_pred)), Some "free var typing") in
-              let g = decls1@decls2@decls3@typingAx::mk_disc_proj_axioms vapp vars in
+              let g = decls1@decls2@decls3@typingAx::mk_disc_proj_axioms guard encoded_res_t vapp vars in
               g, env
        
 
