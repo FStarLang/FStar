@@ -59,12 +59,13 @@ val v_of_box : #a:Type -> #ps:prins -> Box a ps -> GTot a
 
 type can_box: a:Type -> ps:prins -> Type
 
-assume Canbox_nat :   (forall ps. can_box nat ps)
-assume Canbox_bool:   (forall ps. can_box bool ps)
-assume Canbox_prin:   (forall ps. can_box prin ps)
-assume Canbox_prins:  (forall ps. can_box prins ps)
+assume Canbox_nat   : (forall ps. can_box nat ps)
+assume Canbox_int   : (forall ps. can_box int ps)
+assume Canbox_bool  : (forall ps. can_box bool ps)
+assume Canbox_prin  : (forall ps. can_box prin ps)
+assume Canbox_prins : (forall ps. can_box prins ps)
 assume Canbox_eprins: (forall ps. can_box eprins ps)
-assume Canbox_box :   (forall (a:Type) (ps':prins) (ps:prins).
+assume Canbox_box   : (forall (a:Type) (ps':prins) (ps:prins).
                        subset ps' ps ==> can_box (Box a ps') ps)
 assume Canbox_option: (forall (a:Type) ps. can_box a ps ==>
                                            can_box (option a) ps)
@@ -95,6 +96,7 @@ val w_dom: #a:Type -> w:Wire a -> GTot (ps:eprins{forall p. mem p ps <==> w_cont
 type can_wire: Type -> Type
 
 assume Canwire_nat   : can_wire nat
+assume Canwire_int   : can_wire int
 assume Canwire_bool  : can_wire bool
 assume Canwire_prin  : can_wire prin
 assume Canwire_prins : can_wire prins
@@ -223,3 +225,7 @@ val bob    : prin
 val charlie: prin
 
 assume PrinsAxiom: alice =!= bob /\ bob =!= charlie /\ charlie =!= alice
+
+(*****)
+
+val wprint: #a:Type -> x:a -> ML unit
