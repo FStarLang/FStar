@@ -31341,39 +31341,39 @@ Prims.bool))
 @x3)))))
 ;;;;;;;;;;;;;;;;Equation for fuel-instrumented recursive function: OrdMap.mem
 (assert (forall ((@u0 Fuel) (@a1 Type) (@x2 Term) (@x3 Term))
- (! (implies (and (HasKind @a1
-Kind_type)
-(HasType @x2
-@a1)
-(HasType @x3
-(Prims.list @a1)))
-(= (OrdMap.mem__2574 (SFuel @u0)
-@a1
-@x2
-@x3)
-(ite (is-Prims.Nil @x3)
-(BoxBool false)
-(ite (is-Prims.Cons @x3)
-(ite (= (Prims.op_Equality @a1
-(Prims.Cons_hd @x3)
-@x2)
-(BoxBool true))
-(BoxBool true)
-(ite (= (Prims.op_Equality @a1
-(Prims.Cons_hd @x3)
-@x2)
-(BoxBool false))
-(OrdMap.mem__2574 @u0
-@a1
-@x2
-(Prims.Cons_tl @x3))
-Term_unit))
-Term_unit))))
-  
-:pattern ((OrdMap.mem__2574 (SFuel @u0)
-@a1
-@x2
-@x3)))))
+                (! (implies (and (HasKind @a1
+                                          Kind_type)
+                                 (HasType @x2
+                                          @a1)
+                                 (HasType @x3
+                                          (Prims.list @a1)))
+                            (= (OrdMap.mem__2574 (SFuel @u0)
+                                                 @a1
+                                                 @x2
+                                                 @x3)
+                               (ite (is-Prims.Nil @x3)
+                                    (BoxBool false)
+                                    (ite (is-Prims.Cons @x3)
+                                         (ite (= (Prims.op_Equality @a1
+                                                                    (Prims.Cons_hd @x3)
+                                                                    @x2)
+                                                 (BoxBool true))
+                                              (BoxBool true)
+                                              (ite (= (Prims.op_Equality @a1
+                                                                         (Prims.Cons_hd @x3)
+                                                                         @x2)
+                                                      (BoxBool false))
+                                                   (OrdMap.mem__2574 @u0
+                                                                     @a1
+                                                                     @x2
+                                                                     (Prims.Cons_tl @x3))
+                                                   Term_unit))
+                                         Term_unit))))
+                   
+                   :pattern ((OrdMap.mem__2574 (SFuel @u0)
+                                               @a1
+                                               @x2
+                                               @x3)))))
 
 ; </end encoding OrdMap.mem>
 
@@ -31456,52 +31456,53 @@ Kind_type)
 Kind_type)))))
 ;;;;;;;;;;;;;;;;g:(k -> Tot (option v)){(forall (x). ((mem x d) = (is_Some (g x))))}
 (assert (forall ((@u0 Fuel) (@x1 Term) (@x2 Term) (@a3 Type) (@a4 Type))
- (! (iff (HasType @x1
-(Typ_refine_2593 @x2
-@a3
-@a4))
-(and (HasType @x1
-(Typ_fun_2590 @a4
-@a3))
-(forall ((@x5 Term))
- (implies (HasType @x5
-@a3)
-(Valid (Prims.b2t (Prims.op_Equality Prims.bool
-(OrdMap.mem @a3
-@x5
-@x2)
-(Prims.is_Some @a4
-(ApplyEE @x1
-@x5)))))))))
-  
-:pattern ((HasTypeFuel @u0
-@x1
-(Typ_refine_2593 @x2
-@a3
-@a4))))))
+                (! (iff (HasType @x1
+                                 (Typ_refine_2593 @x2
+                                                  @a3
+                                                  @a4))
+                        (and (HasType @x1
+                                      (Typ_fun_2590 @a4
+                                                    @a3))
+                             (forall ((@x5 Term))
+                                     (implies (HasType @x5
+                                                       @a3)
+                                              (Valid (Prims.b2t (Prims.op_Equality Prims.bool
+                                                                                   (OrdMap.mem @a3
+                                                                                               @x5
+                                                                                               @x2)
+                                                                                   (Prims.is_Some @a4
+                                                                                                  (ApplyEE @x1
+                                                                                                           @x5)))))))))
+                   
+                   :pattern ((HasTypeFuel @u0
+                                          @x1
+                                          (Typ_refine_2593 @x2
+                                                           @a3
+                                                           @a4))))))
 ;;;;;;;;;;;;;;;;abbrev. elimination
 (assert (forall ((@a0 Type) (@a1 Type) (@x2 Term) (@x3 Term))
- (! (implies (and (HasKind @a0
-Kind_type)
-(HasKind @a1
-Kind_type)
-(HasType @x2
-(OrdMap.cmp @a0))
-(HasType @x3
-(OrdMap.ordset @a0
-@x2)))
-(= (OrdMap.map_t @a0
-@a1
-@x2
-@x3)
-(Typ_refine_2593 @x3
-@a0
-@a1)))
-  
-:pattern ((OrdMap.map_t @a0
-@a1
-@x2
-@x3)))))
+                (! (implies (and (HasKind @a0
+                                          Kind_type)
+                                 (HasKind @a1
+                                          Kind_type)
+                                 (HasType @x2
+                                          (OrdMap.cmp @a0))
+                                 (HasType @x3
+                                          (OrdMap.ordset @a0
+                                                         @x2)))
+                            (= (OrdMap.map_t @a0
+                                             @a1
+                                             @x2
+                                             @x3)
+                               (Typ_refine_2593 @x3
+                                                @a0
+                                                @a1)))
+                   
+                   :pattern ((OrdMap.map_t @a0
+                                           @a1
+                                           @x2
+                                           @x3)))))
+
 ;;;;;;;;;;;;;;;;abbrev. kinding
 (assert (forall ((@a0 Type) (@a1 Type) (@x2 Term) (@x3 Term))
  (! (implies (and (HasKind @a0
@@ -33107,19 +33108,37 @@ Kind_arrow_2742)))))
 (SFuel (SFuel ZFuel))))
 (assert (= MaxIFuel
 (SFuel ZFuel)))
-;;;;;;;;;;;;;;;;query
-(assert (not (= (OrdMap.contains k___1_93
-                                 v___1_94
-                                 f___1_95
-                                 x___1_96
-                                 m___1_97)
-                (Prims.is_Some v___1_94
-                               (OrdMap.select k___1_93
-                                              v___1_94
-                                              f___1_95
-                                              x___1_96
-                                              m___1_97)))))
 
+
+; No Fuel irrelevance
+;; (assert (forall ((f Fuel) (e Term) (t Type))
+;;                 (! (= (HasTypeFuel (SFuel f) e t)
+;;                       (HasTypeFuel f e t))
+;;                       :pattern ((HasTypeFuel (SFuel f) e t)))))
+
+;;;;;;;;;;;;;;;; original query after simplification and unfolding -- does not work
+;; (assert (not (=
+;;               ;; (OrdMap.contains k___1_93
+;;               ;;                  v___1_94
+;;               ;;                  f___1_95
+;;               ;;                  x___1_96
+;;               ;;                  m___1_97)
+;;               (OrdMap.mem__2574 MaxFuel k___1_93
+;;                           x___1_96
+;;                           (OrdMap.Mk_map_d m___1_97))
+;;               (Prims.is_Some v___1_94
+;;                              ;; (OrdMap.select k___1_93
+;;                              ;;                v___1_94
+;;                              ;;                f___1_95
+;;                              ;;                x___1_96
+;;                              ;;                m___1_97)
+;;                              (ApplyEE (OrdMap.Mk_map_m m___1_97) x___1_96)
+;;                              ))))
+
+;; new query -- does not work, but surprisingly for -old either!
+(assert (not (HasType (OrdMap.Mk_map_m m___1_97)
+                 (Typ_refine_2593 (OrdMap.Mk_map_d m___1_97)
+                                  v___1_94 k___1_93))))
 
 (check-sat)
 (echo "label_2743")

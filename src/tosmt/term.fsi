@@ -154,7 +154,8 @@ val mk_PreKind: term -> term
 val mk_PreType: term -> term
 val mk_Valid: term -> term
 val mk_HasType: term -> term -> term
-val mk_IsTyped : term -> term
+val mk_HasTypeZ: term -> term -> term
+val mk_IsTyped: term -> term
 val mk_HasTypeFuel: term -> term -> term -> term
 val mk_HasTypeWithFuel: option<term> -> term -> term -> term 
 val mk_HasKind: term -> term -> term
