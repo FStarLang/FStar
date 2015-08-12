@@ -505,23 +505,31 @@ and encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) :
             | Inr {v=x; sort=t} -> 
                 let x = unmangle x in
                 let xxsym, xx, env' = gen_term_var env x in
-                let guard_x_t, decls' = encode_typ_pred' fuel_opt (norm_t env t) env xx in
+                let guard_x_t, decls' = encode_typ_pred fuel_opt (norm_t env t) env xx in //if we had polarities, we could generate a mkHasTypeZ here in the negative case
                 (xxsym, Term_sort),
                 guard_x_t,
                 env', 
                 decls',
                 Inr x in
         v::vars, g::guards, env, decls@decls', n::names) ([], [], env, [], []) in
+
     List.rev vars,
     List.rev guards,
     env, 
     decls,
     List.rev names
 
+and encode_typ_pred (fuel_opt:option<term>) (t:typ) (env:env_t) (e:term) : term * decls_t = 
+    let t = Util.compress_typ t in 
+    let t, decls = encode_typ_term t env in
+    mk_HasTypeWithFuel fuel_opt e t, decls
+
 and encode_typ_pred' (fuel_opt:option<term>) (t:typ) (env:env_t) (e:term) : term * decls_t = 
     let t = Util.compress_typ t in 
-    let t, decls = encode_typ_term t env in 
-    mk_HasTypeWithFuel fuel_opt e t, decls
+    let t, decls = encode_typ_term t env in
+    match fuel_opt with 
+        | None -> mk_HasTypeZ e t, decls
+        | Some f -> mk_HasTypeFuel f e t, decls
 
 and encode_typ_term (t:typ) (env:env_t) : (term           (* encoding of t, expects t to be in normal form already *)
                                            * decls_t)     (* top-level declarations to be emitted (for shared representations of existentially bound terms *) = 
@@ -543,7 +551,7 @@ and encode_typ_term (t:typ) (env:env_t) : (term           (* encoding of t, expe
              let f = mkFreeV fsym in
              let app = mk_ApplyE f vars in  
              let pre_opt, res_t = Tc.Util.pure_or_ghost_pre_and_post env.tcenv res in
-             let res_pred, decls' = encode_typ_pred' None res_t env' app in
+             let res_pred, decls' = encode_typ_pred None res_t env' app in
              let guards, guard_decls = match pre_opt with 
                 | None -> mk_and_l guards, decls
                 | Some pre -> 
@@ -818,7 +826,7 @@ and encode_exp (e:exp) (env:env_t) : (term
                                       let f = Term.mkApp(fsym, List.map mkFreeV cvars) in
                                       let app = mk_ApplyE f vars in
 
-                                      let f_has_t, decls'' = encode_typ_pred' None tfun env f in
+                                      let f_has_t, decls'' = encode_typ_pred None tfun env f in
                                       let typing_f = Term.Assume(Term.mkForall([f], cvars, f_has_t), 
                                                                 Some (fsym ^ " typing")) in 
                          
@@ -856,7 +864,7 @@ and encode_exp (e:exp) (env:env_t) : (term
                   let formals, rest = Util.first_N (List.length args_e) formals in
                   let subst = Util.formals_for_actuals formals args_e in
                   let ty = mk_Typ_fun(rest, c) (Some ktype) e0.pos |> Util.subst_typ subst in
-                  let has_type, decls'' = encode_typ_pred' None ty env app_tm in
+                  let has_type, decls'' = encode_typ_pred None ty env app_tm in
                   let cvars = Term.free_variables has_type in
                   let e_typing = Term.Assume(Term.mkForall([has_type], cvars, has_type), None) in
                   app_tm, decls@decls'@decls''@[e_typing]
@@ -1603,13 +1611,13 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let xvars = List.map mkFreeV vars in
         let dapp =  mkApp(ddconstrsym, xvars) in
 
-        let tok_typing, decls3 = encode_typ_pred' None t env ddtok_tm in
+        let tok_typing, decls3 = encode_typ_pred None t env ddtok_tm in
 
         let vars', guards', env'', decls_formals, _ = encode_binders (Some fuel_tm) formals env in //NS/CH: used to be s_fuel_tm
         let ty_pred', decls_pred = 
              let xvars = List.map mkFreeV vars' in
              let dapp =  mkApp(ddconstrsym, xvars) in
-             encode_typ_pred' (Some fuel_tm) t_res env'' dapp in 
+             encode_typ_pred (Some fuel_tm) t_res env'' dapp in 
         let guard' = Term.mk_and_l guards' in
         let proxy_fresh = match formals with 
             | [] -> []
@@ -1784,7 +1792,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                          let body_tm, decls2 = encode_exp body env' in
                          let eqn_g = Term.Assume(mkForall([gsapp], fuel::vars, mkImp(mk_and_l guards, mkEq(gsapp, body_tm))), Some (Util.format1 "Equation for fuel-instrumented recursive function: %s" flid.str)) in
                          let eqn_f = Term.Assume(mkForall([app], vars, mkEq(app, gmax)), Some "Correspondence of recursive function to instrumented version") in
-                         let eqn_g' = Term.Assume(mkForall([gsapp], fuel::vars, mkEq(gsapp,  Term.mkApp(g, mkFreeV fuel::vars_tm))), Some "Fuel irrelevance") in
+                         let eqn_g' = Term.Assume(mkForall([gsapp], fuel::vars, mkEq(gsapp,  Term.mkApp(g, Term.n_fuel 0::vars_tm))), Some "Fuel irrelevance") in
                          let aux_decls, g_typing = 
                             let vars, v_guards, env, binder_decls, _ = encode_binders None formals env0 in
                             let vars_tm = List.map mkFreeV vars in
@@ -1793,7 +1801,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                 let tok_app = mk_ApplyE (Term.mkFreeV (gtok, Term_sort)) (fuel::vars) in
                                 Term.Assume(mkForall([tok_app], fuel::vars, mkEq(tok_app, gapp)), Some "Fuel token correspondence") in
                             let aux_decls, typing_corr = 
-                                let g_typing, d3 = encode_typ_pred' None tres env gapp in
+                                let g_typing, d3 = encode_typ_pred None tres env gapp in
                                 d3, [Term.Assume(mkForall([gapp], fuel::vars, mkImp(Term.mk_and_l v_guards, g_typing)), None)] in
                             binder_decls@aux_decls, typing_corr@[tok_corr] in
                         binder_decls@decls2@aux_decls@[decl_g;decl_g_tok], [eqn_g;eqn_g';eqn_f]@g_typing, env0 in
@@ -1867,15 +1875,8 @@ and encode_free_var env lid tt t_norm quals =
                     let _, (xxsym, _) = Util.prefix vars in
                     let xx = mkFreeV(xxsym, Term_sort) in
                     let prim_app = Term.mkApp(mk_term_projector_name d f, [xx]) in
-                    let prim_app_typing = mk_HasTypeWithFuel None prim_app encoded_res_t in
-                    let pattern = 
-                        let fv_prim_app_typing = Term.free_variables prim_app_typing in
-                        if vars |> List.for_all (fun x -> Util.for_some (fun y -> x=y) fv_prim_app_typing)
-                        then [prim_app_typing]
-                        else [] in
                     [Term.Assume(mkForall([vapp], vars,
-                                            mkEq(vapp, prim_app)), Some "Projector equation");
-                     Term.Assume(mkForall(pattern, vars, mkImp(guard, prim_app_typing)), Some "Primitive projector typing")]
+                                            mkEq(vapp, prim_app)), Some "Projector equation")]
                 | _ -> []) in
               let vars, guards, env', decls1, _ = encode_binders None formals env in
               let guard, decls1 = match pre_opt with 
@@ -1889,8 +1890,8 @@ and encode_free_var env lid tt t_norm quals =
                 let tok_typing, decls2 = 
                     let env = {env with encode_non_total_function_typ=encode_non_total_function_typ} in
                     if not(head_normal env tt) 
-                    then encode_typ_pred' None tt env vtok_tm 
-                    else encode_typ_pred' None t_norm env vtok_tm in //NS:Unfortunately, this is duplicated work --- we effectively encode the function type twice
+                    then encode_typ_pred None tt env vtok_tm 
+                    else encode_typ_pred None t_norm env vtok_tm in //NS:Unfortunately, this is duplicated work --- we effectively encode the function type twice
                 let tok_typing = Term.Assume(tok_typing, Some "function token typing") in
                 let tok_decl, env = match formals with 
                         | [] -> decls2@[tok_typing], push_free_var env lid vname (Some <| mkFreeV(vname, Term_sort))
@@ -1903,7 +1904,7 @@ and encode_free_var env lid tt t_norm quals =
               let encoded_res_t, ty_pred, decls3 = 
                    let res_t = Util.compress_typ res_t in 
                    let encoded_res_t, decls = encode_typ_term res_t env' in 
-                   encoded_res_t, mk_HasTypeWithFuel None vapp encoded_res_t, decls in
+                   encoded_res_t, mk_HasType vapp encoded_res_t, decls in //occurs positively, so add fuel
               let typingAx = Term.Assume(mkForall([vapp], vars, mkImp(guard, ty_pred)), Some "free var typing") in
               let g = decls1@decls2@decls3@typingAx::mk_disc_proj_axioms guard encoded_res_t vapp vars in
               g, env
@@ -1921,7 +1922,7 @@ let encode_env_bindings (env:env_t) (bindings:list<Tc.Env.binding>) : (decls_t *
             let t1 = Normalize.norm_typ [Normalize.DeltaHard; Normalize.Beta; Normalize.Eta; Normalize.EtaArgs; Normalize.Simplify] env.tcenv t0 in
             if Tc.Env.debug env.tcenv <| Options.Other "Encoding"
             then (Util.fprint3 "Normalized %s : %s to %s\n" (Print.strBvd x) (Print.typ_to_string t0) (Print.typ_to_string t1));
-            let t, decls' = encode_typ_pred' None t1 env xx in
+            let t, decls' = encode_typ_pred None t1 env xx in
             let caption = 
                 if !Options.logQueries 
                 then Some (Util.format3 "%s : %s (%s)" (Print.strBvd x) (Print.typ_to_string t0) (Print.typ_to_string t1))
@@ -1964,7 +1965,7 @@ let set_env env = match !last_env with
     | [] -> failwith "Empty env stack"
     | _::tl -> last_env := env::tl
 let push_env () = match !last_env with 
-    | [] -> failwith "Empty env stack"
+    | [] -> failwith "Empty env stack" 
     | hd::tl -> 
       Term.push();
       let refs = Util.smap_copy hd.cache  in
