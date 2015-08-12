@@ -31341,39 +31341,39 @@ Prims.bool))
 @x3)))))
 ;;;;;;;;;;;;;;;;Equation for fuel-instrumented recursive function: OrdMap.mem
 (assert (forall ((@u0 Fuel) (@a1 Type) (@x2 Term) (@x3 Term))
- (! (implies (and (HasKind @a1
-Kind_type)
-(HasType @x2
-@a1)
-(HasType @x3
-(Prims.list @a1)))
-(= (OrdMap.mem__2574 (SFuel @u0)
-@a1
-@x2
-@x3)
-(ite (is-Prims.Nil @x3)
-(BoxBool false)
-(ite (is-Prims.Cons @x3)
-(ite (= (Prims.op_Equality @a1
-(Prims.Cons_hd @x3)
-@x2)
-(BoxBool true))
-(BoxBool true)
-(ite (= (Prims.op_Equality @a1
-(Prims.Cons_hd @x3)
-@x2)
-(BoxBool false))
-(OrdMap.mem__2574 @u0
-@a1
-@x2
-(Prims.Cons_tl @x3))
-Term_unit))
-Term_unit))))
-  
-:pattern ((OrdMap.mem__2574 (SFuel @u0)
-@a1
-@x2
-@x3)))))
+                (! (implies (and (HasKind @a1
+                                          Kind_type)
+                                 (HasType @x2
+                                          @a1)
+                                 (HasType @x3
+                                          (Prims.list @a1)))
+                            (= (OrdMap.mem__2574 (SFuel @u0)
+                                                 @a1
+                                                 @x2
+                                                 @x3)
+                               (ite (is-Prims.Nil @x3)
+                                    (BoxBool false)
+                                    (ite (is-Prims.Cons @x3)
+                                         (ite (= (Prims.op_Equality @a1
+                                                                    (Prims.Cons_hd @x3)
+                                                                    @x2)
+                                                 (BoxBool true))
+                                              (BoxBool true)
+                                              (ite (= (Prims.op_Equality @a1
+                                                                         (Prims.Cons_hd @x3)
+                                                                         @x2)
+                                                      (BoxBool false))
+                                                   (OrdMap.mem__2574 @u0
+                                                                     @a1
+                                                                     @x2
+                                                                     (Prims.Cons_tl @x3))
+                                                   Term_unit))
+                                         Term_unit))))
+                   
+                   :pattern ((OrdMap.mem__2574 (SFuel @u0)
+                                               @a1
+                                               @x2
+                                               @x3)))))
 
 ; </end encoding OrdMap.mem>
 
@@ -33107,18 +33107,32 @@ Kind_arrow_2742)))))
 (SFuel (SFuel ZFuel))))
 (assert (= MaxIFuel
 (SFuel ZFuel)))
+
+
+; No Fuel irrelevance
+;; (assert (forall ((f Fuel) (e Term) (t Type))
+;;                 (! (= (HasTypeFuel (SFuel f) e t)
+;;                       (HasTypeFuel f e t))
+;;                       :pattern ((HasTypeFuel (SFuel f) e t)))))
+
 ;;;;;;;;;;;;;;;;query
-(assert (not (= (OrdMap.contains k___1_93
-                                 v___1_94
-                                 f___1_95
-                                 x___1_96
-                                 m___1_97)
-                (Prims.is_Some v___1_94
-                               (OrdMap.select k___1_93
-                                              v___1_94
-                                              f___1_95
-                                              x___1_96
-                                              m___1_97)))))
+(assert (not (=
+              ;; (OrdMap.contains k___1_93
+              ;;                  v___1_94
+              ;;                  f___1_95
+              ;;                  x___1_96
+              ;;                  m___1_97)
+              (OrdMap.mem__2574 MaxFuel k___1_93
+                          x___1_96
+                          (OrdMap.Mk_map_d m___1_97))
+              (Prims.is_Some v___1_94
+                             ;; (OrdMap.select k___1_93
+                             ;;                v___1_94
+                             ;;                f___1_95
+                             ;;                x___1_96
+                             ;;                m___1_97)
+                             (ApplyEE (OrdMap.Mk_map_m m___1_97) x___1_96)
+                             ))))
 
 
 (check-sat)

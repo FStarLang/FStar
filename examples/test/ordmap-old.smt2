@@ -31733,18 +31733,23 @@ Kind_arrow_2742)))))
 (SFuel ZFuel)))
 ;;;;;;;;;;;;;;;;query
 
-(assert (not (= (OrdMap.contains k___1_93
-                                 v___1_94
-                                 f___1_95
-                                 x___1_96
-                                 m___1_97)
-                (Prims.is_Some v___1_94
-                               (OrdMap.select k___1_93
-                                              v___1_94
-                                              f___1_95
-                                              x___1_96
-                                              m___1_97)))))
-
+(assert (not (=
+              ;; (OrdMap.contains k___1_93
+              ;;                  v___1_94
+              ;;                  f___1_95
+              ;;                  x___1_96
+              ;;                  m___1_97)
+              (OrdMap.mem__2574 MaxFuel k___1_93
+                          x___1_96
+                          (OrdMap.Mk_map_d m___1_97))
+              (Prims.is_Some v___1_94
+                             ;; (OrdMap.select k___1_93
+                             ;;                v___1_94
+                             ;;                f___1_95
+                             ;;                x___1_96
+                             ;;                m___1_97)
+                             (ApplyEE (OrdMap.Mk_map_m m___1_97) x___1_96)
+                             ))))
 
 (check-sat)
 (echo "label_2743")
