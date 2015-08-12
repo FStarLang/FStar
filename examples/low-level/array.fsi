@@ -8,10 +8,11 @@
 
 module SSTArray
 open SSTCombinators
-open StackAndHeap  open Lref  open Located
+open StackAndHeap
 open SST
 open MachineWord
 open Heap
+open Lref  open Located
 open Set
 open Stack
 open Seq
@@ -28,12 +29,12 @@ val asRef : #a:Type  -> va:(sstarray a) -> Tot (erased (lref (seq a)))
 
 
 val length: #a:Type -> x:sstarray a -> PureMem nat
-  (requires (fun h -> refExistsInMem (reveal (asRef x)) h))
-  (ensures  (fun h y ->  (refExistsInMem (reveal (asRef x)) h /\ y= ((Seq.length) ((loopkupRef) (reveal (asRef x)) h)))))
+  (requires (fun h -> liveRef (reveal (asRef x)) h))
+  (ensures  (fun h y ->  (liveRef (reveal (asRef x)) h /\ y= ((Seq.length) ((loopkupRef) (reveal (asRef x)) h)))))
 
 (*using the 2 definitions below causes a strange error in readIndex amd updIndex*)
 (*val arrayExistsInMem : #a:Type -> (sstarray a) -> smem -> GTot bool
-let arrayExistsInMem v sm = refExistsInMem (reveal (asRef v)) sm
+let arrayExistsInMem v sm = liveRef (reveal (asRef v)) sm
 
 val lookup : #a:Type  -> va:(sstarray a) -> m:smem{(arrayExistsInMem va m)} -> GTot ((vector a (length va)))
 let lookup 'a va m = (admit ())*)
@@ -43,19 +44,19 @@ let lookup 'a va m = (admit ())*)
 val readIndex :  #a:Type  -> r:(sstarray a)
   -> index:nat
   -> PureMem a
-        (requires (fun m ->  (refExistsInMem (reveal (asRef r)) m) /\ index < Seq.length (loopkupRef (reveal (asRef r)) m) ) )
+        (requires (fun m ->  (liveRef (reveal (asRef r)) m) /\ index < Seq.length (loopkupRef (reveal (asRef r)) m) ) )
         (ensures (fun m v->
-          (refExistsInMem (reveal (asRef r)) m) /\ index < Seq.length (loopkupRef (reveal (asRef r)) m)
+          (liveRef (reveal (asRef r)) m) /\ index < Seq.length (loopkupRef (reveal (asRef r)) m)
           /\ v = Seq.index (loopkupRef (reveal (asRef r)) m) index ))
 
 val writeIndex :  #a:Type -> r:((sstarray a))
   -> index:nat -> newV:a ->
  Mem unit
-    (requires (fun m ->  (refExistsInMem (reveal (asRef r)) m) /\ index < Seq.length (loopkupRef (reveal (asRef r)) m) ) )
+    (requires (fun m ->  (liveRef (reveal (asRef r)) m) /\ index < Seq.length (loopkupRef (reveal (asRef r)) m) ) )
     (ensures ( fun m0 _ m1 ->
-        (refExistsInMem (reveal (asRef r)) m0) /\ index < Seq.length (loopkupRef (reveal (asRef r)) m0) /\
+        (liveRef (reveal (asRef r)) m0) /\ index < Seq.length (loopkupRef (reveal (asRef r)) m0) /\
           (m1 = (writeMemAux (reveal (asRef r)) m0 (Seq.upd (loopkupRef (reveal (asRef r)) m0) index newV)))))
-      (gonly (reveal (asRef r)))
+      (only (reveal (asRef r)))
 
 (*create an sstarray on stack*)
 val screateSeq :  #a:Type -> init:(seq a)
@@ -100,5 +101,5 @@ val hcreate :  #a:Type -> len:nat -> init:a
    For short arrays, such as the MD5 checksum (4 words), it might not be too inefficient*)
 val to_seq :  #a:Type  -> r:(sstarray a)
   -> PureMem (seq a)
-        (requires (fun m -> b2t (refExistsInMem (reveal (asRef r)) m)))
-        (ensures (fun m v-> (refExistsInMem (reveal (asRef r)) m) /\ v = (loopkupRef (reveal (asRef r)) m)))
+        (requires (fun m -> b2t (liveRef (reveal (asRef r)) m)))
+        (ensures (fun m v-> (liveRef (reveal (asRef r)) m) /\ v = (loopkupRef (reveal (asRef r)) m)))
