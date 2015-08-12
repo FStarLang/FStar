@@ -33116,25 +33116,29 @@ Kind_arrow_2742)))))
 ;;                       (HasTypeFuel f e t))
 ;;                       :pattern ((HasTypeFuel (SFuel f) e t)))))
 
-;;;;;;;;;;;;;;;;query
-(assert (not (=
-              ;; (OrdMap.contains k___1_93
-              ;;                  v___1_94
-              ;;                  f___1_95
-              ;;                  x___1_96
-              ;;                  m___1_97)
-              (OrdMap.mem__2574 MaxFuel k___1_93
-                          x___1_96
-                          (OrdMap.Mk_map_d m___1_97))
-              (Prims.is_Some v___1_94
-                             ;; (OrdMap.select k___1_93
-                             ;;                v___1_94
-                             ;;                f___1_95
-                             ;;                x___1_96
-                             ;;                m___1_97)
-                             (ApplyEE (OrdMap.Mk_map_m m___1_97) x___1_96)
-                             ))))
+;;;;;;;;;;;;;;;; original query after simplification and unfolding -- does not work
+;; (assert (not (=
+;;               ;; (OrdMap.contains k___1_93
+;;               ;;                  v___1_94
+;;               ;;                  f___1_95
+;;               ;;                  x___1_96
+;;               ;;                  m___1_97)
+;;               (OrdMap.mem__2574 MaxFuel k___1_93
+;;                           x___1_96
+;;                           (OrdMap.Mk_map_d m___1_97))
+;;               (Prims.is_Some v___1_94
+;;                              ;; (OrdMap.select k___1_93
+;;                              ;;                v___1_94
+;;                              ;;                f___1_95
+;;                              ;;                x___1_96
+;;                              ;;                m___1_97)
+;;                              (ApplyEE (OrdMap.Mk_map_m m___1_97) x___1_96)
+;;                              ))))
 
+;; new query -- does not work, but surprisingly for -old either!
+(assert (not (HasType (OrdMap.Mk_map_m m___1_97)
+                 (Typ_refine_2593 (OrdMap.Mk_map_d m___1_97)
+                                  v___1_94 k___1_93))))
 
 (check-sat)
 (echo "label_2743")
