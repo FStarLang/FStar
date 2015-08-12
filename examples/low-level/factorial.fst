@@ -22,17 +22,17 @@ match n with
 
 (* val factorialGuardLC :  n:nat -> li:(lref nat)  -> smem -> type *)
 type factorialGuardLC (n:nat) (li : lref nat) (m:smem) =
-  (refExistsInMem li m) && (not ((loopkupRef li m) = n))
+  (liveRef li m) && (not ((loopkupRef li m) = n))
 
 val factorialGuard :  n:nat -> li:(lref nat)  -> unit
-  -> whileGuard (fun m -> b2t (refExistsInMem li m))
+  -> whileGuard (fun m -> b2t (liveRef li m))
                 (factorialGuardLC n li)
 let factorialGuard n li u = not (memread li = n)
 (* the guard of a while loop is not supposed to change the memory*)
 
 
 type  loopInv (li : lref nat) (res : lref nat) (m:smem) =
-  refExistsInMem li m /\ refExistsInMem res m
+  liveRef li m /\ liveRef res m
     /\ (loopkupRef res m = factorial (loopkupRef li m))
     /\ (~ (li = res))
 
@@ -48,7 +48,7 @@ let factorialLoopBody (n:nat) (li:(lref nat)) (res:(lref nat)) u =
   let resv = memread res in
   memwrite li (liv + 1);
   memwrite res ((liv+1) * resv)
- (*  (gunionUnion li res)*)
+ (*  (eunionUnion li res)*)
 val factorialLoop : n:nat -> li:(lref nat) -> res:(lref nat)
   -> Mem unit (fun m -> mreads li 0 m /\ mreads res 1 m  /\ ~(li=res))
               (fun m0 _ m1 -> mreads res (factorial n) m1)

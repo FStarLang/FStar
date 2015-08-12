@@ -26,7 +26,7 @@ let rec wfold ps w f x =
   if ps = empty then x
   else
     let p = choose ps in
-    let y = projwire_s w p in
+    let y = projwire_s p w in
     wfold (remove p ps) w f (f x p y)
 
 type waps_pre (#a:Type) (#b:Type) (m:mode) (ps:eprins) (w:Wire a) =
@@ -42,7 +42,7 @@ val waps: #a:Type -> #b:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> b -> Ty
 let rec waps ps w f =
   let p = choose ps in
   let ps' = remove p ps in
-  let y = projwire_s w p in
+  let y = projwire_s p w in
   let wp = mkwire_s (singleton p) (f p y) in
   if ps' = empty then wp
   else
@@ -64,7 +64,7 @@ val wapp: #a:Type -> #b:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> b -> Ty
 let rec wapp 'a 'b 'req_f 'ens_f ps w f =
   let g: p:prin{mem p ps} -> unit -> Wys 'b (fun m0 -> m0 = Mode Par (singleton p) /\ 'req_f m0) (fun m0 r -> True) =
     fun p _ ->
-      let x = projwire_p w p in
+      let x = projwire_p p w in
       f p x
   in
   let p = choose ps in
