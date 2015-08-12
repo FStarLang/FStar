@@ -116,8 +116,9 @@ let join f f' = match f, f' with
 
 let join_l fs = List.fold_left join E_PURE fs
 
-let extract_pat (g:env) p : (env * list<mlpattern>) = 
-    let rec extract_pat disj imp g p = match p.v with
+let extract_pat (g:env) p : (env * list<mlpattern>) =
+(*what does disj stand for?*) 
+    let rec extract_pat (disj : bool) (imp : bool) g p = match p.v with
       | Pat_disj [] -> failwith "Impossible"
 
       | Pat_disj (p::pats)      ->
@@ -128,11 +129,15 @@ let extract_pat (g:env) p : (env * list<mlpattern>) =
         g, [MLP_Const (mlconst_of_const s)]
 
       | Pat_cons (f, q, pats) -> 
-        let d = match Env.lookup_fv g f with 
-            | MLE_Name n, _ -> n
+        let d,tys = match Env.lookup_fv g f with 
+            | MLE_Name n, ttys -> n, ttys
             | _ -> failwith "Expected a constructor" in
-        let g, pats = Util.fold_map (fun g (p, imp) -> extract_pat disj imp g p) g pats in
-        g, [Util.resugar_pat q <| MLP_CTor (d, List.flatten pats)]
+        let nTyVars = List.length (fst tys) in
+        let tyVarPats, restPats =  Util.first_N nTyVars pats in
+        let g, tyMLPats = Util.fold_map (fun g (p, imp) -> extract_pat disj true g p) g tyVarPats in
+        let g, restMLPats = Util.fold_map (fun g (p, imp) -> extract_pat disj false g p) g restPats in
+        let mlPats = List.append tyMLPats  restMLPats in
+        g, [Util.resugar_pat q <| MLP_CTor (d, List.flatten mlPats)]
 
       | Pat_var x ->
         let mlty = translate_typ g x.sort in 
