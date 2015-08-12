@@ -1,6 +1,12 @@
+type heap = unit
 
 type aref =
 | Ref of unit * Obj.t ref
+
+type 'a ref43584385 = 'a ref
+
+type 'a ref = 'a ref43584385
+
 
 let is_Ref = (fun ( _discr_ ) -> (match (_discr_) with
 | Ref (_) -> begin
@@ -10,24 +16,20 @@ end
 false
 end))
 
-let ___Ref___r = (fun ( projectee ) -> (match (projectee) with
-| Ref (_4_4) -> begin
-(Obj.magic _4_4)
-end))
 
-let sel = (fun ( _ ) ( _ ) -> (Support.All.failwith "Not yet implemented:Heap.sel"))
+let sel = (fun ( _ ) ( _ ) -> (Support.All.failwith "Not yet implemented:sel"))
 
-let upd = (fun ( _ ) ( _ ) ( _ ) -> (Support.All.failwith "Not yet implemented:Heap.upd"))
+let upd = (fun ( _ ) ( _ ) ( _ ) -> (Support.All.failwith "Not yet implemented:upd"))
 
-let emp = (Support.All.failwith "Not yet implemented:Heap.emp")
+let emp = ()
 
-let contains = (fun ( _ ) ( _ ) -> (Support.All.failwith "Not yet implemented:Heap.contains"))
+let contains = (fun ( _ ) ( _ ) -> (Support.All.failwith "Not yet implemented:contains"))
 
-let equal = (fun ( _ ) ( _ ) -> (Support.All.failwith "Not yet implemented:Heap.equal"))
+let equal = (fun ( _ ) ( _ ) -> (Support.All.failwith "Not yet implemented:equal"))
 
-let restrict = (fun ( _ ) ( _ ) -> (Support.All.failwith "Not yet implemented:Heap.restrict"))
+let restrict = (fun ( _ ) ( _ ) -> (Support.All.failwith "Not yet implemented:restrict"))
 
-let concat = (fun ( _ ) ( _ ) -> (Support.All.failwith "Not yet implemented:Heap.concat"))
+let concat = (fun ( _ ) ( _ ) -> (Support.All.failwith "Not yet implemented:concat"))
 
 type (' r, ' p, ' h) l__On =
 ' p
