@@ -17,7 +17,7 @@ let rec sorted (#a:Type) f l = match l with
 
 type ordset (a:Type) (f:cmp a) = l:(list a){sorted f l}
 
-val mem: 'a -> list 'a -> Tot bool //x:'a -> l:list 'a -> b:bool{b==true <==> In x l}
+val mem: 'a -> list 'a -> Tot bool
 let rec mem x = function
   | [] -> false
   | hd::tl -> if hd = x then true else mem x tl
@@ -41,3 +41,10 @@ val sel_contains: #k:Type -> #v:Type -> #f:cmp k -> x:k -> m:ordmap k v f
                (ensures (contains #k #v #f x m = is_Some (select #k #v #f x m)))
 #reset-options
 let sel_contains (#k:Type) (#v:Type) #f x m = ()
+(* intuitive proof:
+   - contains #k #v #f x m = mem x (Mk_map.d m)
+   - is_Some (select #k #v #f x m) = is_Some ((Mk_map.m m) x)
+   - by map_t type: forall x. (mem x d = is_Some (g x)))
+
+ *)
+

@@ -31456,52 +31456,53 @@ Kind_type)
 Kind_type)))))
 ;;;;;;;;;;;;;;;;g:(k -> Tot (option v)){(forall (x). ((mem x d) = (is_Some (g x))))}
 (assert (forall ((@u0 Fuel) (@x1 Term) (@x2 Term) (@a3 Type) (@a4 Type))
- (! (iff (HasType @x1
-(Typ_refine_2593 @x2
-@a3
-@a4))
-(and (HasType @x1
-(Typ_fun_2590 @a4
-@a3))
-(forall ((@x5 Term))
- (implies (HasType @x5
-@a3)
-(Valid (Prims.b2t (Prims.op_Equality Prims.bool
-(OrdMap.mem @a3
-@x5
-@x2)
-(Prims.is_Some @a4
-(ApplyEE @x1
-@x5)))))))))
-  
-:pattern ((HasTypeFuel @u0
-@x1
-(Typ_refine_2593 @x2
-@a3
-@a4))))))
+                (! (iff (HasType @x1
+                                 (Typ_refine_2593 @x2
+                                                  @a3
+                                                  @a4))
+                        (and (HasType @x1
+                                      (Typ_fun_2590 @a4
+                                                    @a3))
+                             (forall ((@x5 Term))
+                                     (implies (HasType @x5
+                                                       @a3)
+                                              (Valid (Prims.b2t (Prims.op_Equality Prims.bool
+                                                                                   (OrdMap.mem @a3
+                                                                                               @x5
+                                                                                               @x2)
+                                                                                   (Prims.is_Some @a4
+                                                                                                  (ApplyEE @x1
+                                                                                                           @x5)))))))))
+                   
+                   :pattern ((HasTypeFuel @u0
+                                          @x1
+                                          (Typ_refine_2593 @x2
+                                                           @a3
+                                                           @a4))))))
 ;;;;;;;;;;;;;;;;abbrev. elimination
 (assert (forall ((@a0 Type) (@a1 Type) (@x2 Term) (@x3 Term))
- (! (implies (and (HasKind @a0
-Kind_type)
-(HasKind @a1
-Kind_type)
-(HasType @x2
-(OrdMap.cmp @a0))
-(HasType @x3
-(OrdMap.ordset @a0
-@x2)))
-(= (OrdMap.map_t @a0
-@a1
-@x2
-@x3)
-(Typ_refine_2593 @x3
-@a0
-@a1)))
-  
-:pattern ((OrdMap.map_t @a0
-@a1
-@x2
-@x3)))))
+                (! (implies (and (HasKind @a0
+                                          Kind_type)
+                                 (HasKind @a1
+                                          Kind_type)
+                                 (HasType @x2
+                                          (OrdMap.cmp @a0))
+                                 (HasType @x3
+                                          (OrdMap.ordset @a0
+                                                         @x2)))
+                            (= (OrdMap.map_t @a0
+                                             @a1
+                                             @x2
+                                             @x3)
+                               (Typ_refine_2593 @x3
+                                                @a0
+                                                @a1)))
+                   
+                   :pattern ((OrdMap.map_t @a0
+                                           @a1
+                                           @x2
+                                           @x3)))))
+
 ;;;;;;;;;;;;;;;;abbrev. kinding
 (assert (forall ((@a0 Type) (@a1 Type) (@x2 Term) (@x3 Term))
  (! (implies (and (HasKind @a0
