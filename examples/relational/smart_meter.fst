@@ -1,97 +1,118 @@
 (*--build-config
     options:--admit_fsi Set;
     variables:LIB=../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/st2.fst $LIB/all.fst $LIB/bytes.fst $LIB/list.fst 
+    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/st2.fst $LIB/all.fst $LIB/bytes.fst $LIB/list.fst
 
   --*)
 
-module SmartMeter 
+module SmartMeter
 open Bytes
 open List
 
-let left = fst 
-let right = snd
-let twice x = x, x
-type double (t:Type) = t * t
-type eq (t:Type) = p:(double t){left p = right p}
 
-let add_pair (a,b) (c,d) = a+c, b+d
-let mul_pair (a,b) (c,d) = a*c, b*d
-val tail_pair: #a:Type -> l:double (list a){is_Cons (left l) /\ is_Cons (right l)}-> Tot (double (list a))
-let tail_pair (_::xs, _::ys) = xs, ys
-let cons_pair (x,y) (xs,ys) = x::xs, y::ys
-let pair_pair (x,y) (x',y') = (x,x'),(y,y')
+type rel (a:Type) (b:Type) : Type =
+  | R : l:a -> r:b -> rel a b
+
+let twice x = R x  x
+type double (t:Type) = rel t  t
+type eq (t:Type) = p:(double t){R.l p = R.r p}
+
+let add_rel (R a b) (R c d) = R (a+c) (b+d)
+let mul_rel (R a b) (R c d) = R (a*c) (b*d)
+val tail_rel: #a:Type -> l:double (list a){is_Cons (R.l l) /\ is_Cons (R.r l)}-> Tot (double (list a))
+let tail_rel (R (_::xs) (_::ys)) = R xs ys
+let cons_rel (R x y) (R xs ys) = R (x::xs)  (y::ys)
+let pair_rel (R x y) (R x' y') = R (x,x') (y,y')
+let fst_rel (R (x, y) (x', y')) = R x x'
+let snd_rel (R (x, y) (x', y')) = R y y'
 
 
 
 type elt (* elements of the group *)
-assume logic val idelt: elt 
+assume logic val idelt: elt
 
 (* Treating exponents as int is dodgy; they are integers modulo. *)
 type tp (* trapdoor (private param) *)
 type public_param (* public param: p, g, h *)
-type pparam = eq public_param 
-assume logic val trap: public_param -> int (* such that g = h^(trap pp) *) 
+type pparam = eq public_param
+assume logic val trap: public_param -> int (* such that g = h^(trap pp) *)
 
 type text = int (* exponents for values *)
 type opng = int (* exponents for openings *)
 
 type openingP (lx:text) (rx:text) (lo:opng) (ro:opng) = lx + lo = rx + ro
-type opening (x:double text) = o:(double opng){ openingP (left x) (right x) (left o) (right o) }
+type opening (x:double text) = o:(double opng){ openingP (R.l x) (R.r x) (R.l o) (R.r o) }
 
 type openingsP (ll:list (text * opng)) (lr:list (text * opng))
-type openings  = os:(double (list (text *opng))){openingsP (left os) (right os) /\
-                                                 length (left  os) = length (right os)}
+type openings  = os:(double (list (text *opng))){openingsP (R.l os) (R.r os) /\
+                                                 length (R.l os) = length (R.r os)}
 assume Openings_nil : (openingsP [] [])
 assume Openings_cons : (forall lx rx lo ro lrest rrest.
-                            (openingP lx rx lo ro /\ openingsP lrest rrest 
+                            (openingP lx rx lo ro /\ openingsP lrest rrest
                             <==> openingsP ((lx,lo)::lrest) ((rx,ro)::rrest)))
 
 val fsts: #a:Type -> #b:Type -> i:list (a * b) -> Tot (o:(list a){length i = length o})
-let rec fsts l = match l with 
+let rec fsts l = match l with
   | [] -> []
-  | (a,b)::ls -> a :: fsts ls 
+  | (a,b)::ls -> a :: fsts ls
 
-let fsts_pair (ll, lr) = fsts ll, fsts lr
+let fsts_rel (R ll lr) = R (fsts ll) (fsts lr)
 
 val scalar_product :l1:list int -> l2:list int{length l1 = length l2} -> Tot int
 let rec scalar_product l1 l2 = match l1, l2 with
   | [], [] -> 1
   | x::xs, y::ys -> x*y + scalar_product xs ys
 
+val scalar_product_rel : l1:double (list int)
+                         -> l2:double (list int){length (R.l l1) = length (R.l l2)
+                                                 /\ length (R.r l1) = length (R.r l2)}
+                         -> Tot (double int)
+let scalar_product_rel (R ll1 rl1) (R ll2 rl2) = R (scalar_product ll1 ll2) (scalar_product rl1 rl2)
+
 assume val commitP: double public_param -> double text -> double opng -> Tot (double elt)
-assume val commit: pp:pparam -> x:double text 
-                   -> p:(double opng * eq elt){openingP (left x) (right x) (left(fst p)) (right(fst p)) 
+assume val commit: pp:pparam -> x:double text
+                   -> p:(double opng * eq elt){openingP (R.l x) (R.r x) (R.l(fst p)) (R.r(fst p))
                                             /\ commitP pp x (fst p) = snd p}
 
-assume val verify: pp:pparam -> x:double text -> r:double opng -> c:double elt 
-                   -> b:(eq bool){fst b ==> c = commitP pp x r}
+assume val verify: pp:pparam -> x:double text -> r:double opng -> c:double elt
+                   -> b:(eq bool){R.l b ==> c = commitP pp x r}
 
 
-assume Commit_injective : (forall pp x0 x1 r0 r1. (commitP pp x0 r0 = commitP pp x1 r1) ==> x0 = x1)
+assume CommitP_injective : (forall pp x0 x1 r0 r1. (commitP pp x0 r0 = commitP pp x1 r1) ==> x0 = x1)
 
 
 
-assume val mult: c0:double elt -> c1: double elt 
+assume val mult: c0:double elt -> c1: double elt
                  -> c:double elt{forall pp x0 x1 r0 r1.
-                          (c0 = commitP pp x0 r0 /\ c1=commitP pp x1 r1) ==> 
-                          c=commitP pp (add_pair x0 x1) (add_pair r0 r1)}
+                          (c0 = commitP pp x0 r0 /\ c1=commitP pp x1 r1) ==>
+                          c=commitP pp (add_rel x0 x1) (add_rel r0 r1)}
 
 assume val exp: c0:double elt -> z:double int
                  -> c:double elt{forall pp x0 r0.
-                          c0 = commitP pp x0 r0 ==> 
-                          c=commitP pp (mul_pair x0 z) (mul_pair r0 z)}
-                  
+                          c0 = commitP pp x0 r0 ==>
+                          c=commitP pp (mul_rel x0 z) (mul_rel r0 z)}
+
 assume val commitsP: pp:double (public_param) -> double (list(text * opng)) -> Tot (double (list elt))
 assume val commitsP_nil: pp:pparam -> xrs:double(list (text * opng)) -> Lemma (commitsP pp xrs = twice [] <==> xrs = twice [])
-assume val commitsP_cons: pp:pparam -> xrs:double (list(text * opng)) 
-                          -> hd:double(elt) -> tl:(double(list(elt))) 
-                          -> Lemma((commitsP pp xrs = cons_pair hd tl) <==> 
-                                     (exists x r xrstl. (xrs = cons_pair (pair_pair x r) xrstl
+assume val commitsP_cons: pp:pparam -> xrs:double (list(text * opng))
+                          -> hd:double(elt) -> tl:(double(list(elt)))
+                          -> Lemma((commitsP pp xrs = cons_rel hd tl) <==>
+                                     (exists x r xrstl. (xrs = cons_rel (pair_rel x r) xrstl
                                                        /\ hd = commitP pp x r
                                                        /\ tl = commitsP pp xrstl)))
-                                                              
 
+type commitments (p:(double (list text) -> Type)) (pp:double (public_param)) =
+           cs:double (list elt){forall x xs. p (cons_rel x xs) ==> p xs
+                                /\ (exists xrs. p (fsts_rel xrs) /\ cs=commitsP pp xrs)}
+(* TODO *)
+assume val scalar_exp : p:(double (list text) -> Type)
+                        -> pp:pparam
+                        -> commitments p pp
+                        -> ps:double (list int)
+                        -> c:double elt{exists xs r. p xs
+                                        /\ length (R.l xs) = length (R.l ps)
+                                        /\ length (R.r xs) = length (R.r ps)
+                                        /\ c = commitP pp (scalar_product_rel xs ps) r}
 
 
 
@@ -103,13 +124,13 @@ let thd3=MkTuple3._3
 
 assume logic type readings (l:double (list int))
 assume logic type rates (l:double (list int))
-assume ReadingsTail : (forall l. is_Cons (left l) /\ is_Cons (right l) 
-                                  ==> readings (tail_pair l))
-assume RatesTail : (forall l. is_Cons (left l) /\ is_Cons (right l) 
-                                  ==> rates (tail_pair l))
+assume ReadingsTail : (forall l. is_Cons (R.l l) /\ is_Cons (R.r l)
+                                  ==> readings (tail_rel l))
+assume RatesTail : (forall l. is_Cons (R.l l) /\ is_Cons (R.r l)
+                                  ==> rates (tail_rel l))
 
-type signed (pp:pparam) (cs:double (list elt)) = 
-              (exists xrs. readings (fsts_pair xrs) /\ cs = commitsP pp xrs)
+type signed (pp:pparam) (cs:double (list elt)) =
+              (exists xrs. readings (fsts_rel xrs) /\ cs = commitsP pp xrs)
 
 type dsig = bytes
 
@@ -118,53 +139,82 @@ assume val sign: pp:pparam -> cs:eq(list elt){signed pp cs} -> eq dsig
 assume val verify_meter_signature: pp:pparam
   -> cs:eq (list elt)
   -> eq dsig
-  -> b:eq bool{left  b ==> signed pp cs }
-
+  -> b:eq bool{R.l b ==> signed pp cs }
 
 
 (* METER *)
-
 val commits: pp:pparam
-  -> xs:double (list int){readings xs /\ length (left xs) = length (right xs)}
+  -> xs:double (list int){readings xs /\ length (R.l xs) = length (R.r xs)}
   -> r:(openings * eq (list elt))
-     {xs = fsts_pair (fst r)
+     {xs = fsts_rel (fst r)
    /\ commitsP pp (fst r) = snd r}
-let rec commits pp xs = match left xs, right xs with 
-  | [], [] -> commitsP_nil pp (twice []); ([],[]),([],[]) 
-  | lx::lxs, rx::rxs -> let xrstl, cs = commits pp (lxs, rxs) in 
-                        let r , c = commit pp (lx, rx) in 
-                        let xrshd =  ((lx, left  r), (rx, right r)) in
-                        let xrs = cons_pair xrshd xrstl in
-                        cut(b2t(xrs = cons_pair (pair_pair (lx,rx) r) xrstl));
-                        cut(exists x r. xrs  = cons_pair (pair_pair x r) xrstl);
-                        commitsP_cons pp xrs c cs;
-                        xrs, (cons_pair c cs)
+let rec commits pp xs = match xs with
+  | R [] [] -> commitsP_nil pp (twice []); (twice []),(twice [])
+  | R (lx::lxs) (rx::rxs) -> let x = R lx rx in
+                             let xs = R lxs rxs in
+                             let xrstl, cs = commits pp xs in
+                             let r,  c = commit pp x in
+                             let xrshd =  pair_rel x r in
+                             let xrs = cons_rel xrshd xrstl in
+                             cut(b2t(xrs = cons_rel (pair_rel x r) xrstl));
+                             cut(exists x r. xrs  = cons_rel (pair_rel x r) xrstl);
+                             commitsP_cons pp xrs c cs;
+                             xrs, (cons_rel c cs)
 
-val meter: pp:pparam 
-          -> xs:double(list int){readings xs /\ length (left xs) = length (right xs)}
+val meter: pp:pparam
+          -> xs:double(list int){readings xs /\ length (R.l xs) = length (R.r xs)}
           -> r:(openings * eq(list elt) * eq dsig)
-            {xs = fsts_pair (fst3 r)
+            {xs = fsts_rel (fst3 r)
           /\ commitsP pp (fst3 r) = snd3 r}
-let meter pp xs = 
-          let xrs,cs = commits pp xs in 
-          assume (signed pp cs);
+let meter pp xs =
+          let xrs,cs = commits pp xs in
           (xrs, cs, sign pp cs)
 
 (* USER *)
-(*
-val sums: xrs: openings -> ps:eq(list int){length(left  ps) = length (left  xrs) /\ 
-                                           length(right ps) = length (right xrs)} -> 
-                          (x:(double int){left  x=scalar_product (fsts (left  xrs)) (left  ps) /\
-                                          right x=scalar_product (fsts (right xrs)) (right ps)}
+val sums: xrs: openings -> ps:eq(list int){length(R.l ps) = length (R.l xrs) /\
+                                           length(R.r ps) = length (R.r xrs)} ->
+                          (x:(double int){R.l x=scalar_product (fsts (R.l xrs)) (R.l ps) /\
+                                          R.r x=scalar_product (fsts (R.r xrs)) (R.r ps)}
                                           & opening x)
 let rec sums xrs ps = match xrs, ps with
-  | (lxr::lxrs,rxr::rxrs), (lp::lps,rp::rps) -> 
-      let (lx, rx), (lr, rr) = lxr, rxr in
-      let (| (lx0, rx0), (lr0, rr0) |) = sums (lxrs, rxrs) (lps, rps) in 
-      assert(openingP  lx rx lr rr);
-      assert(lx0 + lr0 = rx0 + rr0);
-      assert(lx0 + lx * lp + lr0 + lr * lp = rx0 + rx * rp + rr0 +rr * rp);
-(*       (| (lx0 + lx*lp, rx0 + rx*rp), (lr0 + lr * lp, rr0 + rr * rp) |) *)
-      admit ()
-  | (([],[]),([],[])) -> (| (twice 1),(twice 0) |)
-*)
+  | R (lxr::lxrs) (rxr::rxrs), R (lp::lps) (rp::rps) ->
+      (* move from single sided values to relational values again *)
+      let xr = R lxr rxr in
+      let xrs = R lxrs rxrs in
+      let p = R lp rp in
+      let ps = R lps rps in
+
+      let x = fst_rel xr in
+      let r = snd_rel xr in
+      let (| x0, r0 |) = sums xrs ps in
+      (| add_rel x0 (mul_rel x p), add_rel r0 (mul_rel r p) |)
+  | R [] [], R [] [] -> (| (twice 1),(twice 0) |)
+
+val make_payment: pp:pparam -> xrs:openings{readings (fsts_rel xrs)}
+               -> ps:(eq (list int)){rates ps
+                                     /\ length (R.l xrs) = length (R.l ps)
+                                     /\ length (R.r xrs) = length (R.r ps)
+                                     /\ scalar_product (fsts (R.l xrs)) (R.l ps)
+                                      = scalar_product (fsts (R.r xrs)) (R.r ps)}
+               -> (eq int * eq int)
+let make_payment pp xrs ps =
+      let (| x, o |) =  sums xrs ps in
+      x,o
+
+(* VERIFYIER *)
+
+val verify_payment: pp:pparam
+                    -> ps:eq (list int){rates ps}
+                    -> cs:eq (list elt)
+                    -> s:eq dsig
+                    -> x:double text
+                    -> r:double opng
+                    -> b:eq bool{R.l b ==> (exists xs. readings xs
+                                                       /\ length (R.l xs) = length (R.l ps)
+                                                       /\ length (R.r xs) = length (R.r ps)
+                                                       /\ x  = scalar_product_rel xs ps)}
+let verify_payment pp ps cs s x r =
+  match  verify_meter_signature pp cs s with
+  | R true  true  -> let c = scalar_exp #readings pp cs ps in
+                     verify pp x r c
+  | R false false -> twice false
