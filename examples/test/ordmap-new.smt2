@@ -31455,7 +31455,7 @@ Kind_type)
 @a2)
 Kind_type)))))
 ;;;;;;;;;;;;;;;;g:(k -> Tot (option v)){(forall (x). ((mem x d) = (is_Some (g x))))}
-(assert (forall ((@u0 Fuel) (@x1 Term) (@x2 Term) (@a3 Type) (@a4 Type))
+(assert (forall ((@x1 Term) (@x2 Term) (@a3 Type) (@a4 Type))
                 (! (iff (HasType @x1
                                  (Typ_refine_2593 @x2
                                                   @a3
@@ -31474,11 +31474,10 @@ Kind_type)))))
                                                                                                   (ApplyEE @x1
                                                                                                            @x5)))))))))
                    
-                   :pattern ((HasTypeFuel @u0
-                                          @x1
-                                          (Typ_refine_2593 @x2
-                                                           @a3
-                                                           @a4))))))
+                   :pattern (HasType @x1
+                                     (Typ_refine_2593 @x2
+                                                      @a3
+                                                      @a4)))))
 ;;;;;;;;;;;;;;;;abbrev. elimination
 (assert (forall ((@a0 Type) (@a1 Type) (@x2 Term) (@x3 Term))
                 (! (implies (and (HasKind @a0
