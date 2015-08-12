@@ -16,6 +16,11 @@ end
 false
 end))
 
+let ___Ref___r = (fun ( projectee ) -> (match (projectee) with
+| Ref (_, _4_4) -> begin
+(Obj.magic _4_4)
+end))
+
 
 let sel = (fun ( _ ) ( _ ) -> (Support.All.failwith "Not yet implemented:sel"))
 

@@ -397,10 +397,17 @@ let extractTypeAbbrev (c:context) (tyab:typeAbbrev) : context * (mlsymbol  * mli
     let t = tyab.abBody in
     let l = tyab.abTyName in
     let c = (extendContext c (mfst bs)) in
+    (*Unlike in F*, type abbreviations in ML define type, and not, e.g. (n:nat) -> Type.
+     So, we move all the binders from the body to the collection of formal parameters.
+     However, the additional binders are not added to the context. This makes sense for term binders because in
+     ML, types do not depend on terms. One could put type binders in the context. For now, the user should do this movement in F* land.
+     *)
     let c, headBinders, residualType = headBinders c t in
     let bs=List.append bs headBinders in
     let t=residualType in
-    let tyDecBody = MLTD_Abbrev (extractTyp c t) in
+    let mlt = (extractTyp c t) in
+    let mlt = Util.eraseTypeDeep c mlt in
+    let tyDecBody = MLTD_Abbrev mlt in
             //printfn "type is %A\n" (t);
     let td = (mlsymbolOfLident l, List.map mlTyIdentOfBinder bs , Some tyDecBody) in
     let c = Env.extend_tydef c [td] in // why is this needed?
@@ -408,6 +415,7 @@ let extractTypeAbbrev (c:context) (tyab:typeAbbrev) : context * (mlsymbol  * mli
 
 let extractExn (c:context) (exnConstr : inductiveConstructor) : (context * mlmodule1) =
     let mlt = extractTyp c exnConstr.ctype in
+    let mlt = Util.eraseTypeDeep c mlt in
     let tys = [], mlt in //NS: Why are the arguments always empty?
     let fvv = mkFvvar exnConstr.cname exnConstr.ctype in 
     let ex_decl  : mlmodule1 = MLM_Exn (lident2mlsymbol exnConstr.cname, argTypes mlt) in
