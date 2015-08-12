@@ -66,16 +66,16 @@ opaque logic type modifies (mods:set aref) (h:heap) (h':heap) =
 
 type modset = erased (set aref)
 
-val gonly : #a:Type -> (lref a) -> Tot (modset)
-let gonly x = hide (Set.singleton (Ref x))
+val only : #a:Type -> (lref a) -> Tot (modset)
+let only x = hide (Set.singleton (Ref x))
 
 val eonly : #a:Type -> erased (lref a) -> Tot (modset)
 let eonly r = (elift1 (fun x -> (Set.singleton (Ref x)))) r
 
-val gunion : s1:modset -> s2:modset -> Tot (modset)
-let gunion s1 s2 = (elift2 union) s1 s2
+val eunion : s1:modset -> s2:modset -> Tot (modset)
+let eunion s1 s2 = (elift2 union) s1 s2
 
-val gunionUnion : #a:Type  -> #b:Type  -> r1:(lref a) -> r2:(lref b) ->
-  Lemma (requires True) (ensures ((gunion (gonly r1) (gonly r2)) = hide (union (singleton (Ref r1)) (singleton (Ref r2)))))
-  (* [SMTPat (gunion (gonly r1) (gonly r2))] *)
-let gunionUnion r1 r2 = ()
+val eunionUnion : #a:Type  -> #b:Type  -> r1:(lref a) -> r2:(lref b) ->
+  Lemma (requires True) (ensures ((eunion (only r1) (only r2)) = hide (union (singleton (Ref r1)) (singleton (Ref r2)))))
+  (* [SMTPat (eunion (only r1) (only r2))] *)
+let eunionUnion r1 r2 = ()

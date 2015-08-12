@@ -6,10 +6,11 @@
 
 module Sieve
 open SSTCombinators
-open StackAndHeap  open Lref  open Located
+open StackAndHeap
 open SST
 
 open Heap
+open Lref  open Located
 open Stack
 open Set
 open Prims
@@ -29,13 +30,6 @@ open SSTArray
 (* val mark : n:nat -> ((k:nat{k<n}) -> Tot bool) -> index:nat{index<n} -> Tot ((k:nat{k<n}) -> Tot bool) *)
 let mark f index =
   writeIndex f index true
-
-
-val bvAsFun : n:nat -> m:smem -> b:bitarray{haslength m b n} -> Tot (erased ((k:nat{k<n}) -> Tot bool))
-let bvAsFun n m b = arrayAsFun n m b
-
-val bvAsFun2 : n:nat -> m:smem -> b:bitarray{haslength m b n} -> k:nat{k<n} -> Tot (erased bool)
-let bvAsFun2 n m b k = elift1 (fun (f:((k:nat{k<n}) -> Tot bool)) -> f k) (bvAsFun n m b)
 
 
 type bitv n = b:(Seq.seq bool){Seq.length b =n}
@@ -115,14 +109,14 @@ val innerLoop : n:nat{n>1}
                 /\ markedIffDividesOrInit2 n (loopkupRef lo m) (reveal initres) (reveal (esel m res))
                 (* markedIffDividesOrInit n (loopkupRef lo m) initres (reveal (esel m res)) *)
       ))
-      (gunion (gonly li)  (ArrayAlgos.eonly res))
+      (eunion (only li)  (ArrayAlgos.eonly res))
 
 let innerLoop n lo li res initres =
   (scopedWhile
     (innerLoopInv n lo li res initres)
     (SieveFun.innerGuardLC n lo li)
     (fun u -> (memread li * memread lo < n))
-      (gunion (gonly li)  (ArrayAlgos.eonly res))
+      (eunion (only li)  (ArrayAlgos.eonly res))
     (fun u ->
       let liv = memread li in
       let lov = memread lo in
@@ -175,7 +169,7 @@ val outerLoopBody :
   whileBody
     (outerLoopInv n lo res)
     (SieveFun.outerGuardLC n lo)
-    (gunion (gonly lo)  (ArrayAlgos.eonly res))
+    (eunion (only lo)  (ArrayAlgos.eonly res))
 
 let outerLoopBody n lo res u =
   let initMem : erased smem  = get () in
@@ -196,14 +190,14 @@ val outerLoop : n:nat{n>1}
       (fun _ _ m1 -> outerLoopInv n lo res m1 /\ loopkupRef lo m1 = n
         /\ markedIffHasDivisorSmallerThan n n (sel m1 res)
       )
-      (gunion (gonly lo)  (ArrayAlgos.eonly res))
+      (eunion (only lo)  (ArrayAlgos.eonly res))
 
 let outerLoop n lo res =
   scopedWhile
     (outerLoopInv n lo res)
     (SieveFun.outerGuardLC n lo)
     (fun u -> (memread lo < n))
-    (gunion (gonly lo)  (ArrayAlgos.eonly res))
+    (eunion (only lo)  (ArrayAlgos.eonly res))
     (outerLoopBody n lo res)
 
 (*to work around type inference issues*)

@@ -19,50 +19,50 @@ open MD5Common
 open Seq
 open Ghost
 
-val contains : #a:Type -> smem -> sstarray a -> GTot bool
-let contains m v =
-refExistsInMem (reveal (asRef v)) m
+val liveArr : #a:Type -> smem -> sstarray a -> GTot bool
+let liveArr m v =
+liveRef (reveal (asRef v)) m
 
 val eonly :  #a:Type -> sstarray a -> Tot modset
 let eonly s = (eonly (asRef s))
 
 
-val sel : #a:Type -> m:smem -> v:(sstarray a){contains m v} -> GTot (seq a)
+val sel : #a:Type -> m:smem -> v:(sstarray a){liveArr m v} -> GTot (seq a)
 let sel m v = loopkupRef (reveal (asRef v)) m
 
 val loopkupRefR : #a:Type -> #post:(a->Type) -> m:smem -> r:(lref a) ->
 
-  Pure a (requires (refExistsInMem r m /\ post (loopkupRef r m)))
+  Pure a (requires (liveRef r m /\ post (loopkupRef r m)))
     (ensures (fun ret -> post ret))
 let loopkupRefR m r = loopkupRef r m
 
-val loopkupRefR2 : a:Type -> m:smem -> r:(lref a){(refExistsInMem r m)} ->Tot a
+val loopkupRefR2 : a:Type -> m:smem -> r:(lref a){(liveRef r m)} ->Tot a
 let loopkupRefR2 (a:Type) m r = loopkupRef r m
 
 
-val eloopkupRef : #a:Type -> m:smem -> r:(erased (lref a)){(refExistsInMem (reveal r) m)} ->
+val eloopkupRef : #a:Type -> m:smem -> r:(erased (lref a)){(liveRef (reveal r) m)} ->
   Tot (erased a)
-let eloopkupRef  (#a:Type) m v = (elift1_p #(lref a) #a #(fun r -> b2t (refExistsInMem r m)) (loopkupRefR2 a m)) v
+let eloopkupRef  (#a:Type) m v = (elift1_p #(lref a) #a #(fun r -> b2t (liveRef r m)) (loopkupRefR2 a m)) v
 
 
-val esel : #a:Type -> m:smem -> v:(sstarray a){refExistsInMem (reveal (asRef v)) m} -> Tot (erased (seq a))
+val esel : #a:Type -> m:smem -> v:(sstarray a){liveRef (reveal (asRef v)) m} -> Tot (erased (seq a))
 let esel (#a:Type) m v = eloopkupRef m (asRef v)
 
-val eeloopkupRef : #a:Type -> m:(erased smem) -> r:(erased (lref a)){(refExistsInMem (reveal r) (reveal m))} ->
+val eeloopkupRef : #a:Type -> m:(erased smem) -> r:(erased (lref a)){(liveRef (reveal r) (reveal m))} ->
   Tot (erased a)
 let eeloopkupRef  (#a:Type) m v =
-  (elift2_p #smem #(lref a) #(fun m r -> b2t (refExistsInMem r m)) #a (loopkupRefR2)) m v
+  (elift2_p #smem #(lref a) #(fun m r -> b2t (liveRef r m)) #a (loopkupRefR2)) m v
 
 val eesel : #a:Type -> m:(erased smem)
--> v:(sstarray a){refExistsInMem (reveal (asRef v)) (reveal m)} -> Tot (erased (seq a))
+-> v:(sstarray a){liveRef (reveal (asRef v)) (reveal m)} -> Tot (erased (seq a))
 let eesel (#a:Type) m v = eeloopkupRef m (asRef v)
 
 
-val glength : #a:Type -> v:(sstarray a) -> m:smem{contains m v} -> GTot nat
+val glength : #a:Type -> v:(sstarray a) -> m:smem{liveArr m v} -> GTot nat
 let glength v m = Seq.length (sel m v)
 
 val haslength : #a:Type -> smem -> sstarray a -> n:nat -> GTot bool
-let haslength m v n = contains m v && glength v m = n
+let haslength m v n = liveArr m v && glength v m = n
 
 type lseq (a:Type) (n:nat) = x:(seq a){Seq.length x =n}
 
@@ -83,7 +83,7 @@ some failed attempts below. It is surprising how the above works, but not the on
 
 val eeseln : #a:Type -> n:nat -> m:(erased smem)
   -> v:(sstarray a) ->
-    Pure (erased (seq a)) (requires ( refExistsInMem (reveal (asRef v)) (reveal m)
+    Pure (erased (seq a)) (requires ( liveRef (reveal (asRef v)) (reveal m)
           /\  Seq.length (loopkupRef (reveal (asRef v)) (reveal m)) = n))
                           (ensures (fun rs -> Seq.length (reveal rs) = n))
 let eeseln (#a:Type) n m v =
@@ -91,7 +91,7 @@ let eeseln (#a:Type) n m v =
   admitP (b2t (Seq.length (reveal s)=n)); s
 
 (elift2_wp #smem #(lref (seq a)) #(seq a)
-  #(fun m r -> refExistsInMem r m
+  #(fun m r -> liveRef r m
         /\  Seq.length (loopkupRef r m) = n
           )
   #(fun m r rs ->
@@ -116,11 +116,11 @@ type prefixEqualL  (#a:Type)
 val copy:
   #a:Type -> s:sstarray a -> scp :sstarray a
   -> WNSC unit
-     (requires (fun h -> contains h s /\ contains h scp /\ glength s h <= glength scp h))
-     (ensures (fun h0 _ h1 -> (contains h1 s) /\  (contains h1 scp)
+     (requires (fun h -> liveArr h s /\ liveArr h scp /\ glength s h <= glength scp h))
+     (ensures (fun h0 _ h1 -> (liveArr h1 s) /\  (liveArr h1 scp)
                 /\ (glength  s h1  <= glength  scp h1)
                 /\ prefixEqualL (sel h1 s) (sel h1 scp)
-                /\ (contains h0 scp) /\ glength scp h0 = glength scp h1
+                /\ (liveArr h0 scp) /\ glength scp h0 = glength scp h1
               ))
      (eonly scp)
 
@@ -131,13 +131,13 @@ let copy s scp =
   scopedWhile1
     ctr
     (fun ctrv -> ctrv < len)
-    (fun m -> contains m s /\ contains m scp
+    (fun m -> liveArr m s /\ liveArr m scp
         /\ len = glength s m /\ lenscp = glength scp m
-          /\ refExistsInMem ctr m
+          /\ liveRef ctr m
           /\ (loopkupRef ctr m) <=len
           /\ prefixEqual (sel m s) (sel m scp) (loopkupRef ctr m)
           )
-    (gunion (eonly scp) (gonly ctr))
+    (eunion (eonly scp) (only ctr))
     (fun u -> let ctrv = memread ctr in
               writeIndex scp ctrv (readIndex s ctrv);
               memwrite ctr (ctrv +1 ))
@@ -146,8 +146,8 @@ let copy s scp =
 val hcloneAux:
   #a:Type -> s:sstarray a
   -> Mem (sstarray a)
-     (requires (fun h -> contains h s /\ 0 < glength s h ))
-     (ensures (fun h0 scp h1 -> (contains h1 s) /\  (contains h1 scp)
+     (requires (fun h -> liveArr h s /\ 0 < glength s h ))
+     (ensures (fun h0 scp h1 -> (liveArr h1 s) /\  (liveArr h1 scp)
                 /\ (glength s h1) = (glength scp h1)
                 /\ Seq.Eq (sel h1 s) (sel h1 scp)
               ))
@@ -171,11 +171,11 @@ let hcloneAux s =
       let scp = hcreate (Seq.create (SSTArray.length s) (readIndex s 0)) in
         withNewScope
           #_ (*the pre/post conditions below just come from the definition of copy. It is annoying that they cannot be inferred*)
-          #((fun h -> contains h s /\ contains h scp /\ glength s h <= glength scp h))
-          #((fun h0 _ h1 -> (contains h1 s) /\  (contains h1 scp)
+          #((fun h -> liveArr h s /\ liveArr h scp /\ glength s h <= glength scp h))
+          #((fun h0 _ h1 -> (liveArr h1 s) /\  (liveArr h1 scp)
                    /\ (glength  s h1  <= glength  scp h1)
                    /\ prefixEqualL (sel h1 s) (sel h1 scp)
-                   /\ (contains h0 scp) /\ glength scp h0 = glength scp h1
+                   /\ (liveArr h0 scp) /\ glength scp h0 = glength scp h1
                  ))
           #(only (asRef scp))
           (fun u -> copy s scp);
@@ -194,8 +194,8 @@ let hcloneAux s =
 val hclone:
   #a:Type -> s:sstarray a
   -> Mem (sstarray a)
-     (requires (fun h -> contains h s))
-     (ensures (fun h0 scp h1 -> (contains h1 s) /\  (contains h1 scp)
+     (requires (fun h -> liveArr h s))
+     (ensures (fun h0 scp h1 -> (liveArr h1 s) /\  (liveArr h1 scp)
                 /\ (glength s h1) = (glength scp h1)
                 /\ Seq.Eq (sel h1 s) (sel h1 scp)
               ))

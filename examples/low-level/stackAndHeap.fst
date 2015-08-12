@@ -189,8 +189,8 @@ val refExistsInStackTail : #a:Type -> r:(lref a)
 let refExistsInStackTail r id ms = (refExistsInStackId r id (stail ms))
 
 
-val refExistsInMem : #a:Type -> (lref a) -> smem ->  Tot bool
-let refExistsInMem (#a:Type) (r:lref a) (m:smem) =
+val liveRef : #a:Type -> (lref a) -> smem ->  Tot bool
+let liveRef (#a:Type) (r:lref a) (m:smem) =
 match (refLoc r) with
 | InHeap -> contains (hp m) r
 | InStack id -> refExistsInStack r id (st m)
@@ -225,8 +225,8 @@ let freeMemAux r m =
 
 val writeMemAuxPreservesExists :  #a:Type -> #b:Type ->
   rw:lref a -> r:lref b -> m:smem -> v:a ->
-Lemma (requires (refExistsInMem r m))
-      (ensures (refExistsInMem r (writeMemAux rw m v)))
+Lemma (requires (liveRef r m))
+      (ensures (liveRef r (writeMemAux rw m v)))
       [SMTPat (writeMemAux rw m v)]
 let writeMemAuxPreservesExists rw r m v =
 match (refLoc r) with
@@ -266,7 +266,7 @@ match ms with
    of the type (lref False) . For example, the memory allocation operator, which creates a new (lref 'a)
    requires an initial value of type 'a
 *)
-val loopkupRef : #a:Type -> r:(lref a) -> m:smem{(refExistsInMem r m) == true} ->  Tot a
+val loopkupRef : #a:Type -> r:(lref a) -> m:smem{(liveRef r m) == true} ->  Tot a
 let loopkupRef r m =
 match (refLoc r) with
 | InHeap -> (sel (hp m) r)
@@ -302,8 +302,8 @@ val readAfterWriteStackSameType :
 let readAfterWriteStackSameType rw r v id idw m = readAfterWriteStack rw r v id idw m
 
 val readAfterWrite : #a:Type -> #b:Type ->  rw:(lref a) -> r:(lref b) -> v:a -> m:smem ->
-  Lemma (requires (refExistsInMem r m))
-        (ensures (refExistsInMem r m)
+  Lemma (requires (liveRef r m))
+        (ensures (liveRef r m)
         /\ ifthenelseT (r==rw)
             (loopkupRef r (writeMemAux rw m v) == v)
             (loopkupRef r (writeMemAux rw m v) = (loopkupRef r m)))
@@ -319,16 +319,16 @@ match (refLoc r) with
 necessary to provide the 2 specializations below as an SMTPat,
 instead of just the above lemma *)
 val readAfterWriteTrue : #a:Type -> #b:Type ->  rw:(lref a) -> r:(lref b) -> v:a -> m:smem ->
-  Lemma (requires (refExistsInMem r m /\ r==rw))
-        (ensures (refExistsInMem r m) /\
+  Lemma (requires (liveRef r m /\ r==rw))
+        (ensures (liveRef r m) /\
             (loopkupRef r (writeMemAux rw m v) == v))
         [SMTPat (writeMemAux rw m v)]
 let readAfterWriteTrue rw r v m = readAfterWrite rw r v m
 
 
 val readAfterWriteFalse : #a:Type -> #b:Type ->  rw:(lref a) -> r:(lref b) -> v:a -> m:smem ->
-  Lemma (requires (refExistsInMem r m /\ r=!=rw))
-        (ensures (refExistsInMem r m) /\
+  Lemma (requires (liveRef r m /\ r=!=rw))
+        (ensures (liveRef r m) /\
         (loopkupRef r (writeMemAux rw m v) = (loopkupRef r m)))
         [SMTPat (writeMemAux rw m v)]
 let readAfterWriteFalse rw r v m = readAfterWrite rw r v m
@@ -336,17 +336,17 @@ let readAfterWriteFalse rw r v m = readAfterWrite rw r v m
 
 (*perhaps this specialization is not requires anymore*)
 val readAfterWriteSameType : #a:Type -> rw:(lref a) -> r:(lref a) -> v:a -> m:smem ->
-  Lemma (requires (refExistsInMem r m))
-        (ensures (refExistsInMem r m)
+  Lemma (requires (liveRef r m))
+        (ensures (liveRef r m)
             /\ loopkupRef r (writeMemAux rw m v) = (if (r=rw) then v else (loopkupRef r m)))
 let readAfterWriteSameType rw r v m = readAfterWrite rw r v m
 
 
-val refExistsInMemTail : #a:Type -> r:(lref a) -> m:smem ->
-  Lemma (requires (refExistsInMem r (mtail m)))
-        (ensures (refExistsInMem r (m)))
-        [SMTPat (refExistsInMem r (mtail m))]
-let refExistsInMemTail r m =
+val liveRefTail : #a:Type -> r:(lref a) -> m:smem ->
+  Lemma (requires (liveRef r (mtail m)))
+        (ensures (liveRef r (m)))
+        [SMTPat (liveRef r (mtail m))]
+let liveRefTail r m =
 match (refLoc r) with
 | InHeap -> ()
 | InStack id -> (refExistsInStackTail r id (st m))
@@ -361,10 +361,10 @@ let loopkupRefStackTail r id ms = (refExistsInStackId r id (stail ms))
 
 
 val readTailRef : #a:Type -> r:(lref a) -> m:smem ->
-  Lemma (requires (refExistsInMem r (mtail m)))
-        (ensures (refExistsInMem r (mtail m))
+  Lemma (requires (liveRef r (mtail m)))
+        (ensures (liveRef r (mtail m))
             /\ loopkupRef r m =  loopkupRef r (mtail m))
-            [SMTPat (refExistsInMem r (mtail m))]
+            [SMTPat (liveRef r (mtail m))]
 let readTailRef r m =
 match (refLoc r) with
 | InHeap -> ()
@@ -380,10 +380,10 @@ val writeStackTail
 let writeStackTail r id v ms = (refExistsInStackId r id (stail ms))
 
 val writeTailRef : #a:Type -> r:(lref a) -> m:smem -> v:a ->
-  Lemma (requires (refExistsInMem r (mtail m)))
-        (ensures (refExistsInMem r (mtail m))
+  Lemma (requires (liveRef r (mtail m)))
+        (ensures (liveRef r (mtail m))
             /\ mtail (writeMemAux r m v) =  writeMemAux r (mtail m) v)
-            [SMTPat (refExistsInMem r (mtail m))]
+            [SMTPat (liveRef r (mtail m))]
 let writeTailRef r m v =
 match (refLoc r) with
 | InHeap -> ()
@@ -402,25 +402,25 @@ match (refLoc r) with
    preserving stack ids is a definition of sanity
    *)
 
-val refExistsInMemSTailSids : #a:Type -> r:(lref a) -> id:sidt  -> m0:memStack -> m1:memStack
+val liveRefSTailSids : #a:Type -> r:(lref a) -> id:sidt  -> m0:memStack -> m1:memStack
   -> Lemma
    (requires (ssids m0 = ssids m1
             /\ refExistsInStack r id (stail m0)
             (*/\ refExistsInStack r id m0*)
             /\ refExistsInStack r id m1))
    (ensures refExistsInStack r id (stail m1))
-let refExistsInMemSTailSids r id m0 m1 =
+let liveRefSTailSids r id m0 m1 =
 (refExistsInStackId r id (stail m0))
 
 
-val refExistsInMemTailSids : #a:Type -> r:(lref a) -> m0:smem -> m1:smem -> Lemma
-  (requires (sids m0 = sids m1 /\ refExistsInMem r (mtail m0) /\ refExistsInMem r m1))
-  (ensures refExistsInMem r (mtail m1))
+val liveRefTailSids : #a:Type -> r:(lref a) -> m0:smem -> m1:smem -> Lemma
+  (requires (sids m0 = sids m1 /\ liveRef r (mtail m0) /\ liveRef r m1))
+  (ensures liveRef r (mtail m1))
   [SMTPat (sids m0 = sids m1)]
-let refExistsInMemTailSids r m0 m1 =
+let liveRefTailSids r m0 m1 =
 match (refLoc r) with
 | InHeap -> ()
-| InStack id -> (refExistsInMemSTailSids r id (st m0) (st m1))
+| InStack id -> (liveRefSTailSids r id (st m0) (st m1))
 
 
 
@@ -431,19 +431,19 @@ Also, why does it's definition have to be so procedural, unlike the more declara
 *)
 type canModify  (m0 : smem)  (m1: smem) (rs: modset ) =
   forall (a:Type) (r: lref a).
-      refExistsInMem r m0
+      liveRef r m0
       ==> (~(Set.mem (Ref r) (reveal rs)))
-      ==> (refExistsInMem r m1 /\ (loopkupRef r m0 = loopkupRef r m1))
+      ==> (liveRef r m1 /\ (loopkupRef r m0 = loopkupRef r m1))
 
 
-type  mreads (#a:Type) (r: lref a) (v:a) (m:smem) = refExistsInMem r m /\ loopkupRef r m = v
+type  mreads (#a:Type) (r: lref a) (v:a) (m:smem) = liveRef r m /\ loopkupRef r m = v
 
 (*lemmas needed for automatic inference*)
 val canModifyNone : m:smem -> Lemma (canModify m m (hide empty))
 let canModifyNone m = ()
 
 val canModifyWrite : #a:Type -> r:(lref a) -> v:a -> m:smem
-  -> Lemma (canModify m (writeMemAux r m v) (gonly  r))
+  -> Lemma (canModify m (writeMemAux r m v) (only  r))
 let canModifyWrite r v m = ()
 
 type mStackNonEmpty (m:smem) = b2t (isNonEmpty (st m))

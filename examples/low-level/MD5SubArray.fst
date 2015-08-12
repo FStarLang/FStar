@@ -42,7 +42,7 @@ assume val memFlattenIndex :
 (*define this using flatten refs?*)
 type arrayExixtsInMem (#a:Type) (#n:nat) (v: vector (lref  a) n) (m:smem) =
  forall (r:(r:(lref a){mem (Ref r) (flattenRefs v)})).
- {:pattern (mem (Ref r) (flattenRefs v))}refExistsInMem r m
+ {:pattern (mem (Ref r) (flattenRefs v))}liveRef r m
 
 
  type allocateVectorInBlock (#a:Type) (#n:nat) (rv: vector (lref a) n)
@@ -51,8 +51,8 @@ type arrayExixtsInMem (#a:Type) (#n:nat) (v: vector (lref  a) n) (m:smem) =
   (forall (r:(r:(lref a){mem (Ref r) (flattenRefs rv)})).
         {:pattern (mem (Ref r) (flattenRefs rv))}
            refLoc r = rl
-          /\ not (contains h0 r)
-          /\ contains h1 r
+          /\ not (liveArr h0 r)
+          /\ liveArr h1 r
           /\  init = sel h0 r)
 /\ equal h1 (concat h0 (restrict h1 (flattenRefs rv)))
 
@@ -116,7 +116,7 @@ let processChunkSubArray ch acc =
     (fun m -> True
               /\ arrayExixtsInMem ch m
               /\ arrayExixtsInMem acc m
-              /\ refExistsInMem li m /\ loopkupRef li m < 65
+              /\ liveRef li m /\ loopkupRef li m < 65
               )
     (union (singleton (Ref li)) (flattenRefs acc))
     (*(Set.complement Set.empty)*)
@@ -189,7 +189,7 @@ let mainLoopSubArrayAux n ch acc u =
     (fun m -> True
               /\ arrayExixtsInMem ch m
               /\ arrayExixtsInMem acc m
-              /\ refExistsInMem offset m
+              /\ liveRef offset m
               )
     (
       (*union*)
@@ -236,9 +236,9 @@ let mainLoopSubArray n ch u =
   let acc =  sallocateVector word 4 w0 in
   let dummy : lref nat = salloc 0 in
   (*assert (b2t (not (Set.mem (Ref dummy) (flattenRefs acc)))) ;*)
-  memAssert (fun m -> ~ (refExistsInMem dummy (mtail m)));
+  memAssert (fun m -> ~ (liveRef dummy (mtail m)));
   memAssert (fun m -> ~ (arrayExixtsInMem acc (mtail m)));
-  memAssert (fun m -> forall (r:(r:(lref word){Set.mem (Ref r) (flattenRefs acc)})). ~ (refExistsInMem r (mtail m)) );
+  memAssert (fun m -> forall (r:(r:(lref word){Set.mem (Ref r) (flattenRefs acc)})). ~ (liveRef r (mtail m)) );
   memAssert (fun m -> True /\ arrayExixtsInMem ch (m));
   pushStackFrame ();
   memAssert (fun m -> True /\ arrayExixtsInMem ch (m));
@@ -252,6 +252,6 @@ let mainLoopSubArray n ch u =
 
    *)
     (*memAssert (fun m -> ~ (arrayExixtsInMem acc (mtail m)));*)
-  (*memAssert (fun m -> forall (r:(r:(lref word){Set.mem (Ref r) (flattenRefs acc)})). ~ (refExistsInMem r (mtail m)) );*)
-  memAssert (fun m -> ~ (refExistsInMem dummy (mtail m)));
+  (*memAssert (fun m -> forall (r:(r:(lref word){Set.mem (Ref r) (flattenRefs acc)})). ~ (liveRef r (mtail m)) );*)
+  memAssert (fun m -> ~ (liveRef dummy (mtail m)));
   x
