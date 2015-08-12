@@ -77,3 +77,74 @@ val sel_contains: #k:Type -> #v:Type -> #f:cmp k -> x:k -> m:ordmap k v f
                            (ensures (contains #k #v #f x m = is_Some (select #k #v #f x m)))
                      [SMTPat (select #k #v #f x m); SMTPat (contains #k #v #f x m)]
 
+val contains_upd1: #k:Type -> #v:Type -> #f:cmp k -> x:k -> y:v -> x':k
+                   -> m:ordmap k v f
+                   -> Lemma (requires True)
+                            (ensures (contains #k #v #f x' (update #k #v #f x y m) =
+                                      (x = x' || contains #k #v #f x' m)))
+                      [SMTPat (contains #k #v #f x' (update #k #v #f x y m))]
+
+val contains_upd2: #k:Type -> #v:Type -> #f:cmp k -> x:k -> y:v -> x':k
+                   -> m:ordmap k v f
+                   -> Lemma (requires True)
+                            (ensures (x =!= x' ==> (contains #k #v #f x' (update #k #v #f x y m)
+                                                    = contains #k #v #f x' m)))
+                      [SMTPat (contains #k #v #f x' (update #k #v #f x y m))]
+
+val contains_empty: #k:Type -> #v:Type -> #f:cmp k -> x:k
+                    -> Lemma (requires True)
+                             (ensures (not (contains #k #v #f x (empty #k #v #f))))
+                       [SMTPat (contains #k #v #f x (empty #k #v #f))]
+
+val contains_remove: #k:Type -> #v:Type -> #f:cmp k -> x:k -> y:k -> m:ordmap k v f
+                     -> Lemma (requires True)
+                              (ensures (contains #k #v #f x (remove #k #v #f y m) =
+                                        (contains #k #v #f x m && not (x = y))))
+                        [SMTPat (contains #k #v #f x (remove #k #v #f y m))]
+                  
+val eq_remove: #k:Type -> #v:Type -> #f:cmp k -> x:k -> m:ordmap k v f
+              -> Lemma (requires (not (contains #k #v #f x m)))
+                       (ensures (m = remove #k #v #f x m))
+                 [SMTPat (remove #k #v #f x m)]
+
+val choose_empty: #k:Type -> #v:Type -> #f:cmp k
+                 -> Lemma (requires True) (ensures (is_None (choose #k #v #f
+                                                             (empty #k #v #f))))
+                    [SMTPat (choose #k #v #f (empty #k #v #f))]
+
+val choose_m: #k:Type -> #v:Type -> #f:cmp k -> m:ordmap k v f
+             -> Lemma (requires (not (m = (empty #k #v #f))))
+                      (ensures (is_Some (choose #k #v #f m) /\
+                                (select #k #v #f (fst (Some.v (choose #k #v #f m))) m =
+                                 Some (snd (Some.v (choose #k #v #f m)))) /\
+                                (m = update #k #v #f (fst (Some.v (choose #k #v #f m)))
+                                                     (snd (Some.v (choose #k #v #f m)))
+                                                     (remove #k #v #f (fst (Some.v (choose #k #v #f m))) m))))
+                [SMTPat (choose #k #v #f m)]
+
+val size_empty: #k:Type -> #v:Type -> #f:cmp k
+                -> Lemma (requires True)
+                         (ensures (size #k #v #f (empty #k #v #f) = 0))
+                   [SMTPat (size #k #v #f (empty #k #v #f))]
+                   
+val size_remove: #k:Type -> #v:Type -> #f:cmp k -> y:k -> m:ordmap k v f
+                -> Lemma (requires (contains #k #v #f y m))
+                         (ensures (size #k #v #f m = size #k #v #f (remove #k #v #f y m) + 1))
+                   [SMTPat (size #k #v #f (remove #k #v #f y m))]
+
+val dom_lemma: #k:Type -> #v:Type -> #f:cmp k -> x:k -> m:ordmap k v f
+               -> Lemma (requires True)
+                        (ensures (contains #k #v #f x m <==>
+                                  OrdSet.mem #k #f x (dom #k #v #f m)))
+                  [SMTPat (mem #k #f x (dom #k #v #f m))]
+
+val contains_const_on: #k:Type -> #v:Type -> #f:cmp k -> d:ordset k f -> x:v -> y:k
+                  -> Lemma (requires (True))
+                           (ensures (mem y d = contains y (const_on d x)))
+                                    //(contains y (const_on d x) ==> Some.v (select p w) = x)))
+                     [SMTPat (contains #k #v #f y (const_on #k #v #f d x))]
+                     
+val select_const_on: #k:Type -> #v:Type -> #f:cmp k -> d:ordset k f -> x:v -> y:k
+                     -> Lemma (requires (True))
+                              (ensures (mem y d ==> (contains y (const_on d x) /\ Some.v (select y (const_on d x)) = x)))
+                    [SMTPat (select #k #v #f y (const_on #k #v #f d x))]

@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi OrdSet --admit_fsi Set --logQueries;
+    options:--admit_fsi OrdSet --admit_fsi Set;
     other-files:ext.fst set.fsi heap.fst st.fst all.fst list.fst ordset.fsi ordmap.fsi
  --*)
 module OrdMap
@@ -75,6 +75,55 @@ let sel_upd1 (#k:Type) (#v:Type) #f x y m = ()
 let sel_upd2 (#k:Type) (#v:Type) #f x y x' m = ()
 
 let sel_empty (#k:Type) (#v:Type) #f x = ()
-#reset-options
+
 let sel_contains (#k:Type) (#v:Type) #f x m = ()
 
+let contains_upd1 (#k:Type) (#v:Type) #f x y x' m = ()
+
+let contains_upd2 (#k:Type) (#v:Type) #f x y x' m = ()
+
+let contains_empty (#k:Type) (#v:Type) #f x = ()
+
+let contains_remove (#k:Type) (#v:Type) #f x y m = ()
+
+let eq_remove (#k:Type) (#v:Type) #f x m =
+  let (Mk_map s g) = m in
+  let m' = remove #k #v #f x m in
+  let (Mk_map s' g') = m' in
+  let _ = cut (FEq g g') in
+  ()
+
+let choose_empty (#k:Type) (#v:Type) #f = ()
+
+val dom_empty_helper: #k:Type -> #v:Type -> #f:cmp k -> m:ordmap k v f
+                      -> Lemma (requires (True))
+                               (ensures  ((dom #k #v #f m = OrdSet.empty) ==>
+                                          (m = empty #k #v #f)))
+let dom_empty_helper (#k:Type) (#v:Type) #f m =
+  let (Mk_map s g) = m in
+  if (not (s = OrdSet.empty)) then ()
+  else
+    let (Mk_map s' g') = empty #k #v #f in
+    cut (FEq g g')
+
+let choose_m (#k:Type) (#v:Type) #f m =
+  dom_empty_helper #k #v #f m;
+  let (Mk_map s g) = m in
+  let c = choose #k #v #f m in
+  match c with
+    | None        -> ()
+    | Some (x, y) ->
+      let m' = remove #k #v #f x m in
+      let (Mk_map s' g') = m' in
+      let (Mk_map s'' g'') = update #k #v #f x y m' in
+      cut (FEq g g'')
+
+let size_empty (#k:Type) (#v:Type) #f = ()
+
+let size_remove (#k:Type) (#v:Type) #f y m = ()
+
+let dom_lemma (#k:Type) (#v:Type) #f x m = ()
+
+let contains_const_on (#k:Type) (#v:Type) #f d x y = ()
+
+let select_const_on (#k:Type) (#v:Type) #f d x y = ()
