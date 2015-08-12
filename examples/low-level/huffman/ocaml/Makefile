@@ -8,13 +8,18 @@ ALLOCATOR_DIR = ../../../../runtime/allocator
 ALLOCATOR_FILES = $(ALLOCATOR_DIR)/camlstack.o $(ALLOCATOR_DIR)/stack.o $(ALLOCATOR_DIR)/bitmask.o $(ALLOCATOR_DIR)/camlstack.mli
 
 FLAGS=-I $(ALLOCATOR_DIR) -g
-OCAMLC=ocamlfind ocamlopt 
+OCAMLC=ocamlfind ocamlopt
+
+all: allocator huffman$(EXE)
 
 huffman$(EXE): huffman.ml huffman_ffi.o
-	$(OCAMLC) $(FLAGS) -o $@ $^ $(ALLOCATOR_FILES) 
+	$(OCAMLC) $(FLAGS) -o $@ $^ $(ALLOCATOR_FILES)
+
+allocator:
+	$(MAKE) -C $(ALLOCATOR_DIR)
 
 %.o: %.c
 	$(OCAMLC) $(FLAGS) -c  $^ -o $@
 
-clean: 
+clean:
 	$(RM) huffman$(EXE) *.o *.cm*
