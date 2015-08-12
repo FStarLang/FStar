@@ -64,8 +64,8 @@ let loopyFactorial3 n =
   let res = salloc 1 in
   (scopedWhile3
     (loopInv li res)
-    (fun m -> (refExistsInMem li m) /\ ~ ((loopkupRef li m) = n))
-    (fun m -> (refExistsInMem li m) /\  ((loopkupRef li m) = n))
+    (fun m -> (liveRef li m) /\ ~ ((loopkupRef li m) = n))
+    (fun m -> (liveRef li m) /\  ((loopkupRef li m) = n))
     (fun u -> not (memread li = n))
     (fun u ->
       let liv = memread li in

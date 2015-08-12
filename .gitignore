@@ -39,3 +39,8 @@ _build/
 queries*.smt2
 transcript
 dump
+
+*.cmi
+*.cmo
+*.cmx
+*.o
