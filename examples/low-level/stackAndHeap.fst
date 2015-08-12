@@ -454,3 +454,13 @@ let canModifyWrite r v m = ()*)
 
 
 type allocateInBlock (#a:Type) (r: lref a) (h0 : region) (h1 : region) (init : a)   = not(contains h0 r) /\ contains h1 r /\  h1 == upd h0 r init
+
+
+
+(* liveness for arbitrary located data. It merely says that the stack id valid
+   This could be a much simpler definition for liveRef, if we agree to never (manually) free data.*)
+val liveLoc : #a:Type -> (located a) -> smem ->  Tot bool
+let liveLoc v m =
+  match (regionOf v) with
+  | InHeap -> true
+  | InStack id -> memT id  (sids m)
