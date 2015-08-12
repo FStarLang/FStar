@@ -1,4 +1,5 @@
 (*--build-config
+    options:--logQueries;
  --*)
 module OrdMap
 

@@ -271,9 +271,18 @@ let mkForall_fuel' n (pats, vars, body) =
     if !Options.unthrottle_inductives
     then fallback ()
     else let fsym, fterm = fresh_fvar "f" Fuel_sort in 
-         let pats = pats |> List.map (fun p -> match p.tm with 
+         let add_fuel tms = 
+            tms |> List.map (fun p -> match p.tm with 
             | Term.App(Var "HasType", args) -> Term.mkApp("HasTypeFuel", fterm::args)
             | _ -> p) in
+         let pats = add_fuel pats in
+         let body = match body.tm with 
+            | Term.App(Imp, [guard; body']) -> 
+              let guard = match guard.tm with 
+                | App(And, guards) -> Term.mk_and_l (add_fuel guards)
+                | _ -> add_fuel [guard] |> List.hd in
+              Term.mkImp(guard,body')
+            | _ -> body in
          let vars = (fsym, Fuel_sort)::vars in 
          Term.mkForall(pats, vars, body)
   
@@ -567,8 +576,9 @@ and encode_typ_term (t:typ) (env:env_t) : (term           (* encoding of t, expe
                   let k_assumption = Term.Assume(Term.mkForall([t_has_kind], cvars, t_has_kind), Some (tsym ^ " kinding")) in
 
                   let f_has_t = mk_HasType f t in
+                  let f_has_t_z = mk_HasTypeZ f t in
                   let pre_typing = Term.Assume(mkForall_fuel([f_has_t], fsym::cvars, mkImp(f_has_t, mk_tester "Typ_fun" (mk_PreType f))), Some "pre-typing for functions") in
-                  let t_interp = Term.Assume(mkForall_fuel([f_has_t], fsym::cvars, mkIff(f_has_t, t_interp)),
+                  let t_interp = Term.Assume(mkForall([f_has_t_z], fsym::cvars, mkIff(f_has_t_z, t_interp)),
                                              Some (tsym ^ " interpretation")) in 
 
                   let t_decls = decls@decls'@[tdecl; k_assumption; pre_typing; t_interp] in
@@ -597,11 +607,15 @@ and encode_typ_term (t:typ) (env:env_t) : (term           (* encoding of t, expe
         let base_t, decls = encode_typ_term x.sort env in
         let x, xtm, env' = gen_term_var env x.v in
         let refinement, decls' = encode_formula f env' in
-        let encoding = Term.mkAnd(mk_HasType xtm base_t, refinement) in
+        
+        let fsym, fterm = fresh_fvar "f" Fuel_sort in 
+         
+        let encoding = Term.mkAnd(mk_HasTypeWithFuel (Some fterm) xtm base_t, refinement) in
 
-        let cvars = Term.free_variables encoding |> List.filter (fun (y, _) -> y <> x) in 
+        let cvars = Term.free_variables encoding |> List.filter (fun (y, _) -> y <> x && y <> fsym) in 
         let xfv = (x, Term_sort) in
-        let tkey = Term.mkForall([], xfv::cvars, encoding) in
+        let ffv = (fsym, Fuel_sort) in
+        let tkey = Term.mkForall([], ffv::xfv::cvars, encoding) in
 
         begin match Util.smap_try_find env.cache tkey.hash with 
             | Some (t, _, _) -> 
@@ -613,11 +627,11 @@ and encode_typ_term (t:typ) (env:env_t) : (term           (* encoding of t, expe
               let tdecl = Term.DeclFun(tsym, cvar_sorts, Type_sort, None) in
               let t = Term.mkApp(tsym, List.map mkFreeV cvars) in
 
-              let x_has_t = mk_HasType xtm t in
+              let x_has_t = mk_HasTypeWithFuel (Some fterm) xtm t in
               let t_has_kind = mk_HasKind t Term.mk_Kind_type in
               
               let t_kinding = mkForall([t_has_kind], cvars, t_has_kind) in //TODO: guard by typing of cvars?; not necessary since we have pattern-guarded 
-              let assumption = mkForall_fuel([x_has_t], xfv::cvars, mkIff(x_has_t, encoding)) in
+              let assumption = mkForall([x_has_t], ffv::xfv::cvars, mkIff(x_has_t, encoding)) in
               
               let t_decls = decls
                             @decls'
@@ -1322,7 +1336,7 @@ let primitive_type_axioms : lident -> string -> term -> list<decl> =
         let x = mkFreeV xx in
         let valid = Term.mkApp("Valid", [Term.mkApp(for_all, [a;b])]) in
         let valid_b_x = Term.mkApp("Valid", [mk_ApplyTE b x]) in
-        [Term.Assume(mkForall([valid], [aa;bb], mkIff(mkForall([mk_HasType x a], [xx], mkImp(mk_HasType x a, valid_b_x)), valid)), Some "forall interpretation")] in
+        [Term.Assume(mkForall([valid], [aa;bb], mkIff(mkForall([mk_HasTypeZ x a], [xx], mkImp(mk_HasTypeZ x a, valid_b_x)), valid)), Some "forall interpretation")] in
     let mk_exists_interp : string -> term -> decls_t = fun for_all tt -> 
         let aa = ("a", Type_sort) in
         let bb = ("b", Type_sort) in
@@ -1332,7 +1346,7 @@ let primitive_type_axioms : lident -> string -> term -> list<decl> =
         let x = mkFreeV xx in
         let valid = Term.mkApp("Valid", [Term.mkApp(for_all, [a;b])]) in
         let valid_b_x = Term.mkApp("Valid", [mk_ApplyTE b x]) in
-        [Term.Assume(mkForall([valid], [aa;bb], mkIff(mkExists([mk_HasType x a], [xx], mkImp(mk_HasType x a, valid_b_x)), valid)), Some "exists interpretation")] in
+        [Term.Assume(mkForall([valid], [aa;bb], mkIff(mkExists([mk_HasTypeZ x a], [xx], mkImp(mk_HasTypeZ x a, valid_b_x)), valid)), Some "exists interpretation")] in
     let mk_foralltyp_interp : string -> term -> decls_t = fun for_all tt -> 
         let kk = ("k", Kind_sort) in
         let aa = ("aa", Type_sort) in
