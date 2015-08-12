@@ -1295,7 +1295,7 @@ end
 | Pop -> begin
 "(pop)"
 end))
-and mkPrelude = (fun ( z3options ) -> (let basic = (Support.String.strcat z3options "(declare-sort Ref)\n(declare-fun Ref_constr_id (Ref) Int)\n\n(declare-sort String)\n(declare-fun String_constr_id (String) Int)\n\n(declare-sort Kind)\n(declare-fun Kind_constr_id (Kind) Int)\n\n(declare-sort Type)\n(declare-fun Type_constr_id (Type) Int)\n\n(declare-sort Term)\n(declare-fun Term_constr_id (Term) Int)\n(declare-datatypes () ((Fuel \n(ZFuel) \n(SFuel (prec Fuel)))))\n(declare-fun MaxIFuel () Fuel)\n(declare-fun MaxFuel () Fuel)\n(declare-fun PreKind (Type) Kind)\n(declare-fun PreType (Term) Type)\n(declare-fun Valid (Type) Bool)\n(declare-fun HasKind (Type Kind) Bool)\n(declare-fun HasType (Term Type) Bool)\n(define-fun  IsTyped ((x Term)) Bool\n(exists ((t Type)) (HasType x t)))\n(declare-fun HasTypeFuel (Fuel Term Type) Bool)\n(declare-fun ApplyEF (Term Fuel) Term)\n(declare-fun ApplyEE (Term Term) Term)\n(declare-fun ApplyET (Term Type) Term)\n(declare-fun ApplyTE (Type Term) Type)\n(declare-fun ApplyTT (Type Type) Type)\n(declare-fun Rank (Term) Int)\n(declare-fun Closure (Term) Term)\n(declare-fun ConsTerm (Term Term) Term)\n(declare-fun ConsType (Type Term) Term)\n(declare-fun ConsFuel (Fuel Term) Term)\n(declare-fun Precedes (Term Term) Type)\n(assert (forall ((t Type))\n(! (implies (exists ((e Term)) (HasType e t))\n(Valid t))\n:pattern ((Valid t)))))\n(assert (forall ((e Term) (t Type))\n(!  (= (HasType e t)\n(HasTypeFuel MaxIFuel e t))\n:pattern ((HasType e t)))))\n(assert (forall ((f Fuel) (e Term) (t Type)) \n(! (= (HasTypeFuel (SFuel f) e t)\n(HasTypeFuel f e t))\n:pattern ((HasTypeFuel (SFuel f) e t)))))\n(assert (forall ((t1 Term) (t2 Term))\n(! (iff (Valid (Precedes t1 t2)) \n(< (Rank t1) (Rank t2)))\n:pattern ((Precedes t1 t2)))))\n(define-fun Prims.Precedes ((a Type) (b Type) (t1 Term) (t2 Term)) Type\n(Precedes t1 t2))\n")
+and mkPrelude = (fun ( z3options ) -> (let basic = (Support.String.strcat z3options "(declare-sort Ref)\n(declare-fun Ref_constr_id (Ref) Int)\n\n(declare-sort String)\n(declare-fun String_constr_id (String) Int)\n\n(declare-sort Kind)\n(declare-fun Kind_constr_id (Kind) Int)\n\n(declare-sort Type)\n(declare-fun Type_constr_id (Type) Int)\n\n(declare-sort Term)\n(declare-fun Term_constr_id (Term) Int)\n(declare-datatypes () ((Fuel \n(ZFuel) \n(SFuel (prec Fuel)))))\n(declare-fun MaxIFuel () Fuel)\n(declare-fun MaxFuel () Fuel)\n(declare-fun PreKind (Type) Kind)\n(declare-fun PreType (Term) Type)\n(declare-fun Valid (Type) Bool)\n(declare-fun HasKind (Type Kind) Bool)\n(declare-fun HasTypeFuel (Fuel Term Type) Bool)\n(define-fun HasTypeZ ((x Term) (t Type)) Bool\n(HasTypeFuel ZFuel x t))\n\r\n                (define-fun HasType ((x Term) (t Type)) Bool\n(HasTypeFuel MaxIFuel x t))\n\r\n                ;;fuel irrelevance\r\n                (assert (forall ((f Fuel) (x Term) (t Type))\n(! (= (HasTypeFuel (SFuel f) x t)\n(HasTypeZ x t))\n:pattern ((HasTypeFuel (SFuel f) x t)))))\n(define-fun  IsTyped ((x Term)) Bool\n(exists ((t Type)) (HasTypeZ x t)))\n(declare-fun ApplyEF (Term Fuel) Term)\n(declare-fun ApplyEE (Term Term) Term)\n(declare-fun ApplyET (Term Type) Term)\n(declare-fun ApplyTE (Type Term) Type)\n(declare-fun ApplyTT (Type Type) Type)\n(declare-fun Rank (Term) Int)\n(declare-fun Closure (Term) Term)\n(declare-fun ConsTerm (Term Term) Term)\n(declare-fun ConsType (Type Term) Term)\n(declare-fun ConsFuel (Fuel Term) Term)\n(declare-fun Precedes (Term Term) Type)\n(assert (forall ((t Type))\n(! (implies (exists ((e Term)) (HasType e t))\n(Valid t))\n:pattern ((Valid t)))))\n(assert (forall ((t1 Term) (t2 Term))\n(! (iff (Valid (Precedes t1 t2)) \n(< (Rank t1) (Rank t2)))\n:pattern ((Precedes t1 t2)))))\n(define-fun Prims.Precedes ((a Type) (b Type) (t1 Term) (t2 Term)) Type\n(Precedes t1 t2))\n")
 in (let constrs = (("String_const", (("String_const_proj_0", Int_sort))::[], String_sort, 0))::(("Kind_type", [], Kind_sort, 0))::(("Kind_arrow", (("Kind_arrow_id", Int_sort))::[], Kind_sort, 1))::(("Kind_uvar", (("Kind_uvar_fst", Int_sort))::[], Kind_sort, 2))::(("Typ_fun", (("Typ_fun_id", Int_sort))::[], Type_sort, 1))::(("Typ_app", (("Typ_app_fst", Type_sort))::(("Typ_app_snd", Type_sort))::[], Type_sort, 2))::(("Typ_dep", (("Typ_dep_fst", Type_sort))::(("Typ_dep_snd", Term_sort))::[], Type_sort, 3))::(("Typ_uvar", (("Typ_uvar_fst", Int_sort))::[], Type_sort, 4))::(("Term_unit", [], Term_sort, 0))::(("BoxInt", (("BoxInt_proj_0", Int_sort))::[], Term_sort, 1))::(("BoxBool", (("BoxBool_proj_0", Bool_sort))::[], Term_sort, 2))::(("BoxString", (("BoxString_proj_0", String_sort))::[], Term_sort, 3))::(("BoxRef", (("BoxRef_proj_0", Ref_sort))::[], Term_sort, 4))::(("Exp_uvar", (("Exp_uvar_fst", Int_sort))::[], Term_sort, 5))::(("LexCons", (("LexCons_0", Term_sort))::(("LexCons_1", Term_sort))::[], Term_sort, 6))::[]
 in (let bcons = (let _120_534 = (let _120_533 = (Support.All.pipe_right constrs (Support.List.collect constructor_to_decl))
 in (Support.All.pipe_right _120_533 (Support.List.map (declToSmt z3options))))
@@ -1384,6 +1384,8 @@ let mk_Valid = (fun ( t ) -> (mkApp ("Valid", (t)::[])))
 
 let mk_HasType = (fun ( v ) ( t ) -> (mkApp ("HasType", (v)::(t)::[])))
 
+let mk_HasTypeZ = (fun ( v ) ( t ) -> (mkApp ("HasTypeZ", (v)::(t)::[])))
+
 let mk_IsTyped = (fun ( v ) -> (mkApp ("IsTyped", (v)::[])))
 
 let mk_HasTypeFuel = (fun ( f ) ( v ) ( t ) -> (match ((Support.ST.read Microsoft_FStar_Options.unthrottle_inductives)) with
@@ -1420,13 +1422,13 @@ let mk_ApplyEE = (fun ( e ) ( e' ) -> (mkApp ("ApplyEE", (e)::(e')::[])))
 
 let mk_ApplyEF = (fun ( e ) ( f ) -> (mkApp ("ApplyEF", (e)::(f)::[])))
 
-let mk_String_const = (fun ( i ) -> (let _120_642 = (let _120_641 = (let _120_640 = (mkInteger' i)
-in (_120_640)::[])
-in ("String_const", _120_641))
-in (mkApp _120_642)))
+let mk_String_const = (fun ( i ) -> (let _120_646 = (let _120_645 = (let _120_644 = (mkInteger' i)
+in (_120_644)::[])
+in ("String_const", _120_645))
+in (mkApp _120_646)))
 
-let mk_Precedes = (fun ( x1 ) ( x2 ) -> (let _120_647 = (mkApp ("Precedes", (x1)::(x2)::[]))
-in (Support.All.pipe_right _120_647 mk_Valid)))
+let mk_Precedes = (fun ( x1 ) ( x2 ) -> (let _120_651 = (mkApp ("Precedes", (x1)::(x2)::[]))
+in (Support.All.pipe_right _120_651 mk_Valid)))
 
 let mk_LexCons = (fun ( x1 ) ( x2 ) -> (mkApp ("LexCons", (x1)::(x2)::[])))
 
@@ -1435,10 +1437,10 @@ let rec n_fuel = (fun ( n ) -> (match ((n = 0)) with
 (mkApp ("ZFuel", []))
 end
 | false -> begin
-(let _120_656 = (let _120_655 = (let _120_654 = (n_fuel (n - 1))
-in (_120_654)::[])
-in ("SFuel", _120_655))
-in (mkApp _120_656))
+(let _120_660 = (let _120_659 = (let _120_658 = (n_fuel (n - 1))
+in (_120_658)::[])
+in ("SFuel", _120_659))
+in (mkApp _120_660))
 end))
 
 let fuel_2 = (n_fuel 2)
@@ -1447,8 +1449,8 @@ let fuel_100 = (n_fuel 100)
 
 let mk_and_opt = (fun ( p1 ) ( p2 ) -> (match ((p1, p2)) with
 | (Some (p1), Some (p2)) -> begin
-(let _120_661 = (mkAnd (p1, p2))
-in Some (_120_661))
+(let _120_665 = (mkAnd (p1, p2))
+in Some (_120_665))
 end
 | ((Some (p), None)) | ((None, Some (p))) -> begin
 Some (p)
@@ -1480,26 +1482,26 @@ let rec print_smt_term = (fun ( t ) -> (match (t.tm) with
 (Support.Microsoft.FStar.Util.format1 "Integer %s" n)
 end
 | BoundV (n) -> begin
-(let _120_678 = (Support.Microsoft.FStar.Util.string_of_int n)
-in (Support.Microsoft.FStar.Util.format1 "BoundV %s" _120_678))
+(let _120_682 = (Support.Microsoft.FStar.Util.string_of_int n)
+in (Support.Microsoft.FStar.Util.format1 "BoundV %s" _120_682))
 end
 | FreeV (fv) -> begin
 (Support.Microsoft.FStar.Util.format1 "FreeV %s" (Support.Prims.fst fv))
 end
 | App ((op, l)) -> begin
-(let _120_679 = (print_smt_term_list l)
-in (Support.Microsoft.FStar.Util.format2 "App %s [ %s ]" (op_to_string op) _120_679))
+(let _120_683 = (print_smt_term_list l)
+in (Support.Microsoft.FStar.Util.format2 "App %s [ %s ]" (op_to_string op) _120_683))
 end
-| Quant ((qop, l, _49_820, _49_822, t)) -> begin
-(let _120_681 = (print_smt_term_list_list l)
-in (let _120_680 = (print_smt_term t)
-in (Support.Microsoft.FStar.Util.format3 "Quant %s %s %s" (qop_to_string qop) _120_681 _120_680)))
+| Quant ((qop, l, _49_822, _49_824, t)) -> begin
+(let _120_685 = (print_smt_term_list_list l)
+in (let _120_684 = (print_smt_term t)
+in (Support.Microsoft.FStar.Util.format3 "Quant %s %s %s" (qop_to_string qop) _120_685 _120_684)))
 end))
-and print_smt_term_list = (fun ( l ) -> (Support.List.fold_left (fun ( s ) ( t ) -> (let _120_685 = (print_smt_term t)
-in (Support.String.strcat (Support.String.strcat s "; ") _120_685))) "" l))
-and print_smt_term_list_list = (fun ( l ) -> (Support.List.fold_left (fun ( s ) ( l ) -> (let _120_690 = (let _120_689 = (print_smt_term_list l)
-in (Support.String.strcat (Support.String.strcat s "; [ ") _120_689))
-in (Support.String.strcat _120_690 " ] "))) "" l))
+and print_smt_term_list = (fun ( l ) -> (Support.List.fold_left (fun ( s ) ( t ) -> (let _120_689 = (print_smt_term t)
+in (Support.String.strcat (Support.String.strcat s "; ") _120_689))) "" l))
+and print_smt_term_list_list = (fun ( l ) -> (Support.List.fold_left (fun ( s ) ( l ) -> (let _120_694 = (let _120_693 = (print_smt_term_list l)
+in (Support.String.strcat (Support.String.strcat s "; [ ") _120_693))
+in (Support.String.strcat _120_694 " ] "))) "" l))
 
 
 
