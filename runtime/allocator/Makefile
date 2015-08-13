@@ -1,6 +1,6 @@
 OCAMLC := ocamlfind ocamlopt
 OCAMLLINK := ocamlfind ocamlopt
-FLAGS := -g
+FLAGS := -g -ccopt -g
 CMO := cmx
 
 # If for some weird reason, you don't have ocamlfind installed, override it in

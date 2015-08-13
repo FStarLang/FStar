@@ -7,11 +7,12 @@ Factorial.ml: factorial.fst
 	fstar --codegen OCaml-experimental $^
 	./revertManualMLs.sh
 
+PRE_SST_FILES=ListSet.ml Stack.ml FunctionalExtensionality.ml Set.ml Heap.ml Ghost.ml Located.ml Lref.ml StackAndHeap.ml
+
 # make Factorial.ml should build all the remailing .ml files
-factorial:  ListSet.ml Stack.ml FunctionalExtensionality.ml Set.ml Ghost.ml Heap.ml StackAndHeap.ml SST.ml SSTCombinators.ml Factorial.ml Test.ml
+factorial:  $(PRE_SST_FILES) SST.ml SSTCombinators.ml Factorial.ml Test.ml
 	$(OCAML) -o $@ $^
 
-PRE_SST_FILES=ListSet.ml Stack.ml FunctionalExtensionality.ml Set.ml Heap.ml Ghost.ml StackAndHeap.ml
 
 MD5.ml: md5.fst
 	fstar MD5.fst
