@@ -24,7 +24,7 @@ type pre_with (m:mode) (t:Type) = fun m0 -> m0 = m /\ t
 
 let to_s2 p1 p2 = union (singleton p1) (singleton p2)
 
-val mill5_sec: #p1:prin -> #p2:prin -> w:Wire nat
+val mill5_sec: #p1:prin -> #p2:prin -> w:Wire nat (union (singleton p1) (singleton p2))
                -> unit
                -> Wys bool (pre_with (Mode Par (to_s2 p1 p2))
                                      (w_dom w = to_s2 p1 p2)) post

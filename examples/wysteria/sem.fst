@@ -227,7 +227,8 @@ let is_clos #meta v = match v with//is_V_clos v || is_V_fix_clos v || is_V_emp_c
 val get_en_b: #meta:v_meta -> v:value meta{is_clos v} -> Tot (env * varname * exp)
 let get_en_b #meta v = match v with
   | V_clos en x e       -> en, x, e
-  | V_fix_clos en f x e -> update_env #(empty, Cannot_b) en f (V_fix_clos en f x e), x, e
+  | V_fix_clos en f x e ->
+    update_env #(Meta empty Cannot_b empty Cannot_w) en f (V_fix_clos en f x e), x, e
   | V_emp_clos x e      -> empty_env, x, e
 
 val pre_aspar: config -> Tot comp
@@ -266,8 +267,7 @@ let step_aspar c = match c with
 val pre_box: config -> Tot comp
 let pre_box c = match c with
   | Conf l (Mode Par ps1) _ _ (T_red (R_box #meta ps2 _)) ->
-    let (ps', b) = meta in
-    if subset ps' ps2 && is_Can_b b then
+    if is_meta_boxable ps2 meta then
       if src l then
         if subset ps2 ps1 then Do else NA
       else Do
@@ -296,22 +296,22 @@ let step_unbox c = match c with
 val pre_mkwire: config -> Tot comp
 let pre_mkwire c = match c with
   | Conf l (Mode Par ps) _ _ (T_red (R_mkwire (V_const (C_prins ps'))
-                                                      (V_box #mv ps'' _))) ->
-    if fst mv = empty && snd mv = Can_b then
+                                                       (V_box #mv ps'' _))) ->
+    if is_meta_wireable mv then
       if src l then
         if subset ps' ps && subset ps' ps'' then Do else NA
       else Do
     else NA
  
   | Conf l (Mode Sec ps) _ _ (T_red (R_mkwire #mps #mv (V_const (C_prins ps')) _)) ->
-    if fst mv = empty && snd mv = Can_b then
+    if is_meta_wireable mv then
       if subset ps' ps then Do else NA
     else NA
  
   | _ -> NA
 
 val mconst_on:
- eps:eprins -> v:value (empty, Can_b)
+ eps:eprins -> v:value (Meta empty Can_b empty Can_w)
  -> Tot (w:v_wire eps{forall p. (mem p eps ==> select p w = Some v)})
 let mconst_on eps v = const_on eps v
 
