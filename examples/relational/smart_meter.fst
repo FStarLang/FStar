@@ -35,7 +35,7 @@ assume logic val idelt: elt
 type tp (* trapdoor (private param) *)
 type public_param (* public param: p, g, h *)
 type pparam = eq public_param
-assume logic val trap: public_param -> int (* such that g = h^(trap pp) *)
+assume logic val trap: public_param -> Tot int (* such that g = h^(trap pp) *)
 
 type text = int (* exponents for values *)
 type opng = int (* exponents for openings *)
@@ -71,11 +71,11 @@ let scalar_product_rel (R ll1 rl1) (R ll2 rl2) = R (scalar_product ll1 ll2) (sca
 
 assume val commitP: double public_param -> double text -> double opng -> Tot (double elt)
 assume val commit: pp:pparam -> x:double text
-                   -> p:(double opng * eq elt){openingP (R.l x) (R.r x) (R.l(fst p)) (R.r(fst p))
-                                            /\ commitP pp x (fst p) = snd p}
+                   ->Tot (p:(double opng * eq elt){openingP (R.l x) (R.r x) (R.l(fst p)) (R.r(fst p))
+                                            /\ commitP pp x (fst p) = snd p})
 
 assume val verify: pp:pparam -> x:double text -> r:double opng -> c:double elt
-                   -> b:(eq bool){R.l b ==> c = commitP pp x r}
+                   -> Tot (b:(eq bool){R.l b ==> c = commitP pp x r})
 
 
 assume CommitP_injective : (forall pp x0 x1 r0 r1. (commitP pp x0 r0 = commitP pp x1 r1) ==> x0 = x1)
@@ -83,14 +83,14 @@ assume CommitP_injective : (forall pp x0 x1 r0 r1. (commitP pp x0 r0 = commitP p
 
 
 assume val mult: c0:double elt -> c1: double elt
-                 -> c:double elt{forall pp x0 x1 r0 r1.
+                 -> Tot (c:double elt{forall pp x0 x1 r0 r1.
                           (c0 = commitP pp x0 r0 /\ c1=commitP pp x1 r1) ==>
-                          c=commitP pp (add_rel x0 x1) (add_rel r0 r1)}
+                          c=commitP pp (add_rel x0 x1) (add_rel r0 r1)})
 
 assume val exp: c0:double elt -> z:double int
-                 -> c:double elt{forall pp x0 r0.
+                 -> Tot (c:double elt{forall pp x0 r0.
                           c0 = commitP pp x0 r0 ==>
-                          c=commitP pp (mul_rel x0 z) (mul_rel r0 z)}
+                          c=commitP pp (mul_rel x0 z) (mul_rel r0 z)})
 
 assume val commitsP: pp:double (public_param) -> double (list(text * opng)) -> Tot (double (list elt))
 assume val commitsP_nil: pp:pparam -> xrs:double(list (text * opng)) -> Lemma (commitsP pp xrs = twice [] <==> xrs = twice [])
@@ -109,10 +109,10 @@ assume val scalar_exp : p:(double (list text) -> Type)
                         -> pp:pparam
                         -> commitments p pp
                         -> ps:double (list int)
-                        -> c:double elt{exists xs r. p xs
-                                        /\ length (R.l xs) = length (R.l ps)
-                                        /\ length (R.r xs) = length (R.r ps)
-                                        /\ c = commitP pp (scalar_product_rel xs ps) r}
+                        -> Tot (c:double elt{exists xs r. p xs
+                                             /\ length (R.l xs) = length (R.l ps)
+                                             /\ length (R.r xs) = length (R.r ps)
+                                             /\ c = commitP pp (scalar_product_rel xs ps) r})
 
 
 
@@ -134,20 +134,20 @@ type signed (pp:pparam) (cs:double (list elt)) =
 
 type dsig = bytes
 
-assume val sign: pp:pparam -> cs:eq(list elt){signed pp cs} -> eq dsig
+assume val sign: pp:pparam -> cs:eq(list elt){signed pp cs} -> Tot (eq dsig)
 
 assume val verify_meter_signature: pp:pparam
   -> cs:eq (list elt)
   -> eq dsig
-  -> b:eq bool{R.l b ==> signed pp cs }
+  -> Tot (b:eq bool{R.l b ==> signed pp cs })
 
 
 (* METER *)
 val commits: pp:pparam
   -> xs:double (list int){readings xs /\ length (R.l xs) = length (R.r xs)}
-  -> r:(openings * eq (list elt))
-     {xs = fsts_rel (fst r)
-   /\ commitsP pp (fst r) = snd r}
+  -> Tot (r:(openings * eq (list elt)){xs = fsts_rel (fst r)
+                                       /\ commitsP pp (fst r) = snd r})
+                                      (decreases (R.l xs))
 let rec commits pp xs = match xs with
   | R [] [] -> commitsP_nil pp (twice []); (twice []),(twice [])
   | R (lx::lxs) (rx::rxs) -> let x = R lx rx in
@@ -161,21 +161,23 @@ let rec commits pp xs = match xs with
                              commitsP_cons pp xrs c cs;
                              xrs, (cons_rel c cs)
 
+
 val meter: pp:pparam
           -> xs:double(list int){readings xs /\ length (R.l xs) = length (R.r xs)}
-          -> r:(openings * eq(list elt) * eq dsig)
-            {xs = fsts_rel (fst3 r)
-          /\ commitsP pp (fst3 r) = snd3 r}
+          -> Tot (r:(openings * eq(list elt) * eq dsig) {xs = fsts_rel (fst3 r)
+                                                         /\ commitsP pp (fst3 r) = snd3 r})
 let meter pp xs =
           let xrs,cs = commits pp xs in
           (xrs, cs, sign pp cs)
 
 (* USER *)
 val sums: xrs: openings -> ps:eq(list int){length(R.l ps) = length (R.l xrs) /\
-                                           length(R.r ps) = length (R.r xrs)} ->
-                          (x:(double int){R.l x=scalar_product (fsts (R.l xrs)) (R.l ps) /\
-                                          R.r x=scalar_product (fsts (R.r xrs)) (R.r ps)}
-                                          & opening x)
+                                           length(R.r ps) = length (R.r xrs)}
+          -> Tot (x:(double int){R.l x=scalar_product (fsts (R.l xrs)) (R.l ps)
+                              /\ R.r x=scalar_product (fsts (R.r xrs)) (R.r ps)}
+                  & opening x)
+                  (decreases (R.l xrs))
+
 let rec sums xrs ps = match xrs, ps with
   | R (lxr::lxrs) (rxr::rxrs), R (lp::lps) (rp::rps) ->
       (* move from single sided values to relational values again *)
@@ -195,8 +197,8 @@ val make_payment: pp:pparam -> xrs:openings{readings (fsts_rel xrs)}
                                      /\ length (R.l xrs) = length (R.l ps)
                                      /\ length (R.r xrs) = length (R.r ps)
                                      /\ scalar_product (fsts (R.l xrs)) (R.l ps)
-                                      = scalar_product (fsts (R.r xrs)) (R.r ps)}
-               -> (eq int * eq int)
+                                          = scalar_product (fsts (R.r xrs)) (R.r ps)}
+               -> Tot (eq int * eq int)
 let make_payment pp xrs ps =
       let (| x, o |) =  sums xrs ps in
       x,o
@@ -209,10 +211,10 @@ val verify_payment: pp:pparam
                     -> s:eq dsig
                     -> x:double text
                     -> r:double opng
-                    -> b:eq bool{R.l b ==> (exists xs. readings xs
-                                                       /\ length (R.l xs) = length (R.l ps)
-                                                       /\ length (R.r xs) = length (R.r ps)
-                                                       /\ x  = scalar_product_rel xs ps)}
+                    -> Tot (b:eq bool{R.l b ==> (exists xs. readings xs
+                                                            /\ length (R.l xs) = length (R.l ps)
+                                                            /\ length (R.r xs) = length (R.r ps)
+                                                            /\ x  = scalar_product_rel xs ps)})
 let verify_payment pp ps cs s x r =
   match  verify_meter_signature pp cs s with
   | R true  true  -> let c = scalar_exp #readings pp cs ps in
