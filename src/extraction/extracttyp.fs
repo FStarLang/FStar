@@ -342,9 +342,9 @@ let extractCtor (tyBinders : list<binder>) (c:context) (ctor: inductiveConstruct
         let mlt = Util.eraseTypeDeep c (extractTyp newC tr) in
         let tys = (List.map mlTyIdentOfBinder tyBinders, mlt) in //MayErase, because constructors are always pure
         let fvv = mkFvvar ctor.cname ctor.ctype in 
-            // fprint1 "(* extracting the type of constructor %s\n" (lident2mlsymbol ctor.cname);
-           // fprint1 "%s\n" (typ_to_string ctor.ctype);
-            // printfn "%A *)\n" (tys);
+             fprint1 "(* extracting the type of constructor %s\n" (lident2mlsymbol ctor.cname);
+            fprint1 "%s\n" (typ_to_string ctor.ctype);
+             printfn "%A *)\n" (tys);
         (extend_fv c fvv tys false, (lident2mlsymbol ctor.cname, argTypes mlt)))
 
 (*indices get collapsed to unit, so all we need is the number of index arguments.
