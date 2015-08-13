@@ -6,7 +6,7 @@ all:
 	$(FSTAR) mill3.fst
 	$(FSTAR) mill4.fst
 	$(FSTAR) mill5.fst
-	$(FSTAR) lib.fst    # remove once some example uses it
+	$(FSTAR) gps.fst
 	$(FSTAR) theory.fst
 	$(FSTAR) sinterpreter.fst
 

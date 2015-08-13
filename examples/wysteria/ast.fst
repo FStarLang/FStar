@@ -57,6 +57,8 @@ and exp =
 
 type canbox = | Can_b | Cannot_b
 
+type canwire = | Can_w | Cannot_w
+
 (*val canbox_const: c:const -> Tot canbox
 let canbox_const c = match c with
   | C_prin _
@@ -66,29 +68,41 @@ let canbox_const c = match c with
   | C_nat _
   | C_bool _  -> Can_b*)
 
-(* if empty, Can_b then can_wire *)
-type v_meta = eprins * canbox
+type v_meta =
+  | Meta: vps:eprins -> cb:canbox -> wps:eprins -> cw:canwire -> v_meta
+
+val is_meta_wireable: meta:v_meta -> Tot bool
+let is_meta_wireable = function
+  | Meta ps Can_b ps' Can_w -> ps = empty && ps' = empty
+  | _                       -> false
+
+val is_meta_boxable: ps:prins -> meta:v_meta -> Tot bool
+let is_meta_boxable ps = function
+  | Meta ps' Can_b ps'' _ -> subset ps' ps && subset ps'' ps
+  | _                     -> false
 
 type value: v_meta -> Type =
-  | V_const   : c:const -> value (empty, Can_b)
+  | V_const   : c:const -> value (Meta empty Can_b empty Can_w)
 
-  | V_box     : #meta:v_meta -> ps:prins
-                -> v:value meta{subset (fst meta) ps /\ (snd meta) = Can_b}
-                -> value (ps, Can_b)
+  | V_box     : #meta:v_meta -> ps:prins -> v:value meta{is_meta_boxable ps meta}
+                -> value (Meta ps Can_b (Meta.wps meta) Cannot_w)
                 
-  | V_wire    : eps:eprins -> m:v_wire eps -> value (empty, Cannot_b)
+  | V_wire    : eps:eprins -> m:v_wire eps
+                -> value (Meta empty Can_b eps Cannot_w)
 
-  | V_clos    : en:env -> x:varname -> e:exp -> value (empty, Cannot_b)
+  | V_clos    : en:env -> x:varname -> e:exp
+                -> value (Meta empty Cannot_b empty Cannot_w)
   
-  | V_fix_clos: en:env -> f:varname -> x:varname -> e:exp -> value (empty, Cannot_b)
+  | V_fix_clos: en:env -> f:varname -> x:varname -> e:exp
+                -> value (Meta empty Cannot_b empty Cannot_w)
 
-  | V_emp_clos: x:varname -> e:exp -> value (empty, Can_b)
+  | V_emp_clos: x:varname -> e:exp -> value (Meta empty Can_b empty Can_w)
 
   (* bomb value, comes up in target only *)
-  | V_emp     : value (empty, Can_b)
+  | V_emp     : value (Meta empty Can_b empty Can_w)
 
 and v_wire (eps:eprins) =
-  m:ordmap prin (value (empty, Can_b)) p_cmp{forall p. mem p eps = contains p m}
+  m:ordmap prin (value (Meta empty Can_b empty Can_w)) p_cmp{forall p. mem p eps = contains p m}
 
 and dvalue:Type =
   | D_v: meta:v_meta -> v:value meta -> dvalue

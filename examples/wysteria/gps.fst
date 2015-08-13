@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Wysteria --codegen Wysteria;
+    options:--admit_fsi Set --admit_fsi Wysteria;
     variables:LIB=../../lib;
     other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst wysteria.fsi lib.fst
  --*)
@@ -27,9 +27,9 @@ val read_fn: unit -> Wys nat (fun m0 -> Mode.m m0 = Par /\
 let read_fn x = read #nat ()
 
 val gps_sec: ps:prins
-             -> w:Wire int{forall p. mem p ps <==> w_contains p w}
+             -> w:Wire int ps{forall p. mem p ps <==> w_contains p w}
              -> unit
-             -> Wys (Wire prin) (pre (Mode Sec ps)) post
+             -> Wys (Wire prin ps) (pre (Mode Par ps)) post
 let gps_sec ps w _ =
 
   let wfold_f: int -> prev:prin{w_contains prev w}
@@ -47,7 +47,7 @@ let gps_sec ps w _ =
       wfold ps' w (wfold_f x) p
   in
 
-  let g: unit -> Wys (Wire prin) (pre (Mode Sec ps)) post =
+  let g: unit -> Wys (Wire prin ps) (pre (Mode Sec ps)) post =
     fun _ -> waps ps w waps_f
   in
 
@@ -66,11 +66,11 @@ let gps _ =
   let w1 = concat_wire wa wb in
   let w2 = concat_wire w1 wc in
 
-  //let _ = as_par ab (gps_sec ab w1) in
+  let _ = as_par ab (gps_sec ab w1) in
 
-  let _ = as_sec abc (gps_sec abc w2) in
+  let _ = as_par abc (gps_sec abc w2) in
 
   true
 ;;
 
-let x = main abc gps in wprint x
+let x = main abc gps in ()

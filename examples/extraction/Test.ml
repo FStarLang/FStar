@@ -293,17 +293,17 @@ false
 end))
 
 let ___Leaf___n = (fun ( n ) ( projectee ) -> (match (projectee) with
-| Leaf (* manually removed ( _8_113) *) -> begin
-(* manually removed ( _8_113) *)  ()
+| Leaf -> begin
+()
 end))
 
 let ___Node___n = (fun ( n ) ( projectee ) -> (match (projectee) with
-| Node ((* manually removed _8_116, *) _8_117) -> begin
-(* manually removed _8_116, *) ()
+| Node (_8_117) -> begin
+()
 end))
 
 let ___Node____2 = (fun ( n ) ( projectee ) -> (match (projectee) with
-| Node ((*  manually removed _8_119, *) _8_118) -> begin
+| Node (_8_118) -> begin
 _8_118
 end))
 

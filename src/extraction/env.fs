@@ -166,9 +166,9 @@ let extend_ty (g:env) (a:btvar) (mapped_to:option<mlty>) : env =
     let tcenv = Env.push_local_binding g.tcenv (Env.Binding_typ(a.v, a.sort)) in
     {g with gamma=gamma; tcenv=tcenv} 
     
-let extend_bv (g:env) (x:bvvar) (t_x:mltyscheme) (add_unit:bool) : env =
+let extend_bv (g:env) (x:bvvar) (t_x:mltyscheme) (add_unit:bool) (mk_unit:bool (*some pattern terms become unit while extaction*)) : env =
     let mlx = MLE_Var (as_mlident x.v) in
-    let mlx = if add_unit then MLE_App(mlx, [ml_unit]) else mlx in
+    let mlx = if mk_unit then ml_unit else (if add_unit then MLE_App(mlx, [ml_unit]) else mlx) in
     let gamma = Bv(x, mlx, t_x)::g.gamma in 
     let tcenv = Env.push_local_binding g.tcenv (Env.Binding_var(x.v, x.sort)) in
     {g with gamma=gamma; tcenv=tcenv} 
@@ -212,7 +212,7 @@ let extend_fv (g:env) (x:fvvar) (t_x:mltyscheme) (add_unit:bool) : env =
 let extend_lb (g:env) (l:lbname) (t:typ) (t_x:mltyscheme) (add_unit:bool) : (env * mlident) = 
     match l with 
         | Inl x -> 
-          extend_bv g (Util.bvd_to_bvar_s x t) t_x add_unit, as_mlident x
+          extend_bv g (Util.bvd_to_bvar_s x t) t_x add_unit false, as_mlident x
         | Inr f -> 
           let p, y = mlpath_of_lident f in
           extend_fv' g (Util.fvvar_of_lid f t) (p, y) t_x add_unit, (y,0)

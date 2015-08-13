@@ -13,7 +13,8 @@ open AST
 open Semantics
 
 type slice_v_meta_inv (meta:v_meta) (smeta:v_meta) =
-  subset (fst smeta) (fst meta) && (snd smeta = snd meta)
+  subset (Meta.vps smeta) (Meta.vps meta) && (Meta.cb smeta = Meta.cb meta) &&
+  subset (Meta.wps smeta) (Meta.wps meta) && (Meta.cw smeta = Meta.cw meta)
 
 opaque val slice_wire_sps:
   #eps:eprins -> ps:prins -> w:v_wire eps
@@ -42,18 +43,19 @@ val slice_en_sps: prins -> en:env
                      (decreases %[en])
 let rec slice_v_sps #meta ps v =
   let def = D_v meta v in
-  let emp = D_v (empty, Can_b) V_emp in
+  let emp = D_v (Meta empty Can_b empty Can_w) V_emp in
   match v with
    | V_const _           -> def
 
    | V_box ps' v         ->
-     let D_v _ v' =
+     let D_v meta' v' =
        if intersect ps' ps = empty then emp
        else slice_v_sps ps v
      in
-     D_v meta (V_box ps' v')
-
-   | V_wire eps m        -> D_v meta (V_wire (intersect eps ps) (slice_wire_sps #eps ps m))
+     D_v (Meta ps' Can_b (Meta.wps meta') Cannot_w) (V_box ps' v')
+     
+   | V_wire eps m        -> D_v (Meta empty Can_b (intersect eps ps) Cannot_w)
+                                (V_wire (intersect eps ps) (slice_wire_sps #eps ps m))
 
    | V_clos en x e       -> D_v meta (V_clos (slice_en_sps ps en) x e)
 
@@ -160,11 +162,11 @@ val env_upd_upd_slice_lemma_ps: #meta1:v_meta -> #meta2:v_meta -> ps:prins
                                 -> v1:value meta1 -> v2:value meta2
                                 -> Lemma (requires (True))
                                          (ensures (slice_en_sps ps (update_env #meta2 (update_env #meta1 en x1 v1) x2 v2) =
-                                                   update_env #meta2 (update_env #meta1 (slice_en_sps ps en) x1 (D_v.v (slice_v_sps ps v1))) x2 (D_v.v (slice_v_sps ps v2))))
+                                                   update_env #(D_v.meta (slice_v_sps ps v2)) (update_env #(D_v.meta (slice_v_sps ps v1)) (slice_en_sps ps en) x1 (D_v.v (slice_v_sps ps v1))) x2 (D_v.v (slice_v_sps ps v2))))
                                    [SMTPat (slice_en_sps ps (update_env #meta2 (update_env #meta1 en x1 v1) x2 v2))]
 let env_upd_upd_slice_lemma_ps #meta1 #meta2 ps en x1 x2 v1 v2 =
   cut (FEq (slice_en_sps ps (update_env #meta2 (update_env #meta1 en x1 v1) x2 v2))
-           (update_env #meta2 (update_env #meta1 (slice_en_sps ps en) x1 (D_v.v (slice_v_sps ps v1))) x2 (D_v.v (slice_v_sps ps v2))))
+           (update_env #(D_v.meta (slice_v_sps ps v2)) (update_env #(D_v.meta (slice_v_sps ps v1)) (slice_en_sps ps en) x1 (D_v.v (slice_v_sps ps v1))) x2 (D_v.v (slice_v_sps ps v2))))
 
 open Constructive
 
@@ -177,14 +179,14 @@ val subset_intersect_lemma: ps1:prins -> ps2:prins{subset ps2 ps1}
                                //[SMTPat (subset ps2 ps1); SMTPat (intersect ps2 ps1)]
 let subset_intersect_lemma ps1 ps2 = ()
 
-val meta_empty_can_b_same_slice: v:value (empty, Can_b) -> ps:prins
+val meta_empty_can_b_same_slice: v:value (Meta empty Can_b empty Can_w) -> ps:prins
                                  -> Lemma (requires (True))
                                           (ensures (D_v.v (slice_v_sps ps v) = v))
                                     //[SMTPat (slice_v_sps #(empty, Can_b) ps v)]
 let meta_empty_can_b_same_slice v ps = ()
 
 val slice_const_wire_sps_lemma:
-  ps:prins -> ps'':prins{subset ps'' ps} -> v:value (empty, Can_b)
+  ps:prins -> ps'':prins{subset ps'' ps} -> v:value (Meta empty Can_b empty Can_w)
   -> Lemma (requires (True))
            (ensures (slice_wire_sps #ps'' ps (mconst_on ps'' v) =
                      mconst_on ps'' (D_v.v (slice_v_sps ps v))))
@@ -290,7 +292,10 @@ let sstep_sec_slice_lemma c c' h = match h with
     meta_empty_can_b_same_slice v ps;
     slice_const_wire_sps_lemma ps ps' v;
     Conj () (C_mkwire_beta (slice_c_sps c) (slice_c_sps c'))
-  | C_projwire_beta c c'   -> Conj () (C_projwire_beta (slice_c_sps c) (slice_c_sps c'))
+  | C_projwire_beta c c'   ->
+    let Conf _ (Mode Sec ps) _ _ (T_red (R_projwire p (V_wire eps _))) = c in
+    let _ = cut (b2t (mem p (intersect eps ps))) in
+    Conj () (C_projwire_beta (slice_c_sps c) (slice_c_sps c'))
   | C_concatwire_beta c c' ->
     let Conf _ (Mode _ ps) _ _ (T_red (R_concatwire (V_wire eps1 w1) (V_wire eps2 w2))) = c in
     de_morgan_intersect_over_union eps1 eps2 ps;
@@ -322,16 +327,16 @@ val slice_en  : prin -> en:env -> Tot (varname -> Tot (option dvalue)) (decrease
 
 let rec slice_v #meta p v =
   let def = D_v meta v in
-  let emp = D_v (empty, Can_b) V_emp in
+  let emp = D_v (Meta empty Can_b empty Can_w) V_emp in
   match v with
     | V_const _           -> def
 
     | V_box ps v          ->
-      let D_v _ v' = if mem p ps then slice_v p v else emp in
-      D_v meta (V_box ps v')
+      let D_v meta' v' = if mem p ps then slice_v p v else emp in
+      D_v (Meta ps Can_b (Meta.wps meta') Cannot_w) (V_box ps v')
 
-    | V_wire eps w        -> D_v meta (V_wire (intersect eps (singleton p))
-                                              (slice_wire #eps p w))
+    | V_wire eps w        -> D_v (Meta empty Can_b (intersect eps (singleton p)) Cannot_w)
+                                 (V_wire (intersect eps (singleton p)) (slice_wire #eps p w))
 
     | V_clos en x e       -> D_v meta (V_clos (slice_en p en) x e)
 
@@ -375,7 +380,7 @@ let slice_r p r = match r with
   | R_aspar ps v       -> R_aspar ps (D_v.v (slice_v p v))
   | R_assec ps v       -> R_assec ps (D_v.v (slice_v p v))
   | R_box ps v         ->
-    let D_v _ v' = if mem p ps then slice_v p v else D_v (empty, Can_b) V_emp in
+    let D_v _ v' = if mem p ps then slice_v p v else D_v (Meta empty Can_b empty Can_w) V_emp in
     R_box ps v'
   | R_unbox v          -> R_unbox (D_v.v (slice_v p v))
   | R_mkwire v1 v2     -> R_mkwire (D_v.v (slice_v p v1)) (D_v.v (slice_v p v2))
@@ -448,8 +453,10 @@ let rec slice_c p (Conf Source (Mode as_m ps) s en t) =
   Conf Target (Mode Par (singleton p)) (slice_s p s) en' t'
 
 type compose_v_meta_inv (m1:v_meta) (m2:v_meta) (cmeta:v_meta) =
-  subset (fst cmeta) (union (fst m1) (fst m2)) /\
-  ((snd m1 = Can_b /\ snd m2 = Can_b) ==> snd cmeta = Can_b)
+  subset (Meta.vps cmeta) (union (Meta.vps m1) (Meta.vps m2))            /\
+  ((Meta.cb m1 = Can_b /\ Meta.cb m2 = Can_b) ==> Meta.cb cmeta = Can_b) /\
+  subset (Meta.wps cmeta) (union (Meta.wps m1) (Meta.wps m2))            /\
+  ((Meta.cw m1 = Can_w /\ Meta.cw m2 = Can_w) ==> Meta.cw cmeta = Can_w)
 
 val compose_vals: #m1:v_meta -> #m2:v_meta -> v1:value m1 -> v2:value m2
                   -> Tot (r:dvalue{compose_v_meta_inv m1 m2 (D_v.meta r)})
@@ -460,7 +467,7 @@ let rec compose_vals #m1 #m2 v1 v2 =
   if is_V_emp v1 then D_v m2 v2
   else if is_V_emp v2 then D_v m1 v1
   else
-    let emp = D_v (empty, Can_b) V_emp in
+    let emp = D_v (Meta empty Can_b empty Can_w) V_emp in
     match v1 with
       | V_const c1 ->
         if is_V_const v2 && V_const.c v1 = V_const.c v2 then
@@ -471,7 +478,8 @@ let rec compose_vals #m1 #m2 v1 v2 =
         if is_V_box v2 then
           let V_box ps2 v2 = v2 in
           if ps1 = ps2 then
-            D_v m1 (V_box ps1 (D_v.v (compose_vals v1 v2)))
+            let D_v meta v = compose_vals v1 v2 in
+            D_v (Meta ps1 Can_b (Meta.wps meta) Cannot_w) (V_box ps1 v)
           else
             emp
         else emp
@@ -480,7 +488,8 @@ let rec compose_vals #m1 #m2 v1 v2 =
         if is_V_wire v2 then
           let V_wire eps2 w2 = v2 in
           if intersect eps1 eps2 = empty then
-            D_v m1 (V_wire (union eps1 eps2) (compose_wires #eps1 #eps2 w1 w2 eps1))
+            D_v (Meta empty Can_b (union eps1 eps2) Cannot_w)
+                (V_wire (union eps1 eps2) (compose_wires #eps1 #eps2 w1 w2 eps1))
           else emp
         else emp
 
@@ -565,9 +574,34 @@ and slice_lem_singl_en en p =
   let _ = cut (FEq (slice_en p en) (slice_en_sps (singleton p) en)) in
   ()
 
+val boxed_wire_slice_lem: ps1:prins -> ps2:prins{not (intersect ps1 ps2 = empty)}
+                          -> eps:eprins{subset eps ps2} -> w:v_wire eps
+                          -> Lemma (requires (True))
+                                   (ensures (slice_wire_sps #eps ps1 w =
+                                            (slice_wire_sps #eps (intersect ps1 ps2) w)))
+let boxed_wire_slice_lem ps1 ps2 eps w = if intersect eps ps1 = empty then () else ()
+
+val boxed_wire_value_slice_lem:
+  ps1:prins -> ps2:prins{not (intersect ps1 ps2 = empty)}
+  -> eps:eprins{subset eps ps2} -> w:v_wire eps
+  -> Lemma (requires (True))
+           (ensures (slice_v_sps #(Meta empty Can_b eps Cannot_w) ps1 (V_wire eps w) =
+                    (slice_v_sps #(Meta empty Can_b eps Cannot_w) (intersect ps1 ps2) (V_wire eps w))))
+let boxed_wire_value_slice_lem ps1 ps2 eps w =
+  if intersect eps ps1 = empty then
+    let _ = cut (b2t (intersect eps ps1 = intersect eps (intersect ps1 ps2))) in
+    boxed_wire_slice_lem ps1 ps2 eps w;
+    ()
+  else
+    let _ = cut (b2t (intersect eps ps1 = intersect eps (intersect ps1 ps2))) in
+    boxed_wire_slice_lem ps1 ps2 eps w;
+    ()
+
 val box_slice_lem: #m:v_meta -> v:value m
                    -> ps1:prins -> ps2:prins{not (intersect ps1 ps2 = empty) /\
-                                             subset (fst m) ps2 /\ snd m = Can_b}
+                                             subset (Meta.vps m) ps2 /\
+                                             subset (Meta.wps m) ps2 /\
+                                             Meta.cb m = Can_b}
                    -> Lemma (requires (True))
                             (ensures (slice_v_sps ps1 (V_box ps2 v) =
                                       slice_v_sps (intersect ps1 ps2) (V_box ps2 v)))
@@ -582,6 +616,9 @@ let rec box_slice_lem #m v ps1 ps2 = match v with
       box_slice_lem v' ps1 ps';
       box_slice_lem v' (intersect ps1 ps2) ps';
       ()
+  | V_wire eps w     ->
+    let _ = cut (b2t (subset eps ps2)) in
+    boxed_wire_value_slice_lem ps1 ps2 eps w    
   | V_emp_clos _ _   -> ()
   | V_emp            -> ()
 
@@ -751,17 +788,17 @@ val env_upd_upd_slice_lemma: #meta1:v_meta -> #meta2:v_meta -> p:prin
                              -> v1:value meta1 -> v2:value meta2
                              -> Lemma (requires (True))
                                       (ensures (slice_en p (update_env #meta2 (update_env #meta1 en x1 v1) x2 v2) =
-                                                update_env #meta2 (update_env #meta1 (slice_en p en) x1 (D_v.v (slice_v p v1))) x2 (D_v.v (slice_v p v2))))
+                                                update_env #(D_v.meta (slice_v p v2)) (update_env #(D_v.meta (slice_v p v1)) (slice_en p en) x1 (D_v.v (slice_v p v1))) x2 (D_v.v (slice_v p v2))))
                                 [SMTPat (slice_en p (update_env #meta2 (update_env #meta1 en x1 v1) x2 v2))]
 let env_upd_upd_slice_lemma #meta1 #meta2 p en x1 x2 v1 v2 =
   cut (FEq (slice_en p (update_env #meta2 (update_env #meta1 en x1 v1) x2 v2))
-           (update_env #meta2 (update_env #meta1 (slice_en p en) x1 (D_v.v (slice_v p v1))) x2 (D_v.v (slice_v p v2))))
+           (update_env #(D_v.meta (slice_v p v2)) (update_env #(D_v.meta (slice_v p v1)) (slice_en p en) x1 (D_v.v (slice_v p v1))) x2 (D_v.v (slice_v p v2))))
 
 val if_enter_sec_then_from_sec: #c:sconfig -> #c':sconfig -> h:sstep c c' -> Tot bool
 let if_enter_sec_then_from_sec #c #c' h = not (is_C_assec_beta h) || is_sec c
 
 val slice_wire_p_lemma_mem:
-  p:prin -> ps:prins{mem p ps} -> v:value (empty, Can_b)
+  p:prin -> ps:prins{mem p ps} -> v:value (Meta empty Can_b empty Can_w)
   -> Lemma (requires (True))
            (ensures (slice_wire #ps p (mconst_on ps v) =
                      mconst_on (singleton p) (D_v.v (slice_v p v))))
@@ -769,7 +806,7 @@ val slice_wire_p_lemma_mem:
 let slice_wire_p_lemma_mem p ps v = ()
 
 val slice_wire_p_lemma_not_mem:
-  p:prin -> ps:prins{not (mem p ps)} -> v:value (empty, Can_b)
+  p:prin -> ps:prins{not (mem p ps)} -> v:value (Meta empty Can_b empty Can_w)
   -> Lemma (requires (True))
            (ensures (slice_wire #ps p (mconst_on ps v) = OrdMap.empty))
      //[SMTPat (slice_wire #ps p (mconst_on ps v))]
