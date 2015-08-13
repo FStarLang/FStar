@@ -14,7 +14,7 @@ let incr_linenum lexbuf =
 }
 
 let var_head = ['a'-'z' '_']
-let var_num = ['a'-'z' 'A'-'Z' '0'-'9' '_']
+let var_num = ['a'-'z' 'A'-'Z' '0'-'9' '_' '\'']
 let var = var_head var_num*
 
 let num = ['0'-'9']+

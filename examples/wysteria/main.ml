@@ -61,6 +61,7 @@ let init_env =
     if x = "alice" then Some (D_v (meta, V_const (C_prin 0)))
     else if x = "bob" then Some (D_v (meta, V_const (C_prin 1)))
     else if x = "charlie" then Some (D_v (meta, V_const (C_prin 2)))
+    else if x = "empty" then Some (D_v (meta, V_const (C_prins (OrdSet.empty ()))))
     else None
 
 let print_terminal (c:config) = match c with

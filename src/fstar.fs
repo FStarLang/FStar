@@ -250,7 +250,9 @@ let codegen fmods env=
             List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^".ml")) (FSharp.Format.pretty 120 d)) newDocs
     end
     else if !Options.codegen = Some "Wysteria" then begin
-        List.iter (fun m -> Extraction.Wysteria.Extract.extract m) fmods
+        let fh = Util.open_file_for_writing "SMC.wy" in
+        List.iter (fun m -> Extraction.Wysteria.Extract.extract fh m) fmods;
+        Util.close_file fh
     end
 //    ;
 //    if !Options.codegen = Some "JavaScript" then begin

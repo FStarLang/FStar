@@ -163,11 +163,11 @@ let extract_sigelt (s:sigelt) :string =
 
         | _ -> ""
 
-let extract (m:modul) : unit =
+let extract (fh:file_handle) (m:modul) :unit =
     let name = m.name.str in
     Util.print_string ("Extracting module: " ^ name ^ "\n");
-    if name = "SMC" then
+    if name = "WLib" || name = "SMC" then
         let s = List.fold_left (fun s sigelt -> s ^ "\n" ^ (extract_sigelt sigelt)) "" m.declarations in
-        Util.write_file "SMC.wy" s
+        Util.append_to_file fh s; Util.append_to_file fh "\n"
         //Util.print_string (s ^ "\n")
     else ()

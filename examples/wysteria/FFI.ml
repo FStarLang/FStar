@@ -154,6 +154,23 @@ let exec_ffi (s:string) (l:dvalue list) =
       let ps = get_ps v in
       D_v (meta, V_const (C_nat (OrdSet.size () ps)))
       
+    | "choose" ->
+      let v = List.hd l in
+      let ps = get_ps v in
+      let p_opt = OrdSet.choose () ps in
+      let p =
+        match p_opt with
+          | None -> raise (FFI_error ("choose FFI returns None breaking typing"))
+          | Some p -> p
+      in
+      D_v (meta, V_const (C_prin p))
+      
+    | "remove" ->
+      let (v1, v2) = get_two_values l in
+      let p, ps = get_p v1, get_ps v2 in
+      let ps' = OrdSet.remove () p ps in
+      D_v (meta, V_const (C_prins ps'))
+      
     | "read" ->
       let n = read_int () in
       D_v (meta, V_const (C_nat n))
