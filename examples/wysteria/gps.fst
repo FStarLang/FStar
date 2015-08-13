@@ -29,7 +29,7 @@ let read_fn x = read #nat ()
 val gps_sec: ps:prins
              -> w:Wire int ps{forall p. mem p ps <==> w_contains p w}
              -> unit
-             -> Wys (Wire prin ps) (pre (Mode Sec ps)) post
+             -> Wys (Wire prin ps) (pre (Mode Par ps)) post
 let gps_sec ps w _ =
 
   let wfold_f: int -> prev:prin{w_contains prev w}
@@ -66,11 +66,9 @@ let gps _ =
   let w1 = concat_wire wa wb in
   let w2 = concat_wire w1 wc in
 
-  (*let _ = assert (can_box (Wire prin ab) ab) in
-  let _ = assert (forall p. mem p ab <==> w_contains p w1) in
-  let _ = as_par ab (gps_sec ab w1) in*)
+  let _ = as_par ab (gps_sec ab w1) in
 
-  let _ = as_sec abc (gps_sec abc w2) in
+  let _ = as_par abc (gps_sec abc w2) in
 
   true
 ;;
