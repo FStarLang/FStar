@@ -54,7 +54,7 @@ let rec extract_exp (e:exp) :string =
             "match " ^ s ^ " with\n" ^ (extract_pats pats) ^ "\nend"
         | Exp_ascribed (e, _, _) -> extract_exp e
         | Exp_let (lbs, e)       ->
-            if fst lbs then raise (NYI "Recursive let not expected")
+            if fst lbs then raise (NYI "Recursive let not expected (only top level)")
             else
                 let lb = List.hd (snd lbs) in
                 "let " ^ (lbname_to_string lb.lbname) ^ " = " ^ (extract_exp lb.lbdef) ^ " in\n" ^ (extract_exp e)
@@ -132,10 +132,29 @@ and extract_pat (p:pat) :string =
 
         | _              -> raise (NYI "Pattern not expected")
 
+let filter_ascriptions (e:exp) :exp =
+    match (Util.compress_exp e).n with
+        | Exp_ascribed (e, _, _) -> e
+        | _ -> e
+
 let extract_sigelt (s:sigelt) :string =
     match s with
         | Sig_let (lbs, _, _, _) ->
-            if fst lbs then raise (NYI "Recursive let not expected")
+            if fst lbs then
+                if List.length (snd lbs) <> 1 then raise (NYI "Mutually recursive lets not expected")
+                else
+                    let lb = List.hd (snd lbs) in
+                    let lbname = lbname_to_string lb.lbname in
+                    let lb_body = filter_ascriptions lb.lbdef in
+                    match (Util.compress_exp lb_body).n with
+                        | Exp_abs (bs, e) ->
+                            let bs = List.filter (fun a -> match a with | Inl _, _ -> false | Inr _, _ -> true) bs in
+                            let bname b = match b with | Inl _, _ -> "" | Inr bvar, _ -> bvar.v.ppname.idText in
+                            let first_b = List.hd bs in
+                            let s = "let " ^ lbname ^ " = fix " ^ lbname ^ ". " ^ (bname first_b) ^ ". " in
+                            let bs_str = List.fold_left (fun s b -> s ^ "fun " ^ (extract_binder b) ^ ". ") "" (List.tl bs) in
+                            s ^ bs_str ^ (extract_exp e) ^ " in"
+                        | _ -> raise (NYI ("Expected an abs with recursive let"))
             else
                 let lb = List.hd (snd lbs) in
                 "let " ^ (lbname_to_string lb.lbname) ^ " = " ^ (extract_exp lb.lbdef) ^ " in"
