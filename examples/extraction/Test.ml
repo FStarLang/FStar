@@ -422,6 +422,11 @@ let ___OddSEven____1 = (fun ( _0 ) ( projectee ) -> (match (projectee) with
 _8_152
 end))
 
+type node =
+{frequency : int; next : node; zero_child : node Support.ST.ref; one_child : node; symbol : int; code : string}
+
+let is_Mknode = (fun ( _ ) -> (Support.All.failwith "Not yet implemented:is\x5fMknode"))
+
 let ev2 = EvSOdd (S (O), OddSEven (O, Ev0))
 
 type someLemmaStatement =
