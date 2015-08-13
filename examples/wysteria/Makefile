@@ -6,7 +6,7 @@ all:
 	$(FSTAR) mill3.fst
 	$(FSTAR) mill4.fst
 	$(FSTAR) mill5.fst
-	$(FSTAR) lib.fst    # remove once some example uses it
+	$(FSTAR) gps.fst
 	$(FSTAR) theory.fst
 	$(FSTAR) sinterpreter.fst
 
@@ -14,8 +14,8 @@ all:
 OCAMLOPT=ocamlfind ocamlopt -thread -package batteries -linkpkg -g
 
 codegen:
-	$(FSTAR) --admit_fsi OrdSet --admit_fsi OrdMap --codegen OCaml-experimental ../../lib/ordset.fsi ../../lib/ordmap.fsi ../../lib/classical.fst ast.fst sem.fst sinterpreter.fst
-	$(OCAMLOPT) support.ml ordSet.ml ordMap.ml AST.ml Semantics.ml SourceInterpreter.ml -o a.out
+	$(FSTAR) --admit_fsi OrdSet --admit_fsi OrdMap --admit_fsi FFI --codegen OCaml-experimental ../../lib/ordset.fsi ../../lib/ordmap.fsi ../../lib/classical.fst ast.fst ffi.fsi sem.fst sinterpreter.fst
+	$(OCAMLOPT) support.ml ordSet.ml ordMap.ml AST.ml FFI.ml Semantics.ml SourceInterpreter.ml -o a.out
 
 clean:
 	rm -f Classical.ml AST.ml Semantics.ml SourceInterpreter.ml *.cmi *.cmx *.o *.exe a.out

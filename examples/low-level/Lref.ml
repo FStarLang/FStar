@@ -1,12 +1,12 @@
-type heap = unit
+
+type ' a lref =
+' a Support.ST.ref Located.located
+
+type heap =
+unit
 
 type aref =
-| Ref of unit * Obj.t ref
-
-type 'a ref43584385 = 'a ref
-
-type 'a ref = 'a ref43584385
-
+| Ref of unit * Obj.t lref
 
 let is_Ref = (fun ( _discr_ ) -> (match (_discr_) with
 | Ref (_) -> begin
@@ -17,16 +17,15 @@ false
 end))
 
 let ___Ref___r = (fun ( projectee ) -> (match (projectee) with
-| Ref (_, _4_4) -> begin
-(Obj.magic _4_4)
+| Ref (_, _12_5) -> begin
+(Obj.magic _12_5)
 end))
-
 
 let sel = (fun ( _ ) ( _ ) -> (Support.All.failwith "Not yet implemented:sel"))
 
 let upd = (fun ( _ ) ( _ ) ( _ ) -> (Support.All.failwith "Not yet implemented:upd"))
 
-let emp = ()
+let emp = () (*this line was manually edited, everything else is as extracted*)
 
 let contains = (fun ( _ ) ( _ ) -> (Support.All.failwith "Not yet implemented:contains"))
 
@@ -39,19 +38,22 @@ let concat = (fun ( _ ) ( _ ) -> (Support.All.failwith "Not yet implemented:conc
 type (' r, ' p, ' h) l__On =
 ' p
 
-type (' refs, ' h0, ' h1) fresh =
-(Obj.t ref, (unit Support.Prims.b2t, (unit Support.Prims.b2t, unit Support.Prims.b2t) Support.Prims.l_and) Support.Prims.l_imp) Support.Prims.l__Forall Support.Prims.l__ForallTyp
+type (' lrefs, ' h0, ' h1) fresh =
+(Obj.t lref, (unit Support.Prims.b2t, (unit Support.Prims.b2t, unit Support.Prims.b2t) Support.Prims.l_and) Support.Prims.l_imp) Support.Prims.l__Forall Support.Prims.l__ForallTyp
 
 type (' mods, ' h, ' h') modifies =
 unit Support.Prims.b2t
 
-let only = (fun ( x ) -> (Set.singleton (Ref ((), (Obj.magic x)))))
+type modset =
+unit
 
-let op_Hat_Plus_Plus = (fun ( r ) ( s ) -> (Set.union (Set.singleton (Ref ((), (Obj.magic r)))) s))
+let only = (fun ( x ) -> ())
 
-let op_Plus_Plus_Hat = (fun ( s ) ( r ) -> (Set.union s (Set.singleton (Ref ((), (Obj.magic r))))))
+let eonly = (fun ( r ) -> ())
 
-let op_Hat_Plus_Hat = (fun ( r1 ) ( r2 ) -> (Set.union (Set.singleton (Ref ((), (Obj.magic r1)))) (Set.singleton (Ref ((), (Obj.magic r2))))))
+let eunion = (fun ( s1 ) ( s2 ) -> ())
+
+let eunionUnion = (fun ( r1 ) ( r2 ) -> ())
 
 
 

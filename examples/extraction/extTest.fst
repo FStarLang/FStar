@@ -1,13 +1,15 @@
 (*--build-config
   variables:LIB=../../lib;
-  other-files: $LIB/list.fst
+  other-files: $LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst
   --*)
+
+
 
 (*
 fstar extTest.fst --codegen OCaml-experimental > Test.ml ; sed -i '$d;/kdhvljkdshalfkhclklkdnfsnydufnysdkyfnklsnykweyacklnyrecynrncrewanyu/d' Test.ml ; ocamlc Test.ml
 *)
 module Test
-
+open All
 type prod 'a 'b =
 | Pair : pfst:'a -> psnd:'b -> (prod 'a 'b)
 
@@ -34,6 +36,7 @@ let idnat2 (x:nnat) = x
       Their RHS can be any value, including a lambda.
   *)
 let id : a:Type -> a -> a = fun x -> x
+
 let idp (a:Type) = fun x -> x (*x does not have type a, it has a type ?uvar a*)
 let idp' (a:Type) = fun (x:a) -> x
 
@@ -86,9 +89,10 @@ type list3 : Type -> Type =
 type  poly (x : nnat -> Type)  =
 | Poly :  n:nnat -> x n -> poly x
 
+(*
 type  poly2 (x : Type -> Type)  =
-| Poly2 :  t:Type -> x t -> poly2 x
-
+| Poly2 : t:Type -> x t -> poly2 x
+*)
 
 (*The type sections (new paragraph in the thesis)*)
 type sch (x:Type) =  (x ->  Tot x)
@@ -117,7 +121,16 @@ type naryTree (t:Type) (n:nnat) =
 | Node : vec (naryTree t n) n -> (naryTree t n)
 
 
-type binaryTree (t:Type) = naryTree t (S (S O))
+val two : nnat
+let two = (S (S O))
+
+type binaryTree (t:Type) = naryTree t two
+
+val binLeaf : naryTree nnat two
+let binLeaf = Leaf
+
+val binNode : naryTree nnat two
+let binNode = Node (Conss (S O) binLeaf (Conss O binLeaf Nill))
 
 type polyvec = poly (vec nnat)
 
@@ -146,11 +159,14 @@ type polyvec = poly (vec nnat)
 
   Our current implementation makes these same choices as Coq's.
 *)
+(*
 type polylist = poly2 (list)
-
+*)
 type listalias 'a = list 'a
 
+(*
 type polylistalias = poly2 (listalias)
+*)
 
 type evenlist (a:Type) =
   | ENil  : evenlist a
@@ -208,6 +224,8 @@ match a with
 | O -> O
 | S a' -> add b (mult2 a' b)
 
+
+type capture (a:Type) 'a = 'a*a
 
 (*
 type bTree (t:Type)=

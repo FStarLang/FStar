@@ -39,13 +39,13 @@ assume val salloc:  #a:Type -> init:a -> SST (lref a)
           /\ mtail m0 = mtail m1)
 
 assume val memread:  #a:Type -> r:(lref a) -> SST a
-	  (fun m -> b2t (refExistsInMem r m))
-    (fun m0 a m1 -> m0=m1 /\ (refExistsInMem r m0) /\ loopkupRef r m0 = a)
+	  (fun m -> b2t (liveRef r m))
+    (fun m0 a m1 -> m0=m1 /\ (liveRef r m0) /\ loopkupRef r m0 = a)
 
 assume val memwrite:  #a:Type -> r:(lref a) -> v:a ->
   SST unit
-	    (fun m -> b2t (refExistsInMem r m))
-      (fun m0 _ m1 -> (refExistsInMem r m1)
+	    (fun m -> b2t (liveRef r m))
+      (fun m0 _ m1 -> (liveRef r m1)
         /\ (writeMemAux r m0 v) =  m1)
 
 (*
@@ -55,7 +55,7 @@ references
 
 assume val freeRef:  #a:Type -> r:(lref a)  ->
   SST unit
-	    (fun m -> b2t (refExistsInMem r m))
+	    (fun m -> b2t (liveRef r m))
       (fun m0 _ m1 -> (freeMemAux r m0) ==  m1)
 *)
 

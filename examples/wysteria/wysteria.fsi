@@ -59,12 +59,13 @@ val v_of_box : #a:Type -> #ps:prins -> Box a ps -> GTot a
 
 type can_box: a:Type -> ps:prins -> Type
 
-assume Canbox_nat :   (forall ps. can_box nat ps)
-assume Canbox_bool:   (forall ps. can_box bool ps)
-assume Canbox_prin:   (forall ps. can_box prin ps)
-assume Canbox_prins:  (forall ps. can_box prins ps)
+assume Canbox_nat   : (forall ps. can_box nat ps)
+assume Canbox_int   : (forall ps. can_box int ps)
+assume Canbox_bool  : (forall ps. can_box bool ps)
+assume Canbox_prin  : (forall ps. can_box prin ps)
+assume Canbox_prins : (forall ps. can_box prins ps)
 assume Canbox_eprins: (forall ps. can_box eprins ps)
-assume Canbox_box :   (forall (a:Type) (ps':prins) (ps:prins).
+assume Canbox_box   : (forall (a:Type) (ps':prins) (ps:prins).
                        subset ps' ps ==> can_box (Box a ps') ps)
 assume Canbox_option: (forall (a:Type) ps. can_box a ps ==>
                                            can_box (option a) ps)
@@ -73,34 +74,39 @@ assume Canbox_prod:   (forall (a:Type) (b:Type) ps.
 
 (**********)
 
-type Wire: Type -> Type
+type Wire: Type -> eprins -> Type
 
-val w_contains: #a:Type -> prin -> Wire a -> GTot bool
-val w_empty   : #a:Type -> GTot (w:Wire a{forall p. not (w_contains p w)})
-val w_select  : #a:Type -> p:prin -> w:Wire a{w_contains p w} -> GTot a
+val w_contains: #a:Type -> #eps:eprins -> prin -> Wire a eps -> GTot bool
+val w_empty   : #a:Type -> GTot (w:Wire a empty{forall p. not (w_contains p w)})
+val w_select  : #a:Type -> #eps:eprins -> p:prin -> w:Wire a eps{w_contains p w} -> GTot a
 val w_const_on: #a:Type -> eps:eprins -> x:a
-                -> GTot (w:Wire a{forall p. (mem p eps <==> w_contains p w) /\
-                                            (w_contains p w ==> w_select p w = x)})
+                -> GTot (w:Wire a eps{forall p. (mem p eps <==> w_contains p w) /\
+                                                (w_contains p w ==> w_select p w = x)})
 
 (* TODO: FIXME: Make this ghost, add a concat to the OrdMap lib and use that for computation *)
 val w_concat  :
-  #a:Type -> w1:Wire a -> w2:Wire a{forall p. w_contains p w1 ==> not (w_contains p w2)}
-  -> Tot (w:Wire a
+  #a:Type -> #eps1:eprins -> #eps2:eprins
+  -> w1:Wire a eps1 -> w2:Wire a eps2{forall p. w_contains p w1 ==> not (w_contains p w2)}
+  -> Tot (w:Wire a (union eps1 eps2)
           {forall p. (w_contains p w1 ==> (w_contains p w /\ w_select p w = w_select p w1)) /\
                      (w_contains p w2 ==> (w_contains p w /\ w_select p w = w_select p w2)) /\
                      (w_contains p w  ==> (w_contains p w1 \/ w_contains p w2))})
 
-val w_dom: #a:Type -> w:Wire a -> GTot (ps:eprins{forall p. mem p ps <==> w_contains p w})
+val w_dom: #a:Type -> #ps:prins -> w:Wire a ps -> GTot (ps:eprins{forall p. mem p ps <==> w_contains p w})
 
 type can_wire: Type -> Type
 
 assume Canwire_nat   : can_wire nat
+assume Canwire_int   : can_wire int
 assume Canwire_bool  : can_wire bool
 assume Canwire_prin  : can_wire prin
 assume Canwire_prins : can_wire prins
 assume Canwire_eprins: can_wire eprins
 assume Canwire_prod  : forall (a:Type) (b:Type). (can_wire a /\ can_wire b) ==>
                                                  can_wire (a * b)
+
+assume Canbox_wire   : (forall (a:Type) (eps:eprins) (ps:prins).
+                       subset eps ps ==> can_box (Wire a eps) ps)
 
 assume Can_wire_implies_can_box: forall (a:Type) ps. can_wire a ==> can_box a ps
 (**********)
@@ -163,8 +169,8 @@ type CanMkWireP (a:Type) (m:mode) (ps':prins) (eps:eprins) =
   Mode.m m = Par /\ can_wire a /\ CanUnboxPC eps ps' /\ subset eps (Mode.ps m)
 
 val mkwire_p: #a:Type -> #ps':prins -> eps:eprins -> x:Box a ps'
-              -> Wys (Wire a) (fun m0   -> CanMkWireP a m0 ps' eps)
-                              (fun m0 r -> Let (v_of_box #a #ps' x) (fun y -> b2t (r = w_const_on #a eps y)))
+              -> Wys (Wire a eps) (fun m0   -> CanMkWireP a m0 ps' eps)
+                                  (fun m0 r -> Let (v_of_box #a #ps' x) (fun y -> b2t (r = w_const_on #a eps y)))
 
 (*****)
 
@@ -172,35 +178,36 @@ type CanMkWireS (a:Type) (m:mode) (eps:eprins) =
   Mode.m m = Sec /\ can_wire a /\ subset eps (Mode.ps m)
 
 val mkwire_s: #a:Type -> eps:eprins -> x:a
-              -> Wys (Wire a) (fun m0   -> CanMkWireS a m0 eps)
-                              (fun m0 r -> b2t (r = w_const_on #a eps x))
+              -> Wys (Wire a eps) (fun m0   -> CanMkWireS a m0 eps)
+                                  (fun m0 r -> b2t (r = w_const_on #a eps x))
 
 (*****)
 
-type CanProjWireP (#a:Type) (m:mode) (x:Wire a) (p:prin) =
+type CanProjWireP (#a:Type) (#eps:eprins) (m:mode) (x:Wire a eps) (p:prin) =
   Mode.m m = Par /\ Mode.ps m = singleton p /\ w_contains p x
 
-val projwire_p: #a:Type -> x:Wire a -> p:prin{w_contains p x}
+val projwire_p: #a:Type -> #eps:eprins -> p:prin -> x:Wire a eps{w_contains p x}
                 -> Wys a (fun m0   -> CanProjWireP m0 x p)
                          (fun m0 r -> b2t (r = w_select p x))
 
 (*****)
 
-type CanProjWireS (#a:Type) (m:mode) (x:Wire a) (p:prin) =
+type CanProjWireS (#a:Type) (#eps:eprins) (m:mode) (x:Wire a eps) (p:prin) =
   Mode.m m = Sec /\ mem p (Mode.ps m) /\ w_contains p x
 
-val projwire_s: #a:Type -> x:Wire a -> p:prin{w_contains p x}
+val projwire_s: #a:Type -> #eps:eprins -> p:prin -> x:Wire a eps{w_contains p x}
                 -> Wys a (fun m0   -> CanProjWireS m0 x p)
                          (fun m0 r -> b2t (r = w_select p x))
 
 (*****)
 
-type CanConcatWire (#a:Type) (x:Wire a) (y:Wire a) =
+type CanConcatWire (#a:Type) (#eps1:eprins) (#eps2:eprins) (x:Wire a eps1) (y:Wire a eps2) =
   forall p. w_contains p x ==> not (w_contains p y)
 
-val concat_wire: #a:Type -> x:Wire a -> y:Wire a{CanConcatWire x y}
-                 -> Wys (Wire a) (fun m0   -> CanConcatWire x y)
-                                 (fun m0 r -> b2t (r = w_concat x y))
+val concat_wire: #a:Type -> #eps_x:eprins -> #eps_y:eprins
+                 -> x:Wire a eps_x -> y:Wire a eps_y{CanConcatWire x y}
+                 -> Wys (Wire a (union eps_x eps_y)) (fun m0   -> CanConcatWire x y)
+                                                     (fun m0 r -> b2t (r = w_concat x y))
 
 (*****)
 
@@ -223,3 +230,7 @@ val bob    : prin
 val charlie: prin
 
 assume PrinsAxiom: alice =!= bob /\ bob =!= charlie /\ charlie =!= alice
+
+(*****)
+
+val wprint: #a:Type -> x:a -> ML unit

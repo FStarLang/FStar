@@ -52,30 +52,33 @@ let v_of_box (#a:Type) #ps x = Mk_box.x x
 
 type can_box: a:Type -> ps:prins -> Type
 
-type Wire (a:Type) = OrdMap.ordmap prin a p_cmp
+type Wire (a:Type) (eps:eprins) = m:OrdMap.ordmap prin a p_cmp{forall p. mem p eps = OrdMap.contains p m}
 
-let w_contains (#a:Type) p x = OrdMap.contains p x
+let w_contains (#a:Type) #eps p x = OrdMap.contains p x
 let w_empty (#a:Type) = OrdMap.empty
-let w_select (#a:Type) p x = Some.v (OrdMap.select p x)
+let w_select (#a:Type) #eps p x = Some.v (OrdMap.select p x)
 let w_const_on (#a:Type) eps x = OrdMap.const_on eps x
 
 val w_concat_helper:
-  #a:Type -> w1:Wire a -> w2:Wire a{forall p. w_contains p w1 ==> not (w_contains p w2)}
+  #a:Type -> #eps1:eprins -> #eps2:eprins
+  -> w1:Wire a eps1 -> w2:Wire a eps2{forall p. w_contains #a #eps1 p w1 ==> not (w_contains #a #eps2 p w2)}
   -> ps:eprins{forall p. mem p ps ==> OrdMap.contains p w1}
-  -> Tot (w:Wire a
-          {forall p.(mem p ps ==> (w_contains p w /\ w_select p w = w_select p w1)) /\
-                    (w_contains p w2 ==> (w_contains p w /\ w_select p w = w_select p w2)) /\
-                    (w_contains p w  ==> (mem p ps \/ w_contains p w2))})
+  -> Tot (w:Wire a (union ps eps2)
+          {forall p.(mem p ps ==> (w_contains #a #(union ps eps2) p w /\
+                                   w_select #a #(union ps eps2) p w = w_select #a #eps1 p w1)) /\
+                    (w_contains #a #eps2 p w2 ==> (w_contains #a #(union ps eps2) p w /\
+                                                   w_select #a #(union ps eps2) p w = w_select #a #eps2 p w2)) /\
+                    (w_contains #a #(union ps eps2) p w  ==> (mem p ps \/ w_contains #a #eps2 p w2))})
      (decreases (OrdSet.size ps))
-let rec w_concat_helper w1 w2 eps =
+let rec w_concat_helper (#a:Type) #eps1 #eps2 w1 w2 eps =
   if eps = empty then w2
   else
     let Some p = OrdSet.choose eps in
-    let w = w_concat_helper w1 w2 (OrdSet.remove p eps) in
+    let w = w_concat_helper #a #eps1 #eps2 w1 w2 (OrdSet.remove p eps) in
     OrdMap.update p (Some.v (OrdMap.select p w1)) w
 
-let w_concat (#a:Type) w1 w2 = w_concat_helper #a w1 w2 (OrdMap.dom w1)
-let w_dom (#a:Type) w = OrdMap.dom w
+let w_concat (#a:Type) #eps1 #eps2 w1 w2 = w_concat_helper #a #eps1 #eps2 w1 w2 (OrdMap.dom w1)
+let w_dom (#a:Type) #eps w = OrdMap.dom w
 
 type can_wire: Type -> Type
 
@@ -91,12 +94,12 @@ type CanMkWireP (a:Type) (m:mode) (ps':prins) (eps:eprins) =
   Mode.m m = Par /\ can_wire a /\ CanUnboxPC eps ps' /\ subset eps (Mode.ps m)
 type CanMkWireS (a:Type) (m:mode) (eps:eprins) =
   Mode.m m = Sec /\ can_wire a /\ subset eps (Mode.ps m)
-type CanProjWireP (#a:Type) (m:mode) (x:Wire a) (p:prin) =
-  Mode.m m = Par /\ Mode.ps m = singleton p /\ w_contains p x
-type CanProjWireS (#a:Type) (m:mode) (x:Wire a) (p:prin) =
-  Mode.m m = Sec /\ mem p (Mode.ps m) /\ w_contains p x
-type CanConcatWire (#a:Type) (x:Wire a) (y:Wire a) =
-  forall p. w_contains p x ==> not (w_contains p y)
+type CanProjWireP (#a:Type) (#eps:eprins) (m:mode) (x:Wire a eps) (p:prin) =
+  Mode.m m = Par /\ Mode.ps m = singleton p /\ w_contains #a #eps p x
+type CanProjWireS (#a:Type) (#eps:eprins) (m:mode) (x:Wire a eps) (p:prin) =
+  Mode.m m = Sec /\ mem p (Mode.ps m) /\ w_contains #a #eps p x
+type CanConcatWire (#a:Type) (#eps_x:eprins) (#eps_y:eprins) (x:Wire a eps_x) (y:Wire a eps_y) =
+  forall p. w_contains #a #eps_x p x ==> not (w_contains #a #eps_y p y)
 
 let as_par ps f =
   let m0 = ST.read moderef in
@@ -139,18 +142,18 @@ let mkwire_s (#a:Type) eps x =
   assert (CanMkWireS a (Some.v m0) eps);
   OrdMap.const_on eps x
 
-let projwire_p (#a:Type) x p =
+let projwire_p (#a:Type) #eps p x =
   let m0 = ST.read moderef in
-  assert (CanProjWireP (Some.v m0) x p);
+  assert (CanProjWireP #a #eps (Some.v m0) x p);
   Some.v (OrdMap.select p x)
 
-let projwire_s (#a:Type) x p =
+let projwire_s (#a:Type) #eps p x =
   let m0 = ST.read moderef in
-  assert (CanProjWireS (Some.v m0) x p);
+  assert (CanProjWireS #a #eps (Some.v m0) x p);
   Some.v (OrdMap.select p x)
 
-let concat_wire x y = w_concat x y
+let concat_wire (#a:Type) #eps1 #eps2 x y = w_concat #a #eps1 #eps2 x y
 
 let main (#a:Type) (#req_f:(mode -> Type)) (#ens_f:(mode -> a -> Type)) ps f =
   ST.write moderef (Some (Mode Par ps));
-  f () (* TODO: FIXME: expected to write V (f ()), also if try is_Err then fails *)
+  f ()

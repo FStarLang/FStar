@@ -89,7 +89,7 @@ let extendContextWithRepAsTyVar (b : either<btvar,bvvar> * either<btvar,bvvar>) 
                    //printfn "mapping from %A\n" btr.v.realname;
                    //printfn "to %A\n" bt.v.realname;
            extend_ty c btr (Some ((MLTY_Var (btvar_as_mltyvar bt))))
-        | (Inr bv, Inr _ ) -> extend_bv c bv ([], erasedContent) false
+        | (Inr bv, Inr _ ) -> extend_bv c bv ([], erasedContent) false false
         | _ -> failwith "Impossible case"
 
 
@@ -100,7 +100,7 @@ let extendContextAsTyvar (availableInML : bool) (b : either<btvar,bvvar>) (c:con
     match b with
         | (Inl bt) -> extend_ty c bt (Some (if availableInML then (MLTY_Var (btvar_as_mltyvar bt)) else unknownType))
         //if availableInML then (extend_ty c bt (Some ( (MLTY_Var (btvar2mlident bt))))) else (extend_hidden_ty c bt unknownType)
-        | (Inr bv) -> extend_bv c bv ([], erasedContent) false
+        | (Inr bv) -> extend_bv c bv ([], erasedContent) false false
 
 let extendContext (c:context) (tyVars : list<either<btvar,bvvar>>) : context = 
    List.fold_right (extendContextAsTyvar true) (tyVars) c (*TODO: is the fold in the right direction? check *)
@@ -342,9 +342,9 @@ let extractCtor (tyBinders : list<binder>) (c:context) (ctor: inductiveConstruct
         let mlt = Util.eraseTypeDeep c (extractTyp newC tr) in
         let tys = (List.map mlTyIdentOfBinder tyBinders, mlt) in //MayErase, because constructors are always pure
         let fvv = mkFvvar ctor.cname ctor.ctype in 
-            // fprint1 "(* extracting the type of constructor %s\n" (lident2mlsymbol ctor.cname);
-           // fprint1 "%s\n" (typ_to_string ctor.ctype);
-            // printfn "%A *)\n" (tys);
+             //fprint1 "(* extracting the type of constructor %s\n" (lident2mlsymbol ctor.cname);
+            // fprint1 "%s\n" (typ_to_string ctor.ctype);
+             // printfn "%A *)\n" (tys);
         (extend_fv c fvv tys false, (lident2mlsymbol ctor.cname, argTypes mlt)))
 
 (*indices get collapsed to unit, so all we need is the number of index arguments.
@@ -397,10 +397,17 @@ let extractTypeAbbrev (c:context) (tyab:typeAbbrev) : context * (mlsymbol  * mli
     let t = tyab.abBody in
     let l = tyab.abTyName in
     let c = (extendContext c (mfst bs)) in
+    (*Unlike in F*, type abbreviations in ML define type, and not, e.g. (n:nat) -> Type.
+     So, we move all the binders from the body to the collection of formal parameters.
+     However, the additional binders are not added to the context. This makes sense for term binders because in
+     ML, types do not depend on terms. One could put type binders in the context. For now, the user should do this movement in F* land.
+     *)
     let c, headBinders, residualType = headBinders c t in
     let bs=List.append bs headBinders in
     let t=residualType in
-    let tyDecBody = MLTD_Abbrev (extractTyp c t) in
+    let mlt = (extractTyp c t) in
+    let mlt = Util.eraseTypeDeep c mlt in
+    let tyDecBody = MLTD_Abbrev mlt in
             //printfn "type is %A\n" (t);
     let td = (mlsymbolOfLident l, List.map mlTyIdentOfBinder bs , Some tyDecBody) in
     let c = Env.extend_tydef c [td] in // why is this needed?
@@ -408,6 +415,7 @@ let extractTypeAbbrev (c:context) (tyab:typeAbbrev) : context * (mlsymbol  * mli
 
 let extractExn (c:context) (exnConstr : inductiveConstructor) : (context * mlmodule1) =
     let mlt = extractTyp c exnConstr.ctype in
+    let mlt = Util.eraseTypeDeep c mlt in
     let tys = [], mlt in //NS: Why are the arguments always empty?
     let fvv = mkFvvar exnConstr.cname exnConstr.ctype in 
     let ex_decl  : mlmodule1 = MLM_Exn (lident2mlsymbol exnConstr.cname, argTypes mlt) in

@@ -28,9 +28,9 @@ assume val cloneAndPad :
   r:(sstarray word)
   -> rcloned :(sstarray word)
   -> Mem unit
-      (fun m -> (contains m r) /\ (contains m rcloned))
-      (fun m0 rp m1  -> (contains m0 r) /\ (contains m1 rcloned)
-          /\ (contains m1 r)
+      (fun m -> (liveArr m r) /\ (liveArr m rcloned))
+      (fun m0 rp m1  -> (liveArr m0 r) /\ (liveArr m1 rcloned)
+          /\ (liveArr m1 r)
           /\ (glength rcloned m1) = psize ((glength r m0))
           /\ prefixEqual
                 (loopkupRef (reveal (asRef r)) m0)
@@ -43,13 +43,13 @@ val processChunk :
  -> offset:nat
  -> acc:(sstarray word)
  -> WNSC unit
-    (requires (fun m -> (contains m ch)
-              /\ (contains m acc) /\ ch =!= acc
+    (requires (fun m -> (liveArr m ch)
+              /\ (liveArr m acc) /\ ch =!= acc
               /\ offset + 16 <= ((glength ch m))
               /\ 4 = ((glength acc m))
               ))
-    (ensures (fun m0 _ m1 -> (contains m1 ch)
-              /\ (contains m1 acc) /\ ch =!= acc
+    (ensures (fun m0 _ m1 -> (liveArr m1 ch)
+              /\ (liveArr m1 acc) /\ ch =!= acc
               /\ 4 = ((glength acc m1))
               (*/\ loopkupRef  ch m0 = loopkupRef ch m1*)
               ))
@@ -62,13 +62,13 @@ let processChunk ch offset acc =
     li
     (fun liv -> liv < 64)
     (fun m -> True
-              /\ (contains m ch)
-              /\ (contains m acc)
+              /\ (liveArr m ch)
+              /\ (liveArr m acc)
               /\ offset + 16 <= ((glength ch m))
               /\ 4 = ((glength acc m))
-              /\ refExistsInMem li m /\ loopkupRef li m < 65
+              /\ liveRef li m /\ loopkupRef li m < 65
               )
-    (gunion (gonly li) (eonly acc))
+    (eunion (only li) (eonly acc))
     (*allRefs ; why does this not work?*)
     (fun u ->
       let liv = memread li in
@@ -89,9 +89,9 @@ val mainLoop :
  ch:(sstarray word)
  -> un:unit
  -> WNSC (s:(seq word){Seq.length s = 4})
-    (requires (fun m -> (contains m ch)
+    (requires (fun m -> (liveArr m ch)
           /\ divides 16 ((glength ch m))))
-    (ensures (fun m0 _ m1 -> True /\ (contains m1 ch)))
+    (ensures (fun m0 _ m1 -> True /\ (liveArr m1 ch)))
     (hide empty)
 
 let mainLoop ch u =
@@ -102,13 +102,13 @@ let mainLoop ch u =
     offset
     (fun offsetv-> offsetv +16 <= chl)
     (fun m -> True
-              /\ (contains m ch)
-              /\ (contains m acc)
-              /\ refExistsInMem offset m
+              /\ (liveArr m ch)
+              /\ (liveArr m acc)
+              /\ liveRef offset m
               /\ (glength ch m) = chl
               /\ 4 = ((glength acc m))
               )
-    (gunion (gonly  offset) (eonly acc))
+    (eunion (only  offset) (eonly acc))
     (fun u ->
         let offsetv = memread offset in
         processChunk ch offsetv acc;
@@ -121,8 +121,8 @@ let allZeros n = Seq.create n w0
 val mD5 :
  ch:(sstarray word)
  -> WNSC (s:(seq word){Seq.length s = 4})
-    (fun m -> True /\ (contains m ch))
-    (fun m0 _ m1 -> True /\ (contains m1 ch))
+    (fun m -> True /\ (liveArr m ch))
+    (fun m0 _ m1 -> True /\ (liveArr m1 ch))
     (hide empty)
 
 let mD5 ch =
@@ -132,9 +132,9 @@ let mD5 ch =
   cloneAndPad ch clonedCh;
   withNewScope
     #_
-    #(fun m -> (contains m ch) /\ (contains m clonedCh)
+    #(fun m -> (liveArr m ch) /\ (liveArr m clonedCh)
         /\ divides 16 ((glength clonedCh m)) )
-    #(fun m0 _ m1 -> True /\ contains m1 ch)
+    #(fun m0 _ m1 -> True /\ liveArr m1 ch)
     #(hide empty)
     (mainLoop clonedCh)
 
@@ -143,8 +143,8 @@ let mD5 ch =
 val mD53 : n:nat
  -> ch:(sstarray word)
  -> WNSC (vector word 4)
-    (fun m -> True /\ refExistsInMem (asRef ch) m)
-    (fun m0 _ m1 -> True /\ refExistsInMem (asRef ch) m1)
+    (fun m -> True /\ liveRef (asRef ch) m)
+    (fun m0 _ m1 -> True /\ liveRef (asRef ch) m1)
     (empty)
 
 let mD53 n ch =
@@ -157,8 +157,8 @@ let mD53 n ch =
 val mD52 : n:nat
  -> ch:(sstarray word)
  -> WNSC  (s:(seq word){Seq.length s = 4})
-    (fun m -> True /\ (contains m ch))
-    (fun m0 _ m1 -> True /\ (contains m1 ch))
+    (fun m -> True /\ (liveArr m ch))
+    (fun m0 _ m1 -> True /\ (liveArr m1 ch))
     (hide empty)
 
 let mD52 n ch =

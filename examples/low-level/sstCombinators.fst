@@ -87,16 +87,16 @@ val scopedWhile1 :
   -> loopInv:(smem -> Type)
   -> mods:(modset)
   -> bd:(unit -> whileBody
-                      (fun m -> loopInv m /\ refExistsInMem r m)
-                      (fun m -> refExistsInMem r m /\ lc (loopkupRef r m))  mods)
-  -> Mem unit ((fun m -> loopInv m /\ refExistsInMem r m))
-              ((fun m0 _ m1 -> loopInv m1 /\ refExistsInMem r m1 /\ ~(lc (loopkupRef r m1))))
+                      (fun m -> loopInv m /\ liveRef r m)
+                      (fun m -> liveRef r m /\ lc (loopkupRef r m))  mods)
+  -> Mem unit ((fun m -> loopInv m /\ liveRef r m))
+              ((fun m0 _ m1 -> loopInv m1 /\ liveRef r m1 /\ ~(lc (loopkupRef r m1))))
               mods
 let scopedWhile1 'a r lc 'loopInv mods bd =
   scopedWhile
   (*augment the loop invariant to include the precondition for evaluating the guard*)
-    (fun m -> 'loopInv m /\ refExistsInMem r m)
-    (fun m -> refExistsInMem r m /\ (lc (loopkupRef r m)))
+    (fun m -> 'loopInv m /\ liveRef r m)
+    (fun m -> liveRef r m /\ (lc (loopkupRef r m)))
     (fun u -> lc (memread r))
     mods
     bd
@@ -110,17 +110,17 @@ val scopedWhile2 :
   -> loopInv:(smem -> Type)
   -> mods:(modset)
   -> bd:(unit -> whileBody
-                      (fun m -> loopInv m /\ refExistsInMem ra m /\ refExistsInMem rb m)
-                      (fun m -> refExistsInMem ra m /\ refExistsInMem rb m /\ lc (loopkupRef ra m) (loopkupRef rb m))
+                      (fun m -> loopInv m /\ liveRef ra m /\ liveRef rb m)
+                      (fun m -> liveRef ra m /\ liveRef rb m /\ lc (loopkupRef ra m) (loopkupRef rb m))
                       mods)
-  -> Mem unit (requires (fun m -> loopInv m /\ refExistsInMem ra m /\ refExistsInMem rb m))
-              (ensures (fun m0 _ m1 -> loopInv m1 /\ refExistsInMem ra m1 /\ refExistsInMem rb m1 /\ ~(lc (loopkupRef ra m1) (loopkupRef rb m1)) ))
+  -> Mem unit (requires (fun m -> loopInv m /\ liveRef ra m /\ liveRef rb m))
+              (ensures (fun m0 _ m1 -> loopInv m1 /\ liveRef ra m1 /\ liveRef rb m1 /\ ~(lc (loopkupRef ra m1) (loopkupRef rb m1)) ))
               mods
 let scopedWhile2 'a ra rb lc 'loopInv mods bd =
   scopedWhile
   (*augment the loop invariant to include the precondition for evaluating the guard*)
-    (fun m -> 'loopInv m /\ refExistsInMem ra m /\ refExistsInMem rb m)
-    (fun m -> refExistsInMem ra m /\ refExistsInMem rb m /\ (lc (loopkupRef ra m) (loopkupRef rb m))  )
+    (fun m -> 'loopInv m /\ liveRef ra m /\ liveRef rb m)
+    (fun m -> liveRef ra m /\ liveRef rb m /\ (lc (loopkupRef ra m) (loopkupRef rb m))  )
     (fun u -> lc (memread ra) (memread rb))
     mods
     bd
