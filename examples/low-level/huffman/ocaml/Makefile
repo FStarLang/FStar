@@ -7,7 +7,7 @@ endif
 ALLOCATOR_DIR = ../../../../runtime/allocator
 ALLOCATOR_FILES = $(ALLOCATOR_DIR)/camlstack.o $(ALLOCATOR_DIR)/stack.o $(ALLOCATOR_DIR)/bitmask.o $(ALLOCATOR_DIR)/camlstack.mli
 
-FLAGS=-I $(ALLOCATOR_DIR) -g
+FLAGS=-I $(ALLOCATOR_DIR) -g -ccopt -g
 # OCAMLC=ocamlfind ocamlc
 # OCAMLLINK=ocamlfind ocamlc -custom
 OCAMLC=ocamlfind ocamlopt
