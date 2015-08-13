@@ -1,6 +1,6 @@
 (*--build-config
-    options:--z3timeout 20 --max_fuel 8 --max_ifuel 6 --initial_fuel 4 --initial_ifuel 2 --admit_fsi Set;
-    other-files:classical.fst ext.fst constr.fst set.fsi heap.fst st.fst all.fst
+    options:--z3timeout 20 --max_fuel 8 --max_ifuel 6 --initial_fuel 4 --initial_ifuel 2;
+    other-files:classical.fst ext.fst constr.fst
   --*)
 module TinyFStarNew
 
@@ -299,7 +299,8 @@ val esub_inc : var -> Tot exp
 let esub_inc x = EVar (x+1)
 
 val esub_inc2 : var -> Tot exp
-let esub_inc2 = esub_inc_gen 2
+(* let esub_inc2 = esub_inc_gen 2 -- working around #311 *)
+let esub_inc2 x = esub_inc_gen 2 x
 
 let is_evar (e:exp) : int = if is_EVar e then 0 else 1
 
@@ -516,7 +517,8 @@ let esub_ebeta_gen x e = fun y -> if y < x then (EVar y)
                                  else if y = x then e
                                  else (EVar (y-1))
 val esub_ebeta : exp -> Tot esub
-let esub_ebeta = esub_ebeta_gen 0
+(* let esub_ebeta = esub_ebeta_gen 0 -- working around #311 *)
+let esub_ebeta e = esub_ebeta_gen 0 e
 
 val sub_ebeta : exp -> Tot sub
 let sub_ebeta e = Sub (esub_ebeta e) (tsub_id)
@@ -548,7 +550,8 @@ let tsub_tbeta_gen x t = fun y -> if y < x then (TVar y)
                                  else if y = x then t
                                  else (TVar (y-1))
 val tsub_tbeta : typ -> Tot tsub
-let tsub_tbeta = tsub_tbeta_gen 0
+(* let tsub_tbeta = tsub_tbeta_gen 0 -- working around #311 *)
+let tsub_tbeta t = tsub_tbeta_gen 0 t
 
 val sub_tbeta : typ -> Tot sub
 let sub_tbeta t = Sub (esub_id) (tsub_tbeta t)
@@ -2431,11 +2434,12 @@ type sub_neappears_all : s:sub -> x:var -> Type =
 	      tf: (a:var -> Lemma (not (teappears x (Sub.ts s a)))) ->
 	      sub_neappears_all s x
 
-val einc_neappears_all : (sub_neappears_all sub_einc 0)
-let einc_neappears_all =
-SubNEAppearsAll sub_einc 0
-  (fun y -> ())
-  (fun a -> ())
+(* added silly unit to work around #311 *)
+val einc_neappears_all : unit -> Tot (sub_neappears_all sub_einc 0)
+let einc_neappears_all () =
+  SubNEAppearsAll sub_einc 0
+                  (fun y -> ())
+                  (fun a -> ())
 
 val elam_on_neappears_all : #s:sub -> #x:var ->
              hs:sub_neappears_all s x ->
@@ -2720,8 +2724,8 @@ SubAlmostEq sub_edec (sub_ebeta e) 0
 opaque val elam_neappears0 : s:sub -> Tot (sub_neappears (sub_elam s) 0 0)
 let elam_neappears0 s =
 SubEAppears (sub_elam s) 0 0
-  (fun x -> esubst_on_neappears_all (einc_neappears_all) (Sub.es s (x-1)))
-  (fun a -> tsubst_on_neappears_all (einc_neappears_all) (Sub.ts s a))
+  (fun x -> esubst_on_neappears_all (einc_neappears_all ()) (Sub.es s (x-1)))
+  (fun a -> tsubst_on_neappears_all (einc_neappears_all ()) (Sub.ts s a))
 
 //}}}
 
@@ -4000,7 +4004,7 @@ let kdg_foralle g t1 t2 hk1 hk2 = admit()
   let happ1 : (kinding g (TTApp (TConst TcForallE) t1)
                          (KKArr (KTArr t1 KType) KType)) =
     KTApp (KKArr (KTArr (TVar 0) KType) KType) (KConst TcForallE gwf) hk1 (magic())
-          (* (WfKArr (magic()) (\*WfTArr (magic())*\) *)
+          (* (WfKArr (magic()) (*WfTArr (magic())*) *)
           (*                 (WfType (eextend (TVar 0) g)) *)
           (*         (WfType (textend KType g))) *)
   in magic() (* KTApp KType happ1 hk2 (WfType g) *)
@@ -4101,7 +4105,7 @@ val v_impl_elim : #g:env -> #t1:typ -> #t2:typ ->
                  =hv12:validity g (timpl t1 t2) ->
                  =hv1 :validity g t1 ->
                   Tot (validity g t2)
-let v_impl_elim = admit()
+let v_impl_elim g t1 t2 hv12 hv1 = admit()
 
 val v_assume : g:env -> x:var{is_Some (lookup_evar g x)} ->
   Tot (validity g (Some.v (lookup_evar g x)))
@@ -4128,13 +4132,13 @@ assume val v_true : #g:env -> =hewf:ewf g -> Tot (validity g ttrue)
 val v_not_not_intro : #g:env -> #t:typ ->
                       =hv:validity g t ->
                           Tot(validity g (tnot (tnot t)))
-let v_not_not_intro = admit()
+let v_not_not_intro g t hv = admit()
 
 (* Should follow from VExMiddle (it's equivalent to it) *)
 val v_not_not_elim : #g:env -> t:typ ->
                      =hv:validity g (tnot (tnot t)) ->
                          Tot(validity g t)
-let v_not_not_elim = admit()
+let v_not_not_elim g t hv = admit()
 
 (* Sketch for v_or_intro1
 
@@ -4162,7 +4166,7 @@ val v_or_intro2 : #g:env -> #t1:typ -> #t2:typ ->
                   =hv:validity g t2 ->
                   =hk:kinding g t1 KType ->
                       Tot(validity g (tor t1 t2))
-let v_or_intro2 = admit()
+let v_or_intro2 g t1 t2 hv hk = admit()
 
 (* CH: TODO: so far didn't manage to derive this on paper,
              might need to add it back as primitive! *)
@@ -4172,7 +4176,7 @@ val v_or_elim : #g:env -> t1:typ -> t2:typ -> #t3:typ ->
                 =hv2:validity (eextend t2 g) (tesh t3) ->
                 =hk :kinding g t3 KType ->
                      Tot(validity g t3)
-let v_or_elim = admit()
+let v_or_elim g t1 t2 t3 hv hv1 hv2 hk = admit()
 
 (* CH: TODO: prove symmetry and transitivity of equality as in the F7
    paper from VEqRefl and VSubst; this will save us 4 rules *)
@@ -4193,12 +4197,12 @@ val v_eq_trant : #g:env -> #t1:typ -> #t2:typ -> #t3:typ -> #k:knd ->
              =hv12:validity g (teqt k t1 t2) ->
              =hv23:validity g (teqt k t2 t3) ->
                    Tot(validity g (teqt k t1 t3))
-let v_eq_trant = admit()
+let v_eq_trant g t1 t2 t3 k hv12 hv23 = admit()
 
 val v_eq_symt : #g:env -> #t1:typ -> #t2:typ -> #k:knd ->
             =hv:validity g (teqt k t1 t2) ->
                 Tot(validity g (teqt k t2 t1))
-let v_eq_symt = admit()
+let v_eq_symt g t1 t2 k hv = admit()
 
 val v_inv_foralle : #g:env -> t:typ -> phi:typ ->
                     validity g (tforalle t phi) ->
