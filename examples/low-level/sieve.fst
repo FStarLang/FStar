@@ -275,6 +275,7 @@ let segFault u =
   pushStackFrame ();
   let p : (int * int) =  (1 , 2) in
   let arr = screate 2 p in
+  writeIndex arr 0 (2,3);
   let arr1 = readIndex arr 1 in
   popStackFrame ();
-  (fst arr1)
+  (fst arr1) // this neither segfaults, nor prints 2. It prints 1!
