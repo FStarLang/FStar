@@ -2091,8 +2091,13 @@ let solve tcenv q : unit =
                             | _ -> cb mi p tl (ok, errs))
 
                 and cb (prev_fuel, prev_ifuel) (p:decl) alt (ok, errs) = 
-                    if ok && !Options.print_fuels
-                    then (printfn "(%s) Succeeded with fuel %d and ifuel %d\n" (Range.string_of_range (Env.get_range tcenv)) prev_fuel prev_ifuel) 
+                    if ok 
+                    then if !Options.print_fuels
+                         then (Util.fprint3 "(%s) Succeeded with fuel %s and ifuel %s\n" 
+                                (Range.string_of_range (Env.get_range tcenv)) 
+                                (Util.string_of_int prev_fuel) 
+                                (Util.string_of_int prev_ifuel))
+                         else ()
                     else try_alt_configs p errs alt in
                 Z3.ask fresh labels (with_fuel p initial_config) (cb initial_config p alt_configs)  in
 
