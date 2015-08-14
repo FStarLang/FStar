@@ -216,17 +216,17 @@ val de_morgan_intersect_over_union: eps1:eprins -> eps2:eprins -> ps:prins
 let de_morgan_intersect_over_union eps1 eps2 ps = ()
 
 assume val exec_ffi_axiom_ps:
-  ps:prins -> fn:string -> vs:list dvalue{is_valid_ffi_vs vs}
+  ps:prins -> fn:string -> vs:list dvalue
   -> Lemma (requires (True))
-           (ensures (slice_v_sps ps (D_v.v (FFI.exec_ffi fn vs)) = FFI.exec_ffi fn vs))
+           (ensures (slice_v_sps ps (D_v.v (FFI.exec_ffi fn vs)) = FFI.exec_ffi fn (slice_vs_sps ps vs)))
 
-val valid_ffi_vs_slice_lemma_ps:
+(*val valid_ffi_vs_slice_lemma_ps:
   ps:prins -> vs:list dvalue{is_valid_ffi_vs vs}
   -> Lemma (requires (True))
            (ensures (slice_vs_sps ps vs = vs))
 let rec valid_ffi_vs_slice_lemma_ps ps vs = match vs with
   | []    -> ()
-  | v::tl -> valid_ffi_vs_slice_lemma_ps ps tl
+  | v::tl -> valid_ffi_vs_slice_lemma_ps ps tl*)
 
 val get_next_match_exp_lemma_ps:
   #meta:v_meta -> ps:prins -> pats:list (pat * exp) -> v:value meta
@@ -278,7 +278,7 @@ let sstep_sec_slice_lemma c c' h = match h with
     Conj () (C_app_beta (slice_c_sps c) (slice_c_sps c'))
   | C_ffi_beta c c'        ->
     let Conf _ (Mode Sec ps) _ _ (T_red (R_ffi fn vs)) = c in
-    valid_ffi_vs_slice_lemma_ps ps vs;
+    //valid_ffi_vs_slice_lemma_ps ps vs;
     exec_ffi_axiom_ps ps fn vs;
     Conj () (C_ffi_beta (slice_c_sps c) (slice_c_sps c'))
   | C_match_beta c c'      ->
@@ -841,17 +841,17 @@ val slice_wire_compose_lemma:
 let slice_wire_compose_lemma #eps1 #eps2 w1 w2 p = ()
 
 assume val exec_ffi_axiom:
-  p:prin -> fn:string -> vs:list dvalue{is_valid_ffi_vs vs}
+  p:prin -> fn:string -> vs:list dvalue
   -> Lemma (requires (True))
-           (ensures (slice_v p (D_v.v (FFI.exec_ffi fn vs)) = FFI.exec_ffi fn vs))
+           (ensures (slice_v p (D_v.v (FFI.exec_ffi fn vs)) = FFI.exec_ffi fn (slice_vs p vs)))
 
-val valid_ffi_vs_slice_lemma:
+(*val valid_ffi_vs_slice_lemma:
   p:prin -> vs:list dvalue{is_valid_ffi_vs vs}
   -> Lemma (requires (True))
            (ensures (slice_vs p vs = vs))
 let rec valid_ffi_vs_slice_lemma p vs = match vs with
   | []    -> ()
-  | v::tl -> valid_ffi_vs_slice_lemma p tl
+  | v::tl -> valid_ffi_vs_slice_lemma p tl*)
 
 val get_next_match_exp_lemma:
   #meta:v_meta -> p:prin -> pats:list (pat * exp) -> v:value meta
@@ -984,7 +984,7 @@ let sstep_par_slice_lemma c c' h p =
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else
         let Conf _ _ _ _ (T_red (R_ffi fn vs)) = c in
-        valid_ffi_vs_slice_lemma p vs;
+        //valid_ffi_vs_slice_lemma p vs;
         exec_ffi_axiom p fn vs;
         IntroR (C_ffi_beta (slice_c p c) (slice_c p c'))
     | C_match_beta (Conf _ m _ _ _) c' ->

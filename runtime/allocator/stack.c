@@ -80,7 +80,9 @@ static inline int have_space(int sz_b) {
 static void add_page(int sz_b, int is_ext) {
   sz_b = word_align(max(2*sz_b,DEFAULT_PAGE_SZB));
   int mapsz_b = word_align(MASK_SZB(sz_b/WORD_SZB));
-  Page *region = malloc(sizeof(Page)+mapsz_b);
+  // XXX it's unclear why we need an extra WORD_SZB, but without it, we get a
+  // segfault when WORD_SZB = 8 and sizeof(MASK_TYPE) = 4
+  Page *region = malloc(sizeof(Page)+mapsz_b+WORD_SZB);
   //printf ("add page size = %d, ext = %d, map size = %d\n", sz_b, is_ext, mapsz_b);
   void* memory = malloc(sz_b);
   check (region != NULL);

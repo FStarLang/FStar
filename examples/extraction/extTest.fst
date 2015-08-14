@@ -180,6 +180,16 @@ type isEven : nnat -> Type  =
 and isOdd : nnat -> Type =
   | OddSEven : n:nnat -> isEven n -> isOdd (S n)
 
+  type node =
+      { frequency: int;
+        next: node;
+        zero_child: ref node;
+        one_child: node;
+        symbol: int;
+        code: string;
+      }
+
+
 val ev2 :  (isEven (S (S O)))
 let ev2 = EvSOdd (S O) (OddSEven O Ev0)
 

@@ -4,8 +4,9 @@ all: noninterference\
 		 sample_examples\
 		 ro\
 		 ro_single\
-		 spdz\
-		 simple_st2_examples
+		 simple_st2_examples\
+		 smart_meter\
+		 spdz
 
 noninterference:
 	$(FSTAR) noninterference.fst
@@ -18,6 +19,9 @@ ro_single:
 
 ro:
 	$(FSTAR) ro.fst
+
+smart_meter:
+	$(FSTAR) smart_meter.fst
 
 spdz:
 	$(FSTAR) spdz.fst
