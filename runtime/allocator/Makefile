@@ -14,7 +14,7 @@ stacktest: stack.o bitmask.o test.o
 
 ffitest.$(CMO): camlstack.cmi
 
-ffitest: camlstack.o stack.o bitmask.o ffitest_C.o ffitest.$(CMO)
+ffitest: camlstack.o stack.o bitmask.o ffitest.$(CMO)
 	$(OCAMLLINK) $(FLAGS) -o $@ $^
 
 %.cmi: %.mli

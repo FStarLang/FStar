@@ -304,6 +304,43 @@ CAMLprim value stack_mktuple4(value v1, value v2, value v3, value v4) {
   }
 }
 
+CAMLprim value stack_mktuple5(value v1, value v2, value v3, value v4, value v5) {
+  CAMLparam5 (v1, v2, v3, v4, v5);
+  int mask[5];
+  int nbits = 0;
+  if (!(Is_long(v1) || is_stack_pointer((void *)v1))) {
+    mask[0] = 1;
+    nbits++;
+  }
+  if (!(Is_long(v2) || is_stack_pointer((void *)v2))) {
+    mask[nbits] = 2;
+    nbits++;
+  }
+  if (!(Is_long(v3) || is_stack_pointer((void *)v3))) {
+    mask[nbits] = 3;
+    nbits++;
+  }
+  if (!(Is_long(v4) || is_stack_pointer((void *)v4))) {
+    mask[nbits] = 4;
+    nbits++;
+  }
+  if (!(Is_long(v4) || is_stack_pointer((void *)v5))) {
+    mask[nbits] = 5;
+    nbits++;
+  }
+  value tuple = stack_caml_alloc_tuple(5,nbits,mask);
+  if (tuple == (value)0)
+    caml_failwith ("Camlstack.mktuple4");    
+  else {
+    Field(tuple, 0) = v1;
+    Field(tuple, 1) = v2;
+    Field(tuple, 2) = v3;
+    Field(tuple, 3) = v4;
+    Field(tuple, 4) = v5;
+    CAMLreturn(tuple);
+  }
+}
+
 CAMLprim value stack_mkref(value v) 
 {
   CAMLparam1 (v);
