@@ -7,8 +7,8 @@ all:
 	$(FSTAR) mill4.fst
 	$(FSTAR) mill5.fst
 	$(FSTAR) gps.fst
-	$(FSTAR) theory.fst
 	$(FSTAR) sinterpreter.fst
+	$(FSTAR) theory.fst
 
 
 OCAMLOPT=ocamlfind ocamlopt -thread -package batteries -linkpkg -g
