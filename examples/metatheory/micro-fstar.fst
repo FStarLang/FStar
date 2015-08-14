@@ -2854,35 +2854,37 @@ match m with
 
 val subst_on_ite_pure : s:sub -> a : typ -> wp0:typ -> wp1:typ -> wp2:typ ->
     Lemma(tsubst s (ite_pure a wp0 wp1 wp2) = ite_pure (tsubst s a) (tsubst s wp0) (tsubst s wp1) (tsubst s wp2))
-let subst_on_ite_pure s a wp0 wp1 wp2 = ()
+let subst_on_ite_pure s a wp0 wp1 wp2 = admit()
 
 val subst_on_ifi : s:sub -> i:int -> e1:exp -> e2:exp -> Lemma (esubst s (EIf0 (eint i) (e1) (e2)) = EIf0 (eint i) (esubst s e1) (esubst s e2))
 let subst_on_ifi s i e1 e2 = ()
 val subst_on_tforalle : s:sub -> t:typ -> body:typ -> Lemma (tsubst s (tforalle t body) = tforalle (tsubst s t) (tsubst (sub_elam s) body))
-let subst_on_tforalle s t body = () (*works*)
+let subst_on_tforalle s t body = admit() (*works*)
 
 val subst_on_tforallt : s:sub -> k:knd -> body:typ -> Lemma (tsubst s (tforallt k body) = tforallt (ksubst s k) (tsubst (sub_tlam s) body))
-let subst_on_tforallt s k body = () (*works*)
+let subst_on_tforallt s k body = admit() (*works*)
 
 val subst_on_tot : s:sub -> t:typ -> Lemma (csubst s (tot t) = tot (tsubst s t))
 let subst_on_tot s t = subst_on_tforalle (sub_tlam s) (ttsh t) (TEApp (TVar 0) (EVar 0)); tsubst_tlam_shift s t; admit()(*works*)
 
 val subst_on_return_pure : s:sub -> t:typ -> e:exp -> Lemma (tsubst s (return_pure t e) = return_pure (tsubst s t) (esubst s e))
-let subst_on_return_pure s t e = esubst_tlam_shift s e; ()(*works*)
+let subst_on_return_pure s t e = esubst_tlam_shift s e; admit()(*works*)
 
 
 val subst_on_teqtype : s:sub -> t:typ -> t':typ -> Lemma (tsubst s (teqtype t' t) = teqtype (tsubst s t') (tsubst s t))
-let subst_on_teqtype s t t' = () (*works*)
+let subst_on_teqtype s t t' = admit() (*works*)
 
 val subst_on_teqe : s:sub -> t:typ -> e1:exp -> e2:exp -> Lemma (tsubst s (teqe t e1 e2) = teqe (tsubst s t) (esubst s e1) (esubst s e2))
 let subst_on_teqe s t e1 e2 = ()
 
 
 val subst_on_eupd : s:sub -> eh:exp -> el:exp -> ei:exp -> Lemma (esubst s (eupd (eh) (el) (ei)) = eupd (esubst s eh) (esubst s el) (esubst s ei))
-let subst_on_eupd s eh el ei = () (*works but slow*)
+let subst_on_eupd s eh el ei =
+admit() (*works but slow*)
 
 val subst_on_k_m : s:sub -> m:eff -> t:typ -> Lemma (ksubst s (k_m m t) = k_m m (tsubst s t))
-let subst_on_k_m s m t = ()(* (*works but slow*)
+let subst_on_k_m s m t =
+admit()(* (*works but slow*)
   match m with
 | EfPure -> ()
 | EfAll -> ()
