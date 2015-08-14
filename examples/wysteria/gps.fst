@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Wysteria;
+    options:--admit_fsi Set --admit_fsi Wysteria --codegen Wysteria;
     variables:LIB=../../lib;
     other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst wysteria.fsi lib.fst
  --*)
@@ -44,11 +44,11 @@ let gps_sec ps w _ =
               -> Wys prin (pre (Mode Sec ps)) post =
     fun p x ->
       let ps' = remove p ps in
-      wfold ps' w (wfold_f x) p
+      wfold ps ps' w (wfold_f x) p
   in
 
   let g: unit -> Wys (Wire prin ps) (pre (Mode Sec ps)) post =
-    fun _ -> waps ps w waps_f
+    fun _ -> waps ps ps w waps_f
   in
 
   as_sec ps g

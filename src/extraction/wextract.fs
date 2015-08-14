@@ -47,7 +47,10 @@ let rec extract_exp (e:exp) :string =
                     let b, s' = extract_wysteria_specific_ast s args in
                     if b then s'
                     else
-                        List.fold_left (fun s a -> "(apply " ^ s ^ " " ^ (extract_arg a) ^ ")") s args
+                        if s = "_assert" then "()"
+                        else
+                        //let args = if s = "wfold" || s = "waps" || s = "wapp" then List.tl args else args in
+                            List.fold_left (fun s a -> "(apply " ^ s ^ " " ^ (extract_arg a) ^ ")") s args
                 
         | Exp_match (e, pats)    ->
             let s = extract_exp e in
@@ -101,13 +104,13 @@ and extract_wysteria_specific_ast (s:string) (args:list<arg>) :(bool * string) =
         match s with
             | "unbox_p"
             | "unbox_s"
-            | "mkwire_p" -> true, List.tl args    // first argument is an implicit
+            | "mkwire_p"
+            | "projwire_p"
+            | "projwire_s" -> true, List.tl args    // first argument is implicit
+            | "concat_wire" -> true, List.tl (List.tl args)    // first two arguments are an implicit
             | "as_par"
             | "as_sec"
-            | "mkwire_s"
-            | "projwire_p"
-            | "projwire_s"
-            | "concat_wire" -> true, args
+            | "mkwire_s" -> true, args
 
             | _ -> false, args
     in

@@ -27,7 +27,7 @@ val read_fn: unit -> Wys nat (fun m0 -> Mode.m m0 = Par /\
 let read_fn x = read #nat ()
 
 val mill8_sec: ps:prins
-               -> w:Wire int{forall p. mem p ps <==> w_contains p w}
+               -> w:Wire int ps{forall p. mem p ps <==> w_contains p w}
                -> unit
                -> Wys prin (pre (Mode Par ps))  post
 let mill8_sec ps w _ =
@@ -39,14 +39,14 @@ let mill8_sec ps w _ =
       let y' = projwire_s prev w in
       if y > y' then p else prev
   in
-  
+
   let g:unit -> Wys (p:prin{w_contains p w}) (pre (Mode Sec ps)) (post #(p:prin{w_contains p w})) =
     fun _ ->
       let p = choose ps in
       let ps' = remove p ps in
-      wfold ps' w f p
+      wfold ps ps' w f p
   in
-  
+
   as_sec ps g
 
 val mill8: unit -> Wys bool (pre (Mode Par abc)) post

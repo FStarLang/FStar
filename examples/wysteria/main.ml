@@ -54,25 +54,15 @@ let init_mode =
   let ps_list = Str.split (Str.regexp ";") s in
   let ps = List.fold_left (fun ps p -> OrdSet.union () ps (OrdSet.singleton () (int_of_string p))) (OrdSet.empty ()) ps_list in
   Mode (Par, ps)
-  
+
 let init_env =
-  let meta = (OrdSet.empty (), Can_b) in
+  let meta = Meta (OrdSet.empty (), Can_b, OrdSet.empty (), Can_w) in
   fun x ->
     if x = "alice" then Some (D_v (meta, V_const (C_prin 0)))
     else if x = "bob" then Some (D_v (meta, V_const (C_prin 1)))
     else if x = "charlie" then Some (D_v (meta, V_const (C_prin 2)))
     else if x = "empty" then Some (D_v (meta, V_const (C_prins (OrdSet.empty ()))))
     else None
-
-let print_terminal (c:config) = match c with
-  | Conf (_, _, _, _, t) ->
-    match t with
-      | T_val (_, v) -> begin
-          match v with
-            | V_const c -> print_string (print_const c); print_newline ()
-            | _ -> print_string "Value print not supported\n"
-        end
-      | _ -> print_string "Not a terminal configuration"
 
 let is_terminal (c:config) :bool = match c with
   | Conf (_, _, s, _, t) ->
