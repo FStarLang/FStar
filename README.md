@@ -179,6 +179,7 @@ This section describes the general structure of the F* verifier.
 
      CoreCrypto: Basic cryptographic algorithms as implemented by OpenSSL.
 
+
   src/
 
      All source code for the implementation of F* itself.
@@ -224,7 +225,6 @@ This section describes the general structure of the F* verifier.
      tc/
 
         The main type-checker and verification condition generator.
-
 
      tosmt/
 

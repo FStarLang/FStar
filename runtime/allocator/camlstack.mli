@@ -59,6 +59,10 @@ external mktuple4 : 'a -> 'b -> 'c -> 'd -> 'a*'b*'c*'d = "stack_mktuple4";;
 (** [Camlstack.mktuple4 x y z w] allocates a pair (x,y,z,w) on the stack.
     Raise [Failure "Camlstack.mktuple4"] if the stack has no frames. *)
 
+external mktuple5 : 'a -> 'b -> 'c -> 'd -> 'e -> 'a*'b*'c*'d*'e = "stack_mktuple5";;
+(** [Camlstack.mktuple5 x y z w s] allocates a pair (x,y,z,w,s) on the stack.
+    Raise [Failure "Camlstack.mktuple5"] if the stack has no frames. *)
+
 external cons: 'a -> 'a list -> 'a list = "stack_mkpair";;
 (** [Camlstack.cons x y] allocates a cons cell [x::y] on the stack.
     Raise [Failure "Camlstack.cons"] if the stack has no frames. *)
