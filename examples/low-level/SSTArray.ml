@@ -16,7 +16,7 @@ let hcreateSeq = (fun ( init )
 		-> failwith "NYI:hcreateSeq")
 
 let screate = (fun ( len ) ( init ) 
-	-> Camlstack.mkarray_noscan len init) (*danger: remove no_scan if init has a type whose members can store pointers to OCaml Heap*)
+	-> Camlstack.mkarray len init) (*danger: remove no_scan if init has a type whose members can store pointers to OCaml Heap*)
 
 let hcreate = (fun ( len ) ( init ) 
 	-> Array.make len init)
