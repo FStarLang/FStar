@@ -217,6 +217,13 @@ CAMLprim value stack_pop_frame(value unit)
     CAMLreturn(Val_unit);
 }
 
+CAMLprim value caml_is_stack_pointer(value v) 
+{
+  CAMLparam1 (v);
+  int result = !Is_long(v) && is_stack_pointer((void *)v);
+  CAMLreturn(Val_bool(result));
+}
+
 /* The next set of functions allocate immutable tuples.
    As such, they determine whether a field in the tuple
    may contain an OCaml pointer by examing the initializer.

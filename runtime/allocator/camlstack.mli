@@ -47,6 +47,10 @@ external pop_frame : unit -> unit = "stack_pop_frame";;
     subsequently GCed.
     Raise [Failure "Camlstack.pop_frame"] if the stack has no frames. *)
 
+external is_on_stack : 'a -> bool = "caml_is_stack_pointer";;
+(** [Camlstack.is_on_stack v] returns true if [v] is a boxed value allocated
+    on the stack (though it may contain pointers into the heap). *)
+
 external mkpair : 'a -> 'b -> 'a*'b = "stack_mkpair";;
 (** [Camlstack.mkpair x y] allocates a pair (x,y) on the stack.
     Raise [Failure "Camlstack.mkpair"] if the stack has no frames. *)
