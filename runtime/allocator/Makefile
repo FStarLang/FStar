@@ -1,3 +1,9 @@
+ifdef WINDIR
+EXE=.exe
+else
+EXE=
+endif
+
 OCAMLC := ocamlfind ocamlopt
 OCAMLLINK := ocamlfind ocamlopt
 FLAGS := -g -ccopt -g
@@ -7,15 +13,15 @@ CMO := cmx
 # your local config file.
 -include Makefile.local
 
-all: stacktest ffitest
+all: stacktest$(EXE) ffitest$(EXE)
 
-stacktest: stack.o bitmask.o test.o
+stacktest$(EXE): stack.o bitmask.o test.o
 	$(OCAMLC) $(FLAGS) $^ -o $@
 
 ffitest.$(CMO): camlstack.cmi
 
-ffitest: camlstack.o stack.o bitmask.o ffitest.$(CMO)
-	$(OCAMLLINK) $(FLAGS) -o $@ $^
+ffitest$(EXE): camlstack.o stack.o bitmask.o ffitest.$(CMO)
+	$(OCAMLLINK) -o $@ $^
 
 %.cmi: %.mli
 	$(OCAMLC) $(FLAGS) -c  $^ -o $@
@@ -27,4 +33,4 @@ ffitest: camlstack.o stack.o bitmask.o ffitest.$(CMO)
 	$(OCAMLC) $(FLAGS) -c  $^ -o $@
 
 clean:
-	$(RM) *.o *.cm* stacktest ffitest
+	$(RM) *.o *.cm* stacktest$(EXE) ffitest$(EXE)
