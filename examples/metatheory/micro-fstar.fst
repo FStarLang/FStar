@@ -1,5 +1,5 @@
 (*--build-config
-    options:--z3timeout 20 --max_fuel 8 --max_ifuel 6 --initial_fuel 4 --initial_ifuel 2 --log_types;
+    options:--z3timeout 10 --max_fuel 4 --max_ifuel 2 --initial_fuel 1 --initial_ifuel 1;
     other-files:classical.fst ext.fst constr.fst
   --*)
 module MicroFStar
@@ -2874,9 +2874,11 @@ let subst_on_return_pure s t e = esubst_tlam_shift s e; admit()(*works*)
 val subst_on_teqtype : s:sub -> t:typ -> t':typ -> Lemma (tsubst s (teqtype t' t) = teqtype (tsubst s t') (tsubst s t))
 let subst_on_teqtype s t t' = admit() (*works*)
 
+(* CH: the old settings that used to work *)
+#set-options "--z3timeout 20 --max_fuel 8 --max_ifuel 6 --initial_fuel 4 --initial_ifuel 2"
 val subst_on_teqe : s:sub -> t:typ -> e1:exp -> e2:exp -> Lemma (tsubst s (teqe t e1 e2) = teqe (tsubst s t) (esubst s e1) (esubst s e2))
 let subst_on_teqe s t e1 e2 = ()
-
+#reset-options
 
 val subst_on_eupd : s:sub -> eh:exp -> el:exp -> ei:exp -> Lemma (esubst s (eupd (eh) (el) (ei)) = eupd (esubst s eh) (esubst s el) (esubst s ei))
 let subst_on_eupd s eh el ei =
@@ -3075,6 +3077,10 @@ let subst_on_tprecedes s t1 t2 e1 e2 = admit()
 (* Substitution on reduction of pure exp and types *)
 (***************************************************)
 //{{{
+
+(* CH: the old settings that used to work *)
+#set-options "--z3timeout 20 --max_fuel 8 --max_ifuel 6 --initial_fuel 4 --initial_ifuel 2"
+
 opaque val epstep_substitution : s:sub -> e:exp -> e':exp -> hs:epstep e e' -> Tot (epstep (esubst s e) (esubst s e'))
 (decreases %[hs])
 opaque val tstep_substitution : s:sub -> t:typ -> t':typ -> hs:tstep t t' -> Tot (tstep (tsubst s t) (tsubst s t'))
@@ -3151,6 +3157,9 @@ match hs with
     let hr : tstep (tsubst s t1) (tsubst s t1') = tstep_substitution s t1 t1' ht in
     TsELamT1 #(tsubst s t1) #(tsubst s t1') (tsubst (sub_elam s) t2) hr
     )
+
+#reset-options
+
 //}}}
 
 (*********************************)
@@ -3261,7 +3270,7 @@ let is_tyvar g e t ht = if is_TyVar ht then 0 else 1
 val is_kvar : #g : env -> #t:typ -> #k:knd -> hk : kinding g t k -> Tot nat
 let is_kvar g t k hk = if is_KVar hk then 0 else 1
 
-#set-options "--split_cases 1"
+#set-options "--split_cases 1 --z3timeout 20"
 
 opaque val typing_substitution : #g1:env -> #e:exp -> #c:cmp -> s:sub -> #g2:env ->
     h1:typing g1 e c ->

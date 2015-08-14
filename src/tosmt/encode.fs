@@ -2069,19 +2069,23 @@ let solve tcenv q : unit =
                                                 (if !Options.max_fuel > !Options.initial_fuel && !Options.max_ifuel > !Options.initial_ifuel then [(!Options.max_fuel, !Options.max_ifuel)] else []);
                                                 (if !Options.min_fuel < !Options.initial_fuel then [(!Options.min_fuel, 1)] else [])] in
 
-                let report (ok, errs) = 
-                    if ok then () 
-                    else let errs = match errs with 
+                let report errs = 
+                    let errs = match errs with 
                             | [] -> [("Unknown assertion failed", dummyRange)]
-                            | _ -> errs in 
-                            Tc.Errors.add_errors tcenv errs in
+                            | _ -> errs in
+                    if !Options.print_fuels
+                    then (Util.fprint3 "(%s) Query failed with maximum fuel %s and ifuel %s\n" 
+                            (Range.string_of_range (Env.get_range tcenv))
+                            (!Options.max_fuel |> Util.string_of_int)  
+                            (!Options.max_ifuel |> Util.string_of_int));
+                    Tc.Errors.add_errors tcenv errs in
 
                 let rec try_alt_configs (p:decl) errs = function 
-                    | [] -> report (false, errs)
+                    | [] -> report errs
                     | [mi] -> 
                         begin match errs with 
                         | [] -> Z3.ask fresh labels (with_fuel p mi) (cb mi p [])
-                        | _ -> report (false, errs)
+                        | _ -> report errs
                         end
 
                     | mi::tl -> 
@@ -2093,7 +2097,7 @@ let solve tcenv q : unit =
                 and cb (prev_fuel, prev_ifuel) (p:decl) alt (ok, errs) = 
                     if ok 
                     then if !Options.print_fuels
-                         then (Util.fprint3 "(%s) Succeeded with fuel %s and ifuel %s\n" 
+                         then (Util.fprint3 "(%s) Query succeeded with fuel %s and ifuel %s\n" 
                                 (Range.string_of_range (Env.get_range tcenv)) 
                                 (Util.string_of_int prev_fuel) 
                                 (Util.string_of_int prev_ifuel))
