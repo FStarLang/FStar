@@ -4904,6 +4904,45 @@ let mk_counter_2 _ =
 
 ~
 -->
+# Manual Memory management
+So far, we kept happily allocating data and never worried about when they get freed.
+For long-running programs such as web servers, it is critical that unused memory locations get freed so that
+they can be reused.
+In languages such has C and C++, one has to remember to free memory that will never be used.
+In practice, this turns out to be very hard to get this right.
+Without machine checks (as we will see soon), it is very easy for humans to make mistakes 
+where they free some data too early, or to forget freeing some memory. 
+The can cause memory corruption, or segmentation fault when that data is accessed later.
+The latter can cause the program taking up all of the memory of a computer, 
+and yet complaining "insufficient memory".
+Indeed, a recent version of google's android OS suffered from such mistakes.
+
+
+Therefore, in languages such as Java, OCaml, the programmer need not worry about manually freeing unused memory.
+(In fact, it is not possible to manually free memory in these languages.)
+The run-times of these languages include programs called Garbage Collectors(GC).
+Garbage collector(s) are invoked often when a program is running.
+It's job is to free memory objects that can never be referenced again.
+Since F* compiles to OCaml, it inherits this convenience of OCaml.
+However, this convenience of not worrying about freeing memory often comes at some costs.
+Garbage collection can slow down a program, and sometimes at inopportune times.
+Imagine your car's collision prevention system taking a GC break when you are about to crash!
+
+F* attempts to provide both options to the programmer. 
+It also provides access to some designated regions of memory which are not automatically garbage collected.
+For very time-critical programs, one can entirely stick to these manual regions.
+However, one can also allocate more and more data in these regions, to reduce the burden on the garbage collector.
+Unlike C/C++, F* puts proof obligations on the programmer to make sure that they cannot reference data that has been 
+freed. In return, unlike C/C++, F* guarantees that their programs will never crash 
+or produce wrong results due to memory corruption.
+
+
+
+
+
+
+
+
 
 # Cryptography examples
 
