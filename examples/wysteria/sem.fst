@@ -435,8 +435,8 @@ let rec is_valid_ffi_vs vs = match vs with
 
 val pre_ffi: config -> Tot comp
 let pre_ffi c = match c with
-  | Conf _ _ _ _ (T_red (R_ffi _ vs)) ->
-    if is_valid_ffi_vs vs then Do else NA
+  | Conf _ _ _ _ (T_red (R_ffi _ vs)) -> Do
+    (*if is_valid_ffi_vs vs then Do else NA*)
   
   | _ -> NA
 
