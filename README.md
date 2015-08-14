@@ -225,7 +225,6 @@ This section describes the general structure of the F* verifier.
 
         The main type-checker and verification condition generator.
 
-
      tosmt/
 
         A module that translates F*'s logical specification into the
