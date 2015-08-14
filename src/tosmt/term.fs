@@ -69,18 +69,23 @@ type op =
   | Minus
   | Mod 
   | ITE
-  | Var of string
+  | Var of string //Op corresponding to a user/encoding-defined uninterpreted function
 
 type qop = 
   | Forall
   | Exists
 
+//de Bruijn representation of terms in locally nameless style
 type term' =
   | Integer    of string //unbounded mathematical integers
-  | BoundV     of int
+  | BoundV     of int    
   | FreeV      of fv
-  | App        of op  * list<term>
-  | Quant      of qop * list<list<pat>> * option<int> * list<sort> * term 
+  | App        of op  * list<term> //ops are always fully applied; we're in a first-order theory
+  | Quant      of qop 
+                  * list<list<pat>>  //disjunction of conjunctive patterns
+                  * option<int>      //an optional weight; seldom used
+                  * list<sort>       //sorts of each bound variable
+                  * term             //body
 and pat  = term
 and term = {tm:term'; hash:string; freevars:Syntax.memo<fvs>}
 and fv = string * sort
@@ -103,7 +108,8 @@ let rec freevars t = match t.tm with
   | FreeV fv -> [fv]
   | App(_, tms) -> List.collect freevars tms
   | Quant(_, _, _, _, t) -> freevars t 
- 
+
+//memo-ized 
 let free_variables t = match !t.freevars with 
   | Some b -> b
   | None -> 
@@ -147,7 +153,7 @@ let weightToSmt = function
 let rec hash_of_term' t = match t with 
     | Integer i ->  i 
     | BoundV i  -> "@"^string_of_int i
-    | FreeV x   -> fst x ^ ":" ^ strSort (snd x)
+    | FreeV x   -> fst x ^ ":" ^ strSort (snd x) //Question: Why is the sort part of the hash?
     | App(op, tms) -> "("^(op_to_string op)^(List.map (fun t -> t.hash) tms |> String.concat " ")^")"
     | Quant(qop, pats, wopt, sorts, body) -> 
         Util.format5 "(%s (%s)(! %s %s %s))" 
@@ -157,12 +163,9 @@ let rec hash_of_term' t = match t with
             (weightToSmt wopt)
             (pats |> List.map (fun pats -> (List.map (fun p -> p.hash) pats |> String.concat " ")) |> String.concat "; ")
 
-let all_terms_l = ref [Util.smap_create<term> 10000]
-let all_terms () = List.hd !all_terms_l
-let push () = ()
-let pop () = ()
-let commit_mark () = ()
-
+//The hash-cons table
+let __all_terms = ref (Util.smap_create<term> 10000)
+let all_terms () = !__all_terms
 let mk t = 
     let key = hash_of_term' t in
     match Util.smap_try_find (all_terms()) key with 
@@ -240,7 +243,7 @@ let mkQuant (qop, pats, wopt, vars, body) =
 (*****************************************************)
 (* abstracting free names; instantiating bound vars  *)
 (*****************************************************)
-let abstr fvs t =
+let abstr fvs t = //fvs is a subset of the free vars of t; the result closes over fvs
     let nvars = List.length fvs in
     let index_of fv = match Util.try_find_index (fv_eq fv) fvs with 
         | None -> None
@@ -265,7 +268,7 @@ let abstr fvs t =
     aux 0 t
 
 let inst tms t = 
-    let n = List.length tms in
+    let n = List.length tms in //instantiate the first n BoundV's with tms, in order
     let rec aux shift t = match t.tm with
         | Integer _
         | FreeV _ -> t
@@ -283,6 +286,8 @@ let inst tms t =
 let mkQuant' (qop, pats, wopt, vars, body) = mkQuant (qop, pats |> List.map (List.map (abstr vars)), wopt, List.map fv_sort vars, abstr vars body)
 let mkForall'' (pats, wopt, sorts, body) = mkQuant (Forall, pats, wopt, sorts, body)
 let mkForall' (pats, wopt, vars, body) = mkQuant' (Forall, pats, wopt, vars, body)
+
+//these are the external facing functions for building quantifiers
 let mkForall (pats, vars, body) = mkQuant' (Forall, [pats], None, vars, body)
 let mkExists (pats, vars, body) = mkQuant' (Exists, [pats], None, vars, body)
 
@@ -294,8 +299,8 @@ type constructor_t = (string * list<projector> * sort * int)
 type constructors  = list<constructor_t>
 type decl =
   | DefPrelude
-  | DeclFun    of string * list<sort> * sort * caption
-  | DefineFun  of string * list<sort> * sort * term * caption
+  | DeclFun    of string * list<sort> * sort * caption        //uninterpreted function
+  | DefineFun  of string * list<sort> * sort * term * caption //defined function
   | Assume     of term   * caption
   | Caption    of string
   | Eval       of term

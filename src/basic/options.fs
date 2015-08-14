@@ -91,6 +91,7 @@ let interactive = Util.mk_ref false
 let split_cases = Util.mk_ref 0
 let _include_path = Util.mk_ref []
 let interactive_fsi = Util.mk_ref false
+let print_fuels = Util.mk_ref false
 let __temp_no_proj = Util.mk_ref false
 let init_options () = 
     show_signatures := [];
@@ -136,7 +137,8 @@ let init_options () =
     n_cores  := 1;
     split_cases := 0;
     verify_module := [];
-    _include_path := []
+    _include_path := [];
+    print_fuels := false
 
 let set_fstar_home () = 
   let fh = match !fstar_home_opt with 
@@ -225,6 +227,7 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "in", ZeroArgs (fun () -> interactive := true), "Interactive mode; reads input from stdin");
      ( noshort, "include", OneArg ((fun s -> _include_path := !_include_path @ [s]), "path"), "A directory in which to search for files included on the command line");
      ( noshort, "fsi", ZeroArgs (fun () -> set_interactive_fsi ()), "fsi flag; A flag to indicate if type checking a fsi in the interactive mode");
+     ( noshort, "print_fuels", ZeroArgs (fun () -> print_fuels := true), "Print the fuel amounts used for each successful query");
      ( noshort, "__temp_no_proj", ZeroArgs (fun () -> __temp_no_proj := true), "A temporary flag to disable code generation for projectors");
     ] in 
      ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs
