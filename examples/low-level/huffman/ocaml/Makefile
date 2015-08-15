@@ -13,9 +13,12 @@ OCAMLC=ocamlfind ocamlopt
 OCAMLLINK=ocamlfind ocamlopt
 CMO=cmx
 
-all: allocator huffman$(EXE)
+all: allocator huffman$(EXE) huffmanref$(EXE)
 
 huffman$(EXE): huffman.$(CMO) huffman_ffi.o
+	$(OCAMLLINK) -o $@ $^ $(ALLOCATOR_FILES)
+
+huffmanref$(EXE): huffmanref.$(CMO) huffmanref_ffi.o
 	$(OCAMLLINK) -o $@ $^ $(ALLOCATOR_FILES)
 
 allocator:
