@@ -2055,8 +2055,8 @@ let solve tcenv q : unit =
             let fresh = String.length q.hash >= 2048 in   
             Z3.giveZ3 prefix;
 
-            let with_fuel p (n, i) = 
-                [Term.Caption (Util.format1 "<fuel='%s'>" (string_of_int n)); 
+            let with_fuel p (n, i) =
+                [Term.Caption (Util.format2 "<fuel='%s' ifuel='%s'>" (string_of_int n) (string_of_int i));
                     Term.Assume(mkEq(mkApp("MaxFuel", []), n_fuel n), None);
                     Term.Assume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None);
                     p;

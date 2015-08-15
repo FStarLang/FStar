@@ -444,10 +444,10 @@ and mkPrelude z3options =
                 (declare-fun HasKind (Type Kind) Bool)\n\
                 (declare-fun HasTypeFuel (Fuel Term Type) Bool)\n\
                 (define-fun HasTypeZ ((x Term) (t Type)) Bool\n\
-                    (HasTypeFuel ZFuel x t))\n
+                    (HasTypeFuel ZFuel x t))\n\
                 (define-fun HasType ((x Term) (t Type)) Bool\n\
-                    (HasTypeFuel MaxIFuel x t))\n
-                ;;fuel irrelevance
+                    (HasTypeFuel MaxIFuel x t))\n\
+                ;;fuel irrelevance\n\
                 (assert (forall ((f Fuel) (x Term) (t Type))\n\
 		                (! (= (HasTypeFuel (SFuel f) x t)\n\
 			                  (HasTypeZ x t))\n\
