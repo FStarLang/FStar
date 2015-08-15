@@ -542,8 +542,8 @@ let run test_inp test_oup test_res =
 
 (* generate random contents for the given array, but with lots of clusters *)
 let rnd_arr arr =
-(* XXX: TO REPRODUCE BUG, replace contents of this function with the following:
   let len = Array.length arr in
+(* XXX: TO REPRODUCE BUG, replace the rest of the contents of this function with the following:
   for i = 0 to (len-1) do arr.(i) <- i done
 *)
   let max_count = (Random.int (len/2)) + 1 in
