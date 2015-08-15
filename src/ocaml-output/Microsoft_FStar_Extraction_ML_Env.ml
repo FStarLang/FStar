@@ -253,27 +253,33 @@ in (let tcenv = (Microsoft_FStar_Tc_Env.push_local_binding g.tcenv (Microsoft_FS
 in (let _56_153 = g
 in {tcenv = tcenv; gamma = gamma; tydefs = _56_153.tydefs; currentModule = _56_153.currentModule}))))))
 
-let extend_bv = (fun ( g ) ( x ) ( t_x ) ( add_unit ) -> (let mlx = Microsoft_FStar_Extraction_ML_Syntax.MLE_Var ((Microsoft_FStar_Extraction_ML_Syntax.as_mlident x.Microsoft_FStar_Absyn_Syntax.v))
-in (let mlx = (match (add_unit) with
+let extend_bv = (fun ( g ) ( x ) ( t_x ) ( add_unit ) ( mk_unit ) -> (let mlx = Microsoft_FStar_Extraction_ML_Syntax.MLE_Var ((Microsoft_FStar_Extraction_ML_Syntax.as_mlident x.Microsoft_FStar_Absyn_Syntax.v))
+in (let mlx = (match (mk_unit) with
+| true -> begin
+Microsoft_FStar_Extraction_ML_Syntax.ml_unit
+end
+| false -> begin
+(match (add_unit) with
 | true -> begin
 Microsoft_FStar_Extraction_ML_Syntax.MLE_App ((mlx, (Microsoft_FStar_Extraction_ML_Syntax.ml_unit)::[]))
 end
 | false -> begin
 mlx
 end)
+end)
 in (let gamma = (Bv ((x, mlx, t_x)))::g.gamma
 in (let tcenv = (Microsoft_FStar_Tc_Env.push_local_binding g.tcenv (Microsoft_FStar_Tc_Env.Binding_var ((x.Microsoft_FStar_Absyn_Syntax.v, x.Microsoft_FStar_Absyn_Syntax.sort))))
-in (let _56_163 = g
-in {tcenv = tcenv; gamma = gamma; tydefs = _56_163.tydefs; currentModule = _56_163.currentModule}))))))
+in (let _56_164 = g
+in {tcenv = tcenv; gamma = gamma; tydefs = _56_164.tydefs; currentModule = _56_164.currentModule}))))))
 
 let rec mltyFvars = (fun ( t ) -> (match (t) with
 | Microsoft_FStar_Extraction_ML_Syntax.MLTY_Var (x) -> begin
 (x)::[]
 end
 | Microsoft_FStar_Extraction_ML_Syntax.MLTY_Fun ((t1, f, t2)) -> begin
-(let _127_147 = (mltyFvars t1)
-in (let _127_146 = (mltyFvars t2)
-in (Support.List.append _127_147 _127_146)))
+(let _127_149 = (mltyFvars t1)
+in (let _127_148 = (mltyFvars t2)
+in (Support.List.append _127_149 _127_148)))
 end
 | Microsoft_FStar_Extraction_ML_Syntax.MLTY_Named ((args, path)) -> begin
 (Support.List.collect mltyFvars args)
@@ -282,9 +288,9 @@ end
 (Support.List.collect mltyFvars ts)
 end
 | Microsoft_FStar_Extraction_ML_Syntax.MLTY_App ((t1, t2)) -> begin
-(let _127_149 = (mltyFvars t1)
-in (let _127_148 = (mltyFvars t2)
-in (Support.List.append _127_149 _127_148)))
+(let _127_151 = (mltyFvars t1)
+in (let _127_150 = (mltyFvars t2)
+in (Support.List.append _127_151 _127_150)))
 end
 | Microsoft_FStar_Extraction_ML_Syntax.MLTY_Top -> begin
 []
@@ -298,8 +304,8 @@ end
 true
 end))
 
-let tySchemeIsClosed = (fun ( tys ) -> (let _127_156 = (mltyFvars (Support.Prims.snd tys))
-in (subsetMlidents _127_156 (Support.Prims.fst tys))))
+let tySchemeIsClosed = (fun ( tys ) -> (let _127_158 = (mltyFvars (Support.Prims.snd tys))
+in (subsetMlidents _127_158 (Support.Prims.fst tys))))
 
 let extend_fv' = (fun ( g ) ( x ) ( y ) ( t_x ) ( add_unit ) -> (match ((tySchemeIsClosed t_x)) with
 | true -> begin
@@ -313,8 +319,8 @@ mly
 end)
 in (let gamma = (Fv ((x, mly, t_x)))::g.gamma
 in (let tcenv = (Microsoft_FStar_Tc_Env.push_local_binding g.tcenv (Microsoft_FStar_Tc_Env.Binding_lid ((x.Microsoft_FStar_Absyn_Syntax.v, x.Microsoft_FStar_Absyn_Syntax.sort))))
-in (let _56_200 = g
-in {tcenv = tcenv; gamma = gamma; tydefs = _56_200.tydefs; currentModule = _56_200.currentModule})))))
+in (let _56_201 = g
+in {tcenv = tcenv; gamma = gamma; tydefs = _56_201.tydefs; currentModule = _56_201.currentModule})))))
 end
 | false -> begin
 (Support.All.failwith "freevars found")
@@ -325,30 +331,30 @@ in (extend_fv' g x mlp t_x add_unit)))
 
 let extend_lb = (fun ( g ) ( l ) ( t ) ( t_x ) ( add_unit ) -> (match (l) with
 | Support.Microsoft.FStar.Util.Inl (x) -> begin
-(let _127_185 = (extend_bv g (Microsoft_FStar_Absyn_Util.bvd_to_bvar_s x t) t_x add_unit)
-in (_127_185, (Microsoft_FStar_Extraction_ML_Syntax.as_mlident x)))
+(let _127_187 = (extend_bv g (Microsoft_FStar_Absyn_Util.bvd_to_bvar_s x t) t_x add_unit false)
+in (_127_187, (Microsoft_FStar_Extraction_ML_Syntax.as_mlident x)))
 end
 | Support.Microsoft.FStar.Util.Inr (f) -> begin
-(let _56_218 = (Microsoft_FStar_Extraction_ML_Syntax.mlpath_of_lident f)
-in (match (_56_218) with
+(let _56_219 = (Microsoft_FStar_Extraction_ML_Syntax.mlpath_of_lident f)
+in (match (_56_219) with
 | (p, y) -> begin
-(let _127_187 = (let _127_186 = (Microsoft_FStar_Absyn_Util.fvvar_of_lid f t)
-in (extend_fv' g _127_186 (p, y) t_x add_unit))
-in (_127_187, (y, 0)))
+(let _127_189 = (let _127_188 = (Microsoft_FStar_Absyn_Util.fvvar_of_lid f t)
+in (extend_fv' g _127_188 (p, y) t_x add_unit))
+in (_127_189, (y, 0)))
 end))
 end))
 
 let extend_tydef = (fun ( g ) ( td ) -> (let m = (Support.List.append (Support.Prims.fst g.currentModule) (((Support.Prims.snd g.currentModule))::[]))
-in (let _56_222 = g
-in {tcenv = _56_222.tcenv; gamma = _56_222.gamma; tydefs = ((m, td))::g.tydefs; currentModule = _56_222.currentModule})))
+in (let _56_223 = g
+in {tcenv = _56_223.tcenv; gamma = _56_223.gamma; tydefs = ((m, td))::g.tydefs; currentModule = _56_223.currentModule})))
 
 let emptyMlPath = ([], "")
 
 let mkContext = (fun ( e ) -> (let env = {tcenv = e; gamma = []; tydefs = []; currentModule = emptyMlPath}
 in (let a = ("\'a", (- (1)))
 in (let failwith_ty = ((a)::[], Microsoft_FStar_Extraction_ML_Syntax.MLTY_Fun ((Microsoft_FStar_Extraction_ML_Syntax.MLTY_Named (([], (("Prims")::[], "string"))), Microsoft_FStar_Extraction_ML_Syntax.E_IMPURE, Microsoft_FStar_Extraction_ML_Syntax.MLTY_Var (a))))
-in (let _127_194 = (extend_lb env (Support.Microsoft.FStar.Util.Inr (Microsoft_FStar_Absyn_Const.failwith_lid)) Microsoft_FStar_Absyn_Syntax.tun failwith_ty false)
-in (Support.All.pipe_right _127_194 Support.Prims.fst))))))
+in (let _127_196 = (extend_lb env (Support.Microsoft.FStar.Util.Inr (Microsoft_FStar_Absyn_Const.failwith_lid)) Microsoft_FStar_Absyn_Syntax.tun failwith_ty false)
+in (Support.All.pipe_right _127_196 Support.Prims.fst))))))
 
 
 

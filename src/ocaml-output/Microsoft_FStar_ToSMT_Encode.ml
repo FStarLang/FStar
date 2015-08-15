@@ -4024,71 +4024,68 @@ let push_env = (fun ( _52_3223 ) -> (match (()) with
 (Support.All.failwith "Empty env stack")
 end
 | hd::tl -> begin
-(let _52_3228 = (Microsoft_FStar_ToSMT_Term.push ())
-in (let refs = (Support.Microsoft.FStar.Util.smap_copy hd.cache)
-in (let top = (let _52_3231 = hd
-in {bindings = _52_3231.bindings; depth = _52_3231.depth; tcenv = _52_3231.tcenv; warn = _52_3231.warn; cache = refs; nolabels = _52_3231.nolabels; use_zfuel_name = _52_3231.use_zfuel_name; encode_non_total_function_typ = _52_3231.encode_non_total_function_typ})
-in (Support.ST.op_Colon_Equals last_env ((top)::(hd)::tl)))))
+(let refs = (Support.Microsoft.FStar.Util.smap_copy hd.cache)
+in (let top = (let _52_3229 = hd
+in {bindings = _52_3229.bindings; depth = _52_3229.depth; tcenv = _52_3229.tcenv; warn = _52_3229.warn; cache = refs; nolabels = _52_3229.nolabels; use_zfuel_name = _52_3229.use_zfuel_name; encode_non_total_function_typ = _52_3229.encode_non_total_function_typ})
+in (Support.ST.op_Colon_Equals last_env ((top)::(hd)::tl))))
 end)
 end))
 
-let pop_env = (fun ( _52_3234 ) -> (match (()) with
+let pop_env = (fun ( _52_3232 ) -> (match (()) with
 | () -> begin
 (match ((Support.ST.read last_env)) with
 | [] -> begin
 (Support.All.failwith "Popping an empty stack")
 end
-| _52_3238::tl -> begin
-(let _52_3240 = (Microsoft_FStar_ToSMT_Term.pop ())
-in (Support.ST.op_Colon_Equals last_env tl))
+| _52_3236::tl -> begin
+(Support.ST.op_Colon_Equals last_env tl)
 end)
 end))
 
-let mark_env = (fun ( _52_3242 ) -> (match (()) with
+let mark_env = (fun ( _52_3238 ) -> (match (()) with
 | () -> begin
 (push_env ())
 end))
 
-let reset_mark_env = (fun ( _52_3243 ) -> (match (()) with
+let reset_mark_env = (fun ( _52_3239 ) -> (match (()) with
 | () -> begin
 (pop_env ())
 end))
 
-let commit_mark_env = (fun ( _52_3244 ) -> (match (()) with
+let commit_mark_env = (fun ( _52_3240 ) -> (match (()) with
 | () -> begin
-(let _52_3245 = (Microsoft_FStar_ToSMT_Term.commit_mark ())
-in (match ((Support.ST.read last_env)) with
-| hd::_52_3249::tl -> begin
+(match ((Support.ST.read last_env)) with
+| hd::_52_3243::tl -> begin
 (Support.ST.op_Colon_Equals last_env ((hd)::tl))
 end
-| _52_3254 -> begin
+| _52_3248 -> begin
 (Support.All.failwith "Impossible")
-end))
+end)
 end))
 
-let init = (fun ( tcenv ) -> (let _52_3256 = (init_env tcenv)
-in (let _52_3258 = (Microsoft_FStar_ToSMT_Z3.init ())
+let init = (fun ( tcenv ) -> (let _52_3250 = (init_env tcenv)
+in (let _52_3252 = (Microsoft_FStar_ToSMT_Z3.init ())
 in (Microsoft_FStar_ToSMT_Z3.giveZ3 ((Microsoft_FStar_ToSMT_Term.DefPrelude)::[])))))
 
-let push = (fun ( msg ) -> (let _52_3261 = (push_env ())
-in (let _52_3263 = (varops.push ())
+let push = (fun ( msg ) -> (let _52_3255 = (push_env ())
+in (let _52_3257 = (varops.push ())
 in (Microsoft_FStar_ToSMT_Z3.push msg))))
 
-let pop = (fun ( msg ) -> (let _52_3266 = (let _123_2297 = (pop_env ())
+let pop = (fun ( msg ) -> (let _52_3260 = (let _123_2297 = (pop_env ())
 in (Support.All.pipe_left Support.Prims.ignore _123_2297))
-in (let _52_3268 = (varops.pop ())
+in (let _52_3262 = (varops.pop ())
 in (Microsoft_FStar_ToSMT_Z3.pop msg))))
 
-let mark = (fun ( msg ) -> (let _52_3271 = (mark_env ())
-in (let _52_3273 = (varops.mark ())
+let mark = (fun ( msg ) -> (let _52_3265 = (mark_env ())
+in (let _52_3267 = (varops.mark ())
 in (Microsoft_FStar_ToSMT_Z3.mark msg))))
 
-let reset_mark = (fun ( msg ) -> (let _52_3276 = (reset_mark_env ())
-in (let _52_3278 = (varops.reset_mark ())
+let reset_mark = (fun ( msg ) -> (let _52_3270 = (reset_mark_env ())
+in (let _52_3272 = (varops.reset_mark ())
 in (Microsoft_FStar_ToSMT_Z3.reset_mark msg))))
 
-let commit_mark = (fun ( msg ) -> (let _52_3281 = (commit_mark_env ())
-in (let _52_3283 = (varops.commit_mark ())
+let commit_mark = (fun ( msg ) -> (let _52_3275 = (commit_mark_env ())
+in (let _52_3277 = (varops.commit_mark ())
 in (Microsoft_FStar_ToSMT_Z3.commit_mark msg))))
 
 let encode_sig = (fun ( tcenv ) ( se ) -> (let caption = (fun ( decls ) -> (match ((Support.ST.read Microsoft_FStar_Options.logQueries)) with
@@ -4102,10 +4099,10 @@ end
 decls
 end))
 in (let env = (get_env tcenv)
-in (let _52_3292 = (encode_sigelt env se)
-in (match (_52_3292) with
+in (let _52_3286 = (encode_sigelt env se)
+in (match (_52_3286) with
 | (decls, env) -> begin
-(let _52_3293 = (set_env env)
+(let _52_3287 = (set_env env)
 in (let _123_2312 = (caption decls)
 in (Microsoft_FStar_ToSMT_Z3.giveZ3 _123_2312)))
 end)))))
@@ -4117,7 +4114,7 @@ end
 | false -> begin
 "module"
 end) modul.Microsoft_FStar_Absyn_Syntax.name.Microsoft_FStar_Absyn_Syntax.str)
-in (let _52_3298 = (match ((Microsoft_FStar_Tc_Env.debug tcenv Microsoft_FStar_Options.Low)) with
+in (let _52_3292 = (match ((Microsoft_FStar_Tc_Env.debug tcenv Microsoft_FStar_Options.Low)) with
 | true -> begin
 (let _123_2317 = (Support.All.pipe_right (Support.List.length modul.Microsoft_FStar_Absyn_Syntax.exports) Support.Microsoft.FStar.Util.string_of_int)
 in (Support.Microsoft.FStar.Util.fprint2 "Encoding externals for %s ... %s exports\n" name _123_2317))
@@ -4126,9 +4123,9 @@ end
 ()
 end)
 in (let env = (get_env tcenv)
-in (let _52_3305 = (encode_signature (let _52_3301 = env
-in {bindings = _52_3301.bindings; depth = _52_3301.depth; tcenv = _52_3301.tcenv; warn = false; cache = _52_3301.cache; nolabels = _52_3301.nolabels; use_zfuel_name = _52_3301.use_zfuel_name; encode_non_total_function_typ = _52_3301.encode_non_total_function_typ}) modul.Microsoft_FStar_Absyn_Syntax.exports)
-in (match (_52_3305) with
+in (let _52_3299 = (encode_signature (let _52_3295 = env
+in {bindings = _52_3295.bindings; depth = _52_3295.depth; tcenv = _52_3295.tcenv; warn = false; cache = _52_3295.cache; nolabels = _52_3295.nolabels; use_zfuel_name = _52_3295.use_zfuel_name; encode_non_total_function_typ = _52_3295.encode_non_total_function_typ}) modul.Microsoft_FStar_Absyn_Syntax.exports)
+in (match (_52_3299) with
 | (decls, env) -> begin
 (let caption = (fun ( decls ) -> (match ((Support.ST.read Microsoft_FStar_Options.logQueries)) with
 | true -> begin
@@ -4138,9 +4135,9 @@ end
 | false -> begin
 decls
 end))
-in (let _52_3311 = (set_env (let _52_3309 = env
-in {bindings = _52_3309.bindings; depth = _52_3309.depth; tcenv = _52_3309.tcenv; warn = true; cache = _52_3309.cache; nolabels = _52_3309.nolabels; use_zfuel_name = _52_3309.use_zfuel_name; encode_non_total_function_typ = _52_3309.encode_non_total_function_typ}))
-in (let _52_3313 = (match ((Microsoft_FStar_Tc_Env.debug tcenv Microsoft_FStar_Options.Low)) with
+in (let _52_3305 = (set_env (let _52_3303 = env
+in {bindings = _52_3303.bindings; depth = _52_3303.depth; tcenv = _52_3303.tcenv; warn = true; cache = _52_3303.cache; nolabels = _52_3303.nolabels; use_zfuel_name = _52_3303.use_zfuel_name; encode_non_total_function_typ = _52_3303.encode_non_total_function_typ}))
+in (let _52_3307 = (match ((Microsoft_FStar_Tc_Env.debug tcenv Microsoft_FStar_Options.Low)) with
 | true -> begin
 (Support.Microsoft.FStar.Util.fprint1 "Done encoding externals for %s\n" name)
 end
@@ -4151,30 +4148,30 @@ in (let decls = (caption decls)
 in (Microsoft_FStar_ToSMT_Z3.giveZ3 decls)))))
 end))))))
 
-let solve = (fun ( tcenv ) ( q ) -> (let _52_3318 = (let _123_2326 = (let _123_2325 = (let _123_2324 = (Microsoft_FStar_Tc_Env.get_range tcenv)
+let solve = (fun ( tcenv ) ( q ) -> (let _52_3312 = (let _123_2326 = (let _123_2325 = (let _123_2324 = (Microsoft_FStar_Tc_Env.get_range tcenv)
 in (Support.All.pipe_left Support.Microsoft.FStar.Range.string_of_range _123_2324))
 in (Support.Microsoft.FStar.Util.format1 "Starting query at %s" _123_2325))
 in (push _123_2326))
-in (let pop = (fun ( _52_3321 ) -> (match (()) with
+in (let pop = (fun ( _52_3315 ) -> (match (()) with
 | () -> begin
 (let _123_2331 = (let _123_2330 = (let _123_2329 = (Microsoft_FStar_Tc_Env.get_range tcenv)
 in (Support.All.pipe_left Support.Microsoft.FStar.Range.string_of_range _123_2329))
 in (Support.Microsoft.FStar.Util.format1 "Ending query at %s" _123_2330))
 in (pop _123_2331))
 end))
-in (let _52_3351 = (let env = (get_env tcenv)
+in (let _52_3345 = (let env = (get_env tcenv)
 in (let bindings = (Microsoft_FStar_Tc_Env.fold_env tcenv (fun ( bs ) ( b ) -> (b)::bs) [])
-in (let _52_3334 = (let _123_2335 = (Support.List.filter (fun ( _52_33 ) -> (match (_52_33) with
-| Microsoft_FStar_Tc_Env.Binding_sig (_52_3328) -> begin
+in (let _52_3328 = (let _123_2335 = (Support.List.filter (fun ( _52_33 ) -> (match (_52_33) with
+| Microsoft_FStar_Tc_Env.Binding_sig (_52_3322) -> begin
 false
 end
-| _52_3331 -> begin
+| _52_3325 -> begin
 true
 end)) bindings)
 in (encode_env_bindings env _123_2335))
-in (match (_52_3334) with
+in (match (_52_3328) with
 | (env_decls, env) -> begin
-(let _52_3335 = (match ((Microsoft_FStar_Tc_Env.debug tcenv Microsoft_FStar_Options.Low)) with
+(let _52_3329 = (match ((Microsoft_FStar_Tc_Env.debug tcenv Microsoft_FStar_Options.Low)) with
 | true -> begin
 (let _123_2336 = (Microsoft_FStar_Absyn_Print.formula_to_string q)
 in (Support.Microsoft.FStar.Util.fprint1 "Encoding query formula: %s\n" _123_2336))
@@ -4182,11 +4179,11 @@ end
 | false -> begin
 ()
 end)
-in (let _52_3340 = (encode_formula_with_labels q env)
-in (match (_52_3340) with
+in (let _52_3334 = (encode_formula_with_labels q env)
+in (match (_52_3334) with
 | (phi, labels, qdecls) -> begin
-(let _52_3343 = (encode_labels labels)
-in (match (_52_3343) with
+(let _52_3337 = (encode_labels labels)
+in (match (_52_3337) with
 | (label_prefix, label_suffix) -> begin
 (let query_prelude = (Support.List.append (Support.List.append env_decls label_prefix) qdecls)
 in (let qry = (let _123_2338 = (let _123_2337 = (Microsoft_FStar_ToSMT_Term.mkNot phi)
@@ -4197,150 +4194,165 @@ in (query_prelude, labels, qry, suffix))))
 end))
 end)))
 end))))
-in (match (_52_3351) with
+in (match (_52_3345) with
 | (prefix, labels, qry, suffix) -> begin
 (match (qry) with
-| Microsoft_FStar_ToSMT_Term.Assume (({Microsoft_FStar_ToSMT_Term.tm = Microsoft_FStar_ToSMT_Term.App ((Microsoft_FStar_ToSMT_Term.False, _52_3358)); Microsoft_FStar_ToSMT_Term.hash = _52_3355; Microsoft_FStar_ToSMT_Term.freevars = _52_3353}, _52_3363)) -> begin
-(let _52_3366 = (pop ())
+| Microsoft_FStar_ToSMT_Term.Assume (({Microsoft_FStar_ToSMT_Term.tm = Microsoft_FStar_ToSMT_Term.App ((Microsoft_FStar_ToSMT_Term.False, _52_3352)); Microsoft_FStar_ToSMT_Term.hash = _52_3349; Microsoft_FStar_ToSMT_Term.freevars = _52_3347}, _52_3357)) -> begin
+(let _52_3360 = (pop ())
 in ())
 end
-| _52_3369 when tcenv.Microsoft_FStar_Tc_Env.admit -> begin
-(let _52_3370 = (pop ())
+| _52_3363 when tcenv.Microsoft_FStar_Tc_Env.admit -> begin
+(let _52_3364 = (pop ())
 in ())
 end
-| Microsoft_FStar_ToSMT_Term.Assume ((q, _52_3374)) -> begin
+| Microsoft_FStar_ToSMT_Term.Assume ((q, _52_3368)) -> begin
 (let fresh = ((Support.String.length q.Microsoft_FStar_ToSMT_Term.hash) >= 2048)
-in (let _52_3378 = (Microsoft_FStar_ToSMT_Z3.giveZ3 prefix)
-in (let with_fuel = (fun ( p ) ( _52_3384 ) -> (match (_52_3384) with
+in (let _52_3372 = (Microsoft_FStar_ToSMT_Z3.giveZ3 prefix)
+in (let with_fuel = (fun ( p ) ( _52_3378 ) -> (match (_52_3378) with
 | (n, i) -> begin
-(let _123_2360 = (let _123_2359 = (let _123_2344 = (let _123_2343 = (Support.Microsoft.FStar.Util.string_of_int n)
-in (Support.Microsoft.FStar.Util.format1 "<fuel=\'%s\'>" _123_2343))
-in Microsoft_FStar_ToSMT_Term.Caption (_123_2344))
-in (let _123_2358 = (let _123_2357 = (let _123_2349 = (let _123_2348 = (let _123_2347 = (let _123_2346 = (Microsoft_FStar_ToSMT_Term.mkApp ("MaxFuel", []))
-in (let _123_2345 = (Microsoft_FStar_ToSMT_Term.n_fuel n)
-in (_123_2346, _123_2345)))
-in (Microsoft_FStar_ToSMT_Term.mkEq _123_2347))
-in (_123_2348, None))
-in Microsoft_FStar_ToSMT_Term.Assume (_123_2349))
-in (let _123_2356 = (let _123_2355 = (let _123_2354 = (let _123_2353 = (let _123_2352 = (let _123_2351 = (Microsoft_FStar_ToSMT_Term.mkApp ("MaxIFuel", []))
-in (let _123_2350 = (Microsoft_FStar_ToSMT_Term.n_fuel i)
-in (_123_2351, _123_2350)))
-in (Microsoft_FStar_ToSMT_Term.mkEq _123_2352))
-in (_123_2353, None))
-in Microsoft_FStar_ToSMT_Term.Assume (_123_2354))
-in (_123_2355)::(p)::(Microsoft_FStar_ToSMT_Term.CheckSat)::[])
-in (_123_2357)::_123_2356))
-in (_123_2359)::_123_2358))
-in (Support.List.append _123_2360 suffix))
+(let _123_2361 = (let _123_2360 = (let _123_2345 = (let _123_2344 = (Support.Microsoft.FStar.Util.string_of_int n)
+in (let _123_2343 = (Support.Microsoft.FStar.Util.string_of_int i)
+in (Support.Microsoft.FStar.Util.format2 "<fuel=\'%s\' ifuel=\'%s\'>" _123_2344 _123_2343)))
+in Microsoft_FStar_ToSMT_Term.Caption (_123_2345))
+in (let _123_2359 = (let _123_2358 = (let _123_2350 = (let _123_2349 = (let _123_2348 = (let _123_2347 = (Microsoft_FStar_ToSMT_Term.mkApp ("MaxFuel", []))
+in (let _123_2346 = (Microsoft_FStar_ToSMT_Term.n_fuel n)
+in (_123_2347, _123_2346)))
+in (Microsoft_FStar_ToSMT_Term.mkEq _123_2348))
+in (_123_2349, None))
+in Microsoft_FStar_ToSMT_Term.Assume (_123_2350))
+in (let _123_2357 = (let _123_2356 = (let _123_2355 = (let _123_2354 = (let _123_2353 = (let _123_2352 = (Microsoft_FStar_ToSMT_Term.mkApp ("MaxIFuel", []))
+in (let _123_2351 = (Microsoft_FStar_ToSMT_Term.n_fuel i)
+in (_123_2352, _123_2351)))
+in (Microsoft_FStar_ToSMT_Term.mkEq _123_2353))
+in (_123_2354, None))
+in Microsoft_FStar_ToSMT_Term.Assume (_123_2355))
+in (_123_2356)::(p)::(Microsoft_FStar_ToSMT_Term.CheckSat)::[])
+in (_123_2358)::_123_2357))
+in (_123_2360)::_123_2359))
+in (Support.List.append _123_2361 suffix))
 end))
-in (let check = (fun ( p ) -> (let initial_config = (let _123_2364 = (Support.ST.read Microsoft_FStar_Options.initial_fuel)
-in (let _123_2363 = (Support.ST.read Microsoft_FStar_Options.initial_ifuel)
-in (_123_2364, _123_2363)))
-in (let alt_configs = (let _123_2383 = (let _123_2382 = (match (((Support.ST.read Microsoft_FStar_Options.max_ifuel) > (Support.ST.read Microsoft_FStar_Options.initial_ifuel))) with
+in (let check = (fun ( p ) -> (let initial_config = (let _123_2365 = (Support.ST.read Microsoft_FStar_Options.initial_fuel)
+in (let _123_2364 = (Support.ST.read Microsoft_FStar_Options.initial_ifuel)
+in (_123_2365, _123_2364)))
+in (let alt_configs = (let _123_2384 = (let _123_2383 = (match (((Support.ST.read Microsoft_FStar_Options.max_ifuel) > (Support.ST.read Microsoft_FStar_Options.initial_ifuel))) with
 | true -> begin
-(let _123_2367 = (let _123_2366 = (Support.ST.read Microsoft_FStar_Options.initial_fuel)
-in (let _123_2365 = (Support.ST.read Microsoft_FStar_Options.max_ifuel)
-in (_123_2366, _123_2365)))
-in (_123_2367)::[])
+(let _123_2368 = (let _123_2367 = (Support.ST.read Microsoft_FStar_Options.initial_fuel)
+in (let _123_2366 = (Support.ST.read Microsoft_FStar_Options.max_ifuel)
+in (_123_2367, _123_2366)))
+in (_123_2368)::[])
 end
 | false -> begin
 []
 end)
-in (let _123_2381 = (let _123_2380 = (match ((((Support.ST.read Microsoft_FStar_Options.max_fuel) / 2) > (Support.ST.read Microsoft_FStar_Options.initial_fuel))) with
+in (let _123_2382 = (let _123_2381 = (match ((((Support.ST.read Microsoft_FStar_Options.max_fuel) / 2) > (Support.ST.read Microsoft_FStar_Options.initial_fuel))) with
 | true -> begin
-(let _123_2370 = (let _123_2369 = ((Support.ST.read Microsoft_FStar_Options.max_fuel) / 2)
-in (let _123_2368 = (Support.ST.read Microsoft_FStar_Options.max_ifuel)
-in (_123_2369, _123_2368)))
-in (_123_2370)::[])
+(let _123_2371 = (let _123_2370 = ((Support.ST.read Microsoft_FStar_Options.max_fuel) / 2)
+in (let _123_2369 = (Support.ST.read Microsoft_FStar_Options.max_ifuel)
+in (_123_2370, _123_2369)))
+in (_123_2371)::[])
 end
 | false -> begin
 []
 end)
-in (let _123_2379 = (let _123_2378 = (match ((((Support.ST.read Microsoft_FStar_Options.max_fuel) > (Support.ST.read Microsoft_FStar_Options.initial_fuel)) && ((Support.ST.read Microsoft_FStar_Options.max_ifuel) > (Support.ST.read Microsoft_FStar_Options.initial_ifuel)))) with
+in (let _123_2380 = (let _123_2379 = (match ((((Support.ST.read Microsoft_FStar_Options.max_fuel) > (Support.ST.read Microsoft_FStar_Options.initial_fuel)) && ((Support.ST.read Microsoft_FStar_Options.max_ifuel) > (Support.ST.read Microsoft_FStar_Options.initial_ifuel)))) with
 | true -> begin
-(let _123_2373 = (let _123_2372 = (Support.ST.read Microsoft_FStar_Options.max_fuel)
-in (let _123_2371 = (Support.ST.read Microsoft_FStar_Options.max_ifuel)
-in (_123_2372, _123_2371)))
-in (_123_2373)::[])
+(let _123_2374 = (let _123_2373 = (Support.ST.read Microsoft_FStar_Options.max_fuel)
+in (let _123_2372 = (Support.ST.read Microsoft_FStar_Options.max_ifuel)
+in (_123_2373, _123_2372)))
+in (_123_2374)::[])
 end
 | false -> begin
 []
 end)
-in (let _123_2377 = (let _123_2376 = (match (((Support.ST.read Microsoft_FStar_Options.min_fuel) < (Support.ST.read Microsoft_FStar_Options.initial_fuel))) with
+in (let _123_2378 = (let _123_2377 = (match (((Support.ST.read Microsoft_FStar_Options.min_fuel) < (Support.ST.read Microsoft_FStar_Options.initial_fuel))) with
 | true -> begin
-(let _123_2375 = (let _123_2374 = (Support.ST.read Microsoft_FStar_Options.min_fuel)
-in (_123_2374, 1))
-in (_123_2375)::[])
-end
-| false -> begin
-[]
-end)
+(let _123_2376 = (let _123_2375 = (Support.ST.read Microsoft_FStar_Options.min_fuel)
+in (_123_2375, 1))
 in (_123_2376)::[])
-in (_123_2378)::_123_2377))
-in (_123_2380)::_123_2379))
-in (_123_2382)::_123_2381))
-in (Support.List.flatten _123_2383))
-in (let report = (fun ( _52_3392 ) -> (match (_52_3392) with
-| (ok, errs) -> begin
-(match (ok) with
-| true -> begin
-()
 end
 | false -> begin
-(let errs = (match (errs) with
+[]
+end)
+in (_123_2377)::[])
+in (_123_2379)::_123_2378))
+in (_123_2381)::_123_2380))
+in (_123_2383)::_123_2382))
+in (Support.List.flatten _123_2384))
+in (let report = (fun ( errs ) -> (let errs = (match (errs) with
 | [] -> begin
 (("Unknown assertion failed", Microsoft_FStar_Absyn_Syntax.dummyRange))::[]
 end
-| _52_3395 -> begin
+| _52_3387 -> begin
 errs
 end)
-in (Microsoft_FStar_Tc_Errors.add_errors tcenv errs))
+in (let _52_3389 = (match ((Support.ST.read Microsoft_FStar_Options.print_fuels)) with
+| true -> begin
+(let _123_2392 = (let _123_2387 = (Microsoft_FStar_Tc_Env.get_range tcenv)
+in (Support.Microsoft.FStar.Range.string_of_range _123_2387))
+in (let _123_2391 = (let _123_2388 = (Support.ST.read Microsoft_FStar_Options.max_fuel)
+in (Support.All.pipe_right _123_2388 Support.Microsoft.FStar.Util.string_of_int))
+in (let _123_2390 = (let _123_2389 = (Support.ST.read Microsoft_FStar_Options.max_ifuel)
+in (Support.All.pipe_right _123_2389 Support.Microsoft.FStar.Util.string_of_int))
+in (Support.Microsoft.FStar.Util.fprint3 "(%s) Query failed with maximum fuel %s and ifuel %s\n" _123_2392 _123_2391 _123_2390))))
+end
+| false -> begin
+()
 end)
-end))
+in (Microsoft_FStar_Tc_Errors.add_errors tcenv errs))))
 in (let rec try_alt_configs = (fun ( p ) ( errs ) ( _52_34 ) -> (match (_52_34) with
 | [] -> begin
-(report (false, errs))
+(report errs)
 end
 | mi::[] -> begin
 (match (errs) with
 | [] -> begin
-(let _123_2395 = (with_fuel p mi)
-in (Microsoft_FStar_ToSMT_Z3.ask fresh labels _123_2395 (cb p [])))
+(let _123_2403 = (with_fuel p mi)
+in (Microsoft_FStar_ToSMT_Z3.ask fresh labels _123_2403 (cb mi p [])))
 end
-| _52_3407 -> begin
-(report (false, errs))
+| _52_3401 -> begin
+(report errs)
 end)
 end
 | mi::tl -> begin
-(let _123_2397 = (with_fuel p mi)
-in (Microsoft_FStar_ToSMT_Z3.ask fresh labels _123_2397 (fun ( _52_3413 ) -> (match (_52_3413) with
+(let _123_2405 = (with_fuel p mi)
+in (Microsoft_FStar_ToSMT_Z3.ask fresh labels _123_2405 (fun ( _52_3407 ) -> (match (_52_3407) with
 | (ok, errs') -> begin
 (match (errs) with
 | [] -> begin
-(cb p tl (ok, errs'))
+(cb mi p tl (ok, errs'))
 end
-| _52_3416 -> begin
-(cb p tl (ok, errs))
+| _52_3410 -> begin
+(cb mi p tl (ok, errs))
 end)
 end))))
 end))
-and cb = (fun ( p ) ( alt ) ( _52_3421 ) -> (match (_52_3421) with
-| (ok, errs) -> begin
+and cb = (fun ( _52_3413 ) ( p ) ( alt ) ( _52_3418 ) -> (match ((_52_3413, _52_3418)) with
+| ((prev_fuel, prev_ifuel), (ok, errs)) -> begin
 (match (ok) with
 | true -> begin
+(match ((Support.ST.read Microsoft_FStar_Options.print_fuels)) with
+| true -> begin
+(let _123_2413 = (let _123_2410 = (Microsoft_FStar_Tc_Env.get_range tcenv)
+in (Support.Microsoft.FStar.Range.string_of_range _123_2410))
+in (let _123_2412 = (Support.Microsoft.FStar.Util.string_of_int prev_fuel)
+in (let _123_2411 = (Support.Microsoft.FStar.Util.string_of_int prev_ifuel)
+in (Support.Microsoft.FStar.Util.fprint3 "(%s) Query succeeded with fuel %s and ifuel %s\n" _123_2413 _123_2412 _123_2411))))
+end
+| false -> begin
 ()
+end)
 end
 | false -> begin
 (try_alt_configs p errs alt)
 end)
 end))
-in (let _123_2401 = (with_fuel p initial_config)
-in (Microsoft_FStar_ToSMT_Z3.ask fresh labels _123_2401 (cb p alt_configs))))))))
+in (let _123_2414 = (with_fuel p initial_config)
+in (Microsoft_FStar_ToSMT_Z3.ask fresh labels _123_2414 (cb initial_config p alt_configs))))))))
 in (let process_query = (fun ( q ) -> (match (((Support.ST.read Microsoft_FStar_Options.split_cases) > 0)) with
 | true -> begin
-(let _52_3426 = (let _123_2407 = (Support.ST.read Microsoft_FStar_Options.split_cases)
-in (Microsoft_FStar_ToSMT_SplitQueryCases.can_handle_query _123_2407 q))
-in (match (_52_3426) with
+(let _52_3423 = (let _123_2420 = (Support.ST.read Microsoft_FStar_Options.split_cases)
+in (Microsoft_FStar_ToSMT_SplitQueryCases.can_handle_query _123_2420 q))
+in (match (_52_3423) with
 | (b, cb) -> begin
 (match (b) with
 | true -> begin
@@ -4354,7 +4366,7 @@ end
 | false -> begin
 (check q)
 end))
-in (let _52_3427 = (match ((Support.ST.read Microsoft_FStar_Options.admit_smt_queries)) with
+in (let _52_3424 = (match ((Support.ST.read Microsoft_FStar_Options.admit_smt_queries)) with
 | true -> begin
 ()
 end
@@ -4366,23 +4378,23 @@ end)
 end)))))
 
 let is_trivial = (fun ( tcenv ) ( q ) -> (let env = (get_env tcenv)
-in (let _52_3432 = (push "query")
-in (let _52_3439 = (encode_formula_with_labels q env)
-in (match (_52_3439) with
-| (f, _52_3436, _52_3438) -> begin
-(let _52_3440 = (pop "query")
+in (let _52_3429 = (push "query")
+in (let _52_3436 = (encode_formula_with_labels q env)
+in (match (_52_3436) with
+| (f, _52_3433, _52_3435) -> begin
+(let _52_3437 = (pop "query")
 in (match (f.Microsoft_FStar_ToSMT_Term.tm) with
-| Microsoft_FStar_ToSMT_Term.App ((Microsoft_FStar_ToSMT_Term.True, _52_3444)) -> begin
+| Microsoft_FStar_ToSMT_Term.App ((Microsoft_FStar_ToSMT_Term.True, _52_3441)) -> begin
 true
 end
-| _52_3448 -> begin
+| _52_3445 -> begin
 false
 end))
 end)))))
 
 let solver = {Microsoft_FStar_Tc_Env.init = init; Microsoft_FStar_Tc_Env.push = push; Microsoft_FStar_Tc_Env.pop = pop; Microsoft_FStar_Tc_Env.mark = mark; Microsoft_FStar_Tc_Env.reset_mark = reset_mark; Microsoft_FStar_Tc_Env.commit_mark = commit_mark; Microsoft_FStar_Tc_Env.encode_modul = encode_modul; Microsoft_FStar_Tc_Env.encode_sig = encode_sig; Microsoft_FStar_Tc_Env.solve = solve; Microsoft_FStar_Tc_Env.is_trivial = is_trivial; Microsoft_FStar_Tc_Env.finish = Microsoft_FStar_ToSMT_Z3.finish; Microsoft_FStar_Tc_Env.refresh = Microsoft_FStar_ToSMT_Z3.refresh}
 
-let dummy = {Microsoft_FStar_Tc_Env.init = (fun ( _52_3449 ) -> ()); Microsoft_FStar_Tc_Env.push = (fun ( _52_3451 ) -> ()); Microsoft_FStar_Tc_Env.pop = (fun ( _52_3453 ) -> ()); Microsoft_FStar_Tc_Env.mark = (fun ( _52_3455 ) -> ()); Microsoft_FStar_Tc_Env.reset_mark = (fun ( _52_3457 ) -> ()); Microsoft_FStar_Tc_Env.commit_mark = (fun ( _52_3459 ) -> ()); Microsoft_FStar_Tc_Env.encode_modul = (fun ( _52_3461 ) ( _52_3463 ) -> ()); Microsoft_FStar_Tc_Env.encode_sig = (fun ( _52_3465 ) ( _52_3467 ) -> ()); Microsoft_FStar_Tc_Env.solve = (fun ( _52_3469 ) ( _52_3471 ) -> ()); Microsoft_FStar_Tc_Env.is_trivial = (fun ( _52_3473 ) ( _52_3475 ) -> false); Microsoft_FStar_Tc_Env.finish = (fun ( _52_3477 ) -> ()); Microsoft_FStar_Tc_Env.refresh = (fun ( _52_3478 ) -> ())}
+let dummy = {Microsoft_FStar_Tc_Env.init = (fun ( _52_3446 ) -> ()); Microsoft_FStar_Tc_Env.push = (fun ( _52_3448 ) -> ()); Microsoft_FStar_Tc_Env.pop = (fun ( _52_3450 ) -> ()); Microsoft_FStar_Tc_Env.mark = (fun ( _52_3452 ) -> ()); Microsoft_FStar_Tc_Env.reset_mark = (fun ( _52_3454 ) -> ()); Microsoft_FStar_Tc_Env.commit_mark = (fun ( _52_3456 ) -> ()); Microsoft_FStar_Tc_Env.encode_modul = (fun ( _52_3458 ) ( _52_3460 ) -> ()); Microsoft_FStar_Tc_Env.encode_sig = (fun ( _52_3462 ) ( _52_3464 ) -> ()); Microsoft_FStar_Tc_Env.solve = (fun ( _52_3466 ) ( _52_3468 ) -> ()); Microsoft_FStar_Tc_Env.is_trivial = (fun ( _52_3470 ) ( _52_3472 ) -> false); Microsoft_FStar_Tc_Env.finish = (fun ( _52_3474 ) -> ()); Microsoft_FStar_Tc_Env.refresh = (fun ( _52_3475 ) -> ())}
 
 
 
