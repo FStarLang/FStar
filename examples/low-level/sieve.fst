@@ -3,7 +3,6 @@
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst  stack.fst listset.fst
     $LIB/ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst sstCombinators.fst $LIB/seq.fsi $LIB/seq.fst array.fsi array.fst arrayalgos.fst sieveFun.fst
   --*)
-
 module Sieve
 open SSTCombinators
 open StackAndHeap
@@ -270,3 +269,13 @@ let sieveJustMax n =
   (outerLoop n lo res);
   let res = (maxUnmarked n res) in
   popStackFrame (); res
+
+val segFault : unit -> SST int (requires (fun _-> True)) (ensures (fun _ _ _ -> True))
+let segFault u =
+  pushStackFrame ();
+  let p : (int * int) =  (1 , 2) in
+  let arr = screate 2 p in
+  writeIndex arr 0 (2,3);
+  let arr1 = readIndex arr 1 in
+  popStackFrame ();
+  (fst arr1) // this neither segfaults, nor prints 2. It prints 1!

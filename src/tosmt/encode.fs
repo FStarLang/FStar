@@ -1967,17 +1967,15 @@ let set_env env = match !last_env with
 let push_env () = match !last_env with 
     | [] -> failwith "Empty env stack" 
     | hd::tl -> 
-      Term.push();
       let refs = Util.smap_copy hd.cache  in
       let top = {hd with cache=refs} in
       last_env := top::hd::tl 
 let pop_env () = match !last_env with 
     | [] -> failwith "Popping an empty stack"
-    | _::tl -> Term.pop(); last_env := tl
+    | _::tl -> last_env := tl
 let mark_env () = push_env()
 let reset_mark_env () = pop_env()
 let commit_mark_env () = 
-    Term.commit_mark();
     match !last_env with 
         | hd::_::tl -> last_env := hd::tl
         | _ -> failwith "Impossible"
@@ -2071,29 +2069,41 @@ let solve tcenv q : unit =
                                                 (if !Options.max_fuel > !Options.initial_fuel && !Options.max_ifuel > !Options.initial_ifuel then [(!Options.max_fuel, !Options.max_ifuel)] else []);
                                                 (if !Options.min_fuel < !Options.initial_fuel then [(!Options.min_fuel, 1)] else [])] in
 
-                let report (ok, errs) = 
-                    if ok then () 
-                    else let errs = match errs with 
+                let report errs = 
+                    let errs = match errs with 
                             | [] -> [("Unknown assertion failed", dummyRange)]
-                            | _ -> errs in 
-                            Tc.Errors.add_errors tcenv errs in
+                            | _ -> errs in
+                    if !Options.print_fuels
+                    then (Util.fprint3 "(%s) Query failed with maximum fuel %s and ifuel %s\n" 
+                            (Range.string_of_range (Env.get_range tcenv))
+                            (!Options.max_fuel |> Util.string_of_int)  
+                            (!Options.max_ifuel |> Util.string_of_int));
+                    Tc.Errors.add_errors tcenv errs in
 
                 let rec try_alt_configs (p:decl) errs = function 
-                    | [] -> report (false, errs)
+                    | [] -> report errs
                     | [mi] -> 
                         begin match errs with 
-                        | [] -> Z3.ask fresh labels (with_fuel p mi) (cb p [])
-                        | _ -> report (false, errs)
+                        | [] -> Z3.ask fresh labels (with_fuel p mi) (cb mi p [])
+                        | _ -> report errs
                         end
 
                     | mi::tl -> 
                         Z3.ask fresh labels (with_fuel p mi) (fun (ok, errs') -> 
                         match errs with 
-                            | [] -> cb p tl (ok, errs')  
-                            | _ -> cb p tl (ok, errs))
+                            | [] -> cb mi p tl (ok, errs')  
+                            | _ -> cb mi p tl (ok, errs))
 
-                and cb (p:decl) alt (ok, errs) = if ok then () else try_alt_configs p errs alt in
-                Z3.ask fresh labels (with_fuel p initial_config) (cb p alt_configs)  in
+                and cb (prev_fuel, prev_ifuel) (p:decl) alt (ok, errs) = 
+                    if ok 
+                    then if !Options.print_fuels
+                         then (Util.fprint3 "(%s) Query succeeded with fuel %s and ifuel %s\n" 
+                                (Range.string_of_range (Env.get_range tcenv)) 
+                                (Util.string_of_int prev_fuel) 
+                                (Util.string_of_int prev_ifuel))
+                         else ()
+                    else try_alt_configs p errs alt in
+                Z3.ask fresh labels (with_fuel p initial_config) (cb initial_config p alt_configs)  in
 
             let process_query (q:decl) :unit =
                 if !Options.split_cases > 0 then

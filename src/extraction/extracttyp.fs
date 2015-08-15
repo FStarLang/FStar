@@ -410,7 +410,7 @@ let extractTypeAbbrev (c:context) (tyab:typeAbbrev) : context * (mlsymbol  * mli
     let tyDecBody = MLTD_Abbrev mlt in
             //printfn "type is %A\n" (t);
     let td = (mlsymbolOfLident l, List.map mlTyIdentOfBinder bs , Some tyDecBody) in
-    let c = Env.extend_tydef c [td] in // why is this needed?
+    let c = Env.extend_tydef c [td] in
     c, td
 
 let extractExn (c:context) (exnConstr : inductiveConstructor) : (context * mlmodule1) =

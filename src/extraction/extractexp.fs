@@ -83,7 +83,11 @@ let rec is_ml_value e = match e with
     | MLE_Record (_, fields) -> Util.for_all (fun (_, e) -> is_ml_value e) fields
     | _ -> false
 
+(*INVARIANT: we MUST always perform deep erasure after extraction of types, even when done indirectly e.g. translate_typ_of_arg below.
+  Otherwise, there will be Ob.magic because the types get erased at some places and not at other places *)
 let translate_typ (g:env) (t:typ) : mlty = eraseTypeDeep g (ExtractTyp.extractTyp g t) 
+let translate_typ_of_arg (g:env) (a:arg) : mlty = eraseTypeDeep g (ExtractTyp.getTypeFromArg g a) 
+
 // erasing here is better because if we need to generate OCaml types for binders and return values, they will be accurate. By the time we reach maybe_coerce, we cant change those
 
 let instantiate (s:mltyscheme) (args:list<mlty>) : mlty = Util.subst s args (*only handles fully applied types*)
@@ -331,7 +335,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
               if n <= List.length args
               then let prefix, rest = Util.first_N n args in
                    //let _ = (if n=1 then printfn "\n (*prefix was  \n %A \n  *) \n" prefix) in
-                   let prefixAsMLTypes = (List.map (ExtractTyp.getTypeFromArg g) prefix) in
+                   let prefixAsMLTypes = (List.map (translate_typ_of_arg g) prefix) in
                    // let _ = printfn "\n (*about to instantiate  \n %A \n with \n %A \n \n *) \n" (vars,t) prefixAsMLTypes in
                    let t0 = t in 
                    let t = instantiate (vars, t) prefixAsMLTypes in

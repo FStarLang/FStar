@@ -112,7 +112,7 @@ let interactive_mode dsenv env =
                           Util.flush_file transcript)
         else (fun line -> ()) in
     if Option.isSome !Options.codegen
-    then (Util.print_string "Code-generation is not supported in interactive mode"; exit 1);
+    then (Util.print_string "Warning: Code-generation is not supported in interactive mode, ignoring the codegen flag");
     let chunk = Util.new_string_builder () in
     let stdin = Util.open_stdin () in
     let rec fill_chunk ()= 
