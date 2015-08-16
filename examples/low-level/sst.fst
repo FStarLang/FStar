@@ -92,16 +92,31 @@ assume val get : unit -> PureMem (erased smem)
       (requires (fun m -> true))
       (ensures (fun m v -> reveal v = m))
 
-assume val lalloc: #a:Type -> v:a -> Tot (l:(located a){greveal l = v})
+(*PureMem might seem strange. We need it because lalloc does not
+change the map from references to their values.
+*)
+assume val lalloc: #a:Type -> v:a -> PureMem
+  (located a)
+  (requires (fun m ->isNonEmpty (st m)))
+  (ensures (fun m1 l -> greveal l = v /\ isNonEmpty (st m1) /\ regionOf l = InStack (topstid m1)))
 
 
 assume val llift : f:('a -> Tot 'b) -> l:located 'a
 -> PureMem 'b (requires (fun m-> liveLoc l m))
               (ensures (fun v m1 -> v == f (greveal l) ))
 
-type point = {x:int ; y:int}
 
+(*some examples. should be moved to a different file*)
+type point = {x:int ; y:int}
 
 val lx : p:(located point) -> PureMem int (requires (fun m-> liveLoc p m))
               (ensures (fun v m1 -> v == (greveal p).x ))
 let lx p =  (llift (fun (p:point)-> p.x)) p
+
+val lallocExample1 : p:point -> PureMem int (fun m -> True) (fun m v -> v == p.x+1)
+let lallocExample1 p =
+  pushStackFrame ();
+  let sp= lalloc p in
+  let r = lx sp in
+  popStackFrame ();
+  (r+1)
