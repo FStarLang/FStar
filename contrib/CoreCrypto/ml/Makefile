@@ -1,11 +1,16 @@
 all: CoreCrypto.cmxa
 
 ifeq ($(OS),Windows_NT)
-CC = i686-w64-mingw32-gcc
-INCLUDE = ../../../../openssl-1.0.1p/include
+    CC = i686-w64-mingw32-gcc
+    INCLUDE = ../../../../openssl-1.0.1p/include
 else
-CC = gcc-5
-INCLUDE = /usr/include
+    INCLUDE = /usr/include
+    UNAME_S := $(shell uname -s)
+    ifeq ($(UNAME_S),Darwin)
+        CC = gcc-5
+    else
+        CC = gcc
+    endif
 endif
 
 openssl_stub.o: openssl_stub.c
