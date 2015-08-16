@@ -92,21 +92,16 @@ assume val get : unit -> PureMem (erased smem)
       (requires (fun m -> true))
       (ensures (fun m v -> reveal v = m))
 
-assume val lalloc: #a:Type -> v:a -> Tot (l:(located a){reveal (lreveal l) = v})
+assume val lalloc: #a:Type -> v:a -> Tot (l:(located a){greveal l = v})
 
 
-(*this inbuilt functions determines if a funtion is a record projector in F*.
-  Lateron, it can signify a projector of any arbitrary datatype *)
-val isProjector : (f: 'a -> Tot 'b) -> Tot bool
-let isProjector f = true (*fix in F* implementation*)
-
-assume val lplift : f:('a -> Tot 'b){isProjector f} -> l:located 'a
+assume val llift : f:('a -> Tot 'b) -> l:located 'a
 -> PureMem 'b (requires (fun m-> liveLoc l m))
-              (ensures (fun v m1 -> v == f (reveal (lreveal l)) ))
+              (ensures (fun v m1 -> v == f (greveal l) ))
 
 type point = {x:int ; y:int}
 
-(*
-val lx : (located point) -> PureMem int
-let lx p =  (lplift (fun (p:point)-> p.x)) p
-*)
+
+val lx : p:(located point) -> PureMem int (requires (fun m-> liveLoc p m))
+              (ensures (fun v m1 -> v == (greveal p).x ))
+let lx p =  (llift (fun (p:point)-> p.x)) p
