@@ -61,6 +61,9 @@ let eesel (#a:Type) m v = eeloopkupRef m (asRef v)
 val glength : #a:Type -> v:(sstarray a) -> m:smem{liveArr m v} -> GTot nat
 let glength v m = Seq.length (sel m v)
 
+val gindex: #a:Type -> v:(sstarray a) -> m:smem {liveArr m v} -> i:nat{i < glength v m} -> GTot a
+let gindex v m i = Seq.index (sel m v) i
+
 val haslength : #a:Type -> smem -> sstarray a -> n:nat -> GTot bool
 let haslength m v n = liveArr m v && glength v m = n
 
