@@ -104,19 +104,3 @@ assume val lalloc: #a:Type -> v:a -> PureMem
 assume val llift : f:('a -> Tot 'b) -> l:located 'a
 -> PureMem 'b (requires (fun m-> liveLoc l m))
               (ensures (fun v m1 -> v == f (greveal l) ))
-
-
-(*some examples. should be moved to a different file*)
-type point = {x:int ; y:int}
-
-val lx : p:(located point) -> PureMem int (requires (fun m-> liveLoc p m))
-              (ensures (fun v m1 -> v == (greveal p).x ))
-let lx p =  (llift (fun (p:point)-> p.x)) p
-
-val lallocExample1 : p:point -> PureMem int (fun m -> True) (fun m v -> v == p.x+1)
-let lallocExample1 p =
-  pushStackFrame ();
-  let sp= lalloc p in
-  let r = lx sp in
-  popStackFrame ();
-  (r+1)

@@ -14,5 +14,10 @@ let popStackFrame = (fun ( _ ) -> Camlstack.pop_frame ())
 let get = (fun ( _ ) -> ())
 
 
+let lalloc = (fun ( v ) -> (Support.All.failwith "unexpected. extraction should have redirected calls to this function"))
+
+let llift = (fun ( f ) ( l ) -> (f l))
+
+
 
 
