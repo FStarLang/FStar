@@ -30,7 +30,14 @@ ARRAY_FILES=Seq.ml SSTArray.ml ArrayAlgos.ml
 sieve: $(PRE_SST_FILES)  SST.ml SSTCombinators.ml $(ARRAY_FILES) SieveFun.ml Sieve.ml TestSieve.ml
 	$(OCAML) -o $@ $^
 
+#run make Sieve.ml, and make clean if you just made sieveLoopHeap
 sieveLoop: $(PRE_SST_FILES)  SST.ml SSTCombinators.ml $(ARRAY_FILES) SieveFun.ml Sieve.ml TestSieveInLoop.ml
+	$(OCAML) -o $@ $^
+
+#run make Sieve.ml
+sieveLoopHeap: $(PRE_SST_FILES)  SSTAllHeap.ml  SSTArrayAllHeap.ml SST.ml SSTCombinators.ml $(ARRAY_FILES) SieveFun.ml Sieve.ml TestSieveInLoop.ml
+	cp SSTAllHeap.ml SST.ml
+	cp SSTArrayAllHeap.ml SSTArray.ml
 	$(OCAML) -o $@ $^
 
 SieveFun.ml: sieveFun.fst
@@ -53,3 +60,4 @@ support: #run this whenever the src file of cp is updated. It is tracked in git.
 
 clean:
 	rm *.cmi *.cmo MD5.ml Sieve.ml Factorial.ml LallocTest.ml md5 factorial sieve SieveFun.ml ListSet.ml Stack.ml FunctionalExtensionality.ml Set.ml Ghost.ml StackAndHeap.ml SSTCombinators.ml MachineWord.ml Seq.ml ArrayAlgos.ml MD5Common.ml All.ml
+	./revertManualMLs
