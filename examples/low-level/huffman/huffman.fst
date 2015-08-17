@@ -42,12 +42,6 @@ let live_located x sm = match regionOf x with
   | InHeap     -> true
   | InStack id -> contains_region id (snd sm)
 
-val live_located_across_memwrite_lemma: #a:Type -> #b:Type -> x:located a -> sm:smem
-                                        -> y:lref b{liveRef y sm} -> v:b
-                                        -> Lemma (requires (live_located x sm))
-                                           (ensures (live_located x (writeMemAux y sm v)))
-let live_located_across_memwrite_lemma x sm y v = ()
-
 assume val ghost_lreveal: #a:Type -> x:located a -> GTot (r:a{regionOf x = InHeap ==> r = unlocate x})
 
 (* live_node also ensures that the linked list is live  *)
