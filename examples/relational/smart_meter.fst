@@ -8,23 +8,7 @@
 module SmartMeter
 open Bytes
 open List
-
-
-type rel (a:Type) (b:Type) : Type =
-  | R : l:a -> r:b -> rel a b
-
-let twice x = R x  x
-type double (t:Type) = rel t  t
-type eq (t:Type) = p:(double t){R.l p = R.r p}
-
-let add_rel (R a b) (R c d) = R (a+c) (b+d)
-let mul_rel (R a b) (R c d) = R (a*c) (b*d)
-val tail_rel: #a:Type -> l:double (list a){is_Cons (R.l l) /\ is_Cons (R.r l)}-> Tot (double (list a))
-let tail_rel (R (_::xs) (_::ys)) = R xs ys
-let cons_rel (R x y) (R xs ys) = R (x::xs)  (y::ys)
-let pair_rel (R x y) (R x' y') = R (x,x') (y,y')
-let fst_rel (R (x, y) (x', y')) = R x x'
-let snd_rel (R (x, y) (x', y')) = R y y'
+open Relational
 
 
 
@@ -125,9 +109,9 @@ let thd3=MkTuple3._3
 assume logic type readings (l:double (list int))
 assume logic type rates (l:double (list int))
 assume ReadingsTail : (forall l. is_Cons (R.l l) /\ is_Cons (R.r l)
-                                  ==> readings (tail_rel l))
+                                  ==> readings (tl_rel l))
 assume RatesTail : (forall l. is_Cons (R.l l) /\ is_Cons (R.r l)
-                                  ==> rates (tail_rel l))
+                                  ==> rates (tl_rel l))
 
 type signed (pp:pparam) (cs:double (list elt)) =
               (exists xrs. readings (fsts_rel xrs) /\ cs = commitsP pp xrs)

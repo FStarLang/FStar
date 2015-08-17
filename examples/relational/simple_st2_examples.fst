@@ -7,23 +7,24 @@
 module Samples
 open Comp
 open Heap
+open Relational
 
 let f x = x := !x - !x
 let g x = x := 0
 val equiv1: x:ref int
          -> y:ref int
-         -> ST2 (unit * unit)
+         -> ST2 (rel unit unit)
                 (requires (fun _ -> True)) //x, y may be high-references
-                (ensures (fun _ _ h2' -> sel (fst h2') x == sel (snd h2') y)) //their contents are equal afterwards
+                (ensures (fun _ _ h2' -> sel (R.l h2') x == sel (R.r h2') y)) //their contents are equal afterwards
 let equiv1 x y = compose2 f g x y
 
 
 let square x = x := !x * !x
 val equiv2: x:ref int
          -> y:ref int
-         -> Comp.ST2 (unit * unit)
-                (requires (fun h2 -> sel (fst h2) x = - (sel (snd h2) y)))     //x, y negatives of each other
-                (ensures (fun _ _ h2' -> sel (fst h2') x = sel (snd h2') y)) //their contents are equal afterwards
+         -> ST2 (rel unit unit)
+                (requires (fun h2 -> sel (R.l h2) x = - (sel (R.r h2) y)))     //x, y negatives of each other
+                (ensures (fun _ _ h2' -> sel (R.l h2') x = sel (R.r h2') y)) //their contents are equal afterwards
 let equiv2 x y = compose2 square square x y
 
 
@@ -31,9 +32,9 @@ let f3 x = if !x = 0 then x := 0 else x:= 1
 let g3 x = if !x <> 0 then x := 1 else x:= 0
 val equiv3: x:ref int
          -> y:ref int
-         -> Comp.ST2 (unit * unit)
-                (requires (fun h -> sel (fst h) x = sel (snd h) y)) // x, y have same values
-                (ensures (fun _ _ h2' -> sel (fst h2') x = sel (snd h2') y)) // their contents are equal afterwards
+         -> ST2 (rel unit unit)
+                (requires (fun h -> sel (R.l h) x = sel (R.r h) y)) // x, y have twice values
+                (ensures (fun _ _ h2' -> sel (R.l h2') x = sel (R.r h2') y)) // their contents are equal afterwards
 let equiv3 x y = compose2 f3 g3 x y
 
 
@@ -41,9 +42,9 @@ let f4 x = if !x = 0 then x := 0 else x:= 1
 let g4 x = if !x = 0 then x := 1 else x:= 0
 val equiv4: x:ref int
          -> y:ref int
-         -> Comp.ST2 (unit * unit)
-                (requires (fun h -> if sel (fst h) x = 0 then sel (snd h) y = 1 else sel (snd h) y = 0)) // making sure !x=0 <==> !y <> 0
-                (ensures (fun _ _ h2' -> sel (fst h2') x = sel (snd h2') y)) //their contents are equal afterwards
+         -> ST2 (rel unit unit)
+                (requires (fun h -> if sel (R.l h) x = 0 then sel (R.r h) y = 1 else sel (R.r h) y = 0)) // making sure !x=0 <==> !y <> 0
+                (ensures (fun _ _ h2' -> sel (R.l h2') x = sel (R.r h2') y)) //their contents are equal afterwards
 let equiv4 x y = compose2 f4 g4 x y
 
 
@@ -51,9 +52,9 @@ let f5 x = x := 0
 let g5 x = if !x = 0 then x := !x else x:= !x - !x
 val equiv5: x:ref int
          -> y:ref int
-         -> Comp.ST2 (unit * unit)
+         -> ST2 (rel unit unit)
                 (requires (fun _ -> True))  // no requirements
-                (ensures (fun _ _ h2' -> sel (fst h2') x = sel (snd h2') y)) //their contents are equal afterwards
+                (ensures (fun _ _ h2' -> sel (R.l h2') x = sel (R.r h2') y)) //their contents are equal afterwards
 let equiv5 x y = compose2 f5 g5 x y
 
 
@@ -61,9 +62,9 @@ let f6 x = let y = 1 in x := y
 let g6 x = if !x = 0 then x := 1 else if !x <> 0 then x := 1 else x:= 0
 val equiv6: x:ref int
          -> y:ref int
-         -> Comp.ST2 (unit * unit)
+         -> ST2 (rel unit unit)
                 (requires (fun _ -> True)) // no requirements
-                (ensures (fun _ _ h2' -> sel (fst h2') x = sel (snd h2') y)) //their contents are equal afterwards
+                (ensures (fun _ _ h2' -> sel (R.l h2') x = sel (R.r h2') y)) //their contents are equal afterwards
 let equiv6 x y = compose2 f6 g6 x y
 
 
@@ -71,19 +72,19 @@ let f7 x = x := 2*!x
 let g7 x = let y = (fun a -> a + a) !x in x := y
 val equiv7: x:ref int
          -> y:ref int
-         -> Comp.ST2 (unit * unit)
-                (requires (fun h -> sel (fst h) x - sel (snd h) y = 10)) // values of x, y differ by 10
-                (ensures (fun _ _ h2' -> sel (fst h2') x - sel (snd h2') y = 20)) // values of x, y differ by 20
+         -> ST2 (rel unit unit)
+                (requires (fun h -> sel (R.l h) x - sel (R.r h) y = 10)) // values of x, y differ by 10
+                (ensures (fun _ _ h2' -> sel (R.l h2') x - sel (R.r h2') y = 20)) // values of x, y differ by 20
 let equiv7 x y = compose2 f7 g7 x y
 
 
 let f8 (x, y, z) = if !z=0 then (x := 1; y := 1) else (y:=1 ; x := 0)
 val equiv8: a:(ref int * ref int * ref int)
          -> b:(ref int * ref int * ref int)
-         -> Comp.ST2 (unit * unit)
+         -> ST2 (rel unit unit)
                 (requires (fun h -> MkTuple3._1 a <> MkTuple3._2 a /\  // x and y are not aliases
                                     MkTuple3._1 b <> MkTuple3._2 b))
-                (ensures (fun _ _ h2' -> sel (fst h2') (MkTuple3._2 a) = sel (snd h2') (MkTuple3._2 b))) //value of y is the same
+                (ensures (fun _ _ h2' -> sel (R.l h2') (MkTuple3._2 a) = sel (R.r h2') (MkTuple3._2 b))) //value of y is the twice
 let equiv8 a b = compose2 f8 f8 a b
 
 
@@ -94,9 +95,9 @@ let equiv8 a b = compose2 f8 f8 a b
 let assign x y = x := y
 
 val monotonic_assign : x:ref int -> y1:int -> y2:int
-                       -> Comp.ST2 (unit * unit)
+                       -> ST2 (rel unit unit)
                                      (requires (fun h -> y1 <= y2))
-                                     (ensures (fun h1 r h2 -> sel (fst h2) x <= sel (snd h2) x))
+                                     (ensures (fun h1 r h2 -> sel (R.l h2) x <= sel (R.r h2) x))
 let monotonic_assign x y1 y2 = compose2 (assign x) (assign x) y1 y2
 
 val id : int -> Tot int
@@ -109,24 +110,20 @@ let monotonic_id_standard x y = ()
 
 
 (* This does not work...? *)
-(* val monotonic_id : x:int -> y:int -> Comp.ST2 (int * int) *)
+(* val monotonic_id : x:int -> y:int -> ST2 (rel int int) *)
 (*                                                 (requires (fun h -> x <= y)) *)
-(*                                                 (ensures (fun h1 r h2 -> (fst r) <= (snd r))) *)
+(*                                                 (ensures (fun h1 r h2 -> (R.l r) <= (R.r r))) *)
 (* let monotonic_id x y = compose2 id id x y *)
 
-type twice (a:Type) = a * a
 
-type low 'a = x:(twice 'a){fst x = snd x}
-type high 'a = twice 'a
+type low 'a = x:(double 'a){R.l x = R.r x}
+type high 'a = double 'a
 
-val same : 'a -> Tot (twice 'a)
-let same x = (x,x)
+val one : double int
+let one = twice 1
 
-val one : twice int
-let one = same 1
-
-val pair_map2 : ('a -> 'b -> Tot 'c) -> (twice 'a) -> (twice 'b) -> Tot (twice 'c)
-let pair_map2 f (x1,x2) (y1,y2) = (f x1 y1, f x2 y2)
+val pair_map2 : ('a -> 'b -> Tot 'c) -> (double 'a) -> (double 'b) -> Tot (double 'c)
+let pair_map2 f (R x1 x2) (R y1 y2) = R (f x1 y1) (f x2 y2)
 
 let plus = pair_map2 (fun x y -> x + y)
 
@@ -140,23 +137,23 @@ let minus  = pair_map2 (fun x y -> x - y)
 val test_minus : high int -> Tot (low int)
 let test_minus z = minus z z
 
-type monotonic = x:twice int -> Tot (y:(twice int){fst x <= snd x ==> fst y <= snd y})
+type monotonic = x:double int -> Tot (y:(double int){R.l x <= R.r x ==> R.l y <= R.r y})
 
 type k_sensitive (d:(int -> int -> Tot int)) (k:int) =
-   x:twice int -> Tot (y:(twice int){d (fst y) (snd y) <= k * (d (fst x) (snd x))})
+   x:double int -> Tot (y:(double int){d (R.l y) (R.r y) <= k * (d (R.l x) (R.r x))})
 
-val foo : k:int -> twice int -> Tot (twice int)
-let foo k x = pair_map2 (fun k x -> k * x) (same k) x
+val foo : k:int -> double int -> Tot (double int)
+let foo k x = pair_map2 (fun k x -> k * x) (twice k) x
 
 val foo_monotonic : k:int{k>=0} -> Tot monotonic
-let foo_monotonic k = (fun x -> pair_map2 (fun k x -> k * x) (same k) x)
+let foo_monotonic k = (fun x -> pair_map2 (fun k x -> k * x) (twice k) x)
 
 val dist : int -> int -> Tot int
 let dist x1 x2 = let m = x1 - x2 in
               if m >= 0 then m else -m
 
 val foo_k_sensitive : k:int{k>0} -> Tot (k_sensitive dist k)
-let foo_k_sensitive k = (fun x -> pair_map2 (fun k x -> k * x) (same k) x)
+let foo_k_sensitive k = (fun x -> pair_map2 (fun k x -> k * x) (twice k) x)
 
 
 (* This does not work if I η-expand [noleak] in the body of noleak_ok *)
@@ -165,9 +162,9 @@ val noleak_ok: x1:ref int
                -> x2:ref int
                -> b1:bool
                -> b2:bool
-               -> Comp.ST2 (unit * unit)
+               -> ST2 (rel unit unit)
                              (requires (fun h -> True))
-                             (ensures (fun h1 r h2 -> ((x1 = x2) /\ (fst h1 = snd h1)) ==> (fst h2 = snd h2)))
+                             (ensures (fun h1 r h2 -> ((x1 = x2) /\ (R.l h1 = R.r h1)) ==> (R.l h2 = R.r h2)))
 let noleak_ok x1 x2 b1 b2 = compose2 noleak noleak (x1,b1) (x2,b2)
 
 (* Simple recursive function:
@@ -189,9 +186,9 @@ val gauss_lemma : x:nat -> a:nat -> Lemma
 let rec gauss_lemma x a = if x = 0 then () else gauss_lemma (x-1) (a+x)
 
 val equiv_gauss: x : nat
-                 -> ST2 (nat * nat)
+                 -> ST2 (rel nat nat)
                     (requires (fun _ -> True))
-                    (ensures (fun _ p _ -> fst p = snd p))
+                    (ensures (fun _ p _ -> R.l p = R.r p))
 let equiv_gauss x = compose2 (fun x -> gauss_rec x 0) (fun x -> gauss x) x x
 
 (* We prove, that the imperative functions fulfill the specifiaction *)
@@ -200,7 +197,7 @@ val gauss_imp : x:ref nat -> ST nat
                     (ensures  (fun h0 r h1 -> r = gauss (sel h0 x)))
 let gauss_imp x = (!x*!x + !x)/2
 
-val gauss_imp_rec : p:(ref nat * ref nat) -> ST nat
+val gauss_imp_rec : p:((ref nat) * (ref nat)) -> ST nat
                     (requires (fun h -> fst p <> snd p))
                     (ensures  (fun h0 r h1 ->
                       r = gauss_rec ((sel h0) (fst p)) ((sel h0) (snd p)) /\
@@ -211,9 +208,9 @@ let rec gauss_imp_rec (x, a) = if !x = 0 then !a
 (* We can conclude the equality for the imperative functions *)
 val equiv_gauss_imp: x:ref nat
                  -> a:ref nat
-                 -> ST2 (nat * nat)
+                 -> ST2 (rel nat nat)
                     (requires (fun h2 -> a <> x /\
-                                        sel (fst h2) x = sel (snd h2) x /\
-                                        sel (fst h2) a = 0 ))
-                    (ensures (fun _ p h2 -> fst p = snd p))
+                                        sel (R.l h2) x = sel (R.r h2) x /\
+                                        sel (R.l h2) a = 0 ))
+                    (ensures (fun _ p h2 -> R.l p = R.r p))
 let equiv_gauss_imp x a = compose2 gauss_imp_rec gauss_imp (x,a) x

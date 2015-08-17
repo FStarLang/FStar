@@ -118,5 +118,4 @@ let correctness k p =
                     let p' = decrypt_hon k (Some.v c) in
                     let st = !s in
                     if not (st.bad) then
-                      (assert(is_Some (assoc (append k (snd (Some.v c))) st.l));
-                      assert(is_Some p' /\ p = Some.v p'))
+                      assert(is_Some p' /\ p = Some.v p')
