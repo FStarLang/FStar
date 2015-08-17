@@ -6,8 +6,13 @@ endif
 
 OCAMLC := ocamlfind ocamlopt
 OCAMLLINK := ocamlfind ocamlopt
-FLAGS := -g -ccopt -g
+FLAGS := -g 
+CFLAGS := -ccopt -g
 CMO := cmx
+
+ifdef NOGC
+CFLAGS := $(CFLAGS) -ccopt -DNOGC
+endif
 
 # If for some weird reason, you don't have ocamlfind installed, override it in
 # your local config file.
@@ -30,7 +35,7 @@ ffitest$(EXE): camlstack.o stack.o bitmask.o ffitest.$(CMO)
 	$(OCAMLC) $(FLAGS) -c  $< -o $@
 
 %.o: %.c
-	$(OCAMLC) $(FLAGS) -c  $^ -o $@
+	$(OCAMLC) $(FLAGS) $(CFLAGS) -c  $^ -o $@
 
 clean:
 	$(RM) *.o *.cm* stacktest$(EXE) ffitest$(EXE)
