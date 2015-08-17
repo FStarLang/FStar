@@ -33,7 +33,21 @@ type node =
     
     ghost_list: erased (list (located node))    // ghost list to keep elements of linked list
   }
-assume val live_located: #a:Type -> located a -> smem -> Tot bool
+
+val contains_region: sidt -> memStack -> Tot bool
+let contains_region id st = List.mem id (ssids st)
+
+val live_located: #a:Type -> located a -> smem -> Tot bool
+let live_located x sm = match regionOf x with
+  | InHeap     -> true
+  | InStack id -> contains_region id (snd sm)
+
+val live_located_across_memwrite_lemma: #a:Type -> #b:Type -> x:located a -> sm:smem
+                                        -> y:lref b{liveRef y sm} -> v:b
+                                        -> Lemma (requires (live_located x sm))
+                                           (ensures (live_located x (writeMemAux y sm v)))
+let live_located_across_memwrite_lemma x sm y v = ()
+
 assume val ghost_lreveal: #a:Type -> x:located a -> GTot (r:a{regionOf x = InHeap ==> r = unlocate x})
 
 (* live_node also ensures that the linked list is live  *)
@@ -129,7 +143,8 @@ let rec get_modset_for_list_insert l sm s =
 val insert_in_ordered_list: n:located node -> l:node_list
                             -> SST unit
                                (fun sm0 -> live_node n sm0 /\ live_node_list l sm0)
-                               (fun sm0 _ sm1 -> live_node n sm0 /\ live_node_list l sm0)
+                               (fun sm0 _ sm1 -> live_node n sm0 /\ live_node_list l sm0 /\ live_located n sm1 /\
+                                                 live_node_list l sm1)
                                 (*/\ live_node n sm1 /\ live_node_list l sm1 /\
                                                  sids sm0 = sids sm1 /\ canModify sm0 sm1 (get_modset_for_list_insert l sm0 (hide Set.empty)))*)
                                (*(fun sm0 _ sm1 -> live_node n sm0 /\ live_node_list l sm0 /\ live_node n sm1 /\ live_node_list l sm1 /\

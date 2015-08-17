@@ -92,15 +92,15 @@ let writeInBlock r v mb= upd mb r v
 
 val changeStackBlockWithId  : (region -> Tot region)
   -> sidt
-  -> (Stack (sidt * region))
-        -> Tot (Stack (sidt * region))
+  -> ms:(Stack (sidt * region))
+        -> Tot (r:Stack (sidt * region){ssids r = ssids ms})
 let rec changeStackBlockWithId f s ms=
 match ms with
 | [] -> []
 | h::tl ->
   (if (fst h = s) then ((fst h, (f (snd h)))::tl) else h::(changeStackBlockWithId f s tl))
 
-val writeInMemStack : #a:Type -> (lref a) -> (Stack (sidt * region)) -> sidt -> a -> Tot (Stack (sidt * region))
+val writeInMemStack : #a:Type -> (lref a) -> s:(Stack (sidt * region)) -> sidt -> a -> Tot (r:Stack (sidt * region){ssids r = ssids s})
 let rec writeInMemStack r ms s v = changeStackBlockWithId (writeInBlock r v) s ms
 
 
@@ -209,7 +209,7 @@ match ms with
 | h::tl ->   if (fst h = id) then () else ((writeMemStackExists rw r tl id idw v))
 
 
-val writeMemAux : #a:Type -> (lref a) -> m:smem -> a -> Tot smem
+val writeMemAux : #a:Type -> (lref a) -> m:smem -> a -> Tot (r:smem{sids r = sids m})
 let writeMemAux r m v =
   match (refLoc r) with
   | InHeap -> ((upd (hp m) r v), snd m)
