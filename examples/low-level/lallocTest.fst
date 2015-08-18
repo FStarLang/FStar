@@ -27,10 +27,10 @@ val lx : p:(located point) -> PureMem int (requires (fun m-> liveLoc p m))
               (ensures (fun v m1 -> v == (greveal p).x ))
 let lx p =  (llift (fun (p:point)-> p.x)) p
 
-val lallocExample1 : p:point -> PureMem int (fun m -> True) (fun m v -> v == p.x+1)
-let lallocExample1 p =
+val lallocExample1 : px:int -> py:int -> PureMem int (fun m -> True) (fun m v -> v == px+1)
+let lallocExample1 px py =
   pushStackFrame ();
-  let sp= lalloc p in
+  let sp= lalloc (Mkpoint px py) in
   let r = lx sp in
   popStackFrame ();
   (r+1)
