@@ -92,15 +92,18 @@ assume val get : unit -> PureMem (erased smem)
       (requires (fun m -> true))
       (ensures (fun m v -> reveal v = m))
 
-(*PureMem might seem strange. We need it because lalloc does not
-change the map from references to their values.
-*)
 (*
- * In future, we would like to enforce that type a is "locatable".
- * IIUC, type 'ref t' is locatable, but lalloc should not be applied
- * to ref types (?). So, I guess refs would have to be given non-uniform
- * treatment here.
+ * In future, we would like to enforce that the type a is locatable and immutable.
+ * See a precise definition of locatable in located.fst.
+ * When allocating mutable things, the ghost memory of SST must be updated to
+ * keep track of its "current" value. Because lalloc is a PureMem, it cannot be used.
+ * PureMem means lalloc does not change smem, the map from references to their values.
+ * For refs, use instead salloc above. for arrays, use [hs]create in array.fsi instead.
  *)
+ (*is this is ever renamed or moved, mlp_lalloc in src\extraction\ml-syntax.fs MUST be updated.*)
+ (*as of now, a can only be a record type.*)
+(*for efficiency, the argument to lalloc should be a head normal form of the type.
+Extraction will then avoid creating this value on the heap.*)
 assume val lalloc: #a:Type -> v:a -> PureMem
   (located a)
   (requires (fun m ->isNonEmpty (st m)))

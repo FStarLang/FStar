@@ -802,6 +802,8 @@ let ml_bool_ty = MLTY_Named (([], (("Prims")::[], "bool")))
 
 let ml_unit_ty = MLTY_Named (([], (("Prims")::[], "unit")))
 
+let mlp_lalloc = (("SST")::[], "lalloc")
+
 
 
 

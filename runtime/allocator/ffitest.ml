@@ -21,7 +21,7 @@ let doGC() =
 
 (* DATATYPES *)
 
-push_frame 0;;
+push_frame ();;
 
 type dt =
     A
@@ -96,8 +96,6 @@ Printf.printf "%s\n" (dt_to_string b);;
 
 pop_frame ();;
 
-Pervasives.exit 0;;
-
 (* BYTE ARRAYS *)
 
 let make n c =
@@ -107,7 +105,7 @@ let make n c =
   done;
   str;;
 
-push_frame 0;;
+push_frame ();;
 
 let s = make 10 'a';;
 let s2 = make 35 '<';;
@@ -117,7 +115,7 @@ pop_frame ();;
 
 (* ARRAYS *)
 
-push_frame 0;;
+push_frame ();;
 
 let arr = Camlstack.mkarray 10 [1;2];;
 doGC();;
@@ -145,7 +143,7 @@ pop_frame ();;
 
 (* LISTS *)
 
-push_frame 0;;
+push_frame ();;
 
 (* allocates a list on the stack, where the list elements point to heap-allocated lists *)
 let rec mklist n =
@@ -164,7 +162,7 @@ pop_frame ();;
 
 (* REFERENCES *)
 
-push_frame 0;;
+push_frame ();;
 
 let rec mkrefs n =
   if n = 0 then []
@@ -201,11 +199,4 @@ let _ =
     ignore(pop_frame ())
   with Failure s -> 
     Printf.printf "Tried to pop a frame with no frames pushed\n"
-;;
-
-let _ = 
-  try 
-    ignore(push_frame (-1))
-  with Invalid_argument s -> 
-    Printf.printf "Tried to allocate negatively-sized frame\n"
 ;;

@@ -17,6 +17,13 @@ open IO
 
 (* two events, recording genuine requests and responses *)
 
+logic type lnat = nat
+
+
+val escape : lnat -> Tot nat
+let escape l = l
+
+
 (* logic *) type Request : string -> Type
 (* logic *) type Response : string -> string -> Type
 

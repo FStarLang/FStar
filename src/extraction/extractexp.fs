@@ -151,7 +151,7 @@ let extract_pat (g:env) p : (env * list<mlpattern>) =
       | Pat_wild x when disj -> 
         g, [MLP_Wild]
 
-      | Pat_wild x -> (*how is this different from Pat_wild? For extTest.naryTree.Node, the first projector uses Pat_var and the other one uses Pat_wild*)
+      | Pat_wild x -> (*how is this different from Pat_var? For extTest.naryTree.Node, the first projector uses Pat_var and the other one uses Pat_wild*)
         let mlty = translate_typ g x.sort in 
         let g = Env.extend_bv g x ([], mlty) false imp in
         g, (if imp then [] else [MLP_Var (as_mlident x.v)])
@@ -182,6 +182,22 @@ let normalize_abs e0 =
               else mk_Exp_abs(bs, e) None e0.pos in
    aux [] e0
 
+let ffi_mltuple_mlp (n:int) : mlpath = 
+    let name = if (2<n && n<6) then ("mktuple"^(Util.string_of_int n)) else (if n=2 then "mkpair" else (failwith "NYI in runtime/allocator/camlstack.mli")) in
+    ["Camlstack"],name
+
+let fix_lalloc (arg (*the argument of lalloc (type arg is erased) *):mlexpr) : mlexpr = 
+match arg with
+| MLE_Tuple  args -> failwith "unexpected. Prims.TupleN is not specially handled yet. So, F* tuples, which are sugar forPrims.TupleN,  were expected to be extracted as MLE_CTor"
+| MLE_Record (mlns, fields) -> 
+    let args = List.map snd fields in 
+        let tup= (MLE_App (MLE_Name (ffi_mltuple_mlp (List.length args)), args)) in
+        let dummyTy = ml_unit_ty in
+        MLE_Coerce (tup,dummyTy,dummyTy) // if the pretty printing phase prints dummyTy, we will be in trouble
+| MLE_CTor (mlp, args) -> failwith "NYI: lalloc ctor" 
+| _ -> failwith "for efficiency, the argument to lalloc should be a head normal form of the type. Extraction will then avoid creating this value on the heap."
+
+
     
 (*Preconditions : 
    1) residualType is the type of mlAppExpr 
@@ -190,7 +206,7 @@ let normalize_abs e0 =
    1) the return value (say r) also has type residualType and it's extraction-preimage is definitionally equal (in Fstar ) to that of mlAppExpr
    2) meets the ML requirements that the args to datacons be tupled and that the datacons be fullly applied
 *)
-let maybe_eta_data (qual : option<fv_qual>) (residualType : mlty)  (mlAppExpr : mlexpr) : mlexpr =
+let maybe_lalloc_eta_data (g:env) (qual : option<fv_qual>) (residualType : mlty)  (mlAppExpr : mlexpr) : mlexpr =
     let rec eta_args more_args t = match t with 
         | MLTY_Fun (t0, _, t1) -> 
           let x = Util.gensym (), -1 in
@@ -218,6 +234,7 @@ let maybe_eta_data (qual : option<fv_qual>) (residualType : mlty)  (mlAppExpr : 
                     | _ -> failwith "Impossible" in
     
     match (mlAppExpr, qual) with
+        | (MLE_App (MLE_Name mlp, [mlarg]), _) when (mlp=mlp_lalloc) -> (debug g (fun () -> Util.print_string "need to do lalloc surgery here\n")); (fix_lalloc mlarg)
         | _, None -> mlAppExpr
         | MLE_App(MLE_Name mlp, mle::args), Some (Record_projector f) -> 
           let fn = Util.mlpath_of_lid f in
@@ -285,7 +302,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
           let (x, mltys), qual = lookup_var g e in 
           //let _ = printfn "\n (*looked up tyscheme of \n %A \n as \n %A *) \n" x s in
           begin match mltys with 
-            | ([], t) -> maybe_eta_data qual t x, E_PURE, t
+            | ([], t) -> maybe_lalloc_eta_data g qual t x, E_PURE, t
             | _ -> err_uninst e
           end
 
@@ -304,8 +321,8 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                                 else let x = Util.gensym (), -1 in
                                      (x, arg)::lbs, (MLE_Var x::out_args)) 
                         ([], []) mlargs_f in
-                    let app = maybe_eta_data is_data t <| MLE_App(mlhead, mlargs) in
-                    let l_app = List.fold_right (fun (x, arg) out -> MLE_Let((false, [{mllb_name=x; mllb_tysc=None; mllb_add_unit=false; mllb_def=arg}]), out)) lbs app in
+                    let app = maybe_lalloc_eta_data g is_data t <| MLE_App(mlhead, mlargs) in
+                    let l_app = List.fold_right (fun (x, arg) out -> MLE_Let((false, [{mllb_name=x; mllb_tysc=None; mllb_add_unit=false; mllb_def=arg}]), out)) lbs app in // lets are to ensure L to R eval ordering of arguments
                     l_app, f, t
 
                 | (Inl _, _)::rest, MLTY_Fun (tunit, f', t) -> //non-prefix type app; this type argument gets erased to unit
@@ -341,7 +358,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                    let t = instantiate (vars, t) prefixAsMLTypes in
                    //debug g (fun () -> printfn "\n (*instantiating  \n %A \n with \n %A \n produced \n %A \n *) \n" (vars,t0) prefixAsMLTypes t);
                    match rest with 
-                    | [] -> maybe_eta_data qual t head, E_PURE, t
+                    | [] -> maybe_lalloc_eta_data g qual t head, E_PURE, t
                     | _  -> synth_app qual (head, []) (E_PURE, t) rest
               else err_uninst e
 

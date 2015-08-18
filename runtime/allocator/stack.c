@@ -20,6 +20,10 @@
 #include "stack.h"
 #include "bitmask.h"
 
+/* TODO:
+   - Change these routines to allocate words, not bytes, and then drop the word alignment checks 
+*/
+
 /* Utility routines */
 
 
@@ -30,8 +34,6 @@
 #define assert(x) 
 #endif
 #define max(a,b) (a>b?a:b)
-
-#define WORD_SZB sizeof(void*)
 
 static inline int align(int n, int blocksize) {
   return n % blocksize == 0 ? n : blocksize * ((n / blocksize) + 1);
@@ -101,16 +103,14 @@ static void add_page(int sz_b, int is_ext) {
 }
 
 /* [push_frame(b)] pushes a new frame on the stack. It attempts to add that
-   frame to the current page, if there is space. In that case, it stores the current
+   frame to the current page, if there is a minimum amount of space. It stores the current
    frame pointers at the allocation pointer, updates the frame pointer to point to
    that location, and then advances the allocation pointer (as in a C function call). 
    It also clears the pointermap for the frame pointer's storage. If insufficient
    space exists on the current page to support the frame, then a new page is 
    allocated, establishing the new frame. */
-void push_frame(int sz_b) {
-  assert(sz_b >= 0);  
-  sz_b = word_align(sz_b);
-  if (top != NULL && have_space(sz_b+sizeof(void*))) { // can continue with current page
+void push_frame(void) {
+  if (top != NULL && have_space(MIN_FRAME_SZB)) { // can continue with current page
     //printf("push frame in page\n");
     *((void **)top->alloc_ptr) = top->frame_ptr;
     top->frame_ptr = top->alloc_ptr;
@@ -121,7 +121,7 @@ void push_frame(int sz_b) {
     top->alloc_ptr = (void *)((unsigned long)top->alloc_ptr + WORD_SZB);
   } else {
     //printf("push frame on new page\n");
-    add_page(sz_b,0);
+    add_page(MIN_FRAME_SZB,0);
   }
 }
 
@@ -135,9 +135,13 @@ void push_frame(int sz_b) {
    case top->frame is EXT_MARKER). In this case, we free the page and
    the associated memory, and pop it from the stack. If the frame is a
    continuation, we also have to pop it on the previous page.  */
-int pop_frame() {
-  if (top == NULL) return -1;
-  if (top->frame_ptr != NULL && top->frame_ptr != EXT_MARKER) {
+void pop_frame() {
+#ifdef DEBUG
+  if (top == NULL) {
+    printf("warning: popping from empty stack!\n");
+    return;
+#endif
+  if (top->frame_ptr > EXT_MARKER) {
     //printf ("pop frame on page\n");
     top->alloc_ptr = top->frame_ptr;
     top->frame_ptr = *((void **)top->alloc_ptr);
@@ -156,7 +160,6 @@ int pop_frame() {
       pop_frame();
     }
   }
-  return 0;
 }
 
 /* [stack_alloc_maskp(s,n,m)] allocates [s] bytes in the current
@@ -170,7 +173,12 @@ int pop_frame() {
    0, and then the bits in the mask are set.
  */
 void *stack_alloc_maskp(int sz_b, int nbits, int *mask) {
-  if (top == NULL) return NULL;
+#ifdef DEBUG
+  if (top != NULL) {
+    printf ("Warning: allocating on an empty stack\n");
+    return NULL;
+  }
+#endif
   sz_b = word_align(sz_b);
  retry: if (have_space(sz_b)) { // can continue with current page
     void *res = top->alloc_ptr;
@@ -192,7 +200,7 @@ void *stack_alloc_maskp(int sz_b, int nbits, int *mask) {
 #endif    
     return res;
   } else {
-    //printf("adding page on demand\n");
+    //printf("adding page on demand (size %d)\n", sz_b);
     add_page(sz_b,1);
     goto retry;
   }
