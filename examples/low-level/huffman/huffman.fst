@@ -23,127 +23,185 @@ assume val symbol_value_bound: nat
 
 type symbol_t = n:nat{n < symbol_value_bound}
 
-type erased_heap_list (a:Type) = erased (r:lref (list a){regionOf r = InHeap})
-
 type node =
-  { frequency: lref int;
-    next: lref (located node);
+  {
+    frequency: lref int;
     zero_child: located node;
     one_child: located node;
     symbol: symbol_t;
-    code: lref string;
-    
-    ghost_list: erased_heap_list (located node)    // ghost list to keep elements of linked list
+    code: lref string
   }
-
-val contains_region: sidt -> memStack -> Tot bool
-let contains_region id st = List.mem id (ssids st)
 
 val live_located: #a:Type -> located a -> smem -> Tot bool
 let live_located x sm = match regionOf x with
   | InHeap     -> true
-  | InStack id -> contains_region id (snd sm)
+  | InStack id -> List.mem id (ssids (snd sm))
 
-assume val ghost_lreveal: #a:Type -> x:located a -> GTot (r:a{regionOf x = InHeap ==> r = unlocate x})
-
-val live_ghost_list: n:located node -> sm:smem -> GTot bool
-let live_ghost_list n sm = liveRef (reveal (ghost_lreveal n).ghost_list) sm
-
-(* live_node also ensures that the linked list is live  *)
-val live_node: n:located node -> sm:smem{live_ghost_list n sm}
-               -> GTot bool (decreases (List.length (loopkupRef (reveal ((ghost_lreveal n).ghost_list)) sm)))
+assume val greveal_precedence_axiom: #a:Type -> l:located a
+                                     -> Lemma (requires (True)) (ensures (greveal l << l))
+                                                           
+val live_node: n:located node -> sm:smem -> GTot bool
 let rec live_node n sm =
-  if live_located n sm then
-    let n = ghost_lreveal n in
-    if liveRef n.frequency sm && liveRef n.next sm && liveRef n.code sm &&
-       live_located n.zero_child sm && live_located n.one_child sm then
-      let l = loopkupRef (reveal n.ghost_list) sm in
-      match l with
-        | []     -> loopkupRef n.frequency sm = -1    // meaning that the node is also null_node defined below
-        | hd::tl ->
-          loopkupRef n.frequency sm <> -1 &&
-          hd = loopkupRef n.next sm && live_ghost_list hd sm &&
-          tl = loopkupRef (reveal (ghost_lreveal hd).ghost_list) sm && live_node hd sm
-    else
-      false
-  else
-    false
+  greveal_precedence_axiom n;
+
+  let n' = greveal n in
+  live_located n sm && liveRef n'.frequency sm && live_node n'.zero_child sm &&
+  live_node n'.one_child sm && liveRef n'.code sm
+
+val live_node_after_write: #a:Type -> #b:Type ->  rw:(lref a) -> v:a
+                           -> n:located node -> m:smem{live_node n m}
+                           -> GTot (u:unit{live_node n (writeMemAux rw m v)})
+                              (decreases n)
+let rec live_node_after_write rw v n m =
+  greveal_precedence_axiom n;
+  let n' = greveal n in
+  live_node_after_write rw v n'.zero_child m;
+  live_node_after_write rw v n'.one_child m
+
+(* TODO: FIXME: Can't write ghost code in lemmas *)
+val live_node_after_write_lemma: #a:Type -> #b:Type ->  rw:(lref a) -> v:a
+                                 -> n:located node -> m:smem{live_node n m}
+                                 -> Lemma (requires (True))
+                                          (ensures (live_node n (writeMemAux rw m v)))
+                                    [SMTPat (writeMemAux rw m v)]
+let live_node_after_write_lemma rw v n m = admit ()
 
 (* projectors *)
 assume val read_frequency: n:located node -> PureMem (lref int)
                                              (fun sm0 -> b2t (live_located n sm0))
-                                             (fun sm0 r -> b2t (r = (ghost_lreveal n).frequency))
-assume val read_next: n:located node -> PureMem (lref (located node))
-                                        (fun sm0 -> b2t (live_located n sm0))
-                                        (fun sm0 r -> b2t (r = (ghost_lreveal n).next))
+                                             (fun sm0 r -> b2t (r = (greveal n).frequency))
 assume val read_zero_child: n:located node -> PureMem (located node)
                                               (fun sm0 -> b2t (live_located n sm0))
-                                              (fun sm0 r -> b2t (r = (ghost_lreveal n).zero_child))
+                                              (fun sm0 r -> b2t (r = (greveal n).zero_child))
 assume val read_one_child: n:located node -> PureMem (located node)
                                              (fun sm0 -> b2t (live_located n sm0))
-                                             (fun sm0 r -> b2t (r = (ghost_lreveal n).one_child))
+                                             (fun sm0 r -> b2t (r = (greveal n).one_child))
 assume val read_symbol: n:located node -> PureMem symbol_t
                                           (fun sm0 -> b2t (live_located n sm0))
-                                          (fun sm0 r -> b2t (r = (ghost_lreveal n).symbol))
+                                          (fun sm0 r -> b2t (r = (greveal n).symbol))
 assume val read_code: n:located node -> PureMem (lref string)
                                         (fun sm0 -> b2t (live_located n sm0))
-                                        (fun sm0 r -> b2t (r = (ghost_lreveal n).code))
-assume val read_ghost_list: n:located node -> PureMem (erased_heap_list (located node))
-                                                      (fun sm0 -> b2t (live_located n sm0))
-                                                      (fun sm0 r -> b2t (r = (ghost_lreveal n).ghost_list))
+                                        (fun sm0 r -> b2t (r = (greveal n).code))
+
 (* mk *)
-assume val mk_node: f:lref int -> n:lref (located node) -> z:located node -> o:located node
-                    -> s:symbol_t -> c:lref string
+assume val mk_node: f:lref int -> z:located node -> o:located node -> s:symbol_t -> c:lref string
                     -> PureMem (located node)
                        (fun sm0 -> isNonEmpty (st sm0) /\
-                                   liveRef f sm0 /\ liveRef n sm0 /\ live_located z sm0 /\
-                                   live_located o sm0 /\ liveRef c sm0)
+                                   liveRef f sm0 /\ live_node z sm0 /\ live_node o sm0 /\ liveRef c sm0)
                        (fun sm0 r -> isNonEmpty (st sm0) /\ regionOf r = InStack (topstid sm0) /\
-                                     (ghost_lreveal r).frequency = f  /\
-                                     (ghost_lreveal r).next = n       /\
-                                     (ghost_lreveal r).zero_child = z /\
-                                     (ghost_lreveal r).one_child = o  /\
-                                     (ghost_lreveal r).symbol = s     /\
-                                     (ghost_lreveal r).code = c       /\
-                                     live_ghost_list r sm0            /\
+                                     (greveal r).frequency = f  /\
+                                     (greveal r).zero_child = z /\
+                                     (greveal r).one_child = o  /\
+                                     (greveal r).symbol = s     /\
+                                     (greveal r).code = c       /\
                                      live_node r sm0)
 
 assume val mk_null_node: unit -> PureMem (located node)
                                  (fun sm0 -> b2t (isNonEmpty (st sm0)))
                                  (fun sm0 r -> isNonEmpty (st sm0) /\ regionOf r = InStack (topstid sm0) /\
-                                               live_ghost_list r sm0 /\
                                                live_node r sm0 /\
-                                               loopkupRef (ghost_lreveal r).frequency sm0 = -1 /\
-                                               loopkupRef (reveal (ghost_lreveal r).ghost_list) sm0 = [])
+                                               loopkupRef (greveal r).frequency sm0 = -1)
 
 val is_null: n:located node -> PureMem bool
-                       (fun sm0 -> live_ghost_list n sm0 /\ live_node n sm0)
-                       (fun sm0 r -> live_ghost_list n sm0 /\ live_node n sm0 /\
-                                     (r <==> (loopkupRef (ghost_lreveal n).frequency sm0 = -1)))
-                                              //TODO: loopkupRef (reveal (ghost_lreveal n).ghost_list) sm0 = [])))
+                               (fun sm0 -> b2t (live_node n sm0))
+                               (fun sm0 r -> live_node n sm0 /\
+                                             (r = (loopkupRef (greveal n).frequency sm0 = -1)))
 let is_null n = memread (read_frequency n) = -1
 
-val is_nullT: n:located node -> sm:smem{live_ghost_list n sm /\ live_node n sm}
-              -> GTot (r:bool{r <==> (loopkupRef (ghost_lreveal n).frequency sm = -1)})
-                                      //TODO: reveal (ghost_lreveal n).ghost_list = [])})
-let is_nullT n sm = loopkupRef (ghost_lreveal n).frequency sm = -1
+(**********)
 
-type node_list = lref (located node)
+(* NodeList module *)
+
+type node_list = lref (list (located node))  // list is on heap
+
+val live_list: l:list (located node) -> sm:smem -> GTot bool
+let rec live_list l sm = match l with
+  | []     -> true
+  | hd::tl -> live_node hd sm && live_list tl sm
+
+val live_list_after_write_lemma: #a:Type -> #b:Type ->  rw:(lref a) -> v:a
+                                 -> l:list (located node) -> m:smem{live_list l m}
+                                 -> Lemma (requires (True))
+                                          (ensures (live_list l (writeMemAux rw m v)))
+                                    [SMTPat (writeMemAux rw m v)]
+let rec live_list_after_write_lemma rw v l m = match l with
+  | []     -> ()
+  | hd::tl -> live_list_after_write_lemma rw v tl m
 
 val live_node_list: l:node_list -> sm:smem -> GTot bool
-let live_node_list l sm = liveRef l sm && live_ghost_list (loopkupRef l sm) sm && live_node (loopkupRef l sm) sm
+let live_node_list l sm = liveRef l sm && live_list (loopkupRef l sm) sm
 
-(*val get_modset_for_list_insert: l:node_list -> sm:smem{live_node_list l sm} -> s:modset
-                                -> GTot modset
-                                   (decreases (List.length (reveal (ghost_lreveal (loopkupRef l sm)).ghost_list)))
-let rec get_modset_for_list_insert l sm s =
-  let n = loopkupRef l sm in
-  if is_nullT n sm then eunion s (only l)
-  else
-    let s' = get_modset_for_list_insert (ghost_lreveal n).next sm s in
-    eunion s' (only l)*)
-    
-val insert_in_ordered_list: n:located node -> l:node_list
+val new_list: unit -> Mem node_list (fun m0 -> True) (fun m0 r m1 -> b2t (live_node_list r m1)) (hide (Set.empty))
+let new_list _ = halloc []
+
+val is_empty: l:node_list -> PureMem bool
+                             (fun m0 -> b2t (live_node_list l m0))
+                             (fun m0 r -> live_node_list l m0 /\ r = (loopkupRef l m0 =  []))
+let is_empty l = (memread l = [])
+
+val is_singleton: l:node_list -> PureMem bool
+                                 (fun m0 -> b2t (live_node_list l m0))
+                                 (fun m0 r -> live_node_list l m0 /\ r = (is_Cons (loopkupRef l m0) &&
+                                                                          Cons.tl (loopkupRef l m0) = []))
+let is_singleton l = match (memread l) with
+  | _::[] -> true
+  | _     -> false
+
+val pop_two: l:node_list -> Mem (located node * located node)
+                            (fun m0 -> live_node_list l m0 /\
+                                       is_Cons (loopkupRef l m0) /\
+                                       is_Cons (Cons.tl (loopkupRef l m0)))
+                            (fun m0 r m1 -> live_node_list l m0                 /\
+                                            is_Cons (loopkupRef l m0)           /\
+                                            is_Cons (Cons.tl (loopkupRef l m0)) /\
+                                            live_node (fst r) m1                /\
+                                            live_node (snd r) m1                /\
+                                            live_node_list l m1                 /\
+                                            loopkupRef l m1 = (Cons.tl (Cons.tl (loopkupRef l m0))))
+                            (hide (Set.singleton (Ref l)))
+let pop_two l = match (memread l) with
+  | hd::hd'::tl ->
+    memwrite l tl;
+    hd, hd'
+
+val contents: l:node_list -> PureMem (list (located node)) (fun m0 -> b2t (live_node_list l m0))
+                                                           (fun m0 r -> live_node_list l m0 /\
+                                                                        r = loopkupRef l m0)
+let contents l = memread l                                                                        
+
+val insert_in_ordered_list: n:located node -> l:list (located node)
+                            -> PureMem (list (located node))
+                               (fun m0 -> live_node n m0 /\ live_list l m0)
+                               (fun m0 r -> live_node n m0                    /\
+                                            live_list l m0                    /\
+                                            live_list r m0                    /\
+                                            List.mem n r                      /\
+                                            (forall n'. List.mem n' l ==> List.mem n' r))
+let rec insert_in_ordered_list n l = match l with
+  | []     -> [n]
+  | hd::tl ->
+    let f = memread (read_frequency n) in
+    let f' = memread (read_frequency hd) in
+    if f <= f' then
+      n::hd::tl
+    else    
+      let tl' = insert_in_ordered_list n tl in
+      hd::tl'
+
+val insert_in_ordered_node_list:
+  n:located node -> l:node_list
+  -> Mem unit (fun m0 -> live_node n m0 /\ live_node_list l m0)
+              (fun m0 _ m1 -> live_node n m0               /\
+                              live_node_list l m0          /\
+                              live_node_list l m1          /\
+                              List.mem n (loopkupRef l m1) /\
+                              (forall n'. List.mem n' (loopkupRef l m0) ==> List.mem n' (loopkupRef l m1)))
+              (hide (Set.singleton (Ref l)))
+let insert_in_ordered_node_list n l =
+  let r = insert_in_ordered_list n (memread l) in
+  memwrite l r
+
+(*val insert_in_ordered_list: n:located node -> l:node_list
                             -> SST unit
                                (fun sm0 -> live_ghost_list n sm0 /\ live_node n sm0 /\ live_node_list l sm0)
                                (fun sm0 _ sm1 -> live_ghost_list n sm0 /\ live_node n sm0 /\ live_node_list l sm0 /\
@@ -227,4 +285,4 @@ let huffman_encode sstream estream =
   let tree = build_huffman_tree histogram in
   popStackFrame ();
   admit ()
-  *)
+  *)*)
