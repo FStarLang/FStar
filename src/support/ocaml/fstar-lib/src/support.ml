@@ -8,23 +8,128 @@ module Prims = struct
   type nat = int
   type byte = char
   type uint8 = char
+  type _exn = exn
+  type exn = _exn
+
+
+
+
+
+
+  type 'dummy b2t = unit
+
+  type (' p, ' q) l_or =
+  | Left of ' p
+  | Right of ' q
+
+  let is_Left = (fun ( _discr_ ) -> (match (_discr_) with
+  | Left (_) -> begin
+  true
+  end
+  | _ -> begin
+  false
+  end))
+
+  let is_Right = (fun ( _discr_ ) -> (match (_discr_) with
+  | Right (_) -> begin
+  true
+  end
+  | _ -> begin
+  false
+  end))
+
+  type (' p, ' q) l_and =
+  | And of ' p * ' q
+
+  let is_And = (fun ( _discr_ ) -> (match (_discr_) with
+  | And (_) -> begin
+  true
+  end
+  | _ -> begin
+  false
+  end))
+
+
+  type l__True =
+  | T
+
+  let is_T = (fun ( _discr_ ) -> (match (_discr_) with
+  | T -> begin
+  true
+  end
+  | _ -> begin
+  false
+  end))
+
+  type l__False = unit
+  (*This is how Coq extracts Inductive void := . Our extraction needs to be fixed to recognize when there
+    are no constructors and generate this type abbreviation*)
+
+  type (' p, ' q) l_imp =
+  ' p  ->  ' q
+
+  type (' p, ' q) l_iff =
+  ((' p, ' q) l_imp, (' q, ' p) l_imp) l_and
+
+  type ' p l_not =
+  (' p, l__False) l_imp
+
+  type (' a, ' p) l__Forall =
+  ' a  ->  ' p
+
+  type ' f l__ForallTyp =
+  unit  ->  ' f
+
+  type (' a, ' p) l__Exists =
+  | MkExists of ' a * ' p
+
+
+
+  type heap = unit (*perhaps implement Heap concretely, and hence get it extracted fully automatically?
+    We shoud get rid of this plethora of assumed primitives! *)
+  type (' p, ' q, 'dummyP, 'dummyQ) l__Eq2 =  unit
+
   let ignore _ = ()
   let cut = ()
   let fst = fst
   let snd = snd
-  let failwith = failwith
-  let try_with f1 f2 = try f1 () with | e -> f2 e
   let admit () = ()
   let _assume () = ()
   let _assert x = ()
   let magic () = failwith "no magic"
   let min x y = if x < y then x else y
+  let op_Negation x = not x
+  let op_Addition x y = x + y
+  let op_Subtraction x y = x - y
+  let op_Multiply x y = x * y
+  let op_Division x y = x / y
+  let op_Equality x y = x = y
+  let op_disEquality x y = x<>y
+  let op_AmpAmp x y = x && y
+  let op_BarBar x y  = x || y
+  let op_LessThanOrEqual x y = x <= y
+  let op_GreaterThanOrEqual x y = x >= y
+  let op_LessThan x y = x < y
+  let op_GreaterThan x y = x > y
+  let op_Modulus x y = x mod y
+  let is_Nil l = l = [] (*consider redefining List.isEmpty as this function*)
+  let is_Cons l = not (is_Nil l)
 end
 
 module ST = struct
+  type 'a __ref = 'a ref
+  type 'a ref = 'a __ref
   let read x = !x
   let op_Colon_Equals x y = x := y
   let alloc x = ref x
+end
+
+module All = struct
+  let failwith x = failwith x
+  let exit i = exit i
+  let pipe_right a f = f a
+  let pipe_left f a = f a
+  let try_with f1 f2 = try f1 () with | e -> f2 e
 end
 
 module String = struct
@@ -48,11 +153,14 @@ end
 module Char = struct
   let lowercase = BatChar.lowercase
   let uppercase = BatChar.uppercase
+  let int_of_char x = BatChar.code x
+  let char_of_int x = BatChar.chr x
 end
 
 module List = struct
   let isEmpty l = l = []
   let mem = List.mem
+  let memT = List.mem
   let hd = BatList.hd
   let tl = BatList.tl
   let tail = BatList.tl
@@ -60,6 +168,7 @@ module List = struct
   let length = BatList.length
   let rev = BatList.rev
   let map = BatList.map
+  let mapT = map
   let mapi = BatList.mapi
   let map2 = BatList.map2
   let rec map3 f l1 l2 l3 =
@@ -170,16 +279,16 @@ module Microsoft = struct
 
       let ask_process (p:proc) (stdin:string) : string =
         let out = Buffer.create 16 in
-        
+
         let rec read_out _ =
           let s = BatString.trim (input_line p.inc) in
           if s = "Done!" then ()
           else
             (Buffer.add_string out (s ^ "\n"); read_out ())
         in
-        
+
         let child_thread = Thread.create (fun _ -> read_out ()) () in
-        
+
         output_string p.outc stdin;
         flush p.outc;
         Thread.join child_thread;
@@ -1356,7 +1465,7 @@ end
 
 module Set = struct
   type 'a set = 'a BatSet.t
-  let empty = BatSet.empty
+  let empty =  BatSet.empty
   let singleton = BatSet.singleton
   let union = BatSet.union
   let intersect = BatSet.intersect

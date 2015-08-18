@@ -8,7 +8,7 @@ open System.Text
 
 open Microsoft.FStar.Util
 
-open Microsoft.FStar.Backends.OCaml.Syntax
+open Microsoft.FStar.Backends.ML.Syntax
 open FSharp.Format
 
 (* -------------------------------------------------------------------- *)
@@ -201,9 +201,60 @@ let string_of_mlconstant (sctt : mlconstant) =
       let chars = String.collect encode_char chars in
       "\""^chars^"\"" 
 
+
+(* -------------------------------------------------------------------- *)
+let rec doc_of_mltype (outer : level) (ty : mlty) =
+    match ty with
+    | MLTY_Var x ->
+        text (idsym x)
+
+    | MLTY_Tuple tys ->
+        let doc = List.map (doc_of_mltype (t_prio_tpl, Left)) tys in
+        let doc = parens (hbox (combine (text " * ") doc)) in
+        doc
+
+    | MLTY_Named (args, name) -> begin
+        let args =
+            match args with
+            | []    -> empty
+            | [arg] -> doc_of_mltype (t_prio_name, Left) arg
+            | _     ->
+                let args = List.map (doc_of_mltype (min_op_prec, NonAssoc)) args in
+                parens (hbox (combine (text ", ") args))
+
+        in
+
+        let name =
+          if is_standard_type name then
+            snd (Option.get (as_standard_type name))
+          else
+            ptsym name
+
+        in hbox (reduce1 [args; text name])
+    end
+
+    | MLTY_Fun (t1, _, t2) ->
+        let d1 = doc_of_mltype (t_prio_fun, Left ) t1 in
+        let d2 = doc_of_mltype (t_prio_fun, Right) t2 in
+
+        maybe_paren outer t_prio_fun (hbox (reduce1 [d1; text " -> "; d2]))
+
+    | MLTY_App (t1, t2) ->
+        let d1 = doc_of_mltype (t_prio_fun, Left ) t1 in
+        let d2 = doc_of_mltype (t_prio_fun, Right) t2 in
+
+        maybe_paren outer t_prio_fun (hbox (reduce1 [d2; text " "; d1]))
+
+    | MLTY_Top -> 
+      text "Obj.t" //TODO: change this to 'obj' if we're generating F#
+
 (* -------------------------------------------------------------------- *)
 let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
     match e with
+    | MLE_Coerce (e, t, t') -> 
+      let doc = doc_of_expr (min_op_prec, NonAssoc) e in    
+      parens (reduce [text "Obj.magic "; doc]) //TODO: rewire to a checked cast for F#; check that the doc is being generated properly ...don't really understand the API yet
+
     | MLE_Seq es ->
         let docs = List.map (doc_of_expr (min_op_prec, NonAssoc)) es in
         let docs = List.map (fun d -> reduce [d; text ";"; hardline]) docs in
@@ -252,7 +303,7 @@ let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
         let docs = parens (combine (text ", ") docs) in
         docs
 
-    | MLE_Let (rec_, lets, body) ->
+    | MLE_Let ((rec_, lets), body) ->
         let doc  = doc_of_lets (rec_, lets) in
         let body = doc_of_expr (min_op_prec, NonAssoc) body in
         parens (combine hardline [doc; reduce1 [text "in"; body]])
@@ -284,7 +335,7 @@ let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
        doc
 
     | MLE_Fun (ids, body) ->
-        let ids  = List.map (fun (x, _) -> text x) ids in
+        let ids  = List.map (fun ((x, _),xt) -> reduce1 [text "("; text x ; (match xt with | Some xxt -> reduce1 [text " : "; doc_of_mltype outer xxt] | _ -> text "");text ")"]) ids in
         let body = doc_of_expr (min_op_prec, NonAssoc) body in
         let doc  = reduce1 [text "fun"; reduce1 ids; text "->"; body] in
         parens doc
@@ -395,7 +446,7 @@ and doc_of_branch ((p, cond, e) : mlbranch) : doc =
 
 (* -------------------------------------------------------------------- *)
 and doc_of_lets (rec_, lets) =
-    let for1 (name, ids, e) =
+    let for1 (name, tys, ids, e) =
         let e   = doc_of_expr (min_op_prec, NonAssoc) e in
         let ids = List.map (fun (x, _) -> text x) ids in
         reduce1 [text (idsym name); reduce1 ids; text "="; e] in
@@ -408,49 +459,6 @@ and doc_of_lets (rec_, lets) =
         lets in
 
     combine hardline lets
-
-(* -------------------------------------------------------------------- *)
-let rec doc_of_mltype (outer : level) (ty : mlty) =
-    match ty with
-    | MLTY_Var x ->
-        text (idsym x)
-
-    | MLTY_Tuple tys ->
-        let doc = List.map (doc_of_mltype (t_prio_tpl, Left)) tys in
-        let doc = parens (hbox (combine (text " * ") doc)) in
-        doc
-
-    | MLTY_Named (args, name) -> begin
-        let args =
-            match args with
-            | []    -> empty
-            | [arg] -> doc_of_mltype (t_prio_name, Left) arg
-            | _     ->
-                let args = List.map (doc_of_mltype (min_op_prec, NonAssoc)) args in
-                parens (hbox (combine (text ", ") args))
-
-        in
-
-        let name =
-          if is_standard_type name then
-            snd (Option.get (as_standard_type name))
-          else
-            ptsym name
-
-        in hbox (reduce1 [args; text name])
-    end
-
-    | MLTY_Fun (t1, t2) ->
-        let d1 = doc_of_mltype (t_prio_fun, Left ) t1 in
-        let d2 = doc_of_mltype (t_prio_fun, Right) t2 in
-
-        maybe_paren outer t_prio_fun (hbox (reduce1 [d1; text " -> "; d2]))
-
-    | MLTY_App (t1, t2) ->
-        let d1 = doc_of_mltype (t_prio_fun, Left ) t1 in
-        let d2 = doc_of_mltype (t_prio_fun, Right) t2 in
-
-        maybe_paren outer t_prio_fun (hbox (reduce1 [d2; text " "; d1]))
 
 (* -------------------------------------------------------------------- *)
 let doc_of_mltydecl (decls : mltydecl) =
@@ -504,11 +512,11 @@ let doc_of_mltydecl (decls : mltydecl) =
     in
 
     let doc = List.map for1 decls in
-    let doc = reduce1 [text "type"; combine (text " and ") doc] in
+    let doc = if (List.length doc >0) then reduce1 [text "type"; combine (text " \n and ") doc] else text "" in
     doc
 
 (* -------------------------------------------------------------------- *)
-let rec doc_of_sig1 (s : mlsig1) =
+let rec doc_of_sig1 s = 
     match s with
     | MLS_Mod (x, subsig) ->
         combine hardline
@@ -552,8 +560,7 @@ let doc_of_mod1 (m : mlmodule1) =
         doc_of_mltydecl decls
 
     | MLM_Let (rec_, lets) ->
-        let lets = List.map (fun (x, y, z) -> ((x, -1), y, z)) lets in
-        doc_of_lets (rec_, lets)
+      doc_of_lets (rec_, lets)
 
     | MLM_Top e ->
         reduce1 [

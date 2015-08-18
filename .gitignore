@@ -11,6 +11,10 @@ cache/
 /src/parser/parse.fs
 /src/parser/parse.fsi
 /src/parser/lex.fs
+/src/parser/parse.ml
+/src/parser/parse.mli
+/src/parser/parse.mly
+
 
 /bin/*.dll
 /bin/*.pdb
@@ -24,10 +28,19 @@ cache/
 /bin/z3-x64.exe
 /src/*/obj
 
+examples/*/*.ml
+
 attic/
 _build/
 
 *.native*
 *.byte*
 
-queries.smt2
+queries*.smt2
+transcript
+dump
+
+*.cmi
+*.cmo
+*.cmx
+*.o

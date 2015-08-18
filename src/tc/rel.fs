@@ -471,7 +471,7 @@ let force_refinement (t_base, refopt) =
 (* ------------------------------------------------ *)
 (* <variable ops> common ops on variables           *)
 (* ------------------------------------------------ *)
-let rec occurs env wl uk t = 
+let rec occurs (env:'a) (wl:worklist) (uk:(uvar_t * 'b)) (t:typ) = 
     let uvs = Util.uvars_in_typ t in 
     uvs.uvars_t |> Util.set_elements |> Util.for_some (fun (uvt, _) ->
         match find_uvar_t uvt wl.subst with 
@@ -628,7 +628,7 @@ let head_match = function
     | MisMatch -> MisMatch
     | _ -> HeadMatch
 
-let rec head_matches env t1 t2 : match_result = 
+let rec head_matches t1 t2 : match_result = 
   match (Util.unmeta_typ t1).n, (Util.unmeta_typ t2).n with 
     | Typ_btvar x, Typ_btvar y -> if Util.bvar_eq x y then FullMatch else MisMatch
     | Typ_const f, Typ_const g -> if Util.fvar_eq f g then FullMatch else MisMatch
@@ -636,16 +636,16 @@ let rec head_matches env t1 t2 : match_result =
     | Typ_btvar _, Typ_const _
     | Typ_const _, Typ_btvar _ -> MisMatch
 
-    | Typ_refine(x, _), Typ_refine(y, _) -> head_matches env x.sort y.sort |> head_match
+    | Typ_refine(x, _), Typ_refine(y, _) -> head_matches x.sort y.sort |> head_match
    
-    | Typ_refine(x, _), _  -> head_matches env x.sort t2 |> head_match
-    | _, Typ_refine(x, _)  -> head_matches env t1 x.sort |> head_match
+    | Typ_refine(x, _), _  -> head_matches x.sort t2 |> head_match
+    | _, Typ_refine(x, _)  -> head_matches t1 x.sort |> head_match
 
     | Typ_fun _, Typ_fun _  -> HeadMatch
     
-    | Typ_app(head, _), Typ_app(head', _) -> head_matches env head head'
-    | Typ_app(head, _), _ -> head_matches env head t2
-    | _, Typ_app(head, _) -> head_matches env t1 head
+    | Typ_app(head, _), Typ_app(head', _) -> head_matches head head'
+    | Typ_app(head, _), _ -> head_matches head t2
+    | _, Typ_app(head, _) -> head_matches t1 head
      
     | Typ_uvar (uv, _),  Typ_uvar (uv', _) -> if Unionfind.equivalent uv uv' then FullMatch else MisMatch
 
@@ -658,7 +658,7 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
     let success d r t1 t2 = (r, (if d then Some(t1, t2) else None)) in
     let fail () = (MisMatch, None) in
     let rec aux d t1 t2 = 
-        match head_matches env t1 t2 with 
+        match head_matches t1 t2 with 
             | MisMatch -> 
                 if d then fail() //already delta normal
                 else let t1 = normalize_refinement env wl t1 in
@@ -715,7 +715,7 @@ let rec decompose_kind (env:env) (k:knd) : (list<ktec> -> knd) * list<(option<bi
 
 let rec decompose_typ env t : (list<ktec> -> typ) * (typ -> bool) * list<(option<binder> * variance * ktec)> =
     let t = Util.unmeta_typ t in
-    let matches t' = head_matches env t t' <> MisMatch in
+    let matches t' = head_matches t t' <> MisMatch in
     match t.n with 
         | Typ_app(hd, args) -> (* easy case: it's already in the form we want *)
           let rebuild args' = 
@@ -1879,6 +1879,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
 //                      then Util.fprint1 "Got guard %s\n" (Normalize.formula_norm_to_string env <| (fst <| p_guard ref_prob));
                       let guard = Util.mk_conj (p_guard base_prob |> fst) (p_guard ref_prob |> fst |> guard_on_element problem x1) in
                       let wl = solve_prob orig (Some guard) [] wl in
+                      let wl = {wl with subst=subst; ctr=wl.ctr+1} in
                       solve env (attempt [base_prob] wl)
              end
         else fallback()
@@ -1989,7 +1990,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                      let base2, refinement2 = base_and_refinement env wl t2 in
                      begin match refinement1, refinement2 with 
                              | None, None ->  //neither side is a refinement; reason extensionally
-                               let _ = if head_matches env head head <> FullMatch
+                               let _ = if head_matches head head <> FullMatch
                                        then failwith (Util.format2 "Assertion failed: expected full match of %s and %s\n" (Print.typ_to_string head) (Print.typ_to_string head')) in
                                let subprobs = List.map2 (fun a a' -> match fst a, fst a' with 
                                     | Inl t, Inl t' -> 
@@ -2244,10 +2245,10 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
         else giveup env "no SMT solution permitted" orig  in
 
     match e1.n, e2.n with 
-    | Exp_ascribed(e1, _), _ -> 
+    | Exp_ascribed(e1, _, _), _ -> 
       solve_e env ({problem with lhs=e1}) wl
 
-    | _, Exp_ascribed(e2, _) -> 
+    | _, Exp_ascribed(e2, _, _) -> 
       solve_e env ({problem with rhs=e2}) wl
 
     | Exp_uvar _,                 Exp_uvar _ 
@@ -2324,8 +2325,8 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
       let rec match_head_and_args head1 head2 = match (Util.compress_exp head1).n, (Util.compress_exp head2).n with 
         | Exp_bvar x, Exp_bvar y           when (bvar_eq x y && List.length args1 = List.length args2) -> solve_args [] wl args1 args2
         | Exp_fvar (f, _), Exp_fvar (g, _) when (fvar_eq f g && not (Util.is_interpreted f.v) && List.length args1 = List.length args2) -> solve_args [] wl args1 args2
-        | Exp_ascribed(e, _), _ -> match_head_and_args e head2
-        | _, Exp_ascribed(e, _) -> match_head_and_args head1 e
+        | Exp_ascribed(e, _, _), _ -> match_head_and_args e head2
+        | _, Exp_ascribed(e, _, _) -> match_head_and_args head1 e
         | Exp_abs _, _ -> 
           solve_e env ({problem with lhs=whnf_e env e1}) wl
         | _, Exp_abs _ -> 

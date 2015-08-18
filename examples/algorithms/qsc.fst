@@ -1,6 +1,10 @@
+(*--build-config
+    options:--admit_fsi Set --z3timeout 20;
+    other-files:set.fsi heap.fst st.fst all.fst list.fst
+  --*)
 module QuickSort
 open List
-
+#set-options "--initial_ifuel 2 --initial_fuel 1 --max_ifuel 2 --max_fuel 1"
 
 (* Specification of sortedness according to some comparison function f *)
 val sorted: ('a -> 'a -> Tot bool) -> list 'a -> Tot bool
@@ -49,17 +53,19 @@ let rec partition p = function
      then hd::l1, l2
      else l1, hd::l2
 
-
+opaque logic type trigger (#a:Type) (x:a) = True
 val partition_lemma: f:('a -> Tot bool) -> l:list 'a -> Lemma (requires True)
       (ensures (forall hi lo. (hi, lo) = partition f l
-                ==> (length l = length hi + length lo
-                 /\ (forall x. (mem x hi ==> f x)
-                            /\ (mem x lo ==> not (f x))
-                            /\ (count x l = count x hi + count x lo)))))
+                ==>  (length l = length hi + length lo
+                 /\ (forall x.{:pattern (trigger x)}
+                              trigger x ==>
+                               (mem x hi ==> f x)
+                           /\  (mem x lo ==> not (f x))
+                           /\  (count x l = count x hi + count x lo)))))
       [SMTPat (partition f l)]
 let rec partition_lemma f l = match l with
     | [] -> ()
-    | hd::tl -> partition_lemma f tl
+    | hd::tl -> cut (trigger hd); partition_lemma f tl
 
 
 val sorted_app_lemma: #a:Type
@@ -67,18 +73,18 @@ val sorted_app_lemma: #a:Type
                       -> l1:list a{sorted f l1}
                       -> l2:list a{sorted f l2}
                       -> pivot:a
-                      -> Lemma (requires ((forall y. (mem y l1 ==> not (f pivot y))
-                                                  /\ (mem y l2 ==> f pivot y))))
+                      -> Lemma (requires ((forall y.{:pattern (trigger y)} trigger y ==>
+                                                        ((mem y l1 ==> not (f pivot y))
+                                                      /\ (mem y l2 ==> f pivot y)))))
                                (ensures (sorted f (append l1 (pivot::l2))))
                                [SMTPat (sorted f (append l1 (pivot::l2)))]
 let rec sorted_app_lemma f l1 l2 pivot = match l1 with
-    | [] -> ()
-    | hd::tl -> sorted_app_lemma f tl l2 pivot
-
+    | [] -> if is_Cons l2 then cut (trigger (Cons.hd l2)) else ()
+    | hd::tl -> cut (trigger hd); sorted_app_lemma f tl l2 pivot
 
 val sort: f:('a -> 'a -> Tot bool){total_order 'a f}
        -> l:list 'a
-       -> Tot (m:list 'a{sorted f m /\ (forall i. count i l = count i m)})
+       -> Tot (m:list 'a{sorted f m /\ (forall i.{:pattern trigger i} trigger i ==> (count i l = count i m))})
               (decreases (length l))
 let rec sort f = function
   | [] -> []

@@ -143,6 +143,9 @@ let destruct_arrow_kind env tt k (args:args) : (Syntax.args * binders * knd) =
 
     aux ktop
 
+let as_imp = function 
+    | Some Implicit -> true
+    | _ -> false  
 (*
     Turns a disjunctive pattern p into a quadruple:
  *)
@@ -167,67 +170,70 @@ let pat_as_exps allow_implicits env p
                                     * list<Env.binding>   //just the accessible vars, for the disjunctive pattern test
                                     * list<Env.binding>   //just the wildcards
                                     * Env.env             //env extending with the pattern-bound variables
-                                    * arg                 //the pattern as a term/typ
+                                    * either<typ,exp>      //the pattern as a term/typ
                                     * pat) =              //the elaborated pattern itself
         match p.v with 
            | Pat_dot_term(x, _) ->
              let t = new_tvar env ktype in
              let e, u = Rel.new_evar p.p [] t in //TODO: why empty vars?
              let p = {p with v=Pat_dot_term(x, e)} in
-             ([], [], [], env, varg e, p)
+             ([], [], [], env, Inr e, p)
 
            | Pat_dot_typ (a, _) ->
              let k = new_kvar env in
              let t, u = Rel.new_tvar p.p (Env.binders env) k in
              let p = {p with v=Pat_dot_typ(a, t)} in
-             ([], [], [], env, (Inl t, as_implicit true), p)
+             ([], [], [], env, Inl t, p)
 
            | Pat_constant c -> 
              let e = mk_Exp_constant c None p.p in
-             ([], [], [], env, varg e, p)
+             ([], [], [], env, Inr e, p)
            
            | Pat_wild x -> 
              let w = Env.Binding_var(x.v, new_tvar env ktype) in
              let env = if allow_wc_dependence then Env.push_local_binding env w else env in
              let e = mk_Exp_bvar x None p.p in
-             ([w], [], [w], env, varg e, p)
+             ([w], [], [w], env, Inr e, p)
 
-           | Pat_var (x, imp) ->
+           | Pat_var x ->
              let b = Env.Binding_var(x.v, new_tvar env ktype) in
              let env = Env.push_local_binding env b in
              let e = mk_Exp_bvar x None p.p in
-             ([b], [b], [], env, (Inr e, as_implicit imp), p)
+             ([b], [b], [], env, Inr e, p)
  
            | Pat_twild a -> 
              let w = Env.Binding_typ(a.v, new_kvar env) in
              let env = if allow_wc_dependence then Env.push_local_binding env w else env in
              let t = mk_Typ_btvar a None p.p in
-             ([w], [], [w], env, targ t, p)
+             ([w], [], [w], env, Inl t, p)
 
            | Pat_tvar a ->      
              let b = Env.Binding_typ(a.v, new_kvar env) in
              let env = Env.push_local_binding env b in 
              let t = mk_Typ_btvar a None p.p in
-             ([b], [b], [], env, targ t, p)
+             ([b], [b], [], env, Inl t, p)
 
 
-           | Pat_cons(fv, pats) -> 
-               let (b, a, w, env, args, pats) = pats |> List.fold_left (fun (b, a, w, env, args, pats) p ->
-                   let (b', a', w', env, arg, pat) = pat_as_arg_with_env allow_wc_dependence env p in
-                    (b'::b, a'::a, w'::w, env, arg::args, pat::pats))  ([], [], [], env, [], []) in
-               let e = mk_Exp_meta(Meta_desugared(mk_Exp_app'(Util.fvar true fv.v fv.p, args |> List.rev) None p.p, Data_app)) in
+           | Pat_cons(fv, q, pats) -> 
+               let (b, a, w, env, args, pats) = pats |> List.fold_left (fun (b, a, w, env, args, pats) (p, imp) ->
+                   let (b', a', w', env, te, pat) = pat_as_arg_with_env allow_wc_dependence env p in
+                   let arg = match te with 
+                    | Inl t -> if imp then itarg t else targ t
+                    | Inr e -> if imp then ivarg e else varg e in 
+                    (b'::b, a'::a, w'::w, env, arg::args, (pat, imp)::pats))  ([], [], [], env, [], []) in
+               let e = mk_Exp_meta(Meta_desugared(mk_Exp_app'(Util.fvar (Some Data_ctor) fv.v fv.p, args |> List.rev) None p.p, Data_app)) in
                (List.rev b |> List.flatten, 
                 List.rev a |> List.flatten, 
                 List.rev w |> List.flatten,
                 env,
-                varg e,
-                {p with v=Pat_cons(fv, List.rev pats)})
+                Inr e,
+                {p with v=Pat_cons(fv, q, List.rev pats)})
 
            | Pat_disj _ -> failwith "impossible" in
     let rec elaborate_pat env p = //Adds missing implicit patterns to constructor patterns
         match p.v with 
-           | Pat_cons(fv, pats) -> 
-               let pats = List.map (elaborate_pat env) pats in
+           | Pat_cons(fv, q, pats) -> 
+               let pats = List.map (fun (p, imp) -> elaborate_pat env p, imp) pats in
                let t = Tc.Env.lookup_datacon env fv.v in
                let pats = match Util.function_formals t with 
                     | None -> 
@@ -241,24 +247,24 @@ let pat_as_exps allow_implicits env p
                         | [], _::_ -> raise (Error("Too many pattern arguments", range_of_lid fv.v))
                         | _::_, [] -> //fill the rest with dot patterns (if allowed), if all the remaining formals are implicit
                           formals |> List.map (fun f -> match f with 
-                            | Inl t, _ -> //type arguments are implicit by default
+                            | Inl t, imp -> //type arguments are implicit by default
                               let a = Util.bvd_to_bvar_s (Util.new_bvd None) kun in
                               if allow_implicits
-                              then withinfo (Pat_dot_typ (a, tun)) None  (Syntax.range_of_lid fv.v)
-                              else withinfo (Pat_tvar a) None (Syntax.range_of_lid fv.v)
+                              then withinfo (Pat_dot_typ (a, tun)) None  (Syntax.range_of_lid fv.v), as_imp imp
+                              else withinfo (Pat_tvar a) None (Syntax.range_of_lid fv.v), as_imp imp
 
                             | Inr _, Some Implicit ->
                               let a = Util.gen_bvar tun in
-                              withinfo (Pat_var(a, true)) None (*Inr tun*) (Syntax.range_of_lid fv.v)
+                              withinfo (Pat_var a) None (*Inr tun*) (Syntax.range_of_lid fv.v), true
 
                             | _ -> raise (Error(Util.format1 "Insufficient pattern arguments (%s)" (Print.pat_to_string p), range_of_lid fv.v)))
 
-                        | f::formals', p::pats' -> 
+                        | f::formals', (p, p_imp)::pats' -> 
                             begin match f, p.v with 
-                                | (Inl _, _), Pat_tvar _
-                                | (Inl _, _), Pat_twild _ -> p::aux formals' pats'
-                                | (Inl _, _), Pat_dot_typ _ when allow_implicits -> p::aux formals' pats'
-                                | (Inl _, _), _ -> 
+                                | (Inl _, imp), Pat_tvar _
+                                | (Inl _, imp), Pat_twild _ -> (p, as_imp imp)::aux formals' pats'
+                                | (Inl _, imp), Pat_dot_typ _ when allow_implicits -> (p, as_imp imp)::aux formals' pats'
+                                | (Inl _, imp), _ -> 
                                     let a = Util.bvd_to_bvar_s (Util.new_bvd None) kun in
                                     let p1 =
                                         if allow_implicits
@@ -267,18 +273,18 @@ let pat_as_exps allow_implicits env p
                                     let pats' = match p.v with 
                                         | Pat_dot_typ _ -> pats'
                                         | _ -> pats in
-                                    p1::aux formals' pats'
-                                | (Inr _, Some Implicit), Pat_var(_, true) -> 
-                                    p::aux formals' pats'
+                                    (p1, as_imp imp)::aux formals' pats'
+                                | (Inr _, Some Implicit), _ when p_imp -> 
+                                    (p, true)::aux formals' pats'
                                 | (Inr _, Some Implicit), _ ->
                                     let a = Util.gen_bvar tun in
-                                    let p = withinfo (Pat_var(a, true)) None (*Inr tun*) (Syntax.range_of_lid fv.v) in
-                                    p::aux formals' pats
-                                | (Inr _, _), _ ->
-                                  p::aux formals' pats' 
+                                    let p = withinfo (Pat_var a) None (Syntax.range_of_lid fv.v) in
+                                    (p, true)::aux formals' pats
+                                | (Inr _, imp), _ ->
+                                  (p, as_imp imp)::aux formals' pats' 
                             end in
                       aux f pats in
-               {p with v=Pat_cons(fv, pats)} 
+               {p with v=Pat_cons(fv, q, pats)} 
 
         | _ -> p in
 
@@ -296,7 +302,9 @@ let pat_as_exps allow_implicits env p
             | Some (Env.Binding_typ(x, _)) -> raise (Error(Tc.Errors.nonlinear_pattern_variable (Inl x), p.p))
             | _ -> b, a, w, arg, p in
 
-
+   let as_arg = function 
+    | Inl t -> failwith "Impossible"
+    | Inr e -> varg e in
    let top_level_pat_as_args env (p:pat) : (list<Env.binding>                    (* pattern bound variables *)
                                             * list<arg>                          (* pattern sub-terms *)
                                             * pat)  =                            (* decorated pattern *)
@@ -304,18 +312,18 @@ let pat_as_exps allow_implicits env p
            | Pat_disj [] -> failwith "impossible"
 
            | Pat_disj (q::pats) -> 
-              let b, a, _, arg, q = one_pat false env q in //in disjunctive patterns, the wildcards are not accessible even for typing
+              let b, a, _, te, q = one_pat false env q in //in disjunctive patterns, the wildcards are not accessible even for typing
               let w, args, pats = List.fold_right (fun p (w, args, pats) -> 
                   let b', a', w', arg, p = one_pat false env p in
                   if not (Util.multiset_equiv pvar_eq a a')
                   then raise (Error(Tc.Errors.disjunctive_pattern_vars (vars_of_bindings a) (vars_of_bindings a'), Tc.Env.get_range env))
-                  else (w'@w, arg::args, p::pats))
+                  else (w'@w, as_arg arg::args, p::pats))
                   pats ([], [], []) in
-              b@w, arg::args, {p with v=Pat_disj(q::pats)}
+              b@w, as_arg te::args, {p with v=Pat_disj(q::pats)}
 
            | _ -> 
              let b, _, _, arg, p = one_pat true env p in //in single pattersn, the wildcards are available, at least for typing
-             b, [arg], p in
+             b, [as_arg arg], p in
 
     let b, args, p = top_level_pat_as_args env p in
     let exps = args |> List.map (function 
@@ -331,14 +339,14 @@ let decorate_pattern env p exps =
         match p.v, e.n with 
             | Pat_constant _, Exp_constant _ -> pkg p.v (force_tk e)
 
-            | Pat_var (x,imp), Exp_bvar y -> 
+            | Pat_var x, Exp_bvar y -> 
               if Util.bvar_eq x y |> not
               then failwith (Util.format2 "Expected pattern variable %s; got %s" (Print.strBvd x.v) (Print.strBvd y.v));
               if Env.debug env <| Options.Other "Pat"
               then Util.fprint2 "Pattern variable %s introduced at type %s\n" (Print.strBvd x.v) (Normalize.typ_norm_to_string env y.sort);
               let s = Normalize.norm_typ [Normalize.Beta] env y.sort in
               let x = {x with sort=s} in
-              pkg (Pat_var (x, imp)) (force_tk e)
+              pkg (Pat_var x) (force_tk e)
 
             | Pat_wild x, Exp_bvar y -> 
               if Util.bvar_eq x y |> not
@@ -350,36 +358,36 @@ let decorate_pattern env p exps =
               let x = {x with sort=force_tk e} in
               pkg (Pat_dot_term(x, e)) x.sort
 
-            | Pat_cons(fv, []), Exp_fvar (fv',_) -> 
+            | Pat_cons(fv, q, []), Exp_fvar (fv',_) -> 
               if Util.fvar_eq fv fv' |> not
               then failwith (Util.format2 "Expected pattern constructor %s; got %s" fv.v.str fv'.v.str);
-              pkg (Pat_cons(fv', [])) fv'.sort
+              pkg (Pat_cons(fv', q, [])) fv'.sort
 
-            | Pat_cons(fv, argpats), Exp_app({n=Exp_fvar(fv', _)}, args) -> 
+            | Pat_cons(fv, q, argpats), Exp_app({n=Exp_fvar(fv', _)}, args) -> 
               if Util.fvar_eq fv fv' |> not
               then failwith (Util.format2 "Expected pattern constructor %s; got %s" fv.v.str fv'.v.str);
               let fv = fv' in
 
               let rec match_args matched_pats args argpats = match args, argpats with 
-                | [], [] -> pkg (Pat_cons(fv, List.rev matched_pats)) (force_tk e)
-                | arg::args, argpat::argpats -> 
+                | [], [] -> pkg (Pat_cons(fv, q, List.rev matched_pats)) (force_tk e)
+                | arg::args, (argpat, _)::argpats -> 
                   begin match arg, argpat.v with 
                         | (Inl t, Some Implicit), Pat_dot_typ _ -> (* implicit type argument *)
                           let x = Util.gen_bvar_p p.p (force_tk t) in
                           let q = withinfo (Pat_dot_typ(x, t)) (Some<| Inl x.sort) p.p in
-                          match_args (q::matched_pats) args argpats
+                          match_args ((q, true)::matched_pats) args argpats
                  
                         | (Inr e, Some Implicit), Pat_dot_term _ -> (* implicit value argument *)  
                           let x = Util.gen_bvar_p p.p (force_tk e) in
                           let q = withinfo (Pat_dot_term(x, e)) (Some <| Inr x.sort) p.p in
-                          match_args (q::matched_pats) args argpats
+                          match_args ((q, true)::matched_pats) args argpats
                   
-                        | (Inl t, _), _ -> 
+                        | (Inl t, imp), _ -> 
                           let pat = aux_t argpat t in
-                          match_args (pat::matched_pats) args argpats
+                          match_args ((pat, as_imp imp)::matched_pats) args argpats
 
-                        | (Inr e, _), _ ->
-                          let pat = aux argpat e in
+                        | (Inr e, imp), _ ->
+                          let pat = aux argpat e, as_imp imp in
                           match_args (pat::matched_pats) args argpats
                  end
 
@@ -429,9 +437,9 @@ let decorate_pattern env p exps =
 
     let pkg f = f topt pat.p in
 
-    let pat_as_arg p = 
+    let pat_as_arg (p, i) = 
         let vars, te = decorated_pattern_as_either p in 
-        vars, (te, as_implicit true) in
+        vars, (te, as_implicit i) in
     
     match pat.v with 
         | Pat_disj _ -> failwith "Impossible" (* these are only on top-level patterns *)
@@ -440,13 +448,13 @@ let decorate_pattern env p exps =
             [], mk_Exp_constant c |> pkg
 
         | Pat_wild x
-        | Pat_var (x, _)  ->
+        | Pat_var x  ->
             [Inr x], mk_Exp_bvar x |> pkg
 
-        | Pat_cons(fv, pats) -> 
+        | Pat_cons(fv, q, pats) -> 
             let vars, args = pats |> List.map pat_as_arg |> List.unzip in
             let vars = List.flatten vars in
-            vars,  mk_Exp_app'(mk_Exp_fvar(fv, true) (Some fv.sort) fv.p, args) |> pkg
+            vars,  mk_Exp_app'(mk_Exp_fvar(fv, q) (Some fv.sort) fv.p, args) |> pkg
 
         | Pat_dot_term(x, e) -> 
             [], e
@@ -530,7 +538,7 @@ let extract_lb_annotation env t e = match t.n with
 
     let rec aux vars e : exp * typ * bool = match e.n with 
       | Exp_meta(Meta_desugared(e, _)) -> aux vars e 
-      | Exp_ascribed(e, t) -> e, t, true
+      | Exp_ascribed(e, t, _) -> e, t, true
 
       | Exp_abs(bs, body) -> 
         let scope, bs, check = bs |> List.fold_left (fun (scope, bs, check) b -> match fst b with 
@@ -580,25 +588,32 @@ let lift_comp c m lift =
 let norm_eff_name = 
    let cache = Util.smap_create 20 in
    fun env (l:lident) ->
-       let rec find l = 
+       let rec find l =
            match Tc.Env.lookup_effect_abbrev env l with
-            | None -> l
-            | Some (_, c) -> find (Util.comp_to_comp_typ c).effect_name in
-        match Util.smap_try_find cache l.str with 
+            | None -> None
+            | Some (_, c) -> 
+                let l = (Util.comp_to_comp_typ c).effect_name in
+                match find l with 
+                    | None -> Some l
+                    | Some l' -> Some l' in
+       let res = match Util.smap_try_find cache l.str with 
             | Some l -> l
             | None -> 
-              let m = find l in 
-              Util.smap_add cache l.str m;
-              m
+              begin match find l with 
+                        | None -> l
+                        | Some m -> Util.smap_add cache l.str m;
+                                    m
+              end in
+       res
             
 
 let join_effects env l1 l2 = 
   let m, _, _ = Tc.Env.join env (norm_eff_name env l1) (norm_eff_name env l2) in
   m
 let join_lcomp env c1 c2 = 
-  if lid_equals c1.eff_name Const.tot_effect_lid
-  && lid_equals c2.eff_name Const.tot_effect_lid
-  then Const.tot_effect_lid
+  if lid_equals c1.eff_name Const.effect_Tot_lid
+  && lid_equals c2.eff_name Const.effect_Tot_lid
+  then Const.effect_Tot_lid
   else join_effects env c1.eff_name c2.eff_name
 
 let lift_and_destruct env c1 c2 = 
@@ -613,11 +628,11 @@ let lift_and_destruct env c1 c2 =
 
 let is_pure_effect env l =
   let l = norm_eff_name env l in 
-  lid_equals l Const.pure_effect_lid
+  lid_equals l Const.effect_PURE_lid
 
 let is_pure_or_ghost_effect env l =
   let l = norm_eff_name env l in 
-  lid_equals l Const.pure_effect_lid
+  lid_equals l Const.effect_PURE_lid
   || lid_equals l Const.effect_GHOST_lid
 
 let mk_comp md result wp wlp flags = 
@@ -643,10 +658,10 @@ let is_function t = match (compress_typ t).n with
   
 let return_value env t v = 
 //  if is_function t then failwith (Util.format1 "(%s): Returning a function!" (Range.string_of_range (Env.get_range env)));
-  let c = match Tc.Env.effect_decl_opt env Const.pure_effect_lid with 
+  let c = match Tc.Env.effect_decl_opt env Const.effect_PURE_lid with 
     | None -> mk_Total t 
     | Some m -> 
-       let a, kwp = Env.wp_signature env Const.pure_effect_lid in
+       let a, kwp = Env.wp_signature env Const.effect_PURE_lid in
        let k = Util.subst_kind [Inl(a.v, t)] kwp in
        let wp = Tc.Normalize.norm_typ [Beta] env <| mk_Typ_app(m.ret, [targ t; varg v]) (Some k) v.pos in
        let wlp = wp in
@@ -718,7 +733,7 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
      comp=bind_it}
      
 let lift_formula env t mk_wp mk_wlp f = 
-  let md_pure = Tc.Env.get_effect_decl env Const.pure_effect_lid in
+  let md_pure = Tc.Env.get_effect_decl env Const.effect_PURE_lid in
   let a, kwp = Tc.Env.wp_signature env md_pure.mname in 
   let k = Util.subst_kind [Inl(a.v, t)] kwp in
   let wp = mk_Typ_app(mk_wp, [targ t; targ f]) (Some k) f.pos in
@@ -813,7 +828,7 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:exp) (lc:lc
        {g0 with Rel.guard_f=Rel.Trivial} 
 
 let add_equality_to_post_condition env (comp:comp) (res_t:typ) = 
-    let md_pure = Tc.Env.get_effect_decl env Const.pure_effect_lid in 
+    let md_pure = Tc.Env.get_effect_decl env Const.effect_PURE_lid in 
     let x = Util.gen_bvar res_t in
     let y = Util.gen_bvar res_t in
     let xexp, yexp = Util.bvar_to_exp x, Util.bvar_to_exp y in
@@ -853,7 +868,7 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
             let post = Util.bvd_to_bvar_s (Util.new_bvd None) post_k in
             let wp = mk_Typ_lam([t_binder post], label Errors.exhaustiveness_check (Env.get_range env) <| Util.ftv Const.false_lid ktype) (Some kwp) res_t.pos in
             let wlp = mk_Typ_lam([t_binder post], Util.ftv Const.true_lid ktype) (Some kwp) res_t.pos in
-            let md = Tc.Env.get_effect_decl env Const.pure_effect_lid in
+            let md = Tc.Env.get_effect_decl env Const.effect_PURE_lid in
             mk_comp md res_t wp wlp [] in 
         let comp = List.fold_right (fun (g, cthen) celse ->
             let (md, _, _), (_, wp_then, wlp_then), (_, wp_else, wlp_else) = lift_and_destruct env (cthen.comp()) celse in
@@ -1018,7 +1033,7 @@ let weaken_result_typ env (e:exp) (lc:lcomp) (t:typ) : exp * lcomp * guard_t =
             then Util.fprint2 "Strengthening %s with guard %s\n" (Normalize.comp_typ_norm_to_string env c) (Normalize.typ_norm_to_string env f);
           
             let ct = Tc.Normalize.weak_norm_comp env c in
-            let a, kwp = Env.wp_signature env Const.pure_effect_lid in
+            let a, kwp = Env.wp_signature env Const.effect_PURE_lid in
             let k = Util.subst_kind [Inl(a.v, t)] kwp in
             let md = Tc.Env.get_effect_decl env ct.effect_name in
             let x = new_bvd None in
@@ -1228,4 +1243,37 @@ let short_circuit_typ (head:either<typ,exp>) (seen_args:args) : guard_formula =
             | Some g -> g
           end
         | _ -> Rel.Trivial
-        
+     
+let pure_or_ghost_pre_and_post env comp = 
+    let mk_post_type res_t ens = 
+        let x = Util.gen_bvar res_t in
+        mk_Typ_refine(x, mk_Typ_app(ens, [varg (Util.bvar_to_exp x)]) (Some mk_Kind_type) res_t.pos) (Some mk_Kind_type) res_t.pos in
+    let norm t = Normalize.norm_typ [Beta;Delta;Unlabel] env t in
+    if Util.is_tot_or_gtot_comp comp
+    then None, Util.comp_result comp
+    else begin match comp.n with 
+            | Total _ -> failwith "Impossible"
+            | Comp ct -> 
+              if lid_equals ct.effect_name Const.effect_Pure_lid  
+              || lid_equals ct.effect_name Const.effect_Ghost_lid  
+              then begin match ct.effect_args with 
+                      | (Inl req, _)::(Inl ens, _)::_ -> 
+                         Some (norm req), (norm <| mk_post_type ct.result_typ ens)
+                      | _ -> failwith "Impossible"
+                   end
+              else let comp = Normalize.norm_comp [Normalize.DeltaComp] env comp in
+                   begin match comp.n with 
+                    | Total _ -> failwith "Impossible"
+                    | Comp ct -> 
+                        begin match ct.effect_args with 
+                            | (Inl wp, _)::(Inl wlp, _)::_ -> 
+                              let as_req, as_ens = match Tc.Env.lookup_typ_abbrev env Const.as_requires, Tc.Env.lookup_typ_abbrev env Const.as_ensures with 
+                                | Some x, Some y -> x, y
+                                | _ -> failwith "Impossible" in
+                              let req = mk_Typ_app(as_req, [(Inl ct.result_typ, Some Implicit); targ wp]) (Some mk_Kind_type) ct.result_typ.pos in
+                              let ens = mk_Typ_app(as_ens, [(Inl ct.result_typ, Some Implicit); targ wlp]) None ct.result_typ.pos in 
+                              Some (norm req), norm (mk_post_type ct.result_typ ens)
+                            | _ -> failwith "Impossible"
+                        end
+                    end
+         end

@@ -50,7 +50,7 @@
   <ItemGroup>
     <Compile Include="nameenv.fsi" />
     <Compile Include="nameenv.fs" />
-    <Compile Include="ocaml-syntax.fs" />
+    <Compile Include="ml-syntax.fs" />
     <Compile Include="ocaml-asttrans.fsi" />
     <Compile Include="ocaml-asttrans.fs" />
     <Compile Include="ocaml-codegen.fsi" />
@@ -70,6 +70,11 @@
     <ProjectReference Include="..\format\format.fsproj">
       <Name>format</Name>
       <Project>{54bc6905-03ee-4aeb-b726-742b6d4fa710}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\tc\tc.fsproj">
+      <Name>tc</Name>
+      <Project>{5bf4af3f-bec2-4cfd-94b7-11a38a031f4b}</Project>
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>

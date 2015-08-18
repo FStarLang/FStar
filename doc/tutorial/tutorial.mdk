@@ -4030,7 +4030,7 @@ Here's one very precise type for it:
 ```
 val shift_x : p:point -> ST unit
   (requires (fun h -> True))
-  (ensures (fun h0 _ h1 -> h1=upd h0 (Point.x) (sel h0 (Point.x) + 1)))
+  (ensures (fun h0 _ h1 -> h1=upd h0 (Point.x p) (sel h0 (Point.x p) + 1)))
 ```
 
 Another, less precise but more idiomatic type for it is:

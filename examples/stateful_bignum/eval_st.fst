@@ -12,14 +12,14 @@ open ST
 open Seq
 open Heap
 open Array
-
+open Ghost
 
 (* Bit weight of each of the cells of the array of the big integer *)
 val bitweight : t:template -> n:nat -> Tot nat
 let rec bitweight t n = 
   match n with 
   | 0 -> 0
-  | _ -> (t n) + bitweight t (n-1)
+  | _ -> t (n-1) + bitweight t (n-1)
 
 (* GHOST : Eval computes the mathematical value of the bigint from its content and its template *)
 val eval : h:heap -> b:bigint{ inHeap h b } -> n:nat{ n <= getLength h b } -> Tot int

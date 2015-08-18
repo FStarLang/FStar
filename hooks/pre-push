@@ -1,0 +1,5 @@
+#! /bin/sh
+
+# put this file in .git/hooks directory and make it executable (chmod +x)
+
+curl     -k     -H "Content-Type: application/json"     -d "{\"branch\":\"master\", \"type\":\"TEST_AND_DEPLOY\"}"     -u "<your-strider-email-here>:<your-password-here>"     -X POST     https://www.fstar-lang.org:3443/mitls/mitls-fstar/start

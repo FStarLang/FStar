@@ -18,6 +18,8 @@ open Axiomatic
 open Ghost
 open Seq
 
+let max_size = 63
+
 (* Represents the number of bits (-1) the integer fits in *)
 type Bitsize (x:int) (n:nat) = -(pow2 n) < x /\ x < pow2 n
 
@@ -62,11 +64,13 @@ val size_of_add_lemma:
     (requires (True))
     (ensures (Bitsize (a+b) ((max n m)+1)))
 let size_of_add_lemma n a m b =
-  if n < m then pow2_increases_lemma m n
-  else 
-    if m < n then pow2_increases_lemma n m
-    else ();
-  pow2_increases_lemma ((max n m)+1) (max n m)
+  erase (
+    if n < m then pow2_increases_lemma m n
+    else 
+      if m < n then pow2_increases_lemma n m
+      else ();
+    pow2_increases_lemma ((max n m)+1) (max n m)
+  )
   
 val size_of_sub_lemma:
   n:nat -> a:lint n -> m:nat -> b:lint m ->
@@ -74,11 +78,12 @@ val size_of_sub_lemma:
     (requires (True))
     (ensures ( Bitsize (a-b) ((max m n)+1) ))
 let size_of_sub_lemma n a m b =
-  if n < m then pow2_increases_lemma m n
-  else 
-    if m < n then pow2_increases_lemma n m
-    else ();
-  pow2_increases_lemma ((max n m)+1) (max n m)
+  erase (if n < m then pow2_increases_lemma m n
+    else 
+      if m < n then pow2_increases_lemma n m
+      else ();
+	 pow2_increases_lemma ((max n m)+1) (max n m)
+  )
 
 val size_of_mul_lemma:
   n:nat -> a:lint n -> m:nat -> b:lint m ->
@@ -86,16 +91,18 @@ val size_of_mul_lemma:
     (requires (True))
     (ensures (Bitsize (a*b) (n+m)))	       
 let size_of_mul_lemma n a m b = 
-  pow2_exp_lemma n m;
-  mul_ineq1 a (pow2 n) b (pow2 m)
-				  
+  erase (
+    pow2_exp_lemma n m;
+    mul_ineq1 a (pow2 n) b (pow2 m)
+  )
+    
 val size_of_mul_by_pow2_lemma:
   n:nat -> a:lint n -> m:nat ->
   Lemma
     (requires (True))
-    (ensures (Bitsize (a * (pow2 m)) (n+m)))
+    (ensures (Bitsize (a * (pow2 m)) (n+m) /\ Bitsize ((pow2 m) * a) (n+m)))
 let size_of_mul_by_pow2_lemma n a m = 
-  pow2_exp_lemma n m
+  erase (pow2_exp_lemma n m)
 
 val size_of_div_non_eucl:
   n:nat -> a:lint n -> b:pos ->
@@ -103,7 +110,7 @@ val size_of_div_non_eucl:
     (requires (True))
     (ensures (Bitsize (div_non_eucl a b) n))
 let size_of_div_non_eucl n a b =
-  div_non_eucl_decr_lemma a b
+  erase (div_non_eucl_decr_lemma a b)
 
 (* The difference between the euclidian and non euclidian division should be handled with care *)
 (* TODO *)
@@ -135,6 +142,13 @@ val size_of_modulo_pow2:
     [SMTPat (a % (pow2 n))]
 let size_of_modulo_pow2 a n = ()
 
+assume val size_of_signed_modulo_by_pow2:
+    a:int -> n:nat -> 
+	 Lemma
+	   (requires (True))
+	   (ensures (Bitsize (signed_modulo a (pow2 n)) n))
+	   [SMTPat (signed_modulo a (pow2 n))]
+
 (* True but big loss of precision *)
 val bits_of_pow2:
    n:nat ->
@@ -142,7 +156,7 @@ val bits_of_pow2:
      (requires (True))
      (ensures ( Bitsize (pow2 n) (n+1) /\ Bitsize (-(pow2 n)) (n+1) ))
 let bits_of_pow2 n =
-  pow2_increases_lemma (n+1) n
+  erase (pow2_increases_lemma (n+1) n)
 
 val order_n_bits:
   x:int -> n:nat -> m:nat ->
@@ -150,8 +164,10 @@ val order_n_bits:
     (requires (n <= m /\ Bitsize x n))
     (ensures ( Bitsize x m ))
 let order_n_bits x n m =
-  if n = m then ()
-  else pow2_increases_lemma m n
+  erase (
+    if n = m then ()
+    else pow2_increases_lemma m n
+  )
 
 val bitsize_inverse_lemma:
   n:nat -> a:lint n ->
@@ -174,7 +190,7 @@ let size_of_signed_modulo_lemma v n = ()
 
 (* Safe addition taking the integer size into account *)
 val add:
-  n:nat -> a:lint n -> m:nat -> b:lint m ->
+  n:nat -> a:lint n -> m:nat -> b:lint m{ (max n m)+1 <= max_size } ->
   Tot (c:lint ((max n m)+1){ c = a + b })
 let add n a m b = 
   erase (size_of_add_lemma n a m b);
@@ -182,7 +198,7 @@ let add n a m b =
 
 (* Safe substraction taking the integer size into account *)
 val sub:
-  n:nat -> a:lint n -> m:nat -> b:lint m ->
+  n:nat -> a:lint n -> m:nat -> b:lint m{ (max n m)+1 <= max_size } ->
   Tot (c:lint ((max n m) +1){ c = a - b })
 let sub n a m b = 
   erase (size_of_sub_lemma n a m b);
@@ -190,11 +206,15 @@ let sub n a m b =
 
 (* Safe multiplication taking the integer size into account *)
 val mul :
-  n:nat -> a:lint n -> m:nat -> b:lint m ->
+  n:nat -> a:lint n -> m:nat -> b:lint m{ (n+m) <= max_size } ->
   Tot (c:lint (n+m){ c = a * b })
 let mul  n a m b =
   erase (size_of_mul_lemma n a m b);
   a * b
+
+assume val shift_left :
+  n:nat -> a:lint n -> shift:nat{ n + shift <= max_size } ->
+  Tot (c:lint (n+shift){ c = pow2 shift * a })
 
 val one: one:lint 1{ one = 1 }
 let one = 1

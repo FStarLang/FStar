@@ -6,8 +6,10 @@ open Bigint
 open Eval
 
 (* Bitwize operations *)
+(*
 assume val xor_op: x:int -> y:int -> Tot (z:int{ z = 0 <==> x = y })
 assume val and_op: x:int -> y:int -> Tot (z:int{ z = 0 <==> (x = 0 /\ y = 0)})
+*)
   
 (* Comparison function /!\ returns 0 if equal, and 1 if different *)
 val compare_aux: a:bigint -> b:bigint -> tmp:int -> ctr:nat -> len:nat ->
@@ -40,7 +42,7 @@ let rec compare_aux a b tmp ctr len =
      let i = ctr - 1 in
      let ai = get a i in
      let bi = get b i in
-     let tmp' = and_op tmp (xor_op ai bi) in
+     let tmp' = IntLib.and_op tmp (IntLib.xor_op ai bi) in
      compare_aux a b tmp' (ctr-1) len
 
 val compare: a:bigint -> b:bigint -> 
@@ -96,11 +98,14 @@ let rec compare2_aux a b len tmp =
   | 0 -> tmp
   | _ -> 
      let i = get_length a - len in
-     let c = Intlib.compare (get a i) (get b i) in
+     let ai = get a i in
+     let bi = get b i in
+     let c = IntLib.compare ai bi in
+     let minus_one = -1 in
      let tmp = 
        match c with
        | 0 -> tmp
-       | -1 -> -1
+       | minus_one -> -1
        | 1 -> 1
      in
      compare2_aux a b (len+1) tmp

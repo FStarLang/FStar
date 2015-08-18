@@ -2,18 +2,21 @@
 type env =
 {env_root : string list; env_map : string Support.Microsoft.FStar.Util.smap}
 
-let root = (fun env -> env.env_root)
+let is_Mkenv = (fun ( _ ) -> (Support.All.failwith "Not yet implemented:is_Mkenv"))
 
-let create = (fun nm -> {env_root = nm; env_map = (Support.Microsoft.FStar.Util.smap_create 0)})
+let root = (fun ( env ) -> env.env_root)
 
-let push = (fun env x pp -> (let m = env.env_map
-in (let _49_10 = (Support.Microsoft.FStar.Util.smap_add m x pp)
-in (let _49_12 = env
-in {env_root = _49_12.env_root; env_map = m}))))
+let create = (fun ( nm ) -> (let _135_12 = (Support.Microsoft.FStar.Util.smap_create 0)
+in {env_root = nm; env_map = _135_12}))
 
-let resolve = (fun env x -> (match ((Support.Microsoft.FStar.Util.smap_try_find env.env_map x)) with
+let push = (fun ( env ) ( x ) ( pp ) -> (let m = env.env_map
+in (let _64_10 = (Support.Microsoft.FStar.Util.smap_add m x pp)
+in (let _64_12 = env
+in {env_root = _64_12.env_root; env_map = m}))))
+
+let resolve = (fun ( env ) ( x ) -> (match ((Support.Microsoft.FStar.Util.smap_try_find env.env_map x)) with
 | None -> begin
-(failwith "unknown-internal-name")
+(Support.All.failwith "unknown-internal-name")
 end
 | Some (x) -> begin
 x

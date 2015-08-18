@@ -259,23 +259,25 @@ val substraction_max_value_lemma_extended:
 		   ==> getValue h1 c i = getValue h0 a i)))
     (ensures (maxValue h1 c <= maxValue h0 a + maxValue h0 b))
 let substraction_max_value_lemma_extended h0 h1 a b c idx len = 
-  cut ( forall (i:nat). (i < getLength h1 c /\ (i < idx \/ i >= idx + len))
-	==> (getValue h1 c i = getValue h0 a i /\ abs (getValue h1 c i) <= maxValue h0 a + maxValue h0 b));
-  cut ( forall (i:nat). (i < getLength h1 c /\ (i < idx \/ i >= idx + len)) 
-  	==> abs (getValue h1 c i) <= maxValue h0 a + maxValue h0 b);
-  abs_lemma ();
-  cut ( forall (i:nat). (i < idx + len /\ i >= idx)
-	==> ((getValue h1 c i = getValue h0 a i - getValue h0 b (i-idx)) 
-	     /\ (abs (getValue h1 c i) <= abs (getValue h0 a i) + abs (getValue h0 b (i-idx)))) );
-  cut ( forall (i:nat). (i < idx + len /\ i >= idx)
-	==> ( abs (getValue h0 a i) <= maxValue h0 a /\ abs (getValue h0 b (i-idx)) <= maxValue h0 b));
-  cut ( forall (i:nat). (i >= idx /\ i < idx + len)
-	==> abs (getValue h1 c i) <= maxValue h0 a + maxValue h0 b);
-  cut ( forall (i:nat). i < getLength h1 c 
-	==> abs (getValue h1 c i) <= maxValue h0 a + maxValue h0 b);
-  max_value_lemma h1 c (maxValue h0 a + maxValue h0 b);
-  ()
-
+  erase (
+    cut ( forall (i:nat). (i < getLength h1 c /\ (i < idx \/ i >= idx + len))
+	  ==> (getValue h1 c i = getValue h0 a i /\ abs (getValue h1 c i) <= maxValue h0 a + maxValue h0 b));
+    cut ( forall (i:nat). (i < getLength h1 c /\ (i < idx \/ i >= idx + len)) 
+  	  ==> abs (getValue h1 c i) <= maxValue h0 a + maxValue h0 b);
+    abs_lemma ();
+    cut ( forall (i:nat). (i < idx + len /\ i >= idx)
+	  ==> ((getValue h1 c i = getValue h0 a i - getValue h0 b (i-idx)) 
+	       /\ (abs (getValue h1 c i) <= abs (getValue h0 a i) + abs (getValue h0 b (i-idx)))) );
+    cut ( forall (i:nat). (i < idx + len /\ i >= idx)
+	  ==> ( abs (getValue h0 a i) <= maxValue h0 a /\ abs (getValue h0 b (i-idx)) <= maxValue h0 b));
+    cut ( forall (i:nat). (i >= idx /\ i < idx + len)
+	  ==> abs (getValue h1 c i) <= maxValue h0 a + maxValue h0 b);
+    cut ( forall (i:nat). i < getLength h1 c 
+	  ==> abs (getValue h1 c i) <= maxValue h0 a + maxValue h0 b);
+    max_value_lemma h1 c (maxValue h0 a + maxValue h0 b);
+    ()
+  )
+    
 val substraction_max_size_lemma_extended:
   h0:heap -> 
   h1:heap -> 

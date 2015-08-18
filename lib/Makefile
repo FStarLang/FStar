@@ -1,11 +1,13 @@
 
 FSTAR = ../bin/fstar.exe
 
-mref: ext.fst set.fsi heap.fst st.fst mref.fst
-	$(FSTAR) --admit_fsi Set $^
-
-st2: ext.fst set.fsi heap.fst st.fst st2.fst
-	$(FSTAR) --admit_fsi Set $^
+all:
+	$(FSTAR) mref.fst
+	$(FSTAR) st2.fst
+	$(FSTAR) ordset.fst
+	$(FSTAR) ordsetproperties.fst
+	$(FSTAR) ordmap.fst
+	$(FSTAR) hyperHeap.fst
 
 wc:
 	sloccount .

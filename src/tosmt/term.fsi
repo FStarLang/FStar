@@ -132,6 +132,7 @@ val termToSmt: term -> string
 val declToSmt: string -> decl -> string
 
 val mk_Kind_type : term
+val mk_Kind_uvar : int -> term
 val mk_Typ_app : term -> term -> term
 val mk_Typ_dep : term -> term -> term
 val mk_Typ_uvar: int -> term
@@ -153,7 +154,8 @@ val mk_PreKind: term -> term
 val mk_PreType: term -> term
 val mk_Valid: term -> term
 val mk_HasType: term -> term -> term
-val mk_IsTyped : term -> term
+val mk_HasTypeZ: term -> term -> term
+val mk_IsTyped: term -> term
 val mk_HasTypeFuel: term -> term -> term -> term
 val mk_HasTypeWithFuel: option<term> -> term -> term -> term 
 val mk_HasKind: term -> term -> term
@@ -169,10 +171,6 @@ val mk_LexCons: term -> term -> term
 val fuel_2: term
 val fuel_100:term
 val n_fuel: int -> term
-
-val push: unit -> unit
-val pop: unit -> unit
-val commit_mark: unit -> unit
 
 val print_smt_term: term -> string
 val print_smt_term_list: list<term> -> string

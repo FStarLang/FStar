@@ -171,6 +171,15 @@ This section describes the general structure of the F* verifier.
 
      F* libraries.
 
+  contrib/
+
+     Additional libraries.
+
+     Platform: Contains a Bytes.fst library used by miTLS and examples/crypto.
+
+     CoreCrypto: Basic cryptographic algorithms as implemented by OpenSSL.
+
+
   src/
 
      All source code for the implementation of F* itself.
@@ -216,7 +225,6 @@ This section describes the general structure of the F* verifier.
      tc/
 
         The main type-checker and verification condition generator.
-
 
      tosmt/
 

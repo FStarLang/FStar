@@ -6,7 +6,7 @@ MSBUILD = xbuild
 endif
 
 FSTAR_HOME = ../..
-LIB_FILES=set.fsi heap.fst list.fst string.fst st.fst
+LIB_FILES=set.fsi heap.fst st.fst all.fst list.fst string.fst
 STDLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES))
 OLDLIB = $(addprefix $(FSTAR_HOME)/lib/, list.fst string.fst partialmap.fst st.fst)
 

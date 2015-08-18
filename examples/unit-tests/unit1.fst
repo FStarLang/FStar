@@ -361,6 +361,7 @@ val g : x:int -> Pure int (x > 0) (fun y -> y == x + 1)
 let g = h (as_Pure f)
 
 module WPsAndTriples_ST
+open Heap
 type as_requires (#a:Type) (wp:STWP_h heap a)  = wp (fun x h -> True)
 type as_ensures  (#a:Type) (wlp:STWP_h heap a) (h0:heap) (x:a) (h1:heap) = ~ (wlp (fun y h1' -> y<>x \/ h1<>h1') h0)
 assume val as_ST: #a:Type -> #b:(a -> Type)
@@ -380,3 +381,12 @@ let h f x = f x
 
 val g : x:ref int -> ST int (fun h -> True) (fun h0 y h1 -> h0=h1 /\ y >= 0)
 let g = h (as_ST f)
+
+module RefinementInference
+type erased : Type -> Type
+assume val reveal: erased 'a -> GTot 'a
+assume val consHd : #a:Type -> l:list a{is_Cons l} -> Tot a
+assume val elift1_p : #a:Type -> #b:Type -> #p:(a->Type) -> =f:(=x:a{p x} ->Tot b) -> r:erased a{p (reveal r) } -> Tot (erased b)
+
+val ghostConsHd : a:Type -> l:erased (list a){is_Cons (reveal l)} -> Tot (erased a)
+let ghostConsHd (a:Type) l = elift1_p consHd l

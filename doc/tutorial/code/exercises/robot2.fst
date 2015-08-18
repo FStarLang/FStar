@@ -1,12 +1,13 @@
 (*--build-config
     options:--admit_fsi Set --admit_fsi Map --admit_fsi HyperHeap --max_fuel 0 --initial_ifuel 0 --logQueries --z3timeout 20;
-    other-files:ext.fst set.fsi heap.fst map.fsi hyperheap2.fsi util.fst list.fst
+    other-files:ext.fst set.fsi heap.fst map.fsi listTot.fst hyperHeap.fsi stHyperHeap.fst util.fst list.fst
 --*)
 module Robot
-#set-options "--initial_fuel 0 --max_ifuel 0"
+#set-options "--initial_ifuel 1 --max_ifuel 1"
 open Util
 open Heap
 open HyperHeap
+open ST
 
 type point =
   | Point : #r:rid
@@ -31,6 +32,7 @@ type bot =
                         /\ disjoint (Arm.r left)  (Arm.r right)}
        -> bot
 
+#set-options "--initial_fuel 0 --max_ifuel 0"
 let flying (b:bot) (h:HyperHeap.t) =
     sel h (Point.z (Bot.pos b)) > 0
 
@@ -160,13 +162,13 @@ open Set
 type distinct (r:rid) (s:set rid) =
   forall x. Set.mem x s ==> disjoint x r
 
+#set-options "--initial_fuel 2 --max_fuel 2 --initial_ifuel 1 --max_ifuel 1"
 type bots : set rid -> Type =
   | Nil    : bots Set.empty
   | Cons   :  #rs:set rid
            -> hd:bot{distinct (Bot.r hd) rs}
            -> tl:bots rs
            -> bots (rs ++^ Bot.r hd)
-#set-options "--initial_fuel 2 --max_fuel 2 --initial_ifuel 1 --max_ifuel 1"
 val mem : #rs:set rid -> bot -> bs:bots rs -> Tot bool (decreases bs)
 let rec mem  (#rs:set rid) b bs = match bs with
   | Nil -> false

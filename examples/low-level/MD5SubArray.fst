@@ -1,11 +1,15 @@
 (*--build-config
     options:--admit_fsi Set --z3timeout 50;
     variables:LIB=../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst
-    st3.fst $LIB/constr.fst word.fst mvector.fsi mvector.fst MD5Common.fst
+    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst  stack.fst listset.fst
+    $LIB/ghost.fst $LIB/seq.fst located.fst lref.fst stackAndHeap.fst sst.fst sstCombinators.fst  $LIB/constr.fst word.fst mvector.fsi mvector.fst MD5Common.fst
   --*)
+
+(*this file is not being maintained anymore*)
 module MD5SubArray
-open StructuredMem
+open SSTCombinators
+open StackAndHeap  open Lref  open Located
+open SST
 open MVector
 open Heap
 open Set
@@ -13,7 +17,7 @@ open MachineWord
 open MD5Common
 open Stack
 
-type array (a:Type) (n:nat)= vector (ref a) n
+type array (a:Type) (n:nat)= vector (lref a) n
 
 val flattenRefsUpto : #a:Type -> #n:nat -> upto:(m:nat{m<=n}) -> (array a n) -> Tot (set aref)
 let rec flattenRefsUpto 'a #n upto v  =
@@ -26,7 +30,7 @@ let flattenRefs 'a #n v  = flattenRefsUpto n v
 
 assume val memFlattenIndex :
   #a:Type ->  #n:nat
-  -> v:(vector (ref  a) n)
+  -> v:(vector (lref  a) n)
   -> ind:(m:nat{m<n})
   -> m:smem
   ->
@@ -36,26 +40,26 @@ assume val memFlattenIndex :
       [SMTPat (ind < n)]
 
 (*define this using flatten refs?*)
-type arrayExixtsInMem (#a:Type) (#n:nat) (v: vector (ref  a) n) (m:smem) =
- forall (r:(r:(ref a){mem (Ref r) (flattenRefs v)})).
- {:pattern (mem (Ref r) (flattenRefs v))}refExistsInMem r m
+type arrayExixtsInMem (#a:Type) (#n:nat) (v: vector (lref  a) n) (m:smem) =
+ forall (r:(r:(lref a){mem (Ref r) (flattenRefs v)})).
+ {:pattern (mem (Ref r) (flattenRefs v))}liveRef r m
 
 
- type allocateVectorInBlock (#a:Type) (#n:nat) (rv: vector (ref a) n)
-  (h0 : memblock)
-  (h1 : memblock) (init : a)  (rl: refLocType) =
-  (forall (r:(r:(ref a){mem (Ref r) (flattenRefs rv)})).
+ type allocateVectorInBlock (#a:Type) (#n:nat) (rv: vector (lref a) n)
+  (h0 : region)
+  (h1 : region) (init : a)  (rl: regionLoc) =
+  (forall (r:(r:(lref a){mem (Ref r) (flattenRefs rv)})).
         {:pattern (mem (Ref r) (flattenRefs rv))}
            refLoc r = rl
-          /\ not (Heap.contains h0 r)
-          /\ Heap.contains h1 r
+          /\ not (liveArr h0 r)
+          /\ liveArr h1 r
           /\  init = sel h0 r)
-/\ Heap.equal h1 (concat h0 (restrict h1 (flattenRefs rv)))
+/\ equal h1 (concat h0 (restrict h1 (flattenRefs rv)))
 
 (*tj*)
 assume val sallocateVector :  a:Type -> n:nat
  -> init:a
- -> Mem (vector (ref a) n)
+ -> Mem (vector (lref a) n)
     (requires (fun m -> isNonEmpty (st m)))
     (ensures (fun m0 rv m1->
         (isNonEmpty (st m0)) /\ (isNonEmpty (st m1))
@@ -101,7 +105,7 @@ val processChunkSubArray :
 *)
 
 (*had to increase timeout to get this to typecheck.
-  The switch from "ref vector" to "vector ref" cost atleast 10 times more time
+  The switch from "lref vector" to "vector lref" cost atleast 10 times more time
 *)
 
 let processChunkSubArray ch acc =
@@ -112,7 +116,7 @@ let processChunkSubArray ch acc =
     (fun m -> True
               /\ arrayExixtsInMem ch m
               /\ arrayExixtsInMem acc m
-              /\ refExistsInMem li m /\ loopkupRef li m < 65
+              /\ liveRef li m /\ loopkupRef li m < 65
               )
     (union (singleton (Ref li)) (flattenRefs acc))
     (*(Set.complement Set.empty)*)
@@ -142,7 +146,7 @@ val subArrayExists :
 -> Lemma
     (requires (arrayExixtsInMem ch m))
     (ensures (arrayExixtsInMem (subVector offset len ch) m))
-    [SMTPat (subVector #(ref a) #n offset len ch); SMTPatT (arrayExixtsInMem #a #n ch m)]
+    [SMTPat (subVector #(lref a) #n offset len ch); SMTPatT (arrayExixtsInMem #a #n ch m)]
 
 let subArrayExists 'a #n ch offset len m = (admit ())
 (*Note that subVector is opaque and Fstar doesnot know anything about it*)
@@ -185,7 +189,7 @@ let mainLoopSubArrayAux n ch acc u =
     (fun m -> True
               /\ arrayExixtsInMem ch m
               /\ arrayExixtsInMem acc m
-              /\ refExistsInMem offset m
+              /\ liveRef offset m
               )
     (
       (*union*)
@@ -207,7 +211,7 @@ let mainLoopSubArrayAux n ch acc u =
     PureMem unit (requires p) (ensures (fun _ _ _ -> True))
   let memAssert 'p = ()
 
-val arrayExistsInMemTailSids : #a:Type -> #n:nat -> r:(vector (ref a) n)
+val arrayExistsInMemTailSids : #a:Type -> #n:nat -> r:(vector (lref a) n)
   -> m0:smem -> m1:smem -> Lemma
   (requires (sids m0 = sids m1 /\ arrayExixtsInMem r (mtail m0) /\ arrayExixtsInMem r m1))
   (ensures arrayExixtsInMem r (mtail m1))
@@ -230,11 +234,11 @@ val mainLoopSubArray :
 
 let mainLoopSubArray n ch u =
   let acc =  sallocateVector word 4 w0 in
-  let dummy : ref nat = salloc 0 in
+  let dummy : lref nat = salloc 0 in
   (*assert (b2t (not (Set.mem (Ref dummy) (flattenRefs acc)))) ;*)
-  memAssert (fun m -> ~ (refExistsInMem dummy (mtail m)));
+  memAssert (fun m -> ~ (liveRef dummy (mtail m)));
   memAssert (fun m -> ~ (arrayExixtsInMem acc (mtail m)));
-  memAssert (fun m -> forall (r:(r:(ref word){Set.mem (Ref r) (flattenRefs acc)})). ~ (refExistsInMem r (mtail m)) );
+  memAssert (fun m -> forall (r:(r:(lref word){Set.mem (Ref r) (flattenRefs acc)})). ~ (liveRef r (mtail m)) );
   memAssert (fun m -> True /\ arrayExixtsInMem ch (m));
   pushStackFrame ();
   memAssert (fun m -> True /\ arrayExixtsInMem ch (m));
@@ -248,6 +252,6 @@ let mainLoopSubArray n ch u =
 
    *)
     (*memAssert (fun m -> ~ (arrayExixtsInMem acc (mtail m)));*)
-  (*memAssert (fun m -> forall (r:(r:(ref word){Set.mem (Ref r) (flattenRefs acc)})). ~ (refExistsInMem r (mtail m)) );*)
-  memAssert (fun m -> ~ (refExistsInMem dummy (mtail m)));
+  (*memAssert (fun m -> forall (r:(r:(lref word){Set.mem (Ref r) (flattenRefs acc)})). ~ (liveRef r (mtail m)) );*)
+  memAssert (fun m -> ~ (liveRef dummy (mtail m)));
   x

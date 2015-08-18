@@ -14,6 +14,23 @@ module Prims :
     val try_with : (unit -> 'a) -> (exn -> 'a) -> 'a
     val _assert : 'a -> unit
     val min: int -> int -> int
+    val pipe_right: 'a -> ('a -> 'b) -> 'b
+    val pipe_left: ('a -> 'b) -> 'a -> 'b
+    val op_Addition: int -> int -> int
+    val op_Subtraction: int -> int -> int
+    val op_Multiply :int -> int -> int
+    val op_Division:int -> int -> int
+    val op_Equality:'a -> 'a -> bool
+    val op_disEquality:'a -> 'a -> bool
+    val op_Negation: bool -> bool
+    val op_AmpAmp:bool -> bool -> bool
+    val op_BarBar:bool -> bool -> bool
+    val op_LessThanOrEqual: int -> int -> bool
+    val op_GreaterThanOrEqual : int -> int -> bool
+    val op_LessThan: int -> int -> bool
+    val op_GreaterThan : int -> int -> bool
+    val op_Modulus: int -> int -> int
+
   end
 module ST :
   sig

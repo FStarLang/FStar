@@ -17,8 +17,8 @@ downgrade: $(ARR_LIB) qs_seq.fst qsort_arr.fst downgrade.fst
 binary_search: $(FSTAR_HOME)/lib/seq.fsi binary_search.fst
 	$(FSTAR) --admit_fsi Seq $^
 
-qsc: $(FSTAR_HOME)/lib/list.fst qsc.fst
-	$(FSTAR) --z3timeout 20 $^
+qsc:
+	$(FSTAR) qsc.fst
 
 gc: gc.fst
 	$(FSTAR) $^

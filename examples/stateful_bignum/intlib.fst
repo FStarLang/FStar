@@ -66,6 +66,11 @@ val shift_left: v:int -> i:nat -> Tot (res:int{ res = v * (pow2 i)})
 let shift_left v i =
   v * (pow2 i)
 
+(* asr OCaml operator *)
+val arithmetic_shift_right: v:int -> i:nat -> Tot (res:int{ res = div v (pow2 i) })
+let arithmetic_shift_right v i = 
+  div v (pow2 i)
+
 (* Case of C cast functions ? *)
 (* Implemented by "mod" in OCaml *)
 val signed_modulo:
@@ -77,9 +82,31 @@ let signed_modulo v p =
   else - ( (-v) % p)
 
 (* Bitwize operations *)
+#ifndef COMPILE
 assume val xor_op: x:int -> y:int -> Tot (z:int{ z = 0 <==> x = y })
 assume val and_op: x:int -> y:int -> Tot (z:int{ z = 0 <==> (x = 0 /\ y = 0)})
 assume val or_op: x:int -> y:int -> Tot (z:int{ z = 0 <==> (x = 0 \/ y = 0) })
+assume val lnot_op: int -> Tot int
+#else
+val xor_op: x:int -> y:int -> Tot (z:int{ z = 0 <==> x = y })
+let xor_op x y = x
+val and_op: x:int -> y:int -> Tot (z:int{ z = 0 <==> (x = 0 /\ y = 0)})
+let and_op x y = x
+val or_op: x:int -> y:int -> Tot (z:int{ z = 0 <==> (x = 0 \/ y = 0) })
+let or_op x y = x
+val lnot_op: int -> Tot int
+let lnot_op x = x
+#endif
+
+(* Comparison *)
+(* To replace with something constant time in real code *)
+val compare : x:int -> y:int -> Tot (r:int{ (r = 0 <==> x = y)
+					    /\ (r = 1 <==> x > y)
+					    /\ (r = -1 <==> x < y) })
+let compare x y =
+  if x = y then 0
+  else if x < y then -1
+  else 1
 
 (*** Lemmas ***)
 
@@ -113,13 +140,14 @@ val pow2_div_lemma:
     (requires (True))
     (ensures ((pow2 n) / (pow2 m) = pow2 (n-m)))
 let pow2_div_lemma n m =
-  if n = m then ()
-  else 
-    (pow2_increases_lemma n m;
-     pow2_exp_lemma (n-m) m;
-     slash_star_axiom (pow2 (n-m)) (pow2 m) (pow2 n);
-     ())
-
+  erase (
+    if n = m then ()
+    else 
+      (pow2_increases_lemma n m;
+       pow2_exp_lemma (n-m) m;
+       slash_star_axiom (pow2 (n-m)) (pow2 m) (pow2 n);
+       ())
+  )
 (* Lemma : absolute value of product is the product of the absolute values *)
 val abs_mul_lemma:
   a:int -> b:int ->
@@ -135,7 +163,7 @@ val div_non_eucl_decr_lemma:
     (requires (True))
     (ensures (abs (div_non_eucl a b) <= abs a))
 let div_non_eucl_decr_lemma a b =
-  slash_decr_axiom (abs a) b
+  erase (slash_decr_axiom (abs a) b)
 
 (* Lemma : dividing by a bigger value leads to 0 if non euclidian division *)
 val div_non_eucl_bigger_denom_lemma:
@@ -161,7 +189,7 @@ val multiply_fractions_lemma:
     (requires (True))
     (ensures ( n * ( a / n ) <= a ))
 let multiply_fractions_lemma a n =
-  euclidian_div_axiom a n
+  erase (euclidian_div_axiom a n)
 
 (* Lemma : multiplying by a strictly positive value preserves strict inequalities *)
 val mul_pos_strict_incr_lemma: a:pos -> b:int -> c:pos -> Lemma (requires (b < c)) (ensures (a * b < a * c /\ b * a < c * a ))

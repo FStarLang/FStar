@@ -1,131 +1,86 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Map --admit_fsi Wysteria;
+    options:--admit_fsi Set --admit_fsi Wysteria;
     variables:LIB=../../lib;
-    other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/map.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst wysteria.fsi
+    other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst wysteria.fsi
  --*)
 
 module WLib
 
-open Map
-open Set
-
 open Wysteria
-
-val wfold_helper: #a:Type -> #b:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> a -> Type)
-                  -> w:Wire b
-                  -> =f:(a -> (p:prin{contains w p}) -> x:b{sel w p = x} -> Wys a req_f ens_f)
-                  -> a
-                  -> l:list prin
-                  -> Wys a (fun m0 -> Mode.p_or_s m0 = Sec /\
-                                      (forall y. List.mem y l ==> CanProjWireS w y (Mode.ps m0)) /\
-                                      req_f m0)
-                           (fun m0 r -> True)
-let rec wfold_helper w f x l =
- match l with
-   | [] -> x
-   | hd::tl ->
-     let y = projwire_s w hd in
-     wfold_helper w f (f x hd y) tl
 
 (*
  * mode should be able to project all values from the wire bundle
  *)
-type wfold_pre (#b:Type) (w:Wire b) (mode_ps:prins) =
-  (forall p. contains w p ==> CanProjWireS w p mode_ps)
+type wfold_pre (#b:Type) (#eps:eprins) (m:mode) (ps:eprins) (w:Wire b eps) =
+  Mode.m m = Sec /\ (forall p. mem p ps ==> (w_contains p w /\ CanProjWireS #b m w p))
 
+(* we can give a more precise type to p arg of f, p:prin{mem p ps}, but then unification in the recursive call fails *)
 val wfold: #a:Type -> #b:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> a -> Type)
-           -> w:Wire b
-           -> =f:(a -> (p:prin{contains w p}) -> x:b{sel w p = x} -> Wys a req_f ens_f)
+           -> #eps:eprins
+           -> ps:eprins
+           -> w:Wire b eps{forall p. mem p ps ==> w_contains p w}
+           -> =f:(a -> (p:prin{w_contains p w}) -> x:b{w_select p w = x} -> Wys a req_f ens_f)
            -> a
-           -> Wys a (fun m0   -> Mode.p_or_s m0 = Sec /\ wfold_pre w (Mode.ps m0) /\ req_f m0)
-                    (fun m0 r -> True)
-let wfold w f x =
-  let l = dom_of_wire w in
-  wfold_helper w f x l
+           -> Wys a (fun m0 -> wfold_pre #b m0 ps w /\ req_f m0) (fun m0 r -> True)
+              (decreases (size ps))
+let rec wfold #eps ps w f x =
+  if ps = empty then x
+  else
+    let p = choose ps in
+    let y = projwire_s p w in
+    wfold (remove p ps) w f (f x p y)
 
+type waps_pre (#a:Type) (#b:Type) (#eps:eprins) (m:mode) (ps:eprins) (w:Wire a eps) =
+  Mode.m m = Sec /\ (forall p. mem p ps ==> (w_contains p w /\ CanProjWireS #a m w p /\ CanMkWireS b m (singleton p)))
 
-val box_l: #a:Type -> ps:prins -> l:list a
-           -> Wys (list (Box a)) (fun m0   -> Mode.p_or_s m0 = Par /\ CanBoxP ps (Mode.ps m0))
-                                 (fun m0 r -> (forall b. List.mem b r ==> ps_of_box b = ps /\
-                                                                          List.mem (v_of_box b) l) /\
-                                              (forall x. List.mem x l ==> (exists b. List.mem b r /\ v_of_box b = x)))
-let rec box_l ps l = match l with
-  | []     -> []
-  | hd::tl ->
-    let b = box_p hd ps in
-    let l' = box_l ps tl in
-    b::l'
-
-(*
- * mode should be able to project all list prins
- * mode should be able to unbox the list elts in par as well as sec
- * par since wire domain has to be known to all parties
- *)
 val waps: #a:Type -> #b:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> b -> Type)
-          -> l:list (Box prin)
-          -> w:Wire a
-          -> =f:(p:prin{contains w p} -> x:a{sel w p = x} -> Wys b req_f ens_f)
-          -> Wys (Wire b) (fun m0 -> Mode.p_or_s m0 = Sec /\
-                                     (forall b. List.mem b l ==> (CanProjWireS w (v_of_box b) (Mode.ps m0) /\
-                                                                  CanUnboxS b (Mode.ps m0) /\ CanUnboxP b (Mode.ps m0))) /\
-                                     req_f m0)
-                          (fun m0 r -> True)
-let rec waps l w f =
-  match l with
-    | []     -> empty_wire
-    | hd::tl ->
-      let w1 = waps tl w f in
-      let p = unbox_s hd in
-      let x = projwire_s w p in
-      let w2 = mkwire_ss hd (f p x) in
-      concat_wire w1 w2
+          -> #eps:eprins
+          -> ps:prins
+          -> w:Wire a eps{forall p. mem p ps ==> w_contains p w}
+          -> =f:(p:prin{w_contains p w} -> x:a{w_select p w = x} -> Wys b req_f ens_f)
+          -> Wys (Wire b ps) (fun m0 -> waps_pre #a #b m0 ps w /\ req_f m0)
+                             (fun m0 r -> b2t (w_dom r = ps))
+             (decreases (size ps))
+let rec waps #eps ps w f =
+  let p = choose ps in
+  let ps' = remove p ps in
+  let y = projwire_s p w in
+  let wp = mkwire_s (singleton p) (f p y) in
+  if ps' = empty then
+    let _ = assert (ps = singleton p) in
+    wp
+  else
+    let w' = waps ps' w f in
+    let _ = assert (ps = union (singleton p) ps') in
+    concat_wire wp w'
 
-
-val wapp_helper: #a:Type -> #b:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> b -> Type)
-                 -> w:Wire a
-                 -> =f:(p:prin{contains w p} -> x:a{sel w p = x} -> Wys b req_f ens_f)
-                 -> l:list prin
-                 -> Wys (Wire b) (fun m0 -> (forall p. List.mem p l ==> contains w p) /\
-                                            (forall p. contains w p ==> (DelPar m0 (singleton p) /\
-                                                                         req_f (Mode Par (singleton p)))))
-                                 (fun m0 r -> True)
-let rec wapp_helper 'a 'b 'r 'e w f l =
-  match l with
-    | []     -> empty_wire
-    | hd::tl ->
-      let g: p:prin{contains w p} -> Wys 'b (fun m0 -> b2t (m0 = Mode Par (singleton p))) (fun m0 r -> True) =
-        fun p ->
-          let x = projwire_p w p in
-          f p x
-      in
-      empty_wire
-
-      (*
-       * we would like to not pass all arguments to g.
-       * but writing this fails and gives an error:
-         let g: #b:Type -> (p:prin{contains w p}) ->
-                           Wys b (fun m0 -> b2t (m0 = Mode Par (singleton p)))
-       *)
-      (*let g: #a:Type -> #b:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> b -> Type)
-             -> w:Wire a
-             -> =f:(p:prin{contains w p} -> x:a{sel w p = x} -> Wys b req_f ens_f)
-             -> (p:prin{contains w p})
-             -> unit
-             -> Wys b (fun m0 -> m0 = Mode Par (singleton p) /\ req_f m0) (fun m0 r -> True) =
-        fun w f p _ ->
-          let x = projwire_p w p in
-          f p x
-      in*)
-
-      (*let w1 = wapp_helper w f tl in
-      let x = as_par (singleton hd) (g w f hd) in //error here: expected type unit -> Wys b, got unit -> Wys b
-      let w2 = mkwire_p (singleton hd) x in
-      concat_wire w1 w2*)
+type wapp_pre (#a:Type) (#b:Type) (#eps:eprins) (m:mode) (ps:eprins) (w:Wire a eps) (req_f: mode -> Type) =
+  (forall p. mem p ps ==> (w_contains p w /\ DelPar m (singleton p)   /\
+                           CanMkWireP b m (singleton p) (singleton p) /\
+                           req_f (Mode Par (singleton p))))
 
 val wapp: #a:Type -> #b:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> b -> Type)
-                     -> w:Wire a
-                     -> =f:(p:prin{contains w p} -> x:a{sel w p = x} -> Wys b req_f ens_f)
-                     -> Wys (Wire b) (fun m0   -> (forall p. contains w p ==> (DelPar m0 (singleton p) /\
-                                                                               req_f (Mode Par (singleton p)))))
-                                     (fun m0 r -> True)
-let wapp w f = wapp_helper w f (dom_of_wire w)
+          -> #eps:eprins
+          -> ps:prins
+          -> w:Wire a eps{forall p. mem p ps ==> w_contains p w}
+          -> =f:(p:prin{w_contains p w} -> x:a{w_select p w = x} -> Wys b req_f ens_f)
+          -> Wys (Wire b ps) (fun m0 -> wapp_pre #a #b m0 ps w req_f)
+                             (fun m0 r -> b2t (w_dom r = ps))
+             (decreases (size ps))
+let rec wapp 'a 'b 'req_f 'ens_f #eps ps w f =
+  let g: p:prin{mem p ps} -> unit -> Wys 'b (fun m0 -> m0 = Mode Par (singleton p) /\ 'req_f m0) (fun m0 r -> True) =
+    fun p _ ->
+      let x = projwire_p p w in
+      f p x
+  in
+  let p = choose ps in
+  let ps' = remove p ps in
+  let py = as_par (singleton p) (g p) in
+  let wp = mkwire_p #'b #(singleton p) (singleton p) py in
+  if ps' = empty then
+    let _ = assert (ps = singleton p) in
+    wp
+  else
+    let w' = wapp (remove p ps) w f in
+    let _ = assert (ps = union (singleton p) ps') in
+    concat_wire wp w'

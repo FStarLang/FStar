@@ -2,7 +2,7 @@
     options:--admit_fsi Set --z3timeout 10;
     variables:LIB=../../lib;
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst
-    st3.fst $LIB/seq.fsi $LIB/seq.fst word.fst
+    $LIB/ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst sstCombinators.fst $LIB/seq.fsi $LIB/seq.fst word.fst
   --*)
 
 (*Why is MD5 so? Why did its designer(s) think
@@ -10,7 +10,9 @@
   Is there a principle behind its design? or just random convolutery?
   *)
 module MD5Common
-open StructuredMem
+open SSTCombinators
+open StackAndHeap  open Lref  open Located
+open SST
 open MVector
 open Heap
 open Set
@@ -119,7 +121,10 @@ exists (k:nat). k*divisor=n
 
 
 val leastMultipleGeq : n:nat -> div:pos -> Tot (m:nat{divides div m /\ m < n+ div /\ n<=m})
-let leastMultipleGeq n div = admit ()
+let leastMultipleGeq n div =
+let m = (if (n%div = 0) then n else ((div - (n % div)) + n)) in
+let ad = (admitP (divides div m /\ m < n+ div /\ n<=m)) in m
+
 (*(div - (n % div)) + n*)
 (*(ceil (n/div))*div*)
 

@@ -188,7 +188,7 @@ let xieee64    = xinteger 'L' 'F'
 let escape_char = ('\\' ( '\\' | "\"" | '\'' | 'n' | 't' | 'b' | 'r'))
 let char        = [^'\\''\n''\r''\t''\b'] | escape_char
 let custom_op_char = '&'|'@'|'+'|'-'|'/'|'<'|'='|'|'|'!'|'^'|'?'
-let custom_op = custom_op_char (custom_op_char | '>' | '*')*
+let custom_op = custom_op_char (custom_op_char | '>' | '*' | '%')*
 
 (* -------------------------------------------------------------------- *)
 let constructor_start_char = upper

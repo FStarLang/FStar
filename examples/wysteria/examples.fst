@@ -1,14 +1,15 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Map --admit_fsi Wysteria;
+    options:--admit_fsi OrdSet --admit_fsi OrdMap --admit_fsi Set --admit_fsi Wysteria;
     variables:LIB=../../lib;
-    other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/map.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst wysteria.fsi lib.fst
+    other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/ordset.fsi $LIB/ordmap.fsi $LIB/list.fst wysteria.fsi lib.fst
  --*)
 
-module Mill
+module Examples
 
-open Set
-open Map
+(*open Set
+open Map*)
 
+open OrdSet
 open Wysteria
 open WLib
 
@@ -17,158 +18,32 @@ type post (#a:Type) = fun (m:mode) (x:a) -> True
 
 type pre_with (m:mode) (t:Type) = fun m0 -> m0 = m /\ t
 
-let to_s1 p1       = singleton p1
+let to_s1 p1       = singleton #prin #p_cmp p1
 let to_s2 p1 p2    = union (to_s1 p1) (to_s1 p2)
 let to_s3 p1 p2 p3 = union (to_s2 p1 p2) (to_s1 p3)
 
 (**********)
 
-(* millionaire's straightforward, inlined secure block *)
-
-val mill1: unit -> Wys bool (pre p_ab) post
-let mill1 _ =
-  let x = as_par alice_s read in
-  let y = as_par bob_s read in
-
-  let g:unit -> Wys bool (pre s_ab) post =
-    fun _ -> (unbox_s x) > (unbox_s y)
-  in
-
-  as_sec ab g
-
-(**********)
-
-(* factoring out secure computation in a separate function *)
-
-val mill2_sec: x:Box nat -> y:Box nat
-               -> Wys bool (pre_with p_ab (ps_of_box x = alice_s  /\
-                                           ps_of_box y = bob_s))
-                           post
-let mill2_sec x y =
-  let g:unit -> Wys bool (pre s_ab) post =
-    fun _ -> (unbox_s x) > (unbox_s y)
-  in
-  as_sec ab g
-
-val mill2: unit -> Wys bool (pre p_ab) post
-let mill2 _ =
-  let x = as_par alice_s read in
-  let y = as_par bob_s read in
-  mill2_sec x y
-
-(**********)
 
 (* millionaire's secure block for any two parties *)
 (* only unification, so p1 and p2 can only be inferred if type indices *)
-val mill3_sec: #p1:prin -> #p2:prin
-               -> x:Box nat -> y:Box nat
-               -> unit
-               -> Wys bool (fun m0 -> m0 = Mode Par (union (singleton p1) (singleton p2)) /\
-                                           ps_of_box x = singleton p1 /\
-                                           ps_of_box y = singleton p2)
-                           post
-let mill3_sec #p1 #p2 x y _ =
-  let s = union (singleton p1) (singleton p2) in
-  let g:unit -> Wys bool (pre (Mode Sec s)) post =
-   fun _ -> (unbox_s x) > (unbox_s y)
-  in
-  as_sec s g
-
-
-val mill3: unit -> Wys bool (pre p_abc) post
-let mill3 _ =
-  let x = as_par alice_s read in
-  let y = as_par bob_s read in
-  let z = as_par charlie_s read in
-
-  let _ = as_par ab (mill3_sec #alice #bob x y) in
-  let _ = as_par bc (mill3_sec #bob #charlie y z) in
-
-  true
-
 (**********)
 
 (* millionaire's using wires, secure block inlined *)
 
 (* assert (forall s v. const_on s v = restrict s (const v)) fails unless annotated *)
 
-val mill4: unit -> Wys bool (pre p_ab) post
-let mill4 _ =
-  (* because of the above assert problem, here annotations are needed *)
-  let x:Box nat = as_par alice_s read in
-  let y:Box nat = as_par bob_s read in
-
-  let w = concat_wire (mkwire_p alice_s x) (mkwire_p bob_s y) in
-
-  let g:unit -> Wys bool (pre s_ab) post =
-    fun _ -> (projwire_s w alice) > (projwire_s w bob)
-  in
-
-  as_sec ab g
-
-(**********)
-
-(* using wire bundles, secure block a separate function *)
-
-val mill5_sec: w:Wire nat -> Wys bool (pre_with p_ab (HasDom w ab)) post
-let mill5_sec w =
-  let g:unit -> Wys bool (pre s_ab) post =
-    fun _ -> (projwire_s w alice) > (projwire_s w bob)
-  in
-  as_sec ab g
-
-val mill5: unit -> Wys bool (pre p_ab) post
-let mill5 _ =
-  let x:Box nat = as_par alice_s read in
-  let y:Box nat = as_par bob_s read in
-
-  let w = concat_wire (mkwire_p alice_s x) (mkwire_p bob_s y) in
-
-  mill5_sec w
-
-(**********)
-
-(* for any two principals using wires *)
-
-val mill6_sec: #p1:prin -> #p2:prin -> w:Wire nat
-               -> unit
-               -> Wys bool (pre_with (Mode Par (to_s2 p1 p2))
-                                     (HasDom w (to_s2 p1 p2))) post
-let mill6_sec #p1 #p2 w _ =
-  let g:unit -> Wys bool (pre (Mode Sec (to_s2 p1 p2))) post =
-    fun _ -> (projwire_s w p1) > (projwire_s w p2)
-  in
-  as_sec (to_s2 p1 p2) g
-
-val mill6: unit -> Wys bool (pre p_abc) post
-let mill6 _ =
-  let x:Box nat = as_par alice_s read in
-  let y:Box nat = as_par bob_s read in
-  let z:Box nat = as_par charlie_s read in
-
-  let w1 = concat_wire (mkwire_p alice_s x) (mkwire_p bob_s y) in
-  let w2 = concat_wire (mkwire_p bob_s y) (mkwire_p charlie_s z) in
-
-  let _ = as_par ab (mill6_sec #alice #bob w1) in
-  let _ = as_par bc (mill6_sec #bob #charlie w2) in
-
-  true
-
-(**********)
-
 (* return result only to alice *)
 
 val mill7: unit -> Wys (Wire bool) (pre p_ab) post
 let mill7 _ =
-  let x = as_par alice_s read in
-  let y = as_par bob_s read in
-
-  let d = box_p alice_s ab in
+  let x = as_par alice_s (read #nat) in
+  let y = as_par bob_s (read #nat) in
 
   let g:unit -> Wys (Wire bool) (pre s_ab) post =
     fun _ ->
       let b = (unbox_s x) > (unbox_s y) in
-      mkwire_s d b
+      mkwire_s alice_s b
   in
   as_sec ab g
 
@@ -179,12 +54,12 @@ let mill7 _ =
 val mill8_sec: ps:prins
                -> w:Wire nat
                -> unit
-               -> Wys (option (p:prin{contains w p})) (pre_with (Mode Par ps) (HasDom w ps))  post
+               -> Wys (option nat) (pre_with (Mode Par ps) (HasDom w ps))  post
 let mill8_sec ps w _ =
 
-  let f: option (p:prin{contains w p})
-         -> (p:prin{contains w p}) -> y:nat{sel w p = y}
-         -> Wys (option (p:prin{contains w p})) (pre (Mode Sec ps)) post =
+  let f: option (p:prin{w_contains p w})
+         -> (p:prin{w_contains p w}) -> y:nat{w_select p w = y}
+         -> Wys (option (p:prin{w_contains p w})) (pre (Mode Sec ps)) post =
     fun x p y ->
       match x with
         | None    -> Some p
@@ -193,20 +68,26 @@ let mill8_sec ps w _ =
           if y > y' then Some p else Some p'
   in
 
-  let g:unit -> Wys (option (p:prin{contains w p})) (pre (Mode Sec ps)) post =
+  let g:unit -> Wys (option (p:prin{w_contains p w})) (pre (Mode Sec ps)) (post #(option (p:prin{w_contains p w}))) =
     fun _ -> wfold w f None
   in
 
-  as_sec ps g
+  let p = as_sec ps g in
+  if p = None then None else Some (prin_to_nat (Some.v p))
 
+(* TODO: FIXME: This is a regression, how can we define can_box for refinement types ? *)
 val mill8: unit -> Wys bool (pre p_abc) post
 let mill8 _ =
-  let x:Box nat = as_par alice_s read in
-  let y:Box nat = as_par bob_s read in
-  let z:Box nat = as_par charlie_s read in
+  let x:Box nat alice_s = as_par alice_s (read #nat) in
+  let y:Box nat bob_s = as_par bob_s (read #nat) in
+  let z:Box nat charlie_s = as_par charlie_s (read #nat) in
 
-  let w1 = concat_wire (mkwire_p alice_s x) (mkwire_p bob_s y) in
-  let w2 = concat_wire w1 (mkwire_p charlie_s z) in
+  let wa = mkwire_p alice_s x in
+  let wb = mkwire_p bob_s y in
+  let wc = mkwire_p charlie_s z in
+
+  let w1 = concat_wire wa wb in
+  let w2 = concat_wire w1 wc in
 
   (* call mill for 2 parties *)
   let _ = as_par ab (mill8_sec #ab w1) in
@@ -219,8 +100,8 @@ let mill8 _ =
 (**********)
 
 (* nearest neighbor *)
-
-val gps_sec: ps:prins
+(* TODO: FIXME: finish this *)
+(*val gps_sec: ps:prins
              -> w:Wire nat
              -> unit
              -> Wys (Wire (option (p:prin{Set.mem p ps}))) (pre_with (Mode Par ps) (HasDom w ps)) post
@@ -361,6 +242,6 @@ let two_round_bidding p1 p2 =
       if x1 + x1' < y1 + y1' then p1 else p2
   in
 
-  as_sec (to_s2 p1 p2) r2
+  as_sec (to_s2 p1 p2) r2*)
 
 (**********)

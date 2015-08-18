@@ -407,13 +407,13 @@ let lookup_lid env lid =
     | Inl t
     | Inr (Sig_datacon(_, t, _, _,_, _))  
     | Inr (Sig_val_decl (_, t, _, _)) 
-    | Inr (Sig_let((_, [(_, t, _)]), _, _, _)) -> Some t 
+    | Inr (Sig_let((_, [{lbtyp=t}]), _, _, _)) -> Some t
     | Inr (Sig_let((_, lbs), _, _, _)) -> 
-        Util.find_map lbs (function 
-          | (Inl _, _, _) -> failwith "impossible"
-          | (Inr lid', t, e) -> 
+        Util.find_map lbs (fun lb -> match lb.lbname with
+          | Inl _ -> failwith "impossible"
+          | Inr lid' ->
             if lid_equals lid lid' 
-            then Some t
+            then Some lb.lbtyp
             else None) 
     | t -> None
   in

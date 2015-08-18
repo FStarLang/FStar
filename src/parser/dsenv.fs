@@ -110,7 +110,7 @@ let unmangleOpName (id:ident) =
     
 let try_lookup_id' env (id:ident) =
   match unmangleOpName id with 
-    | Some l -> Some (l, mk_Exp_fvar(fv l, false) None id.idRange)
+    | Some l -> Some (l, mk_Exp_fvar(fv l, None) None id.idRange)
     | _ -> 
       let found = find_map env.localbindings (function 
         | Inl _, Binding_typ_var id' when (id'.idText=id.idText) -> Some (Inl ())
@@ -140,6 +140,19 @@ type foundname =
   | Eff_name of occurrence * lident
   | Knd_name of occurrence * lident
  
+let fv_qual_of_se = function 
+    | Sig_datacon(_, _, (l, _, _), quals, _, _) -> 
+      let qopt = Util.find_map quals (function 
+          | RecordConstructor fs -> Some (Record_ctor(l, fs))
+          | _ -> None) in
+      begin match qopt with 
+        | None -> Some Data_ctor
+        | x -> x
+      end
+    | Sig_val_decl (_, _, quals, _) ->  //TODO: record projectors?
+      None
+    | _ -> None
+
 let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> = 
   (* Resolve using, in order, 
      1. rec bindings
@@ -156,11 +169,11 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
           | Sig_kind_abbrev _ -> Some(Knd_name(OSig se, lid))
           | Sig_new_effect(ne, _) -> Some (Eff_name(OSig se, set_lid_range ne.mname (range_of_lid lid)))
           | Sig_effect_abbrev _ -> Some(Eff_name(OSig se, lid))
-          | Sig_datacon _ ->  Some (Exp_name(OSig se,  fvar true lid (range_of_lid lid)))
-          | Sig_let _ -> Some (Exp_name(OSig se,  fvar false lid (range_of_lid lid)))
+          | Sig_datacon _ -> Some (Exp_name(OSig se, fvar (fv_qual_of_se se) lid (range_of_lid lid)))
+          | Sig_let _ -> Some (Exp_name(OSig se,  fvar None lid (range_of_lid lid)))
           | Sig_val_decl(_, _, quals, _) ->
             if any_val || quals |> Util.for_some (function Assumption -> true | _ -> false)
-            then Some (Exp_name(OSig se, fvar false lid (range_of_lid lid)))
+            then Some (Exp_name(OSig se, fvar (fv_qual_of_se se) lid (range_of_lid lid)))
             else None
           | _ -> None
         end in
@@ -172,7 +185,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
         | None -> 
           let recname = qualify env lid.ident in
           Util.find_map env.recbindings (function
-            | Binding_let l when lid_equals l recname -> Some (Exp_name(ORec l, Util.fvar false recname (range_of_lid recname)))
+            | Binding_let l when lid_equals l recname -> Some (Exp_name(ORec l, Util.fvar None recname (range_of_lid recname)))
             | Binding_tycon l when lid_equals l recname  -> Some(Typ_name(ORec l, ftv recname kun))
             | _ -> None)
       end
@@ -232,7 +245,7 @@ let try_lookup_module env path =
 let try_lookup_let env (lid:lident) = 
   let find_in_sig lid = 
     match Util.smap_try_find (sigmap env) lid.str with 
-      | Some (Sig_let _, _) -> Some (fvar false lid (range_of_lid lid))
+      | Some (Sig_let _, _) -> Some (fvar None lid (range_of_lid lid))
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig
           
@@ -497,7 +510,10 @@ let finish_module_or_interface env modul =
 
 let prepare_module_or_interface intf admitted env mname =
   let prep env = 
-    let open_ns = if lid_equals mname Const.prims_lid then [] else [Const.prims_lid] in
+    let open_ns = if      lid_equals mname Const.prims_lid then [] 
+                  else if lid_equals mname Const.st_lid    then [Const.prims_lid]
+                  else if lid_equals mname Const.all_lid   then [Const.prims_lid; Const.st_lid]
+                  else [Const.prims_lid; Const.st_lid; Const.all_lid] in
     {env with curmodule=Some mname; sigmap=env.sigmap; open_namespaces = open_ns; iface=intf; admitted_iface=admitted} in
 
   match env.modules |> Util.find_opt (fun (l, _) -> lid_equals l mname) with

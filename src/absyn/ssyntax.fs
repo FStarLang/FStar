@@ -193,7 +193,7 @@ and serialize_cflags (writer:Writer) (ast:cflags) :unit =
 and serialize_exp' (writer:Writer) (ast:exp') :unit = 
     match ast with
     | Exp_bvar(v) -> writer.write_char 'a'; serialize_bvvar writer v
-    | Exp_fvar(v, b) -> writer.write_char 'b'; serialize_fvvar writer v; writer.write_bool b
+    | Exp_fvar(v, b) -> writer.write_char 'b'; serialize_fvvar writer v; writer.write_bool false//NS: FIXME!
     | Exp_constant(c) -> writer.write_char 'c'; serialize_sconst writer c
     | Exp_abs(bs, e) -> writer.write_char 'd'; serialize_binders writer bs; serialize_exp writer e
     | Exp_app(e, ars) -> writer.write_char 'e'; serialize_exp writer e; serialize_args writer ars
@@ -205,7 +205,7 @@ and serialize_exp' (writer:Writer) (ast:exp') :unit =
         in
         let f writer (p, eopt, e) = serialize_pat writer p; g writer eopt; serialize_exp writer e in
         writer.write_char 'f'; serialize_exp writer e; serialize_list writer f l
-    | Exp_ascribed(e, t) -> writer.write_char 'g'; serialize_exp writer e; serialize_typ writer t
+    | Exp_ascribed(e, t, l) -> writer.write_char 'g'; serialize_exp writer e; serialize_typ writer t; serialize_option writer serialize_lident l
     | Exp_let(lbs, e) -> writer.write_char 'h'; serialize_letbindings writer lbs; serialize_exp writer e
     | Exp_meta(m) -> writer.write_char 'i'; serialize_meta_e writer m
     | _ -> raise (Err "unimplemented exp'")
@@ -232,8 +232,8 @@ and serialize_pat' (writer:Writer) (ast:pat') :unit =
     match ast with
     | Pat_disj(l) -> writer.write_char 'a'; serialize_list writer serialize_pat l
     | Pat_constant(c) -> writer.write_char 'b'; serialize_sconst writer c
-    | Pat_cons(v, l) -> writer.write_char 'c'; serialize_fvvar writer v; serialize_list writer serialize_pat l
-    | Pat_var(v, b) -> writer.write_char 'd'; serialize_bvvar writer v; writer.write_bool b
+    | Pat_cons(v, _, l) -> writer.write_char 'c'; serialize_fvvar writer v; serialize_list writer (fun w (p,b) -> serialize_pat w p; w.write_bool b) l
+    | Pat_var v -> writer.write_char 'd'; serialize_bvvar writer v
     | Pat_tvar(v) -> writer.write_char 'e'; serialize_btvar writer v
     | Pat_wild(v) -> writer.write_char 'f';  serialize_bvvar writer v
     | Pat_twild(v) -> writer.write_char 'g';  serialize_btvar writer v
@@ -261,7 +261,7 @@ and serialize_kabbrev (writer:Writer) (ast:kabbrev) :unit = serialize_lident wri
 and serialize_lbname (writer:Writer) (ast:lbname) :unit = serialize_either writer serialize_bvvdef serialize_lident ast
 
 and serialize_letbindings (writer:Writer) (ast:letbindings) :unit = 
-    let f writer (n, t, e) = serialize_lbname writer n; serialize_typ writer t; serialize_exp writer e in
+    let f writer lb = serialize_lbname writer lb.lbname; serialize_lident writer lb.lbeff; serialize_typ writer lb.lbtyp; serialize_exp writer lb.lbdef in
     writer.write_bool (fst ast); serialize_list writer f (snd ast)
 
 and serialize_fvar (writer:Writer) (ast:Syntax.fvar) :unit = serialize_either writer serialize_btvdef serialize_bvvdef ast
@@ -333,7 +333,7 @@ and deserialize_cflags (reader:Reader) :cflags =
 and deserialize_exp' (reader:Reader) :exp' = 
     match (reader.read_char ()) with
     | 'a' -> Exp_bvar(deserialize_bvvar reader)
-    | 'b' -> Exp_fvar(deserialize_fvvar reader, reader.read_bool ())
+    | 'b' -> Exp_fvar(deserialize_fvvar reader, (ignore <| reader.read_bool (); None)) //FIXME
     | 'c' -> Exp_constant(deserialize_sconst reader)
     | 'd' -> Exp_abs(deserialize_binders reader, deserialize_exp reader)
     | 'e' -> Exp_app(deserialize_exp reader, deserialize_args reader)
@@ -346,7 +346,7 @@ and deserialize_exp' (reader:Reader) :exp' =
         
         let f reader = (deserialize_pat reader, g reader, deserialize_exp reader) in
         Exp_match(deserialize_exp reader, deserialize_list reader f)
-    | 'g' -> Exp_ascribed(deserialize_exp reader, deserialize_typ reader)
+    | 'g' -> Exp_ascribed(deserialize_exp reader, deserialize_typ reader, deserialize_option reader deserialize_lident)
     | 'h' -> Exp_let(deserialize_letbindings reader, deserialize_exp reader)
     | 'i' -> Exp_meta(deserialize_meta_e reader)
     |  _  -> parse_error()
@@ -374,8 +374,8 @@ and deserialize_pat' (reader:Reader) :pat' =
     match (reader.read_char ()) with
     | 'a' -> Pat_disj(deserialize_list reader deserialize_pat)
     | 'b' -> Pat_constant(deserialize_sconst reader)
-    | 'c' -> Pat_cons(deserialize_fvvar reader, deserialize_list reader deserialize_pat)
-    | 'd' -> Pat_var(deserialize_bvvar reader, reader.read_bool ())
+    | 'c' -> Pat_cons(deserialize_fvvar reader, None(* fixme *), deserialize_list reader (fun r -> (deserialize_pat r, r.read_bool ())))
+    | 'd' -> Pat_var(deserialize_bvvar reader)
     | 'e' -> Pat_tvar(deserialize_btvar reader)
     | 'f' -> Pat_wild(deserialize_bvvar reader)
     | 'g' -> Pat_twild(deserialize_btvar reader)
@@ -403,7 +403,10 @@ and deserialize_kabbrev (reader:Reader) :kabbrev = (deserialize_lident reader, d
 and deserialize_lbname (reader:Reader) :lbname = deserialize_either reader deserialize_bvvdef deserialize_lident
 
 and deserialize_letbindings (reader:Reader) :letbindings = 
-    let f reader = (deserialize_lbname reader, deserialize_typ reader, deserialize_exp reader) in
+    let f reader = {lbname=deserialize_lbname reader;
+                    lbeff=deserialize_lident reader;
+                    lbtyp=deserialize_typ reader;
+                    lbdef=deserialize_exp reader} in
     (reader.read_bool (), deserialize_list reader f)
 
 and deserialize_fvar (reader:Reader) :Syntax.fvar = deserialize_either reader deserialize_btvdef deserialize_bvvdef
@@ -427,8 +430,8 @@ let serialize_qualifier (writer:Writer)(ast:qualifier) :unit =
     | Opaque -> writer.write_char 'h'
     | Discriminator(lid) -> writer.write_char 'i'; serialize_lident writer lid
     | Projector(lid, v) -> writer.write_char 'j'; serialize_lident writer lid; serialize_either writer serialize_btvdef serialize_bvvdef v
-    | RecordType(l) -> writer.write_char 'k'; serialize_list writer serialize_ident l
-    | RecordConstructor(l) -> writer.write_char 'l'; serialize_list writer serialize_ident l
+    | RecordType(l) -> writer.write_char 'k'; serialize_list writer serialize_lident l
+    | RecordConstructor(l) -> writer.write_char 'l'; serialize_list writer serialize_lident l
     | ExceptionConstructor -> writer.write_char 'm'
     | HasMaskedEffect -> writer.write_char 'o'
     | DefaultEffect l -> writer.write_char 'p'; serialize_option writer serialize_lident l 
@@ -443,8 +446,8 @@ let deserialize_qualifier (reader:Reader) :qualifier =
     | 'h' -> Opaque
     | 'i' -> Discriminator(deserialize_lident reader)
     | 'j' -> Projector(deserialize_lident reader, deserialize_either reader deserialize_btvdef deserialize_bvvdef)
-    | 'k' -> RecordType(deserialize_list reader deserialize_ident)
-    | 'l' -> RecordConstructor(deserialize_list reader deserialize_ident)
+    | 'k' -> RecordType(deserialize_list reader deserialize_lident)
+    | 'l' -> RecordConstructor(deserialize_list reader deserialize_lident)
     | 'm' -> ExceptionConstructor
     | 'o' -> HasMaskedEffect
     | 'p' -> deserialize_option reader deserialize_lident |> DefaultEffect

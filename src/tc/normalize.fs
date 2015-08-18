@@ -39,6 +39,7 @@ open Microsoft.FStar.Tc.Env
 type step = 
   | WHNF
   | Eta
+  | EtaArgs
   | Delta
   | DeltaHard
   | Beta
@@ -46,6 +47,7 @@ type step =
   | Simplify
   | SNComp
   | Unmeta
+  | Unlabel
 and steps = list<step>
 
 type config<'a> = {code:'a;
@@ -153,10 +155,11 @@ let rec eta_expand_exp (tcenv:Tc.Env.env) (e:exp) : exp =
             end
         | _ -> e
 
-let no_eta = List.filter (function Eta -> false | _ -> true)
+let no_eta s = s |> List.filter (function Eta -> false | _ -> true)
 let no_eta_cfg c = {c with steps=no_eta c.steps}
 let whnf_only config = config.steps |> List.contains WHNF
 let unmeta config = config.steps |> List.contains Unmeta
+let unlabel config = unmeta config || config.steps |> List.contains Unlabel
 let is_stack_empty config = match config.stack.args with 
     | [] -> true
     | _ -> false
@@ -283,7 +286,9 @@ and sn tcenv (cfg:config<typ>) : config<typ> =
     let rebuild config  = 
         let rebuild_stack config = 
             if is_stack_empty config then config
-            else let s' = no_eta config.steps in
+            else let s' = if List.contains EtaArgs config.steps 
+                          then config.steps
+                          else no_eta config.steps in
                  let args = config.stack.args |> List.map (function 
                         | (Inl t, imp), env -> Inl <| (sn tcenv (t_config t env s')).code, imp
                         | (Inr v, imp), env -> Inr <| (wne tcenv (e_config v env s')).code, imp) in
@@ -409,7 +414,7 @@ and sn tcenv (cfg:config<typ>) : config<typ> =
                     sn tcenv ({config with code=t; close=close_with_config config pat})
     
                 | Typ_meta(Meta_labeled(t, l, r, b)) -> 
-                  if unmeta config then
+                  if unlabel config then
                     sn tcenv ({config with code=t})
                   else
                     let lab t = match t.n with 
@@ -537,7 +542,10 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
   let config = {cfg with code = e} in
    let rebuild config  = 
         if is_stack_empty config then config
-        else let s' = no_eta config.steps in
+        else let s' = 
+                if List.contains EtaArgs config.steps 
+                then config.steps
+                else no_eta config.steps in
              let args = 
                  config.stack.args |> List.map (function 
                     | (Inl t, imp), env -> Inl <| (sn  tcenv (t_config t env s')).code, imp
@@ -599,8 +607,8 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
         let rec pat_vars p = match p.v with 
             | Pat_disj [] -> []
             | Pat_disj (p::_) -> pat_vars p
-            | Pat_cons (_, pats) -> List.collect pat_vars pats
-            | Pat_var(x, _) -> [v_binder x]
+            | Pat_cons (_, _, pats) -> List.collect (fun (x, _) -> pat_vars x) pats
+            | Pat_var x  -> [v_binder x]
             | Pat_tvar a -> [t_binder a]
             | Pat_wild _
             | Pat_twild _ 
@@ -620,10 +628,10 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
         let rec norm_pat p = match p.v with 
             | Pat_disj pats -> withinfo (Pat_disj (List.map norm_pat pats)) None p.p
             
-            | Pat_cons (fv, pats) -> withinfo (Pat_cons(fv, List.map norm_pat pats)) None p.p
+            | Pat_cons (fv, q, pats) -> withinfo (Pat_cons(fv, q, List.map (fun (x, i) -> norm_pat x, i) pats)) None p.p
             
-            | Pat_var(x, b) ->
-              withinfo (Pat_var(norm_bvvar x, b)) None p.p
+            | Pat_var x ->
+              withinfo (Pat_var(norm_bvvar x)) None p.p
 
             | Pat_tvar a -> 
               withinfo (Pat_tvar (norm_btvar a)) None p.p
@@ -665,7 +673,7 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
       {config with code=e} |> rebuild
 
     | Exp_let((is_rec, lbs), body) -> 
-      let env, lbs = lbs |> List.fold_left (fun (env, lbs) (x, t, e) -> 
+      let env, lbs = lbs |> List.fold_left (fun (env, lbs) ({lbname=x; lbeff=eff; lbtyp=t; lbdef=e}) -> 
         let c = wne tcenv ({config with code=e; stack=empty_stack}) in
         let t = sn tcenv (t_config t config.environment config.steps) in
         let y, env = match x with 
@@ -675,17 +683,17 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
               let y_for_x = V(x, (yexp, empty_env)) in
               Inl y.v, extend_env' env y_for_x 
             | _ -> x, env in 
-        env, (y, t.code, c.code)::lbs) (config.environment, []) in 
+        env, mk_lb (y, eff, t.code, c.code)::lbs) (config.environment, []) in 
       let lbs = List.rev lbs in
       let c_body = wne tcenv ({config with code=body; stack=empty_stack; environment=env}) in
       let e = mk_Exp_let((is_rec, lbs), c_body.code) None e.pos in
       {config with code=e} |> rebuild
         
-    | Exp_ascribed (e, t) -> 
+    | Exp_ascribed (e, t, l) -> 
       let c = wne tcenv ({config with code=e}) in
       if is_stack_empty config
       then let t = sn tcenv (t_config t config.environment config.steps) in
-           rebuild ({config with code=mk_Exp_ascribed(c.code, t.code) e.pos})
+           rebuild ({config with code=mk_Exp_ascribed(c.code, t.code, l) None e.pos})
       else c
 
     | Exp_meta(Meta_desugared(e, info)) -> 

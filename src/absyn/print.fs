@@ -108,7 +108,7 @@ let rec reconstruct_lex (e:exp) =
   | _ -> if is_lex_top e then Some [] else None
 
 (* CH: F# List.find has a different type from find in list.fst ... so just a hack for now *)
-let rec find f l = match l with 
+let rec find  (f:'a -> bool) (l:list<'a>) : 'a = match l with 
   | [] -> failwith "blah"
   | hd::tl -> if f hd then hd else find f tl
 
@@ -123,16 +123,9 @@ let unary_type_op_to_string t = find_lid (get_type_lid t) unary_type_ops
 let quant_to_string t = find_lid (get_type_lid t) quants
 
 let rec sli (l:lident) : string = 
-   match l.ns with 
-      | hd::tl when (hd.idText="Prims") ->
-        begin match tl with 
-          | [] -> l.ident.idText
-          | _ -> (List.map (fun i -> i.idText) tl |> String.concat ".") ^  "." ^ l.ident.idText
-        end
-      | _ -> 
-        if !Options.print_real_names
-        then l.str
-        else l.ident.idText
+   if !Options.print_real_names
+   then l.str
+   else l.ident.idText
 
 let strBvd bvd = 
     if !Options.print_real_names
@@ -292,7 +285,7 @@ and comp_typ_to_string c =
       let basic = 
           if c.flags |> Util.for_some (function TOTAL -> true | _ -> false) && not !Options.print_effect_args 
           then Util.format1 "Tot %s" (typ_to_string c.result_typ)
-          else if not !Options.print_effect_args && (lid_equals c.effect_name Const.ml_effect_lid)//  || List.contains MLEFFECT c.flags) 
+          else if not !Options.print_effect_args && (lid_equals c.effect_name Const.effect_ML_lid)//  || List.contains MLEFFECT c.flags) 
           then typ_to_string c.result_typ
           else if not !Options.print_effect_args && c.flags |> Util.for_some (function MLEFFECT -> true | _ -> false)
           then Util.format1 "ALL %s" (typ_to_string c.result_typ)
@@ -318,6 +311,10 @@ and formula_to_string_old_now_unused phi =
     let bin_top f = function 
         | [(Inl t1, _); (Inl t2, _)] -> format3 "%s %s %s" (formula_to_string t1) f (formula_to_string t2)
         | _ -> failwith "Impos" in
+    //Note: bin_eop is inferred to have type : string -> list (either<string, ?u>) -> string
+    //This ?u leads to the emission of an Obj.t in the generated OCaml code
+    //Note, bin_eop is actually never called, which is why we have the ?u lingering
+    //We might consider removing the function : ) ... but it's nice in that it revealed a corner case in extraction
     let bin_eop f = function
         | [(Inr e1, _);(Inr e2, _)] -> format3 "%s %s %s" (exp_to_string e1) f (exp_to_string e2)
         | _ -> failwith "impos" in
@@ -390,7 +387,7 @@ and exp_to_string x = match (compress_exp x).n with
       (p |> pat_to_string)
       (match wopt with | None -> "" | Some w -> Util.format1 "when %s" (w |> exp_to_string)) 
       (e |> exp_to_string))))
-  | Exp_ascribed(e, t) -> Util.format2 "(%s:%s)" (e|> exp_to_string) (t |> typ_to_string)
+  | Exp_ascribed(e, t, _) -> Util.format2 "(%s:%s)" (e|> exp_to_string) (t |> typ_to_string)
   | Exp_let(lbs, e) -> Util.format2 "%s in %s" 
     (lbs_to_string lbs)
     (e|> exp_to_string)
@@ -401,7 +398,7 @@ and uvar_e_to_string (uv, _) =
 and lbs_to_string lbs = 
     Util.format2 "let %s %s"
     (if fst lbs then "rec" else "") 
-    (Util.concat_l "\n and " (snd lbs |> List.map (fun (x, t, e) -> Util.format3 "%s:%s = %s" (lbname_to_string x) (t |> typ_to_string) (e|> exp_to_string)))) 
+    (Util.concat_l "\n and " (snd lbs |> List.map (fun lb -> Util.format3 "%s:%s = %s" (lbname_to_string lb.lbname) (lb.lbtyp |> typ_to_string) (lb.lbdef |> exp_to_string)))) 
     
 and lbname_to_string x = match x with
   | Inl bvd -> strBvd bvd 
@@ -442,11 +439,10 @@ and uvar_k_to_string' (uv,args) =
    format2 "('k_%s %s)" str (args_to_string args)
 
 and pat_to_string x = match x.v with
-  | Pat_cons(l, pats) -> Util.format2 "(%s %s)" (sli l.v) (List.map pat_to_string pats |> String.concat " ") 
+  | Pat_cons(l, _, pats) -> Util.format2 "(%s %s)" (sli l.v) (List.map (fun (x, b) -> let p = pat_to_string x in if b then "#"^p else p) pats |> String.concat " ") 
   | Pat_dot_term (x, _) -> Util.format1 ".%s" (strBvd x.v)
   | Pat_dot_typ (x, _) -> Util.format1 ".'%s" (strBvd x.v)
-  | Pat_var (x, true) -> Util.format1 "#%s" (strBvd x.v)
-  | Pat_var (x, false) -> strBvd x.v
+  | Pat_var x -> strBvd x.v
   | Pat_tvar a -> strBvd a.v
   | Pat_constant c -> const_to_string c
   | Pat_wild _ -> "_"
@@ -467,7 +463,7 @@ let qual_to_string = function
     | Opaque -> "opaque"
     | Discriminator _ -> "discriminator"
     | Projector _ -> "projector"
-    | RecordType ids -> Util.format1 "record(%s)" (ids |> List.map (fun id -> id.idText) |> String.concat ", ")
+    | RecordType ids -> Util.format1 "record(%s)" (ids |> List.map (fun lid -> lid.ident.idText) |> String.concat ", ")
     | _ -> "other"
 let quals_to_string quals = quals |> List.map qual_to_string |> String.concat " " 
 let rec sigelt_to_string x = match x with 
@@ -488,24 +484,8 @@ let rec sigelt_to_string x = match x with
 
 let format_error r msg = format2 "%s: %s\n" (Range.string_of_range r) msg
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 let rec sigelt_to_string_short x = match x with 
-  | Sig_let((_, [(Inr l, t, _)]), _, _, _) -> Util.format2 "let %s : %s" l.str (typ_to_string t) 
+  | Sig_let((_, [{lbname=Inr l; lbtyp=t}]), _, _, _) -> Util.format2 "let %s : %s" l.str (typ_to_string t) 
   | _ -> lids_of_sigelt x |> List.map (fun l -> l.str) |> String.concat ", "
 
 let rec modul_to_string (m:modul) = 

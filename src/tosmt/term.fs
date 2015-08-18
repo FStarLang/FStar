@@ -69,18 +69,23 @@ type op =
   | Minus
   | Mod 
   | ITE
-  | Var of string
+  | Var of string //Op corresponding to a user/encoding-defined uninterpreted function
 
 type qop = 
   | Forall
   | Exists
 
+//de Bruijn representation of terms in locally nameless style
 type term' =
   | Integer    of string //unbounded mathematical integers
-  | BoundV     of int
+  | BoundV     of int    
   | FreeV      of fv
-  | App        of op  * list<term>
-  | Quant      of qop * list<list<pat>> * option<int> * list<sort> * term 
+  | App        of op  * list<term> //ops are always fully applied; we're in a first-order theory
+  | Quant      of qop 
+                  * list<list<pat>>  //disjunction of conjunctive patterns
+                  * option<int>      //an optional weight; seldom used
+                  * list<sort>       //sorts of each bound variable
+                  * term             //body
 and pat  = term
 and term = {tm:term'; hash:string; freevars:Syntax.memo<fvs>}
 and fv = string * sort
@@ -103,7 +108,8 @@ let rec freevars t = match t.tm with
   | FreeV fv -> [fv]
   | App(_, tms) -> List.collect freevars tms
   | Quant(_, _, _, _, t) -> freevars t 
- 
+
+//memo-ized 
 let free_variables t = match !t.freevars with 
   | Some b -> b
   | None -> 
@@ -147,7 +153,7 @@ let weightToSmt = function
 let rec hash_of_term' t = match t with 
     | Integer i ->  i 
     | BoundV i  -> "@"^string_of_int i
-    | FreeV x   -> fst x ^ ":" ^ strSort (snd x)
+    | FreeV x   -> fst x ^ ":" ^ strSort (snd x) //Question: Why is the sort part of the hash?
     | App(op, tms) -> "("^(op_to_string op)^(List.map (fun t -> t.hash) tms |> String.concat " ")^")"
     | Quant(qop, pats, wopt, sorts, body) -> 
         Util.format5 "(%s (%s)(! %s %s %s))" 
@@ -157,12 +163,9 @@ let rec hash_of_term' t = match t with
             (weightToSmt wopt)
             (pats |> List.map (fun pats -> (List.map (fun p -> p.hash) pats |> String.concat " ")) |> String.concat "; ")
 
-let all_terms_l = ref [Util.smap_create<term> 10000]
-let all_terms () = List.hd !all_terms_l
-let push () = ()
-let pop () = ()
-let commit_mark () = ()
-
+//The hash-cons table
+let __all_terms = ref (Util.smap_create<term> 10000)
+let all_terms () = !__all_terms
 let mk t = 
     let key = hash_of_term' t in
     match Util.smap_try_find (all_terms()) key with 
@@ -240,7 +243,7 @@ let mkQuant (qop, pats, wopt, vars, body) =
 (*****************************************************)
 (* abstracting free names; instantiating bound vars  *)
 (*****************************************************)
-let abstr fvs t =
+let abstr fvs t = //fvs is a subset of the free vars of t; the result closes over fvs
     let nvars = List.length fvs in
     let index_of fv = match Util.try_find_index (fv_eq fv) fvs with 
         | None -> None
@@ -265,7 +268,7 @@ let abstr fvs t =
     aux 0 t
 
 let inst tms t = 
-    let n = List.length tms in
+    let n = List.length tms in //instantiate the first n BoundV's with tms, in order
     let rec aux shift t = match t.tm with
         | Integer _
         | FreeV _ -> t
@@ -283,6 +286,8 @@ let inst tms t =
 let mkQuant' (qop, pats, wopt, vars, body) = mkQuant (qop, pats |> List.map (List.map (abstr vars)), wopt, List.map fv_sort vars, abstr vars body)
 let mkForall'' (pats, wopt, sorts, body) = mkQuant (Forall, pats, wopt, sorts, body)
 let mkForall' (pats, wopt, vars, body) = mkQuant' (Forall, pats, wopt, vars, body)
+
+//these are the external facing functions for building quantifiers
 let mkForall (pats, vars, body) = mkQuant' (Forall, [pats], None, vars, body)
 let mkExists (pats, vars, body) = mkQuant' (Exists, [pats], None, vars, body)
 
@@ -294,8 +299,8 @@ type constructor_t = (string * list<projector> * sort * int)
 type constructors  = list<constructor_t>
 type decl =
   | DefPrelude
-  | DeclFun    of string * list<sort> * sort * caption
-  | DefineFun  of string * list<sort> * sort * term * caption
+  | DeclFun    of string * list<sort> * sort * caption        //uninterpreted function
+  | DefineFun  of string * list<sort> * sort * term * caption //defined function
   | Assume     of term   * caption
   | Caption    of string
   | Eval       of term
@@ -437,10 +442,18 @@ and mkPrelude z3options =
                 (declare-fun PreType (Term) Type)\n\
                 (declare-fun Valid (Type) Bool)\n\
                 (declare-fun HasKind (Type Kind) Bool)\n\
-                (declare-fun HasType (Term Type) Bool)\n\
-                (define-fun  IsTyped ((x Term)) Bool\n\
-                        (exists ((t Type)) (HasType x t)))\n\
                 (declare-fun HasTypeFuel (Fuel Term Type) Bool)\n\
+                (define-fun HasTypeZ ((x Term) (t Type)) Bool\n\
+                    (HasTypeFuel ZFuel x t))\n\
+                (define-fun HasType ((x Term) (t Type)) Bool\n\
+                    (HasTypeFuel MaxIFuel x t))\n\
+                ;;fuel irrelevance\n\
+                (assert (forall ((f Fuel) (x Term) (t Type))\n\
+		                (! (= (HasTypeFuel (SFuel f) x t)\n\
+			                  (HasTypeZ x t))\n\
+		                   :pattern ((HasTypeFuel (SFuel f) x t)))))\n\
+                (define-fun  IsTyped ((x Term)) Bool\n\
+                    (exists ((t Type)) (HasTypeZ x t)))\n\
                 (declare-fun ApplyEF (Term Fuel) Term)\n\
                 (declare-fun ApplyEE (Term Term) Term)\n\
                 (declare-fun ApplyET (Term Type) Term)\n\
@@ -452,14 +465,10 @@ and mkPrelude z3options =
                 (declare-fun ConsType (Type Term) Term)\n\
                 (declare-fun ConsFuel (Fuel Term) Term)\n\
                 (declare-fun Precedes (Term Term) Type)\n\
-                (assert (forall ((e Term) (t Type))\n\
-                           (!  (= (HasType e t)\n\
-                                  (HasTypeFuel MaxIFuel e t))\n\
-                               :pattern ((HasType e t)))))\n\
-                (assert (forall ((f Fuel) (e Term) (t Type)) \n\
-                                (! (= (HasTypeFuel (SFuel f) e t)\n\
-                                      (HasTypeFuel f e t))\n\
-                                    :pattern ((HasTypeFuel (SFuel f) e t)))))\n\
+                (assert (forall ((t Type))\n\
+                            (! (implies (exists ((e Term)) (HasType e t))\n\
+                                        (Valid t))\n\
+                                :pattern ((Valid t)))))\n\
                 (assert (forall ((t1 Term) (t2 Term))\n\
                      (! (iff (Valid (Precedes t1 t2)) \n\
                              (< (Rank t1) (Rank t2)))\n\
@@ -469,6 +478,7 @@ and mkPrelude z3options =
    let constrs : constructors = [("String_const", ["String_const_proj_0", Int_sort], String_sort, 0);
                                  ("Kind_type",  [], Kind_sort, 0);
                                  ("Kind_arrow", ["Kind_arrow_id", Int_sort], Kind_sort, 1);
+                                 ("Kind_uvar",  [("Kind_uvar_fst", Int_sort)], Kind_sort, 2);
                                  ("Typ_fun",    ["Typ_fun_id", Int_sort], Type_sort, 1);
                                  ("Typ_app",    [("Typ_app_fst", Type_sort);
                                                  ("Typ_app_snd", Type_sort)], Type_sort, 2);
@@ -493,6 +503,7 @@ and mkPrelude z3options =
    basic ^ bcons ^ lex_ordering
 
 let mk_Kind_type        = mkApp("Kind_type", [])
+let mk_Kind_uvar i      = mkApp("Kind_uvar", [mkInteger' i])
 let mk_Typ_app t1 t2    = mkApp("Typ_app", [t1;t2])
 let mk_Typ_dep t1 t2    = mkApp("Typ_dep", [t1;t2])
 let mk_Typ_uvar i       = mkApp("Typ_uvar", [mkInteger' i])
@@ -524,6 +535,7 @@ let mk_PreKind t      = mkApp("PreKind", [t])
 let mk_PreType t      = mkApp("PreType", [t]) 
 let mk_Valid t        = mkApp("Valid",   [t])  
 let mk_HasType v t    = mkApp("HasType", [v;t])
+let mk_HasTypeZ v t   = mkApp("HasTypeZ", [v;t])
 let mk_IsTyped v      = mkApp("IsTyped", [v])
 let mk_HasTypeFuel f v t = 
    if !Options.unthrottle_inductives

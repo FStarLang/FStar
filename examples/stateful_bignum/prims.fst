@@ -17,25 +17,39 @@ module Prims
 
 kind Unop  = Type -> Type
 kind Binop = Type -> Type -> Type
+type bool
+logic type EqTyp : Type -> Type -> Type          (* infix binary '==' *)
+type Eq2 : #a:Type -> #b:Type -> a -> b -> Type  (* infix binary '==' *)
+opaque logic type b2t (b:bool) = b==true
 
+//We assume the Tot effect here; its definition appears a few lines below
 (* Primitive logical connectives *)
-logic type l_not  : Unop  (* prefix unary '~' *)
-logic type l_and  : Binop (* infix binary '/\' *)
-logic type l_or   : Binop (* infix binary '\/' *)
-logic type l_iff  : Binop (* infix binary '<==>' *)
-logic type l_imp  : Binop (* infix binary '==>' *)
-logic type Forall : #a:Type -> (a -> Type) -> Type
-logic type Exists : #a:Type -> (a -> Type) -> Type
+type True =
+  | T
+logic type False
+opaque type l_imp (p:Type) (q:Type) = p -> Tot q                (* infix binary '==>' *)
+type l_and  (p:Type) (q:Type) =
+  | And : p -> q -> p /\ q                                      (* infix binary '/\' *)
+type l_or   (p:Type) (q:Type) =                                 (* infix binary '\/' *)
+  | Left : p -> p \/ q
+  | Right : q -> p \/ q
+opaque type l_iff (p:Type) (q:Type) = p ==> q /\ q ==> p        (* infix binary '<==>' *)
+opaque type l_not (p:Type) = p ==> False                        (* prefix unary '~' *)
+opaque type Forall (#a:Type) (p:a -> Type) = x:a -> Tot (p x)   (* forall (x:a). p x *)
+type DTuple2: a:Type
+          ->  b:(a -> Type)
+          -> Type =
+  | MkDTuple2: #a:Type
+           ->  #b:(a -> Type)
+           -> _1:a
+           -> _2:b _1
+           -> DTuple2 a b
+opaque type Exists (#a:Type) (p:a -> Type) = x:a & p x          (* exists (x:a). p x *)
+logic type XOR (p:Type) (q:Type) = (p \/ q) /\ ~(p /\ q)
+opaque type ITE (p:Type) (q:Type) (r:Type) = (p ==> q) /\ (~p ==> r) (* if/then/else in concrete syntax *)
 logic type ForallTyp : (Type -> Type) -> Type (* Handled specially to support quantification over types of arbitrary kinds *)
 logic type ExistsTyp : (Type -> Type) -> Type (* Handled specially to support quantification over types of arbitrary kinds *)
-logic type True
-logic type False
-logic type EqTyp : Type -> Type -> Type                (* infix binary '==' *)
-logic type Eq2 : #a:Type -> #b:Type -> a -> b -> Type  (* infix binary '==' *)
-logic type XOR (p:Type) (q:Type) = (p \/ q) /\ ~(p /\ q)
-logic type ITE : Type -> Type -> Type -> Type (* written if/then/else in concrete syntax *)
 logic type Precedes : #a:Type -> #b:Type -> a -> b -> Type  (* a built-in well-founded partial order over all terms *)
-type bool
 
 (* PURE effect *)
 kind PurePre = Type
@@ -103,7 +117,6 @@ effect Ghost (a:Type) (pre:Type) (post:PurePost a) =
            (fun (p:PurePost a) -> pre /\ (forall (x:a). post x ==> p x))
            (fun (p:PurePost a) -> forall (x:a). pre /\ post x ==> p x)
 
-opaque logic type b2t (b:bool) = b==true
 type unit
 type int
 assume logic val op_AmpAmp             : bool -> bool -> Tot bool
@@ -117,6 +130,10 @@ assume logic val op_LessThanOrEqual    : int -> int -> Tot bool
 assume logic val op_GreaterThan        : int -> int -> Tot bool
 assume logic val op_GreaterThanOrEqual : int -> int -> Tot bool
 assume logic val op_LessThan           : int -> int -> Tot bool
+(* Primitive (structural) equality.
+   What about for function types? *)
+assume val op_Equality :    #a:Type -> a -> a -> Tot bool
+assume val op_disEquality : #a:Type -> a -> a -> Tot bool
 
 type int16 = i:int{i > -32769  /\ 32768 > i}
 type int32 = int
@@ -129,7 +146,6 @@ type char
 type float
 type string
 type array : Type -> Type
-type ref : Type -> Type
 assume logic type LBL : string -> Type -> Type
 type exn
 type HashMultiMap : Type -> Type -> Type //needed for bootstrapping
@@ -259,20 +275,6 @@ new_effect {
      ; null_wp      = st_null_wp heap
      ; trivial      = st_trivial heap
 }
-
-type heap
-kind STPre = STPre_h heap
-kind STPost (a:Type) = STPost_h heap a
-kind STWP (a:Type) = STWP_h heap a
-new_effect STATE = STATE_h heap
-effect State (a:Type) (wp:STWP a) =
-       STATE a wp wp
-effect ST (a:Type) (pre:STPre) (post: (heap -> STPost a)) =
-       STATE a
-             (fun (p:STPost a) (h:heap) -> pre h /\ (forall a h1. (pre h /\ post h a h1) ==> p a h1)) (* STWP_h *)
-             (fun (p:STPost a) (h:heap) -> (forall a h1. (pre h /\ post h a h1) ==> p a h1))          (* WLP *)
-effect St (a:Type) =
-       ST a (fun h -> True) (fun h0 r h1 -> True)
 
 (* Effect EXCEPTION *)
 kind ExPre  = Type
@@ -409,27 +411,10 @@ new_effect {
 
 }
 
-kind AllPre = AllPre_h heap
-kind AllPost (a:Type) = AllPost_h heap a
-kind AllWP (a:Type) = AllWP_h heap a
-new_effect ALL = ALL_h heap
-effect All (a:Type) (pre:AllPre) (post: (heap -> AllPost a)) =
-       ALL a
-           (fun (p:AllPost a) (h:heap) -> pre h /\ (forall ra h1. post h ra h1 ==> p ra h1)) (* AllWP *)
-           (fun (p:AllPost a) (h:heap) -> forall ra h1. (pre h /\ post h ra h1) ==> p ra h1) (* WLP *)
-default effect ML (a:Type) =
-         ALL a (all_null_wp heap a) (all_null_wp heap a)
-
 sub_effect
   PURE  ~> DIV   = fun (a:Type) (wp:PureWP a) (p:PurePost a) -> wp (fun a -> p a)
 sub_effect
-  DIV   ~> STATE = fun (a:Type) (wp:PureWP a) (p:STPost a) (h:heap) -> wp (fun a -> p a h)
-sub_effect
-  STATE ~> ALL   = fun (a:Type) (wp:STWP a)   (p:AllPost a) -> wp (fun a -> p (V a))
-sub_effect
   DIV   ~> EXN   = fun (a:Type) (wp:PureWP a) (p:ExPost a) -> wp (fun a -> p (V a))
-sub_effect
-  EXN   ~> ALL   = fun (a:Type) (wp:ExWP a)   (p:AllPost a) (h:heap) -> wp (fun ra -> p ra h)
 
 type lex_t =
   | LexTop  : lex_t
@@ -493,16 +478,7 @@ type Tuple8 'a 'b 'c 'd 'e 'f 'g 'h =
            -> _8:'h
            -> Tuple8 'a 'b 'c 'd 'e 'f 'g 'h
 
-type DTuple2: a:Type
-          ->  b:(a -> Type)
-          -> Type =
-  | MkDTuple2: #a:Type
-           ->  #b:(a -> Type)
-           -> _1:a
-           -> _2:b _1
-           -> DTuple2 a b
-
- type DTuple3: a:Type
+type DTuple3: a:Type
             -> b:(a -> Type)
             -> c:(x:a -> b x -> Type)
             -> Type =
@@ -529,41 +505,41 @@ type DTuple4: a:Type
            -> _4:d _1 _2 _3
            -> DTuple4 a b c d
 
-(* Primitive (structural) equality.
-   What about for function types? *)
-assume val op_Equality :    #a:Type -> a -> a -> Tot bool
-assume val op_disEquality : #a:Type -> a -> a -> Tot bool
+
+type as_requires (#a:Type) (wp:PureWP a)  = wp (fun x -> True)
+type as_ensures  (#a:Type) (wlp:PureWP a) (x:a) = ~ (wlp (fun y -> ~(y=x)))
 
 val fst : ('a * 'b) -> Tot 'a
 let fst x = MkTuple2._1 x
 
+
 val snd : ('a * 'b) -> Tot 'b
 let snd x = MkTuple2._2 x
 
-val dfst : #a:Type -> #b:(a -> Type) -> t:DTuple2 a b -> Tot (v:a{ v = MkDTuple2._1 t })
+val dfst : #a:Type -> #b:(a -> Type) -> DTuple2 a b -> Tot a
 let dfst t = MkDTuple2._1 t
 
 val dsnd : #a:Type -> #b:(a -> Type) -> t:(DTuple2 a b) -> Tot (b (MkDTuple2._1 t))
 let dsnd t = MkDTuple2._2 t
+
+type Let (#a:Type) (x:a) (body:(a -> Type)) = body x
 logic type InductionHyp : #a:Type -> a -> Type -> Type
 assume val by_induction_on: #a:Type -> #p:Type -> induction_on:a -> proving:p -> Lemma (ensures (InductionHyp induction_on p))
-assume val _assume : p:Type -> unit -> (y:unit{p})
+assume val _assume : p:Type -> unit -> Pure unit (requires (True)) (ensures (fun x -> p))
 assume val admit   : #a:Type -> unit -> Admit a
 assume val magic   : #a:Type -> unit -> Tot a
 assume val admitP  : p:Type -> Pure unit True (fun x -> p)
 assume val _assert : p:Type -> unit -> Pure unit (requires $"assertion failed" p) (ensures (fun x -> True))
 assume val cut     : p:Type -> Pure unit (requires $"assertion failed" p) (fun x -> p)
 assume val qintro  : #a:Type -> #p:(a -> Type) -> =f:(x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
-assume val failwith: string -> All 'a (fun h -> True) (fun h a h' -> is_Err a /\ h==h')
 assume val raise: exn -> Ex 'a       (* TODO: refine with the Exn monad *)
-assume val pipe_right: 'a -> ('a -> 'b) -> 'b
-assume val pipe_left: ('a -> 'b) -> 'a -> 'b
 val ignore: 'a -> Tot unit
 let ignore x = ()
+
+//TODO: REMOVE THIS!
 val erase: 'a -> Tot 'a
 let erase x = x
-assume val exit: int -> 'a
-assume val try_with: (unit -> 'a) -> (exn -> 'a) -> 'a
+
 assume val min: int -> int -> Tot int
 assume val max: int -> int -> Tot int
 
@@ -583,5 +559,3 @@ type nonzero = i:int{i<>0}
    soundly map F* ints to something in F#/OCaml. *)
 assume val op_Modulus            : int -> nonzero -> Tot int
 assume val op_Division           : nat -> nonzero -> Tot int
-
-assume type Boxed : Type -> Type

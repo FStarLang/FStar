@@ -4,6 +4,7 @@ open IntLib
 open Limb
 open Seq
 open SeqProperties
+open All
 open ST
 open Heap
 open Array
@@ -17,7 +18,7 @@ type u8 = int
 let ocaml63 = 63
 
 (* Maps the index of the integer data to the theoretic bit size of the cell *)
-type template = nat -> Tot pos
+type template = nat -> Tot (n:pos{ n < ocaml63 })
 type template_const = t:template{ forall (n:nat). t n = t 0 }
 
 (* Sized integer *)
@@ -81,7 +82,7 @@ val get_content:
      (requires (fun h -> (inHeap h b)
 			 /\ (i < getLength h b)))
      (ensures (fun h0 v h1 -> (inHeap h1 b)
-			      /\ (modifies !{} h0 h1)
+			      /\ (h1==h0)
 			      /\ (i < getLength h1 b)
 			      /\ (v = getContent h1 b i)))
 let get_content b i =
@@ -104,10 +105,11 @@ val get:
   b:bigint -> n:nat -> 
   ST int
      (requires (fun h -> inHeap h b /\ n < getLength h b))
-     (ensures (fun h0 v h1 -> (modifies !{} h0 h1)
+     (ensures (fun h0 v h1 -> (h0==h1)
 			      /\ (inHeap h1 b)
 			      /\ (n < getLength h1 b)
-			      /\ (v = getValue h1 b n /\ Bitsize v (getSize h1 b n))))
+			      /\ (v = getValue h1 b n /\ Bitsize v (getSize h1 b n))
+      ))
 let get b n =
   match b with
   | Bigint63 data t ->
@@ -125,12 +127,11 @@ val updateBigint:
      (requires (fun h -> (contains h (Bigint63.data b))
 			 /\ (idx < Seq.length (sel h (Bigint63.data b)))))
      (ensures (fun h0 u h1 -> 
-	       (contains h0 (Bigint63.data b))
-	       /\ (contains h1 (Bigint63.data b))
-	       /\ (idx < Seq.length (sel h0 (Bigint63.data b)))
-	       /\ (h1 == Heap.upd h0 (Bigint63.data b) (Seq.upd (sel h0 (Bigint63.data b)) idx v))
-
-	      ))
+	       (idx < Seq.length (sel h0 (Bigint63.data b)))
+               /\ (contains h1 (Bigint63.data b))
+	       /\ (h1==Heap.upd h0 (Bigint63.data b) (Seq.upd (sel h0 (Bigint63.data b)) idx v))
+		 
+      ))
 let updateBigint b idx v =
   match b with
   | Bigint63 data _ ->
@@ -153,15 +154,19 @@ type EqualBigint (a:bigint) (b:bigint) (ha:heap) (hb:heap) =
   /\ (contains hb (Bigint63.data b))
   /\ (getLength ha a = getLength hb b)
   /\ (forall (i:nat). i < getLength ha a ==> getValue ha a i = getValue hb b i)
+  /\ (forall (i:nat). i < getLength ha a ==> getSize ha a i = getSize hb b i)
   /\ (Bigint63.t a = getTemplate b)
 
-val copy:
+opaque val copy:
   a:bigint ->
   ST bigint
      (requires (fun h -> inHeap h a /\ getLength h a > 0))
      (ensures (fun h0 b h1 ->
-	       (EqualBigint a b h0 h1)
-	       /\ (modifies !{} h0 h1)
+       (inHeap h0 a)
+       /\ (inHeap h1 b)
+       /\ not(contains h0 (Bigint63.data b))
+       /\ (EqualBigint a b h0 h1)
+       /\ (modifies !{} h0 h1)
      ))
 let copy a =
   Bigint63 (Array.copy (Bigint63.data a)) (Bigint63.t a)
@@ -180,12 +185,6 @@ let zero_tint = (|0, 0|)
 val one_tint: z:tint ocaml63{ dsnd z = 1 }
 let one_tint = (|1, 1|)
 
-let zero_bigint =
-  Bigint63 (Array.create 1 zero_tint) (fun x -> ocaml63)
-
-let one_bigint =
-  Bigint63 (Array.create 1 one_tint) (fun x -> ocaml63)
-
 let mk_zero_bigint size template =
   Bigint63 (Array.create size zero_tint) template
 
@@ -201,6 +200,82 @@ let mk_tint a size value =
   | Bigint63 _ _ -> 
      (|size, value|)
 
+opaque val extend :
+  a:bigint -> len:pos ->
+  ST bigint
+    (requires (fun h ->
+      (inHeap h a)
+      /\ (len >= getLength h a)
+     ))
+    (ensures (fun h0 b h1 ->
+      (inHeap h0 a)
+      /\ (inHeap h1 b)
+      /\ (Bigint63.data b <> Bigint63.data a)
+      /\ (modifies !{} h0 h1)
+      /\ (len >= getLength h0 a)
+      /\ (getLength h1 b = len)
+      /\ (Seq.Eq (sel h0 (Bigint63.data a)) (Seq.slice (sel h1 (Bigint63.data b)) 0 (getLength h0 a)))
+      /\ (forall (i:nat). (i >= getLength h0 a /\ i < len)
+	  ==> Seq.index (sel h1 (Bigint63.data b)) i = zero_tint)
+     ))
+let extend a len =
+  let len_a = get_length a in
+  let b = Bigint.mk_zero_bigint len (Bigint63.t a) in
+  Array.blit (Bigint63.data a) 0 (Bigint63.data b) 0 len_a;
+  b
+
+#reset-options
+
+val populate_tarray : 
+  t:array int -> templ:template -> max:nat -> len:nat -> a:tarray max ->
+  ST unit
+    (requires (fun h -> True))
+    (ensures (fun h0 _ h1 -> True))
+let rec populate_tarray t templ max len a = 
+  match len with
+  | 0 -> ()
+  | _ -> 
+     let i = len - 1 in
+     Array.upd a i (|templ i, Array.index t i|);
+     populate_tarray t templ max (len-1) a
+
+val mk_tarray : 
+  t:array int -> templ:template -> max:nat ->
+  ST (tarray max)
+    (requires (fun h -> True))
+    (ensures (fun h0 s h1 -> True))
+let mk_tarray t tmpl max =
+  let len = Array.length t in
+  let a = Array.create len zero_tint in
+  populate_tarray t tmpl max 0 a;
+  a
+
+val populate_array : 
+  max:pos -> t:tarray max -> len:nat -> a:array int ->
+  ST unit
+    (requires (fun h -> True))
+    (ensures (fun h0 _ h1 -> True))
+let rec populate_array max t len a =
+  match len with
+  | 0 -> ()
+  | _ -> 
+     let i = len - 1 in
+     let ti = Array.index t i in
+     Array.upd a i (dsnd ti);
+     populate_array max t (len-1) a
+
+val mk_array : 
+  max:pos -> t:tarray max ->
+  ST (array int)
+    (requires (fun h -> True))
+    (ensures (fun h0 s h1 -> True))
+let mk_array max t =
+  let len = Array.length t in
+  let a = Array.create len 0 in
+  populate_array ocaml63 t 0 a;
+  a
+
+(*
 (* Pool of free arrays for temporary computation *)
 type array_pool = { free_arrays: ref (list (tarray ocaml63));
 	      array_size: ref pos;
@@ -246,3 +321,4 @@ val return_to_pool : tarray ocaml63 -> ST unit
 				     (ensures (fun h0 u h1 -> True))
 let return_to_pool a =
   pool.free_arrays := a::!(pool.free_arrays)
+*)

@@ -90,6 +90,9 @@ let use_build_config = Util.mk_ref false
 let interactive = Util.mk_ref false
 let split_cases = Util.mk_ref 0
 let _include_path = Util.mk_ref []
+let interactive_fsi = Util.mk_ref false
+let print_fuels = Util.mk_ref false
+let __temp_no_proj = Util.mk_ref false
 let init_options () = 
     show_signatures := [];
     norm_then_print := true;
@@ -134,7 +137,8 @@ let init_options () =
     n_cores  := 1;
     split_cases := 0;
     verify_module := [];
-    _include_path := []
+    _include_path := [];
+    print_fuels := false
 
 let set_fstar_home () = 
   let fh = match !fstar_home_opt with 
@@ -178,7 +182,7 @@ let display_usage specs =
 let rec specs () : list<Getopt.opt> = 
   let specs =   
     [( noshort, "trace_error", ZeroArgs (fun () -> trace_error := true), "Don't print an error message; show an exception trace instead");
-     ( noshort, "codegen", OneArg ((fun s -> codegen := parse_codegen s; verify := false), "OCaml|F#|JavaScript"), "Generate code for execution");
+     ( noshort, "codegen", OneArg ((fun s -> codegen := parse_codegen s), "OCaml"), "Generate code for execution");
      ( noshort, "codegen-lib", OneArg ((fun s -> codegen_libs := (Util.split s ".")::!codegen_libs), "namespace"), "External runtime library library");
      ( noshort, "lax", ZeroArgs (fun () -> pretype := true; verify := false), "Run the lax-type checker only (admit all verification conditions)");
      ( noshort, "fstar_home", OneArg ((fun x -> fstar_home_opt := Some x), "dir"), "Set the FSTAR_HOME variable to dir");
@@ -221,17 +225,24 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "use_build_config", ZeroArgs (fun () -> use_build_config := true), "Expect just a single file on the command line and no options; will read the 'build-config' prelude from the file");
      ( noshort, "split_cases", OneArg ((fun n -> split_cases := int_of_string n), "t"), "Partition VC of a match into groups of n cases");
      ( noshort, "in", ZeroArgs (fun () -> interactive := true), "Interactive mode; reads input from stdin");
-     ( noshort, "include", OneArg ((fun s -> _include_path := !_include_path @ [s]), "path"), "A directory in which to search for files included on the command line")
+     ( noshort, "include", OneArg ((fun s -> _include_path := !_include_path @ [s]), "path"), "A directory in which to search for files included on the command line");
+     ( noshort, "fsi", ZeroArgs (fun () -> set_interactive_fsi ()), "fsi flag; A flag to indicate if type checking a fsi in the interactive mode");
+     ( noshort, "print_fuels", ZeroArgs (fun () -> print_fuels := true), "Print the fuel amounts used for each successful query");
+     ( noshort, "__temp_no_proj", ZeroArgs (fun () -> __temp_no_proj := true), "A temporary flag to disable code generation for projectors");
     ] in 
      ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs
 and parse_codegen s =
   match s with
-  | "OCaml"
-  | "F#"
-  | "JavaScript" -> Some s
+  | "OCaml-experimental"
+  | "OCaml"  -> Some s
   | _ ->
      (Util.print_string "Wrong argument to codegen flag\n";
       display_usage (specs ()); exit 1)
+
+and set_interactive_fsi (_:unit) =
+    if !interactive then interactive_fsi := true
+    else (Util.print_string "Set interactive flag first before setting interactive fsi flag\n";
+          display_usage (specs ()); exit 1)
 
 let should_verify m = 
     !verify &&

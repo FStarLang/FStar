@@ -38,7 +38,6 @@ type withinfo_t<'a,'t> = {
 } 
 type var<'t>  = withinfo_t<lident,'t>
 type fieldname = lident
-type inst<'a> = ref<option<'a>>
 type bvdef<'a> = {ppname:ident; realname:ident}
 type bvar<'a,'t> = withinfo_t<bvdef<'a>,'t> 
 (* Bound vars have a name for pretty printing, 
@@ -112,12 +111,12 @@ and uvar_basis<'a> =
   | Fixed of 'a
 and exp' =
   | Exp_bvar       of bvvar
-  | Exp_fvar       of fvvar * bool                               (* flag indicates a constructor *)
+  | Exp_fvar       of fvvar * option<fv_qual>                    
   | Exp_constant   of sconst
   | Exp_abs        of binders * exp 
   | Exp_app        of exp * args                                 (* args in order from left to right *)
   | Exp_match      of exp * list<(pat * option<exp> * exp)>      (* optional when clause in each equation *)
-  | Exp_ascribed   of exp * typ 
+  | Exp_ascribed   of exp * typ * option<lident>                 (* an effect label is the third arg, filled in by the type-checker *)
   | Exp_let        of letbindings * exp                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Exp_uvar       of uvar_e * typ                               (* not present after 1st round tc *)
   | Exp_delayed    of exp * subst_t * memo<exp>                  (* A delayed substitution --- always force it before inspecting the first arg *)
@@ -130,20 +129,24 @@ and meta_source_info =
   | Sequence                   
   | Primop                                  (* ... add more cases here as needed for better code generation *)
   | MaskedEffect                            
+and fv_qual = 
+  | Data_ctor
+  | Record_projector of lident                  (* the fully qualified (unmangled) name of the field being projected *)
+  | Record_ctor of lident * list<fieldname> (* the type of the record being constructed and its (unmangled) fields in order *)
 and uvar_e = Unionfind.uvar<uvar_basis<exp>>
 and btvdef = bvdef<typ>
 and bvvdef = bvdef<exp>
 and pat' = 
   | Pat_disj     of list<pat>
   | Pat_constant of sconst
-  | Pat_cons     of fvvar * list<pat>
-  | Pat_var      of bvvar * bool                          (* flag marks an explicitly provided implicit *)
-  | Pat_tvar     of btvar
-  | Pat_wild     of bvvar                                 (* need stable names for even the wild patterns *)
-  | Pat_twild    of btvar
-  | Pat_dot_term of bvvar * exp
-  | Pat_dot_typ  of btvar * typ
-and pat = withinfo_t<pat',option<either<knd,typ>>>                (* the meta-data is a typ, except for Pat_dot_typ and Pat_tvar, where it is a kind (not strictly needed) *)
+  | Pat_cons     of fvvar * option<fv_qual> * list<(pat * bool)> (* flag marks an explicitly provided implicit *)
+  | Pat_var      of bvvar                           
+  | Pat_tvar     of btvar 
+  | Pat_wild     of bvvar                                        (* need stable names for even the wild patterns *)
+  | Pat_twild    of btvar 
+  | Pat_dot_term of bvvar * exp 
+  | Pat_dot_typ  of btvar * typ 
+and pat = withinfo_t<pat',option<either<knd,typ>>>               (* the meta-data is a typ, except for Pat_dot_typ and Pat_tvar, where it is a kind (not strictly needed) *)
 and knd' =
   | Kind_type
   | Kind_effect
@@ -158,7 +161,13 @@ and uvar_k_app = uvar_k * args
 and kabbrev = lident * args
 and uvar_k = Unionfind.uvar<uvar_basis<knd>>
 and lbname = either<bvvdef, lident>
-and letbindings = bool * list<(lbname * typ * exp)> (* let recs may have more than one element; top-level lets have lidents *)
+and letbinding = {
+    lbname:lbname;
+    lbtyp:typ;
+    lbeff:lident;
+    lbdef:exp
+}
+and letbindings = bool * list<letbinding> (* let recs may have more than one element; top-level lets have lidents *)
 and subst_t = list<list<subst_elt>>
 and subst_map = Util.smap<either<typ, exp>>
 and subst_elt = either<(btvdef*typ), (bvvdef*exp)>
@@ -196,8 +205,8 @@ type qualifier =
   | Logic
   | Discriminator of lident                          (* discriminator for a datacon l *)
   | Projector of lident * either<btvdef, bvvdef>     (* projector for datacon l's argument 'a or x *)
-  | RecordType of list<ident>                        (* unmangled field names *)
-  | RecordConstructor of list<ident>                 (* unmangled field names *)
+  | RecordType of list<fieldname>                    (* unmangled field names *)
+  | RecordConstructor of list<fieldname>             (* unmangled field names *)
   | ExceptionConstructor
   | DefaultEffect of option<lident>
   | TotalEffect
@@ -497,7 +506,7 @@ let mk_Exp_bvar (x:bvvar) (t:option<typ>) p = {
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();
 }
-let mk_Exp_fvar ((x:fvvar),(b:bool)) (t:option<typ>) p = {
+let mk_Exp_fvar ((x:fvvar),(b:option<fv_qual>)) (t:option<typ>) p = {
     n=Exp_fvar(x, b);
     tk=get_typ_ref t;
     pos=p;
@@ -517,7 +526,7 @@ let mk_Exp_abs ((b:binders),(e:exp)) (t':option<typ>) p = {
 }
 let mk_Exp_abs' ((b:binders),(e:exp)) (t':option<typ>) p = {
     n=(match b, e.n with 
-        | _, Exp_abs(binders, body) -> Exp_abs(b@binders, body) 
+        | _, Exp_abs(b0::bs, body) -> Exp_abs(b@b0::bs, body) 
         | [], _ -> failwith "abstraction with no binders!"
         | _ -> Exp_abs(b, e));
     tk=get_typ_ref t';
@@ -539,15 +548,15 @@ let mk_Exp_app' ((e1:exp), (args:list<arg>)) (t:option<typ>) (p:range) =
         | [] -> e1
         | _ -> mk_Exp_app (e1, args) t p
 let rec pat_vars p = match p.v with
-  | Pat_cons(_, ps) -> 
-    let vars = List.collect pat_vars ps in 
+  | Pat_cons(_, _, ps) -> 
+    let vars = List.collect (fun (x, _) -> pat_vars x) ps in 
     if vars |> nodups (fun x y -> match x, y with 
       | Inl x, Inl y -> bvd_eq x y
       | Inr x, Inr y -> bvd_eq x y
       | _ -> false) 
     then vars
     else raise (Error("Pattern variables may not occur more than once", p.p))
-  | Pat_var (x, _) -> [Inr x.v]
+  | Pat_var x -> [Inr x.v]
   | Pat_tvar a -> [Inl a.v]
   | Pat_disj ps -> 
     let vars = List.map pat_vars ps in 
@@ -572,14 +581,12 @@ let mk_Exp_match ((e:exp),(pats:list<(pat * option<exp> * exp)>)) (t:option<typ>
        pos=p;
        uvs=mk_uvs(); fvs=mk_fvs();
     } 
-let mk_Exp_ascribed' ((e:exp),(t:typ)) (t':option<typ>) p = {
-    n=Exp_ascribed(e, t);
+let mk_Exp_ascribed ((e:exp),(t:typ),(l:option<lident>)) (t':option<typ>) p = {
+    n=Exp_ascribed(e, t, l);
     tk=get_typ_ref t';
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();
-    
 }
-let mk_Exp_ascribed ((e:exp),(t:typ)) p = mk_Exp_ascribed' (e, t) (Some t) p
 let mk_Exp_let ((lbs:letbindings),(e:exp)) (t:option<typ>) p = 
    {
     n=Exp_let(lbs, e);
@@ -613,6 +620,8 @@ let mk_Exp_meta' (m:meta_e) (t:option<typ>) p =
     }
 let mk_Exp_meta (m:meta_e) = match m with
       | Meta_desugared(e, _) -> mk_Exp_meta' m (!e.tk) e.pos
+
+let mk_lb (x, eff, t, e) = {lbname=x; lbeff=eff; lbtyp=t; lbdef=e}
 
 let mk_subst (s:subst) = s
 let extend_subst x s : subst = x::s

@@ -51,6 +51,7 @@ type lcomp_with_binder = option<Env.binding> * lcomp
 val lcomp_of_comp: comp -> lcomp
 val subst_lcomp: subst -> lcomp -> lcomp
 val is_pure_effect: env -> lident -> bool
+val is_pure_or_ghost_effect: env -> lident -> bool
 val return_value: env -> typ -> exp -> comp
 val bind: env -> option<exp> -> lcomp -> lcomp_with_binder -> lcomp
 val bind_cases: env -> typ -> list<(typ * lcomp)> -> lcomp
@@ -76,3 +77,5 @@ val short_circuit_typ: Util.either<typ,exp> -> args -> guard_formula
 
 val force_tk: syntax<'a,'b> -> 'b
 val tks_of_args: args -> list<(Util.either<knd,typ> * aqual)>
+
+val pure_or_ghost_pre_and_post: env -> comp -> (option<typ> * typ)

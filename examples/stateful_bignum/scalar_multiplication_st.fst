@@ -212,7 +212,6 @@ val scalar_multiplication_with_lemma:
 			      /\ (getLength h0 res = getLength h0 a)
 			      /\ (getLength h1 res = getLength h0 res)
 			      /\ (eval h1 res len = eval h0 a len * s) 
- 
      ))
 let scalar_multiplication_with_lemma res a n s len =
   let h0 = 
@@ -234,7 +233,7 @@ val helper_lemma_2:
 	    (requires (True))
 	    (ensures (forall a b c. abs a * abs c <= abs b * abs c ==> abs a <= abs b ))
 let helper_lemma_2 () = 
-  ineq_axiom ()
+  erase (ineq_axiom ())
 
 val scalar_multiplication_max_value_lemma:
   h0:heap -> 

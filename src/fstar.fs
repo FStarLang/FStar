@@ -22,6 +22,7 @@ open Microsoft.FStar.Util
 open Microsoft.FStar.Getopt
 open Microsoft.FStar.Tc.Util
 open Microsoft.FStar.Tc.Env
+open Microsoft.FStar.Backends
 
 let process_args () = 
   let file_list = Util.mk_ref [] in
@@ -59,7 +60,7 @@ let tc_one_file dsenv env fn =
     let dsenv, fmods = Parser.Driver.parse_file dsenv fn in
     let env, all_mods = fmods |> List.fold_left (fun (env, all_mods) m -> 
         let ms, env = Tc.Tc.check_module env m in
-        env, ms) (env, []) in
+        env, ms@all_mods) (env, []) in
     dsenv, env, List.rev all_mods
 
 let tc_one_fragment curmod dsenv env frag = 
@@ -111,7 +112,7 @@ let interactive_mode dsenv env =
                           Util.flush_file transcript)
         else (fun line -> ()) in
     if Option.isSome !Options.codegen
-    then (Util.print_string "Code-generation is not supported in interactive mode"; exit 1);
+    then (Util.print_string "Warning: Code-generation is not supported in interactive mode, ignoring the codegen flag");
     let chunk = Util.new_string_builder () in
     let stdin = Util.open_stdin () in
     let rec fill_chunk ()= 
@@ -228,12 +229,12 @@ let finished_message fmods =
          print_string "All verification conditions discharged successfully\n"
     end
 
-let codegen fmods = 
-    if !Options.codegen = Some "OCaml" then begin
+let codegen fmods env= 
+    if !Options.codegen = Some "OCaml" then 
         try
             let mllib = Backends.OCaml.ASTTrans.mlmod_of_fstars (List.tail fmods) in
             let doc   = Backends.OCaml.Code.doc_of_mllib mllib in
-            List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^".ml")) (FSharp.Format.pretty 120 d)) doc
+            List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^".ml")) (FSharp.Format.pretty 120 d)) doc 
         with Backends.OCaml.ASTTrans.OCamlFailure (rg, error) -> begin
             (* FIXME: register exception and remove this block  *)
             Util.print_string (* stderr *) <|
@@ -242,6 +243,11 @@ let codegen fmods =
                 (Backends.OCaml.ASTTrans.string_of_error error);
             exit 1
         end
+    else if !Options.codegen = Some "OCaml-experimental" then begin
+        let c, mllibs = Util.fold_map Extraction.ML.ExtractMod.extract (Extraction.ML.Env.mkContext env) fmods in
+        let mllibs = List.flatten mllibs in
+        let newDocs = List.collect Extraction.OCaml.Code.doc_of_mllib mllibs in
+            List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^".ml")) (FSharp.Format.pretty 120 d)) newDocs
     end
 //    ;
 //    if !Options.codegen = Some "JavaScript" then begin
@@ -272,7 +278,7 @@ let go _ =
              if !Options.interactive 
              then interactive_mode dsenv env
              else begin
-                codegen fmods;
+                codegen fmods env;
                 finished_message fmods
              end
 
