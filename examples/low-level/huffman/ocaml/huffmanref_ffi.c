@@ -45,3 +45,20 @@ CAMLprim value stack_mkpair_noscan(value v1, value v2)
     CAMLreturn(tuple);
   }
 }
+
+CAMLprim value stack_mktriple_noscan(value v1, value v2, value v3) 
+{
+  CAMLparam3 (v1, v2, v3);
+  /* assert (Is_long(v1) || is_stack_pointer((void *)v1)); */
+  /* assert (Is_long(v2) || is_stack_pointer((void *)v2)); */
+  /* assert (Is_long(v3) || is_stack_pointer((void *)v3)); */
+  value tuple = stack_caml_alloc_tuple(3,0,NULL);
+  if (tuple == (value)0)
+    caml_failwith ("Camlstack.mktriple_noscan");
+  else {
+    Field(tuple, 0) = v1;
+    Field(tuple, 1) = v2;
+    Field(tuple, 2) = v3;
+    CAMLreturn(tuple);
+  }
+}

@@ -410,7 +410,7 @@ type code_node = (* used for decoding *)
       cn_one_child : code_node;
       cn_symbol : symbol_type }
 
-external stack_mknode_cn: code_node -> code_node -> symbol_type -> code_node = "stack_mktuple3";;
+external stack_mknode_cn: code_node -> code_node -> symbol_type -> code_node = "stack_mktriple_noscan";;
 
 let make_node_cn zc oc sym = (* ALLOCATE stack *)
   if !do_stack then
