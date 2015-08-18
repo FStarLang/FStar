@@ -6,6 +6,12 @@ other-files: ../../lib/ghost.fst
 module Located
 open Ghost
 
+(*in future, one located will take as input only locatable types.
+  A type T is located iff members of type T are represented in OCaml as
+  memory addresses. Examples are references, pairs, etc.
+  regionOf below is supposed to return whether that address points to the OCaml
+  heap or to Mike's C heap
+*)
 type located : Type -> Type
 
 type sidt = nat
