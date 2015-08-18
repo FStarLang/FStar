@@ -83,6 +83,14 @@ let bytearray_substr s ofs len =
   else
     Bytes.sub s ofs len
 
+external stack_cons_noscan: 'a -> 'a list -> 'a list = "stack_mkpair_noscan";;
+
+let make_list h t =
+  if !do_stack then
+    stack_cons_noscan h t
+  else
+    h::t
+
 let eq_array arr1 arr2 =
   if !no_check then true
   else
@@ -102,33 +110,29 @@ let eq_array arr1 arr2 =
    and using this tree will set the "code" of each node, which is used in the final encoding. *)
 type node =
     { frequency: int ref; 
-      next: node ref;
       zero_child: node;
       one_child: node; 
       symbol: symbol_type;
       code: string ref;
     };;
 
-external stack_mknode: int -> node -> node -> node -> symbol_type -> node = "stack_mknode";;
+external stack_mknode: int -> node -> node -> symbol_type -> node = "stack_mknode";;
 
-let make_node freq nx zc oc sym = (* ALLOCATE *)
+let make_node freq zc oc sym = (* ALLOCATE *)
   if !do_stack then
-    stack_mknode freq nx zc oc sym
+    stack_mknode freq zc oc sym
   else
     { frequency = ref freq; 
-      next = ref nx;
       zero_child = zc;
       one_child = oc;
       symbol = sym;
       code = ref "" } 
-        (* code is "" by default (set in caller to change - works around FFI bug) *)
 
 (* dummy "null" node, so that we don't have to use option types. *)
 
-let null_node = make_node (-1) (Obj.magic 1) (Obj.magic 1) (Obj.magic 1) 0;;
+let null_node = make_node (-1) (Obj.magic 1) (Obj.magic 1) 0;;
 (*
   { frequency = -1;
-    next = Obj.magic 1; (* null_node; *)
     zero_child = Obj.magic 1; (* null_node; *)
     one_child = Obj.magic 1; (* null_node; *)
     symbol = 0;
@@ -148,54 +152,49 @@ module type NODE_LIST =
     val is_empty : node_list -> bool
     val is_singleton : node_list -> bool
     val pop_two : node_list -> node*node
-    val contents : node_list -> node
+    val contents : node_list -> node list
     val insert_in_ordered_list : node -> node_list -> unit
     val print_list_nodes : node_list -> bool -> unit
   end
 
 module NodeList : NODE_LIST = 
   struct 
-    type node_list = node ref
-    let is_empty l = is_null !l
-    let new_list () = ref null_node (* ALLOCATE (small) heap *)
+    type node_list = node list ref
+    let is_empty l = !l = []
+    let new_list () = ref [] (* ALLOCATE (small) heap *)
     let contents l = !l
     (* Insert by mutation. The order is according to the frequency field. *)
     let insert_in_ordered_list (the_node:node) (the_list:node_list) =
-      if is_null !the_list then 
-	the_list := the_node
-      else
-	  if the_node.frequency <= (!the_list).frequency then
-	    (the_node.next := !the_list; 
-	     the_list := the_node)
-	  else 
-	    (let rec aux l =
-	      if is_null !(l.next) then
-		(the_node.next := null_node;
-		 l.next := the_node)
-	      else
-		  if !(the_node.frequency) <= !(!(l.next).frequency) then
-		    (the_node.next := !(l.next);
-		     l.next := the_node)
-		  else
-		    aux !(l.next) in
-	     aux !the_list)
-    let is_singleton l = (not (is_empty l)) && (is_null !((!l).next))
+      let rec aux l =
+	match l with 
+	    [] -> make_list the_node []
+	  | n::rest -> 
+	    if !(the_node.frequency) <= !(n.frequency) then
+	      make_list the_node l
+	    else
+	      make_list n (aux rest) in
+      the_list := aux !the_list
+    let is_singleton l = 
+      match !l with [_] -> true | _ -> false
     (* removes the first two elements of the list (with the smallest frequencies) *)
     let pop_two l =
-      let res = (!l,!((!l).next)) in (* ALLOCATE heap *)
-      l := !(!((!l).next).next);
-      res
+      match !l with 
+	  h1::h2::t -> 
+	    (let res = (h1,h2) in (* ALLOCATE heap *)
+	     l := t;
+	     res)
+	| _ -> failwith "invariant violation"
     (* DEBUG: prints list of nodes (for histogram) *)
-    let print_list_nodes l flag =
-      let rec aux tree flag =
+    let print_list_nodes ln flag =
+      let rec aux l flag =
 	if flag then
 	  Printf.printf "Symbol Histogram: \n";
-	if is_null tree then 
-	  print_endline ""
-	else
-	  (Printf.printf "%04x: %d  " tree.symbol !(tree.frequency);
-	   aux !(tree.next) false) in
-      aux !l flag
+	match l with 
+	    [] -> print_endline ""
+	  | n::next -> 
+	    Printf.printf "%04x: %d  " n.symbol !(n.frequency);
+	    aux next false in
+      aux !ln flag
   end
 
 (* Computes a histogram (modifying the [histogram] argument in place) of 
@@ -210,7 +209,7 @@ let compute_histogram
     let sym = symbol_stream.(i) in
     let the_leaf = histogram.(sym)  in (* index into histogram from symbol *)
     if (is_null the_leaf) then
-      (let the_leaf' = make_node 1 null_node null_node null_node sym in (* ALLOCATE stack *)
+      (let the_leaf' = make_node 1 null_node null_node sym in (* ALLOCATE stack *)
        histogram.(sym) <- the_leaf') 
     else
       the_leaf.frequency := !(the_leaf.frequency) + 1
@@ -246,7 +245,8 @@ let build_huffman_tree
   let tree = NodeList.new_list () in
   for i = 0 to (symbol_value_bound-1) do
     let nd = histogram.(i) in
-    if not (is_null nd) then NodeList.insert_in_ordered_list nd tree
+    if not (is_null nd) then 
+      NodeList.insert_in_ordered_list nd tree
     else ()
   done;
   (* debug *)
@@ -255,11 +255,11 @@ let build_huffman_tree
   (* Build the tree recursively combining the first two (lowest freq) nodes *)
   while not (NodeList.is_singleton tree) do
     let (n1,n2) = NodeList.pop_two tree in
-    let new_nd = make_node (!(n1.frequency) + !(n2.frequency)) null_node n1 n2 (-1) in (* ALLOCATE stack *)
+    let new_nd = make_node (!(n1.frequency) + !(n2.frequency)) n1 n2 (-1) in (* ALLOCATE stack *)
     NodeList.insert_in_ordered_list new_nd tree
   done;
   (* compute codes *)
-  let tree' = NodeList.contents tree in
+  let tree' = match (NodeList.contents tree) with [x] -> x | _ -> failwith "invariatn violation!" in
   let temp_code = make_bytearray true symbol_value_bound in (* ALLOCATE stack *)
   compute_code_strings tree' temp_code 0;
   tree'
@@ -410,7 +410,7 @@ type code_node = (* used for decoding *)
       cn_one_child : code_node;
       cn_symbol : symbol_type }
 
-external stack_mknode_cn: code_node -> code_node -> symbol_type -> code_node = "stack_mktuple3";;
+external stack_mknode_cn: code_node -> code_node -> symbol_type -> code_node = "stack_mktriple_noscan";;
 
 let make_node_cn zc oc sym = (* ALLOCATE stack *)
   if !do_stack then
@@ -511,6 +511,7 @@ let run test_inp test_oup test_res =
   if !do_stack then
     Camlstack.push_frame 0;
   let packed_tree,packed_len,encoded_len = huffman_encode test_inp test_oup in
+  (* Camlstack.print_mask (); *)
   if !debug then
     (print_int_arr test_inp;
      print_stream test_oup encoded_len;
@@ -563,7 +564,11 @@ let rnd_arr arr =
     let tmp = arr.(i) in
     arr.(i) <- arr.(idx);
     arr.(idx) <- tmp
-  done
+  done;
+  if !debug then
+    (for i = 0 to (len-1) do 
+      Printf.printf "%d " arr.(i)
+    done; print_endline "")
 ;;
 
 (* MAIN *)

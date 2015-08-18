@@ -190,7 +190,7 @@ static void scan_stack_roots(scanning_action action)
 
 
 
-#ifdef DOGC
+#ifndef NOGC
 static int already_initialized = 0; /* tracks whether GC scanner initialized */
 #else
 static int already_initialized = 1; /* so that GC is never initialized */

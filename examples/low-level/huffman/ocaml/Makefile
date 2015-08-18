@@ -22,7 +22,11 @@ huffmanref$(EXE): huffmanref.$(CMO) huffmanref_ffi.o
 	$(OCAMLLINK) -o $@ $^ $(ALLOCATOR_FILES)
 
 allocator:
+ifdef NOGC
+	$(MAKE) OCAMLC="$(OCAMLC)" CMO=$(CMO) OCAMLLINK="$(OCAMLLINK)" NOGC=y -C $(ALLOCATOR_DIR)
+else
 	$(MAKE) OCAMLC="$(OCAMLC)" CMO=$(CMO) OCAMLLINK="$(OCAMLLINK)" -C $(ALLOCATOR_DIR)
+endif
 
 %.$(CMO): %.ml
 	$(OCAMLC) $(FLAGS) -c  $< -o $@

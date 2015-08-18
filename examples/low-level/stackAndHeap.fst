@@ -455,6 +455,10 @@ let canModifyWrite r v m = ()*)
 
 type allocateInBlock (#a:Type) (r: lref a) (h0 : region) (h1 : region) (init : a)   = not(contains h0 r) /\ contains h1 r /\  h1 == upd h0 r init
 
+val allocateInTopR: #a:Type -> r:lref a -> init:a -> m0:smem{isNonEmpty (st m0) /\
+                                                             not (contains (topstb m0) r)}
+                    -> Tot smem
+let allocateInTopR r init m0 = hp m0, (topstid m0, upd (topstb m0) r init)::mstail m0
 
 
 (* liveness for arbitrary located data. It merely says that the stack id valid
