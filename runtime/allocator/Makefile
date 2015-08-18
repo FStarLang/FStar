@@ -6,8 +6,14 @@ endif
 
 OCAMLC := ocamlfind ocamlopt
 OCAMLLINK := ocamlfind ocamlopt
+
+ifndef OPT
 FLAGS := -g 
 CFLAGS := -ccopt -g
+else
+NOGC := y
+CFLAGS := -ccopt -O3
+endif
 CMO := cmx
 
 ifdef NOGC

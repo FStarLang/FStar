@@ -22,8 +22,12 @@
 #include "stack.h"
 #include "camlstack.h"
 
+#ifdef DEBUG
 #define check(_p) if (!(_p)) { fprintf(stderr,"Failed check %s:%d\n",__FILE__,__LINE__); fflush(stdout); exit(1); }
 #define Assert check
+#else
+#define Assert(_p)
+#endif
 
 /***********************************************************************/
 /* Allocating OCaml values on the stack */
@@ -91,17 +95,11 @@ value stack_caml_alloc(mlsize_t wosize, tag_t tag, int nbits, int *mask) {
   /*The provided mask indexes words starting at 1 so as to skip over
     the header word. */
   tmp = (value)stack_alloc_maskp(Bhsize_wosize(wosize),nbits,mask);
+#ifdef DEBUG
   if (tmp == (value)0) return tmp;
+#endif
   Hd_hp (tmp) = Make_header (wosize, tag, Caml_black);
   result = Val_hp (tmp);
-#ifdef DEBUG
-  /*this initializes the object preliminarily, but probably this
-    code could be removed, since the caller will initialize.*/
-  { mlsize_t i;
-  if (tag < No_scan_tag){
-    for (i = 0; i < wosize; i++) Field (result, i) = Val_unit;
-  } }
-#endif
   return result;
 }
 
@@ -113,7 +111,9 @@ value stack_caml_alloc_string (mlsize_t lenb)
   mlsize_t offset_index;
   mlsize_t wosize = (lenb + sizeof (value)) / sizeof (value);
   result = stack_caml_alloc (wosize, String_tag, 0, NULL);
+#ifdef DEBUG
   if (result == (value)0) return result;
+#endif
   Field (result, wosize - 1) = 0;
   offset_index = Bsize_wsize (wosize) - 1;
   Byte (result, offset_index) = offset_index - lenb;
@@ -156,14 +156,12 @@ static void scanfun(void *env, void **ptr) {
   scanning_action action = (scanning_action)env;
   value *root = (value *)ptr;
   value v = *root;
-#ifdef DEBUG
-  printf("  scanning=%p, val=%p\n",root,(void *)v);
-  if (Is_long(v)) {
-    printf("   is long %d (%ld)\n", Int_val(v), Long_val(v));
-  } else {
-    printf("   is block: Wosize=%lu, Tag=%u\n", Wosize_val(v), Tag_val(v));
-  }
-#endif
+/*   printf("  scanning=%p, val=%p\n",root,(void *)v); */
+/*   if (Is_long(v)) { */
+/*     printf("   is long %d (%ld)\n", Int_val(v), Long_val(v)); */
+/*   } else { */
+/*     printf("   is block: Wosize=%lu, Tag=%u\n", Wosize_val(v), Tag_val(v)); */
+/*   } */
   /* NOTE: We assume that the scanning action will ignore
      values v that are not blocks; caml_oldify_one seems to check,
      so I'll assume that non-block [v] values are safe. */
@@ -172,9 +170,6 @@ static void scanfun(void *env, void **ptr) {
 
 static void scan_stack_roots(scanning_action action)
 {
-#ifdef DEBUG
-  printf("DOING SCAN\n");
-#endif
   each_marked_pointer(scanfun,action);
   if (prev_scan_roots_hook != NULL) (*prev_scan_roots_hook)(action);
 }
@@ -208,15 +203,8 @@ CAMLprim value stack_push_frame(value v)
 
 CAMLprim value stack_pop_frame(value unit) 
 {
-#ifndef NOGC 
-  if (pop_frame() == -1)
-    caml_failwith ("Camlstack.pop_frame");
-  else
-    return(Val_unit);
-#else
   pop_frame();
   return Val_unit;
-#endif
 }
 
 CAMLprim value caml_is_stack_pointer(value v) 
@@ -243,9 +231,12 @@ CAMLprim value stack_mkpair(value v1, value v2)
     nbits++;
   }
   value tuple = stack_caml_alloc_tuple(2,nbits,mask);
+#ifdef DEBUG
   if (tuple == (value)0)
     caml_failwith ("Camlstack.mkpair");
-  else {
+  else 
+#endif
+  {
     Field(tuple, 0) = v1;
     Field(tuple, 1) = v2;
     return(tuple);
@@ -268,9 +259,12 @@ CAMLprim value stack_mktuple3(value v1, value v2, value v3) {
     nbits++;
   }
   value tuple = stack_caml_alloc_tuple(3,nbits,mask);
+#ifdef DEBUG
   if (tuple == (value)0)
     caml_failwith ("Camlstack.mktuple3");
-  else {
+  else 
+#endif
+  {
     Field(tuple, 0) = v1;
     Field(tuple, 1) = v2;
     Field(tuple, 2) = v3;
@@ -298,9 +292,12 @@ CAMLprim value stack_mktuple4(value v1, value v2, value v3, value v4) {
     nbits++;
   }
   value tuple = stack_caml_alloc_tuple(4,nbits,mask);
+#ifdef DEBUG
   if (tuple == (value)0)
     caml_failwith ("Camlstack.mktuple4");    
-  else {
+  else 
+#endif
+  {
     Field(tuple, 0) = v1;
     Field(tuple, 1) = v2;
     Field(tuple, 2) = v3;
@@ -333,9 +330,12 @@ CAMLprim value stack_mktuple5(value v1, value v2, value v3, value v4, value v5) 
     nbits++;
   }
   value tuple = stack_caml_alloc_tuple(5,nbits,mask);
+#ifdef DEBUG
   if (tuple == (value)0)
     caml_failwith ("Camlstack.mktuple4");    
-  else {
+  else 
+#endif
+  {
     Field(tuple, 0) = v1;
     Field(tuple, 1) = v2;
     Field(tuple, 2) = v3;
@@ -349,9 +349,12 @@ CAMLprim value stack_mkref(value v)
 {
   int mask[1] = { 1 }; /* Assume it could always be a pointer, since it could be mutated to one */
   value ref = stack_caml_alloc_tuple(1,1,mask);
+#ifdef DEBUG
   if (ref == (value)0)
     caml_failwith ("Camlstack.mkref");
-  else {
+  else 
+#endif
+  {
     Field(ref, 0) = v;
     return(ref);
   }
@@ -360,9 +363,12 @@ CAMLprim value stack_mkref(value v)
 CAMLprim value stack_mkref_noscan(value v) 
 {
   value ref = stack_caml_alloc_tuple(1,0,NULL); /* Assume it will never contain a pointer */
+#ifdef DEBUG
   if (ref == (value)0)
     caml_failwith ("Camlstack.mkref");
-  else {
+  else 
+#endif
+  {
     Field(ref, 0) = v;
     return(ref);
   }
@@ -376,9 +382,11 @@ CAMLprim value stack_mkbytes(value lenv) {
   }
   else {
     value str = stack_caml_alloc_string(len);
+#ifdef DEBUG
     if (str == (value)0)
       caml_failwith ("Camlstack.mkbytes");    
     else
+#endif
       return(str);
   }
 }
@@ -389,9 +397,12 @@ CAMLprim value stack_mkarray(value lenv, value initv) {
     caml_invalid_argument ("Camlstack.mkarray");
   else {
     value tuple = stack_caml_alloc_tuple(len,-1,NULL); /* all possible heap pointers */
+#ifdef DEBUG
     if (tuple == (value)0)
       caml_failwith ("Camlstack.mkarray");    
-    else {
+    else 
+#endif
+    {
       int i;
       for (i=0;i<len;i++) {
 	Field(tuple, i) = initv;
@@ -414,9 +425,12 @@ CAMLprim value stack_mkarray_noscan(value lenv, value initv) {
       if (sizeof(value) == 4) n *= 2; /* if 32-bit words */
     } else tag = 0;
     value tuple = stack_caml_alloc(n,tag,0,NULL); /* no heap pointers */
+#ifdef DEBUG
     if (tuple == (value)0)
       caml_failwith ("Camlstack.mkarray");    
-    else {
+    else 
+#endif
+    {
       int i;
       if (tag == Double_array_tag) {
 	for (i=0;i<len;i++)
