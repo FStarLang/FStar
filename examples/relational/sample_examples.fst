@@ -14,11 +14,11 @@ open Relational
 
 let c0_pfx a = a := 0
 let c1_pfx b = b := 1
-let equiv_pfx a b = compose2 c0_pfx c1_pfx a b
+let equiv_pfx a = compose2 c0_pfx c1_pfx a
 
 let c0_sfx (a, c) = a := !a + c
 let c1_sfx (b, d) = b := !b + d
-let equiv_sfx a b c d = compose2 c0_sfx c1_sfx (a, c) (b, d)
+let equiv_sfx a b = compose2 c0_sfx c1_sfx (pair_rel a b)
 
 let dec x = x - 1
 let inc x = x + 1
@@ -32,15 +32,15 @@ let dec_good_sample () = cut(inverses dec inc);
 (* relate the programs
   c0_pfx ; sample ; c0_sfx  and
   c1_pfx ; sample ; c1_sfx  *)
-val equiv_seq: a:ref int
-               -> b:ref int
+val equiv_seq: a:(double (ref int))
                -> ST2 (double unit)
                   (requires (fun _ -> True))
-                  (ensures (fun _ _ h2 -> sel (R.l h2) a = sel (R.r h2) b))
-let equiv_seq a b = let _ = equiv_pfx a b in
-                    dec_good_sample ();
-                    let R c d = sample (fun x -> dec x) in
-                    equiv_sfx a b c d
+                  (ensures (fun _ _ h2 -> eq_rel (sel_rel h2 a)))
+let equiv_seq a = let _ = equiv_pfx a in
+                  dec_good_sample ();
+                  let r = sample (fun x -> dec x) in
+                  equiv_sfx a  r
+
 
 (* Encryption with xor (Example from RF* paper) *)
 module Example2
@@ -69,8 +69,8 @@ val cpa : block
             (ensures (fun _ p _ -> R.l p = R.r p))
 let cpa a b = let sample_fun = (fun x -> xor (xor a b) x) in
               cpa_good_sample_fun a b;
-              let R k1 k2 = sample sample_fun in
-              compose2 (fun k -> encrypt a k) (fun k -> encrypt b k) k1 k2
+              let k = sample sample_fun in
+              compose2 (fun k -> encrypt a k) (fun k -> encrypt b k) k
               (* This does not work with eta reduced versions of the function *)
 
 (* As this example does not use state, we actually don't need the ST2 monad *)

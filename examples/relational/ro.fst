@@ -217,14 +217,14 @@ let hash_hon' k r = match assoc k (!s).l with
                     s := {bad = (!s).bad; l= (k,(Hon,t))::(!s).l} ;
                     add_some t
 
-let hash_hon k f = let s = compose2 (fun _ -> !s) (fun _ -> !s) () () in
+let hash_hon k f = let s = compose2 (fun _ -> !s) (fun _ -> !s) (twice ())in
                    let l = rel_map1 (fun s -> s.l) s in
 
                    (* Actual code. The rest is just to apply the correct lemmas *)
                    let r = sample #tag #tag f in
                    let t = compose2 (fun k -> hash_hon' k (R.l r))
                                    (fun k -> hash_hon' k (R.r r))
-                                   (R.l k) (R.r k) in
+                                   k in
 
                    good_sample_fun_bijection #tag #tag f;
                    if (not (or_rel (rel_map1 (fun s -> s.bad) s))) then
@@ -242,33 +242,33 @@ let case_None (k,t) = s:={bad = (!s).bad; l = (k,(Hon,t))::(!s).l}; add_some t
 assume val sample_single : unit -> Tot tag
 
 let hash_hon2 k f =
-  let s = compose2 (fun _ -> !s) (fun _ -> !s) () () in
+  let s = compose2 (fun _ -> !s) (fun _ -> !s) (twice ()) in
   let l = rel_map1 (fun s -> s.l) s in
   let b = or_rel (rel_map1 (fun s -> s.bad) s) in
   match rel_map2 assoc k l with
   | R (Some (Hon,t0)) (Some (Hon,t1)) -> if not b then
                                            ok_hon_safe2 k l;
-                                         compose2 (fun x -> case_Hon x) (fun x -> case_Hon x) t0 t1
-  | R (Some (Hon,t0)) (Some (Adv,t1)) -> compose2 (fun x -> case_Hon x) (fun x -> case_Adv x) t0 ()
+                                         compose2 (fun x -> case_Hon x) (fun x -> case_Hon x) (R t0 t1)
+  | R (Some (Hon,t0)) (Some (Adv,t1)) -> compose2 (fun x -> case_Hon x) (fun x -> case_Adv x) (R t0 ())
   | R (Some (Hon,t0)) (None         ) -> if not b then
                                            ok_hon_safe k l;
                                          let t1 = sample_single () in
-                                         compose2 (fun x -> case_Hon x) (fun x -> case_None x) t0 ((R.r k),t1)
-  | R (Some (Adv,t0)) (Some (Hon,t1)) -> compose2 (fun x -> case_Adv x) (fun x -> case_Hon x) () t0
-  | R (Some (Adv,t0)) (Some (Adv,t1)) -> compose2 (fun x -> case_Adv x) (fun x -> case_Adv x) () ()
+                                         compose2 (fun x -> case_Hon x) (fun x -> case_None x) (R t0 ((R.r k),t1))
+  | R (Some (Adv,t0)) (Some (Hon,t1)) -> compose2 (fun x -> case_Adv x) (fun x -> case_Hon x) (R () t0)
+  | R (Some (Adv,t0)) (Some (Adv,t1)) -> compose2 (fun x -> case_Adv x) (fun x -> case_Adv x) (twice ())
   | R (Some (Adv,t0)) (None         ) -> let t1 = sample_single () in
-                                         compose2 (fun x -> case_Adv x) (fun x -> case_None x) () ((R.r k),t1)
+                                         compose2 (fun x -> case_Adv x) (fun x -> case_None x) (R () ((R.r k),t1))
   | R (None         ) (Some (Hon,t1)) -> if not b then
                                            ok_hon_safe k l;
                                          let t0 = sample_single () in
-                                         compose2 (fun x -> case_None x) (fun x -> case_Hon x) ((R.l k),t0) t1
+                                         compose2 (fun x -> case_None x) (fun x -> case_Hon x) (R ((R.l k),t0) t1)
   | R (None         ) (Some (Adv,t1)) -> let t0 = sample_single () in
-                                         compose2 (fun x -> case_None x) (fun x -> case_Adv x) ((R.l k),t0) ()
+                                         compose2 (fun x -> case_None x) (fun x -> case_Adv x) (R ((R.l k),t0) ())
   | R (None         ) (None         ) -> let t = sample #tag #tag f in
                                          good_sample_fun_bijection #tag #tag f;
                                          if not b then
                                            ok_consH k t l;
-                                         compose2 (fun x -> case_None x) (fun x -> case_None x) (R.l k, R.l t) (R.r k, R.r t)
+                                         compose2 (fun x -> case_None x) (fun x -> case_None x) (pair_rel k t) 
 let hash_adv' k r =  match assoc k (!s).l with
   | Some (Adv,t) -> Some t
   | Some (Hon,t) -> s := {bad = true; l = (!s).l}; None
@@ -277,7 +277,7 @@ let hash_adv' k r =  match assoc k (!s).l with
                     add_some t
 
 
-let hash_adv k  = let s = compose2 (fun _ -> !s) (fun _ -> !s) () () in
+let hash_adv k  = let s = compose2 (fun _ -> !s) (fun _ -> !s) (twice ()) in
                   let l = rel_map1 (fun s -> s.l) s in
 
                   (* Actual code, the rest is just for calling lemmas *)
@@ -286,7 +286,7 @@ let hash_adv k  = let s = compose2 (fun _ -> !s) (fun _ -> !s) () () in
                   let r = sample (fun x->x) in
                   let t = compose2 (fun k -> hash_adv' k (R.l r))
                                    (fun k -> hash_adv' k (R.r r))
-                                   (R.l k) (R.r k) in
+                                   k in 
 
                   if (not (or_rel (rel_map1 (fun s -> s.bad) s))) then
                     if and_rel (rel_map1 is_Some t) then

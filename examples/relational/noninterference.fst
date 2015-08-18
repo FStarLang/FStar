@@ -35,4 +35,4 @@ let test1 () = (if !b = 0 then
                a := 0
 
 val test1_ni : ni
-let test1_ni () = compose2 test1 test1 () ()
+let test1_ni () = compose2 test1 test1 (twice ())

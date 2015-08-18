@@ -24,8 +24,8 @@ val fib_cached : x:nat -> ST nat (requires (fun h -> fib_cache_correct (sel h ca
                                (ensures  (fun _ r h ->  fib_cache_correct (sel h cache)
                                                         /\ r = fib x))
 *)
-let (fib_cached x):nat =g
-  let c = !cache ing
+let (fib_cached x):nat =
+  let c = !cache in
   let l = assoc x c in
   if is_Some l then
     Some.v l
@@ -35,7 +35,7 @@ let (fib_cached x):nat =g
     fib x)
 
 val correct : eq nat
-  -> ST2 (eq nat)g
+  -> ST2 (eq nat)
          (requires (fun h -> fib_cache_correct (sel (R.r h) cache)))
          (ensures (fun _ _ h -> fib_cache_correct (sel (R.r h) cache)))
-let correct x = compose2 (fun x -> fib x) (fun x -> fib_cached x) (R.l x) (R.r x)
+let correct x = compose2 (fun x -> fib x) (fun x -> fib_cached x) x
