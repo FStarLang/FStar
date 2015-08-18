@@ -95,6 +95,12 @@ assume val get : unit -> PureMem (erased smem)
 (*PureMem might seem strange. We need it because lalloc does not
 change the map from references to their values.
 *)
+(*
+ * In future, we would like to enforce that type a is "locatable".
+ * IIUC, type 'ref t' is locatable, but lalloc should not be applied
+ * to ref types (?). So, I guess refs would have to be given non-uniform
+ * treatment here.
+ *)
 assume val lalloc: #a:Type -> v:a -> PureMem
   (located a)
   (requires (fun m ->isNonEmpty (st m)))
