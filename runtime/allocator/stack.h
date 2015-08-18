@@ -19,15 +19,16 @@
 #include <stdarg.h>
 
 /* Default size of contiguous memory in a frame */
+#define WORD_SZB sizeof(void*)
 #define DEFAULT_PAGE_SZB 4096
+#define MIN_FRAME_SZB WORD_SZB*4
 
-/* Creates a logical frame having at least sz_b continguous bytes in
-   it. Specifying 0 just means to keep using the current page. */
-void push_frame(int sz_b);
+/* Creates a logical frame having at MIN_FRAME_SZB bytes. */
+void push_frame(void);
 
 /* Pops off the top frame, freeing the memory if the page is empty.
    Returns -1 if the stack is empty; returns 0 otherwise. */
-int pop_frame();
+int pop_frame(void);
 
 /* Allocates sz_b bytes on the topmost frame. Will add new pages as
    needed. Returns NULL if there is no allocated stack frame. */

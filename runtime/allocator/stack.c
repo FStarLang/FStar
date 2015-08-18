@@ -31,8 +31,6 @@
 #endif
 #define max(a,b) (a>b?a:b)
 
-#define WORD_SZB sizeof(void*)
-
 static inline int align(int n, int blocksize) {
   return n % blocksize == 0 ? n : blocksize * ((n / blocksize) + 1);
 }
@@ -101,16 +99,15 @@ static void add_page(int sz_b, int is_ext) {
 }
 
 /* [push_frame(b)] pushes a new frame on the stack. It attempts to add that
-   frame to the current page, if there is space. In that case, it stores the current
+   frame to the current page, if there is a minimum amount of space. It stores the current
    frame pointers at the allocation pointer, updates the frame pointer to point to
    that location, and then advances the allocation pointer (as in a C function call). 
    It also clears the pointermap for the frame pointer's storage. If insufficient
    space exists on the current page to support the frame, then a new page is 
    allocated, establishing the new frame. */
-void push_frame(int sz_b) {
-  assert(sz_b >= 0);  
-  sz_b = word_align(sz_b);
-  if (top != NULL && have_space(sz_b+sizeof(void*))) { // can continue with current page
+void push_frame(void) {
+  //sz_b = word_align(sz_b);
+  if (top != NULL && have_space(MIN_FRAME_SZB)) { // can continue with current page
     //printf("push frame in page\n");
     *((void **)top->alloc_ptr) = top->frame_ptr;
     top->frame_ptr = top->alloc_ptr;
@@ -121,7 +118,7 @@ void push_frame(int sz_b) {
     top->alloc_ptr = (void *)((unsigned long)top->alloc_ptr + WORD_SZB);
   } else {
     //printf("push frame on new page\n");
-    add_page(sz_b,0);
+    add_page(MIN_FRAME_SZB,0);
   }
 }
 

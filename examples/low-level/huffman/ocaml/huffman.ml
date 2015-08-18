@@ -31,7 +31,7 @@ let arg_specs =
 Arg.parse arg_specs (fun _ -> ()) "Performs huffman coding on random input, decodes the result";;
 
 if !do_stack then
-  Camlstack.push_frame 0;;
+  Camlstack.push_frame ();;
 
 (**********)
 (* BASICS *)
@@ -504,7 +504,7 @@ let print_int_arr arr =
 let run test_inp test_oup test_res =
   (* Encode it *)
   if !do_stack then
-    Camlstack.push_frame 0;
+    Camlstack.push_frame ();
   let packed_tree,packed_len,encoded_len = huffman_encode test_inp test_oup in
   if !debug then
     (print_int_arr test_inp;
@@ -523,7 +523,7 @@ let run test_inp test_oup test_res =
   let f = Reader.make_reader outbytes in
 (*
   if !do_stack then
-    Camlstack.push_frame 0;
+    Camlstack.push_frame ();
 *)
   let cn_tree = read_huffman_tree f in
   read_and_huffman_decode f cn_tree test_res;
@@ -563,7 +563,7 @@ let rnd_arr arr =
 for _ = 0 to (!num-1) do
   (* Generate input *)
   if !do_stack then
-    Camlstack.push_frame 0;
+    Camlstack.push_frame ();
   let test_inp = make_array_noscan true !test_len 0 in (* ALLOCATE stack *)
   let test_oup = make_bytearray true (!test_len*bytes_per_symbol) in (* ALLOCATE stack *)
   let test_res = make_array_noscan true !test_len 0 in (* ALLOCATE stack *)
