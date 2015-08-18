@@ -20,55 +20,56 @@ type map (a:Type) (b:Type) = list (a * b)
 type key = bytes
 type tag = block
 
-(* an abstract relational predicate on correctly-generated entries *)
+(* Two keys are safe to be used for sampling, if they are related by some
+   bijection *)
 assume val safe_key_rel_fun :f:(key -> Tot key){good_sample_fun #key #key f}
-let safe_key (k:double key) = R.r k= safe_key_rel_fun (R.l k)
+let safe_key (k:double key) = R.r k = safe_key_rel_fun (R.l k)
 
 val safe_key_unique : k0:key -> k0':key -> k1:key ->
   Lemma (requires (safe_key (R k0 k1) /\ safe_key (R k0' k1)))
         (ensures (k0 = k0'))
 let safe_key_unique k0 k0' k1 =
-  good_sample_fun_bijection safe_key_rel_fun;
-  (* Injectivity should follow from bijectivity, howere types are opaque, so assuming *)
-  assume (forall (x:key) (y:key). safe_key_rel_fun x = safe_key_rel_fun y ==> x = y)
+  good_sample_fun_bijection safe_key_rel_fun
 
-(*
-assume Safe_key_unique  : (forall k0 k0' k1.
-                               {:pattern (safe_key (R k0 k1)); (safe_key (R k0' k1))}
-                               (safe_key (R k0 k1) /\ safe_key (R k0' k1) ==> k0 = k0'))
-*)
-
+(* correctly-generated are always related by some bijection *)
 opaque type safe (t:double tag) = (exists (f:bij #tag #tag). R.r t = f (R.l t))
 
+
+(* a "ghost" field recording the first allocator for a given key *)
 type alloc =
   | Hon: alloc
-  | Adv: alloc (* a "ghost" field recording the first allocator for a given key *)
+  | Adv: alloc 
 
 type log = map key (alloc * tag)
 
 type state_hash =
-  { bad: bool; (* set iff any allocation has failed, e.g. bumped into the other's table *)
+  { bad: bool; (* set iff any allocation has failed, 
+                  e.g. bumped into the other's table *)
     l:log }    (* the map ensures at most one entry per key *)
 
 
+(* relational invariant for correct logs *)
 type Ok : double log -> Type =
   | Null: Ok (twice [])
   | ConsH: k:double key{safe_key k} -> t:double tag{safe t}
-           -> l:double log{and_rel (rel_map2 (fun k l  -> is_None (assoc k l)) k l)}
+           -> l:double log{and_rel (rel_map2 (fun k l -> is_None (assoc k l)) k l)}
            -> p: Ok l
            -> Ok (cons_rel (pair_rel k (pair_rel (twice Hon) t)) l)
   | ConsA: k:eq key -> t:eq tag
-           -> l:double log{and_rel (rel_map2 (fun k l  -> is_None (assoc k l)) k l)}
+           -> l:double log{and_rel (rel_map2 (fun k l -> is_None (assoc k l)) k l)}
            -> p: Ok l
            -> Ok (cons_rel (pair_rel k (pair_rel (twice Adv) t)) l)
 
+(* keys are fresh if they are not in the hash function's log yet *)
 val fresh_keys : k:double key -> l:double log -> Tot bool
 let fresh_keys k l = and_rel (rel_map2 (fun k l -> is_None (assoc k l)) k l)
 
+(* We need these lemmas to use our inductive datatype Ok without having access
+   to an element of Ok l (it exists only in refinements) *)
 assume val ok_as_refinement : #l:double log  -> p:Ok l -> Tot (u:unit{Ok l})
 assume val ok_as_proof : l: double log{Ok l} -> Tot (Ok l)
 
- val ok_consH : k:double key{safe_key k}
+val ok_consH : k:double key{safe_key k}
              -> t:double tag{safe t}
              -> l:double log{and_rel (rel_map2 (fun k l  -> is_None (assoc k l)) k l)
                           /\ Ok l}
@@ -76,7 +77,7 @@ assume val ok_as_proof : l: double log{Ok l} -> Tot (Ok l)
                        (ensures Ok (cons_rel (pair_rel k (pair_rel (twice Hon) t)) l))
 let ok_consH k t l = ok_as_refinement(ConsH k t l (ok_as_proof l))
 
- val ok_consA : k:eq key
+val ok_consA : k:eq key
              -> t:eq tag
              -> l:double log{and_rel (rel_map2 (fun k l  -> is_None (assoc k l)) k l)
                           /\ Ok l}
@@ -84,6 +85,7 @@ let ok_consH k t l = ok_as_refinement(ConsH k t l (ok_as_proof l))
                        (ensures Ok (cons_rel (pair_rel k (pair_rel (twice Adv) t)) l))
 let ok_consA k t l = ok_as_refinement(ConsA k t l (ok_as_proof l))
 
+(* Adversary lookups on both sides always return equal results for Ok logs *)
 val ok_adv_eq' : k:eq key -> l:double log -> p:Ok l
                 -> Lemma
                    (requires True)
@@ -103,7 +105,9 @@ val ok_adv_eq : k:eq key -> l:double log{Ok l}
                                        assoc (R.r k) (R.r l) = Some(Adv, t)))
 let ok_adv_eq k l = ok_adv_eq' k l (ok_as_proof l)
 
- val ok_hon_safe' : k:double key -> l:double log -> p:Ok l
+
+(* Honest lookups either hit in both or no logs for Ok logs and safe keys *)
+val ok_hon_safe' : k:double key -> l:double log -> p:Ok l
                 -> Lemma
                    (requires (safe_key k))
                    (ensures ( (is_Some(assoc (R.l k) (R.l l)) /\ is_Hon(fst (Some.v(assoc (R.l k) (R.l l))))) <==>
@@ -125,6 +129,9 @@ let rec ok_hon_safe' k l p = match p with
                                is_Some(assoc (R.r k) (R.r l)) /\ is_Hon(fst (Some.v(assoc (R.r k) (R.r l))))))
 let ok_hon_safe k l = ok_hon_safe' k l (ok_as_proof l)
 
+
+(* Honest lookups return safe tags if both lookups hit (for safe keys and Ok
+   logs) *)
 val ok_hon_safe2' : k:double key -> l:double log -> p:Ok l
                 -> Lemma
                    (requires (safe_key k))
@@ -153,23 +160,15 @@ val ok_hon_safe2 : k:double key -> l:double log{Ok l}
                                        (snd(Some.v (assoc (R.r k) (R.r l)))))))
 let ok_hon_safe2 k l = ok_hon_safe2' k l (ok_as_proof l)
 
+(* Invariant on our state: either we have a bad event in one of the two runs or
+   our logs are Ok *)
 type goodstate_hash (s:double state_hash) =
             (R.l s).bad \/ (R.r s).bad
             \/ ~((R.l s).bad \/ (R.r s).bad) /\ Ok (rel_map1 (fun s -> s.l) s)
 
 assume val s :  (ref state_hash)
 
-(* Actual non-relational code of hash_hon : *)
-(*
-let hash_hon k = match assoc k (!s),l with
-  | Some (Hon,t) -> Some t
-  | Some (Adv,t) -> s := {bad = true; l = (!s).l}; None
-  | None         -> let t = samle_hon k in
-                    s := {bad = (!s).bad; l= (k,(Hon,t))::(!s).l} ;
-                    add_some t
-*)
-
-
+(* We prove the same signature for honest hashing in two different ways *)
 opaque val hash_hon:  k:double key -> f:(tag -> Tot tag){good_sample_fun #tag #tag f} ->
                ST2 (double (option tag))
                (requires (fun h2 -> goodstate_hash (sel_rel h2 (twice s)) /\
@@ -203,20 +202,31 @@ opaque val hash_adv: k:eq key ->
                                          Some.v(R.l p) = Some.v(R.r p)
                                          /\ Ok (rel_map1 (fun s -> s.l)(sel_rel h2 (twice s))))))
 
-(* workaround for some typing problems... *)
+(* workaround for some typing problems *)
 val add_some : tag -> Tot (option tag)
 let add_some t = Some t
+
+(* Actual non-relational code of hash_hon : *)
+(*
+let hash_hon k = match assoc k (!s),l with
+  | Some (Hon,t) -> Some t
+  | Some (Adv,t) -> s := {bad = true; l = (!s).l}; None
+  | None         -> let t = sample k in
+                    s := {bad = (!s).bad; l= (k,(Hon,t))::(!s).l} ;
+                    add_some t
+*)
+
 
 (* reordered version of the original program: We do not sample, but we get the
    sampled value as an argument. *)
 let hash_hon' k r = match assoc k (!s).l with
   | Some (Hon,t) -> Some t
-  //| Some (Hon,t) -> s := {bad = true; l = (!s).l}; None
   | Some (Adv,t) -> s := {bad = true; l = (!s).l}; None
   | None         -> let t = r in
                     s := {bad = (!s).bad; l= (k,(Hon,t))::(!s).l} ;
                     add_some t
 
+(* We use this reordered version to do the actual proof only by compose2 *)
 let hash_hon k f = let s = compose2 (fun _ -> !s) (fun _ -> !s) (twice ())in
                    let l = rel_map1 (fun s -> s.l) s in
 
@@ -235,12 +245,18 @@ let hash_hon k f = let s = compose2 (fun _ -> !s) (fun _ -> !s) (twice ())in
                          ok_consH k (R (Some.v (R.l t)) (Some.v (R.r t))) l);
                    t
 
+(* The three code pieces that occur in the three match cases of the single
+   sided variant *)
 let case_Hon  t     = Some t
 let case_Adv  _     = s:={bad = true; l=(!s).l}; None
 let case_None (k,t) = s:={bad = (!s).bad; l = (k,(Hon,t))::(!s).l}; add_some t
 
+(* To deal with cross cases where we only sample on one side, we need a
+   single-sided sample *)
 assume val sample_single : unit -> Tot tag
 
+(* We do a manual interleaving (This is necessary if we don't want to move
+   sample as shown above). *)
 let hash_hon2 k f =
   let s = compose2 (fun _ -> !s) (fun _ -> !s) (twice ()) in
   let l = rel_map1 (fun s -> s.l) s in
@@ -269,13 +285,14 @@ let hash_hon2 k f =
                                          if not b then
                                            ok_consH k t l;
                                          compose2 (fun x -> case_None x) (fun x -> case_None x) (pair_rel k t) 
+
+(* For adversarial hashes we again move sample to the beginning of the function *)
 let hash_adv' k r =  match assoc k (!s).l with
   | Some (Adv,t) -> Some t
   | Some (Hon,t) -> s := {bad = true; l = (!s).l}; None
   | None         -> let t = r in
                     s := {bad = (!s).bad; l= (k,(Adv,t))::(!s).l} ;
                     add_some t
-
 
 let hash_adv k  = let s = compose2 (fun _ -> !s) (fun _ -> !s) (twice ()) in
                   let l = rel_map1 (fun s -> s.l) s in
@@ -308,16 +325,21 @@ open Bytes
 open List
 open Ro
 
-
 assume val append : bytes -> bytes -> Tot bytes
 
+(* We use a simple OTP as basis block for our encryption scheme *)
 val encrypt : block -> block -> Tot block
 let encrypt p k = xor p k
 val decrypt : block -> block -> Tot block
 let decrypt c k = xor c k
 
-opaque type safe_key_pre (k:double bytes) = (forall (r:block). safe_key (rel_map2 append k (twice r)))
+(* As our hash-key will be created by appending a random string to our
+   encryption key, we need to require that encryption keys are prefixes of safe
+   hash keys *)
+opaque type safe_key_pre (k:double bytes) = 
+  (forall (r:block). safe_key (rel_map2 append k (twice r)))
 
+(* We prove that our sampling function is a bijection *)
 opaque val encrypt_good_sample_fun : p1:block -> p2:block
   -> Lemma (good_sample_fun #block #block (fun x -> xor (xor p1 p2) x))
 let encrypt_good_sample_fun p1 p2 =
@@ -325,12 +347,15 @@ let encrypt_good_sample_fun p1 p2 =
   cut (bijection #block #block sample_fun);
   bijection_good_sample_fun #block #block sample_fun
 
+(* We prove that the identity function used for sampling  is a bijection *)
 opaque val id_good_sample_fun : unit -> Lemma (good_sample_fun #block #block (fun x -> x))
 let id_good_sample_fun () =
   cut (bijection #block #block (fun x -> x));
   bijection_good_sample_fun #block #block (fun x -> x)
 
 #reset-options
+(* If the random oracle is not in a bad state and if we used fresh hash-keys,
+   then we can show that two the ciphertexts are equal *)
 opaque val encrypt_hon : k:double key{safe_key_pre k}
                   -> p:double block ->
                   ST2 (double (option (block * block)))
@@ -361,7 +386,7 @@ let encrypt_hon k p =
 
                   c
 
-
+(* We only show that decryption does not violate our relational invariants *)
 #reset-options
 opaque val decrypt_hon : k:double bytes{safe_key_pre k} ->
                   c:double(block * block){snd (R.l c) = snd (R.r c)} ->
