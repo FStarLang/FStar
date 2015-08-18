@@ -151,7 +151,7 @@ let extract_pat (g:env) p : (env * list<mlpattern>) =
       | Pat_wild x when disj -> 
         g, [MLP_Wild]
 
-      | Pat_wild x -> (*how is this different from Pat_wild? For extTest.naryTree.Node, the first projector uses Pat_var and the other one uses Pat_wild*)
+      | Pat_wild x -> (*how is this different from Pat_var? For extTest.naryTree.Node, the first projector uses Pat_var and the other one uses Pat_wild*)
         let mlty = translate_typ g x.sort in 
         let g = Env.extend_bv g x ([], mlty) false imp in
         g, (if imp then [] else [MLP_Var (as_mlident x.v)])
@@ -183,8 +183,8 @@ let normalize_abs e0 =
    aux [] e0
 
 let ffi_mltuple_mlp (n:int) : mlpath = 
-    let name = if (1<n && n<6) then ("mktuple"^(Util.string_of_int n)) else (failwith "NYI in runtime/allocator/camlstack.mli") in
-    ["CamlStack"],name
+    let name = if (2<n && n<6) then ("mktuple"^(Util.string_of_int n)) else (if n=2 then "mkpair" else (failwith "NYI in runtime/allocator/camlstack.mli")) in
+    ["Camlstack"],name
 
 let fix_lalloc (arg (*the argument of lalloc (type arg is erased) *):mlexpr) : mlexpr = 
 match arg with

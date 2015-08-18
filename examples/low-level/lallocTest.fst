@@ -30,7 +30,7 @@ let lx p =  (llift (fun (p:point)-> p.x)) p
 val lallocExample1 : px:int -> py:int -> PureMem int (fun m -> True) (fun m v -> v == px+1)
 let lallocExample1 px py =
   pushStackFrame ();
-  let sp= lalloc (Mkpoint px py) in
+  let sp= lalloc ({x=px ; y=py}) in
   let r = lx sp in
   popStackFrame ();
   (r+1)
