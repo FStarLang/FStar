@@ -23,15 +23,18 @@ let equiv_sfx a b = compose2 c0_sfx c1_sfx (pair_rel a b)
 let dec x = x - 1
 let inc x = x + 1
 
+(* We prove that dec is a bijection *)
 val dec_good_sample : unit -> Lemma (good_sample_fun dec)
 let dec_good_sample () = cut(inverses dec inc);
                          lemma_inverses_bij  dec inc ;
                          bijection_good_sample_fun dec
 
-
 (* relate the programs
   c0_pfx ; sample ; c0_sfx  and
-  c1_pfx ; sample ; c1_sfx  *)
+  c1_pfx ; sample ; c1_sfx
+  We first relate the prefixes, then we sample (we have to synchronize on this
+  call because we only have a relational specification for it) and use the
+  results to relate the suffixes *)
 val equiv_seq: a:(double (ref int))
                -> ST2 (double unit)
                   (requires (fun _ -> True))
@@ -40,7 +43,6 @@ let equiv_seq a = let _ = equiv_pfx a in
                   dec_good_sample ();
                   let r = sample (fun x -> dec x) in
                   equiv_sfx a  r
-
 
 (* Encryption with xor (Example from RF* paper) *)
 module Example2
@@ -54,6 +56,7 @@ open Xor
 let encrypt p k = xor p k
 let decrypt c k = xor c k
 
+(* We prove that the sampling function that we use is a bijection *)
 val cpa_good_sample_fun: a:block -> b:block ->
   Lemma (good_sample_fun #block #block (fun x -> xor (xor a b) x))
 let cpa_good_sample_fun a b =
@@ -62,6 +65,8 @@ let cpa_good_sample_fun a b =
   lemma_inverses_bij #block #block sample_fun sample_fun;
   bijection_good_sample_fun #block #block sample_fun
 
+(* Definition of CPA-security: An adversary cannot distinguish between the
+   encryption of two plaintexts of his choice *)
 val cpa : block
        -> block
        -> ST2 (double block)
