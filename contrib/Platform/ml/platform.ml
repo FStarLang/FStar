@@ -120,7 +120,7 @@ let createBytes len (value:char) : bytes =
     try abytes (String.make len value)
     with _ -> failwith "Default integer for createBytes was greater than max_value"
 
-type lbytes = bytes
+type 'a lbytes = bytes
 
 let bytes_of_int nb i =
   let rec put_bytes bb lb n =
