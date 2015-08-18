@@ -36,7 +36,7 @@ assume val salloc:  #a:Type -> init:a -> SST (lref a)
           (isNonEmpty (st m0)) /\ (isNonEmpty (st m1))
           /\ allocateInBlock r (topstb m0) (topstb m1) init
           /\ refLoc r = InStack (topstid m0) /\ (topstid m0 = topstid m1)
-          /\ mtail m0 = mtail m1)
+          /\ mtail m0 = mtail m1 /\ m1 = allocateInTopR r init m0)
 
 assume val memread:  #a:Type -> r:(lref a) -> SST a
 	  (fun m -> b2t (liveRef r m))

@@ -2,7 +2,7 @@ all: CoreCrypto.cmxa
 
 ifeq ($(OS),Windows_NT)
     CC = i686-w64-mingw32-gcc
-    OPENSSL_INCLUDE = ../../../../openssl-1.0.1p/include
+    OPENSSL_INCLUDE = ../../../../openssl/include
     OCAML_INCLUDE = /usr/local/lib/ocaml
     EXTRA_OPTS =
 else

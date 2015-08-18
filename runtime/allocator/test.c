@@ -38,7 +38,7 @@ void foo(int n) {
     each_marked_pointer(printptrs,0);
     return;
   } else {
-    if (n % 3 == 0) push_frame(0);
+    if (n % 3 == 0) push_frame();
     if (mark_ptr) {
       x = stack_alloc_mask(sizeof(int),1,0);
       y = stack_alloc_mask(sizeof(int),1,0);
@@ -72,7 +72,7 @@ void bar(int n) {
     each_marked_pointer(printptrs,0);
     return;
   } else {
-    if (n % 3 == 0) push_frame(0);
+    if (n % 3 == 0) push_frame();
     if (mark_ptr) {
       p = stack_alloc_mask(sizeof(Triple),2,0,1);
     } else {
@@ -96,7 +96,7 @@ void bar(int n) {
 }
 
 int main(int argc, char *argv[]) {
-  push_frame(0);
+  push_frame();
   bar(10);
   mark_ptr = 0;
   printf("===> redoing, with no marking\n");

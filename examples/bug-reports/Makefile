@@ -27,3 +27,11 @@ insertionsortcmpfails: insertionsortcmpfails.fst
 
 insertionsortcmpfails2: insertionsortcmpfails2.fst
 	../../bin/fstar.exe ../../lib/list.fst insertionsortcmpfails2.fst
+
+
+extraction-error1:
+	fstar extraction-error1.fst
+	ocamlfind ocamlopt -cc "$(CC)" -cclib -L$(LIB) -o Bug.exe -package batteries -linkpkg -g -thread -I \
+	        $(FSTAR_HOME)/src/ocaml-output/ \
+					$(FSTAR_HOME)/src/ocaml-output/support.ml \
+			    Bug.ml

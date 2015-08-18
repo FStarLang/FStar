@@ -34,11 +34,9 @@
     OCaml heap that is not tracked by the stack implementation.)
 *)
 
-external push_frame : int -> unit = "stack_push_frame";;
-(** [Camlstack.push_frame n] pushes a frame onto the stack that has at least
-    [n] contiguous bytes. The frame will grow, if necessary. 
-    (An argument of 0 is acceptable.) 
-    Raise [Invalid_argument "Camlstack.push_frame"] if [n] is negative. *)
+external push_frame : unit -> unit = "stack_push_frame";;
+(** [Camlstack.push_frame ()] pushes a frame onto the stack which will
+    grow as things are allocated. *)
 
 external pop_frame : unit -> unit = "stack_pop_frame";;
 (** Pops the topmost stackframe. This means that all of that data is

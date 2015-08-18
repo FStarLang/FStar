@@ -10,29 +10,50 @@ open Comp
 open Heap
 open Relational
 
-assume val high : ref 'a -> Tot bool
-let low x = not (high x)
+(* We model labels with different levels as integers *)
+type label = int 
 
+(* Label of the attacker *)
+assume val alpha : label
+
+(* Labeling function (assigns a label to every reference) *)
+assume val label_fun : ref int -> Tot label
+
+(* A reference can be observed bu the attacker if its label is not higher than 
+   alpha *)
+let attacker_observable x = label_fun x <= alpha
+
+(* Definition of Noninterference  If all attacker-observable references contain
+   equal values before the function call, then they also have to contain equal
+   values after the function call. *)
 type ni = unit ->
           ST2 (rel unit unit)
-              (requires (fun h2 -> (forall (x:ref int). low x ==>
-                                            sel (R.l h2) x = sel (R.r h2) x)))
-              (ensures  (fun _ _ h2 -> (forall (x:ref int). low x ==>
-                                            sel (R.l h2) x = sel (R.r h2) x)))
+              (requires (fun h2 -> (forall (x:ref int). 
+                                        attacker_observable x 
+                                        ==> sel (R.l h2) x = sel (R.r h2) x)))
+              (ensures  (fun _ _ h2 -> (forall (x:ref int).
+                                        attacker_observable x 
+                                        ==> sel (R.l h2) x = sel (R.r h2) x)))
 
-assume val new_low : unit -> x:ref int{low x}
-assume val new_high : unit -> x:ref int{high x}
+(* Function to create new labeled references *)
+assume val new_labeled_int : l:label -> x:ref int{label_fun x = l}
 
-let a = new_low ()
-let b = new_high ()
-let c = new_high ()
-let d = new_low ()
 
-let test1 () = (if !b = 0 then
+(* Simple Examples using the above definition of Noninterference*)
+module Example1
+open NonInterference
+open Comp
+open Relational
+
+(* Fails if label b > label a *)
+let a = new_labeled_int 1
+let b = new_labeled_int 0
+
+let test () = (if !b = 0 then
                  a := 2
                else
                  a := 1);
-               a := 0
+               b := 0
 
-val test1_ni : ni
-let test1_ni () = compose2 test1 test1 () ()
+val test_ni : ni
+let test_ni () = compose2 test test (twice ())
