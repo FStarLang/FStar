@@ -5416,11 +5416,11 @@ Hint: have a look e.g. at the HMAC construction.
 
 # Advanced cryptographic examples
 
-## Stateful Encryption
+## Stateful Authenticated Encryption
 
-The additional guarantees provided by a secure channel protocol is that
-the messages are received in the same order in which they were sent. To
-achieve this, we build a stateful, authenticated encryption scheme from
+A typical guarantees provided by a secure channel protocol is that
+messages are received in the same order in which they were sent. To
+achieve this, we construct a stateful, authenticated encryption scheme from
 a (stateless) “authenticated encryption with additional data” (AEAD)
 scheme (Rogaway 2002). Two counters are maintained, one each for the
 sender and receiver. When a message is to be sent, the counter value is
@@ -5428,6 +5428,71 @@ authenticated using the AEAD scheme along with the rest of the message
 payload and the counter is incremented. The receiver, in turn, checks
 that the sender’s counter in the message matches hers each time a message
 is received and increments her counter.
+
+Cryptographically, the ideal functionality behind this scheme involves
+associating a stateful log with each instance of a encryptor/decryptor
+key pair. At the level of the stateless functionality, the guarantee
+is that every message sent is in the log and the receiver only accepts
+messages that are in the log---no guarantee is provided regarding
+injectivity or the order in which messages are received. At the
+stateful level, we again associate a log with each key pair and here
+we can guarantee that the sends and receives are in injective,
+order-preserving correspondence. Proving this requires relating the
+contents of the logs at various levels, and, importantly, proving that
+the logs associated with different instances of keys do not
+interfere. We give this proof in F*.
+
+We start with a few types provided by the `AEAD` functionality.
+
+```
+module AEAD
+type encryptor = Enc : #r:rid -> log:rref r (seq entry) -> key -> encryptor
+and decryptor =  Dec : #r:rid -> log:rref r (seq entry) -> key -> decryptor
+and entry =  Entry : ad:nat -> c:cipher -> p:plain -> basicEntry
+```
+
+An `encryptor` encapsulates a `key` (an abstract type whose
+hidden representation is the raw bytes of a key) with a log of entries
+stored in the heap for modeling the ideal
+functionality. Each `entry` associates a `plain` text `p`,
+with its `cipher` `c` and some additional data `ad:nat`. The
+log is stored in a region `r`, which we maintain as an additional
+(erasable) field of `Enc`. The `decryptor` is similar. It is
+worth pointing out that although `AEAD` is a stateless
+functionality, its cryptographic modeling involves the introduction of
+a stateful log. Based on a cryptographic assumption, one can view this log as
+ghost.
+
+On top of `AEAD`, we add a `Stateful` layer, providing stateful
+encryptors and decryptors. `StEnc` encapsulates an encryption key
+provided by `AEAD` together with the sender's counter, `ctr`,
+and its own log of stateful entries, associates `plain`-texts
+with `cipher`s. The `log` and the counter are stored in a
+region `r` associated with the stateful encryptor. `StDec` is
+analogous.
+
+```
+module Stateful
+type st_enc = StEnc : #r:rid -> log: rref r (seq st_entry) -> ctr: rref r nat
+           -> key:encryptor{extends (Enc.r key) r} -> st_enc
+and st_dec =  StDec : #r:rid -> log: rref r (seq st_entry) -> ctr: rref r nat
+           -> key:decryptor{extends (Dec.r key) r} -> st_dec
+and st_entry = StEntry : c:cipher -> p:plain -> st_entry
+```
+
+Exploiting the hierarchical structure of hyper-heaps, we store
+the `AEAD.encryptor` in a distinct sub-region of `r`---this is
+the meaning of the `extends` relation. By doing this, we ensure
+that the state associated with the `AEAD` encryptor is distinct
+from both `log` and `ctr`. By allocating distinct instances
+`k1` and `k2` in disjoint regions, we can prove that using
+`k1` (say `decrypt k1 c`) does not alter the state
+associated with `k2`. In this simplified setting with just three
+references, the separation provided is minimal; when manipulating
+objects with sub-objects that contain many more references (as in our
+full development), partitioning them into separate regions provides
+disequalities between their references for free.
+
 
 ~ Exercise
 Look at the following code, what happens in case of decryption failure?
@@ -5437,20 +5502,26 @@ type statefulEntry =
   | StEntry : c:cipher -> p:plain -> statefulEntry
 
 type st_encryptor (i:rid) =
-  | StEnc : log: rref i (seq statefulEntry) -> ctr: rref i nat -> key:encryptor i -> st_encryptor i
+  | StEnc : log: rref i (seq statefulEntry) ->
+            ctr: rref i nat ->
+            key:encryptor i ->
+            st_encryptor i
 
 type st_decryptor (i:rid) =
-  | StDec : log: rref i (seq statefulEntry) -> ctr: rref i nat -> key:decryptor i -> st_decryptor i
-  
+  | StDec : log: rref i (seq statefulEntry) ->
+            ctr: rref i nat ->
+            key:decryptor i ->
+            st_decryptor i
+
   ...
-  
-  val stateful_enc : #i:rid -> e:st_encryptor i -> p:plain -> ST cipher
+
+val stateful_enc : #i:rid -> e:st_encryptor i -> p:plain -> ST cipher
   (requires (fun h -> st_enc_inv e h))
   (ensures (fun h0 c h1 ->
-                    st_enc_inv e h1
-                 /\ HyperHeap.modifies (Set.singleton i) h0 h1
-                 /\ Heap.modifies (refs_in_e e) (Map.sel h0 i) (Map.sel h1 i)
-                 /\ sel h1 (StEnc.log e) = snoc (sel h0 (StEnc.log e)) (StEntry c p)))
+            st_enc_inv e h1
+         /\ HyperHeap.modifies (Set.singleton i) h0 h1
+         /\ Heap.modifies (refs_in_e e) (Map.sel h0 i) (Map.sel h1 i)
+         /\ sel h1 (StEnc.log e) = snoc (sel h0 (StEnc.log e)) (StEntry c p)))
 let stateful_enc i (StEnc log ctr e) p =
     let c = enc e (op_Bang ctr) p in
     op_Colon_Equals log (snoc (op_Bang log) (StEntry c p));
@@ -5460,18 +5531,19 @@ let stateful_enc i (StEnc log ctr e) p =
 val stateful_dec: #i:rid -> d:st_decryptor i -> c:cipher -> ST (option plain)
   (requires (fun h -> st_dec_inv d h))
   (ensures (fun h0 p h1 ->
-                st_dec_inv d h0    //repeating pre
-                /\ st_dec_inv d h1
-                /\ HyperHeap.modifies (Set.singleton i) h0 h1
-                /\ Heap.modifies !{as_ref (StDec.ctr d)} (Map.sel h0 i) (Map.sel h1 i)
-                /\ Let (sel h0 (StDec.ctr d)) (fun (r:nat{r=sel h0 (StDec.ctr d)}) ->
-                   Let (sel h0 (StDec.log d)) (fun (log:seq statefulEntry{log=sel h0 (StDec.log d)}) ->
-                    (is_None p ==> (r = Seq.length log                     //nothing encrypted yet
-                                    || StEntry.c (Seq.index log r) <> c    //wrong cipher
-                                    ) /\ sel h1 (StDec.ctr d) = r)
-                   /\ (is_Some p ==>
-                          ((sel h1 (StDec.ctr d) = r + 1)
-                           /\ StEntry.p (Seq.index log r) = Some.v p))))))
+        st_dec_inv d h0    //repeating pre
+        /\ st_dec_inv d h1
+        /\ HyperHeap.modifies (Set.singleton i) h0 h1
+        /\ Heap.modifies !{as_ref (StDec.ctr d)} (Map.sel h0 i) (Map.sel h1 i)
+        /\ Let (sel h0 (StDec.ctr d)) (fun (r:nat{r=sel h0 (StDec.ctr d)}) ->
+           Let (sel h0 (StDec.log d))
+           (fun (log:seq statefulEntry{log=sel h0 (StDec.log d)}) ->
+           (is_None p ==> (r = Seq.length log           //nothing encrypted yet
+                          || StEntry.c (Seq.index log r) <> c //wrong cipher
+                            ) /\ sel h1 (StDec.ctr d) = r)
+        /\ (is_Some p ==>
+                  ((sel h1 (StDec.ctr d) = r + 1)
+                   /\ StEntry.p (Seq.index log r) = Some.v p))))))
 
 let stateful_dec _id (StDec _ ctr d) c =
   let i = op_Bang ctr in
@@ -5486,9 +5558,14 @@ let stateful_dec _id (StDec _ ctr d) c =
 
 ## Encryption
 
-The basis of our encryption example is the interface of a symmetric encryption scheme based on a block cipher, say AES.
-It uses a one block initialization vector (IV) that is XORed to the plaintext. The masked value is then enciphered.
-The ciphertext consists of the IV and this enciphered block.
+Next we will look into constructing basic encryption schemes from even lower
+level cryptographic primitives.
+
+The basis of our first encryption example is the interface of a symmetric
+encryption scheme based on a block cipher, say AES.
+It uses a one block initialization vector (IV) that is XORed to the plaintext.
+The masked value is then enciphered. The ciphertext consists of the IV and this
+enciphered block.
 
 ```
 module AES
