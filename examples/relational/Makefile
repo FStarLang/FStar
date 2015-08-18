@@ -6,7 +6,8 @@ all: noninterference\
 		 ro_single\
 		 simple_st2_examples\
 		 smart_meter\
-		 spdz
+		 spdz\
+		 cache
 
 noninterference:
 	$(FSTAR) noninterference.fst
@@ -28,3 +29,6 @@ spdz:
 
 simple_st2_examples:
 	$(FSTAR) simple_st2_examples.fst
+
+cache:
+	$(FSTAR) cache.fst
