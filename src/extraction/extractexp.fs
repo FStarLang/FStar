@@ -190,7 +190,7 @@ let normalize_abs e0 =
    1) the return value (say r) also has type residualType and it's extraction-preimage is definitionally equal (in Fstar ) to that of mlAppExpr
    2) meets the ML requirements that the args to datacons be tupled and that the datacons be fullly applied
 *)
-let maybe_eta_data (qual : option<fv_qual>) (residualType : mlty)  (mlAppExpr : mlexpr) : mlexpr =
+let maybe_lalloc_eta_data (g:env) (qual : option<fv_qual>) (residualType : mlty)  (mlAppExpr : mlexpr) : mlexpr =
     let rec eta_args more_args t = match t with 
         | MLTY_Fun (t0, _, t1) -> 
           let x = Util.gensym (), -1 in
@@ -218,6 +218,7 @@ let maybe_eta_data (qual : option<fv_qual>) (residualType : mlty)  (mlAppExpr : 
                     | _ -> failwith "Impossible" in
     
     match (mlAppExpr, qual) with
+        | (MLE_App (MLE_Name mlp, mlargs), _) when (mlp=mlp_lalloc) -> (debug g (fun () -> Util.print_string "need to do lalloc surgery here\n"));mlAppExpr
         | _, None -> mlAppExpr
         | MLE_App(MLE_Name mlp, mle::args), Some (Record_projector f) -> 
           let fn = Util.mlpath_of_lid f in
@@ -285,7 +286,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
           let (x, mltys), qual = lookup_var g e in 
           //let _ = printfn "\n (*looked up tyscheme of \n %A \n as \n %A *) \n" x s in
           begin match mltys with 
-            | ([], t) -> maybe_eta_data qual t x, E_PURE, t
+            | ([], t) -> maybe_lalloc_eta_data g qual t x, E_PURE, t
             | _ -> err_uninst e
           end
 
@@ -304,8 +305,8 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                                 else let x = Util.gensym (), -1 in
                                      (x, arg)::lbs, (MLE_Var x::out_args)) 
                         ([], []) mlargs_f in
-                    let app = maybe_eta_data is_data t <| MLE_App(mlhead, mlargs) in
-                    let l_app = List.fold_right (fun (x, arg) out -> MLE_Let((false, [{mllb_name=x; mllb_tysc=None; mllb_add_unit=false; mllb_def=arg}]), out)) lbs app in
+                    let app = maybe_lalloc_eta_data g is_data t <| MLE_App(mlhead, mlargs) in
+                    let l_app = List.fold_right (fun (x, arg) out -> MLE_Let((false, [{mllb_name=x; mllb_tysc=None; mllb_add_unit=false; mllb_def=arg}]), out)) lbs app in // lets are to ensure L to R eval ordering of arguments
                     l_app, f, t
 
                 | (Inl _, _)::rest, MLTY_Fun (tunit, f', t) -> //non-prefix type app; this type argument gets erased to unit
@@ -341,7 +342,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                    let t = instantiate (vars, t) prefixAsMLTypes in
                    //debug g (fun () -> printfn "\n (*instantiating  \n %A \n with \n %A \n produced \n %A \n *) \n" (vars,t0) prefixAsMLTypes t);
                    match rest with 
-                    | [] -> maybe_eta_data qual t head, E_PURE, t
+                    | [] -> maybe_lalloc_eta_data g qual t head, E_PURE, t
                     | _  -> synth_app qual (head, []) (E_PURE, t) rest
               else err_uninst e
 

@@ -101,6 +101,7 @@ change the map from references to their values.
  * to ref types (?). So, I guess refs would have to be given non-uniform
  * treatment here.
  *)
+ (*is this is ever renamed or moved, mlp_lalloc in src\extraction\ml-syntax.fs MUST be updated.*)
 assume val lalloc: #a:Type -> v:a -> PureMem
   (located a)
   (requires (fun m ->isNonEmpty (st m)))
