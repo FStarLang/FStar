@@ -17,5 +17,6 @@ let max = int_of_string (Sys.argv.(1)) in
 	Camlstack.set_page_wosize 10240;
 	SST.pushStackFrame ();
 	(* printMaxPrimes max; *)
-	print_int (sumMaxPrimes max);
-	SST.popStackFrame ();;
+	print_endline (string_of_int (sumMaxPrimes max));
+	SST.popStackFrame ();
+	Gc.print_stat Pervasives.stdout;;
