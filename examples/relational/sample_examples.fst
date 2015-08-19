@@ -67,16 +67,14 @@ let cpa_good_sample_fun a b =
 
 (* Definition of CPA-security: An adversary cannot distinguish between the
    encryption of two plaintexts of his choice *)
-val cpa : block
-       -> block
+val cpa : double block
        -> ST2 (double block)
             (requires (fun _ -> True))
             (ensures (fun _ p _ -> R.l p = R.r p))
-let cpa a b = let sample_fun = (fun x -> xor (xor a b) x) in
-              cpa_good_sample_fun a b;
-              let k = sample sample_fun in
-              compose2 (fun k -> encrypt a k) (fun k -> encrypt b k) k
-              (* This does not work with eta reduced versions of the function *)
+let cpa a = let sample_fun = (fun x -> xor (xor (R.l a) (R.r a)) x) in
+            cpa_good_sample_fun (R.l a) (R.r a);
+            let k = sample sample_fun in
+            compose2_self (fun (a,k) -> encrypt a k) (pair_rel a k)
 
 (* As this example does not use state, we actually don't need the ST2 monad *)
 val cpa' : double block

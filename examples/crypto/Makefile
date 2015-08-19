@@ -1,12 +1,10 @@
 VERFILES=cca2.fst #sha1.fst mac.fst sig.fst padding.fst mac3.fst # encrypt3.fst formatting.fst rpc.fst
-MITLS=../../../mitls-fstar
 
 ifeq ($(OS),Windows_NT)
-#CC = i686-w64-mingw32-gcc.exe
+# internally flexlink uses i686-w64-mingw32-gcc.exe
 CC = flexlink -chain mingw -v -v -exe -lgdi32
 # flexlink is needed to link in	/cygdrive/c/OCaml/bin/flexdll_initer_mingw.o /cygdrive/c/OCaml/bin/flexdll_mingw.o
-#LIB = /cygdrive/c/msys32/usr/lib
-LIB = $(FSTAR_HOME)/../openssl-1.0.1p
+LIB = $(FSTAR_HOME)/../openssl #place to look for libcrypto.a
 else
     LIB = /usr/lib #place to look for libcrypto.a
     ifeq ($(UNAME_S),Darwin)
@@ -72,7 +70,7 @@ mllibs:
 	make -C $(FSTAR_HOME)/contrib/CoreCrypto/ml clean all
 
 
-rpc-extract:
+rpc-extract: sha1.fst mac.fst formatting.fst rpc.fst
 	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC --admit_fsi Seq  \
           $(addprefix $(FSTAR_HOME)/lib/, ext.fst classical.fst \
 					set.fsi set.fst \
