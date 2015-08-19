@@ -14,6 +14,7 @@ let rec sumMaxPrimes (upto : int) : int =
 
 let _ =
 let max = int_of_string (Sys.argv.(1)) in
+	Camlstack.set_page_wosize 10240;
 	SST.pushStackFrame ();
 	(* printMaxPrimes max; *)
 	print_int (sumMaxPrimes max);
