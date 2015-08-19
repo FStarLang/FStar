@@ -111,7 +111,7 @@ val innerLoop : n:nat{n>1}
       (eunion (only li)  (ArrayAlgos.eonly res))
 
 let innerLoop n lo li res initres =
-  (scopedWhile
+  (unscopedWhile
     (innerLoopInv n lo li res initres)
     (SieveFun.innerGuardLC n lo li)
     (fun u -> (memread li * memread lo < n))
