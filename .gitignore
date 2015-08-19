@@ -30,7 +30,6 @@ cache/
 
 examples/*/*.ml
 
-attic/
 _build/
 
 *.native*
