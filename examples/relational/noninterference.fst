@@ -45,7 +45,7 @@ open NonInterference
 open Comp
 open Relational
 
-(* Fails if label b > label a *)
+(* Fails iff label b > label a *)
 let a = new_labeled_int 1
 let b = new_labeled_int 0
 
@@ -56,4 +56,24 @@ let test () = (if !b = 0 then
                b := 0
 
 val test_ni : ni
-let test_ni () = compose2 test test (twice ())
+let test_ni () = compose2_self test (twice ())
+
+module Example2
+open NonInterference
+open Comp
+open Relational
+
+(* Fails iff label c < (max (label a) (label b) *)
+let a = new_labeled_int 1
+let b = new_labeled_int 0
+let c = new_labeled_int 2
+
+let test () = c := !a + !b;
+              if !c < !a then
+                b := 0
+              else 
+                b := 1;
+              a := 0
+
+val test_ni : ni
+let test_ni () = compose2_self test (twice ())
