@@ -23,6 +23,9 @@
 #define DEFAULT_PAGE_SZW 8192 / WORD_SZB
 #define MIN_FRAME_SZW 4
 
+/* Sets the default page size (must be at least MIN_FRAME_SZW) */
+void set_page_szw(int sz_w);
+
 /* Creates a logical frame having at MIN_FRAME_SZB bytes. */
 void push_frame(void);
 

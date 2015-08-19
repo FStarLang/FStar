@@ -22,7 +22,6 @@
 
 /* Utility routines */
 
-
 #define check(_p) if (!(_p)) { fprintf(stderr,"Failed check %s:%d\n",__FILE__,__LINE__); fflush(stdout); exit(1); }
 #ifdef DEBUG
 #define assert check
@@ -68,6 +67,7 @@ typedef struct _Page {
 
 /* The top of the stack */
 static Page *top = NULL;
+static int default_page_szw = DEFAULT_PAGE_SZW;
 
 /* [have_space(w)] returns 1 iff there exist [w] words available to allocate on the current page */
 static inline int have_space(int sz_w) {
@@ -78,7 +78,7 @@ static inline int have_space(int sz_w) {
    [w] words. If [e] is 1, then this page is extending a frame begun on the previous page.
    Otherwise the page coincides with the start of a new frame. */
 static void add_page(int sz_w, int is_ext) {
-  int sz_b = WORD_SZB * (max(sz_w, DEFAULT_PAGE_SZW));
+  int sz_b = WORD_SZB * (max(sz_w, default_page_szw));
 #ifndef NOGC
   int mapsz_b = word_align(MASK_SZB(sz_b/WORD_SZB));
   // XXX it's unclear why we need an extra WORD_SZB, but without it, we get a
@@ -97,6 +97,11 @@ static void add_page(int sz_w, int is_ext) {
   region->frame_ptr = is_ext ? EXT_MARKER : NULL;
   region->prev = top;
   top = region;
+}
+
+/* [set_page_szw(w) sets the default page size to [w] words. */
+void set_page_szw(int sz_w) {
+  default_page_szw = sz_w > MIN_FRAME_SZW ? sz_w : MIN_FRAME_SZW;
 }
 
 /* [push_frame()] pushes a new frame on the stack. It attempts to add that

@@ -45,6 +45,10 @@ external pop_frame : unit -> unit = "stack_pop_frame";;
     subsequently GCed.
     Raise [Failure "Camlstack.pop_frame"] if the stack has no frames. *)
 
+external set_page_wosize : int -> unit = "stack_set_page_wosize";;
+(** [Camlstack.set_page_wosize w] sets the default stack page
+    size to [w] words. *)
+
 external is_on_stack : 'a -> bool = "caml_is_stack_pointer";;
 (** [Camlstack.is_on_stack v] returns true if [v] is a boxed value allocated
     on the stack (though it may contain pointers into the heap). *)
