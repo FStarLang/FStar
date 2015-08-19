@@ -183,7 +183,12 @@ static void scan_stack_roots(scanning_action action)
   Please see that file for descriptions of these routines.
  */
 
-
+CAMLprim value stack_set_page_wosize(value lenv) 
+{
+  int len = Int_val(lenv);
+  set_page_szw(len) ;
+  return Val_unit;
+}
 
 static int already_initialized = 0; /* tracks whether GC scanner initialized */
 
@@ -377,7 +382,6 @@ CAMLprim value stack_mkref_noscan(value v)
 CAMLprim value stack_mkbytes(value lenv) {
   mlsize_t len = Int_val(lenv);
   if (len <= 0) {
-    printf ("got len = %lu\n", len);
     caml_invalid_argument ("Camlstack.mkbytes");
   }
   else {
