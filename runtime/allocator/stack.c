@@ -203,7 +203,7 @@ void *stack_alloc_maskp(int sz_w, int nbits, int *mask) {
     return res;
   } else {
     //printf("adding page on demand (size %d)\n", sz_b);
-    add_page(sz_w,1);
+    add_page(sz_w*2,1);
     goto retry;
   }
 }
