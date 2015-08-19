@@ -17,6 +17,16 @@
 #include <assert.h>
 #include "stack.h"
 
+static inline int align(int n, int blocksize) {
+  return n % blocksize == 0 ? n : blocksize * ((n / blocksize) + 1);
+}
+
+static inline int word_align(int bytes) {
+  return align(bytes,WORD_SZB);
+}
+
+#define WORDSIZE(t) (word_align(sizeof(t)) / WORD_SZB)
+
 void printptrs(void *ign, void **ptr) {
   printf("  live pointer addr=%p, val=%p\n",ptr,*ptr);
 }
@@ -40,13 +50,13 @@ void foo(int n) {
   } else {
     if (n % 3 == 0) push_frame();
     if (mark_ptr) {
-      x = stack_alloc_mask(sizeof(int),1,0);
-      y = stack_alloc_mask(sizeof(int),1,0);
-      z = stack_alloc_mask(sizeof(int),1,0);
+      x = stack_alloc_mask(WORDSIZE(int),1,0);
+      y = stack_alloc_mask(WORDSIZE(int),1,0);
+      z = stack_alloc_mask(WORDSIZE(int),1,0);
     } else {
-      x = stack_alloc_mask(sizeof(int),0);
-      y = stack_alloc_mask(sizeof(int),0);
-      z = stack_alloc_mask(sizeof(int),0);
+      x = stack_alloc_mask(WORDSIZE(int),0);
+      y = stack_alloc_mask(WORDSIZE(int),0);
+      z = stack_alloc_mask(WORDSIZE(int),0);
     }
     *x = n;
     *y = n+1;
@@ -74,9 +84,9 @@ void bar(int n) {
   } else {
     if (n % 3 == 0) push_frame();
     if (mark_ptr) {
-      p = stack_alloc_mask(sizeof(Triple),2,0,1);
+      p = stack_alloc_mask(WORDSIZE(Triple),2,0,1);
     } else {
-      p = stack_alloc(sizeof(Triple));
+      p = stack_alloc(WORDSIZE(Triple));
     }
     p->x = n;
     p->y = n+1;

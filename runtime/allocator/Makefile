@@ -10,6 +10,9 @@ OCAMLLINK := ocamlfind ocamlopt
 ifndef OPT
 FLAGS := -g 
 CFLAGS := -ccopt -g
+ifdef DEBUG
+CFLAGS := $(CFLAGS) -ccopt -DDEBUG
+endif
 else
 NOGC := y
 CFLAGS := -ccopt -O3
@@ -26,8 +29,8 @@ endif
 
 all: stacktest$(EXE) ffitest$(EXE)
 
-stacktest$(EXE): stack.o bitmask.o test.o
-	$(OCAMLC) $(FLAGS) $^ -o $@
+stacktest$(EXE): stack.o bitmask.o stacktest.o
+	$(OCAMLC) $(FLAGS) -o $@ $^ 
 
 ffitest.$(CMO): camlstack.cmi
 

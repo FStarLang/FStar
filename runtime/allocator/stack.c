@@ -20,10 +20,6 @@
 #include "stack.h"
 #include "bitmask.h"
 
-/* TODO:
-   - Change these routines to allocate words, not bytes, and then drop the word alignment checks 
-*/
-
 /* Utility routines */
 
 
@@ -67,26 +63,27 @@ typedef struct _Page {
        that range it is garbage. Also, the map is at word granularity. */
 } Page;
 
+/* This needs to be > NULL and < legal pointers */
 #define EXT_MARKER (void **)0x1
 
 /* The top of the stack */
 static Page *top = NULL;
 
-/* [have_space(b)] returns 1 iff there exist [b] bytes available to allocate on the current page */
-static inline int have_space(int sz_b) {
-  return (((unsigned long)top->limit_ptr - (unsigned long)top->alloc_ptr) >= sz_b);
+/* [have_space(w)] returns 1 iff there exist [w] words available to allocate on the current page */
+static inline int have_space(int sz_w) {
+  return (((void **)top->limit_ptr - (void **)top->alloc_ptr) >= sz_w);
 }
 
-/* [add_page(b,e)] pushes a new page on the stack, where the page should have at least
-   [b] bytes. If [e] is 1, then this page is extending a frame begun on the previous page.
+/* [add_page(w,e)] pushes a new page on the stack, where the page should have at least
+   [w] words. If [e] is 1, then this page is extending a frame begun on the previous page.
    Otherwise the page coincides with the start of a new frame. */
-static void add_page(int sz_b, int is_ext) {
-  sz_b = word_align(max(2*sz_b,DEFAULT_PAGE_SZB));
+static void add_page(int sz_w, int is_ext) {
+  int sz_b = WORD_SZB * (max(sz_w, DEFAULT_PAGE_SZW));
 #ifndef NOGC
   int mapsz_b = word_align(MASK_SZB(sz_b/WORD_SZB));
   // XXX it's unclear why we need an extra WORD_SZB, but without it, we get a
   // segfault when WORD_SZB = 8 and sizeof(MASK_TYPE) = 4
- //printf ("add page size = %d, ext = %d, map size = %d\n", sz_b, is_ext, mapsz_b);
+  // printf ("add page size = %d, ext = %d, map size = %d\n", sz_b, is_ext, mapsz_b);
   Page *region = malloc(sizeof(Page)+mapsz_b+WORD_SZB);  
 #else   
   Page *region = malloc(sizeof(Page));
@@ -102,7 +99,7 @@ static void add_page(int sz_b, int is_ext) {
   top = region;
 }
 
-/* [push_frame(b)] pushes a new frame on the stack. It attempts to add that
+/* [push_frame()] pushes a new frame on the stack. It attempts to add that
    frame to the current page, if there is a minimum amount of space. It stores the current
    frame pointers at the allocation pointer, updates the frame pointer to point to
    that location, and then advances the allocation pointer (as in a C function call). 
@@ -110,7 +107,7 @@ static void add_page(int sz_b, int is_ext) {
    space exists on the current page to support the frame, then a new page is 
    allocated, establishing the new frame. */
 void push_frame(void) {
-  if (top != NULL && have_space(MIN_FRAME_SZB)) { // can continue with current page
+  if (top != NULL && have_space(MIN_FRAME_SZW)) { // can continue with current page
     //printf("push frame in page\n");
     *((void **)top->alloc_ptr) = top->frame_ptr;
     top->frame_ptr = top->alloc_ptr;
@@ -121,7 +118,7 @@ void push_frame(void) {
     top->alloc_ptr = (void *)((unsigned long)top->alloc_ptr + WORD_SZB);
   } else {
     //printf("push frame on new page\n");
-    add_page(MIN_FRAME_SZB,0);
+    add_page(MIN_FRAME_SZW,0);
   }
 }
 
@@ -140,6 +137,7 @@ void pop_frame() {
   if (top == NULL) {
     printf("warning: popping from empty stack!\n");
     return;
+  }
 #endif
   if (top->frame_ptr > EXT_MARKER) {
     //printf ("pop frame on page\n");
@@ -162,53 +160,52 @@ void pop_frame() {
   }
 }
 
-/* [stack_alloc_maskp(s,n,m)] allocates [s] bytes in the current
-   frame. Of these bytes, there are [n] words that contain pointers,
+/* [stack_alloc_maskp(w,n,m)] allocates [w] words in the current
+   frame. Of these words, there are [n] words that contain pointers,
    as defined by the mask [m]. This mask is an array of integers
    indicating the word-sized offsets in the memory that begin the
-   pointers. If [n] is -1 then all words are potential pointers. If
+   pointers. If [n] is -1 then all words BUT THE FIRST are potential pointers. If
    the current page has enough memory, we simply bump the allocation
    pointer; otherwise, we allocate another page and extend the frame
    onto that page. The pointermap for the allocated memory is set to
    0, and then the bits in the mask are set.
  */
-void *stack_alloc_maskp(int sz_b, int nbits, int *mask) {
+void *stack_alloc_maskp(int sz_w, int nbits, int *mask) {
 #ifdef DEBUG
-  if (top != NULL) {
+  if (top == NULL) {
     printf ("Warning: allocating on an empty stack\n");
     return NULL;
   }
 #endif
-  sz_b = word_align(sz_b);
- retry: if (have_space(sz_b)) { // can continue with current page
+ retry: if (have_space(sz_w)) { // can continue with current page
     void *res = top->alloc_ptr;
     //printf("allocated %d bytes\n", sz_b);
-    int ofs = (void **)res - (void **)top->memory; // #words into the page
-    int i;
-    top->alloc_ptr = (void *)((unsigned long)top->alloc_ptr + sz_b);
+    top->alloc_ptr = (void *)((void **)top->alloc_ptr + sz_w);
 #ifndef NOGC
-    unsetbit_rng(top->pointermap, ofs, sz_b / WORD_SZB);
-    if (nbits < 0) { /* set all words in object as possibly pointerful */
-      for (i = 0; i<sz_b/WORD_SZB; i++) {
-	setbit(top->pointermap, i+1+ofs);
-      }
-    } else { /* set just words in the mask */
-      for (i = 0; i<nbits; i++) {
-	setbit(top->pointermap, mask[i]+ofs);
+    {
+      int i, ofs = (void **)res - (void **)top->memory; // #words into the page
+      if (nbits < 0) { /* set all object words as possibly pointerful */
+	unsetbit(top->pointermap,ofs); // except the first word
+	setbit_rng(top->pointermap, ofs+1, sz_w-1);
+      } else { /* set just words in the mask */
+	unsetbit_rng(top->pointermap, ofs, sz_w);
+	for (i = 0; i<nbits; i++) {
+	  setbit(top->pointermap, mask[i]+ofs);
+	}
       }
     }
 #endif    
     return res;
   } else {
     //printf("adding page on demand (size %d)\n", sz_b);
-    add_page(sz_b,1);
+    add_page(sz_w,1);
     goto retry;
   }
 }
 
 /* vstack_alloc_mask variable-argument wrapper around the stack
    allocation routine. */
-void *vstack_alloc_mask(int sz_b, int nbits, va_list argp) {
+void *vstack_alloc_mask(int sz_w, int nbits, va_list argp) {
   int buf[256];
   int i;
   assert(nbits >= -1 && nbits < 256);
@@ -216,24 +213,24 @@ void *vstack_alloc_mask(int sz_b, int nbits, va_list argp) {
     int n = va_arg(argp,int);
     buf[i] = n;
   }
-  return stack_alloc_maskp(sz_b,nbits,buf);
+  return stack_alloc_maskp(sz_w,nbits,buf);
 }  
 
 /* vstack_alloc_mask variable-argument wrapper around the stack
    allocation routine. */
-void *stack_alloc_mask(int sz_b, int nbits, ...) {
+void *stack_alloc_mask(int sz_w, int nbits, ...) {
   va_list argp;
   void *result;
   va_start(argp, nbits);
-  result = vstack_alloc_mask(sz_b, nbits, argp);
+  result = vstack_alloc_mask(sz_w, nbits, argp);
   va_end(argp);
   return result;
 }
 
 /* stack_alloc is a special case of stack allocation that allocates
    memory that contains no pointers. */
-void *stack_alloc(int sz_b) {
-  return stack_alloc_mask(sz_b, 0);
+void *stack_alloc(int sz_w) {
+  return stack_alloc_mask(sz_w, 0);
 }
 
 /* [is_stack_pointer(p)] returns 1 if p is a valid (allocated) stack

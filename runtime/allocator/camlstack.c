@@ -94,7 +94,7 @@ value stack_caml_alloc(mlsize_t wosize, tag_t tag, int nbits, int *mask) {
   Assert (wosize != 0);
   /*The provided mask indexes words starting at 1 so as to skip over
     the header word. */
-  tmp = (value)stack_alloc_maskp(Bhsize_wosize(wosize),nbits,mask);
+  tmp = (value)stack_alloc_maskp(Whsize_wosize(wosize),nbits,mask);
 #ifdef DEBUG
   if (tmp == (value)0) return tmp;
 #endif
@@ -365,7 +365,7 @@ CAMLprim value stack_mkref_noscan(value v)
   value ref = stack_caml_alloc_tuple(1,0,NULL); /* Assume it will never contain a pointer */
 #ifdef DEBUG
   if (ref == (value)0)
-    caml_failwith ("Camlstack.mkref");
+    caml_failwith ("Camlstack.mkref_noscan");
   else 
 #endif
   {
@@ -396,6 +396,7 @@ CAMLprim value stack_mkarray(value lenv, value initv) {
   if (len <= 0 || (Is_block(initv) && Tag_val(initv) == Double_tag))
     caml_invalid_argument ("Camlstack.mkarray");
   else {
+    printf ("allocating array; len = %d\n", len);
     value tuple = stack_caml_alloc_tuple(len,-1,NULL); /* all possible heap pointers */
 #ifdef DEBUG
     if (tuple == (value)0)
