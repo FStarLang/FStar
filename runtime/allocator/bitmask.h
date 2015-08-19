@@ -52,6 +52,10 @@ void unsetbit(MASK_TYPE *map, int bit);
    [m]. We assume [m] has sufficient memory allocated to it to unset this range. */
 void unsetbit_rng(MASK_TYPE *map, int bit, int len);
 
+/* [setbit_rng m b l] sets bits [b] up to [b+l-1] in the given map
+   [m]. We assume [m] has sufficient memory allocated to it to unset this range. */
+void setbit_rng(MASK_TYPE *map, int bit, int len);
+
 /* [eachbit m f e] invokes function [f] on each set bit in [m]. In
    particular, for each bit b that is set in [m], this routine will
    call [f(e,b)].  */
