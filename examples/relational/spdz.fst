@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set --z3timeout 5 ;
+    options:--admit_fsi Set --z3timeout 10 ;
     variables:LIB=../../lib;
     other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/st2.fst $LIB/bytes.fst $LIB/list.fst sample.fst
   --*)
@@ -87,6 +87,7 @@ let thd3 = MkTuple3._3
 (* We prove that the sample function used is a bijection *)
 opaque val triple_a_good_sample_fun : sl:fp -> sr:fp ->
   Lemma (good_sample_fun #fp #fp (fun x -> add_fp (minus_fp x sl) sr))
+#reset-options
 let triple_a_good_sample_fun sl sr =
   let sample_fun = (fun x -> add_fp (minus_fp x sl) sr) in
   let sample_fun'= (fun x -> add_fp (minus_fp x sr) sl) in

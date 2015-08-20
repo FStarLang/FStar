@@ -40,7 +40,7 @@ let rec fsts l = match l with
   | [] -> []
   | (a,b)::ls -> a :: fsts ls
 
-let fsts_rel (R ll lr) = R (fsts ll) (fsts lr)
+let fsts_rel = rel_map1 fsts
 
 val scalar_product :l1:list int -> l2:list int{length l1 = length l2} -> Tot int
 let rec scalar_product l1 l2 = match l1, l2 with
@@ -69,12 +69,12 @@ assume CommitP_injective : (forall pp x0 x1 r0 r1. (commitP pp x0 r0 = commitP p
 assume val mult: c0:double elt -> c1: double elt
                  -> Tot (c:double elt{forall pp x0 x1 r0 r1.
                           (c0 = commitP pp x0 r0 /\ c1=commitP pp x1 r1) ==>
-                          c=commitP pp (add_rel x0 x1) (add_rel r0 r1)})
+                          c=commitP pp (x0 ^+ x1) (r0 ^+ r1)})
 
 assume val exp: c0:double elt -> z:double int
                  -> Tot (c:double elt{forall pp x0 r0.
                           c0 = commitP pp x0 r0 ==>
-                          c=commitP pp (mul_rel x0 z) (mul_rel r0 z)})
+                          c=commitP pp (x0 ^* z) (r0 ^* z)})
 
 assume val commitsP: pp:double (public_param) -> double (list(text * opng)) -> Tot (double (list elt))
 assume val commitsP_nil: pp:pparam -> xrs:double(list (text * opng)) -> Lemma (commitsP pp xrs = twice [] <==> xrs = twice [])
@@ -173,7 +173,7 @@ let rec sums xrs ps = match xrs, ps with
       let x = fst_rel xr in
       let r = snd_rel xr in
       let (| x0, r0 |) = sums xrs ps in
-      (| add_rel x0 (mul_rel x p), add_rel r0 (mul_rel r p) |)
+      (| x0 ^+ (x ^* p), r0 ^+ (r ^* p) |)
   | R [] [], R [] [] -> (| (twice 1),(twice 0) |)
 
 val make_payment: pp:pparam -> xrs:openings{readings (fsts_rel xrs)}

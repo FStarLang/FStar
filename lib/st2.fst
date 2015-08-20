@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi Set;
     variables:LIB=../lib;
-    other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst
+    other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst 
   --*)
 
 module Relational
@@ -23,20 +23,21 @@ let rel_map2 f (R x1 x2) (R y1 y2) = R (f x1 y1) (f x2 y2)
 val rel_map3 : ('a -> 'b -> 'c -> Tot 'd) -> (double 'a) -> (double 'b) -> (double 'c) -> Tot (double 'd)
 let rel_map3 f (R x1 x2) (R y1 y2) (R z1 z2) = R (f x1 y1 z1) (f x2 y2 z2)
 
-let add_rel (R a b) (R c d) = R (a+c) (b+d)
-let mul_rel (R a b) (R c d) = R (a*c) (b*d)
+let op_Hat_Plus = rel_map2 (fun x y -> x + y)
+let op_Hat_Minus = rel_map2 (fun x y -> x - y)
+let op_Hat_Star = rel_map2 (fun x y -> x * y)
+let op_Hat_Slash = rel_map2 (fun x y -> x / y)
 val tl_rel: #a:Type -> l:double (list a){is_Cons (R.l l) /\ is_Cons (R.r l)}-> Tot (double (list a))
 let tl_rel (R (_::xs) (_::ys)) = R xs ys
 let cons_rel (R x y) (R xs ys) = R (x::xs)  (y::ys)
-let pair_rel (R x y) (R x' y') = R (x,x') (y,y')
-let fst_rel (R (x, y) (x', y')) = R x x'
-let snd_rel (R (x, y) (x', y')) = R y y'
+let pair_rel = rel_map2 MkTuple2
+let fst_rel = rel_map1 fst
+let snd_rel = rel_map1 snd
 let and_rel (R a b) = a && b
 let or_rel (R a b) = a || b
 let eq_rel (R a b) = a = b
-let sel_rel (R h0 h1) (R r0 r1) = R (sel h0 r0) (sel h1 r1)
-
-
+(* let op_Hat_Bang = rel_map1 (fun x -> !x) *)
+let sel_rel = rel_map2 sel
 
 module Comp
 open Heap
