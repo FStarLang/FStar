@@ -159,10 +159,19 @@ Recursive Extraction void.
 Inductive erased (T:Type) : Prop := 
 | hide : T -> erased T.
 
-Definition unhide (T :Type) (R:Prop) (g : erased T) (f: T -> R) : R.
+
+
+Definition unhide {T :Type} {R:Prop} (g : erased T) (f: T -> R) : R.
   destruct g.
   apply f. assumption.
 Defined.
+
+Definition pi1 (a:nat) (b:nat) (c: erased nat) : nat := a.
+
+
+Recursive Extraction pi1.
+
+
 
 Definition elift1 {T R :Type} (f: T -> R) (g : erased T) : erased R.
   destruct g. apply hide.
