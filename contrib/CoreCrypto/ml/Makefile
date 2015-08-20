@@ -5,8 +5,10 @@ ifeq ($(OS),Windows_NT)
     OPENSSL_INCLUDE = ../../../../openssl/include
     OCAML_INCLUDE = /usr/local/lib/ocaml
     EXTRA_OPTS =
+		DLL = dll #DLL file ending for windows
 else
     UNAME_S := $(shell uname -s)
+		DLL = so #DLL file ending for unix
     ifeq ($(UNAME_S),Darwin)
         CC = gcc-5
         OPENSSL_INCLUDE = /usr/include
@@ -26,7 +28,7 @@ openssl_stub.o: openssl_stub.c
 #	ocamlopt -c -cc "$(CC) -I /usr/local/lib/ocaml -I ../../../../openssl-1.0.1p/include -lcrypto -c" $<
 #	ocamlopt -c -cclib -lcrypto -cclib -lopenssl $< -ccopt -static
 
-dllopenssl_wrap.so: openssl_stub.o
+dllopenssl_wrap.${DLL}: openssl_stub.o
 	ocamlmklib  -o  openssl_wrap  $<
 
 CoreCrypto.cmi: CoreCrypto.mli
@@ -41,8 +43,10 @@ CoreCrypto.cma:  CoreCrypto.cmo  dllopenssl_wrap.so
 CoreCrypto.cmx: CoreCrypto.ml CoreCrypto.cmi
 	ocamlopt -I ../../Platform/ml -c $<
 
-CoreCrypto.cmxa: CoreCrypto.cmx  dllopenssl_wrap.so
+CoreCrypto.cmxa: CoreCrypto.cmx  dllopenssl_wrap.${DLL}
 	ocamlopt -I ../../Platform/ml -a  -o $@  $<  -cclib -lopenssl_wrap
+
+stub: openssl_stub.o
 
 clean:
 	rm -f *.[oa] *.so *.cm[ixoa] *.cmxa
