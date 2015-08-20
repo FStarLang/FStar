@@ -3273,6 +3273,9 @@ let is_kvar g t k hk = if is_KVar hk then 0 else 1
 (* CH: this doesn't always help, on the the contrary
 #set-options "--split_cases 1" *)
 
+(* CH: seems not needed on my machine, but needed on Markulf's Surface *)
+#set-options "--z3timeout 20"
+
 opaque val typing_substitution : #g1:env -> #e:exp -> #c:cmp -> s:sub -> #g2:env ->
     h1:typing g1 e c ->
     hs:subst_typing s g1 g2 ->

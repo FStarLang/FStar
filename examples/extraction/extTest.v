@@ -67,6 +67,11 @@ Check idtype.
 Definition id : idtype := fun X x => x. 
 
 
+Inductive list3 : Type -> Type :=
+| Nil3 : forall (a:Type), list3 a
+| Cons3 : forall (a:Type), a -> list3 a -> list3 (prod a a).
+
+
 Definition idu : unit -> idtype := fun u X x => x. 
 
 Extract Inductive unit => unit [ "()" ].
@@ -151,25 +156,29 @@ Recursive Extraction pair.
 Inductive void := .
 Recursive Extraction void.
 
-Inductive Ghost (T:Type) : Prop := 
-| hide : T -> Ghost T.
+Inductive erased (T:Type) : Prop := 
+| hide : T -> erased T.
 
-Definition unhide (T :Type) (R:Prop) (g : Ghost T) (f: T -> R) : R.
+Definition unhide (T :Type) (R:Prop) (g : erased T) (f: T -> R) : R.
   destruct g.
   apply f. assumption.
 Defined.
 
-Definition GS : Ghost nat -> Ghost nat.
-  intros n.
-  destruct n as [n].
-  exact (hide _ (S n)).
+Definition elift1 {T R :Type} (f: T -> R) (g : erased T) : erased R.
+  destruct g. apply hide.
+  apply f. assumption.
 Defined.
 
-Inductive listOfSize {C:Type} : (list C) -> (Ghost nat) -> Prop :=
-| lsnil : listOfSize nil (hide _ 0)
-| lscons : forall (l: list C) (c:C) (n: Ghost nat), listOfSize l n -> (listOfSize (c::l) (GS n)) .
 
-Definition sizedList (C:Type): Type := {size : Ghost nat & {l : list C | listOfSize l size}}.
+Definition GS : (erased nat) -> erased nat :=
+(elift1 S).
+
+
+Inductive listOfSize {C:Type} : (list C) -> (erased nat) -> Prop :=
+| lsnil : listOfSize nil (hide _ 0)
+| lscons : forall (l: list C) (c:C) (n: erased nat), listOfSize l n -> (listOfSize (c::l) (GS n)) .
+
+Definition sizedList (C:Type): Type := {size : erased nat & {l : list C | listOfSize l size}}.
 
 
 Definition aSizedList : sizedList nat.

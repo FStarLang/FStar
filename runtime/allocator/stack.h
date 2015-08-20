@@ -20,27 +20,30 @@
 
 /* Default size of contiguous memory in a frame */
 #define WORD_SZB sizeof(void*)
-#define DEFAULT_PAGE_SZB 4096
-#define MIN_FRAME_SZB WORD_SZB*4
+#define DEFAULT_PAGE_SZW 8192 / WORD_SZB
+#define MIN_FRAME_SZW 4
+
+/* Sets the default page size (must be at least MIN_FRAME_SZW) */
+void set_page_szw(int sz_w);
 
 /* Creates a logical frame having at MIN_FRAME_SZB bytes. */
 void push_frame(void);
 
 /* Pops off the top frame, freeing the memory if the page is empty.
-   Returns -1 if the stack is empty; returns 0 otherwise. */
-int pop_frame(void);
+   Asumes the stack is non-empty. */
+void pop_frame(void);
 
-/* Allocates sz_b bytes on the topmost frame. Will add new pages as
-   needed. Returns NULL if there is no allocated stack frame. */
-void *stack_alloc(int sz_b);
+/* Allocates sz_w words on the topmost frame. Will add new pages as
+   needed. Assumes the stack is non-empty. */
+void *stack_alloc(int sz_w);
 
-/* Allocates sz_b bytes on the topmost frame. Will add new pages as
+/* Allocates sz_w words on the topmost frame. Will add new pages as
    needed. Sets the bitmask at word-sized offsets given by the varargs. 
    If nbits is -1, then all words allocated are considered potentially
    pointerful. */
-void *stack_alloc_mask(int sz_b, int nbits, ...);
-void *vstack_alloc_mask(int sz_b, int nbits, va_list argp);
-void *stack_alloc_maskp(int sz_b, int nbits, int *mask);
+void *stack_alloc_mask(int sz_w, int nbits, ...);
+void *vstack_alloc_mask(int sz_w, int nbits, va_list argp);
+void *stack_alloc_maskp(int sz_w, int nbits, int *mask);
 
 /* Returns 1 if the given pointer is one managed by the stack; 
    0 otherwise. */

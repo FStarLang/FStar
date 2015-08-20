@@ -147,3 +147,5 @@ let ml_unit    = MLE_Const MLC_Unit
 // do NOT remove Prims, because all mentions of unit/bool in F* are actually Prims.unit/bool.
 let ml_bool_ty = MLTY_Named ([], (["Prims"], "bool")) 
 let ml_unit_ty = MLTY_Named ([], (["Prims"], "unit")) 
+
+let mlp_lalloc = (["SST"], "lalloc")

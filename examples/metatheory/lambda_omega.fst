@@ -1,5 +1,6 @@
 (*
    Copyright 2015
+     Simon Forest - Inria and ENS Paris
      Catalin Hritcu - Inria
      Aseem Rastogi - UMD
      Nikhil Swamy - Microsoft Research
@@ -55,201 +56,58 @@ val is_erenaming : s:esub -> Tot (n:int{(  erenaming s  ==> n=0) /\
 let is_erenaming s = (if excluded_middle (erenaming s) then 0 else 1)
   (* not marking erenaming 'opaque' triggers #222 *)
 
-val esub_inc_above : nat -> var -> Tot exp
-let esub_inc_above x y = if y<x then EVar y else EVar (y+1)
-
 val esub_inc : var -> Tot exp
-let esub_inc = esub_inc_above 0
-
-val erenaming_sub_inc : unit -> Lemma (erenaming (esub_inc))
-let erenaming_sub_inc _ = ()
+let esub_inc y = EVar (y+1)
 
 let is_evar (e:exp) : int = if is_EVar e then 0 else 1
 
 val esubst : s:esub -> e:exp -> Pure exp (requires True)
       (ensures (fun e' -> erenaming s /\ is_EVar e ==> is_EVar e'))
-      (decreases %[is_evar e; is_erenaming s; e])
+      (decreases %[is_evar e; is_erenaming s; 1; e])
+
+val esub_lam: s:esub -> x:var -> Tot (e:exp{ erenaming s ==> is_EVar e})
+      (decreases %[1;is_erenaming s; 0; EVar 0])
+
 let rec esubst s e =
   match e with
   | EVar x -> s x
-
-  | ELam t e1 ->
-     let esubst_lam : y:var -> Tot (e:exp{erenaming s ==> is_EVar e}) =
-       fun y -> if y=0 then EVar y
-                       else (esubst esub_inc (s (y - 1))) in
-     ELam t (esubst esubst_lam e1)
-
+  | ELam t e -> ELam t (esubst (esub_lam s) e)
   | EApp e1 e2 -> EApp (esubst s e1) (esubst s e2)
-
-val esubst_lam: s:esub -> Tot esub
-let esubst_lam s y =
+and esub_lam s = fun y ->
   if y = 0 then EVar y
            else esubst esub_inc (s (y-1))
 
-val esubst_lam_renaming: s:esub -> Lemma
-  (ensures (forall (x:var). erenaming s ==> is_EVar (esubst_lam s x)))
-let esubst_lam_renaming s = ()
+val esub_lam_renaming: s:esub -> Lemma
+  (ensures (forall (x:var). erenaming s ==> is_EVar (esub_lam s x)))
+let esub_lam_renaming s = ()
 
 (* Substitution extensional; trivial with the extensionality axiom *)
 val esubst_extensional: s1:esub -> s2:esub{FEq s1 s2} -> e:exp ->
                         Lemma (requires True) (ensures (esubst s1 e = esubst s2 e))
-                       (* [SMTPat (esubst e s1);  SMTPat (esubst e s2)] *)
+                       (*[SMTPat (esubst s1 e);  SMTPat (esubst s2 e)]*)
 let esubst_extensional s1 s2 e = ()
 
 (* This only works automatically with the patterns in subst_extensional above;
    it would be a lot cooler if this worked without, since that increases checking time.
    Even worse, there is no way to prove this without the SMTPat (e.g. manually),
    or to use the SMTPat only locally, in this definition (`using` needed). *)
-val esubst_lam_hoist : t:typ -> e:exp -> s:esub -> Lemma (requires True)
-      (ensures (esubst s (ELam t e) = ELam t (esubst (esubst_lam s) e)))
+val esub_lam_hoist : t:typ -> e:exp -> s:esub -> Lemma (requires True)
+      (ensures (esubst s (ELam t e) = ELam t (esubst (esub_lam s) e)))
       (* [SMTPat (esubst (ELam t e) s)]
       (\* -- this increases running time by 10 secs and adds variability *\) *)
-let esubst_lam_hoist t e s = admit()
+let esub_lam_hoist t e s = admit()
+val esub_beta : exp -> Tot esub
+let esub_beta e = fun y -> if y = 0 then e
+                           else (EVar (y-1))
 
-(* Substitution composition *)
+val esubst_beta : exp -> exp -> Tot exp
+let esubst_beta e = esubst (esub_beta e)
 
-val esub_comp : s1:esub -> s2:esub -> Tot esub
-let esub_comp s1 s2 x = esubst s1 (s2 x)
-
-val esub_comp_inc : s:esub -> x:var ->
-      Lemma (esub_comp esub_inc s x = esub_comp (esubst_lam s) esub_inc x)
-let esub_comp_inc s x =
-  assert(esub_comp esub_inc s x = esubst esub_inc (s x));
-  assert(esub_comp (esubst_lam s) esub_inc x =
-                                  esubst (esubst_lam s) (EVar (x+1)));
-  assert(esub_comp (esubst_lam s) esub_inc x = esubst_lam s (x+1));
-  assert(esub_comp (esubst_lam s) esub_inc x = esubst esub_inc (s x))
-
-val esubst_comp : s1:esub -> s2:esub -> e:exp -> Lemma
-      (ensures (esubst s1 (esubst s2 e) = esubst (esub_comp s1 s2) e))
-      (decreases %[is_evar e;
-                   is_erenaming s1;
-                   is_erenaming s2;
-                   e])
-let rec esubst_comp s1 s2 e =
-  match e with
-  | EVar x -> ()
-  | EApp e1 e2 ->
-    esubst_comp s1 s2 e1;
-    esubst_comp s1 s2 e2
-
-  | ELam t e1 ->
-    (* Sketch of the proof:
-               esubst (esubst (ELam t e1) s2) s1
-  def,hoist1=  esubst (ELam t (esubst e1 (esubst_lam s2)) s1
-  def,hoist2=  ELam t (esubst (esubst e1 (esubst_lam s2)) (esubst_lam s1))
-          h1=  ELam t (esubst e1 (esub_comp (esubst_lam s1) (esubst_lam s2)))
-      h2,ext=  ELam t (esubst e1 (esubst_lam (esub_comp s1 s2))
-  def,hoist3=  esubst (ELam t e1) (esubst_comp s1 s2)
-    *)
-
-    let esubst_lam_comp : x:var -> Lemma
-      (esubst_lam (esub_comp s1 s2) x =
-       esub_comp (esubst_lam s1) (esubst_lam s2) x) =
-      fun x ->
-        match x with
-          | 0 -> ()
-          | _ ->
-            (* sketch:
-                     esubst_lam (esub_comp s1 s2) x
-           def=      esubst (esub_comp s1 s2 (x-1)) esub_inc
-           def=      esubst (esubst (s2 (x - 1)) s1) esub_inc
-           ih1=      esubst (s2 (x-1)) (esub_comp esub_inc s1)
-esub_comp_inc,ext=   esubst (s2 (x-1)) (esub_comp (esubst_lam s1) esub_inc)
-           ih2=      esubst (esubst (s2 (x-1)) esub_inc) (esubst_lam s1)
-           def=      esubst (esubst_lam s2 x) (esubst_lam s1)
-              =      esub_comp (esubst_lam s1) (esubst_lam s2) x
-            *)
-            begin
-            (* terminates because:
-               1. if s2 is a renaming, then s2 (x - 1) is a var and e is a non-var
-               2. else if s1 is a renaming, then esub_inc is a renaming so
-               both the first and 2nd components remain the same;
-               but the third component goes down (s1 is a renaming and s2 is not).
-               3. else the second component goes down since esub_inc is a
-                  renaming and s1 is not. *)
-
-              let ih1 =
-                erenaming_sub_inc ();
-                esubst_comp esub_inc s1 (s2 (x-1)) in
-
-              let ext =
-                forall_intro (esub_comp_inc s1);
-                esubst_extensional
-                  (esub_comp esub_inc s1)
-                  (esub_comp (esubst_lam s1) esub_inc) (s2 (x-1)) in
-
-            (* terminates because:
-               1. if s2 is a renaming ... easy.
-               2. else if s1 is a renaming, (esubst_lam s1) is a renaming,
-                  and the third component goes down.
-               3. else the third component goes down. *)
-              let ih2 =
-                esubst_lam_renaming s1;
-                erenaming_sub_inc ();
-                esubst_comp (esubst_lam s1) esub_inc (s2 (x-1)) in
-
-              ()
-
-            end in
-
-
-    let hoist1 = esubst_lam_hoist t e1 s2 in
-    let hoist2 = esubst_lam_hoist t (esubst (esubst_lam s2) e1) s1 in
-
-
-    (* terminates because e1 is a sub-term,
-       and (esubst_lam s1/s2) are renamings if s1/s2 are.
-       h1 proves   esubst (esubst e1 (esubst_lam s2)) (esubst_lam s1)
-                 = esubst e1 (esub_comp (esubst_lam s1) (esubst_lam s2))
-    *)
-    let h1 =
-      esubst_lam_renaming s1;
-      esubst_lam_renaming s2;
-      esubst_comp (esubst_lam s1) (esubst_lam s2) e1 in
-
-    let h2 =
-      forall_intro esubst_lam_comp;
-      cut (FEq (esub_comp (esubst_lam s1) (esubst_lam s2))
-             (esubst_lam (esub_comp s1 s2))) in
-
-    let ext = esubst_extensional
-      (esub_comp (esubst_lam s1) (esubst_lam s2))
-      (esubst_lam (esub_comp s1 s2))
-      e1 in
-
-    let hoist3 = esubst_lam_hoist t e1 (esub_comp s1 s2) in
-    ()
-
-(* Identity substitution *)
-
-val esub_id : esub
-let esub_id x = EVar x
-
-val esubst_id : e:exp -> Lemma (esubst esub_id e = e)
-let rec esubst_id e =
-  match e with
-  | EVar _ -> ()
-  | ELam t e1 ->
-     esubst_lam_hoist t e1 esub_id;
-     esubst_extensional esub_id (esubst_lam esub_id) e1;
-     esubst_id e1
-  | EApp e1 e2 -> esubst_id e1; esubst_id e2
-
-(* subst_beta_gen is a generalization of the substitution we do for
-   the beta rule, when we're under x binders
-   (useful for the substitution lemma) *)
-val esub_beta_gen : var -> exp -> Tot esub
-let esub_beta_gen x e = fun y -> if y < x then (EVar y)
-                                 else if y = x then e
-                                 else (EVar (y-1))
-
-val esubst_beta_gen : var -> exp -> exp -> Tot exp
-let esubst_beta_gen x e' = esubst (esub_beta_gen x e')
-
-let esubst_beta = esubst_beta_gen 0
-
-(* Substitution on types is very much analogous *)
+(* Substitution on types is kind of analogous *)
+(* CH: Now this is more complex: tsub_inc_above, tsubst_beta_gen are
+   still there unfortunately, although they were simplified away for
+   expressions. This seems to be more an artifact of the TAPL proof
+   (via confluence); so we can still hope we can do better for TinyF*.*)
 
 type tsub = var -> Tot typ
 opaque type trenaming (s:tsub) = (forall (x:var). is_TVar (s x))
@@ -277,16 +135,16 @@ let rec tsubst s t =
   | TVar x -> s x
 
   | TLam k t1 ->
-     let tsubst_lam : y:var -> Tot (t:typ{trenaming s ==> is_TVar t}) =
+     let tsub_lam : y:var -> Tot (t:typ{trenaming s ==> is_TVar t}) =
        fun y -> if y=0 then TVar y
                        else (tsubst tsub_inc (s (y-1))) in
-     TLam k (tsubst tsubst_lam t1)
+     TLam k (tsubst tsub_lam t1)
 
   | TArr t1 t2 -> TArr (tsubst s t1) (tsubst s t2)
   | TApp t1 t2 -> TApp (tsubst s t1) (tsubst s t2)
 
-val tsubst_lam: s:tsub -> Tot tsub
-let tsubst_lam s y =
+val tsub_lam: s:tsub -> Tot tsub
+let tsub_lam s y =
   if y = 0 then TVar y
            else tsubst tsub_inc (s (y-1))
 
@@ -296,21 +154,95 @@ val tsubst_extensional: s1:tsub -> s2:tsub{FEq s1 s2} -> t:typ ->
 (*                       [SMTPat (tsubst t s1);  SMTPat (tsubst t s2)]*)
 let tsubst_extensional s1 s2 t = ()
 
-(* Same silly situation as for esubst_lam_hoist *)
-val tsubst_lam_hoist : k:knd -> t:typ -> s:tsub -> Lemma
-      (ensures (tsubst s (TLam k t) = TLam k (tsubst (tsubst_lam s) t)))
-let tsubst_lam_hoist k t s = admit()
+(* Same silly situation as for esub_lam_hoist *)
+val tsub_lam_hoist : k:knd -> t:typ -> s:tsub -> Lemma
+      (ensures (tsubst s (TLam k t) = TLam k (tsubst (tsub_lam s) t)))
+let tsub_lam_hoist k t s = admit()
 
-(* Type substitution composition (again analogous) *)
+(* Type substitution composition *)
+(* CH: again, we managed to get rid of this for expressions only
+       (it was never used anyway) *)
 
 val tsub_comp : s1:tsub -> s2:tsub -> Tot tsub
 let tsub_comp s1 s2 x = tsubst s1 (s2 x)
 
-(* CH: admitting these for now, they are exactly the same as for esubst *)
-assume val tsubst_comp : s1:tsub -> s2:tsub -> t:typ -> Lemma
+val tsub_comp_inc : s:tsub -> x:var ->
+      Lemma (tsub_comp tsub_inc s x = tsub_comp (tsub_lam s) tsub_inc x)
+let tsub_comp_inc s x = ()
+
+val tsub_lam_renaming: s:tsub -> Lemma
+  (ensures (forall (x:var). trenaming s ==> is_TVar (tsub_lam s x)))
+let tsub_lam_renaming s = ()
+
+val tsubst_comp : s1:tsub -> s2:tsub -> t:typ -> Lemma
       (tsubst s1 (tsubst s2 t) = tsubst (tsub_comp s1 s2) t)
-assume val tsubst_lam_comp : s1:tsub -> s2:tsub -> x:var -> Lemma
-      (tsubst_lam (tsub_comp s1 s2) x = tsub_comp (tsubst_lam s1) (tsubst_lam s2) x)
+      (decreases %[is_tvar t;
+                   is_trenaming s1;
+                   is_trenaming s2;
+                   t])
+let rec tsubst_comp s1 s2 t =
+  match t with
+  | TVar z -> ()
+  | TApp t1 t2 -> tsubst_comp s1 s2 t1; tsubst_comp s1 s2 t2
+  | TLam k tbody ->
+      let tsub_lam_comp : x:var ->
+            Lemma(tsub_lam (tsub_comp s1 s2) x =
+                            tsub_comp (tsub_lam s1) (tsub_lam s2) x) =
+        fun x -> match x with
+        | 0 -> ()
+        | _ -> begin
+          let ih1 = trenaming_sub_inc ();
+                    tsubst_comp tsub_inc s1 (s2 (x-1)) in
+          let ext = forall_intro (tsub_comp_inc s1);
+                    tsubst_extensional (tsub_comp tsub_inc s1)
+                                       (tsub_comp (tsub_lam s1) tsub_inc)
+                                       (s2 (x-1)) in
+          let ih2 = tsub_lam_renaming s1;
+                    trenaming_sub_inc ();
+                    tsubst_comp (tsub_lam s1) tsub_inc (s2 (x-1))
+          in ()
+        end
+      in
+      let hoist1 = tsub_lam_hoist k tbody s2 in
+      let hoist2 = tsub_lam_hoist k (tsubst (tsub_lam s2) tbody) s1 in
+    let h1 =
+      tsub_lam_renaming s1;
+      tsub_lam_renaming s2;
+      tsubst_comp (tsub_lam s1) (tsub_lam s2) tbody in
+
+    let h2 =
+      forall_intro tsub_lam_comp;
+      cut (FEq (tsub_comp (tsub_lam s1) (tsub_lam s2))
+             (tsub_lam (tsub_comp s1 s2))) in
+
+    let ext = tsubst_extensional
+      (tsub_comp (tsub_lam s1) (tsub_lam s2))
+      (tsub_lam (tsub_comp s1 s2))
+      tbody in
+
+    tsub_lam_hoist k tbody (tsub_comp s1 s2)
+
+  | TArr t1 t2 -> tsubst_comp s1 s2 t1; tsubst_comp s1 s2 t2
+
+val tsub_lam_comp : s1:tsub -> s2:tsub -> x:var -> Lemma
+      (tsub_lam (tsub_comp s1 s2) x = tsub_comp (tsub_lam s1) (tsub_lam s2) x)
+(* CH: TODO: Quite a bit of duplication here, mutual recursion would
+       have been better than nested one. Can we do that? *)
+let tsub_lam_comp s1 s2 x =
+        match x with
+        | 0 -> ()
+        | _ -> begin
+          let ih1 = trenaming_sub_inc ();
+                    tsubst_comp tsub_inc s1 (s2 (x-1)) in
+          let ext = forall_intro (tsub_comp_inc s1);
+                    tsubst_extensional (tsub_comp tsub_inc s1)
+                                       (tsub_comp (tsub_lam s1) tsub_inc)
+                                       (s2 (x-1)) in
+          let ih2 = tsub_lam_renaming s1;
+                    trenaming_sub_inc ();
+                    tsubst_comp (tsub_lam s1) tsub_inc (s2 (x-1))
+          in ()
+        end
 
 (* Identity substitution *)
 
@@ -322,8 +254,8 @@ let rec tsubst_id t =
   match t with
   | TVar z -> ()
   | TLam k t1 ->
-     tsubst_lam_hoist k t1 tsub_id;
-     tsubst_extensional tsub_id (tsubst_lam tsub_id) t1;
+     tsub_lam_hoist k t1 tsub_id;
+     tsubst_extensional tsub_id (tsub_lam tsub_id) t1;
      tsubst_id t1
   | TArr t1 t2
   | TApp t1 t2 -> tsubst_id t1; tsubst_id t2
@@ -356,15 +288,15 @@ type step : exp -> exp -> Type =
             e2:exp ->
             step (EApp (ELam t e1) e2) (esubst_beta e2 e1)
   | SApp1 : #e1:exp ->
-            e2:exp ->
+             e2:exp ->
             #e1':exp ->
-            step e1 e1' ->
-            step (EApp e1 e2) (EApp e1' e2)
-  | SApp2 : e1:exp ->
+            =hst:(step e1 e1') ->
+             step (EApp e1 e2) (EApp e1' e2)
+  | SApp2 :  e1:exp ->
             #e2:exp ->
             #e2':exp ->
-            step e2 e2' ->
-            step (EApp e1 e2) (EApp e1 e2')
+            =hst:(step e2 e2') ->
+             step (EApp e1 e2) (EApp e1 e2')
 
 (* Typing environments *)
 
@@ -413,54 +345,54 @@ let extend_evar g n t =
 
 type kinding : env -> typ -> knd -> Type =
   | KiVar : #g:env ->
-            a:var{is_Some (lookup_tvar g a)} ->
-            kinding g (TVar a) (Some.v (lookup_tvar g a))
+             a:var{is_Some (lookup_tvar g a)} ->
+             kinding g (TVar a) (Some.v (lookup_tvar g a))
   | KiLam : #g:env ->
-            k:knd ->
+             k:knd ->
             #t:typ ->
             #k':knd ->
-            kinding (extend_tvar g 0 k) t k' ->
-            kinding g (TLam k t) (KArr k k')
+            =hk:kinding (extend_tvar g 0 k) t k' ->
+                kinding g (TLam k t) (KArr k k')
   | KiApp : #g:env ->
             #t1:typ ->
             #t2:typ ->
             #k11:knd ->
             #k12:knd ->
-            kinding g t1 (KArr k11 k12) ->
-            kinding g t2 k11 ->
-            kinding g (TApp t1 t2) k12
+            =hk1:kinding g t1 (KArr k11 k12) ->
+            =hk2:kinding g t2 k11 ->
+                 kinding g (TApp t1 t2) k12
   | KiArr : #g:env ->
             #t1:typ ->
             #t2:typ ->
-            kinding g t1 KTyp ->
-            kinding g t2 KTyp ->
-            kinding g (TArr t1 t2) KTyp
+            =hk1:kinding g t1 KTyp ->
+            =hk2:kinding g t2 KTyp ->
+                 kinding g (TArr t1 t2) KTyp
 
 type tequiv : typ -> typ -> Type =
   | EqRefl : t:typ ->
              tequiv t t
   | EqSymm : #t1:typ ->
              #t2:typ ->
-             tequiv t1 t2 ->
+             =he:tequiv t1 t2 ->
              tequiv t2 t1
   | EqTran : #t1:typ ->
              #t2:typ ->
              #t3:typ ->
-             tequiv t1 t2 ->
-             tequiv t2 t3 ->
-             tequiv t1 t3
+             =he12:tequiv t1 t2 ->
+             =he23:tequiv t2 t3 ->
+                   tequiv t1 t3
   | EqLam : #t :typ ->
             #t':typ ->
-            k :knd ->
-            tequiv t t' ->
-            tequiv (TLam k t) (TLam k t')
+             k :knd ->
+            =he:tequiv t t' ->
+                tequiv (TLam k t) (TLam k t')
   | EqApp : #t1 :typ ->
             #t1':typ ->
             #t2 :typ ->
             #t2':typ ->
-            tequiv t1 t1' ->
-            tequiv t2 t2' ->
-            tequiv (TApp t1 t2) (TApp t1' t2')
+            =he1:tequiv t1 t1' ->
+            =he2:tequiv t2 t2' ->
+                 tequiv (TApp t1 t2) (TApp t1' t2')
   | EqBeta :k:knd ->
             t1:typ ->
             t2:typ ->
@@ -469,38 +401,38 @@ type tequiv : typ -> typ -> Type =
             #t1':typ ->
             #t2 :typ ->
             #t2':typ ->
-            tequiv t1 t1' ->
-            tequiv t2 t2' ->
-            tequiv (TArr t1 t2) (TArr t1' t2')
+            =he1:tequiv t1 t1' ->
+            =he2:tequiv t2 t2' ->
+                 tequiv (TArr t1 t2) (TArr t1' t2')
 
 type typing : env -> exp -> typ -> Type =
   | TyVar : #g:env ->
-            x:var{is_Some (lookup_evar g x)} ->
-            kinding g (Some.v (lookup_evar g x)) KTyp ->
-            typing g (EVar x) (Some.v (lookup_evar g x))
+             x:var{is_Some (lookup_evar g x)} ->
+            =hk:kinding g (Some.v (lookup_evar g x)) KTyp ->
+                typing g (EVar x) (Some.v (lookup_evar g x))
   | TyLam : #g:env ->
-            t:typ ->
+             t:typ ->
             #e1:exp ->
             #t':typ ->
-            kinding g t KTyp ->
-            typing (extend_evar g 0 t) e1 t' ->
-            typing g (ELam t e1) (TArr t t')
+            =hk:kinding g t KTyp ->
+            =ht:typing (extend_evar g 0 t) e1 t' ->
+                typing g (ELam t e1) (TArr t t')
   | TyApp : #g:env ->
             #e1:exp ->
             #e2:exp ->
             #t1:typ ->
             #t2:typ ->
-            typing g e1 (TArr t1 t2) ->
-            typing g e2 t1 ->
-            typing g (EApp e1 e2) t2
+            =ht1:typing g e1 (TArr t1 t2) ->
+            =ht2:typing g e2 t1 ->
+                 typing g (EApp e1 e2) t2
   | TyEqu : #g:env ->
             #e:exp ->
             #t1:typ ->
             #t2:typ ->
-            typing g e t1 ->
-            tequiv t1 t2 ->
-            kinding g t2 KTyp ->
-            typing g e t2
+            =ht:typing g e t1 ->
+            =he:tequiv t1 t2 ->
+            =hk:kinding g t2 KTyp ->
+                typing g e t2
 
 (* Progress proof *)
 
@@ -529,7 +461,7 @@ let rec tappears_free_in x t =
   | TLam _ t1 -> tappears_free_in (x+1) t1
 
 opaque logic type EnvEqualT (t:typ) (g1:env) (g2:env) =
-		 (forall (x:var). tappears_free_in x t ==>
+                 (forall (x:var). tappears_free_in x t ==>
                     lookup_tvar g1 x = lookup_tvar g2 x)
 
 opaque val tcontext_invariance : #t:typ -> #g:env -> #k:knd ->
@@ -541,22 +473,6 @@ let rec tcontext_invariance _ _ _ h g' =
   | KiLam k1 h1 -> KiLam k1 (tcontext_invariance h1 (extend_tvar g' 0 k1))
   | KiApp h1 h2 -> KiApp (tcontext_invariance h1 g') (tcontext_invariance h2 g')
   | KiArr h1 h2 -> KiArr (tcontext_invariance h1 g') (tcontext_invariance h2 g')
-
-val eappears_free_in : x:var -> e:exp -> Tot bool (decreases e)
-let rec eappears_free_in x e =
-  match e with
-    | EVar y -> x = y
-    | EApp e1 e2 -> eappears_free_in x e1 || eappears_free_in x e2
-    | ELam _ e1 -> eappears_free_in (x+1) e1
-
-(* g1 and g2 are the same on the type variables,
-   but they can vary on the unused term variables *)
-opaque logic type EnvEqualE (e:exp) (g1:env) (g2:env) =
-		 (forall (x:var). eappears_free_in x e ==>
-                    lookup_evar g1 x = lookup_evar g2 x) /\
-		 (FEq (MkEnv.a g1) (MkEnv.a g2))
-
-(* g |- t :: k, g and g' are same for type variables, then g' |- t :: k *)
 (* CH: this doesn't directly follow from functional extensionality,
        because (MkEnv.x g) and (MkEnv.x g') are completely unrelated;
        this is just because we pass this useless argument to kinding. *)
@@ -570,49 +486,21 @@ let rec kinding_extensional _ _ _ h g' =
     | KiApp h1 h2 -> KiApp (kinding_extensional h1 g') (kinding_extensional h2 g')
     | KiArr h1 h2 -> KiArr (kinding_extensional h1 g') (kinding_extensional h2 g')
 
-opaque val econtext_invariance : #e:exp -> #g:env -> #t:typ ->
-      h:(typing g e t) -> g':env{EnvEqualE e g g'} ->
-      Tot (typing g' e t) (decreases h)
-let rec econtext_invariance _ _ t h g' =
-  match h with
-    | TyVar x h -> TyVar x (kinding_extensional h g')
-    | TyLam #g t_y #e1 #t' hk h1 ->
-      TyLam t_y (tcontext_invariance hk g')
-  	(econtext_invariance #e1 #(extend_evar g 0 t_y) #t' h1
-  	   (extend_evar g' 0 t_y))
-    | TyApp h1 h2 -> TyApp (econtext_invariance h1 g')
-                           (econtext_invariance h2 g')
-    | TyEqu h1 eq k -> TyEqu (econtext_invariance h1 g') eq (kinding_extensional k g')
-
 (* kinding weakening when a term variable binding is added to env *)
 opaque val kinding_weakening_ebnd : #g:env -> #t:typ -> #k:knd ->
       h:(kinding g t k) -> x:var -> t':typ ->
       Tot (kinding (extend_evar g x t') t k)
-let kinding_weakening_ebnd g t k h x t' = kinding_extensional h (extend_evar g x t')
+let kinding_weakening_ebnd g t k h x t' =
+  kinding_extensional h (extend_evar g x t')
 
 val tshift_up_above_lam: n:nat -> k:knd -> t:typ -> Lemma
   (ensures (tshift_up_above n (TLam k t) = TLam k (tshift_up_above (n + 1) t)))
 let tshift_up_above_lam n k t =
   assert(tshift_up_above n (TLam k t) = tsubst (tsub_inc_above n) (TLam k t));
-  tsubst_lam_hoist k t (tsub_inc_above n);
+  tsub_lam_hoist k t (tsub_inc_above n);
   assert(tshift_up_above n (TLam k t) =
-         TLam k (tsubst (tsubst_lam (tsub_inc_above n)) t));
-  tsubst_extensional (tsubst_lam (tsub_inc_above n)) (tsub_inc_above (n+1)) t
-
-val eshift_up_above : nat -> exp -> Tot exp
-let eshift_up_above x = esubst (esub_inc_above x)
-
-val eshift_up : exp -> Tot exp
-let eshift_up = eshift_up_above 0
-
-val eshift_up_above_lam: n:nat -> t:typ -> e:exp -> Lemma
-  (ensures (eshift_up_above n (ELam t e) = ELam t (eshift_up_above (n + 1) e)))
-let eshift_up_above_lam n t e =
-  assert(eshift_up_above n (ELam t e) = esubst (esub_inc_above n) (ELam t e));
-  esubst_lam_hoist t e (esub_inc_above n);
-  assert(eshift_up_above n (ELam t e) =
-         ELam t (esubst (esubst_lam (esub_inc_above n)) e));
-  esubst_extensional (esubst_lam (esub_inc_above n)) (esub_inc_above (n+1)) e
+         TLam k (tsubst (tsub_lam (tsub_inc_above n)) t));
+  tsubst_extensional (tsub_lam (tsub_inc_above n)) (tsub_inc_above (n+1)) t
 
 (* kinding weakening when a type variable binding is added to env *)
 opaque val kinding_weakening_tbnd : #g:env -> #t:typ -> #k:knd ->
@@ -620,11 +508,8 @@ opaque val kinding_weakening_tbnd : #g:env -> #t:typ -> #k:knd ->
       Tot (kinding (extend_tvar g x k') (tshift_up_above x t) k) (decreases h)
 let rec kinding_weakening_tbnd g t k h x k' =
   match h with
-    | KiVar a ->
-      if a < x then
-  	KiVar a
-      else
-  	KiVar (a + 1)
+    | KiVar a -> if a < x then KiVar a
+                          else KiVar (a + 1)
     | KiLam #g k'' #t1 #k''' h1 ->
       tshift_up_above_lam x k'' t1;
       let h2 = kinding_weakening_tbnd h1 (x + 1) k' in
@@ -636,7 +521,8 @@ let rec kinding_weakening_tbnd g t k h x k' =
 
 (* kinding strengthening from TAPL (Lemma 30.3.1),
    just an instance of kinding_extensional; used often *)
-opaque val kinding_strengthening_ebnd : g:env -> x:var -> t_x:typ -> #t:typ -> #k:knd ->
+opaque val kinding_strengthening_ebnd :
+      g:env -> x:var -> t_x:typ -> #t:typ -> #k:knd ->
       h:(kinding (extend_evar g x t_x) t k) ->
       Tot (kinding g t k) (decreases h)
 let kinding_strengthening_ebnd g x t_x t k h = kinding_extensional h g
@@ -655,43 +541,10 @@ let rec typing_to_kinding g e t h = match h with
   | TyLam t' hk h1 -> KiArr hk (kinding_strengthening_ebnd g 0 t'
                                   (typing_to_kinding h1))
   | TyApp #g #e1 #e2 #t1 #t2 h1 h2 ->
-    let Conj pa pb = kinding_inversion_arrow #g #t1 #t2
-                       (typing_to_kinding h1) in pb
+    Conj.h2 (kinding_inversion_arrow #g #t1 #t2 (typing_to_kinding h1))
   | TyEqu h1 eq hk -> hk
 
 (* this folows from functional extensionality *)
-opaque val typing_extensional: #g:env -> #e:exp -> #t:typ -> h:(typing g e t) ->
-                g':env{FEq (MkEnv.x g) (MkEnv.x g') /\
-                       FEq (MkEnv.a g) (MkEnv.a g')} ->
-                Tot (typing g' e t) (decreases h)
-let rec typing_extensional _ _ _ h g' = h
-
-(* typing weakening when term variable is added to env *)
-opaque val typing_weakening_ebnd: #g:env -> x:var -> t_x:typ -> #e:exp -> #t:typ ->
-      h:(typing g e t) -> Tot (typing (extend_evar g x t_x)
-                                      (eshift_up_above x e) t) (decreases h)
-let rec typing_weakening_ebnd g x t_x e t h =
-  match h with
-    | TyVar y h ->
-      let h1 = kinding_weakening_ebnd h x t_x in
-      if y < x then TyVar y h1 else TyVar (y+1) h1
-    | TyLam #g t_y #e' #t'' kh h21 ->
-      eshift_up_above_lam x t_y e';
-      let h21 = typing_weakening_ebnd (x+1) t_x h21 in
-      TyLam t_y (kinding_extensional kh (extend_evar g x t_x))
-                (typing_extensional h21 (extend_evar (extend_evar g x t_x) 0 t_y))
-    | TyApp h21 h22 -> TyApp (typing_weakening_ebnd x t_x h21)
-                             (typing_weakening_ebnd x t_x h22)
-    | TyEqu h1 eq k1 ->
-      TyEqu (typing_weakening_ebnd x t_x h1) eq
-            (kinding_extensional k1 (extend_evar g x t_x))
-
-val tshift_up_above_e: x:nat -> e:exp -> Tot exp
-let rec tshift_up_above_e x e = match e with
-  | EVar _ -> e
-  | ELam t e1 -> ELam (tshift_up_above x t) (tshift_up_above_e x e1)
-  | EApp e1 e2 -> EApp (tshift_up_above_e x e1) (tshift_up_above_e x e2)
-
 val tshift_up_above_tsubst_beta_aux : x:var -> t2:typ -> y:var ->
       Lemma (tsub_comp (tsub_inc_above x) (tsub_beta_gen 0 t2) y =
              tsub_comp (tsub_beta_gen 0 (tsubst (tsub_inc_above x) t2))
@@ -731,7 +584,7 @@ let rec tshift_up_above_tsubst_beta x t1 t2 =
 
 opaque val tequiv_tshift : #t1:typ -> #t2:typ -> h:(tequiv t1 t2) -> x:nat ->
                Tot (tequiv (tshift_up_above x t1) (tshift_up_above x t2))
-	       (decreases h)
+               (decreases h)
 let rec tequiv_tshift t1 t2 h x =
   match h with
   | EqRefl t -> EqRefl (tshift_up_above x t)
@@ -748,105 +601,73 @@ let rec tequiv_tshift t1 t2 h x =
      EqBeta k (tshift_up_above (x+1) t1') (tshift_up_above x t2')
   | EqArr h1 h2 -> EqArr (tequiv_tshift h1 x) (tequiv_tshift h2 x)
 
-(* typing weakening when type variable binding is added to env *)
-(* NS: This one alone takes ~4-5 secs to prove
-   CH: For me, admitting it doesn't seem to improve things by more than 1-2s though *)
-opaque val typing_weakening_tbnd: #g:env -> x:var -> k_x:knd -> #e:exp -> #t:typ ->
-      h:(typing g e t) ->
-      Tot (typing (extend_tvar g x k_x)
-                  (tshift_up_above_e x e) (tshift_up_above x t)) (decreases h)
-let rec typing_weakening_tbnd g x k_x e t h =
-  match h with
-    | TyVar y h -> TyVar y (kinding_weakening_tbnd h x k_x)
-    | TyLam #g t' #e1 #t'' kh h1 ->
-      TyLam (tshift_up_above x t') (kinding_weakening_tbnd kh x k_x)
-            (typing_extensional (typing_weakening_tbnd x k_x h1)
-                        (extend_evar (extend_tvar g x k_x) 0
-                                     (tshift_up_above x t')))
-    | TyApp h1 h2 -> TyApp (typing_weakening_tbnd x k_x h1)
-                           (typing_weakening_tbnd x k_x h2)
-    | TyEqu h1 eq kh ->
-      TyEqu (typing_weakening_tbnd x k_x h1) (tequiv_tshift eq x)
-            (kinding_weakening_tbnd kh x k_x)
+val is_var : exp -> Tot(nat)
+let is_var e = if is_EVar e then 0 else 1
+opaque type renaming (s:esub) = (forall (x:var). is_EVar (s x))
 
-(* CH: this proof sometimes fails with 5s timeout *)
-val esubst_gen_elam_aux : e:exp -> x:var -> y:var ->
-                          Lemma (esubst_lam (esub_beta_gen x e) y =
-                                 esub_beta_gen (x + 1) (eshift_up e) y)
-let esubst_gen_elam_aux e x y = admit()
-(*
-  match y with
-  | 0 -> ()
-  | _ ->
-     (assert(esubst_lam (esub_beta_gen x e) y =
-               esubst esub_inc (esub_beta_gen x e (y-1)));
-      assert(esub_beta_gen (x + 1) (eshift_up e) y =
-               esub_beta_gen (x + 1) (esubst (esub_inc_above 0) e) y);
-      if (y-1) < x then ()
-      else if y-1 = x then
-        (assert(esubst_lam (esub_beta_gen x e) y =
-                  esubst esub_inc e);
-         assert(esub_beta_gen (x + 1) (eshift_up e) y =
-                  esubst (esub_inc_above 0) e);
-         esubst_extensional esub_inc (esub_inc_above 0) e)
-      else ())
-*)
+val is_renaming : s:esub -> Tot (n:int{  (renaming s  ==> n=0) /\
+                                      (~(renaming s) ==> n=1)})
+let is_renaming s = (if excluded_middle (renaming s) then 0 else 1)
 
-val esubst_gen_elam : x:var -> e:exp -> t:typ -> e':exp -> Lemma
-                      (ensures (esubst_beta_gen x e (ELam t e') =
-                       ELam t (esubst_beta_gen (x + 1) (eshift_up e) e')))
-let esubst_gen_elam x e t e' =
-  assert(esubst_beta_gen x e (ELam t e') =
-           esubst (esub_beta_gen x e) (ELam t e'));
-  esubst_lam_hoist t e' (esub_beta_gen x e);
-  assert(esubst_beta_gen x e (ELam t e') =
-           ELam t (esubst (esubst_lam (esub_beta_gen x e)) e'));
+type subst_typing (s:esub) (g1:env) (g2:env) =
+  f:(x:var{is_Some (lookup_evar g1 x)} ->
+     kinding g1 (Some.v (lookup_evar g1 x)) KTyp ->
+     Tot(typing g2 (s x) (Some.v (lookup_evar g1 x)))
+    ){FEq (MkEnv.a g1) (MkEnv.a g2)}
 
-  assert(ELam t (esubst_beta_gen (x + 1) (eshift_up e) e') =
-           ELam t (esubst (esub_beta_gen (x + 1) (eshift_up e)) e'));
+opaque val substitution :
+      #g1:env -> #e:exp -> #t:typ -> s:esub -> #g2:env ->
+      h1:typing g1 e t ->
+      hs:subst_typing s g1 g2 ->
+      Tot (typing g2 (esubst s e) t)
+     (decreases %[is_var e; is_renaming s; h1])
+let rec substitution g1 e t s g2 h1 hs =
+  match h1 with
+  | TyVar x kind_normal -> hs x kind_normal
+  | TyApp hfun harg -> TyApp (substitution s hfun hs) (substitution s harg hs)
+  | TyLam #gtemp tlam #ebody #tfun hkind hbody ->
+     let hs'' : subst_typing (esub_inc) (g2) (extend_evar g2 0 tlam) =
+       fun x hkind ->
+         TyVar (x+1) (kinding_extensional hkind (extend_evar g2 0 tlam)) in
+     let hs' : subst_typing (esub_lam s) (extend_evar g1 0 tlam)
+                                         (extend_evar g2 0 tlam) =
+       fun y hkindg1 ->
+         if y = 0
+         then TyVar y (kinding_extensional hkindg1 (extend_evar g2 0 tlam))
+         else let hgamma2 = hs (y - 1) (kinding_extensional hkindg1 g1) in
+              substitution esub_inc hgamma2 hs''
+     in (esub_lam_hoist tlam ebody s;
+         TyLam tlam (kinding_extensional hkind g2)
+               (substitution (esub_lam s) hbody hs'))
+  | TyEqu het1 hequiv hkind ->
+     TyEqu (substitution s het1 hs) hequiv (kinding_extensional hkind g2)
 
-  forall_intro (esubst_gen_elam_aux e x);
-
-  esubst_extensional (esubst_lam (esub_beta_gen x e))
-                     (esub_beta_gen (x + 1) (eshift_up e)) e'
-
-opaque val typing_substitution: x:nat -> #e:exp -> #v:exp -> #t_x:typ -> #t:typ ->
-      #g:env -> h1:(typing g v t_x) -> h2:(typing (extend_evar g x t_x) e t) ->
-      Tot (typing g (esubst_beta_gen x v e) t) (decreases %[e;h2])
-let rec typing_substitution x e v t_x t g h1 h2 =
-  match h2 with
-    | TyVar y hk ->
-      (*let hk1 = kinding_strengthening_ebnd g x t_x t KTyp hk in*)
-      if x = y then h1
-      else if y < x then econtext_invariance h2 g
-      else TyVar (y - 1) (kinding_strengthening_ebnd g x t_x hk)
-    | TyLam #g' t_y #e' #t' kh h21 ->
-      let h21' = typing_extensional h21
-                   (extend_evar (extend_evar g 0 t_y) (x+1) t_x) in
-      let h1' = typing_weakening_ebnd 0 t_y h1 in
-      esubst_gen_elam x v t_y e';
-      TyLam t_y (kinding_extensional kh g) (typing_substitution (x + 1) h1' h21')
-    | TyApp h21 h22 ->
-      TyApp (typing_substitution x h1 h21) (typing_substitution x h1 h22)
-    | TyEqu h21 eq kh ->
-      TyEqu (typing_substitution x h1 h21) eq
-        (kinding_strengthening_ebnd g x t_x kh)
+opaque val typing_substitution: #e:exp -> #v:exp -> #t_x:typ ->
+                                #t:typ -> #g:env ->
+      h1:(typing g v t_x) ->
+      h2:(typing (extend_evar g 0 t_x) e t) ->
+      Tot (typing g (esubst_beta v e) t) (decreases %[e;h2])
+let rec typing_substitution e v t_x t g h1 h2 =
+  let hs : subst_typing (esub_beta v) (extend_evar g 0 t_x) g =
+    fun y hkind -> if y = 0 then h1
+                   else TyVar (y-1) (kinding_extensional hkind g) in
+  substitution (esub_beta v) h2 hs
 
 (* analogous to above *)
 val tsubst_gen_tlam_aux : t:typ -> x:var -> y:var ->
-      Lemma (tsubst_lam (tsub_beta_gen x t) y =
+      Lemma (tsub_lam (tsub_beta_gen x t) y =
              tsub_beta_gen (x + 1) (tshift_up t) y)
 let tsubst_gen_tlam_aux t x y =
   match y with
   | 0 -> ()
   | _ ->
-     (assert(tsubst_lam (tsub_beta_gen x t) y =
+     (assert(tsub_lam (tsub_beta_gen x t) y =
                tsubst tsub_inc (tsub_beta_gen x t (y-1)));
       assert(tsub_beta_gen (x + 1) (tshift_up t) y =
                tsub_beta_gen (x + 1) (tsubst (tsub_inc_above 0) t) y);
       if (y-1) < x then ()
       else if y-1 = x then
-        (assert(tsubst_lam (tsub_beta_gen x t) y =
+        (assert(tsub_lam (tsub_beta_gen x t) y =
                   tsubst tsub_inc t);
          assert(tsub_beta_gen (x + 1) (tshift_up t) y =
                   tsubst (tsub_inc_above 0) t);
@@ -859,42 +680,17 @@ val tsubst_gen_tlam : x:var -> t:typ -> k:knd -> t':typ -> Lemma
 let tsubst_gen_tlam x t k t' =
   assert(tsubst_beta_gen x t (TLam k t') =
            tsubst (tsub_beta_gen x t) (TLam k t'));
-  tsubst_lam_hoist k t' (tsub_beta_gen x t);
+  tsub_lam_hoist k t' (tsub_beta_gen x t);
   assert(tsubst_beta_gen x t (TLam k t') =
-           TLam k (tsubst (tsubst_lam (tsub_beta_gen x t)) t'));
+           TLam k (tsubst (tsub_lam (tsub_beta_gen x t)) t'));
 
   assert(TLam k (tsubst_beta_gen (x + 1) (tshift_up t) t') =
            TLam k (tsubst (tsub_beta_gen (x + 1) (tshift_up t)) t'));
 
   forall_intro (tsubst_gen_tlam_aux t x);
 
-  tsubst_extensional (tsubst_lam (tsub_beta_gen x t))
+  tsubst_extensional (tsub_lam (tsub_beta_gen x t))
                      (tsub_beta_gen (x + 1) (tshift_up t)) t'
-
-(* The (pleasant) surprise here is that (as opposed to TAPS) we didn't
-   have to also apply the substitution within the MkEnv.x part of the
-   environment. That's because kinding completely ignores that part.
-   So we don't even ensure that it's well formed in any way after
-   substitution. Unfortunately this joy won't last long. *)
-opaque val kinding_substitution: x:nat -> #t1:typ -> #t:typ -> #k_x:knd -> #k1:knd ->
-      #g:env -> h1:(kinding g t k_x) ->
-      h2:(kinding (extend_tvar g x k_x) t1 k1) ->
-      Tot (kinding g (tsubst_beta_gen x t t1) k1) (decreases t1)
-let rec kinding_substitution x t1 t k_x k1 g h1 h2 =
-  match h2 with
-  | KiVar y -> if x=y then h1
-               else if y<x then tcontext_invariance h2 g
-               else KiVar (y-1)
-  | KiLam #g' k_y #t' #k' h21 ->
-     (let h21' = kinding_extensional h21 (extend_tvar (extend_tvar g 0 k_y) (x+1) k_x) in
-      let h1' = kinding_weakening_tbnd h1 0 k_y in
-      let ih = kinding_substitution (x+1) h1' h21' in
-      tsubst_gen_tlam x t k_y t';
-      KiLam k_y ih)
-  | KiApp h21 h22 -> KiApp (kinding_substitution x h1 h21)
-                           (kinding_substitution x h1 h22)
-  | KiArr h21 h22 ->  KiArr (kinding_substitution x h1 h21)
-                            (kinding_substitution x h1 h22)
 
 (* Parallel type reduction *)
 
@@ -903,30 +699,28 @@ type tred: typ -> typ -> Type =
            tred t t
 
   | TrArr:  #t1:typ -> #t2:typ -> #t1':typ -> #t2':typ ->
-           tred t1 t1' ->
-           tred t2 t2' ->
-           tred (TArr t1 t2) (TArr t1' t2')
+            =hr1:tred t1 t1' ->
+            =hr2:tred t2 t2' ->
+                 tred (TArr t1 t2) (TArr t1' t2')
 
-  | TrLam:  #t1:typ -> #t2:typ ->
-           k:knd ->
-           h:tred t1 t2 ->
-           tred (TLam k t1) (TLam k t2)
+  | TrLam:  #t1:typ -> #t2:typ -> k:knd ->
+            =hr:tred t1 t2 ->
+                tred (TLam k t1) (TLam k t2)
 
   | TrApp:  #t1:typ -> #t2:typ -> #t1':typ -> #t2':typ ->
-           tred t1 t1' ->
-           tred t2 t2' ->
-           tred (TApp t1 t2) (TApp t1' t2')
+            =hr1:tred t1 t1' ->
+            =hr2:tred t2 t2' ->
+                 tred (TApp t1 t2) (TApp t1' t2')
 
-  | TrBeta: #t1:typ -> #t2:typ -> #t1':typ -> #t2':typ ->
-           k:knd ->
-           tred t1 t1' ->
-           tred t2 t2' ->
-           tred (TApp (TLam k t1) t2) (tsubst_beta t2' t1')
+  | TrBeta: #t1:typ -> #t2:typ -> #t1':typ -> #t2':typ -> k:knd ->
+            =hr1:tred t1 t1' ->
+            =hr2:tred t2 t2' ->
+                 tred (TApp (TLam k t1) t2) (tsubst_beta t2' t1')
 
 (* t => t' implies tshift_up_above x t => tshift_up_above x t' *)
 opaque val tred_shiftup_above: #t:typ -> #t':typ -> x:nat -> h:(tred t t') ->
                         Tot (tred (tshift_up_above x t) (tshift_up_above x t'))
-		        (decreases h)
+                        (decreases h)
 let rec tred_shiftup_above t t' x h =
   match h with
     | TrRefl t''  -> TrRefl (tshift_up_above x t'')
@@ -945,19 +739,14 @@ let rec tred_shiftup_above t t' x h =
 opaque val subst_of_tred: #s:typ -> #s':typ -> x:nat -> t:typ ->
                    h:(tred s s') ->
                    Tot (tred (tsubst_beta_gen x s t) (tsubst_beta_gen x s' t))
-		   (decreases t)
+                   (decreases t)
 let rec subst_of_tred s s' x t h =
   match t with
-    | TVar y ->
-      if y < x then
-  	TrRefl t
-      else if y = x then
-  	h
-      else
-  	TrRefl (TVar (y - 1))
+    | TVar y -> if y < x then TrRefl t
+                else if y = x then h
+                else TrRefl (TVar (y - 1))
     | TLam k t1 ->
-      tsubst_gen_tlam x s k t1;
-      tsubst_gen_tlam x s' k t1;
+      tsubst_gen_tlam x s k t1; tsubst_gen_tlam x s' k t1;
       TrLam k (subst_of_tred (x + 1) t1 (tred_shiftup_above 0 h))
     | TApp t1 t2 ->
       TrApp (subst_of_tred x t1 h) (subst_of_tred x t2 h)
@@ -976,42 +765,25 @@ let rec shift_above_and_subst s y t =
   tsubst_extensional (tsub_comp (tsub_beta_gen y t) (tsub_inc_above y)) tsub_id s;
   tsubst_id s
 
-(* reordering shifts *)
-val tshifts_reordering: x:nat -> y:nat{y >= x} -> s:typ -> Lemma
-                        (ensures (tsh x (tsh y s) = tsh (y + 1) (tsh x s)))
-             	        (decreases s)
-let rec tshifts_reordering x y s =
-  tsubst_comp (tsub_inc_above x) (tsub_inc_above y) s;
-  tsubst_extensional (tsub_comp (tsub_inc_above x) (tsub_inc_above y)) (tsub_comp (tsub_inc_above (y+1)) (tsub_inc_above x)) s;
-  tsubst_comp (tsub_inc_above (y+1)) (tsub_inc_above x) s
+val tsubst_commute_aux : y:nat -> x:nat{x >= y} -> s1:typ -> s2:typ -> v:var ->
+      Lemma (requires True)
+          (ensures ((tsub_comp (tsub_beta_gen x s1) (tsub_beta_gen y s2)) v =
+                    (tsub_comp (tsub_beta_gen y (tsubst_beta_gen x s1 s2))
+                               (tsub_beta_gen (x+1) (tshift_up_above y s1))) v))
+let tsubst_commute_aux y x s1 s2 v =
+  if v = x+1 then shift_above_and_subst s1 y (tsubst_beta_gen x s1 s2)
 
-val tsubst_commute_helper: x:nat -> y:nat{x >= y} ->s:typ -> t:typ ->
-          Lemma (requires True)
-                (ensures (tsh y (ts x s t) = ts (x + 1) (tsh y s) (tsh y t)))
-         (decreases t)
-let rec tsubst_commute_helper x y s t = 
-  tsubst_comp (tsub_inc_above y) (tsub_beta_gen x s) t;
-  tsubst_extensional (tsub_comp (tsub_inc_above y) (tsub_beta_gen x s)) (tsub_comp (tsub_beta_gen (x+1) (tsh y s)) (tsub_inc_above y)) t;
-  tsubst_comp (tsub_beta_gen (x+1) (tsh y s)) (tsub_inc_above y) t
-val tsubst_commute_aux : y:nat -> x:nat{x >= y} -> s1:typ ->
-  s2:typ -> v:var ->          Lemma (requires True)
-		    (ensures ((tsub_comp (tsub_beta_gen x s1) (tsub_beta_gen y s2)) v = (tsub_comp (tsub_beta_gen y (tsubst_beta_gen x s1 s2)) (tsub_beta_gen (x+1) (tshift_up_above y s1))) v))
-let tsubst_commute_aux y x s1 s2 v = 
-  if v < x+1 then ()
-  else if v = x+1 then
-    shift_above_and_subst s1 y (tsubst_beta_gen x s1 s2)
-  else ()
-  
 val tsubst_commute: t1:typ -> y:nat -> t2:typ -> x:nat{x >= y} -> s:typ ->
                     Lemma (requires True)
-		    (ensures (ts x s (ts y t2 t1) =
+                    (ensures (ts x s (ts y t2 t1) =
                               ts y (ts x s t2) (ts (x + 1) (tsh y s) t1)))
-let rec tsubst_commute t1 y t2 x s = 
+let rec tsubst_commute t1 y t2 x s =
   tsubst_comp (tsub_beta_gen x s) (tsub_beta_gen y t2) t1;
   forall_intro (tsubst_commute_aux y x s t2);
-  tsubst_extensional (tsub_comp (tsub_beta_gen x s) (tsub_beta_gen y t2)) (tsub_comp (tsub_beta_gen y (ts x s t2)) (tsub_beta_gen (x+1) (tsh y s))) t1;
+  tsubst_extensional (tsub_comp (tsub_beta_gen x s) (tsub_beta_gen y t2))
+                     (tsub_comp (tsub_beta_gen y (ts x s t2))
+                                (tsub_beta_gen (x+1) (tsh y s))) t1;
   tsubst_comp (tsub_beta_gen y (ts x s t2)) (tsub_beta_gen (x+1) (tsh y s)) t1
-
 
 (* Lemma 30.3.7: t => t' and s => s' implies t[x |-> s] => t'[x |-> s'] *)
 opaque val subst_of_tred_tred: #s:typ -> #s':typ -> #t:typ -> #t':typ -> x:nat ->
@@ -1037,7 +809,7 @@ let rec subst_of_tred_tred s s' t t' x hs ht =
       TrBeta k ht1' ht2'
 
 type ltup =
-  | MkLTup: #s:typ -> #t:typ -> #u:typ -> (tred s t) -> (tred s u) -> ltup
+  | MkLTup: #s:typ -> #t:typ -> #u:typ -> =h1:(tred s t) -> =h2:(tred s u) -> ltup
 
 (* single step diamond property of parallel reduction *)
 opaque val tred_diamond: #s:typ -> #t:typ -> #u:typ ->
@@ -1052,76 +824,50 @@ let rec tred_diamond s t u h1 h2 =
     | MkLTup (TrLam k h11) (TrLam _ h12) ->
     (* AR: p only has one constructor Conj,
            but direct pattern matching doesn't work *)
-      let ExIntro t' p = tred_diamond h11 h12 in
-      (match p with
-  	| Conj pa pb -> ExIntro (TLam k t') (Conj (TrLam k pa) (TrLam k pb)))
+      let ExIntro t' (Conj pa pb) = tred_diamond h11 h12 in
+      ExIntro (TLam k t') (Conj (TrLam k pa) (TrLam k pb))
     (* if one is TrArr, the other has to be TrArr *)
     | MkLTup (TrArr h11 h12) (TrArr h21 h22) ->
-      let ExIntro v1 p1 = tred_diamond h11 h21 in
-      let ExIntro v2 p2 = tred_diamond h12 h22 in
-
-      (match p1 with
-  	| Conj p1a p1b ->
-  	  (match p2 with
-  	    | Conj p2a p2b ->
-  	      ExIntro (TArr v1 v2) (Conj (TrArr p1a p2a) (TrArr p1b p2b))))
+      let ExIntro v1 (Conj p1a p1b) = tred_diamond h11 h21 in
+      let ExIntro v2 (Conj p2a p2b) = tred_diamond h12 h22 in
+      ExIntro (TArr v1 v2) (Conj (TrArr p1a p2a) (TrArr p1b p2b))
     (* both TrApp *)
     | MkLTup (TrApp h11 h12) (TrApp h21 h22) ->
-      let ExIntro v1 p1 = tred_diamond h11 h21 in
-      let ExIntro v2 p2 = tred_diamond h12 h22 in
-
-      (match p1 with
-  	| Conj p1a p1b ->
-  	  (match p2 with
-  	    | Conj p2a p2b ->
-  	      ExIntro (TApp v1 v2) (Conj (TrApp p1a p2a) (TrApp p1b p2b))))
+      let ExIntro v1 (Conj p1a p1b) = tred_diamond h11 h21 in
+      let ExIntro v2 (Conj p2a p2b) = tred_diamond h12 h22 in
+      ExIntro (TApp v1 v2) (Conj (TrApp p1a p2a) (TrApp p1b p2b))
     (* both TrBeta *)
     | MkLTup (TrBeta #s1 #s2 #t1' #t2' k h11 h12)
              (TrBeta #s11 #s21 #u1' #u2' k' h21 h22) ->
-      let ExIntro v1 p1 = tred_diamond h11 h21 in
-      let ExIntro v2 p2 = tred_diamond h12 h22 in
-
-      (match p1 with
-  	| Conj p1a p1b ->
-  	  (match p2 with
-  	    | Conj p2a p2b ->
-  	      ExIntro (tsubst_beta_gen 0 v2 v1)
-                      (Conj (subst_of_tred_tred 0 p2a p1a)
-                            (subst_of_tred_tred 0 p2b p1b))))
+      let ExIntro v1 (Conj p1a p1b) = tred_diamond h11 h21 in
+      let ExIntro v2 (Conj p2a p2b) = tred_diamond h12 h22 in
+      ExIntro (tsubst_beta v2 v1) (Conj (subst_of_tred_tred 0 p2a p1a)
+                                        (subst_of_tred_tred 0 p2b p1b))
     (* one TrBeta and other TrApp *)
     | MkLTup (TrBeta #s1 #s2 #t1' #t2' k h11 h12)
              (TrApp #s1' #s2' #lu1' #u2' h21 h22) ->
     (* AR: does not work without this type annotation *)
-      let h21:(tred (TLam.t s1') (TLam.t lu1')) = match h21 with
-  	| TrLam _ h' -> h'
-  	| TrRefl _ -> TrRefl (TLam.t s1')
-      in
+      let h21:(tred (TLam.t s1') (TLam.t lu1')) =
+        match h21 with
+          | TrLam _ h' -> h'
+          | TrRefl _ -> TrRefl (TLam.t s1') in
+      let ExIntro v1 (Conj p1a p1b) = tred_diamond h11 h21 in
+      let ExIntro v2 (Conj p2a p2b) = tred_diamond h12 h22 in
+      let v = tsubst_beta v2 v1 in
+      ExIntro v (Conj (subst_of_tred_tred 0 p2a p1a) (TrBeta k p1b p2b))
 
-      let ExIntro v1 p1 = tred_diamond h11 h21 in
-      let ExIntro v2 p2 = tred_diamond h12 h22 in
-
-      (match p1 with
-  	| Conj p1a p1b ->
-  	  (match p2 with
-  	    | Conj p2a p2b ->
-  	      let v = tsubst_beta_gen 0 v2 v1 in
-  	      ExIntro v (Conj (subst_of_tred_tred 0 p2a p1a) (TrBeta k p1b p2b))))
     | MkLTup (TrApp #s1' #s2' #lu1' #u2' h21 h22)
              (TrBeta #s1 #s2 #t1' #t2' k h11 h12) ->
-      let ExIntro v1 p = tred_diamond h21 (TrLam k h11) in
-      let Conj (p1:tred lu1' v1) (p2:tred (TLam k t1') v1) = p in
-      let ExIntro v2 p = tred_diamond h22 h12 in
-      let Conj (p3:tred u2' v2) (p4:tred t2' v2) = p in
-
-      let h_body:(tred (TLam.t lu1') (TLam.t v1)) = match p1 with
-  	| TrLam _ h' -> h'
-  	| TrRefl _ -> TrRefl (TLam.t lu1')
-      in
-      let h_body2:(tred t1' (TLam.t v1)) = match p2 with
-  	| TrLam _ h' -> h'
-  	| TrRefl _ -> TrRefl t1'
-      in
-
+      let ExIntro v1 (Conj p1 p2) = tred_diamond h21 (TrLam k h11) in
+      let ExIntro v2 (Conj p3 p4) = tred_diamond h22 h12 in
+      let h_body:(tred (TLam.t lu1') (TLam.t v1)) =
+        match p1 with
+          | TrLam _ h' -> h'
+          | TrRefl _ -> TrRefl (TLam.t lu1') in
+      let h_body2:(tred t1' (TLam.t v1)) =
+        match p2 with
+          | TrLam _ h' -> h'
+          | TrRefl _ -> TrRefl t1' in
       ExIntro (tsubst_beta v2 (TLam.t v1))
               (Conj (TrBeta k h_body p3) (subst_of_tred_tred 0 p4 h_body2))
 
@@ -1130,9 +876,9 @@ type tred_star: typ -> typ -> Type =
              tred_star t t
 
   | TsStep : #t1:typ -> #t2:typ -> #t3:typ ->
-             tred      t1 t2 ->
-             tred_star t2 t3 ->
-             tred_star t1 t3
+             =hr12:tred      t1 t2 ->
+             =hr23:tred_star t2 t3 ->
+                   tred_star t1 t3
 
 opaque val tred_star_one_loop: #s:typ -> #t:typ -> #u:typ ->
       h:(tred s t) -> hs:(tred_star s u) ->
@@ -1141,10 +887,8 @@ let rec tred_star_one_loop s t u h hs = match hs with
   | TsRefl _ ->
     ExIntro t (Conj (TsRefl t) h)
   | TsStep #s #u1 #u h1 hs' ->
-    let ExIntro v1 p1 = tred_diamond h h1 in
-    let Conj p1a p1b = p1 in
-    let ExIntro v p2 = tred_star_one_loop p1b hs' in
-    let Conj p2a p2b = p2 in
+    let ExIntro v1 (Conj p1a p1b) = tred_diamond h h1 in
+    let ExIntro v (Conj p2a p2b) = tred_star_one_loop p1b hs' in
     ExIntro v (Conj (TsStep p1a p2a) (p2b))
 
 (* aka Church-Rosser; used in Proposition 30.3.10 *)
@@ -1157,14 +901,12 @@ let rec confluence s t u h1 h2 =
   | TsRefl _ ->
     ExIntro u (Conj h2 (TsRefl u))
   | TsStep #s #t1 #t h1' hs1 ->
-     let ExIntro v1 p = tred_star_one_loop h1' h2 in
-     let Conj p1 p2 = p in
-     let ExIntro v p' = confluence hs1 p1 in
-     let Conj p1' p2' = p' in
+     let ExIntro v1 (Conj p1 p2) = tred_star_one_loop h1' h2 in
+     let ExIntro v (Conj p1' p2') = confluence hs1 p1 in
      ExIntro v (Conj p1' (TsStep p2 p2'))
 
 opaque val ts_tran: #s:typ -> #t:typ -> #u:typ ->
-	     h1:tred_star s t -> h2:tred_star t u -> Tot (tred_star s u)
+             h1:tred_star s t -> h2:tred_star t u -> Tot (tred_star s u)
              (decreases h1)
 let rec ts_tran s t u h1 h2 =
   match h1 with
@@ -1174,15 +916,15 @@ let rec ts_tran s t u h1 h2 =
 
 type tred_star_sym : typ -> typ -> Type =
   | TssBase: #t1:typ -> #t2:typ ->
-             tred t1 t2 ->
-             tred_star_sym t1 t2
+             =hr:tred t1 t2 ->
+                 tred_star_sym t1 t2
   | TssSym: #t1:typ -> #t2:typ ->
-            tred_star_sym t2 t1 ->
-            tred_star_sym t1 t2
+            =hr:tred_star_sym t2 t1 ->
+                tred_star_sym t1 t2
   | TssTran: #t1:typ -> #t2:typ -> #t3:typ ->
-             tred_star_sym t1 t2 ->
-             tred_star_sym t2 t3 ->
-             tred_star_sym t1 t3
+             =hr12:tred_star_sym t1 t2 ->
+             =hr23:tred_star_sym t2 t3 ->
+                   tred_star_sym t1 t3
 
 (* Proposition 30.3.10 in TAPL (has a graphical proof only for this, pg. 561) *)
 opaque val tred_star_sym_confluent : #s:typ -> #t:typ ->
@@ -1192,17 +934,12 @@ let rec tred_star_sym_confluent s t h =
   match h with
     | TssBase h1 -> ExIntro t (Conj (TsStep h1 (TsRefl t)) (TsRefl t))
     | TssSym h1 ->
-      let ExIntro u p = tred_star_sym_confluent h1 in
-      let Conj p1 p2 = p in
+      let ExIntro u (Conj p1 p2) = tred_star_sym_confluent h1 in
       ExIntro u (Conj p2 p1)
     | TssTran #s #v #t h1 h2 ->
-      let ExIntro u1 p = tred_star_sym_confluent h1 in
-      let Conj psu1 pvu1 = p in
-      let ExIntro u2 p = tred_star_sym_confluent h2 in
-      let Conj pvu2 ptu2 = p in
-
-      let ExIntro w p = confluence pvu1 pvu2 in
-      let Conj pu1w pu2w = p in
+      let ExIntro u1 (Conj psu1 pvu1) = tred_star_sym_confluent h1 in
+      let ExIntro u2 (Conj pvu2 ptu2) = tred_star_sym_confluent h2 in
+      let ExIntro w (Conj pu1w pu2w) = confluence pvu1 pvu2 in
       ExIntro w (Conj (ts_tran psu1 pu1w) (ts_tran ptu2 pu2w))
 
 opaque val trlam_tss : #t1:typ -> #t2:typ -> k:knd ->
@@ -1284,7 +1021,8 @@ let rec tred_tequiv s t h =
   | TrLam k h1 -> EqLam k (tred_tequiv h1)
   | TrApp h1 h2 -> EqApp (tred_tequiv h1) (tred_tequiv h2)
   | TrBeta #t1 #t2 #t1' #t2' k h1 h2 ->
-     EqTran (EqApp (EqLam k (tred_tequiv h1)) (tred_tequiv h2)) (EqBeta k t1' t2')
+     EqTran (EqApp (EqLam k (tred_tequiv h1)) (tred_tequiv h2))
+            (EqBeta k t1' t2')
 
 opaque val tred_star_tequiv : #s:typ -> #t:typ -> h:(tred_star s t) ->
                        Tot (tequiv s t) (decreases h)
@@ -1302,6 +1040,7 @@ let rec tss_tequiv s t h =
     | TssSym h1 -> EqSymm (tss_tequiv h1)
     | TssTran h1 h2 -> EqTran (tss_tequiv h1) (tss_tequiv h2)
 
+#set-options "--initial_ifuel 2 --max_ifuel 2"
 opaque val tred_tarr_preserved : #s1:typ -> #s2:typ -> #t:typ ->
       h:(tred_star (TArr s1 s2) t) ->
       Tot (cexists (fun t1 -> (cexists (fun t2 ->
@@ -1312,15 +1051,15 @@ let rec tred_tarr_preserved s1 s2 t h =
     | TsRefl _ -> ExIntro s1 (ExIntro s2 (Conj (TsRefl s1) (TsRefl s2)))
     | TsStep #s #u #t h1 hs1 ->
       match h1 with
-  	| TrRefl _ -> tred_tarr_preserved hs1
-  	| TrArr #s1 #s2 #u1 #u2 h11 h12 ->
-  	  (* AR: does not work without specifying implicits *)
-  	  let ExIntro t1 p = tred_tarr_preserved #u1 #u2 #t hs1 in
-  	  let ExIntro t2 p = p in
-  	  let Conj p1 p2 = p in
-  	  ExIntro t1 (ExIntro t2 (Conj (TsStep h11 p1) (TsStep h12 p2)))
-
-opaque val inversion_elam : #g:env -> s1:typ -> e:exp -> #s:typ -> t1:typ -> t2:typ ->
+          | TrRefl _ -> tred_tarr_preserved hs1
+          | TrArr #s1 #s2 #u1 #u2 h11 h12 ->
+            (* AR: does not work without specifying implicits *)
+            let ExIntro t1 (ExIntro t2 (Conj p1 p2)) =
+                                           tred_tarr_preserved #u1 #u2 #t hs1 in
+            ExIntro t1 (ExIntro t2 (Conj (TsStep h11 p1) (TsStep h12 p2)))
+//NS: Something seems super fragile here ...
+opaque val inversion_elam :
+      #g:env -> s1:typ -> e:exp -> #s:typ -> t1:typ -> t2:typ ->
       ht:typing g (ELam s1 e) s -> heq:tequiv s (TArr t1 t2) ->
       hnew:kinding g t2 KTyp ->
       Tot (cand (cand (tequiv t1 s1) (typing (extend_evar g 0 s1) e t2))
@@ -1331,16 +1070,29 @@ let rec inversion_elam g s1 e s t1 t2 ht heq hnew = match ht with
   | TyLam #g s1 #e #s2 hk ht1 ->
     let ExIntro u p = tequiv_tred_tred heq in
     let Conj p1 p2 = p in
-
-    (* implicits required *)
-    let ExIntro u1 p = tred_tarr_preserved #s1 #s2 #u p1 in
-    let ExIntro u2 p = p in
-    let Conj psu1 psu2 = p in
+    (* NS:
+       p1:tred_star (TArr s1 s2) u
+       p2:tred_star (TArr t1 t2) u
+    *)
 
     (* AR: implicits required *)
+    (*let ExIntro u1 pp = tred_tarr_preserved #s1 #s2 #u p1 in
+    let ExIntro u2 (Conj psu1 psu2) = pp in
+    *)
+    let ExIntro u1 (ExIntro u2 (Conj psu1 psu2)) = tred_tarr_preserved #s1 #s2 #u p1 in
+    (* NS:
+       psu1: tred_star (TArr s1 s2) (TArr u1 u2)
+       psu2: tred_star u (TArr u1 u2)
+    *)
+
+    (* AR: implicits required *)
+    (* CH: can't merge these two matches (error: "Patterns are incomplete") *)
     let ExIntro u1' p = tred_tarr_preserved #t1 #t2 #u p2 in
-    let ExIntro u2' p = p in
-    let Conj ptu1 ptu2 = p in
+    let ExIntro u2' (Conj ptu1 ptu2) = p in
+    (* NS:
+        ptu1: tred_star (TArr s1 s2) (TArr u1' u2')
+        ptu2: tred_star u (TArr u1' u2')
+    *)
 
     (*
      * AR: so now we have tequiv s2 t2, and ht1. as TAPL says, we now want to use
@@ -1354,21 +1106,14 @@ let rec inversion_elam g s1 e s t1 t2 ht heq hnew = match ht with
      * requiring that the lookup type has kind KTyp.
      *)
 
-    (*
-     * AR: Cannot use Conj.pb directly below, have to let bind.
-     *)
-
-    (* AR: removing this type annotation, verification fails after taking a long time *)
-    (* CH: I can reproduce this, even with z3timeout 100 I get:
-      An unknown assertion in the term at this location was not provable *)
-    let d1:(cand (kinding g s1 KTyp) (kinding g s2 KTyp)) =
-      kinding_inversion_arrow (typing_to_kinding ht) in
-    let Conj pa pb = d1 in
-
-    let pst2 = EqTran (tred_star_tequiv psu2) (EqSymm (tred_star_tequiv ptu2)) in
+    let pst2 = EqTran (tred_star_tequiv psu2) //NS: tequiv (TArr u1 u2) u
+                      (EqSymm (tred_star_tequiv ptu2))  //NS: tequiv u (TArr u1' u2')
+                      in
     let h:(typing (extend_evar g 0 s1) e t2) =
       TyEqu ht1 pst2 (kinding_weakening_ebnd hnew 0 s1) in
-    Conj (Conj (EqTran (tred_star_tequiv ptu1) (EqSymm (tred_star_tequiv psu1))) h) hk
+    Conj (Conj (EqTran (tred_star_tequiv ptu1)
+                       (EqSymm (tred_star_tequiv psu1))) h) hk
+#reset-options
 
 (* Corollary of inversion_elam *)
 opaque val inversion_elam_typing : #g:env -> s1:typ -> e:exp ->
@@ -1376,9 +1121,8 @@ opaque val inversion_elam_typing : #g:env -> s1:typ -> e:exp ->
       Tot (cand (cand (tequiv t1 s1) (typing (extend_evar g 0 s1) e t2))
                 (kinding g s1 KTyp))
 let inversion_elam_typing g s1 e t1 t2 h =
-  let Conj _ hnew = kinding_inversion_arrow #g #t1 #t2
-                      (typing_to_kinding h) in
-  inversion_elam s1 e t1 t2 h (EqRefl (TArr t1 t2)) hnew
+  inversion_elam s1 e t1 t2 h (EqRefl (TArr t1 t2))
+    (Conj.h2 (kinding_inversion_arrow #g #t1 #t2 (typing_to_kinding h)))
 
 (* Type preservation *)
 opaque val preservation : #e:exp -> #e':exp -> hs:step e e' ->
@@ -1389,9 +1133,8 @@ let rec preservation _ _ hs _ _ ht =
   | TyApp #g #e1 #e2 #t1 #t2 h1 h2 ->
     (match hs with
      | SBeta s1 e11 e12 ->
-       let Conj p12 (p3:kinding g s1 KTyp) = inversion_elam_typing s1 e11 t1 t2 h1 in
-       let Conj (p1:tequiv t1 s1) (p2:typing (extend_evar g 0 s1) e11 t2) = p12 in
-       typing_substitution 0 (TyEqu h2 p1 p3) p2
+       let Conj (Conj p1 p2) p3 = inversion_elam_typing s1 e11 t1 t2 h1 in
+       typing_substitution (TyEqu h2 p1 p3) p2
      | SApp1 e2' hs1   -> TyApp (preservation hs1 h1) h2
      | SApp2 e1' hs2   -> TyApp h1 (preservation hs2 h2))
   | TyEqu ht1 he hk -> TyEqu (preservation hs ht1) he hk

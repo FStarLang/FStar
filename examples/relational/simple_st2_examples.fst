@@ -22,7 +22,7 @@ val equiv2: x:double (ref int)
          -> ST2 (rel unit unit)
                 (requires (fun h2 -> sel (R.l h2) (R.l x) = - (sel (R.r h2) (R.r x)))) //x, y negatives of each other
                 (ensures (fun _ _ h2' -> eq_rel (sel_rel h2' x))) //their contents are equal afterwards
-let equiv2 x = compose2 square square x
+let equiv2 x = compose2_self square x
 
 
 let f3 x = if !x = 0 then x := 0 else x:= 1
@@ -86,7 +86,7 @@ val monotonic_assign : x:ref int -> y:double int
                        -> ST2 (rel unit unit)
                                      (requires (fun h -> R.l y <= R.r y))
                                      (ensures (fun h1 r h2 -> sel (R.l h2) x <= sel (R.r h2) x))
-let monotonic_assign x y = compose2 (assign x) (assign x) y
+let monotonic_assign x y = compose2_self (assign x) y
 val id : int -> Tot int
 let id x = x
 
@@ -150,7 +150,7 @@ val noleak_ok: x:double (ref int)
                -> ST2 (double unit)
                              (requires (fun h -> True))
                              (ensures (fun h1 r h2 -> (eq_rel x /\ eq_rel h1) ==> eq_rel h2))
-let noleak_ok x b = compose2 noleak noleak (pair_rel x b)
+let noleak_ok x b = compose2_self noleak (pair_rel x b)
 (* Simple recursive function:
    The proof works by proving a pure specification for the imperative functions
    and by proving the equality of those specifiactions *)

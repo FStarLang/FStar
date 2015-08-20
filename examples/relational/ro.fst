@@ -227,14 +227,13 @@ let hash_hon' k r = match assoc k (!s).l with
                     add_some t
 
 (* We use this reordered version to do the actual proof only by compose2 *)
-let hash_hon k f = let s = compose2 (fun _ -> !s) (fun _ -> !s) (twice ())in
+let hash_hon k f = let s = compose2_self (fun s -> !s) (twice s)in
                    let l = rel_map1 (fun s -> s.l) s in
 
                    (* Actual code. The rest is just to apply the correct lemmas *)
                    let r = sample #tag #tag f in
-                   let t = compose2 (fun k -> hash_hon' k (R.l r))
-                                   (fun k -> hash_hon' k (R.r r))
-                                   k in
+                   let t = compose2_self (fun (k,r) -> hash_hon' k r)
+                                         (pair_rel k r) in
 
                    good_sample_fun_bijection #tag #tag f;
                    if (not (or_rel (rel_map1 (fun s -> s.bad) s))) then
@@ -258,20 +257,20 @@ assume val sample_single : unit -> Tot tag
 (* We do a manual interleaving (This is necessary if we don't want to move
    sample as shown above). *)
 let hash_hon2 k f =
-  let s = compose2 (fun _ -> !s) (fun _ -> !s) (twice ()) in
+  let s = compose2_self (fun s -> !s) (twice s) in
   let l = rel_map1 (fun s -> s.l) s in
   let b = or_rel (rel_map1 (fun s -> s.bad) s) in
   match rel_map2 assoc k l with
   | R (Some (Hon,t0)) (Some (Hon,t1)) -> if not b then
                                            ok_hon_safe2 k l;
-                                         compose2 (fun x -> case_Hon x) (fun x -> case_Hon x) (R t0 t1)
+                                         compose2_self (fun x -> case_Hon x) (R t0 t1)
   | R (Some (Hon,t0)) (Some (Adv,t1)) -> compose2 (fun x -> case_Hon x) (fun x -> case_Adv x) (R t0 ())
   | R (Some (Hon,t0)) (None         ) -> if not b then
                                            ok_hon_safe k l;
                                          let t1 = sample_single () in
                                          compose2 (fun x -> case_Hon x) (fun x -> case_None x) (R t0 ((R.r k),t1))
   | R (Some (Adv,t0)) (Some (Hon,t1)) -> compose2 (fun x -> case_Adv x) (fun x -> case_Hon x) (R () t0)
-  | R (Some (Adv,t0)) (Some (Adv,t1)) -> compose2 (fun x -> case_Adv x) (fun x -> case_Adv x) (twice ())
+  | R (Some (Adv,t0)) (Some (Adv,t1)) -> compose2_self (fun x -> case_Adv x) (twice ())
   | R (Some (Adv,t0)) (None         ) -> let t1 = sample_single () in
                                          compose2 (fun x -> case_Adv x) (fun x -> case_None x) (R () ((R.r k),t1))
   | R (None         ) (Some (Hon,t1)) -> if not b then
@@ -284,7 +283,7 @@ let hash_hon2 k f =
                                          good_sample_fun_bijection #tag #tag f;
                                          if not b then
                                            ok_consH k t l;
-                                         compose2 (fun x -> case_None x) (fun x -> case_None x) (pair_rel k t) 
+                                         compose2_self (fun x -> case_None x) (pair_rel k t) 
 
 (* For adversarial hashes we again move sample to the beginning of the function *)
 let hash_adv' k r =  match assoc k (!s).l with
@@ -294,16 +293,15 @@ let hash_adv' k r =  match assoc k (!s).l with
                     s := {bad = (!s).bad; l= (k,(Adv,t))::(!s).l} ;
                     add_some t
 
-let hash_adv k  = let s = compose2 (fun _ -> !s) (fun _ -> !s) (twice ()) in
+let hash_adv k  = let s = compose2_self (fun s -> !s) (twice s) in
                   let l = rel_map1 (fun s -> s.l) s in
 
                   (* Actual code, the rest is just for calling lemmas *)
                   cut(bijection #tag #tag  (fun x -> x));
                   bijection_good_sample_fun #tag #tag (fun x -> x);
                   let r = sample (fun x->x) in
-                  let t = compose2 (fun k -> hash_adv' k (R.l r))
-                                   (fun k -> hash_adv' k (R.r r))
-                                   k in 
+                  let t = compose2_self (fun (k,r) -> hash_adv' k r)
+                                        (pair_rel k r) in 
 
                   if (not (or_rel (rel_map1 (fun s -> s.bad) s))) then
                     if and_rel (rel_map1 is_Some t) then

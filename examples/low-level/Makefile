@@ -55,7 +55,7 @@ sieveFun$(EXE): $(PRE_SST_FILES) SST.ml SSTCombinators.ml $(ARRAY_FILES) SieveFu
 
 
 LallocTest.ml: lallocTest.fst
-	fstar --codegen OCaml-experimental $^
+	fstar --codegen OCaml-experimental $^ --debug yes --prn
 	./revertManualMLs.sh
 
 lallocTest$(EXE): $(PRE_SST_FILES)  SST.ml LallocTest.ml TestLalloc.ml

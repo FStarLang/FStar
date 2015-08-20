@@ -16,7 +16,6 @@
 
 #include "bitmask.h"
 
-
 /* See bitmask.h for explanations of the functions. */
 
 void eachbit(MASK_TYPE *map, int maxbit, bitfun f, void *env) {
@@ -25,11 +24,16 @@ void eachbit(MASK_TYPE *map, int maxbit, bitfun f, void *env) {
   for (i = 0; i<maplen; i++) {
     int j, k = 1;
     MASK_TYPE v = map[i];
-    if (v == 0)  continue;
-    for (j = 0; j<BITS_PER_ELEM; j++) {
-      if ((v & k) == k)
+    if (v == 0)  continue; /* no marked bits */
+    if (v == (MASK_TYPE)-1) { /* all bits marked */
+      for (j = 0; j<BITS_PER_ELEM; j++)
 	f(env,i*BITS_PER_ELEM + j);
-      k = k << 1;
+    } else { /* some bits marked */
+      for (j = 0; j<BITS_PER_ELEM; j++) {
+	if ((v & k) == k)
+	  f(env,i*BITS_PER_ELEM + j);
+	k = k << 1;
+      }
     }
   }
   /* XXX: The last fraction of the mask; probably could do this
@@ -85,7 +89,31 @@ void unsetbit_rng(MASK_TYPE *map, int bit, int len) {
   }
 }
 
-/* TEST
+void setbit_rng(MASK_TYPE *map, int bit, int len) {
+  /* up to first byte boundary */
+  if (bit % BITS_PER_ELEM != 0) {
+    int i; /* XXX: create the mask all at once */
+    int l = MIN(BITS_PER_ELEM-(bit % BITS_PER_ELEM), len);
+    for (i=0; i<l; i++) 
+      setbit(map,bit+i);
+    bit += l;
+    len -= l;
+  }
+  /* series of bytes */
+  while (len >= BITS_PER_ELEM) {
+    map[bit / BITS_PER_ELEM] = (MASK_TYPE)-1;
+    len -= BITS_PER_ELEM; 
+    bit += BITS_PER_ELEM;
+  }
+  /* last fractional byte */
+  if (len > 0) {
+    MASK_TYPE v = map[bit / BITS_PER_ELEM];
+    int m = ((MASK_TYPE)1 << len) - 1; 
+    map[bit / BITS_PER_ELEM] = v | m;
+  }
+}
+
+/* TEST 
 #include <stdio.h>
 
 void printidx(void *ign, int idx) {
@@ -105,9 +133,10 @@ int main() {
   setbit(x,33);
   setbit(x,34);
   setbit(x,73);
-  eachbit(x,96,printidx,0); 
+  setbit_rng(x,62,70);
+  eachbit(x,150,printidx,0); 
   unsetbit_rng(x,9,70);
-  eachbit(x,96,printidx,0); 
+  eachbit(x,150,printidx,0); 
   return 0;
 }
 */

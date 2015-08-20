@@ -18,8 +18,8 @@ module ParallelSubstitution
 
 open FunctionalExtensionality
 
-(* Constructive-style progress and preservation proof for STLC with
-   strong reduction, using deBruijn indices and parallel substitution. *)
+(* Parallel substitution, with comments
+  (the real development is in ) *)
 
 type ty =
   | TArrow : t1:ty -> t2:ty -> ty

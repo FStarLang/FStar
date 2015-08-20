@@ -69,5 +69,10 @@ assume val compose2: #a0:Type -> #b0:Type -> #wp0:(a0 -> STWP b0) -> #wlp0:(a0 -
                             (comp b0 b1 (wp0 (R.l x)) (wp1 (R.r x)))
                             (comp b0 b1 (wlp0 (R.l x)) (wlp1 (R.r x)))
 
-
-let compose_self (f:('a -> St 'b)) x = compose2 (fun x -> f x)  (fun y -> f y) x
+val compose2_self : #a:Type -> #b:Type -> #wp:(a -> STWP b) -> #wlp:(a -> STWP b)
+                -> =c:(x:a -> STATE b (wp x) (wlp x))
+                -> x: double a 
+                -> STATE2 (double b)
+                          (comp b b (wp (R.l x)) (wp (R.r x)))
+                          (comp b b (wlp (R.l x)) (wlp (R.r x)))
+let compose2_self f x = compose2 f f x
