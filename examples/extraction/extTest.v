@@ -67,6 +67,11 @@ Check idtype.
 Definition id : idtype := fun X x => x. 
 
 
+Inductive list3 : Type -> Type :=
+| Nil3 : forall (a:Type), list3 a
+| Cons3 : forall (a:Type), a -> list3 a -> list3 (prod a a).
+
+
 Definition idu : unit -> idtype := fun u X x => x. 
 
 Extract Inductive unit => unit [ "()" ].
