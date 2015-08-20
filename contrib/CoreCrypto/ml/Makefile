@@ -5,10 +5,10 @@ ifeq ($(OS),Windows_NT)
     OPENSSL_INCLUDE = ../../../../openssl/include
     OCAML_INCLUDE = /usr/local/lib/ocaml
     EXTRA_OPTS =
-		DLL = dll #DLL file ending for windows
+    DLL = dll #DLL file ending for windows
 else
+    DLL = so #DLL file ending for unix
     UNAME_S := $(shell uname -s)
-		DLL = so #DLL file ending for unix
     ifeq ($(UNAME_S),Darwin)
         CC = gcc-5
         OPENSSL_INCLUDE = /usr/include

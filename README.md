@@ -36,7 +36,7 @@ see `LICENSE` for more details.
 Please report bugs or ask questions using the GitHub issue tracker for
 the F* project: https://github.com/FStarLang/FStar/issues
 
-Yes, we encourage asking questions on the issue tracker!
+Yes, **we encourage asking questions on the issue tracker**!
 
 ### Editing F* code
 
@@ -52,14 +52,15 @@ interactive development via [fstar-interactive].
 
 #### Vim
 
-[VimFStar] is a [Vim] plugin for F*.
+[VimFStar] is a [Vim] plugin for F* that also supports interactive
+development and syntax highlighting.
 
 [Vim]: http://www.vim.org/
 [VimFStar]: https://github.com/FStarLang/VimFStar
 
 #### Emacs
 
-The [Tuareg Mode] for Objective Caml works quite well for F* too.
+The [Tuareg Mode] for OCaml works quite well for F* too.
 Go for 2.0.9 (2015-03-25) or later to avoid some bugs that are already fixed.
 Tuareg is easiest to install using [MELPA].
 To use MELPA add this to your `.emacs` or `.emacs.d/init.el` file:
