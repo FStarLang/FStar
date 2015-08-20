@@ -75,11 +75,3 @@ let cpa a = let sample_fun = (fun x -> xor (xor (R.l a) (R.r a)) x) in
             cpa_good_sample_fun (R.l a) (R.r a);
             let k = sample sample_fun in
             compose2_self (fun (a,k) -> encrypt a k) (pair_rel a k)
-
-(* As this example does not use state, we actually don't need the ST2 monad *)
-val cpa' : double block
-        -> Tot (eq block)
-let cpa' b = let sample_fun = (fun x -> xor (xor (R.l b) (R.r b)) x) in
-              cpa_good_sample_fun (R.l b) (R.r b);
-              let k = sample sample_fun in
-              rel_map2 encrypt b k

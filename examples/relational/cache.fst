@@ -87,4 +87,4 @@ val correct : x:ref nat -> a:ref nat -> y:eq nat
                           /\ (exists c. equal (upd (R.l h) cache c) (R.r h))))
          (ensures (fun h _ h' -> fac_cache_correct (sel (R.r h') cache)
                               /\ (exists c. equal (upd (R.l h') cache c) (R.r h'))))
-let correct x a y =   compose2 (fun y -> imp_fac_wrap x a y) (fun x -> fac_cached x) y 
+let correct x a y =  compose2 (fun y -> imp_fac_wrap x a y) (fun x -> fac_cached x) y 

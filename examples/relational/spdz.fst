@@ -43,6 +43,7 @@ open Fp
 open Sample
 open Bijection
 open Relational
+open Comp
 
 (* The shares on both sides have to sum up to the respective secret.
    We assume that the first party is dishonest and that the second party is
@@ -60,7 +61,7 @@ let id_good_sample_fun () =
   bijection_good_sample_fun #fp #fp(fun x -> x)
 
 (* Simple sharing algorithm *)
-opaque val share : h:double fp -> Tot (shared h)
+opaque val share : h:double fp -> St2 (shared h)
 let share h = id_good_sample_fun ();
               let s0 = sample (fun x -> x) in
               let s1 = rel_map2 minus_fp h s0 in
@@ -79,6 +80,7 @@ open Sample
 open Bijection
 open Relational
 open Sharing
+open Comp
 
 let fst3 = MkTuple3._1
 let snd3 = MkTuple3._2
@@ -103,7 +105,7 @@ let triple_a_good_sample_fun sl sr =
    intermediate shares of the honest party during the multiplication *)
 #reset-options
 opaque val triple_a : s:double fp
-               -> Tot (r:(h:double fp & shared h) {minus_fp (R.l s) (snd(R.l(dsnd r))) =
+               -> St2 (r:(h:double fp & shared h) {minus_fp (R.l s) (snd(R.l(dsnd r))) =
                                                    minus_fp (R.r s) (snd(R.r(dsnd r)))})
 
 let triple_a s = let sample_fun = (fun x -> add_fp (minus_fp x (R.l s)) (R.r s)) in
@@ -118,7 +120,7 @@ let triple_a s = let sample_fun = (fun x -> add_fp (minus_fp x (R.l s)) (R.r s))
 
 (* This function generates the third component of the triple *)
 opaque val triple_c : a:(double fp) -> b:(double fp)
-               -> Tot (r:(h:double fp & shared h){dfst r = rel_map2 mul_fp a b})
+               -> St2 (r:(h:double fp & shared h){dfst r = rel_map2 mul_fp a b})
 let triple_c a b  = let c = rel_map2 mul_fp a b in
                     id_good_sample_fun ();
                     let cs0 = sample (fun x -> x) in
@@ -138,6 +140,8 @@ open Sample
 open Relational
 open Sharing
 open Triples
+open Comp
+
 
 (* This module contains the actual arithmetic operations. 
    For each operation we show correctness and we show that the secret inputs
@@ -182,7 +186,7 @@ let minus_mpc _ _ s0 s1 = let r0 = minus_loc (fst_rel s0) (fst_rel s1) in
 #reset-options
 opaque val mul_mpc : #h0:double fp -> #h1:double fp
               -> s0:shared h0 -> s1:shared h1
-              -> Tot (shared(rel_map2 mul_fp h0 h1))
+              -> St2 (shared(rel_map2 mul_fp h0 h1))
 let mul_mpc #h0 #h1 s0 s1 =
   let (|a, a_s|), (|b, b_s|), (|c, c_s|) = triple (rel_map1 snd s0) (rel_map1 snd s1) in
   let e_s = minus_mpc #h0 #a s0 a_s in

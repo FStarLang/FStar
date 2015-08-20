@@ -42,8 +42,13 @@ assume val good_sample_fun_bijection : #a:Type -> #b:Type -> f:(a -> Tot b) ->
 module Sample
 open Bijection
 open Relational
+open Heap
+open Comp
 
 (* sample two random values such that they are related by a bijection f *)
 assume val sample : #a:Type -> #b:Type
                     -> f:(a -> Tot b){good_sample_fun f}
-                    -> Tot (r:(rel a  b) {R.r r = f (R.l r)})
+                    -> ST2 (rel a  b)
+                           (requires (fun h      -> True))
+                           (ensures  (fun h r h' -> R.r r = f (R.l r)
+                                                 /\ and_rel (rel_map2 equal h h')))
