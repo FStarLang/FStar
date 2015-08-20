@@ -88,13 +88,6 @@ val loopyFactorial2 : n:nat
               (fun _ rv _ -> rv == (factorial n))
               (hide empty)
 let loopyFactorial2 n =
-(*  withNewScope
-  #nat
-  #(fun m -> True) (*same as the comment below. F* should certainly try this precondition*)
-  #(fun _ rv _ -> rv == (factorial n)) (*this is the same as that of the conclusion, why cant it be inferred?*)
-  #(hide empty)
-  (fun u ->
-  *)
   pushStackFrame ();
     let li:(lref nat) = salloc 0 in
     let res:(lref nat) = salloc 1 in

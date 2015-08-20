@@ -54,7 +54,6 @@ effect whileBody (loopInv:smem -> Type) (lc:smem  -> Type) (mod:modset)
               mod
 
 
-
 val scopedWhile : loopInv:(smem -> Type)
   -> wglc:(smem -> Type)
   -> wg:(unit -> whileGuard loopInv wglc)
@@ -67,9 +66,9 @@ let rec scopedWhile
    'loopInv 'wglc wg mods bd =
    if (wg ())
       then
-        ((withNewScope #unit
-            #(fun m -> 'loopInv m /\ ('wglc m)) #(fun _ _ m1 -> 'loopInv m1) #mods bd);
-        (scopedWhile 'loopInv 'wglc wg mods bd))
+        ((let _ = pushStackFrame () in
+          let _ = bd  () in popStackFrame());
+         (scopedWhile 'loopInv 'wglc wg mods bd))
       else ()
 
 val scopedWhile1 :
