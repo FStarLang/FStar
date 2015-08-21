@@ -22,7 +22,6 @@ open Microsoft.FStar.Util
 open Microsoft.FStar.Getopt
 open Microsoft.FStar.Tc.Util
 open Microsoft.FStar.Tc.Env
-open Microsoft.FStar.Backends
 
 let process_args () = 
   let file_list = Util.mk_ref [] in
@@ -230,32 +229,14 @@ let finished_message fmods =
     end
 
 let codegen fmods env= 
-    if !Options.codegen = Some "OCaml" then 
-        try
-            let mllib = Backends.OCaml.ASTTrans.mlmod_of_fstars (List.tail fmods) in
-            let doc   = Backends.OCaml.Code.doc_of_mllib mllib in
-            List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^".ml")) (FSharp.Format.pretty 120 d)) doc 
-        with Backends.OCaml.ASTTrans.OCamlFailure (rg, error) -> begin
-            (* FIXME: register exception and remove this block  *)
-            Util.print_string (* stderr *) <|
-            Util.format2 "OCaml Backend Error: %s %s\n"
-                (Range.string_of_range rg)
-                (Backends.OCaml.ASTTrans.string_of_error error);
-            exit 1
-        end
-    else if !Options.codegen = Some "OCaml-experimental" then begin
+    if !Options.codegen = Some "OCaml" 
+    || !Options.codegen = Some "OCaml-experimental" 
+    then begin
         let c, mllibs = Util.fold_map Extraction.ML.ExtractMod.extract (Extraction.ML.Env.mkContext env) fmods in
         let mllibs = List.flatten mllibs in
         let newDocs = List.collect Extraction.OCaml.Code.doc_of_mllib mllibs in
-            List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^".ml")) (FSharp.Format.pretty 120 d)) newDocs
+        List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^".ml")) (FSharp.Format.pretty 120 d)) newDocs
     end
-//    ;
-//    if !Options.codegen = Some "JavaScript" then begin
-//        let js = Backends.JS.Translate.js_of_fstars (List.tail fmods) in
-//        let doc = Backends.JS.Print.pretty_print js in
-//        Util.print_string (FSharp.Format.pretty 120 doc)
-//    end
-//    
 
 (* Main function *)
 let go _ =    

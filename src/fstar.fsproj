@@ -94,11 +94,6 @@
       <Project>{13e8984e-188d-447b-b7b7-9f7441050565}</Project>
       <Private>True</Private>
     </ProjectReference>
-    <ProjectReference Include="backend\backend.fsproj">
-      <Name>backend</Name>
-      <Project>{2f500a50-bdba-40d3-92fa-f186adb9a44f}</Project>
-      <Private>True</Private>
-    </ProjectReference>
     <ProjectReference Include="basic\basic.fsproj">
       <Name>basic</Name>
       <Project>{e8957dbd-58e7-4cf8-9192-e0a9cfb3867e}</Project>
