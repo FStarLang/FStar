@@ -16,39 +16,39 @@ val fac : nat -> Tot nat
 let rec fac x = if x = 0 then 1 else  fac (x-1) * x
 
 (* A tail-recursive imperative implementation *)
-val imp_fac : x:ref nat -> a:ref nat 
-  -> ST nat (requires (fun h -> a <> x 
-                             /\ contains h a 
+val imp_fac : x:ref nat -> a:ref nat
+  -> ST nat (requires (fun h -> a <> x
+                             /\ contains h a
                              /\ contains h x ))
-            (ensures  (fun h r h' -> a <> x 
+            (ensures  (fun h r h' -> a <> x
                                   /\ r = (fac (sel h x) * (sel h a))
-                                  /\ sel h' x = 0 
+                                  /\ sel h' x = 0
                                   /\ sel h' a = r
                                   /\ equal h' (upd (upd h x 0) a r)))
-let rec imp_fac x a = 
-  if !x = 0 then 
-    !a 
-  else 
+let rec imp_fac x a =
+  if !x = 0 then
+    !a
+  else
   ( a := !a * !x;
     x := !x - 1;
-    imp_fac x a 
+    imp_fac x a
     )
 
 
 (* A wrapper for the recursive function, ensuring that the heap will not be
    modified *)
-val imp_fac_wrap : x:ref nat -> a:ref nat -> y:nat 
+val imp_fac_wrap : x:ref nat -> a:ref nat -> y:nat
   -> ST nat (requires  (fun h -> a <> x
-                              /\ contains h a 
+                              /\ contains h a
                               /\ contains h x ))
-            (ensures   (fun h r h' -> r = fac y 
+            (ensures   (fun h r h' -> r = fac y
                                    /\ equal h h'))
 let imp_fac_wrap x a y =
-  let tmp1 = !x in 
+  let tmp1 = !x in
   let tmp2 = !a in
   x := y;
   a := 1;
-  let res = imp_fac x a in 
+  let res = imp_fac x a in
   x := tmp1;
   a := tmp2;
   res
@@ -80,11 +80,11 @@ let fac_cached x =
 val correct : x:ref nat -> a:ref nat -> y:eq nat
   -> ST2 (eq nat)
          (requires (fun h -> fac_cache_correct (sel (R.r h) cache)
-                          /\ x <> a 
-                          /\ contains (R.l h) x 
-                          /\ contains (R.l h) a 
+                          /\ x <> a
+                          /\ contains (R.l h) x
+                          /\ contains (R.l h) a
                           /\ contains (R.r h) cache
                           /\ (exists c. equal (upd (R.l h) cache c) (R.r h))))
          (ensures (fun h _ h' -> fac_cache_correct (sel (R.r h') cache)
                               /\ (exists c. equal (upd (R.l h') cache c) (R.r h'))))
-let correct x a y =  compose2 (fun y -> imp_fac_wrap x a y) (fun x -> fac_cached x) y 
+let correct x a y =  compose2 (fun y -> imp_fac_wrap x a y) (fun x -> fac_cached x) y

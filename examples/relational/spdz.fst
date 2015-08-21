@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set --z3timeout 10 ;
+    options:--admit_fsi Set --z3timeout 30 --log_types;
     variables:LIB=../../lib;
     other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/st2.fst $LIB/bytes.fst $LIB/list.fst sample.fst
   --*)
