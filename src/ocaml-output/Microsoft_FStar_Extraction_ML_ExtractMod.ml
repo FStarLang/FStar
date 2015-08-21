@@ -1,17 +1,17 @@
 
-let fail_exp = (fun ( lid ) ( t ) -> (let _133_16 = (let _133_15 = (Microsoft_FStar_Absyn_Util.fvar None Microsoft_FStar_Absyn_Const.failwith_lid Microsoft_FStar_Absyn_Syntax.dummyRange)
-in (let _133_14 = (let _133_13 = (Microsoft_FStar_Absyn_Syntax.targ t)
-in (let _133_12 = (let _133_11 = (let _133_10 = (let _133_9 = (let _133_8 = (let _133_7 = (let _133_6 = (let _133_5 = (Microsoft_FStar_Absyn_Print.sli lid)
-in (Support.String.strcat "Not yet implemented:" _133_5))
-in (Support.Microsoft.FStar.Bytes.string_as_unicode_bytes _133_6))
-in (_133_7, Microsoft_FStar_Absyn_Syntax.dummyRange))
-in Microsoft_FStar_Absyn_Syntax.Const_string (_133_8))
-in (Microsoft_FStar_Absyn_Syntax.mk_Exp_constant _133_9 None Microsoft_FStar_Absyn_Syntax.dummyRange))
-in (Support.All.pipe_left Microsoft_FStar_Absyn_Syntax.varg _133_10))
-in (_133_11)::[])
-in (_133_13)::_133_12))
-in (_133_15, _133_14)))
-in (Microsoft_FStar_Absyn_Syntax.mk_Exp_app _133_16 None Microsoft_FStar_Absyn_Syntax.dummyRange)))
+let fail_exp = (fun ( lid ) ( t ) -> (let _126_16 = (let _126_15 = (Microsoft_FStar_Absyn_Util.fvar None Microsoft_FStar_Absyn_Const.failwith_lid Microsoft_FStar_Absyn_Syntax.dummyRange)
+in (let _126_14 = (let _126_13 = (Microsoft_FStar_Absyn_Syntax.targ t)
+in (let _126_12 = (let _126_11 = (let _126_10 = (let _126_9 = (let _126_8 = (let _126_7 = (let _126_6 = (let _126_5 = (Microsoft_FStar_Absyn_Print.sli lid)
+in (Support.String.strcat "Not yet implemented:" _126_5))
+in (Support.Microsoft.FStar.Bytes.string_as_unicode_bytes _126_6))
+in (_126_7, Microsoft_FStar_Absyn_Syntax.dummyRange))
+in Microsoft_FStar_Absyn_Syntax.Const_string (_126_8))
+in (Microsoft_FStar_Absyn_Syntax.mk_Exp_constant _126_9 None Microsoft_FStar_Absyn_Syntax.dummyRange))
+in (Support.All.pipe_left Microsoft_FStar_Absyn_Syntax.varg _126_10))
+in (_126_11)::[])
+in (_126_13)::_126_12))
+in (_126_15, _126_14)))
+in (Microsoft_FStar_Absyn_Syntax.mk_Exp_app _126_16 None Microsoft_FStar_Absyn_Syntax.dummyRange)))
 
 let mangle_projector_lid = (fun ( x ) -> (let projecteeName = x.Microsoft_FStar_Absyn_Syntax.ident
 in (let _62_11 = (Support.Microsoft.FStar.Util.prefix x.Microsoft_FStar_Absyn_Syntax.ns)
@@ -21,9 +21,9 @@ in (match (_62_11) with
 in (Microsoft_FStar_Absyn_Syntax.lid_of_ids (Support.List.append prefix ((mangledName)::[]))))
 end))))
 
-let rec extract_sig = (fun ( g ) ( se ) -> (let _62_16 = (Microsoft_FStar_Extraction_ML_Env.debug g (fun ( u ) -> (let _133_25 = (let _133_24 = (Microsoft_FStar_Absyn_Print.sigelt_to_string se)
-in (Support.Microsoft.FStar.Util.format1 "now extracting :  %s \n" _133_24))
-in (Support.Microsoft.FStar.Util.print_string _133_25))))
+let rec extract_sig = (fun ( g ) ( se ) -> (let _62_16 = (Microsoft_FStar_Extraction_ML_Env.debug g (fun ( u ) -> (let _126_25 = (let _126_24 = (Microsoft_FStar_Absyn_Print.sigelt_to_string se)
+in (Support.Microsoft.FStar.Util.format1 "now extracting :  %s \n" _126_24))
+in (Support.Microsoft.FStar.Util.print_string _126_25))))
 in (match (se) with
 | (Microsoft_FStar_Absyn_Syntax.Sig_datacon (_)) | (Microsoft_FStar_Absyn_Syntax.Sig_bundle (_)) | (Microsoft_FStar_Absyn_Syntax.Sig_tycon (_)) | (Microsoft_FStar_Absyn_Syntax.Sig_typ_abbrev (_)) -> begin
 (let _62_32 = (Microsoft_FStar_Extraction_ML_ExtractTyp.extractSigElt g se)
@@ -49,21 +49,21 @@ end
 false
 end))))) with
 | true -> begin
-(let mname = (let _133_31 = (let _133_30 = (Support.Microsoft.FStar.Util.right lbname)
-in (mangle_projector_lid _133_30))
-in (Support.All.pipe_right _133_31 Microsoft_FStar_Extraction_ML_Syntax.mlpath_of_lident))
-in (let env = (let _133_34 = (let _133_32 = (Support.Microsoft.FStar.Util.right lbname)
-in (Support.All.pipe_left Microsoft_FStar_Absyn_Util.fv _133_32))
-in (let _133_33 = (Support.Microsoft.FStar.Util.must ml_lb.Microsoft_FStar_Extraction_ML_Syntax.mllb_tysc)
-in (Microsoft_FStar_Extraction_ML_Env.extend_fv' env _133_34 mname _133_33 ml_lb.Microsoft_FStar_Extraction_ML_Syntax.mllb_add_unit)))
+(let mname = (let _126_31 = (let _126_30 = (Support.Microsoft.FStar.Util.right lbname)
+in (mangle_projector_lid _126_30))
+in (Support.All.pipe_right _126_31 Microsoft_FStar_Extraction_ML_Syntax.mlpath_of_lident))
+in (let env = (let _126_34 = (let _126_32 = (Support.Microsoft.FStar.Util.right lbname)
+in (Support.All.pipe_left Microsoft_FStar_Absyn_Util.fv _126_32))
+in (let _126_33 = (Support.Microsoft.FStar.Util.must ml_lb.Microsoft_FStar_Extraction_ML_Syntax.mllb_tysc)
+in (Microsoft_FStar_Extraction_ML_Env.extend_fv' env _126_34 mname _126_33 ml_lb.Microsoft_FStar_Extraction_ML_Syntax.mllb_add_unit)))
 in (env, (let _62_71 = ml_lb
 in {Microsoft_FStar_Extraction_ML_Syntax.mllb_name = ((Support.Prims.snd mname), 0); Microsoft_FStar_Extraction_ML_Syntax.mllb_tysc = _62_71.Microsoft_FStar_Extraction_ML_Syntax.mllb_tysc; Microsoft_FStar_Extraction_ML_Syntax.mllb_add_unit = _62_71.Microsoft_FStar_Extraction_ML_Syntax.mllb_add_unit; Microsoft_FStar_Extraction_ML_Syntax.mllb_def = _62_71.Microsoft_FStar_Extraction_ML_Syntax.mllb_def}))))
 end
 | false -> begin
-(let _133_37 = (let _133_36 = (let _133_35 = (Support.Microsoft.FStar.Util.must ml_lb.Microsoft_FStar_Extraction_ML_Syntax.mllb_tysc)
-in (Microsoft_FStar_Extraction_ML_Env.extend_lb env lbname t _133_35 ml_lb.Microsoft_FStar_Extraction_ML_Syntax.mllb_add_unit))
-in (Support.All.pipe_left Support.Prims.fst _133_36))
-in (_133_37, ml_lb))
+(let _126_37 = (let _126_36 = (let _126_35 = (Support.Microsoft.FStar.Util.must ml_lb.Microsoft_FStar_Extraction_ML_Syntax.mllb_tysc)
+in (Microsoft_FStar_Extraction_ML_Env.extend_lb env lbname t _126_35 ml_lb.Microsoft_FStar_Extraction_ML_Syntax.mllb_add_unit))
+in (Support.All.pipe_left Support.Prims.fst _126_36))
+in (_126_37, ml_lb))
 end)
 in (match (_62_75) with
 | (g, ml_lb) -> begin
@@ -85,9 +85,9 @@ end
 | true -> begin
 (let impl = (match ((Microsoft_FStar_Absyn_Util.function_formals t)) with
 | Some ((bs, c)) -> begin
-(let _133_39 = (let _133_38 = (fail_exp lid (Microsoft_FStar_Absyn_Util.comp_result c))
-in (bs, _133_38))
-in (Microsoft_FStar_Absyn_Syntax.mk_Exp_abs _133_39 None Microsoft_FStar_Absyn_Syntax.dummyRange))
+(let _126_39 = (let _126_38 = (fail_exp lid (Microsoft_FStar_Absyn_Util.comp_result c))
+in (bs, _126_38))
+in (Microsoft_FStar_Absyn_Syntax.mk_Exp_abs _126_39 None Microsoft_FStar_Absyn_Syntax.dummyRange))
 end
 | _62_92 -> begin
 (fail_exp lid t)
@@ -111,9 +111,9 @@ end
 None
 end)))) with
 | Some (l) when (not (is_record)) -> begin
-(let _133_43 = (let _133_42 = (Microsoft_FStar_Extraction_ML_ExtractExp.ind_discriminator_body g lid l)
-in (_133_42)::[])
-in (g, _133_43))
+(let _126_43 = (let _126_42 = (Microsoft_FStar_Extraction_ML_ExtractExp.ind_discriminator_body g lid l)
+in (_126_42)::[])
+in (g, _126_43))
 end
 | _62_113 -> begin
 (match ((Support.Microsoft.FStar.Util.find_map quals (fun ( _62_4 ) -> (match (_62_4) with
@@ -147,8 +147,8 @@ end
 (g, [])
 end)))
 
-let extract_iface = (fun ( g ) ( m ) -> (let _133_49 = (Support.Microsoft.FStar.Util.fold_map extract_sig g m.Microsoft_FStar_Absyn_Syntax.declarations)
-in (Support.All.pipe_right _133_49 Support.Prims.fst)))
+let extract_iface = (fun ( g ) ( m ) -> (let _126_49 = (Support.Microsoft.FStar.Util.fold_map extract_sig g m.Microsoft_FStar_Absyn_Syntax.declarations)
+in (Support.All.pipe_right _126_49 Support.Prims.fst)))
 
 let rec extract = (fun ( g ) ( m ) -> (let _62_160 = (Microsoft_FStar_Absyn_Util.reset_gensym ())
 in (let name = (Microsoft_FStar_Extraction_ML_Syntax.mlpath_of_lident m.Microsoft_FStar_Absyn_Syntax.name)

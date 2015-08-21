@@ -18,9 +18,9 @@ end
 Microsoft_FStar_Extraction_ML_Syntax.MLC_Byte (c)
 end
 | Microsoft_FStar_Absyn_Syntax.Const_int (c) -> begin
-(let _128_7 = (let _128_6 = (Support.Microsoft.FStar.Util.int_of_string c)
-in (Support.Microsoft.FStar.Util.int32_of_int _128_6))
-in Microsoft_FStar_Extraction_ML_Syntax.MLC_Int32 (_128_7))
+(let _121_7 = (let _121_6 = (Support.Microsoft.FStar.Util.int_of_string c)
+in (Support.Microsoft.FStar.Util.int32_of_int _121_6))
+in Microsoft_FStar_Extraction_ML_Syntax.MLC_Int32 (_121_7))
 end
 | Microsoft_FStar_Absyn_Syntax.Const_int32 (i) -> begin
 Microsoft_FStar_Extraction_ML_Syntax.MLC_Int32 (i)
@@ -55,25 +55,25 @@ t
 end)
 end
 | Microsoft_FStar_Extraction_ML_Syntax.MLTY_Fun ((t1, f, t2)) -> begin
-(let _128_15 = (let _128_14 = (subst_aux subst t1)
-in (let _128_13 = (subst_aux subst t2)
-in (_128_14, f, _128_13)))
-in Microsoft_FStar_Extraction_ML_Syntax.MLTY_Fun (_128_15))
+(let _121_15 = (let _121_14 = (subst_aux subst t1)
+in (let _121_13 = (subst_aux subst t2)
+in (_121_14, f, _121_13)))
+in Microsoft_FStar_Extraction_ML_Syntax.MLTY_Fun (_121_15))
 end
 | Microsoft_FStar_Extraction_ML_Syntax.MLTY_Named ((args, path)) -> begin
-(let _128_17 = (let _128_16 = (Support.List.map (subst_aux subst) args)
-in (_128_16, path))
-in Microsoft_FStar_Extraction_ML_Syntax.MLTY_Named (_128_17))
+(let _121_17 = (let _121_16 = (Support.List.map (subst_aux subst) args)
+in (_121_16, path))
+in Microsoft_FStar_Extraction_ML_Syntax.MLTY_Named (_121_17))
 end
 | Microsoft_FStar_Extraction_ML_Syntax.MLTY_Tuple (ts) -> begin
-(let _128_18 = (Support.List.map (subst_aux subst) ts)
-in Microsoft_FStar_Extraction_ML_Syntax.MLTY_Tuple (_128_18))
+(let _121_18 = (Support.List.map (subst_aux subst) ts)
+in Microsoft_FStar_Extraction_ML_Syntax.MLTY_Tuple (_121_18))
 end
 | Microsoft_FStar_Extraction_ML_Syntax.MLTY_App ((t1, t2)) -> begin
-(let _128_21 = (let _128_20 = (subst_aux subst t1)
-in (let _128_19 = (subst_aux subst t2)
-in (_128_20, _128_19)))
-in Microsoft_FStar_Extraction_ML_Syntax.MLTY_App (_128_21))
+(let _121_21 = (let _121_20 = (subst_aux subst t1)
+in (let _121_19 = (subst_aux subst t2)
+in (_121_20, _121_19)))
+in Microsoft_FStar_Extraction_ML_Syntax.MLTY_App (_121_21))
 end
 | Microsoft_FStar_Extraction_ML_Syntax.MLTY_Top -> begin
 Microsoft_FStar_Extraction_ML_Syntax.MLTY_Top
@@ -86,8 +86,8 @@ let subst = (fun ( _57_67 ) ( args ) -> (match (_57_67) with
 (Support.All.failwith "Substitution must be fully applied")
 end
 | false -> begin
-(let _128_26 = (Support.List.zip formals args)
-in (subst_aux _128_26 t))
+(let _121_26 = (Support.List.zip formals args)
+in (subst_aux _121_26 t))
 end)
 end))
 
@@ -95,8 +95,8 @@ let delta_unfold = (fun ( g ) ( _57_1 ) -> (match (_57_1) with
 | Microsoft_FStar_Extraction_ML_Syntax.MLTY_Named ((args, n)) -> begin
 (match ((Microsoft_FStar_Extraction_ML_Env.lookup_ty_const g n)) with
 | Some (ts) -> begin
-(let _128_31 = (subst ts args)
-in Some (_128_31))
+(let _121_31 = (subst ts args)
+in Some (_121_31))
 end
 | _57_78 -> begin
 None
@@ -177,8 +177,8 @@ let mkTypFun = (fun ( bs ) ( c ) ( original ) -> (Microsoft_FStar_Absyn_Syntax.m
 
 let mkTypApp = (fun ( typ ) ( arrgs ) ( original ) -> (Microsoft_FStar_Absyn_Syntax.mk_Typ_app (typ, arrgs) None original.Microsoft_FStar_Absyn_Syntax.pos))
 
-let tbinder_prefix = (fun ( t ) -> (match ((let _128_53 = (Microsoft_FStar_Absyn_Util.compress_typ t)
-in _128_53.Microsoft_FStar_Absyn_Syntax.n)) with
+let tbinder_prefix = (fun ( t ) -> (match ((let _121_53 = (Microsoft_FStar_Absyn_Util.compress_typ t)
+in _121_53.Microsoft_FStar_Absyn_Syntax.n)) with
 | Microsoft_FStar_Absyn_Syntax.Typ_fun ((bs, c)) -> begin
 (match ((Support.Microsoft.FStar.Util.prefix_until (fun ( _57_3 ) -> (match (_57_3) with
 | (Support.Microsoft.FStar.Util.Inr (_57_171), _57_174) -> begin
@@ -191,8 +191,8 @@ end)) bs)) with
 (bs, t)
 end
 | Some ((bs, b, rest)) -> begin
-(let _128_55 = (mkTypFun ((b)::rest) c t)
-in (bs, _128_55))
+(let _121_55 = (mkTypFun ((b)::rest) c t)
+in (bs, _121_55))
 end)
 end
 | _57_185 -> begin
@@ -334,8 +334,8 @@ let flatten_mlpath = (fun ( _57_271 ) -> (match (_57_271) with
 (Support.String.concat "_" (Support.List.append ns ((n)::[])))
 end))
 
-let mlpath_of_lid = (fun ( l ) -> (let _128_82 = (Support.All.pipe_right l.Microsoft_FStar_Absyn_Syntax.ns (Support.List.map (fun ( i ) -> i.Microsoft_FStar_Absyn_Syntax.idText)))
-in (_128_82, l.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText)))
+let mlpath_of_lid = (fun ( l ) -> (let _121_82 = (Support.All.pipe_right l.Microsoft_FStar_Absyn_Syntax.ns (Support.List.map (fun ( i ) -> i.Microsoft_FStar_Absyn_Syntax.idText)))
+in (_121_82, l.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText)))
 
 let rec erasableType = (fun ( g ) ( t ) -> (match ((Microsoft_FStar_Extraction_ML_Env.erasableTypeNoDelta t)) with
 | true -> begin
@@ -355,10 +355,10 @@ let rec eraseTypeDeep = (fun ( g ) ( t ) -> (match (t) with
 | Microsoft_FStar_Extraction_ML_Syntax.MLTY_Fun ((tyd, etag, tycd)) -> begin
 (match ((etag = Microsoft_FStar_Extraction_ML_Syntax.E_PURE)) with
 | true -> begin
-(let _128_93 = (let _128_92 = (eraseTypeDeep g tyd)
-in (let _128_91 = (eraseTypeDeep g tycd)
-in (_128_92, etag, _128_91)))
-in Microsoft_FStar_Extraction_ML_Syntax.MLTY_Fun (_128_93))
+(let _121_93 = (let _121_92 = (eraseTypeDeep g tyd)
+in (let _121_91 = (eraseTypeDeep g tycd)
+in (_121_92, etag, _121_91)))
+in Microsoft_FStar_Extraction_ML_Syntax.MLTY_Fun (_121_93))
 end
 | false -> begin
 t
@@ -370,20 +370,20 @@ end
 Microsoft_FStar_Extraction_ML_Env.erasedContent
 end
 | false -> begin
-(let _128_95 = (let _128_94 = (Support.List.map (eraseTypeDeep g) lty)
-in (_128_94, mlp))
-in Microsoft_FStar_Extraction_ML_Syntax.MLTY_Named (_128_95))
+(let _121_95 = (let _121_94 = (Support.List.map (eraseTypeDeep g) lty)
+in (_121_94, mlp))
+in Microsoft_FStar_Extraction_ML_Syntax.MLTY_Named (_121_95))
 end)
 end
 | Microsoft_FStar_Extraction_ML_Syntax.MLTY_Tuple (lty) -> begin
-(let _128_96 = (Support.List.map (eraseTypeDeep g) lty)
-in Microsoft_FStar_Extraction_ML_Syntax.MLTY_Tuple (_128_96))
+(let _121_96 = (Support.List.map (eraseTypeDeep g) lty)
+in Microsoft_FStar_Extraction_ML_Syntax.MLTY_Tuple (_121_96))
 end
 | Microsoft_FStar_Extraction_ML_Syntax.MLTY_App ((tyf, tyarg)) -> begin
-(let _128_99 = (let _128_98 = (eraseTypeDeep g tyf)
-in (let _128_97 = (eraseTypeDeep g tyarg)
-in (_128_98, _128_97)))
-in Microsoft_FStar_Extraction_ML_Syntax.MLTY_App (_128_99))
+(let _121_99 = (let _121_98 = (eraseTypeDeep g tyf)
+in (let _121_97 = (eraseTypeDeep g tyarg)
+in (_121_98, _121_97)))
+in Microsoft_FStar_Extraction_ML_Syntax.MLTY_App (_121_99))
 end
 | _57_297 -> begin
 t
