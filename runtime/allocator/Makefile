@@ -14,7 +14,7 @@ ifdef DEBUG
 CFLAGS := $(CFLAGS) -ccopt -DDEBUG
 endif
 else
-NOGC := y
+#NOGC := y
 CFLAGS := -ccopt -O3
 endif
 CMO := cmx
