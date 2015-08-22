@@ -21,26 +21,27 @@ with just an OCaml compiler (see [below](#building-f-using-the-ocaml-snapshot)).
 
 ### Building F* from sources (.NET version) ###
 
+**Note:** Building F* using the recently released F# 4.0 is currently not supported (building suceeds but produces a broken binary: https://github.com/FStarLang/FStar/issues/308)
+
 #### On Windows 7/8 using Visual Studio ####
 
   - Prerequisite: .NET framework 4.5
 
-  - Prerequisite: [VisualStudio 2013 and Visual F# Tools (v3.0 or later)](http://fsharp.org/use/windows/)
+  - Prerequisite: [Visual Studio 2013 or 2015 and Visual F# Tools (v3.0 or later)](http://fsharp.org/use/windows/)
     - for instance install the **free**
-      [Visual Studio 2013 Community](https://www.visualstudio.com/en-us/products/visual-studio-community-vs.aspx)
+      [Visual Studio Community](https://www.visualstudio.com/en-us/products/visual-studio-community-vs.aspx)
     - Install the Visual F# Tools from Microsoft
-      (by clicking the "Get Visual F# Tools for Visual Studio 2013"
+      (e.g. by clicking the "Get Visual F# Tools for Visual Studio 2013"
        link [here](https://msdn.microsoft.com/en-us/vstudio/hh388569.aspx))
 
-  - Using VisualStudio 2013, open `FStar/VS/FStar.sln` and build solution (in
+  - Using Visual Studio, open `FStar/VS/FStar.sln` and build solution (in
       the menus: Build > Build Solution).
 
   - Get a Z3 4.3.2 binary and add it to your PATH
     - 64 bits: https://z3.codeplex.com/releases/view/135729
     - 32 bits: https://z3.codeplex.com/releases/view/135728
 
-Please note that 1) the Makefile is currently broken on Windows, and 2) the
-"Release" build configuration is also broken in Visual Studio.
+**Note:** on Windows you need to build F\* using Visual Studio (building in Cygwin is not supported currently; `make -C src` succeeds but produces broken binary: https://github.com/FStarLang/FStar/issues/159)
 
 #### On Linux or Mac OS X using Mono ####
 
