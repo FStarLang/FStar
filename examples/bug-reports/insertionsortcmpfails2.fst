@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set --max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1;
+    options:--admit_fsi Set;
     other-files:set.fsi heap.fst st.fst all.fst list.fst
  --*)
 module InsertionSortCmp
