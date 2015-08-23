@@ -1,27 +1,51 @@
-### Binary releases ###
+## Online editor ##
 
+The easiest way to try out F\* is directly in your browser by using
+the [online F\* editor] that's part of the [F\* tutorial].
+
+[online F\* editor]: https://www.fstar-lang.org/run.php
+[F\* tutorial]: https://www.fstar-lang.org/tutorial/
+
+## Binary releases ##
+
+Every now and then we release F\* binaries on GitHub:
 - https://github.com/FStarLang/FStar/releases
 
-### Overview of the build process
+This is the easiest way to get F\* running quickly on your machine,
+but if the release you use is old you might be missing out on new
+features and bug fixes.
 
-F\* is written in a subset of F# that F\* itself can also parse with a special flag.
-Therefore, the standard build process of F* is as follows:
+## Building F* from sources ##
 
-- build F* using the F# compiler
-- compile the source of F* with F* and emit OCaml code (optional)
-- re-build F* using the OCaml compiler (optional).
+If you have a serious interest in F\* or want to report bugs then we
+recommend that you build F\* from the sources on GitHub (the master branch).
 
-The first step builds an F* compiler that runs on .NET. The last two steps build
-a native, more optimized binary of F*.
+F\* is written in a subset of F# that F\* itself can also parse with a
+special flag. Therefore, the standard build process of F* is as follows:
 
-It may be the case that it's easier for you to build F* directly from the OCaml
-sources. Therefore, for convenience, we keep a (possibly outdated) snapshot of
-the F* sources translated to OCaml in the repo. This allows you to bootstrap F*
-with just an OCaml compiler (see [below](#building-f-using-the-ocaml-snapshot)).
+  1. build F* from sources using the F# compiler
+     (obtaining a .NET binary for F\*);
+  
+  2. extract the sources of F* itself to OCaml
+     using the F* binary produced at step 1;
+  
+  3. re-build F* using the OCaml compiler from the code generated at step 2
+     (obtaining a faster native binary for F\*).
 
-### Building F* from sources (.NET version) ###
+**Alternative:**  If you don't care about efficiency and about the .NET
+dependency you can stop already after step 1.
 
-**Note:** Building F* using the recently released F# 4.0 is currently not supported (building suceeds but produces a broken binary: https://github.com/FStarLang/FStar/issues/308)
+**Alternative:**  If you don't want to use F#/.NET/Mono at all you can
+also build F\* directly from the OCaml sources.  Therefore, for
+convenience, we keep a (possibly outdated) snapshot of the F\* sources
+extracted to OCaml (the result of step 2) in the repo.  This allows
+you to skip directly to step 3 and build F* with just an OCaml compiler.
+
+### 1. Building F* from sources using the F# compiler ###
+
+**Note:** Building F* using the recently released F# 4.0 is currently
+  not supported (building suceeds but produces a broken binary:
+  https://github.com/FStarLang/FStar/issues/308)
 
 #### On Windows 7/8 using Visual Studio ####
 
@@ -41,7 +65,19 @@ with just an OCaml compiler (see [below](#building-f-using-the-ocaml-snapshot)).
     - 64 bits: https://z3.codeplex.com/releases/view/135729
     - 32 bits: https://z3.codeplex.com/releases/view/135728
 
-**Note:** on Windows you need to build F\* using Visual Studio (building in Cygwin is not supported currently; `make -C src` succeeds but produces broken binary: https://github.com/FStarLang/FStar/issues/159)
+**Note:** on Windows you need to build F\* using Visual Studio
+  (building in Cygwin is not supported currently; `make -C src`
+  succeeds but produces a broken binary:
+  https://github.com/FStarLang/FStar/issues/159)
+
+**Note:** if the Visual Studio build fails because `parse.fs` and
+  `lex.fs` are not found because of a mysterious issue, try closing
+  and reopening the solution and rebuilding until things magically
+  work (yes, we know it's strange) or do a `make -C src` for getting
+  these files generated before rebuilding with Visual Studio for
+  getting a proper binary:
+  https://github.com/FStarLang/FStar/issues/325 and
+  https://github.com/FStarLang/FStar/issues/73
 
 #### On Linux or Mac OS X using Mono ####
 
@@ -63,7 +99,8 @@ with just an OCaml compiler (see [below](#building-f-using-the-ocaml-snapshot)).
     - For Mac OS X install the MRE:
       - http://www.mono-project.com/download/#download-mac
 
-  - Import certificates for Mono
+  - Depending on your distribution, you might need to manually import
+    certificates for Mono
 
           $ mozroots --import --sync
 
@@ -96,7 +133,7 @@ with just an OCaml compiler (see [below](#building-f-using-the-ocaml-snapshot)).
     issuing `ulimit -s unlimited` in the terminal beforehand.
 
 
-### Building F* using the OCaml snapshot ###
+### 3. Building F* using the OCaml snapshot ###
 
 The current version of F* requires OCaml 4.02.
 
@@ -139,12 +176,12 @@ special `flexlink` technology for this. See `contrib/CoreCrypto/ml` and
 
         $ opam install batteries
 
-2. Then run the following commands in `src/ocaml-output`:
+3. Then run the following commands in `src/ocaml-output`:
 
         $ make
 
 
-### Refreshing the OCaml snapshot
+### 2. Refreshing the OCaml snapshot
 
 0. Get an F* binary, either using the .NET build process, or the OCaml build
    process. Make sure you follow the instructions above to get a working OCaml
