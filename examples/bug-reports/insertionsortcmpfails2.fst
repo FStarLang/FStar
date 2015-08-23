@@ -1,3 +1,7 @@
+(*--build-config
+    options:--admit_fsi Set --max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1;
+    other-files:set.fsi heap.fst st.fst all.fst list.fst
+ --*)
 module InsertionSortCmp
 open List
 
@@ -12,7 +16,7 @@ opaque type permutation (a:Type) (l1:list a) (l2:list a) =
 
 type total_order (a:Type) (f: (a -> a -> Tot bool)) =
     (forall a. f a a)                                           (* reflexivity   *)
-    /\ (forall a1 a2. (f a1 a2 /\ f a2 a1)  ==> a1 = a2)       (* anti-symmetry *)
+    /\ (forall a1 a2. (f a1 a2 /\ f a2 a1)  ==> a1 = a2)        (* anti-symmetry *)
     /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)        (* transitivity  *)
     /\ (forall a1 a2. f a1 a2 \/ f a2 a1)                       (* totality      *)
 

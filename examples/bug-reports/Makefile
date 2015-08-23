@@ -20,13 +20,13 @@ bug244: bug244.fst
 	../../bin/fstar.exe  ../../lib/string.fst bug244.fst
 
 insertionsortcmp: insertionsortcmp.fst
-	../../bin/fstar.exe ../../lib/list.fst insertionsortcmp.fst
+	../../bin/fstar.exe insertionsortcmp.fst
 
 insertionsortcmpfails: insertionsortcmpfails.fst
-	../../bin/fstar.exe ../../lib/list.fst insertionsortcmpfails.fst
+	../../bin/fstar.exe insertionsortcmpfails.fst
 
 insertionsortcmpfails2: insertionsortcmpfails2.fst
-	../../bin/fstar.exe ../../lib/list.fst insertionsortcmpfails2.fst
+	../../bin/fstar.exe insertionsortcmpfails2.fst
 
 
 extraction-error1:
