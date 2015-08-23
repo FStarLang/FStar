@@ -3,7 +3,7 @@ VERFILES=bug015.fst bug019.fst\
   bug029.fst bug026.fst bug028.fst bug034.fst\
   bug052.fst bug056.fst bug060.fst bug062.fst bug067.fst bug077.fst\
   bug092.fst bug096.fst bug097b.fst bug101.fst bug103.fst\
-  bug111.fst bug116.fst bug117.fst bug122.fst bug124.fst\
+  bug111.fst bug116.fst bug117.fst bug122.fst bug124.fst bug139.fst\
   bug148.fst bug155.fst bug161.fst bug162.fst bug170.fst bug175.fst bug178.fst\
   bug179.fst bug181.fst bug186.fst bug189.fst bug192.fst bug195.fst\
   bug203.fst bug212.fst bug213.fst bug-295.fst\
