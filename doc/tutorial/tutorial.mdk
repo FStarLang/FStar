@@ -166,8 +166,8 @@ You can [edit F\* code] using your favourite text editor, but the [Atom editor]
 has currently the best support for F\*. It supports
 syntax highlighting via [atom-fstar] and (Proof General style)
 interactive development via [fstar-interactive].
-[VimFStar] is a Vim plugin for F* that also supports interactive development.
-Finally, the [Tuareg Emacs Mode] for OCaml works quite well for F* too.
+[VimFStar] is a Vim plugin for F\* that also supports interactive development.
+Finally, the [Tuareg Emacs Mode] for OCaml works quite well for F\* too.
 
 [edit F\* code]: https://github.com/FStarLang/FStar#editing-f-code
 [Atom editor]: https://atom.io/
@@ -176,12 +176,12 @@ Finally, the [Tuareg Emacs Mode] for OCaml works quite well for F* too.
 [VimFStar]: https://github.com/FStarLang/VimFStar
 [Tuareg Emacs Mode]: https://github.com/ocaml/tuareg
 
-By default F* only verifies the input code, **it does not execute it**.
-To execute F* code one needs to extract it to OCaml and then
+By default F\* only verifies the input code, **it does not execute it**.
+To execute F\* code one needs to extract it to OCaml and then
 compile it using the OCaml compiler. More details on
-[executing F* code] in the F\* [README.md] file.
+[executing F\* code] in the F\* [README.md] file.
 
-[executing F* code]: https://github.com/FStarLang/FStar#executing-f-code
+[executing F\* code]: https://github.com/FStarLang/FStar#executing-f-code
 [README.md]: https://github.com/FStarLang/FStar/blob/master/README.md
 
 **A note on compatibility with F\#**: The syntax of F\* and F\#
