@@ -1,7 +1,6 @@
 (*--build-config
-    options:--max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1;
-    variables:LIB=../../lib;
-    other-files:$LIB/constr.fst $LIB/classical.fst $LIB/ext.fst
+    options:--admit_fsi Set --max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1;
+    other-files:constr.fst classical.fst ext.fst set.fsi heap.fst st.fst all.fst
  --*)
 (*
    Copyright 2008-2015 Catalin Hritcu (Inria), Aseem Rastogi (UMD), and
