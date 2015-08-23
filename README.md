@@ -119,6 +119,13 @@ where `program` is the desired name of the produced executable.
 Linking the `ocaml-output` directory and `support.ml` is required if
 the F* code used any built-in functions.
 
+### Old F* versions (v0.7.1 and earlier) ###
+
+[F\* v0.7.1] and earlier are no longer maintained, so please do not
+create any issues here about those versions.
+
+[F\* v0.7.1]: https://github.com/FStarLang/FStar/blob/master/old/fstar-0.7.1-alpha.zip
+
 ### Code structure (partially outdated)
 
 This section describes the general structure of the F* verifier.
