@@ -154,7 +154,7 @@ clean:
 	make -s -C ocaml-output clean
 
 # --------------------------------------------------------------------
-# Bootstrapping
+# Bootstrapping in OCaml
 # --------------------------------------------------------------------
 
 STDFILESEXP=system.fst
@@ -186,59 +186,57 @@ boot: $(BOOT_ALL)
 ocaml: $(BOOT_ALL)
 	../bin/fstar.exe --eager_inference --MLish --lax --fs_typ_app --odir ocaml-output $(FSTAROPTS) --codegen OCaml $(ADMITS) $^
 
+ocaml-test: ocaml boot-ocaml
 
-FS_SUPPORT_LIBS=prims.fs st.fs all.fs
-FSTAR_SUPPORT_LIBS=util.fsi util.fs platform.fsi platform.fs bytes.fsi bytes.fs range.fsi range.fs getoptsimple.fsi getoptsimple.fs unionfind.fsi unionfind.fs
-BOOT_FS_BASE=Microsoft.FStar.Options.fs
-BOOT_FS_SYNTAX=Microsoft.FStar.Absyn.Syntax.fs Microsoft.FStar.Absyn.Const.fs Microsoft.FStar.Absyn.Visit.fs Microsoft.FStar.Absyn.Util.fs Microsoft.FStar.Absyn.Print.fs Microsoft.FStar.Absyn.SSyntax.fs
-BOOT_FS_TC=Microsoft.FStar.Tc.Env.fs Microsoft.FStar.Tc.Recheck.fs Microsoft.FStar.Tc.Normalize.fs Microsoft.FStar.Tc.Errors.fs Microsoft.FStar.Tc.Rel.fs Microsoft.FStar.Tc.Util.fs Microsoft.FStar.Tc.Tc.fs 
-BOOT_FS_FILES=FSharp.Format.fs $(BOOT_FS_BASE) $(BOOT_FS_SYNTAX) $(BOOT_FS_TC)
-
-
-
-
-# 
-
-# Microsoft.FStar.Extraction.ML.Code.fs
-# Microsoft.FStar.Extraction.ML.Env.fs
-# Microsoft.FStar.Extraction.ML.ExtractExp.fs
-# Microsoft.FStar.Extraction.ML.ExtractMod.fs
-# Microsoft.FStar.Extraction.ML.ExtractTyp.fs
-# Microsoft.FStar.Extraction.ML.Syntax.fs
-# Microsoft.FStar.Extraction.ML.Util.fs
-# Microsoft.FStar.Extraction.OCaml.Code.fs
-# Microsoft.FStar.FStar.fs
-# 
-# Microsoft.FStar.Parser.AST.fs
-# Microsoft.FStar.Parser.Desugar.fs
-# Microsoft.FStar.Parser.DesugarEnv.fs
-# Microsoft.FStar.Parser.Driver.fs
-# Microsoft.FStar.Parser.Lexhelp.fs
-# Microsoft.FStar.ToSMT.Encode.fs
-# Microsoft.FStar.ToSMT.SplitQueryCases.fs
-# Microsoft.FStar.ToSMT.Term.fs
-# Microsoft.FStar.ToSMT.Z3.fs
-
-boot_fs: fsharp-output/support.dll
-	$(FSC) --warn:0 $(BASELIBS) -r $^ $(OTHERFLAGS) $(addprefix fsharp-output/, $(BOOT_FS_FILES))
-
-fs: $(BOOT_ALL)
-	../bin/fstar.exe --eager_inference --MLish --lax --fs_typ_app --odir fsharp-output $(FSTAROPTS) --codegen FSharp $(ADMITS) $^
-
-
-fsharp-output/support.dll: $(addprefix support/fsharp/, $(FS_SUPPORT_LIBS)) $(addprefix basic/, $(FSTAR_SUPPORT_LIBS))
-	$(FSC) $(OTHERFLAGS) $(BASELIBS) -o $@ -a $^
+boot-ocaml:
+	make -C ocaml-output parser
+	make -C ocaml-output
 
 fstarml:
 	@echo "Building parser and lexer filex..."
 	make -C ocaml-output parser
 	make -s -C ocaml-output
 
-ocaml-test: ocaml boot-ocaml
+# --------------------------------------------------------------------
+# Bootstrapping in F#
+# --------------------------------------------------------------------
 
-boot-ocaml:
-	make -C ocaml-output parser
-	make -C ocaml-output
+FS_SUPPORT_LIBS=prims.fs st.fs all.fs
+FSTAR_SUPPORT_LIBS=util.fsi util.fs platform.fsi platform.fs bytes.fsi bytes.fs range.fsi range.fs getoptsimple.fsi getoptsimple.fs unionfind.fsi unionfind.fs
+BOOT_FS_BASE=Microsoft.FStar.Options.fs
+BOOT_FS_SYNTAX=Microsoft.FStar.Absyn.Syntax.fs Microsoft.FStar.Absyn.Const.fs Microsoft.FStar.Absyn.Visit.fs Microsoft.FStar.Absyn.Util.fs Microsoft.FStar.Absyn.Print.fs Microsoft.FStar.Absyn.SSyntax.fs
+BOOT_FS_TC=Microsoft.FStar.Tc.Env.fs Microsoft.FStar.Tc.Recheck.fs Microsoft.FStar.Tc.Normalize.fs Microsoft.FStar.Tc.Errors.fs Microsoft.FStar.Tc.Rel.fs Microsoft.FStar.Tc.Util.fs Microsoft.FStar.Tc.Tc.fs 
+BOOT_FS_PARSER=Microsoft.FStar.Parser.AST.fs parseutil.fs parse.fs Microsoft.FStar.Parser.Lexhelp.fs lex.fs Microsoft.FStar.Parser.DesugarEnv.fs Microsoft.FStar.Parser.Desugar.fs parseit.fs Microsoft.FStar.Parser.Driver.fs
+BOOT_FS_TOSMT=Microsoft.FStar.ToSMT.Term.fs Microsoft.FStar.ToSMT.Z3.fs Microsoft.FStar.ToSMT.SplitQueryCases.fs Microsoft.FStar.ToSMT.Encode.fs
+BOOT_FS_EXTRACTION=Microsoft.FStar.Extraction.ML.Syntax.fs Microsoft.FStar.Extraction.ML.Env.fs Microsoft.FStar.Extraction.ML.Util.fs Microsoft.FStar.Extraction.OCaml.Code.fs Microsoft.FStar.Extraction.ML.Code.fs Microsoft.FStar.Extraction.ML.ExtractTyp.fs Microsoft.FStar.Extraction.ML.ExtractExp.fs Microsoft.FStar.Extraction.ML.ExtractMod.fs
+BOOT_FS_FILES=FSharp.Format.fs $(BOOT_FS_BASE) $(BOOT_FS_SYNTAX) $(BOOT_FS_TC) $(BOOT_FS_PARSER) $(BOOT_FS_TOSMT) $(BOOT_FS_EXTRACTION) Microsoft.FStar.FStar.fs
+
+boot_fs: fsharp-output fs plain-fs-files fsharp-output/fstar.exe 
+
+deploy_boot_fs: fsharp-output/fstar.exe fsharp-output/support.dll
+	cp $^ ../bin
+
+fsharp-output/fstar.exe: fsharp-output/support.dll
+	$(FSC) --nowarn:0025 -o $@ $(BASELIBS) -r $^ $(OTHERFLAGS) $(addprefix fsharp-output/, $(BOOT_FS_FILES) main.fs)
+
+fs: $(BOOT_ALL) 
+	../bin/fstar.exe --eager_inference --MLish --lax --fs_typ_app --odir fsharp-output $(FSTAROPTS) --codegen FSharp $(ADMITS) $^
+
+fsharp-output/support.dll: $(addprefix support/fsharp/, $(FS_SUPPORT_LIBS)) $(addprefix basic/, $(FSTAR_SUPPORT_LIBS))
+	$(FSC) $(OTHERFLAGS) $(BASELIBS) -o $@ -a $^
+
+fsharp-output: 
+	mkdir -p fsharp-output
+
+plain-fs-files: $(addprefix parser/, parseutil.fs parse.fs lex.fs parseit.fs) main.fs
+	cp $^ fsharp-output/ 
+
+clean_boot_fs:
+	rm -rf fsharp-output
+
+# --------------------------------------------------------------------
+# Testing
+# --------------------------------------------------------------------
 
 test:   clean $(BIN)/fstar.exe ocaml-test
 	make -C ../lib

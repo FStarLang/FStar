@@ -114,7 +114,7 @@ type uvi =
 (* The set of problems currently being addressed *)
 type worklist = {
     attempting: probs;
-    deferred:   list<(int * string * prob)>;  //flex-flex cases, non patterns, and subtyping constraints involving a unification variable, 
+    wl_deferred:   list<(int * string * prob)>;  //flex-flex cases, non patterns, and subtyping constraints involving a unification variable, 
     subst:      list<uvi>;                    //the partial solution derived so far
     ctr:        int;                          //a counter incremented each time we extend subst, used to detect if we've made progress
     slack_vars: list<(bool * typ)>;           //all the slack variables introduced so far, the flag marks a multiplicative variable
@@ -302,7 +302,7 @@ let explain env d s =
 (* ------------------------------------------------*)
 let empty_worklist env = {
     attempting=[];
-    deferred=[];
+    wl_deferred=[];
     subst=[];
     ctr=0;
     slack_vars=[];
@@ -312,7 +312,7 @@ let empty_worklist env = {
 }
 let singleton env prob     = {empty_worklist env with attempting=[prob]}
 let wl_of_guard env g      = {empty_worklist env with defer_ok=false; attempting=List.map snd g.carry; slack_vars=g.slack}
-let defer reason prob wl   = {wl with deferred=(wl.ctr, reason, prob)::wl.deferred}
+let defer reason prob wl   = {wl with wl_deferred=(wl.ctr, reason, prob)::wl.wl_deferred}
 let attempt probs wl       = {wl with attempting=probs@wl.attempting}
 let add_slack_mul slack wl = {wl with slack_vars=(true, slack)::wl.slack_vars}
 let add_slack_add slack wl = {wl with slack_vars=(false, slack)::wl.slack_vars}
@@ -1364,13 +1364,13 @@ and solve (env:Tc.Env.env) (probs:worklist) : solution =
             | CProb cp -> solve_c env (maybe_invert cp) probs
          end
        | None, _, _ ->
-         match probs.deferred with 
+         match probs.wl_deferred with 
             | [] -> Success (probs.subst, {carry=[]; slack=probs.slack_vars}) //Yay ... done!
             | _ -> 
-              let attempt, rest = probs.deferred |> List.partition (fun (c, _, _) -> c < probs.ctr) in
+              let attempt, rest = probs.wl_deferred |> List.partition (fun (c, _, _) -> c < probs.ctr) in
               match attempt with 
-                 | [] -> Success(probs.subst, {carry=List.map (fun (_, x, y) -> (x, y)) probs.deferred; slack=probs.slack_vars})//can't solve yet; defer the rest
-                 | _ -> solve env ({probs with attempting=attempt |> List.map (fun (_, _, y) -> y); deferred=rest})
+                 | [] -> Success(probs.subst, {carry=List.map (fun (_, x, y) -> (x, y)) probs.wl_deferred; slack=probs.slack_vars})//can't solve yet; defer the rest
+                 | _ -> solve env ({probs with attempting=attempt |> List.map (fun (_, _, y) -> y); wl_deferred=rest})
 
 
 and solve_binders (env:Tc.Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:worklist) 
@@ -1869,7 +1869,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
             solve env (attempt [base_prob] wl) in
         if problem.relation = EQ
         then let ref_prob = TProb <| mk_problem (p_scope orig) orig phi1 EQ phi2 None "refinement formula" in
-             begin match solve env ({wl with defer_ok=false; attempting=[ref_prob]; deferred=[]}) with 
+             begin match solve env ({wl with defer_ok=false; attempting=[ref_prob]; wl_deferred=[]}) with 
                     | Failed _ -> fallback()
                     | Success (subst, _) -> 
 //                      if Tc.Env.debug env <| Options.Other "RefEq"
@@ -2312,7 +2312,7 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
                 | Inr e1, Inr e2 ->
                     EProb <| mk_problem (p_scope orig) orig e1 EQ e2 None "expression arg"
                 | _ -> failwith "Impossible: ill-typed expression" in
-                begin match solve env ({wl with defer_ok=false; smt_ok=false; attempting=[prob]; deferred=[]}) with 
+                begin match solve env ({wl with defer_ok=false; smt_ok=false; attempting=[prob]; wl_deferred=[]}) with 
                 | Failed _ -> smt_fallback e1 e2
                 | Success (subst, _) -> solve_args (prob::sub_probs) ({wl with subst=subst}) rest1 rest2
                 end

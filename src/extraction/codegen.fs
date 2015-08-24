@@ -357,7 +357,7 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
         docs
 
     | MLE_Let ((rec_, lets), body) ->
-        let doc  = doc_of_lets currentModule (rec_, lets) in
+        let doc  = doc_of_lets currentModule (rec_, false, lets) in
         let body = doc_of_expr  currentModule (min_op_prec, NonAssoc) body in
         parens (combine hardline [doc; reduce1 [text "in"; body]])
 
@@ -514,7 +514,7 @@ and doc_of_branch (currentModule : mlsymbol) ((p, cond, e) : mlbranch) : doc =
     ]
 
 (* -------------------------------------------------------------------- *)
-and doc_of_lets (currentModule : mlsymbol) (rec_, lets) =
+and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
     let for1 {mllb_name=name; mllb_tysc=tys; mllb_def=e} =
         let e   = doc_of_expr currentModule  (min_op_prec, NonAssoc) e in
         let ids = [] in //TODO: maybe extract the top-level binders from e and print it alongside name
@@ -523,14 +523,15 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, lets) =
         //i.e., print the latter as the former
         let ids = List.map (fun (x, _) -> text x) ids in
         let ty_annot = 
-            if Util.codegen_fsharp () && rec_ //needed for polymorphic recursion and to overcome incompleteness of type inference in F#
+            if Util.codegen_fsharp () && (rec_ || top_level) //needed for polymorphic recursion and to overcome incompleteness of type inference in F#
             then match tys with 
                     | None
-                    | Some (_::_, _) -> text ""
+                    | Some (_::_, _) -> //except, emitting binders for type variables in F# sometimes also requires emitting type constraints; which is not yet supported 
+                      text ""
                     | Some ([], ty) -> 
-//                      let ids = List.map (fun (x, _) -> text x) ids in
                       let ty = doc_of_mltype currentModule (min_op_prec, NonAssoc) ty in
                       reduce1 [text ":"; ty]
+//                      let ids = List.map (fun (x, _) -> text x) ids in
 //                      begin match ids with 
 //                        | [] -> reduce1 [text ":"; ty]
 //                        | _ ->  reduce1 [text "<"; combine (text ", ") ids; text ">"; text ":"; ty]
@@ -647,7 +648,7 @@ let doc_of_mod1 (currentModule : mlsymbol) (m : mlmodule1) =
         doc_of_mltydecl currentModule decls
 
     | MLM_Let (rec_, lets) ->
-      doc_of_lets currentModule (rec_, lets)
+      doc_of_lets currentModule (rec_, true, lets)
 
     | MLM_Top e ->
         reduce1 [
