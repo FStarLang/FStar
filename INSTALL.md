@@ -61,10 +61,6 @@ you to skip directly to step 3 and build F* with just an OCaml compiler.
   - Using Visual Studio, open `FStar/VS/FStar.sln` and build the solution
     (in the menus: Build > Build Solution).
 
-  - Get a Z3 4.3.2 binary and add it to your PATH
-    - 64 bits: https://z3.codeplex.com/releases/view/135729
-    - 32 bits: https://z3.codeplex.com/releases/view/135728
-
 **Note:** on Windows you need to build F\* using Visual Studio
   (building in Cygwin is not supported currently; `make -C src`
   succeeds but produces a broken binary:
@@ -103,20 +99,6 @@ you to skip directly to step 3 and build F* with just an OCaml compiler.
     certificates for Mono
 
           $ mozroots --import --sync
-
-  - Get a Z3 4.3.2 binary and add it to your PATH
-
-    - On Linux (any distribution, not just Ubuntu) get binary from here:
-      - https://z3.codeplex.com/releases/view/101911
-
-      For instance, for a 64bit architecture you can do
-
-          $ wget "https://download-codeplex.sec.s-msft.com/Download/Release?ProjectName=z3&DownloadId=923684&FileTime=130586905368570000&Build=20959" -O z3-4.3.2.0713535fa6a3-x64-ubuntu-14.04.zip
-          $ unzip z3-4.3.2.0713535fa6a3-x64-ubuntu-14.04.zip
-          $ export PATH=z3-4.3.2.0713535fa6a3-x64-ubuntu-14.04/bin:$PATH
-
-    - On Mac OS X get binary from here:
-      - https://z3.codeplex.com/releases/view/101918
 
   - Compile F* from sources
 
@@ -197,6 +179,29 @@ special `flexlink` technology for this. See `contrib/CoreCrypto/ml` and
 
         $ make parser
         $ make
+
+## Runtime dependency: Z3 SMT solver ##
+
+To use F* for verification you need to get a Z3 4.3.2 binary and add
+it to your `PATH`:
+
+  - Z3 binaries for Windows:
+
+    - 64 bits: https://z3.codeplex.com/releases/view/135729
+    - 32 bits: https://z3.codeplex.com/releases/view/135728
+
+  - Z3 binaries for Linux (any distribution, not just Ubuntu):
+
+      - https://z3.codeplex.com/releases/view/101911
+
+      For instance, for a 64bit architecture you can do
+
+          $ wget "https://download-codeplex.sec.s-msft.com/Download/Release?ProjectName=z3&DownloadId=923684&FileTime=130586905368570000&Build=20959" -O z3-4.3.2.0713535fa6a3-x64-ubuntu-14.04.zip
+          $ unzip z3-4.3.2.0713535fa6a3-x64-ubuntu-14.04.zip
+          $ export PATH=z3-4.3.2.0713535fa6a3-x64-ubuntu-14.04/bin:$PATH
+
+  - Z3 binaries for Mac OS X:
+      - https://z3.codeplex.com/releases/view/101918
 
 ## Creating binary packages for your platform ##
 
