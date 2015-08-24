@@ -247,11 +247,16 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_create(value cipher, value forenc) {
 
     EVP_CIPHER_CTX_init(ctx);
 
+    // Set all parameters to NULL except the cipher type in this initial call
+    // Give remaining parameters in subsequent calls (e.g. EVP_CIPHER_set_key),
+    // all of which have cipher type set to NULL
     if (EVP_CipherInit_ex(ctx, CIPHER_val(cipher), NULL, NULL, NULL, Bool_val(forenc)) == 0) {
         caml_failwith("cannot initialize cipher context");
         goto bailout;
     }
 
+    // Disable padding: total amount of data encrypted or decrypted must be a
+    // multiple of the block size or an error will occur
     EVP_CIPHER_CTX_set_padding(ctx, 0);
 
     CIPHER_CTX_val(mlctx) = ctx;
@@ -376,6 +381,7 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_set_iv(value mlctx, value iv) {
 CAMLprim value ocaml_EVP_CIPHER_CTX_set_tag(value mlctx, value tag) {
     EVP_CIPHER_CTX *ctx = NULL;
     int olen = 0;
+    int tlen = 0;
 
     CAMLparam2(mlctx, tag);
     CAMLlocal1(output);
@@ -385,7 +391,11 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_set_tag(value mlctx, value tag) {
         CAMLreturn(Val_unit);
     }
 
-    if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG, 16, String_val(tag)) != 1) {
+    // Hardcoded tag length for AES-{128,256}-GCM, may need to be revised to
+    // support other ciphers
+    tlen = 16;
+
+    if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG, tlen, String_val(tag)) != 1) {
        caml_failwith("failed to set AEAD tag");
        CAMLreturn(Val_unit);
     }
@@ -423,10 +433,12 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_get_tag(value mlctx) {
         CAMLreturn(Val_unit);
     }
 
+    // Hardcoded tag length for AES-{128,256}-GCM, may need to be revised to
+    // support other ciphers
     tlen = 16;
     tag  = caml_alloc_string(tlen);
 
-    if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_GET_TAG, 16, (uint8_t*) tag) != 1) {
+    if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_GET_TAG, tlen, (uint8_t*) tag) != 1) {
        caml_failwith("failed to get AEAD tag");
        CAMLreturn(Val_unit);
     }

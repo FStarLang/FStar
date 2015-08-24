@@ -156,8 +156,8 @@ let aead_encrypt (c:aead_cipher) (k:bytes) (iv:bytes) (ad:bytes) (d:bytes) =
 
 let aead_decrypt (c:aead_cipher) (k:bytes) (iv:bytes) (ad:bytes) (d:bytes) =
   let c = cipher_of_aead_cipher c in
-  let d,t = Platform.Bytes.split d ((Platform.Bytes.length d) - 16) in
   let ctx = ocaml_EVP_CIPHER_CTX_create c false in
+  let d,t = Platform.Bytes.split d ((Platform.Bytes.length d) - 16) in
   ocaml_EVP_CIPHER_CTX_set_key ctx (string_of_bytes k);
   ocaml_EVP_CIPHER_CTX_set_iv ctx (string_of_bytes iv);
   ocaml_EVP_CIPHER_CTX_set_additional_data ctx (string_of_bytes ad);
