@@ -22,7 +22,6 @@ open System.Text
 open System.Diagnostics
 open System.IO
 open System.IO.Compression
-open Profiling
 
 let return_all x = x
 
@@ -166,8 +165,6 @@ let string_builder_append (s: string_builder) (t:string) = s.Append t |> ignore
 
 let message_of_exn (e:exn) = e.Message
 let trace_of_exn (e:exn) = e.StackTrace
-
-open Prims
 type set<'a> = (list<'a> * ('a -> 'a -> bool))
 
 let set_is_empty ((s, _):set<'a>) = 

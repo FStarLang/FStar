@@ -36,12 +36,10 @@ open Microsoft.FStar.Absyn.Syntax
 (* <new_uvar> Generating new unification variables/patterns  *)
 (* --------------------------------------------------------- *)
 let new_kvar r binders =
-  let wf k () = true in
   let u = Unionfind.fresh Uvar in
   mk_Kind_uvar (u, Util.args_of_non_null_binders binders) r, u
 
 let new_tvar r binders k =
-  let wf t tk = true in
   let binders = binders |> List.filter (fun x -> is_null_binder x |> not) in
   let uv = Unionfind.fresh Uvar in
   match binders with 
@@ -55,7 +53,6 @@ let new_tvar r binders k =
       mk_Typ_app(uv, args) None r, uv
 
 let new_evar r binders t =
-  let wf e t = true in 
   let binders = binders |> List.filter (fun x -> is_null_binder x |> not) in
   let uv = Unionfind.fresh Uvar in
   match binders with 
@@ -2372,7 +2369,7 @@ let guard_to_string (env:env) g =
 (* ------------------------------------------------*)
 let guard_of_guard_formula g = {guard_f=g; deferred={slack=[]; carry=[]}; implicits=[]}
 
-let guard_f g = g.guard_f
+let guard_form g = g.guard_f
 
 let is_trivial g = match g with 
     | {guard_f=Trivial; deferred={carry=[]; slack=[]}} -> true

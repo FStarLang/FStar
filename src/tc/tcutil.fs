@@ -802,7 +802,7 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:exp) (lc:lc
         let strengthen () = 
             let c = lc.comp () in
             let g0 = Rel.simplify_guard env g0 in 
-            match guard_f g0 with
+            match guard_form g0 with
                 | Rel.Trivial -> c
                 | Rel.NonTrivial f -> 
                 let c = 
@@ -1020,7 +1020,7 @@ let weaken_result_typ env (e:exp) (lc:lcomp) (t:typ) : exp * lcomp * guard_t =
     | None, _ -> subtype_fail env lc.res_typ t 
     | Some g, apply_guard -> 
       let g = Rel.simplify_guard env g in 
-      match guard_f g with 
+      match guard_form g with 
         | Rel.Trivial -> 
           let lc = {lc with res_typ = t} in
           (e, lc, g)

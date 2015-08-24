@@ -166,7 +166,7 @@ let check_expected_effect env (copt:option<comp>) (e, c) : exp * comp * guard_t 
        e, expected_c, g
 
 let no_logical_guard env (te, kt, f) = 
-  match guard_f f with 
+  match guard_form f with 
     | Rel.Trivial -> te, kt, f
     | Rel.NonTrivial f -> raise (Error(Tc.Errors.unexpected_non_trivial_precondition_on_term env f, Env.get_range env)) 
 
@@ -933,7 +933,7 @@ and tc_exp env e : exp * lcomp * guard_t =
                       let k = Util.subst_kind subst a.sort in 
                       fxv_check head env (Inl k) fvs;
                       let t, g' = tc_typ_check ({env with use_eq=is_eq aqual}) t k in
-                      let f = Tc.Util.label_guard Errors.ill_kinded_type t.pos (guard_f g') in
+                      let f = Tc.Util.label_guard Errors.ill_kinded_type t.pos (guard_form g') in
                       let g' = {g' with Rel.guard_f=f} in
                       let arg = Inl t, aq in
                       let subst = maybe_extend_subst subst (List.hd bs) arg in

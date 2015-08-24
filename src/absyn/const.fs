@@ -82,7 +82,7 @@ let nil_lid         = pconst  "Nil"
 let assume_lid      = pconst  "_assume"
 let assert_lid      = pconst  "_assert"
 let list_append_lid = p2l ["List"; "append"]
-let strcat_lid      = p2l ["String"; "strcat"]
+let strcat_lid      = p2l ["Prims"; "strcat"]
 
 (* Primitive operators *)
 let op_Eq              = pconst "op_Equality"

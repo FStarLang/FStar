@@ -66,7 +66,7 @@ match  t with
 let unknownType : mlty =  MLTY_Top
 
 (*copied from ocaml-strtrans.fs*)
-let prependTick (x,n) = if Util.starts_with x "'" then (x,n) else ("' "^x,n)
+let prependTick (x,n) = if Util.starts_with x "'" then (x,n) else ("' "^x,n) ///the addition of the space is intentional; it's apparently valid syntax of tvars
 let removeTick (x,n) = if Util.starts_with x "'" then (Util.substring_from x 1,n) else (x,n)
 
 let convRange (r:Range.range) : int = 0 (*FIX!!*)
