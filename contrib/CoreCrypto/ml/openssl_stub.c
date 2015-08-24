@@ -359,12 +359,79 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_set_iv(value mlctx, value iv) {
         CAMLreturn(Val_unit);
     }
 
+    if(EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_IVLEN, caml_string_length(iv), NULL) != 1) {
+        caml_failwith("cannot set CIPHER_CTX_iv_length");
+        CAMLreturn(Val_unit);
+    }
+
     if (EVP_CipherInit_ex(ctx, NULL, NULL, NULL, (uint8_t*) String_val(iv), -1) == 0) {
-        caml_failwith("cannot set CIPHER_CTX_key");
+        caml_failwith("cannot set CIPHER_CTX_iv");
         CAMLreturn(Val_unit);
     }
 
     CAMLreturn(Val_unit);
+}
+
+/* -------------------------------------------------------------------- */
+CAMLprim value ocaml_EVP_CIPHER_CTX_set_tag(value mlctx, value tag) {
+    EVP_CIPHER_CTX *ctx = NULL;
+    int olen = 0;
+
+    CAMLparam2(mlctx, tag);
+    CAMLlocal1(output);
+
+    if ((ctx = CIPHER_CTX_val(mlctx)) == NULL) {
+        caml_failwith("CIPHER_CTX has been disposed");
+        CAMLreturn(Val_unit);
+    }
+
+    if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG, 16, String_val(tag)) != 1) {
+       caml_failwith("failed to set AEAD tag");
+       CAMLreturn(Val_unit);
+    }
+
+    olen   = EVP_MAX_BLOCK_LENGTH;
+    output = caml_alloc_string(olen);
+
+    if ((EVP_DecryptFinal_ex(ctx, (uint8_t*) output, &olen) != 1) || (olen != 0)) {
+        caml_failwith("ciphertext and/or additional data authentication failed");
+        CAMLreturn(Val_unit);
+    }
+
+    CAMLreturn(Val_unit);
+}
+
+/* -------------------------------------------------------------------- */
+CAMLprim value ocaml_EVP_CIPHER_CTX_get_tag(value mlctx) {
+    EVP_CIPHER_CTX *ctx = NULL;
+    int olen = 0;
+    int tlen = 0;
+
+    CAMLparam1(mlctx);
+    CAMLlocal2(output, tag);
+
+    if ((ctx = CIPHER_CTX_val(mlctx)) == NULL) {
+        caml_failwith("CIPHER_CTX has been disposed");
+        CAMLreturn(Val_unit);
+    }
+
+    olen   = EVP_MAX_BLOCK_LENGTH;
+    output = caml_alloc_string(olen);
+
+    if ((EVP_EncryptFinal_ex(ctx, (uint8_t*) output, &olen) != 1) || (olen != 0)) {
+        caml_failwith("final encryption failed");
+        CAMLreturn(Val_unit);
+    }
+
+    tlen = 16;
+    tag  = caml_alloc_string(tlen);
+
+    if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_GET_TAG, 16, (uint8_t*) tag) != 1) {
+       caml_failwith("failed to get AEAD tag");
+       CAMLreturn(Val_unit);
+    }
+
+    CAMLreturn(tag);
 }
 
 /* ------------------------------------------------------------------- */

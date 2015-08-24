@@ -22,10 +22,10 @@ type dsa_key = {
   dsa_private : bytes option;
 }
 
-type dh_params = { 
-  dh_p : bytes; 
-  dh_g : bytes; 
-  dh_q : bytes option; 
+type dh_params = {
+  dh_p : bytes;
+  dh_g : bytes;
+  dh_q : bytes option;
   safe_prime : bool;
 }
 type dh_key = {
@@ -40,8 +40,8 @@ val hmac : hash_alg -> bytes -> bytes -> bytes
 
 val block_encrypt : block_cipher -> bytes -> bytes -> bytes -> bytes
 val block_decrypt : block_cipher -> bytes -> bytes -> bytes -> bytes
-val aead_encrypt : aead_cipher -> bytes -> bytes -> bytes -> bytes -> 'a
-val aead_decrypt : aead_cipher -> bytes -> bytes -> bytes -> bytes -> 'a
+val aead_encrypt : aead_cipher -> bytes -> bytes -> bytes -> bytes -> bytes
+val aead_decrypt : aead_cipher -> bytes -> bytes -> bytes -> bytes -> bytes
 
 type cipher_stream
 val stream_encryptor : stream_cipher -> bytes -> cipher_stream

@@ -107,7 +107,11 @@ external ocaml_EVP_CIPHER_CTX_iv_length  : cipher_ctx -> int = "ocaml_EVP_CIPHER
 
 external ocaml_EVP_CIPHER_CTX_set_key : cipher_ctx -> string -> unit = "ocaml_EVP_CIPHER_CTX_set_key"
 external ocaml_EVP_CIPHER_CTX_set_iv  : cipher_ctx -> string -> unit = "ocaml_EVP_CIPHER_CTX_set_iv"
+external ocaml_EVP_CIPHER_CTX_set_additional_data : cipher_ctx -> string -> unit = "ocaml_EVP_CIPHER_CTX_set_additional_data"
 external ocaml_EVP_CIPHER_CTX_process : cipher_ctx -> string -> string = "ocaml_EVP_CIPHER_CTX_process"
+
+external ocaml_EVP_CIPHER_CTX_set_tag : cipher_ctx -> string -> unit = "ocaml_EVP_CIPHER_CTX_set_tag"
+external ocaml_EVP_CIPHER_CTX_get_tag : cipher_ctx -> string = "ocaml_EVP_CIPHER_CTX_get_tag"
 
 let cipher_of_block_cipher (c:block_cipher) = match c with
 	| AES_128_CBC -> ocaml_EVP_CIPHER_aes_128_cbc()
@@ -140,10 +144,27 @@ let block_decrypt (c:block_cipher) (k:bytes) (iv:bytes) (d:bytes) =
   bytes_of_string e
 
 let aead_encrypt (c:aead_cipher) (k:bytes) (iv:bytes) (ad:bytes) (d:bytes) =
-  failwith "unimplemented"
+  let c = cipher_of_aead_cipher c in
+  let ctx = ocaml_EVP_CIPHER_CTX_create c true in
+  ocaml_EVP_CIPHER_CTX_set_key ctx (string_of_bytes k);
+  ocaml_EVP_CIPHER_CTX_set_iv ctx (string_of_bytes iv);
+  ocaml_EVP_CIPHER_CTX_set_additional_data ctx (string_of_bytes ad);
+  let e = ocaml_EVP_CIPHER_CTX_process ctx (string_of_bytes d) in
+  let t = ocaml_EVP_CIPHER_CTX_get_tag ctx in
+  ocaml_EVP_CIPHER_CTX_fini ctx;
+  Platform.Bytes.op_At_Bar (bytes_of_string e) (bytes_of_string t)
 
 let aead_decrypt (c:aead_cipher) (k:bytes) (iv:bytes) (ad:bytes) (d:bytes) =
-  failwith "unimplemented"
+  let c = cipher_of_aead_cipher c in
+  let d,t = Platform.Bytes.split d ((Platform.Bytes.length d) - 16) in
+  let ctx = ocaml_EVP_CIPHER_CTX_create c false in
+  ocaml_EVP_CIPHER_CTX_set_key ctx (string_of_bytes k);
+  ocaml_EVP_CIPHER_CTX_set_iv ctx (string_of_bytes iv);
+  ocaml_EVP_CIPHER_CTX_set_additional_data ctx (string_of_bytes ad);
+  let e = ocaml_EVP_CIPHER_CTX_process ctx (string_of_bytes d) in
+  ocaml_EVP_CIPHER_CTX_set_tag ctx (string_of_bytes t);
+  ocaml_EVP_CIPHER_CTX_fini ctx;
+  bytes_of_string e
 
 let stream_encryptor (c:stream_cipher) (k:bytes) =
   let c = cipher_of_stream_cipher c in
@@ -324,4 +345,3 @@ let ecdsa_verify ha key b1 b2 =
 
 let ec_gen_key params =
   failwith "Not implemented"
-
