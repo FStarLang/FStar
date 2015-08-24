@@ -36,7 +36,7 @@ see `LICENSE` for more details.
 Please report bugs or ask questions using the GitHub issue tracker for
 the F* project: https://github.com/FStarLang/FStar/issues
 
-Yes, we encourage asking questions on the issue tracker!
+Yes, **we encourage asking questions on the issue tracker**!
 
 ### Editing F* code
 
@@ -52,14 +52,15 @@ interactive development via [fstar-interactive].
 
 #### Vim
 
-[VimFStar] is a [Vim] plugin for F*.
+[VimFStar] is a [Vim] plugin for F* that also supports interactive
+development and syntax highlighting.
 
 [Vim]: http://www.vim.org/
 [VimFStar]: https://github.com/FStarLang/VimFStar
 
 #### Emacs
 
-The [Tuareg Mode] for Objective Caml works quite well for F* too.
+The [Tuareg Mode] for OCaml works quite well for F* too.
 Go for 2.0.9 (2015-03-25) or later to avoid some bugs that are already fixed.
 Tuareg is easiest to install using [MELPA].
 To use MELPA add this to your `.emacs` or `.emacs.d/init.el` file:
@@ -117,6 +118,13 @@ ocamlfind ocamlopt -o program -package batteries -linkpkg -thread -I $FSTAR_HOME
 where `program` is the desired name of the produced executable.
 Linking the `ocaml-output` directory and `support.ml` is required if
 the F* code used any built-in functions.
+
+### Old F* versions (v0.7.1 and earlier) ###
+
+[F\* v0.7.1] and earlier are no longer maintained, so please do not
+create any issues here about those versions.
+
+[F\* v0.7.1]: https://github.com/FStarLang/FStar/blob/master/old/fstar-0.7.1-alpha.zip
 
 ### Code structure (partially outdated)
 

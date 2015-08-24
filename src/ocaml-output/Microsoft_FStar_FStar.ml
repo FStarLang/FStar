@@ -346,7 +346,7 @@ let finished_message = (fun ( fmods ) -> (match ((not ((Support.ST.read Microsof
 | true -> begin
 (let msg = (match ((Support.ST.read Microsoft_FStar_Options.verify)) with
 | true -> begin
-"Verified"
+"Verifying"
 end
 | false -> begin
 (match ((Support.ST.read Microsoft_FStar_Options.pretype)) with

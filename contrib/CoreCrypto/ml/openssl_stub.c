@@ -247,11 +247,16 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_create(value cipher, value forenc) {
 
     EVP_CIPHER_CTX_init(ctx);
 
+    // Set all parameters to NULL except the cipher type in this initial call
+    // Give remaining parameters in subsequent calls (e.g. EVP_CIPHER_set_key),
+    // all of which have cipher type set to NULL
     if (EVP_CipherInit_ex(ctx, CIPHER_val(cipher), NULL, NULL, NULL, Bool_val(forenc)) == 0) {
         caml_failwith("cannot initialize cipher context");
         goto bailout;
     }
 
+    // Disable padding: total amount of data encrypted or decrypted must be a
+    // multiple of the block size or an error will occur
     EVP_CIPHER_CTX_set_padding(ctx, 0);
 
     CIPHER_CTX_val(mlctx) = ctx;
@@ -359,12 +364,86 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_set_iv(value mlctx, value iv) {
         CAMLreturn(Val_unit);
     }
 
+    if(EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_IVLEN, caml_string_length(iv), NULL) != 1) {
+        caml_failwith("cannot set CIPHER_CTX_iv_length");
+        CAMLreturn(Val_unit);
+    }
+
     if (EVP_CipherInit_ex(ctx, NULL, NULL, NULL, (uint8_t*) String_val(iv), -1) == 0) {
-        caml_failwith("cannot set CIPHER_CTX_key");
+        caml_failwith("cannot set CIPHER_CTX_iv");
         CAMLreturn(Val_unit);
     }
 
     CAMLreturn(Val_unit);
+}
+
+/* -------------------------------------------------------------------- */
+CAMLprim value ocaml_EVP_CIPHER_CTX_set_tag(value mlctx, value tag) {
+    EVP_CIPHER_CTX *ctx = NULL;
+    int olen = 0;
+    int tlen = 0;
+
+    CAMLparam2(mlctx, tag);
+    CAMLlocal1(output);
+
+    if ((ctx = CIPHER_CTX_val(mlctx)) == NULL) {
+        caml_failwith("CIPHER_CTX has been disposed");
+        CAMLreturn(Val_unit);
+    }
+
+    // Hardcoded tag length for AES-{128,256}-GCM, may need to be revised to
+    // support other ciphers
+    tlen = 16;
+
+    if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG, tlen, String_val(tag)) != 1) {
+       caml_failwith("failed to set AEAD tag");
+       CAMLreturn(Val_unit);
+    }
+
+    olen   = EVP_MAX_BLOCK_LENGTH;
+    output = caml_alloc_string(olen);
+
+    if ((EVP_DecryptFinal_ex(ctx, (uint8_t*) output, &olen) != 1) || (olen != 0)) {
+        caml_failwith("ciphertext and/or additional data authentication failed");
+        CAMLreturn(Val_unit);
+    }
+
+    CAMLreturn(Val_unit);
+}
+
+/* -------------------------------------------------------------------- */
+CAMLprim value ocaml_EVP_CIPHER_CTX_get_tag(value mlctx) {
+    EVP_CIPHER_CTX *ctx = NULL;
+    int olen = 0;
+    int tlen = 0;
+
+    CAMLparam1(mlctx);
+    CAMLlocal2(output, tag);
+
+    if ((ctx = CIPHER_CTX_val(mlctx)) == NULL) {
+        caml_failwith("CIPHER_CTX has been disposed");
+        CAMLreturn(Val_unit);
+    }
+
+    olen   = EVP_MAX_BLOCK_LENGTH;
+    output = caml_alloc_string(olen);
+
+    if ((EVP_EncryptFinal_ex(ctx, (uint8_t*) output, &olen) != 1) || (olen != 0)) {
+        caml_failwith("final encryption failed");
+        CAMLreturn(Val_unit);
+    }
+
+    // Hardcoded tag length for AES-{128,256}-GCM, may need to be revised to
+    // support other ciphers
+    tlen = 16;
+    tag  = caml_alloc_string(tlen);
+
+    if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_GET_TAG, tlen, (uint8_t*) tag) != 1) {
+       caml_failwith("failed to get AEAD tag");
+       CAMLreturn(Val_unit);
+    }
+
+    CAMLreturn(tag);
 }
 
 /* ------------------------------------------------------------------- */
@@ -417,7 +496,7 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_set_additional_data(value mlctx, value data)
     output = caml_alloc_string(olen);
 
     if (EVP_CipherUpdate(ctx, NULL, &olen, (uint8_t*) String_val(data), olen) == 0) {
-        caml_failwith("encryption/decryption failed");
+        caml_failwith("failed to set additional data");
         CAMLreturn(Val_unit);
     }
 
@@ -507,7 +586,7 @@ static int RSAPadding_val(value mlvalue) {
     switch (Int_val(mlvalue)) {
     case PD_NONE : return RSA_NO_PADDING;
     case PD_PKCS1: return RSA_PKCS1_PADDING;
-    }    
+    }
 
     abort();
 }
@@ -575,11 +654,18 @@ CAMLprim value ocaml_rsa_fini(value mlrsa) {
 /* -------------------------------------------------------------------- */
 CAMLprim value ocaml_rsa_gen_key(value mlsz, value mlexp) {
     RSA *rsa = NULL;
+    BIGNUM *bn_mlexp = NULL;
 
     CAMLparam2(mlsz, mlexp);
     CAMLlocal4(e, n, d, mlkey);
 
-    if ((rsa = RSA_generate_key(mlsz, mlexp, NULL, NULL)) == NULL) {
+    if ((bn_mlexp = BN_new()) == NULL) {
+      caml_failwith("RSA:genkey failed");
+      CAMLreturn(Val_unit);
+    }
+
+    BN_set_word(bn_mlexp, mlexp);
+    if (RSA_generate_key_ex(rsa, mlsz, bn_mlexp, NULL) != 1) {
         caml_failwith("RSA:genkey failed");
         CAMLreturn(Val_unit);
     }
@@ -597,6 +683,7 @@ CAMLprim value ocaml_rsa_gen_key(value mlsz, value mlexp) {
     RSAKey_set_pub_exp(mlkey, e);
     RSAKey_set_prv_exp(mlkey, Val_some(d));
 
+    BN_free(bn_mlexp);
     RSA_free(rsa);
 
     CAMLreturn(mlkey);
@@ -932,9 +1019,7 @@ CAMLprim value ocaml_dsa_gen_params(value size) {
     CAMLparam1(size);
     CAMLlocal4(p, q, g, mlparams);
 
-    dsa = DSA_generate_parameters(Int_val(size), NULL, 0, NULL, NULL, NULL, NULL);
-
-    if (dsa == NULL) {
+    if (DSA_generate_parameters_ex(dsa, Int_val(size), NULL, 0, NULL, NULL, NULL) != 1) {
         caml_failwith("DSA:genparams failed");
         CAMLreturn(Val_unit);
     }
@@ -1015,7 +1100,7 @@ CAMLprim value ocaml_dsa_set_key(value mldsa, value mlkey) {
     BIGNUM *g = NULL;
     BIGNUM *pub = NULL;
     BIGNUM *prv = NULL;
-    
+
     CAMLparam2(mldsa, mlkey);
     CAMLlocal5(mlp, mlq, mlg, mlpub, mlprv);
 
@@ -1099,7 +1184,7 @@ CAMLprim value ocaml_dsa_sign(value mldsa, value data) {
 
     output = caml_alloc_string(DSA_size(dsa));
     olen = caml_string_length(output);
-    
+
     if (DSA_sign(0,             /* ignored */
                  (uint8_t*) String_val(data),
                  caml_string_length(data),
@@ -1245,9 +1330,7 @@ CAMLprim value ocaml_dh_gen_params(value size, value gen) {
     CAMLparam1(size);
     CAMLlocal3(p, g, mlparams);
 
-    dh = DH_generate_parameters(Int_val(size), Int_val(gen), NULL, NULL);
-
-    if (dh == NULL) {
+    if (DH_generate_parameters_ex(dh, Int_val(size), Int_val(gen), NULL) != 1) {
         caml_failwith("DH:genparams failed");
         CAMLreturn(Val_unit);
     }
@@ -1362,7 +1445,7 @@ CAMLprim value ocaml_dh_set_key(value mldh, value mlkey) {
     BIGNUM *g = NULL;
     BIGNUM *pub = NULL;
     BIGNUM *prv = NULL;
-    
+
     CAMLparam2(mldh, mlkey);
     CAMLlocal4(mlp, mlg, mlpub, mlprv);
 

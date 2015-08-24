@@ -10,6 +10,7 @@ api:
 	$(FSTAR) mill4.fst
 	$(FSTAR) mill5.fst
 	$(FSTAR) gps.fst
+	$(FSTAR) median.fst
 
 theory:
 	$(FSTAR) theory.fst

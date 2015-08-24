@@ -1,7 +1,6 @@
 (*--build-config
-    options:--max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1;
-    variables:LIB=../../lib;
-    other-files:$LIB/constr.fst $LIB/classical.fst $LIB/ext.fst
+    options:--admit_fsi Set --max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1;
+    other-files:constr.fst classical.fst ext.fst set.fsi heap.fst st.fst all.fst
  --*)
 (*
    Copyright 2008-2015 Catalin Hritcu (Inria), Aseem Rastogi (UMD), and
@@ -53,12 +52,11 @@ type exp =
    (in this calculus doesn't interact with type substitution below) *)
 
 type esub = var -> Tot exp
-opaque type erenaming (s:esub) = (forall (x:var). is_EVar (s x))
+type erenaming (s:esub) = (forall (x:var). is_EVar (s x))
 
 val is_erenaming : s:esub -> Tot (n:int{(  erenaming s  ==> n=0) /\
                                         (~(erenaming s) ==> n=1)})
 let is_erenaming s = (if excluded_middle (erenaming s) then 0 else 1)
-  (* not marking erenaming 'opaque' triggers #222 *)
 
 val esub_inc : var -> Tot exp
 let esub_inc y = EVar (y+1)

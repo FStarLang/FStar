@@ -23,6 +23,7 @@ let rel_map2 f (R x1 x2) (R y1 y2) = R (f x1 y1) (f x2 y2)
 val rel_map3 : ('a -> 'b -> 'c -> Tot 'd) -> (double 'a) -> (double 'b) -> (double 'c) -> Tot (double 'd)
 let rel_map3 f (R x1 x2) (R y1 y2) (R z1 z2) = R (f x1 y1 z1) (f x2 y2 z2)
 
+(* Some convenient functions *)
 let op_Hat_Plus = rel_map2 (fun x y -> x + y)
 let op_Hat_Minus = rel_map2 (fun x y -> x - y)
 let op_Hat_Star = rel_map2 (fun x y -> x * y)
@@ -30,7 +31,9 @@ let op_Hat_Slash = rel_map2 (fun x y -> x / y)
 val tl_rel: #a:Type -> l:double (list a){is_Cons (R.l l) /\ is_Cons (R.r l)}-> Tot (double (list a))
 let tl_rel (R (_::xs) (_::ys)) = R xs ys
 let cons_rel (R x y) (R xs ys) = R (x::xs)  (y::ys)
-let pair_rel = rel_map2 MkTuple2
+let pair_rel (R a b) (R c d) = R (a,c) (b,d)
+(* This is less general but makes some verifcation (spdz) a lot more efficient *)
+(* let pair_rel = rel_map2 MkTuple2 *)
 let fst_rel = rel_map1 fst
 let snd_rel = rel_map1 snd
 let and_rel (R a b) = a && b

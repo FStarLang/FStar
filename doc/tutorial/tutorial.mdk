@@ -2,7 +2,7 @@ Title         : Verified programming in F\*
 Sub title     : A tutorial
 Heading Base  : 2
 Author        : The F* Team
-Affiliation   : MSR, MSR-Inria, Inria, IMDEA
+Affiliation   : MSR, MSR-Inria, Inria
 Colorizer     : fstar
 
 .Comment      : replace=""
@@ -108,7 +108,7 @@ CatalinComment : replace="Can't understand why this doesn't work (it eats up the
 # Introduction
 
 F\* is a verification-oriented programming language developed at
-[Microsoft Research], [MSR-Inria], [Inria], and [IMDEA Software].
+[Microsoft Research], [MSR-Inria], and [Inria].
 It follows in
 the tradition of the [ML] family of languages in that it is a typed,
 strict, functional programming language. However, its type system is
@@ -143,7 +143,7 @@ resources freely available on the web, e.g., [TryF#],
 [Introduction to Caml]: http://www.cs.jhu.edu/~scott/pl/lectures/caml-intro.html
 [Real World OCaml]: https://realworldocaml.org/
 
-The easiest way to try F\* and solve the exercises in this tutorial is
+The easiest way to try F\* and solve the verification exercises in this tutorial is
 directly in your browser by using the [online F\* editor]. You can
 load the boilerplate code needed for each exercise into the online
 editor by clicking the "Load in editor" link in the body of each
@@ -151,26 +151,38 @@ exercise. Your progress on each exercise will be stored in browser
 local storage, so you can return to your code later (e.g. if your
 browser crashes, etc).
 
+[online F\* editor]: https://www.fstar-lang.org/run.php
+
 You can also do this tutorial by installing F\* locally on your
 machine.  F\* is open source and cross-platform, and you can get
 [binary packages] for Windows, Linux, and MacOS X or compile F\* from
-the [source code on github] using these [instructions]. You can use
-your favourite text editor (for instance Emacs with ocaml-mode or
-tuareg-mode) to edit F\* files locally.
+the [source code on github] using these [instructions].
 
-[online F\* editor]: https://www.fstar-lang.org/run.php
 [binary packages]: http://fstar-lang.org
 [source code on github]: http://github.com/FStarLang/FStar
 [instructions]: https://github.com/FStarLang/FStar/blob/master/INSTALL.md
 
-A new github project now also provides an [interactive mode] for
-type-checking F* code, built as a package for the [Atom editor]. You need
-an installation of Atom, and it's a good idea to also install [atom-fstar]
-separately for syntax highlighting.
+You can [edit F\* code] using your favourite text editor, but the [Atom editor]
+has currently the best support for F\*. It supports
+syntax highlighting via [atom-fstar] and (Proof General style)
+interactive development via [fstar-interactive].
+[VimFStar] is a Vim plugin for F\* that also supports interactive development.
+Finally, the [Tuareg Emacs Mode] for OCaml works quite well for F\* too.
 
+[edit F\* code]: https://github.com/FStarLang/FStar#editing-f-code
 [Atom editor]: https://atom.io/
-[interactive mode]: https://github.com/FStarLang/fstar-interactive
 [atom-fstar]: https://github.com/FStarLang/atom-fstar
+[fstar-interactive]: https://github.com/FStarLang/fstar-interactive
+[VimFStar]: https://github.com/FStarLang/VimFStar
+[Tuareg Emacs Mode]: https://github.com/ocaml/tuareg
+
+By default F\* only verifies the input code, **it does not execute it**.
+To execute F\* code one needs to extract it to OCaml and then
+compile it using the OCaml compiler. More details on
+[executing F\* code] in the F\* [README.md] file.
+
+[executing F\* code]: https://github.com/FStarLang/FStar#executing-f-code
+[README.md]: https://github.com/FStarLang/FStar/blob/master/README.md
 
 **A note on compatibility with F\#**: The syntax of F\* and F\#
 overlap on a common subset. In fact, the F\* compiler is currently

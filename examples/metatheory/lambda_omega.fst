@@ -49,12 +49,11 @@ type exp =
    (in this calculus doesn't interact with type substitution below) *)
 
 type esub = var -> Tot exp
-opaque type erenaming (s:esub) = (forall (x:var). is_EVar (s x))
+type erenaming (s:esub) = (forall (x:var). is_EVar (s x))
 
 val is_erenaming : s:esub -> Tot (n:int{(  erenaming s  ==> n=0) /\
                                         (~(erenaming s) ==> n=1)})
 let is_erenaming s = (if excluded_middle (erenaming s) then 0 else 1)
-  (* not marking erenaming 'opaque' triggers #222 *)
 
 val esub_inc : var -> Tot exp
 let esub_inc y = EVar (y+1)
@@ -110,7 +109,7 @@ let esubst_beta e = esubst (esub_beta e)
    (via confluence); so we can still hope we can do better for TinyF*.*)
 
 type tsub = var -> Tot typ
-opaque type trenaming (s:tsub) = (forall (x:var). is_TVar (s x))
+type trenaming (s:tsub) = (forall (x:var). is_TVar (s x))
 
 val is_trenaming : s:tsub -> Tot (n:int{(  trenaming s  ==> n=0) /\
                                         (~(trenaming s) ==> n=1)})

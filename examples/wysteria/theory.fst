@@ -1320,6 +1320,10 @@ let if_par_then_exit_sec_to_sec #c #c' h = match h with
   | C_assec_ret _ _ -> ()
   | _               -> ()
 
+
+(* CH: this sometimes timed out on my laptop *)
+#set-options "--z3timeout 20"
+
 opaque val forward_simulation_par: #c:sconfig -> #c':sconfig
                                    -> h:sstep c c'{is_par c /\
                                                    if_enter_sec_then_from_sec h}
@@ -1372,6 +1376,8 @@ let rec forward_simulation_par #c #c' h ps =
       | IntroR h' ->
         pstep_par_star_upd_step #ps_rest #(pi_rest, s_rest) #(pi_rest', s_rest')
                                          #c_p #c_p' h_ind h' p
+
+#reset-options
 
 val slice_wire_lem_singl_of_ps: #eps:eprins -> w:v_wire eps
                                 -> ps:prins -> p:prin{mem p ps}

@@ -219,7 +219,7 @@ let finished_message fmods =
     if not !Options.silent 
     then begin
         let msg = 
-            if !Options.verify then "Verified" 
+            if !Options.verify then "Verifying" 
             else if !Options.pretype then "Lax type-checked"
             else "Parsed and desugared" in
          fmods |> List.iter (fun m -> 

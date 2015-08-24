@@ -17,10 +17,10 @@ lambda_omega:
 	$(FSTAR) $(_STDLIB_) lambda_omega.fst --max_fuel 1 --max_ifuel 1 --initial_fuel 1
 
 f-omega:
-	$(FSTAR) $(_STDLIB_) f-omega.fst --max_fuel 1 --max_ifuel 1 --initial_fuel 1 --z3timeout 25
+	$(FSTAR) f-omega.fst
 
-micro-fstar: micro-fstar.fst
-	$(FSTAR) $^
+micro-fstar:
+	$(FSTAR) micro-fstar.fst
 
 hoare_wp:
 	$(FSTAR) $(_STDLIB_) hoare_wp.fst --max_fuel 1 --max_ifuel 1

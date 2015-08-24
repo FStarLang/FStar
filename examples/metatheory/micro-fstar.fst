@@ -281,12 +281,13 @@ and prove some properties on it*)
 
 type esub = var -> Tot exp
 
-opaque type erenaming (s:esub) = (forall (x:var). is_EVar (s x))
+type erenaming (s:esub) = (forall (x:var). is_EVar (s x))
 
 opaque val is_erenaming : s:esub -> Tot (n:int{(  erenaming s  ==> n=0) /\
                                         (~(erenaming s) ==> n=1)})
 let is_erenaming s = (if excluded_middle (erenaming s) then 0 else 1)
-opaque type value_esub (s:esub) = (forall (x:var). is_value (s x))
+
+type value_esub (s:esub) = (forall (x:var). is_value (s x))
 
 val esub_id : esub
 let esub_id = fun x -> EVar x

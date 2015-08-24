@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi OrdSet --admit_fsi OrdMap --admit_fsi Set;
     variables:LIB=../../lib;
-    other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/ordset.fsi $LIB/ordmap.fsi $LIB/list.fst wysteria.fsi
+    other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst $LIB/st2.fst $LIB/ordset.fsi $LIB/ordmap.fsi wysteria.fsi
  --*)
 
 module Wysteria
@@ -41,9 +41,82 @@ type as_mode =
   | Sec
 
 type mode =
- | Mode: m:as_mode -> ps:prins -> mode
+  | Mode: m:as_mode -> ps:prins -> mode
+
+open List
+
+type telt =
+  | TMsg  : #a:Type -> x:a -> telt
+  | TScope: ps:prins -> t:list telt -> telt
+
+type trace = list telt
+
+let rec rest_trace t1 t2 = match t2 with
+  | []     -> Some t1
+  | hd::tl ->
+    match t1 with
+      | []       -> None
+      | hd'::tl' ->
+        if hd = hd' then rest_trace tl' tl else None
+
+let rec last_elt (Cons hd tl) = match tl with
+  | [] -> hd
+  | _  -> last_elt tl
+
+let rec all_but_last (Cons hd tl) = match tl with
+  | []       -> []
+  | hd'::tl' -> hd::(all_but_last tl)
+
+let rec equal_trace_rest_lemma t1 t2 = match t2 with
+  | []     -> ()
+  | hd::tl ->
+    match t1 with
+      | hd'::tl' -> equal_trace_rest_lemma tl tl'
+
+let rec rest_equal_trace_lemma t1 t2 = match t2 with
+  | []     -> ()
+  | hd::tl ->
+    match t1 with
+      | hd'::tl' -> if hd = hd' then rest_equal_trace_lemma tl' tl else ()
+      | []       -> ()
+
+let rec append_rest_lemma t1 t2 t3 = match t1 with
+  | []     -> ()
+  | hd::tl ->
+    match t3 with
+      | _::tl' -> append_rest_lemma tl t2 tl'
+
+let rec rest_append_lemma t1 t2 t3 = match t1 with
+  | []     -> ()
+  | hd::tl ->
+    match t3 with
+      | _::tl' -> rest_append_lemma tl t2 tl'
+
+let rec trace_assoc t1 t2 t3 = match t1 with
+  | []     -> ()
+  | hd::tl ->
+    match t2 with
+      | _::tl' ->
+        match t3 with
+          | _::tl'' -> trace_assoc tl tl' tl''
+
+let last_elt_singleton_lemma t = ()
+
+let rec snoc_last_elt_lemma elt t = match t with
+  | []     -> ()
+  | hd::tl -> snoc_last_elt_lemma elt tl
+
+let rec snoc_all_but_last_lemma elt t = match t with
+  | []     -> ()
+  | hd::tl -> snoc_all_but_last_lemma elt tl
+
+let rec all_but_last_append_lemma (Cons hd tl) = match tl with
+  | [] -> ()
+  | _  -> all_but_last_append_lemma tl
 
 let moderef = Wysteria.moderef
+
+let traceref = Wysteria.traceref
 
 type Box: Type -> prins -> Type =
   |Mk_box: #a:Type -> x:a -> ps:prins -> Box a ps
@@ -103,19 +176,28 @@ type CanConcatWire (#a:Type) (#eps_x:eprins) (#eps_y:eprins) (x:Wire a eps_x) (y
 
 let as_par ps f =
   let m0 = ST.read moderef in
-  assert (DelPar (Some.v m0) ps);
+  let t0 = ST.read traceref in
+  let _ = assert (DelPar (Some.v m0) ps) in
   ST.write moderef (Some (Mode Par ps));
   let x = f () in
+  let t1 = ST.read traceref in
+  let t_diff = rest_trace t1 t0 in
   ST.write moderef m0;
+  ST.write traceref (append t0 [ TScope ps (Some.v t_diff) ]);
   Mk_box x ps
 
 let as_sec ps f =
- let m0 = ST.read moderef in
- assert (DelSec (Some.v m0) ps);
- ST.write moderef (Some (Mode Sec ps));
- let x = f () in
- ST.write moderef m0;
- x
+  let m0 = ST.read moderef in
+  let t0 = ST.read traceref in
+  let _ = assert (DelSec (Some.v m0) ps) in
+  ST.write moderef (Some (Mode Sec ps));
+  let x = f () in
+  let t1 = ST.read traceref in
+  let t_diff = rest_trace t1 t0 in
+  let t' = append (Some.v t_diff) [TMsg x] in
+  ST.write moderef m0;
+  ST.write traceref (append t0 t');
+  x
 
 let unbox_p (#a:Type) #ps x =
   let m0 = ST.read moderef in
@@ -154,6 +236,7 @@ let projwire_s (#a:Type) #eps p x =
 
 let concat_wire (#a:Type) #eps1 #eps2 x y = w_concat #a #eps1 #eps2 x y
 
-let main (#a:Type) (#req_f:(mode -> Type)) (#ens_f:(mode -> a -> Type)) ps f =
+let main ps f =
   ST.write moderef (Some (Mode Par ps));
+  ST.write traceref [];
   f ()

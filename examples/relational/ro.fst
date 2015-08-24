@@ -247,7 +247,7 @@ let hash_hon k f = let s = compose2_self (fun s -> !s) (twice s)in
 (* The three code pieces that occur in the three match cases of the single
    sided variant *)
 let case_Hon  t     = Some t
-let case_Adv  _     = s:={bad = true; l=(!s).l}; None
+let case_Adv  ()    = s:={bad = true; l=(!s).l}; None #tag
 let case_None (k,t) = s:={bad = (!s).bad; l = (k,(Hon,t))::(!s).l}; add_some t
 
 (* To deal with cross cases where we only sample on one side, we need a
@@ -267,18 +267,22 @@ let hash_hon2 k f =
   | R (Some (Hon,t0)) (Some (Adv,t1)) -> compose2 (fun x -> case_Hon x) (fun x -> case_Adv x) (R t0 ())
   | R (Some (Hon,t0)) (None         ) -> if not b then
                                            ok_hon_safe k l;
-                                         let t1 = sample_single () in
-                                         compose2 (fun x -> case_Hon x) (fun x -> case_None x) (R t0 ((R.r k),t1))
+                                         compose2 (fun (_ ,x) -> case_Hon x) 
+                                                  (fun x -> case_None x) 
+                                                  (pair_rel k (R t0 (sample_single ())))
   | R (Some (Adv,t0)) (Some (Hon,t1)) -> compose2 (fun x -> case_Adv x) (fun x -> case_Hon x) (R () t0)
   | R (Some (Adv,t0)) (Some (Adv,t1)) -> compose2_self (fun x -> case_Adv x) (twice ())
-  | R (Some (Adv,t0)) (None         ) -> let t1 = sample_single () in
-                                         compose2 (fun x -> case_Adv x) (fun x -> case_None x) (R () ((R.r k),t1))
+  | R (Some (Adv,t0)) (None         ) -> compose2 (fun (_, x) -> case_Adv x) 
+                                                  (fun x -> case_None x) 
+                                                  (pair_rel k (R () (sample_single ())))
   | R (None         ) (Some (Hon,t1)) -> if not b then
                                            ok_hon_safe k l;
-                                         let t0 = sample_single () in
-                                         compose2 (fun x -> case_None x) (fun x -> case_Hon x) (R ((R.l k),t0) t1)
-  | R (None         ) (Some (Adv,t1)) -> let t0 = sample_single () in
-                                         compose2 (fun x -> case_None x) (fun x -> case_Adv x) (R ((R.l k),t0) ())
+                                         compose2 (fun x -> case_None x) 
+                                                  (fun (_, x) -> case_Hon x) 
+                                                  (pair_rel k (R (sample_single ()) t1))
+  | R (None         ) (Some (Adv,t1)) -> compose2 (fun x -> case_None x) 
+                                                  (fun (k, x) -> case_Adv x)
+                                                  (pair_rel k (R (sample_single ()) () ))
   | R (None         ) (None         ) -> let t = sample #tag #tag f in
                                          good_sample_fun_bijection #tag #tag f;
                                          if not b then
@@ -375,7 +379,7 @@ let encrypt_hon k p =
                   let r = sample #block #block (fun x -> x) in
                   let kh = rel_map2 append k r in
 
-                  let h = hash_hon kh (sample_fun) in
+                  let h = hash_hon kh sample_fun in
                   (* Writing the code in this style causes the loss of some typing information *)
 (*                   let c = rel_map3 (fun h p r -> if is_Some h then Some ((encrypt p (Some.v h)), r) else None) h p r in *)
                   let cl = if is_Some (R.l h) then Some ((encrypt (R.l p) (Some.v (R.l h))), (R.l r)) else None in
