@@ -1,5 +1,9 @@
 #light "off"
 module Prims
+  let down (x:obj) : 'b =
+      x :?> 'b
+  let lift (x:'a) : obj = x :> obj
+  let checked_cast (x:'a) : 'b = lift x |> down
   type Tot<'a> = 'a
   type float' = float
   type float  = float'

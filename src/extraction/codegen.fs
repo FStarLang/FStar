@@ -16,7 +16,7 @@
 (* -------------------------------------------------------------------- *)
 #light "off"
 
-module Microsoft.FStar.Extraction.OCaml.Code
+module Microsoft.FStar.Extraction.ML.Code
 
 open System
 open System.Text
@@ -25,7 +25,7 @@ open Microsoft.FStar.Util
 open Microsoft.FStar.Extraction.ML
 open Microsoft.FStar.Extraction.ML.Syntax
 open FSharp.Format
-
+      
 (* -------------------------------------------------------------------- *)
 type assoc  = | ILeft | IRight | Left | Right | NonAssoc
 type fixity = | Prefix | Postfix | Infix of assoc
@@ -58,34 +58,6 @@ let max_op_prec = (max_int, Infix NonAssoc)
 (*copied from ocaml-asttrans.fs*)
 
 (* -------------------------------------------------------------------- *)
-let outmod = [
-    ["Prims"];
-    ["System"];
-    ["ST"];
-    ["All"];
-    ["Option"];
-    ["String"];
-    ["Char"];
-    ["Bytes"];
-    ["List"]; 
-    ["Array"];
-//    ["Set"];
-    ["Map"];
-//    ["Heap"];
-    ["DST"];
-    ["IO"];
-    ["Tcp"];
-    ["Crypto"];
-    ["Collections"];
-    ["Microsoft"; "FStar"; "Bytes"];
-    ["Microsoft"; "FStar"; "Platform"];
-    ["Microsoft"; "FStar"; "Util"];
-    ["Microsoft"; "FStar"; "Getopt"];
-    ["Microsoft"; "FStar"; "Unionfind"];
-    ["Microsoft"; "FStar"; "Range"];
-    ["Microsoft"; "FStar"; "Parser"; "Util"];
-]
-
 let rec in_ns (x: (list<'a> * list<'a>)) : bool = match x with 
     | [], _ -> true
     | x1::t1, x2::t2 when (x1 = x2) -> in_ns (t1, t2)
@@ -93,37 +65,23 @@ let rec in_ns (x: (list<'a> * list<'a>)) : bool = match x with
 
 (* -------------------------------------------------------------------- *)
 let path_of_ns (currentModule : mlsymbol) ns =
-   let outsupport ns = 
     let ns' = Util.flatten_ns ns in
-    if ns' = currentModule then [] else [ns'] in
-
-    //in outsupport ((fst currentModule) @ [snd currentModule], ns)
-
-   let chkin sns = if in_ns (sns, ns) then Some sns else None
-    in match List.tryPick chkin  outmod  with
-    | None -> 
-        (match List.tryPick chkin (!Microsoft.FStar.Options.codegen_libs) with
-         | None -> outsupport ns
-         | _ -> ns)
-    | Some sns ->  "Support" :: ns 
-
+    if ns' = currentModule 
+    then [] 
+    else [ns']
 
 let mlpath_of_mlpath (currentModule : mlsymbol) (x : mlpath) : mlpath =
     match string_of_mlpath x with
     | "Prims.Some" -> ([], "Some")
     | "Prims.None" -> ([], "None")
-    | "Prims.failwith" -> ([], "failwith")
-    | "ST.alloc" -> ([], "ref")
-    | "ST.read" ->  (["Support";"ST"], "read")
-    | "ST.op_ColonEquals" -> (["Support";"ST"], "op_ColonEquals")
     | _ -> 
-      begin
-        let ns, x = x in 
-        (path_of_ns currentModule ns, x)
-      end
-
+     let ns, x = x in 
+     (path_of_ns currentModule ns, x)
+     
 let ptsym_of_symbol (s : mlsymbol) : mlsymbol =
-        if Char.lowercase (String.get s 0) <> String.get s 0 then "l__" ^ s else s
+    if Char.lowercase (String.get s 0) <> String.get s 0 
+    then "l__" ^ s 
+    else s
 
 let ptsym (currentModule : mlsymbol) (mlp : mlpath) : mlsymbol =
     if (List.isEmpty (fst mlp))
@@ -153,45 +111,30 @@ let infix_prim_ops = [
     ("op_GreaterThanOrEqual", e_bin_prio_order , ">=");
     ("op_LessThan"          , e_bin_prio_order , "<" );
     ("op_GreaterThan"       , e_bin_prio_order , ">" );
-    ("op_Modulus"           , e_bin_prio_order , "mod" );
+    ("op_Modulus"           , e_bin_prio_order , "%" );
 ]
 
 (* -------------------------------------------------------------------- *)
 let prim_uni_ops = [
     ("op_Negation", "not");
     ("op_Minus", "-");
-    ("op_Bang","Support.ST.read");
-    ("exit", "exit");
-    ("failwith", "failwith");
-    ("raise", "raise");
+    ("op_Bang","Support.ST.read")
 ]
 
 (* -------------------------------------------------------------------- *)
-let prim_types = [
-    ("char", "char");
-    ("bool", "bool");
-    ("string", "string");
-    ("unit", "unit");
-    ("ref", "ref");
-    ("array", "array");
-    ("option", "option");
-    ("list", "list");
-    ("int", "int");
-    ("int64", "Int64.t");
-]
+let prim_types = []
 
 (* -------------------------------------------------------------------- *)
 let prim_constructors = [
     ("Some", "Some");
     ("None", "None");
-    ("Nil", "[]");
+    ("Nil",  "[]");
     ("Cons", "::");
 ]
 
 (* -------------------------------------------------------------------- *)
 let is_prims_ns (ns : list<mlsymbol>) =
-    ns = [(*"Fstar";*) //"Support";
-         "Prims"]
+    ns = ["Prims"]
 
 (* -------------------------------------------------------------------- *)
 let as_bin_op ((ns, x) : mlpath) =
@@ -350,18 +293,21 @@ let rec doc_of_mltype' (currentModule : mlsymbol) (outer : level) (ty : mlty) =
         maybe_paren outer t_prio_fun (hbox (reduce1 [d2; text " "; d1]))
 
     | MLTY_Top -> 
-      text "Obj.t" //TODO: change this to 'obj' if we're generating F#
+      if Util.codegen_fsharp()
+      then text "object"
+      else text "Obj.t" 
 
 and doc_of_mltype (currentModule : mlsymbol) (outer : level) (ty : mlty) =
     doc_of_mltype' currentModule outer (Util.resugar_mlty ty)
-
 
 (* -------------------------------------------------------------------- *)
 let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : doc =
     match e with
     | MLE_Coerce (e, t, t') -> 
-      let doc = doc_of_expr currentModule (min_op_prec, NonAssoc) e in    
-      parens (reduce [text "Obj.magic "; doc]) //TODO: rewire to a checked cast for F#; check that the doc is being generated properly ...don't really understand the API yet
+      let doc = doc_of_expr currentModule (min_op_prec, NonAssoc) e in  
+      if Util.codegen_fsharp()
+      then parens (reduce [text "Prims.checked_cast"; doc]) 
+      else parens (reduce [text "Obj.magic "; doc]) 
 
     | MLE_Seq es ->
         let docs = List.map (doc_of_expr currentModule (min_op_prec, NonAssoc)) es in
@@ -715,10 +661,15 @@ let rec doc_of_mllib_r (MLLib mllib) =
         ]
     and for1_mod istop (x, sigmod, MLLib sub) =
         fprint1 "Gen Code: %s\n" x;
+
         let head = reduce1 (if   not istop
-                            then [text "module";  text x; text "="; text "struct"]
+                            then if Util.codegen_fsharp()
+                                 then [text "module";  text x]
+                                 else [text "module";  text x; text "="; text "struct"]
                             else []) in
-        let tail = if not istop then reduce1 [text "end"] else reduce1 [] in
+        let tail = if not istop && not <| Util.codegen_fsharp() 
+                   then reduce1 [text "end"] 
+                   else reduce1 [] in
         let doc  = Option.map (fun (_, m) -> doc_of_mod x m) sigmod in
         let sub  = List.map (for1_mod false)  sub in
         let sub  = List.map (fun x -> reduce [x; hardline; hardline]) sub in
@@ -735,11 +686,6 @@ let rec doc_of_mllib_r (MLLib mllib) =
     in
 
     let docs = List.map (fun (x,s,m) -> (x,for1_mod true (x,s,m))) mllib in
-
-(* was:
-    let docs = List.combine (List.map for1_sig mllib) (List.map (for1_mod true) mllib) in
-    let docs = List.map (fun (sig_, mod_) -> reduce [sig_; text "="; mod_; hardline]) docs in
-*)
     docs
 
 (* -------------------------------------------------------------------- *)

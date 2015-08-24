@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 (* -------------------------------------------------------------------- *)
-module Microsoft.FStar.Extraction.OCaml.Code
+module Microsoft.FStar.Extraction.ML.Code
 
 open Microsoft.FStar.Extraction.ML.Syntax
 open Microsoft.FStar.Extraction.ML.Env
