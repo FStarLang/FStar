@@ -70,6 +70,7 @@ val screateSeq :  #a:Type -> init:(seq a)
         (hide empty)
 
 (*create an sstarray on the heap*)
+//TODO: we should remove this one; currently used only in MD5 for some experiments
 val hcreateSeq :  #a:Type -> init:(seq a)
   -> Mem (sstarray a)
         (requires  (fun m -> True))

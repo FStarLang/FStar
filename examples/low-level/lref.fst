@@ -13,12 +13,15 @@ type lref (a:Type) : Type = located (ref a)
 
 type heapAux
 type heap = erased heapAux
-
+//TODO
+//Would be good to make heap polymorphic in the reference type
+//so that we can just derive this by instantiation
 
 open Set
 
 type aref =
   | Ref : #a:Type -> r:lref a -> aref
+//TODO make all these functions GTot; note heap is already erased
 assume logic val sel :       #a:Type -> heap -> lref a -> Tot (*erased*) a
 assume logic val upd :       #a:Type -> heap -> lref a -> a -> Tot heap
 assume logic val emp :       heap
@@ -66,16 +69,16 @@ opaque logic type modifies (mods:set aref) (h:heap) (h':heap) =
 
 type modset = erased (set aref)
 
-val only : #a:Type -> (lref a) -> Tot (modset)
+val only : #a:Type -> lref a -> Tot modset
 let only x = hide (Set.singleton (Ref x))
 
-val eonly : #a:Type -> erased (lref a) -> Tot (modset)
+val eonly : #a:Type -> erased (lref a) -> Tot modset
 let eonly r = (elift1 (fun x -> (Set.singleton (Ref x)))) r
 
-val eunion : s1:modset -> s2:modset -> Tot (modset)
+val eunion : s1:modset -> s2:modset -> Tot modset
 let eunion s1 s2 = (elift2 union) s1 s2
 
-val eunionUnion : #a:Type  -> #b:Type  -> r1:(lref a) -> r2:(lref b) ->
+val eunionUnion : #a:Type  -> #b:Type  -> r1:lref a -> r2:lref b ->
   Lemma (requires True) (ensures ((eunion (only r1) (only r2)) = hide (union (singleton (Ref r1)) (singleton (Ref r2)))))
   (* [SMTPat (eunion (only r1) (only r2))] *)
 let eunionUnion r1 r2 = ()

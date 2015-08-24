@@ -6,8 +6,9 @@
 
 (*     options: --codegen OCaml-experimental --trace_error --debug yes --prn; *)
 
-module StackAndHeap
-open Heap open Stack
+module StackAndHeap//TODO rename to Regions
+open Heap
+open Stack
 open Set
 open Prims
 open List
@@ -72,7 +73,7 @@ let topstid ss = fst (topst ss)
 val refLoc : #a:Type -> lref a -> Tot regionLoc
 let refLoc r = regionOf r
 
-new_effect StSTATE = STATE_h smem
+new_effect StSTATE = STATE_h smem //TODO: move this to sst.fst
 
 val stackBlockAtLoc : sidt  -> (Stack (sidt * region)) -> Tot (option region)
 let rec stackBlockAtLoc id sp =
