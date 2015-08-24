@@ -5,21 +5,24 @@ module Prims
   let lift (x:'a) : obj = x :> obj
   let checked_cast (x:'a) : 'b = lift x |> down
   type Tot<'a> = 'a
-  type float' = float
-  type float  = float'
-  type uint8' = uint8
-  type uint8 = uint8'
-  type uint16' = uint16
-  type uint16 = uint16'
-  type int32 = int
+  type unit      = Microsoft.FSharp.Core.unit
+  type bool      = Microsoft.FSharp.Core.bool
+  type char      = Microsoft.FSharp.Core.char
+  type string    = Microsoft.FSharp.Core.string
+  type int64     = Microsoft.FSharp.Core.int64
+  type 'a array  = 'a Microsoft.FSharp.Core.array
+  type double    = Microsoft.FSharp.Core.double
+  type float     = Microsoft.FSharp.Core.float
+  type uint8     = Microsoft.FSharp.Core.uint8
+  type uint16    = Microsoft.FSharp.Core.uint16
+  type int32     = Microsoft.FSharp.Core.int32
+  type int       = Microsoft.FSharp.Core.int
+  type byte 	 = Microsoft.FSharp.Core.byte
+  type exn       = Microsoft.FSharp.Core.exn
+  type 'a list'  = 'a list
+  type 'a list   = 'a list'
+  type 'a option = 'a Microsoft.FSharp.Core.option
   type nat = int
-  type byte = Microsoft.FSharp.Core.byte
-  type _exn = exn
-  type exn = _exn
-  type 'a list' = 'a list
-  type 'a list = 'a list'
-  type 'a option' = 'a option
-  type 'a option = 'a option'
   type 'dummy b2t = Dummy_b2t of unit
 
   type (' p, ' q) l_or =
@@ -83,6 +86,7 @@ module Prims
   let _assert x = ()
   let magic () = failwith "no magic"
   let min x y = if x < y then x else y
+  let strcat x y = x ^ y
   let op_Negation x = not x
   let op_Addition x y = x + y
   let op_Subtraction x y = x - y
@@ -99,3 +103,4 @@ module Prims
   let op_Modulus x y = x % y
   let is_Nil l = l = [] (*consider redefining List.isEmpty as this function*)
   let is_Cons l = not (is_Nil l)
+  let raise e = raise e

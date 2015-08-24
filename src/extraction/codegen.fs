@@ -283,7 +283,6 @@ let rec doc_of_mltype' (currentModule : mlsymbol) (outer : level) (ty : mlty) =
     | MLTY_Fun (t1, _, t2) ->
         let d1 = doc_of_mltype currentModule (t_prio_fun, Left ) t1 in
         let d2 = doc_of_mltype currentModule (t_prio_fun, Right) t2 in
-
         maybe_paren outer t_prio_fun (hbox (reduce1 [d1; text " -> "; d2]))
 
     | MLTY_App (t1, t2) ->
@@ -294,7 +293,7 @@ let rec doc_of_mltype' (currentModule : mlsymbol) (outer : level) (ty : mlty) =
 
     | MLTY_Top -> 
       if Util.codegen_fsharp()
-      then text "object"
+      then text "obj"
       else text "Obj.t" 
 
 and doc_of_mltype (currentModule : mlsymbol) (outer : level) (ty : mlty) =
@@ -381,14 +380,20 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
 
     | MLE_Proj (e, f) ->
        let e = doc_of_expr  currentModule  (min_op_prec, NonAssoc) e in
-       let doc = reduce [e; text "."; text (ptsym currentModule f)] in
+       let doc = 
+        if Util.codegen_fsharp() //field names are not qualified in F#
+        then reduce [e; text "."; text (snd f)]
+        else reduce [e; text "."; text (ptsym currentModule f)] in
        doc
 
     | MLE_Fun (ids, body) ->
-        let ids  = List.map (fun ((x, _),xt) -> reduce1 [text "("; 
-                                                         text x ; 
-//                                                         (match xt with | Some xxt -> reduce1 [text " : "; doc_of_mltype currentModule  outer xxt] | _ -> text "");
-                                                         text ")"]) ids in
+        let bvar_annot x xt = 
+            if Util.codegen_fsharp() //type inference in F# is not complete, particularly for field projections; so these annotations are needed
+            then reduce1 [text "("; text x ; 
+                          (match xt with | Some xxt -> reduce1 [text " : "; doc_of_mltype currentModule outer xxt] | _ -> text "");
+                          text ")"]
+            else text x in
+        let ids  = List.map (fun ((x, _),xt) -> bvar_annot x xt) ids in
         let body = doc_of_expr currentModule (min_op_prec, NonAssoc) body in
         let doc  = reduce1 [text "fun"; reduce1 ids; text "->"; body] in
         parens doc
@@ -470,18 +475,18 @@ and doc_of_pattern (currentModule : mlsymbol) (pattern : mlpattern) : doc =
            ptctor currentModule  ctor in
         text name
 
-    | MLP_CTor (ctor, ps) ->
-       let ps = List.map (doc_of_pattern currentModule) ps in
+    | MLP_CTor (ctor, pats) ->
        let name =
          if is_standard_constructor ctor then
            snd (Option.get (as_standard_constructor ctor))
          else
            ptctor currentModule  ctor in
        let doc =
-         match name, ps with
+         match name, pats with
            (* Special case for Cons *)
-           | "::", [x;xs] -> reduce [x; text "::"; xs]
-           | _, _ -> reduce1 [text name; parens (combine (text ", ") ps)] in
+           | "::", [x;xs] -> reduce [doc_of_pattern currentModule x; text "::"; doc_of_pattern currentModule xs]
+           | _, [MLP_Tuple _] -> reduce1 [text name; doc_of_pattern currentModule (List.hd pats)] //no redundant parens; particularly if we have (T of a * b), we must generate T (x, y) not T ((x, y))
+           | _ -> reduce1 [text name; parens (combine (text ", ") (List.map (doc_of_pattern currentModule) pats))] in
        maybe_paren (min_op_prec, NonAssoc) e_app_prio doc
 
     | MLP_Tuple ps ->
@@ -517,7 +522,21 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, lets) =
         //let f = fun x -> x
         //i.e., print the latter as the former
         let ids = List.map (fun (x, _) -> text x) ids in
-        reduce1 [text (idsym name); reduce1 ids; text "="; e] in
+        let ty_annot = 
+            if Util.codegen_fsharp () && rec_ //needed for polymorphic recursion and to overcome incompleteness of type inference in F#
+            then match tys with 
+                    | None
+                    | Some (_::_, _) -> text ""
+                    | Some ([], ty) -> 
+//                      let ids = List.map (fun (x, _) -> text x) ids in
+                      let ty = doc_of_mltype currentModule (min_op_prec, NonAssoc) ty in
+                      reduce1 [text ":"; ty]
+//                      begin match ids with 
+//                        | [] -> reduce1 [text ":"; ty]
+//                        | _ ->  reduce1 [text "<"; combine (text ", ") ids; text ">"; text ":"; ty]
+//                      end
+            else text "" in    
+        reduce1 [text (idsym name); reduce1 ids; ty_annot; text "="; e] in
 
     let letdoc = if rec_ then reduce1 [text "let"; text "rec"] else text "let" in
 
@@ -662,26 +681,27 @@ let rec doc_of_mllib_r (MLLib mllib) =
     and for1_mod istop (x, sigmod, MLLib sub) =
         fprint1 "Gen Code: %s\n" x;
 
-        let head = reduce1 (if   not istop
-                            then if Util.codegen_fsharp()
-                                 then [text "module";  text x]
-                                 else [text "module";  text x; text "="; text "struct"]
+        let head = reduce1 (if Util.codegen_fsharp()
+                            then [text "module";  text x]
+                            else if not istop 
+                            then [text "module";  text x; text "="; text "struct"]
                             else []) in
-        let tail = if not istop && not <| Util.codegen_fsharp() 
+        let tail = if not istop 
                    then reduce1 [text "end"] 
                    else reduce1 [] in
         let doc  = Option.map (fun (_, m) -> doc_of_mod x m) sigmod in
         let sub  = List.map (for1_mod false)  sub in
         let sub  = List.map (fun x -> reduce [x; hardline; hardline]) sub in
+        let prefix = if Util.codegen_fsharp () then [cat (text "#light \"off\"") hardline] else [] in
 
-        reduce [
+        reduce <| (prefix @ [
             cat head hardline;
             (match doc with
              | None   -> empty
              | Some s -> cat s hardline);
             reduce sub;
             cat tail hardline;
-        ]
+        ])
 
     in
 

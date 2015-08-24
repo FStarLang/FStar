@@ -231,11 +231,14 @@ let finished_message fmods =
 let codegen fmods env= 
     if !Options.codegen = Some "OCaml" 
     || !Options.codegen = Some "OCaml-experimental" 
+    || !Options.codegen = Some "FSharp"
     then begin
         let c, mllibs = Util.fold_map Extraction.ML.ExtractMod.extract (Extraction.ML.Env.mkContext env) fmods in
         let mllibs = List.flatten mllibs in
-        let newDocs = List.collect Extraction.OCaml.Code.doc_of_mllib mllibs in
-        List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^".ml")) (FSharp.Format.pretty 120 d)) newDocs
+        let newDocs, ext = if !Options.codegen = Some "FSharp"
+                           then List.collect Extraction.ML.Code.doc_of_mllib mllibs, ".fs"
+                           else List.collect Extraction.OCaml.Code.doc_of_mllib mllibs, ".ml" in
+        List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^ext)) (FSharp.Format.pretty 120 d)) newDocs
     end
 
 (* Main function *)

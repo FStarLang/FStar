@@ -10,7 +10,7 @@ ABSYN_SRC=$(addprefix absyn/, $(ABSYN))
 FORMAT=format.fsi format.fs
 FORMAT_SRC=$(addprefix format/, $(FORMAT))
 
-EXTRACTION=ml-syntax.fs env.fs util.fs ocaml-codegen.fsi ocaml-codegen.fs extracttyp.fs extractexp.fs extractmod.fs
+EXTRACTION=ml-syntax.fs env.fs util.fs ocaml-codegen.fsi ocaml-codegen.fs codegen.fsi codegen.fs extracttyp.fs extractexp.fs extractmod.fs
 EXTRACTION_SRC=$(addprefix extraction/, $(EXTRACTION))
 
 PARSER=ast.fs parseutil.fs parse.fs lexhelp.fs lex.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs parseit.fsi parseit.fs driver.fs
@@ -172,7 +172,7 @@ BOOT_TCFILES=tcenv.fsi tcenv.fs recheck.fs normalize.fsi normalize.fs errors.fs 
 BOOT_TC=$(addprefix tc/, $(BOOT_TCFILES))
 BOOT_FORMATFILES=format.fsi formatml.fs
 BOOT_FORMAT=$(addprefix format/, $(BOOT_FORMATFILES))
-BOOT_EXTRACTIONFILES=ml-syntax.fs env.fs util.fs ocaml-codegen.fsi ocaml-codegen.fs extracttyp.fs extractexp.fs extractmod.fs
+BOOT_EXTRACTIONFILES=ml-syntax.fs env.fs util.fs ocaml-codegen.fsi ocaml-codegen.fs codegen.fsi codegen.fs extracttyp.fs extractexp.fs extractmod.fs
 BOOT_EXTRACTION=$(addprefix extraction/, $(BOOT_EXTRACTIONFILES))
 
 BOOT_MAIN=fstar.fs
@@ -185,6 +185,49 @@ boot: $(BOOT_ALL)
 
 ocaml: $(BOOT_ALL)
 	../bin/fstar.exe --eager_inference --MLish --lax --fs_typ_app --odir ocaml-output $(FSTAROPTS) --codegen OCaml $(ADMITS) $^
+
+
+FS_SUPPORT_LIBS=prims.fs st.fs all.fs
+FSTAR_SUPPORT_LIBS=util.fsi util.fs platform.fsi platform.fs bytes.fsi bytes.fs range.fsi range.fs getoptsimple.fsi getoptsimple.fs unionfind.fsi unionfind.fs
+BOOT_FS_BASE=Microsoft.FStar.Options.fs
+BOOT_FS_SYNTAX=Microsoft.FStar.Absyn.Syntax.fs Microsoft.FStar.Absyn.Const.fs Microsoft.FStar.Absyn.Visit.fs Microsoft.FStar.Absyn.Util.fs Microsoft.FStar.Absyn.Print.fs Microsoft.FStar.Absyn.SSyntax.fs
+BOOT_FS_TC=Microsoft.FStar.Tc.Env.fs Microsoft.FStar.Tc.Recheck.fs Microsoft.FStar.Tc.Normalize.fs Microsoft.FStar.Tc.Errors.fs Microsoft.FStar.Tc.Rel.fs Microsoft.FStar.Tc.Util.fs Microsoft.FStar.Tc.Tc.fs 
+BOOT_FS_FILES=FSharp.Format.fs $(BOOT_FS_BASE) $(BOOT_FS_SYNTAX) $(BOOT_FS_TC)
+
+
+
+
+# 
+
+# Microsoft.FStar.Extraction.ML.Code.fs
+# Microsoft.FStar.Extraction.ML.Env.fs
+# Microsoft.FStar.Extraction.ML.ExtractExp.fs
+# Microsoft.FStar.Extraction.ML.ExtractMod.fs
+# Microsoft.FStar.Extraction.ML.ExtractTyp.fs
+# Microsoft.FStar.Extraction.ML.Syntax.fs
+# Microsoft.FStar.Extraction.ML.Util.fs
+# Microsoft.FStar.Extraction.OCaml.Code.fs
+# Microsoft.FStar.FStar.fs
+# 
+# Microsoft.FStar.Parser.AST.fs
+# Microsoft.FStar.Parser.Desugar.fs
+# Microsoft.FStar.Parser.DesugarEnv.fs
+# Microsoft.FStar.Parser.Driver.fs
+# Microsoft.FStar.Parser.Lexhelp.fs
+# Microsoft.FStar.ToSMT.Encode.fs
+# Microsoft.FStar.ToSMT.SplitQueryCases.fs
+# Microsoft.FStar.ToSMT.Term.fs
+# Microsoft.FStar.ToSMT.Z3.fs
+
+boot_fs: fsharp-output/support.dll
+	$(FSC) --warn:0 $(BASELIBS) -r $^ $(OTHERFLAGS) $(addprefix fsharp-output/, $(BOOT_FS_FILES))
+
+fs: $(BOOT_ALL)
+	../bin/fstar.exe --eager_inference --MLish --lax --fs_typ_app --odir fsharp-output $(FSTAROPTS) --codegen FSharp $(ADMITS) $^
+
+
+fsharp-output/support.dll: $(addprefix support/fsharp/, $(FS_SUPPORT_LIBS)) $(addprefix basic/, $(FSTAR_SUPPORT_LIBS))
+	$(FSC) $(OTHERFLAGS) $(BASELIBS) -o $@ -a $^
 
 fstarml:
 	@echo "Building parser and lexer filex..."

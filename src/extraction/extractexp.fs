@@ -311,9 +311,9 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
             match restArgs, t with 
                 | [], _ -> 
                     //1. If partially applied and head is a datacon, it needs to be eta-expanded
-                    //2. If any of the arguments are impure, and the head is not a primitive short-circuiting op, then evaluation order must be enforced to be L-to-R (by hoisting)
+                    //2. If we're generated OCaml, and any of the arguments are impure, and the head is not a primitive short-circuiting op, then evaluation order must be enforced to be L-to-R (by hoisting)
                     let lbs, mlargs = 
-                        if Util.is_primop head
+                        if Util.is_primop head || Util.codegen_fsharp()
                         then [], List.rev mlargs_f |> List.map fst
                         else List.fold_left (fun (lbs, out_args) (arg, f) -> 
                                 if f=E_PURE 

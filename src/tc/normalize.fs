@@ -309,9 +309,6 @@ and sn tcenv (cfg:config<typ>) : config<typ> =
     | _ -> f None cfg.code.pos in
 
   let config = {cfg with code=Util.compress_typ cfg.code} in
-  let is_flex u = match Unionfind.find u with 
-    | Fixed _ -> false
-    | _ -> true in
   begin match config.code.n with
     | Typ_delayed _ -> failwith "Impossible"
      
