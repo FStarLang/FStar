@@ -39,26 +39,26 @@ let int31_lid = (p2l (("Int31")::("int31")::[]))
 
 let heap_lid = (p2l (("Heap")::("heap")::[]))
 
-let kunary = (fun ( k ) ( k' ) -> (let _87_11 = (let _87_10 = (let _87_9 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k)
-in (_87_9)::[])
-in (_87_10, k'))
-in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _87_11 Microsoft_FStar_Absyn_Syntax.dummyRange)))
+let kunary = (fun ( k ) ( k' ) -> (let _89_11 = (let _89_10 = (let _89_9 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k)
+in (_89_9)::[])
+in (_89_10, k'))
+in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _89_11 Microsoft_FStar_Absyn_Syntax.dummyRange)))
 
-let kbin = (fun ( k1 ) ( k2 ) ( k' ) -> (let _87_22 = (let _87_21 = (let _87_20 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k1)
-in (let _87_19 = (let _87_18 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k2)
-in (_87_18)::[])
-in (_87_20)::_87_19))
-in (_87_21, k'))
-in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _87_22 Microsoft_FStar_Absyn_Syntax.dummyRange)))
+let kbin = (fun ( k1 ) ( k2 ) ( k' ) -> (let _89_22 = (let _89_21 = (let _89_20 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k1)
+in (let _89_19 = (let _89_18 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k2)
+in (_89_18)::[])
+in (_89_20)::_89_19))
+in (_89_21, k'))
+in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _89_22 Microsoft_FStar_Absyn_Syntax.dummyRange)))
 
-let ktern = (fun ( k1 ) ( k2 ) ( k3 ) ( k' ) -> (let _87_37 = (let _87_36 = (let _87_35 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k1)
-in (let _87_34 = (let _87_33 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k2)
-in (let _87_32 = (let _87_31 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k3)
-in (_87_31)::[])
-in (_87_33)::_87_32))
-in (_87_35)::_87_34))
-in (_87_36, k'))
-in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _87_37 Microsoft_FStar_Absyn_Syntax.dummyRange)))
+let ktern = (fun ( k1 ) ( k2 ) ( k3 ) ( k' ) -> (let _89_37 = (let _89_36 = (let _89_35 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k1)
+in (let _89_34 = (let _89_33 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k2)
+in (let _89_32 = (let _89_31 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k3)
+in (_89_31)::[])
+in (_89_33)::_89_32))
+in (_89_35)::_89_34))
+in (_89_36, k'))
+in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _89_37 Microsoft_FStar_Absyn_Syntax.dummyRange)))
 
 let true_lid = (pconst "True")
 
@@ -120,7 +120,7 @@ let assert_lid = (pconst "_assert")
 
 let list_append_lid = (p2l (("List")::("append")::[]))
 
-let strcat_lid = (p2l (("String")::("strcat")::[]))
+let strcat_lid = (p2l (("Prims")::("strcat")::[]))
 
 let op_Eq = (pconst "op_Equality")
 

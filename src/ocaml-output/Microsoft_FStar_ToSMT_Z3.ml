@@ -65,14 +65,14 @@ in (match ((Support.ST.read _z3version)) with
 version
 end
 | None -> begin
-(let _50_31 = (let _114_26 = (Support.ST.read Microsoft_FStar_Options.z3_exe)
-in (Support.Microsoft.FStar.Util.run_proc _114_26 "-version" ""))
+(let _50_31 = (let _116_26 = (Support.ST.read Microsoft_FStar_Options.z3_exe)
+in (Support.Microsoft.FStar.Util.run_proc _116_26 "-version" ""))
 in (match (_50_31) with
 | (_50_27, out, _50_30) -> begin
 (let out = (match ((Support.Microsoft.FStar.Util.splitlines out)) with
 | x::_50_33 when (Support.Microsoft.FStar.Util.starts_with x prefix) -> begin
-(let x = (let _114_27 = (Support.Microsoft.FStar.Util.substring_from x (Support.String.length prefix))
-in (Support.Microsoft.FStar.Util.trim_string _114_27))
+(let x = (let _116_27 = (Support.Microsoft.FStar.Util.substring_from x (Support.String.length prefix))
+in (Support.Microsoft.FStar.Util.trim_string _116_27))
 in (let x = (Support.All.try_with (fun ( _50_38 ) -> (match (()) with
 | () -> begin
 (Support.List.map Support.Microsoft.FStar.Util.int_of_string (Support.Microsoft.FStar.Util.split x "."))
@@ -99,18 +99,18 @@ end))
 
 let ini_params = (fun ( _50_56 ) -> (match (()) with
 | () -> begin
-(let t = (match ((let _114_32 = (get_z3version ())
-in (z3v_le _114_32 (4, 3, 1)))) with
+(let t = (match ((let _116_32 = (get_z3version ())
+in (z3v_le _116_32 (4, 3, 1)))) with
 | true -> begin
 (Support.ST.read Microsoft_FStar_Options.z3timeout)
 end
 | false -> begin
 ((Support.ST.read Microsoft_FStar_Options.z3timeout) * 1000)
 end)
-in (let timeout = (let _114_33 = (Support.Microsoft.FStar.Util.string_of_int t)
-in (Support.Microsoft.FStar.Util.format1 "-t:%s" _114_33))
-in (let relevancy = (match ((let _114_34 = (get_z3version ())
-in (z3v_le _114_34 (4, 3, 1)))) with
+in (let timeout = (let _116_33 = (Support.Microsoft.FStar.Util.string_of_int t)
+in (Support.Microsoft.FStar.Util.format1 "-t:%s" _116_33))
+in (let relevancy = (match ((let _116_34 = (get_z3version ())
+in (z3v_le _116_34 (4, 3, 1)))) with
 | true -> begin
 "RELEVANCY"
 end
@@ -174,15 +174,15 @@ end))
 
 let tid = (fun ( _50_65 ) -> (match (()) with
 | () -> begin
-(let _114_43 = (Support.Microsoft.FStar.Util.current_tid ())
-in (Support.All.pipe_right _114_43 Support.Microsoft.FStar.Util.string_of_int))
+(let _116_43 = (Support.Microsoft.FStar.Util.current_tid ())
+in (Support.All.pipe_right _116_43 Support.Microsoft.FStar.Util.string_of_int))
 end))
 
 let new_z3proc = (fun ( id ) -> (let cond = (fun ( pid ) ( s ) -> (let x = ((Support.Microsoft.FStar.Util.trim_string s) = "Done!")
 in x))
-in (let _114_51 = (Support.ST.read Microsoft_FStar_Options.z3_exe)
-in (let _114_50 = (ini_params ())
-in (Support.Microsoft.FStar.Util.start_process id _114_51 _114_50 cond)))))
+in (let _116_51 = (Support.ST.read Microsoft_FStar_Options.z3_exe)
+in (let _116_50 = (ini_params ())
+in (Support.Microsoft.FStar.Util.start_process id _116_51 _116_50 cond)))))
 
 type bgproc =
 {grab : unit  ->  Support.Microsoft.FStar.Util.proc; release : unit  ->  unit; refresh : unit  ->  unit}
@@ -195,10 +195,10 @@ let get_qfile = (let ctr = (Support.Microsoft.FStar.Util.mk_ref 0)
 in (fun ( fresh ) -> (match (fresh) with
 | true -> begin
 (let _50_77 = (Support.Microsoft.FStar.Util.incr ctr)
-in (let _114_84 = (let _114_83 = (let _114_82 = (Support.ST.read ctr)
-in (Support.Microsoft.FStar.Util.string_of_int _114_82))
-in (Support.Microsoft.FStar.Util.format1 "queries-%s.smt2" _114_83))
-in (Support.Microsoft.FStar.Util.open_file_for_writing _114_84)))
+in (let _116_84 = (let _116_83 = (let _116_82 = (Support.ST.read ctr)
+in (Support.Microsoft.FStar.Util.string_of_int _116_82))
+in (Support.Microsoft.FStar.Util.format1 "queries-%s.smt2" _116_83))
+in (Support.Microsoft.FStar.Util.open_file_for_writing _116_84)))
 end
 | false -> begin
 (match ((Support.ST.read queries_dot_smt2)) with
@@ -225,14 +225,14 @@ end))))
 let bg_z3_proc = (let ctr = (Support.Microsoft.FStar.Util.mk_ref (- (1)))
 in (let new_proc = (fun ( _50_92 ) -> (match (()) with
 | () -> begin
-(let _114_93 = (let _114_92 = (let _50_93 = (Support.Microsoft.FStar.Util.incr ctr)
-in (let _114_91 = (Support.ST.read ctr)
-in (Support.All.pipe_right _114_91 Support.Microsoft.FStar.Util.string_of_int)))
-in (Support.Microsoft.FStar.Util.format1 "bg-%s" _114_92))
-in (new_z3proc _114_93))
+(let _116_93 = (let _116_92 = (let _50_93 = (Support.Microsoft.FStar.Util.incr ctr)
+in (let _116_91 = (Support.ST.read ctr)
+in (Support.All.pipe_right _116_91 Support.Microsoft.FStar.Util.string_of_int)))
+in (Support.Microsoft.FStar.Util.format1 "bg-%s" _116_92))
+in (new_z3proc _116_93))
 end))
-in (let z3proc = (let _114_94 = (new_proc ())
-in (Support.Microsoft.FStar.Util.mk_ref _114_94))
+in (let z3proc = (let _116_94 = (new_proc ())
+in (Support.Microsoft.FStar.Util.mk_ref _116_94))
 in (let x = []
 in (let grab = (fun ( _50_98 ) -> (match (()) with
 | () -> begin
@@ -247,18 +247,18 @@ in (let refresh = (fun ( _50_104 ) -> (match (()) with
 | () -> begin
 (let proc = (grab ())
 in (let _50_106 = (Support.Microsoft.FStar.Util.kill_process proc)
-in (let _50_108 = (let _114_101 = (new_proc ())
-in (Support.ST.op_Colon_Equals z3proc _114_101))
+in (let _50_108 = (let _116_101 = (new_proc ())
+in (Support.ST.op_Colon_Equals z3proc _116_101))
 in (let _50_116 = (match ((Support.ST.read queries_dot_smt2)) with
 | None -> begin
 ()
 end
 | Some (fh) -> begin
 (let _50_113 = (Support.Microsoft.FStar.Util.close_file fh)
-in (let fh = (let _114_104 = (let _114_103 = (let _114_102 = (Support.ST.read ctr)
-in (Support.All.pipe_right _114_102 Support.Microsoft.FStar.Util.string_of_int))
-in (Support.Microsoft.FStar.Util.format1 "queries-bg-%s.smt2" _114_103))
-in (Support.Microsoft.FStar.Util.open_file_for_writing _114_104))
+in (let fh = (let _116_104 = (let _116_103 = (let _116_102 = (Support.ST.read ctr)
+in (Support.All.pipe_right _116_102 Support.Microsoft.FStar.Util.string_of_int))
+in (Support.Microsoft.FStar.Util.format1 "queries-bg-%s.smt2" _116_103))
+in (Support.Microsoft.FStar.Util.open_file_for_writing _116_104))
 in (Support.ST.op_Colon_Equals queries_dot_smt2 (Some (fh)))))
 end)
 in (release ())))))
@@ -268,8 +268,8 @@ in {grab = grab; release = release; refresh = refresh})))))))
 let doZ3Exe' = (fun ( input ) ( z3proc ) -> (let parse = (fun ( z3out ) -> (let lines = (Support.All.pipe_right (Support.String.split (('\n')::[]) z3out) (Support.List.map Support.Microsoft.FStar.Util.trim_string))
 in (let rec lblnegs = (fun ( lines ) -> (match (lines) with
 | lname::"false"::rest -> begin
-(let _114_113 = (lblnegs rest)
-in (lname)::_114_113)
+(let _116_113 = (lblnegs rest)
+in (lname)::_116_113)
 end
 | lname::_50_132::rest -> begin
 (lblnegs rest)
@@ -282,12 +282,12 @@ in (let rec result = (fun ( x ) -> (match (x) with
 (TIMEOUT, [])
 end
 | "unknown"::tl -> begin
-(let _114_116 = (lblnegs tl)
-in (UNKNOWN, _114_116))
+(let _116_116 = (lblnegs tl)
+in (UNKNOWN, _116_116))
 end
 | "sat"::tl -> begin
-(let _114_117 = (lblnegs tl)
-in (SAT, _114_117))
+(let _116_117 = (lblnegs tl)
+in (SAT, _116_117))
 end
 | "unsat"::tl -> begin
 (UNSAT, [])
@@ -296,10 +296,10 @@ end
 (result tl)
 end
 | _50_157 -> begin
-(let _114_121 = (let _114_120 = (let _114_119 = (Support.List.map (fun ( l ) -> (Support.Microsoft.FStar.Util.format1 "<%s>" (Support.Microsoft.FStar.Util.trim_string l))) lines)
-in (Support.String.concat "\n" _114_119))
-in (Support.Microsoft.FStar.Util.format1 "Got output lines: %s\n" _114_120))
-in (Support.All.pipe_left Support.All.failwith _114_121))
+(let _116_121 = (let _116_120 = (let _116_119 = (Support.List.map (fun ( l ) -> (Support.Microsoft.FStar.Util.format1 "<%s>" (Support.Microsoft.FStar.Util.trim_string l))) lines)
+in (Support.String.concat "\n" _116_119))
+in (Support.Microsoft.FStar.Util.format1 "Got output lines: %s\n" _116_120))
+in (Support.All.pipe_left Support.All.failwith _116_121))
 end))
 in (result lines)))))
 in (let stdout = (Support.Microsoft.FStar.Util.ask_process z3proc input)
@@ -309,9 +309,9 @@ let doZ3Exe = (let ctr = (Support.Microsoft.FStar.Util.mk_ref 0)
 in (fun ( fresh ) ( input ) -> (let z3proc = (match (fresh) with
 | true -> begin
 (let _50_163 = (Support.Microsoft.FStar.Util.incr ctr)
-in (let _114_127 = (let _114_126 = (Support.ST.read ctr)
-in (Support.Microsoft.FStar.Util.string_of_int _114_126))
-in (new_z3proc _114_127)))
+in (let _116_127 = (let _116_126 = (Support.ST.read ctr)
+in (Support.Microsoft.FStar.Util.string_of_int _116_126))
+in (new_z3proc _116_127)))
 end
 | false -> begin
 (bg_z3_proc.grab ())
@@ -328,23 +328,23 @@ in res)))))
 
 let z3_options = (fun ( _50_169 ) -> (match (()) with
 | () -> begin
-(let mbqi = (match ((let _114_130 = (get_z3version ())
-in (z3v_le _114_130 (4, 3, 1)))) with
+(let mbqi = (match ((let _116_130 = (get_z3version ())
+in (z3v_le _116_130 (4, 3, 1)))) with
 | true -> begin
 "mbqi"
 end
 | false -> begin
 "smt.mbqi"
 end)
-in (let model_on_timeout = (match ((let _114_131 = (get_z3version ())
-in (z3v_le _114_131 (4, 3, 1)))) with
+in (let model_on_timeout = (match ((let _116_131 = (get_z3version ())
+in (z3v_le _116_131 (4, 3, 1)))) with
 | true -> begin
 "(set-option :model-on-timeout true)\n"
 end
 | false -> begin
 ""
 end)
-in (Support.String.strcat (Support.String.strcat (Support.String.strcat (Support.String.strcat "(set-option :global-decls false)\n" "(set-option :") mbqi) " false)\n") model_on_timeout)))
+in (Support.Prims.strcat (Support.Prims.strcat (Support.Prims.strcat (Support.Prims.strcat "(set-option :global-decls false)\n" "(set-option :") mbqi) " false)\n") model_on_timeout)))
 end))
 
 type 'a job =
@@ -357,10 +357,10 @@ type z3job =
 
 let job_queue = (let x = (Support.Microsoft.FStar.Util.mk_ref (({job = (fun ( _50_176 ) -> (match (()) with
 | () -> begin
-(let _114_155 = (let _114_154 = (let _114_153 = (Support.Microsoft.FStar.Range.mk_range "" 0 0)
-in ("", _114_153))
-in (_114_154)::[])
-in (false, _114_155))
+(let _116_155 = (let _116_154 = (let _116_153 = (Support.Microsoft.FStar.Range.mk_range "" 0 0)
+in ("", _116_153))
+in (_116_154)::[])
+in (false, _116_155))
 end)); callback = (fun ( a ) -> ())})::[]))
 in (let _50_179 = (Support.ST.op_Colon_Equals x [])
 in x))
@@ -384,8 +384,8 @@ end
 | _50_197 -> begin
 (let _50_198 = (match (((Support.ST.read Microsoft_FStar_Options.debug) <> [])) with
 | true -> begin
-(let _114_166 = (Support.Microsoft.FStar.Util.format1 "Z3 says: %s\n" (status_to_string status))
-in (Support.All.pipe_left Support.Microsoft.FStar.Util.print_string _114_166))
+(let _116_166 = (Support.Microsoft.FStar.Util.format1 "Z3 says: %s\n" (status_to_string status))
+in (Support.All.pipe_left Support.Microsoft.FStar.Util.print_string _116_166))
 end
 | false -> begin
 ()
@@ -442,8 +442,8 @@ end)
 end))
 in (aux ())))
 end))
-and run_job = (fun ( j ) -> (let _114_178 = (j.job ())
-in (Support.All.pipe_left j.callback _114_178)))
+and run_job = (fun ( j ) -> (let _116_178 = (j.job ())
+in (Support.All.pipe_left j.callback _116_178)))
 
 let init = (fun ( _50_246 ) -> (match (()) with
 | () -> begin
@@ -465,9 +465,9 @@ let enqueue = (fun ( fresh ) ( j ) -> (match ((not (fresh))) with
 end
 | false -> begin
 (let _50_254 = (Support.Microsoft.FStar.Util.monitor_enter job_queue)
-in (let _50_256 = (let _114_188 = (let _114_187 = (Support.ST.read job_queue)
-in (Support.List.append _114_187 ((j)::[])))
-in (Support.ST.op_Colon_Equals job_queue _114_188))
+in (let _50_256 = (let _116_188 = (let _116_187 = (Support.ST.read job_queue)
+in (Support.List.append _116_187 ((j)::[])))
+in (Support.ST.op_Colon_Equals job_queue _116_188))
 in (let _50_258 = (Support.Microsoft.FStar.Util.monitor_pulse job_queue)
 in (Support.Microsoft.FStar.Util.monitor_exit job_queue))))
 end))
@@ -481,17 +481,17 @@ in (let rec aux = (fun ( _50_267 ) -> (match (()) with
 | () -> begin
 (let _50_271 = (with_monitor job_queue (fun ( _50_268 ) -> (match (()) with
 | () -> begin
-(let _114_196 = (Support.ST.read pending_jobs)
-in (let _114_195 = (let _114_194 = (Support.ST.read job_queue)
-in (Support.List.length _114_194))
-in (_114_196, _114_195)))
+(let _116_196 = (Support.ST.read pending_jobs)
+in (let _116_195 = (let _116_194 = (Support.ST.read job_queue)
+in (Support.List.length _116_194))
+in (_116_196, _116_195)))
 end)))
 in (match (_50_271) with
 | (n, m) -> begin
 (match (((n + m) = 0)) with
 | true -> begin
-(let _114_197 = (Microsoft_FStar_Tc_Errors.report_all ())
-in (Support.All.pipe_right _114_197 Support.Prims.ignore))
+(let _116_197 = (Microsoft_FStar_Tc_Errors.report_all ())
+in (Support.All.pipe_right _116_197 Support.Prims.ignore))
 end
 | false -> begin
 (let _50_272 = (Support.Microsoft.FStar.Util.sleep 500)
@@ -509,19 +509,19 @@ let fresh_scope = (Support.Microsoft.FStar.Util.mk_ref (([])::[]))
 
 let bg_scope = (Support.Microsoft.FStar.Util.mk_ref [])
 
-let push = (fun ( msg ) -> (let _50_275 = (let _114_201 = (let _114_200 = (Support.ST.read fresh_scope)
-in ((Microsoft_FStar_ToSMT_Term.Caption (msg))::[])::_114_200)
-in (Support.ST.op_Colon_Equals fresh_scope _114_201))
-in (let _114_203 = (let _114_202 = (Support.ST.read bg_scope)
-in (Support.List.append ((Microsoft_FStar_ToSMT_Term.Caption (msg))::(Microsoft_FStar_ToSMT_Term.Push)::[]) _114_202))
-in (Support.ST.op_Colon_Equals bg_scope _114_203))))
+let push = (fun ( msg ) -> (let _50_275 = (let _116_201 = (let _116_200 = (Support.ST.read fresh_scope)
+in ((Microsoft_FStar_ToSMT_Term.Caption (msg))::[])::_116_200)
+in (Support.ST.op_Colon_Equals fresh_scope _116_201))
+in (let _116_203 = (let _116_202 = (Support.ST.read bg_scope)
+in (Support.List.append ((Microsoft_FStar_ToSMT_Term.Caption (msg))::(Microsoft_FStar_ToSMT_Term.Push)::[]) _116_202))
+in (Support.ST.op_Colon_Equals bg_scope _116_203))))
 
-let pop = (fun ( msg ) -> (let _50_278 = (let _114_207 = (let _114_206 = (Support.ST.read fresh_scope)
-in (Support.List.tl _114_206))
-in (Support.ST.op_Colon_Equals fresh_scope _114_207))
-in (let _114_209 = (let _114_208 = (Support.ST.read bg_scope)
-in (Support.List.append ((Microsoft_FStar_ToSMT_Term.Caption (msg))::(Microsoft_FStar_ToSMT_Term.Pop)::[]) _114_208))
-in (Support.ST.op_Colon_Equals bg_scope _114_209))))
+let pop = (fun ( msg ) -> (let _50_278 = (let _116_207 = (let _116_206 = (Support.ST.read fresh_scope)
+in (Support.List.tl _116_206))
+in (Support.ST.op_Colon_Equals fresh_scope _116_207))
+in (let _116_209 = (let _116_208 = (Support.ST.read bg_scope)
+in (Support.List.append ((Microsoft_FStar_ToSMT_Term.Caption (msg))::(Microsoft_FStar_ToSMT_Term.Pop)::[]) _116_208))
+in (Support.ST.op_Colon_Equals bg_scope _116_209))))
 
 let giveZ3 = (fun ( decls ) -> (let _50_286 = (match ((Support.ST.read fresh_scope)) with
 | hd::tl -> begin
@@ -530,15 +530,15 @@ end
 | _50_285 -> begin
 (Support.All.failwith "Impossible")
 end)
-in (let _114_213 = (let _114_212 = (Support.ST.read bg_scope)
-in (Support.List.append (Support.List.rev decls) _114_212))
-in (Support.ST.op_Colon_Equals bg_scope _114_213))))
+in (let _116_213 = (let _116_212 = (Support.ST.read bg_scope)
+in (Support.List.append (Support.List.rev decls) _116_212))
+in (Support.ST.op_Colon_Equals bg_scope _116_213))))
 
 let bgtheory = (fun ( fresh ) -> (match (fresh) with
 | true -> begin
-(let _114_217 = (let _114_216 = (Support.ST.read fresh_scope)
-in (Support.List.rev _114_216))
-in (Support.All.pipe_right _114_217 Support.List.flatten))
+(let _116_217 = (let _116_216 = (Support.ST.read fresh_scope)
+in (Support.List.rev _116_216))
+in (Support.All.pipe_right _116_217 Support.List.flatten))
 end
 | false -> begin
 (let bg = (Support.ST.read bg_scope)
@@ -575,10 +575,10 @@ end
 | false -> begin
 (Support.List.append (Support.List.append (Support.List.append theory ((Microsoft_FStar_ToSMT_Term.Push)::[])) qry) ((Microsoft_FStar_ToSMT_Term.Pop)::[]))
 end)
-in (let input = (let _114_234 = (let _114_233 = (let _114_232 = (z3_options ())
-in (Microsoft_FStar_ToSMT_Term.declToSmt _114_232))
-in (Support.List.map _114_233 theory))
-in (Support.All.pipe_right _114_234 (Support.String.concat "\n")))
+in (let input = (let _116_234 = (let _116_233 = (let _116_232 = (z3_options ())
+in (Microsoft_FStar_ToSMT_Term.declToSmt _116_232))
+in (Support.List.map _116_233 theory))
+in (Support.All.pipe_right _116_234 (Support.String.concat "\n")))
 in (let _50_316 = (match ((Support.ST.read Microsoft_FStar_Options.logQueries)) with
 | true -> begin
 (log_query fresh input)

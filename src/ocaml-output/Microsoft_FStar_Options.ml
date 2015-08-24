@@ -55,8 +55,8 @@ let show_signatures = (Support.Microsoft.FStar.Util.mk_ref [])
 
 let norm_then_print = (Support.Microsoft.FStar.Util.mk_ref true)
 
-let z3_exe = (let _84_19 = (Support.Microsoft.FStar.Platform.exe "z3")
-in (Support.Microsoft.FStar.Util.mk_ref _84_19))
+let z3_exe = (let _86_19 = (Support.Microsoft.FStar.Platform.exe "z3")
+in (Support.Microsoft.FStar.Util.mk_ref _86_19))
 
 let silent = (Support.Microsoft.FStar.Util.mk_ref false)
 
@@ -95,8 +95,8 @@ end
 ((((l2 = Low) || (l2 = Medium)) || (l2 = High)) || (l2 = Extreme))
 end))
 
-let debug_level_geq = (fun ( l2 ) -> (let _84_29 = (Support.ST.read debug_level)
-in (Support.All.pipe_right _84_29 (Support.Microsoft.FStar.Util.for_some (fun ( l1 ) -> (one_debug_level_geq l1 l2))))))
+let debug_level_geq = (fun ( l2 ) -> (let _86_29 = (Support.ST.read debug_level)
+in (Support.All.pipe_right _86_29 (Support.Microsoft.FStar.Util.for_some (fun ( l1 ) -> (one_debug_level_geq l1 l2))))))
 
 let log_types = (Support.Microsoft.FStar.Util.mk_ref false)
 
@@ -196,8 +196,8 @@ let init_options = (fun ( _20_26 ) -> (match (()) with
 | () -> begin
 (let _20_27 = (Support.ST.op_Colon_Equals show_signatures [])
 in (let _20_29 = (Support.ST.op_Colon_Equals norm_then_print true)
-in (let _20_31 = (let _84_34 = (Support.Microsoft.FStar.Platform.exe "z3")
-in (Support.ST.op_Colon_Equals z3_exe _84_34))
+in (let _20_31 = (let _86_34 = (Support.Microsoft.FStar.Platform.exe "z3")
+in (Support.ST.op_Colon_Equals z3_exe _86_34))
 in (let _20_33 = (Support.ST.op_Colon_Equals silent false)
 in (let _20_35 = (Support.ST.op_Colon_Equals debug [])
 in (let _20_37 = (Support.ST.op_Colon_Equals debug_level [])
@@ -247,7 +247,7 @@ let set_fstar_home = (fun ( _20_115 ) -> (match (()) with
 (let fh = (match ((Support.ST.read fstar_home_opt)) with
 | None -> begin
 (let x = (Support.Microsoft.FStar.Util.get_exec_dir ())
-in (let x = (Support.String.strcat x "/..")
+in (let x = (Support.Prims.strcat x "/..")
 in (let _20_119 = (Support.ST.op_Colon_Equals _fstar_home x)
 in (let _20_121 = (Support.ST.op_Colon_Equals fstar_home_opt (Some (x)))
 in x))))
@@ -263,8 +263,8 @@ let get_fstar_home = (fun ( _20_128 ) -> (match (()) with
 | () -> begin
 (match ((Support.ST.read fstar_home_opt)) with
 | None -> begin
-(let _20_130 = (let _84_39 = (set_fstar_home ())
-in (Support.All.pipe_left Support.Prims.ignore _84_39))
+(let _20_130 = (let _86_39 = (set_fstar_home ())
+in (Support.All.pipe_left Support.Prims.ignore _86_39))
 in (Support.ST.read _fstar_home))
 end
 | Some (x) -> begin
@@ -274,12 +274,12 @@ end))
 
 let get_include_path = (fun ( _20_134 ) -> (match (()) with
 | () -> begin
-(let _84_46 = (Support.ST.read _include_path)
-in (let _84_45 = (let _84_44 = (let _84_43 = (let _84_42 = (get_fstar_home ())
-in (Support.String.strcat _84_42 "/lib"))
-in (_84_43)::[])
-in (".")::_84_44)
-in (Support.List.append _84_46 _84_45)))
+(let _86_46 = (Support.ST.read _include_path)
+in (let _86_45 = (let _86_44 = (let _86_43 = (let _86_42 = (get_fstar_home ())
+in (Support.Prims.strcat _86_42 "/lib"))
+in (_86_43)::[])
+in (".")::_86_44)
+in (Support.List.append _86_46 _86_45)))
 end))
 
 let prims = (fun ( _20_135 ) -> (match (()) with
@@ -298,7 +298,7 @@ let prependOutputDir = (fun ( fname ) -> (match ((Support.ST.read outputDir)) wi
 fname
 end
 | Some (x) -> begin
-(Support.String.strcat (Support.String.strcat x "/") fname)
+(Support.Prims.strcat (Support.Prims.strcat x "/") fname)
 end))
 
 let cache_dir = "cache"
@@ -310,23 +310,23 @@ in (Support.List.iter (fun ( _20_151 ) -> (match (_20_151) with
 | Support.Microsoft.FStar.Getopt.ZeroArgs (ig) -> begin
 (match ((doc = "")) with
 | true -> begin
-(let _84_54 = (Support.Microsoft.FStar.Util.format1 "  --%s\n" flag)
-in (Support.Microsoft.FStar.Util.print_string _84_54))
+(let _86_54 = (Support.Microsoft.FStar.Util.format1 "  --%s\n" flag)
+in (Support.Microsoft.FStar.Util.print_string _86_54))
 end
 | false -> begin
-(let _84_55 = (Support.Microsoft.FStar.Util.format2 "  --%s  %s\n" flag doc)
-in (Support.Microsoft.FStar.Util.print_string _84_55))
+(let _86_55 = (Support.Microsoft.FStar.Util.format2 "  --%s  %s\n" flag doc)
+in (Support.Microsoft.FStar.Util.print_string _86_55))
 end)
 end
 | Support.Microsoft.FStar.Getopt.OneArg ((_20_155, argname)) -> begin
 (match ((doc = "")) with
 | true -> begin
-(let _84_57 = (Support.Microsoft.FStar.Util.format2 "  --%s %s\n" flag argname)
-in (Support.Microsoft.FStar.Util.print_string _84_57))
+(let _86_57 = (Support.Microsoft.FStar.Util.format2 "  --%s %s\n" flag argname)
+in (Support.Microsoft.FStar.Util.print_string _86_57))
 end
 | false -> begin
-(let _84_58 = (Support.Microsoft.FStar.Util.format3 "  --%s %s  %s\n" flag argname doc)
-in (Support.Microsoft.FStar.Util.print_string _84_58))
+(let _86_58 = (Support.Microsoft.FStar.Util.format3 "  --%s %s  %s\n" flag argname doc)
+in (Support.Microsoft.FStar.Util.print_string _86_58))
 end)
 end)
 end)) specs)))
@@ -336,10 +336,10 @@ let rec specs = (fun ( _20_159 ) -> (match (()) with
 (let specs = ((Support.Microsoft.FStar.Getopt.noshort, "trace_error", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun ( _20_160 ) -> (match (()) with
 | () -> begin
 (Support.ST.op_Colon_Equals trace_error true)
-end))), "Don\'t print an error message; show an exception trace instead"))::((Support.Microsoft.FStar.Getopt.noshort, "codegen", Support.Microsoft.FStar.Getopt.OneArg (((fun ( s ) -> (let _84_67 = (parse_codegen s)
-in (Support.ST.op_Colon_Equals codegen _84_67))), "OCaml")), "Generate code for execution"))::((Support.Microsoft.FStar.Getopt.noshort, "codegen-lib", Support.Microsoft.FStar.Getopt.OneArg (((fun ( s ) -> (let _84_72 = (let _84_71 = (Support.ST.read codegen_libs)
-in ((Support.Microsoft.FStar.Util.split s "."))::_84_71)
-in (Support.ST.op_Colon_Equals codegen_libs _84_72))), "namespace")), "External runtime library library"))::((Support.Microsoft.FStar.Getopt.noshort, "lax", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun ( _20_163 ) -> (match (()) with
+end))), "Don\'t print an error message; show an exception trace instead"))::((Support.Microsoft.FStar.Getopt.noshort, "codegen", Support.Microsoft.FStar.Getopt.OneArg (((fun ( s ) -> (let _86_67 = (parse_codegen s)
+in (Support.ST.op_Colon_Equals codegen _86_67))), "OCaml|FSharp")), "Generate code for execution"))::((Support.Microsoft.FStar.Getopt.noshort, "codegen-lib", Support.Microsoft.FStar.Getopt.OneArg (((fun ( s ) -> (let _86_72 = (let _86_71 = (Support.ST.read codegen_libs)
+in ((Support.Microsoft.FStar.Util.split s "."))::_86_71)
+in (Support.ST.op_Colon_Equals codegen_libs _86_72))), "namespace")), "External runtime library library"))::((Support.Microsoft.FStar.Getopt.noshort, "lax", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun ( _20_163 ) -> (match (()) with
 | () -> begin
 (let _20_164 = (Support.ST.op_Colon_Equals pretype true)
 in (Support.ST.op_Colon_Equals verify false))
@@ -349,18 +349,18 @@ end))), "Run the lax-type checker only (admit all verification conditions)"))::(
 end))), ""))::((Support.Microsoft.FStar.Getopt.noshort, "prims", Support.Microsoft.FStar.Getopt.OneArg (((fun ( x ) -> (Support.ST.op_Colon_Equals prims_ref (Some (x)))), "file")), ""))::((Support.Microsoft.FStar.Getopt.noshort, "prn", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun ( _20_169 ) -> (match (()) with
 | () -> begin
 (Support.ST.op_Colon_Equals print_real_names true)
-end))), "Print real names---you may want to use this in conjunction with logQueries"))::((Support.Microsoft.FStar.Getopt.noshort, "debug", Support.Microsoft.FStar.Getopt.OneArg (((fun ( x ) -> (let _84_86 = (let _84_85 = (Support.ST.read debug)
-in (x)::_84_85)
-in (Support.ST.op_Colon_Equals debug _84_86))), "module name")), "Print LOTS of debugging information while checking module [arg]"))::((Support.Microsoft.FStar.Getopt.noshort, "debug_level", Support.Microsoft.FStar.Getopt.OneArg (((fun ( x ) -> (let _84_91 = (let _84_90 = (Support.ST.read debug_level)
-in ((dlevel x))::_84_90)
-in (Support.ST.op_Colon_Equals debug_level _84_91))), "Low|Medium|High|Extreme")), "Control the verbosity of debugging info"))::((Support.Microsoft.FStar.Getopt.noshort, "log_types", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun ( _20_172 ) -> (match (()) with
+end))), "Print real names---you may want to use this in conjunction with logQueries"))::((Support.Microsoft.FStar.Getopt.noshort, "debug", Support.Microsoft.FStar.Getopt.OneArg (((fun ( x ) -> (let _86_86 = (let _86_85 = (Support.ST.read debug)
+in (x)::_86_85)
+in (Support.ST.op_Colon_Equals debug _86_86))), "module name")), "Print LOTS of debugging information while checking module [arg]"))::((Support.Microsoft.FStar.Getopt.noshort, "debug_level", Support.Microsoft.FStar.Getopt.OneArg (((fun ( x ) -> (let _86_91 = (let _86_90 = (Support.ST.read debug_level)
+in ((dlevel x))::_86_90)
+in (Support.ST.op_Colon_Equals debug_level _86_91))), "Low|Medium|High|Extreme")), "Control the verbosity of debugging info"))::((Support.Microsoft.FStar.Getopt.noshort, "log_types", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun ( _20_172 ) -> (match (()) with
 | () -> begin
 (Support.ST.op_Colon_Equals log_types true)
 end))), "Print types computed for data/val/let-bindings"))::((Support.Microsoft.FStar.Getopt.noshort, "print_effect_args", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun ( _20_173 ) -> (match (()) with
 | () -> begin
 (Support.ST.op_Colon_Equals print_effect_args true)
-end))), "Print inferred predicate transformers for all computation types"))::((Support.Microsoft.FStar.Getopt.noshort, "dump_module", Support.Microsoft.FStar.Getopt.OneArg (((fun ( x ) -> (Support.ST.op_Colon_Equals dump_module (Some (x)))), "module name")), ""))::((Support.Microsoft.FStar.Getopt.noshort, "z3timeout", Support.Microsoft.FStar.Getopt.OneArg (((fun ( s ) -> (let _84_100 = (Support.Microsoft.FStar.Util.int_of_string s)
-in (Support.ST.op_Colon_Equals z3timeout _84_100))), "t")), "Set the Z3 per-query (soft) timeout to t seconds (default 5)"))::((Support.Microsoft.FStar.Getopt.noshort, "admit_smt_queries", Support.Microsoft.FStar.Getopt.OneArg (((fun ( s ) -> (let _84_104 = (match ((s = "true")) with
+end))), "Print inferred predicate transformers for all computation types"))::((Support.Microsoft.FStar.Getopt.noshort, "dump_module", Support.Microsoft.FStar.Getopt.OneArg (((fun ( x ) -> (Support.ST.op_Colon_Equals dump_module (Some (x)))), "module name")), ""))::((Support.Microsoft.FStar.Getopt.noshort, "z3timeout", Support.Microsoft.FStar.Getopt.OneArg (((fun ( s ) -> (let _86_100 = (Support.Microsoft.FStar.Util.int_of_string s)
+in (Support.ST.op_Colon_Equals z3timeout _86_100))), "t")), "Set the Z3 per-query (soft) timeout to t seconds (default 5)"))::((Support.Microsoft.FStar.Getopt.noshort, "admit_smt_queries", Support.Microsoft.FStar.Getopt.OneArg (((fun ( s ) -> (let _86_104 = (match ((s = "true")) with
 | true -> begin
 true
 end
@@ -373,17 +373,17 @@ end
 (Support.All.failwith "Invalid argument to --admit_smt_queries")
 end)
 end)
-in (Support.ST.op_Colon_Equals admit_smt_queries _84_104))), "true|false")), "Admit SMT queries (UNSAFE! But, useful during development); default: \'false\'"))::((Support.Microsoft.FStar.Getopt.noshort, "logQueries", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun ( _20_177 ) -> (match (()) with
+in (Support.ST.op_Colon_Equals admit_smt_queries _86_104))), "true|false")), "Admit SMT queries (UNSAFE! But, useful during development); default: \'false\'"))::((Support.Microsoft.FStar.Getopt.noshort, "logQueries", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun ( _20_177 ) -> (match (()) with
 | () -> begin
 (Support.ST.op_Colon_Equals logQueries true)
-end))), "Log the Z3 queries in queries.smt2"))::((Support.Microsoft.FStar.Getopt.noshort, "admit_fsi", Support.Microsoft.FStar.Getopt.OneArg (((fun ( x ) -> (let _84_110 = (let _84_109 = (Support.ST.read admit_fsi)
-in (x)::_84_109)
-in (Support.ST.op_Colon_Equals admit_fsi _84_110))), "module name")), "Treat .fsi as a .fst"))::((Support.Microsoft.FStar.Getopt.noshort, "odir", Support.Microsoft.FStar.Getopt.OneArg (((fun ( x ) -> (Support.ST.op_Colon_Equals outputDir (Some (x)))), "dir")), "Place output in directory dir"))::((Support.Microsoft.FStar.Getopt.noshort, "smt", Support.Microsoft.FStar.Getopt.OneArg (((fun ( x ) -> (Support.ST.op_Colon_Equals z3_exe x)), "path")), "Path to the SMT solver (usually Z3, but could be any SMT2-compatible solver)"))::((Support.Microsoft.FStar.Getopt.noshort, "print_before_norm", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun ( _20_181 ) -> (match (()) with
+end))), "Log the Z3 queries in queries.smt2"))::((Support.Microsoft.FStar.Getopt.noshort, "admit_fsi", Support.Microsoft.FStar.Getopt.OneArg (((fun ( x ) -> (let _86_110 = (let _86_109 = (Support.ST.read admit_fsi)
+in (x)::_86_109)
+in (Support.ST.op_Colon_Equals admit_fsi _86_110))), "module name")), "Treat .fsi as a .fst"))::((Support.Microsoft.FStar.Getopt.noshort, "odir", Support.Microsoft.FStar.Getopt.OneArg (((fun ( x ) -> (Support.ST.op_Colon_Equals outputDir (Some (x)))), "dir")), "Place output in directory dir"))::((Support.Microsoft.FStar.Getopt.noshort, "smt", Support.Microsoft.FStar.Getopt.OneArg (((fun ( x ) -> (Support.ST.op_Colon_Equals z3_exe x)), "path")), "Path to the SMT solver (usually Z3, but could be any SMT2-compatible solver)"))::((Support.Microsoft.FStar.Getopt.noshort, "print_before_norm", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun ( _20_181 ) -> (match (()) with
 | () -> begin
 (Support.ST.op_Colon_Equals norm_then_print false)
-end))), "Do not normalize types before printing (for debugging)"))::((Support.Microsoft.FStar.Getopt.noshort, "show_signatures", Support.Microsoft.FStar.Getopt.OneArg (((fun ( x ) -> (let _84_122 = (let _84_121 = (Support.ST.read show_signatures)
-in (x)::_84_121)
-in (Support.ST.op_Colon_Equals show_signatures _84_122))), "module name")), "Show the checked signatures for all top-level symbols in the module"))::((Support.Microsoft.FStar.Getopt.noshort, "full_context_dependency", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun ( _20_183 ) -> (match (()) with
+end))), "Do not normalize types before printing (for debugging)"))::((Support.Microsoft.FStar.Getopt.noshort, "show_signatures", Support.Microsoft.FStar.Getopt.OneArg (((fun ( x ) -> (let _86_122 = (let _86_121 = (Support.ST.read show_signatures)
+in (x)::_86_121)
+in (Support.ST.op_Colon_Equals show_signatures _86_122))), "module name")), "Show the checked signatures for all top-level symbols in the module"))::((Support.Microsoft.FStar.Getopt.noshort, "full_context_dependency", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun ( _20_183 ) -> (match (()) with
 | () -> begin
 (Support.ST.op_Colon_Equals full_context_dependency true)
 end))), "Introduce unification variables that are dependent on the entire context (possibly expensive, but better for type inference (on, by default)"))::((Support.Microsoft.FStar.Getopt.noshort, "MLish", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun ( _20_184 ) -> (match (()) with
@@ -401,12 +401,12 @@ end))), "Don\'t print unification variable numbers"))::((Support.Microsoft.FStar
 end))), "Don\'t print generated identifier numbers"))::((Support.Microsoft.FStar.Getopt.noshort, "serialize_mods", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun ( _20_188 ) -> (match (()) with
 | () -> begin
 (Support.ST.op_Colon_Equals serialize_mods true)
-end))), "Serialize compiled modules"))::((Support.Microsoft.FStar.Getopt.noshort, "initial_fuel", Support.Microsoft.FStar.Getopt.OneArg (((fun ( x ) -> (let _84_132 = (Support.Microsoft.FStar.Util.int_of_string x)
-in (Support.ST.op_Colon_Equals initial_fuel _84_132))), "non-negative integer")), "Number of unrolling of recursive functions to try initially (default 2)"))::((Support.Microsoft.FStar.Getopt.noshort, "max_fuel", Support.Microsoft.FStar.Getopt.OneArg (((fun ( x ) -> (let _84_136 = (Support.Microsoft.FStar.Util.int_of_string x)
-in (Support.ST.op_Colon_Equals max_fuel _84_136))), "non-negative integer")), "Number of unrolling of recursive functions to try at most (default 8)"))::((Support.Microsoft.FStar.Getopt.noshort, "min_fuel", Support.Microsoft.FStar.Getopt.OneArg (((fun ( x ) -> (let _84_140 = (Support.Microsoft.FStar.Util.int_of_string x)
-in (Support.ST.op_Colon_Equals min_fuel _84_140))), "non-negative integer")), "Minimum number of unrolling of recursive functions to try (default 1)"))::((Support.Microsoft.FStar.Getopt.noshort, "initial_ifuel", Support.Microsoft.FStar.Getopt.OneArg (((fun ( x ) -> (let _84_144 = (Support.Microsoft.FStar.Util.int_of_string x)
-in (Support.ST.op_Colon_Equals initial_ifuel _84_144))), "non-negative integer")), "Number of unrolling of inductive datatypes to try at first (default 1)"))::((Support.Microsoft.FStar.Getopt.noshort, "max_ifuel", Support.Microsoft.FStar.Getopt.OneArg (((fun ( x ) -> (let _84_148 = (Support.Microsoft.FStar.Util.int_of_string x)
-in (Support.ST.op_Colon_Equals max_ifuel _84_148))), "non-negative integer")), "Number of unrolling of inductive datatypes to try at most (default 1)"))::((Support.Microsoft.FStar.Getopt.noshort, "warn_top_level_effects", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun ( _20_194 ) -> (match (()) with
+end))), "Serialize compiled modules"))::((Support.Microsoft.FStar.Getopt.noshort, "initial_fuel", Support.Microsoft.FStar.Getopt.OneArg (((fun ( x ) -> (let _86_132 = (Support.Microsoft.FStar.Util.int_of_string x)
+in (Support.ST.op_Colon_Equals initial_fuel _86_132))), "non-negative integer")), "Number of unrolling of recursive functions to try initially (default 2)"))::((Support.Microsoft.FStar.Getopt.noshort, "max_fuel", Support.Microsoft.FStar.Getopt.OneArg (((fun ( x ) -> (let _86_136 = (Support.Microsoft.FStar.Util.int_of_string x)
+in (Support.ST.op_Colon_Equals max_fuel _86_136))), "non-negative integer")), "Number of unrolling of recursive functions to try at most (default 8)"))::((Support.Microsoft.FStar.Getopt.noshort, "min_fuel", Support.Microsoft.FStar.Getopt.OneArg (((fun ( x ) -> (let _86_140 = (Support.Microsoft.FStar.Util.int_of_string x)
+in (Support.ST.op_Colon_Equals min_fuel _86_140))), "non-negative integer")), "Minimum number of unrolling of recursive functions to try (default 1)"))::((Support.Microsoft.FStar.Getopt.noshort, "initial_ifuel", Support.Microsoft.FStar.Getopt.OneArg (((fun ( x ) -> (let _86_144 = (Support.Microsoft.FStar.Util.int_of_string x)
+in (Support.ST.op_Colon_Equals initial_ifuel _86_144))), "non-negative integer")), "Number of unrolling of inductive datatypes to try at first (default 1)"))::((Support.Microsoft.FStar.Getopt.noshort, "max_ifuel", Support.Microsoft.FStar.Getopt.OneArg (((fun ( x ) -> (let _86_148 = (Support.Microsoft.FStar.Util.int_of_string x)
+in (Support.ST.op_Colon_Equals max_ifuel _86_148))), "non-negative integer")), "Number of unrolling of inductive datatypes to try at most (default 1)"))::((Support.Microsoft.FStar.Getopt.noshort, "warn_top_level_effects", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun ( _20_194 ) -> (match (()) with
 | () -> begin
 (Support.ST.op_Colon_Equals warn_top_level_effects true)
 end))), "Top-level effects are ignored, by default; turn this flag on to be warned when this happens"))::((Support.Microsoft.FStar.Getopt.noshort, "no_slack", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun ( _20_195 ) -> (match (()) with
@@ -427,19 +427,19 @@ end))), "Use equality constraints when comparing higher-order types; temporary")
 end))), "Allow the use of t<t1,...,tn> syntax for type applications; brittle since it clashes with the integer less-than operator"))::((Support.Microsoft.FStar.Getopt.noshort, "no_fs_typ_app", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun ( _20_200 ) -> (match (()) with
 | () -> begin
 (Support.ST.op_Colon_Equals fs_typ_app false)
-end))), "Do not allow the use of t<t1,...,tn> syntax for type applications"))::((Support.Microsoft.FStar.Getopt.noshort, "n_cores", Support.Microsoft.FStar.Getopt.OneArg (((fun ( x ) -> (let _84_159 = (Support.Microsoft.FStar.Util.int_of_string x)
-in (Support.ST.op_Colon_Equals n_cores _84_159))), "positive integer")), "Maximum number of cores to use for the solver (default 1)"))::((Support.Microsoft.FStar.Getopt.noshort, "verify_module", Support.Microsoft.FStar.Getopt.OneArg (((fun ( x ) -> (let _84_164 = (let _84_163 = (Support.ST.read verify_module)
-in (x)::_84_163)
-in (Support.ST.op_Colon_Equals verify_module _84_164))), "string")), "Name of the module to verify"))::((Support.Microsoft.FStar.Getopt.noshort, "use_build_config", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun ( _20_203 ) -> (match (()) with
+end))), "Do not allow the use of t<t1,...,tn> syntax for type applications"))::((Support.Microsoft.FStar.Getopt.noshort, "n_cores", Support.Microsoft.FStar.Getopt.OneArg (((fun ( x ) -> (let _86_159 = (Support.Microsoft.FStar.Util.int_of_string x)
+in (Support.ST.op_Colon_Equals n_cores _86_159))), "positive integer")), "Maximum number of cores to use for the solver (default 1)"))::((Support.Microsoft.FStar.Getopt.noshort, "verify_module", Support.Microsoft.FStar.Getopt.OneArg (((fun ( x ) -> (let _86_164 = (let _86_163 = (Support.ST.read verify_module)
+in (x)::_86_163)
+in (Support.ST.op_Colon_Equals verify_module _86_164))), "string")), "Name of the module to verify"))::((Support.Microsoft.FStar.Getopt.noshort, "use_build_config", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun ( _20_203 ) -> (match (()) with
 | () -> begin
 (Support.ST.op_Colon_Equals use_build_config true)
-end))), "Expect just a single file on the command line and no options; will read the \'build-config\' prelude from the file"))::((Support.Microsoft.FStar.Getopt.noshort, "split_cases", Support.Microsoft.FStar.Getopt.OneArg (((fun ( n ) -> (let _84_169 = (Support.Microsoft.FStar.Util.int_of_string n)
-in (Support.ST.op_Colon_Equals split_cases _84_169))), "t")), "Partition VC of a match into groups of n cases"))::((Support.Microsoft.FStar.Getopt.noshort, "in", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun ( _20_205 ) -> (match (()) with
+end))), "Expect just a single file on the command line and no options; will read the \'build-config\' prelude from the file"))::((Support.Microsoft.FStar.Getopt.noshort, "split_cases", Support.Microsoft.FStar.Getopt.OneArg (((fun ( n ) -> (let _86_169 = (Support.Microsoft.FStar.Util.int_of_string n)
+in (Support.ST.op_Colon_Equals split_cases _86_169))), "t")), "Partition VC of a match into groups of n cases"))::((Support.Microsoft.FStar.Getopt.noshort, "in", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun ( _20_205 ) -> (match (()) with
 | () -> begin
 (Support.ST.op_Colon_Equals interactive true)
-end))), "Interactive mode; reads input from stdin"))::((Support.Microsoft.FStar.Getopt.noshort, "include", Support.Microsoft.FStar.Getopt.OneArg (((fun ( s ) -> (let _84_175 = (let _84_174 = (Support.ST.read _include_path)
-in (Support.List.append _84_174 ((s)::[])))
-in (Support.ST.op_Colon_Equals _include_path _84_175))), "path")), "A directory in which to search for files included on the command line"))::((Support.Microsoft.FStar.Getopt.noshort, "fsi", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun ( _20_207 ) -> (match (()) with
+end))), "Interactive mode; reads input from stdin"))::((Support.Microsoft.FStar.Getopt.noshort, "include", Support.Microsoft.FStar.Getopt.OneArg (((fun ( s ) -> (let _86_175 = (let _86_174 = (Support.ST.read _include_path)
+in (Support.List.append _86_174 ((s)::[])))
+in (Support.ST.op_Colon_Equals _include_path _86_175))), "path")), "A directory in which to search for files included on the command line"))::((Support.Microsoft.FStar.Getopt.noshort, "fsi", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun ( _20_207 ) -> (match (()) with
 | () -> begin
 (set_interactive_fsi ())
 end))), "fsi flag; A flag to indicate if type checking a fsi in the interactive mode"))::((Support.Microsoft.FStar.Getopt.noshort, "print_fuels", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun ( _20_208 ) -> (match (()) with
@@ -453,23 +453,23 @@ in (('h', "help", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun ( x ) -> (let _2
 in (Support.All.exit 0)))), "Display this information"))::specs)
 end))
 and parse_codegen = (fun ( s ) -> (match (s) with
-| ("OCaml-experimental") | ("OCaml") -> begin
+| ("OCaml-experimental") | ("OCaml") | ("FSharp") -> begin
 Some (s)
 end
-| _20_218 -> begin
-(let _20_219 = (Support.Microsoft.FStar.Util.print_string "Wrong argument to codegen flag\n")
-in (let _20_221 = (let _84_181 = (specs ())
-in (display_usage _84_181))
+| _20_219 -> begin
+(let _20_220 = (Support.Microsoft.FStar.Util.print_string "Wrong argument to codegen flag\n")
+in (let _20_222 = (let _86_181 = (specs ())
+in (display_usage _86_181))
 in (Support.All.exit 1)))
 end))
-and set_interactive_fsi = (fun ( _20_223 ) -> (match ((Support.ST.read interactive)) with
+and set_interactive_fsi = (fun ( _20_224 ) -> (match ((Support.ST.read interactive)) with
 | true -> begin
 (Support.ST.op_Colon_Equals interactive_fsi true)
 end
 | false -> begin
-(let _20_225 = (Support.Microsoft.FStar.Util.print_string "Set interactive flag first before setting interactive fsi flag\n")
-in (let _20_227 = (let _84_183 = (specs ())
-in (display_usage _84_183))
+(let _20_226 = (Support.Microsoft.FStar.Util.print_string "Set interactive flag first before setting interactive fsi flag\n")
+in (let _20_228 = (let _86_183 = (specs ())
+in (display_usage _86_183))
 in (Support.All.exit 1)))
 end))
 
@@ -481,21 +481,21 @@ end
 (Support.List.contains m l)
 end)))
 
-let set_options = (fun ( s ) -> (let _84_189 = (specs ())
-in (Support.Microsoft.FStar.Getopt.parse_string _84_189 (fun ( _20_233 ) -> ()) s)))
+let set_options = (fun ( s ) -> (let _86_189 = (specs ())
+in (Support.Microsoft.FStar.Getopt.parse_string _86_189 (fun ( _20_234 ) -> ()) s)))
 
 let reset_options_string = (ref None)
 
-let reset_options = (fun ( _20_235 ) -> (match (()) with
+let reset_options = (fun ( _20_236 ) -> (match (()) with
 | () -> begin
-(let _20_236 = (init_options ())
+(let _20_237 = (init_options ())
 in (match ((Support.ST.read reset_options_string)) with
 | Some (x) -> begin
 (set_options x)
 end
-| _20_241 -> begin
-(let _84_193 = (specs ())
-in (Support.Microsoft.FStar.Getopt.parse_cmdline _84_193 (fun ( x ) -> ())))
+| _20_242 -> begin
+(let _86_193 = (specs ())
+in (Support.Microsoft.FStar.Getopt.parse_cmdline _86_193 (fun ( x ) -> ())))
 end))
 end))
 

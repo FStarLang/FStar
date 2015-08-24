@@ -29,33 +29,33 @@ let break1 = (text " ")
 
 let enclose = (fun ( _54_6 ) ( _54_8 ) ( _54_10 ) -> (match ((_54_6, _54_8, _54_10)) with
 | (Doc (l), Doc (r), Doc (x)) -> begin
-Doc ((Support.String.strcat (Support.String.strcat l x) r))
+Doc ((Support.Prims.strcat (Support.Prims.strcat l x) r))
 end))
 
 let brackets = (fun ( _54_12 ) -> (match (_54_12) with
 | Doc (d) -> begin
-(let _118_20 = (text "[")
-in (let _118_19 = (text "]")
-in (enclose _118_20 _118_19 (Doc (d)))))
+(let _120_20 = (text "[")
+in (let _120_19 = (text "]")
+in (enclose _120_20 _120_19 (Doc (d)))))
 end))
 
 let cbrackets = (fun ( _54_14 ) -> (match (_54_14) with
 | Doc (d) -> begin
-(let _118_24 = (text "{")
-in (let _118_23 = (text "}")
-in (enclose _118_24 _118_23 (Doc (d)))))
+(let _120_24 = (text "{")
+in (let _120_23 = (text "}")
+in (enclose _120_24 _120_23 (Doc (d)))))
 end))
 
 let parens = (fun ( _54_16 ) -> (match (_54_16) with
 | Doc (d) -> begin
-(let _118_28 = (text "(")
-in (let _118_27 = (text ")")
-in (enclose _118_28 _118_27 (Doc (d)))))
+(let _120_28 = (text "(")
+in (let _120_27 = (text ")")
+in (enclose _120_28 _120_27 (Doc (d)))))
 end))
 
 let cat = (fun ( _54_18 ) ( _54_20 ) -> (match ((_54_18, _54_20)) with
 | (Doc (d1), Doc (d2)) -> begin
-Doc ((Support.String.strcat d1 d2))
+Doc ((Support.Prims.strcat d1 d2))
 end))
 
 let reduce = (fun ( docs ) -> (Support.List.fold_left cat empty docs))
@@ -65,8 +65,8 @@ let group = (fun ( _54_23 ) -> (match (_54_23) with
 Doc (d)
 end))
 
-let groups = (fun ( docs ) -> (let _118_39 = (reduce docs)
-in (group _118_39)))
+let groups = (fun ( docs ) -> (let _120_39 = (reduce docs)
+in (group _120_39)))
 
 let combine = (fun ( _54_26 ) ( docs ) -> (match (_54_26) with
 | Doc (sep) -> begin
