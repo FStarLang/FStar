@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi Set;
     variables:LIB=../../lib;
-    other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst
+    other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst
  --*)
 
 module Wysteria
@@ -39,18 +39,87 @@ type as_mode =
 type mode =
   | Mode: m:as_mode -> ps:prins -> mode
 
+open List
+  
+type telt =
+  | TMsg  : #a:Type -> x:a -> telt
+  | TScope: ps:prins -> t:list telt -> telt
+
+type trace = list telt
+
+val rest_trace: t1:trace -> t2:trace -> Tot (option trace)
+
+val last_elt: t:trace{is_Cons t} -> Tot telt
+
+val all_but_last: t:trace{is_Cons t} -> Tot trace
+
+val equal_trace_rest_lemma: t1:trace -> t2:trace
+                            -> Lemma (requires (b2t (t1 = t2)))
+                                     (ensures (rest_trace t1 t2 = Some []))
+                               [SMTPat (rest_trace t1 t2)]
+                               
+val rest_equal_trace_lemma: t1:trace -> t2:trace
+                            -> Lemma (requires (rest_trace t1 t2 = Some []))
+                                     (ensures (b2t (t1 = t2)))
+                               [SMTPat (rest_trace t1 t2)]
+                               
+val append_rest_lemma: t1:trace -> t2:trace -> t3:trace
+                       -> Lemma (requires (append t1 t2 = t3))
+                                (ensures (is_Some (rest_trace t3 t1) /\ Some.v (rest_trace t3 t1) = t2))
+                          [SMTPat (rest_trace t3 t1); SMTPat (append t1 t2)]
+
+val rest_append_lemma: t1:trace -> t2:trace -> t3:trace
+                       -> Lemma (requires (is_Some (rest_trace t3 t1) /\ Some.v (rest_trace t3 t1) = t2))
+                                (ensures (append t1 t2 = t3))
+                          [SMTPat (rest_trace t3 t1); SMTPat (append t1 t2)]
+
+val trace_assoc: t1:trace -> t2:trace -> t3:trace
+                 -> Lemma (requires (is_Some (rest_trace t2 t1) /\ is_Some (rest_trace t3 t2)))
+                          (ensures (is_Some (rest_trace t2 t1) /\ is_Some (rest_trace t3 t2) /\ is_Some (rest_trace t3 t1) /\
+                                    Some.v (rest_trace t3 t1) = append (Some.v (rest_trace t2 t1))
+                                                                       (Some.v (rest_trace t3 t2))))
+                    [SMTPat (rest_trace t2 t1); SMTPat (rest_trace t3 t2)]
+
+val last_elt_singleton_lemma: t:trace{is_Cons t}
+                              -> Lemma (requires (all_but_last t = []))
+                                       (ensures (t = [last_elt t]))
+                                 [SMTPat (last_elt t); SMTPat (all_but_last t)]
+
+val snoc_last_elt_lemma: elt:telt -> t:trace
+                         -> Lemma (requires (True))
+                                  (ensures (last_elt (t @ [elt]) = elt))
+                            [SMTPat (last_elt (t @ [elt]))]
+
+val snoc_all_but_last_lemma: elt:telt -> t:trace
+                             -> Lemma (requires (True))
+                                      (ensures (all_but_last (t @ [elt]) = t))
+                            [SMTPat (all_but_last (t @ [elt]))]
+
+val all_but_last_append_lemma: t:trace{is_Cons t} ->
+                               Lemma (requires (True))
+                                     (ensures (append (all_but_last t) ([last_elt t]) = t))
+                               [SMTPat (append (all_but_last t) ([last_elt t]))]
+
 (**********)
 
 open Heap
 
-let moderef : ref (option mode) = alloc None(* private *)
+let moderef : ref (option mode) = alloc None (* private *)
+
+let traceref: ref trace = alloc []
 
 kind Requires         = mode -> Type
-kind Ensures (a:Type) = mode -> a -> Type
+kind Ensures (a:Type) = mode -> a -> trace -> Type
 
 effect Wys (a:Type) (req:Requires) (ens:Ensures a) =
-  STATE a (fun (p:a -> heap -> Type) (h0:heap) -> is_Some (sel h0 moderef) /\ req (Some.v (sel h0 moderef)) /\ (forall x h1. sel h1 moderef = sel h0 moderef /\ ens (Some.v (sel h0 moderef)) x ==> p x h1))
-          (fun (p:a -> heap -> Type) (h0:heap) -> is_Some (sel h0 moderef) /\ req (Some.v (sel h0 moderef)) /\ (forall x h1. sel h1 moderef = sel h0 moderef /\ ens (Some.v (sel h0 moderef)) x ==> p x h1))
+  STATE a (fun (p:a -> heap -> Type) (h0:heap) ->
+           is_Some (sel h0 moderef) /\ req (Some.v (sel h0 moderef)) /\
+           (forall x h1. (sel h1 moderef = sel h0 moderef /\ is_Some (rest_trace (sel h1 traceref) (sel h0 traceref)) /\
+                          ens (Some.v (sel h0 moderef)) x (Some.v (rest_trace (sel h1 traceref) (sel h0 traceref)))) ==> p x h1))
+          (fun (p:a -> heap -> Type) (h0:heap) ->
+           is_Some (sel h0 moderef) /\ req (Some.v (sel h0 moderef)) /\
+           (forall x h1. (sel h1 moderef = sel h0 moderef /\ is_Some (rest_trace (sel h1 traceref) (sel h0 traceref)) /\
+                          ens (Some.v (sel h0 moderef)) x (Some.v (rest_trace (sel h1 traceref) (sel h0 traceref)))) ==> p x h1))
 
 (**********)
 type Box: Type -> prins -> Type
@@ -113,24 +182,28 @@ assume Can_wire_implies_can_box: forall (a:Type) ps. can_wire a ==> can_box a ps
 
 type DelPar (m:mode) (ps:prins) = Mode.m m = Par /\ subset ps (Mode.ps m)
 
-val as_par: #a:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> a -> Type)
+val as_par: #a:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> a -> trace -> Type)
             -> ps:prins
             -> =f:(unit -> Wys a req_f ens_f)
-            -> Wys (Box a ps) (fun m0   -> req_f (Mode Par ps) /\
-                                           DelPar m0 ps        /\
-                                           can_box a ps)
-                              (fun m0 r -> ens_f (Mode Par ps) (v_of_box r))
+            -> Wys (Box a ps) (fun m0     -> req_f (Mode Par ps) /\
+                                             DelPar m0 ps        /\
+                                             can_box a ps)
+                              (fun m0 r t -> is_Cons t /\ Cons.tl t = [] /\
+                                             is_TScope (Cons.hd t)       /\
+                                             TScope.ps (Cons.hd t) = ps  /\
+                                             ens_f (Mode Par ps) (v_of_box r) (TScope.t (Cons.hd t)))
 
 (*****)
 
 type DelSec (m:mode) (ps:prins) = ps = Mode.ps m
 
-val as_sec: #a:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> a -> Type)
+val as_sec: #a:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> a -> trace -> Type)
             -> ps:prins
             -> =f:(unit -> Wys a req_f ens_f)
-            -> Wys a (fun m0   -> req_f (Mode Sec ps) /\ DelSec m0 ps)
-                     (fun m0 r -> ens_f (Mode Sec ps) r)
-
+            -> Wys a (fun m0     -> req_f (Mode Sec ps) /\ DelSec m0 ps)
+                     (fun m0 r t -> is_Cons t /\ last_elt t = TMsg #a r /\
+                                    ens_f (Mode Sec ps) r (all_but_last t))
+                                    
 (*****)
 
 type CanUnboxPC (mode_ps:eprins) (ps:prins) = b2t (subset mode_ps ps)
@@ -138,8 +211,8 @@ type CanUnboxPC (mode_ps:eprins) (ps:prins) = b2t (subset mode_ps ps)
 type CanUnboxP (m:mode) (ps:prins) = Mode.m m = Par /\ CanUnboxPC (Mode.ps m) ps
 
 val unbox_p: #a:Type -> #ps:prins -> x:Box a ps
-             -> Wys a (fun m0   -> CanUnboxP m0 ps)
-                      (fun m0 r -> b2t (r = v_of_box x))
+             -> Wys a (fun m0     -> CanUnboxP m0 ps)
+                      (fun m0 r t -> r = v_of_box x /\ t = [])
 
 (*****)
 
@@ -151,8 +224,8 @@ type CanUnboxS (m:mode)(ps:prins) =
   Mode.m m = Sec /\ subset ps (Mode.ps m)
 
 val unbox_s: #a:Type -> #ps:prins -> x:Box a ps
-             -> Wys a (fun m0   -> CanUnboxS m0 ps)
-                      (fun m0 r -> b2t (r = v_of_box x))
+             -> Wys a (fun m0     -> CanUnboxS m0 ps)
+                      (fun m0 r t -> r = v_of_box x /\ t = [])
 
 (*****)
 
@@ -160,8 +233,8 @@ type CanBox (a:Type) (mode_ps:prins) (ps:prins) =
   can_box a ps /\ subset ps mode_ps
 
 val box: #a:Type -> x:a -> ps:prins
-         -> Wys (Box a ps) (fun m0   -> CanBox a (Mode.ps m0) ps)
-                           (fun m0 r -> b2t (v_of_box r = x))
+         -> Wys (Box a ps) (fun m0     -> CanBox a (Mode.ps m0) ps)
+                           (fun m0 r t -> v_of_box r = x /\ t = [])
 
 (*****)
 
@@ -169,8 +242,8 @@ type CanMkWireP (a:Type) (m:mode) (ps':prins) (eps:eprins) =
   Mode.m m = Par /\ can_wire a /\ CanUnboxPC eps ps' /\ subset eps (Mode.ps m)
 
 val mkwire_p: #a:Type -> #ps':prins -> eps:eprins -> x:Box a ps'
-              -> Wys (Wire a eps) (fun m0   -> CanMkWireP a m0 ps' eps)
-                                  (fun m0 r -> Let (v_of_box #a #ps' x) (fun y -> b2t (r = w_const_on #a eps y)))
+              -> Wys (Wire a eps) (fun m0     -> CanMkWireP a m0 ps' eps)
+                                  (fun m0 r t -> r = w_const_on #a eps (v_of_box #a #ps' x) /\ t = [])
 
 (*****)
 
@@ -178,8 +251,8 @@ type CanMkWireS (a:Type) (m:mode) (eps:eprins) =
   Mode.m m = Sec /\ can_wire a /\ subset eps (Mode.ps m)
 
 val mkwire_s: #a:Type -> eps:eprins -> x:a
-              -> Wys (Wire a eps) (fun m0   -> CanMkWireS a m0 eps)
-                                  (fun m0 r -> b2t (r = w_const_on #a eps x))
+              -> Wys (Wire a eps) (fun m0     -> CanMkWireS a m0 eps)
+                                  (fun m0 r t -> r = w_const_on #a eps x /\ t = [])
 
 (*****)
 
@@ -187,8 +260,8 @@ type CanProjWireP (#a:Type) (#eps:eprins) (m:mode) (x:Wire a eps) (p:prin) =
   Mode.m m = Par /\ Mode.ps m = singleton p /\ w_contains p x
 
 val projwire_p: #a:Type -> #eps:eprins -> p:prin -> x:Wire a eps{w_contains p x}
-                -> Wys a (fun m0   -> CanProjWireP m0 x p)
-                         (fun m0 r -> b2t (r = w_select p x))
+                -> Wys a (fun m0     -> CanProjWireP m0 x p)
+                         (fun m0 r t -> r = w_select p x /\ t = [])
 
 (*****)
 
@@ -196,8 +269,8 @@ type CanProjWireS (#a:Type) (#eps:eprins) (m:mode) (x:Wire a eps) (p:prin) =
   Mode.m m = Sec /\ mem p (Mode.ps m) /\ w_contains p x
 
 val projwire_s: #a:Type -> #eps:eprins -> p:prin -> x:Wire a eps{w_contains p x}
-                -> Wys a (fun m0   -> CanProjWireS m0 x p)
-                         (fun m0 r -> b2t (r = w_select p x))
+                -> Wys a (fun m0     -> CanProjWireS m0 x p)
+                         (fun m0 r t -> r = w_select p x /\ t = [])
 
 (*****)
 
@@ -206,24 +279,24 @@ type CanConcatWire (#a:Type) (#eps1:eprins) (#eps2:eprins) (x:Wire a eps1) (y:Wi
 
 val concat_wire: #a:Type -> #eps_x:eprins -> #eps_y:eprins
                  -> x:Wire a eps_x -> y:Wire a eps_y{CanConcatWire x y}
-                 -> Wys (Wire a (union eps_x eps_y)) (fun m0   -> CanConcatWire x y)
-                                                     (fun m0 r -> b2t (r = w_concat x y))
+                 -> Wys (Wire a (union eps_x eps_y)) (fun m0     -> CanConcatWire x y)
+                                                     (fun m0 r t -> r = w_concat x y /\ t = [])
 
 (*****)
 
-val main: #a:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> a -> Type)
+val main: #a:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> a -> trace -> Type)
           -> ps:prins
           -> =f:(unit -> Wys a req_f ens_f)
-          -> All a (fun h0 -> req_f (Mode Par ps))
-                   (fun h0 r h1 -> is_V r /\ ens_f (Mode Par ps) (V.v r))
+          -> All a (fun h0      -> req_f (Mode Par ps))
+                   (fun h0 r h1 -> is_V r /\ ens_f (Mode Par ps) (V.v r) (sel h1 traceref))
 
 (*****)
 
 (* these are also ffi calls *)
 
-val read: #a:Type -> unit -> Wys a (fun m0 -> Mode.m m0 = Par /\
-                                              (exists p. Mode.ps m0 = singleton p))
-                                   (fun m0 r -> True)
+val read: #a:Type -> unit -> Wys a (fun m0     -> Mode.m m0 = Par /\
+                                                  (exists p. Mode.ps m0 = singleton p))
+                                   (fun m0 r t -> b2t (t = []))
 
 val alice  : prin
 val bob    : prin
