@@ -49,7 +49,7 @@ type exp =
 
 type sub = var -> Tot exp
 
-opaque type renaming (s:sub) = (forall (x:var). is_EVar (s x))
+type renaming (s:sub) = (forall (x:var). is_EVar (s x))
 
 val is_renaming : s:sub -> Tot (n:int{  (renaming s  ==> n=0) /\
                                       (~(renaming s) ==> n=1)})
