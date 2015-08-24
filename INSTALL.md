@@ -117,7 +117,7 @@ you to skip directly to step 3 and build F* with just an OCaml compiler.
 
 ### 3. Building F* using the OCaml snapshot ###
 
-The current version of F* requires OCaml 4.02.
+The current version of F* requires OCaml 4.02.x.
 
 #### Instructions for Windows ####
 
@@ -128,20 +128,18 @@ The current version of F* requires OCaml 4.02.
 
 1. `make -C src/ocaml-output`
 
-(Side note: this procedure generates a native F* binary, that is, a binary that
+**Note:** This procedure generates a native F* binary, that is, a binary that
 does *not* depend on `cygwin1.dll`, since the installer above uses a
 *native* Windows port of OCaml.  Cygwin is just there to provide `make` and
 other utilities required for the build.
-
 This also means that when linking C libraries with OCaml compiled objects one
 needs to use the *correct* mingw libraries and *not* the Cygwin ones. OCaml uses
 special `flexlink` technology for this. See `contrib/CoreCrypto/ml` and
 `examples/crypto` for examples.
-)
 
 #### Instructions for Linux and Mac OS X ####
 
-0. Install OCaml (version 4.02.0 or later)
+0. Install OCaml (version 4.02.x)
    - Can be installed using either your package manager or using OPAM
      (see below).
 
@@ -158,12 +156,12 @@ special `flexlink` technology for this. See `contrib/CoreCrypto/ml` and
 
         $ opam install batteries
 
-3. Then run the following commands in `src/ocaml-output`:
+3. Then run the following command:
 
-        $ make
+        $ make -C src/ocaml-output
 
 
-### 2. Refreshing the OCaml snapshot
+### 2. Extracting the sources of F* itself to OCaml ###
 
 0. Get an F* binary, either using the .NET build process, or the OCaml build
    process. Make sure you follow the instructions above to get a working OCaml
@@ -182,8 +180,10 @@ special `flexlink` technology for this. See `contrib/CoreCrypto/ml` and
 
 ## Runtime dependency: Z3 SMT solver ##
 
-To use F* for verification you need to get a Z3 4.3.2 binary and add
-it to your `PATH`:
+To use F* for verification you need a Z3 4.3.2 binary.
+Our binary packages include that already in `bin`, but if you compile
+F* from sources you need to get a Z3 binary yourself and add it to
+your `PATH`:
 
   - Z3 binaries for Windows:
 
