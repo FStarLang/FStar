@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi Set;
     variables:LIB=../../lib;
-    other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst
+    other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst $LIB/st2.fst
  --*)
 
 module Wysteria
@@ -111,15 +111,44 @@ let traceref: ref trace = alloc []
 kind Requires         = mode -> Type
 kind Ensures (a:Type) = mode -> a -> trace -> Type
 
+type wys_encoding (a:Type) (req:Requires) (ens:Ensures a) (p:a -> heap -> Type) (h0:heap) =
+  is_Some (sel h0 moderef) /\ req (Some.v (sel h0 moderef)) /\
+  (forall x h1. (sel h1 moderef = sel h0 moderef /\ is_Some (rest_trace (sel h1 traceref) (sel h0 traceref)) /\
+                 ens (Some.v (sel h0 moderef)) x (Some.v (rest_trace (sel h1 traceref) (sel h0 traceref)))) ==> p x h1)
+
 effect Wys (a:Type) (req:Requires) (ens:Ensures a) =
-  STATE a (fun (p:a -> heap -> Type) (h0:heap) ->
-           is_Some (sel h0 moderef) /\ req (Some.v (sel h0 moderef)) /\
-           (forall x h1. (sel h1 moderef = sel h0 moderef /\ is_Some (rest_trace (sel h1 traceref) (sel h0 traceref)) /\
-                          ens (Some.v (sel h0 moderef)) x (Some.v (rest_trace (sel h1 traceref) (sel h0 traceref)))) ==> p x h1))
-          (fun (p:a -> heap -> Type) (h0:heap) ->
-           is_Some (sel h0 moderef) /\ req (Some.v (sel h0 moderef)) /\
-           (forall x h1. (sel h1 moderef = sel h0 moderef /\ is_Some (rest_trace (sel h1 traceref) (sel h0 traceref)) /\
-                          ens (Some.v (sel h0 moderef)) x (Some.v (rest_trace (sel h1 traceref) (sel h0 traceref)))) ==> p x h1))
+  STATE a (fun (p:a -> heap -> Type) (h0:heap) -> wys_encoding a req ens p h0)
+          (fun (p:a -> heap -> Type) (h0:heap) -> wys_encoding a req ens p h0)
+
+open Relational
+open Comp
+
+kind Requires2                  = double mode -> Type
+kind Ensures2 (a:Type) (b:Type) = double mode -> rel a b -> double trace -> Type
+
+type wys2_encoding (a:Type) (b:Type) (req:Requires2) (ens:Ensures2 a b) (p:rel a b -> heap2 -> Type) (h0:heap2) =
+  is_Some (sel (R.l h0) moderef) /\ is_Some (sel (R.r h0) moderef) /\
+  req (R (Some.v (sel (R.l h0) moderef)) (Some.v (sel (R.r h0) moderef))) /\
+  (forall x h1. (sel (R.l h1) moderef = sel (R.l h0) moderef /\
+                 sel (R.r h1) moderef = sel (R.r h0) moderef /\
+                 is_Some (rest_trace (sel (R.l h1) traceref) (sel (R.l h0) traceref)) /\
+                 is_Some (rest_trace (sel (R.r h1) traceref) (sel (R.r h0) traceref)) /\
+                 ens (R (Some.v (sel (R.l h0) moderef)) (Some.v (sel (R.r h0) moderef))) x
+                     (R (Some.v (rest_trace (sel (R.l h1) traceref) (sel (R.l h0) traceref)))
+                        (Some.v (rest_trace (sel (R.r h1) traceref) (sel (R.r h0) traceref))))) ==> p x h1)
+
+effect Wys2 (a:Type) (b:Type) (req:Requires2) (ens:Ensures2 a b) =
+  STATE2 (rel a b) (fun (p:rel a b -> heap2 -> Type) (h0:heap2) -> wys2_encoding a b req ens p h0)
+                   (fun (p:rel a b -> heap2 -> Type) (h0:heap2) -> wys2_encoding a b req ens p h0)
+
+assume val compose_wys2: #a:Type -> #b:Type
+                         -> #req0:(mode -> Type) ->#req1:(mode -> Type)
+                         -> #ens0:(mode -> a -> trace -> Type) -> #ens1:(mode -> b -> trace -> Type)
+                         -> =f0:(unit -> Wys a req0 ens0)
+                         -> =f1:(unit -> Wys b req1 ens1)
+                         -> Wys2 a b (fun m0     -> req0 (R.l m0) /\ req1 (R.r m0))
+                                     (fun m0 r t -> ens0 (R.l m0) (R.l r) (R.l t) /\
+                                                    ens1 (R.r m0) (R.r r) (R.r t))
 
 (**********)
 type Box: Type -> prins -> Type
