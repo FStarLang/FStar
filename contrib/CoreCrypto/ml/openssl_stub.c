@@ -417,7 +417,7 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_set_additional_data(value mlctx, value data)
     output = caml_alloc_string(olen);
 
     if (EVP_CipherUpdate(ctx, NULL, &olen, (uint8_t*) String_val(data), olen) == 0) {
-        caml_failwith("encryption/decryption failed");
+        caml_failwith("failed to set additional data");
         CAMLreturn(Val_unit);
     }
 
@@ -507,7 +507,7 @@ static int RSAPadding_val(value mlvalue) {
     switch (Int_val(mlvalue)) {
     case PD_NONE : return RSA_NO_PADDING;
     case PD_PKCS1: return RSA_PKCS1_PADDING;
-    }    
+    }
 
     abort();
 }
@@ -575,11 +575,18 @@ CAMLprim value ocaml_rsa_fini(value mlrsa) {
 /* -------------------------------------------------------------------- */
 CAMLprim value ocaml_rsa_gen_key(value mlsz, value mlexp) {
     RSA *rsa = NULL;
+    BIGNUM *bn_mlexp = NULL;
 
     CAMLparam2(mlsz, mlexp);
     CAMLlocal4(e, n, d, mlkey);
 
-    if ((rsa = RSA_generate_key(mlsz, mlexp, NULL, NULL)) == NULL) {
+    if ((bn_mlexp = BN_new()) == NULL) {
+      caml_failwith("RSA:genkey failed");
+      CAMLreturn(Val_unit);
+    }
+
+    BN_set_word(bn_mlexp, mlexp);
+    if (RSA_generate_key_ex(rsa, mlsz, bn_mlexp, NULL) != 1) {
         caml_failwith("RSA:genkey failed");
         CAMLreturn(Val_unit);
     }
@@ -597,6 +604,7 @@ CAMLprim value ocaml_rsa_gen_key(value mlsz, value mlexp) {
     RSAKey_set_pub_exp(mlkey, e);
     RSAKey_set_prv_exp(mlkey, Val_some(d));
 
+    BN_free(bn_mlexp);
     RSA_free(rsa);
 
     CAMLreturn(mlkey);
@@ -932,9 +940,7 @@ CAMLprim value ocaml_dsa_gen_params(value size) {
     CAMLparam1(size);
     CAMLlocal4(p, q, g, mlparams);
 
-    dsa = DSA_generate_parameters(Int_val(size), NULL, 0, NULL, NULL, NULL, NULL);
-
-    if (dsa == NULL) {
+    if (DSA_generate_parameters_ex(dsa, Int_val(size), NULL, 0, NULL, NULL, NULL) != 1) {
         caml_failwith("DSA:genparams failed");
         CAMLreturn(Val_unit);
     }
@@ -1015,7 +1021,7 @@ CAMLprim value ocaml_dsa_set_key(value mldsa, value mlkey) {
     BIGNUM *g = NULL;
     BIGNUM *pub = NULL;
     BIGNUM *prv = NULL;
-    
+
     CAMLparam2(mldsa, mlkey);
     CAMLlocal5(mlp, mlq, mlg, mlpub, mlprv);
 
@@ -1099,7 +1105,7 @@ CAMLprim value ocaml_dsa_sign(value mldsa, value data) {
 
     output = caml_alloc_string(DSA_size(dsa));
     olen = caml_string_length(output);
-    
+
     if (DSA_sign(0,             /* ignored */
                  (uint8_t*) String_val(data),
                  caml_string_length(data),
@@ -1245,9 +1251,7 @@ CAMLprim value ocaml_dh_gen_params(value size, value gen) {
     CAMLparam1(size);
     CAMLlocal3(p, g, mlparams);
 
-    dh = DH_generate_parameters(Int_val(size), Int_val(gen), NULL, NULL);
-
-    if (dh == NULL) {
+    if (DH_generate_parameters_ex(dh, Int_val(size), Int_val(gen), NULL) != 1) {
         caml_failwith("DH:genparams failed");
         CAMLreturn(Val_unit);
     }
@@ -1362,7 +1366,7 @@ CAMLprim value ocaml_dh_set_key(value mldh, value mlkey) {
     BIGNUM *g = NULL;
     BIGNUM *pub = NULL;
     BIGNUM *prv = NULL;
-    
+
     CAMLparam2(mldh, mlkey);
     CAMLlocal4(mlp, mlg, mlpub, mlprv);
 
