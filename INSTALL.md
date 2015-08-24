@@ -8,12 +8,12 @@ the [online F\* editor] that's part of the [F\* tutorial].
 
 ## Binary releases ##
 
-Every now and then we release F\* binaries on GitHub:
-- https://github.com/FStarLang/FStar/releases
-
-This is the easiest way to get F\* running quickly on your machine,
+Every now and then we release [F\* binaries on GitHub].
+This is the easiest way to get F\* quickly running on your machine,
 but if the release you use is old you might be missing out on new
 features and bug fixes.
+
+[F\* binaries on GitHub]: https://github.com/FStarLang/FStar/releases
 
 ## Building F* from sources ##
 
@@ -36,7 +36,7 @@ special flag. Therefore, the standard build process of F* is as follows:
 dependency you can stop already after step 1.
 
 **Alternative:**  If you don't want to use F#/.NET/Mono at all you can
-also build F\* directly from the OCaml sources.  Therefore, for
+also build F\* directly from the generated OCaml sources.  Therefore, for
 convenience, we keep a (possibly outdated) snapshot of the F\* sources
 extracted to OCaml (the result of step 2) in the repo.  This allows
 you to skip directly to step 3 and build F* with just an OCaml compiler.
@@ -51,15 +51,15 @@ you to skip directly to step 3 and build F* with just an OCaml compiler.
 
   - Prerequisite: .NET framework 4.5
 
-  - Prerequisite: [Visual Studio 2013 or 2015 and Visual F# Tools (v3.0 or later)](http://fsharp.org/use/windows/)
+  - Prerequisite: [Visual Studio 2013 or 2015 and Visual F# Tools (v3.0 or 3.1)](http://fsharp.org/use/windows/)
     - for instance install the **free**
       [Visual Studio Community](https://www.visualstudio.com/en-us/products/visual-studio-community-vs.aspx)
-    - Install the Visual F# Tools from Microsoft
+    - Install the Visual F# Tools (v3.0 or 3.1) from Microsoft
       (e.g. by clicking the "Get Visual F# Tools for Visual Studio 2013"
        link [here](https://msdn.microsoft.com/en-us/vstudio/hh388569.aspx))
 
-  - Using Visual Studio, open `FStar/VS/FStar.sln` and build solution (in
-      the menus: Build > Build Solution).
+  - Using Visual Studio, open `FStar/VS/FStar.sln` and build the solution
+    (in the menus: Build > Build Solution).
 
   - Get a Z3 4.3.2 binary and add it to your PATH
     - 64 bits: https://z3.codeplex.com/releases/view/135729
@@ -198,7 +198,7 @@ special `flexlink` technology for this. See `contrib/CoreCrypto/ml` and
         $ make parser
         $ make
 
-### Creating binary packages for your platform ###
+## Creating binary packages for your platform ##
 
 (no cross-platform compilation supported at the moment)
 
