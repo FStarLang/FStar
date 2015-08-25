@@ -8,4 +8,5 @@
 *.mli       eol=crlf
 *.mll       eol=crlf 
 *.fsproj    eol=crlf 
-*.sln       eol=crlf 
+*.sln       eol=crlf
+Makefile.*  eol=crlf 
