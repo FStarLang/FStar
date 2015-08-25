@@ -60,8 +60,12 @@ parser:
 	ocamllex ../lex.mll -o Microsoft_FStar_Parser_LexFStar.ml
 	cp ../parseit.ml Microsoft_FStar_Parser_ParseIt.ml
 	$(OCAMLDEP) $(INCLUDES) *.ml > .depend
+ifeq (, $(shell which dos2unix))
 	dos2unix parse.mly
+endif
+ifeq (, $(shell which unix2dos))
 	unix2dos $(PARSER_MLS)
+endif
 
 support.ml: ../support/ocaml/fstar-lib/src/support.ml
 	cp $^ $@
