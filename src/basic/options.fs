@@ -20,6 +20,7 @@ module FStar.Options
 open FStar
 open FStar.Util
 open FStar.Getopt
+open FStar.Version
 
 type debug_level_t =
     | Low
@@ -166,6 +167,10 @@ let prependOutputDir fname = match !outputDir with
 
 let cache_dir = "cache"
 
+let display_version () =
+  Util.print_string (Util.format4 "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\n"
+                                  version platform compiler date)
+
 let display_usage specs =
   Util.print_string "fstar [option] infile...";
   List.iter
@@ -229,6 +234,7 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "fsi", ZeroArgs (fun () -> set_interactive_fsi ()), "fsi flag; A flag to indicate if type checking a fsi in the interactive mode");
      ( noshort, "print_fuels", ZeroArgs (fun () -> print_fuels := true), "Print the fuel amounts used for each successful query");
      ( noshort, "__temp_no_proj", ZeroArgs (fun () -> __temp_no_proj := true), "A temporary flag to disable code generation for projectors");
+     ( 'v', "version", ZeroArgs (fun _ -> display_version(); exit 0), "Display version number");
     ] in
      ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs
 and parse_codegen s =

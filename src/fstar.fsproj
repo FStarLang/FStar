@@ -25,8 +25,8 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartWorkingDirectory>C:\Users\nswamy\workspace\FStar\src</StartWorkingDirectory>
-    <StartArguments>--eager_inference --MLish --lax --fs_typ_app --trace_error --odir ocaml-output --codegen OCaml-experimental --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform --admit_fsi Microsoft.FStar.Parser.ParseIt ../lib/system.fst ../lib/stboot.fst ../lib/list.fst ../lib/option.fst ../lib/string.fst ../lib/char.fst basic/bytes.fst basic/platform.fsi basic/util.fsi basic/getoptsimple.fst basic/options.fs basic/range.fst basic/unionfind.fst absyn/syntax.fsi absyn/syntax.fs absyn/const.fs</StartArguments>
+    <StartWorkingDirectory>C:\Users\hritcu\Desktop\FStar\</StartWorkingDirectory>
+    <StartArguments>--version</StartArguments>
     <StartAction>Project</StartAction>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">

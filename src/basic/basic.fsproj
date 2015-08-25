@@ -68,6 +68,8 @@
     <Compile Include="range.fs" />
     <Compile Include="getoptsimple.fsi" />
     <Compile Include="getoptsimple.fs" />
+    <Compile Include="version.fsi" />
+    <Compile Include="version.fs" />
     <Compile Include="options.fs" />
     <Compile Include="unionfind.fsi" />
     <Compile Include="unionfind.fs" />
