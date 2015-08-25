@@ -20,9 +20,9 @@ PARSER_MLS=Microsoft_FStar_Parser_LexFStar.ml Microsoft_FStar_Parser_Parse.ml Mi
 
 all: fstar.exe
 
-# the `export` function takes a path relative to the top of the F* repo
+# the `fexport` function takes a path relative to the top of the F* repo
 # and exports the contents of that directory to the `fstar` dir
-export = cd ../.. && git archive "--format=tar" "--prefix=$(1)/" HEAD:$(1)/ | tar -x -C src/ocaml-output/fstar
+fexport = cd ../.. && git archive "--format=tar" "--prefix=$(1)/" HEAD:$(1)/ | tar -x -C src/ocaml-output/fstar
 
 package: parser fstar.exe
 	rm -f $(NAME).zip $(NAME).tar.gz
@@ -32,10 +32,10 @@ package: parser fstar.exe
 	mkdir fstar/bin
 	cp fstar.exe fstar/bin/fstar.exe
 	@cp ../../bin/*z3* fstar/bin > /dev/null || cp `which z3` fstar/bin > /dev/null || echo " ********** WARNING: you don't have Z3 in \\$FSTAR_HOME/bin or in your \\$PATH, skipped from package ************** "
-	$(call export,lib)
-	$(call export,examples)
-	$(call export,contrib)
-	$(call export,doc/tutorial)
+	$(call fexport,lib)
+	$(call fexport,examples)
+	$(call fexport,contrib)
+	$(call fexport,doc/tutorial)
 	cd fstar/doc/tutorial; make
 ifeq ($(OS),Windows_NT)
 	zip -r -9 $(NAME).zip fstar
