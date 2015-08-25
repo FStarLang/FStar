@@ -1,7 +1,7 @@
 # -*- Makefile -*-
 
 # --------------------------------------------------------------------
-BASIC=prims-fake.fs profiling.fs char.fsi char.fs string.fsi string.fs list.fsi list.fs util.fsi util.fs bytes.fsi bytes.fs range.fsi range.fs getoptsimple.fsi getoptsimple.fs platform.fsi platform.fs options.fs unionfind.fsi unionfind.fs
+BASIC=prims-fake.fs profiling.fs char.fsi char.fs string.fsi string.fs list.fsi list.fs util.fsi util.fs bytes.fsi bytes.fs range.fsi range.fs getoptsimple.fsi getoptsimple.fs platform.fsi platform.fs version.fsi version.fs options.fs unionfind.fsi unionfind.fs
 BASIC_SRC=$(addprefix basic/, $(BASIC))
 
 ABSYN=syntax.fs const.fs visit.fs util.fs print.fs ssyntax.fs
@@ -162,7 +162,7 @@ STDFILES=system.fsi system.io.fsi system.text.fsi system.diagnostics.fsi system.
 STDLIB=$(addprefix ../lib/, $(STDFILES))
 STDLIBEXP=$(addprefix ../lib/, $(STDFILES))
 
-BOOT_BASICFILES=char.fsi string.fsi bytes.fsti platform.fsi util.fsi getoptsimple.fsti range.fsti unionfind.fsti options.fs
+BOOT_BASICFILES=char.fsi string.fsi bytes.fsti platform.fsi util.fsi getoptsimple.fsti range.fsti unionfind.fsti version.fsi options.fs
 BOOT_BASIC=$(addprefix basic/, $(BOOT_BASICFILES))
 BOOT_SYNTAXFILES=syntax.fsi syntax.fs const.fs visit.fs util.fs print.fs ssyntax.fs
 BOOT_SYNTAX=$(addprefix absyn/, $(BOOT_SYNTAXFILES))
@@ -178,7 +178,7 @@ BOOT_EXTRACTION=$(addprefix extraction/, $(BOOT_EXTRACTIONFILES))
 BOOT_MAIN=fstar.fs
 BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_TC) $(BOOT_PARSER) $(TOSMT_SRC) $(BOOT_FORMAT) $(BOOT_EXTRACTION) fstar.fs
 
-ADMITTED_MODULES=System System.IO System.Text System.Diagnostics System.Collections.Generic Collections FStar.Set FStar.Heap FStar.ST FStar.All FStar.List FStar.Option FStar.Char FStar.String FStar.List FStar.Bytes FStar.Platform FStar.Util FStar.Getopt FStar.Range FStar.Unionfind FStar.Parser.ParseIt FStar.Parser.Parse 
+ADMITTED_MODULES=System System.IO System.Text System.Diagnostics System.Collections.Generic Collections FStar.Set FStar.Heap FStar.ST FStar.All FStar.List FStar.Option FStar.Char FStar.String FStar.List FStar.Bytes FStar.Platform FStar.Util FStar.Version FStar.Getopt FStar.Range FStar.Unionfind FStar.Parser.ParseIt FStar.Parser.Parse 
 ADMITS=$(addprefix --admit_fsi , $(ADMITTED_MODULES))
 
 boot: $(BOOT_ALL)
