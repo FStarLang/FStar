@@ -15,7 +15,7 @@ type Writer = Util.oWriter
 type Reader = Util.oReader
 
 let serialize_option (writer:Writer) (f:Writer -> 'a -> unit) (l:option<'a>) :unit =
-    match l with 
+    match l with
         | None -> writer.write_char 'n'
         | Some l -> writer.write_char 's'; f writer l
 
@@ -36,7 +36,7 @@ let deserialize_list (reader: Reader) (f:Reader -> 'a) :list<'a> =
             helper ((f reader)::accum) (n - 1)
     in
     helper [] n
-    
+
 let serialize_ident (writer: Writer) (ast:ident) :unit = writer.write_string ast.idText
 let deserialize_ident (reader: Reader) :ident = mk_ident (reader.read_string (), dummyRange)
 
@@ -69,7 +69,7 @@ let serialize_bvdef (writer:Writer) (ast:bvdef<'a>) :unit =
     serialize_ident writer ast.ppname;
     serialize_ident writer ast.realname
 
-(* 
+(*
  * the ghost param below is to bind 'a in the return type
  * is there another way to bind type parameters that works for F* and F#
  *)
@@ -130,7 +130,7 @@ let deserialize_syntax (reader:Reader) (ds_a:Reader -> 'a) (ds_b:'b) :syntax<'a,
       fvs = Util.mk_ref None;
       uvs = Util.mk_ref None}
 
-let rec serialize_typ' (writer:Writer) (ast:typ') :unit = 
+let rec serialize_typ' (writer:Writer) (ast:typ') :unit =
     match ast with
     | Typ_btvar(v) -> writer.write_char 'a'; serialize_btvar writer v
     | Typ_const(v) -> writer.write_char 'b'; serialize_ftvar writer v
@@ -150,7 +150,7 @@ let rec serialize_typ' (writer:Writer) (ast:typ') :unit =
     | Typ_uvar(_, _) -> raise (Err "typ not impl:1")
     | Typ_delayed(_, _) -> raise (Err "typ not impl:2")
 
-and serialize_meta_t (writer:Writer) (ast:meta_t) :unit = 
+and serialize_meta_t (writer:Writer) (ast:meta_t) :unit =
     match ast with
     | Meta_pattern(t, l) -> writer.write_char 'a'; serialize_typ writer t; serialize_list writer serialize_arg l
     | Meta_named(t, lid) -> writer.write_char 'b'; serialize_typ writer t; serialize_lident writer lid
@@ -173,14 +173,14 @@ and serialize_comp_typ (writer:Writer) (ast:comp_typ) :unit =
     serialize_args writer ast.effect_args;
     serialize_list writer serialize_cflags ast.flags
 
-and serialize_comp' (writer:Writer) (ast:comp') :unit = 
+and serialize_comp' (writer:Writer) (ast:comp') :unit =
     match ast with
     | Total(t) -> writer.write_char 'a'; serialize_typ writer t
     | Comp(c) -> writer.write_char 'b'; serialize_comp_typ writer c
 
 and serialize_comp (writer:Writer) (ast:comp) :unit = serialize_syntax writer serialize_comp' ast
 
-and serialize_cflags (writer:Writer) (ast:cflags) :unit = 
+and serialize_cflags (writer:Writer) (ast:cflags) :unit =
     match ast with
     | TOTAL -> writer.write_char 'a'
     | MLEFFECT -> writer.write_char 'b'
@@ -190,15 +190,15 @@ and serialize_cflags (writer:Writer) (ast:cflags) :unit =
     | LEMMA -> writer.write_char 'f'
     | DECREASES e -> writer.write_char 'g'; serialize_exp writer e
 
-and serialize_exp' (writer:Writer) (ast:exp') :unit = 
+and serialize_exp' (writer:Writer) (ast:exp') :unit =
     match ast with
     | Exp_bvar(v) -> writer.write_char 'a'; serialize_bvvar writer v
     | Exp_fvar(v, b) -> writer.write_char 'b'; serialize_fvvar writer v; writer.write_bool false//NS: FIXME!
     | Exp_constant(c) -> writer.write_char 'c'; serialize_sconst writer c
     | Exp_abs(bs, e) -> writer.write_char 'd'; serialize_binders writer bs; serialize_exp writer e
     | Exp_app(e, ars) -> writer.write_char 'e'; serialize_exp writer e; serialize_args writer ars
-    | Exp_match(e, l) -> 
-        let g (writer:Writer) eopt = 
+    | Exp_match(e, l) ->
+        let g (writer:Writer) eopt =
             match eopt with
             | Some(e1) -> writer.write_char 'a'; serialize_exp writer e1
             | None -> writer.write_char 'b'
@@ -210,12 +210,12 @@ and serialize_exp' (writer:Writer) (ast:exp') :unit =
     | Exp_meta(m) -> writer.write_char 'i'; serialize_meta_e writer m
     | _ -> raise (Err "unimplemented exp'")
 
-and serialize_meta_e (writer:Writer) (ast:meta_e) :unit = 
+and serialize_meta_e (writer:Writer) (ast:meta_e) :unit =
     match ast with
     | Meta_desugared(e, s) -> writer.write_char 'a'; serialize_exp writer  e; serialize_meta_source_info writer s
-    
-   
-and serialize_meta_source_info (writer:Writer) (ast:meta_source_info) :unit = 
+
+
+and serialize_meta_source_info (writer:Writer) (ast:meta_source_info) :unit =
     match ast with
     | Data_app -> writer.write_char 'a'
     | Sequence -> writer.write_char 'b'
@@ -228,7 +228,7 @@ and serialize_btvdef (writer:Writer) (ast:btvdef) :unit = serialize_bvdef writer
 
 and serialize_bvvdef (writer:Writer) (ast:bvvdef) :unit = serialize_bvdef writer ast
 
-and serialize_pat' (writer:Writer) (ast:pat') :unit = 
+and serialize_pat' (writer:Writer) (ast:pat') :unit =
     match ast with
     | Pat_disj(l) -> writer.write_char 'a'; serialize_list writer serialize_pat l
     | Pat_constant(c) -> writer.write_char 'b'; serialize_sconst writer c
@@ -240,10 +240,10 @@ and serialize_pat' (writer:Writer) (ast:pat') :unit =
     | Pat_dot_term(v, e) -> writer.write_char 'h'; serialize_bvvar writer v; serialize_exp writer e
     | Pat_dot_typ(v, t) -> writer.write_char 'i'; serialize_btvar writer v; serialize_typ writer t
 
-and serialize_pat (writer:Writer) (ast:pat) :unit = 
+and serialize_pat (writer:Writer) (ast:pat) :unit =
     serialize_withinfo_t writer serialize_pat' (fun w kt -> () (* serialize_either w serialize_knd serialize_typ kt*)) ast
 
-and serialize_knd' (writer:Writer) (ast:knd') :unit = 
+and serialize_knd' (writer:Writer) (ast:knd') :unit =
     match ast with
     | Kind_type -> writer.write_char 'a'
     | Kind_effect -> writer.write_char 'b'
@@ -260,7 +260,7 @@ and serialize_kabbrev (writer:Writer) (ast:kabbrev) :unit = serialize_lident wri
 
 and serialize_lbname (writer:Writer) (ast:lbname) :unit = serialize_either writer serialize_bvvdef serialize_lident ast
 
-and serialize_letbindings (writer:Writer) (ast:letbindings) :unit = 
+and serialize_letbindings (writer:Writer) (ast:letbindings) :unit =
     let f writer lb = serialize_lbname writer lb.lbname; serialize_lident writer lb.lbeff; serialize_typ writer lb.lbtyp; serialize_exp writer lb.lbdef in
     writer.write_bool (fst ast); serialize_list writer f (snd ast)
 
@@ -274,7 +274,7 @@ and serialize_ftvar (writer:Writer) (ast:ftvar) :unit = serialize_var writer ser
 
 and serialize_fvvar (writer:Writer) (ast:fvvar) :unit = serialize_var writer serialize_typ ast
 
-let rec deserialize_typ' (reader:Reader) :typ' = 
+let rec deserialize_typ' (reader:Reader) :typ' =
     match (reader.read_char ()) with
     | 'a' -> Typ_btvar(deserialize_btvar reader)
     | 'b' -> Typ_const(deserialize_ftvar reader)
@@ -287,7 +287,7 @@ let rec deserialize_typ' (reader:Reader) :typ' =
     | 'i' -> Typ_unknown //TODO: fail on Typ_unknown
     |  _  -> parse_error()
 
-and deserialize_meta_t (reader:Reader) :meta_t = 
+and deserialize_meta_t (reader:Reader) :meta_t =
     match (reader.read_char ()) with
     | 'a' -> Meta_pattern(deserialize_typ reader, deserialize_list reader deserialize_arg)
     | 'b' -> Meta_named(deserialize_typ reader, deserialize_lident reader)
@@ -298,20 +298,20 @@ and deserialize_arg (reader:Reader) :arg = (deserialize_either reader deserializ
 
 and deserialize_args (reader:Reader) :args = deserialize_list reader deserialize_arg
 
-and deserialize_binder (reader:Reader) :binder = 
+and deserialize_binder (reader:Reader) :binder =
     (deserialize_either reader deserialize_btvar deserialize_bvvar, as_implicit <| reader.read_bool ())//TODO: Generalize
 
 and deserialize_binders (reader:Reader) :binders = deserialize_list reader deserialize_binder
 
 and deserialize_typ (reader:Reader) :typ = deserialize_syntax reader deserialize_typ' mk_Kind_unknown
 
-and deserialize_comp_typ (reader:Reader) :comp_typ = 
+and deserialize_comp_typ (reader:Reader) :comp_typ =
     { effect_name = deserialize_lident reader;
       result_typ = deserialize_typ reader;
       effect_args = deserialize_args reader;
       flags = deserialize_list reader deserialize_cflags }
 
-and deserialize_comp' (reader:Reader) :comp' = 
+and deserialize_comp' (reader:Reader) :comp' =
     match (reader.read_char ()) with
     | 'a' -> Total(deserialize_typ reader)
     | 'b' -> Comp(deserialize_comp_typ reader)
@@ -319,7 +319,7 @@ and deserialize_comp' (reader:Reader) :comp' =
 
 and deserialize_comp (reader:Reader) :comp = deserialize_syntax reader deserialize_comp' ()
 
-and deserialize_cflags (reader:Reader) :cflags = 
+and deserialize_cflags (reader:Reader) :cflags =
     match (reader.read_char ()) with
     | 'a' -> TOTAL
     | 'b' -> MLEFFECT
@@ -330,7 +330,7 @@ and deserialize_cflags (reader:Reader) :cflags =
     | 'g' -> DECREASES(deserialize_exp reader)
     |  _  -> parse_error()
 
-and deserialize_exp' (reader:Reader) :exp' = 
+and deserialize_exp' (reader:Reader) :exp' =
     match (reader.read_char ()) with
     | 'a' -> Exp_bvar(deserialize_bvvar reader)
     | 'b' -> Exp_fvar(deserialize_fvvar reader, (ignore <| reader.read_bool (); None)) //FIXME
@@ -343,7 +343,7 @@ and deserialize_exp' (reader:Reader) :exp' =
             | 'a' -> Some(deserialize_exp reader)
             | 'b' -> None
             |  _  -> parse_error() in
-        
+
         let f reader = (deserialize_pat reader, g reader, deserialize_exp reader) in
         Exp_match(deserialize_exp reader, deserialize_list reader f)
     | 'g' -> Exp_ascribed(deserialize_exp reader, deserialize_typ reader, deserialize_option reader deserialize_lident)
@@ -355,7 +355,7 @@ and deserialize_meta_e (reader:Reader) :meta_e =
     match (reader.read_char ()) with
     | 'a' -> Meta_desugared(deserialize_exp reader, deserialize_meta_source_info reader)
     |  _  -> parse_error()
-  
+
 and deserialize_meta_source_info (reader:Reader) :meta_source_info =
     match (reader.read_char ()) with
     | 'a' -> Data_app
@@ -370,7 +370,7 @@ and deserialize_btvdef (reader:Reader) :btvdef = deserialize_bvdef None reader
 
 and deserialize_bvvdef (reader:Reader) :bvvdef = deserialize_bvdef None reader
 
-and deserialize_pat' (reader:Reader) :pat' = 
+and deserialize_pat' (reader:Reader) :pat' =
     match (reader.read_char ()) with
     | 'a' -> Pat_disj(deserialize_list reader deserialize_pat)
     | 'b' -> Pat_constant(deserialize_sconst reader)
@@ -383,10 +383,10 @@ and deserialize_pat' (reader:Reader) :pat' =
     | 'i' -> Pat_dot_typ(deserialize_btvar reader, deserialize_typ reader)
     | _   -> parse_error ()
 
-and deserialize_pat (reader:Reader) :pat = 
+and deserialize_pat (reader:Reader) :pat =
     deserialize_withinfo_t reader deserialize_pat' (fun r -> None)// deserialize_either r deserialize_knd deserialize_typ)
 
-and deserialize_knd' (reader:Reader) :knd' = 
+and deserialize_knd' (reader:Reader) :knd' =
     match (reader.read_char ()) with
     | 'a' -> Kind_type
     | 'b' -> Kind_effect
@@ -402,7 +402,7 @@ and deserialize_kabbrev (reader:Reader) :kabbrev = (deserialize_lident reader, d
 
 and deserialize_lbname (reader:Reader) :lbname = deserialize_either reader deserialize_bvvdef deserialize_lident
 
-and deserialize_letbindings (reader:Reader) :letbindings = 
+and deserialize_letbindings (reader:Reader) :letbindings =
     let f reader = {lbname=deserialize_lbname reader;
                     lbeff=deserialize_lident reader;
                     lbtyp=deserialize_typ reader;
@@ -434,10 +434,10 @@ let serialize_qualifier (writer:Writer)(ast:qualifier) :unit =
     | RecordConstructor(l) -> writer.write_char 'l'; serialize_list writer serialize_lident l
     | ExceptionConstructor -> writer.write_char 'm'
     | HasMaskedEffect -> writer.write_char 'o'
-    | DefaultEffect l -> writer.write_char 'p'; serialize_option writer serialize_lident l 
+    | DefaultEffect l -> writer.write_char 'p'; serialize_option writer serialize_lident l
     | TotalEffect -> writer.write_char 'q'
     | _ -> failwith "Unexpected qualifier"
- 
+
 let deserialize_qualifier (reader:Reader) :qualifier =
     match reader.read_char () with
     | 'a' -> Private
@@ -457,12 +457,12 @@ let deserialize_qualifier (reader:Reader) :qualifier =
 let serialize_tycon (writer:Writer) ((lid, bs, k): tycon) :unit = serialize_lident writer lid; serialize_binders writer bs; serialize_knd writer k
 let deserialize_tycon (reader:Reader) :tycon = (deserialize_lident reader, deserialize_binders reader, deserialize_knd reader)
 
-let serialize_monad_abbrev (writer:Writer) (ast : monad_abbrev) :unit = 
+let serialize_monad_abbrev (writer:Writer) (ast : monad_abbrev) :unit =
     serialize_lident writer ast.mabbrev;
     serialize_binders writer ast.parms;
     serialize_typ writer ast.def
 
-let deserialize_monad_abbrev (reader:Reader) :monad_abbrev = 
+let deserialize_monad_abbrev (reader:Reader) :monad_abbrev =
     { mabbrev = deserialize_lident reader;
       parms = deserialize_binders reader;
       def = deserialize_typ reader }
@@ -472,7 +472,7 @@ let serialize_sub_effect (writer:Writer) (ast:sub_eff) :unit =
     serialize_lident writer ast.target;
     serialize_typ writer ast.lift
 
-let deserialize_sub_effect (reader:Reader) : sub_eff  = 
+let deserialize_sub_effect (reader:Reader) : sub_eff  =
     { source = deserialize_lident reader;
       target = deserialize_lident reader;
       lift = deserialize_typ reader }
@@ -511,7 +511,7 @@ and serialize_sigelt (writer:Writer) (ast:sigelt) :unit =
         serialize_typ writer t; serialize_list writer serialize_qualifier qs
     | Sig_datacon(lid1, t, tyc, qs, mutuals, _) ->
       let t' =
-        match Util.function_formals t with 
+        match Util.function_formals t with
         | Some (f, c) -> mk_Typ_fun (f, Syntax.mk_Total  (Util.comp_result c)) None dummyRange
         | None -> t
       in
@@ -519,19 +519,19 @@ and serialize_sigelt (writer:Writer) (ast:sigelt) :unit =
       serialize_lident writer lid1; serialize_typ writer t'; serialize_tycon writer tyc;
       serialize_list writer serialize_qualifier qs;
       serialize_list writer serialize_lident mutuals
-    | Sig_val_decl(lid, t, qs, _) -> 
+    | Sig_val_decl(lid, t, qs, _) ->
         writer.write_char 'd';
         serialize_lident writer lid; serialize_typ writer t; serialize_list writer serialize_qualifier qs
     | Sig_assume(lid, fml, qs, _) ->
         writer.write_char 'e';
         serialize_lident writer lid; serialize_formula writer fml; serialize_list writer serialize_qualifier qs
-    | Sig_let(lbs, _, l, quals) -> 
+    | Sig_let(lbs, _, l, quals) ->
         writer.write_char 'f';
         serialize_letbindings writer lbs; serialize_list writer serialize_lident l; writer.write_bool (quals |> Util.for_some (function HasMaskedEffect -> true | _ -> false)) //TODO: Generalize
     | Sig_main(e, _) -> writer.write_char 'g'; serialize_exp writer e
     | Sig_bundle(l, qs, lids, _) ->
         writer.write_char 'h';
-        serialize_list writer serialize_sigelt l; 
+        serialize_list writer serialize_sigelt l;
         serialize_list writer serialize_qualifier qs;
         serialize_list writer serialize_lident lids
     | Sig_new_effect (n, _) ->
@@ -539,19 +539,19 @@ and serialize_sigelt (writer:Writer) (ast:sigelt) :unit =
         serialize_new_effect writer n
     | Sig_effect_abbrev(lid, bs, c, qs, _) ->
         writer.write_char 'j';
-        serialize_lident writer lid; serialize_binders writer bs; 
+        serialize_lident writer lid; serialize_binders writer bs;
         serialize_comp writer c; serialize_list writer serialize_qualifier qs
-    | Sig_sub_effect(se, r) -> 
+    | Sig_sub_effect(se, r) ->
         writer.write_char 'k';
         serialize_sub_effect writer se
-    | Sig_kind_abbrev(l, binders, k, _) -> 
+    | Sig_kind_abbrev(l, binders, k, _) ->
         writer.write_char 'l';
         serialize_lident writer l;
         serialize_list writer serialize_binder binders;
         serialize_knd writer k
-    
+
 let rec deserialize_new_effect (reader:Reader) :eff_decl =
-    { 
+    {
       mname = deserialize_lident reader;
       binders= deserialize_list reader deserialize_binder;
       qualifiers = deserialize_list reader deserialize_qualifier;
@@ -571,24 +571,24 @@ let rec deserialize_new_effect (reader:Reader) :eff_decl =
       null_wp = deserialize_typ reader;
       trivial = deserialize_typ reader;
      }
-      
+
 and deserialize_sigelt (reader:Reader) :sigelt =
     match (reader.read_char ()) with
     | 'a' ->
         Sig_tycon
-            (deserialize_lident reader, deserialize_binders reader, deserialize_knd reader, deserialize_list reader deserialize_lident, 
+            (deserialize_lident reader, deserialize_binders reader, deserialize_knd reader, deserialize_list reader deserialize_lident,
              deserialize_list reader deserialize_lident, deserialize_list reader deserialize_qualifier, dummyRange)
     | 'b' ->
         Sig_typ_abbrev
             (deserialize_lident reader, deserialize_binders reader, deserialize_knd reader, deserialize_typ reader,
              deserialize_list reader deserialize_qualifier, dummyRange)
-    | 'c' -> 
+    | 'c' ->
         Sig_datacon
-            (deserialize_lident reader, deserialize_typ reader, deserialize_tycon reader, deserialize_list reader deserialize_qualifier, 
+            (deserialize_lident reader, deserialize_typ reader, deserialize_tycon reader, deserialize_list reader deserialize_qualifier,
             deserialize_list reader deserialize_lident, dummyRange)
-    | 'd' -> 
+    | 'd' ->
         Sig_val_decl(deserialize_lident reader, deserialize_typ reader, deserialize_list reader deserialize_qualifier, dummyRange)
-    | 'e' -> 
+    | 'e' ->
         Sig_assume(deserialize_lident reader, deserialize_formula reader, deserialize_list reader deserialize_qualifier, dummyRange)
     | 'f' -> Sig_let(deserialize_letbindings reader, dummyRange, deserialize_list reader deserialize_lident, (if reader.read_bool () then [HasMaskedEffect] else [])) //TODO: Generalize
     | 'g' -> Sig_main(deserialize_exp reader, dummyRange)
@@ -600,7 +600,7 @@ and deserialize_sigelt (reader:Reader) :sigelt =
     |  _  -> parse_error()
 
 let serialize_sigelts (writer:Writer) (ast:sigelts) :unit = serialize_list writer serialize_sigelt ast
-let deserialize_sigelts (reader:Reader) :sigelts = deserialize_list reader deserialize_sigelt 
+let deserialize_sigelts (reader:Reader) :sigelts = deserialize_list reader deserialize_sigelt
 
 let serialize_modul (writer:Writer) (ast:modul) :unit =
     serialize_lident writer ast.name;

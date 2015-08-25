@@ -17,7 +17,7 @@
 
 module FStar.Tc.Env
 
-open FStar 
+open FStar
 open FStar.Absyn.Syntax
 
 
@@ -27,7 +27,7 @@ type binding =
   | Binding_lid of lident * typ
   | Binding_sig of sigelt
 
-type level = 
+type level =
   | Expr
   | Type
   | Kind
@@ -62,8 +62,8 @@ type env = {
   top_level:bool;                (* is this a top-level term? if so, then discharge guards *)
   check_uvars:bool;              (* paranoid: re-typecheck unification variables *)
   use_eq:bool;                   (* generate an equality constraint, rather than subtyping/subkinding *)
-  is_iface:bool;                 (* is the module we're currently checking an interface? *)  
-  admit:bool;                    (* admit VCs in the current module *) 
+  is_iface:bool;                 (* is the module we're currently checking an interface? *)
+  admit:bool;                    (* admit VCs in the current module *)
   default_effects:list<(lident*lident)>;
 }
 and solver_t = {
@@ -93,14 +93,14 @@ val finish_module : env -> modul -> env
 val set_level : env -> level -> env
 val is_level : env -> level -> bool
 val modules : env -> list<modul>
-val current_module : env -> lident 
+val current_module : env -> lident
 val set_current_module : env -> lident -> env
 val set_range : env -> Range.range -> env
 val get_range : env -> Range.range
 
 val default_effect : env -> lident -> option<lident>
 val lookup_bvar : env -> bvvar -> typ
-val lookup_lid : env -> lident -> typ      
+val lookup_lid : env -> lident -> typ
 val lookup_kind_abbrev: env -> lident -> (lident * binders * knd)
 val try_lookup_val_decl : env -> lident -> option<(typ * list<qualifier>)>
 val lookup_val_decl : env -> lident -> typ
@@ -128,12 +128,12 @@ val set_expected_typ : env -> typ -> env
 val expected_typ : env -> option<typ>
 val clear_expected_typ : env -> env*option<typ>
 
-val fold_env : env -> ('a -> binding -> 'a) -> 'a -> 'a 
+val fold_env : env -> ('a -> binding -> 'a) -> 'a -> 'a
 val binding_of_binder: binder -> binding
 val idents : env -> freevars
 val binders: env -> binders
 val t_binders : env -> FStar.Absyn.Syntax.binders
-val lidents : env -> list<lident>     
+val lidents : env -> list<lident>
 
 (* operations on monads *)
 val join: env -> lident -> lident -> lident * mlift * mlift

@@ -461,7 +461,7 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
           loc, env, pat::pats) pats (loc, env, []) in
         let pat = List.fold_right (fun hd tl ->
             let r = Range.union_ranges hd.p tl.p in
-            pos_r r <| Pat_cons(Util.fv Const.cons_lid, Some Data_ctor, [(hd, false);(tl, false)])) pats 
+            pos_r r <| Pat_cons(Util.fv Const.cons_lid, Some Data_ctor, [(hd, false);(tl, false)])) pats
                         (pos_r (Range.end_range p.prange) <| Pat_cons(Util.fv Const.nil_lid, Some Data_ctor, [])) in
         let x = new_bvd (Some p.prange) in
         loc, env, VBinder(x, tun, None), pat, false
@@ -494,7 +494,7 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
             | Some (_, p) -> p) in
         let app = mk_pattern (PatApp(mk_pattern (PatName record.constrname) p.prange, args)) p.prange in
         let env, e, b, p, _ = aux loc env app in
-        let p = match p.v with 
+        let p = match p.v with
             | Pat_cons(fv, _, args) -> pos <| Pat_cons(fv, Some (Record_ctor (record.typename, record.fields |> List.map fst)), args)
             | _ -> p in
         env, e, b, p, false in
@@ -761,9 +761,9 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
           Let(false, [(mk_pattern (PatVar (x, false)) x.idRange, e)], mk_term record top.range top.level) in
 
       let recterm = mk_term recterm top.range top.level in
-      let e = desugar_exp env recterm in 
-      begin match e.n with 
-        | Exp_meta(Meta_desugared({n=Exp_app({n=Exp_fvar(fv, _)}, args)}, Data_app)) -> 
+      let e = desugar_exp env recterm in
+      begin match e.n with
+        | Exp_meta(Meta_desugared({n=Exp_app({n=Exp_fvar(fv, _)}, args)}, Data_app)) ->
           let e = pos <| mk_Exp_app(mk_Exp_fvar(fv, Some (Record_ctor(record.typename, record.fields |> List.map fst))) None e.pos,
                                     args)  in
           mk_Exp_meta(Meta_desugared(e, Data_app))
@@ -773,11 +773,11 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
 
     | Project(e, f) ->
       let _, fieldname = fail_or env  (try_lookup_record_by_field_name env) f in
-      let e = desugar_exp env e in 
+      let e = desugar_exp env e in
       let fn =
         let ns, _ = Util.prefix fieldname.ns in
         lid_of_ids (ns@[f.ident]) in
-      pos <| mk_Exp_app(Util.fvar (Some (Record_projector fn)) fieldname (range_of_lid f), [varg e]) 
+      pos <| mk_Exp_app(Util.fvar (Some (Record_projector fn)) fieldname (range_of_lid f), [varg e])
 
     | Paren e ->
       desugar_exp env e
@@ -952,12 +952,12 @@ and desugar_comp r default_ok env t =
               let t = mk_term (Construct(lemma, args@decreases_clause)) t.range t.level in
               desugar_typ env t
 
-            | Name tot when (tot.ident.idText = "Tot" 
-                             && not (DesugarEnv.is_effect_name env Const.effect_Tot_lid)  
+            | Name tot when (tot.ident.idText = "Tot"
+                             && not (DesugarEnv.is_effect_name env Const.effect_Tot_lid)
                              && lid_equals (DesugarEnv.current_module env) Const.prims_lid) ->
-              //we're right at the beginning of Prims, when Tot isn't yet fully defined 
+              //we're right at the beginning of Prims, when Tot isn't yet fully defined
               let args = List.map (fun (t, imp) -> arg_withimp_t imp <| desugar_typ_or_exp env t) args in
-              mk_typ_app (Util.ftv Const.effect_Tot_lid kun) args 
+              mk_typ_app (Util.ftv Const.effect_Tot_lid kun) args
 
             | _ -> desugar_typ env t
         in
@@ -980,7 +980,7 @@ and desugar_comp r default_ok env t =
                         | _ -> failwith "impos"
                     end
                 | _ -> failwith "impos") in
-          if DesugarEnv.is_effect_name env eff.v 
+          if DesugarEnv.is_effect_name env eff.v
           || lid_equals eff.v Const.effect_Tot_lid  //We need the Tot effect before its definition is in scope; it is primitive
           then if lid_equals eff.v Const.effect_Tot_lid && List.length decreases_clause=0
                then mk_Total result_typ
@@ -1233,19 +1233,19 @@ let mk_indexed_projectors fvq refine_domain env (tc, tps, k) lid (formals:list<b
             let t = mk_Typ_fun(binders, Util.total_comp (Util.subst_typ subst x.sort) p) None p in
             let quals q = if not env.iface || env.admitted_iface then Assumption::q else q in
             let quals = quals [Logic; Projector(lid, Inr x.v)] in
-            let impl = 
-                if lid_equals Const.prims_lid  (DesugarEnv.current_module env) 
+            let impl =
+                if lid_equals Const.prims_lid  (DesugarEnv.current_module env)
                 || fvq<>Data_ctor
                 || !Options.__temp_no_proj
                 then []
                 else let projection = Util.gen_bvar tun in
-                     let as_imp = function 
+                     let as_imp = function
                         | Some Implicit -> true
                         | _ -> false in
-                     let arg_pats = formals |> List.mapi (fun j by -> match by with 
-                        | Inl _, imp -> 
+                     let arg_pats = formals |> List.mapi (fun j by -> match by with
+                        | Inl _, imp ->
                           if j < ntps then [] else [pos (Pat_tvar (Util.gen_bvar kun)), as_imp imp]
-                        | Inr _, imp -> 
+                        | Inr _, imp ->
                             if i=j  //this is the one to project
                             then [pos (Pat_var projection), as_imp imp]
                             else [pos (Pat_wild (Util.gen_bvar tun)), as_imp imp]) |> List.flatten in
@@ -1413,7 +1413,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
       let env = push_sigelt env0 bundle in
       let data_ops = sigelts |> List.collect (mk_data_projectors env) in
       let discs = sigelts |> List.collect (function
-        | Sig_tycon(tname, tps, k, _, constrs, quals, _) -> 
+        | Sig_tycon(tname, tps, k, _, constrs, quals, _) ->
           mk_data_discriminators quals env tname tps k constrs
         | _ -> []) in
       let ops = discs@data_ops in
@@ -1600,10 +1600,10 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
         let env, se = desugar_decl env d in
         env, sigelts@se) (env, []) decls
 
-let open_prims_all = 
+let open_prims_all =
     [AST.mk_decl (AST.Open Const.prims_lid) dummyRange;
      AST.mk_decl (AST.Open Const.all_lid) dummyRange]
-     
+
 (* Most important function: from AST to a module
    Keeps track of the name of variables and so on (in the context)
  *)
@@ -1619,7 +1619,7 @@ let desugar_modul_common curmod env (m:AST.modul) : env_t * Syntax.modul =
   let env, mname, decls, intf = match m with
     | Interface(mname, decls, admitted) ->
       DesugarEnv.prepare_module_or_interface true admitted env mname, mname, open_ns mname decls, true
-    | Module(mname, decls) -> 
+    | Module(mname, decls) ->
       DesugarEnv.prepare_module_or_interface false false env mname, mname, open_ns mname decls, false in
   let env, sigelts = desugar_decls env decls in
   let modul = {

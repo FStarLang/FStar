@@ -24,5 +24,5 @@ val length:  string -> Tot<nat>
 
 (* may fail with index out of bounds *)
 val substring: string -> int -> int -> string
-val get: string -> int -> char 
+val get: string -> int -> char
 val collect: (char -> string) -> string -> string

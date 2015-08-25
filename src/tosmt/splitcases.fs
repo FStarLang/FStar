@@ -1,5 +1,5 @@
 ﻿#light "off"
- 
+
 module FStar.ToSMT.SplitQueryCases
 
 open FStar
@@ -30,7 +30,7 @@ let rec is_ite_all_the_way (n:int) (t:term) (negs:term) (l:list<term>) :bool * l
               if b then
                 is_ite_all_the_way n rest negs' ((mkImp (negs, t))::l)
               else
-                false, [], mkFalse 
+                false, [], mkFalse
 
 (* return: if can split, the query context, list of queries, neg of all guards *)
 let rec parse_query_for_split_cases (n:int) (t:term) (f:term -> term) :bool * ((term -> term) * list<term> * term) = match t.tm with
@@ -53,7 +53,7 @@ let rec parse_query_for_split_cases (n:int) (t:term) (f:term -> term) :bool * ((
 
     | App (ITE, _) ->
       let b, l, negs = is_ite_all_the_way n t mkTrue [] in
-      b, (f, l, negs) 
+      b, (f, l, negs)
 
     | _ -> false, ((fun _ -> mkFalse), [], mkFalse)
 

@@ -67,7 +67,7 @@ let outmod = [
     ["String"];
     ["Char"];
     ["Bytes"];
-    ["List"]; 
+    ["List"];
     ["Array"];
 //    ["Set"];
     ["Map"];
@@ -86,14 +86,14 @@ let outmod = [
     ["Microsoft"; "FStar"; "Parser"; "Util"];
 ]
 
-let rec in_ns (x: (list<'a> * list<'a>)) : bool = match x with 
+let rec in_ns (x: (list<'a> * list<'a>)) : bool = match x with
     | [], _ -> true
     | x1::t1, x2::t2 when (x1 = x2) -> in_ns (t1, t2)
     | _, _ -> false
 
 (* -------------------------------------------------------------------- *)
 let path_of_ns (currentModule : mlsymbol) ns =
-   let outsupport ns = 
+   let outsupport ns =
     let ns' = Util.flatten_ns ns in
     if ns' = currentModule then [] else [ns'] in
 
@@ -101,11 +101,11 @@ let path_of_ns (currentModule : mlsymbol) ns =
 
    let chkin sns = if in_ns (sns, ns) then Some sns else None
     in match List.tryPick chkin  outmod  with
-    | None -> 
+    | None ->
         (match List.tryPick chkin (!FStar.Options.codegen_libs) with
          | None -> outsupport ns
          | _ -> ns)
-    | Some sns ->  "Support" :: ns 
+    | Some sns ->  "Support" :: ns
 
 
 let mlpath_of_mlpath (currentModule : mlsymbol) (x : mlpath) : mlpath =
@@ -116,9 +116,9 @@ let mlpath_of_mlpath (currentModule : mlsymbol) (x : mlpath) : mlpath =
     | "ST.alloc" -> ([], "ref")
     | "ST.read" ->  (["Support";"ST"], "read")
     | "ST.op_ColonEquals" -> (["Support";"ST"], "op_ColonEquals")
-    | _ -> 
+    | _ ->
       begin
-        let ns, x = x in 
+        let ns, x = x in
         (path_of_ns currentModule ns, x)
       end
 
@@ -136,7 +136,7 @@ let ptsym (currentModule : mlsymbol) (mlp : mlpath) : mlsymbol =
 let ptctor (currentModule : mlsymbol) (mlp : mlpath) : mlsymbol =
     let (p, s) = mlpath_of_mlpath currentModule mlp in
     let s = if Char.uppercase (String.get s 0) <> String.get s 0 then "U__" ^ s else s in
-    String.concat "." (p @ [s]) 
+    String.concat "." (p @ [s])
 
 (* -------------------------------------------------------------------- *)
 let infix_prim_ops = [
@@ -276,9 +276,9 @@ let encode_char c =
     | c when (c = '\n')              -> "\\n"
     | c when (c = '\'')              -> "\\'"
     | c when (c = '\"')              -> "\\\""
-    | c when is_letter_or_digit(c) -> string_of_char c 
-    | c when is_punctuation(c)   -> string_of_char c 
-    | c when is_symbol(c)        -> string_of_char c 
+    | c when is_letter_or_digit(c) -> string_of_char c
+    | c when is_punctuation(c)   -> string_of_char c
+    | c when is_symbol(c)        -> string_of_char c
     | _                          -> ocaml_u8_codepoint (byte_of_char c))
 
 (* -------------------------------------------------------------------- *)
@@ -299,14 +299,14 @@ let string_of_mlconstant (sctt : mlconstant) =
 
   | MLC_String chars ->
       let chars = String.collect encode_char chars in
-      "\""^chars^"\"" 
+      "\""^chars^"\""
 
 
 (* -------------------------------------------------------------------- *)
 let rec doc_of_mltype' (currentModule : mlsymbol) (outer : level) (ty : mlty) =
     match ty with
     | MLTY_Var x ->
-        let escape_tyvar s = 
+        let escape_tyvar s =
             if Util.starts_with s "'_" //this denotes a weak type variable in OCaml; it cannot be written in source programs
             then Util.replace_char s '_' 'u'
             else s in
@@ -349,7 +349,7 @@ let rec doc_of_mltype' (currentModule : mlsymbol) (outer : level) (ty : mlty) =
 
         maybe_paren outer t_prio_fun (hbox (reduce1 [d2; text " "; d1]))
 
-    | MLTY_Top -> 
+    | MLTY_Top ->
       text "Obj.t" //TODO: change this to 'obj' if we're generating F#
 
 and doc_of_mltype (currentModule : mlsymbol) (outer : level) (ty : mlty) =
@@ -359,8 +359,8 @@ and doc_of_mltype (currentModule : mlsymbol) (outer : level) (ty : mlty) =
 (* -------------------------------------------------------------------- *)
 let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : doc =
     match e with
-    | MLE_Coerce (e, t, t') -> 
-      let doc = doc_of_expr currentModule (min_op_prec, NonAssoc) e in    
+    | MLE_Coerce (e, t, t') ->
+      let doc = doc_of_expr currentModule (min_op_prec, NonAssoc) e in
       parens (reduce [text "Obj.magic "; doc]) //TODO: rewire to a checked cast for F#; check that the doc is being generated properly ...don't really understand the API yet
 
     | MLE_Seq es ->
@@ -439,8 +439,8 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
        doc
 
     | MLE_Fun (ids, body) ->
-        let ids  = List.map (fun ((x, _),xt) -> reduce1 [text "("; 
-                                                         text x ; 
+        let ids  = List.map (fun ((x, _),xt) -> reduce1 [text "(";
+                                                         text x ;
 //                                                         (match xt with | Some xxt -> reduce1 [text " : "; doc_of_mltype currentModule  outer xxt] | _ -> text "");
                                                          text ")"]) ids in
         let body = doc_of_expr currentModule (min_op_prec, NonAssoc) body in
@@ -638,7 +638,7 @@ let doc_of_mltydecl (currentModule : mlsymbol) (decls : mltydecl) =
     doc
 
 (* -------------------------------------------------------------------- *)
-let rec doc_of_sig1 currentModule s = 
+let rec doc_of_sig1 currentModule s =
     match s with
     | MLS_Mod (x, subsig) ->
         combine hardline
@@ -747,10 +747,10 @@ let doc_of_mllib mllib =
     doc_of_mllib_r mllib
 
 open FStar.Extraction.ML.Env
-let string_of_mlexpr (env:env) (e:mlexpr) = 
+let string_of_mlexpr (env:env) (e:mlexpr) =
     let doc = doc_of_expr (Util.flatten_mlpath env.currentModule) (min_op_prec, NonAssoc) e in
     FSharp.Format.pretty 0 doc
 
-let string_of_mlty (env:env) (e:mlty) = 
+let string_of_mlty (env:env) (e:mlty) =
     let doc = doc_of_mltype (Util.flatten_mlpath env.currentModule) (min_op_prec, NonAssoc) e in
     FSharp.Format.pretty 0 doc

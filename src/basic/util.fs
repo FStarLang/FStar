@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-// Using light syntax in this file because of object-oriented F# constructs 
+// Using light syntax in this file because of object-oriented F# constructs
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Util
 
@@ -30,7 +30,7 @@ exception NYI of string
 exception Failure of string
 let max_int: int = System.Int32.MaxValue
 
-type proc = {m:Object; 
+type proc = {m:Object;
              outbuf:StringBuilder;
              proc:Process;
              killed:ref<bool>;
@@ -44,14 +44,14 @@ let monitor_wait m = ignore <| System.Threading.Monitor.Wait(m)
 let monitor_pulse m = System.Threading.Monitor.Pulse(m)
 let current_tid () = System.Threading.Thread.CurrentThread.ManagedThreadId
 let sleep n = System.Threading.Thread.Sleep(0+n)
-let atomically (f:unit -> 'a) = 
+let atomically (f:unit -> 'a) =
     System.Threading.Monitor.Enter(global_lock);
     let result = f () in
     System.Threading.Monitor.Exit(global_lock);
     result
 let spawn (f:unit -> unit) = let t = new Thread(f) in t.Start()
 let ctr = ref 0
-let start_process (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc = 
+let start_process (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc =
     let signal = new Object() in
     let startInfo = new ProcessStartInfo() in
     let driverOutput = new StringBuilder() in
@@ -72,7 +72,7 @@ let start_process (id:string) (prog:string) (args:string) (cond:string -> string
     proc.EnableRaisingEvents <- true;
     proc.OutputDataReceived.AddHandler(
             DataReceivedEventHandler(
-                fun _ args -> 
+                fun _ args ->
                     if !killed then ()
                     else
                         ignore <| driverOutput.Append(args.Data);
@@ -103,9 +103,9 @@ let start_process (id:string) (prog:string) (args:string) (cond:string -> string
     all_procs := proc_wrapper::!all_procs;
 //        Printf.printf "Started process %s\n" (proc.id);
     proc_wrapper
-let tid () = System.Threading.Thread.CurrentThread.ManagedThreadId |> string_of_int   
+let tid () = System.Threading.Thread.CurrentThread.ManagedThreadId |> string_of_int
 
-let ask_process (p:proc) (input:string) : string = 
+let ask_process (p:proc) (input:string) : string =
     System.Threading.Monitor.Enter(p.m);
     //Printf.printf "Thread %s is asking process %s\n" (tid()) p.id;
     //Printf.printf "Thread %s is writing to process %s ... responding?=%A\n" (tid()) p.id p.proc.Responding;
@@ -123,7 +123,7 @@ let ask_process (p:proc) (input:string) : string =
     System.Threading.Monitor.Exit(p.m);
     x
 
-let kill_process (p:proc) = 
+let kill_process (p:proc) =
 //    Printf.printf "Killing process %s\n" (p.id);
     p.killed := true;
     System.Threading.Monitor.Enter(p.m);
@@ -133,7 +133,7 @@ let kill_process (p:proc) =
 
 let kill_all () = !all_procs |> List.iter (fun p -> if not !p.killed then kill_process p)
 
-let run_proc (name:string) (args:string) (stdin:string) : bool * string * string = 
+let run_proc (name:string) (args:string) (stdin:string) : bool * string * string =
   let pinfo = new ProcessStartInfo(name, args) in
   pinfo.RedirectStandardOutput <- true;
   pinfo.RedirectStandardError <- true;
@@ -141,18 +141,18 @@ let run_proc (name:string) (args:string) (stdin:string) : bool * string * string
   pinfo.RedirectStandardInput <- true;
   let proc = new Process() in
   proc.StartInfo <- pinfo;
-  let result = proc.Start() in 
+  let result = proc.Start() in
   proc.StandardInput.Write(stdin);
   let stdout = proc.StandardOutput.ReadToEnd() in
-  let stderr = proc.StandardError.ReadToEnd() in 
+  let stderr = proc.StandardError.ReadToEnd() in
   result, stdout, stderr
 
 let get_file_extension (fn: string) :string = Path.GetExtension fn
 
 type stream_reader = System.IO.StreamReader (* not relying on representation *)
-let open_stdin () = new System.IO.StreamReader(System.Console.OpenStandardInput()) 
+let open_stdin () = new System.IO.StreamReader(System.Console.OpenStandardInput())
 let is_end_of_stream (s: stream_reader) = s.EndOfStream
-let read_line (s:stream_reader) = 
+let read_line (s:stream_reader) =
     if is_end_of_stream s
     then None
     else Some <| s.ReadLine()
@@ -160,23 +160,23 @@ let read_line (s:stream_reader) =
 type string_builder = System.Text.StringBuilder (* not relying on representation *)
 let new_string_builder () = new System.Text.StringBuilder()
 let clear_string_builder (s:string_builder) = s.Clear() |> ignore
-let string_of_string_builder (s: string_builder) = s.ToString() 
+let string_of_string_builder (s: string_builder) = s.ToString()
 let string_builder_append (s: string_builder) (t:string) = s.Append t |> ignore
 
 let message_of_exn (e:exn) = e.Message
 let trace_of_exn (e:exn) = e.StackTrace
 type set<'a> = (list<'a> * ('a -> 'a -> bool))
 
-let set_is_empty ((s, _):set<'a>) = 
-    match s with 
+let set_is_empty ((s, _):set<'a>) =
+    match s with
     | [] -> true
     | _ -> false
 
-let new_set (cmp:'a -> 'a -> int) (hash:'a -> int) : set<'a> = 
+let new_set (cmp:'a -> 'a -> int) (hash:'a -> int) : set<'a> =
     ([], fun x y -> cmp x y = 0)
 
-let set_elements ((s1, eq):set<'a>) :list<'a> = 
-   let rec aux out = function 
+let set_elements ((s1, eq):set<'a>) :list<'a> =
+   let rec aux out = function
         | [] -> out
         | hd::tl -> if List.exists (eq hd) out
                     then aux out tl
@@ -196,7 +196,7 @@ type smap<'value>=HashMultiMap<string, 'value>
 let smap_create<'value> (i:int) = new HashMultiMap<string,'value>(i, HashIdentity.Structural)
 let smap_clear<'value> (s:smap<'value>) = s.Clear()
 let smap_add (m:smap<'value>) k (v:'value) = m.Add(k,v)
-let smap_of_list<'value> (l:list<string*'value>) = 
+let smap_of_list<'value> (l:list<string*'value>) =
     let s = smap_create (List.length l) in
     List.iter (fun (x,y) -> smap_add s x y) l;
     s
@@ -204,18 +204,18 @@ let smap_try_find (m:smap<'value>) k = m.TryFind(k)
 let smap_fold (m:smap<'value>) f a = m.Fold f a
 let smap_remove (m:smap<'value>) k = m.Remove k
 let smap_keys (m:smap<'value>) = m.Fold (fun k v keys -> k::keys) []
-let smap_copy (m:smap<'value>) = 
+let smap_copy (m:smap<'value>) =
     let n = smap_create (m.Count) in
     smap_fold m (fun k v () -> smap_add n k v) ();
     n
 let pr  = Printf.printf
-let spr = Printf.sprintf 
-let fpr = Printf.fprintf 
+let spr = Printf.sprintf
+let fpr = Printf.fprintf
 
 let print_string s = pr "%s" s
 let print_any s = pr "%A" s
 let strcat s1 s2 = s1 ^ s2
-let concat_l sep (l:list<string>) = String.concat sep l 
+let concat_l sep (l:list<string>) = String.concat sep l
 
 let unicodeEncoding = new System.Text.UnicodeEncoding()
 let asciiEncoding = new System.Text.ASCIIEncoding()
@@ -241,7 +241,7 @@ let string_of_int   i = string_of_int i
 let string_of_int64  (i:int64) = i.ToString()
 let string_of_int32 i = string_of_int i
 let string_of_float i = string_of_float i
-let hex_string_of_byte  (i:byte) = 
+let hex_string_of_byte  (i:byte) =
     let hs = spr "%x" i in
     if (String.length hs = 1) then "0"^hs
     else hs
@@ -264,12 +264,12 @@ let split (s1:string) (s2:string) = Array.toList (s1.Split([|s2|], StringSplitOp
 let iof = int_of_float
 let foi = float_of_int
 
-let format (fmt:string) (args:list<string>) = 
+let format (fmt:string) (args:list<string>) =
     let frags = fmt.Split([|"%s"|], System.StringSplitOptions.None) in
     if frags.Length <> List.length args + 1
     then failwith ("Not enough arguments to format string " ^fmt^ " : expected " ^ (string frags.Length) ^ " got [" ^ (String.concat ", " args) ^ "] frags are [" ^ (String.concat ", " (List.ofArray frags)) ^ "]")
-    else let args = Array.ofList (args@[""]) in 
-         Array.fold2 (fun out frag arg -> out ^ frag ^ arg) "" frags args 
+    else let args = Array.ofList (args@[""]) in
+         Array.fold2 (fun out frag arg -> out ^ frag ^ arg) "" frags args
 
 let format1 f a = format f [a]
 let format2 f a b = format f [a;b]
@@ -285,40 +285,40 @@ let fprint3 a b c d = print_string <| format3 a b c d
 let fprint4 a b c d e = print_string <| format4 a b c d e
 let fprint5 a b c d e f = print_string <| format5 a b c d e f
 let fprint6 a b c d e f g = print_string <| format6 a b c d e f g
-      
+
 type either<'a,'b> =
   | Inl of 'a
   | Inr of 'b
- 
-let left = function 
+
+let left = function
   | Inl x -> x
   | _ -> failwith "Not in left"
-let right = function 
+let right = function
   | Inr x -> x
-  | _ -> failwith "Not in right"  
-       
+  | _ -> failwith "Not in right"
+
 let (-<-) f g x = f (g x)
 
-let find_dup f l = 
-  let rec aux = function 
-    | hd::tl -> 
-        let hds, tl' = List.partition (f hd) tl in 
-          (match hds with 
-             | [] -> aux tl' 
+let find_dup f l =
+  let rec aux = function
+    | hd::tl ->
+        let hds, tl' = List.partition (f hd) tl in
+          (match hds with
+             | [] -> aux tl'
              | _ -> Some hd)
     | _ -> None in
     aux l
 
 let nodups f l = find_dup f l |> Option.isNone
 
-let remove_dups f l = 
-   let rec aux out = function 
+let remove_dups f l =
+   let rec aux out = function
    | hd::tl -> let _, tl' = List.partition (f hd) tl in aux (hd::out) tl'
    | _ -> out in
    aux [] l
 
 
-let is_some = function 
+let is_some = function
   | None -> false
   | Some _ -> true
 
@@ -330,48 +330,48 @@ let dflt x = function
     | None   -> x
     | Some x -> x
 
-let find_opt f l = 
-  let rec aux = function 
+let find_opt f l =
+  let rec aux = function
     | [] -> None
-    | hd::tl -> if f hd then Some hd else aux tl in 
+    | hd::tl -> if f hd then Some hd else aux tl in
     aux l
 
 let try_find_index f l = List.tryFindIndex f l
 
-let sort_with f l = List.sortWith f l 
+let sort_with f l = List.sortWith f l
 
-let set_eq f l1 l2 = 
-  let eq x y = f x y = 0 in 
+let set_eq f l1 l2 =
+  let eq x y = f x y = 0 in
   let l1 = sort_with f l1 |> remove_dups eq in
   let l2 = sort_with f l2 |> remove_dups eq in
-  if List.length l1 <> List.length l2 
+  if List.length l1 <> List.length l2
   then false
   else List.forall2 eq l1 l2
 
-let bind_opt opt f = 
-    match opt with 
+let bind_opt opt f =
+    match opt with
     | None -> None
     | Some x -> f x
 
-let map_opt opt f = 
+let map_opt opt f =
     match opt with
       | None -> None
       | Some x -> Some (f x)
 
-let try_find_i f l = 
-    let rec aux i = function 
+let try_find_i f l =
+    let rec aux i = function
         | [] -> None
-        | hd::tl -> 
-            if f i hd 
+        | hd::tl ->
+            if f i hd
             then Some(i, hd)
             else aux (i+1) tl in
     aux 0 l
 
-let rec find_map l f = 
-    match l with 
-      | [] -> None 
-      | x::tl -> 
-        match f x with 
+let rec find_map l f =
+    match l with
+      | [] -> None
+      | x::tl ->
+        match f x with
           | None -> find_map tl f
           | y -> y
 
@@ -395,11 +395,11 @@ let forall_exists rel l1 l2 = l1 |> for_all (fun x -> l2 |> for_some (rel x))
 let multiset_equiv rel l1 l2 = List.length l1 = List.length l2 && forall_exists rel l1 l2
 
 let add_unique f x l =
-  if l |> for_some (f x) 
-  then l 
+  if l |> for_some (f x)
+  then l
   else x::l
 
-(**split the list at index n and return the 2 parts *)   
+(**split the list at index n and return the 2 parts *)
 let first_N n l (*: list 'a * list 'a*)=
   let rec f acc i l =
     if i = n then List.rev acc,l else
@@ -412,82 +412,82 @@ let first_N n l (*: list 'a * list 'a*)=
 let rec nth_tail n l =
    if n=0 then l else nth_tail (n - 1) (List.tl l)
 
-let prefix l = 
-    match List.rev l with 
+let prefix l =
+    match List.rev l with
       | hd::tl -> List.rev tl, hd
       | _ -> failwith "impossible"
 
-let prefix_until f l = 
+let prefix_until f l =
     let rec aux prefix = function
         | [] -> None
-        | hd::tl -> 
+        | hd::tl ->
             if f hd then Some (List.rev prefix, hd, tl)
             else aux (hd::prefix) tl in
     aux [] l
 
-        
+
 let string_to_ascii_bytes: string -> byte [] = fun s -> asciiEncoding.GetBytes(s)
 let ascii_bytes_to_string: byte [] -> string = fun b -> asciiEncoding.GetString(b)
 let mk_ref a = ref a
-  
+
 (* A simple state monad *)
-type state<'s,'a> = ('s -> ('a*'s)) 
+type state<'s,'a> = ('s -> ('a*'s))
 let get : state<'s,'s> = fun s -> s,s
-let upd (f:'s -> 's) : state<'s, unit> = fun s -> (), f s 
+let upd (f:'s -> 's) : state<'s, unit> = fun s -> (), f s
 let put (s:'s) : state<'s, unit> = fun _ -> (), s
 let ret (x:'a) : state<'s,'a> = fun s -> x, s
-let bind (sa:state<'s,'a>) (f : 'a -> state<'s,'b>) : state<'s,'b> = fun s1 -> 
+let bind (sa:state<'s,'a>) (f : 'a -> state<'s,'b>) : state<'s,'b> = fun s1 ->
   let a, s2 = sa s1 in (f a) s2
-let (>>) s f = bind s f  
+let (>>) s f = bind s f
 let run_st init (s:state<'s,'a>) = s init
 
-let rec stmap (l:list<'a>) (f: 'a -> state<'s,'b>) : state<'s, list<'b>> = 
-    match l with 
-    | [] -> ret []
-    | hd::tl -> bind (f hd) 
-                     (fun b -> 
-                        let stl = stmap tl f in 
-                        bind stl (fun tl -> ret (b::tl)))   
-
-let stmapi (l:list<'a>) (f:int -> 'a -> state<'s,'b>) : state<'s, list<'b>> = 
-  let rec aux i l = 
+let rec stmap (l:list<'a>) (f: 'a -> state<'s,'b>) : state<'s, list<'b>> =
     match l with
     | [] -> ret []
-    | hd::tl -> 
-      bind (f i hd) 
-        (fun b -> 
-          let stl = aux (i + 1) tl in 
-          bind stl (fun tl -> ret (b::tl))) in 
+    | hd::tl -> bind (f hd)
+                     (fun b ->
+                        let stl = stmap tl f in
+                        bind stl (fun tl -> ret (b::tl)))
+
+let stmapi (l:list<'a>) (f:int -> 'a -> state<'s,'b>) : state<'s, list<'b>> =
+  let rec aux i l =
+    match l with
+    | [] -> ret []
+    | hd::tl ->
+      bind (f i hd)
+        (fun b ->
+          let stl = aux (i + 1) tl in
+          bind stl (fun tl -> ret (b::tl))) in
   aux 0 l
 
-let rec stiter (l:list<'a>) (f: 'a -> state<'s,unit>) : state<'s, unit> = 
-    match l with 
+let rec stiter (l:list<'a>) (f: 'a -> state<'s,unit>) : state<'s, unit> =
+    match l with
     | [] -> ret ()
     | hd::tl -> bind (f hd) (fun () -> stiter tl f)
 
-let rec stfoldr_pfx (l:list<'a>) (f: list<'a> -> 'a -> state<'s,unit>) : state<'s,unit> = 
-  match l with 
+let rec stfoldr_pfx (l:list<'a>) (f: list<'a> -> 'a -> state<'s,unit>) : state<'s,unit> =
+  match l with
     | [] -> ret ()
     | hd::tl -> (stfoldr_pfx tl f) >> (fun _ -> f tl hd)
 
-let rec stfold (init:'b) (l:list<'a>) (f: 'b -> 'a -> state<'s,'b>) : state<'s,'b> = 
-  match l with 
+let rec stfold (init:'b) (l:list<'a>) (f: 'b -> 'a -> state<'s,'b>) : state<'s,'b> =
+  match l with
     | [] -> ret init
     | hd::tl -> (f init hd) >> (fun next -> stfold next tl f)
-                 
+
 
 type file_handle = System.IO.TextWriter
 let open_file_for_writing (fn:string) : file_handle =
-  new System.IO.StreamWriter(fn)  :> System.IO.TextWriter 
+  new System.IO.StreamWriter(fn)  :> System.IO.TextWriter
 let append_to_file (fh:file_handle) s = fpr fh "%s\n" s; flush fh
 let close_file (fh:file_handle) = fh.Close()
-let write_file (fn:string) s = 
+let write_file (fn:string) s =
   let fh = open_file_for_writing fn in
   append_to_file fh s;
   close_file fh
 let flush_file (fh:file_handle) = fh.Flush()
 
-let for_range lo hi f = 
+let for_range lo hi f =
   for i = lo to hi do
     f i
   done
@@ -496,11 +496,11 @@ let incr r = r := !r + 1
 let decr r = r := !r - 1
 let geq (i:int) (j:int) = i >= j
 
-let get_exec_dir () = 
+let get_exec_dir () =
     let asm = System.Reflection.Assembly.GetEntryAssembly() in
     Path.GetDirectoryName(asm.Location)
 
-let expand_environment_variable s = 
+let expand_environment_variable s =
   System.Environment.ExpandEnvironmentVariables ("%"^s^"%")
 
 let physical_equality (x:'a) (y:'a) = LanguagePrimitives.PhysicalEquality (box x) (box y)

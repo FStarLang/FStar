@@ -23,7 +23,7 @@ open FStar.Getopt
 open FStar.Tc.Util
 open FStar.Tc.Env
 
-let process_args () = 
+let process_args () =
   let file_list = Util.mk_ref [] in
   let res = Getopt.parse_cmdline (Options.specs()) (fun i -> file_list := !file_list @ [i]) in
     (match res with
@@ -35,77 +35,77 @@ let cleanup () = Util.kill_all ()
 
 let has_prims_cache (l: list<string>) :bool = List.mem "Prims.cache" l
 
-let tc_prims () = 
+let tc_prims () =
     let solver = if !Options.verify then ToSMT.Encode.solver else ToSMT.Encode.dummy in
     let env = Tc.Env.initial_env solver Const.prims_lid in
-    env.solver.init env; 
-    
+    env.solver.init env;
+
     let p = Options.prims () in
     let dsenv, prims_mod = Parser.Driver.parse_file (Parser.DesugarEnv.empty_env()) p in
     let prims_mod, env = Tc.Tc.check_module env (List.hd prims_mod) in
     prims_mod, dsenv, env
 
-let report_errors nopt = 
+let report_errors nopt =
     let errs = match nopt with
         | None -> Tc.Errors.get_err_count ()
         | Some n -> n in
-    if errs>0 
+    if errs>0
     then begin
         fprint1 "Error: %s errors were reported (see above)\n" (string_of_int errs);
         exit 1
     end
 
-let tc_one_file dsenv env fn = 
+let tc_one_file dsenv env fn =
     let dsenv, fmods = Parser.Driver.parse_file dsenv fn in
-    let env, all_mods = fmods |> List.fold_left (fun (env, all_mods) m -> 
+    let env, all_mods = fmods |> List.fold_left (fun (env, all_mods) m ->
         let ms, env = Tc.Tc.check_module env m in
         env, ms@all_mods) (env, []) in
     dsenv, env, List.rev all_mods
 
-let tc_one_fragment curmod dsenv env frag = 
+let tc_one_fragment curmod dsenv env frag =
     try
-        match Parser.Driver.parse_fragment curmod dsenv frag with 
-            | Inl (dsenv, modul) -> 
+        match Parser.Driver.parse_fragment curmod dsenv frag with
+            | Inl (dsenv, modul) ->
               let env = match curmod with
-                | None -> env 
+                | None -> env
                 | Some _ ->
                   raise (Absyn.Syntax.Err("Interactive mode only supports a single module at the top-level")) in
               let modul, npds, env = Tc.Tc.tc_partial_modul env modul in
               Some (Some (modul, npds), dsenv, env)
 
-            | Inr (dsenv, decls) -> 
-              begin match curmod with 
+            | Inr (dsenv, decls) ->
+              begin match curmod with
                 | None -> failwith "Fragment without an enclosing module"
-                | Some (modul,npds) -> 
+                | Some (modul,npds) ->
                   let modul, npds', env  = Tc.Tc.tc_more_partial_modul env modul decls in
                   Some (Some (modul, npds@npds'), dsenv, env)
               end
-    with 
-        | Absyn.Syntax.Error(msg, r) -> 
+    with
+        | Absyn.Syntax.Error(msg, r) ->
           Tc.Errors.add_errors env [(msg,r)];
           None
 
-        | Absyn.Syntax.Err msg -> 
+        | Absyn.Syntax.Err msg ->
           Tc.Errors.add_errors env [(msg,Absyn.Syntax.dummyRange)];
           None
-        
+
         | e -> raise e
 
-type input_chunks = 
+type input_chunks =
     | Push of string
     | Pop  of string
     | Code of string * (string * string)
-    
-type stack_elt = 
+
+type stack_elt =
     (option<(modul * list<sigelt>)>
-     * Parser.DesugarEnv.env 
+     * Parser.DesugarEnv.env
      * Tc.Env.env)
 type stack = list<stack_elt>
 
-let interactive_mode dsenv env = 
+let interactive_mode dsenv env =
     let should_log = !Options.debug <> [] in
-    let log = 
-        if should_log 
+    let log =
+        if should_log
         then let transcript = Util.open_file_for_writing "transcript" in
              (fun line -> Util.append_to_file transcript line;
                           Util.flush_file transcript)
@@ -114,19 +114,19 @@ let interactive_mode dsenv env =
     then (Util.print_string "Warning: Code-generation is not supported in interactive mode, ignoring the codegen flag");
     let chunk = Util.new_string_builder () in
     let stdin = Util.open_stdin () in
-    let rec fill_chunk ()= 
-        let line = match Util.read_line stdin with 
+    let rec fill_chunk ()=
+        let line = match Util.read_line stdin with
             | None -> exit 0
             | Some l -> l in
-        log line; 
+        log line;
 //        Printf.printf "Read line <%s>\n" line;
-        let l = Util.trim_string line in 
+        let l = Util.trim_string line in
         if Util.starts_with l "#end"
         then begin
-            let responses = match Util.split l " " with 
+            let responses = match Util.split l " " with
                 | [_; ok; fail] -> (ok, fail)
                 | _ -> ("ok", "fail") in
-            let str = Util.string_of_string_builder chunk in 
+            let str = Util.string_of_string_builder chunk in
             Util.clear_string_builder chunk; Code (str, responses)
         end
         else if Util.starts_with l "#pop"
@@ -139,39 +139,39 @@ let interactive_mode dsenv env =
               Util.string_builder_append chunk "\n";
               fill_chunk()) in
 
-    
-    let rec go (stack:stack) curmod dsenv env = 
-        begin match fill_chunk () with 
-            | Pop msg -> 
+
+    let rec go (stack:stack) curmod dsenv env =
+        begin match fill_chunk () with
+            | Pop msg ->
               Tc.Env.pop env msg |> ignore;
               env.solver.refresh();
               Options.reset_options() |> ignore;
-              let (curmod, dsenv, env), stack = match stack with 
+              let (curmod, dsenv, env), stack = match stack with
                 | [] -> failwith "Too many pops"
                 | hd::tl -> hd, tl in
               go stack curmod dsenv env
 
-            | Push msg -> 
+            | Push msg ->
               let stack = (curmod, dsenv, env)::stack in
               let dsenv = Parser.DesugarEnv.push dsenv in
               let env = Tc.Env.push env msg in
               go stack curmod dsenv env
-            
+
             | Code (text, (ok, fail)) ->
-                let mark dsenv env = 
+                let mark dsenv env =
                     let dsenv = Parser.DesugarEnv.mark dsenv in
                     let env = Tc.Env.mark env in
-                    dsenv, env in 
+                    dsenv, env in
 
-                let reset_mark dsenv env = 
+                let reset_mark dsenv env =
                     let dsenv = Parser.DesugarEnv.reset_mark dsenv in
                     let env = Tc.Env.reset_mark env in
-                    dsenv, env in 
+                    dsenv, env in
 
-                let commit_mark dsenv env = 
+                let commit_mark dsenv env =
                     let dsenv = Parser.DesugarEnv.commit_mark dsenv in
                     let env = Tc.Env.commit_mark env in
-                    dsenv, env in 
+                    dsenv, env in
 
               let fail curmod dsenv_mark env_mark =
                 Tc.Errors.report_all() |> ignore;
@@ -180,20 +180,20 @@ let interactive_mode dsenv env =
                 let dsenv, env = reset_mark dsenv_mark env_mark in
                 go stack curmod dsenv env in
 
-              let dsenv_mark, env_mark = mark dsenv env in 
+              let dsenv_mark, env_mark = mark dsenv env in
               let res = tc_one_fragment curmod dsenv_mark env_mark text in
 
-              begin match res with 
-                | Some (curmod, dsenv, env) -> 
+              begin match res with
+                | Some (curmod, dsenv, env) ->
                   if !Tc.Errors.num_errs=0
                   then begin
                      Util.fprint1 "\n%s\n" ok;
                      let dsenv, env = commit_mark dsenv env in
                      go stack curmod dsenv env
-                  end 
+                  end
                   else fail curmod dsenv_mark env_mark
 
-                | _ -> 
+                | _ ->
                   fail curmod dsenv_mark env_mark
               end
         end in
@@ -201,48 +201,48 @@ let interactive_mode dsenv env =
     go [] None dsenv env
 
 
-let batch_mode_tc filenames = 
+let batch_mode_tc filenames =
     let prims_mod, dsenv, env = tc_prims () in
 
-    let all_mods, dsenv, env = filenames |> List.fold_left (fun (all_mods, dsenv, env) f -> 
+    let all_mods, dsenv, env = filenames |> List.fold_left (fun (all_mods, dsenv, env) f ->
         Util.reset_gensym();
         let dsenv, env, ms = tc_one_file dsenv env f in
         all_mods@ms, dsenv, env)
         (prims_mod, dsenv, env) in
-   
+
     if !Options.interactive && Tc.Errors.get_err_count () = 0
     then env.solver.refresh()
     else env.solver.finish();
     all_mods, dsenv, env
 
 let finished_message fmods =
-    if not !Options.silent 
+    if not !Options.silent
     then begin
-        let msg = 
-            if !Options.verify then "Verifying" 
+        let msg =
+            if !Options.verify then "Verifying"
             else if !Options.pretype then "Lax type-checked"
             else "Parsed and desugared" in
-         fmods |> List.iter (fun m -> 
+         fmods |> List.iter (fun m ->
             if Options.should_verify m.name.str
             then Util.print_string (Util.format2 "%s module: %s\n" msg (Syntax.text_of_lid m.name)));
          print_string "All verification conditions discharged successfully\n"
     end
 
-let codegen fmods env= 
-    if !Options.codegen = Some "OCaml" 
-    || !Options.codegen = Some "OCaml-experimental" 
+let codegen fmods env=
+    if !Options.codegen = Some "OCaml"
+    || !Options.codegen = Some "OCaml-experimental"
     || !Options.codegen = Some "FSharp"
     then begin
         let c, mllibs = Util.fold_map Extraction.ML.ExtractMod.extract (Extraction.ML.Env.mkContext env) fmods in
         let mllibs = List.flatten mllibs in
         let ext = if !Options.codegen = Some "FSharp" then ".fs" else ".ml" in
-        let newDocs = List.collect Extraction.ML.Code.doc_of_mllib mllibs in 
+        let newDocs = List.collect Extraction.ML.Code.doc_of_mllib mllibs in
 //                           else List.collect Extraction.OCaml.Code.doc_of_mllib mllibs, ".ml" in
         List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^ext)) (FSharp.Format.pretty 120 d)) newDocs
     end
 
 (* Main function *)
-let go _ =    
+let go _ =
   let (res, filenames) = process_args () in
   match res with
     | Help ->
@@ -252,14 +252,14 @@ let go _ =
     | GoOn ->
              let filenames = if !Options.use_build_config  //if the user explicitly requested it
                              || (not !Options.interactive && List.length filenames = 1)  //or, if there is only a single file on the command line
-                             then match filenames with 
+                             then match filenames with
                                     | [f] -> Parser.Driver.read_build_config f //then, try to read a build config from the header of the file
                                     | _ -> Util.print_string "--use_build_config expects just a single file on the command line and no other arguments"; exit 1
                              else filenames in
-             
+
              let fmods, dsenv, env = batch_mode_tc filenames  in
              report_errors None;
-             if !Options.interactive 
+             if !Options.interactive
              then interactive_mode dsenv env
              else begin
                 codegen fmods env;
@@ -268,12 +268,12 @@ let go _ =
 
 
 let main () =
-    try 
+    try
       go ();
       cleanup ();
       exit 0
-    with 
-    | e -> 
+    with
+    | e ->
         if Util.handleable e then Util.handle_err false () e;
         if !Options.trace_error
         then Util.fprint2 "\nUnexpected error\n%s\n%s\n" (Util.message_of_exn e) (Util.trace_of_exn e)

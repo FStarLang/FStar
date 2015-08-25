@@ -18,22 +18,22 @@ module FStar.Absyn.Const
 open FStar.Absyn.Syntax
 open FStar.Util
 
-let p2l l = lid_of_path l dummyRange 
+let p2l l = lid_of_path l dummyRange
 let pconst s     = p2l ["Prims";s]
 let prims_lid    = p2l ["Prims"]
 let fstar_ns_lid = p2l ["Microsoft"; "FStar"]
 
 (* Primitive types *)
-let bool_lid   = pconst  "bool" 
-let unit_lid   = pconst  "unit" 
-let string_lid = pconst  "string" 
-let bytes_lid  = pconst  "bytes" 
-let char_lid   = pconst  "char" 
-let int_lid    = pconst  "int" 
+let bool_lid   = pconst  "bool"
+let unit_lid   = pconst  "unit"
+let string_lid = pconst  "string"
+let bytes_lid  = pconst  "bytes"
+let char_lid   = pconst  "char"
+let int_lid    = pconst  "int"
 let uint8_lid  = pconst  "uint8"
 let int64_lid  = pconst  "int64"
-let float_lid  = pconst  "float" 
-let exn_lid    = pconst  "exn" 
+let float_lid  = pconst  "float"
+let exn_lid    = pconst  "exn"
 let precedes_lid = pconst "Precedes"
 let lex_t_lid    = pconst "lex_t"
 let lexcons_lid  = pconst "LexCons"
@@ -46,19 +46,19 @@ let heap_lid   = p2l ["Heap"; "heap"]
 (* Logical connectives and operators *)
 let kunary k k'              = mk_Kind_arrow([null_t_binder k], k') dummyRange
 let kbin k1 k2 k'            = mk_Kind_arrow([null_t_binder k1; null_t_binder k2], k') dummyRange
-let ktern k1 k2 k3 k'        = mk_Kind_arrow([null_t_binder k1; 
+let ktern k1 k2 k3 k'        = mk_Kind_arrow([null_t_binder k1;
                                               null_t_binder k2;
                                               null_t_binder k3], k') dummyRange
 let true_lid   = pconst "True"
 let false_lid  = pconst "False"
-let and_lid    = pconst "l_and"  
-let or_lid     = pconst "l_or"    
-let not_lid    = pconst "l_not"  
+let and_lid    = pconst "l_and"
+let or_lid     = pconst "l_or"
+let not_lid    = pconst "l_not"
 let imp_lid    = pconst "l_imp"
-let iff_lid    = pconst "l_iff"      
-let ite_lid    = pconst "ITE" 
-let exists_lid = pconst "Exists"  
-let forall_lid = pconst "Forall"  
+let iff_lid    = pconst "l_iff"
+let ite_lid    = pconst "ITE"
+let exists_lid = pconst "Exists"
+let forall_lid = pconst "Forall"
 let exTyp_lid  = pconst "ExistsTyp"
 let allTyp_lid = pconst "ForallTyp"
 let b2t_lid    = pconst "b2t" (* coercion from boolean to type *)

@@ -38,8 +38,8 @@ end))
 
 let lengthT x = length x
 
-let rec nth = fun ( l  :  'a Prims.list ) ( n  :  Prims.int ) -> 
-    if n < 0 
+let rec nth = fun ( l  :  'a Prims.list ) ( n  :  Prims.int ) ->
+    if n < 0
     then failwith "nth takes a non-negative integer as input"
     else if n=0 then
         match (l) with

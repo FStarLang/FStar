@@ -28,7 +28,7 @@ let encode_char (c : char) =
 let jstr_escape s = String.collect encode_char s
 
 let rec pretty_print (program:Ast.t) : doc =
-  program 
+  program
   |> List.map (function
     | JS_Statement(s) -> pretty_print_statement s
     | JS_FunctionDeclaration(f) -> pretty_print_function f)
@@ -36,7 +36,7 @@ let rec pretty_print (program:Ast.t) : doc =
 
 and pretty_print_statement (p:statement_t) : doc =
   let optws (s:statement_t) = match s with JSS_Block(_) -> pretty_print_statement s
-    | _ -> reduce [ws; nest 1 (pretty_print_statement s)] in 
+    | _ -> reduce [ws; nest 1 (pretty_print_statement s)] in
   let f = function
   | JSS_Empty -> semi
   | JSS_Debugger -> reduce [ws; text "debugger;"]
@@ -73,8 +73,8 @@ and pretty_print_statement (p:statement_t) : doc =
 
   | JSS_For(i,c,l,s) -> reduce [ws; text "for"; reduce [
     (match i with None -> empty
-     | Some e -> (match e with JSF_Expression(f) -> pretty_print_exp_il f 
-        | JSF_Declaration(l) -> List.map 
+     | Some e -> (match e with JSF_Expression(f) -> pretty_print_exp_il f
+        | JSF_Declaration(l) -> List.map
             (fun (x,vl) -> reduce [text "var"; ws; text (jstr_escape x);
                 (match vl with None -> empty | Some v -> reduce [ws; text "="; ws; pretty_print_exp_cl v])]
             ) l |> combine comma)
@@ -84,7 +84,7 @@ and pretty_print_statement (p:statement_t) : doc =
     hardline; optws s]
 
   | JSS_Forin(i,e,s) -> reduce [ws; text "for"; reduce [
-    (match i with JSF_Expression(f) -> pretty_print_exp_il f 
+    (match i with JSF_Expression(f) -> pretty_print_exp_il f
     | JSF_Declaration(l) -> List.map (fun (x,v) -> reduce [text "var"; ws; text (jstr_escape x);
         (match v with None->empty | Some v -> reduce [ws; text "="; ws; pretty_print_exp_cl v])])
     l |> combine comma); ws; colon; ws; pretty_print_exp e] |> parens;
@@ -119,7 +119,7 @@ and pretty_print_exp_gen (commaless:bool) (inless:bool) =
   | JSE_Null -> (text "null", 0)
   | JSE_Undefined -> (text "undefined", 0)
   | JSE_Elision -> (text "undefined", 0)
-  | JSE_Bool(b) -> (text (if b then "true" else "false"), 0) 
+  | JSE_Bool(b) -> (text (if b then "true" else "false"), 0)
   | JSE_Number(n) -> (text (sprintf "%F" n), 0)
   | JSE_String(s) -> (text (sprintf "\"%s\"" (jstr_escape s)), 0)
   | JSE_Regexp(r,f) -> (text (sprintf "/%s/%s" (jstr_escape r) f), 0)

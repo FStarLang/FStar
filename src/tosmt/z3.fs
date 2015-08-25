@@ -81,10 +81,10 @@ let ini_params () =
     %s=2"
     timeout relevancy
 
-type z3status = 
-    | SAT 
-    | UNSAT 
-    | UNKNOWN 
+type z3status =
+    | SAT
+    | UNSAT
+    | UNKNOWN
     | TIMEOUT
 
 let status_to_string = function
@@ -93,13 +93,13 @@ let status_to_string = function
     | UNKNOWN -> "unknown"
     | TIMEOUT -> "timeout"
 
-let tid () = Util.current_tid() |> Util.string_of_int   
+let tid () = Util.current_tid() |> Util.string_of_int
 let new_z3proc id =
-   let cond pid (s:string) = 
+   let cond pid (s:string) =
     (let x = Util.trim_string s = "Done!" in
-//     Util.fprint5 "On thread %s, Z3 %s (%s) says: %s\n\t%s\n" (tid()) id pid s (if x then "finished" else "waiting for more output"); 
+//     Util.fprint5 "On thread %s, Z3 %s (%s) says: %s\n\t%s\n" (tid()) id pid s (if x then "finished" else "waiting for more output");
      x) in
-   Util.start_process id (!Options.z3_exe) (ini_params()) cond 
+   Util.start_process id (!Options.z3_exe) (ini_params()) cond
 
 type bgproc = {
     grab:unit -> proc;
@@ -110,35 +110,35 @@ type bgproc = {
 
 let queries_dot_smt2 : ref<option<file_handle>> = Util.mk_ref None
 
-let get_qfile = 
+let get_qfile =
     let ctr = Util.mk_ref 0 in
-    fun fresh -> 
+    fun fresh ->
         if fresh
         then (incr ctr;
               Util.open_file_for_writing (Util.format1 "queries-%s.smt2" (Util.string_of_int !ctr)))
-        else match !queries_dot_smt2 with 
+        else match !queries_dot_smt2 with
                 | None -> let fh = Util.open_file_for_writing "queries-bg-0.smt2" in  queries_dot_smt2 := Some fh; fh
                 | Some fh -> fh
 
- let log_query fresh i = 
-    let fh = get_qfile fresh in 
+ let log_query fresh i =
+    let fh = get_qfile fresh in
     Util.append_to_file fh i;
-    if fresh then Util.close_file fh 
- 
-let bg_z3_proc = 
+    if fresh then Util.close_file fh
+
+let bg_z3_proc =
     let ctr = Util.mk_ref (-1) in
     let new_proc () = new_z3proc (Util.format1 "bg-%s" (incr ctr; !ctr |> string_of_int)) in
     let z3proc = Util.mk_ref (new_proc()) in
     let x = [] in
     let grab () = Util.monitor_enter x; !z3proc in
     let release () = Util.monitor_exit(x) in
-    let refresh () = 
-        let proc = grab() in 
+    let refresh () =
+        let proc = grab() in
         Util.kill_process proc;
         z3proc := new_proc ();
-        begin match !queries_dot_smt2 with 
+        begin match !queries_dot_smt2 with
             | None -> ()
-            | Some fh -> 
+            | Some fh ->
                 Util.close_file fh;
                 let fh = Util.open_file_for_writing (Util.format1 "queries-bg-%s.smt2" (!ctr |> string_of_int)) in
                 queries_dot_smt2 := Some fh
@@ -147,30 +147,30 @@ let bg_z3_proc =
     {grab=grab;
      release=release;
      refresh=refresh}
-    
-let doZ3Exe' (input:string) (z3proc:proc) = 
+
+let doZ3Exe' (input:string) (z3proc:proc) =
   let parse (z3out:string) =
     let lines = String.split ['\n'] z3out |> List.map Util.trim_string in
-    let rec lblnegs lines = match lines with 
+    let rec lblnegs lines = match lines with
       | lname::"false"::rest -> lname::lblnegs rest
       | lname::_::rest -> lblnegs rest
       | _ -> [] in
-    let rec result x = match x with 
+    let rec result x = match x with
       | "timeout"::tl -> TIMEOUT, []
       | "unknown"::tl -> UNKNOWN, lblnegs tl
       | "sat"::tl -> SAT, lblnegs tl
       | "unsat"::tl -> UNSAT, []
-      | _::tl -> result tl 
+      | _::tl -> result tl
       | _ -> failwith <| format1 "Got output lines: %s\n" (String.concat "\n" (List.map (fun (l:string) -> format1 "<%s>" (Util.trim_string l)) lines)) in
       result lines in
-  let stdout = Util.ask_process z3proc input in    
-  parse (Util.trim_string stdout) 
+  let stdout = Util.ask_process z3proc input in
+  parse (Util.trim_string stdout)
 
-let doZ3Exe = 
-    let ctr = Util.mk_ref 0 in 
-    fun (fresh:bool) (input:string) ->  
+let doZ3Exe =
+    let ctr = Util.mk_ref 0 in
+    fun (fresh:bool) (input:string) ->
         let z3proc = if fresh then (incr ctr; new_z3proc (Util.string_of_int !ctr)) else bg_z3_proc.grab() in
-        let res = doZ3Exe' input z3proc in 
+        let res = doZ3Exe' input z3proc in
         //Printf.printf "z3-%A says %s\n"  (get_z3version()) (status_to_string (fst res));
         if fresh then Util.kill_process z3proc else bg_z3_proc.release();
         res
@@ -200,30 +200,30 @@ let job_queue : ref<list<z3job>> =
     x:=[]; x
 
 let pending_jobs = Util.mk_ref 0
-let with_monitor m f = 
+let with_monitor m f =
     Util.monitor_enter(m);
     let res = f () in
     Util.monitor_exit(m);
     res
-    
+
 let z3_job fresh label_messages input () =
   let status, lblnegs = doZ3Exe fresh input in
-  let result = match status with 
+  let result = match status with
     | UNSAT -> true, []
-    | _ -> 
+    | _ ->
         if !Options.debug <> [] then print_string <| format1 "Z3 says: %s\n" (status_to_string status);
-        let failing_assertions = lblnegs |> List.collect (fun l -> 
+        let failing_assertions = lblnegs |> List.collect (fun l ->
         match label_messages |> List.tryFind (fun (m, _, _) -> fst m = l) with
             | None -> []
             | Some (_, msg, r) -> [(msg, r)]) in
-        false, failing_assertions in        
+        false, failing_assertions in
     result
 
-let rec dequeue' () = 
-    let j = match !job_queue with 
+let rec dequeue' () =
+    let j = match !job_queue with
         | [] -> failwith "Impossible"
-        | hd::tl -> 
-          job_queue := tl; 
+        | hd::tl ->
+          job_queue := tl;
           hd in
     incr pending_jobs;
     Util.monitor_exit job_queue;
@@ -231,25 +231,25 @@ let rec dequeue' () =
     with_monitor job_queue (fun () -> decr pending_jobs);
     dequeue(); ()
 
-and dequeue () = 
+and dequeue () =
     Util.monitor_enter (job_queue);
-    let rec aux () = match !job_queue with 
-        | [] -> 
+    let rec aux () = match !job_queue with
+        | [] ->
           Util.monitor_wait(job_queue);
           aux ()
         | _ -> dequeue'() in
     aux()
-        
+
 and run_job j = j.callback <| j.job ()
 
-let init () = 
+let init () =
     let n_runners = !Options.n_cores - 1 in
-    let rec aux n = 
+    let rec aux n =
         if n = 0 then ()
         else (spawn dequeue; aux (n - 1)) in
     aux n_runners
 
-let enqueue fresh j = 
+let enqueue fresh j =
  //   Util.fprint1 "Enqueue fresh is %s\n" (if fresh then "true" else "false");
     if not fresh
     then run_job j
@@ -260,14 +260,14 @@ let enqueue fresh j =
         Util.monitor_exit job_queue
     end
 
-let finish () = 
+let finish () =
     let bg = bg_z3_proc.grab() in
     Util.kill_process bg;
     bg_z3_proc.release();
     let rec aux () =
         let n, m = with_monitor job_queue (fun () -> !pending_jobs,  List.length !job_queue)  in
         //Printf.printf "In finish: pending jobs = %d, job queue len = %d\n" n m;
-        if n+m=0 
+        if n+m=0
         then Tc.Errors.report_all() |> ignore
         else let _ = Util.sleep(500) in
              aux() in
@@ -276,45 +276,45 @@ let finish () =
 type scope_t = list<list<decl>>
 let fresh_scope : ref<scope_t> = Util.mk_ref [[]]
 let bg_scope : ref<list<decl>> = Util.mk_ref []
-let push msg    = 
+let push msg    =
     fresh_scope := [Term.Caption msg]::!fresh_scope;
     bg_scope := [Term.Caption msg; Term.Push]@ !bg_scope
-let pop msg      = 
+let pop msg      =
     fresh_scope := List.tl !fresh_scope;
     bg_scope := [Term.Caption msg; Term.Pop]@ !bg_scope
-let giveZ3 decls = 
-   let _  = match !fresh_scope with 
+let giveZ3 decls =
+   let _  = match !fresh_scope with
     | hd::tl -> fresh_scope := (hd@decls)::tl
     | _ -> failwith "Impossible" in
    bg_scope := List.rev decls @ !bg_scope
-let bgtheory fresh = 
-    if fresh 
+let bgtheory fresh =
+    if fresh
     then List.rev !fresh_scope |> List.flatten
     else let bg = !bg_scope in
          bg_scope := [];
          List.rev bg
-let refresh () = 
+let refresh () =
     bg_z3_proc.refresh();
     let theory = bgtheory true in
     bg_scope := List.rev theory
-let mark msg = 
+let mark msg =
     push msg
-let reset_mark msg = 
+let reset_mark msg =
     pop msg;
     refresh ()
-let commit_mark msg = 
-    begin match !fresh_scope with 
+let commit_mark msg =
+    begin match !fresh_scope with
         | hd::s::tl -> fresh_scope := (hd@s)::tl
         | _ -> failwith "Impossible"
     end
 let ask fresh label_messages qry cb =
-  let fresh = fresh && !Options.n_cores > 1 in 
+  let fresh = fresh && !Options.n_cores > 1 in
   let theory = bgtheory fresh in
-  let theory = 
-    if fresh 
+  let theory =
+    if fresh
     then theory@qry
     else theory@[Term.Push]@qry@[Term.Pop] in
   let input = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
-  if !Options.logQueries then log_query fresh input; 
+  if !Options.logQueries then log_query fresh input;
   enqueue fresh ({job=z3_job fresh label_messages input; callback=cb})
-  
+

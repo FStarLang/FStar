@@ -14,7 +14,7 @@ let idsym ((s, _) : mlident) : mlsymbol =
 
 let string_of_mlpath ((p, s) : mlpath) : mlsymbol =
     String.concat "." (p @ [s])
- 
+
 
 
 (* -------------------------------------------------------------------- *)
@@ -28,14 +28,14 @@ type mlidents  = list<mlident>
 type mlsymbols = list<mlsymbol>
 
 (* -------------------------------------------------------------------- *)
-type e_tag = 
+type e_tag =
   | E_PURE
   | E_IMPURE
 
 type mlty =
 | MLTY_Var   of mlident
 | MLTY_Fun   of mlty * e_tag * mlty //t -> MayErase t', or  t -> Keep t'
-| MLTY_Named of list<mlty> * mlpath 
+| MLTY_Named of list<mlty> * mlpath
 | MLTY_Tuple of list<mlty>
 | MLTY_App   of mlty * mlty         //Why do we have a type-application form? The only applications in ML are of named constructors
 | MLTY_Top
@@ -68,18 +68,18 @@ type mlexpr =
 | MLE_Var    of mlident
 | MLE_Name   of mlpath
 | MLE_Let    of mlletbinding * mlexpr //tyscheme for polymorphic recursion
-| MLE_App    of mlexpr * list<mlexpr> //why are function types curried, but the applications not curried 
+| MLE_App    of mlexpr * list<mlexpr> //why are function types curried, but the applications not curried
 | MLE_Fun    of list<(mlident * (option<mlty>))> * mlexpr
 | MLE_Match  of mlexpr * list<mlbranch>
 | MLE_Coerce of mlexpr * mlty * mlty
 (* SUGAR *)
 | MLE_CTor   of mlpath * list<mlexpr>
-| MLE_Seq    of list<mlexpr> 
-| MLE_Tuple  of list<mlexpr> 
-| MLE_Record of list<mlsymbol> * list<(mlsymbol * mlexpr)> 
-| MLE_Proj   of mlexpr * mlpath 
-| MLE_If     of mlexpr * mlexpr * option<mlexpr> 
-| MLE_Raise  of mlpath * list<mlexpr> 
+| MLE_Seq    of list<mlexpr>
+| MLE_Tuple  of list<mlexpr>
+| MLE_Record of list<mlsymbol> * list<(mlsymbol * mlexpr)>
+| MLE_Proj   of mlexpr * mlpath
+| MLE_If     of mlexpr * mlexpr * option<mlexpr>
+| MLE_Raise  of mlpath * list<mlexpr>
 | MLE_Try    of mlexpr * list<mlbranch>
 
 and mlbranch = mlpattern * option<mlexpr> * mlexpr
@@ -96,7 +96,7 @@ and mlletbinding = bool * list<mllb>
 type mltybody =
 | MLTD_Abbrev of mlty
 | MLTD_Record of list<(mlsymbol * mlty)>
-| MLTD_DType  of list<(mlsymbol * list<mlty>)> 
+| MLTD_DType  of list<(mlsymbol * list<mlty>)>
     (*list of constructors? list<mlty> is the list of arguments of the constructors?
         One could have instead used a mlty and tupled the argument types?
      *)
@@ -113,7 +113,7 @@ type mlmodule = list<mlmodule1>
 
 type mlsig1 =
 | MLS_Mod of mlsymbol * mlsig
-| MLS_Ty  of mltydecl 
+| MLS_Ty  of mltydecl
     (*used for both type schemes and inductive types. Even inductives are defined in OCaml using type ....,
         unlike data in Haskell *)
 | MLS_Val of mlsymbol * mltyscheme
@@ -122,7 +122,7 @@ type mlsig1 =
 and mlsig = list<mlsig1>
 
 (* -------------------------------------------------------------------- *)
-type mllib = 
+type mllib =
   | MLLib of list<(mlsymbol * option<(mlsig * mlmodule)> * mllib)>
 
 (* -------------------------------------------------------------------- *)
@@ -145,7 +145,7 @@ let mlif (b : mlexpr) ((e1, e2) : mlexpr * mlexpr) =
 let ml_unit    = MLE_Const MLC_Unit
 
 // do NOT remove Prims, because all mentions of unit/bool in F* are actually Prims.unit/bool.
-let ml_bool_ty = MLTY_Named ([], (["Prims"], "bool")) 
-let ml_unit_ty = MLTY_Named ([], (["Prims"], "unit")) 
+let ml_bool_ty = MLTY_Named ([], (["Prims"], "bool"))
+let ml_unit_ty = MLTY_Named ([], (["Prims"], "unit"))
 
 let mlp_lalloc = (["SST"], "lalloc")

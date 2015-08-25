@@ -21,7 +21,7 @@ let getLexerRange (lexbuf:Microsoft.FSharp.Text.Lexing.LexBuffer<char>) = (* Uni
 let lhs (parseState: Microsoft.FSharp.Text.Parsing.IParseState) =
   let p1,p2 = parseState.ResultRange in
   mksyn_range p1 p2
-    
+
 (* Get the position corresponding to the start of one of the r.h.s. symbols of a grammar rule while it is being reduced *)
 let rhspos (parseState: Microsoft.FSharp.Text.Parsing.IParseState) n =
   pos_of_lexpos (fst (parseState.InputRange(n)))
@@ -47,11 +47,11 @@ let errorAndWarningCount = ref 0
 let errorR  exn = incr errorAndWarningCount; match exn with StopProcessing | ReportedError -> raise exn | _ -> !errorHandler exn
 let warning exn = incr errorAndWarningCount; match exn with StopProcessing | ReportedError -> raise exn | _ -> !warningHandler exn
 
-let newline (lexbuf:Microsoft.FSharp.Text.Lexing.LexBuffer<_>) = 
+let newline (lexbuf:Microsoft.FSharp.Text.Lexing.LexBuffer<_>) =
     lexbuf.EndPos <- lexbuf.EndPos.NextLine
 
-let lexeme (lexbuf : Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*UnicodeLexing.Lexbuf*)) = 
+let lexeme (lexbuf : Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*UnicodeLexing.Lexbuf*)) =
     Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*UnicodeLexing.Lexbuf*).LexemeString(lexbuf)
 let ulexeme lexbuf = lexeme lexbuf
 
-let adjust_lexbuf_start_pos (lexbuf:Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*UnicodeLexing.Lexbuf*)) p =  lexbuf.StartPos <- p 
+let adjust_lexbuf_start_pos (lexbuf:Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*UnicodeLexing.Lexbuf*)) p =  lexbuf.StartPos <- p

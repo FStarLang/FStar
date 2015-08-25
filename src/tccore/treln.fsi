@@ -33,7 +33,7 @@ val equivalent_kinds_with_evidence: Tcenv.env -> kind -> kind -> option<evidence
 val alpha_equiv: Tcenv.env -> typ -> typ -> bool
 
 val new_uvar: Tcenv.env -> kind -> Range.range -> typ
-val instantiate_kind: Tcenv.env -> typ -> kind -> (typ * kind) 
+val instantiate_kind: Tcenv.env -> typ -> kind -> (typ * kind)
 
 (* (instantiate_typ G (forall a1..an. t)) --> (t[u1..un/a1..an], ([(a1,u1), ..., (an,un)])) *)
 val instantiate_typ_gen_constraints : Tcenv.env -> typ -> (list<formula> * typ * list<(btvdef*typ)>)

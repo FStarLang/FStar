@@ -25,7 +25,7 @@ open FStar.Tc.Rel
 open FStar.Absyn.Syntax
 
 val report: env -> list<string> -> unit
-val new_kvar : env -> knd          
+val new_kvar : env -> knd
 val new_tvar : env -> knd -> typ
 val new_evar : env -> typ -> exp
 val new_implicit_tvar : env -> knd -> (typ * (uvar_t * Range.range))

@@ -20,7 +20,7 @@ module FStar.Unionfind
 (* Unionfind with path compression but without ranks *)
 
 type cell<'a when 'a : not struct> = {mutable contents : contents<'a> }
-and contents<'a when 'a : not struct> = 
+and contents<'a when 'a : not struct> =
   | Data of list<'a> * int
   | Fwd of cell<'a>
 type uvar<'a when 'a : not struct> = 'a cell
@@ -31,16 +31,16 @@ exception Impos
 let counter = ref 0
 
 let fresh x = counter := !counter + 1; {contents = Data ([x], !counter) }
-  
-let rec rep cell = match cell.contents with 
+
+let rec rep cell = match cell.contents with
   | Data _ -> cell
-  | Fwd cell' -> 
+  | Fwd cell' ->
     if Util.physical_equality cell cell'
     then failwith "YIKES! Cycle in unionfind graph"
     else rep cell'
 
-let find x = 
-    let y = rep x in 
+let find x =
+    let y = rep x in
     if not (LanguagePrimitives.PhysicalEquality x y) then x.contents <- Fwd y; //path compression
     match y.contents with
         | Data ((hd::tl), _) -> hd
@@ -50,20 +50,20 @@ let uvar_id uv = match (rep uv).contents with
   | Data (_, id) -> id
   | _ -> failwith "impossible"
 
-let union x y = 
+let union x y =
   let cellX = rep x in
   let cellY = rep y in
     if LanguagePrimitives.PhysicalEquality cellX cellY then ()
     else match cellX.contents, cellY.contents with
-            | Data (dx, ctrx), Data (dy,_) -> 
+            | Data (dx, ctrx), Data (dy,_) ->
               cellX.contents <- Data ((dx@dy), ctrx);
               cellY.contents <- Fwd cellX
             | _ -> failwith "impossible"
-          
-let change x a = 
+
+let change x a =
   let cellX = rep x in
-    match cellX.contents with 
-	  | Data (_, ctrX) -> 
+    match cellX.contents with
+	  | Data (_, ctrX) ->
 	    cellX.contents <- Data ([a],ctrX)
       | _ -> failwith "impossible"
 
