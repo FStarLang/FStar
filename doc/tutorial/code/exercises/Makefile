@@ -32,15 +32,16 @@ verify-%: __force__
 verify-security: verify-ex9b-format verify-ex9c-format verify-ex9d-padding verify-ex9e-padding verify-ex9f-padding verify-ex9g-padding
 
 extract-acl:
-	fstar.exe --codegen OCaml-experimental ex1a-safe-read-write.fst
-	sed -i "s/Support\\.System\\.IO/System.IO/" UntrustedClientCode.ml
+	fstar.exe --codegen OCaml ex1a-safe-read-write.fst
 
 ML_FILES = FileName.ml ACLs.ml UntrustedClientCode.ml
 
-STUFF = All.ml Heap.ml ST.ml System_IO.ml
+STUFF = FStar_All.ml FStar_Heap.ml FStar_ST.ml System_IO.ml
+
+SUPPORT_DIR = $(FSTAR_HOME)/src/support/ocaml/fstar-lib/src
 
 ocaml-acl:
-	ocamlfind ocamlopt -o acl -package batteries -linkpkg -thread -I $(FSTAR_HOME)/src/ocaml-output/ $(FSTAR_HOME)/src/ocaml-output/support.ml system.ml $(ML_FILES) main.ml
+	ocamlfind ocamlopt -o acl -package batteries -linkpkg -thread $(SUPPORT_DIR)/prims.ml $(SUPPORT_DIR)/FStar_ST.ml $(SUPPORT_DIR)/FStar_All.ml system.ml $(ML_FILES) main.ml
 
 clean-acl:
 	rm -f $(ML_FILES) $(STUFF) *.cmi *.cmx *.o *~ acl
