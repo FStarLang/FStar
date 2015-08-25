@@ -51,8 +51,8 @@ type exp =
 type esub = var -> Tot exp
 type erenaming (s:esub) = (forall (x:var). is_EVar (s x))
 
-val is_erenaming : s:esub -> Tot (n:int{(  erenaming s  ==> n=0) /\
-                                        (~(erenaming s) ==> n=1)})
+val is_erenaming : s:esub -> GTot (n:int{(  erenaming s  ==> n=0) /\
+                                         (~(erenaming s) ==> n=1)})
 let is_erenaming s = (if excluded_middle (erenaming s) then 0 else 1)
 
 val esub_inc : var -> Tot exp
@@ -111,8 +111,8 @@ let esubst_beta e = esubst (esub_beta e)
 type tsub = var -> Tot typ
 type trenaming (s:tsub) = (forall (x:var). is_TVar (s x))
 
-val is_trenaming : s:tsub -> Tot (n:int{(  trenaming s  ==> n=0) /\
-                                        (~(trenaming s) ==> n=1)})
+val is_trenaming : s:tsub -> GTot (n:int{(  trenaming s  ==> n=0) /\
+                                         (~(trenaming s) ==> n=1)})
 let is_trenaming s = (if excluded_middle (trenaming s) then 0 else 1)
 
 val tsub_inc_above : nat -> var -> Tot typ
@@ -604,8 +604,8 @@ val is_var : exp -> Tot(nat)
 let is_var e = if is_EVar e then 0 else 1
 opaque type renaming (s:esub) = (forall (x:var). is_EVar (s x))
 
-val is_renaming : s:esub -> Tot (n:int{  (renaming s  ==> n=0) /\
-                                      (~(renaming s) ==> n=1)})
+val is_renaming : s:esub -> GTot (n:int{  (renaming s  ==> n=0) /\
+                                        (~(renaming s) ==> n=1)})
 let is_renaming s = (if excluded_middle (renaming s) then 0 else 1)
 
 type subst_typing (s:esub) (g1:env) (g2:env) =

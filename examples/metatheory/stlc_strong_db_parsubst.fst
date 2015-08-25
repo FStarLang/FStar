@@ -51,8 +51,8 @@ type sub = var -> Tot exp
 
 type renaming (s:sub) = (forall (x:var). is_EVar (s x))
 
-val is_renaming : s:sub -> Tot (n:int{  (renaming s  ==> n=0) /\
-                                      (~(renaming s) ==> n=1)})
+val is_renaming : s:sub -> GTot (n:int{  (renaming s  ==> n=0) /\
+                                       (~(renaming s) ==> n=1)})
 let is_renaming s = (if excluded_middle (renaming s) then 0 else 1)
 
 val sub_inc : var -> Tot exp
