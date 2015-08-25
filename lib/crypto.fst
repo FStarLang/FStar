@@ -1,4 +1,4 @@
-module Crypto
+module FStar.Crypto
 open Bytes
 
 type nbytes (n:nat) = b:bytes{length b == n} (* fixed-length bytes *)

@@ -38,31 +38,16 @@ end))
 
 let lengthT x = length x
 
-let rec nth = (fun ( l  :  'a Prims.list ) ( n  :  Prims.int ) -> (match ((n < 0)) with
-| true -> begin
-(failwith "nth takes a non-negative integer as input")
-end
-| false -> begin
-(match ((n = 0)) with
-| true -> begin
-(match (l) with
-| [] -> begin
-(failwith "not enough elements")
-end
-| hd::_5_44 -> begin
-hd
-end)
-end
-| false -> begin
-(match (l) with
-| [] -> begin
-(failwith "not enough elements")
-end
-| _5_50::tl -> begin
-(nth tl n)
-end)
-end)
-end))
+let rec nth = fun ( l  :  'a Prims.list ) ( n  :  Prims.int ) -> 
+    if n < 0 
+    then failwith "nth takes a non-negative integer as input"
+    else if n=0 then
+        match (l) with
+        | [] -> failwith "not enough elements"
+        | hd::_ -> hd
+    else match l with
+        | [] ->  failwith "not enough elements"
+        | _5_50::tl -> nth tl (n - 1)
 
 let rec total_nth = (fun ( l  :  'a Prims.list ) ( n  :  Prims.nat ) -> (match (l) with
 | [] -> begin

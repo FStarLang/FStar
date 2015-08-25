@@ -1,7 +1,7 @@
 (*--build-config
     options:--logQueries;
  --*)
-module BoundedIntegers
+module FStar.BoundedIntegers
 
 val int32_min_value : int
 let int32_min_value = -2147483647

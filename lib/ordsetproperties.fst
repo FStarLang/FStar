@@ -2,9 +2,9 @@
     options:--admit_fsi OrdSet;
     other-files:ordset.fsi
  --*)
-module OrdSetProps
+module FStar.OrdSetProps
  
-open OrdSet
+open FStar.OrdSet
  
 val fold: #a:Type -> #b:Type -> #f:cmp a -> (a -> b -> Tot b) -> s:ordset a f -> b
           -> Tot b (decreases (size s))

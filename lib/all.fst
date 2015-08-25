@@ -13,9 +13,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module All
-open Heap
-open ST
+module FStar.All
+open FStar.Heap
+open FStar.ST
 
 kind AllPre = AllPre_h heap
 kind AllPost (a:Type) = AllPost_h heap a

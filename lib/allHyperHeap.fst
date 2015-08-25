@@ -17,8 +17,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module All
-open ST
+module FStar.All
+open FStar.ST
 
 kind AllPre = AllPre_h HyperHeap.t
 kind AllPost (a:Type) = AllPost_h HyperHeap.t a

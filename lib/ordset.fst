@@ -3,7 +3,7 @@
     other-files:set.fsi heap.fst st.fst all.fst list.fst listproperties.fst ordset.fsi
  --*)
 
-module OrdSet
+module FStar.OrdSet
 
 opaque type total_order (a:Type) (f: (a -> a -> Tot bool)) =
     (forall a1 a2. (f a1 a2 /\ f a2 a1)  ==> a1 = a2)  (* anti-symmetry *)

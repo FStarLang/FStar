@@ -513,7 +513,7 @@ let prepare_module_or_interface intf admitted env mname =
     let open_ns = if      lid_equals mname Const.prims_lid then [] 
                   else if lid_equals mname Const.st_lid    then [Const.prims_lid]
                   else if lid_equals mname Const.all_lid   then [Const.prims_lid; Const.st_lid]
-                  else [Const.prims_lid; Const.st_lid; Const.all_lid] in
+                  else [Const.prims_lid; Const.st_lid; Const.all_lid; Const.fstar_ns_lid] in
     {env with curmodule=Some mname; sigmap=env.sigmap; open_namespaces = open_ns; iface=intf; admitted_iface=admitted} in
 
   match env.modules |> Util.find_opt (fun (l, _) -> lid_equals l mname) with
@@ -522,10 +522,6 @@ let prepare_module_or_interface intf admitted env mname =
       if intf 
       then raise (Error(Util.format1 "Duplicate module or interface name: %s" mname.str, range_of_lid mname));
       prep env 
-//      let vals = m.declarations |> List.filter (function 
-//        | Sig_val_decl _ -> true
-//        | _ -> false) in
-//      prep ({env with sigaccum=m.declarations})
 
 let enter_monad_scope env mname = 
   let curmod = current_module env in

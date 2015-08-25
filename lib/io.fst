@@ -1,4 +1,4 @@
-module IO
+module FStar.IO
 open List
 
 exception EOF

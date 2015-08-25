@@ -4,8 +4,8 @@
     other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst 
   --*)
 
-module Relational
-open Heap
+module FStar.Relational
+open FStar.Heap
 type rel (a:Type) (b:Type) : Type =
   | R : l:a -> r:b -> rel a b
 

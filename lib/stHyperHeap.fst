@@ -17,8 +17,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module ST
-open HyperHeap
+module FStar.ST
+open FStar.HyperHeap
 type ref (t:Type) = rref root t
 kind STPre = STPre_h t
 kind STPost (a:Type) = STPost_h t a

@@ -2,9 +2,9 @@
     options:--admit_fsi Set;
     other-files:ext.fst set.fsi heap.fst st.fst
  --*)
-module MRef
-open Heap
-open ST
+module FStar.MRef
+open FStar.Heap
+open FStar.ST
 
 kind Reln (a:Type) = a -> a -> Type
 

@@ -1,4 +1,4 @@
-module All
+module FStar.All
 type heap
 kind AllPre = AllPre_h heap
 kind AllPost (a:Type) = AllPost_h heap a

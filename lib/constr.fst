@@ -1,4 +1,4 @@
-module Constructive
+module FStar.Constructive
 
 type cand : Type -> Type -> Type =
   | Conj : #p1:Type -> #p2:Type -> h1:p1 -> h2:p2 -> cand p1 p2

@@ -19,8 +19,9 @@ open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Util
 
 let p2l l = lid_of_path l dummyRange 
-let pconst s  = p2l ["Prims";s]
-let prims_lid = p2l ["Prims"]
+let pconst s     = p2l ["Prims";s]
+let prims_lid    = p2l ["Prims"]
+let fstar_ns_lid = p2l ["Microsoft"; "FStar"]
 
 (* Primitive types *)
 let bool_lid   = pconst  "bool" 

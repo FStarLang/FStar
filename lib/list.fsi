@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  *)
-module Microsoft.FStar.List
+module FStar.List
 val isEmpty : (list 'a) -> Tot bool
 val hd : (list 'a) -> 'a
 val length : (list 'a) -> Tot nat
