@@ -15,16 +15,16 @@
 *)
 #light "off"
 
-module Microsoft.FStar.Tc.Errors
+module FStar.Tc.Errors
 
-open Microsoft.FStar
-open Microsoft.FStar.Absyn
-open Microsoft.FStar.Absyn.Syntax
-open Microsoft.FStar.Util
+open FStar
+open FStar.Absyn
+open FStar.Absyn.Syntax
+open FStar.Util
 
-open Microsoft.FStar.Tc
-open Microsoft.FStar.Tc.Env
-open Microsoft.FStar.Tc.Normalize
+open FStar.Tc
+open FStar.Tc.Env
+open FStar.Tc.Normalize
 
 (* Error messages for labels in VCs *)
 let exhaustiveness_check = "Patterns are incomplete"

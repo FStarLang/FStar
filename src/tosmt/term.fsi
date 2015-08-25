@@ -15,13 +15,13 @@
 *)
 #light "off"
 
-module Microsoft.FStar.ToSMT.Term
+module FStar.ToSMT.Term
 
 open System.Diagnostics
-open Microsoft.FStar
-open Microsoft.FStar.Absyn.Syntax
-open Microsoft.FStar.Absyn
-open Microsoft.FStar.Util
+open FStar
+open FStar.Absyn.Syntax
+open FStar.Absyn
+open FStar.Util
 
 type sort =
   | Bool_sort 

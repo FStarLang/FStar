@@ -16,14 +16,14 @@
 (* -------------------------------------------------------------------- *)
 #light "off"
 
-module Microsoft.FStar.Extraction.ML.Code
+module FStar.Extraction.ML.Code
 
 open System
 open System.Text
-open Microsoft.FStar
-open Microsoft.FStar.Util
-open Microsoft.FStar.Extraction.ML
-open Microsoft.FStar.Extraction.ML.Syntax
+open FStar
+open FStar.Util
+open FStar.Extraction.ML
+open FStar.Extraction.ML.Syntax
 open FSharp.Format
       
 (* -------------------------------------------------------------------- *)
@@ -208,7 +208,7 @@ let encode_char c =
   if (int_of_char c) > 127 then // Use UTF-8 encoding
     let bytes = string_of_char c in
     let bytes = unicode_of_string bytes in
-    Microsoft.FStar.Bytes.f_encode ocaml_u8_codepoint bytes
+    FStar.Bytes.f_encode ocaml_u8_codepoint bytes
   else
    (match c with
     | c when (c = '\\')              -> "\\\\"
@@ -237,7 +237,7 @@ let string_of_mlconstant (sctt : mlconstant) =
   | MLC_Float    d     -> string_of_float d
 
   | MLC_Bytes bytes ->
-      let bytes = Microsoft.FStar.Bytes.f_encode ocaml_u8_codepoint bytes in
+      let bytes = FStar.Bytes.f_encode ocaml_u8_codepoint bytes in
       "\""^bytes^"\""
 
   | MLC_String chars ->
@@ -713,7 +713,7 @@ let rec doc_of_mllib_r (MLLib mllib) =
 let doc_of_mllib mllib =
     doc_of_mllib_r mllib
 
-open Microsoft.FStar.Extraction.ML.Env
+open FStar.Extraction.ML.Env
 let string_of_mlexpr (env:env) (e:mlexpr) = 
     let doc = doc_of_expr (Util.flatten_mlpath env.currentModule) (min_op_prec, NonAssoc) e in
     FSharp.Format.pretty 0 doc

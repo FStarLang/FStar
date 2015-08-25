@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 #light "off"
-module Microsoft.FStar.Krivine
+module FStar.Krivine
 open Util
 open Absyn 
 open Profiling 

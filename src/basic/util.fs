@@ -15,7 +15,7 @@
 *)
 // Using light syntax in this file because of object-oriented F# constructs 
 // (c) Microsoft Corporation. All rights reserved
-module Microsoft.FStar.Util
+module FStar.Util
 
 open System
 open System.Text

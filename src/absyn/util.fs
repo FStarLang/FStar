@@ -15,14 +15,14 @@
 *)
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
-module Microsoft.FStar.Absyn.Util
+module FStar.Absyn.Util
 
 open Prims
-open Microsoft.FStar
-open Microsoft.FStar.Util
-open Microsoft.FStar.Absyn
-open Microsoft.FStar.Absyn.Syntax
-open Microsoft.FStar.Profiling
+open FStar
+open FStar.Util
+open FStar.Absyn
+open FStar.Absyn.Syntax
+open FStar.Profiling
 
 let handle_err warning ret e =
   match e with

@@ -14,9 +14,9 @@
    limitations under the License.
 *)
 #light "off"
-module Microsoft.FStar.Absyn.Test
-open Microsoft.FStar.Util
-open Microsoft.FStar.Absyn.Syntax
+module FStar.Absyn.Test
+open FStar.Util
+open FStar.Absyn.Syntax
 
 let fail msg = failwith msg
   
@@ -303,7 +303,7 @@ let testDelaySubst nvars size num =
  
 #if TEST
 let _ =
-  let ios = Microsoft.FStar.Util.int_of_string in
+  let ios = FStar.Util.int_of_string in
   let nvars = ios <| Sys.argv.(1) in
   let size = ios <| Sys.argv.(2) in
   let num = ios <| Sys.argv.(3) in

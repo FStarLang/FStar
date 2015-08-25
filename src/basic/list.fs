@@ -1,5 +1,5 @@
 #light "off"
-module Microsoft.FStar.List
+module FStar.List
 let isEmpty = (fun ( l  :  'a Prims.list ) -> (match (l) with
 | [] -> begin
 true

@@ -28,7 +28,7 @@
 // See LICENSE-fsharp.txt at the root of this distribution for terms and conditions
 #light 
 // (c) Microsoft Corporation. All rights reserved
-module Microsoft.FStar.Range
+module FStar.Range
 
 open System.Collections.Generic
 (* open Internal.Utilities *)

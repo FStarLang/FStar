@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Microsoft.FStar.Char
+module FStar.Char
 let lowercase c = Char.lowercase c
 let uppercase c = Char.uppercase c
 let int_of_char c = Char.code c

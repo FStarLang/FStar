@@ -15,10 +15,10 @@
 *)
 // (c) Microsoft Corporation. All rights reserved
 
-module Microsoft.FStar.Tc.Env
+module FStar.Tc.Env
 
-open Microsoft.FStar 
-open Microsoft.FStar.Absyn.Syntax
+open FStar 
+open FStar.Absyn.Syntax
 
 
 type binding =
@@ -132,7 +132,7 @@ val fold_env : env -> ('a -> binding -> 'a) -> 'a -> 'a
 val binding_of_binder: binder -> binding
 val idents : env -> freevars
 val binders: env -> binders
-val t_binders : env -> Microsoft.FStar.Absyn.Syntax.binders
+val t_binders : env -> FStar.Absyn.Syntax.binders
 val lidents : env -> list<lident>     
 
 (* operations on monads *)

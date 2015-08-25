@@ -15,17 +15,17 @@
 *)
 #light "off" 
  
-module Microsoft.FStar.ToSMT.Encode
+module FStar.ToSMT.Encode
 
-open Microsoft.FStar
-open Microsoft.FStar.Tc.Env
-open Microsoft.FStar.Util
-open Microsoft.FStar.Absyn
-open Microsoft.FStar.Absyn.Syntax
-open Microsoft.FStar.Tc
-open Microsoft.FStar.ToSMT.Term
+open FStar
+open FStar.Tc.Env
+open FStar.Util
+open FStar.Absyn
+open FStar.Absyn.Syntax
+open FStar.Tc
+open FStar.ToSMT.Term
 
-open Microsoft.FStar.ToSMT.SplitQueryCases
+open FStar.ToSMT.SplitQueryCases
 
 let add_fuel x tl = if !Options.unthrottle_inductives then tl else x::tl 
 let withenv c (a, b) = (a,b,c)
@@ -1953,7 +1953,7 @@ let encode_labels labs =
     prefix, suffix
 
 (* caching encodings of the environment and the top-level API to the encoding *)
-open Microsoft.FStar.Tc.Env
+open FStar.Tc.Env
 let last_env : ref<list<env_t>> = Util.mk_ref []
 let init_env tcenv = last_env := [{bindings=[]; tcenv=tcenv; warn=true; depth=0; 
                                    cache=Util.smap_create 100; nolabels=false; use_zfuel_name=false;

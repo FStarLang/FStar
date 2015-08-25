@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Microsoft.FStar.String
+module FStar.String
 open Prims
 val split:   list<char> -> string -> Tot<list<string>>
 val strcat:  string -> string -> Tot<string>

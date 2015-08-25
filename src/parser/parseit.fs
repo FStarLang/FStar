@@ -14,9 +14,9 @@
    limitations under the License.
 *)
 #light "off"
-module Microsoft.FStar.Parser.ParseIt
-open Microsoft.FStar
-open Microsoft.FStar.Util
+module FStar.Parser.ParseIt
+open FStar
+open FStar.Util
 
 let resetLexbufPos filename (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char>) =
   lexbuf.EndPos <- {lexbuf.EndPos with

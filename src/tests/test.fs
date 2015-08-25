@@ -1,12 +1,12 @@
 ﻿// Learn more about F# at http://fsharp.net
 // See the 'F# Tutorial' project for more help.
 
-module Microsoft.FStar.Tests.Test
+module FStar.Tests.Test
 
-open Microsoft.FStar
-open Microsoft.FStar.Util
-open Microsoft.FStar.Absyn
-open Microsoft.FStar.Absyn.Syntax
+open FStar
+open FStar.Util
+open FStar.Absyn
+open FStar.Absyn.Syntax
 
 type Boxed<'a> (value:'a, cmp:'a -> 'a -> int, hash: 'a -> int) = 
    member this.unbox = value

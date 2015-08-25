@@ -15,10 +15,10 @@
 *)
 #light "off"
 
-module Microsoft.FStar.ToSMT.Z3
-open Microsoft.FStar
-open Microsoft.FStar.ToSMT.Term
-open Microsoft.FStar.Util
+module FStar.ToSMT.Z3
+open FStar
+open FStar.ToSMT.Term
+open FStar.Util
 
 (****************************************************************************)
 (* Z3 Specifics                                                             *)

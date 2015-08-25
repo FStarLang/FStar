@@ -19,17 +19,17 @@
 //////////////////////////////////////////////////////////////////////////
 
 #light "off"
-module Microsoft.FStar.Tc.Rel
+module FStar.Tc.Rel
 
-open Microsoft.FStar
-open Microsoft.FStar.Options
-open Microsoft.FStar.Tc
-open Microsoft.FStar.Absyn
-open Microsoft.FStar.Absyn.Util
-open Microsoft.FStar.Util
-open Microsoft.FStar.Tc.Env
-open Microsoft.FStar.Tc.Normalize
-open Microsoft.FStar.Absyn.Syntax
+open FStar
+open FStar.Options
+open FStar.Tc
+open FStar.Absyn
+open FStar.Absyn.Util
+open FStar.Util
+open FStar.Tc.Env
+open FStar.Tc.Normalize
+open FStar.Absyn.Syntax
 
 
 (* --------------------------------------------------------- *)

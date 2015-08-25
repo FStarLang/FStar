@@ -13,7 +13,7 @@
 //----------------------------------------------------------------------------
 // See LICENSE-fsharp.txt at the root of this distribution for terms and conditions
 #light "off"
-  module Microsoft.FStar.LexFStar
+module FStar.LexFStar
 (*------------------------------------------------------------------------
  * The Lexer.  Some of the complication arises from the fact it is 
  * reused by the Visual Studio mode to do partial lexing reporting 
@@ -21,11 +21,11 @@
  * (c) Microsoft Corporation. All rights reserved 
  *-----------------------------------------------------------------------*)
 
-open Microsoft.FStar.Range
-open Microsoft.FStar.Parser
-open Microsoft.FStar.Parser.Parse
-open Microsoft.FStar.Parser.AST
-open Microsoft.FStar.Parser.Util
+open FStar.Range
+open FStar.Parser
+open FStar.Parser.Parse
+open FStar.Parser.AST
+open FStar.Parser.Util
 
 let string_trim_both s n m = Util.substring s n (String.length s - (n+m))
 let trim_both   lexbuf n m = string_trim_both (ulexeme lexbuf) n m

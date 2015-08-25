@@ -15,19 +15,19 @@
 *)
 #light "off"
 
-module Microsoft.FStar.Backends.JS.Translate
+module FStar.Backends.JS.Translate
 
-open Microsoft.FStar.Backends.JS.Ast
+open FStar.Backends.JS.Ast
 
 open System
 open System.Text
 
-open Microsoft.FStar
-open Microsoft.FStar.Util
-open Microsoft.FStar.Range
-open Microsoft.FStar.Absyn.Syntax
-open Microsoft.FStar.Absyn.Util
-open Microsoft.FStar.Util
+open FStar
+open FStar.Util
+open FStar.Range
+open FStar.Absyn.Syntax
+open FStar.Absyn.Util
+open FStar.Util
 
 let constructors : smap<(option<int> * option<(list<expression_t> -> expression_t)>)>   = Util.smap_create 1000
 

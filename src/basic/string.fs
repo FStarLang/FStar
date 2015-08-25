@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Microsoft.FStar.String
+module FStar.String
 
 let split (chars:list<char>) s = String.split chars s
 let strcat s1 s2 = s1 ^ s2

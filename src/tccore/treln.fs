@@ -16,7 +16,7 @@
 #light "off"
 
 // (c) Microsoft Corporation. All rights reserved
-module Microsoft.FStar.TypeRelations
+module FStar.TypeRelations
 
 open Absyn
 open AbsynUtils

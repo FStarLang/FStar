@@ -1,9 +1,9 @@
-﻿module Microsoft.FStar.Parser.Util
-open Microsoft.FStar.Parser
-open Microsoft.FStar.Parser.AST
-open Microsoft.FStar
-open Microsoft.FStar.Range
-open Microsoft.FStar.Absyn
+﻿module FStar.Parser.Util
+open FStar.Parser
+open FStar.Parser.AST
+open FStar
+open FStar.Range
+open FStar.Absyn
 
 type bytes = byte[]
 type decimal = System.Decimal

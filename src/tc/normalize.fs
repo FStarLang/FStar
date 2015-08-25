@@ -16,15 +16,15 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 
-module Microsoft.FStar.Tc.Normalize
+module FStar.Tc.Normalize
 
-open Microsoft.FStar
-open Microsoft.FStar.Tc
-open Microsoft.FStar.Absyn
-open Microsoft.FStar.Absyn.Syntax
-open Microsoft.FStar.Absyn.Util
-open Microsoft.FStar.Util
-open Microsoft.FStar.Tc.Env
+open FStar
+open FStar.Tc
+open FStar.Absyn
+open FStar.Absyn.Syntax
+open FStar.Absyn.Util
+open FStar.Util
+open FStar.Tc.Env
 
 
 (**********************************************************************************************
@@ -56,7 +56,7 @@ type config<'a> = {code:'a;
                    close:option<('a -> 'a)>;
                    steps:list<step>}
 and environment = {
-    context:list<env_entry>;//Tried using Util.smap<env_entry> and Microsoft.FStar.Util.map<env_entry>; lists are still the fastest by about 12.5% end-to-end time
+    context:list<env_entry>;//Tried using Util.smap<env_entry> and FStar.Util.map<env_entry>; lists are still the fastest by about 12.5% end-to-end time
     label_suffix:list<(option<bool> * Range.range)>
 }
 and stack = {

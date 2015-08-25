@@ -1,8 +1,8 @@
 ﻿#light "off"
 
-module Microsoft.FStar.Backends.JS.Print
+module FStar.Backends.JS.Print
 
-open Microsoft.FStar.Backends.JS.Ast
+open FStar.Backends.JS.Ast
 open System
 open System.Text
 open FSharp.Format

@@ -15,7 +15,7 @@
 *)
 // (c) Microsoft Corporation. All rights reserved
 
-module Microsoft.FStar.Unionfind
+module FStar.Unionfind
 
 type cell<'a when 'a : not struct> = {mutable contents : contents<'a> }
 and contents<'a when 'a : not struct> = 

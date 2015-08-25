@@ -15,15 +15,15 @@
 *)
 #light "off"
 
-module Microsoft.FStar.Tc.Recheck
+module FStar.Tc.Recheck
 
-open Microsoft.FStar
-open Microsoft.FStar.Absyn
-open Microsoft.FStar.Absyn.Syntax
-open Microsoft.FStar.Absyn.Util
-open Microsoft.FStar.Absyn.Const
-open Microsoft.FStar.Util
-open Microsoft.FStar.Absyn.Util
+open FStar
+open FStar.Absyn
+open FStar.Absyn.Syntax
+open FStar.Absyn.Util
+open FStar.Absyn.Const
+open FStar.Util
+open FStar.Absyn.Util
 
 
 let oktype = Some ktype

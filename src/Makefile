@@ -93,7 +93,7 @@ msbuild-clean:
 # --------------------------------------------------------------------
 parser/parse.fs: parser/parse.fsy
 	$(MAKE) -C ../VS install-packages
-	$(FSYACC) --module Microsoft.FStar.Parser.Parse $<
+	$(FSYACC) --module FStar.Parser.Parse $<
 
 parser/lex.fs: parser/lex.fsl
 	$(MAKE) -C ../VS install-packages

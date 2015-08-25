@@ -14,14 +14,14 @@
    limitations under the License.
 *)
 #light "off"
-module Microsoft.FStar.Extraction.ML.ExtractMod
-open Microsoft.FStar
-open Microsoft.FStar.Util
-open Microsoft.FStar.Absyn
-open Microsoft.FStar.Absyn.Syntax
-open Microsoft.FStar.Extraction.ML.Syntax
-open Microsoft.FStar.Extraction.ML.Env
-open Microsoft.FStar.Extraction.ML.Util
+module FStar.Extraction.ML.ExtractMod
+open FStar
+open FStar.Util
+open FStar.Absyn
+open FStar.Absyn.Syntax
+open FStar.Extraction.ML.Syntax
+open FStar.Extraction.ML.Env
+open FStar.Extraction.ML.Util
 
 (*This approach assumes that failwith already exists in scope. This might be problematic, see below.*)
 let fail_exp (lid:lident) (t:typ) = mk_Exp_app(Util.fvar None Const.failwith_lid dummyRange, 

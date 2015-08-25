@@ -15,11 +15,11 @@
 *)
 #light "off"
 
-module Microsoft.FStar.ToSMT.Env
-open Microsoft.FStar
-open Microsoft.FStar.Util
-open Microsoft.FStar.Absyn
-open Microsoft.FStar.Absyn.Syntax
+module FStar.ToSMT.Env
+open FStar
+open FStar.Util
+open FStar.Absyn
+open FStar.Absyn.Syntax
 open Term
 
 type tbinding =

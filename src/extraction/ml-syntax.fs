@@ -1,7 +1,7 @@
 ﻿(* -------------------------------------------------------------------- *)
-module Microsoft.FStar.Extraction.ML.Syntax
-open Microsoft.FStar
-open Microsoft.FStar.Absyn.Syntax
+module FStar.Extraction.ML.Syntax
+open FStar
+open FStar.Absyn.Syntax
 
 (* -------------------------------------------------------------------- *)
 type mlsymbol = string

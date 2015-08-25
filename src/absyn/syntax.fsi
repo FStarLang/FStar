@@ -14,14 +14,14 @@
    limitations under the License.
 *)
 #light "off"
-module Microsoft.FStar.Absyn.Syntax
+module FStar.Absyn.Syntax
 (* Type definitions for the core AST *)
 
 (* Prims is used for bootstrapping *)
 open Prims
-open Microsoft.FStar
-open Microsoft.FStar.Util
-open Microsoft.FStar.Range
+open FStar
+open FStar.Util
+open FStar.Range
 
 exception Err of string
 exception Error of string * Range.range

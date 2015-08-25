@@ -14,11 +14,11 @@
    limitations under the License.
 *)
 #light "off"
-module Microsoft.FStar.Absyn.Syntax
+module FStar.Absyn.Syntax
 (* Type definitions for the core AST *)
 
-open Microsoft.FStar
-open Microsoft.FStar.Util
+open FStar
+open FStar.Util
 
 exception Err of string
 exception Error of string * Range.range
@@ -325,7 +325,7 @@ let range_of_lbname (l:lbname) = match l with
 (*********************************************************************************)
 (* Syntax builders *)
 (*********************************************************************************)
-open Microsoft.FStar.Range
+open FStar.Range
 
 let syn p k f = f k p
 let mk_fvs () = Util.mk_ref None

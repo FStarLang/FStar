@@ -14,14 +14,14 @@
    limitations under the License.
 *)
 #light "off"
-module Microsoft.FStar.Tc.Rel
+module FStar.Tc.Rel
 
-open Microsoft.FStar
-open Microsoft.FStar.Util
-open Microsoft.FStar.Tc
-open Microsoft.FStar.Absyn
-open Microsoft.FStar.Tc.Env
-open Microsoft.FStar.Absyn.Syntax
+open FStar
+open FStar.Util
+open FStar.Tc
+open FStar.Absyn
+open FStar.Tc.Env
+open FStar.Absyn.Syntax
 
 (* relations on types, kinds, etc. *)
 type rel = 

@@ -16,16 +16,16 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 
-module Microsoft.FStar.Parser.DesugarEnv
+module FStar.Parser.DesugarEnv
 
 
-open Microsoft.FStar
-open Microsoft.FStar.Util
-open Microsoft.FStar.Absyn
-open Microsoft.FStar.Absyn.Syntax
-open Microsoft.FStar.Absyn.Util
-open Microsoft.FStar.Absyn.Const
-open Microsoft.FStar.Parser
+open FStar
+open FStar.Util
+open FStar.Absyn
+open FStar.Absyn.Syntax
+open FStar.Absyn.Util
+open FStar.Absyn.Const
+open FStar.Parser
     
 type binding = 
   | Binding_typ_var of ident

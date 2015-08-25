@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 // (c) Microsoft Corporation. All rights reserved
-module Microsoft.FStar.TypeRelations
+module FStar.TypeRelations
 
 open Absyn
 open Tcutil

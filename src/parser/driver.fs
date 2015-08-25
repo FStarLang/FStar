@@ -14,16 +14,16 @@
    limitations under the License.
 *)
 #light "off"
-module Microsoft.FStar.Parser.Driver
+module FStar.Parser.Driver
 
-open Microsoft.FStar
-open Microsoft.FStar.Parser
-open Microsoft.FStar.Parser.AST
-open Microsoft.FStar.Parser.Parse
-open Microsoft.FStar.Util
+open FStar
+open FStar.Parser
+open FStar.Parser.AST
+open FStar.Parser.Parse
+open FStar.Util
 
-open Microsoft.FStar.Absyn
-open Microsoft.FStar.Absyn.Syntax
+open FStar.Absyn
+open FStar.Absyn.Syntax
 
 let print_error msg r = 
   Util.print_string (Util.format2 "ERROR %s: %s\n" (Range.string_of_range r) msg)

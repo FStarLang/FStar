@@ -14,10 +14,10 @@
    limitations under the License.
 *)
 #light "off"
-module Microsoft.FStar.Parser.ParseIt
-open Microsoft.FStar.Parser
-open Microsoft.FStar.Util
-open Microsoft.FStar
+module FStar.Parser.ParseIt
+open FStar.Parser
+open FStar.Util
+open FStar
 
 val parse: either<string,string> -> either<AST.inputFragment, (string * Range.range)>
 val read_build_config:string -> list<string>

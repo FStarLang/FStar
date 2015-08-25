@@ -16,7 +16,7 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 
-module Microsoft.FStar.Unionfind
+module FStar.Unionfind
 (* Unionfind with path compression but without ranks *)
 
 type cell<'a when 'a : not struct> = {mutable contents : contents<'a> }

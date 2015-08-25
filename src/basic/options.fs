@@ -16,10 +16,10 @@
 #light "off"
 
 // (c) Microsoft Corporation. All rights reserved
-module Microsoft.FStar.Options
-open Microsoft.FStar
-open Microsoft.FStar.Util
-open Microsoft.FStar.Getopt
+module FStar.Options
+open FStar
+open FStar.Util
+open FStar.Getopt
 
 type debug_level_t = 
     | Low

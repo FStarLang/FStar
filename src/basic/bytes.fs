@@ -29,7 +29,7 @@
 #light
 
 /// Byte arrays
-module Microsoft.FStar.Bytes 
+module FStar.Bytes 
 
 open System.IO
 open Microsoft.FSharp.Compatibility

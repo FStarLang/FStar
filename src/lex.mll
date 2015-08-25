@@ -1,5 +1,5 @@
 {
-  open Microsoft_FStar_Parser_Parse
+  open FStar_Parser_Parse
   open Lexing
 
   module Option  = BatOption

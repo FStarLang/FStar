@@ -14,10 +14,10 @@
    limitations under the License.
 *)
 (* -------------------------------------------------------------------- *)
-module Microsoft.FStar.Extraction.ML.Code
+module FStar.Extraction.ML.Code
 
-open Microsoft.FStar.Extraction.ML.Syntax
-open Microsoft.FStar.Extraction.ML.Env
+open FStar.Extraction.ML.Syntax
+open FStar.Extraction.ML.Env
 open FSharp.Format
 
 val doc_of_mllib : mllib -> list<(string * doc)>

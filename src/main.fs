@@ -1,4 +1,4 @@
 ﻿#light "off"
-module Microsoft.FStar.Main
+module FStar.Main
 let _ = FStar.main ()
 

@@ -16,7 +16,7 @@
    limitations under the License.
 *)
 
-module Microsoft.FStar.Backends.JS.Ast
+module FStar.Backends.JS.Ast
 
 (* Type of Javascript program *)
 type t = list<source_t>

@@ -16,10 +16,10 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 
-module Microsoft.FStar.Tc.Normalize
+module FStar.Tc.Normalize
 
-open Microsoft.FStar.Tc
-open Microsoft.FStar.Absyn.Syntax
+open FStar.Tc
+open FStar.Absyn.Syntax
 
 type step =
   | WHNF         (* reduce to weak head normal form only -- CH: adding this removes behaviors, quite unintuitive; NS: Not sure what this comment means. *)

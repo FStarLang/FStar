@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  *)
-module Microsoft.FStar.List
+module FStar.List
 open Prims
 
 val isEmpty : (list<'a>) -> Tot<bool>

@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Microsoft.FStar.Getopt
+module FStar.Getopt
 (* A simplified re-implementation of Getopt, a command line parsing tool *)
 let noshort='\000'
 let nolong=""

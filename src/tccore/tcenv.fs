@@ -16,7 +16,7 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 
-module Microsoft.FStar.Tcenv
+module FStar.Tcenv
 
 open Absyn 
 open AbsynUtils

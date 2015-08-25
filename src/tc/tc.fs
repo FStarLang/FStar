@@ -14,16 +14,16 @@
    limitations under the License.
 *)
 #light "off"
-module Microsoft.FStar.Tc.Tc
+module FStar.Tc.Tc
 
-open Microsoft.FStar
-open Microsoft.FStar.Tc
-open Microsoft.FStar.Tc.Env
-open Microsoft.FStar.Util
-open Microsoft.FStar.Absyn
-open Microsoft.FStar.Absyn.Util
-open Microsoft.FStar.Tc.Rel
-open Microsoft.FStar.Absyn.Syntax
+open FStar
+open FStar.Tc
+open FStar.Tc.Env
+open FStar.Util
+open FStar.Absyn
+open FStar.Absyn.Util
+open FStar.Tc.Rel
+open FStar.Absyn.Syntax
 
 let syn' env k = syn (Tc.Env.get_range env) (Some k)
 let log env = !Options.log_types && not(lid_equals Const.prims_lid (Env.current_module env))

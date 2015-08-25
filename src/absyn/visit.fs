@@ -15,12 +15,12 @@
 *)
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
-module Microsoft.FStar.Absyn.Visit
+module FStar.Absyn.Visit
 
-open Microsoft.FStar
-open Microsoft.FStar.Absyn
-open Microsoft.FStar.Absyn.Syntax
-open Microsoft.FStar.Util
+open FStar
+open FStar.Absyn
+open FStar.Absyn.Syntax
+open FStar.Util
 
 let log s = ()
 

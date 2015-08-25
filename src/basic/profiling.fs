@@ -16,7 +16,7 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 
-module Microsoft.FStar.Profiling
+module FStar.Profiling
 
 let profiling = ref false
 

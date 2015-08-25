@@ -16,17 +16,17 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 
-module Microsoft.FStar.Tc.Util
+module FStar.Tc.Util
 
-open Microsoft.FStar
-open Microsoft.FStar.Tc
-open Microsoft.FStar.Absyn
-open Microsoft.FStar.Absyn.Util
-open Microsoft.FStar.Util
-open Microsoft.FStar.Tc.Env
-open Microsoft.FStar.Tc.Normalize
-open Microsoft.FStar.Tc.Rel
-open Microsoft.FStar.Absyn.Syntax
+open FStar
+open FStar.Tc
+open FStar.Absyn
+open FStar.Absyn.Util
+open FStar.Util
+open FStar.Tc.Env
+open FStar.Tc.Normalize
+open FStar.Tc.Rel
+open FStar.Absyn.Syntax
 
 (**************************************************************************************)
 (* Calling the solver *)

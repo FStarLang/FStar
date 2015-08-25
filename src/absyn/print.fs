@@ -15,13 +15,13 @@
 *)
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
-module Microsoft.FStar.Absyn.Print
+module FStar.Absyn.Print
 
-open Microsoft.FStar
-open Microsoft.FStar.Absyn
-open Microsoft.FStar.Util
-open Microsoft.FStar.Absyn.Syntax
-open Microsoft.FStar.Absyn.Util
+open FStar
+open FStar.Absyn
+open FStar.Util
+open FStar.Absyn.Syntax
+open FStar.Absyn.Util
 
 (* CH: This should later be shared with ocaml-codegen.fs and util.fs (is_primop and destruct_typ_as_formula) *)
 let infix_prim_ops = [

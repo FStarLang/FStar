@@ -14,12 +14,12 @@
    limitations under the License.
 *)
 #light "off"
-module Microsoft.FStar.Extraction.ML.Util
-open Microsoft.FStar
-open Microsoft.FStar.Util
-open Microsoft.FStar.Absyn
-open Microsoft.FStar.Absyn.Syntax
-open Microsoft.FStar.Extraction.ML.Syntax
+module FStar.Extraction.ML.Util
+open FStar
+open FStar.Util
+open FStar.Absyn
+open FStar.Absyn.Syntax
+open FStar.Extraction.ML.Syntax
 
 let pruneNones (l : list<option<'a>>) : list<'a> =
     List.fold_right (fun  x ll -> match x with 

@@ -14,14 +14,14 @@
    limitations under the License.
 *)
 #light "off"
-module Microsoft.FStar.FStar
-open Microsoft.FStar
-open Microsoft.FStar.Absyn
-open Microsoft.FStar.Absyn.Syntax
-open Microsoft.FStar.Util
-open Microsoft.FStar.Getopt
-open Microsoft.FStar.Tc.Util
-open Microsoft.FStar.Tc.Env
+module FStar.FStar
+open FStar
+open FStar.Absyn
+open FStar.Absyn.Syntax
+open FStar.Util
+open FStar.Getopt
+open FStar.Tc.Util
+open FStar.Tc.Env
 
 let process_args () = 
   let file_list = Util.mk_ref [] in

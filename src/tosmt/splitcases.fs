@@ -1,10 +1,10 @@
 ﻿#light "off"
  
-module Microsoft.FStar.ToSMT.SplitQueryCases
+module FStar.ToSMT.SplitQueryCases
 
-open Microsoft.FStar
-open Microsoft.FStar.Util
-open Microsoft.FStar.ToSMT.Term
+open FStar
+open FStar.Util
+open FStar.ToSMT.Term
 
 (* return: if is ite all the way, ite for n cases, neg guards conj, rest of t *)
 let rec get_next_n_ite (n:int) (t:term) (negs:term) (f:term -> term) :bool * term * term * term =

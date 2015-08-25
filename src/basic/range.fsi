@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Microsoft.FStar.Range
+module FStar.Range
 
 type range = int64
 type file_idx = int32

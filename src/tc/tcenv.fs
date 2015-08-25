@@ -15,14 +15,14 @@
 *)
 #light "off"
 
-module Microsoft.FStar.Tc.Env
+module FStar.Tc.Env
 
-open Microsoft.FStar
-open Microsoft.FStar.Absyn
-open Microsoft.FStar.Absyn.Syntax
-open Microsoft.FStar.Absyn.Util
-open Microsoft.FStar.Util
-open Microsoft.FStar.Absyn.Util
+open FStar
+open FStar.Absyn
+open FStar.Absyn.Syntax
+open FStar.Absyn.Util
+open FStar.Util
+open FStar.Absyn.Util
    
 type binding =
   | Binding_var of bvvdef * typ
@@ -546,7 +546,7 @@ let binders env : binders =
     | Binding_typ(a, k) -> (t_binder <| bvd_to_bvar_s a k)::out
     | _ -> out) [] env.gamma
 
-let t_binders env : Microsoft.FStar.Absyn.Syntax.binders = 
+let t_binders env : FStar.Absyn.Syntax.binders = 
   List.fold_left (fun out b -> match b with 
     | Binding_var _ -> out
     | Binding_typ(a, k) -> (t_binder <| bvd_to_bvar_s a k)::out

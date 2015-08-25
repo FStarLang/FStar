@@ -16,7 +16,7 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 
-module Microsoft.FStar.Tcutil
+module FStar.Tcutil
 
 open Absyn
 

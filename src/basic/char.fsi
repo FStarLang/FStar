@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Microsoft.FStar.Char
+module FStar.Char
 val lowercase: char -> char
 val uppercase: char -> char
 val int_of_char: char -> int

@@ -14,12 +14,12 @@
    limitations under the License.
 *)
 #light "off"
-module Microsoft.FStar.Parser.AST
-open Microsoft.FStar.Absyn
-open Microsoft.FStar.Absyn.Syntax
-open Microsoft.FStar.Range
-open Microsoft.FStar
-open Microsoft.FStar.Util
+module FStar.Parser.AST
+open FStar.Absyn
+open FStar.Absyn.Syntax
+open FStar.Range
+open FStar
+open FStar.Util
 
 (* AST produced by the parser, before desugaring
    It is not stratified: a single type called "term" containing

@@ -14,9 +14,9 @@
    limitations under the License.
 *)
 #light "off"
-module Microsoft.FStar.Absyn.Const
-open Microsoft.FStar.Absyn.Syntax
-open Microsoft.FStar.Util
+module FStar.Absyn.Const
+open FStar.Absyn.Syntax
+open FStar.Util
 
 let p2l l = lid_of_path l dummyRange 
 let pconst s     = p2l ["Prims";s]
