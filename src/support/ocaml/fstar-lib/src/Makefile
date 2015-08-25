@@ -1,4 +1,4 @@
-FILES=prims.ml st.ml all.ml list.ml option.ml Microsoft_FStar_Char.ml Microsoft_FStar_String.ml Microsoft_FStar_Util.ml Microsoft_FStar_Unionfind.ml Microsoft_FStar_Platform.ml Microsoft_FStar_Getopt.ml Microsoft_FStar_Range.ml Microsoft_FStar_Bytes.ml Microsoft_FStar_Parser_Util.ml set.ml map.ml heap.ml
+FILES=prims.ml FStar_ST.ml FStar_All.ml FStar_List.ml FStar_Option.ml FStar_Char.ml FStar_String.ml FStar_Util.ml FStar_Unionfind.ml FStar_Platform.ml FStar_Getopt.ml FStar_Range.ml FStar_Bytes.ml FStar_Parser_Util.ml FStar_Set.ml FStar_Set.ml FStar_Set.ml
 OCAMLOPT=ocamlfind ocamlopt -thread -package batteries -linkpkg -g
 OCAMLDEP=ocamldep
 OBJS=$(FILES:.ml=.o)
