@@ -10,14 +10,13 @@ VERSION=$(shell cat ../version.txt)
 
 NAME=fstar_$(VERSION)_$(shell echo `uname`_`uname -m`)
 
-BASE_OBJS=prims.cmx ST.cmx all.cmx option.cmx 
-FSTAR_LIBS=FStar_List.cmx FStar_Char.cmx FStar_String.cmx FStar_Util.cmx FStar_Bytes.cmx FStar_Getopt.cmx FStar_Range.cmx FStar_Parser_Util.cmx FStar_Platform.cmx FStar_Unionfind.cmx 
+BASE_OBJS=prims.cmx
+FSTAR_LIBS=FStar_ST.cmx FStar_All.cmx FStar_Option.cmx FStar_List.cmx FStar_Char.cmx FStar_String.cmx FStar_Util.cmx FStar_Bytes.cmx FStar_Getopt.cmx FStar_Range.cmx FStar_Parser_Util.cmx FStar_Platform.cmx FStar_Unionfind.cmx 
 FSTAR_OBJS=$(BASE_OBJS) $(FSTAR_LIBS) FStar_Options.cmx FStar_Absyn_Syntax.cmx FStar_Absyn_Const.cmx FStar_Absyn_Visit.cmx FStar_Absyn_Util.cmx FStar_Absyn_Print.cmx FStar_Absyn_SSyntax.cmx FStar_Tc_Env.cmx FStar_Tc_Recheck.cmx FStar_Tc_Normalize.cmx FStar_Tc_Errors.cmx FStar_Tc_Rel.cmx FStar_Tc_Util.cmx FStar_Tc_Tc.cmx FStar_Parser_AST.cmx FStar_Parser_DesugarEnv.cmx FStar_Parser_Desugar.cmx FStar_Parser_Parse.cmx FStar_Parser_Lexhelp.cmx FStar_Parser_LexFStar.cmx FStar_Parser_ParseIt.cmx FStar_Parser_Driver.cmx FStar_ToSMT_Term.cmx FStar_ToSMT_Z3.cmx FStar_ToSMT_SplitQueryCases.cmx FStar_ToSMT_Encode.cmx FSharp_Format.cmx FStar_Extraction_ML_Syntax.cmx FStar_Extraction_ML_Env.cmx FStar_Extraction_ML_Util.cmx FStar_Extraction_OCaml_Code.cmx FStar_Extraction_ML_Code.cmx FStar_Extraction_ML_ExtractTyp.cmx FStar_Extraction_ML_ExtractExp.cmx FStar_Extraction_ML_ExtractMod.cmx FStar_FStar.cmx
 
 SUPPORT_DIR=../support/ocaml/fstar-lib/src
 
-default: $(FSTARML)
-# >>>>>>> revising libraries to cleanup ocaml backend
+default: fstar.exe
 
 package: parser fstar.exe
 	rm -f $(NAME).zip $(NAME).tar.gz
@@ -37,6 +36,8 @@ ifeq ($(OS),Windows_NT)
 else
 	tar czf $(NAME).tar.gz fstar
 endif
+
+PARSER_MLS=FStar_Parser_LexFStar.ml FStar_Parser_Parse.ml FStar_Parser_ParseIt.ml parse.ml parse.mli
 
 prep: parser base_objs depend 
 
@@ -61,9 +62,6 @@ parser:
 #	cp ../support/ocaml/fstar-lang/src/FSLangLexer.mll lex.mll
 	ocamllex ../lex.mll -o FStar_Parser_LexFStar.ml
 	cp ../parseit.ml FStar_Parser_ParseIt.ml
-ifneq (, $(shell which dos2unix))
-	dos2unix parse.mly
-endif
 ifneq (, $(shell which unix2dos))
 	unix2dos $(PARSER_MLS)
 endif
@@ -92,7 +90,7 @@ clean:
 	rm -dfr fstar
 	rm -f .depend fstar.exe *.cmi *.cmx *.cmo *.o
 	rm -f fstarml* support.ml
-	rm -f $(PARSER_MLS) parse.mly
+	rm -f $(PARSER_MLS) parse.mly $(BASE_OBJS:.cmx=.ml) $(FSTAR_LIBS:.cmx=.ml)
 	rm -f *.tar.gz *.zip
 
 # Purge (clean + delete *all* automatically generated files)

@@ -178,7 +178,7 @@ BOOT_EXTRACTION=$(addprefix extraction/, $(BOOT_EXTRACTIONFILES))
 BOOT_MAIN=fstar.fs
 BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_TC) $(BOOT_PARSER) $(TOSMT_SRC) $(BOOT_FORMAT) $(BOOT_EXTRACTION) fstar.fs
 
-ADMITTED_MODULES=System System.IO System.Text System.Diagnostics System.Collections.Generic Collections Set Heap ST All List Option Microsoft.FStar.Char Microsoft.FStar.String Microsoft.FStar.List Microsoft.FStar.Bytes Microsoft.FStar.Platform Microsoft.FStar.Util Microsoft.FStar.Getopt Microsoft.FStar.Range Microsoft.FStar.Unionfind Microsoft.FStar.Parser.ParseIt Microsoft.FStar.Parser.Parse 
+ADMITTED_MODULES=System System.IO System.Text System.Diagnostics System.Collections.Generic Collections FStar.Set FStar.Heap FStar.ST FStar.All FStar.List FStar.Option FStar.Char FStar.String FStar.List FStar.Bytes FStar.Platform FStar.Util FStar.Getopt FStar.Range FStar.Unionfind FStar.Parser.ParseIt FStar.Parser.Parse 
 ADMITS=$(addprefix --admit_fsi , $(ADMITTED_MODULES))
 
 boot: $(BOOT_ALL)
@@ -204,13 +204,13 @@ fstarml:
 
 FS_SUPPORT_LIBS=prims.fs st.fs all.fs
 FSTAR_SUPPORT_LIBS=char.fsi char.fs string.fsi string.fs list.fsi list.fs util.fsi util.fs platform.fsi platform.fs bytes.fsi bytes.fs range.fsi range.fs getoptsimple.fsi getoptsimple.fs unionfind.fsi unionfind.fs
-BOOT_FS_BASE=Microsoft.FStar.Options.fs
-BOOT_FS_SYNTAX=Microsoft.FStar.Absyn.Syntax.fs Microsoft.FStar.Absyn.Const.fs Microsoft.FStar.Absyn.Visit.fs Microsoft.FStar.Absyn.Util.fs Microsoft.FStar.Absyn.Print.fs Microsoft.FStar.Absyn.SSyntax.fs
-BOOT_FS_TC=Microsoft.FStar.Tc.Env.fs Microsoft.FStar.Tc.Recheck.fs Microsoft.FStar.Tc.Normalize.fs Microsoft.FStar.Tc.Errors.fs Microsoft.FStar.Tc.Rel.fs Microsoft.FStar.Tc.Util.fs Microsoft.FStar.Tc.Tc.fs 
-BOOT_FS_PARSER=Microsoft.FStar.Parser.AST.fs parseutil.fs parse.fs Microsoft.FStar.Parser.Lexhelp.fs lex.fs Microsoft.FStar.Parser.DesugarEnv.fs Microsoft.FStar.Parser.Desugar.fs parseit.fs Microsoft.FStar.Parser.Driver.fs
-BOOT_FS_TOSMT=Microsoft.FStar.ToSMT.Term.fs Microsoft.FStar.ToSMT.Z3.fs Microsoft.FStar.ToSMT.SplitQueryCases.fs Microsoft.FStar.ToSMT.Encode.fs
-BOOT_FS_EXTRACTION=Microsoft.FStar.Extraction.ML.Syntax.fs Microsoft.FStar.Extraction.ML.Env.fs Microsoft.FStar.Extraction.ML.Util.fs Microsoft.FStar.Extraction.OCaml.Code.fs Microsoft.FStar.Extraction.ML.Code.fs Microsoft.FStar.Extraction.ML.ExtractTyp.fs Microsoft.FStar.Extraction.ML.ExtractExp.fs Microsoft.FStar.Extraction.ML.ExtractMod.fs
-BOOT_FS_FILES=FSharp.Format.fs $(BOOT_FS_BASE) $(BOOT_FS_SYNTAX) $(BOOT_FS_TC) $(BOOT_FS_PARSER) $(BOOT_FS_TOSMT) $(BOOT_FS_EXTRACTION) Microsoft.FStar.FStar.fs
+BOOT_FS_BASE=FStar.Options.fs
+BOOT_FS_SYNTAX=FStar.Absyn.Syntax.fs FStar.Absyn.Const.fs FStar.Absyn.Visit.fs FStar.Absyn.Util.fs FStar.Absyn.Print.fs FStar.Absyn.SSyntax.fs
+BOOT_FS_TC=FStar.Tc.Env.fs FStar.Tc.Recheck.fs FStar.Tc.Normalize.fs FStar.Tc.Errors.fs FStar.Tc.Rel.fs FStar.Tc.Util.fs FStar.Tc.Tc.fs 
+BOOT_FS_PARSER=FStar.Parser.AST.fs parseutil.fs parse.fs FStar.Parser.Lexhelp.fs lex.fs FStar.Parser.DesugarEnv.fs FStar.Parser.Desugar.fs parseit.fs FStar.Parser.Driver.fs
+BOOT_FS_TOSMT=FStar.ToSMT.Term.fs FStar.ToSMT.Z3.fs FStar.ToSMT.SplitQueryCases.fs FStar.ToSMT.Encode.fs
+BOOT_FS_EXTRACTION=FStar.Extraction.ML.Syntax.fs FStar.Extraction.ML.Env.fs FStar.Extraction.ML.Util.fs FStar.Extraction.OCaml.Code.fs FStar.Extraction.ML.Code.fs FStar.Extraction.ML.ExtractTyp.fs FStar.Extraction.ML.ExtractExp.fs FStar.Extraction.ML.ExtractMod.fs
+BOOT_FS_FILES=FSharp.Format.fs $(BOOT_FS_BASE) $(BOOT_FS_SYNTAX) $(BOOT_FS_TC) $(BOOT_FS_PARSER) $(BOOT_FS_TOSMT) $(BOOT_FS_EXTRACTION) FStar.FStar.fs
 
 boot_fs: fsharp-output fs plain-fs-files fsharp-output/fstar.exe 
 

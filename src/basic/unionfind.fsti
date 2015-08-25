@@ -15,7 +15,7 @@
 *)
 // (c) Microsoft Corporation. All rights reserved
 
-module Microsoft.FStar.Unionfind
+module FStar.Unionfind
 
 type uvar 'a
 val uvar_id: uvar 'a -> int

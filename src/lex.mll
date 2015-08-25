@@ -17,7 +17,7 @@
       (lexeme_start_p lexbuf, lexeme_end_p lexbuf)
   end
 
-  let string_trim_both s n m = Microsoft_FStar_Util.substring s n (String.length s - (n+m))
+  let string_trim_both s n m = FStar_Util.substring s n (String.length s - (n+m))
   let trim_both   lexbuf n m = string_trim_both (L.lexeme lexbuf) n m
   let trim_right  lexbuf n = trim_both lexbuf 0 n
   let trim_left   lexbuf n = trim_both lexbuf n 0
@@ -87,9 +87,9 @@
   type delimiters = { angle:int ref; paren:int ref; }
 
   let ba_of_string s = Array.init (String.length s) (String.get s)
-  let n_typ_apps = Microsoft_FStar_Util.mk_ref 0
+  let n_typ_apps = FStar_Util.mk_ref 0
   let is_typ_app lexbuf =
-  if not !Microsoft_FStar_Options.fs_typ_app then false
+  if not !FStar_Options.fs_typ_app then false
   else try
    let char_ok = function
      | '(' | ')' | '<' | '>' | '*' | '-' | '\'' | '_' | ',' | '.' | ' ' | '\t' -> true
@@ -98,36 +98,36 @@
      | c when c >= '0' && c <= '9' -> true
      | _ -> false in
    let balanced (contents:string) pos =
-    if Microsoft_FStar_Util.char_at contents pos <> '<' then
+    if FStar_Util.char_at contents pos <> '<' then
       (failwith  "Unexpected position in is_typ_lapp");
     let d = {angle=ref 1; paren=ref 0} in
-    let upd i = match Microsoft_FStar_Util.char_at contents i with
+    let upd i = match FStar_Util.char_at contents i with
       | '(' -> incr d.paren | ')' -> decr d.paren
       | '<' -> incr d.angle | '>' -> decr d.angle
       | _ -> () in
     let ok () = !(d.angle) >= 0 && !(d.paren) >= 0 in
     let rec aux i =
       if !(d.angle)=0 && !(d.paren)=0 then true
-      else if i >= String.length contents || not (ok ()) || (not (char_ok (Microsoft_FStar_Util.char_at contents i))) || (Microsoft_FStar_Util.starts_with (Microsoft_FStar_Util.substring_from contents i) "then") then false
+      else if i >= String.length contents || not (ok ()) || (not (char_ok (FStar_Util.char_at contents i))) || (FStar_Util.starts_with (FStar_Util.substring_from contents i) "then") then false
       else (upd i; aux (i + 1)) in
       aux (pos + 1) in
    let rest = String.sub lexbuf.lex_buffer lexbuf.lex_last_pos (lexbuf.lex_buffer_len - lexbuf.lex_last_pos) in
    if not (String.contains rest '\n') then (lexbuf.refill_buff lexbuf);
    let lookahead = String.sub lexbuf.lex_buffer (lexbuf.lex_last_pos - 1) (lexbuf.lex_buffer_len - lexbuf.lex_last_pos + 1) in
    let res = balanced lookahead 0 in
-   if res then Microsoft_FStar_Util.incr n_typ_apps;
+   if res then FStar_Util.incr n_typ_apps;
    (*Printf.printf "TYP_APP %s: %s\n" lookahead (if res then "YES" else "NO");*)
    res
   with e -> Printf.printf "Resolving typ_app<...> syntax failed.\n"; false
 
   let is_typ_app_gt () =
     if !n_typ_apps > 0
-    then (Microsoft_FStar_Util.decr n_typ_apps; true)
+    then (FStar_Util.decr n_typ_apps; true)
     else false
 
-  let lc = Microsoft_FStar_Util.mk_ref 1
+  let lc = FStar_Util.mk_ref 1
   let rec mknewline n lexbuf =
-    if n > 0 then (L.new_line lexbuf; Microsoft_FStar_Util.incr lc; mknewline (n-1) lexbuf)
+    if n > 0 then (L.new_line lexbuf; FStar_Util.incr lc; mknewline (n-1) lexbuf)
 
  let clean_number x = String.strip ~chars:"uyslLUnIN" x
 }
