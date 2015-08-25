@@ -11,7 +11,7 @@ VERSION=$(shell cat ../version.txt)
 NAME=fstar_$(VERSION)_$(shell echo `uname`_`uname -m`)
 
 # not using this any more
-REV=$(shell git log --pretty=format:'%h' -n 1)
+# REV=$(shell "git log --pretty=format:'%h' -n 1")
 
 FSTAR_OBJS=support.cmx Microsoft_FStar_Options.cmx Microsoft_FStar_Absyn_Syntax.cmx Microsoft_FStar_Absyn_Const.cmx Microsoft_FStar_Absyn_Visit.cmx Microsoft_FStar_Absyn_Util.cmx Microsoft_FStar_Absyn_Print.cmx Microsoft_FStar_Absyn_SSyntax.cmx Microsoft_FStar_Tc_Env.cmx Microsoft_FStar_Tc_Recheck.cmx Microsoft_FStar_Tc_Normalize.cmx Microsoft_FStar_Tc_Errors.cmx Microsoft_FStar_Tc_Rel.cmx Microsoft_FStar_Tc_Util.cmx Microsoft_FStar_Tc_Tc.cmx Microsoft_FStar_Parser_AST.cmx Microsoft_FStar_Parser_DesugarEnv.cmx Microsoft_FStar_Parser_Desugar.cmx Microsoft_FStar_Parser_Parse.cmx Microsoft_FStar_Parser_Lexhelp.cmx Microsoft_FStar_Parser_LexFStar.cmx Microsoft_FStar_Parser_ParseIt.cmx Microsoft_FStar_Parser_Driver.cmx Microsoft_FStar_ToSMT_Term.cmx Microsoft_FStar_ToSMT_Z3.cmx Microsoft_FStar_ToSMT_SplitQueryCases.cmx Microsoft_FStar_ToSMT_Encode.cmx FSharp_Format.cmx Microsoft_FStar_Extraction_ML_Syntax.cmx Microsoft_FStar_Extraction_ML_Env.cmx Microsoft_FStar_Extraction_ML_Util.cmx Microsoft_FStar_Extraction_OCaml_Code.cmx Microsoft_FStar_Extraction_ML_Code.cmx Microsoft_FStar_Extraction_ML_ExtractTyp.cmx Microsoft_FStar_Extraction_ML_ExtractExp.cmx Microsoft_FStar_Extraction_ML_ExtractMod.cmx Microsoft_FStar_FStar.cmx
 
@@ -22,7 +22,7 @@ all: fstar.exe
 
 # the `export` function takes a path relative to the top of the F* repo
 # and exports the contents of that directory to the `fstar` dir
-export = cd ../.. && git archive --format=tar --prefix=$(1)/ HEAD:$(1)/ | tar -x -C src/ocaml-output/fstar
+export = cd ../.. && git archive "--format=tar" "--prefix=$(1)/" HEAD:$(1)/ | tar -x -C src/ocaml-output/fstar
 
 package: parser fstar.exe
 	rm -f $(NAME).zip $(NAME).tar.gz
@@ -69,7 +69,7 @@ support.ml: ../support/ocaml/fstar-lib/src/support.ml
 fstarml.ml: ../main.ml
 	cp $^ $@
 
-fstar.exe: $(FSTAR_OBJS) support.ml fstarml.ml
+fstar.exe: $(FSTAR_OBJS) fstarml.ml
 	$(OCAMLOPT) $(OCAMLOPTFLAGS) -o fstar.exe $^
 	cp fstar.exe ../../bin/fstar.exe
 
