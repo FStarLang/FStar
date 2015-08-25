@@ -1,7 +1,7 @@
 # -*- Makefile -*-
 
 # --------------------------------------------------------------------
-BASIC=prims-fake.fs profiling.fs util.fsi util.fs bytes.fsi bytes.fs range.fsi range.fs getoptsimple.fsi getoptsimple.fs platform.fsi platform.fs options.fs unionfind.fsi unionfind.fs
+BASIC=prims-fake.fs profiling.fs char.fsi char.fs string.fsi string.fs list.fsi list.fs util.fsi util.fs bytes.fsi bytes.fs range.fsi range.fs getoptsimple.fsi getoptsimple.fs platform.fsi platform.fs options.fs unionfind.fsi unionfind.fs
 BASIC_SRC=$(addprefix basic/, $(BASIC))
 
 ABSYN=syntax.fs const.fs visit.fs util.fs print.fs ssyntax.fs
@@ -158,11 +158,11 @@ clean:
 # --------------------------------------------------------------------
 
 STDFILESEXP=system.fst
-STDFILES=system.fsi system.io.fsi system.text.fsi system.diagnostics.fsi system.collections.generic.fsi collections.fsi set.fsi allboot.fsti stboot.fsi list.fsi option.fsi string.fsi char.fsi
+STDFILES=system.fsi system.io.fsi system.text.fsi system.diagnostics.fsi system.collections.generic.fsi collections.fsi set.fsi allboot.fsti stboot.fsi list.fsi option.fsi
 STDLIB=$(addprefix ../lib/, $(STDFILES))
 STDLIBEXP=$(addprefix ../lib/, $(STDFILES))
 
-BOOT_BASICFILES=bytes.fsti platform.fsi util.fsi getoptsimple.fsti range.fsti unionfind.fsti options.fs
+BOOT_BASICFILES=char.fsi string.fsi bytes.fsti platform.fsi util.fsi getoptsimple.fsti range.fsti unionfind.fsti options.fs
 BOOT_BASIC=$(addprefix basic/, $(BOOT_BASICFILES))
 BOOT_SYNTAXFILES=syntax.fsi syntax.fs const.fs visit.fs util.fs print.fs ssyntax.fs
 BOOT_SYNTAX=$(addprefix absyn/, $(BOOT_SYNTAXFILES))
@@ -178,8 +178,9 @@ BOOT_EXTRACTION=$(addprefix extraction/, $(BOOT_EXTRACTIONFILES))
 BOOT_MAIN=fstar.fs
 BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_TC) $(BOOT_PARSER) $(TOSMT_SRC) $(BOOT_FORMAT) $(BOOT_EXTRACTION) fstar.fs
 
-ADMITTED_MODULES=System System.IO System.Text System.Diagnostics System.Collections.Generic Collections Set Heap ST All List Option String Char Microsoft.FStar.Bytes Microsoft.FStar.Platform Microsoft.FStar.Util Microsoft.FStar.Getopt Microsoft.FStar.Range Microsoft.FStar.Unionfind Microsoft.FStar.Parser.ParseIt Microsoft.FStar.Parser.Parse
+ADMITTED_MODULES=System System.IO System.Text System.Diagnostics System.Collections.Generic Collections Set Heap ST All List Option Microsoft.FStar.Char Microsoft.FStar.String Microsoft.FStar.List Microsoft.FStar.Bytes Microsoft.FStar.Platform Microsoft.FStar.Util Microsoft.FStar.Getopt Microsoft.FStar.Range Microsoft.FStar.Unionfind Microsoft.FStar.Parser.ParseIt Microsoft.FStar.Parser.Parse 
 ADMITS=$(addprefix --admit_fsi , $(ADMITTED_MODULES))
+
 boot: $(BOOT_ALL)
 	../bin/fstar.exe --debug yes --fs_typ_app --lax $(FSTAROPTS) $(ADMITS) $^
 
@@ -202,7 +203,7 @@ fstarml:
 # --------------------------------------------------------------------
 
 FS_SUPPORT_LIBS=prims.fs st.fs all.fs
-FSTAR_SUPPORT_LIBS=util.fsi util.fs platform.fsi platform.fs bytes.fsi bytes.fs range.fsi range.fs getoptsimple.fsi getoptsimple.fs unionfind.fsi unionfind.fs
+FSTAR_SUPPORT_LIBS=char.fsi char.fs string.fsi string.fs list.fsi list.fs util.fsi util.fs platform.fsi platform.fs bytes.fsi bytes.fs range.fsi range.fs getoptsimple.fsi getoptsimple.fs unionfind.fsi unionfind.fs
 BOOT_FS_BASE=Microsoft.FStar.Options.fs
 BOOT_FS_SYNTAX=Microsoft.FStar.Absyn.Syntax.fs Microsoft.FStar.Absyn.Const.fs Microsoft.FStar.Absyn.Visit.fs Microsoft.FStar.Absyn.Util.fs Microsoft.FStar.Absyn.Print.fs Microsoft.FStar.Absyn.SSyntax.fs
 BOOT_FS_TC=Microsoft.FStar.Tc.Env.fs Microsoft.FStar.Tc.Recheck.fs Microsoft.FStar.Tc.Normalize.fs Microsoft.FStar.Tc.Errors.fs Microsoft.FStar.Tc.Rel.fs Microsoft.FStar.Tc.Util.fs Microsoft.FStar.Tc.Tc.fs 

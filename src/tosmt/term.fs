@@ -178,7 +178,8 @@ let mk t =
 let mkTrue       = mk (App(True, [])) 
 let mkFalse      = mk (App(False, []))
 let mkInteger i  = mk (Integer i)
-let mkInteger' i = mkInteger (string_of_int i) 
+let mkInteger32 i = mkInteger (string_of_int32 i) 
+let mkInteger' i  = mkInteger (string_of_int i) 
 let mkBoundV i   = mk (BoundV i) 
 let mkFreeV x    = mk (FreeV x) 
 let mkApp' f        = mk (App f) 
@@ -503,7 +504,7 @@ and mkPrelude z3options =
    basic ^ bcons ^ lex_ordering
 
 let mk_Kind_type        = mkApp("Kind_type", [])
-let mk_Kind_uvar i      = mkApp("Kind_uvar", [mkInteger' i])
+let mk_Kind_uvar i      = mkApp("Kind_uvar", [mkInteger'  i])
 let mk_Typ_app t1 t2    = mkApp("Typ_app", [t1;t2])
 let mk_Typ_dep t1 t2    = mkApp("Typ_dep", [t1;t2])
 let mk_Typ_uvar i       = mkApp("Typ_uvar", [mkInteger' i])
@@ -553,7 +554,7 @@ let mk_ApplyTT t t'   = mkApp("ApplyTT", [t;t'])
 let mk_ApplyET e t    = mkApp("ApplyET", [e;t])
 let mk_ApplyEE e e'   = mkApp("ApplyEE", [e;e'])
 let mk_ApplyEF e f    = mkApp("ApplyEF", [e;f])
-let mk_String_const i = mkApp("String_const", [ mkInteger' i ])
+let mk_String_const i = mkApp("String_const", [ mkInteger' i])
 let mk_Precedes x1 x2 = mkApp("Precedes", [x1;x2]) |> mk_Valid
 let mk_LexCons x1 x2  = mkApp("LexCons", [x1;x2])
 let rec n_fuel n = 

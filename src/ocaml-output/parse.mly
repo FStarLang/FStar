@@ -40,6 +40,7 @@
 
 
 
+
 %} 
 
 %token <bytes> BYTEARRAY
@@ -392,7 +393,7 @@ typars:
   | binders                { $1 }
 
 tvarinsts: 
-  | TYP_APP_LESS tvars TYP_APP_GREATER    { List.map (fun tv -> mk_binder (TVariable(tv)) tv.idRange Kind None) $2 }
+  | TYP_APP_LESS tvars TYP_APP_GREATER    { map (fun tv -> mk_binder (TVariable(tv)) tv.idRange Kind None) $2 }
 
 aqual_opt:
   | HASH   { Some Implicit }
@@ -848,7 +849,7 @@ atomicTerm:
       }
   | projectionLHS maybeFieldProjections 
       {  
-        List.fold_left (fun e f -> 
+        fold_left (fun e f -> 
                           mk_term (Project(e, lid_of_ids [f])) (rhs2 parseState 1 3) Expr )
           $1 $2
       }

@@ -64,7 +64,7 @@ let kill_process (p:proc) =
   p.killed <- true
 
 let kill_all () =
-  List.iter (fun p -> if not p.killed then kill_process p) !all_procs
+  Microsoft_FStar_List.iter (fun p -> if not p.killed then kill_process p) !all_procs
 
 let run_proc (name:string) (args:string) (stdin:string) : bool * string * string =
   let command = name^" "^args in
@@ -131,8 +131,8 @@ let smap_create (i:int) : 'value smap = BatHashtbl.create i
 let smap_clear (s:('value smap)) = BatHashtbl.clear s
 let smap_add (m:'value smap) k (v:'value) = BatHashtbl.add m k v
 let smap_of_list (l: (string * 'value) list) =
-  let s = smap_create (List.length l) in
-  List.iter (fun (x,y) -> smap_add s x y) l;
+  let s = smap_create (Microsoft_FStar_List.length l) in
+  Microsoft_FStar_List.iter (fun (x,y) -> smap_add s x y) l;
   s
 let smap_try_find (m:'value smap) k = BatHashtbl.find_option m k
 let smap_fold (m:'value smap) f a = BatHashtbl.fold f m a
@@ -171,10 +171,10 @@ let float_of_int32 = float_of_int
 let float_of_int64 = BatInt64.to_float
 
 let int_of_int32 i = i
-let int32_of_int i = i
+let int32_of_int i = BatInt32.of_int i
 
 let string_of_int = string_of_int
-let string_of_int32 = string_of_int
+let string_of_int32 = BatInt32.to_string
 let string_of_int64 = BatInt64.to_string
 let string_of_float = string_of_float
 let string_of_char  (i:char) = spr "%c" i
@@ -438,7 +438,7 @@ type oWriter = {
   write_byte: char -> unit;
   write_bool: bool -> unit;
   write_int: int -> unit;
-  write_int32: int -> unit;
+  write_int32: int32 -> unit;
   write_int64: int64 -> unit;
   write_char: char -> unit;
   write_double: float -> unit;
@@ -452,7 +452,7 @@ type oReader = {
   read_byte: unit -> char;
   read_bool: unit -> bool;
   read_int: unit -> int;
-  read_int32: unit -> int;
+  read_int32: unit -> int32;
   read_int64: unit -> int64;
   read_char: unit -> char;
   read_double: unit -> float;
@@ -511,7 +511,7 @@ let get_oreader (filename:string) : oReader = {
   read_byte = (fun _ -> 'a');
   read_bool = (fun _ -> true);
   read_int = (fun _ -> 0);
-  read_int32 = (fun _ -> 0);
+  read_int32 = (fun _ -> failwith "NYI");
   read_int64 = (fun _ -> 0L);
   read_char = (fun _ -> 'a');
   read_double = (fun _ -> 0.0);

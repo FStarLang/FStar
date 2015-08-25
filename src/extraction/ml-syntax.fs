@@ -1,6 +1,6 @@
 ﻿(* -------------------------------------------------------------------- *)
 module Microsoft.FStar.Extraction.ML.Syntax
-
+open Microsoft.FStar
 open Microsoft.FStar.Absyn.Syntax
 
 (* -------------------------------------------------------------------- *)

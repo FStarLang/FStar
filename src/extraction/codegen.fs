@@ -111,7 +111,7 @@ let infix_prim_ops = [
     ("op_GreaterThanOrEqual", e_bin_prio_order , ">=");
     ("op_LessThan"          , e_bin_prio_order , "<" );
     ("op_GreaterThan"       , e_bin_prio_order , ">" );
-    ("op_Modulus"           , e_bin_prio_order , "%" );
+//    ("op_Modulus"           , e_bin_prio_order , "%" );
 ]
 
 (* -------------------------------------------------------------------- *)

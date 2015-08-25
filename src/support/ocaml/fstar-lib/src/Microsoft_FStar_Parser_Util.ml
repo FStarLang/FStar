@@ -5,13 +5,12 @@ type byte = char
 type sbyte = char
 type bytes = char array
 type decimal = float
-type int16 = int
-type int32 = int
-type uint16 = int
-type uint32 = int
-type uint64 = int64
 type single = float
 type double = float
+(* FIXME! *)
+type int16 = Prims.int
+type uint32 = Prims.int
+type uint64 = Prims.int64
 
 let parseState = ()
 

@@ -20,7 +20,7 @@ let rec parse (opts:opt list) def ar ix max i =
       let hd = String.sub arg 0 2 in
       if hd = "--" then
         let argtrim = String.sub arg 2 ((String.length arg) - 2) in
-        match List.tryFind (fun (_, option, _, _) -> option = argtrim) opts with
+        match Microsoft_FStar_List.tryFind (fun (_, option, _, _) -> option = argtrim) opts with
         | Some (_, _, p, _) ->
            (match p with
             | ZeroArgs f -> f (); parse opts def ar (ix + 1) max (i + 1)

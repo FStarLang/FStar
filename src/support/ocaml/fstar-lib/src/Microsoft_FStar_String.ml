@@ -1,4 +1,3 @@
-module S = String
 let make len v : Prims.string = BatString.init len (fun x -> char_of_int v)
 let strcat s t = s^t
 let split seps s =
@@ -11,6 +10,6 @@ let split seps s =
 let compare x y = BatString.compare x y
 let concat = BatString.concat
 let length = BatString.length
-let sub = S.sub
-let get = S.get
+let sub s i j = BatString.slice ~first:i ~last:j s
+let get s i = Microsoft_FStar_List.nth (BatString.to_list s) i
 let collect = BatString.replace_chars

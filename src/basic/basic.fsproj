@@ -51,6 +51,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="prims-fake.fs" />
+    <Compile Include="char.fsi" />
+    <Compile Include="char.fs" />
+    <Compile Include="string.fsi" />
+    <Compile Include="string.fs" />
+    <Compile Include="list.fsi" />
+    <Compile Include="list.fs" />
     <Compile Include="profiling.fs" />
     <Compile Include="util.fsi" />
     <Compile Include="util.fs" />

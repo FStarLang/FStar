@@ -198,4 +198,4 @@ let emit_int_as_byte t i = Bytebuf.emit_int_as_byte t i
 let emit_bytes t b = Bytebuf.emit_bytes t b
 
 let f_encode f (b:bytes) : string = 
-    String.concat "" (Array.map f b)
+    Microsoft.FSharp.Core.String.concat "" (Array.map f b)

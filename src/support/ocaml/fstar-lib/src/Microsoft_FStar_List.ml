@@ -1,3 +1,5 @@
+(* We give an implementation here using OCaml's BatList,
+   which privide tail-recursive versions of most functions *)
 let isEmpty l = l = []
 let mem = BatList.mem
 let memT = mem

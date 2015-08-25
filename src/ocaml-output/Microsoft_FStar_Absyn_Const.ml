@@ -1,7 +1,7 @@
 
-let p2l = (fun ( l ) -> (Microsoft_FStar_Absyn_Syntax.lid_of_path l Microsoft_FStar_Absyn_Syntax.dummyRange))
+let p2l = (fun l -> (Microsoft_FStar_Absyn_Syntax.lid_of_path l Microsoft_FStar_Absyn_Syntax.dummyRange))
 
-let pconst = (fun ( s ) -> (p2l (("Prims")::(s)::[])))
+let pconst = (fun s -> (p2l (("Prims")::(s)::[])))
 
 let prims_lid = (p2l (("Prims")::[]))
 
@@ -39,19 +39,19 @@ let int31_lid = (p2l (("Int31")::("int31")::[]))
 
 let heap_lid = (p2l (("Heap")::("heap")::[]))
 
-let kunary = (fun ( k ) ( k' ) -> (let _89_11 = (let _89_10 = (let _89_9 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k)
+let kunary = (fun k k' -> (let _89_11 = (let _89_10 = (let _89_9 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k)
 in (_89_9)::[])
 in (_89_10, k'))
 in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _89_11 Microsoft_FStar_Absyn_Syntax.dummyRange)))
 
-let kbin = (fun ( k1 ) ( k2 ) ( k' ) -> (let _89_22 = (let _89_21 = (let _89_20 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k1)
+let kbin = (fun k1 k2 k' -> (let _89_22 = (let _89_21 = (let _89_20 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k1)
 in (let _89_19 = (let _89_18 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k2)
 in (_89_18)::[])
 in (_89_20)::_89_19))
 in (_89_21, k'))
 in (Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow _89_22 Microsoft_FStar_Absyn_Syntax.dummyRange)))
 
-let ktern = (fun ( k1 ) ( k2 ) ( k3 ) ( k' ) -> (let _89_37 = (let _89_36 = (let _89_35 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k1)
+let ktern = (fun k1 k2 k3 k' -> (let _89_37 = (let _89_36 = (let _89_35 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k1)
 in (let _89_34 = (let _89_33 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k2)
 in (let _89_32 = (let _89_31 = (Microsoft_FStar_Absyn_Syntax.null_t_binder k3)
 in (_89_31)::[])
@@ -118,7 +118,7 @@ let assume_lid = (pconst "_assume")
 
 let assert_lid = (pconst "_assert")
 
-let list_append_lid = (p2l (("List")::("append")::[]))
+let list_append_lid = (p2l (("Microsoft")::("FStar")::("List")::("append")::[]))
 
 let strcat_lid = (p2l (("Prims")::("strcat")::[]))
 
