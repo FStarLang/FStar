@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set;
+    options:--admit_fsi FStar.Set;
     variables:LIB=../../lib/;
     other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst ../../lib/int32.fst
  --*)
@@ -19,7 +19,7 @@
    limitations under the License.
 *)
 module TestInt32
-open Int32
+open FStar.Int32
 let f0 (x:nat32) : int32 = x - 1l
 let f1 (x:nat32) (y:nat32{y <= x}) : nat32 = x - y
 let f2 (x:nat32{x < (Int32.max_value / 2l)}) = x * 2l

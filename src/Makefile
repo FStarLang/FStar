@@ -190,7 +190,7 @@ ocaml: $(BOOT_ALL)
 ocaml-test: ocaml boot-ocaml
 
 boot-ocaml:
-	make -C ocaml-output parser
+	make -C ocaml-output prep
 	make -C ocaml-output
 
 fstarml:
