@@ -1,2 +1,2 @@
-*.fst linguist-language=FStar
-*.fsti linguist-language=FStar
+*.fst linguist-language=Java
+*.fsti linguist-language=Java
