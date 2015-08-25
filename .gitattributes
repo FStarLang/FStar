@@ -1,1 +1,11 @@
-*.fst linguist-language=FStar
+*.fst       eol=crlf
+*.fsti      eol=crlf
+*.fsi       eol=crlf 
+*.fs        eol=crlf
+*.fsy       eol=crlf
+*.fsl       eol=crlf
+*.ml        eol=crlf
+*.mli       eol=crlf
+*.mll       eol=crlf 
+*.fsproj    eol=crlf 
+*.sln       eol=crlf 
