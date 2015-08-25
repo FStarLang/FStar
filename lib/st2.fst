@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set;
+    options:--admit_fsi FStar.Set;
     variables:LIB=../lib;
     other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst 
   --*)
@@ -42,9 +42,9 @@ let eq_rel (R a b) = a = b
 (* let op_Hat_Bang = rel_map1 (fun x -> !x) *)
 let sel_rel = rel_map2 sel
 
-module Comp
-open Heap
-open Relational
+module FStar.Comp
+open FStar.Heap
+open FStar.Relational
 type heap2 = double heap
 
 new_effect STATE2 = STATE_h heap2

@@ -19,9 +19,9 @@
 
 module StlcStrongDbParSubst
 
-open Constructive
-open Classical
-open FunctionalExtensionality
+open FStar.Constructive
+open FStar.Classical
+open FStar.FunctionalExtensionality
 
 (* Constructive-style progress and preservation proof for STLC with
    strong reduction, using deBruijn indices and parallel substitution. *)

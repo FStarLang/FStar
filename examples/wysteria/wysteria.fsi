@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set;
+    options:--admit_fsi FStar.Set;
     variables:LIB=../../lib;
     other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst $LIB/st2.fst
  --*)
@@ -39,7 +39,7 @@ type as_mode =
 type mode =
   | Mode: m:as_mode -> ps:prins -> mode
 
-open List
+open FStar.List
   
 type telt =
   | TMsg  : #a:Type -> x:a -> telt
@@ -102,7 +102,7 @@ val all_but_last_append_lemma: t:trace{is_Cons t} ->
 
 (**********)
 
-open Heap
+open FStar.Heap
 
 let moderef : ref (option mode) = alloc None (* private *)
 
@@ -120,8 +120,8 @@ effect Wys (a:Type) (req:Requires) (ens:Ensures a) =
   STATE a (fun (p:a -> heap -> Type) (h0:heap) -> wys_encoding a req ens p h0)
           (fun (p:a -> heap -> Type) (h0:heap) -> wys_encoding a req ens p h0)
 
-open Relational
-open Comp
+open FStar.Relational
+open FStar.Comp
 
 kind Requires2                  = double mode -> Type
 kind Ensures2 (a:Type) (b:Type) = double mode -> rel a b -> double trace -> Type

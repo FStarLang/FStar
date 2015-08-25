@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set;
+    options:--admit_fsi FStar.Set;
     other-files:set.fsi heap.fst st.fst all.fst list.fst listproperties.fst ordset.fsi
  --*)
 

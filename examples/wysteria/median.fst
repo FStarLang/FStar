@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Wysteria;
+    options:--admit_fsi FStar.Set --admit_fsi Wysteria;
     variables:LIB=../../lib;
     other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst $LIB/st2.fst wysteria.fsi
  --*)
@@ -83,7 +83,7 @@ let optimized_median x1 x2 y1 y2 _ =
   let d = as_sec ab (cmp x3 y3) in
   as_sec ab (final_sb d x3 y3)
 
-open Relational
+open FStar.Relational
 
 val opt_median_secure_alice: x1:Box int alice_s -> x2:Box int alice_s
                              -> y1:Box int bob_s -> y2:Box int bob_s

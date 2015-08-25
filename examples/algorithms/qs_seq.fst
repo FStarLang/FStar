@@ -1,6 +1,6 @@
 module QuickSort.Seq
-open Seq
-open SeqProperties
+open FStar.Seq
+open FStar.SeqProperties
 
 (* the last recursive call to partition fails for me if I use the F# version
    of F* and and the option here:

@@ -71,9 +71,9 @@ module MicroFStar
 *)
 
 
-open Classical
-open FunctionalExtensionality
-open Constructive
+open FStar.Classical
+open FStar.FunctionalExtensionality
+open FStar.Constructive
 
 type var = nat
 type loc = nat

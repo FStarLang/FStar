@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set --max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1;
+    options:--admit_fsi FStar.Set --max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1;
     other-files:constr.fst classical.fst ext.fst set.fsi heap.fst st.fst all.fst
  --*)
 (*
@@ -20,9 +20,9 @@
 
 module FOmega
 
-open Constructive
-open Classical
-open FunctionalExtensionality
+open FStar.Constructive
+open FStar.Classical
+open FStar.FunctionalExtensionality
 
 (* System F omega *)
 

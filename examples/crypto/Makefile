@@ -16,7 +16,7 @@ endif
 
 include ../Makefile.include
 all: .all.crypto.ver merkle_tree mac rpc rpc-extract acls-cap statefulEnc
-STDLIB_ADMITS=--admit_fsi Seq --admit_fsi Set --admit_fsi SeqProperties
+STDLIB_ADMITS=--admit_fsi FStar.Seq --admit_fsi FStar.Set --admit_fsi FStar.SeqProperties
 STDLIB=$(addprefix $(FSTAR_HOME)/lib/, classical.fst ext.fst set.fsi \
        heap.fst st.fst all.fst string.fst list.fst seq.fsi seqproperties.fst) \
 			 $(STDLIB_ADMITS)
@@ -25,7 +25,7 @@ STDLIB=$(addprefix $(FSTAR_HOME)/lib/, classical.fst ext.fst set.fsi \
 	$(FSTAR) --z3timeout 20 $(STDLIB) $^
 
 mac: sha1.fst mac.fst
-	$(FSTAR) --verify_module SHA1 --verify_module MAC --admit_fsi Seq $(addprefix $(FSTAR_HOME)/lib/, \
+	$(FSTAR) --verify_module SHA1 --verify_module MAC --admit_fsi FStar.Seq $(addprefix $(FSTAR_HOME)/lib/, \
 	ext.fst classical.fst \
 	set.fsi set.fst \
 	heap.fst st.fst all.fst \
@@ -38,7 +38,7 @@ merkle_tree:
 	$(FSTAR) --verify_module MerkleTree $(STDLIB) $(FSTAR_HOME)/lib/constr.fst merkle_tree.fst
 
 acls-cap: sha1.fst mac.fst ../security/acls2.fst acls-cap.fst
-	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --admit_fsi Seq \
+	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --admit_fsi FStar.Seq \
 	--verify_module Platform.Bytes --verify_module CoreCrypto --verify_module ACLs2 --verify_module Cap \
 	$(addprefix $(FSTAR_HOME)/lib/, \
 	ext.fst classical.fst \
@@ -51,7 +51,7 @@ acls-cap: sha1.fst mac.fst ../security/acls2.fst acls-cap.fst
 
 
 rpc: formatting.fst sha1.fst mac.fst rpc.fst
-	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC --admit_fsi Seq  \
+	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC --admit_fsi FStar.Seq  \
           $(addprefix $(FSTAR_HOME)/lib/, ext.fst classical.fst \
 					set.fsi set.fst \
 					heap.fst st.fst all.fst \
@@ -71,7 +71,7 @@ mllibs:
 
 
 rpc-extract: sha1.fst mac.fst formatting.fst rpc.fst
-	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC --admit_fsi Seq  \
+	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC --admit_fsi FStar.Seq  \
           $(addprefix $(FSTAR_HOME)/lib/, ext.fst classical.fst \
 					set.fsi set.fst \
 					heap.fst st.fst all.fst \
@@ -89,8 +89,8 @@ rpc-ml: rpc-extract
 					Seq.ml SeqProperties.ml SHA1.ml MAC.ml Formatting.ml RPC.ml
 
 cnt-protocol: cnt-format.fst cnt-format.fsi cnt-mac.fst cnt-protocol.fst
-	$(FSTAR) --admit_fsi Set $(addprefix $(FSTAR_HOME)/lib/, list.fst string.fst partialmap.fst ) cnt-format-deprecated.fst
-	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --admit_fsi Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
+	$(FSTAR) --admit_fsi FStar.Set $(addprefix $(FSTAR_HOME)/lib/, list.fst string.fst partialmap.fst ) cnt-format-deprecated.fst
+	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --admit_fsi FStar.Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
           $(addprefix $(FSTAR_HOME)/lib/, string.fst list.fst ext.fst classical.fst \
 					set.fsi set.fst \
 					heap.fst st.fst \

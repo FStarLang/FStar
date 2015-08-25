@@ -44,7 +44,7 @@ let mem_intersect x s1 s2 = ()
 let mem_complement x s    = ()
 
 (* extensionality *)
-open FunctionalExtensionality
+open FStar.FunctionalExtensionality
 type Equal (#a:Type) (s1:set a) (s2:set a) = FEq s1 s2
 let lemma_equal_intro s1 s2 = ()
 let lemma_equal_elim s1 s2 = ()

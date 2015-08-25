@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi OrdSet --admit_fsi Set;
+    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.Set;
     other-files:ext.fst set.fsi heap.fst st.fst all.fst list.fst ordset.fsi ordmap.fsi
  --*)
 module FStar.OrdMap
@@ -51,7 +51,7 @@ let choose (#k:Type) (#v:Type) #f (Mk_map s g) =
 
 let size (#k:Type) (#v:Type) #f (Mk_map s g) = OrdSet.size s
 
-open FunctionalExtensionality
+open FStar.FunctionalExtensionality
 
 let eq_lemma (#k:Type) (#v:Type) #f m1 m2 =
   let Mk_map s1 g1 = m1 in

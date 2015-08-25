@@ -98,7 +98,7 @@ let read_build_config (filename:string) =
               files
     else if !FStar_Options.use_build_config (* the user claimed that the build config exists *)
     then fail ""
-    else (FStar_Options.admit_fsi := "Set"::!FStar_Options.admit_fsi;
+    else (FStar_Options.admit_fsi := "FStar.Set"::!FStar_Options.admit_fsi;
           ["set.fsi"; "heap.fst"; "st.fst"; "all.fst"; filename])
 
 let parse fn =

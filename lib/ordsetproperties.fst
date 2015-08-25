@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi OrdSet;
+    options:--admit_fsi FStar.OrdSet;
     other-files:ordset.fsi
  --*)
 module FStar.OrdSetProps

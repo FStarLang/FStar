@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set --verify_module Unit1;
+    options:--admit_fsi FStar.Set --verify_module Unit1;
     variables:LIB=../../lib;
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst $LIB/string.fst
 --*)
@@ -361,7 +361,7 @@ val g : x:int -> Pure int (x > 0) (fun y -> y == x + 1)
 let g = h (as_Pure f)
 
 module WPsAndTriples_ST
-open Heap
+open FStar.Heap
 type as_requires (#a:Type) (wp:STWP_h heap a)  = wp (fun x h -> True)
 type as_ensures  (#a:Type) (wlp:STWP_h heap a) (h0:heap) (x:a) (h1:heap) = ~ (wlp (fun y h1' -> y<>x \/ h1<>h1') h0)
 assume val as_ST: #a:Type -> #b:(a -> Type)

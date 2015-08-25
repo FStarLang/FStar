@@ -18,7 +18,7 @@ theory:
 OCAMLOPT=ocamlfind ocamlopt -thread -package batteries -linkpkg -g -w -8
 
 codegen:
-	$(FSTAR) --admit_fsi OrdSet --admit_fsi OrdMap --admit_fsi FFI --codegen OCaml-experimental ../../lib/ordset.fsi ../../lib/ordmap.fsi ../../lib/classical.fst ast.fst ffi.fsi sem.fst sinterpreter.fst
+	$(FSTAR) --admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FFI --codegen OCaml ../../lib/ordset.fsi ../../lib/ordmap.fsi ../../lib/classical.fst ast.fst ffi.fsi sem.fst sinterpreter.fst
 
 ocaml: codegen
 	cp $(FSTAR_HOME)/src/support/ocaml/fstar-lib/src/support.ml .

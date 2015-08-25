@@ -14,9 +14,9 @@
    limitations under the License.
 *)
 module Counters
-open Heap
-open Set
-open ST
+open FStar.Heap
+open FStar.Set
+open FStar.ST
 type even (x:int) = x%2=0
 
 opaque type fresh (refs:set aref) (h0:heap) =

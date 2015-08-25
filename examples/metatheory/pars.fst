@@ -16,7 +16,7 @@
 
 module ParallelSubstitution
 
-open FunctionalExtensionality
+open FStar.FunctionalExtensionality
 
 (* Parallel substitution, with comments
   (the real development is in ) *)

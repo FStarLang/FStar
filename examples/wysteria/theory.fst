@@ -1,13 +1,13 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi OrdSet --admit_fsi OrdMap --admit_fsi FFI --z3timeout 10 --__temp_no_proj;
+    options:--admit_fsi FStar.Set --admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FFI --z3timeout 10 --__temp_no_proj;
     variables:LIB=../../lib;
     other-files:set.fsi $LIB/ordset.fsi $LIB/ordmap.fsi $LIB/constr.fst $LIB/ext.fst $LIB/classical.fst ast.fst ffi.fsi sem.fst
  --*)
 
 module Metatheory
 
-open OrdMap
-open OrdSet
+open FStar.OrdMap
+open FStar.OrdSet
 
 open AST
 open Semantics
@@ -72,7 +72,7 @@ and slice_en_sps ps en =
           else
             Some (slice_v_sps ps (D_v.v (Some.v (en x))))
 
-open FunctionalExtensionality
+open FStar.FunctionalExtensionality
 
 val slice_emp_en_sps: ps:prins
                       -> Lemma (requires (True))
@@ -168,7 +168,7 @@ let env_upd_upd_slice_lemma_ps #meta1 #meta2 ps en x1 x2 v1 v2 =
   cut (FEq (slice_en_sps ps (update_env #meta2 (update_env #meta1 en x1 v1) x2 v2))
            (update_env #(D_v.meta (slice_v_sps ps v2)) (update_env #(D_v.meta (slice_v_sps ps v1)) (slice_en_sps ps en) x1 (D_v.v (slice_v_sps ps v1))) x2 (D_v.v (slice_v_sps ps v2))))
 
-open Constructive
+open FStar.Constructive
 
 val if_exit_sec_then_to_sec: #c:sconfig -> #c':config -> h:sstep c c' -> Tot bool
 let if_exit_sec_then_to_sec #c #c' h = not (is_C_assec_ret h) || is_sec c'
@@ -531,7 +531,7 @@ and compose_envs en1 en2 =
 
 (**********)
 
-open Classical
+open FStar.Classical
 
 val slice_lem_singl_wire: #eps:eprins -> w:v_wire eps -> p:prin
                           -> Lemma (requires (True))

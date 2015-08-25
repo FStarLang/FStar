@@ -1,6 +1,6 @@
 module MerkleTree
 
-open Constructive
+open FStar.Constructive
 
 (* type of data and hashes, length indexed strings *)
 type mstring:nat -> Type =

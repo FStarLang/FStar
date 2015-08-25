@@ -20,9 +20,9 @@
 
 module LambdaOmega
 
-open Constructive
-open Classical
-open FunctionalExtensionality
+open FStar.Constructive
+open FStar.Classical
+open FStar.FunctionalExtensionality
 
 (* Chapter 29 of TAPL: "Type Operators and Kinding",
    proof follows Chapter 30, but we don't consider polymorphism

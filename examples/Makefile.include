@@ -19,16 +19,16 @@ STDCACHE=Prims.cache List.cache String.cache ST.cache Set.cache Map.cache Heap.c
 FSTARC=../../bin/fstar.exe $(STDCACHE) $(OTHERFLAGS)
 
 %.ver: %.fst
-	$(FSTAR) --admit_fsi Set $(STDLIB) $^
+	$(FSTAR) --admit_fsi FStar.Set $(STDLIB) $^
 
 %.oldlib.ver: %.fst
-	$(FSTAR) --admit_fsi Set $(OLDLIB) $^
+	$(FSTAR) --admit_fsi FStar.Set $(OLDLIB) $^
 
 %.cache.ver: %.fst
 	$(FSTAR) $(STDLIB_CACHE) $^
 
 %.fulllib.ver: %.fst
-	$(FSTAR) --admit_fsi Set $(FULL_LIB) $^
+	$(FSTAR) --admit_fsi FStar.Set $(FULL_LIB) $^
 
 %.vv: %.fst
 	$(FSTAR) $^
@@ -50,10 +50,10 @@ FSTARC=../../bin/fstar.exe $(STDCACHE) $(OTHERFLAGS)
 	rm -f $(addprefix $(FSTAR_HOME)/cache/, $(STDCACHE))
 
 .all.ver: $(VERFILES)
-	$(FSTAR) --admit_fsi Set $(STDLIB) $^
+	$(FSTAR) --admit_fsi FStar.Set $(STDLIB) $^
 
 .all.oldlib.ver: $(VERFILES)
-	$(FSTAR) --admit_fsi Set $(OLDLIB) $^
+	$(FSTAR) --admit_fsi FStar.Set $(OLDLIB) $^
 
 .all.cache.ver: $(VERFILES)
 	$(FSTAR) $(STDLIB_CACHE) $^

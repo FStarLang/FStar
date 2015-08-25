@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi OrdSet --admit_fsi OrdMap --admit_fsi Set;
+    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set;
     variables:LIB=../../lib;
     other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst $LIB/st2.fst $LIB/ordset.fsi $LIB/ordmap.fsi wysteria.fsi
  --*)
@@ -43,7 +43,7 @@ type as_mode =
 type mode =
   | Mode: m:as_mode -> ps:prins -> mode
 
-open List
+open FStar.List
 
 type telt =
   | TMsg  : #a:Type -> x:a -> telt

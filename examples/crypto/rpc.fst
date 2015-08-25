@@ -1,5 +1,5 @@
 (*--build-config
-    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module RPC --admit_fsi Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
+    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module RPC --admit_fsi FStar.Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
     variables:LIB=../../lib
               CONTRIB=../../contrib;
     other-files:
@@ -21,9 +21,9 @@
 
 module RPC
 
-open All
-open String
-open IO
+open FStar.All
+open FStar.String
+open FStar.IO
 
 
 let init_print = print_string "\ninitializing...\n\n"

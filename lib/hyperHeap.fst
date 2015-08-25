@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Map;
+    options:--admit_fsi FStar.Set --admit_fsi FStar.Map;
     other-files:set.fsi heap.fst map.fsi listTot.fst
  --*)
 (*
