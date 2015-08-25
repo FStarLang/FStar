@@ -1,14 +1,11 @@
+.PHONY: default  __force__
+
 OCAMLC=ocamlfind ocamlc -thread -package batteries -linkpkg -g
 OCAMLOPT=ocamlfind ocamlopt -thread -package batteries -linkpkg -g
 OCAMLDEP=ocamldep
 INCLUDES=                 # all relevant -I options here
 OCAMLFLAGS=$(INCLUDES)    -w -8 # add other options for ocamlc here
 OCAMLOPTFLAGS=$(INCLUDES) -w -8 # add other options for ocamlopt here
-
-# always bump version for a release
-VERSION=$(shell cat ../version.txt)
-
-NAME=fstar_$(VERSION)_$(shell echo `uname`_`uname -m`)
 
 BASE_OBJS=prims.cmx
 FSTAR_LIBS=FStar_ST.cmx FStar_All.cmx FStar_Option.cmx FStar_List.cmx FStar_Char.cmx FStar_String.cmx FStar_Util.cmx FStar_Bytes.cmx FStar_Getopt.cmx FStar_Range.cmx FStar_Parser_Util.cmx FStar_Platform.cmx FStar_Unionfind.cmx 
@@ -21,6 +18,19 @@ default: fstar.exe
 # the `fexport` function takes a path relative to the top of the F* repo
 # and exports the contents of that directory to the `fstar` dir
 fexport = cd ../.. && git archive "--format=tar" "--prefix=$(1)/" HEAD:$(1)/ | tar -x -C src/ocaml-output/fstar
+
+
+VERSION=$(shell cat ../version.txt)  # always bump version for a release
+PLATFORM=$(shell echo `uname`_`uname -m`)
+NAME=fstar_$(VERSION)_$(PLATFORM)
+COMPILER = $(shell ocamlc -version)
+DATE = $(shell date -Iseconds)
+
+FStar_Version.ml:__force__
+	echo 'let version = "$(VERSION)"' > FStar_Version.ml
+	echo 'let platform = "$(PLATFORM)"' >> FStar_Version.ml
+	echo 'let compiler = "OCaml $(COMPILER)"' >> FStar_Version.ml
+	echo 'let date = "$(DATE)"' >> FStar_Version.ml
 
 package: parser fstar.exe
 	rm -f $(NAME).zip $(NAME).tar.gz
@@ -75,12 +85,6 @@ fstarml.ml: ../main.ml
 fstar.exe: $(FSTAR_OBJS) fstarml.ml
 	$(OCAMLOPT) $(OCAMLOPTFLAGS) -o fstar.exe $^
 	cp fstar.exe ../../bin/fstar.exe
-
-FStar_Version.ml:
-	echo 'let version = "unknown version"' > FStar_Version.ml
-	echo 'let platform = "unknown platform"' >> FStar_Version.ml
-	echo 'let compiler = "unknown compiler"' >> FStar_Version.ml
-	echo 'let date = "unknown date"' >> FStar_Version.ml
 
 # Common rules
 .SUFFIXES: .ml .mli .cmo .cmi .cmx
