@@ -177,13 +177,14 @@ Finally, the [Tuareg Emacs Mode] for OCaml works quite well for F\* too.
 [Tuareg Emacs Mode]: https://github.com/ocaml/tuareg
 
 By default F\* only verifies the input code, **it does not execute it**.
-To execute F\* code one needs to extract it to OCaml and then
-compile it using the OCaml compiler. More details on
+To execute F\* code one needs to extract it to OCaml or F# and then
+compile it using the OCaml or F# compiler. More details on
 [executing F\* code] in the F\* [README.md] file.
 
 [executing F\* code]: https://github.com/FStarLang/FStar#executing-f-code
 [README.md]: https://github.com/FStarLang/FStar/blob/master/README.md
 
+<!-- CH: this is just distraction
 **A note on compatibility with F\#**: The syntax of F\* and F\#
 overlap on a common subset. In fact, the F\* compiler is currently
 programmed entirely in this intersection. Aside from this, the
@@ -192,6 +193,7 @@ tutorial, we will use the full syntax of F\*, even when it is possible
 to express the same program in the fragment shared with F\#. The F\*
 compiler sources are a good resource to turn to when trying to figure
 out the syntax of this shared fragment.
+-->
 
 <!-- # Getting started  { #sec-getstarted } -->
 
@@ -231,22 +233,26 @@ begins with a `module` declaration, defining the name of the module. Its
 body includes a number of definitions, and optionally includes a 'main'
 expression.
 
-Here is a module called `ACLs` (for Access-Control Lists) that defines
-our policy:
+Here are two modules: one called `FileName` and the other one called
+`ACLs` (for Access-Control Lists):
 
 ~ Fragment {link="code/exercises/ex1a-safe-read-write.fst"}
 [INCLUDE=code/exercises/ex1a-safe-read-write.fst:ACLs]
 ~
 
-Our first module begins by defining a type synonym: we'll use
-`:string`s to model `:filename`s.
+The `FileName` module defines a type synonym: we'll use `:string`s to
+model `:filename`s.  The `ACLs` module first `open`s the `FileName`
+module, so the type synonym there can now be used directly (otherwise
+it could only be called by a longer fully-qualified name:
+`:FileName.filename`).
 
-Next, we define `canWrite`, a function that inspects its argument `f`
+Afterwards `ACLs` defines our security policy as two boolean functions:
+`canWrite` and `canRead`:
+The `canWrite` function inspects its argument `f`
 using a *pattern matching expression*: it returns the boolean `true`
 when `f="C:/temp/tempfile"` and `false` otherwise. The function
 `canRead` is similar---a file is readable if it is writable, or if it
-is the `"C:/public/README"` file. The boolean functions `canWrite` and
-`canRead` specify our policy.
+is the `"C:/public/README"` file.
 
 ### Tying the policy to the file-access primitives
 
@@ -264,8 +270,13 @@ describe a simple interface provided by the framework as follows:
 [INCLUDE=code/exercises/ex1a-safe-read-write.fst:SystemIO]
 ~
 
+~CH
+Calling it System.IO makes this sound more primitive/canonical than it
+actually is.
+~
+
 Here, we've defined an *interface* called `System.IO`, which uses the
-`ACLs` module (indicated by the `open` keyword). More importantly,
+`ACLs` module. More importantly,
 `System.IO` provides two functions, `read` and `write`, which
 presumably implement the corresponding operations on files.
 
@@ -296,7 +307,7 @@ connect the types of these security-sensitive functions to our policy.
 
 ### Writing programs and verifying their security
 
-Trying to check that a piece of code conforms to a access-control
+Trying to check that a piece of code conforms to an access-control
 policy is a tedious and error-prone process. Even if every access is
 guarded by a security check, how can we make sure that each check is
 adequate? We can use F\*'s type-checker to automate this kind of code
@@ -366,14 +377,14 @@ is not readable your `checkedWrite` should raise an exception. As for
 ~~
 ~
 You can use `checkedRead` and your `checkedWrite` to replace `read`
-and `write` in the original in `staticChecking`, so that now even
+and `write` in `staticChecking`, so that now even
 the accesses to `passwd` are well-typed.
 ~ ExerciseFragment {exname=ex1a-safe-read-write}
 [INCLUDE=code/exercises/ex1a-safe-read-write.fst:DynamicChecking]
 ~
 This is secure because `checkedRead` and `checkedWrite` defer to
-runtime the same checks that were performed at compile time by F\*,
-and perform the IO actions only if those checks succeed.
+runtime the same checks that were previously performed at compile time
+by F\*, and perform the IO actions only if those checks succeed.
 
 # Basics: Types and effects
 
