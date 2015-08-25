@@ -19,18 +19,19 @@ default: fstar.exe
 # and exports the contents of that directory to the `fstar` dir
 fexport = cd ../.. && git archive "--format=tar" "--prefix=$(1)/" HEAD:$(1)/ | tar -x -C src/ocaml-output/fstar
 
-
-VERSION=$(shell cat ../version.txt)  # always bump version for a release
+# always bump version for a release
+VERSION=$(shell head -n 1 ../version.txt)
 PLATFORM=$(shell echo `uname`_`uname -m`)
-NAME=fstar_$(VERSION)_$(PLATFORM)
-COMPILER = $(shell ocamlc -version)
+COMPILER = OCaml $(shell ocamlc -version)
 DATE = $(shell date -Iseconds)
 
 FStar_Version.ml:__force__
 	echo 'let version = "$(VERSION)"' > FStar_Version.ml
 	echo 'let platform = "$(PLATFORM)"' >> FStar_Version.ml
-	echo 'let compiler = "OCaml $(COMPILER)"' >> FStar_Version.ml
+	echo 'let compiler = "$(COMPILER)"' >> FStar_Version.ml
 	echo 'let date = "$(DATE)"' >> FStar_Version.ml
+
+NAME=fstar_$(VERSION)_$(PLATFORM)
 
 package: parser fstar.exe
 	rm -f $(NAME).zip $(NAME).tar.gz
