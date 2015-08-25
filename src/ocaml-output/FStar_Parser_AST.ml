@@ -484,208 +484,208 @@ end))
 let is_Mkpattern = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkpattern"))
 
 let ___Const____0 = (fun projectee -> (match (projectee) with
-| Const (_39_13) -> begin
-_39_13
+| Const (_40_13) -> begin
+_40_13
 end))
 
 let ___Op____0 = (fun projectee -> (match (projectee) with
-| Op (_39_16) -> begin
-_39_16
+| Op (_40_16) -> begin
+_40_16
 end))
 
 let ___Tvar____0 = (fun projectee -> (match (projectee) with
-| Tvar (_39_19) -> begin
-_39_19
+| Tvar (_40_19) -> begin
+_40_19
 end))
 
 let ___Var____0 = (fun projectee -> (match (projectee) with
-| Var (_39_22) -> begin
-_39_22
+| Var (_40_22) -> begin
+_40_22
 end))
 
 let ___Name____0 = (fun projectee -> (match (projectee) with
-| Name (_39_25) -> begin
-_39_25
+| Name (_40_25) -> begin
+_40_25
 end))
 
 let ___Construct____0 = (fun projectee -> (match (projectee) with
-| Construct (_39_28) -> begin
-_39_28
+| Construct (_40_28) -> begin
+_40_28
 end))
 
 let ___Abs____0 = (fun projectee -> (match (projectee) with
-| Abs (_39_31) -> begin
-_39_31
+| Abs (_40_31) -> begin
+_40_31
 end))
 
 let ___App____0 = (fun projectee -> (match (projectee) with
-| App (_39_34) -> begin
-_39_34
+| App (_40_34) -> begin
+_40_34
 end))
 
 let ___Let____0 = (fun projectee -> (match (projectee) with
-| Let (_39_37) -> begin
-_39_37
+| Let (_40_37) -> begin
+_40_37
 end))
 
 let ___Seq____0 = (fun projectee -> (match (projectee) with
-| Seq (_39_40) -> begin
-_39_40
+| Seq (_40_40) -> begin
+_40_40
 end))
 
 let ___If____0 = (fun projectee -> (match (projectee) with
-| If (_39_43) -> begin
-_39_43
+| If (_40_43) -> begin
+_40_43
 end))
 
 let ___Match____0 = (fun projectee -> (match (projectee) with
-| Match (_39_46) -> begin
-_39_46
+| Match (_40_46) -> begin
+_40_46
 end))
 
 let ___TryWith____0 = (fun projectee -> (match (projectee) with
-| TryWith (_39_49) -> begin
-_39_49
+| TryWith (_40_49) -> begin
+_40_49
 end))
 
 let ___Ascribed____0 = (fun projectee -> (match (projectee) with
-| Ascribed (_39_52) -> begin
-_39_52
+| Ascribed (_40_52) -> begin
+_40_52
 end))
 
 let ___Record____0 = (fun projectee -> (match (projectee) with
-| Record (_39_55) -> begin
-_39_55
+| Record (_40_55) -> begin
+_40_55
 end))
 
 let ___Project____0 = (fun projectee -> (match (projectee) with
-| Project (_39_58) -> begin
-_39_58
+| Project (_40_58) -> begin
+_40_58
 end))
 
 let ___Product____0 = (fun projectee -> (match (projectee) with
-| Product (_39_61) -> begin
-_39_61
+| Product (_40_61) -> begin
+_40_61
 end))
 
 let ___Sum____0 = (fun projectee -> (match (projectee) with
-| Sum (_39_64) -> begin
-_39_64
+| Sum (_40_64) -> begin
+_40_64
 end))
 
 let ___QForall____0 = (fun projectee -> (match (projectee) with
-| QForall (_39_67) -> begin
-_39_67
+| QForall (_40_67) -> begin
+_40_67
 end))
 
 let ___QExists____0 = (fun projectee -> (match (projectee) with
-| QExists (_39_70) -> begin
-_39_70
+| QExists (_40_70) -> begin
+_40_70
 end))
 
 let ___Refine____0 = (fun projectee -> (match (projectee) with
-| Refine (_39_73) -> begin
-_39_73
+| Refine (_40_73) -> begin
+_40_73
 end))
 
 let ___NamedTyp____0 = (fun projectee -> (match (projectee) with
-| NamedTyp (_39_76) -> begin
-_39_76
+| NamedTyp (_40_76) -> begin
+_40_76
 end))
 
 let ___Paren____0 = (fun projectee -> (match (projectee) with
-| Paren (_39_79) -> begin
-_39_79
+| Paren (_40_79) -> begin
+_40_79
 end))
 
 let ___Requires____0 = (fun projectee -> (match (projectee) with
-| Requires (_39_82) -> begin
-_39_82
+| Requires (_40_82) -> begin
+_40_82
 end))
 
 let ___Ensures____0 = (fun projectee -> (match (projectee) with
-| Ensures (_39_85) -> begin
-_39_85
+| Ensures (_40_85) -> begin
+_40_85
 end))
 
 let ___Labeled____0 = (fun projectee -> (match (projectee) with
-| Labeled (_39_88) -> begin
-_39_88
+| Labeled (_40_88) -> begin
+_40_88
 end))
 
 let ___Variable____0 = (fun projectee -> (match (projectee) with
-| Variable (_39_92) -> begin
-_39_92
+| Variable (_40_92) -> begin
+_40_92
 end))
 
 let ___TVariable____0 = (fun projectee -> (match (projectee) with
-| TVariable (_39_95) -> begin
-_39_95
+| TVariable (_40_95) -> begin
+_40_95
 end))
 
 let ___Annotated____0 = (fun projectee -> (match (projectee) with
-| Annotated (_39_98) -> begin
-_39_98
+| Annotated (_40_98) -> begin
+_40_98
 end))
 
 let ___TAnnotated____0 = (fun projectee -> (match (projectee) with
-| TAnnotated (_39_101) -> begin
-_39_101
+| TAnnotated (_40_101) -> begin
+_40_101
 end))
 
 let ___NoName____0 = (fun projectee -> (match (projectee) with
-| NoName (_39_104) -> begin
-_39_104
+| NoName (_40_104) -> begin
+_40_104
 end))
 
 let ___PatConst____0 = (fun projectee -> (match (projectee) with
-| PatConst (_39_108) -> begin
-_39_108
+| PatConst (_40_108) -> begin
+_40_108
 end))
 
 let ___PatApp____0 = (fun projectee -> (match (projectee) with
-| PatApp (_39_111) -> begin
-_39_111
+| PatApp (_40_111) -> begin
+_40_111
 end))
 
 let ___PatVar____0 = (fun projectee -> (match (projectee) with
-| PatVar (_39_114) -> begin
-_39_114
+| PatVar (_40_114) -> begin
+_40_114
 end))
 
 let ___PatName____0 = (fun projectee -> (match (projectee) with
-| PatName (_39_117) -> begin
-_39_117
+| PatName (_40_117) -> begin
+_40_117
 end))
 
 let ___PatTvar____0 = (fun projectee -> (match (projectee) with
-| PatTvar (_39_120) -> begin
-_39_120
+| PatTvar (_40_120) -> begin
+_40_120
 end))
 
 let ___PatList____0 = (fun projectee -> (match (projectee) with
-| PatList (_39_123) -> begin
-_39_123
+| PatList (_40_123) -> begin
+_40_123
 end))
 
 let ___PatTuple____0 = (fun projectee -> (match (projectee) with
-| PatTuple (_39_126) -> begin
-_39_126
+| PatTuple (_40_126) -> begin
+_40_126
 end))
 
 let ___PatRecord____0 = (fun projectee -> (match (projectee) with
-| PatRecord (_39_129) -> begin
-_39_129
+| PatRecord (_40_129) -> begin
+_40_129
 end))
 
 let ___PatAscribed____0 = (fun projectee -> (match (projectee) with
-| PatAscribed (_39_132) -> begin
-_39_132
+| PatAscribed (_40_132) -> begin
+_40_132
 end))
 
 let ___PatOr____0 = (fun projectee -> (match (projectee) with
-| PatOr (_39_135) -> begin
-_39_135
+| PatOr (_40_135) -> begin
+_40_135
 end))
 
 type knd =
@@ -736,23 +736,23 @@ false
 end))
 
 let ___TyconAbstract____0 = (fun projectee -> (match (projectee) with
-| TyconAbstract (_39_139) -> begin
-_39_139
+| TyconAbstract (_40_139) -> begin
+_40_139
 end))
 
 let ___TyconAbbrev____0 = (fun projectee -> (match (projectee) with
-| TyconAbbrev (_39_142) -> begin
-_39_142
+| TyconAbbrev (_40_142) -> begin
+_40_142
 end))
 
 let ___TyconRecord____0 = (fun projectee -> (match (projectee) with
-| TyconRecord (_39_145) -> begin
-_39_145
+| TyconRecord (_40_145) -> begin
+_40_145
 end))
 
 let ___TyconVariant____0 = (fun projectee -> (match (projectee) with
-| TyconVariant (_39_148) -> begin
-_39_148
+| TyconVariant (_40_148) -> begin
+_40_148
 end))
 
 type qualifiers =
@@ -888,68 +888,68 @@ false
 end))
 
 let ___Open____0 = (fun projectee -> (match (projectee) with
-| Open (_39_157) -> begin
-_39_157
+| Open (_40_157) -> begin
+_40_157
 end))
 
 let ___KindAbbrev____0 = (fun projectee -> (match (projectee) with
-| KindAbbrev (_39_160) -> begin
-_39_160
+| KindAbbrev (_40_160) -> begin
+_40_160
 end))
 
 let ___ToplevelLet____0 = (fun projectee -> (match (projectee) with
-| ToplevelLet (_39_163) -> begin
-_39_163
+| ToplevelLet (_40_163) -> begin
+_40_163
 end))
 
 let ___Main____0 = (fun projectee -> (match (projectee) with
-| Main (_39_166) -> begin
-_39_166
+| Main (_40_166) -> begin
+_40_166
 end))
 
 let ___Assume____0 = (fun projectee -> (match (projectee) with
-| Assume (_39_169) -> begin
-_39_169
+| Assume (_40_169) -> begin
+_40_169
 end))
 
 let ___Tycon____0 = (fun projectee -> (match (projectee) with
-| Tycon (_39_172) -> begin
-_39_172
+| Tycon (_40_172) -> begin
+_40_172
 end))
 
 let ___Val____0 = (fun projectee -> (match (projectee) with
-| Val (_39_175) -> begin
-_39_175
+| Val (_40_175) -> begin
+_40_175
 end))
 
 let ___Exception____0 = (fun projectee -> (match (projectee) with
-| Exception (_39_178) -> begin
-_39_178
+| Exception (_40_178) -> begin
+_40_178
 end))
 
 let ___NewEffect____0 = (fun projectee -> (match (projectee) with
-| NewEffect (_39_181) -> begin
-_39_181
+| NewEffect (_40_181) -> begin
+_40_181
 end))
 
 let ___SubEffect____0 = (fun projectee -> (match (projectee) with
-| SubEffect (_39_184) -> begin
-_39_184
+| SubEffect (_40_184) -> begin
+_40_184
 end))
 
 let ___Pragma____0 = (fun projectee -> (match (projectee) with
-| Pragma (_39_187) -> begin
-_39_187
+| Pragma (_40_187) -> begin
+_40_187
 end))
 
 let ___DefineEffect____0 = (fun projectee -> (match (projectee) with
-| DefineEffect (_39_191) -> begin
-_39_191
+| DefineEffect (_40_191) -> begin
+_40_191
 end))
 
 let ___RedefineEffect____0 = (fun projectee -> (match (projectee) with
-| RedefineEffect (_39_194) -> begin
-_39_194
+| RedefineEffect (_40_194) -> begin
+_40_194
 end))
 
 type modul =
@@ -973,13 +973,13 @@ false
 end))
 
 let ___Module____0 = (fun projectee -> (match (projectee) with
-| Module (_39_197) -> begin
-_39_197
+| Module (_40_197) -> begin
+_40_197
 end))
 
 let ___Interface____0 = (fun projectee -> (match (projectee) with
-| Interface (_39_200) -> begin
-_39_200
+| Interface (_40_200) -> begin
+_40_200
 end))
 
 type file =
@@ -1000,7 +1000,7 @@ let un_curry_abs = (fun ps body -> (match (body.tm) with
 | Abs (p', body') -> begin
 Abs (((FStar_List.append ps p'), body'))
 end
-| _39_219 -> begin
+| _40_219 -> begin
 Abs ((ps, body))
 end))
 
@@ -1016,10 +1016,10 @@ in Abs (_105_936))
 in (mk_term _105_937 r2 Expr))))
 
 let un_function = (fun p tm -> (match ((p.pat, tm.tm)) with
-| (PatVar (_39_227), Abs (pats, body)) -> begin
+| (PatVar (_40_227), Abs (pats, body)) -> begin
 Some (((mk_pattern (PatApp ((p, pats))) p.prange), body))
 end
-| _39_235 -> begin
+| _40_235 -> begin
 None
 end))
 
@@ -1029,11 +1029,11 @@ in (FStar_Absyn_Syntax.lid_of_path _105_946 r)))
 let to_string_l = (fun sep f l -> (let _105_953 = (FStar_List.map f l)
 in (FStar_String.concat sep _105_953)))
 
-let imp_to_string = (fun _39_1 -> (match (_39_1) with
+let imp_to_string = (fun _40_1 -> (match (_40_1) with
 | Hash -> begin
 "#"
 end
-| _39_244 -> begin
+| _40_244 -> begin
 ""
 end))
 
@@ -1041,15 +1041,15 @@ let rec term_to_string = (fun x -> (match (x.tm) with
 | Wild -> begin
 "_"
 end
-| Requires (t, _39_249) -> begin
+| Requires (t, _40_249) -> begin
 (let _105_960 = (term_to_string t)
 in (FStar_Util.format1 "(requires %s)" _105_960))
 end
-| Ensures (t, _39_254) -> begin
+| Ensures (t, _40_254) -> begin
 (let _105_961 = (term_to_string t)
 in (FStar_Util.format1 "(ensures %s)" _105_961))
 end
-| Labeled (t, l, _39_260) -> begin
+| Labeled (t, l, _40_260) -> begin
 (let _105_962 = (term_to_string t)
 in (FStar_Util.format2 "(labeled %s %s)" l _105_962))
 end
@@ -1069,7 +1069,7 @@ end
 end
 | Construct (l, args) -> begin
 (let _105_969 = (FStar_Absyn_Print.sli l)
-in (let _105_968 = (to_string_l " " (fun _39_281 -> (match (_39_281) with
+in (let _105_968 = (to_string_l " " (fun _40_281 -> (match (_40_281) with
 | (a, imp) -> begin
 (let _105_967 = (term_to_string a)
 in (FStar_Util.format2 "%s%s" (imp_to_string imp) _105_967))
@@ -1097,8 +1097,8 @@ in (let _105_977 = (FStar_All.pipe_right tm term_to_string)
 in (let _105_976 = (FStar_All.pipe_right body term_to_string)
 in (FStar_Util.format3 "let %s = %s in %s" _105_978 _105_977 _105_976))))
 end
-| Let (_39_304, lbs, body) -> begin
-(let _105_983 = (to_string_l " and " (fun _39_311 -> (match (_39_311) with
+| Let (_40_304, lbs, body) -> begin
+(let _105_983 = (to_string_l " and " (fun _40_311 -> (match (_40_311) with
 | (p, b) -> begin
 (let _105_981 = (FStar_All.pipe_right p pat_to_string)
 in (let _105_980 = (FStar_All.pipe_right b term_to_string)
@@ -1120,7 +1120,7 @@ in (FStar_Util.format3 "if %s then %s else %s" _105_988 _105_987 _105_986))))
 end
 | Match (t, branches) -> begin
 (let _105_995 = (FStar_All.pipe_right t term_to_string)
-in (let _105_994 = (to_string_l " | " (fun _39_328 -> (match (_39_328) with
+in (let _105_994 = (to_string_l " | " (fun _40_328 -> (match (_40_328) with
 | (p, w, e) -> begin
 (let _105_993 = (FStar_All.pipe_right p pat_to_string)
 in (let _105_992 = (match (w) with
@@ -1143,7 +1143,7 @@ in (FStar_Util.format2 "(%s : %s)" _105_997 _105_996)))
 end
 | Record (Some (e), fields) -> begin
 (let _105_1002 = (FStar_All.pipe_right e term_to_string)
-in (let _105_1001 = (to_string_l " " (fun _39_343 -> (match (_39_343) with
+in (let _105_1001 = (to_string_l " " (fun _40_343 -> (match (_40_343) with
 | (l, e) -> begin
 (let _105_1000 = (FStar_Absyn_Print.sli l)
 in (let _105_999 = (FStar_All.pipe_right e term_to_string)
@@ -1152,7 +1152,7 @@ end)) fields)
 in (FStar_Util.format2 "{%s with %s}" _105_1002 _105_1001)))
 end
 | Record (None, fields) -> begin
-(let _105_1006 = (to_string_l " " (fun _39_350 -> (match (_39_350) with
+(let _105_1006 = (to_string_l " " (fun _40_350 -> (match (_40_350) with
 | (l, e) -> begin
 (let _105_1005 = (FStar_Absyn_Print.sli l)
 in (let _105_1004 = (FStar_All.pipe_right e term_to_string)
@@ -1242,7 +1242,7 @@ end
 | Some (FStar_Absyn_Syntax.Equality) -> begin
 (FStar_Util.format1 "=%s" s)
 end
-| _39_425 -> begin
+| _40_425 -> begin
 s
 end)))
 and pat_to_string = (fun x -> (match (x.pat) with
@@ -1279,7 +1279,7 @@ end
 in (FStar_Util.format1 "(|%s|)" _105_1036))
 end
 | PatRecord (l) -> begin
-(let _105_1040 = (to_string_l "; " (fun _39_464 -> (match (_39_464) with
+(let _105_1040 = (to_string_l "; " (fun _40_464 -> (match (_40_464) with
 | (f, e) -> begin
 (let _105_1039 = (FStar_Absyn_Print.sli f)
 in (let _105_1038 = (FStar_All.pipe_right e pat_to_string)
@@ -1323,13 +1323,13 @@ let mkApp = (fun t args r -> (match (args) with
 | [] -> begin
 t
 end
-| _39_500 -> begin
+| _40_500 -> begin
 (match (t.tm) with
 | Name (s) -> begin
 (mk_term (Construct ((s, args))) r Un)
 end
-| _39_504 -> begin
-(FStar_List.fold_left (fun t _39_508 -> (match (_39_508) with
+| _40_504 -> begin
+(FStar_List.fold_left (fun t _40_508 -> (match (_40_508) with
 | (a, imp) -> begin
 (mk_term (App ((t, a, imp))) r Un)
 end)) t args)
@@ -1356,7 +1356,7 @@ let mkExplicitApp = (fun t args r -> (match (args) with
 | [] -> begin
 t
 end
-| _39_524 -> begin
+| _40_524 -> begin
 (match (t.tm) with
 | Name (s) -> begin
 (let _105_1108 = (let _105_1107 = (let _105_1106 = (FStar_List.map (fun a -> (a, Nothing)) args)
@@ -1364,7 +1364,7 @@ in (s, _105_1106))
 in Construct (_105_1107))
 in (mk_term _105_1108 r Un))
 end
-| _39_529 -> begin
+| _40_529 -> begin
 (FStar_List.fold_left (fun t a -> (mk_term (App ((t, a, Nothing))) r Un)) t args)
 end)
 end))
@@ -1387,7 +1387,7 @@ in ((mk_pattern PatWild r), None, _105_1118)))
 let focusBranches = (fun branches r -> (let should_filter = (FStar_Util.for_some Prims.fst branches)
 in (match (should_filter) with
 | true -> begin
-(let _39_543 = (FStar_Tc_Errors.warn r "Focusing on only some cases")
+(let _40_543 = (FStar_Tc_Errors.warn r "Focusing on only some cases")
 in (let focussed = (let _105_1121 = (FStar_List.filter Prims.fst branches)
 in (FStar_All.pipe_right _105_1121 (FStar_List.map Prims.snd)))
 in (let _105_1123 = (let _105_1122 = (mkWildAdmitMagic r)
@@ -1401,8 +1401,8 @@ end)))
 let focusLetBindings = (fun lbs r -> (let should_filter = (FStar_Util.for_some Prims.fst lbs)
 in (match (should_filter) with
 | true -> begin
-(let _39_549 = (FStar_Tc_Errors.warn r "Focusing on only some cases in this (mutually) recursive definition")
-in (FStar_List.map (fun _39_553 -> (match (_39_553) with
+(let _40_549 = (FStar_Tc_Errors.warn r "Focusing on only some cases in this (mutually) recursive definition")
+in (FStar_List.map (fun _40_553 -> (match (_40_553) with
 | (f, lb) -> begin
 (match (f) with
 | true -> begin
@@ -1442,13 +1442,13 @@ let rec extract_named_refinement = (fun t1 -> (match (t1.tm) with
 | NamedTyp (x, t) -> begin
 Some ((x, t, None))
 end
-| Refine ({b = Annotated (x, t); brange = _39_585; blevel = _39_583; aqual = _39_581}, t') -> begin
+| Refine ({b = Annotated (x, t); brange = _40_585; blevel = _40_583; aqual = _40_581}, t') -> begin
 Some ((x, t, Some (t')))
 end
 | Paren (t) -> begin
 (extract_named_refinement t)
 end
-| _39_597 -> begin
+| _40_597 -> begin
 None
 end))
 

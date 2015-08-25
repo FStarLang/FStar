@@ -97,7 +97,7 @@ let erasable (g:env)  (f:e_tag) (t:mlty) =
 
 let erase (g:env) (e:mlexpr) (f:e_tag) (t:mlty) : mlexpr * e_tag * mlty =
     if erasable g f t
-    then (debug g (fun () -> Util.fprint2 "Erasing %s at type %s\n" (OCaml.Code.string_of_mlexpr g e) (OCaml.Code.string_of_mlty g t));
+    then (debug g (fun () -> Util.fprint2 "Erasing %s at type %s\n" (ML.Code.string_of_mlexpr g e) (ML.Code.string_of_mlty g t));
           ml_unit, f , erasedContent) (*unit value*)
     else e, f, t
 

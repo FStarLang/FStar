@@ -7,8 +7,8 @@ let is_cache_file = (fun fn -> ((FStar_Util.get_file_extension fn) = ".cache"))
 
 let parse_fragment = (fun curmod env frag -> (match ((FStar_Parser_ParseIt.parse (FStar_Util.Inr (frag)))) with
 | FStar_Util.Inl (FStar_Util.Inl (modul::[])) -> begin
-(let _47_13 = (FStar_Parser_Desugar.desugar_partial_modul curmod env modul)
-in (match (_47_13) with
+(let _48_13 = (FStar_Parser_Desugar.desugar_partial_modul curmod env modul)
+in (match (_48_13) with
 | (env, modul) -> begin
 FStar_Util.Inl ((env, modul))
 end))
@@ -17,7 +17,7 @@ end
 (let _113_13 = (FStar_Parser_Desugar.desugar_decls env decls)
 in (FStar_All.pipe_left (fun _113_12 -> FStar_Util.Inr (_113_12)) _113_13))
 end
-| FStar_Util.Inl (FStar_Util.Inl (_47_18)) -> begin
+| FStar_Util.Inl (FStar_Util.Inl (_48_18)) -> begin
 (Prims.raise (FStar_Absyn_Syntax.Err ("Refusing to check more than one module at a time incrementally")))
 end
 | FStar_Util.Inr (msg, r) -> begin
@@ -41,12 +41,12 @@ end
 | FStar_Util.Inl (FStar_Util.Inl (ast)) -> begin
 (FStar_Parser_Desugar.desugar_file env ast)
 end
-| FStar_Util.Inl (FStar_Util.Inr (_47_33)) -> begin
-(let _47_36 = (FStar_Util.fprint1 "%s: Expected a module\n" fn)
+| FStar_Util.Inl (FStar_Util.Inr (_48_33)) -> begin
+(let _48_36 = (FStar_Util.fprint1 "%s: Expected a module\n" fn)
 in (FStar_All.exit 1))
 end
 | FStar_Util.Inr (msg, r) -> begin
-(let _47_42 = (let _113_24 = (FStar_Absyn_Print.format_error r msg)
+(let _48_42 = (let _113_24 = (FStar_Absyn_Print.format_error r msg)
 in (FStar_All.pipe_left FStar_Util.print_string _113_24))
 in (FStar_All.exit 1))
 end)

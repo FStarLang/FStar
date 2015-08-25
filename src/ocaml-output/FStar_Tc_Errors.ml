@@ -21,7 +21,7 @@ let num_errs = (FStar_Util.mk_ref 0)
 
 let verification_errs = (FStar_Util.mk_ref [])
 
-let add_errors = (fun env errs -> (let errs = (FStar_All.pipe_right errs (FStar_List.map (fun _33_14 -> (match (_33_14) with
+let add_errors = (fun env errs -> (let errs = (FStar_All.pipe_right errs (FStar_List.map (fun _34_14 -> (match (_34_14) with
 | (msg, r) -> begin
 (let r = (match ((r = FStar_Absyn_Syntax.dummyRange)) with
 | true -> begin
@@ -33,28 +33,28 @@ end)
 in (r, msg))
 end))))
 in (let n_errs = (FStar_List.length errs)
-in (FStar_Util.atomically (fun _33_18 -> (match (()) with
+in (FStar_Util.atomically (fun _34_18 -> (match (()) with
 | () -> begin
-(let _33_19 = (let _99_30 = (let _99_29 = (FStar_ST.read verification_errs)
+(let _34_19 = (let _99_30 = (let _99_29 = (FStar_ST.read verification_errs)
 in (FStar_List.append errs _99_29))
 in (FStar_ST.op_Colon_Equals verification_errs _99_30))
 in (let _99_31 = ((FStar_ST.read num_errs) + n_errs)
 in (FStar_ST.op_Colon_Equals num_errs _99_31)))
 end))))))
 
-let report_all = (fun _33_21 -> (match (()) with
+let report_all = (fun _34_21 -> (match (()) with
 | () -> begin
-(let all_errs = (FStar_Util.atomically (fun _33_22 -> (match (()) with
+(let all_errs = (FStar_Util.atomically (fun _34_22 -> (match (()) with
 | () -> begin
 (let x = (FStar_ST.read verification_errs)
-in (let _33_24 = (FStar_ST.op_Colon_Equals verification_errs [])
+in (let _34_24 = (FStar_ST.op_Colon_Equals verification_errs [])
 in x))
 end)))
-in (let all_errs = (FStar_List.sortWith (fun _33_30 _33_34 -> (match ((_33_30, _33_34)) with
-| ((r1, _33_29), (r2, _33_33)) -> begin
+in (let all_errs = (FStar_List.sortWith (fun _34_30 _34_34 -> (match ((_34_30, _34_34)) with
+| ((r1, _34_29), (r2, _34_33)) -> begin
 (FStar_Range.compare r1 r2)
 end)) all_errs)
-in (let _33_39 = (FStar_All.pipe_right all_errs (FStar_List.iter (fun _33_38 -> (match (_33_38) with
+in (let _34_39 = (FStar_All.pipe_right all_errs (FStar_List.iter (fun _34_38 -> (match (_34_38) with
 | (r, msg) -> begin
 (let _99_38 = (FStar_Range.string_of_range r)
 in (FStar_Util.fprint2 "%s: %s\n" _99_38 msg))
@@ -62,12 +62,12 @@ end))))
 in (FStar_List.length all_errs))))
 end))
 
-let report = (fun r msg -> (let _33_43 = (FStar_Util.incr num_errs)
+let report = (fun r msg -> (let _34_43 = (FStar_Util.incr num_errs)
 in (let _99_44 = (let _99_43 = (FStar_Range.string_of_range r)
 in (FStar_Util.format2 "%s: %s\n" _99_43 msg))
 in (FStar_Util.print_string _99_44))))
 
-let get_err_count = (fun _33_45 -> (match (()) with
+let get_err_count = (fun _34_45 -> (match (()) with
 | () -> begin
 (FStar_ST.read num_errs)
 end))
@@ -162,7 +162,7 @@ end
 end)
 in (FStar_Util.format1 "The pattern variable \"%s\" was used more than once" m)))
 
-let disjunctive_pattern_vars = (fun v1 v2 -> (let vars = (fun v -> (let _99_192 = (FStar_All.pipe_right v (FStar_List.map (fun _33_1 -> (match (_33_1) with
+let disjunctive_pattern_vars = (fun v1 v2 -> (let vars = (fun v -> (let _99_192 = (FStar_All.pipe_right v (FStar_List.map (fun _34_1 -> (match (_34_1) with
 | FStar_Util.Inl (a) -> begin
 (FStar_Absyn_Print.strBvd a)
 end
@@ -183,11 +183,11 @@ end
 in (_99_196, ct.FStar_Absyn_Syntax.result_typ))
 end))
 
-let computed_computation_type_does_not_match_annotation = (fun env e c c' -> (let _33_127 = (name_and_result c)
-in (match (_33_127) with
+let computed_computation_type_does_not_match_annotation = (fun env e c c' -> (let _34_127 = (name_and_result c)
+in (match (_34_127) with
 | (f1, r1) -> begin
-(let _33_130 = (name_and_result c')
-in (match (_33_130) with
+(let _34_130 = (name_and_result c')
+in (match (_34_130) with
 | (f2, r2) -> begin
 (let _99_202 = (FStar_Tc_Normalize.typ_norm_to_string env r1)
 in (let _99_201 = (FStar_Tc_Normalize.typ_norm_to_string env r2)
@@ -220,7 +220,7 @@ let failed_to_prove_specification = (fun lbls -> (match (lbls) with
 | [] -> begin
 "An unknown assertion in the term at this location was not provable"
 end
-| _33_144 -> begin
+| _34_144 -> begin
 (let _99_232 = (FStar_All.pipe_right lbls (FStar_String.concat "\n\t"))
 in (FStar_Util.format1 "The following problems were found:\n\t%s" _99_232))
 end))

@@ -10,7 +10,7 @@ ABSYN_SRC=$(addprefix absyn/, $(ABSYN))
 FORMAT=format.fsi format.fs
 FORMAT_SRC=$(addprefix format/, $(FORMAT))
 
-EXTRACTION=ml-syntax.fs env.fs util.fs ocaml-codegen.fsi ocaml-codegen.fs codegen.fsi codegen.fs extracttyp.fs extractexp.fs extractmod.fs
+EXTRACTION=ml-syntax.fs env.fs util.fs codegen.fsi codegen.fs extracttyp.fs extractexp.fs extractmod.fs
 EXTRACTION_SRC=$(addprefix extraction/, $(EXTRACTION))
 
 PARSER=ast.fs parseutil.fs parse.fs lexhelp.fs lex.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs parseit.fsi parseit.fs driver.fs
@@ -172,7 +172,7 @@ BOOT_TCFILES=tcenv.fsi tcenv.fs recheck.fs normalize.fsi normalize.fs errors.fs 
 BOOT_TC=$(addprefix tc/, $(BOOT_TCFILES))
 BOOT_FORMATFILES=format.fsi formatml.fs
 BOOT_FORMAT=$(addprefix format/, $(BOOT_FORMATFILES))
-BOOT_EXTRACTIONFILES=ml-syntax.fs env.fs util.fs ocaml-codegen.fsi ocaml-codegen.fs codegen.fsi codegen.fs extracttyp.fs extractexp.fs extractmod.fs
+BOOT_EXTRACTIONFILES=ml-syntax.fs env.fs util.fs codegen.fsi codegen.fs extracttyp.fs extractexp.fs extractmod.fs
 BOOT_EXTRACTION=$(addprefix extraction/, $(BOOT_EXTRACTIONFILES))
 
 BOOT_MAIN=fstar.fs

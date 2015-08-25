@@ -48,8 +48,6 @@
     <Compile Include="ml-syntax.fs" />
     <Compile Include="env.fs" />
     <Compile Include="util.fs" />
-    <Compile Include="ocaml-codegen.fsi" />
-    <Compile Include="ocaml-codegen.fs" />
     <Compile Include="codegen.fsi" />
     <Compile Include="codegen.fs" />
     <Compile Include="extracttyp.fs" />
