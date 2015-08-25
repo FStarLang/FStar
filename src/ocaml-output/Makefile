@@ -31,7 +31,7 @@ package: parser fstar.exe
 	cp README fstar/
 	mkdir fstar/bin
 	cp fstar.exe fstar/bin/fstar.exe
-	@cp ../../bin/*z3* fstar/bin > /dev/null || cp `which z3` fstar/bin > /dev/null || echo " ********** WARNING: you don't have Z3 in \\$FSTAR_HOME/bin or in your \\$PATH, skipped from package ************** "
+	@cp ../../bin/*z3* fstar/bin &> /dev/null || cp `which z3` fstar/bin &> /dev/null || echo " ********** WARNING: you don't have Z3 in \\$FSTAR_HOME/bin or in your \\$PATH, skipped from package ************** "
 	$(call fexport,lib)
 	$(call fexport,examples)
 	$(call fexport,contrib)
@@ -60,10 +60,10 @@ parser:
 	ocamllex ../lex.mll -o Microsoft_FStar_Parser_LexFStar.ml
 	cp ../parseit.ml Microsoft_FStar_Parser_ParseIt.ml
 	$(OCAMLDEP) $(INCLUDES) *.ml > .depend
-ifeq (, $(shell which dos2unix))
+ifneq (, $(shell which dos2unix))
 	dos2unix parse.mly
 endif
-ifeq (, $(shell which unix2dos))
+ifneq (, $(shell which unix2dos))
 	unix2dos $(PARSER_MLS)
 endif
 
