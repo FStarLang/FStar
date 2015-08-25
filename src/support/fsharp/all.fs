@@ -1,5 +1,5 @@
 #light "off"
-module All
+module FStar.All
   let failwith x = failwith x
   let exit i = exit i
   let pipe_right a f = f a
