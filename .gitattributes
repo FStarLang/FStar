@@ -10,3 +10,6 @@
 *.fsproj    eol=crlf 
 *.sln       eol=crlf
 Makefile.*  eol=crlf 
+*.fst linguist-language=FStar
+*.fsti linguist-language=FStar
+
