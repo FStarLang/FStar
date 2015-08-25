@@ -1,11 +1,5 @@
 .PHONY: all verify-% __force__
 
-ifeq ($(OS),Windows_NT)
-MSBUILD = msbuild
-else
-MSBUILD = xbuild
-endif
-
 # This will be called from subdirs
 FSTAR_HOME = ../../../..
 

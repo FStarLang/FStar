@@ -1,0 +1,4 @@
+
+let main () =
+  UntrustedClientCode.dynamicChecking()
+;;
