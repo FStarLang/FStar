@@ -58,7 +58,7 @@ you to skip directly to step 3 and build F* with just an OCaml compiler.
       (e.g. by clicking the "Get Visual F# Tools for Visual Studio 2013"
        link [here](https://msdn.microsoft.com/en-us/vstudio/hh388569.aspx))
 
-  - Using Visual Studio, open `FStar/VS/FStar.sln` and build the solution
+  - Using Visual Studio, open `src/VS/FStar.sln` and build the solution
     (in the menus: Build > Build Solution).
 
 **Note:** on Windows you need to build F\* using Visual Studio
@@ -163,45 +163,24 @@ special `flexlink` technology for this. See `contrib/CoreCrypto/ml` and
 
 ### 2. Extracting the sources of F* itself to OCaml ###
 
-0. Get an F* binary, either using the .NET build process, or the OCaml build
-   process. Make sure you follow the instructions above to get a working OCaml
-   setup.
+0. Get an F* binary, either using the F#/.NET build process (step 1
+   above), or the OCaml build process (step 3 above). Make sure you
+   follow the instructions above to get a working OCaml setup.
 
 1. Once you satisfy the prerequisites for your platform,
-   translate the F* sources from F# to OCaml using F*.
-   Run the following commands in `$FSTAR_HOME/src`:
+   translate the F* sources from F# to OCaml using F* by running:
 
-        $ make ocaml
+        $ make ocaml -C src
 
-2. On windows, close all instances of fstar.exe, e.g. your F* IDE, because this step will overwrite fstar.exe. Then run the following commands in `src/ocaml-output`:
-
-        $ make prep
-        $ make
 
 ## Runtime dependency: Z3 SMT solver ##
 
-To use F* for verification you need a Z3 4.3.2 binary.
+To use F* for verification you need a Z3 4.4.0 (or 4.3.2) binary.
 Our binary packages include that already in `bin`, but if you compile
 F* from sources you need to get a Z3 binary yourself and add it to
-your `PATH`:
+your `PATH`. We recommend you use the 4.4.0 binaries here:
+https://github.com/Z3Prover/z3/releases/tag/z3-4.4.0
 
-  - Z3 binaries for Windows:
-
-    - 64 bits: https://z3.codeplex.com/releases/view/135729
-    - 32 bits: https://z3.codeplex.com/releases/view/135728
-
-  - Z3 binaries for Linux (any distribution, not just Ubuntu):
-
-      - https://z3.codeplex.com/releases/view/101911
-
-      For instance, for a 64bit architecture you can do
-
-          $ wget "https://download-codeplex.sec.s-msft.com/Download/Release?ProjectName=z3&DownloadId=923684&FileTime=130586905368570000&Build=20959" -O z3-4.3.2.0713535fa6a3-x64-ubuntu-14.04.zip
-          $ unzip z3-4.3.2.0713535fa6a3-x64-ubuntu-14.04.zip
-          $ export PATH=z3-4.3.2.0713535fa6a3-x64-ubuntu-14.04/bin:$PATH
-
-  - Z3 binaries for Mac OS X:
-      - https://z3.codeplex.com/releases/view/101918
 
 ## Creating binary packages for your platform ##
 
@@ -212,9 +191,9 @@ your `PATH`:
 1. Make sure you have the Z3 binary in your `$PATH` or
    in the `$FSTAR_HOME/bin` directory
 
-2. Run the following command in `src/ocaml-output`:
+2. Run the following command:
 
-        $ make package
+        $ make package -C src/ocaml-output
 
 3. Test that the binary is good by expanding the archive and running
    `make` in the `examples` directory inside

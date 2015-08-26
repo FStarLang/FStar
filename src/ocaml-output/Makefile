@@ -71,7 +71,9 @@ FStar_Version.ml:__force__
 fexport = cd ../.. && git archive "--format=tar" "--prefix=$(1)/" HEAD:$(1)/ | tar -x -C src/ocaml-output/fstar
 
 NAME=fstar_$(VERSION)_$(PLATFORM)
-package: fstar.exe
+
+package:
+	make all
 	rm -f $(NAME).zip $(NAME).tar.gz
 	rm -dfr fstar && mkdir fstar
 	cp ../../README.md ../../LICENSE ../../setenv.sh fstar/
