@@ -202,7 +202,7 @@ BOOT_FS_FILES=FSharp.Format.fs $(BOOT_FS_BASE) $(BOOT_FS_SYNTAX) $(BOOT_FS_TC) $
 
 boot_fs: fsharp-output fs plain-fs-files fsharp-output/fstar.exe 
 
-fsharp-output/fstar.exe: $(addprefix support/fsharp/, $(FS_SUPPORT_LIBS)) $(addprefix basic/, $(FSTAR_SUPPORT_LIBS)) $(addprefix fsharp-output/, $(BOOT_FS_FILES) main.fs)
+fsharp-output/fstar.exe: $(addprefix ../lib/fs/, $(FS_SUPPORT_LIBS)) $(addprefix basic/, $(FSTAR_SUPPORT_LIBS)) $(addprefix fsharp-output/, $(BOOT_FS_FILES) main.fs)
 	$(FSC) --nowarn:0025 -o $@ $(BASELIBS) $(OTHERFLAGS) $^
 
 fs: $(BOOT_ALL) 
@@ -211,7 +211,7 @@ fs: $(BOOT_ALL)
 fsharp-output: 
 	mkdir -p fsharp-output
 
-plain-fs-files: $(addprefix parser/, parseutil.fs parse.fs lex.fs parseit.fs) main.fs
+plain-fs-files: $(addprefix parser/, parseutil.fs parse.fs lex.fs parseit.fs) fstar/main.fs
 	cp $^ fsharp-output/ 
 
 deploy_boot_fs: fsharp-output/fstar.exe 
