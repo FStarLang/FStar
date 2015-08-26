@@ -12,29 +12,29 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{8D74F5
 		.nuget\NuGet.targets = .nuget\NuGet.targets
 	EndProjectSection
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "absyn", "..\src\absyn\absyn.fsproj", "{13E8984E-188D-447B-B7B7-9F7441050565}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "absyn", "..\absyn\absyn.fsproj", "{13E8984E-188D-447B-B7B7-9F7441050565}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "basic", "..\src\basic\basic.fsproj", "{E8957DBD-58E7-4CF8-9192-E0A9CFB3867E}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "basic", "..\basic\basic.fsproj", "{E8957DBD-58E7-4CF8-9192-E0A9CFB3867E}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "parser", "..\src\parser\parser.fsproj", "{9974A6DE-6CA8-44B6-A52E-51FC52932179}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "parser", "..\parser\parser.fsproj", "{9974A6DE-6CA8-44B6-A52E-51FC52932179}"
 	ProjectSection(ProjectDependencies) = postProject
 		{5BF4AF3F-BEC2-4CFD-94B7-11A38A031F4B} = {5BF4AF3F-BEC2-4CFD-94B7-11A38A031F4B}
 	EndProjectSection
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fstar", "..\src\fstar.fsproj", "{F95B3965-1A6A-4FBF-A079-E849E8EA3FF7}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fstar", "..\fstar\fstar.fsproj", "{F95B3965-1A6A-4FBF-A079-E849E8EA3FF7}"
 	ProjectSection(ProjectDependencies) = postProject
 		{670DA3F6-7E41-4C1D-AB17-1F59E0317F52} = {670DA3F6-7E41-4C1D-AB17-1F59E0317F52}
 	EndProjectSection
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "tc", "..\src\tc\tc.fsproj", "{5BF4AF3F-BEC2-4CFD-94B7-11A38A031F4B}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "tc", "..\tc\tc.fsproj", "{5BF4AF3F-BEC2-4CFD-94B7-11A38A031F4B}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "format", "..\src\format\format.fsproj", "{54BC6905-03EE-4AEB-B726-742B6D4FA710}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "format", "..\format\format.fsproj", "{54BC6905-03EE-4AEB-B726-742B6D4FA710}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "tosmt", "..\src\tosmt\tosmt.fsproj", "{670DA3F6-7E41-4C1D-AB17-1F59E0317F52}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "tosmt", "..\tosmt\tosmt.fsproj", "{670DA3F6-7E41-4C1D-AB17-1F59E0317F52}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "tests", "..\src\tests\tests.fsproj", "{5716A290-2899-478B-BEA2-1C59FA088DAD}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "tests", "..\tests\tests.fsproj", "{5716A290-2899-478B-BEA2-1C59FA088DAD}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "extraction", "..\src\extraction\extraction.fsproj", "{55398B56-03CF-4E11-ADB0-A4274B7DBB35}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "extraction", "..\extraction\extraction.fsproj", "{55398B56-03CF-4E11-ADB0-A4274B7DBB35}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

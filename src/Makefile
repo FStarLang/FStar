@@ -132,20 +132,16 @@ $(BIN)/tc.dll: $(TC_DEPS) $(TC_SRC)
 	$(FSC)  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(TC_DEPS)) $(TC_SRC)
 
 FSTAR_DEPS=$(addprefix $(BIN)/, $(ALL_DLLS))
-$(BIN)/fstar.exe: $(FSTAR_DEPS) fstar.fs main.fs $(BIN)/fstar-mono.sh
+$(BIN)/fstar.exe: $(FSTAR_DEPS) fstar/fstar.fs fstar/main.fs $(BIN)/fstar-mono.sh
 ifeq ($(OS),Windows_NT)
-	$(FSC)  $(OTHERFLAGS) -o $@ $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) fstar.fs main.fs
+	$(FSC)  $(OTHERFLAGS) -o $@ $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) fstar/fstar.fs fstar/main.fs
 else
-	$(FSC)  $(OTHERFLAGS) -o $(BIN)/fstar-mono.exe $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) fstar.fs main.fs
+	$(FSC)  $(OTHERFLAGS) -o $(BIN)/fstar-mono.exe $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) fstar/fstar.fs fstar/main.fs
 	cp $(BIN)/fstar-mono.sh $(BIN)/fstar.exe
 endif
 
-fstar-nodeps: fstar.fs main.fs
-	$(FSC) $(OTHERFLAGS) -o $(BIN)/fstar.exe $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) fstar.fs
 
-
-wc: $(BASIC_SRC) $(ABSYN_SRC) $(PARSER_NOGEN_SRC) $(TC_SRC) $(TOSMT_SRC) $(FORMAT_SRC) $(EXTRACTION_SRC) fstar.fs
-#	wc -l $^
+wc: $(BASIC_SRC) $(ABSYN_SRC) $(PARSER_NOGEN_SRC) $(TC_SRC) $(TOSMT_SRC) $(FORMAT_SRC) $(EXTRACTION_SRC) fstar/fstar.fs
 	sloccount $^
 
 clean:
@@ -175,14 +171,11 @@ BOOT_FORMAT=$(addprefix format/, $(BOOT_FORMATFILES))
 BOOT_EXTRACTIONFILES=ml-syntax.fs env.fs util.fs codegen.fsi codegen.fs extracttyp.fs extractexp.fs extractmod.fs
 BOOT_EXTRACTION=$(addprefix extraction/, $(BOOT_EXTRACTIONFILES))
 
-BOOT_MAIN=fstar.fs
-BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_TC) $(BOOT_PARSER) $(TOSMT_SRC) $(BOOT_FORMAT) $(BOOT_EXTRACTION) fstar.fs
+BOOT_MAIN=fstar/fstar.fs
+BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_TC) $(BOOT_PARSER) $(TOSMT_SRC) $(BOOT_FORMAT) $(BOOT_EXTRACTION) $(BOOT_MAIN)
 
 ADMITTED_MODULES=System System.IO System.Text System.Diagnostics System.Collections.Generic Collections FStar.Set FStar.Heap FStar.ST FStar.All FStar.List FStar.Option FStar.Char FStar.String FStar.List FStar.Bytes FStar.Platform FStar.Util FStar.Version FStar.Getopt FStar.Range FStar.Unionfind FStar.Parser.ParseIt FStar.Parser.Parse 
 ADMITS=$(addprefix --admit_fsi , $(ADMITTED_MODULES))
-
-boot: $(BOOT_ALL)
-	../bin/fstar.exe --debug yes --fs_typ_app --lax $(FSTAROPTS) $(ADMITS) $^
 
 ocaml: $(BOOT_ALL)
 	../bin/fstar.exe --eager_inference --MLish --lax --fs_typ_app --odir ocaml-output $(FSTAROPTS) --codegen OCaml $(ADMITS) $^
@@ -192,11 +185,6 @@ ocaml-test: ocaml boot-ocaml
 boot-ocaml:
 	make -C ocaml-output prep
 	make -C ocaml-output
-
-fstarml:
-	@echo "Building parser and lexer filex..."
-	make -C ocaml-output parser
-	make -s -C ocaml-output
 
 # --------------------------------------------------------------------
 # Bootstrapping in F#
@@ -214,23 +202,20 @@ BOOT_FS_FILES=FSharp.Format.fs $(BOOT_FS_BASE) $(BOOT_FS_SYNTAX) $(BOOT_FS_TC) $
 
 boot_fs: fsharp-output fs plain-fs-files fsharp-output/fstar.exe 
 
-deploy_boot_fs: fsharp-output/fstar.exe fsharp-output/support.dll
-	cp $^ ../bin
-
-fsharp-output/fstar.exe: fsharp-output/support.dll
-	$(FSC) --nowarn:0025 -o $@ $(BASELIBS) -r $^ $(OTHERFLAGS) $(addprefix fsharp-output/, $(BOOT_FS_FILES) main.fs)
+fsharp-output/fstar.exe: $(addprefix support/fsharp/, $(FS_SUPPORT_LIBS)) $(addprefix basic/, $(FSTAR_SUPPORT_LIBS)) $(addprefix fsharp-output/, $(BOOT_FS_FILES) main.fs)
+	$(FSC) --nowarn:0025 -o $@ $(BASELIBS) $(OTHERFLAGS) $^
 
 fs: $(BOOT_ALL) 
 	../bin/fstar.exe --eager_inference --MLish --lax --fs_typ_app --odir fsharp-output $(FSTAROPTS) --codegen FSharp $(ADMITS) $^
-
-fsharp-output/support.dll: $(addprefix support/fsharp/, $(FS_SUPPORT_LIBS)) $(addprefix basic/, $(FSTAR_SUPPORT_LIBS))
-	$(FSC) $(OTHERFLAGS) $(BASELIBS) -o $@ -a $^
 
 fsharp-output: 
 	mkdir -p fsharp-output
 
 plain-fs-files: $(addprefix parser/, parseutil.fs parse.fs lex.fs parseit.fs) main.fs
 	cp $^ fsharp-output/ 
+
+deploy_boot_fs: fsharp-output/fstar.exe 
+	cp $^ ../bin
 
 clean_boot_fs:
 	rm -rf fsharp-output

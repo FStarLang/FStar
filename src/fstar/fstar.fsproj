@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -66,12 +66,12 @@
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="extraction\extraction.fsproj">
+    <ProjectReference Include="..\extraction\extraction.fsproj">
       <Name>extraction</Name>
       <Project>{55398b56-03cf-4e11-adb0-a4274b7dbb35}</Project>
       <Private>True</Private>
     </ProjectReference>
-    <ProjectReference Include="tosmt\tosmt.fsproj">
+    <ProjectReference Include="..\tosmt\tosmt.fsproj">
       <Name>tosmt</Name>
       <Project>{670da3f6-7e41-4c1d-ab17-1f59e0317f52}</Project>
       <Private>True</Private>
@@ -89,27 +89,27 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
-    <ProjectReference Include="absyn\absyn.fsproj">
+    <ProjectReference Include="..\absyn\absyn.fsproj">
       <Name>absyn</Name>
       <Project>{13e8984e-188d-447b-b7b7-9f7441050565}</Project>
       <Private>True</Private>
     </ProjectReference>
-    <ProjectReference Include="basic\basic.fsproj">
+    <ProjectReference Include="..\basic\basic.fsproj">
       <Name>basic</Name>
       <Project>{e8957dbd-58e7-4cf8-9192-e0a9cfb3867e}</Project>
       <Private>True</Private>
     </ProjectReference>
-    <ProjectReference Include="format\format.fsproj">
+    <ProjectReference Include="..\format\format.fsproj">
       <Name>format</Name>
       <Project>{54bc6905-03ee-4aeb-b726-742b6d4fa710}</Project>
       <Private>True</Private>
     </ProjectReference>
-    <ProjectReference Include="parser\parser.fsproj">
+    <ProjectReference Include="..\parser\parser.fsproj">
       <Name>parser</Name>
       <Project>{9974a6de-6ca8-44b6-a52e-51fc52932179}</Project>
       <Private>True</Private>
     </ProjectReference>
-    <ProjectReference Include="tc\tc.fsproj">
+    <ProjectReference Include="..\tc\tc.fsproj">
       <Name>tc</Name>
       <Project>{5bf4af3f-bec2-4cfd-94b7-11a38a031f4b}</Project>
       <Private>True</Private>
