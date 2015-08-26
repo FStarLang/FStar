@@ -31,12 +31,26 @@ released 0.7 versions.
 This new variant of F* is released under the Apache 2.0 license;
 see `LICENSE` for more details.
 
-### Contacting the F* team
+### Community mailing list
 
-Please report bugs or ask questions using the GitHub issue tracker for
-the F* project: https://github.com/FStarLang/FStar/issues
+The [fstar-club mailing list] (fstar-club@lists.gforge.inria.fr) is
+dedicated to F* users. Here is where all F* announcements are made to
+the general public (e.g. for releases, new papers, etc) and where
+users can ask questions, ask for help, discuss, provide feedback,
+announce jobs requiring at least 10 years of F* experience, etc.
 
-Yes, **we encourage asking questions on the issue tracker**!
+[List archives] are public, but only members can post.
+[Join here][fstar-club mailing list]!
+
+[fstar-club mailing list]: http://lists.gforge.inria.fr/mailman/listinfo/fstar-club
+
+[List archives]: https://lists.gforge.inria.fr/pipermail/fstar-club/
+
+### Issues
+
+Please report issues using the [F* issue tracker] on GitHub.
+
+[F* issue tracker]: https://github.com/FStarLang/FStar/issues
 
 ### Editing F* code
 
