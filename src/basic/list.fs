@@ -583,9 +583,9 @@ let rec sortWith = (fun ( f  :  'a  ->  'a  ->  Prims.int ) ( _5_12  :  'a Prims
 []
 end
 | pivot::tl -> begin
-(let _5_544 = (partition (fun ( x  :  'a ) -> ((f pivot x) > 0)) tl)
+(let _5_544 = (partition (fun ( x  :  'a ) -> ((f pivot x) >= 0)) tl)
 in (match (_5_544) with
-| (hi, lo) -> begin
+| (lo, hi) -> begin
 (append (sortWith f lo) ((pivot)::(sortWith f hi)))
 end))
 end))
@@ -601,7 +601,7 @@ end
 | pivot::tl -> begin
 (let _5_568 = (partitionT (bool_of_compare f pivot) tl)
 in (match (_5_568) with
-| (hi, lo) -> begin
+| (lo, hi) -> begin
 (let _5_569 = ()
 in (append (sortWithT f lo) ((pivot)::(sortWithT f hi))))
 end))
