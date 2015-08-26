@@ -460,22 +460,22 @@ in (('h', "help", FStar_Getopt.ZeroArgs ((fun x -> (let _21_217 = (display_usage
 in (FStar_All.exit 0)))), "Display this information"))::specs)
 end))
 and parse_codegen = (fun s -> (match (s) with
-| ("OCaml-experimental") | ("OCaml") | ("FSharp") -> begin
+| ("OCaml") | ("FSharp") -> begin
 Some (s)
 end
-| _21_224 -> begin
-(let _21_225 = (FStar_Util.print_string "Wrong argument to codegen flag\n")
-in (let _21_227 = (let _86_185 = (specs ())
+| _21_223 -> begin
+(let _21_224 = (FStar_Util.print_string "Wrong argument to codegen flag\n")
+in (let _21_226 = (let _86_185 = (specs ())
 in (display_usage _86_185))
 in (FStar_All.exit 1)))
 end))
-and set_interactive_fsi = (fun _21_229 -> (match ((FStar_ST.read interactive)) with
+and set_interactive_fsi = (fun _21_228 -> (match ((FStar_ST.read interactive)) with
 | true -> begin
 (FStar_ST.op_Colon_Equals interactive_fsi true)
 end
 | false -> begin
-(let _21_231 = (FStar_Util.print_string "Set interactive flag first before setting interactive fsi flag\n")
-in (let _21_233 = (let _86_187 = (specs ())
+(let _21_230 = (FStar_Util.print_string "Set interactive flag first before setting interactive fsi flag\n")
+in (let _21_232 = (let _86_187 = (specs ())
 in (display_usage _86_187))
 in (FStar_All.exit 1)))
 end))
@@ -489,18 +489,18 @@ end
 end)))
 
 let set_options = (fun s -> (let _86_193 = (specs ())
-in (FStar_Getopt.parse_string _86_193 (fun _21_239 -> ()) s)))
+in (FStar_Getopt.parse_string _86_193 (fun _21_238 -> ()) s)))
 
 let reset_options_string = (FStar_ST.alloc None)
 
-let reset_options = (fun _21_241 -> (match (()) with
+let reset_options = (fun _21_240 -> (match (()) with
 | () -> begin
-(let _21_242 = (init_options ())
+(let _21_241 = (init_options ())
 in (match ((FStar_ST.read reset_options_string)) with
 | Some (x) -> begin
 (set_options x)
 end
-| _21_247 -> begin
+| _21_246 -> begin
 (let _86_197 = (specs ())
 in (FStar_Getopt.parse_cmdline _86_197 (fun x -> ())))
 end))

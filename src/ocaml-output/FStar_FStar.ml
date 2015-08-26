@@ -372,7 +372,7 @@ end
 ()
 end))
 
-let codegen = (fun fmods env -> (match (((((FStar_ST.read FStar_Options.codegen) = Some ("OCaml")) || ((FStar_ST.read FStar_Options.codegen) = Some ("OCaml-experimental"))) || ((FStar_ST.read FStar_Options.codegen) = Some ("FSharp")))) with
+let codegen = (fun fmods env -> (match ((((FStar_ST.read FStar_Options.codegen) = Some ("OCaml")) || ((FStar_ST.read FStar_Options.codegen) = Some ("FSharp")))) with
 | true -> begin
 (let _64_252 = (let _129_132 = (FStar_Extraction_ML_Env.mkContext env)
 in (FStar_Util.fold_map FStar_Extraction_ML_ExtractMod.extract _129_132 fmods))
