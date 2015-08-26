@@ -1,19 +1,19 @@
 (*--build-config
-    options:--admit_fsi Set --z3timeout 5  --print_implicits;
+    options:--admit_fsi FStar.Set --z3timeout 5  --print_implicits;
     variables:LIB=../../lib;
     other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/st2.fst $LIB/bytes.fst $LIB/list.fst sample.fst xor.fst
   --*)
 
 module Ro
 
-open Comp
-open Heap
-open List
-open Bytes
-open Xor
-open Bijection
-open Sample
-open Relational
+open FStar.Comp
+open FStar.Heap
+open FStar.List
+open FStar.Bytes
+open FStar.Xor
+open FStar.Bijection
+open FStar.Sample
+open FStar.Relational
 
 type map (a:Type) (b:Type) = list (a * b)
 
@@ -317,14 +317,14 @@ let hash_adv k  = let s = compose2_self (fun s -> !s) (twice s) in
 (* Simple Encryption Scheme based on ro *)
 module Encryption
 
-open Comp
-open Heap
-open Bijection
-open Sample
-open Relational
-open Xor
-open Bytes
-open List
+open FStar.Comp
+open FStar.Heap
+open FStar.Bijection
+open FStar.Sample
+open FStar.Relational
+open FStar.Xor
+open FStar.Bytes
+open FStar.List
 open Ro
 
 assume val append : bytes -> bytes -> Tot bytes

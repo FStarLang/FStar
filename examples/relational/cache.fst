@@ -1,15 +1,17 @@
 (*--build-config
-    options:--admit_fsi Set --z3timeout 15;
+    options:--admit_fsi FStar.Set --z3timeout 15;
     variables:LIB=../../lib;
     other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/st2.fst $LIB/list.fst
   --*)
 
+
+
 module Cache
 
-open Relational
-open Comp
-open List
-open Heap
+open FStar.Relational
+open FStar.Comp
+open FStar.List
+open FStar.Heap
 
 (* Functional Sepcification of Factorials *)
 val fac : nat -> Tot nat

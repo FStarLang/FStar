@@ -1,14 +1,14 @@
 (*--build-config
-    options:--admit_fsi Set;
+    options:--admit_fsi FStar.Set;
     variables:LIB=../../lib;
     other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/st2.fst
   --*)
 
 module NonInterference
 
-open Comp
-open Heap
-open Relational
+open FStar.Comp
+open FStar.Heap
+open FStar.Relational
 
 (* We model labels with different levels as integers *)
 type label = int 
@@ -42,8 +42,8 @@ assume val new_labeled_int : l:label -> x:ref int{label_fun x = l}
 (* Simple Examples using the above definition of Noninterference*)
 module Example1
 open NonInterference
-open Comp
-open Relational
+open FStar.Comp
+open FStar.Relational
 
 (* Fails iff label b > label a *)
 let a = new_labeled_int 1
@@ -60,8 +60,8 @@ let test_ni () = compose2_self test (twice ())
 
 module Example2
 open NonInterference
-open Comp
-open Relational
+open FStar.Comp
+open FStar.Relational
 
 (* Fails iff label c < (max (label a) (label b) *)
 let a = new_labeled_int 1

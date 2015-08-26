@@ -1,10 +1,10 @@
 (*--build-config
-    options:--admit_fsi Set --z3timeout 30 --log_types;
+    options:--admit_fsi FStar.Set --z3timeout 30 ;
     variables:LIB=../../lib;
     other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/st2.fst $LIB/bytes.fst $LIB/list.fst sample.fst
   --*)
 module Fp
-open Relational
+open FStar.Relational
 
 (* TODO, actually turn this into Fp
    For now we just use ints because they have better automatic support... *)
@@ -40,10 +40,10 @@ let mod_laws6 = assume(forall a b.(a - (b % p)) % p = (a - b) %p)
 
 module Sharing
 open Fp
-open Sample
-open Bijection
-open Relational
-open Comp
+open FStar.Sample
+open FStar.Bijection
+open FStar.Relational
+open FStar.Comp
 
 (* The shares on both sides have to sum up to the respective secret.
    We assume that the first party is dishonest and that the second party is
@@ -76,11 +76,11 @@ let reconstruct _ s  = rel_map1 (fun (a,b) -> add_fp a b) s
 
 module Triples
 open Fp
-open Sample
-open Bijection
-open Relational
+open FStar.Sample
+open FStar.Bijection
+open FStar.Relational
 open Sharing
-open Comp
+open FStar.Comp
 
 let fst3 = MkTuple3._1
 let snd3 = MkTuple3._2
@@ -109,7 +109,6 @@ opaque val triple_a : s:double fp
                                                    minus_fp (R.r s) (snd(R.r(dsnd r)))})
 
 let triple_a s = let sample_fun = (fun x -> add_fp (minus_fp x (R.l s)) (R.r s)) in
-                 let sample_fun'= (fun x -> add_fp (minus_fp x (R.r s)) (R.l s)) in
                  id_good_sample_fun ();
                  let as0 = sample #fp #fp (fun x -> x) in
                  triple_a_good_sample_fun (R.l s) (R.r s);
@@ -136,11 +135,11 @@ let triple s01 s11 = let a = triple_a s01 in
 #reset-options
 module MPC
 open Fp
-open Sample
-open Relational
+open FStar.Sample
+open FStar.Relational
 open Sharing
 open Triples
-open Comp
+open FStar.Comp
 
 
 (* This module contains the actual arithmetic operations. 
