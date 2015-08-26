@@ -175,7 +175,7 @@ special `flexlink` technology for this. See `contrib/CoreCrypto/ml` and
 
 2. On windows, close all instances of fstar.exe, e.g. your F* IDE, because this step will overwrite fstar.exe. Then run the following commands in `src/ocaml-output`:
 
-        $ make parser
+        $ make prep
         $ make
 
 ## Runtime dependency: Z3 SMT solver ##
