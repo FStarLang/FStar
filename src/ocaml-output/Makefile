@@ -1,4 +1,4 @@
-.PHONY: default  __force__
+.PHONY: all __force__
 
 OCAMLC=ocamlfind ocamlc -thread -package batteries -linkpkg -g
 OCAMLOPT=ocamlfind ocamlopt -thread -package batteries -linkpkg -g
@@ -13,7 +13,9 @@ PARSER_ML_LIB=FStar_Parser_Util.cmx
 FSTAR_OBJS=$(FSTAR_STDLIB) $(COMPILER_ML_LIB) $(PARSER_ML_LIB) FStar_Version.cmx FStar_Options.cmx FStar_Absyn_Syntax.cmx FStar_Absyn_Const.cmx FStar_Absyn_Visit.cmx FStar_Absyn_Util.cmx FStar_Absyn_Print.cmx FStar_Absyn_SSyntax.cmx FStar_Tc_Env.cmx FStar_Tc_Recheck.cmx FStar_Tc_Normalize.cmx FStar_Tc_Errors.cmx FStar_Tc_Rel.cmx FStar_Tc_Util.cmx FStar_Tc_Tc.cmx FStar_Parser_AST.cmx FStar_Parser_DesugarEnv.cmx FStar_Parser_Desugar.cmx FStar_Parser_Parse.cmx FStar_Parser_Lexhelp.cmx FStar_Parser_LexFStar.cmx FStar_Parser_ParseIt.cmx FStar_Parser_Driver.cmx FStar_ToSMT_Term.cmx FStar_ToSMT_Z3.cmx FStar_ToSMT_SplitQueryCases.cmx FStar_ToSMT_Encode.cmx FSharp_Format.cmx FStar_Extraction_ML_Syntax.cmx FStar_Extraction_ML_Env.cmx FStar_Extraction_ML_Util.cmx FStar_Extraction_ML_Code.cmx FStar_Extraction_ML_ExtractTyp.cmx FStar_Extraction_ML_ExtractExp.cmx FStar_Extraction_ML_ExtractMod.cmx FStar_FStar.cmx
 GENRATED_FILES=$(FSTAR_STDLIB:.cmx=.ml) $(COMPILER_ML_LIB:.cmx=.ml) $(PARSER_ML_LIB) main.ml parse.mly parse.ml FStar_Parser_Parse.ml FStar_Parser_LexFStar.ml lex.mll FStar_Parser_ParseIt.ml
 
-default: fstar.exe
+all:
+	make prep
+	make fstar.exe
 
 prep: parser copy_lib_files depend
 

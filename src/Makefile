@@ -74,11 +74,11 @@ FSLEX   := $(RUNTIME) $(FSLYDIR)/bin/fslex.exe
 all: $(BIN)/fstar.exe
 
 # --------------------------------------------------------------------
-z3_x86:
+z3-x86:
 	cp $(BIN)/Microsoft.Z3.x86.dll $(BIN)/Microsoft.Z3.dll
 	cp $(BIN)/z3.x86.dll $(BIN)/z3.dll
 
-z3_x64:
+z3-x64:
 	cp $(BIN)/Microsoft.Z3.x64.dll $(BIN)/Microsoft.Z3.dll
 	cp $(BIN)/z3.x64.dll $(BIN)/z3.dll
 
@@ -183,7 +183,6 @@ ocaml: $(BOOT_ALL)
 ocaml-test: ocaml boot-ocaml
 
 boot-ocaml:
-	make -C ocaml-output prep
 	make -C ocaml-output
 
 # --------------------------------------------------------------------
@@ -200,7 +199,7 @@ BOOT_FS_TOSMT=FStar.ToSMT.Term.fs FStar.ToSMT.Z3.fs FStar.ToSMT.SplitQueryCases.
 BOOT_FS_EXTRACTION=FStar.Extraction.ML.Syntax.fs FStar.Extraction.ML.Env.fs FStar.Extraction.ML.Util.fs FStar.Extraction.ML.Code.fs FStar.Extraction.ML.ExtractTyp.fs FStar.Extraction.ML.ExtractExp.fs FStar.Extraction.ML.ExtractMod.fs
 BOOT_FS_FILES=FSharp.Format.fs $(BOOT_FS_BASE) $(BOOT_FS_SYNTAX) $(BOOT_FS_TC) $(BOOT_FS_PARSER) $(BOOT_FS_TOSMT) $(BOOT_FS_EXTRACTION) FStar.FStar.fs
 
-boot_fs: fsharp-output fs plain-fs-files fsharp-output/fstar.exe 
+boot-fsharp: fsharp-output fs plain-fs-files fsharp-output/fstar.exe 
 
 fsharp-output/fstar.exe: $(addprefix ../lib/fs/, $(FS_SUPPORT_LIBS)) $(addprefix basic/, $(FSTAR_SUPPORT_LIBS)) $(addprefix fsharp-output/, $(BOOT_FS_FILES) main.fs)
 	$(FSC) --nowarn:0025 -o $@ $(BASELIBS) $(OTHERFLAGS) $^
@@ -214,10 +213,10 @@ fsharp-output:
 plain-fs-files: $(addprefix parser/, parseutil.fs parse.fs lex.fs parseit.fs) fstar/main.fs
 	cp $^ fsharp-output/ 
 
-deploy_boot_fs: fsharp-output/fstar.exe 
+deploy-boot-fs: fsharp-output/fstar.exe 
 	cp $^ ../bin
 
-clean_boot_fs:
+clean-boot-fs:
 	rm -rf fsharp-output
 
 # --------------------------------------------------------------------
