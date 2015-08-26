@@ -714,7 +714,7 @@ end
 (let _118_567 = (let _118_566 = (let _118_565 = (let _118_564 = (FStar_ToSMT_Term.mkInteger32 i)
 in (FStar_ToSMT_Term.boxInt _118_564))
 in (_118_565)::[])
-in ("Int32.Int32", _118_566))
+in ("FStar.Int32.Int32", _118_566))
 in (FStar_ToSMT_Term.mkApp _118_567))
 end
 | FStar_Absyn_Syntax.Const_string (bytes, _53_627) -> begin
