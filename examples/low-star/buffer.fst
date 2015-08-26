@@ -1,10 +1,10 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Seq  --verify_module Buffer --z3timeout 10;
+    options:--admit_fsi Set --admit_fsi Seq --verify_module Buffer --z3timeout 10;
     variables:LIB=../../lib PLATFORM=../../contrib/Platform/fst SST=../low-level;
   other-files:$LIB/classical.fst $LIB/ext.fst $LIB/set.fsi $LIB/seq.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/seqproperties.fst $LIB/list.fst $LIB/listTot.fst $LIB/listproperties.fst $SST/stack.fst $SST/listset.fst $LIB/ghost.fst $SST/located.fst $SST/lref.fst $SST/stackAndHeap.fst $SST/sst.fst $SST/sstCombinators.fst $SST/array.fsi $SST/array.fst
   --*)
 
-module Buffer
+module CBuffer
 
 open Set
 open Heap
@@ -31,26 +31,21 @@ let sel m v = loopkupRef (reveal (asRef v)) m
 val glength : #a:Type -> v:(sstarray a) -> m:smem{liveArr m v} -> GTot nat
 let glength v m = Seq.length (sel m v)
 
-(* Redefining localy some of the functions from Platform.Bytes 
+(* Redefining localy some of the functions from Platform.Bytes
  * to make it stateful *)
 type byte = uint8
 
-(*
-type bytes = sstarray byte
-type lbytes (#m:smem) (n:nat) = 
-  b:bytes{ liveArr m b /\ Seq.length (loopkupRef (reveal (asRef b)) m) = n}
-*)
-
-type buffer = 
-  { 
+(* TODO : length should be ghost *)
+type buffer =
+  {
     content:sstarray byte;
     start_idx:nat;
-    length:nat;
+    length:erased nat;
   }
 
 (* Equality predicates for a sub part of seq *)
 type EqSub (#a:Type) (s:Seq.seq a) (si:nat) (t:Seq.seq a) (ti:nat) (len:nat) =
-  Seq.length s >= si + len /\ Seq.length t >= ti+len 
+  Seq.length s >= si + len /\ Seq.length t >= ti+len
   /\ (forall (i:nat{i<len}). index s (i+si) = index t (i+ti))
 
 assume val eqSub : #a:Type -> s:Seq.seq a -> si:nat -> t:Seq.seq a -> ti:nat -> len:nat ->
@@ -58,27 +53,35 @@ assume val eqSub : #a:Type -> s:Seq.seq a -> si:nat -> t:Seq.seq a -> ti:nat -> 
 
 (* Equality predicates for a sub part of seq *)
 type EqSubInv (#a:Type) (s:Seq.seq a) (t:Seq.seq a) (si:nat) (len:nat) =
-  Seq.length s >= si + len /\ Seq.length t = Seq.length s 
+  Seq.length s >= si + len /\ Seq.length t = Seq.length s
   /\ (forall (i:nat{ (i < si \/ i >= len) /\ i < Seq.length s}). index s i = index t i)
 
-val liveBuffer : 
-  m:smem -> b:buffer -> 
-  GTot (r:bool{ r = (liveArr m b.content && b.start_idx+b.length <= glength (b.content) m)})
+val liveBuffer :
+  m:smem -> b:buffer ->
+  GTot (r:bool{ r = (liveArr m b.content && b.start_idx+(reveal b.length) <= glength (b.content) m)})
 let liveBuffer m b =
   liveArr m b.content
-  && b.start_idx + b.length <= glength (b.content) m
+  && b.start_idx + (reveal b.length) <= glength (b.content) m
 
+// TODO : Change to disjoints
 type Distinct (m:smem) (b1:buffer) (b2:buffer) =
   (liveBuffer m b1) /\ (liveBuffer m b2)
-  /\ (b1.content = b2.content ==> 
-      (b1.start_idx <= b2.start_idx + b2.length 
-	 \/ b2.start_idx <= b1.start_idx + b1.length))
-	
+  /\ (b1.content = b2.content ==>
+      (b1.start_idx <= b2.start_idx + (reveal b2.length)
+	 \/ b2.start_idx <= b1.start_idx + (reveal b1.length)))
+
+
+val nth: #a:Type -> l:list a -> n:nat{ n < List.length l } -> Tot a
+let rec nth l n = Some.v (List.total_nth l n)
+
+
+(* TODO : change the name "Distinct" into "Disjoint" *)
 type AllDistinct (m:smem) (l:list buffer) =
   (forall (e:buffer{ List.mem e l}). liveBuffer m e)
-  /\ (forall (e1:buffer{ List.mem e1 l}) (e2:buffer{List.mem e2 l}). Distinct m e1 e2)
+  /\ (forall (i:nat{i < List.length l}) (j:nat{j < List.length l /\ j <> i}).
+        Distinct m (nth l i) (nth l j))
 
-val allDistinctLemma : m:smem -> l:list buffer{ is_Cons l } -> 
+val allDistinctLemma : m:smem -> l:list buffer{ is_Cons l } ->
   Lemma
     (requires (AllDistinct m l))
     (ensures (AllDistinct m (List.Tot.tl l)))
@@ -88,7 +91,7 @@ val bufferListContent : m:smem -> l:list buffer{AllDistinct m l} -> GTot (s:seq 
 let rec bufferListContent m l =
   match l with
   | [] -> Seq.createEmpty
-  | b::tl -> 
+  | b::tl ->
      cut (True /\ liveBuffer m b);
      Seq.append (sel m b.content) (bufferListContent m tl)
 
@@ -101,6 +104,7 @@ let rec inBufferComplement m b i l =
   match l with
   | [] -> false
   | hd::tl ->
-     (b.content = hd.content && i < glength hd.content m && (i >= hd.start_idx+hd.length || i < hd.start_idx))
+     (b.content = hd.content
+       && i < glength hd.content m
+       && (i >= hd.start_idx+ (reveal hd.length) || i < hd.start_idx))
      || inBufferComplement m b i tl
-
