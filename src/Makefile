@@ -62,7 +62,7 @@ else
 RUNTIME = mono
 endif
 
-FSLYDIR := ../VS/packages/FsLexYacc.6.0.3
+FSLYDIR := VS/packages/FsLexYacc.6.0.3
 FSYACC  := $(RUNTIME) $(FSLYDIR)/bin/fsyacc.exe
 FSLEX   := $(RUNTIME) $(FSLYDIR)/bin/fslex.exe
 
@@ -84,19 +84,19 @@ z3-x64:
 
 # --------------------------------------------------------------------
 msbuild:
-	$(MAKE) -C ../VS install-packages
-	$(MSBUILD) ../VS/FStar.sln
+	$(MAKE) -C VS install-packages
+	$(MSBUILD) VS/FStar.sln
 
 msbuild-clean:
-	$(MSBUILD) /t:clean ../VS/FStar.sln
+	$(MSBUILD) /t:clean VS/FStar.sln
 
 # --------------------------------------------------------------------
 parser/parse.fs: parser/parse.fsy
-	$(MAKE) -C ../VS install-packages
+	$(MAKE) -C VS install-packages
 	$(FSYACC) --module FStar.Parser.Parse $<
 
 parser/lex.fs: parser/lex.fsl
-	$(MAKE) -C ../VS install-packages
+	$(MAKE) -C VS install-packages
 	$(FSLEX) --unicode $<
 
 BASIC_DEPS=
