@@ -1,7 +1,7 @@
 type ('a, 'b, 'c) ordmap = ('a, 'b) BatMap.t
 
 let empty _ = BatMap.empty					 
-let const_on g s x = OrdSet.fold g (fun y m -> BatMap.add y x m) s BatMap.empty
+let const_on g s x = FStar_OrdSet.fold g (fun y m -> BatMap.add y x m) s BatMap.empty
 let select _ k m = if BatMap.mem k m then Some (BatMap.find k m) else None
 let update _ k v m = BatMap.add k v m
 let contains _ k m = BatMap.mem k m
