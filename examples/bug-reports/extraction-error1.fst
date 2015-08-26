@@ -1,5 +1,5 @@
 (*--build-config
-    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module Bug --codegen OCaml-experimental;
+    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module Bug --codegen OCaml;
     variables:LIB=../../lib;
     other-files:
             $LIB/ext.fst $LIB/classical.fst

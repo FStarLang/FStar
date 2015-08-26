@@ -79,7 +79,7 @@ rpc-extract: sha1.fst mac.fst formatting.fst rpc.fst
 					seq.fst seqproperties.fst ) \
 					$(addprefix $(FSTAR_HOME)/contrib/,  Platform/fst/Bytes.fst CoreCrypto/fst/CoreCrypto.fst) \
 					sha1.fst mac.fst formatting.fst rpc.fst  \
-					--codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml-experimental
+					--codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml
 
 rpc-ml: rpc-extract
 	ocamlfind ocamlopt -cc "$(CC)" -cclib -L$(LIB) -cclib -lcrypto -o rpc.exe -package batteries -linkpkg -g -thread -I $(FSTAR_HOME)/contrib/Platform/ml -I $(FSTAR_HOME)/contrib/CoreCrypto/ml -I \
