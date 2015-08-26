@@ -1,14 +1,11 @@
+.PHONY: default  __force__
+
 OCAMLC=ocamlfind ocamlc -thread -package batteries -linkpkg -g
 OCAMLOPT=ocamlfind ocamlopt -thread -package batteries -linkpkg -g
 OCAMLDEP=ocamldep
 INCLUDES=                 # all relevant -I options here
 OCAMLFLAGS=$(INCLUDES)    -w -8 # add other options for ocamlc here
 OCAMLOPTFLAGS=$(INCLUDES) -w -8 # add other options for ocamlopt here
-
-# always bump version for a release
-VERSION=$(shell cat ../version.txt)
-
-NAME=fstar_$(VERSION)_$(shell echo `uname`_`uname -m`)
 
 BASE_OBJS=prims.cmx
 FSTAR_LIBS=FStar_ST.cmx FStar_All.cmx FStar_Option.cmx FStar_List.cmx FStar_Char.cmx FStar_String.cmx FStar_Util.cmx FStar_Bytes.cmx FStar_Getopt.cmx FStar_Range.cmx FStar_Parser_Util.cmx FStar_Platform.cmx FStar_Unionfind.cmx 
@@ -18,11 +15,28 @@ SUPPORT_DIR=../support/ocaml/fstar-lib/src
 
 default: fstar.exe
 
+# the `fexport` function takes a path relative to the top of the F* repo
+# and exports the contents of that directory to the `fstar` dir
+fexport = cd ../.. && git archive "--format=tar" "--prefix=$(1)/" HEAD:$(1)/ | tar -x -C src/ocaml-output/fstar
+
+# always bump version for a release
+VERSION=$(shell head -n 1 ../version.txt)
+PLATFORM=$(shell echo `uname`_`uname -m`)
+COMPILER = OCaml $(shell ocamlc -version)
+DATE = $(shell date -Iseconds)
+
+FStar_Version.ml:__force__
+	echo 'let version = "$(VERSION)"' > FStar_Version.ml
+	echo 'let platform = "$(PLATFORM)"' >> FStar_Version.ml
+	echo 'let compiler = "$(COMPILER)"' >> FStar_Version.ml
+	echo 'let date = "$(DATE)"' >> FStar_Version.ml
+
+NAME=fstar_$(VERSION)_$(PLATFORM)
+
 package: parser fstar.exe
 	rm -f $(NAME).zip $(NAME).tar.gz
 	rm -dfr fstar && mkdir fstar
 	cp ../../README.md ../../LICENSE ../../setenv.sh fstar/
-	cp README fstar/
 	mkdir fstar/bin
 	cp fstar.exe fstar/bin/fstar.exe
 	@cp ../../bin/*z3* fstar/bin &> /dev/null || cp `which z3` fstar/bin &> /dev/null || echo " ********** WARNING: you don't have Z3 in \\$FSTAR_HOME/bin or in your \\$PATH, skipped from package ************** "
@@ -63,7 +77,7 @@ parser:
 	ocamllex ../lex.mll -o FStar_Parser_LexFStar.ml
 	cp ../parseit.ml FStar_Parser_ParseIt.ml
 ifneq (, $(shell which unix2dos))
-	unix2dos $(PARSER_MLS)
+	unix2dos $(PARSER_MLS) parse.mly
 endif
 
 fstarml.ml: ../main.ml
@@ -72,12 +86,6 @@ fstarml.ml: ../main.ml
 fstar.exe: $(FSTAR_OBJS) fstarml.ml
 	$(OCAMLOPT) $(OCAMLOPTFLAGS) -o fstar.exe $^
 	cp fstar.exe ../../bin/fstar.exe
-
-FStar_Version.ml:
-	echo 'let version = "unknown version"' > FStar_Version.ml
-	echo 'let platform = "unknown platform"' >> FStar_Version.ml
-	echo 'let compiler = "unknown compiler"' >> FStar_Version.ml
-	echo 'let date = "unknown date"' >> FStar_Version.ml
 
 # Common rules
 .SUFFIXES: .ml .mli .cmo .cmi .cmx
