@@ -6,7 +6,7 @@
 
 
 (*
-fstar extTest.fst --codegen OCaml-experimental > Test.ml ; sed -i '$d;/kdhvljkdshalfkhclklkdnfsnydufnysdkyfnklsnykweyacklnyrecynrncrewanyu/d' Test.ml ; ocamlc Test.ml
+fstar extTest.fst --codegen OCaml > Test.ml ; sed -i '$d;/kdhvljkdshalfkhclklkdnfsnydufnysdkyfnklsnykweyacklnyrecynrncrewanyu/d' Test.ml ; ocamlc Test.ml
 *)
 module Test
 open All

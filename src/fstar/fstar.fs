@@ -230,7 +230,6 @@ let finished_message fmods =
 
 let codegen fmods env=
     if !Options.codegen = Some "OCaml"
-    || !Options.codegen = Some "OCaml-experimental"
     || !Options.codegen = Some "FSharp"
     then begin
         let c, mllibs = Util.fold_map Extraction.ML.ExtractMod.extract (Extraction.ML.Env.mkContext env) fmods in

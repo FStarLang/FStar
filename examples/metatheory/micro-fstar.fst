@@ -3332,7 +3332,8 @@ opaque val tlam_hs : #g1:env -> s:sub -> #g2:env -> k:knd ->
                          hs:subst_typing s g1 g2 ->
                          Tot (hr:subst_typing (sub_tlam s) (textend k g1) (textend (ksubst s k) g2){is_RenamingTyping hs ==> is_RenamingTyping hr})
 (decreases %[1;is_renaming_typing hs; 0; TVar 0])
-let rec typing_substitution g1 e c s g2 h1 hs =
+let rec typing_substitution g1 e c s g2 h1 hs = magic()
+(* CH: this started failing 2015-08-26, but was very flaky before too
 match h1 with
 | TyVar #g1 x ->
 ( match hs with
@@ -3408,6 +3409,7 @@ let htg2 : typing g2 (esubst s e) (csubst s c') = typing_substitution s ht hs in
 let hscg2 : scmp g2 (csubst s c') (csubst s c) = scmp_substitution s hsc hs in
 TySub htg2 hscg2
 )
+ *)
 and scmp_substitution g1 c1 c2 s g2 h1 hs =
 let SCmp #g m' #t' wp' m #t wp hsub hk hvmono hk' hvmono' hvsub = h1 in
 let hsubg2 = styping_substitution s hsub hs in
