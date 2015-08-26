@@ -33,11 +33,11 @@ see `LICENSE` for more details.
 
 ### Community mailing list
 
-The [fstar-club mailing list] (fstar-club@lists.gforge.inria.fr) is
-dedicated to F* users. Here is where all F* announcements are made to
-the general public (e.g. for releases, new papers, etc) and where
-users can ask questions, ask for help, discuss, provide feedback,
-announce jobs requiring at least 10 years of F* experience, etc.
+The [fstar-club mailing list] is dedicated to F* users. Here is where
+all F* announcements are made to the general public (e.g. for
+releases, new papers, etc) and where users can ask questions, ask for
+help, discuss, provide feedback, announce jobs requiring at least 10
+years of F* experience, etc.
 
 [List archives] are public, but only members can post.
 [Join here][fstar-club mailing list]!
