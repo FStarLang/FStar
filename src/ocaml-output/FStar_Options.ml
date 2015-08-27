@@ -305,7 +305,7 @@ let cache_dir = "cache"
 
 let display_version = (fun _21_143 -> (match (()) with
 | () -> begin
-(let _86_53 = (FStar_Util.format4 "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\n" FStar_Version.version FStar_Version.platform FStar_Version.compiler FStar_Version.date)
+(let _86_53 = (FStar_Util.format5 "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n" FStar_Version.version FStar_Version.platform FStar_Version.compiler FStar_Version.date FStar_Version.commit)
 in (FStar_Util.print_string _86_53))
 end))
 
