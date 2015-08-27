@@ -425,9 +425,9 @@ let extractExn (c:context) (exnConstr : inductiveConstructor) : (context * mlmod
 (* \pi_1 of returned value is the exported constant*)
 let rec extractSigElt (c:context) (s:sigelt) : context * list<mlmodule1> =
     match s with
-    | Sig_typ_abbrev (l,bs,_,t,_,_) ->
+    | Sig_typ_abbrev (l,bs,_,t,quals,_) ->
         let c, tds = extractTypeAbbrev c ({abTyName=l; abTyBinders=bs; abBody=t}) in
-        (c, [MLM_Ty [tds]])
+        (c, (if quals |> List.contains Logic then [] else [MLM_Ty [tds]]))
 
     | Sig_bundle(sigs, [ExceptionConstructor], _, _) ->
         let _, _, exConstrs = parseInductiveTypesFromSigBundle c sigs in

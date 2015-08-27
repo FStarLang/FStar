@@ -500,47 +500,54 @@ in (let _126_257 = (FStar_Extraction_ML_Env.extend_fv c fvv tys false)
 in (_126_257, ex_decl))))))))
 
 let rec extractSigElt = (fun c s -> (match (s) with
-| FStar_Absyn_Syntax.Sig_typ_abbrev (l, bs, _61_491, t, _61_494, _61_496) -> begin
-(let _61_501 = (extractTypeAbbrev c {abTyName = l; abTyBinders = bs; abBody = t})
-in (match (_61_501) with
+| FStar_Absyn_Syntax.Sig_typ_abbrev (l, bs, _61_491, t, quals, _61_495) -> begin
+(let _61_500 = (extractTypeAbbrev c {abTyName = l; abTyBinders = bs; abBody = t})
+in (match (_61_500) with
 | (c, tds) -> begin
-(c, (FStar_Extraction_ML_Syntax.MLM_Ty ((tds)::[]))::[])
+(let _126_262 = (match ((FStar_All.pipe_right quals (FStar_List.contains FStar_Absyn_Syntax.Logic))) with
+| true -> begin
+[]
+end
+| false -> begin
+(FStar_Extraction_ML_Syntax.MLM_Ty ((tds)::[]))::[]
+end)
+in (c, _126_262))
 end))
 end
-| FStar_Absyn_Syntax.Sig_bundle (sigs, FStar_Absyn_Syntax.ExceptionConstructor::[], _61_506, _61_508) -> begin
-(let _61_516 = (parseInductiveTypesFromSigBundle c sigs)
-in (match (_61_516) with
-| (_61_512, _61_514, exConstrs) -> begin
-(let _61_517 = ()
-in (let _61_521 = (let _126_262 = (FStar_List.hd exConstrs)
-in (extractExn c _126_262))
-in (match (_61_521) with
+| FStar_Absyn_Syntax.Sig_bundle (sigs, FStar_Absyn_Syntax.ExceptionConstructor::[], _61_505, _61_507) -> begin
+(let _61_515 = (parseInductiveTypesFromSigBundle c sigs)
+in (match (_61_515) with
+| (_61_511, _61_513, exConstrs) -> begin
+(let _61_516 = ()
+in (let _61_520 = (let _126_263 = (FStar_List.hd exConstrs)
+in (extractExn c _126_263))
+in (match (_61_520) with
 | (c, exDecl) -> begin
 (c, (exDecl)::[])
 end)))
 end))
 end
-| FStar_Absyn_Syntax.Sig_bundle (sigs, _61_524, _61_526, _61_528) -> begin
-(let _61_535 = (parseInductiveTypesFromSigBundle c sigs)
-in (match (_61_535) with
-| (inds, abbs, _61_534) -> begin
-(let _61_538 = (FStar_Util.fold_map extractInductive c inds)
-in (match (_61_538) with
+| FStar_Absyn_Syntax.Sig_bundle (sigs, _61_523, _61_525, _61_527) -> begin
+(let _61_534 = (parseInductiveTypesFromSigBundle c sigs)
+in (match (_61_534) with
+| (inds, abbs, _61_533) -> begin
+(let _61_537 = (FStar_Util.fold_map extractInductive c inds)
+in (match (_61_537) with
 | (c, indDecls) -> begin
-(let _61_541 = (FStar_Util.fold_map extractTypeAbbrev c abbs)
-in (match (_61_541) with
+(let _61_540 = (FStar_Util.fold_map extractTypeAbbrev c abbs)
+in (match (_61_540) with
 | (c, tyAbDecls) -> begin
 (c, (FStar_Extraction_ML_Syntax.MLM_Ty ((FStar_List.append indDecls tyAbDecls)))::[])
 end))
 end))
 end))
 end
-| FStar_Absyn_Syntax.Sig_tycon (_61_543, _61_545, _61_547, _61_549, _61_551, quals, _61_554) -> begin
+| FStar_Absyn_Syntax.Sig_tycon (_61_542, _61_544, _61_546, _61_548, _61_550, quals, _61_553) -> begin
 (match (((FStar_All.pipe_right quals (FStar_List.contains FStar_Absyn_Syntax.Assumption)) && (not ((FStar_All.pipe_right quals (FStar_Util.for_some (fun _61_2 -> (match (_61_2) with
 | (FStar_Absyn_Syntax.Projector (_)) | (FStar_Absyn_Syntax.Discriminator (_)) -> begin
 true
 end
-| _61_565 -> begin
+| _61_564 -> begin
 false
 end)))))))) with
 | true -> begin
@@ -550,7 +557,7 @@ end
 (c, [])
 end)
 end
-| _61_567 -> begin
+| _61_566 -> begin
 (c, [])
 end))
 
