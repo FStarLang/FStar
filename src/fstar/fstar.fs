@@ -223,7 +223,7 @@ let finished_message fmods =
             else if !Options.pretype then "Lax type-checked"
             else "Parsed and desugared" in
          fmods |> List.iter (fun m ->
-            if Options.should_verify m.name.str
+            if Options.should_print_message m.name.str
             then Util.print_string (Util.format2 "%s module: %s\n" msg (Syntax.text_of_lid m.name)));
          print_string "All verification conditions discharged successfully\n"
     end
@@ -255,7 +255,6 @@ let go _ =
                                     | [f] -> Parser.Driver.read_build_config f //then, try to read a build config from the header of the file
                                     | _ -> Util.print_string "--use_build_config expects just a single file on the command line and no other arguments"; exit 1
                              else filenames in
-
              let fmods, dsenv, env = batch_mode_tc filenames  in
              report_errors None;
              if !Options.interactive

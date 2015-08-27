@@ -156,7 +156,6 @@ let read_line (s:stream_reader) =
     if is_end_of_stream s
     then None
     else Some <| s.ReadLine()
-
 type string_builder = System.Text.StringBuilder (* not relying on representation *)
 let new_string_builder () = new System.Text.StringBuilder()
 let clear_string_builder (s:string_builder) = s.Clear() |> ignore

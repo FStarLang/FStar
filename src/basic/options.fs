@@ -256,12 +256,17 @@ let should_verify m =
         | [] -> true //the verify_module flag was not set, so verify everything
         | l -> List.contains m l) //otherwise, look in the list to see if it is explicitly mentioned
 
+let should_print_message m = 
+    should_verify m 
+    && not (List.contains m !admit_fsi) 
+    && m <> "Prims"
+
 let set_options s = Getopt.parse_string (specs()) (fun _ -> ()) s
 
 let reset_options_string : ref<option<string>> = ref None
 let reset_options () =
     init_options();
+    let res = Getopt.parse_cmdline (specs()) (fun x -> ()) in
     match !reset_options_string with
         | Some x -> set_options x
-        | _ -> Getopt.parse_cmdline (specs()) (fun x -> ())
-
+        | _ -> res

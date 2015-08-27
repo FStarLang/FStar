@@ -680,8 +680,6 @@ let rec doc_of_mllib_r (MLLib mllib) =
             cat tail hardline;
         ]
     and for1_mod istop (x, sigmod, MLLib sub) =
-        fprint1 "Gen Code: %s\n" x;
-
         let head = reduce1 (if Util.codegen_fsharp()
                             then [text "module";  text x]
                             else if not istop
