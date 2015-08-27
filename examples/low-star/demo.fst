@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Seq --verify_module Demo --z3timeout 30 --codegen OCaml;
+    options:--admit_fsi FStar.Set --admit_fsi FStar.Seq --verify_module Demo --z3timeout 30 --codegen OCaml;
     variables:LIB=../../lib PLATFORM=../../contrib/Platform/fst SST=../low-level;
   other-files:$LIB/classical.fst $LIB/ext.fst $LIB/set.fsi $LIB/seq.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/seqproperties.fst $LIB/list.fst $LIB/listTot.fst $LIB/listproperties.fst $SST/stack.fst $SST/listset.fst $LIB/ghost.fst $SST/located.fst $SST/lref.fst $SST/stackAndHeap.fst $SST/sst.fst $SST/sstCombinators.fst  $SST/array.fsi $SST/array.fst buffer.fst system.fst;
   --*)
@@ -9,12 +9,12 @@ module Demo
 open SSTCombinators
 open StackAndHeap
 open SST
-open Heap
+open FStar.Heap
 open Lref  open Located
-open Set
+open FStar.Set
 open Stack
 open SSTArray
-open Ghost
+open FStar.Ghost
 open CBuffer
 
 
@@ -47,7 +47,7 @@ val allocate_buffer:
       /\ (refLoc (reveal (asRef b.content)) = InStack (topstid m0))
       /\ (topstid m0 = topstid m1)
       /\ (mtail m0 = mtail m1)
-      /\ (b.start_idx = 0) /\ (b.length = len)
+      /\ (b.start_idx = 0) /\ ( b.length = len)
       ))
     (hide empty)
 let allocate_buffer len =
@@ -66,9 +66,8 @@ val demo:
     (hide empty)
 let demo () =
   pushStackFrame ();
-  let m0 = SST.get() in
+
   let buff = allocate_buffer buffer_length in
-  let m1 = SST.get() in
 
   (* Input files *)
   let file1 = CSystem.openfile "file1.txt" [CSystem.READ_ONLY] 438 in
@@ -81,8 +80,6 @@ let demo () =
   let frag3 = {buff with start_idx = 678; length = 64} in
 
   (* Read files into fragments *)
-  let m2 = SST.get() in
-
   admitP (snd file1 <> snd file2 /\ snd file2 <> snd header_file /\ snd file1 <> snd header_file);
   let nb_read1 = CSystem.read file1 frag1 frag1.start_idx frag1.length in
   let nb_read2 = CSystem.read file2 frag2 frag2.start_idx frag2.length in

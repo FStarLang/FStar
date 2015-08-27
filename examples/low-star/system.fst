@@ -1,20 +1,20 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Seq --verify_module System --z3timeout 10;
+    options:--admit_fsi FStar.Set --admit_fsi FStar.Seq --verify_module System --z3timeout 10;
     variables:LIB=../../lib PLATFORM=../../contrib/Platform/fst SST=../low-level;
   other-files:$LIB/classical.fst $LIB/ext.fst $LIB/set.fsi $LIB/seq.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/seqproperties.fst $LIB/list.fst $LIB/listTot.fst $LIB/listproperties.fst $SST/stack.fst $SST/listset.fst $LIB/ghost.fst $SST/located.fst $SST/lref.fst $SST/stackAndHeap.fst $SST/sst.fst $SST/sstCombinators.fst $SST/array.fsi $SST/array.fst buffer.fst
   --*)
 
 module CSystem
 
-open Set
-open Heap
+open FStar.Set
+open FStar.Heap
 open SST
 open SSTCombinators
 open StackAndHeap
 open Lref
 open Located
 open SSTArray
-open Ghost
+open FStar.Ghost
 
 open CBuffer
 
@@ -47,7 +47,7 @@ assume val read :
   f:fd ->
   b:buffer ->
   off:nat{ off >= b.start_idx} ->
-  count:nat{ count <= reveal b.length } ->
+  count:nat{ count <= b.length } ->
   Mem nat
     (requires (fun m ->
       (liveBuffer m b)
@@ -66,7 +66,7 @@ assume val read :
 (* Output stream to write to a file descriptor *)
 assume val writeStreamT :
   f:fd -> m:smem{liveRef (snd f) m} -> b:buffer{liveBuffer m b} ->
-  Tot (n:nat{n <= reveal b.length})
+  Tot (n:nat{n <= b.length})
 
 assume val write :
   f:fd ->
@@ -79,7 +79,7 @@ assume val write :
     (ensures (fun m0 n m1 ->
       (liveBuffer m0 b) /\ (liveBuffer m1 b)
       /\ (liveRef (snd f) m0) /\ (liveRef (snd f) m1)
-      /\ (n <= reveal b.length /\ n >= 0) (* Issue : does not get it from the returned type *)
+      /\ (n <= b.length /\ n >= 0) (* Issue : does not get it from the returned type *)
       /\ (is_Some (readStreamT f m1 n) /\ Seq.length (Some.v (readStreamT f m1 n)) = n)
       /\ (EqSub (Some.v (readStreamT f m1 n)) 0 (sel m0 b.content) b.start_idx n)
      ))

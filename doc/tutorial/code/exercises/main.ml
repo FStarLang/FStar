@@ -1,6 +1,2 @@
 
-let main () =
-  UntrustedClientCode.dynamicChecking()
-;;
-
-main()
+UntrustedClientCode.dynamicChecking()

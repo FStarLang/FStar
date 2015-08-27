@@ -4,7 +4,7 @@ other-files: ../../lib/ghost.fst
 
 
 module Located
-open Ghost
+open FStar.Ghost
 
 (*in future, one located will take as input only locatable types.
   A type T is located iff some members of type T are represented in OCaml as

@@ -6,8 +6,7 @@ open Printf
 let read f =
   let ic = open_in f in
   let n = in_channel_length ic in
-  let s = String.create n in
-  really_input ic s 0 n;
+  let s = really_input_string ic n in
   close_in ic;
   (s)
 

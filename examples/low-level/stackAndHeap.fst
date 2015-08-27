@@ -7,13 +7,13 @@
 (*     options: --codegen OCaml --trace_error --debug yes --prn; *)
 
 module StackAndHeap//TODO rename to Regions
-open Heap
+open FStar.Heap
 open Stack
-open Set
-open Prims
-open List
+open FStar.Set
+
+open FStar.List
 open ListSet
-open Ghost
+open FStar.Ghost
 
 open Located
 open Lref

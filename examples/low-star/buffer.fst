@@ -1,21 +1,21 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Seq --verify_module Buffer --z3timeout 10;
+    options:--admit_fsi FStar.Set --admit_fsi FStar.Seq --verify_module CBuffer --z3timeout 10;
     variables:LIB=../../lib PLATFORM=../../contrib/Platform/fst SST=../low-level;
   other-files:$LIB/classical.fst $LIB/ext.fst $LIB/set.fsi $LIB/seq.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/seqproperties.fst $LIB/list.fst $LIB/listTot.fst $LIB/listproperties.fst $SST/stack.fst $SST/listset.fst $LIB/ghost.fst $SST/located.fst $SST/lref.fst $SST/stackAndHeap.fst $SST/sst.fst $SST/sstCombinators.fst $SST/array.fsi $SST/array.fst
   --*)
 
 module CBuffer
 
-open Set
-open Heap
+open FStar.Set
+open FStar.Heap
 open SST
 open SSTCombinators
 open StackAndHeap
 open Lref
 open Located
 open SSTArray
-open Ghost
-open Seq
+open FStar.Ghost
+open FStar.Seq
 
 (* From arrayAlgos.fst, useful to specifications *)
 val liveArr : #a:Type -> smem -> sstarray a -> GTot bool
@@ -40,7 +40,7 @@ type buffer =
   {
     content:sstarray byte;
     start_idx:nat;
-    length:erased nat;
+    length:nat;
   }
 
 (* Equality predicates for a sub part of seq *)
@@ -58,18 +58,29 @@ type EqSubInv (#a:Type) (s:Seq.seq a) (t:Seq.seq a) (si:nat) (len:nat) =
 
 val liveBuffer :
   m:smem -> b:buffer ->
-  GTot (r:bool{ r = (liveArr m b.content && b.start_idx+(reveal b.length) <= glength (b.content) m)})
+  GTot (r:bool{ r = (liveArr m b.content && b.start_idx+( b.length) <= glength (b.content) m)})
 let liveBuffer m b =
   liveArr m b.content
-  && b.start_idx + (reveal b.length) <= glength (b.content) m
+  && b.start_idx + ( b.length) <= glength (b.content) m
 
 // TODO : Change to disjoints
 type Distinct (m:smem) (b1:buffer) (b2:buffer) =
   (liveBuffer m b1) /\ (liveBuffer m b2)
   /\ (b1.content = b2.content ==>
-      (b1.start_idx <= b2.start_idx + (reveal b2.length)
-	 \/ b2.start_idx <= b1.start_idx + (reveal b1.length)))
+      (b1.start_idx <= b2.start_idx + ( b2.length)
+	 \/ b2.start_idx <= b1.start_idx + ( b1.length)))
 
+
+val nth_lemma:
+  #a:Type -> l:list a -> n:nat{ n < List.length l } ->
+  Lemma
+    (requires (True))
+    (ensures (is_Some (List.total_nth l n)))
+    [SMTPat (List.total_nth l n)]
+let rec nth_lemma l n =
+  match n, l with
+  | 0, _ -> ()
+  | n, hd::tl -> nth_lemma tl (n-1)
 
 val nth: #a:Type -> l:list a -> n:nat{ n < List.length l } -> Tot a
 let rec nth l n = Some.v (List.total_nth l n)
@@ -81,18 +92,29 @@ type AllDistinct (m:smem) (l:list buffer) =
   /\ (forall (i:nat{i < List.length l}) (j:nat{j < List.length l /\ j <> i}).
         Distinct m (nth l i) (nth l j))
 
+val nth_lemma2: #a:Type -> l:list a{ is_Cons l } -> n:pos{ n < List.length l } ->
+  Lemma
+    (requires (True))
+    (ensures (nth l n = nth (List.Tot.tl l) (n-1)))
+    [SMTPat (nth (List.Tot.tl l) (n-1))]
+let nth_lemma2 l n = ()
+
 val allDistinctLemma : m:smem -> l:list buffer{ is_Cons l } ->
   Lemma
     (requires (AllDistinct m l))
     (ensures (AllDistinct m (List.Tot.tl l)))
-let allDistinctLemma m l = ()
+let rec allDistinctLemma m l =
+  match l with
+  | hd::[] -> ()
+  | hd::tl -> admit ()
 
-val bufferListContent : m:smem -> l:list buffer{AllDistinct m l} -> GTot (s:seq byte)
+
+val bufferListContent : m:smem -> l:list buffer{ forall (e:buffer{ List.mem e l }). liveBuffer m e } -> GTot (s:seq byte) (decreases (List.length l))
 let rec bufferListContent m l =
   match l with
   | [] -> Seq.createEmpty
   | b::tl ->
-     cut (True /\ liveBuffer m b);
+    cut (True /\ liveBuffer m b);
      Seq.append (sel m b.content) (bufferListContent m tl)
 
 val bufferListLength : m:smem -> l:list buffer{AllDistinct m l} -> GTot (n:nat{ n = Seq.length (bufferListContent  m l)})
@@ -106,5 +128,5 @@ let rec inBufferComplement m b i l =
   | hd::tl ->
      (b.content = hd.content
        && i < glength hd.content m
-       && (i >= hd.start_idx+ (reveal hd.length) || i < hd.start_idx))
+       && (i >= hd.start_idx+ ( hd.length) || i < hd.start_idx))
      || inBufferComplement m b i tl
