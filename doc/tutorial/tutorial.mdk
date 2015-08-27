@@ -272,7 +272,7 @@ describe a simple interface provided by the framework as follows:
 
 ~CH
 Calling it System.IO makes this sound more primitive/canonical than it
-actually is.
+actually is. How about Simple.IO?
 ~
 
 Here, we've defined an *interface* called `System.IO`, which uses the
@@ -403,9 +403,8 @@ ML-like languages, such types are inexpressible.
 
 In general, a refinement type in F\* has the form `:x:t{phi(x)}`, a
 refinement of the type `:t` to those elements `x` that satisfy the formula
-`phi(x)`. For now, you can think of `phi(x)` as any boolean valued
-expression. We will see, shortly ([#sec-bool-versus-type]),
-that the full story is more general.
+`:phi(x)`. For now, you can think of `:phi(x)` as any pure boolean valued
+expression. The full story is more general ([#sec-bool-versus-type]).
 
 ## Inferred types and effects for computations
 
@@ -428,7 +427,7 @@ state, etc).
 
 For instance, in ML `(canRead "foo.txt")` is inferred to have type `:bool`.
 However, in F\*, we infer `(canRead "foo.txt" : Tot bool)`. This
-indicates that `canRead "foo.txt"` is a total expression, which always
+indicates that `canRead "foo.txt"` is a pure total expression, which always
 evaluates to a boolean. For that matter, any expression that is
 inferred to have type-and-effect `:Tot t`, is guaranteed (provided the
 computer has enough resources) to evaluate to a `:t`-typed result,
@@ -451,6 +450,11 @@ include:
   write or allocate new references in the heap;
 * `:Exn`, the effect of a computation that may diverge
   or raise an exception.
+
+~CH
+Should we add Ghost to the list of effects or would that be too
+confusing at this point?
+~
 
 The effects `:{Tot, Dv, ST, Exn, ML}` are arranged in a lattice,
 with `:Tot` at the
@@ -510,7 +514,7 @@ type of the form `:t_1 -> ... -> t_n -> E t`, where `:t_1 .. t_n` are the
 types of each of the arguments; `:E` is the effect of its body; and
 `:t` is the type of its result. (*Note to the experts: We
 will generalize this to dependent functions and indexed effects
-progressively.*) The pure functions
+progressively.) The pure functions
 above are given a type using effect `Tot` in F\*:
 ```
 val is_positive : int -> Tot bool
@@ -553,8 +557,8 @@ Without further annotation, F\* (sometimes conservatively) infers
 functions that may perform IO or functions that are not
 provably terminating to have the `:ML` effect. So, both
 functions below are inferred to have the type `:(int -> ML int)`.
-_(Note: Recursive functions are defined using the `let rec`
-notation.)_
+(Note: Recursive functions are defined using `let rec`
+in ML-like languages.)
 
     let hello_incr i = Print.print_string "hello"; i + 1
     let rec loop i = i + loop (i - 1)
@@ -687,7 +691,7 @@ We can assert and automatically check a more general property about `max`. For e
                      && max x y >= y
                      && (max x y = x || max x y = y))
 
-## `:nat` is a refinement of `:int`
+## Factorial and Fibonacci functions
 
 Let's take a look at the factorial function:
 
@@ -697,22 +701,11 @@ As we said earlier, without further annotation, F\* infers `:int -> int`
 as the type of this function, which is a shorthand for
 `:int -> ML int`---meaning that F\* does not attempt to
 automatically prove that `factorial` (or any recursive function, for that
-matter) is in fact a pure, total function. It actually is not a total
+matter) is in fact a pure, total function. Factorial is actually not a total
 function on arbitrary integers! Think about `factorial (-1)`.
 
-~ CH
-Sorry to keep bringing this up, but if integers are indeed 32-bit
-as you say below then factorial is a total function even for negative
-numbers because of wrap-around. This issue came up in Nik's group at
-the school, but I don't remember what the resolution was.
-~
-
 ~ Remark
-Integers (values of the `int` type) in F\* are represented by
-32-bit integers when you're using the F\# backend and 31-bit integers
-when compiling to OCaml. At the moment, we do not yet check for
-overflow. We plan to add overflow checks in a platform-specific way,
-soon.
+F\*'s `:int` type represents unbounded mathematical integers.
 ~
 
 The `factorial` function is, however, a total function on non-negative
@@ -730,9 +723,8 @@ The line above says several things:
 * It can only be applied to integers `x` that are greater than or
   equal to `0` (that's the refinement type '`x:int{x>=0}`')
 
-* When applied to `x` it always terminates and has no observable effects
-(the '`:Tot`' part), except for returning an integer (the result type
-'`:int`')
+* When applied to `x` it always terminates, has no effects (the
+'`:Tot`' part), and returns an integer (the result type '`:int`')
 
 Once we write this down, F\* automatically proves that `factorial`
 satisfies all these properties. The main interesting bit to prove, of
@@ -752,27 +744,42 @@ this for you in its standard prelude).
     type nat = x:int{x>=0}
 
 ~ Exercise
-What are some other types you can give to `factorial`? Try
+What are some other correct types you can give to `factorial`? Try
 writing them and see if F\* agrees with you.
+Try describing in words what each of those types mean.
 ~~ ExerciseFragment {exname=ex3a-factorial-types}
 [INCLUDE=code/exercises/ex3a-factorial-types.fst:FactorialTypes]
 ~~
 ~~ Answer
-
-There are many possible types for `factorial`. Here are a few.
+There are many possible correct types for `factorial`. Here are a few:
 ~~~ SolutionFragment {exname=ex3a-factorial-types}
-val factorial: nat -> Tot int
-val factorial: nat -> Tot nat
-val factorial: nat -> Tot (x:int{x > 0})
-val factorial: int -> int
+val factorial: int -> int                     (* inferred by default *)
+val factorial: int -> ML int                  (* same as above *)
+val factorial: nat -> Tot int                 (* total function on nat inputs *)
+val factorial: nat -> Tot nat                 (* stronger result type *)
+val factorial: nat -> Tot (y:int{y>=1})       (* even stronger result type *)
 ~~~
 ~~
-Try describing in words what each of those types mean. Rank the types
-in order of increasing precision. Is it a total order?
-~~CH
-We're missing a solution here
-~~
 ~
+
+<!-- CH: This is causing too much unnecessary pain too early on
+  The problem is that to give the following uncomparable type for factorial:
+val factorial: x:int{x>=2} -> Tot (y:int{y>=2}) (* uncomparable to prev type *)
+  One needs to unroll it as follows:
+let rec factorial n =
+  if n = 0 then 1
+  else if n = 1 then 1
+  else if n = 2 then 2
+  else n * factorial (n - 1)
+
+Rank the types
+in order of increasing precision. Is it a total order?
+~~ Answer
+The types in the solution above are listed in increasing order of
+precision, with the exception of the last two ones which are
+uncomparable.  So no, subtyping is not a total order.
+~~
+-->
 
 ~ Exercise
 Give several types for the fibonacci function.
@@ -827,12 +834,9 @@ in detail in the remainder of this section.
 ### Dependent function types
 
 ~CH
-Lemmas don't seem like the most intuitive way of introducing dependent functions.
-Can we find a more computationally relevant thing first? See `max_ref_type`
-in `code/max.fst`? How about
-```
-    val factorial_monotone: x:int{x>2} -> Tot (y:nat{y > x})
-```
+Lemmas don't seem like the most intuitive way of introducing dependent
+functions.  Can we find a more computationally relevant thing first?
+See `max_ref_type` in `code/max.fst`?
 ~
 
 Let's start by looking a little closer at the statement of the lemma.
@@ -858,15 +862,10 @@ the variables `:x_1 ... x_m` may appear free in `:t`.
 
 ### Some syntactic sugar for refinement types and lemmas
 
-~CH
-This is not really monotonicity, as Giuseppe Castagna remarked
-during our POPL tutorial. `factorial_increases`?
-~
-
-How shall we specify that `factorial` is strictly monotone when its
+How shall we specify that `factorial` is strictly increasing when its
 argument is greater than 2? Here's a first cut:
 
-    val factorial_is_monotone_1: x:(y:nat{y > 2}) -> Tot (u:unit{factorial x > x})
+    val factorial_is_increasing_1: x:(y:nat{y > 2}) -> Tot (u:unit{factorial x > x})
 
 This does the job, but the type of the function's argument is a bit
 clumsy, since we needed two names: `y` to restrict the domain to natural
@@ -876,22 +875,22 @@ syntactic sugar for it---we have seen it already in passing in the first
 type we gave to `factorial`. Using it, we can write the following type,
 which is equivalent to, but more concise than, the type above.
 
-    val factorial_is_monotone_2: x:nat{x > 2} -> Tot (u:unit{factorial x > x})
+    val factorial_is_increasing_2: x:nat{x > 2} -> Tot (u:unit{factorial x > x})
 
 Another bit of clumsiness that you have no doubt noticed is the result
 type of the lemmas which include a refinement of the
 `:unit` type. To make this lighter, F\* provides the `:Lemma` keyword which
 can be used in place of the `:Tot` effect.
 
-For example, the type of `factorial_is_monotone_2` is equivalent to the
-type of `factorial_is_monotone_3` (below), which is just a little
+For example, the type of `factorial_is_increasing_2` is equivalent to the
+type of `factorial_is_increasing_3` (below), which is just a little
 easier to read and write.
 
-    val factorial_is_monotone_3: x:nat{x > 2} -> Lemma (factorial x > x)
+    val factorial_is_increasing_3: x:nat{x > 2} -> Lemma (factorial x > x)
 
 We can also write it in the following way, when that's more convenient:
 
-    val factorial_is_monotone_4: x:nat -> Lemma (requires (x > 2))
+    val factorial_is_increasing_4: x:nat -> Lemma (requires (x > 2))
                                                 (ensures (factorial x > x))
 
 The formula after `requires` is the _pre-condition_ of the
@@ -899,12 +898,12 @@ function/lemma, while the one after `ensures` is its _post-condition_.
 
 ### A simple lemma proved by induction, in detail
 
-Now, let's look at a proof of `factorial_is_monotone` in detail. Here it is:
+Now, let's look at a proof of `factorial_is_increasing` in detail. Here it is:
 
-    let rec factorial_is_monotone x =
+    let rec factorial_is_increasing x =
       match x with
       | 3 -> ()
-      | _ -> factorial_is_monotone (x - 1)
+      | _ -> factorial_is_increasing (x - 1)
 
 The proof is a recursive function (as indicated by the `let rec`); the
 function is defined by cases on `x`.
@@ -918,7 +917,7 @@ done. This is the base case of the induction.
 
 The cases are taken in order, so if we reach the second case, then we
 know that the first case is inapplicable, i.e., in the second case, we
-know from the type for `factorial_is_monotone` that `x:nat{x > 2}`, and
+know from the type for `factorial_is_increasing` that `x:nat{x > 2}`, and
 from the inapplicability of the previous case that `x <> 3`. In other
 words, the second case is the induction step and handles the proof when
 `x > 3`.
@@ -931,15 +930,15 @@ that `x*x - x > x`---which is true for `x > 3`.
 Let's see how this works formally in F\*.
 
 When defining a total recursive function, the function being defined
-(`factorial_is_monotone` in this case) is available for use in the body
+(`factorial_is_increasing` in this case) is available for use in the body
 of the definition, but only at a type that ensures that the recursive
-call will terminate. In this case, the type of `factorial_is_monotone` in
+call will terminate. In this case, the type of `factorial_is_increasing` in
 the body of the definition is:
 
     n:nat{2 < n && n < x} -> Lemma (factorial n > n)
 
 This is, of course, exactly our induction hypothesis. By calling
-`factorial_is_monotone (x - 1)` in the second case, we, in effect, make
+`factorial_is_increasing (x - 1)` in the second case, we, in effect, make
 use of the induction hypothesis to prove that
 `factorial (x - 1) > x - 1`, provided we can prove that
 `2 < x - 1 && x - 1 < x`---we give this to Z3 to prove, which it can,
@@ -950,10 +949,10 @@ from our use of the induction hypothesis: again, Z3 proves this easily.
 ~ Exercise
 Prove the following monotonicity property for the fibonacci function:
 ~~ ExerciseFragment {exname=ex3c-fibonacci}
-[INCLUDE=code/exercises/ex3c-fibonacci.fst:FibonacciMonotone]
+[INCLUDE=code/exercises/ex3c-fibonacci.fst:FibonacciIncreasing]
 ~~
 ~~ AnswerFragment {exname=ex3c-fibonacci}
-[INCLUDE=code/solutions/ex3c-fibonacci.fst:FibonacciMonotoneProof]
+[INCLUDE=code/solutions/ex3c-fibonacci.fst:FibonacciIncreasingProof]
 ~~
 ~
 
@@ -985,7 +984,7 @@ all but one case, if F\* can prove the lemma automatically, then the case
 is trivial. For this F\* provides an `admit` function, that can be used
 as follows:
 ```
-    let rec factorial_is_monotone x =
+    let rec factorial_is_increasing x =
       match x with
       | 3 -> ()
       | _ -> admit()
@@ -1001,11 +1000,11 @@ analysis and call the induction hypothesis as needed. Surely, we should
 automate this for you---and we do, in many cases using an **experimental**
 _automatic induction_ feature.
 
-Here's another proof of `factorial_is_monotone`:
+Here's another proof of `factorial_is_increasing`:
 
-    let rec factorial_is_monotone n = by_induction_on n factorial_is_monotone
+    let rec factorial_is_increasing n = by_induction_on n factorial_is_increasing
 
-Calling `by_induction_on` with `n` and `factorial_is_monotone` as argument
+Calling `by_induction_on` with `n` and `factorial_is_increasing` as argument
 causes F\* to encode the induction hypothesis as a quantified logical
 formula and feed it to Z3, which in simple examples can take care of
 the rest.
@@ -1070,10 +1069,10 @@ let rec factorial_is_positive = function
   | 0 -> ()
   | x -> factorial_is_positive (x - 1)
 
-val factorial_is_monotone: x:nat{x >= 2} -> Tot (u:unit{factorial x >= x})
-let rec factorial_is_monotone = function
+val factorial_is_increasing: x:nat{x >= 2} -> Tot (u:unit{factorial x >= x})
+let rec factorial_is_increasing = function
   | 2 -> ()
-  | x -> factorial_is_monotone (x - 1)
+  | x -> factorial_is_increasing (x - 1)
 
 val factorial_is_doubling: x:nat{x >= 3} -> Tot (u:unit{factorial x >= 2 * x})
 let rec factorial_is_doubling = function
@@ -1097,10 +1096,10 @@ let rec fibonacci = function
   | 1 -> 1
   | n -> fibonacci (n - 1) + fibonacci (n - 2)
 
-val fibonacci_is_monotone: n:nat -> Lemma (requires True)
+val fibonacci_is_increasing: n:nat -> Lemma (requires True)
                                           (ensures (fibonacci n >= n))
                                           []
-let rec fibonacci_is_monotone n = if n > 1 then fibonacci_is_monotone (n - 1) else ()
+let rec fibonacci_is_increasing n = if n > 1 then fibonacci_is_increasing (n - 1) else ()
 
 -->
 
