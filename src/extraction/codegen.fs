@@ -68,7 +68,19 @@ let path_of_ns (currentModule : mlsymbol) ns =
     let ns' = Util.flatten_ns ns in
     if ns' = currentModule
     then []
-    else [ns']
+    else let cg_libs = !Options.codegen_libs in
+         let ns_len = List.length ns in
+         let found = Util.find_map cg_libs (fun cg_path ->
+            let cg_len = List.length cg_path in
+            if List.length cg_path < ns_len
+            then let pfx, sfx = Util.first_N cg_len ns in
+                 if pfx = cg_path
+                 then Some (pfx@[Util.flatten_ns sfx])
+                 else None
+            else None) in
+         match found with 
+            | None -> [ns']
+            | Some x -> x
 
 let mlpath_of_mlpath (currentModule : mlsymbol) (x : mlpath) : mlpath =
     match string_of_mlpath x with

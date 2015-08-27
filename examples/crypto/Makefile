@@ -71,7 +71,7 @@ mllibs:
 
 
 rpc-extract: sha1.fst mac.fst formatting.fst rpc.fst
-	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC --admit_fsi FStar.Seq --admit_fsi FStar.IO  \
+	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC --admit_fsi FStar.IO  \
           $(addprefix $(FSTAR_HOME)/lib/, ext.fst classical.fst \
 					set.fsi set.fst \
 					heap.fst st.fst all.fst \
@@ -81,12 +81,12 @@ rpc-extract: sha1.fst mac.fst formatting.fst rpc.fst
 					sha1.fst mac.fst formatting.fst rpc.fst  \
 					--codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml
 
+OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_HOME)/contrib/Platform/ml $(FSTAR_HOME)/contrib/CoreCrypto/ml $(FSTAR_HOME)/lib/ml)
+OCAMLC=ocamlfind ocamlopt -cc "$(CC)" -cclib -L$(LIB) -cclib -lcrypto -o rpc.exe -package batteries -linkpkg -g -thread $(OCAML_INCLUDE_PATHS) 
+SUPPORT_LIBS=$(addprefix $(FSTAR_HOME)/lib/ml/, prims.ml FStar_All.ml FStar_List.ml FStar_String.ml FStar_IO.ml)
+CONTRIB_LIBS=$(addprefix $(FSTAR_HOME)/contrib/, Platform/ml/platform.ml CoreCrypto/ml/CoreCrypto.cmxa)
 rpc-ml: rpc-extract
-	ocamlfind ocamlopt -cc "$(CC)" -cclib -L$(LIB) -cclib -lcrypto -o rpc.exe -package batteries -linkpkg -g -thread -I $(FSTAR_HOME)/contrib/Platform/ml -I $(FSTAR_HOME)/contrib/CoreCrypto/ml -I \
-	        $(FSTAR_HOME)/src/ocaml-output/ \
-					$(FSTAR_HOME)/src/ocaml-output/support.ml \
-					$(addprefix $(FSTAR_HOME)/contrib/,  Platform/ml/platform.cmx CoreCrypto/ml/CoreCrypto.cmxa) \
-					Seq.ml SeqProperties.ml SHA1.ml MAC.ml Formatting.ml RPC.ml
+	$(OCAMLC) $(SUPPORT_LIBS) $(CONTRIB_LIBS) FStar_Seq.ml FStar_SeqProperties.ml SHA1.ml MAC.ml Formatting.ml RPC.ml
 
 cnt-protocol: cnt-format.fst cnt-format.fsi cnt-mac.fst cnt-protocol.fst
 	$(FSTAR) --admit_fsi FStar.Set $(addprefix $(FSTAR_HOME)/lib/, list.fst string.fst partialmap.fst ) cnt-format-deprecated.fst
