@@ -261,7 +261,11 @@ let should_print_message m =
     && not (List.contains m !admit_fsi) 
     && m <> "Prims"
 
-let set_options s = Getopt.parse_string (specs()) (fun _ -> ()) s
+let set_options = 
+    //The smt option is a security concern
+    //only allow it to be set from the command line, not from the build-config
+    let no_smt_specs = specs() |> List.filter (fun (_, name, _, _) -> name <> "smt") in
+    fun s -> Getopt.parse_string no_smt_specs (fun _ -> ()) s
 
 let reset_options_string : ref<option<string>> = ref None
 let reset_options () =
