@@ -98,8 +98,14 @@ let read_build_config (filename:string) =
               files
     else if !FStar_Options.use_build_config (* the user claimed that the build config exists *)
     then fail ""
-    else (FStar_Options.admit_fsi := "FStar.Set"::!FStar_Options.admit_fsi;
-          ["set.fsi"; "heap.fst"; "st.fst"; "all.fst"; filename])
+    else (let stdlib = ["FStar.Set"; "FStar.Heap"; "FStar.ST"; "FStar.All"; "FStar.IO"] in
+          let admit_string = FStar_List.map (fun x -> "--admit_fsi " ^ x) stdlib in
+          let admit_string = FStar_String.concat " " admit_string in 
+          FStar_Options.admit_fsi := stdlib @ (!FStar_Options.admit_fsi);
+          let _ = match !FStar_Options.reset_options_string with 
+            | None -> FStar_Options.reset_options_string := Some admit_string
+            | Some x -> FStar_Options.reset_options_string := Some (admit_string ^ " " ^ x) in
+          ["set.fsi"; "heap.fst"; "st.fst"; "all.fst"; "io.fsti"; filename])
 
 let parse fn =
   FStar_Parser_Util.warningHandler := (function

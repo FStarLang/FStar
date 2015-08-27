@@ -51,11 +51,11 @@ acls-cap: sha1.fst mac.fst ../security/acls2.fst acls-cap.fst
 
 
 rpc: formatting.fst sha1.fst mac.fst rpc.fst
-	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC --admit_fsi FStar.Seq  \
+	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC --admit_fsi FStar.Seq --admit_fsi FStar.IO  \
           $(addprefix $(FSTAR_HOME)/lib/, ext.fst classical.fst \
 					set.fsi set.fst \
 					heap.fst st.fst all.fst \
-					string.fst io.fst list.fst \
+					string.fst io.fsti list.fst \
 					seq.fsi seqproperties.fst )  \
 					$(addprefix $(FSTAR_HOME)/contrib/,  Platform/fst/Bytes.fst CoreCrypto/fst/CoreCrypto.fst) \
 					sha1.fst mac.fst formatting.fst rpc.fst
@@ -71,11 +71,11 @@ mllibs:
 
 
 rpc-extract: sha1.fst mac.fst formatting.fst rpc.fst
-	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC --admit_fsi FStar.Seq  \
+	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC --admit_fsi FStar.Seq --admit_fsi FStar.IO  \
           $(addprefix $(FSTAR_HOME)/lib/, ext.fst classical.fst \
 					set.fsi set.fst \
 					heap.fst st.fst all.fst \
-					string.fst io.fst list.fst \
+					string.fst io.fsti list.fst \
 					seq.fst seqproperties.fst ) \
 					$(addprefix $(FSTAR_HOME)/contrib/,  Platform/fst/Bytes.fst CoreCrypto/fst/CoreCrypto.fst) \
 					sha1.fst mac.fst formatting.fst rpc.fst  \

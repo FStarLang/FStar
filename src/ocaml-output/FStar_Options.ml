@@ -488,22 +488,26 @@ end
 (FStar_List.contains m l)
 end)))
 
-let set_options = (fun s -> (let _86_193 = (specs ())
-in (FStar_Getopt.parse_string _86_193 (fun _21_238 -> ()) s)))
+let should_print_message = (fun m -> (((should_verify m) && (not ((let _86_192 = (FStar_ST.read admit_fsi)
+in (FStar_List.contains m _86_192))))) && (m <> "Prims")))
+
+let set_options = (fun s -> (let _86_196 = (specs ())
+in (FStar_Getopt.parse_string _86_196 (fun _21_239 -> ()) s)))
 
 let reset_options_string = (FStar_ST.alloc None)
 
-let reset_options = (fun _21_240 -> (match (()) with
+let reset_options = (fun _21_241 -> (match (()) with
 | () -> begin
-(let _21_241 = (init_options ())
+(let _21_242 = (init_options ())
+in (let res = (let _86_200 = (specs ())
+in (FStar_Getopt.parse_cmdline _86_200 (fun x -> ())))
 in (match ((FStar_ST.read reset_options_string)) with
 | Some (x) -> begin
 (set_options x)
 end
-| _21_246 -> begin
-(let _86_197 = (specs ())
-in (FStar_Getopt.parse_cmdline _86_197 (fun x -> ())))
-end))
+| _21_249 -> begin
+res
+end)))
 end))
 
 

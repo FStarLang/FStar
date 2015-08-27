@@ -1221,8 +1221,7 @@ in (FSharp_Format.reduce _125_537)))))))
 end))
 and for1_mod = (fun istop _60_622 -> (match (_60_622) with
 | (x, sigmod, FStar_Extraction_ML_Syntax.MLLib (sub)) -> begin
-(let _60_623 = (FStar_Util.fprint1 "Gen Code: %s\n" x)
-in (let head = (let _125_550 = (match ((FStar_Extraction_ML_Util.codegen_fsharp ())) with
+(let head = (let _125_550 = (match ((FStar_Extraction_ML_Util.codegen_fsharp ())) with
 | true -> begin
 (let _125_542 = (FSharp_Format.text "module")
 in (let _125_541 = (let _125_540 = (FSharp_Format.text x)
@@ -1255,8 +1254,8 @@ end
 | false -> begin
 (FSharp_Format.reduce1 [])
 end)
-in (let doc = (FStar_Option.map (fun _60_630 -> (match (_60_630) with
-| (_60_628, m) -> begin
+in (let doc = (FStar_Option.map (fun _60_628 -> (match (_60_628) with
+| (_60_626, m) -> begin
 (doc_of_mod x m)
 end)) sigmod)
 in (let sub = (FStar_List.map (for1_mod false) sub)
@@ -1285,9 +1284,9 @@ in (_125_559)::_125_558))
 in (_125_561)::_125_560))
 in (_125_563)::_125_562))
 in (FStar_List.append prefix _125_564))
-in (FStar_All.pipe_left FSharp_Format.reduce _125_565)))))))))
+in (FStar_All.pipe_left FSharp_Format.reduce _125_565))))))))
 end))
-in (let docs = (FStar_List.map (fun _60_642 -> (match (_60_642) with
+in (let docs = (FStar_List.map (fun _60_640 -> (match (_60_640) with
 | (x, s, m) -> begin
 (let _125_567 = (for1_mod true (x, s, m))
 in (x, _125_567))

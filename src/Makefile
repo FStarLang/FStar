@@ -224,8 +224,8 @@ clean-boot-fs:
 # --------------------------------------------------------------------
 
 test:   clean $(BIN)/fstar.exe ocaml-test
-	make -C ../lib
-	make -C ../examples
+	make -C ../lib 
+	make -C ../examples 
 
 test.net: clean $(BIN)/fstar.exe boot
 	make -C ../examples

@@ -357,7 +357,7 @@ end
 "Parsed and desugared"
 end)
 end)
-in (let _64_246 = (FStar_All.pipe_right fmods (FStar_List.iter (fun m -> (match ((FStar_Options.should_verify m.FStar_Absyn_Syntax.name.FStar_Absyn_Syntax.str)) with
+in (let _64_246 = (FStar_All.pipe_right fmods (FStar_List.iter (fun m -> (match ((FStar_Options.should_print_message m.FStar_Absyn_Syntax.name.FStar_Absyn_Syntax.str)) with
 | true -> begin
 (let _129_127 = (let _129_126 = (FStar_Absyn_Syntax.text_of_lid m.FStar_Absyn_Syntax.name)
 in (FStar_Util.format2 "%s module: %s\n" msg _129_126))

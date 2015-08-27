@@ -152,27 +152,27 @@ in (FStar_All.pipe_right _128_49 Prims.fst)))
 
 let rec extract = (fun g m -> (let _63_160 = (FStar_Absyn_Util.reset_gensym ())
 in (let name = (FStar_Extraction_ML_Syntax.mlpath_of_lident m.FStar_Absyn_Syntax.name)
-in (let _63_163 = (FStar_Util.print_string (Prims.strcat (Prims.strcat "extracting: " m.FStar_Absyn_Syntax.name.FStar_Absyn_Syntax.str) "\n"))
-in (let g = (let _63_165 = g
-in {FStar_Extraction_ML_Env.tcenv = _63_165.FStar_Extraction_ML_Env.tcenv; FStar_Extraction_ML_Env.gamma = _63_165.FStar_Extraction_ML_Env.gamma; FStar_Extraction_ML_Env.tydefs = _63_165.FStar_Extraction_ML_Env.tydefs; FStar_Extraction_ML_Env.currentModule = name})
-in (match (((m.FStar_Absyn_Syntax.name.FStar_Absyn_Syntax.str = "Prims") || m.FStar_Absyn_Syntax.is_interface)) with
+in (let g = (let _63_163 = g
+in {FStar_Extraction_ML_Env.tcenv = _63_163.FStar_Extraction_ML_Env.tcenv; FStar_Extraction_ML_Env.gamma = _63_163.FStar_Extraction_ML_Env.gamma; FStar_Extraction_ML_Env.tydefs = _63_163.FStar_Extraction_ML_Env.tydefs; FStar_Extraction_ML_Env.currentModule = name})
+in (match ((((m.FStar_Absyn_Syntax.name.FStar_Absyn_Syntax.str = "Prims") || m.FStar_Absyn_Syntax.is_interface) || (let _128_54 = (FStar_ST.read FStar_Options.admit_fsi)
+in (FStar_List.contains m.FStar_Absyn_Syntax.name.FStar_Absyn_Syntax.str _128_54)))) with
 | true -> begin
 (let g = (extract_iface g m)
 in (g, []))
 end
 | false -> begin
-(let _63_171 = (FStar_Util.fold_map extract_sig g m.FStar_Absyn_Syntax.declarations)
-in (match (_63_171) with
+(let _63_169 = (FStar_Util.fold_map extract_sig g m.FStar_Absyn_Syntax.declarations)
+in (match (_63_169) with
 | (g, sigs) -> begin
 (let mlm = (FStar_List.flatten sigs)
-in (let _128_58 = (let _128_57 = (let _128_56 = (let _128_55 = (let _128_54 = (FStar_Extraction_ML_Util.flatten_mlpath name)
-in (_128_54, Some (([], mlm)), FStar_Extraction_ML_Syntax.MLLib ([])))
-in (_128_55)::[])
-in FStar_Extraction_ML_Syntax.MLLib (_128_56))
-in (_128_57)::[])
-in (g, _128_58)))
+in (let _128_59 = (let _128_58 = (let _128_57 = (let _128_56 = (let _128_55 = (FStar_Extraction_ML_Util.flatten_mlpath name)
+in (_128_55, Some (([], mlm)), FStar_Extraction_ML_Syntax.MLLib ([])))
+in (_128_56)::[])
+in FStar_Extraction_ML_Syntax.MLLib (_128_57))
+in (_128_58)::[])
+in (g, _128_59)))
 end))
-end))))))
+end)))))
 
 
 
