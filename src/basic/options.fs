@@ -168,8 +168,8 @@ let prependOutputDir fname = match !outputDir with
 let cache_dir = "cache"
 
 let display_version () =
-  Util.print_string (Util.format4 "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\n"
-                                  version platform compiler date)
+  Util.print_string (Util.format5 "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n"
+                                  version platform compiler date commit)
 
 let display_usage specs =
   Util.print_string "fstar [option] infile...";

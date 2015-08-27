@@ -947,7 +947,7 @@ goal `factorial x > x` from the `x > 3` and the property we obtained
 from our use of the induction hypothesis: again, Z3 proves this easily.
 
 ~ Exercise
-Prove the following monotonicity property for the fibonacci function:
+Prove the following increasingness property for the fibonacci function:
 ~~ ExerciseFragment {exname=ex3c-fibonacci}
 [INCLUDE=code/exercises/ex3c-fibonacci.fst:FibonacciIncreasing]
 ~~

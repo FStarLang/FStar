@@ -54,11 +54,13 @@ VERSION=$(shell head -n 1 ../../version.txt)
 PLATFORM=$(shell echo `uname`_`uname -m`)
 COMPILER = OCaml $(shell ocamlc -version)
 DATE = $(shell date -Iseconds)
+COMMIT = $(shell git log --pretty=format:'%h' -n 1)
 FStar_Version.ml:__force__
 	echo 'let version = "$(VERSION)"' > FStar_Version.ml
 	echo 'let platform = "$(PLATFORM)"' >> FStar_Version.ml
 	echo 'let compiler = "$(COMPILER)"' >> FStar_Version.ml
 	echo 'let date = "$(DATE)"' >> FStar_Version.ml
+	echo 'let commit= "$(COMMIT)"' >> FStar_Version.ml
 
 # Common rules
 .SUFFIXES: .ml .cmx

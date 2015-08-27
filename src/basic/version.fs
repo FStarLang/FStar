@@ -7,3 +7,5 @@ let platform = "unknown platform"
 let compiler = "unknown compiler"
 
 let date = "unknown date"
+
+let commit = "unknown commit"

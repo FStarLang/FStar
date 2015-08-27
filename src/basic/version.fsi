@@ -8,3 +8,4 @@ val compiler : string
 
 val date : string
 
+val commit : string
