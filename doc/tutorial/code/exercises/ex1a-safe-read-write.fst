@@ -14,7 +14,7 @@ module ACLs
   (* canRead is also a function ... *)
   let canRead (f:filename) = 
     canWrite f               (* writeable files are also readable *)
-    || f="demo/README"  (* and so is this file *)
+    || f="demo/README"       (* and so is this file *)
 // END: ACLs
 
 // BEGIN: FileIO
