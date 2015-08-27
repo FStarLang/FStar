@@ -7,7 +7,7 @@ other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LI
 
 module Lref
 open Located
-open Ghost
+open FStar.Ghost
 
 type lref (a:Type) : Type = located (ref a)
 
@@ -17,7 +17,7 @@ type heap = erased heapAux
 //Would be good to make heap polymorphic in the reference type
 //so that we can just derive this by instantiation
 
-open Set
+open FStar.Set
 
 type aref =
   | Ref : #a:Type -> r:lref a -> aref

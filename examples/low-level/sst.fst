@@ -9,11 +9,11 @@
 module SST //TODO: rename to RST?
 open StackAndHeap
 open Located
-open Heap
+open FStar.Heap
 open Stack
-open Set
-open Prims
-open List
+open FStar.Set
+
+open FStar.List
 open Lref  open Located
 open ListSet
 
@@ -88,7 +88,7 @@ effect Mem (a:Type) (pre: smem -> Type) (post: (smem -> SSTPost a)) (mod: modset
 effect PureMem (a:Type) (pre:smem -> Type) (post: ( smem -> a -> Type)) =
         SST a pre (fun m0 a m1 -> post m1 a /\ m0=m1)
 
-open Ghost
+open FStar.Ghost
 assume val get : unit -> PureMem (erased smem)
       (requires (fun m -> true))
       (ensures (fun m v -> reveal v = m))

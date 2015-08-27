@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set --z3timeout 10;
+    options:--admit_fsi FStar.Set --z3timeout 10;
     variables:LIB=../../lib;
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst  stack.fst listset.fst
     $LIB/ghost.fst lref.fst stackAndHeap.fst sst.fst sstCombinators.fst $LIB/constr.fst word.fst $LIB/seq.fsi $LIB/seq.fst
@@ -11,18 +11,18 @@ open SSTCombinators
 open StackAndHeap
 open SST
 open MachineWord
-open Heap
+open FStar.Heap
 open Lref  open Located
-open Set
+open FStar.Set
 open Stack
-open Seq
+open FStar.Seq
 
 (*to make vector opaque, just include vector.fsi*)
 (*val testf : vector nat 10 -> nat
 let testf v = v 1*)
 
 type sstarray : Type -> Type
-open Ghost
+open FStar.Ghost
 
 (*making it GTot causes a strange error in the postcondition of readIndex *)
 val asRef : #a:Type  -> va:(sstarray a) -> Tot (erased (lref (seq a)))
