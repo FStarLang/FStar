@@ -267,12 +267,7 @@ to F\* programs via the underlying framework, e.g., .NET or OCaml. We can
 describe a simple interface provided by the framework as follows:
 
 ~ Fragment {link=code/exercises/ex1a-safe-read-write.fst}
-[INCLUDE=code/exercises/ex1a-safe-read-write.fst:SystemIO]
-~
-
-~CH
-Calling it System.IO makes this sound more primitive/canonical than it
-actually is. How about Simple.IO?
+[INCLUDE=code/exercises/ex1a-safe-read-write.fst:FileIO]
 ~
 
 Here, we've defined an *interface* called `FileIO`, which uses the
