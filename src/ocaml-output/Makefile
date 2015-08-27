@@ -78,7 +78,7 @@ package:
 	make all
 	rm -f $(NAME).zip $(NAME).tar.gz
 	rm -dfr fstar && mkdir fstar
-	cp ../../README.md ../../LICENSE ../../setenv.sh fstar/
+	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../setenv.sh fstar/
 	mkdir fstar/bin
 	cp fstar.exe fstar/bin/fstar.exe
 	@cp ../../bin/*z3* fstar/bin &> /dev/null || cp `which z3` fstar/bin &> /dev/null || echo " ********** WARNING: you don't have Z3 in \\$FSTAR_HOME/bin or in your \\$PATH, skipped from package ************** "

@@ -32,6 +32,9 @@ special flag. Therefore, the standard build process of F* is as follows:
   3. re-build F* using the OCaml compiler from the code generated at step 2
      (obtaining a faster native binary for F\*).
 
+If you build F* from sources you will also need to get a Z3
+binary. This is further explained towards the end of this document.
+
 **Alternative:**  If you don't care about efficiency and about the .NET
 dependency you can stop already after step 1.
 
