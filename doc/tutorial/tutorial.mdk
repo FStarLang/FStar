@@ -250,9 +250,9 @@ Afterwards `ACLs` defines our security policy as two boolean functions:
 `canWrite` and `canRead`:
 The `canWrite` function inspects its argument `f`
 using a *pattern matching expression*: it returns the boolean `true`
-when `f="C:/temp/tempfile"` and `false` otherwise. The function
+when `f="demo/tempfile"` and `false` otherwise. The function
 `canRead` is similar---a file is readable if it is writable, or if it
-is the `"C:/public/README"` file.
+is the `"demo/README"` file.
 
 ### Tying the policy to the file-access primitives
 
@@ -275,12 +275,12 @@ Calling it System.IO makes this sound more primitive/canonical than it
 actually is. How about Simple.IO?
 ~
 
-Here, we've defined an *interface* called `System.IO`, which uses the
+Here, we've defined an *interface* called `FileIO`, which uses the
 `ACLs` module. More importantly,
-`System.IO` provides two functions, `read` and `write`, which
+`FileIO` provides two functions, `read` and `write`, which
 presumably implement the corresponding operations on files.
 
-By using the `assume val` notation, we *declare* that `System.IO` provides
+By using the `assume val` notation, we *declare* that `FileIO` provides
 the `read` and `write` operations (they are *values*), but that we are
 *_not_ defining* those values here---they will be provided by an external
 module. Our use of `assume val` is much like the
@@ -313,7 +313,7 @@ guarded by a security check, how can we make sure that each check is
 adequate? We can use F\*'s type-checker to automate this kind of code
 review.
 
-Here's some simple, untrusted client code. It uses `System.IO`,
+Here's some simple, untrusted client code. It uses `FileIO`,
 defines some common file names, and then a function called
 `staticChecking`, which tries to read and write a few files.
 
@@ -359,7 +359,7 @@ allows it, otherwise it raises an exception.
 ~
 Please note that the type of `checkRead` imposes no condition on the
 the input file `f`. When the `ACLs.canRead f` check succeeds the
-type-checker knows that the `System.IO.read f` is safe.
+type-checker knows that the `FileIO.read f` is safe.
 
 ~Exercise
 Write a function called `checkedWrite` that takes a filename `f` and a
@@ -398,7 +398,7 @@ already seen two uses of this feature, e.g, the type
 `:f:filename{canRead f}` is a *refinement* of the type `:filename`. It's
 a refinement because only a subset of the `:filename` values have this
 type, namely those that satisfy the `canRead` predicate. The
-refinement in the type of `System.IO.write` is similar. In traditional
+refinement in the type of `FileIO.write` is similar. In traditional
 ML-like languages, such types are inexpressible.
 
 In general, a refinement type in F\* has the form `:x:t{phi(x)}`, a
@@ -435,7 +435,7 @@ without entering an infinite loop; reading or writing the program's
 state; throwing exceptions; performing input or output; or, having any
 other effect whatsoever.
 
-On the other hand, an expression like `(System.IO.read "foo.txt")` is
+On the other hand, an expression like `(FileIO.read "foo.txt")` is
 inferred to have type-and-effect `:ML string`, meaning that this term
 may have arbitrary effects (it may loop, do IO, throw exceptions,
 mutate the heap, etc.), but if it returns, it always returns a

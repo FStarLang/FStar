@@ -31,23 +31,23 @@ verify-security: verify-ex9b-format verify-ex9c-format verify-ex9d-padding verif
 
 ## Extracting and compiling the ACL example using OCaml -- the simple way ##
 
-SUPPORT_FILES=prims.ml FStar_Set.ml FStar_ST.ml FStar_All.ml
+SUPPORT_FILES=prims.ml FStar_All.ml
 
 SUPPORT=$(addprefix $(FSTAR_HOME)/lib/ml/, $(SUPPORT_FILES))
 
 extract-acl:
-	fstar.exe --codegen OCaml ex1a-safe-read-write.fst
-	cp system.io.ml System_IO.ml
+	fstar.exe --admit_fsi FileIO --codegen OCaml ex1a-safe-read-write.fst
 	cp $(SUPPORT) .    # copying these things just to make ocamlfind happy
 
-ML_FILES = System_IO.ml FileName.ml ACLs.ml UntrustedClientCode.ml
+GEN_ML_FILES = FileName.ml ACLs.ml UntrustedClientCode.ml
+ML_FILES = FileIO.ml $(GEN_ML_FILES)
 
-OCAMLOPT=ocamlfind ocamlopt -thread -package batteries -linkpkg -g
+OCAMLOPT=ocamlfind ocamlopt -thread -package batteries -linkpkg -g -w -26
 
-simple-acl:
+acls-ocaml.exe: demo
 	make clean-acl
 	make extract-acl
-	$(OCAMLOPT) -o acls.exe $(SUPPORT_FILES) $(ML_FILES) main.ml
+	$(OCAMLOPT) -o acls-ocaml.exe $(SUPPORT_FILES) $(ML_FILES) main.ml
 
 ## Extracting and compiling the ACL example using OCaml -- the hard/better way ##
 
@@ -64,15 +64,35 @@ acls.exe: $(SUPPORT_FILES:.ml=.cmx) $(ML_FILES:.ml=.cmx) main.ml
 %.cmx: %.ml
 	$(OCAMLOPT) -c $<
 
-hard-acl:
+hard-acl: 
 	make clean-acl
 	make extract-acl
 	make deps-acl
+	make demo
 	make acls.exe
 
-STUFF = FStar_All.ml FStar_ST.ml System_IO.ml
+## Extracting and compiling the ACL example using F#
+SUPPORT_FS_FILES=prims.fs all.fs
+LIB=$(FSTAR_HOME)/lib
+BIN=$(FSTAR_HOME)/bin
+FSC=fsc --mlcompatibility $(addprefix -r , $(FS_LIBS))
+FS_LIBS=$(BIN)/FSharp.PowerPack.dll
+SUPPORT_FS=$(addprefix $(FSTAR_HOME)/lib/fs/, $(SUPPORT_FS_FILES))
+GEN_FS_FILES = FileName.fs ACLs.fs UntrustedClientCode.fs
+FS_FILES=FileIO.fs $(GEN_FS_FILES)
+
+acls-fs.exe: demo ex1a-safe-read-write.fst
+	fstar.exe --codegen FSharp --admit_fsi FileIO ex1a-safe-read-write.fst
+	$(FSC) -o $@ $(SUPPORT_FS) $(FS_FILES) main.fs
 
 clean-acl:
-	rm -f $(ML_FILES) $(STUFF) *.cmi *.cmx *.o *~ acl acls.exe
+	rm -f $(GEN_FS_FILES) $(GEN_ML_FILES) *.cmi *.cmx *.o *~ acl acls-fs.exe acls-ocaml.exe acls.exe
+	rm -rf demo
+
+demo:__force__
+	mkdir -p demo
+	echo "demo tempfile" > demo/tempfile
+	echo "demo secret" > demo/passwd
+	echo "demo readme" > demo/README
 
 -include .depend
