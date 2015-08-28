@@ -52,7 +52,7 @@ fstar.exe: $(FSTAR_OBJS) main.ml
 # always bump version for a release
 VERSION=$(shell head -n 1 ../../version.txt)
 ifeq ($(OS),Windows_NT)
-     PLATFORM="Windows_x64"
+     PLATFORM=Windows_x64
 else
      PLATFORM=$(shell echo `uname`_`uname -m`)
 endif
