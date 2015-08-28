@@ -8,13 +8,19 @@ else
 FSC     = fsharpc --mlcompatibility $(addprefix -r , $(FS_LIBS))
 endif
 
+ifeq ($(OS),Windows_NT)
+FSRUNTIME =
+else
+FSRUNTIME = mono
+endif
+
 FS_LIBS=$(BIN)/FSharp.PowerPack.dll
 
 fs: out hello.fst
 	$(FSTAR) --odir out --codegen FSharp hello.fst
 	cp $(FS_LIBS) out
 	$(FSC) -o out/hello.exe $(LIB)/fs/prims.fs $(LIB)/fs/io.fs out/Hello.fs
-	./out/hello.exe
+	$(FSRUNTIME) ./out/hello.exe
 
 ocaml: out hello.fst
 	$(FSTAR) --odir out --codegen OCaml hello.fst
