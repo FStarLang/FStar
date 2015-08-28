@@ -90,11 +90,7 @@ package:
 ifeq ($(OS),Windows_NT)
 	zip -r -9 $(NAME).zip fstar
 else
-ifeq ($(UNAME_S),Darwin)
-	COPYFILE_DISABLE=1 tar czf $(NAME).tar.gz fstar
-else
 	tar czf $(NAME).tar.gz fstar
-endif
 endif
 
 
