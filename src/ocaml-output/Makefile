@@ -77,7 +77,8 @@ NAME=fstar_$(VERSION)_$(PLATFORM)
 package:
 	make all
 	rm -f $(NAME).zip $(NAME).tar.gz
-	rm -dfr fstar && mkdir fstar
+	if [ -d "fstar" ]; then rm -dfr fstar; fi
+	mkdir fstar
 	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../setenv.sh fstar/
 	mkdir fstar/bin
 	cp fstar.exe fstar/bin/fstar.exe
