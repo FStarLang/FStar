@@ -88,6 +88,8 @@ package:
 	$(call fexport,contrib)
 	$(call fexport,doc/tutorial)
 	cd fstar/doc/tutorial; make
+	make -C ../VS install-packages
+	cp ../../bin/FSharp.PowerPack.* fstar/bin
 ifeq ($(OS),Windows_NT)
 	cp ../../bin/msvc*dll ../../bin/vcomp100.dll fstar
 	zip -r -9 $(NAME).zip fstar
