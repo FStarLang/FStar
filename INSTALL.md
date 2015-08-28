@@ -198,5 +198,7 @@ https://github.com/Z3Prover/z3/releases/tag/z3-4.4.0
 
         $ make package -C src/ocaml-output
 
-3. Test that the binary is good by expanding the archive and running
-   `make` in the `examples` directory inside
+3. Test that the binary is good by expanding the archive and running:
+
+        $ make -C examples/unit-tests
+        $ make -C examples             # things might fail because of timeouts

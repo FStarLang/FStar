@@ -51,7 +51,11 @@ fstar.exe: $(FSTAR_OBJS) main.ml
 
 # always bump version for a release
 VERSION=$(shell head -n 1 ../../version.txt)
-PLATFORM=$(shell echo `uname`_`uname -m`)
+ifeq ($(OS),Windows_NT)
+     PLATFORM="Windows_x64"
+else
+     PLATFORM=$(shell echo `uname`_`uname -m`)
+endif
 COMPILER = OCaml $(shell ocamlc -version)
 DATE = $(shell date -Iseconds)
 COMMIT = $(shell git log --pretty=format:'%h' -n 1)
