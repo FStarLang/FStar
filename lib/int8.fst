@@ -1,7 +1,7 @@
 (*--build-config
   --*)
 
-module Int8
+module FStar.Int8
 val min_value_int : int
 let min_value_int = -128
 

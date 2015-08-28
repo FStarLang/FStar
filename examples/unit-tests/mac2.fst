@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Seq --admit_fsi SeqProperties;
+    options:--admit_fsi FStar.Set --admit_fsi FStar.Seq --admit_fsi FStar.SeqProperties;
     other-files:classical.fst ext.fst set.fsi heap.fst st.fst all.fst seq.fsi list.fst
   --*)
 (*
@@ -23,7 +23,7 @@
    computational assumption *)
 
 module MAC
-open Seq
+open FStar.Seq
 type bytes = seq byte (* concrete byte arrays *)
 type text  = bytes    (* a type abbreviation, for clarity *)
 

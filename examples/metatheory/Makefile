@@ -2,7 +2,7 @@ VERFILES=stlc_cbv_db_pntsubst_nolists.fst stlc_cbv_named.fst db_subst.fst
 include ../Makefile.include
 all: .all.ver pars stlc_cbv_db_parsubst lambda_omega f-omega micro-fstar hoare_wp
 
-_STDLIB_=constr.fst classical.fst ext.fst set.fsi heap.fst st.fst all.fst --admit_fsi Set
+_STDLIB_=constr.fst classical.fst ext.fst set.fsi heap.fst st.fst all.fst --admit_fsi FStar.Set
 
 pars:
 	$(FSTAR) $(_STDLIB_) pars.fst --max_fuel 1 --max_ifuel 1
@@ -17,10 +17,10 @@ lambda_omega:
 	$(FSTAR) $(_STDLIB_) lambda_omega.fst --max_fuel 1 --max_ifuel 1 --initial_fuel 1
 
 f-omega:
-	$(FSTAR) $(_STDLIB_) f-omega.fst --max_fuel 1 --max_ifuel 1 --initial_fuel 1 --z3timeout 25
+	$(FSTAR) f-omega.fst
 
-micro-fstar: micro-fstar.fst
-	$(FSTAR) $^
+micro-fstar:
+	$(FSTAR) micro-fstar.fst
 
 hoare_wp:
 	$(FSTAR) $(_STDLIB_) hoare_wp.fst --max_fuel 1 --max_ifuel 1

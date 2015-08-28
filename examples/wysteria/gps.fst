@@ -1,7 +1,7 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Wysteria;
+    options:--admit_fsi FStar.Set --admit_fsi Wysteria;
     variables:LIB=../../lib;
-    other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst wysteria.fsi lib.fst
+    other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst $LIB/st2.fst wysteria.fsi lib.fst
  --*)
 
 module SMC
@@ -17,13 +17,13 @@ let bc = union bob_s charlie_s
 let abc = union ab charlie_s
 
 type pre  (m:mode)  = fun m0 -> b2t (m0 = m)
-type post (#a:Type) = fun (m:mode) (x:a) -> True
+type post (#a:Type) = fun (m:mode) (x:a) (t:trace) -> True
 
 type pre_with (m:mode) (t:Type) = fun m0 -> m0 = m /\ t
 
 val read_fn: unit -> Wys nat (fun m0 -> Mode.m m0 = Par /\
                                         (exists p. Mode.ps m0 = singleton p))
-                             (fun m0 r -> True)
+                             (fun m0 r t -> True)
 let read_fn x = read #nat ()
 
 val gps_sec: ps:prins
@@ -34,7 +34,7 @@ let gps_sec ps w _ =
 
   let wfold_f: int -> prev:prin{w_contains prev w}
                -> p:prin{w_contains p w} -> y:int{w_select p w = y}
-               -> Wys (prev:prin{w_contains prev w}) (fun m0 -> b2t (m0 = Mode Sec ps)) (fun m0 r -> True) =
+               -> Wys (prev:prin{w_contains prev w}) (fun m0 -> b2t (m0 = Mode Sec ps)) (fun m0 r t -> True) =
     fun c prev p y ->
       let y' = projwire_s prev w in
       if c - y' < c - y then prev else p

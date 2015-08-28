@@ -1,14 +1,14 @@
 (*--build-config
-    options:--admit_fsi OrdSet --admit_fsi OrdMap;
+    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap;
     variables:LIB=../../lib;
     other-files:$LIB/ordset.fsi $LIB/ordmap.fsi
  --*)
 
 module AST
 
-open OrdMap
+open FStar.OrdMap
 
-open OrdSet
+open FStar.OrdSet
 
 type other_info = nat
 

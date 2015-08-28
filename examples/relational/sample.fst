@@ -1,10 +1,10 @@
 (*--build-config
-    options:--admit_fsi Set --z3timeout 5;
+    options:--admit_fsi FStar.Set --z3timeout 5;
     variables:LIB=../../lib;
     other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/st2.fst $LIB/bytes.fst
   --*)
 
-module Bijection
+module FStar.Bijection
 
 (* Definition of the bijection properties *)
 type injection (#a:Type) (#b:Type) (f:a -> Tot b) = 
@@ -39,11 +39,11 @@ assume val good_sample_fun_bijection : #a:Type -> #b:Type -> f:(a -> Tot b) ->
   Lemma (requires (good_sample_fun f))
         (ensures  (bijection f))
 
-module Sample
-open Bijection
-open Relational
-open Heap
-open Comp
+module FStar.Sample
+open FStar.Bijection
+open FStar.Relational
+open FStar.Heap
+open FStar.Comp
 
 (* sample two random values such that they are related by a bijection f *)
 assume val sample : #a:Type -> #b:Type

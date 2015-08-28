@@ -1,14 +1,14 @@
 (*--build-config
-    options:--admit_fsi Set;
+    options:--admit_fsi FStar.Set;
     variables:LIB=../../lib;
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/st2.fst $LIB/all.fst $LIB/bytes.fst $LIB/list.fst
 
   --*)
 
 module SmartMeter
-open Bytes
-open List
-open Relational
+open FStar.Bytes
+open FStar.List
+open FStar.Relational
 
 
 

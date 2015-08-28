@@ -1,6 +1,6 @@
-module Map
+module FStar.Map
 open Prims.PURE
-open Set
+open FStar.Set
 
 type t (key:Type) (value:Type) = {
   mappings: key -> Tot value;

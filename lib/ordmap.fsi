@@ -2,9 +2,9 @@
   options:--admit_fsi OrdSet;
   other-files:ordset.fsi
  --*)
-module OrdMap
+module FStar.OrdMap
 
-open OrdSet
+open FStar.OrdSet
 
 opaque type total_order (a:Type) (f: (a -> a -> Tot bool)) =
     (forall a1 a2. (f a1 a2 /\ f a2 a1)  ==> a1 = a2) (* anti-symmetry *)

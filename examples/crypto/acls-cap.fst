@@ -1,5 +1,5 @@
 (*--build-config
-    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module Cap --admit_fsi Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
+    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module Cap --admit_fsi FStar.Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
     variables:LIB=../../lib
               CONTRIB=../../contrib;
     other-files:
@@ -19,8 +19,8 @@
 (* to be used with mac.fst and acls2.fst *)
 
 module Cap (* capabilities *)
-open Seq
-open SeqProperties
+open FStar.Seq
+open FStar.SeqProperties
 open ACLs2
 open MAC
 

@@ -4,15 +4,16 @@
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst stack.fst listset.fst $LIB/ghost.fst located.fst lref.fst
   --*)
 
-(*     options: --codegen OCaml-experimental --trace_error --debug yes --prn; *)
+(*     options: --codegen OCaml --trace_error --debug yes --prn; *)
 
-module StackAndHeap
-open Heap open Stack
-open Set
-open Prims
-open List
+module StackAndHeap//TODO rename to Regions
+open FStar.Heap
+open Stack
+open FStar.Set
+
+open FStar.List
 open ListSet
-open Ghost
+open FStar.Ghost
 
 open Located
 open Lref
@@ -72,7 +73,7 @@ let topstid ss = fst (topst ss)
 val refLoc : #a:Type -> lref a -> Tot regionLoc
 let refLoc r = regionOf r
 
-new_effect StSTATE = STATE_h smem
+new_effect StSTATE = STATE_h smem //TODO: move this to sst.fst
 
 val stackBlockAtLoc : sidt  -> (Stack (sidt * region)) -> Tot (option region)
 let rec stackBlockAtLoc id sp =

@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Option
+module FStar.Option
 
 assume val isNone: option 'a -> bool
 assume val isSome: option 'a -> bool

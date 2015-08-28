@@ -1,11 +1,11 @@
 (*--build-config
-    options:--admit_fsi Set;
+    options:--admit_fsi FStar.Set;
     variables:LIB=../lib;
     other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst 
   --*)
 
-module Relational
-open Heap
+module FStar.Relational
+open FStar.Heap
 type rel (a:Type) (b:Type) : Type =
   | R : l:a -> r:b -> rel a b
 
@@ -23,6 +23,7 @@ let rel_map2 f (R x1 x2) (R y1 y2) = R (f x1 y1) (f x2 y2)
 val rel_map3 : ('a -> 'b -> 'c -> Tot 'd) -> (double 'a) -> (double 'b) -> (double 'c) -> Tot (double 'd)
 let rel_map3 f (R x1 x2) (R y1 y2) (R z1 z2) = R (f x1 y1 z1) (f x2 y2 z2)
 
+(* Some convenient functions *)
 let op_Hat_Plus = rel_map2 (fun x y -> x + y)
 let op_Hat_Minus = rel_map2 (fun x y -> x - y)
 let op_Hat_Star = rel_map2 (fun x y -> x * y)
@@ -30,7 +31,9 @@ let op_Hat_Slash = rel_map2 (fun x y -> x / y)
 val tl_rel: #a:Type -> l:double (list a){is_Cons (R.l l) /\ is_Cons (R.r l)}-> Tot (double (list a))
 let tl_rel (R (_::xs) (_::ys)) = R xs ys
 let cons_rel (R x y) (R xs ys) = R (x::xs)  (y::ys)
-let pair_rel = rel_map2 MkTuple2
+let pair_rel (R a b) (R c d) = R (a,c) (b,d)
+(* This is less general but makes some verifcation (spdz) a lot more efficient *)
+(* let pair_rel = rel_map2 MkTuple2 *)
 let fst_rel = rel_map1 fst
 let snd_rel = rel_map1 snd
 let and_rel (R a b) = a && b
@@ -39,9 +42,9 @@ let eq_rel (R a b) = a = b
 (* let op_Hat_Bang = rel_map1 (fun x -> !x) *)
 let sel_rel = rel_map2 sel
 
-module Comp
-open Heap
-open Relational
+module FStar.Comp
+open FStar.Heap
+open FStar.Relational
 type heap2 = double heap
 
 new_effect STATE2 = STATE_h heap2

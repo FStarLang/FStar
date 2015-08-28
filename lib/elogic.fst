@@ -1,6 +1,6 @@
 (*--build-config
-other-files: ghost.fst
-  --*)
+    other-files: ghost.fst
+ --*)
 
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
@@ -17,7 +17,7 @@ other-files: ghost.fst
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module ErasedLogic
+module FStar.ErasedLogic
 
 (*F* 's exists should be thought of Coq's sigT. It is totally unerased *)
 (*Coq has 2 more versions, with increading degree of erasure*)

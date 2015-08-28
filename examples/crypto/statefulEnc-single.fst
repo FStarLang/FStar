@@ -1,14 +1,14 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Seq;
+    options:--admit_fsi FStar.Set --admit_fsi FStar.Seq;
     other-files:../../lib/ext.fst ../../lib/set.fsi
     ../../lib/heap.fst ../../lib/st.fst ../../lib/all.fst
     ../../lib/seq.fsi
   --*)
 module StatefulEncryption.SingleInstance
-open ST
-open Set
-open Heap
-open Seq
+open FStar.ST
+open FStar.Set
+open FStar.Heap
+open FStar.Seq
 
 (* TODO: merge these next two functions and lemma/assumption with the seq library *)
 val snoc : seq 'a -> 'a -> Tot (seq 'a)

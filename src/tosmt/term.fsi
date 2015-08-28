@@ -15,20 +15,20 @@
 *)
 #light "off"
 
-module Microsoft.FStar.ToSMT.Term
+module FStar.ToSMT.Term
 
 open System.Diagnostics
-open Microsoft.FStar
-open Microsoft.FStar.Absyn.Syntax
-open Microsoft.FStar.Absyn
-open Microsoft.FStar.Util
+open FStar
+open FStar.Absyn.Syntax
+open FStar.Absyn
+open FStar.Util
 
 type sort =
-  | Bool_sort 
-  | Int_sort 
-  | Kind_sort 
-  | Type_sort 
-  | Term_sort 
+  | Bool_sort
+  | Int_sort
+  | Kind_sort
+  | Type_sort
+  | Term_sort
   | String_sort
   | Ref_sort
   | Fuel_sort
@@ -36,29 +36,29 @@ type sort =
   | Arrow of sort * sort
   | Sort of string
 
-type op = 
+type op =
   | True
   | False
   | Not
   | And
-  | Or 
+  | Or
   | Imp
   | Iff
-  | Eq 
-  | LT 
+  | Eq
+  | LT
   | LTE
-  | GT 
+  | GT
   | GTE
   | Add
   | Sub
   | Div
   | Mul
   | Minus
-  | Mod 
+  | Mod
   | ITE
   | Var of string
 
-type qop = 
+type qop =
   | Forall
   | Exists
 
@@ -67,7 +67,7 @@ type term' =
   | BoundV     of int
   | FreeV      of fv
   | App        of op  * list<term>
-  | Quant      of qop * list<list<pat>> * option<int> * list<sort> * term 
+  | Quant      of qop * list<list<pat>> * option<int> * list<sort> * term
 and pat  = term
 and term = {tm:term'; hash:string; freevars:Syntax.memo<fvs>}
 and fv = string * sort
@@ -79,7 +79,8 @@ val free_variables: term -> fvs
 val mkTrue : term
 val mkFalse : term
 val mkInteger : string -> term
-val mkInteger' : int -> term
+val mkInteger32 : int32 -> term
+val mkInteger': int -> term
 val mkBoundV : int -> term
 val mkFreeV  : (string * sort) -> term
 val mkApp' : (op * list<term>) -> term
@@ -100,7 +101,7 @@ val mkSub:   ((term * term) -> term)
 val mkDiv:   ((term * term) -> term)
 val mkMul:   ((term * term) -> term)
 val mkMod:   ((term * term) -> term)
-val mkITE: (term * term * term) -> term 
+val mkITE: (term * term * term) -> term
 val mkCases : list<term> -> term
 val mkForall: (list<pat> * fvs * term) -> term
 val mkForall': (list<list<pat>> * option<int> * fvs * term) -> term
@@ -157,7 +158,7 @@ val mk_HasType: term -> term -> term
 val mk_HasTypeZ: term -> term -> term
 val mk_IsTyped: term -> term
 val mk_HasTypeFuel: term -> term -> term -> term
-val mk_HasTypeWithFuel: option<term> -> term -> term -> term 
+val mk_HasTypeWithFuel: option<term> -> term -> term -> term
 val mk_HasKind: term -> term -> term
 val mk_tester: string -> term -> term
 val mk_ApplyTE: term -> term -> term

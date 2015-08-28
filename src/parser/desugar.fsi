@@ -14,17 +14,17 @@
   limitations under the License.
 *)
 #light "off"
-module Microsoft.FStar.Parser.Desugar
+module FStar.Parser.Desugar
 
-open Microsoft.FStar
-open Microsoft.FStar.Parser
-open Microsoft.FStar.Range
-open Microsoft.FStar.Parser.AST
-open Microsoft.FStar.Parser.DesugarEnv
-open Microsoft.FStar.Absyn
-open Microsoft.FStar.Absyn.Syntax
-open Microsoft.FStar.Absyn.Util
-open Microsoft.FStar.Util
+open FStar
+open FStar.Parser
+open FStar.Range
+open FStar.Parser.AST
+open FStar.Parser.DesugarEnv
+open FStar.Absyn
+open FStar.Absyn.Syntax
+open FStar.Absyn.Util
+open FStar.Util
 
 val desugar_file: env -> file -> env * list<modul>
 val desugar_decls: env -> list<AST.decl> -> env * sigelts

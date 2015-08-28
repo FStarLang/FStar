@@ -1,11 +1,11 @@
 (*--build-config
-    options:--admit_fsi Set;
+    options:--admit_fsi FStar.Set;
     variables:LIB=../../lib;
     other-files:$LIB/ext.fst $LIB/list.fst
   --*)
 
 module ListSet
-open List
+open FStar.List
 
 (*this is impossible to define unless equality on a is decidable.
   the definition of memT does not seem to need a proof of decidability

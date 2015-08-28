@@ -1,13 +1,13 @@
 (*--build-config
-    options:--admit_fsi OrdSet --admit_fsi OrdMap --admit_fsi FFI;
+    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FFI;
     variables:LIB=../../lib;
     other-files:$LIB/ordset.fsi $LIB/ordmap.fsi $LIB/classical.fst ast.fst ffi.fsi
  --*)
 
 module Semantics
 
-open OrdMap
-open OrdSet
+open FStar.OrdMap
+open FStar.OrdSet
 
 open AST
 
@@ -357,7 +357,7 @@ let pre_concatwire c = match c with
    
   | _ -> NA
 
-open Classical
+open FStar.Classical
 
 val empty_intersection_lemma: eps1:eprins -> eps2:eprins{intersect eps1 eps2 = empty}
                              -> p:prin

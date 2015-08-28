@@ -1,5 +1,5 @@
 module MergeSort
-open List
+open FStar.List
 open IntSort
 
 opaque type split_inv (l:list int) (l1:list int) (l2:list int) =

@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module List
+module FStar.List
 
 (** Base operations **)
 
@@ -49,7 +49,7 @@ let rec nth l n =
     else
       match l with
         | [] -> failwith "not enough elements"
-        | _::tl -> nth tl n
+        | _::tl -> nth tl (n - 1)
 
 val total_nth: list 'a -> nat -> Tot (option 'a)
 let rec total_nth l n = match l with

@@ -1,12 +1,12 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Map --admit_fsi HyperHeap --max_fuel 0 --initial_ifuel 0 --logQueries --z3timeout 20;
+    options:--admit_fsi FStar.Set --admit_fsi FStar.Map --admit_fsi FStar.HyperHeap --max_fuel 0 --initial_ifuel 0 --logQueries --z3timeout 20;
     other-files:ext.fst set.fsi heap.fst map.fsi listTot.fst hyperHeap.fsi stHyperHeap.fst allHyperHeap.fst util.fst list.fst
 --*)
 module Robot
 #set-options "--initial_ifuel 1 --max_ifuel 1"
-open Heap
-open Util
-open HyperHeap
+open FStar.Heap
+open FStar.Util
+open FStar.HyperHeap
 
 type point =
   | Point : #r:rid
@@ -157,7 +157,7 @@ let fly_robots b0 b1 =
   fly b0;
   fly b1
 
-open Set
+open FStar.Set
 type distinct (r:rid) (s:set rid) =
   forall x. Set.mem x s ==> disjoint x r
 

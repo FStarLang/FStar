@@ -21,9 +21,9 @@ module StlcCbvDbParSubst
    An awkward special case of stlc_strong...; in fact this proof
    is _more_ complex than the one in stlc_strong...! *)
 
-open Classical
+open FStar.Classical
+open FStar.FunctionalExtensionality
 open StlcStrongDbParSubst
-open FunctionalExtensionality
 
 val step : exp -> Tot (option exp)
 let rec step e =

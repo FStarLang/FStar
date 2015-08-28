@@ -1,7 +1,7 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Wysteria;
+    options:--admit_fsi FStar.Set --admit_fsi Wysteria;
     variables:LIB=../../lib;
-    other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst wysteria.fsi
+    other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst $LIB/st2.fst wysteria.fsi
  --*)
 
 (* Millionaire's for any 2 parties, private output for the first party *)
@@ -18,7 +18,7 @@ let bc = union bob_s charlie_s
 let abc = union ab charlie_s
 
 type pre  (m:mode)  = fun m0 -> b2t (m0 = m)
-type post (#a:Type) = fun (m:mode) (x:a) -> True
+type post (#a:Type) = fun (m:mode) (x:a) (t:trace) -> True
 
 val mill3_sec: #p1:prin -> #p2:prin
                -> x:Box nat (singleton p1) -> y:Box nat (singleton p2)

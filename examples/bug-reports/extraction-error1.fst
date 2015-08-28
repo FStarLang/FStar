@@ -1,19 +1,19 @@
 (*--build-config
-    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module Bug --codegen OCaml-experimental;
+    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module Bug --codegen OCaml --admit_fsi FStar.IO;
     variables:LIB=../../lib;
     other-files:
             $LIB/ext.fst $LIB/classical.fst
             $LIB/set.fsi $LIB/set.fst
             $LIB/heap.fst $LIB/st.fst $LIB/all.fst
             $LIB/string.fst $LIB/list.fst
-            $LIB/io.fst
+            $LIB/io.fsti
   --*)
 
 module Bug
 
-open All
-open String
-open IO
+open FStar.All
+open FStar.String
+open FStar.IO
 
 (* two events, recording genuine requests and responses *)
 

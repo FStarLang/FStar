@@ -13,10 +13,10 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module ST
+module FStar.ST
 #set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-open Set
-open Heap
+open FStar.Set
+open FStar.Heap
 
 // this intentionally does not preclude h' extending h with fresh refs
 opaque logic type modifies (mods:set aref) (h:heap) (h':heap) =

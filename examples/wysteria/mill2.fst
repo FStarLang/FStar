@@ -1,7 +1,7 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Wysteria;
+    options:--admit_fsi FStar.Set --admit_fsi Wysteria;
     variables:LIB=../../lib;
-    other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst wysteria.fsi
+    other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst $LIB/st2.fst wysteria.fsi
  --*)
 
 (* Millionaire's with 2 parties, secure block as a separate function *)
@@ -15,7 +15,7 @@ let bob_s = singleton bob
 let ab = union alice_s bob_s
 
 type pre  (m:mode)  = fun m0 -> b2t (m0 = m)
-type post (#a:Type) = fun (m:mode) (x:a) -> True
+type post (#a:Type) = fun (m:mode) (x:a) (t:trace) -> True
 
 val mill2_sec: x:Box nat alice_s -> y:Box nat bob_s -> Wys bool (pre (Mode Par ab)) post
 let mill2_sec x y =

@@ -1,13 +1,13 @@
 (*--build-config
-    options:--admit_fsi Set;
+    options:--admit_fsi FStar.Set;
     variables:LIB=../../lib;
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/st2.fst $LIB/all.fst
   --*)
 
 module Samples
-open Comp
-open Heap
-open Relational
+open FStar.Comp
+open FStar.Heap
+open FStar.Relational
 
 let f x = x := !x - !x
 let g x = x := 0

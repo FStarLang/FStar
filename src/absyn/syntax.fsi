@@ -14,19 +14,19 @@
    limitations under the License.
 *)
 #light "off"
-module Microsoft.FStar.Absyn.Syntax
+module FStar.Absyn.Syntax
 (* Type definitions for the core AST *)
 
 (* Prims is used for bootstrapping *)
 open Prims
-open Microsoft.FStar
-open Microsoft.FStar.Util
-open Microsoft.FStar.Range
+open FStar
+open FStar.Util
+open FStar.Range
 
 exception Err of string
 exception Error of string * Range.range
 exception Warning of string * Range.range
- 
+
 type ident = {idText:string;
               idRange:Range.range}
 type LongIdent = {ns:list<ident>; //["Microsoft"; "FStar"; "Absyn"; "Syntax"]
@@ -37,24 +37,24 @@ type lident = LongIdent
 
 (* Objects with metadata *)
 type withinfo_t<'a,'t> = {
-  v: 'a; 
+  v: 'a;
   sort: 't;
-  p: Range.range; 
-} 
+  p: Range.range;
+}
 
 (* Free term and type variables *)
 type var<'t>  = withinfo_t<lident,'t>
-type fieldname = lident 
+type fieldname = lident
 (* Bound variables. 'a is a phantom type to distinguish between term and
    type bound variables. 't is the type or the kind of the variable. *)
 type bvdef<'a> = {ppname:ident; realname:ident}
-type bvar<'a,'t> = withinfo_t<bvdef<'a>,'t> 
-(* Bound vars have a name for pretty printing, 
-   and a unique name generated during desugaring. 
+type bvar<'a,'t> = withinfo_t<bvdef<'a>,'t>
+(* Bound vars have a name for pretty printing,
+   and a unique name generated during desugaring.
    Only the latter is used during type checking.  *)
-  
+
 (* Term language *)
-type sconst = 
+type sconst =
   | Const_unit
   | Const_uint8       of byte
   | Const_bool        of bool
@@ -63,7 +63,7 @@ type sconst =
   | Const_int         of string
   | Const_char        of char
   | Const_float       of double
-  | Const_bytearray   of array<byte> * Range.range 
+  | Const_bytearray   of array<byte> * Range.range
   | Const_string      of array<byte> * Range.range           (* unicode encoded, F#/Caml independent *)
 type pragma =
   | SetOptions of string
@@ -73,9 +73,9 @@ type arg_qualifier =
     | Implicit
     | Equality
 type aqual = option<arg_qualifier>
-type typ' =  
+type typ' =
   | Typ_btvar    of btvar
-  | Typ_const    of ftvar 
+  | Typ_const    of ftvar
   | Typ_fun      of binders * comp                           (* (ai:ki|xi:ti) -> M t' wp *)
   | Typ_refine   of bvvar * typ                              (* x:t{phi} *)
   | Typ_app      of typ * args                               (* args in order *)
@@ -91,38 +91,38 @@ and binder = either<btvar,bvvar> * aqual                     (* f:   #n:nat -> v
 and binders = list<binder>                                   (* bool marks implicit binder *)
 and typ = syntax<typ',knd>                                   (* A type is a typ' + its kind as metadata *)
 and comp_typ = {
-  effect_name:lident; 
-  result_typ:typ; 
+  effect_name:lident;
+  result_typ:typ;
   effect_args:args;
   flags:list<cflags>
   }
-and comp' = 
+and comp' =
   | Total of typ
-  | Comp of comp_typ                    
+  | Comp of comp_typ
 and comp = syntax<comp', unit>
-and cflags = 
-  | TOTAL 
-  | MLEFFECT 
-  | RETURN 
+and cflags =
+  | TOTAL
+  | MLEFFECT
+  | RETURN
   | PARTIAL_RETURN
   | SOMETRIVIAL
   | LEMMA
   | DECREASES of exp
 and uvar_t = Unionfind.uvar<uvar_basis<typ>>
-and meta_t = 
+and meta_t =
   | Meta_pattern       of typ * list<arg>
   | Meta_named         of typ * lident                                 (* Useful for pretty printing to keep the type abbreviation around *)
   | Meta_labeled       of typ * string * Range.range * bool            (* Sub-terms in a VC are labeled with error messages to be reported, used in SMT encoding *)
   | Meta_refresh_label of typ * option<bool> * Range.range             (* Add the range to the label of any labeled sub-term of the type *)
   | Meta_slack_formula of typ * typ * ref<bool>                        (* A refinement formula with slack, used in type inference; boolean marks if the slack is gone *)
-and uvar_basis<'a> = 
-  | Uvar 
+and uvar_basis<'a> =
+  | Uvar
   | Fixed of 'a
 and exp' =
   | Exp_bvar       of bvvar
-  | Exp_fvar       of fvvar * option<fv_qual>                    
+  | Exp_fvar       of fvvar * option<fv_qual>
   | Exp_constant   of sconst
-  | Exp_abs        of binders * exp 
+  | Exp_abs        of binders * exp
   | Exp_app        of exp * args                                 (* h tau_1 ... tau_n, args in order from left to right *)
   | Exp_match      of exp * list<(pat * option<exp> * exp)>      (* optional when clause in each equation *)
   | Exp_ascribed   of exp * typ * option<lident>
@@ -131,25 +131,25 @@ and exp' =
   | Exp_delayed    of exp * subst_t * memo<exp>                    (* A delayed substitution --- always force it before inspecting the first arg *)
   | Exp_meta       of meta_e                                     (* No longer tag every expression with info, only selectively *)
 and exp = syntax<exp',typ>
-and meta_e = 
+and meta_e =
   | Meta_desugared     of exp * meta_source_info                 (* Node tagged with some information about source term before desugaring *)
 and meta_source_info =
   | Data_app
-  | Sequence                   
+  | Sequence
   | Primop                                  (* ... add more cases here as needed for better code generation *)
   | MaskedEffect
-and fv_qual = 
+and fv_qual =
   | Data_ctor
   | Record_projector of lident                  (* the fully qualified (unmangled) name of the field being projected *)
   | Record_ctor of lident * list<fieldname>     (* the type of the record being constructed and its (unmangled) fields in order *)
 and uvar_e = Unionfind.uvar<uvar_basis<exp>>
 and btvdef = bvdef<typ>
 and bvvdef = bvdef<exp>
-and pat' = 
+and pat' =
   | Pat_disj     of list<pat>
   | Pat_constant of sconst
   | Pat_cons     of fvvar * option<fv_qual> * list<(pat * bool)>  (* flag marks an explicitly provided implicit *)
-  | Pat_var      of bvvar 
+  | Pat_var      of bvvar
   | Pat_tvar     of btvar
   | Pat_wild     of bvvar                                         (* need stable names for even the wild patterns *)
   | Pat_twild    of btvar
@@ -202,7 +202,7 @@ and bvvar = bvar<exp,typ>
 and ftvar = var<knd>
 and fvvar = var<typ>
 
-type ktec = 
+type ktec =
     | K of knd
     | T of typ * option<knd>
     | E of exp
@@ -222,8 +222,8 @@ val new_ftv_set: unit -> set<bvar<'a,'b>>
 val new_uv_set: unit -> set<Unionfind.uvar<'a>>
 val new_uvt_set: unit -> set<(Unionfind.uvar<'a> * 'b)>
 
-type qualifier = 
-  | Private 
+type qualifier =
+  | Private
   | Assumption
   | Opaque
   | Logic
@@ -269,17 +269,17 @@ type eff_decl = {
     trivial:typ;
 }
 and sigelt =
-  | Sig_tycon          of lident * binders * knd * list<lident> * list<lident> * list<qualifier> * Range.range 
+  | Sig_tycon          of lident * binders * knd * list<lident> * list<lident> * list<qualifier> * Range.range
   (* list<lident> identifies mutuals, second list<lident> are all the constructors *)
   | Sig_kind_abbrev    of lident * binders * knd * Range.range
-  | Sig_typ_abbrev     of lident * binders * knd * typ * list<qualifier> * Range.range 
-  | Sig_datacon        of lident * typ * tycon * list<qualifier> * list<lident> (* mutuals *) * Range.range  
+  | Sig_typ_abbrev     of lident * binders * knd * typ * list<qualifier> * Range.range
+  | Sig_datacon        of lident * typ * tycon * list<qualifier> * list<lident> (* mutuals *) * Range.range
   (* the tycon is the inductive type of the value this constructs *)
-  | Sig_val_decl       of lident * typ * list<qualifier> * Range.range 
-  | Sig_assume         of lident * formula * list<qualifier> * Range.range 
+  | Sig_val_decl       of lident * typ * list<qualifier> * Range.range
+  | Sig_assume         of lident * formula * list<qualifier> * Range.range
   | Sig_let            of letbindings * Range.range * list<lident> * list<qualifier>
-  | Sig_main           of exp * Range.range 
-  | Sig_bundle         of list<sigelt> * list<qualifier> * list<lident> * Range.range 
+  | Sig_main           of exp * Range.range
+  | Sig_bundle         of list<sigelt> * list<qualifier> * list<lident> * Range.range
     (* an inductive type is a bundle of all mutually defined Sig_tycons and Sig_datacons *)
     (* perhaps it would be nicer to let this have a 2-level structure, e.g. list<list<sigelt>>,
        where each higher level list represents one of the inductive types and its constructors.
@@ -367,7 +367,7 @@ val mk_Total: typ -> comp
 val mk_Comp: comp_typ -> comp
 
 val mk_Exp_bvar: bvvar -> option<typ> -> range -> exp
-val mk_Exp_fvar: (fvvar * option<fv_qual>) -> option<typ> -> range -> exp 
+val mk_Exp_fvar: (fvvar * option<fv_qual>) -> option<typ> -> range -> exp
 val mk_Exp_constant: sconst -> option<typ> -> range -> exp
 val mk_Exp_abs: (binders * exp) -> option<typ> -> range -> exp
 val mk_Exp_abs': (binders * exp) -> option<typ> -> range -> exp
@@ -396,7 +396,7 @@ val targ: typ -> arg
 val varg: exp -> arg
 val itarg: typ -> arg
 val ivarg: exp -> arg
-val is_null_pp: bvdef<'a> -> bool 
+val is_null_pp: bvdef<'a> -> bool
 val is_null_bvd: bvdef<'a> -> bool
 val is_null_bvar: bvar<'a,'b> -> bool
 val is_null_binder: binder -> bool

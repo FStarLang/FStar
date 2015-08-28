@@ -1,10 +1,10 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Map --logQueries;
+    options:--admit_fsi FStar.Set --admit_fsi FStar.Map --logQueries;
     other-files:../../lib/set.fsi ../../lib/heap.fst ../../lib/st.fst ../../lib/all.fst ../../lib/map.fsi ../../lib/twoLevelHeap.fst
  --*)
 
 module TestTwoLevelHeap
-open TwoLevelHeap
+open FStar.TwoLevelHeap
 
 val test0: #r:rid -> i:int -> v:rref r int -> ST int
   (requires (fun m0 -> Map.contains m0 r))

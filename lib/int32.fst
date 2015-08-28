@@ -15,7 +15,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Int32
+module FStar.Int32
 val min_value_int : int
 let min_value_int = -2147483648
 

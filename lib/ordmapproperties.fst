@@ -2,9 +2,9 @@
     options:--admit_fsi OrdSet --admit_fsi OrdMap;
     other-files:ordset.fsi ordmap.fsi
  --*)
-module OrdMapProps
+module FStar.OrdMapProps
  
-open OrdMap
+open FStar.OrdMap
 
 val fold: #k:Type -> #v:Type -> #a:Type -> #f:cmp k -> (k -> v -> a -> Tot a)
           -> m:ordmap k v f -> a -> Tot a (decreases (size m))

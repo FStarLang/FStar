@@ -28,13 +28,13 @@
 // See LICENSE-fsharp.txt at the root of this distribution for terms and conditions
 #light "off"
 
-module Microsoft.FStar.Parser.Lexhelp
+module FStar.Parser.Lexhelp
 
-open Microsoft.FStar
-open Microsoft.FStar.Util
-open Microsoft.FStar.Range
-open Microsoft.FStar.Parser
-open Microsoft.FStar.Parser.Parse
+open FStar
+open FStar.Util
+open FStar.Range
+open FStar.Parser
+open FStar.Parser.Parse
 
 let intern_string : string -> string =
   let strings = Util.smap_create 100 in (* new System.Collections.Generic.Dictionary<string,string>(100) in  *)

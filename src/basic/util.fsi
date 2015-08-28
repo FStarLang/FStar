@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Microsoft.FStar.Util
+module FStar.Util
 
 open System.IO
 
@@ -26,10 +26,8 @@ val return_all: 'a -> 'a
 
 
 (* generic utils *)
-open Prims
 (* Functional sets *)
 type set<'a> = (list<'a> * ('a -> 'a -> bool))
-//type set<'value> = (Collections.Set<Boxed<'value>> * ('value -> Boxed<'value>)) (* not relying on representation *)
 val new_set: ('a -> 'a -> int) -> ('a -> int) -> set<'a>
 val set_is_empty: set<'a> -> bool
 val set_add: 'a -> set<'a> -> set<'a>
@@ -112,7 +110,7 @@ val kill_all: unit -> unit
 val run_proc : string -> string -> string -> (bool * string * string)
 
 val get_file_extension: string -> string
-
+open Prims
 val int_of_string: string -> int
 val int_of_char:   char -> Tot<int>
 val int_of_byte:   byte -> Tot<int>

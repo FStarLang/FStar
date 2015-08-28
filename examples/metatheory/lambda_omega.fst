@@ -20,9 +20,9 @@
 
 module LambdaOmega
 
-open Constructive
-open Classical
-open FunctionalExtensionality
+open FStar.Constructive
+open FStar.Classical
+open FStar.FunctionalExtensionality
 
 (* Chapter 29 of TAPL: "Type Operators and Kinding",
    proof follows Chapter 30, but we don't consider polymorphism
@@ -49,12 +49,11 @@ type exp =
    (in this calculus doesn't interact with type substitution below) *)
 
 type esub = var -> Tot exp
-opaque type erenaming (s:esub) = (forall (x:var). is_EVar (s x))
+type erenaming (s:esub) = (forall (x:var). is_EVar (s x))
 
-val is_erenaming : s:esub -> Tot (n:int{(  erenaming s  ==> n=0) /\
-                                        (~(erenaming s) ==> n=1)})
+val is_erenaming : s:esub -> GTot (n:int{(  erenaming s  ==> n=0) /\
+                                         (~(erenaming s) ==> n=1)})
 let is_erenaming s = (if excluded_middle (erenaming s) then 0 else 1)
-  (* not marking erenaming 'opaque' triggers #222 *)
 
 val esub_inc : var -> Tot exp
 let esub_inc y = EVar (y+1)
@@ -110,10 +109,10 @@ let esubst_beta e = esubst (esub_beta e)
    (via confluence); so we can still hope we can do better for TinyF*.*)
 
 type tsub = var -> Tot typ
-opaque type trenaming (s:tsub) = (forall (x:var). is_TVar (s x))
+type trenaming (s:tsub) = (forall (x:var). is_TVar (s x))
 
-val is_trenaming : s:tsub -> Tot (n:int{(  trenaming s  ==> n=0) /\
-                                        (~(trenaming s) ==> n=1)})
+val is_trenaming : s:tsub -> GTot (n:int{(  trenaming s  ==> n=0) /\
+                                         (~(trenaming s) ==> n=1)})
 let is_trenaming s = (if excluded_middle (trenaming s) then 0 else 1)
 
 val tsub_inc_above : nat -> var -> Tot typ
@@ -605,8 +604,8 @@ val is_var : exp -> Tot(nat)
 let is_var e = if is_EVar e then 0 else 1
 opaque type renaming (s:esub) = (forall (x:var). is_EVar (s x))
 
-val is_renaming : s:esub -> Tot (n:int{  (renaming s  ==> n=0) /\
-                                      (~(renaming s) ==> n=1)})
+val is_renaming : s:esub -> GTot (n:int{  (renaming s  ==> n=0) /\
+                                        (~(renaming s) ==> n=1)})
 let is_renaming s = (if excluded_middle (renaming s) then 0 else 1)
 
 type subst_typing (s:esub) (g1:env) (g2:env) =

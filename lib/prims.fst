@@ -146,6 +146,7 @@ type char
 type float
 type string
 type array : Type -> Type
+assume val strcat : string -> string -> Tot string
 assume logic type LBL : string -> Type -> Type
 type exn
 type HashMultiMap : Type -> Type -> Type //needed for bootstrapping

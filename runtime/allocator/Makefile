@@ -1,26 +1,38 @@
+# Options:
+# make DEBUG=y ===> compile with -g, enable debugging printfs
+# make NOOPT=y ===> compile with -g, no prints
+# make (no options) ===> compile with -O3
+# make NOGC=y ===> compile with -O3, disable GC scanning support
+# make OPT=y ===> same as NOGC
+
+OCAMLC := ocamlfind ocamlopt
+OCAMLLINK := ocamlfind ocamlopt
+CMO := cmx
+
+ifdef DEBUG
+CFLAGS := -ccopt -DDEBUG
+NOOPT := y
+endif
+
+ifndef NOOPT
+CFLAGS := -ccopt -O3
+else
+FLAGS := -g 
+CFLAGS := $(CFLAGS) -ccopt -g
+endif
+
+ifdef OPT
+NOGC := y
+endif
+
+ifdef NOGC
+CFLAGS := $(CFLAGS) -ccopt -DNOGC
+endif
+
 ifdef WINDIR
 EXE=.exe
 else
 EXE=
-endif
-
-OCAMLC := ocamlfind ocamlopt
-OCAMLLINK := ocamlfind ocamlopt
-
-ifndef OPT
-FLAGS := -g 
-CFLAGS := -ccopt -g
-ifdef DEBUG
-CFLAGS := $(CFLAGS) -ccopt -DDEBUG
-endif
-else
-NOGC := y
-CFLAGS := -ccopt -O3
-endif
-CMO := cmx
-
-ifdef NOGC
-CFLAGS := $(CFLAGS) -ccopt -DNOGC
 endif
 
 # If for some weird reason, you don't have ocamlfind installed, override it in

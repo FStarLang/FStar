@@ -16,15 +16,15 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 
-module Microsoft.FStar.Tcutil
+module FStar.Tcutil
 
 open Absyn
 
 val handleable: exn -> bool
 val handle_err: bool -> 'a -> exn -> 'a
-val terr: Tcenv.env -> typ -> typ -> exp -> 'a 
-val terr_p: Tcenv.env -> typ -> typ -> Range.range -> 'a 
-val is_non_variable_value: Tcenv.env -> exp -> bool 
+val terr: Tcenv.env -> typ -> typ -> exp -> 'a
+val terr_p: Tcenv.env -> typ -> typ -> Range.range -> 'a
+val is_non_variable_value: Tcenv.env -> exp -> bool
 val kind_dominated: kind -> kind -> bool
 val kind_lub: kind -> kind -> kind
 val kind_abstractable: Range.range -> kind -> bool
@@ -67,7 +67,7 @@ val eqT_of_typ : Tcenv.env -> typ -> typ
 val unwrap_pf: typ -> typ
 
 (* an equivalence class of unification variables, possibly unified to a typ *)
-type subst = list<(list<uvar*kind> * option<typ>)> 
+type subst = list<(list<uvar*kind> * option<typ>)>
 val check_unify: (uvar * kind) -> typ -> option<string>
 val unify: uvar -> typ -> unit
 val unify_subst_vars: subst -> unit
@@ -78,5 +78,5 @@ val mkTypDep : typ -> exp -> typ
 val reduce_typ_delta_beta: Tcenv.env -> typ -> typ
 val rtdb: Tcenv.env -> typ -> typ
 val generalize: Tcenv.env -> typ -> exp -> (typ * exp)
-val generalize_with_constraints: Tcenv.env -> list<formula> -> typ -> exp -> (list<formula> * typ * exp) 
+val generalize_with_constraints: Tcenv.env -> list<formula> -> typ -> exp -> (list<formula> * typ * exp)
 val extractSignature : Tcenv.env -> Absyn.modul -> list<sigelt> * list<sigelt>

@@ -10,7 +10,7 @@ ALLOCATOR_FILES = $(ALLOCATOR_DIR)/camlstack.o $(ALLOCATOR_DIR)/stack.o $(ALLOCA
 OCAML = ocamlfind ocamlopt -g -package batteries -linkpkg -thread -I ../../src/ocaml-output/ -I $(ALLOCATOR_DIR) $(ALLOCATOR_FILES) ../../src/ocaml-output/support.ml
 
 Factorial.ml: factorial.fst
-	fstar --codegen OCaml-experimental $^
+	fstar --codegen OCaml $^
 	./revertManualMLs.sh
 
 PRE_SST_FILES=ListSet.ml Stack.ml FunctionalExtensionality.ml Ghost.ml Located.ml Lref.ml StackAndHeap.ml
@@ -28,7 +28,7 @@ md5$(EXE): $(PRE_SST_FILES) SST.ml SSTCombinators.ml MachineWord.ml Seq.ml SSTAr
 	$(OCAML) -o $@ $^
 
 Sieve.ml: sieve.fst
-	fstar --codegen OCaml-experimental $^
+	fstar --codegen OCaml $^
 	./revertManualMLs.sh
 
 ARRAY_FILES=Seq.ml SSTArray.ml ArrayAlgos.ml
@@ -47,7 +47,7 @@ sieveLoopHeap$(EXE): $(PRE_SST_FILES)  SSTAllHeap.ml  SSTArrayAllHeap.ml SST.ml 
 	$(OCAML) -o $@ $^
 
 SieveFun.ml: sieveFun.fst
-	fstar --codegen OCaml-experimental $^
+	fstar --codegen OCaml $^
 	./revertManualMLs.sh
 
 sieveFun$(EXE): $(PRE_SST_FILES) SST.ml SSTCombinators.ml $(ARRAY_FILES) SieveFun.ml TestSieve.ml
@@ -55,7 +55,7 @@ sieveFun$(EXE): $(PRE_SST_FILES) SST.ml SSTCombinators.ml $(ARRAY_FILES) SieveFu
 
 
 LallocTest.ml: lallocTest.fst
-	fstar --codegen OCaml-experimental $^ --debug yes --prn
+	fstar --codegen OCaml $^ --debug yes --prn
 	./revertManualMLs.sh
 
 lallocTest$(EXE): $(PRE_SST_FILES)  SST.ml LallocTest.ml TestLalloc.ml

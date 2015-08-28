@@ -15,9 +15,9 @@
 *)
 // (c) Microsoft Corporation. All rights reserved
 
-module Microsoft.FStar.Tcenv
+module FStar.Tcenv
 
-open Absyn 
+open Absyn
 
 type binding =
   | Binding_var of ident * typ
@@ -27,7 +27,7 @@ type binding =
 
 (* type env *)
 type sigtable = HashMultiMap<string, sigelt>
-type phase = | TC | DEREFINE 
+type phase = | TC | DEREFINE
 type env = {
   range:Range.range;
   phase:phase;
@@ -54,13 +54,13 @@ type env = {
   uvars:list<uvar>;
   annot:option<string>;
 }
-and solver = {solver_toggle_caching: unit -> unit; 
-              solver_query: env -> typ -> bool; 
+and solver = {solver_toggle_caching: unit -> unit;
+              solver_query: env -> typ -> bool;
               solver_query_equiv: env -> exp -> exp -> bool;
               solver_discharge_proof: env -> typ -> option<exp>}
 
 val set_range : env -> Range.range -> env
-val get_range : env -> Range.range 
+val get_range : env -> Range.range
 val in_tc_phase: env -> bool
 val set_tc_phase: env -> env
 val in_derefinement_phase: env -> bool
@@ -105,7 +105,7 @@ val lookup_typ_lid : env -> lident -> kind
 val lookup_field_name : env -> lident -> (list<tparam> * typ)
 val field_name_exists : env -> lident -> bool
 val lookup_record_typ : env -> lident -> (lident * typ * list<tparam> * typ) (* first type is the abbreviation as type name *)
-val lookup_record_typ_by_name : env -> lident -> (lident * typ * list<tparam> * typ) 
+val lookup_record_typ_by_name : env -> lident -> (lident * typ * list<tparam> * typ)
 val get_record_fields: Range.range -> env -> typ -> list<fieldname*typ>
 val is_datacon: env -> var<typ> -> bool
 val is_logic_function: env -> var<typ> -> bool
@@ -119,12 +119,12 @@ val push_sigelt : env -> sigelt -> env
 val push_local_binding : env -> binding -> env
 val push_local_binding_fast : env -> binding -> env
 val push_module : env -> modul -> env
-val set_expected_typ : env -> typ -> env 
-val expected_typ : env -> option<typ> 
+val set_expected_typ : env -> typ -> env
+val expected_typ : env -> option<typ>
 val clear_expected_typ : env -> (env * option<typ>)
 val recall_expected_typ : env -> option<typ>
-val set_expected_kind : env -> kind -> env 
-val expected_kind : env -> option<kind> 
+val set_expected_kind : env -> kind -> env
+val expected_kind : env -> option<kind>
 val clear_expected_kind : env -> (env * option<kind>)
 val uvars_in_env: env -> list<uvar>
 
@@ -164,5 +164,5 @@ val clear_extern_typ : env -> env
 val clear_expand_externs : env -> env
 val set_expand_externs : env -> env
 
-val patternEnv : env -> typ -> env 
+val patternEnv : env -> typ -> env
 val bindings: env -> string

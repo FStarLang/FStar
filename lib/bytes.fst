@@ -1,8 +1,5 @@
-module Bytes
-open Prims
-
+module FStar.Bytes
 assume type bytes
-
 assume val length : bytes -> Tot int
 assume val get : b:bytes -> pos:nat{pos < length b} -> Tot byte
 assume val make : f:(nat -> byte) -> len:nat -> Tot (b:bytes{length b = len})
