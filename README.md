@@ -131,6 +131,7 @@ Several examples of how this process works can be found in the repository.
   * `examples/crypto` provides `rpc.fst` and a `Makefile` with the `rpc-ml` target providing a way to run a small, verified example of remote procedure calls in OCaml (while linking with OpenSSL).
   * `src/ocaml-output` provides a `Makefile` which we use to [bootstrap the F\* compiler in OCaml]. 
   * `src/Makefile` provides a make target `boot-fsharp` which we use to bootstrap the F\* compiler in F\#.
+  * `examples/wysteria/Makefile` contains make targets for extracting and compiling Wysteria code. Target `codegen` generates code with some admitted interfaces (`lib/ordset.fsi`, `lib/ordmap.fsi`, and `ffi.fsi`) and target `ocaml` compiles the extracted code providing concrete implementations of those interfaces.
   
 
 ### Old F* versions (v0.7.1 and earlier) ###
