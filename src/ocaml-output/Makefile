@@ -89,6 +89,7 @@ package:
 	$(call fexport,doc/tutorial)
 	cd fstar/doc/tutorial; make
 ifeq ($(OS),Windows_NT)
+	cp ../../bin/msvc*dll ../../bin/vcomp100.dll fstar
 	zip -r -9 $(NAME).zip fstar
 else
 	tar czf $(NAME).tar.gz fstar
