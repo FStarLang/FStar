@@ -84,7 +84,7 @@ rpc-extract: sha1.fst mac.fst formatting.fst rpc.fst
 OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_HOME)/contrib/Platform/ml $(FSTAR_HOME)/contrib/CoreCrypto/ml $(FSTAR_HOME)/lib/ml)
 OCAMLC=ocamlfind ocamlopt -cc "$(CC)" -cclib -L$(LIB) -cclib -lcrypto -o rpc.exe -package batteries -linkpkg -g -thread $(OCAML_INCLUDE_PATHS) 
 SUPPORT_LIBS=$(addprefix $(FSTAR_HOME)/lib/ml/, prims.ml FStar_ST.ml FStar_All.ml FStar_List.ml FStar_String.ml FStar_IO.ml)
-CONTRIB_LIBS=$(addprefix $(FSTAR_HOME)/contrib/, Platform/ml/platform.ml CoreCrypto/ml/CoreCrypto.cmxa)
+CONTRIB_LIBS=$(addprefix $(FSTAR_HOME)/contrib/, Platform/ml/platform.cmx CoreCrypto/ml/CoreCrypto.cmxa)
 rpc-ml: rpc-extract
 	$(OCAMLC) $(SUPPORT_LIBS) $(CONTRIB_LIBS) FStar_Seq.ml FStar_SeqProperties.ml SHA1.ml MAC.ml Formatting.ml RPC.ml
 
@@ -97,4 +97,4 @@ cnt-protocol: cnt-format.fst cnt-format.fsi cnt-mac.fst cnt-protocol.fst
 					seq.fsi seqproperties.fst ) cnt-format.fst cnt-mac.fst cnt-protocol.fst
 
 clean:
-	rm -fr rpc *.ml *.cmi *.cmx *.o *~
+	rm -fr rpc *.ml *.cmi *.cmx *.o *.exe *~
