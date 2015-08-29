@@ -75,7 +75,13 @@ hard-acl:
 SUPPORT_FS_FILES=prims.fs all.fs
 LIB=$(FSTAR_HOME)/lib
 BIN=$(FSTAR_HOME)/bin
-FSC=fsc --mlcompatibility $(addprefix -r , $(FS_LIBS))
+
+ifeq ($(OS),Windows_NT)
+FSC     = fsc --mlcompatibility $(addprefix -r , $(FS_LIBS))
+else
+FSC     = fsharpc --mlcompatibility $(addprefix -r , $(FS_LIBS))
+endif
+
 FS_LIBS=$(BIN)/FSharp.PowerPack.dll
 SUPPORT_FS=$(addprefix $(FSTAR_HOME)/lib/fs/, $(SUPPORT_FS_FILES))
 GEN_FS_FILES = FileName.fs ACLs.fs UntrustedClientCode.fs
