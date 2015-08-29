@@ -24,7 +24,7 @@ Colorizer     : fstar
 ~AnswerContent: border-style=solid border-width=1px border-color=black padding=0.5ex
 
 ~Code,~Pre : language=fstar
-                replace=/([a-zA-Z])([12])\b/\(\1\2|\1~\2~\)/g
+                replace=/([a-zA-Z])(\d)\b/\(\1\2|\1~\2~\)/g
                 replace=/([a-zA-Z])_([\dnm])\b/\(\1_\2|\1~\2~\)/g
                 replace=/_n1\b/\(_n1|~n-1~\)/g
 
