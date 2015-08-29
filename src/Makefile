@@ -209,6 +209,8 @@ fs: $(BOOT_ALL)
 
 fsharp-output: 
 	mkdir -p fsharp-output
+	make -C VS install-packages
+	cp ../bin/FSharp.PowerPack.* fsharp-output
 
 plain-fs-files: $(addprefix parser/, parseutil.fs parse.fs lex.fs parseit.fs) fstar/main.fs
 	cp $^ fsharp-output/ 
