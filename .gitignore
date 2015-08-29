@@ -43,3 +43,8 @@ dump
 *.cmo
 *.cmx
 *.o
+
+.depend
+*.a
+*.cmxa
+*.so
