@@ -96,7 +96,7 @@ package:
 	make -C ../VS install-packages
 	cp ../../bin/FSharp.PowerPack.* fstar/bin
 ifeq ($(OS),Windows_NT)
-	cp ../../bin/msvc*dll ../../bin/vcomp100.dll fstar
+	cp ../../bin/msvc*dll fstar
 	zip -r -9 $(NAME).zip fstar
 else
 	tar czf $(NAME).tar.gz fstar
