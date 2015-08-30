@@ -4,7 +4,7 @@ ifeq ($(OS),Windows_NT)
 # internally flexlink uses i686-w64-mingw32-gcc.exe
 CC = flexlink -chain mingw -v -v -exe -lgdi32
 # flexlink is needed to link in	/cygdrive/c/OCaml/bin/flexdll_initer_mingw.o /cygdrive/c/OCaml/bin/flexdll_mingw.o
-LIB = $(FSTAR_HOME)/../openssl #place to look for libcrypto.a
+LIB = $(FSTAR_HOME)/3rdparty/win32 #place to look for libcrypto.a
 else
     LIB = /usr/lib #place to look for libcrypto.a
     ifeq ($(UNAME_S),Darwin)
@@ -82,7 +82,7 @@ rpc-extract: sha1.fst mac.fst formatting.fst rpc.fst
 					--codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml
 
 OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_HOME)/contrib/Platform/ml $(FSTAR_HOME)/contrib/CoreCrypto/ml $(FSTAR_HOME)/lib/ml)
-OCAMLC=ocamlfind ocamlopt -cc "$(CC)" -cclib -L$(LIB) -cclib -lcrypto -o rpc.exe -package batteries -linkpkg -g -thread $(OCAML_INCLUDE_PATHS) 
+OCAMLC=ocamlfind ocamlopt -cc "$(CC)" -cclib -L$(LIB) -cclib -lcrypto -o rpc.exe -package batteries -linkpkg -g -thread $(OCAML_INCLUDE_PATHS)
 SUPPORT_LIBS=$(addprefix $(FSTAR_HOME)/lib/ml/, prims.ml FStar_ST.ml FStar_All.ml FStar_List.ml FStar_String.ml FStar_IO.ml)
 CONTRIB_LIBS=$(addprefix $(FSTAR_HOME)/contrib/, Platform/ml/platform.cmx CoreCrypto/ml/CoreCrypto.cmxa)
 rpc-ml: rpc-extract
