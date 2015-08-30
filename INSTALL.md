@@ -21,11 +21,11 @@ features and bug fixes.
 
         $ make -C examples/unit-tests
 
-2. If you have OCaml installed run, this should print "Hello F*!"
+2. If you have OCaml installed run, the following command should print "Hello F*!"
 
         $ make -C examples/hello ocaml
 
-3. If you have F# installed run, this should print "Hello F*!"
+3. If you have F# installed run, the following command should print "Hello F*!"
 
         $ make -C examples/hello fs
 
