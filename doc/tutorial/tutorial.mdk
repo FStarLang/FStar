@@ -213,7 +213,7 @@ inaccessible file is never accessed mistakenly.
 Our model of this scenario (which we'll make more realistic in later
 sections) proceeds in three easy steps.
 
-  1. Describe the policy using simple pure functions.
+  1. Define the policy using simple pure functions.
 
 
   2. Identify the security-sensitive primitives in the program
@@ -225,7 +225,7 @@ sections) proceeds in three easy steps.
      that the policy-protected primitives are never improperly accessed.
 
 
-### Describing a policy { #sec-policy }
+### Defining a policy { #sec-policy }
 
 The syntax of F\* is based closely on the OCaml syntax and the non-light
 syntax of F\#. An F\* program is composed of several modules. Each module
