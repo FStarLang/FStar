@@ -92,6 +92,7 @@ let rec slice_vs_sps ps vs = match vs with
 
 val slice_r_sps: prins -> r:redex{is_sec_redex r} -> Tot redex
 let slice_r_sps ps r = match r with
+  | R_box ps' v        -> R_box ps' (D_v.v (slice_v_sps ps v))
   | R_assec ps' v      -> R_assec ps' (D_v.v (slice_v_sps ps v))
   | R_unbox v          -> R_unbox (D_v.v (slice_v_sps ps v))
   | R_mkwire v1 v2     -> R_mkwire (D_v.v (slice_v_sps ps v1)) (D_v.v (slice_v_sps ps v2))
@@ -104,6 +105,8 @@ let slice_r_sps ps r = match r with
 
 val slice_f'_sps: ps:prins -> f:frame'{is_sec_frame f} -> Tot frame'
 let slice_f'_sps ps f = match f with
+  | F_box_ps     _    -> f
+  | F_box_e      _    -> f
   | F_assec_ps   _    -> f
   | F_assec_e    _    -> f
   | F_assec_ret       -> f
@@ -243,6 +246,7 @@ opaque val sstep_sec_slice_lemma: c:sconfig{is_sec c}
                                                (sstep (slice_c_sps c) (slice_c_sps c')))
 #set-options "--split_cases 1"
 let sstep_sec_slice_lemma c c' h = match h with
+  | C_box_ps c c'          -> Conj () (C_box_ps (slice_c_sps c) (slice_c_sps c'))
   | C_unbox c c'           -> Conj () (C_unbox (slice_c_sps c) (slice_c_sps c'))
   | C_mkwire_e1 c c'       -> Conj () (C_mkwire_e1 (slice_c_sps c) (slice_c_sps c'))
   | C_projwire_p c c'      -> Conj () (C_projwire_p (slice_c_sps c) (slice_c_sps c'))
@@ -256,6 +260,7 @@ let sstep_sec_slice_lemma c c' h = match h with
   | C_app_e1 c c'          -> Conj () (C_app_e1 (slice_c_sps c) (slice_c_sps c'))
   | C_ffi_e c c'           -> Conj () (C_ffi_e (slice_c_sps c) (slice_c_sps c'))
   | C_match_e c c'         -> Conj () (C_match_e (slice_c_sps c) (slice_c_sps c'))
+  | C_box_e c c'           -> Conj () (C_box_e (slice_c_sps c) (slice_c_sps c'))
   | C_mkwire_e2 c c'       -> Conj () (C_mkwire_e2 (slice_c_sps c) (slice_c_sps c'))
   | C_projwire_e c c'      -> Conj () (C_projwire_e (slice_c_sps c) (slice_c_sps c'))
   | C_concatwire_e2 c c'   -> Conj () (C_concatwire_e2 (slice_c_sps c) (slice_c_sps c'))
@@ -264,6 +269,7 @@ let sstep_sec_slice_lemma c c' h = match h with
     let Conf l (Mode Sec ps) ((Frame _ _ (F_ffi _ _ vs))::_) _ (T_val #meta v) = c in
     let _ = cut (b2t (slice_vs_sps ps ((D_v meta v)::vs) = (slice_v_sps ps v)::(slice_vs_sps ps vs))) in
     Conj () (C_ffi_l (slice_c_sps c) (slice_c_sps c'))
+  | C_box_red c c'         -> Conj () (C_box_red (slice_c_sps c) (slice_c_sps c'))
   | C_match_red c c'       -> Conj () (C_match_red (slice_c_sps c) (slice_c_sps c'))
   | C_unbox_red c c'       -> Conj () (C_unbox_red (slice_c_sps c) (slice_c_sps c'))
   | C_mkwire_red c c'      -> Conj () (C_mkwire_red (slice_c_sps c) (slice_c_sps c'))
@@ -271,6 +277,7 @@ let sstep_sec_slice_lemma c c' h = match h with
   | C_concatwire_red c c'  -> Conj () (C_concatwire_red (slice_c_sps c) (slice_c_sps c'))
   | C_let_red c c'         -> Conj () (C_let_red (slice_c_sps c) (slice_c_sps c'))
   | C_app_red c c'         -> Conj () (C_app_red (slice_c_sps c) (slice_c_sps c'))
+  | C_box_beta c c'        -> Conj () (C_box_beta (slice_c_sps c) (slice_c_sps c'))
   | C_let_beta c c'        -> Conj () (C_let_beta (slice_c_sps c) (slice_c_sps c'))
   | C_app_beta c c'        ->
     let Conf _ (Mode Sec ps) _ _ (T_red (R_app v _)) = c in
@@ -379,9 +386,7 @@ val slice_r: prin -> redex -> Tot redex
 let slice_r p r = match r with
   | R_aspar ps v       -> R_aspar ps (D_v.v (slice_v p v))
   | R_assec ps v       -> R_assec ps (D_v.v (slice_v p v))
-  (*| R_box ps v         ->
-    let D_v _ v' = if mem p ps then slice_v p v else D_v (Meta empty Can_b empty Can_w) V_emp in
-    R_box ps v'*)
+  | R_box ps v         -> R_box ps (D_v.v (slice_v p v))
   | R_unbox v          -> R_unbox (D_v.v (slice_v p v))
   | R_mkwire v1 v2     -> R_mkwire (D_v.v (slice_v p v1)) (D_v.v (slice_v p v2))
   | R_projwire p' v    -> R_projwire p' (D_v.v (slice_v p v))
@@ -395,6 +400,8 @@ val slice_f': p:prin -> f:frame'{not (is_F_assec_ret f)} -> Tot frame'
 let slice_f' p f = match f with
   | F_aspar_ps      _ -> f
   | F_aspar_e       _ -> f
+  | F_box_ps        _ -> f
+  | F_box_e         _ -> f
   | F_assec_ps      _ -> f
   | F_assec_e       _ -> f
   | F_aspar_ret     _ -> f
@@ -877,6 +884,9 @@ let sstep_par_slice_lemma c c' h p =
     | C_aspar_ps (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else IntroR (C_aspar_ps (slice_c p c) (slice_c p c'))
+    | C_box_ps (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else IntroR (C_box_ps (slice_c p c) (slice_c p c'))
     | C_unbox (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else IntroR (C_unbox (slice_c p c) (slice_c p c'))
@@ -922,6 +932,9 @@ let sstep_par_slice_lemma c c' h p =
     | C_aspar_e (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else IntroR (C_aspar_e (slice_c p c) (slice_c p c'))
+    | C_box_e (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else IntroR (C_box_e (slice_c p c) (slice_c p c'))
     | C_mkwire_e2 (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else IntroR (C_mkwire_e2 (slice_c p c) (slice_c p c'))
@@ -943,12 +956,9 @@ let sstep_par_slice_lemma c c' h p =
     | C_aspar_red (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else IntroR (C_aspar_red (slice_c p c) (slice_c p c'))
-    (*| C_box_red (Conf _ m s _ _) _ ->
-      if mem p (Mode.ps m) then
-        IntroR (C_box_red (slice_c p c) (slice_c p c'))
-      else if mem p (Mode.ps (Frame.m (Cons.hd s))) then
-        IntroR (C_box_red (slice_c p c) (slice_c p c'))
-      else IntroL ()*)
+    | C_box_red (Conf _ m s _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else IntroR (C_box_red (slice_c p c) (slice_c p c'))
     | C_unbox_red (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else IntroR (C_unbox_red (slice_c p c) (slice_c p c'))
@@ -1000,10 +1010,10 @@ let sstep_par_slice_lemma c c' h p =
         let (en, x, _) = get_en_b v in
         env_upd_slice_lemma p en x (V_const (C_unit));
         IntroR (C_aspar_beta (slice_c p c) (slice_c p c'))
-    (*| C_box_beta (Conf _ m _ _ _) _ ->
+    | C_box_beta (Conf _ m _ _ (T_red (R_box ps _))) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else
-        IntroR (C_box_beta (slice_c p c) (slice_c p c'))*)
+        IntroR (C_box_beta (slice_c p c) (slice_c p c'))
     | C_unbox_beta (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else

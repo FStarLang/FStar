@@ -21,6 +21,9 @@ let e_of_exp (Exp e _) = e
 
 let pre_easpar (c:config) =
   is_T_exp (t_of_conf c) && is_E_aspar (e_of_exp (e_of_t_exp (t_of_conf c))) && is_par c
+  
+let pre_ebox (c:config) =
+  is_T_exp (t_of_conf c) && is_E_box (e_of_exp (e_of_t_exp (t_of_conf c)))
 
 let pre_eapp (c:config) =
   is_T_exp (t_of_conf c) && is_E_app (e_of_exp (e_of_t_exp (t_of_conf c)))
@@ -82,6 +85,10 @@ type comp = | Do | Skip | NA
 val step_aspar_e1: c:config{pre_easpar c} -> Tot config
 let step_aspar_e1 (Conf l m s en (T_exp (Exp (E_aspar e1 e2) _))) =
   Conf l m ((Frame m en (F_aspar_ps e2))::s) en (T_exp e1)
+  
+val step_box_e1: c:config{pre_ebox c} -> Tot config
+let step_box_e1 (Conf l m s en (T_exp (Exp (E_box e1 e2) _))) =
+  Conf l m ((Frame m en (F_box_ps e2))::s) en (T_exp e1)
 
 val step_unbox_e: c:config{pre_eunbox c} -> Tot config
 let step_unbox_e (Conf l m s en (T_exp (Exp (E_unbox e) _))) =
@@ -143,6 +150,12 @@ let step_aspar_e2 (Conf l _ ((Frame m en (F_aspar_ps e))::s) _
                        (T_val (V_const (C_prins ps)))) =
   Conf l m ((Frame m en (F_aspar_e ps))::s) en (T_exp e)
 
+val step_box_e2: c:config{is_value_ps c /\ is_sframe c is_F_box_ps}
+                  -> Tot config
+let step_box_e2 (Conf l _ ((Frame m en (F_box_ps e))::s) _
+                      (T_val (V_const (C_prins ps)))) =
+  Conf l m ((Frame m en (F_box_e ps))::s) en (T_exp e)
+
 val step_mkwire_e2: c:config{is_value c /\ is_sframe c is_F_mkwire_ps}
                    -> Tot config
 let step_mkwire_e2 (Conf l _ ((Frame m en (F_mkwire_ps e))::s) _
@@ -180,6 +193,11 @@ val step_aspar_red: c:config{is_value c /\ is_sframe c is_F_aspar_e}
                    -> Tot config
 let step_aspar_red (Conf l _ ((Frame m en (F_aspar_e ps))::s) _ (T_val v)) =
   Conf l m s en (T_red (R_aspar ps v))
+
+val step_box_red: c:config{is_value c /\ is_sframe c is_F_box_e}
+                   -> Tot config
+let step_box_red (Conf l _ ((Frame m en (F_box_e ps))::s) _ (T_val v)) =
+  Conf l m s en (T_red (R_box ps v))
 
 (*val step_box_red: c:config{is_value c /\ is_sframe c is_F_box_e}
                  -> Tot config
@@ -263,6 +281,26 @@ let step_aspar c = match c with
     in
 
     Conf l m' s' en' t'
+
+val pre_box: c:config -> Tot comp
+let pre_box c = match c with
+  | Conf l (Mode _ ps) _ _ (T_red (R_box #meta ps' v)) ->
+    if is_meta_boxable ps' meta then
+      if src l then
+        if subset ps' ps then Do else NA
+      else Do
+    else NA
+  
+  | _ -> NA
+
+val step_box: c:config{pre_box c = Do} -> Tot config
+let step_box (Conf l m s en (T_red (R_box ps' v))) =
+  let Mode as_m ps = m in
+  if src l || as_m = Sec then
+    Conf l m s en (T_val (V_box ps' v))
+  else
+    if subset ps ps' then Conf l m s en (T_val (V_box ps' v))
+    else Conf l m s en (T_val (V_box ps' V_emp))
 
 val pre_unbox: config -> Tot comp
 let pre_unbox c = match c with
@@ -516,6 +554,10 @@ type sstep: config -> config -> Type =
   | C_aspar_ps:
     c:config{pre_easpar c} -> c':config{c' = step_aspar_e1 c}
     -> sstep c c'
+    
+  | C_box_ps:
+    c:config{pre_ebox c} -> c':config{c' = step_box_e1 c}
+    -> sstep c c'
 
   | C_unbox:
     c:config{pre_eunbox c} -> c':config{c' = step_unbox_e c}
@@ -571,6 +613,11 @@ type sstep: config -> config -> Type =
     c:config{is_value_ps c /\ is_sframe c is_F_aspar_ps}
     -> c':config{c' = step_aspar_e2 c}
     -> sstep c c'
+    
+  | C_box_e:
+    c:config{is_value_ps c /\ is_sframe c is_F_box_ps}
+    -> c':config{c' = step_box_e2 c}
+    -> sstep c c'
    
   | C_mkwire_e2:
     c:config{is_value c /\ is_sframe c is_F_mkwire_ps}
@@ -605,10 +652,10 @@ type sstep: config -> config -> Type =
     -> c':config{c' = step_aspar_red c}
     -> sstep c c'
 
-  (*| C_box_red:
+  | C_box_red:
     c:config{is_value c /\ is_sframe c is_F_box_e}
     -> c':config{c' = step_box_red c}
-    -> sstep c c'*)
+    -> sstep c c'
 
   | C_unbox_red:
     c:config{is_value c /\ is_sframe c is_F_unbox}
@@ -656,8 +703,8 @@ type sstep: config -> config -> Type =
     c:config{not (pre_aspar c = NA)} -> c':config{c' = step_aspar c}
     -> sstep c c'
 
-  (*| C_box_beta:
-    c:config{pre_box c = Do} -> c':config{c' = step_box c} -> sstep c c'*)
+  | C_box_beta:
+    c:config{pre_box c = Do} -> c':config{c' = step_box c} -> sstep c c'
 
   | C_unbox_beta:
     c:config{pre_unbox c = Do} -> c':config{c' = step_unbox c}

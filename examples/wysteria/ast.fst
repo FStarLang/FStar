@@ -34,6 +34,7 @@ type const =
 type exp' =
   | E_aspar     : ps:exp -> e:exp -> exp'
   | E_assec     : ps:exp -> e:exp -> exp'
+  | E_box       : ps:exp -> e:exp -> exp'
   | E_unbox     : e:exp  -> exp'
   | E_mkwire    : e1:exp -> e2:exp -> exp'
   | E_projwire  : e1:exp -> e2:exp -> exp'
@@ -114,7 +115,7 @@ assume val preceds_axiom: en:env -> x:varname -> Lemma (ensures (en x << en))
 type redex =
   | R_aspar     : #meta:v_meta -> ps:prins -> v:value meta -> redex
   | R_assec     : #meta:v_meta -> ps:prins -> v:value meta -> redex
-  (*| R_box       : #meta:v_meta -> ps:prins -> v:value meta -> redex*)
+  | R_box       : #meta:v_meta -> ps:prins -> v:value meta -> redex
   | R_unbox     : #meta:v_meta -> v:value meta -> redex
   | R_mkwire    : #mps:v_meta -> #mv:v_meta -> vps:value mps -> v:value mv -> redex
   | R_projwire  : #meta:v_meta -> p:prin -> v:value meta -> redex
@@ -145,6 +146,8 @@ type frame' =
   | F_assec_ps     : e:exp -> frame'
   | F_assec_e      : ps:prins -> frame'
   | F_assec_ret    : frame'
+  | F_box_ps       : e:exp -> frame'
+  | F_box_e        : ps:prins -> frame'
   | F_unbox        : frame'
   | F_mkwire_ps    : e:exp -> frame'
   | F_mkwire_e     : #meta:v_meta -> v:value meta -> frame'
