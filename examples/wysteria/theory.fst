@@ -1875,3 +1875,29 @@ let forward_simulation_theorem #c #c' h ps =
   match h1 with
     | IntroL h' -> PS_tran h' (PS_refl (slice_c_ps ps c'))
     | IntroR h' -> pstep_par_star_to_pstep_star h'
+
+val sstep_deterministic:
+  c:config -> c1:config -> h1:sstep c c1 -> c2:config -> h2:sstep c c2
+  -> Lemma (requires (True)) (ensures (c1 = c2))
+let sstep_deterministic c c1 h1 c2 h2 = ()
+
+(*val pstep_ppar_ppar_confluence:
+  #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
+  -> h1:pstep #ps pi pi1{is_P_par h1} -> h2:pstep #ps pi pi2{is_P_par h2}
+  -> Tot (cor (u:unit{pi1 = pi2}) (cexists #(protocol ps) (fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3))))
+let pstep_ppar_ppar_confluence #ps pi pi1 pi2 h1 h2 =
+  let pi_m, _ = pi in
+  let pi1_m, _ = pi1 in
+  let pi2_m, _ = pi2 in
+
+  let P_par #d #c1' _ p1 hp1 _ = h1 in
+  let P_par #d #c2' _ p2 hp2 _ = h2 in
+
+  let _ = assert (pi1_m = update p1 c1' pi_m) in
+  let _ = assert (pi2_m = update p2 c2' pi_m) in
+  
+  if p1 = p2 then IntroL ()
+  else admit ()
+  
+  admit ()*)
+  
