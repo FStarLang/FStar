@@ -114,7 +114,7 @@ assume val preceds_axiom: en:env -> x:varname -> Lemma (ensures (en x << en))
 type redex =
   | R_aspar     : #meta:v_meta -> ps:prins -> v:value meta -> redex
   | R_assec     : #meta:v_meta -> ps:prins -> v:value meta -> redex
-  | R_box       : #meta:v_meta -> ps:prins -> v:value meta -> redex
+  (*| R_box       : #meta:v_meta -> ps:prins -> v:value meta -> redex*)
   | R_unbox     : #meta:v_meta -> v:value meta -> redex
   | R_mkwire    : #mps:v_meta -> #mv:v_meta -> vps:value mps -> v:value mv -> redex
   | R_projwire  : #meta:v_meta -> p:prin -> v:value meta -> redex
@@ -141,10 +141,10 @@ type mode =
 type frame' =
   | F_aspar_ps     : e:exp -> frame'
   | F_aspar_e      : ps:prins -> frame'
+  | F_aspar_ret    : ps:prins -> frame'
   | F_assec_ps     : e:exp -> frame'
   | F_assec_e      : ps:prins -> frame'
   | F_assec_ret    : frame'
-  | F_box_e        : ps:prins -> frame'
   | F_unbox        : frame'
   | F_mkwire_ps    : e:exp -> frame'
   | F_mkwire_e     : #meta:v_meta -> v:value meta -> frame'
@@ -184,11 +184,11 @@ type mode_inv (m:mode) (l:level) =
 
 val is_sec_frame: f':frame' -> Tot bool
 let is_sec_frame f' =
-  not (is_F_aspar_ps f' || is_F_aspar_e f' || is_F_box_e f')
+  not (is_F_aspar_ps f' || is_F_aspar_e f' || is_F_aspar_ret f')
 
 (* TODO: FIXME: workaround for projectors *)
-val ps_of_box_e_frame: f':frame'{is_F_box_e f'} -> Tot prins
-let ps_of_box_e_frame (F_box_e ps) = ps
+val ps_of_aspar_ret_frame: f':frame'{is_F_aspar_ret f'} -> Tot prins
+let ps_of_aspar_ret_frame (F_aspar_ret ps) = ps
 
 val stack_source_inv: stack -> mode -> Tot bool
 let rec stack_source_inv s (Mode as_m ps) = match s with
@@ -199,8 +199,8 @@ let rec stack_source_inv s (Mode as_m ps) = match s with
     (not (as_m = Par) || not (is_F_assec_ret f'))                  &&
     (not (as_m = Sec) || (not (as_m' = Par) || is_F_assec_ret f')) &&
     (not (as_m' = Sec) || (is_sec_frame f' && is_Cons tl))         &&
-    (not (is_F_box_e f') || (ps = ps_of_box_e_frame f'))                  &&
-    (ps = ps' || (subset ps ps' && is_F_box_e f'))                 &&
+    (not (is_F_aspar_ret f') || (ps = ps_of_aspar_ret_frame f'))   &&
+    (ps = ps' || (subset ps ps' && is_F_aspar_ret f'))             &&
     stack_source_inv tl m'
 
 val stack_target_inv: stack -> mode -> Tot bool
@@ -217,7 +217,7 @@ let rec stack_inv s m l =
   if is_Source l then stack_source_inv s m else stack_target_inv s m
 
 val is_sec_redex: redex -> Tot bool
-let is_sec_redex r = not (is_R_aspar r || is_R_box r)
+let is_sec_redex r = not (is_R_aspar r) //|| is_R_box r)
 
 (* TODO: FIXME: workaround for projectors *)
 val r_of_t_red: t:term{is_T_red t} -> Tot redex

@@ -181,10 +181,10 @@ val step_aspar_red: c:config{is_value c /\ is_sframe c is_F_aspar_e}
 let step_aspar_red (Conf l _ ((Frame m en (F_aspar_e ps))::s) _ (T_val v)) =
   Conf l m s en (T_red (R_aspar ps v))
 
-val step_box_red: c:config{is_value c /\ is_sframe c is_F_box_e}
+(*val step_box_red: c:config{is_value c /\ is_sframe c is_F_box_e}
                  -> Tot config
 let step_box_red (Conf l _ ((Frame m en (F_box_e ps))::s) _ (T_val v)) =
-  Conf l m s en (T_red (R_box ps v))
+  Conf l m s en (T_red (R_box ps v))*)
 
 val step_unbox_red: c:config{is_value c /\ is_sframe c is_F_unbox}
                    -> Tot config
@@ -248,7 +248,7 @@ let step_aspar c = match c with
   | Conf l m s en' (T_red (R_aspar ps v)) ->
     let en, x, e = get_en_b v in
     let m'  = if src l then Mode Par ps else m in
-    let s'  = (Frame m en' (F_box_e ps))::s in
+    let s'  = (Frame m en' (F_aspar_ret ps))::s in
 
     (*
      * for parties not in ps, the choice of empty_env is arbitrary
@@ -263,21 +263,6 @@ let step_aspar c = match c with
     in
 
     Conf l m' s' en' t'
-
-val pre_box: config -> Tot comp
-let pre_box c = match c with
-  | Conf l (Mode Par ps1) _ _ (T_red (R_box #meta ps2 _)) ->
-    if is_meta_boxable ps2 meta then
-      if src l then
-        if subset ps2 ps1 then Do else NA
-      else Do
-    else NA
-
-  | _ -> NA
-
-val step_box: c:config{pre_box c = Do} -> Tot config
-let step_box c = match c with
-  | Conf l m s en (T_red (R_box ps v)) -> Conf l m s en (T_val (V_box ps v))
 
 val pre_unbox: config -> Tot comp
 let pre_unbox c = match c with
@@ -471,6 +456,22 @@ val step_match: c:config{pre_match c = Do} -> Tot config
 let step_match (Conf l m s en (T_red (R_match v pats))) =
   Conf l m s en (T_exp (get_next_exp pats v))
 
+val pre_aspar_ret: config -> Tot comp
+let pre_aspar_ret c = match c with
+  | Conf _ _ ((Frame _ _ (F_aspar_ret ps))::_) _ (T_val #meta _) ->
+    if is_meta_boxable ps meta then Do else NA
+      (*if src l then
+        if subset ps2 ps1 then Do else NA
+      else Do
+    else NA
+*)
+  | _ -> NA
+
+val step_aspar_ret: c:config{pre_aspar_ret c = Do} -> Tot config
+let step_aspar_ret c = match c with
+  | Conf l _ ((Frame m en (F_aspar_ret ps))::s) _ (T_val v)
+    -> Conf l m s en (T_val (V_box ps v))
+
 let pre_eassec (c:config) =
   is_T_exp (t_of_conf c) && is_E_assec (e_of_exp (e_of_t_exp (t_of_conf c)))
 
@@ -604,10 +605,10 @@ type sstep: config -> config -> Type =
     -> c':config{c' = step_aspar_red c}
     -> sstep c c'
 
-  | C_box_red:
+  (*| C_box_red:
     c:config{is_value c /\ is_sframe c is_F_box_e}
     -> c':config{c' = step_box_red c}
-    -> sstep c c'
+    -> sstep c c'*)
 
   | C_unbox_red:
     c:config{is_value c /\ is_sframe c is_F_unbox}
@@ -655,8 +656,8 @@ type sstep: config -> config -> Type =
     c:config{not (pre_aspar c = NA)} -> c':config{c' = step_aspar c}
     -> sstep c c'
 
-  | C_box_beta:
-    c:config{pre_box c = Do} -> c':config{c' = step_box c} -> sstep c c'
+  (*| C_box_beta:
+    c:config{pre_box c = Do} -> c':config{c' = step_box c} -> sstep c c'*)
 
   | C_unbox_beta:
     c:config{pre_unbox c = Do} -> c':config{c' = step_unbox c}
@@ -672,6 +673,11 @@ type sstep: config -> config -> Type =
    
   | C_concatwire_beta:
     c:config{pre_concatwire c = Do} -> c':config{c' = step_concatwire c}
+    -> sstep c c'
+    
+  | C_aspar_ret:
+    c:config{is_sframe c is_F_aspar_ret /\ pre_aspar_ret c = Do}
+    -> c':config{c' = step_aspar_ret c}
     -> sstep c c'
    
   | C_assec_ps:

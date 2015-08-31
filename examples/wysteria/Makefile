@@ -1,6 +1,6 @@
 include ../Makefile.include
 
-all: api theory codegen clean
+all: api interpreter theory codegen clean
 
 api:
 	$(FSTAR) wysteria.fst
@@ -11,6 +11,9 @@ api:
 	$(FSTAR) mill5.fst
 	$(FSTAR) gps.fst
 	$(FSTAR) median.fst
+
+interpreter:
+	$(FSTAR) sinterpreter.fst
 
 theory:
 	$(FSTAR) theory.fst

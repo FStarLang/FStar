@@ -379,9 +379,9 @@ val slice_r: prin -> redex -> Tot redex
 let slice_r p r = match r with
   | R_aspar ps v       -> R_aspar ps (D_v.v (slice_v p v))
   | R_assec ps v       -> R_assec ps (D_v.v (slice_v p v))
-  | R_box ps v         ->
+  (*| R_box ps v         ->
     let D_v _ v' = if mem p ps then slice_v p v else D_v (Meta empty Can_b empty Can_w) V_emp in
-    R_box ps v'
+    R_box ps v'*)
   | R_unbox v          -> R_unbox (D_v.v (slice_v p v))
   | R_mkwire v1 v2     -> R_mkwire (D_v.v (slice_v p v1)) (D_v.v (slice_v p v2))
   | R_projwire p' v    -> R_projwire p' (D_v.v (slice_v p v))
@@ -397,7 +397,7 @@ let slice_f' p f = match f with
   | F_aspar_e       _ -> f
   | F_assec_ps      _ -> f
   | F_assec_e       _ -> f
-  | F_box_e         _ -> f
+  | F_aspar_ret     _ -> f
   | F_unbox           -> f
   | F_mkwire_ps     _ -> f
   | F_mkwire_e      v -> F_mkwire_e (D_v.v (slice_v p v))
@@ -943,12 +943,12 @@ let sstep_par_slice_lemma c c' h p =
     | C_aspar_red (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else IntroR (C_aspar_red (slice_c p c) (slice_c p c'))
-    | C_box_red (Conf _ m s _ _) _ ->
+    (*| C_box_red (Conf _ m s _ _) _ ->
       if mem p (Mode.ps m) then
         IntroR (C_box_red (slice_c p c) (slice_c p c'))
       else if mem p (Mode.ps (Frame.m (Cons.hd s))) then
         IntroR (C_box_red (slice_c p c) (slice_c p c'))
-      else IntroL ()
+      else IntroL ()*)
     | C_unbox_red (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else IntroR (C_unbox_red (slice_c p c) (slice_c p c'))
@@ -1000,10 +1000,10 @@ let sstep_par_slice_lemma c c' h p =
         let (en, x, _) = get_en_b v in
         env_upd_slice_lemma p en x (V_const (C_unit));
         IntroR (C_aspar_beta (slice_c p c) (slice_c p c'))
-    | C_box_beta (Conf _ m _ _ _) _ ->
+    (*| C_box_beta (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else
-        IntroR (C_box_beta (slice_c p c) (slice_c p c'))
+        IntroR (C_box_beta (slice_c p c) (slice_c p c'))*)
     | C_unbox_beta (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else
@@ -1035,6 +1035,12 @@ let sstep_par_slice_lemma c c' h p =
         slice_wire_compose_lemma #eps1 #eps2 w1 w2 p;
         de_morgan_intersect_over_union eps1 eps2 (singleton p);
         IntroR (C_concatwire_beta (slice_c p c) (slice_c p c'))
+    | C_aspar_ret (Conf _ m s _ _) _ ->
+      if mem p (Mode.ps m) then
+        IntroR (C_aspar_ret (slice_c p c) (slice_c p c'))
+      else if mem p (Mode.ps (Frame.m (Cons.hd s))) then
+        IntroR (C_aspar_ret (slice_c p c) (slice_c p c'))
+      else IntroL ()
     | C_assec_ps (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else
