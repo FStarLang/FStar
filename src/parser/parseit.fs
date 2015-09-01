@@ -29,7 +29,9 @@ let bc_start = "(*--build-config"
 let bc_end   = "--*)"
 
 let find_file (filename:string) : string =
-  if System.IO.Path.IsPathRooted filename then filename
+  if System.IO.Path.IsPathRooted filename then
+    (Util.fprint1 "Absolute path: %s\n" filename;
+     filename)
   else
     let include_path = Options.get_include_path() in
     try
