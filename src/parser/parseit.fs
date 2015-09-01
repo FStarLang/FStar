@@ -1,3 +1,4 @@
+
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
@@ -26,7 +27,10 @@ let resetLexbufPos filename (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char
 
 let bc_start = "(*--build-config"
 let bc_end   = "--*)"
-let open_file (filename:string) =
+
+let find_file (filename:string) : string =
+  if System.IO.Path.IsPathRooted filename then filename
+  else
     let include_path = Options.get_include_path() in
     try
         let p = Util.find_map include_path (fun p ->
@@ -35,13 +39,14 @@ let open_file (filename:string) =
                 then Some path
                 else None) in
         match p with
-        | Some f ->
-            if !Options.debug <> []
-            then Util.fprint1 "Opening file: %s\n" f;
-            new System.IO.StreamReader(f)
+        | Some f -> f
         | _ -> raise (Absyn.Syntax.Err("unable to open file"))
     with e -> raise (Absyn.Syntax.Err (Util.format2 "Unable to open file: %s\n%s\n" filename (e.ToString())))
 
+let open_file (filename:string) =
+  if !Options.debug <> []
+  then Util.fprint1 "Opening file: %s\n" filename;
+  new System.IO.StreamReader(filename)
 
 let read_build_config (filename:string) =
     let fail msg = raise (Absyn.Syntax.Err(Util.format2 "Could not parse a valid build configuration from %s; %s" filename msg)) in
@@ -110,13 +115,8 @@ let read_build_config (filename:string) =
               files
     else if !Options.use_build_config //the user claimed that the build config exists
     then fail ""
-    else (let stdlib = ["FStar.Set"; "FStar.Heap"; "FStar.ST"; "FStar.All"; "FStar.IO"] in
-          let admit_string = stdlib |> List.map (fun x -> "--admit_fsi " ^ x) |> String.concat " " in 
-          Options.admit_fsi := stdlib @ (!Options.admit_fsi);
-          let _ = match !Options.reset_options_string with 
-            | None -> Options.reset_options_string := Some admit_string
-            | Some x -> Options.reset_options_string := Some (admit_string ^ " " ^ x) in
-          ["set.fsi"; "heap.fst"; "st.fst"; "all.fst"; "io.fsti"; filename])
+    else (Options.admit_fsi := "FStar.Set"::!Options.admit_fsi;
+          ["set.fsi"; "heap.fst"; "st.fst"; "all.fst"; filename])
 
 let parse fn =
   Parser.Util.warningHandler := (function
