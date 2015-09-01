@@ -45,7 +45,8 @@ let find_file (filename:string) : string =
         | _ -> raise (Absyn.Syntax.Err("unable to open file"))
     with e -> raise (Absyn.Syntax.Err (Util.format2 "Unable to open file: %s\n%s\n" filename (e.ToString())))
 
-let open_file (filename:string) =
+let open_file (f:string) =
+  let filename = find_file f in
   if !Options.debug <> []
   then Util.fprint1 "Opening file: %s\n" filename;
   new System.IO.StreamReader(filename)
