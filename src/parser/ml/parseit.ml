@@ -11,16 +11,20 @@ let resetLexbufPos filename lexbuf =
 let bc_start = "(*--build-config"
 let bc_end   = "--*)"
 
+module Path = BatPathGen.OfString
+
 let find_file (filename:string) =
-  let include_path = FStar_Options.get_include_path () in
-  let f = find_map include_path (fun p ->
-    let p = p ^ "/" ^ filename in
-    if Sys.file_exists p then Some p else None) in
-  try
-    match f with
-      | None -> raise (Err "")
-      | Some f -> f
-  with e -> raise (Err (FStar_Util.format1 "Unable to open file: %s\n" filename))
+  if Path.is_relative (Path.of_string filename) then
+    let include_path = FStar_Options.get_include_path () in
+    let f = find_map include_path (fun p ->
+      let p = p ^ "/" ^ filename in
+      if Sys.file_exists p then Some p else None) in
+    try
+      match f with
+        | None -> raise (Err "")
+        | Some f -> f
+    with e -> raise (Err (FStar_Util.format1 "Unable to open file: %s\n" filename))
+  else filename
 
 let open_file (filename:string) =
   let f = find_file filename in
