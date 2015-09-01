@@ -1176,7 +1176,7 @@ let rec ret_sec_value_to_ps #ps' pi sec_c ps =
 type pstep: #ps:prins -> protocol ps -> protocol ps -> Type =
 
   | P_par:
-    #ps:prins -> #c':tconfig -> pi:protocol ps
+    #ps:prins -> #c':tconfig_par -> pi:protocol ps
     -> p:prin{contains p (fst pi)}
     -> h:sstep (Some.v (select p (fst pi))) c'
     -> pi':protocol ps{pi' = (update p c' (fst pi), (snd pi))}
@@ -1878,26 +1878,30 @@ let forward_simulation_theorem #c #c' h ps =
 
 val sstep_deterministic:
   c:config -> c1:config -> h1:sstep c c1 -> c2:config -> h2:sstep c c2
-  -> Lemma (requires (True)) (ensures (c1 = c2))
+  -> Lemma (requires (True)) (ensures (c1 = c2 /\ h1 = h2))
 let sstep_deterministic c c1 h1 c2 h2 = ()
 
-(*val pstep_ppar_ppar_confluence:
+val pstep_ppar_ppar_confluence:
   #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
   -> h1:pstep #ps pi pi1{is_P_par h1} -> h2:pstep #ps pi pi2{is_P_par h2}
   -> Tot (cor (u:unit{pi1 = pi2}) (cexists #(protocol ps) (fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3))))
 let pstep_ppar_ppar_confluence #ps pi pi1 pi2 h1 h2 =
-  let pi_m, _ = pi in
-  let pi1_m, _ = pi1 in
-  let pi2_m, _ = pi2 in
+  let p1, c1', hp1 = P_par.p h1, P_par.c' h1, P_par.h h1 in
+  let p2, c2', hp2 = P_par.p h2, P_par.c' h2, P_par.h h2 in
 
-  let P_par #d #c1' _ p1 hp1 _ = h1 in
-  let P_par #d #c2' _ p2 hp2 _ = h2 in
+  let pi_m, s = pi in
+  let pi1_m, s1 = pi1 in
+  let pi2_m, s2 = pi2 in
 
-  let _ = assert (pi1_m = update p1 c1' pi_m) in
-  let _ = assert (pi2_m = update p2 c2' pi_m) in
+  (*let _ = assert (pi1_m = update p1 c1' pi_m) in
+  let _ = assert (pi2_m = update p2 c2' pi_m) in*)
   
   if p1 = p2 then IntroL ()
-  else admit ()
-  
-  admit ()*)
+  else
+    let pi13_m = update p2 c2' pi1_m in
+    let pi23_m = update p1 c1' pi2_m in
+    let _ = assert (pi13_m = pi23_m) in
+    
+    (*let h13 = P_par #ps #c2' pi1 p2 hp2 (pi13_m, s) in*)
+    admit ()
   
