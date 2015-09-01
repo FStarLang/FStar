@@ -219,3 +219,6 @@ https://github.com/Z3Prover/z3/releases/tag/z3-4.4.0
         $ make package -C src/ocaml-output
 
 3. Run the testing of binary packages (described above)
+
+**Note**: to create the package successfully you will need tools like
+Madoko, make, git, zip, etc installed.
