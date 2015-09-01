@@ -1069,6 +1069,53 @@ let sstep_par_slice_lemma c c' h p =
 #reset-options
 (**********)
 
+(*val ps_cmp: ps1:eprins -> ps2:eprins -> Tot bool (decreases (size ps1))
+let rec ps_cmp ps1 ps2 =
+  if size ps1 < size ps2 then false
+  else if size ps1 > size ps2 then true
+  else
+    if ps1 = empty && ps2 = empty then true
+    else
+      let Some p1, Some p2 = choose ps1, choose ps2 in
+      let ps1_rest, ps2_rest = remove p1 ps1, remove p2 ps2 in
+      if p1 = p2 then ps_cmp ps1_rest ps2_rest
+      else p_cmp p1 p2
+
+val ps_cmp_antisymm:
+  ps1:eprins -> ps2:eprins
+  -> Lemma (requires (True)) (ensures ((ps_cmp ps1 ps2 /\ ps_cmp ps2 ps1) ==> ps1 = ps2))
+     (decreases (size ps1))
+let rec ps_cmp_antisymm ps1 ps2 =
+  if ps1 = empty || ps2 = empty then ()
+  else
+    let Some p1, Some p2 = choose ps1, choose ps2 in
+    let ps1_rest, ps2_rest = remove p1 ps1, remove p2 ps2 in
+    ps_cmp_antisymm ps1_rest ps2_rest
+
+val ps_cmp_trans:
+  ps1:eprins -> ps2:eprins -> ps3:eprins
+  -> Lemma (requires (True)) (ensures ((ps_cmp ps1 ps2 /\ ps_cmp ps2 ps3) ==> ps_cmp ps1 ps3))
+     (decreases (size ps1))
+let rec ps_cmp_trans ps1 ps2 ps3 =
+  if ps1 = empty || ps2 = empty || ps3 = empty then ()
+  else
+    let Some p1, Some p2, Some p3 = choose ps1, choose ps2, choose ps3 in
+    let ps1_rest, ps2_rest, ps3_rest = remove p1 ps1, remove p2 ps2, remove p3 ps3 in
+    ps_cmp_trans ps1_rest ps2_rest ps3_rest
+
+val ps_cmp_total:
+  ps1:eprins -> ps2:eprins
+  -> Lemma (requires (True)) (ensures (ps_cmp ps1 ps2 \/ ps_cmp ps2 ps1))
+     (decreases (size ps1))
+let rec ps_cmp_total ps1 ps2 =
+  if ps1 = empty || ps2 = empty then ()
+  else
+    let Some p1, Some p2 = choose ps1, choose ps2 in
+    let ps1_rest, ps2_rest = remove p1 ps1, remove p2 ps2 in
+    ps_cmp_total ps1_rest ps2_rest
+
+assume Ps_cmp_is_total_order: total_order prins ps_cmp*)
+
 type tconfig_par = c:tconfig{Mode.m (Conf.m c) = Par}
 
 type tpar (ps:prins) = m:OrdMap.ordmap prin tconfig_par p_cmp{forall p. mem p ps = contains p m}
@@ -1090,15 +1137,16 @@ type tpre_assec (#ps':prins) (pi:protocol ps') (ps:prins) (x:varname) (e:exp) =
                                MkTuple3._3 (get_en_b (R_assec.v (T_red.r (Conf.t c)))) = e)))
 
 opaque val get_env_m:
-  #ps':prins -> pi:protocol ps' -> ps:prins{forall p. mem p ps ==>
-                                            contains p (fst pi) /\
-                                            Let (Some.v (select p (fst pi)))
-                                                (fun c -> is_T_red (Conf.t c) /\
-                                                          is_R_assec (T_red.r (Conf.t c)) /\
-                                                          is_clos (R_assec.v (T_red.r (Conf.t c))))}
-  -> Tot (m:env_map ps{(forall p. mem p ps ==>
-                                  select p m = Some (
-                                  MkTuple3._1 (get_en_b (R_assec.v (T_red.r (Conf.t (Some.v (select p (fst pi)))))))))})
+  #ps':prins -> pi:protocol ps' -> ps:prins{forall p. (mem p ps ==>
+                                                       contains p (fst pi) /\
+                                                       Let (Some.v (select p (fst pi)))
+                                                       (fun c -> is_T_red (Conf.t c) /\
+                                                                 is_R_assec (T_red.r (Conf.t c)) /\
+                                                                 is_clos (R_assec.v (T_red.r (Conf.t c)))))}
+  -> Tot (m:env_map ps{(forall p. (mem p ps ==>
+                                   select p m = Some (
+                                   MkTuple3._1 (get_en_b (R_assec.v (T_red.r (Conf.t (Some.v (select p (fst pi))))))))) /\
+                                  (not (mem p ps) ==> select p m = None))})
      (decreases (size ps))
 let rec get_env_m #ps' pi ps =
   let Some p = choose ps in
@@ -1922,12 +1970,60 @@ let pstep_ppar_psec_confluence #ps pi pi1 pi2 h1 h2 =
   let h23:pstep #ps pi2 (pi3_m, s3) = P_par #ps #(P_par.c' h1) pi2 (P_par.p h1) (P_par.h h1) (pi3_m, s3) in
   
   ExIntro #(protocol ps) #(fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)) (pi3_m, s3) (Conj h13 h23)
-  
+
+val step_ps_to_wait_update_lemma:
+  ps':prins -> pi:tpar ps' -> ps:prins{forall p. mem p ps ==> contains p pi}
+  -> p:prin{not (mem p ps) /\ mem p ps'} -> c:tconfig_par
+  -> Lemma (requires (True))
+           (ensures (update p c (step_ps_to_wait #ps' pi ps) = step_ps_to_wait #ps' (update p c pi) ps))
+let step_ps_to_wait_update_lemma ps' pi ps p c = ()
+
 val pstep_ppar_psec_enter_confluence:
   #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
   -> h1:pstep #ps pi pi1{is_P_par h1} -> h2:pstep #ps pi pi2{is_P_sec_enter h2}
   -> Tot (cexists #(protocol ps) (fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)))
-let pstep_ppar_psec_enter_confluence #ps pi pi1 pi2 h1 h2 = admit ()
+let pstep_ppar_psec_enter_confluence #ps pi pi1 pi2 h1 h2 =
+  let _ = cut (b2t (not (mem (P_par.p h1) (P_sec_enter.ps h2)))) in
+  
+  let pi_m, s = pi in
+  let pi1_m, s1 = pi1 in
+  let pi2_m, s2 = pi2 in
+    
+  let pi3_m = update (P_par.p h1) (P_par.c' h1) pi2_m in
+  let s3 = s2 in
+    
+  let _ = cut (tpre_assec #ps pi1 (P_sec_enter.ps h2) (P_sec_enter.x h2) (P_sec_enter.e h2)) in
+  //let _ = cut (b2t (step_ps_to_wait #ps pi_m (P_sec_enter.ps h2) = pi2_m)) in
+  //let _ = cut (b2t (update (P_par.p h1) (P_par.c' h1) (step_ps_to_wait #ps pi_m (P_sec_enter.ps h2)) = update (P_par.p h1) (P_par.c' h1) pi2_m)) in
+  step_ps_to_wait_update_lemma ps pi_m (P_sec_enter.ps h2) (P_par.p h1) (P_par.c' h1);
+  let _ = cut (b2t (step_ps_to_wait #ps pi1_m (P_sec_enter.ps h2) = pi3_m)) in
+  let _ = cut (forall p. mem p (P_sec_enter.ps h2) ==> select p pi_m = select p pi1_m) in
+  let _ = cut (b2t (get_env_m pi (P_sec_enter.ps h2) = get_env_m pi1 (P_sec_enter.ps h2))) in
+  
+  //let _ = assert (forall p. mem p (P_sec_enter.ps h2) ==> select p pi3_m = select p pi2_m) in
+  let _ = cut (b2t (tstep_assec #ps pi1 (P_sec_enter.ps h2) (P_sec_enter.x h2) (P_sec_enter.e h2) = (pi3_m, s3))) in
+  let h13:pstep #ps pi1 (pi3_m, s3) = P_sec_enter #ps pi1 (P_sec_enter.ps h2) (P_sec_enter.x h2) (P_sec_enter.e h2) (pi3_m, s3) in
+  let h23:pstep #ps pi2 (pi3_m, s3) = P_par #ps #(P_par.c' h1) pi2 (P_par.p h1) (P_par.h h1) (pi3_m, s3) in  
+  ExIntro #(protocol ps) #(fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)) (pi3_m, s3) (Conj h13 h23)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   
 
 
