@@ -1886,22 +1886,23 @@ val pstep_ppar_ppar_confluence:
   -> h1:pstep #ps pi pi1{is_P_par h1} -> h2:pstep #ps pi pi2{is_P_par h2}
   -> Tot (cor (u:unit{pi1 = pi2}) (cexists #(protocol ps) (fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3))))
 let pstep_ppar_ppar_confluence #ps pi pi1 pi2 h1 h2 =
-  let p1, c1', hp1 = P_par.p h1, P_par.c' h1, P_par.h h1 in
-  let p2, c2', hp2 = P_par.p h2, P_par.c' h2, P_par.h h2 in
+  let p1, c1' = P_par.p h1, P_par.c' h1 in
+  let p2, c2' = P_par.p h2, P_par.c' h2 in
 
   let pi_m, s = pi in
   let pi1_m, s1 = pi1 in
   let pi2_m, s2 = pi2 in
 
-  (*let _ = assert (pi1_m = update p1 c1' pi_m) in
-  let _ = assert (pi2_m = update p2 c2' pi_m) in*)
-  
   if p1 = p2 then IntroL ()
   else
+    let hp1:sstep (Some.v (select p1 pi_m)) c1' = P_par.h h1 in
+    let hp2:sstep (Some.v (select p2 pi_m)) c2' = P_par.h h2 in
+    
     let pi13_m = update p2 c2' pi1_m in
     let pi23_m = update p1 c1' pi2_m in
-    let _ = assert (pi13_m = pi23_m) in
     
-    (*let h13 = P_par #ps #c2' pi1 p2 hp2 (pi13_m, s) in*)
-    admit ()
+    let h13:pstep #ps pi1 (pi13_m, s) = P_par #ps #c2' pi1 p2 hp2 (pi13_m, s) in
+    let h23:pstep #ps pi2 (pi13_m, s) = P_par #ps #c1' pi2 p1 hp1 (pi23_m, s) in
+    
+    IntroR (ExIntro #(protocol ps) #((fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3))) (pi13_m, s) (Conj h13 h23))
   
