@@ -1,10 +1,10 @@
 all: CoreCrypto.cmxa
 
 PLATFORM = ../../Platform/ml
+OPENSSL_INCLUDE = ../../../../openssl/include
 
 ifeq ($(OS),Windows_NT)
     CC = i686-w64-mingw32-gcc
-    OPENSSL_INCLUDE = ../../../../openssl/include
     OCAML_INCLUDE = /usr/local/lib/ocaml
     EXTRA_OPTS =
     DLL = dll #DLL file ending for windows
@@ -13,12 +13,10 @@ else
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Darwin)
         CC = gcc-4.9 # Change if necessary
-        OPENSSL_INCLUDE = ../../../../openssl/include
         OCAML_INCLUDE = /usr/local/lib/ocaml
         EXTRA_OPTS =
     else
         CC = gcc
-        OPENSSL_INCLUDE = /usr/include/openssl
         OCAML_INCLUDE = /usr/lib/ocaml
         EXTRA_OPTS = -ccopt -fPIC
     endif
