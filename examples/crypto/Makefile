@@ -1,16 +1,17 @@
 VERFILES=cca2.fst #sha1.fst mac.fst sig.fst padding.fst mac3.fst # encrypt3.fst formatting.fst rpc.fst
 
 ifeq ($(OS),Windows_NT)
-# internally flexlink uses i686-w64-mingw32-gcc.exe
-CC = flexlink -chain mingw -v -v -exe -lgdi32
-# flexlink is needed to link in	/cygdrive/c/OCaml/bin/flexdll_initer_mingw.o /cygdrive/c/OCaml/bin/flexdll_mingw.o
-LIB = $(FSTAR_HOME)/3rdparty/win32 #place to look for libcrypto.a
+    # internally flexlink uses i686-w64-mingw32-gcc.exe
+    CC = flexlink -chain mingw -v -v -exe -lgdi32
+    # flexlink is needed to link in	/cygdrive/c/OCaml/bin/flexdll_initer_mingw.o /cygdrive/c/OCaml/bin/flexdll_mingw.o
+    LIB = $(FSTAR_HOME)/3rdparty/win32 #place to look for libcrypto.a
 else
-    LIB = /usr/lib #place to look for libcrypto.a
     ifeq ($(UNAME_S),Darwin)
         CC = gcc-5
+        LIB = $(FSTAR_HOME)/3rdparty/osx #place to look for libcrypto.a
     else
         CC = gcc
+        LIB = $(FSTAR_HOME)/3rdparty/x86_64 #place to look for libcrypto.a
     endif
 endif
 
