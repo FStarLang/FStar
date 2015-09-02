@@ -65,10 +65,13 @@ statefulEnc: statefulEnc-single.fst statefulEnc-twoLevelHeap.fst
 	$(FSTAR) statefulEnc-single.fst
 	$(FSTAR) statefulEnc-twoLevelHeap.fst
 
+.PHONY: mllibs
+
 
 mllibs:
-	make -C $(FSTAR_HOME)/contrib/Platform/ml clean all
-	make -C $(FSTAR_HOME)/contrib/CoreCrypto/ml clean all
+	$(MAKE) -C $(FSTAR_HOME)/contrib/Platform/ml clean all
+	$(MAKE) -C $(FSTAR_HOME)/contrib/CoreCrypto/ml clean all
+
 
 
 rpc-extract: sha1.fst mac.fst formatting.fst rpc.fst

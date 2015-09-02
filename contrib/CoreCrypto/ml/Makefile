@@ -4,6 +4,7 @@ OCAMLC = ocamlfind c
 OCAMLOPT = ocamlfind opt
 OCAMLMKLIB = ocamlfind mklib
 
+FSTAR_HOME = ../../..
 PLATFORM = $(FSTAR_HOME)/contrib/Platform/ml
 OPENSSL_INCLUDE = ../../../../openssl/include
 
