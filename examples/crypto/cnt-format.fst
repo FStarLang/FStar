@@ -123,12 +123,10 @@ let signal s c =
 val signal_split : m:msg signal_size -> Tot (x:option (uint32 * uint16)
     { is_Some x ==> m = signal (fst (Some.v x)) (snd (Some.v x))})
 let signal_split m =
-  let (t, sc) = split m 1 in
+  let (t, sc) = split_eq m 1 in
   if t = tag2 then
-    let (s_b, c_b) = split sc 4 in
+    let (s_b, c_b) = split_eq sc 4 in
     let (s, c) = (bytes_to_ulint 4 s_b, bytes_to_ulint 2 c_b) in
-    assert ((append t (append s_b c_b)) = signal s c);
-    assert (m = (append t (append s_b c_b)));
     Some (s, c)
   else
     None
