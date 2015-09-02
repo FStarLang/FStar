@@ -8,10 +8,10 @@ pars:
 	$(FSTAR) $(_STDLIB_) pars.fst --max_fuel 1 --max_ifuel 1
 
 stlc_strong_db_parsubst:
-	$(FSTAR) $(_STDLIB_) stlc_strong_db_parsubst.fst --max_fuel 1 --max_ifuel 1
+	$(FSTAR) stlc_strong_db_parsubst.fst --max_fuel 1 --max_ifuel 1
 
 stlc_cbv_db_parsubst:
-	$(FSTAR) $(_STDLIB_) stlc_strong_db_parsubst.fst stlc_cbv_db_parsubst.fst --max_fuel 1 --max_ifuel 1
+	$(FSTAR) stlc_cbv_db_parsubst.fst --max_fuel 1 --max_ifuel 1
 
 lambda_omega:
 	$(FSTAR) $(_STDLIB_) lambda_omega.fst --max_fuel 1 --max_ifuel 1 --initial_fuel 1
