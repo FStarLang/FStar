@@ -1,11 +1,13 @@
 (*--build-config
     options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module Format --admit_fsi Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
     variables:LIB=../../lib;
-    other-files:$LIB/string.fst $LIB/list.fst
+    other-files:
             $LIB/ext.fst $LIB/classical.fst
             $LIB/set.fsi $LIB/set.fst
-            $LIB/heap.fst $LIB/st.fst
+            $LIB/heap.fst $LIB/st.fst $LIB/all.fst
+            $LIB/string.fst $LIB/list.fst
             $LIB/seq.fsi $LIB/seqproperties.fst
+            $LIB/io.fsti
   --*)
 
 (*
@@ -26,9 +28,9 @@
 
 module Format
 open Prims.PURE
-open String
-open Seq
-open SeqProperties
+open FStar.String
+open FStar.Seq
+open FStar.SeqProperties
 
 type message = seq byte
 type msg (l:nat) = m:message{length m==l}
