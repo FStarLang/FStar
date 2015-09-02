@@ -14,7 +14,7 @@ ifeq ($(OS),Windows_NT)
     OCAML_INCLUDE = /usr/local/lib/ocaml
     ARCH = win32
 else
-    DLL = so 
+    DLL = so
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Darwin)
         CC = gcc-4.9
@@ -33,7 +33,7 @@ LIB = $(FSTAR_HOME)/3rdparty/$(ARCH)
 openssl_stub.o: openssl_stub.c
 	$(OCAMLOPT) -c -cc $(CC) -ccopt "-I $(OCAML_INCLUDE)" -ccopt "-I $(OPENSSL_INCLUDE)" $(EXTRA_OPTS) $<
 
-$(LIB)/dllopenssl_wrap.${DLL}: openssl_stub.o
+$(LIB)/dllopenssl_wrap.${DLL}:
 	$(OCAMLMKLIB) -o $(LIB)/openssl_wrap $<
 
 CoreCrypto.cmi: CoreCrypto.mli
@@ -57,7 +57,7 @@ clean:
 Tests: CoreCrypto.cmx $(LIB)/dllopenssl_wrap.$(DLL) Tests.ml
 	$(OCAMLOPT) -ccopt "-L$(LIB)" -I $(PLATFORM) -package batteries -linkpkg -o $@ \
 	$(PLATFORM)/platform.cmx $< Tests.ml \
-	-cclib -lopenssl_wrap -cclib $(LIB)/libcrypto.a 
+	-cclib -lopenssl_wrap -cclib $(LIB)/libcrypto.a
 
 .PHONY: test
 
