@@ -1,5 +1,5 @@
 (*--build-config
-    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module Format --admit_fsi Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
+    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module Format --admit_fsi FStar.Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
     variables:LIB=../../lib;
     other-files:
             $LIB/ext.fst $LIB/classical.fst
@@ -111,24 +111,27 @@ let response s t =
   let lb = uint16_to_bytes (length (utf8 s)) in
   append tag1 (append lb (append (utf8 s) (utf8 t)))
 
-val signal : uint32 -> uint16 -> Tot (msg 7)
+val signal_size: int
+let signal_size = 7 (* Bytes *)
+
+val signal : uint32 -> uint16 -> Tot (msg signal_size)
 let signal s c =
   let s_b = uint32_to_bytes s in
   let c_b = uint16_to_bytes c in
   append tag2 (append s_b c_b)
 
-val signal_split : m:msg 7 -> Tot (x:option (uint32 * uint16)
-    { is_Some x ==> (fun (s,c) -> m = signal s c) (Some.v x)})
+val signal_split : m:msg signal_size -> Tot (x:option (uint32 * uint16)
+    { is_Some x ==> m = signal (fst (Some.v x)) (snd (Some.v x))})
 let signal_split m =
   let (t, sc) = split m 1 in
   if t = tag2 then
     let (s_b, c_b) = split sc 4 in
-    Some (bytes_to_uint32 s_b, bytes_to_uint16 c_b)
+    let (s, c) = (bytes_to_ulint 4 s_b, bytes_to_ulint 2 c_b) in
+    assert ((append t (append s_b c_b)) = signal s c);
+    assert (m = (append t (append s_b c_b)));
+    Some (s, c)
   else
     None
-
-val signal_size: int
-let signal_size = 7 (* Bytes *)
 
 val signal_components_corr:
   s0:uint32 -> c0:uint16 -> s1:uint32 -> c1:uint16 ->
