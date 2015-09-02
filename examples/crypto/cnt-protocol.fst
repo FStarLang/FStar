@@ -1,5 +1,5 @@
 (*--build-config
-    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module RPC --admit_fsi FStar.Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 --admit_fsi FStar.IO;
+    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module CntProtocol --admit_fsi FStar.Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 --admit_fsi FStar.IO;
     variables:LIB=../../lib
               CONTRIB=../../contrib;
     other-files:

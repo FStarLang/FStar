@@ -88,7 +88,6 @@ CONTRIB_LIBS=$(addprefix $(FSTAR_HOME)/contrib/, Platform/ml/platform.cmx CoreCr
 rpc-ml: rpc-extract
 	$(OCAMLC) $(SUPPORT_LIBS) $(CONTRIB_LIBS) FStar_Seq.ml FStar_SeqProperties.ml SHA1.ml MAC.ml Formatting.ml RPC.ml
 
-
 cnt-protocol: cnt-format.fst cnt-mac.fst cnt-protocol.fst
 	#$(FSTAR) --admit_fsi FStar.Set $(addprefix $(FSTAR_HOME)/lib/, list.fst string.fst partialmap.fst ) cnt-format-deprecated.fst
 	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --admit_fsi FStar.Seq --admit_fsi FStar.IO --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
@@ -97,6 +96,7 @@ cnt-protocol: cnt-format.fst cnt-mac.fst cnt-protocol.fst
 					heap.fst st.fst all.fst \
 					string.fst list.fst \
 					seq.fsi seqproperties.fst io.fsti ) cnt-format.fst cnt-mac.fst cnt-protocol.fst
+
 
 clean:
 	rm -fr rpc *.ml *.cmi *.cmx *.o *.exe *~
