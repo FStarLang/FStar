@@ -1,3 +1,6 @@
+(*--build-config
+    other-files: constr.fst classical.fst ext.fst stlc_strong_db_parsubst.fst
+  --*)
 (*
    Copyright 2008-2014 Catalin Hritcu, Nikhil Swamy, Microsoft Research and Inria
 
@@ -25,6 +28,27 @@ open FStar.Classical
 open FStar.FunctionalExtensionality
 open StlcStrongDbParSubst
 
+(* Weakening (or shifting preserves typing) *)
+(* Useless now, showing that it follows from substitution lemma *)
+val sub_inc_above : nat -> var -> Tot exp
+let sub_inc_above n y = if y<n then EVar y else EVar (y+1)
+
+val shift_up_above : nat -> exp -> Tot exp
+let shift_up_above n e = subst (sub_inc_above n) e
+
+val extend_gen : var -> typ -> env -> Tot env
+let extend_gen x t g y = if y < x then g y
+                         else if y = x then Some t
+                         else g (y-1)
+
+opaque val weakening : n:nat -> #g:env -> #e:exp -> #t:typ -> t':typ ->
+      h:typing g e t -> Tot (typing (extend_gen n t' g) (shift_up_above n e) t)
+      (decreases h)
+let rec weakening n g v t t' h =
+  let hs : subst_typing (sub_inc_above n) g (extend_gen n t' g) =
+    fun y -> if y < n then TyVar y else TyVar (y+1)
+  in substitution (sub_inc_above n) h hs
+
 val step : exp -> Tot (option exp)
 let rec step e =
   match e with
@@ -51,6 +75,7 @@ let rec progress _ _ h =
   | TyVar _   -> ()
   | TyLam _ _ -> ()
   | TyApp h1 h2 -> progress h1; progress h2
+  | TyUnit -> ()
 
 (* Typing extensional (weaker) and context invariance (stronger) lemmas *)
 
@@ -67,6 +92,7 @@ let rec appears_free_in x e =
   | EVar y -> x = y
   | EApp e1 e2 -> appears_free_in x e1 || appears_free_in x e2
   | ELam _ e1 -> appears_free_in (x+1) e1
+  | EUnit -> false
 
 opaque logic type EnvEqualE (e:exp) (g1:env) (g2:env) =
                  (forall (x:var). appears_free_in x e ==> g1 x = g2 x)
@@ -83,6 +109,7 @@ let rec context_invariance _ _ _ h g' =
     TyLam t_y (context_invariance h1 (extend t_y g'))
   | TyApp h1 h2 ->
     TyApp (context_invariance h1 g') (context_invariance h2 g')
+  | TyUnit -> TyUnit
 
 val free_in_context : x:var -> #e:exp -> #g:env -> #t:typ -> h:typing g e t ->
       Lemma (ensures (appears_free_in x e ==> is_Some (g x))) (decreases h)
@@ -91,6 +118,7 @@ let rec free_in_context x _ _ _ h =
   | TyVar x -> ()
   | TyLam t h1 -> free_in_context (x+1) h1
   | TyApp h1 h2 -> free_in_context x h1; free_in_context x h2
+  | TyUnit -> ()
 
 val typable_empty_not_free : x:var -> #e:exp -> #t:typ -> typing empty e t ->
       Lemma (ensures (not (appears_free_in x e)))
@@ -103,9 +131,10 @@ let rec below x e =
   | EVar y -> y < x
   | EApp e1 e2 -> below x e1 && below x e2
   | ELam _ e1 -> below (x+1) e1
+  | EUnit -> true
 
 val closed : exp -> Tot bool
-let closed = below 0
+let closed e = below 0 e
 
 (* at some point we could try again to relate closed and appears_free *)
 (* this didn't work for some reason
@@ -133,6 +162,7 @@ let rec typable_below x g _ _ h =
   | TyVar y -> ()
   | TyApp h1 h2 -> typable_below x h1; typable_below x h2
   | TyLam _y h1 -> typable_below (x+1) h1
+  | TyUnit -> ()
 
 val typable_empty_closed : #e:exp -> #t:typ -> h:typing empty e t ->
       Lemma (ensures (closed e))
@@ -172,6 +202,7 @@ let rec subst_below x v s =
                    assert(e = subst (sub_elam s) e);
                    assert(v = ELam t e);
                    assert(subst s v = ELam t (subst (sub_elam s) e)))
+  | EUnit -> ()
 
 val subst_closed : v:exp{closed v} -> s:sub ->
   Lemma (ensures (v = subst s v)) (decreases v)
@@ -232,6 +263,7 @@ let rec substitution_preserves_typing x e v t_x t g h1 h2 =
               #(subst (sub_beta_gen x v) e2) #t11 #t12
        (substitution_preserves_typing x h1 h21)
        (substitution_preserves_typing x h1 h22))
+  | TyUnit -> TyUnit
 
 
 val extend_gen_0_aux : t:typ -> g:env -> y:var ->
