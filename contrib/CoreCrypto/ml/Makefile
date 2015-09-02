@@ -53,6 +53,10 @@ stub: openssl_stub.o
 clean:
 	rm -f *.[oa] *.so *.cm[ixoa] *.cmxa
 
+distclean: clean
+	rm -f *.dll
+
+
 Tests: CoreCrypto.cmx Tests.ml
 	ocamlfind ocamlopt -I $(PLATFORM) -I . -package Unix -linkpkg -o $@ \
 	$(PLATFORM)/platform.cmx $^ \
