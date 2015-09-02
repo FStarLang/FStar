@@ -33,7 +33,7 @@ let sample n = random n
 
 let sha1 b = hash SHA1 b
 
-val hmac_sha1: key -> text -> tag
+val hmac_sha1: key -> text -> Tot tag
 let hmac_sha1 k t =
   let x5c = byte_of_int 92 in
   let x36 = byte_of_int 54 in

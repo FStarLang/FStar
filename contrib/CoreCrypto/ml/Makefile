@@ -12,7 +12,7 @@ else
     DLL = so #DLL file ending for unix
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Darwin)
-        CC = gcc-4.9 # Change if necessary
+        CC = gcc-5 # Change if necessary
         OPENSSL_INCLUDE = ../../../../openssl/include
         OCAML_INCLUDE = /usr/local/lib/ocaml
         EXTRA_OPTS =
