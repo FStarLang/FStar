@@ -127,3 +127,9 @@ let dom_lemma (#k:Type) (#v:Type) #f x m = ()
 let contains_const_on (#k:Type) (#v:Type) #f d x y = ()
 
 let select_const_on (#k:Type) (#v:Type) #f d x y = ()
+
+let sel_rem1 (#k:Type) (#v:Type) #f x m = ()
+
+let sel_rem2 (#k:Type) (#v:Type) #f x x' m = ()
+
+let rem_upd (#k:Type) (#v:Type) #f x y x' m = ()

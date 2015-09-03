@@ -2134,23 +2134,6 @@ let pstep_psec_psec_enter_confluence #ps pi pi1 pi2 h1 h2 =
   let h23:pstep #ps pi2 (pi3_m, s3) = P_sec #ps #(P_sec.c' h1) pi2 (P_sec.ps h1) (P_sec.h h1) (pi3_m, s3) in
   ExIntro #(protocol ps) #(fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)) (pi3_m, s3) (Conj h13 h23)
 
-assume val sel_rem1: #k:Type -> #v:Type -> #f:cmp k -> x:k -> m:ordmap k v f
-                     -> Lemma (requires True) (ensures select #k #v #f x
-                                                       (OrdMap.remove #k #v #f x m) = None)
-                     [SMTPat (select #k #v #f x (OrdMap.remove #k #v #f x m))]
-
-assume val sel_rem2: #k:Type -> #v:Type -> #f:cmp k -> x:k -> x':k -> m:ordmap k v f
-                    -> Lemma (requires True) (ensures (x =!= x' ==>
-                                                       select #k #v #f x'
-                                                       (OrdMap.remove #k #v #f x m) = select #k #v #f x' m))
-                    [SMTPat (select #k #v #f x' (OrdMap.remove #k #v #f x m))]
-
-assume val rem_upd: #k:Type -> #v:Type -> #f:cmp k -> x:k -> y:v -> x':k -> m:ordmap k v f
-                    -> Lemma (requires (True)) (ensures (x =!= x' ==>
-                                                         update #k #v #f x y (OrdMap.remove #k #v #f x' m) =
-                                                         OrdMap.remove #k #v #f x' (update #k #v #f x y m)))
-                       [SMTPat (update #k #v #f x y (OrdMap.remove #k #v #f x' m))]
-
 val pstep_psec_psec_exit_excl_lemma:
   #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
   -> h1:pstep #ps pi pi1{is_P_sec h1} -> h2:pstep #ps pi pi2{is_P_sec_exit h2}
