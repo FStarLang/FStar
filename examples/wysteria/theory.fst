@@ -1984,6 +1984,18 @@ val step_ps_to_wait_update_lemma:
            (ensures (update p c (step_ps_to_wait #ps' pi ps) = step_ps_to_wait #ps' (update p c pi) ps))
 let step_ps_to_wait_update_lemma ps' pi ps p c = ()
 
+(*val pstep_ppar_psec_enter_excl_lemma:
+  #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
+  -> h1:pstep #ps pi pi1{is_P_par h1} -> h2:pstep #ps pi pi2{is_P_sec_enter h2}
+  -> Lemma (requires (True))
+           (ensures (not (mem (P_par.p h1) (P_sec_enter.ps h2))))
+let pstep_ppar_psec_enter_excl_lemma #ps pi pi1 pi2 h1 h2 =
+  let _ = assert (forall p. mem p (P_sec_enter.ps h2) ==> (is_T_red (Conf.t (Some.v (select p (fst pi)))) /\
+                                                           is_R_assec (T_red.r (Conf.t (Some.v (select p (fst pi))))))) in
+  match P_par.h h1 with
+    | C_assec_beta _ _ -> ()
+    | _                -> () 
+*)
 opaque val pstep_ppar_psec_enter_confluence:
   #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
   -> h1:pstep #ps pi pi1{is_P_par h1} -> h2:pstep #ps pi pi2{is_P_sec_enter h2}
@@ -2236,8 +2248,43 @@ let pstep_psec_enter_psec_exit_confluence #ps pi pi1 pi2 h1 h2 =
   
   ExIntro #(protocol ps) #(fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)) (pi13_m, s13) (Conj h13 h23)
 
+opaque val pstep_psec_exit_psec_exit_confluence:
+  #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
+  -> h1:pstep #ps pi pi1{is_P_sec_exit h1} -> h2:pstep #ps pi pi2{is_P_sec_exit h2}
+  -> Tot (cor (u:unit{pi1 = pi2}) (cexists #(protocol ps) (fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3))))
+let pstep_psec_exit_psec_exit_confluence #ps pi pi1 pi2 h1 h2 =
+  let pi_m, s = pi in
+  let pi1_m, s1 = pi1 in
+  let pi2_m, s2 = pi2 in
 
-(*opaque val pstep_confluence_theorem:
+  if P_sec_exit.ps h1 = P_sec_exit.ps h2 then IntroL ()
+  else
+    let _ = admitP (b2t (intersect (P_sec_exit.ps h1) (P_sec_exit.ps h2) = empty)) in
+    let _ = admitP (forall p. mem p (P_sec_exit.ps h2) ==> not (mem p (P_sec_exit.ps h1))) in
+    
+    (*let _ = cut (b2t (pi1_m = ret_sec_value_to_ps #ps pi_m (Some.v (select (P_sec_exit.ps h1) s)) (P_sec_exit.ps h1))) in
+    let _ = cut (b2t (pi2_m = ret_sec_value_to_ps #ps pi_m (Some.v (select (P_sec_exit.ps h2) s)) (P_sec_exit.ps h2))) in*)
+        
+    let _ = cut (forall p. mem p (P_sec_exit.ps h2) ==> select p pi_m = select p pi1_m) in
+    let _ = cut (forall p. mem p (P_sec_exit.ps h1) ==> select p pi_m = select p pi2_m) in
+    
+    let _ = cut (b2t (select (P_sec_exit.ps h2) s1 = select (P_sec_exit.ps h2) s)) in
+    let _ = cut (b2t (select (P_sec_exit.ps h1) s2 = select (P_sec_exit.ps h1) s)) in
+    
+    let pi13_m = ret_sec_value_to_ps #ps pi1_m (Some.v (select (P_sec_exit.ps h2) s1)) (P_sec_exit.ps h2) in
+    let pi23_m = ret_sec_value_to_ps #ps pi2_m (Some.v (select (P_sec_exit.ps h1) s2)) (P_sec_exit.ps h1) in
+    let _ = cut (b2t (pi13_m = pi23_m)) in
+    
+    let s13 = OrdMap.remove (P_sec_exit.ps h2) s1 in
+    let s23 = OrdMap.remove (P_sec_exit.ps h1) s2 in
+    let _ = cut (b2t (s13 = s23)) in
+
+    let h13:pstep #ps pi1 (pi13_m, s13) = P_sec_exit #ps pi1 (P_sec_exit.ps h2) (pi13_m, s13) in
+    let h23:pstep #ps pi2 (pi23_m, s23) = P_sec_exit #ps pi2 (P_sec_exit.ps h1) (pi23_m, s23) in
+
+    IntroR (ExIntro #(protocol ps) #(fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)) (pi13_m, s13) (Conj h13 h23))
+
+opaque val pstep_confluence_theorem:
   #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
   -> h1:pstep #ps pi pi1 -> h2:pstep #ps pi pi2
   -> Tot (cor (u:unit{pi1 = pi2}) (cexists #(protocol ps) (fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3))))
@@ -2247,33 +2294,39 @@ let pstep_confluence_theorem ps pi pi1 pi2 h1 h2 =
     else if is_P_sec h2 then IntroR (pstep_ppar_psec_confluence #ps pi pi1 pi2 h1 h2)
     else if is_P_sec_enter h2 then IntroR (pstep_ppar_psec_enter_confluence #ps pi pi1 pi2 h1 h2)
     else IntroR (pstep_ppar_psec_exit_confluence #ps pi pi1 pi2 h1 h2)
-  
+
   else if is_P_sec h1 then
     if is_P_par h2 then
       let ExIntro pi3 (Conj p1 p2) = pstep_ppar_psec_confluence #ps pi pi2 pi1 h2 h1 in
       IntroR (ExIntro pi3 (Conj p2 p1))
-    else if is_P_sec h2 then IntroL ()
-    else if is_P_sec_enter h2 then
-      let _ = pstep_psec_psec_enter_confluence #ps pi pi1 pi2 h1 h2 in IntroL ()
+    else if is_P_sec h2 then pstep_psec_psec_confluence #ps pi pi1 pi2 h1 h2
+    else if is_P_sec_enter h2 then 
+      let ExIntro pi3 (Conj p1 p2) = pstep_psec_psec_enter_confluence #ps pi pi1 pi2 h1 h2 in
+      IntroR (ExIntro pi3 (Conj p1 p2))
     else
-      let _ = pstep_psec_enter_psec_exit_confluence #ps pi pi1 pi2 h1 h2 in IntroL ()
-    
-  else if is_P_sec_enter h1 then
-    if is_P_par h2 then
-      let ExIntro pi3 (Conj p1 p2) = pstep_ppar_psec_enter_confluence #ps pi pi2 pi1 h2 h1 in
-      IntroR (ExIntro pi3 (Conj p2 p1))
-    else if is_P_sec h2 then IntroL (pstep_psec_psec_enter_confluence #ps pi pi2 pi1 h2 h1)
-    else if is_P_sec_enter h2 then admit ()//IntroL ()
-    else IntroL (pstep_psec_enter_psec_exit_confluence #ps pi pi1 pi2 h1 h2)
-    
-  else
-    if is_P_par h2 then
-      let ExIntro pi3 (Conj p1 p2) = pstep_ppar_psec_exit_confluence #ps pi pi2 pi1 h2 h1 in
-      IntroR (ExIntro pi3 (Conj p2 p1))
-    else if is_P_sec h2 then
-      let _ = pstep_psec_psec_exit_confluence #ps pi pi2 pi1 h2 h1 in
-      IntroL ()
-    else if is_P_sec_enter h2 then
-      let _ = pstep_psec_enter_psec_exit_confluence #ps pi pi2 pi1 h2 h1 in
-      IntroL ()
-    else admit ()*)
+      let ExIntro pi3 (Conj p1 p2) = pstep_psec_psec_exit_confluence #ps pi pi1 pi2 h1 h2 in
+      IntroR (ExIntro pi3 (Conj p1 p2))
+      
+    else if is_P_sec_enter h1 then
+      if is_P_par h2 then
+        let ExIntro pi3 (Conj p1 p2) = pstep_ppar_psec_enter_confluence #ps pi pi2 pi1 h2 h1 in
+        IntroR (ExIntro pi3 (Conj p2 p1))
+      else if is_P_sec h2 then
+        let ExIntro pi3 (Conj p1 p2) = pstep_psec_psec_enter_confluence #ps pi pi2 pi1 h2 h1 in
+        IntroR (ExIntro pi3 (Conj p2 p1))
+      else if is_P_sec_enter h2 then pstep_psec_enter_psec_enter_confluence #ps pi pi1 pi2 h1 h2
+      else
+        let ExIntro pi3 (Conj p1 p2) = pstep_psec_enter_psec_exit_confluence #ps pi pi1 pi2 h1 h2 in
+        IntroR (ExIntro pi3 (Conj p1 p2))
+          
+    else
+      if is_P_par h2 then
+        let ExIntro pi3 (Conj p1 p2) = pstep_ppar_psec_exit_confluence #ps pi pi2 pi1 h2 h1 in
+        IntroR (ExIntro pi3 (Conj p2 p1))
+      else if is_P_sec h2 then
+        let ExIntro pi3 (Conj p1 p2) = pstep_psec_psec_exit_confluence #ps pi pi2 pi1 h2 h1 in
+        IntroR (ExIntro pi3 (Conj p2 p1))
+      else if is_P_sec_enter h2 then
+        let ExIntro pi3 (Conj p1 p2) = pstep_psec_enter_psec_exit_confluence #ps pi pi2 pi1 h2 h1 in
+        IntroR (ExIntro pi3 (Conj p2 p1))
+      else pstep_psec_exit_psec_exit_confluence #ps pi pi1 pi2 h1 h2
