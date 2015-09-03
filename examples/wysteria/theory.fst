@@ -1984,24 +1984,30 @@ val step_ps_to_wait_update_lemma:
            (ensures (update p c (step_ps_to_wait #ps' pi ps) = step_ps_to_wait #ps' (update p c pi) ps))
 let step_ps_to_wait_update_lemma ps' pi ps p c = ()
 
-(*val pstep_ppar_psec_enter_excl_lemma:
+val target_par_sstep_lemma:
+  c:tconfig_par -> c':tconfig_par -> h:sstep c c'
+  -> Lemma (requires (True))
+           (ensures ((not (is_T_red (Conf.t c) && is_R_assec (T_red.r (Conf.t c)))) /\
+                     (not (is_T_sec_wait (Conf.t c)))))
+let target_par_sstep_lemma c c' h = ()
+
+val pstep_ppar_psec_enter_excl_lemma:
   #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
   -> h1:pstep #ps pi pi1{is_P_par h1} -> h2:pstep #ps pi pi2{is_P_sec_enter h2}
   -> Lemma (requires (True))
            (ensures (not (mem (P_par.p h1) (P_sec_enter.ps h2))))
 let pstep_ppar_psec_enter_excl_lemma #ps pi pi1 pi2 h1 h2 =
-  let _ = assert (forall p. mem p (P_sec_enter.ps h2) ==> (is_T_red (Conf.t (Some.v (select p (fst pi)))) /\
-                                                           is_R_assec (T_red.r (Conf.t (Some.v (select p (fst pi))))))) in
-  match P_par.h h1 with
-    | C_assec_beta _ _ -> ()
-    | _                -> () 
-*)
+  let _ = cut (forall p. mem p (P_sec_enter.ps h2) ==> (is_T_red (Conf.t (Some.v (select p (fst pi)))) /\
+                                                        is_R_assec (T_red.r (Conf.t (Some.v (select p (fst pi))))))) in
+  target_par_sstep_lemma (Some.v (select (P_par.p h1) (fst pi))) (P_par.c' h1) (P_par.h h1)
+
 opaque val pstep_ppar_psec_enter_confluence:
   #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
   -> h1:pstep #ps pi pi1{is_P_par h1} -> h2:pstep #ps pi pi2{is_P_sec_enter h2}
   -> Tot (cexists #(protocol ps) (fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)))
 let pstep_ppar_psec_enter_confluence #ps pi pi1 pi2 h1 h2 =
-  let _ = admitP (b2t (not (mem (P_par.p h1) (P_sec_enter.ps h2)))) in
+  pstep_ppar_psec_enter_excl_lemma #ps pi pi1 pi2 h1 h2;
+  //let _ = admitP (b2t (not (mem (P_par.p h1) (P_sec_enter.ps h2)))) in
   
   let pi_m, s = pi in
   let pi1_m, s1 = pi1 in
@@ -2031,12 +2037,22 @@ val ret_sec_value_to_ps_update_lemma:
            (ensures (update p c (ret_sec_value_to_ps #ps' pi sec_c ps) = ret_sec_value_to_ps #ps' (update p c pi) sec_c ps))
 let ret_sec_value_to_ps_update_lemma ps' pi sec_c ps p c = ()
 
+val pstep_ppar_psec_exit_excl_lemma:
+  #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
+  -> h1:pstep #ps pi pi1{is_P_par h1} -> h2:pstep #ps pi pi2{is_P_sec_exit h2}
+  -> Lemma (requires (True))
+           (ensures (not (mem (P_par.p h1) (P_sec_exit.ps h2))))
+let pstep_ppar_psec_exit_excl_lemma #ps pi pi1 pi2 h1 h2 =
+  let _ = cut (forall p. mem p (P_sec_exit.ps h2) ==> (is_T_sec_wait (Conf.t (Some.v (select p (fst pi)))))) in
+  target_par_sstep_lemma (Some.v (select (P_par.p h1) (fst pi))) (P_par.c' h1) (P_par.h h1)
+
 opaque val pstep_ppar_psec_exit_confluence:
   #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
   -> h1:pstep #ps pi pi1{is_P_par h1} -> h2:pstep #ps pi pi2{is_P_sec_exit h2}
   -> Tot (cexists #(protocol ps) (fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)))
 let pstep_ppar_psec_exit_confluence #ps pi pi1 pi2 h1 h2 =
-  let _ = admitP (b2t (not (mem (P_par.p h1) (P_sec_exit.ps h2)))) in
+  pstep_ppar_psec_exit_excl_lemma #ps pi pi1 pi2 h1 h2;
+  //let _ = admitP (b2t (not (mem (P_par.p h1) (P_sec_exit.ps h2)))) in
   
   let pi_m, s = pi in
   let pi1_m, s1 = pi1 in
