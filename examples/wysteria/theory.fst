@@ -1122,13 +1122,17 @@ type tpar (ps:prins) = m:OrdMap.ordmap prin tconfig_par p_cmp{forall p. mem p ps
 
 type tconfig_sec = c:tconfig{Mode.m (Conf.m c) = Sec}
 
-type tsec = OrdMap.ordmap prins tconfig_sec ps_cmp
+type tsec =
+  m:OrdMap.ordmap prins tconfig_sec ps_cmp{forall ps1 ps2.
+                                           (contains ps1 m /\ contains ps2 m /\ not (ps1 = ps2) ==>
+                                           intersect ps1 ps2 = empty)}
 
 //type protocol (ps:prins) = tpar ps * option tconfig_sec
 type protocol (ps:prins) = tpar ps * tsec
 
 type tpre_assec (#ps':prins) (pi:protocol ps') (ps:prins) (x:varname) (e:exp) =
   not (contains ps (snd pi)) /\
+  (forall ps1. contains ps1 (snd pi) ==> intersect ps1 ps = empty) /\
   (forall p. mem p ps ==> (contains p (fst pi) /\
                            Let (Some.v (select p (fst pi)))
                              (fun c ->
@@ -2089,7 +2093,7 @@ opaque val pstep_psec_psec_enter_confluence:
   -> h1:pstep #ps pi pi1{is_P_sec h1} -> h2:pstep #ps pi pi2{is_P_sec_enter h2}
   -> Tot (cexists #(protocol ps) (fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)))
 let pstep_psec_psec_enter_confluence #ps pi pi1 pi2 h1 h2 =
-  let _ = admitP (b2t (intersect (P_sec.ps h1) (P_sec_enter.ps h2) = empty)) in
+  let _ = cut (b2t (intersect (P_sec.ps h1) (P_sec_enter.ps h2) = empty)) in
   
   let pi_m, s = pi in
   let pi1_m, s1 = pi1 in
@@ -2147,13 +2151,21 @@ assume val rem_upd: #k:Type -> #v:Type -> #f:cmp k -> x:k -> y:v -> x':k -> m:or
                                                          OrdMap.remove #k #v #f x' (update #k #v #f x y m)))
                        [SMTPat (update #k #v #f x y (OrdMap.remove #k #v #f x' m))]
 
+val pstep_psec_psec_exit_excl_lemma:
+  #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
+  -> h1:pstep #ps pi pi1{is_P_sec h1} -> h2:pstep #ps pi pi2{is_P_sec_exit h2}
+  -> Lemma (requires (True))
+           (ensures (not (P_sec.ps h1 = P_sec_exit.ps h2)))
+let pstep_psec_psec_exit_excl_lemma #ps pi pi1 pi2 h1 h2 = () // TODO: FIXME: make it faster ?
+
 opaque val pstep_psec_psec_exit_confluence:
   #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
   -> h1:pstep #ps pi pi1{is_P_sec h1} -> h2:pstep #ps pi pi2{is_P_sec_exit h2}
   -> Tot (cexists #(protocol ps) (fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)))
 let pstep_psec_psec_exit_confluence #ps pi pi1 pi2 h1 h2 =
-  let _ = admitP (b2t (intersect (P_sec.ps h1) (P_sec_exit.ps h2) = empty)) in
-
+  pstep_psec_psec_exit_excl_lemma #ps pi pi1 pi2 h1 h2;
+  let _ = cut (b2t (intersect (P_sec.ps h1) (P_sec_exit.ps h2) = empty)) in
+  
   let pi_m, s = pi in
   let pi1_m, s1 = pi1 in
   let pi2_m, s2 = pi2 in
@@ -2181,6 +2193,7 @@ let pstep_psec_enter_psec_enter_confluence #ps pi pi1 pi2 h1 h2 =
   
   if P_sec_enter.ps h1 = P_sec_enter.ps h2 then IntroL ()
   else
+    (* TODO: FIXME: this is not needed, but takes a long time otherwise *)
     let _ = admitP (b2t (intersect (P_sec_enter.ps h1) (P_sec_enter.ps h2) = empty)) in
 
     let pi23_m = step_ps_to_wait #ps pi2_m (P_sec_enter.ps h1) in
@@ -2194,7 +2207,6 @@ let pstep_psec_enter_psec_enter_confluence #ps pi pi1 pi2 h1 h2 =
     let _ = cut (b2t (get_env_m pi (P_sec_enter.ps h1) = get_env_m pi2 (P_sec_enter.ps h1))) in
     
     //let _ = cut (tpre_assec #ps pi1 (P_sec_enter.ps h2) (P_sec_enter.x h2) (P_sec_enter.e h2)) in admit ()
-
     
     let env23 = update_env (compose_envs_m (P_sec_enter.ps h1) (get_env_m pi2 (P_sec_enter.ps h1)))
                 (P_sec_enter.x h1) (V_const C_unit) in
@@ -2221,7 +2233,7 @@ opaque val pstep_psec_enter_psec_exit_confluence:
   -> h1:pstep #ps pi pi1{is_P_sec_enter h1} -> h2:pstep #ps pi pi2{is_P_sec_exit h2}
   -> Tot (cexists #(protocol ps) (fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)))
 let pstep_psec_enter_psec_exit_confluence #ps pi pi1 pi2 h1 h2 =
-  let _ = admitP (b2t (intersect (P_sec_enter.ps h1) (P_sec_exit.ps h2) = empty)) in
+  let _ = cut (b2t (intersect (P_sec_enter.ps h1) (P_sec_exit.ps h2) = empty)) in
   
   let pi_m, s = pi in
   let pi1_m, s1 = pi1 in
@@ -2275,7 +2287,7 @@ let pstep_psec_exit_psec_exit_confluence #ps pi pi1 pi2 h1 h2 =
 
   if P_sec_exit.ps h1 = P_sec_exit.ps h2 then IntroL ()
   else
-    let _ = admitP (b2t (intersect (P_sec_exit.ps h1) (P_sec_exit.ps h2) = empty)) in
+    let _ = cut (b2t (intersect (P_sec_exit.ps h1) (P_sec_exit.ps h2) = empty)) in
     let _ = admitP (forall p. mem p (P_sec_exit.ps h2) ==> not (mem p (P_sec_exit.ps h1))) in
     
     (*let _ = cut (b2t (pi1_m = ret_sec_value_to_ps #ps pi_m (Some.v (select (P_sec_exit.ps h1) s)) (P_sec_exit.ps h1))) in
