@@ -26,7 +26,7 @@
    limitations under the License.
 *)
 
-module Format
+module CntFormat
 open Prims.PURE
 open FStar.String
 open FStar.Seq
