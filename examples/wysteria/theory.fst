@@ -2188,13 +2188,56 @@ let pstep_psec_enter_psec_enter_confluence #ps pi pi1 pi2 h1 h2 =
     
     IntroR (ExIntro #(protocol ps) #(fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)) (pi13_m, s13) (Conj h13 h23))
 
-(*opaque val pstep_psec_enter_psec_exit_confluence:
+opaque val pstep_psec_enter_psec_exit_confluence:
   #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
   -> h1:pstep #ps pi pi1{is_P_sec_enter h1} -> h2:pstep #ps pi pi2{is_P_sec_exit h2}
-  -> Tot (u:unit{false})
-let pstep_psec_enter_psec_exit_confluence #ps pi pi1 pi2 h1 h2 = ()
+  -> Tot (cexists #(protocol ps) (fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)))
+let pstep_psec_enter_psec_exit_confluence #ps pi pi1 pi2 h1 h2 =
+  let _ = admitP (b2t (intersect (P_sec_enter.ps h1) (P_sec_exit.ps h2) = empty)) in
+  
+  let pi_m, s = pi in
+  let pi1_m, s1 = pi1 in
+  let pi2_m, s2 = pi2 in
 
-opaque val pstep_confluence_theorem:
+  let env' = update_env (compose_envs_m (P_sec_enter.ps h1) (get_env_m pi (P_sec_enter.ps h1)))
+             (P_sec_enter.x h1) (V_const C_unit) in
+  let tsec' = Conf Target (Mode Sec (P_sec_enter.ps h1)) [] env' (T_exp (P_sec_enter.e h1)) in
+  let _ = assert (s1 = update (P_sec_enter.ps h1) tsec' s) in
+  
+  OrdMap.sel_upd2 (P_sec_enter.ps h1) tsec' (P_sec_exit.ps h2) s;
+  let _ = cut (b2t (select (P_sec_exit.ps h2) s1 = select (P_sec_exit.ps h2) s)) in
+
+  let _ = cut (forall p. mem p (P_sec_exit.ps h2) ==> select p pi_m = select p pi1_m) in
+
+  let _ = cut (forall p. mem p (P_sec_enter.ps h1) ==> select p pi_m = select p pi2_m) in
+  let _ = cut (b2t (get_env_m pi (P_sec_enter.ps h1) = get_env_m pi2 (P_sec_enter.ps h1))) in
+  
+  let pi23_m = step_ps_to_wait #ps pi2_m (P_sec_enter.ps h1) in
+  let pi13_m = ret_sec_value_to_ps #ps pi1_m (Some.v (select (P_sec_exit.ps h2) s1)) (P_sec_exit.ps h2) in
+  let _ = cut (b2t (pi13_m = pi23_m)) in
+
+  //let _ = cut (tpre_assec #ps pi1 (P_sec_enter.ps h2) (P_sec_enter.x h2) (P_sec_enter.e h2)) in admit ()
+  
+  let env23 = update_env (compose_envs_m (P_sec_enter.ps h1) (get_env_m pi2 (P_sec_enter.ps h1)))
+              (P_sec_enter.x h1) (V_const C_unit) in
+  let tsec23 = Conf Target (Mode Sec (P_sec_enter.ps h1)) [] env23 (T_exp (P_sec_enter.e h1)) in
+  let s23 = update (P_sec_enter.ps h1) tsec23 s2 in
+  //let _ = cut (b2t (tsec23 = tsec')) in
+
+  let s13 = OrdMap.remove (P_sec_exit.ps h2) s1 in
+  let _ = cut (b2t (s13 = s23)) in
+  
+  //let _ = cut (tpre_assec #ps pi1 (P_sec_enter.ps h2) (P_sec_enter.x h2) (P_sec_enter.e h2)) in
+  let _ = cut (tpre_assec_ret #ps pi1 (P_sec_exit.ps h2)) in
+  let _ = cut (tpre_assec #ps pi2 (P_sec_enter.ps h1) (P_sec_enter.x h1) (P_sec_enter.e h1)) in
+
+  let h13:pstep #ps pi1 (pi13_m, s13) = P_sec_exit #ps pi1 (P_sec_exit.ps h2) (pi13_m, s13) in
+  let h23:pstep #ps pi2 (pi23_m, s23) = P_sec_enter #ps pi2 (P_sec_enter.ps h1) (P_sec_enter.x h1) (P_sec_enter.e h1) (pi23_m, s23) in
+  
+  ExIntro #(protocol ps) #(fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)) (pi13_m, s13) (Conj h13 h23)
+
+
+(*opaque val pstep_confluence_theorem:
   #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
   -> h1:pstep #ps pi pi1 -> h2:pstep #ps pi pi2
   -> Tot (cor (u:unit{pi1 = pi2}) (cexists #(protocol ps) (fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3))))
