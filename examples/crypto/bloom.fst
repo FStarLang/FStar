@@ -63,8 +63,8 @@ let rec check ln h n x bl =
   if n > 0 then
   begin
     let pt = Seq.append (uint16_to_bytes n) x in
-    let hs = h pt in
-    let b = is_set ln bl (bytes_to_uint16 (append (index hs 0) (index hs 1))) in
+    let hs = Seq.slice (h pt) 0 2 in
+    let b = is_set ln bl (bytes_to_uint16 hs) in
     if b then check ln h (n-1) x bl
     else false
   end
@@ -74,7 +74,7 @@ val add: ln:ln_t -> h:hash_fn -> n:uint16 -> x:text -> bl:bloom ln -> Tot (bl':b
 let rec add ln h n x bl =
   if n > 0 then
     let pt = Seq.append (uint16_to_bytes n) x in
-    let (hs, _) = split_eq (h pt) 2 in
+    let hs = Seq.slice (h pt) 0 2 in
     let bl' = set ln bl (bytes_to_uint16 hs) in
     add ln h (n-1) x bl'
   else bl

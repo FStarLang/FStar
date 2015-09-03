@@ -23,7 +23,9 @@ assume val ulint_to_bytes: len:pint -> ulint len -> Tot (msg len)
 assume val bytes_to_ulint: len:pint -> x:msg len -> Tot (y:ulint len{ulint_to_bytes len y == x})
 assume UINT_inj: forall len s0 s1. Seq.Eq (ulint_to_bytes len s0) (ulint_to_bytes len s1) ==> s0==s1
 
+val uint16_to_bytes: uint16 -> Tot (msg 2)
 let uint16_to_bytes = ulint_to_bytes 2
 let uint32_to_bytes = ulint_to_bytes 4
+val bytes_to_uint16: msg 2 -> Tot uint16
 let bytes_to_uint16 = bytes_to_ulint 2
 let bytes_to_uint32 = bytes_to_ulint 4
