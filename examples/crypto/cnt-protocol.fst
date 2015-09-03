@@ -13,7 +13,7 @@
             $CONTRIB/CoreCrypto/fst/CoreCrypto.fst
             cnt-format.fst
             sha1.fst
-            cnt-mac.fst
+            mac.fst
   --*)
 
 
