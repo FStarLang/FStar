@@ -11,9 +11,9 @@
             $LIB/io.fsti
             $CONTRIB/Platform/fst/Bytes.fst
             $CONTRIB/CoreCrypto/fst/CoreCrypto.fst
-            cnt-format.fst
+            cnt-CntFormat.fst
             sha1.fst
-            cnt-mac.fst
+            mac.fst
   --*)
 
 
@@ -33,7 +33,7 @@ open Platform.Bytes
 open FStar.Seq
 open FStar.SeqProperties
 open SHA1
-open Format
+open CntFormat
 open MAC
 
 let max x y = if x > y then x else y
@@ -127,7 +127,7 @@ logic type Signal : uint32 -> uint16 -> Type
 (* the meaning of MACs, as used in RPC *)
 
 opaque logic type req (msg:message) =
-    (exists s c.   msg = Format.signal s c /\ Signal s c)
+    (exists s c.   msg = CntFormat.signal s c /\ Signal s c)
 
 let k = keygen req
 
@@ -138,7 +138,7 @@ let client (s: uint32) =
   let c = next_cnt () in
   admitP (Signal s c);
   assert(Signal s c);
-  let t = Format.signal s c in
+  let t = CntFormat.signal s c in
   let m = mac k t in
   send (append t m);
   None

@@ -35,8 +35,8 @@ type dh_key = {
   dh_private : option bytes;
 }
 
-assume val hash : hash_alg -> bytes -> bytes
-assume val hmac : hash_alg -> bytes -> bytes -> bytes
+assume val hash : hash_alg -> bytes -> Tot bytes
+assume val hmac : hash_alg -> bytes -> bytes -> Tot bytes
 
 assume val block_encrypt : block_cipher -> bytes -> bytes -> bytes -> bytes
 assume val block_decrypt : block_cipher -> bytes -> bytes -> bytes -> bytes
