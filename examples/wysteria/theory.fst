@@ -12,10 +12,6 @@ open FStar.OrdSet
 open AST
 open Semantics
 
-type slice_v_meta_inv (meta:v_meta) (smeta:v_meta) =
-  subset (Meta.vps smeta) (Meta.vps meta) && (Meta.cb smeta = Meta.cb meta) &&
-  subset (Meta.wps smeta) (Meta.wps meta) && (Meta.cw smeta = Meta.cw meta)
-
 opaque val slice_wire_sps:
   #eps:eprins -> ps:prins -> w:v_wire eps
   -> Tot (r:v_wire (intersect eps ps)
@@ -320,46 +316,6 @@ let sstep_sec_slice_lemma c c' h = match h with
 #reset-options
 (**********)
 
-opaque val slice_wire:
-  #eps:eprins -> p:prin -> w:v_wire eps
-  -> Tot (r:v_wire (intersect eps (singleton p)){select p r = select p w})
-let slice_wire #eps p w =
-  if mem p eps then
-    update p (Some.v (select p w)) OrdMap.empty
-  else OrdMap.empty
-
-val slice_v   : #meta:v_meta -> prin -> v:value meta
-                -> Tot (r:dvalue{slice_v_meta_inv meta (D_v.meta r)}) (decreases %[v])
-val slice_en  : prin -> en:env -> Tot (varname -> Tot (option dvalue)) (decreases %[en])
-
-let rec slice_v #meta p v =
-  let def = D_v meta v in
-  let emp = D_v (Meta empty Can_b empty Can_w) V_emp in
-  match v with
-    | V_const _           -> def
-
-    | V_box ps v          ->
-      let D_v meta' v' = if mem p ps then slice_v p v else emp in
-      D_v (Meta ps Can_b (Meta.wps meta') Cannot_w) (V_box ps v')
-
-    | V_wire eps w        -> D_v (Meta empty Can_b (intersect eps (singleton p)) Cannot_w)
-                                 (V_wire (intersect eps (singleton p)) (slice_wire #eps p w))
-
-    | V_clos en x e       -> D_v meta (V_clos (slice_en p en) x e)
-
-    | V_fix_clos en f x e -> D_v meta (V_fix_clos (slice_en p en) f x e)
-
-    | V_emp_clos _ _      -> def
-
-    | V_emp               -> emp
-
-and slice_en p en =
-  let _ = () in
-  fun x -> preceds_axiom en x;
-           if en x = None then None
-           else
-             Some (slice_v p (D_v.v (Some.v (en x))))
-
 val slice_emp_en: p:prin
                   -> Lemma (requires (True))
                            (ensures (slice_en p empty_env = empty_env))
@@ -458,83 +414,6 @@ let rec slice_c p (Conf Source (Mode as_m ps) s en t) =
       else slice_en p (get_sec_ret_env (Mode as_m ps) s), T_sec_wait
   in
   Conf Target (Mode Par (singleton p)) (slice_s p s) en' t'
-
-type compose_v_meta_inv (m1:v_meta) (m2:v_meta) (cmeta:v_meta) =
-  subset (Meta.vps cmeta) (union (Meta.vps m1) (Meta.vps m2))            /\
-  ((Meta.cb m1 = Can_b /\ Meta.cb m2 = Can_b) ==> Meta.cb cmeta = Can_b) /\
-  subset (Meta.wps cmeta) (union (Meta.wps m1) (Meta.wps m2))            /\
-  ((Meta.cw m1 = Can_w /\ Meta.cw m2 = Can_w) ==> Meta.cw cmeta = Can_w)
-
-val compose_vals: #m1:v_meta -> #m2:v_meta -> v1:value m1 -> v2:value m2
-                  -> Tot (r:dvalue{compose_v_meta_inv m1 m2 (D_v.meta r)})
-                     (decreases %[v1])
-val compose_envs: en:env -> env -> Tot (varname -> Tot (option dvalue)) (decreases %[en])
-
-let rec compose_vals #m1 #m2 v1 v2 =
-  if is_V_emp v1 then D_v m2 v2
-  else if is_V_emp v2 then D_v m1 v1
-  else
-    let emp = D_v (Meta empty Can_b empty Can_w) V_emp in
-    match v1 with
-      | V_const c1 ->
-        if is_V_const v2 && V_const.c v1 = V_const.c v2 then
-          D_v m1 v1
-        else emp
-
-      | V_box ps1 v1 ->
-        if is_V_box v2 then
-          let V_box ps2 v2 = v2 in
-          if ps1 = ps2 then
-            let D_v meta v = compose_vals v1 v2 in
-            D_v (Meta ps1 Can_b (Meta.wps meta) Cannot_w) (V_box ps1 v)
-          else
-            emp
-        else emp
-
-      | V_wire eps1 w1 ->
-        if is_V_wire v2 then
-          let V_wire eps2 w2 = v2 in
-          if intersect eps1 eps2 = empty then
-            D_v (Meta empty Can_b (union eps1 eps2) Cannot_w)
-                (V_wire (union eps1 eps2) (compose_wires #eps1 #eps2 w1 w2 eps1))
-          else emp
-        else emp
-
-      | V_clos en1 x1 e1 ->
-        if is_V_clos v2 then
-          let V_clos en2 x2 e2 = v2 in
-          if x1 = x2 && e1 = e2 then
-            D_v m1 (V_clos (compose_envs en1 en2) x1 e1)
-          else emp
-        else emp
-
-      | V_fix_clos en1 f1 x1 e1 ->
-        if is_V_fix_clos v2 then
-          let V_fix_clos en2 f2 x2 e2 = v2 in
-          if f1 = f2 && x1 = x2 && e1 = e2 then
-            D_v m1 (V_fix_clos (compose_envs en1 en2) f1 x1 e1)
-          else emp
-        else emp
-
-      | V_emp_clos x1 e1 ->
-        if is_V_emp_clos v2 then
-          let V_emp_clos x2 e2 = v2 in
-          if x1 = x2 && e1 = e2 then
-            D_v m1 (V_emp_clos x1 e1)
-          else emp
-        else emp
-
-and compose_envs en1 en2 =
-  let _ = () in
-  fun x -> preceds_axiom en1 x;
-           let r1 = en1 x in
-           let r2 = en2 x in
-           match r1 with
-             | None             -> r2
-             | Some (D_v m1 v1) ->
-               match r2 with
-                 | None             -> r1
-                 | Some (D_v m2 v2) -> Some (compose_vals v1 v2)
 
 (**********)
 
@@ -719,33 +598,6 @@ and slc_en_lem_ps en p ps =
 
 val mempty: #key:Type -> #value:Type -> #f:cmp key -> Tot (OrdMap.ordmap key value f)
 let mempty (#k:Type) (#v:Type) #f = OrdMap.empty #k #v #f
-
-type contains_ps (#v:Type) (ps:prins) (m:OrdMap.ordmap prin v p_cmp) =
-  forall p. mem p ps ==> contains p m
-
-type value_map (ps:prins) = m:OrdMap.ordmap prin dvalue p_cmp{contains_ps ps m}
-
-type env_map (ps:prins) = m:OrdMap.ordmap prin env p_cmp{contains_ps ps m}
-
-val compose_vals_m: ps:prins -> m:value_map ps -> Tot dvalue (decreases (size ps))
-let rec compose_vals_m ps m =
-  let Some p = choose ps in
-  let Some (D_v meta v) = select p m in
-  let ps_rest = remove p ps in
-  if ps_rest = empty then D_v meta v
-  else
-    let D_v _ v' = compose_vals_m ps_rest m in
-    compose_vals v v'
-
-val compose_envs_m: ps:prins -> m:env_map ps -> Tot env (decreases (size ps))
-let rec compose_envs_m ps m =
-  let Some p = choose ps in
-  let Some en = select p m in
-  let ps_rest = remove p ps in
-  if ps_rest = empty then en
-  else
-    let en' = compose_envs_m ps_rest m in
-    compose_envs en en'
 
 val slc_v_lem_m: #meta:v_meta -> v:value meta -> ps:prins
                  -> m:value_map ps{(forall p. mem p ps ==>
@@ -1068,53 +920,6 @@ let sstep_par_slice_lemma c c' h p =
 
 #reset-options
 (**********)
-
-val ps_cmp: ps1:eprins -> ps2:eprins -> Tot bool (decreases (size ps1))
-let rec ps_cmp ps1 ps2 =
-  if size ps1 < size ps2 then false
-  else if size ps1 > size ps2 then true
-  else
-    if ps1 = empty && ps2 = empty then true
-    else
-      let Some p1, Some p2 = choose ps1, choose ps2 in
-      let ps1_rest, ps2_rest = remove p1 ps1, remove p2 ps2 in
-      if p1 = p2 then ps_cmp ps1_rest ps2_rest
-      else p_cmp p1 p2
-
-val ps_cmp_antisymm:
-  ps1:eprins -> ps2:eprins
-  -> Lemma (requires (True)) (ensures ((ps_cmp ps1 ps2 /\ ps_cmp ps2 ps1) ==> ps1 = ps2))
-     (decreases (size ps1))
-let rec ps_cmp_antisymm ps1 ps2 =
-  if ps1 = empty || ps2 = empty then ()
-  else
-    let Some p1, Some p2 = choose ps1, choose ps2 in
-    let ps1_rest, ps2_rest = remove p1 ps1, remove p2 ps2 in
-    ps_cmp_antisymm ps1_rest ps2_rest
-
-val ps_cmp_trans:
-  ps1:eprins -> ps2:eprins -> ps3:eprins
-  -> Lemma (requires (True)) (ensures ((ps_cmp ps1 ps2 /\ ps_cmp ps2 ps3) ==> ps_cmp ps1 ps3))
-     (decreases (size ps1))
-let rec ps_cmp_trans ps1 ps2 ps3 =
-  if ps1 = empty || ps2 = empty || ps3 = empty then ()
-  else
-    let Some p1, Some p2, Some p3 = choose ps1, choose ps2, choose ps3 in
-    let ps1_rest, ps2_rest, ps3_rest = remove p1 ps1, remove p2 ps2, remove p3 ps3 in
-    ps_cmp_trans ps1_rest ps2_rest ps3_rest
-
-val ps_cmp_total:
-  ps1:eprins -> ps2:eprins
-  -> Lemma (requires (True)) (ensures (ps_cmp ps1 ps2 \/ ps_cmp ps2 ps1))
-     (decreases (size ps1))
-let rec ps_cmp_total ps1 ps2 =
-  if ps1 = empty || ps2 = empty then ()
-  else
-    let Some p1, Some p2 = choose ps1, choose ps2 in
-    let ps1_rest, ps2_rest = remove p1 ps1, remove p2 ps2 in
-    ps_cmp_total ps1_rest ps2_rest
-
-assume Ps_cmp_is_total_order: total_order prins ps_cmp
 
 type tconfig_par = c:tconfig{Mode.m (Conf.m c) = Par}
 
@@ -2318,26 +2123,26 @@ let pstep_confluence_theorem ps pi pi1 pi2 h1 h2 =
       let ExIntro pi3 (Conj p1 p2) = pstep_psec_psec_exit_confluence #ps pi pi1 pi2 h1 h2 in
       IntroR (ExIntro pi3 (Conj p1 p2))
       
-    else if is_P_sec_enter h1 then
-      if is_P_par h2 then
-        let ExIntro pi3 (Conj p1 p2) = pstep_ppar_psec_enter_confluence #ps pi pi2 pi1 h2 h1 in
-        IntroR (ExIntro pi3 (Conj p2 p1))
-      else if is_P_sec h2 then
-        let ExIntro pi3 (Conj p1 p2) = pstep_psec_psec_enter_confluence #ps pi pi2 pi1 h2 h1 in
-        IntroR (ExIntro pi3 (Conj p2 p1))
-      else if is_P_sec_enter h2 then pstep_psec_enter_psec_enter_confluence #ps pi pi1 pi2 h1 h2
-      else
-        let ExIntro pi3 (Conj p1 p2) = pstep_psec_enter_psec_exit_confluence #ps pi pi1 pi2 h1 h2 in
-        IntroR (ExIntro pi3 (Conj p1 p2))
-          
+  else if is_P_sec_enter h1 then
+    if is_P_par h2 then
+      let ExIntro pi3 (Conj p1 p2) = pstep_ppar_psec_enter_confluence #ps pi pi2 pi1 h2 h1 in
+      IntroR (ExIntro pi3 (Conj p2 p1))
+    else if is_P_sec h2 then
+      let ExIntro pi3 (Conj p1 p2) = pstep_psec_psec_enter_confluence #ps pi pi2 pi1 h2 h1 in
+      IntroR (ExIntro pi3 (Conj p2 p1))
+    else if is_P_sec_enter h2 then pstep_psec_enter_psec_enter_confluence #ps pi pi1 pi2 h1 h2
     else
-      if is_P_par h2 then
-        let ExIntro pi3 (Conj p1 p2) = pstep_ppar_psec_exit_confluence #ps pi pi2 pi1 h2 h1 in
-        IntroR (ExIntro pi3 (Conj p2 p1))
-      else if is_P_sec h2 then
-        let ExIntro pi3 (Conj p1 p2) = pstep_psec_psec_exit_confluence #ps pi pi2 pi1 h2 h1 in
-        IntroR (ExIntro pi3 (Conj p2 p1))
-      else if is_P_sec_enter h2 then
-        let ExIntro pi3 (Conj p1 p2) = pstep_psec_enter_psec_exit_confluence #ps pi pi2 pi1 h2 h1 in
-        IntroR (ExIntro pi3 (Conj p2 p1))
-      else pstep_psec_exit_psec_exit_confluence #ps pi pi1 pi2 h1 h2
+      let ExIntro pi3 (Conj p1 p2) = pstep_psec_enter_psec_exit_confluence #ps pi pi1 pi2 h1 h2 in
+      IntroR (ExIntro pi3 (Conj p1 p2))
+          
+  else
+    if is_P_par h2 then
+      let ExIntro pi3 (Conj p1 p2) = pstep_ppar_psec_exit_confluence #ps pi pi2 pi1 h2 h1 in
+      IntroR (ExIntro pi3 (Conj p2 p1))
+    else if is_P_sec h2 then
+      let ExIntro pi3 (Conj p1 p2) = pstep_psec_psec_exit_confluence #ps pi pi2 pi1 h2 h1 in
+      IntroR (ExIntro pi3 (Conj p2 p1))
+    else if is_P_sec_enter h2 then
+      let ExIntro pi3 (Conj p1 p2) = pstep_psec_enter_psec_exit_confluence #ps pi pi2 pi1 h2 h1 in
+      IntroR (ExIntro pi3 (Conj p2 p1))
+    else pstep_psec_exit_psec_exit_confluence #ps pi pi1 pi2 h1 h2
