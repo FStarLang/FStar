@@ -10,6 +10,14 @@ type aead_cipher = | AES_128_GCM | AES_256_GCM
 type stream_cipher = | RC4_128
 type rsa_padding = | Pad_none | Pad_PKCS1
 
+val hashSize: h:hash_alg -> Tot nat
+let hashSize = function
+  | MD5     -> 16
+  | SHA1    -> 20
+  | SHA256  -> 32
+  | SHA384  -> 48
+  | SHA512  -> 64
+
 type rsa_key = {
   rsa_mod : bytes;
   rsa_pub_exp : bytes;
@@ -35,8 +43,8 @@ type dh_key = {
   dh_private : option bytes;
 }
 
-assume val hash : hash_alg -> bytes -> Tot bytes
-assume val hmac : hash_alg -> bytes -> bytes -> Tot bytes
+assume val hash : alg:hash_alg -> bytes -> Tot (h:bytes{length h = hashSize alg})
+assume val hmac : alg:hash_alg -> bytes -> bytes -> Tot (h:bytes{length h = hashSize alg})
 
 assume val block_encrypt : block_cipher -> bytes -> bytes -> bytes -> bytes
 assume val block_decrypt : block_cipher -> bytes -> bytes -> bytes -> bytes
