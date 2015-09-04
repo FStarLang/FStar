@@ -36,4 +36,4 @@ let cfalse_elim pf =
   | _ -> 76 (* silly, fails type checking *)
 *)
 
-type cnot p = cimp p cfalse
+type cnot (p:Type) = cimp p cfalse

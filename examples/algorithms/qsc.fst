@@ -53,7 +53,9 @@ let rec partition p = function
      then hd::l1, l2
      else l1, hd::l2
 
+(* this is used only to speed things up *)
 opaque logic type trigger (#a:Type) (x:a) = True
+
 val partition_lemma: f:('a -> Tot bool) -> l:list 'a -> Lemma (requires True)
       (ensures (forall hi lo. (hi, lo) = partition f l
                 ==>  (length l = length hi + length lo
