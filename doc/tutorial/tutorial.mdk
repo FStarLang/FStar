@@ -992,6 +992,20 @@ Since type-checking this succeeds we know
 that the base case of the induction is trivially proved and need
 to focus our effort on the inductive case.
 
+~CH
+How about adding (proper) monotonicity?
+```
+val fact_monotone : n:nat -> m:nat -> Lemma (requires (n <= m))
+                                            (ensures (factorial n <= factorial m))
+                                            (decreases m)
+let rec fact_monotone n m =
+  match m - n with
+  | 0 -> ()
+  | _ -> fact_monotone n (m-1)
+```
+~
+
+
 ## Automatic induction { #auto-ind }
 
 Many of these proofs by induction are quite boring. You simply do case
@@ -1262,31 +1276,16 @@ the induction hypothesis but also the `snoc_cons` lemma we proved above.
 ~Exercise
 Prove that reverse is injective, i.e.,
 ~~ ExerciseFragment {exname=ex4d-reverse}
-val rev_injective_1: l1:list 'a -> l2:list 'a
-                -> Lemma (reverse l1 = reverse l2 ==> l1 = l2)
+[INCLUDE=code/exercises/ex4d-reverse.fst:RevInjective]
 ~~
 ~~ Answer
 Perhaps you did it like this:
 ~~~ SolutionFragment {exname=ex4d-reverse}
-    val snoc_injective: l1:list 'a -> h1:'a -> l2:list 'a -> h2:'a
-                     -> Lemma (snoc l1 h1 = snoc l2 h2 ==> l1 = l2 && h1 = h2)
-    let rec snoc_injective l1 h1 l2 h2 = match l1, l2 with
-      | _::tl1, _::tl2 -> snoc_injective tl1 h1 tl2 h2
-      | _ -> ()
-
-    val rev_injective_1: l1:list 'a -> l2:list 'a
-                    -> Lemma (reverse l1 = reverse l2 ==> l1 = l2)
-    let rec rev_injective_1 l1 l2 = match (l1, l2) with
-      | hd1::tl1, hd2::tl2 ->
-        rev_injective_1 tl1 tl2;
-        snoc_injective (reverse tl1) hd1 (reverse tl2) hd2
-      | _ -> ()
+[INCLUDE=code/solutions/ex4d-reverse.fst:RevInjective1]
 ~~~
 That's quite a tedious proof, isn't it. Here's a simpler proof.
 ~~~ SolutionFragment {exname=ex4d-reverse}
-    val rev_injective_2: l1:list 'a -> l2:list 'a
-                     -> Lemma (reverse l1 = reverse l2 ==> l1 = l2)
-    let rev_injective_2 l1 l2 = rev_involutive l1; rev_involutive l2
+[INCLUDE=code/solutions/ex4d-reverse.fst:RevInjective2]
 ~~~
 The `rev_injective_2` proof is based on the idea that every involutive
 function is injective. We've already proven that `reverse` is
@@ -1600,10 +1599,6 @@ In its standard prelude, F\* defines the following inductive type:
     type lex_t =
       | LexTop  : lex_t
       | LexCons : #a:Type -> a -> lex_t -> lex_t
-
-<!-- type lex_t = -->
-<!--   | LexCons: 'a -> lex_t -> lex_t -->
-<!--   | LexTop : lex_t 'a 'b -->
 
 **The lexicographic ordering on `lex_t`** is the following:
 
@@ -3119,6 +3114,12 @@ kind Predicate (a:Type) = a -> Type
 Now, the kind `Predicate a` is an abbreviation for `a -> Type`.
 
 # Specifying effects
+
+~CH
+This seems like super advanced stuff that should come a lot
+later in the tutorial. How about swapping 2 references first?
+(have a couple of such simple examples in the Saarbrucken course)
+~
 
 F\* provides a mechanism to define new effects. As mentioned earlier,
 the system is already configured with several basic effects, including

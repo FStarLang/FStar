@@ -8,6 +8,6 @@ val fibonacci_increasing : n:nat{n >= 2} -> Lemma (fibonacci n >= n)
 // BEGIN: FibonacciIncreasingProof
 let rec fibonacci_increasing n =
   match n with
-  | 2 | 3 -> ()
+  | 2 -> ()
   | _ -> fibonacci_increasing (n-1)
 // END: FibonacciIncreasingProof
