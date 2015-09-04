@@ -803,7 +803,7 @@ lemmas) to prove more properties about `factorial`, after you've defined
 `factorial` and given it some generally useful type like
 `:nat -> Tot nat`.
 
-A lemma is a total function that always returns the single `:unit` value
+A lemma is a _ghost_ total function that always returns the single `:unit` value
 `()`. As such, computationally, lemmas are useless---they have no effect
 and always return the same value, so what's the point? The point is that
 the type of the value returned by the lemma carries some useful
@@ -812,19 +812,23 @@ properties about your program.
 As a first lemma about `factorial`, let's prove that it always
 returns a positive number.
 
-    val factorial_is_positive: x:nat -> Tot (u:unit{factorial x > 0})
+    val factorial_is_positive: x:nat -> GTot (u:unit{factorial x > 0})
     let rec factorial_is_positive x =
       match x with
       | 0 -> ()
       | _ -> factorial_is_positive (x - 1)
 
 The statement of the lemma is the type given to `factorial_is_positive`,
-a total function on `x:nat` which returns a unit, but with the refinement
+a ghost total function on `x:nat` which returns a unit, but with the refinement
 that `factorial x > 0`. The next three lines define
 `factorial_is_positive` and proves the lemma using a proof by induction
 on `x`. The basic concept here is that by programming total functions, we
-can write proofs about other program fragments. We'll discuss such proofs
+can write proofs about other pure expressions. We'll discuss such proofs
 in detail in the remainder of this section.
+
+~ Remark
+In F\* an expression being ghost (computationally irrelevant) is an effect.
+~
 
 ### Dependent function types
 
@@ -836,22 +840,22 @@ See `max_ref_type` in `code/max.fst`?
 
 Let's start by looking a little closer at the statement of the lemma.
 
-    val factorial_is_positive: x:nat -> Tot (u:unit{factorial x > 0})
+    val factorial_is_positive: x:nat -> GTot (u:unit{factorial x > 0})
 
-This is your first *dependent function type* in F\*. Why *dependent*?
+This is a *dependent function type* in F\*. Why *dependent*?
 Well, the type of the result depends on the _value_ of the parameter
 `x:nat`. For example, `factorial_is_positive 0` has the type
-`:Tot (u:unit{factorial 0 > 0))` which is different from the type of
+`:Tot (u:unit{factorial 0 > 0))`, which is different from the type of
 `factorial_is_positive 1`.
 
 Now that we've seen dependent functions, we can elaborate a bit more
-on the general form of function types, which have the following form:
+on the general form of function types:
 
 ~ Center
 `:x_1:t_1 -> ... -> x_n:t_n[x_1 ... x\(~n-1~\)] -> E t[x_1 ... x_n]`
 ~
-This is to say that each of a function's formal parameters are named
-`x\(~i~\) `; and each of these names is in scope to the right of the first
+Each of a function's formal parameters are named
+`x\(~i~\)` and each of these names is in scope to the right of the first
 arrow that follows it. The notation `:t[x_1 ... x_m]` indicates that
 the variables `:x_1 ... x_m` may appear free in `:t`.
 
@@ -860,7 +864,7 @@ the variables `:x_1 ... x_m` may appear free in `:t`.
 How shall we specify that `factorial` is strictly increasing when its
 argument is greater than 2? Here's a first cut:
 
-    val factorial_is_increasing_1: x:(y:nat{y > 2}) -> Tot (u:unit{factorial x > x})
+    val factorial_is_increasing_1: x:(y:nat{y > 2}) -> GTot (u:unit{factorial x > x})
 
 This does the job, but the type of the function's argument is a bit
 clumsy, since we needed two names: `y` to restrict the domain to natural
@@ -870,12 +874,12 @@ syntactic sugar for it---we have seen it already in passing in the first
 type we gave to `factorial`. Using it, we can write the following type,
 which is equivalent to, but more concise than, the type above.
 
-    val factorial_is_increasing_2: x:nat{x > 2} -> Tot (u:unit{factorial x > x})
+    val factorial_is_increasing_2: x:nat{x > 2} -> GTot (u:unit{factorial x > x})
 
 Another bit of clumsiness that you have no doubt noticed is the result
 type of the lemmas which include a refinement of the
 `:unit` type. To make this lighter, F\* provides the `:Lemma` keyword which
-can be used in place of the `:Tot` effect.
+can be used in place of the `:GTot` effect.
 
 For example, the type of `factorial_is_increasing_2` is equivalent to the
 type of `factorial_is_increasing_3` (below), which is just a little
@@ -886,7 +890,7 @@ easier to read and write.
 We can also write it in the following way, when that's more convenient:
 
     val factorial_is_increasing_4: x:nat -> Lemma (requires (x > 2))
-                                                (ensures (factorial x > x))
+                                                  (ensures (factorial x > x))
 
 The formula after `requires` is the _pre-condition_ of the
 function/lemma, while the one after `ensures` is its _post-condition_.
@@ -1015,7 +1019,11 @@ We mentioned earlier that a refinement type has the form `:x:t{phi(x)}`.
 In its primitive form, `phi` is in fact a type, a predicate on the value
 `x:t`. We allow you to use a boolean function in place of a type: under
 the covers, we implicitly coerce the boolean to a type, by adding the
-coercion `b2t (b:bool) : Type = (b == true)`. The type '`==`' is the type
+coercion
+
+    b2t (b:bool) : Type = (b == true)
+
+The type '`==`' is the type
 constructor for the equality predicate; it is different from '`=`', which
 is a boolean function comparing a pair of values. Additionally, '`==`' is
 heterogeneous: you can speak about equality between any pair of values,
@@ -1032,7 +1040,7 @@ start to write refinement formulas with quantifiers, the distinction
 between the two will become apparent.
 
 Both the universal quantifier `forall`, and the existential quantifier
-`exists`, are only available at `:Type`. When you mix refinements that
+`exists`, are only available in `:Type`. When you mix refinements that
 include boolean function and the quantifiers, you need to use the
 propositional connectives. For example, the following formula
 is well-formed:

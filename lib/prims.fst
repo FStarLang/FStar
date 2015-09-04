@@ -20,7 +20,7 @@ kind Binop = Type -> Type -> Type
 type bool
 logic type EqTyp : Type -> Type -> Type          (* infix binary '==' *)
 type Eq2 : #a:Type -> #b:Type -> a -> b -> Type  (* infix binary '==' *)
-opaque logic type b2t (b:bool) = b==true
+opaque logic type b2t (b:bool) = (b == true)
 
 //We assume the Tot effect here; its definition appears a few lines below
 (* Primitive logical connectives *)
