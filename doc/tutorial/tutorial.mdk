@@ -1061,51 +1061,6 @@ boolean. While a boolean can be coerced to a type, there is no coercion
 in the other direction.
 
 
-<!--
-module FirstProofs
-
-val factorial: nat -> Tot nat
-let rec factorial n = if n = 0 then 1 else n * factorial (n - 1)
-
-val factorial_is_positive: x:nat -> Tot (u:unit{factorial x > 0})
-let rec factorial_is_positive = function
-  | 0 -> ()
-  | x -> factorial_is_positive (x - 1)
-
-val factorial_is_increasing: x:nat{x >= 2} -> Tot (u:unit{factorial x >= x})
-let rec factorial_is_increasing = function
-  | 2 -> ()
-  | x -> factorial_is_increasing (x - 1)
-
-val factorial_is_doubling: x:nat{x >= 3} -> Tot (u:unit{factorial x >= 2 * x})
-let rec factorial_is_doubling = function
-  | 3 -> ()
-  | x -> factorial_is_doubling (x - 1)
-
-val factorial_is_squaring: x:nat{x >= 4} -> Tot (u:unit{factorial x > x * x})
-let rec factorial_is_squaring = function
-  | 4 -> ()
-  | x -> factorial_is_squaring (x - 1)
-
-(* (\* This is getting to be a bit much for Z3 *\) *)
-(* val factorial_is_cubing: x:nat{x > 5} -> Tot (u:unit{factorial x >= x * x * x}) *)
-(* let rec factorial_is_cubing = function *)
-(*   | 6 -> () *)
-(*   | x -> factorial_is_cubing (x - 1) *)
-
-val fibonacci: nat -> Tot nat
-let rec fibonacci = function
-  | 0
-  | 1 -> 1
-  | n -> fibonacci (n - 1) + fibonacci (n - 2)
-
-val fibonacci_is_increasing: n:nat -> Lemma (requires True)
-                                          (ensures (fibonacci n >= n))
-                                          []
-let rec fibonacci_is_increasing n = if n > 1 then fibonacci_is_increasing (n - 1) else ()
-
--->
-
 # Simple inductive types
 
 ~CH
@@ -1232,7 +1187,7 @@ decides whether `x` is present in the `l` or not, then prove it satisfies the
 following property:
 ~~ ExerciseFragment {exname=ex4c-mem}
 val append_mem:  l1:list 'a -> l2:list 'a -> a:'a
-        -> Lemma (ensures (mem a (append l1 l2) <==>  mem a l1 || mem a l2))
+        -> Lemma (ensures (mem a (append l1 l2)  <==>  mem a l1 || mem a l2))
 ~~
 ~~ AnswerFragment {exname=ex4c-mem}
 
@@ -1242,7 +1197,7 @@ let rec mem a l = match l with
   | hd::tl -> hd=a || mem a tl
 
 val append_mem:  l1:list 'a -> l2:list 'a -> a:'a
-                  -> Lemma (ensures (mem a (append l1 l2) <==>  mem a l1 || mem a l2))
+    -> Lemma (ensures (mem a (append l1 l2)  <==>  mem a l1 || mem a l2))
 let rec append_mem l1 l2 a = match l1 with
   | [] -> ()
   | hd::tl -> append_mem tl l2 a
@@ -1283,7 +1238,7 @@ got a function "(fun _682:<UNKNOWN> -> (match _682 with (Nil )  -> Nil
 ~
 
 However, F\* refuses to accept this as a valid type for `reverse`:
-proving this property requires two separate induction steps, neither of
+proving this property requires two separate inductions, neither of
 which F\* can perform automatically.
 
 Instead, one can use two lemmas to prove the property we care about. Here
@@ -1356,7 +1311,9 @@ Here is the familiar `map`:
 
 It takes a function `f` and a list `l` and it applies `f` to each element in `l`
 producing a new list. More precisely `map f [a1; ...; a_n]` produces the list
-`[f a1; ...; f a_n]`.
+`[f a1; ...; f a_n]`. For example:
+
+    map (fun x -> x + 1) [0;1;2] = [1;2;3]
 
 As usual, without any specification, F\* will infer for `map` type
 `:('a -> 'b) -> list 'a -> list 'b`. Written explicitly, the type of
@@ -1378,17 +1335,6 @@ lead to some code duplication. We plan to address this by allowing you
 to write more than one type for a value, an ad hoc overloading
 mechanism.
 
-We can use assertions to test expected properties of programs. For example:
-
-    assert (map (fun x -> x + 1) [0;1;2] = [1;2;3]);
-
-~CH
-Again, this is not real code
-~
-~NS
-We are showing code snippets throughout, not complete programs. So, I don't get it ...
-are you upset because this line is not a valid top-level expression?
-~
 
 ### Finding
 
@@ -1419,7 +1365,9 @@ Is it better to do this intrinsically or extrinsically? Do it both ways.
 
 ~Exercise
 Define the `fold_left` function on lists, so that
-`fold_left f a [b1; ...; bn]` computes `f (... (f (f a b1) b2) ...) bn`.
+
+    fold_left f a [b1; ...; bn] = f (... (f (f a b1) b2) ...) bn
+
 Prove that `(fold_left Cons [] l = reverse l)`.
 (The proof is a level harder from what we've done so far)
 ~~ ExerciseFragment {exname=ex4f-fold-left}
