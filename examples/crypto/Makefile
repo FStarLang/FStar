@@ -17,7 +17,7 @@ else
 endif
 
 include ../Makefile.include
-all: .all.crypto.ver merkle_tree mac rpc rpc-extract acls-cap statefulEnc
+all: .all.crypto.ver merkle_tree mac rpc cnt-protocol acls-cap statefulEnc
 STDLIB_ADMITS=--admit_fsi FStar.Seq --admit_fsi FStar.Set --admit_fsi FStar.SeqProperties
 STDLIB=$(addprefix $(FSTAR_HOME)/lib/, classical.fst ext.fst set.fsi \
        heap.fst st.fst all.fst string.fst list.fst seq.fsi seqproperties.fst) \
@@ -68,14 +68,11 @@ statefulEnc: statefulEnc-single.fst statefulEnc-twoLevelHeap.fst
 
 .PHONY: mllibs
 
-
 mllibs:
 	$(MAKE) -C $(FSTAR_HOME)/contrib/Platform/ml clean all
 	$(MAKE) -C $(FSTAR_HOME)/contrib/CoreCrypto/ml clean all
 
-
-
-rpc-extract: sha1.fst mac.fst formatting.fst rpc.fst
+RPC.ml: sha1.fst mac.fst formatting.fst rpc.fst
 	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC --admit_fsi FStar.IO  \
           $(addprefix $(FSTAR_HOME)/lib/, ext.fst classical.fst \
 					set.fsi set.fst \
@@ -90,16 +87,15 @@ OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_HOME)/contrib/Platform/ml $(FSTAR_H
 OCAMLC=ocamlfind ocamlopt -cc "$(CC)" -cclib -L$(LIB) -cclib -lcrypto -o rpc.exe -package batteries -linkpkg -g -thread $(OCAML_INCLUDE_PATHS)
 SUPPORT_LIBS=$(addprefix $(FSTAR_HOME)/lib/ml/, prims.ml FStar_ST.ml FStar_All.ml FStar_List.ml FStar_String.ml FStar_IO.ml)
 CONTRIB_LIBS=$(addprefix $(FSTAR_HOME)/contrib/, Platform/ml/platform.cmx CoreCrypto/ml/CoreCrypto.cmxa)
-rpc-ml: RPC.ml
+rpc.exe: RPC.ml
 	$(OCAMLC) $(SUPPORT_LIBS) $(CONTRIB_LIBS) FStar_Seq.ml FStar_SeqProperties.ml SHA1.ml MAC.ml Formatting.ml RPC.ml
 
-
-rpc-test:
+rpc-test: rpc.exe
 	./rpc.exe > /dev/null
 
 cnt-protocol: cnt-format.fst mac.fst sha1.fst cnt-protocol.fst
 	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --admit_fsi FStar.Seq --admit_fsi FStar.IO --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
-	  --verify_module Format --verify_module SHA1 --verify_module MAC --verify_module CntProtocol \
+	  --verify_module CntFormat --verify_module SHA1 --verify_module MAC --verify_module CntProtocol \
           $(addprefix $(FSTAR_HOME)/lib/, ext.fst classical.fst \
 					set.fsi set.fst \
 					heap.fst st.fst all.fst \
@@ -109,6 +105,20 @@ cnt-protocol: cnt-format.fst mac.fst sha1.fst cnt-protocol.fst
 	  $(FSTAR_HOME)/contrib/CoreCrypto/fst/CoreCrypto.fst \
 	  cnt-format.fst sha1.fst mac.fst cnt-protocol.fst
 
+CntProtocol.ml: cnt-format.fst mac.fst sha1.fst cnt-protocol.fst
+	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --admit_fsi FStar.IO --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
+	  --verify_module CntFormat --verify_module SHA1 --verify_module MAC --verify_module CntProtocol \
+          $(addprefix $(FSTAR_HOME)/lib/, ext.fst classical.fst \
+					set.fsi set.fst \
+					heap.fst st.fst all.fst \
+					string.fst list.fst \
+					seq.fst seqproperties.fst io.fsti ) \
+	  $(FSTAR_HOME)/contrib/Platform/fst/Bytes.fst \
+	  $(FSTAR_HOME)/contrib/CoreCrypto/fst/CoreCrypto.fst \
+	  cnt-format.fst sha1.fst mac.fst cnt-protocol.fst --codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml
+
+CntProtocol.exe: CntProtocol.ml
+	$(OCAMLC) $(SUPPORT_LIBS) $(CONTRIB_LIBS) FStar_Seq.ml FStar_SeqProperties.ml SHA1.ml MAC.ml CntFormat.ml CntProtocol.ml
 
 clean:
 	rm -fr rpc *.ml *.cmi *.cmx *.o *.exe *~
