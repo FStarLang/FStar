@@ -33,40 +33,24 @@ type text = seq byte
 type hash_fn = text -> Tot hash
 type bloom (ln:ln_t) = bl:seq bool{Seq.length bl = ln}
 
+logic type Le (ln:ln_t) (bl1:bloom ln) (bl2:bloom ln) (a:uint16) =
+  forall i . (a <= i && i < ln) ==> ((not (Seq.index bl1 i)) || (Seq.index bl2 i))
+
 (* TODO: put this as an anonymous function in le *)
-val le_loop: ln:ln_t -> i:uint16{i <= ln} -> bl1: bloom ln -> bl2: bloom ln -> Tot bool (decreases %[ln - i])
+val le_loop: ln:ln_t -> i:uint16{i <= ln} -> bl1: bloom ln -> bl2: bloom ln -> Tot (b:bool{b ==> Le  ln bl1 bl2 i}) (decreases %[ln - i])
 let rec le_loop ln i bl1 bl2 =
   if i < ln then
-  begin
-    let b1 = Seq.index bl1 i in
-    let b2 = Seq.index bl2 i in
-    if ((not b1) || b2) then le_loop ln (i+1) bl1 bl2
-    else false
-  end
+    ((not (Seq.index bl1 i)) || (Seq.index bl2 i)) &&
+      le_loop ln (i+1) bl1 bl2
   else true
 
-val le: ln:ln_t -> bl1:bloom ln -> bl2:bloom ln -> Tot bool
+val le: ln:ln_t -> bl1:bloom ln -> bl2:bloom ln -> Tot (b:bool{b ==> Le ln bl1 bl2 0})
 let le ln bl1 bl2 = le_loop ln 0 bl1 bl2
 
-assume val lemma_le_eq: ln:ln_t -> bl:bloom ln -> Lemma
-  (requires True)
-  (ensures (le ln bl bl))
-
-(*val set: ln:ln_t -> bl:bloom ln -> i:uint16 -> Tot (bl':bloom ln{le ln bl bl'})
-let set ln bl i =
-  let i' = op_Modulus i ln in
-  let bl' = Seq.upd bl i' true in
-  assert ((not (Seq.index bl i')) || (Seq.index bl' i'));
-  bl'*)
-
-val set: ln:ln_t -> bl:bloom ln -> i:uint16 -> Tot (bl':bloom ln)
+val set: ln:ln_t -> bl:bloom ln -> i:uint16 -> Tot (bl':bloom ln{Le ln bl bl' 0})
 let set ln bl i =
   let i' = op_Modulus i ln in
   Seq.upd bl i' true
-
-assume val lemma_set_le: ln:ln_t -> bl:bloom ln -> i:uint16 -> Lemma
-  (requires True)
-  (ensures (le ln bl (set ln bl i)))
 
 val is_set: ln:ln_t -> bl:bloom ln -> i:uint16 -> Tot (b:bool)
 let is_set ln bl i =
@@ -85,7 +69,7 @@ let rec check ln h n x bl =
   end
   else true
 
-val add: ln:ln_t -> h:hash_fn -> n:uint16 -> x:text -> bl:bloom ln -> Tot (bl':bloom ln{le ln bl bl' && check ln h n x bl'})
+val add: ln:ln_t -> h:hash_fn -> n:uint16 -> x:text -> bl:bloom ln -> Tot (bl':bloom ln{Le ln bl bl' 0 /\ check ln h n x bl'})
 let rec add ln h n x bl =
   if n > 0 then
   begin
@@ -93,14 +77,7 @@ let rec add ln h n x bl =
     let hs = Seq.slice (h pt) 0 2 in
     let i = (bytes_to_uint16 hs) in
     let bl' = set ln bl i in
-    lemma_set_le ln bl i;
     let bl'' = add ln h (n-1) x bl' in
-    assume (le ln bl bl'' && check ln h n x bl'');
     bl''
   end
-  else
-  begin
-    lemma_le_eq ln bl;
-    assume (check ln h n x bl);
-    bl
-  end
+  else bl
