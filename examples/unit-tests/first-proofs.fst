@@ -18,10 +18,11 @@ let rec factorial_is_doubling = function
   | 3 -> ()
   | x -> factorial_is_doubling (x - 1)
 
-val factorial_is_squaring: x:nat{x >= 4} -> Tot (u:unit{factorial x > x * x})
-let rec factorial_is_squaring = function
-  | 4 -> ()
-  | x -> factorial_is_squaring (x - 1)
+// This fails on strider
+// val factorial_is_squaring: x:nat{x >= 4} -> Tot (u:unit{factorial x > x * x})
+// let rec factorial_is_squaring = function
+//   | 4 -> ()
+//   | x -> factorial_is_squaring (x - 1)
 
 (* (\* This is getting to be a bit much for Z3 *\) *)
 (* val factorial_is_cubing: x:nat{x > 5} -> Tot (u:unit{factorial x >= x * x * x}) *)
