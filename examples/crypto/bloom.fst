@@ -33,21 +33,10 @@ type text = seq byte
 type hash_fn = text -> Tot hash
 type bloom (ln:ln_t) = bl:seq bool{Seq.length bl = ln}
 
-logic type Le (ln:ln_t) (bl1:bloom ln) (bl2:bloom ln) (a:uint16) =
-  forall i . (a <= i && i < ln) ==> ((not (Seq.index bl1 i)) || (Seq.index bl2 i))
+logic type Le (ln:ln_t) (bl1:bloom ln) (bl2:bloom ln) =
+  forall i . (0 <= i && i < ln) ==> ((not (Seq.index bl1 i)) || (Seq.index bl2 i))
 
-(* TODO: put this as an anonymous function in le *)
-val le_loop: ln:ln_t -> i:uint16{i <= ln} -> bl1: bloom ln -> bl2: bloom ln -> Tot (b:bool{b ==> Le  ln bl1 bl2 i}) (decreases %[ln - i])
-let rec le_loop ln i bl1 bl2 =
-  if i < ln then
-    ((not (Seq.index bl1 i)) || (Seq.index bl2 i)) &&
-      le_loop ln (i+1) bl1 bl2
-  else true
-
-val le: ln:ln_t -> bl1:bloom ln -> bl2:bloom ln -> Tot (b:bool{b ==> Le ln bl1 bl2 0})
-let le ln bl1 bl2 = le_loop ln 0 bl1 bl2
-
-val set: ln:ln_t -> bl:bloom ln -> i:uint16 -> Tot (bl':bloom ln{Le ln bl bl' 0})
+val set: ln:ln_t -> bl:bloom ln -> i:uint16 -> Tot (bl':bloom ln{Le ln bl bl'})
 let set ln bl i =
   let i' = op_Modulus i ln in
   Seq.upd bl i' true
@@ -56,6 +45,9 @@ val is_set: ln:ln_t -> bl:bloom ln -> i:uint16 -> Tot (b:bool)
 let is_set ln bl i =
   let i' = op_Modulus i ln in
   Seq.index bl i'
+
+val create: ln:ln_t -> Tot (bl:bloom ln)
+let create ln = Seq.create ln false
 
 val check: ln:ln_t -> h:hash_fn -> n:uint16 -> x:text -> bl:bloom ln -> Tot (b:bool)
 let rec check ln h n x bl =
@@ -69,7 +61,7 @@ let rec check ln h n x bl =
   end
   else true
 
-val add: ln:ln_t -> h:hash_fn -> n:uint16 -> x:text -> bl:bloom ln -> Tot (bl':bloom ln{Le ln bl bl' 0 /\ check ln h n x bl'})
+val add: ln:ln_t -> h:hash_fn -> n:uint16 -> x:text -> bl:bloom ln -> Tot (bl':bloom ln{Le ln bl bl' /\ check ln h n x bl'})
 let rec add ln h n x bl =
   if n > 0 then
   begin
