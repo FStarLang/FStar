@@ -82,6 +82,9 @@ Recursive Extraction idvar idtype id idu.
 Inductive  poly (x : nat -> Type) :=
 | Poly :  forall (n:nat), x n -> poly x.
 
+
+
+
 Inductive vec (A:Type) : nat -> Type :=
 | vnil : vec A 0
 | vcons : forall n, A -> (vec A n) -> (vec A (S n)).
@@ -95,6 +98,35 @@ Inductive  poly2 (x : Type -> Type) : Type :=
 
 
 Definition polylist := poly2 list.
+
+
+(*
+Looks like Haskell is more general. type vars need not be of type type.
+Here is an example from 
+http://learnyouahaskell.com/making-our-own-types-and-typeclasses#kinds-and-some-type-foo
+
+data Frank a b  = Frank {frankField :: b a} deriving (Show)  
+
+However, Coq's extraction does not yet take advantage of that, because the core of extraction
+is independent of these differences in target dialects
+
+
+Extraction Language Haskell.
+Recursive Extraction polylist.
+
+*)
+
+
+(*
+Infact, the example above (Haskell extraction of polylist) seems to indicate an orthogonal bug in extraction 
+from Coq to Haskell. 
+In OCaml, the argument to list is Obj.t, which makes sense.
+However, in Haskell. the argument is unit, which can cause type errors lateron, similar to 
+the errors observed in ROSCoq:
+
+https://github.com/aa755/ROSCoq/commit/972ed9d26ac642499e60098cf0510ee9b6e0d3ea#diff-f9928ac6597fcd7e0cfbf7e9da0cdba9L2376
+*)
+
 
 
 Definition listalias (A:Type) := list A.
