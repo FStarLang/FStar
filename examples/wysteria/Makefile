@@ -1,6 +1,6 @@
 include ../Makefile.include
 
-all: api interpreter theory sec_server_codegen distclean
+all: api sinterpreter tinterpreter theory sec_server_codegen tinterpreter_codegen distclean
 
 api:
 	$(FSTAR) wysteria.fst
@@ -12,8 +12,11 @@ api:
 	$(FSTAR) gps.fst
 	$(FSTAR) median.fst
 
-interpreter:
+sinterpreter:
 	$(FSTAR) sinterpreter.fst
+
+tinterpreter:
+	$(FSTAR) tinterpreter.fst
 
 theory:
 	$(FSTAR) theory.fst
@@ -35,8 +38,21 @@ sec_server: sec_server_codegen
 	$(OCAMLOPT) prims.ml FStar_ST.ml FStar_All.ml FStar_OrdSet.ml FStar_OrdMap.ml \
 	            AST.ml FFI.ml Semantics.ml SourceInterpreter.ml secServerNet.ml SecServer.ml -o server.exe
 
+tinterpreter_codegen:
+	$(FSTAR) --admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set\
+	         --admit_fsi FFI --admit_fsi SecClientNet --codegen OCaml $(LIB)/ordset.fsi $(LIB)/ordmap.fsi\
+					 $(LIB)/classical.fst $(LIB)/set.fsi $(LIB)/heap.fst $(LIB)/st.fst $(LIB)/all.fst\
+					 ast.fst ffi.fsi sem.fst sinterpreter.fst sec_client_net.fsi tinterpreter.fst
+
+client: tinterpreter_codegen
+	cp $(FSTAR_HOME)/lib/ml/prims.ml .
+	cp $(FSTAR_HOME)/lib/ml/FStar_All.ml .
+	cp $(FSTAR_HOME)/lib/ml/FStar_ST.ml .
+	$(OCAMLOPT) prims.ml FStar_ST.ml FStar_All.ml FStar_OrdSet.ml FStar_OrdMap.ml \
+	            AST.ml FFI.ml Semantics.ml SourceInterpreter.ml secClientNet.ml TargetInterpreter.ml -o client.exe
+
 clean:
 	rm -f *.cmi *.cmx *.o *.exe a.out 
 
 distclean:
-	rm -f AST.ml prims.ml FStar_All.ml FStar_Classical.ml FStar_Heap.ml FStar_ST.ml SecServer.ml Semantics.ml SourceInterpreter.ml *.cmi *.cmx *.o *.exe a.out 
+	rm -f AST.ml prims.ml FStar_All.ml FStar_Classical.ml FStar_Heap.ml FStar_ST.ml SecServer.ml TargetInterpreter.ml Semantics.ml SourceInterpreter.ml *.cmi *.cmx *.o *.exe a.out 
