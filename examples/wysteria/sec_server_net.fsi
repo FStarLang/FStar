@@ -15,6 +15,6 @@ type pchan_out  // channel type to send output
 val establish_server: callback:(pchan_in -> pchan_out -> ML unit) -> port:nat -> ML unit
 
 val read_input: pchan_in -> ML (prin * (r:redex{is_R_assec r /\ is_clos (R_assec.v r)}))
-val write_output: #meta:v_meta -> pchan_out -> value meta -> ML unit
+val write_output: pchan_out -> dvalue -> ML unit
 
 val create_thread: f:(unit -> ML unit) -> ML unit

@@ -32,7 +32,7 @@ let rec send_output #meta ps out_m v =
   let Some p = choose ps in
   let Some out = select p out_m in
   let ps_rest = remove p ps in
-  write_output out (D_v.v (slice_v p v));
+  write_output out (slice_v p v);
   if ps_rest = empty then ()
   else send_output #meta ps_rest out_m v
 
