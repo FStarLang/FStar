@@ -785,24 +785,60 @@ type compose_v_meta_inv (m1:v_meta) (m2:v_meta) (cmeta:v_meta) =
  subset (Meta.wps cmeta) (union (Meta.wps m1) (Meta.wps m2))            /\
  ((Meta.cw m1 = Can_w /\ Meta.cw m2 = Can_w) ==> Meta.cw cmeta = Can_w)
 
+(* TODO: FIXME: discriminators are not generated properly, they don't have index argument *)
+val is_v_emp: #meta:v_meta -> v:value meta -> Tot bool
+let is_v_emp #meta v = match v with
+  | V_emp -> true
+  | _     -> false
+
+val is_v_const: #meta:v_meta -> v:value meta -> Tot bool
+let is_v_const #meta v = match v with
+  | V_const _ -> true
+  | _         -> false
+
+val is_v_box: #meta:v_meta -> v:value meta -> Tot bool
+let is_v_box #meta v = match v with
+  | V_box _ _ -> true
+  | _         -> false
+
+val is_v_wire: #meta:v_meta -> v:value meta -> Tot bool
+let is_v_wire #meta v = match v with
+  | V_wire _ _ -> true
+  | _          -> false
+
+val is_v_clos: #meta:v_meta -> v:value meta -> Tot bool
+let is_v_clos #meta v = match v with
+  | V_clos _ _ _ -> true
+  | _            -> false
+
+val is_v_fix_clos: #meta:v_meta -> v:value meta -> Tot bool
+let is_v_fix_clos #meta v = match v with
+  | V_fix_clos _ _ _ _ -> true
+  | _                  -> false
+
+val is_v_emp_clos: #meta:v_meta -> v:value meta -> Tot bool
+let is_v_emp_clos #meta v = match v with
+  | V_emp_clos _ _ -> true
+  | _              -> false
+
 val compose_vals: #m1:v_meta -> #m2:v_meta -> v1:value m1 -> v2:value m2
                  -> Tot (r:dvalue{compose_v_meta_inv m1 m2 (D_v.meta r)})
                     (decreases %[v1])
 val compose_envs: en:env -> env -> Tot (varname -> Tot (option dvalue)) (decreases %[en])
 
 let rec compose_vals #m1 #m2 v1 v2 =
- if is_V_emp v1 then D_v m2 v2
- else if is_V_emp v2 then D_v m1 v1
+ if is_v_emp v1 then D_v m2 v2
+ else if is_v_emp v2 then D_v m1 v1
  else
    let emp = D_v (Meta empty Can_b empty Can_w) V_emp in
    match v1 with
      | V_const c1 ->
-       if is_V_const v2 && V_const.c v1 = V_const.c v2 then
+       if is_v_const v2 && V_const.c v1 = V_const.c v2 then
          D_v m1 v1
        else emp
 
      | V_box ps1 v1 ->
-       if is_V_box v2 then
+       if is_v_box v2 then
          let V_box ps2 v2 = v2 in
          if ps1 = ps2 then
            let D_v meta v = compose_vals v1 v2 in
@@ -812,7 +848,7 @@ let rec compose_vals #m1 #m2 v1 v2 =
        else emp
 
      | V_wire eps1 w1 ->
-       if is_V_wire v2 then
+       if is_v_wire v2 then
          let V_wire eps2 w2 = v2 in
          if intersect eps1 eps2 = empty then
            D_v (Meta empty Can_b (union eps1 eps2) Cannot_w)
@@ -821,7 +857,7 @@ let rec compose_vals #m1 #m2 v1 v2 =
        else emp
 
      | V_clos en1 x1 e1 ->
-       if is_V_clos v2 then
+       if is_v_clos v2 then
          let V_clos en2 x2 e2 = v2 in
          if x1 = x2 && e1 = e2 then
            D_v m1 (V_clos (compose_envs en1 en2) x1 e1)
@@ -829,7 +865,7 @@ let rec compose_vals #m1 #m2 v1 v2 =
        else emp
 
      | V_fix_clos en1 f1 x1 e1 ->
-       if is_V_fix_clos v2 then
+       if is_v_fix_clos v2 then
          let V_fix_clos en2 f2 x2 e2 = v2 in
          if f1 = f2 && x1 = x2 && e1 = e2 then
            D_v m1 (V_fix_clos (compose_envs en1 en2) f1 x1 e1)
@@ -837,7 +873,7 @@ let rec compose_vals #m1 #m2 v1 v2 =
        else emp
 
      | V_emp_clos x1 e1 ->
-       if is_V_emp_clos v2 then
+       if is_v_emp_clos v2 then
          let V_emp_clos x2 e2 = v2 in
          if x1 = x2 && e1 = e2 then
            D_v m1 (V_emp_clos x1 e1)

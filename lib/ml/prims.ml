@@ -134,3 +134,6 @@ let is_Some = function (*consider redefining Option.isSome as this function*)
 let is_None o = not (is_Some o)
 let raise e = raise e
 
+let ___Some___v x = match x with
+  | Some v -> v
+  | None   -> failwith "impossible"
