@@ -23,6 +23,53 @@ type prins = s:ordset prin p_cmp{not (s = empty)}
 
 type eprins = ordset prin p_cmp
 
+val ps_cmp: ps1:eprins -> ps2:eprins -> Tot bool (decreases (size ps1))
+let rec ps_cmp ps1 ps2 =
+  if size ps1 < size ps2 then false
+  else if size ps1 > size ps2 then true
+  else
+    if ps1 = empty && ps2 = empty then true
+    else
+      let Some p1, Some p2 = choose ps1, choose ps2 in
+      let ps1_rest, ps2_rest = remove p1 ps1, remove p2 ps2 in
+      if p1 = p2 then ps_cmp ps1_rest ps2_rest
+      else p_cmp p1 p2
+
+val ps_cmp_antisymm:
+  ps1:eprins -> ps2:eprins
+  -> Lemma (requires (True)) (ensures ((ps_cmp ps1 ps2 /\ ps_cmp ps2 ps1) ==> ps1 = ps2))
+     (decreases (size ps1))
+let rec ps_cmp_antisymm ps1 ps2 =
+  if ps1 = empty || ps2 = empty then ()
+  else
+    let Some p1, Some p2 = choose ps1, choose ps2 in
+    let ps1_rest, ps2_rest = remove p1 ps1, remove p2 ps2 in
+    ps_cmp_antisymm ps1_rest ps2_rest
+
+val ps_cmp_trans:
+  ps1:eprins -> ps2:eprins -> ps3:eprins
+  -> Lemma (requires (True)) (ensures ((ps_cmp ps1 ps2 /\ ps_cmp ps2 ps3) ==> ps_cmp ps1 ps3))
+     (decreases (size ps1))
+let rec ps_cmp_trans ps1 ps2 ps3 =
+  if ps1 = empty || ps2 = empty || ps3 = empty then ()
+  else
+    let Some p1, Some p2, Some p3 = choose ps1, choose ps2, choose ps3 in
+    let ps1_rest, ps2_rest, ps3_rest = remove p1 ps1, remove p2 ps2, remove p3 ps3 in
+    ps_cmp_trans ps1_rest ps2_rest ps3_rest
+
+val ps_cmp_total:
+  ps1:eprins -> ps2:eprins
+  -> Lemma (requires (True)) (ensures (ps_cmp ps1 ps2 \/ ps_cmp ps2 ps1))
+     (decreases (size ps1))
+let rec ps_cmp_total ps1 ps2 =
+  if ps1 = empty || ps2 = empty then ()
+  else
+    let Some p1, Some p2 = choose ps1, choose ps2 in
+    let ps1_rest, ps2_rest = remove p1 ps1, remove p2 ps2 in
+    ps_cmp_total ps1_rest ps2_rest
+
+assume Ps_cmp_is_total_order: total_order prins ps_cmp
+
 type const =
   | C_prin : c:prin -> const
   | C_prins: c:prins -> const
@@ -286,3 +333,18 @@ let is_par c = is_Par (m_of_mode (m_of_conf c))
 
 val is_sec: config -> Tot bool
 let is_sec c = is_Sec (m_of_mode (m_of_conf c))
+
+(* TODO: FIXME: the discriminators should take extra args for type indices *)
+val is_clos: #meta:v_meta -> value meta -> Tot bool
+let is_clos #meta v = match v with//is_V_clos v || is_V_fix_clos v || is_V_emp_clos v
+  | V_clos _ _ _
+  | V_emp_clos _ _
+  | V_fix_clos _ _ _ _ -> true
+  | _                  -> false
+
+val get_en_b: #meta:v_meta -> v:value meta{is_clos v} -> Tot (env * varname * exp)
+let get_en_b #meta v = match v with
+  | V_clos en x e       -> en, x, e
+  | V_fix_clos en f x e ->
+    update_env #(Meta empty Cannot_b empty Cannot_w) en f (V_fix_clos en f x e), x, e
+  | V_emp_clos x e      -> empty_env, x, e

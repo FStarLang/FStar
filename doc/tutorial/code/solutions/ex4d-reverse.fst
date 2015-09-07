@@ -24,25 +24,37 @@ let rec rev_involutive l = match l with
 
 (* Perhaps you did it like this: *)
 
+// BEGIN: RevInjective1
 val snoc_injective: l1:list 'a -> h1:'a -> l2:list 'a -> h2:'a 
-                 -> Lemma (snoc l1 h1 = snoc l2 h2 ==> l1 = l2 && h1 = h2)
+                 -> Lemma (requires (snoc l1 h1 = snoc l2 h2))
+                          (ensures (l1 = l2 && h1 = h2))
 let rec snoc_injective l1 h1 l2 h2 = match l1, l2 with
   | _::tl1, _::tl2 -> snoc_injective tl1 h1 tl2 h2
   | _ -> ()
 
 val rev_injective_1: l1:list 'a -> l2:list 'a 
-                -> Lemma (reverse l1 = reverse l2 ==> l1 = l2)
-let rec rev_injective_1 l1 l2 = match (l1, l2) with
-  | hd1::tl1, hd2::tl2 ->
-    rev_injective_1 tl1 tl2;
-    snoc_injective (reverse tl1) hd1 (reverse tl2) hd2
-  | _ -> ()
+                -> Lemma (requires (reverse l1 = reverse l2))
+                         (ensures  (l1 = l2)) (decreases l1)
+let rec rev_injective_1 l1 l2 =
+  match l1,l2 with
+  | h1::t1, h2::t2 ->
+      // assert(reverse (h1::t1) = reverse (h2::t2));
+      // assert(snoc (reverse t1) h1  = snoc (reverse t2) h2);
+      snoc_injective (reverse t1) h1 (reverse t2) h2;
+      // assert(reverse t1 = reverse t2 /\ h1 = h2);
+      rev_injective_1 t1 t2
+      // assert(t1 = t2 /\ h1::t1 = h2::t2)
+  | _, _ -> ()
+// END: RevInjective1
 
 (* That's quite a tedious proof, isn't it. Here's a simpler proof. *)
 
+// BEGIN: RevInjective2
 val rev_injective_2: l1:list 'a -> l2:list 'a 
-                 -> Lemma (reverse l1 = reverse l2 ==> l1 = l2)
+                -> Lemma (requires (reverse l1 = reverse l2))
+                         (ensures  (l1 = l2))
 let rev_injective_2 l1 l2 = rev_involutive l1; rev_involutive l2
+// END: RevInjective2
 
 (* The `rev_injective_2` proof is based on the idea that every involutive
 function is injective. We've already proven that `reverse` is

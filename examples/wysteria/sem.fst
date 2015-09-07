@@ -234,21 +234,6 @@ val step_app_red: c:config{is_value c /\ is_sframe c is_F_app_e2}
 let step_app_red (Conf l _ ((Frame m en (F_app_e2 v1))::s) _ (T_val v2)) =
   Conf l m s en (T_red (R_app v1 v2))
 
-(* TODO: FIXME: the discriminators should take extra args for type indices *)
-val is_clos: #meta:v_meta -> value meta -> Tot bool
-let is_clos #meta v = match v with//is_V_clos v || is_V_fix_clos v || is_V_emp_clos v
-  | V_clos _ _ _
-  | V_emp_clos _ _
-  | V_fix_clos _ _ _ _ -> true
-  | _                  -> false
-
-val get_en_b: #meta:v_meta -> v:value meta{is_clos v} -> Tot (env * varname * exp)
-let get_en_b #meta v = match v with
-  | V_clos en x e       -> en, x, e
-  | V_fix_clos en f x e ->
-    update_env #(Meta empty Cannot_b empty Cannot_w) en f (V_fix_clos en f x e), x, e
-  | V_emp_clos x e      -> empty_env, x, e
-
 val pre_aspar: config -> Tot comp
 let pre_aspar c = match c with
   | Conf l (Mode Par ps1) _ _ (T_red (R_aspar ps2 v)) ->
@@ -749,3 +734,187 @@ type sstep: config -> config -> Type =
     c:config{is_value c /\ is_sframe c is_F_assec_ret}
     -> c':config{c' = step_assec_ret c}
     -> sstep c c'
+
+type slice_v_meta_inv (meta:v_meta) (smeta:v_meta) =
+  subset (Meta.vps smeta) (Meta.vps meta) && (Meta.cb smeta = Meta.cb meta) &&
+  subset (Meta.wps smeta) (Meta.wps meta) && (Meta.cw smeta = Meta.cw meta)
+
+opaque val slice_wire:
+  #eps:eprins -> p:prin -> w:v_wire eps
+  -> Tot (r:v_wire (intersect eps (singleton p)){select p r = select p w})
+let slice_wire #eps p w =
+  if mem p eps then
+    update p (Some.v (select p w)) OrdMap.empty
+  else OrdMap.empty
+
+val slice_v   : #meta:v_meta -> prin -> v:value meta
+                -> Tot (r:dvalue{slice_v_meta_inv meta (D_v.meta r)}) (decreases %[v])
+val slice_en  : prin -> en:env -> Tot (varname -> Tot (option dvalue)) (decreases %[en])
+
+let rec slice_v #meta p v =
+  let def = D_v meta v in
+  let emp = D_v (Meta empty Can_b empty Can_w) V_emp in
+  match v with
+    | V_const _           -> def
+
+    | V_box ps v          ->
+      let D_v meta' v' = if mem p ps then slice_v p v else emp in
+      D_v (Meta ps Can_b (Meta.wps meta') Cannot_w) (V_box ps v')
+
+    | V_wire eps w        -> D_v (Meta empty Can_b (intersect eps (singleton p)) Cannot_w)
+                                 (V_wire (intersect eps (singleton p)) (slice_wire #eps p w))
+
+    | V_clos en x e       -> D_v meta (V_clos (slice_en p en) x e)
+
+    | V_fix_clos en f x e -> D_v meta (V_fix_clos (slice_en p en) f x e)
+
+    | V_emp_clos _ _      -> def
+
+    | V_emp               -> emp
+
+and slice_en p en =
+  let _ = () in
+  fun x -> preceds_axiom en x;
+           if en x = None then None
+           else
+             Some (slice_v p (D_v.v (Some.v (en x))))
+
+type compose_v_meta_inv (m1:v_meta) (m2:v_meta) (cmeta:v_meta) =
+ subset (Meta.vps cmeta) (union (Meta.vps m1) (Meta.vps m2))            /\
+ ((Meta.cb m1 = Can_b /\ Meta.cb m2 = Can_b) ==> Meta.cb cmeta = Can_b) /\
+ subset (Meta.wps cmeta) (union (Meta.wps m1) (Meta.wps m2))            /\
+ ((Meta.cw m1 = Can_w /\ Meta.cw m2 = Can_w) ==> Meta.cw cmeta = Can_w)
+
+(* TODO: FIXME: discriminators are not generated properly, they don't have index argument *)
+val is_v_emp: #meta:v_meta -> v:value meta -> Tot bool
+let is_v_emp #meta v = match v with
+  | V_emp -> true
+  | _     -> false
+
+val is_v_const: #meta:v_meta -> v:value meta -> Tot bool
+let is_v_const #meta v = match v with
+  | V_const _ -> true
+  | _         -> false
+
+val is_v_box: #meta:v_meta -> v:value meta -> Tot bool
+let is_v_box #meta v = match v with
+  | V_box _ _ -> true
+  | _         -> false
+
+val is_v_wire: #meta:v_meta -> v:value meta -> Tot bool
+let is_v_wire #meta v = match v with
+  | V_wire _ _ -> true
+  | _          -> false
+
+val is_v_clos: #meta:v_meta -> v:value meta -> Tot bool
+let is_v_clos #meta v = match v with
+  | V_clos _ _ _ -> true
+  | _            -> false
+
+val is_v_fix_clos: #meta:v_meta -> v:value meta -> Tot bool
+let is_v_fix_clos #meta v = match v with
+  | V_fix_clos _ _ _ _ -> true
+  | _                  -> false
+
+val is_v_emp_clos: #meta:v_meta -> v:value meta -> Tot bool
+let is_v_emp_clos #meta v = match v with
+  | V_emp_clos _ _ -> true
+  | _              -> false
+
+val compose_vals: #m1:v_meta -> #m2:v_meta -> v1:value m1 -> v2:value m2
+                 -> Tot (r:dvalue{compose_v_meta_inv m1 m2 (D_v.meta r)})
+                    (decreases %[v1])
+val compose_envs: en:env -> env -> Tot (varname -> Tot (option dvalue)) (decreases %[en])
+
+let rec compose_vals #m1 #m2 v1 v2 =
+ if is_v_emp v1 then D_v m2 v2
+ else if is_v_emp v2 then D_v m1 v1
+ else
+   let emp = D_v (Meta empty Can_b empty Can_w) V_emp in
+   match v1 with
+     | V_const c1 ->
+       if is_v_const v2 && V_const.c v1 = V_const.c v2 then
+         D_v m1 v1
+       else emp
+
+     | V_box ps1 v1 ->
+       if is_v_box v2 then
+         let V_box ps2 v2 = v2 in
+         if ps1 = ps2 then
+           let D_v meta v = compose_vals v1 v2 in
+           D_v (Meta ps1 Can_b (Meta.wps meta) Cannot_w) (V_box ps1 v)
+         else
+           emp
+       else emp
+
+     | V_wire eps1 w1 ->
+       if is_v_wire v2 then
+         let V_wire eps2 w2 = v2 in
+         if intersect eps1 eps2 = empty then
+           D_v (Meta empty Can_b (union eps1 eps2) Cannot_w)
+               (V_wire (union eps1 eps2) (compose_wires #eps1 #eps2 w1 w2 eps1))
+         else emp
+       else emp
+
+     | V_clos en1 x1 e1 ->
+       if is_v_clos v2 then
+         let V_clos en2 x2 e2 = v2 in
+         if x1 = x2 && e1 = e2 then
+           D_v m1 (V_clos (compose_envs en1 en2) x1 e1)
+         else emp
+       else emp
+
+     | V_fix_clos en1 f1 x1 e1 ->
+       if is_v_fix_clos v2 then
+         let V_fix_clos en2 f2 x2 e2 = v2 in
+         if f1 = f2 && x1 = x2 && e1 = e2 then
+           D_v m1 (V_fix_clos (compose_envs en1 en2) f1 x1 e1)
+         else emp
+       else emp
+
+     | V_emp_clos x1 e1 ->
+       if is_v_emp_clos v2 then
+         let V_emp_clos x2 e2 = v2 in
+         if x1 = x2 && e1 = e2 then
+           D_v m1 (V_emp_clos x1 e1)
+         else emp
+       else emp
+
+and compose_envs en1 en2 =
+ let _ = () in
+ fun x -> preceds_axiom en1 x;
+          let r1 = en1 x in
+          let r2 = en2 x in
+          match r1 with
+            | None             -> r2
+            | Some (D_v m1 v1) ->
+              match r2 with
+                | None             -> r1
+                | Some (D_v m2 v2) -> Some (compose_vals v1 v2)
+
+type contains_ps (#v:Type) (ps:prins) (m:OrdMap.ordmap prin v p_cmp) =
+  forall p. mem p ps ==> contains p m
+
+type value_map (ps:prins) = m:OrdMap.ordmap prin dvalue p_cmp{contains_ps ps m}
+
+type env_map (ps:prins) = m:OrdMap.ordmap prin env p_cmp{contains_ps ps m}
+
+val compose_vals_m: ps:prins -> m:value_map ps -> Tot dvalue (decreases (size ps))
+let rec compose_vals_m ps m =
+  let Some p = choose ps in
+  let Some (D_v meta v) = select p m in
+  let ps_rest = remove p ps in
+  if ps_rest = empty then D_v meta v
+  else
+    let D_v _ v' = compose_vals_m ps_rest m in
+    compose_vals v v'
+
+val compose_envs_m: ps:prins -> m:env_map ps -> Tot env (decreases (size ps))
+let rec compose_envs_m ps m =
+  let Some p = choose ps in
+  let Some en = select p m in
+  let ps_rest = remove p ps in
+  if ps_rest = empty then en
+  else
+    let en' = compose_envs_m ps_rest m in
+    compose_envs en en'

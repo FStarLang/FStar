@@ -34,3 +34,18 @@ val fact_is_ok: a:nat
 let rec fact_is_ok a = function
   | 0 -> ()
   | n -> fact_is_ok (a * n) (n - 1); mult_assoc a n (factorial (n-1))
+
+val fact_monotone : n:nat -> m:nat -> Lemma (requires (n <= m))
+                                            (ensures (factorial n <= factorial m))
+                                            (decreases m)
+let rec fact_monotone n m =
+  match m - n with
+  | 0 -> ()
+  | _ -> fact_monotone n (m-1)
+
+// let tryx = fact_monotone 4 0 -- this fails
+
+assume val fact_monotone' : n:nat -> m:nat ->
+  Lemma (ensures (n <= m ==> factorial n <= factorial m))
+
+let tryx' = fact_monotone' 4 0 // this works

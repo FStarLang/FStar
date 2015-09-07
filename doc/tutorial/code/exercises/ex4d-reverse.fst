@@ -21,5 +21,8 @@ let rec rev_involutive l = match l with
   | [] -> ()
   | hd::tl -> rev_involutive tl; snoc_cons (reverse tl) hd
 
-val rev_injective_1: l1:list 'a -> l2:list 'a 
-                -> Lemma (reverse l1 = reverse l2 ==> l1 = l2)
+// BEGIN: RevInjective
+val rev_injective: l1:list 'a -> l2:list 'a
+                -> Lemma (requires (reverse l1 = reverse l2))
+                         (ensures  (l1 = l2))
+// END: RevInjective
