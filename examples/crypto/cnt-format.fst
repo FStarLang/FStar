@@ -28,6 +28,7 @@
 
 module CntFormat
 open Prims.PURE
+open FStar.Bytes
 open FStar.String
 open FStar.Seq
 open FStar.SeqProperties
@@ -82,6 +83,7 @@ assume UTF8_inj:
      Seq.Eq (utf8 s0) (utf8 s1) ==> s0==s1
 
 assume val ulint_to_bytes: len:pint -> ulint len -> Tot (msg len)
+
 assume val bytes_to_ulint: len:pint -> x:msg len -> Tot (y:ulint len{ulint_to_bytes len y == x})
 assume UINT_inj: forall len s0 s1. Seq.Eq (ulint_to_bytes len s0) (ulint_to_bytes len s1) ==> s0==s1
 

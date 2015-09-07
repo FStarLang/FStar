@@ -8,7 +8,7 @@ ifeq ($(OS),Windows_NT)
 else
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Darwin)
-        CC = gcc-4.9
+        CC = gcc-5
         LIB = $(FSTAR_HOME)/3rdparty/osx #place to look for libcrypto.a
     else
         CC = gcc

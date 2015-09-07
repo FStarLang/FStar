@@ -11,7 +11,7 @@
             $LIB/io.fsti
             $CONTRIB/Platform/fst/Bytes.fst
             $CONTRIB/CoreCrypto/fst/CoreCrypto.fst
-            cnt-CntFormat.fst
+            cnt-format.fst
             sha1.fst
             mac.fst
   --*)
