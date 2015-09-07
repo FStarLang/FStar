@@ -24,9 +24,6 @@ verify-ex10-shift: ex10-shift.fst
 verify-robots:
 	$(FSTAR) robot2.fst
 
-verify-ex10a-acls: ex10a-acls.fst
-	$(FSTAR) $(addprefix $(FSTAR_HOME)/lib/, set.fsi heap.fst st.fst all.fst list.fst) --admit_fsi FStar.Set $^
-
 verify-%: __force__
 	$(FSTAR) $*.fst
 
