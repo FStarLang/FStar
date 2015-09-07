@@ -24,6 +24,9 @@ verify-ex9f-padding: ex9f-padding.fst
 verify-ex9g-padding: ex9g-padding.fst
 	$(FSTAR) $(SECLIB) $^
 
+verify-ex10a-acls: ex10a-acls.fst
+	$(FSTAR) $(addprefix $(FSTAR_HOME)/lib/, set.fsi heap.fst st.fst all.fst list.fst) --admit_fsi FStar.Set $^
+
 verify-%: __force__
 	$(FSTAR) $*.fst
 
