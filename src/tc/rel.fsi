@@ -14,26 +14,26 @@
    limitations under the License.
 *)
 #light "off"
-module Microsoft.FStar.Tc.Rel
+module FStar.Tc.Rel
 
-open Microsoft.FStar
-open Microsoft.FStar.Util
-open Microsoft.FStar.Tc
-open Microsoft.FStar.Absyn
-open Microsoft.FStar.Tc.Env
-open Microsoft.FStar.Absyn.Syntax
+open FStar
+open FStar.Util
+open FStar.Tc
+open FStar.Absyn
+open FStar.Tc.Env
+open FStar.Absyn.Syntax
 
 (* relations on types, kinds, etc. *)
-type rel = 
-  | EQ 
+type rel =
+  | EQ
   | SUB
   | SUBINV  (* sub-typing/sub-kinding, inverted *)
 
-type problem<'a,'b> = {               //Try to prove: lhs rel rhs ~> guard        
+type problem<'a,'b> = {               //Try to prove: lhs rel rhs ~> guard
     lhs:'a;
-    relation:rel;   
+    relation:rel;
     rhs:'a;
-    element:option<'b>;               //where, guard is a predicate on this term (which appears free in/is a subterm of the guard) 
+    element:option<'b>;               //where, guard is a predicate on this term (which appears free in/is a subterm of the guard)
     logical_guard:(typ * typ);        //the condition under which this problem is solveable
     scope:binders;                    //the set of names permissible in the guard of this formula
     reason: list<string>;             //why we generated this problem, for error reporting
@@ -41,7 +41,7 @@ type problem<'a,'b> = {               //Try to prove: lhs rel rhs ~> guard
     rank: option<int>;
 }
 
-type prob = 
+type prob =
   | KProb of problem<knd,unit>
   | TProb of problem<typ,exp>
   | EProb of problem<exp,unit>
@@ -49,7 +49,7 @@ type prob =
 
 type probs = list<prob>
 
-type guard_formula = 
+type guard_formula =
   | Trivial
   | NonTrivial of formula
 
@@ -76,7 +76,7 @@ val is_trivial: guard_t -> bool
 val conj_guard: guard_t -> guard_t -> guard_t
 val imp_guard: guard_t -> guard_t -> guard_t
 val guard_of_guard_formula: guard_formula -> guard_t
-val guard_f: guard_t -> guard_formula
+val guard_form: guard_t -> guard_formula
 val guard_to_string : env -> guard_t -> string
 val solve_deferred_constraints: env -> guard_t -> guard_t
 val try_discharge_guard: env -> guard_t -> unit //(bool * list<string>)

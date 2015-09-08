@@ -1,31 +1,59 @@
+(*--build-config
+    other-files:ext.fst
+  --*)
 module Bug121FunctionNotEqualToItsDefinition
+
+open FunctionalExtensionality
 
 type var = nat
 
 type exp =
   | EVar   : var -> exp
-  | EAbs   : exp -> exp
+  | ELam   : exp -> exp
 
 type sub = var -> Tot exp
 
-(* Parallel substitution operation `subst` *)
+opaque type renaming (s:sub) = (forall (x:var). is_EVar (s x))
 
-val inc_var : var -> Tot exp
-let inc_var y = EVar (y+1)
+assume val is_renaming : s:sub -> Tot (n:int{  (renaming s  ==> n=0) /\
+                                      (~(renaming s) ==> n=1)})
 
-val subst_eabs : (e:exp -> sub -> Tot exp) -> sub -> Tot sub
-let subst_eabs subst_f s =
-  fun y -> if y = 0 then EVar y
-           else subst_f (s (y-1)) inc_var
+val sub_inc : var -> Tot exp
+let sub_inc y = EVar (y+1)
 
-(* F* can't prove this terminating, but that's _not_ the problem *) 
-val subst : e:exp -> sub -> Tot exp
-let rec subst e s =
+val renaming_sub_inc : unit -> Lemma (renaming (sub_inc))
+let renaming_sub_inc _ = ()
+
+let is_var (e:exp) : int = if is_EVar e then 0 else 1
+
+val subst : s:sub -> e:exp -> Pure exp (requires True)
+     (ensures (fun e' -> (renaming s /\ is_EVar e) ==> is_EVar e'))
+     (decreases %[is_var e; is_renaming s; e])
+let rec subst s e =
   match e with
   | EVar x -> s x
-  | EAbs e1 -> EAbs (subst e1 (subst_eabs subst s))
 
-(* F* not being able to prove this is the problem: *)
-val should_be_trivial : e:exp -> s:sub -> Lemma
-  (ensures (subst (EAbs e) s = EAbs (subst e (subst_eabs subst s))))
-let should_be_trivial e s = ()
+  | ELam e1 ->
+     let sub_elam : y:var -> Tot (e:exp{renaming s ==> is_EVar e}) =
+       fun y -> if y=0 then EVar y
+                       else subst sub_inc (s (y-1))            (* shift +1 *)
+     in ELam (subst sub_elam e1)
+
+val sub_lam: s:sub -> Tot sub
+let sub_lam s y = if y=0 then EVar y
+                   else subst sub_inc (s (y-1))
+
+(* Substitution extensional; trivial with the extensionality axiom *)
+val subst_extensional: s1:sub -> s2:sub{FEq s1 s2} -> e:exp ->
+                        Lemma (requires True) (ensures (subst s1 e = subst s2 e))
+                       (* [SMTPat (subst s1 e);  SMTPat (subst s2 e)] *)
+let subst_extensional s1 s2 e = ()
+
+(* This only works automatically with the patterns in
+   subst_extensional above; it would be a lot cooler if this worked
+   without, since that increases checking time.  Even worse, there is
+   no way to prove this without the SMTPat (e.g. manually), or to use
+   the SMTPat only locally, in this definition (`using` needed). *)
+val sub_lam_hoist : e:exp -> s:sub -> Lemma (requires True)
+      (ensures (subst s (ELam e) = ELam (subst (sub_lam s) e)))
+let sub_lam_hoist e s = ()

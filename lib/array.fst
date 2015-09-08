@@ -15,7 +15,7 @@
 *)
 
 (* A logical theory of integer-indexed arrays, from [0, n) *)
-module Array
+module FStar.Array
 
 type seq            : Type -> Type
 assume val index    : #a:Type -> seq a -> int -> Tot a

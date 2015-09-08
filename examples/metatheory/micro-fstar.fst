@@ -1,5 +1,5 @@
 (*--build-config
-    options:--z3timeout 20 --max_fuel 8 --max_ifuel 6 --initial_fuel 4 --initial_ifuel 2 --log_types;
+    options:--z3timeout 10 --max_fuel 4 --max_ifuel 2 --initial_fuel 1 --initial_ifuel 1;
     other-files:classical.fst ext.fst constr.fst
   --*)
 module MicroFStar
@@ -71,9 +71,9 @@ module MicroFStar
 *)
 
 
-open Classical
-open FunctionalExtensionality
-open Constructive
+open FStar.Classical
+open FStar.FunctionalExtensionality
+open FStar.Constructive
 
 type var = nat
 type loc = nat
@@ -281,12 +281,13 @@ and prove some properties on it*)
 
 type esub = var -> Tot exp
 
-opaque type erenaming (s:esub) = (forall (x:var). is_EVar (s x))
+type erenaming (s:esub) = (forall (x:var). is_EVar (s x))
 
-opaque val is_erenaming : s:esub -> Tot (n:int{(  erenaming s  ==> n=0) /\
-                                        (~(erenaming s) ==> n=1)})
+opaque val is_erenaming : s:esub -> GTot (n:int{(  erenaming s  ==> n=0) /\
+                                                (~(erenaming s) ==> n=1)})
 let is_erenaming s = (if excluded_middle (erenaming s) then 0 else 1)
-opaque type value_esub (s:esub) = (forall (x:var). is_value (s x))
+
+type value_esub (s:esub) = (forall (x:var). is_value (s x))
 
 val esub_id : esub
 let esub_id = fun x -> EVar x
@@ -324,8 +325,8 @@ let omap f o =
 type tsub = var -> Tot typ
 opaque type trenaming (s:tsub) = (forall (x:var). is_TVar (s x))
 
-val is_trenaming : s:tsub -> Tot (n:int{(  trenaming s  ==> n=0) /\
-                                        (~(trenaming s) ==> n=1)})
+val is_trenaming : s:tsub -> GTot (n:int{(  trenaming s  ==> n=0) /\
+                                         (~(trenaming s) ==> n=1)})
 let is_trenaming s = (if excluded_middle (trenaming s) then 0 else 1)
 
 val tsub_inc_above : nat -> var -> Tot typ
@@ -357,8 +358,8 @@ type sub =
 
 opaque type renaming (s:sub) = (erenaming (Sub.es s))  /\ (trenaming (Sub.ts s))
 
-opaque val is_renaming : s:sub -> Tot (n:int{(  renaming s  ==> n=0) /\
-                                       (~(renaming s) ==> n=1)})
+opaque val is_renaming : s:sub -> GTot (n:int{(  renaming s  ==> n=0) /\
+                                              (~(renaming s) ==> n=1)})
 let is_renaming s = (if excluded_middle (renaming s) then 0 else 1)
 
 type value_sub (s:sub) = (value_esub (Sub.es s))
@@ -2874,9 +2875,11 @@ let subst_on_return_pure s t e = esubst_tlam_shift s e; admit()(*works*)
 val subst_on_teqtype : s:sub -> t:typ -> t':typ -> Lemma (tsubst s (teqtype t' t) = teqtype (tsubst s t') (tsubst s t))
 let subst_on_teqtype s t t' = admit() (*works*)
 
+(* CH: this needs lots of fuel to work *)
+#set-options "--max_fuel 6 --initial_fuel 6"
 val subst_on_teqe : s:sub -> t:typ -> e1:exp -> e2:exp -> Lemma (tsubst s (teqe t e1 e2) = teqe (tsubst s t) (esubst s e1) (esubst s e2))
 let subst_on_teqe s t e1 e2 = ()
-
+#reset-options
 
 val subst_on_eupd : s:sub -> eh:exp -> el:exp -> ei:exp -> Lemma (esubst s (eupd (eh) (el) (ei)) = eupd (esubst s eh) (esubst s el) (esubst s ei))
 let subst_on_eupd s eh el ei =
@@ -3075,6 +3078,10 @@ let subst_on_tprecedes s t1 t2 e1 e2 = admit()
 (* Substitution on reduction of pure exp and types *)
 (***************************************************)
 //{{{
+
+(* CH: this needs lots of fuel to work *)
+#set-options "--max_fuel 6 --initial_fuel 6"
+
 opaque val epstep_substitution : s:sub -> e:exp -> e':exp -> hs:epstep e e' -> Tot (epstep (esubst s e) (esubst s e'))
 (decreases %[hs])
 opaque val tstep_substitution : s:sub -> t:typ -> t':typ -> hs:tstep t t' -> Tot (tstep (tsubst s t) (tsubst s t'))
@@ -3151,6 +3158,9 @@ match hs with
     let hr : tstep (tsubst s t1) (tsubst s t1') = tstep_substitution s t1 t1' ht in
     TsELamT1 #(tsubst s t1) #(tsubst s t1') (tsubst (sub_elam s) t2) hr
     )
+
+#reset-options
+
 //}}}
 
 (*********************************)
@@ -3261,7 +3271,11 @@ let is_tyvar g e t ht = if is_TyVar ht then 0 else 1
 val is_kvar : #g : env -> #t:typ -> #k:knd -> hk : kinding g t k -> Tot nat
 let is_kvar g t k hk = if is_KVar hk then 0 else 1
 
-#set-options "--split_cases 1"
+(* CH: this doesn't always help, on the the contrary
+#set-options "--split_cases 1" *)
+
+(* CH: seems not needed on my machine, but needed on Markulf's Surface *)
+#set-options "--z3timeout 20"
 
 opaque val typing_substitution : #g1:env -> #e:exp -> #c:cmp -> s:sub -> #g2:env ->
     h1:typing g1 e c ->
@@ -3318,7 +3332,8 @@ opaque val tlam_hs : #g1:env -> s:sub -> #g2:env -> k:knd ->
                          hs:subst_typing s g1 g2 ->
                          Tot (hr:subst_typing (sub_tlam s) (textend k g1) (textend (ksubst s k) g2){is_RenamingTyping hs ==> is_RenamingTyping hr})
 (decreases %[1;is_renaming_typing hs; 0; TVar 0])
-let rec typing_substitution g1 e c s g2 h1 hs =
+let rec typing_substitution g1 e c s g2 h1 hs = magic()
+(* CH: this started failing 2015-08-26, but was very flaky before too
 match h1 with
 | TyVar #g1 x ->
 ( match hs with
@@ -3394,6 +3409,7 @@ let htg2 : typing g2 (esubst s e) (csubst s c') = typing_substitution s ht hs in
 let hscg2 : scmp g2 (csubst s c') (csubst s c) = scmp_substitution s hsc hs in
 TySub htg2 hscg2
 )
+ *)
 and scmp_substitution g1 c1 c2 s g2 h1 hs =
 let SCmp #g m' #t' wp' m #t wp hsub hk hvmono hk' hvmono' hvsub = h1 in
 let hsubg2 = styping_substitution s hsub hs in
@@ -6094,7 +6110,7 @@ let tint_inversion_empty_helper e targ cbody t hst hv =
   let hv : validity empty (teqtype (TArr targ cbody) tint) = tint_inversion_styping' #(TArr targ cbody) #t hst hv in
   let hvnot : validity empty (tnot (teqtype (TArr targ cbody) tint)) = VDistinctTH #empty #(TArr targ cbody) #tint hktarr (kdg_tint empty) in
    let hvfalse : validity empty tfalse = v_impl_elim #empty #(teqtype (TArr targ cbody) tint) #tfalse hvnot hv in
-   empty_consistent hvfalse; TintInversion e 42 (Eq exp (EConst (EcInt 42)))
+   empty_consistent hvfalse; TintInversion e 42 (Refl exp (EConst (EcInt 42)))
 
 val scmpex_efpure : #g:env -> #e:exp -> #c':cmp -> #c:cmp ->
    scmpex g e c' c ->
@@ -6311,7 +6327,7 @@ let tb_inversion_empty_helper e targ cbody t tc hst hv =
   let hv : validity empty (teqtype (TArr targ cbody) (TConst tc)) = tb_inversion_styping' #(TArr targ cbody) #t #tc hst hv in
   let hvnot : validity empty (tnot (teqtype (TArr targ cbody) (TConst tc))) = VDistinctTH #empty #(TArr targ cbody) #(TConst tc) hktarr (kdg_tb empty tc) in
    let hvfalse : validity empty tfalse = v_impl_elim #empty #(teqtype (TArr targ cbody) (TConst tc)) #tfalse hvnot hv in
-   empty_consistent hvfalse; TcIntInversion e (TintInversion e 42 (Eq exp (EConst (EcInt 42))))
+   empty_consistent hvfalse; TcIntInversion e (TintInversion e 42 (Refl exp (EConst (EcInt 42))))
 
 opaque val tb_inversion_empty : #v:value -> #t:typ -> #wp:typ -> #tc:tconst{is_TcHeap tc \/ is_TcInt tc \/ is_TcRefInt tc} ->
    ht:typing empty v (Cmp EfPure t wp) ->
@@ -6336,29 +6352,29 @@ match ht with
 | TyConst _ c hwf ->
 (
  match c with
- | EcInt i -> if tc = TcInt then TcIntInversion v (TintInversion v i (Eq exp (EConst (EcInt i))))
+ | EcInt i -> if tc = TcInt then TcIntInversion v (TintInversion v i (Refl exp (EConst (EcInt i))))
               else
 	      (
 	       let hk : kinding empty (econsts c) KType = kdg_econst empty c hwf in
 	       let hvnot : validity empty (tnot (teqtype t (TConst tc))) = VDistinctTH #empty #t #(TConst tc) hk (kdg_tb empty tc) in
 	       let hvfalse : validity empty tfalse = v_impl_elim #empty #(teqtype t (TConst tc)) #tfalse hvnot hv in
-	       empty_consistent hvfalse; TcIntInversion v (TintInversion v 42 (Eq exp (EConst (EcInt 42))))
+	       empty_consistent hvfalse; TcIntInversion v (TintInversion v 42 (Refl exp (EConst (EcInt 42))))
 	      )
- | EcLoc l -> if tc = TcRefInt then TcRefInversion v (TrefInversion v l (Eq exp (EConst (EcLoc l))))
+ | EcLoc l -> if tc = TcRefInt then TcRefInversion v (TrefInversion v l (Refl exp (EConst (EcLoc l))))
               else
 	      (
 	       let hk : kinding empty (econsts c) KType = kdg_econst empty c hwf in
 	       let hvnot : validity empty (tnot (teqtype t (TConst tc))) = VDistinctTH #empty #t #(TConst tc) hk (kdg_tb empty tc) in
 	       let hvfalse : validity empty tfalse = v_impl_elim #empty #(teqtype t (TConst tc)) #tfalse hvnot hv in
-	       empty_consistent hvfalse; TcIntInversion v (TintInversion v 42 (Eq exp (EConst (EcInt 42))))
+	       empty_consistent hvfalse; TcIntInversion v (TintInversion v 42 (Refl exp (EConst (EcInt 42))))
 	      )
- | EcHeap h -> if tc = TcHeap then TcHeapInversion v (TheapInversion v h (Eq exp (EConst (EcHeap h))))
+ | EcHeap h -> if tc = TcHeap then TcHeapInversion v (TheapInversion v h (Refl exp (EConst (EcHeap h))))
                else
 	       (
 	       let hk : kinding empty (econsts c) KType = kdg_econst empty c hwf in
 	       let hvnot : validity empty (tnot (teqtype t (TConst tc))) = VDistinctTH #empty #t #(TConst tc) hk (kdg_tb empty tc) in
 	       let hvfalse : validity empty tfalse = v_impl_elim #empty #(teqtype t (TConst tc)) #tfalse hvnot hv in
-	       empty_consistent hvfalse; TcIntInversion v (TintInversion v 42 (Eq exp (EConst (EcInt 42))))
+	       empty_consistent hvfalse; TcIntInversion v (TintInversion v 42 (Refl exp (EConst (EcInt 42))))
 	       )
  | EcUnit
  | EcBang
@@ -6370,7 +6386,7 @@ match ht with
 	       let hk : kinding empty (econsts c) KType = kdg_econst empty c hwf in
 	       let hvnot : validity empty (tnot (teqtype t (TConst tc))) = VDistinctTH #empty #t #(TConst tc) hk (kdg_tb empty tc) in
 	       let hvfalse : validity empty tfalse = v_impl_elim #empty #(teqtype t (TConst tc)) #tfalse hvnot hv in
-	       empty_consistent hvfalse; TcIntInversion v (TintInversion v 42 (Eq exp (EConst (EcInt 42))))
+	       empty_consistent hvfalse; TcIntInversion v (TintInversion v 42 (Refl exp (EConst (EcInt 42))))
 
    )
 )
@@ -6379,7 +6395,7 @@ match ht with
  let hk : kinding empty (TArr targ (Cmp m tbody wpbody)) KType = let TypingDerived hk _ _ = typing_derived #empty #(ELam targ ebody) #EfPure #(TArr targ (Cmp m tbody wpbody) ) (GEmpty) ht in hk in
  let hvnot : validity empty (tnot (teqtype t (TConst tc))) = VDistinctTH #empty #t #(TConst tc) hk (kdg_tb empty tc) in
  let hvfalse : validity empty tfalse = v_impl_elim #empty #(teqtype t (TConst tc)) #tfalse hvnot hv in
- empty_consistent hvfalse; TcIntInversion v (TintInversion v 42 (Eq exp (EConst (EcInt 42))))
+ empty_consistent hvfalse; TcIntInversion v (TintInversion v 42 (Refl exp (EConst (EcInt 42))))
 )
 | TyApp #x1 #e1 #e2 #x2 #targs1 #tbodys1 #wps1 #wpfuns1 #wpargs1 htfuns1 htargs1 htotargs1 hkargs1 ->
 (

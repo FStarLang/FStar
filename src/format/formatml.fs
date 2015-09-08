@@ -2,7 +2,7 @@
 #light "off"
 
 module FSharp.Format
-
+open FStar
 
 (* -------------------------------------------------------------------- *)
 type doc = | Doc of string

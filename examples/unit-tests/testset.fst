@@ -5,7 +5,7 @@ assume logic val a : elt
 assume logic val b : elt
 assume logic val c : elt
 assume AB_distinct: a=!=b
-open Set
+open FStar.Set
 
 val should_succeed: unit -> Tot unit
 let should_succeed u =
@@ -18,8 +18,8 @@ let should_succeed u =
 
 
 module TestHeap
-open Set
-open Heap
+open FStar.Set
+open FStar.Heap
 assume val x : ref int
 assume val y : ref int
 assume val h : heap

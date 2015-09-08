@@ -120,7 +120,7 @@ let createBytes len (value:char) : bytes =
     try abytes (String.make len value)
     with _ -> failwith "Default integer for createBytes was greater than max_value"
 
-type lbytes = bytes
+type 'a lbytes = bytes
 
 let bytes_of_int nb i =
   let rec put_bytes bb lb n =
@@ -231,12 +231,12 @@ let sock_recv sock maxlen =
     let str = String.sub str 0 recvlen in
     abytes str
 
-let read s i =
+let recv s i =
     try Correct (sock_recv s i)
     with Unix_error (e,s1,s2) ->
      Error (Printf.sprintf "%s: %s(%s)" (error_message e) s1 s2)
 
-let write s b =
+let send s b =
     try (let n = sock_send s b in if n < Bytes.length b then Error(Printf.sprintf "Network error, wrote %d bytes" n) else Correct())
     with Unix_error (e,s1,s2) ->
      Error (Printf.sprintf "%s: %s(%s)" (error_message e) s1 s2)

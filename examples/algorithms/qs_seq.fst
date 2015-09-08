@@ -1,7 +1,10 @@
 module QuickSort.Seq
-#set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
-open Seq
-open SeqProperties
+open FStar.Seq
+open FStar.SeqProperties
+
+(* the last recursive call to partition fails for me if I use the F# version
+   of F* and and the option here:
+#set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0" *)
 
 opaque val partition: f:('a -> 'a -> Tot bool){total_order 'a f}
     -> s:seq 'a -> pivot:nat{pivot < length s} -> back:nat{pivot <= back /\ back < length s} ->
@@ -37,7 +40,7 @@ let rec partition f s pivot back =
             partition f s' (pivot + 1) back
        else let s' = swap s (pivot + 1) back in (* the back moves backward *)
             let _ = lemma_swap_permutes s (pivot + 1) back in
-            let res = partition f s' pivot (back - 1) in
+            let res = (* admit() *) partition f s' pivot (back - 1) in
             res        
 
 #set-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1"

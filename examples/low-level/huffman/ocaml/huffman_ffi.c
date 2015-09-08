@@ -12,15 +12,15 @@ CAMLprim value stack_mknode(value v1, value v2, value v3, value v4, value v5)
   int nbits = 0;
   if (empty_string == (value)0)
     empty_string = stack_caml_alloc_string(1);
-  if (!(Is_long(v1) || is_stack_pointer((void *)v2))) {
+  if (!(Is_long(v2) || is_stack_pointer((void *)v2))) {
     mask[0] = 2;
     nbits++;
   }
-  if (!(Is_long(v1) || is_stack_pointer((void *)v3))) {
+  if (!(Is_long(v3) || is_stack_pointer((void *)v3))) {
     mask[nbits] = 3;
     nbits++;
   }
-  if (!(Is_long(v1) || is_stack_pointer((void *)v4))) {
+  if (!(Is_long(v4) || is_stack_pointer((void *)v4))) {
     mask[nbits] = 4;
     nbits++;
   }

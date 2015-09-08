@@ -1,37 +1,79 @@
 (*--build-config
-    options:--admit_fsi Set;
+    options:--admit_fsi FStar.Set;
     variables:LIB=../../lib;
     other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/st2.fst
   --*)
 
 module NonInterference
 
-open Comp
-open Heap
+open FStar.Comp
+open FStar.Heap
+open FStar.Relational
 
-assume val high : ref 'a -> Tot bool
-let low x = not (high x)
+(* We model labels with different levels as integers *)
+type label = int 
 
-type ni = unit -> 
-          ST2 (unit * unit)
-              (requires (fun h2 -> (forall (x:ref int). low x ==> 
-                                            sel (fst h2) x = sel (snd h2) x)))
-              (ensures  (fun _ _ h2 -> (forall (x:ref int). low x ==> 
-                                            sel (fst h2) x = sel (snd h2) x)))
+(* Label of the attacker *)
+assume val alpha : label
 
-assume val new_low : unit -> x:ref int{low x}
-assume val new_high : unit -> x:ref int{high x}
- 
-let a = new_low ()
-let b = new_high ()
-let c = new_high ()
-let d = new_low ()
+(* Labeling function (assigns a label to every reference) *)
+assume val label_fun : ref int -> Tot label
 
-let test1 () = (if !b = 0 then
+(* A reference can be observed bu the attacker if its label is not higher than 
+   alpha *)
+let attacker_observable x = label_fun x <= alpha
+
+(* Definition of Noninterference  If all attacker-observable references contain
+   equal values before the function call, then they also have to contain equal
+   values after the function call. *)
+type ni = unit ->
+          ST2 (rel unit unit)
+              (requires (fun h2 -> (forall (x:ref int). 
+                                        attacker_observable x 
+                                        ==> sel (R.l h2) x = sel (R.r h2) x)))
+              (ensures  (fun _ _ h2 -> (forall (x:ref int).
+                                        attacker_observable x 
+                                        ==> sel (R.l h2) x = sel (R.r h2) x)))
+
+(* Function to create new labeled references *)
+assume val new_labeled_int : l:label -> x:ref int{label_fun x = l}
+
+
+(* Simple Examples using the above definition of Noninterference*)
+module Example1
+open NonInterference
+open FStar.Comp
+open FStar.Relational
+
+(* Fails iff label b > label a *)
+let a = new_labeled_int 1
+let b = new_labeled_int 0
+
+let test () = (if !b = 0 then
                  a := 2
-               else 
-                 a := 1); 
-               a := 0
+               else
+                 a := 1);
+               b := 0
 
-val test1_ni : ni
-let test1_ni () = compose2 test1 test1 () () 
+val test_ni : ni
+let test_ni () = compose2_self test (twice ())
+
+module Example2
+open NonInterference
+open FStar.Comp
+open FStar.Relational
+
+(* Fails iff label c < (max (label a) (label b) *)
+let a = new_labeled_int 1
+let b = new_labeled_int 0
+let c = new_labeled_int 2
+
+let test () = c := !a + !b;
+              if !c < !a then
+                b := 0
+              else 
+                b := 1;
+              a := 0
+
+val test_ni : ni
+let test_ni () = compose2_self test (twice ())

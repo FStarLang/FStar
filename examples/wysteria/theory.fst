@@ -1,20 +1,16 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi OrdSet --admit_fsi OrdMap --admit_fsi FFI --z3timeout 10 --__temp_no_proj;
+    options:--admit_fsi FStar.Set --admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FFI --z3timeout 10 --__temp_no_proj;
     variables:LIB=../../lib;
     other-files:set.fsi $LIB/ordset.fsi $LIB/ordmap.fsi $LIB/constr.fst $LIB/ext.fst $LIB/classical.fst ast.fst ffi.fsi sem.fst
  --*)
 
 module Metatheory
 
-open OrdMap
-open OrdSet
+open FStar.OrdMap
+open FStar.OrdSet
 
 open AST
 open Semantics
-
-type slice_v_meta_inv (meta:v_meta) (smeta:v_meta) =
-  subset (Meta.vps smeta) (Meta.vps meta) && (Meta.cb smeta = Meta.cb meta) &&
-  subset (Meta.wps smeta) (Meta.wps meta) && (Meta.cw smeta = Meta.cw meta)
 
 opaque val slice_wire_sps:
   #eps:eprins -> ps:prins -> w:v_wire eps
@@ -72,7 +68,7 @@ and slice_en_sps ps en =
           else
             Some (slice_v_sps ps (D_v.v (Some.v (en x))))
 
-open FunctionalExtensionality
+open FStar.FunctionalExtensionality
 
 val slice_emp_en_sps: ps:prins
                       -> Lemma (requires (True))
@@ -92,6 +88,7 @@ let rec slice_vs_sps ps vs = match vs with
 
 val slice_r_sps: prins -> r:redex{is_sec_redex r} -> Tot redex
 let slice_r_sps ps r = match r with
+  | R_box ps' v        -> R_box ps' (D_v.v (slice_v_sps ps v))
   | R_assec ps' v      -> R_assec ps' (D_v.v (slice_v_sps ps v))
   | R_unbox v          -> R_unbox (D_v.v (slice_v_sps ps v))
   | R_mkwire v1 v2     -> R_mkwire (D_v.v (slice_v_sps ps v1)) (D_v.v (slice_v_sps ps v2))
@@ -104,6 +101,8 @@ let slice_r_sps ps r = match r with
 
 val slice_f'_sps: ps:prins -> f:frame'{is_sec_frame f} -> Tot frame'
 let slice_f'_sps ps f = match f with
+  | F_box_ps     _    -> f
+  | F_box_e      _    -> f
   | F_assec_ps   _    -> f
   | F_assec_e    _    -> f
   | F_assec_ret       -> f
@@ -168,7 +167,7 @@ let env_upd_upd_slice_lemma_ps #meta1 #meta2 ps en x1 x2 v1 v2 =
   cut (FEq (slice_en_sps ps (update_env #meta2 (update_env #meta1 en x1 v1) x2 v2))
            (update_env #(D_v.meta (slice_v_sps ps v2)) (update_env #(D_v.meta (slice_v_sps ps v1)) (slice_en_sps ps en) x1 (D_v.v (slice_v_sps ps v1))) x2 (D_v.v (slice_v_sps ps v2))))
 
-open Constructive
+open FStar.Constructive
 
 val if_exit_sec_then_to_sec: #c:sconfig -> #c':config -> h:sstep c c' -> Tot bool
 let if_exit_sec_then_to_sec #c #c' h = not (is_C_assec_ret h) || is_sec c'
@@ -243,6 +242,7 @@ opaque val sstep_sec_slice_lemma: c:sconfig{is_sec c}
                                                (sstep (slice_c_sps c) (slice_c_sps c')))
 #set-options "--split_cases 1"
 let sstep_sec_slice_lemma c c' h = match h with
+  | C_box_ps c c'          -> Conj () (C_box_ps (slice_c_sps c) (slice_c_sps c'))
   | C_unbox c c'           -> Conj () (C_unbox (slice_c_sps c) (slice_c_sps c'))
   | C_mkwire_e1 c c'       -> Conj () (C_mkwire_e1 (slice_c_sps c) (slice_c_sps c'))
   | C_projwire_p c c'      -> Conj () (C_projwire_p (slice_c_sps c) (slice_c_sps c'))
@@ -256,6 +256,7 @@ let sstep_sec_slice_lemma c c' h = match h with
   | C_app_e1 c c'          -> Conj () (C_app_e1 (slice_c_sps c) (slice_c_sps c'))
   | C_ffi_e c c'           -> Conj () (C_ffi_e (slice_c_sps c) (slice_c_sps c'))
   | C_match_e c c'         -> Conj () (C_match_e (slice_c_sps c) (slice_c_sps c'))
+  | C_box_e c c'           -> Conj () (C_box_e (slice_c_sps c) (slice_c_sps c'))
   | C_mkwire_e2 c c'       -> Conj () (C_mkwire_e2 (slice_c_sps c) (slice_c_sps c'))
   | C_projwire_e c c'      -> Conj () (C_projwire_e (slice_c_sps c) (slice_c_sps c'))
   | C_concatwire_e2 c c'   -> Conj () (C_concatwire_e2 (slice_c_sps c) (slice_c_sps c'))
@@ -264,6 +265,7 @@ let sstep_sec_slice_lemma c c' h = match h with
     let Conf l (Mode Sec ps) ((Frame _ _ (F_ffi _ _ vs))::_) _ (T_val #meta v) = c in
     let _ = cut (b2t (slice_vs_sps ps ((D_v meta v)::vs) = (slice_v_sps ps v)::(slice_vs_sps ps vs))) in
     Conj () (C_ffi_l (slice_c_sps c) (slice_c_sps c'))
+  | C_box_red c c'         -> Conj () (C_box_red (slice_c_sps c) (slice_c_sps c'))
   | C_match_red c c'       -> Conj () (C_match_red (slice_c_sps c) (slice_c_sps c'))
   | C_unbox_red c c'       -> Conj () (C_unbox_red (slice_c_sps c) (slice_c_sps c'))
   | C_mkwire_red c c'      -> Conj () (C_mkwire_red (slice_c_sps c) (slice_c_sps c'))
@@ -271,6 +273,7 @@ let sstep_sec_slice_lemma c c' h = match h with
   | C_concatwire_red c c'  -> Conj () (C_concatwire_red (slice_c_sps c) (slice_c_sps c'))
   | C_let_red c c'         -> Conj () (C_let_red (slice_c_sps c) (slice_c_sps c'))
   | C_app_red c c'         -> Conj () (C_app_red (slice_c_sps c) (slice_c_sps c'))
+  | C_box_beta c c'        -> Conj () (C_box_beta (slice_c_sps c) (slice_c_sps c'))
   | C_let_beta c c'        -> Conj () (C_let_beta (slice_c_sps c) (slice_c_sps c'))
   | C_app_beta c c'        ->
     let Conf _ (Mode Sec ps) _ _ (T_red (R_app v _)) = c in
@@ -313,46 +316,6 @@ let sstep_sec_slice_lemma c c' h = match h with
 #reset-options
 (**********)
 
-opaque val slice_wire:
-  #eps:eprins -> p:prin -> w:v_wire eps
-  -> Tot (r:v_wire (intersect eps (singleton p)){select p r = select p w})
-let slice_wire #eps p w =
-  if mem p eps then
-    update p (Some.v (select p w)) OrdMap.empty
-  else OrdMap.empty
-
-val slice_v   : #meta:v_meta -> prin -> v:value meta
-                -> Tot (r:dvalue{slice_v_meta_inv meta (D_v.meta r)}) (decreases %[v])
-val slice_en  : prin -> en:env -> Tot (varname -> Tot (option dvalue)) (decreases %[en])
-
-let rec slice_v #meta p v =
-  let def = D_v meta v in
-  let emp = D_v (Meta empty Can_b empty Can_w) V_emp in
-  match v with
-    | V_const _           -> def
-
-    | V_box ps v          ->
-      let D_v meta' v' = if mem p ps then slice_v p v else emp in
-      D_v (Meta ps Can_b (Meta.wps meta') Cannot_w) (V_box ps v')
-
-    | V_wire eps w        -> D_v (Meta empty Can_b (intersect eps (singleton p)) Cannot_w)
-                                 (V_wire (intersect eps (singleton p)) (slice_wire #eps p w))
-
-    | V_clos en x e       -> D_v meta (V_clos (slice_en p en) x e)
-
-    | V_fix_clos en f x e -> D_v meta (V_fix_clos (slice_en p en) f x e)
-
-    | V_emp_clos _ _      -> def
-
-    | V_emp               -> emp
-
-and slice_en p en =
-  let _ = () in
-  fun x -> preceds_axiom en x;
-           if en x = None then None
-           else
-             Some (slice_v p (D_v.v (Some.v (en x))))
-
 val slice_emp_en: p:prin
                   -> Lemma (requires (True))
                            (ensures (slice_en p empty_env = empty_env))
@@ -379,9 +342,7 @@ val slice_r: prin -> redex -> Tot redex
 let slice_r p r = match r with
   | R_aspar ps v       -> R_aspar ps (D_v.v (slice_v p v))
   | R_assec ps v       -> R_assec ps (D_v.v (slice_v p v))
-  | R_box ps v         ->
-    let D_v _ v' = if mem p ps then slice_v p v else D_v (Meta empty Can_b empty Can_w) V_emp in
-    R_box ps v'
+  | R_box ps v         -> R_box ps (D_v.v (slice_v p v))
   | R_unbox v          -> R_unbox (D_v.v (slice_v p v))
   | R_mkwire v1 v2     -> R_mkwire (D_v.v (slice_v p v1)) (D_v.v (slice_v p v2))
   | R_projwire p' v    -> R_projwire p' (D_v.v (slice_v p v))
@@ -395,9 +356,11 @@ val slice_f': p:prin -> f:frame'{not (is_F_assec_ret f)} -> Tot frame'
 let slice_f' p f = match f with
   | F_aspar_ps      _ -> f
   | F_aspar_e       _ -> f
+  | F_box_ps        _ -> f
+  | F_box_e         _ -> f
   | F_assec_ps      _ -> f
   | F_assec_e       _ -> f
-  | F_box_e         _ -> f
+  | F_aspar_ret     _ -> f
   | F_unbox           -> f
   | F_mkwire_ps     _ -> f
   | F_mkwire_e      v -> F_mkwire_e (D_v.v (slice_v p v))
@@ -452,86 +415,9 @@ let rec slice_c p (Conf Source (Mode as_m ps) s en t) =
   in
   Conf Target (Mode Par (singleton p)) (slice_s p s) en' t'
 
-type compose_v_meta_inv (m1:v_meta) (m2:v_meta) (cmeta:v_meta) =
-  subset (Meta.vps cmeta) (union (Meta.vps m1) (Meta.vps m2))            /\
-  ((Meta.cb m1 = Can_b /\ Meta.cb m2 = Can_b) ==> Meta.cb cmeta = Can_b) /\
-  subset (Meta.wps cmeta) (union (Meta.wps m1) (Meta.wps m2))            /\
-  ((Meta.cw m1 = Can_w /\ Meta.cw m2 = Can_w) ==> Meta.cw cmeta = Can_w)
-
-val compose_vals: #m1:v_meta -> #m2:v_meta -> v1:value m1 -> v2:value m2
-                  -> Tot (r:dvalue{compose_v_meta_inv m1 m2 (D_v.meta r)})
-                     (decreases %[v1])
-val compose_envs: en:env -> env -> Tot (varname -> Tot (option dvalue)) (decreases %[en])
-
-let rec compose_vals #m1 #m2 v1 v2 =
-  if is_V_emp v1 then D_v m2 v2
-  else if is_V_emp v2 then D_v m1 v1
-  else
-    let emp = D_v (Meta empty Can_b empty Can_w) V_emp in
-    match v1 with
-      | V_const c1 ->
-        if is_V_const v2 && V_const.c v1 = V_const.c v2 then
-          D_v m1 v1
-        else emp
-
-      | V_box ps1 v1 ->
-        if is_V_box v2 then
-          let V_box ps2 v2 = v2 in
-          if ps1 = ps2 then
-            let D_v meta v = compose_vals v1 v2 in
-            D_v (Meta ps1 Can_b (Meta.wps meta) Cannot_w) (V_box ps1 v)
-          else
-            emp
-        else emp
-
-      | V_wire eps1 w1 ->
-        if is_V_wire v2 then
-          let V_wire eps2 w2 = v2 in
-          if intersect eps1 eps2 = empty then
-            D_v (Meta empty Can_b (union eps1 eps2) Cannot_w)
-                (V_wire (union eps1 eps2) (compose_wires #eps1 #eps2 w1 w2 eps1))
-          else emp
-        else emp
-
-      | V_clos en1 x1 e1 ->
-        if is_V_clos v2 then
-          let V_clos en2 x2 e2 = v2 in
-          if x1 = x2 && e1 = e2 then
-            D_v m1 (V_clos (compose_envs en1 en2) x1 e1)
-          else emp
-        else emp
-
-      | V_fix_clos en1 f1 x1 e1 ->
-        if is_V_fix_clos v2 then
-          let V_fix_clos en2 f2 x2 e2 = v2 in
-          if f1 = f2 && x1 = x2 && e1 = e2 then
-            D_v m1 (V_fix_clos (compose_envs en1 en2) f1 x1 e1)
-          else emp
-        else emp
-
-      | V_emp_clos x1 e1 ->
-        if is_V_emp_clos v2 then
-          let V_emp_clos x2 e2 = v2 in
-          if x1 = x2 && e1 = e2 then
-            D_v m1 (V_emp_clos x1 e1)
-          else emp
-        else emp
-
-and compose_envs en1 en2 =
-  let _ = () in
-  fun x -> preceds_axiom en1 x;
-           let r1 = en1 x in
-           let r2 = en2 x in
-           match r1 with
-             | None             -> r2
-             | Some (D_v m1 v1) ->
-               match r2 with
-                 | None             -> r1
-                 | Some (D_v m2 v2) -> Some (compose_vals v1 v2)
-
 (**********)
 
-open Classical
+open FStar.Classical
 
 val slice_lem_singl_wire: #eps:eprins -> w:v_wire eps -> p:prin
                           -> Lemma (requires (True))
@@ -713,33 +599,6 @@ and slc_en_lem_ps en p ps =
 val mempty: #key:Type -> #value:Type -> #f:cmp key -> Tot (OrdMap.ordmap key value f)
 let mempty (#k:Type) (#v:Type) #f = OrdMap.empty #k #v #f
 
-type contains_ps (#v:Type) (ps:prins) (m:OrdMap.ordmap prin v p_cmp) =
-  forall p. mem p ps ==> contains p m
-
-type value_map (ps:prins) = m:OrdMap.ordmap prin dvalue p_cmp{contains_ps ps m}
-
-type env_map (ps:prins) = m:OrdMap.ordmap prin env p_cmp{contains_ps ps m}
-
-val compose_vals_m: ps:prins -> m:value_map ps -> Tot dvalue (decreases (size ps))
-let rec compose_vals_m ps m =
-  let Some p = choose ps in
-  let Some (D_v meta v) = select p m in
-  let ps_rest = remove p ps in
-  if ps_rest = empty then D_v meta v
-  else
-    let D_v _ v' = compose_vals_m ps_rest m in
-    compose_vals v v'
-
-val compose_envs_m: ps:prins -> m:env_map ps -> Tot env (decreases (size ps))
-let rec compose_envs_m ps m =
-  let Some p = choose ps in
-  let Some en = select p m in
-  let ps_rest = remove p ps in
-  if ps_rest = empty then en
-  else
-    let en' = compose_envs_m ps_rest m in
-    compose_envs en en'
-
 val slc_v_lem_m: #meta:v_meta -> v:value meta -> ps:prins
                  -> m:value_map ps{(forall p. mem p ps ==>
                                               (Some.v (select p m) = slice_v p v))}
@@ -877,6 +736,9 @@ let sstep_par_slice_lemma c c' h p =
     | C_aspar_ps (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else IntroR (C_aspar_ps (slice_c p c) (slice_c p c'))
+    | C_box_ps (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else IntroR (C_box_ps (slice_c p c) (slice_c p c'))
     | C_unbox (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else IntroR (C_unbox (slice_c p c) (slice_c p c'))
@@ -922,6 +784,9 @@ let sstep_par_slice_lemma c c' h p =
     | C_aspar_e (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else IntroR (C_aspar_e (slice_c p c) (slice_c p c'))
+    | C_box_e (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else IntroR (C_box_e (slice_c p c) (slice_c p c'))
     | C_mkwire_e2 (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else IntroR (C_mkwire_e2 (slice_c p c) (slice_c p c'))
@@ -944,11 +809,8 @@ let sstep_par_slice_lemma c c' h p =
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else IntroR (C_aspar_red (slice_c p c) (slice_c p c'))
     | C_box_red (Conf _ m s _ _) _ ->
-      if mem p (Mode.ps m) then
-        IntroR (C_box_red (slice_c p c) (slice_c p c'))
-      else if mem p (Mode.ps (Frame.m (Cons.hd s))) then
-        IntroR (C_box_red (slice_c p c) (slice_c p c'))
-      else IntroL ()
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else IntroR (C_box_red (slice_c p c) (slice_c p c'))
     | C_unbox_red (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else IntroR (C_unbox_red (slice_c p c) (slice_c p c'))
@@ -1000,7 +862,7 @@ let sstep_par_slice_lemma c c' h p =
         let (en, x, _) = get_en_b v in
         env_upd_slice_lemma p en x (V_const (C_unit));
         IntroR (C_aspar_beta (slice_c p c) (slice_c p c'))
-    | C_box_beta (Conf _ m _ _ _) _ ->
+    | C_box_beta (Conf _ m _ _ (T_red (R_box ps _))) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else
         IntroR (C_box_beta (slice_c p c) (slice_c p c'))
@@ -1035,6 +897,12 @@ let sstep_par_slice_lemma c c' h p =
         slice_wire_compose_lemma #eps1 #eps2 w1 w2 p;
         de_morgan_intersect_over_union eps1 eps2 (singleton p);
         IntroR (C_concatwire_beta (slice_c p c) (slice_c p c'))
+    | C_aspar_ret (Conf _ m s _ _) _ ->
+      if mem p (Mode.ps m) then
+        IntroR (C_aspar_ret (slice_c p c) (slice_c p c'))
+      else if mem p (Mode.ps (Frame.m (Cons.hd s))) then
+        IntroR (C_aspar_ret (slice_c p c) (slice_c p c'))
+      else IntroL ()
     | C_assec_ps (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else
@@ -1059,10 +927,17 @@ type tpar (ps:prins) = m:OrdMap.ordmap prin tconfig_par p_cmp{forall p. mem p ps
 
 type tconfig_sec = c:tconfig{Mode.m (Conf.m c) = Sec}
 
-type protocol (ps:prins) = tpar ps * option tconfig_sec
+type tsec =
+  m:OrdMap.ordmap prins tconfig_sec ps_cmp{forall ps1 ps2.
+                                           (contains ps1 m /\ contains ps2 m /\ not (ps1 = ps2) ==>
+                                           intersect ps1 ps2 = empty)}
+
+//type protocol (ps:prins) = tpar ps * option tconfig_sec
+type protocol (ps:prins) = tpar ps * tsec
 
 type tpre_assec (#ps':prins) (pi:protocol ps') (ps:prins) (x:varname) (e:exp) =
-  is_None (snd pi) /\
+  not (contains ps (snd pi)) /\
+  (forall ps1. contains ps1 (snd pi) ==> intersect ps1 ps = empty) /\
   (forall p. mem p ps ==> (contains p (fst pi) /\
                            Let (Some.v (select p (fst pi)))
                              (fun c ->
@@ -1074,15 +949,16 @@ type tpre_assec (#ps':prins) (pi:protocol ps') (ps:prins) (x:varname) (e:exp) =
                                MkTuple3._3 (get_en_b (R_assec.v (T_red.r (Conf.t c)))) = e)))
 
 opaque val get_env_m:
-  #ps':prins -> pi:protocol ps' -> ps:prins{forall p. mem p ps ==>
-                                            contains p (fst pi) /\
-                                            Let (Some.v (select p (fst pi)))
-                                                (fun c -> is_T_red (Conf.t c) /\
-                                                          is_R_assec (T_red.r (Conf.t c)) /\
-                                                          is_clos (R_assec.v (T_red.r (Conf.t c))))}
-  -> Tot (m:env_map ps{(forall p. mem p ps ==>
-                                  select p m = Some (
-                                  MkTuple3._1 (get_en_b (R_assec.v (T_red.r (Conf.t (Some.v (select p (fst pi)))))))))})
+  #ps':prins -> pi:protocol ps' -> ps:prins{forall p. (mem p ps ==>
+                                                       contains p (fst pi) /\
+                                                       Let (Some.v (select p (fst pi)))
+                                                       (fun c -> is_T_red (Conf.t c) /\
+                                                                 is_R_assec (T_red.r (Conf.t c)) /\
+                                                                 is_clos (R_assec.v (T_red.r (Conf.t c)))))}
+  -> Tot (m:env_map ps{(forall p. (mem p ps ==>
+                                   select p m = Some (
+                                   MkTuple3._1 (get_en_b (R_assec.v (T_red.r (Conf.t (Some.v (select p (fst pi))))))))) /\
+                                  (not (mem p ps) ==> select p m = None))})
      (decreases (size ps))
 let rec get_env_m #ps' pi ps =
   let Some p = choose ps in
@@ -1122,15 +998,15 @@ val tstep_assec:
 let tstep_assec #ps' pi ps x e =
   let env = update_env (compose_envs_m ps (get_env_m pi ps)) x (V_const C_unit) in
   let tsec = Conf Target (Mode Sec ps) [] env (T_exp e) in
-  (step_ps_to_wait #ps' (fst pi) ps, Some tsec)
+  (step_ps_to_wait #ps' (fst pi) ps, update ps tsec (snd pi))
 
 type ps_sec_waiting (#ps':prins) (pi:protocol ps') (ps:prins) =
   (forall p. mem p ps ==> (contains p (fst pi) /\
                            is_T_sec_wait (Conf.t (Some.v (select p (fst pi))))))
 
 type tpre_assec_ret (#ps':prins) (pi:protocol ps') (ps:prins) =
-  is_Some (snd pi) /\ (Conf.m (Some.v (snd pi)) = Mode Sec ps)  /\
-  is_value (Some.v (snd pi)) /\ (Conf.s (Some.v (snd pi)) = []) /\
+  contains ps (snd pi) /\ (Conf.m (Some.v (select ps (snd pi))) = Mode Sec ps)  /\
+  is_value (Some.v (select ps (snd pi))) /\ (Conf.s (Some.v (select ps (snd pi))) = []) /\
   ps_sec_waiting pi ps
 
 val ret_sec_value_to_p: sec_c:tconfig{is_value sec_c} -> c:tconfig -> p:prin -> Tot tconfig
@@ -1160,17 +1036,18 @@ let rec ret_sec_value_to_ps #ps' pi sec_c ps =
 type pstep: #ps:prins -> protocol ps -> protocol ps -> Type =
 
   | P_par:
-    #ps:prins -> #c':tconfig -> pi:protocol ps
+    #ps:prins -> #c':tconfig_par -> pi:protocol ps
     -> p:prin{contains p (fst pi)}
     -> h:sstep (Some.v (select p (fst pi))) c'
     -> pi':protocol ps{pi' = (update p c' (fst pi), (snd pi))}
     -> pstep #ps pi pi'
 
   | P_sec:
-    #ps:prins -> #c':tconfig -> pi:protocol ps{is_Some (snd pi)}
-    -> h:sstep (Some.v (snd pi)) c'
-    -> pi':protocol ps{pi' = (fst pi, Some c')}
-    -> pstep #ps pi pi'
+    #ps':prins -> #c':tconfig_sec -> pi:protocol ps'
+    -> ps:prins{contains ps (snd pi)}
+    -> h:sstep (Some.v (select ps (snd pi))) c'
+    -> pi':protocol ps'{pi' = (fst pi, update ps c' (snd pi))}
+    -> pstep #ps' pi pi'
 
   | P_sec_enter:
     #ps':prins -> pi:protocol ps' -> ps:prins
@@ -1180,7 +1057,7 @@ type pstep: #ps:prins -> protocol ps -> protocol ps -> Type =
 
   | P_sec_exit:
     #ps':prins -> pi:protocol ps' -> ps:prins{tpre_assec_ret pi ps}
-    -> pi':protocol ps'{pi' = (ret_sec_value_to_ps #ps' (fst pi) (Some.v (snd pi)) ps, None)}
+    -> pi':protocol ps'{pi' = (ret_sec_value_to_ps #ps' (fst pi) (Some.v (select ps (snd pi))) ps, OrdMap.remove ps (snd pi))}
     -> pstep #ps' pi pi'
 
 opaque val slice_c_ps_par:
@@ -1198,13 +1075,15 @@ let rec slice_c_ps_par ps c =
     update p (slice_c p c) pi_rest
 
 val slice_c_ps: ps:prins -> c:sconfig
-                -> Tot (pi:protocol ps{forall p. (mem p ps ==>
-                                                  select p (fst pi) = Some (slice_c p c)) /\
-                                                 (not (mem p ps) ==>
-                                                  select p (fst pi) = None)})
+                -> Tot (pi:protocol ps{(forall p. (mem p ps ==>
+                                                   select p (fst pi) = Some (slice_c p c)) /\
+                                                  (not (mem p ps) ==>
+                                                   select p (fst pi) = None)) /\
+                                        (is_par c ==> snd pi = mempty)        /\
+                                        (is_sec c ==> snd pi = update (Mode.ps (Conf.m c)) (slice_c_sps c) mempty)})
 let slice_c_ps ps c =
   let pi = slice_c_ps_par ps c in
-  let tsec = if is_sec c then Some (slice_c_sps c) else None in
+  let tsec = if is_sec c then update (Mode.ps (Conf.m c)) (slice_c_sps c) mempty else mempty in
   pi, tsec
 
 val slice_remains_same_in_sec_step_p: #c:sconfig -> #c':sconfig
@@ -1234,7 +1113,7 @@ let forward_simulation_sec #c #c' ps h =
   //sel_contains_tpar ps pi; sel_contains_tpar ps pi';
   cut (forall p. select p pi = select p pi');
   OrdMap.eq_lemma pi pi';
-  P_sec (pi, s) h' (pi', s')
+  P_sec (pi, s) (Mode.ps (Conf.m c)) h' (pi', s')
 
 type pstep_par_star: #ps:prins -> protocol ps -> protocol ps -> Type =
   | PP_refl: #ps:prins -> pi:protocol ps -> pstep_par_star #ps pi pi
@@ -1289,7 +1168,7 @@ let rec pstep_par_star_upd_step #ps #pi #pi' #c #c' h1 h2 p =
 (* TODO: FIXME: this is a weird behavior *)
 val slice_c_snd_lemma: ps:prins -> c:sconfig{is_par c}
                        -> Lemma (requires (True))
-                                (ensures (snd (slice_c_ps ps c) = None))
+                                (ensures (snd (slice_c_ps ps c) = mempty))
 let slice_c_snd_lemma ps c =
   let _, _ = slice_c_ps ps c in
   ()
@@ -1306,7 +1185,7 @@ val sstep_par_slc_snd_lemma: #c:sconfig -> #c':sconfig -> ps:prins
                              -> h:sstep c c'{is_par c /\ if_enter_sec_then_from_sec h}
                              -> Lemma (requires (True))
                                       (ensures (snd (slice_c_ps ps c) = snd (slice_c_ps ps c') /\
-                                                snd (slice_c_ps ps c) = None))
+                                                snd (slice_c_ps ps c) = mempty))
 let sstep_par_slc_snd_lemma #c #c' ps h =
   slice_c_snd_lemma ps c;
   if_par_and_enter_sec_from_sec_then_par #c #c' h;
@@ -1319,6 +1198,9 @@ val if_par_then_exit_sec_to_sec: #c:sconfig -> #c':sconfig
 let if_par_then_exit_sec_to_sec #c #c' h = match h with
   | C_assec_ret _ _ -> ()
   | _               -> ()
+
+(* CH: this sometimes timed out on my laptop *)
+#set-options "--z3timeout 20"
 
 opaque val forward_simulation_par: #c:sconfig -> #c':sconfig
                                    -> h:sstep c c'{is_par c /\
@@ -1360,8 +1242,8 @@ let rec forward_simulation_par #c #c' h ps =
 
     let _ = cut (b2t (pi = update p c_p pi_rest)) in
     let _ = cut (b2t (pi' = update p c_p' pi_rest')) in
-    let _ = cut (b2t (s_rest = None)) in
-    let _ = cut (b2t (s_rest' = None)) in
+    let _ = cut (b2t (s_rest = mempty)) in
+    let _ = cut (b2t (s_rest' = mempty)) in
 
     let h_ind = forward_simulation_par #c #c' h ps_rest in
 
@@ -1372,6 +1254,8 @@ let rec forward_simulation_par #c #c' h ps =
       | IntroR h' ->
         pstep_par_star_upd_step #ps_rest #(pi_rest, s_rest) #(pi_rest', s_rest')
                                          #c_p #c_p' h_ind h' p
+
+#reset-options
 
 val slice_wire_lem_singl_of_ps: #eps:eprins -> w:v_wire eps
                                 -> ps:prins -> p:prin{mem p ps}
@@ -1645,8 +1529,8 @@ let forward_simulation_exit_sec #c #c' h ps =
 
   let pi, s = slice_c_ps ps c in
   let pi', s' = slice_c_ps ps c' in
-  let pi_s = ret_sec_value_to_ps #ps pi (Some.v s) ps' in //writing this and next on one line does not work
-  let s_s = None in
+  let pi_s = ret_sec_value_to_ps #ps pi (Some.v (select ps' s)) ps' in //writing this and next on one line does not work
+  let s_s = mempty #prins #tconfig_sec #ps_cmp in
 
   sstep_sec_to_par_slice_par_others #c #c' h;
   sstep_sec_to_par_slice_par_mems #c #c' h;
@@ -1673,6 +1557,7 @@ let forward_simulation_exit_sec #c #c' h ps =
   //let _ = cut (forall p. not (mem p ps) ==> select p pi_s = None) in
 
   OrdMap.eq_lemma pi_s (fst (slice_c_ps ps c'));
+  let _ = admitP (b2t (OrdMap.remove ps' s = mempty)) in
   P_sec_exit #ps (pi, s) ps' (pi_s, s_s)
 
 opaque val sstep_par_to_sec_slice_par_others:
@@ -1768,8 +1653,8 @@ let forward_simulation_enter_sec #c #c' h ps =
   sstep_par_to_sec_slice_par #c #c' h ps x e;
   let _ = cut (b2t (pi_s = pi')) in
 
-  let Some (Conf _ _ st_s en_s t_s) = s_s in
-  let Some (Conf _ _ st' en' t') = s' in
+  let Some (Conf _ _ st_s en_s t_s) = select ps' s_s in
+  let Some (Conf _ _ st' en' t') = select ps' s' in
 
   let _ = cut (b2t (st_s = [])) in
   let _ = cut (b2t (st' = [])) in
@@ -1853,3 +1738,411 @@ let forward_simulation_theorem #c #c' h ps =
   match h1 with
     | IntroL h' -> PS_tran h' (PS_refl (slice_c_ps ps c'))
     | IntroR h' -> pstep_par_star_to_pstep_star h'
+
+val sstep_deterministic:
+  c:config -> c1:config -> h1:sstep c c1 -> c2:config -> h2:sstep c c2
+  -> Lemma (requires (True)) (ensures (c1 = c2 /\ h1 = h2))
+let sstep_deterministic c c1 h1 c2 h2 = ()
+
+opaque val pstep_ppar_ppar_confluence:
+  #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
+  -> h1:pstep #ps pi pi1{is_P_par h1} -> h2:pstep #ps pi pi2{is_P_par h2}
+  -> Tot (cor (u:unit{pi1 = pi2}) (cexists #(protocol ps) (fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3))))
+let pstep_ppar_ppar_confluence #ps pi pi1 pi2 h1 h2 =
+  let p1, c1' = P_par.p h1, P_par.c' h1 in
+  let p2, c2' = P_par.p h2, P_par.c' h2 in
+
+  let pi_m, s = pi in
+  let pi1_m, s1 = pi1 in
+  let pi2_m, s2 = pi2 in
+
+  if p1 = p2 then IntroL ()
+  else
+    let hp1:sstep (Some.v (select p1 pi_m)) c1' = P_par.h h1 in
+    let hp2:sstep (Some.v (select p2 pi_m)) c2' = P_par.h h2 in
+    
+    let pi13_m = update p2 c2' pi1_m in
+    let pi23_m = update p1 c1' pi2_m in
+    
+    let h13:pstep #ps pi1 (pi13_m, s) = P_par #ps #c2' pi1 p2 hp2 (pi13_m, s) in
+    let h23:pstep #ps pi2 (pi13_m, s) = P_par #ps #c1' pi2 p1 hp1 (pi23_m, s) in
+    
+    IntroR (ExIntro #(protocol ps) #((fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3))) (pi13_m, s) (Conj h13 h23))
+
+opaque val pstep_ppar_psec_confluence:
+  #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
+  -> h1:pstep #ps pi pi1{is_P_par h1} -> h2:pstep #ps pi pi2{is_P_sec h2}
+  -> Tot (cexists #(protocol ps) (fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)))
+let pstep_ppar_psec_confluence #ps pi pi1 pi2 h1 h2 =
+  let pi_m, s = pi in
+  let pi1_m, s1 = pi1 in
+  let pi2_m, s2 = pi2 in
+  
+  let pi3_m = pi1_m in
+  let s3 = s2 in
+  
+  let h13:pstep #ps pi1 (pi3_m, s3) = P_sec #ps #(P_sec.c' h2) pi1 (P_sec.ps h2) (P_sec.h h2) (pi3_m, s3) in
+  let h23:pstep #ps pi2 (pi3_m, s3) = P_par #ps #(P_par.c' h1) pi2 (P_par.p h1) (P_par.h h1) (pi3_m, s3) in
+  
+  ExIntro #(protocol ps) #(fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)) (pi3_m, s3) (Conj h13 h23)
+
+val step_ps_to_wait_update_lemma:
+  ps':prins -> pi:tpar ps' -> ps:prins{forall p. mem p ps ==> contains p pi}
+  -> p:prin{not (mem p ps) /\ mem p ps'} -> c:tconfig_par
+  -> Lemma (requires (True))
+           (ensures (update p c (step_ps_to_wait #ps' pi ps) = step_ps_to_wait #ps' (update p c pi) ps))
+let step_ps_to_wait_update_lemma ps' pi ps p c = ()
+
+val target_par_sstep_lemma:
+  c:tconfig_par -> c':tconfig_par -> h:sstep c c'
+  -> Lemma (requires (True))
+           (ensures ((not (is_T_red (Conf.t c) && is_R_assec (T_red.r (Conf.t c)))) /\
+                     (not (is_T_sec_wait (Conf.t c)))))
+let target_par_sstep_lemma c c' h = ()
+
+val pstep_ppar_psec_enter_excl_lemma:
+  #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
+  -> h1:pstep #ps pi pi1{is_P_par h1} -> h2:pstep #ps pi pi2{is_P_sec_enter h2}
+  -> Lemma (requires (True))
+           (ensures (not (mem (P_par.p h1) (P_sec_enter.ps h2))))
+let pstep_ppar_psec_enter_excl_lemma #ps pi pi1 pi2 h1 h2 =
+  let _ = cut (forall p. mem p (P_sec_enter.ps h2) ==> (is_T_red (Conf.t (Some.v (select p (fst pi)))) /\
+                                                        is_R_assec (T_red.r (Conf.t (Some.v (select p (fst pi))))))) in
+  target_par_sstep_lemma (Some.v (select (P_par.p h1) (fst pi))) (P_par.c' h1) (P_par.h h1)
+
+opaque val pstep_ppar_psec_enter_confluence:
+  #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
+  -> h1:pstep #ps pi pi1{is_P_par h1} -> h2:pstep #ps pi pi2{is_P_sec_enter h2}
+  -> Tot (cexists #(protocol ps) (fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)))
+let pstep_ppar_psec_enter_confluence #ps pi pi1 pi2 h1 h2 =
+  pstep_ppar_psec_enter_excl_lemma #ps pi pi1 pi2 h1 h2;
+  //let _ = admitP (b2t (not (mem (P_par.p h1) (P_sec_enter.ps h2)))) in
+  
+  let pi_m, s = pi in
+  let pi1_m, s1 = pi1 in
+  let pi2_m, s2 = pi2 in
+    
+  let pi3_m = update (P_par.p h1) (P_par.c' h1) pi2_m in
+  let s3 = s2 in
+    
+  let _ = cut (tpre_assec #ps pi1 (P_sec_enter.ps h2) (P_sec_enter.x h2) (P_sec_enter.e h2)) in
+  //let _ = cut (b2t (step_ps_to_wait #ps pi_m (P_sec_enter.ps h2) = pi2_m)) in
+  //let _ = cut (b2t (update (P_par.p h1) (P_par.c' h1) (step_ps_to_wait #ps pi_m (P_sec_enter.ps h2)) = update (P_par.p h1) (P_par.c' h1) pi2_m)) in
+  step_ps_to_wait_update_lemma ps pi_m (P_sec_enter.ps h2) (P_par.p h1) (P_par.c' h1);
+  let _ = cut (b2t (step_ps_to_wait #ps pi1_m (P_sec_enter.ps h2) = pi3_m)) in
+  let _ = cut (forall p. mem p (P_sec_enter.ps h2) ==> select p pi_m = select p pi1_m) in
+  let _ = cut (b2t (get_env_m pi (P_sec_enter.ps h2) = get_env_m pi1 (P_sec_enter.ps h2))) in
+  
+  //let _ = assert (forall p. mem p (P_sec_enter.ps h2) ==> select p pi3_m = select p pi2_m) in
+  let _ = cut (b2t (tstep_assec #ps pi1 (P_sec_enter.ps h2) (P_sec_enter.x h2) (P_sec_enter.e h2) = (pi3_m, s3))) in
+  let h13:pstep #ps pi1 (pi3_m, s3) = P_sec_enter #ps pi1 (P_sec_enter.ps h2) (P_sec_enter.x h2) (P_sec_enter.e h2) (pi3_m, s3) in
+  let h23:pstep #ps pi2 (pi3_m, s3) = P_par #ps #(P_par.c' h1) pi2 (P_par.p h1) (P_par.h h1) (pi3_m, s3) in  
+  ExIntro #(protocol ps) #(fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)) (pi3_m, s3) (Conj h13 h23)
+
+val ret_sec_value_to_ps_update_lemma:
+  ps':prins -> pi:tpar ps' -> sec_c:tconfig{is_value sec_c} -> ps:prins{forall p. mem p ps ==> contains p pi}
+  -> p:prin{not (mem p ps) /\ mem p ps'} -> c:tconfig_par
+  -> Lemma (requires (True))
+           (ensures (update p c (ret_sec_value_to_ps #ps' pi sec_c ps) = ret_sec_value_to_ps #ps' (update p c pi) sec_c ps))
+let ret_sec_value_to_ps_update_lemma ps' pi sec_c ps p c = ()
+
+val pstep_ppar_psec_exit_excl_lemma:
+  #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
+  -> h1:pstep #ps pi pi1{is_P_par h1} -> h2:pstep #ps pi pi2{is_P_sec_exit h2}
+  -> Lemma (requires (True))
+           (ensures (not (mem (P_par.p h1) (P_sec_exit.ps h2))))
+let pstep_ppar_psec_exit_excl_lemma #ps pi pi1 pi2 h1 h2 =
+  let _ = cut (forall p. mem p (P_sec_exit.ps h2) ==> (is_T_sec_wait (Conf.t (Some.v (select p (fst pi)))))) in
+  target_par_sstep_lemma (Some.v (select (P_par.p h1) (fst pi))) (P_par.c' h1) (P_par.h h1)
+
+opaque val pstep_ppar_psec_exit_confluence:
+  #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
+  -> h1:pstep #ps pi pi1{is_P_par h1} -> h2:pstep #ps pi pi2{is_P_sec_exit h2}
+  -> Tot (cexists #(protocol ps) (fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)))
+let pstep_ppar_psec_exit_confluence #ps pi pi1 pi2 h1 h2 =
+  pstep_ppar_psec_exit_excl_lemma #ps pi pi1 pi2 h1 h2;
+  //let _ = admitP (b2t (not (mem (P_par.p h1) (P_sec_exit.ps h2)))) in
+  
+  let pi_m, s = pi in
+  let pi1_m, s1 = pi1 in
+  let pi2_m, s2 = pi2 in
+  
+  let pi3_m = update (P_par.p h1) (P_par.c' h1) pi2_m in
+  let s3 = s2 in
+
+  let _ = cut (tpre_assec_ret #ps pi1 (P_sec_exit.ps h2)) in
+  ret_sec_value_to_ps_update_lemma ps pi_m (Some.v (select (P_sec_exit.ps h2) s)) (P_sec_exit.ps h2) (P_par.p h1) (P_par.c' h1);
+  let h13:pstep #ps pi1 (pi3_m, s3) = P_sec_exit #ps pi1 (P_sec_exit.ps h2) (pi3_m, s3) in
+  let h23:pstep #ps pi2 (pi3_m, s3) = P_par #ps #(P_par.c' h1) pi2 (P_par.p h1) (P_par.h h1) (pi3_m, s3) in
+  ExIntro #(protocol ps) #(fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)) (pi3_m, s3) (Conj h13 h23)
+
+opaque val pstep_psec_psec_confluence:
+  #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
+  -> h1:pstep #ps pi pi1{is_P_sec h1} -> h2:pstep #ps pi pi2{is_P_sec h2}
+  -> Tot (cor (u:unit{pi1 = pi2}) (cexists #(protocol ps) (fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3))))
+let pstep_psec_psec_confluence #ps pi pi1 pi2 h1 h2 =
+  let pi_m, s = pi in
+  let pi1_m, s1 = pi1 in
+  let pi2_m, s2 = pi2 in
+
+  if P_sec.ps h1 = P_sec.ps h2 then IntroL ()
+  else
+    let pi3_m = pi_m in
+    let s3 = update (P_sec.ps h1) (P_sec.c' h1) s2 in
+    let h13:pstep #ps pi1 (pi3_m, s3) = P_sec #ps #(P_sec.c' h2) pi1 (P_sec.ps h2) (P_sec.h h2) (pi3_m, s3) in
+    let h23:pstep #ps pi2 (pi3_m, s3) = P_sec #ps #(P_sec.c' h1) pi2 (P_sec.ps h1) (P_sec.h h1) (pi3_m, s3) in
+    IntroR (ExIntro #(protocol ps) #(fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)) (pi3_m, s3) (Conj h13 h23))
+
+opaque val pstep_psec_psec_enter_confluence:
+  #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
+  -> h1:pstep #ps pi pi1{is_P_sec h1} -> h2:pstep #ps pi pi2{is_P_sec_enter h2}
+  -> Tot (cexists #(protocol ps) (fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)))
+let pstep_psec_psec_enter_confluence #ps pi pi1 pi2 h1 h2 =
+  let _ = cut (b2t (intersect (P_sec.ps h1) (P_sec_enter.ps h2) = empty)) in
+  
+  let pi_m, s = pi in
+  let pi1_m, s1 = pi1 in
+  let pi2_m, s2 = pi2 in
+  
+  let pi3_m = pi2_m in
+  let s3 = update (P_sec.ps h1) (P_sec.c' h1) s2 in
+
+  let _ = cut (tpre_assec #ps pi1 (P_sec_enter.ps h2) (P_sec_enter.x h2) (P_sec_enter.e h2)) in
+  
+  //let _ = cut (b2t (step_ps_to_wait #ps pi_m (P_sec_enter.ps h2) = pi2_m)) in
+  //let _ = cut (b2t (update (P_par.p h1) (P_par.c' h1) (step_ps_to_wait #ps pi_m (P_sec_enter.ps h2)) = update (P_par.p h1) (P_par.c' h1) pi2_m)) in
+  //step_ps_to_wait_update_lemma ps pi_m (P_sec_enter.ps h2) (P_par.p h1) (P_par.c' h1);
+  //let _ = cut (b2t (step_ps_to_wait #ps pi1_m (P_sec_enter.ps h2) = pi3_m)) in
+  let _ = cut (forall p. mem p (P_sec_enter.ps h2) ==> select p pi_m = select p pi1_m) in
+  let _ = cut (b2t (get_env_m pi (P_sec_enter.ps h2) = get_env_m pi1 (P_sec_enter.ps h2))) in
+  
+  //let _ = assert (forall p. mem p (P_sec_enter.ps h2) ==> select p pi3_m = select p pi2_m) in
+  //let _ = cut (b2t (tstep_assec #ps pi1 (P_sec_enter.ps h2) (P_sec_enter.x h2) (P_sec_enter.e h2) = (pi3_m, s3))) in admit ()
+  let pi13_m, s13 = tstep_assec #ps pi1 (P_sec_enter.ps h2) (P_sec_enter.x h2) (P_sec_enter.e h2) in
+  
+  let env13 = update_env (compose_envs_m (P_sec_enter.ps h2) (get_env_m pi1 (P_sec_enter.ps h2)))
+                         (P_sec_enter.x h2) (V_const C_unit) in
+  let tsec13 = Conf Target (Mode Sec (P_sec_enter.ps h2)) [] env13 (T_exp (P_sec_enter.e h2)) in
+  (*let env2 = update_env (compose_envs_m (P_sec_enter.ps h2) (get_env_m pi (P_sec_enter.ps h2)))
+                        (P_sec_enter.x h2) (V_const C_unit) in
+  let tsec2 = Conf Target (Mode Sec (P_sec_enter.ps h2)) [] env2 (T_exp (P_sec_enter.e h2)) in*)
+  //let _ = assert (tsec2 = tsec13) in
+
+  //let _ = assert (select (P_sec_enter.ps h2) s13 = Some tsec13) in
+  //let _ = assert (select (P_sec_enter.ps h2) s2 = Some tsec2) in
+  
+  //let _ = assert (select (P_sec_enter.ps h2) s13 = select (P_sec_enter.ps h2) s2) in
+  
+  //let _ = assert (s13 = s3) in
+  
+  let h13:pstep #ps pi1 (pi3_m, s3) = P_sec_enter #ps pi1 (P_sec_enter.ps h2) (P_sec_enter.x h2) (P_sec_enter.e h2) (pi3_m, s3) in
+  let h23:pstep #ps pi2 (pi3_m, s3) = P_sec #ps #(P_sec.c' h1) pi2 (P_sec.ps h1) (P_sec.h h1) (pi3_m, s3) in
+  ExIntro #(protocol ps) #(fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)) (pi3_m, s3) (Conj h13 h23)
+
+val pstep_psec_psec_exit_excl_lemma:
+  #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
+  -> h1:pstep #ps pi pi1{is_P_sec h1} -> h2:pstep #ps pi pi2{is_P_sec_exit h2}
+  -> Lemma (requires (True))
+           (ensures (not (P_sec.ps h1 = P_sec_exit.ps h2)))
+let pstep_psec_psec_exit_excl_lemma #ps pi pi1 pi2 h1 h2 = () // TODO: FIXME: make it faster ?
+
+opaque val pstep_psec_psec_exit_confluence:
+  #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
+  -> h1:pstep #ps pi pi1{is_P_sec h1} -> h2:pstep #ps pi pi2{is_P_sec_exit h2}
+  -> Tot (cexists #(protocol ps) (fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)))
+let pstep_psec_psec_exit_confluence #ps pi pi1 pi2 h1 h2 =
+  pstep_psec_psec_exit_excl_lemma #ps pi pi1 pi2 h1 h2;
+  let _ = cut (b2t (intersect (P_sec.ps h1) (P_sec_exit.ps h2) = empty)) in
+  
+  let pi_m, s = pi in
+  let pi1_m, s1 = pi1 in
+  let pi2_m, s2 = pi2 in
+
+  let pi3_m = pi2_m in
+  let s3 = update (P_sec.ps h1) (P_sec.c' h1) s2 in
+
+  let _ = cut (tpre_assec_ret #ps pi1 (P_sec_exit.ps h2)) in
+
+  let pi13_m, s13 = ret_sec_value_to_ps #ps pi1_m (Some.v (select (P_sec_exit.ps h2) s1)) (P_sec_exit.ps h2),
+                    OrdMap.remove (P_sec_exit.ps h2) s1 in
+  
+  let h13:pstep #ps pi1 (pi3_m, s3) = P_sec_exit #ps pi1 (P_sec_exit.ps h2) (pi3_m, s3) in
+  let h23:pstep #ps pi2 (pi3_m, s3) = P_sec #ps #(P_sec.c' h1) pi2 (P_sec.ps h1) (P_sec.h h1) (pi3_m, s3) in
+  ExIntro #(protocol ps) #(fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)) (pi3_m, s3) (Conj h13 h23)
+
+opaque val pstep_psec_enter_psec_enter_confluence:
+  #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
+  -> h1:pstep #ps pi pi1{is_P_sec_enter h1} -> h2:pstep #ps pi pi2{is_P_sec_enter h2}
+  -> Tot (cor (u:unit{pi1 = pi2}) (cexists #(protocol ps) (fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3))))
+let pstep_psec_enter_psec_enter_confluence #ps pi pi1 pi2 h1 h2 =
+  let pi_m, s = pi in
+  let pi1_m, s1 = pi1 in
+  let pi2_m, s2 = pi2 in
+  
+  if P_sec_enter.ps h1 = P_sec_enter.ps h2 then IntroL ()
+  else
+    (* TODO: FIXME: this is not needed, but takes a long time otherwise *)
+    let _ = admitP (b2t (intersect (P_sec_enter.ps h1) (P_sec_enter.ps h2) = empty)) in
+
+    let pi23_m = step_ps_to_wait #ps pi2_m (P_sec_enter.ps h1) in
+    let pi13_m = step_ps_to_wait #ps pi1_m (P_sec_enter.ps h2) in
+    let _ = cut (b2t (pi13_m = pi23_m)) in
+
+    let _ = cut (forall p. mem p (P_sec_enter.ps h2) ==> select p pi_m = select p pi1_m) in
+    let _ = cut (b2t (get_env_m pi (P_sec_enter.ps h2) = get_env_m pi1 (P_sec_enter.ps h2))) in
+
+    let _ = cut (forall p. mem p (P_sec_enter.ps h1) ==> select p pi_m = select p pi2_m) in
+    let _ = cut (b2t (get_env_m pi (P_sec_enter.ps h1) = get_env_m pi2 (P_sec_enter.ps h1))) in
+    
+    //let _ = cut (tpre_assec #ps pi1 (P_sec_enter.ps h2) (P_sec_enter.x h2) (P_sec_enter.e h2)) in admit ()
+    
+    let env23 = update_env (compose_envs_m (P_sec_enter.ps h1) (get_env_m pi2 (P_sec_enter.ps h1)))
+                (P_sec_enter.x h1) (V_const C_unit) in
+    let tsec23 = Conf Target (Mode Sec (P_sec_enter.ps h1)) [] env23 (T_exp (P_sec_enter.e h1)) in
+    let s23 = update (P_sec_enter.ps h1) tsec23 s2 in
+    
+    let env13 = update_env (compose_envs_m (P_sec_enter.ps h2) (get_env_m pi1 (P_sec_enter.ps h2)))
+                (P_sec_enter.x h2) (V_const C_unit) in
+    let tsec13 = Conf Target (Mode Sec (P_sec_enter.ps h2)) [] env13 (T_exp (P_sec_enter.e h2)) in
+    
+    let s13 = update (P_sec_enter.ps h2) tsec13 s1 in
+    let _ = cut (b2t (s13 = s23)) in
+    
+    let _ = cut (tpre_assec #ps pi1 (P_sec_enter.ps h2) (P_sec_enter.x h2) (P_sec_enter.e h2)) in
+    let _ = cut (tpre_assec #ps pi2 (P_sec_enter.ps h1) (P_sec_enter.x h1) (P_sec_enter.e h1)) in
+
+    let h13:pstep #ps pi1 (pi13_m, s13) = P_sec_enter #ps pi1 (P_sec_enter.ps h2) (P_sec_enter.x h2) (P_sec_enter.e h2) (pi13_m, s13) in
+    let h23:pstep #ps pi2 (pi23_m, s23) = P_sec_enter #ps pi2 (P_sec_enter.ps h1) (P_sec_enter.x h1) (P_sec_enter.e h1) (pi23_m, s23) in
+    
+    IntroR (ExIntro #(protocol ps) #(fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)) (pi13_m, s13) (Conj h13 h23))
+
+opaque val pstep_psec_enter_psec_exit_confluence:
+  #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
+  -> h1:pstep #ps pi pi1{is_P_sec_enter h1} -> h2:pstep #ps pi pi2{is_P_sec_exit h2}
+  -> Tot (cexists #(protocol ps) (fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)))
+let pstep_psec_enter_psec_exit_confluence #ps pi pi1 pi2 h1 h2 =
+  let _ = cut (b2t (intersect (P_sec_enter.ps h1) (P_sec_exit.ps h2) = empty)) in
+  
+  let pi_m, s = pi in
+  let pi1_m, s1 = pi1 in
+  let pi2_m, s2 = pi2 in
+
+  let env' = update_env (compose_envs_m (P_sec_enter.ps h1) (get_env_m pi (P_sec_enter.ps h1)))
+             (P_sec_enter.x h1) (V_const C_unit) in
+  let tsec' = Conf Target (Mode Sec (P_sec_enter.ps h1)) [] env' (T_exp (P_sec_enter.e h1)) in
+  let _ = assert (s1 = update (P_sec_enter.ps h1) tsec' s) in
+  
+  OrdMap.sel_upd2 (P_sec_enter.ps h1) tsec' (P_sec_exit.ps h2) s;
+  let _ = cut (b2t (select (P_sec_exit.ps h2) s1 = select (P_sec_exit.ps h2) s)) in
+
+  let _ = cut (forall p. mem p (P_sec_exit.ps h2) ==> select p pi_m = select p pi1_m) in
+
+  let _ = cut (forall p. mem p (P_sec_enter.ps h1) ==> select p pi_m = select p pi2_m) in
+  let _ = cut (b2t (get_env_m pi (P_sec_enter.ps h1) = get_env_m pi2 (P_sec_enter.ps h1))) in
+  
+  let pi23_m = step_ps_to_wait #ps pi2_m (P_sec_enter.ps h1) in
+  let pi13_m = ret_sec_value_to_ps #ps pi1_m (Some.v (select (P_sec_exit.ps h2) s1)) (P_sec_exit.ps h2) in
+  let _ = cut (b2t (pi13_m = pi23_m)) in
+
+  //let _ = cut (tpre_assec #ps pi1 (P_sec_enter.ps h2) (P_sec_enter.x h2) (P_sec_enter.e h2)) in admit ()
+  
+  let env23 = update_env (compose_envs_m (P_sec_enter.ps h1) (get_env_m pi2 (P_sec_enter.ps h1)))
+              (P_sec_enter.x h1) (V_const C_unit) in
+  let tsec23 = Conf Target (Mode Sec (P_sec_enter.ps h1)) [] env23 (T_exp (P_sec_enter.e h1)) in
+  let s23 = update (P_sec_enter.ps h1) tsec23 s2 in
+  //let _ = cut (b2t (tsec23 = tsec')) in
+
+  let s13 = OrdMap.remove (P_sec_exit.ps h2) s1 in
+  let _ = cut (b2t (s13 = s23)) in
+  
+  //let _ = cut (tpre_assec #ps pi1 (P_sec_enter.ps h2) (P_sec_enter.x h2) (P_sec_enter.e h2)) in
+  let _ = cut (tpre_assec_ret #ps pi1 (P_sec_exit.ps h2)) in
+  let _ = cut (tpre_assec #ps pi2 (P_sec_enter.ps h1) (P_sec_enter.x h1) (P_sec_enter.e h1)) in
+
+  let h13:pstep #ps pi1 (pi13_m, s13) = P_sec_exit #ps pi1 (P_sec_exit.ps h2) (pi13_m, s13) in
+  let h23:pstep #ps pi2 (pi23_m, s23) = P_sec_enter #ps pi2 (P_sec_enter.ps h1) (P_sec_enter.x h1) (P_sec_enter.e h1) (pi23_m, s23) in
+  
+  ExIntro #(protocol ps) #(fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)) (pi13_m, s13) (Conj h13 h23)
+
+opaque val pstep_psec_exit_psec_exit_confluence:
+  #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
+  -> h1:pstep #ps pi pi1{is_P_sec_exit h1} -> h2:pstep #ps pi pi2{is_P_sec_exit h2}
+  -> Tot (cor (u:unit{pi1 = pi2}) (cexists #(protocol ps) (fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3))))
+let pstep_psec_exit_psec_exit_confluence #ps pi pi1 pi2 h1 h2 =
+  let pi_m, s = pi in
+  let pi1_m, s1 = pi1 in
+  let pi2_m, s2 = pi2 in
+
+  if P_sec_exit.ps h1 = P_sec_exit.ps h2 then IntroL ()
+  else
+    let _ = cut (b2t (intersect (P_sec_exit.ps h1) (P_sec_exit.ps h2) = empty)) in
+    let _ = admitP (forall p. mem p (P_sec_exit.ps h2) ==> not (mem p (P_sec_exit.ps h1))) in
+    
+    (*let _ = cut (b2t (pi1_m = ret_sec_value_to_ps #ps pi_m (Some.v (select (P_sec_exit.ps h1) s)) (P_sec_exit.ps h1))) in
+    let _ = cut (b2t (pi2_m = ret_sec_value_to_ps #ps pi_m (Some.v (select (P_sec_exit.ps h2) s)) (P_sec_exit.ps h2))) in*)
+        
+    let _ = cut (forall p. mem p (P_sec_exit.ps h2) ==> select p pi_m = select p pi1_m) in
+    let _ = cut (forall p. mem p (P_sec_exit.ps h1) ==> select p pi_m = select p pi2_m) in
+    
+    let _ = cut (b2t (select (P_sec_exit.ps h2) s1 = select (P_sec_exit.ps h2) s)) in
+    let _ = cut (b2t (select (P_sec_exit.ps h1) s2 = select (P_sec_exit.ps h1) s)) in
+    
+    let pi13_m = ret_sec_value_to_ps #ps pi1_m (Some.v (select (P_sec_exit.ps h2) s1)) (P_sec_exit.ps h2) in
+    let pi23_m = ret_sec_value_to_ps #ps pi2_m (Some.v (select (P_sec_exit.ps h1) s2)) (P_sec_exit.ps h1) in
+    let _ = cut (b2t (pi13_m = pi23_m)) in
+    
+    let s13 = OrdMap.remove (P_sec_exit.ps h2) s1 in
+    let s23 = OrdMap.remove (P_sec_exit.ps h1) s2 in
+    let _ = cut (b2t (s13 = s23)) in
+
+    let h13:pstep #ps pi1 (pi13_m, s13) = P_sec_exit #ps pi1 (P_sec_exit.ps h2) (pi13_m, s13) in
+    let h23:pstep #ps pi2 (pi23_m, s23) = P_sec_exit #ps pi2 (P_sec_exit.ps h1) (pi23_m, s23) in
+
+    IntroR (ExIntro #(protocol ps) #(fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)) (pi13_m, s13) (Conj h13 h23))
+
+opaque val pstep_confluence_theorem:
+  #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
+  -> h1:pstep #ps pi pi1 -> h2:pstep #ps pi pi2
+  -> Tot (cor (u:unit{pi1 = pi2}) (cexists #(protocol ps) (fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3))))
+let pstep_confluence_theorem ps pi pi1 pi2 h1 h2 =
+  if is_P_par h1 then
+    if is_P_par h2 then pstep_ppar_ppar_confluence #ps pi pi1 pi2 h1 h2
+    else if is_P_sec h2 then IntroR (pstep_ppar_psec_confluence #ps pi pi1 pi2 h1 h2)
+    else if is_P_sec_enter h2 then IntroR (pstep_ppar_psec_enter_confluence #ps pi pi1 pi2 h1 h2)
+    else IntroR (pstep_ppar_psec_exit_confluence #ps pi pi1 pi2 h1 h2)
+
+  else if is_P_sec h1 then
+    if is_P_par h2 then
+      let ExIntro pi3 (Conj p1 p2) = pstep_ppar_psec_confluence #ps pi pi2 pi1 h2 h1 in
+      IntroR (ExIntro pi3 (Conj p2 p1))
+    else if is_P_sec h2 then pstep_psec_psec_confluence #ps pi pi1 pi2 h1 h2
+    else if is_P_sec_enter h2 then 
+      let ExIntro pi3 (Conj p1 p2) = pstep_psec_psec_enter_confluence #ps pi pi1 pi2 h1 h2 in
+      IntroR (ExIntro pi3 (Conj p1 p2))
+    else
+      let ExIntro pi3 (Conj p1 p2) = pstep_psec_psec_exit_confluence #ps pi pi1 pi2 h1 h2 in
+      IntroR (ExIntro pi3 (Conj p1 p2))
+      
+  else if is_P_sec_enter h1 then
+    if is_P_par h2 then
+      let ExIntro pi3 (Conj p1 p2) = pstep_ppar_psec_enter_confluence #ps pi pi2 pi1 h2 h1 in
+      IntroR (ExIntro pi3 (Conj p2 p1))
+    else if is_P_sec h2 then
+      let ExIntro pi3 (Conj p1 p2) = pstep_psec_psec_enter_confluence #ps pi pi2 pi1 h2 h1 in
+      IntroR (ExIntro pi3 (Conj p2 p1))
+    else if is_P_sec_enter h2 then pstep_psec_enter_psec_enter_confluence #ps pi pi1 pi2 h1 h2
+    else
+      let ExIntro pi3 (Conj p1 p2) = pstep_psec_enter_psec_exit_confluence #ps pi pi1 pi2 h1 h2 in
+      IntroR (ExIntro pi3 (Conj p1 p2))
+          
+  else
+    if is_P_par h2 then
+      let ExIntro pi3 (Conj p1 p2) = pstep_ppar_psec_exit_confluence #ps pi pi2 pi1 h2 h1 in
+      IntroR (ExIntro pi3 (Conj p2 p1))
+    else if is_P_sec h2 then
+      let ExIntro pi3 (Conj p1 p2) = pstep_psec_psec_exit_confluence #ps pi pi2 pi1 h2 h1 in
+      IntroR (ExIntro pi3 (Conj p2 p1))
+    else if is_P_sec_enter h2 then
+      let ExIntro pi3 (Conj p1 p2) = pstep_psec_enter_psec_exit_confluence #ps pi pi2 pi1 h2 h1 in
+      IntroR (ExIntro pi3 (Conj p2 p1))
+    else pstep_psec_exit_psec_exit_confluence #ps pi pi1 pi2 h1 h2

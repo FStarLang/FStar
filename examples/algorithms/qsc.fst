@@ -1,9 +1,9 @@
 (*--build-config
-    options:--admit_fsi Set --z3timeout 20;
+    options:--admit_fsi FStar.Set --z3timeout 20;
     other-files:set.fsi heap.fst st.fst all.fst list.fst
   --*)
 module QuickSort
-open List
+open FStar.List
 #set-options "--initial_ifuel 2 --initial_fuel 1 --max_ifuel 2 --max_fuel 1"
 
 (* Specification of sortedness according to some comparison function f *)
@@ -53,7 +53,9 @@ let rec partition p = function
      then hd::l1, l2
      else l1, hd::l2
 
+(* this is used only to speed things up *)
 opaque logic type trigger (#a:Type) (x:a) = True
+
 val partition_lemma: f:('a -> Tot bool) -> l:list 'a -> Lemma (requires True)
       (ensures (forall hi lo. (hi, lo) = partition f l
                 ==>  (length l = length hi + length lo

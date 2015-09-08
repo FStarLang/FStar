@@ -1,5 +1,5 @@
 (*--build-config
-    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module Formatting --admit_fsi Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
+    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module Formatting --admit_fsi FStar.Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
     variables:LIB=../../lib
             MITLS=../../../mitls-fstar/libs/fst/;
     other-files:$LIB/string.fst $LIB/list.fst
@@ -28,9 +28,9 @@
 
 module Formatting
 open Prims.PURE
-open String
-open Seq
-open SeqProperties
+open FStar.String
+open FStar.Seq
+open FStar.SeqProperties
 open Platform.Bytes
 
 type message = bytes
@@ -87,7 +87,7 @@ let tag1 = createBytes 1 1uy
 let request s = tag0 @| (utf8 s)
 
 let response s t =
-  lemma_repr_bytes_values (length (utf8 s));
+  //lemma_repr_bytes_values (length (utf8 s));
   let lb = uint16_to_bytes (length (utf8 s)) in
   tag1 @| (lb @| ( (utf8 s) @| (utf8 t)))
 
@@ -108,8 +108,8 @@ val req_resp_distinct:
         (ensures (not( (request s) = (response s' t'))))
         [SMTPat (request s); SMTPat (response s' t')]
 let req_resp_distinct s s' t' =
-  lemma_repr_bytes_values (length (utf8 s));
-  lemma_repr_bytes_values (length (utf8 s'));
+  //lemma_repr_bytes_values (length (utf8 s));
+  //lemma_repr_bytes_values (length (utf8 s'));
   (*lemma_repr_bytes_values (length (utf8 t'));*)
   cut (Seq.index tag0 0 == 0uy)
 
@@ -125,6 +125,6 @@ val resp_components_corr:
   Lemma (requires (Seq.Eq (response s0 t0) (response s1 t1)))
         (ensures  (s0==s1 /\ t0==t1))
         [SMTPat (response s0 t0); SMTPat (response s1 t1)]
-let resp_components_corr s0 t0 s1 t1 =
-  lemma_repr_bytes_values (length (utf8 s0));
-  lemma_repr_bytes_values (length (utf8 s1))
+let resp_components_corr s0 t0 s1 t1 = ()
+  //lemma_repr_bytes_values (length (utf8 s0));
+  //lemma_repr_bytes_values (length (utf8 s1))

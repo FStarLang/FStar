@@ -1,13 +1,13 @@
 (*--build-config
-    options:--admit_fsi OrdSet --admit_fsi OrdMap --admit_fsi FFI;
+    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FFI;
     variables:LIB=../../lib;
     other-files:$LIB/ordset.fsi $LIB/ordmap.fsi $LIB/classical.fst ast.fst ffi.fsi
  --*)
 
 module Semantics
 
-open OrdMap
-open OrdSet
+open FStar.OrdMap
+open FStar.OrdSet
 
 open AST
 
@@ -21,6 +21,9 @@ let e_of_exp (Exp e _) = e
 
 let pre_easpar (c:config) =
   is_T_exp (t_of_conf c) && is_E_aspar (e_of_exp (e_of_t_exp (t_of_conf c))) && is_par c
+  
+let pre_ebox (c:config) =
+  is_T_exp (t_of_conf c) && is_E_box (e_of_exp (e_of_t_exp (t_of_conf c)))
 
 let pre_eapp (c:config) =
   is_T_exp (t_of_conf c) && is_E_app (e_of_exp (e_of_t_exp (t_of_conf c)))
@@ -82,6 +85,10 @@ type comp = | Do | Skip | NA
 val step_aspar_e1: c:config{pre_easpar c} -> Tot config
 let step_aspar_e1 (Conf l m s en (T_exp (Exp (E_aspar e1 e2) _))) =
   Conf l m ((Frame m en (F_aspar_ps e2))::s) en (T_exp e1)
+  
+val step_box_e1: c:config{pre_ebox c} -> Tot config
+let step_box_e1 (Conf l m s en (T_exp (Exp (E_box e1 e2) _))) =
+  Conf l m ((Frame m en (F_box_ps e2))::s) en (T_exp e1)
 
 val step_unbox_e: c:config{pre_eunbox c} -> Tot config
 let step_unbox_e (Conf l m s en (T_exp (Exp (E_unbox e) _))) =
@@ -143,6 +150,12 @@ let step_aspar_e2 (Conf l _ ((Frame m en (F_aspar_ps e))::s) _
                        (T_val (V_const (C_prins ps)))) =
   Conf l m ((Frame m en (F_aspar_e ps))::s) en (T_exp e)
 
+val step_box_e2: c:config{is_value_ps c /\ is_sframe c is_F_box_ps}
+                  -> Tot config
+let step_box_e2 (Conf l _ ((Frame m en (F_box_ps e))::s) _
+                      (T_val (V_const (C_prins ps)))) =
+  Conf l m ((Frame m en (F_box_e ps))::s) en (T_exp e)
+
 val step_mkwire_e2: c:config{is_value c /\ is_sframe c is_F_mkwire_ps}
                    -> Tot config
 let step_mkwire_e2 (Conf l _ ((Frame m en (F_mkwire_ps e))::s) _
@@ -182,9 +195,14 @@ let step_aspar_red (Conf l _ ((Frame m en (F_aspar_e ps))::s) _ (T_val v)) =
   Conf l m s en (T_red (R_aspar ps v))
 
 val step_box_red: c:config{is_value c /\ is_sframe c is_F_box_e}
-                 -> Tot config
+                   -> Tot config
 let step_box_red (Conf l _ ((Frame m en (F_box_e ps))::s) _ (T_val v)) =
   Conf l m s en (T_red (R_box ps v))
+
+(*val step_box_red: c:config{is_value c /\ is_sframe c is_F_box_e}
+                 -> Tot config
+let step_box_red (Conf l _ ((Frame m en (F_box_e ps))::s) _ (T_val v)) =
+  Conf l m s en (T_red (R_box ps v))*)
 
 val step_unbox_red: c:config{is_value c /\ is_sframe c is_F_unbox}
                    -> Tot config
@@ -216,21 +234,6 @@ val step_app_red: c:config{is_value c /\ is_sframe c is_F_app_e2}
 let step_app_red (Conf l _ ((Frame m en (F_app_e2 v1))::s) _ (T_val v2)) =
   Conf l m s en (T_red (R_app v1 v2))
 
-(* TODO: FIXME: the discriminators should take extra args for type indices *)
-val is_clos: #meta:v_meta -> value meta -> Tot bool
-let is_clos #meta v = match v with//is_V_clos v || is_V_fix_clos v || is_V_emp_clos v
-  | V_clos _ _ _
-  | V_emp_clos _ _
-  | V_fix_clos _ _ _ _ -> true
-  | _                  -> false
-
-val get_en_b: #meta:v_meta -> v:value meta{is_clos v} -> Tot (env * varname * exp)
-let get_en_b #meta v = match v with
-  | V_clos en x e       -> en, x, e
-  | V_fix_clos en f x e ->
-    update_env #(Meta empty Cannot_b empty Cannot_w) en f (V_fix_clos en f x e), x, e
-  | V_emp_clos x e      -> empty_env, x, e
-
 val pre_aspar: config -> Tot comp
 let pre_aspar c = match c with
   | Conf l (Mode Par ps1) _ _ (T_red (R_aspar ps2 v)) ->
@@ -248,7 +251,7 @@ let step_aspar c = match c with
   | Conf l m s en' (T_red (R_aspar ps v)) ->
     let en, x, e = get_en_b v in
     let m'  = if src l then Mode Par ps else m in
-    let s'  = (Frame m en' (F_box_e ps))::s in
+    let s'  = (Frame m en' (F_aspar_ret ps))::s in
 
     (*
      * for parties not in ps, the choice of empty_env is arbitrary
@@ -264,20 +267,25 @@ let step_aspar c = match c with
 
     Conf l m' s' en' t'
 
-val pre_box: config -> Tot comp
+val pre_box: c:config -> Tot comp
 let pre_box c = match c with
-  | Conf l (Mode Par ps1) _ _ (T_red (R_box #meta ps2 _)) ->
-    if is_meta_boxable ps2 meta then
+  | Conf l (Mode _ ps) _ _ (T_red (R_box #meta ps' v)) ->
+    if is_meta_boxable ps' meta then
       if src l then
-        if subset ps2 ps1 then Do else NA
+        if subset ps' ps then Do else NA
       else Do
     else NA
-
+  
   | _ -> NA
 
 val step_box: c:config{pre_box c = Do} -> Tot config
-let step_box c = match c with
-  | Conf l m s en (T_red (R_box ps v)) -> Conf l m s en (T_val (V_box ps v))
+let step_box (Conf l m s en (T_red (R_box ps' v))) =
+  let Mode as_m ps = m in
+  if src l || as_m = Sec then
+    Conf l m s en (T_val (V_box ps' v))
+  else
+    if subset ps ps' then Conf l m s en (T_val (V_box ps' v))
+    else Conf l m s en (T_val (V_box ps' V_emp))
 
 val pre_unbox: config -> Tot comp
 let pre_unbox c = match c with
@@ -357,7 +365,7 @@ let pre_concatwire c = match c with
    
   | _ -> NA
 
-open Classical
+open FStar.Classical
 
 val empty_intersection_lemma: eps1:eprins -> eps2:eprins{intersect eps1 eps2 = empty}
                              -> p:prin
@@ -471,6 +479,22 @@ val step_match: c:config{pre_match c = Do} -> Tot config
 let step_match (Conf l m s en (T_red (R_match v pats))) =
   Conf l m s en (T_exp (get_next_exp pats v))
 
+val pre_aspar_ret: config -> Tot comp
+let pre_aspar_ret c = match c with
+  | Conf _ _ ((Frame _ _ (F_aspar_ret ps))::_) _ (T_val #meta _) ->
+    if is_meta_boxable ps meta then Do else NA
+      (*if src l then
+        if subset ps2 ps1 then Do else NA
+      else Do
+    else NA
+*)
+  | _ -> NA
+
+val step_aspar_ret: c:config{pre_aspar_ret c = Do} -> Tot config
+let step_aspar_ret c = match c with
+  | Conf l _ ((Frame m en (F_aspar_ret ps))::s) _ (T_val v)
+    -> Conf l m s en (T_val (V_box ps v))
+
 let pre_eassec (c:config) =
   is_T_exp (t_of_conf c) && is_E_assec (e_of_exp (e_of_t_exp (t_of_conf c)))
 
@@ -514,6 +538,10 @@ let step_assec_ret (Conf l _ ((Frame m en F_assec_ret)::s) _ t) = Conf l m s en 
 type sstep: config -> config -> Type =
   | C_aspar_ps:
     c:config{pre_easpar c} -> c':config{c' = step_aspar_e1 c}
+    -> sstep c c'
+    
+  | C_box_ps:
+    c:config{pre_ebox c} -> c':config{c' = step_box_e1 c}
     -> sstep c c'
 
   | C_unbox:
@@ -569,6 +597,11 @@ type sstep: config -> config -> Type =
   | C_aspar_e:
     c:config{is_value_ps c /\ is_sframe c is_F_aspar_ps}
     -> c':config{c' = step_aspar_e2 c}
+    -> sstep c c'
+    
+  | C_box_e:
+    c:config{is_value_ps c /\ is_sframe c is_F_box_ps}
+    -> c':config{c' = step_box_e2 c}
     -> sstep c c'
    
   | C_mkwire_e2:
@@ -673,6 +706,11 @@ type sstep: config -> config -> Type =
   | C_concatwire_beta:
     c:config{pre_concatwire c = Do} -> c':config{c' = step_concatwire c}
     -> sstep c c'
+    
+  | C_aspar_ret:
+    c:config{is_sframe c is_F_aspar_ret /\ pre_aspar_ret c = Do}
+    -> c':config{c' = step_aspar_ret c}
+    -> sstep c c'
    
   | C_assec_ps:
     c:config{pre_eassec c} -> c':config{c' = step_assec_e1 c}
@@ -696,3 +734,187 @@ type sstep: config -> config -> Type =
     c:config{is_value c /\ is_sframe c is_F_assec_ret}
     -> c':config{c' = step_assec_ret c}
     -> sstep c c'
+
+type slice_v_meta_inv (meta:v_meta) (smeta:v_meta) =
+  subset (Meta.vps smeta) (Meta.vps meta) && (Meta.cb smeta = Meta.cb meta) &&
+  subset (Meta.wps smeta) (Meta.wps meta) && (Meta.cw smeta = Meta.cw meta)
+
+opaque val slice_wire:
+  #eps:eprins -> p:prin -> w:v_wire eps
+  -> Tot (r:v_wire (intersect eps (singleton p)){select p r = select p w})
+let slice_wire #eps p w =
+  if mem p eps then
+    update p (Some.v (select p w)) OrdMap.empty
+  else OrdMap.empty
+
+val slice_v   : #meta:v_meta -> prin -> v:value meta
+                -> Tot (r:dvalue{slice_v_meta_inv meta (D_v.meta r)}) (decreases %[v])
+val slice_en  : prin -> en:env -> Tot (varname -> Tot (option dvalue)) (decreases %[en])
+
+let rec slice_v #meta p v =
+  let def = D_v meta v in
+  let emp = D_v (Meta empty Can_b empty Can_w) V_emp in
+  match v with
+    | V_const _           -> def
+
+    | V_box ps v          ->
+      let D_v meta' v' = if mem p ps then slice_v p v else emp in
+      D_v (Meta ps Can_b (Meta.wps meta') Cannot_w) (V_box ps v')
+
+    | V_wire eps w        -> D_v (Meta empty Can_b (intersect eps (singleton p)) Cannot_w)
+                                 (V_wire (intersect eps (singleton p)) (slice_wire #eps p w))
+
+    | V_clos en x e       -> D_v meta (V_clos (slice_en p en) x e)
+
+    | V_fix_clos en f x e -> D_v meta (V_fix_clos (slice_en p en) f x e)
+
+    | V_emp_clos _ _      -> def
+
+    | V_emp               -> emp
+
+and slice_en p en =
+  let _ = () in
+  fun x -> preceds_axiom en x;
+           if en x = None then None
+           else
+             Some (slice_v p (D_v.v (Some.v (en x))))
+
+type compose_v_meta_inv (m1:v_meta) (m2:v_meta) (cmeta:v_meta) =
+ subset (Meta.vps cmeta) (union (Meta.vps m1) (Meta.vps m2))            /\
+ ((Meta.cb m1 = Can_b /\ Meta.cb m2 = Can_b) ==> Meta.cb cmeta = Can_b) /\
+ subset (Meta.wps cmeta) (union (Meta.wps m1) (Meta.wps m2))            /\
+ ((Meta.cw m1 = Can_w /\ Meta.cw m2 = Can_w) ==> Meta.cw cmeta = Can_w)
+
+(* TODO: FIXME: discriminators are not generated properly, they don't have index argument *)
+val is_v_emp: #meta:v_meta -> v:value meta -> Tot bool
+let is_v_emp #meta v = match v with
+  | V_emp -> true
+  | _     -> false
+
+val is_v_const: #meta:v_meta -> v:value meta -> Tot bool
+let is_v_const #meta v = match v with
+  | V_const _ -> true
+  | _         -> false
+
+val is_v_box: #meta:v_meta -> v:value meta -> Tot bool
+let is_v_box #meta v = match v with
+  | V_box _ _ -> true
+  | _         -> false
+
+val is_v_wire: #meta:v_meta -> v:value meta -> Tot bool
+let is_v_wire #meta v = match v with
+  | V_wire _ _ -> true
+  | _          -> false
+
+val is_v_clos: #meta:v_meta -> v:value meta -> Tot bool
+let is_v_clos #meta v = match v with
+  | V_clos _ _ _ -> true
+  | _            -> false
+
+val is_v_fix_clos: #meta:v_meta -> v:value meta -> Tot bool
+let is_v_fix_clos #meta v = match v with
+  | V_fix_clos _ _ _ _ -> true
+  | _                  -> false
+
+val is_v_emp_clos: #meta:v_meta -> v:value meta -> Tot bool
+let is_v_emp_clos #meta v = match v with
+  | V_emp_clos _ _ -> true
+  | _              -> false
+
+val compose_vals: #m1:v_meta -> #m2:v_meta -> v1:value m1 -> v2:value m2
+                 -> Tot (r:dvalue{compose_v_meta_inv m1 m2 (D_v.meta r)})
+                    (decreases %[v1])
+val compose_envs: en:env -> env -> Tot (varname -> Tot (option dvalue)) (decreases %[en])
+
+let rec compose_vals #m1 #m2 v1 v2 =
+ if is_v_emp v1 then D_v m2 v2
+ else if is_v_emp v2 then D_v m1 v1
+ else
+   let emp = D_v (Meta empty Can_b empty Can_w) V_emp in
+   match v1 with
+     | V_const c1 ->
+       if is_v_const v2 && V_const.c v1 = V_const.c v2 then
+         D_v m1 v1
+       else emp
+
+     | V_box ps1 v1 ->
+       if is_v_box v2 then
+         let V_box ps2 v2 = v2 in
+         if ps1 = ps2 then
+           let D_v meta v = compose_vals v1 v2 in
+           D_v (Meta ps1 Can_b (Meta.wps meta) Cannot_w) (V_box ps1 v)
+         else
+           emp
+       else emp
+
+     | V_wire eps1 w1 ->
+       if is_v_wire v2 then
+         let V_wire eps2 w2 = v2 in
+         if intersect eps1 eps2 = empty then
+           D_v (Meta empty Can_b (union eps1 eps2) Cannot_w)
+               (V_wire (union eps1 eps2) (compose_wires #eps1 #eps2 w1 w2 eps1))
+         else emp
+       else emp
+
+     | V_clos en1 x1 e1 ->
+       if is_v_clos v2 then
+         let V_clos en2 x2 e2 = v2 in
+         if x1 = x2 && e1 = e2 then
+           D_v m1 (V_clos (compose_envs en1 en2) x1 e1)
+         else emp
+       else emp
+
+     | V_fix_clos en1 f1 x1 e1 ->
+       if is_v_fix_clos v2 then
+         let V_fix_clos en2 f2 x2 e2 = v2 in
+         if f1 = f2 && x1 = x2 && e1 = e2 then
+           D_v m1 (V_fix_clos (compose_envs en1 en2) f1 x1 e1)
+         else emp
+       else emp
+
+     | V_emp_clos x1 e1 ->
+       if is_v_emp_clos v2 then
+         let V_emp_clos x2 e2 = v2 in
+         if x1 = x2 && e1 = e2 then
+           D_v m1 (V_emp_clos x1 e1)
+         else emp
+       else emp
+
+and compose_envs en1 en2 =
+ let _ = () in
+ fun x -> preceds_axiom en1 x;
+          let r1 = en1 x in
+          let r2 = en2 x in
+          match r1 with
+            | None             -> r2
+            | Some (D_v m1 v1) ->
+              match r2 with
+                | None             -> r1
+                | Some (D_v m2 v2) -> Some (compose_vals v1 v2)
+
+type contains_ps (#v:Type) (ps:prins) (m:OrdMap.ordmap prin v p_cmp) =
+  forall p. mem p ps ==> contains p m
+
+type value_map (ps:prins) = m:OrdMap.ordmap prin dvalue p_cmp{contains_ps ps m}
+
+type env_map (ps:prins) = m:OrdMap.ordmap prin env p_cmp{contains_ps ps m}
+
+val compose_vals_m: ps:prins -> m:value_map ps -> Tot dvalue (decreases (size ps))
+let rec compose_vals_m ps m =
+  let Some p = choose ps in
+  let Some (D_v meta v) = select p m in
+  let ps_rest = remove p ps in
+  if ps_rest = empty then D_v meta v
+  else
+    let D_v _ v' = compose_vals_m ps_rest m in
+    compose_vals v v'
+
+val compose_envs_m: ps:prins -> m:env_map ps -> Tot env (decreases (size ps))
+let rec compose_envs_m ps m =
+  let Some p = choose ps in
+  let Some en = select p m in
+  let ps_rest = remove p ps in
+  if ps_rest = empty then en
+  else
+    let en' = compose_envs_m ps_rest m in
+    compose_envs en en'

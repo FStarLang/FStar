@@ -1,8 +1,9 @@
 
-type 't located = 't (*this line was manually added, everything else is as extracted*)
+type 't located = 't (*this line and the definitions of locate and unlocate were manually added,
+ everything else is as extracted*)
 
 type sidt =
-Support.Prims.nat
+Prims.nat
 
 type regionLoc =
 | InHeap
@@ -29,12 +30,9 @@ let ___InStack___id = (fun ( projectee ) -> (match (projectee) with
 _11_4
 end))
 
-let regionOf = (fun ( _ ) -> (Support.All.failwith "Not yet implemented:regionOf"))
-
-let locate = (fun ( _ ) -> (Support.All.failwith "Not yet implemented:locate"))
-
-let unlocate = (fun ( l ) -> (Support.All.failwith "Not yet implemented:unlocate"))
+let regionOf = (fun ( _ ) -> (FStar_All.failwith "Not yet implemented:regionOf"))
 
 
+let locate = (fun ( x ) -> x)
 
-
+let unlocate = (fun ( l ) -> l)

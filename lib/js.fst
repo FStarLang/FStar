@@ -14,12 +14,12 @@
    limitations under the License.
 *)
 
-module JS
+module FStar.JS
 
 assume val alert: string -> unit
 assume val utest: string -> 'a -> 'b -> unit
 
-module JS.Console
+module FStar.JS.Console
 
 assume val log: 'a -> unit
 assume val dir: 'a -> unit

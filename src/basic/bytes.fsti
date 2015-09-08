@@ -1,4 +1,4 @@
-module Microsoft.FStar.Bytes
+module FStar.Bytes
 
 type bytes = array byte
 val length : bytes -> int

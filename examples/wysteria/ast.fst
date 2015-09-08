@@ -1,14 +1,14 @@
 (*--build-config
-    options:--admit_fsi OrdSet --admit_fsi OrdMap;
+    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap;
     variables:LIB=../../lib;
     other-files:$LIB/ordset.fsi $LIB/ordmap.fsi
  --*)
 
 module AST
 
-open OrdMap
+open FStar.OrdMap
 
-open OrdSet
+open FStar.OrdSet
 
 type other_info = nat
 
@@ -23,17 +23,66 @@ type prins = s:ordset prin p_cmp{not (s = empty)}
 
 type eprins = ordset prin p_cmp
 
+val ps_cmp: ps1:eprins -> ps2:eprins -> Tot bool (decreases (size ps1))
+let rec ps_cmp ps1 ps2 =
+  if size ps1 < size ps2 then false
+  else if size ps1 > size ps2 then true
+  else
+    if ps1 = empty && ps2 = empty then true
+    else
+      let Some p1, Some p2 = choose ps1, choose ps2 in
+      let ps1_rest, ps2_rest = remove p1 ps1, remove p2 ps2 in
+      if p1 = p2 then ps_cmp ps1_rest ps2_rest
+      else p_cmp p1 p2
+
+val ps_cmp_antisymm:
+  ps1:eprins -> ps2:eprins
+  -> Lemma (requires (True)) (ensures ((ps_cmp ps1 ps2 /\ ps_cmp ps2 ps1) ==> ps1 = ps2))
+     (decreases (size ps1))
+let rec ps_cmp_antisymm ps1 ps2 =
+  if ps1 = empty || ps2 = empty then ()
+  else
+    let Some p1, Some p2 = choose ps1, choose ps2 in
+    let ps1_rest, ps2_rest = remove p1 ps1, remove p2 ps2 in
+    ps_cmp_antisymm ps1_rest ps2_rest
+
+val ps_cmp_trans:
+  ps1:eprins -> ps2:eprins -> ps3:eprins
+  -> Lemma (requires (True)) (ensures ((ps_cmp ps1 ps2 /\ ps_cmp ps2 ps3) ==> ps_cmp ps1 ps3))
+     (decreases (size ps1))
+let rec ps_cmp_trans ps1 ps2 ps3 =
+  if ps1 = empty || ps2 = empty || ps3 = empty then ()
+  else
+    let Some p1, Some p2, Some p3 = choose ps1, choose ps2, choose ps3 in
+    let ps1_rest, ps2_rest, ps3_rest = remove p1 ps1, remove p2 ps2, remove p3 ps3 in
+    ps_cmp_trans ps1_rest ps2_rest ps3_rest
+
+val ps_cmp_total:
+  ps1:eprins -> ps2:eprins
+  -> Lemma (requires (True)) (ensures (ps_cmp ps1 ps2 \/ ps_cmp ps2 ps1))
+     (decreases (size ps1))
+let rec ps_cmp_total ps1 ps2 =
+  if ps1 = empty || ps2 = empty then ()
+  else
+    let Some p1, Some p2 = choose ps1, choose ps2 in
+    let ps1_rest, ps2_rest = remove p1 ps1, remove p2 ps2 in
+    ps_cmp_total ps1_rest ps2_rest
+
+assume Ps_cmp_is_total_order: total_order prins ps_cmp
+
 type const =
-  | C_prin : c:prin -> const
-  | C_prins: c:prins -> const
+  | C_prin  : c:prin   -> const
+  | C_eprins: c:eprins -> const
+  | C_prins : c:prins  -> const
 
   | C_unit : const
-  | C_nat  : c:nat -> const
+  | C_nat  : c:nat  -> const
   | C_bool : c:bool -> const
 
 type exp' =
   | E_aspar     : ps:exp -> e:exp -> exp'
   | E_assec     : ps:exp -> e:exp -> exp'
+  | E_box       : ps:exp -> e:exp -> exp'
   | E_unbox     : e:exp  -> exp'
   | E_mkwire    : e1:exp -> e2:exp -> exp'
   | E_projwire  : e1:exp -> e2:exp -> exp'
@@ -141,9 +190,11 @@ type mode =
 type frame' =
   | F_aspar_ps     : e:exp -> frame'
   | F_aspar_e      : ps:prins -> frame'
+  | F_aspar_ret    : ps:prins -> frame'
   | F_assec_ps     : e:exp -> frame'
   | F_assec_e      : ps:prins -> frame'
   | F_assec_ret    : frame'
+  | F_box_ps       : e:exp -> frame'
   | F_box_e        : ps:prins -> frame'
   | F_unbox        : frame'
   | F_mkwire_ps    : e:exp -> frame'
@@ -172,7 +223,6 @@ type term =
 
 type level = | Source | Target
 
-(* TODO: FIXME: error if just write = is_Source *)
 val src: level -> Tot bool
 let src l = is_Source l
 
@@ -185,11 +235,11 @@ type mode_inv (m:mode) (l:level) =
 
 val is_sec_frame: f':frame' -> Tot bool
 let is_sec_frame f' =
-  not (is_F_aspar_ps f' || is_F_aspar_e f' || is_F_box_e f')
+  not (is_F_aspar_ps f' || is_F_aspar_e f' || is_F_aspar_ret f')
 
 (* TODO: FIXME: workaround for projectors *)
-val ps_of_box_e_frame: f':frame'{is_F_box_e f'} -> Tot prins
-let ps_of_box_e_frame (F_box_e ps) = ps
+val ps_of_aspar_ret_frame: f':frame'{is_F_aspar_ret f'} -> Tot prins
+let ps_of_aspar_ret_frame (F_aspar_ret ps) = ps
 
 val stack_source_inv: stack -> mode -> Tot bool
 let rec stack_source_inv s (Mode as_m ps) = match s with
@@ -200,8 +250,8 @@ let rec stack_source_inv s (Mode as_m ps) = match s with
     (not (as_m = Par) || not (is_F_assec_ret f'))                  &&
     (not (as_m = Sec) || (not (as_m' = Par) || is_F_assec_ret f')) &&
     (not (as_m' = Sec) || (is_sec_frame f' && is_Cons tl))         &&
-    (not (is_F_box_e f') || (ps = ps_of_box_e_frame f'))                  &&
-    (ps = ps' || (subset ps ps' && is_F_box_e f'))                 &&
+    (not (is_F_aspar_ret f') || (ps = ps_of_aspar_ret_frame f'))   &&
+    (ps = ps' || (subset ps ps' && is_F_aspar_ret f'))             &&
     stack_source_inv tl m'
 
 val stack_target_inv: stack -> mode -> Tot bool
@@ -218,7 +268,7 @@ let rec stack_inv s m l =
   if is_Source l then stack_source_inv s m else stack_target_inv s m
 
 val is_sec_redex: redex -> Tot bool
-let is_sec_redex r = not (is_R_aspar r || is_R_box r)
+let is_sec_redex r = not (is_R_aspar r) //|| is_R_box r)
 
 (* TODO: FIXME: workaround for projectors *)
 val r_of_t_red: t:term{is_T_red t} -> Tot redex
@@ -284,3 +334,21 @@ let is_par c = is_Par (m_of_mode (m_of_conf c))
 
 val is_sec: config -> Tot bool
 let is_sec c = is_Sec (m_of_mode (m_of_conf c))
+
+(* TODO: FIXME: the discriminators should take extra args for type indices *)
+val is_clos: #meta:v_meta -> value meta -> Tot bool
+let is_clos #meta v = match v with//is_V_clos v || is_V_fix_clos v || is_V_emp_clos v
+  | V_clos _ _ _
+  | V_emp_clos _ _
+  | V_fix_clos _ _ _ _ -> true
+  | _                  -> false
+
+val get_en_b: #meta:v_meta -> v:value meta{is_clos v} -> Tot (env * varname * exp)
+let get_en_b #meta v = match v with
+  | V_clos en x e       -> en, x, e
+  | V_fix_clos en f x e ->
+    update_env #(Meta empty Cannot_b empty Cannot_w) en f (V_fix_clos en f x e), x, e
+  | V_emp_clos x e      -> empty_env, x, e
+
+val is_terminal: config -> Tot bool
+let is_terminal (Conf _ _ s _ t) = s = [] && is_T_val t

@@ -9,20 +9,27 @@ ALLOCATOR_FILES = $(ALLOCATOR_DIR)/camlstack.o $(ALLOCATOR_DIR)/stack.o $(ALLOCA
 
 OPT_FLAGS=-strict-sequence -w @1..2+3@8@10..12@14..21@23..40-41@43
 FLAGS=-I $(ALLOCATOR_DIR) -g -ccopt -g $(OPT_FLAGS)
-FLAGS=-I $(ALLOCATOR_DIR) -g -ccopt -g
-# OCAMLC=ocamlfind ocamlc
-# OCAMLLINK=ocamlfind ocamlc -custom
 OCAMLC=ocamlfind ocamlopt
 OCAMLLINK=ocamlfind ocamlopt
 CMO=cmx
 
-all: allocator huffman$(EXE)
+all: allocator huffman$(EXE) huffmanref$(EXE)
 
-huffman$(EXE): huffman.ml huffman_ffi.o
-	$(OCAMLLINK) $(FLAGS) -o $@ $^ $(ALLOCATOR_FILES)
+huffman$(EXE): huffman.$(CMO) huffman_ffi.o
+	$(OCAMLLINK) -o $@ $^ $(ALLOCATOR_FILES)
+
+huffmanref$(EXE): huffmanref.$(CMO) huffmanref_ffi.o
+	$(OCAMLLINK) -o $@ $^ $(ALLOCATOR_FILES)
 
 allocator:
+ifdef NOGC
+	$(MAKE) OCAMLC="$(OCAMLC)" CMO=$(CMO) OCAMLLINK="$(OCAMLLINK)" NOGC=y -C $(ALLOCATOR_DIR)
+else
 	$(MAKE) OCAMLC="$(OCAMLC)" CMO=$(CMO) OCAMLLINK="$(OCAMLLINK)" -C $(ALLOCATOR_DIR)
+endif
+
+%.$(CMO): %.ml
+	$(OCAMLC) $(FLAGS) -c  $< -o $@
 
 %.o: %.c
 	$(OCAMLC) $(FLAGS) -c  $^ -o $@

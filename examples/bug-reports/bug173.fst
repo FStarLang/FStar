@@ -201,14 +201,26 @@ let rec preservation_exp g h e = match e with
   | (Val _, _) -> preservation_exp g h op2
   | _ -> preservation_exp g h op1
 
-(* type preservation for statments *)
+(* type preservation for statments -- working variant *)
 val preservation : g:env -> h:heap{typed_heap g h} -> 
                    s:stmt{typing g s /\ is_Some (step h s)} -> Lemma
-                   (typing g (snd (Some.v (step h s))) /\
-                     typed_heap g (fst (Some.v (step h s))))
+                   (typing g (MkTuple2._2 (Some.v (step h s))) /\
+                     typed_heap g (MkTuple2._1 (Some.v (step h s))))
 let rec preservation g h s = match s with
 | Skip -> ()
 | Assign x t -> if not (is_Val t) then preservation_exp g h t
 | Seq s1 s2 -> if not (is_Skip s1) then preservation g h s1
+| Cond c t e -> if not (is_Val c) then preservation_exp g h c
+| While c b -> if not (is_Val c) then preservation_exp g h c
+
+(* type preservation for statments -- failing variant *)
+val preservation' : g:env -> h:heap{typed_heap g h} -> 
+                   s:stmt{typing g s /\ is_Some (step h s)} -> Lemma
+                   (typing g (snd (Some.v (step h s))) /\
+                     typed_heap g (fst (Some.v (step h s))))
+let rec preservation' g h s = match s with
+| Skip -> ()
+| Assign x t -> if not (is_Val t) then preservation_exp g h t
+| Seq s1 s2 -> if not (is_Skip s1) then preservation' g h s1
 | Cond c t e -> if not (is_Val c) then preservation_exp g h c
 | While c b -> if not (is_Val c) then preservation_exp g h c

@@ -16,18 +16,18 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 
-module Microsoft.FStar.Parser.DesugarEnv
+module FStar.Parser.DesugarEnv
 
 
-open Microsoft.FStar
-open Microsoft.FStar.Util
-open Microsoft.FStar.Absyn
-open Microsoft.FStar.Absyn.Syntax
-open Microsoft.FStar.Absyn.Util
-open Microsoft.FStar.Absyn.Const
-open Microsoft.FStar.Parser
-    
-type binding = 
+open FStar
+open FStar.Util
+open FStar.Absyn
+open FStar.Absyn.Syntax
+open FStar.Absyn.Util
+open FStar.Absyn.Const
+open FStar.Parser
+
+type binding =
   | Binding_typ_var of ident
   | Binding_var of ident
   | Binding_let of lident
@@ -64,17 +64,17 @@ val qualify_lid: env -> lident -> lident
 val empty_env: unit -> env
 val default_total: env -> env
 val default_ml: env -> env
-type occurrence = 
+type occurrence =
   | OSig of sigelt
   | OLet of lident
   | ORec of lident
-type foundname = 
+type foundname =
   | Exp_name of occurrence * exp
   | Typ_name of occurrence * typ
   | Eff_name of occurrence * lident
   | Knd_name of occurrence * lident
 val current_module: env -> lident
-val try_lookup_name : bool -> bool -> env -> lident -> option<foundname> 
+val try_lookup_name : bool -> bool -> env -> lident -> option<foundname>
 val try_lookup_typ_var: env -> ident -> option<typ>
 val resolve_in_open_namespaces: env -> lident -> (lident -> option<'a>) -> option<'a>
 val try_lookup_typ_name: env -> lident -> option<typ>

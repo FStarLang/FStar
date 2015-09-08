@@ -5,3 +5,4 @@ tc/obj/
 obj
 ocaml.ml
 fstarml.cm[io]
+fsharp-output

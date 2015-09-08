@@ -15,23 +15,23 @@
 *)
 #light "off"
 
-module Microsoft.FStar.Backends.JS.Translate
+module FStar.Backends.JS.Translate
 
-open Microsoft.FStar.Backends.JS.Ast
+open FStar.Backends.JS.Ast
 
 open System
 open System.Text
 
-open Microsoft.FStar
-open Microsoft.FStar.Util
-open Microsoft.FStar.Range
-open Microsoft.FStar.Absyn.Syntax
-open Microsoft.FStar.Absyn.Util
-open Microsoft.FStar.Util
+open FStar
+open FStar.Util
+open FStar.Range
+open FStar.Absyn.Syntax
+open FStar.Absyn.Util
+open FStar.Util
 
 let constructors : smap<(option<int> * option<(list<expression_t> -> expression_t)>)>   = Util.smap_create 1000
 
-let nothing = 
+let nothing =
     Util.smap_add constructors "Prims.op_Minus" (Some 1, Some(function x::[] -> JSE_Minus(x) | _ -> failwith ""));
     Util.smap_add constructors "Prims.op_Negation" (Some 1, Some(function x::[] -> JSE_Lnot(x) | _ -> failwith ""));
     Util.smap_add constructors "Prims.op_Addition" (Some 2, Some(function x::y::[] -> JSE_Add(x,y) | _ -> failwith ""));
@@ -104,7 +104,7 @@ and try_compile_constructor (e:exp) : option<expression_t> =
         | Some(None, compiler) -> Some(uncur x.v.str args (List.length args) compiler)
         | Some(Some(arity), compiler) when (arity >= List.length args) -> Some(uncur x.v.str args arity compiler)
         | _ -> None)
-    | Exp_app(e, args) -> 
+    | Exp_app(e, args) ->
         if args |> Util.for_some (function Inl _, _ -> true | _ -> false)
         then None
         else aux (args |> List.collect (function Inl _, _ -> [] | Inr e, _ -> [e])) e
@@ -164,7 +164,7 @@ and js_of_expr (binder:option<string>) (expr:exp) : expression_t =
         | Exp_fvar(x,b) -> JSE_Identifier(x.v.str)
         | Exp_constant(c) -> js_of_const c
         | Exp_abs([], e) -> js_of_expr binder e
-        | Exp_abs((Inl _, _)::rest, e) -> 
+        | Exp_abs((Inl _, _)::rest, e) ->
           js_of_expr binder (mk_Exp_abs(rest, e) None expr.pos)
         | Exp_abs((Inr x, _)::rest, e) -> js_of_fun binder x.v x.sort (mk_Exp_abs(rest, e) None e.pos)
         | Exp_app(e, args) -> JSE_Call(js_of_expr None e, args |> List.collect (function Inr e, _ -> [js_of_expr None e] | _ -> []))
@@ -181,7 +181,7 @@ and js_of_expr (binder:option<string>) (expr:exp) : expression_t =
 
 and untype_expr (e:exp) =
     let e = Absyn.Util.compress_exp e in
-    let unt_pat ((p,cnd,v):(pat * option<exp> * exp)) = 
+    let unt_pat ((p,cnd,v):(pat * option<exp> * exp)) =
         (p, (match cnd with None->None | Some(e)->Some(untype_expr e)), untype_expr v) in
     let unt_bnd (x,t,e) =  (x, t, untype_expr e) in
     match e.n with
@@ -198,13 +198,13 @@ and comp_vars ct = match ct with
     | Comp(ct) -> type_vars ct.result_typ.n
 
 and type_vars ty = match ty with
-    | Typ_fun(bs,c) -> (bs |> List.collect (function 
-       | Inr x, _ -> 
+    | Typ_fun(bs,c) -> (bs |> List.collect (function
+       | Inr x, _ ->
         let tl = type_vars x.sort.n in
         let hd = if is_null_binder (Inr x, None) then None else Some x.v in
         hd::tl
        | _ -> [])) @ (comp_vars c.n)
-    | Typ_lam(_,t) | Typ_refine({sort=t}, _) | Typ_app(t, _) 
+    | Typ_lam(_,t) | Typ_refine({sort=t}, _) | Typ_app(t, _)
     | Typ_ascribed(t,_)
     | Typ_meta(Meta_pattern(t,_))
     | Typ_meta(Meta_named(t,_)) -> type_vars t.n

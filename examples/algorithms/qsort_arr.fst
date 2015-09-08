@@ -15,11 +15,11 @@
 *)
 
 module QuickSort.Array
-open Array
-open Seq
-open SeqProperties
-open Heap
-open ST
+open FStar.Array
+open FStar.Seq
+open FStar.SeqProperties
+open FStar.Heap
+open FStar.ST
 #set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0"
 
 opaque type partition_inv (a:Type) (f:tot_ord a) (lo:seq a) (pv:a) (hi:seq a) =

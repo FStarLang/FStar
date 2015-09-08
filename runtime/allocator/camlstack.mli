@@ -34,11 +34,9 @@
     OCaml heap that is not tracked by the stack implementation.)
 *)
 
-external push_frame : int -> unit = "stack_push_frame";;
-(** [Camlstack.push_frame n] pushes a frame onto the stack that has at least
-    [n] contiguous bytes. The frame will grow, if necessary. 
-    (An argument of 0 is acceptable.) 
-    Raise [Invalid_argument "Camlstack.push_frame"] if [n] is negative. *)
+external push_frame : unit -> unit = "stack_push_frame";;
+(** [Camlstack.push_frame ()] pushes a frame onto the stack which will
+    grow as things are allocated. *)
 
 external pop_frame : unit -> unit = "stack_pop_frame";;
 (** Pops the topmost stackframe. This means that all of that data is
@@ -46,6 +44,14 @@ external pop_frame : unit -> unit = "stack_pop_frame";;
     In addition, Caml heap data reachable only from that data will be
     subsequently GCed.
     Raise [Failure "Camlstack.pop_frame"] if the stack has no frames. *)
+
+external set_page_wosize : int -> unit = "stack_set_page_wosize";;
+(** [Camlstack.set_page_wosize w] sets the default stack page
+    size to [w] words. *)
+
+external is_on_stack : 'a -> bool = "caml_is_stack_pointer";;
+(** [Camlstack.is_on_stack v] returns true if [v] is a boxed value allocated
+    on the stack (though it may contain pointers into the heap). *)
 
 external mkpair : 'a -> 'b -> 'a*'b = "stack_mkpair";;
 (** [Camlstack.mkpair x y] allocates a pair (x,y) on the stack.
@@ -58,6 +64,10 @@ external mktuple3 : 'a -> 'b -> 'c -> 'a*'b*'c = "stack_mktuple3";;
 external mktuple4 : 'a -> 'b -> 'c -> 'd -> 'a*'b*'c*'d = "stack_mktuple4";;
 (** [Camlstack.mktuple4 x y z w] allocates a pair (x,y,z,w) on the stack.
     Raise [Failure "Camlstack.mktuple4"] if the stack has no frames. *)
+
+external mktuple5 : 'a -> 'b -> 'c -> 'd -> 'e -> 'a*'b*'c*'d*'e = "stack_mktuple5";;
+(** [Camlstack.mktuple5 x y z w s] allocates a pair (x,y,z,w,s) on the stack.
+    Raise [Failure "Camlstack.mktuple5"] if the stack has no frames. *)
 
 external cons: 'a -> 'a list -> 'a list = "stack_mkpair";;
 (** [Camlstack.cons x y] allocates a cons cell [x::y] on the stack.

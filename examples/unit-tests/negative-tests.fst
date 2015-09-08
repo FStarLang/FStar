@@ -43,7 +43,7 @@ assume logic val a : elt
 assume logic val b : elt
 assume logic val c : elt
 assume AB_distinct: a=!=b
-open Set
+open FStar.Set
 
 val should_fail1: unit -> Tot unit
 let should_fail1 u =
@@ -59,8 +59,8 @@ let should_fail3 u =
 
 (* ******************************************************************************** *)
 module NegHeap
-open Set
-open Heap
+open FStar.Set
+open FStar.Heap
 assume val x : ref int
 assume val y : ref int
 assume val h : heap

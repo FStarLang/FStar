@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi Set --admit_fsi Wysteria;
     variables:LIB=../../lib;
-    other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst wysteria.fsi
+    other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst $LIB/st2.fst wysteria.fsi
  --*)
 
 module WLib
@@ -15,33 +15,33 @@ type wfold_pre (#b:Type) (#eps:eprins) (m:mode) (ps:eprins) (w:Wire b eps) =
   Mode.m m = Sec /\ (forall p. mem p ps ==> (w_contains p w /\ CanProjWireS #b m w p))
 
 (* we can give a more precise type to p arg of f, p:prin{mem p ps}, but then unification in the recursive call fails *)
-val wfold: #a:Type -> #b:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> a -> Type)
-           -> eps:eprins
+val wfold: #a:Type -> #b:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> a -> trace -> Type)
+           -> #eps:eprins
            -> ps:eprins
            -> w:Wire b eps{forall p. mem p ps ==> w_contains p w}
            -> =f:(a -> (p:prin{w_contains p w}) -> x:b{w_select p w = x} -> Wys a req_f ens_f)
            -> a
-           -> Wys a (fun m0 -> wfold_pre #b m0 ps w /\ req_f m0) (fun m0 r -> True)
+           -> Wys a (fun m0 -> wfold_pre #b m0 ps w /\ req_f m0) (fun m0 r t -> True)
               (decreases (size ps))
-let rec wfold eps ps w f x =
+let rec wfold #eps ps w f x =
   if ps = empty then x
   else
     let p = choose ps in
     let y = projwire_s p w in
-    wfold eps (remove p ps) w f (f x p y)
+    wfold (remove p ps) w f (f x p y)
 
 type waps_pre (#a:Type) (#b:Type) (#eps:eprins) (m:mode) (ps:eprins) (w:Wire a eps) =
   Mode.m m = Sec /\ (forall p. mem p ps ==> (w_contains p w /\ CanProjWireS #a m w p /\ CanMkWireS b m (singleton p)))
 
-val waps: #a:Type -> #b:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> b -> Type)
-          -> eps:eprins
+val waps: #a:Type -> #b:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> b -> trace -> Type)
+          -> #eps:eprins
           -> ps:prins
           -> w:Wire a eps{forall p. mem p ps ==> w_contains p w}
           -> =f:(p:prin{w_contains p w} -> x:a{w_select p w = x} -> Wys b req_f ens_f)
           -> Wys (Wire b ps) (fun m0 -> waps_pre #a #b m0 ps w /\ req_f m0)
-                             (fun m0 r -> b2t (w_dom r = ps))
+                             (fun m0 r t -> b2t (w_dom r = ps))
              (decreases (size ps))
-let rec waps eps ps w f =
+let rec waps #eps ps w f =
   let p = choose ps in
   let ps' = remove p ps in
   let y = projwire_s p w in
@@ -50,7 +50,7 @@ let rec waps eps ps w f =
     let _ = assert (ps = singleton p) in
     wp
   else
-    let w' = waps eps ps' w f in
+    let w' = waps ps' w f in
     let _ = assert (ps = union (singleton p) ps') in
     concat_wire wp w'
 
@@ -59,16 +59,16 @@ type wapp_pre (#a:Type) (#b:Type) (#eps:eprins) (m:mode) (ps:eprins) (w:Wire a e
                            CanMkWireP b m (singleton p) (singleton p) /\
                            req_f (Mode Par (singleton p))))
 
-val wapp: #a:Type -> #b:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> b -> Type)
-          -> eps:eprins
+val wapp: #a:Type -> #b:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> b -> trace -> Type)
+          -> #eps:eprins
           -> ps:prins
           -> w:Wire a eps{forall p. mem p ps ==> w_contains p w}
           -> =f:(p:prin{w_contains p w} -> x:a{w_select p w = x} -> Wys b req_f ens_f)
           -> Wys (Wire b ps) (fun m0 -> wapp_pre #a #b m0 ps w req_f)
-                             (fun m0 r -> b2t (w_dom r = ps))
+                             (fun m0 r t -> b2t (w_dom r = ps))
              (decreases (size ps))
-let rec wapp 'a 'b 'req_f 'ens_f eps ps w f =
-  let g: p:prin{mem p ps} -> unit -> Wys 'b (fun m0 -> m0 = Mode Par (singleton p) /\ 'req_f m0) (fun m0 r -> True) =
+let rec wapp 'a 'b 'req_f 'ens_f #eps ps w f =
+  let g: p:prin{mem p ps} -> unit -> Wys 'b (fun m0 -> m0 = Mode Par (singleton p) /\ 'req_f m0) (fun m0 r t -> True) =
     fun p _ ->
       let x = projwire_p p w in
       f p x
@@ -81,6 +81,6 @@ let rec wapp 'a 'b 'req_f 'ens_f eps ps w f =
     let _ = assert (ps = singleton p) in
     wp
   else
-    let w' = wapp eps (remove p ps) w f in
+    let w' = wapp (remove p ps) w f in
     let _ = assert (ps = union (singleton p) ps') in
     concat_wire wp w'

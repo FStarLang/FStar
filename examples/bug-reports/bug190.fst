@@ -1,16 +1,16 @@
 module Bug190
 
 type form =
-| FForall : (heap -> Tot form) -> form
+| FForall : (int -> Tot form) -> form
 
 type deduce : form -> Type =
   | DForallElim :
-             f:(heap->Tot form) ->
+             f:(int->Tot form) ->
              deduce (FForall f) ->
-             x:heap ->
+             x:int ->
              deduce (f x)
 
-type pred = heap -> Tot form
+type pred = int -> Tot form
 
-val hoare_consequence : p:pred -> deduce (FForall (fun (h:heap) -> p h)) -> h:heap -> Tot unit
-let hoare_consequence p vpp' h0 = ignore(DForallElim (fun (h : heap) -> p h) vpp' h0)
+val hoare_consequence : p:pred -> deduce (FForall (fun (h:int) -> p h)) -> h:int -> Tot unit
+let hoare_consequence p vpp' h0 = ignore(DForallElim (fun (h : int) -> p h) vpp' h0)

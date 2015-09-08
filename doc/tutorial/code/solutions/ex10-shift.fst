@@ -1,6 +1,6 @@
 module Ex10b
-open Heap
-open ST
+open FStar.Heap
+open FStar.ST
 
 type point =
   | Point : x:ref int -> y:ref int{y<>x} -> point

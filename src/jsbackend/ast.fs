@@ -16,23 +16,23 @@
    limitations under the License.
 *)
 
-module Microsoft.FStar.Backends.JS.Ast
+module FStar.Backends.JS.Ast
 
 (* Type of Javascript program *)
 type t = list<source_t>
 
 and source_t =
   | JS_Statement of statement_t
-  | JS_FunctionDeclaration of function_t 
+  | JS_FunctionDeclaration of function_t
 
-and statement_t = 
+and statement_t =
   | JSS_Empty
   | JSS_Debugger
   | JSS_Return of option<expression_t>
   | JSS_Throw of expression_t
   | JSS_Continue of option<identifier_t>
   | JSS_Break of option<identifier_t>
-  | JSS_Try of statement_t * option<(identifier_t * statement_t)> * option<statement_t> 
+  | JSS_Try of statement_t * option<(identifier_t * statement_t)> * option<statement_t>
   | JSS_Block of list<statement_t>
   | JSS_Label of identifier_t * statement_t
   | JSS_Expression of expression_t
@@ -45,19 +45,19 @@ and statement_t =
   | JSS_With of expression_t * statement_t
   | JSS_Switch of expression_t * option<list<statement_t>> * list<(expression_t * list<statement_t>)>
 
-and forinit_t = 
+and forinit_t =
   | JSF_Expression of expression_t
   | JSF_Declaration of list<(identifier_t * option<expression_t>)>
 
 and identifier_t = string
 and function_t = option<identifier_t> * list<identifier_t> * t
 
-and object_prop_t = 
+and object_prop_t =
   | JSP_Property of string * expression_t
   | JSP_Getter of string * function_t
   | JSP_Setter of string * function_t
 
-and expression_t = 
+and expression_t =
   | JSE_This
   | JSE_Null
   | JSE_Undefined

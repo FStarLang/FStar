@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module ST
+module FStar.ST
 type ref: Type -> Type
 assume val alloc: 'a -> ref 'a
 assume val read:  ref 'a -> 'a

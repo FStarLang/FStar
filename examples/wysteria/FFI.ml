@@ -1,10 +1,10 @@
 open AST
 
-open OrdSet
+open FStar_OrdSet
 
 exception FFI_error of string
 
-let meta = Meta (OrdSet.empty (), Can_b, OrdSet.empty (), Can_w)
+let meta = Meta (FStar_OrdSet.empty (), Can_b, FStar_OrdSet.empty (), Can_w)
 
 let get_nat ((D_v (_, v)):dvalue) :int = match v with
   | V_const c -> begin
@@ -45,7 +45,7 @@ let get_p ((D_v (_, v)):dvalue) :prin = match v with
 let get_two_values (l:dvalue list) :(dvalue * dvalue) = List.hd l, List.hd (List.tl l)
 
 let print_ps (ps:prins) :string =
-  OrdSet.fold () (fun p s -> s ^ (string_of_int p) ^ "; ") ps ""
+  FStar_OrdSet.fold () (fun p s -> s ^ (string_of_int p) ^ "; ") ps ""
 
 let rec print_value (v:unit value) :string = match v with
   | V_const c -> begin
@@ -130,32 +130,32 @@ let exec_ffi (s:string) (l:dvalue list) =
     | "mem" ->
       let (v1, v2) = get_two_values l in
       let p, ps = get_p v1, get_ps v2 in
-      D_v (meta, V_const (C_bool (OrdSet.mem () p ps)))
+      D_v (meta, V_const (C_bool (FStar_OrdSet.mem () p ps)))
 
     | "singleton" ->
       let v = List.hd l in
       let p = get_p v in
-      D_v (meta, V_const (C_prins (OrdSet.singleton () p)))
+      D_v (meta, V_const (C_prins (FStar_OrdSet.singleton () p)))
 
     | "subset" ->
       let (v1, v2) = get_two_values l in
       let ps1, ps2 = get_ps v1, get_ps v2 in
-      D_v (meta, V_const (C_bool (OrdSet.subset () ps1 ps2)))
+      D_v (meta, V_const (C_bool (FStar_OrdSet.subset () ps1 ps2)))
 
     | "union" ->
       let (v1, v2) = get_two_values l in
       let ps1, ps2 = get_ps v1, get_ps v2 in
-      D_v (meta, V_const (C_prins (OrdSet.union () ps1 ps2)))
+      D_v (meta, V_const (C_prins (FStar_OrdSet.union () ps1 ps2)))
 
     | "size" ->
       let v = List.hd l in
       let ps = get_ps v in
-      D_v (meta, V_const (C_nat (OrdSet.size () ps)))
+      D_v (meta, V_const (C_nat (FStar_OrdSet.size () ps)))
 
     | "choose" ->
       let v = List.hd l in
       let ps = get_ps v in
-      let p_opt = OrdSet.choose () ps in
+      let p_opt = FStar_OrdSet.choose () ps in
       let p =
         match p_opt with
           | None -> raise (FFI_error ("choose FFI returns None breaking typing"))
@@ -166,7 +166,7 @@ let exec_ffi (s:string) (l:dvalue list) =
     | "remove" ->
       let (v1, v2) = get_two_values l in
       let p, ps = get_p v1, get_ps v2 in
-      let ps' = OrdSet.remove () p ps in
+      let ps' = FStar_OrdSet.remove () p ps in
       D_v (meta, V_const (C_prins ps'))
 
     | "read" ->

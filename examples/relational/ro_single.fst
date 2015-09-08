@@ -1,13 +1,13 @@
 (*--build-config
-    options:--admit_fsi Set --z3timeout 300;
+    options:--admit_fsi FStar.Set --z3timeout 300;
     variables:LIB=../../lib;
     other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/bytes.fst $LIB/list.fst xor.fst
   --*)
 module Ro_Single
-open List
-open Bytes
-open Heap
-open Xor
+open FStar.List
+open FStar.Bytes
+open FStar.Heap
+open FStar.Xor
 
 type map (a:Type) (b:Type) = list (a * b)
 
@@ -118,5 +118,4 @@ let correctness k p =
                     let p' = decrypt_hon k (Some.v c) in
                     let st = !s in
                     if not (st.bad) then
-                      (assert(is_Some (assoc (append k (snd (Some.v c))) st.l));
-                      assert(is_Some p' /\ p = Some.v p'))
+                      assert(is_Some p' /\ p = Some.v p')

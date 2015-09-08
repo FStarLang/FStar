@@ -1,13 +1,13 @@
 (*--build-config
-    options:--admit_fsi OrdSet --admit_fsi OrdMap --admit_fsi Set --admit_fsi FFI;
+    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi Set --admit_fsi FFI;
     variables:LIB=../../lib;
     other-files:set.fsi $LIB/ordset.fsi $LIB/ordmap.fsi $LIB/classical.fst ast.fst ffi.fsi sem.fst
  --*)
 
 module SourceInterpreter
 
-open OrdMap
-open OrdSet
+open FStar.OrdMap
+open FStar.OrdSet
 
 open AST
 
@@ -16,6 +16,7 @@ open Semantics
 val step: c:config -> Tot (option config)
 let step c =
   if pre_easpar c then Some (step_aspar_e1 c)
+  else if pre_ebox c then Some (step_box_e1 c)
   else if pre_eunbox c then Some (step_unbox_e c)
   else if pre_emkwire c then Some (step_mkwire_e1 c)
   else if pre_eprojwire c then Some (step_projwire_e1 c)
@@ -30,6 +31,7 @@ let step c =
   else if pre_effi c then Some (step_ffi_e c)
   else if pre_ematch c then Some (step_match_e c)
   else if is_value_ps c && is_sframe c is_F_aspar_ps then Some (step_aspar_e2 c)
+  else if is_value_ps c && is_sframe c is_F_box_ps then Some (step_box_e2 c)
   else if is_value c && is_sframe c is_F_mkwire_ps then Some (step_mkwire_e2 c)
   else if is_value_p c && is_sframe c is_F_projwire_p then Some (step_projwire_e2 c)
   else if is_value c && is_sframe c is_F_concatwire_e1 then Some (step_concatwire_e2 c)
@@ -54,6 +56,7 @@ let step c =
   else if pre_mkwire c = Do then Some (step_mkwire c)
   else if pre_projwire c = Do then Some (step_projwire c)
   else if pre_concatwire c = Do then Some (step_concatwire c)
+  else if pre_aspar_ret c = Do then Some (step_aspar_ret c)
   else if pre_eassec c then Some (step_assec_e1 c)
   else if is_value_ps c && is_sframe c is_F_assec_ps then Some (step_assec_e2 c)
   else if is_value c && is_sframe c is_F_assec_e then Some (step_assec_red c)
@@ -66,6 +69,7 @@ val step_correctness: c:config{is_Some (step c)} -> Tot (sstep c (Some.v (step c
 let step_correctness c =
   let c' = v_of_some (step c) in
   if pre_easpar c then C_aspar_ps c c'
+  else if pre_ebox c then C_box_ps c c'
   else if pre_eunbox c then C_unbox c c'
   else if pre_emkwire c then C_mkwire_e1 c c'
   else if pre_eprojwire c then C_projwire_p c c'
@@ -80,6 +84,7 @@ let step_correctness c =
   else if pre_effi c then C_ffi_e c c'
   else if pre_ematch c then C_match_e c c'
   else if is_value_ps c && is_sframe c is_F_aspar_ps then C_aspar_e c c'
+  else if is_value_ps c && is_sframe c is_F_box_ps then C_box_e c c'
   else if is_value c && is_sframe c is_F_mkwire_ps then C_mkwire_e2 c c'
   else if is_value_p c && is_sframe c is_F_projwire_p then C_projwire_e c c'
   else if is_value c && is_sframe c is_F_concatwire_e1 then C_concatwire_e2 c c'
@@ -104,14 +109,12 @@ let step_correctness c =
   else if pre_mkwire c = Do then C_mkwire_beta c c'
   else if pre_projwire c = Do then C_projwire_beta c c'
   else if pre_concatwire c = Do then C_concatwire_beta c c'
+  else if pre_aspar_ret c = Do then C_aspar_ret c c'
   else if pre_eassec c then C_assec_ps c c'
   else if is_value_ps c && is_sframe c is_F_assec_ps then C_assec_e c c'
   else if is_value c && is_sframe c is_F_assec_e then C_assec_red c c'
   else if not (pre_assec c = NA) then C_assec_beta c c'
   else C_assec_ret c c'
-
-val is_terminal: config -> Tot bool
-let is_terminal (Conf _ _ s _ t) = s = [] && is_T_val t
 
 val step_star: config -> Dv (option config)
 let rec step_star c =

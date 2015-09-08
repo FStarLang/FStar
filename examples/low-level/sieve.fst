@@ -3,7 +3,6 @@
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst  stack.fst listset.fst
     $LIB/ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst sstCombinators.fst $LIB/seq.fsi $LIB/seq.fst array.fsi array.fst arrayalgos.fst sieveFun.fst
   --*)
-
 module Sieve
 open SSTCombinators
 open StackAndHeap
@@ -112,7 +111,7 @@ val innerLoop : n:nat{n>1}
       (eunion (only li)  (ArrayAlgos.eonly res))
 
 let innerLoop n lo li res initres =
-  (scopedWhile
+  (unscopedWhile
     (innerLoopInv n lo li res initres)
     (SieveFun.innerGuardLC n lo li)
     (fun u -> (memread li * memread lo < n))
@@ -148,8 +147,8 @@ type allUnmarked
    (n:nat) (neww: bitv n) =
    forall (m:nat{m<n}). not (marked n neww m)
 
-type  outerLoopInv (n:nat) (lo: lref nat) (res: bitarray) (m:smem) =
- SieveFun.distinctRefsExists2 m lo (reveal (asRef res))
+type  outerLoopInv (n:nat) (li: lref nat) (lo: lref nat) (res: bitarray) (m:smem) =
+ SieveFun.distinctRefsExists3 m li lo (reveal (asRef res))
   /\ (((loopkupRef lo m) - 1) < n)
   /\ (1<(loopkupRef lo m)) /\  haslength m res n
   /\ (markedIffHasDivisorSmallerThan n (loopkupRef lo m) (reveal (esel m res)))
@@ -163,19 +162,19 @@ type  outerLoopInv (n:nat) (lo: lref nat) (res: bitarray) (m:smem) =
 
 val outerLoopBody :
   n:nat{n>1}
+  -> li:(lref nat)
   -> lo:(lref nat)
   -> res : bitarray
   -> unit ->
-  whileBody
-    (outerLoopInv n lo res)
+  whileBodyUnscoped
+    (outerLoopInv n li lo res)
     (SieveFun.outerGuardLC n lo)
-    (eunion (only lo)  (ArrayAlgos.eonly res))
+    (eunion (only li) ((eunion (only lo)  (ArrayAlgos.eonly res))))
 
-let outerLoopBody n lo res u =
+let outerLoopBody n li lo res u =
   let initMem : erased smem  = get () in
   let lov = memread lo in
-  let li = salloc 2 in
-  let liv = memread li in
+  (memwrite li 2);
   innerLoop n lo li res (eeseln n initMem res);
   memwrite lo (lov+1);
   let fMem : erased smem = get () in
@@ -183,22 +182,23 @@ let outerLoopBody n lo res u =
   (markedIffHasDivisorSmallerThanInc n lov (eeseln n initMem res) (eeseln n fMem res))
 
 val outerLoop : n:nat{n>1}
+  -> li: lref nat
   -> lo: lref nat
   -> res : bitarray
   -> Mem unit
-      (fun m -> outerLoopInv n lo res m /\ loopkupRef lo m =2 /\ allUnmarked n (sel m res))
-      (fun _ _ m1 -> outerLoopInv n lo res m1 /\ loopkupRef lo m1 = n
+      (fun m -> outerLoopInv n li lo res m /\ loopkupRef lo m =2 /\ allUnmarked n (sel m res))
+      (fun _ _ m1 -> outerLoopInv n li lo res m1 /\ loopkupRef lo m1 = n
         /\ markedIffHasDivisorSmallerThan n n (sel m1 res)
       )
-      (eunion (only lo)  (ArrayAlgos.eonly res))
+      (eunion (only li) ((eunion (only lo)  (ArrayAlgos.eonly res))))
 
-let outerLoop n lo res =
-  scopedWhile
-    (outerLoopInv n lo res)
+let outerLoop n li lo res =
+  unscopedWhile
+    (outerLoopInv n li lo res)
     (SieveFun.outerGuardLC n lo)
     (fun u -> (memread lo < n))
-    (eunion (only lo)  (ArrayAlgos.eonly res))
-    (outerLoopBody n lo res)
+    (eunion (only li) ((eunion (only lo)  (ArrayAlgos.eonly res))))
+    (outerLoopBody n li lo res)
 
 (*to work around type inference issues*)
 val nmem : nat -> list nat -> Tot bool
@@ -226,9 +226,10 @@ val sieve : n:nat{n>1} -> unit
         (hide empty)
 
 let sieve n u =
+  let li = salloc 2 in
   let lo = salloc 2 in
   let res = screate n false in
-  (outerLoop n lo res);
+  (outerLoop n li lo res);
   (listOfUnmarked n res)
 
 
@@ -265,8 +266,19 @@ val sieveJustMax : n:nat{n>1}
         (hide empty)
 let sieveJustMax n =
   pushStackFrame ();
+  let li = salloc 2 in
   let lo = salloc 2 in
   let res = screate n false in
-  (outerLoop n lo res);
+  (outerLoop n li lo res);
   let res = (maxUnmarked n res) in
   popStackFrame (); res
+
+val segFault : unit -> SST int (requires (fun _-> True)) (ensures (fun _ _ _ -> True))
+let segFault u =
+  pushStackFrame ();
+  let p : (int * int) =  (1 , 2) in
+  let arr = screate 2 p in
+  writeIndex arr 0 (2,3);
+  let arr1 = readIndex arr 1 in
+  popStackFrame ();
+  (fst arr1) // this neither segfaults, nor prints 2. It prints 1!

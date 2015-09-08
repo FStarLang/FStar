@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Map;
+    options:--admit_fsi FStar.Set --admit_fsi FStar.Map;
     other-files:set.fsi heap.fst map.fsi listTot.fst
  --*)
 (*
@@ -17,9 +17,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module HyperHeap
-open Map
-open Heap
+module FStar.HyperHeap
+open FStar.Map
+open FStar.Heap
 
 type rid = list int
 type t = Map.t rid heap

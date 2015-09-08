@@ -4,15 +4,16 @@
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst stack.fst listset.fst $LIB/ghost.fst located.fst lref.fst
   --*)
 
-(*     options: --codegen OCaml-experimental --trace_error --debug yes --prn; *)
+(*     options: --codegen OCaml --trace_error --debug yes --prn; *)
 
-module StackAndHeap
-open Heap open Stack
-open Set
-open Prims
-open List
+module StackAndHeap//TODO rename to Regions
+open FStar.Heap
+open Stack
+open FStar.Set
+
+open FStar.List
 open ListSet
-open Ghost
+open FStar.Ghost
 
 open Located
 open Lref
@@ -72,7 +73,7 @@ let topstid ss = fst (topst ss)
 val refLoc : #a:Type -> lref a -> Tot regionLoc
 let refLoc r = regionOf r
 
-new_effect StSTATE = STATE_h smem
+new_effect StSTATE = STATE_h smem //TODO: move this to sst.fst
 
 val stackBlockAtLoc : sidt  -> (Stack (sidt * region)) -> Tot (option region)
 let rec stackBlockAtLoc id sp =
@@ -92,15 +93,15 @@ let writeInBlock r v mb= upd mb r v
 
 val changeStackBlockWithId  : (region -> Tot region)
   -> sidt
-  -> (Stack (sidt * region))
-        -> Tot (Stack (sidt * region))
+  -> ms:(Stack (sidt * region))
+        -> Tot (r:Stack (sidt * region){ssids r = ssids ms})
 let rec changeStackBlockWithId f s ms=
 match ms with
 | [] -> []
 | h::tl ->
   (if (fst h = s) then ((fst h, (f (snd h)))::tl) else h::(changeStackBlockWithId f s tl))
 
-val writeInMemStack : #a:Type -> (lref a) -> (Stack (sidt * region)) -> sidt -> a -> Tot (Stack (sidt * region))
+val writeInMemStack : #a:Type -> (lref a) -> s:(Stack (sidt * region)) -> sidt -> a -> Tot (r:Stack (sidt * region){ssids r = ssids s})
 let rec writeInMemStack r ms s v = changeStackBlockWithId (writeInBlock r v) s ms
 
 
@@ -209,7 +210,7 @@ match ms with
 | h::tl ->   if (fst h = id) then () else ((writeMemStackExists rw r tl id idw v))
 
 
-val writeMemAux : #a:Type -> (lref a) -> m:smem -> a -> Tot smem
+val writeMemAux : #a:Type -> (lref a) -> m:smem -> a -> Tot (r:smem{sids r = sids m})
 let writeMemAux r m v =
   match (refLoc r) with
   | InHeap -> ((upd (hp m) r v), snd m)
@@ -455,6 +456,10 @@ let canModifyWrite r v m = ()*)
 
 type allocateInBlock (#a:Type) (r: lref a) (h0 : region) (h1 : region) (init : a)   = not(contains h0 r) /\ contains h1 r /\  h1 == upd h0 r init
 
+val allocateInTopR: #a:Type -> r:lref a -> init:a -> m0:smem{isNonEmpty (st m0) /\
+                                                             not (contains (topstb m0) r)}
+                    -> Tot smem
+let allocateInTopR r init m0 = hp m0, (topstid m0, upd (topstb m0) r init)::mstail m0
 
 
 (* liveness for arbitrary located data. It merely says that the stack id valid

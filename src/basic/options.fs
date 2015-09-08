@@ -16,12 +16,13 @@
 #light "off"
 
 // (c) Microsoft Corporation. All rights reserved
-module Microsoft.FStar.Options
-open Microsoft.FStar
-open Microsoft.FStar.Util
-open Microsoft.FStar.Getopt
+module FStar.Options
+open FStar
+open FStar.Util
+open FStar.Getopt
+open FStar.Version
 
-type debug_level_t = 
+type debug_level_t =
     | Low
     | Medium
     | High
@@ -34,14 +35,14 @@ let z3_exe = Util.mk_ref (Platform.exe "z3")
 let silent=Util.mk_ref false
 let debug=Util.mk_ref []
 let debug_level = Util.mk_ref []
-let dlevel = function 
+let dlevel = function
     | "Low" -> Low
     | "Medium" -> Medium
     | "High" -> High
     | "Extreme" -> Extreme
     | s -> Other s
-let one_debug_level_geq l1 l2 = match l1 with 
-    | Other _ 
+let one_debug_level_geq l1 l2 = match l1 with
+    | Other _
     | Low -> l1 = l2
     | Medium -> (l2 = Low || l2 = Medium)
     | High -> (l2 = Low || l2 = Medium || l2 = High)
@@ -51,7 +52,7 @@ let log_types = Util.mk_ref false
 let print_effect_args=Util.mk_ref false
 let print_real_names = Util.mk_ref false
 let dump_module : ref<option<string>> = Util.mk_ref None
-let should_dump l = match !dump_module with 
+let should_dump l = match !dump_module with
     | None -> false
     | Some m -> m=l
 let logQueries = Util.mk_ref false
@@ -91,8 +92,9 @@ let interactive = Util.mk_ref false
 let split_cases = Util.mk_ref 0
 let _include_path = Util.mk_ref []
 let interactive_fsi = Util.mk_ref false
+let print_fuels = Util.mk_ref false
 let __temp_no_proj = Util.mk_ref false
-let init_options () = 
+let init_options () =
     show_signatures := [];
     norm_then_print := true;
     z3_exe := Platform.exe "z3";
@@ -136,33 +138,38 @@ let init_options () =
     n_cores  := 1;
     split_cases := 0;
     verify_module := [];
-    _include_path := []
+    _include_path := [];
+    print_fuels := false
 
-let set_fstar_home () = 
-  let fh = match !fstar_home_opt with 
+let set_fstar_home () =
+  let fh = match !fstar_home_opt with
     | None ->
-      let x = Util.get_exec_dir () in 
+      let x = Util.get_exec_dir () in
       let x = x ^ "/.." in
       _fstar_home := x;
       fstar_home_opt := Some x;
       x
     | Some x -> _fstar_home := x; x in
   fh
-let get_fstar_home () = match !fstar_home_opt with 
+let get_fstar_home () = match !fstar_home_opt with
     | None -> ignore <| set_fstar_home(); !_fstar_home
     | Some x -> x
 
 let get_include_path () = !_include_path@["."; get_fstar_home() ^ "/lib"]
 
-let prims () = match !prims_ref with 
-  | None -> "prims.fst" 
+let prims () = match !prims_ref with
+  | None -> "prims.fst"
   | Some x -> x
 
 let prependOutputDir fname = match !outputDir with
   | None -> fname
   | Some x -> x ^ "/" ^ fname
 
-let cache_dir = "cache" 
+let cache_dir = "cache"
+
+let display_version () =
+  Util.print_string (Util.format5 "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n"
+                                  version platform compiler date commit)
 
 let display_usage specs =
   Util.print_string "fstar [option] infile...";
@@ -177,10 +184,10 @@ let display_usage specs =
              else Util.print_string (Util.format3 "  --%s %s  %s\n" flag argname doc))
     specs
 
-let rec specs () : list<Getopt.opt> = 
-  let specs =   
+let rec specs () : list<Getopt.opt> =
+  let specs =
     [( noshort, "trace_error", ZeroArgs (fun () -> trace_error := true), "Don't print an error message; show an exception trace instead");
-     ( noshort, "codegen", OneArg ((fun s -> codegen := parse_codegen s), "OCaml"), "Generate code for execution");
+     ( noshort, "codegen", OneArg ((fun s -> codegen := parse_codegen s), "OCaml|FSharp"), "Generate code for execution");
      ( noshort, "codegen-lib", OneArg ((fun s -> codegen_libs := (Util.split s ".")::!codegen_libs), "namespace"), "External runtime library library");
      ( noshort, "lax", ZeroArgs (fun () -> pretype := true; verify := false), "Run the lax-type checker only (admit all verification conditions)");
      ( noshort, "fstar_home", OneArg ((fun x -> fstar_home_opt := Some x), "dir"), "Set the FSTAR_HOME variable to dir");
@@ -225,14 +232,15 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "in", ZeroArgs (fun () -> interactive := true), "Interactive mode; reads input from stdin");
      ( noshort, "include", OneArg ((fun s -> _include_path := !_include_path @ [s]), "path"), "A directory in which to search for files included on the command line");
      ( noshort, "fsi", ZeroArgs (fun () -> set_interactive_fsi ()), "fsi flag; A flag to indicate if type checking a fsi in the interactive mode");
+     ( noshort, "print_fuels", ZeroArgs (fun () -> print_fuels := true), "Print the fuel amounts used for each successful query");
      ( noshort, "__temp_no_proj", ZeroArgs (fun () -> __temp_no_proj := true), "A temporary flag to disable code generation for projectors");
-    ] in 
+     ( 'v', "version", ZeroArgs (fun _ -> display_version(); exit 0), "Display version number");
+    ] in
      ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs
 and parse_codegen s =
   match s with
-  | "Wysteria"
-  | "OCaml-experimental"
-  | "OCaml"  -> Some s
+  | "OCaml"
+  | "FSharp" -> Some s
   | _ ->
      (Util.print_string "Wrong argument to codegen flag\n";
       display_usage (specs ()); exit 1)
@@ -242,18 +250,27 @@ and set_interactive_fsi (_:unit) =
     else (Util.print_string "Set interactive flag first before setting interactive fsi flag\n";
           display_usage (specs ()); exit 1)
 
-let should_verify m = 
+let should_verify m =
     !verify &&
-    (match !verify_module with 
+    (match !verify_module with
         | [] -> true //the verify_module flag was not set, so verify everything
         | l -> List.contains m l) //otherwise, look in the list to see if it is explicitly mentioned
 
-let set_options s = Getopt.parse_string (specs()) (fun _ -> ()) s
+let should_print_message m = 
+    should_verify m 
+    && not (List.contains m !admit_fsi) 
+    && m <> "Prims"
+
+let set_options = 
+    //The smt option is a security concern
+    //only allow it to be set from the command line, not from the build-config
+    let no_smt_specs = specs() |> List.filter (fun (_, name, _, _) -> name <> "smt") in
+    fun s -> Getopt.parse_string no_smt_specs (fun _ -> ()) s
 
 let reset_options_string : ref<option<string>> = ref None
-let reset_options () = 
+let reset_options () =
     init_options();
-    match !reset_options_string with 
+    let res = Getopt.parse_cmdline (specs()) (fun x -> ()) in
+    match !reset_options_string with
         | Some x -> set_options x
-        | _ -> Getopt.parse_cmdline (specs()) (fun x -> ())
-
+        | _ -> res

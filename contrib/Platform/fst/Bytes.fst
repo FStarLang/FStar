@@ -11,7 +11,11 @@ let repr_bytes n =
     if n < 256 then 1
     else if n < 65536 then 2
     else if n < 16777216 then 3
-    else 4
+    else if n < 4294967296 then 4
+    else if n < 1099511627776 then 5
+    else if n < 281474976710656 then 6
+    else if n < 72057594037927936 then 7    
+    else 8
 (* NS:
    The two assumes below were previously defined as axioms.
 	 They are evil! They pollute the global environment and
@@ -19,14 +23,24 @@ let repr_bytes n =
 	 I've made them assumed lemmas; if you want to
 	 make use of these axioms, call the lemmas as needed in the context.
 *)
-assume val lemma_repr_bytes_values: n:nat ->
-	     Lemma (ensures
-			      			( n < 256 <==> repr_bytes n = 1 )
+(* SZ: No longer needed because we have a definition? *)
+(*
+val lemma_repr_bytes_values: n:nat ->
+    Lemma (ensures
+       			  ( n < 256 <==> repr_bytes n = 1 )
                /\ ( (n < 65536 /\ n >= 256 ) <==> repr_bytes n = 2 )
-               /\ ( (n >= 65536 /\ n < 16777216) <==> repr_bytes n = 3 ))
+               /\ ( (n >= 65536 /\ n < 16777216) <==> repr_bytes n = 3 )
+               /\ ( (n >= 16777216 /\ n < 4294967296) <==> repr_bytes n = 4 )
+               /\ ( (n >= 4294967296 /\ n < 1099511627776) <==> repr_bytes n = 5 )
+               /\ ( (n >= 1099511627776 /\ n < 281474976710656) <==> repr_bytes n = 6 )
+               /\ ( (n >= 281474976710656 /\ n < 72057594037927936) <==> repr_bytes n = 7 )
+               )
+let lemma_repr_bytes_values n = ()
 
-assume val lemma_repr_bytes_monotone: a:nat -> b:nat ->
-	     Lemma (ensures ((a <= b) ==> (repr_bytes a <= repr_bytes b)))
+val lemma_repr_bytes_monotone: a:nat -> b:nat ->
+    Lemma (ensures (a <= b ==> repr_bytes a <= repr_bytes b))
+let lemma_repr_bytes_monotone a b = ()
+*)
 
 type byte = uint8
 type cbytes = string
@@ -100,8 +114,8 @@ assume val split2 : b:bytes -> n1:nat{n1 <= Seq.length b} -> n2:nat{n1 + n2 <= S
 (*@ function assume val IntBytes : ((int * int) -> bytes) @*)
 
 assume val bytes_of_int : l:nat -> n:nat{repr_bytes n <= l} -> Tot (lbytes l)
-assume val int_of_bytes : b:bytes{Seq.length b <= 4} -> Tot (n:nat{repr_bytes n <= Seq.length b
-                                                                   /\ b=bytes_of_int (Seq.length b) n})
+assume val int_of_bytes : b:bytes{Seq.length b <= 8} -> 
+    Tot (n:nat{repr_bytes n <= Seq.length b /\ b=bytes_of_int (Seq.length b) n})
 
 (*@ assume val int_of_bytes : ((b:bytes){C_pr_LessThanOrEqual(Length (b), 8)} -> (i:nat){b = IntBytes (Length (b), i) /\ Length (b) = 1 => C_pr_LessThanOrEqual(0, i) /\ C_pr_LessThan(i, 256)}) @*)
 

@@ -20,7 +20,7 @@ kind Binop = Type -> Type -> Type
 type bool
 logic type EqTyp : Type -> Type -> Type          (* infix binary '==' *)
 type Eq2 : #a:Type -> #b:Type -> a -> b -> Type  (* infix binary '==' *)
-opaque logic type b2t (b:bool) = b==true
+opaque logic type b2t (b:bool) = (b == true)
 
 //We assume the Tot effect here; its definition appears a few lines below
 (* Primitive logical connectives *)
@@ -146,6 +146,7 @@ type char
 type float
 type string
 type array : Type -> Type
+assume val strcat : string -> string -> Tot string
 assume logic type LBL : string -> Type -> Type
 type exn
 type HashMultiMap : Type -> Type -> Type //needed for bootstrapping

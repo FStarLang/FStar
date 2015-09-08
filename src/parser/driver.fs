@@ -14,18 +14,18 @@
    limitations under the License.
 *)
 #light "off"
-module Microsoft.FStar.Parser.Driver
+module FStar.Parser.Driver
 
-open Microsoft.FStar
-open Microsoft.FStar.Parser
-open Microsoft.FStar.Parser.AST
-open Microsoft.FStar.Parser.Parse
-open Microsoft.FStar.Util
+open FStar
+open FStar.Parser
+open FStar.Parser.AST
+open FStar.Parser.Parse
+open FStar.Util
 
-open Microsoft.FStar.Absyn
-open Microsoft.FStar.Absyn.Syntax
+open FStar.Absyn
+open FStar.Absyn.Syntax
 
-let print_error msg r = 
+let print_error msg r =
   Util.print_string (Util.format2 "ERROR %s: %s\n" (Range.string_of_range r) msg)
 
 let is_cache_file (fn: string) = Util.get_file_extension fn = ".cache"
@@ -35,14 +35,14 @@ let parse_fragment curmod env frag =
     | Inl (Inl [modul]) -> //interactive mode: module
       let env, modul = Desugar.desugar_partial_modul curmod env modul in
       Inl (env, modul)
-  
+
     | Inl (Inr decls) -> //interactive mode: more decls
       Inr <| Desugar.desugar_decls env decls
-  
-    | Inl (Inl _) -> 
+
+    | Inl (Inl _) ->
       raise (Absyn.Syntax.Err("Refusing to check more than one module at a time incrementally"))
 
-    | Inr (msg,r) -> 
+    | Inr (msg,r) ->
       raise (Absyn.Syntax.Error(msg, r))
 
 let parse_file env fn =
@@ -54,14 +54,14 @@ let parse_file env fn =
     match ParseIt.parse (Inl fn) with
     | Inl (Inl ast) ->
       Desugar.desugar_file env ast
-  
-    | Inl (Inr _) -> 
+
+    | Inl (Inr _) ->
       Util.fprint1 "%s: Expected a module\n" fn;
       exit 1
 
-    | Inr (msg, r) -> 
+    | Inr (msg, r) ->
       Util.print_string <| Print.format_error r msg;
       exit 1
 
 let read_build_config file = ParseIt.read_build_config file
-  
+

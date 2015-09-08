@@ -1,8 +1,8 @@
 ﻿#light "off"
 
-module Microsoft.FStar.Platform
+module FStar.Platform
 
-open Microsoft.FStar
+open FStar
 open System
 
 type sys =

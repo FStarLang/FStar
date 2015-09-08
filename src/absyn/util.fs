@@ -15,14 +15,14 @@
 *)
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
-module Microsoft.FStar.Absyn.Util
+module FStar.Absyn.Util
 
 open Prims
-open Microsoft.FStar
-open Microsoft.FStar.Util
-open Microsoft.FStar.Absyn
-open Microsoft.FStar.Absyn.Syntax
-open Microsoft.FStar.Profiling
+open FStar
+open FStar.Util
+open FStar.Absyn
+open FStar.Absyn.Syntax
+open FStar.Profiling
 
 let handle_err warning ret e =
   match e with
@@ -50,9 +50,9 @@ type gensym_t = {
     gensym: unit -> string;
     reset:unit -> unit;
 }
-let gs = 
+let gs =
   let ctr = mk_ref 0 in
-  let n_resets = mk_ref 0 in 
+  let n_resets = mk_ref 0 in
   {gensym =(fun () -> "_" ^ (Util.string_of_int !n_resets) ^ "_" ^ (Util.string_of_int (incr ctr; !ctr)));
    reset = (fun () -> ctr := 0; incr n_resets)}
 let gensym () = gs.gensym()
@@ -544,8 +544,8 @@ let is_total_comp c =
 
 let is_total_lcomp c = lid_equals c.eff_name Const.effect_Tot_lid || c.cflags |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
 
-let is_tot_or_gtot_lcomp c = lid_equals c.eff_name Const.effect_Tot_lid 
-                             || lid_equals c.eff_name Const.effect_GTot_lid 
+let is_tot_or_gtot_lcomp c = lid_equals c.eff_name Const.effect_Tot_lid
+                             || lid_equals c.eff_name Const.effect_GTot_lid
                              || c.cflags |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
 
 let is_partial_return c = comp_flags c |> Util.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)

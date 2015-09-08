@@ -1,30 +1,14 @@
 (*--build-config
-    options:--admit_fsi Set;
+    options:--admit_fsi FStar.Set;
     variables:LIB=../../lib;
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/st2.fst $LIB/all.fst $LIB/bytes.fst $LIB/list.fst
 
   --*)
 
 module SmartMeter
-open Bytes
-open List
-
-
-type rel (a:Type) (b:Type) : Type =
-  | R : l:a -> r:b -> rel a b
-
-let twice x = R x  x
-type double (t:Type) = rel t  t
-type eq (t:Type) = p:(double t){R.l p = R.r p}
-
-let add_rel (R a b) (R c d) = R (a+c) (b+d)
-let mul_rel (R a b) (R c d) = R (a*c) (b*d)
-val tail_rel: #a:Type -> l:double (list a){is_Cons (R.l l) /\ is_Cons (R.r l)}-> Tot (double (list a))
-let tail_rel (R (_::xs) (_::ys)) = R xs ys
-let cons_rel (R x y) (R xs ys) = R (x::xs)  (y::ys)
-let pair_rel (R x y) (R x' y') = R (x,x') (y,y')
-let fst_rel (R (x, y) (x', y')) = R x x'
-let snd_rel (R (x, y) (x', y')) = R y y'
+open FStar.Bytes
+open FStar.List
+open FStar.Relational
 
 
 
@@ -56,7 +40,7 @@ let rec fsts l = match l with
   | [] -> []
   | (a,b)::ls -> a :: fsts ls
 
-let fsts_rel (R ll lr) = R (fsts ll) (fsts lr)
+let fsts_rel = rel_map1 fsts
 
 val scalar_product :l1:list int -> l2:list int{length l1 = length l2} -> Tot int
 let rec scalar_product l1 l2 = match l1, l2 with
@@ -85,12 +69,12 @@ assume CommitP_injective : (forall pp x0 x1 r0 r1. (commitP pp x0 r0 = commitP p
 assume val mult: c0:double elt -> c1: double elt
                  -> Tot (c:double elt{forall pp x0 x1 r0 r1.
                           (c0 = commitP pp x0 r0 /\ c1=commitP pp x1 r1) ==>
-                          c=commitP pp (add_rel x0 x1) (add_rel r0 r1)})
+                          c=commitP pp (x0 ^+ x1) (r0 ^+ r1)})
 
 assume val exp: c0:double elt -> z:double int
                  -> Tot (c:double elt{forall pp x0 r0.
                           c0 = commitP pp x0 r0 ==>
-                          c=commitP pp (mul_rel x0 z) (mul_rel r0 z)})
+                          c=commitP pp (x0 ^* z) (r0 ^* z)})
 
 assume val commitsP: pp:double (public_param) -> double (list(text * opng)) -> Tot (double (list elt))
 assume val commitsP_nil: pp:pparam -> xrs:double(list (text * opng)) -> Lemma (commitsP pp xrs = twice [] <==> xrs = twice [])
@@ -125,9 +109,9 @@ let thd3=MkTuple3._3
 assume logic type readings (l:double (list int))
 assume logic type rates (l:double (list int))
 assume ReadingsTail : (forall l. is_Cons (R.l l) /\ is_Cons (R.r l)
-                                  ==> readings (tail_rel l))
+                                  ==> readings (tl_rel l))
 assume RatesTail : (forall l. is_Cons (R.l l) /\ is_Cons (R.r l)
-                                  ==> rates (tail_rel l))
+                                  ==> rates (tl_rel l))
 
 type signed (pp:pparam) (cs:double (list elt)) =
               (exists xrs. readings (fsts_rel xrs) /\ cs = commitsP pp xrs)
@@ -189,7 +173,7 @@ let rec sums xrs ps = match xrs, ps with
       let x = fst_rel xr in
       let r = snd_rel xr in
       let (| x0, r0 |) = sums xrs ps in
-      (| add_rel x0 (mul_rel x p), add_rel r0 (mul_rel r p) |)
+      (| x0 ^+ (x ^* p), r0 ^+ (r ^* p) |)
   | R [] [], R [] [] -> (| (twice 1),(twice 0) |)
 
 val make_payment: pp:pparam -> xrs:openings{readings (fsts_rel xrs)}

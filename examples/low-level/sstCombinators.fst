@@ -38,25 +38,20 @@ let withNewScope 'a 'pre 'post #mods body =
     let v = body () in
     popStackFrame (); v
 
-(*SMTPat could be used to implement something similar to Coq's type-class mechanism.
-Coq's typeclass resolution is based on proof search using Hint databases, which is similar to SMTPat.
-Can implicit arguments be inferred automatically by the SMT solver using proof seach with SMTPat hints?
-*)
-
 
 (*a combinator for writing while loops*)
 
-(*Mem restriction is not needed, because there is a even stronger condition here that the memory is unchanges*)
+(*Mem restriction is not needed, because there is a even stronger condition here that the memory is unchanged*)
 effect whileGuard (pre :(smem -> Type))
   (lc : (smem -> Type))
   = PureMem bool  pre (fun m0 b  ->   (lc m0 <==> b = true))
 (* the guard of a while loop is not supposed to change the memory*)
 
+
 effect whileBody (loopInv:smem -> Type) (lc:smem  -> Type) (mod:modset)
   = WNSC unit (fun m -> loopInv m /\ lc m)
               (fun m0 _ m1 -> (* (loopInv m0 /\ canModify m0 m1 mod) ==> *) loopInv m1)
               mod
-
 
 
 val scopedWhile : loopInv:(smem -> Type)
@@ -71,14 +66,10 @@ let rec scopedWhile
    'loopInv 'wglc wg mods bd =
    if (wg ())
       then
-        ((withNewScope #unit
-            #(fun m -> 'loopInv m /\ ('wglc m)) #(fun _ _ m1 -> 'loopInv m1) #mods bd);
-        (scopedWhile 'loopInv 'wglc wg mods bd))
+        ((let _ = pushStackFrame () in
+          let _ = bd  () in popStackFrame());
+         (scopedWhile 'loopInv 'wglc wg mods bd))
       else ()
-
-(*The 2 definitions below do not extract properly. 'loopInv is a type var and
-OCaml complains "operator expected" . Removing 'loopInv manually in the extract
-fixes the problem. 'loopInv is not used anyway in the extract. *)
 
 val scopedWhile1 :
   #a:Type
@@ -93,8 +84,8 @@ val scopedWhile1 :
               ((fun m0 _ m1 -> loopInv m1 /\ liveRef r m1 /\ ~(lc (loopkupRef r m1))))
               mods
 let scopedWhile1 'a r lc 'loopInv mods bd =
+(*loop invariant includes the precondition for evaluating the guard*)
   scopedWhile
-  (*augment the loop invariant to include the precondition for evaluating the guard*)
     (fun m -> 'loopInv m /\ liveRef r m)
     (fun m -> liveRef r m /\ (lc (loopkupRef r m)))
     (fun u -> lc (memread r))
@@ -118,9 +109,54 @@ val scopedWhile2 :
               mods
 let scopedWhile2 'a ra rb lc 'loopInv mods bd =
   scopedWhile
-  (*augment the loop invariant to include the precondition for evaluating the guard*)
     (fun m -> 'loopInv m /\ liveRef ra m /\ liveRef rb m)
     (fun m -> liveRef ra m /\ liveRef rb m /\ (lc (loopkupRef ra m) (loopkupRef rb m))  )
     (fun u -> lc (memread ra) (memread rb))
+    mods
+    bd
+
+
+(*unscoped while. push/pops are costly because of FFI and possibly malloc overheads.
+So if the programmer knows that nothing is being allocated, they should used the
+unscoped versions below*)
+
+effect whileBodyUnscoped (loopInv:smem -> Type) (lc:smem  -> Type) (mod:modset)
+  = Mem unit (fun m -> loopInv m /\ lc m)
+              (fun m0 _ m1 -> (* (loopInv m0 /\ canModify m0 m1 mod) ==> *) loopInv m1)
+              mod
+
+
+
+val unscopedWhile : loopInv:(smem -> Type)
+  -> wglc:(smem -> Type)
+  -> wg:(unit -> whileGuard loopInv wglc)
+  -> mods:(modset)
+  -> bd:(unit -> whileBodyUnscoped loopInv wglc mods)
+  -> Mem unit (requires (fun m -> loopInv m))
+              (ensures (fun _ _ m1 -> loopInv m1 /\ (~(wglc m1))))
+              mods
+let rec unscopedWhile
+   'loopInv 'wglc wg mods bd =
+   if (wg ())
+      then (let _ = bd () in (unscopedWhile 'loopInv 'wglc wg mods bd))
+      else ()
+
+val unscopedWhile1 :
+  #a:Type
+  -> r:(lref a)
+  -> lc : (a -> Tot bool)
+  -> loopInv:(smem -> Type)
+  -> mods:(modset)
+  -> bd:(unit -> whileBodyUnscoped
+                      (fun m -> loopInv m /\ liveRef r m)
+                      (fun m -> liveRef r m /\ lc (loopkupRef r m))  mods)
+  -> Mem unit ((fun m -> loopInv m /\ liveRef r m))
+              ((fun m0 _ m1 -> loopInv m1 /\ liveRef r m1 /\ ~(lc (loopkupRef r m1))))
+              mods
+let unscopedWhile1 'a r lc 'loopInv mods bd =
+  unscopedWhile
+    (fun m -> 'loopInv m /\ liveRef r m)
+    (fun m -> liveRef r m /\ (lc (loopkupRef r m)))
+    (fun u -> lc (memread r))
     mods
     bd

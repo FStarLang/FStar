@@ -1,3 +1,6 @@
+(*--build-config
+    other-files: constr.fst classical.fst ext.fst
+  --*)
 (*
    Copyright 2014-2015
      Simon Forest - Inria and ENS Paris
@@ -19,22 +22,24 @@
 
 module StlcStrongDbParSubst
 
-open Constructive
-open Classical
-open FunctionalExtensionality
+open FStar.Constructive
+open FStar.Classical
+open FStar.FunctionalExtensionality
 
 (* Constructive-style progress and preservation proof for STLC with
    strong reduction, using deBruijn indices and parallel substitution. *)
 
 type typ =
-  | TArr : typ -> typ -> typ
+  | TArr  : typ -> typ -> typ
+  | TUnit : typ
 
 type var = nat
 
 type exp =
-  | EVar   : var -> exp
-  | EApp   : exp -> exp -> exp
-  | ELam   : typ -> exp -> exp
+  | EVar  : var -> exp
+  | EApp  : exp -> exp -> exp
+  | ELam  : typ -> exp -> exp
+  | EUnit : exp
 
 (* Parallel substitution operation `subst` *)
 
@@ -49,10 +54,10 @@ type exp =
 
 type sub = var -> Tot exp
 
-opaque type renaming (s:sub) = (forall (x:var). is_EVar (s x))
+type renaming (s:sub) = (forall (x:var). is_EVar (s x))
 
-val is_renaming : s:sub -> Tot (n:int{  (renaming s  ==> n=0) /\
-                                      (~(renaming s) ==> n=1)})
+val is_renaming : s:sub -> GTot (n:int{  (renaming s  ==> n=0) /\
+                                       (~(renaming s) ==> n=1)})
 let is_renaming s = (if excluded_middle (renaming s) then 0 else 1)
 
 val sub_inc : var -> Tot exp
@@ -69,14 +74,13 @@ val subst : s:sub -> e:exp -> Pure exp (requires True)
 let rec subst s e =
   match e with
   | EVar x -> s x
-
   | ELam t e1 ->
      let sub_elam : y:var -> Tot (e:exp{renaming s ==> is_EVar e}) =
        fun y -> if y=0 then EVar y
                        else subst sub_inc (s (y-1))            (* shift +1 *)
      in ELam t (subst sub_elam e1)
-
   | EApp e1 e2 -> EApp (subst s e1) (subst s e2)
+  | EUnit -> EUnit
 
 val sub_elam: s:sub -> Tot sub
 let sub_elam s y = if y=0 then EVar y
@@ -135,11 +139,13 @@ type typing : env -> exp -> typ -> Type =
             =h1:typing g e1 (TArr t11 t12) ->
             =h2:typing g e2 t11 ->
                 typing g (EApp e1 e2) t12
+  | TyUnit : #g:env ->
+             typing g EUnit TUnit
 
 (* Progress *)
 
 val is_value : exp -> Tot bool
-let is_value = is_ELam
+let is_value e = is_ELam e || is_EUnit e
 
 opaque val progress : #e:exp -> #t:typ -> h:typing empty e t ->
                          Pure (cexists (fun e' -> step e e'))
@@ -183,27 +189,7 @@ let rec substitution g1 e t s g2 h1 hs =
        fun y -> if y = 0 then TyVar y
                 else substitution sub_inc (hs (y - 1)) hs''
      in TyLam tlam (substitution (sub_elam s) hbody hs')
-
-(* Weakening (or shifting preserves typing) *)
-(* Useless now, showing that it follows from substitution lemma *)
-val sub_inc_above : nat -> var -> Tot exp
-let sub_inc_above n y = if y<n then EVar y else EVar (y+1)
-
-val shift_up_above : nat -> exp -> Tot exp
-let shift_up_above n e = subst (sub_inc_above n) e
-
-val extend_gen : var -> typ -> env -> Tot env
-let extend_gen x t g y = if y < x then g y
-                         else if y = x then Some t
-                         else g (y-1)
-
-opaque val weakening : n:nat -> #g:env -> #e:exp -> #t:typ -> t':typ ->
-      h:typing g e t -> Tot (typing (extend_gen n t' g) (shift_up_above n e) t)
-      (decreases h)
-let rec weakening n g v t t' h =
-  let hs : subst_typing (sub_inc_above n) g (extend_gen n t' g) =
-    fun y -> if y < n then TyVar y else TyVar (y+1)
-  in substitution (sub_inc_above n) h hs
+  | TyUnit -> TyUnit
 
 (* Substitution for beta reduction
    Now just a special case of substitution lemma *)
@@ -218,12 +204,13 @@ let rec substitution_beta e v t_x t g h1 h2 =
   substitution (sub_beta v) h2 hs
 
 (* Type preservation *)
-opaque val preservation : #e:exp -> #e':exp -> hs:step e e' ->
-                          #g:env -> #t:typ -> ht:(typing g e t) ->
-                          Tot (typing g e' t) (decreases ht)
-let rec preservation e e' hs g t ht =
+opaque val preservation : #e:exp -> #e':exp -> #g:env -> #t:typ ->
+       ht:(typing g e t) ->
+       hs:step e e' ->
+       Tot (typing g e' t) (decreases ht)
+let rec preservation e e' g t ht hs =
   let TyApp h1 h2 = ht in
   match hs with
   | SBeta t e1' e2' -> substitution_beta h2 (TyLam.hbody h1)
-  | SApp1 e2' hs1   -> TyApp (preservation hs1 h1) h2
-  | SApp2 e1' hs2   -> TyApp h1 (preservation hs2 h2)
+  | SApp1 e2' hs1   -> TyApp (preservation h1 hs1) h2
+  | SApp2 e1' hs2   -> TyApp h1 (preservation h2 hs2)

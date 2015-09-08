@@ -1,11 +1,5 @@
 .PHONY: all verify-% __force__
 
-ifeq ($(OS),Windows_NT)
-MSBUILD = msbuild
-else
-MSBUILD = xbuild
-endif
-
 # This will be called from subdirs
 FSTAR_HOME = ../../../..
 
@@ -37,6 +31,7 @@ EXERCISES =\
   ex7b-stlc-pairs\
   ex7c-stlc-let\
   ex7d-stlc-eval\
+  ex10a-acls\
   ex10-shift\
   robots\
 # Files currently not compiling

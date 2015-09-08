@@ -2,9 +2,9 @@
   options:--admit_fsi OrdSet;
   other-files:ordset.fsi
  --*)
-module OrdMap
+module FStar.OrdMap
 
-open OrdSet
+open FStar.OrdSet
 
 opaque type total_order (a:Type) (f: (a -> a -> Tot bool)) =
     (forall a1 a2. (f a1 a2 /\ f a2 a1)  ==> a1 = a2) (* anti-symmetry *)
@@ -148,3 +148,20 @@ val select_const_on: #k:Type -> #v:Type -> #f:cmp k -> d:ordset k f -> x:v -> y:
                      -> Lemma (requires (True))
                               (ensures (mem y d ==> (contains y (const_on d x) /\ Some.v (select y (const_on d x)) = x)))
                     [SMTPat (select #k #v #f y (const_on #k #v #f d x))]
+
+val sel_rem1: #k:Type -> #v:Type -> #f:cmp k -> x:k -> m:ordmap k v f
+              -> Lemma (requires True) (ensures select #k #v #f x
+                                                (OrdMap.remove #k #v #f x m) = None)
+                 [SMTPat (select #k #v #f x (OrdMap.remove #k #v #f x m))]
+
+val sel_rem2: #k:Type -> #v:Type -> #f:cmp k -> x:k -> x':k -> m:ordmap k v f
+              -> Lemma (requires True) (ensures (x =!= x' ==>
+                                                 select #k #v #f x'
+                                                 (OrdMap.remove #k #v #f x m) = select #k #v #f x' m))
+                 [SMTPat (select #k #v #f x' (OrdMap.remove #k #v #f x m))]
+
+val rem_upd: #k:Type -> #v:Type -> #f:cmp k -> x:k -> y:v -> x':k -> m:ordmap k v f
+             -> Lemma (requires (True)) (ensures (x =!= x' ==>
+                                                  update #k #v #f x y (OrdMap.remove #k #v #f x' m) =
+                                                  OrdMap.remove #k #v #f x' (update #k #v #f x y m)))
+                [SMTPat (update #k #v #f x y (OrdMap.remove #k #v #f x' m))]

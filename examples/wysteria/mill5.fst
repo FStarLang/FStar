@@ -1,7 +1,7 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Wysteria --codegen Wysteria;
+    options:--admit_fsi FStar.Set --admit_fsi Wysteria;
     variables:LIB=../../lib;
-    other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst wysteria.fsi
+    other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst $LIB/st2.fst wysteria.fsi
  --*)
 
 (* Millionaire's for any 2 parties, private output for the first party, using wires *)
@@ -18,7 +18,7 @@ let bc = union bob_s charlie_s
 let abc = union ab charlie_s
 
 type pre  (m:mode)  = fun m0 -> b2t (m0 = m)
-type post (#a:Type) = fun (m:mode) (x:a) -> True
+type post (#a:Type) = fun (m:mode) (x:a) (t:trace) -> True
 
 type pre_with (m:mode) (t:Type) = fun m0 -> m0 = m /\ t
 
@@ -36,9 +36,9 @@ let mill5_sec #p1 #p2 w _ =
 
 val mill5: unit -> Wys bool (pre (Mode Par abc)) post
 let mill5 _ =
-  let x = as_par alice_s read_fn in
-  let y = as_par bob_s read_fn in
-  let z = as_par charlie_s read_fn in
+  let x:Box nat alice_s = as_par alice_s (read #nat) in
+  let y:Box nat bob_s = as_par bob_s (read #nat) in
+  let z:Box nat charlie_s = as_par charlie_s (read #nat) in
 
   let wa = mkwire_p alice_s x in
   let wb = mkwire_p bob_s y in
@@ -53,4 +53,4 @@ let mill5 _ =
   true
 ;;
 
-let x = main abc mill5 in wprint x
+let _ = main abc mill5 in ()

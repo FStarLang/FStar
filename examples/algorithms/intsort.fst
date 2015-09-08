@@ -1,6 +1,6 @@
 
 module IntSort
-open List
+open FStar.List
 
 (* Check that a list is sorted *)
 val sorted: list int -> Tot bool

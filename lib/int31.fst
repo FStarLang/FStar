@@ -1,7 +1,7 @@
 (*--build-config
   --*)
 
-module Int31
+module FStar.Int31
 val min_value_int : int
 let min_value_int = -1073741824
 

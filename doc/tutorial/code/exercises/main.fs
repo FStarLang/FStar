@@ -1,0 +1,3 @@
+module AclsTest
+
+UntrustedClientCode.dynamicChecking()

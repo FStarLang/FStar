@@ -1,4 +1,4 @@
-module Constructive
+module FStar.Constructive
 
 type cand : Type -> Type -> Type =
   | Conj : #p1:Type -> #p2:Type -> h1:p1 -> h2:p2 -> cand p1 p2
@@ -18,7 +18,7 @@ type cexists_type : (Type -> Type) -> Type =
   | ExTypeIntro : #p:(Type -> Type) -> t:Type -> h:(p t) -> cexists_type p
 
 type ceq : #a:Type -> a -> a -> Type =
-  | Eq : a:Type -> x:a -> ceq x x
+  | Refl : a:Type -> x:a -> ceq x x
 
 val ceq_eq : #a:Type -> #x:a -> #y:a -> h:(ceq x y) -> Lemma (x = y)
 let ceq_eq x y p = ()
@@ -36,4 +36,4 @@ let cfalse_elim pf =
   | _ -> 76 (* silly, fails type checking *)
 *)
 
-type cnot p = cimp p cfalse
+type cnot (p:Type) = cimp p cfalse

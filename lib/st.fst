@@ -17,9 +17,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module ST
-open Set
-open Heap
+module FStar.ST
+open FStar.Set
+open FStar.Heap
 type ref (a:Type) = Heap.ref a
 // this intentionally does not preclude h' extending h with fresh refs
 opaque logic type modifies (mods:set aref) (h:heap) (h':heap) =

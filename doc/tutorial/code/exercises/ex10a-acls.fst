@@ -1,7 +1,10 @@
+(*--build-config
+    options:--admit_fsi FStar.Set;
+    other-files:set.fsi heap.fst st.fst all.fst list.fst
+--*)
 module DynACLs
-open Heap
-open ST
-open List
+open FStar.List
+open FStar.Heap
 
 type file = string
 
@@ -12,14 +15,14 @@ type entry =
 type db = list entry
 
 let canWrite db file =
-  is_Some (List.find (function Writable x -> x=file | _ -> false) db)
+  is_Some (find (function Writable x -> x=file | _ -> false) db)
 
 let canRead db file =
-  is_Some (List.find (function Readable x | Writable x -> x=file) db)
+  is_Some (find (function Readable x | Writable x -> x=file) db)
 
 assume val acls: ref db
-type CanRead f h  = canRead  (Heap.sel h acls) f == true
-type CanWrite f h = canWrite (Heap.sel h acls) f == true
+type CanRead f h  = canRead  (sel h acls) f == true
+type CanWrite f h = canWrite (sel h acls) f == true
 
 
 val grant : e:entry -> ST unit (requires (fun h -> True))
@@ -29,7 +32,7 @@ let grant e = ST.write acls (e::ST.read acls)
 val revoke: e:entry -> ST unit (requires (fun h -> True))
                                (ensures (fun h x h' -> True))
 let revoke e =
-  let db = List.filterT (fun e' -> e<>e') (ST.read acls) in
+  let db = filterT (fun e' -> e<>e') (ST.read acls) in
   ST.write acls db
 
 (* two dangerous primitives *)

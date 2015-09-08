@@ -30,7 +30,6 @@ cache/
 
 examples/*/*.ml
 
-attic/
 _build/
 
 *.native*
@@ -44,3 +43,8 @@ dump
 *.cmo
 *.cmx
 *.o
+
+.depend
+*.a
+*.cmxa
+*.so

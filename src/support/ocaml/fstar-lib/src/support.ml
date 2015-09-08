@@ -114,6 +114,11 @@ module Prims = struct
   let op_Modulus x y = x mod y
   let is_Nil l = l = [] (*consider redefining List.isEmpty as this function*)
   let is_Cons l = not (is_Nil l)
+  let strcat x y = x ^ y
+  let is_Some = function (*consider redefining Option.isSome as this function*)
+    | Some _ -> true
+    | None -> false
+  let is_None o = not (is_Some o)
 end
 
 module ST = struct

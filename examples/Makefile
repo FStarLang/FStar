@@ -14,7 +14,7 @@ all:
 	make -C wysteria
 	make -C ../doc/tutorial/code/solutions
 	make -C unit-tests
-
+	make -C hello ocaml
 
 test: all
 

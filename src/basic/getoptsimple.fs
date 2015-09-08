@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Microsoft.FStar.Getopt
+module FStar.Getopt
 (* A simplified re-implementation of Getopt, a command line parsing tool *)
 let noshort='\000'
 let nolong=""
@@ -56,7 +56,7 @@ let rec parse (opts:list<opt>) def ar ix max i =
                 | None -> Die ("unrecognized option '" + arg + "'\n")
           else go_on ()
 
-let parse_cmdline specs others = 
+let parse_cmdline specs others =
   let len = Array.length Sys.argv in
   let go_on () = parse specs others Sys.argv 1 (len - 1) 0 in
     if len = 1 then Help

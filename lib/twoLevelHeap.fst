@@ -17,9 +17,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module TwoLevelHeap
-open Map
-open Heap
+module FStar.TwoLevelHeap
+open FStar.Map
+open FStar.Heap
 type rid = int  //region id
 type t = Map.t rid heap
 

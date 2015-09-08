@@ -1,6 +1,6 @@
 (*--build-config
   variables:LIB=../../lib;
-  other-files: $LIB/ghost.fst $LIB/list.fst
+  other-files: $LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/ghost.fst $LIB/list.fst
   --*)
 
 
@@ -19,3 +19,27 @@ type sizedList =
 
 val aSizedList : sizedList
 let aSizedList =  MkSList (hide 2) [1]
+
+assume val effectfulIncr : nat -> St nat
+
+val someNat : nat -> nat
+let someNat n =
+  let _ = (hide (effectfulIncr n)) in n
+
+assume val pureIncr : nat -> Tot nat
+
+val someNat2 : nat -> nat
+let someNat2 n =
+  let _ = (hide (pureIncr n)) in n
+
+open Heap
+type llist : Type -> Type
+type rep : #a:Type -> heap -> llist a  -> list a -> Type
+
+
+val llrev : #a:Type -> l:(llist a) -> el:erased (list a)
+    -> ST ((llist a)*(erased (list a)))
+        (fun m -> rep m l (reveal el))
+        (fun _ rl m1 -> rep m1 (fst rl) (reveal (snd rl)))
+
+let llev l el = admit ()

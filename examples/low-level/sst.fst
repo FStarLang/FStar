@@ -6,14 +6,14 @@
 
 (*perhaps this should be an interface file?*)
 
-module SST
+module SST //TODO: rename to RST?
 open StackAndHeap
 open Located
-open Heap
+open FStar.Heap
 open Stack
-open Set
-open Prims
-open List
+open FStar.Set
+
+open FStar.List
 open Lref  open Located
 open ListSet
 
@@ -36,7 +36,7 @@ assume val salloc:  #a:Type -> init:a -> SST (lref a)
           (isNonEmpty (st m0)) /\ (isNonEmpty (st m1))
           /\ allocateInBlock r (topstb m0) (topstb m1) init
           /\ refLoc r = InStack (topstid m0) /\ (topstid m0 = topstid m1)
-          /\ mtail m0 = mtail m1)
+          /\ mtail m0 = mtail m1 /\ m1 = allocateInTopR r init m0)
 
 assume val memread:  #a:Type -> r:(lref a) -> SST a
 	  (fun m -> b2t (liveRef r m))
@@ -84,10 +84,45 @@ sub_effect
 effect Mem (a:Type) (pre: smem -> Type) (post: (smem -> SSTPost a)) (mod: modset) =
         SST a pre (fun m0 a m1 -> post m0 a m1 /\ sids m0 = sids m1 /\ canModify m0 m1 mod)
 
+//TODO: MemReader?
 effect PureMem (a:Type) (pre:smem -> Type) (post: ( smem -> a -> Type)) =
         SST a pre (fun m0 a m1 -> post m1 a /\ m0=m1)
 
-open Ghost
+open FStar.Ghost
 assume val get : unit -> PureMem (erased smem)
       (requires (fun m -> true))
       (ensures (fun m v -> reveal v = m))
+
+(*
+ * In future, we would like to enforce that the type a is locatable and immutable.
+ * See a precise definition of locatable in located.fst.
+ * When allocating mutable things, the ghost memory of SST must be updated to
+ * keep track of its "current" value. Because lalloc is a PureMem, it cannot be used.
+ * PureMem means lalloc does not change smem, the map from references to their values.
+ * For refs, use instead salloc above. for arrays, use [hs]create in array.fsi instead.
+ *)
+ (*is this is ever renamed or moved, mlp_lalloc in src\extraction\ml-syntax.fs MUST be updated.*)
+ (*as of now, a can only be a record type.*)
+(*for efficiency, the argument to lalloc should be a head normal form of the type.
+Extraction will then avoid creating this value on the heap.*)
+assume val lalloc: #a:Type -> v:a -> PureMem
+  (located a)
+  (requires (fun m ->isNonEmpty (st m)))
+  (ensures (fun m1 l -> greveal l = v /\ isNonEmpty (st m1) /\ regionOf l = InStack (topstid m1)))
+
+//TODO: This is not sound; take f as the identity function
+//      The intended semantics is to restrict f to be a strict projector of 'a
+assume val llift : f:('a -> Tot 'b) -> l:located 'a
+-> PureMem 'b (requires (fun m-> liveLoc l m))
+              (ensures (fun v m1 -> v == f (greveal l) ))
+
+(*
+e.g., components (code (a * b)) c = a -> b -> Tot c;
+but this requires type-to-type functions functions
+
+assume val llift : #a:Type -> #b:Type -> f:(components a b) -> l:located a
+-> PureMem 'b (requires (fun m-> liveLoc l m))
+              (ensures (fun v m1 -> v == f (greveal l) ))
+
+
+*)

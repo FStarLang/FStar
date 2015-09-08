@@ -1,10 +1,13 @@
 (*--build-config
-    options:--z3timeout 20;
-    other-files: sample.fst 
+    options:--admit_fsi FStar.Set --z3timeout 30 ;
+    variables:LIB=../../lib;
+    other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/st2.fst $LIB/bytes.fst $LIB/list.fst sample.fst
   --*)
-
 module Fp
+open FStar.Relational
 
+(* TODO, actually turn this into Fp
+   For now we just use ints because they have better automatic support... *)
 assume type prime (p:pos)
 type prime_number = p:pos{prime p}
 assume val p:prime_number
@@ -35,288 +38,164 @@ let mod_laws5 = assume(forall a b.((a % p) - b) % p = (a - b) %p)
 let mod_laws6 = assume(forall a b.(a - (b % p)) % p = (a - b) %p)
 *)
 
+module Sharing
+open Fp
+open FStar.Sample
+open FStar.Bijection
+open FStar.Relational
+open FStar.Comp
+
+(* The shares on both sides have to sum up to the respective secret.
+   We assume that the first party is dishonest and that the second party is
+   honest. Hence, the first shares are always equal in both runs, while the
+   second shares are not related (high) *)
+type shared (secret:double fp) = s:double (fp*fp)
+                                    {fst(R.l s) = fst(R.r s)
+                                  /\ add_fp (fst(R.l s)) (snd(R.l s)) = R.l secret
+                                  /\ add_fp (fst(R.r s)) (snd(R.r s)) = R.r secret}
+
+(* We show that the identity function used for sampling is a bijection *)
+opaque val id_good_sample_fun : unit -> Lemma (good_sample_fun #fp #fp (fun x -> x))
+let id_good_sample_fun () =
+  cut (bijection #fp #fp (fun x -> x));
+  bijection_good_sample_fun #fp #fp(fun x -> x)
+
+(* Simple sharing algorithm *)
+opaque val share : h:double fp -> St2 (shared h)
+let share h = id_good_sample_fun ();
+              let s0 = sample (fun x -> x) in
+              let s1 = rel_map2 minus_fp h s0 in
+              let p = pair_rel s0 s1 in
+              p
+
+(* For reconstruction all  shares have to be of eq type since they are
+   published *) opaque val reconstruct : #h:double fp -> s:shared h{eq_rel s}
+                  -> Tot (r:(eq fp){r=h})
+let reconstruct _ s  = rel_map1 (fun (a,b) -> add_fp a b) s
+
+
 module Triples
 open Fp
-open Sample
-open Bijection
+open FStar.Sample
+open FStar.Bijection
+open FStar.Relational
+open Sharing
+open FStar.Comp
 
 let fst3 = MkTuple3._1
 let snd3 = MkTuple3._2
 let thd3 = MkTuple3._3
 
-val help_triple_a: x:fp -> sl0:fp -> sr0:fp
-           -> Lemma (minus_fp sl0 x = minus_fp sr0 (add_fp (minus_fp x sl0) sr0))
-let help_triple_a x sl0 sr0 = ()
+(* We prove that the sample function used is a bijection *)
+opaque val triple_a_good_sample_fun : sl:fp -> sr:fp ->
+  Lemma (good_sample_fun #fp #fp (fun x -> add_fp (minus_fp x sl) sr))
+#reset-options
+let triple_a_good_sample_fun sl sr =
+  let sample_fun = (fun x -> add_fp (minus_fp x sl) sr) in
+  let sample_fun'= (fun x -> add_fp (minus_fp x sr) sl) in
+  cut(inverses #fp #fp sample_fun sample_fun');
+  lemma_inverses_bij #fp #fp sample_fun sample_fun';
+  cut(bijection #fp #fp sample_fun);
+  bijection_good_sample_fun #fp #fp sample_fun
 
-opaque val triple_a : sl0:(fp*fp) -> sr0:(fp*fp)
-               -> Pure ((fp*(fp*fp))*(fp*(fp*fp)))
-                      (requires  True)
-                      (ensures  fun r -> minus_fp (snd sl0) (snd(snd(fst r))) =
-                                             minus_fp (snd sr0) (snd(snd(snd r)))
-                                          /\ add_fp (fst(snd(fst r))) (snd(snd(fst r))) = (fst(fst r))
-                                          /\ add_fp (fst(snd(snd r))) (snd(snd(snd r))) = (fst(snd r))
-                                          /\ fst(snd(fst r))=fst(snd(snd r)))
-let triple_a sl0 sr0 =
-                       let sample_fun = (fun x -> add_fp (minus_fp x (snd sl0)) (snd sr0)) in
-                       let sample_fun'= (fun x -> add_fp (minus_fp x (snd sr0)) (snd sl0)) in
-                       cut(inverses #fp #fp sample_fun sample_fun');
-                       lemma_inverses_bij #fp #fp sample_fun sample_fun';
-                       let asl0, asr0 = sample (fun x -> x) in
-                       let asl1, asr1 = sample  sample_fun in
-                       let al = add_fp asl0 asl1 in
-                       let ar = add_fp asr0 asr1 in
-                       let ar = add_fp asr0 asr1 in
-                       help_triple_a asl1 (snd sl0) (snd sr0);
-                       cut(b2t(minus_fp (snd sl0) asl1 = minus_fp (snd sr0) asr1));
-                       cut(b2t(add_fp asl0 asl1 = al));
-                       cut(b2t(add_fp asr0 asr1 = ar));
-                       cut(b2t(asl0 = asr0));
-                       cut(b2t(add_fp asl0 asl1 = al));
-                       let r = (al,(asl0, asl1)),(ar,(asr0,asr1)) in
-                       cut(b2t(minus_fp (snd sl0) (snd(snd(fst r))) =
-                               minus_fp (snd sr0) (snd(snd(snd r)))));
-                       cut(b2t(add_fp (fst(snd(fst r))) (snd(snd(fst r))) = (fst(fst r))));
-                       cut(b2t(add_fp (fst(snd(snd r))) (snd(snd(snd r))) = (fst(snd r))));
-                       cut(b2t(fst(snd(fst r))=fst(snd(snd r))));
-                       r
+
+
+(* This function is used to generate the first and the second component of the
+   triple. The additional refinement ensures that we can safely publish the
+   intermediate shares of the honest party during the multiplication *)
+#reset-options
+opaque val triple_a : s:double fp
+               -> St2 (r:(h:double fp & shared h) {minus_fp (R.l s) (snd(R.l(dsnd r))) =
+                                                   minus_fp (R.r s) (snd(R.r(dsnd r)))})
+
+let triple_a s = let sample_fun = (fun x -> add_fp (minus_fp x (R.l s)) (R.r s)) in
+                 id_good_sample_fun ();
+                 let as0 = sample #fp #fp (fun x -> x) in
+                 triple_a_good_sample_fun (R.l s) (R.r s);
+                 let as1 = sample  sample_fun in
+                 let a = rel_map2 add_fp as0 as1 in
+                 (| a, (pair_rel as0 as1) |)
 #reset-options
 
-
-opaque val triple_c : a:(fp*fp) -> b:(fp*fp)
-               -> Pure ((fp*(fp*fp))*(fp*(fp*fp)))
-                      (requires  True)
-                      (ensures  fun r -> mul_fp (fst a) (fst b) = fst(fst r)
-                                          /\ mul_fp (snd a) (snd b) = fst(snd r)
-                                          /\ add_fp (fst(snd(fst r))) (snd(snd(fst r))) = (fst(fst r))
-                                          /\ add_fp (fst(snd(snd r))) (snd(snd(snd r))) = (fst(snd r))
-                                          /\ fst(snd(fst r))=fst(snd(snd r)))
-let triple_c (al,ar) (bl,br) = let cl = mul_fp al bl in
-                               let cr = mul_fp ar br in
-                               let csl0, csr0 = sample (fun x -> x) in
-                               let csl1, csr1 = minus_fp cl csl0, minus_fp cr csr0 in
-                               (cl,(csl0, csl1)),(cr,(csr0,csr1))
+(* This function generates the third component of the triple *)
+opaque val triple_c : a:(double fp) -> b:(double fp)
+               -> St2 (r:(h:double fp & shared h){dfst r = rel_map2 mul_fp a b})
+let triple_c a b  = let c = rel_map2 mul_fp a b in
+                    id_good_sample_fun ();
+                    let cs0 = sample (fun x -> x) in
+                    let cs1 = rel_map2 minus_fp c cs0 in
+                    (| c, (pair_rel cs0 cs1) |)
 #reset-options
 
-opaque val triple : sl0:(fp*fp) -> sl1:(fp*fp) -> sr0:(fp*fp) -> sr1:(fp*fp)
-                    -> Pure (((fp*(fp*fp))*(fp*(fp*fp))*(fp*(fp*fp))) * ((fp*(fp*fp))*(fp*(fp*fp))*(fp*(fp*fp))))
-                           (requires ( True))
-                           (ensures  (fun r -> mul_fp (fst(fst3(fst r))) (fst(snd3(fst r)))
-                                                         = fst(thd3(fst r))
-                                                 /\ mul_fp (fst(fst3(snd r))) (fst(snd3(snd r)))
-                                                         = fst(thd3(snd r))
-                                                 /\ add_fp (fst(snd(fst3(fst r)))) (snd(snd(fst3(fst r)))) = fst(fst3(fst r))
-                                                 /\ add_fp (fst(snd(snd3(fst r)))) (snd(snd(snd3(fst r)))) = fst(snd3(fst r))
-                                                 /\ add_fp (fst(snd(thd3(fst r)))) (snd(snd(thd3(fst r)))) = fst(thd3(fst r))
-                                                 /\ add_fp (fst(snd(fst3(snd r)))) (snd(snd(fst3(snd r)))) = fst(fst3(snd r))
-                                                 /\ add_fp (fst(snd(snd3(snd r)))) (snd(snd(snd3(snd r)))) = fst(snd3(snd r))
-                                                 /\ add_fp (fst(snd(thd3(snd r)))) (snd(snd(thd3(snd r)))) = fst(thd3(snd r))
-                                                 /\ minus_fp (snd sl0) (snd(snd(fst3(fst r)))) =
-                                                    minus_fp (snd sr0) (snd(snd(fst3(snd r))))
-                                                 /\ minus_fp (snd sl1) (snd(snd(snd3(fst r)))) =
-                                                    minus_fp (snd sr1) (snd(snd(snd3(snd r))))
-                                                 /\ fst(snd(fst3(fst r))) = fst(snd(fst3(snd r)))
-                                                 /\ fst(snd(snd3(fst r))) = fst(snd(snd3(snd r)))
-                                                 /\ fst(snd(thd3(fst r))) = fst(snd(thd3(snd r)))
-                                                    ))
-let triple sl0 sl1 sr0 sr1 = let (al,(asl0,asl1)),(ar,(asr0,asr1)) = triple_a sl0 sr0 in
-                             let (bl,(bsl0,bsl1)),(br,(bsr0,bsr1)) = triple_a sl1 sr1 in
-                             let (cl,(csl0,csl1)),(cr,(csr0,csr1)) = triple_c (al,ar) (bl,br) in
-                             cut(b2t(mul_fp al bl = cl));
-                             cut(b2t(mul_fp ar br = cr));
-                             cut(b2t(al = add_fp asl0 asl1));
-                             cut(b2t(ar = add_fp asr0 asr1));
-                             cut(b2t(bl = add_fp bsl0 bsl1));
-                             cut(b2t(br = add_fp bsr0 bsr1));
-                             cut(b2t(cl = add_fp csl0 csl1));
-                             cut(b2t(cr = add_fp csr0 csr1));
-                             cut(b2t(minus_fp (snd sl0) asl1 = minus_fp (snd sr0) asr1));
-                             cut(b2t(minus_fp (snd sl1) bsl1 = minus_fp (snd sr1) bsr1));
-                             cut(b2t(asl0 = asr0));
-                             cut(b2t(bsl0 = bsr0));
-                             cut(b2t(csl0 = csr0));
-                             ((al,(asl0,asl1)),(bl,(bsl0,bsl1)),(cl,(csl0,csl1))),
-                             ((ar,(asr0,asr1)),(br,(bsr0,bsr1)),(cr,(csr0,csr1)))
+(* Combining the single elements *)
+let triple s01 s11 = let a = triple_a s01 in
+                     let b = triple_a s11 in
+                     let c = triple_c (dfst a) (dfst b) in
+                     a, b, c
 #reset-options
-
-
 module MPC
 open Fp
-open Sample
+open FStar.Sample
+open FStar.Relational
+open Sharing
 open Triples
-
-type shared (secret:fp) = p:(fp * fp){add_fp (fst p) (snd p) = secret}
-val share : hl:fp -> hr:fp
-            -> Pure ((fp*fp)*(fp*fp))
-                   (requires ( True))
-                   (ensures  (fun r -> add_fp (fst(fst r)) (snd(fst r)) = hl
-                                        /\ add_fp (fst(snd r)) (snd(snd r)) = hr
-                                        /\ fst(fst r) = fst(snd r)))
-let share hl hr = let sl0, sr0 = sample (fun x -> x) in
-                  let sl1, sr1 = minus_fp hl sl0, minus_fp hr sr0 in
-                  (sl0, sl1),(sr0, sr1)
+open FStar.Comp
 
 
-opaque val reconstruct : #h0:fp -> #h1:fp -> s0:(fp*fp) -> s1:(fp*fp)
-                  -> Pure (fp * fp)
-                         (requires ( add_fp (fst s0) (snd s0) = h0 /\
-                                             add_fp (fst s1) (snd s1) = h1 /\
-                                             fst s0 = fst s1 /\
-                                             snd s0 = snd s1))
-                         (ensures  (fun r -> fst r = snd r /\
-                                                 fst r = h0 /\
-                                                 snd r = h1))
-let reconstruct _ _  (sl0, sl1) (sr0, sr1) = add_fp sl0 sl1, add_fp sr0 sr1
+(* This module contains the actual arithmetic operations. 
+   For each operation we show correctness and we show that the secret inputs
+   (the shares of the honest party) do not influence the public output *)
 
-opaque val add_adv : sl0:fp -> sl1:fp -> sr0:fp -> sr1:fp ->
-              Pure (fp * fp)
-                  (requires ( sl0 = sr0 /\ sl1 = sr1))
-                  (ensures  (fun r -> fst r = snd r /\
-                                          fst r = add_fp sl0 sl1 /\
-                                          snd r = add_fp sr0 sr1))
-let add_adv sl0 sl1 sr0 sr1 = add_fp sl0 sl1, add_fp sr0 sr1
+let add_loc s0 s1 = rel_map2 add_fp s0 s1
 
-opaque val add_hon : sl0:fp -> sl1:fp -> sr0:fp -> sr1:fp ->
-              Pure (fp * fp)
-                  (requires ( True))
-                  (ensures  (fun r -> fst r = add_fp sl0 sl1 /\
-                                          snd r = add_fp sr0 sr1))
-let add_hon sl0 sl1 sr0 sr1 = add_fp sl0 sl1, add_fp sr0 sr1
+opaque val add_mpc : #h0:double fp -> #h1:double fp
+              -> s0:shared h0 -> s1:shared h1
+              -> Tot (shared(rel_map2 add_fp h0 h1))
+let add_mpc _ _ s0 s1 = let r0 = add_loc (fst_rel s0) (fst_rel s1) in
+                        let r1 = add_loc (snd_rel s0) (snd_rel s1) in
+                        pair_rel r0 r1
 
-opaque val add_mpc : #hl0:fp -> #hl1:fp -> #hr0:fp -> #hr1:fp
-              -> sl0:shared hl0 -> sl1:shared hl1
-              -> sr0:shared hr0 -> sr1:shared hr1
-(*               -> Pure ((shared (add_fp hl0 hl1)) * (shared (add_fp hr0 hr1))) *)
-              -> Pure ((fp*fp)*(fp*fp))
-                     (requires ( fst sl0 = fst sr0 /\
-                                         fst sl1 = fst sr1))
-                     (ensures  (fun r -> fst (fst r) = fst (snd r)
-                                          /\ add_fp (fst (fst r)) (snd (fst r)) = add_fp hl0 hl1
-                                          /\ add_fp (fst (snd r)) (snd (snd r)) = add_fp hr0 hr1 ))
-let add_mpc _ _ _ _ sl0 sl1 sr0 sr1 = let rl0, rr0 = add_adv (fst sl0) (fst sl1) (fst sr0) (fst sr1) in
-                                      let rl1, rr1 = add_hon (snd sl0) (snd sl1) (snd sr0) (snd sr1) in
-                                      (rl0, rl1), (rr0, rr1)
+let scalar_mul_loc a s = rel_map2 mul_fp a s
 
-opaque val scalar_mul_adv : a:fp -> sl:fp -> sr:fp ->
-                     Pure (fp * fp)
-                         (requires ( sl = sr))
-                         (ensures  (fun r -> fst r = snd r /\
-                                                 fst r = mul_fp a sl /\
-                                                 snd r = mul_fp a sr))
-let scalar_mul_adv a sl sr = mul_fp a sl, mul_fp a sr
+opaque val scalar_mul_mpc : #h:double fp
+                     -> a:eq fp -> s:shared h
+                     -> Tot (shared (rel_map2 mul_fp a h))
+let scalar_mul_mpc _ a s = let r0 = scalar_mul_loc a (fst_rel s) in
+                           let r1 = scalar_mul_loc a (snd_rel s) in
+                           pair_rel r0 r1
 
-opaque val scalar_mul_hon : a:fp -> sl:fp -> sr:fp ->
-                     Pure (fp * fp)
-                         (requires ( True))
-                         (ensures  (fun r -> fst r = mul_fp a sl /\
-                                                 snd r = mul_fp a sr))
-let scalar_mul_hon a sl sr = mul_fp a sl, mul_fp a sr
+let add_const_loc a s = rel_map2 add_fp a s
 
-opaque val scalar_mul_mpc : #hl:fp -> #hr:fp
-                     -> a:fp -> sl:shared hl -> sr:shared hr
-(*                      -> Pure ((shared (mul_fp a hl)) * (shared (mul_fp a hr))) *)
-                     -> Pure ((fp*fp)*(fp*fp))
-                            (requires ( fst sl = fst sr))
-                            (ensures  (fun r -> fst (fst r) = fst (snd r)
-                                                 /\ add_fp (fst (fst r)) (snd (fst r)) = mul_fp a hl
-                                                 /\ add_fp (fst (snd r)) (snd (snd r)) = mul_fp a hr ))
-let scalar_mul_mpc _ _ a sl sr = let rl0, rr0 = scalar_mul_adv a (fst sl) (fst sr) in
-                                 let rl1, rr1 = scalar_mul_hon a (snd sl) (snd sr) in
-                                 (rl0, rl1), (rr0, rr1)
+opaque val add_const_mpc : #h:double fp
+                     -> a:eq fp -> s:shared h
+                     -> Tot (shared (rel_map2 add_fp a h))
+let add_const_mpc _ a s = let r0 = add_const_loc a (fst_rel s) in
+                          let r1 = add_const_loc (twice (mod_p 0)) (snd_rel s) in
+                          pair_rel r0 r1
 
-opaque val add_const_adv : a:fp -> sl:fp -> sr:fp ->
-                    Pure (fp * fp)
-                        (requires ( sl = sr))
-                        (ensures  (fun r -> fst r = snd r /\
-                                                fst r = add_fp a sl /\
-                                                snd r = add_fp a sr))
-let add_const_adv a sl sr = add_fp a sl, add_fp a sr
+let minus_loc s0 s1 = rel_map2 minus_fp s0 s1
 
-opaque val add_const_hon : a:fp -> sl:fp -> sr:fp ->
-                    Pure (fp * fp)
-                        (requires ( True))
-                        (ensures  (fun r -> fst r = add_fp a sl /\
-                                                snd r = add_fp a sr))
-let add_const_hon a sl sr = add_fp a sl, add_fp a sr
-
-opaque val add_const_mpc : #hl:fp -> #hr:fp
-                    -> a:fp -> sl:shared hl -> sr:shared hr
-(*                     -> Pure ((shared (add_fp a hl)) * (shared (add_fp a hr))) *)
-                    -> Pure ((fp*fp)*(fp*fp))
-                           (requires ( fst sl = fst sr))
-                           (ensures  (fun r -> fst (fst r) = fst (snd r)
-                                                /\ add_fp (fst (fst r)) (snd (fst r)) = add_fp a hl
-                                                /\ add_fp (fst (snd r)) (snd (snd r)) = add_fp a hr ))
-let add_const_mpc _ _ a sl sr = let rl0, rr0 = add_const_adv a (fst sl) (fst sr) in
-                                let rl1, rr1 = add_const_hon (mod_p 0) (snd sl) (snd sr) in
-                                (rl0, rl1), (rr0, rr1)
-
-opaque val minus_adv : sl0:fp -> sl1:fp -> sr0:fp -> sr1:fp ->
-              Pure (fp * fp)
-                  (requires ( sl0 = sr0 /\ sl1 = sr1))
-                  (ensures  (fun r -> fst r = snd r /\
-                                          fst r = minus_fp sl0 sl1 /\
-                                          snd r = minus_fp sr0 sr1))
-let minus_adv sl0 sl1 sr0 sr1 = minus_fp sl0 sl1, minus_fp sr0 sr1
-
-opaque val minus_hon : sl0:fp -> sl1:fp -> sr0:fp -> sr1:fp ->
-              Pure (fp * fp)
-                  (requires ( True))
-                  (ensures  (fun r -> fst r = minus_fp sl0 sl1 /\
-                                          snd r = minus_fp sr0 sr1))
-let minus_hon sl0 sl1 sr0 sr1 = minus_fp sl0 sl1, minus_fp sr0 sr1
-
-opaque val minus_mpc : #hl0:fp -> #hl1:fp -> #hr0:fp -> #hr1:fp
-              -> sl0:shared hl0 -> sl1:shared hl1
-              -> sr0:shared hr0 -> sr1:shared hr1
-(*               -> Pure ((shared (minus_fp hl0 hl1)) * (shared (minus_fp hr0 hr1))) *)
-              -> Pure ((fp*fp)*(fp*fp))
-                     (requires ( fst sl0 = fst sr0 /\
-                                         fst sl1 = fst sr1))
-                     (ensures  (fun r -> fst (fst r) = fst (snd r)
-                                          /\ add_fp (fst (fst r)) (snd (fst r)) = minus_fp hl0 hl1
-                                          /\ add_fp (fst (snd r)) (snd (snd r)) = minus_fp hr0 hr1 ))
-let minus_mpc _ _ _ _ sl0 sl1 sr0 sr1 = let rl0, rr0 = minus_adv (fst sl0) (fst sl1) (fst sr0) (fst sr1) in
-                                      let rl1, rr1 = minus_hon (snd sl0) (snd sl1) (snd sr0) (snd sr1) in
-                                      (rl0, rl1), (rr0, rr1)
+opaque val minus_mpc : #h0:double fp -> #h1:double fp
+              -> s0:shared h0 -> s1:shared h1
+              -> Tot (shared(rel_map2 minus_fp h0 h1))
+let minus_mpc _ _ s0 s1 = let r0 = minus_loc (fst_rel s0) (fst_rel s1) in
+                        let r1 = minus_loc (snd_rel s0) (snd_rel s1) in
+                        pair_rel r0 r1
 
 #reset-options
-opaque val mul_mpc : #hl0:fp -> #hl1:fp -> #hr0:fp -> #hr1:fp
-              -> sl0:shared hl0 -> sl1:shared hl1
-              -> sr0:shared hr0 -> sr1:shared hr1
-(*               -> Pure ((shared (mul_fp hl0 hl1)) * (shared (mul_fp hr0 hr1))) *)
-              -> Pure ((fp*fp)*(fp*fp))
-                     (requires ( fst sl0 = fst sr0 /\
-                                         fst sl1 = fst sr1))
-                     (ensures  (fun r -> fst (fst r) = fst (snd r)
-                                         /\ add_fp (fst (fst r)) (snd (fst r)) = mul_fp hl0 hl1
-                                         /\ add_fp (fst (snd r)) (snd (snd r)) = mul_fp hr0 hr1))
-let mul_mpc hl0 hl1 hr0 hr1 sl0 sl1 sr0 sr1 =
-                                              let ((al,asl), (bl,bsl), (cl,csl)), ((ar,asr), (br,bsr), (cr,csr)) =
-                                                  triple sl0 sl1 sr0 sr1 in
-                                              let el', er' = minus_mpc #hl0 #al #hr0 #ar sl0 asl sr0 asr in
-                                              assert(fst el' = fst er');
-                                              assert (snd el' = snd er');
-                                              let el, er = reconstruct  #(minus_fp hl0 al) #(minus_fp hr0 ar) el' er' in
-                                              let dl', dr' = minus_mpc #hl1 #bl #hr1 #br sl1 bsl sr1 bsr in let dl, dr = reconstruct  #(minus_fp hl1 bl) #(minus_fp hr1 br) dl' dr' in
-                                              let tmp1l, tmp1r = scalar_mul_mpc #al #ar dl asl asr in
-                                              let tmp2l, tmp2r = add_mpc #(mul_fp dl al) #cl  #(mul_fp ar dr) #cr tmp1l csl tmp1r csr in
-                                              let tmp3l, tmp3r = scalar_mul_mpc #bl #br el bsl bsr in
-                                              let tmp4l, tmp4r = add_mpc #(mul_fp el bl) #(add_fp (mul_fp dl al) cl)
-                                                                         #(mul_fp er br) #(add_fp (mul_fp dr ar) cr)
-                                                                         tmp3l tmp2l tmp3r tmp2r in
-                                              let tmp5l, tmp5r = add_const_mpc #(add_fp (mul_fp el bl) (add_fp (mul_fp dl al) cl))
-                                                                               #(add_fp (mul_fp er br) (add_fp (mul_fp dr ar) cr))
-                                                                               (mul_fp dl el) tmp4l tmp4r in
-                                              cut (b2t(add_fp (mul_fp dl el) (add_fp (mul_fp el bl) (add_fp (mul_fp dl al) cl))
-                                                              = add_fp (fst tmp5l) (snd tmp5l)));
-                                              cut (b2t(add_fp (mul_fp dl el) (add_fp (mul_fp el bl) (add_fp (mul_fp dl al) cl))
-                                                              = mul_fp hl0 hl1));
-                                              cut (b2t(add_fp (mul_fp dr er) (add_fp (mul_fp er br) (add_fp (mul_fp dr ar) cr))
-                                                              = add_fp (fst tmp5r) (snd tmp5r)));
-                                              cut (b2t(add_fp (mul_fp dr er) (add_fp (mul_fp er br) (add_fp (mul_fp dr ar) cr))
-                                                              = mul_fp hr0 hr1));
-                                              cut (b2t(add_fp (fst tmp5l) (snd tmp5l) = mul_fp hl0 hl1));
-                                              cut (b2t(add_fp (fst tmp5r) (snd tmp5r) = mul_fp hr0 hr1));
-                                              cut (b2t(fst tmp5l = fst tmp5r));
-                                              let r = tmp5l, tmp5r in
-                                              r
+opaque val mul_mpc : #h0:double fp -> #h1:double fp
+              -> s0:shared h0 -> s1:shared h1
+              -> St2 (shared(rel_map2 mul_fp h0 h1))
+let mul_mpc #h0 #h1 s0 s1 =
+  let (|a, a_s|), (|b, b_s|), (|c, c_s|) = triple (rel_map1 snd s0) (rel_map1 snd s1) in
+  let e_s = minus_mpc #h0 #a s0 a_s in
+  let d_s = minus_mpc #h1 #b s1 b_s in
+  let e = reconstruct #(rel_map2 minus_fp h0 a) e_s in
+  let d = reconstruct #(rel_map2 minus_fp h1 b) d_s in
+  let tmp1 = scalar_mul_mpc #a d a_s in
+  let tmp2 = add_mpc #(rel_map2 mul_fp d a) #c tmp1 c_s in
+  let tmp3 = scalar_mul_mpc #b e b_s in
+  let tmp4 = add_mpc #(rel_map2 mul_fp e b) #(rel_map2 add_fp (rel_map2 mul_fp d a) c) tmp3 tmp2 in
+  let tmp5 = add_const_mpc #(rel_map2 add_fp (rel_map2 mul_fp e b) (rel_map2 add_fp (rel_map2 mul_fp d a) c))
+                            (rel_map2 mul_fp d e) tmp4 in
+  tmp5

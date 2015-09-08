@@ -1,21 +1,40 @@
 (*--build-config
-    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module CntProtocol --admit_fsi Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
-    variables:LIB=../../lib;
-    other-files:$LIB/string.fst $LIB/list.fst
+    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module CntProtocol --admit_fsi FStar.Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 --admit_fsi FStar.IO;
+    variables:LIB=../../lib
+              CONTRIB=../../contrib;
+    other-files:
             $LIB/ext.fst $LIB/classical.fst
             $LIB/set.fsi $LIB/set.fst
-            $LIB/heap.fst $LIB/st.fst
-            $LIB/seq.fsi $LIB/seqproperties.fst cnt-format.fst cnt-mac.fst
+            $LIB/heap.fst $LIB/st.fst $LIB/all.fst
+            $LIB/string.fst $LIB/list.fst
+            $LIB/seq.fsi $LIB/seqproperties.fst
+            $LIB/io.fsti
+            $CONTRIB/Platform/fst/Bytes.fst
+            $CONTRIB/CoreCrypto/fst/CoreCrypto.fst
+            cnt-CntFormat.fst
+            sha1.fst
+            mac.fst
   --*)
 
+
+(* Copyright (c) Microsoft Corporation.  All rights reserved.  *)
+
 module CntProtocol
-open Seq
-open SeqProperties
-open Format
+
+open FStar.All
+open FStar.String
+open FStar.IO
+open FStar.Heap
+
+
+let init_print = print_string "\ninitializing...\n\n"
+
+open Platform.Bytes
+open FStar.Seq
+open FStar.SeqProperties
+open SHA1
+open CntFormat
 open MAC
-open ST
-open ML
-open Heap
 
 let max x y = if x > y then x else y
 
@@ -56,7 +75,7 @@ let rec max_lemma s c l =
      max_lemma s c l'
 
 let invariant h =
-  server_max (sel h log_prot) = sel h server_cnt &&
+  server_max (Heap.sel h log_prot) = Heap.sel h server_cnt &&
     Heap.contains h server_cnt && Heap.contains h client_cnt &&
       Heap.contains h log_prot && server_cnt <> client_cnt
 
@@ -108,7 +127,7 @@ logic type Signal : uint32 -> uint16 -> Type
 (* the meaning of MACs, as used in RPC *)
 
 opaque logic type req (msg:message) =
-    (exists s c.   msg = Format.signal s c /\ Signal s c)
+    (exists s c.   msg = CntFormat.signal s c /\ Signal s c)
 
 let k = keygen req
 
@@ -119,7 +138,7 @@ let client (s: uint32) =
   let c = next_cnt () in
   admitP (Signal s c);
   assert(Signal s c);
-  let t = Format.signal s c in
+  let t = CntFormat.signal s c in
   let m = mac k t in
   send (append t m);
   None

@@ -1,13 +1,12 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Map --admit_fsi HyperHeap --max_fuel 0 --initial_ifuel 0 --logQueries --z3timeout 20;
-    other-files:ext.fst set.fsi heap.fst map.fsi listTot.fst hyperHeap.fsi stHyperHeap.fst util.fst list.fst
+    options:--admit_fsi FStar.Set --admit_fsi FStar.Map --admit_fsi FStar.HyperHeap --max_fuel 0 --initial_ifuel 0 --logQueries --z3timeout 20;
+    other-files:ext.fst set.fsi heap.fst map.fsi listTot.fst hyperHeap.fsi stHyperHeap.fst allHyperHeap.fst util.fst list.fst
 --*)
 module Robot
 #set-options "--initial_ifuel 1 --max_ifuel 1"
-open Util
-open Heap
-open HyperHeap
-open ST
+open FStar.Heap
+open FStar.Util
+open FStar.HyperHeap
 
 type point =
   | Point : #r:rid
@@ -158,7 +157,7 @@ let fly_robots b0 b1 =
   fly b0;
   fly b1
 
-open Set
+open FStar.Set
 type distinct (r:rid) (s:set rid) =
   forall x. Set.mem x s ==> disjoint x r
 
@@ -192,23 +191,14 @@ val lemma_bots_tl_disjoint : #rs:set rid -> bs:bots rs{is_Cons bs}
                                     (ensures (forall b. mem b (Cons.tl bs) ==> disjoint (Bot.r b) (Bot.r (Cons.hd bs))))
 let lemma_bots_tl_disjoint #rs bs = ()
 
-opaque logic type trigger (#a:Type) (x:a) = True
-val fly_robot_army:  #rs:Set.set rid
+(* remove the assume and implement this function *)
+assume val fly_robot_army:  #rs:Set.set rid
                   -> bs:bots rs
                   -> ST unit
-                     (requires (fun h -> (forall b.{:pattern (trigger b)} (trigger b /\ mem b bs ==> robot_inv b h))))
+                     (requires (fun h -> (forall b. mem b bs ==> robot_inv b h)))
                      (ensures  (fun h0 _u h1 ->
                                     modifies rs h0 h1
-                                     /\ (forall b.{:pattern (trigger b)} (trigger b /\ mem b bs ==> robot_inv b h1 /\ flying b h1))))
-let rec fly_robot_army #rs bs =
-  match bs with
-   | Nil -> ()
-   | Cons #rs' hd tl  ->
-         cut (trigger hd);
-         cut (rs == (rs' ++^ Bot.r hd)); //not necesary, but goes faster with the hint
-         lemma_bots_tl_disjoint bs; //again, not necessary; but goes faster
-     fly hd;
-     fly_robot_army tl
+                                     /\ (forall b. mem b bs ==> robot_inv b h1 /\ flying b h1)))
 
 val main: unit -> ST unit
     (requires (fun _ -> True))
