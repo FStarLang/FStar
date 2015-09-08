@@ -71,11 +71,12 @@ let rec ps_cmp_total ps1 ps2 =
 assume Ps_cmp_is_total_order: total_order prins ps_cmp
 
 type const =
-  | C_prin : c:prin -> const
-  | C_prins: c:prins -> const
+  | C_prin  : c:prin   -> const
+  | C_eprins: c:eprins -> const
+  | C_prins : c:prins  -> const
 
   | C_unit : const
-  | C_nat  : c:nat -> const
+  | C_nat  : c:nat  -> const
   | C_bool : c:bool -> const
 
 type exp' =
@@ -348,3 +349,6 @@ let get_en_b #meta v = match v with
   | V_fix_clos en f x e ->
     update_env #(Meta empty Cannot_b empty Cannot_w) en f (V_fix_clos en f x e), x, e
   | V_emp_clos x e      -> empty_env, x, e
+
+val is_terminal: config -> Tot bool
+let is_terminal (Conf _ _ s _ t) = s = [] && is_T_val t
