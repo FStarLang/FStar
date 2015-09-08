@@ -6,7 +6,7 @@ module InjectiveTypeFormers
 // F* unfortunately still includes injective type formers;
 // these are known to be inconsistent;
 // ported inconsistency proof from Lean:
-// https://gist.github.com/leodemoura/0c88341BB585bf9a72e6
+// https://gist.github.com/leodemoura/0c88341bb585bf9a72e6
 // - the few assumes are workarounds for other F* bugs
 //   (i.e. if those are fixed this proof would be axiom free)
 
@@ -20,10 +20,10 @@ val injI : x:(Type->Type) -> y:(Type->Type) ->
 let injI (x:Type->Type) (y:Type->Type) = ()
 
 // P in SMT logic -- accepted but hard to use for the rest of the proof
-//                   (the SMT solver doesn't prove false_of_p automatically)
+//                   (the SMT solver doesn't prove false_of_Pp automatically)
 // type P (x:Type) = (exists (a:Type->Type). I a == x /\ ~(a x))
 
-// P in constructive logic -- not accepted, for no good reason (see below)!
+// P in constructive logic -- not accepted, for no good reason (filed as #350)!
 // type cexists_type_to_type : ((Type->Type) -> Type) -> Type =
 //   | ExTypeToTypeIntro : #p:((Type->Type) -> Type) -> t:(Type -> Type) ->
 //                          h:(p t) -> cexists_type_to_type p
@@ -46,11 +46,11 @@ type P (x:Type) = (cexists_type_to_type (fun (a:Type->Type) ->
 
 type p = I P
 
-opaque val aux : a:(Type->Type) ->
-                 h:P p ->
+opaque val aux : h:P p ->
+                 a:(Type->Type) ->
                  h12:(cand (ceq_type (I a) p) (cnot (a p))) ->
                    Tot cfalse
-let aux (a:(Type->Type)) h h12 =
+let aux h (a:(Type->Type)) h12 =
   let Conj h1 h2 = h12 in
   injI a P; // h2 h -- this should finish the proof but causes bogus error
             // Subtyping check failed;
@@ -59,14 +59,14 @@ let aux (a:(Type->Type)) h h12 =
             // got type (P p)
   assert(a == P);
 //  let h2' : cnot (a p) = magic() in h2' h -- this does not work,
-//           F* doesn't seem to replace equals by equals in types
+//    F* doesn't seem to replace equals by equals in types (filed as #351)
     let h2' : cnot (P p) = magic() in h2' h // this does work
 
 opaque val false_of_Pp : P p -> Tot cfalse
 let false_of_Pp h =
   exInd // #(fun (a:Type->Type) -> cand (ceq_type (I a) p) (cnot (a p)))
         cfalse
-        (fun (a:(Type->Type)) -> aux a h) // needed an eta expansion
+        (fun (a:(Type->Type)) -> aux h a) // needed an eta expansion
         h
 
 opaque val have_Pp : unit -> Tot (P p)
