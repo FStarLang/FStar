@@ -1,7 +1,7 @@
 (*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi FFI --admit_fsi Runtime;
+    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi FFI --admit_fsi Runtime --admit_fsi FStar.IO;
     variables:LIB=../../lib;
-    other-files:$LIB/ordset.fsi $LIB/ordmap.fsi $LIB/classical.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst ast.fst ffi.fsi sem.fst sinterpreter.fst runtime.fsi tinterpreter.fst sec_server.fst
+    other-files:$LIB/ordset.fsi $LIB/ordmap.fsi $LIB/classical.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/io.fsti ast.fst print.fst ffi.fsi sem.fst sinterpreter.fst runtime.fsi tinterpreter.fst sec_server.fst
  --*)
 
 module Main
@@ -9,8 +9,11 @@ module Main
 open Runtime
 
 open AST
+open Print
 open SecServer
 open TargetInterpreter
+
+open FStar.IO
 
 exception Invalid_arg
 
@@ -32,6 +35,11 @@ else
   match init_env pname with
     | Some (D_v _ (V_const (C_prin p))) ->
       let c = Conf Target (Mode Par (OrdSet.singleton p)) [] init_env (T_exp (get_smc ())) in
-      let _ = tstep_star c in
-      ()
+      let c' = tstep_star c in
+      if is_Some c' then
+        let Some c' = c' in
+        let _ = print_term (Conf.t c') in
+        print_string "\n"
+      else
+        print_string "Target interpreter stuck\n"
     | _                                 -> raise Invalid_arg
