@@ -13,6 +13,7 @@ ifeq ($(OS),Windows_NT)
     CC = i686-w64-mingw32-gcc
     OCAML_INCLUDE = /usr/local/lib/ocaml
     ARCH = win32
+    OCAMLLINK = $(OCAMLOPT) -cc "flexlink -chain mingw -v -v -exe -lgdi32"
 else
     DLL = so
     UNAME_S := $(shell uname -s)
@@ -26,6 +27,7 @@ else
         EXTRA_OPTS = -ccopt -fPIC
 	ARCH = x86_64
     endif
+    OCAMLLINK = $(OCAMLOPT)
 endif
 
 LIB = $(FSTAR_HOME)/3rdparty/$(ARCH)
@@ -55,7 +57,7 @@ clean:
 	rm -f Tests *.[oa] *.so *.cm[ixoa] *.cmxa *.exe
 
 Tests: CoreCrypto.cmx $(LIB)/dllopenssl_wrap.$(DLL) Tests.ml
-	$(OCAMLOPT) -ccopt "-L$(LIB)" -I $(PLATFORM) -package batteries -linkpkg -o $@ \
+	$(OCAMLLINK) -ccopt "-L$(LIB)" -I $(PLATFORM) -package batteries -linkpkg -o $@ \
 	$(PLATFORM)/platform.cmx $< Tests.ml \
 	-cclib -lopenssl_wrap -cclib $(LIB)/libcrypto.a
 
