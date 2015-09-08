@@ -130,7 +130,7 @@ let extract_pat (g:env) p : (env * list<mlpattern>) =
         g, [MLP_Branch (p@List.collect (fun x -> snd (extract_pat true false g x)) pats)]
 
       | Pat_constant s     ->
-        g, [MLP_Const (mlconst_of_const s)]
+        g, [MLP_Const (mlconst_of_const' p.p s)]
 
       | Pat_cons (f, q, pats) ->
         let d,tys = match Env.lookup_fv g f with
@@ -287,7 +287,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
     match (Util.compress_exp e).n with
         | Exp_constant c ->
           let t = Tc.Recheck.typing_const e.pos c in
-          MLE_Const <| mlconst_of_const c, E_PURE, translate_typ g t
+          MLE_Const <| mlconst_of_const' e.pos c, E_PURE, translate_typ g t
 
         | Exp_ascribed(e0, t, f) ->
           let t = translate_typ g t in

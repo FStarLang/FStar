@@ -6,7 +6,7 @@
 
 module Platform.Bytes
 
-val repr_bytes : nat -> Tot nat
+val repr_bytes : nat -> GTot nat
 let repr_bytes n =
     if n < 256 then 1
     else if n < 65536 then 2
@@ -14,8 +14,9 @@ let repr_bytes n =
     else if n < 4294967296 then 4
     else if n < 1099511627776 then 5
     else if n < 281474976710656 then 6
-    else if n < 72057594037927936 then 7    
+    else if n < 72057594037927936 then 7
     else 8
+    
 (* NS:
    The two assumes below were previously defined as axioms.
 	 They are evil! They pollute the global environment and
@@ -114,7 +115,7 @@ assume val split2 : b:bytes -> n1:nat{n1 <= Seq.length b} -> n2:nat{n1 + n2 <= S
 (*@ function assume val IntBytes : ((int * int) -> bytes) @*)
 
 assume val bytes_of_int : l:nat -> n:nat{repr_bytes n <= l} -> Tot (lbytes l)
-assume val int_of_bytes : b:bytes{Seq.length b <= 8} -> 
+assume val int_of_bytes : b:bytes{Seq.length b <= 8} ->
     Tot (n:nat{repr_bytes n <= Seq.length b /\ b=bytes_of_int (Seq.length b) n})
 
 (*@ assume val int_of_bytes : ((b:bytes){C_pr_LessThanOrEqual(Length (b), 8)} -> (i:nat){b = IntBytes (Length (b), i) /\ Length (b) = 1 => C_pr_LessThanOrEqual(0, i) /\ C_pr_LessThan(i, 256)}) @*)

@@ -44,6 +44,9 @@ let mlconst_of_const (sctt : sconst) =
   | Const_string (bytes, _) ->
       MLC_String (string_of_unicode (bytes))
 
+let mlconst_of_const' (p:Range.range) (c:sconst) = 
+    try mlconst_of_const c
+    with _ -> failwith (Util.format2 "(%s) Failed to translate constant %s " (Range.string_of_range p) (Print.const_to_string c)) 
 
 let rec subst_aux (subst:list<(mlident * mlty)>) (t:mlty)  : mlty =
     match t with
