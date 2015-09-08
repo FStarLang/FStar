@@ -162,7 +162,7 @@ in (g, _127_101))
 end))
 end
 | FStar_Absyn_Syntax.Pat_constant (s) -> begin
-(let _127_104 = (let _127_103 = (let _127_102 = (FStar_Extraction_ML_Util.mlconst_of_const s)
+(let _127_104 = (let _127_103 = (let _127_102 = (FStar_Extraction_ML_Util.mlconst_of_const' p.FStar_Absyn_Syntax.p s)
 in FStar_Extraction_ML_Syntax.MLP_Const (_127_102))
 in (_127_103)::[])
 in (g, _127_104))
@@ -437,7 +437,7 @@ in (match ((let _127_181 = (FStar_Absyn_Util.compress_exp e)
 in _127_181.FStar_Absyn_Syntax.n)) with
 | FStar_Absyn_Syntax.Exp_constant (c) -> begin
 (let t = (FStar_Tc_Recheck.typing_const e.FStar_Absyn_Syntax.pos c)
-in (let _127_185 = (let _127_183 = (FStar_Extraction_ML_Util.mlconst_of_const c)
+in (let _127_185 = (let _127_183 = (FStar_Extraction_ML_Util.mlconst_of_const' e.FStar_Absyn_Syntax.pos c)
 in (FStar_All.pipe_left (fun _127_182 -> FStar_Extraction_ML_Syntax.MLE_Const (_127_182)) _127_183))
 in (let _127_184 = (translate_typ g t)
 in (_127_185, FStar_Extraction_ML_Syntax.E_PURE, _127_184))))
