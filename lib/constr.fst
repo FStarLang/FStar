@@ -18,7 +18,7 @@ type cexists_type : (Type -> Type) -> Type =
   | ExTypeIntro : #p:(Type -> Type) -> t:Type -> h:(p t) -> cexists_type p
 
 type ceq : #a:Type -> a -> a -> Type =
-  | Eq : a:Type -> x:a -> ceq x x
+  | Refl : a:Type -> x:a -> ceq x x
 
 val ceq_eq : #a:Type -> #x:a -> #y:a -> h:(ceq x y) -> Lemma (x = y)
 let ceq_eq x y p = ()
