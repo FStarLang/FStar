@@ -42,4 +42,4 @@ clean:
 	rm -f *.cmi *.cmx *.o *.exe a.out 
 
 distclean:
-	rm -f AST.ml prims.ml FStar_All.ml FStar_Classical.ml FStar_Heap.ml FStar_ST.ml SecServer.ml TargetInterpreter.ml Semantics.ml SourceInterpreter.ml *.cmi *.cmx *.o *.exe a.out 
+	rm -f AST.ml prims.ml FStar_All.ml FStar_Classical.ml FStar_Heap.ml FStar_ST.ml SecServer.ml TargetInterpreter.ml Semantics.ml SourceInterpreter.ml Main.ml *.cmi *.cmx *.o *.exe a.out 
