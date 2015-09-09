@@ -5,7 +5,8 @@ all:
 	make -C data_structures
 	make -C algorithms
 	make -C ../contrib/Platform/ml/
-	make -C crypto
+	make -C ../contrib/CoreCrypto/ml/ all test
+	make -C crypto all rpc-test
 	make -C security
 	make -C termination
 	make -C software_foundations

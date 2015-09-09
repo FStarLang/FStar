@@ -70,7 +70,7 @@ statefulEnc: statefulEnc-single.fst statefulEnc-twoLevelHeap.fst
 
 mllibs:
 	$(MAKE) -C $(FSTAR_HOME)/contrib/Platform/ml clean all
-	$(MAKE) -C $(FSTAR_HOME)/contrib/CoreCrypto/ml clean all
+	$(MAKE) -C $(FSTAR_HOME)/contrib/CoreCrypto/ml clean all test
 
 RPC.ml: sha1.fst mac.fst formatting.fst rpc.fst
 	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC --admit_fsi FStar.IO  \
