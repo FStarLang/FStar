@@ -28,6 +28,8 @@ let resetLexbufPos filename (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char
 let bc_start = "(*--build-config"
 let bc_end   = "--*)"
 
+let get_bc_start_string (_:unit) = bc_start
+
 let find_file (filename:string) : string =
   if System.IO.Path.IsPathRooted filename then filename
   else
@@ -49,7 +51,7 @@ let open_file (f:string) =
   then Util.fprint1 "Opening file: %s\n" filename;
   new System.IO.StreamReader(filename)
 
-let read_build_config (filename:string) =
+let read_build_config_from_string (filename:string) (use_filename:bool) (contents:string) =
     let fail msg = raise (Absyn.Syntax.Err(Util.format2 "Could not parse a valid build configuration from %s; %s" filename msg)) in
     let options = ref None in
     let filenames = ref None in
@@ -62,8 +64,6 @@ let read_build_config (filename:string) =
         | _ -> fail "more than one 'other-files' field" in
     let set_variable (x, v) = variables := (x,v)::!variables in
     let substitute_variables (f:string) = !variables |> List.fold_left (fun (f:string) (x,v) -> f.Replace("$"^x, v)) f  in
-    let fs = open_file filename in
-    let contents = fs.ReadToEnd() in
     if contents.StartsWith(bc_start)
     then
         let bc_end_index = contents.IndexOf(bc_end) in
@@ -110,14 +110,23 @@ let read_build_config (filename:string) =
               end
         end;
         match !filenames with
-            | None ->  [filename]
+            | None -> if use_filename then [filename] else []
             | Some other_files ->
-              let files = List.map substitute_variables other_files@[filename] in
-              files
+              let files = if use_filename then other_files@[filename] else other_files
+	      in
+	      List.map substitute_variables files
     else if !Options.use_build_config //the user claimed that the build config exists
     then fail ""
-    else (Options.admit_fsi := "FStar.Set"::!Options.admit_fsi;
-          ["set.fsi"; "heap.fst"; "st.fst"; "all.fst"; filename])
+    else
+      let common_files = ["set.fsi"; "heap.fst"; "st.fst"; "all.fst"] in
+      let files = if use_filename then common_files@[filename] else common_files
+      in
+      (Options.admit_fsi := "FStar.Set"::!Options.admit_fsi; files)
+
+let read_build_config (filename:string) =
+    let fs = open_file filename in
+    let contents = fs.ReadToEnd() in
+    read_build_config_from_string filename true contents
 
 let parse fn =
   Parser.Util.warningHandler := (function
