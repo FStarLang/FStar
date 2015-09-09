@@ -1,7 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set;
-    variables:LIB=../../lib;
-    other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst $LIB/st2.fst
+    other-files:ghost.fst ext.fst set.fsi heap.fst st.fst all.fst list.fst st2.fst
  --*)
 
 module Wysteria

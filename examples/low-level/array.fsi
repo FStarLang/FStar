@@ -1,8 +1,7 @@
 (*--build-config
     options:--admit_fsi FStar.Set --z3timeout 10;
-    variables:LIB=../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst  stack.fst listset.fst
-    $LIB/ghost.fst lref.fst stackAndHeap.fst sst.fst sstCombinators.fst $LIB/constr.fst word.fst $LIB/seq.fsi $LIB/seq.fst
+    other-files:ext.fst set.fsi heap.fst st.fst all.fst list.fst  stack.fst listset.fst
+    ghost.fst lref.fst stackAndHeap.fst sst.fst sstCombinators.fst constr.fst word.fst seq.fsi seq.fst
   --*)
 
 

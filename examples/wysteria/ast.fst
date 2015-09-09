@@ -1,7 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap;
-    variables:LIB=../../lib;
-    other-files:$LIB/ordset.fsi $LIB/ordmap.fsi
+    other-files:ordset.fsi ordmap.fsi
  --*)
 
 module AST

@@ -1,7 +1,6 @@
 (*--build-config
     options:--admit_fsi Set --z3timeout 10;
-    variables:LIB=../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst st3.fst $LIB/constr.fst word.fst mvector.fsi
+    other-files:ext.fst set.fsi heap.fst st.fst list.fst  stack.fst listset.fst st3.fst constr.fst word.fst mvector.fsi
   --*)
 
 (*rename mvector to vector. The word array is used for memory-stored vectors *)

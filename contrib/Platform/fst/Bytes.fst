@@ -6,7 +6,15 @@
 
 module Platform.Bytes
 
-val repr_bytes : nat -> GTot nat
+assume val repr_bytes : nat -> GTot nat
+(* Integer literals are currently extracted to int32, rather than bigint, so the definition below
+   breaks extraction: 
+   Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.
+   int_of_string
+
+   Also, defining repr_bytes n <= 8 for all n is dubious
+*)
+(*
 let repr_bytes n =
     if n < 256 then 1
     else if n < 65536 then 2
@@ -16,7 +24,7 @@ let repr_bytes n =
     else if n < 281474976710656 then 6
     else if n < 72057594037927936 then 7
     else 8
-    
+*)
 (* NS:
    The two assumes below were previously defined as axioms.
 	 They are evil! They pollute the global environment and
@@ -24,24 +32,15 @@ let repr_bytes n =
 	 I've made them assumed lemmas; if you want to
 	 make use of these axioms, call the lemmas as needed in the context.
 *)
-(* SZ: No longer needed because we have a definition? *)
-(*
-val lemma_repr_bytes_values: n:nat ->
-    Lemma (ensures
-       			  ( n < 256 <==> repr_bytes n = 1 )
-               /\ ( (n < 65536 /\ n >= 256 ) <==> repr_bytes n = 2 )
-               /\ ( (n >= 65536 /\ n < 16777216) <==> repr_bytes n = 3 )
-               /\ ( (n >= 16777216 /\ n < 4294967296) <==> repr_bytes n = 4 )
-               /\ ( (n >= 4294967296 /\ n < 1099511627776) <==> repr_bytes n = 5 )
-               /\ ( (n >= 1099511627776 /\ n < 281474976710656) <==> repr_bytes n = 6 )
-               /\ ( (n >= 281474976710656 /\ n < 72057594037927936) <==> repr_bytes n = 7 )
-               )
-let lemma_repr_bytes_values n = ()
-
-val lemma_repr_bytes_monotone: a:nat -> b:nat ->
-    Lemma (ensures (a <= b ==> repr_bytes a <= repr_bytes b))
-let lemma_repr_bytes_monotone a b = ()
-*)
+assume val lemma_repr_bytes_values: n:nat ->
+  Lemma (   ( n < 256 <==> repr_bytes n = 1 )
+         /\ ( (n >= 256 /\ n < 65536) <==> repr_bytes n = 2 )
+         /\ ( (n >= 65536 /\ n < 16777216) <==> repr_bytes n = 3 )
+         /\ ( (n >= 16777216 /\ n < 4294967296) <==> repr_bytes n = 4 )
+         /\ ( (n >= 4294967296 /\ n < 1099511627776) <==> repr_bytes n = 5 )
+         /\ ( (n >= 1099511627776 /\ n < 281474976710656) <==> repr_bytes n = 6 )
+         /\ ( (n >= 281474976710656 /\ n < 72057594037927936) <==> repr_bytes n = 7 )
+         /\ ( (n >= 72057594037927936 /\ n < 18446744073709551616) <==> repr_bytes n = 8 ) )
 
 type byte = uint8
 type cbytes = string
@@ -115,8 +114,11 @@ assume val split2 : b:bytes -> n1:nat{n1 <= Seq.length b} -> n2:nat{n1 + n2 <= S
 (*@ function assume val IntBytes : ((int * int) -> bytes) @*)
 
 assume val bytes_of_int : l:nat -> n:nat{repr_bytes n <= l} -> Tot (lbytes l)
-assume val int_of_bytes : b:bytes{Seq.length b <= 8} ->
+assume val int_of_bytes : b:bytes -> 
     Tot (n:nat{repr_bytes n <= Seq.length b /\ b=bytes_of_int (Seq.length b) n})
+
+assume val int_of_bytes_of_int : l:nat -> n:nat{repr_bytes n <= l} -> 
+    Lemma (n = int_of_bytes (bytes_of_int l n))
 
 (*@ assume val int_of_bytes : ((b:bytes){C_pr_LessThanOrEqual(Length (b), 8)} -> (i:nat){b = IntBytes (Length (b), i) /\ Length (b) = 1 => C_pr_LessThanOrEqual(0, i) /\ C_pr_LessThan(i, 256)}) @*)
 
@@ -133,4 +135,8 @@ assume val iutf8_opt : bytes -> Tot (option string)
 assume val iutf8 : m:bytes -> s:string{utf8 s == m}
 (*@  assume (!x. (!y. Utf8 (x) = Utf8 (y) => x = y)) @*)
 
-assume val byte_of_int: i:int{0 <= i /\ i < 256} -> Tot byte
+val byte_of_int: n:nat{n < 256} -> Tot byte
+let byte_of_int n = 
+  lemma_repr_bytes_values n;
+  Seq.index (bytes_of_int 1 n) 0
+

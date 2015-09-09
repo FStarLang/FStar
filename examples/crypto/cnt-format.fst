@@ -1,13 +1,12 @@
 (*--build-config
-    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module Format --admit_fsi FStar.Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
-    variables:LIB=../../lib;
+    options:--z3timeout 10 --verify_module Format --admit_fsi FStar.Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
     other-files:
-            $LIB/ext.fst $LIB/classical.fst
-            $LIB/set.fsi $LIB/set.fst
-            $LIB/heap.fst $LIB/st.fst $LIB/all.fst
-            $LIB/string.fst $LIB/list.fst
-            $LIB/seq.fsi $LIB/seqproperties.fst
-            $LIB/io.fsti
+            ext.fst classical.fst
+            set.fsi set.fst
+            heap.fst st.fst all.fst
+            string.fst list.fst
+            seq.fsi seqproperties.fst
+            io.fsti
   --*)
 
 (*
@@ -43,9 +42,8 @@ val append_inj_lemma: b1:message -> b2:message
                             [SMTPat (append b1 b2); SMTPat (append c1 c2)] (* given to the SMT solver *)
 let append_inj_lemma b1 b2 c1 c2 =
     lemma_append_len_disj b1 b2 c1 c2;
-    erase (Classical.forall_intro (lemma_append_inj_l b1 b2 c1 c2));
-    erase (Classical.forall_intro (lemma_append_inj_r b1 b2 c1 c2));
-    ()
+    Classical.forall_intro (lemma_append_inj_l b1 b2 c1 c2);
+    Classical.forall_intro (lemma_append_inj_r b1 b2 c1 c2)
 
 (* ----- from strings to bytestring and back *)
 type uint = i:int{0 <= i}

@@ -1,7 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set --logQueries --verify_module TestMRef --max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1;
-    variables:LIB=../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/mref.fst
+    other-files:ext.fst set.fsi heap.fst st.fst all.fst mref.fst
 --*)
 module TestMRef
 open FStar.Heap

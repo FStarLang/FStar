@@ -1,7 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set;
-    variables:LIB=../../lib;
-    other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/st2.fst $LIB/bytes.fst sample.fst xor.fst
+    other-files:set.fsi heap.fst st.fst all.fst st2.fst bytes.fst sample.fst xor.fst
   --*)
 
 (* Simple example for Nik's proposal of sequencing (Email from 04/29/2015) *)

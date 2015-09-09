@@ -537,10 +537,6 @@ assume val raise: exn -> Ex 'a       (* TODO: refine with the Exn monad *)
 val ignore: 'a -> Tot unit
 let ignore x = ()
 
-//TODO: REMOVE THIS!
-val erase: 'a -> Tot unit
-let erase x = ()
-
 assume val min: int -> int -> Tot int
 assume val max: int -> int -> Tot int
 
