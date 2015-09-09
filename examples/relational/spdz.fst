@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi FStar.Set --z3timeout 30 ;
     variables:LIB=../../lib;
-    other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/st2.fst $LIB/bytes.fst $LIB/list.fst sample.fst
+    other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/st2.fst sample.fst
   --*)
 module Fp
 open FStar.Relational
@@ -40,8 +40,8 @@ let mod_laws6 = assume(forall a b.(a - (b % p)) % p = (a - b) %p)
 
 module Sharing
 open Fp
-open FStar.Sample
-open FStar.Bijection
+open Sample
+open Bijection
 open FStar.Relational
 open FStar.Comp
 
@@ -69,15 +69,15 @@ let share h = id_good_sample_fun ();
               p
 
 (* For reconstruction all  shares have to be of eq type since they are
-   published *) opaque val reconstruct : #h:double fp -> s:shared h{eq_rel s}
+   published *) opaque val reconstruct : h:double fp -> s:shared h{eq_rel s}
                   -> Tot (r:(eq fp){r=h})
 let reconstruct _ s  = rel_map1 (fun (a,b) -> add_fp a b) s
 
 
 module Triples
 open Fp
-open FStar.Sample
-open FStar.Bijection
+open Sample
+open Bijection
 open FStar.Relational
 open Sharing
 open FStar.Comp
@@ -128,6 +128,15 @@ let triple_c a b  = let c = rel_map2 mul_fp a b in
 #reset-options
 
 (* Combining the single elements *)
+opaque val triple : s01:double fp -> s11:double fp
+                    -> St2 (r:((a:double fp & shared a)
+                             * (b:double fp & shared b)
+                             * (c:double fp & shared c))
+                               {dfst (thd3 r) = rel_map2 mul_fp (dfst (fst3 r)) (dfst (snd3 r))
+                             /\ minus_fp (R.l s01) (snd(R.l(dsnd (fst3 r)))) =
+                                minus_fp (R.r s01) (snd(R.r(dsnd (fst3 r))))
+                             /\ minus_fp (R.l s11) (snd(R.l(dsnd (snd3 r)))) =
+                                minus_fp (R.r s11) (snd(R.r(dsnd (snd3 r))))})
 let triple s01 s11 = let a = triple_a s01 in
                      let b = triple_a s11 in
                      let c = triple_c (dfst a) (dfst b) in
@@ -135,7 +144,7 @@ let triple s01 s11 = let a = triple_a s01 in
 #reset-options
 module MPC
 open Fp
-open FStar.Sample
+open Sample
 open FStar.Relational
 open Sharing
 open Triples
@@ -148,7 +157,7 @@ open FStar.Comp
 
 let add_loc s0 s1 = rel_map2 add_fp s0 s1
 
-opaque val add_mpc : #h0:double fp -> #h1:double fp
+opaque val add_mpc : h0:double fp -> h1:double fp
               -> s0:shared h0 -> s1:shared h1
               -> Tot (shared(rel_map2 add_fp h0 h1))
 let add_mpc _ _ s0 s1 = let r0 = add_loc (fst_rel s0) (fst_rel s1) in
@@ -157,7 +166,7 @@ let add_mpc _ _ s0 s1 = let r0 = add_loc (fst_rel s0) (fst_rel s1) in
 
 let scalar_mul_loc a s = rel_map2 mul_fp a s
 
-opaque val scalar_mul_mpc : #h:double fp
+opaque val scalar_mul_mpc : h:double fp
                      -> a:eq fp -> s:shared h
                      -> Tot (shared (rel_map2 mul_fp a h))
 let scalar_mul_mpc _ a s = let r0 = scalar_mul_loc a (fst_rel s) in
@@ -166,7 +175,7 @@ let scalar_mul_mpc _ a s = let r0 = scalar_mul_loc a (fst_rel s) in
 
 let add_const_loc a s = rel_map2 add_fp a s
 
-opaque val add_const_mpc : #h:double fp
+opaque val add_const_mpc : h:double fp
                      -> a:eq fp -> s:shared h
                      -> Tot (shared (rel_map2 add_fp a h))
 let add_const_mpc _ a s = let r0 = add_const_loc a (fst_rel s) in
@@ -175,7 +184,7 @@ let add_const_mpc _ a s = let r0 = add_const_loc a (fst_rel s) in
 
 let minus_loc s0 s1 = rel_map2 minus_fp s0 s1
 
-opaque val minus_mpc : #h0:double fp -> #h1:double fp
+opaque val minus_mpc : h0:double fp -> h1:double fp
               -> s0:shared h0 -> s1:shared h1
               -> Tot (shared(rel_map2 minus_fp h0 h1))
 let minus_mpc _ _ s0 s1 = let r0 = minus_loc (fst_rel s0) (fst_rel s1) in
@@ -183,19 +192,19 @@ let minus_mpc _ _ s0 s1 = let r0 = minus_loc (fst_rel s0) (fst_rel s1) in
                         pair_rel r0 r1
 
 #reset-options
-opaque val mul_mpc : #h0:double fp -> #h1:double fp
+opaque val mul_mpc : h0:double fp -> h1:double fp
               -> s0:shared h0 -> s1:shared h1
               -> St2 (shared(rel_map2 mul_fp h0 h1))
-let mul_mpc #h0 #h1 s0 s1 =
+let mul_mpc h0 h1 s0 s1 =
   let (|a, a_s|), (|b, b_s|), (|c, c_s|) = triple (rel_map1 snd s0) (rel_map1 snd s1) in
-  let e_s = minus_mpc #h0 #a s0 a_s in
-  let d_s = minus_mpc #h1 #b s1 b_s in
-  let e = reconstruct #(rel_map2 minus_fp h0 a) e_s in
-  let d = reconstruct #(rel_map2 minus_fp h1 b) d_s in
-  let tmp1 = scalar_mul_mpc #a d a_s in
-  let tmp2 = add_mpc #(rel_map2 mul_fp d a) #c tmp1 c_s in
-  let tmp3 = scalar_mul_mpc #b e b_s in
-  let tmp4 = add_mpc #(rel_map2 mul_fp e b) #(rel_map2 add_fp (rel_map2 mul_fp d a) c) tmp3 tmp2 in
-  let tmp5 = add_const_mpc #(rel_map2 add_fp (rel_map2 mul_fp e b) (rel_map2 add_fp (rel_map2 mul_fp d a) c))
+  let e_s = minus_mpc h0 a s0 a_s in
+  let d_s = minus_mpc h1 b s1 b_s in
+  let e = reconstruct (rel_map2 minus_fp h0 a) e_s in
+  let d = reconstruct (rel_map2 minus_fp h1 b) d_s in
+  let tmp1 = scalar_mul_mpc a d a_s in
+  let tmp2 = add_mpc (rel_map2 mul_fp d a) c tmp1 c_s in
+  let tmp3 = scalar_mul_mpc b e b_s in
+  let tmp4 = add_mpc (rel_map2 mul_fp e b) (rel_map2 add_fp (rel_map2 mul_fp d a) c) tmp3 tmp2 in
+  let tmp5 = add_const_mpc (rel_map2 add_fp (rel_map2 mul_fp e b) (rel_map2 add_fp (rel_map2 mul_fp d a) c))
                             (rel_map2 mul_fp d e) tmp4 in
   tmp5

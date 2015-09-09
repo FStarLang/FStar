@@ -8,8 +8,8 @@
 module Example1
 open FStar.Heap
 open FStar.Comp
-open FStar.Sample
-open FStar.Bijection
+open Sample
+open Bijection
 open FStar.Relational
 
 let c0_pfx a = a := 0
@@ -48,10 +48,10 @@ let equiv_seq a = let _ = equiv_pfx a in
 module Example2
 open FStar.Heap
 open FStar.Comp
-open FStar.Sample
-open FStar.Bijection
+open Sample
+open Bijection
 open FStar.Relational
-open FStar.Xor
+open Xor
 
 let encrypt p k = xor p k
 let decrypt c k = xor c k

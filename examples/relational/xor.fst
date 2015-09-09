@@ -4,7 +4,7 @@
     other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/bytes.fst sample.fst
   --*)
 
-module FStar.Xor
+module Xor
 open FStar.Bytes
 open FStar.Bijection
 

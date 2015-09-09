@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi FStar.Set --z3timeout 300;
+    options:--admit_fsi FStar.Set --z3timeout 15;
     variables:LIB=../../lib;
     other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/bytes.fst $LIB/list.fst xor.fst
   --*)
@@ -7,7 +7,7 @@ module Ro_Single
 open FStar.List
 open FStar.Bytes
 open FStar.Heap
-open FStar.Xor
+open Xor
 
 type map (a:Type) (b:Type) = list (a * b)
 
