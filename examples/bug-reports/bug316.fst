@@ -8,4 +8,5 @@ type t (#max:nat) = a #max
 type c (#max:nat) = 
    | C : x:a #max -> c #max
 
-type r (max:nat) = { x:a #max; }
+(* Now works also *)
+type r (#max:nat) = { x:a #max; }

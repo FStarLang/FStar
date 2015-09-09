@@ -7,7 +7,7 @@ VERFILES=bug015.fst bug019.fst\
   bug148.fst bug155.fst bug161.fst bug162.fst bug170.fst bug175.fst bug178.fst\
   bug179.fst bug181.fst bug184.fst bug184b.fst\
   bug186.fst bug189.fst bug190.fst bug192.fst bug195.fst\
-  bug203.fst bug212.fst bug213.fst bug-295.fst bug331.fst\
+  bug203.fst bug212.fst bug213.fst bug-295.fst bug316.fst bug331.fst\
   bugWildcardTelescopes.fst
 
 include ../Makefile.include

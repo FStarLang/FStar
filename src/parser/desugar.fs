@@ -1302,7 +1302,10 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
   let tot = mk_term (Name (Const.effect_Tot_lid)) rng Expr in
   let with_constructor_effect t = mk_term (App(tot, t, Nothing)) t.range t.level in
   let apply_binders t binders =
-    List.fold_left (fun out b -> mk_term (App(out, binder_to_term b, Nothing)) out.range out.level)
+    let imp_of_aqual (b:AST.binder) = match b.aqual with 
+        | Some Implicit -> Hash
+        | _ -> Nothing in
+    List.fold_left (fun out b -> mk_term (App(out, binder_to_term b, imp_of_aqual b)) out.range out.level)
       t binders in
   let tycon_record_as_variant = function
     | TyconRecord(id, parms, kopt, fields) ->
