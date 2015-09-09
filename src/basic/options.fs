@@ -187,7 +187,7 @@ let display_usage specs =
 let rec specs () : list<Getopt.opt> =
   let specs =
     [( noshort, "trace_error", ZeroArgs (fun () -> trace_error := true), "Don't print an error message; show an exception trace instead");
-     ( noshort, "codegen", OneArg ((fun s -> codegen := parse_codegen s), "OCaml|FSharp"), "Generate code for execution");
+     ( noshort, "codegen", OneArg ((fun s -> codegen := parse_codegen s), "OCaml|FSharp|Wysteria"), "Generate code for execution");
      ( noshort, "codegen-lib", OneArg ((fun s -> codegen_libs := (Util.split s ".")::!codegen_libs), "namespace"), "External runtime library library");
      ( noshort, "lax", ZeroArgs (fun () -> pretype := true; verify := false), "Run the lax-type checker only (admit all verification conditions)");
      ( noshort, "fstar_home", OneArg ((fun x -> fstar_home_opt := Some x), "dir"), "Set the FSTAR_HOME variable to dir");
@@ -240,7 +240,8 @@ let rec specs () : list<Getopt.opt> =
 and parse_codegen s =
   match s with
   | "OCaml"
-  | "FSharp" -> Some s
+  | "FSharp"
+  | "Wysteria"  -> Some s
   | _ ->
      (Util.print_string "Wrong argument to codegen flag\n";
       display_usage (specs ()); exit 1)

@@ -28,8 +28,8 @@ end
 | FStar_Absyn_Syntax.Typ_app ({FStar_Absyn_Syntax.n = FStar_Absyn_Syntax.Typ_uvar (uv, _25_45); FStar_Absyn_Syntax.tk = _25_42; FStar_Absyn_Syntax.pos = _25_40; FStar_Absyn_Syntax.fvs = _25_38; FStar_Absyn_Syntax.uvs = _25_36}, args) -> begin
 (match ((FStar_Unionfind.find uv)) with
 | FStar_Absyn_Syntax.Fixed (t') -> begin
-(let _90_8 = (FStar_Absyn_Syntax.mk_Typ_app (t', args) None typ.FStar_Absyn_Syntax.pos)
-in (FStar_All.pipe_left (compress_typ_aux pos) _90_8))
+(let _91_8 = (FStar_Absyn_Syntax.mk_Typ_app (t', args) None typ.FStar_Absyn_Syntax.pos)
+in (FStar_All.pipe_left (compress_typ_aux pos) _91_8))
 end
 | _25_55 -> begin
 typ
@@ -277,8 +277,8 @@ and reduce_typ = (fun map_kind' map_typ' map_exp' combine_kind combine_typ combi
 (let _25_324 = (map_typ env binders t)
 in (match (_25_324) with
 | (t, env) -> begin
-(let _90_292 = (FStar_Absyn_Syntax.mk_Total t)
-in (_90_292, env))
+(let _91_292 = (FStar_Absyn_Syntax.mk_Total t)
+in (_91_292, env))
 end))
 end
 | FStar_Absyn_Syntax.Comp (ct) -> begin
@@ -301,15 +301,15 @@ end
 end)) env))
 in (match (_25_343) with
 | (env, flags) -> begin
-(let _90_295 = (FStar_Absyn_Syntax.mk_Comp (let _25_344 = ct
+(let _91_295 = (FStar_Absyn_Syntax.mk_Comp (let _25_344 = ct
 in {FStar_Absyn_Syntax.effect_name = _25_344.FStar_Absyn_Syntax.effect_name; FStar_Absyn_Syntax.result_typ = t; FStar_Absyn_Syntax.effect_args = args; FStar_Absyn_Syntax.flags = flags}))
-in (_90_295, env))
+in (_91_295, env))
 end))
 end))
 end))
 end))
-and visit_typ = (fun env binders t -> (let _25_494 = (match ((let _90_299 = (compress_typ t)
-in _90_299.FStar_Absyn_Syntax.n)) with
+and visit_typ = (fun env binders t -> (let _25_494 = (match ((let _91_299 = (compress_typ t)
+in _91_299.FStar_Absyn_Syntax.n)) with
 | FStar_Absyn_Syntax.Typ_delayed (_25_350) -> begin
 (FStar_All.failwith "Impossible")
 end
@@ -629,8 +629,8 @@ end
 | _25_800 -> begin
 (FStar_All.failwith "impossible")
 end)
-in (let _90_382 = (k' k.FStar_Absyn_Syntax.pos)
-in (_90_382, env))))
+in (let _91_382 = (k' k.FStar_Absyn_Syntax.pos)
+in (_91_382, env))))
 
 let combine_typ = (fun t tc env -> (let t = (compress_typ t)
 in (let w = (fun f -> (f None t.FStar_Absyn_Syntax.pos))
@@ -669,11 +669,11 @@ end
 (FStar_All.pipe_left w (FStar_Absyn_Syntax.mk_Typ_meta' (FStar_Absyn_Syntax.Meta_refresh_label ((t, b, r)))))
 end
 | (FStar_Absyn_Syntax.Typ_meta (FStar_Absyn_Syntax.Meta_slack_formula (_25_990, _25_992, _25_994)), (_25_999, _25_1001, t1::t2::[], _25_1006, _25_1008)) -> begin
-(let _90_423 = (let _90_422 = (let _90_421 = (let _90_420 = (FStar_Util.mk_ref false)
-in (t1, t2, _90_420))
-in FStar_Absyn_Syntax.Meta_slack_formula (_90_421))
-in (FStar_Absyn_Syntax.mk_Typ_meta' _90_422))
-in (FStar_All.pipe_left w _90_423))
+(let _91_423 = (let _91_422 = (let _91_421 = (let _91_420 = (FStar_Util.mk_ref false)
+in (t1, t2, _91_420))
+in FStar_Absyn_Syntax.Meta_slack_formula (_91_421))
+in (FStar_Absyn_Syntax.mk_Typ_meta' _91_422))
+in (FStar_All.pipe_left w _91_423))
 end
 | _25_1012 -> begin
 (FStar_All.failwith "impossible")
@@ -704,12 +704,12 @@ end
 | (FStar_Absyn_Syntax.Exp_match (_25_1121, eqns), (_25_1126, [], [], e1::el, _25_1133)) -> begin
 (let rec mk_eqns = (fun eqns el -> (match ((eqns, el)) with
 | ((p, None, _25_1143)::eqns', e::el') -> begin
-(let _90_453 = (mk_eqns eqns' el')
-in ((p, None, e))::_90_453)
+(let _91_453 = (mk_eqns eqns' el')
+in ((p, None, e))::_91_453)
 end
 | ((p, Some (_25_1153), _25_1156)::eqns', w::e::el') -> begin
-(let _90_454 = (mk_eqns eqns' el')
-in ((p, Some (w), e))::_90_454)
+(let _91_454 = (mk_eqns eqns' el')
+in ((p, Some (w), e))::_91_454)
 end
 | ([], []) -> begin
 []
@@ -717,10 +717,10 @@ end
 | _25_1169 -> begin
 (FStar_All.failwith "impossible")
 end))
-in (let _90_459 = (let _90_458 = (let _90_457 = (mk_eqns eqns el)
-in (e1, _90_457))
-in (FStar_Absyn_Syntax.mk_Exp_match _90_458))
-in (FStar_All.pipe_left w _90_459)))
+in (let _91_459 = (let _91_458 = (let _91_457 = (mk_eqns eqns el)
+in (e1, _91_457))
+in (FStar_Absyn_Syntax.mk_Exp_match _91_458))
+in (FStar_All.pipe_left w _91_459)))
 end
 | (FStar_Absyn_Syntax.Exp_let ((is_rec, lbs), _25_1174), (_25_1178, _25_1180, tl, el, _25_1184)) -> begin
 (match ((FStar_Util.first_N (FStar_List.length lbs) el)) with
@@ -738,16 +738,16 @@ end
 end)
 in (e', env)))))
 
-let collect_from_typ = (fun f env t -> (let _90_583 = (reduce_typ (fun _25_1246 _25_1248 _25_1250 env _25_1253 k -> (k, env)) (fun _25_1228 vt _25_1231 env bvs t -> (let env = (f env t)
-in (match ((let _90_540 = (compress_typ t)
-in _90_540.FStar_Absyn_Syntax.n)) with
+let collect_from_typ = (fun f env t -> (let _91_583 = (reduce_typ (fun _25_1246 _25_1248 _25_1250 env _25_1253 k -> (k, env)) (fun _25_1228 vt _25_1231 env bvs t -> (let env = (f env t)
+in (match ((let _91_540 = (compress_typ t)
+in _91_540.FStar_Absyn_Syntax.n)) with
 | (FStar_Absyn_Syntax.Typ_unknown) | (FStar_Absyn_Syntax.Typ_btvar (_)) | (FStar_Absyn_Syntax.Typ_const (_)) -> begin
 (t, env)
 end
 | _25_1245 -> begin
 (vt env bvs t)
 end))) (fun _25_1218 _25_1220 _25_1222 env _25_1225 e -> (e, env)) (fun k _25_1215 env -> (k, env)) (fun t _25_1211 env -> (t, env)) (fun e _25_1207 env -> (e, env)) env [] t)
-in (FStar_All.pipe_left Prims.snd _90_583)))
+in (FStar_All.pipe_left Prims.snd _91_583)))
 
 
 

@@ -42,5 +42,6 @@ else
         let _ = print_term (Conf.t c') in
         print_string "\n"
       else
-        print_string "Target interpreter stuck\n"
+        let _ = print_string "Target interpreter stuck\n" in
+        print_any (Conf.t c)
     | _                                 -> raise Invalid_arg

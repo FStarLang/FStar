@@ -1,10 +1,10 @@
-﻿module Microsoft.FStar.Extraction.Wysteria.Extract
+﻿module FStar.Extraction.Wysteria.Extract
 
-open Microsoft.FStar
-open Microsoft.FStar.Util
-open Microsoft.FStar.Absyn
-open Microsoft.FStar.Absyn.Syntax
-open Microsoft.FStar.Absyn.Print
+open FStar
+open FStar.Util
+open FStar.Absyn
+open FStar.Absyn.Syntax
+open FStar.Absyn.Print
 
 exception NYI of string
 

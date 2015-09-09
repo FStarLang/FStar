@@ -1,21 +1,21 @@
 
 let rec get_next_n_ite = (fun n t negs f -> (match ((n <= 0)) with
 | true -> begin
-(let _117_14 = (f FStar_ToSMT_Term.mkTrue)
-in (true, _117_14, negs, t))
+(let _118_14 = (f FStar_ToSMT_Term.mkTrue)
+in (true, _118_14, negs, t))
 end
 | false -> begin
 (match (t.FStar_ToSMT_Term.tm) with
 | FStar_ToSMT_Term.App (FStar_ToSMT_Term.ITE, g::t::e::_52_7) -> begin
-(let _117_19 = (let _117_16 = (let _117_15 = (FStar_ToSMT_Term.mkNot g)
-in (negs, _117_15))
-in (FStar_ToSMT_Term.mkAnd _117_16))
-in (get_next_n_ite (n - 1) e _117_19 (fun x -> (let _117_18 = (FStar_ToSMT_Term.mkITE (g, t, x))
-in (f _117_18)))))
+(let _118_19 = (let _118_16 = (let _118_15 = (FStar_ToSMT_Term.mkNot g)
+in (negs, _118_15))
+in (FStar_ToSMT_Term.mkAnd _118_16))
+in (get_next_n_ite (n - 1) e _118_19 (fun x -> (let _118_18 = (FStar_ToSMT_Term.mkITE (g, t, x))
+in (f _118_18)))))
 end
 | FStar_ToSMT_Term.FreeV (_52_18) -> begin
-(let _117_20 = (f FStar_ToSMT_Term.mkTrue)
-in (true, _117_20, negs, t))
+(let _118_20 = (f FStar_ToSMT_Term.mkTrue)
+in (true, _118_20, negs, t))
 end
 | _52_21 -> begin
 (false, FStar_ToSMT_Term.mkFalse, FStar_ToSMT_Term.mkFalse, FStar_ToSMT_Term.mkFalse)
@@ -29,10 +29,10 @@ end
 | false -> begin
 (match (t.FStar_ToSMT_Term.tm) with
 | FStar_ToSMT_Term.FreeV (_52_27) -> begin
-(let _117_31 = (let _117_30 = (let _117_29 = (FStar_ToSMT_Term.mkNot t)
-in (negs, _117_29))
-in (FStar_ToSMT_Term.mkAnd _117_30))
-in (true, l, _117_31))
+(let _118_31 = (let _118_30 = (let _118_29 = (FStar_ToSMT_Term.mkNot t)
+in (negs, _118_29))
+in (FStar_ToSMT_Term.mkAnd _118_30))
+in (true, l, _118_31))
 end
 | _52_30 -> begin
 (let _52_36 = (get_next_n_ite n t negs (fun x -> x))
@@ -40,9 +40,9 @@ in (match (_52_36) with
 | (b, t, negs', rest) -> begin
 (match (b) with
 | true -> begin
-(let _117_34 = (let _117_33 = (FStar_ToSMT_Term.mkImp (negs, t))
-in (_117_33)::l)
-in (is_ite_all_the_way n rest negs' _117_34))
+(let _118_34 = (let _118_33 = (FStar_ToSMT_Term.mkImp (negs, t))
+in (_118_33)::l)
+in (is_ite_all_the_way n rest negs' _118_34))
 end
 | false -> begin
 (false, [], FStar_ToSMT_Term.mkFalse)
@@ -53,21 +53,21 @@ end))
 
 let rec parse_query_for_split_cases = (fun n t f -> (match (t.FStar_ToSMT_Term.tm) with
 | FStar_ToSMT_Term.Quant (FStar_ToSMT_Term.Forall, l, opt, l', t) -> begin
-(parse_query_for_split_cases n t (fun x -> (let _117_61 = (FStar_ToSMT_Term.mkForall'' (l, opt, l', x))
-in (f _117_61))))
+(parse_query_for_split_cases n t (fun x -> (let _118_61 = (FStar_ToSMT_Term.mkForall'' (l, opt, l', x))
+in (f _118_61))))
 end
 | FStar_ToSMT_Term.App (FStar_ToSMT_Term.Imp, t1::t2::_52_50) -> begin
 (let r = (match (t2.FStar_ToSMT_Term.tm) with
 | FStar_ToSMT_Term.Quant (FStar_ToSMT_Term.Forall, _52_59, _52_61, _52_63, _52_65) -> begin
-(parse_query_for_split_cases n t2 (fun x -> (let _117_69 = (FStar_ToSMT_Term.mkImp (t1, x))
-in (f _117_69))))
+(parse_query_for_split_cases n t2 (fun x -> (let _118_69 = (FStar_ToSMT_Term.mkImp (t1, x))
+in (f _118_69))))
 end
 | FStar_ToSMT_Term.App (FStar_ToSMT_Term.ITE, _52_71) -> begin
 (let _52_77 = (is_ite_all_the_way n t2 FStar_ToSMT_Term.mkTrue [])
 in (match (_52_77) with
 | (b, l, negs) -> begin
-(b, ((fun x -> (let _117_78 = (FStar_ToSMT_Term.mkImp (t1, x))
-in (f _117_78))), l, negs))
+(b, ((fun x -> (let _118_78 = (FStar_ToSMT_Term.mkImp (t1, x))
+in (f _118_78))), l, negs))
 end))
 end
 | _52_80 -> begin
@@ -94,18 +94,18 @@ end
 t
 end))
 
-let rec check_split_cases = (fun f l check -> (FStar_List.iter (fun t -> (let _117_117 = (let _117_116 = (let _117_115 = (let _117_114 = (f t)
-in (FStar_ToSMT_Term.mkNot _117_114))
-in (_117_115, None))
-in FStar_ToSMT_Term.Assume (_117_116))
-in (check _117_117))) (FStar_List.rev l)))
+let rec check_split_cases = (fun f l check -> (FStar_List.iter (fun t -> (let _118_117 = (let _118_116 = (let _118_115 = (let _118_114 = (f t)
+in (FStar_ToSMT_Term.mkNot _118_114))
+in (_118_115, None))
+in FStar_ToSMT_Term.Assume (_118_116))
+in (check _118_117))) (FStar_List.rev l)))
 
-let check_exhaustiveness = (fun f negs check -> (let _117_138 = (let _117_137 = (let _117_136 = (let _117_135 = (let _117_134 = (FStar_ToSMT_Term.mkNot negs)
-in (f _117_134))
-in (FStar_ToSMT_Term.mkNot _117_135))
-in (_117_136, None))
-in FStar_ToSMT_Term.Assume (_117_137))
-in (check _117_138)))
+let check_exhaustiveness = (fun f negs check -> (let _118_138 = (let _118_137 = (let _118_136 = (let _118_135 = (let _118_134 = (FStar_ToSMT_Term.mkNot negs)
+in (f _118_134))
+in (FStar_ToSMT_Term.mkNot _118_135))
+in (_118_136, None))
+in FStar_ToSMT_Term.Assume (_118_137))
+in (check _118_138)))
 
 let can_handle_query = (fun n q -> (match (q) with
 | FStar_ToSMT_Term.Assume (q', _52_118) -> begin

@@ -27,7 +27,6 @@ let establish_server (callback:chan_in -> chan_out -> unit) (port:int) =
     accept_loop ()
   in
   accept_loop ()  
-  (*Unix.establish_server callback sock_addr*)
 
 let server_read (c:chan_in) :(prin * redex) = Marshal.input c
 let server_write (out:chan_out) (dv:dvalue) :unit = Marshal.output ~closures:true out dv; IO.flush out
