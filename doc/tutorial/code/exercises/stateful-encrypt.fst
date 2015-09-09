@@ -1,14 +1,15 @@
 (*--build-config
-    options:--fstar_home /var/fstar --smt /var/fstar/bin/z3 --admit_fsi Set --admit_fsi Seq --admit_fsi Map --max_ifuel 1 --initial_ifuel 1 --initial_fuel 0 --max_fuel 0 --z3timeout 10;
-    other-files:/var/fstar/lib/ext.fst /var/fstar/lib/set.fsi /var/fstar/lib/heap.fst /var/fstar/lib/map.fsi /var/fstar/lib/hyperheap.fst /var/fstar/lib/seq.fsi
+    options:--admit_fsi FStar.Set --admit_fsi FStar.Seq --admit_fsi FStar.Map --max_ifuel 1 --initial_ifuel 1 --initial_fuel 0 --max_fuel 0 --z3timeout 10;
+    other-files:ext.fst set.fsi heap.fst map.fsi listTot.fst hyperHeap.fst stHyperHeap.fst seq.fsi
   --*)
 (* A standalone experiment corresponding to building a stateful encryption on
    top of a stateless one ... along the lines of StatefulLHAE on top of AEAD_GCM *)
 module StatefulEncryption.MultiInstance.HyperHeap
-open ST
-open Set
-open Seq
-open HyperHeap
+
+open FStar.ST
+open FStar.Set
+open FStar.Seq
+open FStar.HyperHeap
 
 (* TODO: merge these next two functions and lemma/assumption with the seq library *)
 val snoc : seq 'a -> 'a -> Tot (seq 'a)

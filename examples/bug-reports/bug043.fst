@@ -16,7 +16,7 @@ let rec free_in_context e g =
   | S n' -> free_in_context n' g
 
 (*
-mono ../../bin/fstar.exe --fstar_home ../.. bug43.fst --verify --logQueries
+fstar.exe bug43.fst
 bug43.fst(11,31-11,32) : Error
 Expected a function;
 got an expression of type "_7894:(_:int -> Tot (option nat)){(Precedes #lex_t #lex_t (LexPair #nat #lex_t e (LexPair #(_:int -> Tot (option nat)) #lex_t _7894 LexTop)) (LexPair #nat #lex_t e (LexPair #(_:int -> Tot (option nat)) #lex_t g LexTop)))}"
