@@ -1,4 +1,4 @@
-VERFILES=cca2.fst #sha1.fst mac.fst sig.fst padding.fst mac3.fst # encrypt3.fst formatting.fst rpc.fst
+VERFILES=cca2.fst # encrypt3.fst formatting.fst rpc.fst
 
 ifeq ($(OS),Windows_NT)
     # internally flexlink uses i686-w64-mingw32-gcc.exe
@@ -17,24 +17,28 @@ else
 endif
 
 include ../Makefile.include
-all: .all.crypto.ver merkle_tree mac rpc cnt-protocol acls-cap statefulEnc
+all: .all.crypto.ver merkle_tree mac padding mac3 rpc cnt-protocol acls-cap statefulEnc
+
+
 STDLIB_ADMITS=--admit_fsi FStar.Seq --admit_fsi FStar.Set --admit_fsi FStar.SeqProperties
 STDLIB=$(addprefix $(FSTAR_HOME)/lib/, classical.fst ext.fst set.fsi \
        heap.fst st.fst all.fst string.fst list.fst seq.fsi seqproperties.fst) \
-			 $(STDLIB_ADMITS)
+       $(STDLIB_ADMITS)
 
 .all.crypto.ver: $(VERFILES)
 	$(FSTAR) --z3timeout 20 $(STDLIB) $^
 
 mac: sha1.fst mac.fst
-	$(FSTAR) --verify_module SHA1 --verify_module MAC --admit_fsi FStar.Seq $(addprefix $(FSTAR_HOME)/lib/, \
-	ext.fst classical.fst \
-	set.fsi set.fst \
-	heap.fst st.fst all.fst \
-	list.fst \
-	seq.fsi seqproperties.fst ) \
-	$(addprefix $(FSTAR_HOME)/contrib/,  Platform/fst/Bytes.fst CoreCrypto/fst/CoreCrypto.fst) \
-	$^
+	$(FSTAR) mac.fst
+
+sig: sig.fst
+	$(FSTAR) $^
+
+padding: padding.fst
+	$(FSTAR) $^
+
+mac3: mac3.fst
+	$(FSTAR) $^
 
 merkle_tree:
 	$(FSTAR) --verify_module MerkleTree $(STDLIB) $(FSTAR_HOME)/lib/constr.fst merkle_tree.fst

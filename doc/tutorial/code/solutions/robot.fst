@@ -1,12 +1,12 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Map --z3timeout 25;
-    variables:LIB=../../../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/map.fsi $LIB/hyperheap.fst $LIB/list.fst
+    options:--admit_fsi FStar.Set --admit_fsi FStar.Map --z3timeout 25;
+    other-files:ext.fst set.fsi heap.fst map.fsi listTot.fst hyperHeap.fst stHyperHeap.fst
 --*)
 module Robot
-open List
-open Heap
-open HyperHeap
+
+open FStar.List
+open FStar.Heap
+open FStar.HyperHeap
 
 type point (i:rid) = {
     x:rref i int;
@@ -54,13 +54,13 @@ type robot_inv (x:t) (h:HyperHeap.t) =
   /\ (sel h (Robot.r x).position.z > 0 //if flying
       ==> (sel h (Robot.r x).right_arm.polar = 0)) //then right arm is up!
 
-val new_robot: unit -> ST t (requires (fun h0 -> True))
-                            (ensures (fun h0 x h1 ->
+val new_robot: r0:rid -> ST t (requires (fun h0 -> True))
+                              (ensures (fun h0 x h1 ->
                                       HyperHeap.modifies Set.empty h0 h1
                                       /\ fresh_region (Robot.i x) h0 h1
                                       /\ robot_inv x h1))
-let new_robot () =
-  let r = new_region () in
+let new_robot r0 =
+  let r = new_region r0 in
   let x = {position={x=ralloc r 0; y=ralloc r 0; z=ralloc r 0};
            left_arm={polar=ralloc r 180; azim=ralloc r 0};
            right_arm={polar=ralloc r 180; azim=ralloc r 0}} in
@@ -79,5 +79,5 @@ val walk_robot_to: x:int -> y:int -> r:t -> ST unit
 let walk_robot_to x y r =
  let robot = Robot.r r in
  assert (Set.mem (Ref (as_ref (robot.right_arm.polar))) (refs_in_arm robot.right_arm));
- op_ColonEquals robot.position.x x;
- op_ColonEquals robot.position.y y
+ op_Colon_Equals robot.position.x x;
+ op_Colon_Equals robot.position.y y

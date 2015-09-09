@@ -1,9 +1,10 @@
 (*--build-config
-    options:--admit_fsi Set;
+    options:--admit_fsi FStar.Set;
     other-files:set.fsi heap.fst st.fst all.fst list.fst
  --*)
 module InsertionSortCmp
-open List
+
+open FStar.List
 
 val sorted: ('a -> 'a -> Tot bool) -> list 'a -> Tot bool
 let rec sorted f l = match l with

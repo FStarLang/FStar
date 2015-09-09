@@ -1,10 +1,12 @@
 (*--build-config
-    options:--admit_fsi Set;
+    options:--admit_fsi FStar.Set;
     other-files:ext.fst set.fsi heap.fst st.fst all.fst
   --*)
 
 module Bug
-open ST
+
+open FStar.ST
+
 //val log: ref (list int) //<-- adding this line makes it succeed
 let log = ref []
 

@@ -33,7 +33,6 @@ EXERCISES =\
   ex7d-stlc-eval\
   ex10a-acls\
   ex10-shift\
-  robots\
 # Files currently not compiling
 #  ex6b-sort-poly\
    ex6d-no-discard\
