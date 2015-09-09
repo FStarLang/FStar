@@ -6,7 +6,8 @@ let rec append l1 l2 = match l1 with
   | hd :: tl -> hd :: append tl l2
 
 val reverse: list 'a -> Tot (list 'a)
-let rec reverse = function 
+let rec reverse l =
+  match l with
   | [] -> []
   | hd::tl -> append (reverse tl) [hd]
 let snoc l h = append l [h]

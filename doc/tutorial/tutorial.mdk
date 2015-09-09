@@ -5302,7 +5302,7 @@ Hint: have a look e.g. at the HMAC construction.
 
 ## Stateful Authenticated Encryption
 
-A typical guarantees provided by a secure channel protocol is that
+A typical guarantee provided by a secure channel protocol is that
 messages are received in the same order in which they were sent. To
 achieve this, we construct a stateful, authenticated encryption scheme from
 a (stateless) “authenticated encryption with additional data” (AEAD)

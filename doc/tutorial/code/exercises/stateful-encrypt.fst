@@ -37,16 +37,16 @@ type paired (#i:rid) (e:encryptor i) (d:decryptor i) = b2t (Enc.log e = Dec.log 
 type both =
   | Both : i:rid -> e:encryptor i -> d:decryptor i{paired e d} -> both
 
-val gen: unit -> ST both
+val gen: r0:rid -> ST both
   (requires (fun h -> True))
   (ensures (fun h0 b h1 ->
       HyperHeap.modifies Set.empty h0 h1
       /\ fresh_region (Both.i b) h0 h1
       /\ contains_ref (Enc.log (Both.e b)) h1
       /\ sel h1 (Enc.log (Both.e b)) = emp))
-let gen () =
+let gen r0 =
   let key : key = magic () in
-  let region = new_region () in
+  let region = new_region r0 in
   let log = ralloc region emp in
   Both region (Enc log key) (Dec log key)
 
@@ -93,7 +93,7 @@ let dec i d a c =
 (* A test of multiple basic instances:
    proves that use of one instance doesn't mess with another
 *)
-val test_basic_frame : b1:both -> b2:both{Both.i b1 <> Both.i b2} -> ST unit
+val test_basic_frame : r0:rid -> b1:both -> b2:both{Both.i b1 <> Both.i b2} -> ST unit
     (requires (fun h -> Map.contains h (Both.i b1)
                         /\ Map.contains h (Both.i b2)
                         /\ sel h (Enc.log (Both.e b1)) = emp
@@ -103,8 +103,8 @@ val test_basic_frame : b1:both -> b2:both{Both.i b1 <> Both.i b2} -> ST unit
                                                 (Set.singleton (Both.i b2)))
                             h0 h1))
 assume val mk_plain : unit -> ST plain (requires (fun h -> True)) (ensures (fun h0 x h1 -> h0=h1))
-let test_basic_frame b1 b2 =
- let b3 = gen() in
+let test_basic_frame r0 b1 b2 =
+ let b3 = gen r0 in
  let p = mk_plain () in
  let q = mk_plain () in
  let c0 = enc (Both.e b1) 0 p in
@@ -168,14 +168,14 @@ type st_dec_inv (#i:rid) (d:st_decryptor i) (h:HyperHeap.t) =
 let refs_in_e (#i:rid) (e:st_encryptor i) = !{as_ref (StEnc.log e), as_ref (StEnc.ctr e), as_ref (Enc.log (StEnc.key e))}
 let refs_in_d (#i:rid) (d:st_decryptor i) = !{as_ref (StDec.log d), as_ref (StDec.ctr d), as_ref (Dec.log (StDec.key d))}
 
-val stateful_gen : unit -> ST sti
+val stateful_gen : r0:rid -> ST sti
   (requires (fun h -> True))
   (ensures (fun h0 b h1 ->
               st_inv (STI.e b) (STI.d b) h1
               /\ HyperHeap.modifies Set.empty h0 h1
               /\ fresh_region (STI.i b) h0 h1))
-let stateful_gen () =
-  let Both i e d = gen () in
+let stateful_gen r0 =
+  let Both i e d = gen r0 in
   let l = ralloc i emp in
   let w = ralloc i 0 in
   let r = ralloc i 0 in
@@ -219,7 +219,8 @@ let stateful_dec _id (StDec _ ctr d) c =
     | Some p -> op_Colon_Equals ctr (op_Bang ctr + 1); Some p
 
 
-val test_st_frame :   s1:sti
+val test_st_frame :r0:rid 
+                   -> s1:sti
                    -> s2:sti{STI.i s1 <> STI.i s2}
                    -> ST unit
   (requires (fun h ->
@@ -235,10 +236,10 @@ val test_st_frame :   s1:sti
 
 // note that we do not require new encryptor/decryptors,
 // just that those in s1 are in sync, so that decryption cancels encryption
-let test_st_frame s1 s2 =
+let test_st_frame r0 s1 s2 =
   let p = mk_plain () in
   let q = mk_plain () in
-  let g = stateful_gen () in
+  let g = stateful_gen r0 in
   let ctr = op_Bang (StEnc.ctr (STI.e s1)) in
   let c0 = stateful_enc (STI.e s1) p in
   let c1 = stateful_enc (STI.e s1) q in

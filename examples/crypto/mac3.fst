@@ -1,9 +1,7 @@
 (*--build-config
-    options:--z3timeout 10 --verify_module Pad --admit_fsi Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
-    other-files:string.fst list.fst
+    options:--z3timeout 10 --admit_fsi FStar.Seq --admit_fsi FStar.Set --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
+    other-files:set.fsi heap.fst st.fst all.fst string.fst list.fst
             ext.fst classical.fst
-            set.fsi set.fst
-            heap.fst st.fst
             seq.fsi seqproperties.fst
   --*)
 
@@ -44,8 +42,9 @@
 
 module MAC3
 
-open Seq
-open SeqProperties
+open FStar.Seq
+open FStar.SeqProperties
+
 type bytes = seq byte (* concrete byte arrays *)
 type text  = bytes    (* a type abbreviation, for clarity *)
 
