@@ -102,7 +102,40 @@ type stack_elt =
      * Tc.Env.env)
 type stack = list<stack_elt>
 
+
+let batch_mode_tc_no_prims dsenv env filenames =
+    let all_mods, dsenv, env = filenames |> List.fold_left (fun (all_mods, dsenv, env) f ->
+        Util.reset_gensym();
+        let dsenv, env, ms = tc_one_file dsenv env f in
+        all_mods@ms, dsenv, env)
+        ([], dsenv, env) in
+
+    if !Options.interactive && Tc.Errors.get_err_count () = 0
+    then env.solver.refresh()
+    else env.solver.finish();
+    all_mods, dsenv, env
+
+let batch_mode_tc filenames =
+    let prims_mod, dsenv, env = tc_prims () in
+
+    let all_mods, dsenv, env = batch_mode_tc_no_prims dsenv env filenames in
+   prims_mod@all_mods, dsenv, env
+
+let finished_message fmods =
+    if not !Options.silent
+    then begin
+        let msg =
+            if !Options.verify then "Verifying"
+            else if !Options.pretype then "Lax type-checked"
+            else "Parsed and desugared" in
+         fmods |> List.iter (fun m ->
+            if Options.should_print_message m.name.str
+            then Util.print_string (Util.format2 "%s module: %s\n" msg (Syntax.text_of_lid m.name)));
+         print_string "All verification conditions discharged successfully\n"
+    end
+
 let interactive_mode dsenv env =
+    let should_read_build_config = ref true in
     let should_log = !Options.debug <> [] in
     let log =
         if should_log
@@ -179,6 +212,24 @@ let interactive_mode dsenv env =
                 Util.fprint1 "%s\n" fail;
                 let dsenv, env = reset_mark dsenv_mark env_mark in
                 go stack curmod dsenv env in
+	      
+	      let dsenv, env =
+		if !should_read_build_config then
+		  if Util.starts_with text (Parser.ParseIt.get_bc_start_string ()) then
+		    begin
+		      let filenames = Parser.ParseIt.read_build_config_from_string "" false text in
+		      let _, dsenv, env = batch_mode_tc_no_prims dsenv env filenames in
+		      should_read_build_config := false;
+		      dsenv, env
+		    end
+		  else begin
+		    should_read_build_config := false;
+		    dsenv, env
+		  end
+		else
+		  dsenv, env
+		  
+	      in
 
               let dsenv_mark, env_mark = mark dsenv env in
               let res = tc_one_fragment curmod dsenv_mark env_mark text in
@@ -200,33 +251,6 @@ let interactive_mode dsenv env =
 
     go [] None dsenv env
 
-
-let batch_mode_tc filenames =
-    let prims_mod, dsenv, env = tc_prims () in
-
-    let all_mods, dsenv, env = filenames |> List.fold_left (fun (all_mods, dsenv, env) f ->
-        Util.reset_gensym();
-        let dsenv, env, ms = tc_one_file dsenv env f in
-        all_mods@ms, dsenv, env)
-        (prims_mod, dsenv, env) in
-
-    if !Options.interactive && Tc.Errors.get_err_count () = 0
-    then env.solver.refresh()
-    else env.solver.finish();
-    all_mods, dsenv, env
-
-let finished_message fmods =
-    if not !Options.silent
-    then begin
-        let msg =
-            if !Options.verify then "Verifying"
-            else if !Options.pretype then "Lax type-checked"
-            else "Parsed and desugared" in
-         fmods |> List.iter (fun m ->
-            if Options.should_print_message m.name.str
-            then Util.print_string (Util.format2 "%s module: %s\n" msg (Syntax.text_of_lid m.name)));
-         print_string "All verification conditions discharged successfully\n"
-    end
 
 let codegen fmods env=
     if !Options.codegen = Some "OCaml"
