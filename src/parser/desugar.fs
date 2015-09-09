@@ -1109,6 +1109,9 @@ and desugar_formula' env (f:term) : typ =
                 | Inr v -> targ <| (Util.b2t v)) //implicitly coerce a boolean to a type
          [f1;f2;f3])
 
+    | QForall([], _, _)
+    | QExists([], _, _) -> failwith "Impossible: Quantifier without binders"
+
     | QForall((_1::_2::_3), pats, body) ->
       let binders = _1::_2::_3 in
       desugar_formula env (push_quant (fun x -> QForall x) binders pats body)
