@@ -1,8 +1,7 @@
 (*--build-config
   options:--z3timeout 20;
-  variables:LIB=../../lib;
-  other-files:$LIB/classical.fst $LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst
-              $LIB/stperm.fst $LIB/seq.fsi $LIB/seq.fst $LIB/seqproperties.fst $LIB/arr.fst
+  other-files:classical.fst ext.fst set.fsi set.fst heap.fst
+              stperm.fst seq.fsi seq.fst seqproperties.fst arr.fst
               qs_seq.fst qsort_arr.fst
 --*)
 module Downgrade

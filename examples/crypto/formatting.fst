@@ -1,12 +1,11 @@
 (*--build-config
-    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module Formatting --admit_fsi FStar.Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
-    variables:LIB=../../lib
-            MITLS=../../../mitls-fstar/libs/fst/;
-    other-files:$LIB/string.fst $LIB/list.fst
-            $LIB/ext.fst $LIB/classical.fst
-            $LIB/set.fsi $LIB/set.fst
-            $LIB/heap.fst $LIB/st.fst
-            $LIB/seq.fsi $LIB/seqproperties.fst
+    options:--z3timeout 10 --prims --verify_module Formatting --admit_fsi FStar.Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
+    variables:MITLS=../../../mitls-fstar/libs/fst/;
+    other-files:string.fst list.fst
+            ext.fst classical.fst
+            set.fsi set.fst
+            heap.fst st.fst
+            seq.fsi seqproperties.fst
             $MITLS/Platform/Bytes.fst
   --*)
 
@@ -44,8 +43,8 @@ val append_inj_lemma: b1:message -> b2:message
                             [SMTPat (b1 @| b2); SMTPat (c1 @| c2)] (* given to the SMT solver *)
 let rec append_inj_lemma b1 b2 c1 c2 =
   lemma_append_len_disj b1 b2 c1 c2;
-  erase (Classical.forall_intro (lemma_append_inj_l b1 b2 c1 c2));
-  erase (Classical.forall_intro (lemma_append_inj_r b1 b2 c1 c2))
+  Classical.forall_intro (lemma_append_inj_l b1 b2 c1 c2);
+  Classical.forall_intro (lemma_append_inj_r b1 b2 c1 c2)
 
 
 (* ----- from strings to bytestring and back *)

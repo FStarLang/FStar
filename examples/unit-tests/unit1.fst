@@ -1,7 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set --verify_module Unit1;
-    variables:LIB=../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst $LIB/string.fst
+    other-files:ext.fst set.fsi heap.fst st.fst list.fst string.fst
 --*)
 module Unit1
 

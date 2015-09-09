@@ -1,6 +1,5 @@
 (*--build-config
-  variables:LIB=../../lib;
-  other-files: $LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/ghost.fst $LIB/list.fst
+ other-files: ext.fst set.fsi set.fst heap.fst st.fst all.fst ghost.fst list.fst
   --*)
 
 

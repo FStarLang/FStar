@@ -1,7 +1,6 @@
 (*--build-config
     options:--admit_fsi Set;
-    variables:LIB=../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst stack.fst listset.fst st3.fst example1.fst
+    other-files:ext.fst set.fsi heap.fst st.fst list.fst stack.fst listset.fst st3.fst example1.fst
   --*)
 module ScopedWhile3
 open StructuredMem
