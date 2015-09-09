@@ -2229,8 +2229,12 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
               let zs = intersect_vars xs ys in
               let tt = Recheck.recompute_typ e2 in
               let u, _ = new_evar (Env.get_range env) zs tt in
-              let sub1 = mk_Exp_abs(xs, u) (Some t1) e1.pos in
-              let sub2 = mk_Exp_abs(ys, u) (Some t2) e1.pos in
+              let sub1 = match xs with 
+                | [] -> u
+                | _ -> mk_Exp_abs(xs, u) (Some t1) e1.pos in
+              let sub2 = match ys with 
+                | [] -> u
+                | _ -> mk_Exp_abs(ys, u) (Some t2) e1.pos in
               solve env (solve_prob orig None [UE((u1,t1), sub1); UE((u2,t2), sub2)] wl)
       end in
 
