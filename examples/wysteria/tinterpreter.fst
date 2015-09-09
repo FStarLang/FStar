@@ -9,14 +9,20 @@ module TargetInterpreter
 open AST
 open Runtime
 
+open FStar.IO
+
 val do_sec_comp: prin -> r:redex{is_R_assec r} -> ML dvalue
 let do_sec_comp p r =
+  print_string "Opening a connection\n";
   let (c_in, c_out) = open_connection 8888 in
+  print_string "Connected to the server\n";
   let _ = client_write c_out p r in
+  print_string "Done sending the input\n";
   client_read c_in
   
 val tstep: config -> ML (option config)
 let tstep c =
+  print_string "Taking one step\n";
   let Conf l m s en t = c in
   if is_T_red t && is_R_assec (T_red.r t) then
     let dv = do_sec_comp (Some.v (OrdSet.choose (Mode.ps m))) (T_red.r t) in

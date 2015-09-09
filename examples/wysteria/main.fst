@@ -35,6 +35,7 @@ else
   match init_env pname with
     | Some (D_v _ (V_const (C_prin p))) ->
       let c = Conf Target (Mode Par (OrdSet.singleton p)) [] init_env (T_exp (get_smc ())) in
+      print_string "Start executing\n";
       let c' = tstep_star c in
       if is_Some c' then
         let Some c' = c' in

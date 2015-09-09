@@ -1,7 +1,7 @@
 (*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi FFI --admit_fsi Runtime;
+    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi FFI --admit_fsi Runtime --admit_fsi FStar.IO;
     variables:LIB=../../lib;
-    other-files:$LIB/ordset.fsi $LIB/ordmap.fsi $LIB/classical.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst ast.fst ffi.fsi sem.fst sinterpreter.fst runtime.fsi
+    other-files:$LIB/ordset.fsi $LIB/ordmap.fsi $LIB/classical.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/io.fsti ast.fst ffi.fsi sem.fst sinterpreter.fst runtime.fsi
  --*)
 
 module SecServer
@@ -14,6 +14,8 @@ open Runtime
 open AST
 open Semantics
 open SourceInterpreter
+
+open FStar.IO
 
 exception Comp_error
 
@@ -40,6 +42,7 @@ val do_sec_comp: ps:prins -> env_m:en_map{contains_ps ps env_m}
                  -> out_m:out_map{contains_ps ps out_m}
                  -> varname -> exp -> unit -> ML unit
 let do_sec_comp ps env_m out_m x e _ =
+  print_string "Thread starting\n";
   let en = update_env (compose_envs_m ps env_m) x (V_const C_unit) in
   let conf = Conf Target (Mode Sec ps) [] en (T_exp e) in
   let c_opt = step_star conf in
@@ -51,7 +54,9 @@ let do_sec_comp ps env_m out_m x e _ =
 
 val handle_connection: chan_in -> chan_out -> ML unit
 let handle_connection c_in c_out =
+  print_string "Received a connection\n";
   let p, R_assec #meta ps v = server_read c_in in
+  print_string "Received inputs\n";
   let (en, x, e) = get_en_b v in
   
   let env_m', out_m', x', e' =
@@ -67,6 +72,7 @@ let handle_connection c_in c_out =
   if OrdMap.size env_m' = size ps then
     let _ = admitP (contains_ps ps env_m') in
     let _ = admitP (contains_ps ps out_m') in
+    print_string "Launching a thread\n";
     create_thread (do_sec_comp ps env_m' out_m' x e);
     psmap_ref := OrdMap.remove ps (!psmap_ref)
   else

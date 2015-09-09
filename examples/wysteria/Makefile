@@ -34,7 +34,7 @@ codegen:
 	ocamlyacc -v wparser.mly
 	ocamllex wlexer.mll
 
-a.out: 
+a.out:
 	cp $(FSTAR_HOME)/lib/ml/prims.ml .
 	cp $(FSTAR_HOME)/lib/ml/FStar_All.ml .
 	cp $(FSTAR_HOME)/lib/ml/FStar_ST.ml .
