@@ -56,7 +56,10 @@ CoreCrypto.cmxa: CoreCrypto.cmx $(LIB)/dllopenssl_wrap.${DLL}
 clean:
 	rm -f Tests *.[oa] *.so *.cm[ixoa] *.cmxa *.exe
 
-Tests: CoreCrypto.cmx $(LIB)/dllopenssl_wrap.$(DLL) Tests.ml
+$(LIB)/libcrypto.a:
+	git submodule update --init $(FSTAR_HOME)/3rdparty
+
+Tests: CoreCrypto.cmx $(LIB)/libcrypto.a $(LIB)/dllopenssl_wrap.$(DLL) Tests.ml
 	$(OCAMLLINK) -ccopt "-L$(LIB)" -I $(PLATFORM) -package batteries -linkpkg -o $@ \
 	$(PLATFORM)/platform.cmx $< Tests.ml \
 	-cclib -lopenssl_wrap -cclib $(LIB)/libcrypto.a
