@@ -324,7 +324,7 @@ and custom_op_parser = parse
 
 and string buffer = parse
  |  '\\' (newline as x) anywhite*
-    { Buffer.add_string buffer x;
+    {
       L.new_line lexbuf;
       string buffer lexbuf; }
 
