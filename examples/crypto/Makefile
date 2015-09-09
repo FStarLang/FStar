@@ -40,7 +40,7 @@ merkle_tree:
 	$(FSTAR) --verify_module MerkleTree $(STDLIB) $(FSTAR_HOME)/lib/constr.fst merkle_tree.fst
 
 acls-cap: sha1.fst mac.fst ../security/acls2.fst acls-cap.fst
-	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --admit_fsi FStar.Seq \
+	$(FSTAR) --z3timeout 10 --admit_fsi FStar.Seq \
 	--verify_module Platform.Bytes --verify_module CoreCrypto --verify_module ACLs2 --verify_module Cap \
 	$(addprefix $(FSTAR_HOME)/lib/, \
 	ext.fst classical.fst \
@@ -53,7 +53,7 @@ acls-cap: sha1.fst mac.fst ../security/acls2.fst acls-cap.fst
 
 
 rpc: formatting.fst sha1.fst mac.fst rpc.fst
-	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC --admit_fsi FStar.Seq --admit_fsi FStar.IO  \
+	$(FSTAR) --z3timeout 10 --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC --admit_fsi FStar.Seq --admit_fsi FStar.IO  \
           $(addprefix $(FSTAR_HOME)/lib/, ext.fst classical.fst \
 					set.fsi set.fst \
 					heap.fst st.fst all.fst \
@@ -73,7 +73,7 @@ mllibs:
 	$(MAKE) -C $(FSTAR_HOME)/contrib/CoreCrypto/ml clean all test
 
 RPC.ml: sha1.fst mac.fst formatting.fst rpc.fst
-	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC --admit_fsi FStar.IO  \
+	$(FSTAR) --z3timeout 10 --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC --admit_fsi FStar.IO  \
           $(addprefix $(FSTAR_HOME)/lib/, ext.fst classical.fst \
 					set.fsi set.fst \
 					heap.fst st.fst all.fst \
@@ -94,7 +94,7 @@ rpc-test: rpc.exe
 	./rpc.exe
 
 cnt-protocol: cnt-format.fst mac.fst sha1.fst cnt-protocol.fst
-	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --admit_fsi FStar.Seq --admit_fsi FStar.IO --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
+	$(FSTAR) --z3timeout 10 --admit_fsi FStar.Seq --admit_fsi FStar.IO --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
 	  --verify_module CntFormat --verify_module SHA1 --verify_module MAC --verify_module CntProtocol \
           $(addprefix $(FSTAR_HOME)/lib/, ext.fst classical.fst \
 					set.fsi set.fst \
@@ -106,7 +106,7 @@ cnt-protocol: cnt-format.fst mac.fst sha1.fst cnt-protocol.fst
 	  cnt-format.fst sha1.fst mac.fst cnt-protocol.fst
 
 CntProtocol.ml: cnt-format.fst mac.fst sha1.fst cnt-protocol.fst
-	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --admit_fsi FStar.IO --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
+	$(FSTAR) --z3timeout 10 --admit_fsi FStar.IO --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
 	  --verify_module CntFormat --verify_module SHA1 --verify_module MAC --verify_module CntProtocol \
           $(addprefix $(FSTAR_HOME)/lib/, ext.fst classical.fst \
 					set.fsi set.fst \

@@ -1,5 +1,5 @@
 (*--build-config
-    options:--z3timeout 10 --prims --verify_module BloomProtocol --admit_fsi FStar.Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 --admit_fsi FStar.IO;
+    options:--z3timeout 10 --verify_module BloomProtocol --admit_fsi FStar.Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 --admit_fsi FStar.IO;
     variables:CONTRIB=../../contrib;
     other-files:
             ext.fst classical.fst

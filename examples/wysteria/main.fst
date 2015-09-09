@@ -1,7 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi FFI --admit_fsi Runtime --admit_fsi FStar.IO;
-    variables:LIB=../../lib;
-    other-files:$LIB/ordset.fsi $LIB/ordmap.fsi $LIB/classical.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/io.fsti ast.fst print.fst ffi.fsi sem.fst sinterpreter.fst runtime.fsi tinterpreter.fst sec_server.fst
+    other-files:ordset.fsi ordmap.fsi classical.fst set.fsi heap.fst st.fst all.fst io.fsti ast.fst print.fst ffi.fsi sem.fst sinterpreter.fst runtime.fsi tinterpreter.fst sec_server.fst
  --*)
 
 module Main

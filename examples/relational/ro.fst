@@ -1,7 +1,6 @@
 (*--build-config
-    options:--admit_fsi FStar.Set --z3timeout 5  --print_implicits;
-    variables:LIB=../../lib;
-    other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/st2.fst $LIB/bytes.fst $LIB/list.fst sample.fst xor.fst
+    options:--admit_fsi FStar.Set --z3timeout 15  --print_implicits;
+    other-files:set.fsi heap.fst st.fst all.fst st2.fst bytes.fst list.fst sample.fst xor.fst
   --*)
 
 module Ro
@@ -10,9 +9,9 @@ open FStar.Comp
 open FStar.Heap
 open FStar.List
 open FStar.Bytes
-open FStar.Xor
-open FStar.Bijection
-open FStar.Sample
+open Xor
+open Bijection
+open Sample
 open FStar.Relational
 
 type map (a:Type) (b:Type) = list (a * b)
@@ -270,7 +269,7 @@ let hash_hon2 k f =
                                          compose2 (fun (_ ,x) -> case_Hon x) 
                                                   (fun x -> case_None x) 
                                                   (pair_rel k (R t0 (sample_single ())))
-  | R (Some (Adv,t0)) (Some (Hon,t1)) -> compose2 (fun x -> case_Adv x) (fun x -> case_Hon x) (R () t0)
+  | R (Some (Adv,t0)) (Some (Hon,t1)) -> compose2 (fun x -> case_Adv x) (fun x -> case_Hon x) (R () t1)
   | R (Some (Adv,t0)) (Some (Adv,t1)) -> compose2_self (fun x -> case_Adv x) (twice ())
   | R (Some (Adv,t0)) (None         ) -> compose2 (fun (_, x) -> case_Adv x) 
                                                   (fun x -> case_None x) 
@@ -319,10 +318,10 @@ module Encryption
 
 open FStar.Comp
 open FStar.Heap
-open FStar.Bijection
-open FStar.Sample
+open Bijection
+open Sample
 open FStar.Relational
-open FStar.Xor
+open Xor
 open FStar.Bytes
 open FStar.List
 open Ro
@@ -382,10 +381,8 @@ let encrypt_hon k p =
                   let h = hash_hon kh sample_fun in
                   (* Writing the code in this style causes the loss of some typing information *)
 (*                   let c = rel_map3 (fun h p r -> if is_Some h then Some ((encrypt p (Some.v h)), r) else None) h p r in *)
-                  let cl = if is_Some (R.l h) then Some ((encrypt (R.l p) (Some.v (R.l h))), (R.l r)) else None in
-                  let cr = if is_Some (R.r h) then Some ((encrypt (R.r p) (Some.v (R.r h))), (R.r r)) else None in
-                  let c = R cl cr in
-
+                  let c = R (if is_Some (R.l h) then Some ((encrypt (R.l p) (Some.v (R.l h))), (R.l r)) else None)
+                            (if is_Some (R.r h) then Some ((encrypt (R.r p) (Some.v (R.r h))), (R.r r)) else None) in 
                   c
 
 (* We only show that decryption does not violate our relational invariants *)
@@ -402,6 +399,5 @@ let decrypt_hon k c =
                   let h = hash_hon kh (fun x -> x) in
                   (* Writing the code in this style causes the loss of some typing information *)
 (*                   rel_map2 (fun h c -> if is_Some h then Some (decrypt (fst c) (Some.v h)) else None) h c *)
-                  let a = if is_Some (R.l h) then Some (decrypt (fst (R.l c)) (Some.v (R.l h))) else None in
-                  let b = if is_Some (R.r h) then Some (decrypt (fst (R.r c)) (Some.v (R.r h))) else None in
-                  R a b
+                  R (if is_Some (R.l h) then Some (decrypt (fst (R.l c)) (Some.v (R.l h))) else None)
+                    (if is_Some (R.r h) then Some (decrypt (fst (R.r c)) (Some.v (R.r h))) else None)

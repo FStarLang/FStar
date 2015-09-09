@@ -1,7 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set;
-    variables:LIB=../../lib;
-    other-files:$LIB/ext.fst $LIB/list.fst
+    other-files:ext.fst list.fst
   --*)
 
 module ListSet

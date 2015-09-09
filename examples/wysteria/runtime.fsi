@@ -1,7 +1,6 @@
 (*--build-config
    options:--admit_fsi FStar.Set --admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap;
-   variables:LIB=../../lib;
-   other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/ordset.fsi $LIB/ordmap.fsi ast.fst
+   other-files:set.fsi heap.fst st.fst all.fst ordset.fsi ordmap.fsi ast.fst
 --*)
 
 

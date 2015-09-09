@@ -1,7 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set;
-    variables:LIB=../../lib;
-    other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/st2.fst
+    other-files:set.fsi heap.fst st.fst all.fst st2.fst
   --*)
 
 module NonInterference
@@ -49,6 +48,9 @@ open FStar.Relational
 let a = new_labeled_int 1
 let b = new_labeled_int 0
 
+
+assume Distinct : a <> b
+
 let test () = (if !b = 0 then
                  a := 2
                else
@@ -68,6 +70,8 @@ let a = new_labeled_int 1
 let b = new_labeled_int 0
 let c = new_labeled_int 2
 
+assume Distinct : a <> b /\ a <> c /\ b <> c
+
 let test () = c := !a + !b;
               if !c < !a then
                 b := 0
@@ -77,3 +81,96 @@ let test () = c := !a + !b;
 
 val test_ni : ni
 let test_ni () = compose2_self test (twice ())
+
+
+module Example3
+open NonInterference
+open FStar.Comp 
+open FStar.Relational
+
+assume val la : int 
+assume val lb : lb:int{lb <= la}
+assume val lc : lc:int{lc <= la} 
+
+let a = new_labeled_int la
+let b = new_labeled_int lb
+let c = new_labeled_int lc
+
+assume Distinct : a <> b /\ a <> c /\ b <> c
+
+let test () = a:= !b + !c
+
+val test_ni : ni
+let test_ni () = compose2_self test (twice ())
+
+
+module Example4
+open NonInterference
+open FStar.Comp 
+open FStar.Relational
+
+assume val la : int 
+assume val lb : lb:int{lb >= la}
+assume val lc : lc:int{lc >= la} 
+
+let a = new_labeled_int la
+let b = new_labeled_int lb
+let c = new_labeled_int lc
+
+assume Distinct : a <> b /\ a <> c /\ b <> c
+
+let test () = if !a = 0 then
+                b := 1
+              else
+                c := 2
+
+val test_ni : ni
+let test_ni () = compose2_self test (twice ())
+
+
+module Example5
+open NonInterference
+open FStar.Comp 
+open FStar.Relational
+open FStar.Heap
+
+assume val la : int 
+assume val lb : lb:int{lb >= la}
+assume val lc : lc:int
+
+let a = new_labeled_int la
+let b = new_labeled_int lb
+let c = new_labeled_int lc
+
+assume Distinct : a <> b /\ a <> c /\ b <> c
+
+(* This val-declaration is necessary (otherwise: FStar does not infer ST, but ALL) *)
+val loop : unit -> ST unit (requires (fun _ -> True))
+                           (ensures  (fun h r h' -> ((sel h a) <= 0 ==> equal h h')
+                                                 /\ ((sel h a) > 0  ==> equal h' (upd (upd h b ((sel h b) + (sel h a))) a 0))))
+let rec loop _ = if !a > 0 then (a := !a - 1; b := !b + 1; loop ())
+
+val loop' : unit -> ST unit (requires (fun _ -> True))
+                            (ensures  (fun h r h' -> ((sel h a) <= 0 ==> equal h h')
+                                                  /\ ((sel h a) > 0  ==> False)))
+let rec loop' _ = if !a > 0 then (a := !a + 1; b := !b + 1; loop' ())
+
+let test () = loop ();
+              c := 0;
+              loop' ();
+              c := 1
+              
+val test_ni : ni
+let test_ni () = compose2_self test (twice ())
+
+(* This val-declaration is necessary (otherwise: Stackoverflow) *)
+val test' : unit -> St (u:unit{False})
+let test' () = a := 1249;
+               loop ();
+               c := !b;
+               a := !a + 1;
+               loop' ();
+               c := !b
+
+val test_ni' : ni
+let test_ni' () = compose2_self test' (twice ())
