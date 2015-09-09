@@ -1,5 +1,5 @@
 (*--build-config
-    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module Bug --codegen OCaml --admit_fsi FStar.IO;
+    options:--z3timeout 10 --verify_module Bug --codegen OCaml --admit_fsi FStar.IO;
     other-files:
             ext.fst classical.fst
             set.fsi set.fst

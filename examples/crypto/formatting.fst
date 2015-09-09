@@ -1,12 +1,12 @@
 (*--build-config
-    options:--z3timeout 10 --prims --verify_module Formatting --admit_fsi FStar.Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
+    options:--z3timeout 10 --verify_module Formatting --admit_fsi FStar.Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
     variables:MITLS=../../../mitls-fstar/libs/fst/;
-    other-files:string.fst list.fst
+    other-files:
             ext.fst classical.fst
             set.fsi set.fst
-            heap.fst st.fst
+            heap.fst st.fst all.fst string.fst list.fst
             seq.fsi seqproperties.fst
-            $MITLS/Platform/Bytes.fst
+            ../../contrib/Platform/fst/Bytes.fst
   --*)
 
 (*
