@@ -15,6 +15,7 @@ all:
 	make -C ../doc/tutorial/code/solutions
 	make -C unit-tests
 	make -C hello ocaml
+	make -C relational
 
 test: all
 

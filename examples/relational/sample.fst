@@ -6,11 +6,11 @@
 module Bijection
 
 (* Definition of the bijection properties *)
-type injection (#a:Type) (#b:Type) (f:a -> Tot b) = 
+opaque type injection (#a:Type) (#b:Type) (f:a -> Tot b) = 
   (forall (x:a) (y:a). f x = f y ==> x = y)
-type surjection (#a:Type)(#b:Type) (f:a -> Tot b) = 
+opaque type surjection (#a:Type)(#b:Type) (f:a -> Tot b) = 
   (forall (y:b). (exists (x:a). f x = y))
-type bijection (#a:Type) (#b:Type) (f:a -> Tot b) = 
+opaque type bijection (#a:Type) (#b:Type) (f:a -> Tot b) = 
   injection f /\ surjection f
 type bij (#a:Type) (#b:Type) = f:(a -> Tot b){bijection f}
 
@@ -36,8 +36,8 @@ assume val bijection_good_sample_fun : #a:Type -> #b:Type -> f:(a -> Tot b) ->
         (ensures  (good_sample_fun f))
 assume val good_sample_fun_bijection : #a:Type -> #b:Type -> f:(a -> Tot b) ->
   Lemma (requires (good_sample_fun f))
-        (ensures  (bijection f))
-
+        (ensures ((forall (x:a) (y:a). f x = f y ==> x = y)
+              /\ (forall (y:b). (exists (x:a). f x = y))))
 module Sample
 open Bijection
 open FStar.Relational

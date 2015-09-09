@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi FStar.Set --z3timeout 30 ;
+    options:--admit_fsi FStar.Set --z3timeout 30;
     other-files:set.fsi heap.fst st.fst all.fst st2.fst sample.fst
   --*)
 
