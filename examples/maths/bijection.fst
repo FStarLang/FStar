@@ -1,6 +1,6 @@
 module Bijection
 
-open Constructive
+open FStar.Constructive
 
 type injective 'a 'b (f:('a -> Tot 'b)) =
        (forall (x1:'a) (x2:'a). f x1 = f x2 ==> x1 = x2)
@@ -23,3 +23,6 @@ let foo_inv i = if i >= 0 then i*2 else ((-i)*2)-1
 
 val bijective_foo : bijective nat int foo
 let bijective_foo = ExIntro foo_inv I
+// bijection.fst(25,0-25,37): Unknown assertion failed
+// Error: 1 errors were reported (see above)
+// CH: I think this used to work 4 months ago!

@@ -1,6 +1,6 @@
 module Gcd
-open List
-open Constructive
+open FStar.List
+open FStar.Constructive
 
 assume val intuitionistic_of_smt : #a:Type -> u:unit{a} -> Tot a
 assume val smt_of_intuitionistic : #a:Type -> a -> Lemma a

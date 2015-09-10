@@ -5,13 +5,13 @@ module Factorial
 open SSTCombinators
 open StackAndHeap
 open SST
-open Heap
+open FStar.Heap
 open Lref  open Located
 open Stack
-open Set
-open Prims
-open List
+open FStar.Set
+open FStar.List
 open ListSet
+open FStar.Ghost
 
 val factorial : nat -> Tot nat
 let rec factorial n =
@@ -35,7 +35,6 @@ type  loopInv (li : lref nat) (res : lref nat) (m:smem) =
     /\ (loopkupRef res m = factorial (loopkupRef li m))
     /\ (~ (li = res))
 
-open Ghost
 val factorialLoopBody :
   n:nat -> li:(lref nat) -> res:(lref nat)
   -> unit ->

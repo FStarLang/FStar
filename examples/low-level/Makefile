@@ -10,7 +10,7 @@ ALLOCATOR_FILES = $(ALLOCATOR_DIR)/camlstack.o $(ALLOCATOR_DIR)/stack.o $(ALLOCA
 OCAML = ocamlfind ocamlopt -g -package batteries -linkpkg -thread -I ../../src/ocaml-output/ -I $(ALLOCATOR_DIR) $(ALLOCATOR_FILES) ../../src/ocaml-output/support.ml
 
 Factorial.ml: factorial.fst
-	fstar --codegen OCaml $^
+	fstar.exe --codegen OCaml $^
 	./revertManualMLs.sh
 
 PRE_SST_FILES=ListSet.ml Stack.ml FunctionalExtensionality.ml Ghost.ml Located.ml Lref.ml StackAndHeap.ml
