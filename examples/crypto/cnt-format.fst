@@ -6,6 +6,7 @@
             heap.fst st.fst all.fst
             string.fst list.fst
             seq.fsi seqproperties.fst
+            ../../contrib/Platform/fst/Bytes.fst
             io.fsti
   --*)
 
@@ -30,8 +31,9 @@ open Prims.PURE
 open FStar.String
 open FStar.Seq
 open FStar.SeqProperties
+open Platform.Bytes
 
-type message = seq byte
+type message = bytes
 type msg (l:nat) = m:message{length m==l}
 
 (* ----- a lemma on array append *)
@@ -61,12 +63,13 @@ type uint16 = i:int{UInt 2 i}
 let uint16_max = (max_int 2) - 1
 type uint32 = i:int{UInt 4 i}
 
-assume val utf8:
-  s:string  -> Tot (m:message{length m <= strlen s})
+(*assume val utf8:
+  s:string  -> Tot (m:message{length m <= strlen s})*)
+
   (* this spec is accurate for ASCII strings *)
 
-assume val iutf8: m:message -> s:string{utf8 s == m}
-assume val iutf8T: m:message -> Tot (s:string{utf8 s == m})
+(*assume val iutf8: m:message -> s:string{utf8 s == m}*)
+(*assume val iutf8T: m:message -> Tot (s:string{utf8 s == m})*)
 
 (* val iutf8T: m:message -> s:option string{match s with *)
 (* 					 | Some s' -> iutf8 s' = m *)
@@ -98,16 +101,16 @@ val response: string16 -> string -> Tot message
 
 (* -------- implementation *)
 
-let tag0 = create 1 0uy
-let tag1 = create 1 1uy
-let tag2 = create 1 2uy
+let tag0 = createBytes 1 0uy
+let tag1 = createBytes 1 1uy
+let tag2 = createBytes 1 2uy
 
-let request s = append tag0 (utf8 s)
+let request s = tag0 @| (utf8 s)
 
 val response: s:string{ length (utf8 s) < max_int 2} -> string -> Tot message
 let response s t =
   let lb = uint16_to_bytes (length (utf8 s)) in
-  append tag1 (append lb (append (utf8 s) (utf8 t)))
+  tag1 @| (lb @| ( (utf8 s) @| (utf8 t)))
 
 val signal_size: int
 let signal_size = 7 (* Bytes *)
@@ -116,7 +119,7 @@ val signal : uint32 -> uint16 -> Tot (msg signal_size)
 let signal s c =
   let s_b = uint32_to_bytes s in
   let c_b = uint16_to_bytes c in
-  append tag2 (append s_b c_b)
+  tag2 @| (s_b @| c_b)
 
 val signal_split : m:msg signal_size -> Tot (x:option (uint32 * uint16)
     { is_Some x ==> m = signal (fst (Some.v x)) (snd (Some.v x))})
@@ -164,3 +167,5 @@ val resp_components_corr:
   Lemma (requires (Seq.Eq (response s0 t0) (response s1 t1)))
         (ensures  (s0==s1 /\ t0==t1))
 let resp_components_corr s0 t0 s1 t1 = ()
+
+(* check_marker *)
