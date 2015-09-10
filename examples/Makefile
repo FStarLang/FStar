@@ -6,7 +6,7 @@ all:
 	make -C bug-reports
 	make -C data_structures
 	make -C algorithms
-	make -C crypto all rpc-test
+	make -C crypto
 	make -C security
 	make -C termination
 	make -C software_foundations
