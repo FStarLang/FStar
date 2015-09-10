@@ -1,13 +1,14 @@
 
 (*--build-config
-other-files:../../lib/list.fst
+options:--admit_fsi FStar.Set;
+other-files:set.fsi heap.fst st.fst all.fst list.fst
 --*)
 module MyList
-open List
+open FStar.List
 
 type nlist (a:Type) (n:nat) = l:list a { length l = n }
 
-val mapT: (#n:nat) -> ('a -> Tot 'b) -> nlist 'a #n -> Tot (list 'b #n)
+val mapT: #n:nat -> ('a -> Tot 'b) -> nlist 'a #n -> Tot (list 'b #n)
 let rec mapT f x = match x with
   | [] -> []
   | a::tl -> f a::mapT f tl
