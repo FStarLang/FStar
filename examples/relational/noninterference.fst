@@ -174,3 +174,46 @@ let test' () = a := 1249;
 
 val test_ni' : ni
 let test_ni' () = compose2_self test' (twice ())
+
+
+module Example6
+open NonInterference
+open FStar.Comp 
+open FStar.Relational
+
+assume val la : la:int 
+assume val lb : lb:int{lb <= la}
+assume val lc : lc:int{lc <= la /\ lb <= lc} 
+assume val ld : ld:int 
+assume val le : le:int{le <= ld /\ le <= lc}
+assume val lf : lf:int{lf <= ld /\ le <= lf}
+
+let a = new_labeled_int la
+let b = new_labeled_int lb
+let c = new_labeled_int lc
+let d = new_labeled_int ld
+let e = new_labeled_int le
+let f = new_labeled_int lf
+
+assume Distinct : a <> b /\ a <> c /\ a <> d /\ a <> e /\ a <> f
+               /\ b <> c /\ b <> d /\ b <> e /\ b <> f
+               /\ c <> d /\ c <> e /\ c <> f 
+               /\ d <> e /\ d <> f 
+               /\ e <> f 
+
+let test () = a := !b + !c;
+              d := !e * !f;
+              c := !a - !e;
+              f := !a + !b + !c + !d + !e;
+              f := !f - !a  - !b - !c - !d - !e;
+              if !f = 0 then
+                f := !e
+              else
+                f := !a
+            
+(* This works only with the ocaml-binary (causes stackoverflow when run through mono) *)
+(*
+val test_ni : ni
+let test_ni () = compose2_self test (twice ())
+*)
+
