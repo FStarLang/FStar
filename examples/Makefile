@@ -1,11 +1,11 @@
 include Makefile.include
 
+# WARNING: this target shouldn't depend on anything other than the F*
+# binary in particular it shouldn't depend on OCaml, F#, git, etc.
 all:
 	make -C bug-reports
 	make -C data_structures
 	make -C algorithms
-	make -C ../contrib/Platform/ml/
-	make -C ../contrib/CoreCrypto/ml/ all test
 	make -C crypto all rpc-test
 	make -C security
 	make -C termination
@@ -15,7 +15,6 @@ all:
 	make -C wysteria
 	make -C ../doc/tutorial/code/solutions
 	make -C unit-tests
-	make -C hello ocaml
 	make -C relational
 
 test: all
