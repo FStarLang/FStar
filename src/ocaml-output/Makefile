@@ -80,14 +80,10 @@ FStar_Version.ml:__force__
 .ml.cmx:
 	$(OCAMLOPT) $(OCAMLOPTFLAGS) -c $<
 
-NAME=fstar_$(VERSION)_$(PLATFORM)
-
 # Copy the contents of $(1) into $(PREFIX)/$(2) while setting the right file
 # permissions and creating directories on the fly as needed.
-#
-# XXX the previous version of this command was based on git (thus ignoring files
-# in ~/.gitignore) but for OPAM installs we cannot assume the user has git
-# installed.
+# (JP: the package version of this command is based on git but for OPAM
+#  installs we cannot assume the user has git installed.)
 install_dir = cd ../../$(1) && find . -type f -exec install -m 644 -D {} $(PREFIX)/$(2)/{} \;
 
 # Install FStar into $(PREFIX) using the standard Unix directory structure.
@@ -104,21 +100,38 @@ ifeq ($(MADOKO),Madoko)
 	$(call install_dir,doc/tutorial,share/fstar/tutorial)
 endif
 
-# Create a zip / tar.gz package of FStar that contains a Z3 binary and proper
-# license files. Note: you probably want to run "git clean -fdx ../.." before
-# (see comment on install_dir).
-package:
+NAME=fstar_$(VERSION)_$(PLATFORM)
+
+# the `fexport` function takes a path relative to the top of the F* repo
+# and exports the contents of that directory to the $(PREFIX) dir
+fexport = cd ../.. && git archive "--format=tar" "--prefix=$(1)/" HEAD:$(1)/ |\
+          tar -x -C $(PREFIX)
+
+# Create a zip / tar.gz package of FStar that contains a Z3 binary and
+# proper license files.
+package: all
         # Clean previous packages.
 	rm -f $(NAME).zip $(NAME).tar.gz
 	if [ -d "$(PREFIX)" ]; then rm -dfr fstar; fi
-        # Make everything, and install in the default $(PREFIX) (i.e. ./fstar/).
-	$(MAKE) install
-        # In addition to the binaries and lib directories, let's add z3 and the
-        # license files.
-	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt ../../setenv.sh fstar/
+        # Install the F* binary
+	install -m 755 -D -T fstar.exe $(PREFIX)/bin/fstar.exe
+        # Then the rest of the static files.
+	$(call fexport,lib)
+	$(call fexport,examples)
+	$(call fexport,contrib)
+ifeq ($(MADOKO),Madoko)
+        # Build the tutorial
+	$(MAKE) -C ../../doc/tutorial
+	$(call fexport,doc/tutorial)
+else
+	@echo " ********** WARNING: You don't have Madoko installed. Binary package will not include tutorial."
+endif
+        # Documentation and licenses
+	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt ../../setenv.sh $(PREFIX)
 	wget https://raw.githubusercontent.com/Z3Prover/z3/master/LICENSE.txt -O fstar/LICENSE-z3.txt
+        # Copy Z3 binary
 	@cp ../../bin/*z3* $(PREFIX)/bin &> /dev/null || cp `which z3` $(PREFIX)/bin &> /dev/null || echo " ********** WARNING: you don't have Z3 in \\$FSTAR_HOME/bin or in your \\$PATH, skipped from package ************** "
-        # XXX actually this only makes sense for the F# build of F*. Why are we
+        # JP: actually this only makes sense for the F# build of F*. Why are we
         # copying these files while this directory builds an OCaml-compiled,
         # Windows-native version of F*?
 	make -C ../VS install-packages
