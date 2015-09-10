@@ -4,7 +4,7 @@ module Carry
 
 open Limb
 open IntLib
-open Seq
+open FStar.Seq
 open Axiomatic
 open Eval
 
