@@ -8,11 +8,11 @@ module Eval
 open IntLib
 open Limb
 open Bigint
-open ST
-open Seq
-open Heap
-open Array
-open Ghost
+open FStar.ST
+open FStar.Seq
+open FStar.Heap
+open FStar.Array
+open FStar.Ghost
 
 (* Bit weight of each of the cells of the array of the big integer *)
 val bitweight : t:template -> n:nat -> Tot nat
