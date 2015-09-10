@@ -1,7 +1,34 @@
 let max_int = max_int
 let is_letter_or_digit c = (BatChar.is_digit c) || (BatChar.is_letter c)
-let is_punctuation c = c = ',' || c = ';' || c = '.'
 let is_symbol c = BatChar.is_symbol c
+
+(* Modeled after: Char.IsPunctuation in .NET
+   (http://www.dotnetperls.com/char-ispunctuation) *)
+let is_punctuation c = (
+    c = '!' ||
+    c = '"' ||
+    c = '#' ||
+    c = '%' ||
+    c = '&' ||
+    c = '\'' ||
+    c = '(' ||
+    c = ')' ||
+    c = '*' ||
+    c = ',' ||
+    c = '-' ||
+    c = '.' ||
+    c = '/' ||
+    c = ':' ||
+    c = ';' ||
+    c = '?' ||
+    c = '@' ||
+    c = '[' ||
+    c = '\\' ||
+    c = ']' ||
+    c = '_' ||
+    c = '{' ||
+    c = '}'
+  )
 
 let return_all x = x
 
