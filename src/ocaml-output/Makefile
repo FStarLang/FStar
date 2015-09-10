@@ -92,14 +92,14 @@ install_dir = cd ../../$(1) && find . -type f -exec install -m 644 -D {} $(PREFI
 
 # Install FStar into $(PREFIX) using the standard Unix directory structure.
 install: all
-	# Install the binary
+        # Install the binary
 	install -m 755 -D -T fstar.exe $(PREFIX)/bin/fstar.exe
-	# Then the rest of the static files.
+        # Then the rest of the static files.
 	$(call install_dir,lib,lib/fstar)
 	$(call install_dir,examples,share/fstar/examples)
 	$(call install_dir,contrib,share/fstar/contrib)
 ifeq ($(MADOKO),Madoko)
-	# Build the tutorial first
+        # Build the tutorial first
 	$(MAKE) -C ../../doc/tutorial
 	$(call install_dir,doc/tutorial,share/fstar/tutorial)
 endif
@@ -108,19 +108,19 @@ endif
 # license files. Note: you probably want to run "git clean -fdx ../.." before
 # (see comment on install_dir).
 package:
-	# Clean previous packages.
+        # Clean previous packages.
 	rm -f $(NAME).zip $(NAME).tar.gz
 	if [ -d "$(PREFIX)" ]; then rm -dfr fstar; fi
-	# Make everything, and install in the default $(PREFIX) (i.e. ./fstar/).
+        # Make everything, and install in the default $(PREFIX) (i.e. ./fstar/).
 	$(MAKE) install
-	# In addition to the binaries and lib directories, let's add z3 and the
-	# license files.
+        # In addition to the binaries and lib directories, let's add z3 and the
+        # license files.
 	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt ../../setenv.sh fstar/
 	wget https://raw.githubusercontent.com/Z3Prover/z3/master/LICENSE.txt -O fstar/LICENSE-z3.txt
 	@cp ../../bin/*z3* $(PREFIX)/bin &> /dev/null || cp `which z3` $(PREFIX)/bin &> /dev/null || echo " ********** WARNING: you don't have Z3 in \\$FSTAR_HOME/bin or in your \\$PATH, skipped from package ************** "
-	# XXX actually this only makes sense for the F# build of F*. Why are we
-	# copying these files while this directory builds an OCaml-compiled,
-	# Windows-native version of F*?
+        # XXX actually this only makes sense for the F# build of F*. Why are we
+        # copying these files while this directory builds an OCaml-compiled,
+        # Windows-native version of F*?
 	make -C ../VS install-packages
 	cp ../../bin/FSharp.PowerPack.* $(PREFIX)/bin
 ifeq ($(OS),Windows_NT)
