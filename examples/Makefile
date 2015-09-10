@@ -1,7 +1,7 @@
 include Makefile.include
 
 # WARNING: this target shouldn't depend on anything other than the F*
-# binary in particular it shouldn't depend on OCaml, F#, git, etc.
+# binary; in particular it shouldn't depend on OCaml, F#, git, etc.
 all:
 	make -C bug-reports
 	make -C data_structures
@@ -14,8 +14,8 @@ all:
 	make -C wf
 	make -C wysteria
 	make -C ../doc/tutorial/code/solutions
-	make -C unit-tests
 	make -C relational
+	make -C unit-tests
 
 test: all
 
