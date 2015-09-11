@@ -1096,7 +1096,7 @@ Here's the standard definition of (immutable) lists in F\*.
 
 We note some important conventions for the constructors of a data type in F\*.
 
-+ Constructor names must begin with a captial letter.
++ Constructor names must begin with a capital letter.
 
 + When not writing effects in constructor types,
   the default effect on the result is `Tot`
@@ -2250,7 +2250,7 @@ let is_value e =
   | EFalse     -> true
   | _          -> false
 ```
-The `EAbs`, `ETrue`, and `EFalse` cases share the same right-hand-side (`false`),
+The `EAbs`, `ETrue`, and `EFalse` cases share the same right-hand-side (`true`),
 which is a way to prevent duplication in definitions.
 
 In order to give a semantics to function applications we define a
@@ -2922,6 +2922,15 @@ let rec eval e =
   if is_value e then e
   else eval (typed_step e)
 ~~~
+or using the `progress` and `preservation` lemmas instead of `typed_step`
+(suggested by Guido Martinez):
+```
+val eval : e:exp{is_Some (typing empty e)} ->
+  Dv (v:exp{is_value v && typing empty v = typing empty e})
+let rec eval e = match step e with
+  | None -> progress e; e
+  | Some e' -> preservation e; eval e'
+```
 Here is another solution that only uses the substitution lemma:
 ~~~ SolutionFragment {exname=ex7d-stlc-eval}
 val eval' : e:exp{is_Some (typing empty e)} ->
