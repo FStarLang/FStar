@@ -1018,7 +1018,8 @@ and encode_formula (phi:typ) (env:env_t) : term * decls_t =
         | [] -> t, decls
         | _ -> failwith "Unexpected labels in formula"
 
-and encode_function_type_as_formula (induction_on:option<term>) (t:typ) (env:env_t) : term * decls_t =
+(* this assumes t is a Lemma *)
+and encode_function_type_as_formula (induction_on:option<term>) (new_pats:option<exp>) (t:typ) (env:env_t) : term * decls_t =
     let v_or_t_pat p = match (Util.unmeta_exp p).n with
         | Exp_app(_, [(Inl _, _); (Inr e, _)]) -> varg e
         | Exp_app(_, [(Inl t, _)]) -> targ t
@@ -1032,7 +1033,10 @@ and encode_function_type_as_formula (induction_on:option<term>) (t:typ) (env:env
         | Typ_fun(binders, {n=Comp ct}) ->
            (match ct.effect_args with
             | [(Inl pre, _); (Inl post, _); (Inr pats, _)] ->
-              binders, pre, post, lemma_pats pats
+              let pats' = (match new_pats with
+                          | Some new_pats' -> new_pats'
+                          | None           -> pats) in
+              binders, pre, post, lemma_pats pats'
             | _ -> failwith "impos")
 
         | _ -> failwith "Impos" in
@@ -1142,8 +1146,18 @@ and encode_formula_with_labels (phi:typ) (env:env_t) : (term * labels * decls_t)
         | Typ_app({n=Typ_const ih}, [_;(Inr l, _); (Inl phi, _)]) when lid_equals ih.v Const.using_IH ->
             if Util.is_lemma phi
             then let e, decls = encode_exp l env in
-                 let f, decls' = encode_function_type_as_formula (Some e) phi env in
+                 let f, decls' = encode_function_type_as_formula (Some e) None phi env in
                  (f, [], decls@decls')
+            else (Term.mkTrue, [], [])
+
+        | Typ_app({n=Typ_const ih}, _::(Inl phi, _)::tl) when lid_equals ih.v Const.using_lem ->
+            if Util.is_lemma phi
+            then
+                let pat = match tl with
+                  | [] -> None
+                  | [(Inr pat, _)] -> Some pat in
+                let f, decls = encode_function_type_as_formula None pat phi env in
+                (f, [], decls)
             else (Term.mkTrue, [], [])
 
         | _ ->
@@ -1836,7 +1850,7 @@ and declare_top_level_let env x t t_norm =
             (n, x), [], env
 
 and encode_smt_lemma env lid t =
-    let form, decls = encode_function_type_as_formula None t env in
+    let form, decls = encode_function_type_as_formula None None t env in
     decls@[Term.Assume(form, Some ("Lemma: " ^ lid.str))]
 
 and encode_free_var env lid tt t_norm quals =
