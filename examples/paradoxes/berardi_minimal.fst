@@ -25,13 +25,15 @@ assume val cem : a:Type -> Tot (cor a (cnot a))
 
 assume val get_proof : p:Type -> Tot p (requires p) (ensures (fun _ -> True))
 
-val excluded_middle : p:Type -> Tot (b:bool{(b = true) <==> p})
-let excluded_middle (p:Type) = 
-  let t = get_proof (p \/ (~p)) in
+val bool_of_or : #p:Type -> #q:Type -> (p \/ q) -> 
+  Tot (b:bool{(b ==> p) /\ (not(b) ==> q)})
+let bool_of_or (p:Type) (q:Type) (t:p \/ q) = 
   match t with
   | Left  _ -> true
-  | Right r -> Classical.give_proof r; false
-(* Doesn't work without (Classical.give_proof r); why? *)
+  | Right _ -> false
+
+val excluded_middle : p:Type -> Tot (b:bool{b <==> p})
+let excluded_middle (p:Type) = bool_of_or (get_proof (p \/ ~p))
 
 val cem : p:Type -> Tot (cor p (cnot p))
 let cem (p:Type) = 
