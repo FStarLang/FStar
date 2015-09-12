@@ -20,6 +20,27 @@ let foo f = f t
 (* Ingredient #2: excluded middle in Type *)
 assume val cem : a:Type -> Tot (cor a (cnot a))
 
+(*
+(* Alternative Ingredient #2: proof reification to Type *)
+
+assume val get_proof : p:Type -> Tot p (requires p) (ensures (fun _ -> True))
+
+val excluded_middle : p:Type -> Tot (b:bool{(b = true) <==> p})
+let excluded_middle (p:Type) = 
+  let t = get_proof (p \/ (~p)) in
+  match t with
+  | Left  _ -> true
+  | Right r -> Classical.give_proof r; false
+(* Doesn't work without (Classical.give_proof r); why? *)
+
+val cem : p:Type -> Tot (cor p (cnot p))
+let cem (p:Type) = 
+  if excluded_middle p then
+    IntroL (get_proof _)
+  else
+    IntroR (get_proof _)
+*)
+
 assume val cfalse_elim : cfalse -> Tot 'a
 
 (*
