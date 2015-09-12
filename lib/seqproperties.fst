@@ -177,7 +177,7 @@ let rec sorted_concat_lemma f lo pivot hi =
         lemma_append_cons lo (cons pivot hi);
         lemma_tl (head lo) (append (tail lo) (cons pivot hi)))
 
-#set-options " --max_fuel 0 --initial_fuel 0"
+#set-options "--max_fuel 1 --initial_fuel 1 --z3timeout 20"
 opaque val split_5 : #a:Type -> s:seq a -> i:nat -> j:nat{i < j && j < length s} -> Pure (seq (seq a))
   (requires True)
   (ensures (fun x ->
@@ -194,6 +194,7 @@ let split_5 s i j =
   let frag_mid,rest  = split_eq rest (j - (i + 1)) in
   let frag_j,frag_hi = split_eq rest 1 in
   upd (upd (upd (upd (create 5 frag_lo) 1 frag_i) 2 frag_mid) 3 frag_j) 4 frag_hi
+#reset-options
 
 val lemma_swap_permutes_aux_frag_eq: #a:Type -> s:seq a -> i:nat{i<length s} -> j:nat{i <= j && j<length s}
                           -> i':nat -> j':nat{i' <= j' /\ j'<=length s /\

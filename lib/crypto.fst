@@ -1,5 +1,6 @@
 module FStar.Crypto
-open Bytes
+
+open FStar.Bytes
 
 type nbytes (n:nat) = b:bytes{length b == n} (* fixed-length bytes *)
 type tag = nbytes 20
