@@ -34,9 +34,6 @@ let exInd (#p:((Type->Type) -> Type)) (p0:Type)
     match h with 
        | ExTypeToTypeIntro 'q 't h -> f 't h
 
-type ceq_type : Type -> Type -> Type =
-  | ReflType : a:Type -> ceq_type a a
-
 type P (x:Type) = (cexists_type_to_type (fun (a:Type->Type) ->
                      cand (ceq_type (I a) x) (cnot (a x))))
 
