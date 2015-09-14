@@ -1,6 +1,6 @@
 (*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FFI;
-    other-files:ordset.fsi ordmap.fsi classical.fst ast.fst ffi.fsi
+    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi Prins --admit_fsi FFI;
+    other-files:ordset.fsi ordmap.fsi classical.fst prins.fsi ast.fst ffi.fsi
  --*)
 
 module Semantics
@@ -8,6 +8,7 @@ module Semantics
 open FStar.OrdMap
 open FStar.OrdSet
 
+open Prins
 open AST
 
 (* TODO: FIXME: workaround for projectors *)

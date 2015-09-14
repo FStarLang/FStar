@@ -27,7 +27,7 @@ codegen:
 	$(FSTAR) --admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set\
 	         --admit_fsi FFI --admit_fsi Runtime --admit_fsi FStar.IO --codegen OCaml ordset.fsi\
 					 ordmap.fsi classical.fst set.fsi heap.fst st.fst\
-					 all.fst io.fsti ast.fst print.fst ffi.fsi sem.fst sinterpreter.fst runtime.fsi tinterpreter.fst\
+					 all.fst io.fsti prins.fst ast.fst print.fst ffi.fsi sem.fst sinterpreter.fst runtime.fsi tinterpreter.fst\
 					 sec_server.fst main.fst
 
 a.out: codegen
