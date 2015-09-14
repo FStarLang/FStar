@@ -29,12 +29,11 @@ type True =
 logic type False
 opaque type l_imp (p:Type) (q:Type) = p -> Tot q                (* infix binary '==>' *)
 type l_and  (p:Type) (q:Type) =
-  | And : p -> q -> (p /\ q)                                    (* infix binary '/\' *)
+  | And : p -> q -> (p /\ q)                                      (* infix binary '/\' *)
 type l_or   (p:Type) (q:Type) =                                 (* infix binary '\/' *)
-  | Left  : p -> (p \/ q)
+  | Left : p -> (p \/ q)
   | Right : q -> (p \/ q)
-
-opaque type l_iff (p:Type) (q:Type) = (p ==> q) /\ (q ==> p)    (* infix binary '<==>' *)
+opaque type l_iff (p:Type) (q:Type) = (p ==> q) /\ (q ==> p)        (* infix binary '<==>' *)
 opaque type l_not (p:Type) = p ==> False                        (* prefix unary '~' *)
 opaque type Forall (#a:Type) (p:a -> Type) = x:a -> Tot (p x)   (* forall (x:a). p x *)
 type DTuple2: a:Type
@@ -105,7 +104,7 @@ total new_effect { (* The definition of the PURE effect is fixed; no user should
 effect Pure (a:Type) (pre:PurePre) (post:PurePost a) =
         PURE a
              (fun (p:PurePost a) -> pre /\ (forall (x:a). post x ==> p x)) (* PureWP *)
-             (fun (p:PurePost a) -> forall (x:a). (pre /\ post x) ==> p x)   (* WLP *)
+             (fun (p:PurePost a) -> forall (x:a). pre /\ post x ==> p x)   (* WLP *)
 effect Admit (a:Type) = PURE a (fun (p:PurePost a) -> True) (fun (p:PurePost a) -> True)
 default effect Tot (a:Type) = PURE a (pure_null_wp a) (pure_null_wp a)
 
@@ -116,7 +115,7 @@ default effect GTot (a:Type) = GHOST a (pure_null_wp a) (pure_null_wp a)
 effect Ghost (a:Type) (pre:Type) (post:PurePost a) =
        GHOST a
            (fun (p:PurePost a) -> pre /\ (forall (x:a). post x ==> p x))
-           (fun (p:PurePost a) -> forall (x:a). (pre /\ post x) ==> p x)
+           (fun (p:PurePost a) -> forall (x:a). pre /\ post x ==> p x)
 
 type unit
 type int
@@ -190,7 +189,7 @@ new_effect DIV = PURE
 effect Div (a:Type) (pre:PurePre) (post:PurePost a) =
        DIV a
            (fun (p:PurePost a) -> pre /\ (forall a. post a ==> p a)) (* WP *)
-           (fun (p:PurePost a) -> forall a. (pre /\ post a) ==> p a)   (* WLP *)
+           (fun (p:PurePost a) -> forall a. pre /\ post a ==> p a)   (* WLP *)
 
 default effect Dv (a:Type) =
      DIV a (fun (p:PurePost a) -> (forall (x:a). p x))

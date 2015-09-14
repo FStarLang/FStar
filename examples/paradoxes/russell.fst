@@ -2,6 +2,7 @@
     other-files: constr.fst;
   --*)
 module Russell
+#set-options "--cardinality warn" //this example relies on a violation of the cardinality constraints of Type
 
 open FStar.Constructive
 

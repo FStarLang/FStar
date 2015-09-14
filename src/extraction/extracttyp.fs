@@ -254,7 +254,11 @@ let lookupDataConType (c:context) (sigb : sigelts) (l:lident)(*this sigbundle co
     let tr =
       Util.find_map sigb (fun s ->
                     match s with
-                    | (Sig_datacon (l',t,tc,quals,lids,_)) -> if l=l' then Some t else None
+                    | Sig_datacon (l',t,(_, tps, _),quals,lids,_) -> 
+                       if l=l' 
+                       then let t = Absyn.Util.close_typ (List.map (fun (x, _) -> (x, Some Implicit)) tps) t in
+                            Some t 
+                       else None
                     | _ -> None
                     )  in must tr
 
@@ -275,10 +279,11 @@ let rec parseInductiveTypesFromSigBundle
             let inds,abbs,exns=(parseInductiveTypesFromSigBundle c tlsig) in
              ({tyName = l; k = kk; tyBinders=bs; constructors=indConstrs; qualifiers=qs})::inds, abbs,exns
 
-        | (Sig_datacon (l,t,tc,quals,lids,_))::tlsig ->
-            if (List.contains  ExceptionConstructor quals)
-            then let t = (lookup_datacon c.tcenv l) in // ignoring the type in the bundle. the typechecker env often has syntactically better types
-                 (assert (List.isEmpty tlsig) ;([],[], [{cname=l; ctype=t}]))
+        | Sig_datacon (l,_,tc,quals,lids,_)::tlsig ->
+            if List.contains  ExceptionConstructor quals
+            then let t = lookup_datacon c.tcenv l in // ignoring the type in the bundle. the typechecker env often has syntactically better types
+                 (assert (List.isEmpty tlsig) ;
+                  ([],[], [{cname=l; ctype=t}]))
             else [],[],[]      // unless this is an exception constructor, at this point we can stop because Nik said that all type type declarations come before data constructors.
 
         | (Sig_typ_abbrev (l,bs,_,t,_,_))::tlsig ->

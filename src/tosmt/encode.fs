@@ -1607,7 +1607,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
     | Sig_datacon(d, _, _, _, _, _) when (lid_equals d Const.lexcons_lid) -> [], env
 
-    | Sig_datacon(d, t, _, quals, _, drange) ->
+    | Sig_datacon(d, t, (_, tps, _), quals, _, drange) ->
+        let t = Util.close_typ (List.map (fun (x, _) -> (x, Some Implicit)) tps) t  in
         let ddconstrsym, ddtok, env = new_term_constant_and_tok_from_lid env d in
         let ddtok_tm = mkApp(ddtok, []) in
         let formals, t_res = match Util.function_formals t with

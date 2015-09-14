@@ -1559,9 +1559,11 @@ and tc_decl env se deserialized = match se with
       let env = Tc.Env.push_sigelt env se in
       se, env
 
-    | Sig_datacon(lid, t, tycon, quals, mutuals, r) ->
-      let tname, _, _  = tycon in
+    | Sig_datacon(lid, t, (tname, tps, k), quals, mutuals, r) ->
       let env = Tc.Env.set_range env r in
+      let tps, env, g = tc_binders env tps in
+      let tycon = tname, tps, k in
+      Tc.Util.discharge_guard env g;
       let t = tc_typ_check_trivial env t ktype in
       let t = norm_t env t in
 
@@ -1569,31 +1571,58 @@ and tc_decl env se deserialized = match se with
         | Some (formals, cod) -> formals, Util.comp_result cod
         | _ -> [], t in
 
-      let positivity_check (formal:binder) = match fst formal with
-        | Inl _ -> ()
+      let cardinality_and_positivity_check (formal:binder) = 
+        let check_positivity formals = 
+            formals |> List.iter (fun (a, _) -> match a with
+                | Inl _ -> ()
+                | Inr y ->
+                    let t = y.sort in
+                    Visit.collect_from_typ (fun b t ->
+                    match (Util.compress_typ t).n with
+                    | Typ_const f ->
+                        begin match List.tryFind (lid_equals f.v) mutuals with
+                        | None -> ()
+                        | Some tname ->
+                            raise (Error (Tc.Errors.constructor_fails_the_positivity_check env (Util.fvar (Some Data_ctor) lid (range_of_lid lid)) tname, range_of_lid lid))
+                        end
+                    | _ -> ()) () t) in
+        match fst formal with
+        | Inl a -> 
+          begin 
+              if Options.warn_cardinality()
+              then Tc.Errors.warn r (Tc.Errors.cardinality_constraint_violated lid a)
+              else if Options.check_cardinality()
+              then raise (Error(Tc.Errors.cardinality_constraint_violated lid a, r))
+          end;
+          let k = Normalize.norm_kind [Normalize.Beta; Normalize.DeltaHard] env a.sort in
+          begin match k.n with 
+            | Kind_arrow _ -> 
+              let formals, _ = Util.kind_formals k in
+              check_positivity formals
+            | _ -> ()
+          end
+
         | Inr x ->
           let t = Normalize.norm_typ [Normalize.Beta; Normalize.DeltaHard] env x.sort in
           if Util.is_function_typ t && Util.is_pure_or_ghost_function t
           then let formals, _ = Util.function_formals t |> Util.must in
-               formals |> List.iter (fun (a, _) -> match a with
-                | Inl _ -> ()
-                | Inr y ->
-                  let t = y.sort in
-                  Visit.collect_from_typ (fun b t ->
-                    match (Util.compress_typ t).n with
-                    | Typ_const f ->
-                      begin match List.tryFind (lid_equals f.v) mutuals with
-                        | None -> ()
-                        | Some tname ->
-                          raise (Error (Tc.Errors.constructor_fails_the_positivity_check env (Util.fvar (Some Data_ctor) lid (range_of_lid lid)) tname, range_of_lid lid))
-                      end
-                    | _ -> ()) () t) in
+               check_positivity formals in
 
-      formals |> List.iter positivity_check;
+      formals |> List.iter cardinality_and_positivity_check;
 
-      (* TODO: check that the tps in tname are the same as here *)
       let _ = match destruct result_t tname with
-        | Some _ -> ()
+        | Some args ->
+          if not (List.length args >= List.length tps
+               && List.forall2 (fun (a, _) (b, _) -> match a, b with 
+                             | Inl ({n=Typ_btvar aa}), Inl bb -> Util.bvar_eq aa bb
+                             | Inr ({n=Exp_bvar xx}), Inr yy -> Util.bvar_eq xx yy
+                             | _ -> false) (Util.first_N (List.length tps) args |> fst) tps)
+          then let expected_t = match tps with 
+                | [] -> Util.ftv tname kun
+                | _ -> 
+                  let _, expected_args = Util.args_of_binders tps in
+                  Util.mk_typ_app (Util.ftv tname kun) expected_args in 
+               raise (Error (Tc.Errors.constructor_builds_the_wrong_type env (Util.fvar (Some Data_ctor) lid (range_of_lid lid)) result_t expected_t, range_of_lid lid))
         | _ -> raise (Error (Tc.Errors.constructor_builds_the_wrong_type env (Util.fvar (Some Data_ctor) lid (range_of_lid lid)) result_t (Util.ftv tname kun), range_of_lid lid)) in
       let se = Sig_datacon(lid, t, tycon, quals, mutuals, r) in
       let env = Tc.Env.push_sigelt env se in
