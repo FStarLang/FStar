@@ -1,6 +1,6 @@
-module Main
-open List
+module Problem01
 
+open FStar.List
 
 val prefix : p:list nat -> str:list nat -> Tot bool
 let rec prefix p str = match p with 

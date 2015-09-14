@@ -1,15 +1,14 @@
 (*--build-config
     options:--admit_fsi FStar.Set;
-    variables:LIB=../../lib;
-    other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/st2.fst $LIB/bytes.fst sample.fst xor.fst
+    other-files:set.fsi heap.fst st.fst all.fst st2.fst bytes.fst sample.fst xor.fst
   --*)
 
 (* Simple example for Nik's proposal of sequencing (Email from 04/29/2015) *)
 module Example1
 open FStar.Heap
 open FStar.Comp
-open FStar.Sample
-open FStar.Bijection
+open Sample
+open Bijection
 open FStar.Relational
 
 let c0_pfx a = a := 0
@@ -48,10 +47,10 @@ let equiv_seq a = let _ = equiv_pfx a in
 module Example2
 open FStar.Heap
 open FStar.Comp
-open FStar.Sample
-open FStar.Bijection
+open Sample
+open Bijection
 open FStar.Relational
-open FStar.Xor
+open Xor
 
 let encrypt p k = xor p k
 let decrypt c k = xor c k

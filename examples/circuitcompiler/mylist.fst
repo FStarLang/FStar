@@ -1,8 +1,9 @@
 (*--build-config
-other-files:../../lib/list.fst
+options:--admit_fsi FStar.Set;
+other-files:set.fsi heap.fst st.fst all.fst list.fst
 --*)
 module MyList
-open List
+open FStar.List
 
 type nlist (a:Type) (n:nat) = l:list a { length l = n }
 

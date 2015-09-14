@@ -23,13 +23,11 @@ theory:
 
 OCAMLOPT=ocamlfind ocamlopt -thread -package batteries -linkpkg -g -w -8
 
-LIB = $(FSTAR_HOME)/lib
-
 codegen:
 	$(FSTAR) --admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set\
-	         --admit_fsi FFI --admit_fsi Runtime --admit_fsi FStar.IO --codegen OCaml $(LIB)/ordset.fsi\
-					 $(LIB)/ordmap.fsi $(LIB)/classical.fst $(LIB)/set.fsi $(LIB)/heap.fst $(LIB)/st.fst\
-					 $(LIB)/all.fst $(LIB)/io.fsti ast.fst print.fst ffi.fsi sem.fst sinterpreter.fst runtime.fsi tinterpreter.fst\
+	         --admit_fsi FFI --admit_fsi Runtime --admit_fsi FStar.IO --codegen OCaml ordset.fsi\
+					 ordmap.fsi classical.fst set.fsi heap.fst st.fst\
+					 all.fst io.fsti prins.fst ast.fst print.fst ffi.fsi sem.fst sinterpreter.fst runtime.fsi tinterpreter.fst\
 					 sec_server.fst main.fst
 	ocamlyacc -v wparser.mly
 	ocamllex wlexer.mll
@@ -39,7 +37,7 @@ a.out:
 	cp $(FSTAR_HOME)/lib/ml/FStar_All.ml .
 	cp $(FSTAR_HOME)/lib/ml/FStar_ST.ml .
 	cp $(FSTAR_HOME)/lib/ml/FStar_IO.ml .
-	$(OCAMLOPT) prims.ml FStar_ST.ml FStar_All.ml FStar_OrdSet.ml FStar_OrdMap.ml FStar_IO.ml\
+	$(OCAMLOPT) prims.ml FStar_ST.ml FStar_All.ml FStar_OrdSet.ml FStar_OrdMap.ml FStar_IO.ml Prins.ml\
 	            AST.ml Print.ml FFI.ml Semantics.ml SourceInterpreter.ml wparser.mli wparser.ml\
 							wlexer.ml Runtime.ml TargetInterpreter.ml SecServer.ml Main.ml -o a.out
 

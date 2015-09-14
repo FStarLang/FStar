@@ -1,3 +1,7 @@
+(*--build-config
+    options: --admit_fsi FStar.Set --max_fuel 1 --max_ifuel 1 --initial_fuel 1;
+    other-files: constr.fst classical.fst ext.fst set.fsi heap.fst st.fst all.fst
+  --*)
 (*
    Copyright 2015
      Simon Forest - Inria and ENS Paris
@@ -95,6 +99,9 @@ val esub_lam_hoist : t:typ -> e:exp -> s:esub -> Lemma (requires True)
       (* [SMTPat (esubst (ELam t e) s)]
       (\* -- this increases running time by 10 secs and adds variability *\) *)
 let esub_lam_hoist t e s = admit()
+  // using esubst_extensional
+  //   (fun s1 s2 e -> [SMTPat (esubst s1 e);  SMTPat (esubst s2 e)])
+
 val esub_beta : exp -> Tot esub
 let esub_beta e = fun y -> if y = 0 then e
                            else (EVar (y-1))

@@ -1,11 +1,11 @@
 (*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi FFI --admit_fsi Runtime;
-    variables:LIB=../../lib;
-    other-files:$LIB/ordset.fsi $LIB/ordmap.fsi $LIB/classical.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst ast.fst ffi.fsi sem.fst sinterpreter.fst runtime.fsi
+    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi FStar.IO --admit_fsi Prins --admit_fsi FFI --admit_fsi Runtime;
+    other-files:ordset.fsi ordmap.fsi classical.fst set.fsi heap.fst st.fst all.fst io.fsti prins.fsi ast.fst ffi.fsi sem.fst sinterpreter.fst runtime.fsi
  --*)
 
 module TargetInterpreter
 
+open Prins
 open AST
 open Runtime
 

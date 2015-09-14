@@ -1,5 +1,5 @@
-module While
-open List
+module Problem02While
+
 (*We were not able to make F* prove simple properties about GCD, so we were stuck …*)
 type divides (a:pos) (b:pos) = (exists (c:pos). a*c = b)
 type is_pgcd (a:pos) (b:pos) (pgcd:pos) =

@@ -1,6 +1,6 @@
 (*--build-config
-    options:--codegen OCaml;
-    other-files:bug267.fsi
+    options:--admit_fsi FStar.Set;
+    other-files:ext.fst set.fsi heap.fst st.fst all.fst bug279.fsi
   --*)
 module Bug267
 

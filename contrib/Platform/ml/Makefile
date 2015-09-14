@@ -22,10 +22,13 @@ clean:
 	$(OCAMLOPT) $(OCAMLOPTFLAGS) -c $<
 
 .ml.exe:
-	$(OCAMLOPT) $(OCAMLOPTFLAGS) $< -o $@
+	$(OCAMLOPT) $(OCAMLOPTFLAGS) platform.cmx $< -o $@
+
+test: Tests.exe
+		@./Tests.exe
+
 
 depend:
 	$(OCAMLDEP) Bytes.ml* Error.ml* > .depend
 
 -include .depend
-

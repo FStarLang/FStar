@@ -65,7 +65,10 @@ let tc_one_file dsenv env fn =
 let tc_one_fragment curmod dsenv env frag =
     try
         match Parser.Driver.parse_fragment curmod dsenv frag with
-            | Inl (dsenv, modul) ->
+            | Parser.Driver.Empty -> 
+              Some (None, dsenv, env)
+
+            | Parser.Driver.Modul (dsenv, modul) ->
               let env = match curmod with
                 | None -> env
                 | Some _ ->
@@ -73,7 +76,7 @@ let tc_one_fragment curmod dsenv env frag =
               let modul, npds, env = Tc.Tc.tc_partial_modul env modul in
               Some (Some (modul, npds), dsenv, env)
 
-            | Inr (dsenv, decls) ->
+            | Parser.Driver.Decls (dsenv, decls) ->
               begin match curmod with
                 | None -> failwith "Fragment without an enclosing module"
                 | Some (modul,npds) ->
@@ -206,30 +209,28 @@ let interactive_mode dsenv env =
                     let env = Tc.Env.commit_mark env in
                     dsenv, env in
 
-              let fail curmod dsenv_mark env_mark =
-                Tc.Errors.report_all() |> ignore;
-                Tc.Errors.num_errs := 0;
-                Util.fprint1 "%s\n" fail;
-                let dsenv, env = reset_mark dsenv_mark env_mark in
-                go stack curmod dsenv env in
-	      
-	      let dsenv, env =
-		if !should_read_build_config then
-		  if Util.starts_with text (Parser.ParseIt.get_bc_start_string ()) then
-		    begin
-		      let filenames = Parser.ParseIt.read_build_config_from_string "" false text in
-		      let _, dsenv, env = batch_mode_tc_no_prims dsenv env filenames in
-		      should_read_build_config := false;
-		      dsenv, env
-		    end
-		  else begin
-		    should_read_build_config := false;
-		    dsenv, env
-		  end
-		else
-		  dsenv, env
-		  
-	      in
+                let fail curmod dsenv_mark env_mark =
+                    Tc.Errors.report_all() |> ignore;
+                    Tc.Errors.num_errs := 0;
+                    Util.fprint1 "%s\n" fail;
+                    let dsenv, env = reset_mark dsenv_mark env_mark in
+                    go stack curmod dsenv env in
+	            
+                let dsenv, env =
+		            if !should_read_build_config then
+		              if Util.starts_with text (Parser.ParseIt.get_bc_start_string ()) then
+		                begin
+		                  let filenames = Parser.ParseIt.read_build_config_from_string "" false text in
+		                  let _, dsenv, env = batch_mode_tc_no_prims dsenv env filenames in
+		                  should_read_build_config := false;
+		                  dsenv, env
+		                end
+		              else begin
+		                should_read_build_config := false;
+		                dsenv, env
+		              end
+		            else
+		              dsenv, env in
 
               let dsenv_mark, env_mark = mark dsenv env in
               let res = tc_one_fragment curmod dsenv_mark env_mark text in

@@ -1,3 +1,4 @@
+open Prins
 open AST
 
 open FStar_OrdSet
@@ -44,15 +45,24 @@ let get_p ((D_v (_, v)):dvalue) :prin = match v with
 
 let get_two_values (l:dvalue list) :(dvalue * dvalue) = List.hd l, List.hd (List.tl l)
 
+let print_p (p:prin) :string =
+  match p with
+    | Alice -> "alice"
+    | Bob -> "bob"
+    | Charlie -> "charlie"
+    | Dave -> "dave"
+    | Evelyn -> "evelyn"
+    | Fred -> "fred"
+
 let print_ps (ps:prins) :string =
-  FStar_OrdSet.fold () (fun p s -> s ^ (string_of_int p) ^ "; ") ps ""
+  FStar_OrdSet.fold () (fun p s -> s ^ (print_p p) ^ "; ") ps ""
 
 let rec print_value (v:unit value) :string = match v with
   | V_const c -> begin
     match c with
       | C_nat n -> "nat: " ^ (string_of_int n)
       | C_bool b -> "bool: " ^ (string_of_bool b)
-      | C_prin p -> "prin: " ^ (string_of_int p)
+      | C_prin p -> "prin: " ^ (print_p p)
       | C_prins ps -> "prins constant: " ^ print_ps ps
       | C_unit -> "unit"
     end

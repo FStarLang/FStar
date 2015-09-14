@@ -1,5 +1,5 @@
 module Inverse
-open Seq
+open FStar.Seq
 type bytes = seq byte
 type lbytes (l:int) = b:bytes{length b = l}
 

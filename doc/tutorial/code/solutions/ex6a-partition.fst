@@ -1,5 +1,4 @@
 module Partition
-open Prims.PURE
 
 (* Exercise: Write the partition function and prove it total.  *)
 // BEGIN: Partition

@@ -526,6 +526,8 @@ let dsnd t = MkDTuple2._2 t
 type Let (#a:Type) (x:a) (body:(a -> Type)) = body x
 logic type InductionHyp : #a:Type -> a -> Type -> Type
 assume val by_induction_on: #a:Type -> #p:Type -> induction_on:a -> proving:p -> Lemma (ensures (InductionHyp induction_on p))
+logic type Using : #a:Type -> Type -> a -> Type
+assume val using: #a:Type -> #p:Type -> proving:p -> pat:a -> Lemma (ensures (Using p pat))
 assume val _assume : p:Type -> unit -> Pure unit (requires (True)) (ensures (fun x -> p))
 assume val admit   : #a:Type -> unit -> Admit a
 assume val magic   : #a:Type -> unit -> Tot a
@@ -536,10 +538,6 @@ assume val qintro  : #a:Type -> #p:(a -> Type) -> =f:(x:a -> Lemma (p x)) -> Lem
 assume val raise: exn -> Ex 'a       (* TODO: refine with the Exn monad *)
 val ignore: 'a -> Tot unit
 let ignore x = ()
-
-//TODO: REMOVE THIS!
-val erase: 'a -> Tot unit
-let erase x = ()
 
 assume val min: int -> int -> Tot int
 assume val max: int -> int -> Tot int

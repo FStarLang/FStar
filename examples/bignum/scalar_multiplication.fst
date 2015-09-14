@@ -4,7 +4,7 @@ module ScalarMultiplication
 
 open IntLib
 open Limb
-open Seq
+open FStar.Seq
 open Eval
 open Axiomatic
 

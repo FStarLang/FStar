@@ -1,7 +1,6 @@
 (*--build-config
     options:--admit_fsi Set --admit_fsi Seq --verify_module Source;
-    variables:LIB=/home/jkz/fstar/FStar/lib;
-  other-files:$LIB/classical.fst $LIB/ext.fst $LIB/set.fsi $LIB/seq.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/seqproperties.fst
+    other-files:classical.fst ext.fst set.fsi seq.fsi heap.fst st.fst all.fst seqproperties.fst
   --*)
 
 

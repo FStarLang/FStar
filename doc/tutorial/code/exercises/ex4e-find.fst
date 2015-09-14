@@ -4,7 +4,7 @@ type option 'a =
    | None : option 'a
    | Some : 'a -> option 'a
 
-let rec find f l = match l with 
+let rec find f l = match l with
   | [] -> None
   | hd::tl -> if f hd then Some hd else find f tl
 

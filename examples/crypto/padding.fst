@@ -1,17 +1,15 @@
 (*--build-config
-    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module Pad --admit_fsi Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
-    variables:LIB=../../lib;
-    other-files:$LIB/string.fst $LIB/list.fst
-            $LIB/ext.fst $LIB/classical.fst
-            $LIB/set.fsi $LIB/set.fst
-            $LIB/heap.fst $LIB/st.fst
-            $LIB/seq.fsi $LIB/seqproperties.fst
+    options:--z3timeout 10 --verify_module Pad --admit_fsi FStar.Seq --admit_fsi FStar.Set --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
+    other-files: set.fsi heap.fst st.fst all.fst
+            string.fst list.fst
+            ext.fst classical.fst
+            seq.fsi seqproperties.fst
   --*)
 
-
 module Pad
-open Seq
-open SeqProperties
+
+open FStar.Seq
+open FStar.SeqProperties
 
 (* a coercion; avoid it? *)
 assume val n2b: n:nat {( n < 256 )} -> Tot (b:uint8{b==n})
@@ -106,8 +104,9 @@ let verify k t tag = BMAC.verify k (encode t) tag
 
 
 module MAC2
-open Seq
-open SeqProperties
+
+open FStar.Seq
+open FStar.SeqProperties
 open Pad
 
 type text2 = b:bytes { length b <=  blocksize }

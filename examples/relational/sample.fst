@@ -1,17 +1,16 @@
 (*--build-config
     options:--admit_fsi FStar.Set --z3timeout 5;
-    variables:LIB=../../lib;
-    other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/st2.fst $LIB/bytes.fst
+    other-files:set.fsi heap.fst st.fst all.fst st2.fst
   --*)
 
-module FStar.Bijection
+module Bijection
 
 (* Definition of the bijection properties *)
-type injection (#a:Type) (#b:Type) (f:a -> Tot b) = 
+opaque type injection (#a:Type) (#b:Type) (f:a -> Tot b) = 
   (forall (x:a) (y:a). f x = f y ==> x = y)
-type surjection (#a:Type)(#b:Type) (f:a -> Tot b) = 
+opaque type surjection (#a:Type)(#b:Type) (f:a -> Tot b) = 
   (forall (y:b). (exists (x:a). f x = y))
-type bijection (#a:Type) (#b:Type) (f:a -> Tot b) = 
+opaque type bijection (#a:Type) (#b:Type) (f:a -> Tot b) = 
   injection f /\ surjection f
 type bij (#a:Type) (#b:Type) = f:(a -> Tot b){bijection f}
 
@@ -37,10 +36,10 @@ assume val bijection_good_sample_fun : #a:Type -> #b:Type -> f:(a -> Tot b) ->
         (ensures  (good_sample_fun f))
 assume val good_sample_fun_bijection : #a:Type -> #b:Type -> f:(a -> Tot b) ->
   Lemma (requires (good_sample_fun f))
-        (ensures  (bijection f))
-
-module FStar.Sample
-open FStar.Bijection
+        (ensures ((forall (x:a) (y:a). f x = f y ==> x = y)
+              /\ (forall (y:b). (exists (x:a). f x = y))))
+module Sample
+open Bijection
 open FStar.Relational
 open FStar.Heap
 open FStar.Comp

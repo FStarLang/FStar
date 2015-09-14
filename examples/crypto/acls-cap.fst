@@ -1,13 +1,12 @@
 (*--build-config
-    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module Cap --admit_fsi FStar.Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
-    variables:LIB=../../lib
-              CONTRIB=../../contrib;
+    options:--z3timeout 10 --verify_module Cap --admit_fsi FStar.Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
+    variables:CONTRIB=../../contrib;
     other-files:
-            $LIB/ext.fst $LIB/classical.fst
-            $LIB/set.fsi $LIB/set.fst
-            $LIB/heap.fst $LIB/st.fst $LIB/all.fst
-            $LIB/string.fst $LIB/list.fst
-            $LIB/seq.fsi $LIB/seqproperties.fst
+            ext.fst classical.fst
+            set.fsi set.fst
+            heap.fst st.fst all.fst
+            string.fst list.fst
+            seq.fsi seqproperties.fst
             $CONTRIB/Platform/fst/Bytes.fst
             $CONTRIB/CoreCrypto/fst/CoreCrypto.fst
             sha1.fst

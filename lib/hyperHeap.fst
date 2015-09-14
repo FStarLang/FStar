@@ -146,3 +146,6 @@ type contains_ref (#a:Type) (#i:rid) (r:rref i a) (m:t) =
 type fresh_rref (#a:Type) (#i:rid) (r:rref i a) (m0:t) (m1:t) =
   not (Heap.contains (Map.sel m0 i) (as_ref r))
   /\  (Heap.contains (Map.sel m1 i) (as_ref r))
+
+type modifies_rref (r:rid) (s:Set.set aref) h0 h1 = Heap.modifies s (Map.sel h0 r) (Map.sel h1 r)
+

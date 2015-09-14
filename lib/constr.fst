@@ -18,7 +18,10 @@ type cexists_type : (Type -> Type) -> Type =
   | ExTypeIntro : #p:(Type -> Type) -> t:Type -> h:(p t) -> cexists_type p
 
 type ceq : #a:Type -> a -> a -> Type =
-  | Refl : a:Type -> x:a -> ceq x x
+  | Refl : #a:Type -> x:a -> ceq x x
+
+type ceq_type : Type -> Type -> Type =
+  | ReflType : a:Type -> ceq_type a a
 
 val ceq_eq : #a:Type -> #x:a -> #y:a -> h:(ceq x y) -> Lemma (x = y)
 let ceq_eq x y p = ()
@@ -29,8 +32,8 @@ type ctrue : Type =
 (* hopefully this is an empty type *)
 type cfalse : Type =
 
+assume val cfalse_elim : #a:Type -> cfalse -> Tot a
 (* can we make this work?
-val cfalse_elim : cfalse -> 'a
 let cfalse_elim pf =
   match pf with
   | _ -> 76 (* silly, fails type checking *)

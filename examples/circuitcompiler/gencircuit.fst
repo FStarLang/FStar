@@ -1,6 +1,6 @@
 (*--build-config
-options:--admit_fsi Set;
-other-files:../../lib/list.fst ../../lib/set.fsi ../../lib/heap.fst ../../lib/st.fst fixnat.fst wires.fst
+options:--admit_fsi FStar.Set;
+other-files:set.fsi heap.fst st.fst all.fst list.fst fixnat.fst wires.fst
 --*)
 module Bool_circuit
 open Wires

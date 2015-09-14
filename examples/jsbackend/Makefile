@@ -1,6 +1,6 @@
 FSLIBFILES=st.fst string.fst js.fst list.fsi
 FSLIB=$(addprefix ../../lib/, $(FSLIBFILES))
-FSTAR=../../bin/FStar.exe --admit_fsi List $(OTHERFLAGS)
+include ../Makefile.include
 
 TESTS=constants.js strings.js fun.js tuples.js record.js
 
@@ -13,7 +13,7 @@ close:
 	echo "</body></html>" >> tests.htm
 
 %.js: %.fst
-	$(FSTAR) --silent --codegen JavaScript $(FSLIB) $^ > $@
+	$(FSTAR) --admit_fsi List $(OTHERFLAGS) --silent --codegen JavaScript $(FSLIB) $^ > $@
 	echo "<script src=\"$@\"></script>" >> tests.htm
 
 clean:

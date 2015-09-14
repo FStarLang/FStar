@@ -13,10 +13,10 @@ module Eval
 
 open IntLib
 open Limb
-open ST
-open Seq
-open Heap
-open Array
+open FStar.ST
+open FStar.Seq
+open FStar.Heap
+open FStar.Array
 
 
 (* TODO : unify the types and notations for bigint *)

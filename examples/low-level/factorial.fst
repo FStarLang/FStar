@@ -1,18 +1,17 @@
 (*--build-config
-variables:LIB=../../lib;
-other-files:$LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst stack.fst listset.fst  $LIB/ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst sstCombinators.fst
+other-files:ext.fst set.fsi set.fst heap.fst st.fst all.fst list.fst stack.fst listset.fst ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst sstCombinators.fst
   --*)
 module Factorial
 open SSTCombinators
 open StackAndHeap
 open SST
-open Heap
+open FStar.Heap
 open Lref  open Located
 open Stack
-open Set
-open Prims
-open List
+open FStar.Set
+open FStar.List
 open ListSet
+open FStar.Ghost
 
 val factorial : nat -> Tot nat
 let rec factorial n =
@@ -36,7 +35,6 @@ type  loopInv (li : lref nat) (res : lref nat) (m:smem) =
     /\ (loopkupRef res m = factorial (loopkupRef li m))
     /\ (~ (li = res))
 
-open Ghost
 val factorialLoopBody :
   n:nat -> li:(lref nat) -> res:(lref nat)
   -> unit ->

@@ -1,4 +1,3 @@
-open Platform
 open Unix
 
 (* Convert human readable form to 32 bit value *)
@@ -13,47 +12,68 @@ let sock = socket PF_INET SOCK_STREAM 0
 (* Get socketname *)
 (* let saddr = getsockname sock  *)
 
-let sock_send sock str =
-    Printf.printf "sock_send\n" ;
+let unix_send sock str =
     let len = String.length str in
     send sock str 0 len []
 
-let sock_recv sock maxlen =
-      Printf.printf "sock_recv\n" ;
-    let str = String.create maxlen in
+let unix_recv sock maxlen =
+    let str = Bytes.create maxlen in
     let recvlen = recv sock str 0 maxlen [] in
     String.sub str 0 recvlen
 
+let tcp_recv sock maxlen =
+    match ( Platform.Tcp.recv sock maxlen ) with
+    |  Platform.Error.Correct b -> (Platform.Bytes.get_cbytes b)
+    | _ -> failwith "Error \n" ;;
+
+let passed = ref 0
+let total  = ref 0
+
+
 let client_sock = socket PF_INET SOCK_STREAM 0
 
+let tcp_client_sock = Platform.Tcp.connect "fstar-lang.org" 25
+
 let hentry =
-    Printf.printf "gethostbyname\n" ;
     gethostbyname "fstar-lang.org" ;;
 
 connect client_sock (ADDR_INET (hentry.h_addr_list.(0), 25)) ; (* SMTP *)
 
-Printf.printf "connected\n" ;
+let unix = unix_recv client_sock 1024 in
+(* Printf.printf "Unix: %s \n" unix; *)
+let tcp  = tcp_recv tcp_client_sock 1024 in
+(* Printf.printf "Tcp:  %s \n" tcp; *)
+total := !total + 1;
+if unix=tcp then
+  passed := !passed + 1;
+
+unix_send client_sock "mail from: <strider@fstar-lang.org>\n" |> ignore ;
+Platform.Tcp.send tcp_client_sock (Platform.Bytes.abytes "mail from: <strider@fstar-lang.org>\n") |> ignore;
+
+let unix = unix_recv client_sock 1024 in
+(* Printf.printf "Unix: %s \n" unix; *)
+let tcp  = tcp_recv tcp_client_sock 1024 in
+(* Printf.printf "Tcp:  %s \n" tcp; *)
+total := !total + 1;
+if unix=tcp && tcp= "250 OK
+"
+then
+  passed := !passed + 1;
 
 
-sock_recv client_sock 1024 |> Printf.printf "redeived: %s " ;
+(* unix_send client_sock "rcpt to: <erikd@localhost>\n" ;
+unix_recv client_sock 1024 |> Printf.printf "received: %s \n" ;
 
-sock_send client_sock "mail from: <pleac@localhost>\n" ;
-sock_recv client_sock 1024 |> Printf.printf "redeived: %s " ;
+unix_send client_sock "data\n" ;
+unix_recv client_sock 1024 |> Printf.printf "redeived: %s " ;
 
-sock_send client_sock "rcpt to: <erikd@localhost>\n" ;
-sock_recv client_sock 1024 |> Printf.printf "redeived: %s " ;
-
-sock_send client_sock "data\n" ;
-sock_recv client_sock 1024 |> Printf.printf "redeived: %s " ;
-
-sock_send client_sock "From: Ocaml whiz\nSubject: Ocaml rulez!\n\nYES!\n.\n" ;
-sock_recv client_sock 1024 |> Printf.printf "redeived: %s " ;
+unix_send client_sock "From: Ocaml whiz\nSubject: Ocaml rulez!\n\nYES!\n.\n" ;
+unix_recv client_sock 1024 |> Printf.printf "redeived: %s " ; *)
 
 close client_sock ;;
 
-Printf.printf "closed" ;
+Platform.Tcp.close tcp_client_sock ;;
 
-failwith "closed" ;
 
 let server_sock = socket PF_INET SOCK_STREAM 0 in
 
@@ -64,17 +84,36 @@ setsockopt server_sock SO_REUSEADDR true ;
 let address = (gethostbyname(gethostname())).h_addr_list.(0) in
 bind server_sock (ADDR_INET (address, 1029)) ;
 
+
+
 (* Listen on the socket. Max of 10 incoming connections. *)
 listen server_sock 10 ;
 
-(* accept and process connections *)
-while true do
-        Printf.printf "loop\n" ;
-        let (client_sock, client_addr) = accept server_sock in
-        let str = "Hello\n" in
-        let len = String.length str in
-        let x = send client_sock str 0 len [] in
-        shutdown client_sock SHUTDOWN_ALL
-        done ;;
+let thread () =
+    try
+      let client_sock = socket PF_INET SOCK_STREAM 0 in
+      (connect client_sock) (ADDR_INET (address, 1029));
+      Platform.Tcp.send client_sock (Platform.Bytes.abytes "Hello\n") |> ignore;
+      Platform.Tcp.close client_sock
+    with Unix_error (e,s1,s2) ->
+     failwith (Printf.sprintf "%s: %s(%s)" (error_message e) s1 s2) in
 
-Printf.printf "tests passed\n" ;
+Thread.create thread () |> ignore ;
+
+(* accept and process connections *)
+
+let (client_sock, client_addr) = accept server_sock in
+
+let tcp = tcp_recv client_sock 1024 in
+(* Printf.printf "Tcp:  %s \n" tcp; *)
+total := !total + 1;
+if tcp="Hello\n" then
+  passed := !passed + 1;
+
+
+let str = "Hello\n" in
+let len = String.length str in
+let _ = send client_sock str 0 len [] in
+shutdown client_sock SHUTDOWN_ALL;;
+
+Printf.printf "%d/%d tests passed\n" !passed !total

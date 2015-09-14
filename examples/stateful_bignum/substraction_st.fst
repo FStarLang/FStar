@@ -2,11 +2,11 @@ module Substraction
 
 open IntLib
 open Limb
-open Seq
+open FStar.Seq
 open Eval
 open Axiomatic
-open ST
-open Heap
+open FStar.ST
+open FStar.Heap
 open Bigint
 
 (* 

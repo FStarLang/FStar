@@ -1,6 +1,6 @@
 (*--build-config
-options:--admit_fsi Set;
-other-files:../../lib/list.fst fixnat.fst mylist.fst
+options:--admit_fsi FStar.Set;
+other-files:set.fsi heap.fst st.fst all.fst list.fst fixnat.fst mylist.fst
 --*)
 module Bool_circuit
 open MyList

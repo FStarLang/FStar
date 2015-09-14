@@ -1109,6 +1109,9 @@ and desugar_formula' env (f:term) : typ =
                 | Inr v -> targ <| (Util.b2t v)) //implicitly coerce a boolean to a type
          [f1;f2;f3])
 
+    | QForall([], _, _)
+    | QExists([], _, _) -> failwith "Impossible: Quantifier without binders"
+
     | QForall((_1::_2::_3), pats, body) ->
       let binders = _1::_2::_3 in
       desugar_formula env (push_quant (fun x -> QForall x) binders pats body)
@@ -1299,7 +1302,10 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
   let tot = mk_term (Name (Const.effect_Tot_lid)) rng Expr in
   let with_constructor_effect t = mk_term (App(tot, t, Nothing)) t.range t.level in
   let apply_binders t binders =
-    List.fold_left (fun out b -> mk_term (App(out, binder_to_term b, Nothing)) out.range out.level)
+    let imp_of_aqual (b:AST.binder) = match b.aqual with 
+        | Some Implicit -> Hash
+        | _ -> Nothing in
+    List.fold_left (fun out b -> mk_term (App(out, binder_to_term b, imp_of_aqual b)) out.range out.level)
       t binders in
   let tycon_record_as_variant = function
     | TyconRecord(id, parms, kopt, fields) ->

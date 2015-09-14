@@ -1,6 +1,5 @@
 (*--build-config
-  variables:LIB=../../lib;
-  other-files: $LIB/list.fst
+  other-files: list.fst
  --*)
 
 module Stack

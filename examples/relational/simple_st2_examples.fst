@@ -1,7 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set;
-    variables:LIB=../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/st2.fst $LIB/all.fst
+    other-files:ext.fst set.fsi heap.fst st.fst st2.fst all.fst
   --*)
 
 module Samples

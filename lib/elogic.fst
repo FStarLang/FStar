@@ -22,7 +22,7 @@ module FStar.ErasedLogic
 (*F* 's exists should be thought of Coq's sigT. It is totally unerased *)
 (*Coq has 2 more versions, with increading degree of erasure*)
 (* https://coq.inria.fr/library/Coq.Init.Specif.html#sigT *)
-open Ghost
+open FStar.Ghost
 
 (*you can get the withness x, that the proof part is erased*)
 (*https://coq.inria.fr/library/Coq.Init.Specif.html#sig*)

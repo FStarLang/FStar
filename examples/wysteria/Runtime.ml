@@ -3,6 +3,7 @@ module IO = Extlib.IO
 module Unix = BatUnix
 module Marshal = BatMarshal
 
+open Prins
 open AST
 
 type chan_in = IO.input

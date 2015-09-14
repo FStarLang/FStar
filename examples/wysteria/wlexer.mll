@@ -58,7 +58,6 @@ rule token = parse
   | "ffi"           { FFI                                }
 
   | var as v        { VAR v   }
-  | bang (num as n) { PRINC (int_of_string n) }
   | num as n        { NUM (int_of_string n) }
 
   | eof     { EOF }

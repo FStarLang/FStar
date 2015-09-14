@@ -1,4 +1,4 @@
-VERFILES=stlc_cbv_db_pntsubst_nolists.fst stlc_cbv_named.fst db_subst.fst
+VERFILES=stlc_cbv_db_pntsubst_nolists.fst stlc_cbv_named.fst db_subst.fst hs.fst
 include ../Makefile.include
 all: .all.ver pars stlc_cbv_db_parsubst lambda_omega f-omega micro-fstar hoare_wp
 

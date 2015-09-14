@@ -1,9 +1,9 @@
 (*--build-config
-    other-files:../../lib/int8.fst
+    other-files:int8.fst
  --*)
 
 module TestInt8
-open Int8
+open FStar.Int8
 let f0 (x:nat8) : int8 = x - 1y
 let f1 (x:nat8) (y:nat8{y <= x}) : nat8 = x - y
 let f2 (x:nat8{x < (Int8.max_value / 2y)}) = x * 2y

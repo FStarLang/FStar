@@ -155,7 +155,11 @@ let get_fstar_home () = match !fstar_home_opt with
     | None -> ignore <| set_fstar_home(); !_fstar_home
     | Some x -> x
 
-let get_include_path () = !_include_path@["."; get_fstar_home() ^ "/lib"]
+let get_include_path () =
+  (* Allows running fstar either from the source repository, or after
+   * installation (into /usr/local for instance) *)
+  let h = get_fstar_home () in
+  !_include_path@["."; h ^ "/lib"; h ^ "/lib/fstar"]
 
 let prims () = match !prims_ref with
   | None -> "prims.fst"

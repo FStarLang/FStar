@@ -1,24 +1,24 @@
 (*--build-config
-    variables:LIB=../../lib;
-    other-files:$LIB/ghost.fst
+    other-files:ghost.fst
  --*)
 module TestGhost
-open Ghost
 
-//let f (x:ghost int) = x + 1 //type-error; x is not an int
+open FStar.Ghost
 
-(*val g: ghost int -> Tot int
-let g x = reveal x    //type-error: Ghost is not a sub-effect of pure
-*)
+//let f (x:erased int) = x + 1 //type-error; x is not an int
 
-//fine; having ghost effects in specifications is ok
-val h: x:ghost int -> Pure (ghost int) (requires (reveal x >= 0)) (ensures (fun y -> x = y))
+// val g: erased int -> Tot int
+let g x = reveal x    //type-error: Erased is not a sub-effect of pure
+
+//fine; having erased effects in specifications is ok
+val h: x:erased int -> Pure (erased int) (requires (reveal x >= 0)) (ensures (fun y -> x = y))
 let h x = x
 
-//fine; having ghost effects in specifications is ok
-val i: x:ghost int -> Pure int (requires (reveal x = 0)) (ensures (fun y -> x = hide y))
+//fine; having erased effects in specifications is ok
+val i: x:erased int -> Pure int (requires (reveal x = 0)) (ensures (fun y -> x = hide y))
 let i x = 0 //fine
 
-//fine; having ghost effects in specifications is ok
-val j: x:ghost int -> Pure int (requires (reveal x = 0)) (ensures (fun y -> x = hide y))
-let j x = 1 //logical failure
+//fine; having erased effects in specifications is ok
+assume val j: x:erased int -> Pure int (requires (reveal x = 0))
+                                       (ensures (fun y -> x = hide y))
+//let j x = 1 -- logical failure

@@ -5,7 +5,6 @@ let mk_exp (e:exp') = Exp (e, None)
 %}
 
 %token <int> NUM
-%token <int> PRINC
 %token TRUE FALSE UNIT
 
 %token <string> VAR
@@ -31,7 +30,6 @@ const:
 | UNIT       { C_unit       }
 | TRUE       { C_bool true  }
 | FALSE      { C_bool false }
-| PRINC      { C_prin $1    }
 ;
 
 pat:

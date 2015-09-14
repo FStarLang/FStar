@@ -1,12 +1,11 @@
 (*--build-config
-    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module Bug --codegen OCaml --admit_fsi FStar.IO;
-    variables:LIB=../../lib;
+    options:--z3timeout 10 --verify_module Bug --codegen OCaml --admit_fsi FStar.IO;
     other-files:
-            $LIB/ext.fst $LIB/classical.fst
-            $LIB/set.fsi $LIB/set.fst
-            $LIB/heap.fst $LIB/st.fst $LIB/all.fst
-            $LIB/string.fst $LIB/list.fst
-            $LIB/io.fsti
+            ext.fst classical.fst
+            set.fsi set.fst
+            heap.fst st.fst all.fst
+            string.fst list.fst
+            io.fsti
   --*)
 
 module Bug
