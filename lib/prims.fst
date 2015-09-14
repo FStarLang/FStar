@@ -29,11 +29,12 @@ type True =
 logic type False
 opaque type l_imp (p:Type) (q:Type) = p -> Tot q                (* infix binary '==>' *)
 type l_and  (p:Type) (q:Type) =
-  | And : p -> q -> p /\ q                                      (* infix binary '/\' *)
+  | And : p -> q -> (p /\ q)                                    (* infix binary '/\' *)
 type l_or   (p:Type) (q:Type) =                                 (* infix binary '\/' *)
-  | Left : p -> p \/ q
-  | Right : q -> p \/ q
-opaque type l_iff (p:Type) (q:Type) = p ==> q /\ q ==> p        (* infix binary '<==>' *)
+  | Left  : p -> (p \/ q)
+  | Right : q -> (p \/ q)
+
+opaque type l_iff (p:Type) (q:Type) = (p ==> q) /\ (q ==> p)    (* infix binary '<==>' *)
 opaque type l_not (p:Type) = p ==> False                        (* prefix unary '~' *)
 opaque type Forall (#a:Type) (p:a -> Type) = x:a -> Tot (p x)   (* forall (x:a). p x *)
 type DTuple2: a:Type
