@@ -26,6 +26,17 @@ type ceq_type : Type -> Type -> Type =
 val ceq_eq : #a:Type -> #x:a -> #y:a -> h:(ceq x y) -> Lemma (x = y)
 let ceq_eq x y p = ()
 
+val ceq_congruence : #a:Type -> #b:Type -> #x:a -> #y:a -> ceq x y ->
+                     f:(a->GTot b) -> GTot (ceq (f x) (f y))
+let ceq_congruence (a:Type) (b:Type) x y h f = Refl (f x)
+
+val ceq_symm : #a:Type -> #x:a -> #y:a -> ceq x y -> Tot (ceq y x)
+let ceq_symm (a:Type) x y h = Refl x
+
+val ceq_trans : #a:Type -> #x:a -> #y:a -> #z:a -> ceq x y -> ceq y z ->
+                  Tot (ceq x z)
+let ceq_trans (a:Type) x y z hxy hyz = Refl x
+
 type ctrue : Type =
   | I : ctrue
 

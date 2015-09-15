@@ -93,6 +93,13 @@ let split_cases = Util.mk_ref 0
 let _include_path = Util.mk_ref []
 let interactive_fsi = Util.mk_ref false
 let print_fuels = Util.mk_ref false
+let cardinality = Util.mk_ref "off"
+let warn_cardinality () = match !cardinality with 
+    | "warn" -> true
+    | _ -> false
+let check_cardinality () = match !cardinality with 
+    | "check" -> true
+    | _ -> false
 let __temp_no_proj = Util.mk_ref false
 let init_options () =
     show_signatures := [];
@@ -237,6 +244,7 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "include", OneArg ((fun s -> _include_path := !_include_path @ [s]), "path"), "A directory in which to search for files included on the command line");
      ( noshort, "fsi", ZeroArgs (fun () -> set_interactive_fsi ()), "fsi flag; A flag to indicate if type checking a fsi in the interactive mode");
      ( noshort, "print_fuels", ZeroArgs (fun () -> print_fuels := true), "Print the fuel amounts used for each successful query");
+     ( noshort, "cardinality", OneArg ((fun x -> cardinality := validate_cardinality x), "off|warn|check"), "Check cardinality constraints on inductive data types(default 'off')");
      ( noshort, "__temp_no_proj", ZeroArgs (fun () -> __temp_no_proj := true), "A temporary flag to disable code generation for projectors");
      ( 'v', "version", ZeroArgs (fun _ -> display_version(); exit 0), "Display version number");
     ] in
@@ -249,6 +257,12 @@ and parse_codegen s =
   | _ ->
      (Util.print_string "Wrong argument to codegen flag\n";
       display_usage (specs ()); exit 1)
+and validate_cardinality x = match x with
+    | "warn" 
+    | "check"
+    | "off" -> x
+    | _ ->   (Util.print_string "Wrong argument to cardinality flag\n";
+              display_usage (specs ()); exit 1)
 
 and set_interactive_fsi (_:unit) =
     if !interactive then interactive_fsi := true

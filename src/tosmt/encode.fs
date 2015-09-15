@@ -1607,7 +1607,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
     | Sig_datacon(d, _, _, _, _, _) when (lid_equals d Const.lexcons_lid) -> [], env
 
-    | Sig_datacon(d, t, _, quals, _, drange) ->
+    | Sig_datacon(d, t, (_, tps, _), quals, _, drange) ->
+        let t = Util.close_typ (List.map (fun (x, _) -> (x, Some Implicit)) tps) t  in
         let ddconstrsym, ddtok, env = new_term_constant_and_tok_from_lid env d in
         let ddtok_tm = mkApp(ddtok, []) in
         let formals, t_res = match Util.function_formals t with
@@ -1930,6 +1931,30 @@ and encode_signature env ses =
       g@g', env) ([], env)
 
 let encode_env_bindings (env:env_t) (bindings:list<Tc.Env.binding>) : (decls_t * env_t) =
+     (* Encoding Binding_var and Binding_typ as local constants leads to breakages in hash consing. 
+                
+               Consider:
+
+                type t
+                type Good : nat -> Type
+                type s (ps:nat) = m:t{Good ps} 
+                let f (ps':nat) (pi:(s ps' * unit))  =  e
+
+               When encoding a goal formula derived from e, ps' and pi are Binding_var in the environment.
+               They get encoded to constants, declare-fun ps', pi etc.
+               Now, when encoding the type of pi, we encode the (s ps') as a refinement type (m:t{Good ps'}). 
+               So far so good. 
+               But, the trouble is that since ps' is a constant, we build a formula for the refinement type that does not
+               close over ps'---constants are not subject to closure.
+               So, we get a formula that is syntactically different than what we get when encoding the type s, where (ps:nat) is
+               a locally bound free variable and _is_ subject to closure.
+               The syntactic difference leads to the hash consing lookup failing.
+
+               So:
+                  Instead of encoding Binding_vars as declare-funs, we can try to close the query formula over the vars in the context, 
+                  thus demoting them to free variables subject to closure. 
+                  
+    *)
     let encode_binding b (decls, env) = match b with
         | Env.Binding_var(x, t0) ->
             let xxsym, xx, env' = new_term_constant env x in

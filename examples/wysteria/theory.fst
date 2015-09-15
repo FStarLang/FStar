@@ -1257,6 +1257,12 @@ let rec forward_simulation_par #c #c' h ps =
 
 #reset-options
 
+val slice_wire_helper_lemma:
+  eps:eprins -> ps:prins -> p:prin{mem p ps}
+  -> Lemma (requires (True)) (ensures (intersect (intersect  eps ps) (singleton p) =
+				   intersect eps (singleton p)))
+let slice_wire_helper_lemma eps ps p = ()
+
 val slice_wire_lem_singl_of_ps: #eps:eprins -> w:v_wire eps
                                 -> ps:prins -> p:prin{mem p ps}
                                 -> Lemma (requires (True))
@@ -1288,7 +1294,8 @@ let rec slice_v_lem_singl_of_ps #m v ps p = match v with
     else if not (mem p ps') then ()
     else slice_v_lem_singl_of_ps v' ps p
   | V_wire eps w        ->
-    let _ = admitP (b2t (intersect (intersect eps ps) (singleton p) = intersect eps (singleton p))) in
+    let _ = slice_wire_helper_lemma eps ps p in
+    //let _ = admitP (b2t (intersect (intersect eps ps) (singleton p) = intersect eps (singleton p))) in
     slice_wire_lem_singl_of_ps #eps w ps p
   | V_clos en _ _       -> slice_en_lem_singl_of_ps en ps p
   | V_fix_clos en _ _ _ -> slice_en_lem_singl_of_ps en ps p
@@ -1557,7 +1564,7 @@ let forward_simulation_exit_sec #c #c' h ps =
   //let _ = cut (forall p. not (mem p ps) ==> select p pi_s = None) in
 
   OrdMap.eq_lemma pi_s (fst (slice_c_ps ps c'));
-  let _ = admitP (b2t (OrdMap.remove ps' s = mempty)) in
+  let _ = cut (b2t (OrdMap.remove ps' s = mempty)) in
   P_sec_exit #ps (pi, s) ps' (pi_s, s_s)
 
 opaque val sstep_par_to_sec_slice_par_others:
@@ -1730,10 +1737,9 @@ let rec pstep_par_star_to_pstep_star #ps #pi #pi' h = match h with
     PS_tran h1 (pstep_par_star_to_pstep_star h2)
 
 opaque val forward_simulation_theorem:
-  #c:sconfig -> #c':sconfig -> h:sstep c c'
-  -> Tot (pstep_star #(all_prins ()) (slice_c_ps (all_prins ()) c) (slice_c_ps (all_prins ()) c'))
-let forward_simulation_theorem #c #c' h =
-  let ps = all_prins () in
+  #c:sconfig -> #c':sconfig -> h:sstep c c' -> ps:prins{ps = all_prins ()}
+  -> Tot (pstep_star #ps (slice_c_ps ps c) (slice_c_ps ps c'))
+let forward_simulation_theorem #c #c' h ps =
   all_prins_superset_lemma ();
   let h1 = forward_simulation #c #c' h ps in
   match h1 with
@@ -1971,6 +1977,12 @@ let pstep_psec_psec_exit_confluence #ps pi pi1 pi2 h1 h2 =
   let h23:pstep #ps pi2 (pi3_m, s3) = P_sec #ps #(P_sec.c' h1) pi2 (P_sec.ps h1) (P_sec.h h1) (pi3_m, s3) in
   ExIntro #(protocol ps) #(fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)) (pi3_m, s3) (Conj h13 h23)
 
+val pstep_psec_enter_psec_enter_empty_intersection:
+  #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
+  -> h1:pstep #ps pi pi1{is_P_sec_enter h1} -> h2:pstep #ps pi pi2{is_P_sec_enter h2 /\ not (P_sec_enter.ps h1 = P_sec_enter.ps h2)}
+  -> Lemma (requires (True)) (ensures (intersect (P_sec_enter.ps h1) (P_sec_enter.ps h2) = empty))
+let pstep_psec_enter_psec_enter_empty_intersection #ps pi pi1 pi2 h1 h2 = ()
+
 opaque val pstep_psec_enter_psec_enter_confluence:
   #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
   -> h1:pstep #ps pi pi1{is_P_sec_enter h1} -> h2:pstep #ps pi pi2{is_P_sec_enter h2}
@@ -1982,8 +1994,8 @@ let pstep_psec_enter_psec_enter_confluence #ps pi pi1 pi2 h1 h2 =
   
   if P_sec_enter.ps h1 = P_sec_enter.ps h2 then IntroL ()
   else
-    (* TODO: FIXME: this is not needed, but takes a long time otherwise *)
-    let _ = admitP (b2t (intersect (P_sec_enter.ps h1) (P_sec_enter.ps h2) = empty)) in
+    let _ = pstep_psec_enter_psec_enter_empty_intersection #ps pi pi1 pi2 h1 h2 in
+    //let _ = cut (b2t (intersect (P_sec_enter.ps h1) (P_sec_enter.ps h2) = empty)) in
 
     let pi23_m = step_ps_to_wait #ps pi2_m (P_sec_enter.ps h1) in
     let pi13_m = step_ps_to_wait #ps pi1_m (P_sec_enter.ps h2) in
@@ -2065,6 +2077,15 @@ let pstep_psec_enter_psec_exit_confluence #ps pi pi1 pi2 h1 h2 =
   
   ExIntro #(protocol ps) #(fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)) (pi13_m, s13) (Conj h13 h23)
 
+val pstep_psec_exit_psec_exit_helper_lemma:
+  ps1:eprins -> ps2:eprins{intersect ps1 ps2 = empty}
+  -> Lemma (requires (True)) (ensures (forall p. mem p ps2 ==> not (mem p ps1)))
+let pstep_psec_exit_psec_exit_helper_lemma ps1 ps2 =
+  let _ = cut (forall p. mem p (intersect ps1 ps2) = (mem p ps1 && mem p ps2)) in
+  let _ = cut (b2t (intersect ps1 ps2 = empty)) in
+  let _ = assert (forall p. (mem p (intersect ps1 ps2)) = (mem #prin #p_cmp p empty)) in
+  ()
+
 opaque val pstep_psec_exit_psec_exit_confluence:
   #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
   -> h1:pstep #ps pi pi1{is_P_sec_exit h1} -> h2:pstep #ps pi pi2{is_P_sec_exit h2}
@@ -2077,7 +2098,8 @@ let pstep_psec_exit_psec_exit_confluence #ps pi pi1 pi2 h1 h2 =
   if P_sec_exit.ps h1 = P_sec_exit.ps h2 then IntroL ()
   else
     let _ = cut (b2t (intersect (P_sec_exit.ps h1) (P_sec_exit.ps h2) = empty)) in
-    let _ = admitP (forall p. mem p (P_sec_exit.ps h2) ==> not (mem p (P_sec_exit.ps h1))) in
+    pstep_psec_exit_psec_exit_helper_lemma (P_sec_exit.ps h1) (P_sec_exit.ps h2);
+    //let _ = admitP (forall p. mem p (P_sec_exit.ps h2) ==> not (mem p (P_sec_exit.ps h1))) in
     
     (*let _ = cut (b2t (pi1_m = ret_sec_value_to_ps #ps pi_m (Some.v (select (P_sec_exit.ps h1) s)) (P_sec_exit.ps h1))) in
     let _ = cut (b2t (pi2_m = ret_sec_value_to_ps #ps pi_m (Some.v (select (P_sec_exit.ps h2) s)) (P_sec_exit.ps h2))) in*)
@@ -2183,100 +2205,183 @@ let slice_of_terminal_is_terminal ps c =
   let _ = cut (forall p. is_terminal (slice_c p c)) in
   ()
 
-type sterminates_in: config -> config -> Type =
-  | STerm_refl: c:config{is_terminal c} -> sterminates_in c c
-  | STerm_step:
+// val two_sterminating_runs_end_in_same:
+//   #c:config -> #c_1:config -> #c_2:config
+//   -> h_1:s_terminating_run c c_1 -> h2:s_terminating_run c c_2
+//   -> Lemma (requires (True)) (ensures (c_1 = c_2)) (decreases h_1)
+// let rec two_sterminating_runs_end_in_same #c #c_1 #c_2 h_1 h_2 = match h_1 with
+//   | STRun_refl _ ->
+//     (
+//       match h_2 with
+// 	| STRun_refl _                   -> ()
+// 	| STRun_step #c #c' #c_1 hs' h_1' -> terminal_does_not_step #c #c' hs'
+//     )
+
+//   | STRun_step #c #c' #c_1 hs' h_1' ->
+//     (
+//       match h_2 with
+// 	| STRun_refl _                     -> terminal_does_not_step #c #c' hs'
+// 	| STRun_step #c #c'' #c_2 hs'' h_2' ->
+// 	  sstep_deterministic c c' hs' c'' hs'';
+// 	  two_sterminating_runs_end_in_same #c' #c_1 #c_2 h_1' h_2'
+//     )
+
+type s_terminating_run: config -> config -> Type =
+  | STRun_refl: c:config{is_terminal c} -> s_terminating_run c c
+  | STRun_step:
     #c:config -> #c':config -> #c'':config
-    -> hs:sstep c c' -> ht:sterminates_in c' c'' -> sterminates_in c c''
+    -> hs:sstep c c' -> ht:s_terminating_run c' c'' -> s_terminating_run c c''
 
-type pterminates_in: #ps:prins -> protocol ps -> protocol ps -> nat -> Type =
-  | PTerm_refl:
-    #ps:prins -> pi:protocol ps{terminal_protocol pi} -> pterminates_in #ps pi pi 0
-  | PTerm_step:
+// type not_stuck (c:config) = cexists #config (fun c' -> sstep c c')
+
+// type s_terminates_in: config -> config -> Type =
+//   | STerm_refl: c:config{is_terminal c} -> s_terminates_in c c
+//   | STerm_step:
+//     #c:config -> #c':config -> hns:not_stuck c
+//     -> f:(#c_1:config -> hs:sstep c c_1 -> Tot (s_terminates_in c_1 c'))
+//     -> s_terminates_in c c'
+
+// val one_sterminating_run_implies_sterminates:
+//   #c:config -> #c':config -> ht:s_terminating_run c c'
+//   -> Tot (s_terminates_in c c') (decreases ht)
+// let rec one_sterminating_run_implies_sterminates #c #c' ht = match ht with
+//   | STRun_refl _ -> STerm_refl c
+//   | STRun_step #c #c'' #c' hs ht' ->
+//     let hns:not_stuck c = ExIntro c'' hs in
+//     let f = fun c_1 hs_1 -> let _ = sstep_deterministic c c_1 hs_1 c'' hs in
+//                        one_sterminating_run_implies_sterminates #c'' #c' ht'
+//    in
+//    STerm_step #c #c' hns f
+
+(* TODO: FIXME: This gives an assertion failed *)
+// assume val preceds_axiom_st: c:config -> c_1:config -> hs:sstep c c_1
+// 		             -> f:(#c':config -> sstep c c' -> Tot (s_terminates c'))
+//                              -> Lemma (requires (True)) (ensures (f #c_1 hs << f))
+
+// val sterminates_implies_at_least_one_terminating_run:
+//   #c:config -> h:s_terminates c -> Tot (c':config & s_terminating_run c c') (decreases h)
+// let rec sterminates_implies_at_least_one_terminating_run #c h = match h with
+//   | STerm_refl _        -> (| c, STRun_refl c |)
+//   | STerm_step #c hns f ->
+//     let ExIntro c' hs = hns in
+//     let h' = f #c' hs in
+//     let _ = admitP (h' << f) in
+//     let (| c'', h'' |) = sterminates_implies_at_least_one_terminating_run #c' h' in
+//     (| c'', STRun_step #c #c' #c'' hs h'' |)
+
+type p_terminating_run: #ps:prins -> protocol ps -> protocol ps -> nat -> Type =
+  | PTRun_refl:
+    #ps:prins -> pi:protocol ps{terminal_protocol pi} -> p_terminating_run #ps pi pi 0
+  | PTRun_step:
     #ps:prins -> #pi:protocol ps -> #pi':protocol ps -> #pi'':protocol ps -> #n:nat
-    -> hp:pstep #ps pi pi' -> ht:pterminates_in pi' pi'' n -> pterminates_in #ps pi pi'' (n + 1)
+    -> hp:pstep #ps pi pi' -> ht:p_terminating_run pi' pi'' n -> p_terminating_run #ps pi pi'' (n + 1)
 
-val sterminates_in_terminal:
-  #c:config -> #c':config -> h:sterminates_in c c'
-  -> Lemma (requires (True)) (ensures (is_terminal c')) (decreases h)
-let rec sterminates_in_terminal #c #c' h = match h with
-  | STerm_refl _    -> ()
-  | STerm_step _ ht -> sterminates_in_terminal ht
+// val sterminates_in_terminal:
+//   #c:config -> #c':config -> h:sterminates_in c c'
+//   -> Lemma (requires (True)) (ensures (is_terminal c')) (decreases h)
+// let rec sterminates_in_terminal #c #c' h = match h with
+//   | STerm_refl _    -> ()
+//   | STerm_step _ ht -> sterminates_in_terminal ht
 
-val pterminates_in_terminal:
-  #ps:prins -> #pi:protocol ps -> #pi':protocol ps -> #n:nat -> h:pterminates_in #ps pi pi' n
-  -> Lemma (requires (True)) (ensures (terminal_protocol #ps pi')) (decreases h)
-let rec pterminates_in_terminal #ps #pi #pi' #n h = match h with
-  | PTerm_refl _    -> ()
-  | PTerm_step _ ht -> pterminates_in_terminal ht
+// val pterminates_in_terminal:
+//   #ps:prins -> #pi:protocol ps -> #pi':protocol ps -> #n:nat -> h:pterminates_in #ps pi pi' n
+//   -> Lemma (requires (True)) (ensures (terminal_protocol #ps pi')) (decreases h)
+// let rec pterminates_in_terminal #ps #pi #pi' #n h = match h with
+//   | PTerm_refl _    -> ()
+//   | PTerm_step _ ht -> pterminates_in_terminal ht
 
-val pstep_star_to_terminating_terminates:
+opaque val pstep_star_to_terminating_run_gives_terminating_run:
   #ps:prins -> pi:protocol ps -> pi':protocol ps -> pi'':protocol ps -> n:nat
-  -> hp:pstep_star #ps pi pi' -> ht:pterminates_in #ps pi' pi'' n
-  -> Tot (n':nat & pterminates_in #ps pi pi'' n') (decreases hp)
-let rec pstep_star_to_terminating_terminates #ps pi pi' pi'' n hp ht = match hp with
+  -> hp:pstep_star #ps pi pi' -> ht:p_terminating_run #ps pi' pi'' n
+  -> Tot (n':nat & p_terminating_run #ps pi pi'' n') (decreases hp)
+let rec pstep_star_to_terminating_run_gives_terminating_run #ps pi pi' pi'' n hp ht = match hp with
   | PS_refl _                       -> (| n, ht |)
   | PS_tran #ps #pi #pi_1 #pi' h_1 h_2 ->
-    let (| n_1, ht_1 |) = pstep_star_to_terminating_terminates #ps #pi_1 #pi' #pi'' #n h_2 ht in
-    (| n_1 + 1, PTerm_step #ps #pi #pi_1 #pi'' #n_1 h_1 ht_1 |)
+    let (| n_1, ht_1 |) = pstep_star_to_terminating_run_gives_terminating_run #ps #pi_1 #pi' #pi'' #n h_2 ht in
+    (| n_1 + 1, PTRun_step #ps #pi #pi_1 #pi'' #n_1 h_1 ht_1 |)
 
-(* If c terminates in c', then (slice_c_ps ps c) terminates in (slice_c_ps ps c') *)
-val terminates_slice_lemma:
-  #c:sconfig -> #c':sconfig -> ht:sterminates_in c c'
-  -> Tot (n:nat & (pterminates_in #(all_prins ()) (slice_c_ps (all_prins ()) c) (slice_c_ps (all_prins ()) c') n))
+opaque val s_terminating_run_gives_p_terminating_run:
+  #c:sconfig -> #c':sconfig -> ht:s_terminating_run c c' -> ps:prins{ps = all_prins ()}
+  -> Tot (n:nat & (p_terminating_run #ps (slice_c_ps ps c) (slice_c_ps ps c') n))
     (decreases ht)
-let rec terminates_slice_lemma #c #c' ht =
-  let ps = all_prins () in
+let rec s_terminating_run_gives_p_terminating_run #c #c' ht ps =
   match ht with
-    | STerm_refl _                  ->
+    | STRun_refl _                  ->
       let _ = slice_of_terminal_is_terminal ps c in
-      (| 0, PTerm_refl (slice_c_ps ps c) |)
-    | STerm_step #c #c'' #c' hs ht' ->
-      let (| n', pt |) = terminates_slice_lemma #c'' #c' ht' in
-      let hps = forward_simulation_theorem #c #c'' hs in
-      pstep_star_to_terminating_terminates #ps (slice_c_ps ps c) (slice_c_ps ps c'')
-                                           (slice_c_ps ps c') n' hps pt
+      (| 0, PTRun_refl (slice_c_ps ps c) |)
+    | STRun_step #c #c'' #c' hs ht' ->
+      let (| n', pt |) = s_terminating_run_gives_p_terminating_run #c'' #c' ht' ps in
+      let hps = forward_simulation_theorem #c #c'' hs ps in
+      pstep_star_to_terminating_run_gives_terminating_run #ps (slice_c_ps ps c) (slice_c_ps ps c'')
+                                                          (slice_c_ps ps c') n' hps pt
 
 (* If pi -> pi1 and pi1 terminates in pi' and pi -> pi2
    then pi2 terminates in pi' *)
-val pterminates_one_and_all:
+opaque val p_terminating_one_gives_p_terminating_other:
   #ps:prins -> pi:protocol ps -> pi1:protocol ps -> hs1:pstep #ps pi pi1
-  -> n:nat -> pi':protocol ps -> ht:pterminates_in #ps pi1 pi' n
+  -> n:nat -> pi':protocol ps -> ht:p_terminating_run #ps pi1 pi' n
   -> pi2:protocol ps -> hs2:pstep #ps pi pi2
-  -> Tot (pterminates_in #ps pi2 pi' n) (decreases n)
-let rec pterminates_one_and_all #ps pi pi1 hs1 n pi' ht pi2 hs2 =
+  -> Tot (p_terminating_run #ps pi2 pi' n) (decreases n)
+let rec p_terminating_one_gives_p_terminating_other #ps pi pi1 hs1 n pi' ht pi2 hs2 =
   let p = pstep_confluence_theorem #ps pi pi1 pi2 hs1 hs2 in
   match p with
     | IntroL _ -> ht
     | IntroR p ->
       let ExIntro pi3 (Conj p1 p2) = p in
       match ht with
-	| PTerm_refl _ ->
+	| PTRun_refl _ ->
 	  let _ = terminal_protocol_does_not_step #ps pi1 pi3 p1 in ht
-	| PTerm_step #ps #pi1 #pi3' #pi' #m hs3 ht' ->
-	  let ht'' = pterminates_one_and_all #ps pi1 pi3' hs3 m pi' ht' pi3 p1 in
-	  PTerm_step #ps #pi2 #pi3 #pi' #m p2 ht''
+	| PTRun_step #ps #pi1 #pi3' #pi' #m hs3 ht' ->
+	  let ht'' = p_terminating_one_gives_p_terminating_other #ps pi1 pi3' hs3 m pi' ht' pi3 p1 in
+	  PTRun_step #ps #pi2 #pi3 #pi' #m p2 ht''
 
-val pterminates_confluence:
-  #ps:prins -> pi:protocol ps
-  -> pi1:protocol ps -> n1:nat -> h1:pterminates_in #ps pi pi1 n1
-  -> pi2:protocol ps -> n2:nat -> h2:pterminates_in #ps pi pi2 n2
-  -> Lemma (requires (True)) (ensures (pi1 = pi2)) (decreases n1)
-let rec pterminates_confluence #ps pi pi1 n1 h1 pi2 n2 h2 = match h1 with
-  | PTerm_refl _ ->
-    (
-      match h2 with
-	| PTerm_refl _                         -> ()
-	| PTerm_step #ps #pi #pi' #pi2 #n hp _ ->
-	  terminal_protocol_does_not_step #ps pi pi' hp
-    )
+type makes_progress_p (#ps:prins) (pi:protocol ps) =
+  cexists #(protocol ps) (fun pi' -> pstep #ps pi pi')
+
+type p_terminates_in: #ps:prins -> protocol ps -> protocol ps -> nat -> Type =
+  | PTerm_refl:
+    #ps:prins -> pi:protocol ps{terminal_protocol pi} -> p_terminates_in #ps pi pi 0
+  | PTerm_step:
+    #ps:prins -> #pi:protocol ps -> #pi':protocol ps -> #n:nat
+    -> hns:makes_progress_p #ps pi
+    -> f:(pi_1:protocol ps -> hs:pstep #ps pi pi_1 -> Tot (p_terminates_in #ps pi_1 pi' n))
+    -> p_terminates_in #ps pi pi' (n + 1)
+
+opaque val p_terminating_run_implies_p_terminates_in:
+  #ps:prins -> #pi:protocol ps -> #pi':protocol ps -> #n:nat
+  -> h:p_terminating_run #ps pi pi' n
+  -> Tot (p_terminates_in #ps pi pi' n) (decreases n)
+let rec p_terminating_run_implies_p_terminates_in #ps #pi #pi' #n h = match h with
+  | PTRun_refl _ -> PTerm_refl pi
+
+  | PTRun_step #ps #pi #pi_1 #pi' #m hs_1 h' ->
+    let hmp = ExIntro pi_1 hs_1 in
+    let f = fun (pi_2:protocol ps) (hs_2:pstep #ps pi pi_2) ->
+	    let h'' = p_terminating_one_gives_p_terminating_other #ps pi pi_1 hs_1 m pi' h' pi_2 hs_2 in
+	    p_terminating_run_implies_p_terminates_in #ps #pi_2 #pi' #m h''
+    in
+    PTerm_step #ps #pi #pi' #m hmp f
+
+// val pterminates_confluence:
+//   #ps:prins -> pi:protocol ps
+//   -> pi1:protocol ps -> n1:nat -> h1:pterminates_in #ps pi pi1 n1
+//   -> pi2:protocol ps -> n2:nat -> h2:pterminates_in #ps pi pi2 n2
+//   -> Lemma (requires (True)) (ensures (pi1 = pi2)) (decreases n1)
+// let rec pterminates_confluence #ps pi pi1 n1 h1 pi2 n2 h2 = match h1 with
+//   | PTerm_refl _ ->
+//     (
+//       match h2 with
+// 	| PTerm_refl _                         -> ()
+// 	| PTerm_step #ps #pi #pi' #pi2 #n hp _ ->
+// 	  terminal_protocol_does_not_step #ps pi pi' hp
+//     )
   
-  | PTerm_step #ps #pi #pi1' #pi1 #n1' hp1 ht1 ->
-    (
-      match h2 with
-	| PTerm_refl _                              ->
-	  terminal_protocol_does_not_step #ps pi pi1' hp1
-	| PTerm_step #ps #pi #pi2' #pi2 #n2' hp2 ht2 ->
-	  let p:pterminates_in #ps pi2' pi1 n1' = pterminates_one_and_all #ps pi pi1' hp1 n1' pi1 ht1 pi2' hp2 in
-	  pterminates_confluence #ps pi2' pi1 n1' p pi2 n2' ht2
-    )
+//   | PTerm_step #ps #pi #pi1' #pi1 #n1' hp1 ht1 ->
+//     (
+//       match h2 with
+// 	| PTerm_refl _                              ->
+// 	  terminal_protocol_does_not_step #ps pi pi1' hp1
+// 	| PTerm_step #ps #pi #pi2' #pi2 #n2' hp2 ht2 ->
+// 	  let p:pterminates_in #ps pi2' pi1 n1' = pterminates_one_and_all #ps pi pi1' hp1 n1' pi1 ht1 pi2' hp2 in
+// 	  pterminates_confluence #ps pi2' pi1 n1' p pi2 n2' ht2
+//     )

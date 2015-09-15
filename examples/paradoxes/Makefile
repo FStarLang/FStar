@@ -1,6 +1,9 @@
 include ../Makefile.include
 all:
 
+russell:
+	$(FSTAR) russell.fst
+
 berardi:
 	$(FSTAR) constr.fst berardi.fst
 

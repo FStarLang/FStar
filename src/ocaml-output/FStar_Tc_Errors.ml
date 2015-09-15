@@ -227,6 +227,10 @@ end))
 
 let top_level_effect = "Top-level let-bindings must be total; this term may have effects"
 
+let cardinality_constraint_violated = (fun l a -> (let _100_236 = (FStar_Absyn_Print.sli l)
+in (let _100_235 = (FStar_Absyn_Print.strBvd a.FStar_Absyn_Syntax.v)
+in (FStar_Util.format2 "Constructor %s violates the cardinality of Type at parameter \'%s\'; type arguments are not allowed" _100_236 _100_235))))
+
 
 
 

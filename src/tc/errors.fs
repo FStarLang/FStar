@@ -183,3 +183,6 @@ let failed_to_prove_specification lbls =
     | _ -> format1 "The following problems were found:\n\t%s" (lbls |> String.concat "\n\t")
 
 let top_level_effect = "Top-level let-bindings must be total; this term may have effects"
+
+let cardinality_constraint_violated l a = 
+    Util.format2 "Constructor %s violates the cardinality of Type at parameter '%s'; type arguments are not allowed" (Print.sli l) (Print.strBvd a.v)
