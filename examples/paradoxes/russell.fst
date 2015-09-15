@@ -2,12 +2,12 @@
     other-files: constr.fst;
   --*)
 module Russell
-#set-options "--cardinality warn" //this example relies on a violation of the cardinality constraints of Type
-
 open FStar.Constructive
 
-(* Russell's paradox; didn't expect this to work, but it does ... even if
-   - we don't have Type : Type -- or so I thought *)
+(* Russell's paradox *)
+
+(* this file relies on a violation of the cardinality constraints of Type*)
+#set-options "--cardinality warn"
 
 (* The proof follows the one from The Essence of Coq as a Formal System
    by Bart Jacobs (http://people.cs.kuleuven.be/~bart.jacobs/coq-essence.pdf)
@@ -16,7 +16,7 @@ open FStar.Constructive
 type U = | Set : i:Type  -> p:(i -> Type) -> f:(i -> Tot U) -> U
 
 type in_set (x:U) (y:U) =
-  cexists #(Set.i y) (fun (ii:Set.i y) -> cand (Set.p y ii) (ceq #U (Set.f y ii) x))
+  cexists (fun (ii:Set.i y) -> cand (Set.p y ii) (ceq (Set.f y ii) x))
 
 val id : U -> Tot U
 let id x = x

@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi FStar.Set --admit_fsi FStar.Map --verify_module Berardi;
+    options:--warn_top_level_effects --admit_fsi FStar.Set --admit_fsi FStar.Map --verify_module Berardi;
     other-files:constr.fst ext.fst classical.fst set.fsi heap.fst map.fsi st.fst all.fst;
 --*)
 module Berardi
@@ -7,20 +7,18 @@ module Berardi
 open FStar.Constructive
 
 (* Berardi's paradox:
-   Https://coq.inria.fr/distrib/current/stdlib/Coq.Logic.Berardi.html
+   https://coq.inria.fr/distrib/current/stdlib/Coq.Logic.Berardi.html
    This was brought to our attention by Maxime Denes.
 *)
 
-(* Ingredient #1: impredicative polymorphism in Type, as in
+(* Ingredient #1: impredicative polymorphism in Type, as in *)
 type t = a:Type -> Tot a
 val foo : t -> Tot t
 let foo f = f t
-*)
 
 (* Ingredient #2: excluded middle in Type *)
-assume val cem : a:Type -> Tot (cor a (cnot a))
+// assume val cem : a:Type -> Tot (cor a (cnot a))
 
-(*
 (* Alternative Ingredient #2: proof reification to Type *)
 
 assume val get_proof : p:Type -> Tot p (requires p) (ensures (fun _ -> True))
@@ -41,26 +39,21 @@ let cem (p:Type) =
     IntroL (get_proof _)
   else
     IntroR (get_proof _)
-*)
 
-assume val cfalse_elim : cfalse -> Tot 'a
-
-(*
-(* Conditional on any Type *)
+(* Conditional on any Type -- unused below *)
 val ifProp: #p:Type -> b:Type -> (e1:p) -> (e2:p) -> Tot p
 let ifProp (#p:Type) (b:Type) e1 e2 =
    match cem b with
    | IntroL _ -> e1
    | IntroR _ -> e2
 
-(* Axiom of choice applied to constructive disjunction *)
+(* Axiom of choice applied to constructive disjunction -- unused below *)
 val ac_if: p:Type -> b:Type -> e1:p -> e2:p -> q:(p -> Type) ->
-  (b -> q e1) -> (cnot b -> q e2) -> q (ifProp b e1 e2)
+  (b -> Tot (q e1)) -> (cnot b -> Tot (q e2)) -> Tot (q (ifProp b e1 e2))
 let ac_if (p:Type) (b:Type) e1 e2 (q:(p -> Type)) l r =
    match cem b with
    | IntroL w -> l w 
    | IntroR w -> r w
-*)
 
 
 (* The powerset operator *)
@@ -78,10 +71,10 @@ type retract_cond 'a 'b : Type =
          inv2:(retract 'a 'b -> x:'a -> Tot (ceq (j2 (i2 x)) x)) -> 
          retract_cond 'a 'b 
 
-(*
-val ac: r:retract_cond 'a 'b -> retract 'a 'b -> x:'a -> Tot (ceq ((MkC.j2 r) (MkC.i2 r x)) x)
+(* unused below *)
+val ac: r:retract_cond 'a 'b -> retract 'a 'b -> x:'a ->
+          Tot (ceq ((MkC.j2 r) (MkC.i2 r x)) x)
 let ac (MkC _ _ inv2) = inv2
-*)
 
 val l1: (a:Type) -> (b:Type) -> Tot (retract_cond (pow a) (pow b))
 let l1 (a:Type) (b:Type) = 
@@ -114,7 +107,7 @@ let r = g (fun (u:U) -> not (u U u))
 
 (* Russell's  paradox *)
 val not_has_fixpoint : ceq (r U r) (not (r U r))
-let not_has_fixpoint = Refl _ (r U r)
+let not_has_fixpoint = Refl (r U r)
 
 
 (* Contradiction *)
