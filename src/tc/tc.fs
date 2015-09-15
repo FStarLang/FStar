@@ -1155,13 +1155,15 @@ and tc_exp env e : exp * lcomp * guard_t =
         else tc_typ_check_trivial ({env0 with check_uvars=true}) t ktype |> norm_t env in
       let env = if Util.is_pure_or_ghost_function t
                 && Options.should_verify env.curmodule.str (* store the let rec names separately for termination checks *)
-                then {env with letrecs=(x,t)::env.letrecs}
+                then (//printfn "Extending let recs with %s : %s\n" (Print.lbname_to_string x) (Print.typ_to_string t);
+                      {env with letrecs=(x,t)::env.letrecs})
                 else Env.push_local_binding env (binding_of_lb x t) in
       (x, t, e)::xts, env) ([],env)  in
 
     let lbs, gs = (lbs |> List.rev) |> List.map (fun (x, t, e) ->
         let t =  Tc.Normalize.norm_typ [Normalize.Beta] env t in
         if Tc.Env.debug env Options.High then Util.fprint3 "Checking %s = %s against type %s\n" (Print.lbname_to_string x) (Print.exp_to_string e) (Print.typ_to_string t);
+//        printfn "IN environment: %s : %s\n" (Print.lbname_to_string x) (Print.typ_to_string <| Env.lookup_lid env' (right x));
         let env' = Env.set_expected_typ env' t in
         let e, t, g = tc_total_exp env' e in
         (x, t, e), g) |> List.unzip in
