@@ -46,7 +46,7 @@ let do_sec_comp ps env_m out_m x e _ =
   let en = update_env (compose_envs_m ps env_m) x (V_const C_unit) in
   let conf = Conf Target (Mode Sec ps) [] en (T_exp e) in
   let c_opt = step_star conf in
-  if is_Some c_opt && is_terminal (Some.v c_opt) then
+  if is_Some c_opt && is_sterminal (Some.v c_opt) then
     let _ = send_output ps out_m (T_val.v (Conf.t (Some.v c_opt))) in
     ()
   else

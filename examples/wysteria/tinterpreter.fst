@@ -22,7 +22,7 @@ let do_sec_comp p r =
   
 val tstep: config -> ML (option config)
 let tstep c =
-  print_string "Taking one step\n";
+  //print_string "Taking one step\n";
   let Conf l m s en t = c in
   if is_T_red t && is_R_assec (T_red.r t) then
     let dv = do_sec_comp (Some.v (OrdSet.choose (Mode.ps m))) (T_red.r t) in

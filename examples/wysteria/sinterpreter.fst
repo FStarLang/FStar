@@ -115,9 +115,12 @@ let step_correctness c =
   else if not (pre_assec c = NA) then C_assec_beta c c'
   else C_assec_ret c c'
 
+val is_sterminal: config -> Tot bool
+let is_sterminal (Conf _ _ s _ t) = s = [] && is_T_val t
+
 val step_star: config -> Dv (option config)
 let rec step_star c =
-  if is_terminal c then Some c
+  if is_sterminal c then Some c
   else
     match step c with
       | Some c' -> step_star c'

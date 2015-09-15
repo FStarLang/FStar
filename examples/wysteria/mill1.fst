@@ -26,7 +26,7 @@ let mill1 _ =
   let x = as_par alice_s read_fn in  
   let y = as_par bob_s read_fn in
   
-  let g:unit -> Wys bool (pre (Mode Sec ab)) post =
+  let g:unit -> Wys bool (pre (Mode Sec ab)) (fun m r t -> b2t (r = (v_of_box x > v_of_box y))) =
     fun _ -> (unbox_s x) > (unbox_s y)
   in
 
