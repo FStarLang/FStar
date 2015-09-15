@@ -1730,10 +1730,9 @@ let rec pstep_par_star_to_pstep_star #ps #pi #pi' h = match h with
     PS_tran h1 (pstep_par_star_to_pstep_star h2)
 
 opaque val forward_simulation_theorem:
-  #c:sconfig -> #c':sconfig -> h:sstep c c'
-  -> Tot (pstep_star #(all_prins ()) (slice_c_ps (all_prins ()) c) (slice_c_ps (all_prins ()) c'))
-let forward_simulation_theorem #c #c' h =
-  let ps = all_prins () in
+  #c:sconfig -> #c':sconfig -> h:sstep c c' -> ps:prins{ps = all_prins ()}
+  -> Tot (pstep_star #ps (slice_c_ps ps c) (slice_c_ps ps c'))
+let forward_simulation_theorem #c #c' h ps =
   all_prins_superset_lemma ();
   let h1 = forward_simulation #c #c' h ps in
   match h1 with
@@ -2269,7 +2268,7 @@ type p_terminating_run: #ps:prins -> protocol ps -> protocol ps -> nat -> Type =
 //   | PTerm_refl _    -> ()
 //   | PTerm_step _ ht -> pterminates_in_terminal ht
 
-val pstep_star_to_terminating_run_gives_terminating_run:
+opaque val pstep_star_to_terminating_run_gives_terminating_run:
   #ps:prins -> pi:protocol ps -> pi':protocol ps -> pi'':protocol ps -> n:nat
   -> hp:pstep_star #ps pi pi' -> ht:p_terminating_run #ps pi' pi'' n
   -> Tot (n':nat & p_terminating_run #ps pi pi'' n') (decreases hp)
@@ -2279,25 +2278,24 @@ let rec pstep_star_to_terminating_run_gives_terminating_run #ps pi pi' pi'' n hp
     let (| n_1, ht_1 |) = pstep_star_to_terminating_run_gives_terminating_run #ps #pi_1 #pi' #pi'' #n h_2 ht in
     (| n_1 + 1, PTRun_step #ps #pi #pi_1 #pi'' #n_1 h_1 ht_1 |)
 
-val s_terminating_run_gives_p_terminating_run:
-  #c:sconfig -> #c':sconfig -> ht:s_terminating_run c c'
-  -> Tot (n:nat & (p_terminating_run #(all_prins ()) (slice_c_ps (all_prins ()) c) (slice_c_ps (all_prins ()) c') n))
+opaque val s_terminating_run_gives_p_terminating_run:
+  #c:sconfig -> #c':sconfig -> ht:s_terminating_run c c' -> ps:prins{ps = all_prins ()}
+  -> Tot (n:nat & (p_terminating_run #ps (slice_c_ps ps c) (slice_c_ps ps c') n))
     (decreases ht)
-let rec s_terminating_run_gives_p_terminating_run #c #c' ht =
-  let ps = all_prins () in
+let rec s_terminating_run_gives_p_terminating_run #c #c' ht ps =
   match ht with
     | STRun_refl _                  ->
       let _ = slice_of_terminal_is_terminal ps c in
       (| 0, PTRun_refl (slice_c_ps ps c) |)
     | STRun_step #c #c'' #c' hs ht' ->
-      let (| n', pt |) = s_terminating_run_gives_p_terminating_run #c'' #c' ht' in
-      let hps = forward_simulation_theorem #c #c'' hs in
+      let (| n', pt |) = s_terminating_run_gives_p_terminating_run #c'' #c' ht' ps in
+      let hps = forward_simulation_theorem #c #c'' hs ps in
       pstep_star_to_terminating_run_gives_terminating_run #ps (slice_c_ps ps c) (slice_c_ps ps c'')
                                                           (slice_c_ps ps c') n' hps pt
 
 (* If pi -> pi1 and pi1 terminates in pi' and pi -> pi2
    then pi2 terminates in pi' *)
-val p_terminating_one_gives_p_terminating_other:
+opaque val p_terminating_one_gives_p_terminating_other:
   #ps:prins -> pi:protocol ps -> pi1:protocol ps -> hs1:pstep #ps pi pi1
   -> n:nat -> pi':protocol ps -> ht:p_terminating_run #ps pi1 pi' n
   -> pi2:protocol ps -> hs2:pstep #ps pi pi2
@@ -2327,7 +2325,7 @@ type p_terminates_in: #ps:prins -> protocol ps -> protocol ps -> nat -> Type =
     -> f:(pi_1:protocol ps -> hs:pstep #ps pi pi_1 -> Tot (p_terminates_in #ps pi_1 pi' n))
     -> p_terminates_in #ps pi pi' (n + 1)
 
-val p_terminating_run_implies_p_terminates_in:
+opaque val p_terminating_run_implies_p_terminates_in:
   #ps:prins -> #pi:protocol ps -> #pi':protocol ps -> #n:nat
   -> h:p_terminating_run #ps pi pi' n
   -> Tot (p_terminates_in #ps pi pi' n) (decreases n)
