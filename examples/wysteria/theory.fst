@@ -1257,6 +1257,12 @@ let rec forward_simulation_par #c #c' h ps =
 
 #reset-options
 
+val slice_wire_helper_lemma:
+  eps:eprins -> ps:prins -> p:prin{mem p ps}
+  -> Lemma (requires (True)) (ensures (intersect (intersect  eps ps) (singleton p) =
+				   intersect eps (singleton p)))
+let slice_wire_helper_lemma eps ps p = ()
+
 val slice_wire_lem_singl_of_ps: #eps:eprins -> w:v_wire eps
                                 -> ps:prins -> p:prin{mem p ps}
                                 -> Lemma (requires (True))
@@ -1288,7 +1294,8 @@ let rec slice_v_lem_singl_of_ps #m v ps p = match v with
     else if not (mem p ps') then ()
     else slice_v_lem_singl_of_ps v' ps p
   | V_wire eps w        ->
-    let _ = admitP (b2t (intersect (intersect eps ps) (singleton p) = intersect eps (singleton p))) in
+    let _ = slice_wire_helper_lemma eps ps p in
+    //let _ = admitP (b2t (intersect (intersect eps ps) (singleton p) = intersect eps (singleton p))) in
     slice_wire_lem_singl_of_ps #eps w ps p
   | V_clos en _ _       -> slice_en_lem_singl_of_ps en ps p
   | V_fix_clos en _ _ _ -> slice_en_lem_singl_of_ps en ps p
@@ -1557,7 +1564,7 @@ let forward_simulation_exit_sec #c #c' h ps =
   //let _ = cut (forall p. not (mem p ps) ==> select p pi_s = None) in
 
   OrdMap.eq_lemma pi_s (fst (slice_c_ps ps c'));
-  let _ = admitP (b2t (OrdMap.remove ps' s = mempty)) in
+  let _ = cut (b2t (OrdMap.remove ps' s = mempty)) in
   P_sec_exit #ps (pi, s) ps' (pi_s, s_s)
 
 opaque val sstep_par_to_sec_slice_par_others:
@@ -1970,6 +1977,12 @@ let pstep_psec_psec_exit_confluence #ps pi pi1 pi2 h1 h2 =
   let h23:pstep #ps pi2 (pi3_m, s3) = P_sec #ps #(P_sec.c' h1) pi2 (P_sec.ps h1) (P_sec.h h1) (pi3_m, s3) in
   ExIntro #(protocol ps) #(fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)) (pi3_m, s3) (Conj h13 h23)
 
+val pstep_psec_enter_psec_enter_empty_intersection:
+  #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
+  -> h1:pstep #ps pi pi1{is_P_sec_enter h1} -> h2:pstep #ps pi pi2{is_P_sec_enter h2 /\ not (P_sec_enter.ps h1 = P_sec_enter.ps h2)}
+  -> Lemma (requires (True)) (ensures (intersect (P_sec_enter.ps h1) (P_sec_enter.ps h2) = empty))
+let pstep_psec_enter_psec_enter_empty_intersection #ps pi pi1 pi2 h1 h2 = ()
+
 opaque val pstep_psec_enter_psec_enter_confluence:
   #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
   -> h1:pstep #ps pi pi1{is_P_sec_enter h1} -> h2:pstep #ps pi pi2{is_P_sec_enter h2}
@@ -1981,8 +1994,8 @@ let pstep_psec_enter_psec_enter_confluence #ps pi pi1 pi2 h1 h2 =
   
   if P_sec_enter.ps h1 = P_sec_enter.ps h2 then IntroL ()
   else
-    (* TODO: FIXME: this is not needed, but takes a long time otherwise *)
-    let _ = admitP (b2t (intersect (P_sec_enter.ps h1) (P_sec_enter.ps h2) = empty)) in
+    let _ = pstep_psec_enter_psec_enter_empty_intersection #ps pi pi1 pi2 h1 h2 in
+    //let _ = cut (b2t (intersect (P_sec_enter.ps h1) (P_sec_enter.ps h2) = empty)) in
 
     let pi23_m = step_ps_to_wait #ps pi2_m (P_sec_enter.ps h1) in
     let pi13_m = step_ps_to_wait #ps pi1_m (P_sec_enter.ps h2) in
@@ -2064,6 +2077,15 @@ let pstep_psec_enter_psec_exit_confluence #ps pi pi1 pi2 h1 h2 =
   
   ExIntro #(protocol ps) #(fun pi3 -> cand (pstep #ps pi1 pi3) (pstep #ps pi2 pi3)) (pi13_m, s13) (Conj h13 h23)
 
+val pstep_psec_exit_psec_exit_helper_lemma:
+  ps1:eprins -> ps2:eprins{intersect ps1 ps2 = empty}
+  -> Lemma (requires (True)) (ensures (forall p. mem p ps2 ==> not (mem p ps1)))
+let pstep_psec_exit_psec_exit_helper_lemma ps1 ps2 =
+  let _ = cut (forall p. mem p (intersect ps1 ps2) = (mem p ps1 && mem p ps2)) in
+  let _ = cut (b2t (intersect ps1 ps2 = empty)) in
+  let _ = assert (forall p. (mem p (intersect ps1 ps2)) = (mem #prin #p_cmp p empty)) in
+  ()
+
 opaque val pstep_psec_exit_psec_exit_confluence:
   #ps:prins -> pi:protocol ps -> pi1:protocol ps -> pi2:protocol ps
   -> h1:pstep #ps pi pi1{is_P_sec_exit h1} -> h2:pstep #ps pi pi2{is_P_sec_exit h2}
@@ -2076,7 +2098,8 @@ let pstep_psec_exit_psec_exit_confluence #ps pi pi1 pi2 h1 h2 =
   if P_sec_exit.ps h1 = P_sec_exit.ps h2 then IntroL ()
   else
     let _ = cut (b2t (intersect (P_sec_exit.ps h1) (P_sec_exit.ps h2) = empty)) in
-    let _ = admitP (forall p. mem p (P_sec_exit.ps h2) ==> not (mem p (P_sec_exit.ps h1))) in
+    pstep_psec_exit_psec_exit_helper_lemma (P_sec_exit.ps h1) (P_sec_exit.ps h2);
+    //let _ = admitP (forall p. mem p (P_sec_exit.ps h2) ==> not (mem p (P_sec_exit.ps h1))) in
     
     (*let _ = cut (b2t (pi1_m = ret_sec_value_to_ps #ps pi_m (Some.v (select (P_sec_exit.ps h1) s)) (P_sec_exit.ps h1))) in
     let _ = cut (b2t (pi2_m = ret_sec_value_to_ps #ps pi_m (Some.v (select (P_sec_exit.ps h2) s)) (P_sec_exit.ps h2))) in*)
@@ -2234,7 +2257,6 @@ type s_terminating_run: config -> config -> Type =
 // assume val preceds_axiom_st: c:config -> c_1:config -> hs:sstep c c_1
 // 		             -> f:(#c':config -> sstep c c' -> Tot (s_terminates c'))
 //                              -> Lemma (requires (True)) (ensures (f #c_1 hs << f))
-
 
 // val sterminates_implies_at_least_one_terminating_run:
 //   #c:config -> h:s_terminates c -> Tot (c':config & s_terminating_run c c') (decreases h)
