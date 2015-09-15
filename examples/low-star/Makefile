@@ -5,8 +5,9 @@ ALLOCATOR_FILES = $(ALLOCATOR_DIR)/camlstack.o $(ALLOCATOR_DIR)/stack.o \
 	$(ALLOCATOR_DIR)/bitmask.o $(ALLOCATOR_DIR)/camlstack.mli
 
 FSTAR_OCAML_LIB=prims.ml FStar_List.ml FStar_All.ml FStar_ST.ml
-OCAML = ocamlfind ocamlopt -g -package batteries -linkpkg -thread -I ../../src/ocaml-output/\
- -I $(ALLOCATOR_DIR) $(ALLOCATOR_FILES) $(addprefix ../../src/ocaml-output/, $(FSTAR_OCAML_LIB))
+
+OCAML = ocamlfind ocamlopt -g -package batteries -linkpkg -thread -I ../../lib/ml \
+ -I $(ALLOCATOR_DIR) $(ALLOCATOR_FILES) $(addprefix ../../lib/ml/, $(FSTAR_OCAML_LIB))
 
 all: codegen demo
 
