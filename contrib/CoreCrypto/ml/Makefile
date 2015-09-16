@@ -18,7 +18,7 @@ else
     DLL = so
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Darwin)
-        CC = gcc-4.9
+        CC = gcc-5
         OCAML_INCLUDE = /usr/local/lib/ocaml
 	ARCH = osx
     else
