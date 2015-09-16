@@ -412,7 +412,7 @@ let lookup_lid env lid =
 
     | Inr (Sig_val_decl (l, t, qs, _)) -> 
       if in_cur_mod env l
-      then if qs |> List.contains Assumption
+      then if qs |> List.contains Assumption || env.is_iface
            then Some t
            else None
       else Some t  
