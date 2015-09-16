@@ -2347,6 +2347,8 @@ type p_terminates_in: #ps:prins -> protocol ps -> protocol ps -> nat -> Type =
     -> f:(pi_1:protocol ps -> hs:pstep #ps pi pi_1 -> Tot (p_terminates_in #ps pi_1 pi' n))
     -> p_terminates_in #ps pi pi' (n + 1)
 
+(* TODO: prove pi' is always terminal in the proof of p_terminates_in *)
+
 opaque val p_terminating_run_implies_p_terminates_in:
   #ps:prins -> #pi:protocol ps -> #pi':protocol ps -> #n:nat
   -> h:p_terminating_run #ps pi pi' n
