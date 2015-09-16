@@ -104,11 +104,9 @@ let g (h:pow U) = fun (x:Type) ->
 val r : U
 let r = g (fun (u:U) -> not (u U u))
 
-
 (* Russell's  paradox *)
 val not_has_fixpoint : ceq (r U r) (not (r U r))
-let not_has_fixpoint = Refl (r U r)
-
+let not_has_fixpoint = Refl #bool #(r U r)
 
 (* Contradiction *)
 val contradict : unit -> Lemma False

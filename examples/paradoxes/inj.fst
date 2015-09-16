@@ -11,6 +11,9 @@ module InjectiveTypeFormers
 // https://gist.github.com/leodemoura/0c88341bb585bf9a72e6
 open FStar.Constructive
 
+(* this file relies on a violation of the cardinality constraints of Type*)
+#set-options "--cardinality warn"
+
 type I : (Type -> Type) -> Type =
 | Mk : f:(Type->Type) -> I f
 

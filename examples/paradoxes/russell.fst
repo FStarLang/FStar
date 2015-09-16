@@ -26,7 +26,7 @@ val spec : (U -> Type) -> Tot U
 let spec (p:(U->Type)) = Set U p id
 
 val spec_intro : p:(U->Type) -> x:U -> h:(p x) -> Tot (in_set x (spec p))
-let spec_intro (p:U->Type) (x:U) (h:(p x)) = ExIntro x (Conj h (Refl (id x)))
+let spec_intro (p:U->Type) (x:U) (h:(p x)) = ExIntro x (Conj h Refl)
 
 val spec_elim : p:(U->Type) -> x:U -> h:(in_set x (spec p)) -> Tot (p x)
 let spec_elim (p:U->Type) (x:U) h =
@@ -40,6 +40,8 @@ let contradiction (p:Type) h1 h2 =
   (fun (h3:(cnot p)) -> h3 (h1 h3)) (fun (hp:p) -> h2 hp hp)
 
 val absurd : unit -> Tot cfalse
-let absurd () = contradiction (in_set (spec pr) (spec pr))
-                              (spec_intro pr (spec pr))
-                              (spec_elim  pr (spec pr))
+let absurd () = 
+  let r = spec pr in
+  contradiction (in_set r r)
+                (spec_intro pr r)
+                (spec_elim  pr r)
