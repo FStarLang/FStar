@@ -83,7 +83,7 @@ development and syntax highlighting.
   * Interactive proofs (à la Proof-General)
 
  
- fstar-mode requires Emacs 24.3 or newer, and is distributed through [MELPA]. Add the following to your Emacs init file (usually `.emacs`), if it is not already there:
+fstar-mode requires Emacs 24.3 or newer, and is distributed through [MELPA]. Add the following to your Emacs init file (usually `.emacs`), if it is not already there:
 
 ```elisp
 (require 'package)
