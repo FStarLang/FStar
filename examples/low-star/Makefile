@@ -9,7 +9,9 @@ FSTAR_OCAML_LIB=prims.ml FStar_List.ml FStar_All.ml FStar_ST.ml
 OCAML = ocamlfind ocamlopt -g -package batteries -linkpkg -thread -I ../../lib/ml \
  -I $(ALLOCATOR_DIR) $(ALLOCATOR_FILES) $(addprefix ../../lib/ml/, $(FSTAR_OCAML_LIB))
 
-all: codegen demo
+all: verify
+
+test: codegen demo
 
 # Those ml files are copied back from the low-level folder, same as what Abhishek
 # was doing. It would be good to have extraction working so that we get the good
@@ -27,12 +29,16 @@ SST_FILES=ListSet.ml Stack.ml FStar_FunctionalExtensionality.ml FStar_Ghost.ml L
 	Lref.ml StackAndHeap.ml SST.ml Seq.ml SSTArray.ml SSTCombinators.ml
 
 demo: $(SST_FILES) CBuffer.ml CSystem.ml Demo.ml Test.ml
+	make -C ../../runtime/allocator
 	gcc -I$(shell ocamlc -where) -c ./ml/cfun.c -o cfun.o
 	cp ./ml/CSystem.ml ./ml/CBuffer.ml .
 	$(OCAML) cfun.o -o $@ $^
 	./demo
 	@echo "Content of the output.txt file :"
 	@cat output.txt
+
+verify: demo.fst
+	$(FSTAR) $^
 
 clean:
 	rm -f *.ml *.cmi *.cmo *.cmx *.o || true
