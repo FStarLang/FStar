@@ -21,6 +21,7 @@
 module CntProtocol
 
 open FStar.All
+open FStar.Set
 open FStar.String
 open FStar.IO
 open FStar.Heap
@@ -93,8 +94,9 @@ let log_event e =
   let l = !log_prot in
   log_prot := e::l
 
-logic type Server_refs = (Set.union (Set.singleton (Ref log_prot))
-    			       (Set.singleton (Ref server_cnt)))
+val server_refs: unit -> GTot (set aref)
+let server_refs _ = (Set.union (Set.singleton (Ref log_prot))
+			       (Set.singleton (Ref server_cnt)))
 
 val log_and_update: s: uint32 -> c: uint16 -> ST (unit)
     (requires (fun h -> Invariant h /\
@@ -102,7 +104,7 @@ val log_and_update: s: uint32 -> c: uint16 -> ST (unit)
                         (c > server_max (sel h log_prot))))
     (ensures (fun h x h' -> Invariant h' /\ c = sel h' server_cnt /\
                             (sel h' log_prot = Recv s c::sel h log_prot)
-                            /\ modifies Server_refs h h'))
+                            /\ modifies (server_refs ()) h h'))
 let log_and_update s c =
   log_event (Recv s c);
   update_cnt c
@@ -143,7 +145,7 @@ let client (s: uint32) =
 val server : unit -> ST (option string)
 			(requires (fun h -> Invariant h /\
                                    sel h server_cnt <> sel h client_cnt))
-			(ensures (fun h x h' -> Invariant h' /\ modifies Server_refs h h'))
+			(ensures (fun h x h' -> Invariant h' /\ modifies (server_refs ()) h h'))
 let server () =
   let msg = recv () in (
     if length msg <> signal_size + macsize then Some "Wrong length"
