@@ -45,15 +45,15 @@ val log_prot: ref (list event)
 let log_prot = ST.alloc []
 
 val client_cnt: ref uint16
-let client_cnt = ST.alloc 1
+let client_cnt = lemma_repr_bytes_values 1; ST.alloc 1
 
 val server_cnt: ref uint16
-let server_cnt = ST.alloc 0
+let server_cnt = lemma_repr_bytes_values 0; ST.alloc 0
 
 val server_max: l:list event -> Tot (c:uint16)
 let rec server_max l =
   match l with
-  | [] -> 0
+  | [] -> lemma_repr_bytes_values 0; 0
   | Recv _ c :: l' -> max c (server_max l')
 
 let all_neq e l = List.for_allT (fun e' -> e' <> e) l
