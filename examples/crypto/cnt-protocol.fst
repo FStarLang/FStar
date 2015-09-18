@@ -137,7 +137,8 @@ opaque logic type req (msg:message) =
 let k = keygen req
 
 val client : uint32 -> ST (option string)
- 			  (requires (fun h -> Invariant h /\ repr_bytes ((sel h client_cnt) + 1) < 2 ))
+ 			  (requires (fun h -> Invariant h /\
+				     repr_bytes ((sel h client_cnt) + 1) <= 2 ))
  			  (ensures (fun h x h' -> Invariant h'))
 let client (s: uint32) =
   let c = next_cnt () in
@@ -149,8 +150,7 @@ let client (s: uint32) =
   None
 
 val server : unit -> ST (option string)
-			(requires (fun h -> Invariant h /\
-                                   sel h server_cnt <> sel h client_cnt))
+			(requires (fun h -> Invariant h))
 			(ensures (fun h x h' -> Invariant h' /\ modifies (!{log_prot, server_cnt, msg_buffer}) h h'))
 let server () =
   let msg = recv () in (
@@ -168,11 +168,11 @@ let server () =
 	        ) else Some "MAC failed"
 	      else Some "Counter already used"
       | None -> Some "Bad tag" )
-(*
+
 let main =
+  lemma_repr_bytes_values 10;
   let x = 10 in
-  print_string ("Client sending: " ^ string_of_int x);
-  client x;
-  let y = server () in
-  print_string ("Server received: " ^ string_of_int y)
-*)
+  print_string ("Client sending: 10\n");
+  let _ = client x in
+  let _ = server () in
+  print_string ("Server received: 10\n")
