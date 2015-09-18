@@ -145,7 +145,6 @@ val client : uint32 -> ST (option string)
 let client (s: uint32) =
   let c = next_cnt () in
   admitP (Signal s c);
-  assert(Signal s c);
   let t = CntFormat.signal s c in
   let m = mac k t in
   send (t @| m);
@@ -157,18 +156,14 @@ val server : unit -> ST (option string)
 let server () =
   let msg = recv () in (
     if length msg = signal_size + macsize then (
-      let (t, m) = split_eq msg signal_size  in
-      match CntFormat.signal_split t with
-      | Some (s, c) ->
+      let (t, m) = split msg signal_size  in
+      let (s, c) = CntFormat.signal_split t in
         if fresh_cnt c then(
           if verify k t m then (
 	    assert(Signal s c);
-	    max_lemma s c !log_prot;
-	    log_and_update s c;
 	    None
 	  ) else Some "MAC failed"
 	) else Some "Counter already used"
-      | None -> Some "Bad tag"
     ) else Some "Wrong length")
 
 let main =

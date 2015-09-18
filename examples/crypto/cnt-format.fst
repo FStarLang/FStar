@@ -109,16 +109,11 @@ let signal s c =
   let c_b = uint16_to_bytes c in
   (s_b @| c_b)
 
-val signal_split : m:msg signal_size -> Tot (x:option (uint32 * uint16)
-    { is_Some x ==> m = signal (fst (Some.v x)) (snd (Some.v x))})
+val signal_split : m:msg signal_size -> Tot (x:(uint32 * uint16)
+    { m = signal (fst x) (snd x)})
 let signal_split sc =
-  (*let (t, sc) = split_eq m 1 in
-  if t = tag2 then*)
     let (s_b, c_b) = split_eq sc 4 in
-    let (s, c) = (bytes_to_uint32 s_b, bytes_to_uint16 c_b) in
-    Some (s, c)
-  (*else
-    None*)
+    (bytes_to_uint32 s_b, bytes_to_uint16 c_b)
 
 assume val signal_components_corr:
   s0:uint32 -> c0:uint16 -> s1:uint32 -> c1:uint16 ->
