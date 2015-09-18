@@ -156,20 +156,20 @@ val server : unit -> ST (option string)
 			(ensures (fun h x h' -> Invariant h' /\ modifies (!{log_prot, server_cnt, msg_buffer}) h h'))
 let server () =
   let msg = recv () in (
-    if length msg <> signal_size + macsize then Some "Wrong length"
-    else
-      let (t, m) = split msg signal_size  in
-      match signal_split t with
+    if length msg = signal_size + macsize then (
+      let (t, m) = split_eq msg signal_size  in
+      match CntFormat.signal_split t with
       | Some (s, c) ->
-        if fresh_cnt c then
+        if fresh_cnt c then(
           if verify k t m then (
 	    assert(Signal s c);
 	    max_lemma s c !log_prot;
 	    log_and_update s c;
 	    None
 	  ) else Some "MAC failed"
-	else Some "Counter already used"
-      | None -> Some "Bad tag" )
+	) else Some "Counter already used"
+      | None -> Some "Bad tag"
+    ) else Some "Wrong length")
 
 let main =
   let x = 10 in

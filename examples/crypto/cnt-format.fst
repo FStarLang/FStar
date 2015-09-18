@@ -101,24 +101,24 @@ let response s t =
   tag1 @| (lb @| ( (utf8 s) @| (utf8 t)))
 
 val signal_size: int
-let signal_size = 7 (* Bytes *)
+let signal_size = 6 (* Bytes *)
 
 val signal : uint32 -> uint16 -> Tot (msg signal_size)
 let signal s c =
   let s_b = uint32_to_bytes s in
   let c_b = uint16_to_bytes c in
-  tag2 @| (s_b @| c_b)
+  (s_b @| c_b)
 
 val signal_split : m:msg signal_size -> Tot (x:option (uint32 * uint16)
     { is_Some x ==> m = signal (fst (Some.v x)) (snd (Some.v x))})
-let signal_split m =
-  let (t, sc) = split_eq m 1 in
-  if t = tag2 then
+let signal_split sc =
+  (*let (t, sc) = split_eq m 1 in
+  if t = tag2 then*)
     let (s_b, c_b) = split_eq sc 4 in
     let (s, c) = (bytes_to_uint32 s_b, bytes_to_uint16 c_b) in
     Some (s, c)
-  else
-    None
+  (*else
+    None*)
 
 assume val signal_components_corr:
   s0:uint32 -> c0:uint16 -> s1:uint32 -> c1:uint16 ->
