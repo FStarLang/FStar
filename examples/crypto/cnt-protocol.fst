@@ -163,18 +163,28 @@ let server () =
       | Some (s, c) ->
         if fresh_cnt c then
           if verify k t m then (
-	          assert(Signal s c);
-	          max_lemma s c !log_prot;
-	          log_and_update s c;
-            None
-	        ) else Some "MAC failed"
-	      else Some "Counter already used"
+	    assert(Signal s c);
+	    max_lemma s c !log_prot;
+	    log_and_update s c;
+	    None
+	  ) else Some "MAC failed"
+	else Some "Counter already used"
       | None -> Some "Bad tag" )
 
 let main =
-  lemma_repr_bytes_values 10;
   let x = 10 in
+  lemma_repr_bytes_values x;
   print_string ("Client sending: 10\n");
+  lemma_repr_bytes_values 2;lemma_repr_bytes_values 1;lemma_repr_bytes_values 0;
+  log_prot := [];
+  server_cnt := 0;
+  client_cnt := 1;
+  let a = !log_prot in let b = !server_cnt in
+  assume(server_max a = b);
   let _ = client x in
-  let _ = server () in
-  print_string ("Server received: 10\n")
+  let x = server () in
+  begin
+    match x with
+    | None -> print_string "Success!\n"
+    | Some x -> print_string ("Failure : "^x^"\n")
+  end
