@@ -1,5 +1,5 @@
 (*--build-config
-    options:--z3timeout 10 --verify_module Format --admit_fsi FStar.Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
+    options:--z3timeout 10 --verify_module CntFormat --admit_fsi FStar.Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
     other-files:
             ext.fst classical.fst
             set.fsi set.fst
@@ -120,40 +120,9 @@ let signal_split m =
   else
     None
 
-val signal_components_corr:
+assume val signal_components_corr:
   s0:uint32 -> c0:uint16 -> s1:uint32 -> c1:uint16 ->
-  Lemma (requires (Seq.Eq (signal s0 c0) (signal s1 c1)))
+  Lemma (requires (Eq (signal s0 c0) (signal s1 c1)))
         (ensures  (s0 = s1 /\ c0 = c1))
         [SMTPat (signal s0 c0); SMTPat (signal s1 c1)]
-let signal_components_corr s0 c0 s1 c1 = ()
-
-(* ------- 3 lemmas on message formats:
-
-   - requests are injective on their argument
-   - responses are injective on both their arguments
-   - requests and responses are distinct
-
-   Note that we do not export a "spec" of the request and response
-   functions---they just return messages---so these three lemmas are
-   sufficient *)
-
-val req_resp_distinct:
-  s:string -> s':string16{ repr_bytes (length (utf8 s')) <= 2} -> t':string ->
-  Lemma (requires True)
-        (ensures ( ( (request s) <> (response s' t'))))
-        [SMTPat (request s); SMTPat (response s' t')]
-let req_resp_distinct s s' t' = cut (index tag0 0 == 0uy)
-
-val req_components_corr:
-  s0:string -> s1:string ->
-  Lemma (requires (Seq.Eq (request s0) (request s1)))
-        (ensures  (s0==s1))
-let req_components_corr s0 s1 = ()
-
-val resp_components_corr:
-  s0:string16{ repr_bytes (length (utf8 s0)) <= 2} -> t0:string -> s1:string16{ repr_bytes (length (utf8 s1)) < 2} -> t1:string ->
-  Lemma (requires (Seq.Eq (response s0 t0) (response s1 t1)))
-        (ensures  (s0==s1 /\ t0==t1))
-let resp_components_corr s0 t0 s1 t1 = ()
-
-(* check_marker *)
+(*let signal_components_corr s0 c0 s1 c1 = ()*)

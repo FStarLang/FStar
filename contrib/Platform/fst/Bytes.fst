@@ -101,12 +101,12 @@ val split: b:bytes -> n:nat{n <= Seq.length b} -> Tot (x:(bytes * bytes) {Seq.le
 let split b n =
   SeqProperties.split b n
 
-val lemma_split : #a:Type -> s:bytes -> i:nat{(0 <= i /\ i <= length s)} -> Lemma
+val lemma_split : s:bytes -> i:nat{(0 <= i /\ i <= length s)} -> Lemma
   (ensures ((fst (split s i)) @| (snd (split s i)) = s))
 let lemma_split s i =
   cut (Seq.Eq ((fst (split s i)) @| (snd (split s i)))  s)
 
-val split_eq: #a:Type -> s:bytes -> i:nat{(0 <= i /\ i <= length s)} -> Pure
+val split_eq: s:bytes -> i:nat{(0 <= i /\ i <= length s)} -> Pure
   (x:(bytes * bytes){length (fst x) = i && length (snd x) = length s - i})
   (requires True)
   (ensures (fun x -> ((fst x) @| (snd x) = s)))
@@ -114,6 +114,11 @@ let split_eq s i =
   let x = split s i in
   lemma_split s i;
   x
+
+val lemma_append_inj: s1:bytes -> s2:bytes -> t1:bytes -> t2:bytes {Seq.length s1 = Seq.length t1 \/ Seq.length s2 = Seq.length t2} ->
+  Lemma (requires (Seq.Eq (Seq.append s1 s2) (Seq.append t1 t2)))
+	(ensures (Seq.Eq s1 t1 /\ Seq.Eq s2 t2))
+let lemma_append_inj s1 s2 t1 t2 = ()
 
 (*@ assume val split2 : (b:bytes -> (i:nat -> ((j:nat){C_pr_GreaterThanOrEqual(Length (b), C_bop_Addition (i, j))} -> (b1:bytes * b2:bytes * b3:bytes){Length (b1) = i /\ Length (b2) = j /\ B (b) = C_bop_ArrayAppend (B (b1), C_bop_ArrayAppend (B (b2), B (b3)))}))) @*)
 assume val split2 : b:bytes -> n1:nat{n1 <= Seq.length b} -> n2:nat{n1 + n2 <= Seq.length b} -> Tot (lbytes n1 * lbytes n2 * lbytes (length b - n1 - n2))

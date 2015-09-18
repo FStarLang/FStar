@@ -28,9 +28,9 @@ open FStar.Heap
 
 let init_print = print_string "\ninitializing...\n\n"
 
-open Platform.Bytes
 open FStar.Seq
 open FStar.SeqProperties
+open Platform.Bytes
 open SHA1
 open CntFormat
 open MAC
@@ -56,8 +56,6 @@ let rec server_max l =
   | [] -> lemma_repr_bytes_values 0; 0
   | Recv _ c :: l' -> max c (server_max l')
 
-let all_neq e l = List.for_allT (fun e' -> e' <> e) l
-
 val max_list: s:uint32 -> c:uint16 -> l:list event ->
   Lemma(if c > server_max l then
 	  server_max (Recv s c :: l) > server_max l
@@ -65,7 +63,7 @@ val max_list: s:uint32 -> c:uint16 -> l:list event ->
 let max_list s c l = ()
 
 val max_lemma: s:uint32 -> c:uint16 -> (l:list event{c > server_max l}) ->
-  Lemma(all_neq (Recv s c) l)
+  Lemma(forall e . List.mem e l ==> e <> (Recv s c))
 let rec max_lemma s c l =
   match l with
   | [] -> ()
@@ -73,7 +71,7 @@ let rec max_lemma s c l =
      max_list s' c' l';
      max_lemma s c l'
 
-let invariant h =
+logic type Invariant h =
   server_max (Heap.sel h log_prot) = Heap.sel h server_cnt &&
     Heap.contains h server_cnt && Heap.contains h client_cnt &&
       Heap.contains h log_prot && server_cnt <> client_cnt
@@ -95,16 +93,16 @@ let log_event e =
   let l = !log_prot in
   log_prot := e::l
 
-let server_refs = (Set.union (Set.singleton (Ref log_prot))
+logic type Server_refs = (Set.union (Set.singleton (Ref log_prot))
     			       (Set.singleton (Ref server_cnt)))
 
 val log_and_update: s: uint32 -> c: uint16 -> ST (unit)
-    (requires (fun h -> invariant h /\
-                        (all_neq (Recv s c) (sel h log_prot)) /\
+    (requires (fun h -> Invariant h /\
+                        (forall e . List.mem e (sel h log_prot) ==> e <> (Recv s c)) /\
                         (c > server_max (sel h log_prot))))
-    (ensures (fun h x h' -> invariant h' /\ c = sel h' server_cnt /\
+    (ensures (fun h x h' -> Invariant h' /\ c = sel h' server_cnt /\
                             (sel h' log_prot = Recv s c::sel h log_prot)
-                            /\ modifies server_refs h h'))
+                            /\ modifies Server_refs h h'))
 let log_and_update s c =
   log_event (Recv s c);
   update_cnt c
@@ -131,8 +129,8 @@ opaque logic type req (msg:message) =
 let k = keygen req
 
 val client : uint32 -> ST (option string)
- 			  (requires (fun h -> invariant h /\ repr_bytes ((sel h client_cnt) + 1) < 2 ))
- 			  (ensures (fun h x h' -> invariant h'))
+ 			  (requires (fun h -> Invariant h /\ repr_bytes ((sel h client_cnt) + 1) < 2 ))
+ 			  (ensures (fun h x h' -> Invariant h'))
 let client (s: uint32) =
   let c = next_cnt () in
   admitP (Signal s c);
@@ -143,9 +141,9 @@ let client (s: uint32) =
   None
 
 val server : unit -> ST (option string)
-			(requires (fun h -> invariant h /\
+			(requires (fun h -> Invariant h /\
                                    sel h server_cnt <> sel h client_cnt))
-			(ensures (fun h x h' -> invariant h' /\ modifies server_refs h h'))
+			(ensures (fun h x h' -> Invariant h' /\ modifies Server_refs h h'))
 let server () =
   let msg = recv () in (
     if length msg <> signal_size + macsize then Some "Wrong length"
