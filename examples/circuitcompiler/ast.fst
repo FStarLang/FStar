@@ -1,5 +1,6 @@
 (*--build-config
-other-files:../../lib/list.fst ../../lib/io.fst fixnat.fst
+options:--admit_fsi FStar.Set;
+other-files:set.fsi heap.fst st.fst all.fst list.fst fixnat.fst
 --*)
 module Ast
 open List

@@ -13,7 +13,7 @@ module Eval
 
 open IntLib
 open Limb
-open Seq
+open FStar.Seq
 
 RESET
 

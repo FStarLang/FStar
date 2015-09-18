@@ -502,12 +502,16 @@ typ:
 
   | FORALL binders DOT qpat noSeqTerm
       {
-        mk_term (QForall($2,$4,$5)) (rhs2 parseState 1 5) Formula
+	    match $2 with 
+			| [] -> raise (Error("Missing binders for a quantifier", rhs2 parseState 1 2))
+			| _ -> mk_term (QForall($2,$4,$5)) (rhs2 parseState 1 5) Formula
       }
 
   | EXISTS binders DOT qpat noSeqTerm
       {
-        mk_term (QExists($2,$4,$5)) (rhs2 parseState 1 5) Formula
+	    match $2 with 
+			| [] -> raise (Error("Missing binders for a quantifier", rhs2 parseState 1 2))
+			| _ -> mk_term (QExists($2,$4,$5)) (rhs2 parseState 1 5) Formula
       }
   
 term:

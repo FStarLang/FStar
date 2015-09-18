@@ -1,6 +1,7 @@
 module FStar.Map
 open Prims.PURE
 open FStar.Set
+open FStar.FunctionalExtensionality
 
 type t (key:Type) (value:Type) = {
   mappings: key -> Tot value;
@@ -38,8 +39,6 @@ let lemma_InDomUpd2 m k1 k2 v  = ()
 let lemma_InDomConstMap v k    = ()
 let lemma_InDomConcat m1 m2 k  = ()
 let lemma_InDomRestrict m ks k = ()
-
-open FunctionalExtensionality
 
 type Equal (#key:Type) (#value:Type) (m1:t key value) (m2:t key value) =
     FEq m1.mappings m2.mappings /\ FEq m1.domain m2.domain

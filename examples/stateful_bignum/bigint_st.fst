@@ -2,12 +2,12 @@ module Bigint
 
 open IntLib
 open Limb
-open Seq
-open SeqProperties
-open All
-open ST
-open Heap
-open Array
+open FStar.Seq
+open FStar.SeqProperties
+open FStar.All
+open FStar.ST
+open FStar.Heap
+open FStar.Array
 
 (* TODO : stabilize the type definitions *)
 (* Int types *)

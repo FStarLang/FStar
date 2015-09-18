@@ -90,6 +90,8 @@ let b2t_lid = (pconst "b2t")
 
 let using_IH = (pconst "InductionHyp")
 
+let using_lem = (pconst "Using")
+
 let admit_lid = (pconst "admit")
 
 let magic_lid = (pconst "magic")

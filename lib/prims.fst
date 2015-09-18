@@ -29,11 +29,11 @@ type True =
 logic type False
 opaque type l_imp (p:Type) (q:Type) = p -> Tot q                (* infix binary '==>' *)
 type l_and  (p:Type) (q:Type) =
-  | And : p -> q -> p /\ q                                      (* infix binary '/\' *)
+  | And : p -> q -> (p /\ q)                                      (* infix binary '/\' *)
 type l_or   (p:Type) (q:Type) =                                 (* infix binary '\/' *)
-  | Left : p -> p \/ q
-  | Right : q -> p \/ q
-opaque type l_iff (p:Type) (q:Type) = p ==> q /\ q ==> p        (* infix binary '<==>' *)
+  | Left : p -> (p \/ q)
+  | Right : q -> (p \/ q)
+opaque type l_iff (p:Type) (q:Type) = (p ==> q) /\ (q ==> p)        (* infix binary '<==>' *)
 opaque type l_not (p:Type) = p ==> False                        (* prefix unary '~' *)
 opaque type Forall (#a:Type) (p:a -> Type) = x:a -> Tot (p x)   (* forall (x:a). p x *)
 type DTuple2: a:Type
@@ -526,6 +526,8 @@ let dsnd t = MkDTuple2._2 t
 type Let (#a:Type) (x:a) (body:(a -> Type)) = body x
 logic type InductionHyp : #a:Type -> a -> Type -> Type
 assume val by_induction_on: #a:Type -> #p:Type -> induction_on:a -> proving:p -> Lemma (ensures (InductionHyp induction_on p))
+logic type Using : #a:Type -> Type -> a -> Type
+assume val using: #a:Type -> #p:Type -> proving:p -> pat:a -> Lemma (ensures (Using p pat))
 assume val _assume : p:Type -> unit -> Pure unit (requires (True)) (ensures (fun x -> p))
 assume val admit   : #a:Type -> unit -> Admit a
 assume val magic   : #a:Type -> unit -> Tot a
@@ -536,10 +538,6 @@ assume val qintro  : #a:Type -> #p:(a -> Type) -> =f:(x:a -> Lemma (p x)) -> Lem
 assume val raise: exn -> Ex 'a       (* TODO: refine with the Exn monad *)
 val ignore: 'a -> Tot unit
 let ignore x = ()
-
-//TODO: REMOVE THIS!
-val erase: 'a -> Tot unit
-let erase x = ()
 
 assume val min: int -> int -> Tot int
 assume val max: int -> int -> Tot int

@@ -1,7 +1,6 @@
 (*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap;
-    variables:LIB=../../lib;
-    other-files:$LIB/ordset.fsi $LIB/ordmap.fsi
+    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi Prins;
+    other-files:ordset.fsi ordmap.fsi prins.fsi
  --*)
 
 module AST
@@ -10,72 +9,19 @@ open FStar.OrdMap
 
 open FStar.OrdSet
 
+open Prins
+
 type other_info = nat
 
 type varname = string
 
-type prin = nat
-
-val p_cmp: prin -> prin -> Tot bool
-let p_cmp p1 p2 = p1 <= p2
-
-type prins = s:ordset prin p_cmp{not (s = empty)}
-
-type eprins = ordset prin p_cmp
-
-val ps_cmp: ps1:eprins -> ps2:eprins -> Tot bool (decreases (size ps1))
-let rec ps_cmp ps1 ps2 =
-  if size ps1 < size ps2 then false
-  else if size ps1 > size ps2 then true
-  else
-    if ps1 = empty && ps2 = empty then true
-    else
-      let Some p1, Some p2 = choose ps1, choose ps2 in
-      let ps1_rest, ps2_rest = remove p1 ps1, remove p2 ps2 in
-      if p1 = p2 then ps_cmp ps1_rest ps2_rest
-      else p_cmp p1 p2
-
-val ps_cmp_antisymm:
-  ps1:eprins -> ps2:eprins
-  -> Lemma (requires (True)) (ensures ((ps_cmp ps1 ps2 /\ ps_cmp ps2 ps1) ==> ps1 = ps2))
-     (decreases (size ps1))
-let rec ps_cmp_antisymm ps1 ps2 =
-  if ps1 = empty || ps2 = empty then ()
-  else
-    let Some p1, Some p2 = choose ps1, choose ps2 in
-    let ps1_rest, ps2_rest = remove p1 ps1, remove p2 ps2 in
-    ps_cmp_antisymm ps1_rest ps2_rest
-
-val ps_cmp_trans:
-  ps1:eprins -> ps2:eprins -> ps3:eprins
-  -> Lemma (requires (True)) (ensures ((ps_cmp ps1 ps2 /\ ps_cmp ps2 ps3) ==> ps_cmp ps1 ps3))
-     (decreases (size ps1))
-let rec ps_cmp_trans ps1 ps2 ps3 =
-  if ps1 = empty || ps2 = empty || ps3 = empty then ()
-  else
-    let Some p1, Some p2, Some p3 = choose ps1, choose ps2, choose ps3 in
-    let ps1_rest, ps2_rest, ps3_rest = remove p1 ps1, remove p2 ps2, remove p3 ps3 in
-    ps_cmp_trans ps1_rest ps2_rest ps3_rest
-
-val ps_cmp_total:
-  ps1:eprins -> ps2:eprins
-  -> Lemma (requires (True)) (ensures (ps_cmp ps1 ps2 \/ ps_cmp ps2 ps1))
-     (decreases (size ps1))
-let rec ps_cmp_total ps1 ps2 =
-  if ps1 = empty || ps2 = empty then ()
-  else
-    let Some p1, Some p2 = choose ps1, choose ps2 in
-    let ps1_rest, ps2_rest = remove p1 ps1, remove p2 ps2 in
-    ps_cmp_total ps1_rest ps2_rest
-
-assume Ps_cmp_is_total_order: total_order prins ps_cmp
-
 type const =
-  | C_prin : c:prin -> const
-  | C_prins: c:prins -> const
+  | C_prin  : c:prin   -> const
+  | C_eprins: c:eprins -> const
+  | C_prins : c:prins  -> const
 
   | C_unit : const
-  | C_nat  : c:nat -> const
+  | C_nat  : c:nat  -> const
   | C_bool : c:bool -> const
 
 type exp' =
@@ -348,3 +294,6 @@ let get_en_b #meta v = match v with
   | V_fix_clos en f x e ->
     update_env #(Meta empty Cannot_b empty Cannot_w) en f (V_fix_clos en f x e), x, e
   | V_emp_clos x e      -> empty_env, x, e
+
+val is_terminal: config -> Tot bool
+let is_terminal (Conf _ (Mode as_m _) s _ t) = as_m = Par && s = [] && is_T_val t

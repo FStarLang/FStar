@@ -1,6 +1,5 @@
-(* STATUS : JK : added a dummy DHDB interface needed by the DHDBManager, needs implementation *)
-
 module CoreCrypto
+
 open Platform.Bytes
 
 type hash_alg = | MD5 | SHA1 | SHA256 | SHA384 | SHA512
@@ -10,13 +9,29 @@ type aead_cipher = | AES_128_GCM | AES_256_GCM
 type stream_cipher = | RC4_128
 type rsa_padding = | Pad_none | Pad_PKCS1
 
-val hashSize: h:hash_alg -> Tot nat
+let blockSize = function
+  | TDES_EDE_CBC -> 8
+  | AES_128_CBC  -> 16
+  | AES_256_CBC  -> 16
+
+let aeadKeySize = function
+  | AES_128_GCM -> 16
+  | AES_256_GCM -> 32
+
+let aeadRealIVSize = function
+  | AES_128_GCM -> 12
+  | AES_256_GCM -> 12
+
+let aeadTagSize = function
+  | AES_128_GCM -> 16
+  | AES_256_GCM -> 16
+
 let hashSize = function
-  | MD5     -> 16
-  | SHA1    -> 20
-  | SHA256  -> 32
-  | SHA384  -> 48
-  | SHA512  -> 64
+  | MD5    -> 16
+  | SHA1   -> 20
+  | SHA256 -> 32
+  | SHA384 -> 48
+  | SHA512 -> 64
 
 type rsa_key = {
   rsa_mod : bytes;

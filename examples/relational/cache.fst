@@ -1,7 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set --z3timeout 15;
-    variables:LIB=../../lib;
-    other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/st2.fst $LIB/list.fst
+    other-files:set.fsi heap.fst st.fst all.fst st2.fst list.fst
   --*)
 
 

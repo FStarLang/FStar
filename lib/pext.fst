@@ -12,5 +12,5 @@ opaque logic type PEq : #a:Type -> (Pred a) -> (Pred a) -> Type =
   (fun (a:Type) (p1:Pred a) (p2:Pred a) -> (forall x. p1 x <==> p2 x))
 
 assume PredicateExtensionality :
-    (forall (a:Type) ('p1:Pred a) ('p2:Pred a).
-       {:pattern PEq #a 'p1 'p2} PEq #a 'p1 'p2 <==> 'p1=='p2)
+    (forall (a:Type) (p1:Pred a) (p2:Pred a).
+       {:pattern PEq #a p1 p2} PEq #a p1 p2 <==> p1==p2)

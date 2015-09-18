@@ -1,13 +1,12 @@
 (*--build-config
-    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module Formatting --admit_fsi FStar.Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
-    variables:LIB=../../lib
-            MITLS=../../../mitls-fstar/libs/fst/;
-    other-files:$LIB/string.fst $LIB/list.fst
-            $LIB/ext.fst $LIB/classical.fst
-            $LIB/set.fsi $LIB/set.fst
-            $LIB/heap.fst $LIB/st.fst
-            $LIB/seq.fsi $LIB/seqproperties.fst
-            $MITLS/Platform/Bytes.fst
+    options:--z3timeout 10 --verify_module Formatting --admit_fsi FStar.Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
+    variables:MITLS=../../../mitls-fstar/libs/fst/;
+    other-files:
+            ext.fst classical.fst
+            set.fsi set.fst
+            heap.fst st.fst all.fst string.fst list.fst
+            seq.fsi seqproperties.fst
+            ../../contrib/Platform/fst/Bytes.fst
   --*)
 
 (*
@@ -44,8 +43,8 @@ val append_inj_lemma: b1:message -> b2:message
                             [SMTPat (b1 @| b2); SMTPat (c1 @| c2)] (* given to the SMT solver *)
 let rec append_inj_lemma b1 b2 c1 c2 =
   lemma_append_len_disj b1 b2 c1 c2;
-  erase (Classical.forall_intro (lemma_append_inj_l b1 b2 c1 c2));
-  erase (Classical.forall_intro (lemma_append_inj_r b1 b2 c1 c2))
+  Classical.forall_intro (lemma_append_inj_l b1 b2 c1 c2);
+  Classical.forall_intro (lemma_append_inj_r b1 b2 c1 c2)
 
 
 (* ----- from strings to bytestring and back *)
@@ -87,7 +86,7 @@ let tag1 = createBytes 1 1uy
 let request s = tag0 @| (utf8 s)
 
 let response s t =
-  //lemma_repr_bytes_values (length (utf8 s));
+  lemma_repr_bytes_values (length (utf8 s));
   let lb = uint16_to_bytes (length (utf8 s)) in
   tag1 @| (lb @| ( (utf8 s) @| (utf8 t)))
 
@@ -108,8 +107,8 @@ val req_resp_distinct:
         (ensures (not( (request s) = (response s' t'))))
         [SMTPat (request s); SMTPat (response s' t')]
 let req_resp_distinct s s' t' =
-  //lemma_repr_bytes_values (length (utf8 s));
-  //lemma_repr_bytes_values (length (utf8 s'));
+  lemma_repr_bytes_values (length (utf8 s));
+  lemma_repr_bytes_values (length (utf8 s'));
   (*lemma_repr_bytes_values (length (utf8 t'));*)
   cut (Seq.index tag0 0 == 0uy)
 
@@ -125,6 +124,6 @@ val resp_components_corr:
   Lemma (requires (Seq.Eq (response s0 t0) (response s1 t1)))
         (ensures  (s0==s1 /\ t0==t1))
         [SMTPat (response s0 t0); SMTPat (response s1 t1)]
-let resp_components_corr s0 t0 s1 t1 = ()
-  //lemma_repr_bytes_values (length (utf8 s0));
-  //lemma_repr_bytes_values (length (utf8 s1))
+let resp_components_corr s0 t0 s1 t1 =
+  lemma_repr_bytes_values (length (utf8 s0));
+  lemma_repr_bytes_values (length (utf8 s1))

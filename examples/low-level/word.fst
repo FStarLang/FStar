@@ -1,6 +1,5 @@
 (*--build-config
-    variables:LIB=../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi
+    other-files:ext.fst set.fsi
   --*)
 module MachineWord
 

@@ -1109,6 +1109,9 @@ and desugar_formula' env (f:term) : typ =
                 | Inr v -> targ <| (Util.b2t v)) //implicitly coerce a boolean to a type
          [f1;f2;f3])
 
+    | QForall([], _, _)
+    | QExists([], _, _) -> failwith "Impossible: Quantifier without binders"
+
     | QForall((_1::_2::_3), pats, body) ->
       let binders = _1::_2::_3 in
       desugar_formula env (push_quant (fun x -> QForall x) binders pats body)
@@ -1207,20 +1210,17 @@ let mk_indexed_projectors fvq refine_domain env (tc, tps, k) lid (formals:list<b
     let arg = Util.arg_of_non_null_binder arg_binder in
     let subst = formals |> List.mapi (fun i f -> match fst f with
         | Inl a ->
-            if binders |> Util.for_some (function (Inl b, _) -> bvd_eq a.v b.v | _ -> false)
-            then []
-            else let field_name, _ = Util.mk_field_projector_name lid a i in
-                 let proj = mk_Typ_app(Util.ftv field_name kun, [arg]) None p in
-                 [Inl (a.v, proj)]
+            let field_name, _ = Util.mk_field_projector_name lid a i in
+            let proj = mk_Typ_app(Util.ftv field_name kun, [arg]) None p in
+            [Inl (a.v, proj)]
 
         | Inr x ->
-            if binders |> Util.for_some (function (Inr y, _) -> bvd_eq x.v y.v | _ -> false)
-            then []
-            else let field_name, _ = Util.mk_field_projector_name lid x i in
-                 let proj = mk_Exp_app(Util.fvar None field_name p, [arg]) None p in //TODO: Mark the projector with an fv_qual?
-                 [Inr (x.v, proj)]) |> List.flatten in
+            let field_name, _ = Util.mk_field_projector_name lid x i in
+            let proj = mk_Exp_app(Util.fvar None field_name p, [arg]) None p in //TODO: Mark the projector with an fv_qual?
+            [Inr (x.v, proj)]) |> List.flatten in
 
     let ntps = List.length tps in
+    let all_params = (tps |> List.map (fun (b, _) -> (b, Some Implicit)))@formals in
 //    let pattern_fields = Util.nth_tail ntps formals in
     formals |> List.mapi (fun i ax -> match fst ax with
         | Inl a ->
@@ -1242,11 +1242,11 @@ let mk_indexed_projectors fvq refine_domain env (tc, tps, k) lid (formals:list<b
                      let as_imp = function
                         | Some Implicit -> true
                         | _ -> false in
-                     let arg_pats = formals |> List.mapi (fun j by -> match by with
+                     let arg_pats = all_params |> List.mapi (fun j by -> match by with
                         | Inl _, imp ->
                           if j < ntps then [] else [pos (Pat_tvar (Util.gen_bvar kun)), as_imp imp]
                         | Inr _, imp ->
-                            if i=j  //this is the one to project
+                            if i+ntps=j  //this is the one to project
                             then [pos (Pat_var projection), as_imp imp]
                             else [pos (Pat_wild (Util.gen_bvar tun)), as_imp imp]) |> List.flatten in
                      let pat = (Syntax.Pat_cons(Util.fv lid, Some fvq, arg_pats) |> pos, None, Util.bvar_to_exp projection) in
@@ -1272,7 +1272,7 @@ let mk_data_projectors env = function
                 | Some l -> List.length l > 1
                 | _ -> true in
         begin match Util.function_formals t with
-        | Some(formals, cod) ->
+        | Some(formals, cod) -> //close_typ (List.map (fun (x, _) -> (x, Some Implicit)) tps) t 
           let cod = Util.comp_result cod in
           let qual = match Util.find_map quals (function RecordConstructor fns -> Some (Record_ctor(lid, fns)) | _ -> None) with
             | None -> Data_ctor
@@ -1299,7 +1299,10 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
   let tot = mk_term (Name (Const.effect_Tot_lid)) rng Expr in
   let with_constructor_effect t = mk_term (App(tot, t, Nothing)) t.range t.level in
   let apply_binders t binders =
-    List.fold_left (fun out b -> mk_term (App(out, binder_to_term b, Nothing)) out.range out.level)
+    let imp_of_aqual (b:AST.binder) = match b.aqual with 
+        | Some Implicit -> Hash
+        | _ -> Nothing in
+    List.fold_left (fun out b -> mk_term (App(out, binder_to_term b, imp_of_aqual b)) out.range out.level)
       t binders in
   let tycon_record_as_variant = function
     | TyconRecord(id, parms, kopt, fields) ->
@@ -1321,7 +1324,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
       let se = Sig_tycon(qlid, typars, k, mutuals, [], quals, rng) in
       let _env = push_rec_binding _env (Binding_tycon qlid) in
       let _env2 = push_rec_binding _env' (Binding_tycon qlid) in
-      _env, (_env2, typars), se, tconstr
+      _env, _env2, se, tconstr
     | _ -> failwith "Unexpected tycon" in
   let push_tparam env = function
     | Inr x, _ -> push_bvvdef env x.v
@@ -1374,23 +1377,23 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
             let t, fs = tycon_record_as_variant trec in
             collect_tcs (RecordType fs::quals) (env, tcs) t
           | TyconVariant(id, binders, kopt, constructors) ->
-            let env, (_, tps), se, tconstr = desugar_abstract_tc quals env mutuals (TyconAbstract(id, binders, kopt)) in
-            env, Inl(se, tps, constructors, tconstr, quals)::tcs
+            let env, _, se, tconstr = desugar_abstract_tc quals env mutuals (TyconAbstract(id, binders, kopt)) in
+            env, Inl(se, constructors, tconstr, quals)::tcs
           | TyconAbbrev(id, binders, kopt, t) ->
-            let env, (_, tps), se, tconstr = desugar_abstract_tc quals env mutuals (TyconAbstract(id, binders, kopt)) in
-            env, Inr(se, tps, t, quals)::tcs
+            let env, _, se, tconstr = desugar_abstract_tc quals env mutuals (TyconAbstract(id, binders, kopt)) in
+            env, Inr(se, t, quals)::tcs
           | _ -> failwith "Unrecognized mutual type definition" in
       let env, tcs = List.fold_left (collect_tcs quals) (env, []) tcs in
       let tcs = List.rev tcs in
       let sigelts = tcs |> List.collect (function
-        | Inr(Sig_tycon(id, tpars, k, _, _, _, _), tps, t, quals) ->
-          let env_tps = push_tparams env tps in
+        | Inr(Sig_tycon(id, tpars, k, _, _, _, _), t, quals) ->
+          let env_tps = push_tparams env tpars in
           let t = desugar_typ env_tps t in
           [Sig_typ_abbrev(id, tpars, k, t, [], rng)]
 
-        | Inl (Sig_tycon(tname, tpars, k, mutuals, _, tags, _), tps, constrs, tconstr, quals) ->
+        | Inl (Sig_tycon(tname, tpars, k, mutuals, _, tags, _), constrs, tconstr, quals) ->
           let tycon = (tname, tpars, k) in
-          let env_tps = push_tparams env tps in
+          let env_tps = push_tparams env tpars in
           let constrNames, constrs = List.split <|
               (constrs |> List.map (fun (id, topt, of_notation) ->
                 let t =
@@ -1406,7 +1409,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
                 let quals = tags |> List.collect (function
                     | RecordType fns -> [RecordConstructor fns]
                     | _ -> []) in
-                (name, Sig_datacon(name, close_typ (List.map (fun (x, _) -> (x, Some Implicit)) tps) t |> Util.name_function_binders, tycon, quals, mutuals, rng)))) in
+                (name, Sig_datacon(name, t |> Util.name_function_binders, tycon, quals, mutuals, rng)))) in
               Sig_tycon(tname, tpars, k, mutuals, constrNames, tags, rng)::constrs
         | _ -> failwith "impossible") in
       let bundle = Sig_bundle(sigelts, quals, List.collect Util.lids_of_sigelt sigelts, rng) in

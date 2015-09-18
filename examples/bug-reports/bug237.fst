@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set;
+    options:--admit_fsi FStar.Set;
     other-files:classical.fst ext.fst set.fsi heap.fst st.fst all.fst
   --*)
 module Bug237
@@ -7,7 +7,7 @@ module Bug237
 (* Can only reproduce one of the problems with k_foralle.
    The others only appear in tinyfstar-new.fst *)
 
-open Classical
+open FStar.Classical
 
 type var = nat
 
@@ -27,8 +27,8 @@ type knd =
 type tsub = var -> Tot typ
 opaque type trenaming (s:tsub) = (forall (x:var). is_TVar (s x))
 
-val is_trenaming : s:tsub -> Tot (n:int{(  trenaming s  ==> n=0) /\
-                                        (~(trenaming s) ==> n=1)})
+val is_trenaming : s:tsub -> GTot (n:int{(  trenaming s  ==> n=0) /\
+                                         (~(trenaming s) ==> n=1)})
 let is_trenaming s = (if excluded_middle (trenaming s) then 0 else 1)
 
 val tsub_inc_above : nat -> var -> Tot typ
@@ -80,7 +80,7 @@ assume val esub_elam: s:sub -> Tot esub
 
 opaque type renaming (s:sub) = (trenaming (Sub.ts s))
 
-val is_renaming : s:sub -> Tot (n:int{(  renaming s  ==> n=0) /\
+val is_renaming : s:sub -> GTot (n:int{(  renaming s  ==> n=0) /\
                                        (~(renaming s) ==> n=1)})
 let is_renaming s = (if excluded_middle (renaming s) then 0 else 1)
 

@@ -3,7 +3,7 @@ module Resize
 open IntLib
 open Limb
 open Eval
-open Seq
+open FStar.Seq
 open Axiomatic
 
 val fill_array:

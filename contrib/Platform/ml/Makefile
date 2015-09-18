@@ -5,7 +5,7 @@ INCLUDES=                 # all relevant -I options here
 OCAMLFLAGS=$(INCLUDES)    # add other options for ocamlc here
 OCAMLOPTFLAGS=$(INCLUDES) # add other options for ocamlopt here
 
-.SUFFIXES: .ml .mli .cmo .cmi .cmx
+.SUFFIXES: .ml .mli .cmo .cmi .cmx .exe
 
 all: platform.cmx
 
@@ -21,8 +21,14 @@ clean:
 .ml.cmx:
 	$(OCAMLOPT) $(OCAMLOPTFLAGS) -c $<
 
+.ml.exe:
+	$(OCAMLOPT) $(OCAMLOPTFLAGS) platform.cmx $< -o $@
+
+test: Tests.exe
+		@./Tests.exe
+
+
 depend:
 	$(OCAMLDEP) Bytes.ml* Error.ml* > .depend
 
 -include .depend
-

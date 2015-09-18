@@ -1,7 +1,6 @@
 (*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi Set --admit_fsi FFI;
-    variables:LIB=../../lib;
-    other-files:set.fsi $LIB/ordset.fsi $LIB/ordmap.fsi $LIB/classical.fst ast.fst ffi.fsi sem.fst
+    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi Set --admit_fsi Prins --admit_fsi FFI;
+    other-files:set.fsi ordset.fsi ordmap.fsi classical.fst prins.fsi ast.fst ffi.fsi sem.fst
  --*)
 
 module SourceInterpreter
@@ -115,9 +114,6 @@ let step_correctness c =
   else if is_value c && is_sframe c is_F_assec_e then C_assec_red c c'
   else if not (pre_assec c = NA) then C_assec_beta c c'
   else C_assec_ret c c'
-
-val is_terminal: config -> Tot bool
-let is_terminal (Conf _ _ s _ t) = s = [] && is_T_val t
 
 val step_star: config -> Dv (option config)
 let rec step_star c =

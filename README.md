@@ -74,38 +74,32 @@ development and syntax highlighting.
 
 #### Emacs
 
-The [Tuareg Mode] for OCaml works quite well for F* too.
-Go for 2.0.9 (2015-03-25) or later to avoid some bugs that are already fixed.
-Tuareg is easiest to install using [MELPA].
-To use MELPA add this to your `.emacs` or `.emacs.d/init.el` file:
+[fstar-mode] implements support for F* programming, including
+  
+  * Syntax highlighting
+  * Unicode rendering (with prettify-symbols-mode)
+  * Indentation
+  * Real-time verification (requires the Flycheck package)
+  * Interactive proofs (à la Proof-General)
+
+ 
+fstar-mode requires Emacs 24.3 or newer, and is distributed through [MELPA]. Add the following to your Emacs init file (usually `.emacs`), if it is not already there:
+
 ```elisp
 (require 'package)
-(add-to-list 'package-archives
-             '("melpa" . "http://melpa.milkbox.net/packages/") t)
-```
-Now do `M-x package-install` and install `tuareg`.
-
-Then add the rest of the configuration to `.emacs` or `.emacs.d/init.el`:
-```elisp
-(add-hook 'tuareg-mode-hook 'tuareg-imenu-set-imenu)
-(setq auto-mode-alist
-      (append '(("\\.ml[ily]?$" . tuareg-mode)
-                ("\\.topml$" . tuareg-mode))
-              auto-mode-alist))
-(setq auto-mode-alist
-      (append '(("\\.fs[tiy]?$" . tuareg-mode))
-          auto-mode-alist))
-```
-Finally, if you want easy navigation through F* error messages also
-add this to your `.emacs` or `.emacs.d/init.el`:
-```elisp
-(add-to-list 'compilation-error-regexp-alist
- '("\\([0-9a-zA-Z._/-]*.fst\\)(\\([0-9]+\\)\\,\\([0-9]+\\)-[0-9]+\\,[0-9]+)" 1 2 3))
-(add-to-list 'compilation-error-regexp-alist
- '("^ERROR: Syntax error near line \\([0-9]+\\), character \\([0-9]+\\) in file \\(.*\\)$" 3 1 2))
+(add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
+(package-initialize)
 ```
 
-[Tuareg Mode]: https://github.com/ocaml/tuareg
+Restart Emacs, and run <kbd>M-x package-refresh-contents</kbd>, then <kbd>M-x package-install RET fstar-mode RET</kbd>. Future updates can be downloaded using <kbd>M-x list-packages</kbd>.
+
+If `fstar.exe` is not already in your path, set the `fstar-executable` variable:
+
+```elisp
+(set-default fstar-executable "PATH-TO-FSTAR.EXE")
+```
+
+[fstar-mode]: https://github.com/FStarLang/fstar-mode.el
 [MELPA]: http://melpa.org
 
 ### Executing F* code

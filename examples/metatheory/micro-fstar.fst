@@ -6110,7 +6110,7 @@ let tint_inversion_empty_helper e targ cbody t hst hv =
   let hv : validity empty (teqtype (TArr targ cbody) tint) = tint_inversion_styping' #(TArr targ cbody) #t hst hv in
   let hvnot : validity empty (tnot (teqtype (TArr targ cbody) tint)) = VDistinctTH #empty #(TArr targ cbody) #tint hktarr (kdg_tint empty) in
    let hvfalse : validity empty tfalse = v_impl_elim #empty #(teqtype (TArr targ cbody) tint) #tfalse hvnot hv in
-   empty_consistent hvfalse; TintInversion e 42 (Eq exp (EConst (EcInt 42)))
+   empty_consistent hvfalse; TintInversion e 42 Refl
 
 val scmpex_efpure : #g:env -> #e:exp -> #c':cmp -> #c:cmp ->
    scmpex g e c' c ->
@@ -6327,7 +6327,7 @@ let tb_inversion_empty_helper e targ cbody t tc hst hv =
   let hv : validity empty (teqtype (TArr targ cbody) (TConst tc)) = tb_inversion_styping' #(TArr targ cbody) #t #tc hst hv in
   let hvnot : validity empty (tnot (teqtype (TArr targ cbody) (TConst tc))) = VDistinctTH #empty #(TArr targ cbody) #(TConst tc) hktarr (kdg_tb empty tc) in
    let hvfalse : validity empty tfalse = v_impl_elim #empty #(teqtype (TArr targ cbody) (TConst tc)) #tfalse hvnot hv in
-   empty_consistent hvfalse; TcIntInversion e (TintInversion e 42 (Eq exp (EConst (EcInt 42))))
+   empty_consistent hvfalse; TcIntInversion e (TintInversion e 42 Refl)
 
 opaque val tb_inversion_empty : #v:value -> #t:typ -> #wp:typ -> #tc:tconst{is_TcHeap tc \/ is_TcInt tc \/ is_TcRefInt tc} ->
    ht:typing empty v (Cmp EfPure t wp) ->
@@ -6352,29 +6352,29 @@ match ht with
 | TyConst _ c hwf ->
 (
  match c with
- | EcInt i -> if tc = TcInt then TcIntInversion v (TintInversion v i (Eq exp (EConst (EcInt i))))
+ | EcInt i -> if tc = TcInt then TcIntInversion v (TintInversion v i Refl)
               else
 	      (
 	       let hk : kinding empty (econsts c) KType = kdg_econst empty c hwf in
 	       let hvnot : validity empty (tnot (teqtype t (TConst tc))) = VDistinctTH #empty #t #(TConst tc) hk (kdg_tb empty tc) in
 	       let hvfalse : validity empty tfalse = v_impl_elim #empty #(teqtype t (TConst tc)) #tfalse hvnot hv in
-	       empty_consistent hvfalse; TcIntInversion v (TintInversion v 42 (Eq exp (EConst (EcInt 42))))
+	       empty_consistent hvfalse; TcIntInversion v (TintInversion v 42)
 	      )
- | EcLoc l -> if tc = TcRefInt then TcRefInversion v (TrefInversion v l (Eq exp (EConst (EcLoc l))))
+ | EcLoc l -> if tc = TcRefInt then TcRefInversion v (TrefInversion v l Refl)
               else
 	      (
 	       let hk : kinding empty (econsts c) KType = kdg_econst empty c hwf in
 	       let hvnot : validity empty (tnot (teqtype t (TConst tc))) = VDistinctTH #empty #t #(TConst tc) hk (kdg_tb empty tc) in
 	       let hvfalse : validity empty tfalse = v_impl_elim #empty #(teqtype t (TConst tc)) #tfalse hvnot hv in
-	       empty_consistent hvfalse; TcIntInversion v (TintInversion v 42 (Eq exp (EConst (EcInt 42))))
+	       empty_consistent hvfalse; TcIntInversion v (TintInversion v 42 Refl)
 	      )
- | EcHeap h -> if tc = TcHeap then TcHeapInversion v (TheapInversion v h (Eq exp (EConst (EcHeap h))))
+ | EcHeap h -> if tc = TcHeap then TcHeapInversion v (TheapInversion v h Refl)
                else
 	       (
 	       let hk : kinding empty (econsts c) KType = kdg_econst empty c hwf in
 	       let hvnot : validity empty (tnot (teqtype t (TConst tc))) = VDistinctTH #empty #t #(TConst tc) hk (kdg_tb empty tc) in
 	       let hvfalse : validity empty tfalse = v_impl_elim #empty #(teqtype t (TConst tc)) #tfalse hvnot hv in
-	       empty_consistent hvfalse; TcIntInversion v (TintInversion v 42 (Eq exp (EConst (EcInt 42))))
+	       empty_consistent hvfalse; TcIntInversion v (TintInversion v 42 Refl)
 	       )
  | EcUnit
  | EcBang
@@ -6386,7 +6386,7 @@ match ht with
 	       let hk : kinding empty (econsts c) KType = kdg_econst empty c hwf in
 	       let hvnot : validity empty (tnot (teqtype t (TConst tc))) = VDistinctTH #empty #t #(TConst tc) hk (kdg_tb empty tc) in
 	       let hvfalse : validity empty tfalse = v_impl_elim #empty #(teqtype t (TConst tc)) #tfalse hvnot hv in
-	       empty_consistent hvfalse; TcIntInversion v (TintInversion v 42 (Eq exp (EConst (EcInt 42))))
+	       empty_consistent hvfalse; TcIntInversion v (TintInversion v 42 Refl)
 
    )
 )
@@ -6395,7 +6395,7 @@ match ht with
  let hk : kinding empty (TArr targ (Cmp m tbody wpbody)) KType = let TypingDerived hk _ _ = typing_derived #empty #(ELam targ ebody) #EfPure #(TArr targ (Cmp m tbody wpbody) ) (GEmpty) ht in hk in
  let hvnot : validity empty (tnot (teqtype t (TConst tc))) = VDistinctTH #empty #t #(TConst tc) hk (kdg_tb empty tc) in
  let hvfalse : validity empty tfalse = v_impl_elim #empty #(teqtype t (TConst tc)) #tfalse hvnot hv in
- empty_consistent hvfalse; TcIntInversion v (TintInversion v 42 (Eq exp (EConst (EcInt 42))))
+ empty_consistent hvfalse; TcIntInversion v (TintInversion v 42 Refl)
 )
 | TyApp #x1 #e1 #e2 #x2 #targs1 #tbodys1 #wps1 #wpfuns1 #wpargs1 htfuns1 htargs1 htotargs1 hkargs1 ->
 (

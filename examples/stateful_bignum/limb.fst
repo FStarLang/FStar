@@ -15,8 +15,8 @@ module Limb
 
 open IntLib
 open Axiomatic
-open Ghost
-open Seq
+open FStar.Ghost
+open FStar.Seq
 
 let max_size = 63
 

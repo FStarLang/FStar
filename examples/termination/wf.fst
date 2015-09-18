@@ -1,3 +1,5 @@
+(*--build-config
+  --*)
 (*
    Copyright 2015 Chantal Keller and Catalin Hritcu, Microsoft Research and Inria
 

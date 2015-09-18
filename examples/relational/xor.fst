@@ -1,10 +1,9 @@
 (*--build-config
     options:--admit_fsi FStar.Set;
-    variables:LIB=../../lib;
-    other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/bytes.fst sample.fst
+    other-files:set.fsi heap.fst st.fst all.fst bytes.fst sample.fst
   --*)
 
-module FStar.Xor
+module Xor
 open FStar.Bytes
 open FStar.Bijection
 

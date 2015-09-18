@@ -31,8 +31,8 @@ EXERCISES =\
   ex7b-stlc-pairs\
   ex7c-stlc-let\
   ex7d-stlc-eval\
+  ex10a-acls\
   ex10-shift\
-  robots\
 # Files currently not compiling
 #  ex6b-sort-poly\
    ex6d-no-discard\

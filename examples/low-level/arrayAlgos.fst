@@ -1,8 +1,7 @@
 (*--build-config
     options:--admit_fsi Set --z3timeout 100;
-    variables:LIB=../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/list.fst  stack.fst listset.fst
-    $LIB/ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst sstCombinators.fst $LIB/constr.fst word.fst $LIB/seq.fsi $LIB/seq.fst array.fsi array.fst
+    other-files:ext.fst set.fsi heap.fst st.fst all.fst list.fst  stack.fst listset.fst
+    ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst sstCombinators.fst constr.fst word.fst seq.fsi seq.fst array.fsi array.fst
   --*)
 
 module ArrayAlgos

@@ -1,7 +1,6 @@
 (*--build-config
     options:--admit_fsi Set --z3timeout 10;
-    variables:LIB=../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst st3.fst $LIB/constr.fst word.fst
+    other-files:ext.fst set.fsi heap.fst st.fst list.fst  stack.fst listset.fst st3.fst constr.fst word.fst
   --*)
 
 module MVector

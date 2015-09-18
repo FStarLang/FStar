@@ -2,12 +2,13 @@ FSTAR = ../../bin/fstar.exe
 
 all: noninterference\
 		 sample_examples\
-		 ro\
 		 ro_single\
 		 simple_st2_examples\
 		 smart_meter\
 		 spdz\
 		 cache
+
+#		 ro\ ;;unstable
 
 noninterference:
 	$(FSTAR) noninterference.fst

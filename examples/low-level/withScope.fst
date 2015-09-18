@@ -1,7 +1,6 @@
 (*--build-config
     options:--admit_fsi Set --logQueries --debug Test --debug_level High --debug_level Rel;
-    variables:LIB=../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst stack.fst listset.fst st3.fst
+    other-files:ext.fst set.fsi heap.fst st.fst list.fst stack.fst listset.fst st3.fst
   --*)
 module Example2
 open StructuredMem

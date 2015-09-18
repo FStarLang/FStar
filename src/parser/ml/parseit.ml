@@ -11,6 +11,8 @@ let resetLexbufPos filename lexbuf =
 let bc_start = "(*--build-config"
 let bc_end   = "--*)"
 
+let get_bc_start_string (_:unit) = bc_start
+
 module Path = BatPathGen.OfString
 
 let find_file (filename:string) =
@@ -32,7 +34,7 @@ let open_file (filename:string) =
     BatFile.with_file_in f BatIO.read_all
   with e -> raise (Err (FStar_Util.format1 "Unable to open file: %s\n" filename))
 
-let read_build_config (filename:string) =
+let read_build_config_from_string (filename:string) (use_filename:bool) (contents:string)  =
     let fail msg = raise (Err(FStar_Util.format2 "Could not parse a valid build configuration from %s; %s" filename msg)) in
     let options = ref None in
     let filenames = ref None in
@@ -46,7 +48,6 @@ let read_build_config (filename:string) =
     let set_variable (x, v) = variables := (x,v)::!variables in
     let substitute_variables (f:string) = !variables |> FStar_List.fold_left
       (fun (f:string) (x,v) -> BatString.replace f ("$"^x) v |> snd) f in
-    let contents = open_file filename in
     if FStar_Util.starts_with contents bc_start
     then
         let bc_end_index = BatString.find contents bc_end in
@@ -96,20 +97,28 @@ let read_build_config (filename:string) =
               end
         end;
         match !filenames with
-            | None ->  [filename]
+            | None -> if use_filename then [filename] else []
             | Some other_files ->
-              let files = FStar_List.map substitute_variables other_files@[filename] in
-              files
+	      let files = if use_filename then other_files@[filename] else other_files
+	      in
+              FStar_List.map substitute_variables files
     else if !FStar_Options.use_build_config (* the user claimed that the build config exists *)
     then fail ""
     else (let stdlib = ["FStar.Set"; "FStar.Heap"; "FStar.ST"; "FStar.All"; "FStar.IO"] in
           let admit_string = FStar_List.map (fun x -> "--admit_fsi " ^ x) stdlib in
-          let admit_string = FStar_String.concat " " admit_string in 
+          let admit_string = FStar_String.concat " " admit_string in
+	  let common_files = ["set.fsi"; "heap.fst"; "st.fst"; "all.fst"; "io.fsti"] in
+	  let files = if use_filename then common_files@[filename] else common_files
+	  in
           FStar_Options.admit_fsi := stdlib @ (!FStar_Options.admit_fsi);
           let _ = match !FStar_Options.reset_options_string with 
             | None -> FStar_Options.reset_options_string := Some admit_string
             | Some x -> FStar_Options.reset_options_string := Some (admit_string ^ " " ^ x) in
-          ["set.fsi"; "heap.fst"; "st.fst"; "all.fst"; "io.fsti"; filename])
+          files)
+
+let read_build_config (filename:string) =
+    let contents = open_file filename in
+    read_build_config_from_string filename true contents
 
 let parse fn =
   FStar_Parser_Util.warningHandler := (function

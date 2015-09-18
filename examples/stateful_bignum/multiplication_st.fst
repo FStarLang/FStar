@@ -2,17 +2,17 @@ module Multiplication
 
 open IntLib
 open Limb
-open Seq
+open FStar.Seq
 open Bigint
 open Eval
-open ST
-open Heap
-open Addition
+open FStar.ST
+open FStar.Heap
+open FStar.Addition
 open ScalarMultiplication
 open Axiomatic
 
 (* Verification query :
-fstar.exe $FSTAR_HOME/lib/seq.fsi --admit_fsi Seq axiomatic.p.fst intlib.fst limb.fst eval.fst addition.fst shift_array.fst scalar_multiplication.fst multiplication.fst --verify_module Multiplication
+fstar.exe seq.fsi --admit_fsi FStar.Seq axiomatic.p.fst intlib.fst limb.fst eval.fst addition.fst shift_array.fst scalar_multiplication.fst multiplication.fst --verify_module Multiplication
  *)
 
 (* Type of bigintegers with constant template *)

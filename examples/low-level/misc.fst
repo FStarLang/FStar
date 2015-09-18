@@ -1,8 +1,7 @@
 (*--build-config
     options:--admit_fsi Set;
-    variables:LIB=../../lib;
     variables:MATHS=../maths;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst  $LIB/list.fst stack.fst listset.fst
+    other-files:ext.fst set.fsi heap.fst  list.fst stack.fst listset.fst
   --*)
 
 

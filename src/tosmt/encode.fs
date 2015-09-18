@@ -1018,7 +1018,8 @@ and encode_formula (phi:typ) (env:env_t) : term * decls_t =
         | [] -> t, decls
         | _ -> failwith "Unexpected labels in formula"
 
-and encode_function_type_as_formula (induction_on:option<term>) (t:typ) (env:env_t) : term * decls_t =
+(* this assumes t is a Lemma *)
+and encode_function_type_as_formula (induction_on:option<term>) (new_pats:option<exp>) (t:typ) (env:env_t) : term * decls_t =
     let v_or_t_pat p = match (Util.unmeta_exp p).n with
         | Exp_app(_, [(Inl _, _); (Inr e, _)]) -> varg e
         | Exp_app(_, [(Inl t, _)]) -> targ t
@@ -1032,7 +1033,10 @@ and encode_function_type_as_formula (induction_on:option<term>) (t:typ) (env:env
         | Typ_fun(binders, {n=Comp ct}) ->
            (match ct.effect_args with
             | [(Inl pre, _); (Inl post, _); (Inr pats, _)] ->
-              binders, pre, post, lemma_pats pats
+              let pats' = (match new_pats with
+                          | Some new_pats' -> new_pats'
+                          | None           -> pats) in
+              binders, pre, post, lemma_pats pats'
             | _ -> failwith "impos")
 
         | _ -> failwith "Impos" in
@@ -1142,8 +1146,18 @@ and encode_formula_with_labels (phi:typ) (env:env_t) : (term * labels * decls_t)
         | Typ_app({n=Typ_const ih}, [_;(Inr l, _); (Inl phi, _)]) when lid_equals ih.v Const.using_IH ->
             if Util.is_lemma phi
             then let e, decls = encode_exp l env in
-                 let f, decls' = encode_function_type_as_formula (Some e) phi env in
+                 let f, decls' = encode_function_type_as_formula (Some e) None phi env in
                  (f, [], decls@decls')
+            else (Term.mkTrue, [], [])
+
+        | Typ_app({n=Typ_const ih}, _::(Inl phi, _)::tl) when lid_equals ih.v Const.using_lem ->
+            if Util.is_lemma phi
+            then
+                let pat = match tl with
+                  | [] -> None
+                  | [(Inr pat, _)] -> Some pat in
+                let f, decls = encode_function_type_as_formula None pat phi env in
+                (f, [], decls)
             else (Term.mkTrue, [], [])
 
         | _ ->
@@ -1593,7 +1607,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
     | Sig_datacon(d, _, _, _, _, _) when (lid_equals d Const.lexcons_lid) -> [], env
 
-    | Sig_datacon(d, t, _, quals, _, drange) ->
+    | Sig_datacon(d, t, (_, tps, _), quals, _, drange) ->
+        let t = Util.close_typ (List.map (fun (x, _) -> (x, Some Implicit)) tps) t  in
         let ddconstrsym, ddtok, env = new_term_constant_and_tok_from_lid env d in
         let ddtok_tm = mkApp(ddtok, []) in
         let formals, t_res = match Util.function_formals t with
@@ -1836,7 +1851,7 @@ and declare_top_level_let env x t t_norm =
             (n, x), [], env
 
 and encode_smt_lemma env lid t =
-    let form, decls = encode_function_type_as_formula None t env in
+    let form, decls = encode_function_type_as_formula None None t env in
     decls@[Term.Assume(form, Some ("Lemma: " ^ lid.str))]
 
 and encode_free_var env lid tt t_norm quals =
@@ -1916,6 +1931,30 @@ and encode_signature env ses =
       g@g', env) ([], env)
 
 let encode_env_bindings (env:env_t) (bindings:list<Tc.Env.binding>) : (decls_t * env_t) =
+     (* Encoding Binding_var and Binding_typ as local constants leads to breakages in hash consing. 
+                
+               Consider:
+
+                type t
+                type Good : nat -> Type
+                type s (ps:nat) = m:t{Good ps} 
+                let f (ps':nat) (pi:(s ps' * unit))  =  e
+
+               When encoding a goal formula derived from e, ps' and pi are Binding_var in the environment.
+               They get encoded to constants, declare-fun ps', pi etc.
+               Now, when encoding the type of pi, we encode the (s ps') as a refinement type (m:t{Good ps'}). 
+               So far so good. 
+               But, the trouble is that since ps' is a constant, we build a formula for the refinement type that does not
+               close over ps'---constants are not subject to closure.
+               So, we get a formula that is syntactically different than what we get when encoding the type s, where (ps:nat) is
+               a locally bound free variable and _is_ subject to closure.
+               The syntactic difference leads to the hash consing lookup failing.
+
+               So:
+                  Instead of encoding Binding_vars as declare-funs, we can try to close the query formula over the vars in the context, 
+                  thus demoting them to free variables subject to closure. 
+                  
+    *)
     let encode_binding b (decls, env) = match b with
         | Env.Binding_var(x, t0) ->
             let xxsym, xx, env' = new_term_constant env x in

@@ -4,10 +4,10 @@ module ScalarMultiplication
 
 open IntLib
 open Limb
-open Heap
-open ST
+open FStar.Heap
+open FStar.ST
 open Bigint
-open Seq
+open FStar.Seq
 open Eval
 open Axiomatic
 

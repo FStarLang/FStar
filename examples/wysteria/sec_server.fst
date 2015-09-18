@@ -1,7 +1,6 @@
 (*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi FFI --admit_fsi SecServerNet;
-    variables:LIB=../../lib;
-    other-files:$LIB/ordset.fsi $LIB/ordmap.fsi $LIB/classical.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst ast.fst ffi.fsi sem.fst sinterpreter.fst sec_server_net.fsi
+    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Prins --admit_fsi FFI --admit_fsi Runtime;
+    other-files:ordset.fsi ordmap.fsi classical.fst set.fsi heap.fst st.fst all.fst prins.fsi ast.fst ffi.fsi sem.fst sinterpreter.fst runtime.fsi
  --*)
 
 module SecServer
@@ -9,8 +8,9 @@ module SecServer
 open FStar.OrdMap
 open FStar.OrdSet
 
-open SecServerNet
+open Runtime
 
+open Prins
 open AST
 open Semantics
 open SourceInterpreter
@@ -18,7 +18,7 @@ open SourceInterpreter
 exception Comp_error
 
 type en_map = ordmap prin env p_cmp
-type out_map = ordmap prin pchan_out p_cmp
+type out_map = ordmap prin chan_out p_cmp
 
 type psmap_v = en_map * out_map * varname * exp
 
@@ -32,7 +32,7 @@ let rec send_output #meta ps out_m v =
   let Some p = choose ps in
   let Some out = select p out_m in
   let ps_rest = remove p ps in
-  write_output out (slice_v p v);
+  server_write out (slice_v p v);
   if ps_rest = empty then ()
   else send_output #meta ps_rest out_m v
 
@@ -49,9 +49,9 @@ let do_sec_comp ps env_m out_m x e _ =
   else
     raise Comp_error
 
-val handle_connection: pchan_in -> pchan_out -> ML unit
+val handle_connection: chan_in -> chan_out -> ML unit
 let handle_connection c_in c_out =
-  let p, R_assec #meta ps v = read_input c_in in
+  let p, R_assec #meta ps v = server_read c_in in
   let (en, x, e) = get_en_b v in
   
   let env_m', out_m', x', e' =
@@ -71,6 +71,3 @@ let handle_connection c_in c_out =
     psmap_ref := OrdMap.remove ps (!psmap_ref)
   else
     psmap_ref := (update ps (env_m', out_m', x', e') (!psmap_ref))
-;;
-
-establish_server handle_connection 8888

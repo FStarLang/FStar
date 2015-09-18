@@ -68,8 +68,6 @@ let empty _ = None
 val extend : env -> int -> ty -> Tot env
 let extend g x t x' = if x = x' then Some t else g x'
 
-module Typing
-open Stlc
 val typing : env -> exp -> Tot (option ty)
 let rec typing g e =
   match e with

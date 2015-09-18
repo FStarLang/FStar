@@ -1,6 +1,6 @@
 
 type ' a seq =
-| MkSeq of Support.Prims.nat * (Support.Prims.nat  ->  ' a)
+| MkSeq of Prims.nat * (Prims.nat  ->  ' a)
 
 let is_MkSeq = (fun ( _discr_ ) -> (match (_discr_) with
 | MkSeq (_) -> begin
@@ -71,7 +71,7 @@ let lemma_index_app2 = (fun ( s2 ) ( s2 ) ( i ) -> ())
 let lemma_index_slice = (fun ( s ) ( i ) ( j ) ( k ) -> ())
 
 type (' a, ' s1, ' s2) l__Eq =
-(unit Support.Prims.b2t, (int, (' a, ' a, unit, unit) Support.Prims.l__Eq2) Support.Prims.l__Forall) Support.Prims.l_and
+(unit Prims.b2t, (int, (' a, ' a, unit, unit) Prims.l__Eq2) Prims.l__Forall) Prims.l_and
 
 let lemma_eq_intro = (fun ( s1 ) ( s2 ) -> ())
 

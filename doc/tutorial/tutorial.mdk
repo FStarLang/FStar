@@ -327,7 +327,7 @@ that the `passwd` file does not have the type
 `:f:filename{canRead f}`, respectively `:f:filename{canWrite f}`.
 For instance, if we uncomment the `write` we get the following error message:
 
-<!-- mono ../../bin/fstar.exe --fstar_home ../.. code/exercises/ex1a-safe-read-write.fst -->
+<!-- fstar.exe code/exercises/ex1a-safe-read-write.fst -->
 ``` {language=""}
 Error ex1a-safe-read-write.fst(38,2-47,5): The following problems were found:
 	Subtyping check failed; expected type f:filename{(canWrite f)};
@@ -1096,7 +1096,7 @@ Here's the standard definition of (immutable) lists in F\*.
 
 We note some important conventions for the constructors of a data type in F\*.
 
-+ Constructor names must begin with a captial letter.
++ Constructor names must begin with a capital letter.
 
 + When not writing effects in constructor types,
   the default effect on the result is `Tot`
@@ -2250,7 +2250,7 @@ let is_value e =
   | EFalse     -> true
   | _          -> false
 ```
-The `EAbs`, `ETrue`, and `EFalse` cases share the same right-hand-side (`false`),
+The `EAbs`, `ETrue`, and `EFalse` cases share the same right-hand-side (`true`),
 which is a way to prevent duplication in definitions.
 
 In order to give a semantics to function applications we define a
@@ -2922,6 +2922,15 @@ let rec eval e =
   if is_value e then e
   else eval (typed_step e)
 ~~~
+or using the `progress` and `preservation` lemmas instead of `typed_step`
+(suggested by Guido Martinez):
+```
+val eval : e:exp{is_Some (typing empty e)} ->
+  Dv (v:exp{is_value v && typing empty v = typing empty e})
+let rec eval e = match step e with
+  | None -> progress e; e
+  | Some e' -> preservation e; eval e'
+```
 Here is another solution that only uses the substitution lemma:
 ~~~ SolutionFragment {exname=ex7d-stlc-eval}
 val eval' : e:exp{is_Some (typing empty e)} ->
@@ -3777,86 +3786,8 @@ current state contains the appropriate permission.
 
 Here's how it goes:
 
-
 ```
-module DynACLs
-open Heap
-open ST      (* we open the Heap and ST namespaces to use stateful primitives *)
-type file = string
-
-(* Each entry is an element in our access-control list *)
-type entry =
-  | Readable of string
-  | Writable of string
-type db = list entry
-
-(* The acls reference stores the current access-control list, initially empty *)
-let acls = ref []
-
-(* We define two pure functions that test whether
-   the suitable permission exists in some db *)
-let canRead db file =
-  is_Some (List.find (function Readable x | Writable x -> x=file) db)
-
-let canWrite db file =
-  is_Some (List.find (function Writable x -> x=file | _ -> false) db)
-
-(*
-   Here are two stateful functions which alter the access control list.
-   In reality, these functions may themselves be protected by some
-   further authentication mechanism to ensure that an attacker cannot
-   alter the access control list
-
-   F* infers a fully precise predicate transformer semantics for them
-*)
-let grant e  = acls := e::!acls
-let revoke e = acls := List.filter (fun e' -> e<>e') !acls
-
-(* Next, we model two primitives that provide access to files *)
-
-(* We use two heap predicates, which will serve as stateful pre-conditions *)
-type CanRead (f:file) (h:heap)  = canRead  (Heap.sel h acls) f
-type CanWrite (f:file) (h:heap) = canWrite (Heap.sel h acls) f
-
-(* In order to call `read`, you need to prove
-   the `CanRead f` permission exists in the input heap *)
-assume val read:   f:file -> ST string
-       (requires (CanRead f))
-       (ensures (fun h s h' -> h=h'))
-
-(* Likewise for `delete` *)
-assume val delete: f:file -> ST unit
-       (requires (CanWrite f))
-       (ensures (fun h s h' -> h=h'))
-
-(* Then, we have a top-level API, which provides protected
-   access to a file by first checking the access control list.
-
-   If the check fails, it raises a fatal exception using `failwith`.
-   As such, it is defined to have effect `All`, which combines
-   both state and exceptions.
-
-   Regardless, the specification proves that `checkedDelete`
-   does not change the heap.
- *)
-val checkedDelete: file -> All unit
-    (requires (fun h -> True))
-    (ensures (fun h x h' -> h=h'))
-let checkedDelete file =
-  if canWrite !acls file
-  then delete file
-  else failwith "unwritable"
-
-(* Finally, we have a top-level client program *)
-val test_acls: file -> unit
-let test_acls f =
-  grant (Readable f);     (* ok *)
-  let _ = read f in       (* ok --- it's in the acl *)
-  (* delete f;               not ok --- we're only allowed to read it *)
-  checkedDelete f;          (* ok, but fails dynamically *)
-  revoke (Readable f);
-  (* let _ = read f in    (* not ok any more *)
-  ()
+[INCLUDE=code/exercises/ex10a-acls-variant.fst]
 ```
 
 ~Exercise
@@ -5380,7 +5311,7 @@ Hint: have a look e.g. at the HMAC construction.
 
 ## Stateful Authenticated Encryption
 
-A typical guarantees provided by a secure channel protocol is that
+A typical guarantee provided by a secure channel protocol is that
 messages are received in the same order in which they were sent. To
 achieve this, we construct a stateful, authenticated encryption scheme from
 a (stateless) “authenticated encryption with additional data” (AEAD)

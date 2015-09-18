@@ -4,7 +4,7 @@ module Addition
 
 open IntLib
 open Limb
-open Seq
+open FStar.Seq
 open Eval
 open Axiomatic
 
