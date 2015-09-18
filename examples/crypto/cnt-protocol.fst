@@ -94,30 +94,36 @@ let log_event e =
   let l = !log_prot in
   log_prot := e::l
 
-val server_refs: unit -> GTot (set aref)
-let server_refs _ = (Set.union (Set.singleton (Ref log_prot))
-			       (Set.singleton (Ref server_cnt)))
-
 val log_and_update: s: uint32 -> c: uint16 -> ST (unit)
     (requires (fun h -> Invariant h /\
                         (forall e . List.mem e (sel h log_prot) ==> e <> (Recv s c)) /\
                         (c > server_max (sel h log_prot))))
     (ensures (fun h x h' -> Invariant h' /\ c = sel h' server_cnt /\
                             (sel h' log_prot = Recv s c::sel h log_prot)
-                            /\ modifies (server_refs ()) h h'))
+                            /\ modifies (!{log_prot, server_cnt}) h h'))
 let log_and_update s c =
   log_event (Recv s c);
   update_cnt c
 
 (* some basic, untrusted network controlled by the adversary *)
 
-assume val send: message -> ST unit
-			       (requires (fun h -> True))
-			       (ensures (fun h x h' -> modifies !{} h h'))
+val msg_buffer: ref message
+let msg_buffer = ST.alloc (empty_bytes)
 
-assume val recv: unit -> ST message
-			    (requires (fun h -> True))
-			    (ensures (fun h x h' -> modifies !{} h h'))
+val send: message -> ST unit
+		       (requires (fun h -> True))
+		       (ensures (fun h x h' -> modifies !{msg_buffer} h h'))
+let send m = msg_buffer := m
+
+val recv: unit -> ST message
+		    (requires (fun h -> True))
+		    (ensures (fun h x h' -> modifies !{msg_buffer} h h'))
+let rec recv _ = if length !msg_buffer > 0
+                then (
+                  let msg = !msg_buffer in
+                  msg_buffer := empty_bytes;
+                  msg)
+                else recv ()
 
 (* two events, recording genuine requests and responses *)
 
@@ -145,7 +151,7 @@ let client (s: uint32) =
 val server : unit -> ST (option string)
 			(requires (fun h -> Invariant h /\
                                    sel h server_cnt <> sel h client_cnt))
-			(ensures (fun h x h' -> Invariant h' /\ modifies (server_refs ()) h h'))
+			(ensures (fun h x h' -> Invariant h' /\ modifies (!{log_prot, server_cnt, msg_buffer}) h h'))
 let server () =
   let msg = recv () in (
     if length msg <> signal_size + macsize then Some "Wrong length"
@@ -162,3 +168,11 @@ let server () =
 	        ) else Some "MAC failed"
 	      else Some "Counter already used"
       | None -> Some "Bad tag" )
+(*
+let main =
+  let x = 10 in
+  print_string ("Client sending: " ^ string_of_int x);
+  client x;
+  let y = server () in
+  print_string ("Server received: " ^ string_of_int y)
+*)
