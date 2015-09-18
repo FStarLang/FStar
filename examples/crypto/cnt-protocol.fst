@@ -131,7 +131,7 @@ opaque logic type req (msg:message) =
 let k = keygen req
 
 val client : uint32 -> ST (option string)
- 			  (requires (fun h -> invariant h /\ sel h client_cnt < uint16_max ))
+ 			  (requires (fun h -> invariant h /\ repr_bytes ((sel h client_cnt) + 1) < 2 ))
  			  (ensures (fun h x h' -> invariant h'))
 let client (s: uint32) =
   let c = next_cnt () in

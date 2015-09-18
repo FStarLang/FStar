@@ -51,18 +51,9 @@ let append_inj_lemma b1 b2 c1 c2 =
 (* ----- from strings to bytestring and back *)
 type uint = i:int{0 <= i}
 type pint = i:int{1 <= i}
-(*assume *)
-val max_int : i:pint -> Tot uint
-let rec max_int i =
-  if i > 1 then
-    256 * max_int (i-1)
-  else 256
 
-logic type UInt (len:pint) (i:int) = (0 <= i /\ i < max_int len)
-type ulint (len:pint) = i:int{UInt len i}
-type uint16 = i:int{UInt 2 i}
-let uint16_max = (max_int 2) - 1
-type uint32 = i:int{UInt 4 i}
+type uint16 = i:nat{repr_bytes i <= 2}
+type uint32 = i:nat{repr_bytes i <= 4}
 
 (*assume val utf8:
   s:string  -> Tot (m:message{length m <= strlen s})*)
@@ -79,21 +70,16 @@ type uint32 = i:int{UInt 4 i}
 (*   try Some (iutf8 m) *)
 (*   with _ -> None *)
 
+let uint16_to_bytes = bytes_of_int 2
+let uint32_to_bytes = bytes_of_int 4
+let bytes_to_uint16 (x:msg 2) = int_of_bytes x
+let bytes_to_uint32 (x:msg 4) = int_of_bytes x
+
 assume UTF8_inj:
   forall s0 s1.{:pattern (utf8 s0); (utf8 s1)}
      Seq.Eq (utf8 s0) (utf8 s1) ==> s0==s1
 
-assume val ulint_to_bytes: len:pint -> ulint len -> Tot (msg len)
-
-assume val bytes_to_ulint: len:pint -> x:msg len -> Tot (y:ulint len{ulint_to_bytes len y == x})
-assume UINT_inj: forall len s0 s1. Seq.Eq (ulint_to_bytes len s0) (ulint_to_bytes len s1) ==> s0==s1
-
-let uint16_to_bytes = ulint_to_bytes 2
-let uint32_to_bytes = ulint_to_bytes 4
-let bytes_to_uint16 = bytes_to_ulint 2
-let bytes_to_uint32 = bytes_to_ulint 4
-
-type string16 = s:string{UInt 16 (length (utf8 s))} (* up to 65K *)
+type string16 = s:string{repr_bytes (length (utf8 s)) <= 2} (* up to 65K *)
 
 
 (* =============== the formatting we use for authenticated RPCs *)
@@ -109,7 +95,7 @@ let tag2 = createBytes 1 2uy
 
 let request s = tag0 @| (utf8 s)
 
-val response: s:string{ length (utf8 s) < max_int 2} -> string -> Tot message
+val response: s:string{ repr_bytes (length (utf8 s)) <= 2} -> string -> Tot message
 let response s t =
   let lb = uint16_to_bytes (length (utf8 s)) in
   tag1 @| (lb @| ( (utf8 s) @| (utf8 t)))
@@ -129,7 +115,7 @@ let signal_split m =
   let (t, sc) = split_eq m 1 in
   if t = tag2 then
     let (s_b, c_b) = split_eq sc 4 in
-    let (s, c) = (bytes_to_ulint 4 s_b, bytes_to_ulint 2 c_b) in
+    let (s, c) = (bytes_to_uint32 s_b, bytes_to_uint16 c_b) in
     Some (s, c)
   else
     None
@@ -152,7 +138,7 @@ let signal_components_corr s0 c0 s1 c1 = ()
    sufficient *)
 
 val req_resp_distinct:
-  s:string -> s':string16{ length (utf8 s') < max_int 2} -> t':string ->
+  s:string -> s':string16{ repr_bytes (length (utf8 s')) <= 2} -> t':string ->
   Lemma (requires True)
         (ensures ( ( (request s) <> (response s' t'))))
         [SMTPat (request s); SMTPat (response s' t')]
@@ -165,7 +151,7 @@ val req_components_corr:
 let req_components_corr s0 s1 = ()
 
 val resp_components_corr:
-  s0:string16{ length (utf8 s0) < max_int 2} -> t0:string -> s1:string16{ length (utf8 s1) < max_int 2} -> t1:string ->
+  s0:string16{ repr_bytes (length (utf8 s0)) <= 2} -> t0:string -> s1:string16{ repr_bytes (length (utf8 s1)) < 2} -> t1:string ->
   Lemma (requires (Seq.Eq (response s0 t0) (response s1 t1)))
         (ensures  (s0==s1 /\ t0==t1))
 let resp_components_corr s0 t0 s1 t1 = ()
