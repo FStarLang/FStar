@@ -139,7 +139,7 @@ let client (s: uint32) =
   assert(Signal s c);
   let t = CntFormat.signal s c in
   let m = mac k t in
-  send (append t m);
+  send (t @| m);
   None
 
 val server : unit -> ST (option string)

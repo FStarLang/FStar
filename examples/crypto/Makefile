@@ -122,7 +122,7 @@ CntProtocol.ml: cnt-format.fst mac.fst sha1.fst cnt-protocol.fst
 	  cnt-format.fst sha1.fst mac.fst cnt-protocol.fst --codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml
 
 CntProtocol.exe: CntProtocol.ml
-	$(OCAMLC) $(SUPPORT_LIBS) $(CONTRIB_LIBS) FStar_FunctionalExtensionality.ml FStar_Seq.ml FStar_Set.ml FStar_SeqProperties.ml SHA1.ml MAC.ml CntFormat.ml CntProtocol.ml
+	$(OCAMLC) $(SUPPORT_LIBS) $(CONTRIB_LIBS) FStar_Seq.ml ../../lib/ml/FStar_Set.ml FStar_SeqProperties.ml SHA1.ml MAC.ml CntFormat.ml CntProtocol.ml
 
 clean:
 	rm -fr rpc *.ml *.cmi *.cmx *.o *.exe *~
