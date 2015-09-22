@@ -4,6 +4,10 @@
 --*)
 module FStar.Squash
 
+(* This file shows that there is a natural model some of the squash things;
+   DO NOT IMPORT THIS FILE; USE squash.fsti and --admit_fsi FStar.Squash INSTEAD
+ *)
+
 type squash (t:Type) = t
 
 let return_squash x = x
@@ -17,3 +21,6 @@ assume val get_proof : p:Type ->
 
 assume val give_proof : #p:Type -> squash p ->
   Pure unit (requires True) (ensures (fun _ -> p))
+
+assume val proof_irrelevance : p:Type -> x:squash p ->
+                                         y:squash p -> Tot (squash (x = y))

@@ -13,6 +13,9 @@ val get_proof : p:Type ->
 val give_proof : #p:Type -> squash p ->
   Pure unit (requires True) (ensures (fun _ -> p))
 
+val proof_irrelevance : p:Type -> x:squash p ->
+                                  y:squash p -> Tot (squash (x = y))
+
 (* This is a monad, but not an effect *)
 
 val return_squash : #a:Type -> a -> Tot (squash a)

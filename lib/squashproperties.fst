@@ -46,10 +46,7 @@ let excluded_middle_squash (p:Type) =
   else
     return_squash (IntroR (fun (h:p) -> give_proof (return_squash h); false_elim ())))
 
-(* we should then be able to use this to prove proof irrelevance (by Berardi?) *)
-val proof_irrelevance : p:Type -> x:(squash p) ->
-                                         y:(squash p) -> Tot (squash (x = y))
-
+(* we thought we might prove proof irrelevance by Berardi ... but didn't manage *)
 
 (* Conditional on any Type -- unused below *)
 val ifProp: #p:Type -> b:Type -> (e1:squash p) -> (e2:squash p) -> Tot (squash p)

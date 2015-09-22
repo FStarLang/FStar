@@ -3,7 +3,8 @@ FSTAR = ../bin/fstar.exe
 
 all:
 	$(FSTAR) --admit_fsi FStar.Set set.fsi heap.fst st.fst all.fst
-	$(FSTAR) --admit_fsi FStar.Set set.fsi heap.fst st.fst seq.fsi seq.fst classical.fst seqproperties.fst arr.fst
+	$(FSTAR) --admit_fsi FStar.Set classical.fst ext.fst set.fsi seq.fsi seq.fst 
+	$(FSTAR) --admit_fsi FStar.Set --admit_fsi FStar.Seq set.fsi heap.fst st.fst seq.fsi classical.fst seqproperties.fst arr.fst -- seqproperties is flaky
 	$(FSTAR) array.fst
 	$(FSTAR) char.fst
 	$(FSTAR) classical.fst
