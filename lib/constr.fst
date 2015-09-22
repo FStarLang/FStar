@@ -45,6 +45,9 @@ type ctrue : Type =
 (* hopefully this is an empty type *)
 type cfalse : Type =
 
+val false_elim : #a:Type -> u:unit{false} -> Tot a
+let rec false_elim (a:Type) () = false_elim ()
+
 assume val cfalse_elim : #a:Type -> cfalse -> Tot a
 (* This sholud work (see issue #70)
 E.g. in Coq: False_rect = fun (P:Type) (f:False) => match f return P with end

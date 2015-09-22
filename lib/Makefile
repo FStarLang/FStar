@@ -36,6 +36,8 @@ all:
 	$(FSTAR) --admit_fsi FStar.Set set.fsi heap.fst st.fst all.fst bytes.fst tcp.fst
 	$(FSTAR) --admit_fsi FStar.Set --admit_fsi FStar.Map set.fsi heap.fst map.fsi twoLevelHeap.fst
 #	$(FSTAR) util.fst    -- problem filed as #359
+	$(FSTAR) squash.fst
+	$(FSTAR) squashproperties.fst
 
 wc:
 	sloccount .
