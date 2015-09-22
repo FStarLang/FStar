@@ -4,7 +4,7 @@
 --*)
 module FStar.Squash
 
-(* This file shows that there is a natural model some of the squash things;
+(* This file shows that there is a natural model for some of the squash things;
    DO NOT IMPORT THIS FILE; USE squash.fsti and --admit_fsi FStar.Squash INSTEAD
  *)
 
