@@ -16,6 +16,9 @@ val give_proof : #p:Type -> squash p ->
 val proof_irrelevance : p:Type -> x:squash p ->
                                   y:squash p -> Tot (squash (x = y))
 
+val squash_double_arrow : #a:Type -> #p:(a -> Type) ->
+  =f:(squash (x:a -> Tot (squash (p x)))) -> Tot (squash (x:a -> Tot (p x)))
+
 (* This is a monad, but not an effect *)
 
 val return_squash : #a:Type -> a -> Tot (squash a)
@@ -25,3 +28,4 @@ val bind_squash : #a:Type -> #b:Type -> squash a -> (a -> Tot (squash b)) ->
 
 val map_squash : #a:Type -> #b:Type -> squash a -> (a -> Tot b) ->
   Tot (squash b)
+

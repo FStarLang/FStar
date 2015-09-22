@@ -1,6 +1,6 @@
 (*--build-config
     options:--warn_top_level_effects;
-    other-files:constr.fst classical.fst squash.fsti;
+    other-files:squash.fsti;
 --*)
 module FStar.Squash
 
@@ -24,3 +24,6 @@ assume val give_proof : #p:Type -> squash p ->
 
 assume val proof_irrelevance : p:Type -> x:squash p ->
                                          y:squash p -> Tot (squash (x = y))
+
+assume val squash_double_arrow : #a:Type -> #p:(a -> Type) ->
+  =f:(squash (x:a -> Tot (squash (p x)))) -> Tot (squash (x:a -> Tot (p x)))

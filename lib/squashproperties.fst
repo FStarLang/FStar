@@ -1,16 +1,27 @@
 (*--build-config
-    options:--warn_top_level_effects --admit_fsi FStar.Squash; 
-    other-files:constr.fst classical.fst squash.fsti;
+    options:--warn_top_level_effects --admit_fsi FStar.Squash --print_implicits;
+    other-files:constr.fst squash.fsti;
 --*)
 module FStar.SquashProperties
 
 open FStar.Constructive
-open FStar.Classical
 
 open FStar.Squash
 
 val join_squash : #a:Type -> squash (squash a) -> Tot (squash a)
 let join_squash (a:Type) s = bind_squash #(squash a) #a s (fun x -> x)
+
+val squash_arrow : #a:Type -> #p:(a -> Type) ->
+  =f:(x:a -> Tot (squash (p x))) -> Tot (squash (x:a -> Tot (p x)))
+let squash_arrow (a:Type) (p:(a->Type)) f =
+  squash_double_arrow (return_squash (fun x -> f x))
+
+val forall_intro : #a:Type -> #p:(a -> Type) ->
+  =f:(x:a -> Lemma (p x)) -> Lemma (x:a -> Tot (p x))(* (forall (x:a). p x) *)
+let forall_intro (a:Type) (p:(a->Type)) f =
+  let ff : (x:a -> Tot (squash (p x))) = (fun x -> f x; get_proof (p x)) in
+  give_proof #(x:a -> Tot (p x)) (squash_arrow #a #p ff)
+
 
 // currently unused
 // val squash_elim : a:Type -> #b:Type -> t1:b -> t2:b ->
