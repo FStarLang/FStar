@@ -5,9 +5,8 @@
 module FStar.Squash
 
 (* This file shows that there is another natural model for some of the
-   squash things;
-   DO NOT IMPORT THIS FILE; USE squash.fsti and --admit_fsi FStar.Squash INSTEAD
- *)
+   squash things; for this one it doesn't seem to harm importing this
+   file (exposing the implementation); it probably doesn't help either *)
 
 type squash (t:Type) = u:unit{t}
 

@@ -1,6 +1,6 @@
 (*--build-config
-    options:--warn_top_level_effects --admit_fsi FStar.Squash --print_implicits;
-    other-files:constr.fst squash.fsti;
+    options:--warn_top_level_effects --admit_fsi FStar.Squash --admit_fsi FStar.Set --print_implicits;
+    other-files:constr.fst squash.fsti set.fsi heap.fst st.fst all.fst;
 --*)
 module FStar.SquashProperties
 
@@ -114,13 +114,17 @@ let g sh = fun (x:Type) ->
   bind_squash sh (fun h ->
   return_squash (lX (rU h)))))
 
-(* val r : U *)
-(* let r = g (return_squash (fun (u:U) -> map_squash (u U) (fun uu -> not (uu u)))) *)
-(* got stuck here:
-squash.fst(134,10-134,80) : Error
-Expected type "(squash (pow U))";
-got type "(squash (u:U -> Tot (squash bool)))"
-*)
+(* This only works if importing all.fst, which is nonsense *)
+val r : U
+let r =
+  let ff : (U -> Tot (squash bool)) =
+      (fun (u:U) -> map_squash (u U) (fun uu -> not (uu u))) in
+  g (squash_arrow ff)
+
+(* CH: stopped here *)
+(* val not_has_fixpoint : squash (ceq (r U r) (not (r U r))) *)
+(* let not_has_fixpoint = Refl #bool #(r U r) *)
+
 
 (* otherwise we could assume proof irrelevance as an axiom;
    note that proof relevance shouldn't be derivable for squash types *)
