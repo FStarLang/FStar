@@ -33,3 +33,6 @@ simple_st2_examples:
 
 cache:
 	$(FSTAR) cache.fst
+
+ifc_ts:
+	$(FSTAR) ifc_ts.fst

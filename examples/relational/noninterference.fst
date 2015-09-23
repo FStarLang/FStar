@@ -22,17 +22,16 @@ assume val label_fun : ref int -> Tot label
    alpha *)
 let attacker_observable x = label_fun x <= alpha
 
+type alpha_equiv (h1:double heap) = (forall (x:ref int). attacker_observable x 
+                                                   ==> sel (R.l h1) x = sel (R.r h1) x) 
+
 (* Definition of Noninterference  If all attacker-observable references contain
    equal values before the function call, then they also have to contain equal
    values after the function call. *)
-type ni = (double unit) ->
+type ni = unit ->
           ST2 (double unit)
-              (requires (fun h2 -> (forall (x:ref int).
-                                        attacker_observable x
-                                        ==> sel (R.l h2) x = sel (R.r h2) x)))
-              (ensures  (fun _ _ h2 -> (forall (x:ref int).
-                                        attacker_observable x
-                                        ==> sel (R.l h2) x = sel (R.r h2) x)))
+              (requires (fun h -> alpha_equiv h))
+              (ensures  (fun _ _ h2 -> alpha_equiv h2))
 
 (* Function to create new labeled references *)
 assume val new_labeled_int : l:label -> x:ref int{label_fun x = l}
@@ -101,7 +100,6 @@ type distinct10 (#t:Type) (a1:t) (a2:t) (a3:t) (a4:t) (a5:t) (a6:t) (a7:t) (a8:t
   /\  a8 <> a9 /\ a8 <> a10
   /\  a9 <> a10
 
-
 (* Simple Examples using the above definition of Noninterference*)
 module Example1
 open NonInterference
@@ -123,7 +121,7 @@ let test () = (if !b = 0 then
                b := 0
 
 val test_ni : ni
-let test_ni x = compose2_self test x
+let test_ni _ = compose2_self test (twice ())
 
 module Example2
 open NonInterference
@@ -146,8 +144,7 @@ let test () = c := !a + !b;
               a := 0
 
 val test_ni : ni
-let test_ni x = compose2_self test x
-
+let test_ni _ = compose2_self test (twice ())
 
 module Example3
 open NonInterference
@@ -168,8 +165,7 @@ assume Distinct : distinct3 a b c
 let test () = a:= !b + !c
 
 val test_ni : ni
-let test_ni x = compose2_self test x
-
+let test_ni _ = compose2_self test (twice ())
 
 module Example4
 open NonInterference
@@ -183,8 +179,6 @@ assume val lc : lc:int{lc >= la}
 
 let a = new_labeled_int la
 let b = new_labeled_int lb
-(* This val-declaration is necessary (otherwise: Stackoverflow) *)
-(* val test' : unit -> St (u:unit{False}) *)
 let c = new_labeled_int lc
 
 assume Distinct : distinct3 a b c
@@ -195,8 +189,7 @@ let test () = if !a = 0 then
                 c := 2
 
 val test_ni : ni
-let test_ni x = compose2_self test x
-
+let test_ni _ = compose2_self test (twice ())
 
 module Example5
 open NonInterference
@@ -234,7 +227,7 @@ let test () = loop ();
               c := 1
 
 val test_ni : ni
-let test_ni x = compose2_self test x
+let test_ni _ = compose2_self test (twice ())
 
 let test' () = a := 1249;
                loop ();
@@ -244,10 +237,9 @@ let test' () = a := 1249;
                c := !b
 
 val test_ni' : ni
-let test_ni' x = compose2_self test' x
+let test_ni' _ = compose2_self test' (twice ())
 
 (*
-
 (* These examples require a lot of memory *)
 module Example6
 open NonInterference
@@ -295,12 +287,13 @@ let test () = a := !b + !c;
 
 (* This works only with the ocaml-binary (with fstar-mono it requires ulimit -s unlimited) *)
 val test_ni : ni
-let test_ni x = compose2_self test x
+let test_ni _ = compose2_self test (twice ())
 *)
 
 (* Module 6 and 7 both verify indidually, but do not verify both at the same
    time, as memory is not freed in between *)
 
+(*
 (* The same program manually composed (Way slower) *)
 module Example7
 open NonInterference
@@ -337,7 +330,7 @@ let op_Hat_At = rel_map2 (fun x y -> x - y)
 let eq_rel' = rel_map2 (fun a b -> a = b)
 
 val test_ni : ni
-let test_ni x =
+let test_ni _ =
   let _ = assign_rel (twice a) ((deref_rel (twice b)) ^+ (deref_rel (twice c))) in
   let _ = assign_rel (twice d) ((deref_rel (twice d)) ^* (deref_rel (twice f))) in
   let _ = assign_rel (twice c) ((deref_rel (twice a)) ^@ (deref_rel (twice c))) in
@@ -358,3 +351,4 @@ let test_ni x =
   match (eq_rel' (deref_rel (twice f)) (R 0 0)) with
   | R true true   -> assign_rel (twice f) (deref_rel (twice e))
   | R false false -> assign_rel (twice f) (deref_rel (twice a))
+*)
