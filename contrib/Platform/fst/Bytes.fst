@@ -93,7 +93,7 @@ val createBytes : nat -> byte -> Tot bytes
 let createBytes l b = Seq.create l b
 
 (*@ assume val equalBytes : (b0:bytes -> (b1:bytes -> (r:bool){r = True /\ B (b0) = B (b1) \/ r = False /\ B (b0) <> B (b1)})) @*)
-assume val equalBytes : bytes -> bytes -> Tot bool
+assume val equalBytes : b1:bytes -> b2:bytes -> Tot (b:bool{b = (b1=b2)})
 (*@ assume val xor : (bytes -> (bytes -> (nb:nat -> (b3:bytes){Length (b3) = nb}))) @*)
 assume val xor : bytes -> bytes -> nat -> Tot bytes
 
