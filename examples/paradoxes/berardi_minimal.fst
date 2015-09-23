@@ -5,6 +5,7 @@
 module Berardi
 
 open FStar.Constructive
+open FStar.Classical
 
 (* Berardi's paradox:
    https://coq.inria.fr/distrib/current/stdlib/Coq.Logic.Berardi.html
@@ -21,7 +22,7 @@ let foo f = f t
 
 (* Alternative Ingredient #2: proof reification to Type *)
 
-assume val get_proof : p:Type -> Tot p (requires p) (ensures (fun _ -> True))
+assume val get_proof : p:Type -> Pure p (requires p) (ensures (fun _ -> True))
 
 val bool_of_or : #p:Type -> #q:Type -> (p \/ q) -> 
   Tot (b:bool{(b ==> p) /\ (not(b) ==> q)})
@@ -36,9 +37,9 @@ let excluded_middle (p:Type) = bool_of_or (get_proof (p \/ ~p))
 val cem : p:Type -> Tot (cor p (cnot p))
 let cem (p:Type) = 
   if excluded_middle p then
-    IntroL (get_proof _)
+    IntroL (get_proof p)
   else
-    IntroR (get_proof _)
+    IntroR (fun (h:p) -> give_proof h; false_elim ())
 
 (* Conditional on any Type -- unused below *)
 val ifProp: #p:Type -> b:Type -> (e1:p) -> (e2:p) -> Tot p

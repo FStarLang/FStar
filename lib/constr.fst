@@ -14,8 +14,10 @@ type ciff (a:Type) (b:Type) = cand (cimp a b) (cimp b a)
 type cexists (#a:Type) (p:a -> Type) : Type =
   | ExIntro : x:a -> h:p x -> cexists p
 
-type cexists_type (#p:Type -> Type) (t:Type) : Type =
-  | ExTypeIntro : h:p t -> cexists_type #p t
+(* this currently fails because of ill-typed generated projector;
+   it's a strong elimination so we can't soundly allow that anyway *)
+(* type cexists_type (p:Type -> Type) : Type = *)
+(*   | ExTypeIntro : t:Type -> h:p t -> cexists_type p *)
 
 type ceq (#a:Type) (x:a) : a -> Type =
   | Refl : ceq #a x x
@@ -44,6 +46,9 @@ type ctrue : Type =
 
 (* hopefully this is an empty type *)
 type cfalse : Type =
+
+val false_elim : #a:Type -> u:unit{false} -> Tot a
+let rec false_elim (a:Type) () = false_elim ()
 
 assume val cfalse_elim : #a:Type -> cfalse -> Tot a
 (* This sholud work (see issue #70)

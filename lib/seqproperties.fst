@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Seq;
+    options:--admit_fsi FStar.Set --admit_fsi FStar.Seq;
     other-files:classical.fst ext.fst set.fsi seq.fsi
   --*)
 

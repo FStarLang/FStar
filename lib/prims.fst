@@ -539,9 +539,6 @@ assume val raise: exn -> Ex 'a       (* TODO: refine with the Exn monad *)
 val ignore: 'a -> Tot unit
 let ignore x = ()
 
-assume val min: int -> int -> Tot int
-assume val max: int -> int -> Tot int
-
 type nat = i:int{i >= 0}
 type pos = i:int{i > 0}
 type nonzero = i:int{i<>0}
