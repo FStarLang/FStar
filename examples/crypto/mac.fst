@@ -36,7 +36,6 @@ module MAC
 //open Array
 open SHA1
 open IO
-open Platform.Bytes
 
 (* ---- specification *)
 
@@ -99,21 +98,19 @@ let mac k t =
 let verify k text tag =
   (* to verify, we simply recompute & compare *)
   let m= hmac_sha1 k text in
-  let verified = (equalBytes m tag) in
+  let verified = (m = tag) in
   let found =
     is_Some
       (List.find
-        (fun (Entry k' text' tag') -> equalBytes k k' && equalBytes text text')
+        (fun (Entry k' text' tag') -> k=k' && text=text')
         !log) in
 
   (* plain, concrete implementation (ignoring the log) *)
-  if verified then
-    (assume (key_prop k text); true)
-  else false
-
+//verified
 
   (* ideal, error-correcting implementation *)
 //  verified && found
+  found
 
   (* error-detecting implementation for the INT-CMA game *)
 //(if verified && not found then win := Some(k,text,tag));
