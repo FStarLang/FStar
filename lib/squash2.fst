@@ -10,24 +10,18 @@ module FStar.Squash
 
 type squash (t:Type) = u:unit{t}
 
-assume val return_squash : #a:Type -> a -> Tot (squash a)
+let return_squash x = ()
 
-assume val bind_squash : #a:Type -> #b:Type -> squash a -> (a -> Tot (squash b)) ->
-  Tot (squash b)
+assume val bind_squash : #a:Type -> #b:Type -> squash a -> 
+  (a -> Tot (squash b)) -> Tot (squash b)
 
-assume val map_squash : #a:Type -> #b:Type -> squash a -> (a -> Tot b) ->
-  Tot (squash b)
-
-val get_proof : p:Type ->
-  Pure (squash p) (requires p) (ensures (fun _ -> True))
+let map_squash (#a:Type) (#b:Type) s f = 
+  bind_squash #a #b s (fun x -> return_squash (f x))
+  
 let get_proof (p:Type) = ()
 
-val give_proof : #p:Type -> squash p ->
-  Pure unit (requires True) (ensures (fun _ -> p))
 let give_proof (p:Type) _ = ()
 
-val proof_irrelevance : p:Type -> x:squash p ->
-                                  y:squash p -> Tot (squash (x = y))
 let proof_irrelevance (p:Type) x y = ()
 
 assume val squash_double_arrow : #a:Type -> #p:(a -> Type) ->

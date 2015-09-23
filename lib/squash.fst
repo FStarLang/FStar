@@ -16,14 +16,14 @@ let bind_squash x f = f x
 
 let map_squash x f = f x
 
+(* Inconsistent, see #355 *)
 assume val get_proof : p:Type ->
   Pure (squash p) (requires p) (ensures (fun _ -> True))
 
-assume val give_proof : #p:Type -> squash p ->
-  Pure unit (requires True) (ensures (fun _ -> p))
+let give_proof (#p:Type) (s:squash p) = ()
 
+(* Inconsistent *)
 assume val proof_irrelevance : p:Type -> x:squash p ->
-                                         y:squash p -> Tot (squash (x = y))
+                                        y:squash p -> Tot (squash (x = y))
 
-assume val squash_double_arrow : #a:Type -> #p:(a -> Type) ->
-  =f:(squash (x:a -> Tot (squash (p x)))) -> Tot (squash (x:a -> Tot (p x)))
+let squash_double_arrow (#a:Type) (#p:a -> Type) f = f
