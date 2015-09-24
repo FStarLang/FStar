@@ -246,6 +246,8 @@ let string_of_mlconstant (sctt : mlconstant) =
   | MLC_Byte     c     -> "'"^(ocaml_u8_codepoint c)^"'"
   | MLC_Int32    i     -> string_of_int32  i
   | MLC_Int64    i     -> (string_of_int64 i)^"L"
+  | MLC_Int      s     -> "Prims.parse_int \"" ^s^ "\""
+  
   | MLC_Float    d     -> string_of_float d
 
   | MLC_Bytes bytes ->
@@ -706,7 +708,10 @@ let rec doc_of_mllib_r (MLLib mllib) =
         let prefix = if Util.codegen_fsharp () then [cat (text "#light \"off\"") hardline] else [] in
 
         reduce <| (prefix @ [
-            cat head hardline;
+            head;
+            hardline;
+            text "open Prims";
+            hardline;
             (match doc with
              | None   -> empty
              | Some s -> cat s hardline);

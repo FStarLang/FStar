@@ -31,10 +31,11 @@ type uint16    = uint16'
 type int32'    = int32
 type int32     = int32'
 
-type int       = Big_int.big_int
+type int'      = int
+type int       = int'
 
 type byte'     = char
-type byte      = byte'
+type byte 	 = byte'
 
 type exn'      = exn
 type exn       = exn'
@@ -110,17 +111,8 @@ let _assert x = ()
 let magic () = failwith "no magic"
 let op_Negation x = not x
 
-let (+)    = Big_int.add_big_int
-let (-)    = Big_int.sub_big_int
-let ( * )  = Big_int.mult_big_int
-let (/)    = Big_int.div_big_int
-let (<=)   = Big_int.le_big_int
-let (>=)   = Big_int.ge_big_int
-let (<)    = Big_int.lt_big_int
-let (>)    = Big_int.gt_big_int
-let (%)    = Big_int.mod_big_int
-let op_Minus = Big_int.minus_big_int
-let parse_int = Big_int.big_int_of_string
+let op_Minus x = - x
+let parse_int x = int_of_string x
 
 let op_Equality x y = x = y
 let op_disEquality x y = x<>y
@@ -146,16 +138,13 @@ type ('a, 'b) either =
 let is_Inl = function
   | Inl _ -> true
   | _     -> false
-
+  
 let is_Inr x = not (is_Inl x)
 
 let ___Inl___v x = match x with
   | Inl v -> v
   | _     -> failwith "impossible"
-
+  
 let ___Inr___v x = match x with
   | Inr v -> v
   | _     -> failwith "impossible"
-
-let string_of_bool = string_of_bool
-let string_of_int = string_of_int

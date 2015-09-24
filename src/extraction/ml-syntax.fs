@@ -30,6 +30,7 @@ type mlsymbols = list<mlsymbol>
 (* -------------------------------------------------------------------- *)
 type e_tag =
   | E_PURE
+  | E_GHOST
   | E_IMPURE
 
 type mlty =
@@ -48,6 +49,7 @@ type mlconstant =
 | MLC_Byte   of byte
 | MLC_Int32  of int32
 | MLC_Int64  of int64
+| MLC_Int    of string
 | MLC_Float  of float
 | MLC_Char   of char
 | MLC_String of string

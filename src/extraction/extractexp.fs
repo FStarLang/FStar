@@ -26,6 +26,7 @@ open FStar.Extraction.ML.Util
 
 let eff_to_string = function
     | E_PURE -> "Pure"
+    | E_GHOST -> "Ghost"
     | E_IMPURE -> "Impure"
 
 let fail r msg =
@@ -93,7 +94,8 @@ let translate_typ_of_arg (g:env) (a:arg) : mlty = eraseTypeDeep g (ExtractTyp.ge
 let instantiate (s:mltyscheme) (args:list<mlty>) : mlty = Util.subst s args (*only handles fully applied types*)
 
 let erasable (g:env)  (f:e_tag) (t:mlty) =
-    f = E_PURE && erasableType g t
+    f = E_GHOST
+    || (f = E_PURE && erasableType g t)
 
 let erase (g:env) (e:mlexpr) (f:e_tag) (t:mlty) : mlexpr * e_tag * mlty =
     if erasable g f t
@@ -107,16 +109,21 @@ let maybe_coerce (g:env) (e:mlexpr) (tInferred:mlty) (etag : e_tag) (tExpected:m
     then e
     else (//debug g (fun () -> printfn "\n (*needed to coerce expression \n %A \n of type \n %A \n to type \n %A *) \n" e tInferred tExpected);
           MLE_Coerce (e, tInferred, tExpected)) //TODO: should we go inside lambdas and put coercions at more specific places? test using aref to see if it places coercion inside
-
+           
 let eff_leq f f' = match f, f' with
-    | E_PURE, _
-    | _, E_IMPURE -> true
+    | E_PURE, _          -> true
+    | E_GHOST, E_GHOST   -> true
+    | E_IMPURE, E_IMPURE -> true
     | _ -> false
 
 let join f f' = match f, f' with
-    | E_IMPURE, _
-    | _ , E_IMPURE -> E_IMPURE
-    | _ -> E_PURE
+    | E_IMPURE, E_PURE
+    | E_PURE  , E_IMPURE -> E_IMPURE
+    | E_GHOST , E_GHOST  -> E_GHOST
+    | E_PURE  , E_GHOST  -> E_GHOST
+    | E_GHOST , E_PURE   -> E_GHOST
+    | E_PURE  , E_PURE   -> E_PURE
+    | _ -> failwith "Impossible: Inconsistent effects"
 
 let join_l fs = List.fold_left join E_PURE fs
 
@@ -316,7 +323,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                         if Util.is_primop head || Util.codegen_fsharp()
                         then [], List.rev mlargs_f |> List.map fst
                         else List.fold_left (fun (lbs, out_args) (arg, f) ->
-                                if f=E_PURE
+                                if f=E_PURE || f=E_GHOST
                                 then (lbs, arg::out_args)
                                 else let x = Util.gensym (), -1 in
                                      (x, arg)::lbs, (MLE_Var x::out_args))
