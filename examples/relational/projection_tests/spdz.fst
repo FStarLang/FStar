@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi FStar.Set --z3timeout 30 --project_module SpdzTest --verify_module SpdzTest ;
     variables:LIB=../../../lib;
-    other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/st2.fst ../sample.fst ../spdz.fst test.fst
+    other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/st2.fst ../sample.fst ../spdz.fst projection.fst
   --*)
 
 module SpdzTest
@@ -11,7 +11,7 @@ open Fp
 open Sharing
 open MPC
 open Triples
-open TestPre
+open Projection
 
 
 assume val sample_l : 'a -> ST (fp) (requires (fun h -> True))

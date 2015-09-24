@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi FStar.Set --z3timeout 15 --verify_module RoTest --project_module RoTest --project_module RoTest2 ;
     variables:LIB=../../../lib;
-    other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/st2.fst $LIB/bytes.fst $LIB/list.fst ../sample.fst ../xor.fst ../ro.fst test.fst
+    other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/st2.fst $LIB/bytes.fst $LIB/list.fst ../sample.fst ../xor.fst ../ro.fst projection.fst
   --*)
 
 module RoTest
@@ -9,7 +9,7 @@ module RoTest
 open FStar.Heap
 open Ro
 open Encryption
-open TestPre
+open Projection
 
 assume val sample_l : 'a -> ST Xor.block (requires (fun h -> True))
                                               (ensures  (fun h r h' -> equal h h'))
@@ -34,7 +34,7 @@ module RoTest2
 
 open FStar.Heap
 open Ro
-open TestPre
+open Projection
 
 assume val sample_r : 'a -> ST Xor.block (requires (fun h -> True))
                                               (ensures  (fun h r h' -> equal h h'))

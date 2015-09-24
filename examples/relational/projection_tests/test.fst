@@ -1,21 +1,12 @@
 (*--build-config
     options:--admit_fsi FStar.Set --z3timeout 5 --project_module TEST --project_module TEST2 --project_module TEST3;
     variables:LIB=../../../lib;
-    other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/st2.fst
+    other-files:$LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/st2.fst projection.fst
   --*)
 
 module TestPre
 open FStar.Relational
 open FStar.Comp
-
-assume val iNLINE : #a:Type -> a -> a
-
-(* Careful with these... They imply False *)
-assume val l_PROJECT : #a:Type -> #b:Type -> a -> b
-assume val r_PROJECT : #a:Type -> #b:Type -> a -> b
-
-assume type l_PROJECT_TYP: Type -> Type
-assume type r_PROJECT_TYP: Type -> Type
 
 let add_rel a b = a ^+ b 
 let r2 = R 0 1 
@@ -42,6 +33,7 @@ let test5 a b c = compose2_self (fun () -> c := !a + !b) (twice ())
 module TEST
 
 open TestPre
+open Projection
 open FStar.Heap
 
 let r = l_PROJECT (iNLINE r2)
@@ -69,6 +61,7 @@ module TEST2
 
 open TestPre
 open FStar.Heap
+open Projection
 
 let r = l_PROJECT (iNLINE r2)
 
@@ -92,7 +85,7 @@ let test5_r = r_PROJECT (iNLINE test5)
 
 module TEST3
 
-open TestPre
+open Projection
 
 type t = int 
 type ty : Type =
