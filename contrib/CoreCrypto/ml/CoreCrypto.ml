@@ -12,6 +12,12 @@ type aead_cipher = AES_128_GCM | AES_256_GCM
 type stream_cipher = RC4_128
 type rsa_padding = Pad_none | Pad_PKCS1
 
+let hashSize h = match h with
+  | MD5    -> 16
+  | SHA1   -> 20
+  | SHA256 -> 32
+  | SHA384 -> 48
+  | SHA512 -> 64
 
 type rsa_key = {
   rsa_mod     : bytes;
