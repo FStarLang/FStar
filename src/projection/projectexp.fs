@@ -11,17 +11,18 @@ open FStar.Absyn.Print
 (* Debug Output *)
 let print_pre = false
 let print_post = false
-let print_tag = true
+let print_tag = false
 let print_typ = false
-let print_let_bindings = true
+let print_let_bindings = false
 let print_ascribed = false
 
 (* which kind of projection do we have? *)
 type project =
-  | Left  
-  | Right 
+  | LeftPro  
+  | RightPro 
   | NoPro 
 
+(* Function to inline expressions *)
 let inline_exp (g:env) (e:exp) : exp =
   match (Util.compress_exp e).n with
   (* The inlined expression should be a variable *)
@@ -34,6 +35,7 @@ let inline_exp (g:env) (e:exp) : exp =
       (fun m -> m.name.str = nsstr) mods) in 
     let decs = modl.declarations in 
     (* Look for a declaration declaring this expressions *)
+    (* Something here makes the ocaml-binary segfault... *)
     let dec = Option.get (list_find 
       (fun d -> match d with 
         | Sig_let (lbs, _, _, _) ->
@@ -48,7 +50,7 @@ let inline_exp (g:env) (e:exp) : exp =
     (* apply projecction to this expression and return the
        result *)
     lb.lbdef
-  | _ -> failwith "iNLINE can only be applied to variables"
+  | _ -> raise (Error("iNLINE can only be applied to variables", e.pos))
 
 
 (* Projection of patterns *)
@@ -70,7 +72,7 @@ let rec project_pat (pa:pat) (p:project) : pat =
         else
           (* We replace the constructor application by one of it's arguments *)
           let arg0 = 
-            if p = Left then 
+            if p = LeftPro then 
               List.nth args 2 
             else  
               List.nth args 3 in 
@@ -165,11 +167,11 @@ let rec project_type (m:modul) (g:env) (ty:typ) (p:project) : typ =
           begin
           match p with
 (*
-          | Left -> project_type m g (left(fst(List.nth args 1))) p
-          | Right -> project_type m g (left(fst(List.nth args 0))) p
+          | LeftPro -> project_type m g (left(fst(List.nth args 1))) p
+          | RightPro -> project_type m g (left(fst(List.nth args 0))) p
 *)
-          | Left -> left(fst(List.nth args 1))
-          | Right -> left(fst(List.nth args 0))
+          | LeftPro -> left(fst(List.nth args 1))
+          | RightPro -> left(fst(List.nth args 0))
           | NoPro -> failwith "Impossible"
           end
 
@@ -241,7 +243,7 @@ and project_p (m:modul) (g:env) (e:exp) (p:project) : exp =
                 failwith "List does not have 4 arguments"
               else
                 let arg0 = 
-                  if p = Left then 
+                  if p = LeftPro then 
                     List.nth args 2 
                   else  
                     List.nth args 3 in 
@@ -260,7 +262,7 @@ and project_p (m:modul) (g:env) (e:exp) (p:project) : exp =
                 failwith "List does not have 11 arguments"
               else
                 let arg0 = right(fst 
-                  (if p = Left then 
+                  (if p = LeftPro then 
                     List.nth args 8 
                   else  
                     List.nth args 9)) in 
@@ -291,7 +293,7 @@ and project_p (m:modul) (g:env) (e:exp) (p:project) : exp =
                 failwith "List does not have 3 arguments"
               else
                 let arg0 = List.nth args 2 in 
-                right(fst arg0), Left, true, true
+                right(fst arg0), LeftPro, true, true
 
           | "r_PROJECT" -> 
             if p <> NoPro then 
@@ -301,7 +303,7 @@ and project_p (m:modul) (g:env) (e:exp) (p:project) : exp =
                 failwith "List does not have 3 arguments"
               else
                 let arg0 = List.nth args 2 in 
-                right(fst arg0), Right, true, true
+                right(fst arg0), RightPro, true, true
 
           (* We have special projections for some special functions *)
           | "rel_map1"
@@ -374,7 +376,7 @@ and project_p (m:modul) (g:env) (e:exp) (p:project) : exp =
                           Util.print_string "\n";
 *)
                           if is_relational_typ t && p <> NoPro then 
-                            let ident = {idText = f.v.ident.idText ^ (if p = Left then "_l" else "_r") ;
+                            let ident = {idText = f.v.ident.idText ^ (if p = LeftPro then "_l" else "_r") ;
                                          idRange = f.v.ident.idRange;} in
                             let lident = {ns = [];
                                           ident = ident;
@@ -445,6 +447,8 @@ and project_p (m:modul) (g:env) (e:exp) (p:project) : exp =
 
   e'
 
+
+(* Function to project expressions: *)
 let project_exp (m:modul) (g:env) (e:exp) : exp =
   let r = project_p m g e NoPro in 
   let r = Tc.Normalize.norm_exp [Tc.Normalize.Beta;Tc.Normalize.SNComp;Tc.Normalize.Unmeta] g r in 

@@ -14,6 +14,8 @@
    limitations under the License.
 *)
 #light "off"
+
+(* This file is based on ,,/extraction/extractmod.fs *)
 module FStar.Projection.ProjectMod
 open FStar
 open FStar.Util
@@ -21,25 +23,6 @@ open FStar.Tc.Env
 open FStar.Absyn
 open FStar.Absyn.Syntax
 open FStar.Projection.ProjectExp
-
-let dummy_mod: modul = {name={ns = []; ident = {idText=""; idRange=dummyRange}; nsstr=""; str=""};
-                       declarations = []; exports = [];
-                       is_interface = false; is_deserialized = false;}
-let current_mod = ref dummy_mod
-
-
-(*
-(*This approach assumes that failwith already exists in scope. This might be problematic, see below.*)
-let fail_exp (lid:lident) (t:typ) = mk_Exp_app(Util.fvar None Const.failwith_lid dummyRange,
-                          [ targ t
-                          ; varg <| mk_Exp_constant (Const_string (Bytes.string_as_unicode_bytes ("Not yet implemented:"^(Print.sli lid)), dummyRange)) None dummyRange]) None dummyRange
-
-let mangle_projector_lid (x: lident) : lident =
-    let projecteeName = x.ident in
-    let prefix, constrName = Util.prefix x.ns in
-    let mangledName = Syntax.id_of_text ("___"^constrName.idText^"___"^projecteeName.idText) in
-    lid_of_ids (prefix@[mangledName])
-*)
 
 
 let rec project_sig (m:modul) (g:env) (se:sigelt) : sigelt =
@@ -120,10 +103,10 @@ let rec project_sig (m:modul) (g:env) (se:sigelt) : sigelt =
        | Sig_pragma _ -> //pragmas are currently not relevant for codegen; they may be in the future
          (* g, [] *) se
 
+(* TOOD *)
 let project_iface (g:env) (m:modul) =  List.map (project_sig m g) m.declarations
 
 let rec project (g:env) (m:modul) : modul =
-    current_mod := m;
     if m.name.str = "Prims" 
     || m.is_interface
     || List.contains m.name.str !Options.admit_fsi
@@ -134,4 +117,3 @@ let rec project (g:env) (m:modul) : modul =
     else let sigs = List.map (project_sig m g) m.declarations in
          let new_mod = {m with declarations = sigs} in
          new_mod
-
