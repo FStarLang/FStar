@@ -265,6 +265,15 @@ let codegen fmods env=
         List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^ext)) (FSharp.Format.pretty 120 d)) newDocs
     end
 
+let project fmods  env=
+    if !Options.project_module <> [] 
+    then begin
+        let mods' = List.filter (fun m -> Options.should_project (Print.sli (m.name))) fmods in 
+        let mods = List.map (Projection.ProjectMod.project env) mods' in
+        let ext = "_projected.fst" in 
+        List.iter (fun m -> Util.write_file (Options.prependOutputDir ((Print.sli (m.name))^ext)) (Projection.Print.modul_to_string m)) mods
+    end
+
 (* Main function *)
 let go _ =
   let (res, filenames) = process_args () in
@@ -286,6 +295,7 @@ let go _ =
              then interactive_mode dsenv env
              else begin
                 codegen fmods env;
+                project fmods env;
                 finished_message fmods
              end
 

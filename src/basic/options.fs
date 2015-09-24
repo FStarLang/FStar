@@ -87,6 +87,7 @@ let use_eq_at_higher_order = Util.mk_ref false
 let fs_typ_app = Util.mk_ref false
 let n_cores = Util.mk_ref 1
 let verify_module = Util.mk_ref []
+let project_module = Util.mk_ref []
 let use_build_config = Util.mk_ref false
 let interactive = Util.mk_ref false
 let split_cases = Util.mk_ref 0
@@ -145,6 +146,7 @@ let init_options () =
     n_cores  := 1;
     split_cases := 0;
     verify_module := [];
+    project_module := [];
     _include_path := [];
     print_fuels := false
 
@@ -238,6 +240,7 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "no_fs_typ_app", ZeroArgs (fun () -> fs_typ_app := false), "Do not allow the use of t<t1,...,tn> syntax for type applications");
      ( noshort, "n_cores", OneArg ((fun x -> n_cores := int_of_string x), "positive integer"), "Maximum number of cores to use for the solver (default 1)");
      ( noshort, "verify_module", OneArg ((fun x -> verify_module := x::!verify_module), "string"), "Name of the module to verify");
+     ( noshort, "project_module", OneArg ((fun x -> project_module := x::!project_module), "string"), "Name of the module to verify");
      ( noshort, "use_build_config", ZeroArgs (fun () -> use_build_config := true), "Expect just a single file on the command line and no options; will read the 'build-config' prelude from the file");
      ( noshort, "split_cases", OneArg ((fun n -> split_cases := int_of_string n), "t"), "Partition VC of a match into groups of n cases");
      ( noshort, "in", ZeroArgs (fun () -> interactive := true), "Interactive mode; reads input from stdin");
@@ -272,6 +275,11 @@ let should_verify m =
     !verify &&
     (match !verify_module with
         | [] -> true //the verify_module flag was not set, so verify everything
+        | l -> List.contains m l) //otherwise, look in the list to see if it is explicitly mentioned
+
+let should_project m =
+    (match !project_module with
+        | [] -> false //the project_module flag was not set, so verify everything
         | l -> List.contains m l) //otherwise, look in the list to see if it is explicitly mentioned
 
 let should_print_message m = 
