@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set --z3timeout 15;
-    other-files:set.fsi heap.fst st.fst all.fst st2.fst noninterference.fst
+    other-files:set.fsi heap.fst st.fst all.fst st2.fst distinct.fst
   --*)
 
 module IFC
@@ -15,7 +15,7 @@ open FStar.Relational
 (* We model labels with different levels as integers *)
 
 
-(* A top label that is lower than all other lables *)
+(* A top label that is higher than all other lables *)
 let top = 1000
 
 (* A bottom label that is lower than all other lables *)
@@ -36,41 +36,43 @@ let attacker_observable x = label_fun x <= alpha
 
 (* We have alpha equivalence when two heaps are equal for all references that
   have a label <= alpha and thus are observable by the attacker *)
-type a_equiv (h1:double heap) = (forall (x:ref int). attacker_observable x 
-                                                   ==> sel (R.l h1) x = sel (R.r h1) x) 
+type a_equiv (h1:double heap) = (forall (x:ref int). attacker_observable x
+                                                   ==> sel (R.l h1) x = sel (R.r h1) x)
 
 (* Function to create new labeled references *)
 assume val new_labeled_int : l:label -> x:ref int{label_fun x = l}
 
+let tu = twice ()
+
 
 (**************************** Typing Judgements ****************************)
 
-(* typing judgement  e : l 
-   - Expressions do not modify the heap 
+(* typing judgement  e : l
+   - Expressions do not modify the heap
    - If we have alpha equivalence on the input heaps, then the results must be
      equal if the expression label is lower than or equal to alpha *)
 type ni_exp (l:label) =
-              unit -> 
+              double unit ->
               ST2 (double int)
                   (requires (fun h2 -> True))
                   (ensures  (fun h1 r h2 -> equal (R.l h1) (R.l h2)
                                          /\ equal (R.r h1) (R.r h2)
                                          /\ (a_equiv h1
-                                            ==> (if l <= alpha then 
-                                                  R.l r = R.r r 
-                                                else 
+                                            ==> (if l <= alpha then
+                                                  R.l r = R.r r
+                                                else
                                                   true))))
 
-(* typing judgement  l |- c 
+(* typing judgement  l |- c
    - references with a label below l are not modified
    - alpha equivalence on input heaps implies alpha equivalence on output
      heaps *)
 type ni_com (l:label) =
-              unit -> 
+              double unit ->
               ST2 (double unit)
                   (requires (fun h2 -> True))
-                  (ensures  (fun h1 _ h2 -> (forall (y:ref int). 
-                                              label_fun y < l 
+                  (ensures  (fun h1 _ h2 -> (forall (y:ref int).
+                                              label_fun y < l
                                               ==> sel (R.l h1) y = sel (R.l h2) y
                                                /\ sel (R.r h1) y = sel (R.r h2) y)
                                          /\ (a_equiv h1 ==> a_equiv h2)))
@@ -79,17 +81,16 @@ type ni_com (l:label) =
    the label bottom *)
 type ni = ni_com bot
 
-
 (*********************** Typing Rules for Expressions **********************)
 
-(* Subtyping rule for expression labels 
+(* Subtyping rule for expression labels
 
          e : l1   l1 <= l2
          -----------------
              e : l2
 *)
 val sub_exp : l1:label -> l2:label{l1 <= l2} -> =e1:(ni_exp l1) -> Tot (ni_exp l2)
-let sub_exp _ _ e1 () = e1 ()
+let sub_exp _ _ e1 tu = e1 tu
 
 (* Typing rule for dereferencing
 
@@ -97,51 +98,51 @@ let sub_exp _ _ e1 () = e1 ()
          ----------------
              !r : l
 *)
-val deref_exp : r:ref int 
+val deref_exp : r:ref int
 (*            -> Tot (ni_exp (label_fun r)) *)
 (* This is the above line inlined due to bug #377 ... *)
-           -> unit 
+           -> double unit
            -> ST2 (double int)
                   (requires (fun h2 -> True))
                   (ensures  (fun h1 res h2 -> equal (R.l h1) (R.l h2)
                                            /\ equal (R.r h1) (R.r h2)
                                            /\ (a_equiv h1
-                                              ==> (if (label_fun r) <= alpha then 
+                                              ==> (if (label_fun r) <= alpha then
                                                     R.l res = R.r res
-                                                  else 
+                                                  else
                                                   true))))
-let deref_exp r () = compose2_self read (twice r)
+let deref_exp r tu = compose2_self read (twice r)
 
 (* Typing rule for Int constants
 
-         i : int 
+         i : int
          -------
-         i : bot 
+         i : bot
 *)
 val const_exp : int -> Tot (ni_exp bot)
-let const_exp i () = twice i
+let const_exp i tu = twice i
 
 (* Typing rule for binary operators (we write the rule only for "+", but other
    binarry operators work analogously
- 
-          e1 : l   e2 : l 
+
+          e1 : l   e2 : l
           ---------------
-           e1 + e2  : l2
+           e1 + e2  : l
 *)
-val bin_op_exp : l:label -> =e1:(ni_exp l) -> =e2:(ni_exp l) 
+val bin_op_exp : l:label -> =e1:(ni_exp l) -> =e2:(ni_exp l)
 (*            -> Tot (ni_exp l) *)
 (* This is the above line inlined due to bug #377 ... *)
-           -> unit 
+           -> double unit
            -> ST2 (double int)
                   (requires (fun h2 -> True))
                   (ensures  (fun h1 r h2 -> equal (R.l h1) (R.l h2)
                                          /\ equal (R.r h1) (R.r h2)
                                          /\ (a_equiv h1
-                                            ==> (if l <= alpha then 
-                                                  R.l r = R.r r 
-                                                else 
+                                            ==> (if l <= alpha then
+                                                  R.l r = R.r r
+                                                else
                                                   true))))
-let bin_op_exp _ e1 e2 () = compose2_self (fun (a, b) -> a + b) (pair_rel (e1 ()) (e2 ()))
+let bin_op_exp _ e1 e2 tu = compose2_self (fun (a, b) -> a + b) (pair_rel (e1 tu) (e2 tu))
 
 
 (************************ Typing Rules for Commands ************************)
@@ -150,70 +151,62 @@ let bin_op_exp _ e1 e2 () = compose2_self (fun (a, b) -> a + b) (pair_rel (e1 ()
 
          l1 |- c   l2 <= l1
          ------------------
-              l2 |- c 
+              l2 |- c
 *)
-val sub_com : l1 : label -> l2:label{l2 <= l1} -> =c1:(ni_com l1) -> Tot (ni_com l2)
-let sub_com _ _ c1 () = c1 () 
+val sub_com : l1:label -> l2:label{l2 <= l1} -> =c1:(ni_com l1) -> Tot (ni_com l2)
+let sub_com _ _ c1 tu = c1 tu
 
-(* Typing rule for assignment 
+(* Typing rule for assignment
          e : l'      label_fun(r) = l'      l' >= l
          ------------------------------------------
-                       l |- r := e 
+                       l |- r := e
 *)
-val assign_com : l:label -> l':label{l' >= l} -> r:ref int{label_fun r = l'} -> =e:ni_exp l' 
+val assign_com : l:label -> r:ref int{l <= label_fun r} -> =e:ni_exp (label_fun r)
 (*              -> Tot (ni_com l) *)
 (* This is the above line inlined due to bug #377 ... *)
-          ->  unit -> 
+          ->  double unit ->
               ST2 (double unit)
                   (requires (fun h2 -> True))
-                  (ensures  (fun h1 _ h2 -> (forall (y:ref int). 
-                                              label_fun y < l 
+                  (ensures  (fun h1 _ h2 -> (forall (y:ref int).
+                                              label_fun y < l
                                               ==> sel (R.l h1) y = sel (R.l h2) y
                                                /\ sel (R.r h1) y = sel (R.r h2) y)
                                          /\ (a_equiv h1 ==> a_equiv h2)))
-let assign_com _ _ r e () = compose2_self (write r) (e ())
+let assign_com _ r e tu = compose2_self (write r) (e tu)
 
 (* Sequencing rule for commands
 
          l |- c1    l |- c2
          ------------------
-            l |- c1; c2 
+            l |- c1; c2
 *)
-val seq_com : l:label -> =c1:(ni_com l) -> =c2:(ni_com l) 
+val seq_com : l:label -> =c1:(ni_com l) -> =c2:(ni_com l)
 (*             -> Tot(ni_com l) *)
 (* This is the above line inlined due to bug #377 ... *)
-          ->  unit -> 
+          ->  double unit ->
               ST2 (double unit)
                   (requires (fun h2 -> True))
-                  (ensures  (fun h1 _ h2 -> (forall (y:ref int). 
-                                              label_fun y < l 
+                  (ensures  (fun h1 _ h2 -> (forall (y:ref int).
+                                              label_fun y < l
                                               ==> sel (R.l h1) y = sel (R.l h2) y
                                                /\ sel (R.r h1) y = sel (R.r h2) y)
                                          /\ (a_equiv h1 ==> a_equiv h2)))
-let seq_com _ c1 c2 () = let _ = c1 () in c2 ()
+let seq_com _ c1 c2 tu = let _ = c1 tu in c2 tu
 
-(* This is used for cross cases (TODO: is this sound?)*)
-assume val cross : #p:(heap2 -> heap2 -> Type) 
-                -> #q:(heap2 -> heap2 -> Type) 
-                -> =c1:(unit -> ST2 (double unit) (requires (fun h -> True)) (ensures (fun h1 _ h2 -> p h1 h2))) 
-                -> =c2:(unit -> ST2 (double unit) (requires (fun h -> True)) (ensures (fun h1 _ h2 -> q h1 h2))) 
-                -> ST2 (double unit) (requires (fun h -> True)) 
-                                     (ensures (fun h1 _ h2 -> (exists (h2l:heap) (h2r:heap). p h1 (R (R.l h2) (h2r)) 
-                                                                                          /\ q h1 (R h2l (R.r h2)))))
 
 (* Conditional rule for commands
 
-         e : l     l |- ct      l |- cf    
+         e : l     l |- ct      l |- cf
          ------------------------------
          l |- if e <> 0 then ct else cf
 *)
-  val cond : l:label -> =e:(ni_exp l) -> =ct:(ni_com l) -> =cf:(ni_com l) 
+val cond : l:label -> =e:(ni_exp l) -> =ct:(ni_com l) -> =cf:(ni_com l)
            -> Tot (ni_com l)
-let cond _ e ct cf ()  = match e () with 
-                         | R 0 0 -> cf ()
+let cond _ e ct cf tu  = match e tu with
+                         | R 0 0 -> cf tu
                          | R 0 _ -> cross cf ct
-                         | R _ 0 -> cross ct cf 
-                         | R _ _ -> ct ()
+                         | R _ 0 -> cross ct cf
+                         | R _ _ -> ct tu
 
 (* Typing rule for Skip
 
@@ -221,17 +214,17 @@ let cond _ e ct cf ()  = match e () with
          top |- skip
 *)
 val skip : ni_com top
-let skip () = twice ()
+let skip tu = tu
 
 (* Loop case of a while loop *)
-val loop_loop : l:label -> =e:(ni_exp l) -> =c:(ni_com l) 
+val loop_loop : l:label -> =e:(ni_exp l) -> =c:(ni_com l)
 (*        -> Tot (ni_com l) *)
 (* This fails because of bug #379 *)
-           -> unit -> 
+           -> double unit ->
               ST2 (double unit)
                   (requires (fun h2 -> True))
-                  (ensures  (fun h1 _ h2 -> (forall (y:ref int). 
-                                              label_fun y < l 
+                  (ensures  (fun h1 _ h2 -> (forall (y:ref int).
+                                              label_fun y < l
                                               ==> sel (R.l h1) y = sel (R.l h2) y
                                                /\ sel (R.r h1) y = sel (R.r h2) y)
                                          /\ (a_equiv h1 ==> a_equiv h2)))
@@ -242,31 +235,31 @@ val loop_loop : l:label -> =e:(ni_exp l) -> =c:(ni_com l)
          --------------------------
          l |- while (e <> 0) do {c}
 *)
-val loop_com : l:label -> =e:(ni_exp l) -> =c:(ni_com l) 
+val loop_com : l:label -> =e:(ni_exp l) -> =c:(ni_com l)
 (*            -> Tot (ni_com l) *)
 (* This fails because of bug #379 *)
-           -> unit -> 
+           -> double unit ->
               ST2 (double unit)
                   (requires (fun h2 -> True))
-                  (ensures  (fun h1 _ h2 -> (forall (y:ref int). 
-                                              label_fun y < l 
+                  (ensures  (fun h1 _ h2 -> (forall (y:ref int).
+                                              label_fun y < l
                                               ==> sel (R.l h1) y = sel (R.l h2) y
                                                /\ sel (R.r h1) y = sel (R.r h2) y)
                                          /\ (a_equiv h1 ==> a_equiv h2)))
-let rec loop_com l e c () = 
-                  match e () with 
-                 | R 0 0 -> skip ()
+let rec loop_com l e c tu =
+                  match e tu with
+                 | R 0 0 -> skip tu
                  | R 0 _ -> cross skip (loop_loop l e c)
                  | R _ 0 -> cross (loop_loop l e c) skip
-                 | R _ _ -> loop_loop l e c ()
-and loop_loop l e c () = let _ = c () in loop_com l e c ()
+                 | R _ _ -> loop_loop l e c tu
+and loop_loop l e c tu = let _ = c tu in loop_com l e c tu
 
 
 
 (****************************** IFC_Examples ******************************)
 
-module IFC_Example1 
-open Distinct 
+module IFC_Example1
+open Distinct
 open IFC
 open FStar.Comp
 open FStar.Relational
@@ -285,17 +278,17 @@ let test () = (if !b <> 0 then
 
 (* Brute Force Approach *)
 val test_ni : ni
-let test_ni _ = compose2_self test (twice ())
+let test_ni _ = compose2_self test tu
 
 (* Following the typing derivation *)
 
 (* !b : 0 *)
 val ni_exp_deref_b : ni_exp 0
-let ni_exp_deref_b () = (deref_exp b) ()
+let ni_exp_deref_b tu = (deref_exp b) tu
 
 (* 1 : bot *)
 val ni_exp_1 : ni_exp bot
-let ni_exp_1 () = (const_exp 1) ()
+let ni_exp_1 tu = (const_exp 1) tu
 
 (* 1 : 1 *)
 val ni_exp_1' : ni_exp 1
@@ -303,11 +296,11 @@ let ni_exp_1' = sub_exp bot 1 ni_exp_1
 
 (* 0 |- a := 1 *)
 val ni_com_a_1: ni_com 0
-let ni_com_a_1 () = (assign_com 0 1 a ni_exp_1') ()
+let ni_com_a_1 tu = (assign_com 0 a ni_exp_1') tu
 
 (* 2 : bot *)
 val ni_exp_2 : ni_exp bot
-let ni_exp_2 () = (const_exp  2) ()
+let ni_exp_2 tu = (const_exp  2) tu
 
 (* 2 : 1 *)
 val ni_exp_2' : ni_exp 1
@@ -315,10 +308,10 @@ let ni_exp_2' = sub_exp bot 1 ni_exp_2
 
 (* 0 |- a := 2 *)
 val ni_com_a_2: ni_com 0
-let ni_com_a_2 () = (assign_com 0 1 a ni_exp_2') ()
+let ni_com_a_2 tu = (assign_com 0 a ni_exp_2') tu
 
 (* 0 |- if (!b <> 0) then a := 1 else a := 2 *)
-val ni_com_cond : ni_com 0 
+val ni_com_cond : ni_com 0
 let ni_com_cond = cond 0 ni_exp_deref_b ni_com_a_1 ni_com_a_2
 
 (* bot |- if (!b <> 0) then a := 1 else a := 2 *)
@@ -327,7 +320,7 @@ let ni_com_cond' = sub_com 0 bot ni_com_cond
 
 (* 2 : bot *)
 val ni_exp_0 : ni_exp bot
-let ni_exp_0 () = (const_exp 0) ()
+let ni_exp_0 tu = (const_exp 0) tu
 
 (* 2 : 0 *)
 val ni_exp_0' : ni_exp 0
@@ -335,16 +328,15 @@ let ni_exp_0' = sub_exp bot 0 ni_exp_0
 
 (* bot |- b := 0 *)
 val ni_com_b : ni_com bot
-let ni_com_b () = (assign_com bot 0 b ni_exp_0') ()
+let ni_com_b tu = (assign_com bot b ni_exp_0') tu
 
 (* bot |- if (!b <> 0) then a := 1 else a := 2; b := 0 *)
 val ni_com_seq : ni_com bot
-let ni_com_seq () = (seq_com bot ni_com_cond' ni_com_b) ()
+let ni_com_seq tu = (seq_com bot ni_com_cond' ni_com_b) tu
 
 (* Noninterference result for the complete program *)
 val ni_programm : ni
-let ni_programm () = ni_com_seq ()
-
+let ni_programm tu = ni_com_seq tu
 
 
 module IFC_Example3
@@ -367,37 +359,37 @@ let test () = a:= !b + !c
 
 (* Brute Force Approach *)
 val test_ni : ni
-let test_ni _ = compose2_self test (twice ())
+let test_ni _ = compose2_self test tu
 
 (* Following the typing derivation *)
 
 (* !b : lb *)
 val ni_exp_deref_b : ni_exp lb
-let ni_exp_deref_b () = (deref_exp b) ()
+let ni_exp_deref_b tu = (deref_exp b) tu
 
 (* !b : la *)
 val ni_exp_deref_b' : ni_exp la
-let ni_exp_deref_b' () = (sub_exp lb la ni_exp_deref_b) ()
+let ni_exp_deref_b' tu = (sub_exp lb la ni_exp_deref_b) tu
 
 (* !c : lc *)
 val ni_exp_deref_c : ni_exp lc
-let ni_exp_deref_c () = (deref_exp c) ()
+let ni_exp_deref_c tu = (deref_exp c) tu
 
 (* !c : la *)
 val ni_exp_deref_c' : ni_exp la
-let ni_exp_deref_c' () = (sub_exp lc la ni_exp_deref_c) ()
+let ni_exp_deref_c' tu = (sub_exp lc la ni_exp_deref_c) tu
 
 (* !b + !c : la *)
 val ni_exp_a : ni_exp la
-let ni_exp_a () = (bin_op_exp la ni_exp_deref_b' ni_exp_deref_c') ()
+let ni_exp_a tu = (bin_op_exp la ni_exp_deref_b' ni_exp_deref_c') tu
 
 (* bot |- a := !b + !c *)
-val ni_com_a: ni_com bot 
-let ni_com_a () = (assign_com bot la a ni_exp_a) ()
+val ni_com_a: ni_com bot
+let ni_com_a tu = (assign_com bot a ni_exp_a) tu
 
 (* Noninterference result for the complete program *)
 val ni_program : ni
-let ni_program () = ni_com_a () 
+let ni_program tu = ni_com_a tu
 
 
 module IFC_Example5
@@ -428,74 +420,74 @@ let test () = loop ();
 
 (* Brute Force Approach *)
 val test_ni : ni
-let test_ni _ = compose2_self test (twice ())
+let test_ni _ = compose2_self test tu
 
 (* Following the typing derivation *)
 
 (* !a : la *)
 val ni_exp_deref_a : ni_exp la
-let ni_exp_deref_a () = (deref_exp a) ()
+let ni_exp_deref_a tu = (deref_exp a) tu
 
 (* -1 : bot *)
 val ni_exp__1 : ni_exp bot
-let ni_exp__1 () = (const_exp (-1)) ()
+let ni_exp__1 tu = (const_exp (-1)) tu
 
 (* -1 : la *)
 val ni_exp__1a : ni_exp la
-let ni_exp__1a () = (sub_exp bot la ni_exp__1) ()
+let ni_exp__1a tu = (sub_exp bot la ni_exp__1) tu
 
 (* !a + -1 : la *)
 val ni_exp_a : ni_exp la
-let ni_exp_a () = (bin_op_exp la ni_exp_deref_a ni_exp__1a) ()
+let ni_exp_a tu = (bin_op_exp la ni_exp_deref_a ni_exp__1a) tu
 
 (* la |- a := !a + -1  *)
 val ni_com_a : ni_com la
-let ni_com_a () = (assign_com la la a ni_exp_a) ()
+let ni_com_a tu = (assign_com la a ni_exp_a) tu
 
 (* !b : lb *)
 val ni_exp_deref_b : ni_exp lb
-let ni_exp_deref_b () = (deref_exp b) ()
+let ni_exp_deref_b tu = (deref_exp b) tu
 
 (* 1 : bot *)
 val ni_exp_1 : ni_exp bot
-let ni_exp_1 () = (const_exp 1) ()
+let ni_exp_1 tu = (const_exp 1) tu
 
 (* 1 : lb *)
 val ni_exp_1b : ni_exp lb
-let ni_exp_1b () = (sub_exp bot lb ni_exp_1) ()
+let ni_exp_1b tu = (sub_exp bot lb ni_exp_1) tu
 
 (* !b + 1 : lb *)
 val ni_exp_b : ni_exp lb
-let ni_exp_b () = (bin_op_exp lb ni_exp_deref_b ni_exp_1b) ()
+let ni_exp_b tu = (bin_op_exp lb ni_exp_deref_b ni_exp_1b) tu
 
 (* la |- !b + 1 *)
 val ni_com_b : ni_com la
-let ni_com_b () = (assign_com la lb b ni_exp_b) ()
+let ni_com_b tu = (assign_com la b ni_exp_b) tu
 
 (* la |- a := !a + -1; b := !b + 1 *)
 val ni_com_loop_body : ni_com la
-let ni_com_loop_body () = (seq_com la ni_com_a ni_com_b) ()
+let ni_com_loop_body tu = (seq_com la ni_com_a ni_com_b) tu
 
 (* la |- while !a <> 0 {a := !a + -1; b := !b + 1} *)
 val ni_com_loop : ni_com la
-let ni_com_loop () = (loop_com la ni_exp_deref_a ni_com_loop_body) ()
+let ni_com_loop tu = (loop_com la ni_exp_deref_a ni_com_loop_body) tu
 
 (* bot |- while !a <> 0 {a := !a + -1; b := !b + 1} *)
 val ni_com_loop' : ni_com bot
-let ni_com_loop' () = (sub_com la bot ni_com_loop) ()
+let ni_com_loop' tu = (sub_com la bot ni_com_loop) tu
 
 (* 0 : bot *)
 val ni_exp_0 : ni_exp bot
-let ni_exp_0 () = (const_exp 0) ()
+let ni_exp_0 tu = (const_exp 0) tu
 
 (* 0 : lc *)
 val ni_exp_0' : ni_exp lc
-let ni_exp_0' () = (sub_exp bot lc ni_exp_0) ()
+let ni_exp_0' tu = (sub_exp bot lc ni_exp_0) tu
 
 (* bot |- c := 0 *)
 val ni_com_c : ni_com bot
-let ni_com_c () = (assign_com bot lc c ni_exp_0') ()
+let ni_com_c tu = (assign_com bot c ni_exp_0') tu
 
 (* Noninterference for the complete program *)
-val ni_program : ni 
-let ni_program () = (seq_com bot ni_com_loop' ni_com_c) ()
+val ni_program : ni
+let ni_program tu = (seq_com bot ni_com_loop' ni_com_c) tu

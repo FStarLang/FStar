@@ -6,7 +6,8 @@ all: noninterference\
 		 simple_st2_examples\
 		 smart_meter\
 		 spdz\
-		 cache
+		 cache\
+		 ifc_ts
 
 #		 ro\ ;;unstable
 
