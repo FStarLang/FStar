@@ -1,6 +1,11 @@
 module CoreCrypto
 
 open Platform.Bytes
+open FStar.HyperHeap
+
+effect EXT (a:Type) = ST a
+  (requires (fun _ -> True)) 
+  (ensures (fun h0 _ h -> modifies Set.empty h0 h))
 
 type hash_alg = | MD5 | SHA1 | SHA256 | SHA384 | SHA512
 type sig_alg = | RSASIG | DSA | ECDSA
@@ -63,10 +68,11 @@ assume val hmac : alg:hash_alg -> bytes -> bytes -> Tot (h:bytes{length h = hash
 
 assume val block_encrypt : block_cipher -> bytes -> bytes -> bytes -> bytes
 assume val block_decrypt : block_cipher -> bytes -> bytes -> bytes -> bytes
-assume val aead_encrypt : aead_cipher -> bytes -> bytes -> bytes -> bytes -> Tot 'a
-//should become St 'a
-assume val aead_decrypt : aead_cipher -> bytes -> bytes -> bytes -> bytes -> Tot 'a
-//should become St 'a
+assume val aead_encrypt : (a:aead_cipher) -> (k:bytes)
+  -> (iv:bytes) -> (ad:bytes) -> (p:bytes) -> EXT (lbytes (length p + aeadTagSize a))
+assume val aead_decrypt : (a:aead_cipher) -> (k:bytes) 
+  -> (iv:bytes) -> (ad:bytes) -> (c:bytes{length c >= aeadTagSize a}) 
+  -> EXT (option (lbytes (length c - aeadTagSize a)))
 
 type cipher_stream
 assume val stream_encryptor : stream_cipher -> bytes -> cipher_stream
@@ -74,7 +80,7 @@ assume val stream_decryptor : stream_cipher -> bytes -> cipher_stream
 assume val stream_process : cipher_stream -> bytes -> bytes
 assume val stream_fini : cipher_stream -> unit
 
-assume val random : l:nat -> lbytes l
+assume val random : l:nat -> EXT (lbytes l)
 
 assume val rsa_gen_key : int -> rsa_key
 assume val rsa_encrypt : rsa_key -> rsa_padding -> bytes -> bytes
