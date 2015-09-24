@@ -24,7 +24,8 @@ open FStar.Projection.Util
 open FStar.Absyn.Syntax
 open FStar.Absyn.Util
 
-(* Modified version of ../absyn/print.fs: This version prints valid fstar-code *)
+(* Modified version of ../absyn/print.fs: This version is supposed to print
+  syntactically correct fstar-code *)
 
 let indent = ref 0 
 let skip_let = ref false 

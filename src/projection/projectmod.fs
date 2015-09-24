@@ -44,55 +44,10 @@ let rec project_sig (m:modul) (g:env) (se:sigelt) : sigelt =
               Sig_let (lbs, r, id, quals)
             | _ -> failwith "Impossible!"
           end
-          
-(*
-          TODO
-          in
-          begin match ml_let with
-            | MLE_Let(ml_lbs, _) ->
-              let g, ml_lbs' = List.fold_left2 (fun (env, ml_lbs) (ml_lb:mllb) {lbname=lbname; lbtyp=t} ->
-//              debug g (fun () -> printfn "Translating source lb %s at type %s to %A" (Print.lbname_to_string lbname) (Print.typ_to_string t) (must (mllb.mllb_tysc)));
-                  let g, ml_lb =
-                    if quals |> Util.for_some (function Projector _ -> true | _ -> false) //projector names have to mangled
-                    then let mname = mangle_projector_lid (right lbname) |> mlpath_of_lident in
-                         let env = Env.extend_fv' env (Util.fv <| right lbname) mname (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit in
-                         env, {ml_lb with mllb_name=(snd mname, 0)}
-                    else fst <| Env.extend_lb env lbname t (must ml_lb.mllb_tysc) ml_lb.mllb_add_unit, ml_lb in
-                 g, ml_lb::ml_lbs)
-              (g, []) (snd ml_lbs) (snd lbs) in
-              g, [MLM_Let (fst ml_lbs, List.rev ml_lbs')]
 
-            | _ -> //printfn "%A\n" ml_let;
-                failwith "impossible"
-          end
-*)
+       | Sig_val_decl(lid, t, quals, r) -> se (* TODO *)
 
-       | Sig_val_decl(lid, t, quals, r) -> se
-       (*
-         if quals |> List.contains Assumption
-         //&& not (quals |> Util.for_some (function Projector _ -> true | _ -> false))
-         then let impl = match Util.function_formals t with
-                | Some (bs, c) -> mk_Exp_abs(bs, fail_exp lid (Util.comp_result c)) None dummyRange
-                | _ -> fail_exp lid t in
-              let se = Sig_let((false, [{lbname=Inr lid; lbtyp=t; lbeff=Const.effect_ML_lid; lbdef=impl}]), r, [], quals) in
-              let g, mlm = extract_sig g se in
-              let is_record = Util.for_some (function RecordType _ -> true | _ -> false) quals in
-              match Util.find_map quals (function Discriminator l -> Some l |  _ -> None) with
-                  | Some l when (not is_record) -> g, [ExtractExp.ind_discriminator_body g lid l] //records are single constructor types; there should be no discriminators for them
-                  | _ ->
-                    begin match Util.find_map quals (function  Projector (l,_)  -> Some l |  _ -> None) with
-                        | Some _ -> g, [] //records are extracted as ML records; no projectors for them
-                        | _ -> g, mlm
-                    end
-         else g, []
-
-       *)
-       | Sig_main(e, _) -> se
-       (*
-         let ml_main, _, _ = ExtractExp.synth_exp g e in
-         g, [MLM_Top ml_main]
-       *)
-
+       | Sig_main(e, _) -> se (* TODO *)
 
        | Sig_kind_abbrev _ //not needed; we expand kind abbreviations while translating types
        | Sig_assume _ //not needed; purely logical
