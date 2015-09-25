@@ -68,7 +68,7 @@ let test v =
     false
   else
     let p = aead_decrypt v.cipher key iv aad c in
-    p = plaintext
+    p = Some plaintext
 
 let test_vectors = [
 {
