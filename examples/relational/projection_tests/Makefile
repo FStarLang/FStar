@@ -23,6 +23,7 @@ test_projections:
 	$(FSTAR) TEST_projected.fst
 	$(FSTAR) TEST2_projected.fst
 	$(FSTAR) TEST3_projected.fst
+	$(FSTAR) test_expected.fst
 
 ro_all:ro\
 			 ro_projections
