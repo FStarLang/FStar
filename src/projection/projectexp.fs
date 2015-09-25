@@ -287,7 +287,7 @@ and project_p (m:modul) (g:env) (e:exp) (p:project) : exp =
              further recursive calls *)
           | "l_PROJECT" -> 
             if p <> NoPro then 
-              failwith "Illegal nested projection!"
+              raise (Error ("Illegal nested projection!", e.pos))
             else
               if List.length (args) <> 3 then 
                 failwith "List does not have 3 arguments"
@@ -297,7 +297,7 @@ and project_p (m:modul) (g:env) (e:exp) (p:project) : exp =
 
           | "r_PROJECT" -> 
             if p <> NoPro then 
-              failwith "Illegal nested projection!"
+              raise (Error ("Illegal nested projection!", e.pos))
             else
               if List.length (args) <> 3 then 
                 failwith "List does not have 3 arguments"

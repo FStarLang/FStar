@@ -220,7 +220,7 @@ and typ_to_string x =
     //Util.format2 "(%s:%s)" (strBvd btv.v) (kind_to_string x.tk)
   | Typ_const v -> sli v.v //Util.format2 "%s:%s" (sli v.v) (kind_to_string x.tk)
   | Typ_fun(binders, c) ->     Util.format2 "%s -> %s"  (binders_to_string " -> " binders) (comp_typ_to_string c)
-  | Typ_refine(xt, f) ->       Util.format3 "%s:%s{%s}" (strBvd xt.v) (xt.sort |> typ_to_string) (f|> formula_to_string)
+  | Typ_refine(xt, f) ->       Util.format3 "(%s:%s{%s})" (strBvd xt.v) (xt.sort |> typ_to_string) (f|> formula_to_string)
   | Typ_app(_, []) -> failwith "Empty args!"
   | Typ_app(t, args) ->
       let q_to_string k a = match fst a with
