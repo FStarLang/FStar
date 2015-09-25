@@ -11,7 +11,7 @@ More information on F\* can be found at www.fstar-lang.org
 
 **Update:** The fstar-lang.org is currently [not accessible].
 For a temporary clone of that website please visit:
-fstar.gforge.inria.fr
+http://fstar.gforge.inria.fr
 
 [not accessible]: https://github.com/FStarLang/FStar/issues/381
 
@@ -29,7 +29,7 @@ the online editor to full functionality soon.
 
 [F\* tutorial]: http://fstar.gforge.inria.fr/tutorial/tutorial.html
 <!--
-[F\* tutorial]: https://www.fstar-lang.org/tutorial/
+[F\* tutorial broken]: https://www.fstar-lang.org/tutorial/
 -->
 
 ### Version 1.0
