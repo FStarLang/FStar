@@ -11,12 +11,12 @@ open SST
 open MVector
 open Heap
 open Lref  open Located
-open Set
+open FStar.Set
 open MachineWord
 open SSTArray
 open MD5Common
-open Seq
-open Ghost
+open FStar.Seq
+open FStar.Ghost
 
 val liveArr : #a:Type -> smem -> sstarray a -> GTot bool
 let liveArr m v =
