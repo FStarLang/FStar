@@ -15,7 +15,7 @@ open Projection
 
 
 assume val sample_l : 'a -> ST (fp) (requires (fun h -> True))
-                                       (ensures  (fun h r h' -> equal h h'))
+                                    (ensures  (fun h r h' -> equal h h'))
 type shared (h:fp) = p:(fp * fp){fst p + snd p = h}
 
 val share_l : x:fp -> St (shared x)

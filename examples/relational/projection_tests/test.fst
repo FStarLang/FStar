@@ -74,27 +74,28 @@ open Projection
 
 let r = r_PROJECT (iNLINE r2)
 
-val test_r : x:int -> Tot (y:int{y= -x})
+//val test_r : x:int -> Tot (y:int{y= -x})
 let test_r = r_PROJECT (iNLINE test)
 
-val test2_r : x:int -> y:int -> Tot (z:int{z = x + y})
+//val test2_r : x:int -> y:int -> Tot (z:int{z = x + y})
 let test2_r = r_PROJECT (iNLINE test2)
 
-val test3_r : x:int -> y:int -> z:int -> Tot (r:int{r = (x + y) * z})
+//val test3_r : x:int -> y:int -> z:int -> Tot (r:int{r = (x + y) * z})
 let test3_r = r_PROJECT (iNLINE test3)
 
-val test4_r : x:int -> y:int -> Tot (z:int{z = x + y})
+//val test4_r : x:int -> y:int -> Tot (z:int{z = x + y})
 let test4_r = r_PROJECT (iNLINE test4)
 
+(*
 val test5_r : a:ref int -> b:ref int -> c:ref int
   -> ST unit (requires (fun h -> a <> b /\ a <> c /\ b <> c))
              (ensures  (fun h r h' -> sel h' c = sel h' a + sel h' b))
-             (* TODO: requires and ensures do not get translates... *)
+*)
 let test5_r = r_PROJECT (iNLINE test5)
 
-module TEST3
 
-open Projection
+(* No actual projections in this module, only testing the printing *)
+module TEST3
 
 type t = int 
 type ty : Type =
@@ -102,5 +103,3 @@ type ty : Type =
   | Bla1 : x:ty -> ty
   | Bla2 : x:ty -> y:ty -> ty
   | Bla3 : x:ty -> y:ty -> z:ty -> ty
-
-
