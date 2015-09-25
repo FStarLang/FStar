@@ -6,7 +6,6 @@
 module NonInterference
 
 open FStar.Comp
-open FStar.Heap
 open FStar.Relational
 
 let a = alloc 0

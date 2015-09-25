@@ -42,8 +42,11 @@ let eq_rel (R a b) = a = b
 let sel_rel = rel_map2 sel
 
 module FStar.Comp
+
 open FStar.Heap
-open FStar.Relational type heap2 = double heap
+open FStar.Relational
+
+type heap2 = double heap
 
 new_effect STATE2 = STATE_h heap2
 kind ST2Pre = STPre_h heap2
