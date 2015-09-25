@@ -1,11 +1,17 @@
 F*: An ML-like language with a type system for program verification
 ===================================================================
 
+<!--
 [![Build status](https://www.fstar-lang.org:3443/fstarlang/fstar/badge?branch=master)](https://www.fstar-lang.org:3443/fstarlang/fstar/)
+-->
 
 ### F\* website
 
 More information on F\* can be found at www.fstar-lang.org
+
+**Update:** The fstar-lang.org is currently not accessible.
+For a temporary clone of that website please visit:
+fstar.gforge.inria.fr
 
 ### Installation
 
@@ -17,7 +23,10 @@ See [INSTALL.md]
 
 The [F\* tutorial] provides a first taste of verified programming in F*.
 
+[F\* tutorial]: http://fstar.gforge.inria.fr/tutorial/tutorial.html
+<!--
 [F\* tutorial]: https://www.fstar-lang.org/tutorial/
+-->
 
 ### Version 1.0
 
