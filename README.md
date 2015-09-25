@@ -9,7 +9,7 @@ F*: An ML-like language with a type system for program verification
 
 More information on F\* can be found at www.fstar-lang.org
 
-**Update:** The fstar-lang.org is currently [not accessible].
+**Update:** Unfortunately, the fstar-lang.org domain is currently [not accessible].
 For a temporary clone of that website please visit:
 http://fstar.gforge.inria.fr
 
