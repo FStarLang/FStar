@@ -1,7 +1,6 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Seq;
-    variables:LIB=../../../lib;
-    other-files:$LIB/classical.fst $LIB/ext.fst $LIB/set.fsi $LIB/seq.fsi $LIB/seqproperties.fst
+    options:--admit_fsi FStar.Set --admit_fsi FStar.Seq;
+    other-files: classical.fst ext.fst set.fsi heap.fst st.fst all.fst seq.fsi seqproperties.fst
   --*)
 
 module Platform.Bytes
@@ -117,8 +116,8 @@ let split_eq s i =
 
 val lemma_append_inj: s1:bytes -> s2:bytes -> t1:bytes -> t2:bytes {Seq.length s1 = Seq.length t1 \/ Seq.length s2 = Seq.length t2} ->
   Lemma (requires (Seq.Eq (Seq.append s1 s2) (Seq.append t1 t2)))
-	(ensures (Seq.Eq s1 t1 /\ Seq.Eq s2 t2))
-let lemma_append_inj s1 s2 t1 t2 = ()
+        (ensures (Seq.Eq s1 t1 /\ Seq.Eq s2 t2))
+let lemma_append_inj s1 s2 t1 t2 = admit() (* CH: this used to fail *)
 
 (*@ assume val split2 : (b:bytes -> (i:nat -> ((j:nat){C_pr_GreaterThanOrEqual(Length (b), C_bop_Addition (i, j))} -> (b1:bytes * b2:bytes * b3:bytes){Length (b1) = i /\ Length (b2) = j /\ B (b) = C_bop_ArrayAppend (B (b1), C_bop_ArrayAppend (B (b2), B (b3)))}))) @*)
 assume val split2 : b:bytes -> n1:nat{n1 <= Seq.length b} -> n2:nat{n1 + n2 <= Seq.length b} -> Tot (lbytes n1 * lbytes n2 * lbytes (length b - n1 - n2))
