@@ -424,7 +424,7 @@ let rec seq_find_aux f l ctr =
      Some (Seq.index l i))
   else seq_find_aux f l i
 
-val seq_find: #a:Type -> f:(a -> Tot bool) -> l:seq a ->
+assume val seq_find: #a:Type -> f:(a -> Tot bool) -> l:seq a ->
                      Pure (option a)
                           (requires True)
                           (ensures (fun o -> (is_None o ==> (forall (i:nat{i < Seq.length l}). not (f (Seq.index l i))))
@@ -433,6 +433,8 @@ val seq_find: #a:Type -> f:(a -> Tot bool) -> l:seq a ->
                                                    /\ (exists (i:nat{i < Seq.length l}).{:pattern (found i)}
                                                        found i /\ o = Some (Seq.index l i))))))
 
+(* This causes things to often fail, assumed instead (filed as #394)
 let seq_find f l =
   admit ();
   seq_find_aux f l (Seq.length l)
+*)
