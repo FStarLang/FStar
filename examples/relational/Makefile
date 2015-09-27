@@ -7,7 +7,8 @@ all: noninterference\
 		 smart_meter\
 		 spdz\
 		 cache\
-		 ifc_ts
+		 ifc_ts\
+		 make -C projection_tests
 
 #		 ro\ ;;unstable
 
