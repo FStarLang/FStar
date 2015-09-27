@@ -35,7 +35,7 @@
 module MAC
 //open Array
 open SHA1
-open IO
+open FStar.IO
 
 (* ---- specification *)
 

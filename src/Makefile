@@ -229,9 +229,10 @@ test:   clean $(BIN)/fstar.exe ocaml-test
 	make -C ../lib
 	make -C ../examples
 	make -C ../examples/hello ocaml
-	make -C ../examples/crypto rpc-test
-	make -C ../contrib/CoreCrypto/ml/ all test
 	make -C ../contrib/Platform/ml/
+	make -C ../contrib/CoreCrypto/ml/ all test
+	make -C ../examples/crypto rpc-test
+	make -C ../examples/crypto cnt-test
 
 test.net: clean $(BIN)/fstar.exe boot
 	make -C ../examples
