@@ -33,7 +33,7 @@
 /* Allocating OCaml values on the stack */
 /***********************************************************************/
 
-/* 
+/*
    Caml run-tme information -- this is copied from run-time files.
    If these files change, or the representation of Caml values changes,
    then this file won't work.
@@ -68,7 +68,7 @@ extern void (*caml_scan_roots_hook) (scanning_action);
   their contents. Changes to the run-time may break the routines.
 
   Both stack_caml_alloc and stack_caml_alloc_tuple have two
-  additional arguments, defining the "pointer mask" for the 
+  additional arguments, defining the "pointer mask" for the
   to-be-allocated objects, needed to inform the GC.
  */
 
@@ -107,6 +107,7 @@ value stack_caml_alloc(mlsize_t wosize, tag_t tag, int nbits, int *mask) {
    of length [n]. */
 value stack_caml_alloc_string (mlsize_t lenb)
 {
+  /* FYI: http://caml.inria.fr/pub/ml-archives/caml-list/2002/08/e109df224ff0150b302033e2002dbf87.en.html */
   value result;
   mlsize_t offset_index;
   mlsize_t wosize = (lenb + sizeof (value)) / sizeof (value);
@@ -118,6 +119,17 @@ value stack_caml_alloc_string (mlsize_t lenb)
   offset_index = Bsize_wsize (wosize) - 1;
   Byte (result, offset_index) = offset_index - lenb;
   return result;
+}
+
+value stack_concat (value s1, value s2) {
+  mlsize_t l1 = caml_string_length (s1);
+  mlsize_t l2 = caml_string_length (s2);
+  value s = stack_caml_alloc_string (l1 + l2);
+  if (s == (value)0)
+    caml_failwith ("Camlstack.stack_concat");
+  memmove(Bp_val(s), Bp_val(s1), l1);
+  memmove(&Byte(s, l1), Bp_val(s2), l2);
+  return s;
 }
 
 /* [stack_caml_alloc_tuple s n m] allocates a tuple of [s] elements,
@@ -183,7 +195,7 @@ static void scan_stack_roots(scanning_action action)
   Please see that file for descriptions of these routines.
  */
 
-CAMLprim value stack_set_page_wosize(value lenv) 
+CAMLprim value stack_set_page_wosize(value lenv)
 {
   int len = Int_val(lenv);
   set_page_szw(len) ;
@@ -192,7 +204,7 @@ CAMLprim value stack_set_page_wosize(value lenv)
 
 static int already_initialized = 0; /* tracks whether GC scanner initialized */
 
-CAMLprim value stack_push_frame(value v) 
+CAMLprim value stack_push_frame(value v)
 {
 #ifndef NOGC
   if (!already_initialized) {
@@ -206,13 +218,13 @@ CAMLprim value stack_push_frame(value v)
   return Val_unit;
 }
 
-CAMLprim value stack_pop_frame(value unit) 
+CAMLprim value stack_pop_frame(value unit)
 {
   pop_frame();
   return Val_unit;
 }
 
-CAMLprim value caml_is_stack_pointer(value v) 
+CAMLprim value caml_is_stack_pointer(value v)
 {
   int result = !Is_long(v) && is_stack_pointer((void *)v);
   return(Val_bool(result));
@@ -223,7 +235,7 @@ CAMLprim value caml_is_stack_pointer(value v)
    may contain an OCaml pointer by examing the initializer.
    If the tuples were mutable, this would not be sufficient. */
 
-CAMLprim value stack_mkpair(value v1, value v2) 
+CAMLprim value stack_mkpair(value v1, value v2)
 {
   int mask[2];
   int nbits = 0;
@@ -239,7 +251,7 @@ CAMLprim value stack_mkpair(value v1, value v2)
 #ifdef DEBUG
   if (tuple == (value)0)
     caml_failwith ("Camlstack.mkpair");
-  else 
+  else
 #endif
   {
     Field(tuple, 0) = v1;
@@ -267,7 +279,7 @@ CAMLprim value stack_mktuple3(value v1, value v2, value v3) {
 #ifdef DEBUG
   if (tuple == (value)0)
     caml_failwith ("Camlstack.mktuple3");
-  else 
+  else
 #endif
   {
     Field(tuple, 0) = v1;
@@ -299,8 +311,8 @@ CAMLprim value stack_mktuple4(value v1, value v2, value v3, value v4) {
   value tuple = stack_caml_alloc_tuple(4,nbits,mask);
 #ifdef DEBUG
   if (tuple == (value)0)
-    caml_failwith ("Camlstack.mktuple4");    
-  else 
+    caml_failwith ("Camlstack.mktuple4");
+  else
 #endif
   {
     Field(tuple, 0) = v1;
@@ -337,8 +349,8 @@ CAMLprim value stack_mktuple5(value v1, value v2, value v3, value v4, value v5) 
   value tuple = stack_caml_alloc_tuple(5,nbits,mask);
 #ifdef DEBUG
   if (tuple == (value)0)
-    caml_failwith ("Camlstack.mktuple4");    
-  else 
+    caml_failwith ("Camlstack.mktuple4");
+  else
 #endif
   {
     Field(tuple, 0) = v1;
@@ -350,14 +362,14 @@ CAMLprim value stack_mktuple5(value v1, value v2, value v3, value v4, value v5) 
   }
 }
 
-CAMLprim value stack_mkref(value v) 
+CAMLprim value stack_mkref(value v)
 {
   int mask[1] = { 1 }; /* Assume it could always be a pointer, since it could be mutated to one */
   value ref = stack_caml_alloc_tuple(1,1,mask);
 #ifdef DEBUG
   if (ref == (value)0)
     caml_failwith ("Camlstack.mkref");
-  else 
+  else
 #endif
   {
     Field(ref, 0) = v;
@@ -365,13 +377,13 @@ CAMLprim value stack_mkref(value v)
   }
 }
 
-CAMLprim value stack_mkref_noscan(value v) 
+CAMLprim value stack_mkref_noscan(value v)
 {
   value ref = stack_caml_alloc_tuple(1,0,NULL); /* Assume it will never contain a pointer */
 #ifdef DEBUG
   if (ref == (value)0)
     caml_failwith ("Camlstack.mkref_noscan");
-  else 
+  else
 #endif
   {
     Field(ref, 0) = v;
@@ -388,7 +400,7 @@ CAMLprim value stack_mkbytes(value lenv) {
     value str = stack_caml_alloc_string(len);
 #ifdef DEBUG
     if (str == (value)0)
-      caml_failwith ("Camlstack.mkbytes");    
+      caml_failwith ("Camlstack.mkbytes");
     else
 #endif
       return(str);
@@ -404,8 +416,8 @@ CAMLprim value stack_mkarray(value lenv, value initv) {
     value tuple = stack_caml_alloc_tuple(len,-1,NULL); /* all possible heap pointers */
 #ifdef DEBUG
     if (tuple == (value)0)
-      caml_failwith ("Camlstack.mkarray");    
-    else 
+      caml_failwith ("Camlstack.mkarray");
+    else
 #endif
     {
       int i;
@@ -419,8 +431,8 @@ CAMLprim value stack_mkarray(value lenv, value initv) {
 
 CAMLprim value stack_mkarray_noscan(value lenv, value initv) {
   int len = Int_val(lenv);
-  if (len <= 0 
-      || (Is_block(initv) 
+  if (len <= 0
+      || (Is_block(initv)
 	  && !(is_stack_pointer((void *)initv) || Tag_val(initv) == Double_tag)))
     caml_invalid_argument ("Camlstack.mkarray");
   else {
@@ -432,8 +444,8 @@ CAMLprim value stack_mkarray_noscan(value lenv, value initv) {
     value tuple = stack_caml_alloc(n,tag,0,NULL); /* no heap pointers */
 #ifdef DEBUG
     if (tuple == (value)0)
-      caml_failwith ("Camlstack.mkarray");    
-    else 
+      caml_failwith ("Camlstack.mkarray");
+    else
 #endif
     {
       int i;
@@ -458,7 +470,7 @@ void printptrs(void *ign, void **ptr) {
   nptrs++;
 }
 
-CAMLprim value print_mask(value unit) 
+CAMLprim value print_mask(value unit)
 {
   printf("identifying marked pointers\n");
   nptrs = 0;
