@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi FStar.Set --z3timeout 15 --print_implicits --print_effect_args --prn;
+    options:--admit_fsi FStar.Set --z3timeout 15;
     other-files:set.fsi heap.fst st.fst all.fst st2.fst distinct.fst ifc_ts.fst
   --*)
 
@@ -46,28 +46,19 @@ type com =
 | If     : cond:aexp -> then_branch:com -> else_branch:com -> com
 | While  : cond:aexp -> body:com -> com
 
-val tc_aexp : e:aexp -> Tot (option (l:label & ni_exp l))
+val tc_aexp : e:aexp -> Tot (l:label & ni_exp l)
 let rec tc_aexp e = 
   match e with 
-  | AInt i -> Some (| bot,(const_exp i) |)
-  | AVar r -> Some (| label_fun r, (deref_exp r) |) 
+  | AInt i -> (| bot,(const_exp i) |)
+  | AVar r -> (| label_fun r, (deref_exp r) |) 
   | AOp o e1 e2 -> 
-    let r1, r2 = tc_aexp e1, tc_aexp e2 in 
-    if is_None r1 || is_None r2 then 
-      None
-    else
-      let r1' = Some.v r1 in 
-      (* direct pattern matching causes Stack Overflow (Maybe #291?)*)
-(*
-      let l1, p1 = match r1' with 
-        | (| l1, p1 |) -> l1, p1  in
-*)
-      (* Using dfst is not an alternative... *)
-      assert (dfst r1' = dfst r1');
-      (* Fails... *)
-      //let (p1:ni_exp l1) = dsnd r1' in 
-//      let l2, p2 = dfst (Some.v r2), dsnd (Some.v r2) in 
-      //let l = if l1 <= l2 then l2 else l1 in
-      //let s1 = sub_exp l1 l p1 in 
-      //let s2 = sub_exp l2 l p2 in 
-      admit ()
+    (* This style triggers a lot of weird bugs... *)
+    (* let r1, r2 = tc_aexp e1, tc_aexp e2 in  *)
+    let r1 = tc_aexp e1 in
+    let r2 = tc_aexp e2 in 
+    let (| l1, p1 |) = r1 in 
+    let (| l2, p2 |) = r2 in 
+    let l = if l1 <= l2 then l2 else l1 in
+    let s1 = sub_exp l1 l p1 in 
+    let s2 = sub_exp l2 l p2 in 
+    (| l, convert l (bin_op_exp l s1 s2) |)
