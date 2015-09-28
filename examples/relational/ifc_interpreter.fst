@@ -34,7 +34,7 @@ type bexp =
 | BAnd   : bexp -> bexp -> bexp
 *)
 
-(* Commands (aka. statements) -- while has loop invariant *)
+(* Commands (aka. statements) *)
 type com =
 | Skip   : com
 | Assign : var:id -> term:aexp -> com
@@ -46,6 +46,8 @@ type com =
 | If     : cond:aexp -> then_branch:com -> else_branch:com -> com
 | While  : cond:aexp -> body:com -> com
 
+
+(* Typechecking expressions: we infer the label *)
 val tc_aexp : e:aexp -> Tot (l:label & ni_exp l)
 let rec tc_aexp e = 
   match e with 
