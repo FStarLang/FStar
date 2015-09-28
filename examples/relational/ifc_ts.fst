@@ -15,10 +15,10 @@ open FStar.Relational
 (* We model labels with different levels as integers *)
 
 
-(* A top label that is higher than all other lables *)
+(* A top label that is higher than all other labels *)
 let top = 1000
 
-(* A bottom label that is lower than all other lables *)
+(* A bottom label that is lower than all other labels *)
 let bot = - top
 
 type label = l:int{bot <= l /\ l <= top}
@@ -26,18 +26,18 @@ type label = l:int{bot <= l /\ l <= top}
 (* Label of the attacker *)
 assume val alpha : label
 
-
 (* A global labeling function (assigns a label to every reference) *)
 assume val label_fun : ref int -> Tot label
 
-(* A reference can be observed bu the attacker if its label is not higher than
+(* A reference can be observed by the attacker if its label is not higher than
    alpha *)
 let attacker_observable x = label_fun x <= alpha
 
 (* We have alpha equivalence when two heaps are equal for all references that
   have a label <= alpha and thus are observable by the attacker *)
-type a_equiv (h1:double heap) = (forall (x:ref int). attacker_observable x
-                                                   ==> sel (R.l h1) x = sel (R.r h1) x)
+type a_equiv (h1:double heap) = 
+  (forall (x:ref int). attacker_observable x 
+                       ==> sel (R.l h1) x = sel (R.r h1) x)
 
 (* Function to create new labeled references *)
 assume val new_labeled_int : l:label -> x:ref int{label_fun x = l}
@@ -98,21 +98,8 @@ let sub_exp _ _ e1 tu = e1 tu
          ----------------
              !r : l
 *)
-val deref_exp : r:ref int
-(*            -> Tot (ni_exp (label_fun r)) *)
-(* This is the above line inlined due to bug #377 ... *)
-           -> double unit
-           -> ST2 (double int)
-                  (requires (fun h2 -> True))
-                  (ensures  (fun h1 res h2 -> equal (R.l h1) (R.l h2)
-                                           /\ equal (R.r h1) (R.r h2)
-                                           /\ (a_equiv h1
-                                              ==> (if (label_fun r) <= alpha then
-                                                    R.l res = R.r res
-                                                  else
-                                                  true))))
-let deref_exp r tu = compose2_self read (twice r)
-
+val deref_exp : r:ref int -> Tot (ni_exp (label_fun r)) 
+let deref_exp r tu = compose2_self read (twice r) 
 (* Typing rule for Int constants
 
          i : int
