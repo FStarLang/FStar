@@ -112,6 +112,8 @@ assume Mod_set_def: forall (x:rid) (s:Set.set rid). {:pattern Set.mem x (mod_set
 opaque logic type modifies (s:Set.set rid) (m0:t) (m1:t) =
   Map.Equal m1 (Map.concat m1 (Map.restrict (Set.complement (mod_set s)) m0))
 
+let restrict s (m:HyperHeap.t)  = Map.restrict (HyperHeap.mod_set s) m
+
 val lemma_modifies_trans: m1:t -> m2:t -> m3:t
                        -> s1:Set.set rid -> s2:Set.set rid
                        -> Lemma (requires (modifies s1 m1 m2 /\ modifies s2 m2 m3))
