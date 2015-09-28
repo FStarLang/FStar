@@ -45,6 +45,7 @@ assume val new_labeled_int : l:label -> x:ref int{label_fun x = l}
 let tu = twice ()
 
 
+
 (**************************** Typing Judgements ****************************)
 
 (* typing judgement  e : l
@@ -80,6 +81,34 @@ type ni_com (l:label) =
 (* We define noninterference for a program as noninterference for commands with
    the label bottom *)
 type ni = ni_com bot
+
+(* This is needed due to typing problems with #377 *)
+val convert_exp : l:label
+               -> =e:(double unit
+                 -> ST2 (double int)
+                        (requires (fun h2 -> True))
+                        (ensures  (fun h1 r h2 -> equal (R.l h1) (R.l h2)
+                                               /\ equal (R.r h1) (R.r h2)
+                                               /\ (a_equiv h1
+                                                  ==> (if l <= alpha then
+                                                        R.l r = R.r r
+                                                      else
+                                                        true))))) -> Tot (ni_exp l)
+let convert_exp l e tu = e tu
+
+
+val convert_com : l:label 
+              ->  =e:(double unit ->
+                  ST2 (double unit)
+                      (requires (fun h2 -> True))
+                      (ensures  (fun h1 _ h2 -> (forall (y:ref int).
+                                                  label_fun y < l
+                                                  ==> sel (R.l h1) y = sel (R.l h2) y
+                                                   /\ sel (R.r h1) y = sel (R.r h2) y)
+                                             /\ (a_equiv h1 ==> a_equiv h2)))) -> Tot (ni_com l)
+
+let convert_com l c tu = c tu
+
 
 (*********************** Typing Rules for Expressions **********************)
 
@@ -148,18 +177,18 @@ let sub_com _ _ c1 tu = c1 tu
          ------------------------------------------
                        l |- r := e
 *)
-val assign_com : l:label -> r:ref int{l <= label_fun r} -> =e:ni_exp (label_fun r)
-(*              -> Tot (ni_com l) *)
+val assign_com : r:ref int -> =e:ni_exp (label_fun r)
+(*              -> Tot (ni_com (label_fun r) *)
 (* This is the above line inlined due to bug #377 ... *)
           ->  double unit ->
               ST2 (double unit)
                   (requires (fun h2 -> True))
                   (ensures  (fun h1 _ h2 -> (forall (y:ref int).
-                                              label_fun y < l
+                                              label_fun y < label_fun r
                                               ==> sel (R.l h1) y = sel (R.l h2) y
                                                /\ sel (R.r h1) y = sel (R.r h2) y)
                                          /\ (a_equiv h1 ==> a_equiv h2)))
-let assign_com _ r e tu = compose2_self (write r) (e tu)
+let assign_com r e tu = compose2_self (write r) (e tu)
 
 (* Sequencing rule for commands
 
@@ -187,21 +216,23 @@ let seq_com _ c1 c2 tu = let _ = c1 tu in c2 tu
          ------------------------------
          l |- if e <> 0 then ct else cf
 *)
-val cond : l:label -> =e:(ni_exp l) -> =ct:(ni_com l) -> =cf:(ni_com l)
-           -> Tot (ni_com l)
-let cond _ e ct cf tu  = match e tu with
-                         | R 0 0 -> cf tu
-                         | R 0 _ -> cross cf ct
-                         | R _ 0 -> cross ct cf
-                         | R _ _ -> ct tu
+val cond_com : l:label -> =e:(ni_exp l) -> =ct:(ni_com l) -> =cf:(ni_com l)
+            -> Tot (ni_com l)
+let cond_com _ e ct cf tu  = match e tu with
+                             | R 0 0 -> cf tu
+                             | R 0 _ -> cross cf ct
+                             | R _ 0 -> cross ct cf
+                             | R _ _ -> ct tu
+                             
+
 
 (* Typing rule for Skip
 
          -----------
          top |- skip
 *)
-val skip : ni_com top
-let skip tu = tu
+val skip_com : ni_com top
+let skip_com tu = tu
 
 (* Loop case of a while loop *)
 val loop_loop : l:label -> =e:(ni_exp l) -> =c:(ni_com l)
@@ -235,12 +266,11 @@ val loop_com : l:label -> =e:(ni_exp l) -> =c:(ni_com l)
                                          /\ (a_equiv h1 ==> a_equiv h2)))
 let rec loop_com l e c tu =
                   match e tu with
-                 | R 0 0 -> skip tu
-                 | R 0 _ -> cross skip (loop_loop l e c)
-                 | R _ 0 -> cross (loop_loop l e c) skip
+                 | R 0 0 -> skip_com tu
+                 | R 0 _ -> cross skip_com (loop_loop l e c)
+                 | R _ 0 -> cross (loop_loop l e c) skip_com
                  | R _ _ -> loop_loop l e c tu
 and loop_loop l e c tu = let _ = c tu in loop_com l e c tu
-
 
 
 (****************************** IFC_Examples ******************************)
@@ -281,9 +311,13 @@ let ni_exp_1 tu = (const_exp 1) tu
 val ni_exp_1' : ni_exp 1
 let ni_exp_1' = sub_exp bot 1 ni_exp_1
 
+(* 1 |- a := 1 *)
+val ni_com_a_1: ni_com 1
+let ni_com_a_1 tu = (assign_com a ni_exp_1') tu
+
 (* 0 |- a := 1 *)
-val ni_com_a_1: ni_com 0
-let ni_com_a_1 tu = (assign_com 0 a ni_exp_1') tu
+val ni_com_a_1': ni_com 0
+let ni_com_a_1' tu = (sub_com 1 0  ni_com_a_1) tu
 
 (* 2 : bot *)
 val ni_exp_2 : ni_exp bot
@@ -293,13 +327,17 @@ let ni_exp_2 tu = (const_exp  2) tu
 val ni_exp_2' : ni_exp 1
 let ni_exp_2' = sub_exp bot 1 ni_exp_2
 
+(* 1 |- a := 2 *)
+val ni_com_a_2: ni_com 1
+let ni_com_a_2 tu = (assign_com a ni_exp_2') tu
+
 (* 0 |- a := 2 *)
-val ni_com_a_2: ni_com 0
-let ni_com_a_2 tu = (assign_com 0 a ni_exp_2') tu
+val ni_com_a_2': ni_com 0
+let ni_com_a_2' tu = (sub_com 1 0 ni_com_a_2) tu
 
 (* 0 |- if (!b <> 0) then a := 1 else a := 2 *)
 val ni_com_cond : ni_com 0
-let ni_com_cond = cond 0 ni_exp_deref_b ni_com_a_1 ni_com_a_2
+let ni_com_cond = cond_com 0 ni_exp_deref_b ni_com_a_1' ni_com_a_2'
 
 (* bot |- if (!b <> 0) then a := 1 else a := 2 *)
 val ni_com_cond' : ni_com bot
@@ -313,18 +351,21 @@ let ni_exp_0 tu = (const_exp 0) tu
 val ni_exp_0' : ni_exp 0
 let ni_exp_0' = sub_exp bot 0 ni_exp_0
 
+(* 0 |- b := 0 *)
+val ni_com_b : ni_com 0
+let ni_com_b tu = (assign_com b ni_exp_0') tu
+
 (* bot |- b := 0 *)
-val ni_com_b : ni_com bot
-let ni_com_b tu = (assign_com bot b ni_exp_0') tu
+val ni_com_b' : ni_com bot
+let ni_com_b' tu = (sub_com 0 bot ni_com_b) tu
 
 (* bot |- if (!b <> 0) then a := 1 else a := 2; b := 0 *)
 val ni_com_seq : ni_com bot
-let ni_com_seq tu = (seq_com bot ni_com_cond' ni_com_b) tu
+let ni_com_seq tu = (seq_com bot ni_com_cond' ni_com_b') tu
 
 (* Noninterference result for the complete program *)
 val ni_programm : ni
 let ni_programm tu = ni_com_seq tu
-
 
 module IFC_Example3
 open IFC
@@ -370,14 +411,17 @@ let ni_exp_deref_c' tu = (sub_exp lc la ni_exp_deref_c) tu
 val ni_exp_a : ni_exp la
 let ni_exp_a tu = (bin_op_exp la ni_exp_deref_b' ni_exp_deref_c') tu
 
+(* la |- a := !b + !c *)
+val ni_com_a: ni_com la
+let ni_com_a tu = (assign_com a ni_exp_a) tu
+
 (* bot |- a := !b + !c *)
-val ni_com_a: ni_com bot
-let ni_com_a tu = (assign_com bot a ni_exp_a) tu
+val ni_com_a': ni_com bot
+let ni_com_a' tu = (sub_com la bot ni_com_a) tu
 
 (* Noninterference result for the complete program *)
 val ni_program : ni
-let ni_program tu = ni_com_a tu
-
+let ni_program tu = ni_com_a' tu
 
 module IFC_Example5
 open IFC
@@ -429,7 +473,7 @@ let ni_exp_a tu = (bin_op_exp la ni_exp_deref_a ni_exp__1a) tu
 
 (* la |- a := !a + -1  *)
 val ni_com_a : ni_com la
-let ni_com_a tu = (assign_com la a ni_exp_a) tu
+let ni_com_a tu = (assign_com a ni_exp_a) tu
 
 (* !b : lb *)
 val ni_exp_deref_b : ni_exp lb
@@ -447,13 +491,17 @@ let ni_exp_1b tu = (sub_exp bot lb ni_exp_1) tu
 val ni_exp_b : ni_exp lb
 let ni_exp_b tu = (bin_op_exp lb ni_exp_deref_b ni_exp_1b) tu
 
+(* lb |- !b + 1 *)
+val ni_com_b : ni_com lb
+let ni_com_b tu = (assign_com b ni_exp_b) tu
+
 (* la |- !b + 1 *)
-val ni_com_b : ni_com la
-let ni_com_b tu = (assign_com la b ni_exp_b) tu
+val ni_com_b' : ni_com la
+let ni_com_b' tu = (sub_com lb la ni_com_b) tu
 
 (* la |- a := !a + -1; b := !b + 1 *)
 val ni_com_loop_body : ni_com la
-let ni_com_loop_body tu = (seq_com la ni_com_a ni_com_b) tu
+let ni_com_loop_body tu = (seq_com la ni_com_a ni_com_b') tu
 
 (* la |- while !a <> 0 {a := !a + -1; b := !b + 1} *)
 val ni_com_loop : ni_com la
@@ -471,10 +519,14 @@ let ni_exp_0 tu = (const_exp 0) tu
 val ni_exp_0' : ni_exp lc
 let ni_exp_0' tu = (sub_exp bot lc ni_exp_0) tu
 
+(* lc |- c := 0 *)
+val ni_com_c : ni_com lc
+let ni_com_c tu = (assign_com c ni_exp_0') tu
+
 (* bot |- c := 0 *)
-val ni_com_c : ni_com bot
-let ni_com_c tu = (assign_com bot c ni_exp_0') tu
+val ni_com_c' : ni_com bot
+let ni_com_c' tu = (sub_com lc bot ni_com_c) tu
 
 (* Noninterference for the complete program *)
 val ni_program : ni
-let ni_program tu = (seq_com bot ni_com_loop' ni_com_c) tu
+let ni_program tu = (seq_com bot ni_com_loop' ni_com_c') tu
