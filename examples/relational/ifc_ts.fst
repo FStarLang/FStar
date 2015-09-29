@@ -44,6 +44,8 @@ assume val new_labeled_int : l:label -> x:ref int{label_fun x = l}
 
 let tu = twice ()
 
+let max l1 l2 = if l1 <= l2 then l2 else l1
+let min l1 l2 = if l1 <= l2 then l1 else l2
 
 
 (**************************** Typing Judgements ****************************)

@@ -1,9 +1,9 @@
 (*--build-config
-    options:--admit_fsi FStar.Set --z3timeout 15 --print_effect_args;
+    options:--admit_fsi FStar.Set --z3timeout 15;
     other-files:set.fsi heap.fst st.fst all.fst st2.fst distinct.fst ifc_ts.fst
   --*)
 
-module Interpreter
+module Compiler
 
 open IFC
 open FStar.Comp
@@ -60,7 +60,7 @@ let rec tc_aexp e =
     let r2 = tc_aexp e2 in 
     let (| l1, p1 |) = r1 in 
     let (| l2, p2 |) = r2 in 
-    let l = if l1 <= l2 then l2 else l1 in
+    let l = max l1 l2 in
     let s1 = sub_exp l1 l p1 in 
     let s2 = sub_exp l2 l p2 in 
     (| l, convert_exp l (bin_op_exp l s1 s2) |)
@@ -95,30 +95,27 @@ let rec tc_com l c =
       Some (convert_com l (seq_com l (Some.v r1) (Some.v r2)))
 
   | If e ct cf -> 
-    let (| l1, r1 |) = tc_aexp e in
-    if l1 <= l then 
+    let (| l1', r1' |) = tc_aexp e in
+    let l1 = max l1' l in 
+    let r1 = sub_exp l1' l1 r1' in
+    let r2 = tc_com l1 ct in 
+    let r3 = tc_com l1 cf in 
+    if is_None r2 || is_None r3 then
       None
     else
-      let r2 = tc_com l1 ct in 
-      let r3 = tc_com l1 cf in 
-      if is_None r2 || is_None r3 then
-        None
-      else
-        let s = cond_com l1 r1 (Some.v r2) (Some.v r3) in 
-        Some (sub_com l1 l s)
+      let s = cond_com l1 r1 (Some.v r2) (Some.v r3) in 
+      Some (sub_com l1 l s)
 
   | While e cb -> 
-    let (| l1, r1 |) = tc_aexp e in
-    if l1 <= l then 
+    let (| l1', r1' |) = tc_aexp e in
+    let l1 = max l1' l in 
+    let r1 = sub_exp l1' l1 r1' in
+    let r2 = tc_com l1 cb in 
+    if is_None r2 then 
       None
     else
-      let r2 = tc_com l1 cb in 
-      if is_None r2 then 
-        None
-      else
-        let s = loop_com l1 r1 (Some.v r2) in 
-        Some (sub_com l1 l s)
+      let s = loop_com l1 r1 (Some.v r2) in 
+      Some (sub_com l1 l s)
 
-
-
-
+val tc : com -> option ni
+let tc = tc_com bot
