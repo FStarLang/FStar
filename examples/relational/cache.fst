@@ -1,9 +1,7 @@
 (*--build-config
-    options:--admit_fsi FStar.Set --z3timeout 15;
+    options:--admit_fsi FStar.Set --z3timeout 5;
     other-files:set.fsi heap.fst st.fst all.fst st2.fst list.fst
   --*)
-
-
 
 module Cache
 

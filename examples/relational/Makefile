@@ -7,9 +7,8 @@ all: noninterference\
 		 smart_meter\
 		 spdz\
 		 cache\
+		 ro\
 		 ifc_compiler
-
-#		 ro\ ;;unstable
 
 noninterference:
 	$(FSTAR) noninterference.fst

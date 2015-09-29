@@ -38,7 +38,7 @@ let rec fsts l = match l with
   | [] -> []
   | (a,b)::ls -> a :: fsts ls
 
-let fsts_rel = rel_map1 fsts
+let fsts_rel = rel_map1T fsts
 
 val scalar_product :l1:list int -> l2:list int{length l1 = length l2} -> Tot int
 let rec scalar_product l1 l2 = match l1, l2 with
