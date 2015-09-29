@@ -14,8 +14,7 @@ val compose_self : #wp:(unit -> STWP unit) ->
 let compose_self _ = ()
 
 
-val f : unit -> State unit
-  (fun 'p h -> 'p () (Heap.upd h a 0))
+val f : unit -> State unit (fun 'p h -> 'p () (Heap.upd h a 0))
 let f () = a := 0
 
 let test' () = a := 0;
@@ -47,5 +46,8 @@ let test () = a := 0;
               a := 0
 
 (* Works when setting --eager_inference in build-config options *)
+(* This set-options apparently has no effect though *)
+#set-options "--eager_inference"
+
 val test2 : unit -> St unit
 let test2 () = compose_self test
