@@ -8,6 +8,7 @@ all: noninterference\
 		 spdz\
 		 cache\
 		 ro\
+		 projection_test\
 		 ifc_compiler
 
 noninterference:
@@ -36,3 +37,6 @@ cache:
 
 ifc_compiler:
 	$(FSTAR) ifc_compiler.fst
+
+projection_test:
+	$(FSTAR) projection_test.fst

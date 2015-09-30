@@ -123,7 +123,7 @@ assume val cross : #a:Type -> #b:Type -> #c:Type -> #d:Type
 (* Some experimental functions *)
 
 type decomp_l (a0:Type) (a1:Type) (b0:Type) (b1:Type) (al:a0)
-            (wp:(rel a0 a1 -> ST2WP (rel b0 b1))) (p:b0 -> heap -> Type) (hl:heap) =
+            (wp:(rel a0 a1 -> ST2WP (rel b0 b1))) (p:b0 -> heap -> Type) (hl:heap) = 
     (exists (ar:a1) (hr:heap).
       wp (R al ar) (fun y2 h2 -> p (R.l y2) (R.l h2))
          (R hl hr))
@@ -140,7 +140,7 @@ assume val project_l : #a0:Type -> #b0:Type -> #a1:Type -> #b1:Type
                     -> =c:(x:rel a0 a1 -> STATE2 (rel b0 b1) (wp x) (wlp x))
                     -> x:a0
                     -> STATE b0 (decomp_l a0 a1 b0 b1 x wp)
-                                (decomp_l a0 a1 b0 b1 x wp)
+                                (decomp_l a0 a1 b0 b1 x wlp)
 
 assume val project_r : #a0:Type -> #b0:Type -> #a1:Type -> #b1:Type
                     -> #wp:(rel a0 a1 -> ST2WP (rel b0 b1))
@@ -148,7 +148,7 @@ assume val project_r : #a0:Type -> #b0:Type -> #a1:Type -> #b1:Type
                     -> =c:(x:rel a0 a1 -> STATE2 (rel b0 b1) (wp x) (wlp x))
                     -> x:a1
                     -> STATE b1 (decomp_r a0 a1 b0 b1 x wp)
-                                (decomp_r a0 a1 b0 b1 x wp)
+                                (decomp_r a0 a1 b0 b1 x wlp)
 
 
 module FStar.RelationalState
