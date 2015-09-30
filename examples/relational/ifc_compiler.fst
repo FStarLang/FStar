@@ -46,6 +46,7 @@ type com =
 | If     : cond:aexp -> then_branch:com -> else_branch:com -> com
 | While  : cond:aexp -> body:com -> com
 
+type workaround_bug_404 (u:unit)
 
 (* Typechecking expressions: we infer the label *)
 val tc_aexp : e:aexp -> Tot (l:label & ni_exp l)
