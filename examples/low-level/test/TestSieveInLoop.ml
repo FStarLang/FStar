@@ -1,13 +1,13 @@
 open Sieve
 
-let rec printMaxPrimes (upto : int) : unit = 
-	if upto<=0 
+let rec printMaxPrimes (upto : int) : unit =
+	if upto<=0
 	then ()
 	else ((print_string  (string_of_int (sieveJustMax upto)));
 			printMaxPrimes (upto -1))
 
-let rec sumMaxPrimes (upto : int) : int = 
-	if upto<=0 
+let rec sumMaxPrimes (upto : int) : int =
+	if upto<=0
 	then 0
 	else ((((sieveJustMax upto)))+
 			sumMaxPrimes (upto -1))

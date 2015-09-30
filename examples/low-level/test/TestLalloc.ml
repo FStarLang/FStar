@@ -1,6 +1,6 @@
 open LallocTest
 
-let _ = 
+let _ =
 	print_int (lallocExample1 1 2)
 
 ;;
