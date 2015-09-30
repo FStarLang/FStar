@@ -12,7 +12,6 @@ all:
 	make -C software_foundations
 	make -C ../doc/tutorial/code/solutions
 	make -C relational
-	make -C low-level
 	make -C low-star
 	make -C maths
 	make -C paradoxes
