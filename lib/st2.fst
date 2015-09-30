@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set;
-    other-files:set.fsi heap.fst st.fst all.fst list.fst 
+    other-files:set.fsi heap.fst st.fst all.fst list.fst
   --*)
 
 module FStar.Relational
@@ -15,7 +15,7 @@ type double (t:Type) = rel t  t
 type eq (t:Type) = p:(double t){R.l p = R.r p}
 
 let twice x = R x x
-let tu = twice () 
+let tu = twice ()
 
 (* functions to lift normal functions to Relational functions *)
 val rel_map1T : ('a -> Tot 'b) -> (double 'a) -> Tot (double 'b)
@@ -72,12 +72,15 @@ kind ST2Post (a:Type) = STPost_h heap2 a
 kind ST2WP (a:Type) = STWP_h heap2 a
 effect ST2 (a:Type) (pre:ST2Pre) (post: (heap2 -> ST2Post a)) =
     STATE2 a
-      (fun (p:STPost_h heap2 a) (h:heap2) -> pre h /\ (forall a h1. (pre h /\ post h a h1) ==> p a h1)) (* WP *)
-      (fun (p:STPost_h heap2 a) (h:heap2) -> (forall a h1. (pre h /\ post h a h1) ==> p a h1))           (* WLP *)
+      (fun (p:ST2Post a) (h:heap2) -> pre h /\ (forall a h1. (pre h /\ post h a h1) ==> p a h1)) (* WP *)
+      (fun (p:ST2Post a) (h:heap2) -> (forall a h1. (pre h /\ post h a h1) ==> p a h1))          (* WLP *)
 effect St2 (a:Type) = ST2 a (fun h -> True) (fun h0 r h1 -> True)
 sub_effect
   PURE   ~> STATE2 = (fun (a:Type) (wp:PureWP a) (p:ST2Post a) -> (fun h2 -> wp (fun a0 -> p a0 h2)))
+sub_effect
+  DIV    ~> STATE2 = (fun (a:Type) (wp:PureWP a) (p:ST2Post a) -> (fun h2 -> wp (fun a0 -> p a0 h2)))
 
+(* construct a ST2WP from 2 STWPs *)
 type comp (a:Type) (b:Type) (wp0:STWP a) (wp1:STWP b) (p:((rel a b) -> heap2 -> Type)) (h2:heap2) =
     wp0 (fun y0 h0 ->
       wp1 (fun y1 h1 -> p (R y0 y1) (R h0 h1))
@@ -95,12 +98,11 @@ assume val compose2: #a0:Type -> #b0:Type -> #wp0:(a0 -> STWP b0) -> #wlp0:(a0 -
 
 val compose2_self : #a:Type -> #b:Type -> #wp:(a -> STWP b) -> #wlp:(a -> STWP b)
                 -> =c:(x:a -> STATE b (wp x) (wlp x))
-                -> x: double a 
+                -> x: double a
                 -> STATE2 (double b)
                           (comp b b (wp (R.l x)) (wp (R.r x)))
                           (comp b b (wlp (R.l x)) (wlp (R.r x)))
 let compose2_self f x = compose2 f f x
-
 
 
 assume val cross : #a:Type -> #b:Type -> #c:Type -> #d:Type
@@ -111,28 +113,28 @@ assume val cross : #a:Type -> #b:Type -> #c:Type -> #d:Type
                 -> =c1:(double unit -> ST2 (rel a b) (requires (fun h -> p h)) (ensures (fun h1 r h2 -> q h1 r h2)))
                 -> =c2:(double unit -> ST2 (rel c d) (requires (fun h -> p' h)) (ensures (fun h1 r h2 -> q' h1 r h2)))
                 -> ST2 (rel a d) (requires (fun h -> (exists (hl:heap) (hr:heap).
-                                                             p (R (R.l h) hr) 
+                                                             p (R (R.l h) hr)
                                                           /\ p' (R hl (R.r h)))))
-                                 (ensures (fun h1 r h2 -> (exists (h2l:heap) (h2r:heap) (rl:c) (rr:b). 
+                                 (ensures (fun h1 r h2 -> (exists (h2l:heap) (h2r:heap) (rl:c) (rr:b).
                                                                   q h1 (R (R.l r) rr) (R (R.l h2) (h2r))
                                                                /\ q' h1 (R rl (R.r r)) (R h2l (R.r h2)))))
 
 
 (* Some experimental functions *)
 
-type decomp_l (a0:Type) (a1:Type) (b0:Type) (b1:Type) (al:a0)  
-            (wp:(rel a0 a1 -> ST2WP (rel b0 b1))) (p:b0 -> heap -> Type) (hl:heap) = 
-    (exists (ar:a1) (hr:heap). 
-      wp (R al ar) (fun y2 h2 -> p (R.l y2) (R.l h2)) 
+type decomp_l (a0:Type) (a1:Type) (b0:Type) (b1:Type) (al:a0)
+            (wp:(rel a0 a1 -> ST2WP (rel b0 b1))) (p:b0 -> heap -> Type) (hl:heap) =
+    (exists (ar:a1) (hr:heap).
+      wp (R al ar) (fun y2 h2 -> p (R.l y2) (R.l h2))
          (R hl hr))
 
-type decomp_r (a0:Type) (a1:Type) (b0:Type) (b1:Type) (ar:a1)  
-            (wp:(rel a0 a1 -> ST2WP (rel b0 b1))) (p:b1 -> heap -> Type) (hr:heap) = 
-    (exists (al:a0) (hl:heap). 
-      wp (R al ar) (fun y2 h2 -> p (R.r y2) (R.r h2)) 
+type decomp_r (a0:Type) (a1:Type) (b0:Type) (b1:Type) (ar:a1)
+            (wp:(rel a0 a1 -> ST2WP (rel b0 b1))) (p:b1 -> heap -> Type) (hr:heap) =
+    (exists (al:a0) (hl:heap).
+      wp (R al ar) (fun y2 h2 -> p (R.r y2) (R.r h2))
          (R hl hr))
 
-assume val project_l : #a0:Type -> #b0:Type -> #a1:Type -> #b1:Type 
+assume val project_l : #a0:Type -> #b0:Type -> #a1:Type -> #b1:Type
                     -> #wp:(rel a0 a1 -> ST2WP (rel b0 b1))
                     -> #wlp:(rel a0 a1 -> ST2WP (rel b0 b1))
                     -> =c:(x:rel a0 a1 -> STATE2 (rel b0 b1) (wp x) (wlp x))
@@ -140,7 +142,7 @@ assume val project_l : #a0:Type -> #b0:Type -> #a1:Type -> #b1:Type
                     -> STATE b0 (decomp_l a0 a1 b0 b1 x wp)
                                 (decomp_l a0 a1 b0 b1 x wp)
 
-assume val project_r : #a0:Type -> #b0:Type -> #a1:Type -> #b1:Type 
+assume val project_r : #a0:Type -> #b0:Type -> #a1:Type -> #b1:Type
                     -> #wp:(rel a0 a1 -> ST2WP (rel b0 b1))
                     -> #wlp:(rel a0 a1 -> ST2WP (rel b0 b1))
                     -> =c:(x:rel a0 a1 -> STATE2 (rel b0 b1) (wp x) (wlp x))
