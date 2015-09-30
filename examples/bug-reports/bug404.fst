@@ -1,7 +1,6 @@
-module Bug 
+module M 
 
 (* Adding this line fixes the issue *)
-//type bar (i:int) = int
+//type t (u:unit) 
 
-val foo : (i:int & int)
-let foo = (| 0, 0 |)
+val v: (i:unit & unit) 
