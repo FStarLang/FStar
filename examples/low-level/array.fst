@@ -4,10 +4,10 @@
   --*)
 
 (*rename mvector to vector. The word sstarray is used for memory-stored vectors *)
-module SSTArray
-open SSTCombinators
+module RSTArray
+open RSTCombinators
 open StackAndHeap  open Lref  open Located
-open SST
+open RST
 open MachineWord
 open FStar.Heap
 open Stack

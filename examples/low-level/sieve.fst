@@ -3,9 +3,9 @@
     ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst sstCombinators.fst seq.fsi seq.fst array.fsi array.fst arrayalgos.fst sieveFun.fst
   --*)
 module Sieve
-open SSTCombinators
+open RSTCombinators
 open StackAndHeap
-open SST
+open RST
 
 open Heap
 open Lref  open Located
@@ -19,11 +19,11 @@ open Ghost
 let divides divisor n = ((n % divisor) = 0)*)
 (*Instead, below is a definition from first principles*)
 open ArrayAlgos
-open SSTArray
+open RSTArray
 
 type bitarray = sstarray bool
 
-open SSTArray
+open RSTArray
 
 (* val mark : n:nat -> ((k:nat{k<n}) -> Tot bool) -> index:nat{index<n} -> Tot ((k:nat{k<n}) -> Tot bool) *)
 let mark f index =
@@ -272,7 +272,7 @@ let sieveJustMax n =
   let res = (maxUnmarked n res) in
   popStackFrame (); res
 
-val segFault : unit -> SST int (requires (fun _-> True)) (ensures (fun _ _ _ -> True))
+val segFault : unit -> RST int (requires (fun _-> True)) (ensures (fun _ _ _ -> True))
 let segFault u =
   pushStackFrame ();
   let p : (int * int) =  (1 , 2) in

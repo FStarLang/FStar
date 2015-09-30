@@ -17,20 +17,20 @@ only matters at the time of allocation. Functions like increment can be
 defined without without bothering about that distinction*)
 
 (*ideally, the liveRef clauses should not be needed in the postcondition*)
-val incrementRef : r:(lref int) -> SST unit
+val incrementRef : r:(lref int) -> RST unit
   (requires (fun m -> (liveRef r m)==true))
   (ensures (fun m0 a m1 -> (liveRef r m0) /\ (liveRef r m1) /\ (lookupRef r m1 = (lookupRef r m0) + 1)))
 let incrementRef r =
   let oldv = memread r in
   memwrite r (oldv + 1)
 
-val pushPopNoChage : unit ->  SST unit  (fun _ -> True) (fun m0 vo m1 -> m0 == m1)
+val pushPopNoChage : unit ->  RST unit  (fun _ -> True) (fun m0 vo m1 -> m0 == m1)
 let pushPopNoChage () =
   pushStackFrame (); (* As expected, removing this line results in an error, even for the trivial postcondition*)
   popStackFrame ()
 
 
-val incrementUsingStack : vi:int -> SST int  (fun _ -> True)
+val incrementUsingStack : vi:int -> RST int  (fun _ -> True)
     (fun m0 vo m1 -> m0 = m1 /\ vo=vi+1)
 let incrementUsingStack vi =
   pushStackFrame ();
@@ -42,10 +42,10 @@ let incrementUsingStack vi =
   v
 
 
-val incrementRef2 : r:(lref int) -> SST unit
+val incrementRef2 : r:(lref int) -> RST unit
 (fun m -> (liveRef r m)
               /\ (isNonEmpty (st m))
-              /\ (refLoc r = InStack (topstid m)))
+              /\ (refLoc r = InStack (topRegionId m)))
 (fun m0 a m1 -> (liveRef r m0) /\ (liveRef r m1)
     /\ (mtail m0 = mtail m1)
     /\ (lookupRef r m1 = (lookupRef r m0) + 1))
@@ -55,7 +55,7 @@ let incrementRef2 r =
 
 (* an example illustrating a typical C idiom :
   caller allocates memory and passes the lref to callee to get some work done *)
-val incrementUsingStack2 : vi:int -> SST int  (fun _ -> True)
+val incrementUsingStack2 : vi:int -> RST int  (fun _ -> True)
     (fun m0 vo m1 -> m0 = m1 /\ vo=vi+1)
 let incrementUsingStack2 vi =
   pushStackFrame ();
@@ -65,7 +65,7 @@ let incrementUsingStack2 vi =
   popStackFrame ();
   v
 
-val incrementUsingStack3 : vi:int -> SST int  (fun _ -> True)
+val incrementUsingStack3 : vi:int -> RST int  (fun _ -> True)
     (fun m0 vo m1 ->  m0 =  m1 /\ vo=vi+1)
 let incrementUsingStack3 vi =
   pushStackFrame ();
@@ -81,7 +81,7 @@ let incrementUsingStack3 vi =
 (* Why am I able to write this if then else with effectful computations in the brances?
    What is going on under the hood?
    Is this because of the ite_wp in the definition of an effect? *)
-val incrementIfNot2 : r:(lref int) -> SST int  (fun m -> (liveRef r m)==true)
+val incrementIfNot2 : r:(lref int) -> RST int  (fun m -> (liveRef r m)==true)
 (fun m0 a m1 -> (liveRef r m0) /\ (liveRef r m1))
 let incrementIfNot2 r =
   let oldv = memread r in
@@ -98,7 +98,7 @@ let incrementIfNot2 r =
   *)
 
 
-val testAliasing : n:nat -> ((k:nat{k<n}) -> Tot bool) -> SST unit (fun  _  -> True) (fun _ _ _ -> True)
+val testAliasing : n:nat -> ((k:nat{k<n}) -> Tot bool) -> RST unit (fun  _  -> True) (fun _ _ _ -> True)
 let testAliasing n initv =
   pushStackFrame ();
   let li: lref nat = salloc 1 in
@@ -112,7 +112,7 @@ let testAliasing n initv =
 val testAliasing2 : n:nat
  -> li : lref nat
  -> res : lref ((k:nat{k<n}) -> Tot bool)
- -> SST unit
+ -> RST unit
           (requires (fun  m  -> liveRef res m /\ liveRef li m /\ (li=!=res)))
           (ensures (fun _ _ _ -> True))
 let testAliasing2 n li res =
@@ -122,7 +122,7 @@ let testAliasing2 n li res =
       assert (resv =  resv2)
 
 
-val testSalloc1 : unit -> SST unit (fun _ -> True) (fun _ _ _ -> True)
+val testSalloc1 : unit -> RST unit (fun _ -> True) (fun _ _ _ -> True)
 let testSalloc1 () =
   pushStackFrame ();
   let xi=salloc 0 in
@@ -130,7 +130,7 @@ let testSalloc1 () =
   pushStackFrame ();
   memwrite xi 1
 
-val testSalloc2 : xi:lref int -> SST unit (fun m -> b2t (liveRef xi m)) (fun _ _ m1 -> b2t (liveRef xi m1))
+val testSalloc2 : xi:lref int -> RST unit (fun m -> b2t (liveRef xi m)) (fun _ _ m1 -> b2t (liveRef xi m1))
 let testSalloc2 xi =
   pushStackFrame ();
   memwrite xi 1;

@@ -6,7 +6,7 @@
 (*perhaps this should be an interface file?*)
 
 module LallocTest
-open SST
+open RST
 open StackAndHeap
 open Located
 open Heap

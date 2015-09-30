@@ -9,8 +9,8 @@
   Is there a principle behind its design? or just random convolutery?
   *)
 module MD5
-open SSTCombinators
-open SST
+open RSTCombinators
+open RST
 open MVector
 open Set
 open MachineWord
@@ -18,7 +18,7 @@ open MD5Common
 open StackAndHeap
 open Lref  open Located
 open Seq
-open SSTArray
+open RSTArray
 open ArrayAlgos
 open Ghost
 
@@ -96,7 +96,7 @@ val mainLoop :
 let mainLoop ch u =
   let offset = salloc #nat 0 in
   let acc =  screateSeq initAcc in
-  let chl = SSTArray.length ch in
+  let chl = RSTArray.length ch in
   scopedWhile1
     offset
     (fun offsetv-> offsetv +16 <= chl)
@@ -125,7 +125,7 @@ val mD5 :
     (hide empty)
 
 let mD5 ch =
-  let chl = SSTArray.length ch in
+  let chl = RSTArray.length ch in
   let z:nat =0 in
   let clonedCh = screate  (psize chl) w0 in
   cloneAndPad ch clonedCh;

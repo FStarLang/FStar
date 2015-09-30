@@ -6,8 +6,8 @@
 
 module Huffman
 
-open SST
-open SSTArray
+open RST
+open RSTArray
 open ArrayAlgos
 
 open StackAndHeap
@@ -58,7 +58,7 @@ let rec live_node_after_write rw v n m =
   live_node_after_write rw v n'.one_child m
 
 val live_node_after_salloc: #a:Type -> r:(lref a) -> v:a -> n:located node
-                            -> m:smem{isNonEmpty (st m) /\ not (contains (topstb m) r) /\ live_node n m}
+                            -> m:smem{isNonEmpty (st m) /\ not (contains (topRegion m) r) /\ live_node n m}
                             -> GTot (u:unit{live_node n (allocateInTopR r v m)})
                                (decreases n)
 let rec live_node_after_salloc r v n m =
@@ -76,7 +76,7 @@ val live_node_after_write_lemma: #a:Type -> rw:(lref a) -> v:a
 let live_node_after_write_lemma rw v n m = admit ()
 
 val live_node_after_salloc_lemma: #a:Type -> r:(lref a) -> v:a -> n:located node
-                            -> m:smem{isNonEmpty (st m) /\ not (contains (topstb m) r) /\ live_node n m}
+                            -> m:smem{isNonEmpty (st m) /\ not (contains (topRegion m) r) /\ live_node n m}
                             -> Lemma (requires (True))
                                      (ensures (live_node n (allocateInTopR r v m)))
                                [SMTPat (allocateInTopR r v m); SMTPat (live_node n m)]
@@ -104,7 +104,7 @@ assume val mk_node: f:lref int -> z:located node -> o:located node -> s:symbol_t
                     -> PureMem (located node)
                        (fun sm0 -> isNonEmpty (st sm0) /\
                                    liveRef f sm0 /\ live_node z sm0 /\ live_node o sm0 /\ liveRef c sm0)
-                       (fun sm0 r -> isNonEmpty (st sm0) /\ regionOf r = InStack (topstid sm0) /\
+                       (fun sm0 r -> isNonEmpty (st sm0) /\ regionOf r = InStack (topRegionId sm0) /\
                                      (greveal r).frequency = f  /\
                                      (greveal r).zero_child = z /\
                                      (greveal r).one_child = o  /\
@@ -114,7 +114,7 @@ assume val mk_node: f:lref int -> z:located node -> o:located node -> s:symbol_t
 
 assume val mk_null_node: unit -> PureMem (located node)
                                  (fun sm0 -> b2t (isNonEmpty (st sm0)))
-                                 (fun sm0 r -> isNonEmpty (st sm0) /\ regionOf r = InStack (topstid sm0) /\
+                                 (fun sm0 r -> isNonEmpty (st sm0) /\ regionOf r = InStack (topRegionId sm0) /\
                                                live_node r sm0 /\
                                                lookupRef (greveal r).frequency sm0 = -1)
 
@@ -145,7 +145,7 @@ let rec live_list_after_write_lemma rw v l m = match l with
   | hd::tl -> live_list_after_write_lemma rw v tl m
 
 val live_list_after_salloc_lemma: #a:Type -> r:(lref a) -> v:a -> l:list (located node)
-                            -> m:smem{isNonEmpty (st m) /\ not (contains (topstb m) r) /\ live_list l m}
+                            -> m:smem{isNonEmpty (st m) /\ not (contains (topRegion m) r) /\ live_list l m}
                             -> Lemma (requires (True))
                                      (ensures (live_list l (allocateInTopR r v m)))
                                [SMTPat (allocateInTopR r v m); SMTPat (live_list l m)]
@@ -252,7 +252,7 @@ let rec live_hist_arr_after_write rw v h i m m' =
   else live_hist_arr_after_write rw v h (i + 1) m m'
 
 val live_hist_arr_after_salloc: #a:Type -> r:(lref a) -> v:a -> h:histogram{reveal (asRef h) =!= r} -> i:nat
-                            -> m:smem{isNonEmpty (st m) /\ not (contains (topstb m) r) /\
+                            -> m:smem{isNonEmpty (st m) /\ not (contains (topRegion m) r) /\
                                       liveArr m h /\ i <= glength h m /\ live_histogram_arr h m i}
                             -> m':smem{m' = allocateInTopR r v m}
                             -> GTot (u:unit{liveArr m' h /\ i <= glength h m' /\ live_histogram_arr h m' i})
@@ -271,7 +271,7 @@ val live_hist_arr_after_write_lemma: #a:Type -> rw:(lref a) -> v:a
 let live_hist_arr_after_write_lemma rw v h i m m' = admit ()
 
 val live_hist_arr_after_salloc_lemma: #a:Type -> r:(lref a) -> v:a -> h:histogram{reveal (asRef h) =!= r} -> i:nat
-                            -> m:smem{isNonEmpty (st m) /\ not (contains (topstb m) r) /\
+                            -> m:smem{isNonEmpty (st m) /\ not (contains (topRegion m) r) /\
                                       liveArr m h /\ i <= glength h m /\ live_histogram_arr h m i}
                             -> m':smem{m' = allocateInTopR r v m}
                             -> Lemma (requires (True))
@@ -294,7 +294,7 @@ val live_hist_after_write_lemma: #a:Type -> rw:(lref a) -> v:a
 let live_hist_after_write_lemma rw v h m m' = ()
 
 val live_hist_after_salloc_lemma: #a:Type -> r:(lref a) -> v:a -> h:histogram{reveal (asRef h) =!= r}
-                            -> m:smem{isNonEmpty (st m) /\ not (contains (topstb m) r) /\
+                            -> m:smem{isNonEmpty (st m) /\ not (contains (topRegion m) r) /\
                                       live_histogram h m}
                             -> m':smem{m' = allocateInTopR r v m}
                             -> Lemma (requires (True))
@@ -303,7 +303,7 @@ val live_hist_after_salloc_lemma: #a:Type -> r:(lref a) -> v:a -> h:histogram{re
 let live_hist_after_salloc_lemma r v h m m' = ()
 
 val compute_histogram: d:data -> h:histogram -> i:nat
-                       -> SST unit
+                       -> RST unit
                           (fun m0 -> isNonEmpty (st m0)                        /\
                                      liveArr m0 d /\ live_histogram h m0       /\
                                      glength h m0 = symbol_value_bound /\
@@ -317,20 +317,20 @@ val compute_histogram: d:data -> h:histogram -> i:nat
                                                                  (*/\
                                           liveArr m1 d ) /\ live_histogram h m1)*)
 let compute_histogram d h i =
-  if i = SSTArray.length d then ()
+  if i = RSTArray.length d then ()
   else
-    let sym = SSTArray.readIndex d i in    
-    let the_leaf = SSTArray.readIndex h sym in
+    let sym = RSTArray.readIndex d i in    
+    let the_leaf = RSTArray.readIndex h sym in
     if is_null the_leaf then
       let the_leaf' = mk_node (salloc 1) (mk_null_node ()) (mk_null_node ()) sym (salloc "") in
-      SSTArray.writeIndex h sym the_leaf'
+      RSTArray.writeIndex h sym the_leaf'
     else admit ()
       //memwrite (the_leaf.frequency) ((memread the_leaf.frequency) + 1)
 
 
 
 (*val insert_in_ordered_list: n:located node -> l:node_list
-                            -> SST unit
+                            -> RST unit
                                (fun sm0 -> live_ghost_list n sm0 /\ live_node n sm0 /\ live_node_list l sm0)
                                (fun sm0 _ sm1 -> live_ghost_list n sm0 /\ live_node n sm0 /\ live_node_list l sm0 /\
                                                  live_ghost_list n sm1) ///\ live_node n sm1 /\ live_node_list l sm1)
@@ -376,25 +376,25 @@ type live_histogram (h:sstarray node) (sm:smem) =
  *)
 val compute_histogram: sstream: sstarray symbol_t -> histogram: sstarray node
                        -> i:nat
-                       -> SST unit
+                       -> RST unit
                           (fun sm0 -> isNonEmpty (st sm0)                                    /\
                                       liveArr sm0 sstream /\ live_histogram histogram sm0    /\
                                       glength histogram sm0 = symbol_value_bound             /\
                                       i <= glength sstream sm0)
                           (fun sm0 r sm1 -> b2t (isNonEmpty (st sm1)))
 let rec compute_histogram sstream histogram i =
-  if i = SSTArray.length sstream then ()
+  if i = RSTArray.length sstream then ()
   else
-    let sym = SSTArray.readIndex sstream i in
-    let the_leaf = SSTArray.readIndex histogram sym in
+    let sym = RSTArray.readIndex sstream i in
+    let the_leaf = RSTArray.readIndex histogram sym in
     if is_null the_leaf then
       let the_leaf' = mk_node (salloc 1) (salloc (null_node ())) (null_node ()) (null_node ()) sym (salloc "") in
-      SSTArray.writeIndex histogram sym the_leaf'
+      RSTArray.writeIndex histogram sym the_leaf'
     else
       memwrite (the_leaf.frequency) ((memread the_leaf.frequency) + 1)
 
 val build_huffman_tree: histogram: sstarray node
-                        -> SST node
+                        -> RST node
                            (fun sm0 -> isNonEmpty (st sm0) /\ live_histogram histogram sm0)
                            (fun sm0 r sm1 -> b2t (isNonEmpty (st sm1)))
 let build_huffman_tree histogram =
@@ -402,7 +402,7 @@ let build_huffman_tree histogram =
                                    
 
 val huffman_encode: sstream:sstarray symbol_t -> estream:sstarray byte
-                    -> SST (sstarray byte * nat * nat)
+                    -> RST (sstarray byte * nat * nat)
                        (fun sm0 -> liveArr sm0 sstream /\ liveArr sm0 estream /\
                                    glength sstream sm0 = glength estream sm0)
                        (fun sm0 r sm1 -> True)

@@ -6,9 +6,9 @@
 
 (*this file is not being maintained anymore*)
 module MD5SubArray
-open SSTCombinators
+open RSTCombinators
 open StackAndHeap  open Lref  open Located
-open SST
+open RST
 open MVector
 open Heap
 open Set
@@ -62,9 +62,9 @@ assume val sallocateVector :  a:Type -> n:nat
     (requires (fun m -> isNonEmpty (st m)))
     (ensures (fun m0 rv m1->
         (isNonEmpty (st m0)) /\ (isNonEmpty (st m1))
-        /\ (topstid m0 = topstid m1)
+        /\ (topRegionId m0 = topRegionId m1)
         /\ mtail m0 = mtail m1
-        /\  allocateVectorInBlock rv (topstb m0) (topstb m1) init (InStack (topstid m0))
+        /\  allocateVectorInBlock rv (topRegion m0) (topRegion m1) init (InStack (topRegionId m0))
     ))
       (empty)
 

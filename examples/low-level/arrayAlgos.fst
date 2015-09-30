@@ -5,15 +5,15 @@
   --*)
 
 module ArrayAlgos
-open SSTCombinators
+open RSTCombinators
 open StackAndHeap
-open SST
+open RST
 open MVector
 open Heap
 open Lref  open Located
 open FStar.Set
 open MachineWord
-open SSTArray
+open RSTArray
 open MD5Common
 open FStar.Seq
 open FStar.Ghost
@@ -128,8 +128,8 @@ val copy:
 
 let copy s scp =
   let ctr = salloc #nat 0 in
-  let len = SSTArray.length s in
-  let lenscp = SSTArray.length scp in
+  let len = RSTArray.length s in
+  let lenscp = RSTArray.length scp in
   scopedWhile1
     ctr
     (fun ctrv -> ctrv < len)
@@ -156,13 +156,13 @@ val hcloneAux:
      (hide empty)
 
 let hcloneAux s =
-  let scp = hcreate  (SSTArray.length s) (readIndex s 0) in
+  let scp = hcreate  (RSTArray.length s) (readIndex s 0) in
     pushStackFrame ();
       copy s scp;
     popStackFrame ();
     scp
 
-(*Since we always use the Mem abbreviation and never SST directly,
+(*Since we always use the Mem abbreviation and never RST directly,
   withNewScope does not have any advantage over pushStackFrame/popStackFrame.
   The definition of Mem prevents one from improperly pushing/popping
     of stack frames; i.e. any computation of type Mem ....
@@ -170,7 +170,7 @@ let hcloneAux s =
   *)
 
     (*let hcloneAux s =
-      let scp = hcreate (Seq.create (SSTArray.length s) (readIndex s 0)) in
+      let scp = hcreate (Seq.create (RSTArray.length s) (readIndex s 0)) in
         withNewScope
           #_ (*the pre/post conditions below just come from the definition of copy. It is annoying that they cannot be inferred*)
           #((fun h -> liveArr h s /\ liveArr h scp /\ glength s h <= glength scp h))
@@ -204,6 +204,6 @@ val hclone:
      (hide empty)
 
 let hclone 'a s =
-  if (SSTArray.length s = 0)
+  if (RSTArray.length s = 0)
   then  s
   else hcloneAux s

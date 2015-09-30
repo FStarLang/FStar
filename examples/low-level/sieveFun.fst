@@ -4,9 +4,9 @@
   --*)
 
 module SieveFun
-open SSTCombinators
+open RSTCombinators
 open StackAndHeap
-open SST
+open RST
 open Heap
 open Lref  open Located
 open Stack

@@ -2,9 +2,9 @@
 other-files:ext.fst set.fsi set.fst heap.fst st.fst all.fst list.fst stack.fst listset.fst ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst sstCombinators.fst
   --*)
 module Factorial
-open SSTCombinators
+open RSTCombinators
 open StackAndHeap
-open SST
+open RST
 open FStar.Heap
 open Lref  open Located
 open Stack
@@ -40,7 +40,7 @@ val factorialLoopBody :
   -> unit ->
   whileBody (loopInv li res) (factorialGuardLC n li)
   (hide (union (singleton (Ref li)) (singleton (Ref res))))
-      (*SST unit (fun m -> loopInv li res (mtail m)) (fun m0 _ m1 -> loopInv li res (mtail m1))*)
+      (*RST unit (fun m -> loopInv li res (mtail m)) (fun m0 _ m1 -> loopInv li res (mtail m1))*)
 let factorialLoopBody (n:nat) (li:(lref nat)) (res:(lref nat)) u =
   let liv = memread li in
   let resv = memread res in
