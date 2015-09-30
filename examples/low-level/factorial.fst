@@ -21,7 +21,7 @@ match n with
 
 (* val factorialGuardLC :  n:nat -> li:(lref nat)  -> smem -> type *)
 type factorialGuardLC (n:nat) (li : lref nat) (m:smem) =
-  (liveRef li m) && (not ((loopkupRef li m) = n))
+  (liveRef li m) && (not ((lookupRef li m) = n))
 
 val factorialGuard :  n:nat -> li:(lref nat)  -> unit
   -> whileGuard (fun m -> b2t (liveRef li m))
@@ -32,7 +32,7 @@ let factorialGuard n li u = not (memread li = n)
 
 type  loopInv (li : lref nat) (res : lref nat) (m:smem) =
   liveRef li m /\ liveRef res m
-    /\ (loopkupRef res m = factorial (loopkupRef li m))
+    /\ (lookupRef res m = factorial (lookupRef li m))
     /\ (~ (li = res))
 
 val factorialLoopBody :

@@ -19,7 +19,7 @@ defined without without bothering about that distinction*)
 (*ideally, the liveRef clauses should not be needed in the postcondition*)
 val incrementRef : r:(lref int) -> SST unit
   (requires (fun m -> (liveRef r m)==true))
-  (ensures (fun m0 a m1 -> (liveRef r m0) /\ (liveRef r m1) /\ (loopkupRef r m1 = (loopkupRef r m0) + 1)))
+  (ensures (fun m0 a m1 -> (liveRef r m0) /\ (liveRef r m1) /\ (lookupRef r m1 = (lookupRef r m0) + 1)))
 let incrementRef r =
   let oldv = memread r in
   memwrite r (oldv + 1)
@@ -48,7 +48,7 @@ val incrementRef2 : r:(lref int) -> SST unit
               /\ (refLoc r = InStack (topstid m)))
 (fun m0 a m1 -> (liveRef r m0) /\ (liveRef r m1)
     /\ (mtail m0 = mtail m1)
-    /\ (loopkupRef r m1 = (loopkupRef r m0) + 1))
+    /\ (lookupRef r m1 = (lookupRef r m0) + 1))
 let incrementRef2 r =
   let oldv = memread r in
   memwrite r (oldv + 1)

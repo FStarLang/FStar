@@ -73,7 +73,7 @@ external cons: 'a -> 'a list -> 'a list = "stack_mkpair";;
 (** [Camlstack.cons x y] allocates a cons cell [x::y] on the stack.
     Raise [Failure "Camlstack.cons"] if the stack has no frames. *)
 
-external concat: string -> string -> string = "stack_concat"
+external concat: string -> string -> string = "stack_concat" "noalloc";;
 (** [Camlstack.concat s1 s2] allocates a string of size len(s1) + len(s2) on the
     stack, then write the concatenation of [s1] and [s2] into it. Raises
     [Failure "Camlstack.concat"] if the stack has no frames.] *)

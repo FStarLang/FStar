@@ -116,12 +116,12 @@ assume val mk_null_node: unit -> PureMem (located node)
                                  (fun sm0 -> b2t (isNonEmpty (st sm0)))
                                  (fun sm0 r -> isNonEmpty (st sm0) /\ regionOf r = InStack (topstid sm0) /\
                                                live_node r sm0 /\
-                                               loopkupRef (greveal r).frequency sm0 = -1)
+                                               lookupRef (greveal r).frequency sm0 = -1)
 
 val is_null: n:located node -> PureMem bool
                                (fun sm0 -> b2t (live_node n sm0))
                                (fun sm0 r -> live_node n sm0 /\
-                                             (r = (loopkupRef (greveal n).frequency sm0 = -1)))
+                                             (r = (lookupRef (greveal n).frequency sm0 = -1)))
 let is_null n = memread (read_frequency n) = -1
 
 (**********)
@@ -154,35 +154,35 @@ let rec live_list_after_salloc_lemma r v l m = match l with
   | hd::tl -> live_list_after_salloc_lemma r v tl m
 
 val live_node_list: l:node_list -> sm:smem -> GTot bool
-let live_node_list l sm = liveRef l sm && live_list (loopkupRef l sm) sm
+let live_node_list l sm = liveRef l sm && live_list (lookupRef l sm) sm
 
 val new_list: unit -> Mem node_list (fun m0 -> True) (fun m0 r m1 -> b2t (live_node_list r m1)) (hide (Set.empty))
 let new_list _ = halloc []
 
 val is_empty: l:node_list -> PureMem bool
                              (fun m0 -> b2t (live_node_list l m0))
-                             (fun m0 r -> live_node_list l m0 /\ r = (loopkupRef l m0 =  []))
+                             (fun m0 r -> live_node_list l m0 /\ r = (lookupRef l m0 =  []))
 let is_empty l = (memread l = [])
 
 val is_singleton: l:node_list -> PureMem bool
                                  (fun m0 -> b2t (live_node_list l m0))
-                                 (fun m0 r -> live_node_list l m0 /\ r = (is_Cons (loopkupRef l m0) &&
-                                                                          Cons.tl (loopkupRef l m0) = []))
+                                 (fun m0 r -> live_node_list l m0 /\ r = (is_Cons (lookupRef l m0) &&
+                                                                          Cons.tl (lookupRef l m0) = []))
 let is_singleton l = match (memread l) with
   | _::[] -> true
   | _     -> false
 
 val pop_two: l:node_list -> Mem (located node * located node)
                             (fun m0 -> live_node_list l m0 /\
-                                       is_Cons (loopkupRef l m0) /\
-                                       is_Cons (Cons.tl (loopkupRef l m0)))
+                                       is_Cons (lookupRef l m0) /\
+                                       is_Cons (Cons.tl (lookupRef l m0)))
                             (fun m0 r m1 -> live_node_list l m0                 /\
-                                            is_Cons (loopkupRef l m0)           /\
-                                            is_Cons (Cons.tl (loopkupRef l m0)) /\
+                                            is_Cons (lookupRef l m0)           /\
+                                            is_Cons (Cons.tl (lookupRef l m0)) /\
                                             live_node (fst r) m1                /\
                                             live_node (snd r) m1                /\
                                             live_node_list l m1                 /\
-                                            loopkupRef l m1 = (Cons.tl (Cons.tl (loopkupRef l m0))))
+                                            lookupRef l m1 = (Cons.tl (Cons.tl (lookupRef l m0))))
                             (hide (Set.singleton (Ref l)))
 let pop_two l = match (memread l) with
   | hd::hd'::tl ->
@@ -191,7 +191,7 @@ let pop_two l = match (memread l) with
 
 val contents: l:node_list -> PureMem (list (located node)) (fun m0 -> b2t (live_node_list l m0))
                                                            (fun m0 r -> live_node_list l m0 /\
-                                                                        r = loopkupRef l m0)
+                                                                        r = lookupRef l m0)
 let contents l = memread l                                                                        
 
 val insert_in_ordered_list: n:located node -> l:list (located node)
@@ -219,8 +219,8 @@ val insert_in_ordered_node_list:
               (fun m0 _ m1 -> live_node n m0               /\
                               live_node_list l m0          /\
                               live_node_list l m1          /\
-                              List.mem n (loopkupRef l m1) /\
-                              (forall n'. List.mem n' (loopkupRef l m0) ==> List.mem n' (loopkupRef l m1)))
+                              List.mem n (lookupRef l m1) /\
+                              (forall n'. List.mem n' (lookupRef l m0) ==> List.mem n' (lookupRef l m1)))
               (hide (Set.singleton (Ref l)))
 let insert_in_ordered_node_list n l =
   let r = insert_in_ordered_list n (memread l) in

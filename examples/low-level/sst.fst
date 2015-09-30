@@ -19,6 +19,8 @@ open ListSet
 kind Pre  = smem -> Type
 kind Post (a:Type) = a -> smem -> Type
 
+
+new_effect StSTATE = STATE_h smem //TODO: move this to sst.fst
 effect SST (a:Type) (pre:Pre) (post: (smem -> Post a)) =
         StSTATE a
               (fun (p:Post a) (h:smem) -> pre h /\ (forall a h1. (pre h  /\ post h a h1) ==> p a h1)) (* WP *)

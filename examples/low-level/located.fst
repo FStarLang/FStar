@@ -1,30 +1,44 @@
 (*--build-config
-other-files: ../../lib/ghost.fst
+    other-files:ghost.fst
   --*)
 
-
 module Located
+
 open FStar.Ghost
 
-(*in future, one located will take as input only locatable types.
-  A type T is located iff some members of type T are represented in OCaml as
-  memory addresses. Examples are references, pairs, etc.
-  regionOf below is supposed to return whether that address points to the OCaml
-  heap or to Mike's C heap
-*)
-type located : Type -> Type //implement this as an private pair (a * regionLoc) TODO
-type sidt = nat
+(** [located t] is the same thing as [t]; the extra type constructor
+    is there to make sure we go through the special combinators when
+    dereferencing a [located t]. The type only makes sense for
+    heap-allocated data, but we currently lack a builtin [locatable t]
+    predicate. *)
+type located : Type -> Type // AA: implement this as a private pair (a * regionLoc)
 
+(** Each region on the stack is tagged with a region id [rid]. *)
+type rid = nat
+
+(** Therefore, when locating an object, it's either in the heap or in
+    our stack of regions. *)
 type regionLoc =
-  | InHeap : regionLoc
-  | InStack : id:sidt -> regionLoc
+| InHeap : regionLoc
+| InStack : id:rid -> regionLoc
 
-assume val regionOf : #a:Type -> located a -> Tot regionLoc //the return type of this should be either erased TODO
-assume val lreveal : #a:Type -> l:located a  -> Tot (erased a)
+(** An abstract predicate that tags a [located t] with the region it
+    lives in. We have the invariant that for each [x:located t] we
+    have, there exists a corresponding [regionOf x] predicate in the
+    environment. *)
+assume val regionOf : #a:Type -> located a -> Tot regionLoc // JP: GTot here?
 
-val greveal : #a:Type -> l:located a  -> GTot a
-let greveal l = reveal (lreveal l)
+(** For specification purposes, we want to actually know that [located
+    t] is, really, [t]. *)
+assume val lhide : #a:Type -> l:located a -> Tot (erased a)
 
-(*for region(stack) allocated stuff, lalloc will have a spec w.r.t reveal*)
-assume val locate: #a:Type -> v:a -> Tot (l:located a{regionOf l= InHeap /\  greveal l =v})
-assume val unlocate: #a:Type -> l:located a{regionOf l = InHeap} -> Tot (v:a{greveal l =v})
+(** XXX this combinator is strange. Need to find a better name. *)
+val lreveal : #a:Type -> l:located a  -> GTot a
+let lreveal l = reveal (lhide l)
+
+(** One can always locate an existing value (it's in the heap). *)
+assume val locate: #a:Type -> v:a -> Tot (l:located a{regionOf l = InHeap /\ lreveal l = v})
+
+(** Discarding the location information is sound only if the object
+    was allocated in the heap. *)
+assume val unlocate: #a:Type -> l:located a{regionOf l = InHeap} -> Tot (v:a{lreveal l = v})

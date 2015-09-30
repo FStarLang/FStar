@@ -27,34 +27,34 @@ let eonly s = (eonly (asRef s))
 
 
 val sel : #a:Type -> m:smem -> v:(sstarray a){liveArr m v} -> GTot (seq a)
-let sel m v = loopkupRef (reveal (asRef v)) m
+let sel m v = lookupRef (reveal (asRef v)) m
 
-val loopkupRefR : #a:Type -> #post:(a->Type) -> m:smem -> r:(lref a) ->
+val lookupRefR : #a:Type -> #post:(a->Type) -> m:smem -> r:(lref a) ->
 
-  Pure a (requires (liveRef r m /\ post (loopkupRef r m)))
+  Pure a (requires (liveRef r m /\ post (lookupRef r m)))
     (ensures (fun ret -> post ret))
-let loopkupRefR m r = loopkupRef r m
+let lookupRefR m r = lookupRef r m
 
-val loopkupRefR2 : a:Type -> m:smem -> r:(lref a){(liveRef r m)} ->Tot a
-let loopkupRefR2 (a:Type) m r = loopkupRef r m
+val lookupRefR2 : a:Type -> m:smem -> r:(lref a){(liveRef r m)} ->Tot a
+let lookupRefR2 (a:Type) m r = lookupRef r m
 
 
-val eloopkupRef : #a:Type -> m:smem -> r:(erased (lref a)){(liveRef (reveal r) m)} ->
+val elookupRef : #a:Type -> m:smem -> r:(erased (lref a)){(liveRef (reveal r) m)} ->
   Tot (erased a)
-let eloopkupRef  (#a:Type) m v = (elift1_p #(lref a) #a #(fun r -> b2t (liveRef r m)) (loopkupRefR2 a m)) v
+let elookupRef  (#a:Type) m v = (elift1_p #(lref a) #a #(fun r -> b2t (liveRef r m)) (lookupRefR2 a m)) v
 
 
 val esel : #a:Type -> m:smem -> v:(sstarray a){liveRef (reveal (asRef v)) m} -> Tot (erased (seq a))
-let esel (#a:Type) m v = eloopkupRef m (asRef v)
+let esel (#a:Type) m v = elookupRef m (asRef v)
 
-val eeloopkupRef : #a:Type -> m:(erased smem) -> r:(erased (lref a)){(liveRef (reveal r) (reveal m))} ->
+val eelookupRef : #a:Type -> m:(erased smem) -> r:(erased (lref a)){(liveRef (reveal r) (reveal m))} ->
   Tot (erased a)
-let eeloopkupRef  (#a:Type) m v =
-  (elift2_p #smem #(lref a) #(fun m r -> b2t (liveRef r m)) #a (loopkupRefR2)) m v
+let eelookupRef  (#a:Type) m v =
+  (elift2_p #smem #(lref a) #(fun m r -> b2t (liveRef r m)) #a (lookupRefR2)) m v
 
 val eesel : #a:Type -> m:(erased smem)
 -> v:(sstarray a){liveRef (reveal (asRef v)) (reveal m)} -> Tot (erased (seq a))
-let eesel (#a:Type) m v = eeloopkupRef m (asRef v)
+let eesel (#a:Type) m v = eelookupRef m (asRef v)
 
 
 val glength : #a:Type -> v:(sstarray a) -> m:smem{liveArr m v} -> GTot nat
@@ -86,7 +86,7 @@ some failed attempts below. It is surprising how the above works, but not the on
 val eeseln : #a:Type -> n:nat -> m:(erased smem)
   -> v:(sstarray a) ->
     Pure (erased (seq a)) (requires ( liveRef (reveal (asRef v)) (reveal m)
-          /\  Seq.length (loopkupRef (reveal (asRef v)) (reveal m)) = n))
+          /\  Seq.length (lookupRef (reveal (asRef v)) (reveal m)) = n))
                           (ensures (fun rs -> Seq.length (reveal rs) = n))
 let eeseln (#a:Type) n m v =
   let s = eesel m v in
@@ -94,12 +94,12 @@ let eeseln (#a:Type) n m v =
 
 (elift2_wp #smem #(lref (seq a)) #(seq a)
   #(fun m r -> liveRef r m
-        /\  Seq.length (loopkupRef r m) = n
+        /\  Seq.length (lookupRef r m) = n
           )
   #(fun m r rs ->
         b2t (Seq.length rs = n)
           )
-  (loopkupRefR #(seq a) #(fun (s:seq a) -> b2t (Seq.length s = n))) ) m (asRef v)
+  (lookupRefR #(seq a) #(fun (s:seq a) -> b2t (Seq.length s = n))) ) m (asRef v)
 
 *)
 
@@ -108,7 +108,7 @@ type prefixEqual  (#a:Type)
   = forall (n:nat{n<p}). index v1 n = index v2 n
 
 (*val prefixInc: a#Type -> n:nat->
-  (m1 = (writeMemAux (asRef r) m0 (Seq.upd (loopkupRef (asRef r) m0) index newV)))*)
+  (m1 = (writeMemAux (asRef r) m0 (Seq.upd (lookupRef (asRef r) m0) index newV)))*)
 
 type prefixEqualL  (#a:Type)
   (v1: seq a) (v2:(seq a))
@@ -136,8 +136,8 @@ let copy s scp =
     (fun m -> liveArr m s /\ liveArr m scp
         /\ len = glength s m /\ lenscp = glength scp m
           /\ liveRef ctr m
-          /\ (loopkupRef ctr m) <=len
-          /\ prefixEqual (sel m s) (sel m scp) (loopkupRef ctr m)
+          /\ (lookupRef ctr m) <=len
+          /\ prefixEqual (sel m s) (sel m scp) (lookupRef ctr m)
           )
     (eunion (eonly scp) (only ctr))
     (fun u -> let ctrv = memread ctr in

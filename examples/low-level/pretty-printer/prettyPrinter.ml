@@ -1,12 +1,15 @@
 (** A pretty-printer that allocates all its intermediary strings using the
  * regions library. *)
 
-(* Uncomment the lines below to use the default OCaml allocator. *)
-module Camlstack = struct
-  let concat = (^)
-  let push_frame () = ()
-  let pop_frame () = ()
-end
+(* If uncommented, the five lines below replace [Camlstack] with the standard
+ * OCaml operations. *)
+(* module Camlstack = struct *)
+(*   let concat = (^) *)
+(*   let push_frame () = () *)
+(*   let pop_frame () = () *)
+(* end *)
+
+(* -------------------------------------------------------------------------- *)
 
 let (^^) = Camlstack.concat
 
@@ -49,12 +52,12 @@ and print e =
 
 (* -------------------------------------------------------------------------- *)
 
-let max = ref 22
-let max_runs = ref 10
+let height = ref 22
+let max_runs = ref 30
 
 let arg_spec = [
-  "-h", Arg.Set_int max, Printf.sprintf " <NUMBER> set the maximum depth of the expression \
-    tree (default: %d)" !max;
+  "-h", Arg.Set_int height, Printf.sprintf " <NUMBER> set the maximum depth of the expression \
+    tree (default: %d)" !height;
   "-n", Arg.Set_int max_runs, Printf.sprintf " <NUMBER> set the maximum number of runs \
     (default: %d)" !max_runs;
 ]
@@ -64,7 +67,7 @@ let arg_usage =
 
 let rec gen h =
   if h = 1 then
-    Const (Random.int !max)
+    Const (Random.int !height)
   else match Random.int 4 with
   | 0 -> Add (gen (h - 1), gen (h - 1))
   | 1 -> Sub (gen (h - 1), gen (h - 1))
@@ -76,9 +79,8 @@ let _main =
   Arg.parse (Arg.align arg_spec) (fun _ -> ()) arg_usage;
   for __ = 0 to !max_runs do
     Camlstack.push_frame ();
-    let e = gen !max in
-    let s = print e in
-    ignore s;
+    let e = gen !height in
+    ignore (print e);
     Camlstack.pop_frame ();
   done;
   Gc.print_stat stdout
