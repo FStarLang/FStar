@@ -1,14 +1,15 @@
 (*--build-config
     variables:MATHS=../maths;
-    other-files:ext.fst set.fsi set.fst  heap.fst st.fst all.fst   list.fst stack.fst listset.fst ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst
+    other-files:ext.fst set.fsi set.fst  heap.fst st.fst all.fst   list.fst stack.fst listset.fst ghost.fst located.fst lref.fst regions.fst rst.fst
   --*)
 
 module RSTCombinators
-open StackAndHeap
+
 open RST
 open Heap
 open Lref  open Located
 open Stack
+open Regions
 open Set
 open Prims
 open List
@@ -24,8 +25,8 @@ open Ghost
 Hope this is not a concert w.r.t. soundness*)
 effect WNSC (a:Type) (pre:(smem -> Type))  (post: (smem -> RSTPost a)) (mod:modset) =
   Mem a
-      ( (*requires *) (fun m -> isNonEmpty (st m) /\ topRegion m = emp /\ pre (mtail m)))
-      ( (* ensures *) (fun m0 a m1 -> post (mtail m0) a (mtail m1)))
+      ( (*requires *) (fun m -> isNonEmpty (st m) /\ topRegion m = emp /\ pre (tail m)))
+      ( (* ensures *) (fun m0 a m1 -> post (tail m0) a (tail m1)))
       mod
 
 val withNewScope : #a:Type -> #pre:(smem -> Type) -> #post:(smem -> RSTPost a)
@@ -78,15 +79,15 @@ val scopedWhile1 :
   -> mods:(modset)
   -> bd:(unit -> whileBody
                       (fun m -> loopInv m /\ liveRef r m)
-                      (fun m -> liveRef r m /\ lc (loopkupRef r m))  mods)
+                      (fun m -> liveRef r m /\ lc (lookupRef r m))  mods)
   -> Mem unit ((fun m -> loopInv m /\ liveRef r m))
-              ((fun m0 _ m1 -> loopInv m1 /\ liveRef r m1 /\ ~(lc (loopkupRef r m1))))
+              ((fun m0 _ m1 -> loopInv m1 /\ liveRef r m1 /\ ~(lc (lookupRef r m1))))
               mods
 let scopedWhile1 'a r lc 'loopInv mods bd =
 (*loop invariant includes the precondition for evaluating the guard*)
   scopedWhile
     (fun m -> 'loopInv m /\ liveRef r m)
-    (fun m -> liveRef r m /\ (lc (loopkupRef r m)))
+    (fun m -> liveRef r m /\ (lc (lookupRef r m)))
     (fun u -> lc (memread r))
     mods
     bd
@@ -101,15 +102,15 @@ val scopedWhile2 :
   -> mods:(modset)
   -> bd:(unit -> whileBody
                       (fun m -> loopInv m /\ liveRef ra m /\ liveRef rb m)
-                      (fun m -> liveRef ra m /\ liveRef rb m /\ lc (loopkupRef ra m) (loopkupRef rb m))
+                      (fun m -> liveRef ra m /\ liveRef rb m /\ lc (lookupRef ra m) (lookupRef rb m))
                       mods)
   -> Mem unit (requires (fun m -> loopInv m /\ liveRef ra m /\ liveRef rb m))
-              (ensures (fun m0 _ m1 -> loopInv m1 /\ liveRef ra m1 /\ liveRef rb m1 /\ ~(lc (loopkupRef ra m1) (loopkupRef rb m1)) ))
+              (ensures (fun m0 _ m1 -> loopInv m1 /\ liveRef ra m1 /\ liveRef rb m1 /\ ~(lc (lookupRef ra m1) (lookupRef rb m1)) ))
               mods
 let scopedWhile2 'a ra rb lc 'loopInv mods bd =
   scopedWhile
     (fun m -> 'loopInv m /\ liveRef ra m /\ liveRef rb m)
-    (fun m -> liveRef ra m /\ liveRef rb m /\ (lc (loopkupRef ra m) (loopkupRef rb m))  )
+    (fun m -> liveRef ra m /\ liveRef rb m /\ (lc (lookupRef ra m) (lookupRef rb m))  )
     (fun u -> lc (memread ra) (memread rb))
     mods
     bd
@@ -148,14 +149,14 @@ val unscopedWhile1 :
   -> mods:(modset)
   -> bd:(unit -> whileBodyUnscoped
                       (fun m -> loopInv m /\ liveRef r m)
-                      (fun m -> liveRef r m /\ lc (loopkupRef r m))  mods)
+                      (fun m -> liveRef r m /\ lc (lookupRef r m))  mods)
   -> Mem unit ((fun m -> loopInv m /\ liveRef r m))
-              ((fun m0 _ m1 -> loopInv m1 /\ liveRef r m1 /\ ~(lc (loopkupRef r m1))))
+              ((fun m0 _ m1 -> loopInv m1 /\ liveRef r m1 /\ ~(lc (lookupRef r m1))))
               mods
 let unscopedWhile1 'a r lc 'loopInv mods bd =
   unscopedWhile
     (fun m -> 'loopInv m /\ liveRef r m)
-    (fun m -> liveRef r m /\ (lc (loopkupRef r m)))
+    (fun m -> liveRef r m /\ (lc (lookupRef r m)))
     (fun u -> lc (memread r))
     mods
     bd

@@ -1,19 +1,19 @@
 (*--build-config
     options:--admit_fsi FStar.Set --z3timeout 10;
     other-files:ext.fst set.fsi heap.fst st.fst all.fst list.fst  stack.fst listset.fst
-    ghost.fst lref.fst stackAndHeap.fst sst.fst sstCombinators.fst constr.fst word.fst seq.fsi seq.fst
+    ghost.fst located.fst lref.fst regions.fst rst.fst sstCombinators.fst constr.fst word.fst seq.fsi seq.fst
   --*)
 
 
-module SSTArray
+module RSTArray
 open SSTCombinators
-open StackAndHeap
-open SST
+open RST
 open MachineWord
 open FStar.Heap
 open Lref  open Located
 open FStar.Set
 open Stack
+open Regions
 open FStar.Seq
 
 (*to make vector opaque, just include vector.fsi*)
@@ -29,7 +29,7 @@ val asRef : #a:Type  -> va:(sstarray a) -> Tot (erased (lref (seq a)))
 
 val length: #a:Type -> x:sstarray a -> PureMem nat
   (requires (fun h -> liveRef (reveal (asRef x)) h))
-  (ensures  (fun h y ->  (liveRef (reveal (asRef x)) h /\ y= ((Seq.length) ((loopkupRef) (reveal (asRef x)) h)))))
+  (ensures  (fun h y ->  (liveRef (reveal (asRef x)) h /\ y= ((Seq.length) ((lookupRef) (reveal (asRef x)) h)))))
 
 (*using the 2 definitions below causes a strange error in readIndex amd updIndex*)
 (*val arrayExistsInMem : #a:Type -> (sstarray a) -> smem -> GTot bool
@@ -38,23 +38,23 @@ let arrayExistsInMem v sm = liveRef (reveal (asRef v)) sm
 val lookup : #a:Type  -> va:(sstarray a) -> m:smem{(arrayExistsInMem va m)} -> GTot ((vector a (length va)))
 let lookup 'a va m = (admit ())*)
 
-(*loopkupRef (asRef va) m*)
+(*lookupRef (asRef va) m*)
 
 val readIndex :  #a:Type  -> r:(sstarray a)
   -> index:nat
   -> PureMem a
-        (requires (fun m ->  (liveRef (reveal (asRef r)) m) /\ index < Seq.length (loopkupRef (reveal (asRef r)) m) ) )
+        (requires (fun m ->  (liveRef (reveal (asRef r)) m) /\ index < Seq.length (lookupRef (reveal (asRef r)) m) ) )
         (ensures (fun m v->
-          (liveRef (reveal (asRef r)) m) /\ index < Seq.length (loopkupRef (reveal (asRef r)) m)
-          /\ v = Seq.index (loopkupRef (reveal (asRef r)) m) index ))
+          (liveRef (reveal (asRef r)) m) /\ index < Seq.length (lookupRef (reveal (asRef r)) m)
+          /\ v = Seq.index (lookupRef (reveal (asRef r)) m) index ))
 
 val writeIndex :  #a:Type -> r:((sstarray a))
   -> index:nat -> newV:a ->
  Mem unit
-    (requires (fun m ->  (liveRef (reveal (asRef r)) m) /\ index < Seq.length (loopkupRef (reveal (asRef r)) m) ) )
+    (requires (fun m ->  (liveRef (reveal (asRef r)) m) /\ index < Seq.length (lookupRef (reveal (asRef r)) m) ) )
     (ensures ( fun m0 _ m1 ->
-        (liveRef (reveal (asRef r)) m0) /\ index < Seq.length (loopkupRef (reveal (asRef r)) m0) /\
-          (m1 = (writeMemAux (reveal (asRef r)) m0 (Seq.upd (loopkupRef (reveal (asRef r)) m0) index newV)))))
+        (liveRef (reveal (asRef r)) m0) /\ index < Seq.length (lookupRef (reveal (asRef r)) m0) /\
+          (m1 = (writeMemAux (reveal (asRef r)) m0 (Seq.upd (lookupRef (reveal (asRef r)) m0) index newV)))))
       (only (reveal (asRef r)))
 
 (*create an sstarray on stack*)
@@ -63,9 +63,9 @@ val screateSeq :  #a:Type -> init:(seq a)
         (requires  (fun m -> (isNonEmpty (st m))))
         (ensures (fun m0 vv m1->
             (isNonEmpty (st m0)) /\ (isNonEmpty (st m1))
-            /\ allocatedInRegion (reveal (asRef vv)) (topstb m0) (topstb m1) init
-            /\ refLoc (reveal (asRef vv)) = InStack (topstid m0) /\ (topstid m0 = topstid m1)
-            /\ mtail m0 = mtail m1))
+            /\ allocatedInRegion (reveal (asRef vv)) (topRegion m0) (topRegion m1) init
+            /\ refLoc (reveal (asRef vv)) = InStack (topRegionId m0) /\ (topRegionId m0 = topRegionId m1)
+            /\ tail m0 = tail m1))
         (hide empty)
 
 (*create an sstarray on the heap*)
@@ -83,9 +83,9 @@ val screate :  #a:Type -> len:nat -> init:a
         (requires  (fun m -> (isNonEmpty (st m))))
         (ensures (fun m0 vv m1->
             (isNonEmpty (st m0)) /\ (isNonEmpty (st m1))
-            /\ allocatedInRegion (reveal (asRef vv)) (topstb m0) (topstb m1) (Seq.create len init)
-            /\ refLoc (reveal (asRef vv)) = InStack (topstid m0) /\ (topstid m0 = topstid m1)
-            /\ mtail m0 = mtail m1))
+            /\ allocatedInRegion (reveal (asRef vv)) (topRegion m0) (topRegion m1) (Seq.create len init)
+            /\ refLoc (reveal (asRef vv)) = InStack (topRegionId m0) /\ (topRegionId m0 = topRegionId m1)
+            /\ tail m0 = tail m1))
         (hide empty)
 
 val hcreate :  #a:Type -> len:nat -> init:a
@@ -102,4 +102,4 @@ val hcreate :  #a:Type -> len:nat -> init:a
 val to_seq :  #a:Type  -> r:(sstarray a)
   -> PureMem (seq a)
         (requires (fun m -> b2t (liveRef (reveal (asRef r)) m)))
-        (ensures (fun m v-> (liveRef (reveal (asRef r)) m) /\ v = (loopkupRef (reveal (asRef r)) m)))
+        (ensures (fun m v-> (liveRef (reveal (asRef r)) m) /\ v = (lookupRef (reveal (asRef r)) m)))
