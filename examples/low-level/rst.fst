@@ -81,7 +81,7 @@ sub_effect
 (** Some effect abbreviations. *)
 
 (* Effect of a computation that leaves the region stack's structure unchanged
-   (i.e. no push or pop) but may 
+   (i.e. no push or pop) but may *)
 effect Mem (a:Type) (pre: smem -> Type) (post: (smem -> RSTPost a)) (mod: modset) =
         RST a pre (fun m0 a m1 -> post m0 a m1 /\ rids m0 = rids m1 /\ canModify m0 m1 mod)
 

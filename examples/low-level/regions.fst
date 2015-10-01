@@ -235,7 +235,7 @@ match (refLoc r) with
     | InStack idw ->  (writeRegionStackExists rw r (st m) id idw v)
 
 
-val writeMemAuxPreserveridsSt :  #a:Type -> rw:lref a  -> m:smem -> v:a ->
+val writeMemAuxPreservesIdsSt :  #a:Type -> rw:lref a  -> m:smem -> v:a ->
 Lemma (requires (True)) (ensures (rids m = rids (writeMemAux rw m v)))
  [SMTPat (writeMemAux rw m v)]
 
