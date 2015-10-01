@@ -204,7 +204,6 @@ let rec stack_target_inv s m = match s with
   | []                  -> true
   | (Frame m' _ f')::tl ->
     m = m'                                             &&
-    (not (m_of_mode m' = Par) || not (is_F_assec_ret f')) &&
     (not (m_of_mode m' = Sec) || is_sec_frame f')         &&
     stack_target_inv tl m
 
