@@ -27,9 +27,9 @@ val withNewScope4 : #a:Type -> #req:(smem -> Type) -> #ens:(smem -> a -> smem ->
                                           /\ topRegion m0'=emp
                                           /\ ens m0' x m1')))
 let withNewScope4 body =
-   pushStackFrame ();
+   pushRegion ();
    let v = body () in
-   popStackFrame (); v
+   popRegion (); v
 
 val scopedID4 : n:nat
  -> RST nat (requires (fun m -> True))

@@ -26,19 +26,19 @@ let incrementRef r =
 
 val pushPopNoChage : unit ->  RST unit  (fun _ -> True) (fun m0 vo m1 -> m0 == m1)
 let pushPopNoChage () =
-  pushStackFrame (); (* As expected, removing this line results in an error, even for the trivial postcondition*)
-  popStackFrame ()
+  pushRegion (); (* As expected, removing this line results in an error, even for the trivial postcondition*)
+  popRegion ()
 
 
 val incrementUsingStack : vi:int -> RST int  (fun _ -> True)
     (fun m0 vo m1 -> m0 = m1 /\ vo=vi+1)
 let incrementUsingStack vi =
-  pushStackFrame ();
-    let r = salloc vi in
+  pushRegion ();
+    let r = ralloc vi in
     let oldv = memread r in
     memwrite r (oldv + 1);
     let v = (memread r) in
-  popStackFrame ();
+  popRegion ();
   v
 
 
@@ -58,24 +58,24 @@ let incrementRef2 r =
 val incrementUsingStack2 : vi:int -> RST int  (fun _ -> True)
     (fun m0 vo m1 -> m0 = m1 /\ vo=vi+1)
 let incrementUsingStack2 vi =
-  pushStackFrame ();
-    let r = salloc vi in
+  pushRegion ();
+    let r = ralloc vi in
     incrementRef2 r; (*why doesn't incrementRef work here?*)
     let v = (memread r) in
-  popStackFrame ();
+  popRegion ();
   v
 
 val incrementUsingStack3 : vi:int -> RST int  (fun _ -> True)
     (fun m0 vo m1 ->  m0 =  m1 /\ vo=vi+1)
 let incrementUsingStack3 vi =
-  pushStackFrame ();
-    let r = salloc vi in
-    let r2 = salloc 0 in
+  pushRegion ();
+    let r = ralloc vi in
+    let r2 = ralloc 0 in
     let oldv = memread r in
     memwrite r (oldv + 1);
     memwrite r2 2; (*a dummy operation bwteen write r and read r*)
     let v = (memread r) in
-  popStackFrame ();
+  popRegion ();
   v
 
 (* Why am I able to write this if then else with effectful computations in the brances?
@@ -100,14 +100,14 @@ let incrementIfNot2 r =
 
 val testAliasing : n:nat -> ((k:nat{k<n}) -> Tot bool) -> RST unit (fun  _  -> True) (fun _ _ _ -> True)
 let testAliasing n initv =
-  pushStackFrame ();
-  let li: lref nat = salloc 1 in
-  let res : lref ((k:nat{k<n}) -> Tot bool) = salloc initv in
+  pushRegion ();
+  let li: lref nat = ralloc 1 in
+  let res : lref ((k:nat{k<n}) -> Tot bool) = ralloc initv in
   let resv=memread res in
     memwrite li 2;
     let resv2=memread res in
       assert (resv ==  resv2);
-      popStackFrame ()
+      popRegion ()
 
 val testAliasing2 : n:nat
  -> li : lref nat
@@ -124,15 +124,15 @@ let testAliasing2 n li res =
 
 val testSalloc1 : unit -> RST unit (fun _ -> True) (fun _ _ _ -> True)
 let testSalloc1 () =
-  pushStackFrame ();
-  let xi=salloc 0 in
+  pushRegion ();
+  let xi=ralloc 0 in
   memwrite xi 1;
-  pushStackFrame ();
+  pushRegion ();
   memwrite xi 1
 
 val testSalloc2 : xi:lref int -> RST unit (fun m -> b2t (liveRef xi m)) (fun _ _ m1 -> b2t (liveRef xi m1))
 let testSalloc2 xi =
-  pushStackFrame ();
+  pushRegion ();
   memwrite xi 1;
-  popStackFrame ();
+  popRegion ();
   memwrite xi 1

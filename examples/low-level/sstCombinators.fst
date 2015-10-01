@@ -33,9 +33,9 @@ val withNewScope : #a:Type -> #pre:(smem -> Type) -> #post:(smem -> RSTPost a)
   -> body:(unit -> WNSC a pre post mods)
       -> Mem a pre post mods
 let withNewScope 'a 'pre 'post #mods body =
-    pushStackFrame ();
+    pushRegion ();
     let v = body () in
-    popStackFrame (); v
+    popRegion (); v
 
 
 (*a combinator for writing while loops*)
@@ -65,8 +65,8 @@ let rec scopedWhile
    'loopInv 'wglc wg mods bd =
    if (wg ())
       then
-        ((let _ = pushStackFrame () in
-          let _ = bd  () in popStackFrame());
+        ((let _ = pushRegion () in
+          let _ = bd  () in popRegion());
          (scopedWhile 'loopInv 'wglc wg mods bd))
       else ()
 

@@ -56,7 +56,7 @@ type arrayExixtsInMem (#a:Type) (#n:nat) (v: vector (lref  a) n) (m:smem) =
 /\ equal h1 (concat h0 (restrict h1 (flattenRefs rv)))
 
 (*tj*)
-assume val sallocateVector :  a:Type -> n:nat
+assume val rallocateVector :  a:Type -> n:nat
  -> init:a
  -> Mem (vector (lref a) n)
     (requires (fun m -> isNonEmpty (st m)))
@@ -108,7 +108,7 @@ val processChunkSubArray :
 *)
 
 let processChunkSubArray ch acc =
-  let li = salloc #nat 0 in
+  let li = ralloc #nat 0 in
   scopedWhile1
     li
     (fun liv -> liv < 64)
@@ -180,8 +180,8 @@ val mainLoopSubArrayAux :
 
 
 let mainLoopSubArrayAux n ch acc u =
-  let offset = salloc #nat 0 in
-  (*let acc =  sallocateVector word 4 w0 in*)
+  let offset = ralloc #nat 0 in
+  (*let acc =  rallocateVector word 4 w0 in*)
   scopedWhile1
     offset
     (fun offsetv -> offsetv +16 <= n)
@@ -232,18 +232,18 @@ val mainLoopSubArray :
     (Set.complement (Set.empty))
 
 let mainLoopSubArray n ch u =
-  let acc =  sallocateVector word 4 w0 in
-  let dummy : lref nat = salloc 0 in
+  let acc =  rallocateVector word 4 w0 in
+  let dummy : lref nat = ralloc 0 in
   (*assert (b2t (not (Set.mem (Ref dummy) (flattenRefs acc)))) ;*)
   memAssert (fun m -> ~ (liveRef dummy (mtail m)));
   memAssert (fun m -> ~ (arrayExixtsInMem acc (mtail m)));
   memAssert (fun m -> forall (r:(r:(lref word){Set.mem (Ref r) (flattenRefs acc)})). ~ (liveRef r (mtail m)) );
   memAssert (fun m -> True /\ arrayExixtsInMem ch (m));
-  pushStackFrame ();
+  pushRegion ();
   memAssert (fun m -> True /\ arrayExixtsInMem ch (m));
   memAssert (fun m -> True /\ arrayExixtsInMem acc (m));
   let x = (mainLoopSubArrayAux n ch acc ()) in
-  popStackFrame ();
+  popRegion ();
   memAssert (fun m -> True /\ arrayExixtsInMem acc (m));
   memAssert (fun m -> True /\ arrayExixtsInMem ch (m));
   memAssert (fun m -> True /\ arrayExixtsInMem ch (mtail m));

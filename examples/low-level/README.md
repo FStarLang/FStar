@@ -11,3 +11,7 @@ Base files:
   our new located (ref a) type
 - regions.fst: an axiomatization of our stack of regions, along with a series of
   lemmas
+
+High-level modules:
+- rst.fst: definition of the RST (as in "Region-ST") effect of computations that
+  occur within our stack of regions.

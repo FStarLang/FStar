@@ -19,28 +19,27 @@ open ListSet
 open Located
 open Lref
 
-(** A region, taken individually, behaves just like a heap of its
-    own. Beware! This type is defined in [Lref] (it is *not* the
-    standard FStar heap type). *)
+(** A region, taken individually, behaves just like a heap of its own. Beware!
+    This type is defined in [Lref] (it is *not* the standard FStar heap type). *)
 type region = heap
 
 
-(* Recall that the [Located] module defines [rid], the type of
-   region-ids. In our axiomatization of regions, we carry around a
-   stack of regions where each region is tagged with an [rid]. This
-   axiomatization can be realized with two different models:
-   - one where [rid]s are globally unique throughout the entire
-     program execution, and
+(* Recall that the [Located] module defines [rid], the type of region-ids. In
+   our axiomatization of regions, we carry around a stack of regions where each
+   region is tagged with an [rid]. This axiomatization can be realized with two
+   different models:
+   - one where [rid]s are globally unique throughout the entire program
+     execution, and
    - one where [rid]s may be re-used.
-   The client code cannot assume one model or another (we're providing
-   the client with a weaker model than, say, one that guarantees that
-   [rid]s are never reused). This is similar to [ST] where the client
-   cannot assume either that memory locations will never be re-used. *)
+   The client code cannot assume one model or another (we're providing the
+   client with a weaker model than, say, one that guarantees that [rid]s are
+   never reused). This is similar to [ST] where the client cannot assume either
+   that memory locations will never be re-used. *)
 type regionStack = Stack.stack (rid * region)
 
-(* The naming convention is as follows: functions that operate on the
-   "stack" part of the memory end with [St], while functions that
-   operate on the [smem] type below end with [Mem]. *)
+(* The naming convention is as follows: functions that operate on the "stack"
+   part of the memory end with [St], while functions that operate on the [smem]
+   type below end with [Mem]. *)
 val ridsSt : regionStack -> Tot (list rid)
 let ridsSt ms = mapT fst ms
 
@@ -119,70 +118,57 @@ let rec updateRegionById f s ms=
          h::updateRegionById f s tl
 
 (* Write a new value in a reference that's in a given region id. *)
-val writeInMemStack : #a:Type -> lref a -> s:regionStack -> rid -> a -> Tot (r:regionStack{ridsSt r = ridsSt s})
-let rec writeInMemStack r ms s v = updateRegionById (writeInRegion r v) s ms
+val writeInRegionStack : #a:Type -> lref a -> s:regionStack -> rid -> a -> Tot (r:regionStack{ridsSt r = ridsSt s})
+let rec writeInRegionStack r ms s v = updateRegionById (writeInRegion r v) s ms
 
 
-// XXX JP: didn't proofread after that point. Lots of warnings.
-val changeStackBlockSameIDs :
-    f:(region -> Tot region) -> s:rid -> ms:(regionStack)
-  -> Lemma (ensures ((ridsSt ms) = (ridsSt (updateRegionById f s ms))))
-let rec changeStackBlockSameIDs f s ms =
-match ms with
-| Nil -> ()
-| h::tl ->   if (fst h = s) then () else (changeStackBlockSameIDs f s tl)
+(** A series of lemmas about updating the stack of regions. *)
 
-val changeStackBlockWellFormed :
- f:(region -> Tot region) -> s:rid -> ms:(regionStack)
+(* Calling [updateByRegionId] does not change the region-ids. *)
+val updateRegionSameIds :
+    f:(region -> Tot region) -> s:rid -> ms:regionStack
+  -> Lemma (ensures (ridsSt ms = ridsSt (updateRegionById f s ms)))
+let rec updateRegionSameIds f s ms =
+  match ms with
+  | Nil -> ()
+  | h::tl -> if fst h = s then () else updateRegionSameIds f s tl
+
+
+(* Calling [updateByRegionId] preserves the well-formedness of the region
+   stack. *)
+val updateRegionWellFormed :
+ f:(region -> Tot region) -> s:rid -> ms:regionStack
   -> Lemma
       (requires (wellFormed ms))
       (ensures (wellFormed (updateRegionById f s ms)))
-let changeStackBlockWellFormed  f s ms = (changeStackBlockSameIDs f s ms)
+let updateRegionWellFormed  f s ms = updateRegionSameIds f s ms
 
-val writeMemStackSameIDs : #a:Type -> r:(lref a) -> ms:(regionStack)
+
+(* Updating one of the regions does not change the region-ids. *)
+val writeRegionStackSameIds : #a:Type -> r:(lref a) -> ms:(regionStack)
   -> s:rid -> v:a
-  -> Lemma (ensures ((ridsSt ms) = (ridsSt (writeInMemStack r ms s v))))
-let writeMemStackSameIDs r ms s v = (changeStackBlockSameIDs (writeInRegion r v) s ms)
+  -> Lemma (ensures (ridsSt ms = ridsSt (writeInRegionStack r ms s v)))
+let writeRegionStackSameIds r ms s v = updateRegionSameIds (writeInRegion r v) s ms
 
-val writeMemStackWellFormed : #a:Type -> r:(lref a)
+
+(* Updating one the regions perserves the well-formedness of the region stack. *)
+val writeRegionStackWellFormed : #a:Type -> r:(lref a)
   -> ms:(regionStack)
   -> s:rid -> v:a
   -> Lemma
       (requires (wellFormed (ms)))
-      (ensures (wellFormed (writeInMemStack r ms s v)))
-      [SMTPat (writeInMemStack r ms s v)]
-let writeMemStackWellFormed r ms s v = (changeStackBlockWellFormed (writeInRegion r v) s ms)
-
-(*val freeInMemStackSameIDs : #a:Type -> r:(lref a) -> ms:(regionStack)
-  -> s:rid
-  -> Lemma (ensures ((ridsSt ms) = (ridsSt (freeInMemStack r ms s))))
-let freeInMemStackSameIDs r ms s = (changeStackBlockSameIDs (freeRefInBlock r) s ms)
-
-val freeInMemStackWellFormed : #a:Type -> r:(lref a)
-  -> ms:(regionStack)
-  -> s:rid
-  -> Lemma
-      (requires (wellFormed (ms)))
-      (ensures (wellFormed (freeInMemStack r ms s)))
-      [SMTPat (freeInMemStack r ms s)]
-let freeInMemStackWellFormed r ms s = (changeStackBlockWellFormed (freeRefInBlock r) s ms)*)
+      (ensures (wellFormed (writeInRegionStack r ms s v)))
+      [SMTPat (writeInRegionStack r ms s v)]
+let writeRegionStackWellFormed r ms s v = (updateRegionWellFormed (writeInRegion r v) s ms)
 
 
-(*
-val writeMemStackSameStail : #a:Type -> r:(lref a) -> ms:(regionStack)
-  -> s:rid -> v:a
-  -> Lemma (ensures ((stail ms) = (stail (writeInMemStack r ms s v))))
-         (*  [SMTPat (writeMemStack r ms s v)] *)
-let rec writeMemStackSameStail r ms s v = ()
-*)
-
-
-val refExistsInStack : #a:Type -> (lref a)
-  -> id:rid -> (regionStack) -> Tot bool
+(* Does a reference belong to the region with the given id? *)
+val refExistsInStack : #a:Type -> lref a
+  -> id:rid -> regionStack -> Tot bool
 let rec refExistsInStack r id ms =
-match ms with
-| [] -> false
-| h::tl -> if (fst h=id) then (contains (snd h) r) else refExistsInStack r id tl
+  match ms with
+  | [] -> false
+  | h::tl -> if fst h = id then contains (snd h) r else refExistsInStack r id tl
 
 
 val refExistsInStackId : #a:Type -> r:(lref a)
@@ -190,9 +176,9 @@ val refExistsInStackId : #a:Type -> r:(lref a)
   -> Lemma (requires (refExistsInStack r id ms))
           (ensures (memT id (ridsSt ms)))
 let rec refExistsInStackId r id ms =
-match ms with
-| [] -> ()
-| h::tl -> if (fst h=id) then () else (refExistsInStackId r id tl)
+  match ms with
+  | [] -> ()
+  | h::tl -> if (fst h=id) then () else (refExistsInStackId r id tl)
 
 val memIdUniq:  h:(rid * region) -> tl:regionStack
   -> Lemma (requires (wellFormed (h::tl)))
@@ -209,36 +195,30 @@ let refExistsInStackTail r id ms = (refExistsInStackId r id (Stack.tail ms))
 
 val liveRef : #a:Type -> (lref a) -> smem ->  Tot bool
 let liveRef (#a:Type) (r:lref a) (m:smem) =
-match (refLoc r) with
-| InHeap -> contains (hp m) r
-| InStack id -> refExistsInStack r id (st m)
+  match (refLoc r) with
+  | InHeap -> contains (hp m) r
+  | InStack id -> refExistsInStack r id (st m)
 
 
-val writeMemStackExists : #a:Type -> #b:Type -> rw:(lref a) -> r: (lref b)
+val writeRegionStackExists : #a:Type -> #b:Type -> rw:(lref a) -> r: (lref b)
   -> ms:(regionStack)
   -> id:rid -> idw:rid -> v:a
   -> Lemma
       (requires (refExistsInStack r id ms))
-      (ensures (refExistsInStack r id (writeInMemStack rw ms idw v)))
-      [SMTPat (writeInMemStack rw ms id v)]
-let rec writeMemStackExists rw r ms id idw v =
-match ms with
-| Nil -> ()
-| h::tl ->   if (fst h = id) then () else ((writeMemStackExists rw r tl id idw v))
+      (ensures (refExistsInStack r id (writeInRegionStack rw ms idw v)))
+      [SMTPat (writeInRegionStack rw ms id v)]
+let rec writeRegionStackExists rw r ms id idw v =
+  match ms with
+  | Nil -> ()
+  | h::tl ->   if (fst h = id) then () else ((writeRegionStackExists rw r tl id idw v))
 
 
 val writeMemAux : #a:Type -> (lref a) -> m:smem -> a -> Tot (r:smem{rids r = rids m})
 let writeMemAux r m v =
   match (refLoc r) with
   | InHeap -> ((upd (hp m) r v), snd m)
-  | InStack id -> ( (hp m), (writeInMemStack r (st m) id v) )
+  | InStack id -> ( (hp m), (writeInRegionStack r (st m) id v) )
 
-
-(*val freeMemAux : #a:Type -> (lref a) -> m:smem  -> Tot smem
-let freeMemAux r m =
-  match (refLoc r) with
-  | InHeap -> ((freeRefInBlock r (hp m)), snd m)
-  | InStack s -> ((hp m), ((freeInMemStack r (st m) s)))*)
 
 
 val writeMemAuxPreservesExists :  #a:Type -> #b:Type ->
@@ -252,17 +232,17 @@ match (refLoc r) with
 | InStack id ->
     match (refLoc rw) with
     | InHeap -> ()
-    | InStack idw ->  (writeMemStackExists rw r (st m) id idw v)
+    | InStack idw ->  (writeRegionStackExists rw r (st m) id idw v)
 
 
 val writeMemAuxPreserveridsSt :  #a:Type -> rw:lref a  -> m:smem -> v:a ->
 Lemma (requires (True)) (ensures (rids m = rids (writeMemAux rw m v)))
  [SMTPat (writeMemAux rw m v)]
 
-let writeMemAuxPreserveridsSt rw m v =
+let writeMemAuxPreservesIdsSt rw m v =
 match (refLoc rw) with
 | InHeap -> ()
-| InStack id ->  (writeMemStackSameIDs rw (st m) id v)
+| InStack id ->  (writeRegionStackSameIds rw (st m) id v)
 
 
 (*
@@ -299,8 +279,8 @@ val readAfterWriteStack :
   Lemma (requires (refExistsInStack r id m))
         (ensures ((refExistsInStack r id m)
             /\ ifthenelseT (r==rw /\ id=idw)
-                (lookupRefStack r id (writeInMemStack rw m idw v) == v)
-                (lookupRefStack r id (writeInMemStack rw m idw v) = (lookupRefStack r id m))))
+                (lookupRefStack r id (writeInRegionStack rw m idw v) == v)
+                (lookupRefStack r id (writeInRegionStack rw m idw v) = (lookupRefStack r id m))))
 let rec readAfterWriteStack rw r v id idw m =
 match m with
 | [] -> ()
@@ -316,7 +296,7 @@ val readAfterWriteStackSameType :
   #a:Type -> rw:(lref a) -> r:(lref a) -> v:a -> id:rid -> idw:rid -> m:(regionStack) ->
   Lemma (requires (refExistsInStack r id m))
         (ensures ((refExistsInStack r id m)
-            /\ lookupRefStack r id (writeInMemStack rw m idw v) = (if (r=rw && id=idw) then v else (lookupRefStack r id m))))
+            /\ lookupRefStack r id (writeInRegionStack rw m idw v) = (if (r=rw && id=idw) then v else (lookupRefStack r id m))))
 let readAfterWriteStackSameType rw r v id idw m = readAfterWriteStack rw r v id idw m
 
 val readAfterWrite : #a:Type -> #b:Type ->  rw:(lref a) -> r:(lref b) -> v:a -> m:smem ->
@@ -391,8 +371,8 @@ match (refLoc r) with
 val writeStackTail
   : #a:Type -> r:(lref a) -> id:rid -> v:a -> m:wfRegionStack    ->  Lemma
       (requires (refExistsInStack r id (Stack.tail m)))
-      (ensures (Stack.tail (writeInMemStack r m id v)
-                    = writeInMemStack r (Stack.tail m) id v))
+      (ensures (Stack.tail (writeInRegionStack r m id v)
+                    = writeInRegionStack r (Stack.tail m) id v))
 let writeStackTail r id v ms = (refExistsInStackId r id (Stack.tail ms))
 
 val writeTailRef : #a:Type -> r:(lref a) -> m:smem -> v:a ->
@@ -413,7 +393,7 @@ match (refLoc r) with
    w.r.t the top of the stack e.g.
    whether the reference is in the tail of memory.
    There are some memory operations that do not preserve relative position,
-   e.g. pushStackFrame.
+   e.g. pushRegion.
    However, most sane program blocks will preserve it. So far,
    preserving stack ids is a definition of sanity
    *)
@@ -463,12 +443,10 @@ let canModifyWrite r v m = ()
 
 type mStackNonEmpty (m:smem) = b2t (Stack.isNonEmpty (st m))
 
-(*val canModifySalloc : #a:Type -> r:(lref a) -> v:a -> m:smem
-  -> Lemma (canModify m (writeMemAux r m v) (singleton (Ref r)))
-let canModifyWrite r v m = ()*)
 
 
-type allocateInBlock (#a:Type) (r: lref a) (h0 : region) (h1 : region) (init : a)   = not(contains h0 r) /\ contains h1 r /\  h1 == upd h0 r init
+type allocatedInRegion (#a:Type) (r: lref a) (h0 : region) (h1 : region) (init : a)  =
+  not (contains h0 r) /\ contains h1 r /\  h1 == upd h0 r init
 
 val allocateInTopR: #a:Type -> r:lref a -> init:a -> m0:smem{Stack.isNonEmpty (st m0) /\
                                                              not (contains (topRegion m0) r)}
@@ -484,3 +462,41 @@ let liveLoc v m =
   match (regionOf v) with
   | InHeap -> true
   | InStack id -> memT id  (rids m)
+
+
+(** XXX some commented-out lemmas (?) by Abhishek. *)
+
+(*val freeInRegionStackSameIDs : #a:Type -> r:(lref a) -> ms:(regionStack)
+  -> s:rid
+  -> Lemma (ensures ((ridsSt ms) = (ridsSt (freeInRegionStack r ms s))))
+let freeInRegionStackSameIDs r ms s = (updateRegionSameIds (freeRefInBlock r) s ms)
+
+val freeInRegionStackWellFormed : #a:Type -> r:(lref a)
+  -> ms:(regionStack)
+  -> s:rid
+  -> Lemma
+      (requires (wellFormed (ms)))
+      (ensures (wellFormed (freeInRegionStack r ms s)))
+      [SMTPat (freeInRegionStack r ms s)]
+let freeInRegionStackWellFormed r ms s = (updateRegionWellFormed (freeRefInBlock r) s ms)*)
+
+
+(*
+val writeRegionStackSameStail : #a:Type -> r:(lref a) -> ms:(regionStack)
+  -> s:rid -> v:a
+  -> Lemma (ensures ((stail ms) = (stail (writeInRegionStack r ms s v))))
+         (*  [SMTPat (writeRegionStack r ms s v)] *)
+let rec writeRegionStackSameStail r ms s v = ()
+*)
+
+
+(*val freeMemAux : #a:Type -> (lref a) -> m:smem  -> Tot smem
+let freeMemAux r m =
+  match (refLoc r) with
+  | InHeap -> ((freeRefInBlock r (hp m)), snd m)
+  | InStack s -> ((hp m), ((freeInRegionStack r (st m) s)))*)
+
+
+(*val canModifySalloc : #a:Type -> r:(lref a) -> v:a -> m:smem
+  -> Lemma (canModify m (writeMemAux r m v) (singleton (Ref r)))
+let canModifyWrite r v m = ()*)

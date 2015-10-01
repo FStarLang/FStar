@@ -56,7 +56,7 @@ val processChunk :
 
 
 let processChunk ch offset acc =
-  let li = salloc #nat 0 in
+  let li = ralloc #nat 0 in
   scopedWhile1
     li
     (fun liv -> liv < 64)
@@ -94,7 +94,7 @@ val mainLoop :
     (hide empty)
 
 let mainLoop ch u =
-  let offset = salloc #nat 0 in
+  let offset = ralloc #nat 0 in
   let acc =  screateSeq initAcc in
   let chl = RSTArray.length ch in
   scopedWhile1
@@ -163,9 +163,9 @@ val mD52 : n:nat
 let mD52 n ch =
   let clonedCh = screate (psize n) w0 in
   cloneAndPad ch clonedCh;
-    pushStackFrame ();
+    pushRegion ();
       let mdd5 = mainLoop clonedCh () in
-    popStackFrame (); mdd5
+    popRegion (); mdd5
 
 
 (*can we run this program and compare it agains standard implementations?

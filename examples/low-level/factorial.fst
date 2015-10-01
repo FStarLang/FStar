@@ -75,8 +75,8 @@ val loopyFactorial : n:nat
               (fun _ rv _ -> (rv == (factorial n)))
               (hide empty)
 let loopyFactorial n =
-  let li = salloc 0 in
-  let res = salloc 1 in
+  let li = ralloc 0 in
+  let res = ralloc 1 in
   (factorialLoop n li res);
   let v=memread res in
   v
@@ -86,9 +86,9 @@ val loopyFactorial2 : n:nat
               (fun _ rv _ -> rv == (factorial n))
               (hide empty)
 let loopyFactorial2 n =
-  pushStackFrame ();
-    let li:(lref nat) = salloc 0 in
-    let res:(lref nat) = salloc 1 in
+  pushRegion ();
+    let li:(lref nat) = ralloc 0 in
+    let res:(lref nat) = ralloc 1 in
     (scopedWhile1
       li
       (fun liv -> not (liv = n))
@@ -100,4 +100,4 @@ let loopyFactorial2 n =
         memwrite li (liv + 1);
         memwrite res ((liv+1) * resv)));
     let v=memread res in
-    popStackFrame (); v
+    popRegion (); v

@@ -58,9 +58,9 @@ val loopyFactorial3 : n:nat
   -> RST nat (fun m -> True)
               (fun _ rv _ -> rv == (factorial n))
 let loopyFactorial3 n =
-  pushStackFrame ();
-  let li = salloc 0 in
-  let res = salloc 1 in
+  pushRegion ();
+  let li = ralloc 0 in
+  let res = ralloc 1 in
   (scopedWhile3
     (loopInv li res)
     (fun m -> (liveRef li m) /\ ~ ((loopkupRef li m) = n))
@@ -72,5 +72,5 @@ let loopyFactorial3 n =
       memwrite li (liv + 1);
       memwrite res ((liv+1) * resv)));
   let v=memread res in
-  popStackFrame ();
+  popRegion ();
   v

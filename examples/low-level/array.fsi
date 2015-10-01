@@ -63,7 +63,7 @@ val screateSeq :  #a:Type -> init:(seq a)
         (requires  (fun m -> (isNonEmpty (st m))))
         (ensures (fun m0 vv m1->
             (isNonEmpty (st m0)) /\ (isNonEmpty (st m1))
-            /\ allocateInBlock (reveal (asRef vv)) (topstb m0) (topstb m1) init
+            /\ allocatedInRegion (reveal (asRef vv)) (topstb m0) (topstb m1) init
             /\ refLoc (reveal (asRef vv)) = InStack (topstid m0) /\ (topstid m0 = topstid m1)
             /\ mtail m0 = mtail m1))
         (hide empty)
@@ -74,7 +74,7 @@ val hcreateSeq :  #a:Type -> init:(seq a)
   -> Mem (sstarray a)
         (requires  (fun m -> True))
         (ensures (fun m0 v m1->
-            allocateInBlock (reveal (asRef v)) (hp m0) (hp m1) init
+            allocatedInRegion (reveal (asRef v)) (hp m0) (hp m1) init
             /\ refLoc (reveal (asRef v)) = InHeap /\ (snd m0 = snd m1)))
         (hide empty)
 
@@ -83,7 +83,7 @@ val screate :  #a:Type -> len:nat -> init:a
         (requires  (fun m -> (isNonEmpty (st m))))
         (ensures (fun m0 vv m1->
             (isNonEmpty (st m0)) /\ (isNonEmpty (st m1))
-            /\ allocateInBlock (reveal (asRef vv)) (topstb m0) (topstb m1) (Seq.create len init)
+            /\ allocatedInRegion (reveal (asRef vv)) (topstb m0) (topstb m1) (Seq.create len init)
             /\ refLoc (reveal (asRef vv)) = InStack (topstid m0) /\ (topstid m0 = topstid m1)
             /\ mtail m0 = mtail m1))
         (hide empty)
@@ -92,7 +92,7 @@ val hcreate :  #a:Type -> len:nat -> init:a
   -> Mem (sstarray a)
         (requires  (fun m -> True))
         (ensures (fun m0 v m1->
-            allocateInBlock (reveal (asRef v)) (hp m0) (hp m1) (Seq.create len init)
+            allocatedInRegion (reveal (asRef v)) (hp m0) (hp m1) (Seq.create len init)
             /\ refLoc (reveal (asRef v)) = InHeap /\ (snd m0 = snd m1)))
         (hide empty)
 

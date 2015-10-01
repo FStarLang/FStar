@@ -202,10 +202,10 @@ val outerLoopBody :
 
 
 let outerLoopBody n lo res u =
-  (*pushStackFrame ();*)
+  (*pushRegion ();*)
   let initres = memread res in
   let lov = memread lo in
-  let li = salloc 2 in
+  let li = ralloc 2 in
   let liv = memread li in
   innerLoop n lo li res initres;
   let newres = memread res in
@@ -253,9 +253,9 @@ val sieve : n:nat{n>1} -> unit
         (ensures (fun _ resv _ -> markedIffHasDivisorSmallerThan n n resv))
         (hide empty)
 let sieve n u =
-  let lo = salloc 2 in
+  let lo = ralloc 2 in
   let f:((k:nat{k<n}) -> Tot bool) = (fun x -> false) in
-  let res = salloc f in
+  let res = ralloc f in
   (outerLoop n lo res);
   //assert (False);
   memread res
@@ -266,9 +266,9 @@ val sieveFull : n:nat{n>1}
         (ensures (fun _ resv _ -> markedIffHasDivisorSmallerThan n n resv))
         (hide empty)
 let sieveFull n =
-  pushStackFrame ();
+  pushRegion ();
   let res= sieve n () in
-  popStackFrame (); res
+  popRegion (); res
 
 val firstN : n:nat -> Tot (list nat)
 let rec firstN n = match n with
@@ -301,9 +301,9 @@ val sieveUnfolded : n:nat{n>1} -> unit
         (ensures (fun _ resv _ -> markedIffHasDivisorSmallerThan n n resv))
         (hide empty)
 let sieveUnfolded n u =
-  let lo = salloc 2 in
+  let lo = ralloc 2 in
   let f:((k:nat{k<n}) -> Tot bool) = (fun x -> false) in
-  let res = salloc f in
+  let res = ralloc f in
   scopedWhile
     (outerLoopInv n lo res)
     (outerGuardLC n lo)
@@ -312,7 +312,7 @@ let sieveUnfolded n u =
     (fun u ->
         let initres = memread res in
         let lov = memread lo in
-        let li = salloc 2 in
+        let li = ralloc 2 in
         let liv = memread li in
         innerLoop n lo li res initres;
         let newres = memread res in
@@ -341,9 +341,9 @@ val sieveUnfolded3 : n:nat{n>1} -> unit
         (ensures (fun _ resv _ -> markedIffHasDivisorSmallerThan n n resv))
         empty
 let sieveUnfolded3 n u =
-  let lo:(lref nat) = salloc 2 in
+  let lo:(lref nat) = ralloc 2 in
   let f:((k:nat{k<n}) -> Tot bool) = (fun x -> false) in
-  let res = salloc f in
+  let res = ralloc f in
   scopedWhile1
     lo
     (fun lov -> lov < n)
@@ -352,7 +352,7 @@ let sieveUnfolded3 n u =
     (fun u ->
         let initres = memread res in
         let lov = memread lo in
-        let li:(lref nat) = salloc 2 in
+        let li:(lref nat) = ralloc 2 in
         let liv = memread li in
         (scopedWhile2
             lo
@@ -383,9 +383,9 @@ val sieveUnfolded2 : n:nat{n>1} -> unit
         (ensures (fun _ resv _ -> markedIffHasDivisorSmallerThan n n resv))
         empty
 let sieveUnfolded2 n u =
-  let lo = salloc 2 in
+  let lo = ralloc 2 in
   let f:((k:nat{k<n}) -> Tot bool) = (fun x -> false) in
-  let res = salloc f in
+  let res = ralloc f in
   scopedWhile
     (outerLoopInv2 n lo res)
     (outerGuardLC n lo)
@@ -394,7 +394,7 @@ let sieveUnfolded2 n u =
     (fun u ->
         let initres = memread res in
         let lov = memread lo in
-        let li = salloc 2 in
+        let li = ralloc 2 in
         let liv = memread li in
         (scopedWhile
             (innerLoopInv2 n lo li res initres)

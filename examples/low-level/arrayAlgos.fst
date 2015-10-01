@@ -127,7 +127,7 @@ val copy:
      (eonly scp)
 
 let copy s scp =
-  let ctr = salloc #nat 0 in
+  let ctr = ralloc #nat 0 in
   let len = RSTArray.length s in
   let lenscp = RSTArray.length scp in
   scopedWhile1
@@ -157,13 +157,13 @@ val hcloneAux:
 
 let hcloneAux s =
   let scp = hcreate  (RSTArray.length s) (readIndex s 0) in
-    pushStackFrame ();
+    pushRegion ();
       copy s scp;
-    popStackFrame ();
+    popRegion ();
     scp
 
 (*Since we always use the Mem abbreviation and never RST directly,
-  withNewScope does not have any advantage over pushStackFrame/popStackFrame.
+  withNewScope does not have any advantage over pushRegion/popRegion.
   The definition of Mem prevents one from improperly pushing/popping
     of stack frames; i.e. any computation of type Mem ....
     must pop exactly all the stack frames it pushed

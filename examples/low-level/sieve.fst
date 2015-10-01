@@ -225,8 +225,8 @@ val sieve : n:nat{n>1} -> unit
         (hide empty)
 
 let sieve n u =
-  let li = salloc 2 in
-  let lo = salloc 2 in
+  let li = ralloc 2 in
+  let lo = ralloc 2 in
   let res = screate n false in
   (outerLoop n li lo res);
   (listOfUnmarked n res)
@@ -238,9 +238,9 @@ val sieveFull : n:nat{n>1}
   (ensures (fun _ l m -> forall (k:nat). (nmem k l) <==> ((k<n) /\ (~ (exists (d:nat{1<d}). d<n /\ SieveFun.nonTrivialDivides d k))) ))
         (hide empty)
 let sieveFull n =
-  pushStackFrame ();
+  pushRegion ();
   let res= sieve n () in
-  popStackFrame (); res
+  popRegion (); res
 
   val maxUnmarkedAux : n:nat -> max:nat{max<=n} -> f:bitarray
     -> PureMem (nat)
@@ -264,20 +264,20 @@ val sieveJustMax : n:nat{n>1}
   (ensures (fun _ l m -> True ))
         (hide empty)
 let sieveJustMax n =
-  pushStackFrame ();
-  let li = salloc 2 in
-  let lo = salloc 2 in
+  pushRegion ();
+  let li = ralloc 2 in
+  let lo = ralloc 2 in
   let res = screate n false in
   (outerLoop n li lo res);
   let res = (maxUnmarked n res) in
-  popStackFrame (); res
+  popRegion (); res
 
 val segFault : unit -> RST int (requires (fun _-> True)) (ensures (fun _ _ _ -> True))
 let segFault u =
-  pushStackFrame ();
+  pushRegion ();
   let p : (int * int) =  (1 , 2) in
   let arr = screate 2 p in
   writeIndex arr 0 (2,3);
   let arr1 = readIndex arr 1 in
-  popStackFrame ();
+  popRegion ();
   (fst arr1) // this neither segfaults, nor prints 2. It prints 1!
