@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi FStar.Set --admit_fsi FStar.Seq --verify_module CBuffer --z3timeout 10;
     variables:PLATFORM=../../contrib/Platform/fst SST=../low-level;
-  other-files:classical.fst ext.fst set.fsi seq.fsi heap.fst st.fst all.fst seqproperties.fst list.fst listTot.fst listproperties.fst $SST/stack.fst $SST/listset.fst ghost.fst $SST/located.fst $SST/lref.fst $SST/stackAndHeap.fst $SST/sst.fst $SST/sstCombinators.fst $SST/array.fsi $SST/array.fst
+  other-files:classical.fst ext.fst set.fsi seq.fsi heap.fst st.fst all.fst seqproperties.fst list.fst listTot.fst listproperties.fst $SST/stack.fst $SST/listset.fst ghost.fst $SST/located.fst $SST/lref.fst $SST/regions.fst $SST/rst.fst $SST/sstCombinators.fst $SST/array.fsi $SST/array.fst
   --*)
 
 module CBuffer
@@ -10,10 +10,10 @@ open FStar.Set
 open FStar.Heap
 open SST
 open SSTCombinators
-open StackAndHeap
+open Regions
 open Lref
 open Located
-open SSTArray
+open RSTArray
 open FStar.Ghost
 open FStar.Seq
 
@@ -26,7 +26,7 @@ val eonly :  #a:Type -> sstarray a -> Tot modset
 let eonly s = (eonly (asRef s))
 
 val sel : #a:Type -> m:smem -> v:(sstarray a){liveArr m v} -> GTot (Seq.seq a)
-let sel m v = loopkupRef (reveal (asRef v)) m
+let sel m v = lookupRef (reveal (asRef v)) m
 
 val glength : #a:Type -> v:(sstarray a) -> m:smem{liveArr m v} -> GTot nat
 let glength v m = Seq.length (sel m v)

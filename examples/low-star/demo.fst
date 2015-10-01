@@ -1,19 +1,19 @@
 (*--build-config
     options:--admit_fsi FStar.Set --admit_fsi FStar.Seq --verify_module Demo --z3timeout 30 --codegen OCaml;
     variables:PLATFORM=../../contrib/Platform/fst SST=../low-level;
-  other-files:classical.fst ext.fst set.fsi seq.fsi heap.fst st.fst all.fst seqproperties.fst list.fst listTot.fst listproperties.fst $SST/stack.fst $SST/listset.fst ghost.fst $SST/located.fst $SST/lref.fst $SST/stackAndHeap.fst $SST/sst.fst $SST/sstCombinators.fst  $SST/array.fsi $SST/array.fst buffer.fst system.fst;
+  other-files:classical.fst ext.fst set.fsi seq.fsi heap.fst st.fst all.fst seqproperties.fst list.fst listTot.fst listproperties.fst $SST/stack.fst $SST/listset.fst ghost.fst $SST/located.fst $SST/lref.fst $SST/regions.fst $SST/rst.fst $SST/sstCombinators.fst  $SST/array.fsi $SST/array.fst buffer.fst system.fst;
   --*)
 
 module Demo
 
 open SSTCombinators
-open StackAndHeap
-open SST
+open RST
 open FStar.Heap
 open Lref  open Located
 open FStar.Set
 open Stack
-open SSTArray
+open Regions
+open RSTArray
 open FStar.Ghost
 open CBuffer
 
@@ -43,10 +43,10 @@ val allocate_buffer:
         (Stack.isNonEmpty (st m))))
     (ensures (fun m0 b m1 ->
       (isNonEmpty (st m0)) /\ (isNonEmpty (st m1))
-      /\ (allocateInBlock (reveal (asRef b.content)) (topstb m0) (topstb m1) (Seq.create len 0uy))
-      /\ (refLoc (reveal (asRef b.content)) = InStack (topstid m0))
-      /\ (topstid m0 = topstid m1)
-      /\ (mtail m0 = mtail m1)
+      /\ (allocatedInRegion (reveal (asRef b.content)) (topRegion m0) (topRegion m1) (Seq.create len 0uy))
+      /\ (refLoc (reveal (asRef b.content)) = InStack (topRegionId m0))
+      /\ (topRegionId m0 = topRegionId m1)
+      /\ (tail m0 = tail m1)
       /\ (b.start_idx = 0) /\ ( b.length = len)
       ))
     (hide empty)
@@ -65,7 +65,7 @@ val demo:
       ))
     (hide empty)
 let demo () =
-  pushStackFrame ();
+  pushRegion ();
 
   let buff = allocate_buffer buffer_length in
 
@@ -97,4 +97,4 @@ let demo () =
   let nb_written = CSystem.writev output_file [out_frag3; out_frag1; out_frag3; out_frag2] in
 
   CSystem.close file1; CSystem.close file2; CSystem.close header_file; CSystem.close output_file;
-  popStackFrame ()
+  popRegion ()
