@@ -20,7 +20,7 @@ open FStar.Seq
 (* From arrayAlgos.fst, useful to specifications *)
 val liveArr : #a:Type -> smem -> sstarray a -> GTot bool
 let liveArr m v =
-  liveRef (reveal (asRef v)) m
+  refIsLive (reveal (asRef v)) m
 
 val eonly :  #a:Type -> sstarray a -> Tot modset
 let eonly s = (eonly (asRef s))
