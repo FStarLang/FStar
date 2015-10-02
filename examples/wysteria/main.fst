@@ -1,9 +1,11 @@
 (*--build-config
     options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi FFI --admit_fsi Runtime --admit_fsi FStar.IO;
-    other-files:ordset.fsi ordmap.fsi classical.fst set.fsi heap.fst st.fst all.fst io.fsti prins.fsi prins.fst ast.fst print.fst ffi.fsi sem.fst sinterpreter.fst runtime.fsi tinterpreter.fst sec_server.fst
+    other-files:ghost.fst listTot.fst ordset.fsi ordmap.fsi classical.fst set.fsi heap.fst st.fst all.fst io.fsti prins.fst ast.fst print.fst ffi.fsi sem.fst sinterpreter.fst runtime.fsi tinterpreter.fst sec_server.fst
  --*)
 
 module Main
+
+open FStar.Ghost
 
 open Runtime
 
@@ -34,7 +36,7 @@ else
   let pname = me () in
   match init_env pname with
     | Some (D_v _ (V_const (C_prin p))) ->
-      let c = Conf Target (Mode Par (OrdSet.singleton p)) [] init_env (T_exp (get_smc ())) in
+      let c = Conf Target (Mode Par (OrdSet.singleton p)) [] init_env (T_exp (get_smc ())) (hide []) in
       let c' = tstep_star c in
       if is_Some c' then
         let Some c' = c' in

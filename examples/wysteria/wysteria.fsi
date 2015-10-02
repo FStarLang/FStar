@@ -224,7 +224,7 @@ val as_par: #a:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> a -> trace -> Ty
 (*****)
 
 type DelSec (m:mode) (ps:prins) = ps = Mode.ps m
-
+(* TODO: FIXME: the output should be added to trace ONLY IF current mode is Par *)
 val as_sec: #a:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> a -> trace -> Type)
             -> ps:prins
             -> =f:(unit -> Wys a req_f ens_f)

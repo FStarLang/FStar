@@ -1,9 +1,11 @@
 (*--build-config
     options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Prins --admit_fsi FFI --admit_fsi Runtime;
-    other-files:ordset.fsi ordmap.fsi classical.fst set.fsi heap.fst st.fst all.fst prins.fsi ast.fst ffi.fsi sem.fst sinterpreter.fst runtime.fsi
+    other-files:ghost.fst listTot.fst ordset.fsi ordmap.fsi classical.fst set.fsi heap.fst st.fst all.fst prins.fsi ast.fst ffi.fsi sem.fst sinterpreter.fst runtime.fsi
  --*)
 
 module SecServer
+
+open FStar.Ghost
 
 open FStar.OrdMap
 open FStar.OrdSet
@@ -41,7 +43,7 @@ val do_sec_comp: ps:prins -> env_m:en_map{contains_ps ps env_m}
                  -> varname -> exp -> unit -> ML unit
 let do_sec_comp ps env_m out_m x e _ =
   let en = update_env (compose_envs_m ps env_m) x (V_const C_unit) in
-  let conf = Conf Target (Mode Sec ps) [] en (T_exp e) in
+  let conf = Conf Target (Mode Sec ps) [] en (T_exp e) (hide []) in
   let c_opt = step_star conf in
   if is_Some c_opt && is_terminal (Some.v c_opt) then
     let _ = send_output ps out_m (T_val.v (Conf.t (Some.v c_opt))) in

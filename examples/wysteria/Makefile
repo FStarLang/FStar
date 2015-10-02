@@ -25,10 +25,10 @@ OCAMLOPT=ocamlfind ocamlopt -thread -package batteries -linkpkg -g -w -8
 
 codegen:
 	$(FSTAR) --admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set\
-	         --admit_fsi FFI --admit_fsi Runtime --admit_fsi FStar.IO --codegen OCaml ordset.fsi\
-					 ordmap.fsi classical.fst set.fsi heap.fst st.fst\
-					 all.fst io.fsti prins.fst ast.fst print.fst ffi.fsi sem.fst sinterpreter.fst runtime.fsi tinterpreter.fst\
-					 sec_server.fst main.fst
+	         --admit_fsi FFI --admit_fsi Runtime --admit_fsi FStar.IO --codegen OCaml\
+                 ghost.fst listTot.fst ordset.fsi ordmap.fsi classical.fst set.fsi heap.fst st.fst\
+                 all.fst io.fsti prins.fst ast.fst print.fst ffi.fsi sem.fst sinterpreter.fst runtime.fsi tinterpreter.fst\
+		 sec_server.fst main.fst
 
 a.out: codegen
 	cp $(FSTAR_HOME)/lib/ml/prims.ml .
@@ -41,4 +41,4 @@ clean:
 	rm -f *.cmi *.cmx *.o *.exe a.out 
 
 distclean:
-	rm -f AST.ml prims.ml FStar_All.ml FStar_Classical.ml FStar_Heap.ml FStar_ST.ml FStar_IO.ml Print.ml SecServer.ml TargetInterpreter.ml Semantics.ml SourceInterpreter.ml Main.ml *.cmi *.cmx *.o *.exe a.out 
+	rm -f AST.ml prims.ml FStar_List_Tot.ml FStar_Ghost.ml FStar_All.ml FStar_Classical.ml FStar_Heap.ml FStar_ST.ml FStar_IO.ml Prins.ml Print.ml SecServer.ml TargetInterpreter.ml Semantics.ml SourceInterpreter.ml Main.ml *.cmi *.cmx *.o *.exe a.out 

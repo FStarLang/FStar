@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi Set --admit_fsi Prins --admit_fsi FFI;
-    other-files:set.fsi ordset.fsi ordmap.fsi classical.fst prins.fsi ast.fst ffi.fsi sem.fst
+    other-files:ghost.fst listTot.fst set.fsi ordset.fsi ordmap.fsi classical.fst prins.fsi ast.fst ffi.fsi sem.fst
  --*)
 
 module SourceInterpreter
