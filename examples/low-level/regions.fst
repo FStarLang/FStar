@@ -9,7 +9,7 @@
 
 module Regions
 
-(** An axiomatization of regions in F* *)
+(** An axiomatization of regions in F*. *)
 
 open FStar.Set
 open FStar.List
@@ -51,7 +51,7 @@ type wfRegionStack= x:regionStack{wellFormed x}
 
 
 (* The type of our memory: a garbage-collected heap along with a
-   custom-managed stack of regions. *)
+   custom-managed stack of regions. JP: better name here? *)
 type smem = heap * wfRegionStack
 
 (* A series of helpers to work with the [smem] type. *)
@@ -76,9 +76,6 @@ let topRegion ss = snd (topRegionAndId ss)
 
 val topRegionId : s:smem{Stack.isNonEmpty (st s)} ->  Tot rid
 let topRegionId ss = fst (topRegionAndId ss)
-
-val refLoc : #a:Type -> lref a -> Tot regionLoc
-let refLoc r = regionOf r
 
 
 (* Find a region by [rid]. *)
@@ -117,9 +114,10 @@ let rec updateRegionById f s ms=
        else
          h::updateRegionById f s tl
 
-(* Write a new value in a reference that's in a given region id. *)
+(* The specification-level [:=] operator for writing into a region with a
+   specific id. JP: better name here? *)
 val writeInRegionStack : #a:Type -> lref a -> s:regionStack -> rid -> a -> Tot (r:regionStack{ridsSt r = ridsSt s})
-let rec writeInRegionStack r ms s v = updateRegionById (writeInRegion r v) s ms
+let writeInRegionStack r ms s v = updateRegionById (writeInRegion r v) s ms
 
 
 (** A series of lemmas about updating the stack of regions. *)
@@ -159,128 +157,139 @@ val writeRegionStackWellFormed : #a:Type -> r:(lref a)
       (requires (wellFormed (ms)))
       (ensures (wellFormed (writeInRegionStack r ms s v)))
       [SMTPat (writeInRegionStack r ms s v)]
-let writeRegionStackWellFormed r ms s v = (updateRegionWellFormed (writeInRegion r v) s ms)
+let writeRegionStackWellFormed r ms s v = updateRegionWellFormed (writeInRegion r v) s ms
 
 
 (* Does a reference belong to the region with the given id? *)
-val refExistsInStack : #a:Type -> lref a
+val refIsLiveInStack : #a:Type -> lref a
   -> id:rid -> regionStack -> Tot bool
-let rec refExistsInStack r id ms =
+let rec refIsLiveInStack r id ms =
   match ms with
   | [] -> false
-  | h::tl -> if fst h = id then contains (snd h) r else refExistsInStack r id tl
+  | h::tl -> if fst h = id then contains (snd h) r else refIsLiveInStack r id tl
 
 
-val refExistsInStackId : #a:Type -> r:(lref a)
-  -> id:rid -> ms:(regionStack)
-  -> Lemma (requires (refExistsInStack r id ms))
+(* If [refIsLiveInStack r rid ...], then it must be the case that [rid] is one
+   of the current region-ids. *)
+val refIsLiveInStackId : #a:Type -> r:(lref a)
+  -> id:rid -> ms:regionStack
+  -> Lemma (requires (refIsLiveInStack r id ms))
           (ensures (memT id (ridsSt ms)))
-let rec refExistsInStackId r id ms =
+let rec refIsLiveInStackId r id ms =
   match ms with
   | [] -> ()
-  | h::tl -> if (fst h=id) then () else (refExistsInStackId r id tl)
+  | h::tl -> if fst h = id then () else refIsLiveInStackId r id tl
 
+
+(* The [rid] at the top of the region stack is not found in the tail. *)
 val memIdUniq:  h:(rid * region) -> tl:regionStack
   -> Lemma (requires (wellFormed (h::tl)))
         (ensures (notIn (fst h) (ridsSt tl)))
 let memIdUniq h tl = ()
 
 
-val refExistsInStackTail : #a:Type -> r:(lref a)
-  -> id:rid -> ms:wfRegionStack  -> Lemma (requires (refExistsInStack r id (Stack.tail ms)))
-          (ensures  (refExistsInStack r id ms))
-          [SMTPat (refExistsInStack r id (Stack.tail ms))]
-let refExistsInStackTail r id ms = (refExistsInStackId r id (Stack.tail ms))
+(* If a reference is found in the tail of the region stack, then it is found in
+   the region stack. *)
+val refIsLiveInStackTail : #a:Type -> r:lref a
+  -> id:rid -> ms:wfRegionStack  -> Lemma (requires (refIsLiveInStack r id (Stack.tail ms)))
+          (ensures  (refIsLiveInStack r id ms))
+          [SMTPat (refIsLiveInStack r id (Stack.tail ms))]
+let refIsLiveInStackTail r id ms = refIsLiveInStackId r id (Stack.tail ms)
 
 
-val liveRef : #a:Type -> (lref a) -> smem ->  Tot bool
-let liveRef (#a:Type) (r:lref a) (m:smem) =
-  match (refLoc r) with
+(* A predicate to assert the liveness of a reference regardless of whether it's
+   in the region stack or in the garbage-collected heap. *)
+val refIsLive : #a:Type -> lref a -> smem ->  Tot bool
+let refIsLive r m =
+  match regionOf r with
   | InHeap -> contains (hp m) r
-  | InStack id -> refExistsInStack r id (st m)
+  | InStack id -> refIsLiveInStack r id (st m)
 
 
-val writeRegionStackExists : #a:Type -> #b:Type -> rw:(lref a) -> r: (lref b)
-  -> ms:(regionStack)
-  -> id:rid -> idw:rid -> v:a
+val writeInStackPreservesLiveness : #a:Type -> #b:Type -> rw:lref a -> r:lref b
+  -> ms:regionStack
+  -> idw:rid -> id:rid -> v:a
   -> Lemma
-      (requires (refExistsInStack r id ms))
-      (ensures (refExistsInStack r id (writeInRegionStack rw ms idw v)))
+      (requires (refIsLiveInStack r id ms))
+      (ensures (refIsLiveInStack r id (writeInRegionStack rw ms idw v)))
       [SMTPat (writeInRegionStack rw ms id v)]
-let rec writeRegionStackExists rw r ms id idw v =
+let rec writeInStackPreservesLiveness rw r ms idw id v =
   match ms with
   | Nil -> ()
-  | h::tl ->   if (fst h = id) then () else ((writeRegionStackExists rw r tl id idw v))
+  | h::tl -> if fst h = id then () else writeInStackPreservesLiveness rw r tl idw id v
 
 
-val writeMemAux : #a:Type -> (lref a) -> m:smem -> a -> Tot (r:smem{rids r = rids m})
+(* This is specification-level polymorphic [:=] operator that works regardless
+   of whether the [lref] is in the heap or in the stack of regions. JP: better
+   name here? JP: better name here? *)
+val writeMemAux : #a:Type -> lref a -> m:smem -> a -> Tot (r:smem{rids r = rids m})
 let writeMemAux r m v =
-  match (refLoc r) with
-  | InHeap -> ((upd (hp m) r v), snd m)
-  | InStack id -> ( (hp m), (writeInRegionStack r (st m) id v) )
+  match regionOf r with
+  | InHeap -> upd (hp m) r v, snd m
+  | InStack id -> hp m, writeInRegionStack r (st m) id v
 
 
-
-val writeMemAuxPreservesExists :  #a:Type -> #b:Type ->
+(** A series of lemmas about [writeMemAux]. They don't seem to be used
+    elsewhere, but good to have them, I suppose. *)
+val writeMemAuxPreservesLiveness :  #a:Type -> #b:Type ->
   rw:lref a -> r:lref b -> m:smem -> v:a ->
-Lemma (requires (liveRef r m))
-      (ensures (liveRef r (writeMemAux rw m v)))
+Lemma (requires (refIsLive r m))
+      (ensures (refIsLive r (writeMemAux rw m v)))
       [SMTPat (writeMemAux rw m v)]
-let writeMemAuxPreservesExists rw r m v =
-match (refLoc r) with
-| InHeap -> ()
-| InStack id ->
-    match (refLoc rw) with
-    | InHeap -> ()
-    | InStack idw ->  (writeRegionStackExists rw r (st m) id idw v)
+let writeMemAuxPreservesLiveness rw r m v =
+  match regionOf r with
+  | InHeap -> ()
+  | InStack id ->
+      match regionOf rw with
+      | InHeap -> ()
+      | InStack idw -> writeInStackPreservesLiveness rw r (st m) idw id v
 
 
-val writeMemAuxPreservesIdsSt :  #a:Type -> rw:lref a  -> m:smem -> v:a ->
+val writeMemAuxPreservesRegionIds :  #a:Type -> rw:lref a  -> m:smem -> v:a ->
 Lemma (requires (True)) (ensures (rids m = rids (writeMemAux rw m v)))
  [SMTPat (writeMemAux rw m v)]
 
-let writeMemAuxPreservesIdsSt rw m v =
-match (refLoc rw) with
+let writeMemAuxPreservesRegionIds rw m v =
+match (regionOf rw) with
 | InHeap -> ()
 | InStack id ->  (writeRegionStackSameIds rw (st m) id v)
 
 
-(*
-val writeMemAuxPreservesStail :  #a:Type -> r:(lref a) -> m:smem -> v:a ->
-Lemma (requires (is_InStack (refLoc r)))
-  (ensures tail m = tail (writeMemAux r m v))
-let rec writeMemAuxPreservesStail r m v =  ()
-*)
-
-val lookupRefStack : #a:Type -> r:(lref a) -> id:rid -> ms:(regionStack){refExistsInStack r id ms}  ->  Tot a
+(** The [!] operator, at the specification level, for references that are known
+    to be in the stack of regions. JP: better name here? *)
+val lookupRefStack : #a:Type -> r:(lref a) -> id:rid -> ms:(regionStack){refIsLiveInStack r id ms}  ->  Tot a
 let rec lookupRefStack r id ms =
 match ms with
 | h::tl ->
     if (fst h = id) then  sel (snd h) r else (lookupRefStack r id tl)
 
 
-(* it is surprising that sel always returns something; It might be tricky to implement it.
-   What prevents me from creating a lref of an empty type? Perhaps it is impossible to create a member
-   of the type (lref False) . For example, the memory allocation operator, which creates a new (lref 'a)
-   requires an initial value of type 'a
-*)
-val lookupRef : #a:Type -> r:(lref a) -> m:smem{(liveRef r m) == true} ->  Tot a
+(** The [!] operator, at the specification level, for any located
+    reference. Compared to the standard [!] operator, ours comes with an extra
+    proof obligation: the reference has to be live, of course. JP: better name
+    here? *)
+val lookupRef : #a:Type -> r:lref a -> m:smem{refIsLive r m} -> Tot a
 let lookupRef r m =
-match (refLoc r) with
-| InHeap -> (sel (hp m) r)
+match regionOf r with
+| InHeap -> sel (hp m) r
 | InStack id -> lookupRefStack r id (st m)
 
 
 type ifthenelseT (b:Type) (tc : Type) (fc: Type) =
- (b ==>  tc) /\ ((~b) ==> fc )
+ (b ==>  tc) /\ (~b ==> fc )
 
+
+(** When writing into [rw] (sitting in region with id [idw]), then reading from
+    [r] (sitting in region [id]), then if these parameters match, you read the
+    new value, otherwise, you read the previous value. JP: why do we carry
+    around [id] and [idw] rather than using [regionOf]? *)
 val readAfterWriteStack :
   #a:Type  -> #b:Type -> rw:(lref a) -> r:(lref b) -> v:a -> id:rid -> idw:rid -> m:(regionStack) ->
-  Lemma (requires (refExistsInStack r id m))
-        (ensures ((refExistsInStack r id m)
+  Lemma (requires (refIsLiveInStack r id m))
+        (ensures (refIsLiveInStack r id m
             /\ ifthenelseT (r==rw /\ id=idw)
                 (lookupRefStack r id (writeInRegionStack rw m idw v) == v)
-                (lookupRefStack r id (writeInRegionStack rw m idw v) = (lookupRefStack r id m))))
+                (lookupRefStack r id (writeInRegionStack rw m idw v) = lookupRefStack r id m)))
 let rec readAfterWriteStack rw r v id idw m =
 match m with
 | [] -> ()
@@ -291,177 +300,189 @@ match m with
               then ()
               else ((readAfterWriteStack rw r v id idw tl)))
 
-(*perhaps this specialization is not requires anymore*)
+
+(** Specialization of the lemma above. JP: still a terrible order of
+    arguments?!! AA: still needed? *)
 val readAfterWriteStackSameType :
   #a:Type -> rw:(lref a) -> r:(lref a) -> v:a -> id:rid -> idw:rid -> m:(regionStack) ->
-  Lemma (requires (refExistsInStack r id m))
-        (ensures ((refExistsInStack r id m)
+  Lemma (requires (refIsLiveInStack r id m))
+        (ensures ((refIsLiveInStack r id m)
             /\ lookupRefStack r id (writeInRegionStack rw m idw v) = (if (r=rw && id=idw) then v else (lookupRefStack r id m))))
 let readAfterWriteStackSameType rw r v id idw m = readAfterWriteStack rw r v id idw m
 
-val readAfterWrite : #a:Type -> #b:Type ->  rw:(lref a) -> r:(lref b) -> v:a -> m:smem ->
-  Lemma (requires (liveRef r m))
-        (ensures (liveRef r m)
+
+(** The general lemma for a reference that's located anywhere. *)
+val readAfterWrite : #a:Type -> #b:Type ->  rw:lref a -> r:lref b -> v:a -> m:smem ->
+  Lemma (requires (refIsLive r m))
+        (ensures (refIsLive r m)
         /\ ifthenelseT (r==rw)
             (lookupRef r (writeMemAux rw m v) == v)
-            (lookupRef r (writeMemAux rw m v) = (lookupRef r m)))
+            (lookupRef r (writeMemAux rw m v) = lookupRef r m))
 let readAfterWrite rw r v m =
-match (refLoc r) with
-| InHeap -> ()
-| InStack id ->
-  match (refLoc rw) with
-  | InHeap -> ()
-  | InStack idw -> (readAfterWriteStack rw r v id idw (st m))
+  match regionOf r, regionOf rw with
+  | InStack id, InStack idw -> readAfterWriteStack rw r v id idw (st m)
+  | _ -> ()
 
-(*Again, F*  does not seem to unfold ifthenelseT in the above. So, it seems
-necessary to provide the 2 specializations below as an SMTPat,
-instead of just the above lemma *)
+
+(* AA: Again, F* does not seem to unfold ifthenelseT in the above. So, it seems
+   necessary to provide the 2 specializations below as an SMTPat, instead of
+   just the above lemma *)
 val readAfterWriteTrue : #a:Type -> #b:Type ->  rw:(lref a) -> r:(lref b) -> v:a -> m:smem ->
-  Lemma (requires (liveRef r m /\ r==rw))
-        (ensures (liveRef r m) /\
+  Lemma (requires (refIsLive r m /\ r==rw))
+        (ensures (refIsLive r m) /\
             (lookupRef r (writeMemAux rw m v) == v))
         [SMTPat (writeMemAux rw m v)]
 let readAfterWriteTrue rw r v m = readAfterWrite rw r v m
 
 
 val readAfterWriteFalse : #a:Type -> #b:Type ->  rw:(lref a) -> r:(lref b) -> v:a -> m:smem ->
-  Lemma (requires (liveRef r m /\ r=!=rw))
-        (ensures (liveRef r m) /\
+  Lemma (requires (refIsLive r m /\ r=!=rw))
+        (ensures (refIsLive r m) /\
         (lookupRef r (writeMemAux rw m v) = (lookupRef r m)))
         [SMTPat (writeMemAux rw m v)]
 let readAfterWriteFalse rw r v m = readAfterWrite rw r v m
 
 
-(*perhaps this specialization is not requires anymore*)
+(* AA: still needed? *)
 val readAfterWriteSameType : #a:Type -> rw:(lref a) -> r:(lref a) -> v:a -> m:smem ->
-  Lemma (requires (liveRef r m))
-        (ensures (liveRef r m)
+  Lemma (requires (refIsLive r m))
+        (ensures (refIsLive r m)
             /\ lookupRef r (writeMemAux rw m v) = (if (r=rw) then v else (lookupRef r m)))
 let readAfterWriteSameType rw r v m = readAfterWrite rw r v m
 
 
-val liveRefTail : #a:Type -> r:(lref a) -> m:smem ->
-  Lemma (requires (liveRef r (tail m)))
-        (ensures (liveRef r (m)))
-        [SMTPat (liveRef r (tail m))]
-let liveRefTail r m =
-match (refLoc r) with
+val refIsLiveTail : #a:Type -> r:lref a -> m:smem ->
+  Lemma (requires (refIsLive r (tail m)))
+        (ensures (refIsLive r (m)))
+        [SMTPat (refIsLive r (tail m))]
+let refIsLiveTail r m =
+match regionOf r with
 | InHeap -> ()
-| InStack id -> (refExistsInStackTail r id (st m))
+| InStack id -> refIsLiveInStackTail r id (st m)
 
-val lookupRefStackTail
-  : #a:Type -> r:(lref a) -> id:rid -> m:wfRegionStack    ->  Lemma
-   (requires (refExistsInStack r id (Stack.tail m)))
-    (ensures ((refExistsInStack r id (Stack.tail m)) /\ lookupRefStack r id m
+
+(* If a reference is live in the tail, then looking it up in the stack of
+   regions or in the tail of the stack is the same. *)
+val lookupRefStackTail:
+  #a:Type -> r:lref a -> id:rid -> m:wfRegionStack -> Lemma
+   (requires (refIsLiveInStack r id (Stack.tail m)))
+    (ensures (refIsLiveInStack r id (Stack.tail m) /\ lookupRefStack r id m
         = lookupRefStack r id (Stack.tail m)))
-let lookupRefStackTail r id ms = (refExistsInStackId r id (Stack.tail ms))
+let lookupRefStackTail r id ms = refIsLiveInStackId r id (Stack.tail ms)
 
 
+(* Same thing with the [smem] instead of the [wfRegionStack]. *)
 val readTailRef : #a:Type -> r:(lref a) -> m:smem ->
-  Lemma (requires (liveRef r (tail m)))
-        (ensures (liveRef r (tail m))
+  Lemma (requires (refIsLive r (tail m)))
+        (ensures (refIsLive r (tail m))
             /\ lookupRef r m =  lookupRef r (tail m))
-            [SMTPat (liveRef r (tail m))]
+            [SMTPat (refIsLive r (tail m))]
 let readTailRef r m =
-match (refLoc r) with
+match regionOf r with
 | InHeap -> ()
-| InStack id -> (lookupRefStackTail r id (st m))
+| InStack id -> lookupRefStackTail r id (st m)
 
 
+(* [Stack.tail] and [writeInRegionStack] commute as long as the reference is
+   live in the tail. *)
 val writeStackTail
   : #a:Type -> r:(lref a) -> id:rid -> v:a -> m:wfRegionStack    ->  Lemma
-      (requires (refExistsInStack r id (Stack.tail m)))
+      (requires (refIsLiveInStack r id (Stack.tail m)))
       (ensures (Stack.tail (writeInRegionStack r m id v)
                     = writeInRegionStack r (Stack.tail m) id v))
-let writeStackTail r id v ms = (refExistsInStackId r id (Stack.tail ms))
+let writeStackTail r id v ms = refIsLiveInStackId r id (Stack.tail ms)
 
+(* [tail] and [writeMemAux] commute as long as the reference is live in the
+   tail. *)
 val writeTailRef : #a:Type -> r:(lref a) -> m:smem -> v:a ->
-  Lemma (requires (liveRef r (tail m)))
-        (ensures (liveRef r (tail m))
+  Lemma (requires (refIsLive r (tail m)))
+        (ensures (refIsLive r (tail m))
             /\ tail (writeMemAux r m v) =  writeMemAux r (tail m) v)
-            [SMTPat (liveRef r (tail m))]
+            [SMTPat (refIsLive r (tail m))]
 let writeTailRef r m v =
-match (refLoc r) with
+match (regionOf r) with
 | InHeap -> ()
 | InStack id -> (writeStackTail r id v (st m))
 
-(* The location of a lref (say r) is refLoc r, and is independent of the
-   currrent state of the memory. So the absolute location of a reference is
+
+(* AA: The location of an [lref] (say r) is [regionOf r], and is independent of
+   the currrent state of the memory. So the absolute location of a reference is
    by definition preserved by all memory operations.
 
    However, in most correctness proofs, what matters is the relative position
-   w.r.t the top of the stack e.g.
-   whether the reference is in the tail of memory.
-   There are some memory operations that do not preserve relative position,
-   e.g. pushRegion.
-   However, most sane program blocks will preserve it. So far,
-   preserving stack ids is a definition of sanity
-   *)
+   w.r.t the top of the stack e.g.  whether the reference is in the tail of
+   memory.  There are some memory operations that do not preserve relative
+   position, e.g. pushRegion.  However, most sane program blocks will preserve
+   it. So far, preserving region ids is a definition of sanity. *)
 
-val liveRefSTailRids : #a:Type -> r:(lref a) -> id:rid  -> m0:wfRegionStack-> m1:wfRegionStack  -> Lemma
+(* If a reference was live in the tail of the region stack, and the region-ids
+   haven't changed, then assuming it still is live (JP: shouldn't this be a
+   consequence of "the region-ids haven't changed"?), it must still be in the
+   tail. *)
+val refIsLiveSTailRids : #a:Type -> r:(lref a) -> id:rid  -> m0:wfRegionStack-> m1:wfRegionStack  -> Lemma
    (requires (ridsSt m0 = ridsSt m1
-            /\ refExistsInStack r id (Stack.tail m0)
-            (*/\ refExistsInStack r id m0*)
-            /\ refExistsInStack r id m1))
-   (ensures refExistsInStack r id (Stack.tail m1))
-let liveRefSTailRids r id m0 m1 =
-(refExistsInStackId r id (Stack.tail m0))
+            /\ refIsLiveInStack r id (Stack.tail m0)
+            (*/\ refIsLiveInStack r id m0*)
+            /\ refIsLiveInStack r id m1))
+   (ensures refIsLiveInStack r id (Stack.tail m1))
+let refIsLiveSTailRids r id m0 m1 =
+  refIsLiveInStackId r id (Stack.tail m0)
 
 
-val liveRefTailRids : #a:Type -> r:(lref a) -> m0:smem -> m1:smem -> Lemma
-  (requires (rids m0 = rids m1 /\ liveRef r (tail m0) /\ liveRef r m1))
-  (ensures liveRef r (tail m1))
+(* Same thing over [smem] *)
+val refIsLiveTailRids : #a:Type -> r:(lref a) -> m0:smem -> m1:smem -> Lemma
+  (requires (rids m0 = rids m1 /\ refIsLive r (tail m0) /\ refIsLive r m1))
+  (ensures refIsLive r (tail m1))
   [SMTPat (rids m0 = rids m1)]
-let liveRefTailRids r m0 m1 =
-match (refLoc r) with
-| InHeap -> ()
-| InStack id -> (liveRefSTailRids r id (st m0) (st m1))
+let refIsLiveTailRids r m0 m1 =
+  match regionOf r with
+  | InHeap -> ()
+  | InStack id -> (refIsLiveSTailRids r id (st m0) (st m1))
 
 
-
-(** modifiesOnly and lemmas about it*)
-
-(** cannot just uses ST.modifies. That was on heap; has to be lifted to smem.
-Also, why does it's definition have to be so procedural, unlike the more declarative one below?
-*)
-type canModify  (m0 : smem)  (m1: smem) (rs: modset ) =
+(* JP: gratuitous name + argument order change? *)
+(* AA: the equivalent of [ST.modifies] lifted to our [smem] type. This is a more
+   declarative definition. *)
+type canModify (m0 : smem) (m1: smem) (rs: modset) =
   forall (a:Type) (r: lref a).
-      liveRef r m0
-      ==> (~(Set.mem (Ref r) (reveal rs)))
-      ==> (liveRef r m1 /\ (lookupRef r m0 = lookupRef r m1))
+      refIsLive r m0 /\ ~(Set.mem (Ref r) (reveal rs))
+      ==> (refIsLive r m1 /\ lookupRef r m0 = lookupRef r m1)
 
 
-type  mreads (#a:Type) (r: lref a) (v:a) (m:smem) = liveRef r m /\ lookupRef r m = v
+(* The reference [r] is live and contains the value [v] in memory [m]. *)
+type contains (#a:Type) (r: lref a) (v:a) (m:smem) = refIsLive r m /\ lookupRef r m = v
 
-(*lemmas needed for automatic inference*)
-val canModifyNone : m:smem -> Lemma (canModify m m (hide empty))
+(* AA: some lemmas needed for automatic inference. *)
+val canModifyNone : m:smem -> Lemma (canModify m m (hide Set.empty))
 let canModifyNone m = ()
 
-val canModifyWrite : #a:Type -> r:(lref a) -> v:a -> m:smem
-  -> Lemma (canModify m (writeMemAux r m v) (only  r))
+val canModifyWrite : #a:Type -> r:lref a -> v:a -> m:smem
+  -> Lemma (canModify m (writeMemAux r m v) (Lref.only r))
 let canModifyWrite r v m = ()
+
 
 type mStackNonEmpty (m:smem) = b2t (Stack.isNonEmpty (st m))
 
-
-
 type allocatedInRegion (#a:Type) (r: lref a) (h0 : region) (h1 : region) (init : a)  =
-  not (contains h0 r) /\ contains h1 r /\  h1 == upd h0 r init
+  not (Lref.contains h0 r) /\ Lref.contains h1 r /\  h1 == upd h0 r init
 
+(* A specification-level modelization of allocating in the top region. *)
 val allocateInTopR: #a:Type -> r:lref a -> init:a -> m0:smem{Stack.isNonEmpty (st m0) /\
-                                                             not (contains (topRegion m0) r)}
+                                                             not (Lref.contains (topRegion m0) r)}
                     -> Tot smem
 let allocateInTopR r init m0 =
-    hp m0, (topRegionId m0, upd (topRegion m0) r init)::Stack.tail (st m0)
+  hp m0, (topRegionId m0, upd (topRegion m0) r init)::Stack.tail (st m0)
 
 
-(* liveness for arbitrary located data. It merely says that the stack id valid
-   This could be a much simpler definition for liveRef, if we agree to never (manually) free data.*)
-val liveLoc : #a:Type -> (located a) -> smem ->  Tot bool
-let liveLoc v m =
+(* JP: I mentioned earlier that we should get "region still live ==> any
+   reference in that region still live" for free (since we never manually free data). This
+   predicate merely says "the region is still live". If we used that for the
+   definition of [refIsLive], then we would get the semantics above. *)
+val locIsLive : #a:Type -> located a -> smem -> Tot bool
+let locIsLive v m =
   match (regionOf v) with
   | InHeap -> true
-  | InStack id -> memT id  (rids m)
+  | InStack id -> memT id (rids m)
 
 
 (** XXX some commented-out lemmas (?) by Abhishek. *)
@@ -492,7 +513,7 @@ let rec writeRegionStackSameStail r ms s v = ()
 
 (*val freeMemAux : #a:Type -> (lref a) -> m:smem  -> Tot smem
 let freeMemAux r m =
-  match (refLoc r) with
+  match (regionOf r) with
   | InHeap -> ((freeRefInBlock r (hp m)), snd m)
   | InStack s -> ((hp m), ((freeInRegionStack r (st m) s)))*)
 
@@ -500,3 +521,11 @@ let freeMemAux r m =
 (*val canModifySalloc : #a:Type -> r:(lref a) -> v:a -> m:smem
   -> Lemma (canModify m (writeMemAux r m v) (singleton (Ref r)))
 let canModifyWrite r v m = ()*)
+
+
+(*
+val writeMemAuxPreservesStail :  #a:Type -> r:(lref a) -> m:smem -> v:a ->
+Lemma (requires (is_InStack (regionOf r)))
+  (ensures tail m = tail (writeMemAux r m v))
+let rec writeMemAuxPreservesStail r m v =  ()
+*)

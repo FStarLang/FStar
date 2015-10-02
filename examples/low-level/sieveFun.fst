@@ -31,8 +31,8 @@ type isNotPrime n =
 
 type innerGuardLC (n:nat) (lo : lref nat) (li : lref nat)
 (m:smem) =
-  (liveRef li m) && (liveRef lo m) &&
-    (((loopkupRef li m) * (loopkupRef lo m) < n))
+  (refIsLive li m) && (refIsLive lo m) &&
+    (((lookupRef li m) * (lookupRef lo m) < n))
 
 type vector (a:Type) (n:nat) = (k:nat{k<n}) -> Tot a
 
@@ -55,7 +55,7 @@ let mark n f index =
 type distinctRefsExists3
   (#a:Type) (#b:Type) (#c:Type) (m:smem)
   (ra:lref a) (rb: lref b) (rc: lref c)  =
-  (liveRef ra (m)) /\ (liveRef rb (m)) /\ (liveRef rc m)
+  (refIsLive ra (m)) /\ (refIsLive rb (m)) /\ (refIsLive rc m)
   /\ (ra=!=rb) /\ (rb=!=rc) /\ (ra=!=rc)
 
 type markedIffMultipleOrInit (n:nat) (lo:nat) (upto:nat)
@@ -84,10 +84,10 @@ type markedIffDividesOrInit (n:nat) (lo:nat)
 type multiplesMarked (n:nat) (bitv : (k:nat{k<n}) -> Tot bool) (lo:nat) =
   (forall (m:nat{m<n}). (nonTrivialDivides lo m) ==> marked n bitv m)
   (* this works, is totally precise, but is hard to use
-  /\ loopkupRef res m = markMultiplesUpto n lov (loopkupRef li m) initres*)
+  /\ lookupRef res m = markMultiplesUpto n lov (lookupRef li m) initres*)
 
-        (*(k < (loopkupRef li m))
-            ==> (marked n (loopkupRef res m) ((loopkupRef lo m)*k)))*)
+        (*(k < (lookupRef li m))
+            ==> (marked n (lookupRef res m) ((lookupRef lo m)*k)))*)
 
 type multiplesMarked2 (n:nat) (bitv : (k:nat{k<n}) -> Tot bool) (lo:nat) =
   (forall (k:nat). (k * lo < n /\ 1<k)  ==> marked n bitv (lo*k))
@@ -111,8 +111,8 @@ let multiplesMarkedAsDividesIff n bitv newv lo = (multiplesMarkedAsDivides n new
 type  innerLoopInv (n:nat) (lo: lref nat)  (li : lref nat) (res:lref ((k:nat{k<n}) -> Tot bool))
     (initres: ((k:nat{k<n}) -> Tot bool)) (m:smem) =
  distinctRefsExists3 m lo res li
-  /\ 1 < (loopkupRef li m)
-  /\ markedIffMultipleOrInit n (loopkupRef lo m) (loopkupRef li m) initres (loopkupRef res m)
+  /\ 1 < (lookupRef li m)
+  /\ markedIffMultipleOrInit n (lookupRef lo m) (lookupRef li m) initres (lookupRef res m)
 
 val innerLoop : n:nat{n>1}
   -> lo: lref nat
@@ -121,11 +121,11 @@ val innerLoop : n:nat{n>1}
   -> initres : ((k:nat{k<n}) -> Tot bool)
   -> Mem unit
       (requires (fun m -> innerLoopInv n lo li res initres m/\
-        (*(liveRef li m) /\ (liveRef lo m) /\ (liveRef res m) /\ (li=!=lo) /\ (lo=!=res) /\ (li=!=res)*)
-        loopkupRef li m = 2  /\ 1 < (loopkupRef lo m)
-                    /\ loopkupRef res m= initres))
+        (*(refIsLive li m) /\ (refIsLive lo m) /\ (refIsLive res m) /\ (li=!=lo) /\ (lo=!=res) /\ (li=!=res)*)
+        lookupRef li m = 2  /\ 1 < (lookupRef lo m)
+                    /\ lookupRef res m= initres))
       (ensures (fun _ _ m -> distinctRefsExists3 m lo res li
-                /\ markedIffDividesOrInit n (loopkupRef lo m) initres (loopkupRef res m)
+                /\ markedIffDividesOrInit n (lookupRef lo m) initres (lookupRef res m)
       ))
       (hide (union (singleton (Ref li)) (singleton (Ref res))))
 
@@ -149,10 +149,10 @@ let innerLoop n lo li res initres =
 type distinctRefsExists2
   (#a:Type) (#b:Type) (m:smem)
   (ra:lref a) (rb: lref b)  =
-  (liveRef ra m) /\ (liveRef rb m)  /\ (ra=!=rb)
+  (refIsLive ra m) /\ (refIsLive rb m)  /\ (ra=!=rb)
 
 type outerGuardLC (n:nat) (lo : lref nat) (m:smem) =
-  (liveRef lo m) && ((loopkupRef lo m) < n)
+  (refIsLive lo m) && ((lookupRef lo m) < n)
 
 type markedIffHasDivisorSmallerThan (n:nat) (lo:nat)
     (neww:((k:nat{k<n}) -> Tot bool)) =
@@ -183,9 +183,9 @@ let markedIffHasDivisorSmallerThan2 n neww = ()
 
 type  outerLoopInv (n:nat) (lo: lref nat) (res:lref ((k:nat{k<n}) -> Tot bool)) (m:smem) =
  distinctRefsExists2 m lo res
-  /\ (((loopkupRef lo m) - 1) < n)
-  /\ (1<(loopkupRef lo m))
-  /\ (markedIffHasDivisorSmallerThan n (loopkupRef lo m) (loopkupRef res m))
+  /\ (((lookupRef lo m) - 1) < n)
+  /\ (1<(lookupRef lo m))
+  /\ (markedIffHasDivisorSmallerThan n (lookupRef lo m) (lookupRef res m))
 
 
 (*#set-options "--initial_fuel 100 --max_fuel 10000 --initial_ifuel 100 --max_ifuel 10000"*)
@@ -217,11 +217,11 @@ val outerLoop : n:nat{n>1}
   -> lo: lref nat
   -> res : lref ((k:nat{k<n}) -> Tot bool)
   -> Mem unit
-      (fun m -> distinctRefsExists2 m lo res /\ loopkupRef lo m =2 /\ allUnmarked n (loopkupRef res m))
+      (fun m -> distinctRefsExists2 m lo res /\ lookupRef lo m =2 /\ allUnmarked n (lookupRef res m))
       (fun m0 _ m1 ->
             distinctRefsExists2 m1 lo res
             /\ sids m0 = sids m1
-           /\ (markedIffHasDivisorSmallerThan n n (loopkupRef res m1))
+           /\ (markedIffHasDivisorSmallerThan n n (lookupRef res m1))
       )
       (hide (union (singleton (Ref lo)) (singleton (Ref res))))
 
@@ -324,15 +324,15 @@ let sieveUnfolded n u =
 
 type  innerLoopInv2 (n:nat) (lo: lref nat) (li : lref nat) (res:lref ((k:nat{k<n}) -> Tot bool))
     (initres: ((k:nat{k<n}) -> Tot bool)) (m:smem) =
-  (liveRef li m) /\ (liveRef lo m) /\ (liveRef res m)
-  /\ ((loopkupRef li m)-1)*(loopkupRef lo m) < n
-  /\ markedIffMultipleOrInit n (loopkupRef lo m) (loopkupRef li m) initres (loopkupRef res m)
+  (refIsLive li m) /\ (refIsLive lo m) /\ (refIsLive res m)
+  /\ ((lookupRef li m)-1)*(lookupRef lo m) < n
+  /\ markedIffMultipleOrInit n (lookupRef lo m) (lookupRef li m) initres (lookupRef res m)
 
 type  outerLoopInv2 (n:nat) (lo: lref nat) (res:lref ((k:nat{k<n}) -> Tot bool)) (m:smem) =
-  liveRef lo m /\ liveRef res m
-  /\ (((loopkupRef lo m) - 1) < n)
-  /\ (1<(loopkupRef lo m))
-  /\ (markedIffHasDivisorSmallerThan n (loopkupRef lo m) (loopkupRef res m))
+  refIsLive lo m /\ refIsLive res m
+  /\ (((lookupRef lo m) - 1) < n)
+  /\ (1<(lookupRef lo m))
+  /\ (markedIffHasDivisorSmallerThan n (lookupRef lo m) (lookupRef res m))
 
 (*
 val sieveUnfolded3 : n:nat{n>1} -> unit

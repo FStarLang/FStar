@@ -44,8 +44,8 @@ let rec live_node n sm =
   greveal_precedence_axiom n;
 
   let n' = greveal n in
-  live_located n sm && liveRef n'.frequency sm && live_node n'.zero_child sm &&
-  live_node n'.one_child sm && liveRef n'.code sm
+  live_located n sm && refIsLive n'.frequency sm && live_node n'.zero_child sm &&
+  live_node n'.one_child sm && refIsLive n'.code sm
 
 val live_node_after_write: #a:Type ->  rw:(lref a) -> v:a
                            -> n:located node -> m:smem{live_node n m}
@@ -103,7 +103,7 @@ assume val read_code: n:located node -> PureMem (lref string)
 assume val mk_node: f:lref int -> z:located node -> o:located node -> s:symbol_t -> c:lref string
                     -> PureMem (located node)
                        (fun sm0 -> isNonEmpty (st sm0) /\
-                                   liveRef f sm0 /\ live_node z sm0 /\ live_node o sm0 /\ liveRef c sm0)
+                                   refIsLive f sm0 /\ live_node z sm0 /\ live_node o sm0 /\ refIsLive c sm0)
                        (fun sm0 r -> isNonEmpty (st sm0) /\ regionOf r = InStack (topRegionId sm0) /\
                                      (greveal r).frequency = f  /\
                                      (greveal r).zero_child = z /\
@@ -154,7 +154,7 @@ let rec live_list_after_ralloc_lemma r v l m = match l with
   | hd::tl -> live_list_after_ralloc_lemma r v tl m
 
 val live_node_list: l:node_list -> sm:smem -> GTot bool
-let live_node_list l sm = liveRef l sm && live_list (lookupRef l sm) sm
+let live_node_list l sm = refIsLive l sm && live_list (lookupRef l sm) sm
 
 val new_list: unit -> Mem node_list (fun m0 -> True) (fun m0 r m1 -> b2t (live_node_list r m1)) (hide (Set.empty))
 let new_list _ = halloc []
@@ -364,7 +364,7 @@ let rec insert_in_ordered_list n l =
  *)
 assume val mk_node: f:lref int -> n:lref node -> z:node -> o:node -> s:symbol_t -> c:lref string
                     -> PureMem node
-                       (fun sm0 -> liveRef f sm0 /\ liveRef n sm0 /\ liveRef c sm0)
+                       (fun sm0 -> refIsLive f sm0 /\ refIsLive n sm0 /\ refIsLive c sm0)
                        (fun sm0 r -> live_node r sm0)
 
 type live_histogram (h:sstarray node) (sm:smem) =
