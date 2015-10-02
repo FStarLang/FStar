@@ -97,7 +97,6 @@ let rec interpret_com_st c =
     else
       interpret_com_st cf
 
-
 module IFC
 
 (* We model a simple IFC Type system *)
