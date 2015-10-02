@@ -1,13 +1,11 @@
 (*--build-config
     options:--admit_fsi FStar.Set;
-    other-files:set.fsi heap.fst st.fst all.fst string.fst
+    other-files:set.fsi heap.fst st.fst all.fst
 --*)
 
 module While
 
 open FStar.Heap
-open FStar.String
-open FStar.IO
 
 type id = ref int
 
@@ -16,6 +14,14 @@ type binop =
 | Minus
 | Times
 | Max
+
+val interpret_binop : o:binop -> a:int -> b:int -> Tot int
+let interpret_binop o a b =
+  match o with 
+  | Plus  -> a + b
+  | Minus -> a - b
+  | Times -> a * b
+  | Max   -> if a <= b then b else a
 
 type exp =
 | AInt : int -> exp
@@ -28,13 +34,9 @@ let rec interpret_exp h e =
   | AInt i -> i
   | AVar x -> sel h x
   | AOp o e1 e2 -> 
-    let r1 = interpret_exp h e1 in 
-    let r2 = interpret_exp h e2 in 
-    match o with 
-    | Plus  -> r1 + r2
-    | Minus -> r1 - r2
-    | Times -> r1 * r2
-    | Max   -> if r1 <= r2 then r2 else r1
+    let a = interpret_exp h e1 in 
+    let b = interpret_exp h e2 in 
+    interpret_binop o a b
 
 type variant = e:exp{forall h. 0 <= interpret_exp h e}
 
@@ -44,12 +46,12 @@ type com =
 | Assign : var:id -> term:exp -> com
 | Seq    : first:com -> second:com -> com
 | If     : cond:exp -> then_branch:com -> else_branch:com -> com
-| While  : cond:exp -> body:com -> v:variant -> com
+| While  : cond:exp -> body:com -> variant:variant -> com
 
 
 (* Couldn't find a way of making F* accept a mutually recursive version of this *)
 (* Returns Some heap if the variant is correct *)
-val interpret_while: h:heap -> e:exp -> (body:heap -> Tot (option heap)) -> v:variant 
+val interpret_while : h:heap -> e:exp -> (body:heap -> Tot (option heap)) -> v:variant 
   -> Tot (option heap) (decreases (interpret_exp h v))
 let rec interpret_while h e body v =
   if interpret_exp h e = 0 then
@@ -90,27 +92,24 @@ let rec interpret_exp_st e =
   | AInt i -> i
   | AVar x -> !x
   | AOp o e1 e2 -> 
-    let r1 = interpret_exp_st e1 in 
-    let r2 = interpret_exp_st e2 in 
-    match o with 
-    | Plus  -> r1 + r2
-    | Minus -> r1 - r2
-    | Times -> r1 * r2
-    | Max   -> if r1 <= r2 then r2 else r1
-
+    let a = interpret_exp_st e1 in 
+    let b = interpret_exp_st e2 in 
+    interpret_binop o a b
 
 val interpret_com_st : c:com -> ST unit 
   (requires (fun _ -> True))
   (ensures  (fun h _ h' -> 
     Let (interpret_com h c) (fun o ->
-      if is_Some o then equal h' (Some.v o) else True)))
+     is_Some o ==> equal h' (Some.v o))))
 let rec interpret_com_st c = 
   match c with
   | Skip -> ()
   | Assign x e -> x := interpret_exp_st e
   | Seq c1 c2 -> 
-    interpret_com_st c1;
-    interpret_com_st c2
+    begin
+      interpret_com_st c1;
+      interpret_com_st c2
+    end
   | If e ct cf -> 
     if interpret_exp_st e = 0 then
       interpret_com_st cf
