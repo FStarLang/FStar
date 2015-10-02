@@ -2512,6 +2512,16 @@ type p_terminates_in: #ps:prins -> protocol ps -> protocol ps -> nat -> Type =
     -> f:(pi_1:protocol ps -> hs:pstep #ps pi pi_1 -> Tot (p_terminates_in #ps pi_1 pi' n))
     -> p_terminates_in #ps pi pi' (n + 1)
 
+val p_terminates_in_terminal:
+  #ps:prins -> #n:nat -> pi:protocol ps -> pi':protocol ps -> h:p_terminates_in pi pi' n
+  -> Lemma (requires (True)) (ensures (terminal_protocol pi')) (decreases n)
+let rec p_terminates_in_terminal #ps #n pi pi' h = match h with
+  | PTerm_refl _                     -> ()
+  | PTerm_step #ps #pi #pi' #m hns f ->
+    let ExIntro pi_1 hs_1 = hns in
+    let h' = f pi_1 hs_1 in
+    p_terminates_in_terminal #ps #m pi_1 pi' h'
+
 opaque val p_terminating_run_implies_p_terminates_in:
   #ps:prins -> #pi:protocol ps -> #pi':protocol ps -> #n:nat
   -> h:p_terminating_run #ps pi pi' n
