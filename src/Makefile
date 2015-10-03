@@ -62,7 +62,7 @@ else
 RUNTIME = mono
 endif
 
-FSLYDIR := VS/packages/FsLexYacc.6.0.3
+FSLYDIR := VS/packages/FsLexYacc.6.1.0
 FSYACC  := $(RUNTIME) $(FSLYDIR)/bin/fsyacc.exe
 FSLEX   := $(RUNTIME) $(FSLYDIR)/bin/fslex.exe
 
