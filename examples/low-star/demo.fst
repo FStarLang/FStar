@@ -44,7 +44,7 @@ val allocate_buffer:
     (ensures (fun m0 b m1 ->
       (isNonEmpty (st m0)) /\ (isNonEmpty (st m1))
       /\ (allocatedInRegion (reveal (asRef b.content)) (topRegion m0) (topRegion m1) (Seq.create len 0uy))
-      /\ (refLoc (reveal (asRef b.content)) = InStack (topRegionId m0))
+      /\ (regionOf (reveal (asRef b.content)) = InStack (topRegionId m0))
       /\ (topRegionId m0 = topRegionId m1)
       /\ (tail m0 = tail m1)
       /\ (b.start_idx = 0) /\ ( b.length = len)

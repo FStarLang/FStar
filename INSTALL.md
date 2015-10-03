@@ -35,6 +35,11 @@ features and bug fixes.
 
         $ make -C examples
 
+### Homebrew formula for Mac OS X ###
+
+On Macs you can also install the binary using the following Homebrew formula:
+https://github.com/beurdouche/homebrew-fstar
+
 ## Building F* from sources ##
 
 If you have a serious interest in F\* or want to report bugs then we
@@ -52,13 +57,13 @@ special flag. Therefore, the standard build process of F* is as follows:
   3. re-build F* using the OCaml compiler from the code generated at step 2
      (obtaining a faster native binary for F\*).
 
-If you build F* from sources you will also need to get a Z3
+**Note:** If you build F* from sources you will also need to get a Z3
 binary. This is further explained towards the end of this document.
 
-**Alternative:**  If you don't care about efficiency and about the .NET
+**Easier alternative:**  If you don't care about efficiency and about the .NET
 dependency you can stop already after step 1.
 
-**Alternative:**  If you don't want to use F#/.NET/Mono at all you can
+**Easier alternative:**  If you don't want to use F#/.NET/Mono at all you can
 also build F\* directly from the generated OCaml sources.  Therefore, for
 convenience, we keep a (possibly outdated) snapshot of the F\* sources
 extracted to OCaml (the result of step 2) in the repo.  This allows
@@ -175,9 +180,9 @@ special `flexlink` technology for this. See `contrib/CoreCrypto/ml` and
      `opam init` to edit your `~/.bashrc` or `~/.profile`, it is done
      automatically; otherwise, use: `eval $(opam config env)`.
 
-2. Install OCaml Batteries using OPAM:
+2. Install `ocamlfind` and `batteries` using OPAM:
 
-        $ opam install batteries
+        $ opam install ocamlfind batteries
 
 3. Then run the following command:
 

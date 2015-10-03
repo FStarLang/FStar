@@ -21,17 +21,17 @@ match n with
 
 (* val factorialGuardLC :  n:nat -> li:(lref nat)  -> smem -> type *)
 type factorialGuardLC (n:nat) (li : lref nat) (m:smem) =
-  (liveRef li m) && (not ((lookupRef li m) = n))
+  (refIsLive li m) && (not ((lookupRef li m) = n))
 
 val factorialGuard :  n:nat -> li:(lref nat)  -> unit
-  -> whileGuard (fun m -> b2t (liveRef li m))
+  -> whileGuard (fun m -> b2t (refIsLive li m))
                 (factorialGuardLC n li)
 let factorialGuard n li u = not (memread li = n)
 (* the guard of a while loop is not supposed to change the memory*)
 
 
 type  loopInv (li : lref nat) (res : lref nat) (m:smem) =
-  liveRef li m /\ liveRef res m
+  refIsLive li m /\ refIsLive res m
     /\ (lookupRef res m = factorial (lookupRef li m))
     /\ (~ (li = res))
 
@@ -48,8 +48,8 @@ let factorialLoopBody (n:nat) (li:(lref nat)) (res:(lref nat)) u =
   memwrite res ((liv+1) * resv)
  (*  (eunionUnion li res)*)
 val factorialLoop : n:nat -> li:(lref nat) -> res:(lref nat)
-  -> Mem unit (fun m -> mreads li 0 m /\ mreads res 1 m  /\ ~(li=res))
-              (fun m0 _ m1 -> mreads res (factorial n) m1)
+  -> Mem unit (fun m -> contains li 0 m /\ contains res 1 m  /\ ~(li=res))
+              (fun m0 _ m1 -> contains res (factorial n) m1)
               (hide (union (singleton (Ref li)) (singleton (Ref res))))
 let factorialLoop (n:nat) (li:(lref nat)) (res:(lref nat)) =
   scopedWhile
@@ -60,8 +60,8 @@ let factorialLoop (n:nat) (li:(lref nat)) (res:(lref nat)) =
     (factorialLoopBody n li res)
 
 (*val factorialLoop2 : n:nat -> li:(lref nat) -> res:(lref nat)
-  -> Mem unit (fun m -> mreads li 0 m /\ mreads res 1 m  /\ ~(li=res))
-              (fun m0 _ m1 -> mreads res (factorial n) m1)
+  -> Mem unit (fun m -> contains li 0 m /\ contains res 1 m  /\ ~(li=res))
+              (fun m0 _ m1 -> contains res (factorial n) m1)
 let factorialLoop2 (n:nat) (li:(lref nat)) (res:(lref nat)) =
   scopedWhile1
     li

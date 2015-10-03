@@ -78,16 +78,16 @@ val scopedWhile1 :
   -> loopInv:(smem -> Type)
   -> mods:(modset)
   -> bd:(unit -> whileBody
-                      (fun m -> loopInv m /\ liveRef r m)
-                      (fun m -> liveRef r m /\ lc (lookupRef r m))  mods)
-  -> Mem unit ((fun m -> loopInv m /\ liveRef r m))
-              ((fun m0 _ m1 -> loopInv m1 /\ liveRef r m1 /\ ~(lc (lookupRef r m1))))
+                      (fun m -> loopInv m /\ refIsLive r m)
+                      (fun m -> refIsLive r m /\ lc (lookupRef r m))  mods)
+  -> Mem unit ((fun m -> loopInv m /\ refIsLive r m))
+              ((fun m0 _ m1 -> loopInv m1 /\ refIsLive r m1 /\ ~(lc (lookupRef r m1))))
               mods
 let scopedWhile1 'a r lc 'loopInv mods bd =
 (*loop invariant includes the precondition for evaluating the guard*)
   scopedWhile
-    (fun m -> 'loopInv m /\ liveRef r m)
-    (fun m -> liveRef r m /\ (lc (lookupRef r m)))
+    (fun m -> 'loopInv m /\ refIsLive r m)
+    (fun m -> refIsLive r m /\ (lc (lookupRef r m)))
     (fun u -> lc (memread r))
     mods
     bd
@@ -101,16 +101,16 @@ val scopedWhile2 :
   -> loopInv:(smem -> Type)
   -> mods:(modset)
   -> bd:(unit -> whileBody
-                      (fun m -> loopInv m /\ liveRef ra m /\ liveRef rb m)
-                      (fun m -> liveRef ra m /\ liveRef rb m /\ lc (lookupRef ra m) (lookupRef rb m))
+                      (fun m -> loopInv m /\ refIsLive ra m /\ refIsLive rb m)
+                      (fun m -> refIsLive ra m /\ refIsLive rb m /\ lc (lookupRef ra m) (lookupRef rb m))
                       mods)
-  -> Mem unit (requires (fun m -> loopInv m /\ liveRef ra m /\ liveRef rb m))
-              (ensures (fun m0 _ m1 -> loopInv m1 /\ liveRef ra m1 /\ liveRef rb m1 /\ ~(lc (lookupRef ra m1) (lookupRef rb m1)) ))
+  -> Mem unit (requires (fun m -> loopInv m /\ refIsLive ra m /\ refIsLive rb m))
+              (ensures (fun m0 _ m1 -> loopInv m1 /\ refIsLive ra m1 /\ refIsLive rb m1 /\ ~(lc (lookupRef ra m1) (lookupRef rb m1)) ))
               mods
 let scopedWhile2 'a ra rb lc 'loopInv mods bd =
   scopedWhile
-    (fun m -> 'loopInv m /\ liveRef ra m /\ liveRef rb m)
-    (fun m -> liveRef ra m /\ liveRef rb m /\ (lc (lookupRef ra m) (lookupRef rb m))  )
+    (fun m -> 'loopInv m /\ refIsLive ra m /\ refIsLive rb m)
+    (fun m -> refIsLive ra m /\ refIsLive rb m /\ (lc (lookupRef ra m) (lookupRef rb m))  )
     (fun u -> lc (memread ra) (memread rb))
     mods
     bd
@@ -148,15 +148,15 @@ val unscopedWhile1 :
   -> loopInv:(smem -> Type)
   -> mods:(modset)
   -> bd:(unit -> whileBodyUnscoped
-                      (fun m -> loopInv m /\ liveRef r m)
-                      (fun m -> liveRef r m /\ lc (lookupRef r m))  mods)
-  -> Mem unit ((fun m -> loopInv m /\ liveRef r m))
-              ((fun m0 _ m1 -> loopInv m1 /\ liveRef r m1 /\ ~(lc (lookupRef r m1))))
+                      (fun m -> loopInv m /\ refIsLive r m)
+                      (fun m -> refIsLive r m /\ lc (lookupRef r m))  mods)
+  -> Mem unit ((fun m -> loopInv m /\ refIsLive r m))
+              ((fun m0 _ m1 -> loopInv m1 /\ refIsLive r m1 /\ ~(lc (lookupRef r m1))))
               mods
 let unscopedWhile1 'a r lc 'loopInv mods bd =
   unscopedWhile
-    (fun m -> 'loopInv m /\ liveRef r m)
-    (fun m -> liveRef r m /\ (lc (lookupRef r m)))
+    (fun m -> 'loopInv m /\ refIsLive r m)
+    (fun m -> refIsLive r m /\ (lc (lookupRef r m)))
     (fun u -> lc (memread r))
     mods
     bd

@@ -32,8 +32,8 @@ assume val cloneAndPad :
           /\ (liveArr m1 r)
           /\ (glength rcloned m1) = psize ((glength r m0))
           /\ prefixEqual
-                (loopkupRef (reveal (asRef r)) m0)
-                (loopkupRef (reveal (asRef rcloned)) m1)
+                (lookupRef (reveal (asRef r)) m0)
+                (lookupRef (reveal (asRef rcloned)) m1)
                 ((glength r m0)))
         (hide empty)
 
@@ -50,7 +50,7 @@ val processChunk :
     (ensures (fun m0 _ m1 -> (liveArr m1 ch)
               /\ (liveArr m1 acc) /\ ch =!= acc
               /\ 4 = ((glength acc m1))
-              (*/\ loopkupRef  ch m0 = loopkupRef ch m1*)
+              (*/\ lookupRef  ch m0 = lookupRef ch m1*)
               ))
     (eonly acc)
 
@@ -65,7 +65,7 @@ let processChunk ch offset acc =
               /\ (liveArr m acc)
               /\ offset + 16 <= ((glength ch m))
               /\ 4 = ((glength acc m))
-              /\ liveRef li m /\ loopkupRef li m < 65
+              /\ refIsLive li m /\ lookupRef li m < 65
               )
     (eunion (only li) (eonly acc))
     (*allRefs ; why does this not work?*)
@@ -103,7 +103,7 @@ let mainLoop ch u =
     (fun m -> True
               /\ (liveArr m ch)
               /\ (liveArr m acc)
-              /\ liveRef offset m
+              /\ refIsLive offset m
               /\ (glength ch m) = chl
               /\ 4 = ((glength acc m))
               )
@@ -142,8 +142,8 @@ let mD5 ch =
 val mD53 : n:nat
  -> ch:(sstarray word)
  -> WNSC (vector word 4)
-    (fun m -> True /\ liveRef (asRef ch) m)
-    (fun m0 _ m1 -> True /\ liveRef (asRef ch) m1)
+    (fun m -> True /\ refIsLive (asRef ch) m)
+    (fun m0 _ m1 -> True /\ refIsLive (asRef ch) m1)
     (empty)
 
 let mD53 n ch =
