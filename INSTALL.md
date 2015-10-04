@@ -37,8 +37,11 @@ features and bug fixes.
 
 ### Homebrew formula for Mac OS X ###
 
-On Macs you can also install the binary using the following Homebrew formula:
-https://github.com/beurdouche/homebrew-fstar
+On Macs you can also install or build F\* using Homebrew:
+
+        $ brew tap homebrew/science
+
+        $ brew install fstar
 
 ## Building F* from sources ##
 
