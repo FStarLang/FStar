@@ -37,6 +37,8 @@ let bitwiseAnd w1 w2 = (fun n -> ((w1 n) && (w2 n)))
 val bitwiseOr : word -> word -> Tot word
 let bitwiseOr w1 w2 = (fun n -> ((w1 n) || (w2 n)))
 
+val bitwiseXOR3 : word -> word -> word -> Tot word
+let bitwiseXOR3 w1 w2 w3 = bitwiseXOR (bitwiseXOR w1 w2) w3
 
 assume val fromHex : string -> Tot word
 
@@ -67,6 +69,8 @@ let leftshift  sh w =
 val leftrotate : (n:nat{n<bitsize}) -> word -> Tot word
 let leftrotate n w = bitwiseOr (leftshift n w) (rightshift (bitsize - n) w)
 
+val rightrotate : (n:nat{n<bitsize}) -> word -> Tot word
+let rightrotate n w = bitwiseOr (rightshift n w) (leftshift (bitsize - n) w)
 
 val w0 : word
 let w0 x = false
