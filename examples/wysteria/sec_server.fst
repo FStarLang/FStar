@@ -42,7 +42,7 @@ val do_sec_comp: ps:prins -> env_m:en_map{contains_ps ps env_m}
                  -> out_m:out_map{contains_ps ps out_m}
                  -> varname -> exp -> unit -> ML unit
 let do_sec_comp ps env_m out_m x e _ =
-  let en = update_env (compose_envs_m ps env_m) x (V_const C_unit) in
+  let en = update_env (compose_envs_m ps env_m) x V_unit in
   let conf = Conf Target (Mode Sec ps) [] en (T_exp e) (hide []) in
   let c_opt = step_star conf in
   if is_Some c_opt && is_terminal (Some.v c_opt) then

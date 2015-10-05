@@ -21,9 +21,10 @@ type const =
   | C_eprins: c:eprins -> const
   | C_prins : c:prins  -> const
 
-  | C_unit : const
-  | C_nat  : c:nat  -> const
-  | C_bool : c:bool -> const
+  | C_unit  : c:unit -> const
+  | C_bool  : c:bool -> const
+
+  | C_opaque: c:'a -> const
 
 type exp' =
   | E_aspar     : ps:exp -> e:exp -> exp'
@@ -42,10 +43,7 @@ type exp' =
   | E_empabs    : x:varname -> e:exp -> exp'
   | E_app       : e1:exp -> e2:exp -> exp'
   | E_ffi       : fn:string -> args:list exp -> exp'
-  | E_match     : e:exp -> pats:list (pat * exp) -> exp'
-
-and pat =
-  | P_const: c:const -> pat
+  | E_cond      : e:exp -> e1:exp -> e2:exp -> exp'
 
 and exp =
   | Exp: e:exp' -> info:option other_info -> exp
@@ -54,17 +52,8 @@ type canbox = | Can_b | Cannot_b
 
 type canwire = | Can_w | Cannot_w
 
-(*val canbox_const: c:const -> Tot canbox
-let canbox_const c = match c with
-  | C_prin _
-  | C_prins _ -> Cannot_b
-  
-  | C_unit
-  | C_nat _
-  | C_bool _  -> Can_b*)
-
 type v_meta =
-  | Meta: vps:eprins -> cb:canbox -> wps:eprins -> cw:canwire -> v_meta
+  | Meta: bps:eprins -> cb:canbox -> wps:eprins -> cw:canwire -> v_meta
 
 val is_meta_wireable: meta:v_meta -> Tot bool
 let is_meta_wireable = function
@@ -77,7 +66,17 @@ let is_meta_boxable ps = function
   | _                     -> false
 
 type value: v_meta -> Type =
-  | V_const   : c:const -> value (Meta empty Can_b empty Can_w)
+  | V_prin    : c:prin -> value (Meta empty Can_b empty Can_w)
+  | V_eprins  : c:eprins -> value (Meta empty Can_b empty Can_w)
+  | V_prins   : c:prins -> value (Meta empty Can_b empty Can_w)
+
+  | V_unit    : value (Meta empty Can_b empty Can_w)
+  | V_bool    : c:bool -> value (Meta empty Can_b empty Can_w)
+
+  | V_opaque  : v:'a -> meta:v_meta
+                -> slice_fn:(prin -> 'a -> Tot 'a) -> compose_fn:('a -> 'a -> Tot 'a)
+		-> slice_fn_sps:(prins -> 'a -> Tot 'a)
+		-> value meta
 
   | V_box     : #meta:v_meta -> ps:prins -> v:value meta{is_meta_boxable ps meta}
                 -> value (Meta ps Can_b (Meta.wps meta) Cannot_w)
@@ -133,7 +132,7 @@ type redex =
   | R_app       : #meta1:v_meta -> #meta2:v_meta -> v1:value meta1 -> v2:value meta2
                   -> redex
   | R_ffi       : fn:string -> args:list dvalue -> redex
-  | R_match     : #meta:v_meta -> v:value meta -> pats:list (pat * exp) -> redex
+  | R_cond      : #meta:v_meta -> v:value meta -> e1:exp -> e2:exp -> redex
 
 val empty_env: env
 let empty_env = fun _ -> None
@@ -168,7 +167,7 @@ type frame' =
   | F_app_e1       : e2:exp -> frame'
   | F_app_e2       : #meta:v_meta -> v:value meta -> frame'
   | F_ffi          : fn:string -> es:list exp -> vs:list dvalue -> frame'
-  | F_match        : pats:list (pat * exp) -> frame'
+  | F_cond         : e1:exp -> e2:exp -> frame'
 
 type frame =
   | Frame: m:mode -> en:env -> f:frame'-> tr:erased trace -> frame
@@ -272,24 +271,24 @@ let is_value c = is_T_val (t_of_conf c)
 
 val is_value_ps: c:config -> Tot bool
 let is_value_ps c = match c with
-  | Conf _ _ _ _ (T_val (V_const (C_prins _))) _ -> true
-  | _                                            -> false
+  | Conf _ _ _ _ (T_val (V_prins _)) _ -> true
+  | _                                  -> false
 
 val is_value_p: c:config -> Tot bool
 let is_value_p c = match c with
-  | Conf _ _ _ _ (T_val (V_const (C_prin _))) _ -> true
-  | _                                           -> false
+  | Conf _ _ _ _ (T_val (V_prin _)) _ -> true
+  | _                                 -> false
 
 val c_value: c:config{is_value c} -> Tot dvalue
 let c_value (Conf _ _ _ _ (T_val #meta v) _) = D_v meta v
 
 val c_value_ps: c:config{is_value_ps c} -> Tot prins
 let c_value_ps c = match c with
-  | Conf _ _ _ _ (T_val (V_const (C_prins ps))) _ -> ps
+  | Conf _ _ _ _ (T_val (V_prins ps)) _ -> ps
 
 val c_value_p: c:config{is_value_p c} -> Tot prin
 let c_value_p c = match c with
-  | Conf _ _ _ _ (T_val (V_const (C_prin p))) _ -> p
+  | Conf _ _ _ _ (T_val (V_prin p)) _ -> p
 
 (* TODO: FIXME: workaround for projectors *)
 val m_of_conf: config-> Tot mode

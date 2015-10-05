@@ -27,15 +27,15 @@ else
   let const_meta = Meta OrdSet.empty Can_b OrdSet.empty Can_w in
   let init_env =
     fun x ->
-      if x = "alice" then Some (D_v const_meta (V_const (C_prin Alice)))
-      else if x = "bob" then Some (D_v const_meta (V_const (C_prin Bob)))
-      else if x = "charlie" then Some (D_v const_meta (V_const (C_prin Charlie)))
-      else if x = "empty" then Some (D_v const_meta (V_const (C_eprins OrdSet.empty)))
+      if x = "alice" then Some (D_v const_meta (V_prin Alice))
+      else if x = "bob" then Some (D_v const_meta (V_prin Bob))
+      else if x = "charlie" then Some (D_v const_meta (V_prin Charlie))
+      else if x = "empty" then Some (D_v const_meta (V_eprins OrdSet.empty))
       else None
   in
   let pname = me () in
   match init_env pname with
-    | Some (D_v _ (V_const (C_prin p))) ->
+    | Some (D_v _ (V_prin p)) ->
       let c = Conf Target (Mode Par (OrdSet.singleton p)) [] init_env (T_exp (get_smc ())) (hide []) in
       let c' = tstep_star c in
       if is_Some c' then
