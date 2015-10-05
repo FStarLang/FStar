@@ -27,7 +27,7 @@ val atIndex : #a:Type -> #n:nat -> (vector a n)
 let atIndex 'a #n f index  =
    f index
 
-(* When F* complains that effect ALL and StSTATE cannot be combined,
+(* When F* complains that effect ALL and RSTATE cannot be combined,
   see whether you missed a Tot somewhere.
   Is there a way to make Tot the default effect, instead of ALL
 *)

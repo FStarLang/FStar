@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set --admit_fsi FStar.Seq --admit_fsi FStar.Ghost --admit_fsi RSTArray;
-    other-files:ext.fst set.fsi seq.fsi heap.fst st.fst all.fst list.fst stack.fst listset.fst ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst sstCombinators.fst constr.fst word.fst array.fsi arrayAlgos.fst
+    other-files:ext.fst set.fsi seq.fsi heap.fst st.fst all.fst list.fst stack.fst listset.fst ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst rstWhile.fst constr.fst word.fst array.fsi arrayAlgos.fst
   --*)
 
 module PrettyPrinter

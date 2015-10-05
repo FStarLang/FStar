@@ -14,12 +14,13 @@ open Regions
 open Lref
 
 kind Pre  = smem -> Type
+(* JP: This is the same thing as [STPost_h smem a]. *)
 kind Post (a:Type) = a -> smem -> Type
 
-new_effect StSTATE = STATE_h smem
+new_effect RSTATE = STATE_h smem
 
 effect RST (a:Type) (pre:Pre) (post: (smem -> Post a)) =
-  StSTATE a
+  RSTATE a
     (fun (p:Post a) (h:smem) -> pre h /\ (forall a h1. (pre h /\ post h a h1) ==> p a h1)) (* WP *)
     (fun (p:Post a) (h:smem) -> (forall a h1. (pre h /\ post h a h1) ==> p a h1)) (* WLP *)
 
@@ -32,7 +33,7 @@ effect RST (a:Type) (pre:Pre) (post: (smem -> Post a)) =
 assume val halloc: #a:Type -> init:a ->
   RST (lref a)
     (fun m -> True)
-    (fun m0 r m1 -> allocatedInRegion r (hp m0) (hp m1) init /\ (snd m0 = snd m1) /\ regionOf r == InHeap)
+    (fun m0 r m1 -> allocatedInRegion r (hp m0) (hp m1) init /\ snd m0 = snd m1 /\ regionOf r = InHeap)
 
 (* Allocate an [lref] in the top-most region. This is a new, [ref]-like function. *)
 assume val ralloc:  #a:Type -> init:a -> RST (lref a)
@@ -72,10 +73,8 @@ assume val popRegion:  unit -> RST unit
 
 
 (** Injection of the [DIV] effect into the [RST] effect, mostly copied from prims.fst *)
-kind RSTPost (a:Type) = STPost_h smem a
-
 sub_effect
-  DIV  ~> StSTATE = fun (a:Type) (wp:PureWP a) (p : RSTPost a) (h:smem)
+  DIV  ~> RSTATE = fun (a:Type) (wp:PureWP a) (p: Post a) (h:smem)
                 -> wp (fun a -> p a h)
 
 
@@ -83,7 +82,7 @@ sub_effect
 
 (* Effect of a computation that leaves the region stack's structure unchanged
    (i.e. no push or pop) but may read or modify any live reference in [mod]. *)
-effect Mem (a:Type) (pre: smem -> Type) (post: (smem -> RSTPost a)) (mod: Lref.modset) =
+effect Mem (a:Type) (pre: smem -> Type) (post: (smem -> Post a)) (mod: Lref.modset) =
         RST a pre (fun m0 a m1 -> post m0 a m1 /\ rids m0 = rids m1 /\ canModify m0 m1 mod)
 
 (* Effect of a computation that leaves the region stack's structure unchanged
@@ -93,9 +92,9 @@ effect PureMem (a:Type) (pre:smem -> Type) (post: smem -> a -> Type) =
 
 (* Equivalent of the [Heap.get] function that allows one to talk about the
    [smem] in specifications. *)
-assume val get : unit -> PureMem (FStar.Ghost.erased smem)
+assume val get : unit -> PureMem (Ghost.erased smem)
       (requires (fun m -> true))
-      (ensures (fun m v -> FStar.Ghost.reveal v = m))
+      (ensures (fun m v -> Ghost.reveal v = m))
 
 
 (** [lalloc] is the final combinator -- notice that it is in the effect

@@ -43,7 +43,7 @@ let scopedID4 (n:nat) =
 assume val as_RST: #a:Type -> #b:Type
          -> #wp:(a -> (b -> smem -> Type) -> smem -> Type)
          -> #wlp:(a -> (b -> smem -> Type) -> smem -> Type)
-         -> =f:(x:a -> StSTATE b (wp x) (wlp x))
+         -> =f:(x:a -> RSTATE b (wp x) (wlp x))
          -> Tot (x:a -> RST b
                             (wp x (fun y s -> True))
                             (fun s0 y s1 -> wlp x (fun y' s1' -> y=y' /\ s1=s1') s0))

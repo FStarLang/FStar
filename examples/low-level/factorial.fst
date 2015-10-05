@@ -1,5 +1,5 @@
 (*--build-config
-other-files:ext.fst set.fsi set.fst heap.fst st.fst all.fst list.fst stack.fst listset.fst ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst sstCombinators.fst
+other-files:ext.fst set.fsi set.fst heap.fst st.fst all.fst list.fst stack.fst listset.fst ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst rstWhile.fst
   --*)
 module Factorial
 open RSTCombinators
