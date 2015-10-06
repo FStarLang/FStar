@@ -480,7 +480,7 @@ let allocateInTopR r init m0 =
    definition of [refIsLive], then we would get the semantics above. *)
 val locIsLive : #a:Type -> located a -> smem -> Tot bool
 let locIsLive v m =
-  match (regionOf v) with
+  match regionOf v with
   | InHeap -> true
   | InStack id -> memT id (rids m)
 

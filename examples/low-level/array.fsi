@@ -1,11 +1,14 @@
 (*--build-config
-    options:--admit_fsi FStar.Set --z3timeout 10;
+    options:--admit_fsi FStar.Set --admit_fsi FStar.Seq --z3timeout 10;
     other-files:ext.fst set.fsi heap.fst st.fst all.fst list.fst  stack.fst listset.fst
       ghost.fst located.fst lref.fst regions.fst rst.fst rstWhile.fst constr.fst word.fst seq.fsi
   --*)
 
 
 module RSTArray
+
+open FStar.Seq
+open FStar.Ghost
 
 open RST
 open RSTWhile
@@ -14,15 +17,11 @@ open Lref
 open Located
 open Regions
 
-(*to make vector opaque, just include vector.fsi*)
-(*val testf : vector nat 10 -> nat
-let testf v = v 1*)
-
 type sstarray : Type -> Type
-open FStar.Ghost
+
 
 (*making it GTot causes a strange error in the postcondition of readIndex *)
-val asRef : #a:Type  -> va:(sstarray a) -> Tot (erased (lref (seq a)))
+val asRef : #a:Type  -> va:sstarray a -> Tot (erased (lref (Seq.seq a)))
 
 
 val length: #a:Type -> x:sstarray a -> PureMem nat
@@ -58,13 +57,13 @@ val writeIndex :  #a:Type -> r:((sstarray a))
 (*create an sstarray on stack*)
 val screateSeq :  #a:Type -> init:(seq a)
   -> Mem (sstarray a)
-        (requires  (fun m -> (isNonEmpty (st m))))
+        (requires  (fun m -> (Stack.isNonEmpty (st m))))
         (ensures (fun m0 vv m1->
-            (isNonEmpty (st m0)) /\ (isNonEmpty (st m1))
+            (Stack.isNonEmpty (st m0)) /\ (Stack.isNonEmpty (st m1))
             /\ allocatedInRegion (reveal (asRef vv)) (topRegion m0) (topRegion m1) init
             /\ regionOf (reveal (asRef vv)) = InStack (topRegionId m0) /\ (topRegionId m0 = topRegionId m1)
             /\ tail m0 = tail m1))
-        (hide empty)
+        (hide Set.empty)
 
 (*create an sstarray on the heap*)
 //TODO: we should remove this one; currently used only in MD5 for some experiments
@@ -74,17 +73,17 @@ val hcreateSeq :  #a:Type -> init:(seq a)
         (ensures (fun m0 v m1->
             allocatedInRegion (reveal (asRef v)) (hp m0) (hp m1) init
             /\ regionOf (reveal (asRef v)) = InHeap /\ (snd m0 = snd m1)))
-        (hide empty)
+        (hide Set.empty)
 
 val screate :  #a:Type -> len:nat -> init:a
   -> Mem (sstarray a)
-        (requires  (fun m -> (isNonEmpty (st m))))
+        (requires  (fun m -> (Stack.isNonEmpty (st m))))
         (ensures (fun m0 vv m1->
-            (isNonEmpty (st m0)) /\ (isNonEmpty (st m1))
+            (Stack.isNonEmpty (st m0)) /\ (Stack.isNonEmpty (st m1))
             /\ allocatedInRegion (reveal (asRef vv)) (topRegion m0) (topRegion m1) (Seq.create len init)
             /\ regionOf (reveal (asRef vv)) = InStack (topRegionId m0) /\ (topRegionId m0 = topRegionId m1)
             /\ tail m0 = tail m1))
-        (hide empty)
+        (hide Set.empty)
 
 val hcreate :  #a:Type -> len:nat -> init:a
   -> Mem (sstarray a)
@@ -92,7 +91,7 @@ val hcreate :  #a:Type -> len:nat -> init:a
         (ensures (fun m0 v m1->
             allocatedInRegion (reveal (asRef v)) (hp m0) (hp m1) (Seq.create len init)
             /\ regionOf (reveal (asRef v)) = InHeap /\ (snd m0 = snd m1)))
-        (hide empty)
+        (hide Set.empty)
 
 
 (* This is convenient. It need not be a Primitive, but can be implemented.

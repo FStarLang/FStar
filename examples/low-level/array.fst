@@ -6,7 +6,7 @@
 (*rename mvector to vector. The word sstarray is used for memory-stored vectors *)
 module RSTArray
 open RSTWhile
-open StackAndHeap  open Lref  open Located
+open Regions  open Lref  open Located
 open RST
 open MachineWord
 open FStar.Heap
