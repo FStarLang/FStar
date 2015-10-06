@@ -4,7 +4,7 @@
   --*)
 
 module SieveFun
-open RSTCombinators
+open RSTWhile
 open StackAndHeap
 open RST
 open Heap

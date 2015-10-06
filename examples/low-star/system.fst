@@ -9,7 +9,7 @@ module CSystem
 open FStar.Set
 open FStar.Heap
 open RST
-open SSTCombinators
+open RSTWhile
 open Regions
 open Lref
 open Located

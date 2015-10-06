@@ -6,7 +6,7 @@
 
 module Demo
 
-open SSTCombinators
+open RSTWhile
 open RST
 open FStar.Heap
 open Lref  open Located

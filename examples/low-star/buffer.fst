@@ -9,7 +9,7 @@ module CBuffer
 open FStar.Set
 open FStar.Heap
 open SST
-open SSTCombinators
+open RSTWhile
 open Regions
 open Lref
 open Located

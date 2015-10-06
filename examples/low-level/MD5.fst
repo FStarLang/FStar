@@ -9,7 +9,7 @@
   Is there a principle behind its design? or just random convolutery?
   *)
 module MD5
-open RSTCombinators
+open RSTWhile
 open RST
 open MVector
 open Set

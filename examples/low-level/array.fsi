@@ -1,20 +1,18 @@
 (*--build-config
     options:--admit_fsi FStar.Set --z3timeout 10;
     other-files:ext.fst set.fsi heap.fst st.fst all.fst list.fst  stack.fst listset.fst
-    ghost.fst located.fst lref.fst regions.fst rst.fst sstCombinators.fst constr.fst word.fst seq.fsi seq.fst
+      ghost.fst located.fst lref.fst regions.fst rst.fst rstWhile.fst constr.fst word.fst seq.fsi
   --*)
 
 
 module RSTArray
-open SSTCombinators
+
 open RST
+open RSTWhile
 open MachineWord
-open FStar.Heap
-open Lref  open Located
-open FStar.Set
-open Stack
+open Lref
+open Located
 open Regions
-open FStar.Seq
 
 (*to make vector opaque, just include vector.fsi*)
 (*val testf : vector nat 10 -> nat

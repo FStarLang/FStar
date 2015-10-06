@@ -5,7 +5,7 @@
   --*)
 
 module ArrayAlgos
-open RSTCombinators
+open RSTWhile
 open StackAndHeap
 open RST
 open MVector

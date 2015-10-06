@@ -4,7 +4,7 @@
       listset.fst ghost.fst located.fst lref.fst regions.fst rst.fst
   --*)
 
-module RSTCombinators
+module RSTWhile
 
 open RST
 open Lref

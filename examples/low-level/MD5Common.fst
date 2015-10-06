@@ -9,7 +9,7 @@
   Is there a principle behind its design? or just random convolutery?
   *)
 module MD5Common
-open RSTCombinators
+open RSTWhile
 open StackAndHeap  open Lref  open Located
 open RST
 open MVector

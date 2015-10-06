@@ -6,7 +6,7 @@
 
 (*this file is not being maintained anymore*)
 module MD5SubArray
-open RSTCombinators
+open RSTWhile
 open StackAndHeap  open Lref  open Located
 open RST
 open MVector
