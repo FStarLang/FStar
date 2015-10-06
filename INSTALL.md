@@ -37,11 +37,15 @@ features and bug fixes.
 
 ### Homebrew formula for Mac OS X ###
 
-On Macs you can also install or build F\* using Homebrew:
+On Macs you can also build and install the latest F\* release using Homebrew:
 
         $ brew tap homebrew/science
-
         $ brew install fstar
+
+For building and installing the latest F\* sources from GitHub (the master branch)
+instead of the latest release you can do:
+
+        $ brew --HEAD install fstar
 
 ## Building F* from sources ##
 
