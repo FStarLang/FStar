@@ -9,11 +9,14 @@ open FStar.Constructive
 val hide0_hide1_smt : unit -> Lemma (ensures (~(hide 0 = hide 1)))
 let hide0_hide1_smt () = ()
 
-assume val neq01 : ceq 0 1 -> Tot cfalse
-// let neq01 h = let (Refl _) = h in 42 -- need empty pattern maching (#70) 
+val false_elim : u:unit{False} -> Tot 'a
+let false_elim () = ()
+
+val neq01 : ceq 0 1 -> Tot cfalse
+let neq01 h = false_elim ()
 
 val reveal_hide : #a:Type -> x:a -> GTot (ceq (reveal (hide x)) x)
-let reveal_hide (a:Type) x = Refl (reveal (hide x))
+let reveal_hide (a:Type) x = Refl 
 
 val hide0_hide1_constr : ceq (hide 0) (hide 1) -> GTot cfalse
 let hide0_hide1_constr h =

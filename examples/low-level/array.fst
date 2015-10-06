@@ -4,10 +4,10 @@
   --*)
 
 (*rename mvector to vector. The word sstarray is used for memory-stored vectors *)
-module SSTArray
-open SSTCombinators
+module RSTArray
+open RSTCombinators
 open StackAndHeap  open Lref  open Located
-open SST
+open RST
 open MachineWord
 open FStar.Heap
 open Stack
@@ -32,11 +32,11 @@ let writeIndex 'a r index newV =
   let rv = (memread (r) ) in
   memwrite (r) (Seq.upd rv index newV)
 
-let screateSeq init = (salloc init)
+let screateSeq init = (ralloc init)
 
 let hcreateSeq init = (halloc init)
 
-let screate len init = (salloc (Seq.create len init))
+let screate len init = (ralloc (Seq.create len init))
 
 let hcreate len init = (halloc (Seq.create len init))
 

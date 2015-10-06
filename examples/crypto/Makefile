@@ -88,16 +88,18 @@ RPC.ml: sha1.fst mac.fst formatting.fst rpc.fst
 					--codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml
 
 OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_HOME)/contrib/Platform/ml $(FSTAR_HOME)/contrib/CoreCrypto/ml $(FSTAR_HOME)/lib/ml)
-OCAMLC=ocamlfind ocamlopt -cc "$(CC)" -cclib -L$(LIB) -cclib -lcrypto -o rpc.exe -package batteries -linkpkg -g -thread $(OCAML_INCLUDE_PATHS)
+OCAMLC=ocamlfind ocamlopt -cc "$(CC)" -cclib -L$(LIB) -cclib -lcrypto -package batteries -linkpkg -g -thread
 SUPPORT_LIBS=$(addprefix $(FSTAR_HOME)/lib/ml/, prims.ml FStar_ST.ml FStar_All.ml FStar_List.ml FStar_String.ml FStar_IO.ml)
 CONTRIB_LIBS=$(addprefix $(FSTAR_HOME)/contrib/, Platform/ml/platform.cmx CoreCrypto/ml/CoreCrypto.cmxa)
 rpc.exe: RPC.ml
-	$(OCAMLC) $(SUPPORT_LIBS) $(CONTRIB_LIBS) FStar_Seq.ml FStar_SeqProperties.ml SHA1.ml MAC.ml Formatting.ml RPC.ml
+	make -C $(FSTAR_HOME)/contrib/
+	$(OCAMLC) -o $@ $(OCAML_INCLUDE_PATHS) $(SUPPORT_LIBS) $(CONTRIB_LIBS) FStar_Seq.ml FStar_SeqProperties.ml SHA1.ml MAC.ml Formatting.ml RPC.ml
 
 rpc-test: rpc.exe
 	./rpc.exe
 
 cnt-protocol: cnt-format.fst mac.fst sha1.fst cnt-protocol.fst
+	make -C $(FSTAR_HOME)/contrib/
 	$(FSTAR) --z3timeout 10 --admit_fsi FStar.Seq --admit_fsi FStar.IO --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
 	  --verify_module CntFormat --verify_module SHA1 --verify_module MAC --verify_module CntProtocol \
           $(addprefix $(FSTAR_HOME)/lib/, ext.fst classical.fst \
@@ -121,8 +123,11 @@ CntProtocol.ml: cnt-format.fst mac.fst sha1.fst cnt-protocol.fst
 	  $(FSTAR_HOME)/contrib/CoreCrypto/fst/CoreCrypto.fst \
 	  cnt-format.fst sha1.fst mac.fst cnt-protocol.fst --codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml
 
-CntProtocol.exe: CntProtocol.ml
-	$(OCAMLC) $(SUPPORT_LIBS) $(CONTRIB_LIBS) FStar_Seq.ml FStar_SeqProperties.ml SHA1.ml MAC.ml CntFormat.ml CntProtocol.ml
+cnt-protocol.exe: CntProtocol.ml
+	$(OCAMLC) -o $@ $(OCAML_INCLUDE_PATHS) $(SUPPORT_LIBS) $(CONTRIB_LIBS) FStar_Seq.ml ../../lib/ml/FStar_Set.ml FStar_SeqProperties.ml SHA1.ml MAC.ml CntFormat.ml CntProtocol.ml
+
+cnt-test: cnt-protocol.exe
+	./cnt-protocol.exe
 
 clean:
 	rm -fr rpc *.ml *.cmi *.cmx *.o *.exe *~

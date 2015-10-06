@@ -1,7 +1,6 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Seq;
-    variables:LIB=../../../lib;
-    other-files:$LIB/classical.fst $LIB/ext.fst $LIB/set.fsi $LIB/seq.fsi $LIB/seqproperties.fst
+    options:--admit_fsi FStar.Set --admit_fsi FStar.Seq;
+    other-files: classical.fst ext.fst set.fsi heap.fst st.fst all.fst seq.fsi seqproperties.fst
   --*)
 
 module Platform.Bytes
@@ -93,13 +92,32 @@ val createBytes : nat -> byte -> Tot bytes
 let createBytes l b = Seq.create l b
 
 (*@ assume val equalBytes : (b0:bytes -> (b1:bytes -> (r:bool){r = True /\ B (b0) = B (b1) \/ r = False /\ B (b0) <> B (b1)})) @*)
-assume val equalBytes : bytes -> bytes -> Tot bool
+assume val equalBytes : b1:bytes -> b2:bytes -> Tot (b:bool{b = (b1=b2)})
 (*@ assume val xor : (bytes -> (bytes -> (nb:nat -> (b3:bytes){Length (b3) = nb}))) @*)
 assume val xor : bytes -> bytes -> nat -> Tot bytes
 
 val split: b:bytes -> n:nat{n <= Seq.length b} -> Tot (x:(bytes * bytes) {Seq.length (fst (x))= n /\ Seq.length (snd (x)) == (Seq.length b) - n }) //(lbytes n * lbytes (length b - n))
 let split b n =
   SeqProperties.split b n
+
+val lemma_split : s:bytes -> i:nat{(0 <= i /\ i <= length s)} -> Lemma
+  (ensures ((fst (split s i)) @| (snd (split s i)) = s))
+let lemma_split s i =
+  cut (Seq.Eq ((fst (split s i)) @| (snd (split s i)))  s)
+
+val split_eq: s:bytes -> i:nat{(0 <= i /\ i <= length s)} -> Pure
+  (x:(bytes * bytes){length (fst x) = i && length (snd x) = length s - i})
+  (requires True)
+  (ensures (fun x -> ((fst x) @| (snd x) = s)))
+let split_eq s i =
+  let x = split s i in
+  lemma_split s i;
+  x
+
+val lemma_append_inj: s1:bytes -> s2:bytes -> t1:bytes -> t2:bytes {Seq.length s1 = Seq.length t1 \/ Seq.length s2 = Seq.length t2} ->
+  Lemma (requires (Seq.Eq (Seq.append s1 s2) (Seq.append t1 t2)))
+        (ensures (Seq.Eq s1 t1 /\ Seq.Eq s2 t2))
+let lemma_append_inj s1 s2 t1 t2 = admit() (* CH: this used to fail *)
 
 (*@ assume val split2 : (b:bytes -> (i:nat -> ((j:nat){C_pr_GreaterThanOrEqual(Length (b), C_bop_Addition (i, j))} -> (b1:bytes * b2:bytes * b3:bytes){Length (b1) = i /\ Length (b2) = j /\ B (b) = C_bop_ArrayAppend (B (b1), C_bop_ArrayAppend (B (b2), B (b3)))}))) @*)
 assume val split2 : b:bytes -> n1:nat{n1 <= Seq.length b} -> n2:nat{n1 + n2 <= Seq.length b} -> Tot (lbytes n1 * lbytes n2 * lbytes (length b - n1 - n2))

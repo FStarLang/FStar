@@ -9,8 +9,8 @@
   Is there a principle behind its design? or just random convolutery?
   *)
 module MD5
-open SSTCombinators
-open SST
+open RSTCombinators
+open RST
 open MVector
 open Set
 open MachineWord
@@ -18,7 +18,7 @@ open MD5Common
 open StackAndHeap
 open Lref  open Located
 open Seq
-open SSTArray
+open RSTArray
 open ArrayAlgos
 open Ghost
 
@@ -32,8 +32,8 @@ assume val cloneAndPad :
           /\ (liveArr m1 r)
           /\ (glength rcloned m1) = psize ((glength r m0))
           /\ prefixEqual
-                (loopkupRef (reveal (asRef r)) m0)
-                (loopkupRef (reveal (asRef rcloned)) m1)
+                (lookupRef (reveal (asRef r)) m0)
+                (lookupRef (reveal (asRef rcloned)) m1)
                 ((glength r m0)))
         (hide empty)
 
@@ -50,13 +50,13 @@ val processChunk :
     (ensures (fun m0 _ m1 -> (liveArr m1 ch)
               /\ (liveArr m1 acc) /\ ch =!= acc
               /\ 4 = ((glength acc m1))
-              (*/\ loopkupRef  ch m0 = loopkupRef ch m1*)
+              (*/\ lookupRef  ch m0 = lookupRef ch m1*)
               ))
     (eonly acc)
 
 
 let processChunk ch offset acc =
-  let li = salloc #nat 0 in
+  let li = ralloc #nat 0 in
   scopedWhile1
     li
     (fun liv -> liv < 64)
@@ -65,7 +65,7 @@ let processChunk ch offset acc =
               /\ (liveArr m acc)
               /\ offset + 16 <= ((glength ch m))
               /\ 4 = ((glength acc m))
-              /\ liveRef li m /\ loopkupRef li m < 65
+              /\ refIsLive li m /\ lookupRef li m < 65
               )
     (eunion (only li) (eonly acc))
     (*allRefs ; why does this not work?*)
@@ -94,16 +94,16 @@ val mainLoop :
     (hide empty)
 
 let mainLoop ch u =
-  let offset = salloc #nat 0 in
+  let offset = ralloc #nat 0 in
   let acc =  screateSeq initAcc in
-  let chl = SSTArray.length ch in
+  let chl = RSTArray.length ch in
   scopedWhile1
     offset
     (fun offsetv-> offsetv +16 <= chl)
     (fun m -> True
               /\ (liveArr m ch)
               /\ (liveArr m acc)
-              /\ liveRef offset m
+              /\ refIsLive offset m
               /\ (glength ch m) = chl
               /\ 4 = ((glength acc m))
               )
@@ -125,7 +125,7 @@ val mD5 :
     (hide empty)
 
 let mD5 ch =
-  let chl = SSTArray.length ch in
+  let chl = RSTArray.length ch in
   let z:nat =0 in
   let clonedCh = screate  (psize chl) w0 in
   cloneAndPad ch clonedCh;
@@ -142,8 +142,8 @@ let mD5 ch =
 val mD53 : n:nat
  -> ch:(sstarray word)
  -> WNSC (vector word 4)
-    (fun m -> True /\ liveRef (asRef ch) m)
-    (fun m0 _ m1 -> True /\ liveRef (asRef ch) m1)
+    (fun m -> True /\ refIsLive (asRef ch) m)
+    (fun m0 _ m1 -> True /\ refIsLive (asRef ch) m1)
     (empty)
 
 let mD53 n ch =
@@ -163,9 +163,9 @@ val mD52 : n:nat
 let mD52 n ch =
   let clonedCh = screate (psize n) w0 in
   cloneAndPad ch clonedCh;
-    pushStackFrame ();
+    pushRegion ();
       let mdd5 = mainLoop clonedCh () in
-    popStackFrame (); mdd5
+    popRegion (); mdd5
 
 
 (*can we run this program and compare it agains standard implementations?

@@ -1,12 +1,14 @@
 (*--build-config
-variables:MATHS=../maths;
-other-files:ext.fst set.fsi set.fst heap.fst st.fst all.fst list.fst stack.fst listset.fst ghost.fst located.fst
+    options:--admit_fsi FStar.List --admit_fsi FStar.Set;
+    other-files:set.fsi ext.fst heap.fst st.fst all.fst list.fsi ghost.fst located.fst
   --*)
 
-
 module Lref
+
+(** A series of lemmas about the heap and our lref type. *)
 open Located
 open FStar.Ghost
+open FStar.Set
 
 type lref (a:Type) : Type = located (ref a)
 
@@ -15,8 +17,6 @@ type heap = erased heapAux
 //TODO
 //Would be good to make heap polymorphic in the reference type
 //so that we can just derive this by instantiation
-
-open FStar.Set
 
 type aref =
   | Ref : #a:Type -> r:lref a -> aref

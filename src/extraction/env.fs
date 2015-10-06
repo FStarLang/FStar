@@ -59,7 +59,7 @@ match  t with
 | _ ->
     if t = ml_unit_ty then true
     else match t with
-        | MLTY_Named (_, (["Ghost"], "erased")) -> true
+        | MLTY_Named (_, (["FStar"; "Ghost"], "erased")) -> true
         | _ -> false // this function is used by another function which does delta unfolding
 
 (* \mathbb{T} type in the thesis, to be used when OCaml is not expressive enough for the source type *)

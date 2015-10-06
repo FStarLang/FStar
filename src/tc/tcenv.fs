@@ -329,21 +329,22 @@ let lookup_bvar env (bv:bvvar) =
     | None -> raise (Error(variable_not_found bv.v, Util.range_of_bvd bv.v))
     | Some t -> t
 
-let lookup_qname env (lid:lident) : option<either<typ, sigelt>>  =
-  let in_cur_mod (l:lident) = (* TODO: need a more efficient namespace check! *)
+let in_cur_mod env (l:lident) = (* TODO: need a more efficient namespace check! *)
     let cur = current_module env in
     if l.nsstr = cur.str then true (* fast case; works for everything except records *)
     else if Util.starts_with l.nsstr cur.str
     then let lns = l.ns@[l.ident] in
-         let cur = cur.ns@[cur.ident] in
-         let rec aux c l = match c, l with
-          | [], _ -> true
-          | _, [] -> false
-          | hd::tl, hd'::tl' when (hd.idText=hd'.idText) -> aux tl tl'
-          | _ -> false in
-         aux cur lns
-    else false in
-  let cur_mod = in_cur_mod lid in
+        let cur = cur.ns@[cur.ident] in
+        let rec aux c l = match c, l with
+        | [], _ -> true
+        | _, [] -> false
+        | hd::tl, hd'::tl' when (hd.idText=hd'.idText) -> aux tl tl'
+        | _ -> false in
+        aux cur lns
+    else false 
+
+let lookup_qname env (lid:lident) : option<either<typ, sigelt>>  =
+  let cur_mod = in_cur_mod env lid in
   let found = if cur_mod
               then Util.find_map env.gamma (function
                 | Binding_lid(l,t) -> if lid_equals lid l then Some (Inl t) else None
@@ -407,8 +408,15 @@ let lookup_lid env lid =
   let mapper = function
     | Inr (Sig_datacon(_, t, (_, tps, _), _,_, _)) -> 
       Some (close_typ (List.map (fun (x, _) -> (x, Some Implicit)) tps) t)
-    | Inl t
-    | Inr (Sig_val_decl (_, t, _, _))
+    | Inl t -> Some t
+
+    | Inr (Sig_val_decl (l, t, qs, _)) -> 
+      if in_cur_mod env l
+      then if qs |> List.contains Assumption || env.is_iface
+           then Some t
+           else None
+      else Some t  
+
     | Inr (Sig_let((_, [{lbtyp=t}]), _, _, _)) -> Some t
     | Inr (Sig_let((_, lbs), _, _, _)) ->
         Util.find_map lbs (fun lb -> match lb.lbname with

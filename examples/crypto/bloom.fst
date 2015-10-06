@@ -35,16 +35,6 @@ type bloom (ln:ln_t) = bl:seq bool{Seq.length bl = ln}
 logic type Le (ln:ln_t) (bl1:bloom ln) (bl2:bloom ln) =
   forall i . (0 <= i && i < ln) ==> ((not (Seq.index bl1 i)) || (Seq.index bl2 i))
 
-val set: ln:ln_t -> bl:bloom ln -> i:uint16 -> Tot (bl':bloom ln{Le ln bl bl'})
-let set ln bl i =
-  let i' = op_Modulus i ln in
-  Seq.upd bl i' true
-
-val is_set: ln:ln_t -> bl:bloom ln -> i:uint16 -> Tot (b:bool)
-let is_set ln bl i =
-  let i' = op_Modulus i ln in
-  Seq.index bl i'
-
 val create: ln:ln_t -> Tot (bl:bloom ln)
 let create ln = Seq.create ln false
 
@@ -54,7 +44,8 @@ let rec check ln h n x bl =
   begin
     let pt = Seq.append (uint16_to_bytes n) x in
     let hs = Seq.slice (h pt) 0 2 in
-    let b = is_set ln bl (bytes_to_uint16 hs) in
+    let i = op_Modulus (bytes_to_uint16 hs) ln in
+    let b = Seq.index bl i in
     if b then check ln h (n-1) x bl
     else false
   end
@@ -66,8 +57,8 @@ let rec add ln h n x bl =
   begin
     let pt = Seq.append (uint16_to_bytes n) x in
     let hs = Seq.slice (h pt) 0 2 in
-    let i = (bytes_to_uint16 hs) in
-    let bl' = set ln bl i in
+    let i = op_Modulus (bytes_to_uint16 hs) ln in
+    let bl' = Seq.upd bl i true in
     let bl'' = add ln h (n-1) x bl' in
     bl''
   end

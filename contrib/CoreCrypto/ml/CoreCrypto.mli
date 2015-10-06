@@ -7,8 +7,14 @@ type sig_alg = RSASIG | DSA | ECDSA
 type block_cipher = AES_128_CBC | AES_256_CBC | TDES_EDE_CBC
 type aead_cipher = AES_128_GCM | AES_256_GCM
 type stream_cipher = RC4_128
-
 type rsa_padding = Pad_none | Pad_PKCS1
+
+val blockSize : block_cipher -> int
+val aeadKeySize : aead_cipher -> int
+val aeadRealIVSize : aead_cipher -> int
+val aeadTagSize : aead_cipher -> int
+val hashSize: hash_alg -> int
+
 type rsa_key = {
   rsa_mod : bytes;
   rsa_pub_exp : bytes;
@@ -41,7 +47,7 @@ val hmac : hash_alg -> bytes -> bytes -> bytes
 val block_encrypt : block_cipher -> bytes -> bytes -> bytes -> bytes
 val block_decrypt : block_cipher -> bytes -> bytes -> bytes -> bytes
 val aead_encrypt : aead_cipher -> bytes -> bytes -> bytes -> bytes -> bytes
-val aead_decrypt : aead_cipher -> bytes -> bytes -> bytes -> bytes -> bytes
+val aead_decrypt : aead_cipher -> bytes -> bytes -> bytes -> bytes -> bytes option
 
 type cipher_stream
 val stream_encryptor : stream_cipher -> bytes -> cipher_stream

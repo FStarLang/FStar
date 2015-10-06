@@ -3,9 +3,9 @@
     ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst sstCombinators.fst seq.fsi seq.fst array.fsi array.fst arrayalgos.fst sieveFun.fst
   --*)
 module Sieve
-open SSTCombinators
+open RSTCombinators
 open StackAndHeap
-open SST
+open RST
 
 open Heap
 open Lref  open Located
@@ -19,11 +19,11 @@ open Ghost
 let divides divisor n = ((n % divisor) = 0)*)
 (*Instead, below is a definition from first principles*)
 open ArrayAlgos
-open SSTArray
+open RSTArray
 
 type bitarray = sstarray bool
 
-open SSTArray
+open RSTArray
 
 (* val mark : n:nat -> ((k:nat{k<n}) -> Tot bool) -> index:nat{index<n} -> Tot ((k:nat{k<n}) -> Tot bool) *)
 let mark f index =
@@ -46,8 +46,8 @@ type markedIffMultipleOrInit (n:nat) (lo:nat) (upto:nat)
 type  innerLoopInv (n:nat) (lo: lref nat)  (li : lref nat) (res: bitarray)
     (initres: erased (bitv n)) (m:smem) =
  SieveFun.distinctRefsExists3 m lo (reveal (asRef res)) li
-  /\ 1 < (loopkupRef li m) /\  haslength m res n
-   /\ markedIffMultipleOrInit n (loopkupRef lo m) (loopkupRef li m) (reveal initres) (reveal (esel m res))
+  /\ 1 < (lookupRef li m) /\  haslength m res n
+   /\ markedIffMultipleOrInit n (lookupRef lo m) (lookupRef li m) (reveal initres) (reveal (esel m res))
 
 
 type markedIffDividesOrInit2 (n:nat) (lo:nat)
@@ -66,10 +66,10 @@ type markedIffDividesOrInit (n:nat) (lo:nat)
 type multiplesMarked (n:nat) (biv : bitv n) (lo:nat) =
   (forall (m:nat{m<n}). (SieveFun.nonTrivialDivides lo m) ==> marked n biv m)
  (* this works, is totally precise, but is hard to use
- /\ loopkupRef res m = markMultiplesUpto n lov (loopkupRef li m) initres*)
+ /\ lookupRef res m = markMultiplesUpto n lov (lookupRef li m) initres*)
 
-       (*(k < (loopkupRef li m))
-           ==> (marked n (loopkupRef res m) ((loopkupRef lo m)*k)))*)
+       (*(k < (lookupRef li m))
+           ==> (marked n (lookupRef res m) ((lookupRef lo m)*k)))*)
 
 type multiplesMarked2 (n:nat) (bv : bitv n) (lo:nat) =
  (forall (k:nat). (k * lo < n /\ 1<k)  ==> marked n bv (lo*k))
@@ -100,12 +100,12 @@ val innerLoop : n:nat{n>1}
   -> Mem unit
       (requires (fun m -> innerLoopInv n lo li res initres m /\
         haslength m res n /\
-        loopkupRef li m = 2  /\ 1 < (loopkupRef lo m)
+        lookupRef li m = 2  /\ 1 < (lookupRef lo m)
                     /\ reveal (esel m res)  = reveal initres ))
       (ensures (fun _ _ m -> SieveFun.distinctRefsExists3 m lo (reveal (asRef res)) li
                 /\ haslength m res n
-                /\ markedIffDividesOrInit2 n (loopkupRef lo m) (reveal initres) (reveal (esel m res))
-                (* markedIffDividesOrInit n (loopkupRef lo m) initres (reveal (esel m res)) *)
+                /\ markedIffDividesOrInit2 n (lookupRef lo m) (reveal initres) (reveal (esel m res))
+                (* markedIffDividesOrInit n (lookupRef lo m) initres (reveal (esel m res)) *)
       ))
       (eunion (only li)  (ArrayAlgos.eonly res))
 
@@ -148,9 +148,9 @@ type allUnmarked
 
 type  outerLoopInv (n:nat) (li: lref nat) (lo: lref nat) (res: bitarray) (m:smem) =
  SieveFun.distinctRefsExists3 m li lo (reveal (asRef res))
-  /\ (((loopkupRef lo m) - 1) < n)
-  /\ (1<(loopkupRef lo m)) /\  haslength m res n
-  /\ (markedIffHasDivisorSmallerThan n (loopkupRef lo m) (reveal (esel m res)))
+  /\ (((lookupRef lo m) - 1) < n)
+  /\ (1<(lookupRef lo m)) /\  haslength m res n
+  /\ (markedIffHasDivisorSmallerThan n (lookupRef lo m) (reveal (esel m res)))
 
 
 (*#set-options "--initial_fuel 100 --max_fuel 10000 --initial_ifuel 100 --max_ifuel 10000"*)
@@ -185,8 +185,8 @@ val outerLoop : n:nat{n>1}
   -> lo: lref nat
   -> res : bitarray
   -> Mem unit
-      (fun m -> outerLoopInv n li lo res m /\ loopkupRef lo m =2 /\ allUnmarked n (sel m res))
-      (fun _ _ m1 -> outerLoopInv n li lo res m1 /\ loopkupRef lo m1 = n
+      (fun m -> outerLoopInv n li lo res m /\ lookupRef lo m =2 /\ allUnmarked n (sel m res))
+      (fun _ _ m1 -> outerLoopInv n li lo res m1 /\ lookupRef lo m1 = n
         /\ markedIffHasDivisorSmallerThan n n (sel m1 res)
       )
       (eunion (only li) ((eunion (only lo)  (ArrayAlgos.eonly res))))
@@ -225,8 +225,8 @@ val sieve : n:nat{n>1} -> unit
         (hide empty)
 
 let sieve n u =
-  let li = salloc 2 in
-  let lo = salloc 2 in
+  let li = ralloc 2 in
+  let lo = ralloc 2 in
   let res = screate n false in
   (outerLoop n li lo res);
   (listOfUnmarked n res)
@@ -238,9 +238,9 @@ val sieveFull : n:nat{n>1}
   (ensures (fun _ l m -> forall (k:nat). (nmem k l) <==> ((k<n) /\ (~ (exists (d:nat{1<d}). d<n /\ SieveFun.nonTrivialDivides d k))) ))
         (hide empty)
 let sieveFull n =
-  pushStackFrame ();
+  pushRegion ();
   let res= sieve n () in
-  popStackFrame (); res
+  popRegion (); res
 
   val maxUnmarkedAux : n:nat -> max:nat{max<=n} -> f:bitarray
     -> PureMem (nat)
@@ -264,20 +264,20 @@ val sieveJustMax : n:nat{n>1}
   (ensures (fun _ l m -> True ))
         (hide empty)
 let sieveJustMax n =
-  pushStackFrame ();
-  let li = salloc 2 in
-  let lo = salloc 2 in
+  pushRegion ();
+  let li = ralloc 2 in
+  let lo = ralloc 2 in
   let res = screate n false in
   (outerLoop n li lo res);
   let res = (maxUnmarked n res) in
-  popStackFrame (); res
+  popRegion (); res
 
-val segFault : unit -> SST int (requires (fun _-> True)) (ensures (fun _ _ _ -> True))
+val segFault : unit -> RST int (requires (fun _-> True)) (ensures (fun _ _ _ -> True))
 let segFault u =
-  pushStackFrame ();
+  pushRegion ();
   let p : (int * int) =  (1 , 2) in
   let arr = screate 2 p in
   writeIndex arr 0 (2,3);
   let arr1 = readIndex arr 1 in
-  popStackFrame ();
+  popRegion ();
   (fst arr1) // this neither segfaults, nor prints 2. It prints 1!

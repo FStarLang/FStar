@@ -1,12 +1,13 @@
 (*--build-config
     options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi Prins;
-    other-files:ordset.fsi ordmap.fsi prins.fsi
+    other-files:ghost.fst ordset.fsi ordmap.fsi prins.fsi
  --*)
 
 module AST
 
-open FStar.OrdMap
+open FStar.Ghost
 
+open FStar.OrdMap
 open FStar.OrdSet
 
 open Prins
@@ -20,9 +21,10 @@ type const =
   | C_eprins: c:eprins -> const
   | C_prins : c:prins  -> const
 
-  | C_unit : const
-  | C_nat  : c:nat  -> const
-  | C_bool : c:bool -> const
+  | C_unit  : c:unit -> const
+  | C_bool  : c:bool -> const
+
+  | C_opaque: c:'a -> const
 
 type exp' =
   | E_aspar     : ps:exp -> e:exp -> exp'
@@ -41,10 +43,7 @@ type exp' =
   | E_empabs    : x:varname -> e:exp -> exp'
   | E_app       : e1:exp -> e2:exp -> exp'
   | E_ffi       : fn:string -> args:list exp -> exp'
-  | E_match     : e:exp -> pats:list (pat * exp) -> exp'
-
-and pat =
-  | P_const: c:const -> pat
+  | E_cond      : e:exp -> e1:exp -> e2:exp -> exp'
 
 and exp =
   | Exp: e:exp' -> info:option other_info -> exp
@@ -53,17 +52,8 @@ type canbox = | Can_b | Cannot_b
 
 type canwire = | Can_w | Cannot_w
 
-(*val canbox_const: c:const -> Tot canbox
-let canbox_const c = match c with
-  | C_prin _
-  | C_prins _ -> Cannot_b
-  
-  | C_unit
-  | C_nat _
-  | C_bool _  -> Can_b*)
-
 type v_meta =
-  | Meta: vps:eprins -> cb:canbox -> wps:eprins -> cw:canwire -> v_meta
+  | Meta: bps:eprins -> cb:canbox -> wps:eprins -> cw:canwire -> v_meta
 
 val is_meta_wireable: meta:v_meta -> Tot bool
 let is_meta_wireable = function
@@ -76,7 +66,17 @@ let is_meta_boxable ps = function
   | _                     -> false
 
 type value: v_meta -> Type =
-  | V_const   : c:const -> value (Meta empty Can_b empty Can_w)
+  | V_prin    : c:prin -> value (Meta empty Can_b empty Can_w)
+  | V_eprins  : c:eprins -> value (Meta empty Can_b empty Can_w)
+  | V_prins   : c:prins -> value (Meta empty Can_b empty Can_w)
+
+  | V_unit    : value (Meta empty Can_b empty Can_w)
+  | V_bool    : c:bool -> value (Meta empty Can_b empty Can_w)
+
+  | V_opaque  : v:'a -> meta:v_meta
+                -> slice_fn:(prin -> 'a -> Tot 'a) -> compose_fn:('a -> 'a -> Tot 'a)
+		-> slice_fn_sps:(prins -> 'a -> Tot 'a)
+		-> value meta
 
   | V_box     : #meta:v_meta -> ps:prins -> v:value meta{is_meta_boxable ps meta}
                 -> value (Meta ps Can_b (Meta.wps meta) Cannot_w)
@@ -105,6 +105,21 @@ and env = varname -> Tot (option dvalue)
 
 assume val preceds_axiom: en:env -> x:varname -> Lemma (ensures (en x << en))
 
+type telt =
+  | Tr_val  : #meta:v_meta -> v:value meta -> telt
+  | Tr_scope: ps:prins -> tr:list telt -> telt
+
+type trace = list telt
+
+val vals_trace_h: trace -> Tot bool
+let rec vals_trace_h tr = match tr with
+  | []            -> true
+  | (Tr_val _)::tl -> vals_trace_h tl
+  | _             -> false
+
+val vals_trace: erased trace -> GTot bool
+let vals_trace tr = reveal (elift1 vals_trace_h tr)
+
 type redex =
   | R_aspar     : #meta:v_meta -> ps:prins -> v:value meta -> redex
   | R_assec     : #meta:v_meta -> ps:prins -> v:value meta -> redex
@@ -117,7 +132,7 @@ type redex =
   | R_app       : #meta1:v_meta -> #meta2:v_meta -> v1:value meta1 -> v2:value meta2
                   -> redex
   | R_ffi       : fn:string -> args:list dvalue -> redex
-  | R_match     : #meta:v_meta -> v:value meta -> pats:list (pat * exp) -> redex
+  | R_cond      : #meta:v_meta -> v:value meta -> e1:exp -> e2:exp -> redex
 
 val empty_env: env
 let empty_env = fun _ -> None
@@ -152,10 +167,10 @@ type frame' =
   | F_app_e1       : e2:exp -> frame'
   | F_app_e2       : #meta:v_meta -> v:value meta -> frame'
   | F_ffi          : fn:string -> es:list exp -> vs:list dvalue -> frame'
-  | F_match        : pats:list (pat * exp) -> frame'
+  | F_cond         : e1:exp -> e2:exp -> frame'
 
 type frame =
-  | Frame: m:mode -> en:env -> f:frame'-> frame
+  | Frame: m:mode -> en:env -> f:frame'-> tr:erased trace -> frame
 
 type stack = list frame
 
@@ -186,29 +201,30 @@ let is_sec_frame f' =
 val ps_of_aspar_ret_frame: f':frame'{is_F_aspar_ret f'} -> Tot prins
 let ps_of_aspar_ret_frame (F_aspar_ret ps) = ps
 
-val stack_source_inv: stack -> mode -> Tot bool
+val stack_source_inv: stack -> mode -> GTot bool
 let rec stack_source_inv s (Mode as_m ps) = match s with
-  | []                  -> not (as_m = Sec)
-  | (Frame m' _ f')::tl ->
+  | []                    -> not (as_m = Sec)
+  | (Frame m' _ f' tr)::tl ->
     let Mode as_m' ps' = m' in
     (not (as_m = Par) || as_m' = Par)                              &&
     (not (as_m = Par) || not (is_F_assec_ret f'))                  &&
     (not (as_m = Sec) || (not (as_m' = Par) || is_F_assec_ret f')) &&
     (not (as_m' = Sec) || (is_sec_frame f' && is_Cons tl))         &&
+    (not (as_m' = Sec) || (vals_trace tr))                         &&
     (not (is_F_aspar_ret f') || (ps = ps_of_aspar_ret_frame f'))   &&
     (ps = ps' || (subset ps ps' && is_F_aspar_ret f'))             &&
     stack_source_inv tl m'
 
-val stack_target_inv: stack -> mode -> Tot bool
+val stack_target_inv: stack -> mode -> GTot bool
 let rec stack_target_inv s m = match s with
   | []                  -> true
-  | (Frame m' _ f')::tl ->
-    m = m'                                             &&
-    (not (m_of_mode m' = Par) || not (is_F_assec_ret f')) &&
-    (not (m_of_mode m' = Sec) || is_sec_frame f')         &&
+  | (Frame m' _ f' tr)::tl ->
+    m = m'                                         &&
+    (not (m_of_mode m' = Sec) || is_sec_frame f')  &&
+    (not (m_of_mode m' = Sec) || vals_trace tr)    &&
     stack_target_inv tl m
 
-val stack_inv: stack -> mode -> level -> Tot bool
+val stack_inv: stack -> mode -> level -> GTot bool
 let rec stack_inv s m l =
   if is_Source l then stack_source_inv s m else stack_target_inv s m
 
@@ -224,55 +240,59 @@ let term_inv t m l =
   (not (is_Source l) || not (t = T_sec_wait)) &&
   (not (is_T_red t && m_of_mode m = Sec) || is_sec_redex (r_of_t_red t))
 
+val trace_inv: erased trace -> mode -> GTot bool
+let trace_inv tr m = not (m_of_mode m = Sec) || (vals_trace tr)
+
 type config =
   | Conf: l:level -> m:mode{mode_inv m l} -> s:stack{stack_inv s m l}
-          -> en:env -> t:term{term_inv t m l} -> config
+          -> en:env -> t:term{term_inv t m l} -> tr:erased trace{trace_inv tr m}
+	  -> config
 
 type sconfig = c:config{is_Source (Conf.l c)}
 type tconfig = c:config{is_Target (Conf.l c)}
 
 (* TODO: FIXME: workaround for projectors *)
 val f_of_frame: frame -> Tot frame'
-let f_of_frame (Frame _ _ f) = f
+let f_of_frame (Frame _ _ f _) = f
 
 (* TODO: FIXME: workaround for projectors *)
 val hd_of_list: l:list 'a{is_Cons l} -> Tot 'a
 let hd_of_list (Cons hd _) = hd
 
 val is_sframe: c:config -> f:(frame' -> Tot bool) -> Tot bool
-let is_sframe (Conf _ _ s _ _) f = is_Cons s && f (f_of_frame (hd_of_list s))
+let is_sframe (Conf _ _ s _ _ _) f = is_Cons s && f (f_of_frame (hd_of_list s))
 
 (* TODO: FIXME: workaround for projectors *)
 val t_of_conf: config -> Tot term
-let t_of_conf (Conf _ _ _ _ t) = t
+let t_of_conf (Conf _ _ _ _ t _) = t
 
 val is_value: c:config -> Tot bool
 let is_value c = is_T_val (t_of_conf c)
 
 val is_value_ps: c:config -> Tot bool
 let is_value_ps c = match c with
-  | Conf _ _ _ _ (T_val (V_const (C_prins _))) -> true
-  | _                                          -> false
+  | Conf _ _ _ _ (T_val (V_prins _)) _ -> true
+  | _                                  -> false
 
 val is_value_p: c:config -> Tot bool
 let is_value_p c = match c with
-  | Conf _ _ _ _ (T_val (V_const (C_prin _))) -> true
-  | _                                         -> false
+  | Conf _ _ _ _ (T_val (V_prin _)) _ -> true
+  | _                                 -> false
 
 val c_value: c:config{is_value c} -> Tot dvalue
-let c_value (Conf _ _ _ _ (T_val #meta v)) = D_v meta v
+let c_value (Conf _ _ _ _ (T_val #meta v) _) = D_v meta v
 
 val c_value_ps: c:config{is_value_ps c} -> Tot prins
 let c_value_ps c = match c with
-  | Conf _ _ _ _ (T_val (V_const (C_prins ps))) -> ps
+  | Conf _ _ _ _ (T_val (V_prins ps)) _ -> ps
 
 val c_value_p: c:config{is_value_p c} -> Tot prin
 let c_value_p c = match c with
-  | Conf _ _ _ _ (T_val (V_const (C_prin p))) -> p
+  | Conf _ _ _ _ (T_val (V_prin p)) _ -> p
 
 (* TODO: FIXME: workaround for projectors *)
 val m_of_conf: config-> Tot mode
-let m_of_conf (Conf _ m _ _ _) = m
+let m_of_conf (Conf _ m _ _ _ _) = m
 
 val is_par: config -> Tot bool
 let is_par c = is_Par (m_of_mode (m_of_conf c))
@@ -296,4 +316,4 @@ let get_en_b #meta v = match v with
   | V_emp_clos x e      -> empty_env, x, e
 
 val is_terminal: config -> Tot bool
-let is_terminal (Conf _ (Mode as_m _) s _ t) = as_m = Par && s = [] && is_T_val t
+let is_terminal (Conf _ (Mode as_m _) s _ t _) = as_m = Par && s = [] && is_T_val t

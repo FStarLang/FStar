@@ -77,7 +77,7 @@ let abytes (ba:cbytes) =
 let abytes_max (ba:cbytes) (max:int) =
     let arr = String.make max (char_of_int 0) in
     let len = String.length ba in
-    (for i = 0 to len do String.set arr i ba.[0] done);
+    (for i = 0 to len-1 do String.set arr i ba.[0] done);
     {bl = [arr]; length = len; index = 0; max = len}
 
 let abyte (ba:byte) =
@@ -112,6 +112,9 @@ let split (b:bytes) i : bytes * bytes =
      length = b.length - i;
      index = b.index + i;
      max = b.max}
+     
+let split_eq = split
+
 let length (d:bytes) = d.length
 
 
@@ -139,7 +142,7 @@ let bytes_of_int nb i =
 let int_of_bytes (b:bytes) : int =
     let x = ref 0 in
     let c = get_cbytes b in
-    for y = 0 to b.length do
+    for y = 0 to b.length-1 do
         x := 256 * !x + (int_of_char (String.get c y))
     done;
     !x
@@ -149,7 +152,7 @@ let equalBytes (b1:bytes) (b2:bytes) =
        let cb1 = get_cbytes b1 in
        let cb2 = get_cbytes b2 in
        let ok = ref true in
-       for x = 0 to length b1 do
+       for x = 0 to length b1-1 do
            ok := String.get cb1 x = String.get cb2 x && !ok;
        done;
        !ok

@@ -50,4 +50,4 @@ assume val sample : #a:Type -> #b:Type
                     -> ST2 (rel a  b)
                            (requires (fun h      -> True))
                            (ensures  (fun h r h' -> R.r r = f (R.l r)
-                                                 /\ and_rel (rel_map2 equal h h')))
+                                                 /\ and_irel (rel_map2T equal h h')))

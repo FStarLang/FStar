@@ -17,7 +17,7 @@
 (** Stack operations
 
     The functions here are for allocating Caml values on a
-    manually-managed, growable stack. 
+    manually-managed, growable stack.
 
     This library is unsafe. To avoid memory errors, programs must
     satisfy two constraints:
@@ -73,10 +73,15 @@ external cons: 'a -> 'a list -> 'a list = "stack_mkpair";;
 (** [Camlstack.cons x y] allocates a cons cell [x::y] on the stack.
     Raise [Failure "Camlstack.cons"] if the stack has no frames. *)
 
+external concat: string -> string -> string = "stack_concat" "noalloc";;
+(** [Camlstack.concat s1 s2] allocates a string of size len(s1) + len(s2) on the
+    stack, then write the concatenation of [s1] and [s2] into it. Raises
+    [Failure "Camlstack.concat"] if the stack has no frames.] *)
+
 external mkref: 'a -> 'a ref = "stack_mkref";;
 (** [Camlstack.mkref x] allocates a ref cell on the stack,
     initializing it with x. Assumes that [x] may point to the
-    OCaml heap, and so will scan it. 
+    OCaml heap, and so will scan it.
     Raise [Failure "Camlstack.cons"] if the stack has no frames. *)
 
 external mkref_noscan: 'a -> 'a ref = "stack_mkref_noscan";;
@@ -87,16 +92,16 @@ external mkref_noscan: 'a -> 'a ref = "stack_mkref_noscan";;
 
 external mkbytes : int -> bytes = "stack_mkbytes";;
 (** [Camlstack.mkbytes n] constructs a byte array of length n.
-    The contents are uninitialized. Note that a byte array can be 
+    The contents are uninitialized. Note that a byte array can be
     coerced to a string by Bytes.unsafe_to_string (but only after
     it's fully initialized and won't change anymore).
-    Raise [Failure "Camlstack.mkbytes"] if the stack has no frames. 
+    Raise [Failure "Camlstack.mkbytes"] if the stack has no frames.
     Raise [Invalid_argument "Camlstack.mkbytes"] if [n] is non-positive. *)
 
 external mkarray : int -> 'a -> 'a array = "stack_mkarray";;
 (** [Camlstack.mkarray n v] allocates an array of length [n] with each
-    element initialized to [v]. 
-    Raise [Failure "Camlstack.mkarray"] if the stack has no frames. 
+    element initialized to [v].
+    Raise [Failure "Camlstack.mkarray"] if the stack has no frames.
     Raise [Invalid_argument "Camlstack.mkarray"] if [n] is non-positive,
     or if you try to make an array of floats (for which you should use
     mkarray_noscan instead). *)
@@ -106,7 +111,7 @@ external mkarray_noscan : int -> 'a -> 'a array = "stack_mkarray_noscan";;
     element initialized to [v]. Use this when the values 'a that you install
     in the array are either primitives, or they are pointers to the stack, and
     you can be sure that you will never mutate the array to point to the heap.
-    Raise [Failure "Camlstack.mkarray"] if the stack has no frames. 
+    Raise [Failure "Camlstack.mkarray"] if the stack has no frames.
     Raise [Invalid_argument "Camlstack.mkarray"] if [n] is non-positive
     or [v] is boxed and not a float, and not a pointer to the stack. *)
 

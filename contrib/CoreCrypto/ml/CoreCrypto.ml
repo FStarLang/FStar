@@ -12,6 +12,29 @@ type aead_cipher = AES_128_GCM | AES_256_GCM
 type stream_cipher = RC4_128
 type rsa_padding = Pad_none | Pad_PKCS1
 
+let blockSize = function
+  | TDES_EDE_CBC -> 8
+  | AES_128_CBC  -> 16
+  | AES_256_CBC  -> 16
+
+let aeadKeySize = function
+  | AES_128_GCM -> 16
+  | AES_256_GCM -> 32
+
+let aeadRealIVSize = function
+  | AES_128_GCM -> 12
+  | AES_256_GCM -> 12
+
+let aeadTagSize = function
+  | AES_128_GCM -> 16
+  | AES_256_GCM -> 16
+
+let hashSize = function
+  | MD5    -> 16
+  | SHA1   -> 20
+  | SHA256 -> 32
+  | SHA384 -> 48
+  | SHA512 -> 64
 
 type rsa_key = {
   rsa_mod     : bytes;
@@ -163,8 +186,11 @@ let aead_decrypt (c:aead_cipher) (k:bytes) (iv:bytes) (ad:bytes) (d:bytes) =
   ocaml_EVP_CIPHER_CTX_set_additional_data ctx (string_of_bytes ad);
   let e = ocaml_EVP_CIPHER_CTX_process ctx (string_of_bytes d) in
   ocaml_EVP_CIPHER_CTX_set_tag ctx (string_of_bytes t);
-  ocaml_EVP_CIPHER_CTX_fini ctx;
-  bytes_of_string e
+  try (
+    ocaml_EVP_CIPHER_CTX_fini ctx;
+    Some (bytes_of_string e)
+  )
+  with _ -> None
 
 let stream_encryptor (c:stream_cipher) (k:bytes) =
   let c = cipher_of_stream_cipher c in

@@ -6,9 +6,12 @@ val excluded_middle' : p:Type -> Lemma (requires (True))
                                        (ensures (p \/ ~p))
 let excluded_middle' (p:Type) = ()
 
+(* WARNING: this breaks parametricity; TODO: remove*)
 assume val excluded_middle : p:Type -> GTot (b:bool{b = true <==> p})
 
+(* TODO: remove *)
 assume val forall_intro : #a:Type -> #p:(a -> Type) ->
   =f:(x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
 
+(* TODO: remove *)
 assume val give_proof: #a:Type -> a -> Lemma (ensures a)

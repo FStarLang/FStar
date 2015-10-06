@@ -51,17 +51,17 @@ type state_hash =
 type Ok : double log -> Type =
   | Null: Ok (twice [])
   | ConsH: k:double key{safe_key k} -> t:double tag{safe t}
-           -> l:double log{and_rel (rel_map2 (fun k l -> is_None (assoc k l)) k l)}
+           -> l:double log{and_irel (rel_map2T (fun k l -> is_None (assoc k l)) k l)}
            -> p: Ok l
            -> Ok (cons_rel (pair_rel k (pair_rel (twice Hon) t)) l)
   | ConsA: k:eq key -> t:eq tag
-           -> l:double log{and_rel (rel_map2 (fun k l -> is_None (assoc k l)) k l)}
+           -> l:double log{and_irel (rel_map2T (fun k l -> is_None (assoc k l)) k l)}
            -> p: Ok l
            -> Ok (cons_rel (pair_rel k (pair_rel (twice Adv) t)) l)
 
 (* keys are fresh if they are not in the hash function's log yet *)
 val fresh_keys : k:double key -> l:double log -> Tot bool
-let fresh_keys k l = and_rel (rel_map2 (fun k l -> is_None (assoc k l)) k l)
+let fresh_keys k l = and_irel (rel_map2T (fun k l -> is_None (assoc k l)) k l)
 
 (* We need these lemmas to use our inductive datatype Ok without having access
    to an element of Ok l (it exists only in refinements) *)
@@ -70,7 +70,7 @@ assume val ok_as_proof : l: double log{Ok l} -> Tot (Ok l)
 
 val ok_consH : k:double key{safe_key k}
              -> t:double tag{safe t}
-             -> l:double log{and_rel (rel_map2 (fun k l  -> is_None (assoc k l)) k l)
+             -> l:double log{and_irel (rel_map2T (fun k l  -> is_None (assoc k l)) k l)
                           /\ Ok l}
              ->  Lemma (requires True)
                        (ensures Ok (cons_rel (pair_rel k (pair_rel (twice Hon) t)) l))
@@ -78,7 +78,7 @@ let ok_consH k t l = ok_as_refinement(ConsH k t l (ok_as_proof l))
 
 val ok_consA : k:eq key
              -> t:eq tag
-             -> l:double log{and_rel (rel_map2 (fun k l  -> is_None (assoc k l)) k l)
+             -> l:double log{and_irel (rel_map2T (fun k l  -> is_None (assoc k l)) k l)
                           /\ Ok l}
              ->  Lemma (requires True)
                        (ensures Ok (cons_rel (pair_rel k (pair_rel (twice Adv) t)) l))
@@ -163,43 +163,43 @@ let ok_hon_safe2 k l = ok_hon_safe2' k l (ok_as_proof l)
    our logs are Ok *)
 type goodstate_hash (s:double state_hash) =
             (R.l s).bad \/ (R.r s).bad
-            \/ ~((R.l s).bad \/ (R.r s).bad) /\ Ok (rel_map1 (fun s -> s.l) s)
+            \/ ~((R.l s).bad \/ (R.r s).bad) /\ Ok (rel_map1T (fun s -> s.l) s)
 
 assume val s :  (ref state_hash)
 
 (* We prove the same signature for honest hashing in two different ways *)
 opaque val hash_hon:  k:double key -> f:(tag -> Tot tag){good_sample_fun #tag #tag f} ->
                ST2 (double (option tag))
-               (requires (fun h2 -> goodstate_hash (sel_rel h2 (twice s)) /\
+               (requires (fun h2 -> goodstate_hash (sel_rel1 h2 s) /\
                           safe_key k))
-               (ensures (fun h2' p h2 -> goodstate_hash (sel_rel h2 (twice s)) /\
-                                         (not (or_rel (rel_map1 (fun s -> s.bad) (sel_rel h2 (twice s)))) ==>
+               (ensures (fun h2' p h2 -> goodstate_hash (sel_rel1 h2 s) /\
+                                         (not (or_irel (rel_map1T (fun s -> s.bad) (sel_rel1 h2 s))) ==>
                                          (is_Some (R.l p) /\ is_Some (R.r p)
                                            /\ safe (R (Some.v(R.l p)) (Some.v(R.r p)))
-                                           /\ (fresh_keys k (rel_map1 (fun s -> s.l) (sel_rel h2' (twice s)))
+                                           /\ (fresh_keys k (rel_map1T (fun s -> s.l) (sel_rel1 h2' s))
                                                ==> Some.v #tag (R.r p) = f (Some.v #tag (R.l p)))
-                                           /\ Ok (rel_map1 (fun s -> s.l)(sel_rel h2 (twice s)))))))
+                                           /\ Ok (rel_map1T (fun s -> s.l)(sel_rel1 h2 s))))))
 
 opaque val hash_hon2:  k:double key -> f:(tag -> Tot tag){good_sample_fun #tag #tag f} ->
                ST2 (double (option tag))
-               (requires (fun h2 -> goodstate_hash (sel_rel h2 (twice s)) /\
+               (requires (fun h2 -> goodstate_hash (sel_rel1 h2 s) /\
                           safe_key k))
-               (ensures (fun h2' p h2 -> goodstate_hash (sel_rel h2 (twice s)) /\
-                                         (not (or_rel (rel_map1 (fun s -> s.bad) (sel_rel h2 (twice s)))) ==>
+               (ensures (fun h2' p h2 -> goodstate_hash (sel_rel1 h2 s) /\
+                                         (not (or_irel (rel_map1T (fun s -> s.bad) (sel_rel1 h2 s))) ==>
                                          (is_Some (R.l p) /\ is_Some (R.r p)
                                            /\ safe (R (Some.v(R.l p)) (Some.v(R.r p)))
-                                           /\ (fresh_keys k (rel_map1 (fun s -> s.l) (sel_rel h2' (twice s)))
+                                           /\ (fresh_keys k (rel_map1T (fun s -> s.l) (sel_rel1 h2' s))
                                                ==> Some.v #tag (R.r p) = f (Some.v #tag (R.l p)))
-                                           /\ Ok (rel_map1 (fun s -> s.l)(sel_rel h2 (twice s)))))))
+                                           /\ Ok (rel_map1T (fun s -> s.l)(sel_rel1 h2 s))))))
 
 opaque val hash_adv: k:eq key ->
                ST2 (double (option tag))
-               (requires (fun h2 -> goodstate_hash (sel_rel h2 (twice s))))
-               (ensures (fun h2' p h2 -> goodstate_hash (sel_rel h2 (twice s)) /\
-                                         (or_rel (rel_map1 (fun s -> s.bad) (sel_rel h2 (twice s))) \/
+               (requires (fun h2 -> goodstate_hash (sel_rel1 h2 s)))
+               (ensures (fun h2' p h2 -> goodstate_hash (sel_rel1 h2 s) /\
+                                         (or_irel (rel_map1T (fun s -> s.bad) (sel_rel1 h2 s)) \/
                                          is_Some (R.l p) /\ is_Some (R.r p) /\
                                          Some.v(R.l p) = Some.v(R.r p)
-                                         /\ Ok (rel_map1 (fun s -> s.l)(sel_rel h2 (twice s))))))
+                                         /\ Ok (rel_map1T (fun s -> s.l)(sel_rel1 h2 s)))))
 
 (* workaround for some typing problems *)
 val add_some : tag -> Tot (option tag)
@@ -227,7 +227,7 @@ let hash_hon' k r = match assoc k (!s).l with
 
 (* We use this reordered version to do the actual proof only by compose2 *)
 let hash_hon k f = let s = compose2_self (fun s -> !s) (twice s)in
-                   let l = rel_map1 (fun s -> s.l) s in
+                   let l = rel_map1T (fun s -> s.l) s in
 
                    (* Actual code. The rest is just to apply the correct lemmas *)
                    let r = sample #tag #tag f in
@@ -235,11 +235,11 @@ let hash_hon k f = let s = compose2_self (fun s -> !s) (twice s)in
                                          (pair_rel k r) in
 
                    good_sample_fun_bijection #tag #tag f;
-                   if (not (or_rel (rel_map1 (fun s -> s.bad) s))) then
-                     if and_rel (rel_map1 is_Some t) then
+                   if (not (or_irel (rel_map1T (fun s -> s.bad) s))) then
+                     if and_irel (rel_map1T is_Some t) then
                        (ok_hon_safe k l;
                        ok_hon_safe2 k l;
-                       if and_rel (rel_map2 (fun k l -> is_None (assoc k l)) k l) then
+                       if and_irel (rel_map2T (fun k l -> is_None (assoc k l)) k l) then
                          ok_consH k (R (Some.v (R.l t)) (Some.v (R.r t))) l);
                    t
 
@@ -257,9 +257,9 @@ assume val sample_single : unit -> Tot tag
    sample as shown above). *)
 let hash_hon2 k f =
   let s = compose2_self (fun s -> !s) (twice s) in
-  let l = rel_map1 (fun s -> s.l) s in
-  let b = or_rel (rel_map1 (fun s -> s.bad) s) in
-  match rel_map2 assoc k l with
+  let l = rel_map1T (fun s -> s.l) s in
+  let b = or_irel (rel_map1T (fun s -> s.bad) s) in
+  match rel_map2T assoc k l with
   | R (Some (Hon,t0)) (Some (Hon,t1)) -> if not b then
                                            ok_hon_safe2 k l;
                                          compose2_self (fun x -> case_Hon x) (R t0 t1)
@@ -297,7 +297,7 @@ let hash_adv' k r =  match assoc k (!s).l with
                     add_some t
 
 let hash_adv k  = let s = compose2_self (fun s -> !s) (twice s) in
-                  let l = rel_map1 (fun s -> s.l) s in
+                  let l = rel_map1T (fun s -> s.l) s in
 
                   (* Actual code, the rest is just for calling lemmas *)
                   cut(bijection #tag #tag  (fun x -> x));
@@ -306,10 +306,10 @@ let hash_adv k  = let s = compose2_self (fun s -> !s) (twice s) in
                   let t = compose2_self (fun (k,r) -> hash_adv' k r)
                                         (pair_rel k r) in 
 
-                  if (not (or_rel (rel_map1 (fun s -> s.bad) s))) then
-                    if and_rel (rel_map1 is_Some t) then
+                  if (not (or_irel (rel_map1T (fun s -> s.bad) s))) then
+                    if and_irel (rel_map1T is_Some t) then
                       (ok_adv_eq k l;
-                      if and_rel (rel_map2 (fun k l -> is_None (assoc k l)) k l) then
+                      if and_irel (rel_map2T (fun k l -> is_None (assoc k l)) k l) then
                         ok_consA k (R (Some.v (R.l t)) (Some.v (R.r t))) l);
                   t
 
@@ -338,7 +338,7 @@ let decrypt c k = xor c k
    encryption key, we need to require that encryption keys are prefixes of safe
    hash keys *)
 opaque type safe_key_pre (k:double bytes) = 
-  (forall (r:block). safe_key (rel_map2 append k (twice r)))
+  (forall (r:block). safe_key (rel_map2T append k (twice r)))
 
 (* We prove that our sampling function is a bijection *)
 opaque val encrypt_good_sample_fun : p1:block -> p2:block
@@ -360,23 +360,23 @@ let id_good_sample_fun () =
 opaque val encrypt_hon : k:double key{safe_key_pre k}
                   -> p:double block ->
                   ST2 (double (option (block * block)))
-                 (requires (fun h2 -> goodstate_hash (sel_rel h2 (twice s))))
-                 (ensures (fun h2' p h2 -> goodstate_hash (sel_rel h2 (twice s))
-                                           /\( not (or_rel (rel_map1 (fun s -> s.bad) (sel_rel h2 (twice s))))
-                                             ==> Ok (rel_map1 (fun s -> s.l)(sel_rel h2 (twice s)))
+                 (requires (fun h2 -> goodstate_hash (sel_rel1 h2 s)))
+                 (ensures (fun h2' p h2 -> goodstate_hash (sel_rel1 h2 s)
+                                           /\( not (or_irel (rel_map1T (fun s -> s.bad) (sel_rel1 h2 s)))
+                                             ==> Ok (rel_map1T (fun s -> s.l)(sel_rel1 h2 s))
                                              /\ is_Some (R.l p) /\ is_Some (R.r p)
                                              /\ snd (Some.v (R.l p)) = snd (Some.v (R.r p))
-                                             /\ (fresh_keys (rel_map2 append k (R (snd(Some.v #(block * block) (R.l p)))
+                                             /\ (fresh_keys (rel_map2T append k (R (snd(Some.v #(block * block) (R.l p)))
                                                                                   (snd(Some.v #(block * block) (R.r p)))))
-                                                            (rel_map1 (fun s -> s.l) (sel_rel h2' (twice s)))
-                                                            ==> eq_rel p))))
+                                                            (rel_map1T (fun s -> s.l) (sel_rel1 h2' s))
+                                                            ==> eq_irel p))))
 #reset-options
 let encrypt_hon k p =
                   let sample_fun = (fun x -> xor (xor (R.l p) (R.r p)) x) in
                   id_good_sample_fun ();
                   encrypt_good_sample_fun (R.l p) (R.r p);
                   let r = sample #block #block (fun x -> x) in
-                  let kh = rel_map2 append k r in
+                  let kh = rel_map2T append k r in
 
                   let h = hash_hon kh sample_fun in
                   (* Writing the code in this style causes the loss of some typing information *)
@@ -390,14 +390,14 @@ let encrypt_hon k p =
 opaque val decrypt_hon : k:double bytes{safe_key_pre k} ->
                   c:double(block * block){snd (R.l c) = snd (R.r c)} ->
                   ST2 (double (option block))
-                 (requires (fun h2 -> goodstate_hash (sel_rel h2 (twice s))))
-                 (ensures (fun h2' p h2 -> goodstate_hash (sel_rel h2 (twice s))))
+                 (requires (fun h2 -> goodstate_hash (sel_rel1 h2 s)))
+                 (ensures (fun h2' p h2 -> goodstate_hash (sel_rel1 h2 s)))
 let decrypt_hon k c =
-                  let r = rel_map1 snd c in
-                  let kh = rel_map2 append k r in
+                  let r = snd_rel c in
+                  let kh = rel_map2T append k r in
                   id_good_sample_fun ();
                   let h = hash_hon kh (fun x -> x) in
                   (* Writing the code in this style causes the loss of some typing information *)
-(*                   rel_map2 (fun h c -> if is_Some h then Some (decrypt (fst c) (Some.v h)) else None) h c *)
+(*                   rel_map2T (fun h c -> if is_Some h then Some (decrypt (fst c) (Some.v h)) else None) h c *)
                   R (if is_Some (R.l h) then Some (decrypt (fst (R.l c)) (Some.v (R.l h))) else None)
                     (if is_Some (R.r h) then Some (decrypt (fst (R.r c)) (Some.v (R.r h))) else None)

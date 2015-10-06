@@ -9,9 +9,9 @@
   Is there a principle behind its design? or just random convolutery?
   *)
 module MD5Common
-open SSTCombinators
+open RSTCombinators
 open StackAndHeap  open Lref  open Located
-open SST
+open RST
 open MVector
 open Heap
 open Set

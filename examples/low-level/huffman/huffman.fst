@@ -1,13 +1,13 @@
 (*--build-config
     other-files:ext.fst set.fsi set.fst heap.fst st.fst all.fst list.fst ../stack.fst ../listset.fst
     ghost.fst ../located.fst ../lref.fst ../stackAndHeap.fst ../sst.fst ../sstCombinators.fst constr.fst ../word.fst seq.fsi seq.fst ../array.fsi
-     ../array.fst ../MD5Common.fst ../arrayAlgos.fst
+     ../array.fst ../arrayAlgos.fst
   --*)
 
 module Huffman
 
-open SST
-open SSTArray
+open RST
+open RSTArray
 open ArrayAlgos
 
 open StackAndHeap
@@ -16,7 +16,7 @@ open Stack
 open Lref
 open Located
 
-open Ghost
+open FStar.Ghost
 
 assume val symbol_value_bound: nat
 
@@ -44,8 +44,8 @@ let rec live_node n sm =
   greveal_precedence_axiom n;
 
   let n' = greveal n in
-  live_located n sm && liveRef n'.frequency sm && live_node n'.zero_child sm &&
-  live_node n'.one_child sm && liveRef n'.code sm
+  live_located n sm && refIsLive n'.frequency sm && live_node n'.zero_child sm &&
+  live_node n'.one_child sm && refIsLive n'.code sm
 
 val live_node_after_write: #a:Type ->  rw:(lref a) -> v:a
                            -> n:located node -> m:smem{live_node n m}
@@ -57,15 +57,15 @@ let rec live_node_after_write rw v n m =
   live_node_after_write rw v n'.zero_child m;
   live_node_after_write rw v n'.one_child m
 
-val live_node_after_salloc: #a:Type -> r:(lref a) -> v:a -> n:located node
-                            -> m:smem{isNonEmpty (st m) /\ not (contains (topstb m) r) /\ live_node n m}
+val live_node_after_ralloc: #a:Type -> r:(lref a) -> v:a -> n:located node
+                            -> m:smem{isNonEmpty (st m) /\ not (contains (topRegion m) r) /\ live_node n m}
                             -> GTot (u:unit{live_node n (allocateInTopR r v m)})
                                (decreases n)
-let rec live_node_after_salloc r v n m =
+let rec live_node_after_ralloc r v n m =
   greveal_precedence_axiom n;
   let n' = greveal n in
-  live_node_after_salloc r v n'.zero_child m;
-  live_node_after_salloc r v n'.one_child m
+  live_node_after_ralloc r v n'.zero_child m;
+  live_node_after_ralloc r v n'.one_child m
 
 (* TODO: FIXME: Can't write ghost code in lemmas *)
 val live_node_after_write_lemma: #a:Type -> rw:(lref a) -> v:a
@@ -75,12 +75,12 @@ val live_node_after_write_lemma: #a:Type -> rw:(lref a) -> v:a
                                     [SMTPat (writeMemAux rw m v); SMTPat (live_node n m)]
 let live_node_after_write_lemma rw v n m = admit ()
 
-val live_node_after_salloc_lemma: #a:Type -> r:(lref a) -> v:a -> n:located node
-                            -> m:smem{isNonEmpty (st m) /\ not (contains (topstb m) r) /\ live_node n m}
+val live_node_after_ralloc_lemma: #a:Type -> r:(lref a) -> v:a -> n:located node
+                            -> m:smem{isNonEmpty (st m) /\ not (contains (topRegion m) r) /\ live_node n m}
                             -> Lemma (requires (True))
                                      (ensures (live_node n (allocateInTopR r v m)))
                                [SMTPat (allocateInTopR r v m); SMTPat (live_node n m)]
-let live_node_after_salloc_lemma r v n m = admit ()
+let live_node_after_ralloc_lemma r v n m = admit ()
 
 (* projectors *)
 assume val read_frequency: n:located node -> PureMem (lref int)
@@ -103,8 +103,8 @@ assume val read_code: n:located node -> PureMem (lref string)
 assume val mk_node: f:lref int -> z:located node -> o:located node -> s:symbol_t -> c:lref string
                     -> PureMem (located node)
                        (fun sm0 -> isNonEmpty (st sm0) /\
-                                   liveRef f sm0 /\ live_node z sm0 /\ live_node o sm0 /\ liveRef c sm0)
-                       (fun sm0 r -> isNonEmpty (st sm0) /\ regionOf r = InStack (topstid sm0) /\
+                                   refIsLive f sm0 /\ live_node z sm0 /\ live_node o sm0 /\ refIsLive c sm0)
+                       (fun sm0 r -> isNonEmpty (st sm0) /\ regionOf r = InStack (topRegionId sm0) /\
                                      (greveal r).frequency = f  /\
                                      (greveal r).zero_child = z /\
                                      (greveal r).one_child = o  /\
@@ -114,14 +114,14 @@ assume val mk_node: f:lref int -> z:located node -> o:located node -> s:symbol_t
 
 assume val mk_null_node: unit -> PureMem (located node)
                                  (fun sm0 -> b2t (isNonEmpty (st sm0)))
-                                 (fun sm0 r -> isNonEmpty (st sm0) /\ regionOf r = InStack (topstid sm0) /\
+                                 (fun sm0 r -> isNonEmpty (st sm0) /\ regionOf r = InStack (topRegionId sm0) /\
                                                live_node r sm0 /\
-                                               loopkupRef (greveal r).frequency sm0 = -1)
+                                               lookupRef (greveal r).frequency sm0 = -1)
 
 val is_null: n:located node -> PureMem bool
                                (fun sm0 -> b2t (live_node n sm0))
                                (fun sm0 r -> live_node n sm0 /\
-                                             (r = (loopkupRef (greveal n).frequency sm0 = -1)))
+                                             (r = (lookupRef (greveal n).frequency sm0 = -1)))
 let is_null n = memread (read_frequency n) = -1
 
 (**********)
@@ -144,45 +144,45 @@ let rec live_list_after_write_lemma rw v l m = match l with
   | []     -> ()
   | hd::tl -> live_list_after_write_lemma rw v tl m
 
-val live_list_after_salloc_lemma: #a:Type -> r:(lref a) -> v:a -> l:list (located node)
-                            -> m:smem{isNonEmpty (st m) /\ not (contains (topstb m) r) /\ live_list l m}
+val live_list_after_ralloc_lemma: #a:Type -> r:(lref a) -> v:a -> l:list (located node)
+                            -> m:smem{isNonEmpty (st m) /\ not (contains (topRegion m) r) /\ live_list l m}
                             -> Lemma (requires (True))
                                      (ensures (live_list l (allocateInTopR r v m)))
                                [SMTPat (allocateInTopR r v m); SMTPat (live_list l m)]
-let rec live_list_after_salloc_lemma r v l m = match l with
+let rec live_list_after_ralloc_lemma r v l m = match l with
   | []     -> ()
-  | hd::tl -> live_list_after_salloc_lemma r v tl m
+  | hd::tl -> live_list_after_ralloc_lemma r v tl m
 
 val live_node_list: l:node_list -> sm:smem -> GTot bool
-let live_node_list l sm = liveRef l sm && live_list (loopkupRef l sm) sm
+let live_node_list l sm = refIsLive l sm && live_list (lookupRef l sm) sm
 
 val new_list: unit -> Mem node_list (fun m0 -> True) (fun m0 r m1 -> b2t (live_node_list r m1)) (hide (Set.empty))
 let new_list _ = halloc []
 
 val is_empty: l:node_list -> PureMem bool
                              (fun m0 -> b2t (live_node_list l m0))
-                             (fun m0 r -> live_node_list l m0 /\ r = (loopkupRef l m0 =  []))
+                             (fun m0 r -> live_node_list l m0 /\ r = (lookupRef l m0 =  []))
 let is_empty l = (memread l = [])
 
 val is_singleton: l:node_list -> PureMem bool
                                  (fun m0 -> b2t (live_node_list l m0))
-                                 (fun m0 r -> live_node_list l m0 /\ r = (is_Cons (loopkupRef l m0) &&
-                                                                          Cons.tl (loopkupRef l m0) = []))
+                                 (fun m0 r -> live_node_list l m0 /\ r = (is_Cons (lookupRef l m0) &&
+                                                                          Cons.tl (lookupRef l m0) = []))
 let is_singleton l = match (memread l) with
   | _::[] -> true
   | _     -> false
 
 val pop_two: l:node_list -> Mem (located node * located node)
                             (fun m0 -> live_node_list l m0 /\
-                                       is_Cons (loopkupRef l m0) /\
-                                       is_Cons (Cons.tl (loopkupRef l m0)))
+                                       is_Cons (lookupRef l m0) /\
+                                       is_Cons (Cons.tl (lookupRef l m0)))
                             (fun m0 r m1 -> live_node_list l m0                 /\
-                                            is_Cons (loopkupRef l m0)           /\
-                                            is_Cons (Cons.tl (loopkupRef l m0)) /\
+                                            is_Cons (lookupRef l m0)           /\
+                                            is_Cons (Cons.tl (lookupRef l m0)) /\
                                             live_node (fst r) m1                /\
                                             live_node (snd r) m1                /\
                                             live_node_list l m1                 /\
-                                            loopkupRef l m1 = (Cons.tl (Cons.tl (loopkupRef l m0))))
+                                            lookupRef l m1 = (Cons.tl (Cons.tl (lookupRef l m0))))
                             (hide (Set.singleton (Ref l)))
 let pop_two l = match (memread l) with
   | hd::hd'::tl ->
@@ -191,7 +191,7 @@ let pop_two l = match (memread l) with
 
 val contents: l:node_list -> PureMem (list (located node)) (fun m0 -> b2t (live_node_list l m0))
                                                            (fun m0 r -> live_node_list l m0 /\
-                                                                        r = loopkupRef l m0)
+                                                                        r = lookupRef l m0)
 let contents l = memread l                                                                        
 
 val insert_in_ordered_list: n:located node -> l:list (located node)
@@ -219,8 +219,8 @@ val insert_in_ordered_node_list:
               (fun m0 _ m1 -> live_node n m0               /\
                               live_node_list l m0          /\
                               live_node_list l m1          /\
-                              List.mem n (loopkupRef l m1) /\
-                              (forall n'. List.mem n' (loopkupRef l m0) ==> List.mem n' (loopkupRef l m1)))
+                              List.mem n (lookupRef l m1) /\
+                              (forall n'. List.mem n' (lookupRef l m0) ==> List.mem n' (lookupRef l m1)))
               (hide (Set.singleton (Ref l)))
 let insert_in_ordered_node_list n l =
   let r = insert_in_ordered_list n (memread l) in
@@ -251,15 +251,15 @@ let rec live_hist_arr_after_write rw v h i m m' =
   if i = glength h m then ()
   else live_hist_arr_after_write rw v h (i + 1) m m'
 
-val live_hist_arr_after_salloc: #a:Type -> r:(lref a) -> v:a -> h:histogram{reveal (asRef h) =!= r} -> i:nat
-                            -> m:smem{isNonEmpty (st m) /\ not (contains (topstb m) r) /\
+val live_hist_arr_after_ralloc: #a:Type -> r:(lref a) -> v:a -> h:histogram{reveal (asRef h) =!= r} -> i:nat
+                            -> m:smem{isNonEmpty (st m) /\ not (contains (topRegion m) r) /\
                                       liveArr m h /\ i <= glength h m /\ live_histogram_arr h m i}
                             -> m':smem{m' = allocateInTopR r v m}
                             -> GTot (u:unit{liveArr m' h /\ i <= glength h m' /\ live_histogram_arr h m' i})
                                (decreases (glength h m - i))
-let rec live_hist_arr_after_salloc r v h i m m' =
+let rec live_hist_arr_after_ralloc r v h i m m' =
   if i = glength h m then ()
-  else live_hist_arr_after_salloc r v h (i + 1) m m'
+  else live_hist_arr_after_ralloc r v h (i + 1) m m'
 
 val live_hist_arr_after_write_lemma: #a:Type -> rw:(lref a) -> v:a
                            -> h:histogram{reveal (asRef h) =!= rw} -> i:nat
@@ -270,14 +270,14 @@ val live_hist_arr_after_write_lemma: #a:Type -> rw:(lref a) -> v:a
                               [SMTPat (live_histogram_arr h m i); SMTPat (live_histogram_arr h m' i); SMTPat (writeMemAux rw m v)]
 let live_hist_arr_after_write_lemma rw v h i m m' = admit ()
 
-val live_hist_arr_after_salloc_lemma: #a:Type -> r:(lref a) -> v:a -> h:histogram{reveal (asRef h) =!= r} -> i:nat
-                            -> m:smem{isNonEmpty (st m) /\ not (contains (topstb m) r) /\
+val live_hist_arr_after_ralloc_lemma: #a:Type -> r:(lref a) -> v:a -> h:histogram{reveal (asRef h) =!= r} -> i:nat
+                            -> m:smem{isNonEmpty (st m) /\ not (contains (topRegion m) r) /\
                                       liveArr m h /\ i <= glength h m /\ live_histogram_arr h m i}
                             -> m':smem{m' = allocateInTopR r v m}
                             -> Lemma (requires (True))
                                (ensures (liveArr m' h /\ i <= glength h m' /\ live_histogram_arr h m' i))
                                [SMTPat (live_histogram_arr h m i); SMTPat (live_histogram_arr h m' i); SMTPat (allocateInTopR r v m)]
-let live_hist_arr_after_salloc_lemma r v h i m m' = admit ()
+let live_hist_arr_after_ralloc_lemma r v h i m m' = admit ()
 
 val live_histogram: h:histogram -> sm:smem -> GTot (r:bool{r ==> (liveArr sm h /\
                                                                   (forall i. (i >= 0 /\ i < glength h sm) ==>
@@ -293,17 +293,17 @@ val live_hist_after_write_lemma: #a:Type -> rw:(lref a) -> v:a
                               [SMTPat (live_histogram h m); SMTPat (live_histogram h m'); SMTPat (writeMemAux rw m v)]                              
 let live_hist_after_write_lemma rw v h m m' = ()
 
-val live_hist_after_salloc_lemma: #a:Type -> r:(lref a) -> v:a -> h:histogram{reveal (asRef h) =!= r}
-                            -> m:smem{isNonEmpty (st m) /\ not (contains (topstb m) r) /\
+val live_hist_after_ralloc_lemma: #a:Type -> r:(lref a) -> v:a -> h:histogram{reveal (asRef h) =!= r}
+                            -> m:smem{isNonEmpty (st m) /\ not (contains (topRegion m) r) /\
                                       live_histogram h m}
                             -> m':smem{m' = allocateInTopR r v m}
                             -> Lemma (requires (True))
                                (ensures (live_histogram h m'))
                                [SMTPat (live_histogram h m); SMTPat (live_histogram h m'); SMTPat (allocateInTopR r v m)]
-let live_hist_after_salloc_lemma r v h m m' = ()
+let live_hist_after_ralloc_lemma r v h m m' = ()
 
 val compute_histogram: d:data -> h:histogram -> i:nat
-                       -> SST unit
+                       -> RST unit
                           (fun m0 -> isNonEmpty (st m0)                        /\
                                      liveArr m0 d /\ live_histogram h m0       /\
                                      glength h m0 = symbol_value_bound /\
@@ -317,20 +317,20 @@ val compute_histogram: d:data -> h:histogram -> i:nat
                                                                  (*/\
                                           liveArr m1 d ) /\ live_histogram h m1)*)
 let compute_histogram d h i =
-  if i = SSTArray.length d then ()
+  if i = RSTArray.length d then ()
   else
-    let sym = SSTArray.readIndex d i in    
-    let the_leaf = SSTArray.readIndex h sym in
+    let sym = RSTArray.readIndex d i in    
+    let the_leaf = RSTArray.readIndex h sym in
     if is_null the_leaf then
-      let the_leaf' = mk_node (salloc 1) (mk_null_node ()) (mk_null_node ()) sym (salloc "") in
-      SSTArray.writeIndex h sym the_leaf'
+      let the_leaf' = mk_node (ralloc 1) (mk_null_node ()) (mk_null_node ()) sym (ralloc "") in
+      RSTArray.writeIndex h sym the_leaf'
     else admit ()
       //memwrite (the_leaf.frequency) ((memread the_leaf.frequency) + 1)
 
 
 
 (*val insert_in_ordered_list: n:located node -> l:node_list
-                            -> SST unit
+                            -> RST unit
                                (fun sm0 -> live_ghost_list n sm0 /\ live_node n sm0 /\ live_node_list l sm0)
                                (fun sm0 _ sm1 -> live_ghost_list n sm0 /\ live_node n sm0 /\ live_node_list l sm0 /\
                                                  live_ghost_list n sm1) ///\ live_node n sm1 /\ live_node_list l sm1)
@@ -364,7 +364,7 @@ let rec insert_in_ordered_list n l =
  *)
 assume val mk_node: f:lref int -> n:lref node -> z:node -> o:node -> s:symbol_t -> c:lref string
                     -> PureMem node
-                       (fun sm0 -> liveRef f sm0 /\ liveRef n sm0 /\ liveRef c sm0)
+                       (fun sm0 -> refIsLive f sm0 /\ refIsLive n sm0 /\ refIsLive c sm0)
                        (fun sm0 r -> live_node r sm0)
 
 type live_histogram (h:sstarray node) (sm:smem) =
@@ -376,25 +376,25 @@ type live_histogram (h:sstarray node) (sm:smem) =
  *)
 val compute_histogram: sstream: sstarray symbol_t -> histogram: sstarray node
                        -> i:nat
-                       -> SST unit
+                       -> RST unit
                           (fun sm0 -> isNonEmpty (st sm0)                                    /\
                                       liveArr sm0 sstream /\ live_histogram histogram sm0    /\
                                       glength histogram sm0 = symbol_value_bound             /\
                                       i <= glength sstream sm0)
                           (fun sm0 r sm1 -> b2t (isNonEmpty (st sm1)))
 let rec compute_histogram sstream histogram i =
-  if i = SSTArray.length sstream then ()
+  if i = RSTArray.length sstream then ()
   else
-    let sym = SSTArray.readIndex sstream i in
-    let the_leaf = SSTArray.readIndex histogram sym in
+    let sym = RSTArray.readIndex sstream i in
+    let the_leaf = RSTArray.readIndex histogram sym in
     if is_null the_leaf then
-      let the_leaf' = mk_node (salloc 1) (salloc (null_node ())) (null_node ()) (null_node ()) sym (salloc "") in
-      SSTArray.writeIndex histogram sym the_leaf'
+      let the_leaf' = mk_node (ralloc 1) (ralloc (null_node ())) (null_node ()) (null_node ()) sym (ralloc "") in
+      RSTArray.writeIndex histogram sym the_leaf'
     else
       memwrite (the_leaf.frequency) ((memread the_leaf.frequency) + 1)
 
 val build_huffman_tree: histogram: sstarray node
-                        -> SST node
+                        -> RST node
                            (fun sm0 -> isNonEmpty (st sm0) /\ live_histogram histogram sm0)
                            (fun sm0 r sm1 -> b2t (isNonEmpty (st sm1)))
 let build_huffman_tree histogram =
@@ -402,15 +402,15 @@ let build_huffman_tree histogram =
                                    
 
 val huffman_encode: sstream:sstarray symbol_t -> estream:sstarray byte
-                    -> SST (sstarray byte * nat * nat)
+                    -> RST (sstarray byte * nat * nat)
                        (fun sm0 -> liveArr sm0 sstream /\ liveArr sm0 estream /\
                                    glength sstream sm0 = glength estream sm0)
                        (fun sm0 r sm1 -> True)
 let huffman_encode sstream estream =
-  pushStackFrame ();
+  pushRegion ();
   let histogram = screate symbol_value_bound (null_node ()) in
   compute_histogram sstream histogram 0;
   let tree = build_huffman_tree histogram in
-  popStackFrame ();
+  popRegion ();
   admit ()
   *)*)

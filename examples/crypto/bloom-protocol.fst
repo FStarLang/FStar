@@ -68,6 +68,16 @@ let log_event e =
 let server_refs = (Set.union (Set.singleton (Ref log_prot))
     			       (Set.singleton (Ref server_filter)))
 
+val bloom_lemma: s:uint32 -> c:uint16 ->
+		 bl:bloom filter_size{not (bloom_check (uint16_to_bytes c) bl)} ->
+		 l:list event{forall s' c' . List.mem (Recv s' c') l ==> bloom_check (uint16_to_bytes c) bl} ->
+		 Lemma (all_neq (Recv s c) l)
+let rec bloom_lemma s c bl l =
+  match l with
+  | [] -> ()
+  | Recv s' c' :: l' ->
+    bloom_lemma s c bl l'
+
 (* some basic, untrusted network controlled by the adversary *)
 
 assume val send: message -> ST unit
@@ -86,22 +96,27 @@ opaque logic type req (msg:message) =
 
 let k = keygen req
 
-(*val client : uint32 -> ST (option string)
- 			  (requires (fun h -> invariant h /\ sel h client_cnt < uint16_max ))
- 			  (ensures (fun h x h' -> invariant h'))
 let client (s: uint32) =
-  let c = next_cnt () in
+  let c = bytes_to_uint16 (sample 2) in
   admitP (Signal s c);
-  assert(Signal s c);
   let t = Format.signal s c in
   let m = mac k t in
   send (append t m);
   None
 
-val server : unit -> ST (option string)
-			(requires (fun h -> invariant h /\
-                                   sel h server_cnt <> sel h client_cnt))
-			(ensures (fun h x h' -> invariant h' /\ modifies server_refs h h'))
+val log_and_update: s: uint32 -> c: uint16 -> ST (unit)
+    (requires (fun h -> invariant h /\ (all_neq (Recv s c) (sel h log_prot))))
+    (ensures (fun h x h' -> invariant h' /\ (bloom_check (uint16_to_bytes c) (sel h' server_filter)) &&
+                            (sel h' log_prot = Recv s c::sel h log_prot)
+                            /\ modifies server_refs h h'))
+let log_and_update s c =
+  log_event (Recv s c);
+  let bl = !server_filter in
+  server_filter := bloom_add (uint16_to_bytes c) bl
+
+let fresh_nonce c =
+  not (bloom_check (uint16_to_bytes c) (!server_filter))
+
 let server () =
   let msg = recv () in (
     if length msg <> signal_size + macsize then Some "Wrong length"
@@ -109,13 +124,12 @@ let server () =
       let (t, m) = split msg signal_size  in
       match signal_split t with
       | Some (s, c) ->
-        if fresh_cnt c then
+        if fresh_nonce c then
           if verify k t m then (
 	          assert(Signal s c);
-	          max_lemma s c !log_prot;
 	          log_and_update s c;
             None
 	  ) else Some "MAC failed"
 	else Some "Counter already used"
       | None -> Some "Bad tag" )
-*)
+

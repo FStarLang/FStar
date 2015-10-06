@@ -1,11 +1,19 @@
 F*: An ML-like language with a type system for program verification
 ===================================================================
 
+<!--
 [![Build status](https://www.fstar-lang.org:3443/fstarlang/fstar/badge?branch=master)](https://www.fstar-lang.org:3443/fstarlang/fstar/)
+-->
 
 ### F\* website
 
 More information on F\* can be found at www.fstar-lang.org
+
+**Update:** Unfortunately, the fstar-lang.org domain is currently [not accessible].
+For a temporary clone of that website please visit:
+http://fstar.gforge.inria.fr
+
+[not accessible]: https://github.com/FStarLang/FStar/issues/381
 
 ### Installation
 
@@ -15,9 +23,14 @@ See [INSTALL.md]
 
 ### Tutorial
 
-The [F\* tutorial] provides a first taste of verified programming in F*.
+The [F\* tutorial] provides a first taste of verified programming in F\*.
+There is no way to run F\* online at the moment; we hope to restore
+the online editor to full functionality soon.
 
-[F\* tutorial]: https://www.fstar-lang.org/tutorial/
+[F\* tutorial]: http://fstar.gforge.inria.fr/tutorial/tutorial.html
+<!--
+[F\* tutorial broken]: https://www.fstar-lang.org/tutorial/
+-->
 
 ### Version 1.0
 
@@ -82,7 +95,8 @@ development and syntax highlighting.
   * Real-time verification (requires the Flycheck package)
   * Interactive proofs (à la Proof-General)
 
- F*-mode requires Emacs 24.3 or newer, and is distributed through [MELPA]. Add the following to your Emacs init file (usually `.emacs`), if it is not already there:
+ 
+fstar-mode requires Emacs 24.3 or newer, and is distributed through [MELPA]. Add the following to your Emacs init file (usually `.emacs`), if it is not already there:
 
 ```elisp
 (require 'package)

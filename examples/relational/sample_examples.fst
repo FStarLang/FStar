@@ -37,7 +37,7 @@ let dec_good_sample () = cut(inverses dec inc);
 val equiv_seq: a:(double (ref int))
                -> ST2 (double unit)
                   (requires (fun _ -> True))
-                  (ensures (fun _ _ h2 -> eq_rel (sel_rel h2 a)))
+                  (ensures (fun _ _ h2 -> eq_irel (sel_rel2 h2 a)))
 let equiv_seq a = let _ = equiv_pfx a in
                   dec_good_sample ();
                   let r = sample (fun x -> dec x) in

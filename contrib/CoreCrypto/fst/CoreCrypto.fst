@@ -1,7 +1,11 @@
-(* STATUS : JK : added a dummy DHDB interface needed by the DHDBManager, needs implementation *)
-
 module CoreCrypto
+
 open Platform.Bytes
+open FStar.HyperHeap
+
+effect EXT (a:Type) = ST a
+  (requires (fun _ -> True)) 
+  (ensures (fun h0 _ h -> modifies Set.empty h0 h))
 
 type hash_alg = | MD5 | SHA1 | SHA256 | SHA384 | SHA512
 type sig_alg = | RSASIG | DSA | ECDSA
@@ -10,13 +14,29 @@ type aead_cipher = | AES_128_GCM | AES_256_GCM
 type stream_cipher = | RC4_128
 type rsa_padding = | Pad_none | Pad_PKCS1
 
-val hashSize: h:hash_alg -> Tot nat
+let blockSize = function
+  | TDES_EDE_CBC -> 8
+  | AES_128_CBC  -> 16
+  | AES_256_CBC  -> 16
+
+let aeadKeySize = function
+  | AES_128_GCM -> 16
+  | AES_256_GCM -> 32
+
+let aeadRealIVSize = function
+  | AES_128_GCM -> 12
+  | AES_256_GCM -> 12
+
+let aeadTagSize = function
+  | AES_128_GCM -> 16
+  | AES_256_GCM -> 16
+
 let hashSize = function
-  | MD5     -> 16
-  | SHA1    -> 20
-  | SHA256  -> 32
-  | SHA384  -> 48
-  | SHA512  -> 64
+  | MD5    -> 16
+  | SHA1   -> 20
+  | SHA256 -> 32
+  | SHA384 -> 48
+  | SHA512 -> 64
 
 type rsa_key = {
   rsa_mod : bytes;
@@ -48,10 +68,11 @@ assume val hmac : alg:hash_alg -> bytes -> bytes -> Tot (h:bytes{length h = hash
 
 assume val block_encrypt : block_cipher -> bytes -> bytes -> bytes -> bytes
 assume val block_decrypt : block_cipher -> bytes -> bytes -> bytes -> bytes
-assume val aead_encrypt : aead_cipher -> bytes -> bytes -> bytes -> bytes -> Tot 'a
-//should become St 'a
-assume val aead_decrypt : aead_cipher -> bytes -> bytes -> bytes -> bytes -> Tot 'a
-//should become St 'a
+assume val aead_encrypt : (a:aead_cipher) -> (k:bytes)
+  -> (iv:bytes) -> (ad:bytes) -> (p:bytes) -> EXT (lbytes (length p + aeadTagSize a))
+assume val aead_decrypt : (a:aead_cipher) -> (k:bytes) 
+  -> (iv:bytes) -> (ad:bytes) -> (c:bytes{length c >= aeadTagSize a}) 
+  -> EXT (option (lbytes (length c - aeadTagSize a)))
 
 type cipher_stream
 assume val stream_encryptor : stream_cipher -> bytes -> cipher_stream
@@ -59,7 +80,7 @@ assume val stream_decryptor : stream_cipher -> bytes -> cipher_stream
 assume val stream_process : cipher_stream -> bytes -> bytes
 assume val stream_fini : cipher_stream -> unit
 
-assume val random : l:nat -> lbytes l
+assume val random : l:nat -> EXT (lbytes l)
 
 assume val rsa_gen_key : int -> rsa_key
 assume val rsa_encrypt : rsa_key -> rsa_padding -> bytes -> bytes
