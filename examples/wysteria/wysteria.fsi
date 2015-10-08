@@ -1,35 +1,14 @@
 (*--build-config
-    options:--admit_fsi FStar.Set;
-    other-files:ghost.fst ext.fst set.fsi heap.fst st.fst all.fst list.fst st2.fst
+    options:--admit_fsi FStar.Set --admit_fsi FStar.OrdSet --admit_fsi Prins;
+    other-files:ghost.fst ext.fst set.fsi heap.fst st.fst all.fst list.fst st2.fst ordset.fsi prins.fsi ffi.fst
  --*)
 
 module Wysteria
 
-(**********)
+open FStar.List
 
-(* declare prin and prins types and API, implemented these as ffi calls *)
-type prin
-type eprins
-
-val empty: eprins
-
-type prins = s:eprins{s =!= empty}
-
-val mem      : p:prin -> s:eprins -> Tot (b:bool{b ==> not (s = empty)})
-val singleton: p:prin -> Pure prins (True) (fun s -> s =!= empty /\ (forall p'. mem p' s = (p = p')))
-val subset   : s1:eprins -> s2:eprins -> Pure bool (True) (fun b -> b <==> (forall p. mem p s1 ==> mem p s2))
-val union    : s1:eprins -> s2:eprins -> Pure eprins (True) (fun s -> ((s1 =!= empty \/ s2 =!= empty) ==> s =!= empty) /\
-                                                                      (forall p. mem p s = (mem p s1 || mem p s2)))
-
-val size     : s:eprins -> Pure nat (True) (fun n -> n = 0 <==> s = empty)
-val choose   : s:prins -> Pure prin (True) (fun p -> b2t (mem p s))
-val remove   : p:prin -> s:prins -> Pure eprins (b2t (mem p s)) (fun s' -> (forall p'. ((mem p' s /\ p' =!= p) ==> mem p' s') /\
-                                                                                       (mem p' s' ==> mem p' s)) /\
-                                                                           not (mem p s')                        /\
-                                                                           size s' = size s - 1)
-
-assume val eq_lemma: s1:eprins -> s2:eprins -> Lemma (requires (forall p. mem p s1 = mem p s2)) (ensures (s1 = s2)) [SMTPat (s1 = s2)]
-(**********)
+open Prins
+open FFI
 
 type as_mode =
   | Par
@@ -38,8 +17,6 @@ type as_mode =
 type mode =
   | Mode: m:as_mode -> ps:prins -> mode
 
-open FStar.List
-  
 type telt =
   | TMsg  : #a:Type -> x:a -> telt
   | TScope: ps:prins -> t:list telt -> telt

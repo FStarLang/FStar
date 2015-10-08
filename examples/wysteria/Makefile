@@ -1,6 +1,6 @@
 include ../Makefile.include
 
-all: api sinterpreter tinterpreter theory codegen distclean
+all: api sinterpreter tinterpreter theory distclean #codegen
 
 api:
 	$(FSTAR) wysteria.fst
@@ -27,7 +27,7 @@ codegen:
 	$(FSTAR) --admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set\
 	         --admit_fsi FFI --admit_fsi Runtime --admit_fsi FStar.IO --codegen OCaml\
                  ghost.fst listTot.fst ordset.fsi ordmap.fsi classical.fst set.fsi heap.fst st.fst\
-                 all.fst io.fsti prins.fst ast.fst print.fst ffi.fsi sem.fst sinterpreter.fst runtime.fsi tinterpreter.fst\
+                 all.fst io.fsti prins.fsi prins.fst ast.fst print.fst ffi.fsi ffi.fst sem.fst sinterpreter.fst runtime.fsi tinterpreter.fst\
 		 sec_server.fst main.fst
 
 a.out: codegen
