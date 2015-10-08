@@ -432,22 +432,20 @@ end
 | false -> begin
 (match (((FStar_ST.read FStar_Options.codegen) = Some ("Wysteria"))) with
 | true -> begin
-(let fh = (FStar_Util.open_file_for_writing "SMC.wy")
-in (let _65_283 = (FStar_List.iter (fun m -> (FStar_Extraction_Wysteria_Extract.extract fh m)) fmods)
-in (FStar_Util.close_file fh)))
+(FStar_Extraction_Wysteria_Extract.extract fmods env)
 end
 | false -> begin
 ()
 end)
 end))
 
-let go = (fun _65_285 -> (let _65_289 = (process_args ())
-in (match (_65_289) with
+let go = (fun _65_281 -> (let _65_285 = (process_args ())
+in (match (_65_285) with
 | (res, filenames) -> begin
 (match (res) with
 | FStar_Getopt.Help -> begin
-(let _131_145 = (FStar_Options.specs ())
-in (FStar_Options.display_usage _131_145))
+(let _131_144 = (FStar_Options.specs ())
+in (FStar_Options.display_usage _131_144))
 end
 | FStar_Getopt.Die (msg) -> begin
 (FStar_Util.print_string msg)
@@ -459,63 +457,63 @@ end
 | f::[] -> begin
 (FStar_Parser_Driver.read_build_config f)
 end
-| _65_297 -> begin
-(let _65_298 = (FStar_Util.print_string "--use_build_config expects just a single file on the command line and no other arguments")
+| _65_293 -> begin
+(let _65_294 = (FStar_Util.print_string "--use_build_config expects just a single file on the command line and no other arguments")
 in (FStar_All.exit 1))
 end)
 end
 | false -> begin
 filenames
 end)
-in (let _65_304 = (batch_mode_tc filenames)
-in (match (_65_304) with
+in (let _65_300 = (batch_mode_tc filenames)
+in (match (_65_300) with
 | (fmods, dsenv, env) -> begin
-(let _65_305 = (report_errors None)
+(let _65_301 = (report_errors None)
 in (match ((FStar_ST.read FStar_Options.interactive)) with
 | true -> begin
 (interactive_mode dsenv env)
 end
 | false -> begin
-(let _65_307 = (codegen fmods env)
+(let _65_303 = (codegen fmods env)
 in (finished_message fmods))
 end))
 end)))
 end)
 end)))
 
-let main = (fun _65_309 -> (match (()) with
+let main = (fun _65_305 -> (match (()) with
 | () -> begin
-(FStar_All.try_with (fun _65_311 -> (match (()) with
+(FStar_All.try_with (fun _65_307 -> (match (()) with
 | () -> begin
-(let _65_322 = (go ())
-in (let _65_324 = (cleanup ())
+(let _65_318 = (go ())
+in (let _65_320 = (cleanup ())
 in (FStar_All.exit 0)))
-end)) (fun _65_310 -> (match (_65_310) with
+end)) (fun _65_306 -> (match (_65_306) with
 | e -> begin
-(let _65_314 = (match ((FStar_Absyn_Util.handleable e)) with
+(let _65_310 = (match ((FStar_Absyn_Util.handleable e)) with
 | true -> begin
 (FStar_Absyn_Util.handle_err false () e)
 end
 | false -> begin
 ()
 end)
-in (let _65_316 = (match ((FStar_ST.read FStar_Options.trace_error)) with
+in (let _65_312 = (match ((FStar_ST.read FStar_Options.trace_error)) with
 | true -> begin
-(let _131_150 = (FStar_Util.message_of_exn e)
-in (let _131_149 = (FStar_Util.trace_of_exn e)
-in (FStar_Util.fprint2 "\nUnexpected error\n%s\n%s\n" _131_150 _131_149)))
+(let _131_149 = (FStar_Util.message_of_exn e)
+in (let _131_148 = (FStar_Util.trace_of_exn e)
+in (FStar_Util.fprint2 "\nUnexpected error\n%s\n%s\n" _131_149 _131_148)))
 end
 | false -> begin
 (match ((not ((FStar_Absyn_Util.handleable e)))) with
 | true -> begin
-(let _131_151 = (FStar_Util.message_of_exn e)
-in (FStar_Util.fprint1 "\nUnexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" _131_151))
+(let _131_150 = (FStar_Util.message_of_exn e)
+in (FStar_Util.fprint1 "\nUnexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" _131_150))
 end
 | false -> begin
 ()
 end)
 end)
-in (let _65_318 = (cleanup ())
+in (let _65_314 = (cleanup ())
 in (FStar_All.exit 1))))
 end)))
 end))

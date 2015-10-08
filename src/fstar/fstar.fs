@@ -265,9 +265,10 @@ let codegen fmods env=
         List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^ext)) (FSharp.Format.pretty 120 d)) newDocs
     end
     else if !Options.codegen = Some "Wysteria" then begin
-        let fh = Util.open_file_for_writing "SMC.wy" in
-        List.iter (fun m -> Extraction.Wysteria.Extract.extract fh m) fmods;
-        Util.close_file fh
+        Extraction.Wysteria.Extract.extract fmods env
+//        let fh = Util.open_file_for_writing "SMC.wy" in
+//        List.iter (fun m -> Extraction.Wysteria.Extract.extract fh m) fmods;
+//        Util.close_file fh
     end
 
 (* Main function *)
