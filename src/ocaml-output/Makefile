@@ -114,7 +114,8 @@ package: all
 	rm -f $(NAME).zip $(NAME).tar.gz
 	if [ -d "$(PREFIX)" ]; then rm -dfr fstar; fi
         # Install the F* binary
-	install -m 755 -D -T fstar.exe $(PREFIX)/bin/fstar.exe
+	mkdir -p $(PREFIX)/bin/
+	install -m 755 -T fstar.exe $(PREFIX)/bin/fstar.exe
         # Then the rest of the static files.
 	$(call fexport,lib)
 	$(call fexport,examples)
