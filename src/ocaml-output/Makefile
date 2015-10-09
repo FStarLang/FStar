@@ -97,8 +97,8 @@ install: all
 ifeq ($(MADOKO),Madoko)
         # Build the tutorial first
 	$(MAKE) -C ../../doc/tutorial
-	$(call install_dir,doc/tutorial,share/fstar/tutorial)
 endif
+	$(call install_dir,doc/tutorial,share/fstar/tutorial)
 
 NAME=fstar_$(VERSION)_$(PLATFORM)
 
@@ -123,8 +123,8 @@ package: all
 ifeq ($(MADOKO),Madoko)
         # Build the tutorial
 	$(MAKE) -C ../../doc/tutorial
-	$(call fexport,doc/tutorial)
 else
+	$(call fexport,doc/tutorial)
 	@echo " ********** WARNING: You don't have Madoko installed. Binary package will not include tutorial."
 endif
         # Documentation and licenses
