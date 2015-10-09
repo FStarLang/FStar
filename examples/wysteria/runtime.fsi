@@ -1,6 +1,6 @@
 (*--build-config
    options:--admit_fsi FStar.Set --admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi Prins;
-   other-files:set.fsi heap.fst st.fst all.fst ordset.fsi ordmap.fsi prins.fsi ast.fst
+   other-files:ghost.fst set.fsi heap.fst st.fst all.fst ordset.fsi ordmap.fsi prins.fsi ast.fst
 --*)
 
 
@@ -26,4 +26,3 @@ val get_init_tenv : unit -> ML env
 
 val is_server: unit -> ML bool
 val me       : unit -> ML string
-val get_smc  : unit -> ML exp

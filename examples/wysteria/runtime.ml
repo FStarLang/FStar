@@ -3,6 +3,7 @@ module IO = Extlib.IO
 module Unix = BatUnix
 module Marshal = BatMarshal
 
+open Prins
 open AST
 
 type chan_in = IO.input
@@ -25,6 +26,3 @@ let create_thread (f:unit -> unit) :unit = let _ = Thread.create f () in ()
 
 let is_server _ = Sys.argv.(1) = "0"
 let me _ = Sys.argv.(2)
-
-(* This is properly implemented in w-extraction branch *)
-let get_smc = fun _ -> Exp ((E_const C_unit), None)

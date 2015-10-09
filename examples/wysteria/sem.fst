@@ -1,6 +1,6 @@
 (*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi Prins --admit_fsi FFI;
-    other-files:ghost.fst listTot.fst ordset.fsi ordmap.fsi classical.fst prins.fsi ast.fst ffi.fsi
+    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi Prins --admit_fsi Ffibridge;
+    other-files:ghost.fst listTot.fst ordset.fsi ordmap.fsi classical.fst prins.fsi ast.fst ffibridge.fsi
  --*)
 
 module Semantics
@@ -10,6 +10,8 @@ open FStar.List.Tot
 
 open FStar.OrdMap
 open FStar.OrdSet
+
+open Ffibridge
 
 open Prins
 open AST
@@ -528,25 +530,25 @@ let pre_effi (c:config) =
   is_T_exp (t_of_conf c) && is_E_ffi (e_of_exp (e_of_t_exp (t_of_conf c)))
 
 val step_ffi_e: c:config{pre_effi c} -> Tot config
-let step_ffi_e (Conf l m s en (T_exp (Exp (E_ffi n fn es inj) _)) tr) = match es with
+let step_ffi_e (Conf l m s en (T_exp (Exp (E_ffi 'a 'b n fn es inj) _)) tr) = match es with
   | []    -> Conf l m s en (T_red (R_ffi n fn [] inj)) tr
   | e::tl  -> Conf l m ((Frame m en (F_ffi n fn tl [] inj) tr)::s) en (T_exp e) (hide [])
 
 val step_ffi_l: c:config{is_value c /\ is_sframe c is_F_ffi} -> Tot config
-let step_ffi_l (Conf l _ ((Frame m en (F_ffi n fn es vs inj) tr)::s) _ (T_val #meta v) tr') =
+let step_ffi_l (Conf l _ ((Frame m en (F_ffi 'a 'b n fn es vs inj) tr)::s) _ (T_val #meta v) tr') =
   match es with
     | []    -> Conf l m s en (T_red (R_ffi n fn ((D_v meta v)::vs) inj)) (concat_traces tr tr')
     | e::tl -> Conf l m ((Frame m en (F_ffi n fn tl ((D_v meta v)::vs) inj) (concat_traces tr tr'))::s) en (T_exp e) (hide [])
 
 val pre_ffi: config -> Tot comp
 let pre_ffi c = match c with
-  | Conf _ _ _ _ (T_red (R_ffi _ _ vs _)) _ -> Do
+  | Conf _ _ _ _ (T_red (R_ffi 'a 'b _ _ vs _)) _ -> Do
   
   | _ -> NA
 
 val step_ffi: c:config{pre_ffi c = Do} -> Tot config
-let step_ffi (Conf l m s en (T_red (R_ffi n fn vs inj)) tr) =
-  let D_v _ v = FFI.exec_ffi n fn vs inj in
+let step_ffi (Conf l m s en (T_red (R_ffi 'a 'b n fn vs inj)) tr) =
+  let D_v _ v = exec_ffi n fn vs inj in
   Conf l m s en (T_val v) tr
 
 //----- ffi v l -----//
@@ -1004,7 +1006,7 @@ let rec compose_vals #m1 #m2 v1 v2 =
 	 let V_opaque 'b v2 m2 s2 c2 sps2 = v2 in
 	 let c1' = Mk_c_w c1 in
 	 let c2' = Mk_c_w c2 in
-	 if FFI.verified_eq c1' c2' then
+	 if verified_eq c1' c2' then
 	   let v' = c1 v1 v2 in
 	   let m' = compose_opaque_meta m1 m2 in
 	   D_v m' (V_opaque v' m' s1 c1 sps1)
