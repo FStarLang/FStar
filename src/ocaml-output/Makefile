@@ -115,7 +115,7 @@ package: all
 	if [ -d "$(PREFIX)" ]; then rm -dfr fstar; fi
         # Install the F* binary
 	mkdir -p $(PREFIX)/bin/
-	install -m 755 -T fstar.exe $(PREFIX)/bin/fstar.exe
+	install -m 755 fstar.exe $(PREFIX)/bin/fstar.exe
         # Then the rest of the static files.
 	$(call fexport,lib)
 	$(call fexport,examples)
