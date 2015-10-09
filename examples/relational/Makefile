@@ -9,6 +9,7 @@ all: noninterference\
 		 cache\
 		 ro\
 		 projection_test\
+		 monotone\
 		 ifc_compiler
 
 noninterference:
@@ -37,6 +38,9 @@ cache:
 
 ifc_compiler:
 	$(FSTAR) ifc_compiler.fst
+
+monotone::
+	$(FSTAR) monotone.fst
 
 projection_test:
 	$(FSTAR) projection_test.fst
