@@ -1,12 +1,12 @@
 (*--build-config
     options:--admit_fsi FStar.Set --z3timeout 10;
-    other-files:ext.fst set.fsi heap.fst st.fst all.fst list.fst  stack.fst listset.fst constr.fst word.fst seq.fsi seq.fst  ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst sstCombinators.fst array.fsi
+    other-files:ext.fst set.fsi heap.fst st.fst all.fst list.fst  stack.fst listset.fst constr.fst word.fst seq.fsi seq.fst  ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst rstWhile.fst array.fsi
   --*)
 
 (*rename mvector to vector. The word sstarray is used for memory-stored vectors *)
 module RSTArray
-open RSTCombinators
-open StackAndHeap  open Lref  open Located
+open RSTWhile
+open Regions  open Lref  open Located
 open RST
 open MachineWord
 open FStar.Heap

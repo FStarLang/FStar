@@ -15,7 +15,7 @@ type eprins = ordset prin p_cmp
 
 type prins = s:ordset prin p_cmp{not (s = empty)}
 
-val ps_cmp: ps1:eprins -> ps2:eprins -> Tot bool
+val ps_cmp: ps1:eprins -> ps2:eprins -> Tot bool (decreases (size ps1))
 
 assume Ps_cmp_is_total_order: total_order prins ps_cmp
 

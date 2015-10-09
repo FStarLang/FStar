@@ -9,12 +9,6 @@ F*: An ML-like language with a type system for program verification
 
 More information on F\* can be found at www.fstar-lang.org
 
-**Update:** Unfortunately, the fstar-lang.org domain is currently [not accessible].
-For a temporary clone of that website please visit:
-http://fstar.gforge.inria.fr
-
-[not accessible]: https://github.com/FStarLang/FStar/issues/381
-
 ### Installation
 
 See [INSTALL.md]
@@ -24,13 +18,8 @@ See [INSTALL.md]
 ### Tutorial
 
 The [F\* tutorial] provides a first taste of verified programming in F\*.
-There is no way to run F\* online at the moment; we hope to restore
-the online editor to full functionality soon.
 
-[F\* tutorial]: http://fstar.gforge.inria.fr/tutorial/tutorial.html
-<!--
-[F\* tutorial broken]: https://www.fstar-lang.org/tutorial/
--->
+[F\* tutorial]: https://www.fstar-lang.org/tutorial/
 
 ### Version 1.0
 

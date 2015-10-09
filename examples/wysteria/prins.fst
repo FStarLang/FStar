@@ -15,6 +15,7 @@ type prin =
   | Evelyn
   | Fred
 
+(* TODO: FIXME: we should not write this type *)
 val p_cmp: prin -> prin -> Tot bool
 let p_cmp p1 p2 =
        if p1 = Alice   then true

@@ -1,39 +1,14 @@
 (*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set;
-    other-files:ghost.fst ext.fst set.fsi heap.fst st.fst all.fst list.fst st2.fst ordset.fsi ordmap.fsi wysteria.fsi
+    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Prins;
+    other-files:ghost.fst ext.fst set.fsi heap.fst st.fst all.fst list.fst st2.fst ordset.fsi ordmap.fsi prins.fsi ffi.fst wysteria.fsi
  --*)
 
 module Wysteria
 
-type prin = nat
+open FStar.List
 
-let p_cmp p1 p2 = p1 <= p2
-
-type eprins = OrdSet.ordset prin p_cmp
-
-let empty = OrdSet.empty #prin #p_cmp
-
-type prins = s:eprins{s =!= empty}
-
-let mem p s = OrdSet.mem #prin #p_cmp p s
-let singleton p =
-  let s = OrdSet.singleton #prin #p_cmp p in
-  let _ = assert (not (s = empty)) in
-  s
-let subset s1 s2 = OrdSet.subset #prin #p_cmp s1 s2
-
-val empty_union_lem: #a:Type -> #f:OrdSet.cmp a -> s1:OrdSet.ordset a f -> s2:OrdSet.ordset a f
-                     -> Lemma (requires (True)) (ensures (OrdSet.union s1 s2 = OrdSet.empty ==>
-                                                          (s1 = OrdSet.empty /\ s2 = OrdSet.empty)))
-let empty_union_lem (#a:Type) #f s1 s2 = ()
-
-let union s1 s2 =
-  empty_union_lem s1 s2;
-  OrdSet.union #prin #p_cmp s1 s2
-
-let size s = OrdSet.size #prin #p_cmp s
-let choose s = Some.v (OrdSet.choose #prin #p_cmp s)
-let remove p s = OrdSet.remove #prin #p_cmp p s
+open Prins
+open FFI
 
 type as_mode =
   | Par
@@ -41,8 +16,6 @@ type as_mode =
 
 type mode =
   | Mode: m:as_mode -> ps:prins -> mode
-
-open FStar.List
 
 type telt =
   | TMsg  : #a:Type -> x:a -> telt
