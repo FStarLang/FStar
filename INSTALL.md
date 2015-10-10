@@ -96,9 +96,9 @@ you to skip directly to step 3 and build F* with just an OCaml compiler.
   - Using Visual Studio, open `src/VS/FStar.sln` and build the solution
     (in the menus: Build > Build Solution).
 
-**Note:** on Windows you need to build F\* using Visual Studio
-  (building in Cygwin is not supported currently; `make -C src`
-  succeeds but produces a broken binary:
+**Note:** on Windows if you want to build F\* using F# you need use
+  Visual Studio (building using `fsc.exe` in Cygwin is not supported
+  currently; `make -C src` succeeds but produces a broken binary:
   https://github.com/FStarLang/FStar/issues/159)
 
 **Note:** if the Visual Studio build fails because `parse.fs` and
