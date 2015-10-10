@@ -17,14 +17,13 @@ type ffi_type_s = {
 }
 
 let slice_id = "slice_id"
-let compose_ids = "compose_id"
+let compose_ids = "compose_ids"
 let slice_id_sps = "slice_id_sps"
 
 (* TODO: check that all these types are of kind Type or Type -> Type or Type -> Type -> Type *)
 
 let ffi_types = [ { module_name="Prims"; type_name="int"; slice_fn_n=slice_id; compose_fn_n=compose_ids; slice_sps_fn_n=slice_id_sps; };
                   { module_name="Prims"; type_name="nat"; slice_fn_n=slice_id; compose_fn_n=compose_ids; slice_sps_fn_n=slice_id_sps; };
-                  { module_name="Prims"; type_name="bool"; slice_fn_n=slice_id; compose_fn_n=compose_ids; slice_sps_fn_n=slice_id_sps; };
                   { module_name="Prims"; type_name="list"; slice_fn_n="slice_list"; compose_fn_n="compose_lists"; slice_sps_fn_n="slice_list_sps"; };
                   { module_name="Prims"; type_name="option"; slice_fn_n="slice_option"; compose_fn_n="compose_options"; slice_sps_fn_n="slice_option_sps"; } ]
 
@@ -56,6 +55,11 @@ let rec pre_process_t (t:typ) =
         | _ -> t'
     
 // before calling these is_ functions, the caller must normalize the type
+let is_bool (t:typ) =
+    match (pre_process_t t).n with
+        | Typ_const ftv -> ftv.v.str = "Prims.bool"
+        | _ -> false
+
 let is_unit (t:typ) =
     match (pre_process_t t).n with
         | Typ_const ftv -> ftv.v.str = "Prims.unit"
@@ -113,7 +117,7 @@ let lookup_ffi_map (t:string) :(exp * exp * exp) =
 
 // assume type is normalized already
 let rec get_opaque_fns (t:typ) :(exp * exp * exp) =
-    if is_unit t || is_prin t || is_prins t || is_eprins t then mk_fn_exp slice_id, mk_fn_exp compose_ids, mk_fn_exp slice_id_sps
+    if is_bool t || is_unit t || is_prin t || is_prins t || is_eprins t then mk_fn_exp slice_id, mk_fn_exp compose_ids, mk_fn_exp slice_id_sps
     else if is_box t || is_wire t then slice_value_exp, compose_values_exp, slice_value_sps_exp
     else
         match (pre_process_t t).n with
@@ -133,7 +137,8 @@ let rec get_opaque_fns (t:typ) :(exp * exp * exp) =
 let get_injection (t:typ) :string =
     let s = "fun x -> " in
     let s' =
-        if is_unit t then "V_unit"
+        if is_bool t then "V_bool x"
+        else if is_unit t then "V_unit"
         else if is_prin t then "V_prin x"
         else if is_prins t then "V_prins x"
         else if is_eprins t then "V_eprins x"
@@ -141,7 +146,7 @@ let get_injection (t:typ) :string =
         else
             let e1, e2, e3 = get_opaque_fns t in
             let s1, s2, s3 = exp_to_string e1, exp_to_string e2, exp_to_string e3 in
-            "V_opaque () x" ^ " " ^ s1 ^ " " ^ s2 ^ " " ^ s3
+            "mk_v_opaque x " ^ s1 ^ " " ^ s2 ^ " " ^ s3
     in
     s ^ s'
 
@@ -149,15 +154,17 @@ let filter_out_type_binders = List.filter (fun a -> match a with | Inl _, _ -> f
 
 let filter_out_type_args = List.filter (fun a -> match a with | Inl _, _ -> false | Inr _, _ -> true)
 
+let name_to_string (s:string) :string = "\"" ^ s ^ "\""
+
 let extract_binder (b:binder) :string =
     match b with
         | Inl _, _    -> raise (NYI ("Extract binder cannot extract type arguments"))
-        | Inr bvar, _ -> bvar.v.ppname.idText
+        | Inr bvar, _ -> name_to_string bvar.v.ppname.idText
 
 let extract_const (c:sconst) :string =
     match c with
-        | Const_unit    -> "C_unit"
-        | Const_bool b  -> "C_opaque " ^ (if b then "true" else "false")
+        | Const_unit    -> "C_unit ()"
+        | Const_bool b  -> "C_bool " ^ (if b then "true" else "false")
         | Const_int32 n -> "C_opaque " ^ (Util.string_of_int32 n)
         | Const_int x   -> "C_opaque " ^ x
 
@@ -188,44 +195,45 @@ let check_pats_for_bool (l:list<(pat * option<exp> * exp)>) :(bool * exp * exp) 
 
 let rec extract_exp (e:exp) en :string =
     match (Util.compress_exp e).n with
-        | Exp_bvar bvar          -> bvar.v.ppname.idText
-        | Exp_fvar (fvar, _)     -> fvar.v.ident.idText
-        | Exp_constant c         -> extract_const c
+        | Exp_bvar bvar          -> "mk_var " ^ (name_to_string bvar.v.ppname.idText)
+        | Exp_fvar (fvar, _)     -> "mk_var " ^ (name_to_string fvar.v.ident.idText) // TODO: check here that fvar is not an FFI or Wysteria function, they should only be applied and hence handled in Exp_app
+                                                                                  // another way may be to check that fvar is from current SMC module only
+        | Exp_constant c         -> "mk_const (" ^ extract_const c ^ ")"
         | Exp_abs (bs, e)        ->
             let body_str = extract_exp e en in
             let bs = filter_out_type_binders bs in
-            List.fold_left (fun s b -> "E_abs " ^ (extract_binder b) ^ " (" ^ s ^ ")") body_str (List.rev bs)
+            List.fold_left (fun s b -> "mk_abs " ^ (extract_binder b) ^ " (" ^ s ^ ")") body_str (List.rev bs)
         | Exp_app (e', args)      ->
             let args = filter_out_type_args args in
             let b, ffi = is_ffi e' in
             if b then
                 let t = FStar.Tc.Normalize.normalize en (typ_of_exp e) in
                 let inj = get_injection t in
-                let args_str = List.fold_left (fun s a -> s ^ " (" ^  (extract_arg a en) ^ ")") "" args in
-                "E_ffi" ^ (string_of_int (List.length args)) ^ " (F " ^  ffi ^ ") " ^ args_str ^ " (I (" ^ inj ^ ")"
+                let args_str = List.fold_left (fun s a -> s ^ " (" ^  (extract_arg a en) ^ ");") "" args in
+                "mk_ffi " ^ (string_of_int (List.length args)) ^ " (" ^  ffi ^ ") [ " ^ args_str ^ " ] (" ^ inj ^ ")"
             else
                 let s = extract_exp e' en in
                 let b, s' = extract_wysteria_specific_ast s args en in
                 if b then s'
                 else
-                    if s = "_assert" then "C_unit"  // ?
+                    if s = "_assert" then "mk_const (C_unit ())"  // ?
                     else
-                        List.fold_left (fun s a -> s ^ " (" ^ extract_arg a en ^ ")") s args
+                        List.fold_left (fun s a -> "mk_app (" ^ s ^ ") (" ^ extract_arg a en ^ ")") s args
         | Exp_match (e, pats)    ->
             let b, e1, e2 = check_pats_for_bool pats in
             if b then
-                "E_cond (" ^ (extract_exp e en) ^ ") (" ^ extract_exp e1 en ^ ") (" ^ extract_exp e2 en ^ ")"
+                "mk_cond (" ^ (extract_exp e en) ^ ") (" ^ extract_exp e1 en ^ ") (" ^ extract_exp e2 en ^ ")"
             else raise (NYI ("Only boolean patterns are supported"))
         | Exp_ascribed (e, _, _) -> extract_exp e en
         | Exp_let (lbs, e)       ->
             if fst lbs then raise (NYI "Recursive let not expected (only top level)")
             else
                 let lb = List.hd (snd lbs) in
-                "E_let " ^ (lbname_to_string lb.lbname) ^ " (" ^ extract_exp lb.lbdef en ^ ") (" ^ extract_exp e en ^ ")"
+                "mk_let " ^ name_to_string (lbname_to_string lb.lbname) ^ " (" ^ extract_exp lb.lbdef en ^ ") (" ^ extract_exp e en ^ ")"
         | _ -> Util.print_string ("Expression not expected " ^ (tag_of_exp e)); raise (NYI "")
 
 and extract_wysteria_specific_ast (s:string) (args:list<arg>) en :(bool * string) =
-    if s = "main" then
+    if s = "mk_var \"main\"" then
         let f = List.hd (List.tl args) in
         let s =
             match f with
@@ -235,39 +243,41 @@ and extract_wysteria_specific_ast (s:string) (args:list<arg>) en :(bool * string
         true, s
     else
         match s with
-            | "as_par" ->
+            | "mk_var \"as_par\"" ->
                 let a1 = List.hd args in
                 let a2 = List.hd (List.tl args) in
-                true, "E_aspar (" ^ extract_arg a1 en ^ ") (" ^ extract_arg a2 en ^ ")"
-            | "as_sec" ->
+                true, "mk_aspar (" ^ extract_arg a1 en ^ ") (" ^ extract_arg a2 en ^ ")"
+            | "mk_var \"as_sec\"" ->
                 let a1 = List.hd args in
                 let a2 = List.hd (List.tl args) in
-                true, "E_assec (" ^ extract_arg a1 en ^ ") (" ^ extract_arg a2 en ^ ")"
-            | "box" -> 
+                true, "mk_assec (" ^ extract_arg a1 en ^ ") (" ^ extract_arg a2 en ^ ")"
+            | "mk_var \"box\"" -> 
                 let a1 = List.hd args in
                 let a2 = List.hd (List.tl args) in
-                true, "E_box (" ^ extract_arg a1 en ^ ") (" ^ extract_arg a2 en ^ ")"
-            | "unbox_p"
-            | "unbox_s" ->
+                true, "mk_box (" ^ extract_arg a1 en ^ ") (" ^ extract_arg a2 en ^ ")"
+            | "mk_var \"unbox_p\""
+            | "mk_var \"unbox_s\"" ->
                 let a = List.hd (List.tl args) in  // first argument is an implicit
-                true, "E_unbox (" ^ extract_arg a en ^ ")"
-            | "mkwire_s" ->
+                true, "mk_unbox (" ^ extract_arg a en ^ ")"
+            | "mk_var \"mkwire_s\"" ->
                 let a1 = List.hd args in
                 let a2 = List.hd (List.tl args) in
-                true, "E_mkwire (" ^ extract_arg a1 en ^ ") (" ^ extract_arg a2 en ^ ")"
-            | "mkwire_p" ->
+                true, "mk_mkwire (" ^ extract_arg a1 en ^ ") (" ^ extract_arg a2 en ^ ")"
+            | "mk_var \"mkwire_p\"" ->
                 let a1 = List.hd (List.tl args) in
                 let a2 = List.hd (List.tl (List.tl args)) in
-                true, "E_mkwire (" ^ extract_arg a1 en ^ ") (" ^ extract_arg a2 en ^ ")"  // first argument is implicit
-            | "projwire_p"
-            | "projwire_s" ->
+                true, "mk_mkwire (" ^ extract_arg a1 en ^ ") (" ^ extract_arg a2 en ^ ")"  // first argument is implicit
+            | "mk_var \"projwire_p\""
+            | "mk_var \"projwire_s\"" ->
                 let a1 = List.hd (List.tl args) in
                 let a2 = List.hd (List.tl (List.tl args)) in
-                true, "E_projwire (" ^ extract_arg a1 en ^ ") (" ^ extract_arg a2 en ^ ")"  // first argument is implicit
-            | "concat_wire" ->
+                true, "mk_projwire (" ^ extract_arg a1 en ^ ") (" ^ extract_arg a2 en ^ ")"  // first argument is implicit
+            | "mk_var \"concat_wire\"" ->
                 let a1 = List.hd (List.tl (List.tl args)) in
                 let a2 = List.hd (List.tl (List.tl (List.tl args))) in
-                true, "E_mkwire (" ^ extract_arg a1 en ^ ") (" ^ extract_arg a2 en ^ ")"  // first two arguments are implicit
+                true, "mk_mkwire (" ^ extract_arg a1 en ^ ") (" ^ extract_arg a2 en ^ ")"  // first two arguments are implicit
+            | "mk_var \"w_read_int\"" ->  // TODO: instead of hardcoding V_opaque etc. use get_injection fn
+                true, "mk_ffi 1 FFI.read_int [ E_const (C_unit ()) ] (fun x -> mk_v_opaque x " ^ slice_id ^ " " ^ compose_ids ^ " " ^ slice_id_sps ^ ")"
 
             | _ -> false, ""
 
@@ -299,13 +309,13 @@ and extract_sigelt (s:sigelt) en :string =
                             let rest_bs = List.tl bs in
                             
                             let body_str = extract_exp e en in
-                            let tl_abs_str = List.fold_left (fun s b -> "E_abs " ^ extract_binder b ^ " (" ^ s ^ ")") body_str (List.rev rest_bs) in
-                            let fix_str = "E_fix " ^ lbname ^ " " ^ extract_binder first_b ^ " (" ^ tl_abs_str ^ ")" in
-                            let let_str = "E_let " ^ lbname ^ " (" ^ fix_str ^ ")" in
+                            let tl_abs_str = List.fold_left (fun s b -> "mk_abs " ^ extract_binder b ^ " (" ^ s ^ ")") body_str (List.rev rest_bs) in
+                            let fix_str = "mk_fix " ^ name_to_string lbname ^ " " ^ extract_binder first_b ^ " (" ^ tl_abs_str ^ ")" in
+                            let let_str = "mk_let " ^ name_to_string lbname ^ " (" ^ fix_str ^ ")" in
                             let_str
                         | _ -> raise (NYI ("Expected an abs with recursive let"))
             else
-                let lb = List.hd (snd lbs) in "E_let " ^ (lbname_to_string lb.lbname) ^ " (" ^ (extract_exp lb.lbdef en) ^ ")"
+                let lb = List.hd (snd lbs) in "mk_let " ^ name_to_string (lbname_to_string lb.lbname) ^ " (" ^ (extract_exp lb.lbdef en) ^ ")"
         | Sig_main (e, _) -> extract_exp e en
         | _ -> ""
 
