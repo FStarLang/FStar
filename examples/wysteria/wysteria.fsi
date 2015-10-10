@@ -1,6 +1,6 @@
 (*--build-config
-    options:--admit_fsi FStar.Set --admit_fsi FStar.OrdSet --admit_fsi Prins;
-    other-files:ghost.fst ext.fst set.fsi heap.fst st.fst all.fst list.fst st2.fst ordset.fsi prins.fsi ffi.fst
+    options:--admit_fsi FStar.Set --admit_fsi FStar.OrdSet --admit_fsi Prins --admit_fsi FStar.IO;
+    other-files:ghost.fst ext.fst set.fsi heap.fst st.fst all.fst io.fsti list.fst st2.fst ordset.fsi prins.fsi ffi.fst
  --*)
 
 module Wysteria
@@ -299,9 +299,9 @@ val main: #a:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> a -> trace -> Type
 
 (* these are also ffi calls *)
 
-val read: #a:Type -> unit -> Wys a (fun m0     -> Mode.m m0 = Par /\
-                                                  (exists p. Mode.ps m0 = singleton p))
-                                   (fun m0 r t -> b2t (t = []))
+val w_read_int: unit -> Wys int (fun m0 -> Mode.m m0 = Par /\
+                                     (exists p. Mode.ps m0 = singleton p))
+                             (fun m0 r t -> b2t (t = []))
 
 val alice  : prin
 val bob    : prin

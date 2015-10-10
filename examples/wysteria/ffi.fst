@@ -1,6 +1,6 @@
 (*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi Prins;
-    other-files:ordset.fsi prins.fsi;
+    options:--admit_fsi FStar.Set --admit_fsi FStar.OrdSet --admit_fsi Prins --admit_fsi FStar.IO;
+    other-files:set.fsi heap.fst st.fst all.fst ordset.fsi prins.fsi io.fsti;
  --*)
 
 module FFI
@@ -54,3 +54,5 @@ val eq_lemma: s1:eprins -> s2:eprins
 	        [SMTPat (s1 = s2)]
 let eq_lemma s1 s2 = ()
 
+val read_int: unit -> int
+let read_int x = FStar.IO.input_int ()

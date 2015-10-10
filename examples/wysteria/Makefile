@@ -30,10 +30,11 @@ a.out: codegen
 	cp $(FSTAR_HOME)/lib/ml/prims.ml .
 	cp $(FSTAR_HOME)/lib/ml/FStar_ST.ml .
 	cp $(FSTAR_HOME)/lib/ml/FStar_All.ml .
-	$(OCAMLOPT) prims.ml FStar_Ghost.ml FStar_List_Tot.ml FStar_OrdSet.ml FStar_OrdMap.ml FStar_ST.ml FStar_All.ml  \
+	cp $(FSTAR_HOME)/lib/ml/FStar_IO.ml .
+	$(OCAMLOPT) prims.ml FStar_Ghost.ml FStar_List_Tot.ml FStar_OrdSet.ml FStar_OrdMap.ml FStar_ST.ml FStar_All.ml FStar_IO.ml  \
 	            Prins.ml AST.ml ffibridge.ml Semantics.ml runtime.ml Interpreter.ml SecServer.ml prog.ml Main.ml -o a.out
 clean:
 	rm -f *.cmi *.cmx *.o *.exe a.out 
 
 distclean:
-	rm -f prims.ml FStar_Ghost.ml FStar_List_Tot.ml FStar_ST.ml FStar_All.ml Prins.ml AST.ml Semantics.ml Interpreter.ml SecServer.ml Main.ml FStar_Classical.ml FStar_Heap.ml  *.cmi *.cmx *.o *.exe a.out
+	rm -f prims.ml FStar_Ghost.ml FStar_List_Tot.ml FStar_ST.ml FStar_All.ml FStar_IO.ml Prins.ml AST.ml Semantics.ml Interpreter.ml SecServer.ml Main.ml FStar_Classical.ml FStar_Heap.ml  *.cmi *.cmx *.o *.exe a.out
