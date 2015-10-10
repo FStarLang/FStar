@@ -23,10 +23,6 @@ type comp = | Do | Skip | NA
 val e_of_t_exp: t:term{is_T_exp t} -> Tot exp
 let e_of_t_exp (T_exp e) = e
 
-(* TODO: FIXME: workaround for projectors *)
-val e_of_exp: exp -> Tot exp'
-let e_of_exp (Exp e _) = e
-
 val concat_traces: erased trace -> erased trace -> Tot (erased trace)
 let concat_traces t1 t2 = elift2 append t1 t2
 
@@ -55,10 +51,10 @@ let vals_traces_concat_lemma tr1 tr2 =
 //----- aspar e1 e2 -----//
 
 let pre_easpar (c:config) =
-  is_T_exp (t_of_conf c) && is_E_aspar (e_of_exp (e_of_t_exp (t_of_conf c))) && is_par c
+  is_T_exp (t_of_conf c) && is_E_aspar (e_of_t_exp (t_of_conf c)) && is_par c
 
 val step_aspar_e1: c:config{pre_easpar c} -> Tot config
-let step_aspar_e1 (Conf l m s en (T_exp (Exp (E_aspar e1 e2) _)) tr) =
+let step_aspar_e1 (Conf l m s en (T_exp (E_aspar e1 e2)) tr) =
   Conf l m ((Frame m en (F_aspar_ps e2) tr)::s) en (T_exp e1) (hide [])
 
 val step_aspar_e2: c:config{is_value_ps c /\ is_sframe c is_F_aspar_ps}
@@ -135,10 +131,10 @@ let step_aspar_ret c = match c with
 // ----- box e1 e2 -----//
 
 let pre_ebox (c:config) =
-  is_T_exp (t_of_conf c) && is_E_box (e_of_exp (e_of_t_exp (t_of_conf c)))
+  is_T_exp (t_of_conf c) && is_E_box (e_of_t_exp (t_of_conf c))
 
 val step_box_e1: c:config{pre_ebox c} -> Tot config
-let step_box_e1 (Conf l m s en (T_exp (Exp (E_box e1 e2) _)) tr) =
+let step_box_e1 (Conf l m s en (T_exp (E_box e1 e2)) tr) =
   Conf l m ((Frame m en (F_box_ps e2) tr)::s) en (T_exp e1) (hide [])
 
 val step_box_e2: c:config{is_value_ps c /\ is_sframe c is_F_box_ps}
@@ -177,10 +173,10 @@ let step_box (Conf l m s en (T_red (R_box ps' v)) tr) =
 //----- app e1 e2 -----//
 
 let pre_eapp (c:config) =
-  is_T_exp (t_of_conf c) && is_E_app (e_of_exp (e_of_t_exp (t_of_conf c)))
+  is_T_exp (t_of_conf c) && is_E_app (e_of_t_exp (t_of_conf c))
 
 val step_app_e1: c:config{pre_eapp c} -> Tot config
-let step_app_e1 (Conf l m s en (T_exp (Exp (E_app e1 e2) _)) tr) =
+let step_app_e1 (Conf l m s en (T_exp (E_app e1 e2)) tr) =
   Conf l m ((Frame m en (F_app_e1 e2) tr)::s) en (T_exp e1) (hide [])
 
 val step_app_e2: c:config{is_value c /\ is_sframe c is_F_app_e1}
@@ -210,10 +206,10 @@ let step_app c = match c with
 //----- fun x.e -----//
 
 let pre_eabs (c:config) =
-  is_T_exp (t_of_conf c) && is_E_abs (e_of_exp (e_of_t_exp (t_of_conf c)))
+  is_T_exp (t_of_conf c) && is_E_abs (e_of_t_exp (t_of_conf c))
 
 val step_abs: c:config{pre_eabs c} -> Tot config
-let step_abs (Conf l m s en (T_exp (Exp (E_abs x e) _)) tr) =
+let step_abs (Conf l m s en (T_exp (E_abs x e)) tr) =
   Conf l m s en (T_val (V_clos en x e)) tr
 
 //----- fun x.e -----//
@@ -221,10 +217,10 @@ let step_abs (Conf l m s en (T_exp (Exp (E_abs x e) _)) tr) =
 //----- fix f.fun x.e -----//
 
 let pre_efix (c:config) =
-  is_T_exp (t_of_conf c) && is_E_fix (e_of_exp (e_of_t_exp (t_of_conf c)))
+  is_T_exp (t_of_conf c) && is_E_fix (e_of_t_exp (t_of_conf c))
 
 val step_fix: c:config{pre_efix c} -> Tot config
-let step_fix (Conf l m s en (T_exp (Exp (E_fix f x e) _)) tr) =
+let step_fix (Conf l m s en (T_exp (E_fix f x e)) tr) =
   Conf l m s en (T_val (V_fix_clos en f x e)) tr
 
 //----- fix f.fun x. e -----//
@@ -232,10 +228,10 @@ let step_fix (Conf l m s en (T_exp (Exp (E_fix f x e) _)) tr) =
 //----- fun x.e (closed) -----//
 
 let pre_eempabs (c:config) =
-  is_T_exp (t_of_conf c) && is_E_empabs (e_of_exp (e_of_t_exp (t_of_conf c)))
+  is_T_exp (t_of_conf c) && is_E_empabs (e_of_t_exp (t_of_conf c))
 
 val step_empabs: c:config{pre_eempabs c} -> Tot config
-let step_empabs (Conf l m s en (T_exp (Exp (E_empabs x e) _)) tr) =
+let step_empabs (Conf l m s en (T_exp (E_empabs x e)) tr) =
   Conf l m s en (T_val (V_emp_clos x e)) tr
 
 //----- fun x.e (closed) -----// 
@@ -243,10 +239,10 @@ let step_empabs (Conf l m s en (T_exp (Exp (E_empabs x e) _)) tr) =
 //----- let x = e1 in e2 -----//
 
 let pre_elet (c:config) =
-  is_T_exp (t_of_conf c) && is_E_let (e_of_exp (e_of_t_exp (t_of_conf c)))
+  is_T_exp (t_of_conf c) && is_E_let (e_of_t_exp (t_of_conf c))
 
 val step_let_e1: c:config{pre_elet c} -> Tot config
-let step_let_e1 (Conf l m s en (T_exp (Exp (E_let x e1 e2) _)) tr) =
+let step_let_e1 (Conf l m s en (T_exp (E_let x e1 e2)) tr) =
   Conf l m ((Frame m en (F_let x e2) tr)::s) en (T_exp e1) (hide [])
 
 val step_let_red: c:config{is_value c /\ is_sframe c is_F_let}
@@ -269,7 +265,7 @@ let step_let c = match c with
 //----- x -----//
 
 (* TODO: FIXME: workaround for projectors *)
-val x_of_e_var: e:exp'{is_E_var e} -> Tot varname
+val x_of_e_var: e:exp{is_E_var e} -> Tot varname
 let x_of_e_var (E_var x) = x
 
 (* TODO: FIXME: workaround for projectors *)
@@ -283,11 +279,11 @@ val en_of_conf: config -> Tot env
 let en_of_conf (Conf _ _ _ en _ _) = en
 
 let pre_evar (c:config) =
-  is_T_exp (t_of_conf c) && is_E_var (e_of_exp (e_of_t_exp (t_of_conf c))) &&
-  is_Some ((en_of_conf c) (x_of_e_var (e_of_exp (e_of_t_exp (t_of_conf c)))))
+  is_T_exp (t_of_conf c) && is_E_var (e_of_t_exp (t_of_conf c)) &&
+  is_Some ((en_of_conf c) (x_of_e_var (e_of_t_exp (t_of_conf c))))
 
 val step_var: c:config{pre_evar c} -> Tot config
-let step_var (Conf l m s en (T_exp (Exp (E_var x) _)) tr) =
+let step_var (Conf l m s en (T_exp (E_var x)) tr) =
   let Some (D_v _ v) = en x in
   Conf l m s en (T_val v) tr
 
@@ -296,7 +292,7 @@ let step_var (Conf l m s en (T_exp (Exp (E_var x) _)) tr) =
 //----- c -----//
 
 let pre_econst (c:config) =
-  is_T_exp (t_of_conf c) && is_E_const (e_of_exp (e_of_t_exp (t_of_conf c)))
+  is_T_exp (t_of_conf c) && is_E_const (e_of_t_exp (t_of_conf c))
 
 val slice_const: p:prin -> 'a -> Tot 'a
 let slice_const p x = x
@@ -308,7 +304,7 @@ val slice_const_sps: ps:prins -> 'a -> Tot 'a
 let slice_const_sps ps x = x
 
 val step_const: c:config{pre_econst c} -> Tot config
-let step_const (Conf l m s en (T_exp (Exp (E_const c) _)) tr) =
+let step_const (Conf l m s en (T_exp (E_const c)) tr) =
   let meta = Meta empty Can_b empty Can_w in
   let v = match c with
     | C_prin p     -> V_prin p
@@ -328,10 +324,10 @@ let step_const (Conf l m s en (T_exp (Exp (E_const c) _)) tr) =
 //----- unbox e -----//
 
 let pre_eunbox (c:config) =
-  is_T_exp (t_of_conf c) && is_E_unbox (e_of_exp (e_of_t_exp (t_of_conf c)))
+  is_T_exp (t_of_conf c) && is_E_unbox (e_of_t_exp (t_of_conf c))
 
 val step_unbox_e: c:config{pre_eunbox c} -> Tot config
-let step_unbox_e (Conf l m s en (T_exp (Exp (E_unbox e) _)) tr) =
+let step_unbox_e (Conf l m s en (T_exp (E_unbox e)) tr) =
   Conf l m ((Frame m en F_unbox tr)::s) en (T_exp e) (hide [])
 
 val step_unbox_red: c:config{is_value c /\ is_sframe c is_F_unbox}
@@ -358,10 +354,10 @@ let step_unbox c = match c with
 //----- mkwire e1 e2 -----//
 
 let pre_emkwire (c:config) =
-  is_T_exp (t_of_conf c) && is_E_mkwire (e_of_exp (e_of_t_exp (t_of_conf c)))
+  is_T_exp (t_of_conf c) && is_E_mkwire (e_of_t_exp (t_of_conf c))
 
 val step_mkwire_e1: c:config{pre_emkwire c} -> Tot config
-let step_mkwire_e1 (Conf l m s en (T_exp (Exp (E_mkwire e1 e2) _)) tr) =
+let step_mkwire_e1 (Conf l m s en (T_exp (E_mkwire e1 e2)) tr) =
   Conf l m ((Frame m en (F_mkwire_ps e2) tr)::s) en (T_exp e1) (hide [])
 
 val step_mkwire_e2: c:config{is_value c /\ is_sframe c is_F_mkwire_ps}
@@ -418,10 +414,10 @@ let step_mkwire c = match c with
 //----- projwire e1 e2 -----//
 
 let pre_eprojwire (c:config) =
-  is_T_exp (t_of_conf c) && is_E_projwire (e_of_exp (e_of_t_exp (t_of_conf c)))
+  is_T_exp (t_of_conf c) && is_E_projwire (e_of_t_exp (t_of_conf c))
 
 val step_projwire_e1: c:config{pre_eprojwire c} -> Tot config
-let step_projwire_e1 (Conf l m s en (T_exp (Exp (E_projwire e1 e2) _)) tr) =
+let step_projwire_e1 (Conf l m s en (T_exp (E_projwire e1 e2)) tr) =
   Conf l m ((Frame m en (F_projwire_p e2) tr)::s) en (T_exp e1) (hide [])
 
 val step_projwire_e2: c:config{is_value_p c /\ is_sframe c is_F_projwire_p}
@@ -459,10 +455,10 @@ let step_projwire c = match c with
 //----- concatwire e1 e2 -----//
 
 let pre_econcatwire (c:config) =
-  is_T_exp (t_of_conf c) && is_E_concatwire (e_of_exp (e_of_t_exp (t_of_conf c)))
+  is_T_exp (t_of_conf c) && is_E_concatwire (e_of_t_exp (t_of_conf c))
 
 val step_concatwire_e1: c:config{pre_econcatwire c} -> Tot config
-let step_concatwire_e1 (Conf l m s en (T_exp (Exp (E_concatwire e1 e2) _)) tr) =
+let step_concatwire_e1 (Conf l m s en (T_exp (E_concatwire e1 e2)) tr) =
   Conf l m ((Frame m en (F_concatwire_e1 e2) tr)::s) en (T_exp e1) (hide [])
 
 val step_concatwire_e2: c:config{is_value c /\ is_sframe c is_F_concatwire_e1}
@@ -527,10 +523,10 @@ let step_concatwire c = match c with
 //----- ffi f l -----//
 
 let pre_effi (c:config) =
-  is_T_exp (t_of_conf c) && is_E_ffi (e_of_exp (e_of_t_exp (t_of_conf c)))
+  is_T_exp (t_of_conf c) && is_E_ffi (e_of_t_exp (t_of_conf c))
 
 val step_ffi_e: c:config{pre_effi c} -> Tot config
-let step_ffi_e (Conf l m s en (T_exp (Exp (E_ffi 'a 'b n fn es inj) _)) tr) = match es with
+let step_ffi_e (Conf l m s en (T_exp (E_ffi 'a 'b n fn es inj)) tr) = match es with
   | []    -> Conf l m s en (T_red (R_ffi n fn [] inj)) tr
   | e::tl  -> Conf l m ((Frame m en (F_ffi n fn tl [] inj) tr)::s) en (T_exp e) (hide [])
 
@@ -556,10 +552,10 @@ let step_ffi (Conf l m s en (T_red (R_ffi 'a 'b n fn vs inj)) tr) =
 //----- if e then e1 else e2 -----//
 
 let pre_econd (c:config) =
-  is_T_exp (t_of_conf c) && is_E_cond (e_of_exp (e_of_t_exp (t_of_conf c)))
+  is_T_exp (t_of_conf c) && is_E_cond (e_of_t_exp (t_of_conf c))
 
 val step_cond_e: c:config{pre_econd c} -> Tot config
-let step_cond_e (Conf l m s en (T_exp (Exp (E_cond e e1 e2) _)) tr) =
+let step_cond_e (Conf l m s en (T_exp (E_cond e e1 e2)) tr) =
   Conf l m ((Frame m en (F_cond e1 e2) tr)::s) en (T_exp e) (hide [])
 
 val step_cond_red: c:config{is_value c /\ is_sframe c is_F_cond} -> Tot config
@@ -582,10 +578,10 @@ let step_cond c = match c with
 //----- assec e1 e2 -----//
 
 let pre_eassec (c:config) =
-  is_T_exp (t_of_conf c) && is_E_assec (e_of_exp (e_of_t_exp (t_of_conf c)))
+  is_T_exp (t_of_conf c) && is_E_assec (e_of_t_exp (t_of_conf c))
 
 val step_assec_e1: c:config{pre_eassec c} -> Tot config
-let step_assec_e1 (Conf l m s en (T_exp (Exp (E_assec e1 e2) _)) tr) =
+let step_assec_e1 (Conf l m s en (T_exp (E_assec e1 e2)) tr) =
   Conf l m ((Frame m en (F_assec_ps e2) tr)::s) en (T_exp e1) (hide [])
 
 val step_assec_e2: c:config{is_value_ps c /\ is_sframe c is_F_assec_ps}

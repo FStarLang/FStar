@@ -26,27 +26,24 @@ type const =
 
   | C_opaque: c:'a -> const
 
-type exp' =
-  | E_aspar     : ps:exp -> e:exp -> exp'
-  | E_assec     : ps:exp -> e:exp -> exp'
-  | E_box       : ps:exp -> e:exp -> exp'
-  | E_unbox     : e:exp  -> exp'
-  | E_mkwire    : e1:exp -> e2:exp -> exp'
-  | E_projwire  : e1:exp -> e2:exp -> exp'
-  | E_concatwire: e1:exp -> e2:exp -> exp'
+type exp =
+  | E_aspar     : ps:exp -> e:exp -> exp
+  | E_assec     : ps:exp -> e:exp -> exp
+  | E_box       : ps:exp -> e:exp -> exp
+  | E_unbox     : e:exp  -> exp
+  | E_mkwire    : e1:exp -> e2:exp -> exp
+  | E_projwire  : e1:exp -> e2:exp -> exp
+  | E_concatwire: e1:exp -> e2:exp -> exp
 
-  | E_const     : c:const -> exp'
-  | E_var       : x:varname -> exp'
-  | E_let       : x:varname -> e1:exp -> e2:exp -> exp'
-  | E_abs       : x:varname -> e:exp -> exp'
-  | E_fix       : f:varname -> x:varname -> e:exp -> exp'
-  | E_empabs    : x:varname -> e:exp -> exp'
-  | E_app       : e1:exp -> e2:exp -> exp'
-  | E_ffi       : n:nat -> fn:'a -> args:list exp -> inj:'b -> exp'
-  | E_cond      : e:exp -> e1:exp -> e2:exp -> exp'
-
-and exp =
-  | Exp: e:exp' -> info:option other_info -> exp
+  | E_const     : c:const -> exp
+  | E_var       : x:varname -> exp
+  | E_let       : x:varname -> e1:exp -> e2:exp -> exp
+  | E_abs       : x:varname -> e:exp -> exp
+  | E_fix       : f:varname -> x:varname -> e:exp -> exp
+  | E_empabs    : x:varname -> e:exp -> exp
+  | E_app       : e1:exp -> e2:exp -> exp
+  | E_ffi       : n:nat -> fn:'a -> args:list exp -> inj:'b -> exp
+  | E_cond      : e:exp -> e1:exp -> e2:exp -> exp
 
 type canbox = | Can_b | Cannot_b
 
