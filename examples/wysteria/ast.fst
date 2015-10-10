@@ -314,3 +314,56 @@ let get_en_b #meta v = match v with
 
 val is_terminal: config -> Tot bool
 let is_terminal (Conf _ (Mode as_m _) s _ t _) = as_m = Par && s = [] && is_T_val t
+
+//-----//
+
+opaque val mk_aspar: exp -> exp -> Tot exp
+let mk_aspar ps e = E_aspar ps e
+
+opaque val mk_assec: exp -> exp -> Tot exp
+let mk_assec ps e = E_assec ps e
+
+opaque val mk_box: exp -> exp -> Tot exp
+let mk_box ps e = E_box ps e
+
+opaque val mk_unbox: exp -> Tot exp
+let mk_unbox e = E_unbox e
+
+opaque val mk_mkwire: exp -> exp -> Tot exp
+let mk_mkwire e1 e2 = E_mkwire e1 e2
+
+opaque val mk_projwire: exp -> exp -> Tot exp
+let mk_projwire e1 e2 = E_projwire e1 e2
+
+opaque val mk_concatwire: exp -> exp -> Tot exp
+let mk_concatwire e1 e2 = E_concatwire e1 e2
+
+opaque val mk_const: const -> Tot exp
+let mk_const c = E_const c
+
+opaque val mk_var: varname -> Tot exp
+let mk_var x = E_var x
+
+opaque val mk_let: varname -> exp -> exp -> Tot exp
+let mk_let x e1 e2 = E_let x e1 e2
+
+opaque val mk_abs: varname -> exp -> Tot exp
+let mk_abs x e = E_abs x e
+
+opaque val mk_fix: varname -> varname -> exp -> Tot exp
+let mk_fix f x e = E_fix f x e
+
+opaque val mk_empabs: varname -> exp -> Tot exp
+let mk_empabs x e = E_empabs x e
+
+opaque val mk_app: exp -> exp -> Tot exp
+let mk_app e1 e2 = E_app e1 e2
+
+opaque val mk_ffi: nat -> 'a -> list exp -> 'b -> Tot exp
+let mk_ffi n a l b = E_ffi n a l b
+
+opaque val mk_cond: exp -> exp -> exp -> Tot exp
+let mk_cond e1 e2 e2 = E_cond e1 e2 e2
+
+opaque val mk_v_opaque: 'a -> (prin -> 'a -> Tot 'a) -> ('a -> 'a -> Tot 'a) -> (prins -> 'a -> Tot 'a) -> Tot (value (Meta empty Can_b empty Can_w))
+let mk_v_opaque v s c sps = V_opaque v (Meta empty Can_b empty Can_w) s c sps

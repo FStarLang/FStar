@@ -1,6 +1,6 @@
 type ('a, 'b) ordset = 'a BatSet.t
 
-let empty _ = BatSet.empty
+let empty (_:'a -> 'a -> bool) :'a BatSet.t = BatSet.empty
 let union _ s1 s2 = BatSet.union s1 s2
 let intersect _ s1 s2 = BatSet.intersect s1 s2
 let mem _ x s = BatSet.mem x s					    

@@ -9,9 +9,7 @@ open OrdSet
 open Prins
 
 val empty: eprins
-let empty = OrdSet.empty
-
-type prins = s:eprins{s =!= empty}
+let empty = OrdSet.empty #prin #p_cmp
 
 val mem: p:prin -> s:eprins -> Tot (b:bool{b ==> not (s = empty)})
 let mem p s = OrdSet.mem p s
@@ -36,7 +34,7 @@ let union s1 s2 =
   s
 
 val size: s:eprins -> Pure nat (True) (fun n -> n = 0 <==> s = empty)
-let size s = OrdSet.size s 
+let size s = OrdSet.size s
 
 val choose: s:prins -> Pure prin (True) (fun p -> b2t (mem p s))
 let choose s = Some.v (OrdSet.choose s)
@@ -56,3 +54,16 @@ let eq_lemma s1 s2 = ()
 
 val read_int: unit -> int
 let read_int x = FStar.IO.input_int ()
+
+val slice_id: prin -> 'a -> Tot 'a
+let slice_id p c = c
+
+val compose_ids: 'a -> 'a -> Tot 'a
+let compose_ids x _ = x
+
+val slice_id_sps: prin -> 'a -> Tot 'a
+let slice_id_sps p x = x
+
+
+
+
