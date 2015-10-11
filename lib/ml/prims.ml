@@ -155,3 +155,6 @@ let ___Inl___v x = match x with
 let ___Inr___v x = match x with
   | Inr v -> v
   | _     -> failwith "impossible"
+
+let string_of_bool = string_of_bool
+let string_of_int = string_of_int

@@ -28,28 +28,30 @@ let const_on (#k:Type) (#v:Type) #f d x =
   let g = (fun y -> if mem y d then Some x else None) in
   Mk_map d g
 
-let select (#k:Type) (#v:Type) #f x (Mk_map d m) = m x
+let select (#k:Type) (#v:Type) #f x m = (Mk_map.m m) x
 
-let update (#k:Type) (#v:Type) #f x y (Mk_map s g ) =
-  let s' = insert x s in
-  let g' = fun x' -> if x' = x then Some y else g x' in
+let insert (#a:Type) (#f:cmp a) (x:a) (s:ordset a f) = union #a #f (singleton #a #f x) s
+
+let update (#k:Type) (#v:Type) #f x y m =
+  let s' = insert x (Mk_map.d m) in
+  let g' = fun x' -> if x' = x then Some y else (Mk_map.m m) x' in
   Mk_map s' g'
 
-let contains (#k:Type) (#v:Type) #f x (Mk_map s g) = mem x s
+let contains (#k:Type) (#v:Type) #f x m = mem x (Mk_map.d m)
 
-let dom (#k:Type) (#v:Type) #f (Mk_map s g) = s
+let dom (#k:Type) (#v:Type) #f m = (Mk_map.d m)
 
-let remove (#k:Type) (#v:Type) #f x (Mk_map s g) =
-  let s' = remove x s in
-  let g' = fun x' -> if x' = x then None else g x' in
+let remove (#k:Type) (#v:Type) #f x m =
+  let s' = remove x (Mk_map.d m) in
+  let g' = fun x' -> if x' = x then None else (Mk_map.m m) x' in
   Mk_map s' g'
 
-let choose (#k:Type) (#v:Type) #f (Mk_map s g) =
-  match OrdSet.choose s with
+let choose (#k:Type) (#v:Type) #f m =
+  match OrdSet.choose (Mk_map.d m) with
     | None   -> None
-    | Some x -> Some (x, Some.v (g x))
+    | Some x -> Some (x, Some.v ((Mk_map.m m) x))
 
-let size (#k:Type) (#v:Type) #f (Mk_map s g) = OrdSet.size s
+let size (#k:Type) (#v:Type) #f m = OrdSet.size (Mk_map.d m)
 
 open FStar.FunctionalExtensionality
 
@@ -108,7 +110,6 @@ let dom_empty_helper (#k:Type) (#v:Type) #f m =
 
 let choose_m (#k:Type) (#v:Type) #f m =
   dom_empty_helper #k #v #f m;
-  let (Mk_map s g) = m in
   let c = choose #k #v #f m in
   match c with
     | None        -> ()
@@ -116,7 +117,7 @@ let choose_m (#k:Type) (#v:Type) #f m =
       let m' = remove #k #v #f x m in
       let (Mk_map s' g') = m' in
       let (Mk_map s'' g'') = update #k #v #f x y m' in
-      cut (FEq g g'')
+      cut (FEq (Mk_map.m m) g'')
 
 let size_empty (#k:Type) (#v:Type) #f = ()
 

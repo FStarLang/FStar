@@ -35,19 +35,3 @@ let create_thread (f:unit -> unit) :unit = let _ = Thread.create f () in ()
 
 let is_server _ = Sys.argv.(1) = "0"
 let me _ = Sys.argv.(2)
-
-(* This is properly implemented in w-extraction branch *)
-module Lexer = Wlexer
-module Parser = Wparser
-
-let parse_channel :string -> in_channel -> exp =
-  fun f i ->
-  let lexbuf = Lexing.from_channel i in
-  Parser.exp Lexer.token lexbuf
-
-let get_smc _ =
-  let f = "SMC.wy" in
-  let i = open_in f in
-  let e = parse_channel f i in
-  print_string "Done parsing SMC.wy\n";
-  e

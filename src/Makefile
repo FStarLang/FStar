@@ -233,6 +233,7 @@ test:   clean $(BIN)/fstar.exe ocaml-test
 	make -C ../contrib/CoreCrypto/ml/ all test
 	make -C ../examples/crypto rpc-test
 	make -C ../examples/crypto cnt-test
+	#make -C ../examples/wysteria a.out
 
 test.net: clean $(BIN)/fstar.exe boot
 	make -C ../examples

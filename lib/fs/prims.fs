@@ -104,3 +104,5 @@ module Prims
   let is_Nil l = l = [] (*consider redefining List.isEmpty as this function*)
   let is_Cons l = not (is_Nil l)
   let raise e = raise e
+  let string_of_bool b = sprintf "%b" b
+  let string_of_int i = sprintf "%d" i

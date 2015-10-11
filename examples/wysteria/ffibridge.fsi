@@ -3,10 +3,10 @@
    other-files:ordset.fsi ordmap.fsi ghost.fst prins.fsi ast.fst
 --*)
 
-module FFI
+module Ffibridge
 
 open AST
 
-val exec_ffi: nat -> ffi_fn -> list dvalue -> ffi_inj -> Tot dvalue
+val exec_ffi: nat -> 'a -> list dvalue -> 'b -> Tot dvalue
 
 val verified_eq: x:'a -> y:'a -> Tot (r:bool{r <==> x = y})

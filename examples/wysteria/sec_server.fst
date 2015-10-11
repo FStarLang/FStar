@@ -1,6 +1,6 @@
 (*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Prins --admit_fsi FFI --admit_fsi Runtime;
-    other-files:ghost.fst listTot.fst ordset.fsi ordmap.fsi classical.fst set.fsi heap.fst st.fst all.fst prins.fsi ast.fst ffi.fsi sem.fst sinterpreter.fst runtime.fsi
+    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Ffibridge --admit_fsi Runtime --admit_fsi FStar.IO --admit_fsi FStar.String;
+    other-files:ghost.fst listTot.fst ordset.fsi ordmap.fsi classical.fst set.fsi heap.fst st.fst all.fst io.fsti string.fsi prins.fst ast.fst ffibridge.fsi sem.fst runtime.fsi print.fst interpreter.fst
  --*)
 
 module SecServer
@@ -15,7 +15,7 @@ open Runtime
 open Prins
 open AST
 open Semantics
-open SourceInterpreter
+open Interpreter
 
 open FStar.IO
 
@@ -39,6 +39,9 @@ let rec send_output #meta ps out_m v =
   server_write out (slice_v p v);
   if ps_rest = empty then ()
   else send_output #meta ps_rest out_m v
+
+val is_sterminal: config -> Tot bool
+let is_sterminal (Conf _ _ s _ t _) = s = [] && is_T_val t
 
 val do_sec_comp: ps:prins -> env_m:en_map{contains_ps ps env_m}
                  -> out_m:out_map{contains_ps ps out_m}

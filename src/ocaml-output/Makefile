@@ -97,8 +97,8 @@ install: all
 ifeq ($(MADOKO),Madoko)
         # Build the tutorial first
 	$(MAKE) -C ../../doc/tutorial
-	$(call install_dir,doc/tutorial,share/fstar/tutorial)
 endif
+	$(call install_dir,doc/tutorial,share/fstar/tutorial)
 
 NAME=fstar_$(VERSION)_$(PLATFORM)
 
@@ -114,7 +114,8 @@ package: all
 	rm -f $(NAME).zip $(NAME).tar.gz
 	if [ -d "$(PREFIX)" ]; then rm -dfr fstar; fi
         # Install the F* binary
-	install -m 755 -D -T fstar.exe $(PREFIX)/bin/fstar.exe
+	mkdir -p $(PREFIX)/bin/
+	install -m 755 fstar.exe $(PREFIX)/bin/fstar.exe
         # Then the rest of the static files.
 	$(call fexport,lib)
 	$(call fexport,examples)
@@ -122,10 +123,10 @@ package: all
 ifeq ($(MADOKO),Madoko)
         # Build the tutorial
 	$(MAKE) -C ../../doc/tutorial
-	$(call fexport,doc/tutorial)
 else
-	@echo " ********** WARNING: You don't have Madoko installed. Binary package will not include tutorial."
+	@echo " ********** WARNING: You don't have Madoko installed. Binary package will not include tutorial in html form."
 endif
+	$(call fexport,doc/tutorial)
         # Documentation and licenses
 	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt ../../setenv.sh $(PREFIX)
 	wget https://raw.githubusercontent.com/Z3Prover/z3/master/LICENSE.txt -O fstar/LICENSE-z3.txt

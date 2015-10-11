@@ -17,6 +17,8 @@ let rec fold (#a:Type) (#b:Type) #f g s a =
 
 (**********)
 
+let insert (#a:Type) (#f:cmp a) (x:a) (s:ordset a f) = union #a #f (singleton #a #f x) s
+
 val union':#a:Type -> #f:cmp a -> ordset a f -> ordset a f -> Tot (ordset a f)
 let union' (#a:Type) #f s1 s2 = fold (fun e (s:ordset a f) -> insert e s) s1 s2
 
