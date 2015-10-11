@@ -107,8 +107,4 @@ val size_union: #a:Type -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
                                    (size #a #f (union #a #f s1 s2) >= size #a #f s2)))
                          [SMTPat (size #a #f (union #a #f s1 s2))]
 
-
-let is_singleton (#a:Type) (#f:cmp a) (s:ordset a f) = (size #a #f s = 1)
-let insert (#a:Type) (#f:cmp a) (x:a) (s:ordset a f) = union #a #f (singleton #a #f x) s
-
 (**********)

@@ -188,7 +188,7 @@ val m_of_mode: mode -> Tot as_mode
 let m_of_mode (Mode m _) = m
 
 type mode_inv (m:mode) (l:level) =
-  (is_Target l /\ m_of_mode m = Par) ==> is_singleton (Mode.ps m)
+  (is_Target l /\ m_of_mode m = Par) ==> (size (Mode.ps m) = 1)
 
 val is_sec_frame: f':frame' -> Tot bool
 let is_sec_frame f' =

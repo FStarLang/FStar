@@ -19,31 +19,39 @@ let project_value_content (v:unit value) :Obj.t =
   in
   content
 
+let process_list (l:dvalue list) :Obj.t list =
+  List.rev (
+    List.map (fun dv ->
+      let (D_v (_, v)) = dv in
+      project_value_content v
+    ) l)
+
 let exec_ffi (n:int) (ffi_fn:Obj.t) (l:dvalue list) (ffi_inj:Obj.t) :dvalue =
   let f = cast ffi_fn in
+  let l = process_list l in
   let ffi_ret =
     match n with
       | 1 ->
 	let a = List.hd l in
-	f (cast a)
+	f a
 
       | 2 ->
 	let a1 = List.hd l in
 	let a2 = List.hd (List.tl l) in
-	f (cast a1) (cast a2)
+	f a1 a2
 
       | 3 ->
 	let a1 = List.hd l in
 	let a2 = List.hd (List.tl l) in
 	let a3 = List.hd (List.tl (List.tl l)) in
-	f (cast a1) (cast a2) (cast a3)
+	f a1 a2 a3
 
       | 4 ->
 	let a1 = List.hd l in
 	let a2 = List.hd (List.tl l) in
 	let a3 = List.hd (List.tl (List.tl l)) in
 	let a4 = List.hd (List.tl (List.tl (List.tl l))) in
-	f (cast a1) (cast a2) (cast a3) (cast a4)
+	f a1 a2 a3 a4
 
       | 5 ->
 	let a1 = List.hd l in
@@ -51,7 +59,7 @@ let exec_ffi (n:int) (ffi_fn:Obj.t) (l:dvalue list) (ffi_inj:Obj.t) :dvalue =
 	let a3 = List.hd (List.tl (List.tl l)) in
 	let a4 = List.hd (List.tl (List.tl (List.tl l))) in
 	let a5 = List.hd (List.tl (List.tl (List.tl (List.tl l)))) in
-	f (cast a1) (cast a2) (cast a3) (cast a4) (cast a5)
+	f a1 a2 a3 a4 a5
 
       | _ ->
 	let msg =
@@ -60,6 +68,7 @@ let exec_ffi (n:int) (ffi_fn:Obj.t) (l:dvalue list) (ffi_inj:Obj.t) :dvalue =
 	in
 	raise (FFI_error msg)
   in
-  cast ((cast ffi_inj) ffi_ret)
+  let v = cast ((cast ffi_inj) ffi_ret) in
+  AST.D_v (AST.Meta ([], AST.Can_b, [], AST.Can_w), v)
   
 let verified_eq _ _ = true

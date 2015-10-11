@@ -34,5 +34,4 @@ let mill1 _ =
   as_sec ab g
 ;;
 
-let x = main ab mill1 in
-wprint x
+let x = main ab mill1 in ()
