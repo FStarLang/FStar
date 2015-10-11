@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi FStar.Set --admit_fsi FStar.Seq --verify_module CBuffer --z3timeout 10;
     variables:PLATFORM=../../contrib/Platform/fst SST=../low-level;
-  other-files:classical.fst ext.fst set.fsi seq.fsi heap.fst st.fst all.fst seqproperties.fst list.fst listTot.fst listproperties.fst $SST/stack.fst $SST/listset.fst ghost.fst $SST/located.fst $SST/lref.fst $SST/regions.fst $SST/rst.fst $SST/sstCombinators.fst $SST/array.fsi $SST/array.fst
+  other-files:classical.fst ext.fst set.fsi seq.fsi heap.fst st.fst all.fst seqproperties.fst list.fst listTot.fst listproperties.fst $SST/stack.fst $SST/listset.fst ghost.fst $SST/located.fst $SST/lref.fst $SST/regions.fst $SST/rst.fst $SST/rstWhile.fst $SST/array.fsi $SST/array.fst
   --*)
 
 module CBuffer
@@ -9,7 +9,7 @@ module CBuffer
 open FStar.Set
 open FStar.Heap
 open SST
-open SSTCombinators
+open RSTWhile
 open Regions
 open Lref
 open Located

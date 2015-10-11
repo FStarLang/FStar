@@ -15,6 +15,7 @@ type prin =
   | Evelyn
   | Fred
 
+(* TODO: FIXME: we should not write this type *)
 val p_cmp: prin -> prin -> Tot bool
 let p_cmp p1 p2 =
        if p1 = Alice   then true
@@ -28,7 +29,6 @@ type eprins = ordset prin p_cmp
 
 type prins = s:ordset prin p_cmp{not (s = empty)}
 
-val ps_cmp: ps1:eprins -> ps2:eprins -> Tot bool (decreases (size ps1))
 let rec ps_cmp ps1 ps2 =
   if size ps1 < size ps2 then false
   else if size ps1 > size ps2 then true
@@ -78,11 +78,8 @@ assume Ps_cmp_is_total_order: total_order prins ps_cmp
 val insert: prin -> eprins -> Tot prins
 let insert p ps = union (singleton p) ps
 
-val all_prins: unit -> Tot prins
 let all_prins _ =
   insert Alice (insert Bob (insert Charlie (insert Dave (insert Evelyn (insert Fred empty)))))
 
-val all_prins_superset_lemma:
-  unit -> Lemma (requires (True)) (ensures (forall ps. subset ps (all_prins ())))
 let all_prins_superset_lemma _ = ()
 

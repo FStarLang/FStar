@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi Set --z3timeout 10;
     other-files:ext.fst set.fsi heap.fst st.fst list.fst  stack.fst listset.fst
-    ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst sstCombinators.fst seq.fsi seq.fst word.fst
+    ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst rstWhile.fst seq.fsi seq.fst word.fst
   --*)
 
 (*Why is MD5 so? Why did its designer(s) think
@@ -9,7 +9,7 @@
   Is there a principle behind its design? or just random convolutery?
   *)
 module MD5Common
-open RSTCombinators
+open RSTWhile
 open StackAndHeap  open Lref  open Located
 open RST
 open MVector

@@ -1,11 +1,11 @@
 (*--build-config
     options:--admit_fsi Set --z3timeout 100;
     other-files:ext.fst set.fsi heap.fst st.fst all.fst list.fst  stack.fst listset.fst
-    ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst sstCombinators.fst constr.fst word.fst seq.fsi seq.fst array.fsi array.fst
+    ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst rstWhile.fst constr.fst word.fst seq.fsi seq.fst array.fsi array.fst
   --*)
 
 module ArrayAlgos
-open RSTCombinators
+open RSTWhile
 open StackAndHeap
 open RST
 open MVector

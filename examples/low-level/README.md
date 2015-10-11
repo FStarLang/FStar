@@ -15,3 +15,5 @@ Base files:
 High-level modules:
 - rst.fst: definition of the RST (as in "Region-ST") effect of computations that
   occur within our stack of regions.
+- rstWhile.fst: a selection of curated while combinators for all your iteration
+  needs

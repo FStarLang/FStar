@@ -20,13 +20,13 @@ codegen: demo.fst
 	$(FSTAR) $^
 	cp ../low-level/Located.ml .
 	cp ../low-level/Lref.ml .
-	cp ../low-level/SST.ml .
+	cp ../low-level/RST.ml .
 	cp ../low-level/Seq.ml .
 	cp ../low-level/SSTArray.ml .
 	cp ./ml/CSystem.ml ./ml/CBuffer.ml ./ml/Test.ml .
 
 SST_FILES=ListSet.ml Stack.ml FStar_FunctionalExtensionality.ml FStar_Ghost.ml Located.ml \
-	Lref.ml StackAndHeap.ml SST.ml Seq.ml SSTArray.ml SSTCombinators.ml
+	Lref.ml Regions.ml RST.ml Seq.ml RSTArray.ml RSTWhile.ml
 
 demo: $(SST_FILES) CBuffer.ml CSystem.ml Demo.ml Test.ml
 	make -C ../../runtime/allocator
