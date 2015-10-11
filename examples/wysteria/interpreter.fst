@@ -1,10 +1,11 @@
 (*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Prins --admit_fsi Ffibridge --admit_fsi Runtime;
-    other-files:ghost.fst listTot.fst set.fsi ordset.fsi ordmap.fsi classical.fst heap.fst st.fst all.fst prins.fsi ast.fst ffibridge.fsi sem.fst runtime.fsi
+    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Ffibridge --admit_fsi Runtime --admit_fsi FStar.IO --admit_fsi FStar.String;
+    other-files:ghost.fst listTot.fst set.fsi ordset.fsi ordmap.fsi classical.fst heap.fst st.fst all.fst io.fsti string.fst prins.fst ast.fst ffibridge.fsi sem.fst runtime.fsi print.fst
  --*)
 
 module Interpreter
 
+open FStar.IO
 open FStar.OrdMap
 open FStar.OrdSet
 
@@ -171,9 +172,14 @@ let tstep c =
     Some (Conf l m s en (T_val #(D_v.meta dv) (D_v.v dv)) (hide []))
   else step c
 
+open Print
+
 val tstep_star: config -> ML (option config)
 let rec tstep_star c =
+  print_string "Stepping: "; print_string (config_to_string c); print_string "\n";
   let c' = tstep c in
   match c' with
     | Some c' -> tstep_star c'
-    | None    -> Some c
+    | None    ->
+      print_string "Could not step\n";
+      Some c
