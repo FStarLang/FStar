@@ -149,12 +149,17 @@ let step_correctness c =
   else if not (pre_assec c = NA) then C_assec_beta c c'
   else C_assec_ret c c'
 
-val step_star: config -> Dv (option config)
+open Print
+
+val step_star: config -> ML (option config)
 let rec step_star c =
+  print_string "SStepping: "; print_string (config_to_string c); print_string "\n";
   let c' = step c in
   match c' with
     | Some c' -> step_star c'
-    | None    -> Some c
+    | None    ->
+      print_string "Could not sstep\n";
+      Some c
 
 val do_sec_comp: prin -> r:redex{is_R_assec r} -> ML dvalue
 let do_sec_comp p r =
@@ -171,8 +176,6 @@ let tstep c =
     let dv = do_sec_comp (Some.v (OrdSet.choose (Mode.ps m))) (T_red.r t) in
     Some (Conf l m s en (T_val #(D_v.meta dv) (D_v.v dv)) (hide []))
   else step c
-
-open Print
 
 val tstep_star: config -> ML (option config)
 let rec tstep_star c =

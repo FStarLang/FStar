@@ -35,7 +35,7 @@ let mill3_sec #p1 #p2 x y _ =
   let g:unit -> Wys (Box bool (singleton p1)) (pre (Mode Sec s)) post =
    fun _ ->
     let r =  (unbox_s x) > (unbox_s y) in
-    box r (singleton p1)
+    box (singleton p1) r
   in
   as_sec s g
 

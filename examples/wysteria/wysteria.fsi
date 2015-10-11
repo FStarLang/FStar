@@ -237,7 +237,7 @@ val unbox_s: #a:Type -> #ps:prins -> x:Box a ps
 type CanBox (a:Type) (mode_ps:prins) (ps:prins) =
   can_box a ps /\ subset ps mode_ps
 
-val box: #a:Type -> x:a -> ps:prins
+val box: #a:Type -> ps:prins -> x:a
          -> Wys (Box a ps) (fun m0     -> CanBox a (Mode.ps m0) ps)
                            (fun m0 r t -> v_of_box r = x /\ t = [])
 

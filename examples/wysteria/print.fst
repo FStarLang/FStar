@@ -21,7 +21,7 @@ let prin_to_string = function
 
 val prins_to_string_helper: eps:eprins -> string -> Tot string (decreases (size eps))
 let rec prins_to_string_helper eps s =
-  if eps = empty then ""
+  if eps = empty then s
   else
     let Some p = choose eps in
     let eps' = remove p eps in

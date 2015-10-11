@@ -181,7 +181,7 @@ let unbox_s (#a:Type) #ps x =
   assert (CanUnboxS (Some.v m0) ps);
   Mk_box.x x
 
-let box (#a:Type) x ps =
+let box (#a:Type) ps x =
   let m0 = ST.read moderef in
   assert (CanBox a (Mode.ps (Some.v m0)) ps);
   Mk_box x ps
