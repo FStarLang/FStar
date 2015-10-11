@@ -275,7 +275,7 @@ and extract_wysteria_specific_ast (s:string) (args:list<arg>) en :(bool * string
             | "mk_var \"concat_wire\"" ->
                 let a1 = List.hd (List.tl (List.tl args)) in
                 let a2 = List.hd (List.tl (List.tl (List.tl args))) in
-                true, "mk_mkwire (" ^ extract_arg a1 en ^ ") (" ^ extract_arg a2 en ^ ")"  // first two arguments are implicit
+                true, "mk_concatwire (" ^ extract_arg a1 en ^ ") (" ^ extract_arg a2 en ^ ")"  // first two arguments are implicit
             | "mk_var \"w_read_int\"" ->  // TODO: instead of hardcoding V_opaque etc. use get_injection fn
                 true, "mk_ffi 1 FFI.read_int [ E_const (C_unit ()) ] (fun x -> mk_v_opaque x " ^ slice_id ^ " " ^ compose_ids ^ " " ^ slice_id_sps ^ ")"
 
