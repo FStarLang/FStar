@@ -1,12 +1,14 @@
 (*--build-config
-    options:--admit_fsi FStar.Set --admit_fsi FStar.OrdSet --admit_fsi Prins --admit_fsi FStar.IO;
-    other-files:set.fsi heap.fst st.fst all.fst ordset.fsi prins.fsi io.fsti;
+    options:--admit_fsi FStar.Set --admit_fsi FStar.OrdSet --admit_fsi Prins --admit_fsi FStar.String --admit_fsi FStar.IO;
+    other-files:set.fsi heap.fst st.fst all.fst string.fsi ordset.fsi prins.fsi io.fsti;
  --*)
 
 module FFI
 
 open OrdSet
 open Prins
+
+//----- prins interface ---//
 
 val empty: eprins
 let empty = OrdSet.empty #prin #p_cmp
@@ -52,8 +54,28 @@ val eq_lemma: s1:eprins -> s2:eprins
 	        [SMTPat (s1 = s2)]
 let eq_lemma s1 s2 = ()
 
+//----- prins interface -----//
+
+//----- IO interface -----//
+
 val read_int: unit -> int
 let read_int x = FStar.IO.input_int ()
+
+val print_string: string -> unit
+let print_string s = FStar.IO.print_string s
+
+val print_int: int -> unit
+let print_int n = print_string (string_of_int n)
+
+val print_bool: bool -> unit
+let print_bool b = print_string (string_of_bool b)
+
+val print_newline: unit -> unit
+let print_newline _ = FStar.IO.print_newline ()
+
+//----- IO interface -----//
+
+//----- slice id -----//
 
 val slice_id: prin -> 'a -> Tot 'a
 let slice_id p c = c
@@ -64,6 +86,4 @@ let compose_ids x _ = x
 val slice_id_sps: prin -> 'a -> Tot 'a
 let slice_id_sps p x = x
 
-
-
-
+//----- slice id -----//
