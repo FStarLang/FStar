@@ -1,6 +1,6 @@
 (*--build-config
-    options:--admit_fsi FStar.Set --admit_fsi Wysteria --admit_fsi Prins --admit_fsi FStar.OrdSet;
-    other-files:ghost.fst ext.fst set.fsi heap.fst st.fst all.fst list.fst st2.fst ordset.fsi prins.fsi ffi.fst wysteria.fsi
+    options:--admit_fsi FStar.Set --admit_fsi Wysteria --admit_fsi Prins --admit_fsi FStar.OrdSet --admit_fsi FStar.IO;
+    other-files:ghost.fst ext.fst set.fsi heap.fst st.fst all.fst io.fsti list.fst st2.fst ordset.fsi prins.fsi ffi.fst wysteria.fsi
  --*)
 
 (* Millionaire's for any 2 parties, private output for the first party, using wires *)
@@ -25,7 +25,12 @@ type pre_with (m:mode) (t:Type) = fun m0 -> m0 = m /\ t
 
 let to_s2 p1 p2 = union (singleton p1) (singleton p2)
 
-val mill5_sec: #p1:prin -> #p2:prin -> w:Wire nat (union (singleton p1) (singleton p2))
+val read_fn: unit -> Wys int (fun m0 -> Mode.m m0 = Par /\
+                                  (exists p. Mode.ps m0 = singleton p))
+                          (fun m0 r t -> True)
+let read_fn x = w_read_int ()
+
+val mill5_sec: #p1:prin -> #p2:prin -> w:Wire int (union (singleton p1) (singleton p2))
                -> unit
                -> Wys bool (pre_with (Mode Par (to_s2 p1 p2))
                                      (w_dom w = to_s2 p1 p2)) post
@@ -37,9 +42,9 @@ let mill5_sec #p1 #p2 w _ =
 
 val mill5: unit -> Wys bool (pre (Mode Par abc)) post
 let mill5 _ =
-  let x:Box nat alice_s = as_par alice_s (read #nat) in
-  let y:Box nat bob_s = as_par bob_s (read #nat) in
-  let z:Box nat charlie_s = as_par charlie_s (read #nat) in
+  let x:Box int alice_s = as_par alice_s read_fn in
+  let y:Box int bob_s = as_par bob_s read_fn in
+  let z:Box int charlie_s = as_par charlie_s read_fn in
 
   let wa = mkwire_p alice_s x in
   let wb = mkwire_p bob_s y in

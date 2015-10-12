@@ -1,6 +1,6 @@
 (*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Prins --admit_fsi Ffibridge --admit_fsi Runtime;
-    other-files:ghost.fst listTot.fst ordset.fsi ordmap.fsi classical.fst set.fsi heap.fst st.fst all.fst prins.fsi ast.fst ffibridge.fsi sem.fst runtime.fsi interpreter.fst
+    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Ffibridge --admit_fsi Runtime --admit_fsi FStar.IO --admit_fsi FStar.String;
+    other-files:ghost.fst listTot.fst ordset.fsi ordmap.fsi classical.fst set.fsi heap.fst st.fst all.fst io.fsti string.fsi prins.fst ast.fst ffibridge.fsi sem.fst runtime.fsi print.fst interpreter.fst
  --*)
 
 module SecServer
@@ -38,6 +38,9 @@ let rec send_output #meta ps out_m v =
   if ps_rest = empty then ()
   else send_output #meta ps_rest out_m v
 
+val is_sterminal: config -> Tot bool
+let is_sterminal (Conf _ _ s _ t _) = s = [] && is_T_val t
+
 val do_sec_comp: ps:prins -> env_m:en_map{contains_ps ps env_m}
                  -> out_m:out_map{contains_ps ps out_m}
                  -> varname -> exp -> unit -> ML unit
@@ -45,7 +48,7 @@ let do_sec_comp ps env_m out_m x e _ =
   let en = update_env (compose_envs_m ps env_m) x V_unit in
   let conf = Conf Target (Mode Sec ps) [] en (T_exp e) (hide []) in
   let c_opt = step_star conf in
-  if is_Some c_opt && is_terminal (Some.v c_opt) then
+  if is_Some c_opt && is_sterminal (Some.v c_opt) then
     let _ = send_output ps out_m (T_val.v (Conf.t (Some.v c_opt))) in
     ()
   else

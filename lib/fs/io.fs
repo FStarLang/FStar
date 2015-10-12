@@ -4,6 +4,8 @@ open System
 open System.IO
 type fd_read  = TextReader
 type fd_write = TextWriter
+
+let print_newline _ = Printf.printf "\n"
 let print_string x   = Printf.printf "%s" x
 let print_any x      = Printf.printf "%A" x
 let input_line ()    = System.Console.ReadLine()

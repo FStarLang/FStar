@@ -555,3 +555,6 @@ type nonzero = i:int{i<>0}
    soundly map F* ints to something in F#/OCaml. *)
 assume val op_Modulus            : int -> nonzero -> Tot int
 assume val op_Division           : nat -> nonzero -> Tot int
+
+assume val string_of_bool: bool -> Tot string
+assume val string_of_int: int -> Tot string

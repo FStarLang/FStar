@@ -210,7 +210,7 @@ special `flexlink` technology for this. See `contrib/CoreCrypto/ml` and
 
 ## Runtime dependency: Z3 SMT solver ##
 
-To use F* for verification you need a Z3 4.4.0 (or 4.3.2) binary.
+To use F* for verification you need a Z3 4.4.0 binary.
 Our binary packages include that already in `bin`, but if you compile
 F* from sources you need to get a Z3 binary yourself and add it to
 your `PATH`. We recommend you use the 4.4.0 binaries here:

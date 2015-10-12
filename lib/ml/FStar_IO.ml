@@ -4,6 +4,8 @@ type fd_write = out_channel
 let pr  = Printf.printf
 let spr = Printf.sprintf
 let fpr = Printf.fprintf
+
+let print_newline = print_newline
 let print_string s = pr "%s" s; flush stdout
 let print_any s = output_value stdout s; flush stdout
 let input_line = read_line

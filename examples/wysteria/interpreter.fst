@@ -1,10 +1,11 @@
 (*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Prins --admit_fsi Ffibridge --admit_fsi Runtime;
-    other-files:ghost.fst listTot.fst set.fsi ordset.fsi ordmap.fsi classical.fst heap.fst st.fst all.fst prins.fsi ast.fst ffibridge.fsi sem.fst runtime.fsi
+    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Ffibridge --admit_fsi Runtime --admit_fsi FStar.IO --admit_fsi FStar.String;
+    other-files:ghost.fst listTot.fst set.fsi ordset.fsi ordmap.fsi classical.fst heap.fst st.fst all.fst io.fsti string.fst prins.fst ast.fst ffibridge.fsi sem.fst runtime.fsi print.fst
  --*)
 
 module Interpreter
 
+open FStar.IO
 open FStar.OrdMap
 open FStar.OrdSet
 
@@ -148,12 +149,17 @@ let step_correctness c =
   else if not (pre_assec c = NA) then C_assec_beta c c'
   else C_assec_ret c c'
 
-val step_star: config -> Dv (option config)
+open Print
+
+val step_star: config -> ML (option config)
 let rec step_star c =
+  print_string "SStepping: "; print_string (config_to_string c); print_string "\n";
   let c' = step c in
   match c' with
     | Some c' -> step_star c'
-    | None    -> Some c
+    | None    ->
+      print_string "Could not sstep\n";
+      Some c
 
 val do_sec_comp: prin -> r:redex{is_R_assec r} -> ML dvalue
 let do_sec_comp p r =
@@ -173,7 +179,10 @@ let tstep c =
 
 val tstep_star: config -> ML (option config)
 let rec tstep_star c =
+  print_string "Stepping: "; print_string (config_to_string c); print_string "\n";
   let c' = tstep c in
   match c' with
     | Some c' -> tstep_star c'
-    | None    -> Some c
+    | None    ->
+      print_string "Could not step\n";
+      Some c

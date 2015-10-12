@@ -1,6 +1,6 @@
 (*--build-config
-    options:--admit_fsi FStar.Set --admit_fsi Wysteria --admit_fsi Prins --admit_fsi FStar.OrdSet;
-    other-files:ghost.fst ext.fst set.fsi heap.fst st.fst all.fst list.fst st2.fst ordset.fsi prins.fsi ffi.fst wysteria.fsi lib.fst
+    options:--admit_fsi FStar.Set --admit_fsi Wysteria --admit_fsi Prins --admit_fsi FStar.OrdSet --admit_fsi FStar.IO;
+    other-files:ghost.fst ext.fst set.fsi heap.fst st.fst all.fst io.fsti list.fst st2.fst ordset.fsi prins.fsi ffi.fst wysteria.fsi lib.fst
  --*)
 
 module SMC
@@ -22,10 +22,10 @@ type post (#a:Type) = fun (m:mode) (x:a) (t:trace) -> True
 
 type pre_with (m:mode) (t:Type) = fun m0 -> m0 = m /\ t
 
-val read_fn: unit -> Wys nat (fun m0 -> Mode.m m0 = Par /\
+val read_fn: unit -> Wys int (fun m0 -> Mode.m m0 = Par /\
                                         (exists p. Mode.ps m0 = singleton p))
-                             (fun m0 r t -> True)
-let read_fn x = read #nat ()
+                          (fun m0 r t -> True)
+let read_fn x = w_read_int ()
 
 val gps_sec: ps:prins
              -> w:Wire int ps{forall p. mem p ps <==> w_contains p w}
