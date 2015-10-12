@@ -1090,3 +1090,71 @@ let rec compose_envs_m ps m =
   else
     let en' = compose_envs_m ps_rest m in
     compose_envs en en'
+
+opaque val slice_wire_sps:
+  #eps:eprins -> ps:prins -> w:v_wire eps
+  -> Tot (r:v_wire (intersect eps ps)
+            {forall p. contains p r ==>
+                       Some.v (select p r) = (Some.v (select p w))})
+     (decreases (size ps))
+let rec slice_wire_sps #eps ps w =
+  let Some p = choose ps in
+  let ps_rest = remove p ps in
+  if ps_rest = empty then
+    if mem p eps then
+      update p (Some.v (select p w)) OrdMap.empty
+    else OrdMap.empty
+  else
+    let w' = slice_wire_sps #eps ps_rest w in
+    if mem p eps then
+      update p (Some.v (select p w)) w'
+    else w'
+
+val slice_v_sps : #meta:v_meta -> prins -> v:value meta
+                  -> Tot (r:dvalue{slice_v_meta_inv meta (D_v.meta r)})
+                     (decreases %[v])
+val slice_en_sps: prins -> en:env
+                  -> Tot (varname -> Tot (option dvalue))
+                     (decreases %[en])
+let rec slice_v_sps #meta ps v =
+  let def = D_v meta v in
+  let emp = D_v (Meta empty Can_b empty Can_w) V_emp in
+  match v with
+   | V_prin _            -> def
+   | V_eprins _          -> def
+   | V_prins _           -> def
+
+   | V_unit              -> def
+   | V_bool _            -> def
+
+   | V_opaque 'a v' m' s c sps  ->
+     let Meta bps cb wps cw = m' in
+     let v'' = sps ps v' in
+     let m'' = Meta bps cb (intersect wps ps) cw in
+     let _ = admitP (wps = empty ==> intersect wps ps = empty) in
+     D_v m'' (V_opaque v'' m'' s c sps)
+
+   | V_box ps' v         ->
+     let D_v meta' v' =
+       if intersect ps' ps = empty then emp
+       else slice_v_sps ps v
+     in
+     D_v (Meta ps' Can_b (Meta.wps meta') Cannot_w) (V_box ps' v')
+     
+   | V_wire eps m        -> D_v (Meta empty Can_b (intersect eps ps) Cannot_w)
+                                (V_wire (intersect eps ps) (slice_wire_sps #eps ps m))
+
+   | V_clos en x e       -> D_v meta (V_clos (slice_en_sps ps en) x e)
+
+   | V_fix_clos en f x e -> D_v meta (V_fix_clos (slice_en_sps ps en) f x e)
+
+   | V_emp_clos _ _      -> def
+
+   | V_emp               -> emp
+
+and slice_en_sps ps en =
+ let _ = () in
+ fun x -> preceds_axiom en x;
+          if en x = None then None
+          else
+            Some (slice_v_sps ps (D_v.v (Some.v (en x))))
