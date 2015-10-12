@@ -61,17 +61,17 @@ let eq_lemma s1 s2 = ()
 val read_int: unit -> int
 let read_int x = FStar.IO.input_int ()
 
-val print_string: string -> unit
-let print_string s = FStar.IO.print_string s
-
-val print_int: int -> unit
-let print_int n = print_string (string_of_int n)
-
-val print_bool: bool -> unit
-let print_bool b = print_string (string_of_bool b)
-
 val print_newline: unit -> unit
 let print_newline _ = FStar.IO.print_newline ()
+
+val print_string: string -> unit
+let print_string s = FStar.IO.print_string s; print_newline ()
+
+val print_int: int -> unit
+let print_int n = print_string (string_of_int n); print_newline ()
+
+val print_bool: bool -> unit
+let print_bool b = print_string (string_of_bool b); print_newline ()
 
 //----- IO interface -----//
 
