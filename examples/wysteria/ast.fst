@@ -363,7 +363,7 @@ opaque val mk_ffi: nat -> 'a -> list exp -> 'b -> Tot exp
 let mk_ffi n a l b = E_ffi n a l b
 
 opaque val mk_cond: exp -> exp -> exp -> Tot exp
-let mk_cond e1 e2 e2 = E_cond e1 e2 e2
+let mk_cond e e1 e2 = E_cond e e1 e2
 
 opaque val mk_v_opaque: 'a -> (prin -> 'a -> Tot 'a) -> ('a -> 'a -> Tot 'a) -> (prins -> 'a -> Tot 'a) -> Tot (value (Meta empty Can_b empty Can_w))
 let mk_v_opaque v s c sps = V_opaque v (Meta empty Can_b empty Can_w) s c sps

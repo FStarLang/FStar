@@ -61,6 +61,12 @@ let eq_lemma s1 s2 = ()
 val read_int: unit -> int
 let read_int x = FStar.IO.input_int ()
 
+val read_int_tuple: unit -> (int * int)
+let read_int_tuple x =
+  let fst = FStar.IO.input_int () in
+  let snd = FStar.IO.input_int () in
+  (fst, snd)
+
 val print_newline: unit -> unit
 let print_newline _ = FStar.IO.print_newline ()
 
@@ -87,3 +93,27 @@ val slice_id_sps: prin -> 'a -> Tot 'a
 let slice_id_sps p x = x
 
 //----- slice id -----//
+
+//----- tuple -----//
+
+val mk_tuple: 'a -> 'b -> Tot ('a * 'b)
+let mk_tuple x y = (x, y)
+
+val fst: ('a * 'b) -> Tot 'a
+let fst p = match p with
+  | MkTuple2 x _ -> x
+
+val snd: ('a * 'b) -> Tot 'b
+let snd p = match p with
+  | MkTuple2 _ y -> y
+
+val slice_tuple: (prin -> 'a -> Tot 'a) -> (prin -> 'b -> Tot 'b) -> prin -> ('a * 'b) -> Tot ('a * 'b)
+let slice_tuple f g p t = (f p (fst t), g p (snd t))
+
+val compose_tuples: ('a -> 'a -> Tot 'a) -> ('b -> 'b -> Tot 'b) -> ('a * 'b) -> ('a * 'b) -> Tot ('a * 'b)
+let compose_tuples f g p1 p2 = (f (fst p1) (fst p2), g (snd p1) (snd p2))
+
+val slice_tuple_sps: (prins -> 'a -> Tot 'a) -> (prins -> 'b -> Tot 'b) -> prins -> ('a * 'b) -> Tot ('a * 'b)
+let slice_tuple_sps f g ps t = (f ps (fst t), g ps (snd t))
+
+//----- tuple -----//

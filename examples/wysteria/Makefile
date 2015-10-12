@@ -11,6 +11,7 @@ api:
 	$(FSTAR) mill5.fst
 	$(FSTAR) gps.fst
 	$(FSTAR) median.fst
+	$(FSTAR) mediantuple.fst
 
 interpreter:
 	$(FSTAR) interpreter.fst
