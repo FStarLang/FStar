@@ -25,7 +25,9 @@ let slice_id_sps = "slice_id_sps"
 let ffi_types = [ { module_name="Prims"; type_name="int"; slice_fn_n=slice_id; compose_fn_n=compose_ids; slice_sps_fn_n=slice_id_sps; };
                   { module_name="Prims"; type_name="nat"; slice_fn_n=slice_id; compose_fn_n=compose_ids; slice_sps_fn_n=slice_id_sps; };
                   { module_name="Prims"; type_name="list"; slice_fn_n="slice_list"; compose_fn_n="compose_lists"; slice_sps_fn_n="slice_list_sps"; };
-                  { module_name="Prims"; type_name="option"; slice_fn_n="slice_option"; compose_fn_n="compose_options"; slice_sps_fn_n="slice_option_sps"; } ]
+                  { module_name="Prims"; type_name="option"; slice_fn_n="slice_option"; compose_fn_n="compose_options"; slice_sps_fn_n="slice_option_sps"; }
+                  { module_name="Prims"; type_name="Tuple2"; slice_fn_n="slice_tuple"; compose_fn_n="compose_tuples"; slice_sps_fn_n="slice_tuple_sps"; }
+                ]
 
 let mk_fn_exp (s:string) :exp = mk_Exp_fvar ({ v = { ns = []; ident = { idText = s; idRange = dummyRange }; nsstr = ""; str = s }; sort = mk_Typ_unknown; p = dummyRange }, None) None dummyRange
 
@@ -197,7 +199,7 @@ let rec extract_exp (e:exp) en :string =
     match (Util.compress_exp e).n with
         | Exp_bvar bvar          -> "mk_var " ^ (name_to_string bvar.v.ppname.idText)
         | Exp_fvar (fvar, _)     -> "mk_var " ^ (name_to_string fvar.v.ident.idText) // TODO: check here that fvar is not an FFI or Wysteria function, they should only be applied and hence handled in Exp_app
-                                                                                  // another way may be to check that fvar is from current SMC module only
+                                                                                    // another way may be to check that fvar is from current SMC module only
         | Exp_constant c         -> "mk_const (" ^ extract_const c ^ ")"
         | Exp_abs (bs, e)        ->
             let body_str = extract_exp e en in
@@ -213,7 +215,7 @@ let rec extract_exp (e:exp) en :string =
                 "mk_ffi " ^ (string_of_int (List.length args)) ^ " (" ^  ffi ^ ") [ " ^ args_str ^ " ] (" ^ inj ^ ")"
             else
                 let s = extract_exp e' en in
-                let b, s' = extract_wysteria_specific_ast s args en in
+                let b, s' = extract_wysteria_specific_ast s args e en in
                 if b then s'
                 else
                     if s = "_assert" then "mk_const (C_unit ())"  // ?
@@ -232,7 +234,7 @@ let rec extract_exp (e:exp) en :string =
                 "mk_let " ^ name_to_string (lbname_to_string lb.lbname) ^ " (" ^ extract_exp lb.lbdef en ^ ") (" ^ extract_exp e en ^ ")"
         | _ -> Util.print_string ("Expression not expected " ^ (tag_of_exp e)); raise (NYI "")
 
-and extract_wysteria_specific_ast (s:string) (args:list<arg>) en :(bool * string) =
+and extract_wysteria_specific_ast (s:string) (args:list<arg>) (e:exp) en :(bool * string) =  // e is the original expression that called this function
     if s = "mk_var \"main\"" then
         let f = List.hd (List.tl args) in
         let s =
@@ -242,7 +244,7 @@ and extract_wysteria_specific_ast (s:string) (args:list<arg>) en :(bool * string
         in
         true, s
     else
-        match s with
+        match s with  // TODO: check that wysteria functions are not FFI functions (this will be checked with the check in Exp_fvar case above)
             | "mk_var \"as_par\"" ->
                 let a1 = List.hd args in
                 let a2 = List.hd (List.tl args) in
@@ -276,8 +278,14 @@ and extract_wysteria_specific_ast (s:string) (args:list<arg>) en :(bool * string
                 let a1 = List.hd (List.tl (List.tl args)) in
                 let a2 = List.hd (List.tl (List.tl (List.tl args))) in
                 true, "mk_concatwire (" ^ extract_arg a1 en ^ ") (" ^ extract_arg a2 en ^ ")"  // first two arguments are implicit
-            | "mk_var \"w_read_int\"" ->  // TODO: instead of hardcoding V_opaque etc. use get_injection fn
-                true, "mk_ffi 1 FFI.read_int [ E_const (C_unit ()) ] (fun x -> mk_v_opaque x " ^ slice_id ^ " " ^ compose_ids ^ " " ^ slice_id_sps ^ ")"
+            | "mk_var \"w_read_int\"" ->
+                let t = FStar.Tc.Normalize.normalize en (typ_of_exp e) in  // TODO: I am pusing this call only at FFI nodes, else gives an error in typ_of_exp
+                let inj_str = get_injection t in
+                true, "mk_ffi 1 FFI.read_int [ E_const (C_unit ()) ] (" ^  inj_str ^ ")"
+            | "mk_var \"w_read_int_tuple\"" ->
+                let t = FStar.Tc.Normalize.normalize en (typ_of_exp e) in
+                let inj_str = get_injection t in
+                true, "mk_ffi 1 FFI.read_int_tuple [ E_const (C_unit ()) ] (" ^  inj_str ^ ")"
 
             | _ -> false, ""
 
