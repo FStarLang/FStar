@@ -34,4 +34,5 @@ let mill1 _ =
   as_sec ab g
 ;;
 
-let x = main ab mill1 in ()
+let x = main ab mill1 in
+print_bool x; print_newline ()
