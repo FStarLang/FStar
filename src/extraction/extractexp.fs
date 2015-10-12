@@ -118,12 +118,13 @@ let eff_leq f f' = match f, f' with
 
 let join f f' = match f, f' with
     | E_IMPURE, E_PURE
-    | E_PURE  , E_IMPURE -> E_IMPURE
+    | E_PURE  , E_IMPURE 
+    | E_IMPURE, E_IMPURE -> E_IMPURE
     | E_GHOST , E_GHOST  -> E_GHOST
     | E_PURE  , E_GHOST  -> E_GHOST
     | E_GHOST , E_PURE   -> E_GHOST
     | E_PURE  , E_PURE   -> E_PURE
-    | _ -> failwith "Impossible: Inconsistent effects"
+    | _ -> failwith (Util.format2 "Impossible: Inconsistent effects %s and %s" (eff_to_string f) (eff_to_string f'))
 
 let join_l fs = List.fold_left join E_PURE fs
 
