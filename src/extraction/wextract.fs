@@ -31,9 +31,9 @@ let ffi_types = [ { module_name="Prims"; type_name="int"; slice_fn_n=slice_id; c
 
 let mk_fn_exp (s:string) :exp = mk_Exp_fvar ({ v = { ns = []; ident = { idText = s; idRange = dummyRange }; nsstr = ""; str = s }; sort = mk_Typ_unknown; p = dummyRange }, None) None dummyRange
 
-let slice_value_exp = mk_fn_exp "slice_value"
-let slice_value_sps_exp = mk_fn_exp "slice_value_sps"
-let compose_values_exp = mk_fn_exp "compose_vals"
+let slice_value_exp = mk_fn_exp "Semantics.slice_v_ffi"
+let slice_value_sps_exp = mk_fn_exp "Semantics.slice_v_sps_ffi"
+let compose_values_exp = mk_fn_exp "Semantics.compose_vals_ffi"
 
 type fn_mapping = {
     slice_fn: exp;
@@ -139,11 +139,11 @@ let rec get_opaque_fns (t:typ) :(exp * exp * exp) =
 let get_injection (t:typ) :string =
     let s = "fun x -> " in
     let s' =
-        if is_bool t then "V_bool x"
-        else if is_unit t then "V_unit"
-        else if is_prin t then "V_prin x"
-        else if is_prins t then "V_prins x"
-        else if is_eprins t then "V_eprins x"
+        if is_bool t then "D_v (const_meta, V_bool x)"
+        else if is_unit t then "D_v (const_meta, V_unit)"
+        else if is_prin t then "D_v (const_meta, V_prin x)"
+        else if is_prins t then "D_v (const_meta, V_prins x)"
+        else if is_eprins t then "D_v (const_meta, V_eprins x)"
         else if is_box t || is_wire t then "x"
         else
             let e1, e2, e3 = get_opaque_fns t in
@@ -167,8 +167,8 @@ let extract_const (c:sconst) :string =
     match c with
         | Const_unit    -> "C_unit ()"
         | Const_bool b  -> "C_bool " ^ (if b then "true" else "false")
-        | Const_int32 n -> "C_opaque " ^ (Util.string_of_int32 n)
-        | Const_int x   -> "C_opaque " ^ x
+        | Const_int32 n -> "C_opaque ((), Obj.magic " ^ (Util.string_of_int32 n) ^ ")"
+        | Const_int x   -> "C_opaque ((), Obj.magic " ^ x ^ ")"
 
         | _             -> raise (NYI "Extract constant cannot extract the constant")
 
