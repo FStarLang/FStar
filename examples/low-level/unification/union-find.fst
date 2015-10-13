@@ -66,8 +66,9 @@ let rec compress_preserves_path_to_roots (v: Type) d (f: Relation v) x y z u r #
     match p with
     | Refl _ ->
         assert (u = r);
+        let x : path v (compress v f x z) u r = Refl u in ()
         (* JP: I don't understand why F* won't find a proof. *)
-        admit ()
+        // admit ()
     | Step _ u' _ _ p' ->
         compress_preserves_other_edges v f x z u u';
         assert (compress v f x z u u');

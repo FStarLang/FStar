@@ -9,16 +9,16 @@
   Is there a principle behind its design? or just random convolutery?
   *)
 module MD5
-open RSTWhile
-open RST
+open FStar.Regions.RSTWhile
+open FStar.Regions.RST
 open MVector
 open Set
 open MachineWord
 open MD5Common
 open StackAndHeap
-open Lref  open Located
+open FStar.Regions.Heap  open FStar.Regions.Located
 open Seq
-open RSTArray
+open FStar.Regions.RSTArray
 open ArrayAlgos
 open Ghost
 
@@ -96,7 +96,7 @@ val mainLoop :
 let mainLoop ch u =
   let offset = ralloc #nat 0 in
   let acc =  screateSeq initAcc in
-  let chl = RSTArray.length ch in
+  let chl = FStar.Regions.RSTArray.length ch in
   scopedWhile1
     offset
     (fun offsetv-> offsetv +16 <= chl)
@@ -125,7 +125,7 @@ val mD5 :
     (hide empty)
 
 let mD5 ch =
-  let chl = RSTArray.length ch in
+  let chl = FStar.Regions.RSTArray.length ch in
   let z:nat =0 in
   let clonedCh = screate  (psize chl) w0 in
   cloneAndPad ch clonedCh;

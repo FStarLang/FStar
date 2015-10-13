@@ -137,7 +137,8 @@ and meta_source_info =
   | Data_app
   | Sequence
   | Primop                                  (* ... add more cases here as needed for better code generation *)
-  | MaskedEffect
+  | Masked_effect
+  | Meta_smt_pat
 and fv_qual =
   | Data_ctor
   | Record_projector of lident                  (* the fully qualified (unmangled) name of the field being projected *)

@@ -166,6 +166,20 @@ let rec partition f = function
      then hd::l1, l2
      else l1, hd::l2
 
+(** [subset la lb] is true if and only if all the elements from [la]
+    are also in [lb]. *)
+val subset: #a:Type -> list a -> list a -> Tot bool
+let rec subset la lb =
+  match la with
+  | [] -> true
+  | h :: tl ->  mem h lb && subset tl lb
+
+val noRepeats : #a:Type -> list a -> Tot bool
+let rec noRepeats la =
+  match la with
+  | [] -> true
+  | h :: tl ->  not(mem h tl) && noRepeats tl
+
 
 (** List of tuples **)
 

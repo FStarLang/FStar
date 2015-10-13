@@ -184,7 +184,8 @@ and meta_e_to_string = function
     | Data_app -> "Data_app"
     | Sequence -> "Sequence"
     | Primop   -> "Primop"
-    | MaskedEffect -> "MaskedEffect"
+    | Masked_effect -> "Masked_effect"
+    | Meta_smt_pat -> "Meta_smt_pat"
 
 (* This function prints the type it gets as argument verbatim.
    For already type-checked types use the typ_norm_to_string

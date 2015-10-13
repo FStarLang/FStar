@@ -6,15 +6,15 @@
 (*perhaps this should be an interface file?*)
 
 module LallocTest
-open RST
+open FStar.Regions.RST
 open StackAndHeap
-open Located
+open FStar.Regions.Located
 open Heap
 open Stack
 open Set
 open Prims
 open List
-open Lref  open Located
+open FStar.Regions.Heap  open FStar.Regions.Located
 open ListSet
 
 

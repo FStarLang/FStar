@@ -9,6 +9,9 @@ ALLOCATOR_FILES = $(ALLOCATOR_DIR)/camlstack.o $(ALLOCATOR_DIR)/stack.o $(ALLOCA
 
 OCAML = ocamlfind ocamlopt -g -package batteries -linkpkg -thread -I ../../src/ocaml-output/ -I $(ALLOCATOR_DIR) $(ALLOCATOR_FILES) ../../src/ocaml-output/support.ml
 
+all:
+	(cd lib; fstar FStar.Regions.RST.fst)
+
 Factorial.ml: factorial.fst
 	fstar.exe --codegen OCaml $^
 	./revertManualMLs.sh
