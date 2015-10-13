@@ -25,8 +25,8 @@ let slice_id_sps = "slice_id_sps"
 let ffi_types = [ { module_name="Prims"; type_name="int"; slice_fn_n=slice_id; compose_fn_n=compose_ids; slice_sps_fn_n=slice_id_sps; };
                   { module_name="Prims"; type_name="nat"; slice_fn_n=slice_id; compose_fn_n=compose_ids; slice_sps_fn_n=slice_id_sps; };
                   { module_name="Prims"; type_name="list"; slice_fn_n="slice_list"; compose_fn_n="compose_lists"; slice_sps_fn_n="slice_list_sps"; };
-                  { module_name="Prims"; type_name="option"; slice_fn_n="slice_option"; compose_fn_n="compose_options"; slice_sps_fn_n="slice_option_sps"; }
-                  { module_name="Prims"; type_name="Tuple2"; slice_fn_n="slice_tuple"; compose_fn_n="compose_tuples"; slice_sps_fn_n="slice_tuple_sps"; }
+                  { module_name="Prims"; type_name="option"; slice_fn_n="slice_option"; compose_fn_n="compose_options"; slice_sps_fn_n="slice_option_sps"; };
+                  { module_name="Prims"; type_name="Tuple2"; slice_fn_n="slice_tuple"; compose_fn_n="compose_tuples"; slice_sps_fn_n="slice_tuple_sps"; };
                 ]
 
 let mk_fn_exp (s:string) :exp = mk_Exp_fvar ({ v = { ns = []; ident = { idText = s; idRange = dummyRange }; nsstr = ""; str = s }; sort = mk_Typ_unknown; p = dummyRange }, None) None dummyRange
