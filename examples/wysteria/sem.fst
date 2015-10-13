@@ -1158,3 +1158,22 @@ and slice_en_sps ps en =
           if en x = None then None
           else
             Some (slice_v_sps ps (D_v.v (Some.v (en x))))
+
+(*
+ * TODO: we should update proofs to use these functions instead
+ *)
+val slice_v_ffi: prin -> dvalue -> Tot dvalue
+let slice_v_ffi p dv =
+  let D_v meta v = dv in
+  slice_v #meta p v
+
+val compose_vals_ffi: dvalue -> dvalue -> Tot dvalue
+let compose_vals_ffi dv1 dv2 =
+  let D_v meta1 v1 = dv1 in
+  let D_v meta2 v2 = dv2 in
+  compose_vals #meta1 #meta2 v1 v2
+
+val slice_v_sps_ffi: prins -> dvalue -> Tot dvalue
+let slice_v_sps_ffi ps dv =
+  let D_v meta v = dv in
+  slice_v_sps #meta ps v

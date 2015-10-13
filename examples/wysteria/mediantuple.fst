@@ -27,14 +27,21 @@ let median _ =
   let p_alice = as_par alice_s read_fn in
   let p_bob = as_par bob_s read_fn in
 
+  let tup = mk_tuple p_alice p_bob in
+
   let g:unit -> Wys int (pre (Mode Sec ab)) post =
     fun _ ->
+      let p_alice = fst tup in
+      let p_bob = snd tup in
       let a_t = unbox_s p_alice in
       let b_t = unbox_s p_bob in
       let x1 = fst a_t in
       let x2 = snd a_t in
       let y1 = fst b_t in
       let y2 = snd b_t in
+      let t1 = mk_tuple x1 y1 in
+      let x1 = fst t1 in
+      let y1 = snd t1 in
       let b1 = x1 <= y1 in
       let x3 = if b1 then x2 else x1 in
       let y3 = if b1 then y1 else y2 in
