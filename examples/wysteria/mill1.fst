@@ -35,4 +35,4 @@ let mill1 _ =
 ;;
 
 let x = main ab mill1 in
-print_bool x; print_newline ()
+print_bool x

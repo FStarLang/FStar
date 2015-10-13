@@ -4,7 +4,8 @@ exception FFI_error of string
 
 let cast x = Obj.magic x
     
-let project_value_content (v:unit value) :Obj.t =
+let project_value_content (dv:dvalue) :Obj.t =
+  let D_v (_, v) = dv in
   let content =
     match v with
       | V_prin p -> cast p
@@ -13,8 +14,8 @@ let project_value_content (v:unit value) :Obj.t =
       | V_unit -> cast ()
       | V_bool b -> cast b
       | V_opaque (_, v, _, _, _, _) -> cast v
-      | V_box _ -> cast v
-      | V_wire _ -> cast v
+      | V_box _ -> cast dv
+      | V_wire _ -> cast dv
       | _ -> raise (FFI_error ("FFI fn input not an expected alue"))
   in
   content
@@ -22,8 +23,7 @@ let project_value_content (v:unit value) :Obj.t =
 let process_list (l:dvalue list) :Obj.t list =
   List.rev (
     List.map (fun dv ->
-      let (D_v (_, v)) = dv in
-      project_value_content v
+      project_value_content dv
     ) l)
 
 let exec_ffi (n:int) (ffi_fn:Obj.t) (l:dvalue list) (ffi_inj:Obj.t) :dvalue =
@@ -68,7 +68,6 @@ let exec_ffi (n:int) (ffi_fn:Obj.t) (l:dvalue list) (ffi_inj:Obj.t) :dvalue =
 	in
 	raise (FFI_error msg)
   in
-  let v = cast ((cast ffi_inj) ffi_ret) in
-  AST.D_v (AST.Meta ([], AST.Can_b, [], AST.Can_w), v)
+  cast ((cast ffi_inj) ffi_ret)
   
 let verified_eq _ _ = true

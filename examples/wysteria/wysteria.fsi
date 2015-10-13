@@ -297,11 +297,16 @@ val main: #a:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> a -> trace -> Type
 
 (*****)
 
-(* these are also ffi calls *)
+(* these are also ffi calls, and are handled in the extraction *)
 
 val w_read_int: unit -> Wys int (fun m0 -> Mode.m m0 = Par /\
                                      (exists p. Mode.ps m0 = singleton p))
                              (fun m0 r t -> b2t (t = []))
+val w_read_int_tuple: unit -> Wys (int * int) (fun m0 -> Mode.m m0 = Par /\
+                                                 (exists p. Mode.ps m0 = singleton p))
+                                         (fun m0 r t -> b2t (t = []))
+
+
 
 val alice  : prin
 val bob    : prin
