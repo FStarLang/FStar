@@ -27,6 +27,10 @@ let float_lid = (pconst "float")
 
 let exn_lid = (pconst "exn")
 
+let list_lid = (pconst "list")
+
+let pattern_lid = (pconst "pattern")
+
 let precedes_lid = (pconst "Precedes")
 
 let lex_t_lid = (pconst "lex_t")
