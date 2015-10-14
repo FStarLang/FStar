@@ -377,11 +377,11 @@ type mlexpr =
 | MLE_Proj of (mlexpr * mlpath)
 | MLE_If of (mlexpr * mlexpr * mlexpr Prims.option)
 | MLE_Raise of (mlpath * mlexpr Prims.list)
-| MLE_Try of (mlexpr * mlbranch Prims.list) 
+| MLE_Try of (mlexpr * mlbranch Prims.list)
  and mllb =
-{mllb_name : mlident; mllb_tysc : mltyscheme Prims.option; mllb_add_unit : Prims.bool; mllb_def : mlexpr} 
+{mllb_name : mlident; mllb_tysc : mltyscheme Prims.option; mllb_add_unit : Prims.bool; mllb_def : mlexpr}
  and mlbranch =
-(mlpattern * mlexpr Prims.option * mlexpr) 
+(mlpattern * mlexpr Prims.option * mlexpr)
  and mlletbinding =
 (Prims.bool * mllb Prims.list)
 
@@ -707,7 +707,7 @@ type mlsig1 =
 | MLS_Mod of (mlsymbol * mlsig)
 | MLS_Ty of mltydecl
 | MLS_Val of (mlsymbol * mltyscheme)
-| MLS_Exn of (mlsymbol * mlty Prims.list) 
+| MLS_Exn of (mlsymbol * mlty Prims.list)
  and mlsig =
 mlsig1 Prims.list
 
@@ -813,7 +813,3 @@ let ml_bool_ty = MLTY_Named (([], (("Prims")::[], "bool")))
 let ml_unit_ty = MLTY_Named (([], (("Prims")::[], "unit")))
 
 let mlp_lalloc = (("SST")::[], "lalloc")
-
-
-
-

@@ -1208,7 +1208,3 @@ in (let _93_628 = (reader.FStar_Util.read_bool ())
 in {FStar_Absyn_Syntax.name = _93_631; FStar_Absyn_Syntax.declarations = _93_630; FStar_Absyn_Syntax.exports = _93_629; FStar_Absyn_Syntax.is_interface = _93_628; FStar_Absyn_Syntax.is_deserialized = true}))))
 in (let _28_993 = m
 in {FStar_Absyn_Syntax.name = _28_993.FStar_Absyn_Syntax.name; FStar_Absyn_Syntax.declarations = m.FStar_Absyn_Syntax.exports; FStar_Absyn_Syntax.exports = _28_993.FStar_Absyn_Syntax.exports; FStar_Absyn_Syntax.is_interface = _28_993.FStar_Absyn_Syntax.is_interface; FStar_Absyn_Syntax.is_deserialized = _28_993.FStar_Absyn_Syntax.is_deserialized})))
-
-
-
-

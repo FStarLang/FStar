@@ -1335,7 +1335,3 @@ in (FSharp_Format.pretty 0 doc)))
 let string_of_mlty = (fun env e -> (let doc = (let _125_581 = (FStar_Extraction_ML_Util.flatten_mlpath env.FStar_Extraction_ML_Env.currentModule)
 in (doc_of_mltype _125_581 (min_op_prec, NonAssoc) e))
 in (FSharp_Format.pretty 0 doc)))
-
-
-
-

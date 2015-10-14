@@ -201,7 +201,3 @@ end
 in (let _31_205 = (FStar_ST.op_Colon_Equals e.FStar_Absyn_Syntax.tk (Some (t)))
 in t))
 end)))
-
-
-
-

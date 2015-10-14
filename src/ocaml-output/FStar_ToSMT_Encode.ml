@@ -4430,7 +4430,3 @@ end)))))
 let solver = {FStar_Tc_Env.init = init; FStar_Tc_Env.push = push; FStar_Tc_Env.pop = pop; FStar_Tc_Env.mark = mark; FStar_Tc_Env.reset_mark = reset_mark; FStar_Tc_Env.commit_mark = commit_mark; FStar_Tc_Env.encode_modul = encode_modul; FStar_Tc_Env.encode_sig = encode_sig; FStar_Tc_Env.solve = solve; FStar_Tc_Env.is_trivial = is_trivial; FStar_Tc_Env.finish = FStar_ToSMT_Z3.finish; FStar_Tc_Env.refresh = FStar_ToSMT_Z3.refresh}
 
 let dummy = {FStar_Tc_Env.init = (fun _53_3509 -> ()); FStar_Tc_Env.push = (fun _53_3511 -> ()); FStar_Tc_Env.pop = (fun _53_3513 -> ()); FStar_Tc_Env.mark = (fun _53_3515 -> ()); FStar_Tc_Env.reset_mark = (fun _53_3517 -> ()); FStar_Tc_Env.commit_mark = (fun _53_3519 -> ()); FStar_Tc_Env.encode_modul = (fun _53_3521 _53_3523 -> ()); FStar_Tc_Env.encode_sig = (fun _53_3525 _53_3527 -> ()); FStar_Tc_Env.solve = (fun _53_3529 _53_3531 -> ()); FStar_Tc_Env.is_trivial = (fun _53_3533 _53_3535 -> false); FStar_Tc_Env.finish = (fun _53_3537 -> ()); FStar_Tc_Env.refresh = (fun _53_3538 -> ())}
-
-
-
-

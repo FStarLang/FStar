@@ -846,7 +846,3 @@ in (((mlid, None))::[], _127_267))
 in FStar_Extraction_ML_Syntax.MLE_Fun (_127_268))
 in FStar_Extraction_ML_Syntax.MLM_Let ((false, ({FStar_Extraction_ML_Syntax.mllb_name = (FStar_Extraction_ML_Env.convIdent discName.FStar_Absyn_Syntax.ident); FStar_Extraction_ML_Syntax.mllb_tysc = None; FStar_Extraction_ML_Syntax.mllb_add_unit = false; FStar_Extraction_ML_Syntax.mllb_def = discrBody})::[])))))
 end))))
-
-
-
-

@@ -96,7 +96,3 @@ end)
 end))
 
 let read_build_config = (fun file -> (FStar_Parser_ParseIt.read_build_config file))
-
-
-
-

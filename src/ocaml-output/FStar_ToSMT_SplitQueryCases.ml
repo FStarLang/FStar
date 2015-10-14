@@ -121,7 +121,3 @@ let handle_query = (fun _52_128 check -> (match (_52_128) with
 (let l = (check_split_cases f l check)
 in (check_exhaustiveness f negs check))
 end))
-
-
-
-

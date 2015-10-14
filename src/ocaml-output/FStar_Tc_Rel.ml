@@ -4402,7 +4402,3 @@ in (env.FStar_Tc_Env.solver.FStar_Tc_Env.solve env vc))
 end))
 end)
 end)))
-
-
-
-

@@ -749,7 +749,3 @@ end
 (vt env bvs t)
 end))) (fun _25_1218 _25_1220 _25_1222 env _25_1225 e -> (e, env)) (fun k _25_1215 env -> (k, env)) (fun t _25_1211 env -> (t, env)) (fun e _25_1207 env -> (e, env)) env [] t)
 in (FStar_All.pipe_left Prims.snd _90_583)))
-
-
-
-
