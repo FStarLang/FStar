@@ -128,55 +128,81 @@ let join f f' = match f, f' with
 
 let join_l fs = List.fold_left join E_PURE fs
 
-let extract_pat (g:env) p : (env * list<mlpattern>) =
-(*what does disj stand for?*)
-    let rec extract_pat (disj : bool) (imp : bool) g p = match p.v with
+let extract_pat (g:env) p : (env * list<(mlpattern * option<mlexpr>)>) =
+(*what does disj stand for? NS: disjunctive *)
+    let rec extract_one_pat (disj : bool) (imp : bool) g p : env * option<(mlpattern * list<mlexpr>)> = 
+        match p.v with
+          | Pat_disj _ -> failwith "Impossible"
+ 
+          | Pat_constant (Const_int c) -> //these may be extracted to bigint, in which case, we need to emit a when clause
+            let x = as_mlident (Util.new_bvd None) in
+            let eq = ["Prims"], "op_Equality" in
+            let when_clause = MLE_App(MLE_Name eq, [MLE_Var x; MLE_Const <| mlconst_of_const' p.p (Const_int c)]) in
+            g, Some (MLP_Var x, [when_clause])
+            
+          | Pat_constant s     ->
+            g, Some (MLP_Const (mlconst_of_const' p.p s), [])
+
+          | Pat_cons (f, q, pats) ->
+            let d,tys = match Env.lookup_fv g f with
+                | MLE_Name n, ttys -> n, ttys
+                | _ -> failwith "Expected a constructor" in
+            let nTyVars = List.length (fst tys) in
+            let tysVarPats, restPats =  Util.first_N nTyVars pats in
+            let g, tyMLPats = Util.fold_map (fun g (p, imp) -> extract_one_pat disj true g p) g tysVarPats in (*not all of these were type vars in ML*)
+            let g, restMLPats = Util.fold_map (fun g (p, imp) -> extract_one_pat disj false g p) g restPats in
+            let mlPats, when_clauses = List.append tyMLPats restMLPats |> List.collect (function (Some x) -> [x] | _ -> []) |> List.split in
+            g, Some (Util.resugar_pat q <| MLP_CTor (d, mlPats), when_clauses |> List.flatten)
+
+          | Pat_var x ->
+            let mlty = translate_typ g x.sort in
+            let g = Env.extend_bv g x ([], mlty) false imp in
+            g, (if imp then None else Some (MLP_Var (as_mlident x.v), []))
+
+          | Pat_wild x when disj ->
+            g, Some (MLP_Wild, [])
+
+          | Pat_wild x -> (*how is this different from Pat_var? For extTest.naryTree.Node, the first projector uses Pat_var and the other one uses Pat_wild*)
+            let mlty = translate_typ g x.sort in
+            let g = Env.extend_bv g x ([], mlty) false imp in
+            g, (if imp then None else Some (MLP_Var (as_mlident x.v), []))
+
+          | Pat_dot_term _ ->
+            g, Some (MLP_Wild, [])
+
+          | Pat_tvar a ->
+            let mlty = MLTY_Top in
+            let g = Env.extend_ty g a (Some mlty) in
+            g, (if imp then None else Some (MLP_Wild, []))
+
+          | Pat_dot_typ _
+          | Pat_twild _ ->
+            g, None in
+
+    let extract_one_pat disj g p = 
+        match extract_one_pat disj false g p with 
+            | g, Some (x, v) -> g, (x, v)
+            | _ -> failwith "Impossible" in 
+    
+    let mk_when_clause whens = 
+        match whens with 
+            | [] -> None
+            | hd::tl -> Some (List.fold_left conjoin hd tl) in
+    
+    match p.v with
       | Pat_disj [] -> failwith "Impossible"
 
       | Pat_disj (p::pats)      ->
-        let g, p = extract_pat true false g p in
-        g, [MLP_Branch (p@List.collect (fun x -> snd (extract_pat true false g x)) pats)]
-
-      | Pat_constant s     ->
-        g, [MLP_Const (mlconst_of_const' p.p s)]
-
-      | Pat_cons (f, q, pats) ->
-        let d,tys = match Env.lookup_fv g f with
-            | MLE_Name n, ttys -> n, ttys
-            | _ -> failwith "Expected a constructor" in
-        let nTyVars = List.length (fst tys) in
-        let tysVarPats, restPats =  Util.first_N nTyVars pats in
-        let g, tyMLPats = Util.fold_map (fun g (p, imp) -> extract_pat disj true g p) g tysVarPats in (*not all of these were type vars in ML*)
-        let g, restMLPats = Util.fold_map (fun g (p, imp) -> extract_pat disj false g p) g restPats in
-        let mlPats = List.append tyMLPats  restMLPats in
-        g, [Util.resugar_pat q <| MLP_CTor (d, List.flatten mlPats)]
-
-      | Pat_var x ->
-        let mlty = translate_typ g x.sort in
-        let g = Env.extend_bv g x ([], mlty) false imp in
-        g, (if imp then [] else [MLP_Var (as_mlident x.v)])
-
-      | Pat_wild x when disj ->
-        g, [MLP_Wild]
-
-      | Pat_wild x -> (*how is this different from Pat_var? For extTest.naryTree.Node, the first projector uses Pat_var and the other one uses Pat_wild*)
-        let mlty = translate_typ g x.sort in
-        let g = Env.extend_bv g x ([], mlty) false imp in
-        g, (if imp then [] else [MLP_Var (as_mlident x.v)])
-
-      | Pat_dot_term _ ->
-        g, [MLP_Wild]
-
-      | Pat_tvar a ->
-        let mlty = MLTY_Top in
-        let g = Env.extend_ty g a (Some mlty) in
-        g, (if imp then [] else [MLP_Wild])
-
-      | Pat_dot_typ _
-      | Pat_twild _ ->
-        g, [] in
-
-   extract_pat false false g p
+        let g, p = extract_one_pat true g p in
+        let ps = p :: (pats |> List.map (fun x -> snd (extract_one_pat true g x))) in
+        let ps_when, rest = ps |> List.partition (function (_, _::_) -> true | _ -> false) in
+        //branches that contains a new when clause need to be split out
+        g, (MLP_Branch(List.map fst rest), None) :: (ps_when |> List.map (fun (x, whens) -> (x, mk_when_clause whens)))
+ 
+      | _ -> 
+        let g, (p, whens) = extract_one_pat false g p in
+        let when_clause = mk_when_clause whens in
+        g, [(p, when_clause)] 
 
 let normalize_abs e0 =
     let rec aux bs e =
@@ -265,13 +291,15 @@ and check_exp' (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr =
     match (Util.compress_exp e).n with
       | Exp_match(scrutinee, pats) ->
         let e, f_e, t_e = synth_exp g scrutinee in
-        let mlbranches = pats |> List.map (fun (pat, when_opt, branch) ->
+        let mlbranches = pats |> List.collect (fun (pat, when_opt, branch) ->
             let env, p = extract_pat g pat in
             let when_opt = match when_opt with
                 | None -> None
                 | Some w -> Some (check_exp env w E_IMPURE ml_bool_ty) in //when clauses used to be Pure in F*; they no longer are required to be pure
             let branch = check_exp env branch f t in
-            List.hd p, when_opt, branch) in
+            p |> List.map (fun (p, wopt) -> 
+                let when_clause = conjoin_opt wopt when_opt in
+                p, when_clause, branch)) in
         if eff_leq f_e f
         then MLE_Match(e, mlbranches)
         else err_unexpected_eff scrutinee f f_e
@@ -516,7 +544,3 @@ let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1
         MLP_CTor(mlpath_of_lident rid, arg_pat), None, MLE_Const(MLC_Bool true);
         MLP_Wild, None, MLE_Const(MLC_Bool false)])) in
     MLM_Let (false,[{mllb_name=convIdent discName.ident; mllb_tysc=None; mllb_add_unit=false; mllb_def=discrBody}] )
-
-
-let dummyPatIdent (n:int) : mlident = ("dummyPat"^(Util.string_of_int n), 0)
-let dummyPatIdents (n:int) : list<mlident> = List.map dummyPatIdent (ExtractTyp.firstNNats n)
