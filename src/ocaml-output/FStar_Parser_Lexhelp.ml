@@ -226,7 +226,7 @@ end))
 type lexargs =
 {getSourceDirectory : Prims.unit  ->  Prims.string; contents : Prims.string}
 
-let is_Mklexargs = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mklexargs"))
+let is_Mklexargs = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mklexargs")))
 
 let mkLexargs = (fun _46_86 -> (match (_46_86) with
 | (srcdir, filename, contents) -> begin

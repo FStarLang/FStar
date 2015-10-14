@@ -417,7 +417,7 @@ end
 false
 end))
 
-let is_Mkterm = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkterm"))
+let is_Mkterm = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkterm")))
 
 let ___Integer____0 = (fun projectee -> (match (projectee) with
 | Integer (_50_44) -> begin

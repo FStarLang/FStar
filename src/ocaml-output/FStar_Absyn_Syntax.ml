@@ -48,12 +48,12 @@ end))
 type ident =
 {idText : Prims.string; idRange : FStar_Range.range}
 
-let is_Mkident = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkident"))
+let is_Mkident = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkident")))
 
 type l__LongIdent =
 {ns : ident Prims.list; ident : ident; nsstr : Prims.string; str : Prims.string}
 
-let is_MkLongIdent = (fun _ -> (FStar_All.failwith "Not yet implemented:is_MkLongIdent"))
+let is_MkLongIdent = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_MkLongIdent")))
 
 type lident =
 l__LongIdent
@@ -61,7 +61,7 @@ l__LongIdent
 type ('a, 't) withinfo_t =
 {v : 'a; sort : 't; p : FStar_Range.range}
 
-let is_Mkwithinfo_t = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkwithinfo_t"))
+let is_Mkwithinfo_t = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkwithinfo_t")))
 
 type 't var =
 (lident, 't) withinfo_t
@@ -72,7 +72,7 @@ lident
 type 'a bvdef =
 {ppname : ident; realname : ident}
 
-let is_Mkbvdef = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkbvdef"))
+let is_Mkbvdef = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkbvdef")))
 
 type ('a, 't) bvar =
 ('a bvdef, 't) withinfo_t
@@ -491,7 +491,7 @@ end
 false
 end))
 
-let is_Mkcomp_typ = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkcomp_typ"))
+let is_Mkcomp_typ = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkcomp_typ")))
 
 let is_Total = (fun _discr_ -> (match (_discr_) with
 | Total (_) -> begin
@@ -917,13 +917,13 @@ end
 false
 end))
 
-let is_Mkletbinding = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkletbinding"))
+let is_Mkletbinding = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkletbinding")))
 
-let is_Mkfreevars = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkfreevars"))
+let is_Mkfreevars = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkfreevars")))
 
-let is_Mkuvars = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkuvars"))
+let is_Mkuvars = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkuvars")))
 
-let is_Mksyntax = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mksyntax"))
+let is_Mksyntax = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mksyntax")))
 
 let ___Typ_btvar____0 = (fun projectee -> (match (projectee) with
 | Typ_btvar (_23_87) -> begin
@@ -1325,12 +1325,12 @@ type tycon =
 type monad_abbrev =
 {mabbrev : lident; parms : binders; def : typ}
 
-let is_Mkmonad_abbrev = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkmonad_abbrev"))
+let is_Mkmonad_abbrev = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkmonad_abbrev")))
 
 type sub_eff =
 {source : lident; target : lident; lift : typ}
 
-let is_Mksub_eff = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mksub_eff"))
+let is_Mksub_eff = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mksub_eff")))
 
 type eff_decl =
 {mname : lident; binders : binders; qualifiers : qualifier Prims.list; signature : knd; ret : typ; bind_wp : typ; bind_wlp : typ; if_then_else : typ; ite_wp : typ; ite_wlp : typ; wp_binop : typ; wp_as_type : typ; close_wp : typ; close_wp_t : typ; assert_p : typ; assume_p : typ; null_wp : typ; trivial : typ} 
@@ -1349,7 +1349,7 @@ type eff_decl =
 | Sig_effect_abbrev of (lident * binders * comp * qualifier Prims.list * FStar_Range.range)
 | Sig_pragma of (pragma * FStar_Range.range)
 
-let is_Mkeff_decl = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkeff_decl"))
+let is_Mkeff_decl = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkeff_decl")))
 
 let is_Sig_tycon = (fun _discr_ -> (match (_discr_) with
 | Sig_tycon (_) -> begin
@@ -1526,7 +1526,7 @@ sigelt Prims.list
 type modul =
 {name : lident; declarations : sigelts; exports : sigelts; is_interface : Prims.bool; is_deserialized : Prims.bool}
 
-let is_Mkmodul = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkmodul"))
+let is_Mkmodul = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkmodul")))
 
 type ktec =
 | K of knd
@@ -1589,7 +1589,7 @@ end))
 type lcomp =
 {eff_name : lident; res_typ : typ; cflags : cflags Prims.list; comp : Prims.unit  ->  comp}
 
-let is_Mklcomp = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mklcomp"))
+let is_Mklcomp = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mklcomp")))
 
 type path =
 Prims.string Prims.list

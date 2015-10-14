@@ -37,7 +37,7 @@ end))
 type gensym_t =
 {gensym : Prims.unit  ->  Prims.string; reset : Prims.unit  ->  Prims.unit}
 
-let is_Mkgensym_t = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkgensym_t"))
+let is_Mkgensym_t = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkgensym_t")))
 
 let gs = (let ctr = (FStar_Util.mk_ref 0)
 in (let n_resets = (FStar_Util.mk_ref 0)
@@ -599,7 +599,7 @@ end))
 type red_ctrl =
 {stop_if_empty_subst : Prims.bool; descend : Prims.bool}
 
-let is_Mkred_ctrl = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkred_ctrl"))
+let is_Mkred_ctrl = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkred_ctrl")))
 
 let alpha_ctrl = {stop_if_empty_subst = false; descend = true}
 

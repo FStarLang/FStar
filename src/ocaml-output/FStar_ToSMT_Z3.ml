@@ -188,7 +188,7 @@ in (FStar_Util.start_process id _116_51 _116_50 cond)))))
 type bgproc =
 {grab : Prims.unit  ->  FStar_Util.proc; release : Prims.unit  ->  Prims.unit; refresh : Prims.unit  ->  Prims.unit}
 
-let is_Mkbgproc = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkbgproc"))
+let is_Mkbgproc = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkbgproc")))
 
 let queries_dot_smt2 = (FStar_Util.mk_ref None)
 
@@ -351,7 +351,7 @@ end))
 type 'a job =
 {job : Prims.unit  ->  'a; callback : 'a  ->  Prims.unit}
 
-let is_Mkjob = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkjob"))
+let is_Mkjob = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkjob")))
 
 type z3job =
 (Prims.bool * (Prims.string * FStar_Range.range) Prims.list) job
