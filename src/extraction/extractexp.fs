@@ -24,11 +24,6 @@ open FStar.Extraction.ML.Syntax
 open FStar.Extraction.ML.Env
 open FStar.Extraction.ML.Util
 
-let eff_to_string = function
-    | E_PURE -> "Pure"
-    | E_GHOST -> "Ghost"
-    | E_IMPURE -> "Impure"
-
 let fail r msg =
     Util.print_string <| Print.format_error r msg;
     exit 1
@@ -100,34 +95,19 @@ let erasable (g:env)  (f:e_tag) (t:mlty) =
 let erase (g:env) (e:mlexpr) (f:e_tag) (t:mlty) : mlexpr * e_tag * mlty =
     if erasable g f t
     then (debug g (fun () -> Util.fprint2 "Erasing %s at type %s\n" (ML.Code.string_of_mlexpr g e) (ML.Code.string_of_mlty g t));
-          ml_unit, f , erasedContent) (*unit value*)
+          let e_val = if type_leq g t ml_unit_ty then ml_unit else MLE_Coerce(ml_unit, ml_unit_ty, t) in
+          e_val, f, t) 
     else e, f, t
 
 let maybe_coerce (g:env) (e:mlexpr) (tInferred:mlty) (etag : e_tag) (tExpected:mlty) : mlexpr =
-    // let tExpected = eraseTypeDeep g tExpected in // is this needed? see translate_typ. Even if we coerce here, there is no way to change the type of the generate expression
-    if equiv g tInferred tExpected
-    then e
-    else (//debug g (fun () -> printfn "\n (*needed to coerce expression \n %A \n of type \n %A \n to type \n %A *) \n" e tInferred tExpected);
-          MLE_Coerce (e, tInferred, tExpected)) //TODO: should we go inside lambdas and put coercions at more specific places? test using aref to see if it places coercion inside
+    // let tExpected = eraseTypeDeep g tExpected in 
+    // is this needed? see translate_typ. Even if we coerce here, there is no way to change the type of the generate expression
+    match type_leq_c g (Some e) tInferred tExpected with 
+        | true, Some e' -> e'
+        | _ -> 
+         //debug g (fun () -> printfn "\n (*needed to coerce expression \n %A \n of type \n %A \n to type \n %A *) \n" e tInferred tExpected);
+         MLE_Coerce (e, tInferred, tExpected) 
            
-let eff_leq f f' = match f, f' with
-    | E_PURE, _          -> true
-    | E_GHOST, E_GHOST   -> true
-    | E_IMPURE, E_IMPURE -> true
-    | _ -> false
-
-let join f f' = match f, f' with
-    | E_IMPURE, E_PURE
-    | E_PURE  , E_IMPURE 
-    | E_IMPURE, E_IMPURE -> E_IMPURE
-    | E_GHOST , E_GHOST  -> E_GHOST
-    | E_PURE  , E_GHOST  -> E_GHOST
-    | E_GHOST , E_PURE   -> E_GHOST
-    | E_PURE  , E_PURE   -> E_PURE
-    | _ -> failwith (Util.format2 "Impossible: Inconsistent effects %s and %s" (eff_to_string f) (eff_to_string f'))
-
-let join_l fs = List.fold_left join E_PURE fs
-
 let extract_pat (g:env) p : (env * list<(mlpattern * option<mlexpr>)>) =
 (*what does disj stand for? NS: disjunctive *)
     let rec extract_one_pat (disj : bool) (imp : bool) g p : env * option<(mlpattern * list<mlexpr>)> = 
@@ -368,7 +348,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                     l_app, f, t
 
                 | (Inl _, _)::rest, MLTY_Fun (tunit, f', t) -> //non-prefix type app; this type argument gets erased to unit
-                  if equiv g tunit ml_unit_ty
+                  if type_leq g tunit ml_unit_ty
                   then synth_app is_data (mlhead, (ml_unit, E_PURE)::mlargs_f) (join f f', t) rest
                   else failwith "Impossible: ill-typed application" //ill-typed; should be impossible
 
