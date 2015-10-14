@@ -1,6 +1,6 @@
 include ../Makefile.include
 
-all: api interpreter theory codegen
+all: api interpreter theory codegen distclean
 
 EXAMPLES_DIR=./examples
 
