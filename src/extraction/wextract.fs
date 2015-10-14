@@ -173,7 +173,7 @@ let extract_const (c:sconst) :string =
         | _             -> raise (NYI "Extract constant cannot extract the constant")
 
 let typ_of_exp (e:exp) :typ =
-    let t' = !(Util.compress_exp e).tk in
+    let t' = !(Util.compress_exp e).tk in  //Recheck.recompute_typ sets tk field
     match t' with
         | Some t -> t
         | _ -> raise (NYI "Type of FFI call not set!")
