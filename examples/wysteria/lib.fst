@@ -25,7 +25,7 @@ val wfold: #a:Type -> #b:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> a -> t
            -> Wys a (fun m0 -> wfold_pre #b m0 ps w /\ req_f m0) (fun m0 r t -> True)
               (decreases (size ps))
 let rec wfold #eps ps w f x =
-  if ps = empty then x
+  if ps = empty () then x
   else
     let p = choose ps in
     let y = projwire_s p w in
@@ -47,7 +47,7 @@ let rec waps #eps ps w f =
   let ps' = remove p ps in
   let y = projwire_s p w in
   let wp = mkwire_s (singleton p) (f p y) in
-  if ps' = empty then
+  if ps' = empty () then
     let _ = assert (ps = singleton p) in
     wp
   else
@@ -78,7 +78,7 @@ let rec wapp 'a 'b 'req_f 'ens_f #eps ps w f =
   let ps' = remove p ps in
   let py = as_par (singleton p) (g p) in
   let wp = mkwire_p #'b #(singleton p) (singleton p) py in
-  if ps' = empty then
+  if ps' = empty () then
     let _ = assert (ps = singleton p) in
     wp
   else

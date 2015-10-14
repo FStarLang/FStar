@@ -10,17 +10,17 @@ open Prins
 
 //----- prins interface ---//
 
-val empty: eprins
-let empty = OrdSet.empty #prin #p_cmp
+val empty: unit -> Tot eprins
+let empty _ = OrdSet.empty #prin #p_cmp
 
-val mem: p:prin -> s:eprins -> Tot (b:bool{b ==> not (s = empty)})
+val mem: p:prin -> s:eprins -> Tot (b:bool{b ==> not (s = empty ())})
 let mem p s = OrdSet.mem p s
 
 val singleton: p:prin -> Pure prins (True)
-                                   (fun s -> s =!= empty /\ (forall p'. mem p' s = (p = p')))
+                                   (fun s -> s =!= empty () /\ (forall p'. mem p' s = (p = p')))
 let singleton p =
   let s = OrdSet.singleton p in
-  let _ = assert (not (s = empty)) in
+  let _ = assert (not (s = empty ())) in
   s
 
 val subset: s1:eprins -> s2:eprins
@@ -28,14 +28,14 @@ val subset: s1:eprins -> s2:eprins
 let subset s1 s2 = OrdSet.subset s1 s2
 
 val union: s1:eprins -> s2:eprins
-           -> Pure eprins (True) (fun s -> ((s1 =!= empty \/ s2 =!= empty) ==> s =!= empty) /\
+           -> Pure eprins (True) (fun s -> ((s1 =!= empty () \/ s2 =!= empty ()) ==> s =!= empty ()) /\
                                     (forall p. mem p s = (mem p s1 || mem p s2)))
 let union s1 s2 =
   let s = OrdSet.union s1 s2 in
-  let _ = assert (s = empty <==> (s1 = empty /\ s2 = empty)) in
+  let _ = assert (s = empty () <==> (s1 = empty () /\ s2 = empty ())) in
   s
 
-val size: s:eprins -> Pure nat (True) (fun n -> n = 0 <==> s = empty)
+val size: s:eprins -> Pure nat (True) (fun n -> n = 0 <==> s = empty ())
 let size s = OrdSet.size s
 
 val choose: s:prins -> Pure prin (True) (fun p -> b2t (mem p s))
@@ -117,3 +117,42 @@ val slice_tuple_sps: (prins -> 'a -> Tot 'a) -> (prins -> 'b -> Tot 'b) -> prins
 let slice_tuple_sps f g ps t = (f ps (fst t), g ps (snd t))
 
 //----- tuple -----//
+
+//----- option -----//
+
+val mk_none: unit -> Tot (option 'a)
+let mk_none _ = None
+
+val mk_some: 'a -> Tot (option 'a)
+let mk_some x = Some x
+
+val is_none: option 'a -> Tot bool
+let is_none = function
+  | None -> true
+  | _    -> false
+
+val is_some: option 'a -> Tot bool
+let is_some = function
+  | Some x -> true
+  | _      -> false
+
+val v_of_some: x:option 'a{is_Some x} -> Tot 'a
+let v_of_some = function
+  | Some x -> x
+
+val slice_option: (prin -> 'a -> Tot 'a) -> prin -> option 'a -> Tot (option 'a)
+let slice_option f p = function
+  | None   -> None
+  | Some x -> Some (f p x)
+
+val compose_options: ('a -> 'a -> Tot 'a) -> x:option 'a -> y:option 'a{is_some x <==> is_some y} -> Tot (option 'a)
+let compose_options f x y = match x, y with
+  | None, None       -> None
+  | Some x', Some y' -> Some (f x' y')
+
+val slice_option_sps: (prins -> 'a -> Tot 'a) -> prins -> option 'a -> Tot (option 'a)
+let slice_option_sps f ps = function
+  | None   -> None
+  | Some x -> Some (f ps x)
+
+//----- option -----//
