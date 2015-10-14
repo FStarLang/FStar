@@ -4,17 +4,17 @@
       listset.fst ghost.fst located.fst lref.fst regions.fst rst.fst
   --*)
 
-module RSTWhile
+module FStar.Regions.RSTWhile
 
-open RST
-open Lref
-open Located
-open Regions
+open FStar.Regions.RST
+open FStar.Regions.Heap
+open FStar.Regions.Located
+open FStar.Regions.Regions
 
 (* The effect of a computation that takes places within a fresh, new region
    freshly pushed on the stack. *)
 (* AA: adding requires/ensures here causes the definition of scopedWhile below
-   to not typecheck. Hope this is not a concert w.r.t. soundness. *)
+   to not typecheck. Hope this is not a concern w.r.t. soundness. *)
 effect WNSC (a:Type) (pre:smem -> Type) (post: smem -> Post a) (mod:modset) =
   Mem a
       ( (* requires *) (fun m -> Stack.isNonEmpty (st m) /\ topRegion m = emp /\ pre (tail m)))
@@ -140,7 +140,7 @@ effect whileBodyUnscoped (loopInv:smem -> Type) (lc:smem -> Type) (mod:modset)
 val unscopedWhile : loopInv:(smem -> Type)
   -> wglc:(smem -> Type)
   -> wg:(unit -> whileGuard loopInv wglc)
-  -> mods:(modset)
+  -> mods:modset
   -> bd:(unit -> whileBodyUnscoped loopInv wglc mods)
   -> Mem unit (requires (fun m -> loopInv m))
               (ensures (fun _ _ m1 -> loopInv m1 /\ (~(wglc m1))))

@@ -972,30 +972,11 @@ let rec compose_vals #m1 #m2 v1 v2 =
  else
    let emp = D_v (Meta empty Can_b empty Can_w) V_emp in
    match v1 with
-     | V_prin p1 ->
-       if is_v_prin v2 && V_prin.c v1 = V_prin.c v2 then
-	 D_v m1 v1
-       else emp
-       
-     | V_eprins eps1 ->
-       if is_v_eprins v2 && V_eprins.c v1 = V_eprins.c v2 then
-	 D_v m1 v1
-       else emp
-
-     | V_prins ps1 ->
-       if is_v_prins v2 && V_prins.c v1 = V_prins.c v2 then
-	 D_v m1 v1
-       else emp
-
-     | V_unit ->
-       if is_v_unit v2 then
-	 D_v m1 v1
-       else emp
-
-     | V_bool b1 ->
-       if is_v_bool v2 && V_bool.c v1 = V_bool.c v2 then
-	 D_v m1 v1
-       else emp
+     | V_prin _
+     | V_eprins _
+     | V_prins _
+     | V_unit
+     | V_bool _ -> D_v m1 v1
 
      | V_opaque 'a v1 m1 s1 c1 sps1 ->
        if is_v_opaque v2 then
@@ -1015,8 +996,7 @@ let rec compose_vals #m1 #m2 v1 v2 =
          if ps1 = ps2 then
            let D_v meta v = compose_vals v1 v2 in
            D_v (Meta ps1 Can_b (Meta.wps meta) Cannot_w) (V_box ps1 v)
-         else
-           emp
+         else emp
        else emp
 
      | V_wire eps1 w1 ->
@@ -1031,25 +1011,25 @@ let rec compose_vals #m1 #m2 v1 v2 =
      | V_clos en1 x1 e1 ->
        if is_v_clos v2 then
          let V_clos en2 x2 e2 = v2 in
-         if x1 = x2 && e1 = e2 then
+         (*if x1 = x2 && e1 = e2 then*)
            D_v m1 (V_clos (compose_envs en1 en2) x1 e1)
-         else emp
+         (*else emp*)
        else emp
 
      | V_fix_clos en1 f1 x1 e1 ->
        if is_v_fix_clos v2 then
          let V_fix_clos en2 f2 x2 e2 = v2 in
-         if f1 = f2 && x1 = x2 && e1 = e2 then
+         (*if f1 = f2 && x1 = x2 && e1 = e2 then*)
            D_v m1 (V_fix_clos (compose_envs en1 en2) f1 x1 e1)
-         else emp
+         (*else emp*)
        else emp
 
      | V_emp_clos x1 e1 ->
        if is_v_emp_clos v2 then
          let V_emp_clos x2 e2 = v2 in
-         if x1 = x2 && e1 = e2 then
+         (*if x1 = x2 && e1 = e2 then*)
            D_v m1 (V_emp_clos x1 e1)
-         else emp
+         (*else emp*)
        else emp
 
 and compose_envs en1 en2 =

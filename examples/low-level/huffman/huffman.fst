@@ -6,15 +6,15 @@
 
 module Huffman
 
-open RST
-open RSTArray
+open FStar.Regions.RST
+open FStar.Regions.RSTArray
 open ArrayAlgos
 
 open StackAndHeap
 open Stack
 
-open Lref
-open Located
+open FStar.Regions.Heap
+open FStar.Regions.Located
 
 open FStar.Ghost
 
@@ -303,7 +303,7 @@ val live_hist_after_ralloc_lemma: #a:Type -> r:(lref a) -> v:a -> h:histogram{re
 let live_hist_after_ralloc_lemma r v h m m' = ()
 
 val compute_histogram: d:data -> h:histogram -> i:nat
-                       -> RST unit
+                       -> FStar.Regions.RST unit
                           (fun m0 -> isNonEmpty (st m0)                        /\
                                      liveArr m0 d /\ live_histogram h m0       /\
                                      glength h m0 = symbol_value_bound /\
@@ -317,20 +317,20 @@ val compute_histogram: d:data -> h:histogram -> i:nat
                                                                  (*/\
                                           liveArr m1 d ) /\ live_histogram h m1)*)
 let compute_histogram d h i =
-  if i = RSTArray.length d then ()
+  if i = FStar.Regions.RSTArray.length d then ()
   else
-    let sym = RSTArray.readIndex d i in    
-    let the_leaf = RSTArray.readIndex h sym in
+    let sym = FStar.Regions.RSTArray.readIndex d i in    
+    let the_leaf = FStar.Regions.RSTArray.readIndex h sym in
     if is_null the_leaf then
       let the_leaf' = mk_node (ralloc 1) (mk_null_node ()) (mk_null_node ()) sym (ralloc "") in
-      RSTArray.writeIndex h sym the_leaf'
+      FStar.Regions.RSTArray.writeIndex h sym the_leaf'
     else admit ()
       //memwrite (the_leaf.frequency) ((memread the_leaf.frequency) + 1)
 
 
 
 (*val insert_in_ordered_list: n:located node -> l:node_list
-                            -> RST unit
+                            -> FStar.Regions.RST unit
                                (fun sm0 -> live_ghost_list n sm0 /\ live_node n sm0 /\ live_node_list l sm0)
                                (fun sm0 _ sm1 -> live_ghost_list n sm0 /\ live_node n sm0 /\ live_node_list l sm0 /\
                                                  live_ghost_list n sm1) ///\ live_node n sm1 /\ live_node_list l sm1)
@@ -376,25 +376,25 @@ type live_histogram (h:sstarray node) (sm:smem) =
  *)
 val compute_histogram: sstream: sstarray symbol_t -> histogram: sstarray node
                        -> i:nat
-                       -> RST unit
+                       -> FStar.Regions.RST unit
                           (fun sm0 -> isNonEmpty (st sm0)                                    /\
                                       liveArr sm0 sstream /\ live_histogram histogram sm0    /\
                                       glength histogram sm0 = symbol_value_bound             /\
                                       i <= glength sstream sm0)
                           (fun sm0 r sm1 -> b2t (isNonEmpty (st sm1)))
 let rec compute_histogram sstream histogram i =
-  if i = RSTArray.length sstream then ()
+  if i = FStar.Regions.RSTArray.length sstream then ()
   else
-    let sym = RSTArray.readIndex sstream i in
-    let the_leaf = RSTArray.readIndex histogram sym in
+    let sym = FStar.Regions.RSTArray.readIndex sstream i in
+    let the_leaf = FStar.Regions.RSTArray.readIndex histogram sym in
     if is_null the_leaf then
       let the_leaf' = mk_node (ralloc 1) (ralloc (null_node ())) (null_node ()) (null_node ()) sym (ralloc "") in
-      RSTArray.writeIndex histogram sym the_leaf'
+      FStar.Regions.RSTArray.writeIndex histogram sym the_leaf'
     else
       memwrite (the_leaf.frequency) ((memread the_leaf.frequency) + 1)
 
 val build_huffman_tree: histogram: sstarray node
-                        -> RST node
+                        -> FStar.Regions.RST node
                            (fun sm0 -> isNonEmpty (st sm0) /\ live_histogram histogram sm0)
                            (fun sm0 r sm1 -> b2t (isNonEmpty (st sm1)))
 let build_huffman_tree histogram =
@@ -402,7 +402,7 @@ let build_huffman_tree histogram =
                                    
 
 val huffman_encode: sstream:sstarray symbol_t -> estream:sstarray byte
-                    -> RST (sstarray byte * nat * nat)
+                    -> FStar.Regions.RST (sstarray byte * nat * nat)
                        (fun sm0 -> liveArr sm0 sstream /\ liveArr sm0 estream /\
                                    glength sstream sm0 = glength estream sm0)
                        (fun sm0 r sm1 -> True)

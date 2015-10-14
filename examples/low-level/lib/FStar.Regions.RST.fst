@@ -1,17 +1,17 @@
 (*--build-config
     options:--admit_fsi FStar.Set;
-    other-files:ext.fst set.fsi heap.fst st.fst all.fst list.fst
-      stack.fst listset.fst ghost.fst located.fst lref.fst regions.fst
+    other-files:ext.fst set.fsi ghost.fst listTot.fst FStar.Stack.fst FStar.Regions.Located.fst FStar.Regions.Heap.fst FStar.Regions.Regions.fst
   --*)
 
-module RST
+module FStar.Regions.RST
 
-(** This module defines the [RST] effect of computations that occur within our
+(** This module defines the [FStar.Regions.RST] effect of computations that occur within our
     stack of regions. *)
 
-open Located
-open Regions
-open Lref
+open FStar.Regions.Located
+open FStar.Regions.Heap
+open FStar.Regions.Regions
+
 
 kind Pre  = smem -> Type
 (* JP: This is the same thing as [STPost_h smem a]. *)
@@ -24,6 +24,11 @@ effect RST (a:Type) (pre:Pre) (post: (smem -> Post a)) =
     (fun (p:Post a) (h:smem) -> pre h /\ (forall a h1. (pre h /\ post h a h1) ==> p a h1)) (* WP *)
     (fun (p:Post a) (h:smem) -> (forall a h1. (pre h /\ post h a h1) ==> p a h1)) (* WLP *)
 
+//JP, NS: Can we implement RST on top of ST somehow? 
+//That would allow us to reuse the soundness argument of ST for the region calculus we build on top of it. 
+//Perhaps one strategy is to rely on a single ref cell provided by the ST monad to implement the entire region hierarchy
+//within it. The tricky bit is to figure out how to hide this implementation detail from clients of RST.
+//Also, we need to do something to model new name generation.
 
 (** Operations for allocation, reading and writing into our new (axiomatized)
     memory. The functions below are axiomatized, because when extracting to
@@ -82,7 +87,7 @@ sub_effect
 
 (* Effect of a computation that leaves the region stack's structure unchanged
    (i.e. no push or pop) but may read or modify any live reference in [mod]. *)
-effect Mem (a:Type) (pre: smem -> Type) (post: (smem -> Post a)) (mod: Lref.modset) =
+effect Mem (a:Type) (pre: smem -> Type) (post: (smem -> Post a)) (mod: FStar.Regions.Heap.modset) =
         RST a pre (fun m0 a m1 -> post m0 a m1 /\ rids m0 = rids m1 /\ canModify m0 m1 mod)
 
 (* Effect of a computation that leaves the region stack's structure unchanged
@@ -134,16 +139,4 @@ assume val llift : #a:Type -> #b:Type -> f:(components a b) -> l:located a
               (ensures (fun v m1 -> v == f (greveal l) ))
 
 
-*)
-
-
-(*
-Free can only deallocate a heap-allocated lref. The implementation
-below doesn't make sense becasue it allows even deallocation of stack
-references
-
-assume val freeRef:  #a:Type -> r:(lref a)  ->
-  RST unit
-	    (fun m -> b2t (refIsLive r m))
-      (fun m0 _ m1 -> (freeMemAux r m0) ==  m1)
 *)

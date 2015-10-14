@@ -1,13 +1,15 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Wysteria --codegen Wysteria;
-    variables:LIB=../../lib;
-    other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst wysteria.fsi lib.fst
+    options:--admit_fsi FStar.Set --admit_fsi Wysteria --admit_fsi Prins --admit_fsi FStar.OrdSet --admit_fsi FStar.IO;
+    other-files:ghost.fst ext.fst set.fsi heap.fst st.fst all.fst io.fsti list.fst st2.fst ordset.fsi prins.fsi ffi.fst wysteria.fsi
  --*)
+
+(* Millionaire's for any 2 parties, private output for the first party, using wires *)
 
 module SMC
 
+open Prins
+open FFI
 open Wysteria
-open WLib
 
 let alice_s = singleton alice
 let bob_s = singleton bob
@@ -17,37 +19,62 @@ let bc = union bob_s charlie_s
 let abc = union ab charlie_s
 
 type pre  (m:mode)  = fun m0 -> b2t (m0 = m)
-type post (#a:Type) = fun (m:mode) (x:a) -> True
+type post (#a:Type) = fun (m:mode) (x:a) (t:trace) -> True
 
 type pre_with (m:mode) (t:Type) = fun m0 -> m0 = m /\ t
 
-val read_fn: unit -> Wys nat (fun m0 -> Mode.m m0 = Par /\
-                                        (exists p. Mode.ps m0 = singleton p))
-                             (fun m0 r -> True)
-let read_fn x = read #nat ()
+let to_s2 p1 p2 = union (singleton p1) (singleton p2)
+
+val read_fn: unit -> Wys int (fun m0 -> Mode.m m0 = Par /\
+                                  (exists p. Mode.ps m0 = singleton p))
+                          (fun m0 r t -> True)
+let read_fn x = w_read_int ()
+
+(*
+ * mode should be able to project all values from the wire bundle
+ *)
+type wfold_pre (#b:Type) (#eps:eprins) (m:mode) (ps:eprins) (w:Wire b eps) =
+  Mode.m m = Sec /\ (forall p. mem p ps ==> (w_contains p w /\ CanProjWireS #b m w p))
+
+(* we can give a more precise type to p arg of f, p:prin{mem p ps}, but then unification in the recursive call fails *)
+val wfold: #a:Type -> #b:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> a -> trace -> Type)
+           -> #eps:eprins
+           -> ps:eprins
+           -> w:Wire b eps{forall p. mem p ps ==> w_contains p w}
+           -> =f:(a -> (p:prin{w_contains p w}) -> x:b{w_select p w = x} -> Wys a req_f ens_f)
+           -> a
+           -> Wys a (fun m0 -> wfold_pre #b m0 ps w /\ req_f m0) (fun m0 r t -> True)
+              (decreases (size ps))
+let rec wfold #eps ps w f x =
+  if ps = empty () then x
+  else
+    let p = choose ps in
+    let y = projwire_s p w in
+    wfold (remove p ps) w f (f x p y)
 
 val mill8_sec: ps:prins
-               -> w:Wire int ps{forall p. mem p ps <==> w_contains p w}
+               -> w:Wire int ps
                -> unit
-               -> Wys prin (pre (Mode Par ps))  post
+               -> Wys (option prin) (pre (Mode Par ps)) post
 let mill8_sec ps w _ =
 
-  let f: prev:prin{w_contains prev w}
-         -> p:prin{w_contains p w} -> y:int{w_select p w = y}
-         -> Wys (prev:prin{w_contains prev w}) (fun m0 -> b2t (m0 = Mode Sec ps)) (fun m0 r -> True) =
-    fun prev p y ->
-      let y' = projwire_s prev w in
-      if y > y' then p else prev
+  let f: option (p:prin{w_contains p w})
+          -> (p:prin{w_contains p w}) -> (y:int{w_select p w = y})
+          -> Wys (option (p:prin{w_contains p w})) (pre (Mode Sec ps)) post =
+    fun x p y ->
+      if is_none x then mk_some p
+      else
+      	let p' = v_of_some x in
+        let y' = projwire_s p' w in
+        if y > y' then mk_some p else mk_some p'
   in
 
-  let g:unit -> Wys (p:prin{w_contains p w}) (pre (Mode Sec ps)) (post #(p:prin{w_contains p w})) =
-    fun _ ->
-      let p = choose ps in
-      let ps' = remove p ps in
-      wfold ps ps' w f p
+  let g:unit -> Wys (option (p:prin{w_contains p w})) (pre (Mode Sec ps)) (post #(option (p:prin{w_contains p w}))) =
+    fun _ -> wfold ps w f (mk_none ())
   in
 
-  as_sec ps g
+  let p = as_sec ps g in
+  if is_none p then mk_none () else mk_some (v_of_some p)
 
 val mill8: unit -> Wys bool (pre (Mode Par abc)) post
 let mill8 _ =
@@ -62,13 +89,10 @@ let mill8 _ =
   let w1 = concat_wire wa wb in
   let w2 = concat_wire w1 wc in
 
-  (* call mill for 2 parties *)
-  let _ = as_par ab (mill8_sec ab w1) in
-
-  (* call mill for 3 parties *)
-  let _ = as_par abc (mill8_sec #abc w2) in
+  let _ = as_par abc (mill8_sec abc w2) in
 
   true
 ;;
 
-let x = main abc mill8 in wprint x
+let _ = main abc mill8 in ()
+

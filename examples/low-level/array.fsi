@@ -5,17 +5,17 @@
   --*)
 
 
-module RSTArray
+module FStar.Regions.RSTArray
 
 open FStar.Seq
 open FStar.Ghost
 
-open RST
-open RSTWhile
+open FStar.Regions.RST
+open FStar.Regions.RSTWhile
 open MachineWord
-open Lref
-open Located
-open Regions
+open FStar.Regions.Heap
+open FStar.Regions.Located
+open FStar.Regions.Regions
 
 type sstarray : Type -> Type
 

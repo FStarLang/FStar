@@ -6,9 +6,9 @@
 
 (*this file is not being maintained anymore*)
 module MD5SubArray
-open RSTWhile
-open StackAndHeap  open Lref  open Located
-open RST
+open FStar.Regions.RSTWhile
+open StackAndHeap  open FStar.Regions.Heap  open FStar.Regions.Located
+open FStar.Regions.RST
 open MVector
 open Heap
 open Set

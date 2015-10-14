@@ -1,18 +1,18 @@
 (*--build-config
     options:--admit_fsi FStar.List --admit_fsi FStar.Set;
-    other-files:set.fsi ext.fst heap.fst st.fst all.fst list.fsi ghost.fst located.fst
+    other-files:set.fsi ext.fst ghost.fst FStar.Regions.Located.fst
   --*)
 
-module Lref
+module FStar.Regions.Heap
 
 (** A series of lemmas about the heap and our lref type. *)
-open Located
+open FStar.Regions.Located
 open FStar.Ghost
 open FStar.Set
-
+type ref : Type -> Type 
 type lref (a:Type) : Type = located (ref a)
 
-type heapAux
+assume type heapAux
 type heap = erased heapAux
 //TODO
 //Would be good to make heap polymorphic in the reference type
@@ -21,13 +21,13 @@ type heap = erased heapAux
 type aref =
   | Ref : #a:Type -> r:lref a -> aref
 //TODO make all these functions GTot; note heap is already erased
-assume logic val sel :       #a:Type -> heap -> lref a -> Tot (*erased*) a
-assume logic val upd :       #a:Type -> heap -> lref a -> a -> Tot heap
-assume logic val emp :       heap
-assume logic val contains :  #a:Type -> heap -> lref a -> Tot (*erased*) bool
-assume logic val equal:      heap -> heap -> Tot (*erased*) bool
-assume logic val restrict:   heap -> set aref -> Tot heap
-assume logic val concat:     heap -> heap -> Tot heap
+assume val sel :       #a:Type -> heap -> lref a -> Tot (*erased*) a
+assume val upd :       #a:Type -> heap -> lref a -> a -> Tot heap
+assume val emp :       heap
+assume val contains :  #a:Type -> heap -> lref a -> Tot (*erased*) bool
+assume val equal:      heap -> heap -> Tot (*erased*) bool
+assume val restrict:   heap -> set aref -> Tot heap
+assume val concat:     heap -> heap -> Tot heap
 
 assume SelUpd1:       forall (a:Type) (h:heap) (r:lref a) (v:a).            {:pattern (sel (upd h r v) r)}
                       sel (upd h r v) r == v
@@ -60,10 +60,9 @@ assume ContainsConcat:forall (a:Type) (h1:heap) (h2:heap) (a:lref a).       {:pa
                       contains (concat h1 h2) a == (contains h1 a || contains h2 a)
 
 type On (r:set aref) (p:(heap -> Type)) (h:heap) = p (restrict h r)
-(*opaque type fresh (h:heap) (lrefs:set aref)       = (forall (a:Type) (a:lref a).{:pattern (contains h a)} mem (Ref a) lrefs ==> not(contains h a))*)
 opaque type fresh (lrefs:set aref) (h0:heap) (h1:heap) =
   (forall (a:Type) (a:lref a).{:pattern (contains h0 a)} mem (Ref a) lrefs ==> not(contains h0 a) /\ contains h1 a)
-opaque logic type modifies (mods:set aref) (h:heap) (h':heap) =
+opaque type modifies (mods:set aref) (h:heap) (h':heap) =
     b2t (equal h' (concat h' (restrict h (complement mods))))
 
 type modset = erased (set aref)

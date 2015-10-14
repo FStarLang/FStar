@@ -35,18 +35,6 @@ features and bug fixes.
 
         $ make -C examples
 
-### Homebrew formula for Mac OS X ###
-
-On Macs you can also build and install the latest F\* release using Homebrew:
-
-        $ brew tap homebrew/science
-        $ brew install fstar
-
-For building and installing the latest F\* sources from GitHub (the master branch)
-instead of the latest release you can do:
-
-        $ brew --HEAD install fstar
-
 ## Building F* from sources ##
 
 If you have a serious interest in F\* or want to report bugs then we
@@ -96,9 +84,9 @@ you to skip directly to step 3 and build F* with just an OCaml compiler.
   - Using Visual Studio, open `src/VS/FStar.sln` and build the solution
     (in the menus: Build > Build Solution).
 
-**Note:** on Windows you need to build F\* using Visual Studio
-  (building in Cygwin is not supported currently; `make -C src`
-  succeeds but produces a broken binary:
+**Note:** on Windows if you want to build F\* using F# you need use
+  Visual Studio (building using `fsc.exe` in Cygwin is not supported
+  currently; `make -C src` succeeds but produces a broken binary:
   https://github.com/FStarLang/FStar/issues/159)
 
 **Note:** if the Visual Studio build fails because `parse.fs` and
@@ -223,8 +211,9 @@ https://github.com/Z3Prover/z3/releases/tag/z3-4.4.0
 
 0. Bootstrap the compiler in OCaml using the instructions above
 
-1. Make sure you have the Z3 binary in your `$PATH` or
+1. Make sure you have the Z3 4.4.0 binary in your `$PATH` or
    in the `$FSTAR_HOME/bin` directory
+   (please make sure it's precisely this version!)
 
 2. Run the following command:
 
@@ -232,5 +221,10 @@ https://github.com/Z3Prover/z3/releases/tag/z3-4.4.0
 
 3. Run the testing of binary packages (described above)
 
+4. At the end of the release, please remember to update the
+   links at: https://www.fstar-lang.org/#download and the
+   version on https://en.wikipedia.org/wiki/F*\_(programming_language)
+   and https://en.wikipedia.org/wiki/Proof_assistant
+
 **Note**: to create the package successfully you will need tools like
-Madoko, make, git, zip, etc installed.
+make, git, Madoko, latex, zip, etc installed.
