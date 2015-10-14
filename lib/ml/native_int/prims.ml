@@ -35,7 +35,7 @@ type int'      = int
 type int       = int'
 
 type byte'     = char
-type byte 	 = byte'
+type byte      = byte'
 
 type exn'      = exn
 type exn       = exn'
@@ -111,8 +111,17 @@ let _assert x = ()
 let magic () = failwith "no magic"
 let op_Negation x = not x
 
+let (+)   x y  = x + y
+let (-)   x y  = x - y
+let ( * ) x y  = x * y
+let (/)   x y  = x / y
+let (<=)  x y  = x <= y
+let (>=)  x y  = x >= y
+let (<)   x y  = x < y
+let (>)   x y  = x > y
+let (%)   x y  = x mod y
 let op_Minus x = - x
-let parse_int x = int_of_string x
+let parse_int  = int_of_string
 
 let op_Equality x y = x = y
 let op_disEquality x y = x<>y
@@ -138,13 +147,16 @@ type ('a, 'b) either =
 let is_Inl = function
   | Inl _ -> true
   | _     -> false
-  
+
 let is_Inr x = not (is_Inl x)
 
 let ___Inl___v x = match x with
   | Inl v -> v
   | _     -> failwith "impossible"
-  
+
 let ___Inr___v x = match x with
   | Inr v -> v
   | _     -> failwith "impossible"
+
+let string_of_bool = string_of_bool
+let string_of_int  = string_of_int

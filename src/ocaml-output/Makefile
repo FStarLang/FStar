@@ -45,7 +45,7 @@ parser:
 	ocamllex ../parser/ml/lex.mll -o FStar_Parser_LexFStar.ml
 	cp ../parser/ml/parseit.ml FStar_Parser_ParseIt.ml
 
-copy_lib_files:$(addprefix ../../lib/ml/, $(FSTAR_STDLIB:.cmx=.ml)) $(addprefix ../basic/ml/, $(COMPILER_ML_LIB:.cmx=.ml)) ../parser/ml/$(PARSER_ML_LIB:.cmx=.ml) ../fstar/ml/main.ml
+copy_lib_files:../../lib/ml/native_int/prims.ml $(addprefix ../../lib/ml/, $(FSTAR_STDLIB:.cmx=.ml)) $(addprefix ../basic/ml/, $(COMPILER_ML_LIB:.cmx=.ml)) ../parser/ml/$(PARSER_ML_LIB:.cmx=.ml) ../fstar/ml/main.ml
 	cp $^ .
 
 # Dependencies

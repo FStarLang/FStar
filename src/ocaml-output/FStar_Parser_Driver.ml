@@ -1,4 +1,5 @@
 
+open Prims
 let print_error = (fun msg r -> (let _113_6 = (let _113_5 = (FStar_Range.string_of_range r)
 in (FStar_Util.format2 "ERROR %s: %s\n" _113_5 msg))
 in (FStar_Util.print_string _113_6)))

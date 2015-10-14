@@ -1,4 +1,5 @@
 
+open Prims
 type binding =
 | Binding_typ_var of FStar_Absyn_Syntax.ident
 | Binding_var of FStar_Absyn_Syntax.ident

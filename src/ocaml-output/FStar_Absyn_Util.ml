@@ -1,4 +1,5 @@
 
+open Prims
 let handle_err = (fun warning ret e -> (match (e) with
 | FStar_Absyn_Syntax.Error (msg, r) -> begin
 (let _26_34 = (let _91_8 = (let _91_7 = (FStar_Range.string_of_range r)

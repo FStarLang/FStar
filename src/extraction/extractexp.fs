@@ -134,7 +134,8 @@ let extract_pat (g:env) p : (env * list<(mlpattern * option<mlexpr>)>) =
         match p.v with
           | Pat_disj _ -> failwith "Impossible"
  
-          | Pat_constant (Const_int c) -> //these may be extracted to bigint, in which case, we need to emit a when clause
+          | Pat_constant (Const_int c) when (not !Options.use_native_int) -> 
+            //these may be extracted to bigint, in which case, we need to emit a when clause
             let x = as_mlident (Util.new_bvd None) in
             let eq = ["Prims"], "op_Equality" in
             let when_clause = MLE_App(MLE_Name eq, [MLE_Var x; MLE_Const <| mlconst_of_const' p.p (Const_int c)]) in
@@ -196,9 +197,13 @@ let extract_pat (g:env) p : (env * list<(mlpattern * option<mlexpr>)>) =
         let g, p = extract_one_pat true g p in
         let ps = p :: (pats |> List.map (fun x -> snd (extract_one_pat true g x))) in
         let ps_when, rest = ps |> List.partition (function (_, _::_) -> true | _ -> false) in
+        let ps = ps_when |> List.map (fun (x, whens) -> (x, mk_when_clause whens)) in
         //branches that contains a new when clause need to be split out
-        g, (MLP_Branch(List.map fst rest), None) :: (ps_when |> List.map (fun (x, whens) -> (x, mk_when_clause whens)))
- 
+        let res = match rest with 
+            | [] -> g, ps
+            | rest -> g,  (MLP_Branch(List.map fst rest), None) :: ps in
+        res
+
       | _ -> 
         let g, (p, whens) = extract_one_pat false g p in
         let when_clause = mk_when_clause whens in
@@ -285,7 +290,8 @@ let maybe_lalloc_eta_data (g:env) (qual : option<fv_qual>) (residualType : mlty)
 
 let rec check_exp (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr =
     // debug g (fun () -> printfn "Checking %s at type %A\n" (Print.exp_to_string e) t);
-    let e ,_ ,_ = (erase g (check_exp' g e f t) f t) in e
+    let e, _, _ = erase g (check_exp' g e f t) f t in 
+    e
 
 and check_exp' (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr =
     match (Util.compress_exp e).n with

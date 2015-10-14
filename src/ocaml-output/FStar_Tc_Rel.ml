@@ -1,4 +1,5 @@
 
+open Prims
 let new_kvar = (fun r binders -> (let u = (FStar_Unionfind.fresh FStar_Absyn_Syntax.Uvar)
 in (let _101_7 = (let _101_6 = (let _101_5 = (FStar_Absyn_Util.args_of_non_null_binders binders)
 in (u, _101_5))

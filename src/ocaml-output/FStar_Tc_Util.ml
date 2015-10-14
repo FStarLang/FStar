@@ -1,4 +1,5 @@
 
+open Prims
 let try_solve = (fun env f -> (env.FStar_Tc_Env.solver.FStar_Tc_Env.solve env f))
 
 let report = (fun env errs -> (let _103_10 = (FStar_Tc_Env.get_range env)

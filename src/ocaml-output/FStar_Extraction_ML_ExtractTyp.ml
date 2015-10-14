@@ -1,4 +1,5 @@
 
+open Prims
 let binderIsExp = (fun bn -> (FStar_Absyn_Print.is_inr (Prims.fst bn)))
 
 let rec argIsExp = (fun k typeName -> (match ((let _126_7 = (FStar_Absyn_Util.compress_kind k)
@@ -51,12 +52,18 @@ end))
 in delta_norm_eff))
 
 let translate_eff = (fun g l -> (let l = (delta_norm_eff g l)
-in (match (((FStar_Absyn_Syntax.lid_equals l FStar_Absyn_Const.effect_PURE_lid) || (FStar_Absyn_Syntax.lid_equals l FStar_Absyn_Const.effect_GHOST_lid))) with
+in (match ((FStar_Absyn_Syntax.lid_equals l FStar_Absyn_Const.effect_PURE_lid)) with
 | true -> begin
 FStar_Extraction_ML_Syntax.E_PURE
 end
 | false -> begin
+(match ((FStar_Absyn_Syntax.lid_equals l FStar_Absyn_Const.effect_GHOST_lid)) with
+| true -> begin
+FStar_Extraction_ML_Syntax.E_GHOST
+end
+| false -> begin
 FStar_Extraction_ML_Syntax.E_IMPURE
+end)
 end)))
 
 let rec curry = (fun inp f out -> (match (inp) with

@@ -123,7 +123,7 @@ let infix_prim_ops = [
     ("op_GreaterThanOrEqual", e_bin_prio_order , ">=");
     ("op_LessThan"          , e_bin_prio_order , "<" );
     ("op_GreaterThan"       , e_bin_prio_order , ">" );
-//    ("op_Modulus"           , e_bin_prio_order , "%" );
+    ("op_Modulus"           , e_bin_prio_order , "%" );
 ]
 
 (* -------------------------------------------------------------------- *)
@@ -246,8 +246,9 @@ let string_of_mlconstant (sctt : mlconstant) =
   | MLC_Byte     c     -> "'"^(ocaml_u8_codepoint c)^"'"
   | MLC_Int32    i     -> string_of_int32  i
   | MLC_Int64    i     -> (string_of_int64 i)^"L"
-  | MLC_Int      s     -> "Prims.parse_int \"" ^s^ "\""
-  
+  | MLC_Int      s     -> if !Options.use_native_int  
+                          then s
+                          else "(Prims.parse_int \"" ^s^ "\")"
   | MLC_Float    d     -> string_of_float d
 
   | MLC_Bytes bytes ->

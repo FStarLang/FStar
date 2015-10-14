@@ -1,4 +1,5 @@
 
+open Prims
 type z3version =
 | Z3V_Unknown
 | Z3V of (Prims.int * Prims.int * Prims.int)

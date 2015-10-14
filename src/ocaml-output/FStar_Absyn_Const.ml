@@ -1,4 +1,5 @@
 
+open Prims
 let p2l = (fun l -> (FStar_Absyn_Syntax.lid_of_path l FStar_Absyn_Syntax.dummyRange))
 
 let pconst = (fun s -> (p2l (("Prims")::(s)::[])))

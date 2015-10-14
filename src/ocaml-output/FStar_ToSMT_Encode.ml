@@ -1,4 +1,5 @@
 
+open Prims
 let add_fuel = (fun x tl -> (match ((FStar_ST.read FStar_Options.unthrottle_inductives)) with
 | true -> begin
 tl

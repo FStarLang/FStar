@@ -1,4 +1,5 @@
 
+open Prims
 let syn' = (fun env k -> (let _104_11 = (FStar_Tc_Env.get_range env)
 in (FStar_Absyn_Syntax.syn _104_11 (Some (k)))))
 

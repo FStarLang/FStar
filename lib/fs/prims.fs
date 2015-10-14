@@ -86,16 +86,16 @@ module Prims
   let op_Negation x = not x
 
   open System.Numerics
-  let op_Addition (x:bigint) (y:bigint)           = x + y
-  let op_Subtraction (x:bigint) (y:bigint)        = x - y
-  let op_Multiply (x:bigint) (y:bigint)           = x * y
-  let op_Division (x:bigint) (y:bigint)           = x / y
-  let op_LessThanOrEqual (x:bigint) (y:bigint)    = x <= y
-  let op_GreaterThanOrEqual (x:bigint) (y:bigint) = x >= y
-  let op_LessThan (x:bigint) (y:bigint)           = x < y
-  let op_GreaterThan (x:bigint) (y:bigint)        = x > y
-  let op_Modulus (x:bigint) (y:bigint)            = x % y
-  let parse_int = BigInteger.parse
+  let ( + )  (x:bigint) (y:bigint) = x + y
+  let ( - )  (x:bigint) (y:bigint) = x - y
+  let ( * )  (x:bigint) (y:bigint) = x * y
+  let ( / )  (x:bigint) (y:bigint) = x / y
+  let ( <= ) (x:bigint) (y:bigint) = x <= y
+  let ( >= ) (x:bigint) (y:bigint) = x >= y
+  let ( < )  (x:bigint) (y:bigint) = x < y
+  let ( > )  (x:bigint) (y:bigint) = x > y
+  let ( % )  (x:bigint) (y:bigint) = x % y
+  let parse_int = BigInteger.Parse
 
   let op_Equality x y = x = y
   let op_disEquality x y = x<>y

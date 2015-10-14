@@ -1,4 +1,5 @@
 
+open Prims
 let process_args = (fun _64_1 -> (match (()) with
 | () -> begin
 (let file_list = (FStar_Util.mk_ref [])

@@ -1,4 +1,5 @@
 
+open Prims
 type sort =
 | Bool_sort
 | Int_sort
