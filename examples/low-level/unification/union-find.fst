@@ -1,6 +1,6 @@
 (*--build-config
-    options:--admit_fsi FStar.Set;
-    other-files:ext.fst set.fsi heap.fst st.fst all.fst
+    options:--admit_fsi FStar.Set --admit_fsi FStar.Squash;
+    other-files:ext.fst set.fsi heap.fst st.fst all.fst squash.fsti
   --*)
 module UnionFind
 
@@ -51,6 +51,8 @@ val compress_preserves_roots:
 let compress_preserves_roots (v: Type) (f: Relation v) _ _ _ _ =
   ()
 
+let bind = Squash.bind_squash
+let return = Squash.return_squash
 
 (* Now [d] is implicit, [is_dsf d f] and [path f y z] too. *)
 val compress_preserves_path_to_roots:
@@ -62,19 +64,31 @@ val compress_preserves_path_to_roots:
     (decreases p)
 let rec compress_preserves_path_to_roots (v: Type) d (f: Relation v) x y z u r p =
   if x = u then begin
-    admit ()
+    Squash.give_proof #(path v (compress v f x z) u r) (
+      bind (return #(path v f u r) p) (fun () ->
+      assert (path v f u r);
+      admit ()))
   end else begin
     match p with
     | Refl _ ->
         let _: path v (compress v f x z) u r = Refl u in
         ()
     | Step _ u' _ _ p' ->
+        (* [u] and [u'] and in relation. *)
         compress_preserves_other_edges v f x z u u';
+        (* There is a path from [u'] to [r]. *)
         compress_preserves_path_to_roots v d f x y z u' r p';
-        (* let _: path v (compress v f x z) u r = *)
-        (*   Refl u u' r ? ? *)
-        (* in *)
-        admit ()
+        (* We need to construct a proof witness (z3 won't do it for us);
+           however, the [Step] case requires a proof witness for the two
+           lemmas above; therefore, we use [Squash] to name these proof
+           witnesses. *)
+        Squash.give_proof (
+          bind (Squash.get_proof (compress v f x z u u')) (fun proof_u_u' ->
+          bind (Squash.get_proof (path v (compress v f x z) u' r)) (fun proof_path_u'_r ->
+          let final_proof: path v (compress v f x z) u r =
+            Step u u' r proof_u_u' proof_path_u'_r
+          in
+          return final_proof)))
   end
 
 
