@@ -229,7 +229,7 @@ let maybe_lalloc_eta_data (g:env) (qual : option<fv_qual>) (residualType : mlty)
     let rec eta_args more_args t = match t with
         | MLTY_Fun (t0, _, t1) ->
           let x = Util.gensym (), -1 in
-          eta_args (((x, Some t0), MLE_Var x)::more_args) t1
+          eta_args (((x, t0), MLE_Var x)::more_args) t1
         | MLTY_Named (_, _) -> List.rev more_args
         | _ -> failwith "Impossible" in
    let as_record qual e =
@@ -393,19 +393,19 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
             let ml_bs, env = List.fold_left (fun (ml_bs, env) (b, _) -> match b with
                 | Inl a -> //no first-class polymorphism; so type-binders get wiped out
                   let env = Env.extend_ty env a (Some MLTY_Top) in
-                  let ml_b = (btvar_as_mlTermVar a (*name of the binder*) , Some <| ml_unit_ty (*type of the binder. correspondingly, this argument gets converted to the unit value in application *)) in
-                        ml_b::ml_bs, env
+                  let ml_b = (btvar_as_mlTermVar a (*name of the binder*) , ml_unit_ty (*type of the binder. correspondingly, this argument gets converted to the unit value in application *)) in
+                  ml_b::ml_bs, env
 
                 | Inr x ->
                   let t = translate_typ env x.sort in
                   let env = Env.extend_bv env x ([], t) false false in
-                  let ml_b = (as_mlident x.v, Some t) in
+                  let ml_b = (as_mlident x.v, t) in
                   ml_b::ml_bs, env) ([], g) bs in
             let ml_bs = List.rev ml_bs in
             let ml_body, f, t = synth_exp env body in
 //            printfn "Computed type of function body %s to be %A\n" (Print.exp_to_string body) t;
             let f, tfun = List.fold_right
-                (fun (_, targ) (f, t) -> E_PURE, MLTY_Fun (must targ, f, t))
+                (fun (_, targ) (f, t) -> E_PURE, MLTY_Fun (targ, f, t))
                 ml_bs (f, t) in
 //            printfn "Computed type of abstraction %s to be %A\n" (Print.exp_to_string e) t;
             MLE_Fun(ml_bs, ml_body), f, tfun
@@ -526,7 +526,8 @@ let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1
         | _ -> [] in
     let rid = constrName in
     let discrBody=
-    MLE_Fun([(mlid, None)], MLE_Match(MLE_Name([], idsym mlid), [
-        MLP_CTor(mlpath_of_lident rid, arg_pat), None, MLE_Const(MLC_Bool true);
-        MLP_Wild, None, MLE_Const(MLC_Bool false)])) in
+        MLE_Fun([(mlid, MLTY_Top)],
+                MLE_Match(MLE_Name([], idsym mlid), [
+                    MLP_CTor(mlpath_of_lident rid, arg_pat), None, MLE_Const(MLC_Bool true);
+                    MLP_Wild, None, MLE_Const(MLC_Bool false)])) in
     MLM_Let (false,[{mllb_name=convIdent discName.ident; mllb_tysc=None; mllb_add_unit=false; mllb_def=discrBody}] )

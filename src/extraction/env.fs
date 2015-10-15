@@ -166,9 +166,13 @@ let extend_ty (g:env) (a:btvar) (mapped_to:option<mlty>) : env =
     let tcenv = Env.push_local_binding g.tcenv (Env.Binding_typ(a.v, a.sort)) in
     {g with gamma=gamma; tcenv=tcenv}
 
-let extend_bv (g:env) (x:bvvar) (t_x:mltyscheme) (add_unit:bool) (mk_unit:bool (*some pattern terms become unit while extaction*)) : env =
-    let mlx = MLE_Var (as_mlident x.v) in
-    let mlx = if mk_unit then ml_unit else (if add_unit then MLE_App(mlx, [ml_unit]) else mlx) in
+let extend_bv (g:env) (x:bvvar) (t_x:mltyscheme) (add_unit:bool) (mk_unit:bool (*some pattern terms become unit while extracting*)) : env =
+    let mlx = with_ty MLTY_Top <| MLE_Var (as_mlident x.v) in
+    let mlx = if mk_unit 
+              then ml_unit 
+              else if add_unit 
+              then with_ty MLTY_Top <| MLE_App(mlx, [ml_unit]) 
+              else mlx in
     let gamma = Bv(x, mlx, t_x)::g.gamma in
     let tcenv = Env.push_local_binding g.tcenv (Env.Binding_var(x.v, x.sort)) in
     {g with gamma=gamma; tcenv=tcenv}
@@ -192,8 +196,8 @@ let tySchemeIsClosed (tys : mltyscheme) : bool =
 let extend_fv' (g:env) (x:fvvar) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) : env =
     if  tySchemeIsClosed t_x
     then
-        let mly = MLE_Name y in
-        let mly = if add_unit then MLE_App(mly, [ml_unit]) else mly in
+        let mly = with_ty MLTY_Top <| MLE_Name y in
+        let mly = if add_unit then with_ty MLTY_Top <| MLE_App(mly, [ml_unit]) else mly in
         let gamma = Fv(x, mly, t_x)::g.gamma in
         let tcenv = Env.push_local_binding g.tcenv (Env.Binding_lid(x.v, x.sort)) in
         {g with gamma=gamma; tcenv=tcenv}

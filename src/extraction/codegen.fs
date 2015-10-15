@@ -402,7 +402,7 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
                           (match xt with | Some xxt -> reduce1 [text " : "; doc_of_mltype currentModule outer xxt] | _ -> text "");
                           text ")"]
             else text x in
-        let ids  = List.map (fun ((x, _),xt) -> bvar_annot x xt) ids in
+        let ids  = List.map (fun ((x, _),xt) -> bvar_annot x (Some xt)) ids in
         let body = doc_of_expr currentModule (min_op_prec, NonAssoc) body in
         let doc  = reduce1 [text "fun"; reduce1 ids; text "->"; body] in
         parens doc
