@@ -31,11 +31,10 @@ type uint16    = uint16'
 type int32'    = int32
 type int32     = int32'
 
-type int'      = int
-type int       = int'
+type int       = Big_int.big_int
 
 type byte'     = char
-type byte 	 = byte'
+type byte      = byte'
 
 type exn'      = exn
 type exn       = exn'
@@ -46,12 +45,11 @@ type 'a list   = 'a list'
 type 'a option' = 'a option
 type 'a option  = 'a option'
 
-
 type nat       = int
 type 'd b2t    = unit
 
 type (' p, ' q) l_or =
-| Left of ' p
+  | Left of ' p
   | Right of ' q
 
 let is_Left = (fun ( _discr_ ) -> (match (_discr_) with
@@ -110,21 +108,24 @@ let admit () = ()
 let _assume () = ()
 let _assert x = ()
 let magic () = failwith "no magic"
-let min x y = if x < y then x else y
 let op_Negation x = not x
-let op_Addition x y = x + y
-let op_Subtraction x y = x - y
-let op_Multiply x y = x * y
-let op_Division x y = x / y
+
+let (+)       = Big_int.add_big_int
+let (-)       = Big_int.sub_big_int
+let ( * )     = Big_int.mult_big_int
+let (/)       = Big_int.div_big_int
+let (<=)      = Big_int.le_big_int
+let (>=)      = Big_int.ge_big_int
+let (<)       = Big_int.lt_big_int
+let (>)       = Big_int.gt_big_int
+let (%)       = Big_int.mod_big_int
+let op_Minus  = Big_int.minus_big_int
+let parse_int = Big_int.big_int_of_string
+
 let op_Equality x y = x = y
 let op_disEquality x y = x<>y
 let op_AmpAmp x y = x && y
 let op_BarBar x y  = x || y
-let op_LessThanOrEqual x y = x <= y
-let op_GreaterThanOrEqual x y = x >= y
-let op_LessThan x y = x < y
-let op_GreaterThan x y = x > y
-let op_Modulus x y = x mod y
 let is_Nil l = l = [] (*consider redefining List.isEmpty as this function*)
 let is_Cons l = not (is_Nil l)
 let strcat x y = x ^ y
@@ -145,13 +146,13 @@ type ('a, 'b) either =
 let is_Inl = function
   | Inl _ -> true
   | _     -> false
-  
+
 let is_Inr x = not (is_Inl x)
 
 let ___Inl___v x = match x with
   | Inl v -> v
   | _     -> failwith "impossible"
-  
+
 let ___Inr___v x = match x with
   | Inr v -> v
   | _     -> failwith "impossible"

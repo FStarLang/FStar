@@ -4,11 +4,11 @@
   --*)
 
 module SieveFun
-open RSTWhile
+open FStar.Regions.RSTWhile
 open StackAndHeap
-open RST
+open FStar.Regions.RST
 open Heap
-open Lref  open Located
+open FStar.Regions.Heap  open FStar.Regions.Located
 open Stack
 open Set
 open Prims

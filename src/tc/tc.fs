@@ -334,16 +334,28 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
     let cod, f = tc_comp env cod in
     let t = w ktype <| mk_Typ_fun(bs, cod) in
     let _ = if Util.is_smt_lemma t //check patterns cover the bound vars
-          then match cod.n with
+            then begin
+            match cod.n with
             | Comp ({effect_args=[(Inl pre, _); (Inl post, _); (Inr pats, _)]}) ->
-              let fvs = Util.freevars_exp pats in
+              let rec extract_pats pats = match (Util.compress_exp pats).n with 
+                | Exp_app({n=Exp_fvar (cons, _)}, [_; (Inr hd, _); (Inr tl, _)]) when lid_equals cons.v Const.cons_lid -> 
+                  let head, args = Util.head_and_args_e hd in
+                  let pat = match args with 
+                    | [_; arg]
+                    | [arg] -> [arg]
+                    | _ -> [] in
+                  pat@extract_pats tl 
+                | _ -> [] in
+              let pats = extract_pats (Normalize.norm_exp [Normalize.Beta] env pats) in
+              let fvs = Util.freevars_args pats in
               begin match bs |> Util.find_opt (fun (b, _) -> match b with
                                                     | Inl a -> not(Util.set_mem a fvs.ftvs)
                                                     | Inr x -> not(Util.set_mem x fvs.fxvs)) with
                       | None -> ()
                       | Some b -> Errors.warn t.pos (Util.format1 "Pattern misses at least one bound variables: %s" (Print.binder_to_string b))
               end
-            | _ -> ()
+            | _ -> failwith "Impossible"
+            end
     in
     t, ktype, Rel.conj_guard g (Rel.close_guard bs f)
 
@@ -521,6 +533,7 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
   | Typ_meta (Meta_pattern(qbody, pats)) ->
     let quant, f = tc_typ_check env qbody ktype in
     let pats, g = tc_args env pats in
+    let g = {g with guard_f=Trivial} in //NS: The pattern may have some VCs associated with it, but these are irrelevant.
     mk_Typ_meta(Meta_pattern(quant, pats)), (Tc.Util.force_tk quant), Rel.conj_guard f g
 
   | Typ_unknown ->
@@ -831,6 +844,13 @@ and tc_exp env e : exp * lcomp * guard_t =
     let e, c, f2 = comp_check_expected_typ env (w c <| mk_Exp_ascribed(e1, t1, Some c.eff_name)) c in
     e, c, Rel.conj_guard f (Rel.conj_guard g f2)
 
+  | Exp_meta(Meta_desugared(e, Meta_smt_pat)) -> 
+    let pats_t = mk_Typ_app(Util.ftv Const.list_lid (Const.kunary mk_Kind_type mk_Kind_type), [targ (Util.ftv Const.pattern_lid mk_Kind_type)]) None dummyRange in
+    let e, t, g = tc_ghost_exp (Env.set_expected_typ env pats_t) e in
+    let g = {g with guard_f=Trivial} in //VC's in SMT patterns are irrelevant
+    let c = Util.gtotal_comp pats_t |> Util.lcomp_of_comp in
+    e, c, g //strip the Meta going up
+
   | Exp_meta(Meta_desugared(e, Sequence)) ->
     begin match (compress_exp e).n with
         | Exp_let((_,[{lbname=x; lbdef=e1}]), e2) ->
@@ -1102,7 +1122,7 @@ and tc_exp env e : exp * lcomp * guard_t =
                  then e2, c1
                  else (if !Options.warn_top_level_effects
                        then Tc.Errors.warn (Tc.Env.get_range env) Tc.Errors.top_level_effect;
-                       mk_Exp_meta(Meta_desugared(e2, MaskedEffect)), c1)
+                       mk_Exp_meta(Meta_desugared(e2, Masked_effect)), c1)
             else (Tc.Util.discharge_guard env (Rel.conj_guard g1 guard_f);  //still need to solve remaining unification/subtyping constraints
                   e2, c1.comp()) in
           let _, e1, c1 = if env.generalize
@@ -1674,7 +1694,7 @@ and tc_decl env se deserialized = match se with
       let se, lbs = match tc_exp ({env with generalize=generalize}) e with
         | {n=Exp_let(lbs, e)}, _, g when Rel.is_trivial g ->
             let quals = match e.n with
-                | Exp_meta(Meta_desugared(_, MaskedEffect)) -> HasMaskedEffect::quals
+                | Exp_meta(Meta_desugared(_, Masked_effect)) -> HasMaskedEffect::quals
                 | _ -> quals in
             Sig_let(lbs, r, lids, quals), lbs
         | _ -> failwith "impossible" in

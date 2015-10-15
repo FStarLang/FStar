@@ -178,7 +178,7 @@ ADMITTED_MODULES=System System.IO System.Text System.Diagnostics System.Collecti
 ADMITS=$(addprefix --admit_fsi , $(ADMITTED_MODULES))
 
 ocaml: $(BOOT_ALL)
-	../bin/fstar.exe --eager_inference --MLish --lax --fs_typ_app --odir ocaml-output $(FSTAROPTS) --codegen OCaml $(ADMITS) $^
+	../bin/fstar.exe --use_native_int --eager_inference --MLish --lax --fs_typ_app --odir ocaml-output $(FSTAROPTS) --codegen OCaml $(ADMITS) $^
 
 ocaml-test: ocaml boot-ocaml
 
@@ -189,7 +189,7 @@ boot-ocaml:
 # Bootstrapping in F#
 # --------------------------------------------------------------------
 
-FS_SUPPORT_LIBS=prims.fs st.fs all.fs option.fs
+FS_SUPPORT_LIBS=native_int/prims.fs st.fs all.fs option.fs
 FSTAR_SUPPORT_LIBS=char.fsi char.fs string.fsi string.fs list.fsi list.fs util.fsi util.fs platform.fsi platform.fs bytes.fsi bytes.fs range.fsi range.fs getoptsimple.fsi getoptsimple.fs version.fsi version.fs unionfind.fsi unionfind.fs
 BOOT_FS_BASE=FStar.Options.fs
 BOOT_FS_SYNTAX=FStar.Absyn.Syntax.fs FStar.Absyn.Const.fs FStar.Absyn.Visit.fs FStar.Absyn.Util.fs FStar.Absyn.Print.fs FStar.Absyn.SSyntax.fs
@@ -205,7 +205,7 @@ fsharp-output/fstar.exe: $(addprefix ../lib/fs/, $(FS_SUPPORT_LIBS)) $(addprefix
 	$(FSC) --nowarn:0025 -o $@ $(BASELIBS) $(OTHERFLAGS) $^
 
 fs: $(BOOT_ALL) 
-	../bin/fstar.exe --eager_inference --MLish --lax --fs_typ_app --odir fsharp-output $(FSTAROPTS) --codegen FSharp $(ADMITS) $^
+	../bin/fstar.exe --use_native_int --eager_inference --MLish --lax --fs_typ_app --odir fsharp-output $(FSTAROPTS) --codegen FSharp $(ADMITS) $^
 
 fsharp-output: 
 	mkdir -p fsharp-output
@@ -231,9 +231,8 @@ test:   clean $(BIN)/fstar.exe ocaml-test
 	make -C ../examples/hello ocaml
 	make -C ../contrib/Platform/ml/
 	make -C ../contrib/CoreCrypto/ml/ all test
-	make -C ../examples/crypto rpc-test
-	make -C ../examples/crypto cnt-test
-	#make -C ../examples/wysteria a.out
+	make -C ../examples/crypto clean rpc-test cnt-test
+	make -C ../examples/wysteria a.out
 
 test.net: clean $(BIN)/fstar.exe boot
 	make -C ../examples

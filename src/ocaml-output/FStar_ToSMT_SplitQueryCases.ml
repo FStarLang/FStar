@@ -1,4 +1,5 @@
 
+open Prims
 let rec get_next_n_ite = (fun n t negs f -> (match ((n <= 0)) with
 | true -> begin
 (let _117_14 = (f FStar_ToSMT_Term.mkTrue)
@@ -120,7 +121,3 @@ let handle_query = (fun _52_128 check -> (match (_52_128) with
 (let l = (check_split_cases f l check)
 in (check_exhaustiveness f negs check))
 end))
-
-
-
-

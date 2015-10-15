@@ -30,14 +30,14 @@ type mlsymbols = list<mlsymbol>
 (* -------------------------------------------------------------------- *)
 type e_tag =
   | E_PURE
+  | E_GHOST
   | E_IMPURE
 
 type mlty =
 | MLTY_Var   of mlident
-| MLTY_Fun   of mlty * e_tag * mlty //t -> MayErase t', or  t -> Keep t'
+| MLTY_Fun   of mlty * e_tag * mlty 
 | MLTY_Named of list<mlty> * mlpath
 | MLTY_Tuple of list<mlty>
-| MLTY_App   of mlty * mlty         //Why do we have a type-application form? The only applications in ML are of named constructors
 | MLTY_Top
 
 type mltyscheme = mlidents * mlty   //forall a1..an. t  (the list of binders can be empty)
@@ -48,6 +48,7 @@ type mlconstant =
 | MLC_Byte   of byte
 | MLC_Int32  of int32
 | MLC_Int64  of int64
+| MLC_Int    of string
 | MLC_Float  of float
 | MLC_Char   of char
 | MLC_String of string

@@ -4,10 +4,10 @@
   --*)
 
 (*rename mvector to vector. The word sstarray is used for memory-stored vectors *)
-module RSTArray
-open RSTWhile
-open Regions  open Lref  open Located
-open RST
+module FStar.Regions.RSTArray
+open FStar.Regions.RSTWhile
+open FStar.Regions.Regions  open FStar.Regions.Heap  open FStar.Regions.Located
+open FStar.Regions.RST
 open MachineWord
 open FStar.Heap
 open Stack

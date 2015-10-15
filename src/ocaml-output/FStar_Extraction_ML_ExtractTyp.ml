@@ -1,4 +1,5 @@
 
+open Prims
 let binderIsExp = (fun bn -> (FStar_Absyn_Print.is_inr (Prims.fst bn)))
 
 let rec argIsExp = (fun k typeName -> (match ((let _126_7 = (FStar_Absyn_Util.compress_kind k)
@@ -51,12 +52,18 @@ end))
 in delta_norm_eff))
 
 let translate_eff = (fun g l -> (let l = (delta_norm_eff g l)
-in (match (((FStar_Absyn_Syntax.lid_equals l FStar_Absyn_Const.effect_PURE_lid) || (FStar_Absyn_Syntax.lid_equals l FStar_Absyn_Const.effect_GHOST_lid))) with
+in (match ((FStar_Absyn_Syntax.lid_equals l FStar_Absyn_Const.effect_PURE_lid)) with
 | true -> begin
 FStar_Extraction_ML_Syntax.E_PURE
 end
 | false -> begin
+(match ((FStar_Absyn_Syntax.lid_equals l FStar_Absyn_Const.effect_GHOST_lid)) with
+| true -> begin
+FStar_Extraction_ML_Syntax.E_GHOST
+end
+| false -> begin
 FStar_Extraction_ML_Syntax.E_IMPURE
+end)
 end)))
 
 let rec curry = (fun inp f out -> (match (inp) with
@@ -258,17 +265,17 @@ let mlsymbolOfLident = (fun id -> id.FStar_Absyn_Syntax.ident.FStar_Absyn_Syntax
 type inductiveConstructor =
 {cname : FStar_Absyn_Syntax.lident; ctype : FStar_Absyn_Syntax.typ}
 
-let is_MkinductiveConstructor = (fun _ -> (FStar_All.failwith "Not yet implemented:is_MkinductiveConstructor"))
+let is_MkinductiveConstructor = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_MkinductiveConstructor")))
 
 type inductiveTypeFam =
 {tyName : FStar_Absyn_Syntax.lident; k : FStar_Absyn_Syntax.knd; tyBinders : FStar_Absyn_Syntax.binders; constructors : inductiveConstructor Prims.list; qualifiers : FStar_Absyn_Syntax.qualifier Prims.list}
 
-let is_MkinductiveTypeFam = (fun _ -> (FStar_All.failwith "Not yet implemented:is_MkinductiveTypeFam"))
+let is_MkinductiveTypeFam = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_MkinductiveTypeFam")))
 
 type typeAbbrev =
 {abTyName : FStar_Absyn_Syntax.lident; abTyBinders : FStar_Absyn_Syntax.binders; abBody : FStar_Absyn_Syntax.typ}
 
-let is_MktypeAbbrev = (fun _ -> (FStar_All.failwith "Not yet implemented:is_MktypeAbbrev"))
+let is_MktypeAbbrev = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_MktypeAbbrev")))
 
 let lookupDataConType = (fun c sigb l -> (let tr = (FStar_Util.find_map sigb (fun s -> (match (s) with
 | FStar_Absyn_Syntax.Sig_datacon (l', t, (_61_277, tps, _61_280), quals, lids, _61_285) -> begin
@@ -565,7 +572,3 @@ end
 | _61_577 -> begin
 (c, [])
 end))
-
-
-
-

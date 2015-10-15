@@ -305,7 +305,6 @@ let rec partitionT f = function
      then hd::l1, l2
      else l1, hd::l2
 
-
 (** List of tuples **)
 
 val assoc: 'a -> list ('a*'b) -> Tot (option 'b)

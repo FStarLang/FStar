@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Prins --admit_fsi FStar.IO;
-    other-files:ghost.fst ext.fst set.fsi heap.fst st.fst all.fst io.fsti list.fst st2.fst ordset.fsi ordmap.fsi prins.fsi ffi.fst wysteria.fsi
+    other-files:ghost.fst ext.fst set.fsi heap.fst st.fst all.fst io.fsti list.fst st2.fst ordset.fsi ordmap.fsi ../prins.fsi ffi.fst wysteria.fsi
  --*)
 
 module Wysteria
@@ -116,7 +116,7 @@ val w_concat_helper:
                     (w_contains #a #(union ps eps2) p w  ==> (mem p ps \/ w_contains #a #eps2 p w2))})
      (decreases (OrdSet.size ps))
 let rec w_concat_helper (#a:Type) #eps1 #eps2 w1 w2 eps =
-  if eps = empty then w2
+  if eps = empty () then w2
   else
     let Some p = OrdSet.choose eps in
     let w = w_concat_helper #a #eps1 #eps2 w1 w2 (OrdSet.remove p eps) in
@@ -124,6 +124,8 @@ let rec w_concat_helper (#a:Type) #eps1 #eps2 w1 w2 eps =
 
 let w_concat (#a:Type) #eps1 #eps2 w1 w2 = w_concat_helper #a #eps1 #eps2 w1 w2 (OrdMap.dom w1)
 let w_dom (#a:Type) #eps w = OrdMap.dom w
+
+let w_contains_lemma (a:Type) eps w p = ()
 
 type can_wire: Type -> Type
 

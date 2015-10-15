@@ -1,4 +1,5 @@
 
+open Prims
 let try_solve = (fun env f -> (env.FStar_Tc_Env.solver.FStar_Tc_Env.solve env f))
 
 let report = (fun env errs -> (let _103_10 = (FStar_Tc_Env.get_range env)
@@ -2340,7 +2341,7 @@ in (_103_1075, _103_1074)))))
 end))))))
 end))))
 
-let short_circuit_exp = (fun head seen_args -> (let short_bin_op_e = (fun f -> (fun _38_14 -> (match (_38_14) with
+let short_circuit_exp = (fun head seen_args -> (let short_bin_op_e = (fun f _38_14 -> (match (_38_14) with
 | [] -> begin
 None
 end
@@ -2350,7 +2351,7 @@ in (FStar_All.pipe_right _103_1094 (fun _103_1093 -> Some (_103_1093))))
 end
 | _38_1887 -> begin
 (FStar_All.failwith "Unexpexted args to binary operator")
-end)))
+end))
 in (let table = (let op_and_e = (fun e -> (let _103_1100 = (FStar_Absyn_Util.b2t e)
 in (_103_1100, FStar_Absyn_Const.exp_false_bool)))
 in (let op_or_e = (fun e -> (let _103_1104 = (let _103_1103 = (FStar_Absyn_Util.b2t e)
@@ -2382,7 +2383,7 @@ end
 None
 end))))
 
-let short_circuit_typ = (fun head seen_args -> (let short_bin_op_t = (fun f -> (fun _38_15 -> (match (_38_15) with
+let short_circuit_typ = (fun head seen_args -> (let short_bin_op_t = (fun f _38_15 -> (match (_38_15) with
 | [] -> begin
 FStar_Tc_Rel.Trivial
 end
@@ -2391,7 +2392,7 @@ end
 end
 | _38_1920 -> begin
 (FStar_All.failwith "Unexpexted args to binary operator")
-end)))
+end))
 in (let op_and_t = (fun t -> (let _103_1143 = (unlabel t)
 in (FStar_All.pipe_right _103_1143 (fun _103_1142 -> FStar_Tc_Rel.NonTrivial (_103_1142)))))
 in (let op_or_t = (fun t -> (let _103_1148 = (let _103_1146 = (unlabel t)
@@ -2525,7 +2526,3 @@ end))
 end)
 end)
 end))))
-
-
-
-

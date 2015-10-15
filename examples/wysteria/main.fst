@@ -28,7 +28,6 @@ else
       if x = "alice" then Some (D_v const_meta (V_prin Alice))
       else if x = "bob" then Some (D_v const_meta (V_prin Bob))
       else if x = "charlie" then Some (D_v const_meta (V_prin Charlie))
-      else if x = "empty" then Some (D_v const_meta (V_eprins OrdSet.empty))
       else None
   in
   let pname = me () in

@@ -1,4 +1,5 @@
 
+open Prims
 let intern_string = (let strings = (FStar_Util.smap_create 100)
 in (fun s -> (match ((FStar_Util.smap_try_find strings s)) with
 | Some (res) -> begin
@@ -17,12 +18,12 @@ in (fin endm b _111_19)))
 let add_string = (fun buf x -> (let _111_24 = (FStar_Bytes.string_as_unicode_bytes x)
 in (FStar_Bytes.emit_bytes buf _111_24)))
 
-let add_int_char = (fun buf c -> (let _46_19 = (FStar_Bytes.emit_int_as_byte buf (Prims.op_Modulus c 256))
+let add_int_char = (fun buf c -> (let _46_19 = (FStar_Bytes.emit_int_as_byte buf (c % 256))
 in (FStar_Bytes.emit_int_as_byte buf (c / 256))))
 
 let add_unichar = (fun buf c -> (add_int_char buf c))
 
-let add_byte_char = (fun buf c -> (add_int_char buf (Prims.op_Modulus (FStar_Util.int_of_char c) 256)))
+let add_byte_char = (fun buf c -> (add_int_char buf ((FStar_Util.int_of_char c) % 256)))
 
 let stringbuf_as_bytes = (fun buf -> (let bytes = (FStar_Bytes.close buf)
 in (let _111_40 = ((FStar_Bytes.length bytes) / 2)
@@ -117,7 +118,7 @@ in (match ((high = 0)) with
 (None, (FStar_Util.uint16_of_int low))
 end
 | false -> begin
-(Some ((FStar_Util.uint16_of_int (55296 + (((high * 65536) + (low - 65536)) / 1024)))), (FStar_Util.uint16_of_int (57136 + (Prims.op_Modulus ((high * 65536) + (low - 65536)) 1024))))
+(Some ((FStar_Util.uint16_of_int (0xD800 + (((high * 0x10000) + (low - 0x10000)) / 0x400)))), (FStar_Util.uint16_of_int (0xDF30 + (((high * 0x10000) + (low - 0x10000)) % 0x400))))
 end)))
 end))
 
@@ -225,7 +226,7 @@ end))
 type lexargs =
 {getSourceDirectory : Prims.unit  ->  Prims.string; contents : Prims.string}
 
-let is_Mklexargs = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mklexargs"))
+let is_Mklexargs = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mklexargs")))
 
 let mkLexargs = (fun _46_86 -> (match (_46_86) with
 | (srcdir, filename, contents) -> begin
@@ -270,7 +271,3 @@ end
 in FStar_Parser_Parse.IDENT (_111_137))
 end)
 end))
-
-
-
-

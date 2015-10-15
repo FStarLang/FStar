@@ -1,4 +1,5 @@
 
+open Prims
 let p2l = (fun l -> (FStar_Absyn_Syntax.lid_of_path l FStar_Absyn_Syntax.dummyRange))
 
 let pconst = (fun s -> (p2l (("Prims")::(s)::[])))
@@ -26,6 +27,10 @@ let int64_lid = (pconst "int64")
 let float_lid = (pconst "float")
 
 let exn_lid = (pconst "exn")
+
+let list_lid = (pconst "list")
+
+let pattern_lid = (pconst "pattern")
 
 let precedes_lid = (pconst "Precedes")
 
@@ -213,7 +218,3 @@ let as_requires = (pconst "as_requires")
 let as_ensures = (pconst "as_ensures")
 
 let decreases_lid = (pconst "decreases")
-
-
-
-

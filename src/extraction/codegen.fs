@@ -123,7 +123,7 @@ let infix_prim_ops = [
     ("op_GreaterThanOrEqual", e_bin_prio_order , ">=");
     ("op_LessThan"          , e_bin_prio_order , "<" );
     ("op_GreaterThan"       , e_bin_prio_order , ">" );
-//    ("op_Modulus"           , e_bin_prio_order , "%" );
+    ("op_Modulus"           , e_bin_prio_order , "%" );
 ]
 
 (* -------------------------------------------------------------------- *)
@@ -246,6 +246,9 @@ let string_of_mlconstant (sctt : mlconstant) =
   | MLC_Byte     c     -> "'"^(ocaml_u8_codepoint c)^"'"
   | MLC_Int32    i     -> string_of_int32  i
   | MLC_Int64    i     -> (string_of_int64 i)^"L"
+  | MLC_Int      s     -> if !Options.use_native_int  
+                          then s
+                          else "(Prims.parse_int \"" ^s^ "\")"
   | MLC_Float    d     -> string_of_float d
 
   | MLC_Bytes bytes ->
@@ -296,12 +299,6 @@ let rec doc_of_mltype' (currentModule : mlsymbol) (outer : level) (ty : mlty) =
         let d1 = doc_of_mltype currentModule (t_prio_fun, Left ) t1 in
         let d2 = doc_of_mltype currentModule (t_prio_fun, Right) t2 in
         maybe_paren outer t_prio_fun (hbox (reduce1 [d1; text " -> "; d2]))
-
-    | MLTY_App (t1, t2) ->
-        let d1 = doc_of_mltype currentModule (t_prio_fun, Left ) t1 in
-        let d2 = doc_of_mltype currentModule (t_prio_fun, Right) t2 in
-
-        maybe_paren outer t_prio_fun (hbox (reduce1 [d2; text " "; d1]))
 
     | MLTY_Top ->
       if Util.codegen_fsharp()
@@ -706,7 +703,10 @@ let rec doc_of_mllib_r (MLLib mllib) =
         let prefix = if Util.codegen_fsharp () then [cat (text "#light \"off\"") hardline] else [] in
 
         reduce <| (prefix @ [
-            cat head hardline;
+            head;
+            hardline;
+            text "open Prims";
+            hardline;
             (match doc with
              | None   -> empty
              | Some s -> cat s hardline);

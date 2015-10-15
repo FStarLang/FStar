@@ -1,4 +1,5 @@
 
+open Prims
 let fail_exp = (fun lid t -> (let _128_16 = (let _128_15 = (FStar_Absyn_Util.fvar None FStar_Absyn_Const.failwith_lid FStar_Absyn_Syntax.dummyRange)
 in (let _128_14 = (let _128_13 = (FStar_Absyn_Syntax.targ t)
 in (let _128_12 = (let _128_11 = (let _128_10 = (let _128_9 = (let _128_8 = (let _128_7 = (let _128_6 = (let _128_5 = (FStar_Absyn_Print.sli lid)
@@ -173,7 +174,3 @@ in (_128_58)::[])
 in (g, _128_59)))
 end))
 end)))))
-
-
-
-

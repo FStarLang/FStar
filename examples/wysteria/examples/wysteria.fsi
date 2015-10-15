@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set --admit_fsi FStar.OrdSet --admit_fsi Prins --admit_fsi FStar.IO;
-    other-files:ghost.fst ext.fst set.fsi heap.fst st.fst all.fst io.fsti list.fst st2.fst ordset.fsi prins.fsi ffi.fst
+    other-files:ghost.fst ext.fst set.fsi heap.fst st.fst all.fst io.fsti list.fst st2.fst ordset.fsi ../prins.fsi ffi.fst
  --*)
 
 module Wysteria
@@ -151,7 +151,7 @@ assume Canbox_prod:   (forall (a:Type) (b:Type) ps.
 type Wire: Type -> eprins -> Type
 
 val w_contains: #a:Type -> #eps:eprins -> prin -> Wire a eps -> GTot bool
-val w_empty   : #a:Type -> GTot (w:Wire a empty{forall p. not (w_contains p w)})
+val w_empty   : #a:Type -> GTot (w:Wire a (empty ()){forall p. not (w_contains p w)})
 val w_select  : #a:Type -> #eps:eprins -> p:prin -> w:Wire a eps{w_contains p w} -> GTot a
 val w_const_on: #a:Type -> eps:eprins -> x:a
                 -> GTot (w:Wire a eps{forall p. (mem p eps <==> w_contains p w) /\
@@ -183,6 +183,12 @@ assume Canbox_wire   : (forall (a:Type) (eps:eprins) (ps:prins).
                        subset eps ps ==> can_box (Wire a eps) ps)
 
 assume Can_wire_implies_can_box: forall (a:Type) ps. can_wire a ==> can_box a ps
+
+val w_contains_lemma: a:Type -> eps:prins -> w:Wire a eps -> p:prin
+                      -> Lemma (requires (True)) (ensures (w_contains #a #eps p w =
+		                                       mem p eps))
+		        [SMTPat (w_contains #a #eps p w)]
+
 (**********)
 
 type DelPar (m:mode) (ps:prins) = Mode.m m = Par /\ subset ps (Mode.ps m)

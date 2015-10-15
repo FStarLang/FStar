@@ -1,4 +1,5 @@
 
+open Prims
 let exhaustiveness_check = "Patterns are incomplete"
 
 let subtyping_failed = (fun env t1 t2 x -> (let _99_10 = (FStar_Tc_Normalize.typ_norm_to_string env t2)
@@ -230,7 +231,3 @@ let top_level_effect = "Top-level let-bindings must be total; this term may have
 let cardinality_constraint_violated = (fun l a -> (let _99_236 = (FStar_Absyn_Print.sli l)
 in (let _99_235 = (FStar_Absyn_Print.strBvd a.FStar_Absyn_Syntax.v)
 in (FStar_Util.format2 "Constructor %s violates the cardinality of Type at parameter \'%s\'; type arguments are not allowed" _99_236 _99_235))))
-
-
-
-

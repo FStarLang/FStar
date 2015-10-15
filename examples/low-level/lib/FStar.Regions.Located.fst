@@ -2,7 +2,7 @@
     other-files:ghost.fst
   --*)
 
-module Located
+module FStar.Regions.Located
 
 open FStar.Ghost
 
@@ -12,6 +12,14 @@ open FStar.Ghost
     heap-allocated data, but we currently lack a builtin [locatable t]
     predicate. *)
 type located : Type -> Type // AA: implement this as a private pair (a * regionLoc)
+
+//JP,NS: The (a * regionLoc) model is very low fidelity. 
+//It would allow us to also implement bogus functions like 
+//val locate' : a -> Tot (located a{regionOf l = InStack 17})
+//which, informally, is unsound. 
+//Would be good to pick a model for located that allows us to realize 
+//only the functions that we informally argue are sound.
+//Maybe that would involve building located t on top of FStar.Regions.RST somehow.
 
 (** Each region on the stack is tagged with a region id [rid]. *)
 type rid = nat

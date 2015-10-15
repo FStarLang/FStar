@@ -56,29 +56,25 @@ let compress_preserves_roots (v: Type) (f: Relation v) _ _ _ _ =
 val compress_preserves_path_to_roots:
   v:Type -> d:Set.set v -> f:Relation v ->
   x:v -> y:v -> z:v ->
-  u:v -> r:v -> #p: path v f u r -> Lemma
+  u:v -> r:v -> p: path v f u r -> Lemma
     (requires (f x y /\ path v f y z /\ is_dsf v d f /\ is_root v f r))
     (ensures (path v (compress v f x z) u r))
-let rec compress_preserves_path_to_roots (v: Type) d (f: Relation v) x y z u r #p =
+    (decreases p)
+let rec compress_preserves_path_to_roots (v: Type) d (f: Relation v) x y z u r p =
   if x = u then begin
     admit ()
   end else begin
     match p with
     | Refl _ ->
-        assert (u = r);
-        (* JP: I don't understand why F* won't find a proof. *)
-        admit ()
+        let _: path v (compress v f x z) u r = Refl u in
+        ()
     | Step _ u' _ _ p' ->
         compress_preserves_other_edges v f x z u u';
-        assert (compress v f x z u u');
-        (* JP: if I uncomment the line below I get an error for the
-           post-condition of the *entire function*; however, that's very
-           misleading, because I have an admit at the end... *)
-        (* assert (path v f u' r); *)
+        compress_preserves_path_to_roots v d f x y z u' r p';
+        (* let _: path v (compress v f x z) u r = *)
+        (*   Refl u u' r ? ? *)
+        (* in *)
         admit ()
-        (* compress_preserves_path_to_roots v d f x y z u' r p';
-        assert (path v (compress v f x z) u' r);
-        admit () *)
   end
 
 

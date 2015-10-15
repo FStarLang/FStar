@@ -9,14 +9,10 @@ module Prims
   type bool      = Microsoft.FSharp.Core.bool
   type char      = Microsoft.FSharp.Core.char
   type string    = Microsoft.FSharp.Core.string
-  type int64     = Microsoft.FSharp.Core.int64
   type 'a array  = 'a Microsoft.FSharp.Core.array
   type double    = Microsoft.FSharp.Core.double
   type float     = Microsoft.FSharp.Core.float
-  type uint8     = Microsoft.FSharp.Core.uint8
-  type uint16    = Microsoft.FSharp.Core.uint16
-  type int32     = Microsoft.FSharp.Core.int32
-  type int       = Microsoft.FSharp.Core.int
+  type int       = Microsoft.FSharp.Core.bigint
   type byte 	 = Microsoft.FSharp.Core.byte
   type exn       = Microsoft.FSharp.Core.exn
   type 'a list'  = 'a list
@@ -88,19 +84,23 @@ module Prims
   let min x y = if x < y then x else y
   let strcat x y = x ^ y
   let op_Negation x = not x
-  let op_Addition x y = x + y
-  let op_Subtraction x y = x - y
-  let op_Multiply x y = x * y
-  let op_Division x y = x / y
+
+  open System.Numerics
+  let ( + )  (x:bigint) (y:bigint) = x + y
+  let ( - )  (x:bigint) (y:bigint) = x - y
+  let ( * )  (x:bigint) (y:bigint) = x * y
+  let ( / )  (x:bigint) (y:bigint) = x / y
+  let ( <= ) (x:bigint) (y:bigint) = x <= y
+  let ( >= ) (x:bigint) (y:bigint) = x >= y
+  let ( < )  (x:bigint) (y:bigint) = x < y
+  let ( > )  (x:bigint) (y:bigint) = x > y
+  let ( % )  (x:bigint) (y:bigint) = x % y
+  let parse_int = BigInteger.Parse
+
   let op_Equality x y = x = y
   let op_disEquality x y = x<>y
   let op_AmpAmp x y = x && y
   let op_BarBar x y  = x || y
-  let op_LessThanOrEqual x y = x <= y
-  let op_GreaterThanOrEqual x y = x >= y
-  let op_LessThan x y = x < y
-  let op_GreaterThan x y = x > y
-  let op_Modulus x y = x % y
   let is_Nil l = l = [] (*consider redefining List.isEmpty as this function*)
   let is_Cons l = not (is_Nil l)
   let raise e = raise e

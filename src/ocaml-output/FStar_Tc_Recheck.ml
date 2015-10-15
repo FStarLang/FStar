@@ -1,4 +1,5 @@
 
+open Prims
 let oktype = Some (FStar_Absyn_Syntax.ktype)
 
 let t_unit = (FStar_All.pipe_left (FStar_Absyn_Syntax.syn FStar_Absyn_Syntax.dummyRange oktype) (FStar_Absyn_Syntax.mk_Typ_const (FStar_Absyn_Util.withsort FStar_Absyn_Const.unit_lid FStar_Absyn_Syntax.ktype)))
@@ -200,7 +201,3 @@ end
 in (let _31_205 = (FStar_ST.op_Colon_Equals e.FStar_Absyn_Syntax.tk (Some (t)))
 in t))
 end)))
-
-
-
-

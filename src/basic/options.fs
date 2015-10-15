@@ -84,6 +84,7 @@ let no_slack = Util.mk_ref false
 let eager_inference = Util.mk_ref false
 let unthrottle_inductives = Util.mk_ref false
 let use_eq_at_higher_order = Util.mk_ref false
+let use_native_int = Util.mk_ref false
 let fs_typ_app = Util.mk_ref false
 let n_cores = Util.mk_ref 1
 let verify_module = Util.mk_ref []
@@ -146,7 +147,8 @@ let init_options () =
     split_cases := 0;
     verify_module := [];
     _include_path := [];
-    print_fuels := false
+    print_fuels := false;
+    use_native_int := false
 
 let set_fstar_home () =
   let fh = match !fstar_home_opt with
@@ -197,57 +199,58 @@ let display_usage specs =
 
 let rec specs () : list<Getopt.opt> =
   let specs =
-    [( noshort, "trace_error", ZeroArgs (fun () -> trace_error := true), "Don't print an error message; show an exception trace instead");
+    [( noshort, "__temp_no_proj", ZeroArgs (fun () -> __temp_no_proj := true), "A temporary flag to disable code generation for projectors");
+     ( noshort, "admit_fsi", OneArg ((fun x -> admit_fsi := x::!admit_fsi), "module name"), "Treat .fsi as a .fst");
+     ( noshort, "admit_smt_queries", OneArg ((fun s -> admit_smt_queries := (if s="true" then true else if s="false" then false else failwith("Invalid argument to --admit_smt_queries"))), "true|false"), "Admit SMT queries (UNSAFE! But, useful during development); default: 'false'");
+     ( noshort, "cardinality", OneArg ((fun x -> cardinality := validate_cardinality x), "off|warn|check"), "Check cardinality constraints on inductive data types(default 'off')");
      ( noshort, "codegen", OneArg ((fun s -> codegen := parse_codegen s), "OCaml|FSharp"), "Generate code for execution");
      ( noshort, "codegen-lib", OneArg ((fun s -> codegen_libs := (Util.split s ".")::!codegen_libs), "namespace"), "External runtime library library");
-     ( noshort, "lax", ZeroArgs (fun () -> pretype := true; verify := false), "Run the lax-type checker only (admit all verification conditions)");
-     ( noshort, "fstar_home", OneArg ((fun x -> fstar_home_opt := Some x), "dir"), "Set the FSTAR_HOME variable to dir");
-     ( noshort, "silent", ZeroArgs (fun () -> silent := true), "");
-     ( noshort, "prims", OneArg ((fun x -> prims_ref := Some x), "file"), "");
-     ( noshort, "prn", ZeroArgs (fun () -> print_real_names := true), "Print real names---you may want to use this in conjunction with logQueries");
      ( noshort, "debug", OneArg ((fun x -> debug := x::!debug), "module name"), "Print LOTS of debugging information while checking module [arg]");
      ( noshort, "debug_level", OneArg ((fun x -> debug_level := dlevel x::!debug_level), "Low|Medium|High|Extreme"), "Control the verbosity of debugging info");
-     ( noshort, "log_types", ZeroArgs (fun () -> log_types := true), "Print types computed for data/val/let-bindings");
-     ( noshort, "print_effect_args", ZeroArgs (fun () -> print_effect_args := true), "Print inferred predicate transformers for all computation types");
      ( noshort, "dump_module", OneArg ((fun x -> dump_module := Some x), "module name"), "");
-     ( noshort, "z3timeout", OneArg ((fun s -> z3timeout := int_of_string s), "t"), "Set the Z3 per-query (soft) timeout to t seconds (default 5)");
-     ( noshort, "admit_smt_queries", OneArg ((fun s -> admit_smt_queries := (if s="true" then true else if s="false" then false else failwith("Invalid argument to --admit_smt_queries"))), "true|false"), "Admit SMT queries (UNSAFE! But, useful during development); default: 'false'");
-     ( noshort, "logQueries", ZeroArgs (fun () -> logQueries := true), "Log the Z3 queries in queries.smt2");
-     ( noshort, "admit_fsi", OneArg ((fun x -> admit_fsi := x::!admit_fsi), "module name"), "Treat .fsi as a .fst");
-     ( noshort, "odir", OneArg ((fun x -> outputDir := Some x), "dir"), "Place output in directory dir");
-     ( noshort, "smt", OneArg ((fun x -> z3_exe := x), "path"), "Path to the SMT solver (usually Z3, but could be any SMT2-compatible solver)");
-     ( noshort, "print_before_norm", ZeroArgs(fun () -> norm_then_print := false), "Do not normalize types before printing (for debugging)");
-     ( noshort, "show_signatures", OneArg((fun x -> show_signatures := x::!show_signatures), "module name"), "Show the checked signatures for all top-level symbols in the module");
-     ( noshort, "full_context_dependency", ZeroArgs(fun () -> full_context_dependency := true), "Introduce unification variables that are dependent on the entire context (possibly expensive, but better for type inference (on, by default)");
-     ( noshort, "MLish", ZeroArgs(fun () -> full_context_dependency := false), "Introduce unification variables that are only dependent on the type variables in the context");
-     ( noshort, "print_implicits", ZeroArgs(fun () -> print_implicits := true), "Print implicit arguments");
-     ( noshort, "hide_uvar_nums", ZeroArgs(fun () -> hide_uvar_nums := true), "Don't print unification variable numbers");
-     ( noshort, "hide_genident_nums", ZeroArgs(fun () -> hide_genident_nums := true), "Don't print generated identifier numbers");
-     ( noshort, "serialize_mods", ZeroArgs (fun () -> serialize_mods := true), "Serialize compiled modules");
-     ( noshort, "initial_fuel", OneArg((fun x -> initial_fuel := int_of_string x), "non-negative integer"), "Number of unrolling of recursive functions to try initially (default 2)");
-     ( noshort, "max_fuel", OneArg((fun x -> max_fuel := int_of_string x), "non-negative integer"), "Number of unrolling of recursive functions to try at most (default 8)");
-     ( noshort, "min_fuel", OneArg((fun x -> min_fuel := int_of_string x), "non-negative integer"), "Minimum number of unrolling of recursive functions to try (default 1)");
-     ( noshort, "initial_ifuel", OneArg((fun x -> initial_ifuel := int_of_string x), "non-negative integer"), "Number of unrolling of inductive datatypes to try at first (default 1)");
-     ( noshort, "max_ifuel", OneArg((fun x -> max_ifuel := int_of_string x), "non-negative integer"), "Number of unrolling of inductive datatypes to try at most (default 1)");
-     ( noshort, "warn_top_level_effects", ZeroArgs (fun () -> warn_top_level_effects := true), "Top-level effects are ignored, by default; turn this flag on to be warned when this happens");
-     ( noshort, "no_slack", ZeroArgs (fun () -> no_slack := true), "Use the partially flow-insensitive variant of --rel2 (experimental)");
      ( noshort, "eager_inference", ZeroArgs (fun () -> eager_inference := true), "Solve all type-inference constraints eagerly; more efficient but at the cost of generality");
-     ( noshort, "unthrottle_inductives", ZeroArgs (fun () -> unthrottle_inductives := true), "Let the SMT solver unfold inductive types to arbitrary depths (may affect verifier performance)");
-     ( noshort, "use_eq_at_higher_order", ZeroArgs (fun () -> use_eq_at_higher_order := true), "Use equality constraints when comparing higher-order types; temporary");
      ( noshort, "fs_typ_app", ZeroArgs (fun () -> fs_typ_app := true), "Allow the use of t<t1,...,tn> syntax for type applications; brittle since it clashes with the integer less-than operator");
-     ( noshort, "no_fs_typ_app", ZeroArgs (fun () -> fs_typ_app := false), "Do not allow the use of t<t1,...,tn> syntax for type applications");
-     ( noshort, "n_cores", OneArg ((fun x -> n_cores := int_of_string x), "positive integer"), "Maximum number of cores to use for the solver (default 1)");
-     ( noshort, "verify_module", OneArg ((fun x -> verify_module := x::!verify_module), "string"), "Name of the module to verify");
-     ( noshort, "use_build_config", ZeroArgs (fun () -> use_build_config := true), "Expect just a single file on the command line and no options; will read the 'build-config' prelude from the file");
-     ( noshort, "split_cases", OneArg ((fun n -> split_cases := int_of_string n), "t"), "Partition VC of a match into groups of n cases");
+     ( noshort, "fsi", ZeroArgs (fun () -> set_interactive_fsi ()), "fsi flag; A flag to indicate if type checking a fsi in the interactive mode");
+     ( noshort, "fstar_home", OneArg ((fun x -> fstar_home_opt := Some x), "dir"), "Set the FSTAR_HOME variable to dir");
+     ( noshort, "full_context_dependency", ZeroArgs(fun () -> full_context_dependency := true), "Introduce unification variables that are dependent on the entire context (possibly expensive, but better for type inference (on, by default)");
+     ( noshort, "hide_genident_nums", ZeroArgs(fun () -> hide_genident_nums := true), "Don't print generated identifier numbers");
+     ( noshort, "hide_uvar_nums", ZeroArgs(fun () -> hide_uvar_nums := true), "Don't print unification variable numbers");
      ( noshort, "in", ZeroArgs (fun () -> interactive := true), "Interactive mode; reads input from stdin");
      ( noshort, "include", OneArg ((fun s -> _include_path := !_include_path @ [s]), "path"), "A directory in which to search for files included on the command line");
-     ( noshort, "fsi", ZeroArgs (fun () -> set_interactive_fsi ()), "fsi flag; A flag to indicate if type checking a fsi in the interactive mode");
+     ( noshort, "initial_fuel", OneArg((fun x -> initial_fuel := int_of_string x), "non-negative integer"), "Number of unrolling of recursive functions to try initially (default 2)");
+     ( noshort, "initial_ifuel", OneArg((fun x -> initial_ifuel := int_of_string x), "non-negative integer"), "Number of unrolling of inductive datatypes to try at first (default 1)");
+     ( noshort, "lax", ZeroArgs (fun () -> pretype := true; verify := false), "Run the lax-type checker only (admit all verification conditions)");
+     ( noshort, "log_types", ZeroArgs (fun () -> log_types := true), "Print types computed for data/val/let-bindings");
+     ( noshort, "logQueries", ZeroArgs (fun () -> logQueries := true), "Log the Z3 queries in queries.smt2");
+     ( noshort, "max_fuel", OneArg((fun x -> max_fuel := int_of_string x), "non-negative integer"), "Number of unrolling of recursive functions to try at most (default 8)");
+     ( noshort, "max_ifuel", OneArg((fun x -> max_ifuel := int_of_string x), "non-negative integer"), "Number of unrolling of inductive datatypes to try at most (default 1)");
+     ( noshort, "min_fuel", OneArg((fun x -> min_fuel := int_of_string x), "non-negative integer"), "Minimum number of unrolling of recursive functions to try (default 1)");
+     ( noshort, "MLish", ZeroArgs(fun () -> full_context_dependency := false), "Introduce unification variables that are only dependent on the type variables in the context");
+     ( noshort, "n_cores", OneArg ((fun x -> n_cores := int_of_string x), "positive integer"), "Maximum number of cores to use for the solver (default 1)");
+     ( noshort, "no_fs_typ_app", ZeroArgs (fun () -> fs_typ_app := false), "Do not allow the use of t<t1,...,tn> syntax for type applications");
+     ( noshort, "no_slack", ZeroArgs (fun () -> no_slack := true), "Use the partially flow-insensitive variant of --rel2 (experimental)");
+     ( noshort, "odir", OneArg ((fun x -> outputDir := Some x), "dir"), "Place output in directory dir");
+     ( noshort, "prims", OneArg ((fun x -> prims_ref := Some x), "file"), "");
+     ( noshort, "print_before_norm", ZeroArgs(fun () -> norm_then_print := false), "Do not normalize types before printing (for debugging)");
+     ( noshort, "print_effect_args", ZeroArgs (fun () -> print_effect_args := true), "Print inferred predicate transformers for all computation types");
      ( noshort, "print_fuels", ZeroArgs (fun () -> print_fuels := true), "Print the fuel amounts used for each successful query");
-     ( noshort, "cardinality", OneArg ((fun x -> cardinality := validate_cardinality x), "off|warn|check"), "Check cardinality constraints on inductive data types(default 'off')");
-     ( noshort, "__temp_no_proj", ZeroArgs (fun () -> __temp_no_proj := true), "A temporary flag to disable code generation for projectors");
-     ( 'v', "version", ZeroArgs (fun _ -> display_version(); exit 0), "Display version number");
-    ] in
+     ( noshort, "print_implicits", ZeroArgs(fun () -> print_implicits := true), "Print implicit arguments");
+     ( noshort, "prn", ZeroArgs (fun () -> print_real_names := true), "Print real names---you may want to use this in conjunction with logQueries");
+     ( noshort, "serialize_mods", ZeroArgs (fun () -> serialize_mods := true), "Serialize compiled modules");
+     ( noshort, "show_signatures", OneArg((fun x -> show_signatures := x::!show_signatures), "module name"), "Show the checked signatures for all top-level symbols in the module");
+     ( noshort, "silent", ZeroArgs (fun () -> silent := true), "");
+     ( noshort, "smt", OneArg ((fun x -> z3_exe := x), "path"), "Path to the SMT solver (usually Z3, but could be any SMT2-compatible solver)");
+     ( noshort, "split_cases", OneArg ((fun n -> split_cases := int_of_string n), "t"), "Partition VC of a match into groups of n cases");
+     ( noshort, "trace_error", ZeroArgs (fun () -> trace_error := true), "Don't print an error message; show an exception trace instead");
+     ( noshort, "unthrottle_inductives", ZeroArgs (fun () -> unthrottle_inductives := true), "Let the SMT solver unfold inductive types to arbitrary depths (may affect verifier performance)");
+     ( noshort, "use_build_config", ZeroArgs (fun () -> use_build_config := true), "Expect just a single file on the command line and no options; will read the 'build-config' prelude from the file");
+     ( noshort, "use_eq_at_higher_order", ZeroArgs (fun () -> use_eq_at_higher_order := true), "Use equality constraints when comparing higher-order types; temporary");
+     ( noshort, "use_native_int", ZeroArgs (fun () -> use_native_int := true), "Extract the 'int' type to platform-specific native int; you will need to link the generated code with the appropriate version of the prims library");
+     ( noshort, "verify_module", OneArg ((fun x -> verify_module := x::!verify_module), "string"), "Name of the module to verify");
+     ( 'v',     "version", ZeroArgs (fun _ -> display_version(); exit 0), "Display version number");
+     ( noshort, "warn_top_level_effects", ZeroArgs (fun () -> warn_top_level_effects := true), "Top-level effects are ignored, by default; turn this flag on to be warned when this happens");
+     ( noshort, "z3timeout", OneArg ((fun s -> z3timeout := int_of_string s), "t"), "Set the Z3 per-query (soft) timeout to t seconds (default 5)");
+  ] in
      ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs
 and parse_codegen s =
   match s with

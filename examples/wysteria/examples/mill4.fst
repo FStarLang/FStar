@@ -1,9 +1,9 @@
 (*--build-config
     options:--admit_fsi FStar.Set --admit_fsi Wysteria --admit_fsi Prins --admit_fsi FStar.OrdSet --admit_fsi FStar.IO;
-    other-files:ghost.fst ext.fst set.fsi heap.fst st.fst all.fst io.fsti list.fst st2.fst ordset.fsi prins.fsi ffi.fst wysteria.fsi
+    other-files:ghost.fst ext.fst set.fsi heap.fst st.fst all.fst io.fsti list.fst st2.fst ordset.fsi ../prins.fsi ffi.fst wysteria.fsi
  --*)
 
-(* Millionaire's for any 2 parties *)
+(* Millionaire's for any 2 parties, private output for the first party *)
 
 module SMC
 
@@ -29,11 +29,13 @@ let read_fn x = w_read_int ()
 val mill3_sec: #p1:prin -> #p2:prin
                -> x:Box int (singleton p1) -> y:Box int (singleton p2)
                -> unit
-               -> Wys bool (pre (Mode Par (union (singleton p1) (singleton p2)))) post
+               -> Wys (Box bool (singleton p1)) (pre (Mode Par (union (singleton p1) (singleton p2)))) post
 let mill3_sec #p1 #p2 x y _ =
   let s = union (singleton p1) (singleton p2) in
-  let g:unit -> Wys bool (pre (Mode Sec s)) post =
-   fun _ -> (unbox_s x) > (unbox_s y)
+  let g:unit -> Wys (Box bool (singleton p1)) (pre (Mode Sec s)) post =
+   fun _ ->
+    let r =  (unbox_s x) > (unbox_s y) in
+    box (singleton p1) r
   in
   as_sec s g
 

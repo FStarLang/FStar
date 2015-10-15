@@ -220,7 +220,8 @@ and serialize_meta_source_info (writer:Writer) (ast:meta_source_info) :unit =
     | Data_app -> writer.write_char 'a'
     | Sequence -> writer.write_char 'b'
     | Primop -> writer.write_char 'c'
-    | MaskedEffect -> writer.write_char 'd'
+    | Masked_effect -> writer.write_char 'd'
+    | Meta_smt_pat ->  writer.write_char 'e'
 
 and serialize_exp (writer:Writer) (ast:exp) :unit = serialize_syntax writer serialize_exp' (Util.compress_exp ast)
 
@@ -361,7 +362,7 @@ and deserialize_meta_source_info (reader:Reader) :meta_source_info =
     | 'a' -> Data_app
     | 'b' -> Sequence
     | 'c' -> Primop
-    | 'd' -> MaskedEffect
+    | 'd' -> Masked_effect
     |  _  -> parse_error()
 
 and deserialize_exp (reader:Reader) :exp = deserialize_syntax reader deserialize_exp' mk_Typ_unknown

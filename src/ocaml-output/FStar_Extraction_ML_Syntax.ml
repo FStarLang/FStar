@@ -1,4 +1,5 @@
 
+open Prims
 type mlsymbol =
 Prims.string
 
@@ -31,10 +32,19 @@ mlsymbol Prims.list
 
 type e_tag =
 | E_PURE
+| E_GHOST
 | E_IMPURE
 
 let is_E_PURE = (fun _discr_ -> (match (_discr_) with
 | E_PURE -> begin
+true
+end
+| _ -> begin
+false
+end))
+
+let is_E_GHOST = (fun _discr_ -> (match (_discr_) with
+| E_GHOST -> begin
 true
 end
 | _ -> begin
@@ -54,7 +64,6 @@ type mlty =
 | MLTY_Fun of (mlty * e_tag * mlty)
 | MLTY_Named of (mlty Prims.list * mlpath)
 | MLTY_Tuple of mlty Prims.list
-| MLTY_App of (mlty * mlty)
 | MLTY_Top
 
 let is_MLTY_Var = (fun _discr_ -> (match (_discr_) with
@@ -89,14 +98,6 @@ end
 false
 end))
 
-let is_MLTY_App = (fun _discr_ -> (match (_discr_) with
-| MLTY_App (_) -> begin
-true
-end
-| _ -> begin
-false
-end))
-
 let is_MLTY_Top = (fun _discr_ -> (match (_discr_) with
 | MLTY_Top -> begin
 true
@@ -125,11 +126,6 @@ let ___MLTY_Tuple____0 = (fun projectee -> (match (projectee) with
 _56_23
 end))
 
-let ___MLTY_App____0 = (fun projectee -> (match (projectee) with
-| MLTY_App (_56_26) -> begin
-_56_26
-end))
-
 type mltyscheme =
 (mlidents * mlty)
 
@@ -139,6 +135,7 @@ type mlconstant =
 | MLC_Byte of Prims.byte
 | MLC_Int32 of Prims.int32
 | MLC_Int64 of Prims.int64
+| MLC_Int of Prims.string
 | MLC_Float of Prims.float
 | MLC_Char of Prims.char
 | MLC_String of Prims.string
@@ -184,6 +181,14 @@ end
 false
 end))
 
+let is_MLC_Int = (fun _discr_ -> (match (_discr_) with
+| MLC_Int (_) -> begin
+true
+end
+| _ -> begin
+false
+end))
+
 let is_MLC_Float = (fun _discr_ -> (match (_discr_) with
 | MLC_Float (_) -> begin
 true
@@ -217,22 +222,27 @@ false
 end))
 
 let ___MLC_Bool____0 = (fun projectee -> (match (projectee) with
-| MLC_Bool (_56_29) -> begin
-_56_29
+| MLC_Bool (_56_26) -> begin
+_56_26
 end))
 
 let ___MLC_Byte____0 = (fun projectee -> (match (projectee) with
-| MLC_Byte (_56_32) -> begin
-_56_32
+| MLC_Byte (_56_29) -> begin
+_56_29
 end))
 
 let ___MLC_Int32____0 = (fun projectee -> (match (projectee) with
-| MLC_Int32 (_56_35) -> begin
-_56_35
+| MLC_Int32 (_56_32) -> begin
+_56_32
 end))
 
 let ___MLC_Int64____0 = (fun projectee -> (match (projectee) with
-| MLC_Int64 (_56_38) -> begin
+| MLC_Int64 (_56_35) -> begin
+_56_35
+end))
+
+let ___MLC_Int____0 = (fun projectee -> (match (projectee) with
+| MLC_Int (_56_38) -> begin
 _56_38
 end))
 
@@ -367,11 +377,11 @@ type mlexpr =
 | MLE_Proj of (mlexpr * mlpath)
 | MLE_If of (mlexpr * mlexpr * mlexpr Prims.option)
 | MLE_Raise of (mlpath * mlexpr Prims.list)
-| MLE_Try of (mlexpr * mlbranch Prims.list) 
+| MLE_Try of (mlexpr * mlbranch Prims.list)
  and mllb =
-{mllb_name : mlident; mllb_tysc : mltyscheme Prims.option; mllb_add_unit : Prims.bool; mllb_def : mlexpr} 
+{mllb_name : mlident; mllb_tysc : mltyscheme Prims.option; mllb_add_unit : Prims.bool; mllb_def : mlexpr}
  and mlbranch =
-(mlpattern * mlexpr Prims.option * mlexpr) 
+(mlpattern * mlexpr Prims.option * mlexpr)
  and mlletbinding =
 (Prims.bool * mllb Prims.list)
 
@@ -503,7 +513,7 @@ end
 false
 end))
 
-let is_Mkmllb = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkmllb"))
+let is_Mkmllb = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkmllb")))
 
 let ___MLE_Const____0 = (fun projectee -> (match (projectee) with
 | MLE_Const (_56_75) -> begin
@@ -697,7 +707,7 @@ type mlsig1 =
 | MLS_Mod of (mlsymbol * mlsig)
 | MLS_Ty of mltydecl
 | MLS_Val of (mlsymbol * mltyscheme)
-| MLS_Exn of (mlsymbol * mlty Prims.list) 
+| MLS_Exn of (mlsymbol * mlty Prims.list)
  and mlsig =
 mlsig1 Prims.list
 
@@ -803,7 +813,3 @@ let ml_bool_ty = MLTY_Named (([], (("Prims")::[], "bool")))
 let ml_unit_ty = MLTY_Named (([], (("Prims")::[], "unit")))
 
 let mlp_lalloc = (("SST")::[], "lalloc")
-
-
-
-

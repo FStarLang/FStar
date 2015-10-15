@@ -989,6 +989,12 @@ and desugar_comp r default_ok env t =
                         else if lid_equals eff.v Const.effect_Tot_lid   then [TOTAL]
                         else if lid_equals eff.v Const.effect_ML_lid    then [MLEFFECT]
                         else [] in
+                    let rest = 
+                        if lid_equals eff.v Const.effect_Lemma_lid
+                        then match rest with 
+                                | [req;ens;(Inr pat, aq)] -> [req;ens;(Inr (Syntax.mk_Exp_meta(Meta_desugared(pat, Syntax.Meta_smt_pat))), aq)]
+                                | _ -> rest 
+                        else rest in
                         mk_Comp ({effect_name=eff.v;
                                   result_typ=result_typ;
                                   effect_args=rest;
