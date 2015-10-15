@@ -64,10 +64,9 @@ val compress_preserves_path_to_roots:
     (decreases p)
 let rec compress_preserves_path_to_roots (v: Type) d (f: Relation v) x y z u r p =
   if x = u then begin
-    Squash.give_proof #(path v (compress v f x z) u r) (
-      bind (return #(path v f u r) p) (fun () ->
-      assert (path v f u r);
-      admit ()))
+    Squash.give_proof (return #(path v f x r) p);
+    assert (path v f x r);
+    admit ()
   end else begin
     match p with
     | Refl _ ->
