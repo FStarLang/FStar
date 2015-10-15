@@ -13,7 +13,6 @@ a.out:
 	cp ../ml/ffibridge.ml .
 	cp ../ml/runtime.ml .
 	cp ../ml/prog.ml .
-	sed -i -e 's/let psmap_ref =/let psmap_ref :((unit, unit, unit) FStar_OrdMap.ordmap) ref =/g' SecServer.ml #because of OCaml typing issue, need to fix it
 	$(OCAMLOPT) prims.ml FStar_Ghost.ml FStar_List_Tot.ml FStar_ST.ml FStar_All.ml FStar_List.ml FStar_OrdSet.ml FStar_OrdMap.ml FStar_IO.ml FStar_String.ml  \
 	            Prins.ml AST.ml ffibridge.ml Semantics.ml runtime.ml Print.ml Interpreter.ml SecServer.ml FFI.ml prog.ml Main.ml -o a.out
 
