@@ -11,7 +11,7 @@ type step =
 | Simplify
 | SNComp
 | Unmeta
-| Unlabel
+| Unlabel 
  and steps =
 step Prims.list
 
@@ -104,18 +104,18 @@ false
 end))
 
 type 'a config =
-{code : 'a; environment : environment; stack : stack; close : ('a  ->  'a) Prims.option; steps : step Prims.list}
+{code : 'a; environment : environment; stack : stack; close : ('a  ->  'a) Prims.option; steps : step Prims.list} 
  and environment =
-{context : env_entry Prims.list; label_suffix : (Prims.bool Prims.option * FStar_Range.range) Prims.list}
+{context : env_entry Prims.list; label_suffix : (Prims.bool Prims.option * FStar_Range.range) Prims.list} 
  and stack =
-{args : (FStar_Absyn_Syntax.arg * environment) Prims.list}
+{args : (FStar_Absyn_Syntax.arg * environment) Prims.list} 
  and env_entry =
 | T of (FStar_Absyn_Syntax.btvdef * tclos)
-| V of (FStar_Absyn_Syntax.bvvdef * vclos)
+| V of (FStar_Absyn_Syntax.bvvdef * vclos) 
  and tclos =
-(FStar_Absyn_Syntax.typ * environment)
+(FStar_Absyn_Syntax.typ * environment) 
  and vclos =
-(FStar_Absyn_Syntax.exp * environment)
+(FStar_Absyn_Syntax.exp * environment) 
  and 'a memo =
 'a Prims.option FStar_ST.ref
 
@@ -1335,3 +1335,7 @@ end
 t
 end)))
 in (aux t))))
+
+
+
+

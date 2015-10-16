@@ -367,13 +367,13 @@ type term' =
 | BoundV of Prims.int
 | FreeV of fv
 | App of (op * term Prims.list)
-| Quant of (qop * pat Prims.list Prims.list * Prims.int Prims.option * sort Prims.list * term)
+| Quant of (qop * pat Prims.list Prims.list * Prims.int Prims.option * sort Prims.list * term) 
  and term =
-{tm : term'; hash : Prims.string; freevars : fvs FStar_Absyn_Syntax.memo}
+{tm : term'; hash : Prims.string; freevars : fvs FStar_Absyn_Syntax.memo} 
  and pat =
-term
+term 
  and fv =
-(Prims.string * sort)
+(Prims.string * sort) 
  and fvs =
 fv Prims.list
 
@@ -1497,3 +1497,7 @@ in (Prims.strcat (Prims.strcat s "; ") _115_683))) "" l))
 and print_smt_term_list_list = (fun l -> (FStar_List.fold_left (fun s l -> (let _115_688 = (let _115_687 = (print_smt_term_list l)
 in (Prims.strcat (Prims.strcat s "; [ ") _115_687))
 in (Prims.strcat _115_688 " ] "))) "" l))
+
+
+
+

@@ -126,7 +126,7 @@ type effects =
 let is_Mkeffects = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkeffects")))
 
 type env =
-{solver : solver_t; range : FStar_Range.range; curmodule : FStar_Absyn_Syntax.lident; gamma : binding Prims.list; modules : FStar_Absyn_Syntax.modul Prims.list; expected_typ : FStar_Absyn_Syntax.typ Prims.option; level : level; sigtab : sigtable Prims.list; is_pattern : Prims.bool; instantiate_targs : Prims.bool; instantiate_vargs : Prims.bool; effects : effects; generalize : Prims.bool; letrecs : (FStar_Absyn_Syntax.lbname * FStar_Absyn_Syntax.typ) Prims.list; top_level : Prims.bool; check_uvars : Prims.bool; use_eq : Prims.bool; is_iface : Prims.bool; admit : Prims.bool; default_effects : (FStar_Absyn_Syntax.lident * FStar_Absyn_Syntax.lident) Prims.list}
+{solver : solver_t; range : FStar_Range.range; curmodule : FStar_Absyn_Syntax.lident; gamma : binding Prims.list; modules : FStar_Absyn_Syntax.modul Prims.list; expected_typ : FStar_Absyn_Syntax.typ Prims.option; level : level; sigtab : sigtable Prims.list; is_pattern : Prims.bool; instantiate_targs : Prims.bool; instantiate_vargs : Prims.bool; effects : effects; generalize : Prims.bool; letrecs : (FStar_Absyn_Syntax.lbname * FStar_Absyn_Syntax.typ) Prims.list; top_level : Prims.bool; check_uvars : Prims.bool; use_eq : Prims.bool; is_iface : Prims.bool; admit : Prims.bool; default_effects : (FStar_Absyn_Syntax.lident * FStar_Absyn_Syntax.lident) Prims.list} 
  and solver_t =
 {init : env  ->  Prims.unit; push : Prims.string  ->  Prims.unit; pop : Prims.string  ->  Prims.unit; mark : Prims.string  ->  Prims.unit; reset_mark : Prims.string  ->  Prims.unit; commit_mark : Prims.string  ->  Prims.unit; encode_modul : env  ->  FStar_Absyn_Syntax.modul  ->  Prims.unit; encode_sig : env  ->  FStar_Absyn_Syntax.sigelt  ->  Prims.unit; solve : env  ->  FStar_Absyn_Syntax.typ  ->  Prims.unit; is_trivial : env  ->  FStar_Absyn_Syntax.typ  ->  Prims.bool; finish : Prims.unit  ->  Prims.unit; refresh : Prims.unit  ->  Prims.unit}
 
@@ -974,3 +974,7 @@ end)) [] env.gamma)
 in (let _95_788 = (sigtab env)
 in (FStar_Util.smap_fold _95_788 (fun _30_979 v keys -> (let _95_787 = (FStar_Absyn_Util.lids_of_sigelt v)
 in (FStar_List.append _95_787 keys))) keys))))
+
+
+
+

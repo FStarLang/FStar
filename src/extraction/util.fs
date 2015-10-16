@@ -94,6 +94,8 @@ let join f f' = match f, f' with
 
 let join_l fs = List.fold_left join E_PURE fs
 
+let mk_ty_fun = List.fold_right (fun (_, t0) t -> MLTY_Fun(t0, E_PURE, t))
+
 (* type_leq is essentially the lifting of the sub-effect relation, eff_leq, into function types.
    type_leq_c is a coercive variant of type_leq, which implements an optimization to erase the bodies of ghost functions. 
    Specifically, a function (f : t -> Pure t') can be subsumed to (t -> Ghost t')   
@@ -110,11 +112,13 @@ let rec type_leq_c (g:Env.env) (e:option<mlexpr>) (t:mlty) (t':mlty) : (bool * o
         | MLTY_Fun (t1, f, t2), MLTY_Fun (t1', f', t2') ->
           let mk_fun xs body = match xs with 
             | [] -> body
-            | _ -> match body with 
-                      | MLE_Fun(ys, body) -> MLE_Fun(xs@ys, body)
-                      | _ -> MLE_Fun(xs, body) in
+            | _ -> 
+              let e = match body.expr with 
+                | MLE_Fun(ys, body) -> MLE_Fun(xs@ys, body)
+                | _ -> MLE_Fun(xs, body) in
+              with_ty (mk_ty_fun xs body.ty) e in
           begin match e with 
-            | Some (MLE_Fun(x::xs, body)) ->
+            | Some ({expr=MLE_Fun(x::xs, body)}) ->
               if type_leq g t1' t1
               && eff_leq f f'
               then if f=E_PURE 
@@ -122,8 +126,8 @@ let rec type_leq_c (g:Env.env) (e:option<mlexpr>) (t:mlty) (t':mlty) : (bool * o
                    then if type_leq g t2 t2'
                         then let body = if type_leq g t2 ml_unit_ty 
                                         then ml_unit
-                                        else MLE_Coerce(ml_unit, ml_unit_ty, t2') in
-                             true, Some (MLE_Fun([x], body))
+                                        else with_ty t2' <| MLE_Coerce(ml_unit, ml_unit_ty, t2') in
+                             true, Some (with_ty (mk_ty_fun [x] body.ty) <| MLE_Fun([x], body))
                         else false, None
                    else let ok, body = type_leq_c g (Some <| mk_fun xs body) t2 t2' in
                         let res = match body with
@@ -213,10 +217,10 @@ let is_xtuple (ns, n) =
         | _ -> None
     else None
 
-let resugar_exp e = match e with
+let resugar_exp e = match e.expr with
     | MLE_CTor(mlp, args) ->
         (match is_xtuple mlp with
-        | Some n -> MLE_Tuple args
+        | Some n -> with_ty e.ty <| MLE_Tuple args
         | _ -> e)
     | _ -> e
 
@@ -289,9 +293,9 @@ let rec eraseTypeDeep (g:Env.env) (t:mlty) : mlty =
     | MLTY_Tuple lty ->  MLTY_Tuple (List.map (eraseTypeDeep g) lty)
     | _ ->  t
 
-let prims_op_equality = MLE_Name (["Prims"], "op_Equality")
-let prims_op_amp_amp  = MLE_Name (["Prims"], "op_AmpAmp")
-let conjoin e1 e2 = MLE_App(prims_op_amp_amp, [e1;e2])
+let prims_op_equality = with_ty MLTY_Top <| MLE_Name (["Prims"], "op_Equality")
+let prims_op_amp_amp  = with_ty (mk_ty_fun [(("x",0), ml_bool_ty); (("y",0), ml_bool_ty)] ml_bool_ty) <| MLE_Name (["Prims"], "op_AmpAmp")
+let conjoin e1 e2 = with_ty ml_bool_ty <| MLE_App(prims_op_amp_amp, [e1;e2])
 let conjoin_opt e1 e2 = match e1, e2 with 
     | None, None -> None
     | Some x, None 

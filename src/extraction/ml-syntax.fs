@@ -64,7 +64,7 @@ type mlpattern =
 | MLP_Record of list<mlsymbol> * list<(mlsymbol * mlpattern)>
 | MLP_Tuple  of list<mlpattern>
 
-type mlexpr =
+type mlexpr' =
 | MLE_Const  of mlconstant
 | MLE_Var    of mlident
 | MLE_Name   of mlpath
@@ -83,15 +83,16 @@ type mlexpr =
 | MLE_Raise  of mlpath * list<mlexpr>
 | MLE_Try    of mlexpr * list<mlbranch>
 
-//and mlexpr = {
-//    expr:mlexpr';
-//    ty:mlty;
-//}
+and mlexpr = {
+    expr:mlexpr';
+    ty:mlty;
+}
+
 and mlbranch = mlpattern * option<mlexpr> * mlexpr
 
 and mllb = {
     mllb_name:mlident;
-    mllb_tysc:option<mltyscheme>;
+    mllb_tysc:mltyscheme;
     mllb_add_unit:bool;
     mllb_def:mlexpr;
 }
@@ -126,7 +127,7 @@ type mlsig1 =
 
 and mlsig = list<mlsig1>
 
-let with_ty t e = e//{expr=e; ty=t}
+let with_ty t e = {expr=e; ty=t}
 
 (* -------------------------------------------------------------------- *)
 type mllib =
@@ -134,7 +135,8 @@ type mllib =
 
 (* -------------------------------------------------------------------- *)
 // do NOT remove Prims, because all mentions of unit/bool in F* are actually Prims.unit/bool.
-let ml_bool_ty = MLTY_Named ([], (["Prims"], "bool"))
 let ml_unit_ty = MLTY_Named ([], (["Prims"], "unit"))
-let ml_unit    = (* with_ty ml_unit_ty <| *) MLE_Const MLC_Unit
+let ml_bool_ty = MLTY_Named ([], (["Prims"], "bool"))
+let ml_int_ty  = MLTY_Named ([], (["Prims"], "int"))
+let ml_unit    = with_ty ml_unit_ty <| MLE_Const MLC_Unit
 let mlp_lalloc = (["SST"], "lalloc")

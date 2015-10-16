@@ -106,17 +106,17 @@ type term' =
 | Paren of term
 | Requires of (term * Prims.string Prims.option)
 | Ensures of (term * Prims.string Prims.option)
-| Labeled of (term * Prims.string * Prims.bool)
+| Labeled of (term * Prims.string * Prims.bool) 
  and term =
-{tm : term'; range : FStar_Range.range; level : level}
+{tm : term'; range : FStar_Range.range; level : level} 
  and binder' =
 | Variable of FStar_Absyn_Syntax.ident
 | TVariable of FStar_Absyn_Syntax.ident
 | Annotated of (FStar_Absyn_Syntax.ident * term)
 | TAnnotated of (FStar_Absyn_Syntax.ident * term)
-| NoName of term
+| NoName of term 
  and binder =
-{b : binder'; brange : FStar_Range.range; blevel : level; aqual : FStar_Absyn_Syntax.aqual}
+{b : binder'; brange : FStar_Range.range; blevel : level; aqual : FStar_Absyn_Syntax.aqual} 
  and pattern' =
 | PatWild
 | PatConst of FStar_Absyn_Syntax.sconst
@@ -128,9 +128,9 @@ type term' =
 | PatTuple of (pattern Prims.list * Prims.bool)
 | PatRecord of (lid * pattern) Prims.list
 | PatAscribed of (pattern * term)
-| PatOr of pattern Prims.list
+| PatOr of pattern Prims.list 
  and pattern =
-{pat : pattern'; prange : FStar_Range.range}
+{pat : pattern'; prange : FStar_Range.range} 
  and branch =
 (pattern * term Prims.option * term)
 
@@ -775,9 +775,9 @@ type decl' =
 | Exception of (FStar_Absyn_Syntax.ident * term Prims.option)
 | NewEffect of (qualifiers * effect_decl)
 | SubEffect of lift
-| Pragma of FStar_Absyn_Syntax.pragma
+| Pragma of FStar_Absyn_Syntax.pragma 
  and decl =
-{d : decl'; drange : FStar_Range.range}
+{d : decl'; drange : FStar_Range.range} 
  and effect_decl =
 | DefineEffect of (FStar_Absyn_Syntax.ident * binder Prims.list * term * decl Prims.list)
 | RedefineEffect of (FStar_Absyn_Syntax.ident * binder Prims.list * term)
@@ -1452,3 +1452,7 @@ end
 | _40_597 -> begin
 None
 end))
+
+
+
+
