@@ -21,12 +21,13 @@ type is_repr (v: Type) (f: Relation v) (x: v) (r: v) =
 type confined (v: Type) (d: Set.set v) (f: Relation v) =
   forall (x: v) (y: v). path v f x y ==> Set.mem x d /\ Set.mem y d
 type functional (v: Type) (f: Relation v) =
-  forall (x: v) (y: v) (z: v). f x z /\ f y z ==> x = y
+  forall (x: v) (y: v) (z: v). f x y /\ f x z ==> y = z
 type defined (v: Type) (rel: Relation v) =
   forall (x: v). exists (r: v). rel x r
 
 type is_dsf (v: Type) (d: Set.set v) (f: Relation v) =
   confined v d f /\ functional v f /\ defined v (is_repr v f)
+
 
 (* In FP's development, the following variables are implicit: [v], [f], [x],
    [z] (and [compress] means [compress v f x z]). *)
@@ -55,14 +56,27 @@ let bind = Squash.bind_squash
 let return = Squash.return_squash
 
 
-val path_same_repr:
+val path_same_root:
   v:Type -> d:Set.set v -> f:Relation v ->
-  x:v -> r:v -> z:v -> p_1:path v f x z -> p_2:path v f x r -> Lemma
-    (requires (is_dsf v d f /\ is_root v f r))
+  x:v -> z:v -> r:v -> p:path v f x z -> Lemma
+    (requires (is_repr v f x r /\ is_dsf v d f))
     (ensures (is_repr v f z r))
-    (decreases %[p_1, p_2])
-let rec path_same_repr (v: Type) d (f: Relation v) x r z p_1 p_2 =
-  admit ()
+    (decreases p)
+let rec path_same_root (v: Type) d (f: Relation v) x z r p =
+  match p with
+  | Refl _ ->
+      ()
+  | Step _ y _ f_xy path_yz ->
+      Squash.give_proof #(is_repr v f z r) (
+        bind (Squash.get_proof (path v f x r)) (fun p' ->
+          match p' with
+          | Step _ y' _ _ path_yr ->
+              (* JP: this assert is important for Z3, apparently *)
+              assert (y = y');
+              let _: path v f y r = path_yr in
+              path_same_root v d f y z r path_yz;
+              Squash.get_proof (is_repr v f z r)
+              ))
 
 
 (* Now [d] is implicit, [is_dsf d f] and [path f y z] too. *)
