@@ -1,4 +1,7 @@
-#include "preproc.h"
+(*--build-config
+  options:--verify_module IntLib;
+  other-files:axiomatic.fst
+  --*)
 
 (*
   This library file contains definitions for standard math functions.
@@ -81,22 +84,15 @@ let signed_modulo v p =
   if v >= 0 then v % p
   else - ( (-v) % p)
 
+val op_Question_Modulo : a:int -> p:pos -> 
+  Tot (res:int{ (a >= 0 ==> res = a % p) /\ (a < 0 ==> res = -((-a) % p)) }) 
+let op_Question_Modulo a p = signed_modulo a p
+
 (* Bitwize operations *)
-#ifndef COMPILE
 assume val xor_op: x:int -> y:int -> Tot (z:int{ z = 0 <==> x = y })
 assume val and_op: x:int -> y:int -> Tot (z:int{ z = 0 <==> (x = 0 /\ y = 0)})
 assume val or_op: x:int -> y:int -> Tot (z:int{ z = 0 <==> (x = 0 \/ y = 0) })
 assume val lnot_op: int -> Tot int
-#else
-val xor_op: x:int -> y:int -> Tot (z:int{ z = 0 <==> x = y })
-let xor_op x y = x
-val and_op: x:int -> y:int -> Tot (z:int{ z = 0 <==> (x = 0 /\ y = 0)})
-let and_op x y = x
-val or_op: x:int -> y:int -> Tot (z:int{ z = 0 <==> (x = 0 \/ y = 0) })
-let or_op x y = x
-val lnot_op: int -> Tot int
-let lnot_op x = x
-#endif
 
 (* Comparison *)
 (* To replace with something constant time in real code *)
@@ -140,7 +136,7 @@ val pow2_div_lemma:
     (requires (True))
     (ensures ((pow2 n) / (pow2 m) = pow2 (n-m)))
 let pow2_div_lemma n m =
-  erase (
+  (
     if n = m then ()
     else 
       (pow2_increases_lemma n m;
@@ -163,7 +159,7 @@ val div_non_eucl_decr_lemma:
     (requires (True))
     (ensures (abs (div_non_eucl a b) <= abs a))
 let div_non_eucl_decr_lemma a b =
-  erase (slash_decr_axiom (abs a) b)
+  (slash_decr_axiom (abs a) b)
 
 (* Lemma : dividing by a bigger value leads to 0 if non euclidian division *)
 val div_non_eucl_bigger_denom_lemma:
@@ -189,7 +185,7 @@ val multiply_fractions_lemma:
     (requires (True))
     (ensures ( n * ( a / n ) <= a ))
 let multiply_fractions_lemma a n =
-  erase (euclidian_div_axiom a n)
+  (euclidian_div_axiom a n)
 
 (* Lemma : multiplying by a strictly positive value preserves strict inequalities *)
 val mul_pos_strict_incr_lemma: a:pos -> b:int -> c:pos -> Lemma (requires (b < c)) (ensures (a * b < a * c /\ b * a < c * a ))
@@ -211,29 +207,11 @@ let parenSub a b c = ()
 (* WARNING : this is actually not the log, but rather the number of bits necessary to 
    represent the integer *)
 (* TODO : change the name of the function *)
-#ifndef COMPILE
-assume
-#endif
-val log: x:pos -> Tot (n:nat{ x < pow2 n /\ (forall (i:nat). x < pow2 i ==> i >= n) })
-#ifdef COMPILE
-let log x = x - 1
-#endif
+
+assume val log: x:pos -> Tot (n:nat{ x < pow2 n /\ (forall (i:nat). x < pow2 i ==> i >= n) })
 
 (* TODO : prove lemma *)
-#ifndef COMPILE
-assume
-#endif
-val log_incr_lemma: a:pos -> b:pos -> Lemma (requires (a < b)) 
-						   (ensures (log a < log b))
-#ifdef COMPILE
-let log_incr_lemma a b = ()
-#endif
+assume val log_incr_lemma: a:pos -> b:pos -> Lemma (requires (a < b)) 
 
 (* TODO : prove lemma *)
-#ifndef COMPILE
-assume
-#endif
-val log_lemma: a:pos -> b:pos -> Lemma (ensures (log (a * b) = log a + log b))
-#ifdef COMPILE
-let log_lemma a b = ()	
-#endif
+assume val log_lemma: a:pos -> b:pos -> Lemma (ensures (log (a * b) = log a + log b))

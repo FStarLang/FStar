@@ -1,4 +1,7 @@
-(* STATUS : incomplete lemmas at the end of the file, see TODOS *)
+(*--build-config
+  options:--admit_fsi FStar.Seq --admit_fsi FStar.Set --verify_module ScalarMultiplication --z3timeout 150;
+  other-files:classical.fst ext.fst set.fsi seq.fsi seqproperties.fst heap.fst st.fst all.fst arr.fst ghost.fst axiomatic.fst intlib.fst limb.fst bigint_st.fst eval_st.fst;
+  --*)
 
 module ScalarMultiplication
 
@@ -10,7 +13,6 @@ open Bigint
 open FStar.Seq
 open Eval
 open Axiomatic
-
 
 (* Lemma *)
 val scalar_multiplication_lemma_aux:
@@ -27,7 +29,7 @@ val scalar_multiplication_lemma_aux:
 		/\ (getValue h0 a (len-1) * s = getValue h1 b (len-1))))
     (ensures ( eval h0 a len * s = eval h1 b len ))
 let scalar_multiplication_lemma_aux h0 h1 a b s len =
-  erase (
+  (
       paren_mul_left (pow2 (bitweight (Bigint63.t a) (len-1))) (getValue h0 a (len-1)) s;
       distributivity_add_left ((pow2 (bitweight (Bigint63.t a) (len-1))) * (getValue h0 a (len-1))) (eval h0 a (len-1)) s
     )
@@ -46,7 +48,7 @@ val scalar_multiplication_lemma:
     (requires ( forall (i:nat). i < len ==> getValue h0 a i * s = getValue h1 b i ))
     (ensures ( eval h0 a len * s = eval h1 b len ))
 let rec scalar_multiplication_lemma h0 h1 a b s len =
-  erase (
+  (
       match len with
       | 0 -> ()
       | _ -> scalar_multiplication_lemma h0 h1 a b s (len-1); scalar_multiplication_lemma_aux h0 h1 a b s len
@@ -90,18 +92,18 @@ let rec scalar_multiplication res a a_idx n s len =
   | 0 -> ()
   |  _ -> 
      let h0 = 
-       erase (ST.get()) in
+       (ST.get()) in
      scalar_multiplication res a a_idx n s (len-1);
      let h1 = 
-       erase (ST.get ()) in
+       (ST.get ()) in
      let i = len-1 in
      let ai = get a (a_idx + i) in
      let size_ai = 
-       erase (getSize h1 a (a_idx +i)) in
+       (getSize h1 a (a_idx +i)) in
      let v = Limb.mul size_ai ai n s in
-     erase 
+     
        ( order_n_bits v (size_ai+n) (wordSize a - 1));
-     let (t:tint (wordSize a)) = mk_tint res (erase (size_ai + n)) v in     
+     let (t:tint (wordSize a)) = mk_tint res ((size_ai + n)) v in     
      updateBigint res (a_idx+i) t
 
 
@@ -154,15 +156,15 @@ let rec scalar_multiplication_tr res ghost_res a a_idx n s len ctr =
   | 0 -> ()
   |  _ -> 
      let h1 = 
-       erase (ST.get ()) in
+       (ST.get ()) in
      let i = ctr in
      let ai = get a (a_idx + i) in
      let size_ai = 
-       erase (getSize h1 a (a_idx +i)) in
+       (getSize h1 a (a_idx +i)) in
      let v = Limb.mul size_ai ai n s in
-     let (t:tint (wordSize a)) = mk_tint res (erase (size_ai + n)) v in     
+     let (t:tint (wordSize a)) = mk_tint res ((size_ai + n)) v in     
      updateBigint res (a_idx+i) t;
-     let h2 = erase (ST.get()) in
+     let h2 = (ST.get()) in
      scalar_multiplication_tr res ghost_res a a_idx n s len (ctr+1)
 		      
 
@@ -184,7 +186,7 @@ val theorem_scalar_multiplication:
 		    /\ (getSize h1 b i = getSize h0 a i + n))))
     ( ensures ( (eval h1 b len) = (eval h0 a len) * s ) )
 let theorem_scalar_multiplication h0 h1 a n s len b = 
-  erase (
+  (
       scalar_multiplication_lemma h0 h1 a b s len; ()
     )
 	
@@ -215,9 +217,9 @@ val scalar_multiplication_with_lemma:
      ))
 let scalar_multiplication_with_lemma res a n s len =
   let h0 = 
-    erase (ST.get()) in
-  scalar_multiplication_tr res (erase (Array.to_seq (Bigint63.data res))) a 0 n s len 0;
-  erase (
+    (ST.get()) in
+  scalar_multiplication_tr res ((Array.to_seq (Bigint63.data res))) a 0 n s len 0;
+  (
       let h1 = ST.get() in
       theorem_scalar_multiplication h0 h1 a n s len res
     )
@@ -233,7 +235,7 @@ val helper_lemma_2:
 	    (requires (True))
 	    (ensures (forall a b c. abs a * abs c <= abs b * abs c ==> abs a <= abs b ))
 let helper_lemma_2 () = 
-  erase (ineq_axiom ())
+  (ineq_axiom ())
 
 val scalar_multiplication_max_value_lemma:
   h0:heap -> 
@@ -248,7 +250,7 @@ val scalar_multiplication_max_value_lemma:
     (requires (True))
     (ensures (maxValue h1 res = maxValue h0 a * abs s))
 let scalar_multiplication_max_value_lemma h0 h1 res a n s = 
-  erase ( helper_lemma () ; ineq_axiom () )
+  ( helper_lemma () ; ineq_axiom () )
 
 val scalar_multiplication_max_size_lemma:
   h0:heap -> 
