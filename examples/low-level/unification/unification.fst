@@ -167,7 +167,6 @@ let rec unify e s = match e with
           unify (subst_eqns (x,t) tl) ((x,t)::subst_subst (x,t) s))
 
  | (t, V x)::tl -> //flex-rhs
-   let e' = (V x, t)::tl in
    evars_permute_hd t (V x) tl;
    unify ((V x, t)::tl) s
 
