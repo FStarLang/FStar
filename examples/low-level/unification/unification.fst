@@ -1,6 +1,6 @@
 (*--build-config
-    options:--admit_fsi FStar.Set --admit_fsi FStar.OrdSet;
-    other-files:ext.fst set.fsi heap.fst st.fst all.fst listTot.fst ordset.fsi
+    options:--admit_fsi FStar.Set --admit_fsi FStar.OrdSet --admit_fsi FStar.OrdSetProps;
+    other-files:ext.fst set.fsi heap.fst st.fst all.fst listTot.fst ordset.fsi ordsetproperties.fst
   --*)
 module Unification
 
@@ -30,22 +30,35 @@ type term =
   | V : i:nat -> term
   | F : t1:term -> t2:term -> term
 
+val nat_order : OrdSet.cmp nat
+let nat_order x y = x <= y
 
-type varset = OrdSet.ordset nat (fun x y -> x <= y)
+type varset = OrdSet.ordset nat nat_order
+val empty_vars : varset
+let empty_vars = OrdSet.empty
+
 type eqns  = list (term * term) 
 
-val vars : term -> Tot (list int)
+val vars : term -> Tot varset
 let rec vars = function 
-  | V i -> [i]
-  | F t1 t2 -> union (vars t1) (vars t2) 
+  | V i -> OrdSet.singleton i
+  | F t1 t2 -> OrdSet.union (vars t1) (vars t2) 
 
-val evars : eqns -> Tot nat
-let evars eqns =
-   length (fold_left (fun out (x, y) -> union out (union (vars x) (vars y))) [] eqns)
+val evars : eqns -> Tot varset
+let rec evars = function
+  | [] -> empty_vars
+  | (x, y)::tl -> OrdSet.union (OrdSet.union (vars x) (vars y)) (evars tl)
+  
+val n_evars : eqns -> Tot nat
+let n_evars eqns = OrdSet.size (evars eqns)
 
 val evars_permute_hd : x:term -> y:term -> tl:eqns -> Lemma 
   (ensures (evars ((x, y)::tl) = evars ((y, x)::tl)))
-let evars_permute_hd x y tl = admit()
+let evars_permute_hd x y tl = OrdSet.eq_lemma (evars ((x,y)::tl)) (evars ((y,x)::tl))
+
+val evars_unfun : x:term -> y:term -> x':term -> y':term -> tl:eqns -> Lemma
+  (ensures (evars ((F x y, F x' y')::tl) = evars ((x, x')::(y, y')::tl)))
+let evars_unfun x y x' y' tl = OrdSet.eq_lemma (evars ((F x y, F x' y')::tl)) (evars ((x, x')::(y, y')::tl))
 
 val funs : term -> Tot nat
 let rec funs = function 
@@ -53,7 +66,13 @@ let rec funs = function
   | F t1 t2 -> 1 + funs t1 + funs t2
 
 val efuns : eqns -> Tot nat
-let efuns eqns = fold_left (fun (out:nat) (x,y) -> out + funs x + funs y) 0 eqns
+let rec efuns = function 
+  | [] -> 0
+  | (x,y)::tl -> funs x + funs y + efuns tl
+
+val efuns_smaller: t1:term -> t2:term -> tl:eqns -> Lemma
+  (ensures (efuns tl <= efuns ((t1, t2)::tl)))
+let efuns_smaller t1 t2 tl = ()
 
 val efuns_permute_hd : x:term -> y:term -> tl:eqns -> Lemma
   (ensures (efuns ((x,y)::tl) = efuns ((y,x)::tl)))
@@ -84,18 +103,18 @@ val subst_eqns : subst -> eqns -> Tot eqns
 let subst_eqns s eqns = map (fun (t_1, t_2) -> subst_term s t_1, subst_term s t_2) eqns
  
 val unify : e:eqns -> subst -> Tot (option subst)
-  (decreases %[evars e; efuns e; n_flex_rhs e])
+  (decreases %[n_evars e; efuns e; n_flex_rhs e])
 let rec unify e s = match e with 
   | [] -> Some s
 
   | (V x, t)::tl -> 
     if is_V t && V.i t = x
     then //t is a flex-rhs
-         (assume (evars tl <= evars e);
+         (assume (n_evars tl <= n_evars e);
           unify tl s)
-    else if mem x (vars t) //occurs
+    else if OrdSet.mem x (vars t) //occurs
     then None
-    else (assume (evars (subst_eqns [x,t] tl) < evars e); //x is eliminated 
+    else (assume (n_evars (subst_eqns [x,t] tl) < n_evars e); //x is eliminated 
           unify (subst_eqns [x,t] tl) ((x,t)::s))
 
  | (t, V x)::tl -> //flex-rhs
@@ -104,6 +123,6 @@ let rec unify e s = match e with
    unify ((V x, t)::tl) s
 
  | (F t1 t2, F t1' t2')::tl -> //efuns reduces
-   assume (evars ((t1, t1')::(t2, t2')::tl) < evars e);
+   evars_unfun t1 t2 t1' t2' tl;
    unify ((t1, t1')::(t2, t2')::tl) s
 
