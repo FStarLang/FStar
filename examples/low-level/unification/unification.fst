@@ -109,24 +109,51 @@ let rec n_flex_rhs = function
   | (_  , V _)::tl -> 1 + n_flex_rhs tl
   | _::tl -> n_flex_rhs tl
   
-type subst = list (int * term)
+type subst = (nat * term)
 
 val subst_term : subst -> term -> Tot term 
 let rec subst_term s t = match t with 
-  | V x -> 
-    begin match assoc x s with 
-      | None -> V x
-      | Some y -> y
-    end
+  | V x -> if x = fst s then snd s else V x
   | F t1 t2 -> F (subst_term s t1) (subst_term s t2)
 
-val subst_subst: subst -> subst -> Tot subst
+type subst_ok s = ~ (OrdSet.mem (fst s) (vars (snd s)))
+
+val lemma_vars_decrease: s:subst -> t':term -> Lemma 
+  (requires (subst_ok s))
+  (ensures (OrdSet.subset (vars (subst_term s t'))
+ 			  (OrdSet.remove (fst s) (OrdSet.union (vars (snd s)) (vars t')))))
+let rec lemma_vars_decrease s t' = match t' with 
+  | V x -> ()
+  | F t1 t2 -> 
+    lemma_vars_decrease s t1;
+    lemma_vars_decrease s t2
+
+val subst_subst: subst -> list subst -> Tot (list subst)
 let subst_subst s1 s2 = map (fun (x, t) -> (x, subst_term s1 t)) s2
 
 val subst_eqns : subst -> eqns -> Tot eqns 
-let subst_eqns s eqns = map (fun (t_1, t_2) -> subst_term s t_1, subst_term s t_2) eqns
- 
-val unify : e:eqns -> subst -> Tot (option subst)
+let rec subst_eqns s eqns = match eqns with 
+  | [] -> []
+  | (t_1, t_2)::tl -> (subst_term s t_1, subst_term s t_2) :: subst_eqns s tl
+
+type strict_subset (v1:varset) (v2:varset) = OrdSet.subset v1 v2 /\ ~(OrdSet.Equal v1 v2)
+
+val vars_decrease_eqns: x:nat -> t:term -> e:eqns -> Lemma
+  (requires (subst_ok (x, t)))
+  (ensures (OrdSet.subset (evars (subst_eqns (x,t) e))
+			  (OrdSet.remove x (evars ((V x, t)::e)))))
+let rec vars_decrease_eqns x t e = match e with 
+  | [] -> ()
+  | hd::tl -> lemma_vars_decrease (x,t) (fst hd); 
+	    lemma_vars_decrease (x,t) (snd hd); 
+	    vars_decrease_eqns x t tl
+
+assume val subset_size: #a:Type -> #f:OrdSet.cmp a -> x:OrdSet.ordset a f -> y:OrdSet.ordset a f -> 
+  Lemma (requires (OrdSet.subset x y))
+	(ensures (OrdSet.size x <= OrdSet.size y))
+	[SMTPat (OrdSet.subset x y)]
+
+val unify : e:eqns -> list subst -> Tot (option (list subst))
   (decreases %[n_evars e; efuns e; n_flex_rhs e])
 let rec unify e s = match e with 
   | [] -> Some s
@@ -136,8 +163,8 @@ let rec unify e s = match e with
     then unify tl s //t is a flex-rhs
     else if OrdSet.mem x (vars t) //occurs
     then None
-    else (assume (n_evars (subst_eqns [x,t] tl) < n_evars e); //x is eliminated; TODO
-          unify (subst_eqns [x,t] tl) ((x,t)::s))
+    else (vars_decrease_eqns x t tl;
+          unify (subst_eqns (x,t) tl) ((x,t)::subst_subst (x,t) s))
 
  | (t, V x)::tl -> //flex-rhs
    let e' = (V x, t)::tl in
