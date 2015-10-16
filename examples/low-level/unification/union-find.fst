@@ -54,6 +54,17 @@ let compress_preserves_roots (v: Type) (f: Relation v) _ _ _ _ =
 let bind = Squash.bind_squash
 let return = Squash.return_squash
 
+
+val path_same_repr:
+  v:Type -> d:Set.set v -> f:Relation v ->
+  x:v -> r:v -> z:v -> p_1:path v f x z -> p_2:path v f x r -> Lemma
+    (requires (is_dsf v d f /\ is_root v f r))
+    (ensures (is_repr v f z r))
+    (decreases %[p_1, p_2])
+let rec path_same_repr (v: Type) d (f: Relation v) x r z p_1 p_2 =
+  admit ()
+
+
 (* Now [d] is implicit, [is_dsf d f] and [path f y z] too. *)
 val compress_preserves_path_to_roots:
   v:Type -> d:Set.set v -> f:Relation v ->
@@ -66,14 +77,23 @@ let rec compress_preserves_path_to_roots (v: Type) d (f: Relation v) x y z u r p
   if x = u then begin
     Squash.give_proof (return #(path v f x r) p);
     assert (path v f x r);
+    assert (is_repr v f x r);
+    (* Inject a proof of [path v f x z] in the context. *)
+    Squash.give_proof (
+      bind (Squash.get_proof (f x y)) (fun proof_x_y ->
+      bind (Squash.get_proof (path v f y z)) (fun proof_path_y_z ->
+      (* JP: The implicit argument has to be provided here (I guess otherwise
+         unification comes up with something else?). *)
+      return #(path v f x z) (Step x y z proof_x_y proof_path_y_z))));
+    assert (path v f x z);
     admit ()
   end else begin
     match p with
     | Refl _ ->
-        let _: path v (compress v f x z) u r = Refl u in
-        ()
+        (* JP: Inference should be able to figure out the desired post-condition?! *)
+        Squash.give_proof (return #(path v (compress v f x z) u r) (Refl u))
     | Step _ u' _ _ p' ->
-        (* [u] and [u'] and in relation. *)
+        (* [u] and [u'] are in relation. *)
         compress_preserves_other_edges v f x z u u';
         (* There is a path from [u'] to [r]. *)
         compress_preserves_path_to_roots v d f x y z u' r p';
@@ -84,10 +104,7 @@ let rec compress_preserves_path_to_roots (v: Type) d (f: Relation v) x y z u r p
         Squash.give_proof (
           bind (Squash.get_proof (compress v f x z u u')) (fun proof_u_u' ->
           bind (Squash.get_proof (path v (compress v f x z) u' r)) (fun proof_path_u'_r ->
-          let final_proof: path v (compress v f x z) u r =
-            Step u u' r proof_u_u' proof_path_u'_r
-          in
-          return final_proof)))
+          return (Step u u' r proof_u_u' proof_path_u'_r))))
   end
 
 
