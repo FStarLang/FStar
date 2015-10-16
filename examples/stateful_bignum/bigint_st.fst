@@ -244,6 +244,29 @@ let extend a len =
   FStar.Array.blit (Bigint63.data a) 0 (Bigint63.data b) 0 len_a;
   b
 
+(* TODO : implement *)
+assume opaque val blit:
+  a:bigint -> b:bigint ->
+  ST unit
+    (requires (fun h -> 
+      (inHeap h a) /\ (inHeap h b)
+      /\ (getTemplate a = getTemplate b)
+      /\ (getLength h b >= getLength h a)
+      ))
+    (ensures (fun h0 _ h1 ->
+      (inHeap h0 a) /\ (inHeap h0 b)
+      /\ (inHeap h1 a) /\ (inHeap h1 b)
+      /\ (getTemplate a = getTemplate b)
+      /\ (getLength h0 b >= getLength h0 a)
+      /\ (getLength h0 b = getLength h1 b)
+      /\ (getLength h1 a = getLength h0 a)
+      /\ (modifies !{getData b} h0 h1)
+      /\ (Seq.Eq (Seq.slice (sel h1 (getData b)) 0 (getLength h0 a)) (sel h0 (getData a)))
+      /\ (Seq.Eq (Seq.slice (sel h1 (getData b)) (getLength h0 a) (getLength h1 b)) (Seq.create (getLength h0 b - getLength h0 a) zero_tint))
+      ))
+
+  
+
 #reset-options
 
 val populate_tarray : 

@@ -25,6 +25,31 @@ let rec pow2 n =
   if n = 0 then 1
   else 2 * pow2 (n-1)
 
+(* Function : power of x *)
+val powx : x:int -> n:nat -> Tot int
+let rec powx x n =
+  match n with
+  | 0 -> 1
+  | _ -> x * powx x (n-1)
+
+(* Lemmas of x^n *)
+opaque val powx_lemma1:
+  a:int ->
+  Lemma
+    (requires (True))
+    (ensures ( powx a 1 = a ))
+let powx_lemma1 a = ()
+
+opaque val powx_lemma2 :
+    x:int -> n:nat -> m:nat ->
+    Lemma
+      (requires (True))
+      (ensures (powx x n * powx x m = powx x (n+m)))
+let rec powx_lemma2 x n m =
+  match m with
+  | 0 -> ()
+  | _ -> powx_lemma2 x n (m-1)
+
 (* Function : absolute value *)
 val abs:
   x:int ->
@@ -84,9 +109,9 @@ let signed_modulo v p =
   if v >= 0 then v % p
   else - ( (-v) % p)
 
-val op_Question_Modulo : a:int -> p:pos -> 
+val op_Plus_Percent : a:int -> p:pos -> 
   Tot (res:int{ (a >= 0 ==> res = a % p) /\ (a < 0 ==> res = -((-a) % p)) }) 
-let op_Question_Modulo a p = signed_modulo a p
+let op_Plus_Percent a p = signed_modulo a p
 
 (* Bitwize operations *)
 assume val xor_op: x:int -> y:int -> Tot (z:int{ z = 0 <==> x = y })
