@@ -24,8 +24,6 @@ let rec no_dups_union l m = match l with
     then no_dups_union tl m
     else no_dups_union tl (hd::m)
 
-(* type lset 'a = l:list 'a{noRepeats l} *)
-
 type term = 
   | V : i:nat -> term
   | F : t1:term -> t2:term -> term
@@ -109,12 +107,10 @@ let rec unify e s = match e with
 
   | (V x, t)::tl -> 
     if is_V t && V.i t = x
-    then //t is a flex-rhs
-         (assume (n_evars tl <= n_evars e);
-          unify tl s)
+    then unify tl s //t is a flex-rhs
     else if OrdSet.mem x (vars t) //occurs
     then None
-    else (assume (n_evars (subst_eqns [x,t] tl) < n_evars e); //x is eliminated 
+    else (assume (n_evars (subst_eqns [x,t] tl) < n_evars e); //x is eliminated; TODO
           unify (subst_eqns [x,t] tl) ((x,t)::s))
 
  | (t, V x)::tl -> //flex-rhs
