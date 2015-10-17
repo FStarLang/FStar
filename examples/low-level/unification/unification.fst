@@ -116,6 +116,9 @@ let rec subst_term s t = match t with
   | V x -> if x = fst s then snd s else V x
   | F t1 t2 -> F (subst_term s t1) (subst_term s t2)
 
+val lsubst_term : list subst -> term -> Tot term
+let lsubst_term s t = fold_right subst_term s t
+
 type subst_ok s = ~ (OrdSet.mem (fst s) (vars (snd s)))
 
 val lemma_vars_decrease: s:subst -> t':term -> Lemma 
@@ -150,7 +153,7 @@ let rec vars_decrease_eqns x t e = match e with
 
 val unify : e:eqns -> list subst -> Tot (option (list subst))
   (decreases %[n_evars e; efuns e; n_flex_rhs e])
-let rec unify e s = match e with 
+let rec unify e s = match e with
   | [] -> Some s
 
   | (V x, t)::tl -> 
@@ -168,4 +171,113 @@ let rec unify e s = match e with
  | (F t1 t2, F t1' t2')::tl -> //efuns reduces
    evars_unfun t1 t2 t1' t2' tl;
    unify ((t1, t1')::(t2, t2')::tl) s
+
+val solves: e:(term * term) -> l:list subst -> Tot bool
+let solves (x, y) l = lsubst_term l x = lsubst_term l y
+
+val lsubst_eqns: list subst -> eqns -> Tot eqns
+let rec lsubst_eqns l = function 
+  | [] -> []
+  | (x,y)::tl -> (lsubst_term l x, lsubst_term l y)::lsubst_eqns l tl
+
+val solved : eqns -> Tot bool 
+let rec solved = function
+  | [] -> true
+  | (x,y)::tl -> x=y && solved tl 
+
+assume val lsubst_distributes: l:list subst -> t1:term -> t2:term -> Lemma
+       (requires (True))
+       (ensures (lsubst_term l (F t1 t2) = F (lsubst_term l t1) (lsubst_term l t2)))
+       [SMTPat (lsubst_term l (F t1 t2))]
+
+
+let op_At = append
+let lsubst_lsubst = fold_right subst_subst
+opaque type witness (l:list subst) = True
+
+opaque type extends l l' =  exists lpre.{:pattern (witness lpre)} witness lpre /\ l' = (lpre @ lsubst_lsubst lpre l)
+
+let extend_subst s l = s::subst_subst s l
+let extend_lsubst l l' = l @ lsubst_lsubst l l'
+
+assume val lemma_extend_lsubst_distributes: l:list subst -> l':list subst -> e:eqns -> Lemma
+       (requires True)
+       (ensures (lsubst_eqns (extend_lsubst l l') e = lsubst_eqns l (lsubst_eqns l' e)))
+       [SMTPat (lsubst_eqns (extend_lsubst l l') e)]
+
+let occurs x t = OrdSet.mem x (vars t)
+
+val lemma_subst_id: x:nat -> z:term -> y:term -> Lemma
+  (requires (not (occurs x y)))
+  (ensures (subst_term (x,z) y = y))
+let rec lemma_subst_id x z y = match y with 
+  | V x' -> ()
+  | F t1 t2 -> lemma_subst_id x z t1; lemma_subst_id x z t2
+
+assume val lemma_lsubst_commutes: l:list subst -> x:nat -> t:term -> e:eqns -> Lemma 
+  (requires (lsubst_term l (V x) = V x /\ lsubst_term l t = t))
+  (ensures (lsubst_eqns [(x,t)] (lsubst_eqns l (subst_eqns (x,t) e)) = 
+	    lsubst_eqns [(x,t)] (lsubst_eqns l e)))		
+
+val key_lemma_aux: x:nat -> y:term -> tl:eqns -> l:list subst -> lpre:list subst -> l'':list subst -> Lemma
+  (requires (l'' = extend_lsubst lpre (extend_lsubst [(x, y)] l)
+	     /\ not (occurs x y)
+ 	     /\ lsubst_eqns l ((V x, y)::tl) = (V x, y)::tl
+ 	     /\ solved (lsubst_eqns l'' (subst_eqns (x, y) tl))))
+  (ensures (solved (lsubst_eqns l'' ((V x,y)::tl))))
+let key_lemma_aux x y tl l lpre l'' = 
+  let eqns = (V x, y)::tl in
+  lemma_lsubst_commutes l x y tl;
+  lemma_subst_id x y y;
+  assert (lsubst_eqns l'' [(V x, y)] = 
+  	  lsubst_eqns lpre (lsubst_eqns ([(x,y)]) (lsubst_eqns l [(V x, y)])));
+  assert (lsubst_eqns [x,y] (lsubst_eqns l [(V x, y)]) = 
+  	  lsubst_eqns [x,y] [(V x, y)]);
+  assert (lsubst_eqns [x,y] [(V x, y)] = 
+	  [y,y])
+
+val key_lemma: x:nat -> y:term -> tl:eqns -> l:list subst -> l'':list subst -> Lemma
+  (requires (extends ((x, y)::subst_subst (x,y) l) l''
+	     /\ solved (lsubst_eqns l'' (subst_eqns (x, y) tl))))
+  (ensures (solved (lsubst_eqns l'' ((V x,y)::tl))
+ 	    /\ extends l l''))
+let key_lemma x y tl l l'' = admit()
+
+val unify_correct: l:list subst -> e:eqns -> Lemma 
+ (requires (lsubst_eqns l e = e))
+ (ensures (is_Some (unify e l) ==> 
+	    Let (Some.v (unify e l)) (fun l' -> 
+	         extends l l' 
+		 /\ solved (lsubst_eqns l' e))))
+ (decreases %[n_evars e; efuns e; n_flex_rhs e])
+let rec unify_correct l = function 
+  | [] -> assert (witness [])
+  | hd::tl -> 
+    begin match hd with 
+      | (V x, y) ->
+	if is_V y && V.i y=x
+	then unify_correct l tl
+	else if OrdSet.mem x (vars y) //occurs
+	then ()
+	else begin 
+	     let s = (x,y) in
+	     let l' = s::subst_subst s l in
+	     vars_decrease_eqns x y tl;
+	     let tl' = subst_eqns (x, y) tl in
+	     assume (lsubst_eqns l' tl' = tl');
+	     unify_correct l' tl';
+	     begin match unify tl' l' with 
+	       | None -> ()
+	       | Some l'' -> key_lemma x y tl l l''
+	     end
+	 end
+
+      | (y, V x) -> 
+	evars_permute_hd y (V x) tl; 
+	unify_correct l ((V x, y)::tl)
+
+      | F t1 t2, F s1 s2 -> 
+	evars_unfun t1 t2 s1 s2 tl;
+ 	unify_correct l ((t1, s1)::(t2, s2)::tl)
+     end
 
