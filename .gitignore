@@ -48,3 +48,5 @@ dump
 *.a
 *.cmxa
 *.so
+
+src/**/bin/Release/*
