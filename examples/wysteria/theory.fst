@@ -2706,3 +2706,278 @@ let rec p_terminating_run_implies_p_terminates_in #ps #pi #pi' #n h = match h wi
 // 	  let p:pterminates_in #ps pi2' pi1 n1' = pterminates_one_and_all #ps pi pi1' hp1 n1' pi1 ht1 pi2' hp2 in
 // 	  pterminates_confluence #ps pi2' pi1 n1' p pi2 n2' ht2
 //     )
+
+(**********)
+
+assume val v_cmp: varname -> varname -> Tot bool
+
+assume V_cmp_is_total_order: total_order string v_cmp
+
+type env_dom = ordset varname v_cmp
+
+assume val dom_of_env: en:env -> GTot (s:env_dom{forall x. mem x s = is_Some (en x)})
+
+val subdomain: env_dom -> env -> GTot bool
+let subdomain s en = subset s (dom_of_env en)
+
+val composable_vals: dv1:dvalue -> dv2:dvalue -> GTot bool (decreases %[D_v.v dv1])
+val composable_envs: en1:env -> en2:env -> GTot bool (decreases %[en1])
+val composable_envs_on:
+  en1: env -> en2:env
+  -> s:env_dom{subdomain s en1 /\ subdomain s en2}
+  -> GTot bool
+    (decreases %[en1; en2; size s])
+let rec composable_vals dv1 dv2 = match dv1, dv2 with
+  | D_v _ (V_prin p1), D_v _ (V_prin p2) -> p1 = p2
+  | D_v _ (V_eprins eps1), D_v _ (V_eprins eps2) -> eps1 = eps2
+  | D_v _ (V_prins ps1), D_v _ (V_prins ps2) -> ps1 = ps2
+  | D_v _ V_unit, D_v _ V_unit -> true
+  | D_v _ (V_bool b1), D_v _ (V_bool b2) -> b1 = b2
+  | D_v _ (V_opaque 'a _ _ _ c1 _), D_v _ (V_opaque 'b _ _ _ c2 _) ->
+    Mk_c_w c1 = Mk_c_w c2
+  | D_v _ (V_box #meta1 ps1 v1), D_v _ (V_box #meta2 ps2 v2) ->
+    ps1 = ps2 && composable_vals (D_v meta1 v1) (D_v meta2 v2)
+  | D_v _ (V_wire eps1 _), D_v _ (V_wire eps2 _) -> intersect eps1 eps2 = empty
+  | D_v _ (V_clos en1 x1 e1), D_v _ (V_clos en2 x2 e2) ->
+    x1 = x2 && e1 = e2 && composable_envs en1 en2
+  | D_v _ (V_fix_clos en1 f1 x1 e1), D_v _ (V_fix_clos en2 f2 x2 e2) ->
+    f1 = f2 && x1 = x2 && e1 = e2 && composable_envs en1 en2
+  | D_v _ (V_emp_clos x1 e1), D_v _ (V_emp_clos x2 e2) -> x1 = x2 && e1 = e2
+  | D_v _ V_emp, _ -> true
+  | _, D_v _ V_emp -> true
+  | _, _ -> false
+
+and composable_envs en1 en2 =
+  let s1 = dom_of_env en1 in
+  let s2 = dom_of_env en2 in
+  s1 = s2 && composable_envs_on en1 en2 s1
+
+and composable_envs_on en1 en2 s =
+  if s = empty then true
+  else
+    let Some x = choose s in
+    let s' = remove x s in
+    let Some dv1 = en1 x in
+    let Some dv2 = en2 x in
+    let _ = preceds_axiom en1 x in
+    composable_vals dv1 dv2 && composable_envs_on en1 en2 s'
+
+val composable_envs_on_lemma:
+  en1:env -> en2:env
+  -> s:env_dom{subdomain s en1 /\ subdomain s en2 /\
+              composable_envs_on en1 en2 s}
+  -> Lemma (requires (True))
+          (ensures (forall x. mem x s ==>
+                         composable_vals (Some.v (en1 x)) (Some.v (en2 x))))
+    (decreases (size s))
+let rec composable_envs_on_lemma en1 en2 s =
+  if s = empty then ()
+  else
+    let Some x = choose s in
+    let s' = remove x s in
+    composable_envs_on_lemma en1 en2 s'
+
+val composable_envs_lemma:
+  en1:env -> en2:env{composable_envs en1 en2}
+  -> GTot (u:unit{forall x. is_Some (en1 x) = is_Some (en2 x) /\
+		      (is_Some (en1 x) ==>
+		       composable_vals (Some.v (en1 x)) (Some.v (en2 x)))})
+let composable_envs_lemma en1 en2 = composable_envs_on_lemma en1 en2 (dom_of_env en1)
+
+val composable_vals_symm:
+  dv1:dvalue -> dv2:dvalue{composable_vals dv1 dv2}
+  -> GTot (u:unit{composable_vals dv2 dv1})
+    (decreases %[D_v.v dv1])
+val composable_envs_symm:
+  en1:env -> en2:env{composable_envs en1 en2}
+  -> GTot (u:unit{composable_envs en2 en1})
+    (decreases %[en1])
+val composable_envs_on_symm:
+  en1:env -> en2:env{composable_envs en1 en2}
+  -> s:env_dom{subdomain s en1 /\ subdomain s en2 /\
+              composable_envs_on en1 en2 s}
+  -> GTot (u:unit{composable_envs_on en2 en1 s})
+    (decreases %[en1; en2; size s])
+let rec composable_vals_symm dv1 dv2 = match dv1, dv2 with
+  | D_v _ (V_box #m1 _ v1'), D_v _ (V_box #m2 _ v2') ->
+    composable_vals_symm (D_v m1 v1') (D_v m2 v2')
+  | D_v _ (V_clos en1 _ _), D_v _ (V_clos en2 _ _)
+  | D_v _ (V_fix_clos en1 _ _ _), D_v _ (V_fix_clos en2 _ _ _) ->
+    composable_envs_symm en1 en2
+  | _, _ -> ()
+
+and composable_envs_symm en1 en2 = composable_envs_on_symm en1 en2 (dom_of_env en1)
+
+and composable_envs_on_symm en1 en2 s =
+  if s = empty then ()
+  else
+    let Some x = choose s in
+    let s' = remove x s in
+    let Some dv1, Some dv2 = en1 x, en2 x in
+    preceds_axiom en1 x;
+    composable_envs_lemma en1 en2;
+    composable_vals_symm dv1 dv2;
+    composable_envs_on_symm en1 en2 s'
+
+val compose_envs_same_dom_lemma:
+  en1:env -> en2:env{composable_envs en1 en2}
+  -> GTot (u:unit{dom_of_env (compose_envs en1 en2) = dom_of_env en1})
+let compose_envs_same_dom_lemma en1 en2 = ()
+
+val compose_preserves_composable_vals:
+  dv1:dvalue -> dv2:dvalue
+  -> dv3:dvalue{composable_vals dv1 dv2 /\ composable_vals dv2 dv3 /\
+               composable_vals dv1 dv3}
+  -> GTot (u:unit{composable_vals (compose_vals #(D_v.meta dv1) #(D_v.meta dv2)
+	                                       (D_v.v dv1) (D_v.v dv2)) dv3})
+    (decreases %[D_v.v dv1])
+val compose_preserves_composable_envs:
+  en1:env -> en2:env
+  -> en3:env{composable_envs en1 en2 /\ composable_envs en2 en3 /\
+            composable_envs en1 en3}
+  -> GTot (u:unit{composable_envs (compose_envs en1 en2) en3})
+    (decreases %[en1])
+val compose_preserves_composable_envs_on:
+  en1:env -> en2:env -> en3:env
+  -> s:env_dom{subdomain s en1 /\ subdomain s en2 /\ subdomain s en3 /\
+              composable_envs en1 en2 /\ composable_envs en2 en3 /\
+	      composable_envs en1 en3 /\
+              composable_envs_on en1 en2 s /\ composable_envs_on en2 en3 s}
+  -> GTot (u:unit{subdomain s (compose_envs en1 en2) /\
+                 composable_envs_on (compose_envs en1 en2) en3 s})
+    (decreases %[en1; en2; en3; size s])
+let rec compose_preserves_composable_vals dv1 dv2 dv3 = match dv1, dv2, dv3 with
+  | D_v _ (V_box #m1 _ v1'), D_v _ (V_box #m2 _ v2'), D_v _ (V_box #m3 _ v3') ->
+    compose_preserves_composable_vals (D_v m1 v1') (D_v m2 v2') (D_v m3 v3')
+  | D_v _ (V_clos en1 _ _), D_v _ (V_clos en2 _ _), D_v _ (V_clos en3 _ _) ->
+    compose_preserves_composable_envs en1 en2 en3
+  | D_v _ (V_fix_clos en1 _ _ _), D_v _ (V_fix_clos en2 _ _ _), D_v _ (V_fix_clos en3 _ _ _) ->
+    compose_preserves_composable_envs en1 en2 en3
+  | _ -> ()
+
+and compose_preserves_composable_envs en1 en2 en3 =
+  compose_preserves_composable_envs_on en1 en2 en3 (dom_of_env en1)
+
+and compose_preserves_composable_envs_on en1 en2 en3 s =
+  if s = empty then ()
+  else
+    let Some x = choose s in
+    let s' = remove x s in
+      let Some dv1 = en1 x in
+      let Some dv2 = en2 x in
+      let Some dv3 = en3 x in
+      let _ = preceds_axiom en1 x in
+      composable_envs_lemma en1 en2;
+      composable_envs_lemma en2 en3;
+      composable_envs_lemma en1 en3;
+      compose_preserves_composable_vals dv1 dv2 dv3;
+      compose_preserves_composable_envs_on en1 en2 en3 s'
+
+val slice_env_sps_same_dom_lemma:
+  ps:prins -> en:env
+  -> GTot (u:unit{dom_of_env (slice_en_sps ps en) = dom_of_env en})
+let slice_env_sps_same_dom_lemma ps en = ()
+
+val slice_p_sps_composable_vals:
+  #m:v_meta -> v:value m -> p:prin -> ps:prins{not (mem p ps)}
+  -> GTot (u:unit{composable_vals (slice_v p v) (slice_v_sps ps v)})
+    (decreases %[v])
+val slice_p_sps_composable_envs:
+  en:env -> p:prin -> ps:prins{not (mem p ps)}
+  -> GTot (u:unit{composable_envs (slice_en p en) (slice_en_sps ps en)})
+    (decreases %[en])
+val slice_p_sps_composable_envs_on:
+  en:env -> s:env_dom{subdomain s en} -> p:prin -> ps:prins{not (mem p ps)}
+  -> GTot (u:unit{composable_envs_on (slice_en p en) (slice_en_sps ps en) s})
+    (decreases %[en; size s])
+let rec slice_p_sps_composable_vals #m v p ps = match v with
+  | V_box #m' ps' v' ->
+    if mem p ps' && not (intersect ps ps' = empty) then
+      slice_p_sps_composable_vals #m' v' p ps
+    else ()
+  | V_clos en _ _
+  | V_fix_clos en _ _ _ -> slice_p_sps_composable_envs en p ps  
+  | _ -> ()
+
+and slice_p_sps_composable_envs en p ps =
+  let _ = cut (b2t (dom_of_env (slice_en p en) = dom_of_env en)) in
+  slice_p_sps_composable_envs_on en (dom_of_env en) p ps
+
+and slice_p_sps_composable_envs_on en s p ps =
+  if s = empty then ()
+  else
+    let Some x = choose s in
+    let s' = remove x s in
+    let _ = preceds_axiom en x in
+    let Some (D_v m v) = en x in
+    slice_p_sps_composable_vals #m v p ps;
+    slice_p_sps_composable_envs_on en s' p ps
+
+val slice_p_p_composable_vals:
+  #m:v_meta -> v:value m -> p1:prin -> p2:prin{not (p1 = p2)}
+  -> GTot (u:unit{composable_vals (slice_v p1 v) (slice_v p2 v)})
+    (decreases %[v])
+val slice_p_p_composable_envs:
+  en:env -> p1:prin -> p2:prin{not (p1 = p2)}
+  -> GTot (u:unit{composable_envs (slice_en p1 en) (slice_en p2 en)})
+    (decreases %[en])
+val slice_p_p_composable_envs_on:
+  en:env -> s:env_dom{subdomain s en} -> p1:prin -> p2:prin{not (p1 = p2)}
+  -> GTot (u:unit{composable_envs_on (slice_en p1 en) (slice_en p2 en) s})
+    (decreases %[en; size s])
+let rec slice_p_p_composable_vals #m v p1 p2 = match v with
+  | V_box #m' ps' v' ->
+    if mem p1 ps' && mem p2 ps' then
+      slice_p_p_composable_vals #m' v' p1 p2
+    else ()
+  | V_clos en _ _
+  | V_fix_clos en _ _ _ -> slice_p_p_composable_envs en p1 p2  
+  | _ -> ()
+
+and slice_p_p_composable_envs en p1 p2 =
+  let _ = cut (b2t (dom_of_env (slice_en p1 en) = dom_of_env en)) in
+  slice_p_p_composable_envs_on en (dom_of_env en) p1 p2
+
+and slice_p_p_composable_envs_on en s p1 p2 =
+  if s = empty then ()
+  else
+    let Some x = choose s in
+    let s' = remove x s in
+    let _ = preceds_axiom en x in
+    let Some (D_v m v) = en x in
+    slice_p_p_composable_vals #m v p1 p2;
+    slice_p_p_composable_envs_on en s' p1 p2
+
+type composable_env_map (ps:prins) (m:env_map ps) =
+  forall p1 p2. mem p1 ps ==> mem p2 ps ==> not (p1 = p2) ==>
+           composable_envs (Some.v (select p1 m)) (Some.v (select p2 m))
+
+assume val slice_p_p_composable_envs_lemma:
+  en:env -> Lemma (requires (True))
+                 (ensures (forall p1 p2. not (p1 = p2) ==>
+		                    composable_envs (slice_en p1 en) (slice_en p2 en)))
+
+val enter_sec_from_par_composable_env_map_lemma:
+  #c:sconfig -> #c':sconfig -> h:sstep c c'{is_C_assec_beta h /\ is_par c}
+  -> ps:prins{subset (Mode.ps (Conf.m c)) ps}
+  -> GTot (u:unit{composable_env_map (Mode.ps (Conf.m c))
+                                    (get_env_m #ps (slice_c_ps ps c)
+				                   (Mode.ps (Conf.m c)))})
+let enter_sec_from_par_composable_env_map_lemma #c #c' h ps =
+  let Conf _ (Mode _ ps') _ _ (T_red (R_assec _ v)) _ = c in
+  let (en, x, e) = get_en_b v in
+  let (pi, s) = slice_c_ps ps c in  
+
+  let _ = cut (forall p. mem p ps' ==>
+                    (is_Some (select p pi) /\
+		     is_T_red (Conf.t (Some.v (select p pi))) /\
+		     is_R_assec (T_red.r (Conf.t (Some.v (select p pi)))) /\
+		     MkTuple3._1 (get_en_b (R_assec.v (T_red.r (Conf.t (Some.v (select p pi)))))) = slice_en p en)) in
+
+  slice_p_p_composable_envs_lemma en;
+
+  let en_m = get_env_m #ps (pi, s) ps' in
+
+  let _ = cut (forall p. mem p ps' ==> select p en_m = Some (slice_en p en)) in
+
+  ()
