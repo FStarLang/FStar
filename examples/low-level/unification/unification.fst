@@ -185,11 +185,13 @@ let rec solved = function
   | [] -> true
   | (x,y)::tl -> x=y && solved tl 
 
-assume val lsubst_distributes: l:list subst -> t1:term -> t2:term -> Lemma
+val lsubst_distributes: l:list subst -> t1:term -> t2:term -> Lemma
        (requires (True))
        (ensures (lsubst_term l (F t1 t2) = F (lsubst_term l t1) (lsubst_term l t2)))
        [SMTPat (lsubst_term l (F t1 t2))]
-
+let rec lsubst_distributes l t1 t2 = match l with 
+  | [] -> ()
+  | hd::tl -> lsubst_distributes tl t1 t2
 
 let op_At = append
 let lsubst_lsubst = fold_right subst_subst
@@ -204,6 +206,9 @@ assume val lemma_extend_lsubst_distributes: l:list subst -> l':list subst -> e:e
        (requires True)
        (ensures (lsubst_eqns (extend_lsubst l l') e = lsubst_eqns l (lsubst_eqns l' e)))
        [SMTPat (lsubst_eqns (extend_lsubst l l') e)]
+// let rec lemma_extend_lsubst_distributes l l' e = match l with 
+//   | [] -> ()
+//   | hd::tl -> 
 
 let occurs x t = OrdSet.mem x (vars t)
 
@@ -214,10 +219,25 @@ let rec lemma_subst_id x z y = match y with
   | V x' -> ()
   | F t1 t2 -> lemma_subst_id x z t1; lemma_subst_id x z t2
 
-assume val lemma_lsubst_commutes: l:list subst -> x:nat -> t:term -> e:eqns -> Lemma 
-  (requires (lsubst_term l (V x) = V x /\ lsubst_term l t = t))
+val lemma_lsubst_commutes_term: l:list subst -> x:nat -> t:term -> e:term -> Lemma 
+  (requires (lsubst_term l (V x) = V x /\ lsubst_term l t = t /\ not (occurs x t)))
+  (ensures (lsubst_term [x,t] (lsubst_term l (subst_term (x,t) e)) = 
+	    lsubst_term [x,t] (lsubst_term l e)))		
+let rec lemma_lsubst_commutes_term l x t e = match e with
+  | V y -> lemma_subst_id x t t
+    
+  | F t1 t2 -> lemma_lsubst_commutes_term l x t t1;
+	      lemma_lsubst_commutes_term l x t t2
+  
+val lemma_lsubst_commutes: l:list subst -> x:nat -> t:term -> e:eqns -> Lemma 
+  (requires (lsubst_term l (V x) = V x /\ lsubst_term l t = t /\ not (occurs x t)))
   (ensures (lsubst_eqns [(x,t)] (lsubst_eqns l (subst_eqns (x,t) e)) = 
 	    lsubst_eqns [(x,t)] (lsubst_eqns l e)))		
+let rec lemma_lsubst_commutes l x t = function 
+  | [] -> ()
+  | (t1,t2)::tl -> lemma_lsubst_commutes_term l x t t1;
+		 lemma_lsubst_commutes_term l x t t2;
+		 lemma_lsubst_commutes l x t tl
 
 val key_lemma_aux: x:nat -> y:term -> tl:eqns -> l:list subst -> lpre:list subst -> l'':list subst -> Lemma
   (requires (l'' = extend_lsubst lpre (extend_lsubst [(x, y)] l)
@@ -226,14 +246,13 @@ val key_lemma_aux: x:nat -> y:term -> tl:eqns -> l:list subst -> lpre:list subst
  	     /\ solved (lsubst_eqns l'' (subst_eqns (x, y) tl))))
   (ensures (solved (lsubst_eqns l'' ((V x,y)::tl))))
 let key_lemma_aux x y tl l lpre l'' = 
-  let eqns = (V x, y)::tl in
   lemma_lsubst_commutes l x y tl;
   lemma_subst_id x y y;
-  assert (lsubst_eqns l'' [(V x, y)] = 
-  	  lsubst_eqns lpre (lsubst_eqns ([(x,y)]) (lsubst_eqns l [(V x, y)])));
-  assert (lsubst_eqns [x,y] (lsubst_eqns l [(V x, y)]) = 
-  	  lsubst_eqns [x,y] [(V x, y)]);
-  assert (lsubst_eqns [x,y] [(V x, y)] = 
+  assert (lsubst_eqns l'' [V x, y] = 
+  	  lsubst_eqns lpre (lsubst_eqns [x,y] (lsubst_eqns l [V x, y])));
+  assert (lsubst_eqns [x,y] (lsubst_eqns l [V x, y]) = 
+  	  lsubst_eqns [x,y] [V x, y]);
+  assert (lsubst_eqns [x,y] [V x, y] = 
 	  [y,y])
 
 val key_lemma: x:nat -> y:term -> tl:eqns -> l:list subst -> l'':list subst -> Lemma
