@@ -2957,27 +2957,53 @@ assume val slice_p_p_composable_envs_lemma:
                  (ensures (forall p1 p2. not (p1 = p2) ==>
 		                    composable_envs (slice_en p1 en) (slice_en p2 en)))
 
+type r_assec_c (c:config) =
+  is_T_red (Conf.t c) /\ is_R_assec (T_red.r (Conf.t c)) /\
+  is_clos (R_assec.v (T_red.r (Conf.t c)))
+
+val conf_of_p: ps:prins -> pi:protocol ps -> p:prin{contains p (fst pi)} -> Tot tconfig_par
+let conf_of_p ps pi p = Some.v (select p (fst pi))
+
+val en_of_r_assec: c:config{r_assec_c c} -> Tot env
+let en_of_r_assec c = MkTuple3._1 (get_en_b (R_assec.v (T_red.r (Conf.t c))))
+
+val enter_sec_from_par_composable_env_map_helper:
+  #c:sconfig -> #c':sconfig -> h:sstep c c'{is_C_assec_beta h /\ is_par c}
+  -> ps:prins{subset (Mode.ps (Conf.m c)) ps}
+  -> pi:protocol ps{pi = slice_c_ps ps c}
+  -> en:env{en = MkTuple3._1 (get_en_b (R_assec.v (T_red.r (Conf.t c))))}
+  -> Lemma (requires (True))
+          (ensures (forall p. mem p (Mode.ps (Conf.m c)) ==>
+			 Let (Some.v (select p (fst (slice_c_ps ps c))))
+			     (fun c -> r_assec_c c /\
+			            en_of_r_assec c = slice_en p en)))
+let enter_sec_from_par_composable_env_map_helper #c #c' h ps pi en = ()
+
+type enter_sec_composable (c:sconfig) (c':sconfig)
+                          (h:sstep c c'{is_C_assec_beta h /\ is_par c})
+			  (ps:prins{subset (Mode.ps (Conf.m c)) ps})
+			  (ps':prins{ps' = Mode.ps (Conf.m c)}) =
+  (forall p.     mem p ps' ==> r_assec_c (conf_of_p ps (slice_c_ps ps c) p)) /\
+  (forall p1 p2. mem p1 ps' ==> mem p2 ps' ==> not (p1 = p2) ==>
+	    composable_envs (en_of_r_assec (conf_of_p ps (slice_c_ps ps c) p1))
+			    (en_of_r_assec (conf_of_p ps (slice_c_ps ps c) p2)))
+
 val enter_sec_from_par_composable_env_map_lemma:
   #c:sconfig -> #c':sconfig -> h:sstep c c'{is_C_assec_beta h /\ is_par c}
   -> ps:prins{subset (Mode.ps (Conf.m c)) ps}
-  -> GTot (u:unit{composable_env_map (Mode.ps (Conf.m c))
-                                    (get_env_m #ps (slice_c_ps ps c)
-				                   (Mode.ps (Conf.m c)))})
+  -> GTot (u:unit{enter_sec_composable c c' h ps (Mode.ps (Conf.m c))})
 let enter_sec_from_par_composable_env_map_lemma #c #c' h ps =
   let Conf _ (Mode _ ps') _ _ (T_red (R_assec _ v)) _ = c in
   let (en, x, e) = get_en_b v in
-  let (pi, s) = slice_c_ps ps c in  
+  let pi = slice_c_ps ps c in  
 
-  let _ = cut (forall p. mem p ps' ==>
-                    (is_Some (select p pi) /\
-		     is_T_red (Conf.t (Some.v (select p pi))) /\
-		     is_R_assec (T_red.r (Conf.t (Some.v (select p pi)))) /\
-		     MkTuple3._1 (get_en_b (R_assec.v (T_red.r (Conf.t (Some.v (select p pi)))))) = slice_en p en)) in
+  enter_sec_from_par_composable_env_map_helper #c #c' h ps pi en;
+  slice_p_p_composable_envs_lemma en
 
-  slice_p_p_composable_envs_lemma en;
-
-  let en_m = get_env_m #ps (pi, s) ps' in
-
-  let _ = cut (forall p. mem p ps' ==> select p en_m = Some (slice_en p en)) in
-
-  ()
+val composable_compose_lemma:
+  dv1:dvalue -> dv2:dvalue{composable_vals dv1 dv2}
+  -> Lemma (requires (True))
+          (ensures (is_V_emp (D_v.v (compose_vals #(D_v.meta dv1) #(D_v.meta dv2)
+	                                          (D_v.v dv1) (D_v.v dv2))) <==>
+		    (is_V_emp (D_v.v dv1) /\ is_V_emp (D_v.v dv2))))
+let composable_compose_lemma dv1 dv2 = ()
