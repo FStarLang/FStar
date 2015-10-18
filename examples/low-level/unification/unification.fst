@@ -264,6 +264,101 @@ val lemma_subst_term_idem: s:subst -> t:term -> Lemma
 let rec lemma_subst_term_idem s t = match t with 
   | V x -> lemma_subst_id (fst s) (snd s) (snd s)
   | F t1 t2 -> lemma_subst_term_idem s t1; lemma_subst_term_idem s t2
+ 
+val key_lemma: x:nat -> y:term -> tl:eqns -> l:list subst -> lpre:list subst -> l'':list subst -> Lemma
+  (requires (l'' = extend_lsubst lpre (extend_lsubst [(x, y)] l)
+	     /\ not (occurs x y)
+ 	     /\ lsubst_eqns l ((V x, y)::tl) = (V x, y)::tl
+ 	     /\ solved (lsubst_eqns l'' (lsubst_eqns [x, y] tl))))
+  (ensures (solved (lsubst_eqns l'' ((V x,y)::tl))))
+let key_lemma x y tl l lpre l'' = 
+  lemma_lsubst_eqns_commutes (x,y) l tl;
+  lemma_subst_id x y y;
+  assert (lsubst_eqns l'' [V x, y] = 
+  	  lsubst_eqns lpre (lsubst_eqns [x,y] (lsubst_eqns l [V x, y])));
+  assert (lsubst_eqns [x,y] (lsubst_eqns l [V x, y]) = 
+  	  lsubst_eqns [x,y] [V x, y]);
+  assert (lsubst_eqns [x,y] [V x, y] = 
+	  [y,y])
+
+val lemma_shift_append: l:list 'a -> x:'a -> m:list 'a -> Lemma
+  (ensures ((l@(x::m)) = ((l@[x])@m)))
+let rec lemma_shift_append l x m = match l with 
+  | [] -> ()
+  | hd::tl -> lemma_shift_append tl x m
+
+val lemma_subst_eqns_idem: s:subst -> e:eqns -> Lemma
+  (requires (ok s))
+  (ensures (lsubst_eqns [s] (lsubst_eqns [s] e) = lsubst_eqns [s] e))
+let rec lemma_subst_eqns_idem s = function
+  | [] -> ()
+  | (x, y)::tl -> lemma_subst_eqns_idem s tl;
+	        lemma_subst_term_idem s x;
+	        lemma_subst_term_idem s y
+   
+val unify_correct: l:list subst -> e:eqns -> Pure (list subst)
+ (requires (lsubst_eqns l e = e))
+ (ensures (fun m ->
+	    is_Some (unify e l) ==> 
+	      Let (Some.v (unify e l)) (fun l' -> 
+	            l' = (m @ l)
+		 /\ solved (lsubst_eqns l' e))))
+ (decreases %[n_evars e; efuns e; n_flex_rhs e])
+let rec unify_correct l = function 
+  | [] -> []
+  | hd::tl -> 
+    begin match hd with 
+      | (V x, y) ->
+	if is_V y && V.i y=x
+	then unify_correct l tl
+	else if occurs x y
+	then []
+	else begin 
+	     let s = (x,y) in
+	     let l' = extend_subst s l in
+	     vars_decrease_eqns x y tl;
+	     let tl' = lsubst_eqns [s] tl in 
+	     lemma_extend_lsubst_distributes_eqns [s] l tl;
+	     assert (lsubst_eqns l' tl' = lsubst_eqns [s] (lsubst_eqns l (lsubst_eqns [s] tl)));
+	     lemma_lsubst_eqns_commutes s l tl;
+	     lemma_subst_eqns_idem s tl;
+	     let lpre = unify_correct l' tl' in
+	     begin match unify tl' l' with 
+	       | None -> []
+	       | Some l'' -> 
+		 key_lemma x y tl l lpre l'';
+		 lemma_shift_append lpre s l;
+		 lpre@[s]
+	     end
+	 end
+
+      | (y, V x) -> 
+	evars_permute_hd y (V x) tl; 
+	unify_correct l ((V x, y)::tl)
+
+      | F t1 t2, F s1 s2 -> 
+	evars_unfun t1 t2 s1 s2 tl;
+ 	unify_correct l ((t1, s1)::(t2, s2)::tl)
+     end
+
+
+// l = hd::tl
+// s = x, t
+// ------------------------------------------------------
+// subst_term s (lsubst_term (subst_lsubst s l) t)
+// = {def}
+// subst_term s (subst_term (subst_subst s hd) (lsubst_term (subst_lsubst s tl) t))
+// = {lemma_cancel_subst_subst s hd ...}
+// subst_term s (subst_term hd                 (lsubst_term (subst_lsubst s tl) t))
+// = {subst_term_commutes} (ok s; subst_term hd (V x) = (V x); subst_term hd t = t)
+// subst_term s (subst_term hd (subst_term s  (lsubst_term (subst_lsubst s tl) t)))
+// = {IH}
+// subst_term s (subst_term hd (subst_term s (lsubst_term tl t)))
+// = {subst_term_commutes}  (ok s; subst_term hd (V x) = (V x); subst_term hd t = t)
+// subst_term s (subst_term hd (lsubst_term tl t))
+// = {def}
+// subst_term s (lsubst_term l tl)
+
 
 // val lemma_cancel_subst_subst: s1:subst -> s2:subst -> t:term -> Lemma
 //   (requires (ok s1))
@@ -308,130 +403,3 @@ let rec lemma_subst_term_idem s t = match t with
 // 	    subst_term s (lsubst_term tl t))
 // 	    ;
 //     admit()
-
-
-// lsubst_term (subst_lsubst s l) t = 
-// 	    subst_term (subst_subst s hd) (lsubst_term (subst_lsubst s tl) t));
-
-//     admit()
-//     assert (lsubst_term (subst_lsubst s l
-
-// type ok_lsubst l = forall s. mem s l ==> ok s
-
-
-
-// val lemma_lsubst_term_idem: s:subst -> l:list subst -> t:term -> Lemma
-//   (requires (ok s))
-//   (ensures (subst_term s (subst_term (subst_lsubst s l) t) = 
-// 	    subst_term s (subst_term l t)))
-// let rec lemma_
-
-
-// val lemma_extend_lsubst_idem: l:list subst -> l':list subst -> e:term -> Lemma
-//        (requires (ok_lsubst l))
-//        (ensures (lsubst_term l (lsubst_term l' e)
-// 		 = lsubst_term l (lsubst_term (lsubst_lsubst l l') e)))
-// let rec lemma_extend_lsubst_idem l l' e = match e with
-//   | V x -> 
-//     assert (lsubst_term (lsubst_lsubst l l') e = 
-// 	    fold_right subst_term (lsubst_lsubst l l') e);
-//     admit()
-//   | F t1 t2 -> lemma_extend_lsubst_idem l l' t1;
-// 	      lemma_extend_lsubst_idem l l' t2
-
-
-
-
-val key_lemma_aux: x:nat -> y:term -> tl:eqns -> l:list subst -> lpre:list subst -> l'':list subst -> Lemma
-  (requires (l'' = extend_lsubst lpre (extend_lsubst [(x, y)] l)
-	     /\ not (occurs x y)
- 	     /\ lsubst_eqns l ((V x, y)::tl) = (V x, y)::tl
- 	     /\ solved (lsubst_eqns l'' (lsubst_eqns [x, y] tl))))
-  (ensures (solved (lsubst_eqns l'' ((V x,y)::tl))))
-let key_lemma_aux x y tl l lpre l'' = 
-  lemma_lsubst_eqns_commutes (x,y) l tl;
-  lemma_subst_id x y y;
-  assert (lsubst_eqns l'' [V x, y] = 
-  	  lsubst_eqns lpre (lsubst_eqns [x,y] (lsubst_eqns l [V x, y])));
-  assert (lsubst_eqns [x,y] (lsubst_eqns l [V x, y]) = 
-  	  lsubst_eqns [x,y] [V x, y]);
-  assert (lsubst_eqns [x,y] [V x, y] = 
-	  [y,y])
-
-opaque type witness (l:list subst) = True
-opaque type extends l l' =  exists lpre.{:pattern (witness lpre)} witness lpre /\ l' = (lpre @ lsubst_lsubst lpre l)
-val key_lemma: x:nat -> y:term -> tl:eqns -> l:list subst -> l'':list subst -> Lemma
-  (requires (extends ((x, y)::l) l''
-	     /\ solved (lsubst_eqns l'' (lsubst_eqns [x, y] tl))))
-  (ensures (solved (lsubst_eqns l'' ((V x,y)::tl))
- 	    /\ extends l l''))
-let key_lemma x y tl l l'' = admit()
-
-val lemma_subst_eqns_idem: s:subst -> e:eqns -> Lemma
-  (requires (ok s))
-  (ensures (lsubst_eqns [s] (lsubst_eqns [s] e) = lsubst_eqns [s] e))
-let rec lemma_subst_eqns_idem s = function
-  | [] -> ()
-  | (x, y)::tl -> lemma_subst_eqns_idem s tl;
-	        lemma_subst_term_idem s x;
-	        lemma_subst_term_idem s y
-  
-val unify_correct: l:list subst -> e:eqns -> Lemma 
- (requires (lsubst_eqns l e = e))
- (ensures (is_Some (unify e l) ==> 
-	    Let (Some.v (unify e l)) (fun l' -> 
-	         extends l l' 
-		 /\ solved (lsubst_eqns l' e))))
- (decreases %[n_evars e; efuns e; n_flex_rhs e])
-let rec unify_correct l = function 
-  | [] -> assert (witness [])
-  | hd::tl -> 
-    begin match hd with 
-      | (V x, y) ->
-	if is_V y && V.i y=x
-	then unify_correct l tl
-	else if occurs x y
-	then ()
-	else begin 
-	     let s = (x,y) in
-	     let l' = extend_subst s l in
-	     vars_decrease_eqns x y tl;
-	     let tl' = lsubst_eqns [s] tl in 
-	     lemma_extend_lsubst_distributes_eqns [s] l tl;
-	     assert (lsubst_eqns l' tl' = lsubst_eqns [s] (lsubst_eqns l (lsubst_eqns [s] tl)));
-	     lemma_lsubst_eqns_commutes s l tl;
-	     lemma_subst_eqns_idem s tl;
-	     unify_correct l' tl';
-	     begin match unify tl' l' with 
-	       | None -> ()
-	       | Some l'' -> key_lemma x y tl l l''
-	     end
-	 end
-
-      | (y, V x) -> 
-	evars_permute_hd y (V x) tl; 
-	unify_correct l ((V x, y)::tl)
-
-      | F t1 t2, F s1 s2 -> 
-	evars_unfun t1 t2 s1 s2 tl;
- 	unify_correct l ((t1, s1)::(t2, s2)::tl)
-     end
-
-
-// l = hd::tl
-// s = x, t
-// ------------------------------------------------------
-// subst_term s (lsubst_term (subst_lsubst s l) t)
-// = {def}
-// subst_term s (subst_term (subst_subst s hd) (lsubst_term (subst_lsubst s tl) t))
-// = {lemma_cancel_subst_subst s hd ...}
-// subst_term s (subst_term hd                 (lsubst_term (subst_lsubst s tl) t))
-// = {subst_term_commutes} (ok s; subst_term hd (V x) = (V x); subst_term hd t = t)
-// subst_term s (subst_term hd (subst_term s  (lsubst_term (subst_lsubst s tl) t)))
-// = {IH}
-// subst_term s (subst_term hd (subst_term s (lsubst_term tl t)))
-// = {subst_term_commutes}  (ok s; subst_term hd (V x) = (V x); subst_term hd t = t)
-// subst_term s (subst_term hd (lsubst_term tl t))
-// = {def}
-// subst_term s (lsubst_term l tl)
-
