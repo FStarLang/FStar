@@ -295,8 +295,31 @@ let rec lemma_subst_eqns_idem s = function
   | (x, y)::tl -> lemma_subst_eqns_idem s tl;
 	        lemma_subst_term_idem s x;
 	        lemma_subst_term_idem s y
-   
-val unify_correct: l:list subst -> e:eqns -> Pure (list subst)
+
+val subst_funs_monotone: s:subst -> t:term -> Lemma 
+  (ensures (funs (subst_term s t) >= funs t))
+let rec subst_funs_monotone s = function 
+  | V x -> ()
+  | F t1 t2 -> subst_funs_monotone s t1; subst_funs_monotone s t2
+
+val lemma_occurs_not_solveable: x:nat -> t:term -> s:subst -> Lemma
+  (requires (occurs x t /\ not (is_V t)))
+  (ensures  (funs (subst_term s t) >= (funs t + funs (subst_term s (V x)))))
+let rec lemma_occurs_not_solveable x t s = match t with 
+  | F t1 t2 -> 
+    if occurs x t1 
+    then let _ = subst_funs_monotone s t2 in
+	 match t1 with 
+	   | V y -> ()
+ 	   | _ -> lemma_occurs_not_solveable x t1 s 
+    else if occurs x t2
+    then let _ = subst_funs_monotone s t1 in 
+	 match t2 with 
+	   | V y -> ()
+ 	   | _ -> lemma_occurs_not_solveable x t2 s 
+    else ()
+
+val unify_correct: l:list subst -> e:eqns -> Ghost (list subst)
  (requires (lsubst_eqns l e = e))
  (ensures (fun m ->
 	    is_Some (unify e l) ==> 
