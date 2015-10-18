@@ -1,4 +1,5 @@
 
+open Prims
 let rec get_next_n_ite = (fun n t negs f -> (match ((n <= 0)) with
 | true -> begin
 (let _118_14 = (f FStar_ToSMT_Term.mkTrue)

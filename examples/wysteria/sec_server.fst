@@ -28,7 +28,10 @@ type psmap_v = en_map * out_map * varname * exp
 
 type psmap = ordmap prins psmap_v ps_cmp
 
-let psmap_ref = alloc (OrdMap.empty #prins #psmap_v #ps_cmp)
+type psmap_ref_t =  // TODO: FIXME: writing this type forces instantiation of dummy type variables for OrdMap.empty
+  | Mk_ref: r:ref (ordmap prins psmap_v ps_cmp) -> psmap_ref_t
+
+let psmap_ref = Mk_ref (alloc (OrdMap.empty #prins #psmap_v #ps_cmp))
 
 val send_output: #meta:v_meta -> ps:prins -> out_m:out_map{contains_ps ps out_m}
                  -> v:value meta -> ML unit
@@ -62,7 +65,8 @@ let handle_connection c_in c_out =
   let p, R_assec #meta ps v = server_read c_in in
   print_string "Received inputs\n";
   let (en, x, e) = get_en_b v in
-  
+
+  let psmap_ref = Mk_ref.r psmap_ref in
   let env_m', out_m', x', e' =
     if contains ps !psmap_ref then
       let Some (env_m', out_m', x', e') = select ps !psmap_ref in

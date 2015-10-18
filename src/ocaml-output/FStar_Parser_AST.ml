@@ -1,4 +1,5 @@
 
+open Prims
 type level =
 | Un
 | Expr
@@ -349,7 +350,7 @@ end
 false
 end))
 
-let is_Mkterm = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkterm"))
+let is_Mkterm = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkterm")))
 
 let is_Variable = (fun _discr_ -> (match (_discr_) with
 | Variable (_) -> begin
@@ -391,7 +392,7 @@ end
 false
 end))
 
-let is_Mkbinder = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkbinder"))
+let is_Mkbinder = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkbinder")))
 
 let is_PatWild = (fun _discr_ -> (match (_discr_) with
 | PatWild -> begin
@@ -481,7 +482,7 @@ end
 false
 end))
 
-let is_Mkpattern = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkpattern"))
+let is_Mkpattern = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkpattern")))
 
 let ___Const____0 = (fun projectee -> (match (projectee) with
 | Const (_40_13) -> begin
@@ -761,7 +762,7 @@ FStar_Absyn_Syntax.qualifier Prims.list
 type lift =
 {msource : lid; mdest : lid; lift_op : term}
 
-let is_Mklift = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mklift"))
+let is_Mklift = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mklift")))
 
 type decl' =
 | Open of lid
@@ -869,7 +870,7 @@ end
 false
 end))
 
-let is_Mkdecl = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkdecl"))
+let is_Mkdecl = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkdecl")))
 
 let is_DefineEffect = (fun _discr_ -> (match (_discr_) with
 | DefineEffect (_) -> begin

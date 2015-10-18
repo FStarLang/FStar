@@ -59,8 +59,10 @@ let delta_norm_eff =
 
 let translate_eff g l : e_tag =
     let l = delta_norm_eff g l in
-    if lid_equals l Const.effect_PURE_lid  || lid_equals l Const.effect_GHOST_lid (*TODO : review the last disjunct*)
+    if lid_equals l Const.effect_PURE_lid 
     then E_PURE
+    else if lid_equals l Const.effect_GHOST_lid
+    then E_GHOST
     else E_IMPURE
 
 (*generates inp_1 -> E_PURE (inp_2 -> ...  E_PURE (inp_n -> f out)) *)

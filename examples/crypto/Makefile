@@ -85,11 +85,11 @@ RPC.ml: sha1.fst mac.fst formatting.fst rpc.fst
 					seq.fst seqproperties.fst ) \
 					$(addprefix $(FSTAR_HOME)/contrib/,  Platform/fst/Bytes.fst CoreCrypto/fst/CoreCrypto.fst) \
 					sha1.fst mac.fst formatting.fst rpc.fst  \
-					--codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml
+					--codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml --use_native_int
 
-OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_HOME)/contrib/Platform/ml $(FSTAR_HOME)/contrib/CoreCrypto/ml $(FSTAR_HOME)/lib/ml)
+OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_HOME)/contrib/Platform/ml $(FSTAR_HOME)/contrib/CoreCrypto/ml $(FSTAR_HOME)/lib/ml/native_int $(FSTAR_HOME)/lib/ml)
 OCAMLC=ocamlfind ocamlopt -cc "$(CC)" -cclib -L$(LIB) -cclib -lcrypto -package batteries -linkpkg -g -thread
-SUPPORT_LIBS=$(addprefix $(FSTAR_HOME)/lib/ml/, prims.ml FStar_ST.ml FStar_All.ml FStar_List.ml FStar_String.ml FStar_IO.ml)
+SUPPORT_LIBS=$(addprefix $(FSTAR_HOME)/lib/ml/, native_int/prims.ml FStar_ST.ml FStar_All.ml FStar_List.ml FStar_String.ml FStar_IO.ml)
 CONTRIB_LIBS=$(addprefix $(FSTAR_HOME)/contrib/, Platform/ml/platform.cmx CoreCrypto/ml/CoreCrypto.cmxa)
 rpc.exe: RPC.ml
 	make -C $(FSTAR_HOME)/contrib/

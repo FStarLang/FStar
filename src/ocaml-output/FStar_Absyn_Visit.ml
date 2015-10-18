@@ -1,4 +1,5 @@
 
+open Prims
 let log = (fun s -> ())
 
 let rec compress_typ_aux = (fun pos typ -> (match (typ.FStar_Absyn_Syntax.n) with

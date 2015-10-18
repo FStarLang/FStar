@@ -1,4 +1,5 @@
 
+open Prims
 let add_fuel = (fun x tl -> (match ((FStar_ST.read FStar_Options.unthrottle_inductives)) with
 | true -> begin
 tl
@@ -88,7 +89,7 @@ let mk_data_tester = (fun env l x -> (FStar_ToSMT_Term.mk_tester (escape l.FStar
 type varops_t =
 {push : Prims.unit  ->  Prims.unit; pop : Prims.unit  ->  Prims.unit; mark : Prims.unit  ->  Prims.unit; reset_mark : Prims.unit  ->  Prims.unit; commit_mark : Prims.unit  ->  Prims.unit; new_var : FStar_Absyn_Syntax.ident  ->  FStar_Absyn_Syntax.ident  ->  Prims.string; new_fvar : FStar_Absyn_Syntax.lident  ->  Prims.string; fresh : Prims.string  ->  Prims.string; string_const : Prims.string  ->  FStar_ToSMT_Term.term; next_id : Prims.unit  ->  Prims.int}
 
-let is_Mkvarops_t = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkvarops_t"))
+let is_Mkvarops_t = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkvarops_t")))
 
 let varops = (let initial_ctr = 10
 in (let ctr = (FStar_Util.mk_ref initial_ctr)
@@ -254,7 +255,7 @@ let binder_of_eithervar = (fun v -> (v, None))
 type env_t =
 {bindings : binding Prims.list; depth : Prims.int; tcenv : FStar_Tc_Env.env; warn : Prims.bool; cache : (Prims.string * FStar_ToSMT_Term.sort Prims.list * FStar_ToSMT_Term.decl Prims.list) FStar_Util.smap; nolabels : Prims.bool; use_zfuel_name : Prims.bool; encode_non_total_function_typ : Prims.bool}
 
-let is_Mkenv_t = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkenv_t"))
+let is_Mkenv_t = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkenv_t")))
 
 let print_env = (fun e -> (let _119_301 = (FStar_All.pipe_right e.bindings (FStar_List.map (fun _53_2 -> (match (_53_2) with
 | Binding_var (x, t) -> begin
@@ -676,7 +677,7 @@ label Prims.list
 type pattern =
 {pat_vars : (FStar_Absyn_Syntax.either_var * FStar_ToSMT_Term.fv) Prims.list; pat_term : Prims.unit  ->  (FStar_ToSMT_Term.term * FStar_ToSMT_Term.decls_t); guard : FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term; projections : FStar_ToSMT_Term.term  ->  (FStar_Absyn_Syntax.either_var * FStar_ToSMT_Term.term) Prims.list}
 
-let is_Mkpattern = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkpattern"))
+let is_Mkpattern = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkpattern")))
 
 exception Let_rec_unencodeable
 
@@ -1845,7 +1846,7 @@ end))))
 end))
 end))
 end)))))
-and encode_formula_with_labels = (fun phi env -> (let enc = (fun f -> (fun l -> (let _53_1673 = (FStar_Util.fold_map (fun decls x -> (match ((Prims.fst x)) with
+and encode_formula_with_labels = (fun phi env -> (let enc = (fun f l -> (let _53_1673 = (FStar_Util.fold_map (fun decls x -> (match ((Prims.fst x)) with
 | FStar_Util.Inl (t) -> begin
 (let _53_1665 = (encode_typ_term t env)
 in (match (_53_1665) with
@@ -1864,8 +1865,8 @@ in (match (_53_1673) with
 | (decls, args) -> begin
 (let _119_925 = (f args)
 in (_119_925, [], decls))
-end))))
-in (let enc_prop_c = (fun f -> (fun l -> (let _53_1693 = (FStar_List.fold_right (fun t _53_1681 -> (match (_53_1681) with
+end)))
+in (let enc_prop_c = (fun f l -> (let _53_1693 = (FStar_List.fold_right (fun t _53_1681 -> (match (_53_1681) with
 | (phis, labs, decls) -> begin
 (match ((Prims.fst t)) with
 | FStar_Util.Inl (t) -> begin
@@ -1883,7 +1884,7 @@ in (match (_53_1693) with
 | (phis, labs, decls) -> begin
 (let _119_941 = (f phis)
 in (_119_941, labs, decls))
-end))))
+end)))
 in (let const_op = (fun f _53_1696 -> (f, [], []))
 in (let un_op = (fun f l -> (let _119_955 = (FStar_List.hd l)
 in (FStar_All.pipe_left f _119_955)))
@@ -2104,7 +2105,7 @@ end))))))))))))))))
 type prims_t =
 {mk : FStar_Absyn_Syntax.lident  ->  Prims.string  ->  FStar_ToSMT_Term.decl Prims.list; is : FStar_Absyn_Syntax.lident  ->  Prims.bool}
 
-let is_Mkprims_t = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkprims_t"))
+let is_Mkprims_t = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkprims_t")))
 
 let prims = (let _53_1957 = (fresh_fvar "a" FStar_ToSMT_Term.Type_sort)
 in (match (_53_1957) with
@@ -2116,7 +2117,7 @@ in (match (_53_1960) with
 in (match (_53_1963) with
 | (ysym, y) -> begin
 (let deffun = (fun vars body x -> (FStar_ToSMT_Term.DefineFun ((x, vars, FStar_ToSMT_Term.Term_sort, body, None)))::[])
-in (let quant = (fun vars body -> (fun x -> (let t1 = (let _119_1124 = (let _119_1123 = (FStar_List.map FStar_ToSMT_Term.mkFreeV vars)
+in (let quant = (fun vars body x -> (let t1 = (let _119_1124 = (let _119_1123 = (FStar_List.map FStar_ToSMT_Term.mkFreeV vars)
 in (x, _119_1123))
 in (FStar_ToSMT_Term.mkApp _119_1124))
 in (let vname_decl = (let _119_1126 = (let _119_1125 = (FStar_All.pipe_right vars (FStar_List.map Prims.snd))
@@ -2128,7 +2129,7 @@ in (FStar_ToSMT_Term.mkForall _119_1128))
 in (_119_1129, None))
 in FStar_ToSMT_Term.Assume (_119_1130))
 in (_119_1131)::[])
-in (vname_decl)::_119_1132)))))
+in (vname_decl)::_119_1132))))
 in (let axy = ((asym, FStar_ToSMT_Term.Type_sort))::((xsym, FStar_ToSMT_Term.Term_sort))::((ysym, FStar_ToSMT_Term.Term_sort))::[]
 in (let xy = ((xsym, FStar_ToSMT_Term.Term_sort))::((ysym, FStar_ToSMT_Term.Term_sort))::[]
 in (let qx = ((xsym, FStar_ToSMT_Term.Term_sort))::[]

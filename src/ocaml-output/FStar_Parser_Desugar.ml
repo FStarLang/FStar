@@ -1,4 +1,5 @@
 
+open Prims
 let as_imp = (fun _44_1 -> (match (_44_1) with
 | (FStar_Parser_AST.Hash) | (FStar_Parser_AST.FsTypApp) -> begin
 Some (FStar_Absyn_Syntax.Implicit)

@@ -1,4 +1,5 @@
 
+open Prims
 exception NYI of (Prims.string)
 
 let is_NYI = (fun _discr_ -> (match (_discr_) with
@@ -17,7 +18,7 @@ end))
 type ffi_type_s =
 {module_name : Prims.string; type_name : Prims.string; slice_fn_n : Prims.string; compose_fn_n : Prims.string; slice_sps_fn_n : Prims.string}
 
-let is_Mkffi_type_s = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkffi_type_s"))
+let is_Mkffi_type_s = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkffi_type_s")))
 
 let slice_id = "slice_id"
 
@@ -38,7 +39,7 @@ let compose_values_exp = (mk_fn_exp "Semantics.compose_vals_ffi")
 type fn_mapping =
 {slice_fn : FStar_Absyn_Syntax.exp; compose_fn : FStar_Absyn_Syntax.exp; slice_sps_fn : FStar_Absyn_Syntax.exp}
 
-let is_Mkfn_mapping = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkfn_mapping"))
+let is_Mkfn_mapping = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkfn_mapping")))
 
 let fn_map = (FStar_Util.smap_create (FStar_List.length ffi_types))
 
@@ -264,7 +265,7 @@ end)
 end)
 in (Prims.strcat s s'))))
 
-let filter_out_type_binders = (fun _66_982 -> (FStar_List.filter (fun a -> (match (a) with
+let filter_out_type_binders = (fun _66_95 -> (FStar_List.filter (fun a -> (match (a) with
 | (FStar_Util.Inl (_64_154), _64_157) -> begin
 false
 end
@@ -272,7 +273,7 @@ end
 true
 end))))
 
-let filter_out_type_args = (fun _66_982 -> (FStar_List.filter (fun a -> (match (a) with
+let filter_out_type_args = (fun _66_95 -> (FStar_List.filter (fun a -> (match (a) with
 | (FStar_Util.Inl (_64_167), _64_170) -> begin
 false
 end

@@ -1,7 +1,12 @@
+(*--build-config
+  options:--admit_fsi FStar.Seq --admit_fsi FStar.Set --verify_module Compare --z3timeout 150;
+  other-files:classical.fst ext.fst set.fsi seq.fsi seqproperties.fst heap.fst st.fst all.fst arr.fst ghost.fst axiomatic.fst intlib.fst limb.fst bigint_st.fst eval_st.fst;
+  --*)
+
 module Compare
 
-open Heap
-open ST
+open FStar.Heap
+open FStar.ST
 open Bigint
 open Eval
 
@@ -38,7 +43,7 @@ let rec compare_aux a b tmp ctr len =
   | 0 -> if tmp = 0 then 0 else 1 (* Can be replace with some constant bitwize operation *)
   | _ ->
      let h0 =
-       erase (ST.get()) in
+       (ST.get()) in
      let i = ctr - 1 in
      let ai = get a i in
      let bi = get b i in
@@ -63,9 +68,9 @@ val compare: a:bigint -> b:bigint ->
 			  /\ (r = 0 ==> eval h0 a (getLength h0 a) = eval h0 b (getLength h0 b))
 		))
 let compare a b =
-  let h0 = erase (ST.get()) in
+  let h0 = (ST.get()) in
   let r = compare_aux a b 0 (get_length a) (get_length a) in
-  erase (
+  (
       if r = 0 then eval_eq_lemma h0 h0 a b (get_length a)
     );
   r

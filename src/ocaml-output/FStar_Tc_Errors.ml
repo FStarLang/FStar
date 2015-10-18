@@ -1,4 +1,5 @@
 
+open Prims
 let exhaustiveness_check = "Patterns are incomplete"
 
 let subtyping_failed = (fun env t1 t2 x -> (let _100_10 = (FStar_Tc_Normalize.typ_norm_to_string env t2)

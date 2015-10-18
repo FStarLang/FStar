@@ -1,4 +1,5 @@
 
+open Prims
 type step =
 | WHNF
 | Eta
@@ -118,11 +119,11 @@ type 'a config =
  and 'a memo =
 'a Prims.option FStar_ST.ref
 
-let is_Mkconfig = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkconfig"))
+let is_Mkconfig = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkconfig")))
 
-let is_Mkenvironment = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkenvironment"))
+let is_Mkenvironment = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkenvironment")))
 
-let is_Mkstack = (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkstack"))
+let is_Mkstack = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkstack")))
 
 let is_T = (fun _discr_ -> (match (_discr_) with
 | T (_) -> begin

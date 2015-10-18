@@ -35,7 +35,7 @@ let open_file (filename:string) =
   with e -> raise (Err (FStar_Util.format1 "Unable to open file: %s\n" filename))
 
 let read_build_config_from_string (filename:string) (use_filename:bool) (contents:string)  =
-    let fail msg = raise (Err(FStar_Util.format2 "Could not parse a valid build configuration from %s; %s" filename msg)) in
+    let fail msg = raise (Err(FStar_Util.format2 "Could not parse a valid build configuration from %s; %s\n" filename msg)) in
     let options = ref None in
     let filenames = ref None in
     let variables = ref [] in
