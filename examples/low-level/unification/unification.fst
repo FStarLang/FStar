@@ -298,44 +298,91 @@ let rec lemma_subst_eqns_idem s = function
 
 val subst_funs_monotone: s:subst -> t:term -> Lemma 
   (ensures (funs (subst_term s t) >= funs t))
-let rec subst_funs_monotone s = function 
+let rec subst_funs_monotone s = function
   | V x -> ()
   | F t1 t2 -> subst_funs_monotone s t1; subst_funs_monotone s t2
-
-val lemma_occurs_not_solveable: x:nat -> t:term -> s:subst -> Lemma
-  (requires (occurs x t /\ not (is_V t)))
-  (ensures  (funs (subst_term s t) >= (funs t + funs (subst_term s (V x)))))
-let rec lemma_occurs_not_solveable x t s = match t with 
+  
+val lsubst_funs_monotone: l:list subst -> t:term -> Lemma
+  (ensures (funs (lsubst_term l t) >= funs t))
+let rec lsubst_funs_monotone l t = match l with 
+  | [] -> ()
+  | hd::tl -> 
+    lsubst_funs_monotone tl t; subst_funs_monotone hd (lsubst_term tl t)
+    
+val lemma_occurs_not_solveable_aux: x:nat -> t:term{occurs x t /\ not (is_V t)} -> s:list subst -> Lemma
+  (funs (lsubst_term s t) >= (funs t + funs (lsubst_term s (V x))))
+let rec lemma_occurs_not_solveable_aux x t s = match t with 
   | F t1 t2 -> 
     if occurs x t1 
-    then let _ = subst_funs_monotone s t2 in
+    then let _ = lsubst_funs_monotone s t2 in
 	 match t1 with 
 	   | V y -> ()
- 	   | _ -> lemma_occurs_not_solveable x t1 s 
+ 	   | _ -> lemma_occurs_not_solveable_aux x t1 s 
     else if occurs x t2
-    then let _ = subst_funs_monotone s t1 in 
+    then let _ = lsubst_funs_monotone s t1 in 
 	 match t2 with 
 	   | V y -> ()
- 	   | _ -> lemma_occurs_not_solveable x t2 s 
+ 	   | _ -> lemma_occurs_not_solveable_aux x t2 s 
     else ()
+
+opaque type not_solveable s = 
+  forall l. lsubst_term l (fst s) <> lsubst_term l (snd s)
+
+val lemma_occurs_not_solveable: x:nat -> t:term -> Lemma
+  (requires (occurs x t /\ not (is_V t)))
+  (ensures (not_solveable (V x, t)))
+let lemma_occurs_not_solveable x t = qintro (lemma_occurs_not_solveable_aux x t)
+ 
+val lemma_subst_idem: l:list subst -> x:nat -> t:term -> t':term -> Lemma
+  (requires (lsubst_term l (V x) = lsubst_term l t))
+  (ensures (lsubst_term l (subst_term (x,t) t') = lsubst_term l t'))
+let rec lemma_subst_idem l x t t' = match t' with
+  | V y -> ()
+  | F t1 t2 -> lemma_subst_idem l x t t1; lemma_subst_idem l x t t2
+
+val lemma_subst_eqns: l:list subst -> x:nat -> t:term -> e:eqns -> Lemma
+  (requires (lsubst_term l (V x) = lsubst_term l t))
+  (ensures (lsubst_eqns l (lsubst_eqns [x,t] e) = lsubst_eqns l e))
+let rec lemma_subst_eqns l x t = function
+  | [] -> ()
+  | (t1,t2)::tl -> 
+    lemma_subst_idem l x t t1;
+    lemma_subst_idem l x t t2;
+    lemma_subst_eqns l x t tl
+
+opaque type not_solveable_eqns e = 
+  forall l. not (solved (lsubst_eqns l e))
+
+val lemma_not_solveable_cons_aux: x:nat -> t:term -> tl:eqns -> l:list subst -> Lemma 
+  (requires (not_solveable_eqns (lsubst_eqns [x,t] tl) 
+	     /\ solved (lsubst_eqns l ((V x,t)::tl))))
+  (ensures False)
+  [SMTPat (solved (lsubst_eqns l ((V x,t)::tl)))]
+let lemma_not_solveable_cons_aux x t tl l = lemma_subst_eqns l x t tl
+
+val lemma_not_solveable_cons:  x:nat -> t:term -> tl:eqns -> Lemma
+    (requires (not_solveable_eqns (lsubst_eqns [x,t] tl)))
+    (ensures (not_solveable_eqns ((V x, t)::tl)))
+let lemma_not_solveable_cons x t tl = ()
 
 val unify_correct: l:list subst -> e:eqns -> Ghost (list subst)
  (requires (lsubst_eqns l e = e))
  (ensures (fun m ->
-	    is_Some (unify e l) ==> 
-	      Let (Some.v (unify e l)) (fun l' -> 
-	            l' = (m @ l)
+	    if is_None (unify e l)
+	    then not_solveable_eqns e
+	    else Let (Some.v (unify e l)) (fun l' -> 
+	            l' = (m @ l) 
 		 /\ solved (lsubst_eqns l' e))))
  (decreases %[n_evars e; efuns e; n_flex_rhs e])
 let rec unify_correct l = function 
   | [] -> []
   | hd::tl -> 
     begin match hd with 
-      | (V x, y) ->
+      | (V x, y) -> 
 	if is_V y && V.i y=x
 	then unify_correct l tl
 	else if occurs x y
-	then []
+	then (lemma_occurs_not_solveable x y; [])
 	else begin 
 	     let s = (x,y) in
 	     let l' = extend_subst s l in
@@ -347,7 +394,7 @@ let rec unify_correct l = function
 	     lemma_subst_eqns_idem s tl;
 	     let lpre = unify_correct l' tl' in
 	     begin match unify tl' l' with 
-	       | None -> []
+	       | None -> lemma_not_solveable_cons x y tl; []
 	       | Some l'' -> 
 		 key_lemma x y tl l lpre l'';
 		 lemma_shift_append lpre s l;
