@@ -84,6 +84,7 @@ val max_size_max_value_lemma:
   Lemma
     (requires (True))
     (ensures (maxValue h a <= pow2 (maxSize h a)))
+    [SMTPat (maxValue h a); SMTPat (maxSize h a)]
 let max_size_max_value_lemma h a = 
       cut (forall (n:nat). n < getLength h a ==> getValue h a n <= maxValue h a);
       cut (forall (n:nat). n < getLength h a ==> getSize h a n <= maxSize h a); 
