@@ -34,6 +34,7 @@ module Unification
 
 open FStar.List.Tot
 
+(* First, a missing lemma from the list library *)
 let op_At = append
 val lemma_shift_append: l:list 'a -> x:'a -> m:list 'a -> Lemma
   (ensures ( (l@(x::m)) = ((l@[x])@m)))
@@ -41,40 +42,39 @@ let rec lemma_shift_append l x m = match l with
   | [] -> ()
   | hd::tl -> lemma_shift_append tl x m
 
+(* A term language with variables V and pairs F *)
 type term = 
   | V : i:nat -> term
   | F : t1:term -> t2:term -> term
 
+(* Finite, ordered sets of variables *)
 val nat_order : OrdSet.cmp nat
 let nat_order x y = x <= y
-
 type varset = OrdSet.ordset nat nat_order
+
 val empty_vars : varset
 let empty_vars = OrdSet.empty
 
-type eqns  = list (term * term) 
-
+(* Collecting the variables in a term *)
 val vars : term -> Tot varset
 let rec vars = function 
   | V i -> OrdSet.singleton i
   | F t1 t2 -> OrdSet.union (vars t1) (vars t2) 
 
+(* Equations among pairs of terms, to be solved *)
+type eqns  = list (term * term) 
+
+(* All the variables in a set of equations *)
 val evars : eqns -> Tot varset
 let rec evars = function
   | [] -> empty_vars
   | (x, y)::tl -> OrdSet.union (OrdSet.union (vars x) (vars y)) (evars tl)
-  
+
+(* Counting variables; used in the termination metric *)  
 val n_evars : eqns -> Tot nat
 let n_evars eqns = OrdSet.size (evars eqns)
 
-val evars_permute_hd : x:term -> y:term -> tl:eqns -> Lemma 
-  (ensures (evars ((x, y)::tl) = evars ((y, x)::tl)))
-let evars_permute_hd x y tl = OrdSet.eq_lemma (evars ((x,y)::tl)) (evars ((y,x)::tl))
-
-val evars_unfun : x:term -> y:term -> x':term -> y':term -> tl:eqns -> Lemma
-  (ensures (evars ((F x y, F x' y')::tl) = evars ((x, x')::(y, y')::tl)))
-let evars_unfun x y x' y' tl = OrdSet.eq_lemma (evars ((F x y, F x' y')::tl)) (evars ((x, x')::(y, y')::tl))
-
+(* Counting the number of F-applications; also for the termination metric *)
 val funs : term -> Tot nat
 let rec funs = function 
   | V _ -> 0
@@ -85,22 +85,20 @@ let rec efuns = function
   | [] -> 0
   | (x,y)::tl -> funs x + funs y + efuns tl
 
-val efuns_smaller: t1:term -> t2:term -> tl:eqns -> Lemma
-  (ensures (efuns tl <= efuns ((t1, t2)::tl)))
-let efuns_smaller t1 t2 tl = ()
-
-val efuns_permute_hd : x:term -> y:term -> tl:eqns -> Lemma
-  (ensures (efuns ((x,y)::tl) = efuns ((y,x)::tl)))
-let efuns_permute_hd x y tl = ()  
-
+(* Counting the number of equations with variables on the the RHS; 
+   also for the termination metric *)
 val n_flex_rhs : eqns -> Tot nat
 let rec n_flex_rhs = function
   | [] -> 0
   | (V _, V _)::tl
   | (_  , V _)::tl -> 1 + n_flex_rhs tl
   | _::tl -> n_flex_rhs tl
-  
+
+(* A point substitution *)
 type subst = (nat * term)
+
+(* Composition of point substitions *)
+type lsubst = list subst
 
 val subst_term : subst -> term -> Tot term 
 let rec subst_term s t = match t with 
@@ -108,25 +106,7 @@ let rec subst_term s t = match t with
   | F t1 t2 -> F (subst_term s t1) (subst_term s t2)
 
 val lsubst_term : list subst -> term -> Tot term
-let lsubst_term s t = fold_right subst_term s t
-
-type subst_ok s = ~ (OrdSet.mem (fst s) (vars (snd s)))
-
-val lemma_vars_decrease: s:subst -> t':term -> Lemma 
-  (requires (subst_ok s))
-  (ensures (OrdSet.subset (vars (subst_term s t'))
- 			  (OrdSet.remove (fst s) (OrdSet.union (vars (snd s)) (vars t')))))
-let rec lemma_vars_decrease s t' = match t' with 
-  | V x -> ()
-  | F t1 t2 -> 
-    lemma_vars_decrease s t1;
-    lemma_vars_decrease s t2
-
-val subst_subst : subst -> subst -> Tot subst
-let subst_subst s1 (x, t) = (x, subst_term s1 t)
-
-val subst_lsubst: subst -> list subst -> Tot (list subst)
-let subst_lsubst s1 s2 = map (subst_subst s1) s2
+let lsubst_term = fold_right subst_term
 
 let occurs x t = OrdSet.mem x (vars t)
 let ok s = not (occurs (fst s) (snd s))
@@ -136,8 +116,39 @@ let rec lsubst_eqns l = function
   | [] -> []
   | (x,y)::tl -> (lsubst_term l x, lsubst_term l y)::lsubst_eqns l tl
 
+val lemma_lsubst_eqns_nil: e:eqns -> Lemma
+  (requires True)
+  (ensures (lsubst_eqns [] e = e))
+  [SMTPat (lsubst_eqns [] e)]
+let rec lemma_lsubst_eqns_nil = function 
+  | [] -> ()
+  | _::tl -> lemma_lsubst_eqns_nil tl
+
+(* A couple of lemmas about variable counts. 
+   Both of these rely on extensional equality of sets. 
+   So we need to use eq_lemma explicitly *) 
+val evars_permute_hd : x:term -> y:term -> tl:eqns -> Lemma 
+  (ensures (evars ((x, y)::tl) = evars ((y, x)::tl)))
+let evars_permute_hd x y tl = OrdSet.eq_lemma (evars ((x,y)::tl)) (evars ((y,x)::tl))
+
+val evars_unfun : x:term -> y:term -> x':term -> y':term -> tl:eqns -> Lemma
+  (ensures (evars ((F x y, F x' y')::tl) = evars ((x, x')::(y, y')::tl)))
+let evars_unfun x y x' y' tl = OrdSet.eq_lemma (evars ((F x y, F x' y')::tl)) (evars ((x, x')::(y, y')::tl))
+
+(* Eliminating a variable reduces the variable count *)
+val lemma_vars_decrease: s:subst -> t':term -> Lemma 
+  (requires (ok s))
+  (ensures (OrdSet.subset (vars (subst_term s t'))
+ 			  (OrdSet.remove (fst s) (OrdSet.union (vars (snd s)) (vars t')))))
+let rec lemma_vars_decrease s t' = match t' with 
+  | V x -> ()
+  | F t1 t2 -> 
+    lemma_vars_decrease s t1;
+    lemma_vars_decrease s t2
+
+(* Lifting the prior lemma to equations *)
 val vars_decrease_eqns: x:nat -> t:term -> e:eqns -> Lemma
-  (requires (subst_ok (x, t)))
+  (requires (ok (x, t)))
   (ensures (OrdSet.subset (evars (lsubst_eqns [x,t] e))
 			  (OrdSet.remove x (evars ((V x, t)::e)))))
 let rec vars_decrease_eqns x t e = match e with 
@@ -178,31 +189,29 @@ let rec unify e s = match e with
    evars_unfun t1 t2 t1' t2' tl;
    unify ((t1, t1')::(t2, t2')::tl) s
 
+(* All equations are solved when each one is just reflexive *)
 val solved : eqns -> Tot bool 
 let rec solved = function
   | [] -> true
   | (x,y)::tl -> x=y && solved tl 
 
-val lsubst_distributes: l:list subst -> t1:term -> t2:term -> Lemma
+val lsubst_distributes_over_F: l:list subst -> t1:term -> t2:term -> Lemma
        (requires (True))
        (ensures (lsubst_term l (F t1 t2) = F (lsubst_term l t1) (lsubst_term l t2)))
        [SMTPat (lsubst_term l (F t1 t2))]
-let rec lsubst_distributes l t1 t2 = match l with 
+let rec lsubst_distributes_over_F l t1 t2 = match l with 
   | [] -> ()
-  | hd::tl -> lsubst_distributes tl t1 t2
-
-let lsubst_lsubst = fold_right subst_lsubst
+  | hd::tl -> lsubst_distributes_over_F tl t1 t2
 
 let extend_subst s l = s::l
 let extend_lsubst l l' = l @ l'
-
  
-val lemma_extend_lsubst_term_distributes: l:list subst -> l':list subst -> e:term -> Lemma
+val lemma_extend_lsubst_distributes_term: l:list subst -> l':list subst -> e:term -> Lemma
        (requires True)
        (ensures (lsubst_term (extend_lsubst l l') e = lsubst_term l (lsubst_term l' e)))
-let rec lemma_extend_lsubst_term_distributes l l' e = match l with 
+let rec lemma_extend_lsubst_distributes_term l l' e = match l with 
   | [] -> ()
-  | hd::tl -> lemma_extend_lsubst_term_distributes tl l' e
+  | hd::tl -> lemma_extend_lsubst_distributes_term tl l' e
 
 val lemma_extend_lsubst_distributes_eqns: l:list subst -> l':list subst -> e:eqns -> Lemma
        (requires True)
@@ -211,8 +220,8 @@ val lemma_extend_lsubst_distributes_eqns: l:list subst -> l':list subst -> e:eqn
 let rec lemma_extend_lsubst_distributes_eqns l l' e = match e with 
   | [] -> ()
   | (t1, t2)::tl -> 
-    lemma_extend_lsubst_term_distributes l l' t1;
-    lemma_extend_lsubst_term_distributes l l' t2;
+    lemma_extend_lsubst_distributes_term l l' t1;
+    lemma_extend_lsubst_distributes_term l l' t2;
     lemma_extend_lsubst_distributes_eqns l l' tl
 
 val lemma_subst_id: x:nat -> z:term -> y:term -> Lemma
@@ -234,12 +243,6 @@ let rec lemma_lsubst_term_commutes s l e = match e with
     
   | F t1 t2 -> lemma_lsubst_term_commutes s l t1;
 	      lemma_lsubst_term_commutes s l t2
-
-val lemma_subst_term_commutes: s1:subst -> s2:subst -> t:term -> Lemma
-  (requires (neutral s2 s1))
-  (ensures (subst_term s1 (subst_term s2 (subst_term s1 t)) =
-	    subst_term s1 (subst_term s2 t)))
-let lemma_subst_term_commutes s1 s2 t = lemma_lsubst_term_commutes s1 [s2] t
   
 val lemma_lsubst_eqns_commutes: s:subst -> l:list subst -> e:eqns -> Lemma 
   (requires (neutral_l l s))
@@ -250,13 +253,6 @@ let rec lemma_lsubst_eqns_commutes s l = function
   | (t1,t2)::tl -> lemma_lsubst_term_commutes s l t1;
 		 lemma_lsubst_term_commutes s l t2;
 		 lemma_lsubst_eqns_commutes s l tl
-
-val lemma_subst_term_idem: s:subst -> t:term -> Lemma
-  (requires (ok s))
-  (ensures (subst_term s (subst_term s t) = subst_term s t))
-let rec lemma_subst_term_idem s t = match t with 
-  | V x -> lemma_subst_id (fst s) (snd s) (snd s)
-  | F t1 t2 -> lemma_subst_term_idem s t1; lemma_subst_term_idem s t2
  
 val key_lemma: x:nat -> y:term -> tl:eqns -> l:list subst -> lpre:list subst -> l'':list subst -> Lemma
   (requires (l'' = extend_lsubst lpre (extend_lsubst [(x, y)] l)
@@ -274,6 +270,12 @@ let key_lemma x y tl l lpre l'' =
   assert (lsubst_eqns [x,y] [V x, y] = 
 	  [y,y])
 
+val lemma_subst_term_idem: s:subst -> t:term -> Lemma
+  (requires (ok s))
+  (ensures (subst_term s (subst_term s t) = subst_term s t))
+let rec lemma_subst_term_idem s t = match t with 
+  | V x -> lemma_subst_id (fst s) (snd s) (snd s)
+  | F t1 t2 -> lemma_subst_term_idem s t1; lemma_subst_term_idem s t2
 
 val lemma_subst_eqns_idem: s:subst -> e:eqns -> Lemma
   (requires (ok s))
@@ -353,7 +355,7 @@ val lemma_not_solveable_cons:  x:nat -> t:term -> tl:eqns -> Lemma
     (ensures (not_solveable_eqns ((V x, t)::tl)))
 let lemma_not_solveable_cons x t tl = ()
 
-val unify_correct: l:list subst -> e:eqns -> Ghost (list subst)
+val unify_correct_aux: l:list subst -> e:eqns -> Pure (list subst)
  (requires (lsubst_eqns l e = e))
  (ensures (fun m ->
 	    if is_None (unify e l)
@@ -362,13 +364,13 @@ val unify_correct: l:list subst -> e:eqns -> Ghost (list subst)
 	            l' = (m @ l) 
 		 /\ solved (lsubst_eqns l' e))))
  (decreases %[n_evars e; efuns e; n_flex_rhs e])
-let rec unify_correct l = function 
+let rec unify_correct_aux l = function 
   | [] -> []
   | hd::tl -> 
     begin match hd with 
       | (V x, y) -> 
 	if is_V y && V.i y=x
-	then unify_correct l tl
+	then unify_correct_aux l tl
 	else if occurs x y
 	then (lemma_occurs_not_solveable x y; [])
 	else begin 
@@ -380,7 +382,7 @@ let rec unify_correct l = function
 	     assert (lsubst_eqns l' tl' = lsubst_eqns [s] (lsubst_eqns l (lsubst_eqns [s] tl)));
 	     lemma_lsubst_eqns_commutes s l tl;
 	     lemma_subst_eqns_idem s tl;
-	     let lpre = unify_correct l' tl' in
+	     let lpre = unify_correct_aux l' tl' in
 	     begin match unify tl' l' with 
 	       | None -> lemma_not_solveable_cons x y tl; []
 	       | Some l'' -> 
@@ -392,13 +394,25 @@ let rec unify_correct l = function
 
       | (y, V x) -> 
 	evars_permute_hd y (V x) tl; 
-	unify_correct l ((V x, y)::tl)
+	unify_correct_aux l ((V x, y)::tl)
 
       | F t1 t2, F s1 s2 -> 
 	evars_unfun t1 t2 s1 s2 tl;
- 	unify_correct l ((t1, s1)::(t2, s2)::tl)
+ 	unify_correct_aux l ((t1, s1)::(t2, s2)::tl)
      end
 
+val unify_eqns : e:eqns -> Tot (option lsubst)
+let unify_eqns e = unify e []
+
+val unify_eqns_correct: e:eqns -> Lemma
+  (requires True)
+  (ensures (if is_None (unify_eqns e)
+	    then not_solveable_eqns e
+	    else solved (lsubst_eqns (Some.v (unify_eqns e)) e)))
+let unify_eqns_correct e = 
+  let _ = unify_correct_aux [] e in ()
+
+  
 
 // l = hd::tl
 // s = x, t
@@ -417,6 +431,14 @@ let rec unify_correct l = function
 // = {def}
 // subst_term s (lsubst_term l tl)
 
+
+// val subst_subst : subst -> subst -> Tot subst
+// let subst_subst s1 (x, t) = (x, subst_term s1 t)
+
+// val subst_lsubst: subst -> list subst -> Tot (list subst)
+// let subst_lsubst s1 s2 = map (subst_subst s1) s2
+
+// let lsubst_lsubst = fold_right subst_lsubst
 
 // val lemma_cancel_subst_subst: s1:subst -> s2:subst -> t:term -> Lemma
 //   (requires (ok s1))
