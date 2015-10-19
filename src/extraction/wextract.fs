@@ -6,7 +6,7 @@ open FStar.Absyn
 open FStar.Absyn.Syntax
 open FStar.Absyn.Print
 
-open Extraction.ML.Syntax
+open FStar.Extraction.ML.Syntax
 
 type name = string
 
@@ -15,7 +15,7 @@ type wexp = string
 type tlet =
     | Mk_tlet of (name * wexp)
 
-let fn_map: smap<wexp * wexp * wexp> = smap_create 10
+let fn_map: smap<(wexp * wexp * wexp)> = smap_create 10
 
 type wys_lib_fn = {
     fn_name:string;
@@ -27,6 +27,8 @@ type wys_lib_fn = {
 let to_wys_lib_fn s1 n1 n2 s2 = { fn_name=s1; rem_args=n1; arity=n2; extracted_fn_name=s2 }
 
 let wys_lib_args_map :smap<wys_lib_fn> = smap_create 10
+
+let prims_trans_map :smap<string> = smap_create 10
 
 let slice_id = "slice_id"
 let compose_ids = "compose_ids"
@@ -50,6 +52,15 @@ let initialize (_:unit) :unit =
     Util.smap_add wys_lib_args_map "projwire_s" (to_wys_lib_fn "projwire_s" 1 2 "mk_projwire");
     Util.smap_add wys_lib_args_map "concat_wire" (to_wys_lib_fn "concat_wire" 2 2 "mk_concatwire");
 
+    Util.smap_add prims_trans_map "Prims.op_Multiply" "Prims.( * )";
+    Util.smap_add prims_trans_map "Prims.op_Subtraction" "Prims.(-)";
+    Util.smap_add prims_trans_map "Prims.op_Addition" "Prims.(+)";
+    Util.smap_add prims_trans_map "Prims.op_LessThanOrEqual" "Prims.(<=)";
+    Util.smap_add prims_trans_map "Prims.op_GreaterThan" "Prims.(>)";
+    Util.smap_add prims_trans_map "Prims.op_GreaterThanOrEqual" "Prims.(>=)";
+    Util.smap_add prims_trans_map "Prims.op_LessThan" "Prims.(<)";
+    Util.smap_add prims_trans_map "Prims.op_Modulus" "Prims.(%)";
+
     ()
 
 let lookup_ffi_map (t:string) :(wexp * wexp * wexp) =
@@ -62,6 +73,11 @@ let lookup_wys_lib_map (s:string) :wys_lib_fn =
     match (smap_try_find wys_lib_args_map s) with
         | Some x -> x
         | _ -> failwith "Unknown wysteria library function"
+
+let translate_ffi_name (s:string) :string =
+    match (smap_try_find prims_trans_map s) with
+        | Some x -> x
+        | None   -> s
 
 let rec sublist (s:string) (l:list<'a>) (n:int) =
     if n > List.length l then failwith (Util.format3 "Error removing arguments in sublist for %s, list len is %s, n is %s " s (Util.string_of_int (List.length l)) (Util.string_of_int n))
@@ -143,7 +159,7 @@ let get_injection (t:mlty) :string =
 
 let is_ffi ({expr = e; ty = t}:mlexpr) :(bool * string) =
     match e with
-        | MLE_Name (p, n) -> ((p = ["FFI"] || p = ["Prims"]), (string_of_mlpath (p, n)))
+        | MLE_Name (p, n) -> ((p = ["FFI"] || p = ["Prims"]), translate_ffi_name (string_of_mlpath (p, n)))
         | _ -> (false, "")
 
 let extract_mlconst (c:mlconstant) :wexp =
@@ -170,23 +186,27 @@ let check_pats_for_bool (l:list<(mlpattern * option<mlexpr> * mlexpr)>) :(bool *
             | (MLP_Const (MLC_Bool _), MLP_Const (MLC_Bool _)) -> true, e1, e2
             | _ -> def
 
+let name_to_string (s:name) = "\"" ^ s ^ "\""
+
 let rec extract_mlexp ({expr = e; ty = t}:mlexpr) :wexp =
     match e with
         | MLE_Const c          -> "mk_const (" ^ extract_mlconst c ^ ")"
-        | MLE_Var x            -> "mk_var \"" ^ idsym x ^ "\""
+        | MLE_Var x            -> "mk_var " ^ name_to_string (idsym x)
         | MLE_Name (p, s)      ->
             let ss = string_of_mlpath (p, s) in
-            if Util.starts_with ss "SMC." then s
-            else
-                Util.print_string (Util.format1 "Warning: name not applied: %s\n" (string_of_mlpath (p, s)));
-                s
+            let _ =
+                if not (Util.starts_with ss "SMC.") then
+                    Util.print_string (Util.format1 "Warning: name not applied: %s\n" (string_of_mlpath (p, s)))
+                else ()
+            in
+            "mk_var " ^ (name_to_string s)
         | MLE_Let ((b, l), e') ->
             if b then failwith "Nested recursive lets are not supported yet"
             else
                 let lb = List.hd l in
                 let lbname = idsym lb.mllb_name in
                 let lbbody = lb.mllb_def in
-                "mk_let " ^ lbname ^ " (" ^ extract_mlexp lbbody ^ ") (" ^ extract_mlexp e' ^ ")"
+                "mk_let " ^ (name_to_string lbname) ^ " (" ^ extract_mlexp lbbody ^ ") (" ^ extract_mlexp e' ^ ")"
         | MLE_App (f, args)    ->
             let b, ffi = is_ffi f in
             if b then
@@ -200,7 +220,7 @@ let rec extract_mlexp ({expr = e; ty = t}:mlexpr) :wexp =
                 else List.fold_left (fun s a -> "mk_app (" ^ s ^ ") (" ^ extract_mlexp a ^ ")") s args
         | MLE_Fun (bs, body) ->
             let body_str = extract_mlexp body in
-            List.fold_left (fun s ((b, _), _) -> "mk_abs " ^ b ^ " (" ^ s ^ ")") body_str (List.rev bs)
+            List.fold_left (fun s ((b, _), _) -> "mk_abs " ^ (name_to_string b) ^ " (" ^ s ^ ")") body_str (List.rev bs)
         | MLE_Match (e, bs) ->
             let b, e1, e2 = check_pats_for_bool bs in
             if b then
@@ -215,7 +235,7 @@ and extract_wysteria_specific_ast ({expr=f; ty=_}:mlexpr) (args:list<mlexpr>) (t
             if s = "main" then
                 let f = List.hd (List.tl args) in
                 let f_exp = extract_mlexp f in
-                "mk_app (" ^ f_exp ^ ") (C_opaque ())"
+                "mk_app (" ^ f_exp ^ ") (E_const (C_unit ()))"
             else if s = "w_read_int" then
                 let inj_str = get_injection t in
                 "mk_ffi 1 FFI.read_int [ E_const (C_unit ()) ] (" ^  inj_str ^ ")"
@@ -241,8 +261,8 @@ let extract_mllb ((b, l):mlletbinding) :tlet =
                 | MLE_Fun (bs, e) ->
                     let first_b, rest_bs = List.hd bs, List.tl bs in
                     let body_exp = extract_mlexp e in
-                    let tl_abs_exp = List.fold_left (fun e (bname, _) -> "mk_abs " ^ (idsym bname) ^ " (" ^ e ^ ")") body_exp (List.rev rest_bs) in
-                    let fix_exp = "mk_fix " ^ lbname ^ " " ^ (idsym (fst first_b)) ^ " (" ^ tl_abs_exp ^ ")" in
+                    let tl_abs_exp = List.fold_left (fun e (bname, _) -> "mk_abs " ^ name_to_string (idsym bname) ^ " (" ^ e ^ ")") body_exp (List.rev rest_bs) in
+                    let fix_exp = "mk_fix " ^ name_to_string lbname ^ " " ^ name_to_string (idsym (fst first_b)) ^ " (" ^ tl_abs_exp ^ ")" in
                     Mk_tlet (idsym (fst first_b), fix_exp)
                 | _ -> failwith "Recursive let binding is not an abstraction ?"
         else
@@ -260,7 +280,7 @@ let extract_mlmodule (m:mlmodule) :(list<tlet> * option<wexp>) =
                     | Some _ -> failwith "Impossible: more than one top expressions"
     ) ([], None) m
 
-let rec find_smc_module (mllibs: mllib list) :mlmodule =
+let rec find_smc_module (mllibs:list<mllib>) :mlmodule =
     let rec find_smc_module' (mllib:list<(mlsymbol * option<(mlsig * mlmodule)> * mllib)>) :option<mlmodule> =
         match mllib with
             | []                               -> None
@@ -291,4 +311,8 @@ let extract (l:list<modul>) (en:FStar.Tc.Env.env) :unit =
     let mllibs = List.flatten mllibs in
     let m = find_smc_module mllibs in
     let l, m_opt = extract_mlmodule m in
-    ()
+    match m_opt with
+        | None   -> failwith "End of SMC module, no top level expression"
+        | Some m ->
+            let s = List.fold_left (fun acc (Mk_tlet (n, b)) -> "mk_let " ^ (name_to_string n) ^ " (" ^ b ^ ") (" ^ acc ^ ")") m (List.rev l) in
+            Util.print_string s; Util.print_string "\n"

@@ -1,5 +1,5 @@
 let version = "0.9.1.1"
-let platform = "Windows_x64"
+let platform = "Darwin_x86_64"
 let compiler = "OCaml 4.02.1"
-let date = "2015-10-18T18:31:24-0400"
-let commit= "c096fa0"
+let date = ""
+let commit= "a03b194"

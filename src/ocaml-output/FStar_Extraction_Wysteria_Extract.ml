@@ -1,24 +1,39 @@
 
 open Prims
-exception NYI of (Prims.string)
+type name =
+Prims.string
 
-let is_NYI = (fun _discr_ -> (match (_discr_) with
-| NYI (_) -> begin
+type wexp =
+Prims.string
+
+type tlet =
+| Mk_tlet of (name * wexp)
+
+let is_Mk_tlet = (fun _discr_ -> (match (_discr_) with
+| Mk_tlet (_) -> begin
 true
 end
 | _ -> begin
 false
 end))
 
-let ___NYI____0 = (fun projectee -> (match (projectee) with
-| NYI (_64_2) -> begin
+let ___Mk_tlet____0 = (fun projectee -> (match (projectee) with
+| Mk_tlet (_64_2) -> begin
 _64_2
 end))
 
-type ffi_type_s =
-{module_name : Prims.string; type_name : Prims.string; slice_fn_n : Prims.string; compose_fn_n : Prims.string; slice_sps_fn_n : Prims.string}
+let fn_map = (FStar_Util.smap_create 10)
 
-let is_Mkffi_type_s = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkffi_type_s")))
+type wys_lib_fn =
+{fn_name : Prims.string; rem_args : Prims.int; arity : Prims.int; extracted_fn_name : Prims.string}
+
+let is_Mkwys_lib_fn = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkwys_lib_fn")))
+
+let to_wys_lib_fn = (fun s1 n1 n2 s2 -> {fn_name = s1; rem_args = n1; arity = n2; extracted_fn_name = s2})
+
+let wys_lib_args_map = (FStar_Util.smap_create 10)
+
+let prims_trans_map = (FStar_Util.smap_create 10)
 
 let slice_id = "slice_id"
 
@@ -26,190 +41,174 @@ let compose_ids = "compose_ids"
 
 let slice_id_sps = "slice_id_sps"
 
-let ffi_types = ({module_name = "Prims"; type_name = "int"; slice_fn_n = slice_id; compose_fn_n = compose_ids; slice_sps_fn_n = slice_id_sps})::({module_name = "Prims"; type_name = "nat"; slice_fn_n = slice_id; compose_fn_n = compose_ids; slice_sps_fn_n = slice_id_sps})::({module_name = "Prims"; type_name = "list"; slice_fn_n = "slice_list"; compose_fn_n = "compose_lists"; slice_sps_fn_n = "slice_list_sps"})::({module_name = "Prims"; type_name = "option"; slice_fn_n = "slice_option"; compose_fn_n = "compose_options"; slice_sps_fn_n = "slice_option_sps"})::({module_name = "Prims"; type_name = "Tuple2"; slice_fn_n = "slice_tuple"; compose_fn_n = "compose_tuples"; slice_sps_fn_n = "slice_tuple_sps"})::[]
+let initialize = (fun _64_12 -> (let _64_14 = (FStar_Util.smap_add fn_map "Prims.int" (slice_id, compose_ids, slice_id_sps))
+in (let _64_16 = (FStar_Util.smap_add fn_map "Prims.nat" (slice_id, compose_ids, slice_id_sps))
+in (let _64_18 = (FStar_Util.smap_add fn_map "Prims.list" ("slice_list", "compose_lists", "slice_list_sps"))
+in (let _64_20 = (FStar_Util.smap_add fn_map "Prims.option" ("slice_option", "compose_options", "slice_option_sps"))
+in (let _64_22 = (FStar_Util.smap_add fn_map "Prims.Tuple2" ("slice_tuple", "compose_tuples", "slice_tuple_sps"))
+in (let _64_24 = (FStar_Util.smap_add wys_lib_args_map "as_par" (to_wys_lib_fn "as_par" 0 2 "mk_aspar"))
+in (let _64_26 = (FStar_Util.smap_add wys_lib_args_map "as_sec" (to_wys_lib_fn "as_sec" 0 2 "mk_assec"))
+in (let _64_28 = (FStar_Util.smap_add wys_lib_args_map "unbox_p" (to_wys_lib_fn "unbox_p" 1 1 "mk_unbox"))
+in (let _64_30 = (FStar_Util.smap_add wys_lib_args_map "unbox_s" (to_wys_lib_fn "unbox_s" 1 1 "mk_unbox"))
+in (let _64_32 = (FStar_Util.smap_add wys_lib_args_map "box" (to_wys_lib_fn "box" 0 2 "mk_box"))
+in (let _64_34 = (FStar_Util.smap_add wys_lib_args_map "mkwire_p" (to_wys_lib_fn "mkwire_p" 1 2 "mk_mkwire"))
+in (let _64_36 = (FStar_Util.smap_add wys_lib_args_map "mkwire_s" (to_wys_lib_fn "mkwire_s" 0 2 "mk_mkwire"))
+in (let _64_38 = (FStar_Util.smap_add wys_lib_args_map "projwire_p" (to_wys_lib_fn "projwire_p" 1 2 "mk_projwire"))
+in (let _64_40 = (FStar_Util.smap_add wys_lib_args_map "projwire_s" (to_wys_lib_fn "projwire_s" 1 2 "mk_projwire"))
+in (let _64_42 = (FStar_Util.smap_add wys_lib_args_map "concat_wire" (to_wys_lib_fn "concat_wire" 2 2 "mk_concatwire"))
+in (let _64_44 = (FStar_Util.smap_add prims_trans_map "Prims.op_Multiply" "Prims.( * )")
+in (let _64_46 = (FStar_Util.smap_add prims_trans_map "Prims.op_Subtraction" "Prims.(-)")
+in (let _64_48 = (FStar_Util.smap_add prims_trans_map "Prims.op_Addition" "Prims.(+)")
+in (let _64_50 = (FStar_Util.smap_add prims_trans_map "Prims.op_LessThanOrEqual" "Prims.(<=)")
+in (let _64_52 = (FStar_Util.smap_add prims_trans_map "Prims.op_GreaterThan" "Prims.(>)")
+in (let _64_54 = (FStar_Util.smap_add prims_trans_map "Prims.op_GreaterThanOrEqual" "Prims.(>=)")
+in (let _64_56 = (FStar_Util.smap_add prims_trans_map "Prims.op_LessThan" "Prims.(<)")
+in (let _64_58 = (FStar_Util.smap_add prims_trans_map "Prims.op_Modulus" "Prims.(%)")
+in ()))))))))))))))))))))))))
 
-let mk_fn_exp = (fun s -> (FStar_Absyn_Syntax.mk_Exp_fvar ({FStar_Absyn_Syntax.v = {FStar_Absyn_Syntax.ns = []; FStar_Absyn_Syntax.ident = {FStar_Absyn_Syntax.idText = s; FStar_Absyn_Syntax.idRange = FStar_Absyn_Syntax.dummyRange}; FStar_Absyn_Syntax.nsstr = ""; FStar_Absyn_Syntax.str = s}; FStar_Absyn_Syntax.sort = FStar_Absyn_Syntax.mk_Typ_unknown; FStar_Absyn_Syntax.p = FStar_Absyn_Syntax.dummyRange}, None) None FStar_Absyn_Syntax.dummyRange))
-
-let slice_value_exp = (mk_fn_exp "Semantics.slice_v_ffi")
-
-let slice_value_sps_exp = (mk_fn_exp "Semantics.slice_v_sps_ffi")
-
-let compose_values_exp = (mk_fn_exp "Semantics.compose_vals_ffi")
-
-type fn_mapping =
-{slice_fn : FStar_Absyn_Syntax.exp; compose_fn : FStar_Absyn_Syntax.exp; slice_sps_fn : FStar_Absyn_Syntax.exp}
-
-let is_Mkfn_mapping = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkfn_mapping")))
-
-let fn_map = (FStar_Util.smap_create (FStar_List.length ffi_types))
-
-let initialize = (fun _64_14 -> (FStar_List.iter (fun r -> (let n = (Prims.strcat (Prims.strcat r.module_name ".") r.type_name)
-in (let fns = (let _130_39 = (mk_fn_exp r.slice_fn_n)
-in (let _130_38 = (mk_fn_exp r.compose_fn_n)
-in (let _130_37 = (mk_fn_exp r.slice_sps_fn_n)
-in {slice_fn = _130_39; compose_fn = _130_38; slice_sps_fn = _130_37})))
-in (FStar_Util.smap_add fn_map n fns)))) ffi_types))
-
-let rec pre_process_t = (fun t -> (let t' = (FStar_Absyn_Util.compress_typ t)
-in (match (t'.FStar_Absyn_Syntax.n) with
-| FStar_Absyn_Syntax.Typ_refine (xt, _64_23) -> begin
-(pre_process_t xt.FStar_Absyn_Syntax.sort)
+let lookup_ffi_map = (fun t -> (let m = (FStar_Util.smap_try_find fn_map t)
+in (match (m) with
+| Some (m) -> begin
+m
 end
-| _64_27 -> begin
-t'
+| _64_65 -> begin
+(FStar_All.failwith (Prims.strcat "Unknown user type: " t))
 end)))
 
-let is_bool = (fun t -> (match ((let _130_44 = (pre_process_t t)
-in _130_44.FStar_Absyn_Syntax.n)) with
-| FStar_Absyn_Syntax.Typ_const (ftv) -> begin
-(ftv.FStar_Absyn_Syntax.v.FStar_Absyn_Syntax.str = "Prims.bool")
+let lookup_wys_lib_map = (fun s -> (match ((FStar_Util.smap_try_find wys_lib_args_map s)) with
+| Some (x) -> begin
+x
 end
-| _64_32 -> begin
+| _64_70 -> begin
+(FStar_All.failwith "Unknown wysteria library function")
+end))
+
+let translate_ffi_name = (fun s -> (match ((FStar_Util.smap_try_find prims_trans_map s)) with
+| Some (x) -> begin
+x
+end
+| None -> begin
+s
+end))
+
+let rec sublist = (fun s l n -> (match ((n > (FStar_List.length l))) with
+| true -> begin
+(let _130_46 = (let _130_45 = (FStar_Util.string_of_int (FStar_List.length l))
+in (let _130_44 = (FStar_Util.string_of_int n)
+in (FStar_Util.format3 "Error removing arguments in sublist for %s, list len is %s, n is %s " s _130_45 _130_44)))
+in (FStar_All.failwith _130_46))
+end
+| false -> begin
+(match ((n = 0)) with
+| true -> begin
+l
+end
+| false -> begin
+(let _130_47 = (FStar_List.tl l)
+in (sublist s _130_47 (n - 1)))
+end)
+end))
+
+let is_bool = (fun t -> (match (t) with
+| FStar_Extraction_ML_Syntax.MLTY_Named (_64_81, p) -> begin
+((FStar_Extraction_ML_Syntax.string_of_mlpath p) = "Prims.bool")
+end
+| _64_86 -> begin
 false
 end))
 
-let is_unit = (fun t -> (match ((let _130_47 = (pre_process_t t)
-in _130_47.FStar_Absyn_Syntax.n)) with
-| FStar_Absyn_Syntax.Typ_const (ftv) -> begin
-(ftv.FStar_Absyn_Syntax.v.FStar_Absyn_Syntax.str = "Prims.unit")
+let is_unit = (fun t -> (match (t) with
+| FStar_Extraction_ML_Syntax.MLTY_Named (_64_89, p) -> begin
+((FStar_Extraction_ML_Syntax.string_of_mlpath p) = "Prims.unit")
 end
-| _64_37 -> begin
+| _64_94 -> begin
 false
 end))
 
-let is_prin = (fun t -> (match ((let _130_50 = (pre_process_t t)
-in _130_50.FStar_Absyn_Syntax.n)) with
-| FStar_Absyn_Syntax.Typ_const (ftv) -> begin
-(ftv.FStar_Absyn_Syntax.v.FStar_Absyn_Syntax.str = "Prins.prin")
+let is_prin = (fun t -> (match (t) with
+| FStar_Extraction_ML_Syntax.MLTY_Named (_64_97, p) -> begin
+((FStar_Extraction_ML_Syntax.string_of_mlpath p) = "Prins.prin")
 end
-| _64_42 -> begin
+| _64_102 -> begin
 false
 end))
 
-let is_ordset = (fun t -> (match ((let _130_53 = (pre_process_t t)
-in _130_53.FStar_Absyn_Syntax.n)) with
-| FStar_Absyn_Syntax.Typ_const (ftv) -> begin
-(ftv.FStar_Absyn_Syntax.v.FStar_Absyn_Syntax.str = "FStar.OrdSet.ordset")
+let is_prins = (fun t -> (match (t) with
+| FStar_Extraction_ML_Syntax.MLTY_Named (_64_105, p) -> begin
+((FStar_Extraction_ML_Syntax.string_of_mlpath p) = "Prins.prins")
 end
-| _64_47 -> begin
+| _64_110 -> begin
 false
 end))
 
-let is_p_cmp = (fun e -> (match ((let _130_56 = (FStar_Absyn_Util.compress_exp e)
-in _130_56.FStar_Absyn_Syntax.n)) with
-| FStar_Absyn_Syntax.Exp_fvar (fvv, _64_51) -> begin
-(fvv.FStar_Absyn_Syntax.v.FStar_Absyn_Syntax.str = "Prins.p_cmp")
+let is_eprins = (fun t -> (match (t) with
+| FStar_Extraction_ML_Syntax.MLTY_Named (_64_113, p) -> begin
+((FStar_Extraction_ML_Syntax.string_of_mlpath p) = "Prins.eprins")
 end
-| _64_55 -> begin
+| _64_118 -> begin
 false
 end))
 
-let is_prins = (fun t -> (match ((let _130_59 = (pre_process_t t)
-in _130_59.FStar_Absyn_Syntax.n)) with
-| FStar_Absyn_Syntax.Typ_app (t', (FStar_Util.Inl (t''), _64_66)::(FStar_Util.Inr (f), _64_61)::[]) -> begin
-(((is_ordset t') && (is_prin t'')) && (is_p_cmp f))
+let is_box = (fun t -> (match (t) with
+| FStar_Extraction_ML_Syntax.MLTY_Named (_64_121, p) -> begin
+((FStar_Extraction_ML_Syntax.string_of_mlpath p) = "Wysteria.Box")
 end
-| _64_72 -> begin
+| _64_126 -> begin
 false
 end))
 
-let is_eprins = is_prins
-
-let is_box' = (fun t -> (match ((let _130_63 = (pre_process_t t)
-in _130_63.FStar_Absyn_Syntax.n)) with
-| FStar_Absyn_Syntax.Typ_const (ftv) -> begin
-(ftv.FStar_Absyn_Syntax.v.FStar_Absyn_Syntax.str = "Wysteria.Box")
+let is_wire = (fun t -> (match (t) with
+| FStar_Extraction_ML_Syntax.MLTY_Named (_64_129, p) -> begin
+((FStar_Extraction_ML_Syntax.string_of_mlpath p) = "Wysteria.Wire")
 end
-| _64_77 -> begin
-false
-end))
-
-let is_box = (fun t -> (match ((let _130_66 = (pre_process_t t)
-in _130_66.FStar_Absyn_Syntax.n)) with
-| FStar_Absyn_Syntax.Typ_app (t', _64_81) -> begin
-(is_box' t')
-end
-| _64_85 -> begin
-false
-end))
-
-let is_wire' = (fun t -> (match ((let _130_69 = (pre_process_t t)
-in _130_69.FStar_Absyn_Syntax.n)) with
-| FStar_Absyn_Syntax.Typ_const (ftv) -> begin
-(ftv.FStar_Absyn_Syntax.v.FStar_Absyn_Syntax.str = "Wysteria.Wire")
-end
-| _64_90 -> begin
-false
-end))
-
-let is_wire = (fun t -> (match ((let _130_72 = (pre_process_t t)
-in _130_72.FStar_Absyn_Syntax.n)) with
-| FStar_Absyn_Syntax.Typ_app (t', _64_94) -> begin
-(is_wire' t')
-end
-| _64_98 -> begin
+| _64_134 -> begin
 false
 end))
 
 let is_wysteria_type = (fun t -> (((((is_prin t) || (is_prins t)) || (is_eprins t)) || (is_box t)) || (is_wire t)))
 
-let lookup_ffi_map = (fun t -> (let m = (FStar_Util.smap_try_find fn_map t)
-in (match (m) with
-| Some (m) -> begin
-(m.slice_fn, m.compose_fn, m.slice_sps_fn)
-end
-| _64_105 -> begin
-(let _64_106 = (FStar_Util.print_string (Prims.strcat "Error in looking up ffi type: " t))
-in (Prims.raise (NYI ((Prims.strcat "Error in looking up ffi type: " t)))))
-end)))
+let slice_value = "Semantics.slice_v_ffi"
+
+let slice_value_sps = "Semantics.slice_v_sps_ffi"
+
+let compose_values = "Semantics.compose_vals_ffi"
 
 let rec get_opaque_fns = (fun t -> (match ((((((is_bool t) || (is_unit t)) || (is_prin t)) || (is_prins t)) || (is_eprins t))) with
 | true -> begin
-(let _130_81 = (mk_fn_exp slice_id)
-in (let _130_80 = (mk_fn_exp compose_ids)
-in (let _130_79 = (mk_fn_exp slice_id_sps)
-in (_130_81, _130_80, _130_79))))
+(slice_id, compose_ids, slice_id_sps)
 end
 | false -> begin
 (match (((is_box t) || (is_wire t))) with
 | true -> begin
-(slice_value_exp, compose_values_exp, slice_value_sps_exp)
+(slice_value, compose_values, slice_value_sps)
 end
 | false -> begin
-(match ((let _130_82 = (pre_process_t t)
-in _130_82.FStar_Absyn_Syntax.n)) with
-| FStar_Absyn_Syntax.Typ_const (ftv) -> begin
-(lookup_ffi_map ftv.FStar_Absyn_Syntax.v.FStar_Absyn_Syntax.str)
+(match (t) with
+| FStar_Extraction_ML_Syntax.MLTY_Named ([], p) -> begin
+(lookup_ffi_map (FStar_Extraction_ML_Syntax.string_of_mlpath p))
 end
-| FStar_Absyn_Syntax.Typ_app (t, args) -> begin
-(let _64_118 = (get_opaque_fns t)
-in (match (_64_118) with
+| FStar_Extraction_ML_Syntax.MLTY_Named (args, p) -> begin
+(let _64_148 = (get_opaque_fns (FStar_Extraction_ML_Syntax.MLTY_Named (([], p))))
+in (match (_64_148) with
 | (e1, e2, e3) -> begin
-(FStar_List.fold_left (fun _64_122 arg -> (match (_64_122) with
-| (acc1, acc2, acc3) -> begin
+(FStar_List.fold_left (fun _64_152 arg -> (match (_64_152) with
+| (a1, a2, a3) -> begin
 (match (arg) with
-| (FStar_Util.Inl (t'), _64_127) -> begin
-(let _64_132 = (get_opaque_fns t')
-in (match (_64_132) with
-| (e1', e2', e3') -> begin
-(let _64_136 = ((FStar_Util.Inr (e1'), None), (FStar_Util.Inr (e2'), None), (FStar_Util.Inr (e3'), None))
-in (match (_64_136) with
-| (e1'_arg, e2'_arg, e3'_arg) -> begin
-(let _130_87 = (FStar_Absyn_Syntax.mk_Exp_app (acc1, (e1'_arg)::[]) None FStar_Absyn_Syntax.dummyRange)
-in (let _130_86 = (FStar_Absyn_Syntax.mk_Exp_app (acc2, (e2'_arg)::[]) None FStar_Absyn_Syntax.dummyRange)
-in (let _130_85 = (FStar_Absyn_Syntax.mk_Exp_app (acc3, (e3'_arg)::[]) None FStar_Absyn_Syntax.dummyRange)
-in (_130_87, _130_86, _130_85))))
-end))
+| FStar_Extraction_ML_Syntax.MLTY_Named (_64_155) -> begin
+(let _64_160 = (get_opaque_fns arg)
+in (match (_64_160) with
+| (e1_arg, e2_arg, e3_arg) -> begin
+((Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat "(" a1) " ") e1_arg) ")"), (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat "(" a2) " ") e2_arg) ")"), (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat "(" a3) " ") e3_arg) ")"))
 end))
 end
-| _64_138 -> begin
-(Prims.raise (NYI ("Unexpected type argument: an expression")))
+| _64_162 -> begin
+(FStar_All.failwith "Did not expect type argument to be something other than named type")
 end)
 end)) (e1, e2, e3) args)
 end))
 end
-| _64_140 -> begin
-(Prims.raise (NYI ("Unexpected type in get slice fn")))
+| _64_164 -> begin
+(FStar_All.failwith "Did not expect a non named type in get_opaque_fns")
 end)
 end)
 end))
@@ -245,17 +244,10 @@ end
 "x"
 end
 | false -> begin
-(let _64_146 = (get_opaque_fns t)
-in (match (_64_146) with
-| (e1, e2, e3) -> begin
-(let _64_150 = (let _130_92 = (FStar_Absyn_Print.exp_to_string e1)
-in (let _130_91 = (FStar_Absyn_Print.exp_to_string e2)
-in (let _130_90 = (FStar_Absyn_Print.exp_to_string e3)
-in (_130_92, _130_91, _130_90))))
-in (match (_64_150) with
+(let _64_170 = (get_opaque_fns t)
+in (match (_64_170) with
 | (s1, s2, s3) -> begin
 (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat "mk_v_opaque x " s1) " ") s2) " ") s3)
-end))
 end))
 end)
 end)
@@ -265,37 +257,23 @@ end)
 end)
 in (Prims.strcat s s'))))
 
-let filter_out_type_binders = (fun _66_95 -> (FStar_List.filter (fun a -> (match (a) with
-| (FStar_Util.Inl (_64_154), _64_157) -> begin
-false
+let is_ffi = (fun _64_174 -> (match (_64_174) with
+| {FStar_Extraction_ML_Syntax.expr = e; FStar_Extraction_ML_Syntax.ty = t} -> begin
+(match (e) with
+| FStar_Extraction_ML_Syntax.MLE_Name (p, n) -> begin
+(let _130_72 = (translate_ffi_name (FStar_Extraction_ML_Syntax.string_of_mlpath (p, n)))
+in (((p = ("FFI")::[]) || (p = ("Prims")::[])), _130_72))
 end
-| (FStar_Util.Inr (_64_160), _64_163) -> begin
-true
-end))))
-
-let filter_out_type_args = (fun _66_95 -> (FStar_List.filter (fun a -> (match (a) with
-| (FStar_Util.Inl (_64_167), _64_170) -> begin
-false
-end
-| (FStar_Util.Inr (_64_173), _64_176) -> begin
-true
-end))))
-
-let name_to_string = (fun s -> (Prims.strcat (Prims.strcat "\"" s) "\""))
-
-let extract_binder = (fun b -> (match (b) with
-| (FStar_Util.Inl (_64_181), _64_184) -> begin
-(Prims.raise (NYI ("Extract binder cannot extract type arguments")))
-end
-| (FStar_Util.Inr (bvar), _64_189) -> begin
-(name_to_string bvar.FStar_Absyn_Syntax.v.FStar_Absyn_Syntax.ppname.FStar_Absyn_Syntax.idText)
+| _64_180 -> begin
+(false, "")
+end)
 end))
 
-let extract_const = (fun c -> (match (c) with
-| FStar_Absyn_Syntax.Const_unit -> begin
+let extract_mlconst = (fun c -> (match (c) with
+| FStar_Extraction_ML_Syntax.MLC_Unit -> begin
 "C_unit ()"
 end
-| FStar_Absyn_Syntax.Const_bool (b) -> begin
+| FStar_Extraction_ML_Syntax.MLC_Bool (b) -> begin
 (Prims.strcat "C_bool " (match (b) with
 | true -> begin
 "true"
@@ -304,422 +282,342 @@ end
 "false"
 end))
 end
-| FStar_Absyn_Syntax.Const_int32 (n) -> begin
+| FStar_Extraction_ML_Syntax.MLC_Int32 (n) -> begin
 (Prims.strcat (Prims.strcat "C_opaque ((), Obj.magic " (FStar_Util.string_of_int32 n)) ")")
 end
-| FStar_Absyn_Syntax.Const_int (x) -> begin
+| FStar_Extraction_ML_Syntax.MLC_Int64 (n) -> begin
+(Prims.strcat (Prims.strcat "C_opaque ((), Obj.magic " (FStar_Util.string_of_int64 n)) ")")
+end
+| FStar_Extraction_ML_Syntax.MLC_Int (x) -> begin
 (Prims.strcat (Prims.strcat "C_opaque ((), Obj.magic " x) ")")
 end
-| _64_200 -> begin
-(Prims.raise (NYI ("Extract constant cannot extract the constant")))
+| _64_192 -> begin
+(FStar_All.failwith "Unsupported constant")
 end))
 
-let typ_of_exp = (fun e -> (let t' = (let _130_106 = (let _130_105 = (FStar_Absyn_Util.compress_exp e)
-in _130_105.FStar_Absyn_Syntax.tk)
-in (FStar_ST.read _130_106))
-in (match (t') with
-| Some (t) -> begin
-t
+let is_wys_lib_fn = (fun _64_195 -> (match (_64_195) with
+| {FStar_Extraction_ML_Syntax.expr = e; FStar_Extraction_ML_Syntax.ty = t} -> begin
+(match (e) with
+| FStar_Extraction_ML_Syntax.MLE_Name (p) -> begin
+(FStar_Util.starts_with (FStar_Extraction_ML_Syntax.string_of_mlpath p) "Wysteria")
 end
-| _64_206 -> begin
-(Prims.raise (NYI ("Type of FFI call not set!")))
-end)))
-
-let is_ffi = (fun e -> (match ((let _130_109 = (FStar_Absyn_Util.compress_exp e)
-in _130_109.FStar_Absyn_Syntax.n)) with
-| FStar_Absyn_Syntax.Exp_fvar (fvv, _64_210) -> begin
-(match (((FStar_Util.starts_with fvv.FStar_Absyn_Syntax.v.FStar_Absyn_Syntax.str "FFI.") || (FStar_Util.starts_with fvv.FStar_Absyn_Syntax.v.FStar_Absyn_Syntax.str "Prims."))) with
-| true -> begin
-(true, fvv.FStar_Absyn_Syntax.v.FStar_Absyn_Syntax.str)
-end
-| false -> begin
-(false, "")
+| _64_199 -> begin
+false
 end)
-end
-| _64_214 -> begin
-(false, "")
 end))
 
-let check_pats_for_bool = (fun l -> (let c_unit = (FStar_Absyn_Syntax.mk_Exp_constant FStar_Absyn_Syntax.Const_unit None FStar_Absyn_Syntax.dummyRange)
-in (let def = (false, c_unit, c_unit)
+let check_pats_for_bool = (fun l -> (let def = (false, FStar_Extraction_ML_Syntax.ml_unit, FStar_Extraction_ML_Syntax.ml_unit)
 in (match (((FStar_List.length l) <> 2)) with
 | true -> begin
 def
 end
 | false -> begin
-(let _64_222 = (FStar_List.hd l)
-in (match (_64_222) with
-| (p1, _64_220, e1) -> begin
-(let _64_227 = (let _130_112 = (FStar_List.tl l)
-in (FStar_List.hd _130_112))
-in (match (_64_227) with
-| (p2, _64_225, e2) -> begin
-(match ((p1.FStar_Absyn_Syntax.v, p2.FStar_Absyn_Syntax.v)) with
-| (FStar_Absyn_Syntax.Pat_constant (FStar_Absyn_Syntax.Const_bool (_64_229)), FStar_Absyn_Syntax.Pat_constant (FStar_Absyn_Syntax.Const_bool (_64_233))) -> begin
+(let _64_206 = (FStar_List.hd l)
+in (match (_64_206) with
+| (p1, _64_204, e1) -> begin
+(let _64_211 = (let _130_79 = (FStar_List.tl l)
+in (FStar_List.hd _130_79))
+in (match (_64_211) with
+| (p2, _64_209, e2) -> begin
+(match ((p1, p2)) with
+| (FStar_Extraction_ML_Syntax.MLP_Const (FStar_Extraction_ML_Syntax.MLC_Bool (_64_213)), FStar_Extraction_ML_Syntax.MLP_Const (FStar_Extraction_ML_Syntax.MLC_Bool (_64_217))) -> begin
 (true, e1, e2)
 end
-| _64_238 -> begin
+| _64_222 -> begin
 def
 end)
 end))
 end))
-end))))
+end)))
 
-let rec extract_exp = (fun e en -> (match ((let _130_125 = (FStar_Absyn_Util.compress_exp e)
-in _130_125.FStar_Absyn_Syntax.n)) with
-| FStar_Absyn_Syntax.Exp_bvar (bvar) -> begin
-(Prims.strcat "mk_var " (name_to_string bvar.FStar_Absyn_Syntax.v.FStar_Absyn_Syntax.ppname.FStar_Absyn_Syntax.idText))
+let name_to_string = (fun s -> (Prims.strcat (Prims.strcat "\"" s) "\""))
+
+let rec extract_mlexp = (fun _64_226 -> (match (_64_226) with
+| {FStar_Extraction_ML_Syntax.expr = e; FStar_Extraction_ML_Syntax.ty = t} -> begin
+(match (e) with
+| FStar_Extraction_ML_Syntax.MLE_Const (c) -> begin
+(let _130_88 = (let _130_87 = (extract_mlconst c)
+in (Prims.strcat "mk_const (" _130_87))
+in (Prims.strcat _130_88 ")"))
 end
-| FStar_Absyn_Syntax.Exp_fvar (fvar, _64_245) -> begin
-(Prims.strcat "mk_var " (name_to_string fvar.FStar_Absyn_Syntax.v.FStar_Absyn_Syntax.ident.FStar_Absyn_Syntax.idText))
+| FStar_Extraction_ML_Syntax.MLE_Var (x) -> begin
+(Prims.strcat "mk_var " (name_to_string (FStar_Extraction_ML_Syntax.idsym x)))
 end
-| FStar_Absyn_Syntax.Exp_constant (c) -> begin
-(let _130_127 = (let _130_126 = (extract_const c)
-in (Prims.strcat "mk_const (" _130_126))
-in (Prims.strcat _130_127 ")"))
+| FStar_Extraction_ML_Syntax.MLE_Name (p, s) -> begin
+(let ss = (FStar_Extraction_ML_Syntax.string_of_mlpath (p, s))
+in (let _64_236 = (match ((not ((FStar_Util.starts_with ss "SMC.")))) with
+| true -> begin
+(let _130_89 = (FStar_Util.format1 "Warning: name not applied: %s\n" (FStar_Extraction_ML_Syntax.string_of_mlpath (p, s)))
+in (FStar_Util.print_string _130_89))
 end
-| FStar_Absyn_Syntax.Exp_abs (bs, e) -> begin
-(let body_str = (extract_exp e en)
-in (let bs = ((filter_out_type_binders ()) bs)
-in (FStar_List.fold_left (fun s b -> (let _130_133 = (let _130_132 = (let _130_131 = (let _130_130 = (extract_binder b)
-in (Prims.strcat "mk_abs " _130_130))
-in (Prims.strcat _130_131 " ("))
-in (Prims.strcat _130_132 s))
-in (Prims.strcat _130_133 ")"))) body_str (FStar_List.rev bs))))
+| false -> begin
+()
+end)
+in (Prims.strcat "mk_var " (name_to_string s))))
 end
-| FStar_Absyn_Syntax.Exp_app (e', args) -> begin
-(let args = ((filter_out_type_args ()) args)
-in (let _64_265 = (is_ffi e')
-in (match (_64_265) with
+| FStar_Extraction_ML_Syntax.MLE_Let ((b, l), e') -> begin
+(match (b) with
+| true -> begin
+(FStar_All.failwith "Nested recursive lets are not supported yet")
+end
+| false -> begin
+(let lb = (FStar_List.hd l)
+in (let lbname = (FStar_Extraction_ML_Syntax.idsym lb.FStar_Extraction_ML_Syntax.mllb_name)
+in (let lbbody = lb.FStar_Extraction_ML_Syntax.mllb_def
+in (let _130_94 = (let _130_93 = (let _130_91 = (let _130_90 = (extract_mlexp lbbody)
+in (Prims.strcat (Prims.strcat (Prims.strcat "mk_let " (name_to_string lbname)) " (") _130_90))
+in (Prims.strcat _130_91 ") ("))
+in (let _130_92 = (extract_mlexp e')
+in (Prims.strcat _130_93 _130_92)))
+in (Prims.strcat _130_94 ")")))))
+end)
+end
+| FStar_Extraction_ML_Syntax.MLE_App (f, args) -> begin
+(let _64_253 = (is_ffi f)
+in (match (_64_253) with
 | (b, ffi) -> begin
 (match (b) with
 | true -> begin
-(let t = (let _130_134 = (typ_of_exp e)
-in (FStar_Tc_Normalize.normalize en _130_134))
-in (let inj = (get_injection t)
-in (let args_str = (FStar_List.fold_left (fun s a -> (let _130_138 = (let _130_137 = (extract_arg a en)
-in (Prims.strcat (Prims.strcat s " (") _130_137))
-in (Prims.strcat _130_138 ");"))) "" args)
-in (let _130_146 = (let _130_145 = (let _130_144 = (let _130_143 = (let _130_142 = (let _130_141 = (let _130_140 = (let _130_139 = (FStar_Util.string_of_int (FStar_List.length args))
-in (Prims.strcat "mk_ffi " _130_139))
-in (Prims.strcat _130_140 " ("))
-in (Prims.strcat _130_141 ffi))
-in (Prims.strcat _130_142 ") [ "))
-in (Prims.strcat _130_143 args_str))
-in (Prims.strcat _130_144 " ] ("))
-in (Prims.strcat _130_145 inj))
-in (Prims.strcat _130_146 ")")))))
+(let inj = (get_injection t)
+in (let args_exp = (FStar_List.fold_left (fun s a -> (let _130_98 = (let _130_97 = (extract_mlexp a)
+in (Prims.strcat (Prims.strcat s " (") _130_97))
+in (Prims.strcat _130_98 ");"))) "" args)
+in (let _130_106 = (let _130_105 = (let _130_104 = (let _130_103 = (let _130_102 = (let _130_101 = (let _130_100 = (let _130_99 = (FStar_Util.string_of_int (FStar_List.length args))
+in (Prims.strcat "mk_ffi " _130_99))
+in (Prims.strcat _130_100 " ("))
+in (Prims.strcat _130_101 ffi))
+in (Prims.strcat _130_102 ") [ "))
+in (Prims.strcat _130_103 args_exp))
+in (Prims.strcat _130_104 " ] ("))
+in (Prims.strcat _130_105 inj))
+in (Prims.strcat _130_106 ")"))))
 end
 | false -> begin
-(let s = (extract_exp e' en)
-in (let _64_274 = (extract_wysteria_specific_ast s args e en)
-in (match (_64_274) with
-| (b, s') -> begin
-(match (b) with
+(match ((is_wys_lib_fn f)) with
 | true -> begin
-s'
+(extract_wysteria_specific_ast f args t)
 end
 | false -> begin
-(match ((s = "_assert")) with
+(let s = (extract_mlexp f)
+in (match ((s = "_assert")) with
 | true -> begin
 "mk_const (C_unit ())"
 end
 | false -> begin
-(FStar_List.fold_left (fun s a -> (let _130_150 = (let _130_149 = (extract_arg a en)
-in (Prims.strcat (Prims.strcat (Prims.strcat "mk_app (" s) ") (") _130_149))
-in (Prims.strcat _130_150 ")"))) s args)
+(FStar_List.fold_left (fun s a -> (let _130_110 = (let _130_109 = (extract_mlexp a)
+in (Prims.strcat (Prims.strcat (Prims.strcat "mk_app (" s) ") (") _130_109))
+in (Prims.strcat _130_110 ")"))) s args)
+end))
 end)
 end)
-end)))
-end)
-end)))
+end))
 end
-| FStar_Absyn_Syntax.Exp_match (e, pats) -> begin
-(let _64_284 = (check_pats_for_bool pats)
-in (match (_64_284) with
+| FStar_Extraction_ML_Syntax.MLE_Fun (bs, body) -> begin
+(let body_str = (extract_mlexp body)
+in (FStar_List.fold_left (fun s _64_273 -> (match (_64_273) with
+| ((b, _64_269), _64_272) -> begin
+(Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat "mk_abs " (name_to_string b)) " (") s) ")")
+end)) body_str (FStar_List.rev bs)))
+end
+| FStar_Extraction_ML_Syntax.MLE_Match (e, bs) -> begin
+(let _64_281 = (check_pats_for_bool bs)
+in (match (_64_281) with
 | (b, e1, e2) -> begin
 (match (b) with
 | true -> begin
-(let _130_158 = (let _130_157 = (let _130_155 = (let _130_154 = (let _130_152 = (let _130_151 = (extract_exp e en)
-in (Prims.strcat "mk_cond (" _130_151))
-in (Prims.strcat _130_152 ") ("))
-in (let _130_153 = (extract_exp e1 en)
-in (Prims.strcat _130_154 _130_153)))
-in (Prims.strcat _130_155 ") ("))
-in (let _130_156 = (extract_exp e2 en)
-in (Prims.strcat _130_157 _130_156)))
-in (Prims.strcat _130_158 ")"))
+(let _130_120 = (let _130_119 = (let _130_117 = (let _130_116 = (let _130_114 = (let _130_113 = (extract_mlexp e)
+in (Prims.strcat "mk_cond (" _130_113))
+in (Prims.strcat _130_114 ") ("))
+in (let _130_115 = (extract_mlexp e1)
+in (Prims.strcat _130_116 _130_115)))
+in (Prims.strcat _130_117 ") ("))
+in (let _130_118 = (extract_mlexp e2)
+in (Prims.strcat _130_119 _130_118)))
+in (Prims.strcat _130_120 ")"))
 end
 | false -> begin
-(Prims.raise (NYI ("Only boolean patterns are supported")))
+(FStar_All.failwith "Only if-then-else patterns are supported")
 end)
 end))
 end
-| FStar_Absyn_Syntax.Exp_ascribed (e, _64_287, _64_289) -> begin
-(extract_exp e en)
+| FStar_Extraction_ML_Syntax.MLE_Coerce (e, _64_284, _64_286) -> begin
+(extract_mlexp e)
 end
-| FStar_Absyn_Syntax.Exp_let (lbs, e) -> begin
-(match ((Prims.fst lbs)) with
+| _64_290 -> begin
+(FStar_All.failwith "This expression extraction is not supported yet")
+end)
+end))
+and extract_wysteria_specific_ast = (fun _64_294 args t -> (match (_64_294) with
+| {FStar_Extraction_ML_Syntax.expr = f; FStar_Extraction_ML_Syntax.ty = _64_292} -> begin
+(match (f) with
+| FStar_Extraction_ML_Syntax.MLE_Name (_64_298, s) -> begin
+(match ((s = "main")) with
 | true -> begin
-(Prims.raise (NYI ("Recursive let not expected (only top level)")))
+(let f = (let _130_124 = (FStar_List.tl args)
+in (FStar_List.hd _130_124))
+in (let f_exp = (extract_mlexp f)
+in (Prims.strcat (Prims.strcat "mk_app (" f_exp) ") (E_const (C_unit ()))")))
 end
 | false -> begin
-(let lb = (FStar_List.hd (Prims.snd lbs))
-in (let _130_167 = (let _130_166 = (let _130_164 = (let _130_163 = (let _130_161 = (let _130_160 = (let _130_159 = (FStar_Absyn_Print.lbname_to_string lb.FStar_Absyn_Syntax.lbname)
-in (name_to_string _130_159))
-in (Prims.strcat "mk_let " _130_160))
-in (Prims.strcat _130_161 " ("))
-in (let _130_162 = (extract_exp lb.FStar_Absyn_Syntax.lbdef en)
-in (Prims.strcat _130_163 _130_162)))
-in (Prims.strcat _130_164 ") ("))
-in (let _130_165 = (extract_exp e en)
-in (Prims.strcat _130_166 _130_165)))
-in (Prims.strcat _130_167 ")")))
-end)
-end
-| _64_298 -> begin
-(let _64_299 = (let _130_169 = (let _130_168 = (FStar_Absyn_Print.tag_of_exp e)
-in (Prims.strcat "Expression not expected " _130_168))
-in (FStar_Util.print_string _130_169))
-in (Prims.raise (NYI (""))))
-end))
-and extract_wysteria_specific_ast = (fun s args e en -> (match ((s = "mk_var \"main\"")) with
+(match ((s = "w_read_int")) with
 | true -> begin
-(let f = (let _130_174 = (FStar_List.tl args)
-in (FStar_List.hd _130_174))
-in (let s = (match (f) with
-| (FStar_Util.Inl (_64_307), _64_310) -> begin
-(Prims.raise (NYI ("Main 2nd argument not expected to be a type argument")))
-end
-| (FStar_Util.Inr (f), _64_315) -> begin
-(let _130_179 = (let _130_178 = (let _130_177 = (let _130_176 = (let _130_175 = (FStar_Absyn_Syntax.mk_Exp_constant FStar_Absyn_Syntax.Const_unit None FStar_Absyn_Syntax.dummyRange)
-in (FStar_Absyn_Syntax.varg _130_175))
-in (_130_176)::[])
-in (f, _130_177))
-in (FStar_Absyn_Syntax.mk_Exp_app _130_178 None FStar_Absyn_Syntax.dummyRange))
-in (extract_exp _130_179 en))
-end)
-in (true, s)))
+(let inj_str = (get_injection t)
+in (Prims.strcat (Prims.strcat "mk_ffi 1 FFI.read_int [ E_const (C_unit ()) ] (" inj_str) ")"))
 end
 | false -> begin
-(match (s) with
-| "mk_var \"as_par\"" -> begin
-(let a1 = (FStar_List.hd args)
-in (let a2 = (let _130_180 = (FStar_List.tl args)
-in (FStar_List.hd _130_180))
-in (let _130_186 = (let _130_185 = (let _130_184 = (let _130_182 = (let _130_181 = (extract_arg a1 en)
-in (Prims.strcat "mk_aspar (" _130_181))
-in (Prims.strcat _130_182 ") ("))
-in (let _130_183 = (extract_arg a2 en)
-in (Prims.strcat _130_184 _130_183)))
-in (Prims.strcat _130_185 ")"))
-in (true, _130_186))))
-end
-| "mk_var \"as_sec\"" -> begin
-(let a1 = (FStar_List.hd args)
-in (let a2 = (let _130_187 = (FStar_List.tl args)
-in (FStar_List.hd _130_187))
-in (let _130_193 = (let _130_192 = (let _130_191 = (let _130_189 = (let _130_188 = (extract_arg a1 en)
-in (Prims.strcat "mk_assec (" _130_188))
-in (Prims.strcat _130_189 ") ("))
-in (let _130_190 = (extract_arg a2 en)
-in (Prims.strcat _130_191 _130_190)))
-in (Prims.strcat _130_192 ")"))
-in (true, _130_193))))
-end
-| "mk_var \"box\"" -> begin
-(let a1 = (FStar_List.hd args)
-in (let a2 = (let _130_194 = (FStar_List.tl args)
-in (FStar_List.hd _130_194))
-in (let _130_200 = (let _130_199 = (let _130_198 = (let _130_196 = (let _130_195 = (extract_arg a1 en)
-in (Prims.strcat "mk_box (" _130_195))
-in (Prims.strcat _130_196 ") ("))
-in (let _130_197 = (extract_arg a2 en)
-in (Prims.strcat _130_198 _130_197)))
-in (Prims.strcat _130_199 ")"))
-in (true, _130_200))))
-end
-| ("mk_var \"unbox_p\"") | ("mk_var \"unbox_s\"") -> begin
-(let a = (let _130_201 = (FStar_List.tl args)
-in (FStar_List.hd _130_201))
-in (let _130_204 = (let _130_203 = (let _130_202 = (extract_arg a en)
-in (Prims.strcat "mk_unbox (" _130_202))
-in (Prims.strcat _130_203 ")"))
-in (true, _130_204)))
-end
-| "mk_var \"mkwire_s\"" -> begin
-(let a1 = (FStar_List.hd args)
-in (let a2 = (let _130_205 = (FStar_List.tl args)
-in (FStar_List.hd _130_205))
-in (let _130_211 = (let _130_210 = (let _130_209 = (let _130_207 = (let _130_206 = (extract_arg a1 en)
-in (Prims.strcat "mk_mkwire (" _130_206))
-in (Prims.strcat _130_207 ") ("))
-in (let _130_208 = (extract_arg a2 en)
-in (Prims.strcat _130_209 _130_208)))
-in (Prims.strcat _130_210 ")"))
-in (true, _130_211))))
-end
-| "mk_var \"mkwire_p\"" -> begin
-(let a1 = (let _130_212 = (FStar_List.tl args)
-in (FStar_List.hd _130_212))
-in (let a2 = (let _130_214 = (let _130_213 = (FStar_List.tl args)
-in (FStar_List.tl _130_213))
-in (FStar_List.hd _130_214))
-in (let _130_220 = (let _130_219 = (let _130_218 = (let _130_216 = (let _130_215 = (extract_arg a1 en)
-in (Prims.strcat "mk_mkwire (" _130_215))
-in (Prims.strcat _130_216 ") ("))
-in (let _130_217 = (extract_arg a2 en)
-in (Prims.strcat _130_218 _130_217)))
-in (Prims.strcat _130_219 ")"))
-in (true, _130_220))))
-end
-| ("mk_var \"projwire_p\"") | ("mk_var \"projwire_s\"") -> begin
-(let a1 = (let _130_221 = (FStar_List.tl args)
-in (FStar_List.hd _130_221))
-in (let a2 = (let _130_223 = (let _130_222 = (FStar_List.tl args)
-in (FStar_List.tl _130_222))
-in (FStar_List.hd _130_223))
-in (let _130_229 = (let _130_228 = (let _130_227 = (let _130_225 = (let _130_224 = (extract_arg a1 en)
-in (Prims.strcat "mk_projwire (" _130_224))
-in (Prims.strcat _130_225 ") ("))
-in (let _130_226 = (extract_arg a2 en)
-in (Prims.strcat _130_227 _130_226)))
-in (Prims.strcat _130_228 ")"))
-in (true, _130_229))))
-end
-| "mk_var \"concat_wire\"" -> begin
-(let a1 = (let _130_231 = (let _130_230 = (FStar_List.tl args)
-in (FStar_List.tl _130_230))
-in (FStar_List.hd _130_231))
-in (let a2 = (let _130_234 = (let _130_233 = (let _130_232 = (FStar_List.tl args)
-in (FStar_List.tl _130_232))
-in (FStar_List.tl _130_233))
-in (FStar_List.hd _130_234))
-in (let _130_240 = (let _130_239 = (let _130_238 = (let _130_236 = (let _130_235 = (extract_arg a1 en)
-in (Prims.strcat "mk_concatwire (" _130_235))
-in (Prims.strcat _130_236 ") ("))
-in (let _130_237 = (extract_arg a2 en)
-in (Prims.strcat _130_238 _130_237)))
-in (Prims.strcat _130_239 ")"))
-in (true, _130_240))))
-end
-| "mk_var \"w_read_int\"" -> begin
-(let t = (let _130_241 = (typ_of_exp e)
-in (FStar_Tc_Normalize.normalize en _130_241))
-in (let inj_str = (get_injection t)
-in (true, (Prims.strcat (Prims.strcat "mk_ffi 1 FFI.read_int [ E_const (C_unit ()) ] (" inj_str) ")"))))
-end
-| "mk_var \"w_read_int_tuple\"" -> begin
-(let t = (let _130_242 = (typ_of_exp e)
-in (FStar_Tc_Normalize.normalize en _130_242))
-in (let inj_str = (get_injection t)
-in (true, (Prims.strcat (Prims.strcat "mk_ffi 1 FFI.read_int_tuple [ E_const (C_unit ()) ] (" inj_str) ")"))))
-end
-| _64_350 -> begin
-(false, "")
-end)
-end))
-and extract_arg = (fun a en -> (match (a) with
-| (FStar_Util.Inl (_64_354), _64_357) -> begin
-(Prims.raise (NYI ("Extract argument cannot extract type arguments")))
-end
-| (FStar_Util.Inr (e), _64_362) -> begin
-(extract_exp e en)
-end))
-and extract_sigelt = (fun s en -> (match (s) with
-| FStar_Absyn_Syntax.Sig_let (lbs, _64_368, _64_370, _64_372) -> begin
-(match ((Prims.fst lbs)) with
+(match ((s = "w_read_int_tuple")) with
 | true -> begin
-(match (((FStar_List.length (Prims.snd lbs)) <> 1)) with
-| true -> begin
-(Prims.raise (NYI ("Mutually recursive lets not supported")))
+(let inj_str = (get_injection t)
+in (Prims.strcat (Prims.strcat "mk_ffi 1 FFI.read_int_tuple [ E_const (C_unit ()) ] (" inj_str) ")"))
 end
 | false -> begin
-(let lb = (FStar_List.hd (Prims.snd lbs))
-in (let lbname = (FStar_Absyn_Print.lbname_to_string lb.FStar_Absyn_Syntax.lbname)
-in (let filter_ascription = (fun e -> (match ((let _130_249 = (FStar_Absyn_Util.compress_exp e)
-in _130_249.FStar_Absyn_Syntax.n)) with
-| FStar_Absyn_Syntax.Exp_ascribed (e, _64_381, _64_383) -> begin
-e
-end
-| _64_387 -> begin
-e
-end))
-in (let lb_body = (filter_ascription lb.FStar_Absyn_Syntax.lbdef)
-in (match ((let _130_250 = (FStar_Absyn_Util.compress_exp lb_body)
-in _130_250.FStar_Absyn_Syntax.n)) with
-| FStar_Absyn_Syntax.Exp_abs (bs, e) -> begin
-(let bs = (FStar_List.filter (fun a -> (match (a) with
-| (FStar_Util.Inl (_64_395), _64_398) -> begin
-false
-end
-| (FStar_Util.Inr (_64_401), _64_404) -> begin
-true
-end)) bs)
-in (let first_b = (FStar_List.hd bs)
-in (let rest_bs = (FStar_List.tl bs)
-in (let body_str = (extract_exp e en)
-in (let tl_abs_str = (FStar_List.fold_left (fun s b -> (let _130_257 = (let _130_256 = (let _130_255 = (let _130_254 = (extract_binder b)
-in (Prims.strcat "mk_abs " _130_254))
-in (Prims.strcat _130_255 " ("))
-in (Prims.strcat _130_256 s))
-in (Prims.strcat _130_257 ")"))) body_str (FStar_List.rev rest_bs))
-in (let fix_str = (let _130_261 = (let _130_260 = (let _130_259 = (let _130_258 = (extract_binder first_b)
-in (Prims.strcat (Prims.strcat (Prims.strcat "mk_fix " (name_to_string lbname)) " ") _130_258))
-in (Prims.strcat _130_259 " ("))
-in (Prims.strcat _130_260 tl_abs_str))
-in (Prims.strcat _130_261 ")"))
-in (let let_str = (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat "mk_let " (name_to_string lbname)) " (") fix_str) ")")
-in let_str)))))))
-end
-| _64_416 -> begin
-(Prims.raise (NYI ("Expected an abs with recursive let")))
-end)))))
+(let r = (lookup_wys_lib_map s)
+in (let args = (sublist s args r.rem_args)
+in (FStar_List.fold_left (fun acc arg -> (let _130_128 = (let _130_127 = (extract_mlexp arg)
+in (Prims.strcat (Prims.strcat acc " (") _130_127))
+in (Prims.strcat _130_128 ")"))) r.extracted_fn_name args)))
+end)
+end)
 end)
 end
-| false -> begin
-(let lb = (FStar_List.hd (Prims.snd lbs))
-in (let _130_267 = (let _130_266 = (let _130_264 = (let _130_263 = (let _130_262 = (FStar_Absyn_Print.lbname_to_string lb.FStar_Absyn_Syntax.lbname)
-in (name_to_string _130_262))
-in (Prims.strcat "mk_let " _130_263))
-in (Prims.strcat _130_264 " ("))
-in (let _130_265 = (extract_exp lb.FStar_Absyn_Syntax.lbdef en)
-in (Prims.strcat _130_266 _130_265)))
-in (Prims.strcat _130_267 ")")))
+| _64_311 -> begin
+(FStar_All.failwith "Expected wysteria lib fn to be a MLE_Name")
 end)
-end
-| FStar_Absyn_Syntax.Sig_main (e, _64_420) -> begin
-(extract_exp e en)
-end
-| _64_424 -> begin
-""
 end))
 
-let extract_main = (fun s en -> (match (s) with
-| FStar_Absyn_Syntax.Sig_main (e, _64_429) -> begin
-(extract_exp e en)
+let extract_mllb = (fun _64_314 -> (match (_64_314) with
+| (b, l) -> begin
+(match (((FStar_List.length l) <> 1)) with
+| true -> begin
+(FStar_All.failwith "Mutually recursive lets are not yet suppored")
 end
-| _64_433 -> begin
-(Prims.raise (NYI ("Extract main got some other sigelt!")))
+| false -> begin
+(let lb = (FStar_List.hd l)
+in (let lbname = (FStar_Extraction_ML_Syntax.idsym lb.FStar_Extraction_ML_Syntax.mllb_name)
+in (let lbbody = lb.FStar_Extraction_ML_Syntax.mllb_def
+in (match (b) with
+| true -> begin
+(match (lbbody.FStar_Extraction_ML_Syntax.expr) with
+| FStar_Extraction_ML_Syntax.MLE_Fun (bs, e) -> begin
+(let _64_324 = (let _130_132 = (FStar_List.hd bs)
+in (let _130_131 = (FStar_List.tl bs)
+in (_130_132, _130_131)))
+in (match (_64_324) with
+| (first_b, rest_bs) -> begin
+(let body_exp = (extract_mlexp e)
+in (let tl_abs_exp = (FStar_List.fold_left (fun e _64_330 -> (match (_64_330) with
+| (bname, _64_329) -> begin
+(Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat "mk_abs " (name_to_string (FStar_Extraction_ML_Syntax.idsym bname))) " (") e) ")")
+end)) body_exp (FStar_List.rev rest_bs))
+in (let fix_exp = (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat "mk_fix " (name_to_string lbname)) " ") (name_to_string (FStar_Extraction_ML_Syntax.idsym (Prims.fst first_b)))) " (") tl_abs_exp) ")")
+in Mk_tlet (((FStar_Extraction_ML_Syntax.idsym (Prims.fst first_b)), fix_exp)))))
+end))
+end
+| _64_334 -> begin
+(FStar_All.failwith "Recursive let binding is not an abstraction ?")
+end)
+end
+| false -> begin
+(let _130_136 = (let _130_135 = (extract_mlexp lbbody)
+in (lbname, _130_135))
+in Mk_tlet (_130_136))
+end))))
+end)
 end))
 
-let extract_sigelts = (fun l en -> (let l = (FStar_List.rev l)
-in (let main_str = (let _130_276 = (FStar_List.hd l)
-in (extract_main _130_276 en))
-in (let _130_279 = (FStar_List.tl l)
-in (FStar_List.fold_left (fun acc s -> (let s_str = (extract_sigelt s en)
-in (Prims.strcat (Prims.strcat (Prims.strcat s_str " (") acc) ")"))) main_str _130_279)))))
+let extract_mlmodule = (fun m -> (FStar_List.fold_left (fun _64_338 tld -> (match (_64_338) with
+| (l, top_opt) -> begin
+(match (tld) with
+| FStar_Extraction_ML_Syntax.MLM_Ty (_64_341) -> begin
+(l, top_opt)
+end
+| FStar_Extraction_ML_Syntax.MLM_Exn (_64_344) -> begin
+(FStar_All.failwith "Cannot extract an exception")
+end
+| FStar_Extraction_ML_Syntax.MLM_Let (lb) -> begin
+(let _130_143 = (let _130_142 = (let _130_141 = (extract_mllb lb)
+in (_130_141)::[])
+in (FStar_List.append l _130_142))
+in (_130_143, top_opt))
+end
+| FStar_Extraction_ML_Syntax.MLM_Top (e) -> begin
+(match (top_opt) with
+| None -> begin
+(let _130_145 = (let _130_144 = (extract_mlexp e)
+in Some (_130_144))
+in (l, _130_145))
+end
+| Some (_64_352) -> begin
+(FStar_All.failwith "Impossible: more than one top expressions")
+end)
+end)
+end)) ([], None) m))
 
-let extract = (fun l en -> (let _64_443 = (initialize ())
-in (FStar_List.iter (fun m -> (match ((m.FStar_Absyn_Syntax.name.FStar_Absyn_Syntax.str = "SMC")) with
+let rec find_smc_module = (fun mllibs -> (let rec find_smc_module' = (fun mllib -> (match (mllib) with
+| [] -> begin
+None
+end
+| (x, mlsig_opt, FStar_Extraction_ML_Syntax.MLLib (mllib'))::tl -> begin
+(match ((x = "SMC")) with
 | true -> begin
-(let s = (extract_sigelts m.FStar_Absyn_Syntax.declarations en)
-in (let _64_447 = (FStar_Util.print_string s)
+(match (mlsig_opt) with
+| Some (_64_366, m) -> begin
+Some (m)
+end
+| None -> begin
+(Prims.raise (FStar_Util.NYI ("Found the SMC module name but no module")))
+end)
+end
+| false -> begin
+(let m_opt = (find_smc_module' mllib')
+in (match (m_opt) with
+| Some (m) -> begin
+Some (m)
+end
+| None -> begin
+(find_smc_module' tl)
+end))
+end)
+end))
+in (match (mllibs) with
+| [] -> begin
+(Prims.raise (FStar_Util.NYI ("Cannot find the SMC module")))
+end
+| FStar_Extraction_ML_Syntax.MLLib (s)::tl -> begin
+(let m_opt = (find_smc_module' s)
+in (match (m_opt) with
+| Some (m) -> begin
+m
+end
+| None -> begin
+(find_smc_module tl)
+end))
+end)))
+
+let extract = (fun l en -> (let _64_386 = (initialize ())
+in (let _64_390 = (let _130_154 = (FStar_Extraction_ML_Env.mkContext en)
+in (FStar_Util.fold_map FStar_Extraction_ML_ExtractMod.extract _130_154 l))
+in (match (_64_390) with
+| (c, mllibs) -> begin
+(let mllibs = (FStar_List.flatten mllibs)
+in (let m = (find_smc_module mllibs)
+in (let _64_395 = (extract_mlmodule m)
+in (match (_64_395) with
+| (l, m_opt) -> begin
+(match (m_opt) with
+| None -> begin
+(FStar_All.failwith "End of SMC module, no top level expression")
+end
+| Some (m) -> begin
+(let s = (FStar_List.fold_left (fun acc _64_403 -> (match (_64_403) with
+| Mk_tlet (n, b) -> begin
+(Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat "mk_let " (name_to_string n)) " (") b) ") (") acc) ")")
+end)) m (FStar_List.rev l))
+in (let _64_405 = (FStar_Util.print_string s)
 in (FStar_Util.print_string "\n")))
-end
-| false -> begin
-()
-end)) l)))
+end)
+end))))
+end))))
 
 
 
