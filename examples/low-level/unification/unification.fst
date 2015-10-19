@@ -19,36 +19,27 @@
 *)
 
 (* 
-   An implementation of first-order unification, based on 
-     Ana Bove's Licentiate Thesis
-     Programming in Martin-Löf Type Theory Unification - A non-trivial Example
-     Department of Computer Science, Chalmers University of Technology
-     1999
-     http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.40.3532
+   A verified implementation of first-order unification. 
+
+   The termination argument is based on  Ana Bove's Licentiate Thesis:
+         Programming in Martin-Löf Type Theory Unification - A non-trivial Example
+	 Department of Computer Science, Chalmers University of Technology
+	 1999
+	 http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.40.3532
+
+   But, is done here directly with lex orderings.
 *)   
 
-(* STILL INCOMPLETE *)
 module Unification
 
 open FStar.List.Tot
 
-val union : list 'a -> list 'a -> Tot (list 'a)
-let rec union l m = match l with
-  | [] -> m
-  | hd::tl ->
-    if mem hd m
-    then union tl m
-    else union tl (hd::m)
-
-val no_dups_union: l:list 'a -> m:list 'a ->
-  Lemma (requires (noRepeats m))
-        (ensures (noRepeats (union l m)))
-let rec no_dups_union l m = match l with
+let op_At = append
+val lemma_shift_append: l:list 'a -> x:'a -> m:list 'a -> Lemma
+  (ensures ( (l@(x::m)) = ((l@[x])@m)))
+let rec lemma_shift_append l x m = match l with 
   | [] -> ()
-  | hd::tl ->
-    if mem hd m
-    then no_dups_union tl m
-    else no_dups_union tl (hd::m)
+  | hd::tl -> lemma_shift_append tl x m
 
 type term = 
   | V : i:nat -> term
@@ -154,6 +145,7 @@ let rec vars_decrease_eqns x t e = match e with
   | hd::tl -> lemma_vars_decrease (x,t) (fst hd); 
 	    lemma_vars_decrease (x,t) (snd hd); 
 	    vars_decrease_eqns x t tl
+<<<<<<< d0767954946a4283f65c2c2bd81595098ccd2d9b
 
 <<<<<<< 331769ded7af34efc1c417f74011f0692e4e9fa0
 =======
@@ -161,6 +153,8 @@ assume val subset_size: #a:Type -> #f:OrdSet.cmp a -> x:OrdSet.ordset a f -> y:O
   Lemma (requires (OrdSet.subset x y))
 	(ensures (OrdSet.size x <= OrdSet.size y))
 	[SMTPat (OrdSet.subset x y)]
+=======
+>>>>>>> total correctness of unify
  
 >>>>>>> checkpoint correctness proof
 val unify : e:eqns -> list subst -> Tot (option (list subst))
@@ -197,7 +191,6 @@ let rec lsubst_distributes l t1 t2 = match l with
   | [] -> ()
   | hd::tl -> lsubst_distributes tl t1 t2
 
-let op_At = append
 let lsubst_lsubst = fold_right subst_lsubst
 
 let extend_subst s l = s::l
@@ -281,11 +274,6 @@ let key_lemma x y tl l lpre l'' =
   assert (lsubst_eqns [x,y] [V x, y] = 
 	  [y,y])
 
-val lemma_shift_append: l:list 'a -> x:'a -> m:list 'a -> Lemma
-  (ensures ((l@(x::m)) = ((l@[x])@m)))
-let rec lemma_shift_append l x m = match l with 
-  | [] -> ()
-  | hd::tl -> lemma_shift_append tl x m
 
 val lemma_subst_eqns_idem: s:subst -> e:eqns -> Lemma
   (requires (ok s))
