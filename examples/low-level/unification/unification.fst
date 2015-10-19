@@ -156,18 +156,7 @@ let rec vars_decrease_eqns x t e = match e with
   | hd::tl -> lemma_vars_decrease (x,t) (fst hd); 
 	    lemma_vars_decrease (x,t) (snd hd); 
 	    vars_decrease_eqns x t tl
-<<<<<<< d0767954946a4283f65c2c2bd81595098ccd2d9b
-
-<<<<<<< 331769ded7af34efc1c417f74011f0692e4e9fa0
-=======
-assume val subset_size: #a:Type -> #f:OrdSet.cmp a -> x:OrdSet.ordset a f -> y:OrdSet.ordset a f -> 
-  Lemma (requires (OrdSet.subset x y))
-	(ensures (OrdSet.size x <= OrdSet.size y))
-	[SMTPat (OrdSet.subset x y)]
-=======
->>>>>>> total correctness of unify
  
->>>>>>> checkpoint correctness proof
 val unify : e:eqns -> list subst -> Tot (option (list subst))
   (decreases %[n_evars e; efuns e; n_flex_rhs e])
 let rec unify e s = match e with
