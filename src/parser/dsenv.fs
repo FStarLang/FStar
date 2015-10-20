@@ -301,18 +301,19 @@ let extract_record (e:env) = function
                 let formals = match Util.function_formals t with
                     | Some (x, _) -> x
                     | _ -> [] in
+                let is_rec = is_rec tags in 
                 let fields = formals |> List.collect (fun b -> match b with
                     | Inr x, q ->
                         if is_null_binder b  
-                        || q = Some Implicit
+                        || (is_rec && q = Some Implicit)
                         then []
-                        else [(qual constrname (if is_rec tags then Util.unmangle_field_name x.v.ppname else x.v.ppname), x.sort)]
+                        else [(qual constrname (if is_rec then Util.unmangle_field_name x.v.ppname else x.v.ppname), x.sort)]
                     | _ -> []) in
                 let record = {typename=typename;
                               constrname=constrname;
                               parms=parms;
                               fields=fields;
-                              is_record=is_rec tags} in
+                              is_record=is_rec} in
                 record_cache := record::!record_cache
             | _ -> ()
         end
