@@ -5,7 +5,7 @@ all: api interpreter theory codegen distclean
 EXAMPLES_DIR=./examples
 
 api:
-	make -C examples api FSTAR=../$(FSTAR)
+	make -C examples api FSTAR='../$(FSTAR)'
 
 interpreter:
 	$(FSTAR) interpreter.fst

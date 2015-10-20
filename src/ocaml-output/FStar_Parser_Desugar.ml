@@ -1527,22 +1527,29 @@ end)))
 end))
 end
 | FStar_Parser_AST.Project (e, f) -> begin
-(let _44_1520 = (FStar_Parser_DesugarEnv.fail_or env (FStar_Parser_DesugarEnv.try_lookup_record_by_field_name env) f)
-in (match (_44_1520) with
-| (_44_1518, fieldname) -> begin
+(let _44_1519 = (FStar_Parser_DesugarEnv.fail_or env (FStar_Parser_DesugarEnv.try_lookup_projector_by_field_name env) f)
+in (match (_44_1519) with
+| (fieldname, is_rec) -> begin
 (let e = (desugar_exp env e)
-in (let fn = (let _44_1525 = (FStar_Util.prefix fieldname.FStar_Absyn_Syntax.ns)
-in (match (_44_1525) with
-| (ns, _44_1524) -> begin
+in (let fn = (let _44_1524 = (FStar_Util.prefix fieldname.FStar_Absyn_Syntax.ns)
+in (match (_44_1524) with
+| (ns, _44_1523) -> begin
 (FStar_Absyn_Syntax.lid_of_ids (FStar_List.append ns ((f.FStar_Absyn_Syntax.ident)::[])))
 end))
+in (let qual = (match (is_rec) with
+| true -> begin
+Some (FStar_Absyn_Syntax.Record_projector (fn))
+end
+| false -> begin
+None
+end)
 in (let _109_570 = (let _109_569 = (let _109_568 = (let _109_565 = (FStar_Absyn_Syntax.range_of_lid f)
 in (FStar_Absyn_Util.fvar (Some (FStar_Absyn_Syntax.Record_projector (fn))) fieldname _109_565))
 in (let _109_567 = (let _109_566 = (FStar_Absyn_Syntax.varg e)
 in (_109_566)::[])
 in (_109_568, _109_567)))
 in (FStar_Absyn_Syntax.mk_Exp_app _109_569))
-in (FStar_All.pipe_left pos _109_570))))
+in (FStar_All.pipe_left pos _109_570)))))
 end))
 end
 | FStar_Parser_AST.Paren (e) -> begin

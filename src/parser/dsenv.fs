@@ -273,13 +273,14 @@ let find_all_datacons env (lid:lident) =
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig
 
-type record = {
+type record_or_dc = {
   typename: lident;
   constrname: lident;
   parms: binders;
-  fields: list<(fieldname * typ)>
+  fields: list<(fieldname * typ)>;
+  is_record:bool
 }
-let record_cache : ref<list<record>> = Util.mk_ref []
+let record_cache : ref<list<record_or_dc>> = Util.mk_ref []
 
 let extract_record (e:env) = function
   | Sig_bundle(sigs, _, _, _) ->
@@ -295,30 +296,31 @@ let extract_record (e:env) = function
 
     sigs |> List.iter (function
       | Sig_tycon(typename, parms, _, _, [dc], tags, _) ->
-        if is_rec tags
-        then match must <| find_dc dc with
+        begin match must <| find_dc dc with
             | Sig_datacon(constrname, t, _, _, _, _) ->
                 let formals = match Util.function_formals t with
                     | Some (x, _) -> x
                     | _ -> [] in
                 let fields = formals |> List.collect (fun b -> match b with
                     | Inr x, q ->
-                        if is_null_binder b  || q = Some Implicit
+                        if is_null_binder b  
+                        || q = Some Implicit
                         then []
-                        else [(qual constrname (Util.unmangle_field_name x.v.ppname), x.sort)]
+                        else [(qual constrname (if is_rec tags then Util.unmangle_field_name x.v.ppname else x.v.ppname), x.sort)]
                     | _ -> []) in
                 let record = {typename=typename;
                               constrname=constrname;
                               parms=parms;
-                              fields=fields} in
+                              fields=fields;
+                              is_record=is_rec tags} in
                 record_cache := record::!record_cache
             | _ -> ()
-        else ()
+        end
       | _ -> ())
 
   | _ -> ()
 
-let try_lookup_record_by_field_name env (fieldname:lident) =
+let try_lookup_record_or_dc_by_field_name env (fieldname:lident) =
   let maybe_add_constrname ns c =
     let rec aux ns = match ns with
       | [] -> [c]
@@ -338,7 +340,17 @@ let try_lookup_record_by_field_name env (fieldname:lident) =
         else None)) in
   resolve_in_open_namespaces env fieldname find_in_cache
 
-let qualify_field_to_record env (recd:record) (f:lident) =
+let try_lookup_record_by_field_name env (fieldname:lident) =
+    match try_lookup_record_or_dc_by_field_name env fieldname with 
+        | Some (r, f) when r.is_record -> Some (r,f)
+        | _ -> None
+
+let try_lookup_projector_by_field_name env (fieldname:lident) = 
+    match try_lookup_record_or_dc_by_field_name env fieldname with 
+        | Some (r, f) -> Some (f, r.is_record)
+        | _ -> None
+
+let qualify_field_to_record env (recd:record_or_dc) (f:lident) =
   let qualify fieldname =
     let ns, fieldname = fieldname.ns, fieldname.ident in
     let constrname = recd.constrname.ident in
