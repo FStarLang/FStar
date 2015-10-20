@@ -488,7 +488,7 @@ let finish env modul =
     recbindings=[];
     phase=AST.Un}
 
-let push env =
+let push (env:env) =
     {env with
         sigmap=Util.smap_copy (sigmap env)::env.sigmap;}
 
@@ -502,6 +502,28 @@ let pop env = match env.sigmap with
         {env with
             sigmap=maps}
     | _ -> failwith "No more modules to pop"
+
+let export_interface (m:lident) env =
+//    printfn "Exporting interface %s" m.str;
+    let sigelt_in_m se = 
+        match Util.lids_of_sigelt se with 
+            | l::_ -> l.nsstr=m.str
+            | _ -> false in
+    let sm = sigmap env in 
+    let env = pop env in 
+    let keys = Util.smap_keys sm in
+    let sm' = sigmap env in 
+    keys |> List.iter (fun k ->
+    match Util.smap_try_find sm' k with 
+        | Some (se, true) when sigelt_in_m se ->  
+          Util.smap_remove sm' k;
+//          printfn "Exporting %s" k;
+          let se = match se with 
+            | Sig_val_decl(l, t, q, r) -> Sig_val_decl(l, t, Assumption::q, r)
+            | _ -> se in 
+          Util.smap_add sm' k (se, false)
+        | _ -> ());
+    env
 
 let finish_module_or_interface env modul =
   if not modul.is_interface
@@ -517,12 +539,13 @@ let prepare_module_or_interface intf admitted env mname =
     {env with curmodule=Some mname; sigmap=env.sigmap; open_namespaces = open_ns; iface=intf; admitted_iface=admitted} in
 
   match env.modules |> Util.find_opt (fun (l, _) -> lid_equals l mname) with
-    | None -> prep env
+    | None -> prep env, false
     | Some (_, m) ->
-      if intf
+      if not m.is_interface || intf
       then raise (Error(Util.format1 "Duplicate module or interface name: %s" mname.str, range_of_lid mname));
-      prep env
-
+      //we have an interface for this module already; if we're not interactive then do not export any symbols from this module
+      prep (push env), true //push a context so that we can pop it when we're done
+      
 let enter_monad_scope env mname =
   let curmod = current_module env in
   let mscope = lid_of_ids (curmod.ns@[curmod.ident; mname]) in

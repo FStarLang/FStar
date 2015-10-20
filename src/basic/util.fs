@@ -194,7 +194,7 @@ let set_difference ((s1, eq):set<'a>) ((s2, _):set<'a>) : set<'a> = List.filter 
 type smap<'value>=HashMultiMap<string, 'value>
 let smap_create<'value> (i:int) = new HashMultiMap<string,'value>(i, HashIdentity.Structural)
 let smap_clear<'value> (s:smap<'value>) = s.Clear()
-let smap_add (m:smap<'value>) k (v:'value) = m.Add(k,v)
+let smap_add (m:smap<'value>) k (v:'value) = m.Remove k; m.Add(k,v)
 let smap_of_list<'value> (l:list<string*'value>) =
     let s = smap_create (List.length l) in
     List.iter (fun (x,y) -> smap_add s x y) l;

@@ -108,9 +108,10 @@ val mark: env -> env
 val reset_mark: env -> env
 val commit_mark: env -> env
 val finish_module_or_interface: env -> modul -> env
-val prepare_module_or_interface: bool -> bool -> env -> lident -> env
+val prepare_module_or_interface: bool -> bool -> env -> lident -> env * bool //pop the context when done desugaring
 val enter_monad_scope: env -> ident -> env
 val exit_monad_scope: env -> env -> env
+val export_interface: lident ->  env -> env
 
 (* private *) val unmangleOpName: ident -> option<lident>
 (* private *) val try_lookup_lid': bool -> bool -> env -> lident -> option<exp>
