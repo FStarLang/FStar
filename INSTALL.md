@@ -35,6 +35,17 @@ features and bug fixes.
 
         $ make -C examples
 
+### Homebrew formula for Mac OS X ###
+
+On Macs you can also build and install the latest F\* release using Homebrew:
+
+        $ brew install fstar
+
+For building and installing the latest F\* sources from GitHub (the master branch)
+instead of the latest release you can do:
+
+        $ brew --HEAD install fstar
+
 ## Building F* from sources ##
 
 If you have a serious interest in F\* or want to report bugs then we
@@ -223,7 +234,7 @@ https://github.com/Z3Prover/z3/releases/tag/z3-4.4.0
 
 4. At the end of the release, please remember to update the
    links at: https://www.fstar-lang.org/#download and the
-   version on https://en.wikipedia.org/wiki/F*\_(programming_language)
+   version on https://en.wikipedia.org/wiki/F*_(programming_language)
    and https://en.wikipedia.org/wiki/Proof_assistant
 
 **Note**: to create the package successfully you will need tools like

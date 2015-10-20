@@ -1,4 +1,4 @@
-FSTAR = ../../bin/fstar.exe
+FSTAR = ../../bin/fstar.exe $(OTHERFLAGS)
 
 all: noninterference\
 		 sample_examples\

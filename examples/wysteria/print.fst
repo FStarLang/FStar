@@ -46,7 +46,6 @@ val const_to_string: const -> Tot string
 let const_to_string = function
   | C_prin p      -> tagged_unary_to_string "C_prin" (prin_to_string p)
   | C_eprins eps  -> tagged_unary_to_string "C_eprins" (prins_to_string eps)
-  | C_prins ps    -> tagged_unary_to_string "C_prins" (prins_to_string ps)
   | C_unit _      -> "C_unit"
   | C_bool b      -> tagged_unary_to_string "C_bool" (string_of_bool b)
   | C_opaque 'a _  -> "C_opaque"  // TODO: print of opaque values
@@ -116,8 +115,6 @@ let rec value_to_string #meta v =
 	tagged_unary_to_string "V_prin" (prin_to_string p)
       | V_eprins eps         ->
 	tagged_unary_to_string "V_eprins" (prins_to_string eps)
-      | V_prins ps           ->
-        tagged_unary_to_string "V_prins" (prins_to_string ps)
       | V_unit               -> "V_unit"
       | V_bool b             ->
         tagged_unary_to_string "V_bool" (string_of_bool b)

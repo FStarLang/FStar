@@ -188,6 +188,7 @@ let rec is_type env (t:term) =
             | _ -> false //no other patterns are permitted in type functions
          end in
        aux env pats
+    | Let(false, [({pat=PatVar _}, _)], t) -> is_type env t
     | _ -> false
 
 and is_kind env (t:term) : bool =
@@ -271,10 +272,10 @@ and free_type_vars env t = match (unparen t).tm with
 
 
   | Abs _  (* not closing implicitly over free vars in type-level functions *)
+  | Let _
   | If _
   | QForall _
   | QExists _ -> [] (* not closing implicitly over free vars in formulas *)
-  | Let _
   | Record _
   | Match _
   | TryWith _
@@ -772,11 +773,12 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
       end
 
     | Project(e, f) ->
-      let _, fieldname = fail_or env  (try_lookup_record_by_field_name env) f in
+      let fieldname, is_rec = fail_or env  (try_lookup_projector_by_field_name env) f in
       let e = desugar_exp env e in
       let fn =
         let ns, _ = Util.prefix fieldname.ns in
         lid_of_ids (ns@[f.ident]) in
+      let qual = if is_rec then Some (Record_projector fn) else None in
       pos <| mk_Exp_app(Util.fvar (Some (Record_projector fn)) fieldname (range_of_lid f), [varg e])
 
     | Paren e ->
@@ -923,6 +925,12 @@ and desugar_typ env (top:term) : typ =
       wpos <| mk_Typ_app(tup, targs)
 
     | Record _ -> failwith "Unexpected record type"
+
+    | Let(false, [(x, v)], t) -> 
+      //desugar as Let v (fun x -> t) 
+      let let_v = mk_term (App(mk_term(Name Const.let_in_typ) top.range top.level, v, Nothing)) v.range v.level in
+      let t' = mk_term(App(let_v, mk_term (Abs([x], t)) t.range t.level, Nothing)) top.range top.level in
+      desugar_typ env t'
 
     | If _
     | Labeled _ -> desugar_formula env top
@@ -1616,7 +1624,7 @@ let open_prims_all =
 (* Most important function: from AST to a module
    Keeps track of the name of variables and so on (in the context)
  *)
-let desugar_modul_common curmod env (m:AST.modul) : env_t * Syntax.modul =
+let desugar_modul_common curmod env (m:AST.modul) : env_t * Syntax.modul * bool =
   let open_ns (mname:lident) d =
     let d = if List.length mname.ns <> 0
             then (AST.mk_decl (AST.Open (Syntax.lid_of_ids mname.ns)) (Syntax.range_of_lid mname))  :: d
@@ -1625,7 +1633,7 @@ let desugar_modul_common curmod env (m:AST.modul) : env_t * Syntax.modul =
   let env = match curmod with
     | None -> env
     | Some(prev_mod, _) ->  DesugarEnv.finish_module_or_interface env prev_mod in
-  let env, mname, decls, intf = match m with
+  let (env, pop_when_done), mname, decls, intf = match m with
     | Interface(mname, decls, admitted) ->
       DesugarEnv.prepare_module_or_interface true admitted env mname, mname, open_ns mname decls, true
     | Module(mname, decls) ->
@@ -1638,7 +1646,7 @@ let desugar_modul_common curmod env (m:AST.modul) : env_t * Syntax.modul =
     is_interface=intf;
     is_deserialized=false
   } in
-  env, modul
+  env, modul, pop_when_done
 
 let desugar_partial_modul curmod env (m:AST.modul) : env_t * Syntax.modul =
   let m =
@@ -1648,21 +1656,23 @@ let desugar_partial_modul curmod env (m:AST.modul) : env_t * Syntax.modul =
             | Interface(mname, _, _) -> failwith ("Impossible: " ^ mname.ident.idText)
     else m
   in
-  desugar_modul_common curmod env m
+  let x, y, _ = desugar_modul_common curmod env m in
+  x,y
 
 let desugar_modul env (m:AST.modul) : env_t * Syntax.modul =
-  let env, modul = desugar_modul_common None env m in
+  let env, modul, pop_when_done = desugar_modul_common None env m in
   let env = DesugarEnv.finish_module_or_interface env modul in
   if Options.should_dump modul.name.str then Util.fprint1 "%s\n" (Print.modul_to_string modul);
-  env, modul
+  (if pop_when_done then export_interface modul.name env else env), modul
 
 let desugar_file env (f:file) =
   let env, mods = List.fold_left (fun (env, mods) m ->
     let env, m = desugar_modul env m in
     env, m::mods) (env, []) f in
-  env, List.rev mods
+  env, List.rev mods 
 
 let add_modul_to_env (m:Syntax.modul) (en: env) :env =
-  let en = DesugarEnv.prepare_module_or_interface false false en m.name in
+  let en, pop_when_done = DesugarEnv.prepare_module_or_interface false false en m.name in
   let en = List.fold_left DesugarEnv.push_sigelt ({ en with curmodule = Some(m.name) }) m.exports in
-  DesugarEnv.finish_module_or_interface en m
+  let env = DesugarEnv.finish_module_or_interface en m in
+  if pop_when_done then export_interface m.name env else env

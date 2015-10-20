@@ -111,5 +111,3 @@ val subset_size: #a:Type -> #f:cmp a -> x:ordset a f -> y:ordset a f
                  -> Lemma (requires (subset #a #f x y))
 	                 (ensures (size #a #f x <= size #a #f y))
 	           [SMTPat (subset #a #f x y)]
-
-(**********)

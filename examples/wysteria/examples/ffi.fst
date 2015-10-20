@@ -99,14 +99,6 @@ let slice_id_sps p x = x
 val mk_tuple: 'a -> 'b -> Tot ('a * 'b)
 let mk_tuple x y = (x, y)
 
-val fst: ('a * 'b) -> Tot 'a
-let fst p = match p with
-  | MkTuple2 x _ -> x
-
-val snd: ('a * 'b) -> Tot 'b
-let snd p = match p with
-  | MkTuple2 _ y -> y
-
 val slice_tuple: (prin -> 'a -> Tot 'a) -> (prin -> 'b -> Tot 'b) -> prin -> ('a * 'b) -> Tot ('a * 'b)
 let slice_tuple f g p t = (f p (fst t), g p (snd t))
 
@@ -126,26 +118,12 @@ let mk_none _ = None
 val mk_some: 'a -> Tot (option 'a)
 let mk_some x = Some x
 
-val is_none: option 'a -> Tot bool
-let is_none = function
-  | None -> true
-  | _    -> false
-
-val is_some: option 'a -> Tot bool
-let is_some = function
-  | Some x -> true
-  | _      -> false
-
-val v_of_some: x:option 'a{is_Some x} -> Tot 'a
-let v_of_some = function
-  | Some x -> x
-
 val slice_option: (prin -> 'a -> Tot 'a) -> prin -> option 'a -> Tot (option 'a)
 let slice_option f p = function
   | None   -> None
   | Some x -> Some (f p x)
 
-val compose_options: ('a -> 'a -> Tot 'a) -> x:option 'a -> y:option 'a{is_some x <==> is_some y} -> Tot (option 'a)
+val compose_options: ('a -> 'a -> Tot 'a) -> x:option 'a -> y:option 'a{is_Some x <==> is_Some y} -> Tot (option 'a)
 let compose_options f x y = match x, y with
   | None, None       -> None
   | Some x', Some y' -> Some (f x' y')

@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi FStar.Seq --admit_fsi FStar.Set --verify_module Retemplate --z3timeout 1000 --max_fuel 15 --max_ifuel 15 --initial_fuel 5 --initial_ifuel 5;
+    options:--admit_fsi FStar.Seq --admit_fsi FStar.Set --verify_module Retemplate --z3timeout 3000 --max_fuel 15 --max_ifuel 15 --initial_fuel 5 --initial_ifuel 5;
     variables:LIB=../../lib;
     other-files:$LIB/classical.fst $LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/all.fst $LIB/seq.fsi $LIB/seqproperties.fst $LIB/arr.fst $LIB/ghost.fst axiomatic.fst intlib.fst limb.fst bigint_st.fst eval_st.fst
   --*)
@@ -28,13 +28,13 @@ assume val modulo_of_multiple_lemma :
 #reset-options
 
 assume val add_with_different_bit_domains :
-  a:int -> n:nat{ Bitsize a n } -> b:int -> m:nat{ m < n /\ Bitsize b m } ->
+  a:int -> n:nat{ Bitsize a n } -> b:int -> m:nat{ Bitsize b m } ->
   Lemma
     (requires (signed_modulo a (pow2 m) = 0))
     (ensures (Bitsize (a + b) n))
 
 #reset-options
-
+#set-options "--z3timeout 5"
 
 (* TODO : not verified *)
 (* Takes a value, a size and a bitweight and fill the array with that value *)
@@ -79,7 +79,7 @@ val fill_array :
       /\ (Bitsize (eval h1 b (getLength h1 b)) (bw+tsize))
       /\ (getTemplate b = getTemplate ghost_b)
      ))
-
+     
 let rec fill_array b ghost_b v tsize bw len =
   match (get_length b - len) with
   | 0 -> 
@@ -106,7 +106,7 @@ let rec fill_array b ghost_b v tsize bw len =
      (
        cut ( b2t (tsize2 < ocaml63) )
      );
-     
+       
      (* If v and the current cell overlap, then fill it *)
      if bw + tsize > bw2 && bw2 + tsize2 > bw then (
        
@@ -123,16 +123,19 @@ let rec fill_array b ghost_b v tsize bw len =
 	 ) in
        
        (* Make it fit the new cell size *)
-       let v2 = signed_modulo v2 (pow2 tsize2) in
+       let v3 = signed_modulo v2 (pow2 tsize2) in
        (* Add it to the existing content *)
        (* NB : in terms of bits, it should not overlap the existing value
 	  ie v2 + b[len] == v2 xor b[len] *)
-       let v2 = Limb.add tsize2 v2 ((getSize h0 b len)) blen in
+       let size_b_len = getSize h0 b len in
+       let v2 = Limb.add tsize2 v3 size_b_len blen in
        
-       (* TODO : prove it *)
-       (* Intuitively comes from the fact that v2 & blen == 0 *)
-       admitP ( Bitsize v2 tsize2 /\ tsize2 < ocaml63 );
-       
+       (* TODO : PROOF *)
+       admitP (True /\ signed_modulo v3 (pow2 size_b_len) = 0);
+       add_with_different_bit_domains v3 tsize2 blen size_b_len;
+
+       cut ( Bitsize v2 tsize2 /\ tsize2 < ocaml63 );
+              
        let t2 = mk_tint b ((tsize2)) v2 in
 
        updateBigint b len t2;
@@ -209,7 +212,6 @@ let rec fill_array b ghost_b v tsize bw len =
        
        fill_array b ghost_b v tsize bw (len+1)
      )
-
 
 #reset-options
 
@@ -289,6 +291,7 @@ opaque val retemplate_aux :
        /\ (eval h1 b (getLength h1 b) = eval h0 a (getLength h0 a))
        /\ (bitweight (getTemplate b) (getLength h0 b) >= bitweight (getTemplate a) (getLength h0 a))
      ))
+     
 let rec retemplate_aux a ta b tb len =
   match get_length a - len with
   | 0 -> ()
@@ -302,10 +305,8 @@ let rec retemplate_aux a ta b tb len =
      (
        order_n_bits v (getSize h0 a len) tsize;
        cut ( Bitsize v tsize );     
-       (* TODO : port that to the template refinement, not critical *)
-       admitP (True /\ tsize < ocaml63 )
+       cut (True /\ tsize < ocaml63 )
      );
-
      let bw = bitweight ta len in
 
      let ghost_b = Bigint.copy b in
@@ -351,6 +352,7 @@ let rec retemplate_aux a ta b tb len =
        eval_eq_lemma h0 h1 b ghost_b (getLength h1 ghost_b);
        cut (True /\ eval h1 ghost_b (getLength h1 ghost_b) = eval h0 a len);
        cut (getLength h2 b = getLength h0 b /\ getLength h2 a = getLength h0 a);
+       // TODO : PROOF
        admitP (True /\ eval h2 b (getLength h2 b) = eval h2 a (len+1));
        admitP(True /\ bitweight (getTemplate b) (getLength h2 b) >= bitweight (getTemplate a) (getLength h2 a))
      );
@@ -360,7 +362,8 @@ let rec retemplate_aux a ta b tb len =
      retemplate_aux a ta b tb (len+1);
      (
        let h3 = ST.get() in
-       cut (modifies !{getData b} h0 h3 /\ inHeap h3 a);
+       cut (modifies !{getData b} h0 h3);
+       cut (True /\ inHeap h3 a);
        cut (True /\ Normalized h3 a);
        cut (True /\ inHeap h3 b);
        cut (True /\ Normalized h3 b);
@@ -368,13 +371,11 @@ let rec retemplate_aux a ta b tb len =
        cut (True /\ getLength h3 b > 0);
        cut (getTemplate a = ta /\ getTemplate b = tb);
        cut (True /\ getData a <> getData b);
-       cut (True /\ eval h3 b (getLength h3 b) = eval h1 ghost_b (getLength h1 ghost_b) + pow2 bw * v);
-       eval_eq_lemma h0 h1 b ghost_b (getLength h1 ghost_b);
        cut (True /\ eval h1 ghost_b (getLength h1 ghost_b) = eval h0 a len);
        cut (getLength h3 b = getLength h0 b /\ getLength h3 a = getLength h0 a);
-       admitP (True /\ eval h3 b (getLength h3 b) = eval h3 a (len+1));
-       admitP(True /\ bitweight (getTemplate b) (getLength h3 b) >= bitweight (getTemplate a) (getLength h3 a)); 
-       admitP (True /\ eval h1 b (getLength h1 b) = eval h0 a (getLength h0 a))
+       // TODO : PROOF
+       admitP (True /\ eval h3 b (getLength h3 b) = eval h0 a (getLength h0 a));
+       ()
        )    
 
 

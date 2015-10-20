@@ -67,13 +67,11 @@
     Hashtbl.add keywords "open"          OPEN        ;
     Hashtbl.add keywords "or"            OR          ;
     Hashtbl.add keywords "opaque"        OPAQUE      ;
-    Hashtbl.add keywords "print"         PRINT       ;
     Hashtbl.add keywords "private"       PRIVATE     ;
     Hashtbl.add keywords "public"        PUBLIC      ;
     Hashtbl.add keywords "rec"           REC         ;
     Hashtbl.add keywords "requires"      REQUIRES    ;
     Hashtbl.add keywords "sub_effect"    SUB_EFFECT  ;
-    Hashtbl.add keywords "terminating"   TOTAL       ;
     Hashtbl.add keywords "then"          THEN        ;
     Hashtbl.add keywords "to"            TO          ;
     Hashtbl.add keywords "total"         TOTAL       ;
@@ -132,7 +130,7 @@
 
  let clean_number x = String.strip ~chars:"uyslLUnIN" x
 
-# 136 "FStar_Parser_LexFStar.ml"
+# 134 "FStar_Parser_LexFStar.ml"
 let __ocaml_lex_tables = {
   Lexing.lex_base = 
    "\000\000\182\255\183\255\094\000\105\000\189\255\191\255\195\255\
@@ -1634,445 +1632,445 @@ let rec token lexbuf =
 and __ocaml_lex_token_rec lexbuf __ocaml_lex_state =
   match Lexing.new_engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
-# 204 "../parser/ml/lex.mll"
+# 202 "../parser/ml/lex.mll"
      (token lexbuf)
-# 1640 "FStar_Parser_LexFStar.ml"
+# 1638 "FStar_Parser_LexFStar.ml"
 
   | 1 ->
-# 206 "../parser/ml/lex.mll"
+# 204 "../parser/ml/lex.mll"
      ( PRAGMALIGHT )
-# 1645 "FStar_Parser_LexFStar.ml"
+# 1643 "FStar_Parser_LexFStar.ml"
 
   | 2 ->
-# 208 "../parser/ml/lex.mll"
+# 206 "../parser/ml/lex.mll"
      ( PRAGMA_SET_OPTIONS )
-# 1650 "FStar_Parser_LexFStar.ml"
+# 1648 "FStar_Parser_LexFStar.ml"
 
   | 3 ->
-# 210 "../parser/ml/lex.mll"
+# 208 "../parser/ml/lex.mll"
      ( PRAGMA_RESET_OPTIONS )
-# 1655 "FStar_Parser_LexFStar.ml"
+# 1653 "FStar_Parser_LexFStar.ml"
 
   | 4 ->
-# 212 "../parser/ml/lex.mll"
+# 210 "../parser/ml/lex.mll"
      ( let n = int_of_string (trim_left lexbuf 2) in
        mknewline (n - !lc) lexbuf;
        cpp_filename lexbuf )
-# 1662 "FStar_Parser_LexFStar.ml"
+# 1660 "FStar_Parser_LexFStar.ml"
 
   | 5 ->
-# 215 "../parser/ml/lex.mll"
+# 213 "../parser/ml/lex.mll"
                      (STRING (ba_of_string lexbuf.lex_curr_p.pos_fname))
-# 1667 "FStar_Parser_LexFStar.ml"
+# 1665 "FStar_Parser_LexFStar.ml"
 
   | 6 ->
-# 216 "../parser/ml/lex.mll"
+# 214 "../parser/ml/lex.mll"
                (INT (string_of_int !lc, false))
-# 1672 "FStar_Parser_LexFStar.ml"
+# 1670 "FStar_Parser_LexFStar.ml"
 
   | 7 ->
 let
-# 219 "../parser/ml/lex.mll"
+# 217 "../parser/ml/lex.mll"
                  c
-# 1678 "FStar_Parser_LexFStar.ml"
+# 1676 "FStar_Parser_LexFStar.ml"
 = Lexing.sub_lexeme lexbuf lexbuf.Lexing.lex_mem.(1) lexbuf.Lexing.lex_mem.(0) in
-# 221 "../parser/ml/lex.mll"
+# 219 "../parser/ml/lex.mll"
      ( let c =
          match c.[0] with
          | '\\' -> char_of_ec c.[1]
          | _    -> c.[0]
      in CHAR c )
-# 1686 "FStar_Parser_LexFStar.ml"
+# 1684 "FStar_Parser_LexFStar.ml"
 
   | 8 ->
 let
-# 226 "../parser/ml/lex.mll"
+# 224 "../parser/ml/lex.mll"
             id
-# 1692 "FStar_Parser_LexFStar.ml"
+# 1690 "FStar_Parser_LexFStar.ml"
 = Lexing.sub_lexeme lexbuf lexbuf.Lexing.lex_start_pos lexbuf.Lexing.lex_curr_pos in
-# 227 "../parser/ml/lex.mll"
+# 225 "../parser/ml/lex.mll"
      ( id |> Hashtbl.find_option keywords |> Option.default (IDENT id) )
-# 1696 "FStar_Parser_LexFStar.ml"
+# 1694 "FStar_Parser_LexFStar.ml"
 
   | 9 ->
 let
-# 228 "../parser/ml/lex.mll"
+# 226 "../parser/ml/lex.mll"
                   id
-# 1702 "FStar_Parser_LexFStar.ml"
+# 1700 "FStar_Parser_LexFStar.ml"
 = Lexing.sub_lexeme lexbuf lexbuf.Lexing.lex_start_pos lexbuf.Lexing.lex_curr_pos in
-# 229 "../parser/ml/lex.mll"
+# 227 "../parser/ml/lex.mll"
      ( NAME id )
-# 1706 "FStar_Parser_LexFStar.ml"
+# 1704 "FStar_Parser_LexFStar.ml"
 
   | 10 ->
 let
-# 230 "../parser/ml/lex.mll"
+# 228 "../parser/ml/lex.mll"
            id
-# 1712 "FStar_Parser_LexFStar.ml"
+# 1710 "FStar_Parser_LexFStar.ml"
 = Lexing.sub_lexeme lexbuf lexbuf.Lexing.lex_start_pos lexbuf.Lexing.lex_curr_pos in
-# 231 "../parser/ml/lex.mll"
+# 229 "../parser/ml/lex.mll"
      ( TVAR id )
-# 1716 "FStar_Parser_LexFStar.ml"
+# 1714 "FStar_Parser_LexFStar.ml"
 
   | 11 ->
 let
-# 232 "../parser/ml/lex.mll"
+# 230 "../parser/ml/lex.mll"
             x
-# 1722 "FStar_Parser_LexFStar.ml"
+# 1720 "FStar_Parser_LexFStar.ml"
 = Lexing.sub_lexeme lexbuf lexbuf.Lexing.lex_start_pos lexbuf.Lexing.lex_curr_pos in
-# 233 "../parser/ml/lex.mll"
+# 231 "../parser/ml/lex.mll"
      ( UINT8 (char_of_int (int_of_string (clean_number x))) )
-# 1726 "FStar_Parser_LexFStar.ml"
+# 1724 "FStar_Parser_LexFStar.ml"
 
   | 12 ->
 let
-# 234 "../parser/ml/lex.mll"
+# 232 "../parser/ml/lex.mll"
                      x
-# 1732 "FStar_Parser_LexFStar.ml"
+# 1730 "FStar_Parser_LexFStar.ml"
 = Lexing.sub_lexeme lexbuf lexbuf.Lexing.lex_start_pos lexbuf.Lexing.lex_curr_pos in
-# 235 "../parser/ml/lex.mll"
+# 233 "../parser/ml/lex.mll"
      ( INT8 (char_of_int (int_of_string (clean_number x)), false) )
-# 1736 "FStar_Parser_LexFStar.ml"
+# 1734 "FStar_Parser_LexFStar.ml"
 
   | 13 ->
 let
-# 236 "../parser/ml/lex.mll"
+# 234 "../parser/ml/lex.mll"
                                 x
-# 1742 "FStar_Parser_LexFStar.ml"
+# 1740 "FStar_Parser_LexFStar.ml"
 = Lexing.sub_lexeme lexbuf lexbuf.Lexing.lex_start_pos lexbuf.Lexing.lex_curr_pos in
-# 237 "../parser/ml/lex.mll"
+# 235 "../parser/ml/lex.mll"
      ( INT16 (int_of_string (clean_number x), false) )
-# 1746 "FStar_Parser_LexFStar.ml"
+# 1744 "FStar_Parser_LexFStar.ml"
 
   | 14 ->
 let
-# 238 "../parser/ml/lex.mll"
+# 236 "../parser/ml/lex.mll"
                    x
-# 1752 "FStar_Parser_LexFStar.ml"
+# 1750 "FStar_Parser_LexFStar.ml"
 = Lexing.sub_lexeme lexbuf lexbuf.Lexing.lex_start_pos lexbuf.Lexing.lex_curr_pos in
-# 239 "../parser/ml/lex.mll"
+# 237 "../parser/ml/lex.mll"
      ( INT (clean_number x, false)  )
-# 1756 "FStar_Parser_LexFStar.ml"
+# 1754 "FStar_Parser_LexFStar.ml"
 
   | 15 ->
 let
-# 240 "../parser/ml/lex.mll"
+# 238 "../parser/ml/lex.mll"
                                           x
-# 1762 "FStar_Parser_LexFStar.ml"
+# 1760 "FStar_Parser_LexFStar.ml"
 = Lexing.sub_lexeme lexbuf lexbuf.Lexing.lex_start_pos lexbuf.Lexing.lex_curr_pos in
-# 241 "../parser/ml/lex.mll"
+# 239 "../parser/ml/lex.mll"
      ( INT32 (Int32.of_string (clean_number x), false) )
-# 1766 "FStar_Parser_LexFStar.ml"
+# 1764 "FStar_Parser_LexFStar.ml"
 
   | 16 ->
 let
-# 242 "../parser/ml/lex.mll"
+# 240 "../parser/ml/lex.mll"
                        x
-# 1772 "FStar_Parser_LexFStar.ml"
+# 1770 "FStar_Parser_LexFStar.ml"
 = Lexing.sub_lexeme lexbuf lexbuf.Lexing.lex_start_pos lexbuf.Lexing.lex_curr_pos in
-# 243 "../parser/ml/lex.mll"
+# 241 "../parser/ml/lex.mll"
      ( INT64 (Int64.of_string (clean_number x), false) )
-# 1776 "FStar_Parser_LexFStar.ml"
+# 1774 "FStar_Parser_LexFStar.ml"
 
   | 17 ->
 let
-# 244 "../parser/ml/lex.mll"
+# 242 "../parser/ml/lex.mll"
                          x
-# 1782 "FStar_Parser_LexFStar.ml"
+# 1780 "FStar_Parser_LexFStar.ml"
 = Lexing.sub_lexeme lexbuf lexbuf.Lexing.lex_start_pos lexbuf.Lexing.lex_curr_pos in
-# 245 "../parser/ml/lex.mll"
+# 243 "../parser/ml/lex.mll"
      ( IEEE64 (float_of_string x) )
-# 1786 "FStar_Parser_LexFStar.ml"
+# 1784 "FStar_Parser_LexFStar.ml"
 
   | 18 ->
-# 247 "../parser/ml/lex.mll"
+# 245 "../parser/ml/lex.mll"
      ( failwith "This is not a valid numeric literal." )
-# 1791 "FStar_Parser_LexFStar.ml"
+# 1789 "FStar_Parser_LexFStar.ml"
 
   | 19 ->
-# 250 "../parser/ml/lex.mll"
+# 248 "../parser/ml/lex.mll"
      ( comment false lexbuf )
-# 1796 "FStar_Parser_LexFStar.ml"
+# 1794 "FStar_Parser_LexFStar.ml"
 
   | 20 ->
-# 253 "../parser/ml/lex.mll"
+# 251 "../parser/ml/lex.mll"
      ( token lexbuf )
-# 1801 "FStar_Parser_LexFStar.ml"
+# 1799 "FStar_Parser_LexFStar.ml"
 
   | 21 ->
-# 256 "../parser/ml/lex.mll"
+# 254 "../parser/ml/lex.mll"
      ( string (Buffer.create 0) lexbuf )
-# 1806 "FStar_Parser_LexFStar.ml"
+# 1804 "FStar_Parser_LexFStar.ml"
 
   | 22 ->
-# 259 "../parser/ml/lex.mll"
+# 257 "../parser/ml/lex.mll"
      ( token lexbuf )
-# 1811 "FStar_Parser_LexFStar.ml"
+# 1809 "FStar_Parser_LexFStar.ml"
 
   | 23 ->
-# 262 "../parser/ml/lex.mll"
+# 260 "../parser/ml/lex.mll"
      ( token lexbuf )
-# 1816 "FStar_Parser_LexFStar.ml"
+# 1814 "FStar_Parser_LexFStar.ml"
 
   | 24 ->
-# 265 "../parser/ml/lex.mll"
+# 263 "../parser/ml/lex.mll"
      ( L.new_line lexbuf; token lexbuf )
-# 1821 "FStar_Parser_LexFStar.ml"
+# 1819 "FStar_Parser_LexFStar.ml"
 
   | 25 ->
 let
-# 268 "../parser/ml/lex.mll"
+# 266 "../parser/ml/lex.mll"
                                                               id
-# 1827 "FStar_Parser_LexFStar.ml"
+# 1825 "FStar_Parser_LexFStar.ml"
 = Lexing.sub_lexeme lexbuf lexbuf.Lexing.lex_start_pos (lexbuf.Lexing.lex_curr_pos + -2) in
-# 270 "../parser/ml/lex.mll"
+# 268 "../parser/ml/lex.mll"
      ( IDENT id )
-# 1831 "FStar_Parser_LexFStar.ml"
+# 1829 "FStar_Parser_LexFStar.ml"
 
   | 26 ->
-# 272 "../parser/ml/lex.mll"
+# 270 "../parser/ml/lex.mll"
                ( TILDE (L.lexeme lexbuf) )
-# 1836 "FStar_Parser_LexFStar.ml"
+# 1834 "FStar_Parser_LexFStar.ml"
 
   | 27 ->
-# 273 "../parser/ml/lex.mll"
+# 271 "../parser/ml/lex.mll"
                ( CONJUNCTION )
-# 1841 "FStar_Parser_LexFStar.ml"
+# 1839 "FStar_Parser_LexFStar.ml"
 
   | 28 ->
-# 274 "../parser/ml/lex.mll"
+# 272 "../parser/ml/lex.mll"
                ( DISJUNCTION )
-# 1846 "FStar_Parser_LexFStar.ml"
+# 1844 "FStar_Parser_LexFStar.ml"
 
   | 29 ->
-# 275 "../parser/ml/lex.mll"
+# 273 "../parser/ml/lex.mll"
                ( SUBTYPE )
-# 1851 "FStar_Parser_LexFStar.ml"
+# 1849 "FStar_Parser_LexFStar.ml"
 
   | 30 ->
-# 276 "../parser/ml/lex.mll"
+# 274 "../parser/ml/lex.mll"
                ( SUBKIND )
-# 1856 "FStar_Parser_LexFStar.ml"
+# 1854 "FStar_Parser_LexFStar.ml"
 
   | 31 ->
-# 277 "../parser/ml/lex.mll"
+# 275 "../parser/ml/lex.mll"
                ( LENS_PAREN_LEFT )
-# 1861 "FStar_Parser_LexFStar.ml"
+# 1859 "FStar_Parser_LexFStar.ml"
 
   | 32 ->
-# 278 "../parser/ml/lex.mll"
+# 276 "../parser/ml/lex.mll"
                ( LENS_PAREN_RIGHT )
-# 1866 "FStar_Parser_LexFStar.ml"
+# 1864 "FStar_Parser_LexFStar.ml"
 
   | 33 ->
-# 279 "../parser/ml/lex.mll"
+# 277 "../parser/ml/lex.mll"
                ( HASH )
-# 1871 "FStar_Parser_LexFStar.ml"
+# 1869 "FStar_Parser_LexFStar.ml"
 
   | 34 ->
-# 280 "../parser/ml/lex.mll"
+# 278 "../parser/ml/lex.mll"
                ( AMP )
-# 1876 "FStar_Parser_LexFStar.ml"
+# 1874 "FStar_Parser_LexFStar.ml"
 
   | 35 ->
-# 281 "../parser/ml/lex.mll"
+# 279 "../parser/ml/lex.mll"
                ( AMP_AMP )
-# 1881 "FStar_Parser_LexFStar.ml"
+# 1879 "FStar_Parser_LexFStar.ml"
 
   | 36 ->
-# 282 "../parser/ml/lex.mll"
+# 280 "../parser/ml/lex.mll"
                ( BAR_BAR )
-# 1886 "FStar_Parser_LexFStar.ml"
+# 1884 "FStar_Parser_LexFStar.ml"
 
   | 37 ->
-# 283 "../parser/ml/lex.mll"
+# 281 "../parser/ml/lex.mll"
                ( LPAREN_RPAREN )
-# 1891 "FStar_Parser_LexFStar.ml"
+# 1889 "FStar_Parser_LexFStar.ml"
 
   | 38 ->
-# 284 "../parser/ml/lex.mll"
+# 282 "../parser/ml/lex.mll"
                ( LPAREN )
-# 1896 "FStar_Parser_LexFStar.ml"
+# 1894 "FStar_Parser_LexFStar.ml"
 
   | 39 ->
-# 285 "../parser/ml/lex.mll"
+# 283 "../parser/ml/lex.mll"
                ( RPAREN )
-# 1901 "FStar_Parser_LexFStar.ml"
+# 1899 "FStar_Parser_LexFStar.ml"
 
   | 40 ->
-# 286 "../parser/ml/lex.mll"
+# 284 "../parser/ml/lex.mll"
                ( STAR )
-# 1906 "FStar_Parser_LexFStar.ml"
+# 1904 "FStar_Parser_LexFStar.ml"
 
   | 41 ->
-# 287 "../parser/ml/lex.mll"
+# 285 "../parser/ml/lex.mll"
                ( COMMA )
-# 1911 "FStar_Parser_LexFStar.ml"
+# 1909 "FStar_Parser_LexFStar.ml"
 
   | 42 ->
-# 288 "../parser/ml/lex.mll"
+# 286 "../parser/ml/lex.mll"
                ( SQUIGGLY_RARROW )
-# 1916 "FStar_Parser_LexFStar.ml"
+# 1914 "FStar_Parser_LexFStar.ml"
 
   | 43 ->
-# 289 "../parser/ml/lex.mll"
+# 287 "../parser/ml/lex.mll"
                ( RARROW )
-# 1921 "FStar_Parser_LexFStar.ml"
+# 1919 "FStar_Parser_LexFStar.ml"
 
   | 44 ->
-# 290 "../parser/ml/lex.mll"
+# 288 "../parser/ml/lex.mll"
                ( IFF )
-# 1926 "FStar_Parser_LexFStar.ml"
+# 1924 "FStar_Parser_LexFStar.ml"
 
   | 45 ->
-# 291 "../parser/ml/lex.mll"
+# 289 "../parser/ml/lex.mll"
                ( IMPLIES )
-# 1931 "FStar_Parser_LexFStar.ml"
+# 1929 "FStar_Parser_LexFStar.ml"
 
   | 46 ->
-# 292 "../parser/ml/lex.mll"
+# 290 "../parser/ml/lex.mll"
                ( DOT )
-# 1936 "FStar_Parser_LexFStar.ml"
+# 1934 "FStar_Parser_LexFStar.ml"
 
   | 47 ->
-# 293 "../parser/ml/lex.mll"
+# 291 "../parser/ml/lex.mll"
                ( LBRACE_COLON_PATTERN )
-# 1941 "FStar_Parser_LexFStar.ml"
+# 1939 "FStar_Parser_LexFStar.ml"
 
   | 48 ->
-# 294 "../parser/ml/lex.mll"
+# 292 "../parser/ml/lex.mll"
                ( COLON )
-# 1946 "FStar_Parser_LexFStar.ml"
+# 1944 "FStar_Parser_LexFStar.ml"
 
   | 49 ->
-# 295 "../parser/ml/lex.mll"
+# 293 "../parser/ml/lex.mll"
                ( COLON_COLON )
-# 1951 "FStar_Parser_LexFStar.ml"
+# 1949 "FStar_Parser_LexFStar.ml"
 
   | 50 ->
-# 296 "../parser/ml/lex.mll"
+# 294 "../parser/ml/lex.mll"
                ( COLON_EQUALS )
-# 1956 "FStar_Parser_LexFStar.ml"
+# 1954 "FStar_Parser_LexFStar.ml"
 
   | 51 ->
-# 297 "../parser/ml/lex.mll"
+# 295 "../parser/ml/lex.mll"
                ( SEMICOLON_SEMICOLON )
-# 1961 "FStar_Parser_LexFStar.ml"
+# 1959 "FStar_Parser_LexFStar.ml"
 
   | 52 ->
-# 298 "../parser/ml/lex.mll"
+# 296 "../parser/ml/lex.mll"
                ( SEMICOLON )
-# 1966 "FStar_Parser_LexFStar.ml"
+# 1964 "FStar_Parser_LexFStar.ml"
 
   | 53 ->
-# 299 "../parser/ml/lex.mll"
+# 297 "../parser/ml/lex.mll"
                ( EQUALS )
-# 1971 "FStar_Parser_LexFStar.ml"
+# 1969 "FStar_Parser_LexFStar.ml"
 
   | 54 ->
-# 300 "../parser/ml/lex.mll"
+# 298 "../parser/ml/lex.mll"
                ( PERCENT_LBRACK )
-# 1976 "FStar_Parser_LexFStar.ml"
+# 1974 "FStar_Parser_LexFStar.ml"
 
   | 55 ->
-# 301 "../parser/ml/lex.mll"
+# 299 "../parser/ml/lex.mll"
                ( BANG_LBRACE )
-# 1981 "FStar_Parser_LexFStar.ml"
+# 1979 "FStar_Parser_LexFStar.ml"
 
   | 56 ->
-# 302 "../parser/ml/lex.mll"
+# 300 "../parser/ml/lex.mll"
                ( LBRACK )
-# 1986 "FStar_Parser_LexFStar.ml"
+# 1984 "FStar_Parser_LexFStar.ml"
 
   | 57 ->
-# 303 "../parser/ml/lex.mll"
+# 301 "../parser/ml/lex.mll"
                ( LBRACK_BAR )
-# 1991 "FStar_Parser_LexFStar.ml"
+# 1989 "FStar_Parser_LexFStar.ml"
 
   | 58 ->
-# 304 "../parser/ml/lex.mll"
+# 302 "../parser/ml/lex.mll"
                ( if is_typ_app lexbuf then TYP_APP_LESS else CUSTOM_OP("<")  )
-# 1996 "FStar_Parser_LexFStar.ml"
+# 1994 "FStar_Parser_LexFStar.ml"
 
   | 59 ->
-# 305 "../parser/ml/lex.mll"
+# 303 "../parser/ml/lex.mll"
                ( if is_typ_app_gt () then TYP_APP_GREATER else custom_op_parser lexbuf )
-# 2001 "FStar_Parser_LexFStar.ml"
+# 1999 "FStar_Parser_LexFStar.ml"
 
   | 60 ->
-# 306 "../parser/ml/lex.mll"
+# 304 "../parser/ml/lex.mll"
                ( RBRACK )
-# 2006 "FStar_Parser_LexFStar.ml"
+# 2004 "FStar_Parser_LexFStar.ml"
 
   | 61 ->
-# 307 "../parser/ml/lex.mll"
+# 305 "../parser/ml/lex.mll"
                ( BAR_RBRACK )
-# 2011 "FStar_Parser_LexFStar.ml"
+# 2009 "FStar_Parser_LexFStar.ml"
 
   | 62 ->
-# 308 "../parser/ml/lex.mll"
+# 306 "../parser/ml/lex.mll"
                ( LBRACE )
-# 2016 "FStar_Parser_LexFStar.ml"
+# 2014 "FStar_Parser_LexFStar.ml"
 
   | 63 ->
-# 309 "../parser/ml/lex.mll"
+# 307 "../parser/ml/lex.mll"
                ( BAR )
-# 2021 "FStar_Parser_LexFStar.ml"
+# 2019 "FStar_Parser_LexFStar.ml"
 
   | 64 ->
-# 310 "../parser/ml/lex.mll"
+# 308 "../parser/ml/lex.mll"
                ( RBRACE )
-# 2026 "FStar_Parser_LexFStar.ml"
+# 2024 "FStar_Parser_LexFStar.ml"
 
   | 65 ->
-# 311 "../parser/ml/lex.mll"
+# 309 "../parser/ml/lex.mll"
                ( BANG )
-# 2031 "FStar_Parser_LexFStar.ml"
+# 2029 "FStar_Parser_LexFStar.ml"
 
   | 66 ->
-# 312 "../parser/ml/lex.mll"
+# 310 "../parser/ml/lex.mll"
                ( DOLLAR )
-# 2036 "FStar_Parser_LexFStar.ml"
+# 2034 "FStar_Parser_LexFStar.ml"
 
   | 67 ->
-# 313 "../parser/ml/lex.mll"
+# 311 "../parser/ml/lex.mll"
                ( BACKSLASH )
-# 2041 "FStar_Parser_LexFStar.ml"
+# 2039 "FStar_Parser_LexFStar.ml"
 
   | 68 ->
 let
-# 314 "../parser/ml/lex.mll"
+# 312 "../parser/ml/lex.mll"
                   op
-# 2047 "FStar_Parser_LexFStar.ml"
+# 2045 "FStar_Parser_LexFStar.ml"
 = Lexing.sub_lexeme_char lexbuf lexbuf.Lexing.lex_start_pos in
-# 314 "../parser/ml/lex.mll"
+# 312 "../parser/ml/lex.mll"
                      ( DIV_MOD_OP    (String.of_char op) )
-# 2051 "FStar_Parser_LexFStar.ml"
+# 2049 "FStar_Parser_LexFStar.ml"
 
   | 69 ->
-# 315 "../parser/ml/lex.mll"
+# 313 "../parser/ml/lex.mll"
                ( PLUS_OP )
-# 2056 "FStar_Parser_LexFStar.ml"
+# 2054 "FStar_Parser_LexFStar.ml"
 
   | 70 ->
-# 316 "../parser/ml/lex.mll"
+# 314 "../parser/ml/lex.mll"
                ( MINUS_OP )
-# 2061 "FStar_Parser_LexFStar.ml"
+# 2059 "FStar_Parser_LexFStar.ml"
 
   | 71 ->
-# 317 "../parser/ml/lex.mll"
+# 315 "../parser/ml/lex.mll"
                (CUSTOM_OP (L.lexeme lexbuf) )
-# 2066 "FStar_Parser_LexFStar.ml"
+# 2064 "FStar_Parser_LexFStar.ml"
 
   | 72 ->
-# 319 "../parser/ml/lex.mll"
+# 317 "../parser/ml/lex.mll"
      ( failwith "unexpected char" )
-# 2071 "FStar_Parser_LexFStar.ml"
+# 2069 "FStar_Parser_LexFStar.ml"
 
   | 73 ->
-# 320 "../parser/ml/lex.mll"
+# 318 "../parser/ml/lex.mll"
        ( lc := 1; EOF )
-# 2076 "FStar_Parser_LexFStar.ml"
+# 2074 "FStar_Parser_LexFStar.ml"
 
   | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; 
       __ocaml_lex_token_rec lexbuf __ocaml_lex_state
@@ -2082,9 +2080,9 @@ and custom_op_parser lexbuf =
 and __ocaml_lex_custom_op_parser_rec lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
-# 323 "../parser/ml/lex.mll"
+# 321 "../parser/ml/lex.mll"
                     (CUSTOM_OP(">" ^  L.lexeme lexbuf))
-# 2088 "FStar_Parser_LexFStar.ml"
+# 2086 "FStar_Parser_LexFStar.ml"
 
   | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; 
       __ocaml_lex_custom_op_parser_rec lexbuf __ocaml_lex_state
@@ -2095,64 +2093,64 @@ and __ocaml_lex_string_rec buffer lexbuf __ocaml_lex_state =
   match Lexing.new_engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
 let
-# 326 "../parser/ml/lex.mll"
+# 324 "../parser/ml/lex.mll"
                      x
-# 2101 "FStar_Parser_LexFStar.ml"
+# 2099 "FStar_Parser_LexFStar.ml"
 = Lexing.sub_lexeme lexbuf (lexbuf.Lexing.lex_start_pos + 1) lexbuf.Lexing.lex_mem.(0) in
-# 327 "../parser/ml/lex.mll"
+# 325 "../parser/ml/lex.mll"
     (
       L.new_line lexbuf;
       string buffer lexbuf; )
-# 2107 "FStar_Parser_LexFStar.ml"
+# 2105 "FStar_Parser_LexFStar.ml"
 
   | 1 ->
 let
-# 331 "../parser/ml/lex.mll"
+# 329 "../parser/ml/lex.mll"
               x
-# 2113 "FStar_Parser_LexFStar.ml"
+# 2111 "FStar_Parser_LexFStar.ml"
 = Lexing.sub_lexeme lexbuf lexbuf.Lexing.lex_start_pos lexbuf.Lexing.lex_curr_pos in
-# 332 "../parser/ml/lex.mll"
+# 330 "../parser/ml/lex.mll"
     ( Buffer.add_string buffer x;
       L.new_line lexbuf;
       string buffer lexbuf; )
-# 2119 "FStar_Parser_LexFStar.ml"
+# 2117 "FStar_Parser_LexFStar.ml"
 
   | 2 ->
 let
-# 336 "../parser/ml/lex.mll"
+# 334 "../parser/ml/lex.mll"
                   c
-# 2125 "FStar_Parser_LexFStar.ml"
+# 2123 "FStar_Parser_LexFStar.ml"
 = Lexing.sub_lexeme lexbuf lexbuf.Lexing.lex_start_pos (lexbuf.Lexing.lex_start_pos + 2) in
-# 337 "../parser/ml/lex.mll"
+# 335 "../parser/ml/lex.mll"
     ( Buffer.add_char buffer (char_of_ec c.[1]);
       string buffer lexbuf )
-# 2130 "FStar_Parser_LexFStar.ml"
+# 2128 "FStar_Parser_LexFStar.ml"
 
   | 3 ->
-# 341 "../parser/ml/lex.mll"
+# 339 "../parser/ml/lex.mll"
     ( STRING (ba_of_string (Buffer.contents buffer)) )
-# 2135 "FStar_Parser_LexFStar.ml"
+# 2133 "FStar_Parser_LexFStar.ml"
 
   | 4 ->
-# 344 "../parser/ml/lex.mll"
+# 342 "../parser/ml/lex.mll"
     ( BYTEARRAY (ba_of_string (Buffer.contents buffer)) )
-# 2140 "FStar_Parser_LexFStar.ml"
+# 2138 "FStar_Parser_LexFStar.ml"
 
   | 5 ->
 let
-# 346 "../parser/ml/lex.mll"
+# 344 "../parser/ml/lex.mll"
         c
-# 2146 "FStar_Parser_LexFStar.ml"
+# 2144 "FStar_Parser_LexFStar.ml"
 = Lexing.sub_lexeme_char lexbuf lexbuf.Lexing.lex_start_pos in
-# 347 "../parser/ml/lex.mll"
+# 345 "../parser/ml/lex.mll"
     ( Buffer.add_char buffer c;
       string buffer lexbuf )
-# 2151 "FStar_Parser_LexFStar.ml"
+# 2149 "FStar_Parser_LexFStar.ml"
 
   | 6 ->
-# 351 "../parser/ml/lex.mll"
+# 349 "../parser/ml/lex.mll"
     ( failwith "unterminated string" )
-# 2156 "FStar_Parser_LexFStar.ml"
+# 2154 "FStar_Parser_LexFStar.ml"
 
   | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; 
       __ocaml_lex_string_rec buffer lexbuf __ocaml_lex_state
@@ -2162,29 +2160,29 @@ and comment inner lexbuf =
 and __ocaml_lex_comment_rec inner lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
-# 356 "../parser/ml/lex.mll"
+# 354 "../parser/ml/lex.mll"
     ( let close_eof = comment true lexbuf in comment inner lexbuf )
-# 2168 "FStar_Parser_LexFStar.ml"
+# 2166 "FStar_Parser_LexFStar.ml"
 
   | 1 ->
-# 359 "../parser/ml/lex.mll"
+# 357 "../parser/ml/lex.mll"
     ( L.new_line lexbuf; comment inner lexbuf )
-# 2173 "FStar_Parser_LexFStar.ml"
+# 2171 "FStar_Parser_LexFStar.ml"
 
   | 2 ->
-# 362 "../parser/ml/lex.mll"
+# 360 "../parser/ml/lex.mll"
     ( if inner then EOF else token lexbuf )
-# 2178 "FStar_Parser_LexFStar.ml"
+# 2176 "FStar_Parser_LexFStar.ml"
 
   | 3 ->
-# 365 "../parser/ml/lex.mll"
+# 363 "../parser/ml/lex.mll"
     ( comment inner lexbuf )
-# 2183 "FStar_Parser_LexFStar.ml"
+# 2181 "FStar_Parser_LexFStar.ml"
 
   | 4 ->
-# 368 "../parser/ml/lex.mll"
+# 366 "../parser/ml/lex.mll"
      ( lc := 1; EOF )
-# 2188 "FStar_Parser_LexFStar.ml"
+# 2186 "FStar_Parser_LexFStar.ml"
 
   | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; 
       __ocaml_lex_comment_rec inner lexbuf __ocaml_lex_state
@@ -2194,10 +2192,10 @@ and cpp_filename lexbuf =
 and __ocaml_lex_cpp_filename_rec lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
-# 372 "../parser/ml/lex.mll"
+# 370 "../parser/ml/lex.mll"
      ( let s = trim_both lexbuf 2 1 in
        ignore_endline lexbuf )
-# 2201 "FStar_Parser_LexFStar.ml"
+# 2199 "FStar_Parser_LexFStar.ml"
 
   | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; 
       __ocaml_lex_cpp_filename_rec lexbuf __ocaml_lex_state
@@ -2207,9 +2205,9 @@ and ignore_endline lexbuf =
 and __ocaml_lex_ignore_endline_rec lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
-# 377 "../parser/ml/lex.mll"
+# 375 "../parser/ml/lex.mll"
      ( token lexbuf )
-# 2213 "FStar_Parser_LexFStar.ml"
+# 2211 "FStar_Parser_LexFStar.ml"
 
   | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; 
       __ocaml_lex_ignore_endline_rec lexbuf __ocaml_lex_state

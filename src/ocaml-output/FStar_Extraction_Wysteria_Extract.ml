@@ -229,12 +229,7 @@ end
 "D_v (const_meta, V_prin x)"
 end
 | false -> begin
-(match ((is_prins t)) with
-| true -> begin
-"D_v (const_meta, V_prins x)"
-end
-| false -> begin
-(match ((is_eprins t)) with
+(match (((is_prins t) || (is_eprins t))) with
 | true -> begin
 "D_v (const_meta, V_eprins x)"
 end
@@ -249,7 +244,6 @@ in (match (_64_170) with
 | (s1, s2, s3) -> begin
 (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat "mk_v_opaque x " s1) " ") s2) " ") s3)
 end))
-end)
 end)
 end)
 end)
@@ -510,7 +504,7 @@ in (let tl_abs_exp = (FStar_List.fold_left (fun e _64_330 -> (match (_64_330) wi
 (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat "mk_abs " (name_to_string (FStar_Extraction_ML_Syntax.idsym bname))) " (") e) ")")
 end)) body_exp (FStar_List.rev rest_bs))
 in (let fix_exp = (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat "mk_fix " (name_to_string lbname)) " ") (name_to_string (FStar_Extraction_ML_Syntax.idsym (Prims.fst first_b)))) " (") tl_abs_exp) ")")
-in Mk_tlet (((FStar_Extraction_ML_Syntax.idsym (Prims.fst first_b)), fix_exp)))))
+in Mk_tlet ((lbname, fix_exp)))))
 end))
 end
 | _64_334 -> begin

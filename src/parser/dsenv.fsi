@@ -48,11 +48,12 @@ type env = {
   admitted_iface:bool
 }
 
-type record = {
+type record_or_dc = {
   typename: lident;
   constrname: lident;
   parms: binders;
-  fields: list<(fieldname * typ)>
+  fields: list<(fieldname * typ)>;
+  is_record:bool
 }
 
 val fail_or:  env -> (lident -> option<'a>) -> lident -> 'a
@@ -85,9 +86,10 @@ val try_resolve_typ_abbrev: env -> lident -> option<typ>
 val try_lookup_id: env -> ident -> option<exp>
 val try_lookup_lid: env -> lident -> option<exp>
 val try_lookup_datacon: env -> lident -> option<var<typ>>
-val try_lookup_record_by_field_name: env -> lident -> option<(record * lident)>
+val try_lookup_record_by_field_name: env -> lident -> option<(record_or_dc * lident)>
+val try_lookup_projector_by_field_name: env -> lident -> option<(lident * bool)>
 
-val qualify_field_to_record: env -> record -> lident -> option<lident>
+val qualify_field_to_record: env -> record_or_dc -> lident -> option<lident>
 val find_kind_abbrev: env -> lident -> option<lident>
 val is_kind_abbrev: env -> lident -> bool
 val push_bvvdef: env -> bvvdef -> env
@@ -108,9 +110,10 @@ val mark: env -> env
 val reset_mark: env -> env
 val commit_mark: env -> env
 val finish_module_or_interface: env -> modul -> env
-val prepare_module_or_interface: bool -> bool -> env -> lident -> env
+val prepare_module_or_interface: bool -> bool -> env -> lident -> env * bool //pop the context when done desugaring
 val enter_monad_scope: env -> ident -> env
 val exit_monad_scope: env -> env -> env
+val export_interface: lident ->  env -> env
 
 (* private *) val unmangleOpName: ident -> option<lident>
 (* private *) val try_lookup_lid': bool -> bool -> env -> lident -> option<exp>

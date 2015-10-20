@@ -87,6 +87,7 @@ let assume_lid      = pconst  "_assume"
 let assert_lid      = pconst  "_assert"
 let list_append_lid = p2l ["FStar"; "List"; "append"]
 let strcat_lid      = p2l ["Prims"; "strcat"]
+let let_in_typ      = p2l ["Prims"; "Let"]
 
 (* Primitive operators *)
 let op_Eq              = pconst "op_Equality"

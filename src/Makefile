@@ -62,9 +62,9 @@ else
 RUNTIME = mono
 endif
 
-FSLYDIR := VS/packages/FsLexYacc.6.0.3
-FSYACC  := $(RUNTIME) $(FSLYDIR)/bin/fsyacc.exe
-FSLEX   := $(RUNTIME) $(FSLYDIR)/bin/fslex.exe
+FSLYDIR := VS/packages/FsLexYacc.6.1.0
+FSYACC  := $(RUNTIME) $(FSLYDIR)/build/fsyacc.exe
+FSLEX   := $(RUNTIME) $(FSLYDIR)/build/fslex.exe
 
 # --------------------------------------------------------------------
 .PHONY: all z3_x86 z3_x64 wc clean tidy boot ocaml

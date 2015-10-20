@@ -28,7 +28,6 @@ open FStar.Util
 
 val desugar_file: env -> file -> env * list<modul>
 val desugar_decls: env -> list<AST.decl> -> env * sigelts
-val desugar_modul_common: option<(modul * 'a)> -> env -> AST.modul -> env * Syntax.modul
 val desugar_partial_modul: option<(modul * 'a)> -> env -> AST.modul -> env * Syntax.modul
 
 (* private *) val desugar_modul : env -> AST.modul -> env * Syntax.modul

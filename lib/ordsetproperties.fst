@@ -37,3 +37,4 @@ val union_lemma': #a:Type -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
 let union_lemma' (#a:Type) #f s1 s2 =
   union_lemma s1 s2;
   eq_lemma (union s1 s2) (union' s1 s2)
+

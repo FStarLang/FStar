@@ -131,6 +131,8 @@ let list_append_lid = (p2l (("FStar")::("List")::("append")::[]))
 
 let strcat_lid = (p2l (("Prims")::("strcat")::[]))
 
+let let_in_typ = (p2l (("Prims")::("Let")::[]))
+
 let op_Eq = (pconst "op_Equality")
 
 let op_notEq = (pconst "op_disEquality")
