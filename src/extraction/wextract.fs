@@ -148,8 +148,7 @@ let get_injection (t:mlty) :string =
         if is_bool t then "D_v (const_meta, V_bool x)"
         else if is_unit t then "D_v (const_meta, V_unit)"
         else if is_prin t then "D_v (const_meta, V_prin x)"
-        else if is_prins t then "D_v (const_meta, V_prins x)"
-        else if is_eprins t then "D_v (const_meta, V_eprins x)"
+        else if is_prins t || is_eprins t then "D_v (const_meta, V_eprins x)"
         else if is_box t || is_wire t then "x"
         else
             let s1, s2, s3 = get_opaque_fns t in
@@ -263,7 +262,7 @@ let extract_mllb ((b, l):mlletbinding) :tlet =
                     let body_exp = extract_mlexp e in
                     let tl_abs_exp = List.fold_left (fun e (bname, _) -> "mk_abs " ^ name_to_string (idsym bname) ^ " (" ^ e ^ ")") body_exp (List.rev rest_bs) in
                     let fix_exp = "mk_fix " ^ name_to_string lbname ^ " " ^ name_to_string (idsym (fst first_b)) ^ " (" ^ tl_abs_exp ^ ")" in
-                    Mk_tlet (idsym (fst first_b), fix_exp)
+                    Mk_tlet (lbname, fix_exp)
                 | _ -> failwith "Recursive let binding is not an abstraction ?"
         else
             Mk_tlet (lbname, extract_mlexp lbbody)
