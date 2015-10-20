@@ -106,7 +106,7 @@ let v_meta_to_string m =
   strcat (strcat (strcat (strcat (strcat (strcat (strcat "Meta " scb) " ") (prins_to_string bps)) " ") scw) " ") (prins_to_string wps)
 
 val value_to_string: #meta:v_meta -> v:value meta -> Tot string (decreases v)
-val v_wire_to_string_helper: #eps:eprins -> m:v_wire eps -> string -> Tot string (decreases %[m; (size eps); 0])
+val v_wire_to_string_helper: #eps:eprins -> eps':eprins{subset eps' eps} -> m:v_wire eps -> string -> Tot string (decreases %[m; (size eps'); 0])
 val v_wire_to_string: #eps:eprins -> m:v_wire eps -> Tot string (decreases %[m; (size eps); 1])
 let rec value_to_string #meta v =
   let s =
@@ -133,16 +133,17 @@ let rec value_to_string #meta v =
   in
   strcat (strcat (strcat s " (") (v_meta_to_string meta)) ")"
 
-and v_wire_to_string_helper #eps m s =
-  if eps = empty then s
+and v_wire_to_string_helper #eps eps' m s =
+  if eps' = empty then s
   else
-    let Some p = choose eps in
-    let eps' = remove p eps in
+    let Some p = choose eps' in
+    let eps'' = remove p eps' in
     let Some v = OrdMap.select p m in
     let _ = admitP (v << m) in
-    strcat (strcat (strcat (strcat s (prin_to_string p)) ":") (value_to_string v)) "; "
+    let s' = strcat (strcat (strcat (strcat s (prin_to_string p)) ":") (value_to_string v)) "; " in
+    v_wire_to_string_helper #eps eps'' m s'
 
-and v_wire_to_string #eps m = v_wire_to_string_helper #eps m ""
+and v_wire_to_string #eps m = v_wire_to_string_helper #eps eps m ""
 
 val redex_to_string: redex -> Tot string
 let redex_to_string = function
