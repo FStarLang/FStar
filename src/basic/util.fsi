@@ -40,7 +40,7 @@ val set_count: set<'a> -> int
 val set_difference: set<'a> -> set<'a> -> set<'a>
 val set_elements: set<'a> -> list<'a>
 
-type smap<'value> = HashMultiMap<string,'value> (* not relying on representation *)
+type smap<'value> = System.Collections.Generic.Dictionary<string,'value> (* not relying on representation *)
 val smap_create: int -> smap<'value>
 val smap_clear:smap<'value> -> unit
 val smap_add: smap<'value> -> string -> 'value -> unit
