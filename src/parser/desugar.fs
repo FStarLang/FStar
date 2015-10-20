@@ -188,6 +188,7 @@ let rec is_type env (t:term) =
             | _ -> false //no other patterns are permitted in type functions
          end in
        aux env pats
+    | Let(false, [({pat=PatVar _}, _)], t) -> is_type env t
     | _ -> false
 
 and is_kind env (t:term) : bool =
@@ -271,10 +272,10 @@ and free_type_vars env t = match (unparen t).tm with
 
 
   | Abs _  (* not closing implicitly over free vars in type-level functions *)
+  | Let _
   | If _
   | QForall _
   | QExists _ -> [] (* not closing implicitly over free vars in formulas *)
-  | Let _
   | Record _
   | Match _
   | TryWith _
@@ -924,6 +925,12 @@ and desugar_typ env (top:term) : typ =
       wpos <| mk_Typ_app(tup, targs)
 
     | Record _ -> failwith "Unexpected record type"
+
+    | Let(false, [(x, v)], t) -> 
+      //desugar as Let v (fun x -> t) 
+      let let_v = mk_term (App(mk_term(Name Const.let_in_typ) top.range top.level, v, Nothing)) v.range v.level in
+      let t' = mk_term(App(let_v, mk_term (Abs([x], t)) t.range t.level, Nothing)) top.range top.level in
+      desugar_typ env t'
 
     | If _
     | Labeled _ -> desugar_formula env top
