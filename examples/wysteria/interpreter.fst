@@ -33,7 +33,7 @@ let step c =
   else if pre_unbox c = Do then Some (step_unbox c)
 
   else if pre_emkwire c then Some (step_mkwire_e1 c)
-  else if is_value c && is_sframe c is_F_mkwire_ps then Some (step_mkwire_e2 c)
+  else if is_value_ps c && is_sframe c is_F_mkwire_ps then Some (step_mkwire_e2 c)
   else if is_value c && is_sframe c is_F_mkwire_e then Some (step_mkwire_red c)
   else if pre_mkwire c = Do then Some (step_mkwire c)
   
@@ -102,7 +102,7 @@ let step_correctness c =
   else if pre_unbox c = Do then C_unbox_beta c c'
 
   else if pre_emkwire c then C_mkwire_e1 c c'
-  else if is_value c && is_sframe c is_F_mkwire_ps then C_mkwire_e2 c c'
+  else if is_value_ps c && is_sframe c is_F_mkwire_ps then C_mkwire_e2 c c'
   else if is_value c && is_sframe c is_F_mkwire_e then C_mkwire_red c c'
   else if pre_mkwire c = Do then C_mkwire_beta c c'
 

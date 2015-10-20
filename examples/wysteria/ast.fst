@@ -19,7 +19,6 @@ type varname = string
 type const =
   | C_prin  : c:prin   -> const
   | C_eprins: c:eprins -> const
-  | C_prins : c:prins  -> const
 
   | C_unit  : c:unit -> const
   | C_bool  : c:bool -> const
@@ -65,7 +64,6 @@ let is_meta_boxable ps = function
 type value: v_meta -> Type =
   | V_prin    : c:prin -> value (Meta empty Can_b empty Can_w)
   | V_eprins  : c:eprins -> value (Meta empty Can_b empty Can_w)
-  | V_prins   : c:prins -> value (Meta empty Can_b empty Can_w)
 
   | V_unit    : value (Meta empty Can_b empty Can_w)
   | V_bool    : c:bool -> value (Meta empty Can_b empty Can_w)
@@ -122,7 +120,7 @@ type redex =
   | R_assec     : #meta:v_meta -> ps:prins -> v:value meta -> redex
   | R_box       : #meta:v_meta -> ps:prins -> v:value meta -> redex
   | R_unbox     : #meta:v_meta -> v:value meta -> redex
-  | R_mkwire    : #mps:v_meta -> #mv:v_meta -> vps:value mps -> v:value mv -> redex
+  | R_mkwire    : #mv:v_meta -> ps:prins -> v:value mv -> redex
   | R_projwire  : #meta:v_meta -> p:prin -> v:value meta -> redex
   | R_concatwire: #meta1:v_meta -> #meta2:v_meta -> v1:value meta1 -> v2:value meta2 -> redex
   | R_let       : #meta:v_meta -> x:varname -> v:value meta -> e:exp -> redex
@@ -155,7 +153,7 @@ type frame' =
   | F_box_e        : ps:prins -> frame'
   | F_unbox        : frame'
   | F_mkwire_ps    : e:exp -> frame'
-  | F_mkwire_e     : #meta:v_meta -> v:value meta -> frame'
+  | F_mkwire_e     : ps:prins -> frame'
   | F_projwire_p   : e:exp -> frame'
   | F_projwire_e   : p:prin -> frame'
   | F_concatwire_e1: e:exp -> frame'
@@ -268,8 +266,8 @@ let is_value c = is_T_val (t_of_conf c)
 
 val is_value_ps: c:config -> Tot bool
 let is_value_ps c = match c with
-  | Conf _ _ _ _ (T_val (V_prins _)) _ -> true
-  | _                                  -> false
+  | Conf _ _ _ _ (T_val (V_eprins eps)) _ -> not (eps = empty)
+  | _                                     -> false
 
 val is_value_p: c:config -> Tot bool
 let is_value_p c = match c with
@@ -281,7 +279,7 @@ let c_value (Conf _ _ _ _ (T_val #meta v) _) = D_v meta v
 
 val c_value_ps: c:config{is_value_ps c} -> Tot prins
 let c_value_ps c = match c with
-  | Conf _ _ _ _ (T_val (V_prins ps)) _ -> ps
+  | Conf _ _ _ _ (T_val (V_eprins ps)) _ -> ps
 
 val c_value_p: c:config{is_value_p c} -> Tot prin
 let c_value_p c = match c with
@@ -367,3 +365,21 @@ let mk_cond e e1 e2 = E_cond e e1 e2
 
 opaque val mk_v_opaque: 'a -> (prin -> 'a -> Tot 'a) -> ('a -> 'a -> Tot 'a) -> (prins -> 'a -> Tot 'a) -> Tot dvalue
 let mk_v_opaque v s c sps = D_v (Meta empty Can_b empty Can_w) (V_opaque v (Meta empty Can_b empty Can_w) s c sps)
+
+(**********)
+
+type compose_v_meta_inv (m1:v_meta) (m2:v_meta) (cmeta:v_meta) =
+ subset (Meta.bps cmeta) (union (Meta.bps m1) (Meta.bps m2))            /\
+ ((Meta.cb m1 = Can_b /\ Meta.cb m2 = Can_b) ==> Meta.cb cmeta = Can_b)   /\
+ subset (Meta.wps cmeta) (union (Meta.wps m1) (Meta.wps m2))            /\
+ ((Meta.cw m1 = Can_w /\ Meta.cw m2 = Can_w) ==> Meta.cw cmeta = Can_w)
+
+val compose_opaque_meta: m1:v_meta -> m2:v_meta -> Tot (r:v_meta{compose_v_meta_inv m1 m2 r})
+let compose_opaque_meta m1 m2 =
+  let Meta bps1 cb1 wps1 cw1 = m1 in
+  let Meta bps2 cb2 wps2 cw2 = m2 in
+
+  let cb = if cb1 = Can_b && cb2 = Can_b then Can_b else Cannot_b in
+  let cw = if cw1 = Can_w && cw2 = Can_w then Can_w else Cannot_w in
+
+  Meta (union bps1 bps2) cb (union wps1 wps2) cw

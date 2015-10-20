@@ -40,7 +40,7 @@ let slice_r_sps ps r = match r with
   | R_box ps' v            -> R_box ps' (D_v.v (slice_v_sps ps v))
   | R_assec ps' v          -> R_assec ps' (D_v.v (slice_v_sps ps v))
   | R_unbox v              -> R_unbox (D_v.v (slice_v_sps ps v))
-  | R_mkwire v1 v2         -> R_mkwire (D_v.v (slice_v_sps ps v1)) (D_v.v (slice_v_sps ps v2))
+  | R_mkwire ps' v         -> R_mkwire ps' (D_v.v (slice_v_sps ps v))
   | R_projwire p v         -> R_projwire p (D_v.v (slice_v_sps ps v))
   | R_concatwire v1 v2     -> R_concatwire (D_v.v (slice_v_sps ps v1)) (D_v.v (slice_v_sps ps v2))
   | R_let x v1 e2          -> R_let x (D_v.v (slice_v_sps ps v1)) e2
@@ -57,7 +57,7 @@ let slice_f'_sps ps f = match f with
   | F_assec_ret              -> f
   | F_unbox                  -> f
   | F_mkwire_ps  _           -> f
-  | F_mkwire_e   v           -> F_mkwire_e (D_v.v (slice_v_sps ps v))
+  | F_mkwire_e   _           -> f
   | F_projwire_p _           -> f
   | F_projwire_e _           -> f
   | F_concatwire_e1 _        -> f
@@ -248,7 +248,7 @@ let sstep_sec_slice_lemma c c' h = match h with
   | C_mkwire_e2 c c'       -> Conj () (C_mkwire_e2 (slice_c_sps c) (slice_c_sps c'))
   | C_mkwire_red c c'      -> Conj () (C_mkwire_red (slice_c_sps c) (slice_c_sps c'))
   | C_mkwire_beta c c'     ->
-    let Conf _ (Mode _ ps) _ _ (T_red (R_mkwire (V_prins ps') v)) _ = c in
+    let Conf _ (Mode _ ps) _ _ (T_red (R_mkwire ps' v)) _ = c in
     subset_intersect_lemma ps ps';
     meta_empty_can_b_same_slice_sps v ps;
     slice_const_wire_sps_lemma ps ps' v;
@@ -349,7 +349,7 @@ let slice_r p r = match r with
   | R_assec ps v           -> R_assec ps (D_v.v (slice_v p v))
   | R_box ps v             -> R_box ps (D_v.v (slice_v p v))
   | R_unbox v              -> R_unbox (D_v.v (slice_v p v))
-  | R_mkwire v1 v2         -> R_mkwire (D_v.v (slice_v p v1)) (D_v.v (slice_v p v2))
+  | R_mkwire ps v          -> R_mkwire ps (D_v.v (slice_v p v))
   | R_projwire p' v        -> R_projwire p' (D_v.v (slice_v p v))
   | R_concatwire v1 v2     -> R_concatwire (D_v.v (slice_v p v1)) (D_v.v (slice_v p v2))
   | R_let x v1 e2          -> R_let x (D_v.v (slice_v p v1)) e2
@@ -369,7 +369,7 @@ let slice_f' p f = match f with
   | F_aspar_ret _            -> f
   | F_unbox                  -> f
   | F_mkwire_ps _            -> f
-  | F_mkwire_e v             -> F_mkwire_e (D_v.v (slice_v p v))
+  | F_mkwire_e _             -> f
   | F_projwire_p _           -> f
   | F_projwire_e _           -> f
   | F_concatwire_e1 _        -> f
@@ -463,7 +463,6 @@ val slice_lem_singl_en: en:env -> p:prin
 let rec slice_lem_singl_v #m v p = match v with
   | V_prin _             -> ()
   | V_eprins _           -> ()
-  | V_prins _            -> ()
   | V_unit               -> ()
   | V_bool _             -> ()
   | V_opaque 'a _ _ _ _ _ -> v_opaque_slice_lem_singl_v_axiom v p
@@ -534,7 +533,6 @@ val box_slice_lem: #m:v_meta -> v:value m
 let rec box_slice_lem #m v ps1 ps2 = match v with
   | V_prin _             -> ()
   | V_eprins _           -> ()
-  | V_prins _            -> ()
   | V_unit               -> ()
   | V_bool _             -> ()
   | V_opaque 'a _ _ _ _ _ -> v_opaque_box_slice_lem_axiom v ps1 ps2
@@ -597,7 +595,6 @@ val slc_en_lem_ps: en:env -> p:prin -> ps:prins{not (mem p ps)}
 let rec slc_v_lem_ps #m v p ps = match v with
   | V_prin _             -> ()
   | V_eprins _           -> ()
-  | V_prins _            -> ()
   | V_unit               -> ()
   | V_bool _             -> ()
   | V_opaque 'a _ _ _ _ _ -> v_opaque_slc_v_lem_ps_axiom v p ps
@@ -926,7 +923,7 @@ let sstep_par_slice_lemma c c' h p =
     | C_mkwire_beta (Conf _ m _ _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else
-        let Conf _ (Mode Par _) _ _ (T_red (R_mkwire (V_prins ps') (V_box ps'' v))) _ = c in
+        let Conf _ (Mode Par _) _ _ (T_red (R_mkwire ps' (V_box ps'' v))) _ = c in
 	meta_empty_can_b_same_slice v p;
         if not (mem p ps') then
           let _ =
@@ -1448,7 +1445,6 @@ val slice_en_lem_singl_of_ps: en:env -> ps:prins -> p:prin{mem p ps}
 let rec slice_v_lem_singl_of_ps #m v ps p = match v with
   | V_prin _             -> ()
   | V_eprins _           -> ()
-  | V_prins _            -> ()
   | V_unit               -> ()
   | V_bool _             -> ()
   | V_opaque 'a _ _ _ _ _ -> v_opaque_slice_v_lem_singl_of_ps v ps p
@@ -2730,7 +2726,6 @@ val composable_envs_on:
 let rec composable_vals dv1 dv2 = match dv1, dv2 with
   | D_v _ (V_prin p1), D_v _ (V_prin p2) -> p1 = p2
   | D_v _ (V_eprins eps1), D_v _ (V_eprins eps2) -> eps1 = eps2
-  | D_v _ (V_prins ps1), D_v _ (V_prins ps2) -> ps1 = ps2
   | D_v _ V_unit, D_v _ V_unit -> true
   | D_v _ (V_bool b1), D_v _ (V_bool b2) -> b1 = b2
   | D_v _ (V_opaque 'a _ _ _ c1 _), D_v _ (V_opaque 'b _ _ _ c2 _) ->
