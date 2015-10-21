@@ -279,6 +279,18 @@ let maybe_lalloc_eta_data (g:env) (qual : option<fv_qual>) (residualType : mlty)
 
         | _ -> mlAppExpr
 
+let check_pats_for_ite (l:list<(pat * option<exp> * exp)>) :(bool * option<exp> * option<exp>) =
+    let def = false, None, None in
+    if List.length l <> 2 then def
+    else
+        let (p1, _, e1) = List.hd l in
+        let (p2, _, e2) = List.hd (List.tl l) in
+        match (p1.v, p2.v) with
+            | (Pat_constant (Const_bool true), Pat_constant (Const_bool false)) -> true, Some e1, Some e2
+            | (Pat_constant (Const_bool false), Pat_constant (Const_bool true)) -> true, Some e2, Some e1
+            | _ -> def
+
+
 let rec check_exp (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr =
     // debug g (fun () -> printfn "Checking %s at type %A\n" (Print.exp_to_string e) t);
     let e, _, _ = erase g (check_exp' g e f t) f t in 
@@ -288,19 +300,31 @@ and check_exp' (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr =
     match (Util.compress_exp e).n with
       | Exp_match(scrutinee, pats) ->
         let e, f_e, t_e = synth_exp g scrutinee in
-        let mlbranches = pats |> List.collect (fun (pat, when_opt, branch) ->
-            let env, p = extract_pat g pat in
-            let when_opt = match when_opt with
-                | None -> None
-                | Some w -> Some (check_exp env w E_IMPURE ml_bool_ty) in //when clauses used to be Pure in F*; they no longer are required to be pure
-            let branch = check_exp env branch f t in
-            p |> List.map (fun (p, wopt) -> 
-                let when_clause = conjoin_opt wopt when_opt in
-                p, when_clause, branch)) in
+        let b, then_e, else_e = check_pats_for_ite pats in
+        let e' =
+            if b then
+                match then_e, else_e with
+                    | Some then_e, Some else_e ->
+                        let then_mle = check_exp g then_e f t in
+                        let else_mle = check_exp g else_e f t in
+                        MLE_If (e, then_mle, Some else_mle)
+                    | _ -> failwith "ITE pats matched but then and else expressions not found?"
+            else
+                let mlbranches = pats |> List.collect (fun (pat, when_opt, branch) ->
+                let env, p = extract_pat g pat in
+                let when_opt = match when_opt with
+                    | None -> None
+                    | Some w -> Some (check_exp env w E_IMPURE ml_bool_ty) in //when clauses used to be Pure in F*; they no longer are required to be pure
+                let branch = check_exp env branch f t in
+                p |> List.map (fun (p, wopt) -> 
+                    let when_clause = conjoin_opt wopt when_opt in
+                    p, when_clause, branch))
+                in
+                MLE_Match(e, mlbranches)
+        in
         if eff_leq f_e f
-        then with_ty t <| MLE_Match(e, mlbranches)
+        then with_ty t <| e'
         else err_unexpected_eff scrutinee f f_e
-
      | _ ->
        let e0, f0, t0 = synth_exp g e in
        if eff_leq f0 f

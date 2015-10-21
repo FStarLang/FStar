@@ -79,8 +79,7 @@ end
 | (FStar_Util.Inr (x), _27_80) -> begin
 x
 end)) args)
-in (match (((is_lex_cons f) && ((FStar_List.length exps) = 2))) with
-| true -> begin
+in if ((is_lex_cons f) && ((FStar_List.length exps) = 2)) then begin
 (match ((let _92_31 = (FStar_List.nth exps 1)
 in (reconstruct_lex _92_31))) with
 | Some (xs) -> begin
@@ -91,19 +90,16 @@ end
 | None -> begin
 None
 end)
-end
-| false -> begin
+end else begin
 None
-end)))
+end))
 end
 | _27_87 -> begin
-(match ((is_lex_top e)) with
-| true -> begin
+if (is_lex_top e) then begin
 Some ([])
-end
-| false -> begin
+end else begin
 None
-end)
+end
 end))
 
 let rec find = (fun f l -> (match (l) with
@@ -111,13 +107,11 @@ let rec find = (fun f l -> (match (l) with
 (FStar_All.failwith "blah")
 end
 | hd::tl -> begin
-(match ((f hd)) with
-| true -> begin
+if (f hd) then begin
 hd
-end
-| false -> begin
+end else begin
 (find f tl)
-end)
+end
 end))
 
 let find_lid = (fun x xs -> (let _92_47 = (find (fun p -> (FStar_Absyn_Syntax.lid_equals x (Prims.fst p))) xs)
@@ -138,21 +132,16 @@ in (find_lid _92_55 unary_type_ops)))
 let quant_to_string = (fun t -> (let _92_57 = (get_type_lid t)
 in (find_lid _92_57 quants)))
 
-let rec sli = (fun l -> (match ((FStar_ST.read FStar_Options.print_real_names)) with
-| true -> begin
+let rec sli = (fun l -> if (FStar_ST.read FStar_Options.print_real_names) then begin
 l.FStar_Absyn_Syntax.str
-end
-| false -> begin
+end else begin
 l.FStar_Absyn_Syntax.ident.FStar_Absyn_Syntax.idText
-end))
+end)
 
-let strBvd = (fun bvd -> (match ((FStar_ST.read FStar_Options.print_real_names)) with
-| true -> begin
+let strBvd = (fun bvd -> if (FStar_ST.read FStar_Options.print_real_names) then begin
 (Prims.strcat bvd.FStar_Absyn_Syntax.ppname.FStar_Absyn_Syntax.idText bvd.FStar_Absyn_Syntax.realname.FStar_Absyn_Syntax.idText)
-end
-| false -> begin
-(match (((FStar_ST.read FStar_Options.hide_genident_nums) && (FStar_Util.starts_with bvd.FStar_Absyn_Syntax.ppname.FStar_Absyn_Syntax.idText "_"))) with
-| true -> begin
+end else begin
+if ((FStar_ST.read FStar_Options.hide_genident_nums) && (FStar_Util.starts_with bvd.FStar_Absyn_Syntax.ppname.FStar_Absyn_Syntax.idText "_")) then begin
 (FStar_All.try_with (fun _27_106 -> (match (()) with
 | () -> begin
 (let _27_112 = (let _92_62 = (FStar_Util.substring_from bvd.FStar_Absyn_Syntax.ppname.FStar_Absyn_Syntax.idText 1)
@@ -162,11 +151,10 @@ end)) (fun _27_105 -> (match (_27_105) with
 | _27_109 -> begin
 bvd.FStar_Absyn_Syntax.ppname.FStar_Absyn_Syntax.idText
 end)))
-end
-| false -> begin
+end else begin
 bvd.FStar_Absyn_Syntax.ppname.FStar_Absyn_Syntax.idText
+end
 end)
-end))
 
 let filter_imp = (fun a -> (FStar_All.pipe_right a (FStar_List.filter (fun _27_3 -> (match (_27_3) with
 | (_27_117, Some (FStar_Absyn_Syntax.Implicit)) -> begin
@@ -181,13 +169,11 @@ let const_to_string = (fun x -> (match (x) with
 "()"
 end
 | FStar_Absyn_Syntax.Const_bool (b) -> begin
-(match (b) with
-| true -> begin
+if b then begin
 "true"
-end
-| false -> begin
+end else begin
 "false"
-end)
+end
 end
 | FStar_Absyn_Syntax.Const_int32 (x) -> begin
 (FStar_Util.string_of_int32 x)
@@ -365,11 +351,9 @@ in (FStar_Util.format1 "(<Expected a type!>%s)" _92_129))
 end))
 in (let qbinder_to_string = (q_to_string (fun x -> (binder_to_string (Prims.fst x))))
 in (let qbody_to_string = (q_to_string (fun x -> (typ_to_string (Prims.snd x))))
-in (let args' = (match (((FStar_ST.read FStar_Options.print_implicits) && (not ((is_quant t))))) with
-| true -> begin
+in (let args' = if ((FStar_ST.read FStar_Options.print_implicits) && (not ((is_quant t)))) then begin
 args
-end
-| false -> begin
+end else begin
 (FStar_List.filter (fun _27_5 -> (match (_27_5) with
 | (_27_296, Some (FStar_Absyn_Syntax.Implicit)) -> begin
 false
@@ -377,9 +361,8 @@ end
 | _27_301 -> begin
 true
 end)) args)
-end)
-in (match (((is_ite t) && ((FStar_List.length args) = 3))) with
-| true -> begin
+end
+in if ((is_ite t) && ((FStar_List.length args) = 3)) then begin
 (let _92_140 = (let _92_135 = (FStar_List.nth args 0)
 in (arg_to_string _92_135))
 in (let _92_139 = (let _92_136 = (FStar_List.nth args 1)
@@ -387,50 +370,41 @@ in (arg_to_string _92_136))
 in (let _92_138 = (let _92_137 = (FStar_List.nth args 2)
 in (arg_to_string _92_137))
 in (FStar_Util.format3 "if %s then %s else %s" _92_140 _92_139 _92_138))))
-end
-| false -> begin
-(match (((is_b2t t) && ((FStar_List.length args) = 1))) with
-| true -> begin
+end else begin
+if ((is_b2t t) && ((FStar_List.length args) = 1)) then begin
 (let _92_141 = (FStar_List.nth args 0)
 in (FStar_All.pipe_right _92_141 arg_to_string))
-end
-| false -> begin
-(match (((is_quant t) && ((FStar_List.length args) <= 2))) with
-| true -> begin
+end else begin
+if ((is_quant t) && ((FStar_List.length args) <= 2)) then begin
 (let _92_146 = (quant_to_string t)
 in (let _92_145 = (let _92_142 = (FStar_List.nth args' 0)
 in (qbinder_to_string _92_142))
 in (let _92_144 = (let _92_143 = (FStar_List.nth args' 0)
 in (qbody_to_string _92_143))
 in (FStar_Util.format3 "(%s (%s). %s)" _92_146 _92_145 _92_144))))
-end
-| false -> begin
-(match (((is_infix_type_op t) && ((FStar_List.length args') = 2))) with
-| true -> begin
+end else begin
+if ((is_infix_type_op t) && ((FStar_List.length args') = 2)) then begin
 (let _92_151 = (let _92_147 = (FStar_List.nth args' 0)
 in (FStar_All.pipe_right _92_147 arg_to_string))
 in (let _92_150 = (FStar_All.pipe_right t infix_type_op_to_string)
 in (let _92_149 = (let _92_148 = (FStar_List.nth args' 1)
 in (FStar_All.pipe_right _92_148 arg_to_string))
 in (FStar_Util.format3 "(%s %s %s)" _92_151 _92_150 _92_149))))
-end
-| false -> begin
-(match (((is_unary_type_op t) && ((FStar_List.length args') = 1))) with
-| true -> begin
+end else begin
+if ((is_unary_type_op t) && ((FStar_List.length args') = 1)) then begin
 (let _92_154 = (FStar_All.pipe_right t unary_type_op_to_string)
 in (let _92_153 = (let _92_152 = (FStar_List.nth args' 0)
 in (FStar_All.pipe_right _92_152 arg_to_string))
 in (FStar_Util.format2 "(%s %s)" _92_154 _92_153)))
-end
-| false -> begin
+end else begin
 (let _92_156 = (FStar_All.pipe_right t typ_to_string)
 in (let _92_155 = (FStar_All.pipe_right args args_to_string)
 in (FStar_Util.format2 "(%s %s)" _92_156 _92_155)))
-end)
-end)
-end)
-end)
-end)))))
+end
+end
+end
+end
+end))))
 end
 | FStar_Absyn_Syntax.Typ_lam (binders, t2) -> begin
 (let _92_158 = (binders_to_string " " binders)
@@ -438,15 +412,13 @@ in (let _92_157 = (FStar_All.pipe_right t2 typ_to_string)
 in (FStar_Util.format2 "(fun %s -> %s)" _92_158 _92_157)))
 end
 | FStar_Absyn_Syntax.Typ_ascribed (t, k) -> begin
-(match ((FStar_ST.read FStar_Options.print_real_names)) with
-| true -> begin
+if (FStar_ST.read FStar_Options.print_real_names) then begin
 (let _92_160 = (typ_to_string t)
 in (let _92_159 = (kind_to_string k)
 in (FStar_Util.format2 "(%s <: %s)" _92_160 _92_159)))
-end
-| false -> begin
+end else begin
 (FStar_All.pipe_right t typ_to_string)
-end)
+end
 end
 | FStar_Absyn_Syntax.Typ_unknown -> begin
 "<UNKNOWN>"
@@ -462,30 +434,24 @@ end)
 end)))
 and uvar_t_to_string = (fun _27_331 -> (match (_27_331) with
 | (uv, k) -> begin
-(match ((false && (FStar_ST.read FStar_Options.print_real_names))) with
-| true -> begin
-(let _92_164 = (match ((FStar_ST.read FStar_Options.hide_uvar_nums)) with
-| true -> begin
+if (false && (FStar_ST.read FStar_Options.print_real_names)) then begin
+(let _92_164 = if (FStar_ST.read FStar_Options.hide_uvar_nums) then begin
 "?"
-end
-| false -> begin
+end else begin
 (let _92_162 = (FStar_Unionfind.uvar_id uv)
 in (FStar_Util.string_of_int _92_162))
-end)
+end
 in (let _92_163 = (kind_to_string k)
 in (FStar_Util.format2 "(U%s : %s)" _92_164 _92_163)))
-end
-| false -> begin
-(let _92_166 = (match ((FStar_ST.read FStar_Options.hide_uvar_nums)) with
-| true -> begin
+end else begin
+(let _92_166 = if (FStar_ST.read FStar_Options.hide_uvar_nums) then begin
 "?"
-end
-| false -> begin
+end else begin
 (let _92_165 = (FStar_Unionfind.uvar_id uv)
 in (FStar_Util.string_of_int _92_165))
-end)
+end
 in (FStar_Util.format1 "U%s" _92_166))
-end)
+end
 end))
 and imp_to_string = (fun s _27_6 -> (match (_27_6) with
 | Some (FStar_Absyn_Syntax.Implicit) -> begin
@@ -499,65 +465,53 @@ s
 end))
 and binder_to_string' = (fun is_arrow b -> (match (b) with
 | (FStar_Util.Inl (a), imp) -> begin
-(match (((FStar_Absyn_Syntax.is_null_binder b) || ((let _92_171 = (FStar_ST.read FStar_Options.print_real_names)
-in (FStar_All.pipe_right _92_171 Prims.op_Negation)) && (FStar_Absyn_Syntax.is_null_pp a.FStar_Absyn_Syntax.v)))) with
-| true -> begin
+if ((FStar_Absyn_Syntax.is_null_binder b) || ((let _92_171 = (FStar_ST.read FStar_Options.print_real_names)
+in (FStar_All.pipe_right _92_171 Prims.op_Negation)) && (FStar_Absyn_Syntax.is_null_pp a.FStar_Absyn_Syntax.v))) then begin
 (kind_to_string a.FStar_Absyn_Syntax.sort)
-end
-| false -> begin
-(match (((not (is_arrow)) && (not ((FStar_ST.read FStar_Options.print_implicits))))) with
-| true -> begin
+end else begin
+if ((not (is_arrow)) && (not ((FStar_ST.read FStar_Options.print_implicits)))) then begin
 (let _92_172 = (strBvd a.FStar_Absyn_Syntax.v)
 in (imp_to_string _92_172 imp))
-end
-| false -> begin
+end else begin
 (let _92_176 = (let _92_175 = (let _92_173 = (strBvd a.FStar_Absyn_Syntax.v)
 in (Prims.strcat _92_173 ":"))
 in (let _92_174 = (kind_to_string a.FStar_Absyn_Syntax.sort)
 in (Prims.strcat _92_175 _92_174)))
 in (imp_to_string _92_176 imp))
-end)
-end)
+end
+end
 end
 | (FStar_Util.Inr (x), imp) -> begin
-(match (((FStar_Absyn_Syntax.is_null_binder b) || ((let _92_177 = (FStar_ST.read FStar_Options.print_real_names)
-in (FStar_All.pipe_right _92_177 Prims.op_Negation)) && (FStar_Absyn_Syntax.is_null_pp x.FStar_Absyn_Syntax.v)))) with
-| true -> begin
+if ((FStar_Absyn_Syntax.is_null_binder b) || ((let _92_177 = (FStar_ST.read FStar_Options.print_real_names)
+in (FStar_All.pipe_right _92_177 Prims.op_Negation)) && (FStar_Absyn_Syntax.is_null_pp x.FStar_Absyn_Syntax.v))) then begin
 (typ_to_string x.FStar_Absyn_Syntax.sort)
-end
-| false -> begin
-(match (((not (is_arrow)) && (not ((FStar_ST.read FStar_Options.print_implicits))))) with
-| true -> begin
+end else begin
+if ((not (is_arrow)) && (not ((FStar_ST.read FStar_Options.print_implicits)))) then begin
 (let _92_178 = (strBvd x.FStar_Absyn_Syntax.v)
 in (imp_to_string _92_178 imp))
-end
-| false -> begin
+end else begin
 (let _92_182 = (let _92_181 = (let _92_179 = (strBvd x.FStar_Absyn_Syntax.v)
 in (Prims.strcat _92_179 ":"))
 in (let _92_180 = (typ_to_string x.FStar_Absyn_Syntax.sort)
 in (Prims.strcat _92_181 _92_180)))
 in (imp_to_string _92_182 imp))
-end)
-end)
+end
+end
 end))
 and binder_to_string = (fun b -> (binder_to_string' false b))
 and arrow_binder_to_string = (fun b -> (binder_to_string' true b))
-and binders_to_string = (fun sep bs -> (let bs = (match ((FStar_ST.read FStar_Options.print_implicits)) with
-| true -> begin
+and binders_to_string = (fun sep bs -> (let bs = if (FStar_ST.read FStar_Options.print_implicits) then begin
 bs
-end
-| false -> begin
+end else begin
 (filter_imp bs)
-end)
-in (match ((sep = " -> ")) with
-| true -> begin
+end
+in if (sep = " -> ") then begin
 (let _92_187 = (FStar_All.pipe_right bs (FStar_List.map arrow_binder_to_string))
 in (FStar_All.pipe_right _92_187 (FStar_String.concat sep)))
-end
-| false -> begin
+end else begin
 (let _92_188 = (FStar_All.pipe_right bs (FStar_List.map binder_to_string))
 in (FStar_All.pipe_right _92_188 (FStar_String.concat sep)))
-end)))
+end))
 and arg_to_string = (fun _27_7 -> (match (_27_7) with
 | (FStar_Util.Inl (a), imp) -> begin
 (let _92_190 = (typ_to_string a)
@@ -567,13 +521,11 @@ end
 (let _92_191 = (exp_to_string x)
 in (imp_to_string _92_191 imp))
 end))
-and args_to_string = (fun args -> (let args = (match ((FStar_ST.read FStar_Options.print_implicits)) with
-| true -> begin
+and args_to_string = (fun args -> (let args = if (FStar_ST.read FStar_Options.print_implicits) then begin
 args
-end
-| false -> begin
+end else begin
 (filter_imp args)
-end)
+end
 in (let _92_193 = (FStar_All.pipe_right args (FStar_List.map arg_to_string))
 in (FStar_All.pipe_right _92_193 (FStar_String.concat " ")))))
 and lcomp_typ_to_string = (fun lc -> (let _92_196 = (sli lc.FStar_Absyn_Syntax.eff_name)
@@ -585,51 +537,43 @@ and comp_typ_to_string = (fun c -> (match (c.FStar_Absyn_Syntax.n) with
 in (FStar_Util.format1 "Tot %s" _92_198))
 end
 | FStar_Absyn_Syntax.Comp (c) -> begin
-(let basic = (match (((FStar_All.pipe_right c.FStar_Absyn_Syntax.flags (FStar_Util.for_some (fun _27_8 -> (match (_27_8) with
+(let basic = if ((FStar_All.pipe_right c.FStar_Absyn_Syntax.flags (FStar_Util.for_some (fun _27_8 -> (match (_27_8) with
 | FStar_Absyn_Syntax.TOTAL -> begin
 true
 end
 | _27_375 -> begin
 false
-end)))) && (not ((FStar_ST.read FStar_Options.print_effect_args))))) with
-| true -> begin
+end)))) && (not ((FStar_ST.read FStar_Options.print_effect_args)))) then begin
 (let _92_200 = (typ_to_string c.FStar_Absyn_Syntax.result_typ)
 in (FStar_Util.format1 "Tot %s" _92_200))
-end
-| false -> begin
-(match (((not ((FStar_ST.read FStar_Options.print_effect_args))) && (FStar_Absyn_Syntax.lid_equals c.FStar_Absyn_Syntax.effect_name FStar_Absyn_Const.effect_ML_lid))) with
-| true -> begin
+end else begin
+if ((not ((FStar_ST.read FStar_Options.print_effect_args))) && (FStar_Absyn_Syntax.lid_equals c.FStar_Absyn_Syntax.effect_name FStar_Absyn_Const.effect_ML_lid)) then begin
 (typ_to_string c.FStar_Absyn_Syntax.result_typ)
-end
-| false -> begin
-(match (((not ((FStar_ST.read FStar_Options.print_effect_args))) && (FStar_All.pipe_right c.FStar_Absyn_Syntax.flags (FStar_Util.for_some (fun _27_9 -> (match (_27_9) with
+end else begin
+if ((not ((FStar_ST.read FStar_Options.print_effect_args))) && (FStar_All.pipe_right c.FStar_Absyn_Syntax.flags (FStar_Util.for_some (fun _27_9 -> (match (_27_9) with
 | FStar_Absyn_Syntax.MLEFFECT -> begin
 true
 end
 | _27_379 -> begin
 false
-end)))))) with
-| true -> begin
+end))))) then begin
 (let _92_202 = (typ_to_string c.FStar_Absyn_Syntax.result_typ)
 in (FStar_Util.format1 "ALL %s" _92_202))
-end
-| false -> begin
-(match ((FStar_ST.read FStar_Options.print_effect_args)) with
-| true -> begin
+end else begin
+if (FStar_ST.read FStar_Options.print_effect_args) then begin
 (let _92_206 = (sli c.FStar_Absyn_Syntax.effect_name)
 in (let _92_205 = (typ_to_string c.FStar_Absyn_Syntax.result_typ)
 in (let _92_204 = (let _92_203 = (FStar_All.pipe_right c.FStar_Absyn_Syntax.effect_args (FStar_List.map effect_arg_to_string))
 in (FStar_All.pipe_right _92_203 (FStar_String.concat ", ")))
 in (FStar_Util.format3 "%s (%s) %s" _92_206 _92_205 _92_204))))
-end
-| false -> begin
+end else begin
 (let _92_208 = (sli c.FStar_Absyn_Syntax.effect_name)
 in (let _92_207 = (typ_to_string c.FStar_Absyn_Syntax.result_typ)
 in (FStar_Util.format2 "%s (%s)" _92_208 _92_207)))
-end)
-end)
-end)
-end)
+end
+end
+end
+end
 in (let dec = (let _92_212 = (FStar_All.pipe_right c.FStar_Absyn_Syntax.flags (FStar_List.collect (fun _27_10 -> (match (_27_10) with
 | FStar_Absyn_Syntax.DECREASES (e) -> begin
 (let _92_211 = (let _92_210 = (exp_to_string e)
@@ -689,19 +633,17 @@ end
 end))
 in (let eq_op = (fun _27_15 -> (match (_27_15) with
 | (FStar_Util.Inl (t1), _27_486)::(FStar_Util.Inl (t2), _27_481)::(FStar_Util.Inr (e1), _27_476)::(FStar_Util.Inr (e2), _27_471)::[] -> begin
-(match ((FStar_ST.read FStar_Options.print_implicits)) with
-| true -> begin
+if (FStar_ST.read FStar_Options.print_implicits) then begin
 (let _92_247 = (typ_to_string t1)
 in (let _92_246 = (typ_to_string t2)
 in (let _92_245 = (exp_to_string e1)
 in (let _92_244 = (exp_to_string e2)
 in (FStar_Util.format4 "Eq2 %s %s %s %s" _92_247 _92_246 _92_245 _92_244)))))
-end
-| false -> begin
+end else begin
 (let _92_249 = (exp_to_string e1)
 in (let _92_248 = (exp_to_string e2)
 in (FStar_Util.format2 "%s == %s" _92_249 _92_248)))
-end)
+end
 end
 | (FStar_Util.Inr (e1), _27_497)::(FStar_Util.Inr (e2), _27_492)::[] -> begin
 (let _92_251 = (exp_to_string e1)
@@ -773,13 +715,11 @@ in (let _92_313 = (FStar_All.pipe_right e exp_to_string)
 in (FStar_Util.format2 "(fun %s -> %s)" _92_314 _92_313)))
 end
 | FStar_Absyn_Syntax.Exp_app (e, args) -> begin
-(let lex = (match ((FStar_ST.read FStar_Options.print_implicits)) with
-| true -> begin
+(let lex = if (FStar_ST.read FStar_Options.print_implicits) then begin
 None
-end
-| false -> begin
+end else begin
 (reconstruct_lex x)
-end)
+end
 in (match (lex) with
 | Some (es) -> begin
 (let _92_317 = (let _92_316 = (let _92_315 = (FStar_List.map exp_to_string es)
@@ -796,29 +736,25 @@ end
 | _27_585 -> begin
 false
 end)))))
-in (match (((is_infix_prim_op e) && ((FStar_List.length args') = 2))) with
-| true -> begin
+in if ((is_infix_prim_op e) && ((FStar_List.length args') = 2)) then begin
 (let _92_324 = (let _92_320 = (FStar_List.nth args' 0)
 in (FStar_All.pipe_right _92_320 arg_to_string))
 in (let _92_323 = (FStar_All.pipe_right e infix_prim_op_to_string)
 in (let _92_322 = (let _92_321 = (FStar_List.nth args' 1)
 in (FStar_All.pipe_right _92_321 arg_to_string))
 in (FStar_Util.format3 "(%s %s %s)" _92_324 _92_323 _92_322))))
-end
-| false -> begin
-(match (((is_unary_prim_op e) && ((FStar_List.length args') = 1))) with
-| true -> begin
+end else begin
+if ((is_unary_prim_op e) && ((FStar_List.length args') = 1)) then begin
 (let _92_327 = (FStar_All.pipe_right e unary_prim_op_to_string)
 in (let _92_326 = (let _92_325 = (FStar_List.nth args' 0)
 in (FStar_All.pipe_right _92_325 arg_to_string))
 in (FStar_Util.format2 "(%s %s)" _92_327 _92_326)))
-end
-| false -> begin
+end else begin
 (let _92_329 = (FStar_All.pipe_right e exp_to_string)
 in (let _92_328 = (args_to_string args)
 in (FStar_Util.format2 "(%s %s)" _92_329 _92_328)))
+end
 end)
-end))
 end))
 end
 | FStar_Absyn_Syntax.Exp_match (e, pats) -> begin
@@ -852,14 +788,12 @@ in (FStar_Util.format2 "%s in %s" _92_341 _92_340)))
 end))
 and uvar_e_to_string = (fun _27_611 -> (match (_27_611) with
 | (uv, _27_610) -> begin
-(let _92_344 = (match ((FStar_ST.read FStar_Options.hide_uvar_nums)) with
-| true -> begin
+(let _92_344 = if (FStar_ST.read FStar_Options.hide_uvar_nums) then begin
 "?"
-end
-| false -> begin
+end else begin
 (let _92_343 = (FStar_Unionfind.uvar_id uv)
 in (FStar_Util.string_of_int _92_343))
-end)
+end
 in (Prims.strcat "\'e" _92_344))
 end))
 and lbs_to_string = (fun lbs -> (let _92_351 = (let _92_350 = (FStar_All.pipe_right (Prims.snd lbs) (FStar_List.map (fun lb -> (let _92_349 = (lbname_to_string lb.FStar_Absyn_Syntax.lbname)
@@ -867,11 +801,9 @@ in (let _92_348 = (FStar_All.pipe_right lb.FStar_Absyn_Syntax.lbtyp typ_to_strin
 in (let _92_347 = (FStar_All.pipe_right lb.FStar_Absyn_Syntax.lbdef exp_to_string)
 in (FStar_Util.format3 "%s:%s = %s" _92_349 _92_348 _92_347)))))))
 in (FStar_Util.concat_l "\n and " _92_350))
-in (FStar_Util.format2 "let %s %s" (match ((Prims.fst lbs)) with
-| true -> begin
+in (FStar_Util.format2 "let %s %s" (if (Prims.fst lbs) then begin
 "rec"
-end
-| false -> begin
+end else begin
 ""
 end) _92_351)))
 and lbname_to_string = (fun x -> (match (x) with
@@ -930,15 +862,13 @@ end
 "Effect"
 end
 | FStar_Absyn_Syntax.Kind_abbrev ((n, args), k) -> begin
-(match ((FStar_ST.read FStar_Options.print_real_names)) with
-| true -> begin
+if (FStar_ST.read FStar_Options.print_real_names) then begin
 (kind_to_string k)
-end
-| false -> begin
+end else begin
 (let _92_367 = (sli n)
 in (let _92_366 = (args_to_string args)
 in (FStar_Util.format2 "%s %s" _92_367 _92_366)))
-end)
+end
 end
 | FStar_Absyn_Syntax.Kind_arrow (binders, k) -> begin
 (let _92_369 = (binders_to_string " -> " binders)
@@ -948,25 +878,21 @@ end
 | FStar_Absyn_Syntax.Kind_unknown -> begin
 "_"
 end))
-and uvar_k_to_string = (fun uv -> (let _92_371 = (match ((FStar_ST.read FStar_Options.hide_uvar_nums)) with
-| true -> begin
+and uvar_k_to_string = (fun uv -> (let _92_371 = if (FStar_ST.read FStar_Options.hide_uvar_nums) then begin
 "?"
-end
-| false -> begin
+end else begin
 (let _92_370 = (FStar_Unionfind.uvar_id uv)
 in (FStar_Util.string_of_int _92_370))
-end)
+end
 in (Prims.strcat "\'k_" _92_371)))
 and uvar_k_to_string' = (fun _27_684 -> (match (_27_684) with
 | (uv, args) -> begin
-(let str = (match ((FStar_ST.read FStar_Options.hide_uvar_nums)) with
-| true -> begin
+(let str = if (FStar_ST.read FStar_Options.hide_uvar_nums) then begin
 "?"
-end
-| false -> begin
+end else begin
 (let _92_373 = (FStar_Unionfind.uvar_id uv)
 in (FStar_Util.string_of_int _92_373))
-end)
+end
 in (let _92_374 = (args_to_string args)
 in (FStar_Util.format2 "(\'k_%s %s)" str _92_374)))
 end))
@@ -976,13 +902,11 @@ and pat_to_string = (fun x -> (match (x.FStar_Absyn_Syntax.v) with
 in (let _92_378 = (let _92_377 = (FStar_List.map (fun _27_695 -> (match (_27_695) with
 | (x, b) -> begin
 (let p = (pat_to_string x)
-in (match (b) with
-| true -> begin
+in if b then begin
 (Prims.strcat "#" p)
-end
-| false -> begin
+end else begin
 p
-end))
+end)
 end)) pats)
 in (FStar_All.pipe_right _92_377 (FStar_String.concat " ")))
 in (FStar_Util.format2 "(%s %s)" _92_379 _92_378)))

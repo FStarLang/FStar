@@ -1624,13 +1624,11 @@ in (match (_23_352) with
 | (ns, id) -> begin
 (let nsstr = (let _88_1404 = (FStar_List.map text_of_id ns)
 in (FStar_All.pipe_right _88_1404 text_of_path))
-in {ns = ns; ident = id; nsstr = nsstr; str = (match ((nsstr = "")) with
-| true -> begin
+in {ns = ns; ident = id; nsstr = nsstr; str = if (nsstr = "") then begin
 id.idText
-end
-| false -> begin
+end else begin
 (Prims.strcat (Prims.strcat nsstr ".") id.idText)
-end)})
+end})
 end)))
 
 let lid_of_path = (fun path pos -> (let ids = (FStar_List.map (fun s -> (mk_ident (s, pos))) path)
@@ -2098,7 +2096,7 @@ let rec pat_vars = (fun p -> (match (p.v) with
 | (x, _23_702) -> begin
 (pat_vars x)
 end)) ps)
-in (match ((FStar_All.pipe_right vars (FStar_Util.nodups (fun x y -> (match ((x, y)) with
+in if (FStar_All.pipe_right vars (FStar_Util.nodups (fun x y -> (match ((x, y)) with
 | (FStar_Util.Inl (x), FStar_Util.Inl (y)) -> begin
 (bvd_eq x y)
 end
@@ -2107,13 +2105,11 @@ end
 end
 | _23_718 -> begin
 false
-end))))) with
-| true -> begin
+end)))) then begin
 vars
-end
-| false -> begin
+end else begin
 (Prims.raise (Error (("Pattern variables may not occur more than once", p.p))))
-end))
+end)
 end
 | Pat_var (x) -> begin
 (FStar_Util.Inr (x.v))::[]
@@ -2123,12 +2119,11 @@ end
 end
 | Pat_disj (ps) -> begin
 (let vars = (FStar_List.map pat_vars ps)
-in (match ((not ((let _88_1771 = (FStar_List.tl vars)
+in if (not ((let _88_1771 = (FStar_List.tl vars)
 in (let _88_1770 = (let _88_1769 = (let _88_1768 = (FStar_List.hd vars)
 in (FStar_Util.set_eq order_bvd _88_1768))
 in (FStar_Util.for_all _88_1769))
-in (FStar_All.pipe_right _88_1771 _88_1770)))))) with
-| true -> begin
+in (FStar_All.pipe_right _88_1771 _88_1770))))) then begin
 (let vars = (let _88_1775 = (FStar_All.pipe_right vars (FStar_List.map (fun v -> (let _88_1774 = (FStar_List.map (fun _23_2 -> (match (_23_2) with
 | FStar_Util.Inr (x) -> begin
 x.ppname.idText
@@ -2142,10 +2137,9 @@ in (let _88_1778 = (let _88_1777 = (let _88_1776 = (FStar_Util.format1 "Each bra
 in (_88_1776, p.p))
 in Error (_88_1777))
 in (Prims.raise _88_1778)))
-end
-| false -> begin
+end else begin
 (FStar_List.hd vars)
-end))
+end)
 end
 | (Pat_dot_term (_)) | (Pat_dot_typ (_)) | (Pat_wild (_)) | (Pat_twild (_)) | (Pat_constant (_)) -> begin
 []

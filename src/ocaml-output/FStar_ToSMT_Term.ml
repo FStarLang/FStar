@@ -789,11 +789,9 @@ end))
 
 let mkQuant = (fun _50_406 -> (match (_50_406) with
 | (qop, pats, wopt, vars, body) -> begin
-(match (((FStar_List.length vars) = 0)) with
-| true -> begin
+if ((FStar_List.length vars) = 0) then begin
 body
-end
-| false -> begin
+end else begin
 (match (body.tm) with
 | App (True, _50_409) -> begin
 body
@@ -801,7 +799,7 @@ end
 | _50_413 -> begin
 (mk (Quant ((qop, pats, wopt, vars, body))))
 end)
-end)
+end
 end))
 
 let abstr = (fun fvs t -> (let nvars = (FStar_List.length fvs)
@@ -851,13 +849,11 @@ in (let rec aux = (fun shift t -> (match (t.tm) with
 t
 end
 | BoundV (i) -> begin
-(match (((0 <= (i - shift)) && ((i - shift) < n))) with
-| true -> begin
+if ((0 <= (i - shift)) && ((i - shift) < n)) then begin
 (FStar_List.nth tms (i - shift))
-end
-| false -> begin
+end else begin
 t
-end)
+end
 end
 | App (op, tms) -> begin
 (let _115_298 = (let _115_297 = (FStar_List.map (aux shift) tms)
@@ -1383,13 +1379,11 @@ let mk_HasTypeZ = (fun v t -> (mkApp ("HasTypeZ", (v)::(t)::[])))
 
 let mk_IsTyped = (fun v -> (mkApp ("IsTyped", (v)::[])))
 
-let mk_HasTypeFuel = (fun f v t -> (match ((FStar_ST.read FStar_Options.unthrottle_inductives)) with
-| true -> begin
+let mk_HasTypeFuel = (fun f v t -> if (FStar_ST.read FStar_Options.unthrottle_inductives) then begin
 (mk_HasType v t)
-end
-| false -> begin
+end else begin
 (mkApp ("HasTypeFuel", (f)::(v)::(t)::[]))
-end))
+end)
 
 let mk_HasTypeWithFuel = (fun f v t -> (match (f) with
 | None -> begin
@@ -1427,16 +1421,14 @@ in (FStar_All.pipe_right _115_645 mk_Valid)))
 
 let mk_LexCons = (fun x1 x2 -> (mkApp ("LexCons", (x1)::(x2)::[])))
 
-let rec n_fuel = (fun n -> (match ((n = 0)) with
-| true -> begin
+let rec n_fuel = (fun n -> if (n = 0) then begin
 (mkApp ("ZFuel", []))
-end
-| false -> begin
+end else begin
 (let _115_654 = (let _115_653 = (let _115_652 = (n_fuel (n - 1))
 in (_115_652)::[])
 in ("SFuel", _115_653))
 in (mkApp _115_654))
-end))
+end)
 
 let fuel_2 = (n_fuel 2)
 
