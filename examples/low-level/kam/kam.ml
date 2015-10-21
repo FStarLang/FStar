@@ -40,7 +40,7 @@ let rec norm (env:env) (stack:stack) (tm:tm) : tm = match tm with
   | Abs(x, body) -> 
     begin match stack with 
       | [] -> Abs (x, norm (cons (mkpair x Open) env) stack body)
-      | hd::tl -> norm (cons (mkpair x (Clos(env, hd))) env) tl body 
+      | hd::tl -> norm (cons (mkpair x (Clos(env, hd))) env) tl body  (* How to alloc a Clos(env,hd) in a region? *)
     end
 
   | App(t1, t2) -> 
