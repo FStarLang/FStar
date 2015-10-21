@@ -161,6 +161,19 @@ let is_ffi ({expr = e; ty = t}:mlexpr) :(bool * string) =
         | MLE_Name (p, n) -> ((p = ["FFI"] || p = ["Prims"]), translate_ffi_name (string_of_mlpath (p, n)))
         | _ -> (false, "")
 
+let tag_of_mlconst (c:mlconstant) :string =
+    match c with
+        | MLC_Unit -> "MLC_Unit"
+        | MLC_Bool _ -> "MLC_Bool"
+        | MLC_Char _ -> "MLC_Char"
+        | MLC_Byte _ -> "MLC_Byte"
+        | MLC_Int32 _ -> "MLC_Int32"
+        | MLC_Int64 _ -> "MLC_Int64"
+        | MLC_Int _ -> "MLC_Int"
+        | MLC_Float _ -> "MLC_Float"
+        | MLC_Bytes _ -> "MLC_Bytes"
+        | MLC_String _ -> "MLC_String"
+
 let extract_mlconst (c:mlconstant) :wexp =
     match c with
         | MLC_Unit    -> "C_unit ()"
@@ -168,7 +181,8 @@ let extract_mlconst (c:mlconstant) :wexp =
         | MLC_Int32 n -> "C_opaque ((), Obj.magic " ^ (Util.string_of_int32 n) ^ ")"
         | MLC_Int64 n -> "C_opaque ((), Obj.magic " ^ (Util.string_of_int64 n) ^ ")"
         | MLC_Int x   -> "C_opaque ((), Obj.magic " ^ x ^ ")"
-        | _           -> failwith "Unsupported constant"
+        | MLC_String s -> "C_opaque ((), Obj.magic (\"" ^ s ^ "\"))"
+        | _           -> failwith ("Unsupported constant: tag: " ^ (tag_of_mlconst c))
 
 let is_wys_lib_fn ({expr = e; ty = t}:mlexpr) :bool =
     match e with
