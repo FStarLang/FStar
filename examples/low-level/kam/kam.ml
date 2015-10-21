@@ -8,6 +8,13 @@ let mk_list n =
 
 ;; let _ = mk_list 1000
 
+(**
+ * Cf.
+ *     An abstract machine for Lambda-terms normalization
+ *     P. Cregut
+ *     Proceedings of the 1990 ACM conference on LISP and functional programming  
+ *     http://dl.acm.org/citation.cfm?doid=91556.91681&CFID=723138393&CFTOKEN=40299162
+ **)
 
 type tm =
   | Var of int
