@@ -155,7 +155,9 @@ let rec encode (n:int) =
 let test2 = 
   let s = encode 1000 in 
   let x = norm (minus s s) in 
-  print_term x
+  print_term x; print_string "\n";
+  Gc.print_stat Pervasives.stdout
+
 (*  print_term (norm s) *)
  
 
