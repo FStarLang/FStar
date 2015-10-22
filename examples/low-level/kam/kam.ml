@@ -1,13 +1,3 @@
-(*
-  let mk_list n =
-  Camlstack.push_frame ();
-  let out = Camlstack.mkref [] in
-  for i = 0 to n do
-    out := Camlstack.cons i !out;
-  done;
-  Camlstack.pop_frame()
-*)
-
 (**
  * Cf.
  *     An abstract machine for Lambda-terms normalization
@@ -15,6 +5,12 @@
  *     Proceedings of the 1990 ACM conference on LISP and functional programming  
  *     http://dl.acm.org/citation.cfm?doid=91556.91681&CFID=723138393&CFTOKEN=40299162
  **)
+
+(**
+  * make NOGC=y
+  * ./kamregions.exe  (for the regions variant)
+  * ./kamgc.exe (for the vanilla OCaml variant)
+  **)
 
 type tm =
   | Var of int          (* de Bruijn *)
@@ -28,21 +24,30 @@ and closure =
   | Open of int
   | Clos of env * tm
 
-open Camlstack
-let mk_open (n:int) = 
-  let x = mkref_noscan n in (* basically, a ref is a "one tuple" *)
+#ifdef CAMLSTACK
+let mk_open (n:int) =
+  let x = Camlstack.mkref_noscan n in (* basically, a ref is a "one tuple" *)
   let r = Obj.repr x in
   Obj.set_tag r 0;
-  Obj.magic x
-let mk_clos (e:env) (t:tm) : closure = 
- let p = mkpair e t in
+  Obj.magic x 
+let mk_clos (e:env) (t:tm) : closure =  
+ let p = Camlstack.mkpair e t in
  let r = Obj.repr p in
  Obj.set_tag r 1;
- Obj.magic p
+ Obj.magic p 
 let mkpair e t = Camlstack.mkpair e t
 let cons e l = Camlstack.cons e l
 let push_frame () = Camlstack.push_frame()
-let pop_frame () = Camlstack.pop_frame()
+let pop_frame () =  Camlstack.pop_frame()
+#else
+let mk_open (n:int) = Open n
+let mk_clos (e:env) (t:tm) : closure = Clos(e,t)  
+let mkpair e t = e,t
+let cons e l = e::l
+let push_frame () = ()
+let pop_frame () = ()
+#endif
+
 type stack = closure list
 
 let rec find env x = match env with 
@@ -89,7 +94,11 @@ and norm' env stack e n =
   x
 
 
-let norm e = norm' [] [] e 0
+let norm e = 
+  push_frame();
+  let x = norm [] [] e 0 in 
+  pop_frame(); 
+  x
 
 let rec close x ix body = match body with 
   | Var _ -> body
@@ -108,7 +117,7 @@ let z = abs(f, abs(x, Name x))
 let one = abs(f, abs(x, App(Name f, Name x)))
 let succ n = abs(f, abs(x, App(Name f, App(App(n, Name f), Name x))))
 let pred = abs(n, abs(f, abs(x, App(App(App(Name n, (abs(g, abs(h, App(Name h, App(Name g, Name f)))))), abs(y, Name x)), abs(y, Name y)))))
-
+let minus m n = App(App(n, pred), m)
 
 let push m = 
   let next_char = fst m + 1 in
@@ -145,7 +154,7 @@ let rec encode (n:int) =
 
 let test2 = 
   let s = encode 1000 in 
-  let x = norm s in 
+  let x = norm (minus s s) in 
   print_term x
 (*  print_term (norm s) *)
  
