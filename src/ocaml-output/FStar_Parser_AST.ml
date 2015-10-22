@@ -1298,14 +1298,12 @@ in (FStar_Util.format2 "(%s:%s)" _106_1042 _106_1041)))
 end))
 
 let error = (fun msg tm r -> (let tm = (FStar_All.pipe_right tm term_to_string)
-in (let tm = (match (((FStar_String.length tm) >= 80)) with
-| true -> begin
+in (let tm = if ((FStar_String.length tm) >= 80) then begin
 (let _106_1046 = (FStar_Util.substring tm 0 77)
 in (Prims.strcat _106_1046 "..."))
-end
-| false -> begin
+end else begin
 tm
-end)
+end
 in (Prims.raise (FStar_Absyn_Syntax.Error (((Prims.strcat (Prims.strcat msg "\n") tm), r)))))))
 
 let consPat = (fun r hd tl -> PatApp (((mk_pattern (PatName (FStar_Absyn_Const.cons_lid)) r), (hd)::(tl)::[])))
@@ -1386,38 +1384,32 @@ let mkWildAdmitMagic = (fun r -> (let _106_1118 = (mkAdmitMagic r)
 in ((mk_pattern PatWild r), None, _106_1118)))
 
 let focusBranches = (fun branches r -> (let should_filter = (FStar_Util.for_some Prims.fst branches)
-in (match (should_filter) with
-| true -> begin
+in if should_filter then begin
 (let _40_543 = (FStar_Tc_Errors.warn r "Focusing on only some cases")
 in (let focussed = (let _106_1121 = (FStar_List.filter Prims.fst branches)
 in (FStar_All.pipe_right _106_1121 (FStar_List.map Prims.snd)))
 in (let _106_1123 = (let _106_1122 = (mkWildAdmitMagic r)
 in (_106_1122)::[])
 in (FStar_List.append focussed _106_1123))))
-end
-| false -> begin
+end else begin
 (FStar_All.pipe_right branches (FStar_List.map Prims.snd))
-end)))
+end))
 
 let focusLetBindings = (fun lbs r -> (let should_filter = (FStar_Util.for_some Prims.fst lbs)
-in (match (should_filter) with
-| true -> begin
+in if should_filter then begin
 (let _40_549 = (FStar_Tc_Errors.warn r "Focusing on only some cases in this (mutually) recursive definition")
 in (FStar_List.map (fun _40_553 -> (match (_40_553) with
 | (f, lb) -> begin
-(match (f) with
-| true -> begin
+if f then begin
 lb
-end
-| false -> begin
+end else begin
 (let _106_1127 = (mkAdmitMagic r)
 in ((Prims.fst lb), _106_1127))
-end)
-end)) lbs))
 end
-| false -> begin
+end)) lbs))
+end else begin
 (FStar_All.pipe_right lbs (FStar_List.map Prims.snd))
-end)))
+end))
 
 let mkFsTypApp = (fun t args r -> (let _106_1135 = (FStar_List.map (fun a -> (a, FsTypApp)) args)
 in (mkApp t _106_1135 r)))

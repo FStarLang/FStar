@@ -13,9 +13,15 @@ OCAMLC=ocamlfind ocamlopt
 OCAMLLINK=ocamlfind ocamlopt
 CMO=cmx
 
-all: allocator kam$(EXE)
+all: allocator kamregions$(EXE) kamgc$(EXE)
 
-kam$(EXE): kam.$(CMO)
+kamregions.ml: kam.ml
+	cpp -P -C -DCAMLSTACK kam.ml > $@ 2>/dev/null
+
+kamgc.ml: kam.ml
+	cpp -P -C kam.ml > $@ 2>/dev/null
+
+%$(EXE): %.$(CMO)
 	$(OCAMLLINK) -o $@ $^ $(ALLOCATOR_FILES)
 
 allocator:
@@ -33,4 +39,4 @@ endif
 
 clean:
 	$(MAKE) -C $(ALLOCATOR_DIR) clean
-	$(RM) kam$(EXE) *.o *.cm*
+	$(RM) kamregions$(EXE) kamgc$(EXE) *.o *.cm*

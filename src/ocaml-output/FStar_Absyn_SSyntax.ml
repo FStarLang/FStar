@@ -36,28 +36,24 @@ in (f writer l))
 end))
 
 let deserialize_option = (fun reader f -> (let n = (reader.FStar_Util.read_char ())
-in (match ((n = 'n')) with
-| true -> begin
+in if (n = 'n') then begin
 None
-end
-| false -> begin
+end else begin
 (let _94_21 = (f reader)
 in Some (_94_21))
-end)))
+end))
 
 let serialize_list = (fun writer f l -> (let _28_22 = (writer.FStar_Util.write_int (FStar_List.length l))
 in (FStar_List.iter (fun elt -> (f writer elt)) (FStar_List.rev_append l []))))
 
 let deserialize_list = (fun reader f -> (let n = (reader.FStar_Util.read_int ())
-in (let rec helper = (fun accum n -> (match ((n = 0)) with
-| true -> begin
+in (let rec helper = (fun accum n -> if (n = 0) then begin
 accum
-end
-| false -> begin
+end else begin
 (let _94_42 = (let _94_41 = (f reader)
 in (_94_41)::accum)
 in (helper _94_42 (n - 1)))
-end))
+end)
 in (helper [] n))))
 
 let serialize_ident = (fun writer ast -> (writer.FStar_Util.write_string ast.FStar_Absyn_Syntax.idText))
@@ -242,8 +238,7 @@ end
 (let _28_199 = (writer.FStar_Util.write_char 'e')
 in (let _28_201 = (serialize_typ writer t)
 in (let _28_203 = (serialize_args writer ars)
-in (match (((FStar_ST.read FStar_Options.debug) <> [])) with
-| true -> begin
+in if ((FStar_ST.read FStar_Options.debug) <> []) then begin
 (match (t.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Typ_lam (_28_206, _28_208) -> begin
 (FStar_Util.print_string "type application node with lam\n")
@@ -251,10 +246,9 @@ end
 | _28_212 -> begin
 ()
 end)
-end
-| false -> begin
+end else begin
 ()
-end))))
+end)))
 end
 | FStar_Absyn_Syntax.Typ_lam (bs, t) -> begin
 (let _28_217 = (writer.FStar_Util.write_char 'f')
@@ -1158,13 +1152,11 @@ end
 | 'f' -> begin
 (let _94_607 = (let _94_606 = (deserialize_letbindings reader)
 in (let _94_605 = (deserialize_list reader deserialize_lident)
-in (let _94_604 = (match ((reader.FStar_Util.read_bool ())) with
-| true -> begin
+in (let _94_604 = if (reader.FStar_Util.read_bool ()) then begin
 (FStar_Absyn_Syntax.HasMaskedEffect)::[]
-end
-| false -> begin
+end else begin
 []
-end)
+end
 in (_94_606, FStar_Absyn_Syntax.dummyRange, _94_605, _94_604))))
 in FStar_Absyn_Syntax.Sig_let (_94_607))
 end

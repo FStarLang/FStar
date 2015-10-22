@@ -8,6 +8,7 @@ module IFC
 open FStar.Comp
 open FStar.Heap
 open FStar.Relational
+open FStar.RelationalState
 
 open While
 
@@ -97,7 +98,7 @@ let sub_exp _ _ _ _ e_ni _ = e_ni tu
              r : l
 *)
 val avar_exp : env:label_fun -> r:id -> Tot (ni_exp env (AVar r) (env r)) 
-let avar_exp _ r _ = compose2_self read (twice r)
+let avar_exp _ r _ = read_rel1 r
 
 
 (* Typing rule for Int constants
@@ -117,16 +118,13 @@ let aint_exp _ i _ = twice i
           e1 `op` e2  : l
 *)
 
-val uncurry : #a:Type -> #b:Type -> #c:Type -> (a -> b -> Tot c) -> Tot ((a * b) -> Tot c)
-let uncurry f (a,b) = f a b
-
 val binop_exp : env:label_fun -> op:binop -> e1:exp -> e2:exp -> l:label 
   -> e1_ni:(ni_exp env e1 l) -> e2_ni:(ni_exp env e2 l) 
   -> Tot (ni_exp env (AOp op e1 e2) l)
-let binop_exp env op e1 e2 l e1_ni e2_ni tu =
+let binop_exp env op e1 e2 l e1_ni e2_ni _ =
   // dummy eta-expansion
   (fun tu -> compose2_self (fun (a,b) -> interpret_binop op a b) 
-                        (pair_rel (e1_ni tu) (e2_ni tu))) tu
+                        (pair_rel (e1_ni tu) (e2_ni tu))) tu 
 
 
 (************************ Typing Rules for Commands ************************)
@@ -139,7 +137,7 @@ let binop_exp env op e1 e2 l e1_ni e2_ni tu =
 *)
 val sub_com : env:label_fun -> c:com -> l1:label -> l2:label{l2 <= l1} 
   -> =c_ni:(ni_com env c l1) -> Tot (ni_com env c l2)
-let sub_com _ _ _ l2 c_ni _ = c_ni tu
+let sub_com _ _ _ _ c_ni _ = c_ni tu
 
 (* Typing rule for assignment
 
@@ -160,7 +158,7 @@ let assign_com _ _ r e_ni _ = compose2_self (write r) (e_ni tu)
 val seq_com : env:label_fun -> c1:com -> c2:com -> l:label 
   -> =c1_ni:(ni_com env c1 l) -> =c2_ni:(ni_com env c2 l) 
   -> Tot(ni_com env (Seq c1 c2) l) 
-let seq_com _ _ _ _ c1_ni c2_ni tu = let _ = c1_ni tu in c2_ni tu
+let seq_com _ _ _ _ c1_ni c2_ni _ = let _ = c1_ni tu in c2_ni tu
 
 (* Conditional rule for commands
 
@@ -171,7 +169,7 @@ let seq_com _ _ _ _ c1_ni c2_ni tu = let _ = c1_ni tu in c2_ni tu
 val cond_com : env:label_fun -> e:exp -> ct:com -> cf:com -> l:label 
   -> =e_ni:(ni_exp env e l) -> =ct_ni:(ni_com env ct l) -> =cf_ni:(ni_com env cf l) 
   -> Tot (ni_com env (If e ct cf) l)
-let cond_com _ _ _ _ _ e ct cf tu =
+let cond_com _ _ _ _ _ e ct cf _ =
   match e tu with
   | R 0 0 -> cf tu
   | R 0 _ -> cross cf ct
@@ -186,7 +184,7 @@ let cond_com _ _ _ _ _ e ct cf tu =
 *)
 
 val skip_com : env:label_fun -> Tot (ni_com env Skip High)
-let skip_com _ tu = tu
+let skip_com _ _ = tu
 
 
 (* Loop case of a while loop *)
@@ -232,13 +230,13 @@ val loop_com : env:label_fun -> e:exp -> c:com -> v:variant -> l:label
                     is_Some o ==> equal (Some.v o) (R.r h1))
                 /\ (low_equiv env h0 ==> low_equiv env h1)))
 
-let rec loop_com env e c v l e_ni c_ni tu = 
+let rec loop_com env e c v l e_ni c_ni _ = 
   match e_ni tu with
   | R 0 0 -> skip_com env tu
   | R 0 _ -> cross (skip_com env) (loop_loop env e c v l e_ni c_ni)
   | R _ 0 -> cross (loop_loop env e c v l e_ni c_ni) (skip_com env)
   | R _ _ -> loop_loop env e c v l e_ni c_ni tu
-and loop_loop env e c v l e_ni c_ni tu = 
+and loop_loop env e c v l e_ni c_ni _ = 
   (let _ = c_ni tu in loop_com env e c v l e_ni c_ni) tu
 
 

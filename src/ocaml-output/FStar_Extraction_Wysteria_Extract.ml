@@ -91,23 +91,19 @@ end
 s
 end))
 
-let rec sublist = (fun s l n -> (match ((n > (FStar_List.length l))) with
-| true -> begin
+let rec sublist = (fun s l n -> if (n > (FStar_List.length l)) then begin
 (let _130_46 = (let _130_45 = (FStar_Util.string_of_int (FStar_List.length l))
 in (let _130_44 = (FStar_Util.string_of_int n)
 in (FStar_Util.format3 "Error removing arguments in sublist for %s, list len is %s, n is %s " s _130_45 _130_44)))
 in (FStar_All.failwith _130_46))
-end
-| false -> begin
-(match ((n = 0)) with
-| true -> begin
+end else begin
+if (n = 0) then begin
 l
-end
-| false -> begin
+end else begin
 (let _130_47 = (FStar_List.tl l)
 in (sublist s _130_47 (n - 1)))
+end
 end)
-end))
 
 let is_bool = (fun t -> (match (t) with
 | FStar_Extraction_ML_Syntax.MLTY_Named (_64_81, p) -> begin
@@ -173,16 +169,12 @@ let slice_value_sps = "Semantics.slice_v_sps_ffi"
 
 let compose_values = "Semantics.compose_vals_ffi"
 
-let rec get_opaque_fns = (fun t -> (match ((((((is_bool t) || (is_unit t)) || (is_prin t)) || (is_prins t)) || (is_eprins t))) with
-| true -> begin
+let rec get_opaque_fns = (fun t -> if (((((is_bool t) || (is_unit t)) || (is_prin t)) || (is_prins t)) || (is_eprins t)) then begin
 (slice_id, compose_ids, slice_id_sps)
-end
-| false -> begin
-(match (((is_box t) || (is_wire t))) with
-| true -> begin
+end else begin
+if ((is_box t) || (is_wire t)) then begin
 (slice_value, compose_values, slice_value_sps)
-end
-| false -> begin
+end else begin
 (match (t) with
 | FStar_Extraction_ML_Syntax.MLTY_Named ([], p) -> begin
 (lookup_ffi_map (FStar_Extraction_ML_Syntax.string_of_mlpath p))
@@ -210,45 +202,35 @@ end
 | _64_164 -> begin
 (FStar_All.failwith "Did not expect a non named type in get_opaque_fns")
 end)
+end
 end)
-end))
 
 let get_injection = (fun t -> (let s = "fun x -> "
-in (let s' = (match ((is_bool t)) with
-| true -> begin
+in (let s' = if (is_bool t) then begin
 "D_v (const_meta, V_bool x)"
-end
-| false -> begin
-(match ((is_unit t)) with
-| true -> begin
+end else begin
+if (is_unit t) then begin
 "D_v (const_meta, V_unit)"
-end
-| false -> begin
-(match ((is_prin t)) with
-| true -> begin
+end else begin
+if (is_prin t) then begin
 "D_v (const_meta, V_prin x)"
-end
-| false -> begin
-(match (((is_prins t) || (is_eprins t))) with
-| true -> begin
+end else begin
+if ((is_prins t) || (is_eprins t)) then begin
 "D_v (const_meta, V_eprins x)"
-end
-| false -> begin
-(match (((is_box t) || (is_wire t))) with
-| true -> begin
+end else begin
+if ((is_box t) || (is_wire t)) then begin
 "x"
-end
-| false -> begin
+end else begin
 (let _64_170 = (get_opaque_fns t)
 in (match (_64_170) with
 | (s1, s2, s3) -> begin
 (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat "mk_v_opaque x " s1) " ") s2) " ") s3)
 end))
-end)
-end)
-end)
-end)
-end)
+end
+end
+end
+end
+end
 in (Prims.strcat s s'))))
 
 let is_ffi = (fun _64_174 -> (match (_64_174) with
@@ -263,16 +245,46 @@ end
 end)
 end))
 
+let tag_of_mlconst = (fun c -> (match (c) with
+| FStar_Extraction_ML_Syntax.MLC_Unit -> begin
+"MLC_Unit"
+end
+| FStar_Extraction_ML_Syntax.MLC_Bool (_64_184) -> begin
+"MLC_Bool"
+end
+| FStar_Extraction_ML_Syntax.MLC_Char (_64_187) -> begin
+"MLC_Char"
+end
+| FStar_Extraction_ML_Syntax.MLC_Byte (_64_190) -> begin
+"MLC_Byte"
+end
+| FStar_Extraction_ML_Syntax.MLC_Int32 (_64_193) -> begin
+"MLC_Int32"
+end
+| FStar_Extraction_ML_Syntax.MLC_Int64 (_64_196) -> begin
+"MLC_Int64"
+end
+| FStar_Extraction_ML_Syntax.MLC_Int (_64_199) -> begin
+"MLC_Int"
+end
+| FStar_Extraction_ML_Syntax.MLC_Float (_64_202) -> begin
+"MLC_Float"
+end
+| FStar_Extraction_ML_Syntax.MLC_Bytes (_64_205) -> begin
+"MLC_Bytes"
+end
+| FStar_Extraction_ML_Syntax.MLC_String (_64_208) -> begin
+"MLC_String"
+end))
+
 let extract_mlconst = (fun c -> (match (c) with
 | FStar_Extraction_ML_Syntax.MLC_Unit -> begin
 "C_unit ()"
 end
 | FStar_Extraction_ML_Syntax.MLC_Bool (b) -> begin
-(Prims.strcat "C_bool " (match (b) with
-| true -> begin
+(Prims.strcat "C_bool " (if b then begin
 "true"
-end
-| false -> begin
+end else begin
 "false"
 end))
 end
@@ -285,263 +297,249 @@ end
 | FStar_Extraction_ML_Syntax.MLC_Int (x) -> begin
 (Prims.strcat (Prims.strcat "C_opaque ((), Obj.magic " x) ")")
 end
-| _64_192 -> begin
-(FStar_All.failwith "Unsupported constant")
+| FStar_Extraction_ML_Syntax.MLC_String (s) -> begin
+(Prims.strcat (Prims.strcat "C_opaque ((), Obj.magic (\"" s) "\"))")
+end
+| _64_223 -> begin
+(FStar_All.failwith (Prims.strcat "Unsupported constant: tag: " (tag_of_mlconst c)))
 end))
 
-let is_wys_lib_fn = (fun _64_195 -> (match (_64_195) with
+let is_wys_lib_fn = (fun _64_226 -> (match (_64_226) with
 | {FStar_Extraction_ML_Syntax.expr = e; FStar_Extraction_ML_Syntax.ty = t} -> begin
 (match (e) with
 | FStar_Extraction_ML_Syntax.MLE_Name (p) -> begin
 (FStar_Util.starts_with (FStar_Extraction_ML_Syntax.string_of_mlpath p) "Wysteria")
 end
-| _64_199 -> begin
+| _64_230 -> begin
 false
 end)
 end))
 
 let check_pats_for_bool = (fun l -> (let def = (false, FStar_Extraction_ML_Syntax.ml_unit, FStar_Extraction_ML_Syntax.ml_unit)
-in (match (((FStar_List.length l) <> 2)) with
-| true -> begin
+in if ((FStar_List.length l) <> 2) then begin
 def
-end
-| false -> begin
-(let _64_206 = (FStar_List.hd l)
-in (match (_64_206) with
-| (p1, _64_204, e1) -> begin
-(let _64_211 = (let _130_79 = (FStar_List.tl l)
-in (FStar_List.hd _130_79))
-in (match (_64_211) with
-| (p2, _64_209, e2) -> begin
+end else begin
+(let _64_237 = (FStar_List.hd l)
+in (match (_64_237) with
+| (p1, _64_235, e1) -> begin
+(let _64_242 = (let _130_81 = (FStar_List.tl l)
+in (FStar_List.hd _130_81))
+in (match (_64_242) with
+| (p2, _64_240, e2) -> begin
 (match ((p1, p2)) with
-| (FStar_Extraction_ML_Syntax.MLP_Const (FStar_Extraction_ML_Syntax.MLC_Bool (_64_213)), FStar_Extraction_ML_Syntax.MLP_Const (FStar_Extraction_ML_Syntax.MLC_Bool (_64_217))) -> begin
+| (FStar_Extraction_ML_Syntax.MLP_Const (FStar_Extraction_ML_Syntax.MLC_Bool (_64_244)), FStar_Extraction_ML_Syntax.MLP_Const (FStar_Extraction_ML_Syntax.MLC_Bool (_64_248))) -> begin
 (true, e1, e2)
 end
-| _64_222 -> begin
+| _64_253 -> begin
 def
 end)
 end))
 end))
-end)))
+end))
 
 let name_to_string = (fun s -> (Prims.strcat (Prims.strcat "\"" s) "\""))
 
-let rec extract_mlexp = (fun _64_226 -> (match (_64_226) with
+let rec extract_mlexp = (fun _64_257 -> (match (_64_257) with
 | {FStar_Extraction_ML_Syntax.expr = e; FStar_Extraction_ML_Syntax.ty = t} -> begin
 (match (e) with
 | FStar_Extraction_ML_Syntax.MLE_Const (c) -> begin
-(let _130_88 = (let _130_87 = (extract_mlconst c)
-in (Prims.strcat "mk_const (" _130_87))
-in (Prims.strcat _130_88 ")"))
+(let _130_90 = (let _130_89 = (extract_mlconst c)
+in (Prims.strcat "mk_const (" _130_89))
+in (Prims.strcat _130_90 ")"))
 end
 | FStar_Extraction_ML_Syntax.MLE_Var (x) -> begin
 (Prims.strcat "mk_var " (name_to_string (FStar_Extraction_ML_Syntax.idsym x)))
 end
 | FStar_Extraction_ML_Syntax.MLE_Name (p, s) -> begin
 (let ss = (FStar_Extraction_ML_Syntax.string_of_mlpath (p, s))
-in (let _64_236 = (match ((not ((FStar_Util.starts_with ss "SMC.")))) with
-| true -> begin
-(let _130_89 = (FStar_Util.format1 "Warning: name not applied: %s\n" (FStar_Extraction_ML_Syntax.string_of_mlpath (p, s)))
-in (FStar_Util.print_string _130_89))
-end
-| false -> begin
+in (let _64_267 = if (not ((FStar_Util.starts_with ss "SMC."))) then begin
+(let _130_91 = (FStar_Util.format1 "Warning: name not applied: %s\n" (FStar_Extraction_ML_Syntax.string_of_mlpath (p, s)))
+in (FStar_Util.print_string _130_91))
+end else begin
 ()
-end)
+end
 in (Prims.strcat "mk_var " (name_to_string s))))
 end
 | FStar_Extraction_ML_Syntax.MLE_Let ((b, l), e') -> begin
-(match (b) with
-| true -> begin
+if b then begin
 (FStar_All.failwith "Nested recursive lets are not supported yet")
-end
-| false -> begin
+end else begin
 (let lb = (FStar_List.hd l)
 in (let lbname = (FStar_Extraction_ML_Syntax.idsym lb.FStar_Extraction_ML_Syntax.mllb_name)
 in (let lbbody = lb.FStar_Extraction_ML_Syntax.mllb_def
-in (let _130_94 = (let _130_93 = (let _130_91 = (let _130_90 = (extract_mlexp lbbody)
-in (Prims.strcat (Prims.strcat (Prims.strcat "mk_let " (name_to_string lbname)) " (") _130_90))
-in (Prims.strcat _130_91 ") ("))
-in (let _130_92 = (extract_mlexp e')
-in (Prims.strcat _130_93 _130_92)))
-in (Prims.strcat _130_94 ")")))))
-end)
+in (let _130_96 = (let _130_95 = (let _130_93 = (let _130_92 = (extract_mlexp lbbody)
+in (Prims.strcat (Prims.strcat (Prims.strcat "mk_let " (name_to_string lbname)) " (") _130_92))
+in (Prims.strcat _130_93 ") ("))
+in (let _130_94 = (extract_mlexp e')
+in (Prims.strcat _130_95 _130_94)))
+in (Prims.strcat _130_96 ")")))))
+end
 end
 | FStar_Extraction_ML_Syntax.MLE_App (f, args) -> begin
-(let _64_253 = (is_ffi f)
-in (match (_64_253) with
+(let _64_284 = (is_ffi f)
+in (match (_64_284) with
 | (b, ffi) -> begin
-(match (b) with
-| true -> begin
+if b then begin
 (let inj = (get_injection t)
-in (let args_exp = (FStar_List.fold_left (fun s a -> (let _130_98 = (let _130_97 = (extract_mlexp a)
-in (Prims.strcat (Prims.strcat s " (") _130_97))
-in (Prims.strcat _130_98 ");"))) "" args)
-in (let _130_106 = (let _130_105 = (let _130_104 = (let _130_103 = (let _130_102 = (let _130_101 = (let _130_100 = (let _130_99 = (FStar_Util.string_of_int (FStar_List.length args))
-in (Prims.strcat "mk_ffi " _130_99))
-in (Prims.strcat _130_100 " ("))
-in (Prims.strcat _130_101 ffi))
-in (Prims.strcat _130_102 ") [ "))
-in (Prims.strcat _130_103 args_exp))
-in (Prims.strcat _130_104 " ] ("))
-in (Prims.strcat _130_105 inj))
-in (Prims.strcat _130_106 ")"))))
-end
-| false -> begin
-(match ((is_wys_lib_fn f)) with
-| true -> begin
+in (let args_exp = (FStar_List.fold_left (fun s a -> (let _130_100 = (let _130_99 = (extract_mlexp a)
+in (Prims.strcat (Prims.strcat s " (") _130_99))
+in (Prims.strcat _130_100 ");"))) "" args)
+in (let _130_110 = (let _130_109 = (let _130_108 = (let _130_107 = (let _130_106 = (let _130_105 = (let _130_104 = (let _130_103 = (let _130_102 = (let _130_101 = (FStar_Util.string_of_int (FStar_List.length args))
+in (Prims.strcat "mk_ffi " _130_101))
+in (Prims.strcat _130_102 " "))
+in (Prims.strcat _130_103 (name_to_string ffi)))
+in (Prims.strcat _130_104 " ("))
+in (Prims.strcat _130_105 ffi))
+in (Prims.strcat _130_106 ") [ "))
+in (Prims.strcat _130_107 args_exp))
+in (Prims.strcat _130_108 " ] ("))
+in (Prims.strcat _130_109 inj))
+in (Prims.strcat _130_110 ")"))))
+end else begin
+if (is_wys_lib_fn f) then begin
 (extract_wysteria_specific_ast f args t)
-end
-| false -> begin
+end else begin
 (let s = (extract_mlexp f)
-in (match ((s = "_assert")) with
-| true -> begin
+in if (s = "_assert") then begin
 "mk_const (C_unit ())"
+end else begin
+(FStar_List.fold_left (fun s a -> (let _130_114 = (let _130_113 = (extract_mlexp a)
+in (Prims.strcat (Prims.strcat (Prims.strcat "mk_app (" s) ") (") _130_113))
+in (Prims.strcat _130_114 ")"))) s args)
+end)
 end
-| false -> begin
-(FStar_List.fold_left (fun s a -> (let _130_110 = (let _130_109 = (extract_mlexp a)
-in (Prims.strcat (Prims.strcat (Prims.strcat "mk_app (" s) ") (") _130_109))
-in (Prims.strcat _130_110 ")"))) s args)
-end))
-end)
-end)
+end
 end))
 end
 | FStar_Extraction_ML_Syntax.MLE_Fun (bs, body) -> begin
 (let body_str = (extract_mlexp body)
-in (FStar_List.fold_left (fun s _64_273 -> (match (_64_273) with
-| ((b, _64_269), _64_272) -> begin
+in (FStar_List.fold_left (fun s _64_304 -> (match (_64_304) with
+| ((b, _64_300), _64_303) -> begin
 (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat "mk_abs " (name_to_string b)) " (") s) ")")
 end)) body_str (FStar_List.rev bs)))
 end
 | FStar_Extraction_ML_Syntax.MLE_Match (e, bs) -> begin
-(let _64_281 = (check_pats_for_bool bs)
-in (match (_64_281) with
+(let _64_312 = (check_pats_for_bool bs)
+in (match (_64_312) with
 | (b, e1, e2) -> begin
-(match (b) with
-| true -> begin
-(let _130_120 = (let _130_119 = (let _130_117 = (let _130_116 = (let _130_114 = (let _130_113 = (extract_mlexp e)
-in (Prims.strcat "mk_cond (" _130_113))
-in (Prims.strcat _130_114 ") ("))
-in (let _130_115 = (extract_mlexp e1)
-in (Prims.strcat _130_116 _130_115)))
-in (Prims.strcat _130_117 ") ("))
-in (let _130_118 = (extract_mlexp e2)
-in (Prims.strcat _130_119 _130_118)))
-in (Prims.strcat _130_120 ")"))
-end
-| false -> begin
+if b then begin
+(let _130_124 = (let _130_123 = (let _130_121 = (let _130_120 = (let _130_118 = (let _130_117 = (extract_mlexp e)
+in (Prims.strcat "mk_cond (" _130_117))
+in (Prims.strcat _130_118 ") ("))
+in (let _130_119 = (extract_mlexp e1)
+in (Prims.strcat _130_120 _130_119)))
+in (Prims.strcat _130_121 ") ("))
+in (let _130_122 = (extract_mlexp e2)
+in (Prims.strcat _130_123 _130_122)))
+in (Prims.strcat _130_124 ")"))
+end else begin
 (FStar_All.failwith "Only if-then-else patterns are supported")
-end)
+end
 end))
 end
-| FStar_Extraction_ML_Syntax.MLE_Coerce (e, _64_284, _64_286) -> begin
+| FStar_Extraction_ML_Syntax.MLE_Coerce (e, _64_315, _64_317) -> begin
 (extract_mlexp e)
 end
-| _64_290 -> begin
+| _64_321 -> begin
 (FStar_All.failwith "This expression extraction is not supported yet")
 end)
 end))
-and extract_wysteria_specific_ast = (fun _64_294 args t -> (match (_64_294) with
-| {FStar_Extraction_ML_Syntax.expr = f; FStar_Extraction_ML_Syntax.ty = _64_292} -> begin
+and extract_wysteria_specific_ast = (fun _64_325 args t -> (match (_64_325) with
+| {FStar_Extraction_ML_Syntax.expr = f; FStar_Extraction_ML_Syntax.ty = _64_323} -> begin
 (match (f) with
-| FStar_Extraction_ML_Syntax.MLE_Name (_64_298, s) -> begin
-(match ((s = "main")) with
-| true -> begin
-(let f = (let _130_124 = (FStar_List.tl args)
-in (FStar_List.hd _130_124))
+| FStar_Extraction_ML_Syntax.MLE_Name (_64_329, s) -> begin
+if (s = "main") then begin
+(let f = (let _130_128 = (FStar_List.tl args)
+in (FStar_List.hd _130_128))
 in (let f_exp = (extract_mlexp f)
 in (Prims.strcat (Prims.strcat "mk_app (" f_exp) ") (E_const (C_unit ()))")))
-end
-| false -> begin
-(match ((s = "w_read_int")) with
-| true -> begin
+end else begin
+if (s = "w_read_int") then begin
 (let inj_str = (get_injection t)
-in (Prims.strcat (Prims.strcat "mk_ffi 1 FFI.read_int [ E_const (C_unit ()) ] (" inj_str) ")"))
-end
-| false -> begin
-(match ((s = "w_read_int_tuple")) with
-| true -> begin
+in (Prims.strcat (Prims.strcat "mk_ffi 1 \"FFI.read_int\" FFI.read_int [ E_const (C_unit ()) ] (" inj_str) ")"))
+end else begin
+if (s = "w_read_int_tuple") then begin
 (let inj_str = (get_injection t)
-in (Prims.strcat (Prims.strcat "mk_ffi 1 FFI.read_int_tuple [ E_const (C_unit ()) ] (" inj_str) ")"))
-end
-| false -> begin
+in (Prims.strcat (Prims.strcat "mk_ffi 1 \"FFI.read_int_tuple\" FFI.read_int_tuple [ E_const (C_unit ()) ] (" inj_str) ")"))
+end else begin
+if (s = "w_read_int_list") then begin
+(let inj_str = (get_injection t)
+in (Prims.strcat (Prims.strcat "mk_ffi 1 \"FFI.read_int_list\" FFI.read_int_list [ E_const (C_unit ()) ] (" inj_str) ")"))
+end else begin
 (let r = (lookup_wys_lib_map s)
 in (let args = (sublist s args r.rem_args)
-in (FStar_List.fold_left (fun acc arg -> (let _130_128 = (let _130_127 = (extract_mlexp arg)
-in (Prims.strcat (Prims.strcat acc " (") _130_127))
-in (Prims.strcat _130_128 ")"))) r.extracted_fn_name args)))
-end)
-end)
-end)
+in (FStar_List.fold_left (fun acc arg -> (let _130_132 = (let _130_131 = (extract_mlexp arg)
+in (Prims.strcat (Prims.strcat acc " (") _130_131))
+in (Prims.strcat _130_132 ")"))) r.extracted_fn_name args)))
 end
-| _64_311 -> begin
+end
+end
+end
+end
+| _64_343 -> begin
 (FStar_All.failwith "Expected wysteria lib fn to be a MLE_Name")
 end)
 end))
 
-let extract_mllb = (fun _64_314 -> (match (_64_314) with
+let extract_mllb = (fun _64_346 -> (match (_64_346) with
 | (b, l) -> begin
-(match (((FStar_List.length l) <> 1)) with
-| true -> begin
+if ((FStar_List.length l) <> 1) then begin
 (FStar_All.failwith "Mutually recursive lets are not yet suppored")
-end
-| false -> begin
+end else begin
 (let lb = (FStar_List.hd l)
 in (let lbname = (FStar_Extraction_ML_Syntax.idsym lb.FStar_Extraction_ML_Syntax.mllb_name)
 in (let lbbody = lb.FStar_Extraction_ML_Syntax.mllb_def
-in (match (b) with
-| true -> begin
+in if b then begin
 (match (lbbody.FStar_Extraction_ML_Syntax.expr) with
 | FStar_Extraction_ML_Syntax.MLE_Fun (bs, e) -> begin
-(let _64_324 = (let _130_132 = (FStar_List.hd bs)
-in (let _130_131 = (FStar_List.tl bs)
-in (_130_132, _130_131)))
-in (match (_64_324) with
+(let _64_356 = (let _130_136 = (FStar_List.hd bs)
+in (let _130_135 = (FStar_List.tl bs)
+in (_130_136, _130_135)))
+in (match (_64_356) with
 | (first_b, rest_bs) -> begin
 (let body_exp = (extract_mlexp e)
-in (let tl_abs_exp = (FStar_List.fold_left (fun e _64_330 -> (match (_64_330) with
-| (bname, _64_329) -> begin
+in (let tl_abs_exp = (FStar_List.fold_left (fun e _64_362 -> (match (_64_362) with
+| (bname, _64_361) -> begin
 (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat "mk_abs " (name_to_string (FStar_Extraction_ML_Syntax.idsym bname))) " (") e) ")")
 end)) body_exp (FStar_List.rev rest_bs))
 in (let fix_exp = (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat "mk_fix " (name_to_string lbname)) " ") (name_to_string (FStar_Extraction_ML_Syntax.idsym (Prims.fst first_b)))) " (") tl_abs_exp) ")")
 in Mk_tlet ((lbname, fix_exp)))))
 end))
 end
-| _64_334 -> begin
+| _64_366 -> begin
 (FStar_All.failwith "Recursive let binding is not an abstraction ?")
 end)
+end else begin
+(let _130_140 = (let _130_139 = (extract_mlexp lbbody)
+in (lbname, _130_139))
+in Mk_tlet (_130_140))
+end)))
 end
-| false -> begin
-(let _130_136 = (let _130_135 = (extract_mlexp lbbody)
-in (lbname, _130_135))
-in Mk_tlet (_130_136))
-end))))
-end)
 end))
 
-let extract_mlmodule = (fun m -> (FStar_List.fold_left (fun _64_338 tld -> (match (_64_338) with
+let extract_mlmodule = (fun m -> (FStar_List.fold_left (fun _64_370 tld -> (match (_64_370) with
 | (l, top_opt) -> begin
 (match (tld) with
-| FStar_Extraction_ML_Syntax.MLM_Ty (_64_341) -> begin
+| FStar_Extraction_ML_Syntax.MLM_Ty (_64_373) -> begin
 (l, top_opt)
 end
-| FStar_Extraction_ML_Syntax.MLM_Exn (_64_344) -> begin
+| FStar_Extraction_ML_Syntax.MLM_Exn (_64_376) -> begin
 (FStar_All.failwith "Cannot extract an exception")
 end
 | FStar_Extraction_ML_Syntax.MLM_Let (lb) -> begin
-(let _130_143 = (let _130_142 = (let _130_141 = (extract_mllb lb)
-in (_130_141)::[])
-in (FStar_List.append l _130_142))
-in (_130_143, top_opt))
+(let _130_147 = (let _130_146 = (let _130_145 = (extract_mllb lb)
+in (_130_145)::[])
+in (FStar_List.append l _130_146))
+in (_130_147, top_opt))
 end
 | FStar_Extraction_ML_Syntax.MLM_Top (e) -> begin
 (match (top_opt) with
 | None -> begin
-(let _130_145 = (let _130_144 = (extract_mlexp e)
-in Some (_130_144))
-in (l, _130_145))
+(let _130_149 = (let _130_148 = (extract_mlexp e)
+in Some (_130_148))
+in (l, _130_149))
 end
-| Some (_64_352) -> begin
+| Some (_64_384) -> begin
 (FStar_All.failwith "Impossible: more than one top expressions")
 end)
 end)
@@ -552,17 +550,15 @@ let rec find_smc_module = (fun mllibs -> (let rec find_smc_module' = (fun mllib 
 None
 end
 | (x, mlsig_opt, FStar_Extraction_ML_Syntax.MLLib (mllib'))::tl -> begin
-(match ((x = "SMC")) with
-| true -> begin
+if (x = "SMC") then begin
 (match (mlsig_opt) with
-| Some (_64_366, m) -> begin
+| Some (_64_398, m) -> begin
 Some (m)
 end
 | None -> begin
 (Prims.raise (FStar_Util.NYI ("Found the SMC module name but no module")))
 end)
-end
-| false -> begin
+end else begin
 (let m_opt = (find_smc_module' mllib')
 in (match (m_opt) with
 | Some (m) -> begin
@@ -571,7 +567,7 @@ end
 | None -> begin
 (find_smc_module' tl)
 end))
-end)
+end
 end))
 in (match (mllibs) with
 | [] -> begin
@@ -588,26 +584,26 @@ end
 end))
 end)))
 
-let extract = (fun l en -> (let _64_386 = (initialize ())
-in (let _64_390 = (let _130_154 = (FStar_Extraction_ML_Env.mkContext en)
-in (FStar_Util.fold_map FStar_Extraction_ML_ExtractMod.extract _130_154 l))
-in (match (_64_390) with
+let extract = (fun l en -> (let _64_418 = (initialize ())
+in (let _64_422 = (let _130_158 = (FStar_Extraction_ML_Env.mkContext en)
+in (FStar_Util.fold_map FStar_Extraction_ML_ExtractMod.extract _130_158 l))
+in (match (_64_422) with
 | (c, mllibs) -> begin
 (let mllibs = (FStar_List.flatten mllibs)
 in (let m = (find_smc_module mllibs)
-in (let _64_395 = (extract_mlmodule m)
-in (match (_64_395) with
+in (let _64_427 = (extract_mlmodule m)
+in (match (_64_427) with
 | (l, m_opt) -> begin
 (match (m_opt) with
 | None -> begin
 (FStar_All.failwith "End of SMC module, no top level expression")
 end
 | Some (m) -> begin
-(let s = (FStar_List.fold_left (fun acc _64_403 -> (match (_64_403) with
+(let s = (FStar_List.fold_left (fun acc _64_435 -> (match (_64_435) with
 | Mk_tlet (n, b) -> begin
 (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat "mk_let " (name_to_string n)) " (") b) ") (") acc) ")")
 end)) m (FStar_List.rev l))
-in (let _64_405 = (FStar_Util.print_string s)
+in (let _64_437 = (FStar_Util.print_string s)
 in (FStar_Util.print_string "\n")))
 end)
 end))))

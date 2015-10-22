@@ -239,6 +239,7 @@ CAMLprim value stack_mkpair(value v1, value v2)
 {
   int mask[2];
   int nbits = 0;
+#ifndef NOGC
   if (!(Is_long(v1) || is_stack_pointer((void *)v1))) {
     mask[0] = 1;
     nbits++;
@@ -247,6 +248,7 @@ CAMLprim value stack_mkpair(value v1, value v2)
     mask[nbits] = 2;
     nbits++;
   }
+#endif
   value tuple = stack_caml_alloc_tuple(2,nbits,mask);
 #ifdef DEBUG
   if (tuple == (value)0)
@@ -263,6 +265,7 @@ CAMLprim value stack_mkpair(value v1, value v2)
 CAMLprim value stack_mktuple3(value v1, value v2, value v3) {
   int mask[3];
   int nbits = 0;
+#ifndef NOGC
   if (!(Is_long(v1) || is_stack_pointer((void *)v1))) {
     mask[0] = 1;
     nbits++;
@@ -275,6 +278,7 @@ CAMLprim value stack_mktuple3(value v1, value v2, value v3) {
     mask[nbits] = 3;
     nbits++;
   }
+#endif
   value tuple = stack_caml_alloc_tuple(3,nbits,mask);
 #ifdef DEBUG
   if (tuple == (value)0)
@@ -292,6 +296,7 @@ CAMLprim value stack_mktuple3(value v1, value v2, value v3) {
 CAMLprim value stack_mktuple4(value v1, value v2, value v3, value v4) {
   int mask[4];
   int nbits = 0;
+#ifndef NOGC
   if (!(Is_long(v1) || is_stack_pointer((void *)v1))) {
     mask[0] = 1;
     nbits++;
@@ -308,6 +313,7 @@ CAMLprim value stack_mktuple4(value v1, value v2, value v3, value v4) {
     mask[nbits] = 4;
     nbits++;
   }
+#endif
   value tuple = stack_caml_alloc_tuple(4,nbits,mask);
 #ifdef DEBUG
   if (tuple == (value)0)
@@ -326,6 +332,7 @@ CAMLprim value stack_mktuple4(value v1, value v2, value v3, value v4) {
 CAMLprim value stack_mktuple5(value v1, value v2, value v3, value v4, value v5) {
   int mask[5];
   int nbits = 0;
+#ifndef NOGC
   if (!(Is_long(v1) || is_stack_pointer((void *)v1))) {
     mask[0] = 1;
     nbits++;
@@ -346,6 +353,7 @@ CAMLprim value stack_mktuple5(value v1, value v2, value v3, value v4, value v5) 
     mask[nbits] = 5;
     nbits++;
   }
+#endif
   value tuple = stack_caml_alloc_tuple(5,nbits,mask);
 #ifdef DEBUG
   if (tuple == (value)0)

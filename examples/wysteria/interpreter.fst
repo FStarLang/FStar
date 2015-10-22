@@ -153,7 +153,7 @@ open Print
 
 val step_star: config -> ML (option config)
 let rec step_star c =
-  print_string "SStepping: "; print_string (config_to_string c); print_string "\n";
+  (*print_string "SStepping: "; print_string (config_to_string c); print_string "\n";*)
   let c' = step c in
   match c' with
     | Some c' -> step_star c'
@@ -179,7 +179,7 @@ let tstep c =
 
 val tstep_star: config -> ML (option config)
 let rec tstep_star c =
-  print_string "Stepping: "; print_string (config_to_string c); print_string "\n";
+  (*print_string "Stepping: "; print_string (config_to_string c); print_string "\n";*)
   let c' = tstep c in
   match c' with
     | Some c' -> tstep_star c'

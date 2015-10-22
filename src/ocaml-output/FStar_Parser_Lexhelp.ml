@@ -32,77 +32,61 @@ in (FStar_Bytes.make (fun i -> (FStar_Bytes.get bytes (i * 2))) _112_40))))
 let stringbuf_is_bytes = (fun buf -> (let bytes = (FStar_Bytes.close buf)
 in (let ok = (FStar_Util.mk_ref true)
 in (let _46_32 = (let _112_44 = (((FStar_Bytes.length bytes) / 2) - 1)
-in (FStar_Util.for_range 0 _112_44 (fun i -> (match (((FStar_Bytes.get bytes ((i * 2) + 1)) <> 0)) with
-| true -> begin
+in (FStar_Util.for_range 0 _112_44 (fun i -> if ((FStar_Bytes.get bytes ((i * 2) + 1)) <> 0) then begin
 (FStar_ST.op_Colon_Equals ok false)
-end
-| false -> begin
+end else begin
 ()
-end))))
+end)))
 in (FStar_ST.read ok)))))
 
 let trigraph = (fun c1 c2 c3 -> (let digit = (fun c -> ((FStar_Util.int_of_char c) - (FStar_Util.int_of_char '0')))
 in (FStar_Util.char_of_int (((digit c1) * 100) + (((digit c2) * 10) + (digit c3))))))
 
 let digit = (fun d -> (let dd = (FStar_Util.int_of_char d)
-in (match (((dd >= (FStar_Util.int_of_char '0')) && (dd <= (FStar_Util.int_of_char '9')))) with
-| true -> begin
+in if ((dd >= (FStar_Util.int_of_char '0')) && (dd <= (FStar_Util.int_of_char '9'))) then begin
 ((FStar_Util.int_of_char d) - (FStar_Util.int_of_char '0'))
-end
-| false -> begin
+end else begin
 (FStar_All.failwith "digit")
-end)))
+end))
 
 let hexdigit = (fun d -> (let dd = (FStar_Util.int_of_char d)
-in (match (((dd >= (FStar_Util.int_of_char '0')) && (dd <= (FStar_Util.int_of_char '9')))) with
-| true -> begin
+in if ((dd >= (FStar_Util.int_of_char '0')) && (dd <= (FStar_Util.int_of_char '9'))) then begin
 (digit d)
-end
-| false -> begin
-(match (((dd >= (FStar_Util.int_of_char 'a')) && (dd <= (FStar_Util.int_of_char 'f')))) with
-| true -> begin
+end else begin
+if ((dd >= (FStar_Util.int_of_char 'a')) && (dd <= (FStar_Util.int_of_char 'f'))) then begin
 ((dd - (FStar_Util.int_of_char 'a')) + 10)
-end
-| false -> begin
-(match (((dd >= (FStar_Util.int_of_char 'A')) && (dd <= (FStar_Util.int_of_char 'F')))) with
-| true -> begin
+end else begin
+if ((dd >= (FStar_Util.int_of_char 'A')) && (dd <= (FStar_Util.int_of_char 'F'))) then begin
 ((dd - (FStar_Util.int_of_char 'A')) + 10)
-end
-| false -> begin
+end else begin
 (FStar_All.failwith "hexdigit")
-end)
-end)
-end)))
-
-let unicodegraph_short = (fun s -> (match (((FStar_String.length s) <> 4)) with
-| true -> begin
-(FStar_All.failwith "unicodegraph")
 end
-| false -> begin
+end
+end))
+
+let unicodegraph_short = (fun s -> if ((FStar_String.length s) <> 4) then begin
+(FStar_All.failwith "unicodegraph")
+end else begin
 (let _112_63 = (((let _112_59 = (FStar_Util.char_at s 0)
 in (hexdigit _112_59)) * 4096) + (((let _112_60 = (FStar_Util.char_at s 1)
 in (hexdigit _112_60)) * 256) + (((let _112_61 = (FStar_Util.char_at s 2)
 in (hexdigit _112_61)) * 16) + (let _112_62 = (FStar_Util.char_at s 3)
 in (hexdigit _112_62)))))
 in (FStar_Util.uint16_of_int _112_63))
-end))
+end)
 
-let hexgraph_short = (fun s -> (match (((FStar_String.length s) <> 2)) with
-| true -> begin
+let hexgraph_short = (fun s -> if ((FStar_String.length s) <> 2) then begin
 (FStar_All.failwith "hexgraph")
-end
-| false -> begin
+end else begin
 (let _112_68 = (((let _112_66 = (FStar_Util.char_at s 0)
 in (hexdigit _112_66)) * 16) + (let _112_67 = (FStar_Util.char_at s 1)
 in (hexdigit _112_67)))
 in (FStar_Util.uint16_of_int _112_68))
-end))
+end)
 
-let unicodegraph_long = (fun s -> (match (((FStar_String.length s) <> 8)) with
-| true -> begin
+let unicodegraph_long = (fun s -> if ((FStar_String.length s) <> 8) then begin
 (FStar_All.failwith "unicodegraph_long")
-end
-| false -> begin
+end else begin
 (let high = (((let _112_71 = (FStar_Util.char_at s 0)
 in (hexdigit _112_71)) * 4096) + (((let _112_72 = (FStar_Util.char_at s 1)
 in (hexdigit _112_72)) * 256) + (((let _112_73 = (FStar_Util.char_at s 2)
@@ -113,14 +97,12 @@ in (hexdigit _112_75)) * 4096) + (((let _112_76 = (FStar_Util.char_at s 5)
 in (hexdigit _112_76)) * 256) + (((let _112_77 = (FStar_Util.char_at s 6)
 in (hexdigit _112_77)) * 16) + (let _112_78 = (FStar_Util.char_at s 7)
 in (hexdigit _112_78)))))
-in (match ((high = 0)) with
-| true -> begin
+in if (high = 0) then begin
 (None, (FStar_Util.uint16_of_int low))
-end
-| false -> begin
+end else begin
 (Some ((FStar_Util.uint16_of_int (0xD800 + (((high * 0x10000) + (low - 0x10000)) / 0x400)))), (FStar_Util.uint16_of_int (0xDF30 + (((high * 0x10000) + (low - 0x10000)) % 0x400))))
-end)))
 end))
+end)
 
 let escape = (fun c -> (match (c) with
 | '\\' -> begin
@@ -175,13 +157,11 @@ end)) keywords)
 
 let unreserve_words = (FStar_List.choose (fun _46_67 -> (match (_46_67) with
 | (mode, keyword, _46_66) -> begin
-(match ((mode = FSHARP)) with
-| true -> begin
+if (mode = FSHARP) then begin
 Some (keyword)
-end
-| false -> begin
+end else begin
 None
-end)
+end
 end)) keywords)
 
 let kwd_table = (let tab = (FStar_Util.smap_create 1000)
@@ -235,17 +215,15 @@ end))
 
 let kwd_or_id = (fun args r s -> (match ((kwd s)) with
 | Some (v) -> begin
-(match ((v = FStar_Parser_Parse.RESERVED)) with
-| true -> begin
+if (v = FStar_Parser_Parse.RESERVED) then begin
 (let _46_92 = (let _112_127 = (let _112_126 = (FStar_Range.string_of_range r)
 in (FStar_Util.format2 "The keyword \'%s\' is reserved for future use by F#. (%s)" s _112_126))
 in (FStar_Util.print_string _112_127))
 in (let _112_128 = (intern_string s)
 in FStar_Parser_Parse.IDENT (_112_128)))
-end
-| false -> begin
+end else begin
 v
-end)
+end
 end
 | None -> begin
 (match (s) with

@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set --admit_fsi FStar.OrdSet --admit_fsi Prins --admit_fsi FStar.String --admit_fsi FStar.IO;
-    other-files:set.fsi heap.fst st.fst all.fst string.fsi ordset.fsi prins.fsi io.fsti;
+    other-files:set.fsi heap.fst st.fst all.fst list.fst listTot.fst string.fsi ordset.fsi ../prins.fsi io.fsti;
  --*)
 
 module FFI
@@ -67,6 +67,14 @@ let read_int_tuple x =
   let snd = FStar.IO.input_int () in
   (fst, snd)
 
+val read_int_list: unit -> (list int)
+let read_int_list _ =
+  let rec helper acc =
+    let x = FStar.IO.input_int () in
+    if x = 0 then acc else helper (x::acc)
+  in
+  helper []
+
 val print_newline: unit -> unit
 let print_newline _ = FStar.IO.print_newline ()
 
@@ -78,6 +86,14 @@ let print_int n = print_string (string_of_int n); print_newline ()
 
 val print_bool: bool -> unit
 let print_bool b = print_string (string_of_bool b); print_newline ()
+
+val print_int_list: list int -> unit
+let print_int_list l =
+  let print_string s = FStar.IO.print_string s in
+  let print_int i = print_string (string_of_int i) in
+  print_string "[ ";
+  FStar.List.iter (fun i -> print_int i; print_string "; ") l;
+  print_string " ]"; print_newline ()
 
 //----- IO interface -----//
 
@@ -134,3 +150,35 @@ let slice_option_sps f ps = function
   | Some x -> Some (f ps x)
 
 //----- option -----//
+
+//----- list -----//
+
+val mk_nil: unit -> Tot (list 'a)
+let mk_nil _ = []
+
+val mk_cons: 'a -> list 'a -> Tot (list 'a)
+let mk_cons x l = x::l
+
+val slice_list: (prin -> 'a -> Tot 'a) -> p:prin -> l:list 'a -> Tot (list 'a)
+let slice_list f p l = FStar.List.Tot.map (f p) l
+
+val compose_lists: ('a -> 'a -> Tot 'a) -> l1:list 'a -> l2:list 'a -> Tot (list 'a)
+let rec compose_lists f l1 l2 = match l1, l2 with
+  | x1::tl1, x2::tl2 -> (f x1 x2)::(compose_lists f tl1 tl2)
+  | _, _           -> []
+
+val slice_list_sps: (prins -> 'a -> Tot 'a) -> prins -> list 'a -> Tot (list 'a)
+let slice_list_sps f ps l = FStar.List.Tot.map (f ps) l
+
+val hd_of_cons: l:list 'a{is_Cons l} -> Tot 'a
+let hd_of_cons = function
+  | hd::_ -> hd
+
+val tl_of_cons: l:list 'a{is_Cons l} -> Tot (list 'a)
+let tl_of_cons = function
+  | _::tl -> tl
+
+val length: list 'a -> Tot nat
+let length l = FStar.List.Tot.length l
+
+//----- list -----//
