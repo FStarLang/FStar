@@ -525,7 +525,7 @@ let pre_effi (c:config) =
   is_T_exp (t_of_conf c) && is_E_ffi (e_of_t_exp (t_of_conf c))
 
 val step_ffi_e: c:config{pre_effi c} -> Tot config
-let step_ffi_e (Conf l m s en (T_exp (E_ffi 'a 'b n fn es inj)) tr) = match es with
+let step_ffi_e (Conf l m s en (T_exp (E_ffi 'a 'b n _ fn es inj)) tr) = match es with
   | []    -> Conf l m s en (T_red (R_ffi n fn [] inj)) tr
   | e::tl  -> Conf l m ((Frame m en (F_ffi n fn tl [] inj) tr)::s) en (T_exp e) (hide [])
 

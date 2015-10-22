@@ -3,7 +3,7 @@ OCAMLOPT=ocamlfind ocamlopt -thread -package batteries -linkpkg -g -w -8
 FSTAR_HOME=../../..
 
 a.out:
-	make -C .. codegen
+	#make -C .. codegen
 	cp $(FSTAR_HOME)/lib/ml/native_int/prims.ml .
 	cp $(FSTAR_HOME)/lib/ml/FStar_ST.ml .
 	cp $(FSTAR_HOME)/lib/ml/FStar_All.ml .

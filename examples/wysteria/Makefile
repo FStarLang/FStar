@@ -16,7 +16,7 @@ theory:
 OUTPUT_DIR=./ocaml-output
 
 codegen:
-	$(FSTAR) --admit_fsi FStar.Set\
+	$(FSTAR) --admit_fsi FStar.Set --admit_fsi FStar.String\
 	         --admit_fsi Ffibridge --admit_fsi Runtime --admit_fsi Prog --codegen OCaml --admit_fsi FStar.IO --odir $(OUTPUT_DIR) --use_native_int\
                  ghost.fst ext.fst listTot.fst set.fsi heap.fst st.fst all.fst list.fst listproperties.fst ordset.fsi ordset.fst ordmap.fsi ordmap.fst classical.fst \
                  io.fsti string.fsi prins.fst ast.fst ffibridge.fsi sem.fst runtime.fsi print.fst interpreter.fst sec_server.fst examples/ffi.fst prog.fsi main.fst 

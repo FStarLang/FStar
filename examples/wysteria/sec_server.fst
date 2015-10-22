@@ -37,9 +37,10 @@ let rec send_output #meta ps out_m v =
   let Some p = choose ps in
   let Some out = select p out_m in
   let ps_rest = remove p ps in
+  let out_m' = OrdMap.remove p out_m in
   server_write out (slice_v p v);
   if ps_rest = empty then ()
-  else send_output #meta ps_rest out_m v
+  else send_output #meta ps_rest out_m' v
 
 val is_sterminal: config -> Tot bool
 let is_sterminal (Conf _ _ s _ t _) = s = [] && is_T_val t

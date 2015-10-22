@@ -83,13 +83,13 @@ let rec exp_to_string = function
     tagged_binary_to_string "E_empabs" x (exp_to_string e)
   | E_app e1 e2        ->
     tagged_binary_to_string "E_app" (exp_to_string e1) (exp_to_string e2)
-  | E_ffi 'a 'b n _ l _  ->
-    tagged_binary_to_string "E_ffi" (string_of_int n) (exp_list_to_string l)
+  | E_ffi 'a 'b n fname _ l _  ->
+    tagged_ternary_to_string "E_ffi" (string_of_int n) fname (exp_list_to_string l)
   | E_cond e e1 e2     ->
     tagged_ternary_to_string "E_cond" (exp_to_string e) (exp_to_string e1) (exp_to_string e2)
 
 and exp_list_to_string_helper l s = match l with
-  | []    -> ""
+  | []    -> s
   | hd::tl ->
     let s' = strcat (strcat s (exp_to_string hd)) "; " in
     exp_list_to_string_helper tl s'

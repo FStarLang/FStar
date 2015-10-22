@@ -41,7 +41,7 @@ type exp =
   | E_fix       : f:varname -> x:varname -> e:exp -> exp
   | E_empabs    : x:varname -> e:exp -> exp
   | E_app       : e1:exp -> e2:exp -> exp
-  | E_ffi       : n:nat -> fn:'a -> args:list exp -> inj:'b -> exp
+  | E_ffi       : n:nat -> fname:string -> fn:'a -> args:list exp -> inj:'b -> exp
   | E_cond      : e:exp -> e1:exp -> e2:exp -> exp
 
 type canbox = | Can_b | Cannot_b
@@ -357,8 +357,8 @@ let mk_empabs x e = E_empabs x e
 opaque val mk_app: exp -> exp -> Tot exp
 let mk_app e1 e2 = E_app e1 e2
 
-opaque val mk_ffi: nat -> 'a -> list exp -> 'b -> Tot exp
-let mk_ffi n a l b = E_ffi n a l b
+opaque val mk_ffi: nat -> string -> 'a -> list exp -> 'b -> Tot exp
+let mk_ffi n name a l b = E_ffi n name a l b
 
 opaque val mk_cond: exp -> exp -> exp -> Tot exp
 let mk_cond e e1 e2 = E_cond e e1 e2
