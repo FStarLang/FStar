@@ -225,7 +225,7 @@ let rec extract_mlexp ({expr = e; ty = t}:mlexpr) :wexp =
             if b then
                 let inj = get_injection t in
                 let args_exp = List.fold_left (fun s a -> s ^ " (" ^ (extract_mlexp a) ^ ");") "" args in
-                "mk_ffi " ^ (string_of_int (List.length args)) ^ " (" ^ ffi ^ ") [ " ^ args_exp ^ " ] (" ^ inj ^ ")"
+                "mk_ffi " ^ (string_of_int (List.length args)) ^ " " ^ name_to_string ffi ^ " (" ^ ffi ^ ") [ " ^ args_exp ^ " ] (" ^ inj ^ ")"
             else if is_wys_lib_fn f then extract_wysteria_specific_ast f args t
             else
                 let s = extract_mlexp f in
@@ -251,10 +251,13 @@ and extract_wysteria_specific_ast ({expr=f; ty=_}:mlexpr) (args:list<mlexpr>) (t
                 "mk_app (" ^ f_exp ^ ") (E_const (C_unit ()))"
             else if s = "w_read_int" then
                 let inj_str = get_injection t in
-                "mk_ffi 1 FFI.read_int [ E_const (C_unit ()) ] (" ^  inj_str ^ ")"
+                "mk_ffi 1 \"FFI.read_int\" FFI.read_int [ E_const (C_unit ()) ] (" ^  inj_str ^ ")"
             else if s = "w_read_int_tuple" then
                 let inj_str = get_injection t in
-                "mk_ffi 1 FFI.read_int_tuple [ E_const (C_unit ()) ] (" ^  inj_str ^ ")"
+                "mk_ffi 1 \"FFI.read_int_tuple\" FFI.read_int_tuple [ E_const (C_unit ()) ] (" ^  inj_str ^ ")"
+            else if s = "w_read_int_list" then
+                let inj_str = get_injection t in
+                "mk_ffi 1 \"FFI.read_int_list\" FFI.read_int_list [ E_const (C_unit ()) ] (" ^  inj_str ^ ")"
             else
                 let r = lookup_wys_lib_map s in
                 let args = sublist s args r.rem_args in
