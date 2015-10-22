@@ -178,4 +178,7 @@ val tl_of_cons: l:list 'a{is_Cons l} -> Tot (list 'a)
 let tl_of_cons = function
   | _::tl -> tl
 
+val length: list 'a -> Tot nat
+let length l = FStar.List.Tot.length l
+
 //----- list -----//

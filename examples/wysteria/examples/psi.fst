@@ -27,42 +27,41 @@ val read_fn: p:prin -> unit -> Wys (list int) (fun m0 -> b2t (m0 = Mode Par (sin
                                           (fun m0 r t -> True)
 let read_fn _ _ = w_read_int_list ()
 
-val nth: n:nat -> l:list int{length l >= n + 1} -> Tot int
+val nth: n:nat -> l:list int{n < length l} -> Tot int
 let rec nth n l = if n = 0 then hd_of_cons l else nth (n - 1) (tl_of_cons l)
 
 val mem: x:Box int alice_s -> l:Box (list int) bob_s
-         -> n:nat{length (v_of_box l) >= n}
-	 -> Wys (bool * int) (pre (Mode Par ab)) post
-let rec mem x l n =
-  if n = 0 then mk_tuple false 0
+         -> len:nat{len = length (v_of_box l)}
+         -> n:nat{n <= len}
+	 -> Wys (bool * int) (pre (Mode Par ab)) post (decreases (len - n))
+let rec mem x l len n =
+  if n = len then mk_tuple false 0
   else
     let g:unit -> Wys int (pre (Mode Par bob_s)) post =
-      fun _ -> nth (n - 1) (unbox_p l)
+      fun _ -> nth n (unbox_p l)
     in
     let y = as_par bob_s g in
     let cmp:unit -> Wys (bool * int) (pre (Mode Sec ab)) post =
       fun _ -> if unbox_s x = unbox_s y then mk_tuple true (unbox_s x) else mk_tuple false 0
     in
     let p = as_sec ab cmp in
-    if fst p then p else mem x l (n - 1)
+    if fst p then p else mem x l len (n + 1)
 
 val psi: l1:Box (list int) alice_s -> l2:Box (list int) bob_s
-         -> n1:nat{length (v_of_box l1) >= n1} -> n2:nat{length (v_of_box l2) >= n2}
+	 -> len1:nat{len1 = length (v_of_box l1)} -> len2:nat{len2 = length (v_of_box l2)}
+         -> n1:nat{n1 <= len1}
 	 -> acc:list int
-	 -> Wys (list int) (pre (Mode Par ab)) post
-let rec psi l1 l2 n1 n2 acc =
-  if n1 = 0 then acc
+	 -> Wys (list int) (pre (Mode Par ab)) post (decreases (len1 - n1))
+let rec psi l1 l2 len1 len2 n1 acc =
+  if n1 = len1 then acc
   else
     let g:unit -> Wys int (pre (Mode Par alice_s)) post =
-      fun _ -> nth (n1 - 1) (unbox_p l1)
+      fun _ -> nth n1 (unbox_p l1)
     in
     let x = as_par alice_s g in
-    let p = mem x l2 n2 in
+    let p = mem x l2 len2 0 in
     let acc' = if fst p then mk_cons (snd p) acc else acc in
-    psi l1 l2 (n1 - 1) n2 acc'
-
-val mlength: l:list int -> Tot (n:nat{n = length l})
-let rec mlength l = if is_Nil l then 0 else 1 + mlength (tl_of_cons l)
+    psi l1 l2 len1 len2 (n1 + 1) acc'
 
 val psi_m: unit -> Wys (list int) (pre (Mode Par ab)) post
 let psi_m _ =
@@ -74,7 +73,7 @@ let psi_m _ =
 	   -> Wys nat (pre (Mode Par (singleton p))) (fun _ r _ -> True /\ r = length (v_of_box l)) =
     fun _ l _ ->
     let l = unbox_p l in
-    mlength l
+    length l
   in
   let n1 = as_par alice_s (len alice l1) in
   let n2 = as_par bob_s (len bob l2) in
@@ -88,7 +87,7 @@ let psi_m _ =
   let n1' = as_sec ab (g alice n1) in
   let n2' = as_sec ab (g bob n2) in
 
-  psi l1 l2 n1' n2' (mk_nil ())
+  psi l1 l2 n1' n2' 0 (mk_nil ())
 ;;
 
 let l = main ab psi_m in
