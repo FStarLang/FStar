@@ -1,12 +1,12 @@
-let mk_list n =
+(*
+  let mk_list n =
   Camlstack.push_frame ();
   let out = Camlstack.mkref [] in
   for i = 0 to n do
     out := Camlstack.cons i !out;
   done;
   Camlstack.pop_frame()
-
-;; let _ = mk_list 1000
+*)
 
 (**
  * Cf.
@@ -17,49 +17,137 @@ let mk_list n =
  **)
 
 type tm =
-  | Var of int
-  | Abs of int * tm
+  | Var of int          (* de Bruijn *)
+  | Name of int
+  | Abs of tm
   | App of tm  * tm 
 
-type env = (int * closure) list
+type env = closure list
+
 and closure = 
+  | Open of int
   | Clos of env * tm
-  | Open
 
-let null : closure = Obj.magic 0
+open Camlstack
+let mk_open (n:int) = 
+  let x = mkref_noscan n in (* basically, a ref is a "one tuple" *)
+  let r = Obj.repr x in
+  Obj.set_tag r 0;
+  Obj.magic x
+let mk_clos (e:env) (t:tm) : closure = 
+ let p = mkpair e t in
+ let r = Obj.repr p in
+ Obj.set_tag r 1;
+ Obj.magic p
+let mkpair e t = Camlstack.mkpair e t
+let cons e l = Camlstack.cons e l
+let push_frame () = Camlstack.push_frame()
+let pop_frame () = Camlstack.pop_frame()
+type stack = closure list
 
-type stack = tm list
-
-let rec find env x : closure = match env with 
-  | (y, k)::tl -> 
-    if y=x then k else find tl x
+let rec find env x = match env with 
+  | k::tl -> 
+    if x=0 then k else find tl (x - 1)
   | [] -> raise Not_found
 
-open Camlstack 
-let rec norm (env:env) (stack:stack) (tm:tm) : tm = match tm with 
-  | Abs(x, body) -> 
+let rec norm (env:env) (stack:stack) (tm:tm) (n:int) : tm = match tm with 
+  | Abs body -> 
     begin match stack with 
-      | [] -> Abs (x, norm (cons (mkpair x Open) env) stack body)
-      | hd::tl -> norm (cons (mkpair x (Clos(env, hd))) env) tl body  (* How to alloc a Clos(env,hd) in a region? *)
+      | [] -> let m = n + 1 in 
+	     Abs (norm' (cons (mk_open m) env) stack body m)
+      | hd::tl -> 
+	     norm (cons hd env) tl body n 
     end
 
   | App(t1, t2) -> 
-    norm env (cons t2 stack) t1
+    norm env (cons (mk_clos env t2) stack) t1 n
 
   | Var x -> 
     let k = find env x in
-    match k with 
-      | Open -> rebuild env tm stack
-      | Clos(env', k) -> norm env' stack k
+    begin match k with 
+      | Open m -> 
+        rebuild env (Var (n - m)) stack n
 
-and rebuild env head stack = match stack with 
+      | Clos(env', tm) -> 
+        norm env' stack tm n
+    end
+
+  | Name _ -> failwith "OPEN TERM"
+
+and rebuild env head stack n = match stack with 
   | [] -> head
-  | hd::tl -> rebuild env (App(head, norm env [] hd)) tl
+  | hd::tl -> 
+     let arg = match hd with
+       | Open m -> Var (n - m)
+       | Clos (env, tm) -> norm' env [] tm n in
+     rebuild env (App(head, arg)) tl n
 
-let norm e = 
+and norm' env stack e n = 
   push_frame();
-  let x = norm [] [] e in 
+  let x = norm env stack e n in 
   pop_frame(); 
   x
 
-let _ = norm (Abs(0, App(Abs(1, Var 1), Var 0)))
+
+let norm e = norm' [] [] e 0
+
+let rec close x ix body = match body with 
+  | Var _ -> body
+  | Name y -> if y=x then Var ix else body
+  | App(t1, t2) -> App(close x ix t1, close x ix t2)
+  | Abs t -> Abs (close x (ix + 1) t)
+let abs (x, body) = Abs (close x 0 body)
+
+let x = 0
+let y = 1
+let f = 2
+let g = 3
+let n = 4
+let h = 5
+let z = abs(f, abs(x, Name x))
+let one = abs(f, abs(x, App(Name f, Name x)))
+let succ n = abs(f, abs(x, App(Name f, App(App(n, Name f), Name x))))
+let pred = abs(n, abs(f, abs(x, App(App(App(Name n, (abs(g, abs(h, App(Name h, App(Name g, Name f)))))), abs(y, Name x)), abs(y, Name y)))))
+
+
+let push m = 
+  let next_char = fst m + 1 in
+  let x = Char.chr next_char in
+  x, (next_char, x::snd m)
+
+let rec term_to_string_raw = function 
+  | Var x -> string_of_int x
+  | Name x -> Printf.sprintf "(Name %d)" x
+  | Abs tm -> Printf.sprintf  "(Abs %s)" (term_to_string_raw tm)
+  | App(t1, t2) -> Printf.sprintf "(App %s %s)" (term_to_string_raw t1) (term_to_string_raw t2)
+
+let rec clos_to_string = function 
+  | Open m -> Printf.sprintf "(Open %d)" m
+  | Clos(env, x) -> Printf.sprintf "(Clos %s %s)" (env_to_string env) (term_to_string_raw x)
+
+and env_to_string env = 
+  let s = List.map clos_to_string env in 
+  Printf.sprintf "[%s]" (String.concat "; " s)
+
+let print_term_raw t = print_string (term_to_string_raw t)
+
+let rec print_term m = function 
+  | Var x -> print_char (find (snd m) x)
+  | Name x -> print_string "(Name "; print_int x; print_string ")"
+  | Abs tm -> let x, m = push m in print_string "(Abs "; print_char x; print_string " "; print_term m tm; print_string ")"
+  | App(t1, t2) -> print_string "("; print_term m t1; print_string " "; print_term m t2; print_string ")"
+
+let print_term = print_term (Char.code 'a' - 1, [])
+
+let rec encode (n:int) = 
+  if n = 0 then z
+  else succ (encode (n - 1))
+
+let test2 = 
+  let s = encode 1000 in 
+  let x = norm s in 
+  print_term x
+(*  print_term (norm s) *)
+ 
+
+  
