@@ -327,7 +327,7 @@ let constructor_to_decl (name, projectors, sort, id) =
     let bvar_names = List.map fv_of_term bvars in
     let capp = mkApp(name, bvars) in
     let cid_app = mkApp(constr_id_of_sort sort, [capp]) in
-    let cid = Assume(mkForall([], bvar_names, mkEq(mkInteger id, cid_app)), Some "Constructor distinct") in //specifically omitting pattern
+    let cid = Assume(mkForall([[capp]], bvar_names, mkEq(mkInteger id, cid_app)), Some "Constructor distinct") in //specifically omitting pattern
     let disc_name = "is-"^name in
     let xfv = ("x", sort) in
     let xx = mkFreeV xfv in
@@ -382,7 +382,7 @@ let termToSmt t =
             | _ -> pats |> List.map (fun pats -> format1 "\n:pattern (%s)" (String.concat " " (List.map (fun p -> format1 "%s" (aux n names p)) pats))) |> String.concat "\n" in
         begin match pats, wopt with
             | [[]], None
-            | [], None ->  Util.format3 "(%s (%s)\n %s)" (qop_to_string qop) binders (aux n names body)
+            | [], None ->  Util.format3 "(%s (%s)\n %s);;no pats\n" (qop_to_string qop) binders (aux n names body)
             | _ -> Util.format5 "(%s (%s)\n (! %s\n %s %s))" (qop_to_string qop) binders (aux n names body) (weightToSmt wopt) pats_str
         end in
     aux 0 [] t
