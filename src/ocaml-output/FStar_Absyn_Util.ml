@@ -2348,7 +2348,7 @@ let is_interpreted = (fun l -> (let theory_syms = (FStar_Absyn_Const.op_Eq)::(FS
 in (FStar_Util.for_some (FStar_Absyn_Syntax.lid_equals l) theory_syms)))
 
 type qpats =
-FStar_Absyn_Syntax.args
+FStar_Absyn_Syntax.args Prims.list
 
 type connective =
 | QAll of (FStar_Absyn_Syntax.binders * qpats * FStar_Absyn_Syntax.typ)

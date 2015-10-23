@@ -99,8 +99,8 @@ type term' =
 | Project of (term * lid)
 | Product of (binder Prims.list * term)
 | Sum of (binder Prims.list * term)
-| QForall of (binder Prims.list * term Prims.list * term)
-| QExists of (binder Prims.list * term Prims.list * term)
+| QForall of (binder Prims.list * term Prims.list Prims.list * term)
+| QExists of (binder Prims.list * term Prims.list Prims.list * term)
 | Refine of (binder * term)
 | NamedTyp of (FStar_Absyn_Syntax.ident * term)
 | Paren of term
@@ -1190,13 +1190,13 @@ in (FStar_Util.format2 "%s * %s" _105_1015 _105_1014)))
 end
 | QForall (bs, pats, t) -> begin
 (let _105_1018 = (to_string_l " " binder_to_string bs)
-in (let _105_1017 = (to_string_l "; " term_to_string pats)
+in (let _105_1017 = (to_string_l " \\/ " (to_string_l "; " term_to_string) pats)
 in (let _105_1016 = (FStar_All.pipe_right t term_to_string)
 in (FStar_Util.format3 "forall %s.{:pattern %s} %s" _105_1018 _105_1017 _105_1016))))
 end
 | QExists (bs, pats, t) -> begin
 (let _105_1021 = (to_string_l " " binder_to_string bs)
-in (let _105_1020 = (to_string_l "; " term_to_string pats)
+in (let _105_1020 = (to_string_l " \\/ " (to_string_l "; " term_to_string) pats)
 in (let _105_1019 = (FStar_All.pipe_right t term_to_string)
 in (FStar_Util.format3 "exists %s.{:pattern %s} %s" _105_1021 _105_1020 _105_1019))))
 end
