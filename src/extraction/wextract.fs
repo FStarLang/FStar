@@ -240,6 +240,11 @@ let rec extract_mlexp ({expr = e; ty = t}:mlexpr) :wexp =
                 "mk_cond (" ^ (extract_mlexp e) ^ ") (" ^ extract_mlexp e1 ^ ") (" ^ extract_mlexp e2 ^ ")"
             else failwith "Only if-then-else patterns are supported"
         | MLE_Coerce (e, _, _) -> extract_mlexp e
+        | MLE_If (e, e1, e2_opt) ->            
+            (match e2_opt with
+                | None    -> failwith "If Then Else should have an else branch?"
+                | Some e2 ->
+                    "mk_cond (" ^ (extract_mlexp e) ^ ") (" ^ extract_mlexp e1 ^ ") (" ^ extract_mlexp e2 ^ ")")
         | _ -> failwith "This expression extraction is not supported yet"
 
 and extract_wysteria_specific_ast ({expr=f; ty=_}:mlexpr) (args:list<mlexpr>) (t:mlty) :string =  // t is the original expression type that called this function (the immediate parent app node)
