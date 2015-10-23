@@ -58,14 +58,15 @@ let rec find env x = match env with
 let rec norm (env:env) (stack:stack) (tm:tm) (n:int) : tm = match tm with 
   | Abs body -> 
     begin match stack with 
-      | [] -> let m = n + 1 in 
+          | [] ->
+             let m = n + 1 in 
 	     Abs (norm' (cons (mk_open m) env) stack body m)
-      | hd::tl -> 
+          | hd::tl ->
 	     norm (cons hd env) tl body n 
     end
 
-  | App(t1, t2) -> 
-    norm env (cons (mk_clos env t2) stack) t1 n
+  | App(t1, t2) ->
+     norm env (cons (mk_clos env t2) stack) t1 n
 
   | Var x -> 
     let k = find env x in
@@ -88,8 +89,9 @@ and rebuild env head stack n = match stack with
      rebuild env (App(head, arg)) tl n
 
 and norm' env stack e n = 
-  push_frame();
-  let x = norm env stack e n in 
+  push_frame(); 
+  let x = norm env stack e n in
+  (* print_string "."; *)
   pop_frame(); 
   x
 
@@ -113,12 +115,14 @@ let f = 2
 let g = 3
 let n = 4
 let h = 5
+let m = 6          
 let z = abs(f, abs(x, Name x))
 let one = abs(f, abs(x, App(Name f, Name x)))
 let succ n = abs(f, abs(x, App(Name f, App(App(n, Name f), Name x))))
 let pred = abs(n, abs(f, abs(x, App(App(App(Name n, (abs(g, abs(h, App(Name h, App(Name g, Name f)))))), abs(y, Name x)), abs(y, Name y)))))
 let minus m n = App(App(n, pred), m)
-
+let mul = abs(m, abs(n, abs(f, App(Name m, (App(Name n, Name f))))))
+             
 let push m = 
   let next_char = fst m + 1 in
   let x = Char.chr next_char in
@@ -153,9 +157,12 @@ let rec encode (n:int) =
   else succ (encode (n - 1))
 
 let test2 = 
-  let s = encode 1000 in 
-  let x = norm (minus s s) in 
-  print_term x; print_string "\n";
+  let ten = encode 10 in
+  let hundred = App(App(mul, ten), ten) in 
+  let k = App(App(mul, ten), hundred) in
+  let ten_k = App(App(mul, ten), k) in
+  let _ = norm (minus (minus (minus (minus ten_k k) k) k) k) in 
+  (*  print_term x; print_string "\n"; *)
   Gc.print_stat Pervasives.stdout
 
 (*  print_term (norm s) *)
