@@ -1363,7 +1363,7 @@ let is_interpreted l =
 (**************************************************************************************)
 (* Destructing a type as a formula *)
 (**************************************************************************************)
-type qpats = args
+type qpats = list<args>
 type connective =
     | QAll of binders * qpats * typ
     | QEx of binders * qpats * typ

@@ -51,8 +51,8 @@ type term' =
   | Project   of term * lid
   | Product   of list<binder> * term (* function space *)
   | Sum       of list<binder> * term (* dependent tuple *)
-  | QForall   of list<binder> * list<term> * term
-  | QExists   of list<binder> * list<term> * term
+  | QForall   of list<binder> * list<list<term>> * term
+  | QExists   of list<binder> * list<list<term>> * term
   | Refine    of binder * term
   | NamedTyp  of ident * term
   | Paren     of term
@@ -204,12 +204,12 @@ let rec term_to_string (x:term) = match x.tm with
   | QForall(bs, pats, t) ->
     Util.format3 "forall %s.{:pattern %s} %s"
       (to_string_l " " binder_to_string bs)
-      (to_string_l "; " term_to_string pats)
+      (to_string_l " \/ " (to_string_l "; " term_to_string) pats)
       (t|> term_to_string)
   | QExists(bs, pats, t) ->
     Util.format3 "exists %s.{:pattern %s} %s"
       (to_string_l " " binder_to_string bs)
-      (to_string_l "; " term_to_string pats)
+      (to_string_l " \/ " (to_string_l "; " term_to_string) pats)
       (t|> term_to_string)
   | Refine(b, t) ->
     Util.format2 "%s:{%s}" (b|> binder_to_string) (t|> term_to_string)

@@ -40,6 +40,9 @@ let precedes_lid = pconst "Precedes"
 let lex_t_lid    = pconst "lex_t"
 let lexcons_lid  = pconst "LexCons"
 let lextop_lid   = pconst "LexTop"
+let smtpat_lid   = pconst "SMTPat"
+let smtpatT_lid  = pconst "SMTPatT"
+let smtpatOr_lid = pconst "SMTPatOr"
 
 let int32_lid  = p2l ["FStar"; "Int32"; "int32"]
 let int31_lid  = p2l ["FStar"; "Int31"; "int31"]
