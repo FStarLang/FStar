@@ -30,38 +30,63 @@ let read_fn _ _ = w_read_int_list ()
 val nth: n:nat -> l:list int{n < length l} -> Tot int
 let rec nth n l = if n = 0 then hd_of_cons l else nth (n - 1) (tl_of_cons l)
 
+val mem_begin: x:int -> n:nat -> l:list int{n <= length l} -> GTot bool (decreases (length l - n))
+let rec mem_begin x n l =
+  if n = length l then false
+  else
+    let y = nth n l in
+    if x = y then true else mem_begin x (n + 1) l
+
+#set-options "--z3timeout 15"
+
 val mem: x:Box int alice_s -> l:Box (list int) bob_s
          -> len:nat{len = length (v_of_box l)}
          -> n:nat{n <= len}
-	 -> Wys (bool * int) (pre (Mode Par ab)) post (decreases (len - n))
+	 -> Wys (bool * int) (pre (Mode Par ab))
+	       (fun _ r _ -> (fst r <==> mem_begin (v_of_box x) n (v_of_box l)) /\
+	                  (fst r ==> snd r = v_of_box x))
+	   (decreases (len - n))
 let rec mem x l len n =
   if n = len then mk_tuple false 0
   else
-    let g:unit -> Wys int (pre (Mode Par bob_s)) post =
+    let g:unit -> Wys int (pre (Mode Par bob_s))
+                       (fun _ r _ -> b2t (r = nth n (v_of_box l))) =
       fun _ -> nth n (unbox_p l)
     in
     let y = as_par bob_s g in
-    let cmp:unit -> Wys (bool * int) (pre (Mode Sec ab)) post =
+    let _ = cut (b2t (v_of_box y = nth n (v_of_box l))) in
+    let cmp:unit
+            -> Wys (bool * int) (pre (Mode Sec ab))
+	          (fun _ r _ -> (fst r <==> v_of_box x = v_of_box y) /\
+		             (fst r ==> snd r = v_of_box x)) =
       fun _ -> if unbox_s x = unbox_s y then mk_tuple true (unbox_s x) else mk_tuple false 0
     in
     let p = as_sec ab cmp in
     if fst p then p else mem x l len (n + 1)
 
+#reset-options
+
+val lmem: int -> list int -> GTot bool
+let lmem x l = FStar.List.Tot.mem x l
+
 val psi: l1:Box (list int) alice_s -> l2:Box (list int) bob_s
 	 -> len1:nat{len1 = length (v_of_box l1)} -> len2:nat{len2 = length (v_of_box l2)}
          -> n1:nat{n1 <= len1}
-	 -> acc:list int
-	 -> Wys (list int) (pre (Mode Par ab)) post (decreases (len1 - n1))
-let rec psi l1 l2 len1 len2 n1 acc =
-  if n1 = len1 then acc
+	 -> Wys (list int) (pre (Mode Par ab)) (fun _ r _ -> forall x. lmem x r <==> (mem_begin x 0 (v_of_box l2) /\
+	                                                                 mem_begin x n1 (v_of_box l1)))
+	   (decreases (len1 - n1))
+let rec psi l1 l2 len1 len2 n1 =
+  let _ = admitP (forall (x:int) (n:nat) (l:list int). (n + 1 <= length l) ==> mem_begin x (n + 1) l ==> mem_begin x n l) in
+  if n1 = len1 then (mk_nil ())
   else
-    let g:unit -> Wys int (pre (Mode Par alice_s)) post =
+    let g:unit -> Wys int (pre (Mode Par alice_s)) (fun _ r _ -> b2t (r = nth n1 (v_of_box l1))) =
       fun _ -> nth n1 (unbox_p l1)
     in
     let x = as_par alice_s g in
     let p = mem x l2 len2 0 in
-    let acc' = if fst p then mk_cons (snd p) acc else acc in
-    psi l1 l2 len1 len2 (n1 + 1) acc'
+    let l = psi l1 l2 len1 len2 (n1 + 1) in
+    if fst p then mk_cons (snd p) l
+    else l
 
 val psi_m: unit -> Wys (list int) (pre (Mode Par ab)) post
 let psi_m _ =
@@ -87,7 +112,10 @@ let psi_m _ =
   let n1' = as_sec ab (g alice n1) in
   let n2' = as_sec ab (g bob n2) in
 
-  psi l1 l2 n1' n2' 0 (mk_nil ())
+  let l = psi l1 l2 n1' n2' 0 in
+  let _ = assert (forall x. lmem x l <==> (mem_begin x 0 (v_of_box l2) /\
+	                            mem_begin x 0 (v_of_box l1))) in
+  l
 ;;
 
 let l = main ab psi_m in

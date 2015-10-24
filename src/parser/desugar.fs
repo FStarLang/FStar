@@ -1061,10 +1061,11 @@ and desugar_formula' env (f:term) : typ =
   let setpos t = {t with pos=f.range} in
   let desugar_quant (q:lident) (qt:lident) b pats body =
     let tk = desugar_binder env ({b with blevel=Formula}) in
+    let desugar_pats env pats = List.map (fun es -> es |> List.map (fun e -> arg_withimp_t Nothing <| desugar_typ_or_exp env e)) pats in
     match tk with
       | Inl(Some a,k) ->
         let env, a = push_local_tbinding env a in
-        let pats = List.map (fun e -> arg_withimp_t Nothing <| desugar_typ_or_exp env e) pats in
+        let pats = desugar_pats env pats in
         let body = desugar_formula env body in
         let body = match pats with
           | [] -> body
@@ -1074,7 +1075,7 @@ and desugar_formula' env (f:term) : typ =
 
       | Inr(Some x,t) ->
         let env, x = push_local_vbinding env x in
-        let pats = List.map (fun e -> arg_withimp_t Nothing <| desugar_typ_or_exp env e) pats in
+        let pats = desugar_pats env pats in
         let body = desugar_formula env body in
         let body = match pats with
           | [] -> body

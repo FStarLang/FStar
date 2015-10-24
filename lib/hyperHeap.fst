@@ -112,6 +112,10 @@ assume Mod_set_def: forall (x:rid) (s:Set.set rid). {:pattern Set.mem x (mod_set
 opaque logic type modifies (s:Set.set rid) (m0:t) (m1:t) =
   Map.Equal m1 (Map.concat m1 (Map.restrict (Set.complement (mod_set s)) m0))
 
+opaque logic type equal_on (s:Set.set rid) (m0:t) (m1:t) =
+ (forall (r:rid). {:pattern (Map.contains m0 r)} (Set.mem r (mod_set s) /\ Map.contains m0 r) ==> Map.contains m1 r)
+ /\ Map.Equal m0 (Map.concat m0 (Map.restrict (mod_set s) m1))
+
 let restrict s (m:HyperHeap.t)  = Map.restrict (HyperHeap.mod_set s) m
 
 val lemma_modifies_trans: m1:t -> m2:t -> m3:t
@@ -141,6 +145,12 @@ val lemma_modifies_includes2: m1:t -> m2:t
                        -> Lemma (requires (modifies s1 m1 m2 /\ (forall x. Set.mem x s1 ==> (exists y. Set.mem y s2 /\ includes y x))))
                                 (ensures (modifies s2 m1 m2))
 let lemma_modifies_includes2 m1 m2 s1 s2 = ()
+
+val lemma_disjoint_parents: pr:rid -> r:rid -> ps:rid -> s:rid -> Lemma
+  (requires (extends r pr /\ extends s ps /\ disjoint pr ps))
+  (ensures (disjoint r s))
+  [SMTPat (extends r pr); SMTPat (extends s ps); SMTPat (disjoint pr ps)]
+let lemma_disjoint_parents pr r ps s = ()
 
 type contains_ref (#a:Type) (#i:rid) (r:rref i a) (m:t) =
     Map.contains m i /\ Heap.contains (Map.sel m i) (as_ref r)

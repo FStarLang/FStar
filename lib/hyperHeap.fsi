@@ -70,6 +70,11 @@ val lemma_includes_trans: i:rid -> j:rid -> k:rid
                                  [SMTPat (includes i j);
                                   SMTPat (includes j k)]
 
+val lemma_disjoint_parents: pr:rid -> r:rid -> ps:rid -> s:rid -> Lemma
+  (requires (extends r pr /\ extends s ps /\ disjoint pr ps))
+  (ensures (disjoint r s))
+  [SMTPat (extends r pr); SMTPat (extends s ps); SMTPat (disjoint pr ps)]
+
 type fresh_region (i:rid) (m0:t) (m1:t) =
  (forall j. includes i j ==> not (Map.contains m0 j))
  /\ Map.contains m1 i
@@ -83,6 +88,13 @@ assume Mod_set_def: forall (x:rid) (s:Set.set rid). {:pattern Set.mem x (mod_set
 
 opaque logic type modifies (s:Set.set rid) (m0:t) (m1:t) =
   Map.Equal m1 (Map.concat m1 (Map.restrict (Set.complement (mod_set s)) m0))
+
+opaque logic type modifies_one (r:rid) (m0:t) (m1:t) =
+  Map.Equal m1 (Map.concat m1 (Map.restrict (Set.complement (Set.singleton r)) m0))
+
+opaque logic type equal_on (s:Set.set rid) (m0:t) (m1:t) =
+ (forall (r:rid). {:pattern (Map.contains m0 r)} (Set.mem r (mod_set s) /\ Map.contains m0 r) ==> Map.contains m1 r)
+ /\ Map.Equal m0 (Map.concat m0 (Map.restrict (mod_set s) m1))
 
 val lemma_modifies_trans: m1:t -> m2:t -> m3:t
                        -> s1:Set.set rid -> s2:Set.set rid

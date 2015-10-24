@@ -674,7 +674,7 @@ if (unmeta config) then begin
 (sn tcenv (let _33_664 = config
 in {code = t; environment = _33_664.environment; stack = _33_664.stack; close = _33_664.close; steps = _33_664.steps}))
 end else begin
-(let pat = (fun t -> (let ps = (sn_args true tcenv config.environment config.steps ps)
+(let pat = (fun t -> (let ps = (FStar_All.pipe_right ps (FStar_List.map (sn_args true tcenv config.environment config.steps)))
 in (FStar_All.pipe_left wk (FStar_Absyn_Syntax.mk_Typ_meta' (FStar_Absyn_Syntax.Meta_pattern ((t, ps)))))))
 in (sn tcenv (let _33_669 = config
 in {code = t; environment = _33_669.environment; stack = _33_669.stack; close = (close_with_config config pat); steps = _33_669.steps})))

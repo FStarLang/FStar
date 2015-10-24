@@ -56,8 +56,7 @@ val waps: #a:Type -> #b:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> b -> tr
           -> ps:prins
           -> w:Wire a eps{forall p. mem p ps ==> w_contains p w}
           -> =f:(p:prin{w_contains p w} -> x:a{w_select p w = x} -> Wys b req_f ens_f)
-          -> Wys (Wire b ps) (fun m0 -> waps_pre #a #b m0 ps w /\ req_f m0)
-                             (fun m0 r t -> b2t (w_dom r = ps))
+          -> Wys (Wire b ps) (fun m0 -> waps_pre #a #b m0 ps w /\ req_f m0) post
              (decreases (size ps))
 let rec waps #eps ps w f =
   let p = choose ps in
@@ -72,9 +71,7 @@ let rec waps #eps ps w f =
     let _ = assert (ps = union (singleton p) ps') in
     concat_wire wp w'
 
-val gps_sec: ps:prins
-             -> w:Wire int ps{forall p. mem p ps <==> w_contains p w}
-             -> unit
+val gps_sec: ps:prins -> w:Wire int ps -> unit
              -> Wys (Wire prin ps) (pre (Mode Par ps)) post
 let gps_sec ps w _ =
 
@@ -99,7 +96,7 @@ let gps_sec ps w _ =
 
   as_sec ps g
 
-val gps: unit -> Wys bool (pre (Mode Par abc)) post
+val gps: unit -> Wys unit (pre (Mode Par abc)) post
 let gps _ =
   let x = as_par alice_s read_fn in
   let y = as_par bob_s read_fn in
@@ -112,11 +109,12 @@ let gps _ =
   let w1 = concat_wire wa wb in
   let w2 = concat_wire w1 wc in
 
-  let _ = as_par ab (gps_sec ab w1) in
+  let t1 = as_par ab (gps_sec ab w1) in
 
-  let _ = as_par abc (gps_sec abc w2) in
-
-  true
+  let _ = cut (b2t (subset abc abc)) in
+  let _ = cut (can_box (Wire prin abc) abc) in
+  let t2 = as_par abc (gps_sec abc w2) in
+  ()
 ;;
 
 let x = main abc gps in ()

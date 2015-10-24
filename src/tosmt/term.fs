@@ -289,8 +289,8 @@ let mkForall'' (pats, wopt, sorts, body) = mkQuant (Forall, pats, wopt, sorts, b
 let mkForall' (pats, wopt, vars, body) = mkQuant' (Forall, pats, wopt, vars, body)
 
 //these are the external facing functions for building quantifiers
-let mkForall (pats, vars, body) = mkQuant' (Forall, [pats], None, vars, body)
-let mkExists (pats, vars, body) = mkQuant' (Exists, [pats], None, vars, body)
+let mkForall (pats, vars, body) = mkQuant' (Forall, pats, None, vars, body)
+let mkExists (pats, vars, body) = mkQuant' (Exists, pats, None, vars, body)
 
 
 type caption = option<string>
@@ -341,7 +341,7 @@ let constructor_to_decl (name, projectors, sort, id) =
     let projs = projectors |> List.mapi (fun i (name, s) ->
         let cproj_app = mkApp(name, [capp]) in
         [DeclFun(name, [sort], s, Some "Projector");
-         Assume(mkForall([capp], bvar_names, mkEq(cproj_app, bvar i s)), Some "Projection inverse")]) |> List.flatten in
+         Assume(mkForall([[capp]], bvar_names, mkEq(cproj_app, bvar i s)), Some "Projection inverse")]) |> List.flatten in
     Caption (format1 "<start constructor %s>" name)::cdecl::cid::projs@[disc]@[Caption (format1 "</end constructor %s>" name)]
 
 

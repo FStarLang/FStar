@@ -891,12 +891,12 @@ end))
 
 let mkForall = (fun _50_498 -> (match (_50_498) with
 | (pats, vars, body) -> begin
-(mkQuant' (Forall, (pats)::[], None, vars, body))
+(mkQuant' (Forall, pats, None, vars, body))
 end))
 
 let mkExists = (fun _50_502 -> (match (_50_502) with
 | (pats, vars, body) -> begin
-(mkQuant' (Exists, (pats)::[], None, vars, body))
+(mkQuant' (Exists, pats, None, vars, body))
 end))
 
 type caption =
@@ -1117,7 +1117,7 @@ in (let projs = (let _116_468 = (FStar_All.pipe_right projectors (FStar_List.map
 in (let _116_467 = (let _116_466 = (let _116_465 = (let _116_464 = (let _116_463 = (let _116_462 = (let _116_461 = (let _116_460 = (bvar i s)
 in (cproj_app, _116_460))
 in (mkEq _116_461))
-in ((capp)::[], bvar_names, _116_462))
+in (((capp)::[])::[], bvar_names, _116_462))
 in (mkForall _116_463))
 in (_116_464, Some ("Projection inverse")))
 in Assume (_116_465))

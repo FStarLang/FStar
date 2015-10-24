@@ -103,10 +103,10 @@ val mkMul:   ((term * term) -> term)
 val mkMod:   ((term * term) -> term)
 val mkITE: (term * term * term) -> term
 val mkCases : list<term> -> term
-val mkForall: (list<pat> * fvs * term) -> term
+val mkForall: (list<list<pat>> * fvs * term) -> term
 val mkForall': (list<list<pat>> * option<int> * fvs * term) -> term
 val mkForall'': (list<list<pat>> * option<int> * list<sort> * term) -> term
-val mkExists: (list<pat> * fvs * term) -> term
+val mkExists: (list<list<pat>> * fvs * term) -> term
 
 type caption = option<string>
 type binders = list<(string * sort)>

@@ -291,7 +291,7 @@ type typ' =
 | LEMMA
 | DECREASES of exp 
  and meta_t =
-| Meta_pattern of (typ * arg Prims.list)
+| Meta_pattern of (typ * arg Prims.list Prims.list)
 | Meta_named of (typ * lident)
 | Meta_labeled of (typ * Prims.string * FStar_Range.range * Prims.bool)
 | Meta_refresh_label of (typ * Prims.bool Prims.option * FStar_Range.range)
