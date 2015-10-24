@@ -25,13 +25,13 @@ val size      : #a:Type -> #f:cmp a -> ordset a f -> Tot nat
 val subset    : #a:Type -> #f:cmp a -> ordset a f -> ordset a f -> Tot bool
 val singleton : #a:Type -> #f:cmp a -> a -> Tot (ordset a f)
 
-type Equal (#a:Type) (#f:cmp a) (s1:ordset a f) (s2:ordset a f) =
+opaque type Equal (#a:Type) (#f:cmp a) (s1:ordset a f) (s2:ordset a f) =
   (forall x. mem x s1 = mem x s2)
 
 val eq_lemma: #a:Type -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
               -> Lemma (requires (Equal s1 s2))
                        (ensures (s1 = s2))
-                 [SMTPat (s1 = s2)]
+                 [SMTPatT (Equal s1 s2)]
 
 val mem_empty: #a:Type -> #f:cmp a -> x:a
                -> Lemma (requires True) (ensures (not (mem #a #f x (empty #a #f))))

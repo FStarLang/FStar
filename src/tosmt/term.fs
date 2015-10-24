@@ -534,7 +534,18 @@ let unboxTerm sort t = match sort with
 
 let mk_PreKind t      = mkApp("PreKind", [t])
 let mk_PreType t      = mkApp("PreType", [t])
-let mk_Valid t        = mkApp("Valid",   [t])
+let mk_Valid t        = match t.tm with 
+    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_Equality", [_; t1; t2])}]) -> mkEq (t1, t2)
+    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_disEquality", [_; t1; t2])}]) -> mkNot (mkEq (t1, t2))
+    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_LessThanOrEqual", [t1; t2])}]) -> mkLTE (unboxInt t1, unboxInt t2)
+    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_LessThan", [t1; t2])}]) -> mkLT (unboxInt t1, unboxInt t2)
+    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_GreaterThanOrEqual", [t1; t2])}]) -> mkGTE (unboxInt t1, unboxInt t2)
+    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_GreaterThan", [t1; t2])}]) -> mkGT (unboxInt t1, unboxInt t2)
+    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_AmpAmp", [t1; t2])}]) -> mkAnd (unboxBool t1, unboxBool t2)
+    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_BarBar", [t1; t2])}]) -> mkOr (unboxBool t1, unboxBool t2)
+    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_Negation", [t])}]) -> mkNot (unboxBool t)
+    | App(Var "Prims.b2t", [t]) -> unboxBool t
+    | _ -> mkApp("Valid",   [t])
 let mk_HasType v t    = mkApp("HasType", [v;t])
 let mk_HasTypeZ v t   = mkApp("HasTypeZ", [v;t])
 let mk_IsTyped v      = mkApp("IsTyped", [v])
