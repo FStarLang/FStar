@@ -1,35 +1,68 @@
 (*--build-config
-    options:--admit_fsi FStar.Seq --admit_fsi FStar.Set --verify_module Bug;
-    other-files:classical.fst ext.fst set.fsi seq.fsi seqproperties.fst heap.fst st.fst all.fst arr.fst ghost.fst
-  --*)
+    options:--initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1 --admit_fsi FStar.Set --verify_module Bug;
+    other-files:classical.fst ext.fst set.fsi heap.fst st.fst all.fst
+--*)
 
 module Bug
 
-open FStar.Heap
-open FStar.ST
-open FStar.Array
+type f (t:Type)
 
-// opaque;;making this opaque lets the program check
-  type lint (n:nat) = x:nat{ x < n }
+// making this opaque lets the program check
+type t (u:unit) = x:int{u = ()}
 
-type box2 = | B: size:pos -> v:FStar.Heap.ref (lint size) -> box2
+type box = | B: v:f (t ()) -> box
 
-val get_size: box2 -> Tot pos
-let get_size b = B.size b
+val get: b:box -> St (f (t ()))
 
-//using b.v throughout makes the program check
-val get_ref: b:box2 -> Tot (ref (lint (get_size b)))
-let get_ref b = B.v b
+(* Succeeds *)
+// let get b = b.v
 
-val get_val: 
-  b:box2 -> 
-  ST (lint (get_size b))
-    (requires (fun h -> contains h (get_ref b)))
-    (ensures (fun h0 v h1 -> (h0==h1)
-              /\ (contains h0 (get_ref b))
-              /\ (sel h0 (get_ref b) = v)))
-// let get_val b = ST.read (get_ref b) // Succeeds
+(* Succeeds *)
+// assume val recall_type: a:Type -> x:a -> Tot unit
+// let get b = recall_type (f _) b.v; let r = b.v in r
 
-(* Fails immediately *)
-let get_val b = let r = get_ref b in ST.read r
+(* Fails immediately with 'Unknown assertion failed' *)
+let get b = let r = b.v in r
 
+(*
+This is the crucial assertion that succeeds:
+(not (forall ((@t Type) (@x Term))
+        (implies (and (HasKind @t Kind_arrow_1603)
+                      (HasType @x heap)
+                      (forall ((@y Term) (@z Term))
+                         (implies (and (HasType @y (Bug.f Typ_refine_1602))
+                                       (HasType @z heap))
+                                  (Valid (ApplyTE (ApplyTE @t @y) @z)))
+                      ) // forall
+                 ) // and
+                 (forall ((@r Term))
+                    (implies (and (HasType @r (Bug.f Typ_refine_1602))
+                                  (= @r (Bug.B.v b___8_8)))
+                             (Valid (ApplyTE (ApplyTE @t @r) @x))
+
+                    ) // implies
+                 ) // forall
+        ) // implies
+     ) // forall
+) // not
+
+This is the crucial assertion that fails:
+
+(not (forall ((@t Type) (@x Term))
+        (implies (and (HasKind @t Kind_arrow_1603)
+                      (HasType @x heap)
+                      (forall ((@y Term) (@z Term))
+                         (implies (and (HasType @y (Bug.f Typ_refine_1602))
+                                       (HasType @z heap))
+                                  (Valid (ApplyTE (ApplyTE @t @y) @z)))
+                      ) // forall 
+                 ) // and
+                 (Valid (ApplyTE (ApplyTE @t (Bug.B.v b___8_8)) @x))
+         ) // implies
+      ) // forall
+) // not
+
+Suffices to prove (HasType (Bug.B.v b___8_8) (Bug.f Typ_refine_1602)), but Z3 says 'unknwon'
+to 
+(assert (not (HasType (Bug.B.v b___8_8) (Bug.f Typ_refine_1602))))
+*)
