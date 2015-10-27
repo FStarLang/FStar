@@ -339,26 +339,22 @@ in (FStar_List.iter (fun _21_163 -> (match (_21_163) with
 | (_21_159, flag, p, doc) -> begin
 (match (p) with
 | FStar_Getopt.ZeroArgs (ig) -> begin
-(match ((doc = "")) with
-| true -> begin
+if (doc = "") then begin
 (let _86_57 = (FStar_Util.format1 "  --%s\n" flag)
 in (FStar_Util.print_string _86_57))
-end
-| false -> begin
+end else begin
 (let _86_58 = (FStar_Util.format2 "  --%s  %s\n" flag doc)
 in (FStar_Util.print_string _86_58))
-end)
+end
 end
 | FStar_Getopt.OneArg (_21_167, argname) -> begin
-(match ((doc = "")) with
-| true -> begin
+if (doc = "") then begin
 (let _86_60 = (FStar_Util.format2 "  --%s %s\n" flag argname)
 in (FStar_Util.print_string _86_60))
-end
-| false -> begin
+end else begin
 (let _86_61 = (FStar_Util.format3 "  --%s %s  %s\n" flag argname doc)
 in (FStar_Util.print_string _86_61))
-end)
+end
 end)
 end)) specs)))
 
@@ -369,19 +365,15 @@ let rec specs = (fun _21_171 -> (match (()) with
 (FStar_ST.op_Colon_Equals __temp_no_proj true)
 end))), "A temporary flag to disable code generation for projectors"))::((FStar_Getopt.noshort, "admit_fsi", FStar_Getopt.OneArg (((fun x -> (let _86_72 = (let _86_71 = (FStar_ST.read admit_fsi)
 in (x)::_86_71)
-in (FStar_ST.op_Colon_Equals admit_fsi _86_72))), "module name")), "Treat .fsi as a .fst"))::((FStar_Getopt.noshort, "admit_smt_queries", FStar_Getopt.OneArg (((fun s -> (let _86_76 = (match ((s = "true")) with
-| true -> begin
+in (FStar_ST.op_Colon_Equals admit_fsi _86_72))), "module name")), "Treat .fsi as a .fst"))::((FStar_Getopt.noshort, "admit_smt_queries", FStar_Getopt.OneArg (((fun s -> (let _86_76 = if (s = "true") then begin
 true
-end
-| false -> begin
-(match ((s = "false")) with
-| true -> begin
+end else begin
+if (s = "false") then begin
 false
-end
-| false -> begin
+end else begin
 (FStar_All.failwith "Invalid argument to --admit_smt_queries")
-end)
-end)
+end
+end
 in (FStar_ST.op_Colon_Equals admit_smt_queries _86_76))), "true|false")), "Admit SMT queries (UNSAFE! But, useful during development); default: \'false\'"))::((FStar_Getopt.noshort, "cardinality", FStar_Getopt.OneArg (((fun x -> (let _86_80 = (validate_cardinality x)
 in (FStar_ST.op_Colon_Equals cardinality _86_80))), "off|warn|check")), "Check cardinality constraints on inductive data types(default \'off\')"))::((FStar_Getopt.noshort, "codegen", FStar_Getopt.OneArg (((fun s -> (let _86_84 = (parse_codegen s)
 in (FStar_ST.op_Colon_Equals codegen _86_84))), "OCaml|FSharp")), "Generate code for execution"))::((FStar_Getopt.noshort, "codegen-lib", FStar_Getopt.OneArg (((fun s -> (let _86_89 = (let _86_88 = (FStar_ST.read codegen_libs)
@@ -508,16 +500,14 @@ in (let _21_249 = (let _86_193 = (specs ())
 in (display_usage _86_193))
 in (FStar_All.exit 1)))
 end))
-and set_interactive_fsi = (fun _21_251 -> (match ((FStar_ST.read interactive)) with
-| true -> begin
+and set_interactive_fsi = (fun _21_251 -> if (FStar_ST.read interactive) then begin
 (FStar_ST.op_Colon_Equals interactive_fsi true)
-end
-| false -> begin
+end else begin
 (let _21_253 = (FStar_Util.print_string "Set interactive flag first before setting interactive fsi flag\n")
 in (let _21_255 = (let _86_195 = (specs ())
 in (display_usage _86_195))
 in (FStar_All.exit 1)))
-end))
+end)
 
 let should_verify = (fun m -> ((FStar_ST.read verify) && (match ((FStar_ST.read verify_module)) with
 | [] -> begin

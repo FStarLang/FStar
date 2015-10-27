@@ -113,7 +113,7 @@ let vbinder_opt aopt t = match aopt with
 
 
 type knd_components = binders * list<knd> * list<typ> * list<arg>
-type typ_components = binders * list<knd> * list<typ> * list<comp> * list<arg>
+type typ_components = binders * list<knd> * list<typ> * list<comp> * list<list<arg>>
 type exp_components = binders * list<knd> * list<typ> * list<exp> * list<arg>
 let leaf_k () = ([], [], [], [])
 let leaf_te () = ([], [], [], [], [])
@@ -213,7 +213,7 @@ and reduce_typ
       | Typ_app(t, args) ->
         let t, env = map_typ env binders t in
         let args, env = map_args map_typ map_exp env binders args in
-        ([], [], [t], [], args), env
+        ([], [], [t], [], [args]), env
 
       | Typ_lam(axs, t) ->
         let axs, binders, env = map_binders map_kind map_typ env binders axs in
@@ -252,9 +252,12 @@ and reduce_typ
 
       | Typ_meta(Meta_pattern(t,ps)) ->
         let t,env = map_typ env binders t in
-        let pats, env = List.fold_left (fun (pats, env) arg -> match arg with
-          | Inl t, _ -> let t, env = map_typ env binders t in ((Inl t, None)::pats, env)
-          | Inr e, _ -> let e, env = map_exp env binders e in ((Inr e, None)::pats, env)) ([], env) ps in
+        let map_pats env pats : list<arg> * 'env = 
+            let pats, env = List.fold_left (fun (pats, env) arg -> match arg with
+              | Inl t, _ -> let t, env = map_typ env binders t in ((Inl t, None)::pats, env)
+              | Inr e, _ -> let e, env = map_exp env binders e in ((Inr e, None)::pats, env)) ([], env) pats in
+            List.rev pats, env in 
+        let pats, env = List.fold_left (fun (out, env) pats -> let pats, env = map_pats env pats in (pats::out, env)) ([], env) ps in
         ([], [], [t], [], List.rev pats), env in
 
     combine_typ t components env
@@ -385,7 +388,7 @@ let combine_typ t (tc:typ_components) env =
     | Typ_btvar _, _
     | Typ_const _, _ -> t
     | Typ_lam _, (bs, _, [t], _, _) ->                             w <| mk_Typ_lam(bs, t)
-    | Typ_app _, (_, _, [t], _, args) ->                           w <| mk_Typ_app(t, args)
+    | Typ_app _, (_, _, [t], _, [args]) ->                           w <| mk_Typ_app(t, args)
     | Typ_refine _, ([(Inr x, _)], _, [t], _, _) ->                w <| mk_Typ_refine(x, t)
     | Typ_fun _, (bs, _, _, [c], _) ->                             w <| mk_Typ_fun(bs, c)
     | Typ_uvar(x, _), (_, [k], _, _, _) ->                         w <| mk_Typ_uvar'(x, k)

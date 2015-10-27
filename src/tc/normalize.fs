@@ -406,7 +406,7 @@ and sn tcenv (cfg:config<typ>) : config<typ> =
                     sn tcenv ({config with code=t})
                   else
                     let pat t =
-                        let ps = sn_args true tcenv config.environment config.steps ps in
+                        let ps = ps |> List.map (sn_args true tcenv config.environment config.steps) in
                         wk <| mk_Typ_meta'(Meta_pattern(t, ps)) in
                     sn tcenv ({config with code=t; close=close_with_config config pat})
 
@@ -502,7 +502,7 @@ and sncomp_typ tcenv (cfg:config<comp_typ>) : config<comp_typ> =
         | _ -> norm()
   else norm()
 
-and sn_args delay tcenv env steps args =
+and sn_args delay tcenv env steps (args:args) =
    args |> List.map (function
      | Inl t, imp when delay -> Inl <| (sn_delay tcenv (t_config t env steps)).code, imp
      | Inl t, imp -> Inl <| (sn tcenv (t_config t env steps)).code, imp

@@ -151,13 +151,14 @@ let keywords =
     ALWAYS, "fun"        ,FUN;
     ALWAYS, "function"   ,FUNCTION;
     ALWAYS, "if"         ,IF;
+    ALWAYS, "kind"       ,KIND;
     ALWAYS, "in"         ,IN;
     ALWAYS, "lazy"       ,LAZY;
     ALWAYS, "let"        ,LET(false);
     ALWAYS, "logic"      ,LOGIC;
     ALWAYS, "match"      ,MATCH;
     ALWAYS, "module"     ,MODULE;
-  (*   FSHARP, "namespace"  ,NAMESPACE; *)
+    ALWAYS, "new_effect" ,NEW_EFFECT;
     ALWAYS, "of"         ,OF;
     ALWAYS, "open"       ,OPEN;
     ALWAYS, "or"         ,OR;
@@ -166,18 +167,16 @@ let keywords =
     FSHARP, "public"     ,PUBLIC;
     ALWAYS, "rec"        ,REC;
     ALWAYS, "requires"   ,REQUIRES;
+    ALWAYS, "sub_effect" ,SUB_EFFECT;
     ALWAYS, "then"       ,THEN;
     ALWAYS, "to"         ,TO;
+    ALWAYS, "total"      ,TOTAL;
     ALWAYS, "true"       ,TRUE;
     ALWAYS, "try"        ,TRY;
     ALWAYS, "type"       ,TYPE;
     ALWAYS, "val"        ,VAL;
     ALWAYS, "when"       ,WHEN;
     ALWAYS, "with"       ,WITH;
-    ALWAYS, "new_effect" ,NEW_EFFECT;
-    ALWAYS, "sub_effect" ,SUB_EFFECT;
-    ALWAYS, "total"      ,TOTAL;
-    ALWAYS, "kind"       ,KIND;
     ALWAYS, "_"          ,UNDERSCORE;
   ]
 (*------- reserved keywords which are ml-compatibility ids *)

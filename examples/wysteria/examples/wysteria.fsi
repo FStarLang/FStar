@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set --admit_fsi FStar.OrdSet --admit_fsi Prins --admit_fsi FStar.IO;
-    other-files:ghost.fst ext.fst set.fsi heap.fst st.fst all.fst io.fsti list.fst st2.fst ordset.fsi ../prins.fsi ffi.fst
+    other-files:ghost.fst ext.fst set.fsi heap.fst st.fst all.fst io.fsti list.fst listTot.fst st2.fst ordset.fsi ../prins.fsi ffi.fst
  --*)
 
 module Wysteria
@@ -143,8 +143,9 @@ assume Canbox_box   : (forall (a:Type) (ps':prins) (ps:prins).
                        subset ps' ps ==> can_box (Box a ps') ps)
 assume Canbox_option: (forall (a:Type) ps. can_box a ps ==>
                                            can_box (option a) ps)
-assume Canbox_prod:   (forall (a:Type) (b:Type) ps.
-                       (can_box a ps /\ can_box b ps) ==> can_box (a * b) ps)
+assume Canbox_prod  : (forall (a:Type) (b:Type) ps.
+                         (can_box a ps /\ can_box b ps) ==> can_box (a * b) ps)
+assume Canbox_list  : (forall (a:Type) ps. can_box a ps ==> can_box (list a) ps)
 
 (**********)
 
@@ -178,6 +179,7 @@ assume Canwire_prins : can_wire prins
 assume Canwire_eprins: can_wire eprins
 assume Canwire_prod  : forall (a:Type) (b:Type). (can_wire a /\ can_wire b) ==>
                                                  can_wire (a * b)
+assume Canwire_list  : (forall (a:Type). can_wire a ==> can_wire (list a))
 
 assume Canbox_wire   : (forall (a:Type) (eps:eprins) (ps:prins).
                        subset eps ps ==> can_box (Wire a eps) ps)
@@ -312,7 +314,9 @@ val w_read_int_tuple: unit -> Wys (int * int) (fun m0 -> Mode.m m0 = Par /\
                                                  (exists p. Mode.ps m0 = singleton p))
                                          (fun m0 r t -> b2t (t = []))
 
-
+val w_read_int_list: unit -> Wys (list int) (fun m0 -> Mode.m m0 = Par /\
+                                                 (exists p. Mode.ps m0 = singleton p))
+                                         (fun m0 r t -> b2t (t = []))
 
 val alice  : prin
 val bob    : prin

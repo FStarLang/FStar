@@ -191,6 +191,20 @@ let minus_mpc _ _ s0 s1 = let r0 = minus_loc (fst_rel s0) (fst_rel s1) in
                         let r1 = minus_loc (snd_rel s0) (snd_rel s1) in
                         pair_rel r0 r1
 
+(* Proving this seperately to speed up verfication *)
+val mul_lemma : h0:double fp -> h1:double fp -> a:double fp -> b:double fp 
+   -> c:double fp{c=rel_map2T mul_fp a b} 
+   -> d:double fp{d=rel_map2T minus_fp h1 b}
+   -> e:double fp{e=rel_map2T minus_fp h0 a} 
+   -> Lemma (requires True)
+            (ensures ((rel_map2T add_fp 
+                        (rel_map2T add_fp 
+                            (rel_map2T mul_fp e b) 
+                            (rel_map2T add_fp (rel_map2T mul_fp d a) c)) 
+                        (rel_map2T mul_fp d e) 
+                       = rel_map2T mul_fp h0 h1)))
+let mul_lemma h0 h1 a b c d e= ()
+
 #reset-options
 opaque val mul_mpc : h0:double fp -> h1:double fp
               -> s0:shared h0 -> s1:shared h1
@@ -207,4 +221,5 @@ let mul_mpc h0 h1 s0 s1 =
   let tmp4 = add_mpc (rel_map2T mul_fp e b) (rel_map2T add_fp (rel_map2T mul_fp d a) c) tmp3 tmp2 in
   let tmp5 = add_const_mpc (rel_map2T add_fp (rel_map2T mul_fp e b) (rel_map2T add_fp (rel_map2T mul_fp d a) c))
                             (rel_map2T mul_fp d e) tmp4 in
+  mul_lemma h0 h1 a b c d e;
   tmp5

@@ -46,7 +46,6 @@ val const_to_string: const -> Tot string
 let const_to_string = function
   | C_prin p      -> tagged_unary_to_string "C_prin" (prin_to_string p)
   | C_eprins eps  -> tagged_unary_to_string "C_eprins" (prins_to_string eps)
-  | C_prins ps    -> tagged_unary_to_string "C_prins" (prins_to_string ps)
   | C_unit _      -> "C_unit"
   | C_bool b      -> tagged_unary_to_string "C_bool" (string_of_bool b)
   | C_opaque 'a _  -> "C_opaque"  // TODO: print of opaque values
@@ -84,13 +83,13 @@ let rec exp_to_string = function
     tagged_binary_to_string "E_empabs" x (exp_to_string e)
   | E_app e1 e2        ->
     tagged_binary_to_string "E_app" (exp_to_string e1) (exp_to_string e2)
-  | E_ffi 'a 'b n _ l _  ->
-    tagged_binary_to_string "E_ffi" (string_of_int n) (exp_list_to_string l)
+  | E_ffi 'a 'b n fname _ l _  ->
+    tagged_ternary_to_string "E_ffi" (string_of_int n) fname (exp_list_to_string l)
   | E_cond e e1 e2     ->
     tagged_ternary_to_string "E_cond" (exp_to_string e) (exp_to_string e1) (exp_to_string e2)
 
 and exp_list_to_string_helper l s = match l with
-  | []    -> ""
+  | []    -> s
   | hd::tl ->
     let s' = strcat (strcat s (exp_to_string hd)) "; " in
     exp_list_to_string_helper tl s'
@@ -107,7 +106,7 @@ let v_meta_to_string m =
   strcat (strcat (strcat (strcat (strcat (strcat (strcat "Meta " scb) " ") (prins_to_string bps)) " ") scw) " ") (prins_to_string wps)
 
 val value_to_string: #meta:v_meta -> v:value meta -> Tot string (decreases v)
-val v_wire_to_string_helper: #eps:eprins -> m:v_wire eps -> string -> Tot string (decreases %[m; (size eps); 0])
+val v_wire_to_string_helper: #eps:eprins -> eps':eprins{subset eps' eps} -> m:v_wire eps -> string -> Tot string (decreases %[m; (size eps'); 0])
 val v_wire_to_string: #eps:eprins -> m:v_wire eps -> Tot string (decreases %[m; (size eps); 1])
 let rec value_to_string #meta v =
   let s =
@@ -116,8 +115,6 @@ let rec value_to_string #meta v =
 	tagged_unary_to_string "V_prin" (prin_to_string p)
       | V_eprins eps         ->
 	tagged_unary_to_string "V_eprins" (prins_to_string eps)
-      | V_prins ps           ->
-        tagged_unary_to_string "V_prins" (prins_to_string ps)
       | V_unit               -> "V_unit"
       | V_bool b             ->
         tagged_unary_to_string "V_bool" (string_of_bool b)
@@ -136,16 +133,17 @@ let rec value_to_string #meta v =
   in
   strcat (strcat (strcat s " (") (v_meta_to_string meta)) ")"
 
-and v_wire_to_string_helper #eps m s =
-  if eps = empty then s
+and v_wire_to_string_helper #eps eps' m s =
+  if eps' = empty then s
   else
-    let Some p = choose eps in
-    let eps' = remove p eps in
+    let Some p = choose eps' in
+    let eps'' = remove p eps' in
     let Some v = OrdMap.select p m in
     let _ = admitP (v << m) in
-    strcat (strcat (strcat (strcat s (prin_to_string p)) ":") (value_to_string v)) "; "
+    let s' = strcat (strcat (strcat (strcat s (prin_to_string p)) ":") (value_to_string v)) "; " in
+    v_wire_to_string_helper #eps eps'' m s'
 
-and v_wire_to_string #eps m = v_wire_to_string_helper #eps m ""
+and v_wire_to_string #eps m = v_wire_to_string_helper #eps eps m ""
 
 val redex_to_string: redex -> Tot string
 let redex_to_string = function

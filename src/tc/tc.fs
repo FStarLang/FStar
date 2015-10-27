@@ -269,6 +269,9 @@ and tc_args env args : Syntax.args * guard_t =
         let e, _, g' = tc_ghost_exp env e in
         (Inr e, imp)::args, Tc.Rel.conj_guard g g') args ([], Rel.trivial_guard)
 
+and tc_pats env pats = 
+    List.fold_right (fun p (pats, g) -> let args, g' = tc_args env p in (args::pats, Tc.Rel.conj_guard g g')) pats ([], Rel.trivial_guard) 
+
 and tc_comp env c =
   match c.n with
     | Total t ->
@@ -532,7 +535,7 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
 
   | Typ_meta (Meta_pattern(qbody, pats)) ->
     let quant, f = tc_typ_check env qbody ktype in
-    let pats, g = tc_args env pats in
+    let pats, g = tc_pats env pats in
     let g = {g with guard_f=Trivial} in //NS: The pattern may have some VCs associated with it, but these are irrelevant.
     mk_Typ_meta(Meta_pattern(quant, pats)), (Tc.Util.force_tk quant), Rel.conj_guard f g
 

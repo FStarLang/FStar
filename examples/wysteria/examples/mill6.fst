@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set --admit_fsi Wysteria --admit_fsi Prins --admit_fsi FStar.OrdSet --admit_fsi FStar.IO;
-    other-files:ghost.fst ext.fst set.fsi heap.fst st.fst all.fst io.fsti list.fst st2.fst ordset.fsi ../prins.fsi ffi.fst wysteria.fsi
+    other-files:ghost.fst ext.fst set.fsi heap.fst st.fst all.fst io.fsti list.fst listTot.fst st2.fst ordset.fsi ../prins.fsi ffi.fst wysteria.fsi
  --*)
 
 (* Millionaire's for any 2 parties, private output for the first party, using wires *)
@@ -62,9 +62,9 @@ let mill8_sec ps w _ =
           -> (p:prin{w_contains p w}) -> (y:int{w_select p w = y})
           -> Wys (option (p:prin{w_contains p w})) (pre (Mode Sec ps)) post =
     fun x p y ->
-      if is_none x then mk_some p
+      if is_None x then mk_some p
       else
-      	let p' = v_of_some x in
+      	let p' = Some.v x in
         let y' = projwire_s p' w in
         if y > y' then mk_some p else mk_some p'
   in
@@ -74,7 +74,7 @@ let mill8_sec ps w _ =
   in
 
   let p = as_sec ps g in
-  if is_none p then mk_none () else mk_some (v_of_some p)
+  if is_None p then mk_none () else mk_some (Some.v p)
 
 val mill8: unit -> Wys bool (pre (Mode Par abc)) post
 let mill8 _ =

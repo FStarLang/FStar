@@ -33,7 +33,7 @@ let step c =
   else if pre_unbox c = Do then Some (step_unbox c)
 
   else if pre_emkwire c then Some (step_mkwire_e1 c)
-  else if is_value c && is_sframe c is_F_mkwire_ps then Some (step_mkwire_e2 c)
+  else if is_value_ps c && is_sframe c is_F_mkwire_ps then Some (step_mkwire_e2 c)
   else if is_value c && is_sframe c is_F_mkwire_e then Some (step_mkwire_red c)
   else if pre_mkwire c = Do then Some (step_mkwire c)
   
@@ -102,7 +102,7 @@ let step_correctness c =
   else if pre_unbox c = Do then C_unbox_beta c c'
 
   else if pre_emkwire c then C_mkwire_e1 c c'
-  else if is_value c && is_sframe c is_F_mkwire_ps then C_mkwire_e2 c c'
+  else if is_value_ps c && is_sframe c is_F_mkwire_ps then C_mkwire_e2 c c'
   else if is_value c && is_sframe c is_F_mkwire_e then C_mkwire_red c c'
   else if pre_mkwire c = Do then C_mkwire_beta c c'
 
@@ -153,7 +153,7 @@ open Print
 
 val step_star: config -> ML (option config)
 let rec step_star c =
-  print_string "SStepping: "; print_string (config_to_string c); print_string "\n";
+  (*print_string "SStepping: "; print_string (config_to_string c); print_string "\n";*)
   let c' = step c in
   match c' with
     | Some c' -> step_star c'
@@ -179,7 +179,7 @@ let tstep c =
 
 val tstep_star: config -> ML (option config)
 let rec tstep_star c =
-  print_string "Stepping: "; print_string (config_to_string c); print_string "\n";
+  (*print_string "Stepping: "; print_string (config_to_string c); print_string "\n";*)
   let c' = tstep c in
   match c' with
     | Some c' -> tstep_star c'

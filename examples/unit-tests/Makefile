@@ -1,7 +1,7 @@
 VERFILES=unit1.fst unit2.fst testset.fst short-circuit.fst first-proofs.fst
 include ../Makefile.include
 NEGFILES=negative-tests.fst
-NEGTESTS=35
+NEGTESTS=36
 
 all: basictests testint32.vv testmref.vv testTwoLevelHeap.vv mac2.vv all-neg testghost inverse testghost
 

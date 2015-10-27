@@ -289,8 +289,8 @@ let mkForall'' (pats, wopt, sorts, body) = mkQuant (Forall, pats, wopt, sorts, b
 let mkForall' (pats, wopt, vars, body) = mkQuant' (Forall, pats, wopt, vars, body)
 
 //these are the external facing functions for building quantifiers
-let mkForall (pats, vars, body) = mkQuant' (Forall, [pats], None, vars, body)
-let mkExists (pats, vars, body) = mkQuant' (Exists, [pats], None, vars, body)
+let mkForall (pats, vars, body) = mkQuant' (Forall, pats, None, vars, body)
+let mkExists (pats, vars, body) = mkQuant' (Exists, pats, None, vars, body)
 
 
 type caption = option<string>
@@ -327,7 +327,7 @@ let constructor_to_decl (name, projectors, sort, id) =
     let bvar_names = List.map fv_of_term bvars in
     let capp = mkApp(name, bvars) in
     let cid_app = mkApp(constr_id_of_sort sort, [capp]) in
-    let cid = Assume(mkForall([], bvar_names, mkEq(mkInteger id, cid_app)), Some "Constructor distinct") in //specifically omitting pattern
+    let cid = Assume(mkForall([[capp]], bvar_names, mkEq(mkInteger id, cid_app)), Some "Constructor distinct") in //specifically omitting pattern
     let disc_name = "is-"^name in
     let xfv = ("x", sort) in
     let xx = mkFreeV xfv in
@@ -341,7 +341,7 @@ let constructor_to_decl (name, projectors, sort, id) =
     let projs = projectors |> List.mapi (fun i (name, s) ->
         let cproj_app = mkApp(name, [capp]) in
         [DeclFun(name, [sort], s, Some "Projector");
-         Assume(mkForall([capp], bvar_names, mkEq(cproj_app, bvar i s)), Some "Projection inverse")]) |> List.flatten in
+         Assume(mkForall([[capp]], bvar_names, mkEq(cproj_app, bvar i s)), Some "Projection inverse")]) |> List.flatten in
     Caption (format1 "<start constructor %s>" name)::cdecl::cid::projs@[disc]@[Caption (format1 "</end constructor %s>" name)]
 
 
@@ -382,7 +382,7 @@ let termToSmt t =
             | _ -> pats |> List.map (fun pats -> format1 "\n:pattern (%s)" (String.concat " " (List.map (fun p -> format1 "%s" (aux n names p)) pats))) |> String.concat "\n" in
         begin match pats, wopt with
             | [[]], None
-            | [], None ->  Util.format3 "(%s (%s)\n %s)" (qop_to_string qop) binders (aux n names body)
+            | [], None ->  Util.format3 "(%s (%s)\n %s);;no pats\n" (qop_to_string qop) binders (aux n names body)
             | _ -> Util.format5 "(%s (%s)\n (! %s\n %s %s))" (qop_to_string qop) binders (aux n names body) (weightToSmt wopt) pats_str
         end in
     aux 0 [] t
@@ -534,7 +534,18 @@ let unboxTerm sort t = match sort with
 
 let mk_PreKind t      = mkApp("PreKind", [t])
 let mk_PreType t      = mkApp("PreType", [t])
-let mk_Valid t        = mkApp("Valid",   [t])
+let mk_Valid t        = match t.tm with 
+    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_Equality", [_; t1; t2])}]) -> mkEq (t1, t2)
+    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_disEquality", [_; t1; t2])}]) -> mkNot (mkEq (t1, t2))
+    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_LessThanOrEqual", [t1; t2])}]) -> mkLTE (unboxInt t1, unboxInt t2)
+    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_LessThan", [t1; t2])}]) -> mkLT (unboxInt t1, unboxInt t2)
+    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_GreaterThanOrEqual", [t1; t2])}]) -> mkGTE (unboxInt t1, unboxInt t2)
+    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_GreaterThan", [t1; t2])}]) -> mkGT (unboxInt t1, unboxInt t2)
+    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_AmpAmp", [t1; t2])}]) -> mkAnd (unboxBool t1, unboxBool t2)
+    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_BarBar", [t1; t2])}]) -> mkOr (unboxBool t1, unboxBool t2)
+    | App(Var "Prims.b2t", [{tm=App(Var "Prims.op_Negation", [t])}]) -> mkNot (unboxBool t)
+    | App(Var "Prims.b2t", [t]) -> unboxBool t
+    | _ -> mkApp("Valid",   [t])
 let mk_HasType v t    = mkApp("HasType", [v;t])
 let mk_HasTypeZ v t   = mkApp("HasTypeZ", [v;t])
 let mk_IsTyped v      = mkApp("IsTyped", [v])

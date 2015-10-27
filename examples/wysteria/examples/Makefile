@@ -8,5 +8,6 @@ api:
 	$(FSTAR) mill6.fst
 	$(FSTAR) gps.fst
 	$(FSTAR) median.fst
+	$(FSTAR) psi.fst
 	$(FSTAR) mediantuple.fst
 

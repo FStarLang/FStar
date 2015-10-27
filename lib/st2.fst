@@ -11,7 +11,7 @@ type rel (a:Type) (b:Type) : Type =
   | R : l:a -> r:b -> rel a b
 
 (* Some frequently used abbreviations *)
-type double (t:Type) = rel t  t
+type double (t:Type) = rel t t
 type eq (t:Type) = p:(double t){R.l p = R.r p}
 
 let twice x = R x x
@@ -36,8 +36,7 @@ let op_Hat_Slash = rel_map2T (fun x y -> x / y)
 (* Some convenient list functions *)
 val tl_rel: #a:Type -> l:double (list a){is_Cons (R.l l) /\ is_Cons (R.r l)}-> Tot (double (list a))
 let tl_rel (R (_::xs) (_::ys)) = R xs ys
-let cons_rel (R x y) (R xs ys) = R (x::xs) (y::ys)
-
+let cons_rel (R x y) (R xs ys) = R (x::xs) (y::ys) 
 (* Some convenient tuple functions *)
 let pair_rel (R a b) (R c d) = R (a,c) (b,d)
 let triple_rel (R a b) (R c d) (R e f) = R (a,c,e) (b,d,f)
@@ -76,8 +75,6 @@ effect ST2 (a:Type) (pre:ST2Pre) (post: (heap2 -> ST2Post a)) =
       (fun (p:ST2Post a) (h:heap2) -> (forall a h1. (pre h /\ post h a h1) ==> p a h1))          (* WLP *)
 effect St2 (a:Type) = ST2 a (fun h -> True) (fun h0 r h1 -> True)
 sub_effect
-  PURE   ~> STATE2 = (fun (a:Type) (wp:PureWP a) (p:ST2Post a) -> (fun h2 -> wp (fun a0 -> p a0 h2)))
-sub_effect
   DIV    ~> STATE2 = (fun (a:Type) (wp:PureWP a) (p:ST2Post a) -> (fun h2 -> wp (fun a0 -> p a0 h2)))
 
 (* construct a ST2WP from 2 STWPs *)
@@ -104,14 +101,20 @@ val compose2_self : #a:Type -> #b:Type -> #wp:(a -> STWP b) -> #wlp:(a -> STWP b
                           (comp b b (wlp (R.l x)) (wlp (R.r x)))
 let compose2_self f x = compose2 f f x
 
-
+(* Combine two ST2 statements A and B to create a new ST2 statement C where 
+   the left side of C is equivalent to the left side of A and 
+   the right side of C is equivalent to the right side of B *)
 assume val cross : #a:Type -> #b:Type -> #c:Type -> #d:Type
                 -> #p:(heap2 -> Type)
                 -> #p':(heap2 -> Type)
                 -> #q:(heap2 -> rel a b -> heap2 -> Type)
                 -> #q':(heap2 -> rel c d -> heap2 -> Type)
-                -> =c1:(double unit -> ST2 (rel a b) (requires (fun h -> p h)) (ensures (fun h1 r h2 -> q h1 r h2)))
-                -> =c2:(double unit -> ST2 (rel c d) (requires (fun h -> p' h)) (ensures (fun h1 r h2 -> q' h1 r h2)))
+                -> =c1:(double unit -> ST2 (rel a b) 
+                                           (requires (fun h -> p h)) 
+                                           (ensures (fun h1 r h2 -> q h1 r h2)))
+                -> =c2:(double unit -> ST2 (rel c d) 
+                                           (requires (fun h -> p' h)) 
+                                           (ensures (fun h1 r h2 -> q' h1 r h2)))
                 -> ST2 (rel a d) (requires (fun h -> (exists (hl:heap) (hr:heap).
                                                              p (R (R.l h) hr)
                                                           /\ p' (R hl (R.r h)))))
@@ -120,8 +123,7 @@ assume val cross : #a:Type -> #b:Type -> #c:Type -> #d:Type
                                                                /\ q' h1 (R rl (R.r r)) (R h2l (R.r h2)))))
 
 
-(* Some experimental functions *)
-
+(* Create a ST statment from a ST2 statement by projection *)
 type decomp_l (a0:Type) (a1:Type) (b0:Type) (b1:Type) (al:a0)
             (wp:(rel a0 a1 -> ST2WP (rel b0 b1))) (p:b0 -> heap -> Type) (hl:heap) = 
     (exists (ar:a1) (hr:heap).

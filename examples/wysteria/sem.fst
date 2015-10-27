@@ -19,6 +19,9 @@ open AST
 (* pre returns comp, for src it's never Skip *)
 type comp = | Do | Skip | NA
 
+val is_empty: eprins -> Tot bool
+let is_empty s = size s = 0
+
 (* TODO: FIXME: workaround for projectors *)
 val e_of_t_exp: t:term{is_T_exp t} -> Tot exp
 let e_of_t_exp (T_exp e) = e
@@ -60,7 +63,7 @@ let step_aspar_e1 (Conf l m s en (T_exp (E_aspar e1 e2)) tr) =
 val step_aspar_e2: c:config{is_value_ps c /\ is_sframe c is_F_aspar_ps}
                   -> Tot config
 let step_aspar_e2 (Conf l _ ((Frame m en (F_aspar_ps e) tr)::s) _
-                   (T_val (V_prins ps)) tr') =
+                   (T_val (V_eprins ps)) tr') =
   Conf l m ((Frame m en (F_aspar_e ps) (concat_traces tr tr'))::s) en (T_exp e) (hide [])
 
 val step_aspar_red: c:config{is_value c /\ is_sframe c is_F_aspar_e}
@@ -140,7 +143,7 @@ let step_box_e1 (Conf l m s en (T_exp (E_box e1 e2)) tr) =
 val step_box_e2: c:config{is_value_ps c /\ is_sframe c is_F_box_ps}
                   -> Tot config
 let step_box_e2 (Conf l _ ((Frame m en (F_box_ps e) tr)::s) _
-                 (T_val (V_prins ps)) tr') =
+                 (T_val (V_eprins ps)) tr') =
   Conf l m ((Frame m en (F_box_e ps) (concat_traces tr tr'))::s) en (T_exp e) (hide [])
 
 val step_box_red: c:config{is_value c /\ is_sframe c is_F_box_e}
@@ -309,7 +312,6 @@ let step_const (Conf l m s en (T_exp (E_const c)) tr) =
   let v = match c with
     | C_prin p     -> V_prin p
     | C_eprins eps -> V_eprins eps
-    | C_prins ps   -> V_prins ps
 
     | C_unit _     -> V_unit
     | C_bool b     -> V_bool b
@@ -341,7 +343,7 @@ let pre_unbox c = match c with
     if as_m = Par then
       if subset ps1 ps2 then Do else NA
     else
-      if not (intersect ps1 ps2 = empty) then Do else NA
+      if not (is_empty (intersect ps1 ps2)) then Do else NA
 
   | _ -> NA
 
@@ -360,20 +362,20 @@ val step_mkwire_e1: c:config{pre_emkwire c} -> Tot config
 let step_mkwire_e1 (Conf l m s en (T_exp (E_mkwire e1 e2)) tr) =
   Conf l m ((Frame m en (F_mkwire_ps e2) tr)::s) en (T_exp e1) (hide [])
 
-val step_mkwire_e2: c:config{is_value c /\ is_sframe c is_F_mkwire_ps}
+val step_mkwire_e2: c:config{is_value_ps c /\ is_sframe c is_F_mkwire_ps}
                    -> Tot config
 let step_mkwire_e2 (Conf l _ ((Frame m en (F_mkwire_ps e) tr)::s) _
-                    (T_val v) tr') =
-  Conf l m ((Frame m en (F_mkwire_e v) (concat_traces tr tr'))::s) en (T_exp e) (hide [])
+                    (T_val (V_eprins ps)) tr') =
+  Conf l m ((Frame m en (F_mkwire_e ps) (concat_traces tr tr'))::s) en (T_exp e) (hide [])
 
 val step_mkwire_red: c:config{is_value c /\ is_sframe c is_F_mkwire_e}
                     -> Tot config
-let step_mkwire_red (Conf l _ ((Frame m en (F_mkwire_e v1) tr)::s) _ (T_val v2) tr') =
-  Conf l m s en (T_red (R_mkwire v1 v2)) (concat_traces tr tr')
+let step_mkwire_red (Conf l _ ((Frame m en (F_mkwire_e ps) tr)::s) _ (T_val v) tr') =
+  Conf l m s en (T_red (R_mkwire ps v)) (concat_traces tr tr')
 
 val pre_mkwire: config -> Tot comp
 let pre_mkwire c = match c with
-  | Conf l (Mode Par ps) _ _ (T_red (R_mkwire (V_prins ps')
+  | Conf l (Mode Par ps) _ _ (T_red (R_mkwire ps'
                                               (V_box #mv ps'' _))) _ ->
     if is_meta_wireable mv then
       if src l then
@@ -381,7 +383,7 @@ let pre_mkwire c = match c with
       else Do
     else NA
  
-  | Conf l (Mode Sec ps) _ _ (T_red (R_mkwire #mps #mv (V_prins ps') _)) _ ->
+  | Conf l (Mode Sec ps) _ _ (T_red (R_mkwire #mv ps' _)) _ ->
     if is_meta_wireable mv then
       if subset ps' ps then Do else NA
     else NA
@@ -395,7 +397,7 @@ let mconst_on eps v = const_on eps v
 
 val step_mkwire: c:config{pre_mkwire c = Do} -> Tot config
 let step_mkwire c = match c with
-  | Conf l (Mode Par ps) s en (T_red (R_mkwire (V_prins ps')
+  | Conf l (Mode Par ps) s en (T_red (R_mkwire ps'
                                                (V_box _ v))) tr ->
     let eps, w =
       if src l then ps', mconst_on ps' v
@@ -406,7 +408,7 @@ let step_mkwire c = match c with
     in
     Conf l (Mode Par ps) s en (T_val (V_wire eps w)) tr
 
-  | Conf l (Mode Sec ps) s en (T_red (R_mkwire (V_prins ps') v)) tr ->
+  | Conf l (Mode Sec ps) s en (T_red (R_mkwire ps' v)) tr ->
     Conf l (Mode Sec ps) s en (T_val (V_wire ps' (mconst_on ps' v))) tr
 
 //----- mkwire e1 e2 -----//
@@ -475,7 +477,7 @@ let step_concatwire_red (Conf l _ ((Frame m en (F_concatwire_e2 v1) tr)::s) _ (T
 val pre_concatwire: config -> Tot comp
 let pre_concatwire c = match c with
   | Conf _ _ _ _ (T_red (R_concatwire (V_wire eps1 _) (V_wire eps2 _))) tr ->
-    if intersect eps1 eps2 = empty then Do else NA
+    if is_empty (intersect eps1 eps2) then Do else NA
    
   | _ -> NA
 
@@ -496,7 +498,7 @@ let empty_intersection_lemma_forall eps1 eps2 =
   forall_intro #prin #(fun p -> mem p eps1 ==> not (mem p eps2)) (empty_intersection_lemma eps1 eps2)
   
 opaque val compose_wires:
- #eps1:eprins -> #eps2:eprins{intersect eps1 eps2 = empty}
+ #eps1:eprins -> #eps2:eprins{is_empty (intersect eps1 eps2)}
  -> w1:v_wire eps1 -> w2:v_wire eps2
  -> eps:eprins{subset eps eps1}
  -> Tot (r:v_wire (union eps eps2)
@@ -506,6 +508,7 @@ opaque val compose_wires:
                                      /\ (mem p eps2 ==> select p r = select p w2)})
     (decreases (size eps))
 let rec compose_wires #eps1 #eps2 w1 w2 eps =
+  eq_lemma (intersect eps eps2) empty;
   empty_intersection_lemma_forall eps eps2;
   if eps = empty then w2
   else
@@ -526,7 +529,7 @@ let pre_effi (c:config) =
   is_T_exp (t_of_conf c) && is_E_ffi (e_of_t_exp (t_of_conf c))
 
 val step_ffi_e: c:config{pre_effi c} -> Tot config
-let step_ffi_e (Conf l m s en (T_exp (E_ffi 'a 'b n fn es inj)) tr) = match es with
+let step_ffi_e (Conf l m s en (T_exp (E_ffi 'a 'b n _ fn es inj)) tr) = match es with
   | []    -> Conf l m s en (T_red (R_ffi n fn [] inj)) tr
   | e::tl  -> Conf l m ((Frame m en (F_ffi n fn tl [] inj) tr)::s) en (T_exp e) (hide [])
 
@@ -587,7 +590,7 @@ let step_assec_e1 (Conf l m s en (T_exp (E_assec e1 e2)) tr) =
 val step_assec_e2: c:config{is_value_ps c /\ is_sframe c is_F_assec_ps}
                   -> Tot config
 let step_assec_e2 (Conf l _ ((Frame m en (F_assec_ps e) tr)::s) _
-                   (T_val (V_prins ps)) tr') =
+                   (T_val (V_eprins ps)) tr') =
   Conf l m ((Frame m en (F_assec_e ps) (concat_traces tr tr'))::s) en (T_exp e) (hide [])
 
 val step_assec_red: c:config{is_value c /\ is_sframe c is_F_assec_e}
@@ -682,7 +685,7 @@ type sstep: config -> config -> Type =
     -> sstep c c'
 
   | C_mkwire_e2:
-    c:config{is_value c /\ is_sframe c is_F_mkwire_ps}
+    c:config{is_value_ps c /\ is_sframe c is_F_mkwire_ps}
     -> c':config{c' = step_mkwire_e2 c}
     -> sstep c c'
 
@@ -847,7 +850,6 @@ let rec slice_v #meta p v =
   match v with
     | V_prin _                  -> def
     | V_eprins _                -> def
-    | V_prins _                 -> def
 
     | V_unit                    -> def
     | V_bool _                  -> def
@@ -856,7 +858,7 @@ let rec slice_v #meta p v =
       let Meta bps cb wps cw = m' in
       let v'' = s p v' in
       let m'' = Meta bps cb (intersect wps (singleton p)) cw in
-      let _ = admitP (wps = empty ==> intersect wps (singleton p) = empty) in
+      let _ = admitP (is_empty wps ==> is_empty (intersect wps (singleton p))) in
       D_v m'' (V_opaque v'' m'' s c sps)
 
     | V_box ps v                ->
@@ -881,22 +883,6 @@ and slice_en p en =
            else
              Some (slice_v p (D_v.v (Some.v (en x))))
 
-type compose_v_meta_inv (m1:v_meta) (m2:v_meta) (cmeta:v_meta) =
- subset (Meta.bps cmeta) (union (Meta.bps m1) (Meta.bps m2))            /\
- ((Meta.cb m1 = Can_b /\ Meta.cb m2 = Can_b) ==> Meta.cb cmeta = Can_b)   /\
- subset (Meta.wps cmeta) (union (Meta.wps m1) (Meta.wps m2))            /\
- ((Meta.cw m1 = Can_w /\ Meta.cw m2 = Can_w) ==> Meta.cw cmeta = Can_w)
-
-val compose_opaque_meta: m1:v_meta -> m2:v_meta -> Tot (r:v_meta{compose_v_meta_inv m1 m2 r})
-let compose_opaque_meta m1 m2 =
-  let Meta bps1 cb1 wps1 cw1 = m1 in
-  let Meta bps2 cb2 wps2 cw2 = m2 in
-
-  let cb = if cb1 = Can_b && cb2 = Can_b then Can_b else Cannot_b in
-  let cw = if cw1 = Can_w && cw2 = Can_w then Can_w else Cannot_w in
-
-  Meta (union bps1 bps2) cb (union wps1 wps2) cw
-
 (* TODO: FIXME: discriminators are not generated properly, they don't have index argument *)
 val is_v_emp: #meta:v_meta -> v:value meta -> Tot bool
 let is_v_emp #meta v = match v with
@@ -912,11 +898,6 @@ val is_v_eprins: #meta:v_meta -> v:value meta -> Tot bool
 let is_v_eprins #meta v = match v with
   | V_eprins _ -> true
   | _          -> false
-
-val is_v_prins: #meta:v_meta -> v:value meta -> Tot bool
-let is_v_prins #meta v = match v with
-  | V_prins _ -> true
-  | _         -> false
 
 val is_v_unit: #meta:v_meta -> v:value meta -> Tot bool
 let is_v_unit #meta v = match v with
@@ -958,9 +939,6 @@ let is_v_emp_clos #meta v = match v with
   | V_emp_clos _ _ -> true
   | _              -> false
 
-type compose_fn_wrapper =
-  | Mk_c_w: ('a -> 'a -> Tot 'a) -> compose_fn_wrapper
-
 val compose_vals: #m1:v_meta -> #m2:v_meta -> v1:value m1 -> v2:value m2
                  -> Tot (r:dvalue{compose_v_meta_inv m1 m2 (D_v.meta r)})
                     (decreases %[v1])
@@ -971,41 +949,13 @@ let rec compose_vals #m1 #m2 v1 v2 =
  else
    let emp = D_v (Meta empty Can_b empty Can_w) V_emp in
    match v1 with
-     | V_prin p1 ->
-       if is_v_prin v2 && V_prin.c v1 = V_prin.c v2 then
-	 D_v m1 v1
-       else emp
-       
-     | V_eprins eps1 ->
-       if is_v_eprins v2 && V_eprins.c v1 = V_eprins.c v2 then
-	 D_v m1 v1
-       else emp
-
-     | V_prins ps1 ->
-       if is_v_prins v2 && V_prins.c v1 = V_prins.c v2 then
-	 D_v m1 v1
-       else emp
-
-     | V_unit ->
-       if is_v_unit v2 then
-	 D_v m1 v1
-       else emp
-
-     | V_bool b1 ->
-       if is_v_bool v2 && V_bool.c v1 = V_bool.c v2 then
-	 D_v m1 v1
-       else emp
-
-     | V_opaque 'a v1 m1 s1 c1 sps1 ->
+     | V_prin _
+     | V_eprins _
+     | V_unit
+     | V_bool _ -> D_v m1 v1
+     | V_opaque 'a _ _ _ _ _ ->
        if is_v_opaque v2 then
-	 let V_opaque 'b v2 m2 s2 c2 sps2 = v2 in
-	 let c1' = Mk_c_w c1 in
-	 let c2' = Mk_c_w c2 in
-	 if c1' = c2' then
-	   let v' = c1 v1 v2 in
-	   let m' = compose_opaque_meta m1 m2 in
-	   D_v m' (V_opaque v' m' s1 c1 sps1)
-	 else emp
+	 Ffibridge.compose_v_opaques v1 v2
        else emp
 
      | V_box ps1 v1 ->
@@ -1014,14 +964,13 @@ let rec compose_vals #m1 #m2 v1 v2 =
          if ps1 = ps2 then
            let D_v meta v = compose_vals v1 v2 in
            D_v (Meta ps1 Can_b (Meta.wps meta) Cannot_w) (V_box ps1 v)
-         else
-           emp
+         else emp
        else emp
 
      | V_wire eps1 w1 ->
        if is_v_wire v2 then
          let V_wire eps2 w2 = v2 in
-         if intersect eps1 eps2 = empty then
+         if is_empty (intersect eps1 eps2) then
            D_v (Meta empty Can_b (union eps1 eps2) Cannot_w)
                (V_wire (union eps1 eps2) (compose_wires #eps1 #eps2 w1 w2 eps1))
          else emp
@@ -1029,26 +978,19 @@ let rec compose_vals #m1 #m2 v1 v2 =
 
      | V_clos en1 x1 e1 ->
        if is_v_clos v2 then
-         let V_clos en2 x2 e2 = v2 in
-         if x1 = x2 && e1 = e2 then
-           D_v m1 (V_clos (compose_envs en1 en2) x1 e1)
-         else emp
+         let V_clos en2 _ _ = v2 in
+         D_v m1 (V_clos (compose_envs en1 en2) x1 e1)
        else emp
 
      | V_fix_clos en1 f1 x1 e1 ->
        if is_v_fix_clos v2 then
-         let V_fix_clos en2 f2 x2 e2 = v2 in
-         if f1 = f2 && x1 = x2 && e1 = e2 then
-           D_v m1 (V_fix_clos (compose_envs en1 en2) f1 x1 e1)
-         else emp
+         let V_fix_clos en2 _ _ _ = v2 in
+         D_v m1 (V_fix_clos (compose_envs en1 en2) f1 x1 e1)
        else emp
 
      | V_emp_clos x1 e1 ->
        if is_v_emp_clos v2 then
-         let V_emp_clos x2 e2 = v2 in
-         if x1 = x2 && e1 = e2 then
-           D_v m1 (V_emp_clos x1 e1)
-         else emp
+         D_v m1 (V_emp_clos x1 e1)
        else emp
 
 and compose_envs en1 en2 =
@@ -1075,7 +1017,7 @@ let rec compose_vals_m ps m =
   let Some p = choose ps in
   let Some (D_v meta v) = select p m in
   let ps_rest = remove p ps in
-  if ps_rest = empty then D_v meta v
+  if is_empty ps_rest then D_v meta v
   else
     let D_v _ v' = compose_vals_m ps_rest m in
     compose_vals v v'
@@ -1085,7 +1027,7 @@ let rec compose_envs_m ps m =
   let Some p = choose ps in
   let Some en = select p m in
   let ps_rest = remove p ps in
-  if ps_rest = empty then en
+  if is_empty ps_rest then en
   else
     let en' = compose_envs_m ps_rest m in
     compose_envs en en'
@@ -1099,7 +1041,7 @@ opaque val slice_wire_sps:
 let rec slice_wire_sps #eps ps w =
   let Some p = choose ps in
   let ps_rest = remove p ps in
-  if ps_rest = empty then
+  if is_empty ps_rest then
     if mem p eps then
       update p (Some.v (select p w)) OrdMap.empty
     else OrdMap.empty
@@ -1121,7 +1063,6 @@ let rec slice_v_sps #meta ps v =
   match v with
    | V_prin _            -> def
    | V_eprins _          -> def
-   | V_prins _           -> def
 
    | V_unit              -> def
    | V_bool _            -> def
@@ -1130,12 +1071,12 @@ let rec slice_v_sps #meta ps v =
      let Meta bps cb wps cw = m' in
      let v'' = sps ps v' in
      let m'' = Meta bps cb (intersect wps ps) cw in
-     let _ = admitP (wps = empty ==> intersect wps ps = empty) in
+     let _ = admitP (is_empty wps ==> is_empty (intersect wps ps)) in
      D_v m'' (V_opaque v'' m'' s c sps)
 
    | V_box ps' v         ->
      let D_v meta' v' =
-       if intersect ps' ps = empty then emp
+       if is_empty (intersect ps ps') then emp
        else slice_v_sps ps v
      in
      D_v (Meta ps' Can_b (Meta.wps meta') Cannot_w) (V_box ps' v')

@@ -48,3 +48,4 @@ dump
 *.a
 *.cmxa
 *.so
+/VS/
