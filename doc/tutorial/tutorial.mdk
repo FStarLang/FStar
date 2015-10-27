@@ -2062,7 +2062,9 @@ property proven by the lemma.
 Likewise, here's a revised type for `sorted_concat_lemma`. This time,
 we instruct F\* and the SMT solver to associate the lemma property
 only with very specific terms: just those that have the shape
-`sorted (append 11 (pivot::l2))`. The more specific a pattern you can provide,
+```
+sorted (append 11 (pivot::l2))```
+The more specific a pattern you can provide,
 the more discriminating the SMT solver will be in applying lemmas,
 keeping your verification times acceptable.
 
@@ -2635,12 +2637,18 @@ we give the intuition of the two most interesting cases:
     to apply the `context_invariance` lemma to obtain that
     `typing empty v = typing g v` and complete the proof of this case.
   * Case `x <> y`: We have `subst x v e = e` and
-    `typing gx e = Some t_e` and need to show that `typing g e = Some t_e`.
+    `typing gx e = Some t_e` and need to show that
+```
+typing g e = Some t_e
+```
     We have that `EquivE (EVar y) gx g` since `x <> y` so we can apply
     the `context_invariance` lemma to conclude.
 * Case `e = EAbs y t_y e1`:
   We have that `typing gxy e1 = Some t_e1`,
-  and need to show that `typing gy e1 = Some t_e1`.
+  and need to show that
+```
+typing gy e1 = Some t_e1
+```
   * Case `x = y`: We have `subst x v e = EAbs y t_y e1`.
     Since `x = y` the `x` binder in `gxy` is spurious (we have `Equal gy gxy`)
     and can apply the `typing_extensional` lemma.
@@ -2649,7 +2657,11 @@ we give the intuition of the two most interesting cases:
     a dependently typed one) we can swap the `x` and `y` binding to show
     that `Equal gxy xyx`. By the `typing_extensional` lemma we obtain that
     `typing gxy e1 == typing gyx e1`. By the induction hypothesis we thus
-    obtain that `typing gy (subst x v e1) == Some t_e1`, and by the definition
+    obtain that
+```
+typing gy (subst x v e1) == Some t_e1
+```
+    and by the definition
     of `typing` we conclude that `typing g (EAbs y t_y (subst x v e)) = t_e`.
 
 We now have the tools we need to prove preservation:
@@ -3352,8 +3364,12 @@ kind PurePre = Type
 kind PureWP (a:Type) = PurePost a -> PurePre
 ```
 
-For example, one computation type for `0` is `PURE int return_zero return_zero` where
-`return_zero = fun (p:(int -> Type)) -> p 0`.  This means that in order to
+For example, one computation type for `0` is
+`PURE int return_zero return_zero` where
+```
+return_zero = fun (p:(int -> Type)) -> p 0
+```
+This means that in order to
 prove any property `p` about the result of the computation `0` is
 suffices to prove `p 0`---which is of course what you would
 expect. The type `return_zero` is an instance of the more general form
@@ -3368,8 +3384,10 @@ When sequentially composing two pure computations using
 `e1: PURE t1 wp1 wlp1` and
 `e2: (x:t1 -> PURE t2 (wp2 x) (wlp2 x))`,
 we type the composed computation as
-`PURE t2 (bind_PURE wp1 wp2) (bind_PURE wlp1 wlp2)`, where:
-
+```
+PURE t2 (bind_PURE wp1 wp2) (bind_PURE wlp1 wlp2)
+```
+where:
 ```
 type bind_PURE (#a:Type) (#b:Type)
                (wp1: PureWP a)
@@ -3643,7 +3661,13 @@ relating the `()` to the resulting heap, it suffices to prove
 ~Remark
 F\* provides support for user-defined custom operators. To allow you to
 write `!r` for `read r` and `r := v` instead of `ST.write r v`, we define
-`let op_Bang x = ST.read x` and `let op_Colon_Equals x v = ST.write x v`.
+```
+let op_Bang x = ST.read x
+```
+and
+```
+let op_Colon_Equals x v = ST.write x v
+```
 ~
 
 As with the `PureWP`, the predicate transformers `StateWP t` form a
