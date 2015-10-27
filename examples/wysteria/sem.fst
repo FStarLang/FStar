@@ -19,6 +19,9 @@ open AST
 (* pre returns comp, for src it's never Skip *)
 type comp = | Do | Skip | NA
 
+val is_empty: eprins -> Tot bool
+let is_empty s = size s = 0
+
 (* TODO: FIXME: workaround for projectors *)
 val e_of_t_exp: t:term{is_T_exp t} -> Tot exp
 let e_of_t_exp (T_exp e) = e
@@ -340,7 +343,7 @@ let pre_unbox c = match c with
     if as_m = Par then
       if subset ps1 ps2 then Do else NA
     else
-      if not (intersect ps1 ps2 = empty) then Do else NA
+      if not (is_empty (intersect ps1 ps2)) then Do else NA
 
   | _ -> NA
 
@@ -474,7 +477,7 @@ let step_concatwire_red (Conf l _ ((Frame m en (F_concatwire_e2 v1) tr)::s) _ (T
 val pre_concatwire: config -> Tot comp
 let pre_concatwire c = match c with
   | Conf _ _ _ _ (T_red (R_concatwire (V_wire eps1 _) (V_wire eps2 _))) tr ->
-    if intersect eps1 eps2 = empty then Do else NA
+    if is_empty (intersect eps1 eps2) then Do else NA
    
   | _ -> NA
 
@@ -495,7 +498,7 @@ let empty_intersection_lemma_forall eps1 eps2 =
   forall_intro #prin #(fun p -> mem p eps1 ==> not (mem p eps2)) (empty_intersection_lemma eps1 eps2)
   
 opaque val compose_wires:
- #eps1:eprins -> #eps2:eprins{intersect eps1 eps2 = empty}
+ #eps1:eprins -> #eps2:eprins{is_empty (intersect eps1 eps2)}
  -> w1:v_wire eps1 -> w2:v_wire eps2
  -> eps:eprins{subset eps eps1}
  -> Tot (r:v_wire (union eps eps2)
@@ -505,6 +508,7 @@ opaque val compose_wires:
                                      /\ (mem p eps2 ==> select p r = select p w2)})
     (decreases (size eps))
 let rec compose_wires #eps1 #eps2 w1 w2 eps =
+  eq_lemma (intersect eps eps2) empty;
   empty_intersection_lemma_forall eps eps2;
   if eps = empty then w2
   else
@@ -854,7 +858,7 @@ let rec slice_v #meta p v =
       let Meta bps cb wps cw = m' in
       let v'' = s p v' in
       let m'' = Meta bps cb (intersect wps (singleton p)) cw in
-      let _ = admitP (wps = empty ==> intersect wps (singleton p) = empty) in
+      let _ = admitP (is_empty wps ==> is_empty (intersect wps (singleton p))) in
       D_v m'' (V_opaque v'' m'' s c sps)
 
     | V_box ps v                ->
@@ -966,7 +970,7 @@ let rec compose_vals #m1 #m2 v1 v2 =
      | V_wire eps1 w1 ->
        if is_v_wire v2 then
          let V_wire eps2 w2 = v2 in
-         if intersect eps1 eps2 = empty then
+         if is_empty (intersect eps1 eps2) then
            D_v (Meta empty Can_b (union eps1 eps2) Cannot_w)
                (V_wire (union eps1 eps2) (compose_wires #eps1 #eps2 w1 w2 eps1))
          else emp
@@ -1013,7 +1017,7 @@ let rec compose_vals_m ps m =
   let Some p = choose ps in
   let Some (D_v meta v) = select p m in
   let ps_rest = remove p ps in
-  if ps_rest = empty then D_v meta v
+  if is_empty ps_rest then D_v meta v
   else
     let D_v _ v' = compose_vals_m ps_rest m in
     compose_vals v v'
@@ -1023,7 +1027,7 @@ let rec compose_envs_m ps m =
   let Some p = choose ps in
   let Some en = select p m in
   let ps_rest = remove p ps in
-  if ps_rest = empty then en
+  if is_empty ps_rest then en
   else
     let en' = compose_envs_m ps_rest m in
     compose_envs en en'
@@ -1037,7 +1041,7 @@ opaque val slice_wire_sps:
 let rec slice_wire_sps #eps ps w =
   let Some p = choose ps in
   let ps_rest = remove p ps in
-  if ps_rest = empty then
+  if is_empty ps_rest then
     if mem p eps then
       update p (Some.v (select p w)) OrdMap.empty
     else OrdMap.empty
@@ -1067,12 +1071,12 @@ let rec slice_v_sps #meta ps v =
      let Meta bps cb wps cw = m' in
      let v'' = sps ps v' in
      let m'' = Meta bps cb (intersect wps ps) cw in
-     let _ = admitP (wps = empty ==> intersect wps ps = empty) in
+     let _ = admitP (is_empty wps ==> is_empty (intersect wps ps)) in
      D_v m'' (V_opaque v'' m'' s c sps)
 
    | V_box ps' v         ->
      let D_v meta' v' =
-       if intersect ps' ps = empty then emp
+       if is_empty (intersect ps ps') then emp
        else slice_v_sps ps v
      in
      D_v (Meta ps' Can_b (Meta.wps meta') Cannot_w) (V_box ps' v')
