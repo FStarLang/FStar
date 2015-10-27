@@ -4,6 +4,7 @@ Heading Base  : 2
 Author        : The F* Team
 Affiliation   : MSR, MSR-Inria, Inria
 Colorizer     : fstar
+Package       : fullpage
 
 .Comment      : replace=""
 ~CH           : .comment color=green author=CH
