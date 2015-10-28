@@ -76,7 +76,7 @@ type value: v_meta -> Type =
   | V_box     : #meta:v_meta -> ps:prins -> v:value meta{is_meta_boxable ps meta}
                 -> value (Meta ps Can_b (Meta.wps meta) Cannot_w)
                 
-  | V_wire    : eps:eprins -> m:v_wire eps
+  | V_wire    : all:eprins -> eps:eprins -> m:v_wire eps
                 -> value (Meta empty Can_b eps Cannot_w)
 
   | V_clos    : en:env -> x:varname -> e:exp

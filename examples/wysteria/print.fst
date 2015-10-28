@@ -121,8 +121,8 @@ let rec value_to_string #meta v =
       | V_opaque 'a _ _ _ _ _ -> "V_opaque"
       | V_box ps v'          ->
 	tagged_binary_to_string "V_box" (prins_to_string ps) (value_to_string v')
-      | V_wire eps m         ->
-        tagged_unary_to_string "V_wire" (v_wire_to_string #eps m)
+      | V_wire all eps m     ->
+        tagged_binary_to_string "V_wire" (prins_to_string all) (v_wire_to_string #eps m)
       | V_clos _ x _         ->
 	tagged_unary_to_string "V_clos" x
       | V_fix_clos _ f x e   ->
