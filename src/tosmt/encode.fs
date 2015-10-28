@@ -1474,7 +1474,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
        let tname, ttok, env = new_typ_constant_and_tok_from_lid env lid in
        let xx = ("x", Term_sort) in
        let x = mkFreeV xx in
-       let valid_b2t_x = mk_Valid(Term.mkApp("Prims.b2t", [x])) in
+       let valid_b2t_x = Term.mkApp("Valid", [Term.mkApp("Prims.b2t", [x])]) in //NS: Explicitly avoid the Vaild(b2t t) inlining 
        let decls = [Term.DeclFun(tname, [Term_sort], Type_sort, None);
                     Term.Assume(Term.mkForall([[valid_b2t_x]], [xx],
                                               Term.mkEq(valid_b2t_x, Term.mkApp("BoxBool_proj_0", [x]))),

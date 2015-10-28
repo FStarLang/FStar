@@ -16,11 +16,14 @@ let empty _ = OrdSet.empty #prin #p_cmp
 val mem: p:prin -> s:eprins -> Tot (b:bool{b ==> not (s = empty ())})
 let mem p s = OrdSet.mem p s
 
+type Equal: eprins -> eprins -> Type =
+  fun eps1 eps2 -> forall x. mem x eps1 = mem x eps2
+
 val singleton: p:prin -> Pure prins (True)
                                    (fun s -> s =!= empty () /\ (forall p'. mem p' s = (p = p')))
 let singleton p =
   let s = OrdSet.singleton p in
-  let _ = assert (not (s = empty ())) in
+  let _ = cut (~ (OrdSet.Equal s OrdSet.empty)) in
   s
 
 val subset: s1:eprins -> s2:eprins
@@ -32,7 +35,7 @@ val union: s1:eprins -> s2:eprins
                                     (forall p. mem p s = (mem p s1 || mem p s2)))
 let union s1 s2 =
   let s = OrdSet.union s1 s2 in
-  let _ = assert (s = empty () <==> (s1 = empty () /\ s2 = empty ())) in
+  let _ = cut (OrdSet.Equal s OrdSet.empty ==> (OrdSet.Equal s1 OrdSet.empty /\ OrdSet.Equal s2 OrdSet.empty)) in
   s
 
 val size: s:eprins -> Pure nat (True) (fun n -> n = 0 <==> s = empty ())
@@ -50,9 +53,9 @@ val remove: p:prin -> s:prins
 let remove p s = OrdSet.remove p s
 
 val eq_lemma: s1:eprins -> s2:eprins
-              -> Lemma (requires (forall p. mem p s1 = mem p s2)) (ensures (s1 = s2))
-	        [SMTPat (s1 = s2)]
-let eq_lemma s1 s2 = ()
+              -> Lemma (requires (Equal s1 s2)) (ensures (s1 = s2))
+	        [SMTPatT (Equal s1 s2)]
+let eq_lemma s1 s2 = OrdSet.eq_lemma s1 s2
 
 //----- prins interface -----//
 

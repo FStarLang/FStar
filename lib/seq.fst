@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi Set;
-    other-files: seq.fsi
+    other-files: ext.fst set.fsi seq.fsi
   --*)
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
@@ -77,12 +77,12 @@ let lemma_index_app1 s1 s2 i  = ()
 let lemma_index_app2 s2 s2 i  = ()
 let lemma_index_slice s i j k = ()
 
-logic type Eq (#a:Type) (s1:seq a) (s2:seq a) =
+opaque type Eq (#a:Type) (s1:seq a) (s2:seq a) =
   (length s1 = length s2
    /\ (forall (i:nat{i < length s1}).{:pattern (index s1 i); (index s2 i)} (index s1 i == index s2 i)))
 
 (*This should be provable now*)
-assume Extensionality: forall (a:Type) (s1:seq a) (s2:seq a). Eq s1 s2 <==> (s1=s2)
+assume Extensionality: forall (a:Type) (s1:seq a) (s2:seq a).{:pattern (Eq s1 s2)} Eq s1 s2 <==> (s1=s2)
 
 let lemma_eq_intro s1 s2 = ()
 let lemma_eq_refl s1 s2  = ()

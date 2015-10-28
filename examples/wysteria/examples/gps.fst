@@ -64,11 +64,11 @@ let rec waps #eps ps w f =
   let y = projwire_s p w in
   let wp = mkwire_s (singleton p) (f p y) in
   if ps' = empty () then
-    let _ = assert (ps = singleton p) in
+    let _ = eq_lemma ps (singleton p) in
     wp
   else
     let w' = waps ps' w f in
-    let _ = assert (ps = union (singleton p) ps') in
+    let _ = eq_lemma ps (union (singleton p) ps') in
     concat_wire wp w'
 
 val gps_sec: ps:prins -> w:Wire int ps -> unit

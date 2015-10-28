@@ -55,6 +55,11 @@ let size (#k:Type) (#v:Type) #f m = OrdSet.size (Mk_map.d m)
 
 open FStar.FunctionalExtensionality
 
+opaque type Equal (#k:Type) (#v:Type) (#f:cmp k) (m1:ordmap k v f) (m2:ordmap k v f) = 
+  (forall x. select #k #v #f x m1 = select #k #v #f x m2)
+
+let eq_intro (#k:Type) (#v:Type) #f m1 m2 = ()
+
 let eq_lemma (#k:Type) (#v:Type) #f m1 m2 =
   let Mk_map s1 g1 = m1 in
   let Mk_map s2 g2 = m2 in

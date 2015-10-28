@@ -181,15 +181,13 @@ let rec eq_remove (#a:Type) #f x s = match s with
   | []    -> ()
   | _::tl -> eq_remove #_ #f x tl
 
-let size_empty (#a:Type) #f = ()
+let size_empty (#a:Type) #f s = ()
 
 let rec size_remove (#a:Type) #f x s = match s with
   | hd::tl ->
     if x = hd then () else size_remove #_ #f x tl
 
 let rec size_singleton (#a:Type) #f x = ()
-
-let s_eq_empty (#a:Type) #f s = ()
 
 let rec subset_size (#a:Type) #f x y = match x, y with
   | [], _          -> ()
