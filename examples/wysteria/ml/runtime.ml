@@ -34,7 +34,8 @@ let establish_server (callback:chan_in -> chan_out -> unit) (port:int) =
 
 let server_read (c:chan_in) :(prin * redex) = Marshal.input c
 let server_write (out:chan_out) (dv:dvalue) :unit = Marshal.output ~closures:true out dv; IO.flush out; IO.close_out out
-let create_thread (f:unit -> unit) :unit = let _ = Thread.create f () in ()
+(*let create_thread (f:unit -> unit) :unit = let _ = Thread.create f () in ()*)
+let create_thread (f:unit -> unit) :unit = f ()
 
 let is_server _ = Sys.argv.(1) = "0"
 let me _ = Sys.argv.(2)

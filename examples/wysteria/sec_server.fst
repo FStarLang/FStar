@@ -81,7 +81,7 @@ let handle_connection c_in c_out =
   if OrdMap.size env_m' = size ps then
     let _ = admitP (contains_ps ps env_m') in
     let _ = admitP (contains_ps ps out_m') in
-    print_string "Launching a thread\n";
+    print_string "Running secure computation\n";
     create_thread (do_sec_comp ps env_m' out_m' x e);
     psmap_ref := OrdMap.remove ps (!psmap_ref)
   else
