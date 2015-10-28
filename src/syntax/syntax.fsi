@@ -45,11 +45,11 @@ type withinfo_t<'a,'t> = {
 (* Free term and type variables *)
 type var<'t>  = withinfo_t<lident,'t>
 type fieldname = lident
-type bvdef = {ppname:ident; realname:ident}
+type bvdef = {
+    ppname:ident; //programmer-provided name for pretty-printing 
+    index:int     //de Bruijn index 0-based, counting up from the binder
+}
 type bvar<'t> = withinfo_t<bvdef,'t>
-(* Bound vars have a name for pretty printing,
-   and a unique name generated during desugaring.
-   Only the latter is used during type checking.  *)
 
 (* Term language *)
 type sconst =
@@ -63,69 +63,73 @@ type sconst =
   | Const_float       of double
   | Const_bytearray   of array<byte> * Range.range
   | Const_string      of array<byte> * Range.range           (* unicode encoded, F#/Caml independent *)
+
 type pragma =
   | SetOptions of string
   | ResetOptions
+
 type memo<'a> = ref<option<'a>>
+
 type arg_qualifier =
   | Implicit
   | Equality
 type aqual = option<arg_qualifier>
-
 type universe = 
   | U_zero
   | U_succ  of universe
   | U_max   of universe * universe
   | U_var   of univ_var
+  | U_unif  of Unionfind.uvar<option<universe>>
 and univ_var = ident
 
 type universes = list<universe>
 
 type term' =
-  | Tm_bvar       of bv * universes
-  | Tm_fvar       of fv * universes * option<fv_qual>
-  | Tm_constant   of sconst
-  | Tm_type       of universe
-  | Tm_abs        of binders * term
-  | Tm_fun        of binders * comp                              (* (xi:ti) -> M t' wp *)
+  | Tm_bvar       of bv * universes  //bound variable, referenced by de Bruijn index
+  | Tm_name       of bv * universes  //local constant, referenced by a unique name derived from bv.ppname and bv.index
+  | Tm_fvar       of fv * universes  //fully qualified reference to a top-level symbol from a module
+  | Tm_constant   of sconst 
+  | Tm_type       of universe       
+  | Tm_abs        of binders * term                              (* fun (xi:ti) -> t *)
+  | Tm_arrow      of binders * comp                              (* (xi:ti) -> M t' wp *)
   | Tm_refine     of bv * term                                   (* x:t{phi} *)
   | Tm_app        of term * args                                 (* h tau_1 ... tau_n, args in order from left to right *)
   | Tm_match      of term * list<(pat * option<term> * term)>    (* optional when clause in each equation *)
-  | Tm_ascribed   of term * term * option<lident>
+  | Tm_ascribed   of term * term * option<lident>                (* an effect label is the third arg, filled in by the type-checker *)
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
-  | Tm_uvar       of uvar * term                                 (* not present after 1st round tc *)
+  | Tm_uvar       of uvar * term                                 (* the 2nd arg is the type at which this uvar is introduced *)
   | Tm_delayed    of term * subst_t * memo<term>                 (* A delayed substitution --- always force it before inspecting the first arg *)
-  | Tm_meta       of meta                                        (* No longer tag every expression with info, only selectively *)
+  | Tm_meta       of meta                                        (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
 and pat' =
-  | Pat_disj     of list<pat>
   | Pat_constant of sconst
-  | Pat_cons     of fv * option<fv_qual> * list<(pat * bool)>  (* flag marks an explicitly provided implicit *)
-  | Pat_var      of bv
-  | Pat_wild     of bv                                         (* need stable names for even the wild patterns *)
-  | Pat_dot_term of bv * term
-and letbinding = {
-    lbname :lbname;
-    lbunivs:list<univ_var>;
-    lbtyp  :typ;
-    lbeff  :lident;
-    lbdef  :term
+  | Pat_disj     of list<pat>                                    (* disjunctive patterns (not allowed to nest): D x | E x -> e *)
+  | Pat_cons     of fv * list<(pat * bool)>                      (* flag marks an explicitly provided implicit *)
+  | Pat_var      of bv                                           (* a pattern bound variable (linear in a pattern) *)
+  | Pat_wild     of bv                                           (* need stable names for even the wild patterns *)
+  | Pat_dot_term of bv * term                                    (* dot patterns: determined by other elements in the pattern and type *)
+and letbinding = {  //let f : forall u1..un. M t = e 
+    lbname :lbname;         //f
+    lbunivs:list<univ_var>; //u1..un
+    lbtyp  :typ;            //t
+    lbeff  :lident;         //M
+    lbdef  :term            //e
 }
 and comp_typ = {
   effect_name:lident;
   result_typ:typ;
   effect_args:args;
   flags:list<cflags>
-  }
+}
 and comp' =
   | Total of typ
   | Comp of comp_typ
 and term = syntax<term',term'>
-and typ = term
+and typ = term                                                   (* sometimes we use typ to emphasize that a term is a type *)
 and pat = withinfo_t<pat',term'>
 and comp = syntax<comp', unit>
 and arg = term * aqual                                           (* marks an explicitly provided implicit arg *)
 and args = list<arg>
-and binder = bv * aqual                                        (* f:   #n:nat -> vector n int -> T; f #17 v *)
+and binder = bv * aqual                                          (* f:   #n:nat -> vector n int -> T; f #17 v *)
 and binders = list<binder>                                       (* bool marks implicit binder *)
 and cflags =
   | TOTAL
@@ -161,7 +165,7 @@ and letbindings = bool * list<letbinding>       (* let recs may have more than o
 and subst_t = list<list<subst_elt>>
 and subst_elt = bvdef * term
 and freevars = set<bv>
-and uvars    = set<(uvar * term')>
+and uvars    = set<uvar>
 and syntax<'a,'b> = {
     n:'a;
     tk:memo<'b>;
@@ -170,14 +174,14 @@ and syntax<'a,'b> = {
     uvs:memo<uvars>;
 }
 and bv = bvar<term'>
-and fv = var<term'>
+and fv = var<term'> * option<fv_qual>
 
 type lcomp = {
     eff_name: lident;
     res_typ: typ;
     cflags: list<cflags>;
     comp: unit -> comp //a lazy computation
-    }
+}
 type freevars_l = list<bv>
 type formula = typ
 type formulae = list<typ>
@@ -200,7 +204,7 @@ type qualifier =
   | HasMaskedEffect
   | Effect
 
-type tycon = lident * binders * term
+type tycon = lident * binders * typ                   (* I (x1:t1) ... (xn:tn) : t *)
 type monad_abbrev = {
   mabbrev:lident;
   parms:binders;
@@ -232,21 +236,42 @@ type eff_decl = {
     trivial:typ;
 }
 and sigelt =
-  | Sig_tycon          of lident * binders * typ * list<lident> * list<lident> * list<qualifier> * Range.range
-  (* list<lident> identifies mutuals, second list<lident> are all the constructors *)
-  | Sig_typ_abbrev     of lident * binders * knd * typ * list<qualifier> * Range.range
-  | Sig_datacon        of lident * typ * tycon * list<qualifier> * list<lident> (* mutuals *) * Range.range
-  (* the tycon is the inductive type of the value this constructs *)
-  | Sig_val_decl       of lident * typ * list<qualifier> * Range.range
-  | Sig_assume         of lident * formula * list<qualifier> * Range.range
-  | Sig_let            of letbindings * Range.range * list<lident> * list<qualifier>
-  | Sig_main           of term * Range.range
-  | Sig_bundle         of list<sigelt> * list<qualifier> * list<lident> * Range.range
-    (* an inductive type is a bundle of all mutually defined Sig_tycons and Sig_datacons *)
-    (* perhaps it would be nicer to let this have a 2-level structure, e.g. list<list<sigelt>>,
-       where each higher level list represents one of the inductive types and its constructors.
-       NS: the current order is convenient as it matches the type-checking order for the mutuals;
-           all the tycons and typ_abbrevs first; then all the data which may refer to the tycons/abbrevs *)
+  | Sig_tycon          of lident                   //type l (x1:t1) ... (xn:tn) = t 
+                       * binders                   //(x1:t1) ... (xn:tn)
+                       * typ                       //t
+                       * list<lident>              //mutually defined types
+                       * list<lident>              //data constructors for ths type
+                       * list<qualifier>           
+                       * Range.range
+(* an inductive type is a Sig_bundle of all mutually defined Sig_tycons and Sig_datacons.
+   perhaps it would be nicer to let this have a 2-level structure, e.g. list<list<sigelt>>,
+   where each higher level list represents one of the inductive types and its constructors.
+   However, the current order is convenient as it matches the type-checking order for the mutuals;
+   i.e., all the tycons and typ_abbrevs first; then all the data which may refer to the tycons/abbrevs *)
+  | Sig_bundle         of list<sigelt>              //the set of mutually defined type and data constructors 
+                       * list<qualifier> 
+                       * list<lident> 
+                       * Range.range
+  | Sig_datacon        of lident 
+                       * typ 
+                       * tycon                      //the inductive type of the value this constructs
+                       * list<qualifier> 
+                       * list<lident>               //mutually defined types 
+                       * Range.range
+  | Sig_val_decl       of lident 
+                       * typ 
+                       * list<qualifier> 
+                       * Range.range
+  | Sig_let            of letbindings 
+                       * Range.range 
+                       * list<lident>               //mutually defined
+                       * list<qualifier>
+  | Sig_main           of term
+                       * Range.range
+  | Sig_assume         of lident 
+                        * formula 
+                        * list<qualifier> 
+                        * Range.range
   | Sig_new_effect     of eff_decl * Range.range
   | Sig_sub_effect     of sub_eff * Range.range
   | Sig_effect_abbrev  of lident * binders * comp * list<qualifier> * Range.range
@@ -262,80 +287,62 @@ type modul = {
 }
 type path = list<string>
 type subst = list<subst_elt>
-val syn: 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
-val dummyRange: range
-val mk_ident: (string * range) -> ident
-val id_of_text: string -> ident
-val text_of_id: ident -> string
-val text_of_path: path -> string
-val lid_equals: lident -> lident -> Tot<bool>
-val bvd_eq: bvdef<'a> -> bvdef<'a> -> Tot<bool>
-val order_bvd: either<bvdef<'a>, bvdef<'b>> -> either<bvdef<'c>, bvdef<'d>> -> int
-val lid_with_range: lident -> range -> lident
-val range_of_lid: lident -> range
-val range_of_lbname: lbname -> range
-val lid_of_ids: list<ident> -> lident
-val ids_of_lid: lident -> list<ident>
-val lid_of_path: path -> range -> lident
-val path_of_lid: lident -> path
-val text_of_lid: lident -> string
+
 val withsort: 'a -> 'b -> withinfo_t<'a,'b>
 val withinfo: 'a -> 'b -> Range.range -> withinfo_t<'a,'b>
 
-val ktype:knd
-val keffect: knd
-val kun:knd
-val tun:typ
-val no_fvs: freevars
-val no_uvs: uvars
-val freevars_of_list: list<either<btvar, bvvar>> -> freevars
+type mk_t_a<'a,'b> = option<'b> -> range -> syntax<'a, 'b>
+type mk_t = mk_t_a<term',term'>
+(* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
+val mk: 'a -> mk_t_a<'a,'b>
+
+val mk_lb :         (lbname * list<univ_var> * lident * typ * term) -> letbinding
+val mk_Tm_app:     term -> args -> mk_t
+//val mk_Tm_app_flat: term -> args -> mk_t
+val extend_app:     term -> arg -> mk_t
+val mk_Total:       typ -> comp
+val mk_Comp:        comp_typ -> comp
+
+val dummyRange:      range
+val mk_ident:        (string * range) -> ident
+val id_of_text:      string -> ident
+val text_of_id:      ident -> string
+val text_of_path:    path -> string
+val lid_of_ids:      list<ident> -> lident
+val ids_of_lid:      lident -> list<ident>
+val lid_of_path:     path -> range -> lident
+val path_of_lid:     lident -> path
+val text_of_lid:     lident -> string
+val lid_with_range:  lident -> range -> lident
+val range_of_lid:    lident -> range
+val lid_equals:      lident -> lident -> Tot<bool>
+val bvd_eq:          bvdef -> bvdef -> Tot<bool>
+val order_bvd:       bvdef -> bvdef -> Tot<int>
+val range_of_lbname: lbname -> range
+
+val tun:     term
+val no_fvs:  freevars
+val no_uvs:  uvars
+
+val freevars_of_list:    list<bv> -> freevars
 val freevars_of_binders: binders -> freevars
-val list_of_freevars: freevars -> list<either<btvar,bvvar>>
+val list_of_freevars:    freevars -> list<bv>
 val binders_of_freevars: freevars -> binders
-val binders_of_list: list<either<btvar, bvvar>> -> binders
+val binders_of_list:     list<bv> -> binders
 
-val extend_typ_app: (typ * arg) -> option<knd> -> range -> typ
-val mk_Total: typ -> comp
-val mk_Comp: comp_typ -> comp
-
-val mk_Tm_bvar: bvvar -> option<typ> -> range -> term
-val mk_Tm_fvar: (fvvar * option<fv_qual>) -> option<typ> -> range -> term
-val mk_Tm_constant: sconst -> option<typ> -> range -> term
-val mk_Tm_abs: (binders * term) -> option<typ> -> range -> term
-val mk_Tm_abs': (binders * term) -> option<typ> -> range -> term
-val mk_Tm_app: (term * args) -> option<typ> -> range -> term
-val mk_Tm_app': (term * args) -> option<typ> -> range -> term
-val mk_Tm_app_flat: (term * args) -> option<typ> -> range -> term
-val mk_Tm_match: (term * list<(pat * option<term> * term)>) -> option<typ> -> range -> term
-val mk_Tm_ascribed: (term * typ * option<lident>) -> option<typ> -> range -> term
-val mk_Tm_let: (letbindings * term) -> option<typ> -> range -> term
-val mk_Tm_uvar': (uvar_e * typ) -> option<typ> -> range -> term
-val mk_Tm_uvar: (uvar_e * typ) -> range -> term
-val mk_Tm_delayed: (term * subst_t * memo<term>) -> option<typ> -> range -> term
-val mk_Tm_meta' : meta_e -> option<typ> -> range -> term
-val mk_Tm_meta: meta_e -> term
-val mk_lb : (lbname * lident * typ * term) -> letbinding
-
-//val mk_subst: subst -> subst
-//val extend_subst: subst_elt -> subst -> subst
-
-val null_bvar: 'b -> bv<'a,'b>
-val t_binder: btvar -> binder
-val v_binder: bvvar -> binder
-val null_t_binder: knd -> binder
-val null_v_binder: typ -> binder
-val targ: typ -> arg
-val varg: term -> arg
-val itarg: typ -> arg
-val ivarg: term -> arg
-val is_null_pp: bvdef<'a> -> bool
-val is_null_bvd: bvdef<'a> -> bool
-val is_null_bvar: bv<'a,'b> -> bool
+val null_bvar:      term -> bv
+val mk_binder:      bv -> binder
+val null_binder:    term -> binder
+val arg:            term -> arg
+val iarg:           term -> arg
+val is_null_pp:     bvdef -> bool
+val is_null_bvd:    bvdef -> bool
+val is_null_bvar:   bv -> bool
 val is_null_binder: binder -> bool
-val argpos: arg -> Range.range
-val pat_vars: pat -> list<either<btvdef,bvvdef>>
-val is_implicit: aqual -> bool
-val as_implicit: bool -> aqual
+val argpos:         arg -> Range.range
+val pat_vars:       pat -> list<bvdef>
+val is_implicit:    aqual -> bool
+val as_implicit:    bool -> aqual
 
 
 
