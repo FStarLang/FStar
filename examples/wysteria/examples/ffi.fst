@@ -62,7 +62,9 @@ let eq_lemma s1 s2 = OrdSet.eq_lemma s1 s2
 //----- IO interface -----//
 
 val read_int: unit -> int
-let read_int x = FStar.IO.input_int ()
+let read_int x =
+  FStar.IO.print_string "Enter input: ";
+  FStar.IO.input_int ()
 
 val read_int_tuple: unit -> (int * int)
 let read_int_tuple x =
