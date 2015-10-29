@@ -4,6 +4,8 @@
 --*)
 module M
 
+// Substituting `pos` for a non-refined type makes `f` below typecheck
+// type num = | N of int
 type num = | N of pos
 
 val f: num -> num
