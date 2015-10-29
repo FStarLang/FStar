@@ -99,10 +99,10 @@ effect Wys (a:Type) (req:Requires) (ens:Ensures a) =
 open FStar.Relational
 open FStar.Comp
 
-kind Requires2                  = double mode -> Type
-kind Ensures2 (a:Type) (b:Type) = double mode -> rel a b -> double trace -> Type
+kind Requires2         = double mode -> Type
+kind Ensures2 (a:Type) = double mode -> a -> double trace -> Type
 
-type wys2_encoding (a:Type) (b:Type) (req:Requires2) (ens:Ensures2 a b) (p:rel a b -> heap2 -> Type) (h0:heap2) =
+type wys2_encoding (a:Type) (req:Requires2) (ens:Ensures2 a) (p:a -> heap2 -> Type) (h0:heap2) =
   is_Some (sel (R.l h0) moderef) /\ is_Some (sel (R.r h0) moderef) /\
   req (R (Some.v (sel (R.l h0) moderef)) (Some.v (sel (R.r h0) moderef))) /\
   (forall x h1. (sel (R.l h1) moderef = sel (R.l h0) moderef /\
@@ -113,18 +113,18 @@ type wys2_encoding (a:Type) (b:Type) (req:Requires2) (ens:Ensures2 a b) (p:rel a
                      (R (Some.v (rest_trace (sel (R.l h1) traceref) (sel (R.l h0) traceref)))
                         (Some.v (rest_trace (sel (R.r h1) traceref) (sel (R.r h0) traceref))))) ==> p x h1)
 
-effect Wys2 (a:Type) (b:Type) (req:Requires2) (ens:Ensures2 a b) =
-  STATE2 (rel a b) (fun (p:rel a b -> heap2 -> Type) (h0:heap2) -> wys2_encoding a b req ens p h0)
-                   (fun (p:rel a b -> heap2 -> Type) (h0:heap2) -> wys2_encoding a b req ens p h0)
+effect Wys2 (a:Type) (req:Requires2) (ens:Ensures2 a) =
+  STATE2 a (fun (p:a -> heap2 -> Type) (h0:heap2) -> wys2_encoding a req ens p h0)
+           (fun (p:a -> heap2 -> Type) (h0:heap2) -> wys2_encoding a req ens p h0)
 
 assume val compose_wys2: #a:Type -> #b:Type
                          -> #req0:(mode -> Type) ->#req1:(mode -> Type)
                          -> #ens0:(mode -> a -> trace -> Type) -> #ens1:(mode -> b -> trace -> Type)
                          -> =f0:(unit -> Wys a req0 ens0)
                          -> =f1:(unit -> Wys b req1 ens1)
-                         -> Wys2 a b (fun m0     -> req0 (R.l m0) /\ req1 (R.r m0))
-                                     (fun m0 r t -> ens0 (R.l m0) (R.l r) (R.l t) /\
-                                                    ens1 (R.r m0) (R.r r) (R.r t))
+                         -> Wys2 (rel a b) (fun m0     -> req0 (R.l m0) /\ req1 (R.r m0))
+                                          (fun m0 r t -> ens0 (R.l m0) (R.l r) (R.l t) /\
+                                                      ens1 (R.r m0) (R.r r) (R.r t))
 
 (**********)
 type Box: Type -> prins -> Type
@@ -146,6 +146,9 @@ assume Canbox_option: (forall (a:Type) ps. can_box a ps ==>
 assume Canbox_prod  : (forall (a:Type) (b:Type) ps.
                          (can_box a ps /\ can_box b ps) ==> can_box (a * b) ps)
 assume Canbox_list  : (forall (a:Type) ps. can_box a ps ==> can_box (list a) ps)
+
+assume Canbox_rel   : (forall (a:Type) (b:Type) ps.
+                         (can_box a ps  /\ can_box b ps) ==> can_box (rel a b) ps)
 
 (**********)
 

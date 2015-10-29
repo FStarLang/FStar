@@ -258,7 +258,7 @@ let sstep_sec_slice_lemma c c' h = match h with
   | C_projwire_e c c'      -> Conj () (C_projwire_e (slice_c_sps c) (slice_c_sps c'))
   | C_projwire_red c c'    -> Conj () (C_projwire_red (slice_c_sps c) (slice_c_sps c'))
   | C_projwire_beta c c'   ->
-    let Conf _ (Mode Sec ps) _ _ (T_red (R_projwire p (V_wire eps w))) _ = c in
+    let Conf _ (Mode Sec ps) _ _ (T_red (R_projwire p (V_wire _ eps w))) _ = c in
     let _ = cut (b2t (mem p (intersect eps ps))) in
     let v = v_of_some (select p w) in
     meta_empty_can_b_same_slice_sps v ps;
@@ -268,7 +268,7 @@ let sstep_sec_slice_lemma c c' h = match h with
   | C_concatwire_e2 c c'   -> Conj () (C_concatwire_e2 (slice_c_sps c) (slice_c_sps c'))
   | C_concatwire_red c c'  -> Conj () (C_concatwire_red (slice_c_sps c) (slice_c_sps c'))
   | C_concatwire_beta c c' ->
-    let Conf _ (Mode _ ps) _ _ (T_red (R_concatwire (V_wire eps1 w1) (V_wire eps2 w2))) _ = c in
+    let Conf _ (Mode _ ps) _ _ (T_red (R_concatwire (V_wire _ eps1 w1) (V_wire _ eps2 w2))) _ = c in
     de_morgan_intersect_over_union eps1 eps2 ps;
     slice_wire_compose_lemma_ps #eps1 #eps2 w1 w2 ps;
     Conj () (C_concatwire_beta (slice_c_sps c) (slice_c_sps c'))
@@ -469,7 +469,7 @@ let rec slice_lem_singl_v #m v p = match v with
   | V_box ps v           ->
     let _ = admitP (mem p ps <==> not (is_empty (intersect (singleton p) ps))) in
     if mem p ps then slice_lem_singl_v v p else ()
-  | V_wire eps w         -> slice_lem_singl_wire #eps w p
+  | V_wire _ eps w       -> slice_lem_singl_wire #eps w p
   | V_clos en _ _        -> slice_lem_singl_en en p
   | V_fix_clos en _ _ _  -> slice_lem_singl_en en p
   | V_emp_clos _ _       -> ()
@@ -498,10 +498,11 @@ let boxed_wire_slice_lem ps1 ps2 eps w = if intersect eps ps1 = empty then () el
 val boxed_wire_value_slice_lem:
   ps1:prins -> ps2:prins{not (intersect ps1 ps2 = empty)}
   -> eps:eprins{subset eps ps2} -> w:v_wire eps
+  -> all:eprins
   -> Lemma (requires (True))
-           (ensures (slice_v_sps #(Meta empty Can_b eps Cannot_w) ps1 (V_wire eps w) =
-                    (slice_v_sps #(Meta empty Can_b eps Cannot_w) (intersect ps1 ps2) (V_wire eps w))))
-let boxed_wire_value_slice_lem ps1 ps2 eps w =
+           (ensures (slice_v_sps #(Meta empty Can_b eps Cannot_w) ps1 (V_wire all eps w) =
+                    (slice_v_sps #(Meta empty Can_b eps Cannot_w) (intersect ps1 ps2) (V_wire all eps w))))
+let boxed_wire_value_slice_lem ps1 ps2 eps w all =
   cut (Equal (intersect eps ps1) (intersect eps (intersect ps1 ps2)));
   boxed_wire_slice_lem ps1 ps2 eps w
 
@@ -541,11 +542,11 @@ let rec box_slice_lem #m v ps1 ps2 =
 	box_slice_lem v' ps1 ps';
 	box_slice_lem v' (intersect ps1 ps2) ps';
 	()
-    | V_wire eps w     ->
+    | V_wire all eps w     ->
       let _ = cut (b2t (subset eps ps2)) in
-      boxed_wire_value_slice_lem ps1 ps2 eps w    
-    | V_emp_clos _ _   -> ()
-    | V_emp            -> ()
+      boxed_wire_value_slice_lem ps1 ps2 eps w all
+    | V_emp_clos _ _       -> ()
+    | V_emp                -> ()
 
 val de_morgan_union_over_intersect:
   eps:eprins -> ps1:prins -> ps2:prins
@@ -630,7 +631,7 @@ let rec slc_v_lem_ps #m v p ps = match v with
       let _ = OrdSet.eq_lemma (intersect (union psp ps) ps') empty in
 
       ()
-  | V_wire eps w        ->
+  | V_wire _ eps w      ->
     de_morgan_union_over_intersect eps (singleton p) ps; slc_wire_lem_ps #eps w p ps
   | V_clos en _ _       -> slc_en_lem_ps en p ps
   | V_fix_clos en _ _ _ -> slc_en_lem_ps en p ps
@@ -953,7 +954,7 @@ let sstep_par_slice_lemma c c' h p =
     | C_projwire_beta (Conf _ m _ _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else
-	let Conf _ _ _ _ (T_red (R_projwire p (V_wire eps w))) _ = c in
+	let Conf _ _ _ _ (T_red (R_projwire p (V_wire _ eps w))) _ = c in
 	let v = v_of_some (select p w) in
 	meta_empty_can_b_same_slice v p;
         IntroR (C_projwire_beta (slice_c p c) (slice_c p c'))
@@ -970,7 +971,7 @@ let sstep_par_slice_lemma c c' h p =
     | C_concatwire_beta (Conf _ m _ _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else
-        let Conf _ _ _ _ (T_red (R_concatwire (V_wire eps1 w1) (V_wire eps2 w2))) _ = c in
+        let Conf _ _ _ _ (T_red (R_concatwire (V_wire _ eps1 w1) (V_wire _ eps2 w2))) _ = c in
         slice_wire_compose_lemma #eps1 #eps2 w1 w2 p;
         de_morgan_intersect_over_union eps1 eps2 (singleton p);
         IntroR (C_concatwire_beta (slice_c p c) (slice_c p c'))
@@ -1476,7 +1477,7 @@ let rec slice_v_lem_singl_of_ps #m v ps p = match v with
       ()
     else if not (mem p ps') then ()
     else slice_v_lem_singl_of_ps v' ps p
-  | V_wire eps w        ->
+  | V_wire _ eps w        ->
     let _ = slice_wire_helper_lemma eps ps p in
     //let _ = admitP (b2t (intersect (intersect eps ps) (singleton p) = intersect eps (singleton p))) in
     slice_wire_lem_singl_of_ps #eps w ps p
@@ -2729,7 +2730,7 @@ let rec p_terminating_run_implies_p_terminates_in #ps #pi #pi' #n h = match h wi
 
 assume val v_cmp: varname -> varname -> Tot bool
 
-assume V_cmp_is_total_order: total_order string v_cmp
+assume V_cmp_is_total_order: total_order varname v_cmp
 
 type env_dom = ordset varname v_cmp
 
@@ -2754,7 +2755,7 @@ let rec composable_vals dv1 dv2 = match dv1, dv2 with
     Mk_c_w c1 = Mk_c_w c2
   | D_v _ (V_box #meta1 ps1 v1), D_v _ (V_box #meta2 ps2 v2) ->
     ps1 = ps2 && composable_vals (D_v meta1 v1) (D_v meta2 v2)
-  | D_v _ (V_wire eps1 _), D_v _ (V_wire eps2 _) -> intersect eps1 eps2 = empty
+  | D_v _ (V_wire all1 eps1 _), D_v _ (V_wire all2 eps2 _) -> intersect eps1 eps2 = empty && all1 = all2
   | D_v _ (V_clos en1 x1 e1), D_v _ (V_clos en2 x2 e2) ->
     x1 = x2 && e1 = e2 && composable_envs en1 en2
   | D_v _ (V_fix_clos en1 f1 x1 e1), D_v _ (V_fix_clos en2 f2 x2 e2) ->
@@ -2821,7 +2822,7 @@ let rec composable_vals_symm dv1 dv2 = match dv1, dv2 with
   | D_v _ (V_clos en1 _ _), D_v _ (V_clos en2 _ _)
   | D_v _ (V_fix_clos en1 _ _ _), D_v _ (V_fix_clos en2 _ _ _) ->
     composable_envs_symm en1 en2
-  | D_v _ (V_wire eps1 _), D_v _ (V_wire eps2 _) -> cut (Equal (intersect eps2 eps1) empty)
+  | D_v _ (V_wire _ eps1 _), D_v _ (V_wire _ eps2 _) -> cut (Equal (intersect eps2 eps1) empty)
   | _, _ -> ()
 
 and composable_envs_symm en1 en2 = composable_envs_on_symm en1 en2 (dom_of_env en1)
@@ -2871,7 +2872,7 @@ let rec compose_preserves_composable_vals dv1 dv2 dv3 = match dv1, dv2, dv3 with
     compose_preserves_composable_envs en1 en2 en3
   | D_v _ (V_fix_clos en1 _ _ _), D_v _ (V_fix_clos en2 _ _ _), D_v _ (V_fix_clos en3 _ _ _) ->
     compose_preserves_composable_envs en1 en2 en3
-  | D_v _ (V_wire eps1 _), D_v _ (V_wire eps2 _), D_v _ (V_wire eps3 _) ->
+  | D_v _ (V_wire _ eps1 _), D_v _ (V_wire _ eps2 _), D_v _ (V_wire _ eps3 _) ->
     cut (Equal (intersect (union eps1 eps2) eps3) empty)
   | _ -> ()
 
@@ -2919,7 +2920,7 @@ let rec slice_p_sps_composable_vals #m v p ps = match v with
     else ()
   | V_clos en _ _
   | V_fix_clos en _ _ _ -> slice_p_sps_composable_envs en p ps
-  | V_wire eps _ ->
+  | V_wire _ eps _ ->
     cut (Equal (intersect (intersect eps (singleton p)) (intersect eps ps)) empty)
   | _ -> ()
 
@@ -2957,7 +2958,7 @@ let rec slice_p_p_composable_vals #m v p1 p2 = match v with
     else ()
   | V_clos en _ _
   | V_fix_clos en _ _ _ -> slice_p_p_composable_envs en p1 p2
-  | V_wire eps _ ->
+  | V_wire _ eps _ ->
     cut (Equal (intersect (intersect eps (singleton p1)) (intersect eps (singleton p2))) empty)
   | _ -> ()
 

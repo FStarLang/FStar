@@ -39,4 +39,5 @@ let mill2 _ =
 
 ;;
 
-let _ = main ab mill2 in ()
+let x = main ab mill2 in
+print_bool x

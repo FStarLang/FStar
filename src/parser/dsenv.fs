@@ -280,7 +280,33 @@ type record_or_dc = {
   fields: list<(fieldname * typ)>;
   is_record:bool
 }
-let record_cache : ref<list<record_or_dc>> = Util.mk_ref []
+
+//no top-level pattern in F*, so need to do this ugliness
+let record_cache_aux = 
+    let record_cache : ref<list<list<record_or_dc>>> = Util.mk_ref [[]] in
+    let push () =
+        record_cache := List.hd !record_cache::!record_cache in
+    let pop () = 
+        record_cache := List.tl !record_cache in
+    let peek () = List.hd !record_cache in
+    let insert r = record_cache := (r::peek())::List.tl (!record_cache) in
+    (push, pop, peek, insert) 
+    
+let push_record_cache = 
+    let push, _, _, _ = record_cache_aux in
+    push
+
+let pop_record_cache = 
+    let _, pop, _, _ = record_cache_aux in
+    pop
+
+let peek_record_cache = 
+    let _, _, peek, _ = record_cache_aux in
+    peek
+
+let insert_record_cache = 
+    let _, _, _, insert = record_cache_aux in
+    insert
 
 let extract_record (e:env) = function
   | Sig_bundle(sigs, _, _, _) ->
@@ -314,7 +340,7 @@ let extract_record (e:env) = function
                               parms=parms;
                               fields=fields;
                               is_record=is_rec} in
-                record_cache := record::!record_cache
+                insert_record_cache record
             | _ -> ()
         end
       | _ -> ())
@@ -331,7 +357,7 @@ let try_lookup_record_or_dc_by_field_name env (fieldname:lident) =
   let find_in_cache fieldname =
 //Util.print_string (Util.format1 "Trying field %s\n" fieldname.str);
     let ns, fieldname = fieldname.ns, fieldname.ident in
-    Util.find_map (!record_cache) (fun record ->
+    Util.find_map (peek_record_cache()) (fun record ->
       let constrname = record.constrname.ident in
       let ns = maybe_add_constrname ns constrname in
       let fname = lid_of_ids (ns@[fieldname]) in
@@ -502,6 +528,7 @@ let finish env modul =
     phase=AST.Un}
 
 let push (env:env) =
+    push_record_cache();
     {env with
         sigmap=Util.smap_copy (sigmap env)::env.sigmap;}
 
@@ -512,6 +539,7 @@ let commit_mark env = match env.sigmap with
     | _ -> failwith "Impossible"
 let pop env = match env.sigmap with
     | _::maps ->
+        pop_record_cache();
         {env with
             sigmap=maps}
     | _ -> failwith "No more modules to pop"
