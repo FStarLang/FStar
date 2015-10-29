@@ -2730,7 +2730,7 @@ let rec p_terminating_run_implies_p_terminates_in #ps #pi #pi' #n h = match h wi
 
 assume val v_cmp: varname -> varname -> Tot bool
 
-assume V_cmp_is_total_order: total_order string v_cmp
+assume V_cmp_is_total_order: total_order varname v_cmp
 
 type env_dom = ordset varname v_cmp
 

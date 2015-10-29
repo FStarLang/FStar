@@ -72,15 +72,15 @@ let rec exp_to_string = function
   | E_const c          -> 
     tagged_unary_to_string "E_const" (const_to_string c)
   | E_var x            ->
-    tagged_unary_to_string "E_var" x
+    tagged_unary_to_string "E_var" (name_of_var x)
   | E_let x e1 e2      ->
-    tagged_ternary_to_string "E_let" x (exp_to_string e1) (exp_to_string e2)
+    tagged_ternary_to_string "E_let" (name_of_var x) (exp_to_string e1) (exp_to_string e2)
   | E_abs x e          ->
-    tagged_binary_to_string "E_abs" x (exp_to_string e)
+    tagged_binary_to_string "E_abs" (name_of_var x) (exp_to_string e)
   | E_fix f x e        ->
-    tagged_ternary_to_string "E_fix" f x (exp_to_string e)
+    tagged_ternary_to_string "E_fix" (name_of_var f) (name_of_var x) (exp_to_string e)
   | E_empabs x e       ->
-    tagged_binary_to_string "E_empabs" x (exp_to_string e)
+    tagged_binary_to_string "E_empabs" (name_of_var x) (exp_to_string e)
   | E_app e1 e2        ->
     tagged_binary_to_string "E_app" (exp_to_string e1) (exp_to_string e2)
   | E_ffi 'a 'b n fname _ l _  ->
@@ -124,11 +124,11 @@ let rec value_to_string #meta v =
       | V_wire all eps m     ->
         tagged_binary_to_string "V_wire" (prins_to_string all) (v_wire_to_string #eps m)
       | V_clos _ x _         ->
-	tagged_unary_to_string "V_clos" x
+	tagged_unary_to_string "V_clos" (name_of_var x)
       | V_fix_clos _ f x e   ->
-	tagged_binary_to_string "V_fix_clos" f x
+	tagged_binary_to_string "V_fix_clos" (name_of_var f) (name_of_var x)
       | V_emp_clos x _       ->
-        tagged_unary_to_string "V_emp_clos" x
+        tagged_unary_to_string "V_emp_clos" (name_of_var x)
       | V_emp                -> "V_emp"
   in
   strcat (strcat (strcat s " (") (v_meta_to_string meta)) ")"
