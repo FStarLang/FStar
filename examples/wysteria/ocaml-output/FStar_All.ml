@@ -1,15 +1,6 @@
-
-open Prims
-let pipe_right = (fun _ _ -> (failwith "Not yet implemented:pipe_right"))
-
-let pipe_left = (fun _ _ -> (failwith "Not yet implemented:pipe_left"))
-
-let failwith = (fun _ -> (failwith "Not yet implemented:failwith"))
-
-let exit = (fun _ -> (failwith "Not yet implemented:exit"))
-
-let try_with = (fun _ _ -> (failwith "Not yet implemented:try_with"))
-
-
-
+let failwith x = failwith x
+let exit i = exit i
+let pipe_right a f = f a
+let pipe_left f a = f a
+let try_with f1 f2 = try f1 () with | e -> f2 e
 

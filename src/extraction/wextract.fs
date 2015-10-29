@@ -12,8 +12,10 @@ type name = string
 
 type wexp = string
 
+type wtyp = string
+
 type tlet =
-    | Mk_tlet of (name * wexp)
+    | Mk_tlet of (name * wtyp * wexp)
 
 let fn_map: smap<(wexp * wexp * wexp)> = smap_create 10
 
@@ -119,6 +121,20 @@ let is_wire (t:mlty) =
         | MLTY_Named (_, p) -> string_of_mlpath p = "Wysteria.Wire"
         | _ -> false
 
+let box_content_type (t:mlty) :mlty =
+    match t with
+        | MLTY_Named (l, p) ->
+            if string_of_mlpath p = "Wysteria.Box" then List.hd l
+            else failwith "Cannot get content for non box named type"
+        | _ -> failwith "Cannot get content for non-named type"
+
+let wire_content_type (t:mlty) :mlty =
+    match t with
+        | MLTY_Named (l, p) ->
+            if string_of_mlpath p = "Wysteria.Wire" then List.hd l
+            else failwith "Cannot get content for non wire named type"
+        | _ -> failwith "Cannot get content for non-named type"
+
 let is_wysteria_type (t:mlty) = is_prin t || is_prins t || is_eprins t || is_box t || is_wire t
 
 let slice_value = "Semantics.slice_v_ffi"
@@ -155,6 +171,23 @@ let get_injection (t:mlty) :string =
             "mk_v_opaque x " ^ s1 ^ " " ^ s2 ^ " " ^ s3
     in
     s ^ s'
+
+let name_to_string (s:name) = "\"" ^ s ^ "\""
+
+let rec mlty_to_typ (t:mlty) :string =
+    if is_bool t then "T_bool"
+    else if is_unit t then "T_unit"
+    else if is_prin t then "T_prin"
+    else if is_prins t then "T_eprins"
+    else if is_box t then "T_box (" ^ (mlty_to_typ (box_content_type t)) ^ ")"
+    else if is_wire t then "T_wire (" ^ (mlty_to_typ (wire_content_type t)) ^ ")"
+    else
+        match t with
+            | MLTY_Named (l, p) ->
+                let n = "T_cons (" ^ (name_to_string (string_of_mlpath p)) in
+                let args = List.fold_left (fun s a -> s ^ " (" ^ (mlty_to_typ a) ^ ");") "" l in        
+                n ^ ", [" ^ args ^ "])"
+            | _ -> "T_unknown"
 
 let is_ffi ({expr = e; ty = t}:mlexpr) :(bool * string) =
     match e with
@@ -199,12 +232,16 @@ let check_pats_for_bool (l:list<(mlpattern * option<mlexpr> * mlexpr)>) :(bool *
             | (MLP_Const (MLC_Bool _), MLP_Const (MLC_Bool _)) -> true, e1, e2
             | _ -> def
 
-let name_to_string (s:name) = "\"" ^ s ^ "\""
+let mk_var (s:string) (t:mlty) :wexp =
+    "mk_var " ^ name_to_string s ^ " (" ^ mlty_to_typ t ^ ")"
+
+let mk_varname (s:string) (t:mlty) :wexp =
+    "mk_varname " ^ name_to_string s ^ " (" ^ mlty_to_typ t ^ ")"
 
 let rec extract_mlexp ({expr = e; ty = t}:mlexpr) :wexp =
     match e with
         | MLE_Const c          -> "mk_const (" ^ extract_mlconst c ^ ")"
-        | MLE_Var x            -> "mk_var " ^ name_to_string (idsym x)
+        | MLE_Var x            -> mk_var (idsym x) t
         | MLE_Name (p, s)      ->
             let ss = string_of_mlpath (p, s) in
             let _ =
@@ -212,14 +249,14 @@ let rec extract_mlexp ({expr = e; ty = t}:mlexpr) :wexp =
                     Util.print_string (Util.format1 "Warning: name not applied: %s\n" (string_of_mlpath (p, s)))
                 else ()
             in
-            "mk_var " ^ (name_to_string s)
+            mk_var s t
         | MLE_Let ((b, l), e') ->
             if b then failwith "Nested recursive lets are not supported yet"
             else
                 let lb = List.hd l in
                 let lbname = idsym lb.mllb_name in
                 let lbbody = lb.mllb_def in
-                "mk_let " ^ (name_to_string lbname) ^ " (" ^ extract_mlexp lbbody ^ ") (" ^ extract_mlexp e' ^ ")"
+                "mk_let (" ^ (mk_varname lbname lbbody.ty) ^ ") (" ^ extract_mlexp lbbody ^ ") (" ^ extract_mlexp e' ^ ")"
         | MLE_App (f, args)    ->
             let b, ffi = is_ffi f in
             if b then
@@ -233,7 +270,7 @@ let rec extract_mlexp ({expr = e; ty = t}:mlexpr) :wexp =
                 else List.fold_left (fun s a -> "mk_app (" ^ s ^ ") (" ^ extract_mlexp a ^ ")") s args
         | MLE_Fun (bs, body) ->
             let body_str = extract_mlexp body in
-            List.fold_left (fun s ((b, _), _) -> "mk_abs " ^ (name_to_string b) ^ " (" ^ s ^ ")") body_str (List.rev bs)
+            List.fold_left (fun s ((b, _), t) -> "mk_abs (" ^ mk_varname b t ^ ") (" ^ s ^ ")") body_str (List.rev bs)
         | MLE_Match (e, bs) ->
             let b, e1, e2 = check_pats_for_bool bs in
             if b then
@@ -282,12 +319,12 @@ let extract_mllb ((b, l):mlletbinding) :tlet =
                 | MLE_Fun (bs, e) ->
                     let first_b, rest_bs = List.hd bs, List.tl bs in
                     let body_exp = extract_mlexp e in
-                    let tl_abs_exp = List.fold_left (fun e (bname, _) -> "mk_abs " ^ name_to_string (idsym bname) ^ " (" ^ e ^ ")") body_exp (List.rev rest_bs) in
-                    let fix_exp = "mk_fix " ^ name_to_string lbname ^ " " ^ name_to_string (idsym (fst first_b)) ^ " (" ^ tl_abs_exp ^ ")" in
-                    Mk_tlet (lbname, fix_exp)
+                    let tl_abs_exp = List.fold_left (fun e (bname, btyp) -> "mk_abs (" ^ mk_varname (idsym bname) btyp ^ ") (" ^ e ^ ")") body_exp (List.rev rest_bs) in
+                    let fix_exp = "mk_fix (" ^ mk_varname lbname lbbody.ty ^ ") (" ^ mk_varname (idsym (fst first_b)) (snd first_b) ^ ") (" ^ tl_abs_exp ^ ")" in
+                    Mk_tlet (lbname, (mlty_to_typ lbbody.ty), fix_exp)
                 | _ -> failwith "Recursive let binding is not an abstraction ?"
         else
-            Mk_tlet (lbname, extract_mlexp lbbody)
+            Mk_tlet (lbname, (mlty_to_typ lbbody.ty), extract_mlexp lbbody)
 
 let extract_mlmodule (m:mlmodule) :(list<tlet> * option<wexp>) =
     List.fold_left (fun (l, top_opt)  tld ->
@@ -335,5 +372,5 @@ let extract (l:list<modul>) (en:FStar.Tc.Env.env) :unit =
     match m_opt with
         | None   -> failwith "End of SMC module, no top level expression"
         | Some m ->
-            let s = List.fold_left (fun acc (Mk_tlet (n, b)) -> "mk_let " ^ (name_to_string n) ^ " (" ^ b ^ ") (" ^ acc ^ ")") m (List.rev l) in
+            let s = List.fold_left (fun acc (Mk_tlet (n, t, b)) -> "mk_let (mk_varname " ^ (name_to_string n) ^ " (" ^ t ^ ")) (" ^ b ^ ") (" ^ acc ^ ")") m (List.rev l) in
             Util.print_string s; Util.print_string "\n"
