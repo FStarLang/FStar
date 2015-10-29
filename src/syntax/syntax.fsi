@@ -173,8 +173,8 @@ and syntax<'a,'b> = {
     fvs:memo<freevars>;
     uvs:memo<uvars>;
 }
-and bv = bvar<term'>
-and fv = var<term'> * option<fv_qual>
+and bv = bvar<term>
+and fv = var<term> * option<fv_qual>
 
 type lcomp = {
     eff_name: lident;

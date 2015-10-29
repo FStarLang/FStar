@@ -173,8 +173,8 @@ and syntax<'a,'b> = {
     fvs:memo<freevars>;
     uvs:memo<uvars>;
 }
-and bv = bvar<term'>
-and fv = var<term'> * option<fv_qual>
+and bv = bvar<term>
+and fv = var<term> * option<fv_qual>
 
 type lcomp = {
     eff_name: lident;
@@ -407,7 +407,7 @@ let argpos (x:arg) = (fst x).pos
 let tun      = mk_Tm_meta Meta_unknown
 let null_id  = mk_ident("_", dummyRange)
 let null_bvd = {ppname=null_id; index=0}
-let null_bvar (k:term) : bv = {v=null_bvd; sort=k.n; p=dummyRange}
+let null_bvar (k:term) : bv = {v=null_bvd; sort=k; p=dummyRange}
 let mk_binder (a:bv) : binder = a, None
 let null_binder t : binder = null_bvar t, None
 let iarg t : arg = t, Some Implicit

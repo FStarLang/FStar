@@ -51,6 +51,8 @@
   <ItemGroup>
     <Compile Include="syntax.fsi" />
     <Compile Include="syntax.fs" />
+    <Compile Include="const.fs" />
+    <Compile Include="visit.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\basic\basic.fsproj">
