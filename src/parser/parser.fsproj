@@ -13,7 +13,7 @@
     <Name>parser</Name>
     <TargetFrameworkProfile />
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\VS\</SolutionDir>
-    <RestorePackages>true</RestorePackages>
+    <RestorePackages>false</RestorePackages>
     <NuGetPackageImportStamp>7fc78bb6</NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -121,7 +121,7 @@
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="..\VS\packages\FsLexYacc.6.1.0\build\FsLexYacc.targets" Condition="Exists('..\VS\packages\FsLexYacc.6.1.0\build\FsLexYacc.targets')" />
+  <Import Project="..\VS\packages\FsLexYacc.6.1.0\build\FsLexYacc.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
 	     Other similar extension points exist, see Microsoft.Common.targets.
 	<Target Name="BeforeBuild">
