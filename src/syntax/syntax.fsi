@@ -299,10 +299,12 @@ val withinfo: 'a -> 'b -> Range.range -> withinfo_t<'a,'b>
 val mk: 'a -> mk_t_a<'a,'b>
 
 val mk_lb :         (lbname * list<univ_var> * lident * typ * term) -> letbinding
-val mk_Tm_app:     term -> args -> mk_t
+val mk_Tm_app:      term -> args -> mk_t
 val extend_app:     term -> arg -> mk_t
 val mk_Total:       typ -> comp
 val mk_Comp:        comp_typ -> comp
+val bv_to_tm:       bv -> term
+val bv_to_name:     bv -> term
 
 val dummyRange:      range
 val mk_ident:        (string * range) -> ident
@@ -320,6 +322,7 @@ val lid_equals:      lident -> lident -> Tot<bool>
 val bv_eq:           bv -> bv -> Tot<bool>
 val order_bv:        bv -> bv -> Tot<int>
 val range_of_lbname: lbname -> range
+val range_of_bv:     bv -> range
 
 val tun:     term
 val no_fvs:  freevars

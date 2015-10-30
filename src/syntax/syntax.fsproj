@@ -52,7 +52,8 @@
     <Compile Include="syntax.fsi" />
     <Compile Include="syntax.fs" />
     <Compile Include="const.fs" />
-    <Compile Include="visit.fs" />
+    <Compile Include="subst.fsi" />
+    <Compile Include="subst.fs" />
     <Compile Include="util.fs" />
   </ItemGroup>
   <ItemGroup>

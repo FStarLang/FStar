@@ -328,6 +328,7 @@ let range_of_lid (lid:LongIdent) = lid.ident.idRange
 let range_of_lbname (l:lbname) = match l with
     | Inl x -> x.ppname.idRange
     | Inr l -> range_of_lid l
+let range_of_bv x = x.ppname.idRange
 
 (*********************************************************************************)
 (* Syntax builders *)
@@ -355,6 +356,8 @@ let mk (t:'a) : mk_t_a<'a,'b> = fun topt r -> {
     uvs=mk_uvs(); 
     fvs=mk_fvs()
 }
+let bv_to_tm   bv :term = mk (Tm_bvar bv) None (range_of_bv bv)
+let bv_to_name bv :term = mk (Tm_name bv) None (range_of_bv bv)
 let mk_Tm_app (t1:typ) (args:list<arg>) : mk_t = fun k p ->
     match args with
     | [] -> t1
