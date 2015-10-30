@@ -123,6 +123,8 @@ let rec assign_inps ps fvars en =
 (* Counter for generating free wire ids *)
 let ctr :ref int = alloc 1
 
+let init_ctr (x:unit) = ctr := 1
+
 val alloc_wires: n:int{n > 0} -> St wrange
 let alloc_wires n =
   let r = (!ctr + 1, !ctr + n) in
@@ -201,9 +203,16 @@ let ffi_name_to_op s =
   else if s = "Prims.op_Equality" then Eq, T_bool
   else failwith "FFI name not supported"
 
+val unbox_t: typ -> typ
+let unbox_t t = match t with
+  | T_box t' -> t'
+  | _ -> failwith "Unbox_t with a non T_box"
+
 val exp_to_ckt: cktenv -> exp -> (ckt * wrange * typ)
 let rec exp_to_ckt cen e = match e with
-  | E_unbox e' -> exp_to_ckt cen e'
+  | E_unbox e' ->
+    let cs, r, t = exp_to_ckt cen e' in
+    cs, r, unbox_t t
   | E_const c -> const_to_ckt c
   | E_var (Var s t) ->
     let r_opt = cen s in
@@ -601,8 +610,25 @@ let parse_output l t = match t with
 
   | _ -> failwith "Unsupported output type (should have been checked earlier)"
 
+val typ_to_string: typ -> string
+val typ_l_to_string: list typ -> string
+let rec typ_to_string t = match t with
+  | T_prin -> "T_prin"
+  | T_eprins -> "T_eprins"
+  | T_unit -> "T_unit"
+  | T_bool -> "T_bool"
+  | T_cons s args -> strcat "T_cons " (strcat s (strcat " [" (strcat (typ_l_to_string args) " ]")))
+  | T_box t' -> strcat "T_box " (typ_to_string t')
+  | T_wire t' -> strcat "T_wire " (typ_to_string t')
+  | T_fun t1 t2 -> strcat "T_fun " (strcat (typ_to_string t1) (strcat " " (typ_to_string t2)))
+  | T_unknown -> "T_unknown"
+
+and typ_l_to_string l = fold_left (fun s t -> strcat s (strcat "; " (typ_to_string t))) "" l
+
 val rungmw: prin -> prins -> env -> cktenv -> exp -> dvalue
 let rungmw p ps en cen e =
+  init_ctr ();
+
   let m = assign_inps ps (fvs e) en in
   let cs_inp, cen = alloc_input_wires ps m [] cen in
   let cs_e, r, t = exp_to_ckt cen e in
@@ -610,7 +636,8 @@ let rungmw p ps en cen e =
 
   let _ =
     if supported_output_type t then ()
-    else failwith "Output type not supported"
+    else
+      failwith (strcat "Output type not supported: " (typ_to_string t))
   in
 
   let final_ckt = cs_inp @ cs_e @ cs_out in
