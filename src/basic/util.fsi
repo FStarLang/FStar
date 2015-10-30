@@ -148,6 +148,8 @@ type either<'a,'b> =
   | Inl of 'a
   | Inr of 'b
 
+val is_left: either<'a,'b> -> bool
+val is_right: either<'a,'b> -> bool
 val left: either<'a,'b> -> 'a
 val right: either<'a,'b> -> 'b
 val find_dup: ('a -> 'a -> bool) -> list<'a> -> option<'a>

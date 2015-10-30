@@ -76,7 +76,8 @@ let lbname_eq l1 l2 = match l1, l2 with
   | Inr l, Inr m -> lid_equals l m
   | _ -> false
 let fvar_eq fv1 fv2  = lid_equals fv1.v fv2.v
-let bv_to_tm bv us = mk (Tm_bvar(bv,us)) None (range_of_bv bv)
+let bv_to_tm   bv = mk (Tm_bvar bv) None (range_of_bv bv)
+let bv_to_name bv = mk (Tm_name bv) None (range_of_bv bv)
 let new_bv ropt t = mkbv (genident ropt) 0 t
 let bvd_of_str s = mkbv (id_of_text s) 0 
 let set_bv_range bv r = {bv with ppname=mk_ident(bv.ppname.idText, r)}
@@ -84,8 +85,8 @@ let set_lid_range l r =
   let ids = (l.ns@[l.ident]) |> List.map (fun i -> mk_ident(i.idText, r)) in
   lid_of_ids ids
 let fv l dc = withinfo l tun (range_of_lid l), dc
-let fvar dc l r = mk (Tm_fvar(fv (set_lid_range l r) dc, [])) None r
-let arg_of_non_null_binder (b, imp) = (bv_to_tm b [], imp)
+let fvar dc l r = mk (Tm_fvar(fv (set_lid_range l r) dc)) None r
+let arg_of_non_null_binder (b, imp) = (bv_to_tm b, imp)
 
 let args_of_non_null_binders (binders:binders) =
     binders |> List.collect (fun b ->
@@ -127,7 +128,7 @@ let subst_to_string s = s |> List.map (fun (b, _) -> b.ppname.idText) |> String.
 
 (* delayed substitutions *)
 let subst_bv s a = Util.find_map s (function DB (i, t) when i=a.index -> Some t | _ -> None)
-let subst_nm s (a,us) = Util.find_map s (function NM (x, i) when bv_eq a x -> Some (bv_to_tm ({x with index=i}) us) | _ -> None)
+let subst_nm s a = Util.find_map s (function NM (x, i) when bv_eq a x -> Some (bv_to_tm ({x with index=i})) | _ -> None)
 let rec subst' (s:subst_t) t = match s with
   | [] 
   | [[]] -> Visit.force_uvar t
@@ -146,16 +147,14 @@ let rec subst' (s:subst_t) t = match s with
                 None
                 t.pos
 
-        | Tm_delayed(Inr mk_t, m) ->
-          let t = mk_t () in
-          m := Some t;
-          subst' s t
+        | Tm_delayed(Inr _, _) -> 
+          failwith "Impossible: Visit.force_uvar removes lazy delayed nodes"
 
-        | Tm_bvar (a, _) ->
+        | Tm_bvar a ->
           aux subst_bv a s
 
-        | Tm_name (a, us) -> 
-          aux subst_nm (a,us) s
+        | Tm_name a -> 
+          aux subst_nm a s
 
         | Tm_constant _
         | Tm_uvar _
@@ -200,6 +199,40 @@ let subst_binders' s bs =
         else subst_binder' (shift_subst' i s) b)
 let subst_arg' s (t, imp) = (subst' s t, imp)
 let subst_args' s = List.map (subst_arg' s)
+let subst_pat' s pat : (pat * int) = 
+    let rec aux n pat : (pat * int) = match pat.v with 
+      | Pat_disj [] -> failwith "Impossible: empty disjunction"
+     
+      | Pat_constant _ -> pat, n
+
+      | Pat_disj(p::ps) -> 
+        let p, m = aux n pat in
+        let ps = List.map (fun p -> fst (aux n p)) ps in
+        {pat with v=Pat_disj(p::ps)}, m
+
+      | Pat_cons(fv, pats) ->
+        let pats, n = pats |> List.fold_left (fun (pats, n) (p, imp) -> 
+            let p, m = aux n p in
+            ((p,imp)::pats, m)) ([], n) in
+        {pat with v=Pat_cons(fv, List.rev pats)}, n
+
+      | Pat_var x ->
+        let s = shift_subst' n s in 
+        let x = {x with sort=subst' s x.sort} in
+        {pat with v=Pat_var x}, n + 1
+
+      | Pat_wild x -> 
+        let s = shift_subst' n s in 
+        let x = {x with sort=subst' s x.sort} in
+        {pat with v=Pat_var x}, n //these are not in scope, so don't shift the index
+
+      | Pat_dot_term(x, t0) -> 
+        let s = shift_subst' n s in
+        let x = {x with sort=subst' s x.sort} in
+        let t0 = subst' s t0 in 
+        {pat with v=Pat_dot_term(x, t0)}, n //these are not in scope, so don't shift the index
+  in aux 0 pat
+
 let push_subst s t = 
     let t = Visit.force_uvar t in 
     match t.n with 
@@ -208,10 +241,24 @@ let push_subst s t =
         | Tm_uvar _ 
         | Tm_constant _
         | Tm_fvar _
-        | Tm_type _ -> t
+        | Tm_type _ 
+        | Tm_unknown -> t
 
         | Tm_bvar _ 
         | Tm_name _  -> subst' s t
+
+        | Tm_uinst(t', us) -> //t must be a variable
+          let t' = subst' s t' in
+          begin match t'.n with
+            | Tm_bvar _
+            | Tm_name _
+            | Tm_fvar _ -> //it remains a variable
+              mk (Tm_uinst(t, us)) None t'.pos
+            | _ -> 
+              //no longer a variable; this can only happend as we're reducing a let binding
+              //universe instantiation is discarded as we reduce
+              t'
+          end
 
         | Tm_app(t0, args) -> mk (Tm_app(subst' s t0, subst_args' s args)) None t.pos
         | Tm_ascribed(t0, t1, lopt) -> mk (Tm_ascribed(subst' s t0, subst' s t1, lopt)) None t.pos
@@ -230,18 +277,35 @@ let push_subst s t =
           let phi = subst' (shift_subst' 1 s) phi in
           mk (Tm_refine(x, phi)) None t.pos
 
-        | Tm_match      of term * list<(pat * option<term> * term)>    (* optional when clause in each equation *)
-        | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
-  
-        | Tm_meta m -> 
-          let m = match m with 
-              | Meta_pattern(t, args) -> Meta_pattern(subst' s t, subst_args' s args)
-              | Meta_named(t, l) -> Meta_named(subst' s t, l)
-              | Meta_labeled(t, msg, r, b) -> Meta_labeled(subst' s t, msg, r, b)
-              | Meta_refresh_label(t, b, r) -> Meta_refresh_label(subst' s t, b, r)
-              | Meta_desugared(t, msi) -> Meta_desugared(subst' s t, msi)
-              | Meta_unknown -> Meta_unknown in 
-         mk (Tm_meta(m)) None t.pos
+        | Tm_match(t0, pats) -> 
+          let t0 = subst' s t0 in
+          let pats = pats |> List.map (fun (pat, wopt, branch) -> 
+            let pat, n = subst_pat' s pat in 
+            let s = shift_subst' n s in 
+            let wopt = match wopt with 
+                | None -> None
+                | Some w -> Some (subst' s w) in
+            let branch = subst' s branch in 
+            (pat, wopt, branch)) in
+          mk (Tm_match(t0, pats)) None t.pos    
+           
+        | Tm_let((is_rec, lbs), body) -> 
+          let n = List.length lbs in
+          let sn = shift_subst' n s in
+          let body = subst' sn body in 
+          let lbs = lbs |> List.map (fun lb -> 
+            let lbt = subst' s lb.lbtyp in
+            let lbd = if is_rec && Util.is_left (lb.lbname) //if it is a recursive local let, then all the let bound names are in scope for the body
+                      then subst' sn lb.lbdef 
+                      else subst' s lb.lbdef in
+            {lb with lbtyp=lbt; lbdef=lbd}) in
+          mk (Tm_let((is_rec, lbs), body)) None t.pos  
+         
+        | Tm_meta(t0, Meta_pattern ps) -> 
+          mk (Tm_meta(subst' s t0, Meta_pattern (subst_args' s ps))) None t.pos
+
+        | Tm_meta(t, m) -> 
+          mk (Tm_meta(subst' s t,  m)) None t.pos 
 
 let rec compress (t:term) = 
     let t = Visit.force_uvar t in 
@@ -254,6 +318,8 @@ let rec compress (t:term) =
             
 let subst s t = subst' (mk_subst s) t
 let subst_comp s t = subst_comp' (mk_subst s) t
+
+
 let subst_formal (f:binder) (a:arg) = DB(0, fst a)
 let mk_subst_one_binder b1 b2 =
      if is_null_binder b1 || is_null_binder b2

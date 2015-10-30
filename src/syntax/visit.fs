@@ -46,7 +46,7 @@ let rec force_uvar_aux pos t = match t.n with
         end
       | Some t' -> let t' = force_uvar_aux pos t' in m := Some t'; t')
   | Tm_ascribed(t, _, _)
-  | Tm_meta(Meta_named(t, _)) when pos -> force_uvar_aux pos t
+  | Tm_meta(t, Meta_named _) when pos -> force_uvar_aux pos t
   | Tm_app({n=Tm_uvar(uv, _)}, args) ->
        begin
           match Unionfind.find uv with
@@ -80,13 +80,17 @@ let rec reduce
       match t.n with
         | Tm_delayed _ -> failwith "Impossible"
         
-        | Tm_bvar(_, us)
-        | Tm_name(_, us)
-        | Tm_fvar(_, us) -> 
+        | Tm_bvar _
+        | Tm_name _
+        | Tm_fvar _ -> 
           let _, env = map env t in
-          [us, [], [], [], []], env 
+          [], env 
+    
+        | Tm_uinst (t, us) -> 
+          let t, env = map env t in 
+          [us, [], [t], [], []], env
 
-        | Tm_meta(Meta_unknown)
+        | Tm_unknown
         | Tm_constant _ -> 
           let _, env = map env t in 
           [], env 
@@ -152,19 +156,15 @@ let rec reduce
         | Tm_uvar(_, t) -> 
           let t, env = map env t in 
           [[], [], [t], [], []], env    
-          
-
-        | Tm_meta(Meta_labeled(t, _, _, _))
-        | Tm_meta(Meta_named(t, _))
-        | Tm_meta(Meta_refresh_label(t, _, _))
-        | Tm_meta(Meta_desugared(t, _)) ->
-          let t, env = map env t in
-          [[], [], [t], [], []], env
-
-        | Tm_meta(Meta_pattern(t,ps)) ->
+         
+        | Tm_meta(t, Meta_pattern ps) ->
           let t,env = map env t in
           let args,env = map_args map env ps in 
           [[], [], [t], [], args], env
+
+        | Tm_meta(t, _) ->
+          let t, env = map env t in
+          [[], [], [t], [], []], env
 
     in
     combine t components env
@@ -205,9 +205,12 @@ let combine e (ec:list<tm_components>) env =
     | Tm_fvar _, _
     | Tm_name _, _
     | Tm_constant _, _
-    | Tm_meta(Meta_unknown), _
+    | Tm_unknown, _
     | Tm_type _, _ -> e
     
+    | Tm_uinst(_, _), [us, [], [t], [], []] -> 
+      mk (Tm_uinst(t, us))
+
     | Tm_abs(_, _), [_, bs, [t], _, _] -> 
       mk (Tm_abs(bs, t))
 
@@ -247,12 +250,12 @@ let combine e (ec:list<tm_components>) env =
 
     | Tm_delayed _, _ -> failwith "Impossible"
 
-    | Tm_meta(Meta_named(_, l)), [_, _, [t], _, _] ->             mk <| Tm_meta(Meta_named(t, l))
-    | Tm_meta(Meta_pattern _), [_, _, [t], _, args] ->            mk <| Tm_meta(Meta_pattern(t, args))
-    | Tm_meta(Meta_labeled(_, l, r, p)), [_, _, [t], _, _] ->     mk <| Tm_meta(Meta_labeled(t, l, r, p))
-    | Tm_meta(Meta_refresh_label(_, b, r)), [_, _, [t], _, _]  -> mk <| Tm_meta(Meta_refresh_label(t, b, r))
-    | Tm_meta(Meta_desugared(_, tag)), [_, _, [t], _, _] ->       mk <| Tm_meta(Meta_desugared(t, tag))
+    | Tm_meta(_, Meta_pattern _), [_, _, [t], _, args] ->            
+      mk <| Tm_meta(t, Meta_pattern args)
     
+    | Tm_meta(_, m), [_, _, [t], _, _] ->             
+      mk <| Tm_meta(t, m)
+
     | _ -> failwith "Impossible" in
    e', env
     
@@ -260,7 +263,7 @@ let collect_from_typ (f:'env -> term -> 'env) (env:'env) (t:typ) : 'env =
    snd <| reduce (fun v env (t:term) ->
                         let env = f env t in
                         match (force_uvar t).n with
-                          | Tm_meta Meta_unknown
+                          | Tm_unknown
                           | Tm_bvar _
                           | Tm_constant _ -> t, env
                           | _ -> v env t)

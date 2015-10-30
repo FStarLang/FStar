@@ -79,9 +79,10 @@ and univ_var = ident
 type universes = list<universe>
 
 type term' =
-  | Tm_bvar       of bv * universes  //bound variable, referenced by de Bruijn index
-  | Tm_name       of bv * universes  //local constant, referenced by a unique name derived from bv.ppname and bv.index
-  | Tm_fvar       of fv * universes  //fully qualified reference to a top-level symbol from a module
+  | Tm_bvar       of bv                //bound variable, referenced by de Bruijn index
+  | Tm_name       of bv                //local constant, referenced by a unique name derived from bv.ppname and bv.index
+  | Tm_fvar       of fv                //fully qualified reference to a top-level symbol from a module
+  | Tm_uinst      of term * universes  //universe instantiation; the first argument must be one of the three constructors above
   | Tm_constant   of sconst 
   | Tm_type       of universe       
   | Tm_abs        of binders * term                              (* fun (xi:ti) -> t *)
@@ -94,7 +95,8 @@ type term' =
   | Tm_uvar       of uvar * term                                 (* the 2nd arg is the type at which this uvar is introduced *)
   | Tm_delayed    of either<(term * subst_t), unit -> term> 
                    * memo<term>                                  (* A delayed substitution --- always force it; never inspect it directly *)
-  | Tm_meta       of meta                                        (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
+  | Tm_meta       of term * metadata                             (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
+  | Tm_unknown                                                   (* only present initially while desugaring a term *)
 and pat' =
   | Pat_constant of sconst
   | Pat_disj     of list<pat>                                    (* disjunctive patterns (not allowed to nest): D x | E x -> e *)
@@ -135,13 +137,12 @@ and cflags =
   | LEMMA
   | DECREASES of term
 and uvar = Unionfind.uvar<uvar_basis<term>>
-and meta =
-  | Meta_pattern       of typ * list<arg>
-  | Meta_named         of typ * lident                                 (* Useful for pretty printing to keep the type abbreviation around *)
-  | Meta_labeled       of typ * string * Range.range * bool            (* Sub-terms in a VC are labeled with error messages to be reported, used in SMT encoding *)
-  | Meta_refresh_label of typ * option<bool> * Range.range             (* Add the range to the label of any labeled sub-term of the type *)
-  | Meta_desugared     of term * meta_source_info                       (* Node tagged with some information about source term before desugaring *)
-  | Meta_unknown       
+and metadata =
+  | Meta_pattern       of list<arg>                              (* Patterns for SMT quantifier instantiation *)
+  | Meta_named         of lident                                 (* Useful for pretty printing to keep the type abbreviation around *)
+  | Meta_labeled       of string * Range.range * bool            (* Sub-terms in a VC are labeled with error messages to be reported, used in SMT encoding *)
+  | Meta_refresh_label of option<bool> * Range.range             (* Add the range to the label of any labeled sub-term of the type *)
+  | Meta_desugared     of meta_source_info                       (* Node tagged with some information about source term before desugaring *)
 and uvar_basis<'a> =
   | Uvar
   | Fixed of 'a
@@ -367,13 +368,6 @@ let mk_Tm_abs  ((bs:binders), (t:typ)) k p =
     | _ -> mk (Tm_abs (bs, t)) k p
 let mk_Tm_ascribed ((t:typ),(k:term)) (p:range) = 
     mk (Tm_ascribed (t, k, None)) (Some k) p
-let mk_Tm_meta     (m:meta) = match m with
-    | Meta_pattern(t, _)
-    | Meta_named(t, _)
-    | Meta_labeled(t, _, _, _)
-    | Meta_refresh_label(t, _, _) 
-    | Meta_desugared(t, _) -> mk (Tm_meta m) (!t.tk) t.pos
-    | Meta_unknown -> mk (Tm_meta m) None dummyRange
 let mk_Tm_delayed  ((t:typ),(s:subst_t),(m:memo<typ>)) = 
     match t.n with 
     | Tm_delayed _ -> failwith "NESTED DELAYED TYPES!" 
@@ -405,7 +399,7 @@ let mk_subst (s:subst)   = s
 let extend_subst x s : subst = x::s
 let argpos (x:arg) = (fst x).pos
 
-let tun      = mk_Tm_meta Meta_unknown
+let tun : term = mk (Tm_unknown) None dummyRange
 let null_id  = mk_ident("_", dummyRange)
 let null_bv k = {ppname=null_id; index=0; sort=k}
 let mk_binder (a:bv) : binder = a, None

@@ -53,6 +53,7 @@
     <Compile Include="syntax.fs" />
     <Compile Include="const.fs" />
     <Compile Include="visit.fs" />
+    <Compile Include="util.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\basic\basic.fsproj">
