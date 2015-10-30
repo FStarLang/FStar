@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Ffibridge --admit_fsi Runtime --admit_fsi FStar.IO --admit_fsi FStar.String;
-    other-files:ghost.fst listTot.fst set.fsi ordset.fsi ordmap.fsi classical.fst heap.fst st.fst all.fst io.fsti string.fst prins.fst ast.fst ffibridge.fsi sem.fst runtime.fsi print.fst
+    other-files:ghost.fst listTot.fst set.fsi ordset.fsi ordmap.fsi classical.fst heap.fst st.fst all.fst list.fst io.fsti string.fst prins.fst ast.fst ffibridge.fsi sem.fst runtime.fsi print.fst ckt.fst
  --*)
 
 module Interpreter
@@ -163,6 +163,11 @@ let rec step_star c =
 
 val do_sec_comp: prin -> r:redex{is_R_assec r} -> ML dvalue
 let do_sec_comp p r =
+  (* let R_assec ps v = r in *)
+  (* let _ = admitP (b2t (is_clos v)) in *)
+  (* let (en, _, e) = get_en_b v in *)
+  (* let _ = Circuit.exp_to_celt p ps en (fun _ -> None) e in *)
+  (* failwith "Bye!" *)
   let (c_in, c_out) = open_connection 8888 in
   let _ = client_write c_out p r in
   client_read c_in

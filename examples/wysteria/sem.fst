@@ -310,13 +310,13 @@ val step_const: c:config{pre_econst c} -> Tot config
 let step_const (Conf l m s en (T_exp (E_const c)) tr) =
   let meta = Meta empty Can_b empty Can_w in
   let v = match c with
-    | C_prin p     -> V_prin p
-    | C_eprins eps -> V_eprins eps
+    | C_prin p       -> V_prin p
+    | C_eprins eps   -> V_eprins eps
 
-    | C_unit _     -> V_unit
-    | C_bool b     -> V_bool b
+    | C_unit _       -> V_unit
+    | C_bool b       -> V_bool b
 
-    | C_opaque 'a v -> V_opaque v meta slice_const compose_const slice_const_sps
+    | C_opaque 'a v _ -> V_opaque v meta slice_const compose_const slice_const_sps
   in
 
   Conf l m s en (T_val v) tr

@@ -73,4 +73,10 @@ let exec_ffi (n:int) (ffi_fn:Obj.t) (l:dvalue list) (ffi_inj:Obj.t) :dvalue =
   in
   cast ((cast ffi_inj) ffi_ret)
   
-let verified_eq _ _ = true
+(**********)
+
+let nat_of_c_opaque c = match c with
+  | C_opaque (_, v, _) -> cast v
+
+let nat_of_v_opaque _ v = match v with
+  | V_opaque (_, v', _, _, _, _) -> cast v'
