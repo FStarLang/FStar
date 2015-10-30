@@ -45,12 +45,6 @@ type withinfo_t<'a,'t> = {
 (* Free term and type variables *)
 type var<'t>  = withinfo_t<lident,'t>
 type fieldname = lident
-type bvdef = {
-    ppname:ident; //programmer-provided name for pretty-printing 
-    index:int     //de Bruijn index 0-based, counting up from the binder
-}
-type bvar<'t> = withinfo_t<bvdef,'t>
-
 (* Term language *)
 type sconst =
   | Const_unit
@@ -98,7 +92,8 @@ type term' =
   | Tm_ascribed   of term * term * option<lident>                (* an effect label is the third arg, filled in by the type-checker *)
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Tm_uvar       of uvar * term                                 (* the 2nd arg is the type at which this uvar is introduced *)
-  | Tm_delayed    of term * subst_t * memo<term>                 (* A delayed substitution --- always force it before inspecting the first arg *)
+  | Tm_delayed    of either<(term * subst_t), unit -> term> 
+                   * memo<term>                                  (* A delayed substitution --- always force it; never inspect it directly *)
   | Tm_meta       of meta                                        (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
 and pat' =
   | Pat_constant of sconst
@@ -160,10 +155,12 @@ and fv_qual =
   | Data_ctor
   | Record_projector of lident                  (* the fully qualified (unmangled) name of the field being projected *)
   | Record_ctor of lident * list<fieldname>     (* the type of the record being constructed and its (unmangled) fields in order *)
-and lbname = either<bvdef, lident>
+and lbname = either<bv, lident>
 and letbindings = bool * list<letbinding>       (* let recs may have more than one element; top-level lets have lidents *)
 and subst_t = list<list<subst_elt>>
-and subst_elt = bvdef * term
+and subst_elt = 
+    | DB of int * term                          (* DB i t: replace a bound variable with index i with term t *)
+    | NM of bv * int                            (* NM x i: replace a local name with a bound variable i *)
 and freevars = set<bv>
 and uvars    = set<uvar>
 and syntax<'a,'b> = {
@@ -173,7 +170,11 @@ and syntax<'a,'b> = {
     fvs:memo<freevars>;
     uvs:memo<uvars>;
 }
-and bv = bvar<term>
+and bv = {
+    ppname:ident; //programmer-provided name for pretty-printing 
+    index:int;     //de Bruijn index 0-based, counting up from the binder
+    sort:term
+}
 and fv = var<term> * option<fv_qual>
 
 type lcomp = {
@@ -192,7 +193,7 @@ type qualifier =
   | Opaque
   | Logic
   | Discriminator of lident                          (* discriminator for a datacon l *)
-  | Projector of lident * bvdef                      (* projector for datacon l's argument x *)
+  | Projector of lident * ident                      (* projector for datacon l's argument x *)
   | RecordType of list<fieldname>                    (* unmangled field names *)
   | RecordConstructor of list<fieldname>             (* unmangled field names *)
   | ExceptionConstructor
@@ -313,8 +314,8 @@ let lid_of_path path pos =
     lid_of_ids ids
 let text_of_lid lid = lid.str
 let lid_equals l1 l2 = l1.str = l2.str
-let bvd_eq (bvd1:bvdef) (bvd2:bvdef) = bvd1.ppname.idText=bvd2.ppname.idText && bvd1.index=bvd2.index
-let order_bvd x y = 
+let bv_eq (bv1:bv) (bv2:bv) = bv1.ppname.idText=bv2.ppname.idText && bv1.index=bv2.index
+let order_bv x y = 
   let i = String.compare x.ppname.idText y.ppname.idText in
   if i = 0 
   then x.index - y.index
@@ -335,7 +336,7 @@ open FStar.Range
 let syn p k f = f k p
 let mk_fvs () = Util.mk_ref None
 let mk_uvs () = Util.mk_ref None
-let new_ftv_set () : set<bv> = Util.new_set (fun x y -> order_bvd x.v y.v) (fun x -> x.v.index + Util.hashcode x.v.ppname.idText)
+let new_ftv_set () : set<bv> = Util.new_set order_bv (fun x -> x.index + Util.hashcode x.ppname.idText)
 let new_uv_set ()   = Util.new_set (fun x y -> Unionfind.uvar_id x - Unionfind.uvar_id y) Unionfind.uvar_id
 let new_uvt_set () = Util.new_set (fun (x, _) (y, _) -> Unionfind.uvar_id x - Unionfind.uvar_id y) (fun (x, _) -> Unionfind.uvar_id x)
 let no_fvs = new_ftv_set()
@@ -376,20 +377,20 @@ let mk_Tm_meta     (m:meta) = match m with
 let mk_Tm_delayed  ((t:typ),(s:subst_t),(m:memo<typ>)) = 
     match t.n with 
     | Tm_delayed _ -> failwith "NESTED DELAYED TYPES!" 
-    | _ -> mk (Tm_delayed(t, s, m))
+    | _ -> mk (Tm_delayed(Inl(t, s), m))
 let mk_Total t : comp = mk (Total t) None t.pos
 let mk_Comp (ct:comp_typ) : comp  = mk (Comp ct) None ct.result_typ.pos
 
 let rec pat_vars p = match p.v with
   | Pat_cons(_, ps) ->
     let vars = List.collect (fun (x, _) -> pat_vars x) ps in
-    if vars |> nodups bvd_eq
+    if vars |> nodups bv_eq
     then vars
     else raise (Error("Pattern variables may not occur more than once", p.p))
-  | Pat_var x -> [x.v]
+  | Pat_var x -> [x]
   | Pat_disj ps ->
     let vars = List.map pat_vars ps in
-    if not (List.tl vars |> Util.for_all (Util.set_eq order_bvd (List.hd vars)))
+    if not (List.tl vars |> Util.for_all (Util.set_eq order_bv (List.hd vars)))
     then
       let vars = Util.concat_l ";\n" (vars |>
           List.map (fun v -> Util.concat_l ", " (List.map (fun x -> x.ppname.idText) v))) in
@@ -406,16 +407,13 @@ let argpos (x:arg) = (fst x).pos
 
 let tun      = mk_Tm_meta Meta_unknown
 let null_id  = mk_ident("_", dummyRange)
-let null_bvd = {ppname=null_id; index=0}
-let null_bvar (k:term) : bv = {v=null_bvd; sort=k; p=dummyRange}
+let null_bv k = {ppname=null_id; index=0; sort=k}
 let mk_binder (a:bv) : binder = a, None
-let null_binder t : binder = null_bvar t, None
+let null_binder t : binder = null_bv t, None
 let iarg t : arg = t, Some Implicit
 let arg t : arg = t, None
-let is_null_pp (b:bvdef) = b.ppname.idText = null_id.idText
-let is_null_bvd (b:bvdef) = is_null_pp b
-let is_null_bvar (b:bv) = is_null_bvd b.v
-let is_null_binder (b:binder) = is_null_bvar (fst b)
+let is_null_bv (b:bv) = b.ppname.idText = null_id.idText
+let is_null_binder (b:binder) = is_null_bv (fst b)
 
 let freevars_of_binders (bs:binders) : freevars =
     List.fold_right (fun (x, _) out -> Util.set_add x out) bs no_fvs

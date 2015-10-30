@@ -37,9 +37,13 @@ let rec force_uvar_aux pos t = match t.n with
           | Fixed t' -> force_uvar_aux pos t'
           | _ -> t
       end
-  | Tm_delayed(_,  _, m) ->
+  | Tm_delayed(f, m) ->
     (match !m with
-      | None -> t
+      | None -> 
+        begin match f with 
+            | Inr c -> let t' = force_uvar_aux pos (c()) in m := Some t'; t'
+            | _ -> t
+        end
       | Some t' -> let t' = force_uvar_aux pos t' in m := Some t'; t')
   | Tm_ascribed(t, _, _)
   | Tm_meta(Meta_named(t, _)) when pos -> force_uvar_aux pos t

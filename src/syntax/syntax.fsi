@@ -45,12 +45,6 @@ type withinfo_t<'a,'t> = {
 (* Free term and type variables *)
 type var<'t>  = withinfo_t<lident,'t>
 type fieldname = lident
-type bvdef = {
-    ppname:ident; //programmer-provided name for pretty-printing 
-    index:int     //de Bruijn index 0-based, counting up from the binder
-}
-type bvar<'t> = withinfo_t<bvdef,'t>
-
 (* Term language *)
 type sconst =
   | Const_unit
@@ -98,7 +92,8 @@ type term' =
   | Tm_ascribed   of term * term * option<lident>                (* an effect label is the third arg, filled in by the type-checker *)
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Tm_uvar       of uvar * term                                 (* the 2nd arg is the type at which this uvar is introduced *)
-  | Tm_delayed    of term * subst_t * memo<term>                 (* A delayed substitution --- always force it before inspecting the first arg *)
+  | Tm_delayed    of either<(term * subst_t), unit -> term> 
+                   * memo<term>                                  (* A delayed substitution --- always force it; never inspect it directly *)
   | Tm_meta       of meta                                        (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
 and pat' =
   | Pat_constant of sconst
@@ -160,10 +155,12 @@ and fv_qual =
   | Data_ctor
   | Record_projector of lident                  (* the fully qualified (unmangled) name of the field being projected *)
   | Record_ctor of lident * list<fieldname>     (* the type of the record being constructed and its (unmangled) fields in order *)
-and lbname = either<bvdef, lident>
+and lbname = either<bv, lident>
 and letbindings = bool * list<letbinding>       (* let recs may have more than one element; top-level lets have lidents *)
 and subst_t = list<list<subst_elt>>
-and subst_elt = bvdef * term
+and subst_elt = 
+   | DB of int * term                          (* DB i t: replace a bound variable with index i with term t *)
+   | NM of bv * int                            (* NM x i: replace a local name with a bound variable i *)
 and freevars = set<bv>
 and uvars    = set<uvar>
 and syntax<'a,'b> = {
@@ -173,7 +170,11 @@ and syntax<'a,'b> = {
     fvs:memo<freevars>;
     uvs:memo<uvars>;
 }
-and bv = bvar<term>
+and bv = {
+    ppname:ident;  //programmer-provided name for pretty-printing 
+    index:int;     //de Bruijn index 0-based, counting up from the binder
+    sort:term
+}
 and fv = var<term> * option<fv_qual>
 
 type lcomp = {
@@ -195,7 +196,7 @@ type qualifier =
   | Opaque
   | Logic
   | Discriminator of lident                          (* discriminator for a datacon l *)
-  | Projector of lident * bvdef                      (* projector for datacon l's argument x *)
+  | Projector of lident * ident                      (* projector for datacon l's argument x *)
   | RecordType of list<fieldname>                    (* unmangled field names *)
   | RecordConstructor of list<fieldname>             (* unmangled field names *)
   | ExceptionConstructor
@@ -287,18 +288,17 @@ type modul = {
 }
 type path = list<string>
 type subst = list<subst_elt>
+type mk_t_a<'a,'b> = option<'b> -> range -> syntax<'a, 'b>
+type mk_t = mk_t_a<term',term'>
 
 val withsort: 'a -> 'b -> withinfo_t<'a,'b>
 val withinfo: 'a -> 'b -> Range.range -> withinfo_t<'a,'b>
 
-type mk_t_a<'a,'b> = option<'b> -> range -> syntax<'a, 'b>
-type mk_t = mk_t_a<term',term'>
 (* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
 val mk: 'a -> mk_t_a<'a,'b>
 
 val mk_lb :         (lbname * list<univ_var> * lident * typ * term) -> letbinding
 val mk_Tm_app:     term -> args -> mk_t
-//val mk_Tm_app_flat: term -> args -> mk_t
 val extend_app:     term -> arg -> mk_t
 val mk_Total:       typ -> comp
 val mk_Comp:        comp_typ -> comp
@@ -316,8 +316,8 @@ val text_of_lid:     lident -> string
 val lid_with_range:  lident -> range -> lident
 val range_of_lid:    lident -> range
 val lid_equals:      lident -> lident -> Tot<bool>
-val bvd_eq:          bvdef -> bvdef -> Tot<bool>
-val order_bvd:       bvdef -> bvdef -> Tot<int>
+val bv_eq:           bv -> bv -> Tot<bool>
+val order_bv:        bv -> bv -> Tot<int>
 val range_of_lbname: lbname -> range
 
 val tun:     term
@@ -330,17 +330,15 @@ val list_of_freevars:    freevars -> list<bv>
 val binders_of_freevars: freevars -> binders
 val binders_of_list:     list<bv> -> binders
 
-val null_bvar:      term -> bv
+val null_bv:      term -> bv
 val mk_binder:      bv -> binder
 val null_binder:    term -> binder
 val arg:            term -> arg
 val iarg:           term -> arg
-val is_null_pp:     bvdef -> bool
-val is_null_bvd:    bvdef -> bool
-val is_null_bvar:   bv -> bool
+val is_null_bv:     bv -> bool
 val is_null_binder: binder -> bool
 val argpos:         arg -> Range.range
-val pat_vars:       pat -> list<bvdef>
+val pat_vars:       pat -> list<bv>
 val is_implicit:    aqual -> bool
 val as_implicit:    bool -> aqual
 
