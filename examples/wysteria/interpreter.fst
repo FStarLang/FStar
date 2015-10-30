@@ -163,14 +163,14 @@ let rec step_star c =
 
 val do_sec_comp: prin -> r:redex{is_R_assec r} -> ML dvalue
 let do_sec_comp p r =
-  (* let R_assec ps v = r in *)
-  (* let _ = admitP (b2t (is_clos v)) in *)
-  (* let (en, _, e) = get_en_b v in *)
-  (* let _ = Circuit.exp_to_celt p ps en (fun _ -> None) e in *)
-  (* failwith "Bye!" *)
-  let (c_in, c_out) = open_connection 8888 in
-  let _ = client_write c_out p r in
-  client_read c_in
+  let R_assec ps v = r in
+  let _ = admitP (b2t (is_clos v)) in
+  let (en, _, e) = get_en_b v in
+  let dv = Circuit.rungmw p ps en (fun _ -> None) e in
+  dv
+  (* let (c_in, c_out) = open_connection 8888 in *)
+  (* let _ = client_write c_out p r in *)
+  (* client_read c_in *)
 
 open FStar.Ghost
 

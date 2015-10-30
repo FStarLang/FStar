@@ -29,4 +29,5 @@ val me       : unit -> ML string
 
 (**********)
 
-val rungmw: string -> string -> int -> unit
+val rungmw: string -> string -> int -> list string
+val list_to_int: list string -> int

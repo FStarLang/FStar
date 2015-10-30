@@ -47,7 +47,7 @@ exception GMWError of string
 let gmwsock = ref Unix.stdin
 let gmwsockset = ref false
 
-let rungmw (conf_fname:string) (out_fname:string) (port:int) :unit =
+let rungmw (conf_fname:string) (out_fname:string) (port:int) :string list =
   begin
     if not (!gmwsockset) then
       let s = Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0 in
@@ -63,4 +63,24 @@ let rungmw (conf_fname:string) (out_fname:string) (port:int) :unit =
   else
     let statusstr = String.make 5 '.' in
     let statusn = Unix.read !gmwsock statusstr 0 4 in
-    assert(statusn = 4)
+    assert(statusn = 4);
+    let inc = open_in out_fname in
+    let rec helper l =
+      try
+	let c = input_char inc in
+	if c = '0' then
+	  helper (l @ ["0"])
+	else if c = '1' then
+	  helper (l @ ["1"])
+	else
+	  helper l
+	with
+	  | End_of_file -> close_in inc; l
+      in
+      helper []
+
+let list_to_int l =
+  let l' = List.rev_append l [] in
+  let s = String.concat "" l' in
+  let sin = Scanf.Scanning.from_string ("0b" ^ s) in
+  Scanf.bscanf sin "%i" (fun x -> x)

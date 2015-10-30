@@ -1,12 +1,13 @@
 (*--build-config
     options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi Ffibridge --admit_fsi FStar.Set --admit_fsi FStar.String --admit_fsi FStar.IO --admit_fsi Runtime;
-    other-files:ghost.fst listTot.fst ordset.fsi ordmap.fsi classical.fst set.fsi heap.fst st.fst all.fst list.fst io.fsti string.fsi prins.fst ast.fst ffibridge.fsi runtime.fsi print.fst
+    other-files:ghost.fst listTot.fst ordset.fsi ordmap.fsi classical.fst set.fsi heap.fst st.fst all.fst list.fst io.fsti string.fsi prins.fst ast.fst ffibridge.fsi sem.fst runtime.fsi print.fst
  --*)
 
 module Circuit
 
 open Prins
 open AST
+open Semantics
 
 open FStar.IO
 
@@ -439,7 +440,7 @@ let dump_gmw prs bckt fd =
   ) 0 inps in
 
   ps "n "; psi (OrdSet.size prs); ps "\n"; //num of parties
-  ps "d "; psi !ctr; ps " "; psi (last_inp_id + 1); ps " "; psi (List.length xors); ps "\n";
+  ps "d "; psi (!ctr + 1); ps " "; psi (last_inp_id + 1); ps " "; psi (List.length xors); ps "\n";
 
   List.iter (fun belt ->
     match belt with
@@ -583,8 +584,25 @@ let supported_output_type t = match t with
   | T_cons _ _ -> is_nat t
   | _          -> false
 
-val exp_to_celt: prin -> prins -> env -> cktenv -> exp -> (ckt * typ)
-let rec exp_to_celt p ps en cen e =
+let const_meta (u:unit) = Meta empty Can_b empty Can_w
+
+val parse_output: list string -> typ -> dvalue
+let parse_output l t = match t with
+  | T_bool     ->
+    if l = ["0"] then D_v (const_meta ()) (V_bool false)
+    else if l = ["1"] then D_v (const_meta ()) (V_bool true)
+    else failwith "Unexpected GMW output for boolean type"
+
+  | T_cons _ _ ->
+    if is_nat t then
+      let n = Runtime.list_to_int l in
+      D_v (const_meta ()) (V_opaque n (const_meta ()) slice_const compose_const slice_const_sps)
+    else failwith "Unsupported output cons (should have been checked earlier)"
+
+  | _ -> failwith "Unsupported output type (should have been checked earlier)"
+
+val rungmw: prin -> prins -> env -> cktenv -> exp -> dvalue
+let rungmw p ps en cen e =
   let m = assign_inps ps (fvs e) en in
   let cs_inp, cen = alloc_input_wires ps m [] cen in
   let cs_e, r, t = exp_to_ckt cen e in
@@ -625,7 +643,5 @@ let rec exp_to_celt p ps en cen e =
   close_write_file fd;
 
   let port = prin_to_gmwport p in
-  Runtime.rungmw conf_fname (out_fname p) port;
-
-  let _ = input_int () in
-  failwith "Bye!"
+  let out_l = Runtime.rungmw conf_fname (out_fname p) port in
+  parse_output out_l t
