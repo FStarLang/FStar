@@ -49,4 +49,5 @@ let mill3 _ =
   true
 ;;
 
-let _ = main abc mill3 in ()
+let x = main abc mill3 in
+print_bool x

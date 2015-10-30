@@ -310,13 +310,13 @@ val step_const: c:config{pre_econst c} -> Tot config
 let step_const (Conf l m s en (T_exp (E_const c)) tr) =
   let meta = Meta empty Can_b empty Can_w in
   let v = match c with
-    | C_prin p     -> V_prin p
-    | C_eprins eps -> V_eprins eps
+    | C_prin p       -> V_prin p
+    | C_eprins eps   -> V_eprins eps
 
-    | C_unit _     -> V_unit
-    | C_bool b     -> V_bool b
+    | C_unit _       -> V_unit
+    | C_bool b       -> V_bool b
 
-    | C_opaque 'a v -> V_opaque v meta slice_const compose_const slice_const_sps
+    | C_opaque 'a v _ -> V_opaque v meta slice_const compose_const slice_const_sps
   in
 
   Conf l m s en (T_val v) tr
@@ -406,10 +406,10 @@ let step_mkwire c = match c with
           ps, mconst_on ps v
         else empty, OrdMap.empty
     in
-    Conf l (Mode Par ps) s en (T_val (V_wire eps w)) tr
+    Conf l (Mode Par ps) s en (T_val (V_wire ps' eps w)) tr
 
   | Conf l (Mode Sec ps) s en (T_red (R_mkwire ps' v)) tr ->
-    Conf l (Mode Sec ps) s en (T_val (V_wire ps' (mconst_on ps' v))) tr
+    Conf l (Mode Sec ps) s en (T_val (V_wire ps' ps' (mconst_on ps' v))) tr
 
 //----- mkwire e1 e2 -----//
 
@@ -435,7 +435,7 @@ let step_projwire_red (Conf l _ ((Frame m en (F_projwire_e p) tr)::s) _ (T_val v
 
 val pre_projwire: config -> Tot comp
 let pre_projwire c = match c with
-  | Conf _ (Mode as_m ps) _ _ (T_red (R_projwire p (V_wire eps _))) _ ->
+  | Conf _ (Mode as_m ps) _ _ (T_red (R_projwire p (V_wire _ eps _))) _ ->
     if as_m = Par then
       if ps = singleton p && mem p eps then Do else NA
     else
@@ -449,7 +449,7 @@ let v_of_some (Some x) = x
 
 val step_projwire: c:config{pre_projwire c = Do} -> Tot config
 let step_projwire c = match c with
-  | Conf l m s en (T_red (R_projwire p (V_wire _ w))) tr ->
+  | Conf l m s en (T_red (R_projwire p (V_wire _ _ w))) tr ->
     Conf l m s en (T_val (v_of_some (select p w))) tr
 
 //----- projwire e1 e2 -----//
@@ -476,7 +476,7 @@ let step_concatwire_red (Conf l _ ((Frame m en (F_concatwire_e2 v1) tr)::s) _ (T
 
 val pre_concatwire: config -> Tot comp
 let pre_concatwire c = match c with
-  | Conf _ _ _ _ (T_red (R_concatwire (V_wire eps1 _) (V_wire eps2 _))) tr ->
+  | Conf _ _ _ _ (T_red (R_concatwire (V_wire _ eps1 _) (V_wire _ eps2 _))) tr ->
     if is_empty (intersect eps1 eps2) then Do else NA
    
   | _ -> NA
@@ -518,8 +518,8 @@ let rec compose_wires #eps1 #eps2 w1 w2 eps =
 
 val step_concatwire: c:config{pre_concatwire c = Do} -> Tot config
 let step_concatwire c = match c with
-  | Conf l m s en (T_red (R_concatwire (V_wire eps1 w1) (V_wire eps2 w2))) tr ->
-    Conf l m s en (T_val (V_wire (union eps1 eps2) (compose_wires #eps1 #eps2 w1 w2 eps1))) tr
+  | Conf l m s en (T_red (R_concatwire (V_wire ps1 eps1 w1) (V_wire ps2 eps2 w2))) tr ->
+    Conf l m s en (T_val (V_wire (union ps1 ps2) (union eps1 eps2) (compose_wires #eps1 #eps2 w1 w2 eps1))) tr
 
 //----- concatwire e1 e2 -----//
 
@@ -865,8 +865,8 @@ let rec slice_v #meta p v =
       let D_v meta' v' = if mem p ps then slice_v p v else emp in
       D_v (Meta ps Can_b (Meta.wps meta') Cannot_w) (V_box ps v')
 
-    | V_wire eps w              -> D_v (Meta empty Can_b (intersect eps (singleton p)) Cannot_w)
-                                      (V_wire (intersect eps (singleton p)) (slice_wire #eps p w))
+    | V_wire all eps w          -> D_v (Meta empty Can_b (intersect eps (singleton p)) Cannot_w)
+                                      (V_wire all (intersect eps (singleton p)) (slice_wire #eps p w))
 
     | V_clos en x e             -> D_v meta (V_clos (slice_en p en) x e)
 
@@ -921,8 +921,8 @@ let is_v_box #meta v = match v with
 
 val is_v_wire: #meta:v_meta -> v:value meta -> Tot bool
 let is_v_wire #meta v = match v with
-  | V_wire _ _ -> true
-  | _          -> false
+  | V_wire _ _ _ -> true
+  | _            -> false
 
 val is_v_clos: #meta:v_meta -> v:value meta -> Tot bool
 let is_v_clos #meta v = match v with
@@ -967,12 +967,12 @@ let rec compose_vals #m1 #m2 v1 v2 =
          else emp
        else emp
 
-     | V_wire eps1 w1 ->
+     | V_wire all1 eps1 w1 ->
        if is_v_wire v2 then
-         let V_wire eps2 w2 = v2 in
-         if is_empty (intersect eps1 eps2) then
+         let V_wire all2 eps2 w2 = v2 in
+         if is_empty (intersect eps1 eps2) && all1 = all2 then
            D_v (Meta empty Can_b (union eps1 eps2) Cannot_w)
-               (V_wire (union eps1 eps2) (compose_wires #eps1 #eps2 w1 w2 eps1))
+               (V_wire all1 (union eps1 eps2) (compose_wires #eps1 #eps2 w1 w2 eps1))
          else emp
        else emp
 
@@ -1081,8 +1081,8 @@ let rec slice_v_sps #meta ps v =
      in
      D_v (Meta ps' Can_b (Meta.wps meta') Cannot_w) (V_box ps' v')
      
-   | V_wire eps m        -> D_v (Meta empty Can_b (intersect eps ps) Cannot_w)
-                                (V_wire (intersect eps ps) (slice_wire_sps #eps ps m))
+   | V_wire all eps m    -> D_v (Meta empty Can_b (intersect eps ps) Cannot_w)
+                                (V_wire all (intersect eps ps) (slice_wire_sps #eps ps m))
 
    | V_clos en x e       -> D_v meta (V_clos (slice_en_sps ps en) x e)
 

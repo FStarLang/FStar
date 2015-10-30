@@ -1,5 +1,5 @@
 
-FSTAR = ../bin/fstar.exe
+FSTAR = ../bin/fstar.exe $(OTHERFLAGS)
 
 all:
 	$(FSTAR) --admit_fsi FStar.Set set.fsi heap.fst st.fst all.fst

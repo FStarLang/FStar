@@ -91,7 +91,7 @@ you to skip directly to step 3 and build F* with just an OCaml compiler.
     - Install the Visual F# Tools (v3.0 or 3.1) from Microsoft
       (e.g. by clicking the "Get Visual F# Tools for Visual Studio 2013"
        link [here](https://msdn.microsoft.com/en-us/vstudio/hh388569.aspx))
-
+  - Run the `src/VS/nuget-restore.bat` script before openting the solution for the first time. F* depends upon NuGet packages that are incompatible with Visual Studio's internal invocation of NuGet's restore feature.
   - Using Visual Studio, open `src/VS/FStar.sln` and build the solution
     (in the menus: Build > Build Solution).
 
@@ -100,14 +100,7 @@ you to skip directly to step 3 and build F* with just an OCaml compiler.
   currently; `make -C src` succeeds but produces a broken binary:
   https://github.com/FStarLang/FStar/issues/159)
 
-**Note:** if the Visual Studio build fails because `parse.fs` and
-  `lex.fs` are not found because of a mysterious issue, try closing
-  and reopening the solution and rebuilding until things magically
-  work (yes, we know it's strange) or do a `make -C src` for getting
-  these files generated before rebuilding with Visual Studio for
-  getting a proper binary:
-  https://github.com/FStarLang/FStar/issues/325 and
-  https://github.com/FStarLang/FStar/issues/73
+**Note:** If Visual Studio fails to open one or more projects, the problem is likely that the NuGet package cache hasn't been restored. You must either exit Visual Studio to restore the cache (using the `src/VS/nuget-restore.bat` script), or restart Visual Studio after having restored the cache. Otherwise, F* may not successfully build (or correctly build).
 
 #### On Linux or Mac OS X using Mono ####
 

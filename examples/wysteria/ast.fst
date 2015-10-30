@@ -14,7 +14,19 @@ open Prins
 
 type other_info = nat
 
-type varname = string
+type typ =
+  | T_prin
+  | T_eprins
+  | T_unit
+  | T_bool
+  | T_cons: cname:string -> args:list typ -> typ
+  | T_box: c:typ -> typ
+  | T_wire: c:typ -> typ
+  | T_fun: typ -> typ -> typ  //not emitting it for now
+  | T_unknown
+
+type varname =
+  | Var: name:string -> ty:typ -> varname
 
 type const =
   | C_prin  : c:prin   -> const
@@ -23,7 +35,7 @@ type const =
   | C_unit  : c:unit -> const
   | C_bool  : c:bool -> const
 
-  | C_opaque: c:'a -> const
+  | C_opaque: c:'a -> typ -> const
 
 type exp =
   | E_aspar     : ps:exp -> e:exp -> exp
@@ -76,7 +88,7 @@ type value: v_meta -> Type =
   | V_box     : #meta:v_meta -> ps:prins -> v:value meta{is_meta_boxable ps meta}
                 -> value (Meta ps Can_b (Meta.wps meta) Cannot_w)
                 
-  | V_wire    : eps:eprins -> m:v_wire eps
+  | V_wire    : all:eprins -> eps:eprins -> m:v_wire eps
                 -> value (Meta empty Can_b eps Cannot_w)
 
   | V_clos    : en:env -> x:varname -> e:exp
@@ -132,8 +144,11 @@ type redex =
 val empty_env: env
 let empty_env = fun _ -> None
 
+val name_of_var: varname -> Tot string
+let name_of_var (Var s _) = s
+
 val update_env: #meta:v_meta -> env -> varname -> value meta -> Tot env
-let update_env #meta en x v = fun y -> if y = x then Some (D_v meta v) else en y
+let update_env #meta en x v = fun y -> if name_of_var y = name_of_var x then Some (D_v meta v) else en y
 
 type as_mode =
   | Par
@@ -339,8 +354,11 @@ let mk_concatwire e1 e2 = E_concatwire e1 e2
 opaque val mk_const: const -> Tot exp
 let mk_const c = E_const c
 
-opaque val mk_var: varname -> Tot exp
-let mk_var x = E_var x
+opaque val mk_varname: string -> typ -> Tot varname
+let mk_varname s t = Var s t
+
+opaque val mk_var: string -> typ -> Tot exp
+let mk_var x t = E_var (Var x t)
 
 opaque val mk_let: varname -> exp -> exp -> Tot exp
 let mk_let x e1 e2 = E_let x e1 e2

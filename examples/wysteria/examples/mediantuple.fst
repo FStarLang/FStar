@@ -44,11 +44,11 @@ let median_spec x1 x2 y1 y2 =
 
 val monolithic_median: x1:int -> x2:int -> y1:int -> y2:int -> Tot int
 let monolithic_median x1 x2 y1 y2 =
-  let a = x1 <= y1 in
-  let x3 = if a then x2 else x1 in
-  let y3 = if a then y1 else y2 in
-  let d = x3 <= y3 in
-  if d then x3 else y3
+  let a = x1 > y1 in
+  let x3 = if a then x1 else x2 in
+  let y3 = if a then y2 else y1 in
+  let d = x3 > y3 in
+  if d then y3 else x3
 
 type median_pre (x1:int) (x2:int) (y1:int) (y2:int) =
   x1 < x2 /\ y1 < y2 /\ distinct x1 x2 y1 y2
@@ -68,7 +68,13 @@ let mono_median _ =
   let y2 = as_par bob_s read_fn in
 
   let g:unit -> Wys int (pre (Mode Sec ab)) post =
-    fun _ -> monolithic_median (unbox_s x1) (unbox_s x2) (unbox_s y1) (unbox_s y2)
+    fun _ -> //commenting it out for circuit backend: monolithic_median (unbox_s x1) (unbox_s x2) (unbox_s y1) (unbox_s y2)
+    let x1 = unbox_s x1 in let x2 = unbox_s x2 in let y1 = unbox_s y1 in let y2 = unbox_s y2 in
+    let a = x1 > y1 in
+    let x3 = if a then x1 else x2 in
+    let y3 = if a then y2 else y1 in
+    let d = x3 > y3 in
+    if d then y3 else x3    
   in
   
   as_sec ab g
@@ -83,8 +89,8 @@ let opt_median _ =
   let cmp:
     x:Box int alice_s -> y:Box int bob_s -> unit
     -> Wys bool (pre (Mode Sec ab)) (fun _ r _ ->
-    	                            b2t (r = ((v_of_box x) <= (v_of_box y)))) =
-    fun x y _ -> (unbox_s x) <= (unbox_s y)
+    	                            b2t (r = ((v_of_box x) > (v_of_box y)))) =
+    fun x y _ -> (unbox_s x) > (unbox_s y)
   in
 
   let select:
@@ -98,9 +104,9 @@ let opt_median _ =
   let select_s:
     b:bool -> n1:Box int alice_s -> n2:Box int bob_s -> unit
     -> Wys int (pre (Mode Sec ab))
-            (fun _ r _ -> (b       ==> r = v_of_box n1) /\
-	               ((not b) ==> r = v_of_box n2)) =
-    fun b n1 n2 _ -> if b then (unbox_s n1) else (unbox_s n2)
+            (fun _ r _ -> (b       ==> r = v_of_box n2) /\
+	               ((not b) ==> r = v_of_box n1)) =
+    fun b n1 n2 _ -> if b then (unbox_s n2) else (unbox_s n1)
   in
 
   let g:
@@ -109,8 +115,8 @@ let opt_median _ =
 		                                       (v_of_box y1) (v_of_box y2))) =
     fun _ ->
       let a = as_sec ab (cmp x1 y1) in
-      let x3 = as_par alice_s (select #alice a x2 x1) in
-      let y3 = as_par bob_s (select #bob a y1 y2) in
+      let x3 = as_par alice_s (select #alice a x1 x2) in
+      let y3 = as_par bob_s (select #bob a y2 y1) in
       let d = as_sec ab (cmp x3 y3) in
       let r = as_sec ab (select_s d x3 y3) in
       r

@@ -180,6 +180,7 @@ let interactive_mode dsenv env =
     let rec go (stack:stack) curmod dsenv env =
         begin match fill_chunk () with
             | Pop msg ->
+              Parser.DesugarEnv.pop dsenv |> ignore;
               Tc.Env.pop env msg |> ignore;
               env.solver.refresh();
               Options.reset_options() |> ignore;
