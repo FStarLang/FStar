@@ -162,14 +162,13 @@ and subst_t = list<list<subst_elt>>
 and subst_elt = 
    | DB of int * term                          (* DB i t: replace a bound variable with index i with term t *)
    | NM of bv * int                            (* NM x i: replace a local name with a bound variable i *)
-and freevars = set<bv>
+and freenames = set<bv>
 and uvars    = set<uvar>
 and syntax<'a,'b> = {
     n:'a;
     tk:memo<'b>;
     pos:Range.range;
-    fvs:memo<freevars>;
-    uvs:memo<uvars>;
+    vars:memo<(freenames * uvars)>;
 }
 and bv = {
     ppname:ident;  //programmer-provided name for pretty-printing 
@@ -184,12 +183,11 @@ type lcomp = {
     cflags: list<cflags>;
     comp: unit -> comp //a lazy computation
 }
-type freevars_l = list<bv>
+type freenames_l = list<bv>
 type formula = typ
 type formulae = list<typ>
-val new_ftv_set: unit -> set<bv>
+val new_bv_set: unit -> set<bv>
 val new_uv_set:  unit -> set<Unionfind.uvar<'a>>
-val new_uvt_set: unit -> set<(Unionfind.uvar<'a> * 'b)>
 
 type qualifier =
   | Private
@@ -324,17 +322,17 @@ val order_bv:        bv -> bv -> Tot<int>
 val range_of_lbname: lbname -> range
 val range_of_bv:     bv -> range
 
-val tun:     term
-val no_fvs:  freevars
-val no_uvs:  uvars
+val tun:      term
+val no_names: freenames
+val no_uvs:   uvars
 
-val freevars_of_list:    list<bv> -> freevars
-val freevars_of_binders: binders -> freevars
-val list_of_freevars:    freevars -> list<bv>
-val binders_of_freevars: freevars -> binders
-val binders_of_list:     list<bv> -> binders
+val freenames_of_list:    list<bv> -> freenames
+val freenames_of_binders: binders -> freenames
+val list_of_freenames:    freenames -> list<bv>
+val binders_of_freenames: freenames -> binders
+val binders_of_list:      list<bv> -> binders
 
-val null_bv:      term -> bv
+val null_bv:        term -> bv
 val mk_binder:      bv -> binder
 val null_binder:    term -> binder
 val arg:            term -> arg
@@ -342,7 +340,7 @@ val iarg:           term -> arg
 val is_null_bv:     bv -> bool
 val is_null_binder: binder -> bool
 val argpos:         arg -> Range.range
-val pat_vars:       pat -> list<bv>
+val pat_bvs:        pat -> list<bv>
 val is_implicit:    aqual -> bool
 val as_implicit:    bool -> aqual
 

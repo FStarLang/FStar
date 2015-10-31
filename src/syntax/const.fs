@@ -76,7 +76,6 @@ let magic_lid  = pconst "magic"
 (* Various equality predicates *)
 let eq_lid     = pconst  "Eq"
 let eq2_lid    = pconst  "Eq2"
-let eqA_lid    = pconst  "EqA"
 let eqT_lid    = pconst  "EqTyp"
 let neq_lid    = pconst  "neq"
 let neq2_lid   = pconst  "neq2"

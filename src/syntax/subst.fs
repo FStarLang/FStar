@@ -243,7 +243,7 @@ let push_subst s t =
 
 let rec compress (t:term) = 
     let t = force_uvar t in 
-    match t.n with 
+    match t.n with
         | Tm_delayed(Inl(t, s), memo) -> 
           let t' = compress (push_subst s t) in
           memo := Some t';
@@ -252,6 +252,10 @@ let rec compress (t:term) =
             
 let subst s t = subst' [s] t
 let subst_comp s t = subst_comp' [s] t
+let closing_subst bs = 
+    List.fold_right (fun (x, _) (subst, n)  -> (NM(x, n)::subst, n+1)) bs ([], 0) |> fst 
+let close (bs:binders) t = subst (closing_subst bs) t
+let close_comp (bs:binders) (c:comp) = subst_comp (closing_subst bs) c
 
 (*************************************************************************************)
 (* A general way of reducing types. *)
@@ -309,16 +313,8 @@ let rec reduce
           [[], [], [t], [], args], env
 
         | Tm_match(t, branches) -> 
-          let rec pat_binders b p = match p.v with
-            | Pat_dot_term _
-            | Pat_wild _
-            | Pat_constant _ -> b
-            | Pat_var x -> (x, None)::b
-            | Pat_cons(_, pats) -> List.fold_left (fun b (p, _) -> pat_binders b p) b pats
-            | Pat_disj(p::_) -> pat_binders b p
-            | Pat_disj [] -> failwith "impossible" in
           let components, env = branches |> List.fold_left (fun (components, env) (p,w,e) ->
-            let binders = pat_binders [] p in
+            let binders = pat_bvs p |> List.map mk_binder in
             let binders, env = map_binders map env binders in 
             let wopt, env = match w with 
                 | None -> [], env

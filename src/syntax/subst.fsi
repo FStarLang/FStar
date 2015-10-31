@@ -22,9 +22,11 @@ open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Util
 
-val subst: list<subst_elt> -> term -> term
+val subst:      list<subst_elt> -> term -> term
 val subst_comp: list<subst_elt> -> comp -> comp
-val compress: term -> term
+val compress:   term -> term
+val close:      binders -> term -> term
+val close_comp: binders -> comp -> comp
 
 (* Consider removing these *)
 type imap<'env> = 'env -> term -> (term * 'env)

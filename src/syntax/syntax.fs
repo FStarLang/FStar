@@ -162,14 +162,13 @@ and subst_t = list<list<subst_elt>>
 and subst_elt = 
     | DB of int * term                          (* DB i t: replace a bound variable with index i with term t *)
     | NM of bv * int                            (* NM x i: replace a local name with a bound variable i *)
-and freevars = set<bv>
+and freenames = set<bv>
 and uvars    = set<uvar>
 and syntax<'a,'b> = {
     n:'a;
     tk:memo<'b>;
     pos:Range.range;
-    fvs:memo<freevars>;
-    uvs:memo<uvars>;
+    vars:memo<(freenames * uvars)>;
 }
 and bv = {
     ppname:ident; //programmer-provided name for pretty-printing 
@@ -184,7 +183,7 @@ type lcomp = {
     cflags: list<cflags>;
     comp: unit -> comp //a lazy computation
 }
-type freevars_l = list<bv>
+type freenames_l = list<bv>
 type formula = typ
 type formulae = list<typ>
 
@@ -338,23 +337,21 @@ open FStar.Range
 let syn p k f = f k p
 let mk_fvs () = Util.mk_ref None
 let mk_uvs () = Util.mk_ref None
-let new_ftv_set () : set<bv> = Util.new_set order_bv (fun x -> x.index + Util.hashcode x.ppname.idText)
+let new_bv_set () : set<bv> = Util.new_set order_bv (fun x -> x.index + Util.hashcode x.ppname.idText)
 let new_uv_set ()   = Util.new_set (fun x y -> Unionfind.uvar_id x - Unionfind.uvar_id y) Unionfind.uvar_id
-let new_uvt_set () = Util.new_set (fun (x, _) (y, _) -> Unionfind.uvar_id x - Unionfind.uvar_id y) (fun (x, _) -> Unionfind.uvar_id x)
-let no_fvs = new_ftv_set()
+let no_names  = new_bv_set()
 let no_uvs : uvars = new_uv_set()
 let memo_no_uvs = Util.mk_ref (Some no_uvs)
-let memo_no_fvs = Util.mk_ref (Some no_fvs)
-let freevars_of_list l = List.fold_right Util.set_add l no_fvs
-let list_of_freevars (fvs:freevars) = Util.set_elements fvs
+let memo_no_names = Util.mk_ref (Some no_names)
+let freenames_of_list l = List.fold_right Util.set_add l no_names
+let list_of_freenames (fvs:freenames) = Util.set_elements fvs
 
 (* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
 let mk (t:'a) : mk_t_a<'a,'b> = fun topt r -> {
     n=t;
     pos=r;
     tk=Util.mk_ref topt;
-    uvs=mk_uvs(); 
-    fvs=mk_fvs()
+    vars=Util.mk_ref None;
 }
 let bv_to_tm   bv :term = mk (Tm_bvar bv) None (range_of_bv bv)
 let bv_to_name bv :term = mk (Tm_name bv) None (range_of_bv bv)
@@ -377,26 +374,6 @@ let mk_Tm_delayed  ((t:typ),(s:subst_t),(m:memo<typ>)) =
     | _ -> mk (Tm_delayed(Inl(t, s), m))
 let mk_Total t : comp = mk (Total t) None t.pos
 let mk_Comp (ct:comp_typ) : comp  = mk (Comp ct) None ct.result_typ.pos
-
-let rec pat_vars p = match p.v with
-  | Pat_cons(_, ps) ->
-    let vars = List.collect (fun (x, _) -> pat_vars x) ps in
-    if vars |> nodups bv_eq
-    then vars
-    else raise (Error("Pattern variables may not occur more than once", p.p))
-  | Pat_var x -> [x]
-  | Pat_disj ps ->
-    let vars = List.map pat_vars ps in
-    if not (List.tl vars |> Util.for_all (Util.set_eq order_bv (List.hd vars)))
-    then
-      let vars = Util.concat_l ";\n" (vars |>
-          List.map (fun v -> Util.concat_l ", " (List.map (fun x -> x.ppname.idText) v))) in
-      raise (Error(Util.format1 "Each branch of this pattern binds different variables: %s" vars, p.p))
-    else List.hd vars
-  | Pat_dot_term _
-  | Pat_wild _
-  | Pat_constant _ -> []
-
 let mk_lb (x, univs, eff, t, e) = {lbname=x; lbunivs=univs; lbeff=eff; lbtyp=t; lbdef=e}
 let mk_subst (s:subst)   = s
 let extend_subst x s : subst = x::s
@@ -412,10 +389,22 @@ let arg t : arg = t, None
 let is_null_bv (b:bv) = b.ppname.idText = null_id.idText
 let is_null_binder (b:binder) = is_null_bv (fst b)
 
-let freevars_of_binders (bs:binders) : freevars =
-    List.fold_right (fun (x, _) out -> Util.set_add x out) bs no_fvs
+let freenames_of_binders (bs:binders) : freenames =
+    List.fold_right (fun (x, _) out -> Util.set_add x out) bs no_names
 
 let binders_of_list fvs : binders = (fvs |> List.map (fun t -> t, None))
-let binders_of_freevars (fvs:freevars) = Util.set_elements fvs |> binders_of_list
+let binders_of_freenames (fvs:freenames) = Util.set_elements fvs |> binders_of_list
 let is_implicit = function Some Implicit -> true | _ -> false
 let as_implicit = function true -> Some Implicit | _ -> None
+
+let pat_bvs (p:pat) : list<bv> = 
+    let rec aux b p = match p.v with
+        | Pat_dot_term _
+        | Pat_wild _
+        | Pat_constant _ -> b
+        | Pat_var x -> x::b
+        | Pat_cons(_, pats) -> List.fold_left (fun b (p, _) -> aux b p) b pats
+        | Pat_disj(p::_) -> aux b p
+        | Pat_disj [] -> failwith "impossible" in
+  aux [] p
+         
