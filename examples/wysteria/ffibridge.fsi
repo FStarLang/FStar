@@ -18,3 +18,9 @@ val compose_v_opaques: #m1:v_meta -> #m2:v_meta
 		                        is_V_opaque (D_v.v dv) /\
 					Mk_c_w (V_opaque.compose_fn (D_v.v dv)) =
 					Mk_c_w (V_opaque.compose_fn v1)})
+
+(**********)
+
+val nat_of_c_opaque: const -> Tot nat
+
+val nat_of_v_opaque: #meta:v_meta -> value meta -> Tot nat

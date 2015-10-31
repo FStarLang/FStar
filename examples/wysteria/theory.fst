@@ -603,7 +603,6 @@ let rec slc_v_lem_ps #m v p ps = match v with
   | V_box ps' v'        ->
     let psp = singleton p in
     if mem p ps' && not (is_empty (intersect ps ps')) then
-      let _ = cut (b2t (not (is_empty (intersect (union psp ps) ps')))) in
       slc_v_lem_ps v' p ps
     else if mem p ps' && is_empty (intersect ps ps') then
       //let _ = cut (forall p. mem p (union psp ps) = mem p psp || mem p ps) in

@@ -13,3 +13,5 @@ let length = BatString.length
 let sub s i j = BatString.slice ~first:i ~last:j s
 let get s i = FStar_List.nth (BatString.to_list s) i
 let collect = BatString.replace_chars
+
+let substring = String.sub

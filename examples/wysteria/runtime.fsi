@@ -26,3 +26,8 @@ val get_init_tenv : unit -> ML env
 
 val is_server: unit -> ML bool
 val me       : unit -> ML string
+
+(**********)
+
+val rungmw: string -> string -> int -> list string
+val list_to_int: list string -> int

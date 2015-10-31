@@ -35,7 +35,7 @@ type const =
   | C_unit  : c:unit -> const
   | C_bool  : c:bool -> const
 
-  | C_opaque: c:'a -> const
+  | C_opaque: c:'a -> typ -> const
 
 type exp =
   | E_aspar     : ps:exp -> e:exp -> exp

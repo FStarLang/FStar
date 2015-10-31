@@ -44,11 +44,11 @@ let tagged_ternary_to_string tag e1 e2 e3 =
 
 val const_to_string: const -> Tot string
 let const_to_string = function
-  | C_prin p      -> tagged_unary_to_string "C_prin" (prin_to_string p)
-  | C_eprins eps  -> tagged_unary_to_string "C_eprins" (prins_to_string eps)
-  | C_unit _      -> "C_unit"
-  | C_bool b      -> tagged_unary_to_string "C_bool" (string_of_bool b)
-  | C_opaque 'a _  -> "C_opaque"  // TODO: print of opaque values
+  | C_prin p       -> tagged_unary_to_string "C_prin" (prin_to_string p)
+  | C_eprins eps   -> tagged_unary_to_string "C_eprins" (prins_to_string eps)
+  | C_unit _       -> "C_unit"
+  | C_bool b       -> tagged_unary_to_string "C_bool" (string_of_bool b)
+  | C_opaque 'a _ _ -> "C_opaque"  // TODO: print of opaque values
 
 val exp_to_string: e:exp -> Tot string (decreases e)
 val exp_list_to_string_helper: l:list exp -> string -> Tot string (decreases %[l; 0])

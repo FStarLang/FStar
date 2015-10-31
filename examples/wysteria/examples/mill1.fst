@@ -27,8 +27,19 @@ let mill1 _ =
   let x = as_par alice_s read_fn in
   let y = as_par bob_s read_fn in
   
-  let g:unit -> Wys bool (pre (Mode Sec ab)) (fun m r t -> b2t (r = (v_of_box x > v_of_box y))) =
-    fun _ -> (unbox_s x) > (unbox_s y)
+  let g:unit -> Wys bool (pre (Mode Sec ab)) post =
+    fun _ ->
+    let x = unbox_s x in
+    let y = unbox_s y in
+    let b =
+      if x > y then
+	let b = true in
+	b
+      else
+	let b = false in
+	b
+    in
+    b
   in
 
   as_sec ab g

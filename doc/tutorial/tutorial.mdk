@@ -2063,7 +2063,8 @@ Likewise, here's a revised type for `sorted_concat_lemma`. This time,
 we instruct F\* and the SMT solver to associate the lemma property
 only with very specific terms: just those that have the shape
 ```
-sorted (append 11 (pivot::l2))```
+sorted (append 11 (pivot::l2))
+```
 The more specific a pattern you can provide,
 the more discriminating the SMT solver will be in applying lemmas,
 keeping your verification times acceptable.
