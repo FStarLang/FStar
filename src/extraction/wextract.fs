@@ -211,10 +211,10 @@ let extract_mlconst (c:mlconstant) :wexp =
     match c with
         | MLC_Unit    -> "C_unit ()"
         | MLC_Bool b  -> "C_bool " ^ (if b then "true" else "false")
-        | MLC_Int32 n -> "C_opaque ((), Obj.magic " ^ (Util.string_of_int32 n) ^ ")"
-        | MLC_Int64 n -> "C_opaque ((), Obj.magic " ^ (Util.string_of_int64 n) ^ ")"
-        | MLC_Int x   -> "C_opaque ((), Obj.magic " ^ x ^ ")"
-        | MLC_String s -> "C_opaque ((), Obj.magic (\"" ^ s ^ "\"))"
+        | MLC_Int32 n -> "C_opaque ((), Obj.magic " ^ (Util.string_of_int32 n) ^ ", T_cons (\"Prims.int\", []))"
+        | MLC_Int64 n -> "C_opaque ((), Obj.magic " ^ (Util.string_of_int64 n) ^ ", T_cons (\"Prims.int\", []))"
+        | MLC_Int x   -> "C_opaque ((), Obj.magic " ^ x ^ ", T_cons (\"Prims.int\", []))"
+        | MLC_String s -> "C_opaque ((), Obj.magic (\"" ^ s ^ "\"), T_unknown)"
         | _           -> failwith ("Unsupported constant: tag: " ^ (tag_of_mlconst c))
 
 let is_wys_lib_fn ({expr = e; ty = t}:mlexpr) :bool =
