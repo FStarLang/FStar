@@ -54,6 +54,8 @@
     <Compile Include="const.fs" />
     <Compile Include="subst.fsi" />
     <Compile Include="subst.fs" />
+    <Compile Include="free.fsi" />
+    <Compile Include="free.fs" />
     <Compile Include="util.fs" />
   </ItemGroup>
   <ItemGroup>

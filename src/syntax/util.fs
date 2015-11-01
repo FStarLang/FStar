@@ -140,7 +140,7 @@ open FStar.Syntax.Subst
 let rec unmeta e =
     let e = compress e in
     match e.n with
-        | Tm_meta(e, Meta_desugared _) 
+        | Tm_meta(e, _) 
         | Tm_ascribed(e, _, _) -> unmeta e
         | _ -> e
 
@@ -397,98 +397,7 @@ let unchecked_unify uv t =
     | _ -> Unionfind.change uv (Fixed t) (* used to be an alpha-convert t here; but we now have an invariant that t is closed *)
 
 
-(********************************************************************************)
-(************************* Free names and unif variables ************************)
-(********************************************************************************)
-let singleton_bv x = Util.set_add x (new_bv_set())
-let singleton_uv x = Util.set_add x (new_uv_set())
-let union_nm_uv (x1, y1) (x2, y2) = Util.set_union x1 x2, Util.set_union y1 y2
-let rec free_names_and_uvars' tm =
-    let aux_binders bs acc = 
-        bs |> List.fold_left (fun n (x, _) -> union_nm_uv n (free_names_and_uvars x.sort)) acc in
-    let t = Subst.compress tm in 
-    match t.n with
-      | Tm_delayed _ -> failwith "Impossible"
 
-      | Tm_name x ->
-        singleton_bv x, no_uvs
-
-      | Tm_uvar (x, _) -> 
-        no_names, singleton_uv x
-
-      | Tm_bvar _
-      | Tm_name _
-      | Tm_fvar _ 
-      | Tm_constant _
-      | Tm_type _ 
-      | Tm_unknown -> 
-        no_names, no_uvs
-        
-      | Tm_uinst(t, _) -> 
-        free_names_and_uvars t
-
-      | Tm_abs(bs, t) -> 
-        aux_binders bs (free_names_and_uvars t)
-
-      | Tm_arrow (bs, c) -> 
-        aux_binders bs (free_names_and_uvars_comp c)
-
-      | Tm_refine(bv, t) -> 
-        aux_binders [bv, None] (free_names_and_uvars t)
-      
-      | Tm_app(t, args) -> 
-        free_names_and_uvars_args args (free_names_and_uvars t)
-
-      | Tm_match(t, pats) -> 
-        pats |> List.fold_left (fun n (p, wopt, t) -> 
-            let n1 = match wopt with 
-                | None -> no_names, no_uvs 
-                | Some w -> free_names_and_uvars w in 
-            let n2 = free_names_and_uvars t in
-            let n = union_nm_uv n1 (union_nm_uv n2 n) in
-            pat_bvs p |> List.fold_left (fun n x -> union_nm_uv n (free_names_and_uvars x.sort)) n)
-            (free_names_and_uvars t)
-      
-      | Tm_ascribed(t1, t2, _) -> 
-        union_nm_uv (free_names_and_uvars t1) (free_names_and_uvars t2)
-
-      | Tm_let(lbs, t) -> 
-        snd lbs |> List.fold_left (fun n lb -> 
-          union_nm_uv n (union_nm_uv (free_names_and_uvars lb.lbtyp) (free_names_and_uvars lb.lbdef)))
-          (free_names_and_uvars t)
-          
-      | Tm_meta(t, Meta_pattern args) -> 
-        free_names_and_uvars_args args (free_names_and_uvars t)
-
-      | Tm_meta(t, _) -> 
-        free_names_and_uvars t
-
-and free_names_and_uvars t = 
-    let t = Subst.compress t in 
-    match !t.vars with 
-        | Some n -> n 
-        | _ -> 
-        let n = free_names_and_uvars' t in
-        t.vars := Some n;
-        n
-
-and free_names_and_uvars_args args acc = 
-        args |> List.fold_left (fun n (x, _) -> union_nm_uv n (free_names_and_uvars x)) acc
-             
-and free_names_and_uvars_comp c = 
-    match !c.vars with 
-        | Some n -> n
-        | _ -> 
-         let n = match c.n with 
-            | Total t -> 
-              free_names_and_uvars t
-            | Comp ct -> 
-              free_names_and_uvars_args ct.effect_args (free_names_and_uvars ct.result_typ) in
-         c.vars := Some n;
-         n
-         
-let freenames t = fst (free_names_and_uvars t)
-let uvars t = snd (free_names_and_uvars t)
 
 (***********************************************************************************************)
 (* closing types and terms *)
@@ -503,8 +412,8 @@ let rec arrow_formals k =
             else bs, comp_result c
         | _ -> [], k
 
-let abs bs t = mk (Tm_abs(bs, Subst.close bs t)) None t.pos
-let arrow bs c = mk (Tm_arrow(bs, Subst.close_comp bs c)) None c.pos
+let abs bs t = mk (Tm_abs(close_binders bs, Subst.close bs t)) None t.pos
+let arrow bs c = mk (Tm_arrow(close_binders bs, Subst.close_comp bs c)) None c.pos
 
 
 (********************************************************************************)
@@ -587,7 +496,7 @@ let tand    = fvar None Const.and_lid dummyRange
 let tor     = fvar None Const.or_lid dummyRange
 let timp    = fvar None Const.imp_lid dummyRange
 let tiff    = fvar None Const.iff_lid dummyRange
-let t_bool  = fvar None Const.bool_lid dummyRange
+let t_bool :term = fvar None Const.bool_lid dummyRange
 let t_false = fvar None Const.false_lid dummyRange
 let t_true  = fvar None Const.true_lid dummyRange
 let b2t_v   = fvar None Const.b2t_lid dummyRange
@@ -619,69 +528,34 @@ let mk_imp phi1 phi2  =
 let mk_iff phi1 phi2  = mk_binop tiff phi1 phi2
 let b2t e = mk (Tm_app(b2t_v, [arg e])) None e.pos//implicitly coerce a boolean to a type
 
-let rec unmeta t =
-    let t = compress t in
-    match t.n with
-        | Tm_ascribed(t, _, _)
-        | Tm_meta(t, _) -> unmeta t
-        | _ -> t
+let eq_pred_t : term =
+    let a = new_bv None ktype0 in
+    let atyp = bv_to_tm a in
+    let b = new_bv None ktype0 in
+    let btyp = bv_to_tm b in
+    arrow [(a, Some Implicit); (b, Some Implicit); null_binder atyp; null_binder btyp]
+          (mk_Total ktype0)
 
+let teq = fvar None Const.eq2_lid dummyRange
 
-let eq_k =
-    let a = bvd_to_bvar_s (new_bvd None) ktype in
-    let atyp = btvar_to_typ a in
-    let b = bvd_to_bvar_s (new_bvd None) ktype in
-    let btyp = btvar_to_typ b in
-    mk_Kind_arrow([(Inl a, Some Implicit); (Inl b, Some Implicit); null_v_binder atyp; null_v_binder btyp],
-                  ktype) dummyRange
+let mk_eq t1 t2 e1 e2 = mk (Tm_app(teq, [arg e1; arg e2])) None (Range.union_ranges e1.pos e2.pos)
+let eq_typ = fvar None Const.eqT_lid dummyRange
+let mk_eq_typ t1 t2 = mk (Tm_app(eq_typ, [arg t1; arg t2])) None (Range.union_ranges t1.pos t2.pos)
 
-let teq = ftv Const.eq2_lid eq_k
-let mk_eq t1 t2 e1 e2 = match t1.n, t2.n with
-    | Typ_unknown, _
-    | _, Typ_unknown -> failwith "DIE! mk_eq with tun"
-    | _ -> mk_Typ_app(teq, [itarg t1; itarg t2; varg e1; varg e2]) None (Range.union_ranges e1.pos e2.pos)
-let eq_typ = ftv Const.eqT_lid kun
-let mk_eq_typ t1 t2 = mk_Typ_app(eq_typ, [targ t1; targ t2]) None (Range.union_ranges t1.pos t2.pos)
+let lex_t :term = fvar None Const.lex_t_lid dummyRange
+let lex_top : term = fvar (Some Data_ctor) Const.lextop_lid dummyRange
+let lex_pair : term = fvar (Some Data_ctor) Const.lexcons_lid dummyRange
+let forall_t : term = 
+    let a = new_bv None ktype0 in
+    let atyp = bv_to_tm a in
+    arrow [(a, Some Implicit); null_binder atyp] (mk_Total ktype0)
+let tforall = fvar None Const.forall_lid dummyRange
 
-let lex_t = ftv Const.lex_t_lid ktype
-let lex_top =
-    let lexnil = withinfo Const.lextop_lid lex_t dummyRange in
-    mk_Exp_fvar(lexnil, Some Data_ctor) None dummyRange
-    g
-let lex_pair =
-    let a = gen_bvar ktype in
-    let lexcons = withinfo Const.lexcons_lid (mk_Typ_fun([t_binder a; null_v_binder (btvar_to_typ a); null_v_binder lex_t], mk_Total lex_t) None dummyRange) dummyRange in
-    mk_Exp_fvar(lexcons, Some Data_ctor) None dummyRange
-
-let forall_kind =
-  let a = bvd_to_bvar_s (new_bvd None) ktype in
-  let atyp = btvar_to_typ a in
-  mk_Kind_arrow([(Inl a, Some Implicit);
-                 null_t_binder <| mk_Kind_arrow([null_v_binder atyp], ktype) dummyRange],
-                ktype)
-                dummyRange
-let tforall = ftv Const.forall_lid forall_kind
-
-let allT_k k = mk_Kind_arrow([null_t_binder <| mk_Kind_arrow([null_t_binder k], ktype) dummyRange], ktype) dummyRange
-let eqT_k k = mk_Kind_arrow([null_t_binder <| k; null_t_binder k], ktype) dummyRange
-
-let tforall_typ k = ftv Const.allTyp_lid (allT_k k)
-
-let mk_forallT a b =
-  mk_Typ_app(tforall_typ a.sort, [targ <| mk_Typ_lam([t_binder a], b) None b.pos]) None b.pos
-
-let mk_forall (x:bvvar) (body:typ) : typ =
-  let r = dummyRange in
-  mk_Typ_app(tforall, [(targ <| mk_Typ_lam([v_binder x], body) None r)]) None r
+let mk_forall (x:bv) (body:typ) : typ =
+  mk (Tm_app(tforall, [arg (abs [mk_binder x] body)])) None dummyRange
 
 let rec close_forall bs f =
-  List.fold_right (fun b f ->
-    if Syntax.is_null_binder b
-    then f
-    else let body = mk_Typ_lam([b], f) None f.pos in
-         match fst b with
-           | Inl a -> mk_Typ_app(tforall_typ a.sort, [targ body]) None f.pos
-           | Inr x -> mk_Typ_app(tforall, [(Inl x.sort, Some Implicit); targ body]) None f.pos) bs f
+  List.fold_right (fun b f -> if Syntax.is_null_binder b then f else mk_forall (fst b) f) bs f
 
 let rec is_wild_pat p =
     match p.v with
@@ -689,23 +563,11 @@ let rec is_wild_pat p =
     | _ -> false
 
 let head_and_args t =
-    let t = compress_typ t in
+    let t = compress t in
     match t.n with
-        | Typ_app(head, args) -> head, args
+        | Tm_app(head, args) -> head, args
         | _ -> t, []
-
-let head_and_args_e e =
-    let e = compress_exp e in
-    match e.n with
-        | Exp_app(head, args) -> head, args
-        | _ -> e, []
-
-let function_formals t =
-    let t = compress_typ t in
-    match t.n with
-        | Typ_fun(bs, c) -> Some (bs, c)
-        | _ -> None
-
+        
 let is_interpreted l =
   let theory_syms =
     [Const.op_Eq          ;
@@ -736,54 +598,45 @@ type connective =
 
 let destruct_typ_as_formula f : option<connective> =
     let destruct_base_conn f =
-        let type_sort, term_sort = true, false in
-        let oneType    = [type_sort] in
-        let twoTypes   = [type_sort;type_sort] in
-        let threeTys   = [type_sort;type_sort;type_sort] in
-        let twoTerms   = [term_sort;term_sort] in
-        let connectives = [ (Const.true_lid, []);
-                            (Const.false_lid, []);
-                            (Const.and_lid, twoTypes);
-                            (Const.or_lid,  twoTypes);
-                            (Const.imp_lid, twoTypes);
-                            (Const.iff_lid, twoTypes);
-                            (Const.ite_lid, threeTys);
-                            (Const.not_lid, oneType);
-                            (Const.eqT_lid, twoTypes);
-                            (Const.eq2_lid, twoTerms);
-                            (Const.eq2_lid, twoTypes@twoTerms);
+        let connectives = [ (Const.true_lid,  0);
+                            (Const.false_lid, 0);
+                            (Const.and_lid,   2);
+                            (Const.or_lid,    2);
+                            (Const.imp_lid, 2);
+                            (Const.iff_lid, 2);
+                            (Const.ite_lid, 3);
+                            (Const.not_lid, 1);
+                            (Const.eqT_lid, 2);
+                            (Const.eq2_lid, 2);
+                            (Const.eq2_lid, 4);
                         ] in
         let rec aux f (lid, arity) =
             let t, args = head_and_args f in
             if is_constructor t lid
-                && List.length args = List.length arity
-                && List.forall2 (fun arg flag -> match arg with
-                | Inl _, _ -> flag=type_sort
-                | Inr _, _ -> flag=term_sort) args arity
+                && List.length args = arity
             then Some (BaseConn(lid, args))
             else None in
         Util.find_map connectives (aux f) in
 
     let patterns t =
-        let t = compress_typ t in
+        let t = compress t in
         match t.n with
-            | Typ_meta(Meta_pattern(t, pats)) -> pats, compress_typ t
-            | _ -> [], compress_typ t in
+            | Tm_meta(t, Meta_pattern pats) -> pats, compress t
+            | _ -> [], compress t in
 
     let destruct_q_conn t =
         let is_q : bool -> lident -> Tot<bool> = fun fa l -> if fa then is_forall l else is_exists l in
         let flat t =
             let t, args = head_and_args t in
-            t, args |> List.map (function (Inl t, imp) -> Inl (compress_typ t), imp
-                                        | (Inr e, imp) -> Inr (compress_exp e), imp) in
+            t, args |> List.map (fun (t, imp) -> compress t, imp) in
         let rec aux qopt out t = match qopt, flat t with
-            | Some fa, ({n=Typ_const tc}, [(Inl {n=Typ_lam([b], t2)}, _)])
-            | Some fa, ({n=Typ_const tc}, [_; (Inl {n=Typ_lam([b], t2)}, _)])
+            | Some fa, ({n=Tm_fvar (tc, _)}, [{n=Tm_abs([b], t2)}, _])
+            | Some fa, ({n=Tm_fvar (tc, _)}, [_; ({n=Tm_abs([b], t2)}, _)])
                 when (is_q fa tc.v) ->
               aux qopt (b::out) t2
 
-            | None, ({n=Typ_const tc}, [(Inl {n=Typ_lam([b], t2)}, _)])
-            | None, ({n=Typ_const tc}, [_; (Inl {n=Typ_lam([b], t2)}, _)])
+            | None, ({n=Tm_fvar(tc, _)}, [({n=Tm_abs([b], t2)}, _)])
+            | None, ({n=Tm_fvar(tc, _)}, [_; ({n=Tm_abs([b], t2)}, _)])
                 when (is_qlid tc.v) ->
               aux (Some (is_forall tc.v)) (b::out) t2
 
@@ -798,7 +651,7 @@ let destruct_typ_as_formula f : option<connective> =
             | _ -> None in
         aux None [] t in
 
-    let phi = compress_typ f in
+    let phi = compress f in
         match destruct_base_conn phi with
         | Some b -> Some b
         | None -> destruct_q_conn phi

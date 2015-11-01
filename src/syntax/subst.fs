@@ -125,7 +125,8 @@ and compose_subst (s1:subst_t) (s2:subst_t) = s1@s2
 let shift n = function 
     | DB(i, t) -> DB(i+n, t)
     | NM(x, i) -> NM(x, i+n)
-let shift_subst' n s = s |> List.map (List.map (shift n))
+let shift_subst n s = List.map (shift n) s
+let shift_subst' n s = s |> List.map (shift_subst n)
 let subst_binder' s (x:bv, imp) = {x with sort=subst' s x.sort}, imp
 let subst_binders' s bs = 
     bs |> List.mapi (fun i b -> 
@@ -236,7 +237,7 @@ let push_subst s t =
           mk (Tm_let((is_rec, lbs), body)) None t.pos  
          
         | Tm_meta(t0, Meta_pattern ps) -> 
-          mk (Tm_meta(subst' s t0, Meta_pattern (subst_args' s ps))) None t.pos
+          mk (Tm_meta(subst' s t0, Meta_pattern (ps |> List.map (subst_args' s)))) None t.pos
 
         | Tm_meta(t, m) -> 
           mk (Tm_meta(subst' s t,  m)) None t.pos 
@@ -256,7 +257,16 @@ let closing_subst bs =
     List.fold_right (fun (x, _) (subst, n)  -> (NM(x, n)::subst, n+1)) bs ([], 0) |> fst 
 let close (bs:binders) t = subst (closing_subst bs) t
 let close_comp (bs:binders) (c:comp) = subst_comp (closing_subst bs) c
+let close_binders (bs:binders) : binders =
+    let rec aux s (bs:binders) = match bs with 
+        | [] -> []
+        | (x, imp)::tl ->  
+          let x = {x with sort=subst s x.sort} in 
+          let s' = NM(x, 0)::shift_subst 1 s in
+          (x, imp)::aux s' tl in
+    aux [] bs
 
+ 
 (*************************************************************************************)
 (* A general way of reducing types. *)
 (*************************************************************************************)
@@ -344,8 +354,10 @@ let rec reduce
          
         | Tm_meta(t, Meta_pattern ps) ->
           let t,env = map env t in
-          let args,env = map_args map env ps in 
-          [[], [], [t], [], args], env
+          let args,env = ps |> List.fold_left (fun (args, env) p -> 
+            let p, env = map_args map env p in
+            p::args, env) ([], env) in 
+          ([], [], [t], [], [])::(args |> List.map (fun a -> [], [], [], [], a)), env
 
         | Tm_meta(t, _) ->
           let t, env = map env t in
@@ -435,8 +447,8 @@ let combine e (ec:list<tm_components>) env =
 
     | Tm_delayed _, _ -> failwith "Impossible"
 
-    | Tm_meta(_, Meta_pattern _), [_, _, [t], _, args] ->            
-      mk <| Tm_meta(t, Meta_pattern args)
+    | Tm_meta(_, Meta_pattern _), (_, _, [t], _, _)::args ->            
+      mk <| Tm_meta(t, Meta_pattern (args |> List.map (fun (_, _, _, _, a) -> a)))
     
     | Tm_meta(_, m), [_, _, [t], _, _] ->             
       mk <| Tm_meta(t, m)
