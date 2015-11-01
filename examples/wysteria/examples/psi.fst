@@ -56,13 +56,18 @@ let rec mem x l len n =
     let y = as_par bob_s g in
     let _ = cut (b2t (v_of_box y = nth n (v_of_box l))) in
     let cmp:unit
-            -> Wys (bool * int) (pre (Mode Sec ab))
-	          (fun _ r _ -> (fst r <==> v_of_box x = v_of_box y) /\
-		             (fst r ==> snd r = v_of_box x)) =
-      fun _ -> if unbox_s x = unbox_s y then mk_tuple true (unbox_s x) else mk_tuple false 0
+            -> Wys bool (pre (Mode Sec ab))
+	          (fun _ r _ -> (r <==> v_of_box x = v_of_box y)) =
+      fun _ -> unbox_s x = unbox_s y
     in
     let p = as_sec ab cmp in
-    if fst p then p else mem x l len (n + 1)
+    if p then
+      let get:unit -> Wys int (pre (Mode Sec ab)) (fun _ r _ -> b2t (r = v_of_box x)) =
+	fun _ -> unbox_s x
+      in
+      let v = as_sec ab get in
+      mk_tuple true v
+    else mem x l len (n + 1)
 
 #reset-options
 
