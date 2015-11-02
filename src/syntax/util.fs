@@ -414,7 +414,7 @@ let rec arrow_formals k =
 
 let abs bs t = mk (Tm_abs(close_binders bs, Subst.close bs t)) None t.pos
 let arrow bs c = mk (Tm_arrow(close_binders bs, Subst.close_comp bs c)) None c.pos
-
+let refine b t = mk (Tm_refine(b, Subst.close [mk_binder b] t)) None (Range.union_ranges (range_of_bv b) t.pos)
 
 (********************************************************************************)
 (*********************** Various tests on constants  ****************************)

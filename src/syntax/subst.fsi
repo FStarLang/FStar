@@ -28,10 +28,3 @@ val compress:   term -> term
 val close:      binders -> term -> term
 val close_comp: binders -> comp -> comp
 val close_binders: binders -> binders
-
-(* Consider removing these *)
-type imap<'env> = 'env -> term -> (term * 'env)
-type mapper<'env> = imap<'env> -> imap<'env>
-type tm_components = list<universe> * binders * list<term> * list<comp> * list<arg>
-val reduce: mapper<'env> -> (term -> list<tm_components> -> 'env -> (term * 'env)) -> imap<'env>
-val combine: term -> list<tm_components> -> 'env -> (term * 'env)
