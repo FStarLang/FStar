@@ -1,5 +1,5 @@
 module Uint8 = struct
-  
+
 let zero = Stdint.Uint8.zero
 let one = Stdint.Uint8.one
 let max_int = Stdint.Uint8.max_int
@@ -31,7 +31,7 @@ let compare x y = Stdint.Uint8.compare x y
 end
 
 module Uint16 = struct
-  
+
 let zero = Stdint.Uint16.zero
 let one = Stdint.Uint16.one
 let max_int = Stdint.Uint16.max_int
@@ -61,9 +61,9 @@ let to_string x = Stdint.Uint16.to_string x
 let compare x y = Stdint.Uint16.compare x y
 
 end
-                 
+
 module Uint32 = struct
-  
+
 let zero = Stdint.Uint32.zero
 let one = Stdint.Uint32.one
 let max_int = Stdint.Uint32.max_int
@@ -95,7 +95,7 @@ let compare x y = Stdint.Uint32.compare x y
 end
 
 module Uint64 = struct
-  
+
 let zero = Stdint.Uint64.zero
 let one = Stdint.Uint64.one
 let max_int = Stdint.Uint64.max_int
