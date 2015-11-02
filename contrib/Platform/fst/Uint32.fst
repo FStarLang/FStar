@@ -15,7 +15,7 @@ assume val one : uint32
 (** The 32-bit integer 1. *)
 
 assume val max_int : uint32
-(** The greatest representable 32-bit integer, 2{^31} - 1. *)
+(** The greatest representable 32-bit integer, 2{^32} - 1. *)
 
 assume val min_int : uint32
 (** The smallest representable 32-bit integer, 0. *)
@@ -90,7 +90,7 @@ assume val of_int : int -> Tot uint32
 assume val to_int : uint32 -> Tot int
 (** Convert the given 32-bit integer (type [uint32]) to an
    integer (type [int]).  On 32-bit platforms, the 32-bit integer
-   is taken modulo 2{^31}, i.e. the high-order bit is lost
+   is taken modulo 2{^32}, i.e. the high-order bit is lost
    during the conversion.  On 64-bit platforms, the conversion
    is exact. *)
 
