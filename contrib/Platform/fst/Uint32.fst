@@ -5,7 +5,7 @@
  * Uint32
  *)
 
-module Platform.Uint32
+module Uint32
 
 
 assume val zero : uint32

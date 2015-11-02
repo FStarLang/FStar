@@ -5,7 +5,7 @@
  * Uint64
  *)
 
-module Platform.Uint64
+module Uint64
 
 
 assume val zero : uint64
