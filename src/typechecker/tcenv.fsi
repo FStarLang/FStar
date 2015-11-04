@@ -19,7 +19,7 @@ open FStar.Syntax.Syntax
 
 
 type binding =
-  | Binding_var of bv     * typ
+  | Binding_var of bv    
   | Binding_lid of lident * typ
   | Binding_sig of sigelt
 
@@ -80,7 +80,7 @@ val mark        : env -> env
 val reset_mark  : env -> env
 val commit_mark : env -> env
 
-(* Checking the per-module debug level *)
+(* Checking the per-module debug level and position info *)
 val debug     : env -> Options.debug_level_t -> bool
 val set_range : env -> Range.range -> env
 val get_range : env -> Range.range

@@ -47,6 +47,7 @@ type var<'t>  = withinfo_t<lident,'t>
 type fieldname = lident
 (* Term language *)
 type sconst =
+  | Const_effect
   | Const_unit
   | Const_uint8       of byte
   | Const_bool        of bool
@@ -252,7 +253,7 @@ and sigelt =
                        * Range.range
   | Sig_datacon        of lident 
                        * typ 
-                       * tycon                      //the inductive type of the value this constructs
+                       * lident                     //the inductive type of the value this constructs
                        * list<qualifier> 
                        * list<lident>               //mutually defined types 
                        * Range.range
@@ -380,6 +381,10 @@ let extend_subst x s : subst = x::s
 let argpos (x:arg) = (fst x).pos
 
 let tun : term = mk (Tm_unknown) None dummyRange
+let teff : term = mk (Tm_constant Const_effect) None dummyRange
+let is_teff (t:term) = match t.n with 
+    | Tm_constant Const_effect -> true
+    | _ -> false
 let null_id  = mk_ident("_", dummyRange)
 let null_bv k = {ppname=null_id; index=0; sort=k}
 let mk_binder (a:bv) : binder = a, None

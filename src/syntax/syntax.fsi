@@ -47,6 +47,7 @@ type var<'t>  = withinfo_t<lident,'t>
 type fieldname = lident
 (* Term language *)
 type sconst =
+  | Const_effect
   | Const_unit
   | Const_uint8       of byte
   | Const_bool        of bool
@@ -236,7 +237,7 @@ type eff_decl = {
     trivial:typ;
 }
 and sigelt =
-  | Sig_tycon          of lident                   //type l (x1:t1) ... (xn:tn) = t 
+  | Sig_tycon          of lident                   //type l (x1:t1) ... (xn:tn) : t 
                        * binders                   //(x1:t1) ... (xn:tn)
                        * typ                       //t
                        * list<lident>              //mutually defined types
@@ -254,7 +255,7 @@ and sigelt =
                        * Range.range
   | Sig_datacon        of lident 
                        * typ 
-                       * tycon                      //the inductive type of the value this constructs
+                       * lident                     //the inductive type of the value this constructs
                        * list<qualifier> 
                        * list<lident>               //mutually defined types 
                        * Range.range
@@ -269,9 +270,9 @@ and sigelt =
   | Sig_main           of term
                        * Range.range
   | Sig_assume         of lident 
-                        * formula 
-                        * list<qualifier> 
-                        * Range.range
+                       * formula 
+                       * list<qualifier> 
+                       * Range.range
   | Sig_new_effect     of eff_decl * Range.range
   | Sig_sub_effect     of sub_eff * Range.range
   | Sig_effect_abbrev  of lident * binders * comp * list<qualifier> * Range.range
@@ -323,6 +324,8 @@ val range_of_lbname: lbname -> range
 val range_of_bv:     bv -> range
 
 val tun:      term
+val teff:     term
+val is_teff:  term -> bool
 val no_names: freenames
 val no_uvs:   uvars
 
