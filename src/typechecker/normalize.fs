@@ -18,12 +18,10 @@
 
 module FStar.TypeChecker.Normalize
 open FStar
-open FStar.Tc
-open FStar.Absyn
-open FStar.Absyn.Syntax
-open FStar.Absyn.Util
-open FStar.Util
-open FStar.Tc.Env
+open FStar.Syntax.Syntax
+open FStar.Syntax.Subst
+open FStar.Syntax.Util
+open FStar.TypeChecker.Env
 
 
 (**********************************************************************************************
@@ -48,6 +46,13 @@ type step =
   | Unmeta
   | Unlabel
 and steps = list<step>
+
+type closure = 
+  | Open of int
+  | Clos of env * term 
+
+and env = list<closure>
+
 
 type config<'a> = {code:'a;
                    environment:environment;
