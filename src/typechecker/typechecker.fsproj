@@ -55,8 +55,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="tcenv.fsi" />
-    <Compile Include="tcenv.fs" />
+    <Compile Include="env.fsi" />
+    <Compile Include="env.fs" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
