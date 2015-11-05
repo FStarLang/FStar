@@ -419,7 +419,7 @@ end))), "Print types computed for data/val/let-bindings"))::((FStar_Getopt.nosho
 (FStar_ST.op_Colon_Equals logQueries true)
 end))), "Log the Z3 queries in queries.smt2"))::((FStar_Getopt.noshort, "max_fuel", FStar_Getopt.OneArg (((fun x -> (let _86_132 = (FStar_Util.int_of_string x)
 in (FStar_ST.op_Colon_Equals max_fuel _86_132))), "non-negative integer")), "Number of unrolling of recursive functions to try at most (default 8)"))::((FStar_Getopt.noshort, "max_ifuel", FStar_Getopt.OneArg (((fun x -> (let _86_136 = (FStar_Util.int_of_string x)
-in (FStar_ST.op_Colon_Equals max_ifuel _86_136))), "non-negative integer")), "Number of unrolling of inductive datatypes to try at most (default 1)"))::((FStar_Getopt.noshort, "min_fuel", FStar_Getopt.OneArg (((fun x -> (let _86_140 = (FStar_Util.int_of_string x)
+in (FStar_ST.op_Colon_Equals max_ifuel _86_136))), "non-negative integer")), "Number of unrolling of inductive datatypes to try at most (default 2)"))::((FStar_Getopt.noshort, "min_fuel", FStar_Getopt.OneArg (((fun x -> (let _86_140 = (FStar_Util.int_of_string x)
 in (FStar_ST.op_Colon_Equals min_fuel _86_140))), "non-negative integer")), "Minimum number of unrolling of recursive functions to try (default 1)"))::((FStar_Getopt.noshort, "MLish", FStar_Getopt.ZeroArgs ((fun _21_200 -> (match (()) with
 | () -> begin
 (FStar_ST.op_Colon_Equals full_context_dependency false)
