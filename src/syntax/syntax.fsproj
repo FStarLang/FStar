@@ -57,6 +57,8 @@
     <Compile Include="free.fsi" />
     <Compile Include="free.fs" />
     <Compile Include="util.fs" />
+    <Compile Include="print.fsi" />
+    <Compile Include="print.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\basic\basic.fsproj">

@@ -199,7 +199,7 @@ let lookup_datacon env lid =
     | _ -> raise (Error(name_not_found lid, range_of_lid lid))
 
 let lookup_projector env lid i =
-    let fail () = failwith (Util.format2 "Impossible: projecting field #%s from constructor %s is undefined" (Util.string_of_int i) (Print.sli lid)) in
+    let fail () = failwith (Util.format2 "Impossible: projecting field #%s from constructor %s is undefined" (Util.string_of_int i) (Print.lid_to_string lid)) in
     let t = lookup_datacon env lid in
     match (compress t).n with
         | Tm_arrow(binders, _) ->
@@ -344,7 +344,7 @@ let join env l1 l2 : (lident * (typ -> typ -> typ) * (typ -> typ -> typ)) =
   if lid_equals l1 l2
   then l1, (fun t wp -> wp), (fun t wp -> wp)
   else match env.effects.joins |> Util.find_opt (fun (m1, m2, _, _, _) -> lid_equals l1 m1 && lid_equals l2 m2) with
-        | None -> raise (Error(Util.format2 "Effects %s and %s cannot be composed" (Print.sli l1) (Print.sli l2), env.range))
+        | None -> raise (Error(Util.format2 "Effects %s and %s cannot be composed" (Print.lid_to_string l1) (Print.lid_to_string l2), env.range))
         | Some (_, _, m3, j1, j2) -> m3, j1, j2
 
 let monad_leq env l1 l2 : option<edge> =
@@ -394,7 +394,7 @@ let build_lattice env se = match se with
     let print_mlift l =
         let arg = Util.fv (Syntax.lid_of_path ["ARG"] dummyRange) tun in
         let wp = Util.fv (Syntax.lid_of_path  ["WP"]  dummyRange) tun in
-        Print.typ_to_string (l arg wp) in
+        Print.term_to_string (l arg wp) in
     let order = edge::env.effects.order in
 
     let ms = env.effects.decls |> List.map (fun (e:eff_decl) -> e.mname) in
