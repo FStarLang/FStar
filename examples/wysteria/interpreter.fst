@@ -184,11 +184,25 @@ let do_sec_comp p r =
   let ps = R_assec.ps r in
   let (en, x, e) = get_en_b (R_assec.v r) in
 
-  let (c_in, c_out) = open_connection 8888 in
-  let _ = client_write c_out p r in
-  let (x, e, dv) = client_read c_in in
+  if mem p ps then
+    let (c_in, c_out) = open_connection 8888 in
 
-  dv
+    let _ = assert (is_R_assec r /\ is_clos (R_assec.v r) /\ mem p (R_assec.ps r)) in
+
+    let _ = client_write c_out p r in
+    let (ps', x', e', dv) = client_read c_in in
+
+    let _ = admitP (ps' = ps /\ x' = x /\ e' = e) in
+
+    let _ = admitP (exists pi_init pi_final. pstep_star #ps pi_init pi_final /\
+                                        tpre_assec #ps pi_init ps x e   /\
+					(Let (Conf.t (Some.v (select p (fst pi_final))))
+					 (fun t ->
+  				          is_T_val t /\
+					  D_v (T_val.meta t) (T_val.v t) =
+					  dv))) in
+    dv
+  else failwith "Reached a non-participating secure block"
 
 val tstep: config -> ML (option config)
 let tstep c =

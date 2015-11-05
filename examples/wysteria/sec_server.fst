@@ -150,7 +150,7 @@ let create_pstep_star data c_sec_terminal sstep_h =
 
   let c_sec_init = Conf Target (Mode Sec ps) [] (update_env (compose_envs_m ps en_m) x V_unit) (T_exp e) (hide []) in
 
-  let _ = admitP (b2t (pi_enter_sec = update ps c_sec_init (snd pi_init))) in
+  let _ = cut (b2t (pi_enter_sec = update ps c_sec_init (snd pi_init))) in
 
   let _ = sec_comp_step_star_same_mode #c_sec_init #c_sec_terminal sstep_h in
 
@@ -162,8 +162,8 @@ let create_pstep_star data c_sec_terminal sstep_h =
   let ss:pstep_star #ps pi_enter pi_sec_terminal =
     sec_sstep_star_to_pstep_star c_sec_init c_sec_terminal sstep_h ps pi_enter_par (snd pi_init) in
 
-  let _ = admitP (b2t (contains ps (snd pi_sec_terminal))) in
-  let _ = admitP (b2t (Some.v (select ps (snd pi_sec_terminal)) = c_sec_terminal)) in
+  let _ = cut (b2t (contains ps (snd pi_sec_terminal))) in
+  let _ = cut (b2t (Some.v (select ps (snd pi_sec_terminal)) = c_sec_terminal)) in
   //let _ = cut (b2t (Conf.m c_sec_terminal = Mode Sec ps)) in
   //let _ = cut (b2t (is_value c_sec_terminal)) in
   //let _ = cut (b2t (Conf.s c_sec_terminal = [])) in
@@ -175,7 +175,6 @@ let create_pstep_star data c_sec_terminal sstep_h =
 
   (* TODO: FIXME: this also verifies, but with this the whole thing times out *)
   let _ = admitP (eq_proto' ps pi pi_final_par) in
-
   ret_sec_value_to_ps_helper_lemma #ps pi_enter_par c_sec_terminal pi_final_par;
 
   let s2:pstep #ps pi_sec_terminal pi_final =
@@ -220,7 +219,7 @@ let rec send_output ps out_m s_prop red_m =
 		    (fun dvt ->
 		     b2t (dvt = slice_v #(D_v.meta dv) p (D_v.v dv)))))) in
 
-  server_write out (x, e, slice_v p (D_v.v dv));
+  server_write out (ps, x, e, slice_v p (D_v.v dv));
 
   let ps_rest = remove p ps in
   let out_m' = OrdMap.remove p out_m in
