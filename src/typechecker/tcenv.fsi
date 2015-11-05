@@ -17,10 +17,9 @@ module FStar.TypeChecker.Env
 open FStar
 open FStar.Syntax.Syntax
 
-
 type binding =
-  | Binding_var of bv    
-  | Binding_lid of lident * typ
+  | Binding_var of bv     * tscheme
+  | Binding_lid of lident * tscheme
   | Binding_sig of sigelt
 
 type mlift = typ -> typ -> typ
@@ -88,25 +87,19 @@ val get_range : env -> Range.range
 (* Querying identifiers *)
 val lookup_bv              : env -> bv -> typ
 val lookup_lid             : env -> lident -> typ
+val try_lookup_val_decl    : env -> lident -> option<(typ * list<qualifier>)>
 val lookup_val_decl        : env -> lident -> typ
 val lookup_datacon         : env -> lident -> typ
-val is_datacon             : env -> lident -> bool
-val is_record              : env -> lident -> bool
 val lookup_datacons_of_typ : env -> lident -> option<list<(lident * typ)>>
 val lookup_definition      : env -> lident -> option<term>
+val try_lookup_effect_lid  : env -> lident -> option<term>
 val lookup_effect_lid      : env -> lident -> term
 val lookup_effect_abbrev   : env -> lident -> option<(binders * comp)>
-val lookup_operator        : env -> ident -> typ
 val lookup_projector       : env -> lident -> int -> lident
-val lookup_qname           : env -> lident -> option<Util.either<typ,sigelt>>
-val is_projector           : env -> lident -> bool
 val current_module         : env -> lident
-val default_effect         : env -> lident -> option<lident>
-
-(* floating ... utilities *)
-val try_lookup_effect_lid : env -> lident -> option<term>
-val try_lookup_val_decl   : env -> lident -> option<(typ * list<qualifier>)>
-val binding_of_binder     : binder -> binding
+val is_projector           : env -> lident -> bool
+val is_datacon             : env -> lident -> bool
+val is_record              : env -> lident -> bool
 
 (* Introducing identifiers and updating the environment *)
 val push_sigelt        : env -> sigelt -> env
@@ -116,7 +109,7 @@ val set_expected_typ   : env -> typ -> env
 val expected_typ       : env -> option<typ>
 val clear_expected_typ : env -> env*option<typ>
 val set_current_module : env -> lident -> env
-val finish_module      : env -> modul -> env
+val finish_module      : (env -> modul -> env)
 
 (* Collective state of the environment *)
 val bound_vars   : env -> list<bv>
@@ -126,6 +119,7 @@ val lidents      : env -> list<lident>
 val fold_env     : env -> ('a -> binding -> 'a) -> 'a -> 'a
 
 (* operations on monads *)
+val default_effect  : env -> lident -> option<lident>
 val join            : env -> lident -> lident -> lident * mlift * mlift
 val monad_leq       : env -> lident -> lident -> option<edge>
 val effect_decl_opt : env -> lident -> option<eff_decl>

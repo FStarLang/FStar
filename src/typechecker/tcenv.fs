@@ -15,7 +15,7 @@
 *)
 #light "off"
 
-module FStar.Typechecker.Env
+module FStar.TypeChecker.Env
 
 open FStar
 open FStar.Syntax
@@ -25,8 +25,8 @@ open FStar.Syntax.Util
 open FStar.Util
 
 type binding =
-  | Binding_var of bv     
-  | Binding_lid of lident * typ
+  | Binding_var of bv     * tscheme
+  | Binding_lid of lident * tscheme
   | Binding_sig of sigelt
 
 type mlift = typ -> typ -> typ
@@ -125,36 +125,39 @@ let pop env msg = match env.sigtab with
         env.solver.pop msg;
         {env with sigtab=tl}
 
-(* Checking the per-module debug level and position info *)
+////////////////////////////////////////////////////////////
+// Checking the per-module debug level and position info  //
+////////////////////////////////////////////////////////////
 let debug env (l:Options.debug_level_t) =
        !Options.debug |> Util.for_some (fun x -> env.curmodule.str = x)
     && Options.debug_level_geq l
 let set_range e r = if r=dummyRange then e else {e with range=r}
 let get_range e = e.range
 
-(* local utilities for querying identifiers *)
+////////////////////////////////////////////////////////////
+// Private utilities                                      //
+////////////////////////////////////////////////////////////
+let modules env = env.modules
+let current_module env = env.curmodule
+let set_current_module env lid = {env with curmodule=lid}
+let has_interface env l = env.modules |> Util.for_some (fun m -> m.is_interface && lid_equals m.name l)
+let find_in_sigtab env lid = Util.smap_try_find (sigtab env) (text_of_lid lid)
+
 let name_not_found (l:Syntax.lident) =
   format1 "Name \"%s\" not found" l.str
 
 let variable_not_found v =
   format1 "Variable \"%s\" not found" (Print.bv_to_string v)
 
-(* Querying identifiers *)
-let try_lookup_bv env (bv:bv) =
-  Util.find_map env.gamma (function
-    | Binding_var id when bv_eq id bv -> Some id.sort
-    | _ -> None)
+//Construct a new universe unification variable
+let new_u_univ _ = U_unif (Unionfind.fresh None)
 
-let lookup_bv env bv = 
-    match try_lookup_bv env bv with 
-        | None -> raise (Error(variable_not_found bv, range_of_bv bv))
-        | Some t -> t
-
-let modules env = env.modules
-let current_module env = env.curmodule
-let set_current_module env lid = {env with curmodule=lid}
-let has_interface env l = env.modules |> Util.for_some (fun m -> m.is_interface && lid_equals m.name l)
-let find_in_sigtab env lid = Util.smap_try_find (sigtab env) (text_of_lid lid)
+//Instantiate the universe variables in a type scheme with new unification variables
+let inst_tscheme = function 
+    | [], t -> t
+    | us, t -> 
+      let vs = us |> List.map (fun u -> UN (u, new_u_univ())) in
+      Subst.subst vs t
 
 let in_cur_mod env (l:lident) = (* TODO: need a more efficient namespace check! *)
     let cur = current_module env in
@@ -174,7 +177,7 @@ let lookup_qname env (lid:lident) : option<either<typ, sigelt>>  =
   let cur_mod = in_cur_mod env lid in
   let found = if cur_mod
               then Util.find_map env.gamma (function
-                | Binding_lid(l,t) -> if lid_equals lid l then Some (Inl t) else None
+                | Binding_lid(l,t) -> if lid_equals lid l then Some (Inl (inst_tscheme t)) else None
                 | Binding_sig (Sig_bundle(ses, _, _, _)) ->
                     Util.find_map ses (fun se ->
                         if lids_of_sigelt se |> Util.for_some (lid_equals lid)
@@ -193,106 +196,98 @@ let lookup_qname env (lid:lident) : option<either<typ, sigelt>>  =
         | None -> None
   else None
 
-let lookup_datacon env lid =
-  match lookup_qname env lid with
-    | Some (Inr (Sig_datacon (_, t, _, _, _, _))) -> t 
+let rec add_sigelt env se = match se with
+    | Sig_bundle(ses, _, _, _) -> add_sigelts env ses
+    | _ ->
+    let lids = lids_of_sigelt se in
+    List.iter (fun l -> Util.smap_add (sigtab env) l.str se) lids
+
+and add_sigelts env ses =
+    ses |> List.iter (add_sigelt env) 
+
+////////////////////////////////////////////////////////////
+// Lookup up various kinds of identifiers                 //
+////////////////////////////////////////////////////////////
+
+let try_lookup_bv env (bv:bv) =
+  Util.find_map env.gamma (function
+    | Binding_var (id, ts) when bv_eq id bv -> 
+      Some (inst_tscheme ts)
+    | _ -> None)
+
+let lookup_let se lid = match se with 
+    | Sig_let((_, [lb]), _, _, _) -> 
+      Some (inst_tscheme (lb.lbunivs, lb.lbtyp))
+
+    | Sig_let((_, lbs), _, _, _) ->
+        Util.find_map lbs (fun lb -> match lb.lbname with
+          | Inl _ -> failwith "impossible"
+          | Inr lid' ->
+            if lid_equals lid lid'
+            then Some (inst_tscheme (lb.lbunivs, lb.lbtyp))
+            else None)
+
     | _ -> raise (Error(name_not_found lid, range_of_lid lid))
 
-let lookup_projector env lid i =
-    let fail () = failwith (Util.format2 "Impossible: projecting field #%s from constructor %s is undefined" (Util.string_of_int i) (Print.lid_to_string lid)) in
-    let t = lookup_datacon env lid in
-    match (compress t).n with
-        | Tm_arrow(binders, _) ->
-          if ((i < 0) || i >= List.length binders) //this has to be within bounds!
-          then fail ()
-          else let b = List.nth binders i in
-               Util.mk_field_projector_name lid (fst b) i |> fst
-        | _ -> fail ()
 
-let try_lookup_val_decl env lid =
-  match lookup_qname env lid with
-    | Some (Inr (Sig_val_decl(_, t, q, _))) -> Some (t,q)
-    | _ -> None
-
-let lookup_val_decl env lid =
-  match lookup_qname env lid with
-    | Some (Inr (Sig_val_decl(_, t, _, _))) -> t
-    | _ -> raise (Error(name_not_found lid, range_of_lid lid))
+let lookup_bv env bv = 
+    match try_lookup_bv env bv with 
+        | None -> raise (Error(variable_not_found bv, range_of_bv bv))
+        | Some t -> t
 
 let lookup_lid env lid =
   let not_found () =
     //let _ = Util.smap_fold env.sigtab (fun k _ _ -> Util.print_string (Util.format1 "%s, " k)) () in
     raise (Error(name_not_found lid, range_of_lid lid)) in
   let mapper = function
-    | Inl t -> Some t
+    | Inl t -> 
+      Some t
     
-    | Inr (Sig_datacon(_, t, _, _,_, _)) -> Some t 
+    | Inr (Sig_datacon(_, uvs, t, _, _,_, _)) -> 
+      Some (inst_tscheme (uvs, t))
  
-    | Inr (Sig_val_decl (l, t, qs, _)) -> 
+    | Inr (Sig_val_decl (l, uvs, t, qs, _)) -> 
       if in_cur_mod env l
       then if qs |> List.contains Assumption || env.is_iface
-           then Some t
+           then Some (inst_tscheme (uvs, t))
            else None
-      else Some t  
+      else Some (inst_tscheme (uvs, t))
 
-    | Inr (Sig_let((_, [{lbtyp=t}]), _, _, _)) -> 
-      Some t
+    | Inr (Sig_let _ as se) -> 
+      lookup_let se lid
 
-    | Inr (Sig_let((_, lbs), _, _, _)) ->
-        Util.find_map lbs (fun lb -> match lb.lbname with
-          | Inl _ -> failwith "impossible"
-          | Inr lid' ->
-            if lid_equals lid lid'
-            then Some lb.lbtyp
-            else None)
+    | Inr (Sig_tycon (lid, uvs, tps, k, _, _, _, _)) ->
+      begin match tps with 
+        | [] -> Some <| inst_tscheme (uvs, k)
+        | _ ->  Some <| inst_tscheme (uvs, Util.arrow tps (mk_Total k))
+      end
+   
     | t -> None
   in
     match Util.bind_opt (lookup_qname env lid) mapper with
       | Some t -> {t with pos=Syntax.range_of_lid lid}
       | None -> not_found ()
 
-
-let is_datacon env lid =
+let lookup_val_decl env lid =
   match lookup_qname env lid with
-    | Some (Inr(Sig_val_decl(_, _, quals, _))) -> quals |> Util.for_some (function Assumption -> true | _ -> false)
-    | Some (Inr (Sig_datacon (_, t, _, _,_,_))) -> true
-    | _ -> false
+    | Some (Inr (Sig_val_decl(_, uvs, t, _, _))) -> inst_tscheme (uvs, t)
+    | _ -> raise (Error(name_not_found lid, range_of_lid lid))
 
-let is_record env lid =
+let lookup_datacon env lid =
   match lookup_qname env lid with
-    | Some (Inr (Sig_tycon(_, _, _, _, _, tags, _))) ->
-        Util.for_some (function RecordType _ | RecordConstructor _ -> true | _ -> false) tags
-    | _ -> false
+    | Some (Inr (Sig_datacon (_, uvs, t, _, _, _, _))) -> inst_tscheme (uvs, t) 
+    | _ -> raise (Error(name_not_found lid, range_of_lid lid))
 
 let lookup_datacons_of_typ env lid =
   match lookup_qname env lid with
-    | Some (Inr (Sig_tycon(_, _, _, _, datas, _, _))) -> Some (List.map (fun l -> (l, lookup_lid env l)) datas)
+    | Some (Inr (Sig_tycon(_, _, _, _, _, datas, _, _))) -> Some (List.map (fun l -> (l, lookup_lid env l)) datas)
     | _ -> None
 
-let lookup_effect_abbrev env lid =
+let lookup_definition env lid = 
   match lookup_qname env lid with
-    | Some (Inr (Sig_effect_abbrev (lid, binders, c, quals, _))) ->
-      if quals |> Util.for_some (function Opaque -> true | _ -> false)
-      then None
-      else Some (binders, c)
-    | _ -> None
+    | Some (Inr se) -> lookup_let se lid
 
-let lookup_tycon env (ftv:lident) : typ =
-  match lookup_qname env ftv with
-    | Some (Inr (Sig_tycon (lid, tps, k, _, _, _, _))) ->
-      begin match tps with 
-        | [] -> k
-        | _ -> Util.arrow tps (mk_Total k)
-      end
-    | _ ->
-      raise (Error(name_not_found ftv, range_of_lid ftv))
-
-let is_projector env (l:lident) : bool =
-    match lookup_qname env l with
-        | Some (Inr (Sig_tycon(_, _, _, _, _, quals, _)))
-        | Some (Inr (Sig_val_decl(_, _, quals, _))) ->
-          Util.for_some (function Projector _ -> true | _ -> false) quals
-        | _ -> false
+    | _ -> raise (Error(name_not_found lid, range_of_lid lid))
 
 let try_lookup_effect_lid env (ftv:lident) : option<typ> =
   match lookup_qname env ftv with
@@ -308,30 +303,53 @@ let lookup_effect_lid env (ftv:lident) : typ =
     | None -> raise (Error(name_not_found ftv, range_of_lid ftv))
     | Some k -> k
 
-let lookup_operator env (opname:ident) =
-  let primName = lid_of_path ["Prims"; ("_dummy_" ^ opname.idText)] dummyRange in
-    lookup_lid env primName
+let lookup_projector env lid i =
+    let fail () = failwith (Util.format2 "Impossible: projecting field #%s from constructor %s is undefined" (Util.string_of_int i) (Print.lid_to_string lid)) in
+    let t = lookup_datacon env lid in
+    match (compress t).n with
+        | Tm_arrow(binders, _) ->
+          if ((i < 0) || i >= List.length binders) //this has to be within bounds!
+          then fail ()
+          else let b = List.nth binders i in
+               Util.mk_field_projector_name lid (fst b) i |> fst
+        | _ -> fail ()
 
-let strlid_of_sigelt se = match lid_of_sigelt se with
-  | None -> None
-  | Some l -> Some (text_of_lid l)
-let signature_to_sigtables s =
-  let ht = Util.smap_create default_table_size in
-  let _ = List.iter (fun se ->
-    let lids = lids_of_sigelt se in
-    List.iter (fun l -> Util.smap_add ht l.str se) lids) s in
-  ht
+let try_lookup_val_decl env lid =
+  match lookup_qname env lid with
+    | Some (Inr (Sig_val_decl(_, uvs, t, q, _))) -> Some (inst_tscheme (uvs,t),q)
+    | _ -> None
 
-let modules_to_sigtables mods =
-  signature_to_sigtables (List.collect (fun (_,m) -> m.declarations) mods)
+let lookup_effect_abbrev env lid =
+  match lookup_qname env lid with
+    | Some (Inr (Sig_effect_abbrev (lid, binders, c, quals, _))) ->
+      if quals |> Util.for_some (function Opaque -> true | _ -> false)
+      then None
+      else Some (binders, c)
+    | _ -> None
 
-(* Collective state of the environment *)
-let bound_vars env =
-    env.gamma |> List.collect (function
-        | Binding_var x -> [x]
-        | Binding_lid _ -> []
-        | Binding_sig _ -> [])
+let is_datacon env lid =
+  match lookup_qname env lid with
+    | Some (Inr(Sig_val_decl(_, _, _, quals, _))) -> quals |> Util.for_some (function Assumption -> true | _ -> false)
+    | Some (Inr (Sig_datacon (_, _, _, _, _,_,_))) -> true
+    | _ -> false
 
+let is_record env lid =
+  match lookup_qname env lid with
+    | Some (Inr (Sig_tycon(_, _, _, _, _, _, tags, _))) ->
+        Util.for_some (function RecordType _ | RecordConstructor _ -> true | _ -> false) tags
+    | _ -> false
+
+let is_projector env (l:lident) : bool =
+    match lookup_qname env l with
+        | Some (Inr (Sig_tycon(_, _, _, _, _, _, quals, _)))
+        | Some (Inr (Sig_val_decl(_, _, _, quals, _))) ->
+          Util.for_some (function Projector _ -> true | _ -> false) quals
+        | _ -> false
+
+
+////////////////////////////////////////////////////////////
+// Operations on the monad lattice                        //
+////////////////////////////////////////////////////////////
 let effect_decl_opt env l =
   env.effects.decls |> Util.find_opt (fun d -> lid_equals d.mname l)
 
@@ -448,44 +466,13 @@ let build_lattice env se = match se with
 
   | _ -> env
 
-
-let rec add_sigelt env se = match se with
-  | Sig_bundle(ses, _, _, _) -> add_sigelts env ses
-  | _ ->
-    let lids = lids_of_sigelt se in
-    List.iter (fun l -> Util.smap_add (sigtab env) l.str se) lids
-
-and add_sigelts env ses =
-  ses |> List.iter (add_sigelt env)
-
-let empty_lid = Syntax.lid_of_ids [Syntax.id_of_text ""]
-
-let finish_module env m =
-  let sigs =
-    if lid_equals m.name Const.prims_lid
-    then env.gamma |> List.collect (function
-            | Binding_sig se -> [se]
-            | _ -> [])
-    else m.exports  in
-  add_sigelts env sigs;
-  {env with
-    curmodule=empty_lid;
-    gamma=[];
-    modules=m::env.modules}
-
-
+////////////////////////////////////////////////////////////
+// Introducing identifiers and updating the environment   //
+////////////////////////////////////////////////////////////    
 let push_sigelt env s = build_lattice ({env with gamma=Binding_sig s::env.gamma}) s
+
 let push_local_binding env b = {env with gamma=b::env.gamma}
 
-let uvars_in_env env =
-  let no_uvs = new_uv_set () in
-  let ext out uvs = Util.set_union out uvs in
-  let rec aux out g = match g with
-    | [] -> out
-    | Binding_lid(_, t)::tl
-    | Binding_var({sort=t})::tl -> aux (ext out (Free.uvars t)) tl
-    | Binding_sig _::_ -> out in (* this marks a top-level scope ... no more uvars beyond this *)
-  aux no_uvs env.gamma
 
 let push_module env (m:modul) =
     add_sigelts env m.exports;
@@ -496,10 +483,47 @@ let push_module env (m:modul) =
 
 let set_expected_typ env t =
   {env with expected_typ = Some t; use_eq=false}
+
 let expected_typ env = match env.expected_typ with
   | None -> None
   | Some t -> Some t
-let clear_expected_typ env = {env with expected_typ=None; use_eq=false}, expected_typ env
+
+let clear_expected_typ env = 
+    {env with expected_typ=None; use_eq=false}, expected_typ env
+
+let finish_module =
+    let empty_lid = Syntax.lid_of_ids [Syntax.id_of_text ""] in
+    fun env m ->
+      let sigs =
+        if lid_equals m.name Const.prims_lid
+        then env.gamma |> List.collect (function
+                | Binding_sig se -> [se]
+                | _ -> [])
+        else m.exports  in
+      add_sigelts env sigs;
+      {env with
+        curmodule=empty_lid;
+        gamma=[];
+        modules=m::env.modules}
+
+////////////////////////////////////////////////////////////
+// Collections from the environment                       //
+////////////////////////////////////////////////////////////
+let uvars_in_env env =
+  let no_uvs = new_uv_set () in
+  let ext out uvs = Util.set_union out uvs in
+  let rec aux out g = match g with
+    | [] -> out
+    | Binding_lid(_, (_, t))::tl
+    | Binding_var(_, (_, t))::tl -> aux (ext out (Free.uvars t)) tl
+    | Binding_sig _::_ -> out in (* this marks a top-level scope ... no more uvars beyond this *)
+  aux no_uvs env.gamma
+
+let bound_vars env =
+    env.gamma |> List.collect (function
+        | Binding_var (x, _) -> [x]
+        | Binding_lid _ -> []
+        | Binding_sig _ -> [])
 
 let fold_env env f a = List.fold_right (fun e a -> f a e) env.gamma a
 

@@ -73,10 +73,11 @@ type universe =
   | U_zero
   | U_succ  of universe
   | U_max   of universe * universe
+  | U_bvar  of int
   | U_var   of univ_var
   | U_unif  of Unionfind.uvar<option<universe>>
 and univ_var = ident
-
+type univ_vars = list<univ_var>
 type universes = list<universe>
 
 type term' =
@@ -161,8 +162,9 @@ and lbname = either<bv, lident>
 and letbindings = bool * list<letbinding>       (* let recs may have more than one element; top-level lets have lidents *)
 and subst_t = list<list<subst_elt>>
 and subst_elt = 
-    | DB of int * term                          (* DB i t: replace a bound variable with index i with term t *)
-    | NM of bv * int                            (* NM x i: replace a local name with a bound variable i *)
+   | DB of int * term                          (* DB i t: replace a bound variable with index i with term t *)
+   | NM of bv * int                            (* NM x i: replace a local name with a bound variable i *)
+   | UN of univ_var * universe                 (* UN u v: replace universes variable u with universe term v *)
 and freenames = set<bv>
 and uvars    = set<uvar>
 and syntax<'a,'b> = {
@@ -172,11 +174,13 @@ and syntax<'a,'b> = {
     vars:memo<(freenames * uvars)>;
 }
 and bv = {
-    ppname:ident; //programmer-provided name for pretty-printing 
+    ppname:ident;  //programmer-provided name for pretty-printing 
     index:int;     //de Bruijn index 0-based, counting up from the binder
     sort:term
 }
 and fv = var<term> * option<fv_qual>
+
+type tscheme = list<univ_var> * typ
 
 type lcomp = {
     eff_name: lident;
@@ -235,7 +239,8 @@ type eff_decl = {
     trivial:typ;
 }
 and sigelt =
-  | Sig_tycon          of lident                   //type l (x1:t1) ... (xn:tn) = t 
+  | Sig_tycon          of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t 
+                       * univ_vars                 //u1..un
                        * binders                   //(x1:t1) ... (xn:tn)
                        * typ                       //t
                        * list<lident>              //mutually defined types
@@ -252,12 +257,14 @@ and sigelt =
                        * list<lident> 
                        * Range.range
   | Sig_datacon        of lident 
+                       * univ_vars                  //universe variables
                        * typ 
                        * lident                     //the inductive type of the value this constructs
                        * list<qualifier> 
                        * list<lident>               //mutually defined types 
                        * Range.range
   | Sig_val_decl       of lident 
+                       * univ_vars
                        * typ 
                        * list<qualifier> 
                        * Range.range
@@ -268,9 +275,9 @@ and sigelt =
   | Sig_main           of term
                        * Range.range
   | Sig_assume         of lident 
-                        * formula 
-                        * list<qualifier> 
-                        * Range.range
+                       * formula 
+                       * list<qualifier> 
+                       * Range.range
   | Sig_new_effect     of eff_decl * Range.range
   | Sig_sub_effect     of sub_eff * Range.range
   | Sig_effect_abbrev  of lident * binders * comp * list<qualifier> * Range.range

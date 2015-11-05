@@ -330,10 +330,10 @@ let destruct typ lid =
 let rec lids_of_sigelt se = match se with
   | Sig_let(_, _, lids, _)
   | Sig_bundle(_, _, lids, _) -> lids
-  | Sig_tycon (lid, _, _,  _, _, _, _)
+  | Sig_tycon (lid, _, _,  _, _, _, _, _)
   | Sig_effect_abbrev(lid, _, _,  _, _)
-  | Sig_datacon (lid, _, _, _, _, _)
-  | Sig_val_decl (lid, _, _, _)
+  | Sig_datacon (lid, _, _, _, _, _, _)
+  | Sig_val_decl (lid, _, _, _, _)
   | Sig_assume (lid, _, _, _) -> [lid]
   | Sig_new_effect(n, _) -> [n.mname]
   | Sig_sub_effect _
@@ -346,10 +346,10 @@ let lid_of_sigelt se : option<lident> = match lids_of_sigelt se with
 
 let range_of_sigelt x = match x with
   | Sig_bundle(_, _, _, r)
-  | Sig_tycon (_, _, _,  _, _, _, r)
+  | Sig_tycon (_, _, _,  _, _, _, _, r)
   | Sig_effect_abbrev  (_, _, _, _, r)
-  | Sig_datacon (_, _, _, _, _, r)
-  | Sig_val_decl (_, _, _, r)
+  | Sig_datacon (_, _, _, _, _, _, r)
+  | Sig_val_decl (_, _, _, _, r)
   | Sig_assume (_, _, _, r)
   | Sig_let(_, r, _, _)
   | Sig_main(_, r)
