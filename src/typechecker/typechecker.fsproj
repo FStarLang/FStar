@@ -57,6 +57,8 @@
   <ItemGroup>
     <Compile Include="env.fsi" />
     <Compile Include="env.fs" />
+    <Compile Include="normalize.fsi" />
+    <Compile Include="normalize.fs" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
