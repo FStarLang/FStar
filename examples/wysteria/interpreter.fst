@@ -186,16 +186,8 @@ let do_sec_comp p r =
 
   let (c_in, c_out) = open_connection 8888 in
   let _ = client_write c_out p r in
-  let dv = client_read c_in in
+  let (x, e, dv) = client_read c_in in
 
-  let _ = admitP (exists env_m. dom #prin #env #p_cmp env_m = ps /\
-                           contains p env_m                 /\
-			   select p env_m = Some en         /\
-			   Let (Conf Target (Mode Sec ps) [] (update_env (compose_envs_m ps env_m) x V_unit) (T_exp e) (hide []))
-			   (fun c_init ->
-			     (exists c. (sstep_star c_init c /\
-				    is_sterminal c      /\
-				    dv = slice_v p (T_val.v (Conf.t c)))))) in
   dv
 
 val tstep: config -> ML (option config)
