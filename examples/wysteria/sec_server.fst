@@ -87,10 +87,61 @@ let rec pss_ps_to_pss #ps #pi #pi' #pi'' h1 h2 = match h1 with
     let hh = pss_ps_to_pss h2' h2 in
     PS_tran h1' hh
 
+type eq_proto' (ps:prins) (pi:tpar ps) (pi':tpar ps) =
+  forall p. contains p pi ==>
+       (Let (Some.v (select p pi))
+        (fun c ->
+	 (Let (Some.v (select p pi'))
+	  (fun c' ->
+           Conf.l c = Conf.l c' /\
+           Conf.m c = Conf.m c' /\
+           Conf.s c = Conf.s c' /\
+           Conf.en c = Conf.en c'))))
+
+type final_prop (ps:prins) (pi:tpar ps) (c:config{is_value c}) =
+  forall p. contains p pi ==>
+       (Let (Conf.t (Some.v (select p pi)))
+        (fun t ->
+	 is_T_val t /\
+	 (Let (D_v (T_val.meta t) (T_val.v t))
+	  (fun dvt ->
+	   b2t (dvt = slice_v #(T_val.meta (Conf.t c)) p
+			      (T_val.v (Conf.t c)))))))
+
+type sec_prop =
+  | Mk_prop:
+    ps:prins -> x:varname -> e:exp
+    -> c_sec_terminal:config{is_sterminal c_sec_terminal}
+    -> pi_init:protocol ps{tpre_assec #ps pi_init ps x e}
+    -> pi_final:protocol ps
+    -> h:pstep_star #ps pi_init pi_final{final_prop ps (fst pi_final) c_sec_terminal /\
+                                        eq_proto' ps (fst pi_init) (fst pi_final)}
+    -> sec_prop
+
+val ret_sec_value_to_ps_helper_lemma:
+  #ps:prins
+  -> pi:tpar ps{forall p. mem p ps ==>
+                    (contains p pi /\ waiting_config (Some.v (select p pi)))}
+  -> c:tconfig{is_sec c /\ is_value c}
+  -> pi':tpar ps{pi' = ret_sec_value_to_ps #ps pi c ps}
+  -> Lemma (requires (True))
+          (ensures (final_prop ps pi' c))
+let ret_sec_value_to_ps_helper_lemma #ps pi c pi' = ()
+
 #set-options "--z3timeout 25"
 
-val create_pstep_star: data:psmap_v{Equal data.ps data.ps'} -> ML unit
-let create_pstep_star data =
+val create_pstep_star:
+  data:psmap_v{Equal (Mk_psmap.ps data) (Mk_psmap.ps' data)}
+  -> c_sec_terminal:config{is_sterminal c_sec_terminal}
+  -> h:sstep_star (Conf Target (Mode Sec (Mk_psmap.ps data)) []
+                       (update_env (compose_envs_m (Mk_psmap.ps data) (Mk_psmap.en_m data))
+		                   (Mk_psmap.x data) V_unit)
+		       (T_exp (Mk_psmap.e data)) (hide []))
+		 c_sec_terminal
+  -> Tot (p:sec_prop & (u:unit{Mk_prop.ps p = Mk_psmap.ps data /\
+                              Mk_prop.x p = Mk_psmap.x data   /\
+			      Mk_prop.e p = Mk_psmap.e data}))
+let create_pstep_star data c_sec_terminal sstep_h =
   let Mk_psmap ps _ en_m _ x e pi = data in
 
   let pi_init = (pi, (OrdMap.empty #prins #tconfig_sec #ps_cmp)) in
@@ -106,8 +157,6 @@ let create_pstep_star data =
   let c_sec_init = Conf Target (Mode Sec ps) [] (update_env (compose_envs_m ps en_m) x V_unit) (T_exp e) (hide []) in
 
   let _ = cut (b2t (pi_enter_sec = update ps c_sec_init (snd pi_init))) in
-
-  let (| c_sec_terminal, sstep_h |) = do_sec_comp' c_sec_init in
 
   let _ = sec_comp_step_star_same_mode #c_sec_init #c_sec_terminal sstep_h in
 
@@ -130,13 +179,10 @@ let create_pstep_star data =
   let pi_final_par = ret_sec_value_to_ps #ps pi_enter_par c_sec_terminal ps in
   let pi_final = (pi_final_par, OrdMap.remove ps tsec_terminal) in
 
-  (* let T_val #meta v = Conf.t c_sec_terminal in *)
-  (* let _ = assert (forall p. mem p ps ==> *)
-  (*                      (Let (Conf.t (Some.v (select p (pi_final_par)))) *)
-  (* 		        (fun t -> *)
-  (* 			 is_T_val t /\ *)
-  (* 			 (D_v (T_val.meta t) (T_val.v t) = *)
-  (* 			  slice_v #meta p v)))) in *)
+  (* TODO: FIXME: this also verifies, but with this whole thing times out *)
+  let _ = admitP (eq_proto' ps pi pi_final_par) in
+
+  ret_sec_value_to_ps_helper_lemma #ps pi_enter_par c_sec_terminal pi_final_par;
 
   let s2:pstep #ps pi_sec_terminal pi_final =
     P_sec_exit #ps pi_sec_terminal ps pi_final in
@@ -147,65 +193,66 @@ let create_pstep_star data =
   let h2:pstep_star #ps pi_init pi_final =
     PS_tran #ps #pi_init #pi_enter #pi_final s1 h1 in
 
-  ()
+  (| Mk_prop ps x e c_sec_terminal pi_init pi_final h2, () |)
 
 #reset-options
 
-val handle_connection: chan_in -> chan_out -> ML unit
-let handle_connection c_in c_out =
-  let p, r = server_read c_in in
 
-  admitP (is_R_assec r /\ is_clos (R_assec.v r));
-  admitP (exists c. Conf.t c = T_red r /\ Conf.l c = Target /\ is_par c);
+(* val handle_connection: chan_in -> chan_out -> ML unit *)
+(* let handle_connection c_in c_out = *)
+(*   let p, r = server_read c_in in *)
 
-  let R_assec #meta ps v = r in
-  let (en, x, e) = get_en_b v in
+(*   admitP (is_R_assec r /\ is_clos (R_assec.v r)); *)
+(*   admitP (exists c. Conf.t c = T_red r /\ Conf.l c = Target /\ is_par c); *)
 
-  let _ = admitP (b2t (mem p ps)) in
+(*   let R_assec #meta ps v = r in *)
+(*   let (en, x, e) = get_en_b v in *)
 
-  let c =
-    let proof = give_proof #(exists c. Conf.t c = T_red r /\ Conf.l c = Target /\ is_par c) () in
-    let (| c, proof |) = open_exists #config #(fun c -> Conf.t c = T_red r /\ Conf.l c = Target /\ is_par c) proof in
-    let _ = take_proof proof in
-    c
-  in
+(*   let _ = admitP (b2t (mem p ps)) in *)
 
-  let psmap_ref = Mk_ref.r psmap_ref in
+(*   let c = *)
+(*     let proof = give_proof #(exists c. Conf.t c = T_red r /\ Conf.l c = Target /\ is_par c) () in *)
+(*     let (| c, proof |) = open_exists #config #(fun c -> Conf.t c = T_red r /\ Conf.l c = Target /\ is_par c) proof in *)
+(*     let _ = take_proof proof in *)
+(*     c *)
+(*   in *)
 
-  let ps', pi, en_m, out_m =
-    if contains ps !psmap_ref then
-      let Some (Mk_psmap ps1 ps' en_m out_m  x' e' pi) = select ps !psmap_ref in
-      let _ = admitP (b2t (e = e')) in
-      if ps = ps1 && x = x' then
-	let en_m = update #prin #env #p_cmp p en en_m in
-	let out_m = update #prin #chan_out #p_cmp p c_out out_m in
+(*   let psmap_ref = Mk_ref.r psmap_ref in *)
 
-        let pi = update #prin #tconfig_par #p_cmp p c pi in
-        let ps' = union #prin #p_cmp ps' (singleton p) in
+(*   let ps', pi, en_m, out_m = *)
+(*     if contains ps !psmap_ref then *)
+(*       let Some (Mk_psmap ps1 ps' en_m out_m  x' e' pi) = select ps !psmap_ref in *)
+(*       let _ = admitP (b2t (e = e')) in *)
+(*       if ps = ps1 && x = x' then *)
+(* 	let en_m = update #prin #env #p_cmp p en en_m in *)
+(* 	let out_m = update #prin #chan_out #p_cmp p c_out out_m in *)
 
-	ps', pi, en_m, out_m
-      else failwith "Not a valid secure computation request"
-    else
-      let en_m = update #prin #env #p_cmp p en OrdMap.empty in
-      let out_m = update #prin #chan_out #p_cmp p c_out OrdMap.empty in
-      let pi = update #prin #tconfig_par #p_cmp p c OrdMap.empty in
-      let ps' = singleton p in
+(*         let pi = update #prin #tconfig_par #p_cmp p c pi in *)
+(*         let ps' = union #prin #p_cmp ps' (singleton p) in *)
 
-      ps', pi, en_m, out_m
-  in
+(* 	ps', pi, en_m, out_m *)
+(*       else failwith "Not a valid secure computation request" *)
+(*     else *)
+(*       let en_m = update #prin #env #p_cmp p en OrdMap.empty in *)
+(*       let out_m = update #prin #chan_out #p_cmp p c_out OrdMap.empty in *)
+(*       let pi = update #prin #tconfig_par #p_cmp p c OrdMap.empty in *)
+(*       let ps' = singleton p in *)
 
-  let _ = assert (Equal (dom #prin #env #p_cmp en_m) (dom #prin #chan_out #p_cmp out_m)) in
+(*       ps', pi, en_m, out_m *)
+(*   in *)
 
-  if ps = ps' then
-    let _ = create_pstep_star (Mk_psmap ps ps en_m out_m x e pi) in
-    let c_sec_init = Conf Target (Mode Sec ps) [] (update_env (compose_envs_m ps en_m) x V_unit) (T_exp e) (hide []) in
+(*   let _ = assert (Equal (dom #prin #env #p_cmp en_m) (dom #prin #chan_out #p_cmp out_m)) in *)
 
-    let (| c_sec_terminal, _ |) = do_sec_comp' c_sec_init in
+(*   if ps = ps' then *)
+(*     let _ = create_pstep_star (Mk_psmap ps ps en_m out_m x e pi) in *)
+(*     let c_sec_init = Conf Target (Mode Sec ps) [] (update_env (compose_envs_m ps en_m) x V_unit) (T_exp e) (hide []) in *)
 
-    let _ = send_output ps out_m (c_value c_sec_terminal) in
-    psmap_ref := OrdMap.remove ps (!psmap_ref)
-  else
-    psmap_ref := (update ps (Mk_psmap ps ps' en_m out_m x e pi) (!psmap_ref))
+(*     let (| c_sec_terminal, _ |) = do_sec_comp' c_sec_init in *)
+
+(*     let _ = send_output ps out_m (c_value c_sec_terminal) in *)
+(*     psmap_ref := OrdMap.remove ps (!psmap_ref) *)
+(*   else *)
+(*     psmap_ref := (update ps (Mk_psmap ps ps' en_m out_m x e pi) (!psmap_ref)) *)
 
 
-(*     //let _ = create_thread (do_sec_comp ps env_m' out_m' x e) in *)
+(* (\*     //let _ = create_thread (do_sec_comp ps env_m' out_m' x e) in *\) *)
