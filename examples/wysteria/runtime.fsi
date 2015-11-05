@@ -13,7 +13,8 @@ type chan_in   // channel type to read input
 type chan_out  // channel type to send output
 
 val establish_server: callback:(chan_in -> chan_out -> ML unit) -> port:nat -> ML unit
-val server_read : chan_in  -> ML (prin * (r:redex{is_R_assec r /\ is_clos (R_assec.v r)}))
+// val server_read : chan_in  -> ML (prin * (r:redex{is_R_assec r /\ is_clos (R_assec.v r)}))
+val server_read : chan_in  -> ML (prin * redex)
 val server_write: chan_out -> dvalue -> ML unit
 
 val open_connection : port:nat -> ML (chan_in * chan_out)

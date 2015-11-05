@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi Ffibridge --admit_fsi FStar.Set --admit_fsi FStar.String --admit_fsi FStar.IO --admit_fsi Runtime;
+    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi Ffibridge --admit_fsi FStar.Set --admit_fsi FStar.String --admit_fsi FStar.IO --admit_fsi Runtime --__temp_no_proj;
     other-files:ghost.fst listTot.fst ordset.fsi ordmap.fsi classical.fst set.fsi heap.fst st.fst all.fst list.fst io.fsti string.fsi prins.fst ast.fst ffibridge.fsi sem.fst runtime.fsi print.fst
  --*)
 

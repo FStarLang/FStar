@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Ffibridge --admit_fsi Runtime --admit_fsi FStar.IO --admit_fsi FStar.String;
+    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Ffibridge --admit_fsi Runtime --admit_fsi FStar.IO --admit_fsi FStar.String --__temp_no_proj;
     other-files:ghost.fst listTot.fst set.fsi ordset.fsi ordmap.fsi classical.fst heap.fst st.fst all.fst list.fst io.fsti string.fst prins.fst ast.fst ffibridge.fsi sem.fst runtime.fsi print.fst ckt.fst
  --*)
 
@@ -151,43 +151,64 @@ let step_correctness c =
 
 open Print
 
-val step_star: config -> ML (option config)
+open FStar.Ghost
+
+val construct_sstep_star:
+  c:config -> c':config{step c = Some c'} -> c'':config -> h:sstep_star c' c''
+  -> Tot (sstep_star c c'')
+let construct_sstep_star c c' c'' h = SS_tran #c #c' #c'' (step_correctness c) h
+
+(* TODO: FIXME: make the sstep_star erased *)
+//val step_star: c:config -> Dv (c':config & (erased (sstep_star c c')))
+val step_star: c:config -> Dv (c':config & (sstep_star c c'))
 let rec step_star c =
-  (*print_string "SStepping: "; print_string (config_to_string c); print_string "\n";*)
   let c' = step c in
   match c' with
-    | Some c' -> step_star c'
-    | None    ->
-      print_string "Could not sstep\n";
-      Some c
+    | Some c' ->
+      let (| c'', h'' |) = step_star c' in
+      //let h' = elift1 (construct_sstep_star c c' c'') h'' in
+      let h' = construct_sstep_star c c' c'' h'' in
+      (| c'', h' |)
+    | None    -> (| c, SS_refl c |)
 
-val do_sec_comp: prin -> r:redex{is_R_assec r} -> ML dvalue
+val is_sterminal: config -> Tot bool
+let is_sterminal (Conf _ _ s _ t _) = s = [] && is_T_val t
+
+val do_sec_comp: prin -> r:redex{is_R_assec r /\ is_clos (R_assec.v r)} -> ML dvalue
 let do_sec_comp p r =
-  let R_assec ps v = r in
-  let _ = admitP (b2t (is_clos v)) in
-  let (en, _, e) = get_en_b v in
-  let dv = Circuit.rungmw p ps en (fun _ -> None) e in
-  dv
-  (* let (c_in, c_out) = open_connection 8888 in *)
-  (* let _ = client_write c_out p r in *)
-  (* client_read c_in *)
+  (* let R_assec ps v = r in *)
+  (* let _ = admitP (b2t (is_clos v)) in *)
+  (* let (en, _, e) = get_en_b v in *)
+  (* let dv = Circuit.rungmw p ps en (fun _ -> None) e in *)
+  (* dv *)
+  let ps = R_assec.ps r in
+  let (en, x, e) = get_en_b (R_assec.v r) in
 
-open FStar.Ghost
+  let (c_in, c_out) = open_connection 8888 in
+  let _ = client_write c_out p r in
+  let dv = client_read c_in in
+
+  let _ = admitP (exists env_m. dom #prin #env #p_cmp env_m = ps /\
+                           contains p env_m                 /\
+			   select p env_m = Some en         /\
+			   Let (Conf Target (Mode Sec ps) [] (update_env (compose_envs_m ps env_m) x V_unit) (T_exp e) (hide []))
+			   (fun c_init ->
+			     (exists c. (sstep_star c_init c /\
+				    is_sterminal c      /\
+				    dv = slice_v p (T_val.v (Conf.t c)))))) in
+  dv
 
 val tstep: config -> ML (option config)
 let tstep c =
   let Conf l m s en t _ = c in
-  if is_T_red t && is_R_assec (T_red.r t) then
+  if is_T_red t && is_R_assec (T_red.r t) && is_clos (R_assec.v (T_red.r t)) then
     let dv = do_sec_comp (Some.v (OrdSet.choose (Mode.ps m))) (T_red.r t) in
     Some (Conf l m s en (T_val #(D_v.meta dv) (D_v.v dv)) (hide []))
   else step c
 
 val tstep_star: config -> ML (option config)
 let rec tstep_star c =
-  (*print_string "Stepping: "; print_string (config_to_string c); print_string "\n";*)
   let c' = tstep c in
   match c' with
     | Some c' -> tstep_star c'
-    | None    ->
-      print_string "Could not step\n";
-      Some c
+    | None    -> Some c
