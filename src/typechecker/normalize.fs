@@ -49,9 +49,143 @@ and steps = list<step>
 
 type closure = 
   | Open of int
-  | Clos of env * term 
-
+  | Clos of env * term * memo<term> //memo for lazy evaluation
 and env = list<closure>
+
+type branches = list<(pat * option<term> * term)> 
+type stack_elt = 
+ | MemoLazy of memo<term>
+ | Arg      of closure
+ | Match    of env * branches
+ | Abs      of env * binder * Range.range
+// | RefineL  of bv  * Range.range
+// | RefineR  of env * bv * term * Range.range
+// | Arrow    of env * binders * binder * binders * comp * Range.range
+// | MetaL    of term * Range.range
+// | MetaR    of env * metadata * Range.range
+
+type stack = list<stack_elt>
+
+type depth = int 
+
+let set_memo r t =
+  match !r with 
+    | Some _ -> failwith "Unexpected set_memo: thunk already evaluated"
+    | None -> r := Some t
+
+let rec norm : steps -> env -> stack -> depth -> term -> term = 
+    fun steps env stack depth t -> 
+        let t = compress t in 
+        match t.n with 
+          | Tm_delayed _ -> 
+            failwith "Impossible"
+
+          | Tm_name _ 
+          | Tm_fvar _
+          | Tm_uinst _
+          | Tm_constant _
+          | Tm_type _
+          | Tm_uvar _ 
+          | Tm_unknown _ ->
+            rebuild steps env stack depth t
+
+          | Tm_bvar x -> 
+            begin match List.nth env x.index with 
+                | Open j -> 
+                  let t = mk (Tm_bvar ({x with index=depth - j})) None t.pos in 
+                  rebuild steps env stack depth t
+
+                | Clos (env, t, r) -> 
+                  begin match !r with 
+                    | Some t' -> norm steps env stack depth t'
+                    | None -> norm steps env (MemoLazy r::stack) depth t
+                  end
+            end
+    
+          | Tm_abs(bs, body) -> 
+            begin match stack with 
+                | MemoLazy r::stack -> 
+                  set_memo r t;
+                  norm steps env stack depth t
+                 
+                | Match _::_ -> 
+                  failwith "Ill-typed term: cannot pattern match an abstraction"
+
+                | Arg c::stack -> 
+                  norm steps (c :: env) stack depth (mk (Tm_abs(List.tl bs, body)) None t.pos)
+
+                | _ -> 
+                  let rec aux env stack depth = function 
+                    | [] -> norm steps env stack depth body
+                    | b::bs -> 
+                      let stack = Abs (env, b, t.pos)::stack in 
+                      let depth = depth + 1 in
+                      let env = Open depth::env in
+                      aux env stack depth bs in
+                  aux env stack depth bs
+            end
+
+          | Tm_app(head, args) -> 
+            let stack = stack |> List.fold_right (fun (a, _) stack -> Arg (Clos(env, a, Util.mk_ref None))::stack) args in
+            norm steps env stack depth head
+                            
+          | Tm_refine(x, f) -> //non tail-recursive; the alternative is to keep marks on the stack to rebuild the term ... but that's very heavy
+            let t_x = norm steps env [] depth x.sort in 
+            let depth' = depth + 1 in
+            let env' = Open depth'::env in 
+            let f = norm steps env' [] depth' f in 
+            let t = mk (Tm_refine({x with sort=t_x}, f)) None t.pos in
+            rebuild steps env stack depth t
+                  
+
+//          | Tm_arrow      of binders * comp                              (* (xi:ti) -> M t' wp *)
+//          | Tm_match      of term * list<(pat * option<term> * term)>    (* optional when clause in each equation *)
+//          | Tm_ascribed   of term * term * option<lident>                (* an effect label is the third arg, filled in by the type-checker *)
+//          | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
+          | Tm_meta (head, m) -> 
+            
+            norm steps env (MetaR(env, m, t.pos)::stack) depth head
+
+and rebuild : steps -> env -> stack -> depth -> term -> term = 
+    fun steps env stack depth t -> 
+        match stack with 
+            | [] -> t
+
+            | MemoLazy r::stack -> 
+              set_memo r t;
+              rebuild steps env stack depth t
+
+            | Abs (env', b, r)::stack -> 
+              let b = delay_norm_binder steps env' [] depth b in 
+
+
+
+
+            | RefineR(env', x, f, r)::stack -> 
+              let stack = RefineL ({x with sort=t}, r)::stack in 
+              let depth = depth + 1 in
+              let env' = Open depth::env' in 
+              norm steps env' stack depth f
+
+            | RefineL(x, r)::stack -> 
+              let t = mk (Tm_refine(x, t)) None r in
+              norm steps env stack depth t
+
+            | MetaR(env, m, r)::stack -> 
+              begin match m with 
+                | Meta_pattern args -> 
+                  failwith ""
+
+                | _ -> 
+                 let t = mk (Tm_meta(t, m)) None r in
+                 norm steps env stack depth t
+              end
+
+           | _ -> 
+
+              
+    failwith "NYI"
+
 
 
 type config<'a> = {code:'a;
