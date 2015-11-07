@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Ffibridge --admit_fsi Runtime --admit_fsi FStar.IO --admit_fsi FStar.String --__temp_no_proj --admit_fsi FStar.Squash;
-    other-files:ghost.fst squash.fsti listTot.fst ordset.fsi ordmap.fsi classical.fst set.fsi heap.fst st.fst all.fst list.fst io.fsti string.fsi prins.fst ast.fst ffibridge.fsi sem.fst runtime.fsi print.fst ckt.fst interpreter.fst
+    other-files:ghost.fst squash.fsti listTot.fst ordset.fsi ordmap.fsi classical.fst set.fsi heap.fst st.fst all.fst list.fst io.fsti string.fsi prins.fst ast.fst ffibridge.fsi sem.fst psem.fst runtime.fsi print.fst ckt.fst interpreter.fst
  --*)
 
 module SecServer
@@ -15,6 +15,7 @@ open Runtime
 open Prins
 open AST
 open Semantics
+open PSemantics
 open Interpreter
 
 type en_map = ordmap prin env p_cmp
@@ -76,7 +77,7 @@ let do_sec_comp' c =
     failwith "Secure computation did not end in terminal state"
 
 (* convert a pi ->* pi' -> pi'' to pi ->* pi'' *)
-val pss_ps_to_pss:
+opaque val pss_ps_to_pss:
   #ps:prins -> #pi:protocol ps -> #pi':protocol ps -> #pi'':protocol ps
   -> h1:pstep_star #ps pi pi' -> h2:pstep #ps pi' pi''
   -> Tot (pstep_star #ps pi pi'') (decreases h1)
@@ -145,7 +146,7 @@ let get_sec_enter_step ps en_m red_m x e pi =
      P_sec_enter #ps (pi, (OrdMap.empty #prins #tconfig_sec #ps_cmp))
                  ps x e (tstep_assec #ps (pi, (OrdMap.empty #prins #tconfig_sec #ps_cmp)) ps x e) |)
 
-val squash_pstep_star:
+opaque val squash_pstep_star:
   ps:prins -> pi_init:protocol ps -> pi_final:protocol ps
   -> h:pstep_star #ps pi_init pi_final
   -> Tot (u:unit{pstep_star #ps pi_init pi_final})
@@ -153,7 +154,7 @@ let squash_pstep_star ps pi_init pi_final h =
   let sq_h = FStar.Squash.return_squash #(pstep_star #ps pi_init pi_final) h in
   FStar.Squash.give_proof #(pstep_star #ps pi_init pi_final) sq_h
 
-val stitch_steps:
+opaque val stitch_steps:
   ps:prins
   -> pi_init:protocol ps
   -> pi_enter:protocol ps

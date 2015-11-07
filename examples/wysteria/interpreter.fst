@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Ffibridge --admit_fsi Runtime --admit_fsi FStar.IO --admit_fsi FStar.String --__temp_no_proj;
-    other-files:ghost.fst listTot.fst set.fsi ordset.fsi ordmap.fsi classical.fst heap.fst st.fst all.fst list.fst io.fsti string.fst prins.fst ast.fst ffibridge.fsi sem.fst runtime.fsi print.fst ckt.fst
+    other-files:ghost.fst listTot.fst set.fsi ordset.fsi ordmap.fsi classical.fst heap.fst st.fst all.fst list.fst io.fsti string.fst prins.fst ast.fst ffibridge.fsi sem.fst psem.fst runtime.fsi print.fst ckt.fst
  --*)
 
 module Interpreter
@@ -14,6 +14,7 @@ open AST
 open Runtime
 
 open Semantics
+open PSemantics
 
 val step: c:config -> Tot (option config)
 let step c =
