@@ -17,18 +17,17 @@ open AST
 open Semantics
 open Interpreter
 
-exception Comp_error
-
 type en_map = ordmap prin env p_cmp
 type out_map = ordmap prin chan_out p_cmp
 type redex_map = ordmap prin redex p_cmp
 
 (*
- * ps   -- parties requires for this secure computation
- * ps'  -- parties already checked-in
- * pi   -- the protocol (mapping p to c) accumulated so far
- * x,e  -- \x.e is the secure computation
- * en_m -- the map of p |-> env accumulated so far
+ * ps    -- parties requires for this secure computation
+ * ps'   -- parties already checked-in
+ * pi    -- the protocol (mapping p to c) accumulated so far
+ * x,e   -- \x.e is the secure computation
+ * en_m  -- the map of p |-> env accumulated so far
+ * red_m -- the map of p |-> redex accumulated so far
  *)
 type tpre_assec' (ps:prins) (ps':prins) (pi:tpar ps') (x:varname) (e:exp) (en_m:en_map) (red_m:redex_map) =
   forall p. contains p pi ==>
@@ -59,11 +58,12 @@ type psmap_v =
 
 type psmap = ordmap prins psmap_v ps_cmp
 
-// Forcing instantiation of type variables in extracted OCaml code
+(* Forcing instantiation of type variables in extracted OCaml code *)
 type psmap_ref_t =
   | Mk_ref: r:ref (ordmap prins psmap_v ps_cmp) -> psmap_ref_t
 
-(* private *) let psmap_ref = Mk_ref (alloc (OrdMap.empty #prins #psmap_v #ps_cmp))
+(* private *)
+let psmap_ref = Mk_ref (alloc (OrdMap.empty #prins #psmap_v #ps_cmp))
 
 (* call interpreter step_star on the input config *)
 val do_sec_comp':
@@ -120,26 +120,65 @@ val ret_sec_value_to_ps_helper_lemma:
           (ensures (final_prop ps pi' c))
 let ret_sec_value_to_ps_helper_lemma #ps pi c pi' = ()
 
+(* property that we prove for the secure computation *)
 type sec_comp_prop (ps:prins) (c:config{is_sterminal c}) (pi:tpar ps) (pi_final:protocol ps) =
-   final_prop ps (fst pi_final) c                                           /\
-   pstep_star #ps (pi, (OrdMap.empty #prins #tconfig_sec #ps_cmp)) pi_final /\
-   eq_proto' ps pi (fst pi_final)
+  final_prop ps (fst pi_final) c                                           /\
+  pstep_star #ps (pi, (OrdMap.empty #prins #tconfig_sec #ps_cmp)) pi_final /\
+  eq_proto' ps pi (fst pi_final)
 
 val init_sec_conf:
   ps:prins -> en_m:en_map{contains_ps ps en_m} -> varname -> exp -> Tot tconfig_sec
 let init_sec_conf ps en_m x e =
   Conf Target (Mode Sec ps) [] (update_env (compose_envs_m ps en_m) x V_unit)
-	      (T_exp e) (hide [])
+       (T_exp e) (hide [])
 
-open FStar.Squash
+val get_sec_enter_step:
+  ps:prins -> en_m:en_map{forall p. mem p ps = contains p en_m}
+  -> red_m:redex_map{forall p.mem p ps = contains p red_m}
+  -> x:varname -> e:exp
+  -> pi:tpar ps{tpre_assec' ps ps pi x e en_m red_m}
+  -> Tot (pi_enter:protocol ps{pi_enter = tstep_assec #ps (pi, (OrdMap.empty #prins #tconfig_sec #ps_cmp)) ps x e} &
+         pstep #ps (pi, (OrdMap.empty #prins #tconfig_sec #ps_cmp)) pi_enter)
+let get_sec_enter_step ps en_m red_m x e pi =
+  let pi_enter = tstep_assec #ps (pi, (OrdMap.empty #prins #tconfig_sec #ps_cmp)) ps x e in
+  (| pi_enter,
+     P_sec_enter #ps (pi, (OrdMap.empty #prins #tconfig_sec #ps_cmp))
+                 ps x e (tstep_assec #ps (pi, (OrdMap.empty #prins #tconfig_sec #ps_cmp)) ps x e) |)
+
+val squash_pstep_star:
+  ps:prins -> pi_init:protocol ps -> pi_final:protocol ps
+  -> h:pstep_star #ps pi_init pi_final
+  -> Tot (u:unit{pstep_star #ps pi_init pi_final})
+let squash_pstep_star ps pi_init pi_final h =
+  let sq_h = FStar.Squash.return_squash #(pstep_star #ps pi_init pi_final) h in
+  FStar.Squash.give_proof #(pstep_star #ps pi_init pi_final) sq_h
+
+val stitch_steps:
+  ps:prins
+  -> pi_init:protocol ps
+  -> pi_enter:protocol ps
+  -> pi_sec_terminal:protocol ps
+  -> pi_final:protocol ps
+  -> s1:pstep #ps pi_init pi_enter
+  -> ss:pstep_star #ps pi_enter pi_sec_terminal
+  -> s2:pstep #ps pi_sec_terminal pi_final
+  -> Tot (pstep_star #ps pi_init pi_final)
+let stitch_steps ps pi_init pi_enter pi_sec_terminal pi_final s1 ss s2 =
+  let h1:pstep_star #ps pi_enter pi_final =
+    pss_ps_to_pss #ps #pi_enter #pi_sec_terminal #pi_final ss s2
+  in
+
+  let h2:pstep_star #ps pi_init pi_final =
+    PS_tran #ps #pi_init #pi_enter #pi_final s1 h1
+  in
+  h2
 
 #set-options "--z3timeout 25"
 
 val create_pstep_star:
   ps:prins -> en_m:en_map{forall p. mem p ps = contains p en_m}
   -> red_m:redex_map{forall p.mem p ps = contains p red_m}
-  -> x:varname -> e:exp
-  -> c_sec:config{is_sterminal c_sec}
+  -> x:varname -> e:exp -> c_sec:config{is_sterminal c_sec}
   -> h:sstep_star (init_sec_conf ps en_m x e) c_sec
   -> pi:tpar ps{tpre_assec' ps ps pi x e en_m red_m}
   -> Tot (pi_final:protocol ps{sec_comp_prop ps c_sec pi pi_final})
@@ -148,14 +187,17 @@ let create_pstep_star ps en_m red_m x e c_sec h pi =
   let en_m' = get_env_m #ps pi_init ps in
   let _ = cut (OrdMap.Equal en_m' en_m) in
 
-  let _ = cut (tpre_assec #ps pi_init ps x e) in
+  //tpre_assec_lemma ps en_m red_m x e pi;
+  //let _ = cut (tpre_assec #ps pi_init ps x e) in
 
-  let pi_enter = tstep_assec #ps pi_init ps x e in
-  let (pi_enter_par, pi_enter_sec) = pi_enter in
+  //let pi_enter = tstep_assec #ps pi_init ps x e in
+  //let (pi_enter_par, pi_enter_sec) = pi_enter in
 
   (* first step, enter secure block to pi_enter *)
-  let s1:pstep #ps pi_init pi_enter = P_sec_enter #ps pi_init ps x e pi_enter in
-  
+  //let s1:pstep #ps pi_init pi_enter = P_sec_enter #ps pi_init ps x e pi_enter in
+  let (| pi_enter,  s1 |) = get_sec_enter_step ps en_m red_m x e pi in
+  let (pi_enter_par, pi_enter_sec) = pi_enter in
+
   let c_sec_init = init_sec_conf ps en_m x e in
 
   //let _ = cut (b2t (pi_enter_sec = update ps c_sec_init (snd pi_init))) in
@@ -191,12 +233,14 @@ let create_pstep_star ps en_m red_m x e c_sec h pi =
 
   let _ = cut (final_prop ps pi_final_par c_sec) in
 
-  let s2:pstep #ps pi_sec_terminal pi_final = P_sec_exit #ps pi_sec_terminal ps pi_final in
+  let s2 = P_sec_exit #ps pi_sec_terminal ps pi_final in
 
-  let h1:pstep_star #ps pi_enter pi_final = pss_ps_to_pss #ps #pi_enter #pi_sec_terminal #pi_final ss s2 in
+  (* let h1:pstep_star #ps pi_enter pi_final = pss_ps_to_pss #ps #pi_enter #pi_sec_terminal #pi_final ss s2 in *)
 
-  let h2:pstep_star #ps pi_init pi_final = PS_tran #ps #pi_init #pi_enter #pi_final s1 h1 in
-  let _ = admitP (pstep_star #ps pi_init pi_final) in
+  (* let h2:pstep_star #ps pi_init pi_final = PS_tran #ps #pi_init #pi_enter #pi_final s1 h1 in *)
+  let h2 = stitch_steps ps pi_init pi_enter pi_sec_terminal pi_final s1 ss s2 in
+  squash_pstep_star ps pi_init pi_final h2;
+  //let _ = cut (pstep_star #ps pi_init pi_final) in
   pi_final
 
 #reset-options
@@ -292,13 +336,11 @@ val handle_connection: chan_in -> chan_out -> ML unit
 let handle_connection c_in c_out =
   let p, r = server_read c_in in
 
-  admitP (is_R_assec r /\ is_clos (R_assec.v r));
+  admitP (is_R_assec r /\ is_clos (R_assec.v r) /\ mem p (R_assec.ps r));
   admitP (exists c. Conf.t c = T_red r /\ Conf.l c = Target /\ Conf.m c = Mode Par (singleton p));
 
   let R_assec #meta ps v = r in
   let (en, x, e) = get_en_b v in
-
-  let _ = admitP (b2t (mem p ps)) in
 
   let psmap_ref = Mk_ref.r psmap_ref in
 
