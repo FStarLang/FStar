@@ -276,6 +276,24 @@ let build_pi ps ps' en_m red_m x e p r c pi =
   let _ = cut (witness_build_pi pi') in
   ()
 
+val build_pi_lemma:
+  ps:prins -> ps':prins{subset ps' ps}
+  -> en_m:en_map{forall p. mem p ps' = contains p en_m}
+  -> red_m:redex_map{forall p. mem p ps' = contains p red_m}
+  -> x:varname -> e:exp
+  -> p:prin
+  -> r:redex{is_R_assec r /\ is_clos (R_assec.v r) /\ R_assec.ps r = ps /\
+            MkTuple3._2 (get_en_b (R_assec.v r)) = x /\
+	    MkTuple3._3 (get_en_b (R_assec.v r)) = e}
+  -> Lemma (requires (exists (c:config) (pi:tpar ps').
+                       config_prop ps x e p r c /\
+                       tpre_assec' ps ps' pi x e en_m red_m))
+          (ensures (exists (pi':tpar (union ps' (singleton p))).
+                      tpre_assec' ps (union #prin #p_cmp ps' (singleton p)) pi' x e
+	                          (update #prin #env #p_cmp p (MkTuple3._1 (get_en_b (R_assec.v r))) en_m)
+	                          (update #prin #redex #p_cmp p r red_m)))
+let build_pi_lemma ps ps' en_m red_m x e p r = admit ()
+
 opaque type witness_build_pstep_star (#a:Type) (x:a) = True
 
 opaque type Good (#a:Type) (x:a) = True
@@ -295,6 +313,16 @@ let build_pstep_star ps en_m red_m x e c_sec h pi =
   let pi_final = create_pstep_star ps en_m red_m x e c_sec h pi in
   let _ = cut (witness_build_pstep_star pi_final) in
   ()
+
+val build_pstep_star_lemma:
+  ps:prins
+  -> en_m:en_map{forall p. mem p ps = contains p en_m}
+  -> red_m:redex_map{forall p. mem p ps = contains p red_m}
+  -> x:varname -> e:exp -> c_sec:config{is_sterminal c_sec}
+  -> h:sstep_star (init_sec_conf ps en_m x e) c_sec{Good h}
+  -> Lemma (requires (exists (pi:tpar ps). tpre_assec' ps ps pi x e en_m red_m))
+          (ensures (exists (pi:tpar ps) (pi_final:protocol ps). sec_comp_prop ps c_sec pi pi_final))
+let build_pstep_star_lemma ps en_m red_m x e c_sec h = admit ()
 
 val tpre_assec_lemma:
   ps:prins -> pi:tpar ps -> x:varname -> e:exp
@@ -318,15 +346,10 @@ let rec send_output ps' ps x e en_m red_m out_m c_sec =
   let Some r = select p red_m in
   let dv = slice_v p (D_v.v (c_value c_sec)) in
 
-  let _ = assert (exists pi pi_final.
-                    tpre_assec #ps (pi, OrdMap.empty #prins #tconfig_sec #ps_cmp) ps x e /\
-	            T_red.r (Conf.t (Some.v (select p pi))) = r /\
-		    pstep_star #ps (pi, OrdMap.empty #prins #tconfig_sec #ps_cmp) pi_final /\
-		    is_T_val (Conf.t (Some.v (select p (fst pi_final)))) /\
-		    D_v (T_val.meta ((Conf.t (Some.v (select p (fst pi_final))))))
-		        (T_val.v (Conf.t (Some.v (select p (fst pi_final))))) = dv) in
+  (* This is the server property *)
+  let _ = assert (server_prop p r ps x e dv) in
 
-  server_write out (ps, x, e, dv);
+  server_write out (p, r, ps, x, e, dv);
 
   let ps'_rest = remove p ps' in
   if ps'_rest = empty then ()
@@ -336,9 +359,9 @@ val handle_connection: chan_in -> chan_out -> ML unit
 let handle_connection c_in c_out =
   let p, r = server_read c_in in
 
-  admitP (is_R_assec r /\ is_clos (R_assec.v r) /\ mem p (R_assec.ps r));
-  admitP (exists c. Conf.t c = T_red r /\ Conf.l c = Target /\ Conf.m c = Mode Par (singleton p));
-
+  (* This is the client property *)
+  let _ = admitP (client_prop p r) in
+  
   let R_assec #meta ps v = r in
   let (en, x, e) = get_en_b v in
 
@@ -401,18 +424,4 @@ let handle_connection c_in c_out =
   else
     psmap_ref := (update ps (Mk_psmap ps ps' en_m out_m red_m x e) (!psmap_ref))
 
-
 (* (\*     //let _ = create_thread (do_sec_comp ps env_m' out_m' x e) in *\) *)
-
-
-(* type sec_prop = *)
-(*   | Mk_prop: *)
-(*     ps:prins -> x:varname -> e:exp *)
-(*     -> pi:tpar ps *)
-(*     -> c_sec_terminal:config{is_sterminal c_sec_terminal} *)
-(*     -> pi_init:protocol ps{pi_init = (pi, (OrdMap.empty #prins #tconfig_sec #ps_cmp)) /\ tpre_assec #ps pi_init ps x e} *)
-(*     -> pi_final:protocol ps *)
-(*     -> h:pstep_star #ps pi_init pi_final{final_prop ps (fst pi_final) c_sec_terminal /\ *)
-(*                                         eq_proto' ps (fst pi_init) (fst pi_final)} *)
-(*     -> sec_prop *)
-

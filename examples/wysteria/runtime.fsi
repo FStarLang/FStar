@@ -12,14 +12,16 @@ open AST
 type chan_in   // channel type to read input
 type chan_out  // channel type to send output
 
+type server_ret_type = Tuple6 prin redex prins varname exp dvalue
+
 val establish_server: callback:(chan_in -> chan_out -> ML unit) -> port:nat -> ML unit
 // val server_read : chan_in  -> ML (prin * (r:redex{is_R_assec r /\ is_clos (R_assec.v r)}))
 val server_read : chan_in  -> ML (prin * redex)
-val server_write: chan_out -> Tuple4 prins varname exp dvalue -> ML unit
+val server_write: chan_out -> server_ret_type  -> ML unit
 
 val open_connection : port:nat -> ML (chan_in * chan_out)
-val client_write: chan_out -> prin -> r:redex{is_R_assec r} -> ML unit
-val client_read : chan_in -> ML (Tuple4 prins varname exp dvalue)
+val client_write: chan_out -> prin -> r:redex -> ML unit
+val client_read : chan_in -> ML server_ret_type
 
 val create_thread: f:(unit -> ML unit) -> ML unit  // server spawns a new thread for each sec block
 

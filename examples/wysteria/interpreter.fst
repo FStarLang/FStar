@@ -149,6 +149,14 @@ let step_correctness c =
   else if not (pre_assec c = NA) then C_assec_beta c c'
   else C_assec_ret c c'
 
+val target_step_lemma:
+  p:prin -> c:config{Conf.l c = Target /\ Conf.m c = Mode Par (singleton p) /\
+                    is_Some (step c)}
+  -> c':config{c' = Some.v (step c)}
+  -> Lemma (requires (True))
+          (ensures (Conf.l c' = Target /\ Conf.m c' = Mode Par (singleton p)))
+let target_step_lemma p c c' = ()
+
 open Print
 
 open FStar.Ghost
@@ -159,14 +167,12 @@ val construct_sstep_star:
 let construct_sstep_star c c' c'' h = SS_tran #c #c' #c'' (step_correctness c) h
 
 (* TODO: FIXME: make the sstep_star erased *)
-//val step_star: c:config -> Dv (c':config & (erased (sstep_star c c')))
 val step_star: c:config -> Dv (c':config & (sstep_star c c'))
 let rec step_star c =
   let c' = step c in
   match c' with
     | Some c' ->
       let (| c'', h'' |) = step_star c' in
-      //let h' = elift1 (construct_sstep_star c c' c'') h'' in
       let h' = construct_sstep_star c c' c'' h'' in
       (| c'', h' |)
     | None    -> (| c, SS_refl c |)
@@ -174,47 +180,68 @@ let rec step_star c =
 val is_sterminal: config -> Tot bool
 let is_sterminal (Conf _ _ s _ t _) = s = [] && is_T_val t
 
-val do_sec_comp: prin -> r:redex{is_R_assec r /\ is_clos (R_assec.v r)} -> ML dvalue
-let do_sec_comp p r =
+opaque type witness_client_config (#a:Type) (x:a) = True
+
+type client_prop (p:prin) (r:redex) =
+  is_R_assec r /\ is_clos (R_assec.v r) /\ mem p (R_assec.ps r) /\
+  (exists c.{:pattern witness_client_config c} Conf.t c = T_red r /\ Conf.l c = Target /\ Conf.m c = Mode Par (singleton p))
+
+type tstep_config (p:prin) = c:config{Conf.l c = Target /\
+                                      Conf.m c = Mode Par (singleton p)}
+
+type server_prop (p:prin) (r:redex) (ps:prins) (x:varname) (e:exp) (dv:dvalue) =
+  (exists (pi:tpar ps) (pi_final:protocol ps).
+     contains p pi /\ contains p (fst pi_final) /\
+     tpre_assec #ps (pi, OrdMap.empty #prins #tconfig_sec #ps_cmp) ps x e /\
+     T_red.r (Conf.t (Some.v (select p pi))) = r /\
+     pstep_star #ps (pi, OrdMap.empty #prins #tconfig_sec #ps_cmp) pi_final /\
+     is_T_val (Conf.t (Some.v (select p (fst pi_final)))) /\
+     D_v (T_val.meta (Conf.t (Some.v (select p (fst pi_final)))))
+	 (T_val.v (Conf.t (Some.v (select p (fst pi_final))))) = dv)
+
+val do_sec_comp:
+  p:prin -> c:tstep_config p{is_T_red (Conf.t c) /\ is_R_assec (T_red.r (Conf.t c))}
+  -> ML dvalue
+let do_sec_comp p c =
   (* let R_assec ps v = r in *)
   (* let _ = admitP (b2t (is_clos v)) in *)
   (* let (en, _, e) = get_en_b v in *)
   (* let dv = Circuit.rungmw p ps en (fun _ -> None) e in *)
   (* dv *)
-  let ps = R_assec.ps r in
-  let (en, x, e) = get_en_b (R_assec.v r) in
+  let r = T_red.r (Conf.t c) in
+  let R_assec ps v = r in
+  if is_clos v && mem p ps then
+    let (en, x, e) = get_en_b v in
 
-  if mem p ps then
     let (c_in, c_out) = open_connection 8888 in
 
-    let _ = assert (is_R_assec r /\ is_clos (R_assec.v r) /\ mem p (R_assec.ps r)) in
+    let _ = cut (witness_client_config c) in
+    let _ = assert (client_prop p r) in
 
     let _ = client_write c_out p r in
-    let (ps', x', e', dv) = client_read c_in in
+    let (p', r', ps', x', e', dv) = client_read c_in in
 
-    let _ = admitP (ps' = ps /\ x' = x /\ e' = e) in
-
-    let _ = admitP (exists pi_init pi_final. pstep_star #ps pi_init pi_final /\
-                                        tpre_assec #ps pi_init ps x e   /\
-					(Let (Conf.t (Some.v (select p (fst pi_final))))
-					 (fun t ->
-  				          is_T_val t /\
-					  D_v (T_val.meta t) (T_val.v t) =
-					  dv))) in
-    dv
+    if p = p' && ps = ps' && x = x' (* TODO:sec block id && r = r' && e = e' *) then
+      let _ = admitP (server_prop p r ps x e dv) in
+      dv
+    else failwith "Secure server returned bad output"
   else failwith "Reached a non-participating secure block"
 
-val tstep: config -> ML (option config)
-let tstep c =
+val tstep: p:prin -> tstep_config p -> ML (option (tstep_config p))
+let tstep p c =
   let Conf l m s en t _ = c in
-  if is_T_red t && is_R_assec (T_red.r t) && is_clos (R_assec.v (T_red.r t)) then
-    let dv = do_sec_comp (Some.v (OrdSet.choose (Mode.ps m))) (T_red.r t) in
+  if is_T_red t && is_R_assec (T_red.r t) then
+    let dv = do_sec_comp p c in
     Some (Conf l m s en (T_val #(D_v.meta dv) (D_v.v dv)) (hide []))
-  else step c
+  else
+    let c'_opt = step c in
+    match c'_opt with
+      | None    -> None
+      | Some c' -> target_step_lemma p c c'; Some c'
 
-val tstep_star: config -> ML (option config)
-let rec tstep_star c =
-  let c' = tstep c in
+val tstep_star: p:prin -> tstep_config p -> ML (option (tstep_config p))
+let rec tstep_star p c =
+  let c' = tstep p c in
   match c' with
-    | Some c' -> tstep_star c'
+    | Some c' -> tstep_star p c'
     | None    -> Some c
