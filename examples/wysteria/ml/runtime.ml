@@ -3,22 +3,11 @@ module IO = Extlib.IO
 module Unix = BatUnix
 module Marshal = BatMarshal
 
-open Prins
-open AST
-
 type chan_in = IO.input
 type chan_out = unit IO.output
 
-let open_connection (port:int) :(chan_in * chan_out) =
-  let sock_addr = Unix.ADDR_INET (Unix.inet_addr_of_string "127.0.0.1", port) in
-  Unix.open_connection sock_addr
-
-let client_write (out:chan_out) (p:prin) (r:redex) :unit = Marshal.output ~closures:true out (p, r); IO.flush out
-let client_read (c_in:chan_in) :dvalue =
-  let v = Marshal.input c_in in
-  IO.close_in c_in;
-  v
-
+type bytes = Platform.Bytes.bytes
+    
 let establish_server (callback:chan_in -> chan_out -> unit) (port:int) =
   let sock = Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0 in
   let sock_addr = Unix.ADDR_INET (Unix.inet_addr_of_string "127.0.0.1", port) in
@@ -32,13 +21,39 @@ let establish_server (callback:chan_in -> chan_out -> unit) (port:int) =
   in
   accept_loop ()  
 
-let server_read (c:chan_in) :(prin * redex) = Marshal.input c
-let server_write (out:chan_out) (dv:dvalue) :unit = Marshal.output ~closures:true out dv; IO.flush out; IO.close_out out
+let open_connection (port:int) :(chan_in * chan_out) =
+  let sock_addr = Unix.ADDR_INET (Unix.inet_addr_of_string "127.0.0.1", port) in
+  Unix.open_connection sock_addr
+
+(* TODO: FIXME: these are in CoreCrypto.ml, use from there *)
+let string_of_bytes b = Platform.Bytes.get_cbytes b
+let bytes_of_string s = Platform.Bytes.abytes s
+
+let marshal (x:'a) :bytes =
+  let s = Marshal.to_string x ([Marshal.Closures]) in
+  bytes_of_string s
+
+let unmarshal (b:bytes) =
+  let s = string_of_bytes b in
+  Marshal.from_string s 0
+
+let send (c_out:chan_out) (b:bytes) :unit =
+  let s = string_of_bytes b in
+  let n = String.length s in
+  IO.write_i32 c_out n;
+  ignore (IO.really_output c_out s 0 n);
+  IO.flush c_out
+
+let recv (c_in:chan_in) :string =
+  let n = IO.read_i32 c_in in
+  let s = Bytes.to_string (Bytes.create n) in
+  ignore (IO.really_input c_in s 0 n);
+  s
+
 let create_thread (f:unit -> unit) :unit = let _ = Thread.create f () in ()
 
 let is_server _ = Sys.argv.(1) = "0"
 let me _ = Sys.argv.(2)
-
 
 (**********)
 
