@@ -42,5 +42,9 @@ val me       : unit -> ML string
 
 (**********)
 
+val string_of_bytes: bytes -> Tot string
+val bytes_of_string: string -> Tot bytes
+
+(**********)
 val rungmw: string -> string -> int -> list string
 val list_to_int: list string -> int
