@@ -1251,7 +1251,7 @@ let mk_indexed_projectors fvq refine_domain env (tc, tps, k) lid (formals:list<b
             let impl =
                 if lid_equals Const.prims_lid  (DesugarEnv.current_module env)
                 || fvq<>Data_ctor
-                || !Options.__temp_no_proj
+                || Options.dont_gen_projectors (DesugarEnv.current_module env).str
                 then []
                 else let projection = Util.gen_bvar tun in
                      let as_imp = function
