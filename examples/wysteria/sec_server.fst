@@ -1,6 +1,7 @@
 (*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Ffibridge --admit_fsi Runtime --admit_fsi FStar.IO --admit_fsi FStar.String --__temp_no_proj --admit_fsi FStar.Squash;
-    other-files:ghost.fst squash.fsti listTot.fst ordset.fsi ordmap.fsi classical.fst set.fsi heap.fst st.fst all.fst list.fst io.fsti string.fsi prins.fst ast.fst ffibridge.fsi sem.fst psem.fst runtime.fsi print.fst ckt.fst interpreter.fst
+    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.Seq --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Ffibridge --admit_fsi Runtime --admit_fsi FStar.IO --admit_fsi FStar.String --__temp_no_proj --admit_fsi FStar.Squash;
+    variables:CONTRIB=../../contrib;
+    other-files:classical.fst ext.fst set.fsi heap.fst st.fst all.fst seq.fsi seqproperties.fst ghost.fst squash.fsti listTot.fst ordset.fsi ordmap.fsi list.fst io.fsti string.fsi prins.fst ast.fst ffibridge.fsi sem.fst psem.fst $CONTRIB/Platform/fst/Bytes.fst runtime.fsi print.fst ckt.fst crypto.fst interpreter.fst
  --*)
 
 module SecServer
@@ -17,6 +18,8 @@ open AST
 open Semantics
 open PSemantics
 open Interpreter
+
+open Crypto
 
 type en_map = ordmap prin env p_cmp
 type out_map = ordmap prin chan_out p_cmp
@@ -240,7 +243,9 @@ let create_pstep_star ps en_m red_m x e c_sec h pi =
 
   (* let h2:pstep_star #ps pi_init pi_final = PS_tran #ps #pi_init #pi_enter #pi_final s1 h1 in *)
   let h2 = stitch_steps ps pi_init pi_enter pi_sec_terminal pi_final s1 ss s2 in
-  squash_pstep_star ps pi_init pi_final h2;
+  let _ = admitP (pstep_star #ps pi_init pi_final) in
+  //squash_pstep_star ps pi_init pi_final h2;
+
   //let _ = cut (pstep_star #ps pi_init pi_final) in
   pi_final
 
@@ -350,7 +355,9 @@ let rec send_output ps' ps x e en_m red_m out_m c_sec =
   (* This is the server property *)
   let _ = assert (server_prop p r ps x e dv) in
 
-  server_write out (p, r, ps, x, e, dv);
+  let (m, t) = mac_server_msg p r ps x e dv Interpreter.server_key in
+  send out m;
+  send out t;
 
   let ps'_rest = remove p ps' in
   if ps'_rest = empty then ()
@@ -358,71 +365,77 @@ let rec send_output ps' ps x e en_m red_m out_m c_sec =
 
 val handle_connection: chan_in -> chan_out -> ML unit
 let handle_connection c_in c_out =
-  let p, r = server_read c_in in
+  let c_m = recv c_in in
+  let c_t = recv c_in in
 
-  (* This is the client property *)
-  let _ = admitP (client_prop p r) in
+  let c_opt = verify_client_msg Interpreter.client_key c_m c_t in
+  if c_opt = None then failwith "Failed to verify client's mac"
+  else
+    let Some (p, r) = c_opt in
+
+    (* This is the client property *)
+    let _ = assert (client_prop p r) in
   
-  let R_assec #meta ps v = r in
-  let (en, x, e) = get_en_b v in
+    let R_assec #meta ps v = r in
+    let (en, x, e) = get_en_b v in
 
-  let psmap_ref = Mk_ref.r psmap_ref in
+    let psmap_ref = Mk_ref.r psmap_ref in
 
-  let ps', en_m, out_m, red_m =
-    if contains ps !psmap_ref then
-      let Some (Mk_psmap ps1 ps' en_m out_m red_m x' e') = select ps !psmap_ref in
-      let _ = admitP (b2t (e = e')) in
-      if ps = ps1 && x = x' then
-	let _ = cut (exists c. config_prop ps x e p r c) in
-	let _ = cut (exists pi. tpre_assec' ps ps' pi x e en_m red_m) in
+    let ps', en_m, out_m, red_m =
+      if contains ps !psmap_ref then
+        let Some (Mk_psmap ps1 ps' en_m out_m red_m x' e') = select ps !psmap_ref in
+        let _ = admitP (b2t (e = e')) in
+        if ps = ps1 && x = x' then
+	  let _ = cut (exists c. config_prop ps x e p r c) in
+	  let _ = cut (exists pi. tpre_assec' ps ps' pi x e en_m red_m) in
 
-        let _ = cut (forall p. mem p ps' = contains p en_m) in
-        let _ = cut (forall p. mem p ps' = contains p red_m) in
-        let _ = cut (b2t (subset ps' ps)) in
-        (* let _ = admitP (exists pi'. tpre_assec' ps *)
-	(*                        (union #prin #p_cmp  ps' (singleton p)) pi' x e *)
-	(*                        (update #prin #env #p_cmp p (MkTuple3._1 (get_en_b (R_assec.v r))) en_m) (update p r red_m)) in *)
+          let _ = cut (forall p. mem p ps' = contains p en_m) in
+          let _ = cut (forall p. mem p ps' = contains p red_m) in
+          let _ = cut (b2t (subset ps' ps)) in
+          (* let _ = admitP (exists pi'. tpre_assec' ps *)
+	  (*                        (union #prin #p_cmp  ps' (singleton p)) pi' x e *)
+	  (*                        (update #prin #env #p_cmp p (MkTuple3._1 (get_en_b (R_assec.v r))) en_m) (update p r red_m)) in *)
 
-	let en_m = update #prin #env #p_cmp p en en_m in
-	let out_m = update #prin #chan_out #p_cmp p c_out out_m in
-	let red_m = update #prin #redex #p_cmp p r red_m in
+	  let en_m = update #prin #env #p_cmp p en en_m in
+	  let out_m = update #prin #chan_out #p_cmp p c_out out_m in
+	  let red_m = update #prin #redex #p_cmp p r red_m in
 
-        let ps' = union #prin #p_cmp ps' (singleton p) in
+          let ps' = union #prin #p_cmp ps' (singleton p) in
+
+          let _ = admitP (exists pi'. tpre_assec' ps ps' pi' x e en_m red_m) in
+
+	  ps', en_m, out_m, red_m
+        else failwith "Not a valid secure computation request"
+      else
+        let en_m = update #prin #env #p_cmp p en OrdMap.empty in
+        let out_m = update #prin #chan_out #p_cmp p c_out OrdMap.empty in
+        let red_m = update #prin #redex #p_cmp p r OrdMap.empty in
+        let ps' = singleton p in
 
         let _ = admitP (exists pi'. tpre_assec' ps ps' pi' x e en_m red_m) in
 
-	ps', en_m, out_m, red_m
-      else failwith "Not a valid secure computation request"
+        ps', en_m, out_m, red_m
+    in
+
+    let _ = cut (exists pi'. tpre_assec' ps ps' pi' x e en_m red_m) in
+
+    let _ = assert (Equal (dom #prin #env #p_cmp en_m) (dom #prin #chan_out #p_cmp out_m)) in
+    let _ = assert (Equal (dom #prin #env #p_cmp en_m) (dom #prin #redex #p_cmp red_m)) in
+
+    if ps = ps' then
+      let c_sec_init = Conf Target (Mode Sec ps) [] (update_env (compose_envs_m ps en_m) x V_unit) (T_exp e) (hide []) in
+      let (| c_sec, sstep_h |) = do_sec_comp' c_sec_init in
+
+      let _ = cut (b2t (is_sterminal c_sec)) in
+      let _ = admitP (Good sstep_h) in
+
+      //let _ = assert (exists pi_final pi'. sec_comp_prop ps c_sec pi' pi_final) in
+      let _ = admitP (exists pi pi_final. tpre_assec' ps ps pi x e en_m red_m /\
+                                     sec_comp_prop ps c_sec pi pi_final) in
+
+      let _ = send_output ps ps x e en_m red_m out_m c_sec in
+      psmap_ref := OrdMap.remove ps (!psmap_ref)
     else
-      let en_m = update #prin #env #p_cmp p en OrdMap.empty in
-      let out_m = update #prin #chan_out #p_cmp p c_out OrdMap.empty in
-      let red_m = update #prin #redex #p_cmp p r OrdMap.empty in
-      let ps' = singleton p in
-
-      let _ = admitP (exists pi'. tpre_assec' ps ps' pi' x e en_m red_m) in
-
-      ps', en_m, out_m, red_m
-  in
-
-  let _ = cut (exists pi'. tpre_assec' ps ps' pi' x e en_m red_m) in
-
-  let _ = assert (Equal (dom #prin #env #p_cmp en_m) (dom #prin #chan_out #p_cmp out_m)) in
-  let _ = assert (Equal (dom #prin #env #p_cmp en_m) (dom #prin #redex #p_cmp red_m)) in
-
-  if ps = ps' then
-    let c_sec_init = Conf Target (Mode Sec ps) [] (update_env (compose_envs_m ps en_m) x V_unit) (T_exp e) (hide []) in
-    let (| c_sec, sstep_h |) = do_sec_comp' c_sec_init in
-
-    let _ = cut (b2t (is_sterminal c_sec)) in
-    let _ = admitP (Good sstep_h) in
-
-    //let _ = assert (exists pi_final pi'. sec_comp_prop ps c_sec pi' pi_final) in
-    let _ = admitP (exists pi pi_final. tpre_assec' ps ps pi x e en_m red_m /\
-                                   sec_comp_prop ps c_sec pi pi_final) in
-
-    let _ = send_output ps ps x e en_m red_m out_m c_sec in
-    psmap_ref := OrdMap.remove ps (!psmap_ref)
-  else
-    psmap_ref := (update ps (Mk_psmap ps ps' en_m out_m red_m x e) (!psmap_ref))
+      psmap_ref := (update ps (Mk_psmap ps ps' en_m out_m red_m x e) (!psmap_ref))
 
 (* (\*     //let _ = create_thread (do_sec_comp ps env_m' out_m' x e) in *\) *)

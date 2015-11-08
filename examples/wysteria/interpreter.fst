@@ -1,6 +1,7 @@
 (*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Ffibridge --admit_fsi Runtime --admit_fsi FStar.IO --admit_fsi FStar.String --__temp_no_proj;
-    other-files:ghost.fst listTot.fst set.fsi ordset.fsi ordmap.fsi classical.fst heap.fst st.fst all.fst list.fst io.fsti string.fst prins.fst ast.fst ffibridge.fsi sem.fst psem.fst runtime.fsi print.fst ckt.fst
+    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.Seq --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Ffibridge --admit_fsi Runtime --admit_fsi FStar.IO --admit_fsi FStar.String --__temp_no_proj;
+    variables:CONTRIB=../../contrib;
+    other-files:classical.fst ext.fst set.fsi heap.fst st.fst all.fst seq.fsi seqproperties.fst ghost.fst listTot.fst ordset.fsi ordmap.fsi list.fst io.fsti string.fst prins.fst ast.fst ffibridge.fsi sem.fst psem.fst $CONTRIB/Platform/fst/Bytes.fst runtime.fsi print.fst ckt.fst crypto.fst
  --*)
 
 module Interpreter
@@ -15,6 +16,8 @@ open Runtime
 
 open Semantics
 open PSemantics
+
+open Crypto
 
 val step: c:config -> Tot (option config)
 let step c =
@@ -181,24 +184,20 @@ let rec step_star c =
 val is_sterminal: config -> Tot bool
 let is_sterminal (Conf _ _ s _ t _) = s = [] && is_T_val t
 
-opaque type witness_client_config (#a:Type) (x:a) = True
-
-type client_prop (p:prin) (r:redex) =
-  is_R_assec r /\ is_clos (R_assec.v r) /\ mem p (R_assec.ps r) /\
-  (exists c.{:pattern witness_client_config c} Conf.t c = T_red r /\ Conf.l c = Target /\ Conf.m c = Mode Par (singleton p))
-
 type tstep_config (p:prin) = c:config{Conf.l c = Target /\
                                       Conf.m c = Mode Par (singleton p)}
 
-type server_prop (p:prin) (r:redex) (ps:prins) (x:varname) (e:exp) (dv:dvalue) =
-  (exists (pi:tpar ps) (pi_final:protocol ps).
-     contains p pi /\ contains p (fst pi_final) /\
-     tpre_assec #ps (pi, OrdMap.empty #prins #tconfig_sec #ps_cmp) ps x e /\
-     T_red.r (Conf.t (Some.v (select p pi))) = r /\
-     pstep_star #ps (pi, OrdMap.empty #prins #tconfig_sec #ps_cmp) pi_final /\
-     is_T_val (Conf.t (Some.v (select p (fst pi_final)))) /\
-     D_v (T_val.meta (Conf.t (Some.v (select p (fst pi_final)))))
-	 (T_val.v (Conf.t (Some.v (select p (fst pi_final))))) = dv)
+opaque type witness_client_config (#a:Type) (x:a) = True
+
+let client_key:client_key =
+  let k = bytes_of_string "client_key" in
+  assume (client_key_prop k == client_prop_t);
+  k
+
+let server_key:server_key =
+  let k = bytes_of_string "server_key" in
+  assume (server_key_prop k == server_prop_t);
+  k
 
 val do_sec_comp:
   p:prin -> c:tstep_config p{is_T_red (Conf.t c) /\ is_R_assec (T_red.r (Conf.t c))}
@@ -217,13 +216,22 @@ let do_sec_comp p c =
     let (c_in, c_out) = open_connection 8888 in
 
     let _ = cut (witness_client_config c) in
+    let _ = assert (exists c.{:pattern (witness_client_config c)} Conf.t c = T_red r /\ Conf.l c = Target /\ Conf.m c = Mode Par (singleton p)) in
     let _ = assert (client_prop p r) in
 
-    let _ = client_write c_out p r in
-    let (p', r', ps', x', e', dv) = client_read c_in in
+    let (m, t) = mac_client_msg p r client_key in
+    send c_out m;
+    send c_out t;
 
-    if p = p' && ps = ps' && x = x' (* TODO:sec block id && r = r' && e = e' *) then
-      let _ = admitP (server_prop p r ps x e dv) in
+    let s_m = recv c_in in
+    let s_t = recv c_in in
+
+    let r_opt = verify_server_msg server_key s_m s_t in
+    if r_opt = None then failwith "Failed to verify secure server mac"
+    else
+      let Some (p', r', ps', x', e', dv) = r_opt in      
+      if p = p' && ps = ps' && x = x' (* TODO:sec block id && r = r' && e = e' *) then
+      let _ = assert (server_prop p r ps x e dv) in
       dv
     else failwith "Secure server returned bad output"
   else failwith "Reached a non-participating secure block"

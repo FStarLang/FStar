@@ -202,8 +202,6 @@ type consistent_ts (ts:tsec) (ps:prins) =
   not (contains ps ts) /\
   (forall ps'. contains ps' ts ==> is_empty_eq (intersect ps ps'))
 
-#set-options "--z3timeout 15"
-
 opaque val sec_sstep_star_to_pstep_star:
   c:config{is_sec_comp c} -> c':config{is_sec_comp c'} -> h:sstep_star c c'
   -> ps:prins -> tp:tpar ps -> ts:tsec{consistent_ts ts (Mode.ps (Conf.m c))}
@@ -223,13 +221,10 @@ let rec sec_sstep_star_to_pstep_star c c' h ps tp ts = match h with
     PS_tran #ps #pi #pi' #pi'' ph h'
 
 opaque val par_sstep_to_pstep_star:
-  p:prin -> c:config{Conf.l c = Target /\ is_par c} -> c':config -> h:sstep c c'
-  -> ps:prins -> tp:tpar ps -> ts:tsec
-  -> Tot (pstep_star #(union ps (singleton p)) (update p c tp, ts) (update p c' tp, ts))
+  p:prin -> c:tconfig_par -> c':tconfig_par -> h:sstep c c'
+  -> ps:prins{mem p ps} -> tp:tpar ps{Some.v (select p tp) = c} -> ts:tsec
+  -> Tot (pstep_star #ps (tp, ts) (update p c' tp, ts))
 let par_sstep_to_pstep_star p c c' h ps tp ts =
-  let pi = (update p c tp, ts) in
-  let pi' = (update p c' tp, ts) in
-  let ph = P_par #(union ps (singleton p)) #c' pi p h pi' in
-  PS_tran #(union ps (singleton p)) #pi #pi' #pi' ph (PS_refl pi')
-
-#reset-options
+  let pi' = (update #prin #tconfig_par p c' tp, ts) in
+  let ph = P_par #ps #c' (tp, ts) p h pi' in
+  PS_tran #ps #(tp, ts) #pi' #pi' ph (PS_refl pi')
