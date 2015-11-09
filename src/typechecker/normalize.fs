@@ -68,9 +68,9 @@ type subst_t = list<subst_elt>
 
 type stack_elt = 
  | Arg      of closure * aqual * Range.range
- | MemoLazy of memo<env * term>
- | Match    of env * branches
- | Abs      of env * binders * subst_t * Range.range
+ | MemoLazy of memo<(env * term)>
+ | Match    of env * branches * Range.range
+ | Abs      of env * binders  * subst_t * Range.range
 
 type stack = list<stack_elt>
 
@@ -104,6 +104,10 @@ let log f =
     then f()
     else ()
 
+let is_empty = function
+    | [] -> true
+    | _ -> false
+
 let rec norm : cfg -> env -> stack -> term -> term = 
     fun cfg env stack t -> 
         let t = compress t in
@@ -113,13 +117,24 @@ let rec norm : cfg -> env -> stack -> term -> term =
             failwith "Impossible"
 
           | Tm_name _ 
-          | Tm_fvar _
           | Tm_uinst _
           | Tm_constant _
           | Tm_type _
           | Tm_uvar _ 
           | Tm_unknown _ ->
             rebuild cfg env stack t
+
+          | Tm_fvar(_, Some Data_ctor)
+          | Tm_fvar(_, Some (Record_ctor _)) -> //these are just constructors; no delta steps can apply
+            rebuild cfg env stack t
+     
+          | Tm_fvar (f, _) -> 
+            if List.contains DeltaHard cfg.steps
+            || (List.contains Delta cfg.steps && not (is_empty stack)) //delta only if reduction is blocked
+            then match Env.lookup_definition cfg.tcenv f.v with 
+                    | None -> rebuild cfg env stack t
+                    | Some t -> norm cfg env stack t 
+            else rebuild cfg env stack t     
 
           | Tm_bvar x -> 
             let c = try List.nth env x.index
@@ -147,7 +162,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   norm cfg (c :: env) stack body 
 
                 | MemoLazy r :: stack -> 
-                  set_memo r (env, t);
+                  set_memo r (env, t); //TODO: fix! this doesn't always memoize the strong normal form
                   log (fun () -> Printf.printf "\tSet memo\n");
                   norm cfg env stack t
 
@@ -183,9 +198,15 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let t2 = norm cfg env [] t2 in
             rebuild cfg env stack (mk (Tm_ascribed(t1, t2, l)) t.pos)
 
-          | Tm_match(head, branches) -> failwith "NYI"
+          | Tm_match(head, branches) -> 
+            let stack = Match(env, branches, t.pos)::stack in 
+            norm cfg env stack head
 
-          | Tm_let(lbs, t) -> failwith "NYI"
+          | Tm_let((false, [lb]), body) ->
+            let env = Clos(env, lb.lbdef, Util.mk_ref None)::env in 
+            norm cfg env stack body
+
+          | Tm_let _ -> failwith "NYI: let rec"
 
           | Tm_meta (head, m) -> 
             let head = norm cfg env [] head in
@@ -246,5 +267,38 @@ and rebuild : cfg -> env -> stack -> term -> term =
               let t = mk (Tm_app(t, [(a,aq)])) r in 
               rebuild cfg env stack t
 
-            | Match(env, branches) :: stack -> 
-              failwith "NYI"
+            | Match(env, branches, r) :: stack -> 
+              let rebuild () = rebuild cfg env stack t in
+              
+              begin match t.n with 
+                | Tm_constant s -> 
+                  let matches_s p = match p.v with 
+                     | Pat_constant s' -> s=s'
+                     | Pat_wild _
+                     | Pat_var _ -> true
+                     | _ -> false in
+
+                  let found = branches |> List.tryFind (fun (pat, w, branch) -> 
+                    match pat.v with
+                      | Pat_disj ps -> ps |> Util.for_some matches_s
+                      | _ -> matches_s pat) in
+
+                  match found with 
+                    | None -> rebuild () //we're stuck
+                    | Some (pat, w, branch) -> 
+                      begin match pat with 
+                        | Some ({v=Pat_constant _}) -> 
+                          
+
+                  )
+                    
+                failwith "nyi"
+                | Tm_uinst _
+                | Tm_fvar _
+                | Tm_app _ -> failwith "nyi"
+                
+                | _ -> 
+                  let t = mk (Tm_match(t, branches)) r in 
+                  rebuild cfg env stack t
+              
+              end
