@@ -32,8 +32,10 @@ type server_prop (p:prin) (r:redex) (ps:prins) (x:varname) (e:exp) (dv:dvalue) =
      D_v (T_val.meta (Conf.t (Some.v (select p (fst pi_final)))))
 	 (T_val.v (Conf.t (Some.v (select p (fst pi_final))))) = dv)
 
-type client_prop_t (t:prin * redex) = client_prop (fst t) (snd t) /\ True
+(* TODO: The /\ True is to disable its extraction, file a bug in extraction *)
+(* logic *) type client_prop_t (t:prin * redex) = client_prop (fst t) (snd t) /\ True
 
+(* The /\ True is to disable its extraction *)
 type server_prop_t (t:Tuple6 prin redex prins varname exp dvalue) =
   server_prop (MkTuple6._1 t) (MkTuple6._2 t) (MkTuple6._3 t) (MkTuple6._4 t) (MkTuple6._5 t) (MkTuple6._6 t) /\ True
 

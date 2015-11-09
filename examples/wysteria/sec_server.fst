@@ -33,7 +33,7 @@ type redex_map = ordmap prin redex p_cmp
  * en_m  -- the map of p |-> env accumulated so far
  * red_m -- the map of p |-> redex accumulated so far
  *)
-type tpre_assec' (ps:prins) (ps':prins) (pi:tpar ps') (x:varname) (e:exp) (en_m:en_map) (red_m:redex_map) =
+opaque type tpre_assec' (ps:prins) (ps':prins) (pi:tpar ps') (x:varname) (e:exp) (en_m:en_map) (red_m:redex_map) =
   forall p. contains p pi ==>
        (contains p en_m /\ contains p red_m /\
         (Let (Some.v (select p pi))
@@ -96,8 +96,8 @@ let rec pss_ps_to_pss #ps #pi #pi' #pi'' h1 h2 = match h1 with
     PS_tran h1' hh
 
 (* that two protocols pi and pi' differ only in parties' terms *)
-type eq_proto' (ps:prins) (pi:tpar ps) (pi':tpar ps) =
-  forall p. contains p pi ==>
+opaque type eq_proto' (ps:prins) (pi:tpar ps) (pi':tpar ps) =
+  forall p.{:pattern (contains p pi)} contains p pi ==>
        (Let (Some.v (select p pi))
         (fun c ->
 	 (Let (Some.v (select p pi'))
@@ -108,8 +108,8 @@ type eq_proto' (ps:prins) (pi:tpar ps) (pi':tpar ps) =
            Conf.en c = Conf.en c'))))
 
 (* that pi contains slice of c's value for each party *)
-type final_prop (ps:prins) (pi:tpar ps) (c:config{is_value c}) =
-  forall p. contains p pi ==>
+opaque type final_prop (ps:prins) (pi:tpar ps) (c:config{is_value c}) =
+  forall p.{:pattern (contains p pi)} contains p pi ==>
        (Let (Conf.t (Some.v (select p pi)))
         (fun t ->
 	 is_T_val t /\
@@ -130,7 +130,7 @@ val ret_sec_value_to_ps_helper_lemma:
 let ret_sec_value_to_ps_helper_lemma #ps pi c pi' = ()
 
 (* property that we prove for the secure computation *)
-type sec_comp_prop (ps:prins) (c:config{is_sterminal c}) (pi:tpar ps) (pi_final:protocol ps) =
+opaque type sec_comp_prop (ps:prins) (c:config{is_sterminal c}) (pi:tpar ps) (pi_final:protocol ps) =
   final_prop ps (fst pi_final) c                                           /\
   pstep_star #ps (pi, (OrdMap.empty #prins #tconfig_sec #ps_cmp)) pi_final /\
   eq_proto' ps pi (fst pi_final)
@@ -186,11 +186,9 @@ let stitch_steps ps pi_init pi_enter pi_sec_terminal pi_final s1 ss s2 =
   in
   h2
 
-#set-options "--z3timeout 25"
-
 val create_pstep_star:
-  ps:prins -> en_m:en_map{forall p. mem p ps = contains p en_m}
-  -> red_m:redex_map{forall p.mem p ps = contains p red_m}
+  ps:prins -> en_m:en_map{forall p.{:pattern (mem p ps)} mem p ps = contains p en_m}
+  -> red_m:redex_map{forall p.{:pattern (mem p ps)} mem p ps = contains p red_m}
   -> x:varname -> e:exp -> c_sec:config{is_sterminal c_sec}
   -> h:sstep_star (init_sec_conf ps en_m x e) c_sec
   -> pi:tpar ps{tpre_assec' ps ps pi x e en_m red_m}
@@ -235,16 +233,17 @@ let create_pstep_star ps en_m red_m x e c_sec h pi =
 
   //let _ = cut (is_sec c_sec_terminal /\ is_value c_sec_terminal) in
 
-  let _ = cut (tpre_assec_ret #ps pi_sec_terminal ps) in
+  //let _ = cut (tpre_assec_ret #ps pi_sec_terminal ps) in
 
   let pi_final_par = ret_sec_value_to_ps #ps pi_enter_par c_sec ps in
   let pi_final = (pi_final_par, OrdMap.remove ps tsec_terminal) in
   
   (* TODO: FIXME: this also verifies, but with this the whole thing times out *)
-  let _ = admitP (eq_proto' ps pi pi_final_par) in
+  //let _ = cut (eq_proto' ps pi pi_final_par) in
+
   ret_sec_value_to_ps_helper_lemma #ps pi_enter_par c_sec pi_final_par;
 
-  let _ = cut (final_prop ps pi_final_par c_sec) in
+  //let _ = cut (final_prop ps pi_final_par c_sec) in
 
   let s2 = P_sec_exit #ps pi_sec_terminal ps pi_final in
 
@@ -252,15 +251,16 @@ let create_pstep_star ps en_m red_m x e c_sec h pi =
 
   (* let h2:pstep_star #ps pi_init pi_final = PS_tran #ps #pi_init #pi_enter #pi_final s1 h1 in *)
   let h2 = stitch_steps ps pi_init pi_enter pi_sec_terminal pi_final s1 ss s2 in
-  let _ = admitP (pstep_star #ps pi_init pi_final) in
-  //squash_pstep_star ps pi_init pi_final h2;
-
+  //let _ = admitP (pstep_star #ps pi_init pi_final) in
+  squash_pstep_star ps pi_init pi_final h2;
+  
   //let _ = cut (pstep_star #ps pi_init pi_final) in
   hide pi_final
 
 #reset-options
 
-type config_prop (ps:prins) (x:varname) (e:exp) (p:prin) (r:redex) (c:config) =
+(* Using non opaque types as patterns is risky *)
+opaque type config_prop (ps:prins) (x:varname) (e:exp) (p:prin) (r:redex) (c:config) =
   mem p ps /\ is_R_assec r /\ is_clos (R_assec.v r) /\ R_assec.ps r = ps /\
   MkTuple3._2 (get_en_b (R_assec.v r)) = x /\ MkTuple3._3 (get_en_b (R_assec.v r)) = e /\
   Conf.t c = T_red r /\ Conf.l c = Target /\ Conf.m c = Mode Par (singleton p)
@@ -277,7 +277,8 @@ val build_pi:
   -> c:config{config_prop ps x e p r c}
   -> pi:tpar ps'{tpre_assec' ps ps' pi x e en_m red_m}
   -> Lemma (requires (True))
-          (ensures (exists (pi':tpar (union ps' (singleton p))).{:pattern (witness_build_pi pi')}
+          (ensures (exists (pi':tpar (union ps' (singleton p))). //{:pattern (witness_build_pi pi')}
+	              //witness_build_pi pi' /\
                       tpre_assec' ps (union #prin #p_cmp ps' (singleton p)) pi' x e
 	                          (update #prin #env #p_cmp p (MkTuple3._1 (get_en_b (R_assec.v r))) en_m)
 	                          (update #prin #redex #p_cmp p r red_m)))
@@ -288,7 +289,7 @@ let build_pi ps ps' en_m red_m x e p r c pi =
   let _ = cut (tpre_assec' ps (union ps' (singleton p)) pi' x e
 	                      (update p (MkTuple3._1 (get_en_b (R_assec.v r))) en_m)
 	                      (update p r red_m)) in
-  let _ = cut (witness_build_pi pi') in
+  //let _ = cut (witness_build_pi pi') in
   ()
 
 val build_pi_lemma:
@@ -307,11 +308,14 @@ val build_pi_lemma:
                       tpre_assec' ps (union #prin #p_cmp ps' (singleton p)) pi' x e
 	                          (update #prin #env #p_cmp p (MkTuple3._1 (get_en_b (R_assec.v r))) en_m)
 	                          (update #prin #redex #p_cmp p r red_m)))
-let build_pi_lemma ps ps' en_m red_m x e p r = admit ()
+let build_pi_lemma ps ps' en_m red_m x e p r = ()
 
 opaque type witness_build_pstep_star (#a:Type) (x:a) = True
 
 opaque type Good (#a:Type) (x:a) = True
+
+val get_erased_prop: #a:Type -> #p:(a -> Type) -> e:erased (x:a{p x}) -> Tot (u:unit{p (reveal e)})
+let get_erased_prop e = ()
 
 val build_pstep_star:
   ps:prins
@@ -321,23 +325,24 @@ val build_pstep_star:
   -> h:sstep_star (init_sec_conf ps en_m x e) c_sec
   -> pi:tpar ps{tpre_assec' ps ps pi x e en_m red_m}
   -> Lemma (requires (True))
-          (ensures (exists (pi_final:protocol ps).{:pattern (witness_build_pstep_star pi_final)} sec_comp_prop ps c_sec pi pi_final))
+          (ensures (exists (pi_final:protocol ps).{:pattern sec_comp_prop ps c_sec pi pi_final}
+	            sec_comp_prop ps c_sec pi pi_final))
     [SMTPatT (tpre_assec' ps ps pi x e en_m red_m); SMTPat (is_sterminal c_sec);
      SMTPatT (Good h)]
 let build_pstep_star ps en_m red_m x e c_sec h pi =
   let pi_final = create_pstep_star ps en_m red_m x e c_sec h pi in
-  let _ = cut (witness_build_pstep_star (reveal pi_final)) in
-  ()
+  get_erased_prop pi_final
 
 val build_pstep_star_lemma:
   ps:prins
-  -> en_m:en_map{forall p. mem p ps = contains p en_m}
-  -> red_m:redex_map{forall p. mem p ps = contains p red_m}
-  -> x:varname -> e:exp -> c_sec:config{is_sterminal c_sec}
+  -> en_m:en_map{forall p.{:pattern (mem p ps)} mem p ps = contains p en_m}
+  -> red_m:redex_map{forall p.{:pattern (mem p ps)} mem p ps = contains p red_m}
+  -> x:varname -> e:exp -> c_sec:config{is_sterminal c_sec /\ Good c_sec}
   -> h:sstep_star (init_sec_conf ps en_m x e) c_sec{Good h}
   -> Lemma (requires (exists (pi:tpar ps). tpre_assec' ps ps pi x e en_m red_m))
-          (ensures (exists (pi:tpar ps) (pi_final:protocol ps). sec_comp_prop ps c_sec pi pi_final))
-let build_pstep_star_lemma ps en_m red_m x e c_sec h = admit ()
+          (ensures (forall ps'. ps' = ps ==> (exists (pi:tpar ps') (pi_final:protocol ps').{:pattern (sec_comp_prop ps' c_sec pi pi_final)}
+	            sec_comp_prop ps' c_sec pi pi_final)))
+let build_pstep_star_lemma ps en_m red_m x e c_sec h = ()
 
 val tpre_assec_lemma:
   ps:prins -> pi:tpar ps -> x:varname -> e:exp
