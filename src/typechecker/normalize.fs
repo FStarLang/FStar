@@ -49,10 +49,7 @@ type step =
   | Unlabel
 and steps = list<step>
 
-type cfg = {
-    steps: steps;
-    tcenv: Env.env;
-}
+
 type closure = 
   | Clos of env * term * memo<env * term> //memo for lazy evaluation
   | Dummy 
@@ -61,6 +58,34 @@ and env = list<closure>
 let closure_to_string = function 
     | Clos (_, t, _) -> Print.term_to_string t
     | _ -> "dummy"
+
+type cfg = {
+    steps: steps;
+    tcenv: Env.env;
+    local_defs: list<(bv * env * term)>;
+}
+
+(* <Move> this out of here *)
+let dummy = {
+    init=(fun _ -> ());
+    push=(fun _ -> ());
+    pop=(fun _ -> ());
+    mark=(fun _ -> ());
+    reset_mark=(fun _ -> ());
+    commit_mark=(fun _ -> ());
+    encode_sig=(fun _ _ -> ());
+    encode_modul=(fun _ _ -> ());
+    solve=(fun _ _ -> ());
+    is_trivial=(fun _ _ -> false);
+    finish=(fun () -> ());
+    refresh=(fun () -> ());
+}
+let empty_cfg = { 
+    steps=[];
+    tcenv=Env.initial_env dummy (lid_of_path ["nothing"] dummyRange);
+    local_defs=[]
+}
+(* </Move> *)
 
 type branches = list<(pat * option<term> * term)> 
 
@@ -108,6 +133,9 @@ let is_empty = function
     | [] -> true
     | _ -> false
 
+let lookup_local_def (x:bv) cfg = 
+    Util.find_map cfg.local_defs (fun (y, env, tm) -> if Syntax.bv_eq x y then Some (env, tm) else None)
+
 let rec norm : cfg -> env -> stack -> term -> term = 
     fun cfg env stack t -> 
         let t = compress t in
@@ -116,18 +144,25 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_delayed _ -> 
             failwith "Impossible"
 
-          | Tm_name _ 
-          | Tm_uinst _
-          | Tm_constant _
-          | Tm_type _
+          | Tm_unknown _
           | Tm_uvar _ 
-          | Tm_unknown _ ->
-            rebuild cfg env stack t
-
+          | Tm_constant _
           | Tm_fvar(_, Some Data_ctor)
-          | Tm_fvar(_, Some (Record_ctor _)) -> //these are just constructors; no delta steps can apply
+          | Tm_fvar(_, Some (Record_ctor _)) -> //these last three are just constructors; no delta steps can apply
             rebuild cfg env stack t
      
+          | Tm_type u -> 
+            let u = norm_universe cfg env u in
+            rebuild cfg env stack (mk (Tm_type u) t.pos)
+         
+          | Tm_uinst _ -> failwith "NYI"
+     
+          | Tm_name x -> 
+            begin match lookup_local_def x cfg with 
+                | None -> rebuild cfg env stack t
+                | Some (env, t) -> norm cfg env stack t
+            end
+
           | Tm_fvar (f, _) -> 
             if List.contains DeltaHard cfg.steps
             || (List.contains Delta cfg.steps && not (is_empty stack)) //delta only if reduction is blocked
@@ -206,7 +241,25 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let env = Clos(env, lb.lbdef, Util.mk_ref None)::env in 
             norm cfg env stack body
 
-          | Tm_let _ -> failwith "NYI: let rec"
+          | Tm_let((_, {lbname=Inr _}::_), _) -> //this is a top-level let binding; nothing to normalize
+            rebuild cfg env stack t
+
+          | Tm_let((_, lbs), body) -> 
+            //let rec: The basic idea is to open the body with fresh names for the let bound functions; 
+            //         Then, introduce definitions for those new names in cfg.local_defs
+            //         Then reduce the body
+            let local_defs, opening, _ = List.fold_right (fun lb (local_defs, opening, i) -> 
+                match lb.lbname with 
+                    | Inr _ -> failwith "Impossible" //this is a top-level let binding; excluded already
+                    | Inl x -> 
+                      let x = freshen_bv x in 
+                      let opening = DB(i, bv_to_name x)::opening in
+                      let local_defs = (x, env, lb.lbdef)::local_defs in
+                      local_defs, opening, i + 1) lbs ([], [], 0) in
+            let local_defs = List.map (fun (x, env, t) -> (x, env, subst opening t)) local_defs in 
+            let body = subst opening body in 
+            let cfg = {cfg with local_defs=local_defs@cfg.local_defs} in
+            norm cfg env stack body
 
           | Tm_meta (head, m) -> 
             let head = norm cfg env [] head in
@@ -242,6 +295,8 @@ and norm_binders : cfg -> env -> binders -> binders =
             bs' in
         Subst.close_binders (List.rev nbs') 
 
+and norm_universe cfg env u = failwith "NYI"
+
 and rebuild : cfg -> env -> stack -> term -> term = 
     fun cfg env stack t ->
     (* Pre-condition: t is in strong normal form w.r.t env;
@@ -268,37 +323,51 @@ and rebuild : cfg -> env -> stack -> term -> term =
               rebuild cfg env stack t
 
             | Match(env, branches, r) :: stack -> 
-              let rebuild () = rebuild cfg env stack t in
-              
-              begin match t.n with 
-                | Tm_constant s -> 
-                  let matches_s p = match p.v with 
-                     | Pat_constant s' -> s=s'
-                     | Pat_wild _
-                     | Pat_var _ -> true
-                     | _ -> false in
+              let rebuild () = rebuild cfg env stack (mk (Tm_match(t, branches)) r) in
 
-                  let found = branches |> List.tryFind (fun (pat, w, branch) -> 
-                    match pat.v with
-                      | Pat_disj ps -> ps |> Util.for_some matches_s
-                      | _ -> matches_s pat) in
-
-                  match found with 
-                    | None -> rebuild () //we're stuck
-                    | Some (pat, w, branch) -> 
-                      begin match pat with 
-                        | Some ({v=Pat_constant _}) -> 
-                          
-
-                  )
-                    
-                failwith "nyi"
-                | Tm_uinst _
-                | Tm_fvar _
-                | Tm_app _ -> failwith "nyi"
+              let guard_when_clause wopt b rest = 
+                  match wopt with 
+                   | None -> b
+                   | Some w -> 
+                     let then_branch = b in
+                     let else_branch = mk (Tm_match(t, rest)) r in 
+                     Util.if_then_else w then_branch else_branch in
                 
-                | _ -> 
-                  let t = mk (Tm_match(t, branches)) r in 
-                  rebuild cfg env stack t
-              
-              end
+              let rec matches_pat (t:term) (p:pat) :  option<list<term>> = 
+                    let t = compress t in 
+                    match p.v with 
+                    | Pat_disj ps -> FStar.Util.find_map ps (matches_pat t)
+                    | Pat_var _ -> Some [t]
+                    | Pat_wild _
+                    | Pat_dot_term _ -> Some []
+                    | Pat_constant s -> 
+                      begin match t.n with 
+                        | Tm_constant s' when s=s' -> Some []
+                        | _ -> None
+                      end
+                    | Pat_cons(fv, arg_pats) -> 
+                      let head, args = Util.head_and_args t in 
+                      match head.n with 
+                        | Tm_fvar fv' when fv_eq fv fv' -> 
+                          matches_args [] args arg_pats
+                        | _ -> None
+
+              and matches_args out (a:args) (p:list<(pat * bool)>) = match a, p with 
+                | [], [] -> Some out
+                | (t, _)::rest_a, (p, _)::rest_p -> 
+                    begin match matches_pat t p with 
+                    | None -> None
+                    | Some x -> matches_args (out@x) rest_a rest_p 
+                    end 
+                | _ -> None in
+            
+              let rec matches t p = match p with 
+                | [] -> rebuild ()
+                | (p, wopt, b)::rest -> 
+                   match matches_pat t p with
+                    | None -> matches t rest 
+                    | Some s ->
+                      let env = List.fold_right (fun t env -> Clos([], t, Util.mk_ref (Some ([], t)))::env) s env in //the sub-terms should be fully normalized; so their environment is []
+                      norm cfg env stack (guard_when_clause wopt b rest) in
+
+              matches t branches

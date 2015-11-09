@@ -449,6 +449,29 @@ let sortByFieldName (fn_a_l:list<(fieldname * 'a)>) =
           (text_of_lid fn1)
           (text_of_lid fn2))
 
+let is_interpreted l =
+  let theory_syms =
+    [Const.op_Eq          ;
+     Const.op_notEq       ;
+     Const.op_LT          ;
+     Const.op_LTE         ;
+     Const.op_GT          ;
+     Const.op_GTE         ;
+     Const.op_Subtraction ;
+     Const.op_Minus       ;
+     Const.op_Addition    ;
+     Const.op_Multiply    ;
+     Const.op_Division    ;
+     Const.op_Modulus     ;
+     Const.op_And         ;
+     Const.op_Or          ;
+     Const.op_Negation] in
+  Util.for_some (lid_equals l) theory_syms
+
+(********************************************************************************)
+(*********************** Constructors of common terms  **************************)
+(********************************************************************************)
+
 let ktype0 = mk (Tm_type(U_zero)) None dummyRange
 
 let kt_kt = Const.kunary ktype0 ktype0
@@ -530,24 +553,10 @@ let head_and_args t =
         | Tm_app(head, args) -> head, args
         | _ -> t, []
         
-let is_interpreted l =
-  let theory_syms =
-    [Const.op_Eq          ;
-     Const.op_notEq       ;
-     Const.op_LT          ;
-     Const.op_LTE         ;
-     Const.op_GT          ;
-     Const.op_GTE         ;
-     Const.op_Subtraction ;
-     Const.op_Minus       ;
-     Const.op_Addition    ;
-     Const.op_Multiply    ;
-     Const.op_Division    ;
-     Const.op_Modulus     ;
-     Const.op_And         ;
-     Const.op_Or          ;
-     Const.op_Negation] in
-  Util.for_some (lid_equals l) theory_syms
+let if_then_else b t1 t2 =
+    let then_branch = (withinfo (Pat_constant (Const_bool true)) tun.n t1.pos, None, t1) in
+    let else_branch = (withinfo (Pat_constant (Const_bool false)) tun.n t2.pos, None, t2) in
+    mk (Tm_match(b, [then_branch; else_branch])) None (Range.union_ranges b.pos (Range.union_ranges t1.pos t2.pos))
 
 (**************************************************************************************)
 (* Destructing a type as a formula *)

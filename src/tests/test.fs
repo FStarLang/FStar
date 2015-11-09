@@ -230,7 +230,7 @@ let let_ x e e' : term = app (abs [b x] e') [e]
 module P = FStar.Syntax.Print
 let run r expected = 
  //   Printf.printf "redex = %s\n" (P.term_to_string r);
-    let x = FStar.TypeChecker.Normalize.norm [] [] [] r in
+    let x = FStar.TypeChecker.Normalize.norm FStar.TypeChecker.Normalize.empty_cfg [] [] r in
 //    Printf.printf "result = %s\n" (P.term_to_string x);
 //    Printf.printf "expected = %s\n\n" (P.term_to_string expected);
     assert (term_eq x expected);
