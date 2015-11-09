@@ -827,6 +827,12 @@ type sstep: config -> config -> Type =
     -> c':config{c' = step_assec_ret c}
     -> sstep c c'
 
+type sstep_star: config -> config -> Type =
+  | SS_refl: c:config -> sstep_star c c
+  | SS_tran:
+    #c:config -> #c':config -> #c'':config
+    -> h1:sstep c c' -> h2: sstep_star c' c'' -> sstep_star c c''
+
 type slice_v_meta_inv (meta:v_meta) (smeta:v_meta) =
   (meta = Meta empty Can_b empty Can_w ==> smeta = meta) /\
   subset (Meta.bps smeta) (Meta.bps meta) /\ (Meta.cb smeta = Meta.cb meta) /\
@@ -1117,3 +1123,5 @@ val slice_v_sps_ffi: prins -> dvalue -> Tot dvalue
 let slice_v_sps_ffi ps dv =
   let D_v meta v = dv in
   slice_v_sps #meta ps v
+
+(**********)

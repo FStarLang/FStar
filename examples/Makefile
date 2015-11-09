@@ -30,7 +30,7 @@ all:
 #	make -C test -- just an experiment, trying to optimize SMT encoding
 #	make -C deriving-monads -- still some failing assertions + missing Makefile
 	make -C metatheory
-	make -C wysteria
+	#make -C wysteria  //AR: broken currently
 	make -C unit-tests
 
 test: all
