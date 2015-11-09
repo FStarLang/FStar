@@ -163,7 +163,7 @@ and letbindings = bool * list<letbinding>       (* let recs may have more than o
 and subst_t = list<list<subst_elt>>
 and subst_elt = 
    | DB of int * term                          (* DB i t: replace a bound variable with index i with term t *)
-   | NM of bv * int                            (* NM x i: replace a local name with a bound variable i *)
+   | NM of bv  * int                            (* NM x i: replace a local name with a bound variable i *)
    | UN of univ_var * universe                 (* UN u v: replace universes variable u with universe term v *)
 and freenames = set<bv>
 and uvars    = set<uvar>
@@ -354,6 +354,15 @@ val pat_bvs:        pat -> list<bv>
 val is_implicit:    aqual -> bool
 val as_implicit:    bool -> aqual
 
+(* gensym *)
+val reset_gensym:   (unit -> unit)
+val freshen_bv:     bv -> bv
+val gen_bv:         string -> option<Range.range> -> typ -> bv 
+val new_bv:         option<range> -> typ -> bv
+val fv:             lident -> option<fv_qual> -> fv 
+val fvar:           option<fv_qual> -> lident -> range -> term
+val fv_eq:          fv -> fv -> bool
+val set_lid_range:  lident -> range -> lident
 
 
 

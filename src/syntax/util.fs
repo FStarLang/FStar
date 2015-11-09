@@ -45,44 +45,6 @@ let handleable = function
 (********************************************************************************)
 (**************************Utilities for identifiers ****************************)
 (********************************************************************************)
-type gensym_t = {
-    gensym: unit -> string;
-    reset:unit -> unit;
-}
-let gs =
-  let ctr = mk_ref 0 in
-  let n_resets = mk_ref 0 in
-  {gensym =(fun () -> "_" ^ (Util.string_of_int !n_resets) ^ "_" ^ (Util.string_of_int (incr ctr; !ctr)));
-   reset = (fun () -> ctr := 0; incr n_resets)}
-let gensym () = gs.gensym()
-let reset_gensym() = gs.reset()
-let rec gensyms x = match x with
-  | 0 -> []
-  | n -> gensym ()::gensyms (n-1)
-
-let genident : option<Range.range> -> ident = fun r ->
-  let sym = gensym () in
-  match r with
-    | None -> mk_ident(sym, dummyRange)
-    | Some r -> mk_ident(sym, r)
-
-let mkbv x y t  = {ppname=x;index=y;sort=t}
-let setsort w t = {v=w.v; sort=t; p=w.p}
-let withinfo e s r = {v=e; sort=s; p=r}
-let withsort e s   = withinfo e s dummyRange
-let lbname_eq l1 l2 = match l1, l2 with
-  | Inl x, Inl y -> bv_eq x y
-  | Inr l, Inr m -> lid_equals l m
-  | _ -> false
-let fvar_eq fv1 fv2  = lid_equals fv1.v fv2.v
-let new_bv ropt t = mkbv (genident ropt) 0 t
-let bvd_of_str s = mkbv (id_of_text s) 0 
-let set_bv_range bv r = {bv with ppname=mk_ident(bv.ppname.idText, r)}
-let set_lid_range l r =
-  let ids = (l.ns@[l.ident]) |> List.map (fun i -> mk_ident(i.idText, r)) in
-  lid_of_ids ids
-let fv l dc = withinfo l tun (range_of_lid l), dc
-let fvar dc l r = mk (Tm_fvar(fv (set_lid_range l r) dc)) None r
 
 let mk_discriminator lid =
   lid_of_ids (lid.ns@[Syntax.mk_ident("is_" ^ lid.ident.idText, lid.ident.idRange)])
@@ -110,7 +72,7 @@ let name_binders binders =
             if is_null_binder b
             then let a, imp = b in
                  let b = id_of_text ("_" ^ string_of_int i) in
-                 let b = mkbv b 0 a.sort in
+                 let b = {ppname=b; index=0; sort=a.sort} in
                  b, imp
             else b)
 

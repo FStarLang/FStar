@@ -26,6 +26,7 @@
     <DocumentationFile>
     </DocumentationFile>
     <Prefer32Bit>true</Prefer32Bit>
+    <OtherFlags>--mlcompatibility</OtherFlags>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -65,6 +66,11 @@
     <ProjectReference Include="..\syntax\syntax.fsproj">
       <Name>syntax</Name>
       <Project>{d008f256-80aa-4f9c-9c10-dc743d772940}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\typechecker\typechecker.fsproj">
+      <Name>typechecker</Name>
+      <Project>{21685793-ac84-4ec1-9eab-39f9c0252f3f}</Project>
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>

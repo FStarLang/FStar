@@ -410,8 +410,8 @@ let build_lattice env se = match se with
        mlift=(fun t wp -> wp)
     } in
     let print_mlift l =
-        let arg = Util.fv (Syntax.lid_of_path ["ARG"] dummyRange) tun in
-        let wp = Util.fv (Syntax.lid_of_path  ["WP"]  dummyRange) tun in
+        let arg = fv (Syntax.lid_of_path ["ARG"] dummyRange) None in
+        let wp = fv (Syntax.lid_of_path  ["WP"]  dummyRange) None in
         Print.term_to_string (l arg wp) in
     let order = edge::env.effects.order in
 
