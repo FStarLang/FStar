@@ -60,8 +60,10 @@ let force_uvar = force_uvar_aux false
 (********************************************************************************)
 (*************************** Delayed substitutions ******************************)
 (********************************************************************************)
+(* A subst_t is a composition of parallel substitutions, expressed as a list of lists *)
 let subst_to_string s = s |> List.map (fun (b, _) -> b.ppname.idText) |> String.concat ", "
 
+//Lookup a bound var or a name in a parallel substitution
 let subst_bv s a = Util.find_map s (function DB (i, t) when i=a.index -> Some t | _ -> None)
 let subst_nm s a = Util.find_map s (function NM (x, i) when bv_eq a x -> Some (bv_to_tm ({x with index=i})) | _ -> None)
 let rec subst' (s:subst_t) t = match s with
@@ -69,6 +71,8 @@ let rec subst' (s:subst_t) t = match s with
   | [[]] -> force_uvar t
   | _ ->
     let t0 = force_uvar t in
+
+    //applies each of the parallel substitutions in sequence
     let rec aux f a s = match s with
         | [] -> t0
         | s0::rest ->
@@ -78,7 +82,11 @@ let rec subst' (s:subst_t) t = match s with
 
     match t0.n with
         | Tm_delayed(Inl(t', s'), m) ->
-            mk (Tm_delayed (Inl (t', s@s'), Util.mk_ref None))
+            //s' is the subsitution already associated with this node;
+            //s is the new subsitution to add to it
+            //compose substitutions by concatenating them
+            //the order of concatenation is important!
+            mk (Tm_delayed (Inl (t', s'@s), Util.mk_ref None))
                 None
                 t.pos
 

@@ -211,7 +211,11 @@ let ff    : term = abs [b x; b y] (nm y)
 
 let z : term = abs [b f; b x] (nm x)
 let one = abs [b f; b x] (app (nm f) [nm x])
+let two : term = abs [b g; b y] (app (nm g) [app (nm g) [nm y]])
 let succ n = abs [b f; b x] (app (nm f) [(app n [nm f; nm x])])
+let rec encode n = 
+    if n = 0 then z
+    else succ (encode (n - 1))
 let pred = abs [b n; b f; b x]
                (app (nm n)
                     [abs [b g; b h]
@@ -224,25 +228,34 @@ let let_ x e e' : term = app (abs [b x] e') [e]
 
 
 module P = FStar.Syntax.Print
-let run r = 
-    Printf.printf "redex = %s\n" (P.term_to_string r);
+let run r expected = 
+ //   Printf.printf "redex = %s\n" (P.term_to_string r);
     let x = FStar.TypeChecker.Normalize.norm [] [] [] r in
-    Printf.printf "result = %s\n\n" (P.term_to_string x)
+//    Printf.printf "result = %s\n" (P.term_to_string x);
+//    Printf.printf "expected = %s\n\n" (P.term_to_string expected);
+    assert (term_eq x expected);
+    
 
-
-[<EntryPoint>]
+[<EntryPoint>] 
 let main argv =
-//    run (app apply [one; id; nm n]);
-//    run (app apply [tt; nm n; nm m]);
-//    run (app apply [ff; nm n; nm m]);
-//    run (app apply [apply; apply; apply; apply; apply; ff; nm n; nm m]);
-//    run (app twice [apply; ff; nm n; nm m]);
-//    run (minus one z);
-      run (app pred [one]);
-      run (minus one one);
-      run (app mul [succ one; one]);
-//      run (let_ x (succ one)
-//            (let_ y (app mul [nm x; nm x])
-//              (let_ h (app mul [nm y; nm y]) 
-//                       (minus (nm h) (nm h)))));
-      0
+    TypeChecker.Normalize.debug := argv.Length >= 1 && argv.[0] = "debug";
+    run (app apply [one; id; nm n]) (nm n);
+    run (app apply [tt; nm n; nm m]) (nm n);
+    run (app apply [ff; nm n; nm m]) (nm m);
+    run (app apply [apply; apply; apply; apply; apply; ff; nm n; nm m]) (nm m);
+    run (app twice [apply; ff; nm n; nm m]) (nm m);
+    run (minus one z) one;
+    run (app pred [one]) z;
+    run (minus one one) z;
+    run (app mul [one; one]) one;
+    run (app mul [two; one]) two;
+    run (app mul [succ one; one]) two;
+    run (minus (encode 10) (encode 10)) z;
+    run (minus (encode 100) (encode 100)) z;
+    run (let_ x (encode 1000) (minus (nm x) (nm x))) z;
+    run (minus (encode 1000) (encode 1000)) z;
+    run (let_ x (succ one)
+        (let_ y (app mul [nm x; nm x])
+            (let_ h (app mul [nm y; nm y]) 
+                    (minus (nm h) (nm h))))) z;
+    0
