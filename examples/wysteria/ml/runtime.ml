@@ -44,12 +44,15 @@ let send (c_out:chan_out) (b:bytes) :unit =
   ignore (IO.really_output c_out s 0 n);
   IO.flush c_out
 
-let recv (c_in:chan_in) :string =
+let recv (c_in:chan_in) :bytes =
   let n = IO.read_i32 c_in in
   let s = Bytes.to_string (Bytes.create n) in
   ignore (IO.really_input c_in s 0 n);
-  s
+  bytes_of_string s
 
+(* TODO: FIXME *)
+let random i = bytes_of_string (Bytes.to_string (Bytes.create i))
+ 
 let create_thread (f:unit -> unit) :unit = let _ = Thread.create f () in ()
 
 let is_server _ = Sys.argv.(1) = "0"

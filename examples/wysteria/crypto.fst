@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Ffibridge --admit_fsi FStar.Seq  --admit_fsi Runtime --admit_fsi FStar.IO --admit_fsi FStar.String --__temp_no_proj;
+    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Ffibridge --admit_fsi FStar.Seq  --admit_fsi Runtime --admit_fsi FStar.IO --admit_fsi FStar.String --__temp_no_proj PSemantics;
     variables:CONTRIB=../../contrib;
     other-files:classical.fst ext.fst set.fsi heap.fst st.fst all.fst seq.fsi seqproperties.fst ghost.fst listTot.fst ordset.fsi ordmap.fsi list.fst io.fsti string.fst prins.fst ast.fst ffibridge.fsi sem.fst psem.fst $CONTRIB/Platform/fst/Bytes.fst runtime.fsi print.fst
  --*)
@@ -32,10 +32,10 @@ type server_prop (p:prin) (r:redex) (ps:prins) (x:varname) (e:exp) (dv:dvalue) =
      D_v (T_val.meta (Conf.t (Some.v (select p (fst pi_final)))))
 	 (T_val.v (Conf.t (Some.v (select p (fst pi_final))))) = dv)
 
-type client_prop_t (t:prin * redex) = client_prop (fst t) (snd t)
+type client_prop_t (t:prin * redex) = client_prop (fst t) (snd t) /\ True
 
 type server_prop_t (t:Tuple6 prin redex prins varname exp dvalue) =
-  server_prop (MkTuple6._1 t) (MkTuple6._2 t) (MkTuple6._3 t) (MkTuple6._4 t) (MkTuple6._5 t) (MkTuple6._6 t)
+  server_prop (MkTuple6._1 t) (MkTuple6._2 t) (MkTuple6._3 t) (MkTuple6._4 t) (MkTuple6._5 t) (MkTuple6._6 t) /\ True
 
 (* TODO: plug in a concrete mac *)
 val mac: bytes -> bytes -> Tot bytes

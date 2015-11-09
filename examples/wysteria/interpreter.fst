@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.Seq --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Ffibridge --admit_fsi Runtime --admit_fsi FStar.IO --admit_fsi FStar.String --__temp_no_proj;
+    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.Seq --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Ffibridge --admit_fsi Runtime --admit_fsi FStar.IO --admit_fsi FStar.String --__temp_no_proj PSemantics;
     variables:CONTRIB=../../contrib;
     other-files:classical.fst ext.fst set.fsi heap.fst st.fst all.fst seq.fsi seqproperties.fst ghost.fst listTot.fst ordset.fsi ordmap.fsi list.fst io.fsti string.fst prins.fst ast.fst ffibridge.fsi sem.fst psem.fst $CONTRIB/Platform/fst/Bytes.fst runtime.fsi print.fst ckt.fst crypto.fst
  --*)
@@ -176,10 +176,12 @@ let rec step_star c =
   let c' = step c in
   match c' with
     | Some c' ->
-      let (| c'', h'' |) = step_star c' in
+      let MkDTuple2 'a 'b c'' h'' = step_star c' in
       let h' = construct_sstep_star c c' c'' h'' in
       (| c'', h' |)
-    | None    -> (| c, SS_refl c |)
+    | None    ->
+      let h1 = SS_refl c in
+      MkDTuple2 #config #(fun c' -> sstep_star c c') c h1
 
 val is_sterminal: config -> Tot bool
 let is_sterminal (Conf _ _ s _ t _) = s = [] && is_T_val t

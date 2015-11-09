@@ -160,3 +160,6 @@ let ___Inr___v x = match x with
 
 let string_of_bool = string_of_bool
 let string_of_int  = string_of_int
+
+type ('a, 'b) dTuple2 =
+  | MkDTuple2 of unit * unit * 'a * 'b
