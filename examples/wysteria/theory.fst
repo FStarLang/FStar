@@ -608,16 +608,12 @@ let rec slc_v_lem_ps #m v p ps = match v with
     else if mem p ps' && is_empty (intersect ps ps') then
       //let _ = cut (forall p. mem p (union psp ps) = mem p psp || mem p ps) in
       let _ = cut (forall p. not (mem p (intersect ps ps'))) in
-      let _ = cut (forall p. mem p (intersect (union psp ps) ps') = mem p psp) in
       let _ = OrdSet.eq_lemma (intersect (union psp ps) ps') psp in
 
       box_slice_lem v' (union psp ps) ps';
       slice_lem_singl_v v' p;
       ()
     else if not (mem p ps') && not (is_empty (intersect ps ps')) then
-      //let _ = cut (forall p. mem p (union psp ps) = mem p psp || mem p ps) in
-      let _ = cut (forall p. not (mem p (intersect psp ps'))) in
-      let _ = cut (forall p. mem p (intersect (union psp ps) ps') = mem p (intersect ps ps')) in
       let _ = OrdSet.eq_lemma (intersect (union psp ps) ps') (intersect ps ps') in
 
       box_slice_lem v' (union (singleton p) ps) ps';
@@ -625,9 +621,6 @@ let rec slc_v_lem_ps #m v p ps = match v with
       ()
     else
       //let _ = cut (forall p. mem p (union psp ps) = mem p psp || mem p ps) in
-      let _ = cut (forall p. not (mem p (intersect psp ps'))) in
-      let _ = cut (forall p. not (mem p (intersect ps ps'))) in
-      let _ = cut (forall p. not (mem p (intersect (union psp ps) ps'))) in
       let _ = OrdSet.eq_lemma (intersect (union psp ps) ps') empty in
 
       ()

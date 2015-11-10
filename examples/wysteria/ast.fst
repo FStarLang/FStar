@@ -328,6 +328,9 @@ let get_en_b #meta v = match v with
 val is_terminal: config -> Tot bool
 let is_terminal (Conf _ (Mode as_m _) s _ t _) = as_m = Par && s = [] && is_T_val t
 
+val is_sterminal: config -> Tot bool
+let is_sterminal (Conf _ _ s _ t _) = s = [] && is_T_val t
+
 //-----//
 
 opaque val mk_aspar: exp -> exp -> Tot exp

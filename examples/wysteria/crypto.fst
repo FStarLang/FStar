@@ -18,12 +18,14 @@ open PSemantics
 
 open Platform.Bytes
 
-type client_prop (p:prin) (r:redex) =
+opaque type client_prop (p:prin) (r:redex) =
   is_R_assec r /\ is_clos (R_assec.v r) /\ mem p (R_assec.ps r) /\
   (exists c. Conf.t c = T_red r /\ Conf.l c = Target /\ Conf.m c = Mode Par (singleton p))
 
-type server_prop (p:prin) (r:redex) (ps:prins) (x:varname) (e:exp) (dv:dvalue) =
-  (exists (pi:tpar ps) (pi_final:protocol ps).
+opaque type server_prop_witness (#a:Type) (#b:Type) (x:a) (y:b) = True
+
+opaque type server_prop (p:prin) (r:redex) (ps:prins) (x:varname) (e:exp) (dv:dvalue) =
+  (exists (pi:tpar ps) (pi_final:protocol ps).{:pattern (server_prop_witness pi pi_final)}
      contains p pi /\ contains p (fst pi_final) /\
      tpre_assec #ps (pi, OrdMap.empty #prins #tconfig_sec #ps_cmp) ps x e /\
      T_red.r (Conf.t (Some.v (select p pi))) = r /\
@@ -127,18 +129,18 @@ val verify_server_msg:
   -> Tot (option (t:server_ret_type{server_key_prop k t}))
 let verify_server_msg k m t = verify_mac #server_ret_type #server_key_prop k m t
 
-val server_key_prop_to_server_prop_lemma:
-  k:server_key -> t:server_ret_type{server_key_prop k t}
-  -> Lemma (server_prop_t t)
-let server_key_prop_to_server_prop_lemma k t =
-  (* TODO: Why does this not follow from client_key defn. *)
-  let _ = assume (server_key_prop k == server_prop_t) in
-  ()
+(* val server_key_prop_to_server_prop_lemma: *)
+(*   k:server_key -> t:server_ret_type{server_key_prop k t} *)
+(*   -> Lemma (server_prop_t t) *)
+(* let server_key_prop_to_server_prop_lemma k t = *)
+(*   (\* TODO: Why does this not follow from client_key defn. *\) *)
+(*   let _ = assume (server_key_prop k == server_prop_t) in *)
+(*   () *)
 
-val server_prop_to_server_key_prop_lemma:
-  k:server_key -> t:server_ret_type{server_prop_t t}
-  -> Lemma (server_key_prop k t)
-let server_prop_to_server_key_prop_lemma k t =
-  (* TODO: Why does this not follow from client_key defn. *)
-  let _ = assume (server_key_prop k == server_prop_t) in
-  ()
+(* val server_prop_to_server_key_prop_lemma: *)
+(*   k:server_key -> t:server_ret_type{server_prop_t t} *)
+(*   -> Lemma (server_key_prop k t) *)
+(* let server_prop_to_server_key_prop_lemma k t = *)
+(*   (\* TODO: Why does this not follow from client_key defn. *\) *)
+(*   let _ = assume (server_key_prop k == server_prop_t) in *)
+(*   () *)

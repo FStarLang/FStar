@@ -153,6 +153,8 @@ let step_correctness c =
   else if not (pre_assec c = NA) then C_assec_beta c c'
   else C_assec_ret c c'
 
+#set-options "--z3timeout 10"
+
 val target_step_lemma:
   p:prin -> c:config{Conf.l c = Target /\ Conf.m c = Mode Par (singleton p) /\
                     is_Some (step c)}
@@ -160,6 +162,8 @@ val target_step_lemma:
   -> Lemma (requires (True))
           (ensures (Conf.l c' = Target /\ Conf.m c' = Mode Par (singleton p)))
 let target_step_lemma p c c' = ()
+
+#reset-options
 
 open Print
 
@@ -182,9 +186,6 @@ let rec step_star c =
     | None    ->
       let h1 = SS_refl c in
       MkDTuple2 #config #(fun c' -> sstep_star c c') c h1
-
-val is_sterminal: config -> Tot bool
-let is_sterminal (Conf _ _ s _ t _) = s = [] && is_T_val t
 
 type tstep_config (p:prin) = c:config{Conf.l c = Target /\
                                       Conf.m c = Mode Par (singleton p)}
