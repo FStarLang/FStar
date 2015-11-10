@@ -88,6 +88,7 @@ let use_native_int = Util.mk_ref false
 let fs_typ_app = Util.mk_ref false
 let n_cores = Util.mk_ref 1
 let verify_module = Util.mk_ref []
+let __temp_no_proj = Util.mk_ref []
 let use_build_config = Util.mk_ref false
 let interactive = Util.mk_ref false
 let split_cases = Util.mk_ref 0
@@ -101,7 +102,6 @@ let warn_cardinality () = match !cardinality with
 let check_cardinality () = match !cardinality with 
     | "check" -> true
     | _ -> false
-let __temp_no_proj = Util.mk_ref false
 let init_options () =
     show_signatures := [];
     norm_then_print := true;
@@ -146,6 +146,7 @@ let init_options () =
     n_cores  := 1;
     split_cases := 0;
     verify_module := [];
+    __temp_no_proj := [];
     _include_path := [];
     print_fuels := false;
     use_native_int := false
@@ -199,8 +200,7 @@ let display_usage specs =
 
 let rec specs () : list<Getopt.opt> =
   let specs =
-    [( noshort, "__temp_no_proj", ZeroArgs (fun () -> __temp_no_proj := true), "A temporary flag to disable code generation for projectors");
-     ( noshort, "admit_fsi", OneArg ((fun x -> admit_fsi := x::!admit_fsi), "module name"), "Treat .fsi as a .fst");
+    [( noshort, "admit_fsi", OneArg ((fun x -> admit_fsi := x::!admit_fsi), "module name"), "Treat .fsi as a .fst");
      ( noshort, "admit_smt_queries", OneArg ((fun s -> admit_smt_queries := (if s="true" then true else if s="false" then false else failwith("Invalid argument to --admit_smt_queries"))), "true|false"), "Admit SMT queries (UNSAFE! But, useful during development); default: 'false'");
      ( noshort, "cardinality", OneArg ((fun x -> cardinality := validate_cardinality x), "off|warn|check"), "Check cardinality constraints on inductive data types(default 'off')");
      ( noshort, "codegen", OneArg ((fun s -> codegen := parse_codegen s), "OCaml|FSharp"), "Generate code for execution");
@@ -247,6 +247,7 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "use_eq_at_higher_order", ZeroArgs (fun () -> use_eq_at_higher_order := true), "Use equality constraints when comparing higher-order types; temporary");
      ( noshort, "use_native_int", ZeroArgs (fun () -> use_native_int := true), "Extract the 'int' type to platform-specific native int; you will need to link the generated code with the appropriate version of the prims library");
      ( noshort, "verify_module", OneArg ((fun x -> verify_module := x::!verify_module), "string"), "Name of the module to verify");
+     ( noshort, "__temp_no_proj", OneArg ((fun x -> __temp_no_proj := x::!__temp_no_proj), "string"), "Don't generate projectors for this module");
      ( 'v',     "version", ZeroArgs (fun _ -> display_version(); exit 0), "Display version number");
      ( noshort, "warn_top_level_effects", ZeroArgs (fun () -> warn_top_level_effects := true), "Top-level effects are ignored, by default; turn this flag on to be warned when this happens");
      ( noshort, "z3timeout", OneArg ((fun s -> z3timeout := int_of_string s), "t"), "Set the Z3 per-query (soft) timeout to t seconds (default 5)");
@@ -277,6 +278,8 @@ let should_verify m =
     (match !verify_module with
         | [] -> true //the verify_module flag was not set, so verify everything
         | l -> List.contains m l) //otherwise, look in the list to see if it is explicitly mentioned
+
+let dont_gen_projectors m = List.contains m (!__temp_no_proj)
 
 let should_print_message m = 
     should_verify m 

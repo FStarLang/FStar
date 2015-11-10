@@ -1,6 +1,7 @@
 (*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Ffibridge --admit_fsi Runtime --admit_fsi Prog --admit_fsi FStar.IO --admit_fsi FStar.String;
-    other-files:ghost.fst listTot.fst ordset.fsi ordmap.fsi classical.fst set.fsi heap.fst st.fst all.fst list.fst io.fsti string.fsi prins.fst ast.fst ffibridge.fsi sem.fst runtime.fsi print.fst ckt.fst interpreter.fst sec_server.fst prog.fsi
+    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.Seq --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Ffibridge --admit_fsi Runtime --admit_fsi Prog --admit_fsi FStar.IO --admit_fsi FStar.String --admit_fsi FStar.Squash --__temp_no_proj PSemantics --__temp_no_proj SecServer;
+    variables:CONTRIB=../../contrib;
+    other-files:classical.fst ext.fst set.fsi heap.fst st.fst all.fst seq.fsi seqproperties.fst ghost.fst squash.fsti listTot.fst ordset.fsi ordmap.fsi list.fst io.fsti string.fsi prins.fst ast.fst ffibridge.fsi sem.fst psem.fst $CONTRIB/Platform/fst/Bytes.fst runtime.fsi print.fst ckt.fst crypto.fst interpreter.fst sec_server.fst prog.fsi
  --*)
 
 module Main
@@ -34,10 +35,10 @@ else
   match init_env (Var pname T_prin) with
     | Some (D_v _ (V_prin p)) ->
       let c = Conf Target (Mode Par (OrdSet.singleton p)) [] init_env (T_exp Prog.program) (hide []) in
-      let c' = tstep_star c in
+      let c' = tstep_star p c in
       if is_Some c' then
         let Some c' = c' in
 	()
       else
         ()
-    | _                                 -> raise Invalid_arg
+    | _  -> failwith "Main failure: could not find me"

@@ -360,16 +360,16 @@ end else begin
 end))
 end
 | FStar_Extraction_ML_Syntax.MLC_Int32 (n) -> begin
-(Prims.strcat (Prims.strcat "C_opaque ((), Obj.magic " (FStar_Util.string_of_int32 n)) ")")
+(Prims.strcat (Prims.strcat "C_opaque ((), Obj.magic " (FStar_Util.string_of_int32 n)) ", T_cons (\"Prims.int\", []))")
 end
 | FStar_Extraction_ML_Syntax.MLC_Int64 (n) -> begin
-(Prims.strcat (Prims.strcat "C_opaque ((), Obj.magic " (FStar_Util.string_of_int64 n)) ")")
+(Prims.strcat (Prims.strcat "C_opaque ((), Obj.magic " (FStar_Util.string_of_int64 n)) ", T_cons (\"Prims.int\", []))")
 end
 | FStar_Extraction_ML_Syntax.MLC_Int (x) -> begin
-(Prims.strcat (Prims.strcat "C_opaque ((), Obj.magic " x) ")")
+(Prims.strcat (Prims.strcat "C_opaque ((), Obj.magic " x) ", T_cons (\"Prims.int\", []))")
 end
 | FStar_Extraction_ML_Syntax.MLC_String (s) -> begin
-(Prims.strcat (Prims.strcat "C_opaque ((), Obj.magic (\"" s) "\"))")
+(Prims.strcat (Prims.strcat "C_opaque ((), Obj.magic (\"" s) "\"), T_unknown)")
 end
 | _64_249 -> begin
 (FStar_All.failwith (Prims.strcat "Unsupported constant: tag: " (tag_of_mlconst c)))
