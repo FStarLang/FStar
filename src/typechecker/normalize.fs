@@ -179,7 +179,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     | Dummy -> failwith (Printf.sprintf "Bound variable was resolved to a dummy: %s\n" (Print.term_to_string t))
                     | Clos (env, t, r) -> //norm cfg env stack t
                           match !r with 
-                            | Some (env, t') -> norm cfg env stack t'
+                            | Some (env, t') -> 
+                              begin match (compress t').n with
+                                | Tm_abs _  ->  norm cfg env stack t'
+                                | _ -> rebuild cfg env stack t'
+                              end
                             | None -> norm cfg env (MemoLazy r::stack) t
                 end
             

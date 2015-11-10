@@ -135,6 +135,10 @@ let const_to_string x = match x with
   | Const_int64 _ -> "<int64>"
   | Const_uint8 _ -> "<uint8>"
 
+let lbname_to_string = function
+  | Inl l -> bv_to_string l
+  | Inr l -> lid_to_string l
+
 let rec tag_of_term t = match (compress t).n with
   | Tm_bvar _ -> "Tm_bvar"
   | Tm_name _ -> "Tm_name"
@@ -173,7 +177,30 @@ and term_to_string x =
   | Tm_refine(xt, f) ->       Util.format3 "%s:%s{%s}" (bv_to_string xt) (xt.sort |> term_to_string) (f |> formula_to_string)
   | Tm_app(_, []) -> failwith "Empty args!"
   | Tm_app(t, args) -> Util.format2 "(%s %s)" (term_to_string t) (args_to_string args)
+  | Tm_let(lbs, e) ->  Util.format2 "%s\nin\n%s" (lbs_to_string lbs) (term_to_string e)
+  | Tm_match(head, branches) ->
+    let rec pat_to_string x = match x.v with
+      | Pat_cons(l, pats) -> Util.format2 "(%s %s)" (fv_to_string l) (List.map (fun (x, b) -> let p = pat_to_string x in if b then "#"^p else p) pats |> String.concat " ")
+      | Pat_dot_term (x, _) -> Util.format1 ".%s" (bv_to_string x)
+      | Pat_var x -> bv_to_string x
+      | Pat_constant c -> const_to_string c
+      | Pat_wild _ -> "_"
+      | Pat_disj ps ->  Util.concat_l " | " (List.map pat_to_string ps) in
+    Util.format2 "(match %s with\n\t| %s)"
+      (term_to_string head)
+      (Util.concat_l "\n\t|" (branches |> List.map (fun (p,wopt,e) -> 
+            Util.format3 "%s %s -> %s"
+                        (p |> pat_to_string)
+                        (match wopt with | None -> "" | Some w -> Util.format1 "when %s" (w |> term_to_string))
+                        (e |> term_to_string))))
   | _ -> tag_of_term x
+
+and lbs_to_string lbs =
+    Util.format2 "let %s %s"
+    (if fst lbs then "rec" else "")
+    (Util.concat_l "\n and " (snd lbs |> List.map (fun lb -> Util.format2 "%s = %s" 
+                                                            (lbname_to_string lb.lbname) 
+                                                            (lb.lbdef |> term_to_string))))
 
 //and uvar_t_to_string (uv, k) =
 //   if false && !Options.print_real_names

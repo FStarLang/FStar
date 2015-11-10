@@ -209,8 +209,9 @@ let tt    : term = abs [b x; b y] (nm x)
 let ff    : term = abs [b x; b y] (nm y)
 
 
+
 let z : term = abs [b f; b x] (nm x)
-let one = abs [b f; b x] (app (nm f) [nm x])
+let one : term = abs [b f; b x] (app (nm f) [nm x])
 let two : term = abs [b g; b y] (app (nm g) [app (nm g) [nm y]])
 let succ n = abs [b f; b x] (app (nm f) [(app n [nm f; nm x])])
 let rec encode n = 
@@ -225,14 +226,60 @@ let pred = abs [b n; b f; b x]
 let minus m n = app n [pred; m]
 let mul : term = abs [b m; b n; b f] (app (nm m) [app (nm n) [nm f]])
 let let_ x e e' : term = app (abs [b x] e') [e]
+let mk_let x e e' : term = 
+    let e' = FStar.Syntax.Subst.subst [NM(x, 0)] e' in
+    mk (Tm_let((false, [{lbname=Inl x; lbunivs=[]; lbtyp=tun; lbdef=e; lbeff=lid_of_path ["Pure"] dummyRange}]), e')) 
+                           None dummyRange
 
+let lid x = lid_of_path [x] dummyRange                           
+let znat_l = S.fv (lid "Z") None
+let snat_l = S.fv (lid "S") None
+let tm_fv fv = mk (Tm_fvar fv) None dummyRange
+let znat : term = tm_fv znat_l
+let snat s      = mk (Tm_app(tm_fv snat_l, [arg s])) None dummyRange
+let pat p = withinfo p tun.n dummyRange
+open FStar.Syntax.Subst
+module SS=FStar.Syntax.Subst
+let mk_match h branches = 
+    let branches = branches |> List.map (fun (p, wopt, b) -> 
+        let binders = S.pat_bvs p |> List.map S.mk_binder in
+        let b = SS.close binders b in
+        let wopt = match wopt with
+            | None -> None
+            | Some w -> Some (SS.close binders w) in
+        p, wopt, b) in
+    mk (Tm_match(h, branches)) None dummyRange
+let pred_nat s  = 
+    let zbranch = pat (Pat_cons(znat_l, [])), 
+                  None, 
+                  znat in 
+    let sbranch = pat (Pat_cons(snat_l, [pat (Pat_var x), false])), 
+                  None, 
+                  mk (Tm_bvar({x with index=0})) None dummyRange in
+    mk_match s [zbranch;sbranch]
+let minus_nat t1 t2 =
+    let minus = m in 
+    let zbranch = pat (Pat_cons(znat_l, [])), 
+                  None, 
+                  nm x in
+    let sbranch = pat (Pat_cons(snat_l, [pat (Pat_var n), false])), 
+                  None, 
+                  app (nm minus) [pred_nat (nm x); nm n] in
+    let lb = {lbname=Inl minus; lbeff=lid_of_path ["Pure"] dummyRange; lbunivs=[]; lbtyp=tun; 
+              lbdef=subst [NM(minus, 0)] (abs [b x; b y] (mk_match (nm y) [zbranch; sbranch]))} in
+    mk (Tm_let((true, [lb]), subst [NM(minus, 0)] (app (nm minus) [t1; t2]))) None dummyRange
+let encode_nat n = 
+    let rec aux out n = 
+        if n=0 then out
+        else aux (snat out) (n - 1) in 
+    aux znat n
 
 module P = FStar.Syntax.Print
 let run r expected = 
- //   Printf.printf "redex = %s\n" (P.term_to_string r);
+//    Printf.printf "redex = %s\n" (P.term_to_string r);
     let x = FStar.TypeChecker.Normalize.norm FStar.TypeChecker.Normalize.empty_cfg [] [] r in
-//    Printf.printf "result = %s\n" (P.term_to_string x);
-//    Printf.printf "expected = %s\n\n" (P.term_to_string expected);
+    Printf.printf "result = %s\n" (P.term_to_string x);
+    Printf.printf "expected = %s\n\n" (P.term_to_string expected);
     assert (term_eq x expected);
     
 
@@ -253,9 +300,16 @@ let main argv =
     run (minus (encode 10) (encode 10)) z;
     run (minus (encode 100) (encode 100)) z;
     run (let_ x (encode 1000) (minus (nm x) (nm x))) z;
-    run (minus (encode 1000) (encode 1000)) z;
     run (let_ x (succ one)
         (let_ y (app mul [nm x; nm x])
             (let_ h (app mul [nm y; nm y]) 
                     (minus (nm h) (nm h))))) z;
+    run (mk_let x (succ one)
+        (mk_let y (app mul [nm x; nm x])
+            (mk_let h (app mul [nm y; nm y]) 
+                      (minus (nm h) (nm h))))) z;
+    run (pred_nat (snat (snat znat))) (snat znat);
+    run (minus_nat (snat (snat znat)) (snat znat)) (snat znat);
+    run (minus_nat (encode_nat 100) (encode_nat 100)) znat;
+    run (minus_nat (encode_nat 10000) (encode_nat 10000)) znat;
     0
