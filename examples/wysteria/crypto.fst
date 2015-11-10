@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Ffibridge --admit_fsi FStar.Seq  --admit_fsi Runtime --admit_fsi FStar.IO --admit_fsi FStar.String --__temp_no_proj PSemantics;
     variables:CONTRIB=../../contrib;
-    other-files:classical.fst ext.fst set.fsi heap.fst st.fst all.fst seq.fsi seqproperties.fst ghost.fst listTot.fst ordset.fsi ordmap.fsi list.fst io.fsti string.fst prins.fst ast.fst ffibridge.fsi sem.fst psem.fst $CONTRIB/Platform/fst/Bytes.fst runtime.fsi print.fst
+    other-files:classical.fst ext.fst set.fsi heap.fst st.fst all.fst seq.fsi seqproperties.fst ghost.fst listTot.fst ordset.fsi ordmap.fsi list.fst io.fsti string.fst prins.fst ast.fst ffibridge.fsi sem.fst psem.fst $CONTRIB/Platform/fst/Bytes.fst runtime.fsi print.fst $CONTRIB/CoreCrypto/fst/CoreCrypto.fst ../crypto/sha1.fst
  --*)
 
 module Crypto
@@ -17,6 +17,8 @@ open Semantics
 open PSemantics
 
 open Platform.Bytes
+
+open SHA1
 
 opaque type client_prop (p:prin) (r:redex) =
   is_R_assec r /\ is_clos (R_assec.v r) /\ mem p (R_assec.ps r) /\
@@ -42,38 +44,36 @@ type server_prop_t (t:Tuple6 prin redex prins varname exp dvalue) =
   server_prop (MkTuple6._1 t) (MkTuple6._2 t) (MkTuple6._3 t) (MkTuple6._4 t) (MkTuple6._5 t) (MkTuple6._6 t) /\ True
 
 (* TODO: plug in a concrete mac *)
-val mac: bytes -> bytes -> Tot bytes
-let mac k m = m
+val mac: key -> bytes -> Tot bytes
+let mac k m = SHA1.hmac_sha1 k m
 
-val verify: bytes -> bytes -> bytes -> Tot bool
+val verify: key -> bytes -> bytes -> Tot bool
 let verify k m t = mac k m = t
 
 val mac_msg:
-  #a:Type -> #key_prop:(bytes -> a -> Type)
-  -> k:bytes -> x:a{key_prop k x}
+  #a:Type -> #key_prop:(key -> a -> Type)
+  -> k:key -> x:a{key_prop k x}
   -> Tot (m:bytes{key_prop k (unmarshal_s #a m)} * bytes)
-let mac_msg (#a:Type) (#key_prop:bytes -> a -> Type) k x =
+let mac_msg (#a:Type) (#key_prop:key -> a -> Type) k x =
   let msg = marshal #a x in
   let mac = mac k msg in
   (msg, mac)
 
 val verify_mac:
-  #a:Type -> #key_prop:(bytes -> a -> Type)
-  -> k:bytes -> m:bytes -> t:bytes
+  #a:Type -> #key_prop:(key -> a -> Type)
+  -> k:key -> m:bytes -> t:bytes
   -> Tot (option (x:a{key_prop k x}))
-let verify_mac (#a:Type) (#key_prop:bytes -> a -> Type) k m t =
+let verify_mac (#a:Type) (#key_prop:key -> a -> Type) k m t =
   let _ = admitP (key_prop k (unmarshal_s #a m)) in
   let b = verify k m t in
   if (not b) then None
   else Some (unmarshal #a m)
 
-let keysize = 16
+opaque type client_key_prop: key -> (prin * redex) -> Type
+opaque type server_key_prop: key -> server_ret_type -> Type
 
-opaque type client_key_prop: bytes -> (prin * redex) -> Type
-opaque type server_key_prop: bytes -> server_ret_type -> Type
-
-type client_key = k:bytes{client_key_prop k == client_prop_t}
-type server_key = k:bytes{server_key_prop k == server_prop_t}
+type client_key = k:key{client_key_prop k == client_prop_t}
+type server_key = k:key{server_key_prop k == server_prop_t}
 
 val client_keygen: unit -> Tot client_key
 let client_keygen _ =
@@ -88,7 +88,7 @@ let server_keygen _ =
   k
 
 val mac_client_msg:
-  p:prin -> r:redex -> k:bytes{client_key_prop k (p, r)}
+  p:prin -> r:redex -> k:key{client_key_prop k (p, r)}
   -> Tot (m:bytes{client_key_prop k (unmarshal_s #(prin * redex) m)} * bytes)
 let mac_client_msg p r k = mac_msg #(prin * redex) #client_key_prop k (p, r)
 
@@ -115,7 +115,7 @@ let client_prop_to_client_key_prop_lemma k t =
 
 val mac_server_msg:
   p:prin -> r:redex -> ps:prins -> x:varname -> e:exp -> dv:dvalue
-  -> k:bytes{server_key_prop k (p, r, ps, x, e, dv)}
+  -> k:key{server_key_prop k (p, r, ps, x, e, dv)}
   -> Tot (m:bytes{server_key_prop k (unmarshal_s #(server_ret_type) m)} * bytes)
 let mac_server_msg p r ps x e dv k =
   mac_msg #server_ret_type #server_key_prop k (p, r, ps, x, e, dv)
