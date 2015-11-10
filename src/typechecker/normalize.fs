@@ -96,6 +96,7 @@ type stack_elt =
  | MemoLazy of memo<(env * term)>
  | Match    of env * branches * Range.range
  | Abs      of env * binders  * subst_t * Range.range
+ | App      of term * aqual * Range.range
 
 type stack = list<stack_elt>
 
@@ -204,6 +205,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   set_memo r (env, t); //TODO: fix! this doesn't always memoize the strong normal form
                   log (fun () -> Printf.printf "\tSet memo\n");
                   norm cfg env stack t
+
+                | App _ :: _ -> 
+                  rebuild cfg env stack t
 
                 | Abs _::_
                 | [] -> 
@@ -320,10 +324,19 @@ and rebuild : cfg -> env -> stack -> term -> term =
             | Arg (Dummy, _, _)::_ -> failwith "Impossible"
 
             | Arg (Clos(env, tm, m), aq, r) :: stack ->
-              let a = match !m with 
-                | None -> norm cfg env [MemoLazy m] tm
-                | Some (_, t) -> t in 
-              let t = mk (Tm_app(t, [(a,aq)])) r in 
+              //this needs to be tail recursive for reducing large terms
+              begin match !m with 
+                | None -> 
+                  let stack = MemoLazy m::App(t, aq, r)::stack in 
+                  norm cfg env stack tm
+
+                | Some (_, a) -> 
+                  let t = mk (Tm_app(t, [(a,aq)])) r in 
+                  rebuild cfg env stack t
+              end
+
+            | App(head, aq, r)::stack -> 
+              let t = mk (Tm_app(head, [(t, aq)])) r in
               rebuild cfg env stack t
 
             | Match(env, branches, r) :: stack -> 
