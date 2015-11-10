@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi Prins --admit_fsi Ffibridge --__temp_no_proj PSemantics;
+    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi Prins --admit_fsi Ffibridge --__temp_no_proj PSemantics --verify_module PSemantics;
     other-files:ghost.fst listTot.fst ordset.fsi ordmap.fsi classical.fst prins.fsi ast.fst ffibridge.fsi sem.fst
  --*)
 
@@ -227,4 +227,4 @@ opaque val par_sstep_to_pstep_star:
 let par_sstep_to_pstep_star p c c' h ps tp ts =
   let pi' = (update #prin #tconfig_par p c' tp, ts) in
   let ph = P_par #ps #c' (tp, ts) p h pi' in
-  PS_tran #ps #(tp, ts) #pi' #pi' ph (PS_refl pi')
+  PS_tran #ps #(tp, ts) #pi' #pi' ph (PS_refl #ps pi')

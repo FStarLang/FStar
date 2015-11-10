@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.Seq --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Ffibridge --admit_fsi Runtime --admit_fsi FStar.IO --admit_fsi FStar.String --__temp_no_proj PSemantics;
+    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.Seq --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Ffibridge --admit_fsi Runtime --admit_fsi FStar.IO --admit_fsi FStar.String --__temp_no_proj PSemantics --verify_module Interpreter;
     variables:CONTRIB=../../contrib;
     other-files:classical.fst ext.fst set.fsi heap.fst st.fst all.fst seq.fsi seqproperties.fst ghost.fst listTot.fst ordset.fsi ordmap.fsi list.fst io.fsti string.fst prins.fst ast.fst ffibridge.fsi sem.fst psem.fst $CONTRIB/Platform/fst/Bytes.fst runtime.fsi print.fst ckt.fst $CONTRIB/CoreCrypto/fst/CoreCrypto.fst ../crypto/sha1.fst crypto.fst
  --*)
@@ -233,9 +233,10 @@ let do_sec_comp p c =
     if r_opt = None then failwith "Failed to verify secure server mac"
     else
       let Some (p', r', ps', x', e', dv) = r_opt in      
+      admitP (r = r' /\ e = e'); (* TODO: add sec block ids *)
       if p = p' && ps = ps' && x = x' (* TODO:sec block id && r = r' && e = e' *) then
-      let _ = assert (server_prop p r ps x e dv) in
-      dv
+	let _ = assert (server_prop p r ps x e dv) in
+	dv
     else failwith "Secure server returned bad output"
   else failwith "Reached a non-participating secure block"
 
