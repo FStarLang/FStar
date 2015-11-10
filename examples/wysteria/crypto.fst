@@ -65,11 +65,7 @@ let verify_mac (#a:Type) (#key_prop:bytes -> a -> Type) k m t =
   let _ = admitP (key_prop k (unmarshal_s #a m)) in
   let b = verify k m t in
   if (not b) then None
-  else
-    let x = unmarshal #a m in
-    match x with
-      | None    -> None
-      | Some x' -> Some x'
+  else Some (unmarshal #a m)
 
 let keysize = 16
 
