@@ -30,7 +30,7 @@ assume val marshal_unmarshal_inv_lemma:
     [SMTPat (unmarshal_s #a (marshal_s #a x))]
     
 val marshal: #a:Type -> x:a -> Tot (b:bytes{b = marshal_s x})
-val unmarshal: #a:Type -> b:bytes -> Tot (option (x:a{x = unmarshal_s #a b})) 
+val unmarshal: #a:Type -> b:bytes -> Tot (x:a{x = unmarshal_s #a b})
 
 val send: chan_out -> bytes -> ML unit
 val recv: chan_in -> ML bytes

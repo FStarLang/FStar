@@ -1,7 +1,7 @@
 (*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.Seq --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Ffibridge --admit_fsi Runtime --admit_fsi FStar.IO --admit_fsi FStar.String --__temp_no_proj PSemantics;
+    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.Seq --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Ffibridge --admit_fsi Runtime --admit_fsi FStar.IO --admit_fsi FStar.String --__temp_no_proj PSemantics --verify_module Interpreter;
     variables:CONTRIB=../../contrib;
-    other-files:classical.fst ext.fst set.fsi heap.fst st.fst all.fst seq.fsi seqproperties.fst ghost.fst listTot.fst ordset.fsi ordmap.fsi list.fst io.fsti string.fst prins.fst ast.fst ffibridge.fsi sem.fst psem.fst $CONTRIB/Platform/fst/Bytes.fst runtime.fsi print.fst ckt.fst crypto.fst
+    other-files:classical.fst ext.fst set.fsi heap.fst st.fst all.fst seq.fsi seqproperties.fst ghost.fst listTot.fst ordset.fsi ordmap.fsi list.fst io.fsti string.fst prins.fst ast.fst ffibridge.fsi sem.fst psem.fst $CONTRIB/Platform/fst/Bytes.fst runtime.fsi print.fst ckt.fst $CONTRIB/CoreCrypto/fst/CoreCrypto.fst ../crypto/sha1.fst crypto.fst
  --*)
 
 module Interpreter
@@ -153,6 +153,8 @@ let step_correctness c =
   else if not (pre_assec c = NA) then C_assec_beta c c'
   else C_assec_ret c c'
 
+#set-options "--z3timeout 10"
+
 val target_step_lemma:
   p:prin -> c:config{Conf.l c = Target /\ Conf.m c = Mode Par (singleton p) /\
                     is_Some (step c)}
@@ -160,6 +162,8 @@ val target_step_lemma:
   -> Lemma (requires (True))
           (ensures (Conf.l c' = Target /\ Conf.m c' = Mode Par (singleton p)))
 let target_step_lemma p c c' = ()
+
+#reset-options
 
 open Print
 
@@ -183,21 +187,18 @@ let rec step_star c =
       let h1 = SS_refl c in
       MkDTuple2 #config #(fun c' -> sstep_star c c') c h1
 
-val is_sterminal: config -> Tot bool
-let is_sterminal (Conf _ _ s _ t _) = s = [] && is_T_val t
-
 type tstep_config (p:prin) = c:config{Conf.l c = Target /\
                                       Conf.m c = Mode Par (singleton p)}
 
 opaque type witness_client_config (#a:Type) (x:a) = True
 
 let client_key:client_key =
-  let k = bytes_of_string "client_key" in
+  let k = Platform.Bytes.createBytes SHA1.keysize 0uy in
   assume (client_key_prop k == client_prop_t);
   k
 
 let server_key:server_key =
-  let k = bytes_of_string "server_key" in
+  let k = Platform.Bytes.createBytes SHA1.keysize 0uy in
   assume (server_key_prop k == server_prop_t);
   k
 
@@ -232,9 +233,10 @@ let do_sec_comp p c =
     if r_opt = None then failwith "Failed to verify secure server mac"
     else
       let Some (p', r', ps', x', e', dv) = r_opt in      
+      admitP (r = r' /\ e = e'); (* TODO: add sec block ids *)
       if p = p' && ps = ps' && x = x' (* TODO:sec block id && r = r' && e = e' *) then
-      let _ = assert (server_prop p r ps x e dv) in
-      dv
+	let _ = assert (server_prop p r ps x e dv) in
+	dv
     else failwith "Secure server returned bad output"
   else failwith "Reached a non-participating secure block"
 

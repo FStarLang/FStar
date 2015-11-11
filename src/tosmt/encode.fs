@@ -1612,9 +1612,13 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                         let ttok_decl = Term.DeclFun(ttok, [], Type_sort, Some "token") in
                         let ttok_fresh = Term.fresh_token (ttok, Type_sort) (varops.next_id()) in
                         let ttok_app = mk_ApplyT ttok_tm vars in
-                        let pats = if not is_logical && quals |> Util.for_some (function Opaque -> true | _ -> false)
-                                   then [[ttok_app]; [tapp]]
-                                   else [[ttok_app]] in
+                        let pats = [[ttok_app]; [tapp]] in
+                        // These patterns allow rewriting (ApplyT T@tok args) to (T args) and vice versa
+                        // This seems necessary for some proofs, but the bidirectional rewriting may be inefficient
+                        // Previously, the code used to do what is below, i.e., allowing the bidirectional rewrite only for non-logical opaque types ... not sure why
+//                        if not is_logical && quals |> Util.for_some (function Opaque -> true | _ -> false)
+//                                   then [[ttok_app]; [tapp]]
+//                                   else [[ttok_app]] in
                         let name_tok_corr = Term.Assume(mkForall'(pats, None, vars, mkEq(ttok_app, tapp)), Some "name-token correspondence") in
                         [ttok_decl; ttok_fresh; name_tok_corr], env in
             tname_decl@tok_decls, env in
