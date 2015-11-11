@@ -275,7 +275,33 @@ let encode_nat n =
     aux znat n
 
 module P = FStar.Syntax.Print
+module Subst = FStar.Syntax.Subst
+
+let rec force_term x =
+  let x = Subst.compress x in
+  match x.n with
+  | Tm_delayed _ -> failwith "impossible"
+  | Tm_meta(t, _) -> force_term t
+  | Tm_bvar _ 
+  | Tm_name _ 
+  | Tm_fvar _ 
+  | Tm_constant _ -> ()
+  | Tm_arrow(bs, c) -> force_binders bs; force_comp c
+  | Tm_abs(bs, t2) ->  force_binders bs; force_term t2
+  | Tm_refine(xt, f) -> force_term xt.sort; force_term f
+  | Tm_app(_, []) -> failwith "Empty args!"
+  | Tm_app(t, args) -> force_term t; args |> List.iter (fun (x, _) -> force_term x)
+  | Tm_let(lbs, e) ->  snd lbs |> List.iter (fun lb -> force_term lb.lbdef; force_term lb.lbtyp); force_term e
+  | Tm_match(head, branches) ->
+    force_term head;
+    branches |> List.iter (fun (_, _, e) -> force_term e)
+  | _ -> ()
+
+and force_binders bs = bs |> List.iter (fun (b, _) -> force_term b.sort)
+and force_comp c = ()
+
 let run r expected = 
+//    force_term r;
 //    Printf.printf "redex = %s\n" (P.term_to_string r);
     let x = FStar.TypeChecker.Normalize.norm FStar.TypeChecker.Normalize.empty_cfg [] [] r in
     Printf.printf "result = %s\n" (P.term_to_string x);
@@ -312,5 +338,7 @@ let main argv =
     run (minus_nat (snat (snat znat)) (snat znat)) (snat znat);
     run (minus_nat (encode_nat 100) (encode_nat 100)) znat;
     run (minus_nat (encode_nat 10000) (encode_nat 10000)) znat;
+    run (minus_nat (encode_nat 10) (encode_nat 10)) znat;
     run (minus_nat (encode_nat 1000000) (encode_nat 1000000)) znat;
     0
+     

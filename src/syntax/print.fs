@@ -139,7 +139,7 @@ let lbname_to_string = function
   | Inl l -> bv_to_string l
   | Inr l -> lid_to_string l
 
-let rec tag_of_term t = match (compress t).n with
+let rec tag_of_term (t:term) = match t.n with
   | Tm_bvar _ -> "Tm_bvar"
   | Tm_name _ -> "Tm_name"
   | Tm_fvar _ -> "Tm_fvar"
@@ -154,7 +154,11 @@ let rec tag_of_term t = match (compress t).n with
   | Tm_ascribed _ -> "Tm_ascribed"
   | Tm_let _ -> "Tm_let"
   | Tm_uvar _ -> "Tm_uvar" 
-  | Tm_delayed  _ -> failwith "Impossible"
+  | Tm_delayed(_, m) -> 
+    begin match !m with 
+        | None -> "Tm_delayed"
+        | Some _ -> "Tm_delayed-resolved"
+    end
   | Tm_meta _ -> "Tm_meta"
   | Tm_unknown _ -> "Tm_unknown"
 

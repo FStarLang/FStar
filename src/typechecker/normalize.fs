@@ -139,8 +139,10 @@ let lookup_local_def (x:bv) cfg =
 
 let rec norm : cfg -> env -> stack -> term -> term = 
     fun cfg env stack t -> 
+        log (fun () -> Printf.printf ">>> %s\n" (Print.tag_of_term t));
         let t = compress t in
-        log (fun () -> Printf.printf "Norm %s\n\t\tEnv=%s\n\t\tStack=%s\n" (Print.term_to_string t) (env_to_string env) (stack_to_string stack));
+//        log (fun () -> Printf.printf "Norm %s\n\t\tEnv=%s\n\t\tStack=%s\n" (Print.term_to_string t) (env_to_string env) (stack_to_string stack));
+        log (fun () -> Printf.printf "Norm %s\n" (Print.term_to_string t));
         match t.n with 
           | Tm_delayed _ -> 
             failwith "Impossible"
@@ -178,14 +180,17 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         failwith (Printf.sprintf "Failed to find %s\n" (Print.term_to_string t)) in
                 begin match c with 
                     | Dummy -> failwith (Printf.sprintf "Bound variable was resolved to a dummy: %s\n" (Print.term_to_string t))
-                    | Clos (env, t, r) -> //norm cfg env stack t
+                    | Clos (env, t0, r) -> //norm cfg env stack t
                           match !r with 
                             | Some (env, t') -> 
+                              log (fun () -> Printf.printf "Lazy hit: %s cached to %s\n" (Print.term_to_string t) (Print.term_to_string t'));
                               begin match (compress t').n with
-                                | Tm_abs _  ->  norm cfg env stack t'
-                                | _ -> rebuild cfg env stack t'
+                                | Tm_abs _  ->  
+                                  norm cfg env stack t'
+                                | _ -> 
+                                  rebuild cfg env stack t'
                               end
-                            | None -> norm cfg env (MemoLazy r::stack) t
+                            | None -> norm cfg env (MemoLazy r::stack) t0
                 end
             
           | Tm_abs(bs, body) -> 
@@ -252,22 +257,27 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_let((_, {lbname=Inr _}::_), _) -> //this is a top-level let binding; nothing to normalize
             rebuild cfg env stack t
 
-          | Tm_let((_, lbs), body) -> 
-            //let rec: The basic idea is to open the body with fresh names for the let bound functions; 
-            //         Then, introduce definitions for those new names in cfg.local_defs
-            //         Then reduce the body
-            let local_defs, opening, _ = List.fold_right (fun lb (local_defs, opening, i) -> 
-                match lb.lbname with 
-                    | Inr _ -> failwith "Impossible" //this is a top-level let binding; excluded already
-                    | Inl x -> 
-                      let x = freshen_bv x in 
-                      let opening = DB(i, bv_to_name x)::opening in
-                      let local_defs = (x, env, lb.lbdef)::local_defs in
-                      local_defs, opening, i + 1) lbs ([], [], 0) in
-            let local_defs = List.map (fun (x, env, t) -> (x, env, subst opening t)) local_defs in 
-            let body = subst opening body in 
-            let cfg = {cfg with local_defs=local_defs@cfg.local_defs} in
-            norm cfg env stack body
+          | Tm_let(lbs, body) -> 
+            //let rec: The basic idea is to reduce the body in an environment that includes recursive bindings for the lbs
+            //Consider reducing (let rec f x = f x in f 0) in initial environment env
+            //We build two environments, rec_env and body_env and reduce (f 0) in body_env
+            //rec_env = Clos(env, let rec f x = f x in f, memo)::env
+            //body_env = Clos(rec_env, \x. f x, _)::env
+            //i.e., in body, the bound variable is bound to definition, \x. f x
+            //Within the definition \x.f x, f is bound to the recursive binding (let rec f x = f x in f), aka, fix f. \x. f x
+            //Finally, we add one optimization for laziness by tying a knot in rec_env
+            //i.e., we set memo := Some (rec_env, \x. f x)
+
+            let rec_env, memos, _ = List.fold_right (fun lb (rec_env, memos, i) -> 
+                    let f_i = Syntax.bv_to_tm ({left lb.lbname with index=i}) in
+                    let fix_f_i = mk (Tm_let(lbs, f_i)) t.pos in 
+                    let memo = Util.mk_ref None in 
+                    let rec_env = Clos(env, fix_f_i, memo)::rec_env in
+                    rec_env, memo::memos, i + 1) (snd lbs) (env, [], 0) in
+            let _ = List.map2 (fun lb memo -> memo := Some (rec_env, lb.lbdef)) (snd lbs) memos in //tying the knot
+            let body_env = List.fold_right (fun lb env -> Clos(rec_env, lb.lbdef, Util.mk_ref None)::env)
+                               (snd lbs) env in
+            norm cfg body_env stack body
 
           | Tm_meta (head, m) -> 
             let head = norm cfg env [] head in
@@ -324,6 +334,7 @@ and rebuild : cfg -> env -> stack -> term -> term =
             | Arg (Dummy, _, _)::_ -> failwith "Impossible"
 
             | Arg (Clos(env, tm, m), aq, r) :: stack ->
+              log (fun () -> Printf.printf "Rebuilding with arg %s\n" (Print.term_to_string tm));
               //this needs to be tail recursive for reducing large terms
               begin match !m with 
                 | None -> 
