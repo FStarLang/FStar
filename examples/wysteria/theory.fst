@@ -576,6 +576,12 @@ assume val v_opaque_slc_v_lem_ps_axiom:
                                  (D_v.v (slice_v_sps ps v)) =
                     slice_v_sps (union (singleton p) ps) v))
 
+val mem_intersect_lemma_mem: p:prin -> eps:eprins{mem p eps}
+                             -> Lemma (requires (True))
+                                      (ensures (Equal (intersect eps (singleton p)) (singleton p)))
+                                //[SMTPat (mem p eps); SMTPat (intersect eps (singleton p))]
+let mem_intersect_lemma_mem p eps = ()
+
 val slc_v_lem_ps: #m:v_meta -> v:value m -> p:prin -> ps:prins{not (mem p ps)}
                        -> Lemma (requires (True))
                                 (ensures (compose_vals (D_v.v (slice_v p v))
@@ -606,23 +612,22 @@ let rec slc_v_lem_ps #m v p ps = match v with
     if mem p ps' && not (is_empty (intersect ps ps')) then
       slc_v_lem_ps v' p ps
     else if mem p ps' && is_empty (intersect ps ps') then
-      //let _ = cut (forall p. mem p (union psp ps) = mem p psp || mem p ps) in
-      let _ = cut (forall p. not (mem p (intersect ps ps'))) in
+      let _ = mem_intersect_lemma_mem p ps' in
+      let _ = de_morgan_intersect_over_union psp ps ps' in
       let _ = OrdSet.eq_lemma (intersect (union psp ps) ps') psp in
 
       box_slice_lem v' (union psp ps) ps';
       slice_lem_singl_v v' p;
       ()
     else if not (mem p ps') && not (is_empty (intersect ps ps')) then
+      let _ = de_morgan_intersect_over_union psp ps ps' in
       let _ = OrdSet.eq_lemma (intersect (union psp ps) ps') (intersect ps ps') in
 
       box_slice_lem v' (union (singleton p) ps) ps';
       box_slice_lem v' ps ps';
       ()
     else
-      //let _ = cut (forall p. mem p (union psp ps) = mem p psp || mem p ps) in
       let _ = OrdSet.eq_lemma (intersect (union psp ps) ps') empty in
-
       ()
   | V_wire _ eps w      ->
     de_morgan_union_over_intersect eps (singleton p) ps; slc_wire_lem_ps #eps w p ps
@@ -731,12 +736,6 @@ val mem_intersect_lemma_not_mem: p:prin -> eps:eprins{not (mem p eps)}
                                       (ensures (Equal (intersect eps (singleton p)) empty))
                                 //[SMTPat (not (mem p eps)); SMTPat (intersect eps (singleton p))]
 let mem_intersect_lemma_not_mem p eps = ()
-
-val mem_intersect_lemma_mem: p:prin -> eps:eprins{mem p eps}
-                             -> Lemma (requires (True))
-                                      (ensures (Equal (intersect eps (singleton p)) (singleton p)))
-                                //[SMTPat (mem p eps); SMTPat (intersect eps (singleton p))]
-let mem_intersect_lemma_mem p eps = ()
 
 val get_en_b_slice_lemma:
   #meta:v_meta -> v:value meta{is_clos v} -> p:prin
