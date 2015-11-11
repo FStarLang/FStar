@@ -25,7 +25,9 @@ open FStar.Syntax.Subst
 open FStar.Syntax.Util
 open FStar.TypeChecker.Env
 
-let debug = ref false
+let debug_flag = ref false
+let debug () = debug_flag := true
+
 (**********************************************************************************************
  * Reduction of types via the Krivine Abstract Machine (KN), with lazy
  * reduction and strong reduction (under binders), as described in:
@@ -65,28 +67,6 @@ type cfg = {
     local_defs: list<(bv * env * term)>;
 }
 
-(* <Move> this out of here *)
-let dummy = {
-    init=(fun _ -> ());
-    push=(fun _ -> ());
-    pop=(fun _ -> ());
-    mark=(fun _ -> ());
-    reset_mark=(fun _ -> ());
-    commit_mark=(fun _ -> ());
-    encode_sig=(fun _ _ -> ());
-    encode_modul=(fun _ _ -> ());
-    solve=(fun _ _ -> ());
-    is_trivial=(fun _ _ -> false);
-    finish=(fun () -> ());
-    refresh=(fun () -> ());
-}
-let empty_cfg = { 
-    steps=[];
-    tcenv=Env.initial_env dummy (lid_of_path ["nothing"] dummyRange);
-    local_defs=[]
-}
-(* </Move> *)
-
 type branches = list<(pat * option<term> * term)> 
 
 type subst_t = list<subst_elt>
@@ -95,7 +75,7 @@ type stack_elt =
  | Arg      of closure * aqual * Range.range
  | MemoLazy of memo<(env * term)>
  | Match    of env * branches * Range.range
- | Abs      of env * binders  * subst_t * Range.range
+ | Abs      of env * binders  * Range.range
  | App      of term * aqual * Range.range
 
 type stack = list<stack_elt>
@@ -119,14 +99,14 @@ let env_to_string env =
 let stack_elt_to_string = function 
     | Arg (c, _, _) -> closure_to_string c
     | MemoLazy _ -> "MemoLazy"
-    | Abs (_, bs, _, _) -> Printf.sprintf "Abs %d" (List.length bs)
+    | Abs (_, bs, _) -> Printf.sprintf "Abs %d" (List.length bs)
     | _ -> "Match"
 
 let stack_to_string s = 
     List.map stack_elt_to_string s |> String.concat "; "
 
 let log f = 
-    if !debug
+    if !debug_flag
     then f()
     else ()
 
@@ -216,10 +196,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
                 | Abs _::_
                 | [] -> 
-                  let body, closing = open_term bs body in 
+                  let bs, body = open_term bs body in 
                   let env' = bs |> List.fold_left (fun env _ -> Dummy::env) env in
                   log (fun () -> Printf.printf "\tShifted %d dummies\n" (List.length bs));
-                  norm cfg env' (Abs(env, bs, closing, t.pos)::stack) body
+                  norm cfg env' (Abs(env, bs, t.pos)::stack) body
             end
 
           | Tm_app(head, args) -> 
@@ -229,16 +209,15 @@ let rec norm : cfg -> env -> stack -> term -> term =
                             
           | Tm_refine(x, f) -> //non tail-recursive; the alternative is to keep marks on the stack to rebuild the term ... but that's very heavy
             let t_x = norm cfg env [] x.sort in 
-            let f, closing = open_term [(x, None)] f in
+            let closing, f = open_term [(x, None)] f in
             let f = norm cfg env [] f in 
-            let t = mk (Tm_refine({x with sort=t_x}, subst closing f)) t.pos in 
+            let t = mk (Tm_refine({x with sort=t_x}, close closing f)) t.pos in 
             rebuild cfg env stack t
 
           | Tm_arrow(bs, c) -> 
-            let c, closing = open_comp bs c in 
+            let bs, c = open_comp bs c in 
             let c = norm_comp cfg env c in
-            let c = subst_comp closing c in
-            let t = mk (Tm_arrow(norm_binders cfg env bs, c)) t.pos in
+            let t = arrow (norm_binders cfg env bs) c in
             rebuild cfg env stack t
           
           | Tm_ascribed(t1, t2, l) -> 
@@ -267,7 +246,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             //Within the definition \x.f x, f is bound to the recursive binding (let rec f x = f x in f), aka, fix f. \x. f x
             //Finally, we add one optimization for laziness by tying a knot in rec_env
             //i.e., we set memo := Some (rec_env, \x. f x)
-
+            
             let rec_env, memos, _ = List.fold_right (fun lb (rec_env, memos, i) -> 
                     let f_i = Syntax.bv_to_tm ({left lb.lbname with index=i}) in
                     let fix_f_i = mk (Tm_let(lbs, f_i)) t.pos in 
@@ -326,10 +305,9 @@ and rebuild : cfg -> env -> stack -> term -> term =
               set_memo r (env, t);
               rebuild cfg env stack t
 
-            | Abs (env', bs, closing, r)::stack ->
-              let t = subst closing t in 
+            | Abs (env', bs, r)::stack ->
               let bs = norm_binders cfg env' bs in
-              rebuild cfg env stack (mk (Tm_abs(bs, t)) r)
+              rebuild cfg env stack ({abs bs t with pos=r})
 
             | Arg (Dummy, _, _)::_ -> failwith "Impossible"
 
@@ -399,3 +377,16 @@ and rebuild : cfg -> env -> stack -> term -> term =
                       norm cfg env stack (guard_when_clause wopt b rest) in
 
               matches t branches
+
+let config s e = {local_defs=[]; tcenv=e; steps=s}
+let normalize s e t = norm (config s e) [] [] t
+let normalize_comp s e t = norm_comp (config s e) [] t
+
+let term_to_string env t = Print.term_to_string (normalize [] env t)
+let comp_to_string env c = Print.comp_to_string (norm_comp (config [] env) [] c)
+
+let whnf (_:Env.env) (_:term) : term = failwith "NYI"
+let weak_norm_comp (_:Env.env) (_:comp) : comp_typ = failwith "NYI"
+let normalize_sigelt (_:steps) (_:Env.env) (_:sigelt) : sigelt = failwith "NYI"
+let normalize_refinement (_:Env.env) (_:typ) : typ = failwith "NYI"
+let eta_expand (_:Env.env) (_:typ) : typ = failwith "NYI"

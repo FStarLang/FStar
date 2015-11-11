@@ -139,7 +139,7 @@ let lbname_to_string = function
   | Inl l -> bv_to_string l
   | Inr l -> lid_to_string l
 
-let rec tag_of_term (t:term) = match t.n with
+let tag_of_term (t:term) = match t.n with
   | Tm_bvar _ -> "Tm_bvar"
   | Tm_name _ -> "Tm_name"
   | Tm_fvar _ -> "Tm_fvar"
@@ -162,12 +162,14 @@ let rec tag_of_term (t:term) = match t.n with
   | Tm_meta _ -> "Tm_meta"
   | Tm_unknown _ -> "Tm_unknown"
 
+let uvar_to_string (u:uvar) = if !Options.hide_uvar_nums then "?" else "?" ^ (Unionfind.uvar_id u |> string_of_int) 
+ 
 (* This function prints the type it gets as argument verbatim.
    For already type-checked types use the typ_norm_to_string
    function in normalize.fs instead, since elaboration
    (higher-order unification) produces types containing lots of
    redexes that should first be reduced. *)
-and term_to_string x =
+let rec term_to_string x =
   let x = Subst.compress x in
   match x.n with
   | Tm_delayed _ -> failwith "impossible"
@@ -175,6 +177,7 @@ and term_to_string x =
   | Tm_bvar x -> "@"^db_to_string x  
   | Tm_name x -> nm_to_string x
   | Tm_fvar f -> fv_to_string f
+  | Tm_uvar (u, _) -> uvar_to_string u
   | Tm_constant c -> const_to_string c
   | Tm_arrow(bs, c) -> Util.format2 "(%s -> %s)"  (binders_to_string " -> " bs) (comp_to_string c)
   | Tm_abs(bs, t2) ->  Util.format2 "(fun %s -> %s)" (binders_to_string " " bs) (term_to_string t2)

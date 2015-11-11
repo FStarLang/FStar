@@ -125,3 +125,5 @@ val monad_leq       : env -> lident -> lident -> option<edge>
 val effect_decl_opt : env -> lident -> option<eff_decl>
 val get_effect_decl : env -> lident -> eff_decl
 val wp_signature    : env -> lident -> (bv * term)
+
+val dummy:env

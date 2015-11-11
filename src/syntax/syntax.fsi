@@ -163,7 +163,8 @@ and letbindings = bool * list<letbinding>       (* let recs may have more than o
 and subst_t = list<list<subst_elt>>
 and subst_elt = 
    | DB of int * term                          (* DB i t: replace a bound variable with index i with term t *)
-   | NM of bv  * int                            (* NM x i: replace a local name with a bound variable i *)
+   | NM of bv  * int                           (* NM x i: replace a local name with a bound variable i *)
+   | NT of bv * term                           (* NT x t: replace a local name with a term t *)
    | UN of univ_var * universe                 (* UN u v: replace universes variable u with universe term v *)
 and freenames = set<bv>
 and uvars    = set<uvar>

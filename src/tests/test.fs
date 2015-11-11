@@ -303,7 +303,7 @@ and force_comp c = ()
 let run r expected = 
 //    force_term r;
 //    Printf.printf "redex = %s\n" (P.term_to_string r);
-    let x = FStar.TypeChecker.Normalize.norm FStar.TypeChecker.Normalize.empty_cfg [] [] r in
+    let x = FStar.TypeChecker.Normalize.normalize [] TypeChecker.Env.dummy r in
     Printf.printf "result = %s\n" (P.term_to_string x);
     Printf.printf "expected = %s\n\n" (P.term_to_string expected);
     assert (term_eq x expected);
@@ -311,7 +311,7 @@ let run r expected =
 
 [<EntryPoint>] 
 let main argv =
-    TypeChecker.Normalize.debug := argv.Length >= 1 && argv.[0] = "debug";
+    if argv.Length >= 1 && argv.[0] = "debug" then TypeChecker.Normalize.debug();
     run (app apply [one; id; nm n]) (nm n);
     run (app apply [tt; nm n; nm m]) (nm n);
     run (app apply [ff; nm n; nm m]) (nm m);

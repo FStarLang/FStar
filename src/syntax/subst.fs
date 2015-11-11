@@ -264,17 +264,21 @@ let subst_comp s t = subst_comp' [s] t
 let closing_subst bs = 
     List.fold_right (fun (x, _) (subst, n)  -> (NM(x, n)::subst, n+1)) bs ([], 0) |> fst 
 let open_binders' bs = 
-   let _, bs, opening, closing = List.fold_right (fun (x, imp) (i, bs, o, c) -> 
-        let x' = freshen_bv x in
-        i+1, (x',imp)::bs, DB(i, bv_to_name x')::o, NM(x', i)::c) bs (0, [], [], []) in
-  bs, opening, closing
-let open_binders (bs:binders) = let bs, _, _ = open_binders' bs in bs
+   let rec aux bs o = match bs with
+        | [] -> [], o
+        | (x, imp)::bs' -> 
+          let x' = {freshen_bv x with sort=subst o x.sort} in
+          let o = DB(0, bv_to_name x')::shift_subst 1 o in 
+          let bs', o = aux bs' o in 
+          (x',imp)::bs', o in
+   aux bs [] 
+let open_binders (bs:binders) = fst (open_binders' bs)
 let open_term (bs:binders) t = 
-   let _, opening, closing = open_binders' bs in
-   subst opening t, closing
+   let bs', opening = open_binders' bs in
+   bs', subst opening t
 let open_comp (bs:binders) t = 
-   let _, opening, closing = open_binders' bs in
-   subst_comp opening t, closing
+   let bs', opening = open_binders' bs in
+   bs', subst_comp opening t
 let close (bs:binders) t = subst (closing_subst bs) t
 let close_comp (bs:binders) (c:comp) = subst_comp (closing_subst bs) c
 let close_binders (bs:binders) : binders =

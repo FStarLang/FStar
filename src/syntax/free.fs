@@ -101,7 +101,10 @@ and free_names_and_uvars t =
 
 and free_names_and_uvars_args args acc = 
         args |> List.fold_left (fun n (x, _) -> union_nm_uv n (free_names_and_uvars x)) acc
-             
+ 
+and free_names_and_uvars_binders bs acc = 
+        bs |> List.fold_left (fun n (x, _) -> union_nm_uv n (free_names_and_uvars x.sort)) acc 
+              
 and free_names_and_uvars_comp c = 
     match !c.vars with 
         | Some n -> n
@@ -115,4 +118,5 @@ and free_names_and_uvars_comp c =
          n
          
 let names t = fst (free_names_and_uvars t)
+let names_of_binders (bs:binders) = fst (free_names_and_uvars_binders bs (no_names, no_uvs))
 let uvars t = snd (free_names_and_uvars t)

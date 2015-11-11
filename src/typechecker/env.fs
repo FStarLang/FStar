@@ -534,3 +534,20 @@ let lidents env : list<lident> =
   Util.smap_fold (sigtab env) (fun _ v keys -> Util.lids_of_sigelt v@keys) keys
 
 
+(* <Move> this out of here *)
+let dummy_solver = {
+    init=(fun _ -> ());
+    push=(fun _ -> ());
+    pop=(fun _ -> ());
+    mark=(fun _ -> ());
+    reset_mark=(fun _ -> ());
+    commit_mark=(fun _ -> ());
+    encode_sig=(fun _ _ -> ());
+    encode_modul=(fun _ _ -> ());
+    solve=(fun _ _ -> ());
+    is_trivial=(fun _ _ -> false);
+    finish=(fun () -> ());
+    refresh=(fun () -> ());
+}
+let dummy = initial_env dummy_solver (lid_of_path ["dummy"] dummyRange)
+(* </Move> *)

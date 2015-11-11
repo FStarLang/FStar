@@ -38,13 +38,15 @@ type step =
 
 and steps = list<step>
 
-val eta_expand:      env -> term -> term
-val weak_norm_comp:  env -> comp -> comp_typ
-val norm:            steps -> env -> term -> term
-val norm_comp:       steps -> env -> comp -> comp
-val norm_sigelt:     steps -> env -> sigelt -> sigelt
-val norm_refinement: env -> typ -> typ
-val whnf:            env -> term -> term
+val eta_expand:           env -> term -> term
+val weak_norm_comp:       env -> comp -> comp_typ
+val normalize:            steps -> env -> term -> term
+val normalize_comp:       steps -> env -> comp -> comp
+val normalize_sigelt:     steps -> env -> sigelt -> sigelt
+val normalize_refinement: env -> typ -> typ
+val whnf:                 env -> term -> term
 
 val term_to_string:  env -> term -> string
 val comp_to_string:  env -> comp -> string
+
+val debug: unit -> unit

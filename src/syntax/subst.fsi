@@ -29,5 +29,5 @@ val close:         binders -> term -> term
 val close_comp:    binders -> comp -> comp
 val close_binders: binders -> binders
 val open_binders:  binders -> binders 
-val open_term:     binders -> term -> term * list<subst_elt>
-val open_comp:     binders -> comp -> comp * list<subst_elt>
+val open_term:     binders -> term -> binders * term
+val open_comp:     binders -> comp -> binders * comp
