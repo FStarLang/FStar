@@ -341,7 +341,7 @@ end))))))
 in (let _64_256 = if (FStar_ST.read should_read_build_config) then begin
 if (let _129_135 = (FStar_Parser_ParseIt.get_bc_start_string ())
 in (FStar_Util.starts_with text _129_135)) then begin
-(let filenames = (FStar_Parser_ParseIt.read_build_config_from_string "" false text)
+(let filenames = (FStar_Parser_ParseIt.read_build_config_from_string "" false text true)
 in (let _64_249 = (batch_mode_tc_no_prims dsenv env filenames)
 in (match (_64_249) with
 | (_64_246, dsenv, env) -> begin
@@ -429,7 +429,12 @@ end)
 end else begin
 filenames
 end
-in (let _64_303 = (batch_mode_tc filenames)
+in if (FStar_ST.read FStar_Options.find_deps) then begin
+(let _129_147 = (let _129_146 = (FStar_Util.concat_l "\n" filenames)
+in (FStar_Util.format1 "%s\n" _129_146))
+in (FStar_Util.print_string _129_147))
+end else begin
+(let _64_303 = (batch_mode_tc filenames)
 in (match (_64_303) with
 | (fmods, dsenv, env) -> begin
 (let _64_304 = (report_errors None)
@@ -439,7 +444,8 @@ end else begin
 (let _64_306 = (codegen fmods env)
 in (finished_message fmods))
 end)
-end)))
+end))
+end)
 end)
 end)))
 
@@ -458,13 +464,13 @@ end else begin
 ()
 end
 in (let _64_315 = if (FStar_ST.read FStar_Options.trace_error) then begin
-(let _129_150 = (FStar_Util.message_of_exn e)
-in (let _129_149 = (FStar_Util.trace_of_exn e)
-in (FStar_Util.fprint2 "\nUnexpected error\n%s\n%s\n" _129_150 _129_149)))
+(let _129_152 = (FStar_Util.message_of_exn e)
+in (let _129_151 = (FStar_Util.trace_of_exn e)
+in (FStar_Util.fprint2 "\nUnexpected error\n%s\n%s\n" _129_152 _129_151)))
 end else begin
 if (not ((FStar_Absyn_Util.handleable e))) then begin
-(let _129_151 = (FStar_Util.message_of_exn e)
-in (FStar_Util.fprint1 "\nUnexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" _129_151))
+(let _129_153 = (FStar_Util.message_of_exn e)
+in (FStar_Util.fprint1 "\nUnexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" _129_153))
 end else begin
 ()
 end
