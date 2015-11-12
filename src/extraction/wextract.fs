@@ -6,6 +6,7 @@ open FStar.Absyn
 open FStar.Absyn.Syntax
 open FStar.Absyn.Print
 
+open FStar.Extraction.ML.Env
 open FStar.Extraction.ML.Syntax
 
 type name = string
@@ -91,6 +92,11 @@ let is_bool (t:mlty) =
         | MLTY_Named (_, p) -> string_of_mlpath p = "Prims.bool"
         | _ -> false
 
+let is_int (t:mlty) =
+    match t with
+        | MLTY_Named (_, p) -> string_of_mlpath p = "Prims.int"
+        | _ -> false
+
 let is_unit (t:mlty) =
     match t with
         | MLTY_Named (_, p) -> string_of_mlpath p = "Prims.unit"
@@ -137,6 +143,8 @@ let wire_content_type (t:mlty) :mlty =
 
 let is_wysteria_type (t:mlty) = is_prin t || is_prins t || is_eprins t || is_box t || is_wire t
 
+let get_injection_for_prins (_:unit) :string = "fun x -> D_v (const_meta, V_eprins x)"
+
 let slice_value = "Semantics.slice_v_ffi"
 let slice_value_sps = "Semantics.slice_v_sps_ffi"
 let compose_values = "Semantics.compose_vals_ffi"
@@ -171,6 +179,12 @@ let get_injection (t:mlty) :string =
             "mk_v_opaque x " ^ s1 ^ " " ^ s2 ^ " " ^ s3
     in
     s ^ s'
+
+let get_constant_injection (t:mlty) (x:string) :string =
+    if is_bool t then "C_bool " ^ x
+    else if is_unit t then "C_unit ()"    
+    else if is_int t then "C_opaque ((), Obj.magic " ^ x ^ ", T_cons (\"Prims.int\", []))"
+    else failwith "Constant injection does not support this type"
 
 let name_to_string (s:name) = "\"" ^ s ^ "\""
 
@@ -338,7 +352,7 @@ let extract_mlmodule (m:mlmodule) :(list<tlet> * option<wexp>) =
                     | Some _ -> failwith "Impossible: more than one top expressions"
     ) ([], None) m
 
-let rec find_smc_module (mllibs:list<mllib>) :mlmodule =
+let rec find_smc_module (mllibs:list<mllib>) :option<mlmodule> =
     let rec find_smc_module' (mllib:list<(mlsymbol * option<(mlsig * mlmodule)> * mllib)>) :option<mlmodule> =
         match mllib with
             | []                               -> None
@@ -355,22 +369,66 @@ let rec find_smc_module (mllibs:list<mllib>) :mlmodule =
     in
 
     match mllibs with
-        | []            -> raise (NYI "Cannot find the SMC module")
+        | []            -> None
         | (MLLib s)::tl ->
             let m_opt = find_smc_module' s in
             match m_opt with
-                | Some m -> m
+                | Some m -> Some m
                 | None   -> find_smc_module tl
- 
 
+let mltyp_to_string (t:mlty) :string =
+    match t with
+        | MLTY_Named (_, p) -> string_of_mlpath p
+        | _ -> "Something other than named type"
+
+let rec get_iface_arg_ret_typ (t:mlty) :(mlty * mlty) =
+    match t with
+        | MLTY_Fun (arg, _, ret) ->
+            (match ret with
+                | MLTY_Fun (_, _, _) -> get_iface_arg_ret_typ ret
+                | _ -> (arg, ret))
+        | _ -> failwith "Get wys arg ret type has a non-arrow type" 
+
+let extract_smc_exports (g:env) :string =
+    List.fold_left (fun s b ->
+        match b with
+            | Fv (fvv, _, t) ->
+                if Util.starts_with fvv.v.str "Smciface" then
+                    let fn_name = fvv.v.ident.idText in
+                    let (arg, ret) = get_iface_arg_ret_typ (snd t) in
+                    let arg_inj = get_constant_injection arg "x" in
+
+                    let s0 = "let " ^ fn_name ^ " ps p x = \n" in
+                    let s1 = "let e1 = mk_const (C_eprins ps) in\n" in
+                    let s2 = "let e2 = mk_mkwire (mk_const (C_prin p)) (mk_box (mk_const (C_eprins (singleton p))) (mk_const (" ^ arg_inj ^ "))) in\n" in
+                    let s3 = "let dv = Interpreteriface.run p \"" ^ fn_name ^ "\" " ^ (mlty_to_typ (snd t)) ^ " [e1; e2] in\n"
+                    let s4 = "Obj.magic (project_value_content dv)\n"
+                    s ^ (s0 ^ s1 ^ s2 ^ s3 ^ s4) ^ "\n\n"
+                    // let wire_arg = "mk_mkwire (mk_const (C_prin p)) (mk_box (mk_const (C_prins (singleton p))) ((" ^ arg_inj ^ ") x))" in
+                    // let s' = "let " ^ fn_name ^ " ps p x = project_value_content (Interpreter.run p \"" ^ fn_name ^ "\" " ^
+                    //          "[mk_const (C_eprins ps); (" ^ wire_arg ^ ")])" in
+                    // s ^ s' ^ "\n\n"
+                else s
+            | _ -> s
+    ) "" g.gamma
+                    
 let extract (l:list<modul>) (en:FStar.Tc.Env.env) :unit =
     initialize ();
     let c, mllibs = Util.fold_map Extraction.ML.ExtractMod.extract (Extraction.ML.Env.mkContext en) l in
+    let s_exports = extract_smc_exports c in
+    Util.print_string s_exports; Util.print_string "\n\n"; 
     let mllibs = List.flatten mllibs in
-    let m = find_smc_module mllibs in
-    let l, m_opt = extract_mlmodule m in
+    let m_opt = find_smc_module mllibs in
     match m_opt with
-        | None   -> failwith "End of SMC module, no top level expression"
         | Some m ->
-            let s = List.fold_left (fun acc (Mk_tlet (n, t, b)) -> "mk_let (mk_varname " ^ (name_to_string n) ^ " (" ^ t ^ ")) (" ^ b ^ ") (" ^ acc ^ ")") m (List.rev l) in
-            Util.print_string s; Util.print_string "\n"
+            let l, m_opt = extract_mlmodule m in
+            let s_smc = List.fold_left (fun s (Mk_tlet (n, t, b)) -> s ^ "(" ^ name_to_string n ^ ", (" ^ t ^ "), (" ^ b ^ "));\n") "" l in
+    
+            Util.print_string ("[\n" ^ s_smc ^ "]"); Util.print_string "\n"
+        | _ -> ()
+
+    // match m_opt with
+    //     | None   -> failwith "End of SMC module, no top level expression"
+    //     | Some m ->
+    //         let s = List.fold_left (fun acc (Mk_tlet (n, t, b)) -> "mk_let (mk_varname " ^ (name_to_string n) ^ " (" ^ t ^ ")) (" ^ b ^ ") (" ^ acc ^ ")") m (List.rev l) in
+    //         Util.print_string s; Util.print_string "\n"
