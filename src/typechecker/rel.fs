@@ -30,6 +30,7 @@ open FStar.Syntax.Syntax
 open FStar.Syntax.Subst
 module U = FStar.Syntax.Util
 module S = FStar.Syntax.Syntax
+module SS = FStar.Syntax.Subst
 module N = FStar.TypeChecker.Normalize
 
 (* --------------------------------------------------------- *)
@@ -76,7 +77,8 @@ type problem<'a,'b> = {               //Try to prove: lhs rel rhs ~> guard
     rank: option<int>;
 }
 type problem_t<'a,'b> = problem<'a,'b>
-
+type tprob = problem<typ, term>
+type cprob = problem<comp, unit>
 type prob =
   | TProb of problem<typ, term>
   | CProb of problem<comp,unit>
@@ -712,24 +714,14 @@ let flex_rigid        = 4
 let rigid_flex        = 5
 let refine_flex       = 6
 let flex_flex         = 7
+let compress_tprob wl p = {p with lhs=compress   wl.tcenv wl p.lhs; rhs=compress   wl.tcenv wl p.rhs}
 let compress_prob wl p = match p with
-    | KProb p -> {p with lhs=compress_k wl.tcenv wl p.lhs; rhs=compress_k wl.tcenv wl p.rhs} |> KProb
-    | TProb p -> {p with lhs=compress   wl.tcenv wl p.lhs; rhs=compress   wl.tcenv wl p.rhs} |> TProb
-    | EProb p -> {p with lhs=compress_e wl.tcenv wl p.lhs; rhs=compress_e wl.tcenv wl p.rhs} |> EProb
+    | TProb p -> compress_tprob wl p |> TProb
     | CProb _ -> p
 
 let rank wl prob =
    let prob = compress_prob wl prob |> maybe_invert_p in
    match prob with
-    | KProb kp ->
-      let rank = begin match kp.lhs.n, kp.rhs.n with
-        | Kind_uvar _, Kind_uvar _ -> flex_flex
-        | Kind_uvar _, _ -> if kp.relation = EQ then flex_rigid_eq else flex_rigid
-        | _, Kind_uvar _ -> if kp.relation = EQ then flex_rigid_eq else rigid_flex
-        | _, _ -> rigid_rigid
-        end in
-      rank, {kp with rank=Some rank} |> KProb
-
     | TProb tp ->
       let lh, _ = Util.head_and_args tp.lhs in
       let rh, _ = Util.head_and_args tp.rhs in
@@ -761,16 +753,6 @@ let rank wl prob =
         | _, _ -> rigid_rigid, tp
       end in
       rank, {tp with rank=Some rank} |> TProb
-
-    | EProb ep ->
-      let lh, _ = Util.head_and_args_e ep.lhs in
-      let rh, _ = Util.head_and_args_e ep.rhs in
-      let rank = match lh.n, rh.n with
-        | Exp_uvar _, Exp_uvar _ -> flex_flex
-        | Exp_uvar _, _
-        | _, Exp_uvar _ -> flex_rigid_eq
-        | _, _ -> rigid_rigid in
-      rank, {ep with rank=Some rank} |> EProb
 
     | CProb cp -> rigid_rigid, {cp with rank=Some rigid_rigid} |> CProb
 
@@ -972,24 +954,21 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
       let wl = solve_prob orig (Some phi) [] wl in
       solve env (attempt sub_probs wl)
 
-and solve_t (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
-    let p = compress_prob wl (TProb problem) in
-    match p with
-        | TProb p -> solve_t' env p wl
-        | _ -> failwith "Impossible"
+and solve_t (env:Env.env) (problem:tprob) (wl:worklist) : solution =
+    solve_t' env (compress_tprob wl problem) wl
 
-and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
+and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     let giveup_or_defer orig msg =
         if wl.defer_ok
         then begin
-            if Tc.Env.debug env <| Options.Other "Rel"
+            if Env.debug env <| Options.Other "Rel"
             then Util.fprint2 "\n\t\tDeferring %s\n\t\tBecause %s\n" (prob_to_string env orig) msg;
             solve env (defer msg orig wl)
         end
         else giveup env msg orig in
 
-    (* <imitate_t> used in flex-rigid *)
-    let imitate_t orig (env:Tc.Env.env) (wl:worklist) (p:im_or_proj_t) : solution =
+    (* <imitate> used in flex-rigid *)
+    let imitate orig (env:Env.env) (wl:worklist) (p:im_or_proj_t) : solution =
         let ((u,k), ps, xs, (h, _, qs)) = p in
         let xs = sn_binders env xs in
         //U p1..pn REL h q1..qm
@@ -998,62 +977,49 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
         //sub-problems: Gi(p1..pn) REL' qi, where REL' = vary_rel REL (variance h i)
         let r = Env.get_range env in
         let sub_probs, gs_xs, formula = imitation_sub_probs orig env xs ps qs in
-        let im = mk_Typ_lam'(xs, h gs_xs) None r in
-        if Tc.Env.debug env <| Options.Other "Rel"
+        let im = U.abs xs (h gs_xs) in
+        if Env.debug env <| Options.Other "Rel"
         then Util.fprint4 "Imitating %s (%s)\nsub_probs = %s\nformula=%s\n"
-            (Print.typ_to_string im) (Print.tag_of_typ im)
+            (Print.term_to_string im) (Print.tag_of_term im)
             (List.map (prob_to_string env) sub_probs |> String.concat ", ")
-            (Normalize.formula_norm_to_string env formula);
-        let wl = solve_prob orig (Some formula) [UT((u,k), im)] wl in
+            (Normalize.term_to_string env formula);
+        let wl = solve_prob orig (Some formula) [((u,k), im)] wl in
         solve env (attempt sub_probs wl) in
-    (* </imitate_t> *)
+    (* </imitate> *)
 
-    (* <project_t> used in flex_rigid *)
-    let project_t orig (env:Tc.Env.env) (wl:worklist) (i:int) (p:im_or_proj_t) : option<solution> =
+    (* <project> used in flex_rigid *)
+    let project orig (env:Env.env) (wl:worklist) (i:int) (p:im_or_proj_t) : option<solution> =
         let (u, ps, xs, (h, matches, qs)) = p in
         //U p1..pn REL h q1..qm
         //extend subst: U -> \x1..xn. xi(G1(x1...xn) ... Gk(x1..xm)) ... where k is the arity of ti
         //sub-problems: pi(G1(p1..pn)..Gk(p1..pn)) REL h q1..qm
         let r = Env.get_range env in
-        let pi = List.nth ps i in
+        let pi, _ = List.nth ps i in
+        let xi, _ = List.nth xs i in
+
         let rec gs k =
-            let bs, k = Util.kind_formals k in
+            let bs, k = Util.arrow_formals k in
             let rec aux subst bs = match bs with
                 | [] -> [], []
-                | hd::tl ->
-                    let gi_xs, gi_ps, subst = match fst hd with
-                        | Inl a ->
-                            let k_a = Util.subst_kind subst a.sort in
-                            let gi_xs, gi = new_tvar r xs k_a in
-                            let gi_xs = Tc.Normalize.eta_expand env gi_xs in
-                            let gi_ps = mk_Typ_app(gi, ps) (Some k_a) r in
-                            let subst = if is_null_binder hd then subst else Inl(a.v, gi_xs)::subst in
-                            targ gi_xs, targ gi_ps, subst
-
-                        | Inr x ->
-                            let t_x = Util.subst_typ subst x.sort in
-                            let gi_xs, gi = new_evar r xs t_x in
-                            let gi_xs = Tc.Normalize.eta_expand_exp env gi_xs in
-                            let gi_ps = mk_Exp_app(gi, ps) (Some t_x) r in
-                            let subst = if is_null_binder hd then subst else Inr(x.v, gi_xs)::subst in
-                            varg gi_xs, varg gi_ps, subst in
+                | (a, _)::tl ->
+                    let k_a = SS.subst subst a.sort in
+                    let gi_xs, gi = new_uvar r xs k_a in
+                    let gi_xs = Normalize.eta_expand env gi_xs in
+                    let gi_ps = mk_Tm_app gi ps (Some k_a.n) r in
+                    let subst = if S.is_null_bv a then subst else NT(a, gi_xs)::subst in
                     let gi_xs', gi_ps' = aux subst tl in
-                    gi_xs::gi_xs', gi_ps::gi_ps' in
+                    arg gi_xs::gi_xs', arg gi_ps::gi_ps' in
               aux [] bs in
 
-        match fst pi, fst <| List.nth xs i with
-            | Inl pi, Inl xi ->
-                if not <| matches pi
-                then None
-                else let g_xs, _ = gs xi.sort in
-                     let xi = btvar_to_typ xi in
-                     let proj = mk_Typ_lam(xs, mk_Typ_app'(xi, g_xs) (Some ktype) r) None r in
-                     let sub =
-                        TProb <| mk_problem (p_scope orig) orig (mk_Typ_app'(proj, ps) (Some ktype) r) (p_rel orig) (h <| List.map (fun (_, _, y) -> y) qs) None "projection" in
-                     if debug env <| Options.Other "Rel" then Util.fprint2 "Projecting %s\n\tsubprob=%s\n" (Print.typ_to_string proj) (prob_to_string env sub);
-                     let wl = solve_prob orig (Some (fst <| p_guard sub)) [UT(u, proj)] wl in
-                     Some <| solve env (attempt [sub] wl)
-            | _ -> None in
+        if not <| matches pi
+        then None
+        else let g_xs, _ = gs xi.sort in
+             let xi = S.bv_to_name xi in
+             let proj = U.abs xs (S.mk_Tm_app xi g_xs None r) in
+             let sub = TProb <| mk_problem (p_scope orig) orig (S.mk_Tm_app proj ps None r) (p_rel orig) (h <| List.map (fun (_, _, y) -> y) qs) None "projection" in
+             if debug env <| Options.Other "Rel" then Util.fprint2 "Projecting %s\n\tsubprob=%s\n" (Print.term_to_string proj) (prob_to_string env sub);
+             let wl = solve_prob orig (Some (fst <| p_guard sub)) [(u, proj)] wl in
+             Some <| solve env (attempt [sub] wl) in
     (* </project_t> *)
 
     (* <flex-rigid> *)
@@ -1163,7 +1129,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                 | [] ->
                     let ys = List.rev ys in
                     let binders = List.rev binders in
-                    let kk = Recheck.recompute_kind t in
+                    let kk = Recheck.check t in
                     let t', _ = new_tvar t.pos ys kk in
                     let u1_ys, u1, k1, _ = destruct_flex_t t' in
                     let sol = UT((u,k), mk_Typ_lam(binders, u1_ys) (Some k) t.pos) in

@@ -289,3 +289,12 @@ let close_binders (bs:binders) : binders =
           let s' = NM(x, 0)::shift_subst 1 s in
           (x, imp)::aux s' tl in
     aux [] bs
+
+//requires: length bs = length args
+let mk_subst_binders args = 
+   let s, _ = List.fold_right (fun a (s, i) ->  DB(i, fst a)::s, i + 1) args ([], 0) in
+   s
+
+let subst_binders (bs:binders) (args:args) t = subst (mk_subst_binders args) t
+let subst_binders_comp (bs:binders) (args:args) t = subst_comp (mk_subst_binders args) t
+ 
