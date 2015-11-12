@@ -701,8 +701,8 @@ and eq_args (a1:args) (a2:args) : bool =
 (* ------------------------------------------------ *)
 (* <solver> The main solving algorithm              *)
 (* ------------------------------------------------ *)
-type flex_t = (typ * uvar_t * knd * args)
-type im_or_proj_t = ((uvar_t * knd) * list<arg> * binders * ((list<ktec> -> typ) * (typ -> bool) * list<(option<binder> * variance * ktec)>))
+type flex_t = (term * uvar * typ * args)
+type im_or_proj_t = ((uvar * typ) * list<arg> * binders * ((list<tc> -> typ) * (typ -> bool) * list<(option<binder> * variance * tc)>))
 
 let rigid_rigid       = 0
 let flex_rigid_eq     = 1
@@ -1060,9 +1060,9 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
     let solve_t_flex_rigid orig (lhs:(flex_t * option<binders>)) (t2:typ) (wl:worklist) =
         let (t1, uv, k, args_lhs), maybe_pat_vars = lhs in
         let subterms ps =
-            let xs = Util.kind_formals k |> fst in
+            let xs = Util.arrow_formals k |> fst in
             let xs = Util.name_binders xs in
-            (uv,k), ps, xs, decompose_typ env t2 in
+            (uv,k), ps, xs, decompose env t2 in
 
         let rec imitate_or_project n st i =
             if i >= n then giveup env "flex-rigid case failed all backtracking attempts" orig
@@ -1078,9 +1078,9 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
         let check_head fvs1 t2 =
             let hd, _ = Util.head_and_args t2 in
             match hd.n with
-                | Typ_fun _
-                | Typ_const _
-                | Typ_lam _  -> true
+                | Tm_arrow _
+                | Tm_constant _
+                | Tm_abs _  -> true
                 | _ ->
                     let fvs_hd = Util.freevars_typ hd in
                     if Util.fvs_included fvs_hd fvs1
@@ -1097,17 +1097,20 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
           | Some vars ->
                 let t1 = sn env t1 in
                 let t2 = sn env t2 in
-                let fvs1 = Util.freevars_typ t1 in
-                let fvs2 = Util.freevars_typ t2 in
+                let fvs1 = Free.names t1 in
+                let fvs2 = Free.names t2 in
                 let occurs_ok, msg = occurs_check env wl (uv,k) t2 in
                 if not occurs_ok
                 then giveup_or_defer orig ("occurs-check failed: " ^ (Option.get msg))
-                else if Util.fvs_included fvs2 fvs1
+                else if Util.set_is_subset_of fvs2 fvs1
                 then (if Util.is_function_typ t2 && p_rel orig <> EQ //function types have structural subtyping and have to be imitated
                       then imitate_t orig env wl (subterms args_lhs)
                       else //fast solution, pattern equality
                            let _  = if debug env <| Options.Other "Rel"
-                                    then Util.fprint3 "Pattern %s with fvars=%s succeeded fvar check: %s\n" (Print.typ_to_string t1) (Print.freevars_to_string fvs1) (Print.freevars_to_string fvs2) in
+                                    then Util.fprint3 "Pattern %s with fvars=%s succeeded fvar check: %s\n" 
+                                            (Print.term_to_string t1) 
+                                            (Print.freevars_to_string fvs1) 
+                                            (Print.freevars_to_string fvs2) in
                            let sol = match vars with
                                 | [] -> t2
                                 | _ -> mk_Typ_lam(sn_binders env vars, t2) None t1.pos in
