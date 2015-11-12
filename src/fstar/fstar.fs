@@ -282,6 +282,7 @@ let go _ =
                                     | [f] -> Parser.Driver.read_build_config f //then, try to read a build config from the header of the file
                                     | _ -> Util.print_string "--use_build_config expects just a single file on the command line and no other arguments"; exit 1
                              else filenames in
+             if List.length filenames < 1 then Util.print_string "No file provided\n" else
              let fmods, dsenv, env = batch_mode_tc filenames  in
              report_errors None;
              if !Options.interactive
