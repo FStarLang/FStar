@@ -102,7 +102,9 @@ let warn_cardinality () = match !cardinality with
 let check_cardinality () = match !cardinality with 
     | "check" -> true
     | _ -> false
-let init_options () =
+let auto_deps = Util.mk_ref false
+let find_deps = Util.mk_ref false
+let init_options () = 
     show_signatures := [];
     norm_then_print := true;
     z3_exe := Platform.exe "z3";
@@ -149,7 +151,9 @@ let init_options () =
     __temp_no_proj := [];
     _include_path := [];
     print_fuels := false;
-    use_native_int := false
+    use_native_int := false;
+    auto_deps := false;
+    find_deps := false
 
 let set_fstar_home () =
   let fh = match !fstar_home_opt with
@@ -165,14 +169,20 @@ let get_fstar_home () = match !fstar_home_opt with
     | None -> ignore <| set_fstar_home(); !_fstar_home
     | Some x -> x
 
-let get_include_path () =
+let get_include_path (dirname:string) = 
   (* Allows running fstar either from the source repository, or after
    * installation (into /usr/local for instance) *)
-  let h = get_fstar_home () in
-  !_include_path@["."; h ^ "/lib"; h ^ "/lib/fstar"]
+  List.map 
+    (fun p ->
+      if Util.is_path_absolute p then
+        Util.normalize_file_path p
+      else
+        Util.join_paths dirname p)
+      (let h = get_fstar_home () in
+      !_include_path@["."; h ^ "/lib"; h ^ "/lib/fstar"])
 
 let prims () = match !prims_ref with
-  | None -> "prims.fst"
+  | None -> Util.format1 "%s/lib/prims.fst" (get_fstar_home ())
   | Some x -> x
 
 let prependOutputDir fname = match !outputDir with
@@ -251,6 +261,8 @@ let rec specs () : list<Getopt.opt> =
      ( 'v',     "version", ZeroArgs (fun _ -> display_version(); exit 0), "Display version number");
      ( noshort, "warn_top_level_effects", ZeroArgs (fun () -> warn_top_level_effects := true), "Top-level effects are ignored, by default; turn this flag on to be warned when this happens");
      ( noshort, "z3timeout", OneArg ((fun s -> z3timeout := int_of_string s), "t"), "Set the Z3 per-query (soft) timeout to t seconds (default 5)");
+     ( noshort, "auto_deps", ZeroArgs (fun () -> auto_deps := true), "automatically treat files discovered by --find_deps as dependencies.");
+     ( noshort, "find_deps", ZeroArgs (fun () -> find_deps := true; auto_deps := true), "find transitive dependencies given build-config other-files specifications.");
   ] in
      ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs
 and parse_codegen s =

@@ -103,6 +103,29 @@ let run_proc (name:string) (args:string) (stdin:string) : bool * string * string
   (true, res, "")
 
 let get_file_extension (fn:string) : string = snd (BatString.rsplit fn ".")
+let is_path_absolute path_str = 
+  let open Batteries.Incubator in
+  let open BatPathGen.OfString in
+  let path_str' = of_string path_str in
+  is_absolute path_str'
+let join_paths path_str0 path_str1 = 
+  let open Batteries.Incubator in
+  let open BatPathGen.OfString in
+  let open BatPathGen.OfString.Operators in
+  to_string ((of_string path_str0) //@ (of_string path_str1))
+
+let normalize_file_path (path_str:string) =
+  let open Batteries.Incubator in
+  let open BatPathGen.OfString in
+  let open BatPathGen.OfString.Operators in
+  to_string 
+    (normalize_in_tree
+       (let path = of_string path_str in
+         if is_absolute path then
+           path
+         else
+           let pwd = of_string (BatSys.getcwd ()) in
+           pwd //@ path))
 
 type stream_reader = BatIO.input
 let open_stdin () = BatIO.stdin

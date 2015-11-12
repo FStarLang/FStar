@@ -30,28 +30,38 @@ let bc_end   = "--*)"
 
 let get_bc_start_string (_:unit) = bc_start
 
-let find_file (filename:string) : string =
-  if System.IO.Path.IsPathRooted filename then filename
-  else
-    let include_path = Options.get_include_path() in
+let find_file (context:string) (filename:string) : string =
     try
-        let p = Util.find_map include_path (fun p ->
-                let path = System.IO.Path.Combine(p, filename) in
-                if System.IO.File.Exists(path)
-                then Some path
-                else None) in
-        match p with
-        | Some f -> f
-        | _ -> raise (Absyn.Syntax.Err("unable to open file"))
+      let result =
+        if Util.is_path_absolute filename then
+          if System.IO.File.Exists(filename) then
+            Some filename
+          else
+            None
+        else
+          let cwd = System.IO.Path.GetDirectoryName(context) in
+          let search_path = Options.get_include_path(cwd) in
+          Util.find_map 
+              search_path 
+                  (fun p -> 
+                  let path = System.IO.Path.Combine(p, filename) in
+                      if System.IO.File.Exists(path) then 
+                          Some path
+                      else 
+                          None)
+      in
+      match result with
+      | Some p -> Util.normalize_file_path p
+      | _ -> raise (Absyn.Syntax.Err(Util.format1 "unable to find file: %s" filename))
     with e -> raise (Absyn.Syntax.Err (Util.format2 "Unable to open file: %s\n%s\n" filename (e.ToString())))
 
-let open_file (f:string) =
-  let filename = find_file f in
+let read_file (filename:string) =
   if !Options.debug <> []
   then Util.fprint1 "Opening file: %s\n" filename;
-  new System.IO.StreamReader(filename)
+  let fs = new System.IO.StreamReader(filename) in
+  fs.ReadToEnd()
 
-let read_build_config_from_string (filename:string) (use_filename:bool) (contents:string) =
+let rec read_build_config_from_string (filename:string) (use_filename:bool) (contents:string) (is_root:bool) =
     let fail msg = raise (Absyn.Syntax.Err(Util.format2 "Could not parse a valid build configuration from %s; %s\n" filename msg)) in
     let options = ref None in
     let filenames = ref None in
@@ -112,21 +122,35 @@ let read_build_config_from_string (filename:string) (use_filename:bool) (content
         match !filenames with
             | None -> if use_filename then [filename] else []
             | Some other_files ->
-              let files = if use_filename then other_files@[filename] else other_files
-	      in
-	      List.map substitute_variables files
-    else if !Options.use_build_config //the user claimed that the build config exists
+              if not !Options.auto_deps || not use_filename then
+                let files = if use_filename then other_files@[filename] else other_files in
+        List.map substitute_variables files
+              else
+                // use_filename && auto_deps
+                let included_files =
+                  (List.collect 
+                      (fun include_spec ->
+                        let found_filen = find_file filename (substitute_variables include_spec) in
+                        let contents = read_file found_filen  in
+                        read_build_config_from_string found_filen true contents false)
+                      other_files) in
+                // the semantics of FStar.List.unique preserve the final occurance of a repeated term, so we need to do a double-reverse
+                // in order to preserve the dependency order. this isn't terribly efficient but this isn't a critical path and fewer code
+                // modifications seems more prudent at the moment.
+                FStar.List.rev (FStar.List.unique (FStar.List.rev (included_files@[normalize_file_path filename])))
+    else if !Options.use_build_config && is_root //the user claimed that the build config exists
     then fail ""
     else
-      let common_files = ["set.fsi"; "heap.fst"; "st.fst"; "all.fst"] in
+      // todo: this is going to have the unfortunate side-effect of searching for common files in the current directory. i don't know if this
+      // is desirable. we may want to consider the ability to search for files only within `get_fstar_home ()` and children.
+      let common_files = [(find_file "." "set.fsi"); (find_file "." "heap.fst"); (find_file "." "st.fst"); (find_file "." "all.fst")] in
       let files = if use_filename then common_files@[filename] else common_files
       in
       (Options.admit_fsi := "FStar.Set"::!Options.admit_fsi; files)
 
-let read_build_config (filename:string) =
-    let fs = open_file filename in
-    let contents = fs.ReadToEnd() in
-    read_build_config_from_string filename true contents
+let read_build_config (filename:string) (is_root:bool) =
+    let contents = read_file filename in
+    read_build_config_from_string filename true contents is_root
 
 let parse fn =
   Parser.Util.warningHandler := (function
@@ -138,9 +162,9 @@ let parse fn =
 
   let filename,sr,fs = match fn with
     | Inl (filename:string) ->
-      let fs = open_file filename in
-      let contents = fs.ReadToEnd() in
-      filename, new System.IO.StringReader(contents) :> System.IO.TextReader, contents
+      let filename' = find_file "." filename in
+      let contents = read_file filename' in
+      filename', new System.IO.StringReader(contents) :> System.IO.TextReader, contents
     | Inr (s:string) -> "<input>", new System.IO.StringReader(s) :> System.IO.TextReader, s  in
 
   let lexbuf = Microsoft.FSharp.Text.Lexing.LexBuffer<char>.FromTextReader(sr) in

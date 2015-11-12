@@ -110,6 +110,10 @@ val kill_all: unit -> unit
 val run_proc : string -> string -> string -> (bool * string * string)
 
 val get_file_extension: string -> string
+val is_path_absolute: string -> bool
+val join_paths: string -> string -> string
+val normalize_file_path: string -> string
+
 open Prims
 val int_of_string: string -> int
 val int_of_char:   char -> Tot<int>

@@ -54,4 +54,5 @@ let rec unzip3 l =
   match l with
   | [] -> [],[],[]
   | (x,y,z)::t -> let u,v,w = unzip3 t in x::u,y::v,z::w
+let unique = BatList.unique
 
