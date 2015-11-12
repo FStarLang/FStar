@@ -31,9 +31,7 @@ a.out:
 	cp $(FSTAR_HOME)/lib/ml/FStar_String.ml .
 	cp ../ml/ffibridge.ml .
 	cp ../ml/runtime.ml .
-	cp ../ml/prog.ml .
 	cp ../ml/interpreteriface.ml .
-	cp ../ml/smciface.ml .
 	$(OCAMLC) $(OCAML_INCLUDE_PATHS) $(FSTAR_HOME)/contrib/Platform/ml/platform.cmx $(FSTAR_HOME)/contrib/CoreCrypto/ml/CoreCrypto.cmxa prims.ml FStar_Ghost.ml FStar_List_Tot.ml FStar_ST.ml FStar_All.ml FStar_List.ml FStar_OrdSet.ml FStar_OrdMap.ml FStar_IO.ml FStar_String.ml  \
 	            Prins.ml AST.ml ffibridge.ml Semantics.ml PSemantics.ml RuntimeTheory.ml runtime.ml Print.ml Circuit.ml SHA1.ml Crypto.ml Interpreter.ml SecServer.ml FFI.ml prog.ml interpreteriface.ml smciface.ml SMCMain.ml -o a.out
 
