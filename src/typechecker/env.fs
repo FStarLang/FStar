@@ -525,6 +525,8 @@ let bound_vars env =
         | Binding_lid _ -> []
         | Binding_sig _ -> [])
 
+let binders env = bound_vars env |> List.map Syntax.mk_binder
+
 let fold_env env f a = List.fold_right (fun e a -> f a e) env.gamma a
 
 let lidents env : list<lident> =

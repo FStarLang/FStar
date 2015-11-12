@@ -113,6 +113,7 @@ val finish_module      : (env -> modul -> env)
 
 (* Collective state of the environment *)
 val bound_vars   : env -> list<bv>
+val binders      : env -> binders
 val modules      : env -> list<modul>
 val uvars_in_env : env -> uvars
 val lidents      : env -> list<lident>
