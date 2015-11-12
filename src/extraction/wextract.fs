@@ -143,8 +143,6 @@ let wire_content_type (t:mlty) :mlty =
 
 let is_wysteria_type (t:mlty) = is_prin t || is_prins t || is_eprins t || is_box t || is_wire t
 
-let get_injection_for_prins (_:unit) :string = "fun x -> D_v (const_meta, V_eprins x)"
-
 let slice_value = "Semantics.slice_v_ffi"
 let slice_value_sps = "Semantics.slice_v_sps_ffi"
 let compose_values = "Semantics.compose_vals_ffi"
@@ -180,11 +178,12 @@ let get_injection (t:mlty) :string =
     in
     s ^ s'
 
-let get_constant_injection (t:mlty) (x:string) :string =
-    if is_bool t then "C_bool " ^ x
-    else if is_unit t then "C_unit ()"    
-    else if is_int t then "C_opaque ((), Obj.magic " ^ x ^ ", T_cons (\"Prims.int\", []))"
-    else failwith "Constant injection does not support this type"
+let is_known_named_type (t:mlty) :bool =
+    match t with
+        | MLTY_Named (_, p) ->
+            let s_opt = smap_try_find fn_map (string_of_mlpath p) in
+            if s_opt = None then false else true
+        | _ -> failwith "Is_known_named_type was not called with a named type"
 
 let name_to_string (s:name) = "\"" ^ s ^ "\""
 
@@ -202,6 +201,13 @@ let rec mlty_to_typ (t:mlty) :string =
                 let args = List.fold_left (fun s a -> s ^ " (" ^ (mlty_to_typ a) ^ ");") "" l in        
                 n ^ ", [" ^ args ^ "])"
             | _ -> "T_unknown"
+   
+let get_constant_injection (t:mlty) (x:string) :string =
+    if is_bool t then "C_bool " ^ x
+    else if is_unit t then "C_unit ()"
+    else if is_known_named_type t then
+        "C_opaque ((), Obj.magic " ^ x ^ ", " ^ mlty_to_typ t ^ ")"
+    else failwith "Constant injection does not support this type"
 
 let is_ffi ({expr = e; ty = t}:mlexpr) :(bool * string) =
     match e with
@@ -402,7 +408,7 @@ let extract_smc_exports (g:env) :string =
                     let s1 = "let e1 = mk_const (C_eprins ps) in\n" in
                     let s2 = "let e2 = mk_mkwire (mk_const (C_eprins (singleton p))) (mk_box (mk_const (C_eprins (singleton p))) (mk_const (" ^ arg_inj ^ "))) in\n" in
                     let s3 = "let dv = Interpreteriface.run p \"" ^ fn_name ^ "\" " ^ (mlty_to_typ (snd t)) ^ " [e1; e2] in\n"
-                    let s4 = "Obj.magic (project_value_content dv)\n"
+                    let s4 = "Obj.magic (Interpreteriface.project_value_content dv)\n"
                     s ^ (s0 ^ s1 ^ s2 ^ s3 ^ s4) ^ "\n\n"
                     // let wire_arg = "mk_mkwire (mk_const (C_prin p)) (mk_box (mk_const (C_prins (singleton p))) ((" ^ arg_inj ^ ") x))" in
                     // let s' = "let " ^ fn_name ^ " ps p x = project_value_content (Interpreter.run p \"" ^ fn_name ^ "\" " ^
