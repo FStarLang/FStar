@@ -85,7 +85,7 @@ z3-x64:
 # --------------------------------------------------------------------
 
 nuget-restore:
-	VS/.nuget/NuGet.exe restore VS/FStar.sln
+	$(RUNTIME) VS/.nuget/NuGet.exe restore VS/FStar.sln
 
 nuget-clean:
 	rm -r VS/packages
