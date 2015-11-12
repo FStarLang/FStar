@@ -120,14 +120,19 @@ let psi_m l1 l2 =
 	                            mem_begin x 0 (v_of_box l1))) in
   l
 
-val psi: ps:prins{ps = ab} -> w:Wire (list int) ps -> Wys (list int) (pre (Mode Par ab)) post
+val psi: ps:prins{ps = ab} -> w:Wire (list int) ps -> Wys (Wire (list int) ab) (pre (Mode Par ab)) post
 let psi ps w =
   let proj: p:prin{FStar.OrdSet.mem p ab} -> unit -> Wys (list int) (pre (Mode Par (singleton p))) post =
     fun p _ -> projwire_p p w
   in
   let l1 = as_par alice_s (proj alice) in
   let l2 = as_par bob_s (proj bob) in
-  psi_m l1 l2
+  let l = psi_m l1 l2 in
+
+  let trivial: unit -> Wys (list int) (pre (Mode Par ab)) post =
+    fun _ -> l
+  in
+  mkwire_p ab (as_par ab trivial)
 
 val regmem: int -> list int -> Tot bool
 let rec regmem x l =
@@ -143,12 +148,12 @@ let rec intersect l1 l2 =
     if regmem (hd_of_cons l1) l2 then mk_cons (hd_of_cons l1) (intersect (tl_of_cons l1) l2)
     else intersect (tl_of_cons l1) l2
 
-val psi_reg: ps:prins{ps = ab} -> w:Wire (list int) ps -> Wys (list int) (pre (Mode Par ab)) post
+val psi_reg: ps:prins{ps = ab} -> w:Wire (list int) ps -> Wys (Wire (list int) ab) (pre (Mode Par ab)) post
 let psi_reg ps w =
-  let g:unit -> Wys (list int) (pre (Mode Sec ab)) post =
+  let g:unit -> Wys (Wire (list int) ab) (pre (Mode Sec ab)) post =
     fun _ ->
     let l1 = projwire_s alice w in
     let l2 = projwire_s bob w in
-    intersect l1 l2
+    mkwire_s ab (intersect l1 l2)
   in
   as_sec ab g

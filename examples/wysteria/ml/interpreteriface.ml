@@ -30,9 +30,10 @@ let init_env =
 let run (p:prin) (fn:string) (t:typ) (l:exp list) :dvalue =
   let e_main = mk_app (mk_var fn t) (List.hd l) in
   let e_main = List.fold_left (fun acc e -> mk_app acc e) e_main (List.tl l) in
-  let e = List.fold_left (fun acc (x, t, e) ->
+  let e_c = List.fold_left (fun acc (x, t, e) ->
     mk_let (mk_varname x t) e acc
   ) e_main (List.rev program) in
+  let e = mk_projwire (mk_const (C_prin p)) e_c in
   let dv_opt = Interpreter.run p init_env e in
   match dv_opt with
     | None    -> raise Not_found
