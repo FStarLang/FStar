@@ -976,7 +976,7 @@ let rec compose_vals #m1 #m2 v1 v2 =
      | V_wire all1 eps1 w1 ->
        if is_v_wire v2 then
          let V_wire all2 eps2 w2 = v2 in
-         if is_empty (intersect eps1 eps2) && all1 = all2 then
+         if is_empty (intersect eps1 eps2) (*&& all1 = all2*) then
            D_v (Meta empty Can_b (union eps1 eps2) Cannot_w)
                (V_wire all1 (union eps1 eps2) (compose_wires #eps1 #eps2 w1 w2 eps1))
          else emp
