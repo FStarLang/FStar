@@ -80,7 +80,8 @@ val all_but_last_append_lemma: t:trace{is_Cons t} ->
 
 open FStar.Heap
 
-let moderef : ref (option mode) = alloc None (* private *)
+//let moderef : ref (option mode) = alloc None (* private *)
+assume val moderef : ref mode
 
 let traceref: ref trace = alloc []
 
@@ -88,9 +89,9 @@ kind Requires         = mode -> Type
 kind Ensures (a:Type) = mode -> a -> trace -> Type
 
 type wys_encoding (a:Type) (req:Requires) (ens:Ensures a) (p:a -> heap -> Type) (h0:heap) =
-  is_Some (sel h0 moderef) /\ req (Some.v (sel h0 moderef)) /\
+  req (sel h0 moderef) /\
   (forall x h1. (sel h1 moderef = sel h0 moderef /\ is_Some (rest_trace (sel h1 traceref) (sel h0 traceref)) /\
-                 ens (Some.v (sel h0 moderef)) x (Some.v (rest_trace (sel h1 traceref) (sel h0 traceref)))) ==> p x h1)
+                 ens (sel h0 moderef) x (Some.v (rest_trace (sel h1 traceref) (sel h0 traceref)))) ==> p x h1)
 
 effect Wys (a:Type) (req:Requires) (ens:Ensures a) =
   STATE a (fun (p:a -> heap -> Type) (h0:heap) -> wys_encoding a req ens p h0)
@@ -103,13 +104,12 @@ kind Requires2         = double mode -> Type
 kind Ensures2 (a:Type) = double mode -> a -> double trace -> Type
 
 type wys2_encoding (a:Type) (req:Requires2) (ens:Ensures2 a) (p:a -> heap2 -> Type) (h0:heap2) =
-  is_Some (sel (R.l h0) moderef) /\ is_Some (sel (R.r h0) moderef) /\
-  req (R (Some.v (sel (R.l h0) moderef)) (Some.v (sel (R.r h0) moderef))) /\
+  req (R (sel (R.l h0) moderef) (sel (R.r h0) moderef)) /\
   (forall x h1. (sel (R.l h1) moderef = sel (R.l h0) moderef /\
                  sel (R.r h1) moderef = sel (R.r h0) moderef /\
                  is_Some (rest_trace (sel (R.l h1) traceref) (sel (R.l h0) traceref)) /\
                  is_Some (rest_trace (sel (R.r h1) traceref) (sel (R.r h0) traceref)) /\
-                 ens (R (Some.v (sel (R.l h0) moderef)) (Some.v (sel (R.r h0) moderef))) x
+                 ens (R (sel (R.l h0) moderef) (sel (R.r h0) moderef)) x
                      (R (Some.v (rest_trace (sel (R.l h1) traceref) (sel (R.l h0) traceref)))
                         (Some.v (rest_trace (sel (R.r h1) traceref) (sel (R.r h0) traceref))))) ==> p x h1)
 

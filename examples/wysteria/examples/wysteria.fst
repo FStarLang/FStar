@@ -151,8 +151,8 @@ type CanConcatWire (#a:Type) (#eps_x:eprins) (#eps_y:eprins) (x:Wire a eps_x) (y
 let as_par ps f =
   let m0 = ST.read moderef in
   let t0 = ST.read traceref in
-  let _ = assert (DelPar (Some.v m0) ps) in
-  ST.write moderef (Some (Mode Par ps));
+  let _ = assert (DelPar m0 ps) in
+  ST.write moderef (Mode Par ps);
   let x = f () in
   let t1 = ST.read traceref in
   let t_diff = rest_trace t1 t0 in
@@ -163,8 +163,8 @@ let as_par ps f =
 let as_sec ps f =
   let m0 = ST.read moderef in
   let t0 = ST.read traceref in
-  let _ = assert (DelSec (Some.v m0) ps) in
-  ST.write moderef (Some (Mode Sec ps));
+  let _ = assert (DelSec m0 ps) in
+  ST.write moderef (Mode Sec ps);
   let x = f () in
   let t1 = ST.read traceref in
   let t_diff = rest_trace t1 t0 in
@@ -175,42 +175,42 @@ let as_sec ps f =
 
 let unbox_p (#a:Type) #ps x =
   let m0 = ST.read moderef in
-  assert (CanUnboxP (Some.v m0) ps);
+  assert (CanUnboxP m0 ps);
   Mk_box.x x
 
 let unbox_s (#a:Type) #ps x =
   let m0 = ST.read moderef in
-  assert (CanUnboxS (Some.v m0) ps);
+  assert (CanUnboxS m0 ps);
   Mk_box.x x
 
 let box (#a:Type) ps x =
   let m0 = ST.read moderef in
-  assert (CanBox a (Mode.ps (Some.v m0)) ps);
+  assert (CanBox a (Mode.ps m0) ps);
   Mk_box x ps
 
 let mkwire_p (#a:Type) #ps' eps x =
   let m0 = ST.read moderef in
-  assert (CanMkWireP a (Some.v m0) ps' eps);
+  assert (CanMkWireP a m0 ps' eps);
   OrdMap.const_on #prin #a #p_cmp eps (Mk_box.x x)
 
 let mkwire_s (#a:Type) eps x =
   let m0 = ST.read moderef in
-  assert (CanMkWireS a (Some.v m0) eps);
+  assert (CanMkWireS a m0 eps);
   OrdMap.const_on eps x
 
 let projwire_p (#a:Type) #eps p x =
   let m0 = ST.read moderef in
-  assert (CanProjWireP #a #eps (Some.v m0) x p);
+  assert (CanProjWireP #a #eps m0 x p);
   Some.v (OrdMap.select p x)
 
 let projwire_s (#a:Type) #eps p x =
   let m0 = ST.read moderef in
-  assert (CanProjWireS #a #eps (Some.v m0) x p);
+  assert (CanProjWireS #a #eps m0 x p);
   Some.v (OrdMap.select p x)
 
 let concat_wire (#a:Type) #eps1 #eps2 x y = w_concat #a #eps1 #eps2 x y
 
 let main ps f =
-  ST.write moderef (Some (Mode Par ps));
+  ST.write moderef (Mode Par ps);
   ST.write traceref [];
   f ()

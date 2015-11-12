@@ -68,7 +68,7 @@ FSLEX   := $(RUNTIME) $(FSLYDIR)/build/fslex.exe
 
 # --------------------------------------------------------------------
 .PHONY: all z3_x86 z3_x64 wc clean tidy boot ocaml
-.PHONY: msbuild msbuild-clean
+.PHONY: msbuild msbuild-clean nuget-restore nuget-clean
 
 # --------------------------------------------------------------------
 all: $(BIN)/fstar.exe
@@ -83,7 +83,17 @@ z3-x64:
 	cp $(BIN)/z3.x64.dll $(BIN)/z3.dll
 
 # --------------------------------------------------------------------
-msbuild:
+
+nuget-restore:
+	#VS/.nuget/NuGet.exe restore VS/FStar.sln
+
+nuget-clean:
+	rm -r VS/packages
+
+$(FSYACC) $(FSLEX): nuget-restore
+
+# --------------------------------------------------------------------
+msbuild: nuget-restore
 	$(MAKE) -C VS install-packages
 	$(MSBUILD) VS/FStar.sln
 
@@ -91,11 +101,11 @@ msbuild-clean:
 	$(MSBUILD) /t:clean VS/FStar.sln
 
 # --------------------------------------------------------------------
-parser/parse.fs: parser/parse.fsy
+parser/parse.fs: parser/parse.fsy $(FSYACC)
 	$(MAKE) -C VS install-packages
 	$(FSYACC) --module FStar.Parser.Parse $<
 
-parser/lex.fs: parser/lex.fsl
+parser/lex.fs: parser/lex.fsl $(FSLEX)
 	$(MAKE) -C VS install-packages
 	$(FSLEX) --unicode $<
 
@@ -232,7 +242,7 @@ test:   clean $(BIN)/fstar.exe ocaml-test
 	make -C ../contrib/Platform/ml/
 	make -C ../contrib/CoreCrypto/ml/ all test
 	make -C ../examples/crypto clean rpc-test cnt-test
-	make -C ../examples/wysteria a.out distclean
+	#make -C ../examples/wysteria a.out distclean  //AR: cannot compile Crypto.ml, as it uses assume type
 
 test.net: clean $(BIN)/fstar.exe boot
 	make -C ../examples

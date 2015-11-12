@@ -217,22 +217,22 @@ let interactive_mode dsenv env =
                     Util.fprint1 "%s\n" fail;
                     let dsenv, env = reset_mark dsenv_mark env_mark in
                     go stack curmod dsenv env in
-	            
+              
                 let dsenv, env =
-		            if !should_read_build_config then
-		              if Util.starts_with text (Parser.ParseIt.get_bc_start_string ()) then
-		                begin
-		                  let filenames = Parser.ParseIt.read_build_config_from_string "" false text in
-		                  let _, dsenv, env = batch_mode_tc_no_prims dsenv env filenames in
-		                  should_read_build_config := false;
-		                  dsenv, env
-		                end
-		              else begin
-		                should_read_build_config := false;
-		                dsenv, env
-		              end
-		            else
-		              dsenv, env in
+                if !should_read_build_config then
+                  if Util.starts_with text (Parser.ParseIt.get_bc_start_string ()) then
+                    begin
+                      let filenames = Parser.ParseIt.read_build_config_from_string "" false text true in
+                      let _, dsenv, env = batch_mode_tc_no_prims dsenv env filenames in
+                      should_read_build_config := false;
+                      dsenv, env
+                    end
+                  else begin
+                    should_read_build_config := false;
+                    dsenv, env
+                  end
+                else
+                  dsenv, env in
 
               let dsenv_mark, env_mark = mark dsenv env in
               let res = tc_one_fragment curmod dsenv_mark env_mark text in
@@ -288,14 +288,17 @@ let go _ =
                                     | [f] -> Parser.Driver.read_build_config f //then, try to read a build config from the header of the file
                                     | _ -> Util.print_string "--use_build_config expects just a single file on the command line and no other arguments"; exit 1
                              else filenames in
-             let fmods, dsenv, env = batch_mode_tc filenames  in
-             report_errors None;
-             if !Options.interactive
-             then interactive_mode dsenv env
-             else begin
+             if !Options.find_deps then
+               Util.print_string (Util.format1 "%s\n" (Util.concat_l "\n" filenames))
+             else
+               (let fmods, dsenv, env = batch_mode_tc filenames in
+               report_errors None;
+               if !Options.interactive
+               then interactive_mode dsenv env
+               else begin
                 codegen fmods env;
                 finished_message fmods
-             end
+               end)
 
 
 let main () =

@@ -400,7 +400,7 @@ let extract_smc_exports (g:env) :string =
 
                     let s0 = "let " ^ fn_name ^ " ps p x = \n" in
                     let s1 = "let e1 = mk_const (C_eprins ps) in\n" in
-                    let s2 = "let e2 = mk_mkwire (mk_const (C_prin p)) (mk_box (mk_const (C_eprins (singleton p))) (mk_const (" ^ arg_inj ^ "))) in\n" in
+                    let s2 = "let e2 = mk_mkwire (mk_const (C_eprins (singleton p))) (mk_box (mk_const (C_eprins (singleton p))) (mk_const (" ^ arg_inj ^ "))) in\n" in
                     let s3 = "let dv = Interpreteriface.run p \"" ^ fn_name ^ "\" " ^ (mlty_to_typ (snd t)) ^ " [e1; e2] in\n"
                     let s4 = "Obj.magic (project_value_content dv)\n"
                     s ^ (s0 ^ s1 ^ s2 ^ s3 ^ s4) ^ "\n\n"
@@ -416,16 +416,31 @@ let extract (l:list<modul>) (en:FStar.Tc.Env.env) :unit =
     initialize ();
     let c, mllibs = Util.fold_map Extraction.ML.ExtractMod.extract (Extraction.ML.Env.mkContext en) l in
     let s_exports = extract_smc_exports c in
-    Util.print_string s_exports; Util.print_string "\n\n"; 
     let mllibs = List.flatten mllibs in
     let m_opt = find_smc_module mllibs in
-    match m_opt with
-        | Some m ->
-            let l, m_opt = extract_mlmodule m in
-            let s_smc = List.fold_left (fun s (Mk_tlet (n, t, b)) -> s ^ "(" ^ name_to_string n ^ ", (" ^ t ^ "), (" ^ b ^ "));\n") "" l in
-    
-            Util.print_string ("[\n" ^ s_smc ^ "]"); Util.print_string "\n"
-        | _ -> ()
+    let s_smc =
+        (match m_opt with
+            | Some m ->
+                let l, m_opt = extract_mlmodule m in
+                List.fold_left (fun s (Mk_tlet (n, t, b)) -> s ^ "(" ^ name_to_string n ^ ", (" ^ t ^ "), (" ^ b ^ "));\n") "" l
+            | _ -> "")
+    in
+    let smciface = Util.open_file_for_writing (Options.prependOutputDir "smciface.ml") in
+    Util.append_to_file smciface "open Ffibridge";
+    Util.append_to_file smciface "open FFI";
+    Util.append_to_file smciface "open AST";
+    Util.append_to_file smciface "\n";
+    Util.append_to_file smciface s_exports;
+    Util.close_file smciface;
+
+    let prog = Util.open_file_for_writing (Options.prependOutputDir "prog.ml") in
+    Util.append_to_file prog "open AST";
+    Util.append_to_file prog "open FFI";
+    Util.append_to_file prog "\n";
+    Util.append_to_file prog "let const_meta = Meta ([], Can_b, [], Can_w)";
+    Util.append_to_file prog "\n";
+    Util.append_to_file prog ("let program = [\n" ^ s_smc ^ "]");
+    Util.close_file prog
 
     // match m_opt with
     //     | None   -> failwith "End of SMC module, no top level expression"

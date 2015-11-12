@@ -93,7 +93,7 @@ in (FStar_All.exit 1))
 end)
 end)
 
-let read_build_config = (fun file -> (FStar_Parser_ParseIt.read_build_config file))
+let read_build_config = (fun file -> (FStar_Parser_ParseIt.read_build_config file true))
 
 
 

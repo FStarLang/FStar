@@ -20,6 +20,6 @@ open FStar.Util
 open FStar
 
 val parse: either<string,string> -> either<AST.inputFragment, (string * Range.range)>
-val read_build_config_from_string:string -> bool -> string -> list<string>
-val read_build_config:string -> list<string>
+val read_build_config_from_string:string -> bool -> string -> bool -> list<string>
+val read_build_config:string -> bool -> list<string>
 val get_bc_start_string: unit -> string

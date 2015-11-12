@@ -69,8 +69,8 @@ let verify_mac (#a:Type) (#key_prop:key -> a -> Type) k m t =
   if (not b) then None
   else Some (unmarshal #a m)
 
-assume type client_key_prop: key -> (prin * redex) -> Type
-assume type server_key_prop: key -> server_ret_type -> Type
+assume logic type client_key_prop: key -> (prin * redex) -> Type
+assume logic type server_key_prop: key -> server_ret_type -> Type
 
 type client_key = k:key{client_key_prop k == client_prop_t}
 type server_key = k:key{server_key_prop k == server_prop_t}
