@@ -128,3 +128,27 @@ let psi ps w =
   let l1 = as_par alice_s (proj alice) in
   let l2 = as_par bob_s (proj bob) in
   psi_m l1 l2
+
+val regmem: int -> list int -> Tot bool
+let rec regmem x l =
+  if is_Nil l then false
+  else
+    if hd_of_cons l = x then true
+    else regmem x (tl_of_cons l)
+
+val intersect: l1:list int -> l2:list int -> Tot (list int)
+let rec intersect l1 l2 = 
+  if is_Nil l1 then mk_nil ()
+  else
+    if regmem (hd_of_cons l1) l2 then mk_cons (hd_of_cons l1) (intersect (tl_of_cons l1) l2)
+    else intersect (tl_of_cons l1) l2
+
+val psi_reg: ps:prins{ps = ab} -> w:Wire (list int) ps -> Wys (list int) (pre (Mode Par ab)) post
+let psi_reg ps w =
+  let g:unit -> Wys (list int) (pre (Mode Sec ab)) post =
+    fun _ ->
+    let l1 = projwire_s alice w in
+    let l2 = projwire_s bob w in
+    intersect l1 l2
+  in
+  as_sec ab g
