@@ -453,7 +453,8 @@ let rec extractSigElt (c:context) (s:sigelt) : context * list<mlmodule1> =
         //Util.print_string ((Print.sigelt_to_string s)^"\n");
          if quals |> List.contains Assumption  &&
          not (quals |> Util.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
-         then let se = Sig_typ_abbrev(l, bs, k, Tc.Recheck.t_unit, quals, r) in
+         then let kbs, _ = Util.kind_formals k in 
+              let se = Sig_typ_abbrev(l, bs@kbs, mk_Kind_type, Tc.Recheck.t_unit, quals, r) in
               extractSigElt c se 
          else c,[]
 

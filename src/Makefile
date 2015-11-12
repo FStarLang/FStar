@@ -235,7 +235,9 @@ clean-boot-fs:
 # Testing
 # --------------------------------------------------------------------
 
-test:   clean $(BIN)/fstar.exe ocaml-test
+test:   clean $(BIN)/fstar.exe ocaml-test regressions
+
+regressions:
 	make -C ../lib
 	make -C ../examples
 	make -C ../examples/hello ocaml
