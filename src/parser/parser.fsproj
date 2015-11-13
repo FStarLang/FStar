@@ -87,6 +87,8 @@
     <Compile Include="desugar.fs" />
     <Compile Include="env.fsi" />
     <Compile Include="env.fs" />
+    <Compile Include="tosyntax.fsi" />
+    <Compile Include="tosyntax.fs" />
     <Compile Include="parseit.fsi" />
     <Compile Include="parseit.fs" />
     <Compile Include="driver.fs" />

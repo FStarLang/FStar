@@ -59,6 +59,7 @@ type universe =
   | U_bvar  of int
   | U_var   of univ_var
   | U_unif  of Unionfind.uvar<option<universe>>
+  | U_unknown
 and univ_var = ident
 type univ_vars = list<univ_var>
 type universes = list<universe>

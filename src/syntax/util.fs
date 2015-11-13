@@ -383,6 +383,13 @@ let abs bs t = match bs with
     | _ -> mk (Tm_abs(close_binders bs, Subst.close bs t)) None t.pos
 let arrow bs c = mk (Tm_arrow(close_binders bs, Subst.close_comp bs c)) None c.pos
 let refine b t = mk (Tm_refine(b, Subst.close [mk_binder b] t)) None (Range.union_ranges (range_of_bv b) t.pos)
+let branch (p, wopt, e) =
+    let bs = Syntax.pat_bvs p |> List.map mk_binder in 
+    let wopt = match wopt with 
+        | None -> None
+        | Some e -> Some (Subst.close bs e) in
+    let e = Subst.close bs e in 
+    (p, wopt, e)
 
 (********************************************************************************)
 (*********************** Various tests on constants  ****************************)
