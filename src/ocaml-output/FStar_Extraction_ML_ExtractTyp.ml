@@ -534,20 +534,25 @@ end))
 end))
 end))
 end
-| FStar_Absyn_Syntax.Sig_tycon (_61_553, _61_555, _61_557, _61_559, _61_561, quals, _61_564) -> begin
+| FStar_Absyn_Syntax.Sig_tycon (l, bs, k, _61_556, _61_558, quals, r) -> begin
 if ((FStar_All.pipe_right quals (FStar_List.contains FStar_Absyn_Syntax.Assumption)) && (not ((FStar_All.pipe_right quals (FStar_Util.for_some (fun _61_2 -> (match (_61_2) with
 | (FStar_Absyn_Syntax.Projector (_)) | (FStar_Absyn_Syntax.Discriminator (_)) -> begin
 true
 end
-| _61_575 -> begin
+| _61_571 -> begin
 false
 end))))))) then begin
-(extractSigElt c (FStar_Absyn_Syntax.Sig_bundle (((s)::[], (FStar_Absyn_Syntax.Assumption)::[], [], (FStar_Absyn_Util.range_of_sigelt s)))))
+(let _61_575 = (FStar_Absyn_Util.kind_formals k)
+in (match (_61_575) with
+| (kbs, _61_574) -> begin
+(let se = FStar_Absyn_Syntax.Sig_typ_abbrev ((l, (FStar_List.append bs kbs), FStar_Absyn_Syntax.mk_Kind_type, FStar_Tc_Recheck.t_unit, quals, r))
+in (extractSigElt c se))
+end))
 end else begin
 (c, [])
 end
 end
-| _61_577 -> begin
+| _61_578 -> begin
 (c, [])
 end))
 

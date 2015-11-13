@@ -260,6 +260,14 @@ let sortWith f l = List.sortWith f l
 
 let bool_of_compare = (fun ( f  :  'a  ->  'a  ->  Prims.int ) ( x  :  'a ) ( y  :  'a ) -> ((f x y) >= 0))
 
-
+let rec unique l =
+  // this matches the semantics of BatList.unique.
+  match l with
+  | [] -> []
+  | h::t -> 
+    if mem h t then
+      unique t
+    else 
+      h::(unique t)
 
 

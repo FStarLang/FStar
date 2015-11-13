@@ -86,7 +86,7 @@ end))
 let subst = (fun _58_73 args -> (match (_58_73) with
 | (formals, t) -> begin
 if ((FStar_List.length formals) <> (FStar_List.length args)) then begin
-(FStar_All.failwith "Substitution must be fully applied")
+(FStar_All.failwith "Substitution must be fully applied: instantiation of %A failed; got %A\n")
 end else begin
 (let _123_30 = (FStar_List.zip formals args)
 in (subst_aux _123_30 t))

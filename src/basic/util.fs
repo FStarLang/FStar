@@ -148,6 +148,9 @@ let run_proc (name:string) (args:string) (stdin:string) : bool * string * string
   result, stdout, stderr
 
 let get_file_extension (fn: string) :string = Path.GetExtension fn
+let is_path_absolute p = System.IO.Path.IsPathRooted(p)
+let join_paths p0 p1 = System.IO.Path.Combine(p0, p1)
+let normalize_file_path (path:string) = System.IO.Path.GetFullPath(path)
 
 type stream_reader = System.IO.StreamReader (* not relying on representation *)
 let open_stdin () = new System.IO.StreamReader(System.Console.OpenStandardInput())

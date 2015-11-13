@@ -2583,7 +2583,7 @@ let rec composable_vals dv1 dv2 = match dv1, dv2 with
     Mk_c_w c1 = Mk_c_w c2
   | D_v _ (V_box #meta1 ps1 v1), D_v _ (V_box #meta2 ps2 v2) ->
     ps1 = ps2 && composable_vals (D_v meta1 v1) (D_v meta2 v2)
-  | D_v _ (V_wire all1 eps1 _), D_v _ (V_wire all2 eps2 _) -> intersect eps1 eps2 = empty && all1 = all2
+  | D_v _ (V_wire all1 eps1 _), D_v _ (V_wire all2 eps2 _) -> intersect eps1 eps2 = empty (*&& all1 = all2*)
   | D_v _ (V_clos en1 x1 e1), D_v _ (V_clos en2 x2 e2) ->
     x1 = x2 && e1 = e2 && composable_envs en1 en2
   | D_v _ (V_fix_clos en1 f1 x1 e1), D_v _ (V_fix_clos en2 f2 x2 e2) ->

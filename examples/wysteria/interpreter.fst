@@ -258,3 +258,12 @@ let rec tstep_star p c =
   match c' with
     | Some c' -> tstep_star p c'
     | None    -> Some c
+
+val run: p:prin -> env -> exp -> ML (option dvalue)
+let run p en e =
+  let c = Conf Target (Mode Par (OrdSet.singleton p)) [] en (T_exp e) (hide []) in
+  let c' = tstep_star p c in
+  match c' with
+    | None    -> None
+    | Some c' ->
+      if is_terminal c' then Some (c_value c') else None
