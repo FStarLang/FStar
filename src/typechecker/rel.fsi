@@ -51,10 +51,7 @@ type guard_formula =
   | Trivial
   | NonTrivial of formula
 
-type deferred = {
-  carry:   list<(string * prob)>;
-  slack:   list<(bool * typ)>;
-}
+type deferred = list<(string * prob)>
 
 type implicits = list<(uvar * Range.range)>
 

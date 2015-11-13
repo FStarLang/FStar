@@ -18,9 +18,10 @@
 module FStar.Syntax.Print
 open FStar.Syntax.Syntax
 
-val bv_to_string  : bv -> string
-val lid_to_string : lident -> string
-val term_to_string: term -> string
-val uvar_to_string: uvar -> string
-val comp_to_string: comp -> string
-val tag_of_term   : term -> string
+val bv_to_string    : bv -> string
+val lid_to_string   : lident -> string
+val term_to_string  : term -> string
+val uvar_to_string  : uvar -> string
+val comp_to_string  : comp -> string
+val tag_of_term     : term -> string
+val lbname_to_string: lbname -> string

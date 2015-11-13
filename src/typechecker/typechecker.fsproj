@@ -68,6 +68,7 @@
     <Compile Include="normalize.fs" />
     <Compile Include="recheck.fsi" />
     <Compile Include="recheck.fs" />
+    <Compile Include="errors.fs" />
     <Compile Include="rel.fsi" />
     <Compile Include="rel.fs" />
   </ItemGroup>
