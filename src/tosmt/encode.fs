@@ -24,7 +24,8 @@ open FStar.Absyn
 open FStar.Absyn.Syntax
 open FStar.Tc
 open FStar.ToSMT.Term
-
+open FStar.Ident
+open FStar.Const
 open FStar.ToSMT.SplitQueryCases
 
 let add_fuel x tl = if !Options.unthrottle_inductives then tl else x::tl

@@ -40,6 +40,8 @@ open FStar.Absyn.Const
 open FStar.Absyn.Util
 open FStar.Parser.AST
 open FStar.Parser.Util
+open FStar.Const
+open FStar.Ident
 
 %} 
 
@@ -226,7 +228,7 @@ qualifier:
   | LOGIC        { Logic }
   | ASSUME       { Assumption }
   | OPAQUE       { Opaque }
-  | DEFAULT      { DefaultEffect None }
+  | DEFAULT      { DefaultEffect }
   | TOTAL        { TotalEffect }
   | PRIVATE      { Private }
 

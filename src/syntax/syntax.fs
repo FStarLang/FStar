@@ -22,18 +22,12 @@ open Prims
 open FStar
 open FStar.Util
 open FStar.Range
+open FStar.Ident
+open FStar.Const
 
 exception Err of string
 exception Error of string * Range.range
 exception Warning of string * Range.range
-
-type ident = {idText:string;
-              idRange:Range.range}
-type LongIdent = {ns:list<ident>; //["Microsoft"; "FStar"; "Absyn"; "Syntax"]
-                  ident:ident;    //"LongIdent"
-                  nsstr:string;
-                  str:string}
-type lident = LongIdent
 
 (* Objects with metadata *)
 type withinfo_t<'a,'t> = {
@@ -46,18 +40,7 @@ type withinfo_t<'a,'t> = {
 type var<'t>  = withinfo_t<lident,'t>
 type fieldname = lident
 (* Term language *)
-type sconst =
-  | Const_effect
-  | Const_unit
-  | Const_uint8       of byte
-  | Const_bool        of bool
-  | Const_int32       of int32
-  | Const_int64       of int64
-  | Const_int         of string
-  | Const_char        of char
-  | Const_float       of double
-  | Const_bytearray   of array<byte> * Range.range
-  | Const_string      of array<byte> * Range.range           (* unicode encoded, F#/Caml independent *)
+type sconst = FStar.Const.sconst
 
 type pragma =
   | SetOptions of string
@@ -300,39 +283,16 @@ type mk_t = mk_t_a<term',term'>
 (*********************************************************************************)
 (* Identifiers to/from strings *)
 (*********************************************************************************)
-let dummyRange = 0L
 let withinfo v s r = {v=v; sort=s; p=r}
 let withsort v s = withinfo v s dummyRange
-let mk_ident (text,range) = {idText=text; idRange=range}
-let id_of_text str = mk_ident(str, dummyRange)
-let text_of_id (id:ident) = id.idText
-let text_of_path path = Util.concat_l "." path
-let path_of_text text = String.split ['.'] text
-let path_of_ns ns = List.map text_of_id ns
-let path_of_lid lid = List.map text_of_id (lid.ns@[lid.ident])
-let ids_of_lid lid = lid.ns@[lid.ident]
-let lid_of_ids ids =
-    let ns, id = Util.prefix ids in
-    let nsstr = List.map text_of_id ns |> text_of_path in
-    {ns=ns;
-     ident=id;
-     nsstr=nsstr;
-     str=(if nsstr="" then id.idText else nsstr ^ "." ^ id.idText)}
-let lid_of_path path pos =
-    let ids = List.map (fun s -> mk_ident(s, pos)) path in
-    lid_of_ids ids
-let text_of_lid lid = lid.str
-let lid_equals l1 l2 = l1.str = l2.str
+
 let bv_eq (bv1:bv) (bv2:bv) = bv1.ppname.idText=bv2.ppname.idText && bv1.index=bv2.index
 let order_bv x y = 
   let i = String.compare x.ppname.idText y.ppname.idText in
   if i = 0 
   then x.index - y.index
   else i
-let lid_with_range (lid:LongIdent) (r:Range.range) =
-    let id = {lid.ident with idRange=r} in
-    {lid with ident=id}
-let range_of_lid (lid:LongIdent) = lid.ident.idRange
+
 let range_of_lbname (l:lbname) = match l with
     | Inl x -> x.ppname.idRange
     | Inr l -> range_of_lid l
@@ -442,8 +402,5 @@ let lbname_eq l1 l2 = match l1, l2 with
   | _ -> false
 let fv_eq ((fv1, _):fv) ((fv2, _):fv)  = lid_equals fv1.v fv2.v
 let set_bv_range bv r = {bv with ppname=mk_ident(bv.ppname.idText, r)}
-let set_lid_range l r =
-  let ids = (l.ns@[l.ident]) |> List.map (fun i -> mk_ident(i.idText, r)) in
-  lid_of_ids ids
 let fv l dc : fv = withinfo l tun (range_of_lid l), dc
 let fvar dc l r : term = mk (Tm_fvar(fv (set_lid_range l r) dc)) None r

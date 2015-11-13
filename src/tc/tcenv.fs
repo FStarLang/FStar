@@ -23,6 +23,7 @@ open FStar.Absyn.Syntax
 open FStar.Absyn.Util
 open FStar.Util
 open FStar.Absyn.Util
+open FStar.Ident
 
 type binding =
   | Binding_var of bvvdef * typ

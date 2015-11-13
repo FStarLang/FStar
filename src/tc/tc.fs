@@ -24,6 +24,7 @@ open FStar.Absyn
 open FStar.Absyn.Util
 open FStar.Tc.Rel
 open FStar.Absyn.Syntax
+open FStar.Const
 
 let syn' env k = syn (Tc.Env.get_range env) (Some k)
 let log env = !Options.log_types && not(lid_equals Const.prims_lid (Env.current_module env))
@@ -1693,7 +1694,7 @@ and tc_decl env se deserialized = match se with
              gen, lb in
         gen, lb::lbs) (true, []) in
       let lbs' = List.rev lbs' in
-      let e = mk_Exp_let((fst lbs, lbs'), syn' env Recheck.t_unit <| mk_Exp_constant(Syntax.Const_unit)) None r in
+      let e = mk_Exp_let((fst lbs, lbs'), syn' env Recheck.t_unit <| mk_Exp_constant(Const_unit)) None r in
       let se, lbs = match tc_exp ({env with generalize=generalize}) e with
         | {n=Exp_let(lbs, e)}, _, g when Rel.is_trivial g ->
             let quals = match e.n with

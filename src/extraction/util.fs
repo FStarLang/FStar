@@ -20,6 +20,8 @@ open FStar.Util
 open FStar.Absyn
 open FStar.Absyn.Syntax
 open FStar.Extraction.ML.Syntax
+open FStar.Const
+open FStar.Ident
 
 let pruneNones (l : list<option<'a>>) : list<'a> =
     List.fold_right (fun  x ll -> match x with
@@ -29,6 +31,7 @@ let pruneNones (l : list<option<'a>>) : list<'a> =
 
 let mlconst_of_const (sctt : sconst) =
   match sctt with
+  | Const_effect       -> failwith "Unsupported constant"
   | Const_unit         -> MLC_Unit
   | Const_char   c     -> MLC_Char  c
   | Const_uint8  c     -> MLC_Byte  c

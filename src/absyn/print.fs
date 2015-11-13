@@ -22,6 +22,7 @@ open FStar.Absyn
 open FStar.Util
 open FStar.Absyn.Syntax
 open FStar.Absyn.Util
+open FStar.Const
 
 (* CH: This should later be shared with ocaml-codegen.fs and util.fs (is_primop and destruct_typ_as_formula) *)
 let infix_prim_ops = [
@@ -139,6 +140,7 @@ let strBvd bvd =
 
 let filter_imp a = a |> List.filter (function (_, Some Implicit) -> false | _ -> true)
 let const_to_string x = match x with
+  | Const_effect -> "eff"
   | Const_unit -> "()"
   | Const_bool b -> if b then "true" else "false"
   | Const_int32 x ->      Util.string_of_int32 x

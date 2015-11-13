@@ -20,8 +20,11 @@ module FStar.Syntax.Util
 open Prims
 open FStar
 open FStar.Util
+open FStar.Ident
+open FStar.Range
 open FStar.Syntax
 open FStar.Syntax.Syntax
+open FStar.Const
 
 let handle_err warning ret e =
   match e with
@@ -47,7 +50,7 @@ let handleable = function
 (********************************************************************************)
 
 let mk_discriminator lid =
-  lid_of_ids (lid.ns@[Syntax.mk_ident("is_" ^ lid.ident.idText, lid.ident.idRange)])
+  lid_of_ids (lid.ns@[mk_ident("is_" ^ lid.ident.idText, lid.ident.idRange)])
 
 let is_name (lid:lident) =
   let c = Util.char_at lid.ident.idText 0 in
@@ -348,7 +351,7 @@ let unmangle_field_name x =
 
 let mk_field_projector_name lid (x:bv) i =
     let nm = if Syntax.is_null_bv x
-             then Syntax.mk_ident("_" ^ Util.string_of_int i, range_of_bv x)
+             then mk_ident("_" ^ Util.string_of_int i, Syntax.range_of_bv x)
              else x.ppname in
     let y = {x with ppname=nm} in
     lid_of_ids (ids_of_lid lid @ [unmangle_field_name nm]), y
@@ -397,7 +400,7 @@ let mk_tuple_data_lid n r =
   set_lid_range (Const.pconst t) r
 
 let is_tuple_data_lid f n =
-  Syntax.lid_equals f (mk_tuple_data_lid n Syntax.dummyRange)
+  lid_equals f (mk_tuple_data_lid n dummyRange)
 
 let is_dtuple_constructor (t:typ) = match t.n with
   | Tm_fvar (l, _) -> Util.starts_with l.v.str "Prims.DTuple"

@@ -22,18 +22,11 @@ open Prims
 open FStar
 open FStar.Util
 open FStar.Range
+open FStar.Ident
 
 exception Err of string
 exception Error of string * Range.range
 exception Warning of string * Range.range
-
-type ident = {idText:string;
-              idRange:Range.range}
-type LongIdent = {ns:list<ident>; //["Microsoft"; "FStar"; "Absyn"; "Syntax"]
-                  ident:ident;    //"LongIdent"
-                  nsstr:string;
-                  str:string}
-type lident = LongIdent
 
 (* Objects with metadata *)
 type withinfo_t<'a,'t> = {
@@ -46,18 +39,7 @@ type withinfo_t<'a,'t> = {
 type var<'t>  = withinfo_t<lident,'t>
 type fieldname = lident
 (* Term language *)
-type sconst =
-  | Const_effect
-  | Const_unit
-  | Const_uint8       of byte
-  | Const_bool        of bool
-  | Const_int32       of int32
-  | Const_int64       of int64
-  | Const_int         of string
-  | Const_char        of char
-  | Const_float       of double
-  | Const_bytearray   of array<byte> * Range.range
-  | Const_string      of array<byte> * Range.range           (* unicode encoded, F#/Caml independent *)
+type sconst = FStar.Const.sconst
 
 type pragma =
   | SetOptions of string
@@ -313,19 +295,6 @@ val mk_Comp:        comp_typ -> comp
 val bv_to_tm:       bv -> term
 val bv_to_name:     bv -> term
 
-val dummyRange:      range
-val mk_ident:        (string * range) -> ident
-val id_of_text:      string -> ident
-val text_of_id:      ident -> string
-val text_of_path:    path -> string
-val lid_of_ids:      list<ident> -> lident
-val ids_of_lid:      lident -> list<ident>
-val lid_of_path:     path -> range -> lident
-val path_of_lid:     lident -> path
-val text_of_lid:     lident -> string
-val lid_with_range:  lident -> range -> lident
-val range_of_lid:    lident -> range
-val lid_equals:      lident -> lident -> Tot<bool>
 val bv_eq:           bv -> bv -> Tot<bool>
 val order_bv:        bv -> bv -> Tot<int>
 val range_of_lbname: lbname -> range
@@ -363,8 +332,6 @@ val new_bv:         option<range> -> typ -> bv
 val fv:             lident -> option<fv_qual> -> fv 
 val fvar:           option<fv_qual> -> lident -> range -> term
 val fv_eq:          fv -> fv -> bool
-val set_lid_range:  lident -> range -> lident
-
 
 
 

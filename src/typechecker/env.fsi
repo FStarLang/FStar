@@ -16,6 +16,7 @@
 module FStar.TypeChecker.Env
 open FStar
 open FStar.Syntax.Syntax
+open FStar.Ident
 
 type binding =
   | Binding_var of bv     * tscheme

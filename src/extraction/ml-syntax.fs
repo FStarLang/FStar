@@ -2,6 +2,7 @@
 module FStar.Extraction.ML.Syntax
 open FStar
 open FStar.Absyn.Syntax
+open FStar.Ident
 
 (* -------------------------------------------------------------------- *)
 type mlsymbol = string

@@ -23,8 +23,10 @@ open FStar.Util
 open FStar.Syntax.Syntax
 open FStar.Syntax.Util
 open FStar.Syntax.Subst
+open FStar.Ident
+open FStar.Const
 
-let lid_to_string (l:lident) = l.str
+let lid_to_string (l:lid) = l.str
 
 let fv_to_string fv = lid_to_string (fst fv).v
 

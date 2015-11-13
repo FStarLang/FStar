@@ -23,6 +23,8 @@ open FStar.Syntax.Syntax
 open FStar.Syntax.Subst
 open FStar.Syntax.Util
 open FStar.Util
+open FStar.Ident
+open FStar.Range
 
 type binding =
   | Binding_var of bv     * tscheme
@@ -82,7 +84,7 @@ let new_sigtab () = Util.smap_create default_table_size
 
 let initial_env solver module_lid =
   { solver=solver;
-    range=Syntax.dummyRange;
+    range=dummyRange;
     curmodule=module_lid;
     gamma= [];
     modules= [];
@@ -143,7 +145,7 @@ let set_current_module env lid = {env with curmodule=lid}
 let has_interface env l = env.modules |> Util.for_some (fun m -> m.is_interface && lid_equals m.name l)
 let find_in_sigtab env lid = Util.smap_try_find (sigtab env) (text_of_lid lid)
 
-let name_not_found (l:Syntax.lident) =
+let name_not_found (l:lid) =
   format1 "Name \"%s\" not found" l.str
 
 let variable_not_found v =
@@ -265,7 +267,7 @@ let lookup_lid env lid =
     | t -> None
   in
     match Util.bind_opt (lookup_qname env lid) mapper with
-      | Some t -> {t with pos=Syntax.range_of_lid lid}
+      | Some t -> {t with pos=range_of_lid lid}
       | None -> not_found ()
 
 let lookup_val_decl env lid =
@@ -410,8 +412,8 @@ let build_lattice env se = match se with
        mlift=(fun t wp -> wp)
     } in
     let print_mlift l =
-        let arg = fv (Syntax.lid_of_path ["ARG"] dummyRange) None in
-        let wp = fv (Syntax.lid_of_path  ["WP"]  dummyRange) None in
+        let arg = fv (lid_of_path ["ARG"] dummyRange) None in
+        let wp = fv (lid_of_path  ["WP"]  dummyRange) None in
         Print.term_to_string (l arg wp) in
     let order = edge::env.effects.order in
 
@@ -492,7 +494,7 @@ let clear_expected_typ env =
     {env with expected_typ=None; use_eq=false}, expected_typ env
 
 let finish_module =
-    let empty_lid = Syntax.lid_of_ids [Syntax.id_of_text ""] in
+    let empty_lid = lid_of_ids [id_of_text ""] in
     fun env m ->
       let sigs =
         if lid_equals m.name Const.prims_lid

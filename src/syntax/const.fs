@@ -17,6 +17,9 @@
 module FStar.Syntax.Const
 open FStar.Syntax.Syntax
 open FStar.Util
+open FStar.Ident
+open FStar.Range
+open FStar.Const
 
 let mk t : term = mk t None dummyRange
 let p2l l = lid_of_path l dummyRange

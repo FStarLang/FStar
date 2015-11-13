@@ -30,7 +30,7 @@ open FStar.Util
 open FStar.Tc.Env
 open FStar.Tc.Normalize
 open FStar.Absyn.Syntax
-
+open FStar.Const
 
 (* --------------------------------------------------------- *)
 (* <new_uvar> Generating new unification variables/patterns  *)

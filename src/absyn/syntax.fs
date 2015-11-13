@@ -19,18 +19,17 @@ module FStar.Absyn.Syntax
 
 open FStar
 open FStar.Util
+open FStar.Ident
+open FStar.Range
+open FStar.Const
 
+type ident = FStar.Ident.ident
+type lident = FStar.Ident.lid
+type LongIdent = lident
 exception Err of string
 exception Error of string * Range.range
 exception Warning of string * Range.range
 
-type ident = {idText:string;
-              idRange:Range.range}
-type LongIdent = {ns:list<ident>;
-                  ident:ident;
-                  nsstr:string;
-                  str:string}
-type lident = LongIdent
 type withinfo_t<'a,'t> = {
   v: 'a;
   sort: 't;
@@ -45,17 +44,7 @@ type bvar<'a,'t> = withinfo_t<bvdef<'a>,'t>
    Only the latter is used during type checking.  *)
 
 (* Term language *)
-type sconst =
-  | Const_unit
-  | Const_uint8       of byte
-  | Const_bool        of bool
-  | Const_int32       of int32
-  | Const_int64       of int64
-  | Const_int         of string                               //arbitrary length integer constants
-  | Const_char        of char
-  | Const_float       of double
-  | Const_bytearray   of array<byte> * Range.range
-  | Const_string      of array<byte> * Range.range           (* unicode encoded, F#/Caml independent *)
+type sconst = FStar.Const.sconst
 type pragma =
   | SetOptions of string
   | ResetOptions
@@ -315,10 +304,10 @@ let order_bvd x y = match x, y with
   | Inl x, Inl y -> String.compare x.realname.idText y.realname.idText
   | Inr x, Inr y -> String.compare x.realname.idText y.realname.idText
 
-let lid_with_range (lid:LongIdent) (r:Range.range) =
+let lid_with_range (lid:lid) (r:Range.range) =
     let id = {lid.ident with idRange=r} in
     {lid with ident=id}
-let range_of_lid (lid:LongIdent) = lid.ident.idRange
+let range_of_lid (lid:lid) = lid.ident.idRange
 let range_of_lbname (l:lbname) = match l with
     | Inl x -> x.ppname.idRange
     | Inr l -> range_of_lid l

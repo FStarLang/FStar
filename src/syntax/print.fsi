@@ -17,9 +17,10 @@
 // (c) Microsoft Corporation. All rights reserved
 module FStar.Syntax.Print
 open FStar.Syntax.Syntax
+open FStar.Ident
 
 val bv_to_string    : bv -> string
-val lid_to_string   : lident -> string
+val lid_to_string   : lid -> string
 val term_to_string  : term -> string
 val uvar_to_string  : uvar -> string
 val comp_to_string  : comp -> string

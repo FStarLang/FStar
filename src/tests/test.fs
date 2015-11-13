@@ -10,8 +10,10 @@ open FStar.Absyn.Util
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module T = FStar.Syntax.Subst
-let ident x = S.mk_ident(x.idText, x.idRange)
-let lident (l:lident) = S.lid_of_ids ((l.ns@[l.ident]) |> List.map ident)
+module I = FStar.Ident
+open FStar.Ident
+let ident x = x
+let lident (l:lident) = l
 
 let aqual (a:aqual) : S.aqual = 
     match a with 
@@ -24,18 +26,6 @@ let bv_of_bvar x = {ppname=ident x.v.ppname;
                     index=x.v.realname.GetHashCode(); 
                     sort=S.tun}
 
-let sconst = function
-  | Const_unit           -> S.Const_unit
-  | Const_uint8 x        -> S.Const_uint8 x
-  | Const_bool  b        -> S.Const_bool b
-  | Const_int32 i        -> S.Const_int32 i
-  | Const_int64 i        -> S.Const_int64 i
-  | Const_int i          -> S.Const_int i
-  | Const_char c         -> S.Const_char c
-  | Const_float f        -> S.Const_float f
-  | Const_bytearray(a,r) -> S.Const_bytearray(a,r)
-  | Const_string(a,r)    -> S.Const_string(a,r)
-
 let rec trans_typ (t:typ) : term = 
     match (unmeta_typ t).n with
      | Typ_btvar x ->        S.bv_to_name (bv_of_bvar x)
@@ -44,7 +34,7 @@ let rec trans_typ (t:typ) : term =
      | Typ_refine(x, t) ->   U.refine (trans_bvvar x) (trans_typ t)
      | Typ_app(t0, args) ->  S.mk (Tm_app(trans_typ t0, List.map trans_arg args)) None t.pos
      | Typ_lam(bs, t) ->     U.abs (trans_binders bs) (trans_typ t)
-     | Typ_uvar (u, _) ->    S.fvar None (S.lid_of_path [Util.string_of_int (Unionfind.uvar_id u)] t.pos) t.pos
+     | Typ_uvar (u, _) ->    S.fvar None (I.lid_of_path [Util.string_of_int (Unionfind.uvar_id u)] t.pos) t.pos
      | Typ_ascribed(t, k) -> S.mk (Tm_ascribed(trans_typ t, trans_kind k, None)) None t.pos
      | Typ_unknown _ ->      S.tun
      | Typ_meta    _
@@ -76,10 +66,10 @@ and trans_comp (c:comp) : S.comp =
 and trans_kind (k:knd) :term = 
     match (compress_kind k).n with 
      | Kind_type   ->       U.ktype0
-     | Kind_effect ->       S.fvar None (S.lid_of_path ["Effect"] k.pos) k.pos
+     | Kind_effect ->       S.fvar None (I.lid_of_path ["Effect"] k.pos) k.pos
      | Kind_abbrev(_, k) -> trans_kind k
      | Kind_arrow(bs, k) -> U.arrow (trans_binders bs) (S.mk_Total (trans_kind k))
-     | Kind_uvar(uv, _) ->  S.fvar None (S.lid_of_path [Util.string_of_int (Unionfind.uvar_id uv)] k.pos) k.pos
+     | Kind_uvar(uv, _) ->  S.fvar None (I.lid_of_path [Util.string_of_int (Unionfind.uvar_id uv)] k.pos) k.pos
      | Kind_lam(bs, k) ->   U.abs (trans_binders bs) (trans_kind k)
      | Kind_unknown ->      S.tun
      | Kind_delayed _    -> failwith "Impossible"
@@ -88,7 +78,7 @@ and trans_pat (p:pat) : S.pat =
     let wi q = S.withinfo q S.tun.n p.p in 
     match p.v with
       | Pat_disj ps -> wi (S.Pat_disj (List.map trans_pat ps))
-      | Pat_constant c -> wi (S.Pat_constant (sconst c))
+      | Pat_constant c -> wi (S.Pat_constant c)
       | Pat_cons(x, q, pats) -> wi (S.Pat_cons(S.fv (lident x.v) None,  pats |> List.map (fun (p, b) -> trans_pat p, b)))
       | Pat_var x -> wi (S.Pat_var (bv_of_bvar x))
       | Pat_tvar a   -> wi (S.Pat_var (bv_of_bvar a))
@@ -101,7 +91,7 @@ and trans_exp e =
     match (unmeta_exp e).n with
      | Exp_bvar x ->      S.bv_to_name (bv_of_bvar x)
      | Exp_fvar (f, _) -> S.fvar None (lident f.v) e.pos
-     | Exp_constant s ->  S.mk (Tm_constant (sconst s)) None e.pos
+     | Exp_constant s ->  S.mk (Tm_constant s) None e.pos
      | Exp_abs(bs, e) ->  U.abs (trans_binders bs) (trans_exp e)
      | Exp_app(e0, args) -> mk (Tm_app(trans_exp e0, List.map trans_arg args)) None e.pos
      | Exp_match(e0, pats) -> 
@@ -142,7 +132,7 @@ and trans_exp e =
         let body = FStar.Syntax.Subst.close lb_binders (trans_exp body) in
         mk (Tm_let((is_rec, lbs), body)) None e.pos
 
-     | Exp_uvar(u, _) -> S.fvar None (S.lid_of_path [Util.string_of_int (Unionfind.uvar_id u)] e.pos) e.pos
+     | Exp_uvar(u, _) -> S.fvar None (I.lid_of_path [Util.string_of_int (Unionfind.uvar_id u)] e.pos) e.pos
      | Exp_delayed _ 
      | Exp_meta _  -> failwith "Impossible"
 
@@ -157,7 +147,7 @@ let rec term_eq t1 t2 =
         match c.n, d.n with 
             | S.Total t, S.Total s -> term_eq t s
             | S.Comp ct1, S.Comp ct2 ->     
-              S.lid_equals ct1.effect_name ct2.effect_name 
+              I.lid_equals ct1.effect_name ct2.effect_name 
               && term_eq ct1.result_typ ct2.result_typ
               && args_eq ct1.effect_args ct2.effect_args
             | _ -> false in

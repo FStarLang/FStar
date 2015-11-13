@@ -28,6 +28,7 @@ open FStar.Syntax
 open FStar.TypeChecker.Env
 open FStar.Syntax.Syntax
 open FStar.Syntax.Subst
+open FStar.Ident
 module U = FStar.Syntax.Util
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
@@ -1521,7 +1522,7 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                              if problem.relation = EQ
                              then let wp, wlp = match c1.effect_args with
                                                    | [(wp1,_); (wlp1, _)] -> wp1, wlp1
-                                                   | _ -> failwith (Util.format1 "Unexpected number of indices on a normalized effect (%s)" (Range.string_of_range (Syntax.range_of_lid c1.effect_name))) in
+                                                   | _ -> failwith (Util.format1 "Unexpected number of indices on a normalized effect (%s)" (Range.string_of_range (range_of_lid c1.effect_name))) in
                                   let c1 = {
                                     effect_name=c2.effect_name;
                                     result_typ=c1.result_typ;

@@ -84,6 +84,8 @@
     <Compile Include="options.fs" />
     <Compile Include="unionfind.fsi" />
     <Compile Include="unionfind.fs" />
+    <Compile Include="ident.fs" />
+    <Compile Include="const.fs" />
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

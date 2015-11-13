@@ -24,7 +24,7 @@ open FStar.Absyn.Util
 open FStar.Absyn.Const
 open FStar.Util
 open FStar.Absyn.Util
-
+open FStar.Const
 
 let oktype = Some ktype
 let t_unit   = syn dummyRange oktype <| mk_Typ_const (Util.withsort Const.unit_lid   ktype)

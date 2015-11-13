@@ -19,6 +19,7 @@ type range = int64
 type file_idx = int32
 type pos = int32
 
+val dummyRange: range
 val mk_pos: int -> int -> pos
 val mk_file_idx_range:file_idx -> int -> int -> range
 val mk_range: string -> int -> int -> range

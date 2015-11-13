@@ -23,6 +23,9 @@ open FStar.Syntax.Syntax
 open FStar.Util
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Normalize
+open FStar.Range
+open FStar.Ident
+
 module N = FStar.TypeChecker.Normalize
 
 (* Error messages for labels in VCs *)

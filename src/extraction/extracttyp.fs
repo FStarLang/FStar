@@ -21,6 +21,7 @@ open FStar.Extraction.ML.Syntax
 open FStar.Util
 open FStar.Tc.Env
 open FStar.Absyn.Syntax
+open FStar.Ident
 open FStar
 open FStar.Tc.Normalize
 open FStar.Absyn.Print

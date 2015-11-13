@@ -22,6 +22,9 @@ open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Syntax.Util
 open FStar.Util
+open FStar.Range
+open FStar.Ident
+open FStar.Const
 
 module U = FStar.Syntax.Util
 module S = FStar.Syntax.Syntax

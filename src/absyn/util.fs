@@ -23,6 +23,7 @@ open FStar.Util
 open FStar.Absyn
 open FStar.Absyn.Syntax
 open FStar.Profiling
+open FStar.Ident
 
 let handle_err warning ret e =
   match e with

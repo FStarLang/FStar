@@ -16,37 +16,32 @@
 #light "off"
 // (c) Microsoft Corporation. All rights reserved
 
-module FStar.Parser.DesugarEnv
+module FStar.Parser.Env
 
 
 open FStar
 open FStar.Util
-open FStar.Absyn
-open FStar.Absyn.Syntax
-open FStar.Absyn.Util
-open FStar.Absyn.Const
+open FStar.Syntax
+open FStar.Syntax.Syntax
+open FStar.Syntax.Util
+open FStar.Syntax.Const
 open FStar.Parser
 open FStar.Ident
 
-type binding =
-  | Binding_typ_var of ident
-  | Binding_var of ident
-  | Binding_let of lident
-  | Binding_tycon of lident
+module S = FStar.Syntax.Syntax
+module U = FStar.Syntax.Util
 
-type kind_abbrev = lident * list<either<btvdef, bvvdef>> * Syntax.knd
 type env = {
   curmodule: option<lident>;
-  modules:list<(lident * modul)>;  (* previously desugared modules *)
-  open_namespaces: list<lident>; (* fully qualified names, in order of precedence *)
-  sigaccum:sigelts;              (* type declarations being accumulated for the current module *)
-  localbindings:list<(either<btvdef,bvvdef> * binding)>;  (* local name bindings for name resolution, paired with an env-generated unique name *)
-  recbindings:list<binding>;     (* names bound by recursive type and top-level let-bindings definitions only *)
-  phase:AST.level;
+  modules:list<(lident * modul)>;           (* previously desugared modules *)
+  open_namespaces: list<lident>;            (* fully qualified names, in order of precedence *)
+  sigaccum:sigelts;                         (* top-level declarations being accumulated for the current module *)
+  localbindings:list<(ident * bv)>;         (* local name bindings for name resolution, paired with an env-generated unique name *)
+  recbindings:list<(ident * lident)>;       (* names bound by recursive type and top-level let-bindings definitions only *)
   sigmap: list<Util.smap<(sigelt * bool)>>; (* bool indicates that this was declared in an interface file *)
   default_result_effect:typ -> Range.range -> comp;
   iface:bool;
-  admitted_iface:bool;
+  admitted_iface:bool
 }
 
 let open_modules e = e.modules
@@ -65,7 +60,6 @@ let empty_env () = {curmodule=None;
                     sigaccum=[];
                     localbindings=[];
                     recbindings=[];
-                    phase=AST.Un;
                     sigmap=[new_sigmap()];
                     default_result_effect=Util.ml_comp;
                     iface=false;
@@ -74,21 +68,29 @@ let sigmap env = List.hd env.sigmap
 let default_total env = {env with default_result_effect=(fun t _ -> mk_Total t)}
 let default_ml env = {env with default_result_effect=Util.ml_comp}
 
-let range_of_binding = function
-  | Binding_typ_var id
-  | Binding_var id -> id.idRange
-  | Binding_let lid
-  | Binding_tycon lid -> range_of_lid lid
 
-let try_lookup_typ_var env (id:ident) =
-  let fopt = List.tryFind (fun (_, b) -> match b with
-    | Binding_typ_var id'
-    | Binding_var id' -> id.idText=id'.idText
-    | _ -> false) env.localbindings in
-  match fopt with
-    | Some (Inl bvd, Binding_typ_var _) ->
-      Some (bvd_to_typ (set_bvd_range bvd id.idRange) kun)
-    | _ -> None
+let set_bv_range bv r = 
+    let id = {bv.ppname with idRange=r} in 
+    {bv with ppname=id}
+
+let bv_to_name bv r = bv_to_name (set_bv_range bv r)
+
+let unmangleMap = [("op_ColonColon", "Cons");
+                   ("not", "op_Negation")]
+
+let unmangleOpName (id:ident) =
+  find_map unmangleMap (fun (x,y) ->
+    if (id.idText = x) then Some (lid_of_path ["Prims"; y] id.idRange)
+    else None)
+
+let try_lookup_id env (id:ident) =
+  match unmangleOpName id with
+    | Some l -> Some (S.fvar None l id.idRange)
+    | _ ->
+      find_map env.localbindings (function
+        | id', x when (id'.idText=id.idText) -> 
+          Some (bv_to_name x id.idRange)
+        | _ -> None) 
 
 let resolve_in_open_namespaces env lid (finder:lident -> option<'a>) : option<'a> =
   let aux (namespaces:list<lident>) : option<'a> =
@@ -101,48 +103,12 @@ let resolve_in_open_namespaces env lid (finder:lident -> option<'a>) : option<'a
                 finder full_name) in
   aux (current_module env::env.open_namespaces)
 
-let unmangleMap = [("op_ColonColon", "Cons");
-                   ("not", "op_Negation")]
-
-let unmangleOpName (id:ident) =
-  find_map unmangleMap (fun (x,y) ->
-    if (id.idText = x) then Some (lid_of_path ["Prims"; y] id.idRange)
-    else None)
-
-let try_lookup_id' env (id:ident) =
-  match unmangleOpName id with
-    | Some l -> Some (l, mk_Exp_fvar(fv l, None) None id.idRange)
-    | _ ->
-      let found = find_map env.localbindings (function
-        | Inl _, Binding_typ_var id' when (id'.idText=id.idText) -> Some (Inl ())
-        | Inr bvd, Binding_var id' when (id'.idText=id.idText) -> Some (Inr (lid_of_ids [id'], bvd_to_exp (set_bvd_range bvd id.idRange) tun))
-        | _ -> None) in
-      match found with
-        | Some (Inr x) -> Some x
-        | _ -> None
-
-let try_lookup_id env id =
-  match try_lookup_id' env id with
-    | Some(_, e) -> Some e
-    | None -> None
-
-type occurrence =
-  | OSig of sigelt
-  | OLet of lident
-  | ORec of lident
-let range_of_occurrence = function
-  | OLet l
-  | ORec l -> range_of_lid l
-  | OSig se -> Util.range_of_sigelt se
-
 type foundname =
-  | Exp_name of occurrence * exp
-  | Typ_name of occurrence * typ
-  | Eff_name of occurrence * lident
-  | Knd_name of occurrence * lident
+  | Term_name of typ
+  | Eff_name  of sigelt * lident
 
 let fv_qual_of_se = function
-    | Sig_datacon(_, _, (l, _, _), quals, _, _) ->
+    | Sig_datacon(_, _, _, l, quals, _, _) ->
       let qopt = Util.find_map quals (function
           | RecordConstructor fs -> Some (Record_ctor(l, fs))
           | _ -> None) in
@@ -150,13 +116,14 @@ let fv_qual_of_se = function
         | None -> Some Data_ctor
         | x -> x
       end
-    | Sig_val_decl (_, _, quals, _) ->  //TODO: record projectors?
+    | Sig_val_decl (_, _, _, quals, _) ->  //TODO: record projectors?
       None
     | _ -> None
 
 let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> =
   (* Resolve using, in order,
-     1. rec bindings
+     0. local bindings, if the lid is unqualified
+     1. rec bindings, if the lid is unqualified
      2. sig bindings in current module
      3. each open namespace, in reverse order *)
   let find_in_sig lid  =
@@ -165,30 +132,28 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
       | None -> None
       | Some (se, _) ->
         begin match se with
-          | Sig_typ_abbrev _
-          | Sig_tycon _ -> Some (Typ_name(OSig se, ftv lid kun))
-          | Sig_kind_abbrev _ -> Some(Knd_name(OSig se, lid))
-          | Sig_new_effect(ne, _) -> Some (Eff_name(OSig se, set_lid_range ne.mname (range_of_lid lid)))
-          | Sig_effect_abbrev _ -> Some(Eff_name(OSig se, lid))
-          | Sig_datacon _ -> Some (Exp_name(OSig se, fvar (fv_qual_of_se se) lid (range_of_lid lid)))
-          | Sig_let _ -> Some (Exp_name(OSig se,  fvar None lid (range_of_lid lid)))
-          | Sig_val_decl(_, _, quals, _) ->
-            if any_val || quals |> Util.for_some (function Assumption -> true | _ -> false)
-            then Some (Exp_name(OSig se, fvar (fv_qual_of_se se) lid (range_of_lid lid)))
+          | Sig_tycon _ ->           Some (Term_name(S.fvar None lid (range_of_lid lid)))
+          | Sig_datacon _ ->         Some (Term_name(S.fvar (fv_qual_of_se se) lid (range_of_lid lid)))
+          | Sig_let _ ->             Some (Term_name(S.fvar None lid (range_of_lid lid)))
+          | Sig_val_decl(_, _, _, quals, _) ->
+            if any_val //only in scope in an interface (any_val is true) or if the val is assumed
+            || quals |> Util.for_some (function Assumption -> true | _ -> false)
+            then Some (Term_name(fvar (fv_qual_of_se se) lid (range_of_lid lid)))
             else None
+          | Sig_new_effect(ne, _) -> Some (Eff_name(se, set_lid_range ne.mname (range_of_lid lid)))
+          | Sig_effect_abbrev _ ->   Some (Eff_name(se, lid))
           | _ -> None
         end in
 
   let found_id = match lid.ns with
     | [] ->
-      begin match try_lookup_id' env (lid.ident) with
-        | Some (lid, e) -> Some (Exp_name(OLet lid, e))
+      begin match try_lookup_id env (lid.ident) with
+        | Some e -> Some (Term_name e)
         | None ->
           let recname = qualify env lid.ident in
-          Util.find_map env.recbindings (function
-            | Binding_let l when lid_equals l recname -> Some (Exp_name(ORec l, Util.fvar None recname (range_of_lid recname)))
-            | Binding_tycon l when lid_equals l recname  -> Some(Typ_name(ORec l, ftv recname kun))
-            | _ -> None)
+          Util.find_map env.recbindings (fun (id, l) -> if id.idText=lid.ident.idText 
+                                                        then Some (Term_name(S.fvar None (set_lid_range l (range_of_lid lid)) (range_of_lid lid)))
+                                                        else None)
       end
     | _ -> None in
 
@@ -196,14 +161,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
     | Some _ -> found_id
     | _ -> resolve_in_open_namespaces env lid find_in_sig
 
-let try_lookup_typ_name' exclude_interf env (lid:lident) : option<typ> =
-  match try_lookup_name true exclude_interf env lid with
-    | Some (Typ_name(_, t)) -> Some t
-    | Some (Eff_name(_, l)) -> Some (Util.ftv l mk_Kind_unknown)
-    | _ -> None
-let try_lookup_typ_name env l = try_lookup_typ_name' (not env.iface) env l
-
-let try_lookup_effect_name' exclude_interf env (lid:lident) : option<(occurrence*lident)> =
+let try_lookup_effect_name' exclude_interf env (lid:lident) : option<(sigelt*lident)> =
   match try_lookup_name true exclude_interf env lid with
     | Some (Eff_name(o, l)) -> Some (o,l)
     | _ -> None
@@ -213,26 +171,17 @@ let try_lookup_effect_name env l =
         | _ -> None
 let try_lookup_effect_defn env l =
     match try_lookup_effect_name' (not env.iface) env l with
-        | Some (OSig (Sig_new_effect(ne, _)), _) -> Some ne
+        | Some (Sig_new_effect(ne, _), _) -> Some ne
         | _ -> None
 let is_effect_name env lid =
     match try_lookup_effect_name env lid with
         | None -> false
         | Some _ -> true
 
-let try_resolve_typ_abbrev env lid =
-  let find_in_sig lid =
-    match Util.smap_try_find (sigmap env) lid.str with
-      | Some (Sig_typ_abbrev(lid, tps, k, def, _, _), _) ->
-        let t = mk_Typ_meta(Meta_named(Util.close_with_lam tps def, lid)) in
-        Some t
-      | _ -> None in
-  resolve_in_open_namespaces env lid find_in_sig
-
 let lookup_letbinding_quals env lid =
   let find_in_sig lid =
     match Util.smap_try_find (sigmap env) lid.str with
-      | Some (Sig_val_decl(lid, _, quals, _), _) -> Some quals
+      | Some (Sig_val_decl(lid, _, _, quals, _), _) -> Some quals
       | _ -> None in
   match resolve_in_open_namespaces env lid find_in_sig with
     | Some quals -> quals
@@ -250,27 +199,27 @@ let try_lookup_let env (lid:lident) =
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig
 
-let try_lookup_lid' any_val exclude_interf env (lid:lident) : option<exp> =
+let try_lookup_lid' any_val exclude_interf env (lid:lident) : option<term> =
   match try_lookup_name any_val exclude_interf env lid with
-    | Some (Exp_name(_, e)) -> Some e
+    | Some (Term_name e) -> Some e
     | _ -> None
 let try_lookup_lid (env:env) l = try_lookup_lid' env.iface false env l
 
 let try_lookup_datacon env (lid:lident) =
   let find_in_sig lid =
     match Util.smap_try_find (sigmap env) lid.str with
-      | Some (Sig_val_decl(_, _, quals, _), _) ->
+      | Some (Sig_val_decl(_, _, _, quals, _), _) ->
         if quals |> Util.for_some (function Assumption -> true | _ -> false)
-        then Some (fv lid)
+        then Some (fv lid None)
         else None
-      | Some (Sig_datacon _, _) -> Some (fv lid)
+      | Some (Sig_datacon _, _) -> Some (fv lid (Some Data_ctor))
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig
 
 let find_all_datacons env (lid:lident) =
   let find_in_sig lid =
     match Util.smap_try_find (sigmap env) lid.str with
-      | Some (Sig_tycon(_, _, _, _, datas, _, _), _) -> Some datas
+      | Some (Sig_tycon(_, _, _, _, _, datas, _, _), _) -> Some datas
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig
 
@@ -318,24 +267,20 @@ let extract_record (e:env) = function
 
     let find_dc dc =
       sigs |> Util.find_opt (function
-        | Sig_datacon(lid, _, _, _, _, _) -> lid_equals dc lid
+        | Sig_datacon(lid, _, _, _, _, _, _) -> lid_equals dc lid
         | _ -> false) in
 
     sigs |> List.iter (function
-      | Sig_tycon(typename, parms, _, _, [dc], tags, _) ->
+      | Sig_tycon(typename, univs, parms, _, _, [dc], tags, _) ->
         begin match must <| find_dc dc with
-            | Sig_datacon(constrname, t, _, _, _, _) ->
-                let formals = match Util.function_formals t with
-                    | Some (x, _) -> x
-                    | _ -> [] in
+            | Sig_datacon(constrname, _, t, _, _, _, _) ->
+                let formals, _ = U.arrow_formals t in
                 let is_rec = is_rec tags in 
-                let fields = formals |> List.collect (fun b -> match b with
-                    | Inr x, q ->
-                        if is_null_binder b  
+                let fields = formals |> List.collect (fun (x,q) ->
+                        if S.is_null_bv x
                         || (is_rec && q = Some Implicit)
                         then []
-                        else [(qual constrname (if is_rec then Util.unmangle_field_name x.v.ppname else x.v.ppname), x.sort)]
-                    | _ -> []) in
+                        else [(qual constrname (if is_rec then Util.unmangle_field_name x.ppname else x.ppname), x.sort)]) in
                 let record = {typename=typename;
                               constrname=constrname;
                               parms=parms;
@@ -389,69 +334,21 @@ let qualify_field_to_record env (recd:record_or_dc) (f:lident) =
       else None) in
   resolve_in_open_namespaces env f qualify
 
-let find_kind_abbrev env l =
-  match try_lookup_name true (not env.iface) env l with
-    | Some (Knd_name(_, l)) -> Some l
-    | _ -> None
-
-let is_kind_abbrev env l =
-  match find_kind_abbrev env l with
-    | None -> false
-    | Some _ -> true
-
-let unique_name any_val exclude_if env lid =
-  match try_lookup_lid' any_val exclude_if env lid with
-    | None ->
-      begin match find_kind_abbrev env lid with
-        | None -> true
-        | Some _ -> false
-      end
-    | Some _ -> false
-
-let unique_typ_name env lid =
-  match try_lookup_typ_name' true env lid with
-    | None -> true
-    | Some a -> false
-
 let unique any_val exclude_if env lid =
   let this_env = {env with open_namespaces=[]} in
-  unique_name any_val exclude_if this_env lid && unique_typ_name this_env lid
+  match try_lookup_lid' any_val exclude_if env lid with
+    | None -> true
+    | Some _ -> false
 
-let gen_bvd = function
-  | Binding_typ_var id -> Inl (mkbvd(id, genident (Some id.idRange)))
-  | Binding_var id -> Inr (mkbvd(id, genident (Some id.idRange)))
-  | _ -> failwith "Tried to generate a bound variable for a type constructor"
+let push_bv env (x:ident) =
+  let bv = S.gen_bv x.idText (Some x.idRange) tun in
+  {env with localbindings=(x, bv)::env.localbindings}, bv
 
-let push_bvvdef env x =
-  let b = Binding_var x.ppname in
-  {env with localbindings=(Inr x, b)::env.localbindings}
-
-let push_btvdef env x =
-  let b = Binding_typ_var x.ppname in
-  {env with localbindings=(Inl x, b)::env.localbindings}
-
-let push_local_binding env b =
-  let bvd = gen_bvd b in
-  {env with localbindings=(bvd, b)::env.localbindings}, bvd
-
-let push_local_tbinding env a =
-  match push_local_binding env (Binding_typ_var a) with
-    | env, Inl x -> env, x
-    | _ -> failwith "impossible"
-
-let push_local_vbinding env b =
-  match push_local_binding env (Binding_var b) with
-    | env, Inr x ->
-      env, x
-    | _ -> failwith "impossible"
-
-let push_rec_binding env b = match b with
-  | Binding_let lid
-  | Binding_tycon lid ->
-    if unique false true env lid
-    then {env with recbindings=b::env.recbindings}
-    else raise (Error ("Duplicate top-level names " ^ lid.str, range_of_lid lid))
-  | _ -> failwith "Unexpected rec_binding"
+let push_top_level_rec_binding env (x:ident) = 
+  let l = qualify env x in
+  if unique false true env l
+  then {env with recbindings=(x,l)::env.recbindings}
+  else raise (Error ("Duplicate top-level names " ^ l.str, range_of_lid l))
 
 let push_sigelt env s =
   let err l =
@@ -485,25 +382,14 @@ let push_sigelt env s =
 let push_namespace env lid =
   {env with open_namespaces = lid::env.open_namespaces}
 
-let is_type_lid env lid =
-  let aux () = match try_lookup_typ_name' false env lid with
-    | Some _ -> true
-    | _ -> false in
-  if lid.ns=[]
-  then match try_lookup_id env lid.ident with //bound variables can shadow type names
-    | Some _ -> false
-    | _ -> aux()
-  else aux ()
-
-
 let check_admits nm env =
   let warn = not (!Options.admit_fsi |> Util.for_some (fun l -> nm.str = l)) in
   env.sigaccum |> List.iter (fun se -> match se with
-    | Sig_val_decl(l, t, quals, r) ->
+    | Sig_val_decl(l, u, t, quals, r) ->
       begin match try_lookup_lid env l with
         | None ->
-          if warn then Util.print_string (Util.format2 "%s: Warning: Admitting %s without a definition\n" (Range.string_of_range (range_of_lid l)) (Print.sli l));
-          Util.smap_add (sigmap env) l.str (Sig_val_decl(l, t, Assumption::quals, r), false)
+          if warn then Util.print_string (Util.format2 "%s: Warning: Admitting %s without a definition\n" (Range.string_of_range (range_of_lid l)) (Print.lid_to_string l));
+          Util.smap_add (sigmap env) l.str (Sig_val_decl(l, u, t, Assumption::quals, r), false)
         | Some _ -> ()
       end
     | _ -> ())
@@ -513,9 +399,9 @@ let finish env modul =
     | Sig_bundle(ses, quals, _, _) ->
       if List.contains Private quals
       then ses |> List.iter (function
-                | Sig_datacon(lid, _, _, _, _, _) -> Util.smap_remove (sigmap env) lid.str
+                | Sig_datacon(lid, _, _, _, _, _, _) -> Util.smap_remove (sigmap env) lid.str
                 | _ -> ())
-    | Sig_val_decl(lid, _, quals, _) ->
+    | Sig_val_decl(lid, _, _, quals, _) ->
       if List.contains Private quals
       then Util.smap_remove (sigmap env) lid.str
     | _ -> ());
@@ -525,8 +411,7 @@ let finish env modul =
     open_namespaces=[];
     sigaccum=[];
     localbindings=[];
-    recbindings=[];
-    phase=AST.Un}
+    recbindings=[]}
 
 let push (env:env) =
     push_record_cache();
@@ -561,7 +446,7 @@ let export_interface (m:lident) env =
           Util.smap_remove sm' k;
 //          printfn "Exporting %s" k;
           let se = match se with 
-            | Sig_val_decl(l, t, q, r) -> Sig_val_decl(l, t, Assumption::q, r)
+            | Sig_val_decl(l, u, t, q, r) -> Sig_val_decl(l, u, t, Assumption::q, r)
             | _ -> se in 
           Util.smap_add sm' k (se, false)
         | _ -> ());
@@ -600,18 +485,9 @@ let exit_monad_scope env0 env =
     curmodule=env0.curmodule;
     open_namespaces=env0.open_namespaces}
 
-let fail_or env lookup lid = match lookup lid with
+let fail_or lookup lid = match lookup lid with
   | None ->
-    let r = match try_lookup_name true false env lid with
-      | None -> None
-      | Some (Knd_name(o, _))
-      | Some (Eff_name(o, _))
-      | Some (Typ_name(o, _))
-      | Some (Exp_name(o, _)) -> Some (range_of_occurrence o) in
-    let msg = match r with
-      | None -> ""
-      | Some r -> Util.format1 "(Possible clash with related name at %s)" (Range.string_of_range r) in
-    raise (Error (Util.format2 "Identifier not found: [%s] %s" (text_of_lid lid) msg, range_of_lid lid))
+    raise (Error (Util.format1 "Identifier not found: [%s]" (text_of_lid lid), range_of_lid lid))
   | Some r -> r
 
 let fail_or2 lookup id = match lookup id with

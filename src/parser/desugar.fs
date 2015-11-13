@@ -24,6 +24,8 @@ open FStar.Absyn
 open FStar.Absyn.Syntax
 open FStar.Absyn.Util
 open FStar.Util
+open FStar.Ident
+open FStar.Const
 
 let as_imp = function
     | Hash
@@ -292,7 +294,7 @@ let close env t =
   let ftv = sort_ftv <| free_type_vars env t in
   if List.length ftv = 0
   then t
-  else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, kind_star x.idRange)) x.idRange Type (Some Implicit)) in
+  else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, kind_star x.idRange)) x.idRange Type (Some AST.Implicit)) in
        let result = mk_term (Product(binders, t)) t.range t.level in
        result
 
@@ -300,7 +302,7 @@ let close_fun env t =
   let ftv = sort_ftv <| free_type_vars env t in
   if List.length ftv = 0
   then t
-  else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, kind_star x.idRange)) x.idRange Type (Some Implicit)) in
+  else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, kind_star x.idRange)) x.idRange Type (Some AST.Implicit)) in
        let t = match (unlabel t).tm with
         | Product _ -> t
         | _ -> mk_term (App(mk_term (Name Const.effect_Tot_lid) t.range t.level, t, Nothing)) t.range t.level in
@@ -335,15 +337,19 @@ let binder_of_bnd = function
   | TBinder (a, k, aq) -> Inl (Util.bvd_to_bvar_s a k), aq
   | VBinder (x, t, aq) -> Inr (Util.bvd_to_bvar_s x t), aq
   | _ -> failwith "Impossible"
+let trans_aqual = function
+  | Some AST.Implicit -> Some Implicit
+  | Some AST.Equality -> Some Equality
+  | _ -> None
 let as_binder env imp = function
   | Inl(None, k) -> null_t_binder k, env
   | Inr(None, t) -> null_v_binder t, env
   | Inl(Some a, k) ->
     let env, a = DesugarEnv.push_local_tbinding env a in
-    (Inl (bvd_to_bvar_s a k), imp), env
+    (Inl (bvd_to_bvar_s a k), trans_aqual imp), env
   | Inr(Some x, t) ->
     let env, x = DesugarEnv.push_local_vbinding env x in
-    (Inr (bvd_to_bvar_s x t), imp), env
+    (Inr (bvd_to_bvar_s x t), trans_aqual imp), env
 
 type env_t = DesugarEnv.env
 type lenv_t = list<either<btvdef,bvvdef>>
@@ -1162,10 +1168,10 @@ and typars_of_binders env bs =
         match tk with
             | Inl(Some a, k) ->
                 let env, a = push_local_tbinding env a in
-                (env, (Inl (bvd_to_bvar_s a k), b.aqual)::out)
+                (env, (Inl (bvd_to_bvar_s a k), trans_aqual b.aqual)::out)
             | Inr(Some x,t) ->
                 let env, x = push_local_vbinding env x in
-                (env, (Inr (bvd_to_bvar_s x t), b.aqual)::out)
+                (env, (Inr (bvd_to_bvar_s x t), trans_aqual b.aqual)::out)
             | _ -> raise (Error ("Unexpected binder", b.brange))) (env, []) bs in
     env, List.rev tpars
 
@@ -1315,7 +1321,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
   let with_constructor_effect t = mk_term (App(tot, t, Nothing)) t.range t.level in
   let apply_binders t binders =
     let imp_of_aqual (b:AST.binder) = match b.aqual with 
-        | Some Implicit -> Hash
+        | Some AST.Implicit -> Hash
         | _ -> Nothing in
     List.fold_left (fun out b -> mk_term (App(out, binder_to_term b, imp_of_aqual b)) out.range out.level)
       t binders in
@@ -1454,9 +1460,24 @@ let desugar_binders env binders =
       | _ -> raise (Error("Missing name in binder", b.brange))) (env, []) binders in
     env, List.rev binders
 
+let trans_qual = function
+  | AST.Private -> Private
+  | AST.Assumption -> Assumption
+  | AST.Opaque -> Opaque
+  | AST.Logic -> Logic
+  | AST.TotalEffect -> TotalEffect
+  | AST.DefaultEffect -> DefaultEffect None
+  | AST.Effect -> Effect
+
+let trans_pragma = function
+  | AST.SetOptions s -> SetOptions s
+  | AST.ResetOptions -> ResetOptions
+
+let trans_quals = List.map trans_qual
+
 let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
   | Pragma p ->
-    let se = Sig_pragma(p, d.drange) in
+    let se = Sig_pragma(trans_pragma p, d.drange) in
     env, [se]
 
   | Open lid ->
@@ -1464,7 +1485,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
     env, []
 
   | Tycon(qual, tcs) ->
-    desugar_tycon env d.drange qual tcs
+    desugar_tycon env d.drange (trans_quals qual) tcs
 
   | ToplevelLet(isrec, lets) ->
     begin match (compress_exp <| desugar_exp_maybe_top true env (mk_term (Let(isrec, lets, mk_term (Const Const_unit) d.drange Expr)) d.drange Expr)).n with
@@ -1492,7 +1513,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
 
   | Val(quals, id, t) ->
     let t = desugar_typ env (close_fun env t) in
-    let quals = if env.iface && env.admitted_iface then Assumption::quals else quals in
+    let quals = if env.iface && env.admitted_iface then Assumption::trans_quals quals else trans_quals quals in
     let se = Sig_val_decl(qualify env id, t, quals, d.drange) in
     let env = push_sigelt env se in
     env, [se]
@@ -1542,7 +1563,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
               let sub = Util.subst_typ subst in
               let ed = {
                      mname=qualify env0 eff_name;
-                     qualifiers=quals;
+                     qualifiers=trans_quals quals;
                      binders=binders;
                      signature=Util.subst_kind subst ed.signature;
                      ret=sub ed.ret;
@@ -1581,7 +1602,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
         | Some t -> t in
     let ed = {
          mname=qualify env0 eff_name;
-         qualifiers=quals;
+         qualifiers=trans_quals quals;
          binders=binders;
          signature=eff_k;
          ret=lookup "return";
