@@ -199,6 +199,19 @@ let try_lookup_let env (lid:lident) =
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig
 
+let try_lookup_definition env (lid:lident) = 
+    let find_in_sig lid = 
+    match Util.smap_try_find (sigmap env) lid.str with
+      | Some (Sig_let(lbs, _, _, _), _) ->
+        Util.find_map (snd lbs) (fun lb -> 
+            match lb.lbname with 
+                | Inr lid' when lid_equals lid lid' ->
+                  Some (lb.lbdef)
+                | _ -> None)
+      | _ -> None in
+  resolve_in_open_namespaces env lid find_in_sig
+
+
 let try_lookup_lid' any_val exclude_interf env (lid:lident) : option<term> =
   match try_lookup_name any_val exclude_interf env lid with
     | Some (Term_name e) -> Some e

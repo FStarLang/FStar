@@ -30,14 +30,12 @@ open FStar.Ident
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 
-val desugar_file: env -> file -> env * list<modul>
+val desugar_file: env -> file -> env * list<S.modul>
 val desugar_decls: env -> list<AST.decl> -> env * sigelts
-val desugar_partial_modul: option<(modul * 'a)> -> env -> AST.modul -> env * Syntax.modul
+val desugar_partial_modul: option<(S.modul * 'a)> -> env -> AST.modul -> env * Syntax.modul
 
 (* private *) val desugar_modul : env -> AST.modul -> env * Syntax.modul
 (* private *) val mk_data_projectors : env -> sigelt -> list<sigelt>
 (* private *) val close : env -> term -> term
-(* private *) val op_as_tylid : env -> int -> Range.range -> string -> option<lident>
-(* private *) val op_as_vlid : env -> int -> Range.range -> string -> option<lident>
 
 val add_modul_to_env: Syntax.modul -> env -> env

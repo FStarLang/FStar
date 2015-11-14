@@ -331,6 +331,7 @@ val freshen_bv:     bv -> bv
 val gen_bv:         string -> option<Range.range> -> typ -> bv 
 val new_bv:         option<range> -> typ -> bv
 val fv:             lident -> option<fv_qual> -> fv 
+val fv_to_tm:       fv -> term
 val fvar:           option<fv_qual> -> lident -> range -> term
 val fv_eq:          fv -> fv -> bool
 

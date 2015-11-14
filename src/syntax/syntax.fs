@@ -404,4 +404,5 @@ let lbname_eq l1 l2 = match l1, l2 with
 let fv_eq ((fv1, _):fv) ((fv2, _):fv)  = lid_equals fv1.v fv2.v
 let set_bv_range bv r = {bv with ppname=mk_ident(bv.ppname.idText, r)}
 let fv l dc : fv = withinfo l tun (range_of_lid l), dc
+let fv_to_tm (fv:fv) : term = mk (Tm_fvar fv) None (range_of_lid (fst fv).v)
 let fvar dc l r : term = mk (Tm_fvar(fv (set_lid_range l r) dc)) None r
