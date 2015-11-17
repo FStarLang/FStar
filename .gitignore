@@ -49,3 +49,8 @@ dump
 *.cmxa
 *.so
 /VS/
+
+.nubuild
+nuobj/
+nucache/
+nutemp/
