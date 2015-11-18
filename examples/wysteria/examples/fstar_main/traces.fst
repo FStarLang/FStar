@@ -33,20 +33,6 @@ let update_col_suffix #m #n x i j v =
 let test_col_suffix (#m:nat) (#n:nat) (x:mat m n bool) (i:ri m) (j:cj n) (k:nat{i < k /\ k < m}) = 
   assert (index (update_col_suffix x i j false) k j = false)
 
-val make_sparse: #m:nat -> #n:nat -> mat m n bool -> mat m n nat
-	       -> i:nat{i <= m} -> j:nat{j <= n} -> Tot (mat m n nat)
-  (decreases %[(m - i); (n - j)])
-let rec make_sparse #m #n bs out i j = 
-  if i = m      then out
-  else if j = n then make_sparse bs out (i + 1) 0
-  else if index bs i j 
-  then let out = Matrix2.upd out i j 1 in 
-       let out = update_row_suffix out i j 2 in
-       let out = update_col_suffix out i j 2 in
-       make_sparse bs out i (j + 1)
-  else let out = Matrix2.upd out i j 0 in 
-       make_sparse bs out i (j + 1)
-
 type prod (a:Seq.seq int) (b:Seq.seq int) (t:Type) = mat (Seq.length a) (Seq.length b) t
 
 val full_matrix :   a:Seq.seq int
@@ -94,6 +80,12 @@ let full_is_correct a b i j =
   let init = Matrix2.create (Seq.length a) (Seq.length b) false in
   lemma_full_matrix_aux a b init 0 0 i j   
 
+
+let elim (#m:nat) (#n:nat) (p:mat m n nat) (i:ri m) (j:cj n) = 
+  let out = Matrix2.upd p i j 1 in
+  let out = update_row_suffix out i j 2 in 
+  update_col_suffix out i j 2
+
 val fast_product:  a:Seq.seq int 
                 -> b:Seq.seq int
                 -> out:prod a b nat  
@@ -105,12 +97,8 @@ let rec fast_product a b out i j =
   if i = Seq.length a then out
   else if j = Seq.length b then fast_product a b out (i + 1) 0
   else if index out i j = 2 then fast_product a b out i (j + 1) //skip, we've already eliminated it
-  else let cmp = (Seq.index a i = Seq.index b j) in 
-       if cmp
-       then let out = Matrix2.upd out i j 1 in
-            let out = update_row_suffix out i j 2 in 
-            let out = update_col_suffix out i j 2 in
-            fast_product a b out i (j + 1)
+  else if Seq.index a i = Seq.index b j
+       then fast_product a b (elim out i j) i (j + 1)
        else fast_product a b out i (j + 1)
 
 let precedes (i, j) (i', j') = (i < i') || (i = i' && j < j')
@@ -148,9 +136,16 @@ opaque type zero_or_two_from_weak (#m:nat) (#n:nat) (i:nat{i <= m}) (j:nat{j <= 
    forall (i':ri m) (j':cj n).{:pattern (index p i' j')} 
      (precedes (i, j) (i', j') \/ (i,j)=(i',j'))
      ==> ((index p i' j' = 0 \/ index p i' j' = 2)) //every element from i,j onwards is 0 or 2
-  
-#reset-options
-#set-options "--max_ifuel 3 --initial_ifuel 3 --max_fuel 1 --initial_fuel 1"
+
+val aux_elim_is_correct:  a:Seq.seq int -> b:Seq.seq int -> p:prod a b nat -> i:ix a -> j:ix b -> Lemma
+  (requires (prefix_correct a b i j p 
+            /\ zero_or_two_from i j p
+            /\ (Seq.index a i = Seq.index b j)))
+  (ensures (let out = elim p i j in
+            prefix_correct a b i (j + 1) out
+            /\ zero_or_two_from i (j + 1) out))
+let aux_elim_is_correct a b p i j = cut (witness i /\ witness j)
+ 
 val fast_product_correct: a:Seq.seq int -> b:Seq.seq int -> p:prod a b nat 
                       -> i:nat{i <= Seq.length a} -> j:nat{j <= Seq.length b} -> Lemma
   (requires (prefix_correct a b i j p /\ zero_or_two_from i j p)) 
@@ -160,27 +155,38 @@ let rec fast_product_correct a b p i j =
   if i = Seq.length a then ()
   else if j = Seq.length b then fast_product_correct a b p (i + 1) 0
   else if index p i j = 2 then fast_product_correct a b p i (j + 1)
-  else let cmp = (Seq.index a i = Seq.index b j) in 
-       if cmp
-       then let out = Matrix2.upd p i j 1 in
-            let out = update_row_suffix out i j 2 in 
-            let out = update_col_suffix out i j 2 in
-            assert (zero_or_two_from_weak i (j + 1) out);
-            cut (witness i);
-            cut (witness j);
-            fast_product_correct a b out i (j + 1)
+  else if Seq.index a i = Seq.index b j
+       then (aux_elim_is_correct a b p i j;
+             fast_product_correct a b (elim p i j) i (j + 1))
        else fast_product_correct a b p i (j + 1)
-  
+
+val make_sparse: #m:nat -> #n:nat -> mat m n bool -> mat m n nat
+	       -> i:nat{i <= m} -> j:nat{j <= n} -> Tot (mat m n nat)
+  (decreases %[(m - i); (n - j)])
+let rec make_sparse #m #n bs out i j = 
+  if i = m      then out
+  else if j = n then make_sparse bs out (i + 1) 0
+  else if index out i j = 2 then make_sparse bs out i (j + 1)
+  else if index bs i j 
+  then make_sparse bs (elim out i j) i (j + 1)
+  else make_sparse bs out i (j + 1)
+
 val fast_is_sparse_full: a:Seq.seq int -> b:Seq.seq int -> p:prod a b nat -> q:prod a b nat 
                       -> i:nat{i <= Seq.length a} -> j:nat{j <= Seq.length b} -> Lemma
-  (requires (eq_until i j p q 
+  (requires (Matrix2.Eq p q
+            /\ prefix_correct a b i j p
             /\ zero_or_two_from i j p))
-  (ensures (fast_product a b p i j
-            = make_sparse (full a b) q i j))
+  (ensures (Matrix2.Eq (fast_product a b p i j)
+                      (make_sparse (full a b) q i j)))
+  (decreases %[(Seq.length a - i); (Seq.length b - j)])                     
 let rec fast_is_sparse_full a b p q i j = 
-  if i = Seq.length a 
-  then begin
-    cut (Matrix2.Eq p q)
-  end
-  else admit()
+  if i = Seq.length a then ()
+  else if j = Seq.length b then fast_is_sparse_full a b p q (i + 1) 0
+  else if index p i j = 2 then fast_is_sparse_full a b p q i (j + 1)
+  else if index (full a b) i j 
+  then (aux_elim_is_correct a b p i j;
+        fast_is_sparse_full a b (elim p i j) (elim q i j) i (j + 1))
+  else fast_is_sparse_full a b p q i (j + 1)
+       
+       
 
