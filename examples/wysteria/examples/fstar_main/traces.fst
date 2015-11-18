@@ -148,7 +148,6 @@ opaque type zero_or_two_from_weak (#m:nat) (#n:nat) (i:nat{i <= m}) (j:nat{j <= 
    forall (i':ri m) (j':cj n).{:pattern (index p i' j')} 
      (precedes (i, j) (i', j') \/ (i,j)=(i',j'))
      ==> ((index p i' j' = 0 \/ index p i' j' = 2)) //every element from i,j onwards is 0 or 2
-         (* /\ two_is_ok p i' j') *)
 
 val fast_product_correct: a:Seq.seq int -> b:Seq.seq int -> p:prod a b nat 
                       -> i:nat{i <= Seq.length a} -> j:nat{j <= Seq.length b} -> Lemma
@@ -164,14 +163,11 @@ let rec fast_product_correct a b p i j =
        then let out = Matrix2.upd p i j 1 in
             let out = update_row_suffix out i j 2 in 
             let out = update_col_suffix out i j 2 in
-            assert (prefix_correct a b i (j + 1) out);
             assert (zero_or_two_from_weak i (j + 1) out);
             cut (witness i);
             cut (witness j);
-            assert (zero_or_two_from i (j + 1) out);
             fast_product_correct a b out i (j + 1)
-       else (assert (index p i j = 0);
-             fast_product_correct a b p i (j + 1))
+       else fast_product_correct a b p i (j + 1)
   
 val fast_is_sparse_full: a:Seq.seq int -> b:Seq.seq int -> p:prod a b nat -> q:prod a b nat 
                       -> i:nat{i <= Seq.length a} -> j:nat{j <= Seq.length b} -> Lemma
