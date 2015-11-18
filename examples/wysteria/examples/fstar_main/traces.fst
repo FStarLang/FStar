@@ -188,5 +188,21 @@ let rec fast_is_sparse_full a b p q i j =
         fast_is_sparse_full a b (elim p i j) (elim q i j) i (j + 1))
   else fast_is_sparse_full a b p q i (j + 1)
        
-       
+type sparse (a:Seq.seq int) (b:Seq.seq int) = 
+  p:prod a b nat{prefix_correct a b (Seq.length a) (Seq.length b) p}
+   
+val sparse_as_list: a:Seq.seq int -> b:Seq.seq int -> p:sparse a b 
+                 -> i:nat{i<=Seq.length a} 
+                 -> j:nat{j<=Seq.length b}
+                 -> Tot (list bool)
+  (decreases %[(Seq.length a - i); (Seq.length b - j)])
+let rec sparse_as_list a b p i j = 
+  if i=Seq.length a then []
+  else if j=Seq.length b then sparse_as_list a b p (i + 1) 0
+  else if index p i j = 0 then false :: sparse_as_list a b p i (j + 1)
+  else if index p i j = 1 then true :: sparse_as_list a b p i (j + 1)
+  else (assert (index p i j = 2);
+        sparse_as_list a b p i (j + 1))
+
+
 
