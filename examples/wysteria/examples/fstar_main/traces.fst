@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi FStar.Seq --admit_fsi FStar.Matrix2;
+    options:--admit_fsi FStar.Seq --admit_fsi FStar.Matrix2 --z3timeout 10;
     other-files:seq.fsi matrix2.fsti
   --*)
 module Traces
@@ -84,11 +84,15 @@ let rec lemma_full_matrix_aux a b out i j i' j'  =
   end
 
 
-val lemma_full_matrix: a:Seq.seq int -> b:Seq.seq int -> out:prod a b bool -> i:ix a -> j:ix b -> Lemma
+let full a b = full_matrix a b (Matrix2.create (Seq.length a) (Seq.length b) false) 0 0 
+
+val full_is_correct: a:Seq.seq int -> b:Seq.seq int -> i:ix a -> j:ix b -> Lemma
   (requires True)
-  (ensures (index (full_matrix a b out 0 0) i j = (Seq.index a i = Seq.index b j)))
-  [SMTPat (index (full_matrix a b out 0 0) i j)]
-let lemma_full_matrix a b out i j = lemma_full_matrix_aux a b out 0 0 i j   
+  (ensures (index (full a b) i j = (Seq.index a i = Seq.index b j)))
+  [SMTPat (index (full a b) i j)]
+let full_is_correct a b i j = 
+  let init = Matrix2.create (Seq.length a) (Seq.length b) false in
+  lemma_full_matrix_aux a b init 0 0 i j   
 
 val fast_product:  a:Seq.seq int 
                 -> b:Seq.seq int
@@ -109,15 +113,11 @@ let rec fast_product a b out i j =
             fast_product a b out i (j + 1)
        else fast_product a b out i (j + 1)
 
-let full a b = full_matrix a b (Matrix2.create (Seq.length a) (Seq.length b) false) 0 0 
-
 let precedes (i, j) (i', j') = (i < i') || (i = i' && j < j')
 
 opaque type eq_until (#m:nat) (#n:nat) (i:nat{i <= m}) (j:nat{j<=n}) (p:mat m n nat) (q:mat m n nat) = 
   forall (i':ri m) (j':cj n).{:pattern (index p i' j') \/ (index q i' j')}  
            precedes (i',j') (i,j)  ==>  index p i' j' = index q i' j'
-           
-           (* ((i' < i) \/ (i' = i /\ j' < j)) ==>  index p i' j' = index q i' j' *)
 
 opaque type witness (#a:Type) (x:a) = True
 
@@ -148,7 +148,9 @@ opaque type zero_or_two_from_weak (#m:nat) (#n:nat) (i:nat{i <= m}) (j:nat{j <= 
    forall (i':ri m) (j':cj n).{:pattern (index p i' j')} 
      (precedes (i, j) (i', j') \/ (i,j)=(i',j'))
      ==> ((index p i' j' = 0 \/ index p i' j' = 2)) //every element from i,j onwards is 0 or 2
-
+  
+#reset-options
+#set-options "--max_ifuel 3 --initial_ifuel 3 --max_fuel 1 --initial_fuel 1"
 val fast_product_correct: a:Seq.seq int -> b:Seq.seq int -> p:prod a b nat 
                       -> i:nat{i <= Seq.length a} -> j:nat{j <= Seq.length b} -> Lemma
   (requires (prefix_correct a b i j p /\ zero_or_two_from i j p)) 
@@ -171,7 +173,8 @@ let rec fast_product_correct a b p i j =
   
 val fast_is_sparse_full: a:Seq.seq int -> b:Seq.seq int -> p:prod a b nat -> q:prod a b nat 
                       -> i:nat{i <= Seq.length a} -> j:nat{j <= Seq.length b} -> Lemma
-  (requires (eq_until i j p q /\ zero_or_two_from i j p))
+  (requires (eq_until i j p q 
+            /\ zero_or_two_from i j p))
   (ensures (fast_product a b p i j
             = make_sparse (full a b) q i j))
 let rec fast_is_sparse_full a b p q i j = 
