@@ -250,14 +250,41 @@ let rec for_alice sa sb i =
        let sb, r = check_bob a sb 0 in 
        r::for_alice sa sb (i + 1)
 
-val lemma_bob: oa:Seq.seq int
-         -> ob:Seq.seq int 
-         -> sb:Seq.seq int
-         -> elims:Set.set (ix ob)
-         -> ia:ix oa 
-         -> a:int{a = Seq.index oa ia}
-         -> j:ix sb
-         -> 
+val fst_bob_aux : s:Seq.seq (int * bool) 
+             -> out:Seq.seq int{Seq.length out = Seq.length s}
+             -> i:bound s
+             -> Tot (t:Seq.seq int{Seq.length t = Seq.length s})
+  (decreases (Seq.length s - i))
+let rec fst_bob_aux s out i = 
+  if i = Seq.length s then out
+  else let out = Seq.upd out i (fst (Seq.index s i)) in
+       fst_bob_aux s out (i + 1)
+
+val lemma_fst_bob_aux: s:Seq.seq (int * bool) 
+              -> out: Seq.seq int{Seq.length s = Seq.length out}
+              -> i:bound s -> Lemma
+  (requires (forall (j:nat{j < i}). Seq.index out j = fst (Seq.index s j)))
+  (ensures (forall (j:ix out). Seq.index (fst_bob_aux s out i) j = fst (Seq.index s j)))
+  (decreases (Seq.length s - i))
+let rec lemma_fst_bob_aux s out i = 
+  if i = Seq.length s then ()
+  else let out = Seq.upd out i (fst (Seq.index s i)) in
+       lemma_fst_bob_aux s out (i + 1)
+
+let fst_bob s = fst_bob_aux s (Seq.create (Seq.length s) 0) 0
+val lemma_fst_bob: s:Seq.seq (int * bool) -> j:ix s -> Lemma
+  (requires True)
+  (ensures (Seq.index (fst_bob s) j = fst (Seq.index s j)))
+  [SMTPat (Seq.index (fst_bob s) j)]
+let lemma_fst_bob s j = lemma_fst_bob_aux s (Seq.create (Seq.length s) 0) 0
+
+
+
+val lemma_bob: sa:Seq.seq int
+            -> sb:Seq.seq (int * bool) 
+            -> ia:ix sa
+            -> jb:bound sb 
+            -> 
 
 val lemma_alice: a:Seq.seq int -> b:Seq.seq int -> p:prod a b 
              -> 
