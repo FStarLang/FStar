@@ -72,7 +72,7 @@ val lemma_index_row: #a:Type -> m:nat -> n:nat -> x:matrix2 m n a -> i:nat{i<m} 
 val lemma_index_col: #a:Type -> m:nat -> n:nat -> x:matrix2 m n a -> i:nat{i<m} -> j:nat{j<n} -> Lemma 
   (requires (True))
   (ensures (Seq.index (col x j) i = index x i j))
-  [SMTPat (Seq.index (col x j) j)]
+  [SMTPat (Seq.index (col x j) i)]
 
 val lemma_index_upd_row1: #a:Type -> m:nat -> n:nat -> x:matrix2 m n a -> s:seq a{Seq.length s = n} -> i:nat{i<m} -> j:nat{j<n} -> Lemma 
   (requires (True))
