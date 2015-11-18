@@ -2112,11 +2112,11 @@ let solve tcenv q : unit =
         let bindings = Tc.Env.fold_env tcenv (fun bs b -> b::bs) [] in
         let q, bindings = 
             let rec aux bindings = match bindings with 
-                | Binding_var(x,t)::rest -> 
+                | Env.Binding_var(x,t)::rest -> 
                   let out, rest = aux rest in 
                   let t = Normalize.norm_typ [Normalize.DeltaHard; Normalize.Beta; Normalize.Eta; Normalize.EtaArgs; Normalize.Simplify] env.tcenv t in
                   Syntax.v_binder (Util.bvd_to_bvar_s x t)::out, rest 
-                | Binding_typ(a, k)::rest -> 
+                | Env.Binding_typ(a, k)::rest -> 
                   let out, rest = aux rest in 
                   Syntax.t_binder (Util.bvd_to_bvar_s a k)::out, rest 
                 | _ -> [], bindings in
