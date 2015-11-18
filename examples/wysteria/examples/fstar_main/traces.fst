@@ -103,47 +103,77 @@ let rec fast_product a b out i j =
 
 let precedes (i, j) (i', j') = (i < i') || (i = i' && j < j')
 
-opaque type eq_until (#m:nat) (#n:nat) (i:nat{i <= m}) (j:nat{j<=n}) (p:mat m n nat) (q:mat m n nat) = 
-  forall (i':ri m) (j':cj n).{:pattern (index p i' j') \/ (index q i' j')}  
-           precedes (i',j') (i,j)  ==>  index p i' j' = index q i' j'
+type bound (#a:Type) (s:Seq.seq a) = i:nat{i <= Seq.length s}
 
 opaque type witness (#a:Type) (x:a) = True
 
-opaque type two_is_ok (#m:nat) (#n:nat) (p:mat m n nat) (i:ri m) (j:cj n) = 
+opaque type no_ones (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b nat) (i:ix a) (j:ix b) = 
+    (forall (k:ix b). {:pattern (index p i k)} index p i k <> 1)
+  /\ (forall (k:ix a). {:pattern (index p k j)} index p k j <> 1)
+
+opaque type zero_is_ok (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b nat) (i:ix a) (j:ix b) =
+  index p i j = 0 ==> no_ones p i j
+  //if we have a 0 somewhere, then
+  //we don't have a 1 anywhere else in the same row or column
+   
+opaque type two_is_ok (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b nat) (i:ix a) (j:ix b) =
   index p i j = 2 ==> //if we have a 2 somewhere, then
            //we have a 1 in a previous column of the same row
-          ((exists (c:cj n{c <= j}).{:pattern (witness c)} witness c /\ index p i c = 1)  
+          ((exists (c:ix b{c <= j}).{:pattern (witness c)} witness c /\ index p i c = 1)  
            //or, we have a 1 in a previous row of the same column
-         \/ (exists (r:ri m{r <= i}).{:pattern (witness r)} witness r /\ index p r j = 1)) 
- 
-opaque type zero_or_two_from (#m:nat) (#n:nat) (i:nat{i <= m}) (j:nat{j <= n}) (p:mat m n nat) = 
-   forall (i':ri m) (j':cj n).{:pattern (index p i' j')} 
+         \/ (exists (r:ix a{r <= i}).{:pattern (witness r)} witness r /\ index p r j = 1)) 
+
+opaque type zero_or_two_from (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b nat) (i:bound a) (j:bound b) = 
+   forall (i':ix a) (j':ix b).{:pattern (index p i' j')} 
      (precedes (i, j) (i', j') \/ (i,j)=(i',j'))
      ==> ((index p i' j' = 0 \/ index p i' j' = 2) //every element from i,j onwards is 0 or 2
-         /\ two_is_ok p i' j')
-        
-opaque type prefix_correct (a:Seq.seq int) (b:Seq.seq int) (i:nat{i <= Seq.length a}) (j:nat{j <= Seq.length b}) (p:prod a b nat) = 
+         /\ two_is_ok p i' j'
+         /\ zero_is_ok p i' j')
+
+opaque type prefix_correct (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b nat) (i:bound a) (j:bound b) = 
   forall (i':ix a) (j':ix b).{:pattern (index p i' j')}
     precedes (i',j') (i,j) ==>
-    (* %[i';j'] << %[i;j] ==>  *)
          (if index p i' j' = 0
-          then Seq.index a i' <> Seq.index b j'
+          then (Seq.index a i' <> Seq.index b j' /\ no_ones p i' j')
           else if index p i' j' = 1
           then Seq.index a i' = Seq.index b j'
           else (index p i' j' = 2 /\ two_is_ok p i' j'))
 
-opaque type zero_or_two_from_weak (#m:nat) (#n:nat) (i:nat{i <= m}) (j:nat{j <= n}) (p:mat m n nat) = 
-   forall (i':ri m) (j':cj n).{:pattern (index p i' j')} 
+opaque type zero_or_two_from_weak (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b nat) (i:bound a) (j:bound b) = 
+   forall (i':ix a) (j':ix b).{:pattern (index p i' j')} 
      (precedes (i, j) (i', j') \/ (i,j)=(i',j'))
      ==> ((index p i' j' = 0 \/ index p i' j' = 2)) //every element from i,j onwards is 0 or 2
 
-val aux_elim_is_correct:  a:Seq.seq int -> b:Seq.seq int -> p:prod a b nat -> i:ix a -> j:ix b -> Lemma
-  (requires (prefix_correct a b i j p 
-            /\ zero_or_two_from i j p
-            /\ (Seq.index a i = Seq.index b j)))
-  (ensures (let out = elim p i j in
-            prefix_correct a b i (j + 1) out
-            /\ zero_or_two_from i (j + 1) out))
+opaque type at_most_one_one (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b nat) =
+  forall (i:ix a) (j:ix b).{:pattern index p i j} 
+          index p i j = 1
+          ==> ((forall (j':ix b).{:pattern index p i j'} j<>j' ==> index p i j' <> 1)
+            /\ (forall (i':ix a).{:pattern index p i' j} i<>i' ==> index p i' j <> 1))
+
+opaque type prod_invariant (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b nat) (i:bound a) (j:bound b) = 
+  at_most_one_one p
+  /\ prefix_correct p i j
+  /\ zero_or_two_from p i j
+
+opaque type prefix_correct_weak (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b nat) (i:bound a) (j:bound b) = 
+  forall (i':ix a) (j':ix b).{:pattern (index p i' j')}
+    precedes (i',j') (i,j) ==>
+         (if index p i' j' = 0
+          then (Seq.index a i' <> Seq.index b j')// /\ no_ones p i' j')
+          else if index p i' j' = 1
+          then Seq.index a i' = Seq.index b j'
+          else (index p i' j' = 2 /\ two_is_ok p i' j'))
+
+val aux_elim_is_correct:  #a:Seq.seq int -> #b:Seq.seq int -> p:prod a b nat -> i:ix a -> j:ix b -> Lemma
+  (requires (prod_invariant p i j
+            /\ index p i j = 0
+            /\ Seq.index a i = Seq.index b j))
+  (ensures ( //prod_invariant (elim p i j) (i + 1) 0))
+             prefix_correct_weak (elim p i j) i (j + 1)
+             /\ no_ones p i j
+             /\ at_most_one_one (elim p i j) 
+             /\ zero_or_two_from (elim p i j) i (j + 1)
+                ))
 let aux_elim_is_correct a b p i j = cut (witness i /\ witness j)
  
 val fast_product_correct: a:Seq.seq int -> b:Seq.seq int -> p:prod a b nat 
@@ -207,7 +237,54 @@ let rec sparse_as_list a b p i j =
 let remove (s:Seq.seq int) (i:ix s) = 
   Seq.append (Seq.slice s 0 i) (Seq.slice s (i + 1) (Seq.length s))
 
-type bound (#a:Type) (s:Seq.seq a) = i:nat{i <= Seq.length s}
+
+type bob_t (oa:Seq.seq int) (ob:Seq.seq int) = 
+  | B : p:prod oa ob nat -> sb:Seq.seq int -> result:bool -> bob_t oa ob
+
+assume val eliminate: #a:Seq.seq int -> #b:Seq.seq int -> p:prod a b nat -> j:ix b -> Tot (Seq.seq int * nat)
+assume val ith_row_bool: #a:Seq.seq int -> #b:Seq.seq int -> p:prod a b nat -> i:ix a -> Tot bool
+ 
+val check_bob : oa:Seq.seq int -> ob:Seq.seq int -> p:prod oa ob nat -> i:ix oa -> j:ix ob  (* all ghost *)
+             -> a:int -> sb:Seq.seq int -> k:ix sb -> Pure (bob_t oa ob)
+  (requires (prefix_correct oa ob i j p
+             /\ (eliminate p j = (sb, k))))
+  (ensures (fun b -> prefix_correct oa ob (i + 1) 0 b.p
+                /\  fst (eliminate b.p 0) = b.sb
+                /\  b.result = ith_row_bool b.p i))
+  (decreases (Seq.length sb - k))
+let rec check_bob oa ob p i j a sb k = 
+  if k = Seq.length sb 
+  then B p sb false
+  else if Seq.index sb k = a //found it
+  then let p = elim p i j in
+       let sb = remove sb k in 
+       B p sb true
+  else let p, j' = move_index_to p sb (k + 1) in 
+       check_bob oa ob p i j' a sb (k + 1)
+
+int -> sb:Seq.seq (int * bool) -> i:nat{i<=Seq.length sb} -> Tot (Seq.seq (int * bool) * bool)
+ (decreases (Seq.length sb - i))
+let rec check_bob a sb i = 
+  if i = Seq.length sb 
+  then sb, false
+  else let b, elim = Seq.index sb i in 
+       if elim then check_bob a sb (i + 1)
+       else if a = b 
+       then elim_bob sb i, true
+       else check_bob a sb (i + 1)
+
+val for_alice : sa:Seq.seq int -> sb:Seq.seq (int * bool) -> i:nat{i<=Seq.length sa} -> Tot (list bool)
+ (decreases (Seq.length sa - i))
+let rec for_alice sa sb i =
+  if i = Seq.length sa 
+  then []
+  else let a = Seq.index sa i in 
+       let sb, r = check_bob a sb 0 in 
+       r::for_alice sa sb (i + 1)
+
+
+
+
 
 val elim_bob: s:Seq.seq (int * bool) -> i:bound s -> Tot (s':Seq.seq (int * bool){Seq.length s = Seq.length s'})
   (decreases (Seq.length s - i))
@@ -278,14 +355,18 @@ val lemma_fst_bob: s:Seq.seq (int * bool) -> j:ix s -> Lemma
   [SMTPat (Seq.index (fst_bob s) j)]
 let lemma_fst_bob s j = lemma_fst_bob_aux s (Seq.create (Seq.length s) 0) 0
 
+assume val sparse_jth_row: a:seq int -> b:seq int -> s:sparse a b -> r:ix a -> Tot bool
 
-
-val lemma_bob: sa:Seq.seq int
-            -> sb:Seq.seq (int * bool) 
+val lemma_bob: a:Seq.seq int
+            -> b:Seq.seq (int * bool) 
             -> ia:ix sa
             -> jb:bound sb 
-            -> 
-
+            -> p:sparse a (fst_bob b)
+            -> Lemma
+              (requires (elims_correspond 
+              (let b = fst (check_bob (Seq.index a ia) b) in 
+               let r = snd (check_bob (Seq.index a ia) b) in 
+               r = 
 val lemma_alice: a:Seq.seq int -> b:Seq.seq int -> p:prod a b 
              -> 
 let fast_prod
