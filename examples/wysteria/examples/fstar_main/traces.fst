@@ -204,5 +204,81 @@ let rec sparse_as_list a b p i j =
   else (assert (index p i j = 2);
         sparse_as_list a b p i (j + 1))
 
+let remove (s:Seq.seq int) (i:ix s) = 
+  Seq.append (Seq.slice s 0 i) (Seq.slice s (i + 1) (Seq.length s))
 
+type bound (#a:Type) (s:Seq.seq a) = i:nat{i <= Seq.length s}
 
+val elim_bob: s:Seq.seq (int * bool) -> i:bound s -> Tot (s':Seq.seq (int * bool){Seq.length s = Seq.length s'})
+  (decreases (Seq.length s - i))
+let rec elim_bob s i = 
+  if i = Seq.length s 
+  then s 
+  else let x, _ = Seq.index s i in 
+       let s = Seq.upd s i (x, false) in 
+       elim_bob s (i + 1)
+
+val lemma_elim_bob : s:Seq.seq (int * bool) -> i:bound s -> j:ix s -> Lemma
+  (requires True)
+  (ensures ( (j < i ==> Seq.index (elim_bob s i) j = Seq.index s j)
+           /\ (i <= j ==> Seq.index (elim_bob s i) j = (fst (Seq.index s j), false)))) 
+  (decreases (Seq.length s - i))
+  [SMTPat (Seq.index (elim_bob s i) j)]
+let rec lemma_elim_bob s i j = 
+  if i = Seq.length s 
+  then ()
+  else let s' = Seq.upd s i (fst (Seq.index s i), false) in 
+       lemma_elim_bob s' (i + 1) j
+
+val check_bob : int -> sb:Seq.seq (int * bool) -> i:nat{i<=Seq.length sb} -> Tot (Seq.seq (int * bool) * bool)
+ (decreases (Seq.length sb - i))
+let rec check_bob a sb i = 
+  if i = Seq.length sb 
+  then sb, false
+  else let b, elim = Seq.index sb i in 
+       if elim then check_bob a sb (i + 1)
+       else if a = b 
+       then elim_bob sb i, true
+       else check_bob a sb (i + 1)
+
+val for_alice : sa:Seq.seq int -> sb:Seq.seq (int * bool) -> i:nat{i<=Seq.length sa} -> Tot (list bool)
+ (decreases (Seq.length sa - i))
+let rec for_alice sa sb i =
+  if i = Seq.length sa 
+  then []
+  else let a = Seq.index sa i in 
+       let sb, r = check_bob a sb 0 in 
+       r::for_alice sa sb (i + 1)
+
+val lemma_bob: oa:Seq.seq int
+         -> ob:Seq.seq int 
+         -> sb:Seq.seq int
+         -> elims:Set.set (ix ob)
+         -> ia:ix oa 
+         -> a:int{a = Seq.index oa ia}
+         -> j:ix sb
+         -> 
+
+val lemma_alice: a:Seq.seq int -> b:Seq.seq int -> p:prod a b 
+             -> 
+let fast_prod
+
+//main lemma
+// for_alice oa ob sa sb 0  
+// = sparse_as_list (fast_product oa ob (Matrix2.create _ _ 0) 0 0)
+
+val for_alice : list int -> list int -> Tot (list bool)
+val check_bob : int -> l:list int -> Tot (list int * bool)
+let rec for_alice la lb = match la with 
+  | [] -> []
+  | a::rest -> 
+    let lb, r = check_bob a lb in 
+    r::for_alice rest lb
+    
+and check_bob a lb = match lb with 
+  | [] -> [], false
+  | b::rest -> 
+    if a = b 
+    then rest, true
+    else let rest, r = check_bob a rest in 
+         b::rest, r
