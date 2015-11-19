@@ -416,7 +416,7 @@ let rec row_as_list sb r i =
   else if Seq.index r i = Elim
   then row_as_list sb r (i + 1)
   else Seq.index sb i :: row_as_list sb r (i + 1)
-
+ 
 val iter_extends: a:_ -> b:_ 
 		-> i':bound a -> j':bound b
 		-> i:bound a -> j:bound b {prec_eq (i',j') (i,j)}
@@ -427,6 +427,7 @@ val iter_extends: a:_ -> b:_
 let iter_extends #a #b i' j' i j = 
   prod_until_extends (init a b) i j i' j' 0 0
 
+ 
 val frame_iter: a:_ -> b:_ -> i:bound a -> j:bound b -> i':bound a -> j':bound b{prec_eq (i,j) (i',j')}
 		-> x:ix a -> y:ix b{precedes (x, y) (i, j)}
   	        -> Lemma
@@ -435,18 +436,19 @@ val frame_iter: a:_ -> b:_ -> i:bound a -> j:bound b -> i':bound a -> j':bound b
   [SMTPat (index (iter_i_j a b i j) x y);
    SMTPat (index (iter_i_j a b i' j') x y)]
 let frame_iter a b i j i' j' x y = lemma_iters_agree #a #b i j i' j' x y
-
+ 
 val iter_step: a:seq int ->  b:seq int -> i:ix a -> j:ix b -> i':bound a -> j':bound b{precedes (i, j) (i', j')}
-      -> p:iter a b i j{index p i j = Unknown /\ Seq.index a i = Seq.index b j}
+      -> p:iter a b i j{index p i j = Unknown}
       -> q:iter a b i' j'
       -> Lemma 
   (requires True)
-  (ensures (index q i j = Equal))
+  (ensures ((Seq.index a i = Seq.index b j ==> index q i j = Equal)
+          /\ (Seq.index a i <> Seq.index b j ==> index q i j = NotEqual)))
 let iter_step a b i j i' j' p q = 
   let r = iter_i_j a b i (j + 1) in 
   iter_extends #a #b i j i (j + 1);
-  cut (index r i j == Equal)
-
+  cut (index r i j == index r i j)//for the pattern to fire
+ 
 val lemma_next_row_aux: #a:seq int -> #b:seq int -> i:ix a -> j:ix b  
       -> p:iter a b i j{index p i j = Unknown} 
       -> q:iter a b (i + 1) 0{Seq.index a i = Seq.index b j}
@@ -460,29 +462,26 @@ val lemma_next_row_aux: #a:seq int -> #b:seq int -> i:ix a -> j:ix b
 let lemma_next_row_aux #a #b i j p q = 
     iter_step a b i j (i + 1) 0 p q;
     admit() //TODO: REMOVE ... boring
-
-
-// val advance:  a:Seq.seq int -> b:Seq.seq int -> i:ix a -> j:ix b
-// 	    -> p:iter a b i j
-// 	    -> q:iter a b (i + 1) 0
-// 	    -> lb:list int{is_Cons lb}
-// 	    -> Pure (bound b)
-//   (requires (lb=row_as_list sb (Matrix2.row p i) j 
-// 	    /\ Seq.index sa i <> Seq.index sb j))
-//   (ensures (fun j' -> 
-//   	         j < j'
-// 	      /\  (j' < Seq.length sb ==> index (iter_i_j a b i j') i j' = Unknown)
-// 	      /\
-// 	           fst r > j
-// 	         /\ prod_invariant (snd r) i (fst r)
-// 		 /\ ith_row_until (snd r) i (fst r) 0 = false
-// 		 /\ ith_row_until q i (fst r) 0 = false
-// 		 /\ (fst r < Seq.length sb ==> index (snd r) i (fst r) <> Elim)
-// 		 /\ Cons.tl lb=row_as_list sb (Matrix2.row (snd r) i) (fst r)
-// 		 /\ (i + 1 < Seq.length sa 
-// 		     ==> row_as_list sb (Matrix2.row q (i + 1)) j
-// `		         = Cons.hd lb::row_as_list sb (Matrix2.row q (i + 1)) (fst r))))
-
+ 
+assume val advance:  a:Seq.seq int -> b:Seq.seq int -> i:ix a -> j:ix b
+	    -> p:iter a b i j
+	    -> q:iter a b (i + 1) 0
+	    -> lb:list int{is_Cons lb}
+	    -> Pure (bound b)
+  (requires (lb=row_as_list b (Matrix2.row p i) j 
+	    /\ Seq.index a i <> Seq.index b j))
+  (ensures (fun j' -> 
+	      let p' = iter_i_j a b i j' in
+  	         j < j'
+	      /\  (j' < Seq.length b ==> index p' i j' = Unknown)
+	      /\  Cons.tl lb=row_as_list b (Matrix2.row p' i) j'
+	      /\  (Cons.tl lb=[] ==> j'=Seq.length b)
+	      /\ (ith_row_from q i j =
+	            false::ith_row_from q i j')		      
+	      /\  (i + 1 < Seq.length a 
+		     ==> row_as_list b (Matrix2.row q (i + 1)) j
+		         = Cons.hd lb::row_as_list b (Matrix2.row q (i + 1)) j')))
+ 
 val check_bob: a:int -> lb:list int -> Tot (list int * list bool)
 let rec check_bob a lb =
   match lb with
@@ -509,12 +508,12 @@ val lemma_bob: sa:Seq.seq int -> sb:Seq.seq int -> i:ix sa -> j:bound sb
 let rec lemma_bob sa sb i j p q a lb = match lb with 
   | [] -> ()
   | hd::tl ->
+    iter_step sa sb i j (i + 1) 0 p q;
     if hd=a
     then lemma_next_row_aux i j p q
-    else admit()
-
-(let j', p' = advance sa sb i j p q lb in 
-	  lemma_bob sa sb i j' p' q a tl)
+    else let j' = advance sa sb i j p q lb in
+	 let p' = iter_i_j sa sb i j' in
+	 lemma_bob sa sb i j' p' q a tl
 
 val for_alice : list int -> list int -> Tot (list bool)
 let rec for_alice la lb = match la with 
