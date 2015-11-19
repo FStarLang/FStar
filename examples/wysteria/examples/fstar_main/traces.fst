@@ -163,7 +163,7 @@ opaque type prod_invariant (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b entry) 
   /\ prefix_ok p i j
   /\ suffix_ok p i j
 
-let elim (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b entry) (i:ix a) (j:ix b) = 
+let elim (#m:nat) (#n:nat) (p:mat m n entry) (i:ri m) (j:cj n) = 
   let out = Matrix2.upd p i j Equal in
   let out = update_row_suffix out i j Elim in 
   update_col_suffix out i j Elim
@@ -177,7 +177,7 @@ let elim_is_ok a b p i j =
   cut (witness_row i);
   cut (witness_col j)
 
-let set_neq (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b entry) (i:ix a) (j:ix b) = 
+let set_neq (#m:nat) (#n:nat) (p:mat m n entry) (i:ri m) (j:cj n) = 
   Matrix2.upd p i j NotEqual
 
 val set_neq_is_ok:  #a:Seq.seq int -> #b:Seq.seq int -> p:prod a b entry -> i:ix a -> j:ix b -> Lemma
@@ -217,36 +217,35 @@ let rec fast_product_correct a b p i j =
        else (set_neq_is_ok p i j;
 	    fast_product_correct a b (set_neq p i j) i (j + 1))
 
-val make_sparse: #m:nat -> #n:nat -> mat m n bool -> mat m n nat
-	       -> i:nat{i <= m} -> j:nat{j <= n} -> Tot (mat m n nat)
+val make_sparse: #m:nat -> #n:nat -> mat m n bool -> mat m n entry
+	       -> i:nat{i <= m} -> j:nat{j <= n} -> Tot (mat m n entry)
   (decreases %[(m - i); (n - j)])
 let rec make_sparse #m #n bs out i j = 
   if i = m      then out
   else if j = n then make_sparse bs out (i + 1) 0
-  else if index out i j = 2 then make_sparse bs out i (j + 1)
+  else if index out i j = Elim then make_sparse bs out i (j + 1)
   else if index bs i j 
-  then make_sparse bs (elim out i j) i (j + 1)
-  else make_sparse bs out i (j + 1)
+  then make_sparse bs (elim out i j) (i + 1) 0
+  else make_sparse bs (set_neq out i j) i (j + 1)
 
-val fast_is_sparse_full: a:Seq.seq int -> b:Seq.seq int -> p:prod a b nat -> q:prod a b nat 
+val fast_is_sparse_full: a:Seq.seq int -> b:Seq.seq int -> p:prod a b entry -> q:prod a b entry
                       -> i:nat{i <= Seq.length a} -> j:nat{j <= Seq.length b} -> Lemma
   (requires (Matrix2.Eq p q
-            /\ prefix_correct a b i j p
-            /\ zero_or_two_from i j p))
+            /\ prod_invariant p i j))
   (ensures (Matrix2.Eq (fast_product a b p i j)
-                      (make_sparse (full a b) q i j)))
+                       (make_sparse (full a b) q i j)))
   (decreases %[(Seq.length a - i); (Seq.length b - j)])                     
 let rec fast_is_sparse_full a b p q i j = 
   if i = Seq.length a then ()
   else if j = Seq.length b then fast_is_sparse_full a b p q (i + 1) 0
-  else if index p i j = 2 then fast_is_sparse_full a b p q i (j + 1)
+  else if index p i j = Elim then fast_is_sparse_full a b p q i (j + 1)
   else if index (full a b) i j 
-  then (aux_elim_is_correct a b p i j;
-        fast_is_sparse_full a b (elim p i j) (elim q i j) i (j + 1))
-  else fast_is_sparse_full a b p q i (j + 1)
+  then (elim_is_ok p i j;
+        fast_is_sparse_full a b (elim p i j) (elim q i j) (i + 1) 0)
+  else fast_is_sparse_full a b (set_neq p i j) (set_neq q i j) i (j + 1)
        
 type sparse (a:Seq.seq int) (b:Seq.seq int) = 
-  p:prod a b nat{prefix_correct a b (Seq.length a) (Seq.length b) p}
+  p:prod a b entry{prod_invariant p (Seq.length a) (Seq.length b)}
    
 val sparse_as_list: a:Seq.seq int -> b:Seq.seq int -> p:sparse a b 
                  -> i:nat{i<=Seq.length a} 
