@@ -247,38 +247,124 @@ let rec fast_is_sparse_full a b p q i j =
 type sparse (a:Seq.seq int) (b:Seq.seq int) = 
   p:prod a b entry{prod_invariant p (Seq.length a) (Seq.length b)}
    
-val sparse_as_list: a:Seq.seq int -> b:Seq.seq int -> p:sparse a b 
-                 -> i:nat{i<=Seq.length a} 
-                 -> j:nat{j<=Seq.length b}
-                 -> Tot (list bool)
-  (decreases %[(Seq.length a - i); (Seq.length b - j)])
-let rec sparse_as_list a b p i j = 
-  if i=Seq.length a then []
-  else if j=Seq.length b then sparse_as_list a b p (i + 1) 0
-  else if index p i j = 0 then false :: sparse_as_list a b p i (j + 1)
-  else if index p i j = 1 then true :: sparse_as_list a b p i (j + 1)
-  else (assert (index p i j = 2);
-        sparse_as_list a b p i (j + 1))
+// val sparse_as_list: a:Seq.seq int -> b:Seq.seq int -> p:sparse a b 
+//                  -> i:nat{i<=Seq.length a} 
+//                  -> j:nat{j<=Seq.length b}
+//                  -> Tot (list bool)
+//   (decreases %[(Seq.length a - i); (Seq.length b - j)])
+// let rec sparse_as_list a b p i j = 
+//   if i=Seq.length a then []
+//   else if j=Seq.length b then sparse_as_list a b p (i + 1) 0
+//   else if index p i j = 0 then false :: sparse_as_list a b p i (j + 1)
+//   else if index p i j = 1 then true :: sparse_as_list a b p i (j + 1)
+//   else (assert (index p i j = 2);
+//         sparse_as_list a b p i (j + 1))
 
-let remove (s:Seq.seq int) (i:ix s) = 
-  Seq.append (Seq.slice s 0 i) (Seq.slice s (i + 1) (Seq.length s))
+// let remove (s:Seq.seq int) (i:ix s) = 
+//   Seq.append (Seq.slice s 0 i) (Seq.slice s (i + 1) (Seq.length s))
 
 
-type bob_t (oa:Seq.seq int) (ob:Seq.seq int) = 
-  | B : p:prod oa ob nat -> sb:Seq.seq int -> result:bool -> bob_t oa ob
+val map_fst_aux : s:Seq.seq (int * bool) 
+              -> out:Seq.seq int{Seq.length out = Seq.length s}
+              ->   i:bound s
+              -> Tot (t:Seq.seq int{Seq.length t = Seq.length s})
+  (decreases (Seq.length s - i))
+let rec map_fst_aux s out i = 
+  if i = Seq.length s then out
+  else let out = Seq.upd out i (fst (Seq.index s i)) in
+       map_fst_aux s out (i + 1)
 
-assume val eliminate: #a:Seq.seq int -> #b:Seq.seq int -> p:prod a b nat -> j:ix b -> Tot (Seq.seq int * nat)
-assume val ith_row_bool: #a:Seq.seq int -> #b:Seq.seq int -> p:prod a b nat -> i:ix a -> Tot bool
+val lemma_map_fst_aux: s:Seq.seq (int * bool) 
+                   -> out: Seq.seq int{Seq.length s = Seq.length out}
+                   ->   i:bound s 
+		  -> Lemma
+  (requires (forall (j:nat{j < i}). Seq.index out j = fst (Seq.index s j)))
+  (ensures (forall (j:ix out). Seq.index (map_fst_aux s out i) j = fst (Seq.index s j)))
+  (decreases (Seq.length s - i))
+let rec lemma_map_fst_aux s out i = 
+  if i = Seq.length s then ()
+  else let out = Seq.upd out i (fst (Seq.index s i)) in
+       lemma_map_fst_aux s out (i + 1)
+
+let map_fst s = map_fst_aux s (Seq.create (Seq.length s) 0) 0
+val lemma_map_fst: s:Seq.seq (int * bool) -> j:ix s -> Lemma
+  (requires True)
+  (ensures (Seq.index (map_fst s) j = fst (Seq.index s j)))
+  [SMTPat (Seq.index (map_fst s) j)]
+let lemma_map_fst s j = lemma_map_fst_aux s (Seq.create (Seq.length s) 0) 0
+
+type seq 'a = Seq.seq 'a
+val filter_snd_aux: s:seq (int * bool) -> i:bound s -> Tot (list (int * ix s))
+  (decreases (Seq.length s - i))
+let rec filter_snd_aux s i = 
+  if i=Seq.length s 
+  then []
+  else let (x, keep) = Seq.index s i in 
+       if keep then (x, i) :: filter_snd_aux s (i + 1)
+       else  filter_snd_aux s (i + 1)
+
+val filter_snd : s:seq (int * bool) -> Tot (list (int * ix s))
+let filter_snd s = filter_snd_aux s 0
+
+val mark_elim : a:seq int -> s:seq (int * bool){map_fst s = a} -> i:ix a -> Tot (s:seq (int * bool){map_fst s = a})
+let mark_elim a s i = 
+  let r = Seq.upd s i (fst (Seq.index s i), false) in 
+  cut (Seq.Eq (map_fst r) a);
+  r
  
-val check_bob : oa:Seq.seq int -> ob:Seq.seq int -> p:prod oa ob nat -> i:ix oa -> j:ix ob  (* all ghost *)
-             -> a:int -> sb:Seq.seq int -> k:ix sb -> Pure (bob_t oa ob)
-  (requires (prefix_correct oa ob i j p
-             /\ (eliminate p j = (sb, k))))
-  (ensures (fun b -> prefix_correct oa ob (i + 1) 0 b.p
-                /\  fst (eliminate b.p 0) = b.sb
-                /\  b.result = ith_row_bool b.p i))
-  (decreases (Seq.length sb - k))
-let rec check_bob oa ob p i j a sb k = 
+val eliminate_aux: #a:Seq.seq int -> #b:Seq.seq int -> m:bound a -> n:bound b 
+	      -> p:sparse a b
+	      -> i:bound a{i <= m} -> j:bound b -> lb:seq (int * bool){map_fst lb = b}
+	      -> Tot (list (int * ix lb))
+  (decreases %[(m - i); (Seq.length b - j)])
+let rec eliminate_aux #a #b m n p i j lb = 
+  if not (precedes (i, j) (m, n)) 
+  || i=Seq.length a
+  || j=Seq.length b
+  then filter_snd lb
+  else let lb : (lb:seq (int * bool){map_fst lb = b}) = match index p i j with 
+	 | Elim -> mark_elim b lb j
+	 | _ -> lb in 
+       if i<m
+       then if j = Seq.length b
+	    then eliminate_aux m n p (i + 1) 0 lb
+	    else eliminate_aux m n p i (j + 1) lb
+       else eliminate_aux m n p i (j + 1) lb
+
+assume val zip_with_true : s:seq int -> Tot (seq (int * bool))
+assume val lemma_zip_with_true : s:seq int -> Lemma 
+       (requires True)
+       (ensures  ((map_fst (zip_with_true s) = s 
+		 /\ (forall (i:ix s).{:pattern (Seq.index (zip_with_true s) i)} snd (Seq.index (zip_with_true s) i) = true))))
+       [SMTPat (zip_with_true s)]
+  
+let eliminate #a #b (m:bound a) (n:bound b) (p:sparse a b) =
+  eliminate_aux m n p 0 0 (zip_with_true b)
+
+assume val ith_row_bool: #a:Seq.seq int -> #b:Seq.seq int -> p:prod a b entry -> i:ix a -> Tot bool
+assume val proj_fst : #a:seq int -> list (int * ix a) -> Tot (list int)
+
+val check_bob: a:int -> lb:list int -> Tot (list int * bool)
+let rec check_bob a lb =
+  match lb with
+   | [] -> [], false
+   | hd::tl -> 
+     if hd=a
+     then tl, true
+     else let tl, r = check_bob a tl in
+	  hd::tl, r
+ 
+val lemma_bob: sa:Seq.seq int -> sb:Seq.seq int -> p:sparse sa sb -> i:ix sa -> j:ix sb 
+	       -> a:int -> lb:list int -> Lemma
+  (requires (proj_fst #sb (eliminate i j p) = lb /\ a=Seq.index sa i))
+  (ensures (let br = check_bob a lb in 
+	    fst br = proj_fst #sb (eliminate (i + 1) 0 p)
+          /\ snd br = ith_row_bool p i))
+  (decreases lb)
+
+  
+
+
   if k = Seq.length sb 
   then B p sb false
   else if Seq.index sb k = a //found it
@@ -353,33 +439,6 @@ let rec for_alice sa sb i =
        let sb, r = check_bob a sb 0 in 
        r::for_alice sa sb (i + 1)
 
-val fst_bob_aux : s:Seq.seq (int * bool) 
-             -> out:Seq.seq int{Seq.length out = Seq.length s}
-             -> i:bound s
-             -> Tot (t:Seq.seq int{Seq.length t = Seq.length s})
-  (decreases (Seq.length s - i))
-let rec fst_bob_aux s out i = 
-  if i = Seq.length s then out
-  else let out = Seq.upd out i (fst (Seq.index s i)) in
-       fst_bob_aux s out (i + 1)
-
-val lemma_fst_bob_aux: s:Seq.seq (int * bool) 
-              -> out: Seq.seq int{Seq.length s = Seq.length out}
-              -> i:bound s -> Lemma
-  (requires (forall (j:nat{j < i}). Seq.index out j = fst (Seq.index s j)))
-  (ensures (forall (j:ix out). Seq.index (fst_bob_aux s out i) j = fst (Seq.index s j)))
-  (decreases (Seq.length s - i))
-let rec lemma_fst_bob_aux s out i = 
-  if i = Seq.length s then ()
-  else let out = Seq.upd out i (fst (Seq.index s i)) in
-       lemma_fst_bob_aux s out (i + 1)
-
-let fst_bob s = fst_bob_aux s (Seq.create (Seq.length s) 0) 0
-val lemma_fst_bob: s:Seq.seq (int * bool) -> j:ix s -> Lemma
-  (requires True)
-  (ensures (Seq.index (fst_bob s) j = fst (Seq.index s j)))
-  [SMTPat (Seq.index (fst_bob s) j)]
-let lemma_fst_bob s j = lemma_fst_bob_aux s (Seq.create (Seq.length s) 0) 0
 
 assume val sparse_jth_row: a:seq int -> b:seq int -> s:sparse a b -> r:ix a -> Tot bool
 
