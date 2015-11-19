@@ -297,17 +297,38 @@ val prod_until_extends: #a:_ -> #b:_ -> p:prod a b entry
   (requires True)
   (ensures (prod_until p r c i j
 	    = prod_until (prod_until p r' c' i j) r c r' c'))
-  (decreases %[r' - i; Seq.length b - j])
+  (decreases %[Seq.length a - i; Seq.length b - j])
+//Case Elim:
+// prod_until p r c i j
+// = prod_until p r c i (j + 1)                                                (case analysis)
+// = prod_until (prod_until p r' c' i (j + 1)) r c r' c              '         (IH)
+// = prod_until (prod_until p r' c' i j) r c r' c'                             (case analysis)
+
+//Case NotEqual
+// prod_until p r c i j
+// = prod_until (set_neq p i j) r c i (j + 1)                                  (case analysis)
+// = prod_until (prod_until (set_neq p i j) r' c' i (j + 1)) r c r' c'         (IH)
+// = prod_until (prod_until p r' c' i j) r c r' c'                             (case analysis)
+
+//Case Equal
+// prod_until p r c i j
+// = prod_until (elim p i j) r c i (j + 1)                                     (case analysis)
+// = prod_until (prod_until (elim p i j) r' c' i (j + 1)) r c r' c'            (IH)
+// = prod_until (prod_until p r' c' i j) r c r' c'                             (case analysis)
 let rec prod_until_extends #a #b p r c r' c' i j = 
-  if (r,c) = (r',c') || (i,j)=(r',c') || i = Seq.length a then admit()
-  else if r=r' 
-  then if j < Seq.length b
-       then (let _ = prod_until_extends p r c r' c' i (j + 1) in 
-	     assert (prod_until p r c i (j + 1)
-		     = prod_until (prod_until p r' c' i (j + 1)) r c r' c');
-	     admit())
-       else admit()
-  else admit()
+  if (i,j) = (r, c) 
+  || (i,j) = (r',c')
+  || i = Seq.length a 
+  then ()
+  else if j = Seq.length b 
+  then prod_until_extends p r c r' c' (i+1) 0
+  else if index p i j = Elim 
+  then prod_until_extends p r c r' c' i (j + 1)
+  else if Seq.index a i = Seq.index b j 
+  then let q = elim p i j in
+       prod_until_extends q r c r' c' i (j + 1)
+  else let q = set_neq p i j in
+       prod_until_extends q r c r' c' i (j + 1)
 
 
 val lemma_iter_extends: #a:_ -> #b:_ -> i:bound a -> j:bound b 
