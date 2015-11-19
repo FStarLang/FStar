@@ -330,22 +330,14 @@ let rec prod_until_extends #a #b p r c r' c' i j =
   else let q = set_neq p i j in
        prod_until_extends q r c r' c' i (j + 1)
 
-
-val lemma_iter_extends: #a:_ -> #b:_ -> i:bound a -> j:bound b 
-		      -> i':bound a -> j':bound b{prec_eq (i, j) (i',j')}
-		      -> p:prod a b entry
- 		      -> r:ix a -> c:ix b{prec_eq (r, c) (i,j)}
-		      -> Lemma 
+val lemma_iters_agree: #a:_ -> #b:_ -> i:bound a -> j:bound b -> i':bound a -> j':bound b{prec_eq (i,j) (i',j')}
+		     -> x:ix a -> y:ix b{precedes (x,y) (i,j)}
+		     -> Lemma
   (requires True)
-  (ensures (index (prod_until p i j 0 0) r c
-	   = index (iter_i_j a b i' j') r c))
-  (decreases %[(i' - i); (j' - j)])
-let rec lemma_iter_extends #a #b i j i' j' r c = 
-  if (i,j) = (i',j')
-  then ()
-  else if i=i'
-  then lemma_iter_extends i j i' (j' - 1) r c
-  else admit()
+  (ensures (index (iter_i_j a b i j) x y = index (iter_i_j a b i' j') x y))
+let lemma_iters_agree #a #b i j i' j' x y = 
+  prod_until_extends (init a b) i' j' i j 0 0;
+  prod_until_frame (iter_i_j a b i j) i' j' i j x y
   
 
 val make_sparse: #m:nat -> #n:nat -> mat m n bool -> mat m n entry
