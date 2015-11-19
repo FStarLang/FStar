@@ -515,7 +515,7 @@ let rec lemma_bob sa sb i j p q a lb = match lb with
 	 let p' = iter_i_j sa sb i j' in
 	 lemma_bob sa sb i j' p' q a tl
 
-val for_alice : list int -> list int -> Tot (list bool)
+val for_alice : list int -> list int -> Tot (list (list bool))
 let rec for_alice la lb = match la with 
   | [] -> []
   | a::rest -> 
@@ -535,15 +535,12 @@ let rec rows_from #a #b p i =
   else ith_row p i :: rows_from p (i + 1)
 
 assume val lemma_sub_sparse: #a:seq int -> #b:seq int -> r:bound a
-		      -> p:prod a b entry{prod_invariant p r 0}
+		      -> p:iter a b r 0 
 		      -> s:sparse a b
 		      -> i:ix a{i < r}
 		      -> Lemma
-  (ensures (ith_row p i = ith_row s i))
+  (ensures (ith_row p i = ith_row s i)) //easy
 
-assume val complete_row: sa:Seq.seq int -> sb:Seq.seq int -> i:ix sa 
-	       -> p:prod sa sb entry{prod_invariant p i 0}
-	       -> Tot (q:prod sa sb entry{prod_invariant q (i + 1) 0})
 
 assume val first_iteration_index: sa:seq int -> sb:seq int -> p:prod sa sb entry -> q:prod sa sb entry -> i:ix sa -> 
 	 Pure (bound sb * prod sa sb entry)
@@ -561,7 +558,7 @@ assume val first_iteration_index: sa:seq int -> sb:seq int -> p:prod sa sb entry
 			     /\ ith_row_until q i (fst jp) 0 = false))
 
 val lemma_alice: sa:Seq.seq int -> sb:Seq.seq int -> i:bound sa 
-	       -> p:prod sa sb entry{prod_invariant p i 0}
+	       -> p:iter sa sb i 0
 	       -> t:sparse sa sb 
 	       -> la:list int -> lb:list int -> Lemma
   (requires ((i < Seq.length sa ==> lb=row_as_list sb (Matrix2.row p i) 0)
@@ -572,7 +569,7 @@ let rec lemma_alice sa sb i p t la lb = match la with
   | [] -> ()
   | hd::tl -> 
     begin
-      let q = complete_row sa sb i p in
+      let q = iter_i_j sa sb (i + 1) 0 in 
       let j, p = first_iteration_index sa sb p q i in 
       lemma_bob sa sb i j p q hd lb;
       let lb', _ = check_bob hd lb in
