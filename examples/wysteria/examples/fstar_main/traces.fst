@@ -259,16 +259,73 @@ let rec prod_until_invariant a b p r c i j =
        else (set_neq_is_ok p i j;
 	     prod_until_invariant a b (set_neq p i j) r c i (j + 1))
 
+type iter a b i j = p:prod a b entry {prod_invariant p i j}
+
+val iter_i_j: a:seq int -> b:seq int -> i:bound a -> j:bound b -> Tot (iter a b i j)
+let iter_i_j a b i j = 
+    let x = prod_until (init a b) i j 0 0 in
+    prod_until_invariant a b (init a b) i j 0 0;
+    x
+
 type sparse (a:Seq.seq int) (b:Seq.seq int) = 
   p:prod a b entry{prod_invariant p (Seq.length a) (Seq.length b)}
 
-val sparse_product: a:Seq.seq int 
-                  -> b:Seq.seq int
-  		  -> Tot (sparse a b)
-let sparse_product a b = 
-  let x = prod_until (init a b) (Seq.length a) (Seq.length b) 0 0 in
-  prod_until_invariant a b (init a b) (Seq.length a) (Seq.length b) 0 0;
-  x
+let sparse_product a b = iter_i_j a b (Seq.length a) (Seq.length b)
+
+val prod_until_frame: #a:_ -> #b:_ -> p:prod a b entry 
+		      -> r:bound a -> c:bound b -> i:bound a -> j:bound b{prec_eq (i,j) (r,c)}
+		      -> i':ix a -> j':ix b{precedes (i',j') (i, j)}
+		      -> Lemma
+  (requires True) 
+  (ensures (index p i' j' = index (prod_until p r c i j) i' j'))
+  (decreases %[Seq.length a - i; Seq.length b - j])
+let rec prod_until_frame #a #b p r c i j i' j' = 
+  if (i,j) = (r,c) || i=Seq.length a then ()
+  else if j = Seq.length b   then prod_until_frame p r c (i + 1) 0 i' j'
+  else if index p i j = Elim then prod_until_frame p r c i (j + 1) i' j'
+  else if Seq.index a i = Seq.index b j 
+  then let q = elim p i j in 
+       prod_until_frame q r c i (j + 1) i' j'
+  else let q = set_neq p i j in 
+       prod_until_frame q r c i (j + 1) i' j'
+
+val prod_until_extends: #a:_ -> #b:_ -> p:prod a b entry 
+			-> r:bound a -> c:bound b 
+			-> r':bound a -> c':bound b{prec_eq (r',c') (r,c)}
+			-> i:bound a -> j:bound b{prec_eq (i,j) (r',c')}
+			-> Lemma
+  (requires True)
+  (ensures (prod_until p r c i j
+	    = prod_until (prod_until p r' c' i j) r c r' c'))
+  (decreases %[r' - i; Seq.length b - j])
+let rec prod_until_extends #a #b p r c r' c' i j = 
+  if (r,c) = (r',c') || (i,j)=(r',c') || i = Seq.length a then admit()
+  else if r=r' 
+  then if j < Seq.length b
+       then (let _ = prod_until_extends p r c r' c' i (j + 1) in 
+	     assert (prod_until p r c i (j + 1)
+		     = prod_until (prod_until p r' c' i (j + 1)) r c r' c');
+	     admit())
+       else admit()
+  else admit()
+
+
+val lemma_iter_extends: #a:_ -> #b:_ -> i:bound a -> j:bound b 
+		      -> i':bound a -> j':bound b{prec_eq (i, j) (i',j')}
+		      -> p:prod a b entry
+ 		      -> r:ix a -> c:ix b{prec_eq (r, c) (i,j)}
+		      -> Lemma 
+  (requires True)
+  (ensures (index (prod_until p i j 0 0) r c
+	   = index (iter_i_j a b i' j') r c))
+  (decreases %[(i' - i); (j' - j)])
+let rec lemma_iter_extends #a #b i j i' j' r c = 
+  if (i,j) = (i',j')
+  then ()
+  else if i=i'
+  then lemma_iter_extends i j i' (j' - 1) r c
+  else admit()
+  
 
 val make_sparse: #m:nat -> #n:nat -> mat m n bool -> mat m n entry
 	       -> i:nat{i <= m} -> j:nat{j <= n} -> Tot (mat m n entry)
@@ -313,28 +370,23 @@ let rec fast_is_sparse_full a b p q i j =
 // let remove (s:Seq.seq int) (i:ix s) = 
 //   Seq.append (Seq.slice s 0 i) (Seq.slice s (i + 1) (Seq.length s))
 
-val ith_row_until: #a:Seq.seq int -> #b:Seq.seq int -> p:prod a b entry -> i:ix a -> k:bound b -> j:bound b{j <= k} -> Tot bool
+val ith_row_until: #a:Seq.seq int -> #b:Seq.seq int -> p:prod a b entry -> i:ix a -> k:bound b -> j:bound b{j <= k} -> Tot (list bool)
   (decreases (k - j))
 let rec ith_row_until #a #b p i k j = 
-  if j = k                    then false
-  else if index p i j = Equal then true
+  if j = k                       then []
+  else if index p i j = Equal    then [true]
+  else if index p i j = NotEqual then false::ith_row_until p i k (j + 1)
   else ith_row_until p i k (j + 1)
 
-val lemma_ith_row: #a:Seq.seq int -> #b:Seq.seq int -> p:prod a b entry -> row:ix a -> stop_col:bound b -> cur:bound b{cur <= stop_col} 
-    -> w:ix b{cur <= w && w < stop_col} 
-    -> Lemma (requires (index p row w = Equal))
-	    (ensures (ith_row_until p row stop_col cur = true))
-	    (decreases (stop_col - cur))
-let rec lemma_ith_row #a #b p row stop_col cur w = 
-  if index p row cur <> Equal then lemma_ith_row p row stop_col (cur + 1) w
-
 let ith_row #a #b (p:prod a b entry) i = ith_row_until p i (Seq.length b) 0
-type seq 'a = Seq.seq 'a
 
-val proj_fst : #a:seq int -> list (int * ix a) -> Tot (list int)
-let rec proj_fst #a l = match l with
-  | [] -> []
-  | hd::tl -> fst hd :: proj_fst #a tl
+// val lemma_ith_row: #a:Seq.seq int -> #b:Seq.seq int -> p:prod a b entry -> row:ix a -> stop_col:bound b -> cur:bound b{cur <= stop_col} 
+//     -> w:ix b{cur <= w && w < stop_col} 
+//     -> Lemma (requires (index p row w = Equal))
+// 	    (ensures (ith_row_until p row stop_col cur = true))
+// 	    (decreases (stop_col - cur))
+// let rec lemma_ith_row #a #b p row stop_col cur w = 
+//   if index p row cur <> Equal then lemma_ith_row p row stop_col (cur + 1) w
 
 val row_as_list: sb:seq int -> r:seq entry{Seq.length r = Seq.length sb} -> i:bound sb -> Tot (list int)
   (decreases (Seq.length sb - i))
@@ -344,7 +396,9 @@ let rec row_as_list sb r i =
   else if Seq.index r i = Elim
   then row_as_list sb r (i + 1)
   else Seq.index sb i :: row_as_list sb r (i + 1)
- 
+
+
+va    
 val lemma_next_row_aux: #a:seq int -> #b:seq int -> i:ix a -> j:ix b  
       -> p:prod a b entry{prod_invariant p i j /\ index p i j = Unknown} 
       -> q:prod a b entry{prod_invariant q (i + 1) 0 /\ Seq.index a i = Seq.index b j}
