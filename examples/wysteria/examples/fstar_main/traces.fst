@@ -258,14 +258,14 @@ let rec prod_until_invariant a b p r c i j =
              prod_until_invariant a b (elim p i j) r c i (j + 1))
        else (set_neq_is_ok p i j;
 	     prod_until_invariant a b (set_neq p i j) r c i (j + 1))
-
-type iter a b i j = p:prod a b entry {prod_invariant p i j}
-
-val iter_i_j: a:seq int -> b:seq int -> i:bound a -> j:bound b -> Tot (iter a b i j)
+ 
+val iter_i_j: a:seq int -> b:seq int -> i:bound a -> j:bound b -> Tot (p:prod a b entry{prod_invariant p i j}) 
 let iter_i_j a b i j = 
     let x = prod_until (init a b) i j 0 0 in
     prod_until_invariant a b (init a b) i j 0 0;
     x
+
+type iter a b i j = p:prod a b entry {p = iter_i_j a b i j}
 
 type sparse (a:Seq.seq int) (b:Seq.seq int) = 
   p:prod a b entry{prod_invariant p (Seq.length a) (Seq.length b)}
@@ -338,7 +338,6 @@ val lemma_iters_agree: #a:_ -> #b:_ -> i:bound a -> j:bound b -> i':bound a -> j
 let lemma_iters_agree #a #b i j i' j' x y = 
   prod_until_extends (init a b) i' j' i j 0 0;
   prod_until_frame (iter_i_j a b i j) i' j' i j x y
-  
 
 val make_sparse: #m:nat -> #n:nat -> mat m n bool -> mat m n entry
 	       -> i:nat{i <= m} -> j:nat{j <= n} -> Tot (mat m n entry)
@@ -393,6 +392,14 @@ let rec ith_row_until #a #b p i k j =
 
 let ith_row #a #b (p:prod a b entry) i = ith_row_until p i (Seq.length b) 0
 
+val ith_row_from: #a:Seq.seq int -> #b:Seq.seq int -> p:prod a b entry -> i:ix a -> from:bound b -> Tot (list bool)
+  (decreases (Seq.length b - from))
+let rec ith_row_from #a #b p i from = 
+    if from=Seq.length b then []
+    else if index p i from=Equal then [true]
+    else if index p i from=NotEqual then false::ith_row_from p i (from + 1)
+    else ith_row_from p i (from + 1)
+
 // val lemma_ith_row: #a:Seq.seq int -> #b:Seq.seq int -> p:prod a b entry -> row:ix a -> stop_col:bound b -> cur:bound b{cur <= stop_col} 
 //     -> w:ix b{cur <= w && w < stop_col} 
 //     -> Lemma (requires (index p row w = Equal))
@@ -410,81 +417,103 @@ let rec row_as_list sb r i =
   then row_as_list sb r (i + 1)
   else Seq.index sb i :: row_as_list sb r (i + 1)
 
+val iter_extends: a:_ -> b:_ 
+		-> i':bound a -> j':bound b
+		-> i:bound a -> j:bound b {prec_eq (i',j') (i,j)}
+		-> Lemma
+  (requires True)
+  (ensures (iter_i_j a b i j
+	    = prod_until (iter_i_j a b i' j') i j i' j'))
+let iter_extends #a #b i' j' i j = 
+  prod_until_extends (init a b) i j i' j' 0 0
 
-va    
+val frame_iter: a:_ -> b:_ -> i:bound a -> j:bound b -> i':bound a -> j':bound b{prec_eq (i,j) (i',j')}
+		-> x:ix a -> y:ix b{precedes (x, y) (i, j)}
+  	        -> Lemma
+  (requires True) 
+  (ensures (index (iter_i_j a b i j) x y = index (iter_i_j a b i' j') x y))
+  [SMTPat (index (iter_i_j a b i j) x y);
+   SMTPat (index (iter_i_j a b i' j') x y)]
+let frame_iter a b i j i' j' x y = lemma_iters_agree #a #b i j i' j' x y
+
+val iter_step: a:seq int ->  b:seq int -> i:ix a -> j:ix b -> i':bound a -> j':bound b{precedes (i, j) (i', j')}
+      -> p:iter a b i j{index p i j = Unknown /\ Seq.index a i = Seq.index b j}
+      -> q:iter a b i' j'
+      -> Lemma 
+  (requires True)
+  (ensures (index q i j = Equal))
+let iter_step a b i j i' j' p q = 
+  let r = iter_i_j a b i (j + 1) in 
+  iter_extends #a #b i j i (j + 1);
+  cut (index r i j == Equal)
+
 val lemma_next_row_aux: #a:seq int -> #b:seq int -> i:ix a -> j:ix b  
-      -> p:prod a b entry{prod_invariant p i j /\ index p i j = Unknown} 
-      -> q:prod a b entry{prod_invariant q (i + 1) 0 /\ Seq.index a i = Seq.index b j}
-      -> r:prod a b entry{prod_invariant p i (j + 1)}
+      -> p:iter a b i j{index p i j = Unknown} 
+      -> q:iter a b (i + 1) 0{Seq.index a i = Seq.index b j}
       -> Lemma 
   (requires True)
   (ensures (index q i j = Equal 
-	    /\ (i + 1 < Seq.length a
-	       ==> row_as_list b (Matrix2.row q (i + 1)) j
-  		   = Cons.tl (row_as_list b (Matrix2.row p i) j))))
-let lemma_next_row_aux #a #b i j p q r = ()
+	    /\ (i + 1 < Seq.length a 
+ 	       ==> (index q (i + 1) j = Elim
+  	           /\ row_as_list b (Matrix2.row q (i + 1)) j
+  	    	      = Cons.tl (row_as_list b (Matrix2.row p i) j)))))
+let lemma_next_row_aux #a #b i j p q = 
+    iter_step a b i j (i + 1) 0 p q;
+    admit() //TODO: REMOVE ... boring
 
-val lemma_next_row: #a:seq int -> #b:seq int -> i:ix a -> j:ix b  
-      -> p:prod a b entry{prod_invariant p i j /\ index p i j = Unknown} 
-      -> q:prod a b entry{prod_invariant q (i + 1) 0 /\ Seq.index a i = Seq.index b j}
-      -> Lemma 
-  (requires True)
-  (ensures (index q i j = Equal 
-	    /\ (i + 1 < Seq.length a
-	       ==> row_as_list b (Matrix2.row q (i + 1)) j
-  		   = Cons.tl (row_as_list b (Matrix2.row p i) j))))
-let lemma_next_row #a #b i j p q  = 
-  let r = magic () in //TODO: remove this
-  lemma_next_row_aux i j p q r
 
-assume val advance:  sa:Seq.seq int -> sb:Seq.seq int -> i:ix sa -> j:ix sb
-	    -> p:prod sa sb entry{prod_invariant p i j}
-	    -> q:prod sa sb entry{prod_invariant q (i + 1) 0}
-	    -> lb:list int{is_Cons lb}
-	    -> Pure (bound sb * prod sa sb entry)
-  (requires (lb=row_as_list sb (Matrix2.row p i) j /\ Seq.index sa i <> Seq.index sb j))
-  (ensures (fun (r:(bound sb * prod sa sb entry)) -> 
-	           fst r > j
-	         /\ prod_invariant (snd r) i (fst r)
-		 /\ ith_row_until (snd r) i (fst r) 0 = false
-		 /\ ith_row_until q i (fst r) 0 = false
-		 /\ (fst r < Seq.length sb ==> index (snd r) i (fst r) <> Elim)
-		 /\ Cons.tl lb=row_as_list sb (Matrix2.row (snd r) i) (fst r)
-		 /\ (i + 1 < Seq.length sa 
-		     ==> row_as_list sb (Matrix2.row q (i + 1)) j
-		         = Cons.hd lb::row_as_list sb (Matrix2.row q (i + 1)) (fst r))))
+// val advance:  a:Seq.seq int -> b:Seq.seq int -> i:ix a -> j:ix b
+// 	    -> p:iter a b i j
+// 	    -> q:iter a b (i + 1) 0
+// 	    -> lb:list int{is_Cons lb}
+// 	    -> Pure (bound b)
+//   (requires (lb=row_as_list sb (Matrix2.row p i) j 
+// 	    /\ Seq.index sa i <> Seq.index sb j))
+//   (ensures (fun j' -> 
+//   	         j < j'
+// 	      /\  (j' < Seq.length sb ==> index (iter_i_j a b i j') i j' = Unknown)
+// 	      /\
+// 	           fst r > j
+// 	         /\ prod_invariant (snd r) i (fst r)
+// 		 /\ ith_row_until (snd r) i (fst r) 0 = false
+// 		 /\ ith_row_until q i (fst r) 0 = false
+// 		 /\ (fst r < Seq.length sb ==> index (snd r) i (fst r) <> Elim)
+// 		 /\ Cons.tl lb=row_as_list sb (Matrix2.row (snd r) i) (fst r)
+// 		 /\ (i + 1 < Seq.length sa 
+// 		     ==> row_as_list sb (Matrix2.row q (i + 1)) j
+// `		         = Cons.hd lb::row_as_list sb (Matrix2.row q (i + 1)) (fst r))))
 
-val check_bob: a:int -> lb:list int -> Tot (list int * bool)
+val check_bob: a:int -> lb:list int -> Tot (list int * list bool)
 let rec check_bob a lb =
   match lb with
-   | [] -> [], false
+   | [] -> [], []
    | hd::tl ->
      if hd=a
-     then tl, true
+     then tl, [true]
      else let tl, r = check_bob a tl in
-          hd::tl, r
+          hd::tl, false::r
 
 val lemma_bob: sa:Seq.seq int -> sb:Seq.seq int -> i:ix sa -> j:bound sb 
-	       -> p:prod sa sb entry{prod_invariant p i j}
-	       -> q:prod sa sb entry{prod_invariant q (i + 1) 0}
+	       -> p:iter sa sb i j
+	       -> q:iter sa sb (i + 1) 0
 	       -> a:int -> lb:list int -> Lemma
   (requires (lb=row_as_list sb (Matrix2.row p i) j
 	     /\ a=Seq.index sa i
-	     /\ ith_row_until p i j 0 = false
-	     /\ ith_row_until q i j 0 = false
-	     /\ (j < Seq.length sb ==> index p i j <> Elim)))
+	     /\ (lb=[] ==> j=Seq.length sb)
+	     /\ (j < Seq.length sb ==> index p i j=Unknown)))
   (ensures (let br = check_bob a lb in
 	    (i + 1 < Seq.length sa  
 	     ==>  fst br = row_as_list sb (Matrix2.row q (i + 1)) j)
-          /\ snd br = ith_row q i))
+           /\ snd br = ith_row_from q i j))
   (decreases lb)
 let rec lemma_bob sa sb i j p q a lb = match lb with 
   | [] -> ()
-  | hd::tl ->  
+  | hd::tl ->
     if hd=a
-    then (lemma_next_row i j p q; 
-	  lemma_ith_row q i (Seq.length sb) 0 j)
-    else (let j', p' = advance sa sb i j p q lb in 
+    then lemma_next_row_aux i j p q
+    else admit()
+
+(let j', p' = advance sa sb i j p q lb in 
 	  lemma_bob sa sb i j' p' q a tl)
 
 val for_alice : list int -> list int -> Tot (list bool)
