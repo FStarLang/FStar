@@ -414,40 +414,55 @@ let rec row_as_list sb r i =
   else if Seq.index r i = Elim
   then row_as_list sb r (i + 1)
   else Seq.index sb i :: row_as_list sb r (i + 1)
-
-
-val lemma_next_row: #a:seq int -> #b:seq int -> i:ix a{i + 1 < Seq.length a} -> j:ix b 
-      -> p:prod a b entry{prod_invariant p i j} 
-      -> q:prod a b entry{prod_invariant q i (j + 1) /\ index q i j = Equal} 
-      -> Lemma
+ 
+val lemma_next_row_aux: #a:seq int -> #b:seq int -> i:ix a -> j:ix b  
+      -> p:prod a b entry{prod_invariant p i j /\ index p i j = Unknown} 
+      -> q:prod a b entry{prod_invariant q (i + 1) 0 /\ Seq.index a i = Seq.index b j}
+      -> r:prod a b entry{prod_invariant p i (j + 1)}
+      -> Lemma 
   (requires True)
-  (ensures (row_as_list b (Matrix2.row q (i + 1)) j
- 	    = Cons.tl (row_as_list b (Matrix2.row p i) j)))
-let lemma_next_row #a #b i j p q = ()
+  (ensures (index q i j = Equal 
+	    /\ (i + 1 < Seq.length a
+	       ==> row_as_list b (Matrix2.row q (i + 1)) j
+  		   = Cons.tl (row_as_list b (Matrix2.row p i) j))))
+let lemma_next_row_aux #a #b i j p q r = ()
 
-val lemma_bob: sa:Seq.seq int -> sb:Seq.seq int -> p:sparse sa sb -> i:ix sa -> j:bound sb 
+val lemma_next_row: #a:seq int -> #b:seq int -> i:ix a -> j:ix b  
+      -> p:prod a b entry{prod_invariant p i j /\ index p i j = Unknown} 
+      -> q:prod a b entry{prod_invariant q (i + 1) 0 /\ Seq.index a i = Seq.index b j}
+      -> Lemma 
+  (requires True)
+  (ensures (index q i j = Equal 
+	    /\ (i + 1 < Seq.length a
+	       ==> row_as_list b (Matrix2.row q (i + 1)) j
+  		   = Cons.tl (row_as_list b (Matrix2.row p i) j))))
+let lemma_next_row #a #b i j p q  = 
+  let r = magic () in 
+  lemma_next_row_aux i j p q r
+
+val lemma_bob: sa:Seq.seq int -> sb:Seq.seq int -> i:ix sa -> j:bound sb 
+	       -> p:prod sa sb entry{prod_invariant p i j}
+	       -> q:prod sa sb entry{prod_invariant q (i + 1) 0}
 	       -> a:int -> lb:list int -> Lemma
   (requires (lb=row_as_list sb (Matrix2.row p i) j
 	     /\ a=Seq.index sa i
-	     /\ ith_row_until p i j 0 = false)
-	     /\ (j < Seq.length sb ==> index p i j <> Elim))
+	     /\ ith_row_until p i j 0 = false
+	     /\ ith_row_until q i j 0 = false
+	     /\ (j < Seq.length sb ==> index p i j <> Elim)))
   (ensures (let br = check_bob a lb in
-	    (i + 1 < Seq.length sa 
-	     ==>  fst br = row_as_list sb (Matrix2.row p (i + 1)) j)
-          /\ snd br = ith_row p i))
+	    (i + 1 < Seq.length sa  
+	     ==>  fst br = row_as_list sb (Matrix2.row q (i + 1)) j)
+          /\ snd br = ith_row q i))
   (decreases lb)
-let rec lemma_bob sa sb p i j a lb = match lb with 
+let rec lemma_bob sa sb i j p q a lb = match lb with 
   | [] -> ()
   | hd::tl ->  
-    assert (hd = Seq.index sb j);
     if hd=a
-    then (assert (index p i j = Equal); 
-	  lemma_ith_row p i (Seq.length sb) 0 j;
-          assert (ith_row p i = true);
-          admit())
-    else (assert (index p i j = NotEqual);
- 	  admit())
-  
+    then (lemma_next_row i j p q;
+	  lemma_ith_row q i (Seq.length sb) 0 j)
+    else ( // assert (index q i j = NotEqual);
+  	  admit())
+   
   
 
 
