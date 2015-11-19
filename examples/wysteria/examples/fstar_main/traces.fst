@@ -437,8 +437,24 @@ val lemma_next_row: #a:seq int -> #b:seq int -> i:ix a -> j:ix b
 	       ==> row_as_list b (Matrix2.row q (i + 1)) j
   		   = Cons.tl (row_as_list b (Matrix2.row p i) j))))
 let lemma_next_row #a #b i j p q  = 
-  let r = magic () in 
+  let r = magic () in //TODO: remove this
   lemma_next_row_aux i j p q r
+
+assume val advance:  sa:Seq.seq int -> sb:Seq.seq int -> i:ix sa -> j:ix sb
+	    -> p:prod sa sb entry{prod_invariant p i j}
+	    -> q:prod sa sb entry{prod_invariant q (i + 1) 0}
+	    -> lb:list int{is_Cons lb}
+	    -> Pure (bound sb * prod sa sb entry)
+  (requires (lb=row_as_list sb (Matrix2.row p i) j /\ Seq.index sa i <> Seq.index sb j))
+  (ensures (fun (r:(bound sb * prod sa sb entry)) -> 
+	           fst r > j
+	         /\ prod_invariant (snd r) i (fst r)
+		 /\ ith_row_until (snd r) i (fst r) 0 = false
+		 /\ (fst r < Seq.length sb ==> index (snd r) i (fst r) <> Elim)
+		 /\ Cons.tl lb=row_as_list sb (Matrix2.row (snd r) i) (fst r)
+		 /\ (i + 1 < Seq.length sa 
+		     ==> row_as_list sb (Matrix2.row q (i + 1)) j
+		         = Cons.hd lb::row_as_list sb (Matrix2.row q (i + 1)) (fst r))))
 
 val lemma_bob: sa:Seq.seq int -> sb:Seq.seq int -> i:ix sa -> j:bound sb 
 	       -> p:prod sa sb entry{prod_invariant p i j}
@@ -458,121 +474,17 @@ let rec lemma_bob sa sb i j p q a lb = match lb with
   | [] -> ()
   | hd::tl ->  
     if hd=a
-    then (lemma_next_row i j p q;
+    then (lemma_next_row i j p q; 
 	  lemma_ith_row q i (Seq.length sb) 0 j)
-    else ( // assert (index q i j = NotEqual);
-  	  admit())
-   
-  
+    else (let j', p' = advance sa sb i j p q lb in 
+	  assume (ith_row_until q i j' 0 = false);
+	  lemma_bob sa sb i j' p' q a tl)
 
-
-  if k = Seq.length sb 
-  then B p sb false
-  else if Seq.index sb k = a //found it
-  then let p = elim p i j in
-       let sb = remove sb k in 
-       B p sb true
-  else let p, j' = move_index_to p sb (k + 1) in 
-       check_bob oa ob p i j' a sb (k + 1)
-
-int -> sb:Seq.seq (int * bool) -> i:nat{i<=Seq.length sb} -> Tot (Seq.seq (int * bool) * bool)
- (decreases (Seq.length sb - i))
-let rec check_bob a sb i = 
-  if i = Seq.length sb 
-  then sb, false
-  else let b, elim = Seq.index sb i in 
-       if elim then check_bob a sb (i + 1)
-       else if a = b 
-       then elim_bob sb i, true
-       else check_bob a sb (i + 1)
-
-val for_alice : sa:Seq.seq int -> sb:Seq.seq (int * bool) -> i:nat{i<=Seq.length sa} -> Tot (list bool)
- (decreases (Seq.length sa - i))
-let rec for_alice sa sb i =
-  if i = Seq.length sa 
-  then []
-  else let a = Seq.index sa i in 
-       let sb, r = check_bob a sb 0 in 
-       r::for_alice sa sb (i + 1)
-
-
-
-
-
-val elim_bob: s:Seq.seq (int * bool) -> i:bound s -> Tot (s':Seq.seq (int * bool){Seq.length s = Seq.length s'})
-  (decreases (Seq.length s - i))
-let rec elim_bob s i = 
-  if i = Seq.length s 
-  then s 
-  else let x, _ = Seq.index s i in 
-       let s = Seq.upd s i (x, false) in 
-       elim_bob s (i + 1)
-
-val lemma_elim_bob : s:Seq.seq (int * bool) -> i:bound s -> j:ix s -> Lemma
-  (requires True)
-  (ensures ( (j < i ==> Seq.index (elim_bob s i) j = Seq.index s j)
-           /\ (i <= j ==> Seq.index (elim_bob s i) j = (fst (Seq.index s j), false)))) 
-  (decreases (Seq.length s - i))
-  [SMTPat (Seq.index (elim_bob s i) j)]
-let rec lemma_elim_bob s i j = 
-  if i = Seq.length s 
-  then ()
-  else let s' = Seq.upd s i (fst (Seq.index s i), false) in 
-       lemma_elim_bob s' (i + 1) j
-
-val check_bob : int -> sb:Seq.seq (int * bool) -> i:nat{i<=Seq.length sb} -> Tot (Seq.seq (int * bool) * bool)
- (decreases (Seq.length sb - i))
-let rec check_bob a sb i = 
-  if i = Seq.length sb 
-  then sb, false
-  else let b, elim = Seq.index sb i in 
-       if elim then check_bob a sb (i + 1)
-       else if a = b 
-       then elim_bob sb i, true
-       else check_bob a sb (i + 1)
-
-val for_alice : sa:Seq.seq int -> sb:Seq.seq (int * bool) -> i:nat{i<=Seq.length sa} -> Tot (list bool)
- (decreases (Seq.length sa - i))
-let rec for_alice sa sb i =
-  if i = Seq.length sa 
-  then []
-  else let a = Seq.index sa i in 
-       let sb, r = check_bob a sb 0 in 
-       r::for_alice sa sb (i + 1)
-
-
-assume val sparse_jth_row: a:seq int -> b:seq int -> s:sparse a b -> r:ix a -> Tot bool
-
-val lemma_bob: a:Seq.seq int
-            -> b:Seq.seq (int * bool) 
-            -> ia:ix sa
-            -> jb:bound sb 
-            -> p:sparse a (fst_bob b)
-            -> Lemma
-              (requires (elims_correspond 
-              (let b = fst (check_bob (Seq.index a ia) b) in 
-               let r = snd (check_bob (Seq.index a ia) b) in 
-               r = 
-val lemma_alice: a:Seq.seq int -> b:Seq.seq int -> p:prod a b 
-             -> 
-let fast_prod
-
-//main lemma
-// for_alice oa ob sa sb 0  
-// = sparse_as_list (fast_product oa ob (Matrix2.create _ _ 0) 0 0)
+ 
 
 val for_alice : list int -> list int -> Tot (list bool)
-val check_bob : int -> l:list int -> Tot (list int * bool)
 let rec for_alice la lb = match la with 
   | [] -> []
   | a::rest -> 
     let lb, r = check_bob a lb in 
     r::for_alice rest lb
-    
-and check_bob a lb = match lb with 
-  | [] -> [], false
-  | b::rest -> 
-    if a = b 
-    then rest, true
-    else let rest, r = check_bob a rest in 
-         b::rest, r
