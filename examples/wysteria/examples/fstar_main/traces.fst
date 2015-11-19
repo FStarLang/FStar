@@ -384,34 +384,70 @@ assume val lemma_eliminate_nil: #a:seq int -> #b:seq int -> p:sparse a b -> i:bo
     Lemma (requires (eliminate p i j = Some []))
 	  (ensures (j = Seq.length b))
 
-val ith_row_bool: #a:Seq.seq int -> #b:Seq.seq int -> p:prod a b entry -> i:ix a -> j:bound b -> Tot bool
-  (decreases (Seq.length b - j))
-let rec ith_row_bool #a #b p i j = 
-  if j = Seq.length b         then false
+val ith_row_until: #a:Seq.seq int -> #b:Seq.seq int -> p:prod a b entry -> i:ix a -> k:bound b -> j:bound b{j <= k} -> Tot bool
+  (decreases (k - j))
+let rec ith_row_until #a #b p i k j = 
+  if j = k                    then false
   else if index p i j = Equal then true
-  else ith_row_bool p i (j + 1)
+  else ith_row_until p i k (j + 1)
+
+val lemma_ith_row: #a:Seq.seq int -> #b:Seq.seq int -> p:prod a b entry -> row:ix a -> stop_col:bound b -> cur:bound b{cur <= stop_col} 
+    -> w:ix b{cur <= w && w < stop_col} 
+    -> Lemma (requires (index p row w = Equal))
+	    (ensures (ith_row_until p row stop_col cur = true))
+	    (decreases (stop_col - cur))
+let rec lemma_ith_row #a #b p row stop_col cur w = 
+  if index p row cur <> Equal then lemma_ith_row p row stop_col (cur + 1) w
+
+let ith_row #a #b (p:prod a b entry) i = ith_row_until p i (Seq.length b) 0
 
 val proj_fst : #a:seq int -> list (int * ix a) -> Tot (list int)
 let rec proj_fst #a l = match l with
   | [] -> []
   | hd::tl -> fst hd :: proj_fst #a tl
 
-val lemma_bob: sa:Seq.seq int -> sb:Seq.seq int -> p:sparse sa sb -> i:ix sa -> j:ix sb 
+val row_as_list: sb:seq int -> r:seq entry{Seq.length r = Seq.length sb} -> i:bound sb -> Tot (list int)
+  (decreases (Seq.length sb - i))
+let rec row_as_list sb r i = 
+  if i = Seq.length sb
+  then []
+  else if Seq.index r i = Elim
+  then row_as_list sb r (i + 1)
+  else Seq.index sb i :: row_as_list sb r (i + 1)
+
+
+val lemma_next_row: #a:seq int -> #b:seq int -> i:ix a{i + 1 < Seq.length a} -> j:ix b 
+      -> p:prod a b entry{prod_invariant p i j} 
+      -> q:prod a b entry{prod_invariant q i (j + 1) /\ index q i j = Equal} 
+      -> Lemma
+  (requires True)
+  (ensures (row_as_list b (Matrix2.row q (i + 1)) j
+ 	    = Cons.tl (row_as_list b (Matrix2.row p i) j)))
+let lemma_next_row #a #b i j p q = ()
+
+val lemma_bob: sa:Seq.seq int -> sb:Seq.seq int -> p:sparse sa sb -> i:ix sa -> j:bound sb 
 	       -> a:int -> lb:list int -> Lemma
-  (requires (is_Some(eliminate p i j)
-	    /\ proj_fst #sb (Some.v (eliminate p i j)) = lb 
-	    /\ a=Seq.index sa i))
-  (ensures (let br = check_bob a lb in 
-	    is_Some (eliminate p (i + 1) j)
-	  /\ fst br = proj_fst #sb (Some.v (eliminate p (i + 1) j))
-          /\ snd br = ith_row_bool p i 0))
+  (requires (lb=row_as_list sb (Matrix2.row p i) j
+	     /\ a=Seq.index sa i
+	     /\ ith_row_until p i j 0 = false)
+	     /\ (j < Seq.length sb ==> index p i j <> Elim))
+  (ensures (let br = check_bob a lb in
+	    (i + 1 < Seq.length sa 
+	     ==>  fst br = row_as_list sb (Matrix2.row p (i + 1)) j)
+          /\ snd br = ith_row p i))
   (decreases lb)
 let rec lemma_bob sa sb p i j a lb = match lb with 
-  | [] -> 
-    lemma_eliminate_nil p i j;
-    assert (j = Seq.length sb);
-    admit()
-  | _ -> admit()
+  | [] -> ()
+  | hd::tl ->  
+    assert (hd = Seq.index sb j);
+    if hd=a
+    then (assert (index p i j = Equal); 
+	  lemma_ith_row p i (Seq.length sb) 0 j;
+          assert (ith_row p i = true);
+          admit())
+    else (assert (index p i j = NotEqual);
+ 	  admit())
+  
   
 
 
