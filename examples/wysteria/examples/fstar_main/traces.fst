@@ -177,76 +177,45 @@ let elim_is_ok a b p i j =
   cut (witness_row i);
   cut (witness_col j)
 
+let set_neq (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b entry) (i:ix a) (j:ix b) = 
+  Matrix2.upd p i j NotEqual
+
+val set_neq_is_ok:  #a:Seq.seq int -> #b:Seq.seq int -> p:prod a b entry -> i:ix a -> j:ix b -> Lemma
+  (requires (prod_invariant p i j
+            /\ index p i j = Unknown
+            /\ Seq.index a i <> Seq.index b j))
+  (ensures (prod_invariant (set_neq p i j) i (j + 1)))
+let set_neq_is_ok a b p i j = ()
+
 val fast_product: a:Seq.seq int 
                 -> b:Seq.seq int
-                -> out:prod a b nat  
+                -> out:prod a b entry
                 -> i:nat{i <= Seq.length a}
                 -> j:nat{j <= Seq.length b}
-                -> Tot (prod a b nat)
+                -> Tot (prod a b entry)
   (decreases %[(Seq.length a - i); (Seq.length b - j)])                
 let rec fast_product a b out i j = 
   if i = Seq.length a then out
   else if j = Seq.length b then fast_product a b out (i + 1) 0
-  else if index out i j = 2 then fast_product a b out i (j + 1) //skip, we've already eliminated it
-  else if Seq.index a i = Seq.index b j
-       then fast_product a b (elim out i j) i (j + 1)
-       else fast_product a b out i (j + 1)
+  else if index out i j = Elim then fast_product a b out i (j + 1) //skip, we've already eliminated it
+  else if Seq.index a i = Seq.index b j 
+       then fast_product a b (elim out i j) (i + 1) 0
+       else fast_product a b (set_neq out i j) i (j + 1)
 
-
-
-  assert (prefix_correct q i (j + 1))
-
-  if j + 1 < Seq.length b
-  then assert (index q i (j + 1) = 2)
-
-opaque type no_ones (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b nat) (i:ix a) (j:ix b) = 
-    (forall (k:ix b). {:pattern (index p i k)} index p i k <> 1)
-  /\ (forall (k:ix a). {:pattern (index p k j)} index p k j <> 1)
-
-opaque type zero_is_ok (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b nat) (i:ix a) (j:ix b) =
-  index p i j = 0 ==> no_ones p i j
-  //if we have a 0 somewhere, then
-  //we don't have a 1 anywhere else in the same row or column
-   
-opaque type two_is_ok (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b nat) (i:ix a) (j:ix b) =
-  index p i j = 2 ==> //if we have a 2 somewhere, then
-           //we have a 1 in a previous column of the same row
-          ((exists (c:ix b{c <= j}).{:pattern (witness c)} witness c /\ index p i c = 1)  
-           //or, we have a 1 in a previous row of the same column
-         \/ (exists (r:ix a{r <= i}).{:pattern (witness r)} witness r /\ index p r j = 1)) 
-
-
-
-opaque type zero_or_two_from_weak (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b nat) (i:bound a) (j:bound b) = 
-   forall (i':ix a) (j':ix b).{:pattern (index p i' j')} 
-     (precedes (i, j) (i', j') \/ (i,j)=(i',j'))
-     ==> ((index p i' j' = 0 \/ index p i' j' = 2)) //every element from i,j onwards is 0 or 2
-
-
-opaque type prefix_correct_weak (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b nat) (i:bound a) (j:bound b) = 
-  forall (i':ix a) (j':ix b).{:pattern (index p i' j')}
-    precedes (i',j') (i,j) ==>
-         (if index p i' j' = 0
-          then (Seq.index a i' <> Seq.index b j')// /\ no_ones p i' j')
-          else if index p i' j' = 1
-          then Seq.index a i' = Seq.index b j'
-          else (index p i' j' = 2 /\ two_is_ok p i' j'))
-
-
- 
-val fast_product_correct: a:Seq.seq int -> b:Seq.seq int -> p:prod a b nat 
+val fast_product_correct: a:Seq.seq int -> b:Seq.seq int -> p:prod a b entry
                       -> i:nat{i <= Seq.length a} -> j:nat{j <= Seq.length b} -> Lemma
-  (requires (prefix_correct a b i j p /\ zero_or_two_from i j p)) 
-  (ensures (prefix_correct a b (Seq.length a) (Seq.length b) (fast_product a b p i j)))
+  (requires (prod_invariant p i j))
+  (ensures (prod_invariant (fast_product a b p i j) (Seq.length a) (Seq.length b)))
   (decreases %[(Seq.length a - i); (Seq.length b - j)])
 let rec fast_product_correct a b p i j = 
   if i = Seq.length a then ()
   else if j = Seq.length b then fast_product_correct a b p (i + 1) 0
-  else if index p i j = 2 then fast_product_correct a b p i (j + 1)
+  else if index p i j = Elim then fast_product_correct a b p i (j + 1)
   else if Seq.index a i = Seq.index b j
-       then (aux_elim_is_correct a b p i j;
-             fast_product_correct a b (elim p i j) i (j + 1))
-       else fast_product_correct a b p i (j + 1)
+       then (elim_is_ok p i j;
+             fast_product_correct a b (elim p i j) (i + 1) 0)
+       else (set_neq_is_ok p i j;
+	    fast_product_correct a b (set_neq p i j) i (j + 1))
 
 val make_sparse: #m:nat -> #n:nat -> mat m n bool -> mat m n nat
 	       -> i:nat{i <= m} -> j:nat{j <= n} -> Tot (mat m n nat)
