@@ -264,126 +264,6 @@ type sparse (a:Seq.seq int) (b:Seq.seq int) =
 //   Seq.append (Seq.slice s 0 i) (Seq.slice s (i + 1) (Seq.length s))
 
 
-val map_fst_aux : s:Seq.seq (int * bool) 
-              -> out:Seq.seq int{Seq.length out = Seq.length s}
-              ->   i:bound s
-              -> Tot (t:Seq.seq int{Seq.length t = Seq.length s})
-  (decreases (Seq.length s - i))
-let rec map_fst_aux s out i = 
-  if i = Seq.length s then out
-  else let out = Seq.upd out i (fst (Seq.index s i)) in
-       map_fst_aux s out (i + 1)
-
-val lemma_map_fst_aux: s:Seq.seq (int * bool) 
-                   -> out: Seq.seq int{Seq.length s = Seq.length out}
-                   ->   i:bound s 
-		  -> Lemma
-  (requires (forall (j:nat{j < i}). Seq.index out j = fst (Seq.index s j)))
-  (ensures (forall (j:ix out). Seq.index (map_fst_aux s out i) j = fst (Seq.index s j)))
-  (decreases (Seq.length s - i))
-let rec lemma_map_fst_aux s out i = 
-  if i = Seq.length s then ()
-  else let out = Seq.upd out i (fst (Seq.index s i)) in
-       lemma_map_fst_aux s out (i + 1)
-
-let map_fst s = map_fst_aux s (Seq.create (Seq.length s) 0) 0
-val lemma_map_fst: s:Seq.seq (int * bool) -> j:ix s -> Lemma
-  (requires True)
-  (ensures (Seq.index (map_fst s) j = fst (Seq.index s j)))
-  [SMTPat (Seq.index (map_fst s) j)]
-let lemma_map_fst s j = lemma_map_fst_aux s (Seq.create (Seq.length s) 0) 0
-
-type seq 'a = Seq.seq 'a
-val filter_snd_aux: s:seq (int * bool) -> i:bound s -> Tot (list (int * ix s))
-  (decreases (Seq.length s - i))
-let rec filter_snd_aux s i = 
-  if i=Seq.length s 
-  then []
-  else let (x, keep) = Seq.index s i in 
-       if keep then (x, i) :: filter_snd_aux s (i + 1)
-       else  filter_snd_aux s (i + 1)
-
-val filter_snd : s:seq (int * bool) -> Tot (list (int * ix s))
-let filter_snd s = filter_snd_aux s 0
-
-val mark_elim : a:seq int -> s:seq (int * bool){map_fst s = a} -> i:ix a -> Tot (s:seq (int * bool){map_fst s = a})
-let mark_elim a s i = 
-  let r = Seq.upd s i (fst (Seq.index s i), false) in 
-  cut (Seq.Eq (map_fst r) a);
-  r
-
-val check_bob: a:int -> lb:list int -> Tot (list int * bool)
-let rec check_bob a lb =
-  match lb with
-   | [] -> [], false
-   | hd::tl -> 
-     if hd=a
-     then tl, true
-     else let tl, r = check_bob a tl in
-	  hd::tl, r
- 
-(* 
-  Computes what remains of bob's set after m iterations of alice's loop
-   ... only the elements in the resulting sequence with the flag set to true
-*) 
-val eliminate_rows: #a:Seq.seq int -> #b:Seq.seq int -> p:sparse a b 
-		   -> m:bound a -> i:bound a{i <= m} -> j:bound b 
- 		   -> lb:seq (int * bool){map_fst lb = b}
-  	           -> Tot (x:seq (int * bool){map_fst x = b})
-  (decreases %[(m - i); (Seq.length b - j)])
-let rec eliminate_rows #a #b p m i j lb = 
-  if i = m 
-  then lb
-  else if j = Seq.length b then eliminate_rows p m (i + 1) 0 lb
-  else if index p i j=Elim then eliminate_rows p m i (j + 1) (mark_elim b lb j)
-  else eliminate_rows p m i (j + 1) lb
-
-(* 
-  Given Bob's set lb in the mth round, 
-  this computes what remains of Bob's set after j abstract iterations of his loop.
-*)
-val eliminate_col: #b:Seq.seq int -> lb:seq (int * bool){map_fst lb = b} -> n:bound b -> j:bound b{j <= n} -> Tot (option (list (int * ix b)))
-  (decreases (n - j))
-let rec eliminate_col #b lb n j = 
-  if j = Seq.length b                 //no more iterations left
-  then Some []
-  else if j=n && snd (Seq.index lb j) //we've reached the spot; the element had better be still retained by Bob
-  then Some (filter_snd lb)
-  else if j < n 
-  then eliminate_col #b (mark_elim b lb j) n (j + 1)
-  else None
-
-assume val lemma_filter_snd_cons: lb:seq (int * bool) -> j:ix lb -> Lemma
-  (requires (snd (Seq.index lb j)))
-  (ensures (is_Cons (filter_snd lb)))
-
-val lemma_eliminate_col_nil: #b:seq int -> lb:seq (int * bool){map_fst lb =b} -> n:bound b -> j:bound b{j <= n} -> 
-    Lemma (requires (eliminate_col #b lb n j = Some []))
-	  (ensures (n = Seq.length b))
-	  (decreases (n - j))
-let rec lemma_eliminate_col_nil #b lb n j = 
-  if j = Seq.length b
-  then ()
-  else if j=n && snd (Seq.index lb j)
-  then lemma_filter_snd_cons lb j
-  else if j < n
-  then lemma_eliminate_col_nil #b (mark_elim b lb j) n (j + 1)
-  else ()
-
-assume val zip_with_true : s:seq int -> Tot (seq (int * bool))
-assume val lemma_zip_with_true : s:seq int -> Lemma 
-       (requires True)
-       (ensures  ((map_fst (zip_with_true s) = s 
-		 /\ (forall (i:ix s).{:pattern (Seq.index (zip_with_true s) i)} snd (Seq.index (zip_with_true s) i) = true))))
-       [SMTPat (zip_with_true s)]
-  
-let eliminate #a #b (p:sparse a b) (m:bound a) (n:bound b)  =
-  eliminate_col #b (eliminate_rows p m 0 0 (zip_with_true b)) n 0
-
-assume val lemma_eliminate_nil: #a:seq int -> #b:seq int -> p:sparse a b -> i:bound a -> j:bound b -> 
-    Lemma (requires (eliminate p i j = Some []))
-	  (ensures (j = Seq.length b))
-
 val ith_row_until: #a:Seq.seq int -> #b:Seq.seq int -> p:prod a b entry -> i:ix a -> k:bound b -> j:bound b{j <= k} -> Tot bool
   (decreases (k - j))
 let rec ith_row_until #a #b p i k j = 
@@ -400,6 +280,7 @@ let rec lemma_ith_row #a #b p row stop_col cur w =
   if index p row cur <> Equal then lemma_ith_row p row stop_col (cur + 1) w
 
 let ith_row #a #b (p:prod a b entry) i = ith_row_until p i (Seq.length b) 0
+type seq 'a = Seq.seq 'a
 
 val proj_fst : #a:seq int -> list (int * ix a) -> Tot (list int)
 let rec proj_fst #a l = match l with
@@ -455,6 +336,17 @@ assume val advance:  sa:Seq.seq int -> sb:Seq.seq int -> i:ix sa -> j:ix sb
 		 /\ (i + 1 < Seq.length sa 
 		     ==> row_as_list sb (Matrix2.row q (i + 1)) j
 		         = Cons.hd lb::row_as_list sb (Matrix2.row q (i + 1)) (fst r))))
+
+
+val check_bob: a:int -> lb:list int -> Tot (list int * bool)
+let rec check_bob a lb =
+  match lb with
+   | [] -> [], false
+   | hd::tl ->
+     if hd=a
+     then tl, true
+     else let tl, r = check_bob a tl in
+          hd::tl, r
 
 val lemma_bob: sa:Seq.seq int -> sb:Seq.seq int -> i:ix sa -> j:bound sb 
 	       -> p:prod sa sb entry{prod_invariant p i j}
