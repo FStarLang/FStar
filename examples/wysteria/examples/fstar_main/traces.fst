@@ -81,12 +81,103 @@ let full_is_correct a b i j =
   lemma_full_matrix_aux a b init 0 0 i j   
 
 
-let elim (#m:nat) (#n:nat) (p:mat m n nat) (i:ri m) (j:cj n) = 
-  let out = Matrix2.upd p i j 1 in
-  let out = update_row_suffix out i j 2 in 
-  update_col_suffix out i j 2
+let precedes (i, j) (i', j') = (i < i') || (i = i' && j < j')
+type bound (#a:Type) (s:Seq.seq a) = i:nat{i <= Seq.length s}
+opaque type witness (#a:Type) (x:a) = True
 
-val fast_product:  a:Seq.seq int 
+(* Shape invariant on the matrix 
+
+   0 0 0 0 0 0 0
+   0 0 0 1 2 2 2 
+   0 0 0 2 0 + 3
+   3 3 3 2 3 3 3
+   3 3 3 2 3 3 3
+
+   When considering element '+', everythign preceding it is a 0, 1, or 2
+   Everything suceeding it is 2 or a 3.
+   It gets set to either a 0 or a 1
+   
+   If it gets set to a 1, the rest of the row and column get set to 2
+
+   There can be at most one 1 in each row or column.
+
+   If (i,j) contains a 2, then (i', j) and (i, j') for, i' >= i and j' >= j are 2
+   If (i,j) contains a 2, then there either must be some k <= i such that (k, j) is a 2
+				     or  some k <= j such that (i, k) is a 2
+ *)
+
+type entry = 
+  | NotEqual  //0
+  | Equal     //1
+  | Elim      //2
+  | Unknown   //3
+
+opaque type notequal_ok (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b entry) =
+  forall (i:ix a) (j:ix b).{:pattern index p i j} 
+          index p i j = NotEqual
+          ==> ((Seq.index a i <> Seq.index b j)
+	    /\ ((forall (j':ix b).{:pattern index p i j'} j' < j ==> (index p i j' = NotEqual \/ index p i j' = Elim))
+             /\ (forall (i':ix a).{:pattern index p i' j} i' < i ==> (index p i' j = NotEqual \/ index p i' j = Elim))))
+
+opaque type equal_ok (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b entry) =
+  forall (i:ix a) (j:ix b).{:pattern index p i j} 
+          index p i j = Equal
+          ==> (Seq.index a i = Seq.index b j
+	    /\ ((forall (j':ix b).{:pattern index p i j'} (j' < j ==> (index p i j' = NotEqual \/ index p i j' = Elim))
+	    					 /\  (j < j' ==> index p i j' = Elim))
+             /\ (forall (i':ix a).{:pattern index p i' j} (i' < i ==> (index p i' j = NotEqual \/ index p i' j = Elim))
+	    				         /\  (i < i' ==> index p i' j = Elim))))
+
+opaque type witness_row (i:nat) = True
+opaque type witness_col (i:nat) = True
+
+opaque type elim_ok (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b entry)  = 
+  forall (i:ix a) (j:ix b). {:pattern (index p i j)}
+  index p i j = Elim ==> //if we have an Elim at (i,j), then
+           //we have an Equal in a previous column of the same row
+          ((exists (c:ix b{c < j}).{:pattern (witness_col c)} witness_col c /\ index p i c = Equal)  
+           //or, we have an Equal in a previous row of the same column
+         \/ (exists (r:ix a{r < i}).{:pattern (witness_row r)} witness_row r /\ index p r j = Equal))
+
+opaque type unknown_ok (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b entry) = 
+  forall (i:ix a) (j:ix b). {:pattern (index p i j)}
+    index p i j = Unknown ==>  //there should be no Equal entries in the same row or col
+           ((forall (k:ix b). {:pattern (index p i k)} index p i k <> Equal)
+	  /\ (forall (k:ix a). {:pattern (index p k j)} index p k j <> Equal))
+
+opaque type prefix_ok (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b entry) (i:bound a) (j:bound b) = 
+  forall (i':ix a) (j':ix b).{:pattern (index p i' j')}
+    (precedes (i',j') (i,j) ==> index p i' j' <> Unknown)
+  /\ ((i < Seq.length a /\ j' < j) ==> index p i j' <> Equal)
+
+opaque type suffix_ok (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b entry) (i:bound a) (j:bound b) = 
+   forall (i':ix a) (j':ix b).{:pattern (index p i' j')}  //every element from i,j onwards is elim or unknown
+     (precedes (i, j) (i', j') \/ (i,j)=(i',j'))
+     ==> ((index p i' j' = Elim \/ index p i' j' = Unknown))
+
+opaque type prod_invariant (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b entry) (i:bound a) (j:bound b) = 
+  notequal_ok p
+  /\ equal_ok p
+  /\ elim_ok p
+  /\ unknown_ok p
+  /\ prefix_ok p i j
+  /\ suffix_ok p i j
+
+let elim (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b entry) (i:ix a) (j:ix b) = 
+  let out = Matrix2.upd p i j Equal in
+  let out = update_row_suffix out i j Elim in 
+  update_col_suffix out i j Elim
+
+val elim_is_ok:  #a:Seq.seq int -> #b:Seq.seq int -> p:prod a b entry -> i:ix a -> j:ix b -> Lemma
+  (requires (prod_invariant p i j
+            /\ index p i j = Unknown
+            /\ Seq.index a i = Seq.index b j))
+  (ensures (prod_invariant (elim p i j) (i + 1) 0))
+let elim_is_ok a b p i j = 
+  cut (witness_row i);
+  cut (witness_col j)
+
+val fast_product: a:Seq.seq int 
                 -> b:Seq.seq int
                 -> out:prod a b nat  
                 -> i:nat{i <= Seq.length a}
@@ -101,11 +192,12 @@ let rec fast_product a b out i j =
        then fast_product a b (elim out i j) i (j + 1)
        else fast_product a b out i (j + 1)
 
-let precedes (i, j) (i', j') = (i < i') || (i = i' && j < j')
 
-type bound (#a:Type) (s:Seq.seq a) = i:nat{i <= Seq.length s}
 
-opaque type witness (#a:Type) (x:a) = True
+  assert (prefix_correct q i (j + 1))
+
+  if j + 1 < Seq.length b
+  then assert (index q i (j + 1) = 2)
 
 opaque type no_ones (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b nat) (i:ix a) (j:ix b) = 
     (forall (k:ix b). {:pattern (index p i k)} index p i k <> 1)
@@ -123,37 +215,13 @@ opaque type two_is_ok (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b nat) (i:ix a
            //or, we have a 1 in a previous row of the same column
          \/ (exists (r:ix a{r <= i}).{:pattern (witness r)} witness r /\ index p r j = 1)) 
 
-opaque type zero_or_two_from (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b nat) (i:bound a) (j:bound b) = 
-   forall (i':ix a) (j':ix b).{:pattern (index p i' j')} 
-     (precedes (i, j) (i', j') \/ (i,j)=(i',j'))
-     ==> ((index p i' j' = 0 \/ index p i' j' = 2) //every element from i,j onwards is 0 or 2
-         /\ two_is_ok p i' j'
-         /\ zero_is_ok p i' j')
 
-opaque type prefix_correct (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b nat) (i:bound a) (j:bound b) = 
-  forall (i':ix a) (j':ix b).{:pattern (index p i' j')}
-    precedes (i',j') (i,j) ==>
-         (if index p i' j' = 0
-          then (Seq.index a i' <> Seq.index b j' /\ no_ones p i' j')
-          else if index p i' j' = 1
-          then Seq.index a i' = Seq.index b j'
-          else (index p i' j' = 2 /\ two_is_ok p i' j'))
 
 opaque type zero_or_two_from_weak (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b nat) (i:bound a) (j:bound b) = 
    forall (i':ix a) (j':ix b).{:pattern (index p i' j')} 
      (precedes (i, j) (i', j') \/ (i,j)=(i',j'))
      ==> ((index p i' j' = 0 \/ index p i' j' = 2)) //every element from i,j onwards is 0 or 2
 
-opaque type at_most_one_one (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b nat) =
-  forall (i:ix a) (j:ix b).{:pattern index p i j} 
-          index p i j = 1
-          ==> ((forall (j':ix b).{:pattern index p i j'} j<>j' ==> index p i j' <> 1)
-            /\ (forall (i':ix a).{:pattern index p i' j} i<>i' ==> index p i' j <> 1))
-
-opaque type prod_invariant (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b nat) (i:bound a) (j:bound b) = 
-  at_most_one_one p
-  /\ prefix_correct p i j
-  /\ zero_or_two_from p i j
 
 opaque type prefix_correct_weak (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b nat) (i:bound a) (j:bound b) = 
   forall (i':ix a) (j':ix b).{:pattern (index p i' j')}
@@ -164,17 +232,7 @@ opaque type prefix_correct_weak (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b na
           then Seq.index a i' = Seq.index b j'
           else (index p i' j' = 2 /\ two_is_ok p i' j'))
 
-val aux_elim_is_correct:  #a:Seq.seq int -> #b:Seq.seq int -> p:prod a b nat -> i:ix a -> j:ix b -> Lemma
-  (requires (prod_invariant p i j
-            /\ index p i j = 0
-            /\ Seq.index a i = Seq.index b j))
-  (ensures ( //prod_invariant (elim p i j) (i + 1) 0))
-             prefix_correct_weak (elim p i j) i (j + 1)
-             /\ no_ones p i j
-             /\ at_most_one_one (elim p i j) 
-             /\ zero_or_two_from (elim p i j) i (j + 1)
-                ))
-let aux_elim_is_correct a b p i j = cut (witness i /\ witness j)
+
  
 val fast_product_correct: a:Seq.seq int -> b:Seq.seq int -> p:prod a b nat 
                       -> i:nat{i <= Seq.length a} -> j:nat{j <= Seq.length b} -> Lemma
