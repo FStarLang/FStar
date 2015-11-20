@@ -831,10 +831,6 @@ val lemma_sub_all_iters: #a:seq int -> #b:seq int -> r:bound a
   (ensures (ith_row p i = ith_row s i)) 
 let lemma_sub_all_iters #a #b r p s i = ith_row_eq r p s i 0
 
-opaque type elim_streak' (#a:seq int) (#b:seq int) (p:prod a b entry) row from until = 
-  forall (k:ix b).{:pattern (index p row k)} (from <= k && k < until) ==> index p row k = Elim
-
-
 val elim_streak_down_aux: a:_ -> b:_ -> i:ix a{i + 1 < Seq.length a} -> j:bound b
 		      -> p:iter a b i j{elim_streak' p i 0 j}
 		      -> q:iter a b (i + 1) 0
