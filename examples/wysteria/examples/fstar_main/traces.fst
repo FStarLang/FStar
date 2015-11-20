@@ -612,7 +612,8 @@ val advance:  a:Seq.seq int -> b:Seq.seq int -> i:ix a -> j:ix b -> j':bound b{j
   (ensures (fun j' -> 
 	      let p' = iter_i_j a b i j' in
   	         j < j'
-    	      /\  elim_streak (row p i) (j + 1) j'
+	      /\  lb=row_as_list b (row p' i) j
+    	      /\  elim_streak (row p' i) (j + 1) j'
 	      /\  (j' < Seq.length b ==> index p' i j' = Unknown)
  	      /\  Cons.tl lb=row_as_list b (Matrix2.row p' i) j'
  	      /\  (Cons.tl lb=[] ==> j'=Seq.length b)))
@@ -632,7 +633,29 @@ let rec advance a b i j j' p q lb =
   else (lemma_row_elims_until b (row p i) lb j j';
 	j')
 
-val advance':  a:Seq.seq int -> b:Seq.seq int -> i:ix a -> j:ix b -> j':bound b{j<j'}
+val next_row_elements: a:_ -> b:_ -> i:ix a -> j:ix b -> j':bound b {j < j'} 
+		     -> lb:list int
+		     -> p:iter a b i j' 
+		     -> q:iter a b (i + 1) 0
+		     -> Lemma
+        (requires (index p i j = NotEqual
+		  /\ i + 1 < Seq.length a
+		  /\ elim_streak (row p i) (j + 1) j'))
+        (ensures (row_as_list b (row q (i + 1)) j
+	      	         = Cons.hd lb::row_as_list b (row q (i + 1)) j'))
+let next
+
+let next_ith_row_from_false a b i j j' p q = 
+  assert (index q i j = NotEqual);
+  if (j + 1 = j')
+  then ()
+  else (frame_elim_streak a b i (j + 1) j' p q;
+        ith_row_from_false a b i j j' q)
+
+
+row_as_list b (row q (i + 1)) j
+
+assume val advance':  a:Seq.seq int -> b:Seq.seq int -> i:ix a -> j:ix b -> j':bound b{j<j'}
 	    -> p:iter a b i j' -> q:iter a b (i + 1) 0
 	    -> lb:list int{is_Cons lb}
 	    -> Pure (bound b)
@@ -642,27 +665,22 @@ val advance':  a:Seq.seq int -> b:Seq.seq int -> i:ix a -> j:ix b -> j':bound b{
   (ensures (fun j' -> 
 	      let p' = iter_i_j a b i j' in
   	         j < j'
-    	      /\  elim_streak (row p i) (j + 1) j'
+     	      /\  elim_streak (row p' i) (j + 1) j'
 	      /\  (j' < Seq.length b ==> index p' i j' = Unknown)
  	      /\  Cons.tl lb=row_as_list b (Matrix2.row p' i) j'
  	      /\  (Cons.tl lb=[] ==> j'=Seq.length b)
 	      /\  (ith_row_from q i j =
-	            false::ith_row_from q i j')))
-	      // /\  (i + 1 < Seq.length a 
-	      // 	     ==> row_as_list b (Matrix2.row q (i + 1)) j
-	      // 	         = Cons.hd lb::row_as_list b (Matrix2.row q (i + 1)) j')))
-let advance' a b i j j' p q lb = 
-      let j'' = advance a b i j j' p q lb  in
-      let p' = iter_i_j a b i j'' in
-      assert (index p' i j = NotEqual);
-      assume (elim_streak (row p' i) (j + 1) j'');
-      next_ith_row_from_false a b i j j'' p' q;  
-      j''
-
-
-  let j'' = advance a b i j j' p q lb in 
-  next_ith_row_from_false a b i j j'' p q;
-  j''
+ 	            false::ith_row_from q i j')
+ 	      /\  (i + 1 < Seq.length a 
+	      	     ==> row_as_list b (row q (i + 1)) j
+	      	         = Cons.hd lb::row_as_list b (row q (i + 1)) j')))
+// let advance' a b i j j' p q lb = 
+//       let j'' = advance a b i j j' p q lb  in
+//       let p' = iter_i_j a b i j'' in
+//       // assert (index p' i j = NotEqual);
+//       // assume (elim_streak (row p' i) (j + 1) j'');
+//       next_ith_row_from_false a b i j j'' p' q;  
+//       j''
 
 val check_bob: a:int -> lb:list int -> Tot (list int * list bool)
 let rec check_bob a lb =
@@ -707,7 +725,7 @@ let rec lemma_bob sa sb i j p q a lb = match lb with
     if hd=a
     then lemma_next_row i j p q
     else (lemma_pnext sa sb i j p pnext;
-          let j' = advance sa sb i j (j + 1) pnext q lb in
+          let j' = advance' sa sb i j (j + 1) pnext q lb in
   	  let p' = iter_i_j sa sb i j' in
 	  lemma_bob sa sb i j' p' q a tl)
 
