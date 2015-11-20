@@ -91,10 +91,10 @@ opaque type witness (#a:Type) (x:a) = True
    0 0 0 1 3 3 3 
    0 0 0 2 1 3 3
    0 0 1 2 2 3 3
-   0 + 2 2 2 4 4
+   0 + 2 2 2 3 3
 
    When considering element '+', everything preceding it is a 0, 1, 2, or 3
-   Everything suceeding it is 2, 3 or 4
+   Everything suceeding it is 2 or 3 
 
    It gets set to either a 0 or a 1
    
@@ -114,7 +114,7 @@ type entry =
   | NotEqual  //0
   | Equal     //1
   | Elim      //2
-  | Unknown   //4
+  | Unknown   //3
 
 opaque type notequal_ok (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b entry) =
   forall (i:ix a) (j:ix b).{:pattern index p i j} 
@@ -143,12 +143,6 @@ opaque type elim_ok (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b entry)  =
           //or, we have an Equal in a previous column of the same row
 	   \/ (exists (c:ix b{c < j}).{:pattern (witness_col c)} witness_col c /\ index p i c = Equal))
 
-// opaque type skip_ok (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b entry)  = 
-//   forall (i:ix a) (j:ix b). {:pattern (index p i j)}
-//   index p i j = Skip ==> //if we have an Skip at (i,j), then
-//            //we have an Equal in a previous column of the same row
-//           (exists (c:ix b{c < j}).{:pattern (witness_col c)} witness_col c /\ index p i c = Equal)
-
 opaque type unknown_ok (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b entry) = 
   forall (i:ix a) (j:ix b). {:pattern (index p i j)}
     index p i j = Unknown ==>  //there should be no Equal entries in the same row or col
@@ -175,18 +169,6 @@ opaque type prod_invariant (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b entry) 
   /\ suffix_ok p i j
 
 type seq 'a = Seq.seq 'a
-
-// val lemma_next_row_aux: #a:seq int -> #b:seq int -> i:ix a -> j:ix b  
-//       -> p:prod a b entry{prod_invariant p i j /\ index p i j = Unknown} 
-//       -> q:prod a b entry{prod_invariant q (i + 1) 0 /\ Seq.index a i = Seq.index b j}
-//       -> r:prod a b entry{prod_invariant p i (j + 1)}
-//       -> Lemma 
-//   (requires True)
-//   (ensures (index q i j = Equal 
-// 	    /\ (i + 1 < Seq.length a
-// 	       ==> row_as_list b (Matrix2.row q (i + 1)) j
-//   		   = Cons.tl (row_as_list b (Matrix2.row p i) j))))
-// let lemma_next_row_aux #a #b i j p q r = ()
 
 let elim (#m:nat) (#n:nat) (p:mat m n entry) (i:ri m) (j:cj n) = 
   let out = Matrix2.upd p i j Equal in
@@ -366,23 +348,6 @@ let rec fast_is_sparse_full a b p q i j =
         fast_is_sparse_full a b (elim p i j) (elim q i j) i (j + 1))
   else fast_is_sparse_full a b (set_neq p i j) (set_neq q i j) i (j + 1)
        
-// val sparse_as_list: a:Seq.seq int -> b:Seq.seq int -> p:sparse a b 
-//                  -> i:nat{i<=Seq.length a} 
-//                  -> j:nat{j<=Seq.length b}
-//                  -> Tot (list bool)
-//   (decreases %[(Seq.length a - i); (Seq.length b - j)])
-// let rec sparse_as_list a b p i j = 
-//   if i=Seq.length a then []
-//   else if j=Seq.length b then sparse_as_list a b p (i + 1) 0
-//   else if index p i j = 0 then false :: sparse_as_list a b p i (j + 1)
-//   else if index p i j = 1 then true :: sparse_as_list a b p i (j + 1)
-//   else (assert (index p i j = 2);
-//         sparse_as_list a b p i (j + 1))
-
-// let remove (s:Seq.seq int) (i:ix s) = 
-//   Seq.append (Seq.slice s 0 i) (Seq.slice s (i + 1) (Seq.length s))
-
-
 
 val ith_row_from: #a:Seq.seq int -> #b:Seq.seq int -> p:prod a b entry -> i:ix a -> from:bound b -> Tot (list bool)
   (decreases (Seq.length b - from))
@@ -393,15 +358,6 @@ let rec ith_row_from #a #b p i from =
     else ith_row_from p i (from + 1)
 
 let ith_row #a #b (p:prod a b entry) i = ith_row_from p i 0
-
-// val lemma_ith_row: #a:Seq.seq int -> #b:Seq.seq int -> p:prod a b entry -> row:ix a -> stop_col:bound b -> cur:bound b{cur <= stop_col} 
-//     -> w:ix b{cur <= w && w < stop_col} 
-//     -> Lemma (requires (index p row w = Equal))
-// 	    (ensures (ith_row_until p row stop_col cur = true))
-// 	    (decreases (stop_col - cur))
-// let rec lemma_ith_row #a #b p row stop_col cur w = 
-//   if index p row cur <> Equal then lemma_ith_row p row stop_col (cur + 1) w
- 
 
 val row_as_list_from_to: sb:seq int -> r:seq entry{Seq.length r = Seq.length sb} -> i:bound sb -> j:bound sb{i <= j} -> Tot (list int)
   (decreases (Seq.length sb - i))
@@ -414,12 +370,6 @@ let rec row_as_list_from_to sb r i j =
  
 val row_as_list: sb:seq int -> r:seq entry{Seq.length r = Seq.length sb} -> i:bound sb -> Tot (list int)
 let row_as_list sb r i = row_as_list_from_to sb r i (Seq.length sb)
-// let rec row_as_list sb r i = 
-//   if i = Seq.length sb
-//   then []
-//   else if Seq.index r i = Elim
-//   then row_as_list sb r (i + 1)
-//   else Seq.index sb i :: row_as_list sb r (i + 1)
 
 val row_as_list_eq: sb:seq int 
 		  -> r1:seq entry{Seq.length r1 = Seq.length sb}
@@ -623,11 +573,6 @@ val advance:  a:Seq.seq int -> b:Seq.seq int -> i:ix a -> j:ix b -> j':bound b{j
 	      /\  (j' < Seq.length b ==> index p' i j' = Unknown)
  	      /\  Cons.tl lb=row_as_list b (Matrix2.row p' i) j'
  	      /\  (Cons.tl lb=[] ==> j'=Seq.length b)))
-	      // /\  (ith_row_from q i j =
-	      //       false::ith_row_from q i j')
-	      // /\  (i + 1 < Seq.length a 
-	      // 	     ==> row_as_list b (Matrix2.row q (i + 1)) j
-	      // 	         = Cons.hd lb::row_as_list b (Matrix2.row q (i + 1)) j')))
   (decreases (Seq.length b - j'))
 let rec advance a b i j j' p q lb =
   if j' = Seq.length b  
