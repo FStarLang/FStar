@@ -705,15 +705,18 @@ let rec check_bob a lb =
      else let tl, r = check_bob a tl in
           hd::tl, false::r
 
-assume val lemma_pnext: sa:Seq.seq int -> sb:Seq.seq int -> i:ix sa -> j:ix sb 
+val lemma_pnext: sa:Seq.seq int -> sb:Seq.seq int -> i:ix sa -> j:ix sb 
 	       -> p:iter sa sb i j
 	       -> pnext:iter sa sb i (j + 1)
 	       -> Lemma 
   (requires (index p i j = Unknown
 	     /\ index pnext i j = NotEqual))
   (ensures (row_as_list sb (row p i) j
-	    =row_as_list sb (row pnext i) j))
-
+	    = row_as_list sb (row pnext i) j))
+let lemma_pnext sa sb i j p pnext = 
+    iter_extends sa sb i j i (j + 1);
+    assert (pnext = set_neq p i j);
+    row_as_list_eq sb (row p i) (row pnext i) (j + 1) (Seq.length sb)
 
 val lemma_bob: sa:Seq.seq int -> sb:Seq.seq int -> i:ix sa -> j:bound sb 
 	       -> p:iter sa sb i j
