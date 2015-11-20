@@ -417,11 +417,17 @@ let rec row_as_list sb r i =
   then row_as_list sb r (i + 1)
   else Seq.index sb i :: row_as_list sb r (i + 1)
 
-assume val row_as_list_eq: sb:seq int 
+
+val row_as_list_eq: sb:seq int 
 		  -> r1:seq entry{Seq.length r1 = Seq.length sb}
 		  -> r2:seq entry{Seq.length r2 = Seq.length sb}
 		  -> i:bound sb{forall (x:ix sb). i <= x ==> Seq.index r1 x = Seq.index r2 x}
 		  -> Lemma (row_as_list sb r1 i = row_as_list sb r2 i)
+   (decreases (Seq.length sb - i))
+let rec row_as_list_eq sb r1 r2 i =
+    if i = Seq.length sb 
+    then ()
+    else row_as_list_eq sb r1 r2 (i + 1)
  
 val iter_extends: a:_ -> b:_ 
 		-> i':bound a -> j':bound b
@@ -454,19 +460,11 @@ let iter_step a b i j i' j' p q =
   let r = iter_i_j a b i (j + 1) in 
   iter_extends #a #b i j i (j + 1);
   cut (index r i j == index r i j)//for the pattern to fire
-
-// opaque type prefix_ok_strong (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b entry) (i:bound a) (j:bound b) = 
-//   forall (i':ix a) (j':ix b).{:pattern (index p i' j')}
-//     (precedes (i',j') (i,j) ==> index p i' j' <> Unknown)
-//    /\ ((i < Seq.length a /\ j' < j) ==> index p i j' <> Equal)
  
 val next_row_wraparound: #a:seq int -> #b:seq int -> i:ix a -> 
   Lemma (ensures (iter_i_j a b i (Seq.length b) 
 		  = iter_i_j a b (i + 1) 0))
 let next_row_wraparound a b i = iter_extends a b i (Seq.length b) (i + 1) 0
-
-// val lemma_next_row_eq: #a:seq int -> #b:seq int -> i:ix a{i+1 < Seq.length a} -> j:ix b -> x:ix b -> p:iter a b i j
-//   Lemma (ensures (index p 
 
 val lemma_next_row_unchanged: #a:seq int -> #b:seq int -> i:ix a{i+1 < Seq.length a} -> j:ix b -> k:bound b 
   -> p:iter a b i j
@@ -559,7 +557,7 @@ let rec lemma_bob sa sb i j p q a lb = match lb with
   | hd::tl ->
     iter_step sa sb i j (i + 1) 0 p q;
     if hd=a
-    then lemma_next_row_aux i j p q
+    then lemma_next_row i j p q
     else let j' = advance sa sb i j p q lb in
 	 let p' = iter_i_j sa sb i j' in
 	 lemma_bob sa sb i j' p' q a tl
