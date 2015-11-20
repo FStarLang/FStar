@@ -881,8 +881,26 @@ let rec lemma_alice sa sb i p t la lb = match la with
       let p = iter_i_j sa sb i j in
       lemma_bob sa sb i j p q hd lb;
       let lb', r = check_bob hd lb in
-      // let _ = assert (r = ith_row_from q i j) in
-      // let _ = assume (r = ith_row q i) in
       lemma_sub_sparse (i + 1) q t i;
       lemma_alice sa sb (i + 1) q t tl lb'
     end
+
+let all_iterations a b = iter_i_j a b (Seq.length a) (Seq.length b)
+val as_list_init_b: a:Seq.seq int{Seq.length a <> 0} 
+		  -> b:Seq.seq int 
+		  -> i:bound b
+		  -> Lemma  
+  (ensures (row_as_list b (row (init a b) 0) i
+	    = as_list b i))
+  (decreases (Seq.length b - i))
+let rec as_list_init_b a b i = 
+    if i = Seq.length b then ()
+    else as_list_init_b a b (i + 1)
+
+val thm : sa:Seq.seq int -> sb:Seq.seq int -> la:list int -> lb:list int -> Lemma 
+    (requires (la = as_list sa 0 /\ lb = as_list sb 0))
+    (ensures (for_alice la lb = rows_from (all_iterations sa sb) 0))
+let thm sa sb la lb = 
+  if Seq.length sa <> 0 then as_list_init_b sa sb 0;
+  lemma_alice sa sb 0 (iter_i_j sa sb 0 0) (all_iterations sa sb) la lb
+
