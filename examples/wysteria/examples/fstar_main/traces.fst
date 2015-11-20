@@ -771,6 +771,70 @@ assume val lemma_sub_sparse: #a:seq int -> #b:seq int -> r:bound a
 
 type all_iters a b = iter a b (Seq.length a) (Seq.length b)
 
+opaque type elim_streak' (#a:seq int) (#b:seq int) (p:prod a b entry) row from until = 
+  forall (k:ix b).{:pattern (index p row k)} (from <= k && k < until) ==> index p row k = Elim
+
+val convert_elim_streak' : #a:_ -> #b:_ -> p:prod a b entry -> r:ix a -> from:ix b -> until:bound b 
+      -> Lemma (requires (elim_streak' p r from until))
+	      (ensures (elim_streak (row p r) from until))
+let convert_elim_streak' #a #b p r from until = ()
+
+val elim_streak_down_aux: a:_ -> b:_ -> i:ix a{i + 1 < Seq.length a} -> j:bound b
+		      -> p:iter a b i j{elim_streak' p i 0 j}
+		      -> q:iter a b (i + 1) 0
+		      -> k:ix b{k < j}
+		      -> Lemma
+   (index q (i + 1) k = Elim)
+let elim_streak_down_aux a b i j p q k = 
+  assert (index p i k = Elim);
+  cut (exists (i':ix a). i' < i /\ index p i' k = Equal /\ index q i' k = Equal)
+
+val elim_streak_down: a:_ -> b:_ -> i:ix a{i + 1 < Seq.length a} -> j:bound b
+		      -> p:iter a b i j
+		      -> q:iter a b (i + 1) 0
+		      -> Lemma
+  (requires (elim_streak' p i 0 j))
+  (ensures (elim_streak' q (i + 1) 0 j))
+let elim_streak_down a b i j p q = 
+  qintro (elim_streak_down_aux a b i j p q)
+
+val next_row_elements_alice: a:_ -> b:_ -> i:ix a{i + 1 < Seq.length a} -> j:bound b
+		     -> p:iter a b i j
+		     -> q:iter a b (i + 1) 0
+		     -> Lemma
+        (requires ((j < Seq.length b ==> index p i j = Unknown)
+		  /\ elim_streak' (row p i) 0 j))
+        (ensures (row_as_list b (row q (i + 1)) 0
+	      	         = row_as_list b (row q (i + 1)) j))
+
+
+
+val skip_elims: sa:seq int -> sb:seq int -> i:ix sa -> j:bound sb -> p:iter sa sb i j -> q:iter sa sb (i + 1) 0 -> 
+	 Pure (bound sb)
+	      (requires (elim_streak (row p i) 0 j))
+	      (ensures (fun j -> 
+			  let p' = iter_i_j sa sb i j in
+			  (row_as_list sb (row p i) 0 
+			    = row_as_list sb (row p' i) j
+			    /\  (i + 1 < Seq.length sa 
+			         ==> (row_as_list sb (row q (i + 1)) 0 
+			              = row_as_list sb (row q (i + 1)) j))
+			     /\ (j < Seq.length sb ==> index p' i j <> Elim)
+			     /\ ith_row p' i = ith_row_from p' i j
+			     /\ ith_row q i  = ith_row_from q  i j)))
+	      (decreases (Seq.length sb - j))
+let rec skip_elims sa sb i j p q = 
+  if j = Seq.length sb 
+  then (lemma_row_all_elims b (row p i) 0 j;
+        j)
+  else match index p i j with 
+ 	  | Unknown -> admit(); j
+	  | Elim -> 
+ 	    let j' = j + 1 in 
+	    let p' = iter_i_j sa sb i j' in
+	    iter_extends sa sb i j i j';
+	    skip_elims sa sb i (j + 1) p' q
+
 assume val first_iteration_index: sa:seq int -> sb:seq int -> i:ix sa -> p:iter sa sb i 0 -> q:iter sa sb (i + 1) 0 -> 
 	 Pure (bound sb)
 	      (requires True)
@@ -782,8 +846,8 @@ assume val first_iteration_index: sa:seq int -> sb:seq int -> i:ix sa -> p:iter 
 			         ==> (row_as_list sb (row q (i + 1)) 0 
 			              = row_as_list sb (row q (i + 1)) j))
 			     /\ (j < Seq.length sb ==> index p' i j <> Elim)
-			     /\ ith_row_until p' i j 0 = []
-			     /\ ith_row_until q i j 0  = [])))
+			     /\ ith_row p' i = ith_row_from p' i j
+			     /\ ith_row q i  = ith_row_from q  i j))
  
 val lemma_alice: sa:Seq.seq int -> sb:Seq.seq int -> i:bound sa 
 	       -> p:iter sa sb i 0
@@ -802,8 +866,8 @@ let rec lemma_alice sa sb i p t la lb = match la with
       let p = iter_i_j sa sb i j in
       lemma_bob sa sb i j p q hd lb;
       let lb', r = check_bob hd lb in
-      let _ = assert (r = ith_row_from q i j) in
-      let _ = assume (r = ith_row q i) in
+      // let _ = assert (r = ith_row_from q i j) in
+      // let _ = assume (r = ith_row q i) in
       lemma_sub_sparse (i + 1) q t i;
       lemma_alice sa sb (i + 1) q t tl lb'
     end
