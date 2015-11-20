@@ -2530,6 +2530,14 @@ let rec p_terminating_run_implies_p_terminates_in #ps #pi #pi' #n h = match h wi
     in
     PTerm_step #ps #pi #pi' #m hmp f
 
+opaque val s_terminating_run_implies_p_terminates_in:
+  #c:sconfig -> #c':sconfig -> ht:s_terminating_run c c' -> ps:prins{ps = all_prins ()}
+  -> Tot (n:nat & (p_terminates_in #ps (slice_c_ps ps c) (slice_c_ps ps c') n))
+let s_terminating_run_implies_p_terminates_in #c #c' ht ps =
+  let (| n, h_ptrun |) = s_terminating_run_gives_p_terminating_run #c #c' ht ps in
+  let h_pt = p_terminating_run_implies_p_terminates_in #ps #(slice_c_ps ps c) #(slice_c_ps ps c') #n h_ptrun in
+  (| n, h_pt |)
+
 // val pterminates_confluence:
 //   #ps:prins -> pi:protocol ps
 //   -> pi1:protocol ps -> n1:nat -> h1:pterminates_in #ps pi pi1 n1
