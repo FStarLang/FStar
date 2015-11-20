@@ -689,8 +689,6 @@ val advance':  a:Seq.seq int -> b:Seq.seq int -> i:ix a -> j:ix b -> j':bound b{
 let advance' a b i j j' p q lb = 
       let j'' = advance a b i j j' p q lb  in
       let p' = iter_i_j a b i j'' in
-      // assert (index p' i j = NotEqual);
-      // assume (elim_streak (row p' i) (j + 1) j'');
       next_ith_row_from_false a b i j j'' p' q;  
       if (i + 1 < Seq.length a) then next_row_elements a b i j j'' lb p' q;
       j''
@@ -758,7 +756,7 @@ let rec as_list s i =
   if i = Seq.length s then []
   else Seq.index s i :: as_list s (i + 1)
 
-val rows_from : #a:seq int -> #b:seq int -> prod a b entry -> i:bound a -> Tot (list bool)
+val rows_from : #a:seq int -> #b:seq int -> prod a b entry -> i:bound a -> Tot (list (list bool))
   (decreases (Seq.length a - i))
 let rec rows_from #a #b p i = 
   if i = Seq.length a then []
@@ -771,27 +769,27 @@ assume val lemma_sub_sparse: #a:seq int -> #b:seq int -> r:bound a
 		      -> Lemma
   (ensures (ith_row p i = ith_row s i)) //easy
 
+type all_iters a b = iter a b (Seq.length a) (Seq.length b)
 
-assume val first_iteration_index: sa:seq int -> sb:seq int -> p:prod sa sb entry -> q:prod sa sb entry -> i:ix sa -> 
-	 Pure (bound sb * prod sa sb entry)
-	      (requires (prod_invariant p i 0
-			 /\ prod_invariant q (i + 1) 0))
-	      (ensures (fun (jp:(bound sb * prod sa sb entry)) -> 
-			    prod_invariant (snd jp) i (fst jp)
-			    /\  (row_as_list sb (Matrix2.row p i) 0 
-			        = row_as_list sb (Matrix2.row (snd jp) i) (fst jp))
+assume val first_iteration_index: sa:seq int -> sb:seq int -> i:ix sa -> p:iter sa sb i 0 -> q:iter sa sb (i + 1) 0 -> 
+	 Pure (bound sb)
+	      (requires True)
+	      (ensures (fun j -> 
+			  let p' = iter_i_j sa sb i j in
+			  (row_as_list sb (row p i) 0 
+			    = row_as_list sb (row p' i) j
 			    /\  (i + 1 < Seq.length sa 
-			         ==> (row_as_list sb (Matrix2.row q (i + 1)) 0 
-			              = row_as_list sb (Matrix2.row q (i + 1)) (fst jp)))
-			     /\ (fst jp < Seq.length sb ==> index (snd jp) i (fst jp) <> Elim)
-			     /\ ith_row_until (snd jp) i (fst jp) 0 = false
-			     /\ ith_row_until q i (fst jp) 0 = false))
-
+			         ==> (row_as_list sb (row q (i + 1)) 0 
+			              = row_as_list sb (row q (i + 1)) j))
+			     /\ (j < Seq.length sb ==> index p' i j <> Elim)
+			     /\ ith_row_until p' i j 0 = []
+			     /\ ith_row_until q i j 0  = [])))
+ 
 val lemma_alice: sa:Seq.seq int -> sb:Seq.seq int -> i:bound sa 
 	       -> p:iter sa sb i 0
-	       -> t:sparse sa sb 
+	       -> t:all_iters sa sb 
 	       -> la:list int -> lb:list int -> Lemma
-  (requires ((i < Seq.length sa ==> lb=row_as_list sb (Matrix2.row p i) 0)
+  (requires ((i < Seq.length sa ==> lb=row_as_list sb (row p i) 0)
 	     /\ la=as_list sa i))
   (ensures (for_alice la lb = rows_from t i))
   (decreases la)
@@ -800,9 +798,12 @@ let rec lemma_alice sa sb i p t la lb = match la with
   | hd::tl -> 
     begin
       let q = iter_i_j sa sb (i + 1) 0 in 
-      let j, p = first_iteration_index sa sb p q i in 
+      let j = first_iteration_index sa sb i p q in 
+      let p = iter_i_j sa sb i j in
       lemma_bob sa sb i j p q hd lb;
-      let lb', _ = check_bob hd lb in
+      let lb', r = check_bob hd lb in
+      let _ = assert (r = ith_row_from q i j) in
+      let _ = assume (r = ith_row q i) in
       lemma_sub_sparse (i + 1) q t i;
       lemma_alice sa sb (i + 1) q t tl lb'
     end
