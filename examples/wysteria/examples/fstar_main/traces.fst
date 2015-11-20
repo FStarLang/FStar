@@ -448,8 +448,50 @@ let iter_step a b i j i' j' p q =
   let r = iter_i_j a b i (j + 1) in 
   iter_extends #a #b i j i (j + 1);
   cut (index r i j == index r i j)//for the pattern to fire
+
+// opaque type prefix_ok_strong (#a:Seq.seq int) (#b:Seq.seq int) (p:prod a b entry) (i:bound a) (j:bound b) = 
+//   forall (i':ix a) (j':ix b).{:pattern (index p i' j')}
+//     (precedes (i',j') (i,j) ==> index p i' j' <> Unknown)
+//    /\ ((i < Seq.length a /\ j' < j) ==> index p i j' <> Equal)
  
+val next_row_wraparound: #a:seq int -> #b:seq int -> i:ix a -> 
+  Lemma (ensures (iter_i_j a b i (Seq.length b) 
+		  = iter_i_j a b (i + 1) 0))
+let next_row_wraparound a b i = iter_extends a b i (Seq.length b) (i + 1) 0
+
+// val lemma_next_row_eq: #a:seq int -> #b:seq int -> i:ix a{i+1 < Seq.length a} -> j:ix b -> x:ix b -> p:iter a b i j
+//   Lemma (ensures (index p 
+
+val lemma_next_row_unchanged: #a:seq int -> #b:seq int -> i:ix a{i+1 < Seq.length a} -> j:ix b -> k:bound b -> x:ix b{j < x}
+  -> p:iter a b i j
+  -> q:iter a b i k
+  -> Lemma (requires (index p i j = Unknown /\ j < k /\ Seq.index a i = Seq.index b j))
+	  (ensures ((index q (i + 1) x = index p i x) /\ index q (i + 1) j = Elim /\ index q i x = Elim))
+          (decreases k)
+let rec lemma_next_row_unchanged #a #b i j k x p q = 
+  if j+1=k 
+  then iter_extends a b i j i k
+  else let q' = iter_i_j a b i (k - 1) in
+       let _ = lemma_next_row_unchanged #a #b i j (k - 1) x p q' in
+       iter_extends a b i (k - 1) i k
+
 val lemma_next_row_aux: #a:seq int -> #b:seq int -> i:ix a -> j:ix b  
+      -> p:iter a b i j{index p i j = Unknown} 
+      -> q:iter a b (i + 1) 0{Seq.index a i = Seq.index b j}
+      -> k:ix b{j < k}
+      -> Lemma 
+  (requires True)
+  (ensures (index q i j = Equal 
+	    /\ (i + 1 < Seq.length a 
+ 	       ==> (index q (i + 1) j = Elim
+  	           /\ index q (i + 1) k = index p i k))))
+let lemma_next_row_aux #a #b i j p q k = 
+    iter_step a b i j (i + 1) 0 p q;
+    next_row_wraparound #a #b i;
+    if i + 1 < Seq.length a
+    then lemma_next_row_unchanged #a #b i j (Seq.length b) k p q
+ 
+val lemma_next_row: #a:seq int -> #b:seq int -> i:ix a -> j:ix b  
       -> p:iter a b i j{index p i j = Unknown} 
       -> q:iter a b (i + 1) 0{Seq.index a i = Seq.index b j}
       -> Lemma 
@@ -459,7 +501,9 @@ val lemma_next_row_aux: #a:seq int -> #b:seq int -> i:ix a -> j:ix b
  	       ==> (index q (i + 1) j = Elim
   	           /\ row_as_list b (Matrix2.row q (i + 1)) j
   	    	      = Cons.tl (row_as_list b (Matrix2.row p i) j)))))
-let lemma_next_row_aux #a #b i j p q = 
+let lemma_next_row #a #b i j p q = 
+    lemma_next_row_aux #a #b i j p q
+
     iter_step a b i j (i + 1) 0 p q;
     admit() //TODO: REMOVE ... boring
  
