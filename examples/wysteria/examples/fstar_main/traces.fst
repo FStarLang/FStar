@@ -549,31 +549,25 @@ val lemma_elim_tail: b:seq int -> row:seq entry{Seq.length row = Seq.length b} -
   (ensures (Cons.tl l = []))
 let lemma_elim_tail b row l j = lemma_row_all_elims b row (j + 1) (Seq.length b)
 
+val lemma_ith_row_elim: #a:seq int -> #b:seq int -> i:ix a -> j:bound b -> j':bound b{j <= j'} -> p:iter a b (i + 1) 0
+			-> Lemma
+  (requires (elim_streak (row p i) j j'))
+  (ensures (ith_row_from p i j = ith_row_from p i j'))
+  (decreases (j' - j))
+let rec lemma_ith_row_elim #a #b i j j' p = 
+  if j=j' then ()
+  else (assert (index p i j = Seq.index (row p i) j);
+        lemma_ith_row_elim #a #b i (j+1) j' p)
 
-// val lemma_elim_tail: b:seq int -> row:seq entry{Seq.length row = Seq.length b} -> l:list int{is_Cons l} 
-// 		    -> j:ix b -> k:bound b{j <= k} -> j':bound b{k <= j'}
-// 		    -> Lemma
-//   (requires (l=row_as_list_from_to b row j k
-// 	     /\ elim_streak row (j + 1) j'))
-//   (ensures ((j' = Seq.length b ==> Cons.tl l = [])
-// 	    /\ ((j' < Seq.length b /\ Seq.index row j' = Elim) ==> (elim_streak row j (j' + 1) /\ l=row_as_list_from_to b row j j'))
-// 	    /\ ((j' < Seq.length b /\ Seq.index row j' <> Elim) ==> Cons.tl l=row_as_list b row j')))
-//   (decreases (j' - k))
-// let rec lemma_elim_tail b row l j k j' = 
-//   if k=j'
-//   then if j' = Seq.length b 
-//        then lemma_row_all_elims b row (j + 1) j'
-//        else match Seq.index row j with 
-// 	      | Elim -> admit()
-// 	      | _ -> admit()
-//   else if k=j
-
-//  assert (index row j (k + 1) with 
-//          | Elim -> admit
-//        lemma_elim_tail b row l j (k + 1) j'
-
-// match Seq.index row j with 
-// 	  | Elim - > 
+val ith_row_from_false: #a:seq int -> #b:seq int -> i:ix a -> j:bound b -> p:iter a b (i + 1) 0
+			-> j':bound b{j < j'}
+			-> Lemma
+  (requires (elim_streak (row p i) (j + 1) j' 
+	     /\ index p i j = NotEqual))
+  (ensures (ith_row_from p i j =
+	         false::ith_row_from p i j'))
+let ith_row_from_false #a #b i j p j' = 
+  lemma_ith_row_elim i (j + 1) j' p
 
 
 val advance:  a:Seq.seq int -> b:Seq.seq int -> i:ix a -> j:ix b -> j':bound b{j<j'}
@@ -586,12 +580,12 @@ val advance:  a:Seq.seq int -> b:Seq.seq int -> i:ix a -> j:ix b -> j':bound b{j
   (ensures (fun j' -> 
 	      let p' = iter_i_j a b i j' in
   	         j < j'
+    	      /\  elim_streak (row p i) (j + 1) j'
 	      /\  (j' < Seq.length b ==> index p' i j' = Unknown)
  	      /\  Cons.tl lb=row_as_list b (Matrix2.row p' i) j'
-	      /\  (Cons.tl lb=[] ==> j'=Seq.length b)))
-
-	      // /\ (ith_row_from q i j =
-	      //       false::ith_row_from q i j')		      ))
+ 	      /\  (Cons.tl lb=[] ==> j'=Seq.length b)))
+	      // /\  (ith_row_from q i j =
+	      //       false::ith_row_from q i j')))
 	      // /\  (i + 1 < Seq.length a 
 	      // 	     ==> row_as_list b (Matrix2.row q (i + 1)) j
 	      // 	         = Cons.hd lb::row_as_list b (Matrix2.row q (i + 1)) j')))
