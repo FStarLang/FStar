@@ -408,26 +408,36 @@ let rec ith_row_from #a #b p i from =
 // let rec lemma_ith_row #a #b p row stop_col cur w = 
 //   if index p row cur <> Equal then lemma_ith_row p row stop_col (cur + 1) w
  
-val row_as_list: sb:seq int -> r:seq entry{Seq.length r = Seq.length sb} -> i:bound sb -> Tot (list int)
+
+val row_as_list_from_to: sb:seq int -> r:seq entry{Seq.length r = Seq.length sb} -> i:bound sb -> j:bound sb{i <= j} -> Tot (list int)
   (decreases (Seq.length sb - i))
-let rec row_as_list sb r i = 
-  if i = Seq.length sb
+let rec row_as_list_from_to sb r i j = 
+  if i = j
   then []
   else if Seq.index r i = Elim
-  then row_as_list sb r (i + 1)
-  else Seq.index sb i :: row_as_list sb r (i + 1)
-
+  then row_as_list_from_to sb r (i + 1) j
+  else Seq.index sb i :: row_as_list_from_to sb r (i + 1) j
+ 
+val row_as_list: sb:seq int -> r:seq entry{Seq.length r = Seq.length sb} -> i:bound sb -> Tot (list int)
+let row_as_list sb r i = row_as_list_from_to sb r i (Seq.length sb)
+// let rec row_as_list sb r i = 
+//   if i = Seq.length sb
+//   then []
+//   else if Seq.index r i = Elim
+//   then row_as_list sb r (i + 1)
+//   else Seq.index sb i :: row_as_list sb r (i + 1)
 
 val row_as_list_eq: sb:seq int 
 		  -> r1:seq entry{Seq.length r1 = Seq.length sb}
 		  -> r2:seq entry{Seq.length r2 = Seq.length sb}
-		  -> i:bound sb{forall (x:ix sb). i <= x ==> Seq.index r1 x = Seq.index r2 x}
-		  -> Lemma (row_as_list sb r1 i = row_as_list sb r2 i)
+		  -> i:bound sb
+		  -> j:bound sb{i <= j /\ (forall (x:ix sb). i <= x /\ x < j ==> Seq.index r1 x = Seq.index r2 x)}
+		  -> Lemma (row_as_list_from_to sb r1 i j  = row_as_list_from_to sb r2 i j)
    (decreases (Seq.length sb - i))
-let rec row_as_list_eq sb r1 r2 i =
-    if i = Seq.length sb 
+let rec row_as_list_eq sb r1 r2 i j  =
+    if i = j
     then ()
-    else row_as_list_eq sb r1 r2 (i + 1)
+    else row_as_list_eq sb r1 r2 (i + 1) j
  
 val iter_extends: a:_ -> b:_ 
 		-> i':bound a -> j':bound b
@@ -491,7 +501,7 @@ val lemma_next_row_aux: #a:seq int -> #b:seq int -> i:ix a -> j:ix b
   	           /\ (forall (k:ix b{j < k}). index q (i + 1) k = index p i k))))
 let lemma_next_row_aux #a #b i j p q = 
     iter_step a b i j (i + 1) 0 p q;
-    next_row_wraparound #a #b i;
+    next_row_wraparound #a #b i; 
     if i + 1 < Seq.length a
     then lemma_next_row_unchanged #a #b i j (Seq.length b) p q
 
@@ -508,27 +518,92 @@ val lemma_next_row: #a:seq int -> #b:seq int -> i:ix a -> j:ix b
 let lemma_next_row #a #b i j p q = 
       lemma_next_row_aux #a #b i j p q; 
       if (i + 1 < Seq.length a)
-      then row_as_list_eq b (row p i) (row q (i + 1)) (j + 1)
-  
-assume val advance:  a:Seq.seq int -> b:Seq.seq int -> i:ix a -> j:ix b
-	    -> p:iter a b i j
-	    -> q:iter a b (i + 1) 0
+      then row_as_list_eq b (row p i) (row q (i + 1)) (j + 1) (Seq.length b)
+
+opaque type elim_streak row (j:bound row) (j':bound row) =
+  (forall k. {:pattern (Seq.index row k)} (j <= k && k < j') ==> Seq.index row k = Elim)
+
+val lemma_row_all_elims: b:seq int -> row:seq entry{Seq.length row = Seq.length b} 
+		    -> i:bound b -> j:bound b{i <= j}
+		    -> Lemma
+  (requires (elim_streak row i j))
+  (ensures (row_as_list_from_to b row i j = []))
+  (decreases (j - i))
+let rec lemma_row_all_elims b row i j = 
+  if i=j then ()
+  else lemma_row_all_elims b row (i + 1) j
+
+assume val lemma_row_elims_until: b:seq int -> row:seq entry{Seq.length row = Seq.length b} -> l:list int{is_Cons l}
+			   -> i:bound b -> j:ix b{i < j}
+			   -> Lemma 
+  (requires (l = row_as_list b row i 
+	    /\ elim_streak row (i + 1) j
+	    /\ Seq.index row j <> Elim))
+  (ensures (Cons.tl l = row_as_list b row j /\ is_Cons (Cons.tl l)))
+
+val lemma_elim_tail: b:seq int -> row:seq entry{Seq.length row = Seq.length b} -> l:list int{is_Cons l} 
+		    -> j:ix b 
+		    -> Lemma
+  (requires (l=row_as_list b row j
+	     /\ elim_streak row (j + 1) (Seq.length b)))
+  (ensures (Cons.tl l = []))
+let lemma_elim_tail b row l j = lemma_row_all_elims b row (j + 1) (Seq.length b)
+
+
+// val lemma_elim_tail: b:seq int -> row:seq entry{Seq.length row = Seq.length b} -> l:list int{is_Cons l} 
+// 		    -> j:ix b -> k:bound b{j <= k} -> j':bound b{k <= j'}
+// 		    -> Lemma
+//   (requires (l=row_as_list_from_to b row j k
+// 	     /\ elim_streak row (j + 1) j'))
+//   (ensures ((j' = Seq.length b ==> Cons.tl l = [])
+// 	    /\ ((j' < Seq.length b /\ Seq.index row j' = Elim) ==> (elim_streak row j (j' + 1) /\ l=row_as_list_from_to b row j j'))
+// 	    /\ ((j' < Seq.length b /\ Seq.index row j' <> Elim) ==> Cons.tl l=row_as_list b row j')))
+//   (decreases (j' - k))
+// let rec lemma_elim_tail b row l j k j' = 
+//   if k=j'
+//   then if j' = Seq.length b 
+//        then lemma_row_all_elims b row (j + 1) j'
+//        else match Seq.index row j with 
+// 	      | Elim -> admit()
+// 	      | _ -> admit()
+//   else if k=j
+
+//  assert (index row j (k + 1) with 
+//          | Elim -> admit
+//        lemma_elim_tail b row l j (k + 1) j'
+
+// match Seq.index row j with 
+// 	  | Elim - > 
+
+
+val advance:  a:Seq.seq int -> b:Seq.seq int -> i:ix a -> j:ix b -> j':bound b{j<j'}
+	    -> p:iter a b i j' -> q:iter a b (i + 1) 0
 	    -> lb:list int{is_Cons lb}
 	    -> Pure (bound b)
   (requires (lb=row_as_list b (Matrix2.row p i) j 
-	    /\ Seq.index a i <> Seq.index b j))
+	    /\ Seq.index a i <> Seq.index b j
+	    /\ elim_streak (row p i) (j + 1) j'))
   (ensures (fun j' -> 
 	      let p' = iter_i_j a b i j' in
   	         j < j'
 	      /\  (j' < Seq.length b ==> index p' i j' = Unknown)
-	      /\  Cons.tl lb=row_as_list b (Matrix2.row p' i) j'
-	      /\  (Cons.tl lb=[] ==> j'=Seq.length b)
-	      /\ (ith_row_from q i j =
-	            false::ith_row_from q i j')		      
-	      /\  (i + 1 < Seq.length a 
-		     ==> row_as_list b (Matrix2.row q (i + 1)) j
-		         = Cons.hd lb::row_as_list b (Matrix2.row q (i + 1)) j')))
- 
+ 	      /\  Cons.tl lb=row_as_list b (Matrix2.row p' i) j'
+	      /\  (Cons.tl lb=[] ==> j'=Seq.length b)))
+
+	      // /\ (ith_row_from q i j =
+	      //       false::ith_row_from q i j')		      ))
+	      // /\  (i + 1 < Seq.length a 
+	      // 	     ==> row_as_list b (Matrix2.row q (i + 1)) j
+	      // 	         = Cons.hd lb::row_as_list b (Matrix2.row q (i + 1)) j')))
+  (decreases (Seq.length b - j'))
+let rec advance a b i j j' p q lb =
+  if j' = Seq.length b 
+  then (lemma_elim_tail b (row p i) lb j; j')
+  else if index p i j' = Elim
+  then (admit (); advance a b i j (j' + 1) p q lb)
+  else (lemma_row_elims_until b (row p i) lb j j';
+	j')
+
 val check_bob: a:int -> lb:list int -> Tot (list int * list bool)
 let rec check_bob a lb =
   match lb with
