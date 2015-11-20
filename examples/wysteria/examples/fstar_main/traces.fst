@@ -569,13 +569,23 @@ val ith_row_from_false: #a:seq int -> #b:seq int -> i:ix a -> j:bound b -> p:ite
 let ith_row_from_false #a #b i j p j' = 
   lemma_ith_row_elim i (j + 1) j' p
 
+assume val next_ith_row_from_false:  a:_ -> b:_ -> i:ix a -> j:ix b -> j':bound b {j < j'} 
+			    -> p:iter a b i j' 
+			    -> q:iter a b (i + 1) 0
+			    -> Lemma
+        (requires (Seq.index a i <> Seq.index b j
+		  /\ elim_streak (row p i) (j + 1) j'))
+        (ensures (ith_row_from q i j 
+		  = false::ith_row_from q i j'))
+// let next_ith_row_from_false a b i j j' p q = 
+  
 
 val advance:  a:Seq.seq int -> b:Seq.seq int -> i:ix a -> j:ix b -> j':bound b{j<j'}
 	    -> p:iter a b i j' -> q:iter a b (i + 1) 0
 	    -> lb:list int{is_Cons lb}
 	    -> Pure (bound b)
   (requires (lb=row_as_list b (Matrix2.row p i) j 
-	    /\ Seq.index a i <> Seq.index b j
+	    /\ index p i j = NotEqual //Seq.index a i <> Seq.index b j
 	    /\ elim_streak (row p i) (j + 1) j'))
   (ensures (fun j' -> 
 	      let p' = iter_i_j a b i j' in
@@ -585,7 +595,7 @@ val advance:  a:Seq.seq int -> b:Seq.seq int -> i:ix a -> j:ix b -> j':bound b{j
  	      /\  Cons.tl lb=row_as_list b (Matrix2.row p' i) j'
  	      /\  (Cons.tl lb=[] ==> j'=Seq.length b)))
 	      // /\  (ith_row_from q i j =
-	      //       false::ith_row_from q i j')))
+	      //       false::ith_row_from q i j')
 	      // /\  (i + 1 < Seq.length a 
 	      // 	     ==> row_as_list b (Matrix2.row q (i + 1)) j
 	      // 	         = Cons.hd lb::row_as_list b (Matrix2.row q (i + 1)) j')))
@@ -610,6 +620,16 @@ let rec check_bob a lb =
      else let tl, r = check_bob a tl in
           hd::tl, false::r
 
+assume val lemma_pnext: sa:Seq.seq int -> sb:Seq.seq int -> i:ix sa -> j:ix sb 
+	       -> p:iter sa sb i j
+	       -> pnext:iter sa sb i (j + 1)
+	       -> Lemma 
+  (requires (index p i j = Unknown
+	     /\ index pnext i j = NotEqual))
+  (ensures (row_as_list sb (row p i) j
+	    =row_as_list sb (row pnext i) j))
+
+
 val lemma_bob: sa:Seq.seq int -> sb:Seq.seq int -> i:ix sa -> j:bound sb 
 	       -> p:iter sa sb i j
 	       -> q:iter sa sb (i + 1) 0
@@ -627,11 +647,15 @@ let rec lemma_bob sa sb i j p q a lb = match lb with
   | [] -> ()
   | hd::tl ->
     iter_step sa sb i j (i + 1) 0 p q;
+    let pnext = iter_i_j sa sb i (j + 1) in
+    iter_step sa sb i j i (j + 1) p pnext;
+    iter_extends sa sb i j i (j + 1);
     if hd=a
     then lemma_next_row i j p q
-    else let j' = advance sa sb i j p q lb in
-	 let p' = iter_i_j sa sb i j' in
-	 lemma_bob sa sb i j' p' q a tl
+    else (lemma_pnext sa sb i j p pnext;
+          let j' = advance sa sb i j (j + 1) pnext q lb in
+  	  let p' = iter_i_j sa sb i j' in
+	  lemma_bob sa sb i j' p' q a tl)
 
 val for_alice : list int -> list int -> Tot (list (list bool))
 let rec for_alice la lb = match la with 
