@@ -29,6 +29,8 @@ let open_connection (port:int) :(chan_in * chan_out) =
 let string_of_bytes b = Platform.Bytes.get_cbytes b
 let bytes_of_string s = Platform.Bytes.abytes s
 
+let int_of_string = int_of_string
+  
 let marshal (x:'a) :bytes =
   let s = Marshal.to_string x ([Marshal.Closures]) in
   bytes_of_string s
@@ -53,7 +55,7 @@ let recv (c_in:chan_in) :bytes =
 (* TODO: FIXME *)
 let random i = bytes_of_string (Bytes.to_string (Bytes.create i))
  
-let create_thread (f:unit -> unit) :unit = let _ = Thread.create f () in ()
+(* let create_thread (f:unit -> unit) :unit = let _ = Thread.create f () in () *)
 
 let is_server _ = Sys.argv.(1) = "0"
 let me _ = Sys.argv.(2)

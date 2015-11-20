@@ -19,7 +19,7 @@ open FStar.OrdSet
 
 type wrange = int * int
 
-type binop = | Gt | Eq
+type binop = | Gt | Eq | Sub
 
 type celt =
   | Input     : prin -> wrange -> celt
@@ -89,6 +89,7 @@ let supported_box_content t = match t with
 
 val supported_input_type: typ -> Tot bool
 let supported_input_type t = match t with
+  | T_prin     -> true
   | T_bool     -> true
   | T_cons _ _ -> is_nat t || is_int_list t
   | T_box t'   -> supported_box_content t'
@@ -99,6 +100,7 @@ let assign_prin ps v en =
   let Var s t = v in
   if supported_input_type t then
     match t with
+      | T_prin     -> Some.v (choose ps)
       | T_bool     -> Some.v (choose ps)
       | T_cons _ _ -> Some.v (choose ps)
       | T_box t'  ->
@@ -155,6 +157,7 @@ let listsize = 96
 
 val size: typ -> (n:int{n > 0})
 let rec size t = match t with
+  | T_prin     -> natsize
   | T_bool     -> 1
   | T_cons _ _ ->
     if is_nat t then natsize
@@ -221,6 +224,7 @@ val is_ffi_bin_op: string -> (bool * binop * typ)
 let is_ffi_bin_op s =
   if s = "Prims.(>)" then true, Gt, T_bool
   else if s = "Prims.op_Equality" then true, Eq, T_bool
+  else if s = "Prims.(-)" then true, Sub, (T_cons "Prims.int" [])
   else false, Gt, T_bool
 
 val unbox_t: typ -> typ
@@ -353,6 +357,7 @@ val op_to_string : binop -> Tot string
 let op_to_string = function
   | Gt -> "Gt"
   | Eq -> "Eq"
+  | Sub -> "Sub"
 
 val celt_to_string: celt -> string
 let celt_to_string = function
@@ -499,6 +504,35 @@ let celt_to_booleancelt celt = match celt with
       in
       let (rbckt, c) = fold_left2 f ([], 1) l1 l2 in
       rev_append ((copy (fst r3) c)::rbckt) []
+
+    else if op = Sub then
+      let l1 = flatten_range r1 in
+      let l2 = flatten_range r2 in
+      let l3 = flatten_range r3 in
+
+      let f (ckt, out, c) b1 b2 =
+	let (t1, _) = alloc_wires 1 in
+	let g1 = XOR t1 b1 c in
+	let (t2, _) = alloc_wires 1 in
+	let g2 = XOR t2 b2 c in
+	let (t3, _) = alloc_wires 1 in
+	let g3 = AND t3 t1 t2 in
+	let (c1, _) = alloc_wires 1 in
+	let g4 = XOR c1 t3 b1 in
+	let (t4, _) = alloc_wires 1 in
+	let g5 = XOR t4 b1 b2 in
+	let (t5, _) = alloc_wires 1 in
+	let g6 = XOR t5 t4 c in
+	let (s, _) = alloc_wires 1 in
+	let g7 = XOR s t5 1 in
+	g7::g6::g5::g4::g3::g2::g1::ckt, s::out, c1
+      in
+
+      let (rbckt, rout, _) = fold_left2 f ([], [], 1) l1 l2 in
+      let bckt, out = rev_append rbckt [], rev_append rout [] in
+      let f ckt b1 b2 = (copy b1 b2)::ckt in
+      rev_append (fold_left2 f bckt l3 out) []
+
     else []
   | Const_nat r n ->
     let l1 = flatten_range r in
@@ -641,6 +675,25 @@ let dump_gmw prs bckt fd =
   ) bckt;
   ()
 
+val prin_to_nat: prin -> Tot nat
+let prin_to_nat = function
+  | Alice -> 1
+  | Bob -> 2
+  | Charlie -> 3
+  | Dave -> 4
+  | Evelyn -> 5
+  | Fred -> 6
+
+val nat_to_prin: int -> prin
+let nat_to_prin n = match n with
+  | 1 -> Alice
+  | 2 -> Bob
+  | 3 -> Charlie
+  | 4 -> Dave
+  | 5 -> Evelyn
+  | 6 -> Fred
+  | _ -> failwith "Cannot convert nat to prin"
+
 val dump_val: #meta:v_meta -> v:value meta -> typ -> fd_write -> unit
 let rec dump_val #meta v t fd = match v with
   | V_box _ v'           -> dump_val v' (unbox_t t) fd
@@ -656,6 +709,11 @@ let rec dump_val #meta v t fd = match v with
 	List.iter (fun b -> write_string fd (string_of_int b); write_string fd " ") l'
       else failwith "listsize is not constant size that we expect"
   | V_bool b             -> if b then write_string fd "1 " else write_string fd "0 "
+  | V_prin p             -> 
+    let n = prin_to_nat p in
+    let l = nat_to_bin n in
+    List.iter (fun b -> write_string fd (string_of_int b); write_string fd " ") l
+
   | _ -> failwith "Dumping of this value is not supported"
 
 val dump_inps: varset -> env -> fd_write -> unit
@@ -767,6 +825,11 @@ let parse_output l t = match t with
       D_v (const_meta ()) (V_opaque l' (const_meta ()) slice_const compose_const slice_const_sps)
 
     else failwith "Unsupported output cons (should have been checked earlier)"
+
+  | T_prin ->
+    let n = parse_int l in
+    let p = nat_to_prin n in
+    D_v (const_meta ()) (V_prin p)
 
   | _ -> failwith "Unsupported output type (should have been checked earlier)"
 

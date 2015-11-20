@@ -206,39 +206,39 @@ val do_sec_comp:
   p:prin -> c:tstep_config p{is_T_red (Conf.t c) /\ is_R_assec (T_red.r (Conf.t c))}
   -> ML dvalue
 let do_sec_comp p c =
+  let R_assec ps v = T_red.r (Conf.t c) in
+  let _ = admitP (b2t (is_clos v)) in
+  let (en, _, e) = get_en_b v in
+  let dv = Circuit.rungmw p ps en (fun _ -> None) e in
+  dv
+  (* let r = T_red.r (Conf.t c) in *)
   (* let R_assec ps v = r in *)
-  (* let _ = admitP (b2t (is_clos v)) in *)
-  (* let (en, _, e) = get_en_b v in *)
-  (* let dv = Circuit.rungmw p ps en (fun _ -> None) e in *)
-  (* dv *)
-  let r = T_red.r (Conf.t c) in
-  let R_assec ps v = r in
-  if is_clos v && mem p ps then
-    let (en, x, e) = get_en_b v in
+  (* if is_clos v && mem p ps then *)
+  (*   let (en, x, e) = get_en_b v in *)
 
-    let (c_in, c_out) = open_connection 8888 in
+  (*   let (c_in, c_out) = open_connection 8888 in *)
 
-    let _ = cut (witness_client_config c) in
-    let _ = assert (exists c.{:pattern (witness_client_config c)} Conf.t c = T_red r /\ Conf.l c = Target /\ Conf.m c = Mode Par (singleton p)) in
-    let _ = assert (client_prop p r) in
+  (*   let _ = cut (witness_client_config c) in *)
+  (*   let _ = assert (exists c.{:pattern (witness_client_config c)} Conf.t c = T_red r /\ Conf.l c = Target /\ Conf.m c = Mode Par (singleton p)) in *)
+  (*   let _ = assert (client_prop p r) in *)
 
-    let (m, t) = mac_client_msg p r client_key in
-    send c_out m;
-    send c_out t;
+  (*   let (m, t) = mac_client_msg p r client_key in *)
+  (*   send c_out m; *)
+  (*   send c_out t; *)
 
-    let s_m = recv c_in in
-    let s_t = recv c_in in
+  (*   let s_m = recv c_in in *)
+  (*   let s_t = recv c_in in *)
 
-    let r_opt = verify_server_msg server_key s_m s_t in
-    if r_opt = None then failwith "Failed to verify secure server mac"
-    else
-      let Some (p', r', ps', x', e', dv) = r_opt in      
-      admitP (r = r' /\ e = e'); (* TODO: add sec block ids *)
-      if p = p' && ps = ps' && x = x' (* TODO:sec block id && r = r' && e = e' *) then
-	let _ = assert (server_prop p r ps x e dv) in
-	dv
-    else failwith "Secure server returned bad output"
-  else failwith "Reached a non-participating secure block"
+  (*   let r_opt = verify_server_msg server_key s_m s_t in *)
+  (*   if r_opt = None then failwith "Failed to verify secure server mac" *)
+  (*   else *)
+  (*     let Some (p', r', ps', x', e', dv) = r_opt in       *)
+  (*     admitP (r = r' /\ e = e'); (\* TODO: add sec block ids *\) *)
+  (*     if p = p' && ps = ps' && x = x' (\* TODO:sec block id && r = r' && e = e' *\) then *)
+  (* 	let _ = assert (server_prop p r ps x e dv) in *)
+  (* 	dv *)
+  (*   else failwith "Secure server returned bad output" *)
+  (* else failwith "Reached a non-participating secure block" *)
 
 val tstep: p:prin -> tstep_config p -> ML (option (tstep_config p))
 let tstep p c =

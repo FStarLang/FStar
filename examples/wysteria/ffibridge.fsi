@@ -24,3 +24,5 @@ val compose_v_opaques: #m1:v_meta -> #m2:v_meta
 val nat_of_c_opaque: const -> Tot nat
 
 val nat_of_v_opaque: #meta:v_meta -> value meta -> Tot nat
+
+val int_list_of_v_opaque: #meta:v_meta -> value meta -> Tot (list nat)
