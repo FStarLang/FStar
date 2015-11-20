@@ -638,6 +638,43 @@ let rec advance a b i j j' p q lb =
         advance a b i j (j' + 1) p' q lb)
   else (lemma_row_elims_until b (row p i) lb j j';
 	j')
+ 
+opaque type elim_streak' (#a:seq int) (#b:seq int) (p:prod a b entry) row from until = 
+  forall (k:ix b).{:pattern (index p row k)} (from <= k && k < until) ==> index p row k = Elim
+
+val convert_elim_streak' : #a:_ -> #b:_ -> p:prod a b entry -> r:ix a -> from:ix b -> until:bound b 
+      -> Lemma (requires (elim_streak' p r from until)) 
+	      (ensures (elim_streak (row p r) from until))
+	      [SMTPatT (elim_streak' p r from until)]
+let convert_elim_streak' #a #b p r from until = ()
+
+val move_elim_streak_aux : a:_ -> b:_ -> i:ix a{i + 1 < Seq.length a} -> j:ix b -> j':bound b {j + 1 < j'}
+		     -> q:iter a b (i + 1) 0{elim_streak' q i (j + 1) j' /\ index q i j = NotEqual}
+		     -> k:ix b{j + 1 <= k && k < j'}
+		     -> Lemma (index q (i + 1) k = Elim)
+let move_elim_streak_aux a b i j j' q k = 
+  assert (index q i j = NotEqual); 
+  assert (index q i k = Elim);
+  cut (exists (i':ix a). i' < i /\ index q i' k = Equal)
+
+val move_elim_streak' : a:_ -> b:_ -> i:ix a{i + 1 < Seq.length a} -> j:ix b -> j':bound b {j + 1 < j'} 
+		     -> q:iter a b (i + 1) 0
+		     -> Lemma
+        (requires (index q i j = NotEqual
+		  /\ elim_streak' q i (j + 1) j'))
+	(ensures (elim_streak' q (i + 1) (j + 1) j'))
+let move_elim_streak' a b i j j' q = 
+  qintro (move_elim_streak_aux a b i j j' q)
+
+val move_elim_streak : a:_ -> b:_ -> i:ix a{i + 1 < Seq.length a} -> j:ix b -> j':bound b {j + 1 < j'} 
+		     -> p:iter a b i j' 
+		     -> q:iter a b (i + 1) 0
+		     -> Lemma
+        (requires (index p i j = NotEqual
+		  /\ elim_streak (row p i) (j + 1) j'
+		  /\ elim_streak (row q i) (j + 1) j'))
+	(ensures (elim_streak (row q (i + 1)) (j + 1) j'))
+
 
 val next_row_elements: a:_ -> b:_ -> i:ix a{i + 1 < Seq.length a} -> j:ix b -> j':bound b {j < j'} 
 		     -> lb:list int{is_Cons lb}
@@ -658,7 +695,8 @@ let next_row_elements a b i j j' lb p q =
   then ()
   else (frame_elim_streak a b i (j + 1) j' p q;
         assert (index q i (j + 1) = Elim);
-	assume (elim_streak (row q (i + 1)) (j + 1) j');
+	move_elim_streak a b i j j' p q;
+	// assume (elim_streak (row q (i + 1)) (j + 1) j');
 	lemma_row_elim_some b (row q (i + 1)) (j + 1) j')
 
 val advance':  a:Seq.seq int -> b:Seq.seq int -> i:ix a -> j:ix b -> j':bound b{j<j'}
@@ -782,11 +820,6 @@ let lemma_sub_all_iters #a #b r p s i = ith_row_eq r p s i 0
 opaque type elim_streak' (#a:seq int) (#b:seq int) (p:prod a b entry) row from until = 
   forall (k:ix b).{:pattern (index p row k)} (from <= k && k < until) ==> index p row k = Elim
 
-val convert_elim_streak' : #a:_ -> #b:_ -> p:prod a b entry -> r:ix a -> from:ix b -> until:bound b 
-      -> Lemma (requires (elim_streak' p r from until)) 
-	      (ensures (elim_streak (row p r) from until))
-	      [SMTPatT (elim_streak' p r from until)]
-let convert_elim_streak' #a #b p r from until = ()
 
 val elim_streak_down_aux: a:_ -> b:_ -> i:ix a{i + 1 < Seq.length a} -> j:bound b
 		      -> p:iter a b i j{elim_streak' p i 0 j}
