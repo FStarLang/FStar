@@ -756,14 +756,28 @@ let rec rows_from #a #b p i =
   if i = Seq.length a then []
   else ith_row p i :: rows_from p (i + 1)
 
-assume val lemma_sub_sparse: #a:seq int -> #b:seq int -> r:bound a
+type all_iters a b = iter a b (Seq.length a) (Seq.length b)
+
+val ith_row_eq:  #a:seq int -> #b:seq int -> r:bound a
+		 -> p:iter a b r 0 
+		 -> s:all_iters a b
+		 -> i:ix a{i < r}
+		 -> j:bound b
+		 -> Lemma
+  (requires True)
+  (ensures (ith_row_from p i j = ith_row_from s i j))
+  (decreases (Seq.length b - j))
+let rec ith_row_eq #a #b r p s i j = 
+  if j = Seq.length b then ()
+  else ith_row_eq r p s i (j + 1)
+  
+val lemma_sub_all_iters: #a:seq int -> #b:seq int -> r:bound a
 		      -> p:iter a b r 0 
-		      -> s:sparse a b
+		      -> s:all_iters a b
 		      -> i:ix a{i < r}
 		      -> Lemma
-  (ensures (ith_row p i = ith_row s i)) //easy
-
-type all_iters a b = iter a b (Seq.length a) (Seq.length b)
+  (ensures (ith_row p i = ith_row s i)) 
+let lemma_sub_all_iters #a #b r p s i = ith_row_eq r p s i 0
 
 opaque type elim_streak' (#a:seq int) (#b:seq int) (p:prod a b entry) row from until = 
   forall (k:ix b).{:pattern (index p row k)} (from <= k && k < until) ==> index p row k = Elim
@@ -881,11 +895,12 @@ let rec lemma_alice sa sb i p t la lb = match la with
       let p = iter_i_j sa sb i j in
       lemma_bob sa sb i j p q hd lb;
       let lb', r = check_bob hd lb in
-      lemma_sub_sparse (i + 1) q t i;
+      lemma_sub_all_iters (i + 1) q t i;
       lemma_alice sa sb (i + 1) q t tl lb'
     end
 
 let all_iterations a b = iter_i_j a b (Seq.length a) (Seq.length b)
+
 val as_list_init_b: a:Seq.seq int{Seq.length a <> 0} 
 		  -> b:Seq.seq int 
 		  -> i:bound b
