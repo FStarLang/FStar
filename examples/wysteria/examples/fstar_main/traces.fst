@@ -665,20 +665,9 @@ let next_row_elements a b i j j' lb p q =
   else (frame_elim_streak a b i (j + 1) j' p q;
         assert (index q i (j + 1) = Elim);
 	assume (elim_streak (row q (i + 1)) (j + 1) j');
-	assume (row_as_list b (row q (i + 1)) (j + 1) 
-	        = row_as_list b (row q (i + 1)) j'))
+	lemma_row_elim_some b (row q (i + 1)) (j + 1) j')
 
-let next_ith_row_from_false a b i j j' p q = 
-  assert (index q i j = NotEqual);
-  if (j + 1 = j')
-  then ()
-  else (frame_elim_streak a b i (j + 1) j' p q;
-        ith_row_from_false a b i j j' q)
-
-
-row_as_list b (row q (i + 1)) j
-
-assume val advance':  a:Seq.seq int -> b:Seq.seq int -> i:ix a -> j:ix b -> j':bound b{j<j'}
+val advance':  a:Seq.seq int -> b:Seq.seq int -> i:ix a -> j:ix b -> j':bound b{j<j'}
 	    -> p:iter a b i j' -> q:iter a b (i + 1) 0
 	    -> lb:list int{is_Cons lb}
 	    -> Pure (bound b)
@@ -697,13 +686,14 @@ assume val advance':  a:Seq.seq int -> b:Seq.seq int -> i:ix a -> j:ix b -> j':b
  	      /\  (i + 1 < Seq.length a 
 	      	     ==> row_as_list b (row q (i + 1)) j
 	      	         = Cons.hd lb::row_as_list b (row q (i + 1)) j')))
-// let advance' a b i j j' p q lb = 
-//       let j'' = advance a b i j j' p q lb  in
-//       let p' = iter_i_j a b i j'' in
-//       // assert (index p' i j = NotEqual);
-//       // assume (elim_streak (row p' i) (j + 1) j'');
-//       next_ith_row_from_false a b i j j'' p' q;  
-//       j''
+let advance' a b i j j' p q lb = 
+      let j'' = advance a b i j j' p q lb  in
+      let p' = iter_i_j a b i j'' in
+      // assert (index p' i j = NotEqual);
+      // assume (elim_streak (row p' i) (j + 1) j'');
+      next_ith_row_from_false a b i j j'' p' q;  
+      if (i + 1 < Seq.length a) then next_row_elements a b i j j'' lb p' q;
+      j''
 
 val check_bob: a:int -> lb:list int -> Tot (list int * list bool)
 let rec check_bob a lb =
