@@ -551,13 +551,25 @@ let rec lemma_row_all_elims b row i j =
   if i=j then ()
   else lemma_row_all_elims b row (i + 1) j
 
-assume val lemma_row_elims_until: b:seq int -> row:seq entry{Seq.length row = Seq.length b} -> l:list int{is_Cons l}
+val lemma_row_elim_some: b:seq int -> s:seq entry{Seq.length s = Seq.length b} -> j0:bound s -> j:bound s{j0 <= j} -> 
+    Lemma (requires (elim_streak s j0 j))
+          (ensures (row_as_list b s j0
+	            = row_as_list b s j))
+	  (decreases (j - j0))
+let rec lemma_row_elim_some b s j0 j = 
+    if j0=j then ()
+    else lemma_row_elim_some b s (j0 + 1) j
+
+val lemma_row_elims_until: b:seq int -> row:seq entry{Seq.length row = Seq.length b} -> l:list int{is_Cons l}
 			   -> i:bound b -> j:ix b{i < j}
 			   -> Lemma 
   (requires (l = row_as_list b row i 
 	    /\ elim_streak row (i + 1) j
+	    /\ Seq.index row i <> Elim
 	    /\ Seq.index row j <> Elim))
   (ensures (Cons.tl l = row_as_list b row j /\ is_Cons (Cons.tl l)))
+let lemma_row_elims_until b row l i j = 
+    lemma_row_elim_some b row (i + 1) j
 
 val lemma_elim_tail: b:seq int -> row:seq entry{Seq.length row = Seq.length b} -> l:list int{is_Cons l} 
 		    -> j:ix b 
@@ -633,17 +645,28 @@ let rec advance a b i j j' p q lb =
   else (lemma_row_elims_until b (row p i) lb j j';
 	j')
 
-val next_row_elements: a:_ -> b:_ -> i:ix a -> j:ix b -> j':bound b {j < j'} 
-		     -> lb:list int
+val next_row_elements: a:_ -> b:_ -> i:ix a{i + 1 < Seq.length a} -> j:ix b -> j':bound b {j < j'} 
+		     -> lb:list int{is_Cons lb}
 		     -> p:iter a b i j' 
 		     -> q:iter a b (i + 1) 0
 		     -> Lemma
         (requires (index p i j = NotEqual
-		  /\ i + 1 < Seq.length a
+		  /\ lb=row_as_list b (row p i) j
 		  /\ elim_streak (row p i) (j + 1) j'))
         (ensures (row_as_list b (row q (i + 1)) j
 	      	         = Cons.hd lb::row_as_list b (row q (i + 1)) j'))
-let next
+let next_row_elements a b i j j' lb p q = 
+  assert (index q i j = NotEqual);
+  assert (index q (i + 1) j = Unknown);
+  assert (is_Cons (row_as_list b (row q (i + 1)) j));
+  assert (Cons.hd (row_as_list b (row q (i + 1)) j) = Cons.hd lb);
+  if j + 1 = j'
+  then ()
+  else (frame_elim_streak a b i (j + 1) j' p q;
+        assert (index q i (j + 1) = Elim);
+	assume (elim_streak (row q (i + 1)) (j + 1) j');
+	assume (row_as_list b (row q (i + 1)) (j + 1) 
+	        = row_as_list b (row q (i + 1)) j'))
 
 let next_ith_row_from_false a b i j j' p q = 
   assert (index q i j = NotEqual);
