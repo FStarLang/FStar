@@ -523,6 +523,24 @@ let lemma_next_row #a #b i j p q =
 opaque type elim_streak row (j:bound row) (j':bound row) =
   (forall k. {:pattern (Seq.index row k)} (j <= k && k < j') ==> Seq.index row k = Elim)
 
+val frame_elim_streak_aux:  a:_ -> b:_ -> i:ix a -> j:ix b -> j':bound b {j < j'} 
+			-> p:iter a b i j'{elim_streak (row p i) j j'}
+			-> q:iter a b (i + 1) 0
+			-> k:ix b{j<=k && k < j'}
+			-> Lemma (Seq.index (row q i) k = Elim)
+let frame_elim_streak_aux a b i j j' p q k =
+  assert (Seq.index (row p i) k = index p i k);
+  assert (Seq.index (row q i) k = index q i k);
+  assert (index q i k = Elim)
+
+val frame_elim_streak:  a:_ -> b:_ -> i:ix a -> j:ix b -> j':bound b {j < j'} 
+			-> p:iter a b i j'
+			-> q:iter a b (i + 1) 0
+			-> Lemma (requires (elim_streak (row p i) j j'))
+				(ensures  (elim_streak (row q i) j j'))
+let frame_elim_streak a b i j j' p q =
+  qintro (frame_elim_streak_aux a b i j j' p q)
+
 val lemma_row_all_elims: b:seq int -> row:seq entry{Seq.length row = Seq.length b} 
 		    -> i:bound b -> j:bound b{i <= j}
 		    -> Lemma
@@ -559,33 +577,37 @@ let rec lemma_ith_row_elim #a #b i j j' p =
   else (assert (index p i j = Seq.index (row p i) j);
         lemma_ith_row_elim #a #b i (j+1) j' p)
 
-val ith_row_from_false: #a:seq int -> #b:seq int -> i:ix a -> j:bound b -> p:iter a b (i + 1) 0
-			-> j':bound b{j < j'}
+val ith_row_from_false: a:seq int -> b:seq int -> i:ix a -> j:bound b -> j':bound b{j < j'}
+			-> p:iter a b (i + 1) 0
 			-> Lemma
   (requires (elim_streak (row p i) (j + 1) j' 
 	     /\ index p i j = NotEqual))
   (ensures (ith_row_from p i j =
 	         false::ith_row_from p i j'))
-let ith_row_from_false #a #b i j p j' = 
+let ith_row_from_false a b i j j' p = 
   lemma_ith_row_elim i (j + 1) j' p
-
-assume val next_ith_row_from_false:  a:_ -> b:_ -> i:ix a -> j:ix b -> j':bound b {j < j'} 
+ 			  
+val next_ith_row_from_false:  a:_ -> b:_ -> i:ix a -> j:ix b -> j':bound b {j < j'} 
 			    -> p:iter a b i j' 
 			    -> q:iter a b (i + 1) 0
 			    -> Lemma
-        (requires (Seq.index a i <> Seq.index b j
+        (requires (index p i j = NotEqual
 		  /\ elim_streak (row p i) (j + 1) j'))
         (ensures (ith_row_from q i j 
 		  = false::ith_row_from q i j'))
-// let next_ith_row_from_false a b i j j' p q = 
-  
+let next_ith_row_from_false a b i j j' p q = 
+  assert (index q i j = NotEqual);
+  if (j + 1 = j')
+  then ()
+  else (frame_elim_streak a b i (j + 1) j' p q;
+        ith_row_from_false a b i j j' q)
 
 val advance:  a:Seq.seq int -> b:Seq.seq int -> i:ix a -> j:ix b -> j':bound b{j<j'}
 	    -> p:iter a b i j' -> q:iter a b (i + 1) 0
 	    -> lb:list int{is_Cons lb}
 	    -> Pure (bound b)
   (requires (lb=row_as_list b (Matrix2.row p i) j 
-	    /\ index p i j = NotEqual //Seq.index a i <> Seq.index b j
+	    /\ index p i j = NotEqual 
 	    /\ elim_streak (row p i) (j + 1) j'))
   (ensures (fun j' -> 
 	      let p' = iter_i_j a b i j' in
