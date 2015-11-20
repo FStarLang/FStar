@@ -382,15 +382,7 @@ let rec fast_is_sparse_full a b p q i j =
 // let remove (s:Seq.seq int) (i:ix s) = 
 //   Seq.append (Seq.slice s 0 i) (Seq.slice s (i + 1) (Seq.length s))
 
-val ith_row_until: #a:Seq.seq int -> #b:Seq.seq int -> p:prod a b entry -> i:ix a -> k:bound b -> j:bound b{j <= k} -> Tot (list bool)
-  (decreases (k - j))
-let rec ith_row_until #a #b p i k j = 
-  if j = k                       then []
-  else if index p i j = Equal    then [true]
-  else if index p i j = NotEqual then false::ith_row_until p i k (j + 1)
-  else ith_row_until p i k (j + 1)
 
-let ith_row #a #b (p:prod a b entry) i = ith_row_until p i (Seq.length b) 0
 
 val ith_row_from: #a:Seq.seq int -> #b:Seq.seq int -> p:prod a b entry -> i:ix a -> from:bound b -> Tot (list bool)
   (decreases (Seq.length b - from))
@@ -399,6 +391,8 @@ let rec ith_row_from #a #b p i from =
     else if index p i from=Equal then [true]
     else if index p i from=NotEqual then false::ith_row_from p i (from + 1)
     else ith_row_from p i (from + 1)
+
+let ith_row #a #b (p:prod a b entry) i = ith_row_from p i 0
 
 // val lemma_ith_row: #a:Seq.seq int -> #b:Seq.seq int -> p:prod a b entry -> row:ix a -> stop_col:bound b -> cur:bound b{cur <= stop_col} 
 //     -> w:ix b{cur <= w && w < stop_col} 
@@ -775,8 +769,9 @@ opaque type elim_streak' (#a:seq int) (#b:seq int) (p:prod a b entry) row from u
   forall (k:ix b).{:pattern (index p row k)} (from <= k && k < until) ==> index p row k = Elim
 
 val convert_elim_streak' : #a:_ -> #b:_ -> p:prod a b entry -> r:ix a -> from:ix b -> until:bound b 
-      -> Lemma (requires (elim_streak' p r from until))
+      -> Lemma (requires (elim_streak' p r from until)) 
 	      (ensures (elim_streak (row p r) from until))
+	      [SMTPatT (elim_streak' p r from until)]
 let convert_elim_streak' #a #b p r from until = ()
 
 val elim_streak_down_aux: a:_ -> b:_ -> i:ix a{i + 1 < Seq.length a} -> j:bound b
@@ -797,45 +792,42 @@ val elim_streak_down: a:_ -> b:_ -> i:ix a{i + 1 < Seq.length a} -> j:bound b
   (ensures (elim_streak' q (i + 1) 0 j))
 let elim_streak_down a b i j p q = 
   qintro (elim_streak_down_aux a b i j p q)
-
-val next_row_elements_alice: a:_ -> b:_ -> i:ix a{i + 1 < Seq.length a} -> j:bound b
+ 
+val next_row_elements_alice: a:_ -> b:_ -> i:ix a -> j:bound b
 		     -> p:iter a b i j
 		     -> q:iter a b (i + 1) 0
 		     -> Lemma
-        (requires ((j < Seq.length b ==> index p i j = Unknown)
-		  /\ elim_streak' (row p i) 0 j))
-        (ensures (row_as_list b (row q (i + 1)) 0
+        (requires (elim_streak' p i 0 j))
+        (ensures (i + 1 < Seq.length a
+		    ==>  row_as_list b (row q (i + 1)) 0
 	      	         = row_as_list b (row q (i + 1)) j))
-
-
+let next_row_elements_alice a b i j p q = 
+    if (i + 1 < Seq.length a)
+    then (elim_streak_down a b i j p q;
+          lemma_row_elim_some b (row q (i + 1)) 0 j)
 
 val skip_elims: sa:seq int -> sb:seq int -> i:ix sa -> j:bound sb -> p:iter sa sb i j -> q:iter sa sb (i + 1) 0 -> 
 	 Pure (bound sb)
-	      (requires (elim_streak (row p i) 0 j))
+	      (requires (elim_streak' p i 0 j))
 	      (ensures (fun j -> 
 			  let p' = iter_i_j sa sb i j in
-			  (row_as_list sb (row p i) 0 
-			    = row_as_list sb (row p' i) j
-			    /\  (i + 1 < Seq.length sa 
-			         ==> (row_as_list sb (row q (i + 1)) 0 
-			              = row_as_list sb (row q (i + 1)) j))
-			     /\ (j < Seq.length sb ==> index p' i j <> Elim)
-			     /\ ith_row p' i = ith_row_from p' i j
-			     /\ ith_row q i  = ith_row_from q  i j)))
+			  elim_streak' p i 0 j
+			  /\ (j < Seq.length sb ==> index p' i j <> Elim)))
 	      (decreases (Seq.length sb - j))
 let rec skip_elims sa sb i j p q = 
   if j = Seq.length sb 
-  then (lemma_row_all_elims b (row p i) 0 j;
-        j)
+  then j
   else match index p i j with 
- 	  | Unknown -> admit(); j
+ 	  | Unknown -> j
 	  | Elim -> 
  	    let j' = j + 1 in 
 	    let p' = iter_i_j sa sb i j' in
 	    iter_extends sa sb i j i j';
 	    skip_elims sa sb i (j + 1) p' q
 
-assume val first_iteration_index: sa:seq int -> sb:seq int -> i:ix sa -> p:iter sa sb i 0 -> q:iter sa sb (i + 1) 0 -> 
+val ith_row_elim_prefix: #sa:_ -> #sb:_ ->
+        
+val first_iteration_index: sa:seq int -> sb:seq int -> i:ix sa -> p:iter sa sb i 0 -> q:iter sa sb (i + 1) 0 -> 
 	 Pure (bound sb)
 	      (requires True)
 	      (ensures (fun j -> 
@@ -847,7 +839,14 @@ assume val first_iteration_index: sa:seq int -> sb:seq int -> i:ix sa -> p:iter 
 			              = row_as_list sb (row q (i + 1)) j))
 			     /\ (j < Seq.length sb ==> index p' i j <> Elim)
 			     /\ ith_row p' i = ith_row_from p' i j
-			     /\ ith_row q i  = ith_row_from q  i j))
+			     /\ ith_row q i  = ith_row_from q  i j)))
+let first_iteration_index sa sb i p q = 
+  let j = skip_elims sa sb i 0 p q in
+  lemma_row_all_elims b (row p i) 0 j;
+  next_row_elements_alice a b i j p q;
+
+	lemma_ith_row_elim i 0 (Seq.length sb) p
+
  
 val lemma_alice: sa:Seq.seq int -> sb:Seq.seq int -> i:bound sa 
 	       -> p:iter sa sb i 0
