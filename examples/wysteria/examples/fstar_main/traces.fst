@@ -597,10 +597,12 @@ val advance:  a:Seq.seq int -> b:Seq.seq int -> i:ix a -> j:ix b -> j':bound b{j
 	      // 	         = Cons.hd lb::row_as_list b (Matrix2.row q (i + 1)) j')))
   (decreases (Seq.length b - j'))
 let rec advance a b i j j' p q lb =
-  if j' = Seq.length b 
+  if j' = Seq.length b  
   then (lemma_elim_tail b (row p i) lb j; j')
   else if index p i j' = Elim
-  then (admit (); advance a b i j (j' + 1) p q lb)
+  then (let p' = iter_i_j a b i (j' + 1) in
+        iter_extends a b i j' i (j' + 1);
+        advance a b i j (j' + 1) p' q lb)
   else (lemma_row_elims_until b (row p i) lb j j';
 	j')
 
