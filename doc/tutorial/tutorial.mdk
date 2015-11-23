@@ -827,8 +827,9 @@ on `x`. The basic concept here is that by programming total functions, we
 can write proofs about other pure expressions. We'll discuss such proofs
 in detail in the remainder of this section.
 
-~ Remark
-In F\* an expression being ghost (computationally irrelevant) is an effect.
+~ Remark 
+In F\* an expression being ghost (computationally irrelevant) is an effect. The
+effect `GTot` in the type of `factorial_is_positive` indicates that it is a ghost, total function.
 ~
 
 ### Dependent function types
@@ -1369,9 +1370,9 @@ Is it better to do this intrinsically or extrinsically? Do it both ways.
 ~Exercise
 Define the `fold_left` function on lists, so that
 
-    fold_left f a [b1; ...; bn] = f (... (f (f a b1) b2) ...) bn
+    fold_left f [b1; ...; bn] a = f (bn, ... (f b2 (f b1 a)))
 
-Prove that `(fold_left Cons [] l = reverse l)`.
+Prove that `(fold_left Cons l [] = reverse l)`.
 (The proof is a level harder from what we've done so far)
 ~~ ExerciseFragment {exname=ex4f-fold-left}
 val fold_left_cons_is_reverse: l:list 'a -> l':list 'a ->
