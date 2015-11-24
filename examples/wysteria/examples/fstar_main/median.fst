@@ -55,9 +55,22 @@ val monolithic_median_correctness:
 	                                      median_spec x1 x2 y1 y2))
 let monolithic_median_correctness x1 x2 y1 y2 = ()
 
-val mono_median_h: x:Box (int * int)alice_s -> y:Box (int * int) bob_s -> Wys (Wire int ab) (pre (Mode Par ab)) post
-let mono_median_h x y =
-  let g:unit -> Wys (Wire int ab) (pre (Mode Sec ab)) post =
+val mono_median_h:
+  x:Box (int * int) alice_s -> y:Box (int * int) bob_s
+  -> Wys int (pre (Mode Par ab))
+          (fun _ r t -> (median_pre (fst (v_of_box x)) (snd (v_of_box x))
+                                      (fst (v_of_box y)) (snd (v_of_box y)) ==>
+	              r = median_spec (fst (v_of_box x)) (snd (v_of_box x))
+                                      (fst (v_of_box y)) (snd (v_of_box y))) /\
+		      t = [TMsg #int r])
+  let mono_median_h x y =
+  let g:unit -> Wys int (pre (Mode Sec ab))
+               (fun _ r t -> (median_pre (fst (v_of_box x)) (snd (v_of_box x))
+                                      (fst (v_of_box y)) (snd (v_of_box y)) ==>
+			   r = median_spec (fst (v_of_box x)) (snd (v_of_box x))
+                                           (fst (v_of_box y)) (snd (v_of_box y))) /\
+			   t = [])
+    =
     fun _ -> //commenting it out for circuit backend: monolithic_median (unbox_s x1) (unbox_s x2) (unbox_s y1) (unbox_s y2)
     let x = unbox_s x in let y = unbox_s y in
     let x1 = fst x in let x2 = snd x in let y1 = fst y in let y2 = snd y in
@@ -65,12 +78,37 @@ let mono_median_h x y =
     let x3 = if a then x1 else x2 in
     let y3 = if a then y2 else y1 in
     let d = x3 > y3 in
-    mkwire_s ab (if d then y3 else x3)
+    (if d then y3 else x3)
   in
   
   as_sec ab g
 
-val opt_median_h: x:Box (int * int) alice_s -> y:Box (int * int) bob_s -> Wys int (pre (Mode Par ab)) post
+(* val mono_median_h': *)
+(*   x1:Box int alice_s -> x2:Box int alice_s -> y1:Box int bob_s -> y2:Box int bob_s *)
+(*   -> Wys int (pre (Mode Par ab)) *)
+(*     (fun _ r t -> median_pre (v_of_box x1) (v_of_box x2) (v_of_box y1) (v_of_box y2) ==> *)
+(*                r = median_spec (v_of_box x1) (v_of_box x2) (v_of_box y1) (v_of_box y2) /\ *)
+(* 	       t = [TMsg #int r]) *)
+(* let mono_median_h' x1 x2 y1 y2 = *)
+(*   let mk_t: p:prin -> z1:Box int (singleton p) -> z2:Box int (singleton p) -> unit *)
+(*             -> Wys (int * int) (pre (Mode Par (singleton p))) *)
+(* 	          (fun _ r t -> r = (v_of_box z1, v_of_box z2) /\ t = []) = *)
+(*     fun p z1 z2 _ -> *)
+(*     mk_tuple (unbox_p z1) (unbox_p z2) *)
+(*   in *)
+
+(*   let t1 = as_par alice_s (mk_t alice x1 x2) in *)
+(*   let t2 = as_par bob_s (mk_t bob y1 y2) in *)
+  
+(*   mono_median_h t1 t2 *)
+
+val opt_median_h:
+  x:Box (int * int) alice_s -> y:Box (int * int) bob_s
+  -> Wys int (pre (Mode Par ab))
+          (fun _ r _ -> median_pre (fst (v_of_box x)) (snd (v_of_box x))
+                                     (fst (v_of_box y)) (snd (v_of_box y)) ==>
+	             r = median_spec (fst (v_of_box x)) (snd (v_of_box x))
+                                     (fst (v_of_box y)) (snd (v_of_box y)))
 let opt_median_h x y =
   let fst_p: p:prin -> x:Box (int * int) (singleton p) -> unit
              -> Wys int (pre (Mode Par (singleton p))) (fun _ r _ -> b2t (r = fst (v_of_box x))) =
@@ -125,6 +163,24 @@ let opt_median_h x y =
 
   unbox_p (as_par ab g)
 
+val opt_median_h':
+  x1:Box int alice_s -> x2:Box int alice_s -> y1:Box int bob_s -> y2:Box int bob_s
+  -> Wys int (pre (Mode Par ab))
+    (fun _ r _ -> median_pre (v_of_box x1) (v_of_box x2) (v_of_box y1) (v_of_box y2) ==>
+               r = median_spec (v_of_box x1) (v_of_box x2) (v_of_box y1) (v_of_box y2))
+let opt_median_h' x1 x2 y1 y2 =
+  let mk_t: p:prin -> z1:Box int (singleton p) -> z2:Box int (singleton p) -> unit
+            -> Wys (int * int) (pre (Mode Par (singleton p)))
+	          (fun _ r _ -> b2t (r = (v_of_box z1, v_of_box z2))) =
+    fun p z1 z2 _ ->
+    mk_tuple (unbox_p z1) (unbox_p z2)
+  in
+
+  let t1 = as_par alice_s (mk_t alice x1 x2) in
+  let t2 = as_par bob_s (mk_t bob y1 y2) in
+  
+  opt_median_h t1 t2
+
 val mono_median: ps:prins{ps = ab} -> w:Wire (int * int) ps -> Wys (Wire int ab) (pre (Mode Par ab)) post
 let mono_median ps w =
   let proj: p:prin{FStar.OrdSet.mem p ab} -> unit -> Wys (int * int) (pre (Mode Par (singleton p))) post =
@@ -132,7 +188,11 @@ let mono_median ps w =
   in
   let t1 = as_par alice_s (proj alice) in
   let t2 = as_par bob_s (proj bob) in
-  mono_median_h t1 t2
+  let x = mono_median_h t1 t2 in
+  let trivial: unit -> Wys int (pre (Mode Par ab)) post =
+    fun _ -> x
+  in
+  mkwire_p ab (as_par ab trivial)
 
 val opt_median: ps:prins{ps = ab} -> w:Wire (int * int) ps -> Wys (Wire int ab) (pre (Mode Par ab)) post
 let opt_median ps w =

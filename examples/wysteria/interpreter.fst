@@ -1,7 +1,7 @@
 (*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.Seq --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Ffibridge --admit_fsi Runtime --admit_fsi FStar.IO --admit_fsi FStar.String --__temp_no_proj PSemantics --verify_module Interpreter;
+    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.Seq --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Ffibridge --admit_fsi Runtime --admit_fsi FStar.IO --admit_fsi FStar.String --admit_fsi Hashtable --__temp_no_proj PSemantics --verify_module Interpreter;
     variables:CONTRIB=../../contrib;
-    other-files:classical.fst ext.fst set.fsi heap.fst st.fst all.fst seq.fsi seqproperties.fst ghost.fst listTot.fst ordset.fsi ordmap.fsi list.fst io.fsti string.fst prins.fst ast.fst ffibridge.fsi sem.fst psem.fst $CONTRIB/Platform/fst/Bytes.fst runtime.fsi print.fst ckt.fst $CONTRIB/CoreCrypto/fst/CoreCrypto.fst ../crypto/sha1.fst crypto.fst
+    other-files:classical.fst ext.fst set.fsi heap.fst st.fst all.fst seq.fsi seqproperties.fst ghost.fst listTot.fst ordset.fsi ordmap.fsi list.fst io.fsti string.fst prins.fst ast.fst ffibridge.fsi sem.fst psem.fst $CONTRIB/Platform/fst/Bytes.fst runtime.fsi print.fst hashtable.fsi ckt.fst $CONTRIB/CoreCrypto/fst/CoreCrypto.fst ../crypto/sha1.fst crypto.fst
  --*)
 
 module Interpreter
@@ -153,6 +153,9 @@ let step_correctness c =
   else if not (pre_assec c = NA) then C_assec_beta c c'
   else C_assec_ret c c'
 
+val step_completeness: c:config -> c':config -> h:sstep c c' -> Lemma (requires (True)) (ensures (is_Some (step c)))
+let step_completeness c c' h = ()
+
 #set-options "--z3timeout 10"
 
 val target_step_lemma:
@@ -206,39 +209,39 @@ val do_sec_comp:
   p:prin -> c:tstep_config p{is_T_red (Conf.t c) /\ is_R_assec (T_red.r (Conf.t c))}
   -> ML dvalue
 let do_sec_comp p c =
+  let R_assec ps v = T_red.r (Conf.t c) in
+  let _ = admitP (b2t (is_clos v)) in
+  let (en, _, e) = get_en_b v in
+  let dv = Circuit.rungmw p ps en (fun _ -> None) e in
+  dv
+  (* let r = T_red.r (Conf.t c) in *)
   (* let R_assec ps v = r in *)
-  (* let _ = admitP (b2t (is_clos v)) in *)
-  (* let (en, _, e) = get_en_b v in *)
-  (* let dv = Circuit.rungmw p ps en (fun _ -> None) e in *)
-  (* dv *)
-  let r = T_red.r (Conf.t c) in
-  let R_assec ps v = r in
-  if is_clos v && mem p ps then
-    let (en, x, e) = get_en_b v in
+  (* if is_clos v && mem p ps then *)
+  (*   let (en, x, e) = get_en_b v in *)
 
-    let (c_in, c_out) = open_connection 8888 in
+  (*   let (c_in, c_out) = open_connection 8888 in *)
 
-    let _ = cut (witness_client_config c) in
-    let _ = assert (exists c.{:pattern (witness_client_config c)} Conf.t c = T_red r /\ Conf.l c = Target /\ Conf.m c = Mode Par (singleton p)) in
-    let _ = assert (client_prop p r) in
+  (*   let _ = cut (witness_client_config c) in *)
+  (*   let _ = assert (exists c.{:pattern (witness_client_config c)} Conf.t c = T_red r /\ Conf.l c = Target /\ Conf.m c = Mode Par (singleton p)) in *)
+  (*   let _ = assert (client_prop p r) in *)
 
-    let (m, t) = mac_client_msg p r client_key in
-    send c_out m;
-    send c_out t;
+  (*   let (m, t) = mac_client_msg p r client_key in *)
+  (*   send c_out m; *)
+  (*   send c_out t; *)
 
-    let s_m = recv c_in in
-    let s_t = recv c_in in
+  (*   let s_m = recv c_in in *)
+  (*   let s_t = recv c_in in *)
 
-    let r_opt = verify_server_msg server_key s_m s_t in
-    if r_opt = None then failwith "Failed to verify secure server mac"
-    else
-      let Some (p', r', ps', x', e', dv) = r_opt in      
-      admitP (r = r' /\ e = e'); (* TODO: add sec block ids *)
-      if p = p' && ps = ps' && x = x' (* TODO:sec block id && r = r' && e = e' *) then
-	let _ = assert (server_prop p r ps x e dv) in
-	dv
-    else failwith "Secure server returned bad output"
-  else failwith "Reached a non-participating secure block"
+  (*   let r_opt = verify_server_msg server_key s_m s_t in *)
+  (*   if r_opt = None then failwith "Failed to verify secure server mac" *)
+  (*   else *)
+  (*     let Some (p', r', ps', x', e', dv) = r_opt in       *)
+  (*     admitP (r = r' /\ e = e'); (\* TODO: add sec block ids *\) *)
+  (*     if p = p' && ps = ps' && x = x' (\* TODO:sec block id && r = r' && e = e' *\) then *)
+  (* 	let _ = assert (server_prop p r ps x e dv) in *)
+  (* 	dv *)
+  (*   else failwith "Secure server returned bad output" *)
+  (* else failwith "Reached a non-participating secure block" *)
 
 val tstep: p:prin -> tstep_config p -> ML (option (tstep_config p))
 let tstep p c =

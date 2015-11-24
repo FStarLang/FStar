@@ -400,10 +400,8 @@ let lemma_trans_perm s1 s2 s3 i j = ()
 
 (*New addtions, please review*)
 
-(*snoc would be nice to have but breaks regression for now*)
-
-(*val snoc : #a:Type -> seq a -> a -> Tot (seq a)
-let snoc s x = Seq.append s (Seq.create 1 x)*)
+val snoc : #a:Type -> seq a -> a -> Tot (seq a)
+let snoc s x = Seq.append s (Seq.create 1 x)
 
 opaque logic type found (i:nat) = True
 

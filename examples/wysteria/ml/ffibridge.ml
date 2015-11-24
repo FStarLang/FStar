@@ -80,3 +80,6 @@ let nat_of_c_opaque c = match c with
 
 let nat_of_v_opaque _ v = match v with
   | V_opaque (_, v', _, _, _, _) -> cast v'
+
+let int_list_of_v_opaque _ v = match v with
+  | V_opaque (_, v', _, _, _, _) -> cast v'
