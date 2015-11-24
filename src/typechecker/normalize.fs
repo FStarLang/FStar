@@ -80,14 +80,7 @@ type stack_elt =
 
 type stack = list<stack_elt>
 
-let mk t r = match t with 
-    | Tm_abs(bs, body) -> 
-      begin match (compress body).n with 
-        | Tm_abs(bs', t) -> mk (Tm_abs(bs@bs', t)) None r
-        | _ -> mk t None r
-      end
-    | _ -> mk t None r
-
+let mk t r = mk t None r
 let set_memo r t =
   match !r with 
     | Some _ -> failwith "Unexpected set_memo: thunk already evaluated"
@@ -284,13 +277,12 @@ and norm_binder : cfg -> env -> binder -> binder =
 
 and norm_binders : cfg -> env -> binders -> binders = 
     fun cfg env bs -> 
-        let bs' = Subst.open_binders bs in
-        let nbs', _ = List.fold_left (fun (nbs', env) b -> 
+        let nbs, _ = List.fold_left (fun (nbs', env) b -> 
             let b = norm_binder cfg env b in
             (b::nbs', Dummy::env) (* crossing a binder, so shift environment *)) 
             ([], env)
-            bs' in
-        Subst.close_binders (List.rev nbs') 
+            bs in
+        List.rev nbs
 
 and norm_universe cfg env u = failwith "NYI"
 
@@ -306,7 +298,10 @@ and rebuild : cfg -> env -> stack -> term -> term =
               rebuild cfg env stack t
 
             | Abs (env', bs, r)::stack ->
+//              Printf.printf "binders are %s\n" (List.map (fun (x, _) -> Print.bv_to_string x) bs |> String.concat " ");
+//              Printf.printf "body is    %s\n" (Print.term_to_string t);
               let bs = norm_binders cfg env' bs in
+//              Printf.printf "After normalization bs = %s\n" (List.map (fun (x, _) -> Print.bv_to_string x) bs |> String.concat " ");
               rebuild cfg env stack ({abs bs t with pos=r})
 
             | Arg (Dummy, _, _)::_ -> failwith "Impossible"
