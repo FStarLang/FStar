@@ -33,6 +33,7 @@ module U = FStar.Syntax.Util
 val desugar_file: env -> file -> env * list<S.modul>
 val desugar_decls: env -> list<AST.decl> -> env * sigelts
 val desugar_partial_modul: option<(S.modul * 'a)> -> env -> AST.modul -> env * Syntax.modul
+val desugar_term: env -> term -> S.term
 
 (* private *) val desugar_modul : env -> AST.modul -> env * Syntax.modul
 (* private *) val mk_data_projectors : env -> sigelt -> list<sigelt>

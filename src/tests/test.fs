@@ -192,29 +192,37 @@ let nm x = bv_to_name x
 let app x ts = tm <| Tm_app(x, List.map arg ts)
 let b = mk_binder
 
-let id    : term = abs [b x] (nm x)
-let apply : term = abs [b f; b x] (app (nm f) [nm x])
-let twice : term = abs [b f; b x] (app (nm f) [(app (nm f) [nm x])])
-let tt    : term = abs [b x; b y] (nm x)
-let ff    : term = abs [b x; b y] (nm y)
+open FStar.Parser
+let pars s = 
+  let resetLexbufPos filename (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char>) =
+    lexbuf.EndPos <- {lexbuf.EndPos with
+    pos_fname= Range.encode_file filename;
+    pos_cnum=0;
+    pos_lnum=1 } in
+  let filename,sr,fs = "<input>", new System.IO.StringReader(s) :> System.IO.TextReader, s  in
+  let lexbuf = Microsoft.FSharp.Text.Lexing.LexBuffer<char>.FromTextReader(sr) in
+  resetLexbufPos filename lexbuf;
+  let lexargs = Lexhelp.mkLexargs ((fun () -> "."), filename,fs) in
+  let lexer = LexFStar.token lexargs in
+  let t = Parser.Parse.term lexer lexbuf in
+  let env = Parser.Env.empty_env () in
+  Parser.ToSyntax.desugar_term env t
 
-
-
-let z : term = abs [b f; b x] (nm x)
-let one : term = abs [b f; b x] (app (nm f) [nm x])
-let two : term = abs [b g; b y] (app (nm g) [app (nm g) [nm y]])
-let succ n = abs [b f; b x] (app (nm f) [(app n [nm f; nm x])])
+let id     = pars "fun x -> x"
+let apply  = pars "fun f x -> f x" 
+let twice  = pars "fun f x -> f (f x)" 
+let tt     = pars "fun x y -> x" 
+let ff     = pars "fun x y -> y" 
+let z      = pars "fun f x -> x" 
+let one    = pars "fun f x -> f x"
+let two    = pars "fun f x -> f (f x)"
+let succ   = pars "fun n f x -> f (n f x)"
+let pred   = pars "fun n f x -> n (fun g h -> h (g f)) (fun y -> x) (fun y -> y)"
+let mul    = pars "fun m n f -> m (n f)" 
 let rec encode n = 
     if n = 0 then z
-    else succ (encode (n - 1))
-let pred = abs [b n; b f; b x]
-               (app (nm n)
-                    [abs [b g; b h]
-                         (app (nm h) [app (nm g) [nm f]]);
-                     abs [b y] (nm x); 
-                     abs [b y] (nm y)]) 
+    else app succ [encode (n - 1)]
 let minus m n = app n [pred; m]
-let mul : term = abs [b m; b n; b f] (app (nm m) [app (nm n) [nm f]])
 let let_ x e e' : term = app (abs [b x] e') [e]
 let mk_let x e e' : term = 
     let e' = FStar.Syntax.Subst.subst [NM(x, 0)] e' in
@@ -312,15 +320,15 @@ let main argv =
     run (minus one one) z;
     run (app mul [one; one]) one;
     run (app mul [two; one]) two;
-    run (app mul [succ one; one]) two;
+    run (app mul [app succ [one]; one]) two;
     run (minus (encode 10) (encode 10)) z;
     run (minus (encode 100) (encode 100)) z;
     run (let_ x (encode 1000) (minus (nm x) (nm x))) z;
-    run (let_ x (succ one)
+    run (let_ x (app succ [one])
         (let_ y (app mul [nm x; nm x])
             (let_ h (app mul [nm y; nm y]) 
                     (minus (nm h) (nm h))))) z;
-    run (mk_let x (succ one)
+    run (mk_let x (app succ [one])
         (mk_let y (app mul [nm x; nm x])
             (mk_let h (app mul [nm y; nm y]) 
                       (minus (nm h) (nm h))))) z;

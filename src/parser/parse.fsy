@@ -101,7 +101,9 @@ open FStar.Ident
 %nonassoc ELSE
 
 %start inputFragment
+%start term
 %type <inputFragment> inputFragment
+%type <AST.term> term
 
 %%
 inputFragment:
