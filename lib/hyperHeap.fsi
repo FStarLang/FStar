@@ -94,7 +94,7 @@ opaque logic type modifies_one (r:rid) (m0:t) (m1:t) =
 
 opaque logic type equal_on (s:Set.set rid) (m0:t) (m1:t) =
  (forall (r:rid). {:pattern (Map.contains m0 r)} (Set.mem r (mod_set s) /\ Map.contains m0 r) ==> Map.contains m1 r)
- /\ Map.Equal m0 (Map.concat m0 (Map.restrict (mod_set s) m1))
+ /\ Map.Equal m1 (Map.concat m1 (Map.restrict (mod_set s) m0))
 
 val lemma_modifies_trans: m1:t -> m2:t -> m3:t
                        -> s1:Set.set rid -> s2:Set.set rid
