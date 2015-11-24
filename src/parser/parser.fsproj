@@ -23,12 +23,11 @@
     <Tailcalls>true</Tailcalls>
     <OutputPath>..\..\bin</OutputPath>
     <DefineConstants>TRACE;DEBUG</DefineConstants>
-    <WarningLevel>1</WarningLevel>
+    <WarningLevel>5</WarningLevel>
     <DocumentationFile>
     </DocumentationFile>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <NoWarn>
-    </NoWarn>
+    <NoWarn>1178</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>

@@ -39,7 +39,7 @@ type env = {
   localbindings:list<(ident * bv)>;         (* local name bindings for name resolution, paired with an env-generated unique name *)
   recbindings:list<(ident * lident)>;       (* names bound by recursive type and top-level let-bindings definitions only *)
   sigmap: list<Util.smap<(sigelt * bool)>>; (* bool indicates that this was declared in an interface file *)
-  default_result_effect:typ -> Range.range -> comp;
+  default_result_effect:lident;
   iface:bool;
   admitted_iface:bool
 }
@@ -61,12 +61,12 @@ let empty_env () = {curmodule=None;
                     localbindings=[];
                     recbindings=[];
                     sigmap=[new_sigmap()];
-                    default_result_effect=Util.ml_comp;
+                    default_result_effect=Const.effect_ML_lid;
                     iface=false;
                     admitted_iface=false}
 let sigmap env = List.hd env.sigmap
-let default_total env = {env with default_result_effect=(fun t _ -> mk_Total t)}
-let default_ml env = {env with default_result_effect=Util.ml_comp}
+let default_total env = {env with default_result_effect=Const.effect_Tot_lid}
+let default_ml env = {env with default_result_effect=Const.effect_ML_lid}
 
 
 let set_bv_range bv r = 

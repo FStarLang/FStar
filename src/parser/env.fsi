@@ -39,7 +39,7 @@ type env = {
   localbindings:list<(ident * bv)>;   (* local name bindings for name resolution, paired with an env-generated unique name *)
   recbindings:list<(ident * lident)>; (* names bound by recursive type and top-level let-bindings definitions only *)
   sigmap: list<Util.smap<(sigelt * bool)>>; (* bool indicates that this was declared in an interface file *)
-  default_result_effect:typ -> Range.range -> comp;
+  default_result_effect:lident;
   iface:bool;
   admitted_iface:bool
 }

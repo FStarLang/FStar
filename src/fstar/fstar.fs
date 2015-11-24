@@ -35,6 +35,35 @@ let cleanup () = Util.kill_all ()
 
 let has_prims_cache (l: list<string>) :bool = List.mem "Prims.cache" l
 
+let test_universes filenames = 
+    let parse env fn =
+        try 
+            match Parser.ParseIt.parse (Inl fn) with
+                | Inl (Inl ast) ->
+                  Parser.ToSyntax.desugar_file env ast
+
+                | Inl (Inr _) ->
+                  Util.fprint1 "%s: Expected a module\n" fn;
+                  exit 1
+
+                | Inr (msg, r) ->
+                  Util.print_string <| Print.format_error r msg;
+                  exit 1
+        with e when (!Options.trace_error 
+                     && FStar.Syntax.Util.handleable e 
+                     && (FStar.Syntax.Util.handle_err false () e; false)) -> 
+                     failwith "Impossible" 
+
+           | e when (not !Options.trace_error && FStar.Syntax.Util.handleable e) ->
+            FStar.Syntax.Util.handle_err false () e; 
+            exit 1 in
+
+    let dsenv, prims_mod = parse (Parser.Env.empty_env()) (Options.prims()) in
+    List.fold_left (fun (dsenv, fmods) fn ->
+       Util.fprint1 "Parsing file %s\n" fn; 
+       let dsenv, mods = parse dsenv fn in
+       dsenv, mods@fmods) (dsenv, []) filenames 
+ 
 let tc_prims () =
     let solver = if !Options.verify then ToSMT.Encode.solver else ToSMT.Encode.dummy in
     let env = Tc.Env.initial_env solver Const.prims_lid in
@@ -284,9 +313,11 @@ let go _ =
                              else filenames in
              if !Options.find_deps then
                Util.print_string (Util.format1 "%s\n" (Util.concat_l "\n" filenames))
+             else if !Options.universes
+             then test_universes filenames |> ignore
              else
                (let fmods, dsenv, env = batch_mode_tc filenames in
-               report_errors None;
+                report_errors None;
                if !Options.interactive
                then interactive_mode dsenv env
                else begin
