@@ -190,13 +190,6 @@ let rec term_to_string x =
   | Tm_app(t, args) -> Util.format2 "(%s %s)" (term_to_string t) (args_to_string args)
   | Tm_let(lbs, e) ->  Util.format2 "%s\nin\n%s" (lbs_to_string lbs) (term_to_string e)
   | Tm_match(head, branches) ->
-    let rec pat_to_string x = match x.v with
-      | Pat_cons(l, pats) -> Util.format2 "(%s %s)" (fv_to_string l) (List.map (fun (x, b) -> let p = pat_to_string x in if b then "#"^p else p) pats |> String.concat " ")
-      | Pat_dot_term (x, _) -> Util.format1 ".%s" (bv_to_string x)
-      | Pat_var x -> bv_to_string x
-      | Pat_constant c -> const_to_string c
-      | Pat_wild _ -> "_"
-      | Pat_disj ps ->  Util.concat_l " | " (List.map pat_to_string ps) in
     Util.format2 "(match %s with\n\t| %s)"
       (term_to_string head)
       (Util.concat_l "\n\t|" (branches |> List.map (fun (p,wopt,e) -> 
@@ -205,6 +198,15 @@ let rec term_to_string x =
                         (match wopt with | None -> "" | Some w -> Util.format1 "when %s" (w |> term_to_string))
                         (e |> term_to_string))))
   | _ -> tag_of_term x
+
+and  pat_to_string x = match x.v with
+    | Pat_cons(l, pats) -> Util.format2 "(%s %s)" (fv_to_string l) (List.map (fun (x, b) -> let p = pat_to_string x in if b then "#"^p else p) pats |> String.concat " ")
+    | Pat_dot_term (x, _) -> Util.format1 ".%s" (bv_to_string x)
+    | Pat_var x -> bv_to_string x
+    | Pat_constant c -> const_to_string c
+    | Pat_wild _ -> "_"
+    | Pat_disj ps ->  Util.concat_l " | " (List.map pat_to_string ps) 
+ 
 
 and lbs_to_string lbs =
     Util.format2 "let %s %s"

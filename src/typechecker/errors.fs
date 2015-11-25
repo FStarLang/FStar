@@ -139,16 +139,12 @@ let expected_poly_typ env f t targ =
     (Print.term_to_string f) (N.term_to_string env t) (N.term_to_string env targ)
 
 let nonlinear_pattern_variable x =
-  let m = match x with
-    | Inl x -> Print.bv_to_string x
-    | Inr a -> Print.bv_to_string a in
+  let m = Print.bv_to_string x in
   format1 "The pattern variable \"%s\" was used more than once" m
 
 let disjunctive_pattern_vars v1 v2 =
   let vars v =
-    v |> List.map (function
-      | Inl a -> Print.bv_to_string a
-      | Inr x -> Print.bv_to_string x) |> String.concat ", " in
+    v |> List.map Print.bv_to_string |> String.concat ", " in
   format2
     "Every alternative of an 'or' pattern must bind the same variables; here one branch binds (\"%s\") and another (\"%s\")"
     (vars v1) (vars v2)

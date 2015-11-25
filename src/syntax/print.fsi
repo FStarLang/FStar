@@ -26,4 +26,5 @@ val uvar_to_string  : uvar -> string
 val comp_to_string  : comp -> string
 val tag_of_term     : term -> string
 val lbname_to_string: lbname -> string
+val pat_to_string   : pat -> string
 val modul_to_string : modul -> string
