@@ -215,6 +215,9 @@ and lbs_to_string lbs =
                                                             (lbname_to_string lb.lbname) 
                                                             (lb.lbdef |> term_to_string))))
 
+and lcomp_to_string lc =
+    Util.format2 "%s %s" (sli lc.eff_name) (term_to_string lc.res_typ)
+
 //and uvar_t_to_string (uv, k) =
 //   if false && !Options.print_real_names
 //   then

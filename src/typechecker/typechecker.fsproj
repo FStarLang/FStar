@@ -71,6 +71,8 @@
     <Compile Include="errors.fs" />
     <Compile Include="rel.fsi" />
     <Compile Include="rel.fs" />
+    <Compile Include="util.fsi" />
+    <Compile Include="util.fs" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
