@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Map;
+    options:--admit_fsi FStar.Set --admit_fsi FStar.Map;
     other-files:set.fsi heap.fst map.fsi listTot.fst
  --*)
 (*
@@ -40,6 +40,7 @@ val lemma_proj_typ_inj: #a:Type -> #i:rid -> r:rref i a
 
 val includes : rid -> rid -> Tot bool
 val extends  : rid -> rid -> Tot bool
+val parent   : r:rid{r<>root} -> Tot rid
 let disjoint i j = not (includes i j) && not (includes j i)
 
 val lemma_includes_refl: i:rid
@@ -63,6 +64,21 @@ val lemma_extends_disjoint: i:rid -> j:rid -> k:rid ->
          (ensures (disjoint j k))
          [SMTPat (extends j i);
           SMTPat (extends k i)]
+
+val lemma_extends_parent: i:rid{i<>root} -> 
+  Lemma (requires True)
+        (ensures (extends i (parent i)))
+        [SMTPat (parent i)]
+
+val lemma_extends_not_root: i:rid -> j:rid{extends j i} -> 
+  Lemma (requires True)
+        (ensures (j<>root))
+        [SMTPat (extends j i)]
+
+val lemma_extends_only_parent: i:rid -> j:rid{extends j i} -> 
+  Lemma (requires True)
+        (ensures (i = parent j))
+        [SMTPat (extends j i)]
 
 val lemma_includes_trans: i:rid -> j:rid -> k:rid
                         -> Lemma (requires (includes i j /\ includes j k))
@@ -109,3 +125,18 @@ type fresh_rref (#a:Type) (#i:rid) (r:rref i a) (m0:t) (m1:t) =
   /\  (Heap.contains (Map.sel m1 i) (as_ref r))
 
 type modifies_rref (r:rid) (s:Set.set aref) h0 h1 = Heap.modifies s (Map.sel h0 r) (Map.sel h1 r)
+
+opaque type map_invariant (m:t) =
+  forall r. Map.contains m r ==> 
+      (forall s. includes s r ==> Map.contains m s)
+
+val lemma_extends_fresh_disjoint: i:rid -> j:rid -> ipar:rid -> jpar:rid 
+                               -> m0:t{map_invariant m0} -> m1:t{map_invariant m1} -> 
+  Lemma (requires (fresh_region i m0 m1 
+                  /\ fresh_region j m0 m1
+                  /\ Map.contains m0 ipar 
+                  /\ Map.contains m0 jpar 
+                  /\ extends i ipar
+                  /\ extends j jpar
+                  /\ i<>j))
+        (ensures (disjoint i j))

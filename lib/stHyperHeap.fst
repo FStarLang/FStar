@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Map --admit_fsi HyperHeap;
+    options:--admit_fsi FStar.Set --admit_fsi FStar.Map --admit_fsi FStar.HyperHeap;
     other-files:set.fsi heap.fst map.fsi listTot.fst hyperHeap.fsi
  --*)
 (*
@@ -66,8 +66,12 @@ assume val op_Bang:#a:Type -> #i:rid -> r:rref i a -> ST a
 
 assume val get: unit -> ST t
   (requires (fun m -> True))
-  (ensures (fun m0 x m1 -> m0=x /\ m1=m0))
+  (ensures (fun m0 x m1 -> m0=x /\ m1=m0 /\ map_invariant m1))
 
 assume val recall: #a:Type -> #i:rid -> r:rref i a -> STATE unit
    (fun 'p m0 -> Map.contains m0 i /\ Heap.contains (Map.sel m0 i) (as_ref r) ==> 'p () m0)
    (fun 'p m0 -> Map.contains m0 i /\ Heap.contains (Map.sel m0 i) (as_ref r) ==> 'p () m0)
+
+assume val recall_region: i:rid -> STATE unit
+   (fun 'p m0 -> Map.contains m0 i /\ map_invariant m0  ==> 'p () m0)
+   (fun 'p m0 -> Map.contains m0 i /\ map_invariant m0  ==> 'p () m0)
