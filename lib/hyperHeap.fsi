@@ -141,6 +141,6 @@ val lemma_extends_fresh_disjoint: i:rid -> j:rid -> ipar:rid -> jpar:rid
                   /\ i<>j))
         (ensures (disjoint i j))
 
-
+open FStar.Set
 opaque type disjoint_regions (s1:set rid) (s2:set rid) = 
        forall x y. {:pattern (Set.mem x s1); (Set.mem y s2)} (Set.mem x s1 /\ Set.mem y s2) ==> disjoint x y
