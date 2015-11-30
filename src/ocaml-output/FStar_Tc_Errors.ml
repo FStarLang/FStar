@@ -24,13 +24,11 @@ let verification_errs = (FStar_Util.mk_ref [])
 
 let add_errors = (fun env errs -> (let errs = (FStar_All.pipe_right errs (FStar_List.map (fun _34_14 -> (match (_34_14) with
 | (msg, r) -> begin
-(let r = (match ((r = FStar_Absyn_Syntax.dummyRange)) with
-| true -> begin
+(let r = if (r = FStar_Absyn_Syntax.dummyRange) then begin
 (FStar_Tc_Env.get_range env)
-end
-| false -> begin
+end else begin
 r
-end)
+end
 in (r, msg))
 end))))
 in (let n_errs = (FStar_List.length errs)
@@ -231,3 +229,7 @@ let top_level_effect = "Top-level let-bindings must be total; this term may have
 let cardinality_constraint_violated = (fun l a -> (let _99_236 = (FStar_Absyn_Print.sli l)
 in (let _99_235 = (FStar_Absyn_Print.strBvd a.FStar_Absyn_Syntax.v)
 in (FStar_Util.format2 "Constructor %s violates the cardinality of Type at parameter \'%s\'; type arguments are not allowed" _99_236 _99_235))))
+
+
+
+

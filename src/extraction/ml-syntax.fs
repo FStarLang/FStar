@@ -64,13 +64,13 @@ type mlpattern =
 | MLP_Record of list<mlsymbol> * list<(mlsymbol * mlpattern)>
 | MLP_Tuple  of list<mlpattern>
 
-type mlexpr =
+type mlexpr' =
 | MLE_Const  of mlconstant
 | MLE_Var    of mlident
 | MLE_Name   of mlpath
 | MLE_Let    of mlletbinding * mlexpr //tyscheme for polymorphic recursion
 | MLE_App    of mlexpr * list<mlexpr> //why are function types curried, but the applications not curried
-| MLE_Fun    of list<(mlident * (option<mlty>))> * mlexpr
+| MLE_Fun    of list<(mlident * mlty)> * mlexpr
 | MLE_Match  of mlexpr * list<mlbranch>
 | MLE_Coerce of mlexpr * mlty * mlty
 (* SUGAR *)
@@ -83,11 +83,16 @@ type mlexpr =
 | MLE_Raise  of mlpath * list<mlexpr>
 | MLE_Try    of mlexpr * list<mlbranch>
 
+and mlexpr = {
+    expr:mlexpr';
+    ty:mlty;
+}
+
 and mlbranch = mlpattern * option<mlexpr> * mlexpr
 
 and mllb = {
     mllb_name:mlident;
-    mllb_tysc:option<mltyscheme>;
+    mllb_tysc:mltyscheme;
     mllb_add_unit:bool;
     mllb_def:mlexpr;
 }
@@ -122,31 +127,16 @@ type mlsig1 =
 
 and mlsig = list<mlsig1>
 
+let with_ty t e = {expr=e; ty=t}
+
 (* -------------------------------------------------------------------- *)
 type mllib =
   | MLLib of list<(mlsymbol * option<(mlsig * mlmodule)> * mllib)>
 
 (* -------------------------------------------------------------------- *)
-let mlseq (e1 : mlexpr) (e2 : mlexpr) =
-    match e2 with
-    | MLE_Seq s -> MLE_Seq (e1 :: s)
-    | _ -> MLE_Seq [e1; e2]
-
-let mlfun (x : mlident) (e : mlexpr) =
-    match e with
-    | MLE_Fun (xs, e) -> MLE_Fun((x,None) :: xs, e)
-    | _ -> MLE_Fun ([x,None], e)
-
-let mlif (b : mlexpr) ((e1, e2) : mlexpr * mlexpr) =
-    match e2 with
-    | MLE_Const MLC_Unit -> MLE_If (b, e1, None)
-    | _ -> MLE_If (b, e1, Some e2)
-
-
-let ml_unit    = MLE_Const MLC_Unit
-
 // do NOT remove Prims, because all mentions of unit/bool in F* are actually Prims.unit/bool.
-let ml_bool_ty = MLTY_Named ([], (["Prims"], "bool"))
 let ml_unit_ty = MLTY_Named ([], (["Prims"], "unit"))
-
+let ml_bool_ty = MLTY_Named ([], (["Prims"], "bool"))
+let ml_int_ty  = MLTY_Named ([], (["Prims"], "int"))
+let ml_unit    = with_ty ml_unit_ty <| MLE_Const MLC_Unit
 let mlp_lalloc = (["SST"], "lalloc")

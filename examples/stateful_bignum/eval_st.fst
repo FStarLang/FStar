@@ -1,3 +1,8 @@
+(*--build-config
+  options:--admit_fsi FStar.Seq --admit_fsi FStar.Set --verify_module Eval --z3timeout 10 --use_eq_at_higher_order;
+  other-files:classical.fst ext.fst set.fsi seq.fsi seqproperties.fst heap.fst st.fst all.fst arr.fst ghost.fst axiomatic.fst intlib.fst limb.fst bigint_st.fst;
+  --*)
+
 (* 
   This library file should contain types and functions related to big integer 
   representation.
@@ -24,115 +29,54 @@ let rec bitweight t n =
 (* GHOST : Eval computes the mathematical value of the bigint from its content and its template *)
 val eval : h:heap -> b:bigint{ inHeap h b } -> n:nat{ n <= getLength h b } -> Tot int
 let rec eval h b n =
-  erase (
-      match b, n with
-      | Bigint63 data t, 0 -> 0
-      | Bigint63 data t, _ -> pow2 (bitweight t (n-1)) * getValue h b (n-1) + eval h b (n-1)
-    )
+  match n with
+  | 0 -> 0
+  | _ -> 
+    let t = getTemplate b in
+    pow2 (bitweight t (n-1)) * getValue h b (n-1) + eval h b (n-1)
 
 (* Function returning the size of the integer *)
 assume logic val sizeOf: x:int -> Tot (n:nat{ Bitsize x n /\ (forall (m:nat). Bitsize x m ==> m >= n) }) 
-     
-(* Helper functions for stateful array manipulation *)
-val array_copy_aux:
-  s:array int -> cpy:array int -> ctr:nat ->
-  ST unit
-     (requires (fun h -> (contains h s /\ contains h cpy /\ s <> cpy)
-			 /\ (Seq.length (sel h cpy) = Seq.length (sel h s))
-			 /\ (ctr <= Seq.length (sel h cpy))
-			 /\ (forall (i:nat). i < ctr ==> Seq.index (sel h s) i = Seq.index (sel h cpy) i)))
-     (ensures (fun h0 u h1 -> (contains h1 s /\ contains h1 cpy /\ s <> cpy )
-			      /\ (modifies !{cpy} h0 h1)
-			      /\ (Seq.Eq (sel h1 cpy) (sel h1 s))))
-let rec array_copy_aux s cpy ctr =
-  match Array.length cpy - ctr with
-  | 0 -> ()
-  | _ -> Array.upd cpy ctr (Array.index s ctr);
-	 array_copy_aux s cpy (ctr+1)
 
-val array_copy: 
-	 s:array int -> 
-	 ST (array int)
-	    (requires (fun h -> contains h s))
-	    (ensures (fun h0 r h1 -> (modifies !{} h0 h1)
-				     /\ not(contains h0 r)
-				     /\ (contains h1 r)
-				     /\ (Seq.Eq (sel h1 r) (sel h0 s))))
-let array_copy s =
-  let cpy = Array.create (Array.length s) 0 in
-  array_copy_aux s cpy 0;
-  cpy
-
-val array_blit_aux:
-  s:array int -> s_idx:nat -> t:array int -> t_idx:nat -> len:nat -> ctr:nat ->
-  ST unit
-     (requires (fun h -> 
-		(contains h s /\ contains h t /\ s <> t)
-		/\ (Seq.length (sel h s) >= s_idx + len)
-		/\ (Seq.length (sel h t) >= t_idx + len)
-		/\ (ctr <= len)
-		/\ (forall (i:nat). 
-		    i < ctr ==> Seq.index (sel h s) (s_idx+i) = Seq.index (sel h t) (t_idx+i))))
-     (ensures (fun h0 u h1 -> 
-	       (contains h1 s /\ contains h1 t /\ s <> t )
-	       /\ (modifies !{t} h0 h1)
-	       /\ (Seq.length (sel h1 s) >= s_idx + len)
-	       /\ (Seq.length (sel h1 t) >= t_idx + len)
-	       /\ (Seq.length (sel h0 s) = Seq.length (sel h1 s))
-	       /\ (Seq.length (sel h0 t) = Seq.length (sel h1 t))
-	       /\ (forall (i:nat). 
-		   i < len ==> Seq.index (sel h1 s) (s_idx+i) = Seq.index (sel h1 t) (t_idx+i))
-	       /\ (forall (i:nat).
-		   (i < Seq.length (sel h1 t) /\ (i < t_idx \/ i >= t_idx + len)) ==> 
-		     Seq.index (sel h1 t) i = Seq.index (sel h0 t) i) ))
-let rec array_blit_aux s s_idx t t_idx len ctr =
-  match len - ctr with
-  | 0 -> ()
-  | _ -> Array.upd t (t_idx + ctr) (Array.index s (s_idx + ctr));
-	 array_blit_aux s s_idx t t_idx len (ctr+1)
-
-val array_blit:
-  s:array int -> s_idx:nat -> t:array int -> t_idx:nat -> len:nat ->
-  ST unit
-     (requires (fun h -> 
-		(contains h s) 
-		/\ (contains h t)
-		/\ (s <> t)
-		/\ (Seq.length (sel h s) >= s_idx + len)
-		/\ (Seq.length (sel h t) >= t_idx + len)))
-     (ensures (fun h0 u h1 -> 
-	       (contains h1 s /\ contains h1 t /\ s <> t )
-	       /\ (Seq.length (sel h1 s) >= s_idx + len)
-	       /\ (Seq.length (sel h1 t) >= t_idx + len)
-	       /\ (Seq.length (sel h0 s) = Seq.length (sel h1 s))
-	       /\ (Seq.length (sel h0 t) = Seq.length (sel h1 t))
-	       /\ (modifies !{t} h0 h1)
-	       /\ (forall (i:nat). 
-		   i < len ==> Seq.index (sel h1 s) (s_idx+i) = Seq.index (sel h1 t) (t_idx+i))
-	       /\ (forall (i:nat).
-		   (i < Seq.length (sel h1 t) /\ (i < t_idx \/ i >= t_idx + len)) ==> 
-		     (Seq.index (sel h1 t) i = Seq.index (sel h0 t) i)) ))
-let rec array_blit s s_idx t t_idx len =
-  array_blit_aux s s_idx t t_idx len 0
+assume logic val lsizeOf: x:int -> Tot (n:erased nat{ Bitsize x (reveal n) /\ (forall (m:nat). Bitsize x m ==> m >= reveal n) }) 
 
 assume logic val maxValue: 
-	       h:heap ->
-	       a:bigint{ inHeap h a } -> 
-	       Tot (m:nat{ (forall (n:nat). 
-			    n < getLength h a ==> abs (getValue h a n) <= m)
-			   /\ (exists (i:nat). i < getLength h a /\ abs (getValue h a i) = m) })
+  h:heap ->
+  a:bigint{ inHeap h a } -> 
+  Tot (m:nat{ (forall (n:nat). 
+	    n < getLength h a ==> abs (getValue h a n) <= m)
+	    /\ (exists (i:nat). i < getLength h a /\ abs (getValue h a i) = m) })
+
+assume logic val lmaxValue: 
+  h:heap ->
+  a:bigint{ inHeap h a } -> 
+  Tot (m:erased nat{ (forall (n:nat). 
+	    n < getLength h a ==> abs (getValue h a n) <= reveal m)
+	    /\ (exists (i:nat). i < getLength h a /\ abs (getValue h a i) = reveal m) })
 
 assume logic val maxValueIdx: 
-	       h:heap ->
-	       a:bigint{ inHeap h a } -> 
-	       Tot (m:nat{ (m < getLength h a) 
-			   /\ (forall (n:nat). n < getLength h a ==> abs (getValue h a n) <= abs (getValue h a m)) })
+  h:heap ->
+  a:bigint{ inHeap h a } -> 
+  Tot (m:nat{ (m < getLength h a) 
+	    /\ (forall (n:nat). n < getLength h a ==> abs (getValue h a n) <= abs (getValue h a (m))) })
+
+assume logic val lmaxValueIdx: 
+  h:heap ->
+  a:bigint{ inHeap h a } -> 
+  Tot (m:erased nat{ (reveal m < getLength h a) 
+	    /\ (forall (n:nat). n < getLength h a ==> abs (getValue h a n) <= abs (getValue h a (reveal m))) })
 
 assume logic val maxSize: 
   h:heap ->
   a:bigint{ inHeap h a } -> 
   Tot (m:nat{ (forall (n:nat). n < getLength h a ==> getSize h a n <= m)
 	      /\ (exists (i:nat). i < getLength h a /\ getSize h a i = m) })
+
+assume logic val lmaxSize: 
+  h:heap ->
+  a:bigint{ inHeap h a } -> 
+  Tot (m:erased nat{ (forall (n:nat). n < getLength h a ==> getSize h a n <= reveal m)
+	      /\ (exists (i:nat). i < getLength h a /\ getSize h a i = reveal m) })
 
 val max_size_max_value_lemma:
   h:heap ->
@@ -142,18 +86,18 @@ val max_size_max_value_lemma:
     (ensures (maxValue h a <= pow2 (maxSize h a)))
     [SMTPat (maxValue h a); SMTPat (maxSize h a)]
 let max_size_max_value_lemma h a = 
-  erase (
       cut (forall (n:nat). n < getLength h a ==> getValue h a n <= maxValue h a);
       cut (forall (n:nat). n < getLength h a ==> getSize h a n <= maxSize h a); 
       let midx = maxValueIdx h a in
-      cut (abs (getValue h a midx) = maxValue h a /\ True);
+      cut (abs (getValue h a (midx)) = maxValue h a /\ True);
       size_of_value_lemma h a midx;
-      cut (Bitsize (abs (getValue h a midx)) (getSize h a midx) /\ True);
+      cut (Bitsize (abs (getValue h a (midx))) (getSize h a (midx)) /\ True);
       if (getSize h a midx < maxSize h a) then
-	pow2_increases_lemma (maxSize h a) (getSize h a midx);
-      cut ( pow2 (maxSize h a) >= pow2 (getSize h a midx) /\ True);
+	pow2_increases_lemma (maxSize h a) (getSize h a (midx))
+	else ();
+      cut ( pow2 (maxSize h a) >= pow2 (getSize h a (midx)) /\ True);
       cut ( maxValue h a <= pow2 (maxSize h a) /\ True)
-    )
+
 
 val maxValue_eq_lemma: 
   ha:heap -> hb:heap -> a:bigint{ inHeap ha a }  -> b:bigint{ inHeap hb b } -> 

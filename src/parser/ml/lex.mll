@@ -66,13 +66,11 @@
     Hashtbl.add keywords "open"          OPEN        ;
     Hashtbl.add keywords "or"            OR          ;
     Hashtbl.add keywords "opaque"        OPAQUE      ;
-    Hashtbl.add keywords "print"         PRINT       ;
     Hashtbl.add keywords "private"       PRIVATE     ;
     Hashtbl.add keywords "public"        PUBLIC      ;
     Hashtbl.add keywords "rec"           REC         ;
     Hashtbl.add keywords "requires"      REQUIRES    ;
     Hashtbl.add keywords "sub_effect"    SUB_EFFECT  ;
-    Hashtbl.add keywords "terminating"   TOTAL       ;
     Hashtbl.add keywords "then"          THEN        ;
     Hashtbl.add keywords "to"            TO          ;
     Hashtbl.add keywords "total"         TOTAL       ;

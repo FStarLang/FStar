@@ -148,6 +148,9 @@ let run_proc (name:string) (args:string) (stdin:string) : bool * string * string
   result, stdout, stderr
 
 let get_file_extension (fn: string) :string = Path.GetExtension fn
+let is_path_absolute p = System.IO.Path.IsPathRooted(p)
+let join_paths p0 p1 = System.IO.Path.Combine(p0, p1)
+let normalize_file_path (path:string) = System.IO.Path.GetFullPath(path)
 
 type stream_reader = System.IO.StreamReader (* not relying on representation *)
 let open_stdin () = new System.IO.StreamReader(System.Console.OpenStandardInput())
@@ -191,18 +194,28 @@ let set_count ((s1, _):set<'a>) = s1.Length
 let set_difference ((s1, eq):set<'a>) ((s2, _):set<'a>) : set<'a> = List.filter (fun y -> not (List.exists (eq y) s2)) s1, eq
 
 
-type smap<'value>=HashMultiMap<string, 'value>
-let smap_create<'value> (i:int) = new HashMultiMap<string,'value>(i, HashIdentity.Structural)
+type System.Collections.Generic.Dictionary<'K, 'V> with
+  member x.TryFind(key) =
+    match x.TryGetValue(key) with
+    | true, v -> Some v
+    | _ -> None
+open System.Collections.Generic
+type smap<'value>=System.Collections.Generic.Dictionary<string,'value>
+let smap_create<'value> (i:int) = new Dictionary<string,'value>(i)
 let smap_clear<'value> (s:smap<'value>) = s.Clear()
-let smap_add (m:smap<'value>) k (v:'value) = m.Add(k,v)
+let smap_add (m:smap<'value>) k (v:'value) = ignore <| m.Remove(k); m.Add(k,v)
 let smap_of_list<'value> (l:list<string*'value>) =
     let s = smap_create (List.length l) in
     List.iter (fun (x,y) -> smap_add s x y) l;
     s
 let smap_try_find (m:smap<'value>) k = m.TryFind(k)
-let smap_fold (m:smap<'value>) f a = m.Fold f a
-let smap_remove (m:smap<'value>) k = m.Remove k
-let smap_keys (m:smap<'value>) = m.Fold (fun k v keys -> k::keys) []
+let smap_fold (m:smap<'value>) f a = 
+    let out = ref a in 
+    for entry in m do
+        out := f entry.Key entry.Value !out;
+    !out
+let smap_remove (m:smap<'value>) k = m.Remove k |> ignore
+let smap_keys (m:smap<'value>) = smap_fold m (fun k v keys -> k::keys) []
 let smap_copy (m:smap<'value>) =
     let n = smap_create (m.Count) in
     smap_fold m (fun k v () -> smap_add n k v) ();

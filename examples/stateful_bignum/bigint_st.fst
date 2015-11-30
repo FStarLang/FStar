@@ -1,3 +1,8 @@
+(*--build-config
+  options:--admit_fsi FStar.Seq --admit_fsi FStar.Set --verify_module Bigint;
+  other-files:classical.fst ext.fst set.fsi seq.fsi seqproperties.fst heap.fst st.fst all.fst arr.fst ghost.fst axiomatic.fst intlib.fst limb.fst;
+  --*)
+
 module Bigint
 
 open IntLib
@@ -8,6 +13,7 @@ open FStar.All
 open FStar.ST
 open FStar.Heap
 open FStar.Array
+open FStar.Ghost
 
 (* TODO : stabilize the type definitions *)
 (* Int types *)
@@ -22,14 +28,20 @@ type template = nat -> Tot (n:pos{ n < ocaml63 })
 type template_const = t:template{ forall (n:nat). t n = t 0 }
 
 (* Sized integer *)
+// A potential ghost version
+//type tint (max:nat) = (size:erased nat{ reveal size < max } & content:int{ Bitsize content (reveal size) })
 type tint (max:nat) = (size:nat{ size < max } & content:int{ Bitsize content size })
 
 (* Sized ST array *)
 type tarray (max:nat) = array (tint max)
 
 (* Big integer type *)
-type bigint = 
+private type bigint = 
   | Bigint63 : data:tarray ocaml63 -> t:template -> bigint
+
+(* Constructor *)
+val create: tarray ocaml63 -> template -> Tot bigint
+let create data t = Bigint63 data t
 
 val wordSize: bigint -> Tot pos
 let wordSize b = 
@@ -54,6 +66,10 @@ assume logic val getSize :
 	       h:heap -> b:bigint{ inHeap h b } -> i:nat{ i < getLength h b } -> 
 	       Tot (s:nat{s = dfst (Seq.index (sel h (Bigint63.data b)) i) /\  s < (wordSize b)})
 
+assume logic val lgetSize:
+  h:heap -> b:bigint{ inHeap h b } -> i:erased nat{ reveal i < getLength h b } -> 
+  Tot (s:erased nat{reveal s = dfst (Seq.index (sel h (Bigint63.data b)) (reveal i)) /\ reveal s < (wordSize b)})  
+
 assume logic val getValue :
 	       h:heap -> b:bigint{ inHeap h b } -> i:nat{ i < getLength h b } ->
 	       Tot (v:int{ v = dsnd (Seq.index (sel h (Bigint63.data b)) i)})
@@ -62,18 +78,24 @@ assume logic val getContent :
 	       h:heap -> b:bigint{ inHeap h b } -> i:nat{ i < getLength h b } ->
 	       Tot (v:tint (wordSize b){ v = (Seq.index (sel h (Bigint63.data b)) i)})
 
+assume logic val getData:
+  b:bigint ->
+  Tot (t:tarray ocaml63{t = Bigint63.data b})  
+
 val size_of_value_lemma:
   h:heap -> b:bigint{ inHeap h b } -> i:nat{ i < getLength h b } -> 
   Lemma
     (requires (True))
     (ensures (Bitsize (getValue h b i) (getSize h b i)))
-let size_of_value_lemma h b i = 
-  erase (
-      let v = getContent h b i in
-      assert ( v = (Seq.index (sel h (Bigint63.data b)) i) /\ True);
-      assert ( dfst v = dfst (Seq.index (sel h (Bigint63.data b)) i) /\ True);
-      ()
-    )
+let size_of_value_lemma h b i = ()
+
+val lsize_of_value_lemma:
+  h:heap -> b:bigint{ inHeap h b } -> i:erased nat{ reveal i < getLength h b } -> 
+  Lemma
+    (requires (True))
+    (ensures (Bitsize (getValue h b (reveal i)) (getSize h b (reveal i))))
+let lsize_of_value_lemma h b i = ()
+
 
 (* Concrete getters *)
 val get_content: 
@@ -88,7 +110,7 @@ val get_content:
 let get_content b i =
   match b with 
   | Bigint63 data t ->
-     Array.index data i
+     FStar.Array.index data i
 
 val get_length:
   b:bigint ->
@@ -99,7 +121,7 @@ val get_length:
 			      /\ (l = getLength h0 b)))
 let get_length b =
   match b with
-  | Bigint63 data t -> Array.length data		 
+  | Bigint63 data t -> FStar.Array.length data		 
 
 val get: 
   b:bigint -> n:nat -> 
@@ -113,7 +135,7 @@ val get:
 let get b n =
   match b with
   | Bigint63 data t ->
-     let (|size,v|) = (Array.index data n) in v
+     let (|size,v|) = (FStar.Array.index data n) in v
 
 val getTemplate: bigint -> Tot template
 let getTemplate b =
@@ -129,13 +151,11 @@ val updateBigint:
      (ensures (fun h0 u h1 -> 
 	       (idx < Seq.length (sel h0 (Bigint63.data b)))
                /\ (contains h1 (Bigint63.data b))
-	       /\ (h1==Heap.upd h0 (Bigint63.data b) (Seq.upd (sel h0 (Bigint63.data b)) idx v))
-		 
-      ))
+	       /\ (h1==Heap.upd h0 (Bigint63.data b) (Seq.upd (sel h0 (Bigint63.data b)) idx v))	      ))
 let updateBigint b idx v =
   match b with
   | Bigint63 data _ ->
-     Array.upd data idx v
+     FStar.Array.upd data idx v
 
 val update_bigint_lemma:
   h0:heap -> h1:heap -> b:bigint{ inHeap h1 b /\ inHeap h0 b }  -> idx:nat{ idx < getLength h0 b } -> v:tint ocaml63 -> 
@@ -169,7 +189,7 @@ opaque val copy:
        /\ (modifies !{} h0 h1)
      ))
 let copy a =
-  Bigint63 (Array.copy (Bigint63.data a)) (Bigint63.t a)
+  Bigint63 (FStar.Array.copy (Bigint63.data a)) (Bigint63.t a)
 
 (* Normalized big integer type *)
 type Normalized (h:heap) (b:bigint{ inHeap h b })  =
@@ -186,10 +206,10 @@ val one_tint: z:tint ocaml63{ dsnd z = 1 }
 let one_tint = (|1, 1|)
 
 let mk_zero_bigint size template =
-  Bigint63 (Array.create size zero_tint) template
+  Bigint63 (FStar.Array.create size zero_tint) template
 
 let mk_one_bigint size template =
-  let one = Bigint63 (Array.create size zero_tint) template in
+  let one = Bigint63 (FStar.Array.create size zero_tint) template in
   updateBigint one 0 one_tint;
   one
 
@@ -221,104 +241,112 @@ opaque val extend :
 let extend a len =
   let len_a = get_length a in
   let b = Bigint.mk_zero_bigint len (Bigint63.t a) in
-  Array.blit (Bigint63.data a) 0 (Bigint63.data b) 0 len_a;
+  FStar.Array.blit (Bigint63.data a) 0 (Bigint63.data b) 0 len_a;
   b
+
+(* TODO : implement *)
+assume opaque val blit:
+  a:bigint -> b:bigint ->
+  ST unit
+    (requires (fun h -> 
+      (inHeap h a) /\ (inHeap h b)
+      /\ (getTemplate a = getTemplate b)
+      /\ (getLength h b >= getLength h a)
+      ))
+    (ensures (fun h0 _ h1 ->
+      (inHeap h0 a) /\ (inHeap h0 b)
+      /\ (inHeap h1 a) /\ (inHeap h1 b)
+      /\ (getTemplate a = getTemplate b)
+      /\ (getLength h0 b >= getLength h0 a)
+      /\ (getLength h0 b = getLength h1 b)
+      /\ (getLength h1 a = getLength h0 a)
+      /\ (modifies !{getData b} h0 h1)
+      /\ (Seq.Eq (Seq.slice (sel h1 (getData b)) 0 (getLength h0 a)) (sel h0 (getData a)))
+      /\ (Seq.Eq (Seq.slice (sel h1 (getData b)) (getLength h0 a) (getLength h1 b)) (Seq.create (getLength h0 b - getLength h0 a) zero_tint))
+      ))
+
+  
 
 #reset-options
 
 val populate_tarray : 
-  t:array int -> templ:template -> max:nat -> len:nat -> a:tarray max ->
+  t:array int -> templ:template -> max:nat{forall (i:nat). templ i < max} -> 
+  len:nat -> a:tarray max ->
   ST unit
-    (requires (fun h -> True))
-    (ensures (fun h0 _ h1 -> True))
+    (requires (fun h ->
+      (contains h t)
+      /\ (contains h a)
+      /\ (len <= Seq.length (sel h t))
+      /\ (len <= Seq.length (sel h a))
+      /\ (forall (i:nat). i < len ==> Bitsize (Seq.index (sel h t) i) (templ i))
+    ))
+    (ensures (fun h0 _ h1 -> 
+      (contains h0 t)
+      /\ (contains h0 a)
+      /\ (len <= Seq.length (sel h0 t))
+      /\ (len <= Seq.length (sel h0 a))
+      /\ (forall (i:nat). i < len ==> Bitsize (Seq.index (sel h0 t) i) (templ i))
+    ))
 let rec populate_tarray t templ max len a = 
   match len with
   | 0 -> ()
   | _ -> 
      let i = len - 1 in
-     Array.upd a i (|templ i, Array.index t i|);
+     let v = FStar.Array.index t i in
+     FStar.Array.upd a i (|templ i, v|);
      populate_tarray t templ max (len-1) a
 
 val mk_tarray : 
-  t:array int -> templ:template -> max:nat ->
+  t:array int -> templ:template -> max:pos{ forall (i:nat). templ i < max } ->
   ST (tarray max)
-    (requires (fun h -> True))
-    (ensures (fun h0 s h1 -> True))
+    (requires (fun h -> 
+      (contains h t)
+    ))
+    (ensures (fun h0 s h1 -> 
+      (contains h0 t)
+    ))
 let mk_tarray t tmpl max =
-  let len = Array.length t in
-  let a = Array.create len zero_tint in
+  let len = FStar.Array.length t in
+  let a = FStar.Array.create len (|0,0|) in
   populate_tarray t tmpl max 0 a;
   a
 
 val populate_array : 
   max:pos -> t:tarray max -> len:nat -> a:array int ->
   ST unit
-    (requires (fun h -> True))
-    (ensures (fun h0 _ h1 -> True))
+    (requires (fun h -> 
+      (contains h t)
+      /\ (contains h a)
+      /\ (Seq.length (sel h t) >= len)
+      /\ (Seq.length (sel h a) >= len)
+      
+      ))
+    (ensures (fun h0 _ h1 -> 
+      (contains h0 t)
+      /\ (contains h0 a)
+      /\ (Seq.length (sel h0 t) >= len)
+      /\ (Seq.length (sel h0 a) >= len)
+    ))
 let rec populate_array max t len a =
   match len with
   | 0 -> ()
   | _ -> 
      let i = len - 1 in
-     let ti = Array.index t i in
-     Array.upd a i (dsnd ti);
+     let ti = FStar.Array.index t i in
+     FStar.Array.upd a i (dsnd ti);
      populate_array max t (len-1) a
 
 val mk_array : 
   max:pos -> t:tarray max ->
   ST (array int)
-    (requires (fun h -> True))
-    (ensures (fun h0 s h1 -> True))
+    (requires (fun h -> 
+      (contains h t)
+      ))
+    (ensures (fun h0 s h1 -> 
+      (contains h0 t)
+      ))
 let mk_array max t =
-  let len = Array.length t in
-  let a = Array.create len 0 in
-  populate_array ocaml63 t 0 a;
+  let len = FStar.Array.length t in
+  let a = FStar.Array.create len 0 in
+  populate_array max t 0 a;
   a
-
-(*
-(* Pool of free arrays for temporary computation *)
-type array_pool = { free_arrays: ref (list (tarray ocaml63));
-	      array_size: ref pos;
-	      pool_size: ref nat }
-
-val pool: array_pool
-let pool = { free_arrays = ref [];
-	     array_size = ref 1;
-	     pool_size = ref 0; }
-
-//val initialize_pool: max:nat -> array_size:pos -> ST unit
-let initialize_pool max size =
-  match max with
-  | 0 ->
-     pool.array_size := size;
-     pool.pool_size := max
-  | _ ->
-     pool.free_arrays := (Array.create size zero_tint)::!(pool.free_arrays)
-
-val get_from_pool : size:nat -> ST (tarray ocaml63)
-				   (requires (fun h -> True))
-				   (ensures (fun h0 t h1 -> 
-					     (True)))
-let get_from_pool size =
-  match !(pool.free_arrays), size with
-  | hd::tl, _ -> 
-     if size = !pool.array_size then
-       (pool.free_arrays := tl;
-	hd)
-     else 
-       (
-	 (* Issue warning *)
-	 (* Create pool mapping size to fresh array of that size ? *)
-	 Array.create size zero_tint
-       )
-  | _, _ -> 
-     (* Issue warning *)
-     (* Increase pool size *)
-     Array.create size zero_tint		 
-
-val return_to_pool : tarray ocaml63 -> ST unit
-				     (requires (fun h -> True ))
-				     (ensures (fun h0 u h1 -> True))
-let return_to_pool a =
-  pool.free_arrays := a::!(pool.free_arrays)
-*)

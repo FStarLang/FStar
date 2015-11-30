@@ -7,8 +7,8 @@ module FStar.OrdSet
 
 opaque type total_order (a:Type) (f: (a -> a -> Tot bool)) =
     (forall a1 a2. (f a1 a2 /\ f a2 a1)  ==> a1 = a2)  (* anti-symmetry *)
- /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3) (* transitivity  *)
- /\ (forall a1 a2. f a1 a2 \/ f a2 a1)                (* totality      *)
+ /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)   (* transitivity  *)
+ /\ (forall a1 a2. f a1 a2 \/ f a2 a1)                 (* totality      *)
 
 type cmp (a:Type) = f:(a -> a -> Tot bool){total_order a f}
 
@@ -19,6 +19,20 @@ let rec sorted (#a:Type) f l = match l with
   | x::y::tl -> f x y && x <> y && sorted f (y::tl)
 
 type ordset (a:Type) (f:cmp a) = l:(list a){sorted f l}
+
+let mem (#a:Type) #f x s = List.mem x s
+
+val set_props:
+  #a:Type -> #f:cmp a -> s:ordset a f{is_Cons s}
+  -> Lemma (requires (True))
+          (ensures (forall x. mem #a #f x (Cons.tl s) ==> (f (Cons.hd s) x /\ Cons.hd s =!= x)))
+let rec set_props (#a:Type) #f s = match s with
+  | x::tl -> if tl = [] then () else set_props #a #f tl
+
+val hd_unique: #a:Type -> #f:cmp a -> s:ordset a f{is_Cons s}
+               -> Lemma (requires (is_Cons s))
+                       (ensures (not (mem #a #f (Cons.hd s) (Cons.tl s))))
+let hd_unique (#a:Type) #f s = set_props #a #f s
 
 let empty (#a:Type) #f = []
 
@@ -36,8 +50,6 @@ let rec insert' (#a:Type) #f x s = match s with
 let rec union (#a:Type) #f s1 s2 = match s1 with
   | []     -> s2
   | hd::tl -> union #_ #f tl (insert' #_ #f hd s2)
-
-let mem (#a:Type) #f x s = List.mem x s
 
 let rec intersect (#a:Type) #f s1 s2 = match s1 with
   | []     -> []
@@ -65,9 +77,13 @@ let remove (#a:Type) #f x s = remove' #_ #f x s
 
 let size (#a:Type) #f s = List.length s
 
-let rec subset (#a:Type) #f s1 s2 = match s1 with
-  | []     -> true
-  | hd::tl -> mem #_ #f hd s2 && subset #_ #f tl s2
+let rec subset (#a:Type) #f s1 s2 = match s1, s2 with
+  | [], _          -> true
+  | hd::tl, hd'::tl' ->
+    if f hd hd' && hd = hd' then subset #a #f tl tl'
+    else if f hd hd' && not (hd = hd') then false
+    else subset #a #f s1 tl'
+  | _, _           -> false
 
 let singleton (#a:Type) #f x = [x]
 
@@ -76,17 +92,8 @@ type Equal (#a:Type) (#f:cmp a) (s1:ordset a f) (s2:ordset a f) =
 
 val eq_helper: #a:Type -> #f:cmp a -> x:a -> s:ordset a f
                -> Lemma (requires (is_Cons s /\ f x (Cons.hd s) /\ x =!= Cons.hd s))
-                        (ensures (not (mem #a #f x s))) (decreases (size #a #f s))
-let rec eq_helper (#a:Type) #f x (y::s) = match s with
-  | []   -> ()
-  | _::_ -> eq_helper #_ #f x s
-
-val hd_unique: #a:Type -> #f:cmp a -> s:ordset a f{is_Cons s}
-               -> Lemma (requires (is_Cons s))
-                        (ensures (not (mem #a #f (Cons.hd s) (Cons.tl s))))
-let hd_unique f (x::s) = match s with
-  | []   -> ()
-  | _::_ -> eq_helper #_ #f x s
+                       (ensures (not (mem #a #f x s)))
+let eq_helper (#a:Type) #f x (y::s) = set_props #a #f (y::s)
 
 let rec eq_lemma (#a:Type) #f s1 s2 = match s1, s2 with
   | [], []             -> ()
@@ -128,9 +135,37 @@ let rec mem_intersect (#a:Type) #f x s1 s2 = match s1 with
     let _ = mem_intersect #_ #f x tl s2 in
     if mem #_ #f hd s2 then insert_mem #_ #f hd x (intersect #_ #f tl s2) else ()
 
-let rec mem_subset (#a:Type) #f s1 s2 = match s1 with
-  | []     -> ()
-  | hd::tl -> mem_subset #_ #f tl s2
+val subset_implies_mem:
+  #a:Type -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
+  -> Lemma (requires (True))
+          (ensures (subset #a #f s1 s2 ==> (forall x. mem #a #f x s1 ==>
+                                                mem #a #f x s2)))
+let rec subset_implies_mem (#a:Type) #f s1 s2 = match s1, s2 with
+  | [], _          -> ()
+  | hd::tl, hd'::tl' ->
+    if f hd hd' && hd = hd' then subset_implies_mem #a #f tl tl'
+    else subset_implies_mem #a #f s1 tl'
+  | _, _           -> ()
+
+val mem_implies_subset:
+  #a:Type -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
+  -> Lemma (requires (True))
+          (ensures ((forall x. mem #a #f x s1 ==> mem #a #f x s2) ==> subset #a #f s1 s2))
+let rec mem_implies_subset (#a:Type) #f s1 s2 = match s1, s2 with
+  | [], [] -> ()
+  | _::_, [] -> ()
+  | [], _::_ -> ()
+  | hd::tl, hd'::tl' ->
+    set_props #a #f s1; set_props #a #f s2;
+
+    if f hd hd' && hd = hd' then
+      mem_implies_subset #a #f tl tl'
+    else if f hd hd' && not (hd = hd') then
+      ()
+    else mem_implies_subset #a #f s1 tl'
+    
+let mem_subset (#a:Type) #f s1 s2 =
+  subset_implies_mem #a #f s1 s2; mem_implies_subset #a #f s1 s2
 
 let choose_empty (#a:Type) #f = ()
 
@@ -146,7 +181,7 @@ let rec eq_remove (#a:Type) #f x s = match s with
   | []    -> ()
   | _::tl -> eq_remove #_ #f x tl
 
-let size_empty (#a:Type) #f = ()
+let size_empty (#a:Type) #f s = ()
 
 let rec size_remove (#a:Type) #f x s = match s with
   | hd::tl ->
@@ -154,5 +189,10 @@ let rec size_remove (#a:Type) #f x s = match s with
 
 let rec size_singleton (#a:Type) #f x = ()
 
-let s_eq_empty (#a:Type) #f s = ()
-(**********)
+let rec subset_size (#a:Type) #f x y = match x, y with
+  | [], _          -> ()
+  | hd::tl, hd'::tl' ->
+    if f hd hd' && hd = hd' then subset_size #a #f tl tl'
+    else subset_size #a #f x tl'
+
+(* (\**********\) *)

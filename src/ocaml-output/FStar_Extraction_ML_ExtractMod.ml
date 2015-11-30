@@ -38,34 +38,30 @@ end
 in (let _63_46 = (FStar_Extraction_ML_ExtractExp.synth_exp g elet)
 in (match (_63_46) with
 | (ml_let, _63_43, _63_45) -> begin
-(match (ml_let) with
+(match (ml_let.FStar_Extraction_ML_Syntax.expr) with
 | FStar_Extraction_ML_Syntax.MLE_Let (ml_lbs, _63_49) -> begin
 (let _63_78 = (FStar_List.fold_left2 (fun _63_54 ml_lb _63_62 -> (match ((_63_54, _63_62)) with
 | ((env, ml_lbs), {FStar_Absyn_Syntax.lbname = lbname; FStar_Absyn_Syntax.lbtyp = t; FStar_Absyn_Syntax.lbeff = _63_59; FStar_Absyn_Syntax.lbdef = _63_57}) -> begin
-(let _63_75 = (match ((FStar_All.pipe_right quals (FStar_Util.for_some (fun _63_1 -> (match (_63_1) with
+(let _63_75 = if (FStar_All.pipe_right quals (FStar_Util.for_some (fun _63_1 -> (match (_63_1) with
 | FStar_Absyn_Syntax.Projector (_63_65) -> begin
 true
 end
 | _63_68 -> begin
 false
-end))))) with
-| true -> begin
+end)))) then begin
 (let mname = (let _128_31 = (let _128_30 = (FStar_Util.right lbname)
 in (mangle_projector_lid _128_30))
 in (FStar_All.pipe_right _128_31 FStar_Extraction_ML_Syntax.mlpath_of_lident))
-in (let env = (let _128_34 = (let _128_32 = (FStar_Util.right lbname)
+in (let env = (let _128_33 = (let _128_32 = (FStar_Util.right lbname)
 in (FStar_All.pipe_left FStar_Absyn_Util.fv _128_32))
-in (let _128_33 = (FStar_Util.must ml_lb.FStar_Extraction_ML_Syntax.mllb_tysc)
-in (FStar_Extraction_ML_Env.extend_fv' env _128_34 mname _128_33 ml_lb.FStar_Extraction_ML_Syntax.mllb_add_unit)))
+in (FStar_Extraction_ML_Env.extend_fv' env _128_33 mname ml_lb.FStar_Extraction_ML_Syntax.mllb_tysc ml_lb.FStar_Extraction_ML_Syntax.mllb_add_unit))
 in (env, (let _63_71 = ml_lb
 in {FStar_Extraction_ML_Syntax.mllb_name = ((Prims.snd mname), 0); FStar_Extraction_ML_Syntax.mllb_tysc = _63_71.FStar_Extraction_ML_Syntax.mllb_tysc; FStar_Extraction_ML_Syntax.mllb_add_unit = _63_71.FStar_Extraction_ML_Syntax.mllb_add_unit; FStar_Extraction_ML_Syntax.mllb_def = _63_71.FStar_Extraction_ML_Syntax.mllb_def}))))
+end else begin
+(let _128_35 = (let _128_34 = (FStar_Extraction_ML_Env.extend_lb env lbname t ml_lb.FStar_Extraction_ML_Syntax.mllb_tysc ml_lb.FStar_Extraction_ML_Syntax.mllb_add_unit)
+in (FStar_All.pipe_left Prims.fst _128_34))
+in (_128_35, ml_lb))
 end
-| false -> begin
-(let _128_37 = (let _128_36 = (let _128_35 = (FStar_Util.must ml_lb.FStar_Extraction_ML_Syntax.mllb_tysc)
-in (FStar_Extraction_ML_Env.extend_lb env lbname t _128_35 ml_lb.FStar_Extraction_ML_Syntax.mllb_add_unit))
-in (FStar_All.pipe_left Prims.fst _128_36))
-in (_128_37, ml_lb))
-end)
 in (match (_63_75) with
 | (g, ml_lb) -> begin
 (g, (ml_lb)::ml_lbs)
@@ -82,13 +78,12 @@ end)
 end)))
 end
 | FStar_Absyn_Syntax.Sig_val_decl (lid, t, quals, r) -> begin
-(match ((FStar_All.pipe_right quals (FStar_List.contains FStar_Absyn_Syntax.Assumption))) with
-| true -> begin
+if (FStar_All.pipe_right quals (FStar_List.contains FStar_Absyn_Syntax.Assumption)) then begin
 (let impl = (match ((FStar_Absyn_Util.function_formals t)) with
 | Some (bs, c) -> begin
-(let _128_39 = (let _128_38 = (fail_exp lid (FStar_Absyn_Util.comp_result c))
-in (bs, _128_38))
-in (FStar_Absyn_Syntax.mk_Exp_abs _128_39 None FStar_Absyn_Syntax.dummyRange))
+(let _128_37 = (let _128_36 = (fail_exp lid (FStar_Absyn_Util.comp_result c))
+in (bs, _128_36))
+in (FStar_Absyn_Syntax.mk_Exp_abs _128_37 None FStar_Absyn_Syntax.dummyRange))
 end
 | _63_92 -> begin
 (fail_exp lid t)
@@ -112,9 +107,9 @@ end
 None
 end)))) with
 | Some (l) when (not (is_record)) -> begin
-(let _128_43 = (let _128_42 = (FStar_Extraction_ML_ExtractExp.ind_discriminator_body g lid l)
-in (_128_42)::[])
-in (g, _128_43))
+(let _128_41 = (let _128_40 = (FStar_Extraction_ML_ExtractExp.ind_discriminator_body g lid l)
+in (_128_40)::[])
+in (g, _128_41))
 end
 | _63_113 -> begin
 (match ((FStar_Util.find_map quals (fun _63_4 -> (match (_63_4) with
@@ -132,10 +127,9 @@ end
 end)
 end))
 end))))
-end
-| false -> begin
+end else begin
 (g, [])
-end)
+end
 end
 | FStar_Absyn_Syntax.Sig_main (e, _63_129) -> begin
 (let _63_137 = (FStar_Extraction_ML_ExtractExp.synth_exp g e)
@@ -148,29 +142,31 @@ end
 (g, [])
 end)))
 
-let extract_iface = (fun g m -> (let _128_49 = (FStar_Util.fold_map extract_sig g m.FStar_Absyn_Syntax.declarations)
-in (FStar_All.pipe_right _128_49 Prims.fst)))
+let extract_iface = (fun g m -> (let _128_47 = (FStar_Util.fold_map extract_sig g m.FStar_Absyn_Syntax.declarations)
+in (FStar_All.pipe_right _128_47 Prims.fst)))
 
 let rec extract = (fun g m -> (let _63_160 = (FStar_Absyn_Util.reset_gensym ())
 in (let name = (FStar_Extraction_ML_Syntax.mlpath_of_lident m.FStar_Absyn_Syntax.name)
 in (let g = (let _63_163 = g
 in {FStar_Extraction_ML_Env.tcenv = _63_163.FStar_Extraction_ML_Env.tcenv; FStar_Extraction_ML_Env.gamma = _63_163.FStar_Extraction_ML_Env.gamma; FStar_Extraction_ML_Env.tydefs = _63_163.FStar_Extraction_ML_Env.tydefs; FStar_Extraction_ML_Env.currentModule = name})
-in (match ((((m.FStar_Absyn_Syntax.name.FStar_Absyn_Syntax.str = "Prims") || m.FStar_Absyn_Syntax.is_interface) || (let _128_54 = (FStar_ST.read FStar_Options.admit_fsi)
-in (FStar_List.contains m.FStar_Absyn_Syntax.name.FStar_Absyn_Syntax.str _128_54)))) with
-| true -> begin
+in if (((m.FStar_Absyn_Syntax.name.FStar_Absyn_Syntax.str = "Prims") || m.FStar_Absyn_Syntax.is_interface) || (let _128_52 = (FStar_ST.read FStar_Options.admit_fsi)
+in (FStar_List.contains m.FStar_Absyn_Syntax.name.FStar_Absyn_Syntax.str _128_52))) then begin
 (let g = (extract_iface g m)
 in (g, []))
-end
-| false -> begin
+end else begin
 (let _63_169 = (FStar_Util.fold_map extract_sig g m.FStar_Absyn_Syntax.declarations)
 in (match (_63_169) with
 | (g, sigs) -> begin
 (let mlm = (FStar_List.flatten sigs)
-in (let _128_59 = (let _128_58 = (let _128_57 = (let _128_56 = (let _128_55 = (FStar_Extraction_ML_Util.flatten_mlpath name)
-in (_128_55, Some (([], mlm)), FStar_Extraction_ML_Syntax.MLLib ([])))
+in (let _128_57 = (let _128_56 = (let _128_55 = (let _128_54 = (let _128_53 = (FStar_Extraction_ML_Util.flatten_mlpath name)
+in (_128_53, Some (([], mlm)), FStar_Extraction_ML_Syntax.MLLib ([])))
+in (_128_54)::[])
+in FStar_Extraction_ML_Syntax.MLLib (_128_55))
 in (_128_56)::[])
-in FStar_Extraction_ML_Syntax.MLLib (_128_57))
-in (_128_58)::[])
-in (g, _128_59)))
+in (g, _128_57)))
 end))
-end)))))
+end))))
+
+
+
+

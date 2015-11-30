@@ -35,6 +35,17 @@ features and bug fixes.
 
         $ make -C examples
 
+### Homebrew formula for Mac OS X ###
+
+On Macs you can also build and install the latest F\* release using Homebrew:
+
+        $ brew install fstar
+
+For building and installing the latest F\* sources from GitHub (the master branch)
+instead of the latest release you can do:
+
+        $ brew --HEAD install fstar
+
 ## Building F* from sources ##
 
 If you have a serious interest in F\* or want to report bugs then we
@@ -80,7 +91,7 @@ you to skip directly to step 3 and build F* with just an OCaml compiler.
     - Install the Visual F# Tools (v3.0 or 3.1) from Microsoft
       (e.g. by clicking the "Get Visual F# Tools for Visual Studio 2013"
        link [here](https://msdn.microsoft.com/en-us/vstudio/hh388569.aspx))
-
+  - Run the `src/VS/nuget-restore.bat` script before openting the solution for the first time. F* depends upon NuGet packages that are incompatible with Visual Studio's internal invocation of NuGet's restore feature.
   - Using Visual Studio, open `src/VS/FStar.sln` and build the solution
     (in the menus: Build > Build Solution).
 
@@ -89,14 +100,7 @@ you to skip directly to step 3 and build F* with just an OCaml compiler.
   currently; `make -C src` succeeds but produces a broken binary:
   https://github.com/FStarLang/FStar/issues/159)
 
-**Note:** if the Visual Studio build fails because `parse.fs` and
-  `lex.fs` are not found because of a mysterious issue, try closing
-  and reopening the solution and rebuilding until things magically
-  work (yes, we know it's strange) or do a `make -C src` for getting
-  these files generated before rebuilding with Visual Studio for
-  getting a proper binary:
-  https://github.com/FStarLang/FStar/issues/325 and
-  https://github.com/FStarLang/FStar/issues/73
+**Note:** If Visual Studio fails to open one or more projects, the problem is likely that the NuGet package cache hasn't been restored. You must either exit Visual Studio to restore the cache (using the `src/VS/nuget-restore.bat` script), or restart Visual Studio after having restored the cache. Otherwise, F* may not successfully build (or correctly build).
 
 #### On Linux or Mac OS X using Mono ####
 
@@ -223,7 +227,7 @@ https://github.com/Z3Prover/z3/releases/tag/z3-4.4.0
 
 4. At the end of the release, please remember to update the
    links at: https://www.fstar-lang.org/#download and the
-   version on https://en.wikipedia.org/wiki/F*\_(programming_language)
+   version on https://en.wikipedia.org/wiki/F*_(programming_language)
    and https://en.wikipedia.org/wiki/Proof_assistant
 
 **Note**: to create the package successfully you will need tools like

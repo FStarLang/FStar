@@ -1,6 +1,6 @@
 (*--build-config
-    options:--admit_fsi FStar.Set;
-    other-files:ext.fst set.fsi heap.fst st.fst all.fst
+    options:--admit_fsi FStar.Set --admit_fsi FStar.Squash;
+    other-files:ext.fst set.fsi heap.fst st.fst all.fst squash.fsti
   --*)
 module UnionFind
 
@@ -21,12 +21,13 @@ type is_repr (v: Type) (f: Relation v) (x: v) (r: v) =
 type confined (v: Type) (d: Set.set v) (f: Relation v) =
   forall (x: v) (y: v). path v f x y ==> Set.mem x d /\ Set.mem y d
 type functional (v: Type) (f: Relation v) =
-  forall (x: v) (y: v) (z: v). f x z /\ f y z ==> x = y
+  forall (x: v) (y: v) (z: v). f x y /\ f x z ==> y = z
 type defined (v: Type) (rel: Relation v) =
   forall (x: v). exists (r: v). rel x r
 
 type is_dsf (v: Type) (d: Set.set v) (f: Relation v) =
   confined v d f /\ functional v f /\ defined v (is_repr v f)
+
 
 (* In FP's development, the following variables are implicit: [v], [f], [x],
    [z] (and [compress] means [compress v f x z]). *)
@@ -51,6 +52,32 @@ val compress_preserves_roots:
 let compress_preserves_roots (v: Type) (f: Relation v) _ _ _ _ =
   ()
 
+let bind = Squash.bind_squash
+let return = Squash.return_squash
+
+
+val path_same_root:
+  v:Type -> d:Set.set v -> f:Relation v ->
+  x:v -> z:v -> r:v -> p:path v f x z -> Lemma
+    (requires (is_repr v f x r /\ is_dsf v d f))
+    (ensures (is_repr v f z r))
+    (decreases p)
+let rec path_same_root (v: Type) d (f: Relation v) x z r p =
+  match p with
+  | Refl _ ->
+      ()
+  | Step _ y _ f_xy path_yz ->
+      Squash.give_proof #(is_repr v f z r) (
+        bind (Squash.get_proof (path v f x r)) (fun p' ->
+          match p' with
+          | Step _ y' _ _ path_yr ->
+              (* JP: this assert is important for Z3, apparently *)
+              assert (y = y');
+              let _: path v f y r = path_yr in
+              path_same_root v d f y z r path_yz;
+              Squash.get_proof (is_repr v f z r)
+              ))
+
 
 (* Now [d] is implicit, [is_dsf d f] and [path f y z] too. *)
 val compress_preserves_path_to_roots:
@@ -62,19 +89,36 @@ val compress_preserves_path_to_roots:
     (decreases p)
 let rec compress_preserves_path_to_roots (v: Type) d (f: Relation v) x y z u r p =
   if x = u then begin
+    Squash.give_proof (return #(path v f x r) p);
+    assert (path v f x r);
+    assert (is_repr v f x r);
+    (* Inject a proof of [path v f x z] in the context. *)
+    Squash.give_proof (
+      bind (Squash.get_proof (f x y)) (fun proof_x_y ->
+      bind (Squash.get_proof (path v f y z)) (fun proof_path_y_z ->
+      (* JP: The implicit argument has to be provided here (I guess otherwise
+         unification comes up with something else?). *)
+      return #(path v f x z) (Step x y z proof_x_y proof_path_y_z))));
+    assert (path v f x z);
     admit ()
   end else begin
     match p with
     | Refl _ ->
-        let _: path v (compress v f x z) u r = Refl u in
-        ()
+        (* JP: Inference should be able to figure out the desired post-condition?! *)
+        Squash.give_proof (return #(path v (compress v f x z) u r) (Refl u))
     | Step _ u' _ _ p' ->
+        (* [u] and [u'] are in relation. *)
         compress_preserves_other_edges v f x z u u';
+        (* There is a path from [u'] to [r]. *)
         compress_preserves_path_to_roots v d f x y z u' r p';
-        (* let _: path v (compress v f x z) u r = *)
-        (*   Refl u u' r ? ? *)
-        (* in *)
-        admit ()
+        (* We need to construct a proof witness (z3 won't do it for us);
+           however, the [Step] case requires a proof witness for the two
+           lemmas above; therefore, we use [Squash] to name these proof
+           witnesses. *)
+        Squash.give_proof (
+          bind (Squash.get_proof (compress v f x z u u')) (fun proof_u_u' ->
+          bind (Squash.get_proof (path v (compress v f x z) u' r)) (fun proof_path_u'_r ->
+          return (Step u u' r proof_u_u' proof_path_u'_r))))
   end
 
 

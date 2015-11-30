@@ -48,13 +48,15 @@ let rec partition f = function
 
 
 val partition_lemma: f:('a -> Tot bool)
-                   -> l:list 'a
-                   -> Lemma (requires True)
-                            (ensures ((length (fst (partition f l)) + length (snd (partition f l)) = length l
-                                  /\ (forall x. mem x (fst (partition f l)) ==> f x)
-                                  /\ (forall x. mem x (snd (partition f l)) ==> not (f x))
-                                  /\ (forall x. mem x l = (mem x (fst (partition f l)) || mem x (snd (partition f l)))))))
-                            [SMTPat (partition f l)]
+   -> l:list 'a
+   -> Lemma (requires True)
+            (ensures ((length (fst (partition f l))
+                     + length (snd (partition f l)) = length l
+                  /\ (forall x. mem x (fst (partition f l)) ==> f x)
+                  /\ (forall x. mem x (snd (partition f l)) ==> not (f x))
+                  /\ (forall x. mem x l = (mem x (fst (partition f l))
+                                        || mem x (snd (partition f l)))))))
+            [SMTPat (partition f l)]
 let rec partition_lemma f l = match l with
     | [] -> ()
     | hd::tl -> partition_lemma f tl

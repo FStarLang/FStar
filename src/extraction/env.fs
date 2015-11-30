@@ -54,9 +54,6 @@ let mkFvvar (l: lident) (t:typ) : fvvar =
 let erasedContent : mlty = ml_unit_ty
 
 let erasableTypeNoDelta (t:mlty) =
-match  t with
-//| MLTY_Fun (l, etag ,r) -> etag = MayErase && erasableType_init r // TODO : do we need to check etag here? it is checked just before erasing
-| _ ->
     if t = ml_unit_ty then true
     else match t with
         | MLTY_Named (_, (["FStar"; "Ghost"], "erased")) -> true
@@ -166,9 +163,16 @@ let extend_ty (g:env) (a:btvar) (mapped_to:option<mlty>) : env =
     let tcenv = Env.push_local_binding g.tcenv (Env.Binding_typ(a.v, a.sort)) in
     {g with gamma=gamma; tcenv=tcenv}
 
-let extend_bv (g:env) (x:bvvar) (t_x:mltyscheme) (add_unit:bool) (mk_unit:bool (*some pattern terms become unit while extaction*)) : env =
+let extend_bv (g:env) (x:bvvar) (t_x:mltyscheme) (add_unit:bool) (mk_unit:bool (*some pattern terms become unit while extracting*)) : env =
+    let ml_ty = match t_x with 
+        | ([], t) -> t
+        | _ -> MLTY_Top in
     let mlx = MLE_Var (as_mlident x.v) in
-    let mlx = if mk_unit then ml_unit else (if add_unit then MLE_App(mlx, [ml_unit]) else mlx) in
+    let mlx = if mk_unit 
+              then ml_unit 
+              else if add_unit 
+              then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mlx, [ml_unit]) 
+              else with_ty ml_ty mlx in
     let gamma = Bv(x, mlx, t_x)::g.gamma in
     let tcenv = Env.push_local_binding g.tcenv (Env.Binding_var(x.v, x.sort)) in
     {g with gamma=gamma; tcenv=tcenv}
@@ -192,8 +196,11 @@ let tySchemeIsClosed (tys : mltyscheme) : bool =
 let extend_fv' (g:env) (x:fvvar) (y:mlpath) (t_x:mltyscheme) (add_unit:bool) : env =
     if  tySchemeIsClosed t_x
     then
+        let ml_ty = match t_x with 
+            | ([], t) -> t
+            | _ -> MLTY_Top in
         let mly = MLE_Name y in
-        let mly = if add_unit then MLE_App(mly, [ml_unit]) else mly in
+        let mly = if add_unit then with_ty MLTY_Top <| MLE_App(with_ty MLTY_Top mly, [ml_unit]) else with_ty ml_ty mly in
         let gamma = Fv(x, mly, t_x)::g.gamma in
         let tcenv = Env.push_local_binding g.tcenv (Env.Binding_lid(x.v, x.sort)) in
         {g with gamma=gamma; tcenv=tcenv}

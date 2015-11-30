@@ -40,6 +40,12 @@ let lexcons_lid = (pconst "LexCons")
 
 let lextop_lid = (pconst "LexTop")
 
+let smtpat_lid = (pconst "SMTPat")
+
+let smtpatT_lid = (pconst "SMTPatT")
+
+let smtpatOr_lid = (pconst "SMTPatOr")
+
 let int32_lid = (p2l (("FStar")::("Int32")::("int32")::[]))
 
 let int31_lid = (p2l (("FStar")::("Int31")::("int31")::[]))
@@ -131,6 +137,8 @@ let list_append_lid = (p2l (("FStar")::("List")::("append")::[]))
 
 let strcat_lid = (p2l (("Prims")::("strcat")::[]))
 
+let let_in_typ = (p2l (("Prims")::("Let")::[]))
+
 let op_Eq = (pconst "op_Equality")
 
 let op_notEq = (pconst "op_disEquality")
@@ -218,3 +226,7 @@ let as_requires = (pconst "as_requires")
 let as_ensures = (pconst "as_ensures")
 
 let decreases_lid = (pconst "decreases")
+
+
+
+

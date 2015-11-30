@@ -1,5 +1,5 @@
 (*--build-config
-  options:--__temp_no_proj;
+  options:--__temp_no_proj InjectiveTypeFormers;
   other-files: constr.fst
   --*)
 module InjectiveTypeFormers

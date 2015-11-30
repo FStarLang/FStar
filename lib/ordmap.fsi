@@ -34,27 +34,31 @@ val choose  : #key:Type -> #value:Type -> #f:cmp key -> ordmap key value f
 val size    : #key:Type -> #value:Type -> #f:cmp key -> ordmap key value f
               -> Tot nat
 
-type Equal (#k:Type) (#v:Type) (#f:cmp k) (m1:ordmap k v f) (m2:ordmap k v f) =
-  (forall x. select #k #v #f x m1 = select #k #v #f x m2)
+type Equal (#k:Type) (#v:Type) (#f:cmp k) (m1:ordmap k v f) (m2:ordmap k v f) 
 
-val eq_lemma: #k:Type -> #v:Type -> #f:cmp k -> m1:ordmap k v f -> m2:ordmap k v f
+val eq_intro: #k:Type -> #v:Type -> #f:cmp k -> m1:ordmap k v f -> m2:ordmap k v f
               -> Lemma (requires (forall x. select #k #v #f x m1 = select #k #v #f x m2))
-                       (ensures (m1 = m2))
-                 [SMTPat (m1 = m2)]
+                      (ensures (Equal m1 m2))
+                 [SMTPatT (Equal m1 m2)]
+  
+val eq_lemma: #k:Type -> #v:Type -> #f:cmp k -> m1:ordmap k v f -> m2:ordmap k v f
+              -> Lemma (requires (Equal m1 m2))
+                      (ensures (m1 = m2))
+                 [SMTPatT (Equal m1 m2)]
 
 val upd_order: #k:Type -> #v:Type -> #f:cmp k -> x:k -> y:v -> x':k -> y':v
                -> m:ordmap k v f
                -> Lemma (requires (x =!= x'))
-                        (ensures (update #k #v #f x y (update #k #v #f x' y' m) =
-                                  update #k #v #f x' y' (update #k #v #f x y m)))
-                  [SMTPat (update #k #v #f x y (update #k #v #f x' y' m))]
+                       (ensures (Equal (update #k #v #f x y (update #k #v #f x' y' m))
+                                       (update #k #v #f x' y' (update #k #v #f x y m))))
+                  [SMTPat (update #k #v #f x y (update #k #v #f x' y' m))] //NS:This pattern is too aggresive; it will fire for any pair of updates
                   
 val upd_same_k: #k:Type -> #v:Type -> #f:cmp k -> x:k -> y:v -> y':v
                 -> m:ordmap k v f
                 -> Lemma (requires (True))
-                         (ensures (update #k #v #f x y (update #k #v #f x y' m) =
-                                   update #k #v #f x y m))
-                   [SMTPat (update #k #v #f x y (update #k #v #f x y' m))]
+                        (ensures (Equal (update #k #v #f x y (update #k #v #f x y' m))
+					(update #k #v #f x y m)))
+                   [SMTPat (update #k #v #f x y (update #k #v #f x y' m))] //NS:This pattern is too aggresive; it will fire for any pair of updates
 
 val sel_upd1: #k:Type -> #v:Type -> #f:cmp k -> x:k -> y:v -> m:ordmap k v f
               -> Lemma (requires True) (ensures select #k #v #f x
@@ -99,12 +103,12 @@ val contains_empty: #k:Type -> #v:Type -> #f:cmp k -> x:k
 val contains_remove: #k:Type -> #v:Type -> #f:cmp k -> x:k -> y:k -> m:ordmap k v f
                      -> Lemma (requires True)
                               (ensures (contains #k #v #f x (remove #k #v #f y m) =
-                                        (contains #k #v #f x m && not (x = y))))
+                                       (contains #k #v #f x m && not (x = y))))
                         [SMTPat (contains #k #v #f x (remove #k #v #f y m))]
                   
 val eq_remove: #k:Type -> #v:Type -> #f:cmp k -> x:k -> m:ordmap k v f
               -> Lemma (requires (not (contains #k #v #f x m)))
-                       (ensures (m = remove #k #v #f x m))
+                      (ensures (Equal m (remove #k #v #f x m)))
                  [SMTPat (remove #k #v #f x m)]
 
 val choose_empty: #k:Type -> #v:Type -> #f:cmp k
@@ -113,13 +117,13 @@ val choose_empty: #k:Type -> #v:Type -> #f:cmp k
                     [SMTPat (choose #k #v #f (empty #k #v #f))]
 
 val choose_m: #k:Type -> #v:Type -> #f:cmp k -> m:ordmap k v f
-             -> Lemma (requires (not (m = (empty #k #v #f))))
-                      (ensures (is_Some (choose #k #v #f m) /\
+             -> Lemma (requires (~ (Equal m (empty #k #v #f))))
+                     (ensures (is_Some (choose #k #v #f m) /\
                                 (select #k #v #f (fst (Some.v (choose #k #v #f m))) m =
                                  Some (snd (Some.v (choose #k #v #f m)))) /\
-                                (m = update #k #v #f (fst (Some.v (choose #k #v #f m)))
+                                (Equal m (update #k #v #f (fst (Some.v (choose #k #v #f m)))
                                                      (snd (Some.v (choose #k #v #f m)))
-                                                     (remove #k #v #f (fst (Some.v (choose #k #v #f m))) m))))
+                                                     (remove #k #v #f (fst (Some.v (choose #k #v #f m))) m)))))
                 [SMTPat (choose #k #v #f m)]
 
 val size_empty: #k:Type -> #v:Type -> #f:cmp k
@@ -146,7 +150,7 @@ val contains_const_on: #k:Type -> #v:Type -> #f:cmp k -> d:ordset k f -> x:v -> 
                      
 val select_const_on: #k:Type -> #v:Type -> #f:cmp k -> d:ordset k f -> x:v -> y:k
                      -> Lemma (requires (True))
-                              (ensures (mem y d ==> (contains y (const_on d x) /\ Some.v (select y (const_on d x)) = x)))
+                             (ensures (mem y d ==> (contains y (const_on d x) /\ Some.v (select y (const_on d x)) = x)))
                     [SMTPat (select #k #v #f y (const_on #k #v #f d x))]
 
 val sel_rem1: #k:Type -> #v:Type -> #f:cmp k -> x:k -> m:ordmap k v f
@@ -162,6 +166,6 @@ val sel_rem2: #k:Type -> #v:Type -> #f:cmp k -> x:k -> x':k -> m:ordmap k v f
 
 val rem_upd: #k:Type -> #v:Type -> #f:cmp k -> x:k -> y:v -> x':k -> m:ordmap k v f
              -> Lemma (requires (True)) (ensures (x =!= x' ==>
-                                                  update #k #v #f x y (OrdMap.remove #k #v #f x' m) =
-                                                  OrdMap.remove #k #v #f x' (update #k #v #f x y m)))
+                                                  Equal (update #k #v #f x y (OrdMap.remove #k #v #f x' m)) 
+                                                        (OrdMap.remove #k #v #f x' (update #k #v #f x y m))))
                 [SMTPat (update #k #v #f x y (OrdMap.remove #k #v #f x' m))]

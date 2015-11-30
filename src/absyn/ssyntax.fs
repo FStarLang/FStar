@@ -152,7 +152,7 @@ let rec serialize_typ' (writer:Writer) (ast:typ') :unit =
 
 and serialize_meta_t (writer:Writer) (ast:meta_t) :unit =
     match ast with
-    | Meta_pattern(t, l) -> writer.write_char 'a'; serialize_typ writer t; serialize_list writer serialize_arg l
+    | Meta_pattern(t, l) -> writer.write_char 'a'; serialize_typ writer t; serialize_list writer (fun w -> serialize_list w serialize_arg) l
     | Meta_named(t, lid) -> writer.write_char 'b'; serialize_typ writer t; serialize_lident writer lid
     | Meta_labeled(t, s, _, b) -> writer.write_char 'c'; serialize_typ writer t; writer.write_string s; writer.write_bool b
     | _ -> raise (Err "unimplemented meta_t")
@@ -290,7 +290,7 @@ let rec deserialize_typ' (reader:Reader) :typ' =
 
 and deserialize_meta_t (reader:Reader) :meta_t =
     match (reader.read_char ()) with
-    | 'a' -> Meta_pattern(deserialize_typ reader, deserialize_list reader deserialize_arg)
+    | 'a' -> Meta_pattern(deserialize_typ reader, deserialize_list reader (fun r -> deserialize_list r deserialize_arg))
     | 'b' -> Meta_named(deserialize_typ reader, deserialize_lident reader)
     | 'c' -> Meta_labeled(deserialize_typ reader, reader.read_string (), dummyRange, reader.read_bool ())
     |  _  -> parse_error()

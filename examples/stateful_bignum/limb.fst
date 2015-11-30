@@ -1,3 +1,8 @@
+(*--build-config
+  options:--admit_fsi FStar.Seq --admit_fsi FStar.Set --verify_module Limb;
+  other-files:classical.fst seq.fsi seqproperties.fst set.fsi heap.fst st.fst all.fst ghost.fst axiomatic.fst intlib.fst;
+  --*)
+
 (* 
   This file contains functions and lemmas related to memory safety when 
   manipulating "concrete" integers which may overflow.
@@ -22,6 +27,7 @@ let max_size = 63
 
 (* Represents the number of bits (-1) the integer fits in *)
 type Bitsize (x:int) (n:nat) = -(pow2 n) < x /\ x < pow2 n
+type GBitsize (x:erased int) (n:nat) = -(pow2 n) < reveal x /\ reveal x < pow2 n
 
 (* Integer Types *)
 type ulint (n:nat) = x:nat{ Bitsize x n }
@@ -64,13 +70,11 @@ val size_of_add_lemma:
     (requires (True))
     (ensures (Bitsize (a+b) ((max n m)+1)))
 let size_of_add_lemma n a m b =
-  erase (
     if n < m then pow2_increases_lemma m n
     else 
       if m < n then pow2_increases_lemma n m
       else ();
     pow2_increases_lemma ((max n m)+1) (max n m)
-  )
   
 val size_of_sub_lemma:
   n:nat -> a:lint n -> m:nat -> b:lint m ->
@@ -78,12 +82,11 @@ val size_of_sub_lemma:
     (requires (True))
     (ensures ( Bitsize (a-b) ((max m n)+1) ))
 let size_of_sub_lemma n a m b =
-  erase (if n < m then pow2_increases_lemma m n
+  if n < m then pow2_increases_lemma m n
     else 
       if m < n then pow2_increases_lemma n m
       else ();
 	 pow2_increases_lemma ((max n m)+1) (max n m)
-  )
 
 val size_of_mul_lemma:
   n:nat -> a:lint n -> m:nat -> b:lint m ->
@@ -91,10 +94,8 @@ val size_of_mul_lemma:
     (requires (True))
     (ensures (Bitsize (a*b) (n+m)))	       
 let size_of_mul_lemma n a m b = 
-  erase (
     pow2_exp_lemma n m;
     mul_ineq1 a (pow2 n) b (pow2 m)
-  )
     
 val size_of_mul_by_pow2_lemma:
   n:nat -> a:lint n -> m:nat ->
@@ -102,7 +103,7 @@ val size_of_mul_by_pow2_lemma:
     (requires (True))
     (ensures (Bitsize (a * (pow2 m)) (n+m) /\ Bitsize ((pow2 m) * a) (n+m)))
 let size_of_mul_by_pow2_lemma n a m = 
-  erase (pow2_exp_lemma n m)
+ (pow2_exp_lemma n m)
 
 val size_of_div_non_eucl:
   n:nat -> a:lint n -> b:pos ->
@@ -110,7 +111,7 @@ val size_of_div_non_eucl:
     (requires (True))
     (ensures (Bitsize (div_non_eucl a b) n))
 let size_of_div_non_eucl n a b =
-  erase (div_non_eucl_decr_lemma a b)
+ (div_non_eucl_decr_lemma a b)
 
 (* The difference between the euclidian and non euclidian division should be handled with care *)
 (* TODO *)
@@ -156,7 +157,7 @@ val bits_of_pow2:
      (requires (True))
      (ensures ( Bitsize (pow2 n) (n+1) /\ Bitsize (-(pow2 n)) (n+1) ))
 let bits_of_pow2 n =
-  erase (pow2_increases_lemma (n+1) n)
+ (pow2_increases_lemma (n+1) n)
 
 val order_n_bits:
   x:int -> n:nat -> m:nat ->
@@ -164,7 +165,7 @@ val order_n_bits:
     (requires (n <= m /\ Bitsize x n))
     (ensures ( Bitsize x m ))
 let order_n_bits x n m =
-  erase (
+ (
     if n = m then ()
     else pow2_increases_lemma m n
   )
@@ -193,7 +194,7 @@ val add:
   n:nat -> a:lint n -> m:nat -> b:lint m{ (max n m)+1 <= max_size } ->
   Tot (c:lint ((max n m)+1){ c = a + b })
 let add n a m b = 
-  erase (size_of_add_lemma n a m b);
+ (size_of_add_lemma n a m b);
   a + b
 
 (* Safe substraction taking the integer size into account *)
@@ -201,7 +202,7 @@ val sub:
   n:nat -> a:lint n -> m:nat -> b:lint m{ (max n m)+1 <= max_size } ->
   Tot (c:lint ((max n m) +1){ c = a - b })
 let sub n a m b = 
-  erase (size_of_sub_lemma n a m b);
+ (size_of_sub_lemma n a m b);
   a - b
 
 (* Safe multiplication taking the integer size into account *)
@@ -209,7 +210,7 @@ val mul :
   n:nat -> a:lint n -> m:nat -> b:lint m{ (n+m) <= max_size } ->
   Tot (c:lint (n+m){ c = a * b })
 let mul  n a m b =
-  erase (size_of_mul_lemma n a m b);
+ (size_of_mul_lemma n a m b);
   a * b
 
 assume val shift_left :
@@ -226,10 +227,11 @@ let zero = 0
 (*          SAFE FUNCTIONS RELATED LEMMAS               *)
 (* ---------------------------------------------------- *)
 
+
 (* Tighter bound on the result of the sum with a positive and a negative term *)
 (* TODO *)
 assume val add_negative:
-  n:nat -> a:lint n -> m:nat -> b:lint m ->
+  n:nat -> a:lint n -> m:nat{(max n m)+1 <= max_size} -> b:lint m ->
   Lemma
     (requires ( (a < 0 /\ b >= 0) \/ (a >= 0 /\ b < 0) ))
     (ensures ( add n a m b = a + b /\ Bitsize (add n a m b) (max m n) ))
@@ -242,7 +244,7 @@ assume val add_bigger_pow2:
     (ensures ( a + pow2 m >= pow2 (m-1) )) 
 
 val add_commutative:
-  n:nat -> a:lint n -> m:nat -> b:lint m ->
+  n:nat -> a:lint n -> m:nat{(max n m)+1 <= max_size} -> b:lint m ->
   Lemma
     (requires (True))
     (ensures ( add n a m b = add m b n a ))

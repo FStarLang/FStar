@@ -587,13 +587,20 @@ label_opt:
 
 qpat: 
   |   { [] }
-  | LBRACE_COLON_PATTERN appTerm morePats RBRACE
-      { $2::$3 }
+  | LBRACE_COLON_PATTERN disjunctivePats RBRACE
+      { $2 }
 
 morePats:
   |  { [] }
-  | SEMICOLON appTerm morePats  { $2::$3 }
+  | SEMICOLON conjunctivePat  { $2 }
 
+disjunctivePats:
+ | conjunctivePat   { [$1] }
+ | conjunctivePat DISJUNCTION disjunctivePats { $1::$3 }
+
+conjunctivePat:
+ | appTerm morePats { $1::$2 }
+ 
 simpleTerm:
   | tmIff { $1 }
 

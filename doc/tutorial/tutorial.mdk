@@ -4,6 +4,7 @@ Heading Base  : 2
 Author        : The F* Team
 Affiliation   : MSR, MSR-Inria, Inria
 Colorizer     : fstar
+Package       : fullpage
 
 .Comment      : replace=""
 ~CH           : .comment color=green author=CH
@@ -826,8 +827,9 @@ on `x`. The basic concept here is that by programming total functions, we
 can write proofs about other pure expressions. We'll discuss such proofs
 in detail in the remainder of this section.
 
-~ Remark
-In F\* an expression being ghost (computationally irrelevant) is an effect.
+~ Remark 
+In F\* an expression being ghost (computationally irrelevant) is an effect. The
+effect `GTot` in the type of `factorial_is_positive` indicates that it is a ghost, total function.
 ~
 
 ### Dependent function types
@@ -922,7 +924,10 @@ words, the second case is the induction step and handles the proof when
 `x > 3`.
 
 Informally, the proof in this case works by using the induction
-hypothesis, which gives us that `forall n, 2 < n < x ==> factorial n > n`,
+hypothesis, which gives us that
+```
+forall n, 2 < n < x ==> factorial n > n
+```
 and our goal is to prove `factorial x > x`. Or, equivalently, that
 `x * factorial (x - 1) > x`, knowing that `factorial (x - 1) > x - 1`; or
 that `x*x - x > x`---which is true for `x > 3`.
@@ -1365,9 +1370,9 @@ Is it better to do this intrinsically or extrinsically? Do it both ways.
 ~Exercise
 Define the `fold_left` function on lists, so that
 
-    fold_left f a [b1; ...; bn] = f (... (f (f a b1) b2) ...) bn
+    fold_left f [b1; ...; bn] a = f (bn, ... (f b2 (f b1 a)))
 
-Prove that `(fold_left Cons [] l = reverse l)`.
+Prove that `(fold_left Cons l [] = reverse l)`.
 (The proof is a level harder from what we've done so far)
 ~~ ExerciseFragment {exname=ex4f-fold-left}
 val fold_left_cons_is_reverse: l:list 'a -> l':list 'a ->
@@ -1936,19 +1941,22 @@ Unsurprisingly, it fails, on several counts:
 
 Let's try again:
 
-    val sort: l:list int -> Tot (m:list int{sorted m /\ forall i. mem i l <==> mem i m})
+    val sort: l:list int -> Tot (m:list int{sorted m
+                                         /\ forall i. mem i l <==> mem i m})
                                 (decreases (length l))
 
 And here are a couple of lemmas about `partition` and `sorted`:
 
 
      val partition_lemma: f:('a -> Tot bool)
-                        -> l:list 'a
-                        -> Lemma (requires True)
-                                 (ensures ((length (fst (partition f l)) + length (snd (partition f l)) = length l
-                                      /\ (forall x. mem x (fst (partition f l)) ==> f x)
-                                      /\ (forall x. mem x (snd (partition f l)) ==> not (f x))
-                                      /\ (forall x. mem x l = (mem x (fst (partition f l)) || mem x (snd (partition f l)))))))
+        -> l:list 'a
+        -> Lemma (requires True)
+                 (ensures ((length (fst (partition f l))
+                          + length (snd (partition f l)) = length l
+                      /\ (forall x. mem x (fst (partition f l)) ==> f x)
+                      /\ (forall x. mem x (snd (partition f l)) ==> not (f x))
+                      /\ (forall x. mem x l = (mem x (fst (partition f l))
+                                            || mem x (snd (partition f l)))))))
      let rec partition_lemma f l = match l with
        | [] -> ()
        | hd::tl -> partition_lemma f tl
@@ -2042,18 +2050,23 @@ associate with every occurrence of the term `partition f l` the
 property proven by the lemma.
 
     val partition_lemma: f:('a -> Tot bool)
-                      -> l:list 'a
-                      -> Lemma (requires True)
-                               (ensures ((length (fst (partition f l)) + length (snd (partition f l)) = length l
-                                    /\ (forall x. mem x (fst (partition f l)) ==> f x)
-                                    /\ (forall x. mem x (snd (partition f l)) ==> not (f x))
-                                    /\ (forall x. mem x l = (mem x (fst (partition f l)) || mem x (snd (partition f l)))))))
+      -> l:list 'a
+      -> Lemma (requires True)
+               (ensures ((length (fst (partition f l))
+                        + length (snd (partition f l)) = length l
+                    /\ (forall x. mem x (fst (partition f l)) ==> f x)
+                    /\ (forall x. mem x (snd (partition f l)) ==> not (f x))
+                    /\ (forall x. mem x l = (mem x (fst (partition f l))
+                                          || mem x (snd (partition f l)))))))
                          [SMTPat (partition f l)]
 
 Likewise, here's a revised type for `sorted_concat_lemma`. This time,
 we instruct F\* and the SMT solver to associate the lemma property
 only with very specific terms: just those that have the shape
-`sorted (append 11 (pivot::l2))`. The more specific a pattern you can provide,
+```
+sorted (append 11 (pivot::l2))
+```
+The more specific a pattern you can provide,
 the more discriminating the SMT solver will be in applying lemmas,
 keeping your verification times acceptable.
 
@@ -2626,12 +2639,18 @@ we give the intuition of the two most interesting cases:
     to apply the `context_invariance` lemma to obtain that
     `typing empty v = typing g v` and complete the proof of this case.
   * Case `x <> y`: We have `subst x v e = e` and
-    `typing gx e = Some t_e` and need to show that `typing g e = Some t_e`.
+    `typing gx e = Some t_e` and need to show that
+```
+typing g e = Some t_e
+```
     We have that `EquivE (EVar y) gx g` since `x <> y` so we can apply
     the `context_invariance` lemma to conclude.
 * Case `e = EAbs y t_y e1`:
   We have that `typing gxy e1 = Some t_e1`,
-  and need to show that `typing gy e1 = Some t_e1`.
+  and need to show that
+```
+typing gy e1 = Some t_e1
+```
   * Case `x = y`: We have `subst x v e = EAbs y t_y e1`.
     Since `x = y` the `x` binder in `gxy` is spurious (we have `Equal gy gxy`)
     and can apply the `typing_extensional` lemma.
@@ -2640,7 +2659,11 @@ we give the intuition of the two most interesting cases:
     a dependently typed one) we can swap the `x` and `y` binding to show
     that `Equal gxy xyx`. By the `typing_extensional` lemma we obtain that
     `typing gxy e1 == typing gyx e1`. By the induction hypothesis we thus
-    obtain that `typing gy (subst x v e1) == Some t_e1`, and by the definition
+    obtain that
+```
+typing gy (subst x v e1) == Some t_e1
+```
+    and by the definition
     of `typing` we conclude that `typing g (EAbs y t_y (subst x v e)) = t_e`.
 
 We now have the tools we need to prove preservation:
@@ -3343,8 +3366,12 @@ kind PurePre = Type
 kind PureWP (a:Type) = PurePost a -> PurePre
 ```
 
-For example, one computation type for `0` is `PURE int return_zero return_zero` where
-`return_zero = fun (p:(int -> Type)) -> p 0`.  This means that in order to
+For example, one computation type for `0` is
+`PURE int return_zero return_zero` where
+```
+return_zero = fun (p:(int -> Type)) -> p 0
+```
+This means that in order to
 prove any property `p` about the result of the computation `0` is
 suffices to prove `p 0`---which is of course what you would
 expect. The type `return_zero` is an instance of the more general form
@@ -3359,8 +3386,10 @@ When sequentially composing two pure computations using
 `e1: PURE t1 wp1 wlp1` and
 `e2: (x:t1 -> PURE t2 (wp2 x) (wlp2 x))`,
 we type the composed computation as
-`PURE t2 (bind_PURE wp1 wp2) (bind_PURE wlp1 wlp2)`, where:
-
+```
+PURE t2 (bind_PURE wp1 wp2) (bind_PURE wlp1 wlp2)
+```
+where:
 ```
 type bind_PURE (#a:Type) (#b:Type)
                (wp1: PureWP a)
@@ -3634,7 +3663,13 @@ relating the `()` to the resulting heap, it suffices to prove
 ~Remark
 F\* provides support for user-defined custom operators. To allow you to
 write `!r` for `read r` and `r := v` instead of `ST.write r v`, we define
-`let op_Bang x = ST.read x` and `let op_Colon_Equals x v = ST.write x v`.
+```
+let op_Bang x = ST.read x
+```
+and
+```
+let op_Colon_Equals x v = ST.write x v
+```
 ~
 
 As with the `PureWP`, the predicate transformers `StateWP t` form a
@@ -3667,7 +3702,8 @@ As before, we can also define a coercion to move to `ST` from `STATE`.
 
 ```
 type as_requires (#a:Type) (wp:STWP_h heap a)  = wp (fun x h -> True)
-type as_ensures  (#a:Type) (wlp:STWP_h heap a) (h0:heap) (x:a) (h1:heap) = ~ (wlp (fun y h1' -> y<>x \/ h1<>h1') h0)
+type as_ensures  (#a:Type) (wlp:STWP_h heap a) (h0:heap) (x:a) (h1:heap)
+  = ~ (wlp (fun y h1' -> y<>x \/ h1<>h1') h0)
 val as_ST: #a:Type -> #b:(a -> Type)
           -> #wp:(x:a -> STWP_h heap (b x))
           -> #wlp:(x:a -> STWP_h heap (b x))
@@ -4029,9 +4065,10 @@ need freshness.
 Most identifiers in F\* are resolved unambiguously to some binder in scope. The identifier
 `ref` is the sole exception. It is idiomatic in ML to write `ref t` both for the type of a
 reference and `ref v` to allocate a new reference. To support this idiom, F\* handles the
-`ref` identifier in a special manner: in the latter form, when `ref` is applied to an expression,
-F\* resolves `ref` to `ST.alloc`. If you don't like this convention, you can always just write
-`ST.alloc` yourself.
+`ref` identifier in a special manner: in the latter form, when `ref`
+is applied to an expression, F\* resolves `ref` to `ST.alloc`. If you
+don't like this convention, you can always just write `ST.alloc`
+yourself.
 ~
 
 The type of `ST.alloc` (the name to which `ref` is resolved in the body
@@ -4357,7 +4394,8 @@ this is crucial for good automation in proofs.
 
 ```
 let sel (#a:Type) (#i:rid) (m:t) (r:rref i a) = Heap.sel (Map.sel m i) (as_ref r)
-let upd (#a:Type) (#i:rid) (m:t) (r:rref i a) (v:a) = Map.upd m i (Heap.upd (Map.sel m i) (as_ref r) v)
+let upd (#a:Type) (#i:rid) (m:t) (r:rref i a) (v:a)
+  = Map.upd m i (Heap.upd (Map.sel m i) (as_ref r) v)
 ```
 ### Stateful operations on regions and references
 
@@ -4617,12 +4655,14 @@ val fly_robot_army: ...
 ~~Answer
 ~~~ CodeFragment {filename=solutions/robot2.fst name=so11a-robot}
 val fly_robot_army:  #rs:Set.set rid
-                  -> bs:bots rs
-                  -> ST unit
-                     (requires (fun h -> (forall b.{:pattern (trigger b)} (trigger b /\ mem b bs ==> robot_inv b h))))
-                     (ensures  (fun h0 _u h1 ->
-                                    modifies rs h0 h1
-                                     /\ (forall b.{:pattern (trigger b)} (trigger b /\ mem b bs ==> robot_inv b h1 /\ flying b h1))))
+        -> bs:bots rs
+        -> ST unit
+           (requires (fun h -> (forall b.{:pattern (trigger b)}
+                                            (trigger b /\ mem b bs ==> robot_inv b h))))
+           (ensures  (fun h0 _u h1 ->
+                          modifies rs h0 h1
+                           /\ (forall b.{:pattern (trigger b)}
+                                  (trigger b /\ mem b bs ==> robot_inv b h1 /\ flying b h1))))
 ~~~
 ~~
 ~
@@ -5526,8 +5566,9 @@ type keyT: Type -> Type =
   | Ideal    : p:Type -> AES.key -> i:int -> keyT p
   | Concrete : p:Type -> AES.key -> i:int -> keyT p
 ```
-Keys record whether they were correctly generated `Ideal` in which case their usage will provide security by type abstraction,
-or not, in which they are just concrete keys that can be leaked to the adversary.
+Keys record whether they were correctly generated `Ideal` in which
+case their usage will provide security by type abstraction, or not, in
+which they are just concrete keys that can be leaked to the adversary.
 
 ```
 type scheme: Type -> Type =
@@ -5539,8 +5580,9 @@ type scheme: Type -> Type =
              scheme p
 ```
 
-A scheme records a plain type `p`, a function `keyrepr` for breaking key abstraction,
-a key generation function `keygen`, and encryption and decryption functions `encrypt` and `decrypt`.
+A scheme records a plain type `p`, a function `keyrepr` for breaking
+key abstraction, a key generation function `keygen`, and encryption
+and decryption functions `encrypt` and `decrypt`.
 
 ```
 type entry (p:Type) (k:Type) =

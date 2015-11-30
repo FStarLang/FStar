@@ -40,7 +40,7 @@ val set_count: set<'a> -> int
 val set_difference: set<'a> -> set<'a> -> set<'a>
 val set_elements: set<'a> -> list<'a>
 
-type smap<'value> = HashMultiMap<string,'value> (* not relying on representation *)
+type smap<'value> = System.Collections.Generic.Dictionary<string,'value> (* not relying on representation *)
 val smap_create: int -> smap<'value>
 val smap_clear:smap<'value> -> unit
 val smap_add: smap<'value> -> string -> 'value -> unit
@@ -110,6 +110,10 @@ val kill_all: unit -> unit
 val run_proc : string -> string -> string -> (bool * string * string)
 
 val get_file_extension: string -> string
+val is_path_absolute: string -> bool
+val join_paths: string -> string -> string
+val normalize_file_path: string -> string
+
 open Prims
 val int_of_string: string -> int
 val int_of_char:   char -> Tot<int>

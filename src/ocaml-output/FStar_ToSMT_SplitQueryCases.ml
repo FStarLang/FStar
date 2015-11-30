@@ -1,11 +1,9 @@
 
 open Prims
-let rec get_next_n_ite = (fun n t negs f -> (match ((n <= 0)) with
-| true -> begin
+let rec get_next_n_ite = (fun n t negs f -> if (n <= 0) then begin
 (let _117_14 = (f FStar_ToSMT_Term.mkTrue)
 in (true, _117_14, negs, t))
-end
-| false -> begin
+end else begin
 (match (t.FStar_ToSMT_Term.tm) with
 | FStar_ToSMT_Term.App (FStar_ToSMT_Term.ITE, g::t::e::_52_7) -> begin
 (let _117_19 = (let _117_16 = (let _117_15 = (FStar_ToSMT_Term.mkNot g)
@@ -21,13 +19,11 @@ end
 | _52_21 -> begin
 (false, FStar_ToSMT_Term.mkFalse, FStar_ToSMT_Term.mkFalse, FStar_ToSMT_Term.mkFalse)
 end)
-end))
+end)
 
-let rec is_ite_all_the_way = (fun n t negs l -> (match ((n <= 0)) with
-| true -> begin
+let rec is_ite_all_the_way = (fun n t negs l -> if (n <= 0) then begin
 (Prims.raise FStar_Util.Impos)
-end
-| false -> begin
+end else begin
 (match (t.FStar_ToSMT_Term.tm) with
 | FStar_ToSMT_Term.FreeV (_52_27) -> begin
 (let _117_31 = (let _117_30 = (let _117_29 = (FStar_ToSMT_Term.mkNot t)
@@ -39,18 +35,16 @@ end
 (let _52_36 = (get_next_n_ite n t negs (fun x -> x))
 in (match (_52_36) with
 | (b, t, negs', rest) -> begin
-(match (b) with
-| true -> begin
+if b then begin
 (let _117_34 = (let _117_33 = (FStar_ToSMT_Term.mkImp (negs, t))
 in (_117_33)::l)
 in (is_ite_all_the_way n rest negs' _117_34))
-end
-| false -> begin
+end else begin
 (false, [], FStar_ToSMT_Term.mkFalse)
-end)
+end
 end))
 end)
-end))
+end)
 
 let rec parse_query_for_split_cases = (fun n t f -> (match (t.FStar_ToSMT_Term.tm) with
 | FStar_ToSMT_Term.Quant (FStar_ToSMT_Term.Forall, l, opt, l', t) -> begin
@@ -121,3 +115,7 @@ let handle_query = (fun _52_128 check -> (match (_52_128) with
 (let l = (check_split_cases f l check)
 in (check_exhaustiveness f negs check))
 end))
+
+
+
+

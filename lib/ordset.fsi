@@ -1,4 +1,4 @@
-(*--build-config
+(*--Build-config
 
  --*)
 module FStar.OrdSet
@@ -25,13 +25,13 @@ val size      : #a:Type -> #f:cmp a -> ordset a f -> Tot nat
 val subset    : #a:Type -> #f:cmp a -> ordset a f -> ordset a f -> Tot bool
 val singleton : #a:Type -> #f:cmp a -> a -> Tot (ordset a f)
 
-type Equal (#a:Type) (#f:cmp a) (s1:ordset a f) (s2:ordset a f) =
+opaque type Equal (#a:Type) (#f:cmp a) (s1:ordset a f) (s2:ordset a f) =
   (forall x. mem x s1 = mem x s2)
 
 val eq_lemma: #a:Type -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
               -> Lemma (requires (Equal s1 s2))
                        (ensures (s1 = s2))
-                 [SMTPat (s1 = s2)]
+                 [SMTPatT (Equal s1 s2)]
 
 val mem_empty: #a:Type -> #f:cmp a -> x:a
                -> Lemma (requires True) (ensures (not (mem #a #f x (empty #a #f))))
@@ -83,9 +83,9 @@ val eq_remove: #a:Type -> #f:cmp a -> x:a -> s:ordset a f
                         (ensures (s = remove #a #f x s))
                   [SMTPat (remove #a #f x s)]
 
-val size_empty: #a:Type -> #f:cmp a
-                -> Lemma (requires True) (ensures (size #a #f (empty #a #f) = 0))
-                   [SMTPat (size #a #f (empty #a #f))]
+val size_empty: #a:Type -> #f:cmp a -> s:ordset a f
+                -> Lemma (requires True) (ensures ((size #a #f s = 0) = (s = empty #a #f)))
+                  [SMTPat (size #a #f s)]
                    
 val size_remove: #a:Type -> #f:cmp a -> y:a -> s:ordset a f
                  -> Lemma (requires (mem #a #f y s))
@@ -96,10 +96,6 @@ val size_singleton: #a:Type -> #f:cmp a -> x:a
                     -> Lemma (requires True) (ensures (size #a #f (singleton #a #f x) = 1))
                        [SMTPat (size #a #f (singleton #a #f x))]
                        
-val s_eq_empty: #a:Type -> #f:cmp a -> s:ordset a f
-                -> Lemma (requires True) (ensures ((size #a #f s = 0) = (s = empty)))
-                   [SMTPat (s = empty)]
-
 (* TODO:FIXME: implement *)
 val size_union: #a:Type -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
                 -> Lemma (requires True)
@@ -107,4 +103,7 @@ val size_union: #a:Type -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
                                    (size #a #f (union #a #f s1 s2) >= size #a #f s2)))
                          [SMTPat (size #a #f (union #a #f s1 s2))]
 
-(**********)
+val subset_size: #a:Type -> #f:cmp a -> x:ordset a f -> y:ordset a f
+                 -> Lemma (requires (subset #a #f x y))
+	                 (ensures (size #a #f x <= size #a #f y))
+	           [SMTPat (subset #a #f x y)]

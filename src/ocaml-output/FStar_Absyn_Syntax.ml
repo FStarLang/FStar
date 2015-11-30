@@ -276,12 +276,12 @@ type typ' =
 | Typ_meta of meta_t
 | Typ_uvar of (uvar_t * knd)
 | Typ_delayed of (((typ * subst_t), Prims.unit  ->  typ) FStar_Util.either * typ memo)
-| Typ_unknown
+| Typ_unknown 
  and comp_typ =
-{effect_name : lident; result_typ : typ; effect_args : args; flags : cflags Prims.list}
+{effect_name : lident; result_typ : typ; effect_args : args; flags : cflags Prims.list} 
  and comp' =
 | Total of typ
-| Comp of comp_typ
+| Comp of comp_typ 
  and cflags =
 | TOTAL
 | MLEFFECT
@@ -289,16 +289,16 @@ type typ' =
 | PARTIAL_RETURN
 | SOMETRIVIAL
 | LEMMA
-| DECREASES of exp
+| DECREASES of exp 
  and meta_t =
-| Meta_pattern of (typ * arg Prims.list)
+| Meta_pattern of (typ * arg Prims.list Prims.list)
 | Meta_named of (typ * lident)
 | Meta_labeled of (typ * Prims.string * FStar_Range.range * Prims.bool)
 | Meta_refresh_label of (typ * Prims.bool Prims.option * FStar_Range.range)
-| Meta_slack_formula of (typ * typ * Prims.bool FStar_ST.ref)
+| Meta_slack_formula of (typ * typ * Prims.bool FStar_ST.ref) 
  and 'a uvar_basis =
 | Uvar
-| Fixed of 'a
+| Fixed of 'a 
  and exp' =
 | Exp_bvar of bvvar
 | Exp_fvar of (fvvar * fv_qual Prims.option)
@@ -310,19 +310,19 @@ type typ' =
 | Exp_let of (letbindings * exp)
 | Exp_uvar of (uvar_e * typ)
 | Exp_delayed of (exp * subst_t * exp memo)
-| Exp_meta of meta_e
+| Exp_meta of meta_e 
  and meta_e =
-| Meta_desugared of (exp * meta_source_info)
+| Meta_desugared of (exp * meta_source_info) 
  and meta_source_info =
 | Data_app
 | Sequence
 | Primop
 | Masked_effect
-| Meta_smt_pat
+| Meta_smt_pat 
  and fv_qual =
 | Data_ctor
 | Record_projector of lident
-| Record_ctor of (lident * fieldname Prims.list)
+| Record_ctor of (lident * fieldname Prims.list) 
  and pat' =
 | Pat_disj of pat Prims.list
 | Pat_constant of sconst
@@ -332,7 +332,7 @@ type typ' =
 | Pat_wild of bvvar
 | Pat_twild of btvar
 | Pat_dot_term of (bvvar * exp)
-| Pat_dot_typ of (btvar * typ)
+| Pat_dot_typ of (btvar * typ) 
  and knd' =
 | Kind_type
 | Kind_effect
@@ -341,65 +341,65 @@ type typ' =
 | Kind_uvar of uvar_k_app
 | Kind_lam of (binders * knd)
 | Kind_delayed of (knd * subst_t * knd memo)
-| Kind_unknown
+| Kind_unknown 
  and letbinding =
-{lbname : lbname; lbtyp : typ; lbeff : lident; lbdef : exp}
+{lbname : lbname; lbtyp : typ; lbeff : lident; lbdef : exp} 
  and freevars =
-{ftvs : btvar FStar_Util.set; fxvs : bvvar FStar_Util.set}
+{ftvs : btvar FStar_Util.set; fxvs : bvvar FStar_Util.set} 
  and uvars =
-{uvars_k : uvar_k FStar_Util.set; uvars_t : (uvar_t * knd) FStar_Util.set; uvars_e : (uvar_e * typ) FStar_Util.set}
+{uvars_k : uvar_k FStar_Util.set; uvars_t : (uvar_t * knd) FStar_Util.set; uvars_e : (uvar_e * typ) FStar_Util.set} 
  and ('a, 'b) syntax =
-{n : 'a; tk : 'b memo; pos : FStar_Range.range; fvs : freevars memo; uvs : uvars memo}
+{n : 'a; tk : 'b memo; pos : FStar_Range.range; fvs : freevars memo; uvs : uvars memo} 
  and arg =
-((typ, exp) FStar_Util.either * aqual)
+((typ, exp) FStar_Util.either * aqual) 
  and args =
-arg Prims.list
+arg Prims.list 
  and binder =
-((btvar, bvvar) FStar_Util.either * arg_qualifier Prims.option)
+((btvar, bvvar) FStar_Util.either * arg_qualifier Prims.option) 
  and binders =
-binder Prims.list
+binder Prims.list 
  and typ =
-(typ', knd) syntax
+(typ', knd) syntax 
  and comp =
-(comp', Prims.unit) syntax
+(comp', Prims.unit) syntax 
  and uvar_t =
-typ uvar_basis FStar_Unionfind.uvar
+typ uvar_basis FStar_Unionfind.uvar 
  and exp =
-(exp', typ) syntax
+(exp', typ) syntax 
  and uvar_e =
-exp uvar_basis FStar_Unionfind.uvar
+exp uvar_basis FStar_Unionfind.uvar 
  and btvdef =
-typ bvdef
+typ bvdef 
  and bvvdef =
-exp bvdef
+exp bvdef 
  and pat =
-(pat', (knd, typ) FStar_Util.either Prims.option) withinfo_t
+(pat', (knd, typ) FStar_Util.either Prims.option) withinfo_t 
  and knd =
-(knd', Prims.unit) syntax
+(knd', Prims.unit) syntax 
  and uvar_k_app =
-(uvar_k * args)
+(uvar_k * args) 
  and kabbrev =
-(lident * args)
+(lident * args) 
  and uvar_k =
-knd uvar_basis FStar_Unionfind.uvar
+knd uvar_basis FStar_Unionfind.uvar 
  and lbname =
-(bvvdef, lident) FStar_Util.either
+(bvvdef, lident) FStar_Util.either 
  and letbindings =
-(Prims.bool * letbinding Prims.list)
+(Prims.bool * letbinding Prims.list) 
  and subst_t =
-subst_elt Prims.list Prims.list
+subst_elt Prims.list Prims.list 
  and subst_map =
-(typ, exp) FStar_Util.either FStar_Util.smap
+(typ, exp) FStar_Util.either FStar_Util.smap 
  and subst_elt =
-((btvdef * typ), (bvvdef * exp)) FStar_Util.either
+((btvdef * typ), (bvvdef * exp)) FStar_Util.either 
  and fvar =
-(btvdef, bvvdef) FStar_Util.either
+(btvdef, bvvdef) FStar_Util.either 
  and btvar =
-(typ, knd) bvar
+(typ, knd) bvar 
  and bvvar =
-(exp, typ) bvar
+(exp, typ) bvar 
  and ftvar =
-knd var
+knd var 
  and fvvar =
 typ var
 
@@ -1333,7 +1333,7 @@ type sub_eff =
 let is_Mksub_eff = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mksub_eff")))
 
 type eff_decl =
-{mname : lident; binders : binders; qualifiers : qualifier Prims.list; signature : knd; ret : typ; bind_wp : typ; bind_wlp : typ; if_then_else : typ; ite_wp : typ; ite_wlp : typ; wp_binop : typ; wp_as_type : typ; close_wp : typ; close_wp_t : typ; assert_p : typ; assume_p : typ; null_wp : typ; trivial : typ}
+{mname : lident; binders : binders; qualifiers : qualifier Prims.list; signature : knd; ret : typ; bind_wp : typ; bind_wlp : typ; if_then_else : typ; ite_wp : typ; ite_wlp : typ; wp_binop : typ; wp_as_type : typ; close_wp : typ; close_wp_t : typ; assert_p : typ; assume_p : typ; null_wp : typ; trivial : typ} 
  and sigelt =
 | Sig_tycon of (lident * binders * knd * lident Prims.list * lident Prims.list * qualifier Prims.list * FStar_Range.range)
 | Sig_kind_abbrev of (lident * binders * knd * FStar_Range.range)
@@ -1624,13 +1624,11 @@ in (match (_23_352) with
 | (ns, id) -> begin
 (let nsstr = (let _88_1404 = (FStar_List.map text_of_id ns)
 in (FStar_All.pipe_right _88_1404 text_of_path))
-in {ns = ns; ident = id; nsstr = nsstr; str = (match ((nsstr = "")) with
-| true -> begin
+in {ns = ns; ident = id; nsstr = nsstr; str = if (nsstr = "") then begin
 id.idText
-end
-| false -> begin
+end else begin
 (Prims.strcat (Prims.strcat nsstr ".") id.idText)
-end)})
+end})
 end)))
 
 let lid_of_path = (fun path pos -> (let ids = (FStar_List.map (fun s -> (mk_ident (s, pos))) path)
@@ -2098,7 +2096,7 @@ let rec pat_vars = (fun p -> (match (p.v) with
 | (x, _23_702) -> begin
 (pat_vars x)
 end)) ps)
-in (match ((FStar_All.pipe_right vars (FStar_Util.nodups (fun x y -> (match ((x, y)) with
+in if (FStar_All.pipe_right vars (FStar_Util.nodups (fun x y -> (match ((x, y)) with
 | (FStar_Util.Inl (x), FStar_Util.Inl (y)) -> begin
 (bvd_eq x y)
 end
@@ -2107,13 +2105,11 @@ end
 end
 | _23_718 -> begin
 false
-end))))) with
-| true -> begin
+end)))) then begin
 vars
-end
-| false -> begin
+end else begin
 (Prims.raise (Error (("Pattern variables may not occur more than once", p.p))))
-end))
+end)
 end
 | Pat_var (x) -> begin
 (FStar_Util.Inr (x.v))::[]
@@ -2123,12 +2119,11 @@ end
 end
 | Pat_disj (ps) -> begin
 (let vars = (FStar_List.map pat_vars ps)
-in (match ((not ((let _88_1771 = (FStar_List.tl vars)
+in if (not ((let _88_1771 = (FStar_List.tl vars)
 in (let _88_1770 = (let _88_1769 = (let _88_1768 = (FStar_List.hd vars)
 in (FStar_Util.set_eq order_bvd _88_1768))
 in (FStar_Util.for_all _88_1769))
-in (FStar_All.pipe_right _88_1771 _88_1770)))))) with
-| true -> begin
+in (FStar_All.pipe_right _88_1771 _88_1770))))) then begin
 (let vars = (let _88_1775 = (FStar_All.pipe_right vars (FStar_List.map (fun v -> (let _88_1774 = (FStar_List.map (fun _23_2 -> (match (_23_2) with
 | FStar_Util.Inr (x) -> begin
 x.ppname.idText
@@ -2142,10 +2137,9 @@ in (let _88_1778 = (let _88_1777 = (let _88_1776 = (FStar_Util.format1 "Each bra
 in (_88_1776, p.p))
 in Error (_88_1777))
 in (Prims.raise _88_1778)))
-end
-| false -> begin
+end else begin
 (FStar_List.hd vars)
-end))
+end)
 end
 | (Pat_dot_term (_)) | (Pat_dot_typ (_)) | (Pat_wild (_)) | (Pat_twild (_)) | (Pat_constant (_)) -> begin
 []
@@ -2307,3 +2301,7 @@ end
 | _23_862 -> begin
 None
 end))
+
+
+
+

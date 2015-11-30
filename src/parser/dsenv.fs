@@ -273,13 +273,40 @@ let find_all_datacons env (lid:lident) =
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig
 
-type record = {
+type record_or_dc = {
   typename: lident;
   constrname: lident;
   parms: binders;
-  fields: list<(fieldname * typ)>
+  fields: list<(fieldname * typ)>;
+  is_record:bool
 }
-let record_cache : ref<list<record>> = Util.mk_ref []
+
+//no top-level pattern in F*, so need to do this ugliness
+let record_cache_aux = 
+    let record_cache : ref<list<list<record_or_dc>>> = Util.mk_ref [[]] in
+    let push () =
+        record_cache := List.hd !record_cache::!record_cache in
+    let pop () = 
+        record_cache := List.tl !record_cache in
+    let peek () = List.hd !record_cache in
+    let insert r = record_cache := (r::peek())::List.tl (!record_cache) in
+    (push, pop, peek, insert) 
+    
+let push_record_cache = 
+    let push, _, _, _ = record_cache_aux in
+    push
+
+let pop_record_cache = 
+    let _, pop, _, _ = record_cache_aux in
+    pop
+
+let peek_record_cache = 
+    let _, _, peek, _ = record_cache_aux in
+    peek
+
+let insert_record_cache = 
+    let _, _, _, insert = record_cache_aux in
+    insert
 
 let extract_record (e:env) = function
   | Sig_bundle(sigs, _, _, _) ->
@@ -295,30 +322,32 @@ let extract_record (e:env) = function
 
     sigs |> List.iter (function
       | Sig_tycon(typename, parms, _, _, [dc], tags, _) ->
-        if is_rec tags
-        then match must <| find_dc dc with
+        begin match must <| find_dc dc with
             | Sig_datacon(constrname, t, _, _, _, _) ->
                 let formals = match Util.function_formals t with
                     | Some (x, _) -> x
                     | _ -> [] in
+                let is_rec = is_rec tags in 
                 let fields = formals |> List.collect (fun b -> match b with
                     | Inr x, q ->
-                        if is_null_binder b  || q = Some Implicit
+                        if is_null_binder b  
+                        || (is_rec && q = Some Implicit)
                         then []
-                        else [(qual constrname (Util.unmangle_field_name x.v.ppname), x.sort)]
+                        else [(qual constrname (if is_rec then Util.unmangle_field_name x.v.ppname else x.v.ppname), x.sort)]
                     | _ -> []) in
                 let record = {typename=typename;
                               constrname=constrname;
                               parms=parms;
-                              fields=fields} in
-                record_cache := record::!record_cache
+                              fields=fields;
+                              is_record=is_rec} in
+                insert_record_cache record
             | _ -> ()
-        else ()
+        end
       | _ -> ())
 
   | _ -> ()
 
-let try_lookup_record_by_field_name env (fieldname:lident) =
+let try_lookup_record_or_dc_by_field_name env (fieldname:lident) =
   let maybe_add_constrname ns c =
     let rec aux ns = match ns with
       | [] -> [c]
@@ -328,7 +357,7 @@ let try_lookup_record_by_field_name env (fieldname:lident) =
   let find_in_cache fieldname =
 //Util.print_string (Util.format1 "Trying field %s\n" fieldname.str);
     let ns, fieldname = fieldname.ns, fieldname.ident in
-    Util.find_map (!record_cache) (fun record ->
+    Util.find_map (peek_record_cache()) (fun record ->
       let constrname = record.constrname.ident in
       let ns = maybe_add_constrname ns constrname in
       let fname = lid_of_ids (ns@[fieldname]) in
@@ -338,7 +367,17 @@ let try_lookup_record_by_field_name env (fieldname:lident) =
         else None)) in
   resolve_in_open_namespaces env fieldname find_in_cache
 
-let qualify_field_to_record env (recd:record) (f:lident) =
+let try_lookup_record_by_field_name env (fieldname:lident) =
+    match try_lookup_record_or_dc_by_field_name env fieldname with 
+        | Some (r, f) when r.is_record -> Some (r,f)
+        | _ -> None
+
+let try_lookup_projector_by_field_name env (fieldname:lident) = 
+    match try_lookup_record_or_dc_by_field_name env fieldname with 
+        | Some (r, f) -> Some (f, r.is_record)
+        | _ -> None
+
+let qualify_field_to_record env (recd:record_or_dc) (f:lident) =
   let qualify fieldname =
     let ns, fieldname = fieldname.ns, fieldname.ident in
     let constrname = recd.constrname.ident in
@@ -488,7 +527,8 @@ let finish env modul =
     recbindings=[];
     phase=AST.Un}
 
-let push env =
+let push (env:env) =
+    push_record_cache();
     {env with
         sigmap=Util.smap_copy (sigmap env)::env.sigmap;}
 
@@ -499,9 +539,32 @@ let commit_mark env = match env.sigmap with
     | _ -> failwith "Impossible"
 let pop env = match env.sigmap with
     | _::maps ->
+        pop_record_cache();
         {env with
             sigmap=maps}
     | _ -> failwith "No more modules to pop"
+
+let export_interface (m:lident) env =
+//    printfn "Exporting interface %s" m.str;
+    let sigelt_in_m se = 
+        match Util.lids_of_sigelt se with 
+            | l::_ -> l.nsstr=m.str
+            | _ -> false in
+    let sm = sigmap env in 
+    let env = pop env in 
+    let keys = Util.smap_keys sm in
+    let sm' = sigmap env in 
+    keys |> List.iter (fun k ->
+    match Util.smap_try_find sm' k with 
+        | Some (se, true) when sigelt_in_m se ->  
+          Util.smap_remove sm' k;
+//          printfn "Exporting %s" k;
+          let se = match se with 
+            | Sig_val_decl(l, t, q, r) -> Sig_val_decl(l, t, Assumption::q, r)
+            | _ -> se in 
+          Util.smap_add sm' k (se, false)
+        | _ -> ());
+    env
 
 let finish_module_or_interface env modul =
   if not modul.is_interface
@@ -517,12 +580,13 @@ let prepare_module_or_interface intf admitted env mname =
     {env with curmodule=Some mname; sigmap=env.sigmap; open_namespaces = open_ns; iface=intf; admitted_iface=admitted} in
 
   match env.modules |> Util.find_opt (fun (l, _) -> lid_equals l mname) with
-    | None -> prep env
+    | None -> prep env, false
     | Some (_, m) ->
-      if intf
+      if not m.is_interface || intf
       then raise (Error(Util.format1 "Duplicate module or interface name: %s" mname.str, range_of_lid mname));
-      prep env
-
+      //we have an interface for this module already; if we're not interactive then do not export any symbols from this module
+      prep (push env), true //push a context so that we can pop it when we're done
+      
 let enter_monad_scope env mname =
   let curmod = current_module env in
   let mscope = lid_of_ids (curmod.ns@[curmod.ident; mname]) in

@@ -5,6 +5,7 @@
 fstar/
 *.tar.gz
 
+prims.ml
 FStar_All.ml
 FStar_Bytes.ml
 FStar_Char.ml

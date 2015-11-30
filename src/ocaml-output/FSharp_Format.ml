@@ -73,13 +73,11 @@ let combine = (fun _55_26 docs -> (match (_55_26) with
 | Doc (sep) -> begin
 (let select = (fun _55_30 -> (match (_55_30) with
 | Doc (d) -> begin
-(match ((d = "")) with
-| true -> begin
+if (d = "") then begin
 None
-end
-| false -> begin
+end else begin
 Some (d)
-end)
+end
 end))
 in (let docs = (FStar_List.choose select docs)
 in Doc ((FStar_String.concat sep docs))))
@@ -106,3 +104,7 @@ let pretty = (fun sz _55_44 -> (match (_55_44) with
 | Doc (doc) -> begin
 doc
 end))
+
+
+
+

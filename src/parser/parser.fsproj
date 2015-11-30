@@ -13,7 +13,8 @@
     <Name>parser</Name>
     <TargetFrameworkProfile />
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\VS\</SolutionDir>
-    <RestorePackages>true</RestorePackages>
+    <RestorePackages>false</RestorePackages>
+    <NuGetPackageImportStamp>7fc78bb6</NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -65,8 +66,9 @@
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
+    <Error Condition="!Exists('..\VS\packages\FsLexYacc.6.1.0\build\FsLexYacc.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\VS\packages\FsLexYacc.6.1.0\build\FsLexYacc.targets'))" />
   </Target>
-  <Import Project="$(SolutionDir)\packages\FsLexYacc.6.0.3\bin\FsLexYacc.targets" Condition="Exists('$(SolutionDir)\packages\FsLexYacc.6.0.3\bin\FsLexYacc.targets')" />
+  <Import Project="$(SolutionDir)\packages\FsLexYacc.6.1.0\bin\FsLexYacc.targets" Condition="Exists('$(SolutionDir)\packages\FsLexYacc.6.1.0\bin\FsLexYacc.targets')" />
   <ItemGroup>
     <FsYacc Include="parse.fsy">
       <OtherFlags>--module FStar.Parser.Parse</OtherFlags>
@@ -79,7 +81,6 @@
     <Compile Include="parse.fs" />
     <Compile Include="lexhelp.fs" />
     <Compile Include="lex.fs" />
-    <None Include="packages.config" />
     <Compile Include="dsenv.fsi" />
     <Compile Include="dsenv.fs" />
     <Compile Include="desugar.fsi" />
@@ -87,6 +88,7 @@
     <Compile Include="parseit.fsi" />
     <Compile Include="parseit.fs" />
     <Compile Include="driver.fs" />
+    <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\tc\tc.fsproj">
@@ -101,7 +103,7 @@
       <HintPath>..\..\bin\FSharp.PowerPack.Compatibility.dll</HintPath>
     </Reference>
     <Reference Include="FsLexYacc.Runtime">
-      <HintPath>..\..\VS\packages\FsLexYacc.Runtime.6.0.2\lib\net40\FsLexYacc.Runtime.dll</HintPath>
+      <HintPath>..\VS\packages\FsLexYacc.Runtime.6.1.0\lib\net40\FsLexYacc.Runtime.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="mscorlib" />
@@ -119,6 +121,7 @@
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
+  <Import Project="..\VS\packages\FsLexYacc.6.1.0\build\FsLexYacc.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
 	     Other similar extension points exist, see Microsoft.Common.targets.
 	<Target Name="BeforeBuild">

@@ -71,5 +71,6 @@ let parse_file env fn =
       Util.print_string <| Print.format_error r msg;
       exit 1
 
-let read_build_config file = ParseIt.read_build_config file
-
+let read_build_config file = 
+  ParseIt.read_build_config file true
+  

@@ -99,24 +99,24 @@ type term' =
 | Project of (term * lid)
 | Product of (binder Prims.list * term)
 | Sum of (binder Prims.list * term)
-| QForall of (binder Prims.list * term Prims.list * term)
-| QExists of (binder Prims.list * term Prims.list * term)
+| QForall of (binder Prims.list * term Prims.list Prims.list * term)
+| QExists of (binder Prims.list * term Prims.list Prims.list * term)
 | Refine of (binder * term)
 | NamedTyp of (FStar_Absyn_Syntax.ident * term)
 | Paren of term
 | Requires of (term * Prims.string Prims.option)
 | Ensures of (term * Prims.string Prims.option)
-| Labeled of (term * Prims.string * Prims.bool)
+| Labeled of (term * Prims.string * Prims.bool) 
  and term =
-{tm : term'; range : FStar_Range.range; level : level}
+{tm : term'; range : FStar_Range.range; level : level} 
  and binder' =
 | Variable of FStar_Absyn_Syntax.ident
 | TVariable of FStar_Absyn_Syntax.ident
 | Annotated of (FStar_Absyn_Syntax.ident * term)
 | TAnnotated of (FStar_Absyn_Syntax.ident * term)
-| NoName of term
+| NoName of term 
  and binder =
-{b : binder'; brange : FStar_Range.range; blevel : level; aqual : FStar_Absyn_Syntax.aqual}
+{b : binder'; brange : FStar_Range.range; blevel : level; aqual : FStar_Absyn_Syntax.aqual} 
  and pattern' =
 | PatWild
 | PatConst of FStar_Absyn_Syntax.sconst
@@ -128,9 +128,9 @@ type term' =
 | PatTuple of (pattern Prims.list * Prims.bool)
 | PatRecord of (lid * pattern) Prims.list
 | PatAscribed of (pattern * term)
-| PatOr of pattern Prims.list
+| PatOr of pattern Prims.list 
  and pattern =
-{pat : pattern'; prange : FStar_Range.range}
+{pat : pattern'; prange : FStar_Range.range} 
  and branch =
 (pattern * term Prims.option * term)
 
@@ -775,9 +775,9 @@ type decl' =
 | Exception of (FStar_Absyn_Syntax.ident * term Prims.option)
 | NewEffect of (qualifiers * effect_decl)
 | SubEffect of lift
-| Pragma of FStar_Absyn_Syntax.pragma
+| Pragma of FStar_Absyn_Syntax.pragma 
  and decl =
-{d : decl'; drange : FStar_Range.range}
+{d : decl'; drange : FStar_Range.range} 
  and effect_decl =
 | DefineEffect of (FStar_Absyn_Syntax.ident * binder Prims.list * term * decl Prims.list)
 | RedefineEffect of (FStar_Absyn_Syntax.ident * binder Prims.list * term)
@@ -1190,13 +1190,13 @@ in (FStar_Util.format2 "%s * %s" _105_1015 _105_1014)))
 end
 | QForall (bs, pats, t) -> begin
 (let _105_1018 = (to_string_l " " binder_to_string bs)
-in (let _105_1017 = (to_string_l "; " term_to_string pats)
+in (let _105_1017 = (to_string_l " \\/ " (to_string_l "; " term_to_string) pats)
 in (let _105_1016 = (FStar_All.pipe_right t term_to_string)
 in (FStar_Util.format3 "forall %s.{:pattern %s} %s" _105_1018 _105_1017 _105_1016))))
 end
 | QExists (bs, pats, t) -> begin
 (let _105_1021 = (to_string_l " " binder_to_string bs)
-in (let _105_1020 = (to_string_l "; " term_to_string pats)
+in (let _105_1020 = (to_string_l " \\/ " (to_string_l "; " term_to_string) pats)
 in (let _105_1019 = (FStar_All.pipe_right t term_to_string)
 in (FStar_Util.format3 "exists %s.{:pattern %s} %s" _105_1021 _105_1020 _105_1019))))
 end
@@ -1298,14 +1298,12 @@ in (FStar_Util.format2 "(%s:%s)" _105_1042 _105_1041)))
 end))
 
 let error = (fun msg tm r -> (let tm = (FStar_All.pipe_right tm term_to_string)
-in (let tm = (match (((FStar_String.length tm) >= 80)) with
-| true -> begin
+in (let tm = if ((FStar_String.length tm) >= 80) then begin
 (let _105_1046 = (FStar_Util.substring tm 0 77)
 in (Prims.strcat _105_1046 "..."))
-end
-| false -> begin
+end else begin
 tm
-end)
+end
 in (Prims.raise (FStar_Absyn_Syntax.Error (((Prims.strcat (Prims.strcat msg "\n") tm), r)))))))
 
 let consPat = (fun r hd tl -> PatApp (((mk_pattern (PatName (FStar_Absyn_Const.cons_lid)) r), (hd)::(tl)::[])))
@@ -1386,38 +1384,32 @@ let mkWildAdmitMagic = (fun r -> (let _105_1118 = (mkAdmitMagic r)
 in ((mk_pattern PatWild r), None, _105_1118)))
 
 let focusBranches = (fun branches r -> (let should_filter = (FStar_Util.for_some Prims.fst branches)
-in (match (should_filter) with
-| true -> begin
+in if should_filter then begin
 (let _40_543 = (FStar_Tc_Errors.warn r "Focusing on only some cases")
 in (let focussed = (let _105_1121 = (FStar_List.filter Prims.fst branches)
 in (FStar_All.pipe_right _105_1121 (FStar_List.map Prims.snd)))
 in (let _105_1123 = (let _105_1122 = (mkWildAdmitMagic r)
 in (_105_1122)::[])
 in (FStar_List.append focussed _105_1123))))
-end
-| false -> begin
+end else begin
 (FStar_All.pipe_right branches (FStar_List.map Prims.snd))
-end)))
+end))
 
 let focusLetBindings = (fun lbs r -> (let should_filter = (FStar_Util.for_some Prims.fst lbs)
-in (match (should_filter) with
-| true -> begin
+in if should_filter then begin
 (let _40_549 = (FStar_Tc_Errors.warn r "Focusing on only some cases in this (mutually) recursive definition")
 in (FStar_List.map (fun _40_553 -> (match (_40_553) with
 | (f, lb) -> begin
-(match (f) with
-| true -> begin
+if f then begin
 lb
-end
-| false -> begin
+end else begin
 (let _105_1127 = (mkAdmitMagic r)
 in ((Prims.fst lb), _105_1127))
-end)
-end)) lbs))
 end
-| false -> begin
+end)) lbs))
+end else begin
 (FStar_All.pipe_right lbs (FStar_List.map Prims.snd))
-end)))
+end))
 
 let mkFsTypApp = (fun t args r -> (let _105_1135 = (FStar_List.map (fun a -> (a, FsTypApp)) args)
 in (mkApp t _105_1135 r)))
@@ -1452,3 +1444,7 @@ end
 | _40_597 -> begin
 None
 end))
+
+
+
+

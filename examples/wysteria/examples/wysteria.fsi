@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set --admit_fsi FStar.OrdSet --admit_fsi Prins --admit_fsi FStar.IO;
-    other-files:ghost.fst ext.fst set.fsi heap.fst st.fst all.fst io.fsti list.fst st2.fst ordset.fsi ../prins.fsi ffi.fst
+    other-files:ghost.fst ext.fst set.fsi heap.fst st.fst all.fst io.fsti list.fst listTot.fst st2.fst ordset.fsi ../prins.fsi ffi.fst
  --*)
 
 module Wysteria
@@ -80,7 +80,8 @@ val all_but_last_append_lemma: t:trace{is_Cons t} ->
 
 open FStar.Heap
 
-let moderef : ref (option mode) = alloc None (* private *)
+//let moderef : ref (option mode) = alloc None (* private *)
+assume val moderef : ref mode
 
 let traceref: ref trace = alloc []
 
@@ -88,9 +89,9 @@ kind Requires         = mode -> Type
 kind Ensures (a:Type) = mode -> a -> trace -> Type
 
 type wys_encoding (a:Type) (req:Requires) (ens:Ensures a) (p:a -> heap -> Type) (h0:heap) =
-  is_Some (sel h0 moderef) /\ req (Some.v (sel h0 moderef)) /\
+  req (sel h0 moderef) /\
   (forall x h1. (sel h1 moderef = sel h0 moderef /\ is_Some (rest_trace (sel h1 traceref) (sel h0 traceref)) /\
-                 ens (Some.v (sel h0 moderef)) x (Some.v (rest_trace (sel h1 traceref) (sel h0 traceref)))) ==> p x h1)
+                 ens (sel h0 moderef) x (Some.v (rest_trace (sel h1 traceref) (sel h0 traceref)))) ==> p x h1)
 
 effect Wys (a:Type) (req:Requires) (ens:Ensures a) =
   STATE a (fun (p:a -> heap -> Type) (h0:heap) -> wys_encoding a req ens p h0)
@@ -99,32 +100,31 @@ effect Wys (a:Type) (req:Requires) (ens:Ensures a) =
 open FStar.Relational
 open FStar.Comp
 
-kind Requires2                  = double mode -> Type
-kind Ensures2 (a:Type) (b:Type) = double mode -> rel a b -> double trace -> Type
+kind Requires2         = double mode -> Type
+kind Ensures2 (a:Type) = double mode -> a -> double trace -> Type
 
-type wys2_encoding (a:Type) (b:Type) (req:Requires2) (ens:Ensures2 a b) (p:rel a b -> heap2 -> Type) (h0:heap2) =
-  is_Some (sel (R.l h0) moderef) /\ is_Some (sel (R.r h0) moderef) /\
-  req (R (Some.v (sel (R.l h0) moderef)) (Some.v (sel (R.r h0) moderef))) /\
+type wys2_encoding (a:Type) (req:Requires2) (ens:Ensures2 a) (p:a -> heap2 -> Type) (h0:heap2) =
+  req (R (sel (R.l h0) moderef) (sel (R.r h0) moderef)) /\
   (forall x h1. (sel (R.l h1) moderef = sel (R.l h0) moderef /\
                  sel (R.r h1) moderef = sel (R.r h0) moderef /\
                  is_Some (rest_trace (sel (R.l h1) traceref) (sel (R.l h0) traceref)) /\
                  is_Some (rest_trace (sel (R.r h1) traceref) (sel (R.r h0) traceref)) /\
-                 ens (R (Some.v (sel (R.l h0) moderef)) (Some.v (sel (R.r h0) moderef))) x
+                 ens (R (sel (R.l h0) moderef) (sel (R.r h0) moderef)) x
                      (R (Some.v (rest_trace (sel (R.l h1) traceref) (sel (R.l h0) traceref)))
                         (Some.v (rest_trace (sel (R.r h1) traceref) (sel (R.r h0) traceref))))) ==> p x h1)
 
-effect Wys2 (a:Type) (b:Type) (req:Requires2) (ens:Ensures2 a b) =
-  STATE2 (rel a b) (fun (p:rel a b -> heap2 -> Type) (h0:heap2) -> wys2_encoding a b req ens p h0)
-                   (fun (p:rel a b -> heap2 -> Type) (h0:heap2) -> wys2_encoding a b req ens p h0)
+effect Wys2 (a:Type) (req:Requires2) (ens:Ensures2 a) =
+  STATE2 a (fun (p:a -> heap2 -> Type) (h0:heap2) -> wys2_encoding a req ens p h0)
+           (fun (p:a -> heap2 -> Type) (h0:heap2) -> wys2_encoding a req ens p h0)
 
 assume val compose_wys2: #a:Type -> #b:Type
                          -> #req0:(mode -> Type) ->#req1:(mode -> Type)
                          -> #ens0:(mode -> a -> trace -> Type) -> #ens1:(mode -> b -> trace -> Type)
                          -> =f0:(unit -> Wys a req0 ens0)
                          -> =f1:(unit -> Wys b req1 ens1)
-                         -> Wys2 a b (fun m0     -> req0 (R.l m0) /\ req1 (R.r m0))
-                                     (fun m0 r t -> ens0 (R.l m0) (R.l r) (R.l t) /\
-                                                    ens1 (R.r m0) (R.r r) (R.r t))
+                         -> Wys2 (rel a b) (fun m0     -> req0 (R.l m0) /\ req1 (R.r m0))
+                                          (fun m0 r t -> ens0 (R.l m0) (R.l r) (R.l t) /\
+                                                      ens1 (R.r m0) (R.r r) (R.r t))
 
 (**********)
 type Box: Type -> prins -> Type
@@ -143,8 +143,12 @@ assume Canbox_box   : (forall (a:Type) (ps':prins) (ps:prins).
                        subset ps' ps ==> can_box (Box a ps') ps)
 assume Canbox_option: (forall (a:Type) ps. can_box a ps ==>
                                            can_box (option a) ps)
-assume Canbox_prod:   (forall (a:Type) (b:Type) ps.
-                       (can_box a ps /\ can_box b ps) ==> can_box (a * b) ps)
+assume Canbox_prod  : (forall (a:Type) (b:Type) ps.
+                         (can_box a ps /\ can_box b ps) ==> can_box (a * b) ps)
+assume Canbox_list  : (forall (a:Type) ps. can_box a ps ==> can_box (list a) ps)
+
+assume Canbox_rel   : (forall (a:Type) (b:Type) ps.
+                         (can_box a ps  /\ can_box b ps) ==> can_box (rel a b) ps)
 
 (**********)
 
@@ -178,6 +182,7 @@ assume Canwire_prins : can_wire prins
 assume Canwire_eprins: can_wire eprins
 assume Canwire_prod  : forall (a:Type) (b:Type). (can_wire a /\ can_wire b) ==>
                                                  can_wire (a * b)
+assume Canwire_list  : (forall (a:Type). can_wire a ==> can_wire (list a))
 
 assume Canbox_wire   : (forall (a:Type) (eps:eprins) (ps:prins).
                        subset eps ps ==> can_box (Wire a eps) ps)
@@ -312,7 +317,9 @@ val w_read_int_tuple: unit -> Wys (int * int) (fun m0 -> Mode.m m0 = Par /\
                                                  (exists p. Mode.ps m0 = singleton p))
                                          (fun m0 r t -> b2t (t = []))
 
-
+val w_read_int_list: unit -> Wys (list int) (fun m0 -> Mode.m m0 = Par /\
+                                                 (exists p. Mode.ps m0 = singleton p))
+                                         (fun m0 r t -> b2t (t = []))
 
 val alice  : prin
 val bob    : prin

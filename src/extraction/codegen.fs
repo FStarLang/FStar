@@ -310,7 +310,7 @@ and doc_of_mltype (currentModule : mlsymbol) (outer : level) (ty : mlty) =
 
 (* -------------------------------------------------------------------- *)
 let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : doc =
-    match e with
+    match e.expr with
     | MLE_Coerce (e, t, t') ->
       let doc = doc_of_expr currentModule (min_op_prec, NonAssoc) e in
       if Util.codegen_fsharp()
@@ -371,15 +371,15 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
         parens (combine hardline [doc; reduce1 [text "in"; body]])
 
     | MLE_App (e, args) -> begin
-        match e, args with
+        match e.expr, args with
         | (MLE_Name p, [e1; e2]) when is_bin_op p -> doc_of_binop currentModule p e1 e2
 
-        | (MLE_App ((MLE_Name p),[unitVal]), [e1; e2]) when (is_bin_op p && unitVal=ml_unit) ->
+        | (MLE_App ({expr=MLE_Name p},[unitVal]), [e1; e2]) when (is_bin_op p && unitVal=ml_unit) ->
                      doc_of_binop currentModule p e1 e2
 
         | (MLE_Name p, [e1]) when is_uni_op p -> doc_of_uniop currentModule p e1
 
-        | (MLE_App ((MLE_Name p),[unitVal]), [e1]) when (is_uni_op p  && unitVal=ml_unit) -> doc_of_uniop currentModule p e1
+        | (MLE_App ({expr=MLE_Name p},[unitVal]), [e1]) when (is_uni_op p  && unitVal=ml_unit) -> doc_of_uniop currentModule p e1
 
         | _ ->
             let e    = doc_of_expr  currentModule (e_app_prio, ILeft) e in
@@ -402,7 +402,7 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
                           (match xt with | Some xxt -> reduce1 [text " : "; doc_of_mltype currentModule outer xxt] | _ -> text "");
                           text ")"]
             else text x in
-        let ids  = List.map (fun ((x, _),xt) -> bvar_annot x xt) ids in
+        let ids  = List.map (fun ((x, _),xt) -> bvar_annot x (Some xt)) ids in
         let body = doc_of_expr currentModule (min_op_prec, NonAssoc) body in
         let doc  = reduce1 [text "fun"; reduce1 ids; text "->"; body] in
         parens doc
@@ -534,10 +534,9 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
         let ty_annot =
             if Util.codegen_fsharp () && (rec_ || top_level) //needed for polymorphic recursion and to overcome incompleteness of type inference in F#
             then match tys with
-                    | None
-                    | Some (_::_, _) -> //except, emitting binders for type variables in F# sometimes also requires emitting type constraints; which is not yet supported
+                    | (_::_, _) -> //except, emitting binders for type variables in F# sometimes also requires emitting type constraints; which is not yet supported
                       text ""
-                    | Some ([], ty) ->
+                    | ([], ty) ->
                       let ty = doc_of_mltype currentModule (min_op_prec, NonAssoc) ty in
                       reduce1 [text ":"; ty]
 //                      let ids = List.map (fun (x, _) -> text x) ids in

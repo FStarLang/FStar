@@ -1,9 +1,11 @@
 VERFILES=unit1.fst unit2.fst testset.fst short-circuit.fst first-proofs.fst
 include ../Makefile.include
 NEGFILES=negative-tests.fst
-NEGTESTS=35
+NEGTESTS=36
 
-all: basictests testint32.vv testmref.vv testTwoLevelHeap.vv mac2.vv all-neg testghost inverse testghost
+all: all-pos all-neg
+
+all-pos: basictests testint32.vv testmref.vv testTwoLevelHeap.vv mac2.vv testghost inverse testghost
 
 basictests: $(VERFILES)
 		$(FSTAR) --admit_fsi FStar.Set $(STDLIB) int32.fst $^
