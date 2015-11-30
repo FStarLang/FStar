@@ -10,6 +10,8 @@ module FStar.Squash
 
 type squash (t:Type) = u:unit{t}
 
+// CH: Q: Why does this go through, actually???
+// val return_squash : #a:Type -> a -> Tot (squash a)
 let return_squash x = ()
 
 assume val bind_squash : #a:Type -> #b:Type -> squash a -> 
