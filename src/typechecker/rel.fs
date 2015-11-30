@@ -375,7 +375,7 @@ let force_refinement (t_base, refopt) =
 (* ------------------------------------------------ *)
 let rec occurs (wl:worklist) (uk:(uvar * 'b)) (t:typ) =
     let uvs = Free.uvars t in
-    uvs |> Util.set_elements |> Util.for_some (fun uv ->
+    uvs |> Util.set_elements |> Util.for_some (fun (uv, _) ->
         match find_uvar uv wl.subst with
             | None -> Unionfind.equivalent uv (fst uk)
             | Some t ->

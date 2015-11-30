@@ -42,9 +42,6 @@ val force_sort: syntax<'a,'b> -> 'b
 val sorts_of_args: args -> list<(term' * aqual)>
 val extract_lb_annotation: env -> typ -> term -> (term * typ * bool)
 
-//checking that e:t is convertible to t'
-val check_and_ascribe : env -> term -> typ -> typ -> term * Rel.guard_t
-
 //pattern utilities
 val pat_as_exps: bool -> env -> pat -> (list<Env.binding> * list<term> * pat)
 val decorate_pattern: env -> pat -> list<term> -> pat
@@ -53,9 +50,6 @@ val decorated_pattern_as_term: pat -> list<bv> * term
 //instantiation and generalization
 val maybe_instantiate : env -> term -> typ -> (term * typ * implicits)
 val generalize: bool -> env -> list<(lbname*term*comp)> -> list<(lbname*term*comp)>
-
-
-val mk_basic_dtuple_type: env -> int -> typ
 
 //operations on computation types
 (* most operations on computations are lazy *)
@@ -75,13 +69,16 @@ val weaken_precondition: env -> lcomp -> guard_formula -> lcomp
 val maybe_assume_result_eq_pure_term: env -> term -> lcomp -> lcomp
 val close_comp: env -> list<binding> -> lcomp -> lcomp
 val refresh_comp_label: env -> bool -> lcomp -> lcomp
-val check_top_level: env -> guard_t -> lcomp -> bool*comp
-
-(* Except these two, which require fully evaluated comp types *)
+val pure_or_ghost_pre_and_post: env -> comp -> (option<typ> * typ)
 val check_comp: env -> term -> comp -> comp -> term * comp * guard_t
 
+//checking that e:t is convertible to t'
+val check_and_ascribe : env -> term -> typ -> typ -> term * Rel.guard_t
+val check_top_level: env -> guard_t -> lcomp -> bool*comp
+
+//misc.
 val label: string -> Range.range -> typ -> typ
 val label_guard: string -> Range.range -> guard_formula -> guard_formula
 val short_circuit: term -> args -> guard_formula
+val mk_basic_dtuple_type: env -> int -> typ
 
-val pure_or_ghost_pre_and_post: env -> comp -> (option<typ> * typ)

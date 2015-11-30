@@ -150,7 +150,7 @@ and subst_elt =
    | NT of bv * term                           (* NT x t: replace a local name with a term t *)
    | UN of univ_var * universe                 (* UN u v: replace universes variable u with universe term v *)
 and freenames = set<bv>
-and uvars    = set<uvar>
+and uvars     = set<(uvar*typ)>
 and syntax<'a,'b> = {
     n:'a;
     tk:memo<'b>;
@@ -176,7 +176,7 @@ type freenames_l = list<bv>
 type formula = typ
 type formulae = list<typ>
 val new_bv_set: unit -> set<bv>
-val new_uv_set:  unit -> set<Unionfind.uvar<'a>>
+val new_uv_set: unit -> uvars
 
 type qualifier =
   | Private

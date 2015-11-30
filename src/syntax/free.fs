@@ -40,8 +40,8 @@ let rec free_names_and_uvars' tm =
       | Tm_name x ->
         singleton_bv x, no_uvs
 
-      | Tm_uvar (x, _) -> 
-        no_names, singleton_uv x
+      | Tm_uvar (x, t) -> 
+        no_names, singleton_uv (x,t)
 
       | Tm_bvar _
       | Tm_name _

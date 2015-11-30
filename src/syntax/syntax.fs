@@ -151,7 +151,7 @@ and subst_elt =
    | NT of bv * term                           (* NT x t: replace a local name with a term t *)
    | UN of univ_var * universe                 (* UN u v: replace universes variable u with universe term v *)
 and freenames = set<bv>
-and uvars    = set<uvar>
+and uvars    = set<(uvar * typ)>
 and syntax<'a,'b> = {
     n:'a;
     tk:memo<'b>;
@@ -308,7 +308,8 @@ let syn p k f = f k p
 let mk_fvs () = Util.mk_ref None
 let mk_uvs () = Util.mk_ref None
 let new_bv_set () : set<bv> = Util.new_set order_bv (fun x -> x.index + Util.hashcode x.ppname.idText)
-let new_uv_set ()   = Util.new_set (fun x y -> Unionfind.uvar_id x - Unionfind.uvar_id y) Unionfind.uvar_id
+let new_uv_set () : uvars   = Util.new_set (fun (x, _) (y, _) -> Unionfind.uvar_id x - Unionfind.uvar_id y)  
+                                           (fun (x, _) -> Unionfind.uvar_id x)
 let no_names  = new_bv_set()
 let no_uvs : uvars = new_uv_set()
 let memo_no_uvs = Util.mk_ref (Some no_uvs)

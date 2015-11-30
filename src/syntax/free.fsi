@@ -23,5 +23,5 @@ open FStar.Syntax
 open FStar.Syntax.Syntax
 
 val names: term -> set<bv>
-val uvars: term -> set<uvar>
+val uvars: term -> set<(uvar*typ)>
 val names_of_binders: binders -> set<bv>
