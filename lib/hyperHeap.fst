@@ -195,16 +195,6 @@ val lemma_include_cons: i:rid -> j:rid -> Lemma
   (ensures (j<>root))
 let lemma_includes_cons i j = ()
    
-(* val lemma_extends_disjoint_aux: i:rid -> j:rid -> i':rid -> j':rid ->  *)
-(*   Lemma (requires (extends i i' /\ extends j j' /\ i<>j  *)
-(*                   /\ (includes i' j' ==> (forall k. includes k j' ==> k<>i)) *)
-(*                   /\ (includes j' i' ==> (forall k. includes k i' ==> k<>j)))) *)
-(*         (ensures (disjoint i j)) *)
-(*         [SMTPat (extends i i'); *)
-(*          SMTPat (extends j j'); *)
-(*          SMTPat (disjoint i j)] *)
-(* let lemma_extends_disjoint_aux i j i' j' = () *)
-
 opaque type map_invariant (m:t) =
   forall r. Map.contains m r ==> 
       (forall s. includes s r ==> Map.contains m s)
@@ -224,3 +214,6 @@ val lemma_extends_fresh_disjoint: i:rid -> j:rid -> ipar:rid -> jpar:rid
          SMTPat (extends i ipar);
          SMTPat (extends j jpar)]         
 let lemma_extends_fresh_disjoint i j ipar jpar m0 m1 = ()      
+
+opaque type disjoint_regions (s1:set rid) (s2:set rid) = 
+       forall x y. {:pattern (Set.mem x s1); (Set.mem y s2)} (Set.mem x s1 /\ Set.mem y s2) ==> disjoint x y
