@@ -85,7 +85,7 @@ let tc_one_fragment = (fun curmod dsenv env frag -> (FStar_All.try_with (fun _64
 | () -> begin
 (match ((FStar_Parser_Driver.parse_fragment curmod dsenv frag)) with
 | FStar_Parser_Driver.Empty -> begin
-Some ((None, dsenv, env))
+Some ((curmod, dsenv, env))
 end
 | FStar_Parser_Driver.Modul (dsenv, modul) -> begin
 (let env = (match (curmod) with

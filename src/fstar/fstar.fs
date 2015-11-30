@@ -66,7 +66,7 @@ let tc_one_fragment curmod dsenv env frag =
     try
         match Parser.Driver.parse_fragment curmod dsenv frag with
             | Parser.Driver.Empty -> 
-              Some (None, dsenv, env)
+              Some (curmod, dsenv, env)
 
             | Parser.Driver.Modul (dsenv, modul) ->
               let env = match curmod with
