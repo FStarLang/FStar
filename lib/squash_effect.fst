@@ -35,8 +35,26 @@ assume val resquash : #p:Type -> #pre:PurePre -> #post:PurePost p ->
                       (unit -> Squash p pre post) ->
                       Pure (squash p) (requires pre) (ensures (fun _ -> True))
 
-// with this we probably still can't prove squash_double_arrow
-val squash_double_arrow : #a:Type -> #p:(a -> Type) ->
+// less general but much better inference
+val resquash' : #p:Type -> (unit -> Sq p) -> Tot (squash p)
+let resquash' (p:Type) = resquash #p #True #(fun _ -> True)
+
+// Sanity check: this can encode return_squash and bind_squash
+
+val return_squash : #a:Type -> a -> Tot (squash a)
+let return_squash (a:Type) (x:a) = resquash' (fun () -> x)
+
+// CH: Q: Why does this go through, actually???
+// let return_squash (a:Type) (x:a) = ()
+
+val bind_squash : #a:Type -> #b:Type -> squash a -> (a -> Tot (squash b)) ->
+  Tot (squash b)
+let bind_squash (a:Type) (b:Type) (x:squash a) f =
+  resquash' #b (fun _ -> unsquash (f (unsquash x)))
+
+
+// with this we still can't prove squash_double_arrow
+assume val squash_double_arrow : #a:Type -> #p:(a -> Type) ->
   =f:(squash (x:a -> Tot (squash (p x)))) -> Tot (squash (x:a -> Tot (p x)))
 // the error bellow is silly though:
 // Too many arguments to function of type (#p:Type -> (squash p) -> Sq (p));
