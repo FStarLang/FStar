@@ -42,6 +42,7 @@ type step =
   | EtaArgs
   | Delta
   | DeltaHard
+  | UnfoldOpaque
   | Beta
   | DeltaComp
   | Simplify
@@ -316,13 +317,17 @@ and sn tcenv (cfg:config<typ>) : config<typ> =
       rebuild config
 
     | Typ_const fv ->
-      if config.steps |> List.contains DeltaHard
-        || (config.steps |> List.contains Delta && not <| is_stack_empty config) //delta only if reduction is blocked
-      then match Tc.Env.lookup_typ_abbrev tcenv fv.v with
+      let topt = if config.steps |> List.contains UnfoldOpaque
+                 then Tc.Env.lookup_opaque_typ_abbrev tcenv fv.v 
+                 else if config.steps |> List.contains DeltaHard
+                      || (config.steps |> List.contains Delta && not <| is_stack_empty config) //delta only if reduction is blocked
+                 then Tc.Env.lookup_typ_abbrev tcenv fv.v 
+                 else None in 
+      begin match topt with 
           | None -> rebuild config
           | Some t -> (* delta(); *)
             sn tcenv ({config with code=t})
-      else rebuild config
+      end
 
     | Typ_btvar a ->
       begin match lookup_env config.environment a.v.realname.idText with
@@ -767,8 +772,8 @@ let formula_norm_to_string tcenv f =
 let comp_typ_norm_to_string tcenv c =
   Print.comp_typ_to_string (norm_comp [Beta;SNComp;Unmeta] tcenv c)
 
-let normalize_refinement env t0 =
-   let t = norm_typ [Beta; WHNF; DeltaHard] env t0 in
+let normalize_refinement steps env t0 =
+   let t = norm_typ ([Beta; WHNF; DeltaHard]@steps) env t0 in
    let rec aux t =
     let t = Util.compress_typ t in
     match t.n with
