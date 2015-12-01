@@ -392,7 +392,7 @@ and sn tcenv (cfg:config<typ>) : config<typ> =
                 | Typ_fun(bs, comp) ->
                   let binders, environment = sn_binders tcenv bs config.environment config.steps in
                   let c2 = sncomp tcenv (c_config comp environment config.steps) in
-                  {config with code=wk <| mk_Typ_fun(binders, c2.code)}
+                  rebuild ({config with code=wk <| mk_Typ_fun(binders, c2.code)})
 
                 | Typ_refine(x, t) ->
                   begin match sn_binders tcenv [v_binder x] config.environment config.steps with
@@ -402,7 +402,7 @@ and sn tcenv (cfg:config<typ>) : config<typ> =
                                  code=t;
                                  environment=env;
                                  stack=empty_stack;
-                                 steps=config.steps})
+                                 steps=config.steps |> List.filter (function UnfoldOpaque -> false | _ -> true)})
                     | _ -> failwith "Impossible"
                   end
 

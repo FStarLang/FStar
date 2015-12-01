@@ -659,9 +659,9 @@ let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
             | MisMatch ->
                 if d=2 then fail() //already delta normal
                 else if d=1 then 
-                     let t1 = normalize_refinement [Normalize.UnfoldOpaque] env wl t1 in
-                     let t2 = normalize_refinement [Normalize.UnfoldOpaque] env wl t2 in
-                     aux 2 t1 t2
+                     let t1' = normalize_refinement [Normalize.UnfoldOpaque] env wl t1 in
+                     let t2' = normalize_refinement [Normalize.UnfoldOpaque] env wl t2 in
+                     aux 2 t1' t2'
                 else let t1 = normalize_refinement [] env wl t1 in
                      let t2 = normalize_refinement [] env wl t2 in
                      aux (d+1) t1 t2

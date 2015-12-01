@@ -1092,9 +1092,9 @@ if (d = 2) then begin
 (fail ())
 end else begin
 if (d = 1) then begin
-(let t1 = (normalize_refinement ((FStar_Tc_Normalize.UnfoldOpaque)::[]) env wl t1)
-in (let t2 = (normalize_refinement ((FStar_Tc_Normalize.UnfoldOpaque)::[]) env wl t2)
-in (aux 2 t1 t2)))
+(let t1' = (normalize_refinement ((FStar_Tc_Normalize.UnfoldOpaque)::[]) env wl t1)
+in (let t2' = (normalize_refinement ((FStar_Tc_Normalize.UnfoldOpaque)::[]) env wl t2)
+in (aux 2 t1' t2')))
 end else begin
 (let t1 = (normalize_refinement [] env wl t1)
 in (let t2 = (normalize_refinement [] env wl t2)
