@@ -10,6 +10,7 @@
     <RootNamespace>parser</RootNamespace>
     <AssemblyName>parser</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
     <Name>parser</Name>
     <TargetFrameworkProfile />
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\VS\</SolutionDir>
@@ -110,6 +111,9 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
+    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <Private>True</Private>
+    </Reference>    
     <ProjectReference Include="..\absyn\absyn.fsproj">
       <Name>absyn</Name>
       <Project>{13e8984e-188d-447b-b7b7-9f7441050565}</Project>
