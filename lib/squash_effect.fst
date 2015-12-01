@@ -44,7 +44,7 @@ let resquash' (p:Type) = resquash #p #True #(fun _ -> True)
 val return_squash : #a:Type -> a -> Tot (squash a)
 let return_squash (a:Type) (x:a) = resquash' (fun () -> x)
 
-// CH: Q: Why does this go through, actually???
+// CH: currently, F* can prove return_squash directly
 // let return_squash (a:Type) (x:a) = ()
 
 val bind_squash : #a:Type -> #b:Type -> squash a -> (a -> Tot (squash b)) ->

@@ -34,7 +34,9 @@ documentation on F\*.
 This is a new variant of F* (carrying version 0.9.x) that is still in
 development and we hope will eventually lead to a 1.0 release. This
 new variant is incompatible and quite different compared to the
-previously released 0.7 versions.
+previously released [0.7 versions and earlier].
+
+[0.7 versions and earlier]: https://github.com/FStarLang/FStar#old-f-versions-v071-and-earlier
 
 ### License
 
