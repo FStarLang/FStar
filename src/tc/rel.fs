@@ -2120,12 +2120,12 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
             | Inl t, imp ->
                 let kk = Recheck.recompute_kind t in
                 let gi_xi, gi = new_tvar t.pos xs kk in
-                let gi_pi = mk_Typ_app(gi, args1) (Some kk) t.pos in
+                let gi_pi = mk_Typ_app'(gi, args1) (Some kk) t.pos in
                 (Inl gi_xi, imp), TProb <| sub_prob gi_pi t "type index"
             | Inr v, imp ->
                 let tt = Recheck.recompute_typ v in
                 let gi_xi, gi = new_evar v.pos xs tt in
-                let gi_pi = mk_Exp_app(gi, args1) (Some tt) v.pos in
+                let gi_pi = mk_Exp_app'(gi, args1) (Some tt) v.pos in
                 (Inr gi_xi, imp), EProb <| sub_prob gi_pi v "expression index") |> List.unzip in
         let formula = Util.mk_conj_l (List.map (fun p -> p_guard p |> fst) gi_pi) in
         gi_xi, gi_pi, formula in
