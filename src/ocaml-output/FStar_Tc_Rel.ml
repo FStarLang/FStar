@@ -3236,7 +3236,7 @@ in (let sub_problems = (fun xs args2 -> (let _36_3206 = (let _101_1501 = (FStar_
 in (let _36_3193 = (new_tvar t.FStar_Absyn_Syntax.pos xs kk)
 in (match (_36_3193) with
 | (gi_xi, gi) -> begin
-(let gi_pi = (FStar_Absyn_Syntax.mk_Typ_app (gi, args1) (Some (kk)) t.FStar_Absyn_Syntax.pos)
+(let gi_pi = (FStar_Absyn_Syntax.mk_Typ_app' (gi, args1) (Some (kk)) t.FStar_Absyn_Syntax.pos)
 in (let _101_1497 = (let _101_1496 = (sub_prob gi_pi t "type index")
 in (FStar_All.pipe_left (fun _101_1495 -> TProb (_101_1495)) _101_1496))
 in ((FStar_Util.Inl (gi_xi), imp), _101_1497)))
@@ -3247,7 +3247,7 @@ end
 in (let _36_3202 = (new_evar v.FStar_Absyn_Syntax.pos xs tt)
 in (match (_36_3202) with
 | (gi_xi, gi) -> begin
-(let gi_pi = (FStar_Absyn_Syntax.mk_Exp_app (gi, args1) (Some (tt)) v.FStar_Absyn_Syntax.pos)
+(let gi_pi = (FStar_Absyn_Syntax.mk_Exp_app' (gi, args1) (Some (tt)) v.FStar_Absyn_Syntax.pos)
 in (let _101_1500 = (let _101_1499 = (sub_prob gi_pi v "expression index")
 in (FStar_All.pipe_left (fun _101_1498 -> EProb (_101_1498)) _101_1499))
 in ((FStar_Util.Inr (gi_xi), imp), _101_1500)))
