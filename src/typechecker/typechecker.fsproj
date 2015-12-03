@@ -73,6 +73,7 @@
     <Compile Include="rel.fs" />
     <Compile Include="util.fsi" />
     <Compile Include="util.fs" />
+    <Compile Include="tc.fs" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>

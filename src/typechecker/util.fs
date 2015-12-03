@@ -82,6 +82,8 @@ let check_uvars r t =
     Options.hide_uvar_nums := hide_uvar_nums_saved;
     Options.print_implicits := print_implicits_saved
 
+let type_u () : typ * universe = failwith "NYI"
+
 (************************************************************************)
 (* Extracting annotations from a term *)
 (************************************************************************)
@@ -1121,3 +1123,14 @@ let short_circuit (head:term) (seen_args:args) : guard_formula =
           end
         | _ -> Rel.Trivial
 
+let short_circuit_head l = 
+    match (SS.compress l).n with 
+        | Tm_fvar (v, _) ->
+           Util.for_some (lid_equals v.v)
+                   [Const.op_And;
+                    Const.op_Or;
+                    Const.and_lid;
+                    Const.or_lid;
+                    Const.imp_lid;
+                    Const.ite_lid]
+        | _ -> false

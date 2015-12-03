@@ -33,9 +33,12 @@ val discharge_guard: env -> guard_t -> unit
 
 //unification variables
 val new_uvar : env -> typ -> typ
-val as_uvar : typ -> uvar
+val as_uvar  : typ -> uvar
 val new_implicit_var : env -> typ -> (typ * (uvar * Range.range))
 val check_uvars: Range.range -> typ -> unit
+
+//Type(u), where u is a new universe unification variable
+val type_u   : unit -> typ * universe
 
 //extracting annotations from a term
 val force_sort: syntax<'a,'b> -> 'b
@@ -80,5 +83,6 @@ val check_top_level: env -> guard_t -> lcomp -> bool*comp
 val label: string -> Range.range -> typ -> typ
 val label_guard: string -> Range.range -> guard_formula -> guard_formula
 val short_circuit: term -> args -> guard_formula
+val short_circuit_head: term -> bool
 val mk_basic_dtuple_type: env -> int -> typ
 
