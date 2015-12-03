@@ -418,12 +418,16 @@ let mk_Typ_refine   ((x:bvvar),(phi:typ)) (k:option<knd>) (p:range) = {
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();
 }
-let mk_Typ_app      ((t1:typ),(args:list<arg>)) (k:option<knd>) (p:range) = {
-    n=(match args with [] -> failwith "Empty arg list!" | _ -> Typ_app(t1, args));
-    tk=Util.mk_ref k;
-    pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();
-}
+let mk_Typ_app      ((t1:typ),(args:list<arg>)) (k:option<knd>) (p:range) =
+    match args with
+      | [] -> t1
+      | _ -> 
+      {
+      n=Typ_app(t1, args);
+      tk=Util.mk_ref k;
+      pos=p;
+      uvs=mk_uvs(); fvs=mk_fvs();
+      }
 let mk_Typ_app' ((t1:typ), (args:list<arg>)) (k:option<knd>) (p:range) =
     match args with
         | [] -> t1
@@ -431,16 +435,18 @@ let mk_Typ_app' ((t1:typ), (args:list<arg>)) (k:option<knd>) (p:range) =
 let extend_typ_app ((t:typ), (arg:arg)) (k:option<knd>) p = match t.n with
     | Typ_app(h, args) -> mk_Typ_app(h, args@[arg]) k p
     | _ -> mk_Typ_app(t, [arg]) k p
-let mk_Typ_lam      ((b:binders),(t:typ)) (k:option<knd>) (p:range) = {
-    n=(match b with [] -> failwith "Empty binders!" | _ -> Typ_lam(b, t));
-    tk=Util.mk_ref k;
-    pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();
-}
+let mk_Typ_lam      ((b:binders),(t:typ)) (k:option<knd>) (p:range) =
+    match b with
+    	  | [] -> t
+	  | _ -> {
+	      n=Typ_lam(b, t);
+             tk=Util.mk_ref k;
+    	     pos=p;
+    	     uvs=mk_uvs();
+	     fvs=mk_fvs();
+	   }
 let mk_Typ_lam'      ((bs:binders), (t:typ)) (k:option<knd>) (p:range) =
-    match bs with
-        | [] -> t
-        | _ -> mk_Typ_lam (bs, t) k p
+    mk_Typ_lam (bs, t) k p
 
 let mk_Typ_ascribed' ((t:typ),(k:knd)) (k':option<knd>) (p:range) = {
     n=Typ_ascribed(t, k);
@@ -519,12 +525,15 @@ let mk_Exp_constant (s:sconst) (t:option<typ>) p = {
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();
 }
-let mk_Exp_abs ((b:binders),(e:exp)) (t':option<typ>) p = {
-    n=(match b with [] -> failwith "abstraction with no binders!" | _ -> Exp_abs(b, e));
-    tk=get_typ_ref t';
-    pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();
-}
+let mk_Exp_abs ((b:binders),(e:exp)) (t':option<typ>) p =
+    match b with
+       | [] -> e
+       | _ -> {
+       n=Exp_abs(b, e);
+      tk=get_typ_ref t';
+      pos=p;
+     uvs=mk_uvs(); fvs=mk_fvs();
+    }
 let mk_Exp_abs' ((b:binders),(e:exp)) (t':option<typ>) p = {
     n=(match b, e.n with
         | _, Exp_abs(b0::bs, body) -> Exp_abs(b@b0::bs, body)
@@ -534,12 +543,15 @@ let mk_Exp_abs' ((b:binders),(e:exp)) (t':option<typ>) p = {
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();
 }
-let mk_Exp_app ((e1:exp),(args:args)) (t:option<typ>) p = {
-    n=(match args with [] -> failwith "Empty args!" | _ -> Exp_app(e1, args));
-    tk=get_typ_ref t;
-    pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();
-}
+let mk_Exp_app ((e1:exp),(args:args)) (t:option<typ>) p =
+    match args with
+    	| [] -> e1
+	| _ -> {
+	n=Exp_app(e1, args);
+	tk=get_typ_ref t;
+	pos=p;
+	uvs=mk_uvs(); fvs=mk_fvs();
+   	}
 let mk_Exp_app_flat ((e1:exp), (args:args)) (t:option<typ>) p =
     match e1.n with
         | Exp_app(e1', args') -> mk_Exp_app(e1', args'@args) t p
