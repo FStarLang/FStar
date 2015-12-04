@@ -324,6 +324,27 @@ let rec tc_value env (e:term) : term * lcomp * Rel.guard_t =
 and tc_universe env u = 
    failwith "NYI"
 
+and tc_pure_term env e : term * typ * guard_t =
+  let e, c, g = tc_term env e in
+  let allow_ghost env = false in
+  if Util.is_total_lcomp c
+  || (allow_ghost env && Util.is_tot_or_gtot_lcomp c)
+  then e, c.res_typ, g
+  else let g = Rel.solve_deferred_constraints env g in
+       let c = c.comp() |> norm_c env in
+       let target_comp = if allow_ghost env then Util.gtotal_comp else S.mk_Total in
+       match Rel.sub_comp env c (target_comp (Util.comp_result c)) with
+        | Some g' -> e, Util.comp_result c, Rel.conj_guard g g'
+        | _ -> 
+            if allow_ghost env 
+            then raise (Error(Errors.expected_ghost_expression e c, e.pos))
+            else raise (Error(Errors.expected_pure_expression e c, e.pos))
+
+and tc_check_pure_term env e t = 
+    let e, t', g = tc_pure_term env e in
+    let g' = Rel.subtype env t' t in
+    e, Rel.conj_guard g g'
+
 and tc_ghost_term env (e:term) (bs:binders) (body:term) : term * lcomp * Rel.guard_t =
     //use of the ghost effect is allowed in e, since it is syntactically deemed to be computationally irrelevant
    failwith "NYI"
@@ -551,8 +572,9 @@ and check_short_circuit_args env head chead g_head args =
     match tf.n with 
         | Tm_arrow(bs, c) when Util.is_total_comp c && List.length bs=List.length args -> 
           let res_t = Util.comp_result c in
-          let args, guard = List.fold_left2 (fun (seen, guard) (e, _) (b, _) -> 
-                let e, g = tc_total_term env  e b.sort in
+          let args, guard = List.fold_left2 (fun (seen, guard) (e, aq) (b, aq') ->
+                if aq<>aq' then raise (Error("Inconsistent implicit qualifiers", e.pos)); 
+                let e, g = tc_check_pure_term env e b.sort in //NS: this forbids stuff like !x && y, maybe that's ok
                 let short = TcUtil.short_circuit head seen in 
                 let g = Rel.imp_guard (Rel.guard_of_guard_formula short) g in
                 seen@[arg e], Rel.conj_guard guard g) ([], g_head) args bs in
