@@ -1,6 +1,6 @@
 module Bug
 
-type foo = unit -> Tot unit
+type foo = unit -> St unit
 
 val fail1 : (unit * foo) -> unit
 let fail1 p = assert (fst p = fst p)
