@@ -149,7 +149,7 @@ let subst_pat' s pat : (pat * int) =
       | Pat_constant _ -> pat, n
 
       | Pat_disj(p::ps) -> 
-        let p, m = aux n pat in
+        let p, m = aux n p in
         let ps = List.map (fun p -> fst (aux n p)) ps in
         {pat with v=Pat_disj(p::ps)}, m
 
@@ -167,7 +167,7 @@ let subst_pat' s pat : (pat * int) =
       | Pat_wild x -> 
         let s = shift_subst' n s in 
         let x = {x with sort=subst' s x.sort} in
-        {pat with v=Pat_var x}, n //these are not in scope, so don't shift the index
+        {pat with v=Pat_var x}, n + 1 //these may be in scope in the inferred types of other terms, so shift the index
 
       | Pat_dot_term(x, t0) -> 
         let s = shift_subst' n s in
@@ -279,6 +279,49 @@ let open_term (bs:binders) t =
 let open_comp (bs:binders) t = 
    let bs', opening = open_binders' bs in
    bs', subst_comp opening t
+
+let open_pat (p:pat) : pat * subst = 
+    let rec aux sub p = match p.v with 
+       | Pat_disj [] -> failwith "Impossible: empty disjunction"
+     
+       | Pat_constant _ -> p, sub
+       
+       | Pat_disj(p::ps) -> 
+         let p, sub = aux sub p in
+         let ps = List.map (fun p -> fst (aux sub p)) ps in
+         {p with v=Pat_disj(p::ps)}, sub
+
+       | Pat_cons(fv, pats) ->
+         let pats, sub = pats |> List.fold_left (fun (pats, sub) (p, imp) -> 
+             let p, sub = aux sub p in
+             ((p,imp)::pats, sub)) ([], sub) in
+         {p with v=Pat_cons(fv, List.rev pats)}, sub
+
+       | Pat_var x ->
+         let x' = {freshen_bv x with sort=subst sub x.sort} in
+         let sub = DB(0, bv_to_name x')::shift_subst 1 sub in 
+         {p with v=Pat_var x'}, sub
+
+       | Pat_wild x -> 
+         let x' = {freshen_bv x with sort=subst sub x.sort} in
+         let sub = DB(0, bv_to_name x')::shift_subst 1 sub in 
+         {p with v=Pat_wild x'}, sub
+
+       | Pat_dot_term(x, t0) -> 
+         let x = {x with sort=subst sub x.sort} in
+         let t0 = subst sub t0 in
+         {p with v=Pat_dot_term(x, t0)}, sub in //these are not in scope, so don't shift the index
+    
+    aux [] p
+
+let open_branch (p, wopt, e) = 
+    let p, opening = open_pat p in
+    let wopt = match wopt with 
+        | None -> None
+        | Some w -> Some (subst opening w) in
+    let e = subst opening e in 
+    (p, wopt, e)
+    
 let close (bs:binders) t = subst (closing_subst bs) t
 let close_comp (bs:binders) (c:comp) = subst_comp (closing_subst bs) c
 let close_binders (bs:binders) : binders =
@@ -289,6 +332,48 @@ let close_binders (bs:binders) : binders =
           let s' = NM(x, 0)::shift_subst 1 s in
           (x, imp)::aux s' tl in
     aux [] bs
+
+let close_pat p = 
+    let rec aux sub p = match p.v with
+       | Pat_disj [] -> failwith "Impossible: empty disjunction"
+     
+       | Pat_constant _ -> p, sub
+       
+       | Pat_disj(p::ps) -> 
+         let p, sub = aux sub p in
+         let ps = List.map (fun p -> fst (aux sub p)) ps in
+         {p with v=Pat_disj(p::ps)}, sub
+
+       | Pat_cons(fv, pats) ->
+         let pats, sub = pats |> List.fold_left (fun (pats, sub) (p, imp) -> 
+             let p, sub = aux sub p in
+             ((p,imp)::pats, sub)) ([], sub) in
+         {p with v=Pat_cons(fv, List.rev pats)}, sub
+
+       | Pat_var x ->
+         let x = {x with sort=subst sub x.sort} in
+         let sub = NM(x, 0)::shift_subst 1 sub in 
+         {p with v=Pat_var x}, sub
+
+       | Pat_wild x -> 
+         let x = {x with sort=subst sub x.sort} in
+         let sub = NM(x, 0)::shift_subst 1 sub in 
+         {p with v=Pat_wild x}, sub
+
+       | Pat_dot_term(x, t0) -> 
+         let x = {x with sort=subst sub x.sort} in
+         let t0 = subst sub t0 in
+         {p with v=Pat_dot_term(x, t0)}, sub in //these are not in scope, so don't shift the index    
+    aux [] p
+
+let close_branch (p, wopt, e) = 
+    let p, closing = close_pat p in 
+    let wopt = match wopt with
+        | None -> None
+        | Some w -> Some (subst closing w) in
+    let e = subst closing e in
+    (p, wopt, e)
+
 
 //requires: length bs = length args
 let mk_subst_binders args = 

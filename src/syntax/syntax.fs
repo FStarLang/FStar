@@ -75,7 +75,7 @@ type term' =
   | Tm_arrow      of binders * comp                              (* (xi:ti) -> M t' wp *)
   | Tm_refine     of bv * term                                   (* x:t{phi} *)
   | Tm_app        of term * args                                 (* h tau_1 ... tau_n, args in order from left to right *)
-  | Tm_match      of term * list<(pat * option<term> * term)>    (* optional when clause in each equation *)
+  | Tm_match      of term * list<branch>                         (* match e with b1 ... bn *)
   | Tm_ascribed   of term * term * option<lident>                (* an effect label is the third arg, filled in by the type-checker *)
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Tm_uvar       of uvar * term                                 (* the 2nd arg is the type at which this uvar is introduced *)
@@ -83,6 +83,7 @@ type term' =
                    * memo<term>                                  (* A delayed substitution --- always force it; never inspect it directly *)
   | Tm_meta       of term * metadata                             (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
   | Tm_unknown                                                   (* only present initially while desugaring a term *)
+and branch = pat * option<term> * term                           (* optional when clause in each branch *)
 and pat' =
   | Pat_constant of sconst
   | Pat_disj     of list<pat>                                    (* disjunctive patterns (not allowed to nest): D x | E x -> e *)

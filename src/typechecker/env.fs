@@ -521,13 +521,17 @@ let uvars_in_env env =
     | Binding_sig _::_ -> out in (* this marks a top-level scope ... no more uvars beyond this *)
   aux no_uvs env.gamma
 
-let bound_vars env =
-    env.gamma |> List.collect (function
+let bound_vars_of_bindings bs = 
+  bs |> List.collect (function
         | Binding_var (x, _) -> [x]
         | Binding_lid _ -> []
         | Binding_sig _ -> [])
 
-let binders env = bound_vars env |> List.map Syntax.mk_binder
+let binders_of_bindings bs = bound_vars_of_bindings bs |> List.map Syntax.mk_binder
+
+let bound_vars env = bound_vars_of_bindings env.gamma
+
+let binders env = binders_of_bindings env.gamma
 
 let fold_env env f a = List.fold_right (fun e a -> f a e) env.gamma a
 
