@@ -106,6 +106,7 @@ val is_record              : env -> lident -> bool
 val push_sigelt        : env -> sigelt -> env
 val push_local_binding : env -> binding -> env
 val push_module        : env -> modul -> env
+val push_univ_vars     : env -> univ_vars -> env
 val set_expected_typ   : env -> typ -> env
 val expected_typ       : env -> option<typ>
 val clear_expected_typ : env -> env*option<typ>

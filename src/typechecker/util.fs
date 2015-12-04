@@ -94,18 +94,22 @@ let force_sort s = match !s.tk with
 let sorts_of_args (args:args) =
     args |> List.map (fun (t, imp) -> force_sort t, imp)
 
-let extract_lb_annotation env t e = match t.n with
-  | Tm_unknown ->
-    let r = Env.get_range env in
-    let mk_binder scope a = match a.sort.n with
+let extract_let_rec_annotation env {lbunivs=univ_vars; lbtyp=t; lbdef=e} = 
+  match t.n with
+   | Tm_unknown ->
+     if univ_vars <> [] then failwith "Impossible: non-empty universe variables but the type is unknown";
+     let r = Env.get_range env in
+     let mk_binder scope a = match a.sort.n with
         | Tm_unknown ->
-          let k =  Rel.new_uvar e.pos scope Util.ktype0 |> fst in //NS: Should it always be in Type(0)?
-          {a with sort=k}, false
+          let k, _ = type_u() in
+          let t =  Rel.new_uvar e.pos scope k |> fst in 
+          {a with sort=t}, false
         | _ -> a, true in
 
-    let rec aux vars e : term * typ * bool = match e.n with
+    let rec aux vars e : typ * bool =
+      match e.n with
       | Tm_meta(e, _) -> aux vars e
-      | Tm_ascribed(e, t, _) -> e, t, true
+      | Tm_ascribed(e, t, _) -> t, true
 
       | Tm_abs(bs, body) ->
         let scope, bs, check = bs |> List.fold_left (fun (scope, bs, check) (a, imp) -> 
@@ -116,18 +120,18 @@ let extract_lb_annotation env t e = match t.n with
               scope, bs, c || check)
            (vars,[],false) in
 
-        let body, res, check_res = aux scope body in
-        let c = Util.ml_comp res r in
+        let res, check_res = aux scope body in
+        let c = Util.ml_comp res r in //let rec without annotations default to being in the ML monad; TODO: revisit this
         let t = Util.arrow bs c in 
         if debug env Options.High then Util.fprint2 "(%s) Using type %s\n" (Range.string_of_range r) (Print.term_to_string t);
-        let e = Util.abs bs body in
-        e, t, check_res || check
+        t, check_res || check
 
-      | _ -> e, Rel.new_uvar r vars Util.ktype0 |> fst, false in
+      | _ ->Rel.new_uvar r vars Util.ktype0 |> fst, false in
 
-     aux (t_binders env)  e
+     let t, b = aux (t_binders env)  e in 
+     [], t, b
 
-  | _ -> e, t, false
+  | _ -> univ_vars, t, false
 
 (************************************************************************)
 (* Utilities on patterns  *)
@@ -922,8 +926,7 @@ let maybe_instantiate (env:Env.env) e t =
 (**************************************************************************************)
 (* Generalizing types *)
 (**************************************************************************************)
-
-let gen verify env (ecs:list<(term * comp)>) : option<list<(term * comp)>> =
+let gen env (ecs:list<(term * comp)>) : option<list<(term * comp)>> =
   let is_type t = match (compress t).n with 
     | Tm_type _ -> true
     | _ -> false in
@@ -957,16 +960,6 @@ let gen verify env (ecs:list<(term * comp)>) : option<list<(term * comp)>> =
                let t = ct.result_typ in
                let uvt = Free.uvars t in
                let uvs = gen_uvars uvt in
-               if Options.should_verify env.curmodule.str
-               && verify
-               && not <| Util.is_total_comp c
-               then begin
-                  let _, wp, _ = destruct_comp ct in
-                  let binder = [null_binder t] in
-                  let post = U.abs binder (S.fvar None Const.true_lid t.pos) in
-                  let vc = Normalize.normalize [N.Delta; N.Beta] env (S.mk_Tm_app wp [S.arg post] (Some U.ktype0.n) wp.pos) in
-                  discharge_guard env (Rel.guard_of_guard_formula <| Rel.NonTrivial vc)
-               end;
                uvs, e, c) in
 
      let ecs = uvars |> List.map (fun (uvs, e, c) ->
@@ -998,15 +991,15 @@ let gen verify env (ecs:list<(term * comp)>) : option<list<(term * comp)>> =
               e, S.mk_Total t) in
      Some ecs
 
-let generalize verify env (lecs:list<(lbname*term*comp)>) : (list<(lbname*term*comp)>) =
+let generalize env (lecs:list<(lbname*term*comp)>) : (list<(lbname*term*univ_vars*comp)>) =
   if debug env Options.Low then Util.fprint1 "Generalizing: %s" (List.map (fun (lb, _, _) -> Print.lbname_to_string lb) lecs |> String.concat ", ");
-  match gen verify env (lecs |> List.map (fun (_, e, c) -> (e, c))) with
-    | None -> lecs
+  match gen env (lecs |> List.map (fun (_, e, c) -> (e, c))) with
+    | None -> lecs |> List.map (fun (l,t,c) -> l,t,[],c)
     | Some ecs ->
       List.map2 (fun (l, _, _) (e, c) ->
          if debug env Options.Medium then Util.fprint3 "(%s) Generalized %s to %s" 
             (Range.string_of_range e.pos) (Print.lbname_to_string l) (Print.term_to_string (Util.comp_result c));
-      (l, e, c)) lecs ecs
+      (l, e, [], c)) lecs ecs
 
 (************************************************************************)
 (* Convertibility *)

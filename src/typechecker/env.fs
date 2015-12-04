@@ -483,6 +483,8 @@ let push_module env (m:modul) =
       gamma=[];
       expected_typ=None}
 
+let push_univ_vars (env:env) (_:univ_vars) : env = failwith "NYI" 
+ 
 let set_expected_typ env t =
   {env with expected_typ = Some t; use_eq=false}
 

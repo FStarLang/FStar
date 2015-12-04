@@ -51,7 +51,7 @@ let steps env =
 let whnf   env t = N.normalize [N.WHNF; N.DeltaHard; N.Beta] env t
 let norm   env t = N.normalize (steps env) env t
 let norm_c env c = N.normalize_comp (steps env) env c
-let fxv_check head env kt fvs =
+let fxv_check head env kt fvs = //NS: nearly a duplicate of check_no_escape
     let rec aux try_norm t =
         if Util.set_is_empty fvs then ()
         else let fvs' = Free.names (if try_norm then norm env t else t) in
@@ -73,6 +73,13 @@ let fxv_check head env kt fvs =
                     | _ -> fail ()
                   end in 
     aux false kt
+
+let check_no_escape env bs t = 
+    let fvs = Free.names t in
+    if Util.for_some (fun (x, _) -> Util.set_mem x fvs) bs
+    then let k, _ = TcUtil.type_u() in
+         let tnarrow = TcUtil.new_uvar env k in
+         Rel.try_discharge_guard env <| Rel.teq env t tnarrow
 
 let maybe_push_binding env b =
   if is_null_binder b then env
@@ -251,6 +258,7 @@ let rec tc_term env (e:term) : term                  (* type-checked and elabora
   let top = e in
   match e.n with
   | Tm_delayed _ -> tc_term env (SS.compress e)
+  | Tm_uinst _ -> failwith "Impossible: uinst never appears in a source program"
 
   | Tm_uvar _
   | Tm_bvar _
@@ -355,6 +363,18 @@ let rec tc_term env (e:term) : term                  (* type-checked and elabora
     let e = mk (Tm_ascribed(e, cres.res_typ, Some cres.eff_name)) None e.pos in  //important to ascribe, for recomputing types
     e, cres, Rel.conj_guard g1 g_branches
 
+  | Tm_let ((false, [{lbname=Inr _}]), _) -> 
+    check_top_level_let env top
+
+  | Tm_let ((false, _), _) -> 
+    check_inner_let env top
+
+  | Tm_let ((true, {lbname=Inr _}::_), _) -> 
+    check_top_level_let_rec env top
+
+  | Tm_let ((true, _), _) -> 
+    check_inner_let_rec env top
+
 (************************************************************************************************************)
 (* Type-checking values:                                                                                    *)
 (*   Values have no special status, except that we structure the code to promote a value type t to a Tot t  *)
@@ -436,75 +456,6 @@ and tc_value env (e:term) : term
     let bs, body = SS.open_term bs body in
     tc_abs env top bs body
 
-  | Tm_let((false, [{lbname=x; lbunivs=univ_vars; lbtyp=t; lbdef=e1}]), e2) ->
-    let push_univ_vars env univ_vars : Env.env = failwith "NYI" in
-    let open_univ_vars univ_vars t   : univ_vars * term = failwith "NYI" in
-
-    let env = instantiate_both env in
-    let env0 = env in
-    let topt = Env.expected_typ env in
-    let top_level = match x with Inr _ -> true | _ -> false in
-    let env1, _ = Env.clear_expected_typ env in
-    let f, univ_vars, env1 = match t.n with
-        | Tm_unknown ->
-          if univ_vars <> [] then failwith "Impossible: non-empty universe variables but the type is unknown";
-          Rel.trivial_guard, [], env1
-
-        | _ ->
-            let univ_vars, t = open_univ_vars univ_vars t in
-            let env1 = push_univ_vars env1 univ_vars in
-            if top_level && not (env.generalize)
-            then Rel.trivial_guard, univ_vars, Env.set_expected_typ env1 t //t has already been kind-checked
-            else let k, _ = TcUtil.type_u () in
-                 let t, _, f = tc_check_tot_or_gtot_term env1 t k in
-                 if debug env Options.Medium then Util.fprint2 "(%s) Checked type annotation %s\n" (Range.string_of_range top.pos) (Print.term_to_string t);
-                 let t = norm env1 t in
-                 f, univ_vars, Env.set_expected_typ env1 t in
-
-    let e1, c1, g1 = tc_term ({env1 with top_level=top_level}) e1 in
-    let c1, guard_f = TcUtil.strengthen_precondition (Some (fun () -> Errors.ill_kinded_type)) (Env.set_range env t.pos) e1 c1 f in
-    begin match x with
-        | Inr _ -> (* top-level let, always ends with e2=():unit *)
-          let e2, c1 =
-            if Options.should_verify env.curmodule.str
-            then let ok, c1 = TcUtil.check_top_level env (Rel.conj_guard g1 guard_f) c1 in
-                 if ok
-                 then e2, c1
-                 else (if !Options.warn_top_level_effects
-                       then Errors.warn (Env.get_range env) Errors.top_level_effect;
-                       mk (Tm_meta(e2, Meta_desugared Masked_effect)) None e2.pos, c1)
-            else (TcUtil.discharge_guard env (Rel.conj_guard g1 guard_f);  //still need to solve remaining unification/subtyping constraints
-                  e2, c1.comp()) in
-          let _, e1, c1 = if env.generalize
-                          then List.hd <| TcUtil.generalize false env1 [x, e1, c1] (* only generalize top-level lets, when there is no val decl *)
-                          else x, e1, c1 in
-          let cres = TcUtil.lcomp_of_comp <| Util.ml_comp Recheck.t_unit top.pos in
-          let cres = if Util.is_total_comp c1
-                     then cres
-                     else TcUtil.bind env None (TcUtil.lcomp_of_comp c1) (None, cres) in
-          e2.tk := Some (Recheck.t_unit.n);
-          w cres <| mk_Exp_let((false, [mk_lb (x, Util.comp_effect_name c1, Util.comp_result c1, e1)]), e2), cres, Rel.trivial_guard
-
-        | Inl bvd ->  (* don't generalize inner lets *)
-            let b = binding_of_lb x c1.res_typ in
-            let e2, c2, g2 = tc_exp (Env.push_local_binding env b) e2 in
-            let cres = TcUtil.bind env (Some e1) c1 (Some b, c2) in
-            let e = w cres <| mk_Exp_let((false, [mk_lb (x, c1.eff_name, c1.res_typ, e1)]), e2) in
-            let g2 = Rel.close_guard [v_binder (Util.bvd_to_bvar_s bvd c1.res_typ)] <|
-                (Rel.imp_guard (Rel.guard_of_guard_formula (Rel.NonTrivial <| Util.mk_eq c1.res_typ c1.res_typ (Util.bvd_to_exp bvd c1.res_typ) e1)) g2) in
-            let guard = Rel.conj_guard guard_f (Rel.conj_guard g1 g2) in
-            match topt with
-              | None -> (* no expected type; check that x doesn't escape it's scope *)
-                 let tres = cres.res_typ in
-                 let fvs = Util.freevars_typ tres in
-                 if Util.set_mem (bvd_to_bvar_s bvd t) fvs.fxvs
-                 then let t = TcUtil.new_tvar env0 ktype in
-                      Tc.Rel.try_discharge_guard env <| Tc.Rel.teq env tres t;
-                      e, cres, guard
-                 else e, cres, guard
-              | _ -> e, cres, guard
-     end
-
   | _ ->
     failwith (Util.format1 "Unexpected value: %s" (Print.term_to_string top))
 
@@ -552,7 +503,8 @@ and tc_universe env u =
 (*    top = fun bs -> body, although bs and body must already be opened                                            *)
 (*******************************************************************************************************************)
 and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * Rel.guard_t =
-    let fail :string -> typ -> 'a = fun msg t -> raise (Error(Errors.expected_a_term_of_type_t_got_a_function env msg t top, top.pos)) in
+    let fail :string -> typ -> 'a = fun msg t -> 
+        raise (Error(Errors.expected_a_term_of_type_t_got_a_function env msg t top, top.pos)) in
     
     (***************************************************************************************************************)
     (* check_binders checks that the binders bs of top                                                             *)
@@ -594,12 +546,14 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * Rel.guard_t 
         aux (env, [], Rel.trivial_guard, []) bs bs_expected in
 
 
-    let rec expected_function_typ env t0 : (option<(typ*bool)> (* any remaining expected type to check against; bool signals to check using teq *)
-                                            * binders          (* binders from the abstraction checked against the binders in the corresponding Typ_fun, if any *)
-                                            * binders          (* let rec binders, suitably guarded with termination check, if any *)
-                                            * option<comp>     (* the expected comp type for the body *)
-                                            * Env.env          (* environment for the body *)
-                                            * guard_t) =       (* accumulated guard from checking the binders *)
+    let rec expected_function_typ env t0 
+        : (option<(typ*bool)> (* any remaining expected type to check against; bool signals to check using teq *)
+        * binders             (* binders from the abstraction checked against the binders in the corresponding Typ_fun, if any *)
+        * binders             (* let rec binders, suitably guarded with termination check, if any *)
+        * option<comp>        (* the expected comp type for the body *)
+        * Env.env             (* environment for the body *)
+        * guard_t)            (* accumulated guard from checking the binders *)
+        =
        match t0 with
         | None -> (* no expected type; just build a function type from the binders in the term *)
             let _ = match env.letrecs with [] -> () | _ -> failwith "Impossible: Can't have a let rec annotation but no expected type" in
@@ -1112,8 +1066,254 @@ and tc_eqn scrutinee env branch
   guard
 
 (******************************************************************************)
+(* Checking a top-level, non-recursive let-binding:                           *)
+(* top-level let's may be generalized, if they are not annotated              *)
+(* the body of a top-level let is always ()---no point in checking it         *)
+(******************************************************************************)
+and check_top_level_let env e = 
+   let env = instantiate_both env in
+   match e.n with
+     | Tm_let((false, [lb]), e2) ->
+       let e1, univ_vars, c1, g1, annotated = check_let_bound_def false env lb in
+
+       (* Check that it doesn't have a top-level effect; warn if it does *)
+       let e2, c1 =
+            if Options.should_verify env.curmodule.str
+            then let ok, c1 = TcUtil.check_top_level env g1 c1 in //check that it has no effect and a trivial pre-condition
+                 if ok
+                 then e2, c1
+                 else (if !Options.warn_top_level_effects //otherwise warn
+                       then Errors.warn (Env.get_range env) Errors.top_level_effect;
+                       mk (Tm_meta(e2, Meta_desugared Masked_effect)) None e2.pos, c1) //and tag it as masking an effect
+            else //even if we're not verifying, still need to solve remaining unification/subtyping constraints
+                 (TcUtil.discharge_guard env g1;  
+                  e2, c1.comp()) in
+
+       (* Maybe generalize its type *)
+       let _, e1, univ_vars, c1 = 
+            if annotated
+            then lb.lbname, e1, univ_vars, c1
+            else List.hd <| TcUtil.generalize env [lb.lbname, e1, c1]  in
+
+       (* the result always has type ML unit *)
+       let cres = TcUtil.lcomp_of_comp <| Util.ml_comp Recheck.t_unit e.pos in
+       e2.tk := Some (Recheck.t_unit.n);
+
+       mk (Tm_let((false, [Util.letbinding lb.lbname univ_vars (Util.comp_result c1) (Util.comp_effect_name c1) e1]), e2)) 
+          (Some (Recheck.t_unit.n))
+          e.pos,
+       cres,
+       Rel.trivial_guard
+
+     | _ -> failwith "Impossible"
+   
+(******************************************************************************)
+(* Checking an inner non-recursive let-binding:                               *)
+(* inner let's are never implicitly generalized                               *)
+(* let x = e1 in e2  is logically a bind (lift c1) (\x. lift c2)              *)
+(*    except that we also need to strengthen it with well-formedness checks   *)
+(*    and a check that x does not escape its scope in the type of c2          *)
+(******************************************************************************)
+and check_inner_let env e = 
+   let env = instantiate_both env in
+   match e.n with
+     | Tm_let((false, [lb]), e2) ->
+       let e1, _, c1, g1, annotated = check_let_bound_def false env lb in
+       let lb = Util.letbinding lb.lbname [] c1.res_typ c1.eff_name e1 in
+       let x = {Util.left lb.lbname with sort=c1.res_typ} in
+       let xb, e2 = SS.open_term [S.mk_binder x] e2 in
+       let xbinder = List.hd xb in
+       let x = fst xbinder in
+       let xbinding = Env.Binding_var(x, ([], c1.res_typ)) in
+       let e2, c2, g2 = tc_term (Env.push_local_binding env xbinding) e2 in
+       let cres = TcUtil.bind env (Some e1) c1 (Some xbinding, c2) in
+       let e = mk (Tm_let((false, [lb]), SS.close xb e2)) (Some cres.res_typ.n) e.pos in
+       let x_eq_e1 = Rel.NonTrivial <| Util.mk_eq c1.res_typ c1.res_typ (S.bv_to_name x) e1 in
+       let g2 = Rel.close_guard xb
+                      (Rel.imp_guard (Rel.guard_of_guard_formula x_eq_e1) g2) in
+       let guard = Rel.conj_guard g1 g2 in
+       if annotated
+       then e, cres, guard
+       else (* no expected type; check that x doesn't escape it's scope *)
+            (check_no_escape env [xbinder] cres.res_typ;
+             e, cres, guard)
+
+    | _ -> failwith "Impossible"
+
+(******************************************************************************)
+(* top-level let rec's may be generalized, if they are not annotated          *)
+(******************************************************************************)
+and check_top_level_let_rec env top =
+    let env = instantiate_both env in
+    match top.n with 
+        | Tm_let((true, lbs), e2) -> 
+(*open*)  let lbs, e2 = SS.open_let_rec lbs e2 in
+
+           let env0, topt = Env.clear_expected_typ env in
+           let lbs, rec_env = build_let_rec_env true env0 lbs in
+           let lbs, g_lbs = check_let_recs rec_env lbs in 
+           TcUtil.discharge_guard env g_lbs;
+         
+           let lbs = 
+              if env.generalize
+              then begin
+                 let ecs = TcUtil.generalize env 
+                    (lbs |> List.map (fun lb -> lb.lbname, lb.lbdef, Util.total_comp lb.lbtyp (range_of_lbname lb.lbname))) in
+                 ecs |> List.map (fun (x, e, uvs, c) -> 
+                    Util.letbinding x uvs (Util.comp_result c) (Util.comp_effect_name c) e)
+              end
+             else lbs in
+
+          let cres = TcUtil.lcomp_of_comp <| Util.total_comp Recheck.t_unit top.pos in
+          let _ = TcUtil.discharge_guard env g_lbs in //may need to solve all carried unification constraints, in case not generalized
+          let _ = e2.tk := Some Recheck.t_unit.n in
+         
+(*close*) let lbs, e2 = SS.close_let_rec lbs e2 in
+          mk (Tm_let((true, lbs), e2)) (Some Recheck.t_unit.n) top.pos, 
+          cres, 
+          Rel.trivial_guard
+
+        | _ -> failwith "Impossible"
+
+(******************************************************************************)
+(* inner let rec's are never implicitly generalized *)
+(******************************************************************************)
+and check_inner_let_rec env top = 
+    let env = instantiate_both env in
+    match top.n with 
+        | Tm_let((true, lbs), e2) -> 
+(*open*)  let lbs, e2 = SS.open_let_rec lbs e2 in
+
+          let env0, topt = Env.clear_expected_typ env in
+          let lbs, rec_env = build_let_rec_env false env0 lbs in
+          let lbs, g_lbs = check_let_recs rec_env lbs in 
+         
+          let bindings, env = lbs |> List.fold_left (fun (bindings, env) ({lbname=x; lbtyp=t}) ->
+             let b = binding_of_lb x ([], t) in //local let recs are not universe polymorphic
+             let env = Env.push_local_binding env b in
+             b::bindings, env) ([], env) in
+
+          let bindings = List.rev bindings in 
+          let binders = Env.binders_of_bindings bindings in
+
+          let e2, cres, g2 = tc_term env e2 in
+          let guard = Rel.conj_guard g_lbs g2 in
+          let cres = TcUtil.close_comp env bindings cres in
+          let tres = norm env cres.res_typ in
+          let cres = {cres with res_typ=tres} in
+
+(*close*) let lbs, e2 = SS.close_let_rec lbs e2 in
+          let e = mk (Tm_let((true, lbs), e2)) (Some tres.n) top.pos in 
+
+          begin match topt with
+              | Some _ -> e, cres, guard //we have an annotation
+              | None -> check_no_escape env binders tres;
+                         e, cres, guard
+          end
+         
+        | _ -> failwith "Impossible"
+
+(******************************************************************************)
+(* build an environment with recursively bound names.                         *)
+(* refining the types of those names with decreases clauses is done in tc_abs *)
+(******************************************************************************)
+and build_let_rec_env top_level env lbs : list<letbinding> * env = 
+   let env0 = env in
+   let lbs, env = List.fold_left (fun (lbs, env) lb -> //{lbname=x; lbtyp=t; lbdef=e}) ->
+        let univ_vars, t, check_t = TcUtil.extract_let_rec_annotation env lb in
+        let env = Env.push_univ_vars env univ_vars in //no polymorphic recursion on universes
+        let e = Util.unascribe lb.lbdef in
+        let t =
+            if not check_t
+            then t
+            else if top_level && not(env.generalize) //t is from an already-checked val decl
+            then t
+            else (let t, _, g = tc_check_tot_or_gtot_term ({env0 with check_uvars=true}) t (fst <| TcUtil.type_u()) in
+                  Rel.try_discharge_guard env0 g;
+                  norm env0 t) in
+        let env = if Util.is_pure_or_ghost_function t //termination check is enabled
+                  && Options.should_verify env.curmodule.str (* store the let rec names separately for termination checks *)
+                  then {env with letrecs=(lb.lbname,t)::env.letrecs}
+                  else Env.push_local_binding env (binding_of_lb lb.lbname ([], t)) in //no polymorphic recursion on universes
+       let lb = {lb with lbtyp=t; lbunivs=univ_vars; lbdef=e} in
+       lb::lbs,  env) 
+    ([],env)
+    lbs  in
+  List.rev lbs, env
+
+and check_let_recs env lbs = 
+    let lbs, gs = lbs |> List.map (fun lb ->
+        let e, c, g = tc_tot_or_gtot_term (Env.set_expected_typ env lb.lbtyp) lb.lbdef in
+        if not (Util.is_total_lcomp c)
+        then raise (Error ("Expected let rec to be a Tot term; got effect GTot", e.pos));
+        let lb = {lb with lbdef=e; lbeff=Const.effect_Tot_lid} in
+        lb, g) |> List.unzip in
+    let g_lbs = List.fold_right Rel.conj_guard gs Rel.trivial_guard in
+    lbs, g_lbs
+
+            
+(******************************************************************************)
 (* Several utility functions follow                                           *)
 (******************************************************************************)
+and check_let_bound_def top_level env lb 
+                               : term      (* checked lbdef                   *)
+                               * univ_vars (* univ_vars, if any               *)
+                               * lcomp     (* type of lbdef                   *)
+                               * guard_t   (* well-formedness of lbtyp        *)
+                               * bool      (* true iff lbtyp was annotated    *)
+                               = 
+    let env1, _ = Env.clear_expected_typ env in
+    let e1 = lb.lbdef in
+       
+    (* 1. extract the annotation of the let-bound term, e1, if any *)
+    let topt, wf_annot, univ_vars, env1 = check_lbtyp top_level env lb in
+       
+    if not top_level && univ_vars <> []
+    then raise (Error("Inner let-bound definitions cannot be universe polymorphic", e1.pos));
+
+    (* 2. type-check e1 *)
+    let e1, c1, g1 = tc_term ({env1 with top_level=true}) e1 in
+       
+    (* and strengthen its VC with and well-formedness condition on its annotated type *)
+    let c1, guard_f = TcUtil.strengthen_precondition 
+                        (Some (fun () -> Errors.ill_kinded_type)) 
+                        (Env.set_range env1 e1.pos) e1 c1 wf_annot in
+    let g1 = Rel.conj_guard g1 guard_f in
+       
+    e1, univ_vars, c1, g1, Option.isSome topt
+
+
+(* Extracting the type of non-recursive let binding *)
+and check_lbtyp top_level env lb : option<typ> (* checked version of lb.lbtyp, if it was not Tm_unknown *)
+                                 * guard_t     (* well-formedness condition for that type               *)
+                                 * univ_vars   (* explicit universe variables, if any                   *)
+                                 * Env.env     (* env extended with univ_vars                           *)
+                                 = 
+    let t = SS.compress lb.lbtyp in
+    match t.n with
+        | Tm_unknown ->
+          if lb.lbunivs <> [] then failwith "Impossible: non-empty universe variables but the type is unknown";
+          None, Rel.trivial_guard, [], env
+
+        | _ ->
+          let univ_vars, t = open_univ_vars lb.lbunivs t in
+          let env1 = Env.push_univ_vars env univ_vars in
+          if top_level 
+          && not (env.generalize) //clearly, x has an annotated type ... could env.generalize ever be true here?
+                                  //perhaps. x may not have a val declaration, only an inline annotation
+                                  //so, not (env.generalize) signals that x has been declared as val x : t, and t has already been checked
+          then Some t, Rel.trivial_guard, univ_vars, Env.set_expected_typ env t //t has already been kind-checked
+          else //we have an inline annotation
+               let k, _ = TcUtil.type_u () in
+               let t, _, g = tc_check_tot_or_gtot_term env1 t k in
+               if debug env Options.Medium 
+               then Util.fprint2 "(%s) Checked type annotation %s\n" 
+                        (Range.string_of_range (range_of_lbname lb.lbname)) 
+                        (Print.term_to_string t);
+               let t = norm env1 t in
+               Some t, g, univ_vars, Env.set_expected_typ env1 t
+
+
 and tc_binder env (x:bv, imp) =
     let tu, u = TcUtil.type_u () in
     let t, _, g = tc_check_tot_or_gtot_term env x.sort tu in //ghost effect ok in the types of binders
@@ -1130,15 +1330,14 @@ and tc_binders env bs =
           b::bs, env', Rel.conj_guard g (Rel.close_guard [b] g'), u::us in
     aux env bs
 
-and tc_args env args : Syntax.args * guard_t =
-   //an optimization for checking arguments in cases where we know that their types match the types of the corresponding formal parameters
-   //notably, this is used when checking the application  (?u x1 ... xn).
-   List.fold_right (fun (t, imp) (args, g) -> 
-                         let t, _, g' = tc_term env t in
-                         (t, imp)::args, Rel.conj_guard g g') 
-      args ([], Rel.trivial_guard)
-
 and tc_pats env pats = 
+    let tc_args env args : Syntax.args * guard_t =
+       //an optimization for checking arguments in cases where we know that their types match the types of the corresponding formal parameters
+       //notably, this is used when checking the application  (?u x1 ... xn). NS: which we do not currently do!
+       List.fold_right (fun (t, imp) (args, g) -> 
+                             let t, _, g' = tc_term env t in
+                             (t, imp)::args, Rel.conj_guard g g') 
+          args ([], Rel.trivial_guard) in
     List.fold_right (fun p (pats, g) -> let args, g' = tc_args env p in (args::pats, Rel.conj_guard g g')) pats ([], Rel.trivial_guard) 
 
 and tc_tot_or_gtot_term env e : term           
@@ -1170,193 +1369,7 @@ and tc_check_tot_or_gtot_term env e t : term
             else Util.gtotal_comp t in
     e, Util.lcomp_of_comp c, Rel.conj_guard g g'
 
-and tc_ghost_term env (e:term) (bs:binders) (body:term) : term * lcomp * Rel.guard_t =
-    //use of the ghost effect is allowed in e, since it is syntactically deemed to be computationally irrelevant
-   failwith "NYI"
 
-and check_args env args bs = failwith ""
-
-
-let rec tc_exp env e : exp * lcomp * guard_t =
-  let env = if e.pos=dummyRange then env else Env.set_range env e.pos in
-  if debug env Options.Low then Util.fprint2 "%s (%s)\n" (Range.string_of_range <| Env.get_range env) (Print.tag_of_exp e);
-  let w lc = syn e.pos <| Some lc.res_typ in
-  let top = e in
-  match e.n with
-
-  | Exp_let((false, [{lbname=x; lbtyp=t; lbdef=e1}]), e2) ->
-    let env = instantiate_both env in
-    let env0 = env in
-    let topt = Env.expected_typ env in
-    let top_level = match x with Inr _ -> true | _ -> false in
-    let env1, _ = Env.clear_expected_typ env in
-    let f, env1 = match t.n with
-        | Typ_unknown ->
-            Rel.trivial_guard, env1
-        | _ ->
-            if top_level && not (env.generalize)
-            then Rel.trivial_guard, Env.set_expected_typ env1 t //t has already been kind-checked
-            else let t, f = tc_typ_check env1 t ktype in
-                 if debug env Options.Medium then Util.fprint2 "(%s) Checked type annotation %s\n" (Range.string_of_range top.pos) (Print.term_to_string t);
-                 let t = norm_t env1 t in
-                 let env1 = Env.set_expected_typ env1 t in
-                 f, env1 in
-
-    let e1, c1, g1 = tc_exp ({env1 with top_level=top_level}) e1 in
-    let c1, guard_f = TcUtil.strengthen_precondition (Some (fun () -> Errors.ill_kinded_type)) (Env.set_range env t.pos) e1 c1 f in
-    begin match x with
-        | Inr _ -> (* top-level let, always ends with e2=():unit *)
-          let e2, c1 =
-            if Options.should_verify env.curmodule.str
-            then let ok, c1 = TcUtil.check_top_level env (Rel.conj_guard g1 guard_f) c1 in
-                 if ok
-                 then e2, c1
-                 else (if !Options.warn_top_level_effects
-                       then Tc.Errors.warn (Env.get_range env) Tc.Errors.top_level_effect;
-                       mk_Exp_meta(Meta_desugared(e2, Masked_effect)), c1)
-            else (TcUtil.discharge_guard env (Rel.conj_guard g1 guard_f);  //still need to solve remaining unification/subtyping constraints
-                  e2, c1.comp()) in
-          let _, e1, c1 = if env.generalize
-                          then List.hd <| TcUtil.generalize false env1 [x, e1, c1] (* only generalize top-level lets, when there is no val decl *)
-                          else x, e1, c1 in
-          let cres = TcUtil.lcomp_of_comp <| Util.ml_comp Recheck.t_unit top.pos in
-          let cres = if Util.is_total_comp c1
-                     then cres
-                     else TcUtil.bind env None (TcUtil.lcomp_of_comp c1) (None, cres) in
-          e2.tk := Some (Recheck.t_unit);
-          w cres <| mk_Exp_let((false, [mk_lb (x, Util.comp_effect_name c1, Util.comp_result c1, e1)]), e2), cres, Rel.trivial_guard
-
-        | Inl bvd ->  (* don't generalize inner lets *)
-            let b = binding_of_lb x c1.res_typ in
-            let e2, c2, g2 = tc_exp (Env.push_local_binding env b) e2 in
-            let cres = TcUtil.bind env (Some e1) c1 (Some b, c2) in
-            let e = w cres <| mk_Exp_let((false, [mk_lb (x, c1.eff_name, c1.res_typ, e1)]), e2) in
-            let g2 = Rel.close_guard [v_binder (Util.bvd_to_bvar_s bvd c1.res_typ)] <|
-                (Rel.imp_guard (Rel.guard_of_guard_formula (Rel.NonTrivial <| Util.mk_eq c1.res_typ c1.res_typ (Util.bvd_to_exp bvd c1.res_typ) e1)) g2) in
-            let guard = Rel.conj_guard guard_f (Rel.conj_guard g1 g2) in
-            match topt with
-              | None -> (* no expected type; check that x doesn't escape it's scope *)
-                 let tres = cres.res_typ in
-                 let fvs = Util.freevars_typ tres in
-                 if Util.set_mem (bvd_to_bvar_s bvd t) fvs.fxvs
-                 then let t = TcUtil.new_tvar env0 ktype in
-                      Tc.Rel.try_discharge_guard env <| Tc.Rel.teq env tres t;
-                      e, cres, guard
-                 else e, cres, guard
-              | _ -> e, cres, guard
-     end
-
-  | Exp_let((false, _), _) ->
-    failwith "impossible"
-
-  | Exp_let((true, lbs), e1) ->
-    let env = instantiate_both env in
-    let env0, topt = Env.clear_expected_typ env in
-    let is_inner_let = lbs |> Util.for_some (function {lbname=Inl _} -> true (* inner let *) | _ -> false) in
-    (* build an environment with recursively bound names. refining the types of those names with decreases clauses is done in Exp_abs *)
-    let lbs, env' = lbs |> List.fold_left (fun (xts, env) ({lbname=x; lbtyp=t; lbdef=e}) ->
-      let _, t, check_t = TcUtil.extract_lb_annotation env t e in
-      let e = Util.unascribe e in
-      let t =
-        if not check_t
-        then t
-        else if not (is_inner_let) && not(env.generalize)
-        then (if Env.debug env <| Options.High then Util.fprint1 "Type %s is marked as no-generalize\n" (Print.term_to_string t);
-              t) (* t is already checked *)
-        else tc_typ_check_trivial ({env0 with check_uvars=true}) t ktype |> norm_t env in
-      let env = if Util.is_pure_or_ghost_function t
-                && Options.should_verify env.curmodule.str (* store the let rec names separately for termination checks *)
-                then (//printfn "Extending let recs with %s : %s\n" (Print.lbname_to_string x) (Print.term_to_string t);
-                      {env with letrecs=(x,t)::env.letrecs})
-                else Env.push_local_binding env (binding_of_lb x t) in
-      (x, t, e)::xts, env) ([],env)  in
-
-    let lbs, gs = (lbs |> List.rev) |> List.map (fun (x, t, e) ->
-        let t =  Tc.Normalize.norm_typ [Normalize.Beta] env t in
-        if Env.debug env Options.High then Util.fprint3 "Checking %s = %s against type %s\n" (Print.lbname_to_string x) (Print.term_to_string e) (Print.term_to_string t);
-//        printfn "IN environment: %s : %s\n" (Print.lbname_to_string x) (Print.term_to_string <| Env.lookup_lid env' (right x));
-        let env' = Env.set_expected_typ env' t in
-        let e, t, g = tc_total_exp env' e in
-        (x, t, e), g) |> List.unzip in
-
-    let g_lbs = List.fold_right Rel.conj_guard gs Rel.trivial_guard in
-
-    let lbs, g_lbs =
-        if not env.generalize || is_inner_let
-        then List.map (fun (x, t, e) -> mk_lb (x, Const.effect_Tot_lid, t, e)) lbs, g_lbs
-        else begin
-             TcUtil.discharge_guard env g_lbs;
-             let ecs = TcUtil.generalize true env (lbs |> List.map (fun (x, t, e) -> (x, e, Util.total_comp t <| range_of_lb (x,t,e)))) in
-             List.map (fun (x, e, c) -> mk_lb (x, Const.effect_Tot_lid, Util.comp_result c, e)) ecs, Rel.trivial_guard
-        end in
-
-    if not is_inner_let (* the body is just unit *)
-    then let cres = TcUtil.lcomp_of_comp <| Util.total_comp Recheck.t_unit top.pos in
-         let _ = TcUtil.discharge_guard env g_lbs in //may need to solve all carried unification constraints, in case not generalized
-         let _ = e1.tk := Some Recheck.t_unit in
-         w cres <| mk_Exp_let((true, lbs), e1), cres, Rel.trivial_guard
-    else let bindings, env = lbs |> List.fold_left (fun (bindings, env) ({lbname=x; lbtyp=t}) ->
-             let b = binding_of_lb x t in
-             let env = Env.push_local_binding env b in
-             b::bindings, env) ([], env) in
-         let e1, cres, g1 = tc_exp env e1 in
-         let guard = Rel.conj_guard g_lbs g1 in
-         let cres = TcUtil.close_comp env bindings cres in
-         let tres = norm_t env cres.res_typ in
-         let cres = {cres with res_typ=tres} in
-         //let cres = Normalize.norm_comp [Normalize.Beta] env cres in
-         let e = w cres <| mk_Exp_let((true, lbs), e1) in
-         begin match topt with
-          | Some _ -> e, cres, guard
-          | None ->
-             let fvs = Util.freevars_typ <| tres in
-             match lbs |> List.tryFind (function
-                    | ({lbname=Inr _}) -> false
-                    | ({lbname=Inl x}) -> Util.set_mem (bvd_to_bvar_s x tun) fvs.fxvs) with
-                | Some ({lbname=Inl y}) ->
-                  let t' = TcUtil.new_tvar env0 ktype in
-                  Tc.Rel.try_discharge_guard env <| Tc.Rel.teq env tres t';
-                  e, cres, guard
-                  //else raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape env tres y, rng env))
-                | _ -> e, cres, guard
-         end
-
-
-and tc_kind_trivial env k : knd =
-  let k, g = tc_kind env k in
-  TcUtil.discharge_guard env g;
-  k
-
-and tc_typ_trivial env t : typ * knd =
-  let t, k, g = tc_typ env t in
-  TcUtil.discharge_guard env g;
-  t, k
-
-and tc_typ_check_trivial env t (k:knd) =
-  let t, f = tc_typ_check env t k in
-  TcUtil.discharge_guard env f;
-  t
-
-and tc_total_exp env e : exp * typ * guard_t =
-  let e, c, g = tc_exp env e in
-  if is_total_lcomp c
-  then e, c.res_typ, g
-  else let g = Rel.solve_deferred_constraints env g in
-       let c = c.comp() |> norm_c env in
-       match Tc.Rel.sub_comp env c (Util.total_comp (Util.comp_result c) (Env.get_range env)) with
-        | Some g' -> e, Util.comp_result c, Rel.conj_guard g g'
-        | _ -> raise (Error(Tc.Errors.expected_pure_expression e c, e.pos))
-
-and tc_ghost_exp env e : exp * typ * guard_t =
-  let e, c, g = tc_exp env e in
-  if is_total_lcomp c
-  then e, c.res_typ, g
-  else let c = c.comp() |> norm_c env in
-       let expected_c = Util.gtotal_comp (Util.comp_result c) in
-       let g = Rel.solve_deferred_constraints env g in
-       match Tc.Rel.sub_comp ({env with use_eq=false}) c expected_c with
-        | Some g' -> e, Util.comp_result c, Rel.conj_guard g g'
-        | _ -> raise (Error(Tc.Errors.expected_ghost_expression e c, e.pos))
 
 (*****************Type-checking the signature of a module*****************************)
 

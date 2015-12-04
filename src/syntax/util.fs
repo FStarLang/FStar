@@ -390,6 +390,15 @@ let abs bs t = match bs with
 let arrow bs c = mk (Tm_arrow(close_binders bs, Subst.close_comp bs c)) None c.pos
 let refine b t = mk (Tm_refine(b, Subst.close [mk_binder b] t)) None (Range.union_ranges (range_of_bv b) t.pos)
 let branch b = Subst.close_branch b
+let letbinding lbname univ_vars typ eff def = 
+    let typ = Subst.close_univ_vars univ_vars typ in 
+    let def = Subst.close_univ_vars univ_vars def in 
+    {lbname=lbname; 
+     lbunivs=univ_vars;
+     lbtyp=typ;
+     lbeff=eff;
+     lbdef=def}
+
 
 (********************************************************************************)
 (*********************** Various tests on constants  ****************************)
