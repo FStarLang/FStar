@@ -31815,7 +31815,35 @@ Kind_type)
                                                                                                                      Prims.LexTop@tok))))))));;no pats
                                                   )));;no pats
 
-label_2962)))))
+                            label_2962)))))
 (check-sat)
+
+; set of possible error causes:
 (echo "label_2957")
-(eval label_2957)
+(eval label_2957)    ; the one that gets reported and looks spurious
+(echo "label_2952")
+(eval label_2952)
+(echo "label_2950")
+(eval label_2950)
+(echo "label_2962")
+(eval label_2962)
+
+;; (echo "label_2951")
+;; (eval label_2951)
+;; (echo "label_2950")
+;; (eval label_2950)
+;; (echo "label_2953")
+;; (eval label_2953)
+;; (echo "label_2952")
+;; (eval label_2952)
+;; (echo "label_2961")
+;; (eval label_2961)
+;; (echo "label_2959")
+;; (eval label_2959)
+;; (echo "label_2958")
+;; (eval label_2958)
+;; (echo "label_2957")
+;; (eval label_2957)
+;; (echo "label_2962")
+;; (eval label_2962)
+;; (echo "Done!")
