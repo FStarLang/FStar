@@ -77,7 +77,7 @@ you to skip directly to step 3 and build F* with just an OCaml compiler.
 
 ### 1. Building F* from sources using the F# compiler ###
 
-#### On Windows 7/8 using Visual Studio ####
+#### On Windows 7/8/10 using Visual Studio 2015 ####
 
   - Prerequisite: .NET framework 4.5
 
@@ -86,10 +86,19 @@ you to skip directly to step 3 and build F* with just an OCaml compiler.
       [Visual Studio Community](https://www.visualstudio.com/en-us/products/visual-studio-community-vs.aspx)
     - The Visual F# Tools are installed automatically when you first
       create or open an F# project.
-  - Run the `src/VS/nuget-restore.bat` script before openting the
-    solution for the first time. F* depends upon NuGet packages that
-    are incompatible with Visual Studio's internal invocation of
-    NuGet's restore feature.
+
+  - Run the `src/VS/nuget-restore.bat` script _from the top-level F* directory_
+    before opening the solution for the first time.
+    F* depends upon NuGet packages that are incompatible with
+    Visual Studio's internal invocation of NuGet's restore feature.
+
+        C:\Users\xxx\Desktop\FStar>src\VS\nuget-restore.bat
+        Installing 'FsLexYacc.Runtime 6.1.0'.
+        Installing 'FsLexYacc 6.1.0'.
+        Successfully installed 'FsLexYacc.Runtime 6.1.0'.
+        Successfully installed 'FsLexYacc 6.1.0'.
+        All packages listed in packages.config are already installed.
+
   - Using Visual Studio, open `src/VS/FStar.sln` and build the solution
     (in the menus: Build > Build Solution).
 
