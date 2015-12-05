@@ -1,6 +1,6 @@
 ## Online editor ##
 
-The easiest way to try out F\* is directly in your browser by using
+The easiest way to try out F\* quickly is directly in your browser by using
 the [online F\* editor] that's part of the [F\* tutorial].
 
 [online F\* editor]: https://www.fstar-lang.org/run.php
@@ -206,12 +206,11 @@ special `flexlink` technology for this. See `contrib/CoreCrypto/ml` and
 
 ## Runtime dependency: Z3 SMT solver ##
 
-To use F* for verification you need a Z3 4.4.0 binary.
+To use F* for verification you need a Z3 4.4.1 binary.
 Our binary packages include that already in `bin`, but if you compile
 F* from sources you need to get a Z3 binary yourself and add it to
-your `PATH`. We recommend you use the 4.4.0 binaries here:
-https://github.com/Z3Prover/z3/releases/tag/z3-4.4.0
-
+your `PATH`. We recommend you use the 4.4.1 binaries here:
+https://github.com/Z3Prover/z3/releases/tag/z3-4.4.1
 
 ## Creating binary packages for your platform ##
 
@@ -219,9 +218,11 @@ https://github.com/Z3Prover/z3/releases/tag/z3-4.4.0
 
 0. Bootstrap the compiler in OCaml using the instructions above
 
-1. Make sure you have the Z3 4.4.0 binary in your `$PATH` or
-   in the `$FSTAR_HOME/bin` directory
-   (please make sure it's precisely this version!)
+1. Make sure you have the Z3 4.4.1 binary in your `$PATH` or
+   in the `$FSTAR_HOME/bin` directory.
+   Please make sure it's precisely this version!
+
+        $ z3 --version
 
 2. Run the following command:
 
