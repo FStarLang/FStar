@@ -17,19 +17,25 @@ features and bug fixes.
 
 ### Testing a binary package ###
 
-1. Test that the binary is good by expanding the archive and running:
+1. Add `fstar.exe` to your `PATH`, either permanently
+   or temporarily, for instance by running this:
+
+        $ source setenv.sh
+        $ fstar.exe --version
+
+2. Test that the binary is good by expanding the archive and running:
 
         $ make -C examples/unit-tests
 
-2. If you have OCaml installed run, the following command should print "Hello F*!"
+3. If you have OCaml installed run, the following command should print "Hello F*!"
 
         $ make -C examples/hello ocaml
 
-3. If you have F# installed run, the following command should print "Hello F*!"
+4. If you have F# installed run, the following command should print "Hello F*!"
 
         $ make -C examples/hello fs
 
-4. You can try out the full regression suite, but keep in mind that
+5. You can try out the full regression suite, but keep in mind that
    things might fail because of timeouts if your machine is not
    sufficiently powerful.
 
