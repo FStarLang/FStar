@@ -17,13 +17,23 @@ features and bug fixes.
 
 ### Testing a binary package ###
 
-1. Add `fstar.exe` to your `PATH`, either permanently
+Test that the binary is good by expanding the archive and running the
+following commands. (On Windows this requires Cygwin and `make`)
+
+1. Add `fstar.exe` and `z3` to your `PATH`, either permanently
    or temporarily, for instance by running this:
 
         $ source setenv.sh
         $ fstar.exe --version
+        F* 0.9.1.1
+        platform=Linux_x86_64
+        compiler=OCaml 4.02.3
+        date=2015-12-04T15:45:49+0100
+        commit=344c7d1
+        $ z3 --version
+        Z3 version 4.4.1
 
-2. Test that the binary is good by expanding the archive and running:
+2. Run the unit tests:
 
         $ make -C examples/unit-tests
 
