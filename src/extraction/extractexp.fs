@@ -556,8 +556,8 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
 
       | Exp_meta(Meta_desugared(e, _)) -> synth_exp g e //TODO: handle the re-sugaring
 
-      | Exp_uvar _
-      | Exp_delayed _ -> failwith "Unexpected expression"
+      | Exp_uvar _ -> failwith (Util.format1 "Unexpected expression : uvar, %s" (Print.exp_to_string e))
+      | Exp_delayed _ -> failwith "Unexpected expression : delayed"
 
 (*copied from ocaml-asttrans.fs*)
 let fresh = let c = mk_ref 0 in
