@@ -266,7 +266,15 @@ let codegen fmods env=
 //                           else List.collect Extraction.OCaml.Code.doc_of_mllib mllibs, ".ml" in
         List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^ext)) (FSharp.Format.pretty 120 d)) newDocs
     end
-
+    else if !Options.codegen = Some "C"
+    then begin
+        let c, mllibs = Util.fold_map Extraction.ML.ExtractMod.extract (Extraction.ML.Env.mkContext env) fmods in
+        let mllibs = List.flatten mllibs in
+        let ext = ".c" in
+        let newDocs = List.collect Extraction.ML.CBackend.doc_of_mllib mllibs in
+//                           else List.collect Extraction.OCaml.Code.doc_of_mllib mllibs, ".ml" in
+        List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^ext)) (FSharp.Format.pretty 120 d)) newDocs
+     end 
 (* Main function *)
 let go _ =
   let (res, filenames) = process_args () in

@@ -50,15 +50,18 @@
   </Choose>
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
+    <Compile Include="Copy of c-backend.fs" />
     <Compile Include="ml-syntax.fs" />
     <Compile Include="env.fs" />
     <Compile Include="util.fs" />
     <Compile Include="codegen.fsi" />
     <Compile Include="codegen.fs" />
+    <Compile Include="c-backend.fsi" />
     <Compile Include="extracttyp.fs" />
     <Compile Include="extractexp.fs" />
     <Compile Include="extractmod.fs" />
     <Content Include="app.config" />
+    <Compile Include="c-backend.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.PowerPack, Version=4.0.0.1, Culture=neutral, PublicKeyToken=f536804aa0eb945b" />
