@@ -271,6 +271,76 @@ let rec for_each_alice la lb =
   else
     append (for_each_bob (hd_of_cons la) lb) (for_each_alice (tl_of_cons la) lb)
 
+val ts_for_each_bob_opt: int -> list int -> Tot (list bool * list int)
+let rec ts_for_each_bob_opt x l = match l with
+  | []   -> [], []
+  | y::tl ->
+    if x = y then [true], tl
+    else
+      let t', l' = ts_for_each_bob_opt x tl in
+      false::t', y::l'
+
+val ts_for_each_alice_opt: list int -> list int -> Tot (list bool)
+let rec ts_for_each_alice_opt la lb = match la with
+  | []   -> []
+  | x::tl ->
+    let t1, lb' = ts_for_each_bob_opt x lb in
+    let t2 = ts_for_each_alice_opt tl lb' in
+    append t1 t2
+
+val t_for_each_bob_opt: int -> list int -> Tot (btrace * list int)
+let rec t_for_each_bob_opt x l = match l with
+  | []   -> [], []
+  | y::tl ->
+    if x = y then [TMsg #bool true], tl
+    else
+      let t', l' = t_for_each_bob_opt x tl in
+      (TMsg #bool false)::t', y::l'
+
+val t_for_each_alice_opt: list int -> list int -> Tot btrace
+let rec t_for_each_alice_opt la lb = match la with
+  | []   -> []
+  | x::tl ->
+    let t1, lb' = t_for_each_bob_opt x lb in
+    let t2 = t_for_each_alice_opt tl lb' in
+    append_btrace_lemma t1 t2;
+    append t1 t2
+
+val for_each_bob_opt:
+  x:Box int alice_s -> l:list (Box int bob_s)
+  -> Wys (list bool * list (Box int bob_s)) (pre (Mode Par ab))
+        (fun _ r t -> t = fst (t_for_each_bob_opt (v_of_box x) (no_box_list bob l)) /\
+	           no_box_list bob (snd r) = snd (t_for_each_bob_opt (v_of_box x) (no_box_list bob l)))
+let rec for_each_bob_opt x l =
+  if l = mk_nil () then mk_nil (), mk_nil ()
+  else
+    let y = hd_of_cons l in
+    let g:unit -> Wys bool (pre (Mode Sec ab)) (fun _ r t -> r = (v_of_box x = v_of_box y) /\ t = []) =
+      fun _ -> unbox_s x = unbox_s y
+    in
+    let b = as_sec ab g in
+    if b then [true], tl_of_cons l
+    else
+      let t', l' = for_each_bob_opt x (tl_of_cons l) in
+      false::t', y::l'
+
+val for_each_alice_opt:
+  la:list (Box int alice_s) -> lb:list (Box int bob_s)
+  -> Wys (list bool) (pre (Mode Par ab)) (fun _ _ t -> b2t (t = t_for_each_alice_opt (no_box_list alice la) (no_box_list bob lb)))
+let rec for_each_alice_opt la lb =
+  if la = mk_nil () then mk_nil ()
+  else
+    let r, lb' = for_each_bob_opt (hd_of_cons la) lb in
+    append r (for_each_alice_opt (tl_of_cons la) lb')
+
+
+
+
+
+
+
+
+
 
 
 (* val nth: n:nat -> l:list int{n < length l} -> Tot int *)

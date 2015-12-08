@@ -23,7 +23,7 @@ open FStar.Heap
 
 type rid = list int
 type t = Map.t rid heap
-opaque val root : rid
+val root : rid
 let root = []
 
 private type rref (id:rid) (a:Type) = Heap.ref a
@@ -78,6 +78,9 @@ let rec lemma_disjoint_includes i j k =
 val extends: rid -> rid -> Tot bool
 let extends r0 r1 = is_Cons r0 && Cons.tl r0 = r1
 
+val parent: r:rid{r<>root} -> Tot rid
+let parent r = Cons.tl r
+
 val lemma_includes_refl: i:rid
                       -> Lemma (requires (True))
                                (ensures (includes i i))
@@ -94,6 +97,25 @@ val lemma_extends_disjoint: i:rid -> j:rid -> k:rid ->
     Lemma (requires (extends j i /\ extends k i /\ j<>k))
           (ensures (disjoint j k))
 let lemma_extends_disjoint i j k = ()
+
+val lemma_extends_parent: i:rid{i<>root} -> 
+  Lemma (requires True)
+        (ensures (extends i (parent i)))
+        [SMTPat (parent i)]
+let lemma_extends_parent i = ()
+
+val lemma_extends_not_root: i:rid -> j:rid{extends j i} -> 
+  Lemma (requires True)
+        (ensures (j<>root))
+        [SMTPat (extends j i)]
+let lemma_extends_not_root i j = ()
+
+val lemma_extends_only_parent: i:rid -> j:rid{extends j i} -> 
+  Lemma (requires True)
+        (ensures (i = parent j))
+        [SMTPat (extends j i)]
+let lemma_extends_only_parent i j = ()
+
 
 let test0 = assert (includes [1;0] [2;1;0])
 let test1 (r1:rid) (r2:rid{includes r1 r2}) = assert (includes r1 (0::r2))
@@ -114,7 +136,7 @@ opaque logic type modifies (s:Set.set rid) (m0:t) (m1:t) =
 
 opaque logic type equal_on (s:Set.set rid) (m0:t) (m1:t) =
  (forall (r:rid). {:pattern (Map.contains m0 r)} (Set.mem r (mod_set s) /\ Map.contains m0 r) ==> Map.contains m1 r)
- /\ Map.Equal m0 (Map.concat m0 (Map.restrict (mod_set s) m1))
+ /\ Map.Equal m1 (Map.concat m1 (Map.restrict (mod_set s) m0))
 
 let restrict s (m:HyperHeap.t)  = Map.restrict (HyperHeap.mod_set s) m
 
@@ -124,11 +146,16 @@ val lemma_modifies_trans: m1:t -> m2:t -> m3:t
                                 (ensures (modifies (Set.union s1 s2) m1 m3))
 let lemma_modifies_trans m1 m2 m3 s1 s2 = ()
 
-assume val lemma_includes_trans: i:rid -> j:rid -> k:rid
+val lemma_includes_trans: i:rid -> j:rid -> k:rid
                         -> Lemma (requires (includes i j /\ includes j k))
                                  (ensures (includes i k))
                                  [SMTPat (includes i j);
                                   SMTPat (includes j k)]
+let rec lemma_includes_trans i j k = 
+  if j=k then ()
+  else match k with 
+        | hd::tl -> lemma_includes_trans i j tl
+        
 val lemma_modset: i:rid -> j:rid
                   -> Lemma (requires (includes j i))
                            (ensures (Set.subset (mod_set (Set.singleton i)) (mod_set (Set.singleton j))))
@@ -152,6 +179,7 @@ val lemma_disjoint_parents: pr:rid -> r:rid -> ps:rid -> s:rid -> Lemma
   [SMTPat (extends r pr); SMTPat (extends s ps); SMTPat (disjoint pr ps)]
 let lemma_disjoint_parents pr r ps s = ()
 
+
 type contains_ref (#a:Type) (#i:rid) (r:rref i a) (m:t) =
     Map.contains m i /\ Heap.contains (Map.sel m i) (as_ref r)
 
@@ -161,3 +189,32 @@ type fresh_rref (#a:Type) (#i:rid) (r:rref i a) (m0:t) (m1:t) =
 
 type modifies_rref (r:rid) (s:Set.set aref) h0 h1 = Heap.modifies s (Map.sel h0 r) (Map.sel h1 r)
 
+
+val lemma_include_cons: i:rid -> j:rid -> Lemma
+  (requires (i<>j /\ includes i j))
+  (ensures (j<>root))
+let lemma_includes_cons i j = ()
+   
+opaque type map_invariant (m:t) =
+  forall r. Map.contains m r ==> 
+      (forall s. includes s r ==> Map.contains m s)
+
+val lemma_extends_fresh_disjoint: i:rid -> j:rid -> ipar:rid -> jpar:rid 
+                               -> m0:t{map_invariant m0} -> m1:t{map_invariant m1} -> 
+  Lemma (requires (fresh_region i m0 m1 
+                  /\ fresh_region j m0 m1
+                  /\ Map.contains m0 ipar 
+                  /\ Map.contains m0 jpar 
+                  /\ extends i ipar
+                  /\ extends j jpar
+                  /\ i<>j))
+        (ensures (disjoint i j))
+        [SMTPatT (fresh_region i m0 m1);
+         SMTPatT (fresh_region j m0 m1);
+         SMTPat (extends i ipar);
+         SMTPat (extends j jpar)]         
+let lemma_extends_fresh_disjoint i j ipar jpar m0 m1 = ()      
+
+open FStar.Set
+opaque type disjoint_regions (s1:set rid) (s2:set rid) = 
+       forall x y. {:pattern (Set.mem x s1); (Set.mem y s2)} (Set.mem x s1 /\ Set.mem y s2) ==> disjoint x y

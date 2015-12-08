@@ -29,6 +29,16 @@ let rec is_bst t =
   | Leaf -> true
   | Node n t1 t2 -> all (gt n) t1 && all (lt n) t2 && is_bst t1 && is_bst t2
 
+(* Changing to the following equivalent variant of is_bst triggers
+   errors all over the rest of this file (filed as #339)
+val is_bst : tree -> Tot bool
+let rec is_bst t =
+  match t with
+  | Leaf -> true
+  | Node n t1 t2 -> all (fun n' -> n > n') t1 &&
+                    all (fun n' -> n' < n) t2 && is_bst t1 && is_bst t2
+*)
+
 val search : x:int -> t:tree{is_bst t} -> Tot (r:bool{r <==> in_tree x t})
 let rec search x t =
   match t with

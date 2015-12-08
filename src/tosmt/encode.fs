@@ -608,7 +608,7 @@ and encode_typ_term (t:typ) (env:env_t) : (term           (* encoding of t, expe
              t, [tdecl; t_kinding; t_interp] (* TODO: At least preserve alpha-equivalence of non-pure function types *)
 
       | Typ_refine _ ->
-        let x, f = match Tc.Normalize.normalize_refinement env.tcenv t0 with
+        let x, f = match Tc.Normalize.normalize_refinement [] env.tcenv t0 with
             | {n=Typ_refine(x, f)} -> x, f
             | _ -> failwith "impossible" in
 
@@ -2110,6 +2110,18 @@ let solve tcenv q : unit =
     let prefix, labels, qry, suffix =
         let env = get_env tcenv in
         let bindings = Tc.Env.fold_env tcenv (fun bs b -> b::bs) [] in
+        let q, bindings = 
+            let rec aux bindings = match bindings with 
+                | Env.Binding_var(x,t)::rest -> 
+                  let out, rest = aux rest in 
+                  let t = Normalize.norm_typ [Normalize.DeltaHard; Normalize.Beta; Normalize.Eta; Normalize.EtaArgs; Normalize.Simplify] env.tcenv t in
+                  Syntax.v_binder (Util.bvd_to_bvar_s x t)::out, rest 
+                | Env.Binding_typ(a, k)::rest -> 
+                  let out, rest = aux rest in 
+                  Syntax.t_binder (Util.bvd_to_bvar_s a k)::out, rest 
+                | _ -> [], bindings in
+            let closing, bindings = aux bindings in 
+            Util.close_forall (List.rev closing) q, bindings in 
         let env_decls, env = encode_env_bindings env (List.filter (function Binding_sig _ -> false | _ -> true) bindings) in
         if debug tcenv Options.Low then Util.fprint1 "Encoding query formula: %s\n" (Print.formula_to_string q);//(Normalize.formula_norm_to_string tcenv q);
         let phi, labels, qdecls = encode_formula_with_labels q env in

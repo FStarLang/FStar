@@ -1,7 +1,7 @@
 (*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi Ffibridge --admit_fsi FStar.Set --admit_fsi FStar.String --admit_fsi FStar.IO --admit_fsi Runtime --admit_fsi FStar.Seq;
+    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi Ffibridge --admit_fsi FStar.Set --admit_fsi FStar.String --admit_fsi FStar.IO --admit_fsi Runtime --admit_fsi FStar.Seq --admit_fsi Hashtable --verify_module Circuit;
     variables:CONTRIB=../../contrib;
-    other-files:classical.fst ext.fst set.fsi heap.fst st.fst all.fst seq.fsi seqproperties.fst ghost.fst listTot.fst ordset.fsi ordmap.fsi list.fst io.fsti string.fsi prins.fst ast.fst ffibridge.fsi sem.fst $CONTRIB/Platform/fst/Bytes.fst runtime.fsi print.fst
+    other-files:classical.fst ext.fst set.fsi heap.fst st.fst all.fst seq.fsi seqproperties.fst ghost.fst listTot.fst ordset.fsi ordmap.fsi list.fst io.fsti string.fsi prins.fst ast.fst ffibridge.fsi sem.fst $CONTRIB/Platform/fst/Bytes.fst runtime.fsi print.fst hashtable.fsi
  --*)
 
 module Circuit
@@ -28,6 +28,7 @@ type celt =
   | Const_nat : wrange -> nat -> celt
   | Const_bool: wrange -> bool -> celt
   | Mux       : wrange -> wrange -> wrange -> wrange -> celt  //result range, else branch range, then branch range, condition range
+  | Copy      : wrange -> wrange -> celt
 
 type ckt = list celt
 
@@ -63,6 +64,18 @@ let is_nat t = match t with
   | T_cons s _ -> s = "Prims.int"
   | _          -> false
 
+let hd_of_cons (l:list 'a{is_Cons l}) = match l with
+  | Cons x y -> x
+
+let tl_of_cons (l:list 'a{is_Cons l}) = match l with
+  | Cons x y -> y
+
+val is_int_list: typ -> Tot bool
+let is_int_list t = match t with
+  | T_cons l _ ->
+    l = "Prims.list" && is_Cons (T_cons.args t) && is_nat (hd_of_cons (T_cons.args t))
+  | _          -> false
+
 type inputmap = ordmap prin varset p_cmp
 
 (*
@@ -71,13 +84,13 @@ type inputmap = ordmap prin varset p_cmp
 val supported_box_content: typ -> Tot bool
 let supported_box_content t = match t with
   | T_bool     -> true
-  | T_cons _ _ -> is_nat t
+  | T_cons _ _ -> is_nat t || is_int_list t
   | _          -> false
 
 val supported_input_type: typ -> Tot bool
 let supported_input_type t = match t with
   | T_bool     -> true
-  | T_cons _ _ -> is_nat t
+  | T_cons _ _ -> is_nat t || is_int_list t
   | T_box t'   -> supported_box_content t'
   | _ -> false
 
@@ -113,7 +126,7 @@ let rec assign_inps ps fvars en =
     let Some v = choose fvars in
     let fvars' = remove v fvars in
     let p = assign_prin ps v en in
-    print_string "Assigned "; print_string (Print.prin_to_string p); print_string " to "; print_string (name_of_var v); print_string "\n";
+    //print_string "Assigned "; print_string (Print.prin_to_string p); print_string " to "; print_string (name_of_var v); print_string "\n";
     let m = assign_inps ps fvars' en in
     if contains p m then
       let s = Some.v (select p m) in
@@ -132,15 +145,21 @@ let alloc_wires n =
   ctr := !ctr + n;
   r
 
+let nil_range = (-1, -1)
+
 type cktenv = string -> Tot (option wrange)
 
-let natsize = 4
+let natsize = 12
+
+let listsize = 96
 
 val size: typ -> (n:int{n > 0})
 let rec size t = match t with
   | T_bool     -> 1
   | T_cons _ _ ->
-    if is_nat t then natsize else failwith "Size does not support non-nat cons type"
+    if is_nat t then natsize
+    else if is_int_list t then listsize * natsize
+    else failwith "Size does not support non-nat cons type"
   | T_box t'   ->
     if supported_box_content t' then size t'
     else failwith "Unsupported box content type in size function"
@@ -163,7 +182,7 @@ let rec alloc_input_wires_for_prin p vars r cen =
     let vars' = remove v vars in
     let Var s t = v in
     let r' = alloc_wires (size t) in
-    print_string "Allocated "; print_string (range_to_string r'); print_string " for variable "; print_string (name_of_var v); print_string "\n";
+    //print_string "Allocated "; print_string (range_to_string r'); print_string " for variable "; print_string (name_of_var v); print_string "\n";
     let cen' = fun s' -> if s' = s then Some r' else cen s' in
     alloc_input_wires_for_prin p vars' (fst r, snd r') cen'
 
@@ -181,7 +200,7 @@ let rec alloc_input_wires eps m cs cen =
     if contains p m then
       let Some vars = select p m in
       let (r, cen') = alloc_input_wires_for_prin p vars (!ctr + 1, !ctr) cen in
-      print_string "Allocated "; print_string (range_to_string r); print_string " for "; print_string (Print.prin_to_string p); print_string "\n";
+      //print_string "Allocated "; print_string (range_to_string r); print_string " for "; print_string (Print.prin_to_string p); print_string "\n";
       alloc_input_wires eps' m (FStar.List.Tot.append cs [Input p r]) cen'
     else
       alloc_input_wires eps' m cs cen
@@ -198,16 +217,56 @@ let const_to_ckt c = match c with
     else failwith "Non-nat opaque constant not supported"
   | _ -> failwith "Constant not supported"
 
-val ffi_name_to_op: string -> (binop * typ)
-let ffi_name_to_op s =
-  if s = "Prims.(>)" then Gt, T_bool
-  else if s = "Prims.op_Equality" then Eq, T_bool
-  else failwith "FFI name not supported"
+val is_ffi_bin_op: string -> (bool * binop * typ)
+let is_ffi_bin_op s =
+  if s = "Prims.(>)" then true, Gt, T_bool
+  else if s = "Prims.op_Equality" then true, Eq, T_bool
+  else false, Gt, T_bool
 
 val unbox_t: typ -> typ
 let unbox_t t = match t with
   | T_box t' -> t'
   | _ -> failwith "Unbox_t with a non T_box"
+
+let rec get_cth_mem (c:nat) (r:wrange) =
+  if fst r >= snd r then failwith "exceeded the bound in get_cth_mem"
+  else
+    if c = 0 then
+      if fst r + natsize - 1 <= snd r then (fst r, fst r + natsize - 1)
+      else failwith "exceeded the bound in get_cth_mem'"      
+    else get_cth_mem (c - 1) (fst r + natsize, snd r)
+
+let f x = failwith "This is a never called function"
+
+let rec mem_exp_to_exp (x:exp{is_E_var x}) (l:exp{is_E_var l}) (c:nat) =
+  if c = listsize then E_const (C_bool false)
+  else
+    let cth = E_ffi 2 "FFI.nth" f  [E_const (C_opaque c (T_cons "Prims.int" [])); l] f in
+    let cond = E_ffi 2 "Prims.op_Equality" f [x; cth] f in
+
+    let thenb = E_const (C_bool true) in
+    let elseb = mem_exp_to_exp x l (c + 1) in
+
+    E_cond cond thenb elseb
+
+let rec intersect_exp_to_exp (l1:exp{is_E_var l1}) (l2:exp{is_E_var l2}) (c:nat) =
+  if c = listsize then E_ffi 0 "FFI.mk_nil" f [] f
+  else
+    let nth_v = Var "__tmp_n__" (T_cons "Prims.int" []) in
+
+    let mem_v = Var "__tmp__b__" T_bool in
+
+    let rest_v = Var "__tmp__l__" (T_cons "Prims.list" [T_cons "Prims.int" []]) in
+
+    let e2 = E_cond (E_var mem_v)
+                    (E_ffi 2 "FFI.mk_cons" f [E_var nth_v; E_var rest_v] f)
+                    (E_ffi 2 "FFI.mk_cons" f [E_const (C_opaque 0 (T_cons "Prims.int" [])); E_var rest_v] f) in
+
+    let e2 = E_let rest_v (intersect_exp_to_exp l1 l2 (c + 1)) e2 in
+
+    let e2 = E_let mem_v (mem_exp_to_exp (E_var nth_v) l2 0) e2 in
+
+    E_let nth_v (E_ffi 2 "FFI.nth" f [E_const (C_opaque c (T_cons "Prims.int" [])); l1] f) e2
 
 val exp_to_ckt: cktenv -> exp -> (ckt * wrange * typ)
 let rec exp_to_ckt cen e = match e with
@@ -226,18 +285,66 @@ let rec exp_to_ckt cen e = match e with
     let cs2, r2, t2 = exp_to_ckt cen' e2 in
     cs1 @ cs2, r2, t2
   | E_ffi 'a 'b _ fname _ args _ ->
-    let op, t = ffi_name_to_op fname in
-    let a1 = List.hd args in
-    let a2 = List.hd (List.tl args) in
-    let cs1, r1, _ = exp_to_ckt cen a1 in
-    let cs2, r2, _ = exp_to_ckt cen a2 in
-    let r3 = alloc_wires (size t) in
-    cs1 @ cs2 @ [BinOp op r3 r1 r2], r3, t
+    let b, op, t = is_ffi_bin_op fname in
+    if b then
+      let a1 = List.hd args in
+      let a2 = List.hd (List.tl args) in
+      let cs1, r1, _ = exp_to_ckt cen a1 in
+      let cs2, r2, _ = exp_to_ckt cen a2 in
+      let r3 = alloc_wires (size t) in
+      cs1 @ cs2 @ [BinOp op r3 r1 r2], r3, t
+    else if fname = "FFI.mk_nil" then
+      [], nil_range, (T_cons "Prims.list" [T_cons ("Prims.int") []])
+    else if fname = "FFI.mk_cons" then
+      let a1 = List.hd args in
+      let a2 = List.hd (List.tl args) in
+      let cs1, r1, _ = exp_to_ckt cen a1 in
+      let cs2, r2, _ = exp_to_ckt cen a2 in
+      if r2 = nil_range then
+	cs1 @ cs2, r1 , (T_cons "Prims.list" [T_cons ("Prims.int") []])
+      else
+	let n2 = snd r2 - fst r2 + 1 in
+	let n1 = snd r1 - fst r1 + 1 in
+	admitP (n1 > 0 /\ n2 > 0);
+	let r1' = alloc_wires n1 in
+        let r2' = alloc_wires n2 in
+
+        cs1 @ cs2 @ [Copy r1' r1; Copy r2' r2], (fst r1', snd r2'), (T_cons "Prims.list" [T_cons ("Prims.int") []])
+
+    else if fname = "FFI.nth" then
+      let a1 = List.hd args in
+      let a2 = List.hd (List.tl args) in
+      let cs2, r2, _ = exp_to_ckt cen a2 in
+      if is_E_const a1 && is_C_opaque (E_const.c a1) then
+        let c = Ffibridge.nat_of_c_opaque (E_const.c a1) in
+	//FStar.IO.print_string "get_cth_mem with c: "; FStar.IO.print_string (string_of_int c); FStar.IO.print_string ", with range: "; FStar.IO.print_string (range_to_string r2); FStar.IO.print_string "\n";
+	cs2, get_cth_mem c r2, T_cons "Prims.int" []
+      else failwith "FFI.nth expects a constant argument"
+
+    else if fname = "FFI.list_mem" then
+      let a1 = List.hd args in
+      let a2 = List.hd (List.tl args) in
+      if is_E_var a1 && is_E_var a2 then
+        let e' = mem_exp_to_exp a1 a2 0 in
+	//FStar.IO.print_string (Print.exp_to_string e');
+	exp_to_ckt cen e'
+      else failwith "FFI.list_mem is supported only on variable expressions"
+
+    else if fname = "FFI.list_intersect" then
+      let a1 = List.hd args in
+      let a2 = List.hd (List.tl args) in
+      if is_E_var a1 && is_E_var a2 then
+	let e' = intersect_exp_to_exp a1 a2 0 in
+	exp_to_ckt cen e'
+      else failwith "FFI.list_intersect is supported only for variable expressions"
+
+    else failwith "FFI name not supported"
   | E_cond e1 e2 e3 ->
     let cs1, r1, _ = exp_to_ckt cen e1 in
     let cs2, r2, t2 = exp_to_ckt cen e2 in
     let cs3, r3, t3 = exp_to_ckt cen e3 in
-    let r = alloc_wires (size t2) in
+    let _ = admitP (b2t (snd r2 - fst r2 + 1 > 0)) in
+    let r = alloc_wires (snd r2 - fst r2 + 1) in
     cs1 @ cs2 @ cs3 @ [Mux r r3 r2 r1], r, t2
 
   | _ -> failwith "Expression to circuit not supported"
@@ -261,6 +368,8 @@ let celt_to_string = function
     strcat "Const_bool " (strcat (range_to_string r) (strcat " " (string_of_bool n)))
   | Mux r r3 r2 r1 ->
     strcat "Mux " (strcat (range_to_string r) (strcat " " (strcat (range_to_string r3) (strcat " " (strcat (range_to_string r2) (strcat " " (range_to_string r1)))))))
+  | Copy r1 r2 ->
+    strcat "Copy " (strcat (range_to_string r1) (strcat " " (range_to_string r2)))
 
 val ckt_to_string: ckt -> string
 let ckt_to_string l =
@@ -318,6 +427,14 @@ let nat_to_bin n =
       pad (l @ [0])
   in
   pad (helper n)
+
+val int_list_to_bin: list nat -> list int
+let rec int_list_to_bin l =
+  if l = [] then []
+  else
+    let l' = nat_to_bin (hd_of_cons l) in
+    let l'' = int_list_to_bin (tl_of_cons l) in
+    l' @ l''
 
 val celt_to_booleancelt: celt -> bckt
 let celt_to_booleancelt celt = match celt with
@@ -391,14 +508,21 @@ let celt_to_booleancelt celt = match celt with
     let l1 = flatten_range r in
     let l2 = if b then [1] else [0] in
     rev_append (fold_left2 (fun c i1 i2 -> (copy i1 i2)::c) [] l1 l2) []
+  | Copy r1 r2 ->
+    let l1 = flatten_range r1 in
+    let l2 = flatten_range r2 in
+      (*List.fold_left2 (fun c i1 i2 -> c @ [copy i1 i2]) [] l1 l2*)
+    List.rev_append (List.fold_left2 (fun c i1 i2 -> (copy i1 i2)::c) [] l1 l2) []
 
 val assign_out: eprins -> wrange -> ckt
 let rec assign_out eps r =
-  if eps = empty then []
+  if r = nil_range then []
   else
-    let Some p = choose eps in
-    let eps' = remove p eps in
-    (Output p r)::(assign_out eps' r)
+    if eps = empty then []
+    else
+      let Some p = choose eps in
+      let eps' = remove p eps in
+      (Output p r)::(assign_out eps' r)
 
 val prin_to_id: prin -> nat
 let prin_to_id p = match p with
@@ -412,25 +536,25 @@ let prin_to_id p = match p with
 val int_cmp: int -> int -> Tot bool
 let int_cmp n1 n2 = n1 <= n2
 
-type aux_info = ordmap int (list int) int_cmp
+type aux_info = Hashtable.t int (list int)
 
 val calc_auxinf: bckt -> aux_info
 let calc_auxinf bckt =
-  List.fold_left (fun (m:aux_info) belt ->
+  List.fold_left (fun m belt ->
     match belt with
       | AND x y z
       | XOR x y z ->
 	let ym =
-	  if contains y m then Some.v (select y m)
+	  if Hashtable.mem m y then Hashtable.find m y
 	  else []
 	in
 	let zm =
-	  if contains z m then Some.v (select z m)
+	  if Hashtable.mem m z then Hashtable.find m z
 	  else []
 	in
-	update y (x::ym) (update z (x::zm) m)
+	Hashtable.add (Hashtable.add m z (x::zm)) y (x::ym) 
       | _ -> m
-  ) (OrdMap.empty #int #(list int) #int_cmp) bckt
+  ) (Hashtable.create int (list int) (List.length bckt)) bckt
 
 val dump_gmw: prins -> bckt -> fd_write -> unit
 let dump_gmw prs bckt fd =
@@ -438,16 +562,21 @@ let dump_gmw prs bckt fd =
   let psi i = write_string fd (string_of_int i) in
 
   let inps = filter (fun bcelt -> is_INPUT bcelt) bckt in
+  //print_string "done1";
   let outs = filter (fun bcelt -> is_OUTPUT bcelt) bckt in
+  //print_string "done2";
   let ands = filter (fun bcelt -> is_AND bcelt) bckt in
+  //print_string "done3";
   let xors = filter (fun bcelt -> is_XOR bcelt) bckt in
   let aux = calc_auxinf bckt in
+  //print_string "done4";
 
   let last_inp_id = List.fold_left (fun id belt ->
     match belt with
       | INPUT _ (_, j) -> if id < j then j else id
       | _ -> failwith "Ah, wish it was refined to not have this case"
   ) 0 inps in
+  //print_string "done5";
 
   ps "n "; psi (OrdSet.size prs); ps "\n"; //num of parties
   ps "d "; psi (!ctr + 1); ps " "; psi (last_inp_id + 1); ps " "; psi (List.length xors); ps "\n";
@@ -458,6 +587,7 @@ let dump_gmw prs bckt fd =
 	ps "i "; psi (prin_to_id p); ps " "; psi i; ps " "; psi j; ps "\n"
       | _ -> failwith "Ah, wish it was refined to not have this case"
   ) inps;
+  //print_string "done6";
   List.iter (fun belt ->
     match belt with
       | OUTPUT p (i, j) ->
@@ -472,35 +602,38 @@ let dump_gmw prs bckt fd =
       | _ -> failwith "Ah, wish it was refined to not have this case"
   ) inps;
 
+  //print_string "done7";
   ps "g 0 0 -1 -1 ";
-  let l0 = if contains 0 aux then Some.v (select 0 aux) else [] in
+  let l0 = if Hashtable.mem aux 0 then Hashtable.find aux 0 else [] in
   psi (List.length l0);
   List.iter (fun i -> ps " "; psi i) l0; ps "\n";
 
   ps "g 1 0 -1 -1 ";
-  let l1 = if contains 1 aux then Some.v (select 1 aux) else [] in
+  let l1 = if Hashtable.mem aux 1 then Hashtable.find aux 1 else [] in
   psi (List.length l1);
   List.iter (fun i -> ps " "; psi i) l1; ps "\n";
 
+  //print_string "done8";
   List.iter (fun belt ->
+    //let _ = print_string "elt" in
     match belt with
       | INPUT _ r ->
 	let l = flatten_range r in
 	List.iter (fun i ->
 	  ps "g "; psi i; ps " 0 -1 -1 ";
-	  let l' = if contains i aux then Some.v (select i aux) else [] in
+	  let l' = if Hashtable.mem aux i then Hashtable.find aux i else [] in
 	  psi (List.length l');
 	  List.iter (fun i' -> ps " "; psi i') l'; ps "\n"
 	) l
       | AND x y z ->
 	ps "g "; psi x; ps " 1 "; psi y; ps " "; psi z; ps " ";
-	let l = if contains x aux then Some.v (select x aux) else [] in
+	let l = if Hashtable.mem aux x then Hashtable.find aux x else [] in
 	psi (List.length l);
 	List.iter (fun i -> ps " "; psi i) l;
 	ps "\n"
       | XOR x y z ->
 	ps "g "; psi x; ps " 2 "; psi y; ps " "; psi z; ps " ";
-	let l = if contains x aux then Some.v (select x aux) else [] in
+	let l = if Hashtable.mem aux x then Hashtable.find aux x else [] in
 	psi (List.length l);
 	List.iter (fun i -> ps " "; psi i) l;
 	ps "\n"
@@ -508,13 +641,20 @@ let dump_gmw prs bckt fd =
   ) bckt;
   ()
 
-val dump_val: #meta:v_meta -> v:value meta -> fd_write -> unit
-let rec dump_val #meta v fd = match v with
-  | V_box _ v'           -> dump_val v' fd
-  | V_opaque 'a _ _ _ _ _ -> 
-    let n = Ffibridge.nat_of_v_opaque v in
-    let l = nat_to_bin n in
-    List.iter (fun b -> write_string fd (string_of_int b); write_string fd " ") l
+val dump_val: #meta:v_meta -> v:value meta -> typ -> fd_write -> unit
+let rec dump_val #meta v t fd = match v with
+  | V_box _ v'           -> dump_val v' (unbox_t t) fd
+  | V_opaque 'a _ _ _ _ _ ->
+    if is_nat t then
+      let n = Ffibridge.nat_of_v_opaque v in
+      let l = nat_to_bin n in
+      List.iter (fun b -> write_string fd (string_of_int b); write_string fd " ") l
+    else if is_int_list t then
+      let l = Ffibridge.int_list_of_v_opaque v in
+      if length l = listsize then
+        let l' = int_list_to_bin l in
+	List.iter (fun b -> write_string fd (string_of_int b); write_string fd " ") l'
+      else failwith "listsize is not constant size that we expect"
   | V_bool b             -> if b then write_string fd "1 " else write_string fd "0 "
   | _ -> failwith "Dumping of this value is not supported"
 
@@ -531,7 +671,7 @@ let rec dump_inps vars en fd =
       if is_None dv_opt then failwith "Input is not mapped in the env"
       else
 	let Some (D_v _ v) = dv_opt in
-	dump_val v fd;
+	dump_val v t fd;
 	dump_inps vars' en fd
     else failwith "Dumpinps input type not supported"
 
@@ -591,10 +731,25 @@ let prin_to_gmwport p = match p with
 val supported_output_type: typ -> Tot bool
 let supported_output_type t = match t with
   | T_bool     -> true
-  | T_cons _ _ -> is_nat t
+  | T_cons _ _ -> is_nat t || is_int_list t
   | _          -> false
 
 let const_meta (u:unit) = Meta empty Can_b empty Can_w
+
+let rec get_natsize_elt (l:list 'a) (n:nat) =
+  if n = natsize then [], l
+  else
+    let l', l'' = get_natsize_elt (FStar.List.tl l) (n + 1) in
+    (FStar.List.hd l)::l', l''
+
+let parse_int (l:list string) = Runtime.list_to_int l
+
+let rec parse_int_list (l:list string) =
+  if length l = 0 then []
+  else
+    let l', l'' = get_natsize_elt l 0 in
+    let n = parse_int l' in
+    n::(parse_int_list l'')
 
 val parse_output: list string -> typ -> dvalue
 let parse_output l t = match t with
@@ -605,8 +760,12 @@ let parse_output l t = match t with
 
   | T_cons _ _ ->
     if is_nat t then
-      let n = Runtime.list_to_int l in
+      let n = parse_int l in
       D_v (const_meta ()) (V_opaque n (const_meta ()) slice_const compose_const slice_const_sps)
+    else if is_int_list t then
+      let l' = parse_int_list l in
+      D_v (const_meta ()) (V_opaque l' (const_meta ()) slice_const compose_const slice_const_sps)
+
     else failwith "Unsupported output cons (should have been checked earlier)"
 
   | _ -> failwith "Unsupported output type (should have been checked earlier)"
@@ -642,22 +801,24 @@ let rungmw p ps en cen e =
   in
 
   let final_ckt = cs_inp @ cs_e @ cs_out in
-  print_string (ckt_to_string final_ckt);
-  print_string "\n";
+  //print_string (ckt_to_string final_ckt);
+  (*print_string "created high level circuit";*)
+  //print_string "\n";
   let bckt = flatten (map (fun celt -> celt_to_booleancelt celt) final_ckt) in
-  print_string (bckt_to_string bckt);
-  print_string "\n";
+  //print_string (bckt_to_string bckt);
+  (*print_string "created boolean circuit";
+  print_string "\n";*)
 
   let conf_fname = conf_fname p in
   let ckt_fname = ckt_fname p in
   let inp_fname = inp_fname p in
 
-  print_string "Dumping GMW:\n";
+  (*print_string "Dumping GMW:\n";*)
   let fd = open_write_file ckt_fname in
   dump_gmw ps bckt fd;
   close_write_file fd;
 
-  print_string "Dumping inputs:\n";
+  (*print_string "Dumping inputs:\n";*)
   let fd = open_write_file inp_fname in
   let _ =
     if contains p m then dump_inps (Some.v (select p m)) en fd
@@ -665,7 +826,7 @@ let rungmw p ps en cen e =
   in
   close_write_file fd;
 
-  print_string "Dumping config:\n";
+  (*print_string "Dumping config:\n";*)
   let fd = open_write_file conf_fname in
   dump_conf p (get_inp_size p bckt) fd;
   close_write_file fd;

@@ -186,4 +186,20 @@ let tl_of_cons = function
 val length: list 'a -> Tot nat
 let length l = FStar.List.Tot.length l
 
+val append: list 'a -> list 'a -> Tot (list 'a)
+let append l1 l2 = List.append l1 l2
+
+val lmem: 'a -> list 'a -> Tot bool
+let lmem x l = List.mem x l
+
+(* functions for circuit compiler, they are compiled to circuits *)
+val nth: n:nat -> l:list 'a{n < length l} ->  Tot 'a
+let rec nth n l = if n = 0 then hd_of_cons l else nth (n - 1) (tl_of_cons l)
+
+val list_mem: n:int -> l:list int -> Tot bool
+let list_mem n l = true
+
+val list_intersect: list int -> list int -> Tot (list int)
+let list_intersect l1 l2 = []
+
 //----- list -----//

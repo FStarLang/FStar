@@ -90,11 +90,6 @@ let step_aspar c = match c with
     let m'  = if src l then Mode Par ps else m in
     let s'  = (Frame m en' (F_aspar_ret ps) tr)::s in
 
-    (*
-     * for parties not in ps, the choice of empty_env is arbitrary
-     * perhaps we should prove the theorem using any env and then
-     * implementation can make whatever decision (retain env as in F* semantics)
-     *)
     let en', t' =
       if src l then update_env en x V_unit, T_exp e
       else
@@ -1105,9 +1100,6 @@ and slice_en_sps ps en =
           else
             Some (slice_v_sps ps (D_v.v (Some.v (en x))))
 
-(*
- * TODO: we should update proofs to use these functions instead
- *)
 val slice_v_ffi: prin -> dvalue -> Tot dvalue
 let slice_v_ffi p dv =
   let D_v meta v = dv in

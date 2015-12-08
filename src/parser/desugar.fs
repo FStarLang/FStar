@@ -189,6 +189,8 @@ let rec is_type env (t:term) =
          end in
        aux env pats
     | Let(false, [({pat=PatVar _}, _)], t) -> is_type env t
+    | Let(false, [({pat=PatAscribed({pat=PatVar _}, _)}, _)], t) -> is_type env t
+    | Let(false, [({pat=PatVar _}, _)], t) -> is_type env t
     | _ -> false
 
 and is_kind env (t:term) : bool =

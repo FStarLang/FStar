@@ -66,7 +66,7 @@ let tc_one_fragment curmod dsenv env frag =
     try
         match Parser.Driver.parse_fragment curmod dsenv frag with
             | Parser.Driver.Empty -> 
-              Some (None, dsenv, env)
+              Some (curmod, dsenv, env)
 
             | Parser.Driver.Modul (dsenv, modul) ->
               let env = match curmod with
@@ -283,7 +283,8 @@ let go _ =
                                     | _ -> Util.print_string "--use_build_config expects just a single file on the command line and no other arguments"; exit 1
                              else filenames in
              if !Options.find_deps then
-               Util.print_string (Util.format1 "%s\n" (Util.concat_l "\n" filenames))
+               // `filenames` won't be normalized in cases that `Parser.Driver.read_build_config` is never invoked, so we must do it here to ensure output can be relied upon to produce normalized path names.
+               Util.print_string (Util.format1 "%s\n" (Util.concat_l "\n" (List.map Util.normalize_file_path filenames)))
              else
                (let fmods, dsenv, env = batch_mode_tc filenames in
                report_errors None;

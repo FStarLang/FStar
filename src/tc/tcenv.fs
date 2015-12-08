@@ -466,6 +466,13 @@ let lookup_typ_abbrev env lid =
            Some (mk_Typ_meta(Meta_named(t, lid)))
     | _ -> None
 
+let lookup_opaque_typ_abbrev env lid =
+  match lookup_qname env lid with
+    | Some (Inr (Sig_typ_abbrev (lid, tps, _, t, quals, _))) ->
+      let t = Util.close_with_lam tps t in
+      Some (mk_Typ_meta(Meta_named(t, lid)))
+    | _ -> None
+
 let lookup_btvdef env (btvd:btvdef): option<knd> =
   Util.find_map env.gamma (function
     | Binding_typ (id, k) when Util.bvd_eq id btvd -> Some k
