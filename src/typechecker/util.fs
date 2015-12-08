@@ -496,7 +496,7 @@ let return_value env t v =
     | Some m ->
        let a, kwp = Env.wp_signature env Const.effect_PURE_lid in
        let k = SS.subst [NT(a, t)] kwp in
-       let wp = N.normalize [N.Beta] env (mk_Tm_app m.ret [S.arg t; S.arg v] (Some k.n) v.pos) in
+       let wp = N.normalize [N.Beta] env (mk_Tm_app (Env.uinst env m.ret) [S.arg t; S.arg v] (Some k.n) v.pos) in
        let wlp = wp in
        mk_comp m t wp wlp [RETURN] in
   if debug env Options.High
@@ -555,8 +555,8 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
           let wp_args = [S.arg t1; S.arg t2; S.arg wp1; S.arg wlp1; S.arg (mk_lam wp2); S.arg (mk_lam wlp2)] in
           let wlp_args = [S.arg t1; S.arg t2; S.arg wlp1; S.arg (mk_lam wlp2)] in
           let k = SS.subst [NT(a, t2)] kwp in
-          let wp = mk_Tm_app md.bind_wp wp_args None t2.pos in
-          let wlp = mk_Tm_app md.bind_wlp wlp_args None t2.pos in
+          let wp = mk_Tm_app  (Env.uinst env md.bind_wp)  wp_args None t2.pos in
+          let wlp = mk_Tm_app (Env.uinst env md.bind_wlp) wlp_args None t2.pos in
           let c = mk_comp md t2 wp wlp [] in
           c in
     {eff_name=join_lcomp env lc1 lc2;
@@ -623,8 +623,8 @@ let weaken_precondition env lc (f:guard_formula) : lcomp =
         else let c = Normalize.weak_norm_comp env c in
              let res_t, wp, wlp = destruct_comp c in
              let md = Env.get_effect_decl env c.effect_name in
-             let wp = mk_Tm_app md.assume_p  [S.arg res_t; S.arg f; S.arg wp]  None wp.pos in
-             let wlp = mk_Tm_app md.assume_p [S.arg res_t; S.arg f; S.arg wlp] None wlp.pos in
+             let wp = mk_Tm_app (Env.uinst env md.assume_p)  [S.arg res_t; S.arg f; S.arg wp]  None wp.pos in
+             let wlp = mk_Tm_app (Env.uinst env md.assume_p) [S.arg res_t; S.arg f; S.arg wlp] None wlp.pos in
              mk_comp md res_t wp wlp c.flags in
   {lc with comp=weaken}
 
@@ -651,8 +651,8 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:term) (lc:l
                 let c = Normalize.weak_norm_comp env c in
                 let res_t, wp, wlp = destruct_comp c in
                 let md = Env.get_effect_decl env c.effect_name in
-                let wp =  mk_Tm_app md.assert_p [S.arg res_t; S.arg <| label_opt env reason (Env.get_range env) f; S.arg wp] None wp.pos in
-                let wlp = mk_Tm_app md.assume_p [S.arg res_t; S.arg f; S.arg wlp] None wlp.pos in
+                let wp =  mk_Tm_app (Env.uinst env md.assert_p) [S.arg res_t; S.arg <| label_opt env reason (Env.get_range env) f; S.arg wp] None wp.pos in
+                let wlp = mk_Tm_app (Env.uinst env md.assume_p) [S.arg res_t; S.arg f; S.arg wlp] None wlp.pos in
                 let c2 = mk_comp md res_t wp wlp flags in
                 c2 in
        {lc with eff_name=norm_eff_name env lc.eff_name;
@@ -665,9 +665,9 @@ let add_equality_to_post_condition env (comp:comp) (res_t:typ) =
     let x = S.new_bv None res_t in
     let y = S.new_bv None res_t in
     let xexp, yexp = S.bv_to_name x, S.bv_to_name y in
-    let yret = mk_Tm_app md_pure.ret [S.arg res_t; S.arg yexp] None res_t.pos in
-    let x_eq_y_yret = mk_Tm_app md_pure.assume_p [S.arg res_t; S.arg <| Util.mk_eq res_t res_t xexp yexp; S.arg <| yret] None res_t.pos in
-    let forall_y_x_eq_y_yret = mk_Tm_app md_pure.close_wp [S.arg res_t; S.arg res_t; S.arg <| U.abs [mk_binder y] x_eq_y_yret] None res_t.pos in
+    let yret = mk_Tm_app (Env.uinst env md_pure.ret) [S.arg res_t; S.arg yexp] None res_t.pos in
+    let x_eq_y_yret = mk_Tm_app (Env.uinst env md_pure.assume_p) [S.arg res_t; S.arg <| Util.mk_eq res_t res_t xexp yexp; S.arg <| yret] None res_t.pos in
+    let forall_y_x_eq_y_yret = mk_Tm_app (Env.uinst env md_pure.close_wp) [S.arg res_t; S.arg res_t; S.arg <| U.abs [mk_binder y] x_eq_y_yret] None res_t.pos in
     let lc2 = mk_comp md_pure res_t forall_y_x_eq_y_yret forall_y_x_eq_y_yret [RETURN] in
     let lc = bind env None (lcomp_of_comp comp) (Some (Env.Binding_var(x, ([],x.sort))), lcomp_of_comp lc2) in
     lc.comp()
@@ -675,14 +675,14 @@ let add_equality_to_post_condition env (comp:comp) (res_t:typ) =
 let ite env (guard:formula) lcomp_then lcomp_else =
   let comp () =
       let (md, _, _), (res_t, wp_then, wlp_then), (_, wp_else, wlp_else) = lift_and_destruct env (lcomp_then.comp()) (lcomp_else.comp()) in
-      let ifthenelse md res_t g wp_t wp_e = mk_Tm_app md.if_then_else [S.arg res_t; S.arg g; S.arg wp_t; S.arg wp_e] None (Range.union_ranges wp_t.pos wp_e.pos) in
+      let ifthenelse md res_t g wp_t wp_e = mk_Tm_app (Env.uinst env md.if_then_else) [S.arg res_t; S.arg g; S.arg wp_t; S.arg wp_e] None (Range.union_ranges wp_t.pos wp_e.pos) in
       let wp = ifthenelse md res_t guard wp_then wp_else in
       let wlp = ifthenelse md res_t guard wlp_then wlp_else in
       if !Options.split_cases > 0
       then let comp = mk_comp md res_t wp wlp [] in
            add_equality_to_post_condition env comp res_t
-      else let wp = mk_Tm_app  md.ite_wp  [S.arg res_t; S.arg wlp; S.arg wp] None wp.pos in
-           let wlp = mk_Tm_app md.ite_wlp [S.arg res_t; S.arg wlp] None wlp.pos in
+      else let wp = mk_Tm_app  (Env.uinst env md.ite_wp)  [S.arg res_t; S.arg wlp; S.arg wp] None wp.pos in
+           let wlp = mk_Tm_app (Env.uinst env md.ite_wlp) [S.arg res_t; S.arg wlp] None wlp.pos in
            mk_comp md res_t wp wlp [] in
     {eff_name=join_effects env lcomp_then.eff_name lcomp_else.eff_name;
      res_typ=lcomp_then.res_typ;
@@ -695,7 +695,7 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
         | hd::tl -> List.fold_left (fun eff (_, lc) -> join_effects env eff lc.eff_name) (snd hd).eff_name tl in
     let bind_cases () =
         let ifthenelse md res_t g wp_t wp_e = 
-            mk_Tm_app md.if_then_else [S.arg res_t; S.arg g; S.arg wp_t; S.arg wp_e] None (Range.union_ranges wp_t.pos wp_e.pos) in
+            mk_Tm_app (Env.uinst env md.if_then_else) [S.arg res_t; S.arg g; S.arg wp_t; S.arg wp_e] None (Range.union_ranges wp_t.pos wp_e.pos) in
         let default_case =
             let post_k = U.arrow [null_binder res_t] (S.mk_Total U.ktype0) in
             let kwp    = U.arrow [null_binder post_k] (S.mk_Total U.ktype0) in
@@ -712,8 +712,8 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
         else let comp = U.comp_to_comp_typ comp in
              let md = Env.get_effect_decl env comp.effect_name in
              let _, wp, wlp = destruct_comp comp in
-             let wp = mk_Tm_app  md.ite_wp  [S.arg res_t; S.arg wlp; S.arg wp] None wp.pos in
-             let wlp = mk_Tm_app md.ite_wlp [S.arg res_t; S.arg wlp] None wlp.pos in
+             let wp = mk_Tm_app  (Env.uinst env md.ite_wp)  [S.arg res_t; S.arg wlp; S.arg wp] None wp.pos in
+             let wlp = mk_Tm_app (Env.uinst env md.ite_wlp) [S.arg res_t; S.arg wlp] None wlp.pos in
              mk_comp md res_t wp wlp [] in
     {eff_name=eff;
      res_typ=res_t;
@@ -731,7 +731,7 @@ let close_comp env bindings (lc:lcomp) =
               let x = {x with sort=t} in
               let bs = [mk_binder x] in
               let wp = U.abs bs wp in
-              mk_Tm_app md.close_wp [S.arg res_t; S.arg t; S.arg wp] None wp0.pos
+              mk_Tm_app (Env.uinst env md.close_wp) [S.arg res_t; S.arg t; S.arg wp] None wp0.pos
 
             | Env.Binding_lid(l, t) ->
               (* TODO: replace every occurrence of l in wp with a fresh bound var, abstract over the bound var and then close it.
@@ -830,7 +830,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
             let md = Env.get_effect_decl env ct.effect_name in
             let x = S.new_bv (Some t.pos) t in
             let xexp = S.bv_to_name x in
-            let wp = mk_Tm_app md.ret [S.arg t; S.arg xexp] (Some k.n) xexp.pos in
+            let wp = mk_Tm_app (Env.uinst env md.ret) [S.arg t; S.arg xexp] (Some k.n) xexp.pos in
             let cret = lcomp_of_comp <| mk_comp md t wp wp [RETURN] in
             let guard = if apply_guard then mk_Tm_app f [S.arg xexp] (Some U.ktype0.n) f.pos else f in
             let eq_ret, _trivial_so_ok_to_discard =
@@ -1001,6 +1001,8 @@ let generalize env (lecs:list<(lbname*term*comp)>) : (list<(lbname*term*univ_var
             (Range.string_of_range e.pos) (Print.lbname_to_string l) (Print.term_to_string (Util.comp_result c));
       (l, e, [], c)) lecs ecs
 
+let generalize_universes (_:env) (_:term) : tscheme = failwith "NYI"
+
 (************************************************************************)
 (* Convertibility *)
 (************************************************************************)
@@ -1050,34 +1052,9 @@ let check_top_level env g lc : (bool * comp) =
        let c = Normalize.normalize_comp steps env c |> Util.comp_to_comp_typ in
        let md = Env.get_effect_decl env c.effect_name in
        let t, wp, _ = destruct_comp c in
-       let vc = mk_Tm_app md.trivial [S.arg t; S.arg wp] (Some U.ktype0.n) (Env.get_range env) in
+       let vc = mk_Tm_app (Env.uinst env md.trivial) [S.arg t; S.arg wp] (Some U.ktype0.n) (Env.get_range env) in
        let g = Rel.conj_guard g (Rel.guard_of_guard_formula <| Rel.NonTrivial vc) in
        discharge g, mk_Comp c
-
-
-//(* Having already seen_args to head (from right to left),
-//   compute the guard, if any, for the next argument,
-//   if head is a short-circuiting operator *)
-//let short_circuit (head:term) (seen_args:args) : option<(formula * term)> =
-//    let short_bin_op_e f : args -> option<(formula * exp)> = function
-//        | [] -> (* no args seen yet *) None
-//        | [(Inr fst, _)] -> f fst |> Some
-//        | _ -> failwith "Unexpexted args to binary operator" in
-//
-//    let table =
-//       let op_and_e e = Util.b2t e, Const.exp_false_bool in
-//       let op_or_e e  = Util.mk_neg (Util.b2t e), Const.exp_true_bool  in
-//       [(Const.op_And,  short_bin_op_e op_and_e);
-//        (Const.op_Or,   short_bin_op_e op_or_e)]  in
-//
-//    match head.n with
-//        | Exp_fvar(fv, _) ->
-//          let lid = fv.v in
-//          begin match Util.find_map table (fun (x, mk) -> if lid_equals x lid then Some (mk seen_args) else None) with
-//            | None -> None
-//            | Some g -> g
-//          end
-//        | _ -> None
 
 (* Having already seen_args to head (from right to left),
    compute the guard, if any, for the next argument,

@@ -101,6 +101,7 @@ val current_module         : env -> lident
 val is_projector           : env -> lident -> bool
 val is_datacon             : env -> lident -> bool
 val is_record              : env -> lident -> bool
+val uinst                  : env -> tscheme -> term
 
 (* Introducing identifiers and updating the environment *)
 val push_sigelt        : env -> sigelt -> env

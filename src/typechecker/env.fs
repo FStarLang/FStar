@@ -294,7 +294,7 @@ let lookup_definition env lid =
 let try_lookup_effect_lid env (ftv:lident) : option<typ> =
   match lookup_qname env ftv with
     | Some (Inr (Sig_new_effect(ne, _))) ->
-      Util.arrow ne.binders (mk_Total ne.signature) |> Some
+      inst_tscheme (ne.univs, Util.arrow ne.binders (mk_Total (inst_tscheme ne.signature))) |> Some
     | Some (Inr (Sig_effect_abbrev (lid, binders, _, _, _))) ->
       Util.arrow binders (mk_Total Syntax.teff) |> Some
     | _ ->
@@ -348,6 +348,9 @@ let is_projector env (l:lident) : bool =
           Util.for_some (function Projector _ -> true | _ -> false) quals
         | _ -> false
 
+let uinst env ((us, t):tscheme) : term = 
+    let us = us |> List.map (fun _ -> new_u_univ()) in
+    mk (Tm_uinst(t, us)) None (get_range env)
 
 ////////////////////////////////////////////////////////////
 // Operations on the monad lattice                        //
@@ -376,7 +379,8 @@ let wp_sig_aux decls m =
   match decls |> Util.find_opt (fun d -> lid_equals d.mname m) with
   | None -> failwith (Util.format1 "Impossible: declaration for monad %s not found" m.str)
   | Some md ->
-    match md.signature.n with
+    let signature = inst_tscheme md.signature in
+    match signature.n with
       | Tm_arrow([(a, _); (wp, _); (wlp, _)], c) when (is_teff (comp_result c)) -> a, wp.sort
       | _ -> failwith "Impossible"
 

@@ -61,8 +61,10 @@ type universe =
   | U_unif  of Unionfind.uvar<option<universe>>
   | U_unknown
 and univ_var = ident
-type univ_vars = list<univ_var>
-type universes = list<universe>
+
+type universe_uvar = Unionfind.uvar<option<universe>>
+type univ_vars     = list<univ_var>
+type universes     = list<universe>
 
 type term' =
   | Tm_bvar       of bv                //bound variable, referenced by de Bruijn index
@@ -205,24 +207,24 @@ type sub_eff = {
   lift: typ
  }
 type eff_decl = {
-    mname:lident;
-    binders:binders;
-    qualifiers:list<qualifier>;
-    signature:typ;
-    ret:typ;
-    bind_wp:typ;
-    bind_wlp:typ;
-    if_then_else:typ;
-    ite_wp:typ;
-    ite_wlp:typ;
-    wp_binop:typ;
-    wp_as_type:typ;
-    close_wp:typ;
-    close_wp_t:typ;
-    assert_p:typ;
-    assume_p:typ;
-    null_wp:typ;
-    trivial:typ;
+    mname       :lident;
+    univs       :univ_vars;
+    binders     :binders;
+    qualifiers  :list<qualifier>;
+    signature   :tscheme;
+    ret         :tscheme;
+    bind_wp     :tscheme;
+    bind_wlp    :tscheme;
+    if_then_else:tscheme;
+    ite_wp      :tscheme;
+    ite_wlp     :tscheme;
+    wp_binop    :tscheme;
+    wp_as_type  :tscheme;
+    close_wp    :tscheme;
+    assert_p    :tscheme;
+    assume_p    :tscheme;
+    null_wp     :tscheme;
+    trivial     :tscheme;
 }
 and sigelt =
   | Sig_tycon          of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t 

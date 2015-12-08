@@ -1372,102 +1372,181 @@ and tc_check_tot_or_gtot_term env e t : term
 
 
 (*****************Type-checking the signature of a module*****************************)
+let tc_trivial_guard env t = 
+  let t, c, g = tc_tot_or_gtot_term env t in
+  Rel.try_discharge_guard env g;
+  t,c
 
-let tc_tparams env (tps:binders) : (binders * Env.env) =
-    let tps, env, g = tc_binders env tps in
-    TcUtil.force_trivial env g;
-    tps, env
+let tc_check_trivial_guard env t k = 
+  let t, c, g = tc_check_tot_or_gtot_term env t k in
+  Rel.try_discharge_guard env g;
+  t
 
-let a_kwp_a env m s = match s.n with
-  | Kind_arrow([(Inl a, _);
-                (Inl wp, _);
-                (Inl _, _)], _) -> a, wp.sort
-  | _ -> raise (Error(Tc.Errors.unexpected_signature_for_monad env m s, range_of_lid m))
+let tc_tparams env (tps:binders) : (binders * Env.env * universes) =
+    let tps, env, g, us = tc_binders env tps in
+    TcUtil.discharge_guard env g;
+    tps, env, us
 
-let rec tc_eff_decl env (m:Syntax.eff_decl)  =
-  let binders, env, g = tc_binders env m.binders in
-  TcUtil.discharge_guard env g;
-  let mk = tc_kind_trivial env m.signature in
-  let a, kwp_a = a_kwp_a env m.mname mk in
-  let a_typ = Util.btvar_to_typ a in
-  let b = Util.gen_bvar_p (range_of_lid m.mname) ktype in
-  let b_typ = Util.btvar_to_typ b in
-  let kwp_b = Util.subst_kind [Inl(a.v, b_typ)] kwp_a in
-  let kwlp_a = kwp_a in
-  let kwlp_b = kwp_b in
-  let a_kwp_b = mk_Kind_arrow([null_v_binder a_typ], kwp_b) a_typ.pos in
-  let a_kwlp_b = a_kwp_b in
-  let w k = k (range_of_lid m.mname) in
+let destruct_monad_signature env (m:eff_decl) = 
+    let fail () = raise (Error(Errors.unexpected_signature_for_monad env m.mname (snd m.signature), range_of_lid m.mname)) in
+    let msig = Env.uinst env m.signature in 
+    match msig.n with
+      | Tm_arrow(bs, _) -> 
+        let bs = SS.open_binders bs in 
+        begin match bs with 
+            | [(a, _);(wp, _); (_wlp, _)] -> a, wp.sort
+            | _ -> fail()
+        end
+      | _ -> fail()
+
+let a_kwp_a env m s = 
+ let fail () = raise (Error(Errors.unexpected_signature_for_monad env m s, range_of_lid m)) in
+ match s.n with
+  | Tm_arrow(bs, c) -> 
+    let bs = SS.open_binders bs in 
+    begin match bs with 
+        | [(a, _);(wp, _); (_wlp, _)] -> a, wp.sort
+        | _ -> fail()
+    end
+  | _ -> fail()
+
+let tc_eff_decl env0 (m:Syntax.eff_decl)  =
+  assert (m.univs = []); //no explicit universe variables in the source; Q: But what about re-type-checking a program?
+  assert (fst m.signature = []); //no explicit universe variables in the signature either
+  let binders, env, us = tc_tparams env0 m.binders in
+  let msig, _    = tc_trivial_guard env (snd m.signature) in
+  let msig = TcUtil.generalize_universes env msig in 
+  let m = {m with signature=msig} in
+
+  let check_and_gen env (_,t) k = 
+    TcUtil.generalize_universes env (tc_check_trivial_guard env t k) in
+
   let ret =
-    let expected_k = w <| mk_Kind_arrow([t_binder a; null_v_binder a_typ], kwp_a) in
-    tc_typ_check_trivial env m.ret expected_k |> norm_t env in
+    let a, kwp_a = destruct_monad_signature env m in
+    let expected_k = Util.arrow [S.mk_binder a; S.null_binder (S.bv_to_name a)] (S.mk_Total kwp_a) in
+    check_and_gen env m.ret expected_k in
+
   let bind_wp =
-    let expected_k = w <| mk_Kind_arrow([t_binder a; t_binder b;
-                                         null_t_binder kwp_a; null_t_binder kwlp_a;
-                                         null_t_binder a_kwp_b; null_t_binder a_kwlp_b],
-                                         kwp_b) in
-    tc_typ_check_trivial env m.bind_wp expected_k |> norm_t env  in
+    let a, wp_a = destruct_monad_signature env m in
+    let wlp_a = wp_a in
+    let b = S.new_bv (Some (range_of_lid m.mname)) (TcUtil.type_u() |> fst) in
+    let wp_b = SS.subst [NT(a, S.bv_to_name b)] wp_a in
+    let a_wp_b = Util.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wp_b) in
+    let a_wlp_b = a_wp_b in
+    let expected_k = Util.arrow [S.mk_binder a; S.mk_binder b; 
+                                 S.null_binder wp_a;   S.null_binder wlp_a;
+                                 S.null_binder a_wp_b; S.null_binder a_wlp_b]
+                                 (S.mk_Total wp_b) in
+    check_and_gen env m.bind_wp expected_k in
+
   let bind_wlp =
-   let expected_k = w <| mk_Kind_arrow([t_binder a; t_binder b;
-                                        null_t_binder kwlp_a;
-                                        null_t_binder a_kwlp_b],
-                                        kwlp_b) in
-   tc_typ_check_trivial env m.bind_wlp expected_k |> norm_t env in
+    let a, wlp_a = destruct_monad_signature env m in
+    let b = S.new_bv (Some (range_of_lid m.mname)) (TcUtil.type_u() |> fst) in
+    let wlp_b = SS.subst [NT(a, S.bv_to_name b)] wlp_a in
+    let a_wlp_b = Util.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wlp_b) in
+    let expected_k = Util.arrow [S.mk_binder a; S.mk_binder b; 
+                                 S.null_binder wlp_a;
+                                 S.null_binder a_wlp_b]
+                                 (S.mk_Total wlp_b) in
+    check_and_gen env m.bind_wlp expected_k in
+
   let if_then_else =
-    let expected_k = w <| mk_Kind_arrow([t_binder a;
-                                         t_binder b;
-                                         null_t_binder kwp_a;
-                                         null_t_binder kwp_a], kwp_a) in
-    tc_typ_check_trivial env m.if_then_else expected_k |> norm_t env in
+    let a, wp_a = destruct_monad_signature env m in
+    let p = S.new_bv (Some (range_of_lid m.mname)) (TcUtil.type_u() |> fst) in
+    let expected_k = Util.arrow [S.mk_binder a; S.mk_binder p; 
+                                 S.null_binder wp_a;
+                                 S.null_binder wp_a]
+                                 (S.mk_Total wp_a) in
+    check_and_gen env m.if_then_else expected_k in
+
   let ite_wp =
-    let expected_k = w <| mk_Kind_arrow([t_binder a;
-                                         null_t_binder kwlp_a;
-                                         null_t_binder kwp_a],
-                                         kwp_a) in
-    tc_typ_check_trivial env m.ite_wp expected_k |> norm_t env in
+    let a, wp_a = destruct_monad_signature env m in
+    let wlp_a = wp_a in
+    let expected_k = Util.arrow [S.mk_binder a; 
+                                 S.null_binder wlp_a;
+                                 S.null_binder wp_a]
+                                 (S.mk_Total wp_a) in
+    check_and_gen env m.ite_wp expected_k in
+
   let ite_wlp =
-    let expected_k = w <| mk_Kind_arrow([t_binder a;
-                                         null_t_binder kwlp_a],
-                                         kwlp_a) in
-    tc_typ_check_trivial env m.ite_wlp expected_k |> norm_t env in
+    let a, wp_a = destruct_monad_signature env m in
+    let wlp_a = wp_a in
+    let expected_k = Util.arrow [S.mk_binder a;
+                                 S.null_binder wlp_a]
+                                (S.mk_Total wlp_a) in
+    check_and_gen env m.ite_wlp expected_k in
+
   let wp_binop =
-    let expected_k = w <| mk_Kind_arrow([t_binder a;
-                                         null_t_binder kwp_a;
-                                         null_t_binder (Const.kbin ktype ktype ktype);
-                                         null_t_binder kwp_a],
-                                         kwp_a) in
-    tc_typ_check_trivial env m.wp_binop expected_k |> norm_t env in
+    let a, wp_a = destruct_monad_signature env m in    
+    let bin_op = 
+        let t1, u1 = TcUtil.type_u() in
+        let t2, u2 = TcUtil.type_u() in 
+        let t = mk (Tm_type(S.U_max(u1, u2))) None (Env.get_range env) in
+        Util.arrow [S.null_binder t1; S.null_binder t2] (S.mk_Total t) in
+    let expected_k = Util.arrow [S.mk_binder a;
+                                 S.null_binder wp_a;
+                                 S.null_binder bin_op;
+                                 S.null_binder wp_a]
+                                 (S.mk_Total wp_a) in
+    check_and_gen env m.wp_binop expected_k in
+
   let wp_as_type =
-    let expected_k = w <| mk_Kind_arrow([t_binder a;
-                                         null_t_binder kwp_a],
-                                        ktype) in
-    tc_typ_check_trivial env m.wp_as_type expected_k |> norm_t env in
+    let a, wp_a = destruct_monad_signature env m in    
+    let t, _ = TcUtil.type_u() in
+    let expected_k = Util.arrow [S.mk_binder a;
+                                 S.null_binder wp_a]
+                                (S.mk_Total t) in
+    check_and_gen env m.wp_as_type expected_k in
+
   let close_wp =
-    let expected_k = w <| mk_Kind_arrow([t_binder b; t_binder a;
-                                         null_t_binder a_kwp_b],
-                                        kwp_b) in
-    tc_typ_check_trivial env m.close_wp expected_k |> norm_t env in
-  let close_wp_t =
-    let expected_k = w <| mk_Kind_arrow([t_binder a;
-                                         null_t_binder (w <| mk_Kind_arrow([null_t_binder ktype], kwp_a))],
-                                        kwp_a)  in
-    tc_typ_check_trivial env m.close_wp_t expected_k |> norm_t env in
-  let assert_p, assume_p =
-    let expected_k =   w <| mk_Kind_arrow([t_binder a;
-                                           null_t_binder ktype;
-                                           null_t_binder kwp_a], kwp_a) in
-    tc_typ_check_trivial env m.assert_p expected_k |> norm_t env, tc_typ_check_trivial env m.assume_p expected_k |> norm_t env in
+    let a, wp_a = destruct_monad_signature env m in
+    let b = S.new_bv (Some (range_of_lid m.mname)) (TcUtil.type_u() |> fst) in
+    let wp_b = SS.subst [NT(a, S.bv_to_name b)] wp_a in
+    let a_wp_b = Util.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wp_b) in
+    let expected_k = Util.arrow [S.mk_binder b; S.mk_binder a; S.null_binder a_wp_b]
+                                (S.mk_Total wp_b) in
+    check_and_gen env m.close_wp expected_k in
+
+  let assert_p =
+    let a, wp_a = destruct_monad_signature env m in
+    let expected_k = Util.arrow [S.mk_binder a;
+                                 S.null_binder (TcUtil.type_u() |> fst);
+                                 S.null_binder wp_a] 
+                                 (S.mk_Total wp_a) in
+    check_and_gen env m.assert_p expected_k in
+
+  let assume_p =
+    let a, wp_a = destruct_monad_signature env m in
+    let expected_k = Util.arrow [S.mk_binder a;
+                                 S.null_binder (TcUtil.type_u() |> fst);
+                                 S.null_binder wp_a] 
+                                 (S.mk_Total wp_a) in
+    check_and_gen env m.assume_p expected_k in
+
   let null_wp =
-      let expected_k = w <| mk_Kind_arrow([t_binder a], kwp_a) in
-      tc_typ_check_trivial env m.null_wp expected_k |> norm_t env in
+    let a, wp_a = destruct_monad_signature env m in
+    let expected_k = Util.arrow [S.mk_binder a] 
+                                (S.mk_Total wp_a) in
+    check_and_gen env m.null_wp expected_k in
+
   let trivial_wp =
-      let expected_k = w <| mk_Kind_arrow([t_binder a; null_t_binder kwp_a], ktype) in
-      tc_typ_check_trivial env m.trivial expected_k |> norm_t env in
+    let a, wp_a = destruct_monad_signature env m in
+    let expected_k = Util.arrow [S.mk_binder a] 
+                                (S.mk_Total wp_a) in
+    check_and_gen env m.trivial expected_k in
+
+  let univs = 
+    let t0 = mk (Tm_type(S.U_zero)) None (Env.get_range env0) in
+    let t = Util.arrow binders (S.mk_Total t0) in
+    let (univs, _) = TcUtil.generalize_universes env0 t in 
+    univs in
+
     {
         mname=m.mname;
         qualifiers=m.qualifiers;
+        univs=univs;
         binders=binders;
-        signature=mk;
+        signature=m.signature;
         ret=ret;
         bind_wp=bind_wp;
         bind_wlp=bind_wlp;
@@ -1477,444 +1556,443 @@ let rec tc_eff_decl env (m:Syntax.eff_decl)  =
         wp_binop=wp_binop;
         wp_as_type=wp_as_type;
         close_wp=close_wp;
-        close_wp_t=close_wp_t;
         assert_p=assert_p;
         assume_p=assume_p;
         null_wp=null_wp;
         trivial=trivial_wp
     }
 
-and tc_decl env se deserialized = match se with
-    | Sig_pragma(p, r) ->
-        begin match p with
-            | SetOptions o ->
-                begin match Options.set_options o with
-                    | Getopt.GoOn -> se, env
-                    | Getopt.Help  -> raise (Error ("Failed to process pragma: use 'fstar --help' to see which options are available", r))
-                    | Getopt.Die s -> raise (Error ("Failed to process pragma: " ^s, r))
-                end
-            | ResetOptions ->
-                env.solver.refresh();
-                Options.reset_options() |> ignore;
-                se, env
-        end
-
-    | Sig_new_effect(ne, r) ->
-      let ne = tc_eff_decl env ne in
-      let se = Sig_new_effect(ne, r) in
-      let env = Env.push_sigelt env se in
-      se, env
-
-    | Sig_sub_effect(sub, r) ->
-      let a, kwp_a_src = a_kwp_a env sub.source (Env.lookup_effect_lid env sub.source) in
-      let b, kwp_b_tgt = a_kwp_a env sub.target (Env.lookup_effect_lid env sub.target) in
-      let kwp_a_tgt = Util.subst_kind [Inl(b.v, Util.btvar_to_typ a)] kwp_b_tgt in
-      let expected_k = r |> mk_Kind_arrow([t_binder a; null_t_binder kwp_a_src], kwp_a_tgt) in
-      let lift = tc_typ_check_trivial env sub.lift expected_k in
-      let sub = {sub with lift=lift} in
-      let se = Sig_sub_effect(sub, r) in
-      let env = Env.push_sigelt env se in
-      se, env
-
-    | Sig_tycon (lid, tps, k, _mutuals, _data, tags, r) ->
-      let env = Env.set_range env r in
-      let tps, env = tc_tparams env tps in
-      let k = match k.n with
-        | Kind_unknown -> ktype
-        | _ -> tc_kind_trivial env k in
-      if debug env Options.Extreme then Util.fprint2 "Checked %s at kind %s\n" (Print.sli lid) (Print.kind_to_string (Util.close_kind tps k));
-      let k = norm_k env k in
-      let se = Sig_tycon(lid, tps, k, _mutuals, _data, tags, r) in
-      let _ = match compress_kind k with
-        | {n=Kind_uvar _} -> TcUtil.force_trivial env <| Tc.Rel.keq env None k ktype
-        | _ -> () in
-      let env = Env.push_sigelt env se in
-      se, env
-
-    | Sig_kind_abbrev(lid, tps, k, r) ->
-      let env0 = env in
-      let env = Env.set_range env r in
-      let tps, env = tc_tparams env tps in
-      let k = tc_kind_trivial env k in
-      let se = Sig_kind_abbrev(lid, tps, k, r) in
-      let env = Env.push_sigelt env0 se in
-      se, env
-
-    | Sig_effect_abbrev(lid, tps, c, tags, r) ->
-      let env0 = env in
-      let env = Env.set_range env r in
-      let tps, env = tc_tparams env tps in
-      let c, g = tc_comp env c in
-      let tags = tags |> List.map (function
-        | DefaultEffect None ->
-          let c' = Tc.Normalize.weak_norm_comp env c in
-          DefaultEffect (c'.effect_name |> Some)
-        | t -> t) in
-      let se = Sig_effect_abbrev(lid, tps, c, tags, r) in
-      let env = Env.push_sigelt env0 se in
-      se, env
-
-    | Sig_typ_abbrev(lid, tps, k, t, tags, r) ->
-      let env = Env.set_range env r in
-      let tps, env' = tc_tparams env tps in
-      let t, k1 = tc_typ_trivial env' t |> (fun (t, k) -> norm_t env' t, norm_k env' k) in
-      let k2 = match k.n with
-        | Kind_unknown -> k1
-        | _ -> let k2 = tc_kind_trivial env' k |> norm_k env in
-               TcUtil.force_trivial env' <| Rel.keq env' (Some t) k1 k2; k2 in
-      let se = Sig_typ_abbrev(lid, tps, k2, t, tags, r) in
-      let env = Env.push_sigelt env se in
-      se, env
-
-    | Sig_datacon(lid, t, (tname, tps, k), quals, mutuals, r) ->
-      let env = Env.set_range env r in
-      let tps, env, g = tc_binders env tps in
-      let tycon = tname, tps, k in
-      TcUtil.discharge_guard env g;
-      let t = tc_typ_check_trivial env t ktype in
-      let t = norm_t env t in
-
-      let formals, result_t = match Util.function_formals t with
-        | Some (formals, cod) -> formals, Util.comp_result cod
-        | _ -> [], t in
-
-      let cardinality_and_positivity_check (formal:binder) = 
-        let check_positivity formals = 
-            formals |> List.iter (fun (a, _) -> match a with
-                | Inl _ -> ()
-                | Inr y ->
-                    let t = y.sort in
-                    Visit.collect_from_typ (fun b t ->
-                    match (Util.compress_typ t).n with
-                    | Typ_const f ->
-                        begin match List.tryFind (lid_equals f.v) mutuals with
-                        | None -> ()
-                        | Some tname ->
-                            raise (Error (Tc.Errors.constructor_fails_the_positivity_check env (Util.fvar (Some Data_ctor) lid (range_of_lid lid)) tname, range_of_lid lid))
-                        end
-                    | _ -> ()) () t) in
-        match fst formal with
-        | Inl a -> 
-          begin 
-              if Options.warn_cardinality()
-              then Tc.Errors.warn r (Tc.Errors.cardinality_constraint_violated lid a)
-              else if Options.check_cardinality()
-              then raise (Error(Tc.Errors.cardinality_constraint_violated lid a, r))
-          end;
-          let k = Normalize.norm_kind [Normalize.Beta; Normalize.DeltaHard] env a.sort in
-          begin match k.n with 
-            | Kind_arrow _ -> 
-              let formals, _ = Util.kind_formals k in
-              check_positivity formals
-            | _ -> ()
-          end
-
-        | Inr x ->
-          let t = Normalize.norm_typ [Normalize.Beta; Normalize.DeltaHard] env x.sort in
-          if Util.is_function_typ t && Util.is_pure_or_ghost_function t
-          then let formals, _ = Util.function_formals t |> Util.must in
-               check_positivity formals in
-
-      formals |> List.iter cardinality_and_positivity_check;
-
-      let _ = match destruct result_t tname with
-        | Some args ->
-          if not (List.length args >= List.length tps
-               && List.forall2 (fun (a, _) (b, _) -> match a, b with 
-                             | Inl ({n=Typ_btvar aa}), Inl bb -> Util.bvar_eq aa bb
-                             | Inr ({n=Exp_bvar xx}), Inr yy -> Util.bvar_eq xx yy
-                             | _ -> false) (Util.first_N (List.length tps) args |> fst) tps)
-          then let expected_t = match tps with 
-                | [] -> Util.ftv tname kun
-                | _ -> 
-                  let _, expected_args = Util.args_of_binders tps in
-                  Util.mk_typ_app (Util.ftv tname kun) expected_args in 
-               raise (Error (Tc.Errors.constructor_builds_the_wrong_type env (Util.fvar (Some Data_ctor) lid (range_of_lid lid)) result_t expected_t, range_of_lid lid))
-        | _ -> raise (Error (Tc.Errors.constructor_builds_the_wrong_type env (Util.fvar (Some Data_ctor) lid (range_of_lid lid)) result_t (Util.ftv tname kun), range_of_lid lid)) in
-      let se = Sig_datacon(lid, t, tycon, quals, mutuals, r) in
-      let env = Env.push_sigelt env se in
-      if log env then Util.print_string <| Util.format2 "data %s : %s\n" lid.str (Tc.Normalize.typ_norm_to_string env t);
-      se, env
-
-    | Sig_val_decl(lid, t, quals, r) ->
-      let env = Env.set_range env r in
-      let t = tc_typ_check_trivial env t ktype |> Tc.Normalize.norm_typ [Normalize.Beta; Normalize.SNComp] env in
-      TcUtil.check_uvars r t;
-      let se = Sig_val_decl(lid, t, quals, r) in
-      let env = Env.push_sigelt env se in
-      if log env then Util.print_string <| Util.format2 "val %s : %s\n" lid.str (Tc.Normalize.typ_norm_to_string env t);
-      se, env
-
-    | Sig_assume(lid, phi, quals, r) ->
-      let env = Env.set_range env r in
-      let phi = tc_typ_check_trivial env phi ktype |> norm_t env in
-      TcUtil.check_uvars r phi;
-      let se = Sig_assume(lid, phi, quals, r) in
-      let env = Env.push_sigelt env se in
-      se, env
-
-    | Sig_let(lbs, r, lids, quals) ->
-      //let is_rec = fst lbs in
-      let env = Env.set_range env r in
-      let generalize, lbs' = snd lbs |> List.fold_left (fun (gen, lbs) lb ->
-        let gen, lb = match lb with
-          | {lbname=Inl _} -> failwith "impossible"
-          | {lbname=Inr l; lbtyp=t; lbdef=e} ->
-            let gen, lb = match Env.try_lookup_val_decl env l with
-              | None -> gen, lb
-              | Some (t', _) ->
-                if debug env Options.Medium
-                then Util.fprint2 "Using annotation %s for let binding %s\n" (Print.term_to_string t') l.str;
-                match t.n with
-                  | Typ_unknown ->
-                    false, mk_lb (Inr l, Const.effect_ALL_lid, t', e) //explicit annotation provided; do not generalize
-                  | _ ->
-                   if not(deserialized)
-                   then Util.print_string <| Util.format1 "%s: Warning: Annotation from val declaration overrides inline type annotation\n" (Range.string_of_range r);
-                   false, mk_lb (Inr l, Const.effect_ALL_lid, t', e) in
-             gen, lb in
-        gen, lb::lbs) (true, []) in
-      let lbs' = List.rev lbs' in
-      let e = mk_Exp_let((fst lbs, lbs'), syn' env Recheck.t_unit <| mk_Exp_constant(Const_unit)) None r in
-      let se, lbs = match tc_exp ({env with generalize=generalize}) e with
-        | {n=Exp_let(lbs, e)}, _, g when Rel.is_trivial g ->
-            let quals = match e.n with
-                | Exp_meta(Meta_desugared(_, Masked_effect)) -> HasMaskedEffect::quals
-                | _ -> quals in
-            Sig_let(lbs, r, lids, quals), lbs
-        | _ -> failwith "impossible" in
-      if log env
-      then Util.fprint1 "%s\n" (snd lbs |> List.map (fun lb ->
-            let should_log = match Env.try_lookup_val_decl env (right lb.lbname) with
-                | None -> true
-                | _ -> false in
-            if should_log
-            then Util.format2 "let %s : %s" (Print.lbname_to_string lb.lbname) (Tc.Normalize.typ_norm_to_string env lb.lbtyp)
-            else "") |> String.concat "\n");
-      let env = Env.push_sigelt env se in
-      se, env
-
-    | Sig_main(e, r) ->
-      let env = Env.set_range env r in
-      let env = Env.set_expected_typ env Recheck.t_unit in
-      let e, c, g1 = tc_exp env e in
-      let g1 = Rel.solve_deferred_constraints env g1 in
-      let e, _, g = check_expected_effect env (Some (Util.ml_comp Recheck.t_unit r)) (e, c.comp()) in
-      TcUtil.discharge_guard env (Rel.conj_guard g1 g);
-      let se = Sig_main(e, r) in
-      let env = Env.push_sigelt env se in
-      se, env
-
-    | Sig_bundle(ses, quals, lids, r) ->
-      let env = Env.set_range env r in
-      let tycons, rest = ses |> List.partition (function Sig_tycon _ -> true | _ -> false) in
-      let abbrevs, rest = rest |> List.partition (function Sig_typ_abbrev _ -> true | _ -> false) in
-      let recs = abbrevs |> List.map (function
-        | Sig_typ_abbrev(lid, tps, k, t, [], r) ->
-           let k = match k.n with
-            | Kind_unknown -> Tc.Rel.new_kvar r tps |> fst
-            | _ -> k in
-           Sig_tycon(lid, tps, k, [], [], [], r), t
-        | _ -> failwith "impossible") in
-      let recs, abbrev_defs = List.split recs in
-      let msg = if !Options.logQueries
-                then Util.format1 "Recursive bindings: %s" (Print.sigelt_to_string_short se)
-                else "" in
-      env.solver.push msg; //Push a context in the solver to check the recursively bound definitions
-      let tycons, _, _ = tc_decls false env tycons deserialized in
-      let recs, _, _ = tc_decls false env recs deserialized in
-      let env1 = Env.push_sigelt env (Sig_bundle(tycons@recs, quals, lids, r)) in
-      let rest, _, _ = tc_decls false env1 rest deserialized in
-      let abbrevs = List.map2 (fun se t -> match se with
-        | Sig_tycon(lid, tps, k, [], [], [], r) ->
-          let tt = Util.close_with_lam tps (mk_Typ_ascribed(t, k) t.pos) in
-          let tt, _ = tc_typ_trivial env1 tt in
-          let tps, t = match tt.n with
-            | Typ_lam(bs, t) -> bs, t
-            | _ -> [], tt in
-          Sig_typ_abbrev(lid, tps, compress_kind k, t, [], r)
-        | _ -> failwith (Util.format1 "(%s) Impossible" (Range.string_of_range r)))
-        recs abbrev_defs in
-      env.solver.pop msg;
-      let se = Sig_bundle(tycons@abbrevs@rest, quals, lids, r) in
-      let env = Env.push_sigelt env se in
-      se, env
-
-and tc_decls for_export env ses deserialized =
- let ses, all_non_private, env =
-  ses |> List.fold_left (fun (ses, all_non_private, (env:Env.env)) se ->
-          if debug env Options.Low then Util.print_string (Util.format1 "Checking sigelt\t%s\n" (Print.sigelt_to_string se));
-
-          let se, env = tc_decl env se deserialized in
-          env.solver.encode_sig env se;
-
-          let non_private_decls =
-            if for_export
-            then non_private env se
-            else [] in
-
-          se::ses, non_private_decls::all_non_private, env)
-  ([], [], env) in
-  List.rev ses, List.rev all_non_private |> List.flatten, env
-
-and non_private env se : list<sigelt> =
-   let is_private quals = List.contains Private quals in
-   match se with
-    | Sig_bundle(ses, quals, _, _) ->
-//      if is_private quals
-//      then let ses = ses |> List.filter (function
-//                | Sig_datacon _ -> false
-//                | _ -> true) in
-//           ses |> List.map (function
-//            | Sig_tycon(lid, bs, k, mutuals, datas, quals, r) -> Sig_tycon(lid, bs, k, [], [], Assumption::quals, r)
-//            | se -> se)
-//      else
-      [se]
-
-   | Sig_tycon(_, _, _, _, _, quals, r) ->
-     if is_private quals
-     then []
-     else [se]
-
-   | Sig_typ_abbrev(l, bs, k, t, quals, r) ->
-     if is_private quals
-     then [Sig_tycon(l, bs, k, [], [], Assumption::quals, r)]
-     else [se]
-
-   | Sig_assume(_, _, quals, _) ->
-     if is_private quals
-     then []
-     else [se]
-
-   | Sig_val_decl(_, _, quals, _) ->
-     if is_private quals
-     then []
-     else [se]
-
-   | Sig_main  _ -> []
-
-   | Sig_new_effect     _
-   | Sig_sub_effect     _
-   | Sig_effect_abbrev  _
-   | Sig_pragma         _
-   | Sig_kind_abbrev    _ -> [se]
-
-   | Sig_datacon _ -> failwith "Impossible"
-
-   | Sig_let(lbs, r, l, _) ->
-     let check_priv lbs =
-        let is_priv = function
-            | {lbname=Inr l} ->
-            begin match Env.try_lookup_val_decl env l with
-                    | Some (_, qs) -> List.contains Private qs
-                    | _ -> false
-            end
-            | _ -> false in
-        let some_priv = lbs |> Util.for_some is_priv in
-        if some_priv
-        then if lbs |> Util.for_some (fun x -> is_priv x |> not)
-             then raise (Error("Some but not all functions in this mutually recursive nest are marked private", r))
-             else true
-        else false in
-
-
-     let pure_funs, rest = snd lbs |> List.partition (fun lb -> Util.is_pure_or_ghost_function lb.lbtyp && not <| Util.is_lemma lb.lbtyp) in
-     begin match pure_funs, rest with
-        | _::_, _::_ ->
-          raise (Error("Pure functions cannot be mutually recursive with impure functions", r))
-
-        | _::_, [] ->
-          if check_priv pure_funs
-          then []
-          else [se]
-
-        | [], _::_ ->
-          if check_priv rest
-          then []
-          else rest |> List.collect (fun lb -> match lb.lbname with
-                | Inl _ -> failwith "impossible"
-                | Inr l -> [Sig_val_decl(l, lb.lbtyp, [Assumption], range_of_lid l)])
-
-
-        | [], [] -> failwith "Impossible"
-     end
-
-let get_exports env modul non_private_decls =
-    let assume_vals decls =
-        decls |> List.map (function
-            | Sig_val_decl(lid, t, quals, r) -> Sig_val_decl(lid, t, Assumption::quals, r)
-            | s -> s) in
-    if modul.is_interface
-    then non_private_decls
-    else let exports = Util.find_map (Env.modules env) (fun m ->
-            if (m.is_interface && Syntax.lid_equals modul.name m.name)
-            then Some (m.exports |> assume_vals)
-            else None) in
-         match exports with
-            | None -> non_private_decls
-            | Some e -> e
-
-let tc_partial_modul env modul =
-  let name = Util.format2 "%s %s"  (if modul.is_interface then "interface" else "module") modul.name.str in
-  let msg = "Internals for " ^name in
-  let env = {env with Env.is_iface=modul.is_interface; admit=not (Options.should_verify modul.name.str)} in
-  if not (lid_equals modul.name Const.prims_lid) then env.solver.push msg;
-  let env = Env.set_current_module env modul.name in
-  let ses, non_private_decls, env = tc_decls true env modul.declarations modul.is_deserialized in
-  {modul with declarations=ses}, non_private_decls, env
-
-let tc_more_partial_modul env modul decls =
-  let ses, non_private_decls, env = tc_decls true env decls false in
-  let modul = {modul with declarations=modul.declarations@ses} in
-  modul, non_private_decls, env
-
-let finish_partial_modul env modul npds =
-  let exports = get_exports env modul npds in
-  let modul = {modul with exports=exports; is_interface=modul.is_interface; is_deserialized=modul.is_deserialized} in
-  let env = Env.finish_module env modul in
-  if not (lid_equals modul.name Const.prims_lid)
-  then begin
-    env.solver.pop ("Ending modul " ^ modul.name.str);
-    if  not modul.is_interface
-    ||  List.contains modul.name.str !Options.admit_fsi
-    then env.solver.encode_modul env modul;
-    env.solver.refresh();
-    Options.reset_options() |> ignore
-  end;
-  modul, env
-
-let tc_modul env modul =
-  let modul, non_private_decls, env = tc_partial_modul env modul in
-  finish_partial_modul env modul non_private_decls
-
-let add_modul_to_tcenv (en: env) (m: modul) :env =
-  let do_sigelt (en: env) (elt: sigelt) :env =
-    let env = Env.push_sigelt en elt in
-    env.solver.encode_sig env elt;
-    env
-  in
-  let en = Env.set_current_module en m.name in
-  Env.finish_module (List.fold_left do_sigelt en m.exports) m
-
-let check_module env m =
-    if List.length !Options.debug <> 0
-    then Util.fprint2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.sli m.name);
-
-    let m, env =
-        if m.is_deserialized then
-          let env' = add_modul_to_tcenv env m in
-          m, env'
-        else begin
-           let m, env = tc_modul env m in
-           if !Options.serialize_mods
-           then begin
-                let c_file_name = Options.get_fstar_home () ^ "/" ^ Options.cache_dir ^ "/" ^ (text_of_lid m.name) ^ ".cache" in
-                print_string ("Serializing module " ^ (text_of_lid m.name) ^ "\n");
-                SSyntax.serialize_modul (get_owriter c_file_name) m
-           end;
-           m, env
-      end
-    in
-    if Options.should_dump m.name.str then Util.fprint1 "%s\n" (Print.modul_to_string m);
-    [m], env
-
+//let rec tc_decl env se deserialized = match se with
+//    | Sig_pragma(p, r) ->
+//        begin match p with
+//            | SetOptions o ->
+//                begin match Options.set_options o with
+//                    | Getopt.GoOn -> se, env
+//                    | Getopt.Help  -> raise (Error ("Failed to process pragma: use 'fstar --help' to see which options are available", r))
+//                    | Getopt.Die s -> raise (Error ("Failed to process pragma: " ^s, r))
+//                end
+//            | ResetOptions ->
+//                env.solver.refresh();
+//                Options.reset_options() |> ignore;
+//                se, env
+//        end
+//
+//    | Sig_new_effect(ne, r) ->
+//      let ne = tc_eff_decl env ne in
+//      let se = Sig_new_effect(ne, r) in
+//      let env = Env.push_sigelt env se in
+//      se, env
+//
+//    | Sig_sub_effect(sub, r) ->
+//      let a, kwp_a_src = a_kwp_a env sub.source (Env.lookup_effect_lid env sub.source) in
+//      let b, kwp_b_tgt = a_kwp_a env sub.target (Env.lookup_effect_lid env sub.target) in
+//      let kwp_a_tgt = Util.subst_kind [Inl(b.v, Util.btvar_to_typ a)] kwp_b_tgt in
+//      let expected_k = r |> mk_Kind_arrow([t_binder a; null_t_binder kwp_a_src], kwp_a_tgt) in
+//      let lift = tc_typ_check_trivial env sub.lift expected_k in
+//      let sub = {sub with lift=lift} in
+//      let se = Sig_sub_effect(sub, r) in
+//      let env = Env.push_sigelt env se in
+//      se, env
+//
+//    | Sig_tycon (lid, tps, k, _mutuals, _data, tags, r) ->
+//      let env = Env.set_range env r in
+//      let tps, env = tc_tparams env tps in
+//      let k = match k.n with
+//        | Kind_unknown -> ktype
+//        | _ -> tc_kind_trivial env k in
+//      if debug env Options.Extreme then Util.fprint2 "Checked %s at kind %s\n" (Print.sli lid) (Print.kind_to_string (Util.close_kind tps k));
+//      let k = norm_k env k in
+//      let se = Sig_tycon(lid, tps, k, _mutuals, _data, tags, r) in
+//      let _ = match compress_kind k with
+//        | {n=Kind_uvar _} -> TcUtil.force_trivial env <| Tc.Rel.keq env None k ktype
+//        | _ -> () in
+//      let env = Env.push_sigelt env se in
+//      se, env
+//
+//    | Sig_kind_abbrev(lid, tps, k, r) ->
+//      let env0 = env in
+//      let env = Env.set_range env r in
+//      let tps, env = tc_tparams env tps in
+//      let k = tc_kind_trivial env k in
+//      let se = Sig_kind_abbrev(lid, tps, k, r) in
+//      let env = Env.push_sigelt env0 se in
+//      se, env
+//
+//    | Sig_effect_abbrev(lid, tps, c, tags, r) ->
+//      let env0 = env in
+//      let env = Env.set_range env r in
+//      let tps, env = tc_tparams env tps in
+//      let c, g = tc_comp env c in
+//      let tags = tags |> List.map (function
+//        | DefaultEffect None ->
+//          let c' = Tc.Normalize.weak_norm_comp env c in
+//          DefaultEffect (c'.effect_name |> Some)
+//        | t -> t) in
+//      let se = Sig_effect_abbrev(lid, tps, c, tags, r) in
+//      let env = Env.push_sigelt env0 se in
+//      se, env
+//
+//    | Sig_typ_abbrev(lid, tps, k, t, tags, r) ->
+//      let env = Env.set_range env r in
+//      let tps, env' = tc_tparams env tps in
+//      let t, k1 = tc_typ_trivial env' t |> (fun (t, k) -> norm_t env' t, norm_k env' k) in
+//      let k2 = match k.n with
+//        | Kind_unknown -> k1
+//        | _ -> let k2 = tc_kind_trivial env' k |> norm_k env in
+//               TcUtil.force_trivial env' <| Rel.keq env' (Some t) k1 k2; k2 in
+//      let se = Sig_typ_abbrev(lid, tps, k2, t, tags, r) in
+//      let env = Env.push_sigelt env se in
+//      se, env
+//
+//    | Sig_datacon(lid, t, (tname, tps, k), quals, mutuals, r) ->
+//      let env = Env.set_range env r in
+//      let tps, env, g = tc_binders env tps in
+//      let tycon = tname, tps, k in
+//      TcUtil.discharge_guard env g;
+//      let t = tc_typ_check_trivial env t ktype in
+//      let t = norm_t env t in
+//
+//      let formals, result_t = match Util.function_formals t with
+//        | Some (formals, cod) -> formals, Util.comp_result cod
+//        | _ -> [], t in
+//
+//      let cardinality_and_positivity_check (formal:binder) = 
+//        let check_positivity formals = 
+//            formals |> List.iter (fun (a, _) -> match a with
+//                | Inl _ -> ()
+//                | Inr y ->
+//                    let t = y.sort in
+//                    Visit.collect_from_typ (fun b t ->
+//                    match (Util.compress_typ t).n with
+//                    | Typ_const f ->
+//                        begin match List.tryFind (lid_equals f.v) mutuals with
+//                        | None -> ()
+//                        | Some tname ->
+//                            raise (Error (Tc.Errors.constructor_fails_the_positivity_check env (Util.fvar (Some Data_ctor) lid (range_of_lid lid)) tname, range_of_lid lid))
+//                        end
+//                    | _ -> ()) () t) in
+//        match fst formal with
+//        | Inl a -> 
+//          begin 
+//              if Options.warn_cardinality()
+//              then Tc.Errors.warn r (Tc.Errors.cardinality_constraint_violated lid a)
+//              else if Options.check_cardinality()
+//              then raise (Error(Tc.Errors.cardinality_constraint_violated lid a, r))
+//          end;
+//          let k = Normalize.norm_kind [Normalize.Beta; Normalize.DeltaHard] env a.sort in
+//          begin match k.n with 
+//            | Kind_arrow _ -> 
+//              let formals, _ = Util.kind_formals k in
+//              check_positivity formals
+//            | _ -> ()
+//          end
+//
+//        | Inr x ->
+//          let t = Normalize.norm_typ [Normalize.Beta; Normalize.DeltaHard] env x.sort in
+//          if Util.is_function_typ t && Util.is_pure_or_ghost_function t
+//          then let formals, _ = Util.function_formals t |> Util.must in
+//               check_positivity formals in
+//
+//      formals |> List.iter cardinality_and_positivity_check;
+//
+//      let _ = match destruct result_t tname with
+//        | Some args ->
+//          if not (List.length args >= List.length tps
+//               && List.forall2 (fun (a, _) (b, _) -> match a, b with 
+//                             | Inl ({n=Typ_btvar aa}), Inl bb -> Util.bvar_eq aa bb
+//                             | Inr ({n=Exp_bvar xx}), Inr yy -> Util.bvar_eq xx yy
+//                             | _ -> false) (Util.first_N (List.length tps) args |> fst) tps)
+//          then let expected_t = match tps with 
+//                | [] -> Util.ftv tname kun
+//                | _ -> 
+//                  let _, expected_args = Util.args_of_binders tps in
+//                  Util.mk_typ_app (Util.ftv tname kun) expected_args in 
+//               raise (Error (Tc.Errors.constructor_builds_the_wrong_type env (Util.fvar (Some Data_ctor) lid (range_of_lid lid)) result_t expected_t, range_of_lid lid))
+//        | _ -> raise (Error (Tc.Errors.constructor_builds_the_wrong_type env (Util.fvar (Some Data_ctor) lid (range_of_lid lid)) result_t (Util.ftv tname kun), range_of_lid lid)) in
+//      let se = Sig_datacon(lid, t, tycon, quals, mutuals, r) in
+//      let env = Env.push_sigelt env se in
+//      if log env then Util.print_string <| Util.format2 "data %s : %s\n" lid.str (Tc.Normalize.typ_norm_to_string env t);
+//      se, env
+//
+//    | Sig_val_decl(lid, t, quals, r) ->
+//      let env = Env.set_range env r in
+//      let t = tc_typ_check_trivial env t ktype |> Tc.Normalize.norm_typ [Normalize.Beta; Normalize.SNComp] env in
+//      TcUtil.check_uvars r t;
+//      let se = Sig_val_decl(lid, t, quals, r) in
+//      let env = Env.push_sigelt env se in
+//      if log env then Util.print_string <| Util.format2 "val %s : %s\n" lid.str (Tc.Normalize.typ_norm_to_string env t);
+//      se, env
+//
+//    | Sig_assume(lid, phi, quals, r) ->
+//      let env = Env.set_range env r in
+//      let phi = tc_typ_check_trivial env phi ktype |> norm_t env in
+//      TcUtil.check_uvars r phi;
+//      let se = Sig_assume(lid, phi, quals, r) in
+//      let env = Env.push_sigelt env se in
+//      se, env
+//
+//    | Sig_let(lbs, r, lids, quals) ->
+//      //let is_rec = fst lbs in
+//      let env = Env.set_range env r in
+//      let generalize, lbs' = snd lbs |> List.fold_left (fun (gen, lbs) lb ->
+//        let gen, lb = match lb with
+//          | {lbname=Inl _} -> failwith "impossible"
+//          | {lbname=Inr l; lbtyp=t; lbdef=e} ->
+//            let gen, lb = match Env.try_lookup_val_decl env l with
+//              | None -> gen, lb
+//              | Some (t', _) ->
+//                if debug env Options.Medium
+//                then Util.fprint2 "Using annotation %s for let binding %s\n" (Print.term_to_string t') l.str;
+//                match t.n with
+//                  | Typ_unknown ->
+//                    false, mk_lb (Inr l, Const.effect_ALL_lid, t', e) //explicit annotation provided; do not generalize
+//                  | _ ->
+//                   if not(deserialized)
+//                   then Util.print_string <| Util.format1 "%s: Warning: Annotation from val declaration overrides inline type annotation\n" (Range.string_of_range r);
+//                   false, mk_lb (Inr l, Const.effect_ALL_lid, t', e) in
+//             gen, lb in
+//        gen, lb::lbs) (true, []) in
+//      let lbs' = List.rev lbs' in
+//      let e = mk_Exp_let((fst lbs, lbs'), syn' env Recheck.t_unit <| mk_Exp_constant(Const_unit)) None r in
+//      let se, lbs = match tc_exp ({env with generalize=generalize}) e with
+//        | {n=Exp_let(lbs, e)}, _, g when Rel.is_trivial g ->
+//            let quals = match e.n with
+//                | Exp_meta(Meta_desugared(_, Masked_effect)) -> HasMaskedEffect::quals
+//                | _ -> quals in
+//            Sig_let(lbs, r, lids, quals), lbs
+//        | _ -> failwith "impossible" in
+//      if log env
+//      then Util.fprint1 "%s\n" (snd lbs |> List.map (fun lb ->
+//            let should_log = match Env.try_lookup_val_decl env (right lb.lbname) with
+//                | None -> true
+//                | _ -> false in
+//            if should_log
+//            then Util.format2 "let %s : %s" (Print.lbname_to_string lb.lbname) (Tc.Normalize.typ_norm_to_string env lb.lbtyp)
+//            else "") |> String.concat "\n");
+//      let env = Env.push_sigelt env se in
+//      se, env
+//
+//    | Sig_main(e, r) ->
+//      let env = Env.set_range env r in
+//      let env = Env.set_expected_typ env Recheck.t_unit in
+//      let e, c, g1 = tc_exp env e in
+//      let g1 = Rel.solve_deferred_constraints env g1 in
+//      let e, _, g = check_expected_effect env (Some (Util.ml_comp Recheck.t_unit r)) (e, c.comp()) in
+//      TcUtil.discharge_guard env (Rel.conj_guard g1 g);
+//      let se = Sig_main(e, r) in
+//      let env = Env.push_sigelt env se in
+//      se, env
+//
+//    | Sig_bundle(ses, quals, lids, r) ->
+//      let env = Env.set_range env r in
+//      let tycons, rest = ses |> List.partition (function Sig_tycon _ -> true | _ -> false) in
+//      let abbrevs, rest = rest |> List.partition (function Sig_typ_abbrev _ -> true | _ -> false) in
+//      let recs = abbrevs |> List.map (function
+//        | Sig_typ_abbrev(lid, tps, k, t, [], r) ->
+//           let k = match k.n with
+//            | Kind_unknown -> Tc.Rel.new_kvar r tps |> fst
+//            | _ -> k in
+//           Sig_tycon(lid, tps, k, [], [], [], r), t
+//        | _ -> failwith "impossible") in
+//      let recs, abbrev_defs = List.split recs in
+//      let msg = if !Options.logQueries
+//                then Util.format1 "Recursive bindings: %s" (Print.sigelt_to_string_short se)
+//                else "" in
+//      env.solver.push msg; //Push a context in the solver to check the recursively bound definitions
+//      let tycons, _, _ = tc_decls false env tycons deserialized in
+//      let recs, _, _ = tc_decls false env recs deserialized in
+//      let env1 = Env.push_sigelt env (Sig_bundle(tycons@recs, quals, lids, r)) in
+//      let rest, _, _ = tc_decls false env1 rest deserialized in
+//      let abbrevs = List.map2 (fun se t -> match se with
+//        | Sig_tycon(lid, tps, k, [], [], [], r) ->
+//          let tt = Util.close_with_lam tps (mk_Typ_ascribed(t, k) t.pos) in
+//          let tt, _ = tc_typ_trivial env1 tt in
+//          let tps, t = match tt.n with
+//            | Typ_lam(bs, t) -> bs, t
+//            | _ -> [], tt in
+//          Sig_typ_abbrev(lid, tps, compress_kind k, t, [], r)
+//        | _ -> failwith (Util.format1 "(%s) Impossible" (Range.string_of_range r)))
+//        recs abbrev_defs in
+//      env.solver.pop msg;
+//      let se = Sig_bundle(tycons@abbrevs@rest, quals, lids, r) in
+//      let env = Env.push_sigelt env se in
+//      se, env
+//
+//and tc_decls for_export env ses deserialized =
+// let ses, all_non_private, env =
+//  ses |> List.fold_left (fun (ses, all_non_private, (env:Env.env)) se ->
+//          if debug env Options.Low then Util.print_string (Util.format1 "Checking sigelt\t%s\n" (Print.sigelt_to_string se));
+//
+//          let se, env = tc_decl env se deserialized in
+//          env.solver.encode_sig env se;
+//
+//          let non_private_decls =
+//            if for_export
+//            then non_private env se
+//            else [] in
+//
+//          se::ses, non_private_decls::all_non_private, env)
+//  ([], [], env) in
+//  List.rev ses, List.rev all_non_private |> List.flatten, env
+//
+//and non_private env se : list<sigelt> =
+//   let is_private quals = List.contains Private quals in
+//   match se with
+//    | Sig_bundle(ses, quals, _, _) ->
+////      if is_private quals
+////      then let ses = ses |> List.filter (function
+////                | Sig_datacon _ -> false
+////                | _ -> true) in
+////           ses |> List.map (function
+////            | Sig_tycon(lid, bs, k, mutuals, datas, quals, r) -> Sig_tycon(lid, bs, k, [], [], Assumption::quals, r)
+////            | se -> se)
+////      else
+//      [se]
+//
+//   | Sig_tycon(_, _, _, _, _, quals, r) ->
+//     if is_private quals
+//     then []
+//     else [se]
+//
+//   | Sig_typ_abbrev(l, bs, k, t, quals, r) ->
+//     if is_private quals
+//     then [Sig_tycon(l, bs, k, [], [], Assumption::quals, r)]
+//     else [se]
+//
+//   | Sig_assume(_, _, quals, _) ->
+//     if is_private quals
+//     then []
+//     else [se]
+//
+//   | Sig_val_decl(_, _, quals, _) ->
+//     if is_private quals
+//     then []
+//     else [se]
+//
+//   | Sig_main  _ -> []
+//
+//   | Sig_new_effect     _
+//   | Sig_sub_effect     _
+//   | Sig_effect_abbrev  _
+//   | Sig_pragma         _
+//   | Sig_kind_abbrev    _ -> [se]
+//
+//   | Sig_datacon _ -> failwith "Impossible"
+//
+//   | Sig_let(lbs, r, l, _) ->
+//     let check_priv lbs =
+//        let is_priv = function
+//            | {lbname=Inr l} ->
+//            begin match Env.try_lookup_val_decl env l with
+//                    | Some (_, qs) -> List.contains Private qs
+//                    | _ -> false
+//            end
+//            | _ -> false in
+//        let some_priv = lbs |> Util.for_some is_priv in
+//        if some_priv
+//        then if lbs |> Util.for_some (fun x -> is_priv x |> not)
+//             then raise (Error("Some but not all functions in this mutually recursive nest are marked private", r))
+//             else true
+//        else false in
+//
+//
+//     let pure_funs, rest = snd lbs |> List.partition (fun lb -> Util.is_pure_or_ghost_function lb.lbtyp && not <| Util.is_lemma lb.lbtyp) in
+//     begin match pure_funs, rest with
+//        | _::_, _::_ ->
+//          raise (Error("Pure functions cannot be mutually recursive with impure functions", r))
+//
+//        | _::_, [] ->
+//          if check_priv pure_funs
+//          then []
+//          else [se]
+//
+//        | [], _::_ ->
+//          if check_priv rest
+//          then []
+//          else rest |> List.collect (fun lb -> match lb.lbname with
+//                | Inl _ -> failwith "impossible"
+//                | Inr l -> [Sig_val_decl(l, lb.lbtyp, [Assumption], range_of_lid l)])
+//
+//
+//        | [], [] -> failwith "Impossible"
+//     end
+//
+//let get_exports env modul non_private_decls =
+//    let assume_vals decls =
+//        decls |> List.map (function
+//            | Sig_val_decl(lid, t, quals, r) -> Sig_val_decl(lid, t, Assumption::quals, r)
+//            | s -> s) in
+//    if modul.is_interface
+//    then non_private_decls
+//    else let exports = Util.find_map (Env.modules env) (fun m ->
+//            if (m.is_interface && Syntax.lid_equals modul.name m.name)
+//            then Some (m.exports |> assume_vals)
+//            else None) in
+//         match exports with
+//            | None -> non_private_decls
+//            | Some e -> e
+//
+//let tc_partial_modul env modul =
+//  let name = Util.format2 "%s %s"  (if modul.is_interface then "interface" else "module") modul.name.str in
+//  let msg = "Internals for " ^name in
+//  let env = {env with Env.is_iface=modul.is_interface; admit=not (Options.should_verify modul.name.str)} in
+//  if not (lid_equals modul.name Const.prims_lid) then env.solver.push msg;
+//  let env = Env.set_current_module env modul.name in
+//  let ses, non_private_decls, env = tc_decls true env modul.declarations modul.is_deserialized in
+//  {modul with declarations=ses}, non_private_decls, env
+//
+//let tc_more_partial_modul env modul decls =
+//  let ses, non_private_decls, env = tc_decls true env decls false in
+//  let modul = {modul with declarations=modul.declarations@ses} in
+//  modul, non_private_decls, env
+//
+//let finish_partial_modul env modul npds =
+//  let exports = get_exports env modul npds in
+//  let modul = {modul with exports=exports; is_interface=modul.is_interface; is_deserialized=modul.is_deserialized} in
+//  let env = Env.finish_module env modul in
+//  if not (lid_equals modul.name Const.prims_lid)
+//  then begin
+//    env.solver.pop ("Ending modul " ^ modul.name.str);
+//    if  not modul.is_interface
+//    ||  List.contains modul.name.str !Options.admit_fsi
+//    then env.solver.encode_modul env modul;
+//    env.solver.refresh();
+//    Options.reset_options() |> ignore
+//  end;
+//  modul, env
+//
+//let tc_modul env modul =
+//  let modul, non_private_decls, env = tc_partial_modul env modul in
+//  finish_partial_modul env modul non_private_decls
+//
+//let add_modul_to_tcenv (en: env) (m: modul) :env =
+//  let do_sigelt (en: env) (elt: sigelt) :env =
+//    let env = Env.push_sigelt en elt in
+//    env.solver.encode_sig env elt;
+//    env
+//  in
+//  let en = Env.set_current_module en m.name in
+//  Env.finish_module (List.fold_left do_sigelt en m.exports) m
+//
+//let check_module env m =
+//    if List.length !Options.debug <> 0
+//    then Util.fprint2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.sli m.name);
+//
+//    let m, env =
+//        if m.is_deserialized then
+//          let env' = add_modul_to_tcenv env m in
+//          m, env'
+//        else begin
+//           let m, env = tc_modul env m in
+//           if !Options.serialize_mods
+//           then begin
+//                let c_file_name = Options.get_fstar_home () ^ "/" ^ Options.cache_dir ^ "/" ^ (text_of_lid m.name) ^ ".cache" in
+//                print_string ("Serializing module " ^ (text_of_lid m.name) ^ "\n");
+//                SSyntax.serialize_modul (get_owriter c_file_name) m
+//           end;
+//           m, env
+//      end
+//    in
+//    if Options.should_dump m.name.str then Util.fprint1 "%s\n" (Print.modul_to_string m);
+//    [m], env
+//

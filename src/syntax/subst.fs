@@ -374,8 +374,12 @@ let close_branch (p, wopt, e) =
     let e = subst closing e in
     (p, wopt, e)
 
-let open_univ_vars (_:univ_vars) (_:term)  : univ_vars * term = failwith "NYI"
-let close_univ_vars (_:univ_vars) (_:term) : term = failwith "NYI"
+let open_univ_vars     (_:univ_vars) (_:term)  : univ_vars * term = failwith "NYI"
+let open_eff_signature (_:eff_decl) : univ_vars * binders * term = failwith "NYI"
+
+let close_univ_vars     (_:univ_vars) (_:term) : term = failwith "NYI"
+let close_eff_signature (_:univ_vars) (_:binders) (_:term) : univ_vars * binders * term = failwith "NYI"
+
 let open_let_rec:   list<letbinding> -> term -> list<letbinding> * term = fun _ _ -> failwith "NYI"
 let close_let_rec:   list<letbinding> -> term -> list<letbinding> * term = fun _ _ -> failwith "NYI"
 
