@@ -232,7 +232,7 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "hide_genident_nums", ZeroArgs(fun () -> hide_genident_nums := true), "Don't print generated identifier numbers");
      ( noshort, "hide_uvar_nums", ZeroArgs(fun () -> hide_uvar_nums := true), "Don't print unification variable numbers");
      ( noshort, "in", ZeroArgs (fun () -> interactive := true), "Interactive mode; reads input from stdin");
-     ( noshort, "in_context", OneArg ((fun s -> interactive_context := Some s), "name"), "Specify the context of an interactive session; needed for --auto_deps to work with interactive mode.");
+     ( noshort, "in_context", OneArg ((fun s -> interactive := true; interactive_context := Some s), "name"), "Specify the context of an interactive session; needed for --auto_deps to work with interactive mode.");
      ( noshort, "include", OneArg ((fun s -> _include_path := !_include_path @ [s]), "path"), "A directory in which to search for files included on the command line");
      ( noshort, "initial_fuel", OneArg((fun x -> initial_fuel := int_of_string x), "non-negative integer"), "Number of unrolling of recursive functions to try initially (default 2)");
      ( noshort, "initial_ifuel", OneArg((fun x -> initial_ifuel := int_of_string x), "non-negative integer"), "Number of unrolling of inductive datatypes to try at first (default 1)");
