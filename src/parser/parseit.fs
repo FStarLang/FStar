@@ -138,14 +138,14 @@ let rec read_build_config_from_string (filename:string) (use_filename:bool) (con
                         let contents = read_file found_filen  in
                         read_build_config_from_string found_filen true contents false)
                       other_files) in
-                // the semantics of FStar.List.unique preserve the final occurance of a repeated term, so we need to do a double-reverse
-                // in order to preserve the dependency order. this isn't terribly efficient but this isn't a critical path and fewer code
-                // modifications seems more prudent at the moment.
                 let included_files = 
                   if use_filename then
                     included_files@[normalize_file_path filename]
                   else
                     included_files in
+                // the semantics of FStar.List.unique preserve the final occurance of a repeated term, so we need to do a double-reverse
+                // in order to preserve the dependency order. this isn't terribly efficient but this isn't a critical path and fewer code
+                // modifications seems more prudent at the moment.
                 FStar.List.rev (FStar.List.unique (FStar.List.rev included_files))
     else if !Options.use_build_config && is_root //the user claimed that the build config exists
     then fail ""
