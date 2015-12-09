@@ -49,3 +49,5 @@ dump
 *.cmxa
 *.so
 /VS/
+
+tags

@@ -39,16 +39,16 @@ let find_file (context:string) (filename:string) : string =
           else
             None
         else
-          let cwd = System.IO.Path.GetDirectoryName(context) in
-          let search_path = Options.get_include_path(cwd) in
-          Util.find_map 
-              search_path 
-                  (fun p -> 
-                  let path = System.IO.Path.Combine(p, filename) in
-                      if System.IO.File.Exists(path) then 
-                          Some path
-                      else 
-                          None)
+          let cwd = System.IO.Path.GetDirectoryName context in
+          let search_path = Options.get_include_path cwd in
+          Util.find_map
+            search_path
+            (fun p ->
+              let path = System.IO.Path.Combine(p, filename) in
+              if System.IO.File.Exists(path) then
+                Some path
+              else
+                None)
       in
       match result with
       | Some p -> Util.normalize_file_path p
@@ -109,15 +109,19 @@ let rec read_build_config_from_string (filename:string) (use_filename:bool) (con
                              else set_variable (xv.(0).Trim(), xv.(1).Trim()))
                     | _ -> fail ("unexpected config option: " ^ name));
 
-        begin match !options with
-            | None -> ()
-            | Some v ->
-              begin match Options.set_options v with
-                    | Getopt.GoOn ->
-                      Options.reset_options_string := Some v
-                    | Getopt.Help  -> fail ("Invalid options: " ^ v)
-                    | Getopt.Die s -> fail ("Invalid options : " ^ s)
-              end
+        begin 
+          if is_root then
+            match !options with
+              | None -> ()
+              | Some v ->
+                begin match Options.set_options v with
+                      | Getopt.GoOn ->
+                        Options.reset_options_string := Some v
+                      | Getopt.Help  -> fail ("Invalid options: " ^ v)
+                      | Getopt.Die s -> fail ("Invalid options : " ^ s)
+                end
+          else
+            ()
         end;
         match !filenames with
             | None -> if use_filename then [filename] else []
