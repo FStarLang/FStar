@@ -223,7 +223,7 @@ let interactive_mode dsenv env =
                   if Util.starts_with text (Parser.ParseIt.get_bc_start_string ()) then
                     begin
                       let filenames = 
-                        match !Options.interactive_session_name with
+                        match !Options.interactive_context with
                           | Some s ->
                             Parser.ParseIt.read_build_config_from_string s false text true
                           | None ->
