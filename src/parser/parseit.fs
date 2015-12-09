@@ -39,16 +39,16 @@ let find_file (context:string) (filename:string) : string =
           else
             None
         else
-          let cwd = System.IO.Path.GetDirectoryName(context) in
-          let search_path = Options.get_include_path(cwd) in
-          Util.find_map 
-              search_path 
-                  (fun p -> 
-                  let path = System.IO.Path.Combine(p, filename) in
-                      if System.IO.File.Exists(path) then 
-                          Some path
-                      else 
-                          None)
+          let cwd = System.IO.Path.GetDirectoryName context in
+          let search_path = Options.get_include_path cwd in
+          Util.find_map
+            search_path
+            (fun p ->
+              let path = System.IO.Path.Combine(p, filename) in
+              if System.IO.File.Exists(path) then
+                Some path
+              else
+                None)
       in
       match result with
       | Some p -> Util.normalize_file_path p

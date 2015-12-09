@@ -582,3 +582,15 @@ let get_oreader (file:string) : oReader =
         close = r.Close
     }
 
+
+let getcwd () =
+  System.Environment.CurrentDirectory
+
+let readdir d =
+  List.ofArray (System.IO.Directory.GetFiles d)
+
+let file_exists f =
+  System.IO.File.Exists f || System.IO.Directory.Exists f
+
+let basename f =
+  System.IO.Path.GetFileName f
