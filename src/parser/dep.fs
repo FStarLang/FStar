@@ -141,8 +141,8 @@ let collect_one (original_map: smap<string>) (filename: string) =
     | Interface (lid, decls, _) ->
         check_module_declaration_against_filename lid filename;
         collect_decls decls
-  and collect_decls =
-    List.iter (fun x -> collect_decl x.d)
+  and collect_decls decls =
+    List.iter (fun x -> collect_decl x.d) decls
   and collect_decl = function
     | Open lid ->
         let key = lowercase_join_longident lid true in
