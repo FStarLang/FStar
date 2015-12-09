@@ -225,7 +225,7 @@ let interactive_mode dsenv env =
                       let filenames = 
                         match !Options.interactive_session_name with
                           | Some s ->
-                            Parser.ParseIt.read_build_config_from_string s true text true
+                            Parser.ParseIt.read_build_config_from_string s false text true
                           | None ->
                             Parser.ParseIt.read_build_config_from_string "" false text true in
                       let _, dsenv, env = batch_mode_tc_no_prims dsenv env filenames in
