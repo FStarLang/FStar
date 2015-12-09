@@ -578,7 +578,7 @@ let readdir dir =
   let files = ref [] in
   try
     while true do
-      files := readdir handle :: !files
+      files := Unix.readdir handle :: !files
     done;
     assert false
   with End_of_file ->
