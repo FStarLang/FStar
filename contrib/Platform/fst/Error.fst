@@ -7,7 +7,7 @@ type optResult 'a 'b =
 assume val perror: string -> int -> string -> Tot string
 
 //assume val correct: #a:Type -> #b:Type -> x:a -> Tot (y:(optResult b a){y = Correct(x)})
-assume val correct: #a:Type -> a -> Tot (optResult 'b 'a)
+assume val correct: #a:Type -> a -> Tot (optResult 'b a)
 
 (* Both unexpected and unreachable are aliases for failwith;
    they indicate code that should never be executed at runtime.
