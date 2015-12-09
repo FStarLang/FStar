@@ -135,14 +135,14 @@ let collect_one (original_map: smap<string>) (filename: string) =
     | [ modul ] ->
         collect_module modul
     | _ ->
-        raise (Err (Util.format1 "File %s does not respect the one module per file convention" filename));
+        raise (Err (Util.format1 "File %s does not respect the one module per file convention" filename))
   and collect_module = function
     | Module (lid, decls)
     | Interface (lid, decls, _) ->
         check_module_declaration_against_filename lid filename;
         collect_decls decls
   and collect_decls =
-    List.map (fun x -> collect_decl x.d)
+    List.iter (fun x -> collect_decl x.d)
   and collect_decl = function
     | Open lid ->
         let key = lowercase_join_longident lid true in
