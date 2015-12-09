@@ -318,7 +318,7 @@ let lookup_projector env lid i =
 
 let try_lookup_val_decl env lid =
   match lookup_qname env lid with
-    | Some (Inr (Sig_val_decl(_, uvs, t, q, _))) -> Some (inst_tscheme (uvs,t),q)
+    | Some (Inr (Sig_val_decl(_, uvs, t, q, _))) -> Some ((uvs,t),q)
     | _ -> None
 
 let lookup_effect_abbrev env lid =
@@ -404,7 +404,9 @@ let build_lattice env se = match se with
         mtarget=e2.mtarget;
         mlift=(fun r wp1 -> e2.mlift r (e1.mlift r wp1))} in
 
-    let mk_lift lift_t r wp1 = mk (Tm_app(lift_t, [arg r; arg wp1])) None wp1.pos in
+    let mk_lift lift_t r wp1 = 
+        let lift_t = uinst env lift_t in
+        mk (Tm_app(lift_t, [arg r; arg wp1])) None wp1.pos in
 
     let edge =
       {msource=sub.source;

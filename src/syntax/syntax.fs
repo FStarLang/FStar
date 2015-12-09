@@ -183,6 +183,7 @@ type formulae = list<typ>
 type qualifier =
   | Private
   | Assumption
+  | Fresh
   | Opaque
   | Logic
   | Discriminator of lident                          (* discriminator for a datacon l *)
@@ -204,7 +205,7 @@ type monad_abbrev = {
 type sub_eff = {
   source:lident;
   target:lident;
-  lift: typ
+  lift  :tscheme;
  }
 type eff_decl = {
     mname       :lident;

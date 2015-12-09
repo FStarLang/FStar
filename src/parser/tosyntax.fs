@@ -1315,7 +1315,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
         | Some l -> l in
     let src = lookup l.msource in
     let dst = lookup l.mdest in
-    let lift = desugar_term env l.lift_op in
+    let lift = [],desugar_term env l.lift_op in
     let se = Sig_sub_effect({source=src; target=dst; lift=lift}, d.drange) in
     env, [se]
 

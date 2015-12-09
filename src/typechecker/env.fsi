@@ -88,7 +88,7 @@ val get_range : env -> Range.range
 (* Querying identifiers *)
 val lookup_bv              : env -> bv -> typ
 val lookup_lid             : env -> lident -> typ
-val try_lookup_val_decl    : env -> lident -> option<(typ * list<qualifier>)>
+val try_lookup_val_decl    : env -> lident -> option<(tscheme * list<qualifier>)>
 val lookup_val_decl        : env -> lident -> typ
 val lookup_datacon         : env -> lident -> typ
 val lookup_datacons_of_typ : env -> lident -> option<list<(lident * typ)>>

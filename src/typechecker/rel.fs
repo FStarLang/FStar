@@ -1768,3 +1768,5 @@ let try_discharge_guard env (g:guard_t) =
                                  (Util.format1 "Checking VC=\n%s\n" (Print.term_to_string vc));
                 env.solver.solve env vc
         end
+
+let universe_inequality (_:universe) (_:universe) : guard_t = failwith ""

@@ -387,7 +387,7 @@ let abs bs t = match bs with
             mk (Tm_abs(close_binders bs@bs', t)) None t.pos
         | _ -> mk (Tm_abs(close_binders bs, body)) None t.pos 
 
-let arrow bs c = mk (Tm_arrow(close_binders bs, Subst.close_comp bs c)) None c.pos
+let arrow bs c = match bs with [] -> comp_result c | _ -> mk (Tm_arrow(close_binders bs, Subst.close_comp bs c)) None c.pos
 let refine b t = mk (Tm_refine(b, Subst.close [mk_binder b] t)) None (Range.union_ranges (range_of_bv b) t.pos)
 let branch b = Subst.close_branch b
 let letbinding lbname univ_vars typ eff def = 
