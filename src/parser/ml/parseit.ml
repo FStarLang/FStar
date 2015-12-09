@@ -97,15 +97,19 @@ let rec read_build_config_from_string (filename:string) (use_filename:bool) (con
                              set_variable (FStar_Util.trim_string x, FStar_Util.trim_string v))
                   | _ -> fail ("unexpected config option: " ^ name));
 
-        begin match !options with
-            | None -> ()
-            | Some v ->
-              begin match FStar_Options.set_options v with
-                    | FStar_Getopt.GoOn ->
-                      FStar_Options.reset_options_string := Some v
-                    | FStar_Getopt.Help  -> fail ("Invalid options: " ^ v)
-                    | FStar_Getopt.Die s -> fail ("Invalid options : " ^ s)
-              end
+        begin 
+          if is_root then
+            match !options with
+              | None -> ()
+              | Some v ->
+                begin match FStar_Options.set_options v with
+                      | FStar_Getopt.GoOn ->
+                        FStar_Options.reset_options_string := Some v
+                      | FStar_Getopt.Help  -> fail ("Invalid options: " ^ v)
+                      | FStar_Getopt.Die s -> fail ("Invalid options : " ^ s)
+                end
+          else
+            ()
         end;
         match !filenames with
             | None -> if use_filename then [filename] else []
