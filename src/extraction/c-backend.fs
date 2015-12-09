@@ -262,7 +262,7 @@ let encode_char c =
 (* -------------------------------------------------------------------- *)
 let string_of_mlconstant (sctt : mlconstant) =
   match sctt with
-  | MLC_Unit           -> "NULL"
+  | MLC_Unit           -> ""
   | MLC_Bool     true  -> "1"
   | MLC_Bool     false -> "0"
   | MLC_Char     c     -> "'"^(encode_char c)^"'"
@@ -342,8 +342,12 @@ let rec string_of_ml_type (t:mlty) : string =
         let typ = string_of_mlpath path in
         begin
         let typ = match typ with
+                | "Prims.unit" -> "void"
                 | "Prims.int" -> "int"
+                | "Prims.nat" -> "int"
+                | "Prims.pos" -> "int"
                 | "Prims.char" -> "char"
+                | "Prims.string" -> "char*"
                 | "Prims.Tuple2" -> "_tuple2"
                 | "FStar.ST.ref" -> "*"
                 | "UInt.uint_std" -> "limb"
@@ -673,13 +677,17 @@ let rec string_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) :
 
     | MLE_Fun (ids, body) ->
         let bvar_annot x xt =
-            concat1 [(match xt with | Some xxt -> concat1 [(string_of_ml_type xxt); " "]); x] in
+            match xt with 
+            | Some xxt when (string_of_ml_type xxt = "void") -> None
+            | Some xxt -> Some (concat1 [string_of_ml_type xxt; x])
+            | _ -> Some "void*" in
+                
 //            if Util.codegen_fsharp() //type inference in F# is not complete, particularly for field projections; so these annotations are needed
 //            then concat1 ["("; x ;
 //                          (match xt with | Some xxt -> concat1 [" : "; doc_of_mltype currentModule outer xxt] | _ -> "");
 //                          ")"]
 //            else x in
-        let ids  = List.map (fun ((x, _),xt) -> bvar_annot x (Some xt)) ids in
+        let ids  = List.fold (fun l ((x, _),xt) -> match bvar_annot x (Some xt) with | Some v -> l@[v] | _ -> l) [] ids in
         let vars = paren (concat2 (", ") ids) in
 
         // Handle returns
@@ -848,11 +856,15 @@ and string_of_branch (currentModule : mlsymbol) (ty:string) ((p, cond, e) : mlbr
 
 (* -------------------------------------------------------------------- *)
 and string_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
+
     let print_decl (lb:mllb) = 
         match lb.mllb_tysc with
         | _, MLTY_Fun (ty, tag, ty2) -> "" //((string_of_ml_type ty) ^ " | " ^ (string_of_ml_type ty2)
                                         //^ " | " ^ (string_of_mlident lb.mllb_name))
-        | _ -> ((string_of_ml_type (snd lb.mllb_tysc)) ^ " " ^ (string_of_mlident lb.mllb_name) ^ ";") in
+        | _ -> 
+            if not(top_level) then ((string_of_ml_type (snd lb.mllb_tysc)) ^ " " ^ (string_of_mlident lb.mllb_name) ^ ";") 
+            else "" in
+
     let decls = concat2 new_line (List.map print_decl lets) in
     let print_expr (lb:mllb) = 
         match lb.mllb_tysc with
@@ -860,10 +872,12 @@ and string_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
         | _, MLTY_Fun (ty, tag, ty2) -> concat [(string_of_ml_type ty2); " ";
                                                 currentModule; "_"; (string_of_mlident lb.mllb_name);
                                                 string_of_expr currentModule (min_op_prec, NonAssoc) lb.mllb_def] 
-        // General case
         | _ -> 
+            // Top level constants
+            if top_level then concat1 ["const"; string_of_ml_type (snd lb.mllb_tysc); string_of_mlident lb.mllb_name;  "="; 
+                                        string_of_expr currentModule (min_op_prec, NonAssoc) lb.mllb_def; ";"]
             // If the expression is a 'match' of a 'if'
-            if is_if_or_match lb.mllb_def then
+            else if is_if_or_match lb.mllb_def then
                 // Name of the identifier to which to bind the result of the if of the match
                 let last_bound_init = !last_bound in
                 last_bound := string_of_mlident lb.mllb_name;
