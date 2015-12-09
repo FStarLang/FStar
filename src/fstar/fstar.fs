@@ -222,7 +222,12 @@ let interactive_mode dsenv env =
                 if !should_read_build_config then
                   if Util.starts_with text (Parser.ParseIt.get_bc_start_string ()) then
                     begin
-                      let filenames = Parser.ParseIt.read_build_config_from_string "" false text true in
+                      let filenames = 
+                        match !Options.interactive_context with
+                          | Some s ->
+                            Parser.ParseIt.read_build_config_from_string s false text true
+                          | None ->
+                            Parser.ParseIt.read_build_config_from_string "" false text true in
                       let _, dsenv, env = batch_mode_tc_no_prims dsenv env filenames in
                       should_read_build_config := false;
                       dsenv, env

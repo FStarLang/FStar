@@ -114,11 +114,11 @@ let rec read_build_config_from_string (filename:string) (use_filename:bool) (con
         match !filenames with
             | None -> if use_filename then [filename] else []
             | Some other_files ->
-              if not !FStar_Options.auto_deps || not use_filename then
+              if not !FStar_Options.auto_deps || filename == "" then
                 let files = if use_filename then other_files@[filename] else other_files in
               FStar_List.map substitute_variables files
               else
-                (* use_filename && auto_deps *)
+                (* auto_deps *)
                 let included_files =
                   (FStar_List.collect 
                       (fun include_spec ->
@@ -126,7 +126,15 @@ let rec read_build_config_from_string (filename:string) (use_filename:bool) (con
                         let contents = read_file found_filen in
                         read_build_config_from_string found_filen true contents false)
                       other_files) in
-                FStar_List.rev (FStar_List.unique (FStar_List.rev (included_files@[normalize_file_path filename])))
+                let included_files = 
+                  if use_filename then
+                    included_files@[normalize_file_path filename]
+                  else
+                    included_files in
+                (* the semantics of FStar.List.unique preserve the final occurance of a repeated term, so we need to do a double-reverse
+                 * in order to preserve the dependency order. this isn't terribly efficient but this isn't a critical path and fewer code
+                 * modifications seems more prudent at the moment. *)
+                FStar_List.rev (FStar_List.unique (FStar_List.rev included_files))
     else if !FStar_Options.use_build_config && is_root (* the user claimed that the build config exists *)
     then fail ""
     else (let stdlib = ["FStar.Set"; "FStar.Heap"; "FStar.ST"; "FStar.All"; "FStar.IO"] in
