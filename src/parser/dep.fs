@@ -87,22 +87,22 @@ let build_map () =
             ()
     ) files
   ) include_directories;
-  (* print_map map; *)
   map
 
 
 (** For all items [i] in the map that start with [prefix], add an additional
     entry where [i] stripped from [prefix] points to the same value. Returns a boolean telling
     whether the map was modified. *)
-let enter_namespace map prefix =
+let enter_namespace original_map working_map prefix =
   let found = ref false in
+  let prefix = prefix ^ "." in
   List.iter (fun k ->
     if Util.starts_with k prefix then
       let suffix = String.substring k (String.length prefix) (String.length k - String.length prefix) in
-      let filename = must (smap_try_find map k) in
-      smap_add map suffix filename;
+      let filename = must (smap_try_find original_map k) in
+      smap_add working_map suffix filename;
       found := true
-  ) (smap_keys map);
+  ) (smap_keys original_map);
   !found
 
 
@@ -150,7 +150,7 @@ let collect_one (original_map: smap<string>) (filename: string) =
         | Some filename ->
             add_dep filename
         | None ->
-            let r = enter_namespace working_map key in
+            let r = enter_namespace original_map working_map key in
             if not r then
               Util.fprint1 "Warning: no modules in namespace %s\n" key
         end
