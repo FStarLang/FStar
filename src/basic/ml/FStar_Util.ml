@@ -340,6 +340,9 @@ let map_opt opt f =
   | None -> None
   | Some x -> Some (f x)
 
+let iter_opt opt f =
+  ignore (map_opt opt f)
+
 let rec find_map l f =
   match l with
   | [] -> None

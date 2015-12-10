@@ -180,8 +180,11 @@ val is_some: option<'a> -> Tot<bool>
 val must: option<'a> -> 'a
 val dflt: 'a -> option<'a> -> Tot<'a>
 val find_opt: ('a -> bool) -> list<'a> -> option<'a>
+(* FIXME: these functions have the wrong argument order when compared to
+ List.map, List.iter, etc. *)
 val bind_opt: option<'a> -> ('a -> option<'b>) -> option<'b>
 val map_opt: option<'a> -> ('a -> 'b) -> option<'b>
+val iter_opt: option<'a> -> ('a -> unit) -> unit
 
 val first_N: int -> list<'a> -> (list<'a> * list<'a>)
 val nth_tail: int -> list<'a> -> list<'a>

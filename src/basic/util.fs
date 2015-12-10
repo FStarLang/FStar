@@ -370,6 +370,11 @@ let map_opt opt f =
       | None -> None
       | Some x -> Some (f x)
 
+let iter_opt opt f =
+  match opt with
+  | None -> ()
+  | Some x -> f x
+
 let try_find_i f l =
     let rec aux i = function
         | [] -> None
