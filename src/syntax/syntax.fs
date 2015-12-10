@@ -277,8 +277,7 @@ type modul = {
   name: lident;
   declarations: sigelts;
   exports: sigelts;
-  is_interface:bool;
-  is_deserialized:bool
+  is_interface:bool
 }
 type path = list<string>
 type subst = list<subst_elt>

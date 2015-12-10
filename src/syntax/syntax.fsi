@@ -280,7 +280,6 @@ type modul = {
   declarations: sigelts;
   exports: sigelts;
   is_interface:bool;
-  is_deserialized:bool
 }
 type path = list<string>
 type subst = list<subst_elt>

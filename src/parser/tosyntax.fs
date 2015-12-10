@@ -1350,8 +1350,7 @@ let desugar_modul_common curmod env (m:AST.modul) : env_t * Syntax.modul * bool 
     name = mname;
     declarations = sigelts;
     exports = [];
-    is_interface=intf;
-    is_deserialized=false
+    is_interface=intf
   } in
   env, modul, pop_when_done
 

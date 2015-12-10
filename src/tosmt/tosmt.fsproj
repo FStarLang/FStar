@@ -10,6 +10,7 @@
     <RootNamespace>tosmt</RootNamespace>
     <AssemblyName>tosmt</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
     <Name>tosmt</Name>
     <TargetFrameworkProfile />
   </PropertyGroup>
