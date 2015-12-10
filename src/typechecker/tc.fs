@@ -1651,7 +1651,7 @@ let tc_inductive env ses quals lids =
 
         | _ -> failwith "impossible" in
     
-    let positive_if_pure (_:term) (_:lid) = () in
+    let positive_if_pure (_:term) (_:lid) = failwith "Positivity check: NYI" in
 
     (* 2. Checking each datacon *)
     let tc_data env tcs = function
