@@ -125,9 +125,8 @@ let check_module_declaration_against_filename (lid: lident) (filename: string): 
   let k' = lowercase_join_longident lid true in
   if String.lowercase (must (check_and_strip_suffix (basename filename))) <> k' then
     Util.fprint2 "Warning: the module declaration \"module %s\" \
-      found in file %s does not match its filename\n"
-      (string_of_lid lid true)
-      filename
+      found in file %s does not match its filename. Dependencies will be \
+      incorrect.\n" (string_of_lid lid true) filename
 
 
 (** Parse a file, walk its AST, return a list of FStar compilation units it
@@ -170,7 +169,8 @@ let collect_one (original_map: smap<string>) (filename: string): list<string> =
         | None ->
             let r = enter_namespace original_map working_map key in
             if not r then
-              Util.fprint1 "Warning: no modules in namespace %s\n" (string_of_lid lid true)
+              Util.fprint1 "Warning: no modules in namespace %s and no file with \
+              that name either\n" (string_of_lid lid true)
         end
     | ToplevelLet (_, patterms) ->
         List.iter (fun (_, t) -> collect_term t) patterms
@@ -347,14 +347,61 @@ let collect_one (original_map: smap<string>) (filename: string): list<string> =
 (** A list of filenames along with the direct dependencies for each file. *)
 type t = list<(string * list<string>)>
 
+type color = | White | Gray | Black
 
 (** Collect the dependencies for a list of given files. *)
 let collect (filenames: list<string>): t =
+  (* The dependency graph; keys are filenames, values = list of filenames this
+   * file depends on. *)
+  let graph = smap_create 41 in
+
+  (* A map from lowercase paths (e.g. [a.b.c]) to the corresponding filenames
+   * (e.g. [A.B.C.fst]). Consider this map immutable from there on. *)
   let m = build_map () in
-  List.map (fun f ->
-    let deps = collect_one m f in
-    f, deps
-  ) filenames
+
+  (* This works because we check in [build_map] that there are no collisions
+   * (i.e. no two files have the same name) in the include path. *)
+  let rec discover_one f =
+    let short = basename f in
+    if smap_try_find graph short = None then
+      let deps = collect_one m f in
+      smap_add graph short (deps, White);
+      List.iter discover_one deps
+  in
+  List.iter discover_one filenames;
+
+  (* At this point, we have the (immediate) dependency graph of all the files. *)
+  let print_graph () =
+    List.iter (fun k ->
+      Util.fprint2 "%s: %s\n" k (String.concat " " (fst (must (smap_try_find graph k))))
+    ) (smap_keys graph)
+  in
+
+  (* Compute the transitive closure. *)
+  let rec discover f =
+    let short = basename f in
+    let direct_deps, color = must (smap_try_find graph short) in
+    match color with
+    | Gray ->
+        Util.fprint1 "Recursive dependency on file %s\n" f;
+        print_string "Here's the (non-transitive) dependency graph:\n";
+        print_graph ();
+        print_string "\n";
+        exit 1
+    | Black ->
+        (* If the element has been visited already, then the map contains all its
+         * dependencies. Otherwise, the map only contains its direct dependencies. *)
+        direct_deps
+    | White ->
+        (* Unvisited. Compute. *)
+        smap_add graph short (direct_deps, Gray);
+        let transitive_deps = List.flatten (List.map discover direct_deps) in
+        let all_deps = List.unique (direct_deps @ transitive_deps) in
+        smap_add graph short (all_deps, Black);
+        all_deps
+  in
+
+  List.map (fun f -> f, discover f) filenames
 
 
 (** Print the dependencies as returned by [collect] in a Makefile-compatible

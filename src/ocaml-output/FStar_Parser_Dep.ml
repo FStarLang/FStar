@@ -106,7 +106,7 @@ in (check_and_strip_suffix _115_47))
 in (FStar_Util.must _115_48))
 in (FStar_String.lowercase _115_49)) <> k') then begin
 (let _115_50 = (string_of_lid lid true)
-in (FStar_Util.fprint2 "Warning: the module declaration \"module %s\" found in file %s does not match its filename\n" _115_50 filename))
+in (FStar_Util.fprint2 "Warning: the module declaration \"module %s\" found in file %s does not match its filename. Dependencies will be incorrect.\n" _115_50 filename))
 end else begin
 ()
 end))
@@ -154,7 +154,7 @@ end
 (let r = (enter_namespace original_map working_map key)
 in if (not (r)) then begin
 (let _115_85 = (string_of_lid lid true)
-in (FStar_Util.fprint1 "Warning: no modules in namespace %s\n" _115_85))
+in (FStar_Util.fprint1 "Warning: no modules in namespace %s and no file with that name either\n" _115_85))
 end else begin
 ()
 end)
@@ -367,11 +367,84 @@ in (FStar_ST.read deps))))))))
 type t =
 (Prims.string * Prims.string Prims.list) Prims.list
 
-let collect = (fun filenames -> (let m = (build_map ())
-in (FStar_List.map (fun f -> (let deps = (collect_one m f)
-in (f, deps))) filenames)))
+type color =
+| White
+| Gray
+| Black
 
-let print = (fun deps -> (FStar_List.iter (fun _49_477 -> (match (_49_477) with
+let is_White = (fun _discr_ -> (match (_discr_) with
+| White -> begin
+true
+end
+| _ -> begin
+false
+end))
+
+let is_Gray = (fun _discr_ -> (match (_discr_) with
+| Gray -> begin
+true
+end
+| _ -> begin
+false
+end))
+
+let is_Black = (fun _discr_ -> (match (_discr_) with
+| Black -> begin
+true
+end
+| _ -> begin
+false
+end))
+
+let collect = (fun filenames -> (let graph = (FStar_Util.smap_create 41)
+in (let m = (build_map ())
+in (let rec discover_one = (fun f -> (let short = (FStar_Util.basename f)
+in if ((FStar_Util.smap_try_find graph short) = None) then begin
+(let deps = (collect_one m f)
+in (let _49_477 = (FStar_Util.smap_add graph short (deps, White))
+in (FStar_List.iter discover_one deps)))
+end else begin
+()
+end))
+in (let _49_479 = (FStar_List.iter discover_one filenames)
+in (let print_graph = (fun _49_482 -> (match (()) with
+| () -> begin
+(let _115_118 = (FStar_Util.smap_keys graph)
+in (FStar_List.iter (fun k -> (let _115_117 = (let _115_116 = (let _115_115 = (let _115_114 = (FStar_Util.smap_try_find graph k)
+in (FStar_Util.must _115_114))
+in (Prims.fst _115_115))
+in (FStar_String.concat " " _115_116))
+in (FStar_Util.fprint2 "%s: %s\n" k _115_117))) _115_118))
+end))
+in (let rec discover = (fun f -> (let short = (FStar_Util.basename f)
+in (let _49_489 = (let _115_121 = (FStar_Util.smap_try_find graph short)
+in (FStar_Util.must _115_121))
+in (match (_49_489) with
+| (direct_deps, color) -> begin
+(match (color) with
+| Gray -> begin
+(let _49_491 = (FStar_Util.fprint1 "Recursive dependency on file %s\n" f)
+in (let _49_493 = (FStar_Util.print_string "Here\'s the (non-transitive) dependency graph:\n")
+in (let _49_495 = (print_graph ())
+in (let _49_497 = (FStar_Util.print_string "\n")
+in (FStar_All.exit 1)))))
+end
+| Black -> begin
+direct_deps
+end
+| White -> begin
+(let _49_501 = (FStar_Util.smap_add graph short (direct_deps, Gray))
+in (let transitive_deps = (let _115_122 = (FStar_List.map discover direct_deps)
+in (FStar_List.flatten _115_122))
+in (let all_deps = (FStar_List.unique (FStar_List.append direct_deps transitive_deps))
+in (let _49_505 = (FStar_Util.smap_add graph short (all_deps, Black))
+in all_deps))))
+end)
+end))))
+in (FStar_List.map (fun f -> (let _115_124 = (discover f)
+in (f, _115_124))) filenames))))))))
+
+let print = (fun deps -> (FStar_List.iter (fun _49_511 -> (match (_49_511) with
 | (f, deps) -> begin
 (let deps = (FStar_List.map (fun s -> (FStar_Util.replace_string s " " "\\ ")) deps)
 in (FStar_Util.fprint2 "%s: %s\n" f (FStar_String.concat " " deps)))
