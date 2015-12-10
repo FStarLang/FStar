@@ -1032,7 +1032,7 @@ in (t, (tdecl)::(t_kinding)::(t_interp)::[])))))))))
 end
 end
 | FStar_Absyn_Syntax.Typ_refine (_53_876) -> begin
-(let _53_895 = (match ((FStar_Tc_Normalize.normalize_refinement env.tcenv t0)) with
+(let _53_895 = (match ((FStar_Tc_Normalize.normalize_refinement [] env.tcenv t0)) with
 | {FStar_Absyn_Syntax.n = FStar_Absyn_Syntax.Typ_refine (x, f); FStar_Absyn_Syntax.tk = _53_885; FStar_Absyn_Syntax.pos = _53_883; FStar_Absyn_Syntax.fvs = _53_881; FStar_Absyn_Syntax.uvs = _53_879} -> begin
 (x, f)
 end

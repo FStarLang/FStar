@@ -609,7 +609,7 @@ and encode_typ_term (t:typ) (env:env_t) : (term           (* encoding of t, expe
              t, [tdecl; t_kinding; t_interp] (* TODO: At least preserve alpha-equivalence of non-pure function types *)
 
       | Typ_refine _ ->
-        let x, f = match Tc.Normalize.normalize_refinement env.tcenv t0 with
+        let x, f = match Tc.Normalize.normalize_refinement [] env.tcenv t0 with
             | {n=Typ_refine(x, f)} -> x, f
             | _ -> failwith "impossible" in
 

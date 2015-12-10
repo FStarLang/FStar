@@ -1,6 +1,6 @@
 ## Online editor ##
 
-The easiest way to try out F\* is directly in your browser by using
+The easiest way to try out F\* quickly is directly in your browser by using
 the [online F\* editor] that's part of the [F\* tutorial].
 
 [online F\* editor]: https://www.fstar-lang.org/run.php
@@ -17,19 +17,35 @@ features and bug fixes.
 
 ### Testing a binary package ###
 
-1. Test that the binary is good by expanding the archive and running:
+Test that the binary is good by expanding the archive and running the
+following commands. (On Windows this requires Cygwin and `make`)
+
+1. Add `fstar.exe` and `z3` to your `PATH`, either permanently
+   or temporarily, for instance by running this:
+
+        $ source setenv.sh
+        $ fstar.exe --version
+        F* 0.9.1.1
+        platform=Linux_x86_64
+        compiler=OCaml 4.02.3
+        date=2015-12-04T15:45:49+0100
+        commit=344c7d1
+        $ z3 --version
+        Z3 version 4.4.1
+
+2. Run the unit tests:
 
         $ make -C examples/unit-tests
 
-2. If you have OCaml installed run, the following command should print "Hello F*!"
+3. If you have OCaml installed run, the following command should print "Hello F*!"
 
         $ make -C examples/hello ocaml
 
-3. If you have F# installed run, the following command should print "Hello F*!"
+4. If you have F# installed run, the following command should print "Hello F*!"
 
         $ make -C examples/hello fs
 
-4. You can try out the full regression suite, but keep in mind that
+5. You can try out the full regression suite, but keep in mind that
    things might fail because of timeouts if your machine is not
    sufficiently powerful.
 
@@ -77,21 +93,28 @@ you to skip directly to step 3 and build F* with just an OCaml compiler.
 
 ### 1. Building F* from sources using the F# compiler ###
 
-**Note:** Building F* using the recently released F# 4.0 is currently
-  not supported (building suceeds but produces a broken binary:
-  https://github.com/FStarLang/FStar/issues/308)
-
-#### On Windows 7/8 using Visual Studio ####
+#### On Windows 7/8/10 using Visual Studio 2015 ####
 
   - Prerequisite: .NET framework 4.5
 
-  - Prerequisite: [Visual Studio 2013 or 2015 and Visual F# Tools (v3.0 or 3.1)](http://fsharp.org/use/windows/)
+  - Prerequisite: [Visual Studio 2015 and Visual F# Tools](http://fsharp.org/use/windows/)
     - for instance install the **free**
       [Visual Studio Community](https://www.visualstudio.com/en-us/products/visual-studio-community-vs.aspx)
-    - Install the Visual F# Tools (v3.0 or 3.1) from Microsoft
-      (e.g. by clicking the "Get Visual F# Tools for Visual Studio 2013"
-       link [here](https://msdn.microsoft.com/en-us/vstudio/hh388569.aspx))
-  - Run the `src/VS/nuget-restore.bat` script before openting the solution for the first time. F* depends upon NuGet packages that are incompatible with Visual Studio's internal invocation of NuGet's restore feature.
+    - The Visual F# Tools are installed automatically when you first
+      create or open an F# project.
+
+  - Run the `src/VS/nuget-restore.bat` script _from the top-level F* directory_
+    before opening the solution for the first time.
+    F* depends upon NuGet packages that are incompatible with
+    Visual Studio's internal invocation of NuGet's restore feature.
+
+        C:\Users\xxx\Desktop\FStar>src\VS\nuget-restore.bat
+        Installing 'FsLexYacc.Runtime 6.1.0'.
+        Installing 'FsLexYacc 6.1.0'.
+        Successfully installed 'FsLexYacc.Runtime 6.1.0'.
+        Successfully installed 'FsLexYacc 6.1.0'.
+        All packages listed in packages.config are already installed.
+
   - Using Visual Studio, open `src/VS/FStar.sln` and build the solution
     (in the menus: Build > Build Solution).
 
@@ -100,11 +123,16 @@ you to skip directly to step 3 and build F* with just an OCaml compiler.
   currently; `make -C src` succeeds but produces a broken binary:
   https://github.com/FStarLang/FStar/issues/159)
 
-**Note:** If Visual Studio fails to open one or more projects, the problem is likely that the NuGet package cache hasn't been restored. You must either exit Visual Studio to restore the cache (using the `src/VS/nuget-restore.bat` script), or restart Visual Studio after having restored the cache. Otherwise, F* may not successfully build (or correctly build).
+**Note:** If Visual Studio fails to open one or more projects, the
+  problem is likely that the NuGet package cache hasn't been
+  restored. You must either exit Visual Studio to restore the cache
+  (using the `src/VS/nuget-restore.bat` script), or restart Visual
+  Studio after having restored the cache. Otherwise, F* may not
+  successfully build (or correctly build).
 
 #### On Linux or Mac OS X using Mono ####
 
-  - Install mono 3.10.x or 3.12.x or 4.0.x and fsharp 3.1.x
+  - Install mono from 3.10.x to 4.2.x and fsharp 4.0.1.0
 
     - On Debian/Ubuntu
 
@@ -123,7 +151,8 @@ you to skip directly to step 3 and build F* with just an OCaml compiler.
       - http://www.mono-project.com/download/#download-mac
 
   - Depending on your distribution, you might need to manually import
-    certificates for Mono
+    certificates for Mono (you don't need to do this on Arch if you
+    use the default mono package)
 
           $ mozroots --import --sync
 
@@ -202,12 +231,11 @@ special `flexlink` technology for this. See `contrib/CoreCrypto/ml` and
 
 ## Runtime dependency: Z3 SMT solver ##
 
-To use F* for verification you need a Z3 4.4.0 binary.
+To use F* for verification you need a Z3 4.4.1 binary.
 Our binary packages include that already in `bin`, but if you compile
 F* from sources you need to get a Z3 binary yourself and add it to
-your `PATH`. We recommend you use the 4.4.0 binaries here:
-https://github.com/Z3Prover/z3/releases/tag/z3-4.4.0
-
+your `PATH`. We recommend you use the 4.4.1 binaries here:
+https://github.com/Z3Prover/z3/releases/tag/z3-4.4.1
 
 ## Creating binary packages for your platform ##
 
@@ -215,9 +243,11 @@ https://github.com/Z3Prover/z3/releases/tag/z3-4.4.0
 
 0. Bootstrap the compiler in OCaml using the instructions above
 
-1. Make sure you have the Z3 4.4.0 binary in your `$PATH` or
-   in the `$FSTAR_HOME/bin` directory
-   (please make sure it's precisely this version!)
+1. Make sure you have the Z3 4.4.1 binary in your `$PATH` or
+   in the `$FSTAR_HOME/bin` directory.
+   Please make sure it's precisely this version!
+
+        $ z3 --version
 
 2. Run the following command:
 

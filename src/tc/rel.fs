@@ -409,7 +409,7 @@ let rec compress_e (env:env) wl e =
            end
         | _ -> e
 
-let normalize_refinement env wl t0 = Normalize.normalize_refinement env (compress env wl t0)
+let normalize_refinement steps env wl t0 = Normalize.normalize_refinement steps env (compress env wl t0)
 
 let base_and_refinement env wl t1 =
    let rec aux norm t1 =
@@ -417,7 +417,7 @@ let base_and_refinement env wl t1 =
         | Typ_refine(x, phi) ->
             if norm
             then (x.sort, Some(x, phi))
-            else begin match normalize_refinement env wl t1 with
+            else begin match normalize_refinement [] env wl t1 with
                 | {n=Typ_refine(x, phi)} -> (x.sort, Some(x, phi))
                 | tt -> failwith (Util.format2 "impossible: Got %s ... %s\n" (Print.typ_to_string tt) (Print.tag_of_typ tt))
             end
@@ -426,7 +426,7 @@ let base_and_refinement env wl t1 =
         | Typ_app _ ->
             if norm
             then (t1, None)
-            else let t2', refinement = aux true (normalize_refinement env wl t1) in
+            else let t2', refinement = aux true (normalize_refinement [] env wl t1) in
                  begin match refinement with
                     | None -> t1, None (* no refinement found ... so revert to the original type, without expanding defs *)
                     | _ -> t2', refinement
@@ -652,17 +652,21 @@ let rec head_matches t1 t2 : match_result =
 
 (* Does t1 match t2, after some delta steps? *)
 let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
-    let success d r t1 t2 = (r, (if d then Some(t1, t2) else None)) in
+    let success d r t1 t2 = (r, (if d>0 then Some(t1, t2) else None)) in
     let fail () = (MisMatch, None) in
     let rec aux d t1 t2 =
         match head_matches t1 t2 with
             | MisMatch ->
-                if d then fail() //already delta normal
-                else let t1 = normalize_refinement env wl t1 in
-                     let t2 = normalize_refinement env wl t2 in
-                     aux true t1 t2
+                if d=2 then fail() //already delta normal
+                else if d=1 then 
+                     let t1' = normalize_refinement [Normalize.UnfoldOpaque] env wl t1 in
+                     let t2' = normalize_refinement [Normalize.UnfoldOpaque] env wl t2 in
+                     aux 2 t1' t2'
+                else let t1 = normalize_refinement [] env wl t1 in
+                     let t2 = normalize_refinement [] env wl t2 in
+                     aux (d+1) t1 t2
             | r -> success d r t1 t2 in
-    aux false t1 t2
+    aux 0 t1 t2
 
 let decompose_binder (bs:binders) v_ktec (rebuild_base:binders -> ktec -> 'a) : ((list<ktec> -> 'a)                            //recompose
                                                                                  * list<(option<binder> * variance * ktec)>) = //components
@@ -2116,12 +2120,12 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
             | Inl t, imp ->
                 let kk = Recheck.recompute_kind t in
                 let gi_xi, gi = new_tvar t.pos xs kk in
-                let gi_pi = mk_Typ_app(gi, args1) (Some kk) t.pos in
+                let gi_pi = mk_Typ_app'(gi, args1) (Some kk) t.pos in
                 (Inl gi_xi, imp), TProb <| sub_prob gi_pi t "type index"
             | Inr v, imp ->
                 let tt = Recheck.recompute_typ v in
                 let gi_xi, gi = new_evar v.pos xs tt in
-                let gi_pi = mk_Exp_app(gi, args1) (Some tt) v.pos in
+                let gi_pi = mk_Exp_app'(gi, args1) (Some tt) v.pos in
                 (Inr gi_xi, imp), EProb <| sub_prob gi_pi v "expression index") |> List.unzip in
         let formula = Util.mk_conj_l (List.map (fun p -> p_guard p |> fst) gi_pi) in
         gi_xi, gi_pi, formula in

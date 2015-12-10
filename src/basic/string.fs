@@ -22,6 +22,7 @@ let compare s1 s2 = String.compare s1 s2
 let strlen s = String.length s
 let length s = String.length s
 let collect f s = String.collect f s
+let lowercase s = String.lowercase s
 
 (* may fail with index out of bounds *)
 let substring s i j = String.sub s i j
