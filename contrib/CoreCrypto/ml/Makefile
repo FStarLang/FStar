@@ -1,70 +1,68 @@
-all: CoreCrypto.cmxa
-
 OCAMLC = ocamlfind c
 OCAMLOPT = ocamlfind opt
 OCAMLMKLIB = ocamlfind mklib
+OCAMLDEP = ocamlfind dep
 
 FSTAR_HOME = ../../..
 PLATFORM = $(FSTAR_HOME)/contrib/Platform/ml
-OPENSSL_INCLUDE = ../../../../openssl/include
 
 ifeq ($(OS),Windows_NT)
+    EXE = .exe
     DLL = dll
-    CC = i686-w64-mingw32-gcc
-    OCAML_INCLUDE = /usr/local/lib/ocaml
+    CC =
+    OCAML_INCLUDE =
     ARCH = win32
-    OCAMLLINK = $(OCAMLOPT) -cc "flexlink -chain mingw -v -v -exe -lgdi32"
 else
+    EXE =
     DLL = so
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Darwin)
-        CC = gcc-5
-        OCAML_INCLUDE = /usr/local/lib/ocaml
+        CC = -cc gcc-5
 	ARCH = osx
     else
-        CC = gcc
-        OCAML_INCLUDE = /usr/lib/ocaml
+        CC = -cc gcc
         EXTRA_OPTS = -ccopt -fPIC
 	ARCH = x86_64
     endif
-    OCAMLLINK = $(OCAMLOPT)
 endif
 
-LIB = $(FSTAR_HOME)/3rdparty/$(ARCH)
+.PHONY: test dep
 
-openssl_stub.o: openssl_stub.c
-	$(OCAMLOPT) -c -cc $(CC) -ccopt "-I $(OCAML_INCLUDE)" -ccopt "-I $(OPENSSL_INCLUDE)" $(EXTRA_OPTS) $<
+all: CoreCrypto.cmxa
 
-$(LIB)/dllopenssl_wrap.${DLL}:
-	$(OCAMLMKLIB) -o $(LIB)/openssl_wrap $<
+%.o: %.c
+	$(OCAMLOPT) $(CC) $(EXTRA_OPTS) -c $<
 
-CoreCrypto.cmi: CoreCrypto.mli
+dllopenssl_stubs.$(DLL): openssl_stub.o
+	$(OCAMLMKLIB) -lcrypto -lssl -o openssl_stubs $<
+
+%.cmxa: %.cmx dllopenssl_stubs.$(DLL)
+	$(OCAMLOPT) -a -o $@ $< -cclib -lopenssl_stubs
+
+%.cmi: %.mli
 	$(OCAMLC) -I $(PLATFORM) -c $<
 
-CoreCrypto.cmo: CoreCrypto.ml
+%.cmo: %.ml
 	$(OCAMLC) -I $(PLATFORM) -c $<
 
-CoreCrypto.cma: CoreCrypto.cmo $(LIB)/dllopenssl_wrap.so
-	$(OCAMLC) -I $(PLATFORM) -L$(LIB) -a -o $@ $< -dllib -lopenssl_wrap
-
-CoreCrypto.cmx: CoreCrypto.ml CoreCrypto.cmi
+%.cmx: %.ml
 	$(OCAMLOPT) -I $(PLATFORM) -c $<
 
-CoreCrypto.cmxa: CoreCrypto.cmx $(LIB)/dllopenssl_wrap.${DLL}
-	$(OCAMLOPT) -I $(PLATFORM) -a -o $@ $< -cclib -lopenssl_wrap
+# Note: because there is no .cmxa generated for [openssl_stubs], the final
+# invocation has no way to know that we need -lcrypto and -lssl. If this changes
+# in the future, the rule below can be simplified.
+Tests$(EXE): $(PLATFORM)/platform.cmx CoreCrypto.cmx dllopenssl_stubs.$(DLL) Tests.cmx
+	$(OCAMLOPT) -I $(PLATFORM) -package batteries -linkpkg -o $@ \
+	-cclib -lcrypto -cclib -lssl -cclib -lopenssl_stubs \
+	$(PLATFORM)/platform.cmx CoreCrypto.cmx Tests.cmx
+
+test: Tests$(EXE)
+	@./Tests$(EXE)
 
 clean:
-	rm -f Tests *.[oa] *.so *.cm[ixoa] *.cmxa *.exe
+	rm -f Tests$(EXE) *.[oa] *.so *.cm[ixoa] *.cmxa *.exe
 
-$(LIB)/libcrypto.a:
-	git submodule update --init $(FSTAR_HOME)/3rdparty
+depend:
+	$(OCAMLDEP) *.ml *.mli > .depend
 
-Tests: CoreCrypto.cmx $(LIB)/libcrypto.a $(LIB)/dllopenssl_wrap.$(DLL) Tests.ml
-	$(OCAMLLINK) -ccopt "-L$(LIB)" -I $(PLATFORM) -package batteries -linkpkg -o $@ \
-	$(PLATFORM)/platform.cmx $< Tests.ml \
-	-cclib -lopenssl_wrap -cclib $(LIB)/libcrypto.a
-
-.PHONY: test
-
-test: Tests
-	@./Tests
+include .depend

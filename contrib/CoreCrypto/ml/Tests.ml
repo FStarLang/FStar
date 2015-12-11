@@ -1,6 +1,10 @@
 open CoreCrypto
 open Platform
 
+let _ =
+  print_endline "Tests started"
+;;
+
 let digit_to_int c = match c with
   | '0'..'9' -> Char.code c - Char.code '0'
   | 'a'..'f' -> 10 + Char.code c - Char.code 'a'
