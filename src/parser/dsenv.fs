@@ -573,6 +573,7 @@ let finish_module_or_interface env modul =
 
 let prepare_module_or_interface intf admitted env mname =
   let prep env =
+    (* These automatic directives must be kept in sync with [dep.fs]. *)
     let open_ns = if      lid_equals mname Const.prims_lid then []
                   else if lid_equals mname Const.st_lid    then [Const.prims_lid]
                   else if lid_equals mname Const.all_lid   then [Const.prims_lid; Const.st_lid]
@@ -586,7 +587,7 @@ let prepare_module_or_interface intf admitted env mname =
       then raise (Error(Util.format1 "Duplicate module or interface name: %s" mname.str, range_of_lid mname));
       //we have an interface for this module already; if we're not interactive then do not export any symbols from this module
       prep (push env), true //push a context so that we can pop it when we're done
-      
+
 let enter_monad_scope env mname =
   let curmod = current_module env in
   let mscope = lid_of_ids (curmod.ns@[curmod.ident; mname]) in

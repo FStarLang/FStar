@@ -139,6 +139,34 @@ let collect_one (original_map: smap<string>) (filename: string): list<string> =
   in
   let working_map = smap_copy original_map in
 
+  let record_open lid =
+    let key = lowercase_join_longident lid true in
+    begin match smap_try_find original_map key with
+    | Some filename ->
+        add_dep filename
+    | None ->
+        let r = enter_namespace original_map working_map key in
+        if not r then
+          Util.fprint1 "Warning: no modules in namespace %s and no file with \
+          that name either\n" (string_of_lid lid true)
+    end
+  in
+
+  (* In [dsenv.fs], in [prepare_module_or_interface], some open directives are
+   * auto-generated. *)
+  let auto_open =
+    let me = String.lowercase (must (check_and_strip_suffix filename)) in
+    if me = lowercase_join_longident Const.prims_lid true then
+      []
+    else if me = lowercase_join_longident Const.st_lid true then
+      [ Const.prims_lid ]
+    else if me = lowercase_join_longident Const.all_lid true then
+      [ Const.prims_lid; Const.st_lid ]
+    else
+      [ Const.prims_lid; Const.st_lid; Const.all_lid; Const.fstar_ns_lid ]
+  in
+  List.iter record_open auto_open;
+
   let rec collect_fragment = function
     | Inl file ->
         collect_file file
@@ -162,16 +190,7 @@ let collect_one (original_map: smap<string>) (filename: string): list<string> =
 
   and collect_decl = function
     | Open lid ->
-        let key = lowercase_join_longident lid true in
-        begin match smap_try_find original_map key with
-        | Some filename ->
-            add_dep filename
-        | None ->
-            let r = enter_namespace original_map working_map key in
-            if not r then
-              Util.fprint1 "Warning: no modules in namespace %s and no file with \
-              that name either\n" (string_of_lid lid true)
-        end
+        record_open lid
     | ToplevelLet (_, patterms) ->
         List.iter (fun (_, t) -> collect_term t) patterms
     | KindAbbrev (_, binders, t) ->
