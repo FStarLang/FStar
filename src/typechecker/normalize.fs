@@ -267,10 +267,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   log (fun () -> Printf.printf "\tSet memo\n");
                   norm cfg env stack t
 
-                | App _ :: _ -> 
-                  rebuild cfg env stack t
-
-                | Abs _::_
+//                | App _ :: _ -> 
+//                  rebuild cfg env stack t
+                | App _ :: _ 
+                | Abs _ :: _
                 | [] -> 
                   if List.contains WHNF cfg.steps //don't descend beneath a lambda if we're just doing WHNF   
                   then rebuild cfg env stack (closure_as_term env t) //But, if the environment is non-empty, we need to substitute within the term

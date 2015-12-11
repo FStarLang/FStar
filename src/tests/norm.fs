@@ -113,6 +113,6 @@ let run_all debug =
     run (minus_nat (snat (snat znat)) (snat znat)) (snat znat);
     run (minus_nat (encode_nat 100) (encode_nat 100)) znat;
     run (minus_nat (encode_nat 10000) (encode_nat 10000)) znat;
-    run (minus_nat (encode_nat 10) (encode_nat 10)) znat;
-    run (minus_nat (encode_nat 1000000) (encode_nat 1000000)) znat
+    run (minus_nat (encode_nat 10) (encode_nat 10)) znat
+//    run (minus_nat (encode_nat 1000000) (encode_nat 1000000)) znat
     

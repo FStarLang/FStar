@@ -56,7 +56,7 @@ let is_name (lid:lident) =
   let c = Util.char_at lid.ident.idText 0 in
   Util.is_upper c
 
-let arg_of_non_null_binder (b, imp) = (bv_to_tm b, imp)
+let arg_of_non_null_binder (b, imp) = (bv_to_name b, imp)
 
 let args_of_non_null_binders (binders:binders) =
     binders |> List.collect (fun b ->

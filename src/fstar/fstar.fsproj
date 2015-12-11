@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -16,7 +16,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>true</Optimize>
+    <Optimize>false</Optimize>
     <Tailcalls>true</Tailcalls>
     <OutputPath>..\..\bin\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
@@ -24,7 +24,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DocumentationFile>
     </DocumentationFile>
-    <Prefer32Bit>true</Prefer32Bit>
+    <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
     <StartArguments>ext.fst classical.fst set.fsi heap.fst map.fsi listTot.fst hyperHeap.fsi stHyperHeap.fst allHyperHeap.fst char.fsi string.fst list.fst listproperties.fst seq.fsi seqproperties.fst --admit_fsi FStar.Set --admit_fsi FStar.Map --admit_fsi FStar.HyperHeap --admit_fsi FStar.Seq --admit_fsi FStar.Char --admit_fsi FStar.SeqProperties  --codegen-lib CoreCrypto --codegen-lib Platform --codegen-lib Classical --codegen-lib SeqProperties --codegen-lib HyperHeap --admit_fsi SessionDB --admit_fsi UntrustedCert --admit_fsi DHDB --admit_fsi CoreCrypto --admit_fsi Cert --admit_fsi StatefulPlain --admit_fsi LHAEPlain --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 --z3timeout 100 ../../FStar/contrib/Platform/fst/Bytes.fst ../../FStar/contrib/Platform/fst/Date.fst ../../FStar/contrib/Platform/fst/Error.fst ../../FStar/contrib/Platform/fst/Tcp.fst ../../FStar/contrib/CoreCrypto/fst/CoreCrypto.fst ../../FStar/contrib/CoreCrypto/fst/DHDB.fst tls/TLSError.fst tls/Nonce.p.fst tls/TLSConstants.fst --verify_module TLSConstants</StartArguments>
     <StartAction>Project</StartAction>

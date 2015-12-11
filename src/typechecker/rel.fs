@@ -945,7 +945,8 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
                let env = Env.push_local_binding env (Env.Binding_var(hd1, ([],hd1.sort))) in
                begin match aux ((hd1,imp)::scope) env subst xs ys with
                  | Inl (sub_probs, phi) ->
-                   let phi = Util.mk_conj (p_guard prob |> fst) (U.close_forall [(hd2,imp)] phi) in
+                   let phi = Util.mk_conj (p_guard prob |> fst) (U.close_forall [(hd1,imp)] phi) in
+                   Printf.printf "hd1 = %s\n Formula is %s" (Print.bv_to_string hd1) (Print.term_to_string phi);
                    Inl (prob::sub_probs, phi)
 
                  | fail -> fail
@@ -1294,17 +1295,17 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             let rel = if !Options.use_eq_at_higher_order then EQ else problem.relation in
             CProb <| mk_problem scope orig c1 rel c2 None "function co-domain")
 
-      | Tm_abs(bs1, t1'), Tm_abs(bs2, t2') ->
+      | Tm_abs(bs1, tbody1), Tm_abs(bs2, tbody2) ->
         let mk_t t = function
             | [] -> t
             | bs -> mk (Tm_abs(bs, t)) None t.pos in
-        let (bs1, t1'), (bs2, t2') =
-            match_num_binders (bs1, mk_t t1') (bs2, mk_t t2') in
+        let (bs1, tbody1), (bs2, tbody2) =
+            match_num_binders (bs1, mk_t tbody1) (bs2, mk_t tbody2) in
         solve_binders env bs1 bs2 orig wl
         (fun scope env subst ->
-            let t1 = Subst.subst subst t1 in 
-            let t2 = Subst.subst subst t2 in //open both bodies
-            TProb <| mk_problem scope orig t1 problem.relation t2 None "lambda co-domain")
+            TProb <| mk_problem scope orig (Subst.subst subst tbody1) 
+                                           problem.relation 
+                                           (Subst.subst subst tbody2) None "lambda co-domain")
 
       | Tm_refine _, Tm_refine _ ->
         let x1, phi1 = as_refinement env wl t1 in
