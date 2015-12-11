@@ -50,6 +50,8 @@ dump
 *.so
 /VS/
 
+tags
+
 .nubuild
 nuobj/
 nucache/

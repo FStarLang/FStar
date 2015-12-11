@@ -77,7 +77,7 @@ let convIdent (id:ident) : mlident = (id.idText ,(convRange id.idRange))
 
 (* TODO : if there is a single quote in the name of the type variable, the additional tick in the beginning causes issues with the lexer/parser of OCaml (syntax error).
   Perhaps the type variable is interpreted as a string literal.
-  For an example, see https://github.com/FStarLang/FStar/blob/f53844512c76bd67b21b4cf68d774393391eac75/lib/heap.fst#L49
+  For an example, see https://github.com/FStarLang/FStar/blob/f53844512c76bd67b21b4cf68d774393391eac75/lib/FStar.Heap.fst#L49
 
    Coq seems to add a space after the tick in such cases. Always adding a space for now
   *)

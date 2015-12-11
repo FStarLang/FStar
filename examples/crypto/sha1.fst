@@ -3,11 +3,11 @@
     variables:CONTRIB=../../contrib;
     other-files:
             ext.fst classical.fst
-            set.fsi set.fst
-            heap.fst st.fst all.fst
+            FStar.Set.fsi FStar.Set.fst
+            FStar.Heap.fst FStar.ST.fst FStar.All.fst
             string.fst list.fst
             seq.fsi seqproperties.fst
-            io.fsti
+            FStar.IO.fsti
             $CONTRIB/Platform/fst/Bytes.fst
             $CONTRIB/CoreCrypto/fst/CoreCrypto.fst
   --*)

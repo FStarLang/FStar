@@ -35,7 +35,7 @@ all:
 
 test: all
 
-stdlib: $(addprefix ../lib/, list.fst string.fst partialmap.fst st.fst listproperties.fst)
+stdlib: $(addprefix ../lib/, list.fst string.fst partialmap.fst FStar.ST.fst listproperties.fst)
 	mkdir -p ../cache
 	../bin/fstar.exe $(OTHERFLAGS) $^ --serialize_mods
 

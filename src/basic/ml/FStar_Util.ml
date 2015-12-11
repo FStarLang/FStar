@@ -340,6 +340,9 @@ let map_opt opt f =
   | None -> None
   | Some x -> Some (f x)
 
+let iter_opt opt f =
+  ignore (map_opt opt f)
+
 let rec find_map l f =
   match l with
   | [] -> None
@@ -571,3 +574,18 @@ let get_oreader (filename:string) : oReader = {
   close = (fun _ -> ());
 }
 
+let getcwd = Unix.getcwd
+
+let readdir dir =
+  let handle = Unix.opendir dir in
+  let files = ref [] in
+  try
+    while true do
+      files := Unix.readdir handle :: !files
+    done;
+    assert false
+  with End_of_file ->
+    !files
+
+let file_exists = Sys.file_exists
+let basename = Filename.basename

@@ -113,8 +113,13 @@ val get_file_extension: string -> string
 val is_path_absolute: string -> bool
 val join_paths: string -> string -> string
 val normalize_file_path: string -> string
+val basename: string -> string
+val getcwd: unit -> string
+val readdir: string -> list<string>
 
 open Prims
+val file_exists: string -> Tot<bool>
+
 val int_of_string: string -> int
 val int_of_char:   char -> Tot<int>
 val int_of_byte:   byte -> Tot<int>
@@ -140,6 +145,7 @@ val ends_with: string -> string -> Tot<bool>
 val char_at: string -> int -> char
 val is_upper: char -> Tot<bool>
 val substring_from: string -> int -> string
+(* Second argument is a length, not an index. *)
 val substring: string -> int -> int -> string
 val replace_char: string -> char -> char -> Tot<string>
 val replace_string: string -> string -> string -> Tot<string>
@@ -174,8 +180,11 @@ val is_some: option<'a> -> Tot<bool>
 val must: option<'a> -> 'a
 val dflt: 'a -> option<'a> -> Tot<'a>
 val find_opt: ('a -> bool) -> list<'a> -> option<'a>
+(* FIXME: these functions have the wrong argument order when compared to
+ List.map, List.iter, etc. *)
 val bind_opt: option<'a> -> ('a -> option<'b>) -> option<'b>
 val map_opt: option<'a> -> ('a -> 'b) -> option<'b>
+val iter_opt: option<'a> -> ('a -> unit) -> unit
 
 val first_N: int -> list<'a> -> (list<'a> * list<'a>)
 val nth_tail: int -> list<'a> -> list<'a>

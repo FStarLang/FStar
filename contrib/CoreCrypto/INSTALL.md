@@ -6,14 +6,13 @@ and put it into the parent directory of FStar.
 
 #### On Windows
 
-* Make sure you installed OCaml as described in `FStar/INSTALL.md`.
+* Use the latest windows installer with OPAM.
 
-* In Cygwin run `./config --cross-compile-prefix=i686-w64-mingw32- mingw`
-in the `openssl` source folder.
-
-  Note that the cross compilation flag is important to make it work.
-
-* Run `make` and get a coffee.
+```
+opam init
+opam install depext depext-cygwinports
+opam depext ssl
+```
 
 #### On other platforms
 

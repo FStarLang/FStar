@@ -1,6 +1,6 @@
 (*--build-config
   options:--z3timeout 20;
-  other-files:classical.fst ext.fst set.fsi set.fst heap.fst
+  other-files:classical.fst ext.fst FStar.Set.fsi FStar.Set.fst FStar.Heap.fst
               stperm.fst seq.fsi seq.fst seqproperties.fst arr.fst
               qs_seq.fst qsort_arr.fst
 --*)

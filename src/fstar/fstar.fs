@@ -122,7 +122,7 @@ let batch_mode_tc filenames =
     let prims_mod, dsenv, env = tc_prims () in
 
     let all_mods, dsenv, env = batch_mode_tc_no_prims dsenv env filenames in
-   prims_mod@all_mods, dsenv, env
+    prims_mod@all_mods, dsenv, env
 
 let finished_message fmods =
     if not !Options.silent
@@ -222,7 +222,12 @@ let interactive_mode dsenv env =
                 if !should_read_build_config then
                   if Util.starts_with text (Parser.ParseIt.get_bc_start_string ()) then
                     begin
-                      let filenames = Parser.ParseIt.read_build_config_from_string "" false text true in
+                      let filenames = 
+                        match !Options.interactive_context with
+                          | Some s ->
+                            Parser.ParseIt.read_build_config_from_string s false text true
+                          | None ->
+                            Parser.ParseIt.read_build_config_from_string "" false text true in
                       let _, dsenv, env = batch_mode_tc_no_prims dsenv env filenames in
                       should_read_build_config := false;
                       dsenv, env
@@ -269,32 +274,39 @@ let codegen fmods env=
 
 (* Main function *)
 let go _ =
-  let (res, filenames) = process_args () in
+  let res, filenames = process_args () in
   match res with
     | Help ->
       Options.display_usage (Options.specs())
     | Die msg ->
       Util.print_string msg
     | GoOn ->
-             let filenames = if !Options.use_build_config  //if the user explicitly requested it
-                             || (not !Options.interactive && List.length filenames = 1)  //or, if there is only a single file on the command line
-                             then match filenames with
-                                    | [f] -> Parser.Driver.read_build_config f //then, try to read a build config from the header of the file
-                                    | _ -> Util.print_string "--use_build_config expects just a single file on the command line and no other arguments"; exit 1
-                             else filenames in
-             if !Options.find_deps then
-               // `filenames` won't be normalized in cases that `Parser.Driver.read_build_config` is never invoked, so we must do it here to ensure output can be relied upon to produce normalized path names.
-               Util.print_string (Util.format1 "%s\n" (Util.concat_l "\n" (List.map Util.normalize_file_path filenames)))
-             else
-               (let fmods, dsenv, env = batch_mode_tc filenames in
-               report_errors None;
-               if !Options.interactive
-               then interactive_mode dsenv env
-               else begin
-                codegen fmods env;
-                finished_message fmods
-               end)
-
+      let filenames = if !Options.use_build_config  //if the user explicitly requested it
+                      || (not !Options.interactive && List.length filenames = 1)  //or, if there is only a single file on the command line
+                      then match filenames with
+                             | [f] -> Parser.Driver.read_build_config f //then, try to read a build config from the header of the file
+                             | _ -> Util.print_string "--use_build_config expects just a single file on the command line and no other arguments"; exit 1
+                      else filenames in
+      if !Options.find_deps then
+        (* Dump the filenames found in the build-config special comment.
+           `filenames` won't be normalized in cases that
+           `Parser.Driver.read_build_config` is never invoked, so we must do it
+           here to ensure output can be relied upon to produce normalized path
+           names. *)
+        Util.print_string (Util.format1 "%s\n" (Util.concat_l "\n" (List.map Util.normalize_file_path filenames)))
+      else if !Options.dep then
+        (* This is the fstardep tool *)
+        Parser.Dep.print (Parser.Dep.collect filenames)
+      else
+        (* Normal mode of operations *)
+        (let fmods, dsenv, env = batch_mode_tc filenames in
+        report_errors None;
+        if !Options.interactive
+        then interactive_mode dsenv env
+        else begin
+         codegen fmods env;
+         finished_message fmods
+        end)
 
 let main () =
     try

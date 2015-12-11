@@ -90,3 +90,8 @@ val splitT : (list (Tuple2 '_36940 '_36939)) -> Tot (Tuple2 (list '_36940) (list
 val unzip : (list (Tuple2 '_36948 '_36947)) -> Tot (Tuple2 (list '_36948) (list '_36947))
 val unzipT : (list (Tuple2 '_36956 '_36955)) -> Tot (Tuple2 (list '_36956) (list '_36955))
 val unzip3T : (list (Tuple3 '_40328 '_40327 '_40326)) -> Tot (Tuple3 (list '_40328) (list '_40327) (list '_40326))
+(* This signature (just like [contains] and others) does not require that 'a be
+   comparable for F#, which means that after extraction, your code may not
+   compile with F#. OCaml does not have this problem, as it features a
+   polymorphic comparison. *)
+val unique: list 'a -> list 'a

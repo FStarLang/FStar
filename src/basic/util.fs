@@ -370,6 +370,11 @@ let map_opt opt f =
       | None -> None
       | Some x -> Some (f x)
 
+let iter_opt opt f =
+  match opt with
+  | None -> ()
+  | Some x -> f x
+
 let try_find_i f l =
     let rec aux i = function
         | [] -> None
@@ -582,3 +587,15 @@ let get_oreader (file:string) : oReader =
         close = r.Close
     }
 
+
+let getcwd () =
+  System.Environment.CurrentDirectory
+
+let readdir d =
+  List.ofArray (System.IO.Directory.GetFiles d)
+
+let file_exists f =
+  System.IO.File.Exists f || System.IO.Directory.Exists f
+
+let basename f =
+  System.IO.Path.GetFileName f

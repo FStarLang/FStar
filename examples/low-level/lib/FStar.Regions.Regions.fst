@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set;
-    other-files:ext.fst set.fsi ghost.fst listTot.fst FStar.Stack.fst FStar.Regions.Located.fst FStar.Regions.Heap.fst
+    other-files:ext.fst FStar.Set.fsi ghost.fst listTot.fst FStar.Stack.fst FStar.Regions.Located.fst FStar.Regions.Heap.fst
   --*)
 
 (* Note: we need the definitions of the functions from the [List]

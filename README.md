@@ -1,9 +1,7 @@
 F*: An ML-like language with a type system for program verification
 ===================================================================
 
-<!--
 [![Build status](https://www.fstar-lang.org:3443/fstarlang/fstar/badge?branch=master)](https://www.fstar-lang.org:3443/fstarlang/fstar/)
--->
 
 ### F\* website
 
@@ -29,21 +27,24 @@ documentation on F\*.
 
 [F\* wiki]: https://github.com/FStarLang/FStar/wiki
 
-### Towards F* version 1.0
+### Editing F* code
 
-This is a new variant of F* (carrying version 0.9.x) that is still in
-development and we hope will eventually lead to a 1.0 release. This
-new variant is incompatible and quite different compared to the
-previously released [0.7 versions and earlier].
+You can edit F\* code using your favourite text editor, but Emacs,
+Atom, and Vim have extensions that add special support for F\*,
+including syntax highlighting and interactive development. More
+details on [editor support] on the [F\* wiki].
 
-[0.7 versions and earlier]: https://github.com/FStarLang/FStar#old-f-versions-v071-and-earlier
+[editor support]: https://github.com/FStarLang/FStar/wiki/Editor-support-for-F*
 
-### License
+### Executing F* code
 
-This new variant of F* is released under the [Apache 2.0 license];
-see `LICENSE` for more details.
+By default F* only verifies the input code, it does not compile or execute it.
+To execute F* code one needs to translate it to either OCaml or F\#, using 
+F\*'s code extraction facility---this is invoked using the command line
+argument `--codegen OCaml` or `--codegen FSharp`. More details on
+[executing F\* code] on the [F\* wiki].
 
-[Apache 2.0 license]: https://www.apache.org/licenses/LICENSE-2.0
+[executing F\* code]: https://github.com/FStarLang/FStar/wiki/Executing-F*-code
 
 ### Community mailing list
 
@@ -71,24 +72,21 @@ that your problem still exists.
 [online F\* editor]: https://www.fstar-lang.org/run.php
 [the GitHub sources]: [https://github.com/FStarLang/FStar/blob/master/INSTALL.md#building-f-from-sources
 
-### Editing F* code
+### License
 
-You can edit F\* code using your favourite text editor, but Emacs,
-Atom, and Vim have extensions that add special support for F\*,
-including syntax highlighting and interactive development. More
-details on [editor support] on the [F\* wiki].
+This new variant of F* is released under the [Apache 2.0 license];
+see `LICENSE` for more details.
 
-[editor support]: https://github.com/FStarLang/FStar/wiki/Editor-support-for-F*
+[Apache 2.0 license]: https://www.apache.org/licenses/LICENSE-2.0
 
-### Executing F* code
+### Towards F* version 1.0
 
-By default F* only verifies the input code, it does not compile or execute it.
-To execute F* code one needs to translate it to either OCaml or F\#, using 
-F\*'s code extraction facility---this is invoked using the command line
-argument `--codegen OCaml` or `--codegen FSharp`. More details on
-[executing F\* code] on the [F\* wiki].
+This is a new variant of F* (carrying version 0.9.x) that is still in
+development and we hope will eventually lead to a 1.0 release. This
+new variant is incompatible and quite different compared to the
+previously released [0.7 versions and earlier].
 
-[executing F\* code]: https://github.com/FStarLang/FStar/wiki/Executing-F*-code
+[0.7 versions and earlier]: https://github.com/FStarLang/FStar#old-f-versions-v071-and-earlier
 
 ### Old F* versions (v0.7.1 and earlier) ###
 
