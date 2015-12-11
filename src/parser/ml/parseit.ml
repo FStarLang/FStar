@@ -140,7 +140,7 @@ let rec read_build_config_from_string (filename:string) (use_filename:bool) (con
     else (let stdlib = ["FStar.Set"; "FStar.Heap"; "FStar.ST"; "FStar.All"; "FStar.IO"] in
           let admit_string = FStar_List.map (fun x -> "--admit_fsi " ^ x) stdlib in
           let admit_string = FStar_String.concat " " admit_string in
-	  let common_files = [(find_file "." "set.fsi"); (find_file "." "heap.fst"); (find_file "." "st.fst"); (find_file "." "all.fst"); (find_file "." "io.fsti")] in
+	  let common_files = [(find_file "." "FStar.Set.fsi"); (find_file "." "FStar.Heap.fst"); (find_file "." "FStar.ST.fst"); (find_file "." "FStar.All.fst"); (find_file "." "FStar.IO.fsti")] in
 	  let files = if use_filename then common_files@[filename] else common_files
 	  in
           FStar_Options.admit_fsi := stdlib @ (!FStar_Options.admit_fsi);

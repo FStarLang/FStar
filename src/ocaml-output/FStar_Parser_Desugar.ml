@@ -1054,7 +1054,7 @@ if (l.FStar_Absyn_Syntax.str = "ref") then begin
 (match ((FStar_Parser_DesugarEnv.try_lookup_lid env FStar_Absyn_Const.alloc_lid)) with
 | None -> begin
 (let _110_391 = (let _110_390 = (let _110_389 = (FStar_Absyn_Syntax.range_of_lid l)
-in ("Identifier \'ref\' not found; include lib/st.fst in your path", _110_389))
+in ("Identifier \'ref\' not found; include lib/FStar.ST.fst in your path", _110_389))
 in FStar_Absyn_Syntax.Error (_110_390))
 in (Prims.raise _110_391))
 end

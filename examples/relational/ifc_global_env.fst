@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set;
-    other-files:ext.fst set.fsi heap.fst st.fst all.fst st2.fst while.fst
+    other-files:ext.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst st2.fst while.fst
 --*)
 module IFC
 

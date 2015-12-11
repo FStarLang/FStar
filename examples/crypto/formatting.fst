@@ -3,8 +3,8 @@
     variables:MITLS=../../../mitls-fstar/libs/fst/;
     other-files:
             ext.fst classical.fst
-            set.fsi set.fst
-            heap.fst st.fst all.fst string.fst list.fst
+            FStar.Set.fsi FStar.Set.fst
+            FStar.Heap.fst FStar.ST.fst FStar.All.fst string.fst list.fst
             seq.fsi seqproperties.fst
             ../../contrib/Platform/fst/Bytes.fst
   --*)

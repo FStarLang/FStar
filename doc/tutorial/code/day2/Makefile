@@ -6,7 +6,7 @@ MSBUILD = xbuild
 endif
 
 FSTAR_HOME = ../..
-LIB_FILES= string.fst set.fst map.fst heap.fst array.fst st.fst array-realized.fst
+LIB_FILES= string.fst FStar.Set.fst map.fst FStar.Heap.fst array.fst FStar.ST.fst array-realized.fst
 STDLIB = list.fst $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES))
 #FSTAR      = ../../bin/fstar.exe --codegen OCaml --odir ocaml-gen  $(STDLIB) $(OTHERFLAGS)
 
@@ -23,13 +23,13 @@ all: all-lax all-ver
 
 VERFILES=unit1.fst testset.fst millionaires.fst listlemmas.fst intlist-insertionsort.fst insertionsort.fst insertionsort-lemma.fst sf-basic.fst sf-lists.fst termination.fst termination-bugs.fst cca2.fst sf-poly.fst format.fst mac.fst sig.fst stlc.fst qs.fst cca2.fst bug22.fst bug19.fst bug29.fst bug26.fst bug15.fst bug25.fst bug24.fst bug28.fst bug35.fst bug52.fst bug23.fst bug21.fst
 
-acls2: list.fst $(addprefix $(FSTAR_HOME)/lib/, string.fst partialmap.fst st.fst) acls2.fst
+acls2: list.fst $(addprefix $(FSTAR_HOME)/lib/, string.fst partialmap.fst FStar.ST.fst) acls2.fst
 	../../bin/fstar.exe  $^ --verify
 
 counters: list.fst $(addprefix $(FSTAR_HOME)/lib/, string.fst partialmap.fst stperm.fst) ../sep/counters.fst
 	../../bin/fstar.exe  $^ --verify
 
-test: $(addprefix $(FSTAR_HOME)/lib/, partialmap.fst st.fst) test.fst
+test: $(addprefix $(FSTAR_HOME)/lib/, partialmap.fst FStar.ST.fst) test.fst
 	../../bin/fstar.exe  $^ --verify $(OTHERFLAGS)
 
 cache: $(STDLIB)

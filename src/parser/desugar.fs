@@ -556,7 +556,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
     | Name l ->
       if l.str = "ref"
       then begin match DesugarEnv.try_lookup_lid env Const.alloc_lid with
-            | None -> raise (Error ("Identifier 'ref' not found; include lib/st.fst in your path", range_of_lid l))
+            | None -> raise (Error ("Identifier 'ref' not found; include lib/FStar.ST.fst in your path", range_of_lid l))
             | Some e -> setpos e
            end
       else setpos <| fail_or env (DesugarEnv.try_lookup_lid env) l

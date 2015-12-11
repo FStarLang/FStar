@@ -1,6 +1,6 @@
 (*--build-config
     options:--warn_top_level_effects --admit_fsi FStar.Squash --admit_fsi FStar.Set --print_implicits;
-    other-files:constr.fst squash.fsti set.fsi heap.fst st.fst all.fst;
+    other-files:constr.fst squash.fsti FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst;
 --*)
 module FStar.SquashProperties
 
@@ -114,7 +114,7 @@ let g sh = fun (x:Type) ->
   bind_squash sh (fun h ->
   return_squash (lX (rU h)))))
 
-(* This only works if importing all.fst, which is nonsense *)
+(* This only works if importing FStar.All.fst, which is nonsense *)
 val r : U
 let r =
   let ff : (U -> Tot (squash bool)) =

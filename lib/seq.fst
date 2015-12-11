@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi Set;
-    other-files: ext.fst set.fsi seq.fsi
+    other-files: ext.fst FStar.Set.fsi seq.fsi
   --*)
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
