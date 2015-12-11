@@ -6,6 +6,8 @@ OCAMLDEP = ocamlfind dep
 FSTAR_HOME = ../../..
 PLATFORM = $(FSTAR_HOME)/contrib/Platform/ml
 
+CCOPTS = # -ccopt -O0
+
 ifeq ($(OS),Windows_NT)
     EXE = .exe
     DLL = dll
@@ -31,7 +33,7 @@ endif
 all: CoreCrypto.cmxa
 
 %.o: %.c
-	$(OCAMLOPT) $(CC) $(EXTRA_OPTS) -c $<
+	$(OCAMLOPT) $(CC) $(CCOPTS) $(EXTRA_OPTS) -c $<
 
 dllopenssl_stubs.$(DLL): openssl_stub.o
 	$(OCAMLMKLIB) -lcrypto -lssl -o openssl_stubs $<

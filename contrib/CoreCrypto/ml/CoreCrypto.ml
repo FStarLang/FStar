@@ -115,8 +115,8 @@ external ocaml_EVP_CIPHER_aes_128_cbc  : unit -> cipher = "ocaml_EVP_CIPHER_aes_
 external ocaml_EVP_CIPHER_aes_256_ecb  : unit -> cipher = "ocaml_EVP_CIPHER_aes_256_ecb"
 external ocaml_EVP_CIPHER_aes_256_cbc  : unit -> cipher = "ocaml_EVP_CIPHER_aes_256_cbc"
 
-external ocaml_EVP_CIPHER_aes_128_gcm  : unit -> cipher = "ocaml_EVP_CIPHER_aes_128_gcm"
-external ocaml_EVP_CIPHER_aes_256_gcm  : unit -> cipher = "ocaml_EVP_CIPHER_aes_256_gcm"
+(* external ocaml_EVP_CIPHER_aes_128_gcm  : unit -> cipher = "ocaml_EVP_CIPHER_aes_128_gcm" *)
+(* external ocaml_EVP_CIPHER_aes_256_gcm  : unit -> cipher = "ocaml_EVP_CIPHER_aes_256_gcm" *)
 
 external ocaml_EVP_CIPHER_rc4 : unit -> cipher = "ocaml_EVP_CIPHER_rc4"
 
@@ -145,8 +145,12 @@ let cipher_of_stream_cipher (c:stream_cipher) = match c with
 	| RC4_128 -> ocaml_EVP_CIPHER_rc4()
 
 let cipher_of_aead_cipher (c:aead_cipher) = match c with
-	| AES_128_GCM -> ocaml_EVP_CIPHER_aes_128_gcm()
-	| AES_256_GCM -> ocaml_EVP_CIPHER_aes_256_gcm()
+	| AES_128_GCM ->
+            failwith "FIXME"
+            (* ocaml_EVP_CIPHER_aes_128_gcm() *)
+	| AES_256_GCM ->
+            failwith "FIXME"
+            (* ocaml_EVP_CIPHER_aes_256_gcm() *)
 
 let block_encrypt (c:block_cipher) (k:bytes) (iv:bytes) (d:bytes) =
 	let c = cipher_of_block_cipher c in
