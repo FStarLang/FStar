@@ -82,7 +82,7 @@ let check_uvars r t =
     Options.hide_uvar_nums := hide_uvar_nums_saved;
     Options.print_implicits := print_implicits_saved
 
-let type_u () : typ * universe = failwith "NYI"
+let type_u () : typ * universe = failwith "NYI: type_u"
 
 (************************************************************************)
 (* Extracting annotations from a term *)
@@ -1001,7 +1001,7 @@ let generalize env (lecs:list<(lbname*term*comp)>) : (list<(lbname*term*univ_var
             (Range.string_of_range e.pos) (Print.lbname_to_string l) (Print.term_to_string (Util.comp_result c));
       (l, e, [], c)) lecs ecs
 
-let generalize_universes (_:env) (_:term) : tscheme = failwith "NYI"
+let generalize_universes (_:env) (_:term) : tscheme = failwith "NYI: generalize_universes"
 
 (************************************************************************)
 (* Convertibility *)

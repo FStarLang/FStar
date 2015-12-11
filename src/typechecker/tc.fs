@@ -494,7 +494,7 @@ and tc_comp env c : comp                                      (* checked version
       List.fold_left Rel.conj_guard f guards
 
 and tc_universe env u = 
-   failwith "NYI"
+   failwith "NYI: tc_universe"
 
 (* Several complex cases from the main type-checker are factored in to separate functions below *)
 
@@ -1651,7 +1651,7 @@ let tc_inductive env ses quals lids =
 
         | _ -> failwith "impossible" in
     
-    let positive_if_pure (_:term) (_:lid) = failwith "Positivity check: NYI" in
+    let positive_if_pure (_:term) (_:lid) = failwith "NYI: positivity check" in
 
     (* 2. Checking each datacon *)
     let tc_data env tcs = function

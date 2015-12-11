@@ -3,15 +3,22 @@ module FStar.Tests.Util
 
 open FStar
 open FStar.Util
-open FStar.Absyn
 open FStar.Syntax.Syntax
-open FStar.Absyn.Syntax
-open FStar.Absyn.Util
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module SS = FStar.Syntax.Subst
 module I = FStar.Ident
 open FStar.Ident
+open FStar.Range
+
+let x = gen_bv "x" None S.tun
+let y = gen_bv "y" None S.tun
+let n = gen_bv "n" None S.tun
+let h = gen_bv "h" None S.tun
+let m = gen_bv "m" None S.tun
+let tm t = mk t None dummyRange
+let nm x = bv_to_name x
+let app x ts = mk (Tm_app(x, List.map arg ts)) None dummyRange
 
 let rec force_term x =
   let x = SS.compress x in

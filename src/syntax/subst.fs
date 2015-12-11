@@ -86,9 +86,7 @@ let rec subst' (s:subst_t) t = match s with
             //s is the new subsitution to add to it
             //compose substitutions by concatenating them
             //the order of concatenation is important!
-            mk (Tm_delayed (Inl (t', s'@s), Util.mk_ref None))
-                None
-                t.pos
+          mk_Tm_delayed (Inl (t', s'@s)) t.pos
 
         | Tm_delayed(Inr _, _) -> 
           failwith "Impossible: Visit.force_uvar removes lazy delayed nodes"
@@ -103,9 +101,7 @@ let rec subst' (s:subst_t) t = match s with
         | Tm_uvar _
         | Tm_fvar _ -> t0
 
-        | _ -> mk (Tm_delayed(Inl(t0, s), Util.mk_ref None))
-                   None
-                   t.pos
+        | _ -> mk_Tm_delayed (Inl(t0, s))  t.pos
 
 and subst_flags' s flags =
     flags |> List.map (function
@@ -374,14 +370,10 @@ let close_branch (p, wopt, e) =
     let e = subst closing e in
     (p, wopt, e)
 
-let open_univ_vars     (_:univ_vars) (_:term)  : univ_vars * term = failwith "NYI"
-let open_eff_signature (_:eff_decl) : univ_vars * binders * term = failwith "NYI"
-
-let close_univ_vars     (_:univ_vars) (_:term) : term = failwith "NYI"
-let close_eff_signature (_:univ_vars) (_:binders) (_:term) : univ_vars * binders * term = failwith "NYI"
-
-let open_let_rec:   list<letbinding> -> term -> list<letbinding> * term = fun _ _ -> failwith "NYI"
-let close_let_rec:   list<letbinding> -> term -> list<letbinding> * term = fun _ _ -> failwith "NYI"
+let open_univ_vars     (_:univ_vars) (_:term)  : univ_vars * term = failwith "NYI: open_univ_vars"
+let close_univ_vars     (_:univ_vars) (_:term) : term = failwith "NYI: close_univ_vars"
+let open_let_rec:   list<letbinding> -> term -> list<letbinding> * term = fun _ _ -> failwith "NYI: open_let_rec"
+let close_let_rec:   list<letbinding> -> term -> list<letbinding> * term = fun _ _ -> failwith "NYI: close_let_rec"
 
 //requires: length bs = length args
 let mk_subst_binders args = 

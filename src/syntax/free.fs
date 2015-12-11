@@ -120,4 +120,4 @@ and free_names_and_uvars_comp c =
 let names t = fst (free_names_and_uvars t)
 let names_of_binders (bs:binders) = fst (free_names_and_uvars_binders bs (no_names, no_uvs))
 let uvars t = snd (free_names_and_uvars t)
-let universe_uvars (t:term) : set<universe_uvar> = failwith "NYI"
+let universe_uvars (t:term) : set<universe_uvar> = failwith "NYI: universe_uvars"

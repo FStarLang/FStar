@@ -32,7 +32,6 @@ val close_binders:      binders -> binders
 val close_branch:       branch -> branch
 val close_univ_vars:    univ_vars -> term -> term
 val close_let_rec:      list<letbinding> -> term -> list<letbinding> * term
-val close_eff_signature:univ_vars -> binders -> term -> univ_vars * binders * term 
 
 val open_binders:       binders -> binders 
 val open_term:          binders -> term -> binders * term
@@ -40,7 +39,6 @@ val open_comp:          binders -> comp -> binders * comp
 val open_branch:        branch -> branch
 val open_let_rec:       list<letbinding> -> term -> list<letbinding> * term
 val open_univ_vars:     univ_vars -> term -> univ_vars * term
-val open_eff_signature: eff_decl -> univ_vars * binders * term 
 
 val subst_binders:      binders -> args -> term -> term
 val subst_binders_comp: binders -> args -> comp -> comp

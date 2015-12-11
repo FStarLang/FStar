@@ -333,19 +333,10 @@ let mk_Tm_app (t1:typ) (args:list<arg>) : mk_t = fun k p ->
     match args with
     | [] -> t1
     | _ -> mk (Tm_app (t1, args)) k p
-let extend_app (t:typ) (arg:arg) : mk_t = match t.n with
-    | Tm_app(h, args) -> mk (Tm_app(h, args@[arg]))
-    | _ -> mk (Tm_app(t, [arg]))
-let mk_Tm_abs  ((bs:binders), (t:typ)) k p = 
-    match bs with
-    | [] -> t
-    | _ -> mk (Tm_abs (bs, t)) k p
-let mk_Tm_ascribed ((t:typ),(k:term)) (p:range) = 
-    mk (Tm_ascribed (t, k, None)) (Some k) p
-let mk_Tm_delayed  ((t:typ),(s:subst_t),(m:memo<typ>)) = 
-    match t.n with 
-    | Tm_delayed _ -> failwith "NESTED DELAYED TYPES!" 
-    | _ -> mk (Tm_delayed(Inl(t, s), m))
+let extend_app t arg kopt r = match t.n with 
+    | Tm_app(head, args) -> mk_Tm_app head (args@[arg]) kopt r
+    | _ -> mk_Tm_app t [arg] kopt r
+let mk_Tm_delayed lr pos : term = mk (Tm_delayed(lr, Util.mk_ref None)) None pos
 let mk_Total t : comp = mk (Total t) None t.pos
 let mk_Comp (ct:comp_typ) : comp  = mk (Comp ct) None ct.result_typ.pos
 let mk_lb (x, univs, eff, t, e) = {lbname=x; lbunivs=univs; lbeff=eff; lbtyp=t; lbdef=e}

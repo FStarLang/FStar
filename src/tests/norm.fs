@@ -13,17 +13,9 @@ module I = FStar.Ident
 module P  = FStar.Syntax.Print
 open FStar.Ident
 open FStar.Range
+open FStar.Tests.Util
 
-let x = gen_bv "x" None tun
-let y = gen_bv "y" None tun
-let n = gen_bv "n" None tun
-let h = gen_bv "h" None tun
-let m = gen_bv "m" None tun
-let tm t = mk t None dummyRange
-let nm x = bv_to_name x
-let app x ts = mk (Tm_app(x, List.map arg ts)) None dummyRange
 let b = mk_binder
-
 let id     = pars "fun x -> x"
 let apply  = pars "fun f x -> f x" 
 let twice  = pars "fun f x -> f (f x)" 

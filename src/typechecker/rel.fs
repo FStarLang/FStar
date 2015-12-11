@@ -289,8 +289,8 @@ let find_uvar uv s = Util.find_map s (fun ((u,_), t) -> if Unionfind.equivalent 
 (* ------------------------------------------------*)
 let simplify_formula env f = N.normalize [N.Beta; N.Simplify] env f
 let norm_arg env t = N.normalize [N.Beta] env (fst t), snd t
-let whnf env t = compress (N.whnf env t)
-let sn env t = compress (N.normalize [N.Beta; N.Eta] env t)
+let whnf env t = SS.compress (N.whnf env t)
+let sn env t = SS.compress (N.normalize [N.Beta; N.Eta] env t)
 let sn_binders env (binders:binders) =
     binders |> List.map (fun (x, imp) -> {x with sort=N.normalize [N.Beta] env x.sort}, imp)
 
@@ -309,7 +309,7 @@ let rec compress env wl t =
                 | _ -> t)
         | _ -> t
 
-let normalize_refinement env wl t0 = N.normalize_refinement env (compress env wl t0)
+let normalize_refinement env wl t0 = N.normalize_refinement [] env (compress env wl t0)
 
 let base_and_refinement env wl t1 =
    let rec aux norm t1 =
@@ -694,9 +694,9 @@ and eq_args (a1:args) (a2:args) : bool =
     List.length a1 = List.length a2
     && List.forall2 (fun (a1, _) (a2, _) -> eq_tm a1 a1) a1 a2
     
-(* ------------------------------------------------ *)
-(* <solver> The main solving algorithm              *)
-(* ------------------------------------------------ *)
+(* ----------------------------------------------------- *)
+(* Ranking problems for the order in which to solve them *)
+(* ----------------------------------------------------- *)
 type flex_t = (term * uvar * typ * args)
 type im_or_proj_t = ((uvar * typ) * list<arg> * binders * ((list<tc> -> typ) * (typ -> bool) * list<(option<binder> * variance * tc)>))
 
@@ -713,7 +713,10 @@ let compress_prob wl p = match p with
     | TProb p -> compress_tprob wl p |> TProb
     | CProb _ -> p
 
-let rank wl prob =
+
+let rank wl prob : int    //the rank
+                 * prob   //the input problem, pre-processed a bit (the wl is needed for the pre-processing)
+                 =
    let prob = compress_prob wl prob |> maybe_invert_p in
    match prob with
     | TProb tp ->
@@ -750,10 +753,10 @@ let rank wl prob =
 
     | CProb cp -> rigid_rigid, {cp with rank=Some rigid_rigid} |> CProb
 
-let next_prob wl =
-//    match wl.attempting with
-//        | hd::tl -> Some <| compress_prob wl hd, tl
-//        | _ -> None, []
+let next_prob wl : option<prob>  //the first problem that is at most a flex_rigid_eq
+                 * list<prob>    //all the other problems in wl
+                 * int           //the rank of the first problem, or the minimum rank in the wl
+                 =
     let rec aux (min_rank, min, out) probs = match probs with
         | [] -> min, out, min_rank
         | hd::tl ->
@@ -771,7 +774,47 @@ let next_prob wl =
    aux (flex_flex + 1, None, []) wl.attempting
 
 let is_flex_rigid rank = flex_refine_inner <= rank && rank <= flex_rigid
-let rec solve_flex_rigid_join env tp wl =
+
+(******************************************************************************************************)
+(* Main solving algorithm begins here *)
+(******************************************************************************************************)
+let rec solve (env:Env.env) (probs:worklist) : solution =
+//    printfn "Solving TODO:\n%s;;" (List.map prob_to_string probs.attempting |> String.concat "\n\t");
+    match next_prob probs with
+       | Some hd, tl, rank ->
+         let probs = {probs with attempting=tl} in
+         begin match hd with
+            | CProb cp -> 
+              solve_c env (maybe_invert cp) probs
+
+            | TProb tp ->
+              if not probs.defer_ok 
+              && flex_refine_inner <= rank 
+              && rank <= flex_rigid 
+              then match solve_flex_rigid_join env tp probs with
+                    | None -> solve_t' env (maybe_invert tp) probs //giveup env "join doesn't exist" hd
+                    | Some wl -> solve env wl
+              else solve_t' env (maybe_invert tp) probs
+         end
+
+       | None, _, _ ->
+         match probs.wl_deferred with
+            | [] -> 
+              Success (probs.subst, []) //Yay ... done!
+
+            | _ ->
+              let attempt, rest = probs.wl_deferred |> List.partition (fun (c, _, _) -> c < probs.ctr) in
+              match attempt with
+                 | [] -> //can't solve yet; defer the rest
+                   Success(probs.subst, List.map (fun (_, x, y) -> (x, y)) probs.wl_deferred)
+
+                 | _ -> 
+                   solve env ({probs with attempting=attempt |> List.map (fun (_, _, y) -> y); wl_deferred=rest})
+
+(******************************************************************************************************)
+(* The case where u < t1, .... u < tn: we solve this by taking u=t1/\.../\tn                          *)
+(******************************************************************************************************)
+and solve_flex_rigid_join env tp wl =
     if Env.debug env <| Options.Other "Rel"
     then Util.fprint1 "Trying to solve by joining refinements:%s\n" (prob_to_string env (TProb tp));
     let u, args = Util.head_and_args tp.lhs in
@@ -882,40 +925,6 @@ let rec solve_flex_rigid_join env tp wl =
           end
 
       | _ -> failwith "Impossible: Not a flex-rigid"
-
-and solve (env:Env.env) (probs:worklist) : solution =
-//    printfn "Solving TODO:\n%s;;" (List.map prob_to_string probs.attempting |> String.concat "\n\t");
-    match next_prob probs with
-       | Some hd, tl, rank ->
-         let probs = {probs with attempting=tl} in
-         begin match hd with
-            | CProb cp -> 
-              solve_c env (maybe_invert cp) probs
-
-            | TProb tp ->
-              if not probs.defer_ok 
-              && flex_refine_inner <= rank 
-              && rank <= flex_rigid 
-              then match solve_flex_rigid_join env tp probs with
-                    | None -> solve_t' env (maybe_invert tp) probs //giveup env "join doesn't exist" hd
-                    | Some wl -> solve env wl
-              else solve_t' env (maybe_invert tp) probs
-         end
-
-       | None, _, _ ->
-         match probs.wl_deferred with
-            | [] -> 
-              Success (probs.subst, []) //Yay ... done!
-
-            | _ ->
-              let attempt, rest = probs.wl_deferred |> List.partition (fun (c, _, _) -> c < probs.ctr) in
-              match attempt with
-                 | [] -> //can't solve yet; defer the rest
-                   Success(probs.subst, List.map (fun (_, x, y) -> (x, y)) probs.wl_deferred)
-
-                 | _ -> 
-                   solve env ({probs with attempting=attempt |> List.map (fun (_, _, y) -> y); wl_deferred=rest})
-
 
 and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:worklist)
                   (rhs:binders -> Env.env -> list<subst_elt> -> prob) : solution =
@@ -1270,11 +1279,6 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
       | Tm_bvar _, _
       | _, Tm_bvar _ -> failwith "Only locally nameless! We should never see a de Bruijn variable"
 
-      | Tm_bvar a, Tm_bvar b ->
-        if S.bv_eq a b
-        then solve env (solve_prob orig None [] wl)
-        else solve env (solve_prob orig (Some <| Util.mk_eq_typ t1 t2) [] wl)
-
       | Tm_arrow(bs1, c1), Tm_arrow(bs2, c2) ->
         let mk_c c = function
             | [] -> c
@@ -1409,7 +1413,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 | Tm_fvar (tc, _) -> Env.is_projector env tc.v
                 | _ -> false  in
               if (may_equate head1 || may_equate head2) && wl.smt_ok
-              then solve env (solve_prob orig (Some <| Util.mk_eq_typ t1 t2) [] wl)
+              then solve env (solve_prob orig (Some <| Util.mk_eq tun tun t1 t2) [] wl)
               else giveup env "head mismatch" orig
 
             | (_, Some (t1, t2)) -> //heads match after some delta steps

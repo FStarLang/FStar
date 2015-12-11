@@ -43,7 +43,7 @@ val weak_norm_comp:       env -> comp -> comp_typ
 val normalize:            steps -> env -> term -> term
 val normalize_comp:       steps -> env -> comp -> comp
 val normalize_sigelt:     steps -> env -> sigelt -> sigelt
-val normalize_refinement: env -> typ -> typ
+val normalize_refinement: steps -> env -> typ -> typ
 val whnf:                 env -> term -> term
 
 val term_to_string:  env -> term -> string

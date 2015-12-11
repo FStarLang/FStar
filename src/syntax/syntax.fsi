@@ -295,6 +295,7 @@ val mk: 'a -> mk_t_a<'a,'b>
 val mk_lb :         (lbname * list<univ_var> * lident * typ * term) -> letbinding
 val mk_Tm_app:      term -> args -> mk_t
 val extend_app:     term -> arg -> mk_t
+val mk_Tm_delayed:  either<(term * subst_t), (unit -> term)> -> Range.range -> term
 val mk_Total:       typ -> comp
 val mk_Comp:        comp_typ -> comp
 val bv_to_tm:       bv -> term

@@ -36,7 +36,7 @@ let nm_to_string bv = bv.ppname.idText
 
 let db_to_string bv = bv.ppname.idText ^ string_of_int bv.index
 
-let modul_to_string (m:modul) : string = failwith "NYI"
+let modul_to_string (m:modul) : string = failwith "NYI: modul_to_string"
 
 (* CH: This should later be shared with ocaml-codegen.fs and util.fs (is_primop and destruct_typ_as_formula) *)
 let infix_prim_ops = [
