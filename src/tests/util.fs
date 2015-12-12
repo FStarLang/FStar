@@ -3,6 +3,7 @@ module FStar.Tests.Util
 
 open FStar
 open FStar.Util
+open FStar.Syntax
 open FStar.Syntax.Syntax
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
@@ -43,7 +44,7 @@ let rec force_term x =
 and force_binders bs = bs |> List.iter (fun (b, _) -> force_term b.sort)
 and force_comp c = ()
 
-let rec term_eq t1 t2 = 
+let rec term_eq' t1 t2 = 
     let t1 = SS.compress t1 in 
     let t2 = SS.compress t2 in 
     let binders_eq xs ys = 
@@ -85,3 +86,8 @@ let rec term_eq t1 t2 =
       | Tm_unknown, Tm_unknown -> true
       | _ -> false                                                
 
+and term_eq t1 t2 =
+//    Printf.printf "Comparing %s and\n\t%s\n" (Print.term_to_string t1) (Print.term_to_string t2);
+    let b = term_eq' t1 t2 in
+    if not b then Printf.printf ">>>>>>>>>>>Term %s is not equal to %s\n" (Print.term_to_string t1) (Print.term_to_string t2);
+    b

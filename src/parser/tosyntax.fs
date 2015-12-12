@@ -845,7 +845,7 @@ and desugar_formula env (f:term) : S.term =
   let mk t = S.mk t None f.range in
   let pos t = t None f.range in
   let setpos t = {t with pos=f.range} in
-  let desugar_quant (q:lident) (qt:lident) b pats body =
+  let desugar_quant (q:lident) b pats body =
     let tk = desugar_binder env ({b with blevel=Formula}) in
     let desugar_pats env pats = List.map (fun es -> es |> List.map (fun e -> arg_withimp_t Nothing <| desugar_term env e)) pats in
     match tk with
@@ -858,7 +858,7 @@ and desugar_formula env (f:term) : S.term =
           | [] -> body
           | _ -> mk (Tm_meta (body, Meta_pattern pats)) in
         let body = setpos <| U.abs [S.mk_binder a] body in
-        mk <| Tm_app (S.fvar None (set_lid_range qt b.brange) b.brange, [arg body])
+        mk <| Tm_app (S.fvar None (set_lid_range q b.brange) b.brange, [arg body])
 
       | _ -> failwith "impossible" in
 
@@ -886,10 +886,10 @@ and desugar_formula env (f:term) : S.term =
       desugar_formula env (push_quant (fun x -> QExists x) binders pats body)
 
     | QForall([b], pats, body) ->
-      desugar_quant C.forall_lid C.allTyp_lid b pats body
+      desugar_quant C.forall_lid b pats body
 
     | QExists([b], pats, body) ->
-      desugar_quant C.exists_lid C.allTyp_lid b pats body
+      desugar_quant C.exists_lid b pats body
 
     | Paren f ->
       desugar_formula env f

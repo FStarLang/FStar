@@ -22,6 +22,7 @@ open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Util
 
+val shift_subst:        int -> subst -> subst
 val subst:              list<subst_elt> -> term -> term
 val subst_comp:         list<subst_elt> -> comp -> comp
 val compress:           term -> term

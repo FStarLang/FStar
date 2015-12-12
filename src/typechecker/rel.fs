@@ -118,14 +118,16 @@ let rel_to_string = function
   | SUB -> "<:"
   | SUBINV -> ":>"
 
+let term_to_string env t = Print.term_to_string t
+
 let prob_to_string env = function
   | TProb p ->
     Util.format "\t%s (%s) \n\t\t%s(%s)\n\t%s (%s) (guard %s)"
-        [(N.term_to_string env p.lhs);
+        [(term_to_string env p.lhs);
          (Print.tag_of_term p.lhs);
          (rel_to_string p.relation);
          (p.reason |> List.hd);
-         (N.term_to_string env p.rhs);
+         (term_to_string env p.rhs);
          (Print.tag_of_term p.rhs);
          (N.term_to_string env (fst p.logical_guard))]
   | CProb p -> Util.format3 "\t%s \n\t\t%s\n\t%s" (N.comp_to_string env p.lhs) (rel_to_string p.relation) (N.comp_to_string env p.rhs)
@@ -224,8 +226,8 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
     let _, uv = p_guard prob in
     let _ = match (compress uv).n with
         | Tm_uvar(uvar, k) ->
-          let bs, _ = U.arrow_formals k in
-          let phi   = U.abs bs phi in         //TODO: CHECK THIS! is it really going close over the free variables of phi?
+          let bs = p_scope prob in 
+          let phi = U.abs bs phi in
           Util.unchecked_unify uvar phi
         | _ -> if not resolve_ok then failwith "Impossible: this instance has already been assigned a solution" in
     match uvis with
@@ -933,6 +935,8 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
         match xs, ys with
             | [], [] ->
               let rhs_prob = rhs (List.rev scope) env subst in
+              if debug env <| Options.Other "Rel"
+              then Util.fprint1 "rhs_prob = %s\n" (prob_to_string env rhs_prob);
               let formula = p_guard rhs_prob |> fst in
               Inl ([rhs_prob], formula)
 
@@ -941,12 +945,13 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
                let hd2 = {hd2 with sort=Subst.subst subst hd2.sort} in 
                let prob = TProb <| mk_problem ((hd1,imp)::scope) orig hd1.sort (invert_rel <| p_rel orig) hd2.sort None "Formal parameter" in
                let hd1 = freshen_bv hd1 in
-               let subst = DB(0, S.bv_to_name hd1)::subst in  //extend the substitution
+               let subst = DB(0, S.bv_to_name hd1)::SS.shift_subst 1 subst in  //extend the substitution
                let env = Env.push_local_binding env (Env.Binding_var(hd1, ([],hd1.sort))) in
                begin match aux ((hd1,imp)::scope) env subst xs ys with
                  | Inl (sub_probs, phi) ->
                    let phi = Util.mk_conj (p_guard prob |> fst) (U.close_forall [(hd1,imp)] phi) in
-                   Printf.printf "hd1 = %s\n Formula is %s" (Print.bv_to_string hd1) (Print.term_to_string phi);
+                   if debug env <| Options.Other "Rel"
+                   then Util.fprint2 "Formula is %s\n\thd1=%s\n" (Print.term_to_string phi) (Print.bv_to_string hd1);
                    Inl (prob::sub_probs, phi)
 
                  | fail -> fail

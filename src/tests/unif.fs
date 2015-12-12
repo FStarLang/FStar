@@ -28,20 +28,22 @@ let guard_to_string g = match g with
       N.term_to_string Env.dummy f
 
 let guard_eq g g' = 
-    Printf.printf "Expected guard %s;\n\
-                   Got guard      %s\n" (guard_to_string g') (guard_to_string g);
-    match g, g' with 
-    | Rel.Trivial, Rel.Trivial -> true
-    | Rel.NonTrivial f, Rel.NonTrivial f' ->
-      
-     term_eq f f'
-    | _ -> false
+    let b = match g, g' with 
+        | Rel.Trivial, Rel.Trivial -> true
+        | Rel.NonTrivial f, Rel.NonTrivial f' ->
+          let f = N.normalize [] Env.dummy f in
+          let f' = N.normalize [] Env.dummy f' in
+          term_eq f f'
+        | _ -> false in
+    if not b 
+    then Printf.printf "Expected guard %s;\n\
+                        Got guard      %s\n" (guard_to_string g') (guard_to_string g);
+    b
+
 
 let unify x y g' = 
     let g = Rel.teq Env.dummy x y |> Rel.solve_deferred_constraints Env.dummy in
-//  assert (Rel.is_trivial g);
-    assert (guard_eq g.guard_f g');
-    Printf.printf "%s and %s are unifiable with guard %s\n"  (P.term_to_string x) (P.term_to_string y) (guard_to_string g.guard_f)
+    assert (guard_eq g.guard_f g')
 
 let should_fail x y =
     try 
@@ -51,11 +53,47 @@ let should_fail x y =
             | Rel.NonTrivial f -> Printf.printf "%s and %s are unifiable if %s\n"  (P.term_to_string x) (P.term_to_string y) (P.term_to_string f)
     with Error(msg, r) -> print_string msg; print_newline()
     
+let unify' x y = 
+    let x = pars x in
+    let y = pars y in
+    let g = Rel.teq Env.dummy x y |> Rel.solve_deferred_constraints Env.dummy in
+    Printf.printf "%s and %s are unifiable with guard %s\n"  (P.term_to_string x) (P.term_to_string y) (guard_to_string g.guard_f)
+
+let inst n tm = 
+   let rec aux out n = 
+    if n=0 then out
+    else let u, _ = Rel.new_uvar dummyRange [] tun in
+         aux (u::out) (n - 1) in
+   let us = aux [] n in 
+   N.normalize [] Env.dummy (app tm us), us
+
 let run_all debug = 
-//    unify x x;
-//    should_fail x y;
-//    unify x (app id [x]);
-//    unify id id;
-    Options.debug := ["dummy"];
-    Options.debug_level := [Options.Other "Rel"];
-    unify id id' (Rel.NonTrivial (pars "True /\ (forall x. True)"))
+   try
+       if debug 
+       then (Options.debug := ["dummy"];
+             Options.debug_level := [Options.Other "Rel"]);
+       unify x x Rel.Trivial;
+       unify x y (Rel.NonTrivial (app (pars "Eq2") [x;y]));
+       unify x (app id [x]) Rel.Trivial;
+       unify id id Rel.Trivial;
+       unify id id' (Rel.NonTrivial (pars "True /\ (forall x. True)"));
+       unify (pars "fun x y -> x")
+             (pars "fun a b -> a")
+             (Rel.NonTrivial (pars "True /\ (forall x. True /\ (forall y. True))"));
+       unify (pars "fun x y z -> y")
+             (pars "fun a b c -> b")
+             (Rel.NonTrivial (pars "True /\ (forall x. True /\ (forall y. True /\ (forall z. True)))"));
+       unify (pars "fun x y -> y")
+             (pars "fun x y -> x")
+             (Rel.NonTrivial (pars "True /\ (forall x. True /\ (forall y. Eq2 y x))"));
+       unify (pars "fun x y z -> y")
+             (pars "fun x y z -> z")
+             (Rel.NonTrivial (pars "True /\ (forall x. True /\ (forall y. True /\ (forall z. Eq2 y z)))")); 
+
+       let tm, us = inst 1 (pars "fun u x -> u x") in
+       unify tm 
+             (pars "fun x -> Tuple2 x x") 
+             (Rel.NonTrivial (pars "True /\ (forall x. True)"))
+
+   with Error(msg, r) -> print_string msg; print_newline()
+    
