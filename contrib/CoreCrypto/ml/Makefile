@@ -53,10 +53,9 @@ dllopenssl_stubs.$(DLL): openssl_stub.o
 # Note: because there is no .cmxa generated for [openssl_stubs], the final
 # invocation has no way to know that we need -lcrypto and -lssl. If this changes
 # in the future, the rule below can be simplified.
-Tests$(EXE): $(PLATFORM)/platform.cmx CoreCrypto.cmx dllopenssl_stubs.$(DLL) Tests.cmx
+Tests$(EXE): $(PLATFORM)/platform.cmx CoreCrypto.cmx Tests.cmx openssl_stub.o
 	$(OCAMLOPT) -I $(PLATFORM) -package batteries -linkpkg -o $@ \
-	-cclib -lcrypto -cclib -lssl -cclib -lopenssl_stubs \
-	$(PLATFORM)/platform.cmx CoreCrypto.cmx Tests.cmx
+	$^ libcrypto.a libssl.a libz.a libgdi32.a
 
 test: Tests$(EXE)
 	@./Tests$(EXE)

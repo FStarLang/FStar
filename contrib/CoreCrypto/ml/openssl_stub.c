@@ -206,8 +206,8 @@ EVP_CIPHER_GEN(aes_128_ecb);
 EVP_CIPHER_GEN(aes_128_cbc);
 EVP_CIPHER_GEN(aes_256_ecb);
 EVP_CIPHER_GEN(aes_256_cbc);
-/* EVP_CIPHER_GEN(aes_128_gcm); */
-/* EVP_CIPHER_GEN(aes_256_gcm); */
+EVP_CIPHER_GEN(aes_128_gcm);
+EVP_CIPHER_GEN(aes_256_gcm);
 EVP_CIPHER_GEN(rc4);
 
 /* -------------------------------------------------------------------- */
