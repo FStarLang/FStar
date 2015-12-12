@@ -50,15 +50,25 @@ dllopenssl_stubs.$(DLL): openssl_stub.o
 %.cmx: %.ml
 	$(OCAMLOPT) -I $(PLATFORM) -c $<
 
-# Note: because there is no .cmxa generated for [openssl_stubs], the final
-# invocation has no way to know that we need -lcrypto and -lssl. If this changes
-# in the future, the rule below can be simplified.
-Tests$(EXE): $(PLATFORM)/platform.cmx CoreCrypto.cmx Tests.cmx openssl_stub.o
+TEST_CMX = $(PLATFORM)/platform.cmx CoreCrypto.cmx Tests.cmx
+
+# Static linking for Windows (until I figure out whether we want dynamic
+# linking, and if so, how to do it).
+Tests.exe: $(TEST_CMX) openssl_stub.o
 	$(OCAMLOPT) -I $(PLATFORM) -package batteries -linkpkg -o $@ \
 	$^ libcrypto.a libssl.a libz.a libgdi32.a
 
+# Dynamic linking for others.
+# Note: because there is no .cmxa generated for [openssl_stubs], the final
+# invocation has no way to know that we need -lcrypto and -lssl. If this changes
+# in the future, the rule below can be simplified to drop these.
+Tests: $(TEST_CMX) dllopenssl_stubs.so
+	$(OCAMLOPT) -I $(PLATFORM) -package batteries -linkpkg -o $@ \
+	-cclib -lcrypto -cclib -lssl -cclib dllopenssl_stubs.so \
+	$(TEST_CMX)
+
 test: Tests$(EXE)
-	@./Tests$(EXE)
+	@LD_LIBRARY_PATH=. ./Tests$(EXE)
 
 clean:
 	rm -f Tests$(EXE) *.[oa] *.so *.cm[ixoa] *.cmxa *.exe
