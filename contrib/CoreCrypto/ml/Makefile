@@ -1,70 +1,75 @@
-all: CoreCrypto.cmxa
-
-OCAMLC = ocamlfind c
-OCAMLOPT = ocamlfind opt
+OCAMLC = ocamlfind c -g
+OCAMLOPT = ocamlfind opt -g
 OCAMLMKLIB = ocamlfind mklib
+OCAMLDEP = ocamlfind dep
 
 FSTAR_HOME = ../../..
 PLATFORM = $(FSTAR_HOME)/contrib/Platform/ml
-OPENSSL_INCLUDE = ../../../../openssl/include
+
+CCOPTS = # -ccopt -O0
 
 ifeq ($(OS),Windows_NT)
+    # On cygwin + cygwinports, DLLs are searched in the PATH, which is not
+    # altered to include by default the mingw64 native DLLs. We also need to
+    # find dllcorecrypto.dll; it is in the current directory, which Windows
+    # always uses to search for DLLs.
+    EXTRA_PATH = PATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin/:$(PATH)"
+    EXE = .exe
     DLL = dll
-    CC = i686-w64-mingw32-gcc
-    OCAML_INCLUDE = /usr/local/lib/ocaml
+    CC =
     ARCH = win32
-    OCAMLLINK = $(OCAMLOPT) -cc "flexlink -chain mingw -v -v -exe -lgdi32"
 else
+    # On Unix-like systems, the library search path is LD_LIBRARY_PATH, which is
+    # correctly setup to find libssleay.so and the like, but never includes the
+    # current directory, which is where dllcorecrypto.so is located.
+    EXTRA_PATH = LD_LIBRARY_PATH=.
+    EXE =
     DLL = so
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Darwin)
-        CC = gcc-5
-        OCAML_INCLUDE = /usr/local/lib/ocaml
+        CC = -cc gcc-5
 	ARCH = osx
     else
-        CC = gcc
-        OCAML_INCLUDE = /usr/lib/ocaml
+        CC = -cc gcc
         EXTRA_OPTS = -ccopt -fPIC
 	ARCH = x86_64
     endif
-    OCAMLLINK = $(OCAMLOPT)
 endif
 
-LIB = $(FSTAR_HOME)/3rdparty/$(ARCH)
+.PHONY: test dep
 
-openssl_stub.o: openssl_stub.c
-	$(OCAMLOPT) -c -cc $(CC) -ccopt "-I $(OCAML_INCLUDE)" -ccopt "-I $(OPENSSL_INCLUDE)" $(EXTRA_OPTS) $<
+all: corecrypto.cmxa
 
-$(LIB)/dllopenssl_wrap.${DLL}:
-	$(OCAMLMKLIB) -o $(LIB)/openssl_wrap $<
+%.o: %.c
+	$(OCAMLOPT) $(CC) $(CCOPTS) $(EXTRA_OPTS) -c $<
 
-CoreCrypto.cmi: CoreCrypto.mli
+DLL_OBJ = $(PLATFORM)/platform.cmx CoreCrypto.cmx openssl_stub.o
+
+dllcorecrypto.$(DLL) corecrypto.cmxa: $(DLL_OBJ)
+	$(OCAMLMKLIB) -lcrypto -lssl -o corecrypto $^
+
+%.cmi: %.mli
 	$(OCAMLC) -I $(PLATFORM) -c $<
 
-CoreCrypto.cmo: CoreCrypto.ml
+%.cmo: %.ml
 	$(OCAMLC) -I $(PLATFORM) -c $<
 
-CoreCrypto.cma: CoreCrypto.cmo $(LIB)/dllopenssl_wrap.so
-	$(OCAMLC) -I $(PLATFORM) -L$(LIB) -a -o $@ $< -dllib -lopenssl_wrap
-
-CoreCrypto.cmx: CoreCrypto.ml CoreCrypto.cmi
+%.cmx: %.ml
 	$(OCAMLOPT) -I $(PLATFORM) -c $<
 
-CoreCrypto.cmxa: CoreCrypto.cmx $(LIB)/dllopenssl_wrap.${DLL}
-	$(OCAMLOPT) -I $(PLATFORM) -a -o $@ $< -cclib -lopenssl_wrap
+TEST_CMX = Tests.cmx
+
+Tests$(EXE): $(TEST_CMX) corecrypto.cmxa dllcorecrypto.$(DLL)
+	$(OCAMLOPT) -I $(PLATFORM) -package batteries -linkpkg -o $@ \
+	-cclib dllcorecrypto.$(DLL) corecrypto.cmxa $(TEST_CMX)
+
+test: Tests$(EXE)
+	@$(EXTRA_PATH) ./Tests$(EXE)
 
 clean:
-	rm -f Tests *.[oa] *.so *.cm[ixoa] *.cmxa *.exe
+	rm -f Tests$(EXE) *.[oa] *.so *.cm[ixoa] *.cmxa *.exe *.dll
 
-$(LIB)/libcrypto.a:
-	git submodule update --init $(FSTAR_HOME)/3rdparty
+depend:
+	$(OCAMLDEP) *.ml *.mli > .depend
 
-Tests: CoreCrypto.cmx $(LIB)/libcrypto.a $(LIB)/dllopenssl_wrap.$(DLL) Tests.ml
-	$(OCAMLLINK) -ccopt "-L$(LIB)" -I $(PLATFORM) -package batteries -linkpkg -o $@ \
-	$(PLATFORM)/platform.cmx $< Tests.ml \
-	-cclib -lopenssl_wrap -cclib $(LIB)/libcrypto.a
-
-.PHONY: test
-
-test: Tests
-	@./Tests
+include .depend
