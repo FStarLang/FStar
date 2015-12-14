@@ -30,16 +30,15 @@ endif
 
 .PHONY: test dep
 
-all: CoreCrypto.cmxa
+all: corecrypto.cmxa
 
 %.o: %.c
 	$(OCAMLOPT) $(CC) $(CCOPTS) $(EXTRA_OPTS) -c $<
 
-dllopenssl_stubs.$(DLL): openssl_stub.o
-	$(OCAMLMKLIB) -lcrypto -lssl -o openssl_stubs $<
+DLL_OBJ = $(PLATFORM)/platform.cmx CoreCrypto.cmx openssl_stub.o
 
-%.cmxa: %.cmx dllopenssl_stubs.$(DLL)
-	$(OCAMLOPT) -a -o $@ $< -cclib -lopenssl_stubs
+dllcorecrypto.$(DLL) corecrypto.cmxa: $(DLL_OBJ)
+	$(OCAMLMKLIB) -lcrypto -lssl -o corecrypto $^
 
 %.cmi: %.mli
 	$(OCAMLC) -I $(PLATFORM) -c $<
@@ -50,28 +49,24 @@ dllopenssl_stubs.$(DLL): openssl_stub.o
 %.cmx: %.ml
 	$(OCAMLOPT) -I $(PLATFORM) -c $<
 
-TEST_CMX = $(PLATFORM)/platform.cmx CoreCrypto.cmx Tests.cmx
+TEST_CMX = Tests.cmx
 
 # Static linking for Windows (until I figure out whether we want dynamic
 # linking, and if so, how to do it).
-Tests.exe: $(TEST_CMX) openssl_stub.o
+Tests.exe: $(DLL_OBJ) $(TEST_CMX)
 	$(OCAMLOPT) -I $(PLATFORM) -package batteries -linkpkg -o $@ \
 	$^ libcrypto.a libssl.a libz.a libgdi32.a
 
 # Dynamic linking for others.
-# Note: because there is no .cmxa generated for [openssl_stubs], the final
-# invocation has no way to know that we need -lcrypto and -lssl. If this changes
-# in the future, the rule below can be simplified to drop these.
-Tests: $(TEST_CMX) dllopenssl_stubs.so
+Tests: $(TEST_CMX) corecrypto.cmxa dllcorecrypto.$(DLL)
 	$(OCAMLOPT) -I $(PLATFORM) -package batteries -linkpkg -o $@ \
-	-cclib -lcrypto -cclib -lssl -cclib dllopenssl_stubs.so \
-	$(TEST_CMX)
+	-cclib dllcorecrypto.$(DLL) corecrypto.cmxa $(TEST_CMX)
 
 test: Tests$(EXE)
 	@LD_LIBRARY_PATH=. ./Tests$(EXE)
 
 clean:
-	rm -f Tests$(EXE) *.[oa] *.so *.cm[ixoa] *.cmxa *.exe
+	rm -f Tests$(EXE) *.[oa] *.so *.cm[ixoa] *.cmxa *.exe *.dll
 
 depend:
 	$(OCAMLDEP) *.ml *.mli > .depend
