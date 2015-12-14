@@ -12,6 +12,13 @@ type aead_cipher = AES_128_GCM | AES_256_GCM
 type stream_cipher = RC4_128
 type rsa_padding = Pad_none | Pad_PKCS1
 
+let string_of_hash_alg = function
+  | MD5 -> "MD5"
+  | SHA1 -> "SHA1"
+  | SHA256 -> "SHA256"
+  | SHA384 -> "SHA384"
+  | SHA512 -> "SHA512"
+
 let blockSize = function
   | TDES_EDE_CBC -> 8
   | AES_128_CBC  -> 16

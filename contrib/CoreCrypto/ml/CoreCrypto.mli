@@ -9,6 +9,8 @@ type aead_cipher = AES_128_GCM | AES_256_GCM
 type stream_cipher = RC4_128
 type rsa_padding = Pad_none | Pad_PKCS1
 
+val string_of_hash_alg: hash_alg -> string
+
 val blockSize : block_cipher -> int
 val aeadKeySize : aead_cipher -> int
 val aeadRealIVSize : aead_cipher -> int

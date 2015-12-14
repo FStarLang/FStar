@@ -1,5 +1,5 @@
-OCAMLC = ocamlfind c
-OCAMLOPT = ocamlfind opt
+OCAMLC = ocamlfind c -g
+OCAMLOPT = ocamlfind opt -g
 OCAMLMKLIB = ocamlfind mklib
 OCAMLDEP = ocamlfind dep
 
@@ -9,13 +9,19 @@ PLATFORM = $(FSTAR_HOME)/contrib/Platform/ml
 CCOPTS = # -ccopt -O0
 
 ifeq ($(OS),Windows_NT)
-    EXTRA_PATH = PATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin/:$(PATH)" # needed for the DLL's
+    # On cygwin + cygwinports, DLLs are searched in the PATH, which is not
+    # altered to include by default the mingw64 native DLLs. We also need to
+    # find dllcorecrypto.dll; it is in the current directory, which Windows
+    # always uses to search for DLLs.
+    EXTRA_PATH = PATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin/:$(PATH)"
     EXE = .exe
     DLL = dll
     CC =
-    OCAML_INCLUDE =
     ARCH = win32
 else
+    # On Unix-like systems, the library search path is LD_LIBRARY_PATH, which is
+    # correctly setup to find libssleay.so and the like, but never includes the
+    # current directory, which is where dllcorecrypto.so is located.
     EXTRA_PATH = LD_LIBRARY_PATH=.
     EXE =
     DLL = so
@@ -53,7 +59,6 @@ dllcorecrypto.$(DLL) corecrypto.cmxa: $(DLL_OBJ)
 
 TEST_CMX = Tests.cmx
 
-# Dynamic linking for others.
 Tests$(EXE): $(TEST_CMX) corecrypto.cmxa dllcorecrypto.$(DLL)
 	$(OCAMLOPT) -I $(PLATFORM) -package batteries -linkpkg -o $@ \
 	-cclib dllcorecrypto.$(DLL) corecrypto.cmxa $(TEST_CMX)
