@@ -426,7 +426,7 @@ and tc_value env (e:term) : term
     let c, uc, f = tc_comp env c in
     let e = {Util.arrow bs c with pos=top.pos} in
     check_smt_pat env e bs c;
-    let u = List.fold_left (fun out u -> S.U_max(out, u)) uc us in
+    let u = S.U_max (uc::us) in
     let t = mk (Tm_type u) None top.pos in
     let g = Rel.conj_guard g (Rel.close_guard bs f) in
     value_check_expected_typ env0 e (Inl t) g
@@ -1475,7 +1475,7 @@ let tc_eff_decl env0 (m:Syntax.eff_decl)  =
     let bin_op = 
         let t1, u1 = TcUtil.type_u() in
         let t2, u2 = TcUtil.type_u() in 
-        let t = mk (Tm_type(S.U_max(u1, u2))) None (Env.get_range env) in
+        let t = mk (Tm_type(S.U_max [u1; u2])) None (Env.get_range env) in
         Util.arrow [S.null_binder t1; S.null_binder t2] (S.mk_Total t) in
     let expected_k = Util.arrow [S.mk_binder a;
                                  S.null_binder wp_a;
@@ -1613,10 +1613,6 @@ let tc_inductive env ses quals lids =
                 | C1 : (ua, ub, uw) => a:Type(ua) -> y:Type(ub) -> T a y
                 | C2 : (ua, ub, uw) => a:Type(ua) -> z:Type(ub) -> w:Type(uw) -> T a z
     *)
-    let u_max us = match us with 
-        | [] -> S.U_zero
-        | hd::tl -> List.fold_left (fun u x -> S.U_max(u,x)) hd tl in
-
     (* 1. Checking each tycon *)
     let tc_tycon env (s:sigelt) : env            (* environment extended with a refined type for the type-constructor *)
                                 * guard_t        (* well-formedness guard, mainly universe constraints *)      
@@ -1635,8 +1631,8 @@ let tc_inductive env ses quals lids =
          let u = match (SS.compress t).n with 
             | Tm_type u -> u
             | _ -> raise (Error("Expected a result of type 'Type'", r)) in
-         let g  = Rel.universe_inequality (u_max us) u in
-         let g' = Rel.universe_inequality (S.U_succ (u_max us')) u in
+         let g  = Rel.universe_inequality (S.U_max us) u in
+         let g' = Rel.universe_inequality (S.U_succ (S.U_max us')) u in
          
          let refined_tps = tps |> List.map (fun (x, imp) -> 
             let y = S.freshen_bv x in

@@ -198,6 +198,24 @@ and close_comp env c =
                                effect_args=args;
                                flags=flags})  
 
+let norm_universe cfg env u = 
+    let sort_universes us = us in
+    let rec aux u = 
+        let u = Subst.compress_univ u in
+        match u with
+          | U_bvar x -> failwith ""
+          | U_zero
+          | U_unif _ 
+          | U_name _ 
+          | U_unknown -> [u]
+          | U_max []  -> [U_zero]
+          | U_max us ->  List.collect aux us |> sort_universes
+          | U_succ u ->  List.map U_succ (aux u) in
+    match aux u with 
+        | [] -> U_zero
+        | us -> U_max us
+           
+
 let rec norm : cfg -> env -> stack -> term -> term = 
     fun cfg env stack t -> 
         log (fun () -> Printf.printf ">>> %s\n" (Print.tag_of_term t));
@@ -372,8 +390,6 @@ and norm_binders : cfg -> env -> binders -> binders =
             ([], env)
             bs in
         List.rev nbs
-
-and norm_universe cfg env u = failwith "NYI"
 
 and rebuild : cfg -> env -> stack -> term -> term = 
     fun cfg env stack t ->

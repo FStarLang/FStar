@@ -58,7 +58,7 @@ let rec free_univs u = match Subst.compress_univ u with
   | U_name    _
   | U_unknown -> no_free_vars
   | U_succ u -> free_univs u
-  | U_max (u1, u2) -> union  (free_univs u1) (free_univs u2)
+  | U_max us -> List.fold_left (fun out x -> union out (free_univs x)) no_free_vars us
   | U_unif u -> singleton_univ u
   
 let rec free_names_and_uvs' tm : free_vars =

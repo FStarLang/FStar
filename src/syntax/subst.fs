@@ -98,7 +98,7 @@ and subst_univ s u = match u with
   | U_name  _
   | U_unif _ -> u
   | U_succ u -> U_succ (subst_univ s u)
-  | U_max(u1, u2) -> U_max(subst_univ s u1, subst_univ s u2)
+  | U_max us -> U_max (List.map (subst_univ s) us)
 
 let rec subst' (s:subst_t) t = match s with
   | [] 

@@ -55,9 +55,9 @@ type aqual = option<arg_qualifier>
 type universe = 
   | U_zero
   | U_succ  of universe
-  | U_max   of universe * universe
+  | U_max   of list<universe>
   | U_bvar  of int
-  | U_name   of univ_name
+  | U_name  of univ_name
   | U_unif  of Unionfind.uvar<option<universe>>
   | U_unknown
 and univ_name = ident
