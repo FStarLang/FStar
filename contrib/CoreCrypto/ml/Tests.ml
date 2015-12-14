@@ -252,6 +252,7 @@ module TestAead = struct
 end
 
 let bytes_of_hex = hex_to_bytes
+let hex_of_bytes = bytes_to_hex
 
 module TestHmac = struct
 
@@ -410,8 +411,8 @@ module TestHmac = struct
   let print_test_case v =
     List.iter (fun (digests, hash_alg) ->
       Printf.printf "key: %s\ndata: %s\ndigests: %s (%s)\n"
-        (string_of_bytes v.key) (string_of_bytes v.data)
-        (string_of_bytes digests) (string_of_hash_alg hash_alg)
+        (hex_of_bytes v.key) (hex_of_bytes v.data)
+        (hex_of_bytes digests) (string_of_hash_alg hash_alg)
     ) v.digests
 
   let test v =
@@ -424,6 +425,92 @@ module TestHmac = struct
           Bytes.equalBytes digest (fst (Bytes.split digest' i))
     ) v.digests
 
+end
+
+module TestHash = struct
+  type test = {
+    input: string;
+    output: string;
+    hash_alg: hash_alg;
+    repeat: int;
+  }
+
+  let tests = [{
+      hash_alg = MD5;
+      input = "";
+      output = "d41d8cd98f00b204e9800998ecf8427e";
+      repeat = 1
+    }; {
+      hash_alg = MD5;
+      input = "a";
+      output = "0cc175b9c0f1b6a831c399e269772661";
+      repeat = 1
+    }; {
+      hash_alg = MD5;
+      input = "abc";
+      output = "900150983cd24fb0d6963f7d28e17f72";
+      repeat = 1
+    }; {
+      hash_alg = MD5;
+      input = "message digest";
+      output = "f96b697d7cb7938d525a2f31aaf161d0";
+      repeat = 1
+    }; {
+      hash_alg = MD5;
+      input = "abcdefghijklmnopqrstuvwxyz";
+      output = "c3fcd3d76192e4007dfb496cca67e13b";
+      repeat = 1
+    }; {
+      hash_alg = MD5;
+      input = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+      output = "d174ab98d277d9f5a5611c2c9f419d9f";
+      repeat = 1
+    }; {
+      hash_alg = MD5;
+      input = "12345678901234567890123456789012345678901234567890123456789012345678901234567890";
+      output = "57edf4a22be3c955ac49da2e2107b67a";
+      repeat = 1
+    }; {
+      hash_alg = SHA1;
+      input = "abc";
+      output = "a9993e364706816aba3e25717850c26c9cd0d89d";
+      repeat = 1
+    }; {
+      hash_alg = SHA1;
+      input = "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
+      output = "84983e441c3bd26ebaae4aa1f95129e5e54670f1";
+      repeat = 1
+    }; {
+      hash_alg = SHA1;
+      input = "a";
+      output = "34aa973cd4c4daa4f61eeb2bdbad27316534016f";
+      repeat = 1000000
+    }; {
+      hash_alg = SHA1;
+      input = "0123456701234567012345670123456701234567012345670123456701234567";
+      output = "dea356a2cddd90c7a7ecedc5ebb563934f460452";
+      repeat = 10
+    }]
+
+  let print_test t =
+    Printf.printf "%s(%s) = %s (got: %s)\n"
+      (string_of_hash_alg t.hash_alg) t.input t.output
+      (hex_of_bytes (hash t.hash_alg (bytes_of_string t.input)))
+
+  let test t =
+    let input =
+      if t.repeat = 1 then
+        bytes_of_string t.input
+      else
+        let l = String.length t.input in
+        let s = String.make (l * t.repeat) ' ' in
+        for i = 0 to t.repeat - 1 do
+          String.blit t.input 0 s (i * l) l
+        done;
+        bytes_of_string s
+    in
+    let output = hash t.hash_alg input in
+    Bytes.equalBytes output (bytes_of_hex t.output)
 end
 
 let run_test test_vectors print_test_vector test_vector =
@@ -443,5 +530,6 @@ let run_test test_vectors print_test_vector test_vector =
 
 let _ =
   TestAead.(run_test test_vectors print_test_vector test);
-  TestHmac.(run_test test_cases print_test_case test)
+  TestHmac.(run_test test_cases print_test_case test);
+  TestHash.(run_test tests print_test test)
 
