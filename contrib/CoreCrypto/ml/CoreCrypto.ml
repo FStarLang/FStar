@@ -12,6 +12,13 @@ type aead_cipher = AES_128_GCM | AES_256_GCM
 type stream_cipher = RC4_128
 type rsa_padding = Pad_none | Pad_PKCS1
 
+let string_of_hash_alg = function
+  | MD5 -> "MD5"
+  | SHA1 -> "SHA1"
+  | SHA256 -> "SHA256"
+  | SHA384 -> "SHA384"
+  | SHA512 -> "SHA512"
+
 let blockSize = function
   | TDES_EDE_CBC -> 8
   | AES_128_CBC  -> 16
@@ -145,8 +152,10 @@ let cipher_of_stream_cipher (c:stream_cipher) = match c with
 	| RC4_128 -> ocaml_EVP_CIPHER_rc4()
 
 let cipher_of_aead_cipher (c:aead_cipher) = match c with
-	| AES_128_GCM -> ocaml_EVP_CIPHER_aes_128_gcm()
-	| AES_256_GCM -> ocaml_EVP_CIPHER_aes_256_gcm()
+	| AES_128_GCM ->
+            ocaml_EVP_CIPHER_aes_128_gcm()
+	| AES_256_GCM ->
+            ocaml_EVP_CIPHER_aes_256_gcm()
 
 let block_encrypt (c:block_cipher) (k:bytes) (iv:bytes) (d:bytes) =
 	let c = cipher_of_block_cipher c in
