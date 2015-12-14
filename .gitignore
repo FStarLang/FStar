@@ -52,7 +52,11 @@ dump
 
 tags
 
-.nubuild
-nuobj/
-nucache/
-nutemp/
+*~
+*.swp
+
+/.nubuild
+/nucache/
+/nuobj/
+nubuild.log
+nubuild.progress

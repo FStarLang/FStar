@@ -3,12 +3,18 @@ include ../Makefile.include
 NEGFILES=negative-tests.fst
 NEGTESTS=36
 
+ifdef NUBUILD
+VERIFY=$(NUBUILD) --no-cloudcache VerifyFst 
+else
+VERIFY=$(FSTAR)
+endif
+
 all: all-pos all-neg
 
 all-pos: basictests testint32.vv testmref.vv testTwoLevelHeap.vv mac2.vv testghost inverse testghost
 
 basictests: $(VERFILES)
-		$(FSTAR) --admit_fsi FStar.Set $(STDLIB) int32.fst $^
+	$(VERIFY) --admit_fsi FStar.Set $(STDLIB) $^
 
 all-neg: $(NEGFILES)
 	-$(FSTAR) --admit_fsi FStar.Set $(STDLIB) --split_cases 1 $^ | tee fstar_log

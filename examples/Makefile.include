@@ -1,6 +1,10 @@
 # --------------------------------------------------------------------
 ifeq ($(OS),Windows_NT)
 MSBUILD = msbuild
+# note: paths appear to be specified related to a subdirectory of the directory in 
+# which this makefile resides. see definition of $FSTAR_HOME as evidence supporting
+# this assumption.
+NUBUILD=../../.nubuild/bin/NuBuild.exe
 else
 MSBUILD = xbuild
 endif
