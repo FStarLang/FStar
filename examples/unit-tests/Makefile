@@ -3,12 +3,6 @@ include ../Makefile.include
 NEGFILES=negative-tests.fst
 NEGTESTS=36
 
-ifdef USE_NUBUILD
-VV=$(NUBUILD) --no-cloudcache VerifyFst 
-else
-VV=$(FSTAR)
-endif
-
 all: all-pos all-neg
 
 all-pos: basictests testint32.vv testmref.vv testTwoLevelHeap.vv mac2.vv testghost inverse testghost

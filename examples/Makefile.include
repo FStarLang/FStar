@@ -24,6 +24,12 @@ FSTAR = ../../bin/fstar.exe $(OTHERFLAGS)
 STDCACHE=Prims.cache List.cache String.cache ST.cache Set.cache Map.cache Heap.cache Array.cache
 FSTARC=../../bin/fstar.exe $(STDCACHE) $(OTHERFLAGS)
 
+ifdef USE_NUBUILD
+VV=$(NUBUILD) --no-cloudcache VerifyFst 
+else
+VV=$(FSTAR)
+endif
+
 %.ver: %.fst
 	$(FSTAR) --admit_fsi FStar.Set $(STDLIB) $^
 
