@@ -107,7 +107,7 @@ val uinst                  : env -> tscheme -> term
 val push_sigelt        : env -> sigelt -> env
 val push_local_binding : env -> binding -> env
 val push_module        : env -> modul -> env
-val push_univ_vars     : env -> univ_vars -> env
+val push_univ_vars     : env -> univ_names -> env
 val set_expected_typ   : env -> typ -> env
 val expected_typ       : env -> option<typ>
 val clear_expected_typ : env -> env*option<typ>
@@ -119,6 +119,7 @@ val bound_vars   : env -> list<bv>
 val binders      : env -> binders
 val modules      : env -> list<modul>
 val uvars_in_env : env -> uvars
+val univ_vars    : env -> Util.set<universe_uvar>
 val lidents      : env -> list<lident>
 val fold_env     : env -> ('a -> binding -> 'a) -> 'a -> 'a
 

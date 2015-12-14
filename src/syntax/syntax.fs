@@ -57,13 +57,13 @@ type universe =
   | U_succ  of universe
   | U_max   of universe * universe
   | U_bvar  of int
-  | U_var   of univ_var
+  | U_name   of univ_name
   | U_unif  of Unionfind.uvar<option<universe>>
   | U_unknown
-and univ_var = ident
+and univ_name = ident
 
 type universe_uvar = Unionfind.uvar<option<universe>>
-type univ_vars     = list<univ_var>
+type univ_names     = list<univ_name>
 type universes     = list<universe>
 
 type term' =
@@ -95,7 +95,7 @@ and pat' =
   | Pat_dot_term of bv * term                                    (* dot patterns: determined by other elements in the pattern and type *)
 and letbinding = {  //let f : forall u1..un. M t = e 
     lbname :lbname;         //f
-    lbunivs:list<univ_var>; //u1..un
+    lbunivs:list<univ_name>; //u1..un
     lbtyp  :typ;            //t
     lbeff  :lident;         //M
     lbdef  :term            //e
@@ -150,16 +150,16 @@ and letbindings = bool * list<letbinding>       (* let recs may have more than o
 and subst_t = list<list<subst_elt>>
 and subst_elt = 
    | DB of int * term                          (* DB i t: replace a bound variable with index i with term t *)
-   | NM of bv * int                            (* NM x i: replace a local name with a bound variable i *)
-   | NT of bv * term                           (* NT x t: replace a local name with a term t *)
-   | UN of univ_var * universe                 (* UN u v: replace universes variable u with universe term v *)
+   | NM of bv  * int                           (* NM x i: replace a local name with a bound variable i *)
+   | NT of bv  * term                          (* NT x t: replace a local name with a term t *)
+   | UN of int * universe                      (* UN u v: replace universes variable u with universe term v *)
 and freenames = set<bv>
 and uvars    = set<(uvar * typ)>
 and syntax<'a,'b> = {
     n:'a;
     tk:memo<'b>;
     pos:Range.range;
-    vars:memo<(freenames * uvars)>;
+    vars:memo<free_vars>;
 }
 and bv = {
     ppname:ident;  //programmer-provided name for pretty-printing 
@@ -167,8 +167,13 @@ and bv = {
     sort:term
 }
 and fv = var<term> * option<fv_qual>
+and free_vars = {
+    names:set<bv>;
+    uvars:set<(uvar * typ)>;
+    univs:set<universe_uvar>;
+}
 
-type tscheme = list<univ_var> * typ
+type tscheme = list<univ_name> * typ
 
 type lcomp = {
     eff_name: lident;
@@ -209,7 +214,7 @@ type sub_eff = {
  }
 type eff_decl = {
     mname       :lident;
-    univs       :univ_vars;
+    univs       :univ_names;
     binders     :binders;
     qualifiers  :list<qualifier>;
     signature   :tscheme;
@@ -229,7 +234,7 @@ type eff_decl = {
 }
 and sigelt =
   | Sig_tycon          of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t 
-                       * univ_vars                 //u1..un
+                       * univ_names                 //u1..un
                        * binders                   //(x1:t1) ... (xn:tn)
                        * typ                       //t
                        * list<lident>              //mutually defined types
@@ -246,14 +251,14 @@ and sigelt =
                        * list<lident> 
                        * Range.range
   | Sig_datacon        of lident 
-                       * univ_vars                  //universe variables
+                       * univ_names                  //universe variables
                        * typ 
                        * lident                     //the inductive type of the value this constructs
                        * list<qualifier> 
                        * list<lident>               //mutually defined types 
                        * Range.range
   | Sig_val_decl       of lident 
-                       * univ_vars
+                       * univ_names
                        * typ 
                        * list<qualifier> 
                        * Range.range
@@ -313,8 +318,12 @@ let mk_uvs () = Util.mk_ref None
 let new_bv_set () : set<bv> = Util.new_set order_bv (fun x -> x.index + Util.hashcode x.ppname.idText)
 let new_uv_set () : uvars   = Util.new_set (fun (x, _) (y, _) -> Unionfind.uvar_id x - Unionfind.uvar_id y)  
                                            (fun (x, _) -> Unionfind.uvar_id x)
+let new_universe_uvar_set () : set<universe_uvar> = 
+    Util.new_set (fun x y -> Unionfind.uvar_id x - Unionfind.uvar_id y)  
+                 (fun x -> Unionfind.uvar_id x)
 let no_names  = new_bv_set()
 let no_uvs : uvars = new_uv_set()
+let no_universe_uvars = new_universe_uvar_set()
 let memo_no_uvs = Util.mk_ref (Some no_uvs)
 let memo_no_names = Util.mk_ref (Some no_names)
 let freenames_of_list l = List.fold_right Util.set_add l no_names
@@ -386,11 +395,16 @@ let gen_reset =
 let next_id = fst gen_reset
 let reset_gensym = snd gen_reset
 let freshen_bv bv = {bv with index=next_id()}
-
+let range_of_ropt = function 
+    | None -> dummyRange
+    | Some r -> r
 let gen_bv : string -> option<Range.range> -> typ -> bv = fun s r t ->
-  let id = mk_ident(s, (match r with None -> dummyRange | Some r -> r)) in
+  let id = mk_ident(s, range_of_ropt r) in
   {ppname=id; index=next_id(); sort=t}
 let new_bv ropt t = gen_bv "x" ropt t
+let new_univ_name ropt = 
+    let id = next_id() in 
+    mk_ident (Util.string_of_int id, range_of_ropt ropt)
 let mkbv x y t  = {ppname=x;index=y;sort=t}
 let lbname_eq l1 l2 = match l1, l2 with
   | Inl x, Inl y -> bv_eq x y

@@ -813,6 +813,8 @@ let rec solve (env:Env.env) (probs:worklist) : solution =
                  | _ -> 
                    solve env ({probs with attempting=attempt |> List.map (fun (_, _, y) -> y); wl_deferred=rest})
 
+and solve_universes env u1 u2 wl = failwith "NYI: solve_universes"
+
 (******************************************************************************************************)
 (* The case where u < t1, .... u < tn: we solve this by taking u=t1/\.../\tn                          *)
 (******************************************************************************************************)
@@ -1284,6 +1286,9 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     match t1.n, t2.n with
       | Tm_bvar _, _
       | _, Tm_bvar _ -> failwith "Only locally nameless! We should never see a de Bruijn variable"
+
+      | Tm_type u1, Tm_type u2 -> 
+        solve_universes env u1 u2 wl
 
       | Tm_arrow(bs1, c1), Tm_arrow(bs2, c2) ->
         let mk_c c = function

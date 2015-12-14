@@ -82,7 +82,9 @@ let check_uvars r t =
     Options.hide_uvar_nums := hide_uvar_nums_saved;
     Options.print_implicits := print_implicits_saved
 
-let type_u () : typ * universe = failwith "NYI: type_u"
+let type_u () : typ * universe = 
+    let u = U_unif <| Unionfind.fresh None in
+    mk (Tm_type u) None Range.dummyRange, u
 
 (************************************************************************)
 (* Extracting annotations from a term *)
@@ -738,7 +740,7 @@ let close_comp env bindings (lc:lcomp) =
                        Except that it is highly unlikely for the wp to actually contain such a free occurrence of l *)
               wp
 
-            | Env.Binding_sig s -> failwith "impos") bindings wp0 in //(Printf.sprintf "NYI close_comp_typ with binding %A" b))
+            | Env.Binding_sig s -> failwith "impos") bindings wp0 in 
         let c = Normalize.weak_norm_comp env c in
         let t, wp, wlp = destruct_comp c in
         let md = Env.get_effect_decl env c.effect_name in
@@ -991,7 +993,7 @@ let gen env (ecs:list<(term * comp)>) : option<list<(term * comp)>> =
               e, S.mk_Total t) in
      Some ecs
 
-let generalize env (lecs:list<(lbname*term*comp)>) : (list<(lbname*term*univ_vars*comp)>) =
+let generalize env (lecs:list<(lbname*term*comp)>) : (list<(lbname*term*univ_names*comp)>) =
   if debug env Options.Low then Util.fprint1 "Generalizing: %s" (List.map (fun (lb, _, _) -> Print.lbname_to_string lb) lecs |> String.concat ", ");
   match gen env (lecs |> List.map (fun (_, e, c) -> (e, c))) with
     | None -> lecs |> List.map (fun (l,t,c) -> l,t,[],c)
@@ -1001,7 +1003,17 @@ let generalize env (lecs:list<(lbname*term*comp)>) : (list<(lbname*term*univ_var
             (Range.string_of_range e.pos) (Print.lbname_to_string l) (Print.term_to_string (Util.comp_result c));
       (l, e, [], c)) lecs ecs
 
-let generalize_universes (_:env) (_:term) : tscheme = failwith "NYI: generalize_universes"
+let generalize_universes (env:env) (t:term) : tscheme = 
+    let univs = Free.univs t in 
+    let env_univs = Env.univ_vars env in 
+    let gen = Util.set_difference univs env_univs |> Util.set_elements in 
+    let r = Some (Env.get_range env) in
+    let u_names = gen |> List.map (fun u -> 
+        let u_name = Syntax.new_univ_name r in
+        Unionfind.change u (Some (U_name u_name));
+        u_name) in
+    let ts = SS.close_univ_vars u_names t in 
+    (u_names, ts)
 
 (************************************************************************)
 (* Convertibility *)

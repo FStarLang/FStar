@@ -57,6 +57,14 @@ let rec force_uvar_aux pos t = match t.n with
 let force_uvar_and_ascriptions = force_uvar_aux true
 let force_uvar = force_uvar_aux false 
 
+let rec compress_univ u = match u with 
+    | U_unif u' -> 
+      begin match Unionfind.find u' with 
+        | Some u -> compress_univ u
+        | _ -> u
+      end
+    | _ -> u
+    
 (********************************************************************************)
 (*************************** Delayed substitutions ******************************)
 (********************************************************************************)
@@ -65,7 +73,33 @@ let subst_to_string s = s |> List.map (fun (b, _) -> b.ppname.idText) |> String.
 
 //Lookup a bound var or a name in a parallel substitution
 let subst_bv s a = Util.find_map s (function DB (i, t) when i=a.index -> Some t | _ -> None)
-let subst_nm s a = Util.find_map s (function NM (x, i) when bv_eq a x -> Some (bv_to_tm ({x with index=i})) | _ -> None)
+let subst_nm s a = Util.find_map s (function  
+    | NM (x, i) when bv_eq a x -> Some (bv_to_tm ({x with index=i})) 
+    | NT (x, t) when bv_eq a x -> Some t
+    | _ -> None)
+let find_univ s x = Util.find_map s (function 
+    | UN(y, t) when x=y -> Some t
+    | _ -> None)
+let rec aux_subst_univ s u =
+    match u with 
+        | U_bvar x -> 
+          begin match s with 
+            | [] -> u
+            | hd::tl -> 
+              match find_univ hd x with 
+                | None -> aux_subst_univ tl u
+                | Some t -> subst_univ tl t
+          end
+        | _ -> u
+and subst_univ s u = match u with 
+  | U_bvar _ -> aux_subst_univ s u
+  | U_zero
+  | U_unknown 
+  | U_name  _
+  | U_unif _ -> u
+  | U_succ u -> U_succ (subst_univ s u)
+  | U_max(u1, u2) -> U_max(subst_univ s u1, subst_univ s u2)
+
 let rec subst' (s:subst_t) t = match s with
   | [] 
   | [[]] -> force_uvar t
@@ -97,6 +131,9 @@ let rec subst' (s:subst_t) t = match s with
         | Tm_name a -> 
           aux subst_nm a s
 
+        | Tm_type u -> 
+          mk (Tm_type (subst_univ s u)) None t0.pos
+
         | Tm_constant _
         | Tm_uvar _
         | Tm_fvar _ -> t0
@@ -126,9 +163,11 @@ and subst_comp' s t = match s with
 
 and compose_subst (s1:subst_t) (s2:subst_t) = s1@s2
 
-let shift n = function 
+let shift n s = match s with 
     | DB(i, t) -> DB(i+n, t)
     | NM(x, i) -> NM(x, i+n)
+    | UN(i, t) -> UN(i+n, t)
+    | NT _     -> s
 let shift_subst n s = List.map (shift n) s
 let shift_subst' n s = s |> List.map (shift_subst n)
 let subst_binder' s (x:bv, imp) = {x with sort=subst' s x.sort}, imp
@@ -370,8 +409,8 @@ let close_branch (p, wopt, e) =
     let e = subst closing e in
     (p, wopt, e)
 
-let open_univ_vars     (_:univ_vars) (_:term)  : univ_vars * term = failwith "NYI: open_univ_vars"
-let close_univ_vars     (_:univ_vars) (_:term) : term = failwith "NYI: close_univ_vars"
+let open_univ_vars     (_:univ_names) (_:term)  : univ_names * term = failwith "NYI: open_univ_vars"
+let close_univ_vars     (_:univ_names) (_:term) : term = failwith "NYI: close_univ_vars"
 let open_let_rec:   list<letbinding> -> term -> list<letbinding> * term = fun _ _ -> failwith "NYI: open_let_rec"
 let close_let_rec:   list<letbinding> -> term -> list<letbinding> * term = fun _ _ -> failwith "NYI: close_let_rec"
 

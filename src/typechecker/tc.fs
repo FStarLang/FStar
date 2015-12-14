@@ -1257,7 +1257,7 @@ and check_let_recs env lbs =
 (******************************************************************************)
 and check_let_bound_def top_level env lb 
                                : term      (* checked lbdef                   *)
-                               * univ_vars (* univ_vars, if any               *)
+                               * univ_names (* univ_vars, if any               *)
                                * lcomp     (* type of lbdef                   *)
                                * guard_t   (* well-formedness of lbtyp        *)
                                * bool      (* true iff lbtyp was annotated    *)
@@ -1286,7 +1286,7 @@ and check_let_bound_def top_level env lb
 (* Extracting the type of non-recursive let binding *)
 and check_lbtyp top_level env lb : option<typ> (* checked version of lb.lbtyp, if it was not Tm_unknown *)
                                  * guard_t     (* well-formedness condition for that type               *)
-                                 * univ_vars   (* explicit universe variables, if any                   *)
+                                 * univ_names   (* explicit universe variables, if any                   *)
                                  * Env.env     (* env extended with univ_vars                           *)
                                  = 
     let t = SS.compress lb.lbtyp in

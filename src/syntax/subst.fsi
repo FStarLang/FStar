@@ -26,12 +26,13 @@ val shift_subst:        int -> subst -> subst
 val subst:              list<subst_elt> -> term -> term
 val subst_comp:         list<subst_elt> -> comp -> comp
 val compress:           term -> term
+val compress_univ:      universe -> universe
 
 val close:              binders -> term -> term
 val close_comp:         binders -> comp -> comp
 val close_binders:      binders -> binders
 val close_branch:       branch -> branch
-val close_univ_vars:    univ_vars -> term -> term
+val close_univ_vars:    univ_names -> term -> term
 val close_let_rec:      list<letbinding> -> term -> list<letbinding> * term
 
 val open_binders:       binders -> binders 
@@ -39,7 +40,7 @@ val open_term:          binders -> term -> binders * term
 val open_comp:          binders -> comp -> binders * comp
 val open_branch:        branch -> branch
 val open_let_rec:       list<letbinding> -> term -> list<letbinding> * term
-val open_univ_vars:     univ_vars -> term -> univ_vars * term
+val open_univ_vars:     univ_names -> term -> univ_names * term
 
 val subst_binders:      binders -> args -> term -> term
 val subst_binders_comp: binders -> args -> comp -> comp

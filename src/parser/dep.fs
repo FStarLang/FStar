@@ -164,7 +164,7 @@ let collect_one (original_map: smap<string>) (filename: string) =
 
 
 (** Collect the dependencies for a list of given files. *)
-let collect (filenames: list<string>): list <(string * list<string>)> =
+let collect (filenames: list<string>): list<(string * list<string>)> =
   let m = build_map () in
   List.map (fun f ->
     let deps = collect_one m f in

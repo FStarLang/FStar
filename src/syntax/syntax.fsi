@@ -56,13 +56,13 @@ type universe =
   | U_succ  of universe
   | U_max   of universe * universe
   | U_bvar  of int
-  | U_var   of univ_var
+  | U_name  of univ_name
   | U_unif  of Unionfind.uvar<option<universe>>
   | U_unknown
-and univ_var = ident
+and univ_name = ident
 
 type universe_uvar = Unionfind.uvar<option<universe>>
-type univ_vars     = list<univ_var>
+type univ_names     = list<univ_name>
 type universes     = list<universe>
 
 type term' =
@@ -94,7 +94,7 @@ and pat' =
   | Pat_dot_term of bv * term                                    (* dot patterns: determined by other elements in the pattern and type *)
 and letbinding = {  //let f : forall u1..un. M t = e 
     lbname :lbname;         //f
-    lbunivs:list<univ_var>; //u1..un
+    lbunivs:list<univ_name>; //u1..un
     lbtyp  :typ;            //t
     lbeff  :lident;         //M
     lbdef  :term            //e
@@ -150,15 +150,15 @@ and subst_t = list<list<subst_elt>>
 and subst_elt = 
    | DB of int * term                          (* DB i t: replace a bound variable with index i with term t *)
    | NM of bv  * int                           (* NM x i: replace a local name with a bound variable i *)
-   | NT of bv * term                           (* NT x t: replace a local name with a term t *)
-   | UN of univ_var * universe                 (* UN u v: replace universes variable u with universe term v *)
+   | NT of bv  * term                          (* NT x t: replace a local name with a term t *)
+   | UN of int * universe                      (* UN u v: replace universes variable u with universe term v *)
 and freenames = set<bv>
 and uvars     = set<(uvar*typ)>
 and syntax<'a,'b> = {
     n:'a;
     tk:memo<'b>;
     pos:Range.range;
-    vars:memo<(freenames * uvars)>;
+    vars:memo<free_vars>;
 }
 and bv = {
     ppname:ident;  //programmer-provided name for pretty-printing 
@@ -166,8 +166,13 @@ and bv = {
     sort:term
 }
 and fv = var<term> * option<fv_qual>
+and free_vars = {
+    names:set<bv>;
+    uvars:set<(uvar * typ)>;
+    univs:set<universe_uvar>;
+}
 
-type tscheme = list<univ_var> * typ
+type tscheme = list<univ_name> * typ
 
 type lcomp = {
     eff_name: lident;
@@ -180,6 +185,7 @@ type formula = typ
 type formulae = list<typ>
 val new_bv_set: unit -> set<bv>
 val new_uv_set: unit -> uvars
+val new_universe_uvar_set: unit -> set<universe_uvar>
 
 type qualifier =
   | Private
@@ -211,7 +217,7 @@ type sub_eff = {
 
 type eff_decl = {
     mname       :lident;
-    univs       :univ_vars;
+    univs       :univ_names;
     binders     :binders;
     qualifiers  :list<qualifier>;
     signature   :tscheme;
@@ -231,7 +237,7 @@ type eff_decl = {
 }
 and sigelt =
   | Sig_tycon          of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t 
-                       * univ_vars                 //u1..un
+                       * univ_names                 //u1..un
                        * binders                   //(x1:t1) ... (xn:tn)
                        * typ                       //t
                        * list<lident>              //mutually defined types
@@ -248,14 +254,14 @@ and sigelt =
                        * list<lident> 
                        * Range.range
   | Sig_datacon        of lident 
-                       * univ_vars                  //universe variables
+                       * univ_names                  //universe variables
                        * typ 
                        * lident                     //the inductive type of the value this constructs
                        * list<qualifier> 
                        * list<lident>               //mutually defined types 
                        * Range.range
   | Sig_val_decl       of lident 
-                       * univ_vars
+                       * univ_names
                        * typ 
                        * list<qualifier> 
                        * Range.range
@@ -292,7 +298,7 @@ val withinfo: 'a -> 'b -> Range.range -> withinfo_t<'a,'b>
 (* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
 val mk: 'a -> mk_t_a<'a,'b>
 
-val mk_lb :         (lbname * list<univ_var> * lident * typ * term) -> letbinding
+val mk_lb :         (lbname * list<univ_name> * lident * typ * term) -> letbinding
 val mk_Tm_app:      term -> args -> mk_t
 val extend_app:     term -> arg -> mk_t
 val mk_Tm_delayed:  either<(term * subst_t), (unit -> term)> -> Range.range -> term
@@ -309,8 +315,10 @@ val range_of_bv:     bv -> range
 val tun:      term
 val teff:     term
 val is_teff:  term -> bool
-val no_names: freenames
-val no_uvs:   uvars
+
+val no_names:          freenames
+val no_uvs:            uvars
+val no_universe_uvars: set<universe_uvar>
 
 val freenames_of_list:    list<bv> -> freenames
 val freenames_of_binders: binders -> freenames
@@ -335,6 +343,7 @@ val reset_gensym:   (unit -> unit)
 val freshen_bv:     bv -> bv
 val gen_bv:         string -> option<Range.range> -> typ -> bv 
 val new_bv:         option<range> -> typ -> bv
+val new_univ_name:  option<range> -> univ_name
 val fv:             lident -> option<fv_qual> -> fv 
 val fv_to_tm:       fv -> term
 val fvar:           option<fv_qual> -> lident -> range -> term

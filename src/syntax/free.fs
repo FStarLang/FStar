@@ -26,30 +26,62 @@ open FStar.Syntax.Syntax
 (********************************************************************************)
 (************************* Free names and unif variables ************************)
 (********************************************************************************)
-let singleton_bv x = Util.set_add x (new_bv_set())
-let singleton_uv x = Util.set_add x (new_uv_set())
-let union_nm_uv (x1, y1) (x2, y2) = Util.set_union x1 x2, Util.set_union y1 y2
+let no_free_vars = {
+    names=no_names;
+    uvars=no_uvs;
+    univs=no_universe_uvars;
+}
+let singleton_bv x   = {
+    names=Util.set_add x (new_bv_set());
+    uvars=no_uvs;
+    univs=no_universe_uvars;
+}
+let singleton_uv x   = {
+    names=no_names;
+    uvars=Util.set_add x (new_uv_set());
+    univs=no_universe_uvars;
+}
+let singleton_univ x = {
+    names=no_names;
+    uvars=no_uvs;
+    univs= Util.set_add x (new_universe_uvar_set());
+}
+let union f1 f2 = {
+    names=Util.set_union f1.names f2.names;
+    uvars=Util.set_union f1.uvars f2.uvars;
+    univs=Util.set_union f1.univs f2.univs;
+}
 
-let rec free_names_and_uvars' tm =
+let rec free_univs u = match Subst.compress_univ u with
+  | U_zero
+  | U_bvar   _ 
+  | U_name    _
+  | U_unknown -> no_free_vars
+  | U_succ u -> free_univs u
+  | U_max (u1, u2) -> union  (free_univs u1) (free_univs u2)
+  | U_unif u -> singleton_univ u
+  
+let rec free_names_and_uvs' tm : free_vars =
     let aux_binders bs acc = 
-        bs |> List.fold_left (fun n (x, _) -> union_nm_uv n (free_names_and_uvars x.sort)) acc in
+        bs |> List.fold_left (fun n (x, _) -> union n (free_names_and_uvars x.sort)) acc in
     let t = Subst.compress tm in 
     match t.n with
       | Tm_delayed _ -> failwith "Impossible"
 
       | Tm_name x ->
-        singleton_bv x, no_uvs
+        singleton_bv x
 
       | Tm_uvar (x, t) -> 
-        no_names, singleton_uv (x,t)
+        singleton_uv (x,t)
+
+      | Tm_type _ -> 
+        failwith ""
 
       | Tm_bvar _
-      | Tm_name _
       | Tm_fvar _ 
       | Tm_constant _
-      | Tm_type _ 
       | Tm_unknown -> 
-        no_names, no_uvs
+        no_free_vars
         
       | Tm_uinst(t, _) -> 
         free_names_and_uvars t
@@ -69,19 +101,19 @@ let rec free_names_and_uvars' tm =
       | Tm_match(t, pats) -> 
         pats |> List.fold_left (fun n (p, wopt, t) -> 
             let n1 = match wopt with 
-                | None -> no_names, no_uvs 
+                | None ->   no_free_vars
                 | Some w -> free_names_and_uvars w in 
             let n2 = free_names_and_uvars t in
-            let n = union_nm_uv n1 (union_nm_uv n2 n) in
-            pat_bvs p |> List.fold_left (fun n x -> union_nm_uv n (free_names_and_uvars x.sort)) n)
+            let n = union n1 (union n2 n) in
+            pat_bvs p |> List.fold_left (fun n x -> union n (free_names_and_uvars x.sort)) n)
             (free_names_and_uvars t)
       
       | Tm_ascribed(t1, t2, _) -> 
-        union_nm_uv (free_names_and_uvars t1) (free_names_and_uvars t2)
+        union (free_names_and_uvars t1) (free_names_and_uvars t2)
 
       | Tm_let(lbs, t) -> 
         snd lbs |> List.fold_left (fun n lb -> 
-          union_nm_uv n (union_nm_uv (free_names_and_uvars lb.lbtyp) (free_names_and_uvars lb.lbdef)))
+          union n (union (free_names_and_uvars lb.lbtyp) (free_names_and_uvars lb.lbdef)))
           (free_names_and_uvars t)
           
       | Tm_meta(t, Meta_pattern args) -> 
@@ -95,15 +127,15 @@ and free_names_and_uvars t =
     match !t.vars with 
         | Some n -> n 
         | _ -> 
-        let n = free_names_and_uvars' t in
-        t.vars := Some n;
-        n
+          let n = free_names_and_uvs' t in
+          t.vars := Some n;
+          n
 
 and free_names_and_uvars_args args acc = 
-        args |> List.fold_left (fun n (x, _) -> union_nm_uv n (free_names_and_uvars x)) acc
+        args |> List.fold_left (fun n (x, _) -> union n (free_names_and_uvars x)) acc
  
 and free_names_and_uvars_binders bs acc = 
-        bs |> List.fold_left (fun n (x, _) -> union_nm_uv n (free_names_and_uvars x.sort)) acc 
+        bs |> List.fold_left (fun n (x, _) -> union n (free_names_and_uvars x.sort)) acc 
               
 and free_names_and_uvars_comp c = 
     match !c.vars with 
@@ -117,7 +149,7 @@ and free_names_and_uvars_comp c =
          c.vars := Some n;
          n
          
-let names t = fst (free_names_and_uvars t)
-let names_of_binders (bs:binders) = fst (free_names_and_uvars_binders bs (no_names, no_uvs))
-let uvars t = snd (free_names_and_uvars t)
-let universe_uvars (t:term) : set<universe_uvar> = failwith "NYI: universe_uvars"
+let names t = (free_names_and_uvars t).names
+let uvars t = (free_names_and_uvars t).uvars
+let univs t = (free_names_and_uvars t).univs
+let names_of_binders (bs:binders) = (free_names_and_uvars_binders bs no_free_vars).names

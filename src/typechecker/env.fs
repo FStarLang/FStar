@@ -158,7 +158,8 @@ let new_u_univ _ = U_unif (Unionfind.fresh None)
 let inst_tscheme = function 
     | [], t -> t
     | us, t -> 
-      let vs = us |> List.map (fun u -> UN (u, new_u_univ())) in
+      let n = List.length us - 1 in 
+      let vs = us |> List.mapi (fun i _ -> UN (n - i, new_u_univ())) in
       Subst.subst vs t
 
 let in_cur_mod env (l:lident) = (* TODO: need a more efficient namespace check! *)
@@ -489,7 +490,7 @@ let push_module env (m:modul) =
       gamma=[];
       expected_typ=None}
 
-let push_univ_vars (env:env) (_:univ_vars) : env = failwith "NYI: push_univ_vars" 
+let push_univ_vars (env:env) (_:univ_names) : env = failwith "NYI: push_univ_vars" 
  
 let set_expected_typ env t =
   {env with expected_typ = Some t; use_eq=false}
@@ -528,6 +529,16 @@ let uvars_in_env env =
     | Binding_var(_, (_, t))::tl -> aux (ext out (Free.uvars t)) tl
     | Binding_sig _::_ -> out in (* this marks a top-level scope ... no more uvars beyond this *)
   aux no_uvs env.gamma
+
+let univ_vars env = 
+    let no_univs = Syntax.no_universe_uvars in
+    let ext out uvs = Util.set_union out uvs in
+    let rec aux out g = match g with
+      | [] -> out
+      | Binding_lid(_, (_, t))::tl
+      | Binding_var(_, (_, t))::tl -> aux (ext out (Free.univs t)) tl
+      | Binding_sig _::_ -> out in (* this marks a top-level scope ... no more uvars beyond this *)
+    aux no_univs env.gamma
 
 let bound_vars_of_bindings bs = 
   bs |> List.collect (function

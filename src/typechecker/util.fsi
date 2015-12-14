@@ -43,7 +43,7 @@ val type_u   : unit -> typ * universe
 //extracting annotations from a term
 val force_sort: syntax<'a,'b> -> 'b
 val sorts_of_args: args -> list<(term' * aqual)>
-val extract_let_rec_annotation: env -> letbinding -> (univ_vars * typ * bool)
+val extract_let_rec_annotation: env -> letbinding -> (univ_names * typ * bool)
 
 //pattern utilities
 val pat_as_exps: bool -> env -> pat -> (list<Env.binding> * list<term> * pat)
@@ -52,7 +52,7 @@ val decorated_pattern_as_term: pat -> list<bv> * term
 
 //instantiation and generalization
 val maybe_instantiate : env -> term -> typ -> (term * typ * implicits)
-val generalize: env -> list<(lbname*term*comp)> -> list<(lbname*term*univ_vars*comp)>
+val generalize: env -> list<(lbname*term*comp)> -> list<(lbname*term*univ_names*comp)>
 val generalize_universes: env -> term -> tscheme
 
 //operations on computation types
