@@ -9,12 +9,14 @@ PLATFORM = $(FSTAR_HOME)/contrib/Platform/ml
 CCOPTS = # -ccopt -O0
 
 ifeq ($(OS),Windows_NT)
+    EXTRA_PATH = PATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin/:$(PATH)" # needed for the DLL's
     EXE = .exe
     DLL = dll
     CC =
     OCAML_INCLUDE =
     ARCH = win32
 else
+    EXTRA_PATH = LD_LIBRARY_PATH=.
     EXE =
     DLL = so
     UNAME_S := $(shell uname -s)
@@ -51,19 +53,13 @@ dllcorecrypto.$(DLL) corecrypto.cmxa: $(DLL_OBJ)
 
 TEST_CMX = Tests.cmx
 
-# Static linking for Windows (until I figure out whether we want dynamic
-# linking, and if so, how to do it).
-Tests.exe: $(DLL_OBJ) $(TEST_CMX)
-	$(OCAMLOPT) -I $(PLATFORM) -package batteries -linkpkg -o $@ \
-	$^ libcrypto.a libssl.a libz.a libgdi32.a
-
 # Dynamic linking for others.
-Tests: $(TEST_CMX) corecrypto.cmxa dllcorecrypto.$(DLL)
+Tests$(EXE): $(TEST_CMX) corecrypto.cmxa dllcorecrypto.$(DLL)
 	$(OCAMLOPT) -I $(PLATFORM) -package batteries -linkpkg -o $@ \
 	-cclib dllcorecrypto.$(DLL) corecrypto.cmxa $(TEST_CMX)
 
 test: Tests$(EXE)
-	@LD_LIBRARY_PATH=. ./Tests$(EXE)
+	@$(EXTRA_PATH) ./Tests$(EXE)
 
 clean:
 	rm -f Tests$(EXE) *.[oa] *.so *.cm[ixoa] *.cmxa *.exe *.dll
