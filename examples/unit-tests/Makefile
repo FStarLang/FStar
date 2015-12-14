@@ -3,10 +3,10 @@ include ../Makefile.include
 NEGFILES=negative-tests.fst
 NEGTESTS=36
 
-ifdef NUBUILD
-VERIFY=$(NUBUILD) --no-cloudcache VerifyFst 
+ifdef USE_NUBUILD
+VV=$(NUBUILD) --no-cloudcache VerifyFst 
 else
-VERIFY=$(FSTAR)
+VV=$(FSTAR)
 endif
 
 all: all-pos all-neg
@@ -14,15 +14,14 @@ all: all-pos all-neg
 all-pos: basictests testint32.vv testmref.vv testTwoLevelHeap.vv mac2.vv testghost inverse testghost
 
 basictests: $(VERFILES)
-	$(VERIFY) --admit_fsi FStar.Set $(STDLIB) $^
+	$(VV) --admit_fsi FStar.Set $(STDLIB) $(call from_stdlib,int32.fst) $^
 
 all-neg: $(NEGFILES)
 	-$(FSTAR) --admit_fsi FStar.Set $(STDLIB) --split_cases 1 $^ | tee fstar_log
 	@FAILC=`egrep "^Error: [0-9]* errors" -o fstar_log | egrep -o "[0-9]+"`; if [ "$$FAILC" != "$(NEGTESTS)" ]; then echo "Wrong failure count: $$FAILC (expected $(NEGTESTS))" && false; else echo "Success: $$FAILC failures were expected"; fi
 
-
 inverse:
-	$(FSTAR) --admit_fsi FStar.Seq classical.fst ext.fst seq.fsi inverse.fst --max_fuel 0 --max_ifuel 3 --initial_ifuel 3 --initial_fuel 0
+	$(VV) --max_fuel 0 --max_ifuel 3 --initial_ifuel 3 --initial_fuel 0 --admit_fsi FStar.Seq $(call from_stdlib,classical.fst ext.fst seq.fsi) inverse.fst
 
 testghost:
-	$(FSTAR) testghost.fst
+	$(VV) testghost.fst
