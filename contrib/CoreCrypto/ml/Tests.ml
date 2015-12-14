@@ -253,6 +253,8 @@ end
 
 let bytes_of_hex = hex_to_bytes
 let hex_of_bytes = bytes_to_hex
+let string_of_hex = hex_to_string
+let hex_of_string = string_to_hex
 
 module TestHmac = struct
 
@@ -429,6 +431,7 @@ end
 
 module TestHash = struct
   type test = {
+    (* The input is [input] repeated [repeat] times. *)
     input: string;
     output: string;
     hash_alg: hash_alg;
@@ -490,11 +493,86 @@ module TestHash = struct
       input = "0123456701234567012345670123456701234567012345670123456701234567";
       output = "dea356a2cddd90c7a7ecedc5ebb563934f460452";
       repeat = 10
+    }; {
+      hash_alg = SHA256;
+      input = "abc";
+      output = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
+      repeat = 1
+    }; {
+      hash_alg = SHA256;
+      input = "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
+      output = "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1";
+      repeat = 1
+    }; {
+      hash_alg = SHA256;
+      input = "a";
+      output = "cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0";
+      repeat = 1000000
+    }; {
+      hash_alg = SHA256;
+      input = "0123456701234567012345670123456701234567012345670123456701234567";
+      output = "594847328451bdfa85056225462cc1d867d877fb388df0ce35f25ab5562bfbb5";
+      repeat = 10
+    }; {
+      hash_alg = SHA256;
+      input = "\x19";
+      output = "68aa2e2ee5dff96e3355e6c7ee373e3d6a4e17f75f9518d843709c0c9bc3e3d4";
+      repeat = 1
+    }; {
+      hash_alg = SHA256;
+      input = "\xe3\xd7\x25\x70\xdc\xdd\x78\x7c\xe3\x88\x7a\xb2\xcd\x68\x46\x52";
+      output = "175ee69b02ba9b58e2b0a5fd13819cea573f3940a94f825128cf4209beabb4e8";
+      repeat = 1
+    }; {
+      hash_alg = SHA256;
+      input = "\x83\x26\x75\x4e\x22\x77\x37\x2f\x4f\xc1\x2b\x20\x52\x7a\xfe\xf0\x4d\x8a\x05\x69\x71\xb1\x1a\xd5\x71\x23\xa7\xc1\x37\x76\x00\x00\xd7\xbe\xf6\xf3\xc1\xf7\xa9\x08\x3a\xa3\x9d\x81\x0d\xb3\x10\x77\x7d\xab\x8b\x1e\x7f\x02\xb8\x4a\x26\xc7\x73\x32\x5f\x8b\x23\x74\xde\x7a\x4b\x5a\x58\xcb\x5c\x5c\xf3\x5b\xce\xe6\xfb\x94\x6e\x5b\xd6\x94\xfa\x59\x3a\x8b\xeb\x3f\x9d\x65\x92\xec\xed\xaa\x66\xca\x82\xa2\x9d\x0c\x51\xbc\xf9\x33\x62\x30\xe5\xd7\x84\xe4\xc0\xa4\x3f\x8d\x79\xa3\x0a\x16\x5c\xba\xbe\x45\x2b\x77\x4b\x9c\x71\x09\xa9\x7d\x13\x8f\x12\x92\x28\x96\x6f\x6c\x0a\xdc\x10\x6a\xad\x5a\x9f\xdd\x30\x82\x57\x69\xb2\xc6\x71\xaf\x67\x59\xdf\x28\xeb\x39\x3d\x54\xd6";
+      output = "97dbca7df46d62c8a422c941dd7e835b8ad3361763f7e9b2d95f4f0da6e1ccbc";
+      repeat = 1
+    }; {
+      hash_alg = SHA384;
+      input = "abc";
+      output = "cb00753f45a35e8bb5a03d699ac65007272c32ab0eded1631a8b605a43ff5bed8086072ba1e7cc2358baeca134c825a7";
+      repeat = 1
+    }; {
+      hash_alg = SHA384;
+      input = "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu";
+      output = "09330c33f71147e83d192fc782cd1b4753111b173b3b05d22fa08086e3b0f712fcc7c71a557e2db966c3e9fa91746039";
+      repeat = 1
+    }; {
+      hash_alg = SHA384;
+      input = "a";
+      output = "9d0e1809716474cb086e834e310a4a1ced149e9c00f248527972cec5704c2a5b07b8b3dc38ecc4ebae97ddd87f3d8985";
+      repeat = 1000000
+    }; {
+      hash_alg = SHA384;
+      input = "0123456701234567012345670123456701234567012345670123456701234567";
+      output = "2fc64a4f500ddb6828f6a3430b8dd72a368eb7f3a8322a70bc84275b9c0b3ab00d27a5cc3c2d224aa6b61a0d79fb4596";
+      repeat = 10
+    }; {
+      hash_alg = SHA512;
+      input = "abc";
+      output = "ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f";
+      repeat = 1
+    }; {
+      hash_alg = SHA512;
+      input = "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu";
+      output = "8e959b75dae313da8cf4f72814fc143f8f7779c6eb9f7fa17299aeadb6889018501d289e4900f7e4331b99dec4b5433ac7d329eeb6dd26545e96e55b874be909";
+      repeat = 1
+    }; {
+      hash_alg = SHA512;
+      input = "a";
+      output = "e718483d0ce769644e2e42c7bc15b4638e1f98b13b2044285632a803afa973ebde0ff244877ea60a4cb0432ce577c31beb009c5c2c49aa2e4eadb217ad8cc09b";
+      repeat = 1000000
+    }; {
+      hash_alg = SHA512;
+      input = "0123456701234567012345670123456701234567012345670123456701234567";
+      output = "89d05ba632c699c31231ded4ffc127d5a894dad412c0e024db872d1abd2ba8141a0f85072a9be1e2aa04cf33c765cb510813a39cd5a84c4acaa64d3f3fb7bae9";
+      repeat = 10
     }]
 
   let print_test t =
     Printf.printf "%s(%s) = %s (got: %s)\n"
-      (string_of_hash_alg t.hash_alg) t.input t.output
+      (string_of_hash_alg t.hash_alg) (hex_of_string t.input) t.output
       (hex_of_bytes (hash t.hash_alg (bytes_of_string t.input)))
 
   let test t =
