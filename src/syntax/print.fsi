@@ -22,10 +22,11 @@ open FStar.Ident
 val bv_to_string    : bv -> string
 val lid_to_string   : lid -> string
 val term_to_string  : term -> string
-val uvar_to_string  : uvar -> string
+val uvar_to_string  : FStar.Unionfind.uvar<'a> -> string
 val comp_to_string  : comp -> string
 val tag_of_term     : term -> string
 val lbname_to_string: lbname -> string
 val pat_to_string   : pat -> string
 val modul_to_string : modul -> string
 val lcomp_to_string : lcomp -> string
+val univ_to_string  : universe -> string

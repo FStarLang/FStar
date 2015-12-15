@@ -22,6 +22,7 @@ type binding =
   | Binding_var of bv     * tscheme
   | Binding_lid of lident * tscheme
   | Binding_sig of sigelt
+  | Binding_univ of univ_name
 
 type mlift = typ -> typ -> typ
 
@@ -88,6 +89,7 @@ val get_range : env -> Range.range
 (* Querying identifiers *)
 val lookup_bv              : env -> bv -> typ
 val lookup_lid             : env -> lident -> typ
+val lookup_univ            : env -> univ_name -> bool
 val try_lookup_val_decl    : env -> lident -> option<(tscheme * list<qualifier>)>
 val lookup_val_decl        : env -> lident -> typ
 val lookup_datacon         : env -> lident -> typ

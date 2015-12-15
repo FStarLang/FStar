@@ -27,9 +27,10 @@ open FStar.Ident
 open FStar.Range
 
 type binding =
-  | Binding_var of bv     * tscheme
-  | Binding_lid of lident * tscheme
-  | Binding_sig of sigelt
+  | Binding_var  of bv     * tscheme
+  | Binding_lid  of lident * tscheme
+  | Binding_sig  of sigelt
+  | Binding_univ of univ_name
 
 type mlift = typ -> typ -> typ
 
@@ -211,12 +212,17 @@ and add_sigelts env ses =
 ////////////////////////////////////////////////////////////
 // Lookup up various kinds of identifiers                 //
 ////////////////////////////////////////////////////////////
-
 let try_lookup_bv env (bv:bv) =
   Util.find_map env.gamma (function
     | Binding_var (id, ts) when bv_eq id bv -> 
       Some (inst_tscheme ts)
     | _ -> None)
+
+let lookup_univ env x = 
+    List.find (function
+        | Binding_univ y -> x.idText=y.idText
+        | _ -> false) env.gamma
+    |> Option.isSome
 
 let lookup_let se lid = match se with 
     | Sig_let((_, [lb]), _, _, _) -> 
@@ -230,7 +236,7 @@ let lookup_let se lid = match se with
             then Some (inst_tscheme (lb.lbunivs, lb.lbtyp))
             else None)
 
-    | _ -> raise (Error(name_not_found lid, range_of_lid lid))
+    | _ -> None
 
 
 let lookup_bv env bv = 
@@ -249,7 +255,7 @@ let lookup_lid env lid =
     | Inr (Sig_datacon(_, uvs, t, _, _,_, _)) -> 
       Some (inst_tscheme (uvs, t))
  
-    | Inr (Sig_val_decl (l, uvs, t, qs, _)) -> 
+    | Inr (Sig_declare_typ (l, uvs, t, qs, _)) -> 
       if in_cur_mod env l
       then if qs |> List.contains Assumption || env.is_iface
            then Some (inst_tscheme (uvs, t))
@@ -259,7 +265,7 @@ let lookup_lid env lid =
     | Inr (Sig_let _ as se) -> 
       lookup_let se lid
 
-    | Inr (Sig_tycon (lid, uvs, tps, k, _, _, _, _)) ->
+    | Inr (Sig_inductive_typ (lid, uvs, tps, k, _, _, _, _)) ->
       begin match tps with 
         | [] -> Some <| inst_tscheme (uvs, k)
         | _ ->  Some <| inst_tscheme (uvs, Util.arrow tps (mk_Total k))
@@ -273,7 +279,7 @@ let lookup_lid env lid =
 
 let lookup_val_decl env lid =
   match lookup_qname env lid with
-    | Some (Inr (Sig_val_decl(_, uvs, t, _, _))) -> inst_tscheme (uvs, t)
+    | Some (Inr (Sig_declare_typ(_, uvs, t, _, _))) -> inst_tscheme (uvs, t)
     | _ -> raise (Error(name_not_found lid, range_of_lid lid))
 
 let lookup_datacon env lid =
@@ -283,14 +289,13 @@ let lookup_datacon env lid =
 
 let lookup_datacons_of_typ env lid =
   match lookup_qname env lid with
-    | Some (Inr (Sig_tycon(_, _, _, _, _, datas, _, _))) -> Some (List.map (fun l -> (l, lookup_lid env l)) datas)
+    | Some (Inr (Sig_inductive_typ(_, _, _, _, _, datas, _, _))) -> Some (List.map (fun l -> (l, lookup_lid env l)) datas)
     | _ -> None
 
 let lookup_definition env lid = 
   match lookup_qname env lid with
     | Some (Inr se) -> lookup_let se lid
-
-    | _ -> raise (Error(name_not_found lid, range_of_lid lid))
+    | _ -> None
 
 let try_lookup_effect_lid env (ftv:lident) : option<typ> =
   match lookup_qname env ftv with
@@ -319,7 +324,7 @@ let lookup_projector env lid i =
 
 let try_lookup_val_decl env lid =
   match lookup_qname env lid with
-    | Some (Inr (Sig_val_decl(_, uvs, t, q, _))) -> Some ((uvs,t),q)
+    | Some (Inr (Sig_declare_typ(_, uvs, t, q, _))) -> Some ((uvs,t),q)
     | _ -> None
 
 let lookup_effect_abbrev env lid =
@@ -332,20 +337,20 @@ let lookup_effect_abbrev env lid =
 
 let is_datacon env lid =
   match lookup_qname env lid with
-    | Some (Inr(Sig_val_decl(_, _, _, quals, _))) -> quals |> Util.for_some (function Assumption -> true | _ -> false)
+    | Some (Inr(Sig_declare_typ(_, _, _, quals, _))) -> quals |> Util.for_some (function Assumption -> true | _ -> false)
     | Some (Inr (Sig_datacon (_, _, _, _, _,_,_))) -> true
     | _ -> false
 
 let is_record env lid =
   match lookup_qname env lid with
-    | Some (Inr (Sig_tycon(_, _, _, _, _, _, tags, _))) ->
+    | Some (Inr (Sig_inductive_typ(_, _, _, _, _, _, tags, _))) ->
         Util.for_some (function RecordType _ | RecordConstructor _ -> true | _ -> false) tags
     | _ -> false
 
 let is_projector env (l:lident) : bool =
     match lookup_qname env l with
-        | Some (Inr (Sig_tycon(_, _, _, _, _, _, quals, _)))
-        | Some (Inr (Sig_val_decl(_, _, _, quals, _))) ->
+        | Some (Inr (Sig_inductive_typ(_, _, _, _, _, _, quals, _)))
+        | Some (Inr (Sig_declare_typ(_, _, _, quals, _))) ->
           Util.for_some (function Projector _ -> true | _ -> false) quals
         | _ -> false
 
@@ -490,8 +495,9 @@ let push_module env (m:modul) =
       gamma=[];
       expected_typ=None}
 
-let push_univ_vars (env:env) (_:univ_names) : env = failwith "NYI: push_univ_vars" 
- 
+let push_univ_vars (env:env) (xs:univ_names) : env = 
+    List.fold_left (fun env x -> push_local_binding env (Binding_univ x)) env xs
+
 let set_expected_typ env t =
   {env with expected_typ = Some t; use_eq=false}
 
@@ -525,6 +531,7 @@ let uvars_in_env env =
   let ext out uvs = Util.set_union out uvs in
   let rec aux out g = match g with
     | [] -> out
+    | Binding_univ _ :: tl -> aux out tl
     | Binding_lid(_, (_, t))::tl
     | Binding_var(_, (_, t))::tl -> aux (ext out (Free.uvars t)) tl
     | Binding_sig _::_ -> out in (* this marks a top-level scope ... no more uvars beyond this *)
@@ -535,6 +542,7 @@ let univ_vars env =
     let ext out uvs = Util.set_union out uvs in
     let rec aux out g = match g with
       | [] -> out
+      | Binding_univ _ :: tl -> aux out tl
       | Binding_lid(_, (_, t))::tl
       | Binding_var(_, (_, t))::tl -> aux (ext out (Free.univs t)) tl
       | Binding_sig _::_ -> out in (* this marks a top-level scope ... no more uvars beyond this *)
@@ -543,8 +551,9 @@ let univ_vars env =
 let bound_vars_of_bindings bs = 
   bs |> List.collect (function
         | Binding_var (x, _) -> [x]
-        | Binding_lid _ -> []
-        | Binding_sig _ -> [])
+        | Binding_lid _ 
+        | Binding_sig _ 
+        | Binding_univ _ -> [])
 
 let binders_of_bindings bs = bound_vars_of_bindings bs |> List.map Syntax.mk_binder
 

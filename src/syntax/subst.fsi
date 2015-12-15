@@ -28,12 +28,13 @@ val subst_comp:         list<subst_elt> -> comp -> comp
 val compress:           term -> term
 val compress_univ:      universe -> universe
 
-val close:              binders -> term -> term
-val close_comp:         binders -> comp -> comp
-val close_binders:      binders -> binders
-val close_branch:       branch -> branch
-val close_univ_vars:    univ_names -> term -> term
-val close_let_rec:      list<letbinding> -> term -> list<letbinding> * term
+val close:                binders -> term -> term
+val close_comp:           binders -> comp -> comp
+val close_binders:        binders -> binders
+val close_branch:         branch -> branch
+val close_univ_vars:      univ_names -> term -> term
+val close_univ_vars_comp: univ_names -> comp -> comp
+val close_let_rec:        list<letbinding> -> term -> list<letbinding> * term
 
 val open_binders:       binders -> binders 
 val open_term:          binders -> term -> binders * term

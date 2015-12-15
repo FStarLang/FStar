@@ -110,6 +110,72 @@ let rec unmeta e =
         | _ -> e
 
 (********************************************************************************)
+(*************************** Utilities for universes ****************************)
+(********************************************************************************)
+(* kernel u = (k_u, n)
+        where u is of the form S^n k_u
+        i.e., k_u is the "kernel" and n is the offset *)
+let rec univ_kernel u = match u with
+    | U_unknown
+    | U_name _
+    | U_unif _
+    | U_zero _ -> u, 0
+    | U_succ u -> let k, n = univ_kernel u in k, n+1
+    | U_max _
+    | U_bvar _ -> failwith "Imposible" 
+
+//requires: kernel u = U_zero, n
+//returns: n
+let constant_univ_as_nat u = snd (univ_kernel u)
+
+//ordering on universes:
+//    constants come first, in order of their size
+//    named universes come next, in lexical order of their kernels and their offsets
+//    unification variables next, in lexical order of their kernels and their offsets
+//    max terms come last
+//e.g, [Z; S Z; S S Z; u1; S u1; u2; S u2; S S u2; ?v1; S ?v1; ?v2] 
+let rec compare_univs u1 u2 = match u1, u2 with 
+    | U_bvar _, _
+    | _, U_bvar _ 
+    | U_unknown, _
+    | _, U_unknown -> failwith "Impossible"
+
+    | U_zero, U_zero -> 0
+        
+    | U_zero, _ -> -1
+    | _, U_zero -> 1
+
+    | U_name u1 , U_name u2 -> String.compare u1.idText u2.idText
+    | U_name _, U_unif _ -> -1
+    | U_unif _, U_name _ -> 1
+
+    | U_unif u1, U_unif u2 -> Unionfind.uvar_id u1 - Unionfind.uvar_id u2
+
+    | U_max us1, U_max us2 -> 
+      let n1 = List.length us1 in  
+      let n2 = List.length us2 in
+      if n1 <> n2
+      then n1 - n2
+      else let copt = Util.find_map (List.zip us1 us2) (fun (u1, u2) -> 
+                let c = compare_univs u1 u2 in
+                if c<>0 then Some c
+                else None) in
+           begin match copt with
+            | None -> 0
+            | Some c -> c
+           end
+
+    | _ -> 
+        let k1, n1 = univ_kernel u1 in
+        let k2, n2 = univ_kernel u2 in 
+        let r = compare_univs k1 k2 in
+        if r=0
+        then n1 - n2
+        else r 
+
+let eq_univs u1 u2 = compare_univs u1 u2 = 0
+
+(********************************************************************************)
 (*********************** Utilities for computation types ************************)
 (********************************************************************************)
 
@@ -295,10 +361,10 @@ let destruct typ lid =
 let rec lids_of_sigelt se = match se with
   | Sig_let(_, _, lids, _)
   | Sig_bundle(_, _, lids, _) -> lids
-  | Sig_tycon (lid, _, _,  _, _, _, _, _)
+  | Sig_inductive_typ (lid, _, _,  _, _, _, _, _)
   | Sig_effect_abbrev(lid, _, _,  _, _)
   | Sig_datacon (lid, _, _, _, _, _, _)
-  | Sig_val_decl (lid, _, _, _, _)
+  | Sig_declare_typ (lid, _, _, _, _)
   | Sig_assume (lid, _, _, _) -> [lid]
   | Sig_new_effect(n, _) -> [n.mname]
   | Sig_sub_effect _
@@ -311,10 +377,10 @@ let lid_of_sigelt se : option<lident> = match lids_of_sigelt se with
 
 let range_of_sigelt x = match x with
   | Sig_bundle(_, _, _, r)
-  | Sig_tycon (_, _, _,  _, _, _, _, r)
+  | Sig_inductive_typ (_, _, _,  _, _, _, _, r)
   | Sig_effect_abbrev  (_, _, _, _, r)
   | Sig_datacon (_, _, _, _, _, _, r)
-  | Sig_val_decl (_, _, _, _, r)
+  | Sig_declare_typ (_, _, _, _, r)
   | Sig_assume (_, _, _, r)
   | Sig_let(_, r, _, _)
   | Sig_main(_, r)

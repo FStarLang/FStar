@@ -74,8 +74,8 @@ let rec free_names_and_uvs' tm : free_vars =
       | Tm_uvar (x, t) -> 
         singleton_uv (x,t)
 
-      | Tm_type _ -> 
-        failwith ""
+      | Tm_type u -> 
+        free_univs u
 
       | Tm_bvar _
       | Tm_fvar _ 

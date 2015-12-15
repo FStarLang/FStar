@@ -72,48 +72,55 @@ let rec compress_univ u = match u with
 let subst_to_string s = s |> List.map (fun (b, _) -> b.ppname.idText) |> String.concat ", "
 
 //Lookup a bound var or a name in a parallel substitution
-let subst_bv s a = Util.find_map s (function DB (i, t) when i=a.index -> Some t | _ -> None)
-let subst_nm s a = Util.find_map s (function  
+let subst_bv a s = Util.find_map s (function DB (i, t) when i=a.index -> Some t | _ -> None)
+let subst_nm a s = Util.find_map s (function  
     | NM (x, i) when bv_eq a x -> Some (bv_to_tm ({x with index=i})) 
     | NT (x, t) when bv_eq a x -> Some t
     | _ -> None)
-let find_univ s x = Util.find_map s (function 
+let subst_univ_bv x s = Util.find_map s (function 
     | UN(y, t) when x=y -> Some t
     | _ -> None)
-let rec aux_subst_univ s u =
-    match u with 
-        | U_bvar x -> 
-          begin match s with 
-            | [] -> u
-            | hd::tl -> 
-              match find_univ hd x with 
-                | None -> aux_subst_univ tl u
-                | Some t -> subst_univ tl t
-          end
-        | _ -> u
-and subst_univ s u = match u with 
-  | U_bvar _ -> aux_subst_univ s u
+let subst_univ_nm (x:univ_name) s = Util.find_map s (function 
+    | UD(y, i) when x.idText=y.idText -> Some (U_bvar i)
+    | _ -> None)
+
+(* apply_until_some f s 
+      applies f to each element of s until it returns (Some t)
+*)
+let rec apply_until_some f s = match s with
+    | [] -> None
+    | s0::rest ->
+        match f s0 with
+            | None -> apply_until_some f rest
+            | Some st -> Some (rest, st)
+
+let map_some_curry f x = function
+    | None -> x
+    | Some (a, b) -> f a b
+
+let apply_until_some_then_map f s g t = 
+    apply_until_some f s 
+    |> map_some_curry g t
+
+let rec subst_univ s u = match u with 
+  | U_bvar x -> 
+    apply_until_some_then_map (subst_univ_bv x) s subst_univ u
+
+  | U_name  x ->
+    apply_until_some_then_map (subst_univ_nm x) s subst_univ u
+
   | U_zero
   | U_unknown 
-  | U_name  _
   | U_unif _ -> u
   | U_succ u -> U_succ (subst_univ s u)
   | U_max us -> U_max (List.map (subst_univ s) us)
+
 
 let rec subst' (s:subst_t) t = match s with
   | [] 
   | [[]] -> force_uvar t
   | _ ->
     let t0 = force_uvar t in
-
-    //applies each of the parallel substitutions in sequence
-    let rec aux f a s = match s with
-        | [] -> t0
-        | s0::rest ->
-          match f s0 a with
-            | Some t  -> subst' rest t
-            | _ -> aux f a rest in
-
     match t0.n with
         | Tm_delayed(Inl(t', s'), m) ->
             //s' is the subsitution already associated with this node;
@@ -126,10 +133,10 @@ let rec subst' (s:subst_t) t = match s with
           failwith "Impossible: Visit.force_uvar removes lazy delayed nodes"
 
         | Tm_bvar a ->
-          aux subst_bv a s
+          apply_until_some_then_map (subst_bv a) s subst' t0
 
         | Tm_name a -> 
-          aux subst_nm a s
+          apply_until_some_then_map (subst_nm a) s subst' t0
 
         | Tm_type u -> 
           mk (Tm_type (subst_univ s u)) None t0.pos
@@ -165,8 +172,9 @@ and compose_subst (s1:subst_t) (s2:subst_t) = s1@s2
 
 let shift n s = match s with 
     | DB(i, t) -> DB(i+n, t)
-    | NM(x, i) -> NM(x, i+n)
     | UN(i, t) -> UN(i+n, t)
+    | NM(x, i) -> NM(x, i+n)
+    | UD(x, i) -> UD(x, i+n)
     | NT _     -> s
 let shift_subst n s = List.map (shift n) s
 let shift_subst' n s = s |> List.map (shift_subst n)
@@ -219,9 +227,9 @@ let push_subst s t =
         | Tm_uvar _ 
         | Tm_constant _
         | Tm_fvar _
-        | Tm_type _ 
         | Tm_unknown -> t
 
+        | Tm_type _
         | Tm_bvar _ 
         | Tm_name _  -> subst' s t
 
@@ -229,7 +237,7 @@ let push_subst s t =
           let t' = subst' s t' in
           begin match t'.n with
             | Tm_bvar _
-             | Tm_name _
+            | Tm_name _
             | Tm_fvar _ -> //it remains a variable
               mk (Tm_uinst(t, us)) None t'.pos
             | _ -> 
@@ -409,8 +417,24 @@ let close_branch (p, wopt, e) =
     let e = subst closing e in
     (p, wopt, e)
 
-let open_univ_vars     (_:univ_names) (_:term)  : univ_names * term = failwith "NYI: open_univ_vars"
-let close_univ_vars     (_:univ_names) (_:term) : term = failwith "NYI: close_univ_vars"
+let open_univ_vars  (us:univ_names) (t:term)  : univ_names * term = 
+    let n = List.length us - 1 in
+    let s, us' = us |> List.mapi (fun i u -> 
+        let u' = Syntax.new_univ_name (Some u.idRange) in
+        UN(n - i, U_name u'), u') |> List.unzip in
+    let t = subst s t in
+    us', t
+
+let close_univ_vars (us:univ_names) (t:term) : term = 
+    let n = List.length us - 1 in
+    let s = us |> List.mapi (fun i u -> UD(u, n - i)) in
+    subst s t
+
+let close_univ_vars_comp (us:univ_names) (c:comp) : comp = 
+    let n = List.length us - 1 in
+    let s = us |> List.mapi (fun i u -> UD(u, n - i)) in
+    subst_comp s c
+
 let open_let_rec:   list<letbinding> -> term -> list<letbinding> * term = fun _ _ -> failwith "NYI: open_let_rec"
 let close_let_rec:   list<letbinding> -> term -> list<letbinding> * term = fun _ _ -> failwith "NYI: close_let_rec"
 

@@ -126,7 +126,7 @@ let check_expected_effect env (copt:option<comp>) (e, c) : term * comp * Rel.gua
   let expected_c_opt = match copt with
     | Some _ -> copt
     | None ->
-        let c1 = N.weak_norm_comp env c in
+        let c1 = N.unfold_effect_abbrev env c in
         let md = Env.get_effect_decl env c1.effect_name in
         match Env.default_effect env md.mname with
             | None -> None
@@ -493,8 +493,22 @@ and tc_comp env c : comp                                      (* checked version
       u,
       List.fold_left Rel.conj_guard f guards
 
-and tc_universe env u = 
-   failwith "NYI: tc_universe"
+and tc_universe env u : universe = 
+   let rec aux u = 
+       let u = SS.compress_univ u in 
+       match u with 
+        | U_bvar _  -> failwith "Impossible: locally nameless"
+        | U_unknown -> failwith "Unknown universe"
+        | U_unif _
+        | U_zero    -> u
+        | U_succ u  -> aux u
+        | U_max us  -> U_max (List.map aux us)
+        | U_name x  -> if Env.lookup_univ env x 
+                       then u 
+                       else raise (Error (Util.format1 "Universe variable '%s' not found" x.idText, Env.get_range env)) in
+    match u with 
+        | U_unknown -> TcUtil.type_u () |> snd
+        | _ -> aux u
 
 (* Several complex cases from the main type-checker are factored in to separate functions below *)
 
@@ -1619,7 +1633,7 @@ let tc_inductive env ses quals lids =
                                 * sigelt         (* the typed version of s, with universe variables still TBD *)
                                 * universe       (* universe of the constructed type *)
                                 = match s with
-       | Sig_tycon (tc, uvs, tps, k, mutuals, data, quals, r) -> //the only valid qual is Private
+       | Sig_inductive_typ (tc, uvs, tps, k, mutuals, data, quals, r) -> //the only valid qual is Private
          assert (uvs = []);
 
  (*open*)let tps, k = SS.open_term tps k in
@@ -1642,12 +1656,13 @@ let tc_inductive env ses quals lids =
 (*close*)let t_tc = Util.arrow (refined_tps@indices) (S.mk_Total t) in
          Env.push_local_binding env (Env.Binding_lid(tc, ([], t_tc))), 
          Rel.conj_guard g g',
-         Sig_tycon(tc, [], tps, k, mutuals, data, quals, r), 
+         Sig_inductive_typ(tc, [], tps, k, mutuals, data, quals, r), 
          u
 
         | _ -> failwith "impossible" in
     
-    let positive_if_pure (_:term) (_:lid) = failwith "NYI: positivity check" in
+    let positive_if_pure (_:term) (l:lid) = 
+        Errors.warn (Ident.range_of_lid l) "Positivity check is not yet implemented" in
 
     (* 2. Checking each datacon *)
     let tc_data env tcs = function
@@ -1684,7 +1699,7 @@ let tc_inductive env ses quals lids =
     let generalize_universes env g tcs datas = 
         Rel.try_discharge_guard env g;
         let binders = tcs |> List.map (function 
-            | Sig_tycon(_, _, tps, k, _, _, _, _) -> S.null_binder (Util.arrow tps <| mk_Total k)
+            | Sig_inductive_typ(_, _, tps, k, _, _, _, _) -> S.null_binder (Util.arrow tps <| mk_Total k)
             | _ -> failwith "Impossible")  in 
         let binders' = datas |> List.map (function 
             | Sig_datacon(_, _, t, _, _, _, _) -> S.null_binder t 
@@ -1695,13 +1710,13 @@ let tc_inductive env ses quals lids =
         let args, _ = Util.arrow_formals t in
         let tc_types, data_types = Util.first_N (List.length binders) args in
         let tcs = List.map2 (fun (x, _) se -> match se with
-            | Sig_tycon(tc, _, tps, _, mutuals, datas, quals, r) -> 
+            | Sig_inductive_typ(tc, _, tps, _, mutuals, datas, quals, r) -> 
               let tps, t = match (SS.compress x.sort).n with 
                 | Tm_arrow(binders, c) -> 
                   let tps, rest = Util.first_N (List.length tps) binders in 
                   tps, mk (Tm_arrow(rest, c)) !x.sort.tk x.sort.pos
                 | _ -> [], x.sort in
-               Sig_tycon(tc, uvs, tps, t, mutuals, datas, quals, r)
+               Sig_inductive_typ(tc, uvs, tps, t, mutuals, datas, quals, r)
             | _ -> failwith "Impossible") 
             tc_types tcs in
         let datas = List.map2 (fun (t, _) -> function
@@ -1710,7 +1725,7 @@ let tc_inductive env ses quals lids =
             | _ -> failwith "Impossible") data_types datas in
         tcs, datas in
 
-    let tys, datas = ses |> List.partition (function Sig_tycon _ -> true | _ -> false) in
+    let tys, datas = ses |> List.partition (function Sig_inductive_typ _ -> true | _ -> false) in
 
     let env0 = env in
 
@@ -1732,10 +1747,10 @@ let tc_inductive env ses quals lids =
     Sig_bundle(tcs@datas, quals, lids, Env.get_range env0)
       
 let rec tc_decl env se = match se with
-    | Sig_tycon _
+    | Sig_inductive_typ _
     | Sig_datacon _ -> 
-      failwith "Impossible bare type or data-constructor"
-
+      failwith "Impossible bare data-constructor"
+    
     | Sig_bundle(ses, quals, lids, r) ->
       let env = Env.set_range env r in
       let se = tc_inductive env ses quals lids  in 
@@ -1780,7 +1795,7 @@ let rec tc_decl env se = match se with
       let c, g, u = tc_comp env c in
       let tags = tags |> List.map (function
         | DefaultEffect None ->
-          let c' = Normalize.weak_norm_comp env c in
+          let c' = Normalize.unfold_effect_abbrev env c in
           DefaultEffect (c'.effect_name |> Some)
         | t -> t) in
       let c = SS.close_comp tps c in
@@ -1788,12 +1803,12 @@ let rec tc_decl env se = match se with
       let env = Env.push_sigelt env0 se in
       se, env
 
-    | Sig_val_decl(lid, us, t, quals, r) -> //NS: No checks on the ualifiers? 
+    | Sig_declare_typ(lid, us, t, quals, r) -> //NS: No checks on the qualifiers? 
       let env = Env.set_range env r in
       assert (us = []);
       let k, u = TcUtil.type_u() in
       let uvs, t = check_and_gen env ([],t) k in
-      let se = Sig_val_decl(lid, uvs, t, quals, r) in
+      let se = Sig_declare_typ(lid, uvs, t, quals, r) in
       let env = Env.push_sigelt env se in
       if log env then Util.print_string <| Util.format2 "val %s : %s\n" lid.str (N.term_to_string env t);
       se, env
@@ -1871,7 +1886,7 @@ let non_private env se : list<sigelt> =
     | Sig_bundle(ses, quals, _, _) ->
       [se]
 
-   | Sig_tycon(_, _, _, _, _, _, quals, r) ->
+   | Sig_inductive_typ(_, _, _, _, _, _, quals, r) ->
      if is_private quals
      then []
      else [se]
@@ -1881,7 +1896,7 @@ let non_private env se : list<sigelt> =
      then []
      else [se]
 
-   | Sig_val_decl(_, _, _, quals, _) ->
+   | Sig_declare_typ(_, _, _, quals, _) ->
      if is_private quals
      then []
      else [se]
@@ -1927,7 +1942,7 @@ let non_private env se : list<sigelt> =
           then []
           else rest |> List.collect (fun lb -> match lb.lbname with
                 | Inl _ -> failwith "impossible"
-                | Inr l -> [Sig_val_decl(l, lb.lbunivs, lb.lbtyp, [Assumption], range_of_lid l)])
+                | Inr l -> [Sig_declare_typ(l, lb.lbunivs, lb.lbtyp, [Assumption], range_of_lid l)])
 
 
         | [], [] -> failwith "Impossible"
@@ -1951,7 +1966,7 @@ let tc_decls for_export env ses =
 let get_exports env modul non_private_decls =
     let assume_vals decls =
         decls |> List.map (function
-            | Sig_val_decl(lid, uvs, t, quals, r) -> Sig_val_decl(lid, uvs, t, Assumption::quals, r)
+            | Sig_declare_typ(lid, uvs, t, quals, r) -> Sig_declare_typ(lid, uvs, t, Assumption::quals, r)
             | s -> s) in
     if modul.is_interface
     then non_private_decls

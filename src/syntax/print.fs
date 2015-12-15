@@ -36,8 +36,6 @@ let nm_to_string bv = bv.ppname.idText
 
 let db_to_string bv = bv.ppname.idText ^ string_of_int bv.index
 
-let modul_to_string (m:modul) : string = failwith "NYI: modul_to_string"
-
 (* CH: This should later be shared with ocaml-codegen.fs and util.fs (is_primop and destruct_typ_as_formula) *)
 let infix_prim_ops = [
     (Const.op_Addition    , "+" );
@@ -166,8 +164,17 @@ let tag_of_term (t:term) = match t.n with
   | Tm_meta _ -> "Tm_meta"
   | Tm_unknown _ -> "Tm_unknown"
 
-let uvar_to_string (u:uvar) = if !Options.hide_uvar_nums then "?" else "?" ^ (Unionfind.uvar_id u |> string_of_int) 
+let uvar_to_string u = if !Options.hide_uvar_nums then "?" else "?" ^ (Unionfind.uvar_id u |> string_of_int) 
  
+let rec univ_to_string u = match Subst.compress_univ u with
+    | U_unif u -> uvar_to_string u
+    | U_name x -> x.idText
+    | U_bvar x -> string_of_int x
+    | U_zero   -> "0"
+    | U_succ u -> Util.format1 "(S %s)" (univ_to_string u)
+    | U_max us -> Util.format1 "(max %s)" (List.map univ_to_string us |> String.concat ", ")
+    | U_unknown -> "unknown"
+
 (* This function prints the type it gets as argument verbatim.
    For already type-checked types use the typ_norm_to_string
    function in normalize.fs instead, since elaboration
@@ -183,6 +190,7 @@ let rec term_to_string x =
   | Tm_fvar f -> fv_to_string f
   | Tm_uvar (u, _) -> uvar_to_string u
   | Tm_constant c -> const_to_string c
+  | Tm_type u -> Util.format1 "Type(%s)" (univ_to_string u)
   | Tm_arrow(bs, c) -> Util.format2 "(%s -> %s)"  (binders_to_string " -> " bs) (comp_to_string c)
   | Tm_abs(bs, t2) ->  Util.format2 "(fun %s -> %s)" (binders_to_string " " bs) (term_to_string t2)
   | Tm_refine(xt, f) ->       Util.format3 "%s:%s{%s}" (bv_to_string xt) (xt.sort |> term_to_string) (f |> formula_to_string)
@@ -255,27 +263,27 @@ and args_to_string args =
     let args = if !Options.print_implicits then args else filter_imp args in
     args |> List.map arg_to_string |> String.concat " "
 
-and comp_to_string c = "<COMP>"
-//  match c.n with
-//    | Total t -> Util.format1 "Tot %s" (typ_to_string t)
-//    | Comp c ->
-//      let basic =
-//          if c.flags |> Util.for_some (function TOTAL -> true | _ -> false) && not !Options.print_effect_args
-//          then Util.format1 "Tot %s" (typ_to_string c.result_typ)
-//          else if not !Options.print_effect_args && (lid_equals c.effect_name Const.effect_ML_lid)//  || List.contains MLEFFECT c.flags)
-//          then typ_to_string c.result_typ
-//          else if not !Options.print_effect_args && c.flags |> Util.for_some (function MLEFFECT -> true | _ -> false)
-//          then Util.format1 "ALL %s" (typ_to_string c.result_typ)
-//          else if !Options.print_effect_args
-//          then Util.format3 "%s (%s) %s" (sli c.effect_name) (typ_to_string c.result_typ) (c.effect_args |> List.map effect_arg_to_string |> String.concat ", ")//match c.effect_args with hd::_ -> effect_arg_to_string hd | _ ->"")
-//          else Util.format2 "%s (%s)" (sli c.effect_name) (typ_to_string c.result_typ) in
-//      let dec = c.flags |> List.collect (function DECREASES e -> [Util.format1 " (decreases %s)" (exp_to_string e)] | _ -> []) |> String.concat " " in
-//      Util.format2 "%s%s" basic dec
-//
-//and effect_arg_to_string e = match e with
-//    | Inr e, _ -> exp_to_string e
-//    | Inl wp, _ -> formula_to_string wp
-//
+and comp_to_string c = 
+  match c.n with
+    | Total t -> 
+      begin match (compress t).n with 
+        | Tm_type _ -> term_to_string t 
+        | _ -> Util.format1 "Tot %s" (term_to_string t)
+      end
+    | Comp c ->
+      let basic =
+          if c.flags |> Util.for_some (function TOTAL -> true | _ -> false) && not !Options.print_effect_args
+          then Util.format1 "Tot %s" (term_to_string c.result_typ)
+          else if not !Options.print_effect_args && (lid_equals c.effect_name Const.effect_ML_lid)//  || List.contains MLEFFECT c.flags)
+          then term_to_string c.result_typ
+          else if not !Options.print_effect_args && c.flags |> Util.for_some (function MLEFFECT -> true | _ -> false)
+          then Util.format1 "ALL %s" (term_to_string c.result_typ)
+          else if !Options.print_effect_args
+          then Util.format3 "%s (%s) %s" (sli c.effect_name) (term_to_string c.result_typ) (c.effect_args |> List.map arg_to_string |> String.concat ", ")
+          else Util.format2 "%s (%s)" (sli c.effect_name) (term_to_string c.result_typ) in
+      let dec = c.flags |> List.collect (function DECREASES e -> [Util.format1 " (decreases %s)" (term_to_string e)] | _ -> []) |> String.concat " " in
+      Util.format2 "%s%s" basic dec
+
 (* CH: at this point not even trying to detect if something looks like a formula,
        only locally detecting certain patterns *)
 and formula_to_string phi = term_to_string phi
@@ -295,31 +303,30 @@ let qual_to_string = function
     | Opaque -> "opaque"
     | Discriminator _ -> "discriminator"
     | Projector _ -> "projector"
+    | Assumption -> "assume"
     | RecordType ids -> Util.format1 "record(%s)" (ids |> List.map (fun lid -> lid.ident.idText) |> String.concat ", ")
     | _ -> "other"
 let quals_to_string quals = quals |> List.map qual_to_string |> String.concat " "
-//
-//let rec sigelt_to_string x = match x with
-//  | Sig_pragma(ResetOptions, _) -> "#reset-options"
-//  | Sig_pragma(SetOptions s, _) -> Util.format1 "#set-options \"%s\"" s
-//  | Sig_tycon(lid, tps, k, _, _, quals, _) -> Util.format4 "%s type %s %s : %s" (quals_to_string quals) lid.str (binders_to_string " " tps) (kind_to_string k)
-//  | Sig_typ_abbrev(lid, tps, k, t, _, _) ->  Util.format4 "type %s %s : %s = %s" lid.str (binders_to_string " " tps) (kind_to_string k) (typ_to_string t)
-//  | Sig_datacon(lid, t, _, _, _, _) -> Util.format2 "datacon %s : %s" lid.str (typ_to_string t)
-//  | Sig_val_decl(lid, t, quals, _) -> Util.format3 "%s val %s : %s" (quals_to_string quals) lid.str (typ_to_string t)
-//  | Sig_assume(lid, f, _, _) -> Util.format2 "val %s : %s" lid.str (typ_to_string f)
-//  | Sig_let(lbs, _, _, b) -> lbs_to_string lbs
-//  | Sig_main(e, _) -> Util.format1 "let _ = %s" (exp_to_string e)
-//  | Sig_bundle(ses, _, _, _) -> List.map sigelt_to_string ses |> String.concat "\n"
-//  | Sig_new_effect _ -> "new_effect { ... }"
-//  | Sig_sub_effect _ -> "sub_effect ..."
-//  | Sig_kind_abbrev _ -> "kind ..."
-//  | Sig_effect_abbrev(l, tps, c, _, _) -> Util.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_typ_to_string c)
-//
-//let format_error r msg = format2 "%s: %s\n" (Range.string_of_range r) msg
-//
-//let rec sigelt_to_string_short x = match x with
-//  | Sig_let((_, [{lbname=Inr l; lbtyp=t}]), _, _, _) -> Util.format2 "let %s : %s" l.str (typ_to_string t)
-//  | _ -> lids_of_sigelt x |> List.map (fun l -> l.str) |> String.concat ", "
-//
-//let rec modul_to_string (m:modul) =
-//  Util.format2 "module %s\n%s" (sli m.name) (List.map sigelt_to_string m.declarations |> String.concat "\n")
+
+let rec sigelt_to_string x = match x with
+  | Sig_pragma(ResetOptions, _) -> "#reset-options"
+  | Sig_pragma(SetOptions s, _) -> Util.format1 "#set-options \"%s\"" s
+  | Sig_inductive_typ(lid, _, tps, k, _, _, quals, _) -> Util.format4 "%s type %s %s : %s" (quals_to_string quals) lid.str (binders_to_string " " tps) (term_to_string k)
+  | Sig_datacon(lid, _, t, _, _, _, _) -> Util.format2 "datacon %s : %s" lid.str (term_to_string t)
+  | Sig_declare_typ(lid, _, t, quals, _) -> Util.format3 "%s val %s : %s" (quals_to_string quals) lid.str (term_to_string t)
+  | Sig_assume(lid, f, _, _) -> Util.format2 "val %s : %s" lid.str (term_to_string f)
+  | Sig_let(lbs, _, _, b) -> lbs_to_string lbs
+  | Sig_main(e, _) -> Util.format1 "let _ = %s" (term_to_string e)
+  | Sig_bundle(ses, _, _, _) -> List.map sigelt_to_string ses |> String.concat "\n"
+  | Sig_new_effect _ -> "new_effect { ... }"
+  | Sig_sub_effect _ -> "sub_effect ..."
+  | Sig_effect_abbrev(l, tps, c, _, _) -> Util.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
+
+let format_error r msg = format2 "%s: %s\n" (Range.string_of_range r) msg
+
+let rec sigelt_to_string_short x = match x with
+  | Sig_let((_, [{lbname=Inr l; lbtyp=t}]), _, _, _) -> Util.format2 "let %s : %s" l.str (term_to_string t)
+  | _ -> lids_of_sigelt x |> List.map (fun l -> l.str) |> String.concat ", "
+
+let rec modul_to_string (m:modul) =
+  Util.format2 "module %s\n%s" (sli m.name) (List.map sigelt_to_string m.declarations |> String.concat "\n")

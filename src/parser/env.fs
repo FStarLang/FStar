@@ -116,7 +116,7 @@ let fv_qual_of_se = function
         | None -> Some Data_ctor
         | x -> x
       end
-    | Sig_val_decl (_, _, _, quals, _) ->  //TODO: record projectors?
+    | Sig_declare_typ (_, _, _, quals, _) ->  //TODO: record projectors?
       None
     | _ -> None
 
@@ -132,10 +132,10 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
       | None -> None
       | Some (se, _) ->
         begin match se with
-          | Sig_tycon _ ->           Some (Term_name(S.fvar None lid (range_of_lid lid)))
+          | Sig_inductive_typ _ ->           Some (Term_name(S.fvar None lid (range_of_lid lid)))
           | Sig_datacon _ ->         Some (Term_name(S.fvar (fv_qual_of_se se) lid (range_of_lid lid)))
           | Sig_let _ ->             Some (Term_name(S.fvar None lid (range_of_lid lid)))
-          | Sig_val_decl(_, _, _, quals, _) ->
+          | Sig_declare_typ(_, _, _, quals, _) ->
             if any_val //only in scope in an interface (any_val is true) or if the val is assumed
             || quals |> Util.for_some (function Assumption -> true | _ -> false)
             then Some (Term_name(fvar (fv_qual_of_se se) lid (range_of_lid lid)))
@@ -181,7 +181,7 @@ let is_effect_name env lid =
 let lookup_letbinding_quals env lid =
   let find_in_sig lid =
     match Util.smap_try_find (sigmap env) lid.str with
-      | Some (Sig_val_decl(lid, _, _, quals, _), _) -> Some quals
+      | Some (Sig_declare_typ(lid, _, _, quals, _), _) -> Some quals
       | _ -> None in
   match resolve_in_open_namespaces env lid find_in_sig with
     | Some quals -> quals
@@ -221,7 +221,7 @@ let try_lookup_lid (env:env) l = try_lookup_lid' env.iface false env l
 let try_lookup_datacon env (lid:lident) =
   let find_in_sig lid =
     match Util.smap_try_find (sigmap env) lid.str with
-      | Some (Sig_val_decl(_, _, _, quals, _), _) ->
+      | Some (Sig_declare_typ(_, _, _, quals, _), _) ->
         if quals |> Util.for_some (function Assumption -> true | _ -> false)
         then Some (fv lid None)
         else None
@@ -232,7 +232,7 @@ let try_lookup_datacon env (lid:lident) =
 let find_all_datacons env (lid:lident) =
   let find_in_sig lid =
     match Util.smap_try_find (sigmap env) lid.str with
-      | Some (Sig_tycon(_, _, _, _, _, datas, _, _), _) -> Some datas
+      | Some (Sig_inductive_typ(_, _, _, _, _, datas, _, _), _) -> Some datas
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig
 
@@ -284,7 +284,7 @@ let extract_record (e:env) = function
         | _ -> false) in
 
     sigs |> List.iter (function
-      | Sig_tycon(typename, univs, parms, _, _, [dc], tags, _) ->
+      | Sig_inductive_typ(typename, univs, parms, _, _, [dc], tags, _) ->
         begin match must <| find_dc dc with
             | Sig_datacon(constrname, _, t, _, _, _, _) ->
                 let formals, _ = U.arrow_formals t in
@@ -398,11 +398,11 @@ let push_namespace env lid =
 let check_admits nm env =
   let warn = not (!Options.admit_fsi |> Util.for_some (fun l -> nm.str = l)) in
   env.sigaccum |> List.iter (fun se -> match se with
-    | Sig_val_decl(l, u, t, quals, r) ->
+    | Sig_declare_typ(l, u, t, quals, r) ->
       begin match try_lookup_lid env l with
         | None ->
           if warn then Util.print_string (Util.format2 "%s: Warning: Admitting %s without a definition\n" (Range.string_of_range (range_of_lid l)) (Print.lid_to_string l));
-          Util.smap_add (sigmap env) l.str (Sig_val_decl(l, u, t, Assumption::quals, r), false)
+          Util.smap_add (sigmap env) l.str (Sig_declare_typ(l, u, t, Assumption::quals, r), false)
         | Some _ -> ()
       end
     | _ -> ())
@@ -414,7 +414,7 @@ let finish env modul =
       then ses |> List.iter (function
                 | Sig_datacon(lid, _, _, _, _, _, _) -> Util.smap_remove (sigmap env) lid.str
                 | _ -> ())
-    | Sig_val_decl(lid, _, _, quals, _) ->
+    | Sig_declare_typ(lid, _, _, quals, _) ->
       if List.contains Private quals
       then Util.smap_remove (sigmap env) lid.str
     | _ -> ());
@@ -459,7 +459,7 @@ let export_interface (m:lident) env =
           Util.smap_remove sm' k;
 //          printfn "Exporting %s" k;
           let se = match se with 
-            | Sig_val_decl(l, u, t, q, r) -> Sig_val_decl(l, u, t, Assumption::q, r)
+            | Sig_declare_typ(l, u, t, q, r) -> Sig_declare_typ(l, u, t, Assumption::q, r)
             | _ -> se in 
           Util.smap_add sm' k (se, false)
         | _ -> ());

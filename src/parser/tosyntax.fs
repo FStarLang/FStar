@@ -925,7 +925,7 @@ let mk_data_discriminators quals env t tps k datas =
     datas |> List.map (fun d ->
         let disc_name = Util.mk_discriminator d in
         //Util.fprint1 "Making discriminator %s\n" disc_name.str;
-        Sig_val_decl(disc_name, [], disc_type, quals [S.Logic; S.Discriminator d], range_of_lid disc_name))
+        Sig_declare_typ(disc_name, [], disc_type, quals [S.Logic; S.Discriminator d], range_of_lid disc_name))
 
 let mk_indexed_projectors fvq refine_domain env tc lid (binders:list<S.binder>) t =
     let p = range_of_lid lid in
@@ -980,7 +980,7 @@ let mk_indexed_projectors fvq refine_domain env tc lid (binders:list<S.binder>) 
                     lbdef=imp;
                 } 
                 in [Sig_let((false, [lb]), p, [], quals)] in
-        Sig_val_decl(field_name, [], t, quals, range_of_lid field_name)::impl) |> List.flatten
+        Sig_declare_typ(field_name, [], t, quals, range_of_lid field_name)::impl) |> List.flatten
 
 let mk_data_projectors env = function
   | Sig_datacon(lid, _, t, l, quals, _, _) when (//(not env.iface || env.admitted_iface) &&
@@ -1050,7 +1050,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
         | Some k -> desugar_term _env' k in
       let tconstr = apply_binders (mk_term (Var (lid_of_ids [id])) id.idRange Type) binders in
       let qlid = qualify _env id in
-      let se = Sig_tycon(qlid, [], typars, k, mutuals, [], quals, rng) in
+      let se = Sig_inductive_typ(qlid, [], typars, k, mutuals, [], quals, rng) in
       let _env = Env.push_top_level_rec_binding _env id in
       let _env2 = Env.push_top_level_rec_binding _env' id in
       _env, _env2, se, tconstr
@@ -1061,6 +1061,10 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
     | [TyconAbstract _] ->
         let tc = List.hd tcs in
         let _, _, se, _ = desugar_abstract_tc quals env [] tc in
+        let se = match se with 
+           | Sig_inductive_typ(l, _, typars, k, [], [], quals, rng) -> 
+             Sig_declare_typ(l, [], mk (Tm_arrow(typars, mk_Total k)) None rng, quals, rng)
+           | _ -> se in
         let env = push_sigelt env se in
         (* let _ = pr "Pushed %s\n" (text_of_lid (qualify env (tycon_id tc))) in *)
         env, [se]
@@ -1115,12 +1119,12 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
       let env, tcs = List.fold_left (collect_tcs quals) (env, []) tcs in
       let tcs = List.rev tcs in
       let sigelts = tcs |> List.collect (function
-        | Inr(Sig_tycon(id, uvs, tpars, k, _, _, _, _), t, quals) ->
+        | Inr(Sig_inductive_typ(id, uvs, tpars, k, _, _, _, _), t, quals) ->
           let env_tps = push_tparams env tpars in
           let t = desugar_term env_tps t in
           [mk_typ_abbrev id uvs tpars k t [id] quals rng]
 
-        | Inl (Sig_tycon(tname, univs, tpars, k, mutuals, _, tags, _), constrs, tconstr, quals) ->
+        | Inl (Sig_inductive_typ(tname, univs, tpars, k, mutuals, _, tags, _), constrs, tconstr, quals) ->
           let tycon = (tname, tpars, k) in
           let env_tps = push_tparams env tpars in
           let constrNames, constrs = List.split <|
@@ -1139,13 +1143,13 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
                     | RecordType fns -> [RecordConstructor fns]
                     | _ -> []) in
                 (name, Sig_datacon(name, univs, t |> Util.name_function_binders, tname, quals, mutuals, rng)))) in
-              Sig_tycon(tname, univs, tpars, k, mutuals, constrNames, tags, rng)::constrs
+              Sig_inductive_typ(tname, univs, tpars, k, mutuals, constrNames, tags, rng)::constrs
         | _ -> failwith "impossible") in
       let bundle = Sig_bundle(sigelts, quals, List.collect Util.lids_of_sigelt sigelts, rng) in
       let env = push_sigelt env0 bundle in
       let data_ops = sigelts |> List.collect (mk_data_projectors env) in
       let discs = sigelts |> List.collect (function
-        | Sig_tycon(tname, _, tps, k, _, constrs, quals, _) ->
+        | Sig_inductive_typ(tname, _, tps, k, _, constrs, quals, _) ->
           mk_data_discriminators quals env tname tps k constrs
         | _ -> []) in
       let ops = discs@data_ops in
@@ -1203,7 +1207,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
   | Val(quals, id, t) ->
     let t = desugar_term env (close_fun env t) in
     let quals = if env.iface && env.admitted_iface then Assumption::quals else quals in
-    let se = Sig_val_decl(qualify env id, [], t, List.map trans_qual quals, d.drange) in
+    let se = Sig_declare_typ(qualify env id, [], t, List.map trans_qual quals, d.drange) in
     let env = push_sigelt env se in
     env, [se]
 

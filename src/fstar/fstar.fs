@@ -35,34 +35,51 @@ let cleanup () = Util.kill_all ()
 
 let has_prims_cache (l: list<string>) :bool = List.mem "Prims.cache" l
 
+let u_parse env fn = 
+    try 
+        match Parser.ParseIt.parse (Inl fn) with
+            | Inl (Inl ast) ->
+                Parser.ToSyntax.desugar_file env ast
+
+            | Inl (Inr _) ->
+                Util.fprint1 "%s: Expected a module\n" fn;
+                exit 1
+
+            | Inr (msg, r) ->
+                Util.print_string <| Print.format_error r msg;
+                exit 1
+    with e when (!Options.trace_error 
+                    && FStar.Syntax.Util.handleable e 
+                    && (FStar.Syntax.Util.handle_err false () e; false)) -> 
+                    failwith "Impossible" 
+
+        | e when (not !Options.trace_error && FStar.Syntax.Util.handleable e) ->
+        FStar.Syntax.Util.handle_err false () e; 
+        exit 1 
+
+let u_tc_prims () =
+    let solver = if !Options.verify then ToSMT.Encode.solver else ToSMT.Encode.dummy in
+    let env = FStar.TypeChecker.Env.dummy in
+    env.solver.init env;
+    let p = Options.prims () in
+    let dsenv, prims_mod = u_parse (Parser.Env.empty_env()) p in
+    let prims_mod, env = FStar.TypeChecker.Tc.check_module env (List.hd prims_mod) in
+    prims_mod, dsenv, env
+
+
 let test_universes filenames = 
-    let parse env fn =
-        try 
-            match Parser.ParseIt.parse (Inl fn) with
-                | Inl (Inl ast) ->
-                  Parser.ToSyntax.desugar_file env ast
-
-                | Inl (Inr _) ->
-                  Util.fprint1 "%s: Expected a module\n" fn;
-                  exit 1
-
-                | Inr (msg, r) ->
-                  Util.print_string <| Print.format_error r msg;
-                  exit 1
-        with e when (!Options.trace_error 
-                     && FStar.Syntax.Util.handleable e 
-                     && (FStar.Syntax.Util.handle_err false () e; false)) -> 
-                     failwith "Impossible" 
-
-           | e when (not !Options.trace_error && FStar.Syntax.Util.handleable e) ->
-            FStar.Syntax.Util.handle_err false () e; 
-            exit 1 in
-
-    let dsenv, prims_mod = parse (Parser.Env.empty_env()) (Options.prims()) in
-    List.fold_left (fun (dsenv, fmods) fn ->
-       Util.fprint1 "Parsing file %s\n" fn; 
-       let dsenv, mods = parse dsenv fn in
-       dsenv, mods@fmods) (dsenv, []) filenames 
+    try
+        let prims_mod, dsenv, env = u_tc_prims() in
+        List.fold_left (fun (dsenv, fmods) fn ->
+           Util.fprint1 "Parsing file %s\n" fn; 
+           let dsenv, mods = u_parse dsenv fn in
+           dsenv, mods@fmods) (dsenv, []) filenames 
+    with 
+        | Syntax.Syntax.Error(msg, r) when not (!Options.trace_error) -> 
+          Util.print_string (Util.format2 "Error : %s\n%s\n" (Range.string_of_range r) msg);
+          exit 1
+       
+               
  
 let tc_prims () =
     let solver = if !Options.verify then ToSMT.Encode.solver else ToSMT.Encode.dummy in

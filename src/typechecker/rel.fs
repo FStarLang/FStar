@@ -87,7 +87,9 @@ type prob =
 type probs = list<prob>
 
 (* Instantiation of unification variables *)
-type uvi = (uvar * typ) * typ 
+type uvi = 
+    | TERM of (uvar * typ)    * typ 
+    | UNIV of S.universe_uvar * universe
 
 (* The set of problems currently being addressed *)
 type worklist = {
@@ -130,11 +132,20 @@ let prob_to_string env = function
          (term_to_string env p.rhs);
          (Print.tag_of_term p.rhs);
          (N.term_to_string env (fst p.logical_guard))]
-  | CProb p -> Util.format3 "\t%s \n\t\t%s\n\t%s" (N.comp_to_string env p.lhs) (rel_to_string p.relation) (N.comp_to_string env p.rhs)
+  | CProb p -> 
+    Util.format3 "\t%s \n\t\t%s\n\t%s" 
+                 (N.comp_to_string env p.lhs) 
+                 (rel_to_string p.relation) 
+                 (N.comp_to_string env p.rhs)
 
-let uvi_to_string env ((u,_), t) =
-  let x = if !Options.hide_uvar_nums then "?" else Unionfind.uvar_id u |> string_of_int in
-  Util.format2 "UT %s %s" x (N.term_to_string env t)
+let uvi_to_string env = function
+    | UNIV (u, t) -> 
+      let x = if !Options.hide_uvar_nums then "?" else Unionfind.uvar_id u |> string_of_int in
+      Util.format2 "UNIV %s %s" x (Print.univ_to_string t)
+
+    | TERM ((u,_), t) ->
+      let x = if !Options.hide_uvar_nums then "?" else Unionfind.uvar_id u |> string_of_int in
+      Util.format2 "TERM %s %s" x (N.term_to_string env t)
 
 let names_to_string nms = Util.set_elements nms |> List.map Print.bv_to_string |> String.concat ", "
 let args_to_string args = args |> List.map (fun (x, _) -> Print.term_to_string x) |> String.concat " "
@@ -279,8 +290,18 @@ let giveup env reason prob =
 (* ------------------------------------------------*)
 (* <uvi ops> Instantiating unification variables   *)
 (* ------------------------------------------------*)
-let commit env uvis = uvis |> List.iter (fun ((u, _), t) -> Util.unchecked_unify u t)
-let find_uvar uv s = Util.find_map s (fun ((u,_), t) -> if Unionfind.equivalent uv u then Some t else None)
+let commit env uvis = uvis |> List.iter (function
+    | UNIV(u, t)      -> Unionfind.change u (Some t)
+    | TERM((u, _), t) -> Util.unchecked_unify u t)
+
+let find_term_uvar uv s = Util.find_map s (function 
+    | UNIV _ -> None 
+    | TERM((u,_), t) -> if Unionfind.equivalent uv u then Some t else None)
+
+let find_univ_uvar u s = Util.find_map s (function
+    | UNIV(u', t) -> if Unionfind.equivalent u u' then Some t else None
+    | _ -> None)
+
 (* ------------------------------------------------*)
 (* </uvi ops>                                      *)
 (* ------------------------------------------------*)
@@ -289,22 +310,56 @@ let find_uvar uv s = Util.find_map s (fun ((u,_), t) -> if Unionfind.equivalent 
 (* ------------------------------------------------*)
 (* <normalization>                                *)
 (* ------------------------------------------------*)
-let simplify_formula env f = N.normalize [N.Beta; N.Simplify] env f
 let norm_arg env t = N.normalize [N.Beta] env (fst t), snd t
 let whnf env t = SS.compress (N.whnf env t)
 let sn env t = SS.compress (N.normalize [N.Beta; N.Eta] env t)
 let sn_binders env (binders:binders) =
     binders |> List.map (fun (x, imp) -> {x with sort=N.normalize [N.Beta] env x.sort}, imp)
 
+(*  compress_univ wl u
+        Replace any unification variable at the head of u
+        with its solution in wl, if any
+*)
+let rec compress_univ wl u = 
+    let u = SS.compress_univ u in
+    match u with
+    | U_unif uv ->
+      begin match find_univ_uvar uv wl.subst with 
+        | None -> u
+        | Some u' -> compress_univ wl u' 
+      end
+    | _ -> u
+
+(*  norm_univ wl u
+        Replace all unification variables in u with their solution in wl, if any
+        And normalize the result
+*)
+let norm_univ wl u = 
+    let rec aux u = 
+        let u = compress_univ wl u in 
+        match u with 
+            | U_succ u -> 
+              U_succ (aux u)
+
+            | U_max us -> 
+              U_max (List.map aux us)
+
+            | _ -> u in 
+    N.normalize_universe (aux u)
+
+(* compress env wl t 
+        Replaces any unification variable at the head of t with its solution in wl, if any
+        and returns the result in whnf
+*)
 let rec compress env wl t =
     let t = whnf env (Util.unmeta t) in
     match t.n with
         | Tm_uvar (uv, _) ->
-           (match find_uvar uv wl.subst with
+           (match find_term_uvar uv wl.subst with
                 | None -> t
                 | Some t -> compress env wl t)
         | Tm_app({n=Tm_uvar(uv, _)}, args) ->
-            (match find_uvar uv wl.subst with
+            (match find_term_uvar uv wl.subst with
                 | Some t' ->
                   let t = mk (Tm_app(t', args)) None t.pos in
                   compress env wl t
@@ -378,7 +433,7 @@ let force_refinement (t_base, refopt) =
 let rec occurs (wl:worklist) (uk:(uvar * 'b)) (t:typ) =
     let uvs = Free.uvars t in
     uvs |> Util.set_elements |> Util.for_some (fun (uv, _) ->
-        match find_uvar uv wl.subst with
+        match find_term_uvar uv wl.subst with
             | None -> Unionfind.equivalent uv (fst uk)
             | Some t ->
                let t = match Subst.compress t with
@@ -813,7 +868,74 @@ let rec solve (env:Env.env) (probs:worklist) : solution =
                  | _ -> 
                    solve env ({probs with attempting=attempt |> List.map (fun (_, _, y) -> y); wl_deferred=rest})
 
-and solve_universes env u1 u2 wl = failwith "NYI: solve_universes"
+and solve_universes env orig u1 u2 wl = 
+    let u1 = compress_univ wl u1 |> N.normalize_universe in
+    let u2 = compress_univ wl u2 |> N.normalize_universe in
+    let occurs_univ v1 u = match u with 
+        | U_max us -> 
+          us |> Util.for_some (fun u -> 
+            let k, _ = U.univ_kernel u in 
+            match k with 
+                | U_unif v2 -> Unionfind.equivalent v1 v2
+                | _ -> false)
+        | _ -> false in
+    match u1, u2 with
+        | U_bvar _, _
+        | U_unknown, _
+        | _, U_bvar _ 
+        | _, U_unknown -> failwith "Impossible: locally nameless"
+
+        | U_unif v1, U_unif v2 -> 
+          if Unionfind.equivalent v1 v2 
+          then solve env (solve_prob orig None [] wl)  
+          else solve env (solve_prob orig None [UNIV(v1, u2)] wl)
+
+        | U_unif v1, u
+        | u, U_unif v1 ->
+          let u = norm_univ wl u in
+          if occurs_univ v1 u
+          then giveup env "Failed occurs check" orig
+          else solve env (solve_prob orig None [UNIV(v1, u)] wl)
+
+        | U_zero, U_zero -> 
+          solve env (solve_prob orig None [] wl)  
+          
+        | U_succ u1, U_succ u2 -> 
+          solve_universes env orig u1 u2 wl
+
+        | U_succ _, _
+        | U_zero _, _
+        | _, U_succ _ 
+        | _, U_zero -> 
+          giveup env "Incompatible universes" orig
+        
+        | U_name x, U_name y -> 
+          if x.idText=y.idText
+          then solve env (solve_prob orig None [] wl)  
+          else giveup env "Incompatible universes" orig
+        
+        | U_name _, _
+        | _, U_name _ -> 
+          giveup env "Incompatible universes" orig
+       
+        | U_max _, _
+        | _, U_max _ -> 
+          if wl.defer_ok
+          then solve env (defer "" orig wl)
+          else let u1 = norm_univ wl u1 in
+               let u2 = norm_univ wl u2 in
+               if U.eq_univs u1 u2
+               then solve env (solve_prob orig None [] wl)
+               else giveup env "Unable to unify universes" orig
+
+and giveup_or_defer env orig wl msg =
+    if wl.defer_ok
+    then begin
+        if Env.debug env <| Options.Other "Rel"
+        then Util.fprint2 "\n\t\tDeferring %s\n\t\tBecause %s\n" (prob_to_string env orig) msg;
+        solve env (defer msg orig wl)
+    end
+    else giveup env msg orig 
 
 (******************************************************************************************************)
 (* The case where u < t1, .... u < tn: we solve this by taking u=t1/\.../\tn                          *)
@@ -972,14 +1094,7 @@ and solve_t (env:Env.env) (problem:tprob) (wl:worklist) : solution =
     solve_t' env (compress_tprob wl problem) wl
 
 and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
-    let giveup_or_defer orig msg =
-        if wl.defer_ok
-        then begin
-            if Env.debug env <| Options.Other "Rel"
-            then Util.fprint2 "\n\t\tDeferring %s\n\t\tBecause %s\n" (prob_to_string env orig) msg;
-            solve env (defer msg orig wl)
-        end
-        else giveup env msg orig in
+    let giveup_or_defer orig msg = giveup_or_defer env orig wl msg in
 
     (* <imitate> used in flex-rigid *)
     let imitate orig (env:Env.env) (wl:worklist) (p:im_or_proj_t) : solution =
@@ -997,7 +1112,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             (Print.term_to_string im) (Print.tag_of_term im)
             (List.map (prob_to_string env) sub_probs |> String.concat ", ")
             (Normalize.term_to_string env formula);
-        let wl = solve_prob orig (Some formula) [((u,k), im)] wl in
+        let wl = solve_prob orig (Some formula) [TERM((u,k), im)] wl in
         solve env (attempt sub_probs wl) in
     (* </imitate> *)
 
@@ -1032,7 +1147,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
              let proj = U.abs xs (S.mk_Tm_app xi g_xs None r) in
              let sub = TProb <| mk_problem (p_scope orig) orig (S.mk_Tm_app proj ps None r) (p_rel orig) (h <| List.map (fun (_, _, y) -> y) qs) None "projection" in
              if debug env <| Options.Other "Rel" then Util.fprint2 "Projecting %s\n\tsubprob=%s\n" (Print.term_to_string proj) (prob_to_string env sub);
-             let wl = solve_prob orig (Some (fst <| p_guard sub)) [(u, proj)] wl in
+             let wl = solve_prob orig (Some (fst <| p_guard sub)) [TERM(u, proj)] wl in
              Some <| solve env (attempt [sub] wl) in
     (* </project_t> *)
 
@@ -1094,7 +1209,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     let sol = match vars with
                         | [] -> t2
                         | _ -> U.abs (sn_binders env vars) t2 in
-                    let wl = solve_prob orig None [((uv,k), sol)] wl in
+                    let wl = solve_prob orig None [TERM((uv,k), sol)] wl in
                     solve env wl)
             else if wl.defer_ok
             then solve env (defer "flex pattern/rigid: occurs or freevar check" orig wl)
@@ -1150,7 +1265,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     let kk = Recheck.check t in
                     let t', _ = new_uvar t.pos ys kk in
                     let u1_ys, u1, k1, _ = destruct_flex_t t' in
-                    let sol = ((u,k), U.abs binders u1_ys) in
+                    let sol = TERM((u,k), U.abs binders u1_ys) in
                     sol, (t', u, k1, ys)
 
                 | hd::tl ->
@@ -1191,7 +1306,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 let occurs_ok, msg = occurs_check env wl (u1,k1) sub1 in
                 if not occurs_ok
                 then giveup_or_defer orig "flex-flex: failed occcurs check"
-                else let sol1 = ((u1, k1), sub1) in
+                else let sol1 = TERM((u1, k1), sub1) in
                      if Unionfind.equivalent u1 u2
                      then let wl = solve_prob orig None [sol1] wl in
                           solve env wl
@@ -1199,7 +1314,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                           let occurs_ok, msg = occurs_check env wl (u2,k2) sub2 in
                           if not occurs_ok
                           then giveup_or_defer orig "flex-flex: failed occurs check"
-                          else let sol2 = (u2,k2), sub2 in
+                          else let sol2 = TERM((u2,k2), sub2) in
                                let wl = solve_prob orig None [sol1;sol2] wl in
                                solve env wl in
 
@@ -1221,7 +1336,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                      let lhs_vars = Free.names_of_binders xs in
                      if occurs_ok 
                      && Util.set_is_subset_of rhs_vars lhs_vars
-                     then let sol = ((u1, k1), U.abs xs t2) in
+                     then let sol = TERM((u1, k1), U.abs xs t2) in
                           let wl = solve_prob orig None [sol] wl in
                           solve env wl
                      else if occurs_ok && not <| wl.defer_ok
@@ -1288,7 +1403,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
       | _, Tm_bvar _ -> failwith "Only locally nameless! We should never see a de Bruijn variable"
 
       | Tm_type u1, Tm_type u2 -> 
-        solve_universes env u1 u2 wl
+        solve_universes env orig u1 u2 wl
 
       | Tm_arrow(bs1, c1), Tm_arrow(bs2, c2) ->
         let mk_c c = function
@@ -1526,8 +1641,8 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                       if problem.relation=EQ && lid_equals c1_comp.effect_name c2_comp.effect_name
                       then solve_eq c1_comp c2_comp
                       else
-                         let c1 = Normalize.weak_norm_comp env c1 in
-                         let c2 = Normalize.weak_norm_comp env c2 in
+                         let c1 = Normalize.unfold_effect_abbrev env c1 in
+                         let c2 = Normalize.unfold_effect_abbrev env c2 in
                          if debug env <| Options.Other "Rel" then Util.fprint2 "solve_c for %s and %s\n" (c1.effect_name.str) (c2.effect_name.str);
                          begin match Env.monad_leq env c1.effect_name c2.effect_name with
                            | None -> giveup env (Util.format2 "incompatible monad ordering: %s </: %s" 
@@ -1784,4 +1899,4 @@ let try_discharge_guard env (g:guard_t) =
                 env.solver.solve env vc
         end
 
-let universe_inequality (_:universe) (_:universe) : guard_t = failwith ""
+let universe_inequality (_:universe) (_:universe) : guard_t = failwith "NYI: Universe inequality"
