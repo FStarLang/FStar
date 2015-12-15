@@ -199,7 +199,53 @@ and close_comp env c =
                                flags=flags})  
 
 let norm_universe cfg env u = 
-    let sort_universes us = us in
+    let rec kernel u = match u with
+        | U_unknown
+        | U_name _
+        | U_unif _
+        | U_zero _ -> u, 0
+        | U_succ u -> let k, n = kernel u in k, n+1
+        | U_max _
+        | U_bvar _ -> failwith "Imposible" in
+    let rec compare_univs u1 u2 = match u1, u2 with 
+        | U_max _, _
+        | _, U_max _
+        | U_bvar _, _
+        | _, U_bvar _ 
+        | U_unknown, _
+        | _, U_unknown -> failwith "Impossible"
+
+
+        | U_unif u1, U_unif u2 -> Unionfind.uvar_id u1 - Unionfind.uvar_id u2
+        | U_unif _, _ -> -1
+        | _, U_unif _ -> 1
+
+        | U_zero, U_zero -> 0
+        | U_zero, _ -> -1
+        | _, U_zero -> 1
+
+        | U_name u1 , U_name u2 -> String.compare u1.idText u2.idText
+
+        | U_name _, U_succ _ 
+        | U_succ _, U_name _ 
+        | U_succ _, U_succ _ ->
+          let u1, n1 = kernel u1 in
+          let u2, n2 = kernel u2 in
+          let r = compare_univs u1 u2 in 
+          if u1 = u2
+          then n1 - n2
+          else r in
+
+    let rec is_constant u = match u with 
+        | U_zero -> true
+        | U_succ x -> is_constant x 
+        | _ -> false in
+         
+    let sort_universes us = 
+        let us = Util.remove_dups (fun x y -> compare_univs x y = 0) us in
+        let constants, rest = List.partition is_constant us in
+        norm_constants constants @ Util.sort_with compare_univs rest in
+
     let rec aux u = 
         let u = Subst.compress_univ u in
         match u with
