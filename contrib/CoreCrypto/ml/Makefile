@@ -46,7 +46,7 @@ all: corecrypto.cmxa
 DLL_OBJ = $(PLATFORM)/platform.cmx CoreCrypto.cmx openssl_stub.o
 
 dllcorecrypto.$(DLL) corecrypto.cmxa: $(DLL_OBJ)
-	$(OCAMLMKLIB) -lcrypto -lssl -o corecrypto $^
+	$(OCAMLMKLIB) -lcrypto -o corecrypto $^
 
 %.cmi: %.mli
 	$(OCAMLC) -I $(PLATFORM) -c $<
