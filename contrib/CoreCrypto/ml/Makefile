@@ -28,10 +28,11 @@ else
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Darwin)
         CC = -cc gcc-5
+	EXTRA_OPTS = -ccopt -L.
 	ARCH = osx
     else
         CC = -cc gcc
-        EXTRA_OPTS = -ccopt -fPIC
+        EXTRA_OPTS = -ccopt -fPIC -ccopt -L.
 	ARCH = x86_64
     endif
 endif
@@ -60,7 +61,7 @@ dllcorecrypto.$(DLL) corecrypto.cmxa: $(DLL_OBJ)
 TEST_CMX = Tests.cmx
 
 Tests$(EXE): $(TEST_CMX) corecrypto.cmxa dllcorecrypto.$(DLL)
-	$(OCAMLOPT) -I $(PLATFORM) -package batteries -linkpkg -o $@ \
+	$(OCAMLOPT) $(EXTRA_OPTS) -I $(PLATFORM) -package batteries -linkpkg -o $@ \
 	-cclib dllcorecrypto.$(DLL) corecrypto.cmxa $(TEST_CMX)
 
 test: Tests$(EXE)
