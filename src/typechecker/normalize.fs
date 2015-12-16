@@ -252,6 +252,7 @@ let norm_universe env u =
         | [U_zero] -> U_zero
         | [U_zero; u] -> u
         | U_zero::us -> U_max us
+        | [u] -> u
         | us -> U_max us
            
 

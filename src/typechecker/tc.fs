@@ -1644,7 +1644,7 @@ let tc_inductive env ses quals lids =
          let k = Util.arrow indices (S.mk_Total t) in
          let u = match (SS.compress t).n with 
             | Tm_type u -> u
-            | _ -> raise (Error("Expected a result of type 'Type'", r)) in
+            | _ -> raise (Error(Util.format1 "Expected a result of type 'Type'; got %s" (Print.term_to_string t), r)) in
          let g  = Rel.universe_inequality (S.U_max us) u in
          let g' = Rel.universe_inequality (S.U_succ (S.U_max us')) u in
          

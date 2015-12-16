@@ -799,7 +799,11 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
             let c = lc.comp() in
 
             if Env.debug env <| Options.Extreme
-            then Util.fprint2 "Strengthening %s with guard %s\n" (Normalize.comp_to_string env c) (Normalize.term_to_string env f);
+            then Util.fprint4 "Weakened from %s to %s\nStrengthening %s with guard %s\n" 
+                  (N.term_to_string env lc.res_typ)
+                  (N.term_to_string env t)
+                  (N.comp_to_string env c) 
+                  (N.term_to_string env f);
 
             let ct = Normalize.unfold_effect_abbrev env c in
             let a, kwp = Env.wp_signature env Const.effect_PURE_lid in

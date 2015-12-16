@@ -21,10 +21,10 @@ assume type Eq2 : #a:Type -> #b:Type -> a -> b -> Type  (* infix binary '==' *)
 assume type bool
 opaque type b2t (b:bool) = (b == true)
 
-(* //We assume the Tot effect here; its definition appears a few lines below *)
-(* (\* Primitive logical connectives *\) *)
-(* type True = *)
-(*   | T *)
+// We assume the Tot effect here; its definition appears a few lines below
+(* Primitive logical connectives *)
+// type True =
+//   | T
 (* logic type False *)
 (* opaque type l_imp (p:Type) (q:Type) = p -> Tot q                (\* infix binary '==>' *\) *)
 (* type l_and  (p:Type) (q:Type) = *)
