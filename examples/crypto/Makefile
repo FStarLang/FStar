@@ -1,10 +1,12 @@
 VERFILES=cca2.fst # encrypt3.fst formatting.fst rpc.fst
 
+LIB = ../../contrib/CoreCrypto/ml
+
 ifeq ($(OS),Windows_NT)
   CC =
   EXTRA_PATH = PATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin/:$(PATH)"
 else
-    EXTRA_PATH = LD_LIBRARY_PATH=.
+    EXTRA_PATH = LD_LIBRARY_PATH=.:$(LIB)
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Darwin)
         CC = -cc gcc-5
@@ -12,8 +14,6 @@ else
         CC = -cc gcc
     endif
 endif
-
-LIB = ../../contrib/CoreCrypto/ml
 
 include ../Makefile.include
 all: .all.crypto.ver merkle_tree mac padding mac3 rpc cnt-protocol acls-cap statefulEnc
