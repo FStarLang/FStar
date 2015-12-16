@@ -106,6 +106,11 @@
       <Project>{5bf4af3f-bec2-4cfd-94b7-11a38a031f4b}</Project>
       <Private>True</Private>
     </ProjectReference>
+    <ProjectReference Include="..\typechecker\typechecker.fsproj">
+      <Name>typechecker</Name>
+      <Project>{21685793-ac84-4ec1-9eab-39f9c0252f3f}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <Reference Include="FSharp.PowerPack">
       <HintPath>..\..\bin\FSharp.PowerPack.dll</HintPath>
     </Reference>

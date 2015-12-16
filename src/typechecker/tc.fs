@@ -69,7 +69,7 @@ let fxv_check head env kt fvs = //NS: nearly a duplicate of check_no_escape
                     raise (Error(msg, Env.get_range env)) in
                   let s = TcUtil.new_uvar env (Recheck.check t) in
                   begin match Rel.try_teq env t s with
-                    | Some g -> Rel.try_discharge_guard env g
+                    | Some g -> Rel.discharge_guard env g
                     | _ -> fail ()
                   end in 
     aux false kt
@@ -79,7 +79,7 @@ let check_no_escape env bs t =
     if Util.for_some (fun (x, _) -> Util.set_mem x fvs) bs
     then let k, _ = TcUtil.type_u() in
          let tnarrow = TcUtil.new_uvar env k in
-         Rel.try_discharge_guard env <| Rel.teq env t tnarrow
+         Rel.discharge_guard env <| Rel.teq env t tnarrow
 
 let maybe_push_binding env b =
   if is_null_binder b then env
@@ -422,6 +422,7 @@ and tc_value env (e:term) : term
   | Tm_arrow(bs, c) -> 
     let bs, c = SS.open_comp bs c in 
     let env0 = env in
+    let env, _ = Env.clear_expected_typ env in
     let bs, env, g, us = tc_binders env bs in
     let c, uc, f = tc_comp env c in
     let e = {Util.arrow bs c with pos=top.pos} in
@@ -440,6 +441,7 @@ and tc_value env (e:term) : term
   | Tm_refine(x, phi) ->
     let x, phi = SS.open_term [S.mk_binder x] phi in
     let env0 = env in
+    let env, _ = Env.clear_expected_typ env in
     let x, env, f1, u = tc_binder env (List.hd x) in
     if debug env Options.High 
     then Util.fprint3 "(%s) Checking refinement formula %s; env expects type %s\n"  
@@ -1243,7 +1245,7 @@ and build_let_rec_env top_level env lbs : list<letbinding> * env =
             else if top_level && not(env.generalize) //t is from an already-checked val decl
             then t
             else (let t, _, g = tc_check_tot_or_gtot_term ({env0 with check_uvars=true}) t (fst <| TcUtil.type_u()) in
-                  Rel.try_discharge_guard env0 g;
+                  Rel.discharge_guard env0 g;
                   norm env0 t) in
         let env = if Util.is_pure_or_ghost_function t //termination check is enabled
                   && Options.should_verify env.curmodule.str (* store the let rec names separately for termination checks *)
@@ -1377,7 +1379,7 @@ and tc_check_tot_or_gtot_term env e t : term
                                       * lcomp 
                                       * guard_t = 
     let e, c, g = tc_tot_or_gtot_term env e in
-    let g' = Rel.subtype env c.res_typ t in
+    let g' = Rel.apply_guard (Rel.subtype env c.res_typ t) e in
     let c = if Util.is_total_lcomp c 
             then S.mk_Total t 
             else Util.gtotal_comp t in
@@ -1388,12 +1390,12 @@ and tc_check_tot_or_gtot_term env e t : term
 (*****************Type-checking the signature of a module*****************************)
 let tc_trivial_guard env t = 
   let t, c, g = tc_tot_or_gtot_term env t in
-  Rel.try_discharge_guard env g;
+  Rel.discharge_guard env g;
   t,c
 
 let tc_check_trivial_guard env t k = 
   let t, c, g = tc_check_tot_or_gtot_term env t k in
-  Rel.try_discharge_guard env g;
+  Rel.discharge_guard env g;
   t
 
 let check_and_gen env (_,t) k = 
@@ -1642,11 +1644,10 @@ let tc_inductive env ses quals lids =
          let indices, env', us' = tc_tparams env indices in 
          let t, _ = tc_trivial_guard env' t in 
          let k = Util.arrow indices (S.mk_Total t) in
-         let u = match (SS.compress t).n with 
-            | Tm_type u -> u
-            | _ -> raise (Error(Util.format1 "Expected a result of type 'Type'; got %s" (Print.term_to_string t), r)) in
+         let t_type, u = TcUtil.type_u() in 
+         Rel.discharge_guard env' (Rel.teq env' t t_type); 
          let g  = Rel.universe_inequality (S.U_max us) u in
-         let g' = Rel.universe_inequality (S.U_succ (S.U_max us')) u in
+         let g' = Rel.universe_inequality (S.U_max (List.map S.U_succ us')) u in
          
          let refined_tps = tps |> List.map (fun (x, imp) -> 
             let y = S.freshen_bv x in
@@ -1697,7 +1698,7 @@ let tc_inductive env ses quals lids =
 
     (* 3. Generalizing universes *)
     let generalize_universes env g tcs datas = 
-        Rel.try_discharge_guard env g;
+        Rel.discharge_guard env g;
         let binders = tcs |> List.map (function 
             | Sig_inductive_typ(_, _, tps, k, _, _, _, _) -> S.null_binder (Util.arrow tps <| mk_Total k)
             | _ -> failwith "Impossible")  in 
@@ -1951,6 +1952,8 @@ let non_private env se : list<sigelt> =
 let tc_decls for_export env ses =
  let ses, all_non_private, env =
   ses |> List.fold_left (fun (ses, all_non_private, (env:Env.env)) se ->
+          if Env.debug env Options.Low
+          then Util.fprint1 ">>>>>>>>>>>>>>Checking top-level decl %s\n" (Util.lids_of_sigelt se |> List.map Print.lid_to_string |> String.concat ", ");
           let se, env = tc_decl env se  in
           env.solver.encode_sig env se;
 

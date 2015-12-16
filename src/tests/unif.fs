@@ -19,15 +19,13 @@ open FStar.Tests.Util
 
 let x = S.gen_bv "x" None S.tun |> S.bv_to_name
 let y = S.gen_bv "y" None S.tun |> S.bv_to_name
-let id  = pars "fun x -> x"
-let id' = pars "fun y -> y"
 
 let guard_to_string g = match g with
     | Rel.Trivial -> "trivial"
     | Rel.NonTrivial f ->
       N.term_to_string Env.dummy f
 
-let guard_eq g g' = 
+let guard_eq i g g' = 
     let b = match g, g' with 
         | Rel.Trivial, Rel.Trivial -> true
         | Rel.NonTrivial f, Rel.NonTrivial f' ->
@@ -36,14 +34,14 @@ let guard_eq g g' =
           term_eq f f'
         | _ -> false in
     if not b 
-    then Printf.printf "Expected guard %s;\n\
-                        Got guard      %s\n" (guard_to_string g') (guard_to_string g);
-    b
+    then Printf.printf "Test %d failed:\n\t\
+                        Expected guard %s;\n\t\
+                        Got guard      %s\n" i (guard_to_string g') (guard_to_string g)
 
 
-let unify x y g' = 
+let unify i x y g' = 
     let g = Rel.teq Env.dummy x y |> Rel.solve_deferred_constraints Env.dummy in
-    assert (guard_eq g.guard_f g')
+    guard_eq i g.guard_f g'
 
 let should_fail x y =
     try 
@@ -74,56 +72,64 @@ let run_all debug =
        if debug 
        then (Options.debug := ["dummy"];
              Options.debug_level := [Options.Other "Rel"]);
+       let id  = pars "fun x -> x" in
+       let id' = pars "fun y -> y" in
+
        //syntactic equality of names
-       unify x x Rel.Trivial;
+       unify 0 x x Rel.Trivial;
 
        //different names, equal with a guard
-       unify x y (Rel.NonTrivial (app (pars "Eq2") [x;y]));
+       unify 1 x y (Rel.NonTrivial (app (pars "Eq2") [x;y]));
        
        //equal after some reduction
-       unify x (app id [x]) Rel.Trivial;
+       unify 2 x (app id [x]) Rel.Trivial;
        
        //physical equality of terms
-       unify id id Rel.Trivial;
+       unify 3 id id Rel.Trivial;
 
        //alpha equivalence
-       unify id id' (Rel.NonTrivial (pars "True /\ (forall x. True)"));
+       unify 4 id id' Rel.Trivial; //(Rel.NonTrivial (pars "True /\ (forall x. True)"));
 
        //alpha equivalence 2
-       unify (pars "fun x y -> x")
-             (pars "fun a b -> a")
-             (Rel.NonTrivial (pars "True /\ (forall x. True /\ (forall y. True))"));
+       unify 5 (pars "fun x y -> x")
+               (pars "fun a b -> a")
+               Rel.Trivial;
+//             (Rel.NonTrivial (pars "True /\ (forall x. True /\ (forall y. True))"));
 
        //alpha equivalence 3
-       unify (pars "fun x y z -> y")
-             (pars "fun a b c -> b")
-             (Rel.NonTrivial (pars "True /\ (forall x. True /\ (forall y. True /\ (forall z. True)))"));
+       unify 6 (pars "fun x y z -> y")
+               (pars "fun a b c -> b")
+             Rel.Trivial;
+//             (Rel.NonTrivial (pars "True /\ (forall x. True /\ (forall y. True /\ (forall z. True)))"));
 
        //logical equality of distinct lambdas (questionable ... would only work for unit, or inconsistent context)
-       unify (pars "fun x y -> y")
-             (pars "fun x y -> x")
-             (Rel.NonTrivial (pars "True /\ (forall x. True /\ (forall y. Eq2 y x))"));
+       unify 7 (pars "fun x y -> y")
+               (pars "fun x y -> x")
+               (Rel.NonTrivial (pars "(forall x. (forall y. Eq2 y x))"));
+//             (Rel.NonTrivial (pars "True /\ (forall x. True /\ (forall y. Eq2 y x))"));
 
        //logical equality of distinct lambdas (questionable ... would only work for unit, or inconsistent context)
-       unify (pars "fun x y z -> y")
-             (pars "fun x y z -> z")
-             (Rel.NonTrivial (pars "True /\ (forall x. True /\ (forall y. True /\ (forall z. Eq2 y z)))")); 
+       unify 8 (pars "fun x y z -> y")
+               (pars "fun x y z -> z")
+               (Rel.NonTrivial (pars "(forall x. (forall y. (forall z. Eq2 y z)))")); 
+//             (Rel.NonTrivial (pars "True /\ (forall x. True /\ (forall y. True /\ (forall z. Eq2 y z)))")); 
 
        //imitation: unifies u to a constant
        let tm, us = inst 1 (pars "fun u x -> u x") in
-       unify tm 
-             (pars "fun x -> Tuple2 x x") 
-             (Rel.NonTrivial (pars "True /\ (forall x. True)"));
+       unify 9 tm 
+               (pars "fun x -> Tuple2 x x") 
+               Rel.Trivial;
+//             (Rel.NonTrivial (pars "True /\ (forall x. True)"));
        assert (term_eq (norm (List.hd us))
                        (norm (pars "fun x -> Tuple2 x x")));
 
        //imitation: unifies u to a lambda
        let tm, us = inst 1 (pars "fun u x -> u x") in
-       unify tm 
-             (pars "fun x y -> x + y") 
-             (Rel.NonTrivial (pars "True /\ (forall x. True)"));
+       unify 10 tm 
+                (pars "fun x y -> x + y") 
+                Rel.Trivial;
+//             (Rel.NonTrivial (pars "True /\ (forall x. True)"));
        assert (term_eq (norm (List.hd us))
                        (norm (pars "fun x y -> x + y")))
 
    with Error(msg, r) -> print_string msg; print_newline()
-    

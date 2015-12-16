@@ -985,6 +985,7 @@ let mk_indexed_projectors fvq refine_domain env tc lid (binders:list<S.binder>) 
 let mk_data_projectors env = function
   | Sig_datacon(lid, _, t, l, quals, _, _) when (//(not env.iface || env.admitted_iface) &&
                                                 not (lid_equals lid C.lexcons_lid)) ->
+    Printf.printf "Data projector for %s\n" lid.str;
     let refine_domain =
         if (quals |> Util.for_some (function RecordConstructor _ -> true | _ -> false))
         then false
@@ -1055,14 +1056,22 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
       let _env2 = Env.push_top_level_rec_binding _env' id in
       _env, _env2, se, tconstr
     | _ -> failwith "Unexpected tycon" in
-  let push_tparam env = fun (x, _) -> Env.push_bv env x.ppname |> fst in
-  let push_tparams = List.fold_left push_tparam in       
+  let push_tparams env bs = 
+    let env, bs = List.fold_left (fun (env, tps) (x, imp) -> 
+        let env, y = Env.push_bv env x.ppname in
+        env, (y, imp)::tps) (env, []) bs in 
+    env, List.rev bs in
   match tcs with
     | [TyconAbstract _] ->
         let tc = List.hd tcs in
         let _, _, se, _ = desugar_abstract_tc quals env [] tc in
         let se = match se with 
            | Sig_inductive_typ(l, _, typars, k, [], [], quals, rng) -> 
+             let quals = if quals |> List.contains S.Assumption
+                         then quals
+                         else (TypeChecker.Errors.warn (Ident.range_of_lid l)
+                                                       "Adding an implicit 'assume fresh' qualifier";
+                               S.Assumption::S.Fresh::quals) in
              Sig_declare_typ(l, [], mk (Tm_arrow(typars, mk_Total k)) None rng, quals, rng)
            | _ -> se in
         let env = push_sigelt env se in
@@ -1119,14 +1128,15 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
       let env, tcs = List.fold_left (collect_tcs quals) (env, []) tcs in
       let tcs = List.rev tcs in
       let sigelts = tcs |> List.collect (function
-        | Inr(Sig_inductive_typ(id, uvs, tpars, k, _, _, _, _), t, quals) ->
-          let env_tps = push_tparams env tpars in
+        | Inr(Sig_inductive_typ(id, uvs, tpars, k, _, _, _, _), t, quals) -> //should be impossible
+          let env_tps, _ = push_tparams env tpars in
           let t = desugar_term env_tps t in
           [mk_typ_abbrev id uvs tpars k t [id] quals rng]
 
         | Inl (Sig_inductive_typ(tname, univs, tpars, k, mutuals, _, tags, _), constrs, tconstr, quals) ->
           let tycon = (tname, tpars, k) in
-          let env_tps = push_tparams env tpars in
+          let env_tps, tps = push_tparams env tpars in
+          let data_tpars = List.map (fun (x, _) -> (x, Some S.Implicit)) tps in
           let constrNames, constrs = List.split <|
               (constrs |> List.map (fun (id, topt, of_notation) ->
                 let t =
@@ -1142,7 +1152,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
                 let quals = tags |> List.collect (function
                     | RecordType fns -> [RecordConstructor fns]
                     | _ -> []) in
-                (name, Sig_datacon(name, univs, t |> Util.name_function_binders, tname, quals, mutuals, rng)))) in
+                (name, Sig_datacon(name, univs, Util.abs data_tpars (t |> Util.name_function_binders), tname, quals, mutuals, rng)))) in
               Sig_inductive_typ(tname, univs, tpars, k, mutuals, constrNames, tags, rng)::constrs
         | _ -> failwith "impossible") in
       let bundle = Sig_bundle(sigelts, quals, List.collect Util.lids_of_sigelt sigelts, rng) in

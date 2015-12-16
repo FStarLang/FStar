@@ -1111,7 +1111,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         then Util.fprint4 "Imitating %s (%s)\nsub_probs = %s\nformula=%s\n"
             (Print.term_to_string im) (Print.tag_of_term im)
             (List.map (prob_to_string env) sub_probs |> String.concat ", ")
-            (Normalize.term_to_string env formula);
+            (N.term_to_string env formula);
         let wl = solve_prob orig (Some formula) [TERM((u,k), im)] wl in
         solve env (attempt sub_probs wl) in
     (* </imitate> *)
@@ -1133,7 +1133,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 | (a, _)::tl ->
                     let k_a = SS.subst subst a.sort in
                     let gi_xs, gi = new_uvar r xs k_a in
-                    let gi_xs = Normalize.eta_expand env gi_xs in
+                    let gi_xs = N.eta_expand env gi_xs in
                     let gi_ps = mk_Tm_app gi ps (Some k_a.n) r in
                     let subst = if S.is_null_bv a then subst else NT(a, gi_xs)::subst in
                     let gi_xs', gi_ps' = aux subst tl in
@@ -1456,7 +1456,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     | Failed _ -> fallback()
                     | Success (subst, _) ->
 //                      if Tc.Env.debug env <| Options.Other "RefEq"
-//                      then Util.fprint1 "Got guard %s\n" (Normalize.formula_norm_to_string env <| (fst <| p_guard ref_prob));
+//                      then Util.fprint1 "Got guard %s\n" (N.formula_norm_to_string env <| (fst <| p_guard ref_prob));
                       let guard = Util.mk_conj (p_guard base_prob |> fst) (p_guard ref_prob |> fst |> guard_on_element problem x1) in
                       let wl = solve_prob orig (Some guard) [] wl in
                       let wl = {wl with subst=subst; ctr=wl.ctr+1} in
@@ -1641,8 +1641,8 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                       if problem.relation=EQ && lid_equals c1_comp.effect_name c2_comp.effect_name
                       then solve_eq c1_comp c2_comp
                       else
-                         let c1 = Normalize.unfold_effect_abbrev env c1 in
-                         let c2 = Normalize.unfold_effect_abbrev env c2 in
+                         let c1 = N.unfold_effect_abbrev env c1 in
+                         let c2 = N.unfold_effect_abbrev env c2 in
                          if debug env <| Options.Other "Rel" then Util.fprint2 "solve_c for %s and %s\n" (c1.effect_name.str) (c2.effect_name.str);
                          begin match Env.monad_leq env c1.effect_name c2.effect_name with
                            | None -> giveup env (Util.format2 "incompatible monad ordering: %s </: %s" 
@@ -1693,10 +1693,12 @@ type guard_formula =
   | NonTrivial of formula
 
 type implicits = list<(uvar * Range.range)>
+type univ_ineq = universe * universe
 type guard_t = {
-  guard_f:  guard_formula;
-  deferred: deferred;
-  implicits: implicits;
+  guard_f:    guard_formula;
+  deferred:   deferred;
+  univ_ineqs: list<univ_ineq>;
+  implicits:  implicits;
 }
 
 let guard_to_string (env:env) g =
@@ -1704,7 +1706,7 @@ let guard_to_string (env:env) g =
       | Trivial -> "trivial"
       | NonTrivial f ->
           if debug env <| Options.Other "Rel"
-          then Normalize.term_to_string env f
+          then N.term_to_string env f
           else "non-trivial" in
   let carry = List.map (fun (_, x) -> prob_to_string env x) g.deferred |> String.concat ",\n" in
   Util.format2 "\n\t{guard_f=%s;\n\t deferred={\n%s};}\n" form carry
@@ -1712,7 +1714,7 @@ let guard_to_string (env:env) g =
 (* ------------------------------------------------*)
 (* <guard_formula ops> Operations on guard_formula *)
 (* ------------------------------------------------*)
-let guard_of_guard_formula g = {guard_f=g; deferred=[]; implicits=[]}
+let guard_of_guard_formula g = {guard_f=g; deferred=[]; univ_ineqs=[]; implicits=[]}
 
 let guard_form g = g.guard_f
 
@@ -1720,7 +1722,7 @@ let is_trivial g = match g with
     | {guard_f=Trivial; deferred=[]} -> true
     | _ -> false
 
-let trivial_guard = {guard_f=Trivial; deferred=[]; implicits=[]}
+let trivial_guard = {guard_f=Trivial; deferred=[]; univ_ineqs=[]; implicits=[]}
 
 let abstract_guard x g = match g with
     | None
@@ -1756,6 +1758,7 @@ let imp_guard_f g1 g2 = match g1, g2 with
 
 let binop_guard f g1 g2 = {guard_f=f g1.guard_f g2.guard_f;
                            deferred=g1.deferred@g2.deferred;
+                           univ_ineqs=g1.univ_ineqs@g2.univ_ineqs;
                            implicits=g1.implicits@g2.implicits}
 let conj_guard g1 g2 = binop_guard conj_guard_f g1 g2
 let imp_guard g1 g2 = binop_guard imp_guard_f g1 g2
@@ -1763,10 +1766,6 @@ let imp_guard g1 g2 = binop_guard imp_guard_f g1 g2
 let close_guard binders g = match g.guard_f with
     | Trivial -> g
     | NonTrivial f -> {g with guard_f=U.close_forall binders f |> NonTrivial}
-
-let mk_guard g ps slack locs = {guard_f=g;
-                                deferred=ps;
-                                implicits=[]}
 
 (* ------------------------------------------------*)
 (* </guard_formula ops>                            *)
@@ -1776,8 +1775,8 @@ let mk_guard g ps slack locs = {guard_f=g;
 let new_t_problem env lhs rel rhs elt loc =
  let reason = if debug env <| Options.Other "ExplainRel"
               then Util.format3 "Top-level:\n%s\n\t%s\n%s" 
-                        (Normalize.term_to_string env lhs) (rel_to_string rel) 
-                        (Normalize.term_to_string env rhs)
+                        (N.term_to_string env lhs) (rel_to_string rel) 
+                        (N.term_to_string env rhs)
               else "TOP" in
  let p = new_problem env lhs rel rhs elt loc reason in
  p
@@ -1787,16 +1786,6 @@ let new_t_prob env t1 rel t2 =
  let env = Env.push_local_binding env (Env.Binding_var(x, ([],x.sort))) in
  let p = new_t_problem env t1 rel t2 (Some <| S.bv_to_name x) (Env.get_range env) in
  TProb p, x
-
-let simplify_guard env g = match g.guard_f with
-    | Trivial -> g
-    | NonTrivial f ->
-      if Env.debug env Options.High then Util.fprint1 "Simplifying guard %s\n" (Print.term_to_string f);
-      let f = Normalize.normalize [Normalize.Beta; Normalize.Simplify] env f in
-      let f = match f.n with
-        | Tm_fvar (fv, _) when lid_equals fv.v Const.true_lid -> Trivial
-        | _ -> NonTrivial f in
-      {g with guard_f=f}
 
 let solve_and_commit env probs err =
   let probs = if !Options.eager_inference then {probs with defer_ok=false} else probs in
@@ -1809,11 +1798,21 @@ let solve_and_commit env probs err =
       if Env.debug env <| Options.Other "ExplainRel"
       then Util.print_string <| explain env d s;
       err (d,s)
+      
+let simplify_guard env g = match g.guard_f with
+    | Trivial -> g
+    | NonTrivial f ->
+      if Env.debug env Options.High then Util.fprint1 "Simplifying guard %s\n" (Print.term_to_string f);
+      let f = N.normalize [N.Beta; N.Simplify] env f in
+      let f = match f.n with
+        | Tm_fvar (fv, _) when lid_equals fv.v Const.true_lid -> Trivial
+        | _ -> NonTrivial f in
+      {g with guard_f=f}
 
 let with_guard env prob dopt = match dopt with
     | None -> None
     | Some d ->
-      Some <| simplify_guard env ({guard_f=(p_guard prob |> fst |> NonTrivial); deferred=d; implicits=[]})
+      Some <| simplify_guard env ({guard_f=(p_guard prob |> fst |> NonTrivial); deferred=d; univ_ineqs=[]; implicits=[]})
 
 let try_teq env t1 t2 : option<guard_t> =
  if debug env <| Options.Other "Rel"
@@ -1835,14 +1834,14 @@ let teq env t1 t2 : guard_t =
 
 let try_subtype env t1 t2 =
  if debug env <| Options.Other "Rel"
- then Util.fprint2 "try_subtype of %s and %s\n" (Normalize.term_to_string env t1) (Normalize.term_to_string env t2);
+ then Util.fprint2 "try_subtype of %s and %s\n" (N.term_to_string env t1) (N.term_to_string env t2);
  let prob, x = new_t_prob env t1 SUB t2 in
  let g = with_guard env prob <| solve_and_commit env (singleton env prob) (fun _ -> None) in
  if debug env <| Options.Other "Rel"
     && Util.is_some g
  then Util.fprint3 "try_subtype succeeded: %s <: %s\n\tguard is %s\n" 
-                    (Normalize.term_to_string env t1) 
-                    (Normalize.term_to_string env t2) 
+                    (N.term_to_string env t1) 
+                    (N.term_to_string env t2) 
                     (guard_to_string env (Util.must g));
  abstract_guard x g
 
@@ -1861,6 +1860,11 @@ let sub_comp env c1 c2 =
   let prob = CProb <| new_problem env c1 rel c2 None (Env.get_range env) "sub_comp" in
   with_guard env prob <| solve_and_commit env (singleton env prob)  (fun _ -> None)
 
+let solve_universe_inequalities ineqs = 
+    match ineqs with 
+        | [] -> ()
+        | _ -> Errors.warn Range.dummyRange "Universe inequality check unimplemented"
+
 let solve_deferred_constraints env (g:guard_t) =
    let fail (d,s) =
       let msg = explain env d s in
@@ -1875,21 +1879,22 @@ let solve_deferred_constraints env (g:guard_t) =
                         (Range.string_of_range <| p_loc x) 
                         msg 
                         (prob_to_string env x) 
-                        (Normalize.term_to_string env (p_guard x |> fst))) 
+                        (N.term_to_string env (p_guard x |> fst))) 
        |> String.concat "\n")
    end;
    let gopt = solve_and_commit env (wl_of_guard env g.deferred) fail in
+   solve_universe_inequalities g.univ_ineqs;
    match gopt with
     | Some _ -> {g with deferred=[]}
     | _ -> failwith "impossible"
 
-let try_discharge_guard env (g:guard_t) =
+let discharge_guard env (g:guard_t) =
    let g = solve_deferred_constraints env g in
    if not (Options.should_verify env.curmodule.str) then ()
    else match g.guard_f with
     | Trivial -> ()
     | NonTrivial vc ->
-        let vc = Normalize.normalize [N.DeltaHard; N.Beta; N.Eta; N.Simplify] env vc in
+        let vc = N.normalize [N.DeltaHard; N.Beta; N.Eta; N.Simplify] env vc in
         begin match check_trivial vc with
             | Trivial -> ()
             | NonTrivial vc ->
@@ -1899,4 +1904,5 @@ let try_discharge_guard env (g:guard_t) =
                 env.solver.solve env vc
         end
 
-let universe_inequality (_:universe) (_:universe) : guard_t = failwith "NYI: Universe inequality"
+let universe_inequality (u1:universe) (u2:universe) : guard_t =
+    {trivial_guard with univ_ineqs=[u1,u2]}

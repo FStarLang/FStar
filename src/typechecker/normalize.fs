@@ -1,5 +1,5 @@
 ﻿(*
-   Copyright 2008-2014 Nikhil Swamy and Microsoft Research
+   Copyright 2008-2016 Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ open FStar.TypeChecker.Env
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module U  = FStar.Syntax.Util
+module I  = FStar.Ident
 
 let debug_flag = ref false
 let debug () = debug_flag := true
@@ -41,14 +42,14 @@ let debug () = debug_flag := true
  **********************************************************************************************)
 
 type step =
-  | WHNF
+  | WHNF            //Only produce a weak head normal form
   | Eta             //remove?
   | EtaArgs         //remove?
-  | Delta
-  | DeltaHard
+  | Delta           //Unfold definitions
+  | DeltaHard       
   | Beta            //remove? Always do beta
-  | DeltaComp
-  | Simplify        //remove?
+  | DeltaComp       
+  | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
   | SNComp
   | Unmeta
   | Unlabel
@@ -57,8 +58,8 @@ and steps = list<step>
 
 type closure = 
   | Clos of env * term * memo<env * term> //memo for lazy evaluation
-  | Univ of universe
-  | Dummy 
+  | Univ of universe                      //universe terms do not have free variables
+  | Dummy                                 //Dummy is a placeholder for a binder when doing strong reduction
 and env = list<closure>
 
 let closure_to_string = function 
@@ -114,8 +115,13 @@ let lookup_bvar env x =
     try List.nth env x.index
     with _ -> failwith (Printf.sprintf "Failed to find %s\n" (Print.bv_to_string x))
 
-(* t is a closure with environment env *)
-(* closure_as_term env t is closed term with all its free variables subsituted with their closures in env (recursively closed) *)
+(*******************************************************************)
+(* closure_as_term env t --- t is a closure with environment env   *)
+(* closure_as_term env t                                           *)
+(*      is a closed term with all its free variables               *)
+(*      subsituted with their closures in env (recursively closed) *)
+(* This is used when computing WHNFs                               *)
+(*******************************************************************)
 let rec closure_as_term env t =
     match env with
         | [] -> t
@@ -203,12 +209,73 @@ and close_comp env c =
                                effect_args=args;
                                flags=flags})  
 
-(* Normal form of a universe u is
-    either U_Zero
-    or     U_max [k;                         //constant
-                  S^n1 u1 ; ...; S^nm um;    //offsets of distinct names, in order of the names
-                  S^p1 ?v1; ...; S^pq ?vq]   //offsets of distinct unification variables, in order of the variables
-*)
+
+(*******************************************************************)
+(* Simplification steps are not part of definitional equality      *)
+(* simplifies True /\ t, t /\ True, t /\ False, False /\ t etc.    *)
+(*******************************************************************)
+let maybe_simplify steps tm =
+    let w t = {t with pos=tm.pos} in
+    let simp_t t = match t.n with
+        | Tm_fvar (fv, _) when I.lid_equals fv.v Const.true_lid ->  Some true
+        | Tm_fvar (fv, _) when I.lid_equals fv.v Const.false_lid -> Some false
+        | _ -> None in
+    let simplify arg = (simp_t (fst arg), arg) in
+    if not <| List.contains Simplify steps
+    then tm
+    else match tm.n with
+            | Tm_app({n=Tm_fvar(fv, _)}, args) -> 
+              if I.lid_equals fv.v Const.and_lid
+              then match args |> List.map simplify with
+                     | [(Some true, _); (_, (arg, _))]
+                     | [(_, (arg, _)); (Some true, _)] -> arg
+                     | [(Some false, _); _]
+                     | [_; (Some false, _)] -> w Util.t_false
+                     | _ -> tm
+              else if I.lid_equals fv.v Const.or_lid
+              then match args |> List.map simplify with
+                     | [(Some true, _); _]
+                     | [_; (Some true, _)] -> w Util.t_true
+                     | [(Some false, _); (_, (arg, _))]
+                     | [(_, (arg, _)); (Some false, _)] -> arg
+                     | _ -> tm
+              else if I.lid_equals fv.v Const.imp_lid
+              then match args |> List.map simplify with
+                     | [_; (Some true, _)]
+                     | [(Some false, _); _] -> w Util.t_true
+                     | [(Some true, _); (_, (arg, _))] -> arg
+                     | _ -> tm
+              else if I.lid_equals fv.v Const.not_lid
+              then match args |> List.map simplify with
+                     | [(Some true, _)] ->  w Util.t_false
+                     | [(Some false, _)] -> w Util.t_true
+                     | _ -> tm
+              else if  I.lid_equals fv.v Const.forall_lid
+                    || I.lid_equals fv.v Const.exists_lid
+              then match args with
+                     | [(t, _)]
+                     | [(_, Some Implicit); (t, _)] ->
+                       begin match (SS.compress t).n with
+                                | Tm_abs([_], body) ->
+                                   (match simp_t body with
+                                        | Some true ->  w Util.t_true
+                                        | Some false -> w Util.t_false
+                                        | _ -> tm)
+                                | _ -> tm
+                       end
+                    | _ -> tm
+              else tm
+            | _ -> tm
+
+
+(********************************************************************************************************************)
+(* Normal form of a universe u is                                                                                   *)
+(*  either u, where u <> U_max                                                                                      *)
+(*  or     U_max [k;                        //constant                                                              *)
+(*               S^n1 u1 ; ...; S^nm um;    //offsets of distinct names, in order of the names                      *)
+(*               S^p1 ?v1; ...; S^pq ?vq]   //offsets of distinct unification variables, in order of the variables  *)
+(*          where the size of the list is at least 2                                                                *)
+(********************************************************************************************************************)
 let norm_universe env u =
     let norm_univs us = 
         let us = Util.sort_with U.compare_univs us in 
@@ -256,6 +323,9 @@ let norm_universe env u =
         | us -> U_max us
            
 
+(********************************************************************************************************************)
+(* Main normalization function of the abstract machine                                                              *)
+(********************************************************************************************************************)
 let rec norm : cfg -> env -> stack -> term -> term = 
     fun cfg env stack t -> 
         log (fun () -> Printf.printf ">>> %s\n" (Print.tag_of_term t));
@@ -480,13 +550,13 @@ and rebuild : cfg -> env -> stack -> term -> term =
                        norm cfg env stack tm
 
                 | Some (_, a) -> 
-                  let t = mk (Tm_app(t, [(a,aq)])) r in 
+                  let t = S.extend_app t (a,aq) None r in
                   rebuild cfg env stack t
               end
 
             | App(head, aq, r)::stack -> 
-              let t = mk (Tm_app(head, [(t, aq)])) r in
-              rebuild cfg env stack t
+              let t = S.extend_app head (t,aq) None r in
+              rebuild cfg env stack (maybe_simplify cfg.steps t)
 
             | Match(env, branches, r) :: stack -> 
               let rebuild () = rebuild cfg env stack (mk (Tm_match(t, branches)) r) in

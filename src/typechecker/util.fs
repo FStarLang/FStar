@@ -18,6 +18,7 @@
 
 module FStar.TypeChecker.Util
 open FStar
+open FStar.Util
 open FStar.TypeChecker
 open FStar.Syntax
 open FStar.TypeChecker.Env
@@ -38,7 +39,7 @@ let report env errs =
                   (Errors.failed_to_prove_specification errs)
 
 //Calling the solver
-let discharge_guard env (g:guard_t) = Rel.try_discharge_guard env g
+let discharge_guard env (g:guard_t) = Rel.discharge_guard env g
 
 (************************************************************************)
 (* Unification variables *)
@@ -631,8 +632,13 @@ let weaken_precondition env lc (f:guard_formula) : lcomp =
   {lc with comp=weaken}
 
 let strengthen_precondition (reason:option<(unit -> string)>) env (e:term) (lc:lcomp) (g0:guard_t) : lcomp * guard_t =
-    if Rel.is_trivial g0 then lc, g0
+    if Rel.is_trivial g0 
+    then lc, g0
     else
+        let _ = if Env.debug env <| Options.Extreme
+                then Util.fprint2 "+++++++++++++Strengthening pre-condition of term %s with guard %s\n" 
+                                (N.term_to_string env e)
+                                (Rel.guard_to_string env g0) in
         let flags = lc.cflags |> List.collect (function RETURN | PARTIAL_RETURN -> [PARTIAL_RETURN] | _ -> []) in
         let strengthen () =
             let c = lc.comp () in
@@ -650,6 +656,12 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:term) (lc:l
                          let lc = bind env (Some e) (lcomp_of_comp c) (Some xbinding, lcomp_of_comp xret) in
                          lc.comp()
                     else c in
+
+                if Env.debug env <| Options.Extreme
+                then Util.fprint2 "-------------Strengthening pre-condition of term %s with guard %s\n" 
+                                (N.term_to_string env e)
+                                (N.term_to_string env f);
+
                 let c = Normalize.unfold_effect_abbrev env c in
                 let res_t, wp, wlp = destruct_comp c in
                 let md = Env.get_effect_decl env c.effect_name in
@@ -788,46 +800,52 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
   match gopt with
     | None, _ -> subtype_fail env lc.res_typ t
     | Some g, apply_guard ->
-      let g = Rel.simplify_guard env g in
-      match guard_form g with
-        | Rel.Trivial ->
+      match guard_form g with 
+        | Rel.Trivial -> 
           let lc = {lc with res_typ = t} in
           (e, lc, g)
+        
         | Rel.NonTrivial f ->
           let g = {g with Rel.guard_f=Rel.Trivial} in
-          let strengthen () =
-            let c = lc.comp() in
+          let strengthen () = 
+                //try to normalize one more time, since more unification variables may be resolved now
+                let f = N.normalize [N.Simplify] env f in
+                match (SS.compress f).n with 
+                    | Tm_abs(_, {n=Tm_fvar (fv, _)}) when lid_equals fv.v Const.true_lid -> 
+                      //it's trivial
+                      let lc = {lc with res_typ=t} in
+                      lc.comp()
+      
+                    | _ -> 
+                        let c = lc.comp() in
+                        if Env.debug env <| Options.Extreme
+                        then Util.fprint4 "Weakened from %s to %s\nStrengthening %s with guard %s\n" 
+                                (N.term_to_string env lc.res_typ)
+                                (N.term_to_string env t)
+                                (N.comp_to_string env c) 
+                                (N.term_to_string env f);
 
-            if Env.debug env <| Options.Extreme
-            then Util.fprint4 "Weakened from %s to %s\nStrengthening %s with guard %s\n" 
-                  (N.term_to_string env lc.res_typ)
-                  (N.term_to_string env t)
-                  (N.comp_to_string env c) 
-                  (N.term_to_string env f);
-
-            let ct = Normalize.unfold_effect_abbrev env c in
-            let a, kwp = Env.wp_signature env Const.effect_PURE_lid in
-            let k = SS.subst [NT(a, t)] kwp in
-            let md = Env.get_effect_decl env ct.effect_name in
-            let x = S.new_bv (Some t.pos) t in
-            let xexp = S.bv_to_name x in
-            let wp = mk_Tm_app (Env.uinst env md.ret) [S.arg t; S.arg xexp] (Some k.n) xexp.pos in
-            let cret = lcomp_of_comp <| mk_comp md t wp wp [RETURN] in
-            let guard = if apply_guard then mk_Tm_app f [S.arg xexp] (Some U.ktype0.n) f.pos else f in
-            let eq_ret, _trivial_so_ok_to_discard =
-                strengthen_precondition (Some <| Errors.subtyping_failed env lc.res_typ t) (Env.set_range env e.pos) e cret
-                                        (guard_of_guard_formula <| Rel.NonTrivial guard) in
-//            let eq_ret =
-//                if Util.is_pure_or_ghost_comp c
-//                then weaken_precondition env eq_ret (Rel.NonTrivial (Util.mk_eq t t xexp e))
-//                else eq_ret in
-            let c = bind env (Some e) (lcomp_of_comp <| mk_Comp ct) (Some(Env.Binding_var(x, ([],lc.res_typ))), eq_ret) in
-            let c = c.comp () in
-            if Env.debug env <| Options.Extreme
-            then Util.fprint1 "Strengthened to %s\n" (Normalize.comp_to_string env c);
-            c in
-          let flags = lc.cflags |> List.collect (function RETURN | PARTIAL_RETURN -> [PARTIAL_RETURN] | _ -> []) in
+                        let ct = Normalize.unfold_effect_abbrev env c in
+                        let a, kwp = Env.wp_signature env Const.effect_PURE_lid in
+                        let k = SS.subst [NT(a, t)] kwp in
+                        let md = Env.get_effect_decl env ct.effect_name in
+                        let x = S.new_bv (Some t.pos) t in
+                        let xexp = S.bv_to_name x in
+                        let wp = mk_Tm_app (Env.uinst env md.ret) [S.arg t; S.arg xexp] (Some k.n) xexp.pos in
+                        let cret = lcomp_of_comp <| mk_comp md t wp wp [RETURN] in
+                        let guard = if apply_guard then mk_Tm_app f [S.arg xexp] (Some U.ktype0.n) f.pos else f in
+                        let eq_ret, _trivial_so_ok_to_discard =
+                            strengthen_precondition (Some <| Errors.subtyping_failed env lc.res_typ t) 
+                                                    (Env.set_range env e.pos) e cret
+                                                    (guard_of_guard_formula <| Rel.NonTrivial guard) in
+                        let c = bind env (Some e) (lcomp_of_comp <| mk_Comp ct) (Some(Env.Binding_var(x, ([],lc.res_typ))), eq_ret) in
+                        let c = c.comp () in
+                        if Env.debug env <| Options.Extreme
+                        then Util.fprint1 "Strengthened to %s\n" (Normalize.comp_to_string env c);
+                        c in
+              let flags = lc.cflags |> List.collect (function RETURN | PARTIAL_RETURN -> [PARTIAL_RETURN] | _ -> []) in
           let lc = {lc with res_typ=t; comp=strengthen; cflags=flags; eff_name=norm_eff_name env lc.eff_name} in
+          let g = {g with Rel.guard_f=Rel.Trivial} in
           (e, lc, g)
 
 let pure_or_ghost_pre_and_post env comp =
@@ -1044,7 +1062,7 @@ let check_top_level env g lc : (bool * comp) =
     | Uvar -> true
     | _ -> false in
   let discharge g =
-    try_discharge_guard env g;
+    discharge_guard env g;
     begin match g.implicits |> List.tryFind (fun (u, _) -> unresolved u) with
         | Some (_, r) -> raise (Error("Unresolved implicit argument", r))
         | _ -> ()

@@ -54,11 +54,12 @@ type guard_formula =
 type deferred = list<(string * prob)>
 
 type implicits = list<(uvar * Range.range)>
-
+type univ_ineq = universe * universe
 type guard_t = {
-  guard_f:  guard_formula;
-  deferred: deferred;
-  implicits: implicits;
+  guard_f:    guard_formula;
+  deferred:   deferred;
+  univ_ineqs: list<univ_ineq>;
+  implicits:  implicits;
 }
 
 val new_uvar: Range.range -> binders -> typ -> typ * typ
@@ -74,7 +75,7 @@ val guard_form                : guard_t -> guard_formula
 val guard_to_string           : env -> guard_t -> string
 val simplify_guard            : env -> guard_t -> guard_t
 val solve_deferred_constraints: env -> guard_t -> guard_t
-val try_discharge_guard       : env -> guard_t -> unit 
+val discharge_guard       : env -> guard_t -> unit 
 
 val unrefine   : env -> typ -> typ
 val try_teq    : env -> typ -> typ -> option<guard_t>

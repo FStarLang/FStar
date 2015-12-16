@@ -21,29 +21,6 @@ let tm t = mk t None dummyRange
 let nm x = bv_to_name x
 let app x ts = mk (Tm_app(x, List.map arg ts)) None dummyRange
 
-let rec force_term x =
-  let x = SS.compress x in
-  match x.n with
-  | Tm_delayed _ -> failwith "impossible"
-  | Tm_meta(t, _) -> force_term t
-  | Tm_bvar _ 
-  | Tm_name _ 
-  | Tm_fvar _ 
-  | Tm_constant _ -> ()
-  | Tm_arrow(bs, c) -> force_binders bs; force_comp c
-  | Tm_abs(bs, t2) ->  force_binders bs; force_term t2
-  | Tm_refine(xt, f) -> force_term xt.sort; force_term f
-  | Tm_app(_, []) -> failwith "Empty args!"
-  | Tm_app(t, args) -> force_term t; args |> List.iter (fun (x, _) -> force_term x)
-  | Tm_let(lbs, e) ->  snd lbs |> List.iter (fun lb -> force_term lb.lbdef; force_term lb.lbtyp); force_term e
-  | Tm_match(head, branches) ->
-    force_term head;
-    branches |> List.iter (fun (_, _, e) -> force_term e)
-  | _ -> ()
-
-and force_binders bs = bs |> List.iter (fun (b, _) -> force_term b.sort)
-and force_comp c = ()
-
 let rec term_eq' t1 t2 = 
     let t1 = SS.compress t1 in 
     let t2 = SS.compress t2 in 
@@ -79,10 +56,13 @@ let rec term_eq' t1 t2 =
         lbs |> (lbs' |> List.forall2 (fun lb1 lb2 -> term_eq lb1.lbtyp lb2.lbtyp && term_eq lb1.lbdef lb2.lbdef)) 
         && term_eq t s
       | Tm_uvar(u, _), Tm_uvar(u', _) -> Unionfind.equivalent u u'
+      | Tm_meta(t1, _), _ -> term_eq' t1 t2
+      | _, Tm_meta(t2, _) -> term_eq' t1 t2
+
       | Tm_delayed _, _
-      | Tm_meta _, _
-      | _, Tm_delayed _
-      | _, Tm_meta _ -> failwith "Impossible"
+      | _, Tm_delayed _ ->
+        failwith (Util.format2 "Impossible: %s and %s" (Print.tag_of_term t1) (Print.tag_of_term t2))
+
       | Tm_unknown, Tm_unknown -> true
       | _ -> false                                                
 

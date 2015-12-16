@@ -14,21 +14,19 @@
    limitations under the License.
 *)
 module Prims
-
-kind un_op  = Type -> Type
-kind bin_op = Type -> Type -> Type
-assume type Eq2 : #a:Type -> #b:Type -> a -> b -> Type  (* infix binary '==' *)
-assume type bool
-opaque type b2t (b:bool) = (b == true)
-
-// We assume the Tot effect here; its definition appears a few lines below
-(* Primitive logical connectives *)
-// type True =
-//   | T
+(* kind un_op  = Type -> Type *)
+(* kind bin_op = Type -> Type -> Type *)
+(* assume type Eq2 : #a:Type -> #b:Type -> a -> b -> Type  (\* infix binary '==' *\) *)
+type bool
+(* opaque type b2t (b:bool) = (b == true) *)
+(* (\* We assume the Tot effect here; its definition appears a few lines below *\) *)
+(* (\* Primitive logical connectives *\) *)
+(* type True = *)
+(*   | T *)
 (* logic type False *)
 (* opaque type l_imp (p:Type) (q:Type) = p -> Tot q                (\* infix binary '==>' *\) *)
-(* type l_and  (p:Type) (q:Type) = *)
-(*   | And : p -> q -> (p /\ q)                                      (\* infix binary '/\' *\) *)
+type l_and  (p:Type) (q:Type) =
+  | And : p -> q -> (p /\ q)                                      (* infix binary '/\' *)
 (* type l_or   (p:Type) (q:Type) =                                 (\* infix binary '\/' *\) *)
 (*   | Left : p -> (p \/ q) *)
 (*   | Right : q -> (p \/ q) *)
