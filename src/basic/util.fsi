@@ -24,6 +24,9 @@ exception Failure of string
 val max_int: int
 val return_all: 'a -> 'a
 
+type time = System.DateTime
+val now : unit -> time
+val time_diff: time -> time -> float
 
 (* generic utils *)
 (* Functional sets *)

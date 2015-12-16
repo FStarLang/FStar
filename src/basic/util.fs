@@ -25,6 +25,11 @@ open System.IO.Compression
 
 let return_all x = x
 
+type time = System.DateTime
+let now () = System.DateTime.Now
+let time_diff (t1:time) (t2:time) : float = 
+    let ts = t2 - t1 in ts.TotalSeconds
+
 exception Impos
 exception NYI of string
 exception Failure of string

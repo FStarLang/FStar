@@ -32,6 +32,10 @@ let is_punctuation c = (
 
 let return_all x = x
 
+type time = float
+let now () = Unix.gettimeofday ()
+let time_diff (t1:time) (t2:time) : float = t2 -. t1
+
 exception Impos
 exception NYI of string
 exception Failure of string

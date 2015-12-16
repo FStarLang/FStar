@@ -1759,11 +1759,22 @@ and tc_decl env se deserialized = match se with
       se, env
 
 and tc_decls for_export env ses deserialized =
- let ses, all_non_private, env =
+ let time_tc_decl env se ds = 
+    let start = FStar.Util.now() in
+    let res = tc_decl env se ds in
+    let stop = FStar.Util.now () in 
+    let diff = FStar.Util.time_diff start stop in 
+    Util.fprint2 "Time %ss : %s\n" (Util.string_of_float diff) (Print.sigelt_to_string_short se);
+    res in
+
+  let ses, all_non_private, env =
   ses |> List.fold_left (fun (ses, all_non_private, (env:Tc.Env.env)) se ->
           if debug env Options.Low then Util.print_string (Util.format1 "Checking sigelt\t%s\n" (Print.sigelt_to_string se));
 
-          let se, env = tc_decl env se deserialized in
+          let se, env =
+            if !Options.timing
+            then time_tc_decl env se deserialized
+            else tc_decl env se deserialized in
           env.solver.encode_sig env se;
 
           let non_private_decls =
