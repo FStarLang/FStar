@@ -17,7 +17,6 @@ endif
 
 include ../Makefile.include
 all: .all.crypto.ver merkle_tree mac padding mac3 rpc cnt-protocol acls-cap statefulEnc
-	$(MAKE) -C $(LIB)
 
 
 STDLIB_ADMITS=--admit_fsi FStar.Seq --admit_fsi FStar.Set --admit_fsi FStar.SeqProperties
@@ -90,9 +89,12 @@ RPC.ml: sha1.fst mac.fst formatting.fst rpc.fst
 OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_HOME)/contrib/Platform/ml $(FSTAR_HOME)/contrib/CoreCrypto/ml $(FSTAR_HOME)/lib/ml/native_int $(FSTAR_HOME)/lib/ml)
 OCAMLC=ocamlfind ocamlopt $(CC) -ccopt -L$(LIB) -package batteries -linkpkg -g -thread
 SUPPORT_LIBS=$(addprefix $(FSTAR_HOME)/lib/ml/, native_int/prims.ml FStar_ST.ml FStar_All.ml FStar_List.ml FStar_String.ml FStar_IO.ml)
-CONTRIB_LIBS=$(addprefix $(FSTAR_HOME)/contrib/, CoreCrypto/ml/CoreCrypto.cmxa)
-rpc.exe: RPC.ml
-	make -C $(FSTAR_HOME)/contrib/
+CONTRIB_LIBS=$(addprefix $(FSTAR_HOME)/contrib/, CoreCrypto/ml/corecrypto.cmxa)
+
+$(CONTRIB_LIBS):
+	$(MAKE) -C $(FSTAR_HOME)/contrib/
+
+rpc.exe: RPC.ml $(CONTRIB_LIBS)
 	$(OCAMLC) -o $@ $(OCAML_INCLUDE_PATHS) $(SUPPORT_LIBS) $(CONTRIB_LIBS) FStar_Seq.ml FStar_SeqProperties.ml SHA1.ml MAC.ml Formatting.ml RPC.ml
 
 rpc-test: rpc.exe
