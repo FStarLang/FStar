@@ -26,6 +26,7 @@ val rev : (list<'a>) -> Tot<(list<'a>)>
 val append : (list<'a>) -> (list<'a>) -> Tot<(list<'a>)>
 val flatten : (list<(list<'a>)>) -> Tot<(list<'a>)>
 val iter : ('a -> unit) -> (list<'a>) -> unit
+val iteri : (int -> 'a -> unit) -> (list<'a>) -> unit
 val map : ('a -> 'b) -> (list<'a>) -> (list<'b>)
 val mapi_init : (int -> 'a -> 'b) -> (list<'a>) -> int -> (list<'b>)
 val mapi : (int -> 'a -> 'b) -> (list<'a>) -> (list<'b>)

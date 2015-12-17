@@ -51,6 +51,7 @@ val smap_of_list: list<(string*'value)> -> smap<'value>
 val smap_try_find: smap<'value> -> string -> option<'value>
 val smap_fold: smap<'value> -> (string -> 'value -> 'a -> 'a) -> 'a -> 'a
 val smap_remove: smap<'value> -> string -> unit
+(* The list may contain duplicates. *)
 val smap_keys: smap<'value> -> list<string>
 val smap_copy: smap<'value> -> smap<'value>
 

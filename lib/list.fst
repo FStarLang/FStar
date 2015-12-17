@@ -95,6 +95,12 @@ let rec iter f x = match x with
   | [] -> ()
   | a::tl -> let _ = f a in iter f tl
 
+val iteri: (int -> 'a -> unit) -> list 'a -> unit
+let rec iteri_aux i f x = match x with
+  | [] -> ()
+  | a::tl -> let _ = f i a in iteri_aux (i+1) f tl
+let iteri = iteri_aux 0
+
 val iterT: ('a -> Tot unit) -> list 'a -> Tot unit
 let rec iterT f x = match x with
   | [] -> ()
