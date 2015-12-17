@@ -30,3 +30,4 @@ val pat_to_string   : pat -> string
 val modul_to_string : modul -> string
 val lcomp_to_string : lcomp -> string
 val univ_to_string  : universe -> string
+val sigelt_to_string: sigelt -> string

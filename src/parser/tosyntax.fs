@@ -927,31 +927,41 @@ let mk_data_discriminators quals env t tps k datas =
         //Util.fprint1 "Making discriminator %s\n" disc_name.str;
         Sig_declare_typ(disc_name, [], disc_type, quals [S.Logic; S.Discriminator d], range_of_lid disc_name))
 
-let mk_indexed_projectors fvq refine_domain env tc lid (binders:list<S.binder>) t =
+let mk_indexed_projectors fvq refine_domain env tc lid tps (fields:list<S.binder>) t =
     let p = range_of_lid lid in
     let pos q = Syntax.withinfo q tun.n p in
     let projectee = S.gen_bv "projectee" (Some p) tun in
     let arg_exp = S.bv_to_name projectee in
-    let arg_binder =
-        let arg_typ = S.mk_Tm_app (S.fv_to_tm (S.fv tc (Some fvq))) (Util.args_of_non_null_binders binders) None p in
-        if not refine_domain
-        then S.mk_binder projectee //records have only one constructor; no point refining the domain
-        else let disc_name = Util.mk_discriminator lid in
-             let x = S.new_bv (Some p) arg_typ in
-             S.mk_binder ({projectee with sort=refine x (Util.b2t(S.mk_Tm_app(S.fvar None disc_name p) 
-                                                                             [arg <| S.bv_to_name x] None p))})  in
-    let imp_binders = binders |> List.map (fun (x, _) -> x, Some S.Implicit) in
+    
+    let arg_binder, indices =
+        let head, args = Util.head_and_args t in
+        let _, args = Util.first_N (List.length tps) args in
+        let indices = args |> List.map (fun _ -> S.new_bv (Some p) tun |> S.mk_binder) in
+        let arg_typ = S.mk_Tm_app (S.fv_to_tm (S.fv tc None)) 
+                                  (tps@indices |> List.map (fun (x, _) -> arg (S.bv_to_name x))) None p in
+        let arg_binder = 
+            if not refine_domain
+            then S.mk_binder projectee //records have only one constructor; no point refining the domain
+            else let disc_name = Util.mk_discriminator lid in
+                 let x = S.new_bv (Some p) arg_typ in
+                 S.mk_binder ({projectee with sort=refine x (Util.b2t(S.mk_Tm_app(S.fvar None disc_name p) 
+                                                                                 [arg <| S.bv_to_name x] None p))}) in
+        arg_binder, indices in
+
+    let imp_binders = tps@indices |> List.map (fun (x, _) -> x, Some S.Implicit) in
     let binders = imp_binders@[arg_binder] in
+
     let arg = Util.arg_of_non_null_binder arg_binder in
-    let subst = binders |> List.mapi (fun i (a, _) -> 
+
+    let subst = fields |> List.mapi (fun i (a, _) -> 
             let field_name, _ = Util.mk_field_projector_name lid a i in
             let proj = mk_Tm_app (S.fv_to_tm (S.fv field_name None)) [arg] None p in
             NT(a, proj)) in
-    let ntps = 0 in //TODO: Fix me! NUmber of type parameters?
-    let all_params = binders in
-//    let pattern_fields = Util.nth_tail ntps formals in
 
-    binders |> List.mapi (fun i (x, _) -> 
+    let ntps = List.length tps in
+    let all_params = tps@fields in
+
+    fields |> List.mapi (fun i (x, _) -> 
         let field_name, _ = Util.mk_field_projector_name lid x i in
         let t = U.arrow binders (S.mk_Total (Subst.subst subst x.sort)) in
         let quals q = if not env.iface || env.admitted_iface then S.Assumption::q else q in
@@ -983,7 +993,7 @@ let mk_indexed_projectors fvq refine_domain env tc lid (binders:list<S.binder>) 
         Sig_declare_typ(field_name, [], t, quals, range_of_lid field_name)::impl) |> List.flatten
 
 let mk_data_projectors env = function
-  | Sig_datacon(lid, _, t, l, quals, _, _) when (//(not env.iface || env.admitted_iface) &&
+  | Sig_datacon(lid, _, t, l, n, quals, _, _) when (//(not env.iface || env.admitted_iface) &&
                                                 not (lid_equals lid C.lexcons_lid)) ->
     Printf.printf "Data projector for %s\n" lid.str;
     let refine_domain =
@@ -999,7 +1009,8 @@ let mk_data_projectors env = function
               let qual = match Util.find_map quals (function RecordConstructor fns -> Some (Record_ctor(lid, fns)) | _ -> None) with
                 | None -> Data_ctor
                 | Some q -> q in
-              mk_indexed_projectors qual refine_domain env l lid formals cod
+              let tps, rest = Util.first_N n formals in
+              mk_indexed_projectors qual refine_domain env l lid tps rest cod
         end
 
   | _ -> []
@@ -1047,7 +1058,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
     | TyconAbstract(id, binders, kopt) ->
       let _env', typars = typars_of_binders _env binders in
       let k = match kopt with
-        | None -> tun
+        | None -> Util.ktype
         | Some k -> desugar_term _env' k in
       let tconstr = apply_binders (mk_term (Var (lid_of_ids [id])) id.idRange Type) binders in
       let qlid = qualify _env id in
@@ -1072,7 +1083,10 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
                          else (TypeChecker.Errors.warn (Ident.range_of_lid l)
                                                        "Adding an implicit 'assume fresh' qualifier";
                                S.Assumption::S.Fresh::quals) in
-             Sig_declare_typ(l, [], mk (Tm_arrow(typars, mk_Total k)) None rng, quals, rng)
+             let t = match typars with 
+                | [] -> k
+                | _ -> mk (Tm_arrow(typars, mk_Total k)) None rng in
+             Sig_declare_typ(l, [], t, quals, rng)
            | _ -> se in
         let env = push_sigelt env se in
         (* let _ = pr "Pushed %s\n" (text_of_lid (qualify env (tycon_id tc))) in *)
@@ -1152,14 +1166,15 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
                 let quals = tags |> List.collect (function
                     | RecordType fns -> [RecordConstructor fns]
                     | _ -> []) in
-                (name, Sig_datacon(name, univs, Util.arrow data_tpars (mk_Total (t |> Util.name_function_binders)), tname, quals, mutuals, rng)))) in
+                let ntps = List.length data_tpars in
+                (name, Sig_datacon(name, univs, Util.arrow data_tpars (mk_Total (t |> Util.name_function_binders)), tname, ntps, quals, mutuals, rng)))) in
               Sig_inductive_typ(tname, univs, tpars, k, mutuals, constrNames, tags, rng)::constrs
         | _ -> failwith "impossible") in
       let bundle = Sig_bundle(sigelts, quals, List.collect Util.lids_of_sigelt sigelts, rng) in
       let env = push_sigelt env0 bundle in
       let data_ops = sigelts |> List.collect (mk_data_projectors env) in
       let discs = sigelts |> List.collect (function
-        | Sig_inductive_typ(tname, _, tps, k, _, constrs, quals, _) ->
+        | Sig_inductive_typ(tname, _, tps, k, _, constrs, quals, _) when List.length constrs > 1->
           mk_data_discriminators quals env tname tps k constrs
         | _ -> []) in
       let ops = discs@data_ops in
@@ -1224,7 +1239,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
   | Exception(id, None) ->
     let t = fail_or (try_lookup_lid env) C.exn_lid in
     let l = qualify env id in
-    let se = Sig_datacon(l, [], t, C.exn_lid, [ExceptionConstructor], [C.exn_lid], d.drange) in
+    let se = Sig_datacon(l, [], t, C.exn_lid, 0, [ExceptionConstructor], [C.exn_lid], d.drange) in
     let se' = Sig_bundle([se], [ExceptionConstructor], [l], d.drange) in
     let env = push_sigelt env se' in
     let data_ops = mk_data_projectors env se in
@@ -1236,7 +1251,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
     let t = desugar_term env term in
     let t = U.arrow ([null_binder t]) (mk_Total <| fail_or (try_lookup_lid env) C.exn_lid) in
     let l = qualify env id in
-    let se = Sig_datacon(l, [], t, C.exn_lid, [ExceptionConstructor], [C.exn_lid], d.drange) in
+    let se = Sig_datacon(l, [], t, C.exn_lid, 0, [ExceptionConstructor], [C.exn_lid], d.drange) in
     let se' = Sig_bundle([se], [ExceptionConstructor], [l], d.drange) in
     let env = push_sigelt env se' in
     let data_ops = mk_data_projectors env se in

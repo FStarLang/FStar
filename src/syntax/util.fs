@@ -363,7 +363,7 @@ let rec lids_of_sigelt se = match se with
   | Sig_bundle(_, _, lids, _) -> lids
   | Sig_inductive_typ (lid, _, _,  _, _, _, _, _)
   | Sig_effect_abbrev(lid, _, _,  _, _)
-  | Sig_datacon (lid, _, _, _, _, _, _)
+  | Sig_datacon (lid, _, _, _, _, _, _, _)
   | Sig_declare_typ (lid, _, _, _, _)
   | Sig_assume (lid, _, _, _) -> [lid]
   | Sig_new_effect(n, _) -> [n.mname]
@@ -379,7 +379,7 @@ let range_of_sigelt x = match x with
   | Sig_bundle(_, _, _, r)
   | Sig_inductive_typ (_, _, _,  _, _, _, _, r)
   | Sig_effect_abbrev  (_, _, _, _, r)
-  | Sig_datacon (_, _, _, _, _, _, r)
+  | Sig_datacon (_, _, _, _, _, _, _, r)
   | Sig_declare_typ (_, _, _, _, r)
   | Sig_assume (_, _, _, r)
   | Sig_let(_, r, _, _)
@@ -560,7 +560,8 @@ let is_interpreted l =
 (*********************** Constructors of common terms  **************************)
 (********************************************************************************)
 
-let ktype0 = mk (Tm_type(U_zero)) None dummyRange
+let ktype  : term = mk (Tm_type(U_unknown)) None dummyRange
+let ktype0 : term = mk (Tm_type(U_zero)) None dummyRange
 
 let kt_kt = Const.kunary ktype0 ktype0
 let kt_kt_kt = Const.kbin ktype0 ktype0 ktype0

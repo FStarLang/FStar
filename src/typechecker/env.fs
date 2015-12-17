@@ -252,7 +252,7 @@ let lookup_lid env lid =
     | Inl t -> 
       Some t
     
-    | Inr (Sig_datacon(_, uvs, t, _, _,_, _)) -> 
+    | Inr (Sig_datacon(_, uvs, t, _, _, _, _, _)) -> 
       Some (inst_tscheme (uvs, t))
  
     | Inr (Sig_declare_typ (l, uvs, t, qs, _)) -> 
@@ -284,7 +284,7 @@ let lookup_val_decl env lid =
 
 let lookup_datacon env lid =
   match lookup_qname env lid with
-    | Some (Inr (Sig_datacon (_, uvs, t, _, _, _, _))) -> inst_tscheme (uvs, t) 
+    | Some (Inr (Sig_datacon (_, uvs, t, _, _, _, _, _))) -> inst_tscheme (uvs, t) 
     | _ -> raise (Error(name_not_found lid, range_of_lid lid))
 
 let lookup_datacons_of_typ env lid =
@@ -338,7 +338,7 @@ let lookup_effect_abbrev env lid =
 let is_datacon env lid =
   match lookup_qname env lid with
     | Some (Inr(Sig_declare_typ(_, _, _, quals, _))) -> quals |> Util.for_some (function Assumption -> true | _ -> false)
-    | Some (Inr (Sig_datacon (_, _, _, _, _,_,_))) -> true
+    | Some (Inr (Sig_datacon (_, _, _, _, _, _, _, _))) -> true
     | _ -> false
 
 let is_record env lid =

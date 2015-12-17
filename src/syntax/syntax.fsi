@@ -255,9 +255,10 @@ and sigelt =
                        * list<lident> 
                        * Range.range
   | Sig_datacon        of lident 
-                       * univ_names                  //universe variables
+                       * univ_names                 //universe variables
                        * typ 
                        * lident                     //the inductive type of the value this constructs
+                       * int                        //and the number of parameters of the inductive
                        * list<qualifier> 
                        * list<lident>               //mutually defined types 
                        * Range.range

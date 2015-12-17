@@ -1639,9 +1639,9 @@ let tc_inductive env ses quals lids =
          assert (uvs = []);
 
  (*open*)let tps, k = SS.open_term tps k in
-         let tps, env, us = tc_tparams env tps in
+         let tps, env_tps, us = tc_tparams env tps in
          let indices, t = Util.arrow_formals k in 
-         let indices, env', us' = tc_tparams env indices in 
+         let indices, env', us' = tc_tparams env_tps indices in 
          let t, _ = tc_trivial_guard env' t in 
          let k = Util.arrow indices (S.mk_Total t) in
          let t_type, u = TcUtil.type_u() in 
@@ -1655,7 +1655,7 @@ let tc_inductive env ses quals lids =
             {x with sort=refined}, imp) in
 
 (*close*)let t_tc = Util.arrow (refined_tps@indices) (S.mk_Total t) in
-         Env.push_local_binding env (Env.Binding_lid(tc, ([], t_tc))), 
+         Env.push_local_binding env_tps (Env.Binding_lid(tc, ([], t_tc))), 
          Rel.conj_guard g g',
          Sig_inductive_typ(tc, [], tps, k, mutuals, data, quals, r), 
          u
@@ -1667,13 +1667,29 @@ let tc_inductive env ses quals lids =
 
     (* 2. Checking each datacon *)
     let tc_data env tcs = function
-       | Sig_datacon(c, _uvs, t, tc_lid, quals, _mutual_tcs, r) -> 
+       | Sig_datacon(c, _uvs, t, tc_lid, ntps, quals, _mutual_tcs, r) -> 
          assert (_uvs = []);
 
-         let (_, u_tc) = //u_tc is the universe of the inductive that c constructs
-            List.find (fun (se, _) -> lid_equals tc_lid (must (Util.lid_of_sigelt se))) tcs |> Util.must in 
+         let (tps, u_tc) = //u_tc is the universe of the inductive that c constructs
+            Util.find_map tcs (fun (se, u_tc) -> 
+                if lid_equals tc_lid (must (Util.lid_of_sigelt se))
+                then let tps = match se with 
+                        | Sig_inductive_typ(_, _, tps, _, _, _, _, _) -> tps
+                        | _ -> failwith "Impossible" in
+                     Some (tps, u_tc)
+                else None) |> Util.must in 
 
-(*open*) let arguments, result = Util.arrow_formals t in 
+         let arguments, result = 
+            match (SS.compress t).n with 
+                | Tm_arrow(bs, res) ->
+                  //the type of each datacon is already a function with the type params as arguments
+                  //need to map the prefix of bs corresponding to params to the tps of the inductive
+                  let _, bs' = Util.first_N ntps bs in
+                  let t = mk (Tm_arrow(bs', res)) None t.pos in
+                  let subst = tps |> List.mapi (fun i (x, _) -> DB(ntps - (1 + i), S.bv_to_name x)) in
+(*open*)          Util.arrow_formals (SS.subst subst t)  
+                | _ -> [], t in 
+         
          let arguments, env', us = tc_tparams env arguments in 
          let result, _ = tc_trivial_guard env result in 
          let head, _ = Util.head_and_args result in
@@ -1690,8 +1706,8 @@ let tc_inductive env ses quals lids =
             arguments
             us in
         
-(*close*)let t = Util.arrow arguments (S.mk_Total result) in
-         Sig_datacon(c, [], t, tc_lid, quals, [], r),
+(*close*)let t = Util.arrow (tps@arguments) (S.mk_Total result) in
+         Sig_datacon(c, [], t, tc_lid, ntps, quals, [], r),
          g
 
       | _ -> failwith "impossible" in
@@ -1703,7 +1719,7 @@ let tc_inductive env ses quals lids =
             | Sig_inductive_typ(_, _, tps, k, _, _, _, _) -> S.null_binder (Util.arrow tps <| mk_Total k)
             | _ -> failwith "Impossible")  in 
         let binders' = datas |> List.map (function 
-            | Sig_datacon(_, _, t, _, _, _, _) -> S.null_binder t 
+            | Sig_datacon(_, _, t, _, _, _, _, _) -> S.null_binder t 
             | _ -> failwith "Impossible") in
         let t = Util.arrow (binders@binders') (S.mk_Total Recheck.t_unit) in
         let (uvs, t) = TcUtil.generalize_universes env t in
@@ -1715,14 +1731,17 @@ let tc_inductive env ses quals lids =
               let tps, t = match (SS.compress x.sort).n with 
                 | Tm_arrow(binders, c) -> 
                   let tps, rest = Util.first_N (List.length tps) binders in 
-                  tps, mk (Tm_arrow(rest, c)) !x.sort.tk x.sort.pos
+                  let t = match rest with 
+                    | [] -> Util.comp_result c
+                    | _ -> mk (Tm_arrow(rest, c)) !x.sort.tk x.sort.pos in
+                  tps, t
                 | _ -> [], x.sort in
                Sig_inductive_typ(tc, uvs, tps, t, mutuals, datas, quals, r)
             | _ -> failwith "Impossible") 
             tc_types tcs in
         let datas = List.map2 (fun (t, _) -> function
-            | Sig_datacon(l, _, _, tc, quals, mutuals, r) -> 
-              Sig_datacon(l, uvs, t.sort, tc, quals, mutuals, r)
+            | Sig_datacon(l, _, _, tc, ntps, quals, mutuals, r) -> 
+              Sig_datacon(l, uvs, t.sort, tc, ntps, quals, mutuals, r)
             | _ -> failwith "Impossible") data_types datas in
         tcs, datas in
 
@@ -1953,8 +1972,13 @@ let tc_decls for_export env ses =
  let ses, all_non_private, env =
   ses |> List.fold_left (fun (ses, all_non_private, (env:Env.env)) se ->
           if Env.debug env Options.Low
-          then Util.fprint1 ">>>>>>>>>>>>>>Checking top-level decl %s\n" (Util.lids_of_sigelt se |> List.map Print.lid_to_string |> String.concat ", ");
+          then Util.fprint1 ">>>>>>>>>>>>>>Checking top-level decl %s\n" (Print.sigelt_to_string se);
+          
           let se, env = tc_decl env se  in
+
+          if !Options.log_types
+          then Util.fprint1 "Checked: %s\n" (Print.sigelt_to_string se);
+
           env.solver.encode_sig env se;
 
           let non_private_decls =

@@ -108,7 +108,7 @@ type foundname =
   | Eff_name  of sigelt * lident
 
 let fv_qual_of_se = function
-    | Sig_datacon(_, _, _, l, quals, _, _) ->
+    | Sig_datacon(_, _, _, l, _, quals, _, _) ->
       let qopt = Util.find_map quals (function
           | RecordConstructor fs -> Some (Record_ctor(l, fs))
           | _ -> None) in
@@ -280,13 +280,13 @@ let extract_record (e:env) = function
 
     let find_dc dc =
       sigs |> Util.find_opt (function
-        | Sig_datacon(lid, _, _, _, _, _, _) -> lid_equals dc lid
+        | Sig_datacon(lid, _, _, _, _, _, _, _) -> lid_equals dc lid
         | _ -> false) in
 
     sigs |> List.iter (function
       | Sig_inductive_typ(typename, univs, parms, _, _, [dc], tags, _) ->
         begin match must <| find_dc dc with
-            | Sig_datacon(constrname, _, t, _, _, _, _) ->
+            | Sig_datacon(constrname, _, t, _, _, _, _, _) ->
                 let formals, _ = U.arrow_formals t in
                 let is_rec = is_rec tags in 
                 let fields = formals |> List.collect (fun (x,q) ->
@@ -412,7 +412,7 @@ let finish env modul =
     | Sig_bundle(ses, quals, _, _) ->
       if List.contains Private quals
       then ses |> List.iter (function
-                | Sig_datacon(lid, _, _, _, _, _, _) -> Util.smap_remove (sigmap env) lid.str
+                | Sig_datacon(lid, _, _, _, _, _, _, _) -> Util.smap_remove (sigmap env) lid.str
                 | _ -> ())
     | Sig_declare_typ(lid, _, _, quals, _) ->
       if List.contains Private quals

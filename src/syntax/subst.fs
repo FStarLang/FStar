@@ -102,18 +102,20 @@ let apply_until_some_then_map f s g t =
     apply_until_some f s 
     |> map_some_curry g t
 
-let rec subst_univ s u = match u with 
-  | U_bvar x -> 
-    apply_until_some_then_map (subst_univ_bv x) s subst_univ u
+let rec subst_univ s u =
+    let u = compress_univ u in
+    match u with 
+      | U_bvar x -> 
+        apply_until_some_then_map (subst_univ_bv x) s subst_univ u
 
-  | U_name  x ->
-    apply_until_some_then_map (subst_univ_nm x) s subst_univ u
+      | U_name  x ->
+        apply_until_some_then_map (subst_univ_nm x) s subst_univ u
 
-  | U_zero
-  | U_unknown 
-  | U_unif _ -> u
-  | U_succ u -> U_succ (subst_univ s u)
-  | U_max us -> U_max (List.map (subst_univ s) us)
+      | U_zero
+      | U_unknown 
+      | U_unif _ -> u
+      | U_succ u -> U_succ (subst_univ s u)
+      | U_max us -> U_max (List.map (subst_univ s) us)
 
 
 let rec subst' (s:subst_t) t = match s with
@@ -139,8 +141,8 @@ let rec subst' (s:subst_t) t = match s with
           apply_until_some_then_map (subst_nm a) s subst' t0
 
         | Tm_type u -> 
-          mk (Tm_type (subst_univ s u)) None t0.pos
-
+          mk (Tm_type (subst_univ s u)) None t0.pos 
+          
         | Tm_constant _
         | Tm_uvar _
         | Tm_fvar _ -> t0

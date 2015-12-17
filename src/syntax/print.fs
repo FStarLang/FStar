@@ -32,7 +32,10 @@ let fv_to_string fv = lid_to_string (fst fv).v
 
 let bv_to_string bv = bv.ppname.idText ^ string_of_int bv.index
    
-let nm_to_string bv = bv.ppname.idText
+let nm_to_string bv = 
+    if !Options.print_real_names
+    then bv_to_string bv
+    else bv.ppname.idText
 
 let db_to_string bv = bv.ppname.idText ^ string_of_int bv.index
 
@@ -169,7 +172,7 @@ let uvar_to_string u = if !Options.hide_uvar_nums then "?" else "?" ^ (Unionfind
 let rec univ_to_string u = match Subst.compress_univ u with
     | U_unif u -> uvar_to_string u
     | U_name x -> x.idText
-    | U_bvar x -> string_of_int x
+    | U_bvar x -> "@"^string_of_int x
     | U_zero   -> "0"
     | U_succ u -> Util.format1 "(S %s)" (univ_to_string u)
     | U_max us -> Util.format1 "(max %s)" (List.map univ_to_string us |> String.concat ", ")
@@ -312,7 +315,7 @@ let rec sigelt_to_string x = match x with
   | Sig_pragma(ResetOptions, _) -> "#reset-options"
   | Sig_pragma(SetOptions s, _) -> Util.format1 "#set-options \"%s\"" s
   | Sig_inductive_typ(lid, _, tps, k, _, _, quals, _) -> Util.format4 "%s type %s %s : %s" (quals_to_string quals) lid.str (binders_to_string " " tps) (term_to_string k)
-  | Sig_datacon(lid, _, t, _, _, _, _) -> Util.format2 "datacon %s : %s" lid.str (term_to_string t)
+  | Sig_datacon(lid, _, t, _, _, _, _, _) -> Util.format2 "datacon %s : %s" lid.str (term_to_string t)
   | Sig_declare_typ(lid, _, t, quals, _) -> Util.format3 "%s val %s : %s" (quals_to_string quals) lid.str (term_to_string t)
   | Sig_assume(lid, f, _, _) -> Util.format2 "val %s : %s" lid.str (term_to_string f)
   | Sig_let(lbs, _, _, b) -> lbs_to_string lbs
