@@ -162,3 +162,9 @@ let string_of_int = string_of_int
 
 type ('a, 'b) dTuple2 =
   | MkDTuple2 of unit * unit * 'a * 'b
+
+type ('a, 'b, 'c) dTuple3 =
+  | MkDTuple3 of unit * unit * unit * 'a * 'b * 'c
+
+type ('a, 'b, 'c, 'd) dTuple4 =
+  | MkDTuple4 of unit * unit * unit * unit * 'a * 'b * 'c * 'd
