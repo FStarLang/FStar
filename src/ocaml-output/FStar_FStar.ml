@@ -441,7 +441,7 @@ in (FStar_Util.concat_l "\n" _131_146))
 in (FStar_Util.format1 "%s\n" _131_147))
 in (FStar_Util.print_string _131_148))
 end else begin
-if (FStar_ST.read FStar_Options.dep) then begin
+if ((FStar_ST.read FStar_Options.dep) <> None) then begin
 (let _131_149 = (FStar_Parser_Dep.collect filenames)
 in (FStar_Parser_Dep.print _131_149))
 end else begin

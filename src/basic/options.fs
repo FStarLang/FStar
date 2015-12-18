@@ -104,7 +104,7 @@ let warn_cardinality () = match !cardinality with
 let check_cardinality () = match !cardinality with
     | "check" -> true
     | _ -> false
-let dep = ref false
+let dep = ref None
 let auto_deps = Util.mk_ref false
 let find_deps = Util.mk_ref false
 let init_options () = 
@@ -157,7 +157,7 @@ let init_options () =
     use_native_int := false;
     auto_deps := false;
     find_deps := false;
-    dep := false;
+    dep := None;
     timing := false
 
 let set_fstar_home () =
@@ -223,7 +223,7 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "codegen-lib", OneArg ((fun s -> codegen_libs := (Util.split s ".")::!codegen_libs), "namespace"), "External runtime library library");
      ( noshort, "debug", OneArg ((fun x -> debug := x::!debug), "module name"), "Print LOTS of debugging information while checking module [arg]");
      ( noshort, "debug_level", OneArg ((fun x -> debug_level := dlevel x::!debug_level), "Low|Medium|High|Extreme"), "Control the verbosity of debugging info");
-     ( noshort, "dep", ZeroArgs (fun () -> dep := true), "Output the transitive closure of the dependency graph in a format suitable for make");
+     ( noshort, "dep", OneArg ((fun x -> dep := Some x), "make|nubuild"), "Output the transitive closure of the dependency graph in a format suitable for the given tool");
      ( noshort, "dump_module", OneArg ((fun x -> dump_module := Some x), "module name"), "");
      ( noshort, "eager_inference", ZeroArgs (fun () -> eager_inference := true), "Solve all type-inference constraints eagerly; more efficient but at the cost of generality");
      ( noshort, "find_deps", ZeroArgs (fun () -> find_deps := true; auto_deps := true), "find transitive dependencies given build-config other-files specifications.");

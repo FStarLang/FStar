@@ -265,3 +265,4 @@ val current_tid: unit -> int
 val sleep: int -> unit
 val atomically: (unit -> 'a) -> 'a
 val spawn: (unit -> unit) -> unit
+val print_endline: string -> unit

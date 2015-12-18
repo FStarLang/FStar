@@ -294,7 +294,7 @@ let go _ =
            here to ensure output can be relied upon to produce normalized path
            names. *)
         Util.print_string (Util.format1 "%s\n" (Util.concat_l "\n" (List.map Util.normalize_file_path filenames)))
-      else if !Options.dep then
+      else if !Options.dep <> None then
         (* This is the fstardep tool *)
         Parser.Dep.print (Parser.Dep.collect filenames)
       else

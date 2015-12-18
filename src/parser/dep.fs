@@ -60,8 +60,8 @@ let print_map (m: map): unit =
   ) (List.unique (smap_keys m))
 
 (** List the contents of all include directories, then build a map from long
-    names (e.g. a.b) to filenames (A.B.fst). Long names are all normalized to
-    lowercase. *)
+    names (e.g. a.b) to absolute filenames (/path/to/A.B.fst). Long names are all
+    normalized to lowercase. *)
 let build_map (): map =
   let include_directories = Options.get_include_path (getcwd ()) in
   let map = smap_create 41 in
@@ -81,9 +81,9 @@ let build_map (): map =
                   raise (Err (Util.format1 "Found both a .fs and a .fst (or both a .fsi and a .fsti) (%s)" f));
                 (* Note: we always record a dependency against the interface, if found. *)
                 if not (is_interface existing_file) then
-                  smap_add map key f
+                  smap_add map key (join_paths d f)
             | None ->
-                smap_add map key f
+                smap_add map key (join_paths d f)
             end
         | None ->
             ()
@@ -442,8 +442,23 @@ let collect (filenames: list<string>): t =
 
 (** Print the dependencies as returned by [collect] in a Makefile-compatible
     format. *)
-let print (deps: t): unit =
+let print_make (deps: t): unit =
   List.iter (fun (f, deps) ->
-    let deps = List.map (fun s -> replace_string s " " "\\ ") deps in
+    let deps = List.map (fun s -> replace_string s " " "\\ " |> basename) deps in
     Util.fprint2 "%s: %s\n" f (String.concat " " deps)
   ) deps
+
+let print_nubuild (deps: t): unit =
+  let f, deps = List.hd (List.rev deps) in
+  List.iter print_endline deps
+
+let print (deps: t): unit =
+  match !Options.dep with
+  | Some "nubuild" ->
+      print_nubuild deps
+  | Some "make" ->
+      print_make deps
+  | Some _ ->
+      failwith "Unknown tool for --dep"
+  | None ->
+      assert false
