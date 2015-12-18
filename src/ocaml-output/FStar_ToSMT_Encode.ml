@@ -741,7 +741,7 @@ end
 (let _54_652 = if (FStar_Tc_Env.debug env.tcenv (FStar_Options.Other ("Encoding"))) then begin
 (let _120_622 = (FStar_Absyn_Print.kind_to_string k)
 in (let _120_621 = (FStar_Absyn_Print.kind_to_string k0)
-in (FStar_Util.fprint2 "Encoding kind abbrev %s, expanded to %s\n" _120_622 _120_621)))
+in (FStar_Util.print2 "Encoding kind abbrev %s, expanded to %s\n" _120_622 _120_621)))
 end else begin
 ()
 end
@@ -845,7 +845,7 @@ in (_120_659, decls))
 end)))
 and encode_binders = (fun fuel_opt bs env -> (let _54_733 = if (FStar_Tc_Env.debug env.tcenv FStar_Options.Low) then begin
 (let _120_663 = (FStar_Absyn_Print.binders_to_string ", " bs)
-in (FStar_Util.fprint1 "Encoding binders %s\n" _120_663))
+in (FStar_Util.print1 "Encoding binders %s\n" _120_663))
 end else begin
 ()
 end
@@ -860,7 +860,7 @@ in (match (_54_752) with
 (let _54_753 = if (FStar_Tc_Env.debug env.tcenv (FStar_Options.Other ("Encoding"))) then begin
 (let _120_667 = (FStar_Absyn_Print.strBvd a)
 in (let _120_666 = (FStar_Absyn_Print.kind_to_string k)
-in (FStar_Util.fprint3 "Encoding type binder %s (%s) at kind %s\n" _120_667 aasym _120_666)))
+in (FStar_Util.print3 "Encoding type binder %s (%s) at kind %s\n" _120_667 aasym _120_666)))
 end else begin
 ()
 end
@@ -1438,7 +1438,7 @@ in (let head = (FStar_Absyn_Util.compress_exp head)
 in (let _54_1241 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env.tcenv) (FStar_Options.Other ("186"))) then begin
 (let _120_815 = (FStar_Absyn_Print.exp_to_string head)
 in (let _120_814 = (FStar_Absyn_Print.exp_to_string e)
-in (FStar_Util.fprint2 "Recomputing type for %s\nFull term is %s\n" _120_815 _120_814)))
+in (FStar_Util.print2 "Recomputing type for %s\nFull term is %s\n" _120_815 _120_814)))
 end else begin
 ()
 end
@@ -1450,7 +1450,7 @@ in (let _54_1244 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env.tcenv) (FStar
 (let _120_821 = (FStar_Absyn_Print.exp_to_string head)
 in (let _120_820 = (FStar_Absyn_Print.tag_of_exp head)
 in (let _120_819 = (FStar_Absyn_Print.typ_to_string head_type)
-in (FStar_Util.fprint3 "Recomputed type of head %s (%s) to be %s\n" _120_821 _120_820 _120_819))))
+in (FStar_Util.print3 "Recomputed type of head %s (%s) to be %s\n" _120_821 _120_820 _120_819))))
 end else begin
 ()
 end
@@ -1569,7 +1569,7 @@ in (_120_844)::[])
 end))
 and encode_one_pat = (fun env pat -> (let _54_1360 = if (FStar_Tc_Env.debug env.tcenv FStar_Options.Low) then begin
 (let _120_847 = (FStar_Absyn_Print.pat_to_string pat)
-in (FStar_Util.fprint1 "Encoding pattern %s\n" _120_847))
+in (FStar_Util.print1 "Encoding pattern %s\n" _120_847))
 end else begin
 ()
 end
@@ -2023,7 +2023,7 @@ end))
 end)))
 in (let _54_2009 = if (FStar_Tc_Env.debug env.tcenv FStar_Options.Low) then begin
 (let _120_1069 = (FStar_Absyn_Print.formula_to_string phi)
-in (FStar_Util.fprint1 ">>>> Destructing as formula ... %s\n" _120_1069))
+in (FStar_Util.print1 ">>>> Destructing as formula ... %s\n" _120_1069))
 end else begin
 ()
 end
@@ -2047,7 +2047,7 @@ end
 | Some (FStar_Absyn_Util.QAll (vars, pats, body)) -> begin
 (let _54_2034 = if (FStar_Tc_Env.debug env.tcenv FStar_Options.Low) then begin
 (let _120_1086 = (FStar_All.pipe_right vars (FStar_Absyn_Print.binders_to_string "; "))
-in (FStar_Util.fprint1 ">>>> Got QALL [%s]\n" _120_1086))
+in (FStar_Util.print1 ">>>> Got QALL [%s]\n" _120_1086))
 end else begin
 ()
 end
@@ -2615,7 +2615,7 @@ end)))))))))))))))))))))))
 
 let rec encode_sigelt = (fun env se -> (let _54_2268 = if (FStar_Tc_Env.debug env.tcenv FStar_Options.Low) then begin
 (let _120_1818 = (FStar_Absyn_Print.sigelt_to_string se)
-in (FStar_All.pipe_left (FStar_Util.fprint1 ">>>>Encoding [%s]\n") _120_1818))
+in (FStar_All.pipe_left (FStar_Util.print1 ">>>>Encoding [%s]\n") _120_1818))
 end else begin
 ()
 end
@@ -3882,7 +3882,7 @@ in (let _54_3324 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env.tcenv) (FStar
 (let _120_2291 = (FStar_Absyn_Print.strBvd x)
 in (let _120_2290 = (FStar_Absyn_Print.typ_to_string t0)
 in (let _120_2289 = (FStar_Absyn_Print.typ_to_string t1)
-in (FStar_Util.fprint3 "Normalized %s : %s to %s\n" _120_2291 _120_2290 _120_2289))))
+in (FStar_Util.print3 "Normalized %s : %s to %s\n" _120_2291 _120_2290 _120_2289))))
 end else begin
 ()
 end
@@ -4072,7 +4072,7 @@ end else begin
 end) modul.FStar_Absyn_Syntax.name.FStar_Absyn_Syntax.str)
 in (let _54_3455 = if (FStar_Tc_Env.debug tcenv FStar_Options.Low) then begin
 (let _120_2355 = (FStar_All.pipe_right (FStar_List.length modul.FStar_Absyn_Syntax.exports) FStar_Util.string_of_int)
-in (FStar_Util.fprint2 "Encoding externals for %s ... %s exports\n" name _120_2355))
+in (FStar_Util.print2 "Encoding externals for %s ... %s exports\n" name _120_2355))
 end else begin
 ()
 end
@@ -4090,7 +4090,7 @@ end)
 in (let _54_3468 = (set_env (let _54_3466 = env
 in {bindings = _54_3466.bindings; depth = _54_3466.depth; tcenv = _54_3466.tcenv; warn = true; cache = _54_3466.cache; nolabels = _54_3466.nolabels; use_zfuel_name = _54_3466.use_zfuel_name; encode_non_total_function_typ = _54_3466.encode_non_total_function_typ}))
 in (let _54_3470 = if (FStar_Tc_Env.debug tcenv FStar_Options.Low) then begin
-(FStar_Util.fprint1 "Done encoding externals for %s\n" name)
+(FStar_Util.print1 "Done encoding externals for %s\n" name)
 end else begin
 ()
 end
@@ -4154,7 +4154,7 @@ in (match (_54_3520) with
 | (env_decls, env) -> begin
 (let _54_3521 = if (FStar_Tc_Env.debug tcenv FStar_Options.Low) then begin
 (let _120_2381 = (FStar_Absyn_Print.formula_to_string q)
-in (FStar_Util.fprint1 "Encoding query formula: %s\n" _120_2381))
+in (FStar_Util.print1 "Encoding query formula: %s\n" _120_2381))
 end else begin
 ()
 end
@@ -4264,7 +4264,7 @@ in (let _120_2436 = (let _120_2433 = (FStar_ST.read FStar_Options.max_fuel)
 in (FStar_All.pipe_right _120_2433 FStar_Util.string_of_int))
 in (let _120_2435 = (let _120_2434 = (FStar_ST.read FStar_Options.max_ifuel)
 in (FStar_All.pipe_right _120_2434 FStar_Util.string_of_int))
-in (FStar_Util.fprint3 "(%s) Query failed with maximum fuel %s and ifuel %s\n" _120_2437 _120_2436 _120_2435))))
+in (FStar_Util.print3 "(%s) Query failed with maximum fuel %s and ifuel %s\n" _120_2437 _120_2436 _120_2435))))
 end else begin
 ()
 end
@@ -4304,7 +4304,7 @@ if (FStar_ST.read FStar_Options.print_fuels) then begin
 in (FStar_Range.string_of_range _120_2455))
 in (let _120_2457 = (FStar_Util.string_of_int prev_fuel)
 in (let _120_2456 = (FStar_Util.string_of_int prev_ifuel)
-in (FStar_Util.fprint3 "(%s) Query succeeded with fuel %s and ifuel %s\n" _120_2458 _120_2457 _120_2456))))
+in (FStar_Util.print3 "(%s) Query succeeded with fuel %s and ifuel %s\n" _120_2458 _120_2457 _120_2456))))
 end else begin
 ()
 end

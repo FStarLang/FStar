@@ -51,7 +51,7 @@ let add_errors env errs =
 let report_all () =
     let all_errs = atomically (fun () -> let x = !verification_errs in verification_errs := []; x) in
     let all_errs = List.sortWith (fun (r1, _) (r2, _) -> Range.compare r1 r2) all_errs in
-    all_errs |> List.iter (fun (r, msg) -> Util.fprint2 "%s: %s\n" (Range.string_of_range r) msg);
+    all_errs |> List.iter (fun (r, msg) -> Util.print2 "%s: %s\n" (Range.string_of_range r) msg);
     List.length all_errs
 
 

@@ -222,7 +222,7 @@ end
 (let _39_147 = if (FStar_Tc_Env.debug env FStar_Options.High) then begin
 (let _105_119 = (FStar_Absyn_Print.typ_to_string t)
 in (let _105_118 = (FStar_Absyn_Print.typ_to_string t')
-in (FStar_Util.fprint2 "Computed return type %s; expected type %s\n" _105_119 _105_118)))
+in (FStar_Util.print2 "Computed return type %s; expected type %s\n" _105_119 _105_118)))
 end else begin
 ()
 end
@@ -241,7 +241,7 @@ in (match (_39_158) with
 | (e, lc, g) -> begin
 (let _39_159 = if (FStar_Tc_Env.debug env FStar_Options.Low) then begin
 (let _105_126 = (FStar_Absyn_Print.lcomp_typ_to_string lc)
-in (FStar_Util.fprint1 "Return comp type is %s\n" _105_126))
+in (FStar_Util.print1 "Return comp type is %s\n" _105_126))
 end else begin
 ()
 end
@@ -293,7 +293,7 @@ end
 (let _105_142 = (FStar_Range.string_of_range e.FStar_Absyn_Syntax.pos)
 in (let _105_141 = (FStar_Absyn_Print.comp_typ_to_string c)
 in (let _105_140 = (FStar_Absyn_Print.comp_typ_to_string expected_c)
-in (FStar_Util.fprint3 "(%s) About to check\n\t%s\nagainst expected effect\n\t%s\n" _105_142 _105_141 _105_140))))
+in (FStar_Util.print3 "(%s) About to check\n\t%s\nagainst expected effect\n\t%s\n" _105_142 _105_141 _105_140))))
 end else begin
 ()
 end
@@ -307,7 +307,7 @@ in (match (_39_195) with
 (let _39_196 = if (FStar_Tc_Env.debug env FStar_Options.Low) then begin
 (let _105_146 = (FStar_Range.string_of_range e.FStar_Absyn_Syntax.pos)
 in (let _105_145 = (FStar_Tc_Rel.guard_to_string env g)
-in (FStar_Util.fprint2 "(%s) DONE check_expected_effect; guard is: %s\n" _105_146 _105_145)))
+in (FStar_Util.print2 "(%s) DONE check_expected_effect; guard is: %s\n" _105_146 _105_145)))
 end else begin
 ()
 end
@@ -345,7 +345,7 @@ let print_expected_ty = (fun env -> (match ((FStar_Tc_Env.expected_typ env)) wit
 end
 | Some (t) -> begin
 (let _105_159 = (FStar_Absyn_Print.typ_to_string t)
-in (FStar_Util.fprint1 "Expected type is %s" _105_159))
+in (FStar_Util.print1 "Expected type is %s" _105_159))
 end))
 
 let with_implicits = (fun imps _39_220 -> (match (_39_220) with
@@ -370,7 +370,7 @@ end
 (let _39_244 = if (FStar_Tc_Env.debug env FStar_Options.Medium) then begin
 (let _105_212 = (FStar_Range.string_of_range k.FStar_Absyn_Syntax.pos)
 in (let _105_211 = (FStar_Absyn_Print.kind_to_string k)
-in (FStar_Util.fprint2 "(%s) - Checking kind %s" _105_212 _105_211)))
+in (FStar_Util.print2 "(%s) - Checking kind %s" _105_212 _105_211)))
 end else begin
 ()
 end
@@ -751,7 +751,7 @@ end
 | Some (t) -> begin
 (FStar_Absyn_Print.typ_to_string t)
 end)
-in (FStar_Util.fprint3 "(%s) Checking refinement formula %s; env expects type %s\n" _105_314 _105_313 _105_312))))
+in (FStar_Util.print3 "(%s) Checking refinement formula %s; env expects type %s\n" _105_314 _105_313 _105_312))))
 end else begin
 ()
 end
@@ -772,7 +772,7 @@ end
 (let _105_324 = (FStar_Range.string_of_range top.FStar_Absyn_Syntax.pos)
 in (let _105_323 = (FStar_All.pipe_left FStar_Util.string_of_int (FStar_List.length args))
 in (let _105_322 = (FStar_Absyn_Print.typ_to_string top)
-in (FStar_Util.fprint3 "(%s) Checking type application (%s): %s\n" _105_324 _105_323 _105_322))))
+in (FStar_Util.print3 "(%s) Checking type application (%s): %s\n" _105_324 _105_323 _105_322))))
 end else begin
 ()
 end
@@ -786,7 +786,7 @@ in (let _39_647 = if (FStar_Tc_Env.debug env FStar_Options.Extreme) then begin
 in (let _105_327 = (FStar_Absyn_Print.typ_to_string head)
 in (let _105_326 = (FStar_Absyn_Print.kind_to_string k1')
 in (let _105_325 = (FStar_Absyn_Print.kind_to_string k1)
-in (FStar_Util.fprint4 "(%s) head %s has kind %s ... after norm %s\n" _105_328 _105_327 _105_326 _105_325)))))
+in (FStar_Util.print4 "(%s) head %s has kind %s ... after norm %s\n" _105_328 _105_327 _105_326 _105_325)))))
 end else begin
 ()
 end
@@ -853,7 +853,7 @@ end
 in (let _39_785 = if (FStar_Tc_Env.debug env FStar_Options.High) then begin
 (let _105_352 = (FStar_Absyn_Print.arg_to_string actual)
 in (let _105_351 = (FStar_Absyn_Print.kind_to_string formal_k)
-in (FStar_Util.fprint2 "Checking argument %s against expected kind %s\n" _105_352 _105_351)))
+in (FStar_Util.print2 "Checking argument %s against expected kind %s\n" _105_352 _105_351)))
 end else begin
 ()
 end
@@ -863,7 +863,7 @@ in (match (_39_791) with
 | (t, g') -> begin
 (let _39_792 = if (FStar_Tc_Env.debug env FStar_Options.High) then begin
 (let _105_353 = (FStar_Tc_Rel.guard_to_string env g')
-in (FStar_Util.fprint1 ">>>Got guard %s\n" _105_353))
+in (FStar_Util.print1 ">>>Got guard %s\n" _105_353))
 end else begin
 ()
 end
@@ -884,7 +884,7 @@ in {FStar_Tc_Env.solver = _39_808.FStar_Tc_Env.solver; FStar_Tc_Env.range = _39_
 in (let _39_811 = if (FStar_Tc_Env.debug env FStar_Options.High) then begin
 (let _105_358 = (FStar_Absyn_Print.arg_to_string actual)
 in (let _105_357 = (FStar_Absyn_Print.typ_to_string tx)
-in (FStar_Util.fprint2 "Checking argument %s against expected type %s\n" _105_358 _105_357)))
+in (FStar_Util.print2 "Checking argument %s against expected type %s\n" _105_358 _105_357)))
 end else begin
 ()
 end
@@ -1006,7 +1006,7 @@ in (match (s.FStar_Absyn_Syntax.n) with
 (let _39_924 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) FStar_Options.High) then begin
 (let _105_386 = (FStar_Absyn_Print.typ_to_string s)
 in (let _105_385 = (FStar_Absyn_Print.kind_to_string k1)
-in (FStar_Util.fprint2 "Admitting un-instantiated uvar %s at kind %s\n" _105_386 _105_385)))
+in (FStar_Util.print2 "Admitting un-instantiated uvar %s at kind %s\n" _105_386 _105_385)))
 end else begin
 ()
 end
@@ -1017,7 +1017,7 @@ end
 (let _39_928 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) FStar_Options.High) then begin
 (let _105_391 = (FStar_Absyn_Print.typ_to_string s)
 in (let _105_390 = (FStar_Absyn_Print.kind_to_string k1)
-in (FStar_Util.fprint2 "Admitting instantiated uvar %s at kind %s\n" _105_391 _105_390)))
+in (FStar_Util.print2 "Admitting instantiated uvar %s at kind %s\n" _105_391 _105_390)))
 end else begin
 ()
 end
@@ -1239,7 +1239,7 @@ end
 | _39_1172 -> begin
 (let _39_1173 = if (FStar_Tc_Env.debug env FStar_Options.High) then begin
 (let _105_442 = (FStar_Absyn_Print.binder_to_string hd)
-in (FStar_Util.fprint1 "Checking binder %s\n" _105_442))
+in (FStar_Util.print1 "Checking binder %s\n" _105_442))
 end else begin
 ()
 end
@@ -1297,7 +1297,7 @@ end
 | letrecs -> begin
 (let _39_1220 = if (FStar_Tc_Env.debug env FStar_Options.High) then begin
 (let _105_455 = (FStar_Absyn_Print.typ_to_string t)
-in (FStar_Util.fprint1 "Building let-rec environment... type of this abstraction is %s\n" _105_455))
+in (FStar_Util.print1 "Building let-rec environment... type of this abstraction is %s\n" _105_455))
 end else begin
 ()
 end
@@ -1438,7 +1438,7 @@ in (let _39_1349 = if (FStar_Tc_Env.debug env FStar_Options.Low) then begin
 (let _105_499 = (FStar_Absyn_Print.lbname_to_string l)
 in (let _105_498 = (FStar_Absyn_Print.typ_to_string t)
 in (let _105_497 = (FStar_Absyn_Print.typ_to_string t')
-in (FStar_Util.fprint3 "Refined let rec %s\n\tfrom type %s\n\tto type %s\n" _105_499 _105_498 _105_497))))
+in (FStar_Util.print3 "Refined let rec %s\n\tfrom type %s\n\tto type %s\n" _105_499 _105_498 _105_497))))
 end else begin
 ()
 end
@@ -1523,14 +1523,14 @@ in (match (_39_1422) with
 (let _105_511 = (FStar_Absyn_Print.exp_to_string body)
 in (let _105_510 = (FStar_Absyn_Print.lcomp_typ_to_string cbody)
 in (let _105_509 = (FStar_Tc_Rel.guard_to_string env guard_body)
-in (FStar_Util.fprint3 "!!!!!!!!!!!!!!!body %s has type %s\nguard is %s\n" _105_511 _105_510 _105_509))))
+in (FStar_Util.print3 "!!!!!!!!!!!!!!!body %s has type %s\nguard is %s\n" _105_511 _105_510 _105_509))))
 end else begin
 ()
 end
 in (let guard_body = (FStar_Tc_Rel.solve_deferred_constraints envbody guard_body)
 in (let _39_1426 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) (FStar_Options.Other ("Implicits"))) then begin
 (let _105_512 = (FStar_All.pipe_left FStar_Util.string_of_int (FStar_List.length guard_body.FStar_Tc_Rel.implicits))
-in (FStar_Util.fprint1 "Introduced %s implicits in body of abstraction\n" _105_512))
+in (FStar_Util.print1 "Introduced %s implicits in body of abstraction\n" _105_512))
 end else begin
 ()
 end
@@ -1588,7 +1588,7 @@ in (match (_39_1460) with
 (let _105_526 = (FStar_Absyn_Print.typ_to_string tfun)
 in (let _105_525 = (FStar_Absyn_Print.tag_of_typ tfun)
 in (let _105_524 = (FStar_Tc_Rel.guard_to_string env guard)
-in (FStar_Util.fprint3 "!!!!!!!!!!!!!!!Annotating lambda with type %s (%s)\nGuard is %s\n" _105_526 _105_525 _105_524))))
+in (FStar_Util.print3 "!!!!!!!!!!!!!!!Annotating lambda with type %s (%s)\nGuard is %s\n" _105_526 _105_525 _105_524))))
 end else begin
 ()
 end
@@ -1623,7 +1623,7 @@ in (let _39_1472 = if (FStar_Tc_Env.debug env FStar_Options.Low) then begin
 (let _105_535 = (let _105_533 = (FStar_Tc_Env.get_range env)
 in (FStar_All.pipe_left FStar_Range.string_of_range _105_533))
 in (let _105_534 = (FStar_Absyn_Print.tag_of_exp e)
-in (FStar_Util.fprint2 "%s (%s)\n" _105_535 _105_534)))
+in (FStar_Util.print2 "%s (%s)\n" _105_535 _105_534)))
 end else begin
 ()
 end
@@ -1736,7 +1736,7 @@ in (FStar_All.pipe_right _105_597 instantiate_both))
 in (let _39_1579 = if (FStar_Tc_Env.debug env FStar_Options.High) then begin
 (let _105_599 = (FStar_Range.string_of_range top.FStar_Absyn_Syntax.pos)
 in (let _105_598 = (FStar_Absyn_Print.exp_to_string top)
-in (FStar_Util.fprint2 "(%s) Checking app %s\n" _105_599 _105_598)))
+in (FStar_Util.print2 "(%s) Checking app %s\n" _105_599 _105_598)))
 end else begin
 ()
 end
@@ -1796,7 +1796,7 @@ end
 in (let _39_1623 = if (FStar_Tc_Env.debug env FStar_Options.High) then begin
 (let _105_621 = (FStar_Range.string_of_range head.FStar_Absyn_Syntax.pos)
 in (let _105_620 = (FStar_Absyn_Print.typ_to_string thead)
-in (FStar_Util.fprint2 "(%s) Type of head is %s\n" _105_621 _105_620)))
+in (FStar_Util.print2 "(%s) Type of head is %s\n" _105_621 _105_620)))
 end else begin
 ()
 end
@@ -1855,7 +1855,7 @@ in (match (_39_1720) with
 (let _39_1721 = if (FStar_Tc_Env.debug env FStar_Options.Extreme) then begin
 (let _105_678 = (FStar_Absyn_Print.strBvd a.FStar_Absyn_Syntax.v)
 in (let _105_677 = (FStar_Absyn_Print.typ_to_string targ)
-in (FStar_Util.fprint2 "Instantiating %s to %s" _105_678 _105_677)))
+in (FStar_Util.print2 "Instantiating %s to %s" _105_678 _105_677)))
 end else begin
 ()
 end
@@ -1886,7 +1886,7 @@ end
 (let _39_1761 = if (FStar_Tc_Env.debug env FStar_Options.Extreme) then begin
 (let _105_695 = (FStar_Absyn_Print.strBvd a.FStar_Absyn_Syntax.v)
 in (let _105_694 = (FStar_Absyn_Print.typ_to_string t)
-in (FStar_Util.fprint2 "\tGot a type arg for %s = %s\n" _105_695 _105_694)))
+in (FStar_Util.print2 "\tGot a type arg for %s = %s\n" _105_695 _105_694)))
 end else begin
 ()
 end
@@ -1912,14 +1912,14 @@ end
 (let _39_1790 = if (FStar_Tc_Env.debug env FStar_Options.Extreme) then begin
 (let _105_705 = (FStar_Absyn_Print.subst_to_string subst)
 in (let _105_704 = (FStar_Absyn_Print.typ_to_string x.FStar_Absyn_Syntax.sort)
-in (FStar_Util.fprint2 "\tType of arg (before subst (%s)) = %s\n" _105_705 _105_704)))
+in (FStar_Util.print2 "\tType of arg (before subst (%s)) = %s\n" _105_705 _105_704)))
 end else begin
 ()
 end
 in (let targ = (FStar_Absyn_Util.subst_typ subst x.FStar_Absyn_Syntax.sort)
 in (let _39_1793 = if (FStar_Tc_Env.debug env FStar_Options.Extreme) then begin
 (let _105_706 = (FStar_Absyn_Print.typ_to_string targ)
-in (FStar_Util.fprint1 "\tType of arg (after subst) = %s\n" _105_706))
+in (FStar_Util.print1 "\tType of arg (after subst) = %s\n" _105_706))
 end else begin
 ()
 end
@@ -1930,7 +1930,7 @@ in {FStar_Tc_Env.solver = _39_1798.FStar_Tc_Env.solver; FStar_Tc_Env.range = _39
 in (let _39_1801 = if ((FStar_All.pipe_left (FStar_Tc_Env.debug env) (FStar_Options.Other ("EQ"))) && env.FStar_Tc_Env.use_eq) then begin
 (let _105_708 = (FStar_Absyn_Print.exp_to_string e)
 in (let _105_707 = (FStar_Absyn_Print.typ_to_string targ)
-in (FStar_Util.fprint2 "Checking arg %s at type %s with an equality constraint!\n" _105_708 _105_707)))
+in (FStar_Util.print2 "Checking arg %s at type %s with an equality constraint!\n" _105_708 _105_707)))
 end else begin
 ()
 end
@@ -1938,7 +1938,7 @@ in (let _39_1803 = if (FStar_Tc_Env.debug env FStar_Options.High) then begin
 (let _105_711 = (FStar_Absyn_Print.tag_of_exp e)
 in (let _105_710 = (FStar_Absyn_Print.exp_to_string e)
 in (let _105_709 = (FStar_Absyn_Print.typ_to_string targ)
-in (FStar_Util.fprint3 "Checking arg (%s) %s at type %s\n" _105_711 _105_710 _105_709))))
+in (FStar_Util.print3 "Checking arg (%s) %s at type %s\n" _105_711 _105_710 _105_709))))
 end else begin
 ()
 end
@@ -1949,7 +1949,7 @@ in (match (_39_1808) with
 in (let _39_1810 = if (FStar_Tc_Env.debug env FStar_Options.High) then begin
 (let _105_713 = (FStar_Tc_Rel.guard_to_string env g_e)
 in (let _105_712 = (FStar_Tc_Rel.guard_to_string env g)
-in (FStar_Util.fprint2 "Guard on this arg is %s;\naccumulated guard is %s\n" _105_713 _105_712)))
+in (FStar_Util.print2 "Guard on this arg is %s;\naccumulated guard is %s\n" _105_713 _105_712)))
 end else begin
 ()
 end
@@ -2022,7 +2022,7 @@ end else begin
 (let _105_751 = (FStar_Absyn_Print.exp_to_string head)
 in (let _105_750 = (FStar_Absyn_Print.lcomp_typ_to_string cres)
 in (let _105_749 = (FStar_Tc_Rel.guard_to_string env g)
-in (FStar_Util.fprint3 "Not refining result: f=%s; cres=%s; guard=%s\n" _105_751 _105_750 _105_749))))
+in (FStar_Util.print3 "Not refining result: f=%s; cres=%s; guard=%s\n" _105_751 _105_750 _105_749))))
 end else begin
 ()
 end
@@ -2046,7 +2046,7 @@ in (match (_39_1881) with
 | (cres, g) -> begin
 (let _39_1882 = if (FStar_Tc_Env.debug env FStar_Options.Low) then begin
 (let _105_760 = (FStar_Absyn_Print.lcomp_typ_to_string cres)
-in (FStar_Util.fprint1 "\t Type of result cres is %s\n" _105_760))
+in (FStar_Util.print1 "\t Type of result cres is %s\n" _105_760))
 end else begin
 ()
 end
@@ -2060,7 +2060,7 @@ in (match (_39_1891) with
 (let _105_766 = (FStar_Tc_Normalize.exp_norm_to_string env app)
 in (let _105_765 = (let _105_764 = (comp.FStar_Absyn_Syntax.comp ())
 in (FStar_Absyn_Print.comp_typ_to_string _105_764))
-in (FStar_Util.fprint2 "\t Type of app term %s is %s\n" _105_766 _105_765)))
+in (FStar_Util.print2 "\t Type of app term %s is %s\n" _105_766 _105_765)))
 end else begin
 ()
 end
@@ -2075,7 +2075,7 @@ in (match (tres.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Typ_fun (bs, cres') -> begin
 (let _39_1908 = if (FStar_Tc_Env.debug env FStar_Options.Low) then begin
 (let _105_772 = (FStar_Range.string_of_range tres.FStar_Absyn_Syntax.pos)
-in (FStar_Util.fprint1 "%s: Warning: Potentially redundant explicit currying of a function type \n" _105_772))
+in (FStar_Util.print1 "%s: Warning: Potentially redundant explicit currying of a function type \n" _105_772))
 end else begin
 ()
 end
@@ -2121,7 +2121,7 @@ in (match (_39_1919) with
 | (e, c, g) -> begin
 (let _39_1920 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) (FStar_Options.Other ("Implicits"))) then begin
 (let _105_791 = (FStar_All.pipe_left FStar_Util.string_of_int (FStar_List.length g.FStar_Tc_Rel.implicits))
-in (FStar_Util.fprint1 "Introduced %s implicits in application\n" _105_791))
+in (FStar_Util.print1 "Introduced %s implicits in application\n" _105_791))
 end else begin
 ()
 end
@@ -2141,7 +2141,7 @@ end
 | Some (t) -> begin
 (FStar_Absyn_Print.typ_to_string t)
 end))))
-in (FStar_Util.fprint3 "(%s) About to check %s against expected typ %s\n" _105_796 _105_795 _105_794))))
+in (FStar_Util.print3 "(%s) About to check %s against expected typ %s\n" _105_796 _105_795 _105_794))))
 end else begin
 ()
 end
@@ -2193,7 +2193,7 @@ in (match (_39_1968) with
 in (let _105_807 = (FStar_Absyn_Print.lcomp_typ_to_string c1)
 in (let _105_806 = (FStar_Absyn_Print.lcomp_typ_to_string c_branches)
 in (let _105_805 = (FStar_Tc_Rel.guard_to_string env g_branches)
-in (FStar_Util.fprint4 "(%s) comp\n\tscrutinee: %s\n\tbranches: %s\nguard = %s\n" _105_808 _105_807 _105_806 _105_805)))))
+in (FStar_Util.print4 "(%s) comp\n\tscrutinee: %s\n\tbranches: %s\nguard = %s\n" _105_808 _105_807 _105_806 _105_805)))))
 end else begin
 ()
 end
@@ -2245,7 +2245,7 @@ in (match (_39_2011) with
 (let _39_2012 = if (FStar_Tc_Env.debug env FStar_Options.Medium) then begin
 (let _105_823 = (FStar_Range.string_of_range top.FStar_Absyn_Syntax.pos)
 in (let _105_822 = (FStar_Absyn_Print.typ_to_string t)
-in (FStar_Util.fprint2 "(%s) Checked type annotation %s\n" _105_823 _105_822)))
+in (FStar_Util.print2 "(%s) Checked type annotation %s\n" _105_823 _105_822)))
 end else begin
 ()
 end
@@ -2399,7 +2399,7 @@ end else begin
 if ((not (is_inner_let)) && (not (env.FStar_Tc_Env.generalize))) then begin
 (let _39_2117 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) FStar_Options.High) then begin
 (let _105_868 = (FStar_Absyn_Print.typ_to_string t)
-in (FStar_Util.fprint1 "Type %s is marked as no-generalize\n" _105_868))
+in (FStar_Util.print1 "Type %s is marked as no-generalize\n" _105_868))
 end else begin
 ()
 end
@@ -2429,7 +2429,7 @@ in (let _39_2133 = if (FStar_Tc_Env.debug env FStar_Options.High) then begin
 (let _105_873 = (FStar_Absyn_Print.lbname_to_string x)
 in (let _105_872 = (FStar_Absyn_Print.exp_to_string e)
 in (let _105_871 = (FStar_Absyn_Print.typ_to_string t)
-in (FStar_Util.fprint3 "Checking %s = %s against type %s\n" _105_873 _105_872 _105_871))))
+in (FStar_Util.print3 "Checking %s = %s against type %s\n" _105_873 _105_872 _105_871))))
 end else begin
 ()
 end
@@ -2536,7 +2536,7 @@ in (let _39_2256 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) (FStar_Optio
 | FStar_Tc_Env.Binding_var (x, t) -> begin
 (let _105_908 = (FStar_Absyn_Print.strBvd x)
 in (let _105_907 = (FStar_Tc_Normalize.typ_norm_to_string env t)
-in (FStar_Util.fprint2 "Before tc ... pattern var %s  : %s\n" _105_908 _105_907)))
+in (FStar_Util.print2 "Before tc ... pattern var %s  : %s\n" _105_908 _105_907)))
 end
 | _39_2255 -> begin
 ()
@@ -2553,7 +2553,7 @@ in (let expected_pat_t = (FStar_Tc_Rel.unrefine env pat_t)
 in (let exps = (FStar_All.pipe_right exps (FStar_List.map (fun e -> (let _39_2267 = if (FStar_Tc_Env.debug env FStar_Options.High) then begin
 (let _105_911 = (FStar_Absyn_Print.exp_to_string e)
 in (let _105_910 = (FStar_Absyn_Print.typ_to_string pat_t)
-in (FStar_Util.fprint2 "Checking pattern expression %s against expected type %s\n" _105_911 _105_910)))
+in (FStar_Util.print2 "Checking pattern expression %s against expected type %s\n" _105_911 _105_910)))
 end else begin
 ()
 end
@@ -2563,7 +2563,7 @@ in (match (_39_2272) with
 (let _39_2273 = if (FStar_Tc_Env.debug env FStar_Options.High) then begin
 (let _105_913 = (FStar_Tc_Normalize.exp_norm_to_string env e)
 in (let _105_912 = (FStar_Tc_Normalize.typ_norm_to_string env lc.FStar_Absyn_Syntax.res_typ)
-in (FStar_Util.fprint2 "Pre-checked pattern expression %s at type %s\n" _105_913 _105_912)))
+in (FStar_Util.print2 "Pre-checked pattern expression %s at type %s\n" _105_913 _105_912)))
 end else begin
 ()
 end
@@ -2587,7 +2587,7 @@ end else begin
 end
 in (let _39_2282 = if (FStar_Tc_Env.debug env FStar_Options.High) then begin
 (let _105_923 = (FStar_Tc_Normalize.exp_norm_to_string env e)
-in (FStar_Util.fprint1 "Done checking pattern expression %s\n" _105_923))
+in (FStar_Util.print1 "Done checking pattern expression %s\n" _105_923))
 end else begin
 ()
 end
@@ -2599,7 +2599,7 @@ in (let _39_2293 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) (FStar_Optio
 | FStar_Tc_Env.Binding_var (x, t) -> begin
 (let _105_926 = (FStar_Absyn_Print.strBvd x)
 in (let _105_925 = (FStar_Absyn_Print.typ_to_string t)
-in (FStar_Util.fprint2 "Pattern var %s  : %s\n" _105_926 _105_925)))
+in (FStar_Util.print2 "Pattern var %s  : %s\n" _105_926 _105_925)))
 end
 | _39_2292 -> begin
 ()
@@ -2755,7 +2755,7 @@ in (let guard = (let _105_979 = (FStar_Tc_Rel.conj_guard g_when g_branch)
 in (FStar_Tc_Rel.conj_guard g_pat _105_979))
 in (let _39_2448 = if (FStar_Tc_Env.debug env FStar_Options.High) then begin
 (let _105_980 = (FStar_Tc_Rel.guard_to_string env guard)
-in (FStar_All.pipe_left (FStar_Util.fprint1 "Carrying guard from match: %s\n") _105_980))
+in (FStar_All.pipe_left (FStar_Util.print1 "Carrying guard from match: %s\n") _105_980))
 end else begin
 ()
 end
@@ -3105,7 +3105,7 @@ in (let _39_2644 = if (FStar_Tc_Env.debug env FStar_Options.Extreme) then begin
 (let _105_1201 = (FStar_Absyn_Print.sli lid)
 in (let _105_1200 = (let _105_1199 = (FStar_Absyn_Util.close_kind tps k)
 in (FStar_Absyn_Print.kind_to_string _105_1199))
-in (FStar_Util.fprint2 "Checked %s at kind %s\n" _105_1201 _105_1200)))
+in (FStar_Util.print2 "Checked %s at kind %s\n" _105_1201 _105_1200)))
 end else begin
 ()
 end
@@ -3384,7 +3384,7 @@ end
 | Some (t', _39_2920) -> begin
 (let _39_2923 = if (FStar_Tc_Env.debug env FStar_Options.Medium) then begin
 (let _105_1257 = (FStar_Absyn_Print.typ_to_string t')
-in (FStar_Util.fprint2 "Using annotation %s for let binding %s\n" _105_1257 l.FStar_Absyn_Syntax.str))
+in (FStar_Util.print2 "Using annotation %s for let binding %s\n" _105_1257 l.FStar_Absyn_Syntax.str))
 end else begin
 ()
 end
@@ -3456,7 +3456,7 @@ end else begin
 ""
 end))))
 in (FStar_All.pipe_right _105_1271 (FStar_String.concat "\n")))
-in (FStar_Util.fprint1 "%s\n" _105_1272))
+in (FStar_Util.print1 "%s\n" _105_1272))
 end else begin
 ()
 end
@@ -3585,7 +3585,7 @@ in (let res = (tc_decl env se ds)
 in (let stop = (FStar_Util.now ())
 in (let diff = (FStar_Util.time_diff start stop)
 in (let _39_3112 = (let _105_1300 = (FStar_Absyn_Print.sigelt_to_string_short se)
-in (FStar_Util.fprint2 "Time %ss : %s\n" (FStar_Util.string_of_float diff) _105_1300))
+in (FStar_Util.print2 "Time %ss : %s\n" (FStar_Util.string_of_float diff) _105_1300))
 in res))))))
 in (let _39_3130 = (FStar_All.pipe_right ses (FStar_List.fold_left (fun _39_3117 se -> (match (_39_3117) with
 | (ses, all_non_private, env) -> begin
@@ -3813,7 +3813,7 @@ in (FStar_Tc_Env.finish_module _105_1365 m)))))
 let check_module = (fun env m -> (let _39_3350 = if ((let _105_1370 = (FStar_ST.read FStar_Options.debug)
 in (FStar_List.length _105_1370)) <> 0) then begin
 (let _105_1371 = (FStar_Absyn_Print.sli m.FStar_Absyn_Syntax.name)
-in (FStar_Util.fprint2 "Checking %s: %s\n" (if m.FStar_Absyn_Syntax.is_interface then begin
+in (FStar_Util.print2 "Checking %s: %s\n" (if m.FStar_Absyn_Syntax.is_interface then begin
 "i\'face"
 end else begin
 "module"
@@ -3852,7 +3852,7 @@ in (match (_39_3363) with
 | (m, env) -> begin
 (let _39_3364 = if (FStar_Options.should_dump m.FStar_Absyn_Syntax.name.FStar_Absyn_Syntax.str) then begin
 (let _105_1382 = (FStar_Absyn_Print.modul_to_string m)
-in (FStar_Util.fprint1 "%s\n" _105_1382))
+in (FStar_Util.print1 "%s\n" _105_1382))
 end else begin
 ()
 end

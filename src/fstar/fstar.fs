@@ -51,7 +51,7 @@ let report_errors nopt =
         | Some n -> n in
     if errs>0
     then begin
-        fprint1 "Error: %s errors were reported (see above)\n" (string_of_int errs);
+        print1 "Error: %s errors were reported (see above)\n" (string_of_int errs);
         exit 1
     end
 
@@ -214,7 +214,7 @@ let interactive_mode dsenv env =
                 let fail curmod dsenv_mark env_mark =
                     Tc.Errors.report_all() |> ignore;
                     Tc.Errors.num_errs := 0;
-                    Util.fprint1 "%s\n" fail;
+                    Util.print1 "%s\n" fail;
                     let dsenv, env = reset_mark dsenv_mark env_mark in
                     go stack curmod dsenv env in
               
@@ -246,7 +246,7 @@ let interactive_mode dsenv env =
                 | Some (curmod, dsenv, env) ->
                   if !Tc.Errors.num_errs=0
                   then begin
-                     Util.fprint1 "\n%s\n" ok;
+                     Util.print1 "\n%s\n" ok;
                      let dsenv, env = commit_mark dsenv env in
                      go stack curmod dsenv env
                   end
@@ -317,8 +317,8 @@ let main () =
     | e ->
         if Util.handleable e then Util.handle_err false () e;
         if !Options.trace_error
-        then Util.fprint2 "\nUnexpected error\n%s\n%s\n" (Util.message_of_exn e) (Util.trace_of_exn e)
+        then Util.print2 "\nUnexpected error\n%s\n%s\n" (Util.message_of_exn e) (Util.trace_of_exn e)
         else if not (Util.handleable e)
-        then Util.fprint1 "\nUnexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e);
+        then Util.print1 "\nUnexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e);
         cleanup ();
         exit 1

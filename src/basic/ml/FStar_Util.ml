@@ -271,12 +271,18 @@ let format4 f a b c d = format f [a;b;c;d]
 let format5 f a b c d e = format f [a;b;c;d;e]
 let format6 f a b c d e g = format f [a;b;c;d;e;g]
 
-let fprint1 a b = print_string (format1 a b)
-let fprint2 a b c = print_string (format2 a b c)
-let fprint3 a b c d = print_string (format3 a b c d)
-let fprint4 a b c d e = print_string (format4 a b c d e)
-let fprint5 a b c d e f = print_string (format5 a b c d e f)
-let fprint6 a b c d e f g = print_string (format6 a b c d e f g)
+let print1 a b = print_string (format1 a b)
+let print2 a b c = print_string (format2 a b c)
+let print3 a b c d = print_string (format3 a b c d)
+let print4 a b c d e = print_string (format4 a b c d e)
+let print5 a b c d e f = print_string (format5 a b c d e f)
+let print6 a b c d e f g = print_string (format6 a b c d e f g)
+let printn fmt args = print_string (format fmt args)
+
+let stderr = stderr
+let stdout = stdout
+
+let fprint oc fmt args = Printf.fprintf oc "%s" (format fmt args)
 
 type ('a,'b) either =
   | Inl of 'a
@@ -489,7 +495,7 @@ let get_exec_dir () = Filename.dirname (Sys.executable_name)
 let expand_environment_variable x = try Sys.getenv x with Not_found -> ""
 
 let physical_equality (x:'a) (y:'a) = x == y
-let check_sharing a b msg = if physical_equality a b then fprint1 "Sharing OK: %s\n" msg else fprint1 "Sharing broken in %s\n" msg
+let check_sharing a b msg = if physical_equality a b then print1 "Sharing OK: %s\n" msg else print1 "Sharing broken in %s\n" msg
 
 type oWriter = {
   write_byte: char -> unit;

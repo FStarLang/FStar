@@ -425,8 +425,8 @@ and sn tcenv (cfg:config<typ>) : config<typ> =
                           match config.environment.label_suffix with
                               | (b', sfx)::_ ->
                                   if b'=None || Some b=b'
-                                  then (if Tc.Env.debug tcenv Options.Low then Util.fprint2 "Stripping label %s because of enclosing refresh %s\n" l (Range.string_of_range sfx); t)
-                                  else (if Tc.Env.debug tcenv Options.Low then Util.fprint1 "Normalizer refreshing label: %s\n" (Range.string_of_range sfx);
+                                  then (if Tc.Env.debug tcenv Options.Low then Util.print2 "Stripping label %s because of enclosing refresh %s\n" l (Range.string_of_range sfx); t)
+                                  else (if Tc.Env.debug tcenv Options.Low then Util.print1 "Normalizer refreshing label: %s\n" (Range.string_of_range sfx);
                                         wk <| mk_Typ_meta'(Meta_labeled(t, l, sfx, b)))
                               | _ -> wk <| mk_Typ_meta'(Meta_labeled(t, l, r, b))  in
                     sn tcenv ({config with code=t; close=close_with_config config lab})

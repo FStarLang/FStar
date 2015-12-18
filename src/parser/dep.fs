@@ -56,7 +56,7 @@ let is_interface (f: string): bool =
 
 let print_map (m: map): unit =
   List.iter (fun k ->
-    Util.fprint2 "%s: %s\n" k (must (smap_try_find m k))
+    Util.print2 "%s: %s\n" k (must (smap_try_find m k))
   ) (List.unique (smap_keys m))
 
 (** List the contents of all include directories, then build a map from long
@@ -124,9 +124,9 @@ let lowercase_join_longident (l: lident) (last: bool) =
 let check_module_declaration_against_filename (lid: lident) (filename: string): unit =
   let k' = lowercase_join_longident lid true in
   if String.lowercase (must (check_and_strip_suffix (basename filename))) <> k' then
-    Util.fprint2 "Warning: the module declaration \"module %s\" \
+    Util.fprint stderr "Warning: the module declaration \"module %s\" \
       found in file %s does not match its filename. Dependencies will be \
-      incorrect.\n" (string_of_lid lid true) filename
+      incorrect.\n" [string_of_lid lid true; filename]
 
 exception Exit
 
@@ -148,8 +148,8 @@ let collect_one (original_map: smap<string>) (filename: string): list<string> =
     | None ->
         let r = enter_namespace original_map working_map key in
         if not r then
-          Util.fprint1 "Warning: no modules in namespace %s and no file with \
-          that name either\n" (string_of_lid lid true)
+          Util.fprint stderr "Warning: no modules in namespace %s and no file with \
+          that name either\n" [string_of_lid lid true]
     end
   in
 
@@ -283,7 +283,7 @@ let collect_one (original_map: smap<string>) (filename: string): list<string> =
             add_dep filename
         | None ->
             if List.length lid.ns > 0 then
-              Util.fprint1 "Warning: unbound module reference %s\n" (string_of_lid lid false)
+              Util.fprint stderr "Warning: unbound module reference %s\n" [string_of_lid lid false]
         end
 
     | Construct (_, termimps) ->
@@ -408,7 +408,7 @@ let collect (filenames: list<string>): t =
   (* At this point, we have the (immediate) dependency graph of all the files. *)
   let print_graph () =
     List.iter (fun k ->
-      Util.fprint2 "%s: %s\n" k (String.concat " " (fst (must (smap_try_find graph k))))
+      Util.print2 "%s: %s\n" k (String.concat " " (fst (must (smap_try_find graph k))))
     ) (List.unique (smap_keys graph))
   in
 
@@ -418,7 +418,7 @@ let collect (filenames: list<string>): t =
     let direct_deps, color = must (smap_try_find graph short) in
     match color with
     | Gray ->
-        Util.fprint1 "Recursive dependency on file %s\n" f;
+        Util.print1 "Recursive dependency on file %s\n" f;
         print_string "Here's the (non-transitive) dependency graph:\n";
         print_graph ();
         print_string "\n";
@@ -445,7 +445,7 @@ let collect (filenames: list<string>): t =
 let print_make (deps: t): unit =
   List.iter (fun (f, deps) ->
     let deps = List.map (fun s -> replace_string s " " "\\ " |> basename) deps in
-    Util.fprint2 "%s: %s\n" f (String.concat " " deps)
+    Util.print2 "%s: %s\n" f (String.concat " " deps)
   ) deps
 
 let print_nubuild (deps: t): unit =

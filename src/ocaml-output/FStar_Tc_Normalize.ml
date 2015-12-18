@@ -718,7 +718,7 @@ end
 if ((b' = None) || (Some (b) = b')) then begin
 (let _33_698 = if (FStar_Tc_Env.debug tcenv FStar_Options.Low) then begin
 (let _99_321 = (FStar_Range.string_of_range sfx)
-in (FStar_Util.fprint2 "Stripping label %s because of enclosing refresh %s\n" l _99_321))
+in (FStar_Util.print2 "Stripping label %s because of enclosing refresh %s\n" l _99_321))
 end else begin
 ()
 end
@@ -726,7 +726,7 @@ in t)
 end else begin
 (let _33_700 = if (FStar_Tc_Env.debug tcenv FStar_Options.Low) then begin
 (let _99_322 = (FStar_Range.string_of_range sfx)
-in (FStar_Util.fprint1 "Normalizer refreshing label: %s\n" _99_322))
+in (FStar_Util.print1 "Normalizer refreshing label: %s\n" _99_322))
 end else begin
 ()
 end

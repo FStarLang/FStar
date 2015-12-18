@@ -520,7 +520,7 @@ end
 (let _36_297 = if (FStar_All.pipe_left (FStar_Tc_Env.debug wl.tcenv) (FStar_Options.Other ("Rel"))) then begin
 (let _102_333 = (let _102_332 = (FStar_List.map (uvi_to_string wl.tcenv) uvis)
 in (FStar_All.pipe_right _102_332 (FStar_String.concat ", ")))
-in (FStar_Util.fprint1 "Extending solution: %s\n" _102_333))
+in (FStar_Util.print1 "Extending solution: %s\n" _102_333))
 end else begin
 ()
 end
@@ -562,7 +562,7 @@ in {attempting = _36_336.attempting; wl_deferred = _36_336.wl_deferred; subst = 
 
 let giveup = (fun env reason prob -> (let _36_341 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _102_390 = (prob_to_string env prob)
-in (FStar_Util.fprint2 "Failed %s:\n%s\n" reason _102_390))
+in (FStar_Util.print2 "Failed %s:\n%s\n" reason _102_390))
 end else begin
 ()
 end
@@ -935,7 +935,7 @@ end
 | None -> begin
 (let _36_731 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _102_586 = (FStar_Absyn_Print.arg_to_string hd)
-in (FStar_Util.fprint1 "Not a pattern: %s\n" _102_586))
+in (FStar_Util.print1 "Not a pattern: %s\n" _102_586))
 end else begin
 ()
 end
@@ -1771,7 +1771,7 @@ let is_flex_rigid = (fun rank -> ((flex_refine_inner <= rank) && (rank <= flex_r
 
 let rec solve_flex_rigid_join = (fun env tp wl -> (let _36_1696 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _102_944 = (prob_to_string env (TProb (tp)))
-in (FStar_Util.fprint1 "Trying to solve by joining refinements:%s\n" _102_944))
+in (FStar_Util.print1 "Trying to solve by joining refinements:%s\n" _102_944))
 end else begin
 ()
 end
@@ -2184,7 +2184,7 @@ end)))
 and solve_t' = (fun env problem wl -> (let giveup_or_defer = (fun orig msg -> if wl.defer_ok then begin
 (let _36_2165 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _102_1084 = (prob_to_string env orig)
-in (FStar_Util.fprint2 "\n\t\tDeferring %s\n\t\tBecause %s\n" _102_1084 msg))
+in (FStar_Util.print2 "\n\t\tDeferring %s\n\t\tBecause %s\n" _102_1084 msg))
 end else begin
 ()
 end
@@ -2209,7 +2209,7 @@ in (let _102_1100 = (FStar_Absyn_Print.tag_of_typ im)
 in (let _102_1099 = (let _102_1097 = (FStar_List.map (prob_to_string env) sub_probs)
 in (FStar_All.pipe_right _102_1097 (FStar_String.concat ", ")))
 in (let _102_1098 = (FStar_Tc_Normalize.formula_norm_to_string env formula)
-in (FStar_Util.fprint4 "Imitating %s (%s)\nsub_probs = %s\nformula=%s\n" _102_1101 _102_1100 _102_1099 _102_1098)))))
+in (FStar_Util.print4 "Imitating %s (%s)\nsub_probs = %s\nformula=%s\n" _102_1101 _102_1100 _102_1099 _102_1098)))))
 end else begin
 ()
 end
@@ -2302,7 +2302,7 @@ in (FStar_All.pipe_left (fun _102_1129 -> TProb (_102_1129)) _102_1134))
 in (let _36_2264 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _102_1136 = (FStar_Absyn_Print.typ_to_string proj)
 in (let _102_1135 = (prob_to_string env sub)
-in (FStar_Util.fprint2 "Projecting %s\n\tsubprob=%s\n" _102_1136 _102_1135)))
+in (FStar_Util.print2 "Projecting %s\n\tsubprob=%s\n" _102_1136 _102_1135)))
 end else begin
 ()
 end
@@ -2361,7 +2361,7 @@ true
 end else begin
 (let _36_2319 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _102_1183 = (FStar_Absyn_Print.freevars_to_string fvs_hd)
-in (FStar_Util.fprint1 "Free variables are %s" _102_1183))
+in (FStar_Util.print1 "Free variables are %s" _102_1183))
 end else begin
 ()
 end
@@ -2400,7 +2400,7 @@ end else begin
 (let _102_1193 = (FStar_Absyn_Print.typ_to_string t1)
 in (let _102_1192 = (FStar_Absyn_Print.freevars_to_string fvs1)
 in (let _102_1191 = (FStar_Absyn_Print.freevars_to_string fvs2)
-in (FStar_Util.fprint3 "Pattern %s with fvars=%s succeeded fvar check: %s\n" _102_1193 _102_1192 _102_1191))))
+in (FStar_Util.print3 "Pattern %s with fvars=%s succeeded fvar check: %s\n" _102_1193 _102_1192 _102_1191))))
 end else begin
 ()
 end
@@ -2425,7 +2425,7 @@ if (check_head fvs1 t2) then begin
 (let _102_1198 = (FStar_Absyn_Print.typ_to_string t1)
 in (let _102_1197 = (FStar_Absyn_Print.freevars_to_string fvs1)
 in (let _102_1196 = (FStar_Absyn_Print.freevars_to_string fvs2)
-in (FStar_Util.fprint3 "Pattern %s with fvars=%s failed fvar check: %s ... imitating\n" _102_1198 _102_1197 _102_1196))))
+in (FStar_Util.print3 "Pattern %s with fvars=%s failed fvar check: %s ... imitating\n" _102_1198 _102_1197 _102_1196))))
 end else begin
 ()
 end
@@ -2448,7 +2448,7 @@ in (check_head _102_1200 t2)) then begin
 (let im_ok = (imitate_ok t2)
 in (let _36_2344 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _102_1201 = (FStar_Absyn_Print.typ_to_string t1)
-in (FStar_Util.fprint2 "Not a pattern (%s) ... %s\n" _102_1201 (if (im_ok < 0) then begin
+in (FStar_Util.print2 "Not a pattern (%s) ... %s\n" _102_1201 (if (im_ok < 0) then begin
 "imitating"
 end else begin
 "projecting"
@@ -2572,7 +2572,7 @@ in (let solve_one_pat = (fun _36_2430 _36_2435 -> (match ((_36_2430, _36_2435)) 
 (let _36_2436 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _102_1245 = (FStar_Absyn_Print.typ_to_string t1)
 in (let _102_1244 = (FStar_Absyn_Print.typ_to_string t2)
-in (FStar_Util.fprint2 "Trying flex-flex one pattern (%s) with %s\n" _102_1245 _102_1244)))
+in (FStar_Util.print2 "Trying flex-flex one pattern (%s) with %s\n" _102_1245 _102_1244)))
 end else begin
 ()
 end
@@ -2615,7 +2615,7 @@ in (match (_36_2473) with
 (let wl = (extend_solution sol wl)
 in (let _36_2475 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) (FStar_Options.Other ("QuasiPattern"))) then begin
 (let _102_1256 = (uvi_to_string env sol)
-in (FStar_Util.fprint1 "flex-flex quasi pattern (2): %s\n" _102_1256))
+in (FStar_Util.print1 "flex-flex quasi pattern (2): %s\n" _102_1256))
 end else begin
 ()
 end
@@ -2664,7 +2664,7 @@ in (match (_36_2512) with
 (let wl = (extend_solution sol wl)
 in (let _36_2514 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) (FStar_Options.Other ("QuasiPattern"))) then begin
 (let _102_1258 = (uvi_to_string env sol)
-in (FStar_Util.fprint1 "flex-flex quasi pattern (1): %s\n" _102_1258))
+in (FStar_Util.print1 "flex-flex quasi pattern (1): %s\n" _102_1258))
 end else begin
 ()
 end
@@ -2696,7 +2696,7 @@ end else begin
 (let _102_1263 = (prob_to_string env orig)
 in (let _102_1262 = (let _102_1261 = (FStar_List.map (uvi_to_string wl.tcenv) wl.subst)
 in (FStar_All.pipe_right _102_1261 (FStar_String.concat "; ")))
-in (FStar_Util.fprint2 "Attempting %s\n\tSubst is %s\n" _102_1263 _102_1262)))
+in (FStar_Util.print2 "Attempting %s\n\tSubst is %s\n" _102_1263 _102_1262)))
 end else begin
 ()
 end
@@ -2764,7 +2764,7 @@ end
 in (let _36_2575 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) (FStar_Options.Other ("EQ"))) then begin
 (let _102_1320 = (let _102_1319 = (FStar_Tc_Env.get_range env)
 in (FStar_All.pipe_right _102_1319 FStar_Range.string_of_range))
-in (FStar_Util.fprint2 "(%s) Using relation %s at higher order\n" _102_1320 (rel_to_string rel)))
+in (FStar_Util.print2 "(%s) Using relation %s at higher order\n" _102_1320 (rel_to_string rel)))
 end else begin
 ()
 end
@@ -2953,7 +2953,7 @@ end
 (let _36_2934 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _102_1387 = (FStar_Absyn_Print.typ_to_string t1)
 in (let _102_1386 = (FStar_Absyn_Print.typ_to_string t2)
-in (FStar_Util.fprint2 "Head matches: %s and %s\n" _102_1387 _102_1386)))
+in (FStar_Util.print2 "Head matches: %s and %s\n" _102_1387 _102_1386)))
 end else begin
 ()
 end
@@ -3064,7 +3064,7 @@ end else begin
 (let _36_3052 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _102_1426 = (FStar_Absyn_Print.comp_typ_to_string c1)
 in (let _102_1425 = (FStar_Absyn_Print.comp_typ_to_string c2)
-in (FStar_Util.fprint3 "solve_c %s %s %s\n" _102_1426 (rel_to_string problem.relation) _102_1425)))
+in (FStar_Util.print3 "solve_c %s %s %s\n" _102_1426 (rel_to_string problem.relation) _102_1425)))
 end else begin
 ()
 end
@@ -3100,7 +3100,7 @@ end else begin
 (let c1 = (FStar_Tc_Normalize.weak_norm_comp env c1)
 in (let c2 = (FStar_Tc_Normalize.weak_norm_comp env c2)
 in (let _36_3092 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
-(FStar_Util.fprint2 "solve_c for %s and %s\n" c1.FStar_Absyn_Syntax.effect_name.FStar_Absyn_Syntax.str c2.FStar_Absyn_Syntax.effect_name.FStar_Absyn_Syntax.str)
+(FStar_Util.print2 "solve_c for %s and %s\n" c1.FStar_Absyn_Syntax.effect_name.FStar_Absyn_Syntax.str c2.FStar_Absyn_Syntax.effect_name.FStar_Absyn_Syntax.str)
 end else begin
 ()
 end
@@ -3223,7 +3223,7 @@ in (let orig = EProb (problem)
 in (let sub_prob = (fun lhs rhs reason -> (mk_problem (p_scope orig) orig lhs EQ rhs None reason))
 in (let _36_3172 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _102_1485 = (prob_to_string env orig)
-in (FStar_Util.fprint1 "Attempting:\n%s\n" _102_1485))
+in (FStar_Util.print1 "Attempting:\n%s\n" _102_1485))
 end else begin
 ()
 end
@@ -3308,7 +3308,7 @@ in (let _36_3277 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) (FStar_Optio
 in (let _102_1526 = (FStar_Absyn_Print.exp_to_string sol)
 in (let _102_1525 = (let _102_1524 = (FStar_All.pipe_right gi_pi (FStar_List.map (prob_to_string env)))
 in (FStar_All.pipe_right _102_1524 (FStar_String.concat "\n")))
-in (FStar_Util.fprint3 "Projected: %s -> %s\nSubprobs=\n%s\n" _102_1527 _102_1526 _102_1525))))
+in (FStar_Util.print3 "Projected: %s -> %s\nSubprobs=\n%s\n" _102_1527 _102_1526 _102_1525))))
 end else begin
 ()
 end
@@ -3345,7 +3345,7 @@ end else begin
 (let _36_3292 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _102_1536 = (FStar_Absyn_Print.exp_to_string e1)
 in (let _102_1535 = (FStar_Absyn_Print.exp_to_string e2)
-in (FStar_Util.fprint2 "Imitating expressions: %s =?= %s\n" _102_1536 _102_1535)))
+in (FStar_Util.print2 "Imitating expressions: %s =?= %s\n" _102_1536 _102_1535)))
 end else begin
 ()
 end
@@ -3384,7 +3384,7 @@ in (let _36_3319 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) (FStar_Optio
 in (let _102_1541 = (FStar_Absyn_Print.exp_to_string sol)
 in (let _102_1540 = (let _102_1539 = (FStar_All.pipe_right gi_pi (FStar_List.map (prob_to_string env)))
 in (FStar_All.pipe_right _102_1539 (FStar_String.concat "\n")))
-in (FStar_Util.fprint3 "Imitated: %s -> %s\nSubprobs=\n%s\n" _102_1542 _102_1541 _102_1540))))
+in (FStar_Util.print3 "Imitated: %s -> %s\nSubprobs=\n%s\n" _102_1542 _102_1541 _102_1540))))
 end else begin
 ()
 end
@@ -3469,7 +3469,7 @@ end))
 in (let smt_fallback = (fun e1 e2 -> if wl.smt_ok then begin
 (let _36_3376 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _102_1556 = (prob_to_string env orig)
-in (FStar_Util.fprint1 "Using SMT to solve:\n%s\n" _102_1556))
+in (FStar_Util.print1 "Using SMT to solve:\n%s\n" _102_1556))
 end else begin
 ()
 end
@@ -3657,7 +3657,7 @@ in (match (_36_3756) with
 (let guard = (FStar_Absyn_Util.mk_eq t t e1 e2)
 in (let _36_3758 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _102_1617 = (FStar_Absyn_Print.typ_to_string guard)
-in (FStar_Util.fprint1 "Emitting guard %s\n" _102_1617))
+in (FStar_Util.print1 "Emitting guard %s\n" _102_1617))
 end else begin
 ()
 end
@@ -3863,7 +3863,7 @@ end
 | NonTrivial (f) -> begin
 (let _36_3898 = if (FStar_Tc_Env.debug env FStar_Options.High) then begin
 (let _102_1764 = (FStar_Absyn_Print.typ_to_string f)
-in (FStar_Util.fprint1 "Simplifying guard %s\n" _102_1764))
+in (FStar_Util.print1 "Simplifying guard %s\n" _102_1764))
 end else begin
 ()
 end
@@ -3916,7 +3916,7 @@ end))
 let try_keq = (fun env k1 k2 -> (let _36_3936 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _102_1796 = (FStar_Absyn_Print.kind_to_string k1)
 in (let _102_1795 = (FStar_Absyn_Print.kind_to_string k2)
-in (FStar_Util.fprint2 "try_keq of %s and %s\n" _102_1796 _102_1795)))
+in (FStar_Util.print2 "try_keq of %s and %s\n" _102_1796 _102_1795)))
 end else begin
 ()
 end
@@ -3960,7 +3960,7 @@ let subkind = (fun env k1 k2 -> (let _36_3958 = if (FStar_All.pipe_left (FStar_T
 in (FStar_All.pipe_left FStar_Range.string_of_range _102_1824))
 in (let _102_1826 = (FStar_Absyn_Print.kind_to_string k1)
 in (let _102_1825 = (FStar_Absyn_Print.kind_to_string k2)
-in (FStar_Util.fprint3 "(%s) subkind of %s and %s\n" _102_1827 _102_1826 _102_1825))))
+in (FStar_Util.print3 "(%s) subkind of %s and %s\n" _102_1827 _102_1826 _102_1825))))
 end else begin
 ()
 end
@@ -3981,7 +3981,7 @@ in res))))
 let try_teq = (fun env t1 t2 -> (let _36_3967 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _102_1847 = (FStar_Absyn_Print.typ_to_string t1)
 in (let _102_1846 = (FStar_Absyn_Print.typ_to_string t2)
-in (FStar_Util.fprint2 "try_teq of %s and %s\n" _102_1847 _102_1846)))
+in (FStar_Util.print2 "try_teq of %s and %s\n" _102_1847 _102_1846)))
 end else begin
 ()
 end
@@ -4005,7 +4005,7 @@ end
 (let _102_1865 = (FStar_Absyn_Print.typ_to_string t1)
 in (let _102_1864 = (FStar_Absyn_Print.typ_to_string t2)
 in (let _102_1863 = (guard_to_string env g)
-in (FStar_Util.fprint3 "teq of %s and %s succeeded with guard %s\n" _102_1865 _102_1864 _102_1863))))
+in (FStar_Util.print3 "teq of %s and %s succeeded with guard %s\n" _102_1865 _102_1864 _102_1863))))
 end else begin
 ()
 end
@@ -4015,7 +4015,7 @@ end))
 let try_subtype = (fun env t1 t2 -> (let _36_3984 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _102_1873 = (FStar_Tc_Normalize.typ_norm_to_string env t1)
 in (let _102_1872 = (FStar_Tc_Normalize.typ_norm_to_string env t2)
-in (FStar_Util.fprint2 "try_subtype of %s and %s\n" _102_1873 _102_1872)))
+in (FStar_Util.print2 "try_subtype of %s and %s\n" _102_1873 _102_1872)))
 end else begin
 ()
 end
@@ -4029,7 +4029,7 @@ in (let _36_3992 = if ((FStar_All.pipe_left (FStar_Tc_Env.debug env) (FStar_Opti
 in (let _102_1878 = (FStar_Tc_Normalize.typ_norm_to_string env t2)
 in (let _102_1877 = (let _102_1876 = (FStar_Util.must g)
 in (guard_to_string env _102_1876))
-in (FStar_Util.fprint3 "try_subtype succeeded: %s <: %s\n\tguard is %s\n" _102_1879 _102_1878 _102_1877))))
+in (FStar_Util.print3 "try_subtype succeeded: %s <: %s\n\tguard is %s\n" _102_1879 _102_1878 _102_1877))))
 end else begin
 ()
 end
@@ -4053,7 +4053,7 @@ end))
 let sub_comp = (fun env c1 c2 -> (let _36_4006 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _102_1900 = (FStar_Absyn_Print.comp_typ_to_string c1)
 in (let _102_1899 = (FStar_Absyn_Print.comp_typ_to_string c2)
-in (FStar_Util.fprint2 "sub_comp of %s and %s\n" _102_1900 _102_1899)))
+in (FStar_Util.print2 "sub_comp of %s and %s\n" _102_1900 _102_1899)))
 end else begin
 ()
 end
@@ -4083,7 +4083,7 @@ in (FStar_Tc_Normalize.formula_norm_to_string env _102_1913))
 in (FStar_Util.format4 "(At %s) %s\n%s\nguard is %s\n" _102_1916 msg _102_1915 _102_1914))))
 end))))
 in (FStar_All.pipe_right _102_1917 (FStar_String.concat "\n")))
-in (FStar_All.pipe_left (FStar_Util.fprint1 "Trying to solve carried problems: begin\n%s\nend\n") _102_1918))
+in (FStar_All.pipe_left (FStar_Util.print1 "Trying to solve carried problems: begin\n%s\nend\n") _102_1918))
 end else begin
 ()
 end

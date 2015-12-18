@@ -101,7 +101,7 @@ let erase = (fun g e f t -> if (erasable g f t) then begin
 | () -> begin
 (let _129_61 = (FStar_Extraction_ML_Code.string_of_mlexpr g e)
 in (let _129_60 = (FStar_Extraction_ML_Code.string_of_mlty g t)
-in (FStar_Util.fprint2 "Erasing %s at type %s\n" _129_61 _129_60)))
+in (FStar_Util.print2 "Erasing %s at type %s\n" _129_61 _129_60)))
 end)))
 in (let e_val = if (FStar_Extraction_ML_Util.type_leq g t FStar_Extraction_ML_Syntax.ml_unit_ty) then begin
 FStar_Extraction_ML_Syntax.ml_unit
