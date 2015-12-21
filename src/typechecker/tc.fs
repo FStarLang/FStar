@@ -320,8 +320,8 @@ let rec tc_term env (e:term) : term                  (* type-checked and elabora
     //Don't instantiate head; instantiations will be computed below, accounting for implicits/explicits
     let head, chead, g_head = tc_term (no_inst env) head in 
     let e, c, g = if TcUtil.short_circuit_head head 
-                  then check_short_circuit_args env head chead g_head args
-                  else check_application_args env head chead g_head args in 
+                  then check_short_circuit_args env head chead g_head args (Env.expected_typ env0)
+                  else check_application_args env head chead g_head args (Env.expected_typ env0) in 
     if Env.debug env <| Options.Other "Implicits"
     then Util.fprint1 "Introduced %s implicits in application\n" (string_of_int <| List.length g.implicits);
     let c = if Options.should_verify env.curmodule.str
@@ -704,7 +704,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * Rel.guard_t 
 (* Type-checking applications: Tm_app head args                               *)
 (*      head is already type-checked has comp type chead, with guard ghead    *)
 (******************************************************************************)
-and check_application_args env head chead ghead args : term * lcomp * Rel.guard_t= 
+and check_application_args env head chead ghead args expected_topt : term * lcomp * Rel.guard_t= 
     let n_args = List.length args in
     let r = Env.get_range env in
     let thead = chead.res_typ in
@@ -719,12 +719,24 @@ and check_application_args env head chead ghead args : term * lcomp * Rel.guard_
                     let e, c, g_e = tc_term env e in
                     let args, comps, g_rest = tc_args env tl in
                     (e, imp)::args, c::comps, Rel.conj_guard g_e g_rest in
-            (* Infer: t1 -> ... -> tn -> ML ('u x1...xm),
+            (* Infer: t1 -> ... -> tn -> C ('u x1...xm),
                     where ti are the result types of each arg
-                    and   xi are the free type/term variables in the environment *)
+                    and   xi are the free type/term variables in the environment
+               where C = Tot, if the expected result type is Type(u)
+                              or if the ML monad is not in scope
+               else  C = ML *)
             let args, comps, g_args = tc_args env args in
             let bs = null_binders_of_tks (comps |> List.map (fun c -> c.res_typ, None)) in
-            let cres = Util.ml_comp (TcUtil.new_uvar env (TcUtil.type_u () |> fst)) r in
+            let ml_or_tot = match Env.try_lookup_effect_lid env Const.effect_ML_lid with 
+                | None -> fun t r -> S.mk_Total t
+                | _ -> Util.ml_comp in
+            let ml_or_tot = match expected_topt with 
+                | None -> ml_or_tot
+                | Some t -> 
+                  match (SS.compress t).n with 
+                    | Tm_type _ -> fun t r -> S.mk_Total t 
+                    | _ -> ml_or_tot in
+            let cres = ml_or_tot (TcUtil.new_uvar env (TcUtil.type_u () |> fst)) r in
             TcUtil.discharge_guard env <| Rel.teq env tf (Util.arrow bs cres);
             let comp = List.fold_right (fun c out -> TcUtil.bind env None c (None, out)) (chead::comps) (TcUtil.lcomp_of_comp <| cres) in
             mk_Tm_app head args (Some comp.res_typ.n) r, comp, Rel.conj_guard ghead g_args
@@ -862,7 +874,7 @@ and check_application_args env head chead ghead args : term * lcomp * Rel.guard_
 (*   ALL OF THEM HAVE A LOGICAL SPEC THAT IS BIASED L-to-R,                   *)
 (*  aka they are short-circuiting                                             *) 
 (******************************************************************************)
-and check_short_circuit_args env head chead g_head args : term * lcomp * Rel.guard_t = 
+and check_short_circuit_args env head chead g_head args expected_topt : term * lcomp * Rel.guard_t = 
     let r = Env.get_range env in
     let tf = SS.compress chead.res_typ in
     match tf.n with 
@@ -882,7 +894,7 @@ and check_short_circuit_args env head chead g_head args : term * lcomp * Rel.gua
           e, c, guard
         
         | _ -> //fallback
-          check_application_args env head chead g_head args
+          check_application_args env head chead g_head args expected_topt
 
 
 (********************************************************************************************************************)
@@ -1380,14 +1392,8 @@ and tc_tot_or_gtot_term env e : term
 and tc_check_tot_or_gtot_term env e t : term
                                       * lcomp 
                                       * guard_t = 
-    let e, c, g = tc_tot_or_gtot_term env e in
-    let g' = Rel.apply_guard (Rel.subtype env c.res_typ t) e in
-    let c = if Util.is_total_lcomp c 
-            then S.mk_Total t 
-            else Util.gtotal_comp t in
-    e, Util.lcomp_of_comp c, Rel.conj_guard g g'
-
-
+    let env = Env.set_expected_typ env t in
+    tc_tot_or_gtot_term env e 
 
 (*****************Type-checking the signature of a module*****************************)
 let tc_trivial_guard env t = 

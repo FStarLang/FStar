@@ -37,7 +37,7 @@ let nm_to_string bv =
     then bv_to_string bv
     else bv.ppname.idText
 
-let db_to_string bv = bv.ppname.idText ^ string_of_int bv.index
+let db_to_string bv = bv.ppname.idText ^ "@" ^ string_of_int bv.index
 
 (* CH: This should later be shared with ocaml-codegen.fs and util.fs (is_primop and destruct_typ_as_formula) *)
 let infix_prim_ops = [
@@ -186,20 +186,23 @@ let rec univ_to_string u = match Subst.compress_univ u with
 let rec term_to_string x =
   let x = Subst.compress x in
   match x.n with
-  | Tm_delayed _ -> failwith "impossible"
-  | Tm_meta(t, _) -> term_to_string t
-  | Tm_bvar x -> "@"^db_to_string x  
-  | Tm_name x -> nm_to_string x
-  | Tm_fvar f -> fv_to_string f
-  | Tm_uvar (u, _) -> uvar_to_string u
-  | Tm_constant c -> const_to_string c
-  | Tm_type u -> Util.format1 "Type(%s)" (univ_to_string u)
-  | Tm_arrow(bs, c) -> Util.format2 "(%s -> %s)"  (binders_to_string " -> " bs) (comp_to_string c)
-  | Tm_abs(bs, t2) ->  Util.format2 "(fun %s -> %s)" (binders_to_string " " bs) (term_to_string t2)
-  | Tm_refine(xt, f) ->       Util.format3 "%s:%s{%s}" (bv_to_string xt) (xt.sort |> term_to_string) (f |> formula_to_string)
-  | Tm_app(_, []) -> failwith "Empty args!"
-  | Tm_app(t, args) -> Util.format2 "(%s %s)" (term_to_string t) (args_to_string args)
-  | Tm_let(lbs, e) ->  Util.format2 "%s\nin\n%s" (lbs_to_string lbs) (term_to_string e)
+  | Tm_delayed _ ->   failwith "impossible"
+  | Tm_app(_, []) ->  failwith "Empty args!"
+
+  | Tm_meta(t, _) ->    term_to_string t
+  | Tm_bvar x ->        db_to_string x  
+  | Tm_name x ->        nm_to_string x
+  | Tm_fvar f ->        fv_to_string f
+  | Tm_uvar (u, _) ->   uvar_to_string u
+  | Tm_constant c ->    const_to_string c
+  | Tm_type u ->        Util.format1 "Type(%s)" (univ_to_string u)
+  | Tm_arrow(bs, c) ->  Util.format2 "(%s -> %s)"  (binders_to_string " -> " bs) (comp_to_string c)
+  | Tm_abs(bs, t2) ->   Util.format2 "(fun %s -> %s)" (binders_to_string " " bs) (term_to_string t2)
+  | Tm_refine(xt, f) -> Util.format3 "%s:%s{%s}" (bv_to_string xt) (xt.sort |> term_to_string) (f |> formula_to_string)
+  | Tm_app(t, args) ->  Util.format2 "(%s %s)" (term_to_string t) (args_to_string args)
+  | Tm_let(lbs, e) ->   Util.format2 "%s\nin\n%s" (lbs_to_string lbs) (term_to_string e)
+  | Tm_ascribed(e,t,_) ->
+                        Util.format2 "(%s : %s)" (term_to_string e) (term_to_string t)
   | Tm_match(head, branches) ->
     Util.format2 "(match %s with\n\t| %s)"
       (term_to_string head)
@@ -208,8 +211,6 @@ let rec term_to_string x =
                         (p |> pat_to_string)
                         (match wopt with | None -> "" | Some w -> Util.format1 "when %s" (w |> term_to_string))
                         (e |> term_to_string))))
-  | Tm_ascribed(e, t, _) ->
-    Util.format2 "(%s : %s)" (term_to_string e) (term_to_string t)
   | _ -> tag_of_term x
 
 and  pat_to_string x = match x.v with
@@ -273,16 +274,19 @@ and comp_to_string c =
   match c.n with
     | Total t -> 
       begin match (compress t).n with 
-        | Tm_type _ -> term_to_string t 
+        | Tm_type _ when not !Options.print_implicits -> term_to_string t 
         | _ -> Util.format1 "Tot %s" (term_to_string t)
       end
     | Comp c ->
       let basic =
           if c.flags |> Util.for_some (function TOTAL -> true | _ -> false) && not !Options.print_effect_args
           then Util.format1 "Tot %s" (term_to_string c.result_typ)
-          else if not !Options.print_effect_args && (lid_equals c.effect_name Const.effect_ML_lid)//  || List.contains MLEFFECT c.flags)
+          else if not !Options.print_effect_args 
+                  && not !Options.print_implicits
+                  && lid_equals c.effect_name Const.effect_ML_lid
           then term_to_string c.result_typ
-          else if not !Options.print_effect_args && c.flags |> Util.for_some (function MLEFFECT -> true | _ -> false)
+          else if not !Options.print_effect_args 
+               && c.flags |> Util.for_some (function MLEFFECT -> true | _ -> false)
           then Util.format1 "ALL %s" (term_to_string c.result_typ)
           else if !Options.print_effect_args
           then Util.format3 "%s (%s) %s" (sli c.effect_name) (term_to_string c.result_typ) (c.effect_args |> List.map arg_to_string |> String.concat ", ")

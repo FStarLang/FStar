@@ -1062,6 +1062,8 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
         | Some k -> desugar_term _env' k in
       let tconstr = apply_binders (mk_term (Var (lid_of_ids [id])) id.idRange Type) binders in
       let qlid = qualify _env id in
+      let typars = Subst.close_binders typars in
+      let k = Subst.close typars k in
       let se = Sig_inductive_typ(qlid, [], typars, k, mutuals, [], quals, rng) in
       let _env = Env.push_top_level_rec_binding _env id in
       let _env2 = Env.push_top_level_rec_binding _env' id in

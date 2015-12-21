@@ -14,37 +14,60 @@
    limitations under the License.
 *)
 module Prims
-(* Primitive logical connectives *)
-type False = 
-type True =
+(* False is the empty inductive type *)
+type False =  
+
+(* True is the singleton inductive type *)
+type True =  
   | T
-kind un_op  = Type -> Type
-kind bin_op = Type -> Type -> Type
-type Eq2 : #a:Type -> #b:Type -> a -> b -> Type  (* infix binary '==' *)
-type bool
-opaque type b2t (b:bool) = (b == true)
-(* NB: The Tot effect is primitive; it is explained in terms of PURE a few lines below *)
-opaque type l_imp (p:Type) (q:Type) = p -> Tot q                 (* infix binary '==>' *)
-type l_and  (p:Type) (q:Type) =
-  | And   : p -> q -> (p /\ q)                                      (* infix binary '/\' *)
-type l_or   (p:Type) (q:Type) =                                  (* infix binary '\/' *)
+
+(* infix binary '=='; heterogeneous equality *)
+type Eq2 : #a:Type -> #b:Type -> a -> b -> Type  
+
+(* booleans are primitive (TODO: make them inductives also) *)
+assume (* fresh *) type bool 
+
+(* bool-to-type coercion *)
+opaque type b2t (b:bool) = (b == true) 
+
+(* infix binary '==>' *)
+opaque type l_imp (p:Type) (q:Type) = p -> Tot q                 
+                                          (* NB: The Tot effect is primitive; elaborated using PURE a few lines below *) 
+(* infix binary '/\' *) 
+type l_and  (p:Type) (q:Type) = 
+  | And   : p -> q -> (p /\ q)                                     
+
+(* infix binary '\/' *)
+type l_or   (p:Type) (q:Type) =                                  
   | Left  : p -> (p \/ q)
   | Right : q -> (p \/ q)
-opaque type l_iff (p:Type) (q:Type) = (p ==> q) /\ (q ==> p)        (* infix binary '<==>' *)
-opaque type l_not (p:Type) = p ==> False                              (* prefix unary '~' *)
+
+(* infix binary '<==>' *)
+opaque type l_iff (p:Type) (q:Type) = (p ==> q) /\ (q ==> p)       
+
+(* prefix unary '~' *)
+opaque type l_not (p:Type) = p ==> False                              
+
 logic type XOR (p:Type) (q:Type) = (p \/ q) /\ ~(p /\ q)
-opaque type ITE (p:Type) (q:Type) (r:Type) = (p ==> q) /\ (~p ==> r) (* if/then/else in concrete syntax *)
-type Precedes : #a:Type -> #b:Type -> a -> b -> Type                (* a built-in well-founded partial order over all terms *)
-opaque type Forall (#a:Type) (p:a -> Type) = x:a -> Tot (p x)      (* forall (x:a). p x *)
-// type DTuple2: a:Type
-//            ->  b:(a -> Type)
-//            -> Type =
-//   | MkDTuple2: #a:Type
-//            ->  #b:(a -> Type)
-//            -> _1:a
-//            -> _2:b _1
-//            -> DTuple2 a b
-(* opaque type Exists (#a:Type) (p:a -> Type) = x:a & p x          (\* exists (x:a). p x *\) *)
+
+(* if/then/else in concrete syntax *)
+opaque type ITE (p:Type) (q:Type) (r:Type) = (p ==> q) /\ (~p ==> r) 
+
+(* infix binary '<<'; a built-in well-founded partial order over all terms *)
+type Precedes : #a:Type -> #b:Type -> a -> b -> Type                
+
+(* forall (x:a). p x *)
+opaque type Forall (#a:Type) (p:a -> Type) = x:a -> Tot (p x)      
+
+(* dependent pairs, aka strong sums *)
+type DTuple2 (a:Type)
+             (b:(a -> Type)) = 
+  | MkDTuple2: _1:a
+            -> _2:b _1
+            -> DTuple2 a b
+
+(* exists (x:a). p x *)
+opaque type Exists (#a:Type) (p:a -> Type) = x:a & p x          
 
 (* (\* PURE effect *\) *)
 (* kind PurePre = Type *)
