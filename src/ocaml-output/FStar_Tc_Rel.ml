@@ -107,7 +107,7 @@ end))
 type ('a, 'b) problem =
 {lhs : 'a; relation : rel; rhs : 'a; element : 'b Prims.option; logical_guard : (FStar_Absyn_Syntax.typ * FStar_Absyn_Syntax.typ); scope : FStar_Absyn_Syntax.binders; reason : Prims.string Prims.list; loc : FStar_Range.range; rank : Prims.int Prims.option}
 
-let is_Mkproblem = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkproblem")))
+let is_Mkproblem = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkproblem"))))
 
 type ('a, 'b) problem_t =
 ('a, 'b) problem
@@ -220,12 +220,12 @@ end))
 type worklist =
 {attempting : probs; wl_deferred : (Prims.int * Prims.string * prob) Prims.list; subst : uvi Prims.list; ctr : Prims.int; slack_vars : (Prims.bool * FStar_Absyn_Syntax.typ) Prims.list; defer_ok : Prims.bool; smt_ok : Prims.bool; tcenv : FStar_Tc_Env.env}
 
-let is_Mkworklist = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkworklist")))
+let is_Mkworklist = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkworklist"))))
 
 type deferred =
 {carry : (Prims.string * prob) Prims.list; slack : (Prims.bool * FStar_Absyn_Syntax.typ) Prims.list}
 
-let is_Mkdeferred = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkdeferred")))
+let is_Mkdeferred = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkdeferred"))))
 
 let no_deferred = {carry = []; slack = []}
 
@@ -1387,7 +1387,7 @@ in (aux scope ps qs))))))
 type slack =
 {lower : (FStar_Absyn_Syntax.typ * FStar_Absyn_Syntax.typ); upper : (FStar_Absyn_Syntax.typ * FStar_Absyn_Syntax.typ); flag : Prims.bool FStar_ST.ref}
 
-let is_Mkslack = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkslack")))
+let is_Mkslack = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkslack"))))
 
 let fix_slack_uv = (fun _36_1264 mul -> (match (_36_1264) with
 | (uv, k) -> begin
@@ -3699,7 +3699,7 @@ type implicits =
 type guard_t =
 {guard_f : guard_formula; deferred : deferred; implicits : implicits}
 
-let is_Mkguard_t = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkguard_t")))
+let is_Mkguard_t = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkguard_t"))))
 
 let guard_to_string = (fun env g -> (let form = (match (g.guard_f) with
 | Trivial -> begin

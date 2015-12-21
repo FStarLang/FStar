@@ -255,17 +255,17 @@ let mlsymbolOfLident = (fun id -> id.FStar_Absyn_Syntax.ident.FStar_Absyn_Syntax
 type inductiveConstructor =
 {cname : FStar_Absyn_Syntax.lident; ctype : FStar_Absyn_Syntax.typ}
 
-let is_MkinductiveConstructor = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_MkinductiveConstructor")))
+let is_MkinductiveConstructor = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_MkinductiveConstructor"))))
 
 type inductiveTypeFam =
 {tyName : FStar_Absyn_Syntax.lident; k : FStar_Absyn_Syntax.knd; tyBinders : FStar_Absyn_Syntax.binders; constructors : inductiveConstructor Prims.list; qualifiers : FStar_Absyn_Syntax.qualifier Prims.list}
 
-let is_MkinductiveTypeFam = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_MkinductiveTypeFam")))
+let is_MkinductiveTypeFam = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_MkinductiveTypeFam"))))
 
 type typeAbbrev =
 {abTyName : FStar_Absyn_Syntax.lident; abTyBinders : FStar_Absyn_Syntax.binders; abBody : FStar_Absyn_Syntax.typ}
 
-let is_MktypeAbbrev = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_MktypeAbbrev")))
+let is_MktypeAbbrev = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_MktypeAbbrev"))))
 
 let lookupDataConType = (fun c sigb l -> (let tr = (FStar_Util.find_map sigb (fun s -> (match (s) with
 | FStar_Absyn_Syntax.Sig_datacon (l', t, (_62_277, tps, _62_280), quals, lids, _62_285) -> begin

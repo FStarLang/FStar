@@ -515,9 +515,9 @@ end
 false
 end))
 
-let is_Mkmlexpr = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkmlexpr")))
+let is_Mkmlexpr = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkmlexpr"))))
 
-let is_Mkmllb = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkmllb")))
+let is_Mkmllb = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkmllb"))))
 
 let ___MLE_Const____0 = (fun projectee -> (match (projectee) with
 | MLE_Const (_57_77) -> begin
