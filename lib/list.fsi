@@ -25,6 +25,7 @@ val rev : (list 'a) -> Tot (list 'a)
 val append : (list 'a) -> (list 'a) -> Tot (list 'a)
 val flatten : (list (list 'a)) -> Tot (list 'a)
 val iter : ('a -> unit) -> (list 'a) -> unit
+val iteri : (int -> 'a -> unit) -> (list 'a) -> unit
 val iterT : ('a -> Tot unit) -> (list 'a) -> Tot unit
 val map : ('a -> 'b) -> (list 'a) -> (list 'b)
 val mapT : ('a -> Tot 'b) -> (list 'a) -> Tot (list 'b)

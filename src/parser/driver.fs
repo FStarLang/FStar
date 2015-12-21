@@ -60,7 +60,7 @@ let parse_file_raw fn =
     ast
 
   | Inl (Inr _) ->
-    Util.fprint1 "%s: Expected a module\n" fn;
+    Util.print1 "%s: Expected a module\n" fn;
     exit 1
 
   | Inr (msg, r) ->

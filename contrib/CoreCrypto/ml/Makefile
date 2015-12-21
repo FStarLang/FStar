@@ -15,7 +15,6 @@ ifeq ($(OS),Windows_NT)
     # always uses to search for DLLs.
     EXTRA_PATH = PATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin/:$(PATH)"
     EXE = .exe
-    DLL = dll
     CC =
     ARCH = win32
 else
@@ -24,14 +23,14 @@ else
     # current directory, which is where dllcorecrypto.so is located.
     EXTRA_PATH = LD_LIBRARY_PATH=.
     EXE =
-    DLL = so
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Darwin)
         CC = -cc gcc-5
+	EXTRA_OPTS = -ccopt -L.
 	ARCH = osx
     else
         CC = -cc gcc
-        EXTRA_OPTS = -ccopt -fPIC
+        EXTRA_OPTS = -ccopt -fPIC -ccopt -L.
 	ARCH = x86_64
     endif
 endif
@@ -45,8 +44,8 @@ all: corecrypto.cmxa
 
 DLL_OBJ = $(PLATFORM)/platform.cmx CoreCrypto.cmx openssl_stub.o
 
-dllcorecrypto.$(DLL) corecrypto.cmxa: $(DLL_OBJ)
-	$(OCAMLMKLIB) -lcrypto -lssl -o corecrypto $^
+corecrypto.cmxa: $(DLL_OBJ)
+	$(OCAMLMKLIB) -lcrypto -o corecrypto $^
 
 %.cmi: %.mli
 	$(OCAMLC) -I $(PLATFORM) -c $<
@@ -59,9 +58,9 @@ dllcorecrypto.$(DLL) corecrypto.cmxa: $(DLL_OBJ)
 
 TEST_CMX = Tests.cmx
 
-Tests$(EXE): $(TEST_CMX) corecrypto.cmxa dllcorecrypto.$(DLL)
-	$(OCAMLOPT) -I $(PLATFORM) -package batteries -linkpkg -o $@ \
-	-cclib dllcorecrypto.$(DLL) corecrypto.cmxa $(TEST_CMX)
+Tests$(EXE): $(TEST_CMX) corecrypto.cmxa
+	$(OCAMLOPT) $(EXTRA_OPTS) -I $(PLATFORM) -package batteries -linkpkg -o $@ \
+	corecrypto.cmxa $(TEST_CMX)
 
 test: Tests$(EXE)
 	@$(EXTRA_PATH) ./Tests$(EXE)

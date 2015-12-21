@@ -8,7 +8,7 @@ effect EXT (a:Type) = ST a
   (ensures (fun h0 _ h -> modifies Set.empty h0 h))
 
 type hash_alg = | MD5 | SHA1 | SHA256 | SHA384 | SHA512
-type sig_alg = | RSASIG | DSA | ECDSA
+type sig_alg = | RSASIG | DSA | ECDSA | RSAPSS
 type block_cipher = | AES_128_CBC | AES_256_CBC | TDES_EDE_CBC
 type aead_cipher = | AES_128_GCM | AES_256_GCM
 type stream_cipher = | RC4_128

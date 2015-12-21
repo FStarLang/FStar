@@ -47,7 +47,7 @@ end))
 type env =
 {tcenv : FStar_Tc_Env.env; gamma : binding Prims.list; tydefs : (FStar_Extraction_ML_Syntax.mlsymbol Prims.list * FStar_Extraction_ML_Syntax.mltydecl) Prims.list; currentModule : FStar_Extraction_ML_Syntax.mlpath}
 
-let is_Mkenv = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkenv")))
+let is_Mkenv = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkenv"))))
 
 let debug = (fun g f -> if (((FStar_ST.read FStar_Options.debug) <> []) && ((let _124_65 = (FStar_ST.read FStar_Options.debug)
 in (FStar_List.contains "Prims" _124_65)) || (g.currentModule <> ([], "Prims")))) then begin

@@ -56,7 +56,7 @@ end
 | Some (g) -> begin
 (let _38_51 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _104_62 = (FStar_Tc_Rel.guard_to_string env g)
-in (FStar_All.pipe_left (FStar_Util.fprint1 "Applied guard is %s\n") _104_62))
+in (FStar_All.pipe_left (FStar_Util.print1 "Applied guard is %s\n") _104_62))
 end else begin
 ()
 end
@@ -606,7 +606,7 @@ end
 in (let _38_592 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) (FStar_Options.Other ("Pat"))) then begin
 (let _104_289 = (FStar_Absyn_Print.strBvd x.FStar_Absyn_Syntax.v)
 in (let _104_288 = (FStar_Tc_Normalize.typ_norm_to_string env y.FStar_Absyn_Syntax.sort)
-in (FStar_Util.fprint2 "Pattern variable %s introduced at type %s\n" _104_289 _104_288)))
+in (FStar_Util.print2 "Pattern variable %s introduced at type %s\n" _104_289 _104_288)))
 end else begin
 ()
 end
@@ -949,7 +949,7 @@ in (let t = (FStar_Absyn_Syntax.mk_Typ_fun (bs, c) (Some (FStar_Absyn_Syntax.kty
 in (let _38_970 = if (FStar_Tc_Env.debug env FStar_Options.High) then begin
 (let _104_411 = (FStar_Range.string_of_range r)
 in (let _104_410 = (FStar_Absyn_Print.typ_to_string t)
-in (FStar_Util.fprint2 "(%s) Using type %s\n" _104_411 _104_410)))
+in (FStar_Util.print2 "(%s) Using type %s\n" _104_411 _104_410)))
 end else begin
 ()
 end
@@ -1122,7 +1122,7 @@ in (let _38_1091 = if (FStar_Tc_Env.debug env FStar_Options.High) then begin
 (let _104_520 = (FStar_Range.string_of_range v.FStar_Absyn_Syntax.pos)
 in (let _104_519 = (FStar_Absyn_Print.exp_to_string v)
 in (let _104_518 = (FStar_Tc_Normalize.comp_typ_norm_to_string env c)
-in (FStar_Util.fprint3 "(%s) returning %s at comp type %s\n" _104_520 _104_519 _104_518))))
+in (FStar_Util.print3 "(%s) returning %s at comp type %s\n" _104_520 _104_519 _104_518))))
 end else begin
 ()
 end
@@ -1143,7 +1143,7 @@ end
 end)
 in (let _104_530 = (FStar_Absyn_Print.lcomp_typ_to_string lc1)
 in (let _104_529 = (FStar_Absyn_Print.lcomp_typ_to_string lc2)
-in (FStar_Util.fprint3 "Before lift: Making bind c1=%s\nb=%s\t\tc2=%s\n" _104_530 bstr _104_529))))
+in (FStar_Util.print3 "Before lift: Making bind c1=%s\nb=%s\t\tc2=%s\n" _104_530 bstr _104_529))))
 end else begin
 ()
 end
@@ -1213,7 +1213,7 @@ end)
 in (let _104_541 = (FStar_Absyn_Print.comp_typ_to_string c1)
 in (let _104_540 = (FStar_Absyn_Print.comp_typ_to_string c2)
 in (let _104_539 = (FStar_Absyn_Print.comp_typ_to_string c)
-in (FStar_Util.fprint4 "bind (%s) %s and %s simplified to %s\n" _104_542 _104_541 _104_540 _104_539)))))
+in (FStar_Util.print4 "bind (%s) %s and %s simplified to %s\n" _104_542 _104_541 _104_540 _104_539)))))
 end else begin
 ()
 end
@@ -1311,7 +1311,7 @@ end
 (let _38_1220 = if (FStar_Tc_Env.debug env FStar_Options.Low) then begin
 (let _104_601 = (let _104_600 = (FStar_Tc_Env.get_range env)
 in (FStar_All.pipe_left FStar_Range.string_of_range _104_600))
-in (FStar_Util.fprint1 "Refreshing label at %s\n" _104_601))
+in (FStar_Util.print1 "Refreshing label at %s\n" _104_601))
 end else begin
 ()
 end
@@ -1320,7 +1320,7 @@ in (let _38_1223 = if ((FStar_All.pipe_left Prims.op_Negation (FStar_Absyn_Synta
 (let _104_604 = (FStar_Absyn_Print.comp_typ_to_string c)
 in (let _104_603 = (let _104_602 = (FStar_Absyn_Syntax.mk_Comp c')
 in (FStar_All.pipe_left FStar_Absyn_Print.comp_typ_to_string _104_602))
-in (FStar_Util.fprint2 "To refresh, normalized\n\t%s\nto\n\t%s\n" _104_604 _104_603)))
+in (FStar_Util.print2 "To refresh, normalized\n\t%s\nto\n\t%s\n" _104_604 _104_603)))
 end else begin
 ()
 end
@@ -1915,7 +1915,7 @@ in (let strengthen = (fun _38_1630 -> (match (()) with
 in (let _38_1632 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) FStar_Options.Extreme) then begin
 (let _104_965 = (FStar_Tc_Normalize.comp_typ_norm_to_string env c)
 in (let _104_964 = (FStar_Tc_Normalize.typ_norm_to_string env f)
-in (FStar_Util.fprint2 "Strengthening %s with guard %s\n" _104_965 _104_964)))
+in (FStar_Util.print2 "Strengthening %s with guard %s\n" _104_965 _104_964)))
 end else begin
 ()
 end
@@ -1955,7 +1955,7 @@ in (bind env (Some (e)) _104_984 (Some (FStar_Tc_Env.Binding_var ((x, lc.FStar_A
 in (let c = (c.FStar_Absyn_Syntax.comp ())
 in (let _38_1650 = if (FStar_All.pipe_left (FStar_Tc_Env.debug env) FStar_Options.Extreme) then begin
 (let _104_985 = (FStar_Tc_Normalize.comp_typ_norm_to_string env c)
-in (FStar_Util.fprint1 "Strengthened to %s\n" _104_985))
+in (FStar_Util.print1 "Strengthened to %s\n" _104_985))
 end else begin
 ()
 end
@@ -2008,7 +2008,7 @@ None
 end else begin
 (let norm = (fun c -> (let _38_1687 = if (FStar_Tc_Env.debug env FStar_Options.Medium) then begin
 (let _104_1007 = (FStar_Absyn_Print.comp_typ_to_string c)
-in (FStar_Util.fprint1 "Normalizing before generalizing:\n\t %s" _104_1007))
+in (FStar_Util.print1 "Normalizing before generalizing:\n\t %s" _104_1007))
 end else begin
 ()
 end
@@ -2020,7 +2020,7 @@ end else begin
 end
 in (let _38_1691 = if (FStar_Tc_Env.debug env FStar_Options.Medium) then begin
 (let _104_1008 = (FStar_Absyn_Print.comp_typ_to_string c)
-in (FStar_Util.fprint1 "Normalized to:\n\t %s" _104_1008))
+in (FStar_Util.print1 "Normalized to:\n\t %s" _104_1008))
 end else begin
 ()
 end
@@ -2138,7 +2138,7 @@ let generalize = (fun verify env lecs -> (let _38_1812 = if (FStar_Tc_Env.debug 
 (FStar_Absyn_Print.lbname_to_string lb)
 end)) lecs)
 in (FStar_All.pipe_right _104_1045 (FStar_String.concat ", ")))
-in (FStar_Util.fprint1 "Generalizing: %s" _104_1046))
+in (FStar_Util.print1 "Generalizing: %s" _104_1046))
 end else begin
 ()
 end
@@ -2157,7 +2157,7 @@ end
 (let _104_1053 = (FStar_Range.string_of_range e.FStar_Absyn_Syntax.pos)
 in (let _104_1052 = (FStar_Absyn_Print.lbname_to_string l)
 in (let _104_1051 = (FStar_Absyn_Print.typ_to_string (FStar_Absyn_Util.comp_result c))
-in (FStar_Util.fprint3 "(%s) Generalized %s to %s" _104_1053 _104_1052 _104_1051))))
+in (FStar_Util.print3 "(%s) Generalized %s to %s" _104_1053 _104_1052 _104_1051))))
 end else begin
 ()
 end

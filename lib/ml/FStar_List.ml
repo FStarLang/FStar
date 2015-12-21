@@ -19,6 +19,7 @@ let rec map3 f l1 l2 l3 =
   | x::xs, y::ys, z::zs -> (f x y z)::(map3 f xs ys zs)
   | _, _, _ -> failwith "The lists do not have the same length"
 let iter = BatList.iter
+let iteri = BatList.iteri
 let partition = BatList.partition
 let append = BatList.append
 let rev_append = BatList.rev_append

@@ -39,7 +39,7 @@ let check_and_strip_suffix (f: string): option<string> =
   let matches = List.map (fun ext ->
     let lext = String.length ext in
     let l = String.length f in
-    if l > lext && compare (String.substring f (l - lext) lext) ext = 0 then
+    if l > lext && String.substring f (l - lext) lext = ext then
       Some (String.substring f 0 (l - lext))
     else
       None
@@ -56,12 +56,12 @@ let is_interface (f: string): bool =
 
 let print_map (m: map): unit =
   List.iter (fun k ->
-    Util.fprint2 "%s: %s\n" k (must (smap_try_find m k))
-  ) (smap_keys m)
+    Util.print2 "%s: %s\n" k (must (smap_try_find m k))
+  ) (List.unique (smap_keys m))
 
 (** List the contents of all include directories, then build a map from long
-    names (e.g. a.b) to filenames (A.B.fst). Long names are all normalized to
-    lowercase. *)
+    names (e.g. a.b) to absolute filenames (/path/to/A.B.fst). Long names are all
+    normalized to lowercase. *)
 let build_map (): map =
   let include_directories = Options.get_include_path (getcwd ()) in
   let map = smap_create 41 in
@@ -81,9 +81,9 @@ let build_map (): map =
                   raise (Err (Util.format1 "Found both a .fs and a .fst (or both a .fsi and a .fsti) (%s)" f));
                 (* Note: we always record a dependency against the interface, if found. *)
                 if not (is_interface existing_file) then
-                  smap_add map key f
+                  smap_add map key (join_paths d f)
             | None ->
-                smap_add map key f
+                smap_add map key (join_paths d f)
             end
         | None ->
             ()
@@ -106,7 +106,7 @@ let enter_namespace (original_map: map) (working_map: map) (prefix: string): boo
       let filename = must (smap_try_find original_map k) in
       smap_add working_map suffix filename;
       found := true
-  ) (smap_keys original_map);
+  ) (List.unique (smap_keys original_map));
   !found
 
 
@@ -124,10 +124,11 @@ let lowercase_join_longident (l: lident) (last: bool) =
 let check_module_declaration_against_filename (lid: lident) (filename: string): unit =
   let k' = lowercase_join_longident lid true in
   if String.lowercase (must (check_and_strip_suffix (basename filename))) <> k' then
-    Util.fprint2 "Warning: the module declaration \"module %s\" \
+    Util.fprint stderr "Warning: the module declaration \"module %s\" \
       found in file %s does not match its filename. Dependencies will be \
-      incorrect.\n" (string_of_lid lid true) filename
+      incorrect.\n" [string_of_lid lid true; filename]
 
+exception Exit
 
 (** Parse a file, walk its AST, return a list of FStar compilation units it
     depends on. *)
@@ -147,23 +148,38 @@ let collect_one (original_map: smap<string>) (filename: string): list<string> =
     | None ->
         let r = enter_namespace original_map working_map key in
         if not r then
-          Util.fprint1 "Warning: no modules in namespace %s and no file with \
-          that name either\n" (string_of_lid lid true)
+          Util.fprint stderr "Warning: no modules in namespace %s and no file with \
+          that name either\n" [string_of_lid lid true]
     end
   in
 
   (* In [dsenv.fs], in [prepare_module_or_interface], some open directives are
    * auto-generated. *)
   let auto_open =
-    let me = String.lowercase (must (check_and_strip_suffix filename)) in
-    if me = lowercase_join_longident Const.prims_lid true then
-      []
-    else if me = lowercase_join_longident Const.st_lid true then
-      [ Const.prims_lid ]
-    else if me = lowercase_join_longident Const.all_lid true then
-      [ Const.prims_lid; Const.st_lid ]
-    else
-      [ Const.prims_lid; Const.st_lid; Const.all_lid; Const.fstar_ns_lid ]
+    let index_of s l =
+      let found = ref (-1) in
+      try
+        List.iteri (fun i x ->
+          if s = x then begin
+            found := i;
+            raise Exit
+          end
+        ) l;
+        -1
+      with Exit ->
+        !found
+    in
+    (* All the dependencies of FStar.All.fst, in order. *)
+    let ordered = [ "fstar"; "prims"; "fstar.set"; "fstar.heap"; "fstar.st"; "fstar.all" ] in
+    (* The [open] statements that we wish to prepend. *)
+    let desired_opens = [ Const.fstar_ns_lid; Const.prims_lid; Const.st_lid; Const.all_lid ] in
+    let me = String.lowercase (must (check_and_strip_suffix (basename filename))) in
+    let index_or_length s l =
+      let i = index_of s l in
+      if i < 0 then List.length l else i
+    in
+    let my_index = index_or_length me ordered in
+    List.filter (fun lid -> index_or_length (lowercase_join_longident lid true) ordered < my_index) desired_opens
   in
   List.iter record_open auto_open;
 
@@ -204,7 +220,7 @@ let collect_one (original_map: smap<string>) (filename: string): list<string> =
     | Tycon (_, ts) ->
         List.iter collect_tycon ts
     | Exception (_, t) ->
-        iter_opt t collect_term 
+        iter_opt t collect_term
     | NewEffect (_, ed) ->
         collect_effect_decl ed
     | Pragma _ ->
@@ -267,7 +283,7 @@ let collect_one (original_map: smap<string>) (filename: string): list<string> =
             add_dep filename
         | None ->
             if List.length lid.ns > 0 then
-              Util.fprint1 "Warning: unbound module reference %s\n" (string_of_lid lid false)
+              Util.fprint stderr "Warning: unbound module reference %s\n" [string_of_lid lid false]
         end
 
     | Construct (_, termimps) ->
@@ -392,8 +408,8 @@ let collect (filenames: list<string>): t =
   (* At this point, we have the (immediate) dependency graph of all the files. *)
   let print_graph () =
     List.iter (fun k ->
-      Util.fprint2 "%s: %s\n" k (String.concat " " (fst (must (smap_try_find graph k))))
-    ) (smap_keys graph)
+      Util.print2 "%s: %s\n" k (String.concat " " (fst (must (smap_try_find graph k))))
+    ) (List.unique (smap_keys graph))
   in
 
   (* Compute the transitive closure. *)
@@ -402,7 +418,7 @@ let collect (filenames: list<string>): t =
     let direct_deps, color = must (smap_try_find graph short) in
     match color with
     | Gray ->
-        Util.fprint1 "Recursive dependency on file %s\n" f;
+        Util.print1 "Recursive dependency on file %s\n" f;
         print_string "Here's the (non-transitive) dependency graph:\n";
         print_graph ();
         print_string "\n";
@@ -414,19 +430,35 @@ let collect (filenames: list<string>): t =
     | White ->
         (* Unvisited. Compute. *)
         smap_add graph short (direct_deps, Gray);
-        let transitive_deps = List.flatten (List.map discover direct_deps) in
-        let all_deps = List.unique (direct_deps @ transitive_deps) in
+        let all_deps = List.unique (List.flatten (List.map (fun dep ->
+          dep :: discover dep
+        ) direct_deps)) in
         smap_add graph short (all_deps, Black);
         all_deps
   in
 
-  List.map (fun f -> f, discover f) filenames
+  List.map (fun f -> f, List.rev (discover f)) filenames
 
 
 (** Print the dependencies as returned by [collect] in a Makefile-compatible
     format. *)
-let print (deps: t): unit =
+let print_make (deps: t): unit =
   List.iter (fun (f, deps) ->
-    let deps = List.map (fun s -> replace_string s " " "\\ ") deps in
-    Util.fprint2 "%s: %s\n" f (String.concat " " deps)
+    let deps = List.map (fun s -> replace_string s " " "\\ " |> basename) deps in
+    Util.print2 "%s: %s\n" f (String.concat " " deps)
   ) deps
+
+let print_nubuild (deps: t): unit =
+  let f, deps = List.hd (List.rev deps) in
+  List.iter print_endline deps
+
+let print (deps: t): unit =
+  match !Options.dep with
+  | Some "nubuild" ->
+      print_nubuild deps
+  | Some "make" ->
+      print_make deps
+  | Some _ ->
+      failwith "Unknown tool for --dep"
+  | None ->
+      assert false

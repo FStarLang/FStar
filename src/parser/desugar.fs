@@ -1665,7 +1665,7 @@ let desugar_partial_modul curmod env (m:AST.modul) : env_t * Syntax.modul =
 let desugar_modul env (m:AST.modul) : env_t * Syntax.modul =
   let env, modul, pop_when_done = desugar_modul_common None env m in
   let env = DesugarEnv.finish_module_or_interface env modul in
-  if Options.should_dump modul.name.str then Util.fprint1 "%s\n" (Print.modul_to_string modul);
+  if Options.should_dump modul.name.str then Util.print1 "%s\n" (Print.modul_to_string modul);
   (if pop_when_done then export_interface modul.name env else env), modul
 
 let desugar_file env (f:file) =

@@ -57,7 +57,7 @@ let find_file (context:string) (filename:string) : string =
 
 let read_file (filename:string) =
   if !Options.debug <> []
-  then Util.fprint1 "Opening file: %s\n" filename;
+  then Util.print1 "Opening file: %s\n" filename;
   let fs = new System.IO.StreamReader(filename) in
   fs.ReadToEnd()
 

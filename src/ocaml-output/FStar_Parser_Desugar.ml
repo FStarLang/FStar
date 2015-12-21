@@ -3098,7 +3098,7 @@ in (match (_44_3025) with
 (let env = (FStar_Parser_DesugarEnv.finish_module_or_interface env modul)
 in (let _44_3027 = if (FStar_Options.should_dump modul.FStar_Absyn_Syntax.name.FStar_Absyn_Syntax.str) then begin
 (let _110_1153 = (FStar_Absyn_Print.modul_to_string modul)
-in (FStar_Util.fprint1 "%s\n" _110_1153))
+in (FStar_Util.print1 "%s\n" _110_1153))
 end else begin
 ()
 end

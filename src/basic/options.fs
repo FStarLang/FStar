@@ -97,13 +97,14 @@ let _include_path = Util.mk_ref []
 let interactive_fsi = Util.mk_ref false
 let print_fuels = Util.mk_ref false
 let cardinality = Util.mk_ref "off"
+let timing = Util.mk_ref false
 let warn_cardinality () = match !cardinality with
     | "warn" -> true
     | _ -> false
 let check_cardinality () = match !cardinality with
     | "check" -> true
     | _ -> false
-let dep = ref false
+let dep = ref None
 let auto_deps = Util.mk_ref false
 let find_deps = Util.mk_ref false
 let init_options () = 
@@ -156,7 +157,8 @@ let init_options () =
     use_native_int := false;
     auto_deps := false;
     find_deps := false;
-    dep := false
+    dep := None;
+    timing := false
 
 let set_fstar_home () =
   let fh = match !fstar_home_opt with
@@ -221,7 +223,7 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "codegen-lib", OneArg ((fun s -> codegen_libs := (Util.split s ".")::!codegen_libs), "namespace"), "External runtime library library");
      ( noshort, "debug", OneArg ((fun x -> debug := x::!debug), "module name"), "Print LOTS of debugging information while checking module [arg]");
      ( noshort, "debug_level", OneArg ((fun x -> debug_level := dlevel x::!debug_level), "Low|Medium|High|Extreme"), "Control the verbosity of debugging info");
-     ( noshort, "dep", ZeroArgs (fun () -> dep := true), "Output the transitive closure of the dependency graph in a format suitable for make");
+     ( noshort, "dep", OneArg ((fun x -> dep := Some x), "make|nubuild"), "Output the transitive closure of the dependency graph in a format suitable for the given tool");
      ( noshort, "dump_module", OneArg ((fun x -> dump_module := Some x), "module name"), "");
      ( noshort, "eager_inference", ZeroArgs (fun () -> eager_inference := true), "Solve all type-inference constraints eagerly; more efficient but at the cost of generality");
      ( noshort, "find_deps", ZeroArgs (fun () -> find_deps := true; auto_deps := true), "find transitive dependencies given build-config other-files specifications.");
@@ -258,6 +260,7 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "silent", ZeroArgs (fun () -> silent := true), "");
      ( noshort, "smt", OneArg ((fun x -> z3_exe := x), "path"), "Path to the SMT solver (usually Z3, but could be any SMT2-compatible solver)");
      ( noshort, "split_cases", OneArg ((fun n -> split_cases := int_of_string n), "t"), "Partition VC of a match into groups of n cases");
+     ( noshort, "timing", ZeroArgs (fun () -> timing := true), "Print the time it takes to verify each top-level definition");
      ( noshort, "trace_error", ZeroArgs (fun () -> trace_error := true), "Don't print an error message; show an exception trace instead");
      ( noshort, "unthrottle_inductives", ZeroArgs (fun () -> unthrottle_inductives := true), "Let the SMT solver unfold inductive types to arbitrary depths (may affect verifier performance)");
      ( noshort, "use_build_config", ZeroArgs (fun () -> use_build_config := true), "Expect just a single file on the command line and no options; will read the 'build-config' prelude from the file");

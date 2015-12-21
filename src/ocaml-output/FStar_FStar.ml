@@ -58,7 +58,7 @@ n
 end)
 in if (errs > 0) then begin
 (let _65_29 = (let _131_19 = (FStar_Util.string_of_int errs)
-in (FStar_Util.fprint1 "Error: %s errors were reported (see above)\n" _131_19))
+in (FStar_Util.print1 "Error: %s errors were reported (see above)\n" _131_19))
 in (FStar_All.exit 1))
 end else begin
 ()
@@ -332,7 +332,7 @@ in (dsenv, env))))
 in (let fail = (fun curmod dsenv_mark env_mark -> (let _65_235 = (let _131_134 = (FStar_Tc_Errors.report_all ())
 in (FStar_All.pipe_right _131_134 Prims.ignore))
 in (let _65_237 = (FStar_ST.op_Colon_Equals FStar_Tc_Errors.num_errs 0)
-in (let _65_239 = (FStar_Util.fprint1 "%s\n" fail)
+in (let _65_239 = (FStar_Util.print1 "%s\n" fail)
 in (let _65_243 = (reset_mark dsenv_mark env_mark)
 in (match (_65_243) with
 | (dsenv, env) -> begin
@@ -370,7 +370,7 @@ in (match (_65_262) with
 in (match (res) with
 | Some (curmod, dsenv, env) -> begin
 if ((FStar_ST.read FStar_Tc_Errors.num_errs) = 0) then begin
-(let _65_269 = (FStar_Util.fprint1 "\n%s\n" ok)
+(let _65_269 = (FStar_Util.print1 "\n%s\n" ok)
 in (let _65_273 = (commit_mark dsenv env)
 in (match (_65_273) with
 | (dsenv, env) -> begin
@@ -441,7 +441,7 @@ in (FStar_Util.concat_l "\n" _131_146))
 in (FStar_Util.format1 "%s\n" _131_147))
 in (FStar_Util.print_string _131_148))
 end else begin
-if (FStar_ST.read FStar_Options.dep) then begin
+if ((FStar_ST.read FStar_Options.dep) <> None) then begin
 (let _131_149 = (FStar_Parser_Dep.collect filenames)
 in (FStar_Parser_Dep.print _131_149))
 end else begin
@@ -478,11 +478,11 @@ end
 in (let _65_318 = if (FStar_ST.read FStar_Options.trace_error) then begin
 (let _131_154 = (FStar_Util.message_of_exn e)
 in (let _131_153 = (FStar_Util.trace_of_exn e)
-in (FStar_Util.fprint2 "\nUnexpected error\n%s\n%s\n" _131_154 _131_153)))
+in (FStar_Util.print2 "\nUnexpected error\n%s\n%s\n" _131_154 _131_153)))
 end else begin
 if (not ((FStar_Absyn_Util.handleable e))) then begin
 (let _131_155 = (FStar_Util.message_of_exn e)
-in (FStar_Util.fprint1 "\nUnexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" _131_155))
+in (FStar_Util.print1 "\nUnexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" _131_155))
 end else begin
 ()
 end

@@ -24,6 +24,9 @@ exception Failure of string
 val max_int: int
 val return_all: 'a -> 'a
 
+type time = System.DateTime
+val now : unit -> time
+val time_diff: time -> time -> float
 
 (* generic utils *)
 (* Functional sets *)
@@ -48,6 +51,7 @@ val smap_of_list: list<(string*'value)> -> smap<'value>
 val smap_try_find: smap<'value> -> string -> option<'value>
 val smap_fold: smap<'value> -> (string -> 'value -> 'a -> 'a) -> 'a -> 'a
 val smap_remove: smap<'value> -> string -> unit
+(* The list may contain duplicates. *)
 val smap_keys: smap<'value> -> list<string>
 val smap_copy: smap<'value> -> smap<'value>
 
@@ -66,12 +70,20 @@ val format2: string -> string -> string -> string
 val format3: string -> string -> string -> string -> string
 val format4: string -> string -> string -> string -> string -> string
 val format5: string -> string -> string -> string -> string -> string -> string
-val fprint1: string -> string -> unit
-val fprint2: string -> string -> string -> unit
-val fprint3: string -> string -> string -> string -> unit
-val fprint4: string -> string -> string -> string -> string -> unit
-val fprint5: string -> string -> string -> string -> string -> string -> unit
-val fprint6: string -> string -> string -> string -> string -> string -> string -> unit
+val print1: string -> string -> unit
+val print2: string -> string -> string -> unit
+val print3: string -> string -> string -> string -> unit
+val print4: string -> string -> string -> string -> string -> unit
+val print5: string -> string -> string -> string -> string -> string -> unit
+val print6: string -> string -> string -> string -> string -> string -> string -> unit
+val print: string -> list<string> -> unit
+
+(* Clients of this module should *NOT* rely on this representation *)
+type out_channel = TextWriter
+val stderr: out_channel
+val stdout: out_channel
+val fprint: out_channel -> string -> list<string> -> unit
+
 val print_string : string -> unit
 val print_any : 'a -> unit
 val strcat : string -> string -> string
@@ -261,3 +273,4 @@ val current_tid: unit -> int
 val sleep: int -> unit
 val atomically: (unit -> 'a) -> 'a
 val spawn: (unit -> unit) -> unit
+val print_endline: string -> unit

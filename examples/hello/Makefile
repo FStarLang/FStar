@@ -35,6 +35,12 @@ testseq: out testseq.fst
 	(cd out; ocamlc -o testseq.exe nums.cma prims.ml FStar_IO.ml FStar_Seq.ml TestSeq.ml)
 	./out/TestSeq.exe
 
+bat_testseq: out testseq.fst
+	$(FSTAR) --use_native_int --odir out --codegen OCaml testseq.fst
+	cp $(LIB)/ml/native_int/prims.ml $(LIB)/ml/FStar_IO.ml FStar_Seq.ml out
+	(cd out; ocamlfind ocamlc -package batteries -linkpkg -g -o testseq.exe nums.cma prims.ml FStar_IO.ml FStar_Seq.ml TestSeq.ml)
+	./out/TestSeq.exe
+
 out:
 	mkdir -p out
 

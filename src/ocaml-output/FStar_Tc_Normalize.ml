@@ -128,11 +128,11 @@ type 'a config =
  and 'a memo =
 'a Prims.option FStar_ST.ref
 
-let is_Mkconfig = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkconfig")))
+let is_Mkconfig = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkconfig"))))
 
-let is_Mkenvironment = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkenvironment")))
+let is_Mkenvironment = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkenvironment"))))
 
-let is_Mkstack = (Obj.magic (fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkstack")))
+let is_Mkstack = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkstack"))))
 
 let is_T = (fun _discr_ -> (match (_discr_) with
 | T (_) -> begin
@@ -718,7 +718,7 @@ end
 if ((b' = None) || (Some (b) = b')) then begin
 (let _33_698 = if (FStar_Tc_Env.debug tcenv FStar_Options.Low) then begin
 (let _99_321 = (FStar_Range.string_of_range sfx)
-in (FStar_Util.fprint2 "Stripping label %s because of enclosing refresh %s\n" l _99_321))
+in (FStar_Util.print2 "Stripping label %s because of enclosing refresh %s\n" l _99_321))
 end else begin
 ()
 end
@@ -726,7 +726,7 @@ in t)
 end else begin
 (let _33_700 = if (FStar_Tc_Env.debug tcenv FStar_Options.Low) then begin
 (let _99_322 = (FStar_Range.string_of_range sfx)
-in (FStar_Util.fprint1 "Normalizer refreshing label: %s\n" _99_322))
+in (FStar_Util.print1 "Normalizer refreshing label: %s\n" _99_322))
 end else begin
 ()
 end

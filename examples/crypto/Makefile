@@ -1,18 +1,17 @@
 VERFILES=cca2.fst # encrypt3.fst formatting.fst rpc.fst
 
+LIB = ../../contrib/CoreCrypto/ml
+
 ifeq ($(OS),Windows_NT)
-    # internally flexlink uses i686-w64-mingw32-gcc.exe
-    CC = flexlink -chain mingw -v -v -exe -lgdi32
-    # flexlink is needed to link in	/cygdrive/c/OCaml/bin/flexdll_initer_mingw.o /cygdrive/c/OCaml/bin/flexdll_mingw.o
-    LIB = $(FSTAR_HOME)/3rdparty/win32 #place to look for libcrypto.a
+  CC =
+  EXTRA_PATH = PATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin/:$(PATH)"
 else
+    EXTRA_PATH = LD_LIBRARY_PATH=.:$(LIB)
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Darwin)
-        CC = gcc-5
-        LIB = $(FSTAR_HOME)/3rdparty/osx #place to look for libcrypto.a
+        CC = -cc gcc-5
     else
-        CC = gcc
-        LIB = $(FSTAR_HOME)/3rdparty/x86_64 #place to look for libcrypto.a
+        CC = -cc gcc
     endif
 endif
 
@@ -88,15 +87,18 @@ RPC.ml: sha1.fst mac.fst formatting.fst rpc.fst
 					--codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml --use_native_int
 
 OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_HOME)/contrib/Platform/ml $(FSTAR_HOME)/contrib/CoreCrypto/ml $(FSTAR_HOME)/lib/ml/native_int $(FSTAR_HOME)/lib/ml)
-OCAMLC=ocamlfind ocamlopt -cc "$(CC)" -cclib -L$(LIB) -cclib -lcrypto -package batteries -linkpkg -g -thread
+OCAMLC=ocamlfind ocamlopt $(CC) -ccopt -L$(LIB) -package batteries -linkpkg -g -thread
 SUPPORT_LIBS=$(addprefix $(FSTAR_HOME)/lib/ml/, native_int/prims.ml FStar_ST.ml FStar_All.ml FStar_List.ml FStar_String.ml FStar_IO.ml)
-CONTRIB_LIBS=$(addprefix $(FSTAR_HOME)/contrib/, Platform/ml/platform.cmx CoreCrypto/ml/CoreCrypto.cmxa)
-rpc.exe: RPC.ml
-	make -C $(FSTAR_HOME)/contrib/
+CONTRIB_LIBS=$(addprefix $(FSTAR_HOME)/contrib/, CoreCrypto/ml/corecrypto.cmxa)
+
+$(CONTRIB_LIBS):
+	$(MAKE) -C $(FSTAR_HOME)/contrib/
+
+rpc.exe: RPC.ml $(CONTRIB_LIBS)
 	$(OCAMLC) -o $@ $(OCAML_INCLUDE_PATHS) $(SUPPORT_LIBS) $(CONTRIB_LIBS) FStar_Seq.ml FStar_SeqProperties.ml SHA1.ml MAC.ml Formatting.ml RPC.ml
 
 rpc-test: rpc.exe
-	./rpc.exe
+	$(EXTRA_PATH) ./rpc.exe
 
 cnt-protocol: cnt-format.fst mac.fst sha1.fst cnt-protocol.fst
 	make -C $(FSTAR_HOME)/contrib/
@@ -127,7 +129,7 @@ cnt-protocol.exe: CntProtocol.ml
 	$(OCAMLC) -o $@ $(OCAML_INCLUDE_PATHS) $(SUPPORT_LIBS) $(CONTRIB_LIBS) FStar_Seq.ml ../../lib/ml/FStar_Set.ml FStar_SeqProperties.ml SHA1.ml MAC.ml CntFormat.ml CntProtocol.ml
 
 cnt-test: cnt-protocol.exe
-	./cnt-protocol.exe
+	$(EXTRA_PATH) ./cnt-protocol.exe
 
 clean:
 	rm -fr rpc *.ml *.cmi *.cmx *.o *.exe *~

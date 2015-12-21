@@ -72,7 +72,7 @@ let parse_file_raw = (fun fn -> (match ((FStar_Parser_ParseIt.parse (FStar_Util.
 ast
 end
 | FStar_Util.Inl (FStar_Util.Inr (_48_39)) -> begin
-(let _48_42 = (FStar_Util.fprint1 "%s: Expected a module\n" fn)
+(let _48_42 = (FStar_Util.print1 "%s: Expected a module\n" fn)
 in (FStar_All.exit 1))
 end
 | FStar_Util.Inr (msg, r) -> begin

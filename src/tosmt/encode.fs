@@ -417,7 +417,7 @@ let rec encode_knd_term (k:knd) (env:env_t) : (term * decls_t) =
 
         | Kind_abbrev(_, k0) ->
           if Tc.Env.debug env.tcenv (Options.Other "Encoding")
-          then Util.fprint2 "Encoding kind abbrev %s, expanded to %s\n" (Print.kind_to_string k) (Print.kind_to_string k0);
+          then Util.print2 "Encoding kind abbrev %s, expanded to %s\n" (Print.kind_to_string k) (Print.kind_to_string k0);
           encode_knd_term k0 env
 
         | Kind_uvar (uv, _) -> (* REVIEW: warn? *)
@@ -486,7 +486,7 @@ and encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) :
                             * decls_t                       (* top-level decls to be emitted *)
                             * list<either<btvdef, bvvdef>>) (* unmangled names *) =
 
-    if Tc.Env.debug env.tcenv Options.Low then Util.fprint1 "Encoding binders %s\n" (Print.binders_to_string ", " bs);
+    if Tc.Env.debug env.tcenv Options.Low then Util.print1 "Encoding binders %s\n" (Print.binders_to_string ", " bs);
 
     let vars, guards, env, decls, names = bs |> List.fold_left (fun (vars, guards, env, decls, names) b ->
         let v, g, env, decls', n = match fst b with
@@ -494,7 +494,7 @@ and encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) :
                 let a = unmangle a in
                 let aasym, aa, env' = gen_typ_var env a in
                 if Tc.Env.debug env.tcenv (Options.Other "Encoding")
-                then Util.fprint3 "Encoding type binder %s (%s) at kind %s\n" (Print.strBvd a) aasym (Print.kind_to_string k);
+                then Util.print3 "Encoding type binder %s (%s) at kind %s\n" (Print.strBvd a) aasym (Print.kind_to_string k);
                 let guard_a_k, decls' = encode_knd k env aa in //encode_knd' false k env aa in
                 (aasym, Type_sort),
                 guard_a_k,
@@ -878,12 +878,12 @@ and encode_exp (e:exp) (env:env_t) : (term
         let head = Util.compress_exp head in
 
                 if Env.debug env.tcenv <| Options.Other "186"
-                then Util.fprint2 "Recomputing type for %s\nFull term is %s\n" (Print.exp_to_string head) (Print.exp_to_string e);
+                then Util.print2 "Recomputing type for %s\nFull term is %s\n" (Print.exp_to_string head) (Print.exp_to_string e);
 
         let head_type = Util.unrefine <| whnf env (Util.unrefine (Tc.Recheck.recompute_typ head)) in //head should be a variable, so this should be fast to recompute
 
                 if Tc.Env.debug env.tcenv <| Options.Other "Encoding"
-                then Util.fprint3 "Recomputed type of head %s (%s) to be %s\n" (Print.exp_to_string head) (Print.tag_of_exp head) (Print.typ_to_string head_type);
+                then Util.print3 "Recomputed type of head %s (%s) to be %s\n" (Print.exp_to_string head) (Print.tag_of_exp head) (Print.typ_to_string head_type);
 
         begin match Util.function_formals head_type with
                     | None -> failwith (Util.format3 "(%s) term is %s; head type is %s\n"
@@ -945,7 +945,7 @@ and encode_pat env (pat:Syntax.pat) : list<(env_t * pattern)>  (* one for each d
         | _ -> [encode_one_pat env pat]
 
 and encode_one_pat (env:env_t) pat : (env_t * pattern) =
-        if Tc.Env.debug env.tcenv Options.Low then Util.fprint1 "Encoding pattern %s\n" (Print.pat_to_string pat);
+        if Tc.Env.debug env.tcenv Options.Low then Util.print1 "Encoding pattern %s\n" (Print.pat_to_string pat);
         let vars, pat_exp_or_typ = Tc.Util.decorated_pattern_as_either pat in
 
         let env, vars = vars |> List.fold_left (fun (env, vars) v -> match v with
@@ -1192,7 +1192,7 @@ and encode_formula_with_labels (phi:typ) (env:env_t) : (term * labels * decls_t)
         vars, pats, mk_and_l guards, body, labs, decls@List.flatten decls'@decls'' in
 
     if Tc.Env.debug env.tcenv Options.Low
-    then Util.fprint1 ">>>> Destructing as formula ... %s\n" (Print.formula_to_string phi);
+    then Util.print1 ">>>> Destructing as formula ... %s\n" (Print.formula_to_string phi);
     let phi = Util.compress_typ phi in
     match Util.destruct_typ_as_formula phi with
         | None -> fallback phi
@@ -1204,7 +1204,7 @@ and encode_formula_with_labels (phi:typ) (env:env_t) : (term * labels * decls_t)
 
         | Some (Util.QAll(vars, pats, body)) ->
           if Tc.Env.debug env.tcenv Options.Low
-          then Util.fprint1 ">>>> Got QALL [%s]\n" (vars |> Print.binders_to_string "; ");
+          then Util.print1 ">>>> Got QALL [%s]\n" (vars |> Print.binders_to_string "; ");
 
           let vars, pats, guard, body, labs, decls = encode_q_body env vars pats body in
           (mkForall(pats, vars, mkImp(guard, body)), labs, decls)
@@ -1434,7 +1434,7 @@ let primitive_type_axioms : lident -> string -> term -> list<decl> =
 
 let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t * env_t) =
     if Tc.Env.debug env.tcenv Options.Low
-    then Util.fprint1 ">>>>Encoding [%s]\n"
+    then Util.print1 ">>>>Encoding [%s]\n"
          <| (Print.sigelt_to_string se);//Util.lids_of_sigelt se |> List.map Print.sli |> String.concat ", ");
     let nm = match Util.lid_of_sigelt se with
         | None -> ""
@@ -1994,7 +1994,7 @@ let encode_env_bindings (env:env_t) (bindings:list<Tc.Env.binding>) : (decls_t *
             let xxsym, xx, env' = new_term_constant env x in
             let t1 = Normalize.norm_typ [Normalize.DeltaHard; Normalize.Beta; Normalize.Eta; Normalize.EtaArgs; Normalize.Simplify] env.tcenv t0 in
             if Tc.Env.debug env.tcenv <| Options.Other "Encoding"
-            then (Util.fprint3 "Normalized %s : %s to %s\n" (Print.strBvd x) (Print.typ_to_string t0) (Print.typ_to_string t1));
+            then (Util.print3 "Normalized %s : %s to %s\n" (Print.strBvd x) (Print.typ_to_string t0) (Print.typ_to_string t1));
             let t, decls' = encode_typ_pred None t1 env xx in
             let caption =
                 if !Options.logQueries
@@ -2091,7 +2091,7 @@ let encode_sig tcenv se =
 let encode_modul tcenv modul =
     let name = Util.format2 "%s %s" (if modul.is_interface then "interface" else "module")  modul.name.str in
     if Tc.Env.debug tcenv Options.Low
-    then Util.fprint2 "Encoding externals for %s ... %s exports\n" name (List.length modul.exports |> string_of_int);
+    then Util.print2 "Encoding externals for %s ... %s exports\n" name (List.length modul.exports |> string_of_int);
     let env = get_env tcenv in
     let decls, env = encode_signature ({env with warn=false}) modul.exports in
     let caption decls =
@@ -2100,7 +2100,7 @@ let encode_modul tcenv modul =
          Caption msg::decls@[Caption ("End " ^ msg)]
     else decls in
     set_env ({env with warn=true});
-    if Tc.Env.debug tcenv Options.Low then Util.fprint1 "Done encoding externals for %s\n" name;
+    if Tc.Env.debug tcenv Options.Low then Util.print1 "Done encoding externals for %s\n" name;
     let decls = caption decls in
     Z3.giveZ3 decls
 
@@ -2123,7 +2123,7 @@ let solve tcenv q : unit =
             let closing, bindings = aux bindings in 
             Util.close_forall (List.rev closing) q, bindings in 
         let env_decls, env = encode_env_bindings env (List.filter (function Binding_sig _ -> false | _ -> true) bindings) in
-        if debug tcenv Options.Low then Util.fprint1 "Encoding query formula: %s\n" (Print.formula_to_string q);//(Normalize.formula_norm_to_string tcenv q);
+        if debug tcenv Options.Low then Util.print1 "Encoding query formula: %s\n" (Print.formula_to_string q);//(Normalize.formula_norm_to_string tcenv q);
         let phi, labels, qdecls = encode_formula_with_labels q env in
         let label_prefix, label_suffix = encode_labels labels in
         let query_prelude =
@@ -2159,7 +2159,7 @@ let solve tcenv q : unit =
                             | [] -> [("Unknown assertion failed", dummyRange)]
                             | _ -> errs in
                     if !Options.print_fuels
-                    then (Util.fprint3 "(%s) Query failed with maximum fuel %s and ifuel %s\n"
+                    then (Util.print3 "(%s) Query failed with maximum fuel %s and ifuel %s\n"
                             (Range.string_of_range (Env.get_range tcenv))
                             (!Options.max_fuel |> Util.string_of_int)
                             (!Options.max_ifuel |> Util.string_of_int));
@@ -2182,7 +2182,7 @@ let solve tcenv q : unit =
                 and cb (prev_fuel, prev_ifuel) (p:decl) alt (ok, errs) =
                     if ok
                     then if !Options.print_fuels
-                         then (Util.fprint3 "(%s) Query succeeded with fuel %s and ifuel %s\n"
+                         then (Util.print3 "(%s) Query succeeded with fuel %s and ifuel %s\n"
                                 (Range.string_of_range (Env.get_range tcenv))
                                 (Util.string_of_int prev_fuel)
                                 (Util.string_of_int prev_ifuel))

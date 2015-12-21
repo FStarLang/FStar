@@ -56,7 +56,7 @@ end)) all_errs)
 in (let _34_39 = (FStar_All.pipe_right all_errs (FStar_List.iter (fun _34_38 -> (match (_34_38) with
 | (r, msg) -> begin
 (let _100_38 = (FStar_Range.string_of_range r)
-in (FStar_Util.fprint2 "%s: %s\n" _100_38 msg))
+in (FStar_Util.print2 "%s: %s\n" _100_38 msg))
 end))))
 in (FStar_List.length all_errs))))
 end))
