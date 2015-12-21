@@ -145,9 +145,9 @@ let lbname_to_string = function
   | Inr l -> lid_to_string l
 
 let tag_of_term (t:term) = match t.n with
-  | Tm_bvar _ -> "Tm_bvar"
-  | Tm_name _ -> "Tm_name"
-  | Tm_fvar _ -> "Tm_fvar"
+  | Tm_bvar x -> "Tm_bvar: "   ^ db_to_string x
+  | Tm_name x -> "Tm_name: " ^ nm_to_string x
+  | Tm_fvar x -> "Tm_fvar: "   ^ lid_to_string (fst x).v
   | Tm_uinst _ -> "Tm_uinst"
   | Tm_constant _ -> "Tm_constant"
   | Tm_type _ -> "Tm_type"
@@ -211,6 +211,7 @@ let rec term_to_string x =
                         (p |> pat_to_string)
                         (match wopt with | None -> "" | Some w -> Util.format1 "when %s" (w |> term_to_string))
                         (e |> term_to_string))))
+  | Tm_uinst(t, _) -> term_to_string t
   | _ -> tag_of_term x
 
 and  pat_to_string x = match x.v with

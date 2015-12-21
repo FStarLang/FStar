@@ -49,7 +49,7 @@ type step =
   | DeltaHard       
   | Beta            //remove? Always do beta
   | DeltaComp       
-  | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
+  | Simplify        //Simplifies some basic log cfg ical tautolog cfg ies: not part of definitional equality!
   | SNComp
   | Unmeta
   | Unlabel
@@ -102,8 +102,8 @@ let stack_elt_to_string = function
 let stack_to_string s = 
     List.map stack_elt_to_string s |> String.concat "; "
 
-let log f = 
-    if !debug_flag
+let log cfg f = 
+    if Env.debug cfg.tcenv (Options.Other "Norm")
     then f()
     else ()
 
@@ -328,10 +328,10 @@ let norm_universe env u =
 (********************************************************************************************************************)
 let rec norm : cfg -> env -> stack -> term -> term = 
     fun cfg env stack t -> 
-        log (fun () -> Printf.printf ">>> %s\n" (Print.tag_of_term t));
+        log cfg  (fun () -> Printf.printf ">>> %s\n" (Print.tag_of_term t));
         let t = compress t in
-//        log (fun () -> Printf.printf "Norm %s\n\t\tEnv=%s\n\t\tStack=%s\n" (Print.term_to_string t) (env_to_string env) (stack_to_string stack));
-        log (fun () -> Printf.printf "Norm %s\n" (Print.term_to_string t));
+//        log cfg  (fun () -> Printf.printf "Norm %s\n\t\tEnv=%s\n\t\tStack=%s\n" (Print.term_to_string t) (env_to_string env) (stack_to_string stack));
+        log cfg  (fun () -> Printf.printf "Norm %s\n" (Print.term_to_string t));
         match t.n with 
           | Tm_delayed _ -> 
             failwith "Impossible"
@@ -356,12 +356,13 @@ let rec norm : cfg -> env -> stack -> term -> term =
             rebuild cfg env stack t
            
           | Tm_fvar (f, _) -> 
-            if List.contains DeltaHard cfg.steps
-            || (List.contains Delta cfg.steps && not (is_empty stack)) //delta only if reduction is blocked
-            then match Env.lookup_definition cfg.tcenv f.v with 
+//            if List.contains DeltaHard cfg.steps
+//            || (List.contains Delta cfg.steps && not (is_empty stack)) //delta only if reduction is blocked
+//            then 
+            begin match Env.lookup_definition cfg.tcenv f.v with 
                     | None -> rebuild cfg env stack t
                     | Some t -> norm cfg env stack t 
-            else rebuild cfg env stack t     
+            end
 
           | Tm_bvar x -> 
             begin match lookup_bvar env x with 
@@ -370,7 +371,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 | Clos(env, t0, r) ->  
                    begin match !r with 
                         | Some (env, t') -> 
-                            log (fun () -> Printf.printf "Lazy hit: %s cached to %s\n" (Print.term_to_string t) (Print.term_to_string t'));
+                            log cfg  (fun () -> Printf.printf "Lazy hit: %s cached to %s\n" (Print.term_to_string t) (Print.term_to_string t'));
                             begin match (compress t').n with
                                 | Tm_abs _  ->  
                                     norm cfg env stack t'
@@ -396,13 +397,13 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         | [] -> failwith "Impossible"
                         | [_] -> body
                         | _::tl -> mk (Tm_abs(tl, body)) t.pos in
-                      log (fun () -> Printf.printf "\tShifted %s\n" (closure_to_string c));
+                      log cfg  (fun () -> Printf.printf "\tShifted %s\n" (closure_to_string c));
                       norm cfg (c :: env) stack body 
                   end
 
                 | MemoLazy r :: stack -> 
                   set_memo r (env, t); //We intentionally do not memoize the strng normal form; only the WHNF
-                  log (fun () -> Printf.printf "\tSet memo\n");
+                  log cfg  (fun () -> Printf.printf "\tSet memo\n");
                   norm cfg env stack t
 
                 | App _ :: _ 
@@ -412,13 +413,13 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   then rebuild cfg env stack (closure_as_term env t) //But, if the environment is non-empty, we need to substitute within the term
                   else let bs, body = open_term bs body in 
                        let env' = bs |> List.fold_left (fun env _ -> Dummy::env) env in
-                       log (fun () -> Printf.printf "\tShifted %d dummies\n" (List.length bs));
+                       log cfg  (fun () -> Printf.printf "\tShifted %d dummies\n" (List.length bs));
                        norm cfg env' (Abs(env, bs, t.pos)::stack) body
             end
 
           | Tm_app(head, args) -> 
             let stack = stack |> List.fold_right (fun (a, aq) stack -> Arg (Clos(env, a, Util.mk_ref None),aq,t.pos)::stack) args in
-            log (fun () -> Printf.printf "\tPushed %d arguments\n" (List.length args));
+            log cfg  (fun () -> Printf.printf "\tPushed %d arguments\n" (List.length args));
             norm cfg env stack head
                             
           | Tm_refine(x, f) -> //non tail-recursive; the alternative is to keep marks on the stack to rebuild the term ... but that's very heavy
@@ -426,7 +427,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             then rebuild cfg env stack (closure_as_term env t)
             else let t_x = norm cfg env [] x.sort in 
                  let closing, f = open_term [(x, None)] f in
-                 let f = norm cfg env [] f in 
+                 let f = norm cfg (Dummy::env) [] f in 
                  let t = mk (Tm_refine({x with sort=t_x}, close closing f)) t.pos in 
                  rebuild cfg env stack t 
 
@@ -434,7 +435,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             if List.contains WHNF cfg.steps
             then rebuild cfg env stack (closure_as_term env t)
             else let bs, c = open_comp bs c in 
-                 let c = norm_comp cfg env c in
+                 let c = norm_comp cfg (bs |> List.fold_left (fun env _ -> Dummy::env) env) c in
                  let t = arrow (norm_binders cfg env bs) c in
                  rebuild cfg env stack t
           
@@ -545,7 +546,7 @@ and rebuild : cfg -> env -> stack -> term -> term =
               rebuild cfg env stack t
 
             | Arg (Clos(env, tm, m), aq, r) :: stack ->
-              log (fun () -> Printf.printf "Rebuilding with arg %s\n" (Print.term_to_string tm));
+              log cfg  (fun () -> Printf.printf "Rebuilding with arg %s\n" (Print.term_to_string tm));
               //this needs to be tail recursive for reducing large terms
               begin match !m with 
                 | None -> 

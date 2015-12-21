@@ -309,7 +309,7 @@ let lookup_definition env lid =
   match lookup_qname env lid with
     | Some (Inr se) -> 
       begin match se with 
-        | Sig_let((_, lbs), _, _, _) ->
+        | Sig_let((_, lbs), _, _, quals) when not (List.contains Opaque quals) ->
             Util.find_map lbs (fun lb -> 
                 let lid' = right lb.lbname in
                 if lid_equals lid lid'

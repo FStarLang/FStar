@@ -1819,6 +1819,7 @@ let simplify_guard env g = match g.guard_f with
     | NonTrivial f ->
       if Env.debug env Options.High then Util.fprint1 "Simplifying guard %s\n" (Print.term_to_string f);
       let f = N.normalize [N.Beta; N.Simplify] env f in
+      if Env.debug env Options.High then Util.fprint1 "Simplified guard to %s\n" (Print.term_to_string f);
       let f = match f.n with
         | Tm_fvar (fv, _) when lid_equals fv.v Const.true_lid -> Trivial
         | _ -> NonTrivial f in

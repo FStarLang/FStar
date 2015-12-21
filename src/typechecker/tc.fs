@@ -1686,6 +1686,9 @@ let tc_inductive env ses quals lids =
             {x with sort=refined}, imp) in
 
 (*close*)let t_tc = Util.arrow (refined_tps@indices) (S.mk_Total t) in
+         let tps = SS.close_binders tps in
+         let k = SS.close tps k in
+         Printf.printf ">>>>>>>%s   %s : %s" (Print.lid_to_string tc) (Print.binders_to_string " " tps) (Print.term_to_string k);
          Env.push_local_binding env_tps (Env.Binding_lid(tc, ([], t_tc))), 
          Sig_inductive_typ(tc, [], tps, k, mutuals, data, quals, r), 
          u
@@ -1719,9 +1722,16 @@ let tc_inductive env ses quals lids =
                   let subst = tps |> List.mapi (fun i (x, _) -> DB(ntps - (1 + i), S.bv_to_name x)) in
 (*open*)          Util.arrow_formals (SS.subst subst t)  
                 | _ -> [], t in 
+        
+         if Env.debug env Options.Low then Util.fprint3 "Checking datacon  %s : %s -> %s \n" 
+                (Print.lid_to_string c) 
+                (Print.binders_to_string "->" arguments)
+                (Print.term_to_string result);
          
+
          let arguments, env', us = tc_tparams env arguments in 
-         let result, _ = tc_trivial_guard env result in 
+         Printf.printf "About to check result type : %s\n" (Print.term_to_string result);
+         let result, _ = tc_trivial_guard env' result in 
          let head, _ = Util.head_and_args result in
          let _ = match (SS.compress head).n with 
             | Tm_fvar (fv, _) when lid_equals fv.v tc_lid -> ()
@@ -1786,6 +1796,8 @@ let tc_inductive env ses quals lids =
     let env, tcs, g = List.fold_right (fun tc (env, all_tcs, g)  -> 
             let env, tc, tc_u = tc_tycon env tc in 
             let g' = Rel.universe_inequality S.U_zero tc_u in
+            if Env.debug env Options.Low 
+            then Util.fprint1 "Checked inductive: %s\n" (Print.sigelt_to_string tc);
             env, (tc, tc_u)::all_tcs, Rel.conj_guard g g') 
         tys
         (env, [], Rel.trivial_guard) in
