@@ -584,6 +584,7 @@ let rec head_matches t1 t2 : match_result =
     | Tm_refine(x, _), _  -> head_matches x.sort t2 |> head_match
     | _, Tm_refine(x, _)  -> head_matches t1 x.sort |> head_match
 
+    | Tm_type _, Tm_type _ 
     | Tm_arrow _, Tm_arrow _ -> HeadMatch
 
     | Tm_app(head, _), Tm_app(head', _) -> head_matches head head'
@@ -1989,5 +1990,5 @@ let discharge_guard env (g:guard_t) =
         end
 
 let universe_inequality (u1:universe) (u2:universe) : guard_t =
-    Printf.printf "Universe inequality %s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2);
+    //Printf.printf "Universe inequality %s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2);
     {trivial_guard with univ_ineqs=[u1,u2]}

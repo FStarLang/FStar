@@ -244,10 +244,23 @@ let lookup_bv env bv =
         | None -> raise (Error(variable_not_found bv, range_of_bv bv))
         | Some t -> t
 
+let effect_signature se = 
+    match se with
+        | Sig_new_effect(ne, _) ->
+          Some (inst_tscheme (ne.univs, Util.arrow ne.binders (mk_Total ne.signature)))
+
+        | Sig_effect_abbrev (lid, us, binders, _, _, _) ->
+          Some (inst_tscheme (us, Util.arrow binders (mk_Total teff)))
+
+        | _ -> None
+
+let try_lookup_effect_lid env (ftv:lident) : option<typ> =
+  match lookup_qname env ftv with
+    | Some (Inr se) -> effect_signature se
+    | _ -> None
+
 let lookup_lid env lid =
-  let not_found () =
-    //let _ = Util.smap_fold env.sigtab (fun k _ _ -> Util.print_string (Util.format1 "%s, " k)) () in
-    raise (Error(name_not_found lid, range_of_lid lid)) in
+  let not_found () = raise (Error(name_not_found lid, range_of_lid lid)) in
   let mapper = function
     | Inl t -> 
       Some t
@@ -270,8 +283,8 @@ let lookup_lid env lid =
         | [] -> Some <| inst_tscheme (uvs, k)
         | _ ->  Some <| inst_tscheme (uvs, Util.arrow tps (mk_Total k))
       end
-   
-    | t -> None
+
+    | Inr se -> effect_signature se
   in
     match Util.bind_opt (lookup_qname env lid) mapper with
       | Some t -> {t with pos=range_of_lid lid}
@@ -294,17 +307,19 @@ let lookup_datacons_of_typ env lid =
 
 let lookup_definition env lid = 
   match lookup_qname env lid with
-    | Some (Inr se) -> lookup_let se lid
+    | Some (Inr se) -> 
+      begin match se with 
+        | Sig_let((_, lbs), _, _, _) ->
+            Util.find_map lbs (fun lb -> 
+                let lid' = right lb.lbname in
+                if lid_equals lid lid'
+                then Some (inst_tscheme (lb.lbunivs, Util.unascribe lb.lbdef))
+                else None)
+        | _ -> None
+      end
     | _ -> None
 
-let try_lookup_effect_lid env (ftv:lident) : option<typ> =
-  match lookup_qname env ftv with
-    | Some (Inr (Sig_new_effect(ne, _))) ->
-      inst_tscheme (ne.univs, Util.arrow ne.binders (mk_Total (inst_tscheme ne.signature))) |> Some
-    | Some (Inr (Sig_effect_abbrev (lid, binders, _, _, _))) ->
-      Util.arrow binders (mk_Total Syntax.teff) |> Some
-    | _ ->
-      None
+
 
 let lookup_effect_lid env (ftv:lident) : typ =
   match try_lookup_effect_lid env ftv with
@@ -329,10 +344,11 @@ let try_lookup_val_decl env lid =
 
 let lookup_effect_abbrev env lid =
   match lookup_qname env lid with
-    | Some (Inr (Sig_effect_abbrev (lid, binders, c, quals, _))) ->
+    | Some (Inr (Sig_effect_abbrev (lid, univs, binders, c, quals, _))) ->
       if quals |> Util.for_some (function Opaque -> true | _ -> false)
       then None
-      else Some (binders, c)
+      else let _, binders, c = Util.open_univ_vars_binders_and_comp univs binders c in 
+           Some (binders, c)
     | _ -> None
 
 let is_datacon env lid =
@@ -385,7 +401,7 @@ let wp_sig_aux decls m =
   match decls |> Util.find_opt (fun d -> lid_equals d.mname m) with
   | None -> failwith (Util.format1 "Impossible: declaration for monad %s not found" m.str)
   | Some md ->
-    let signature = inst_tscheme md.signature in
+    let signature = Subst.compress md.signature in
     match signature.n with
       | Tm_arrow([(a, _); (wp, _); (wlp, _)], c) when (is_teff (comp_result c)) -> a, wp.sort
       | _ -> failwith "Impossible"
@@ -395,7 +411,7 @@ let wp_signature env m = wp_sig_aux env.effects.decls m
 let default_effect env l = Util.find_map env.default_effects (fun (l', m) -> if lid_equals l l' then Some m else None)
 
 let build_lattice env se = match se with
-  | Sig_effect_abbrev(l, _, c, quals, r) ->
+  | Sig_effect_abbrev(l, _, _, c, quals, r) ->
     begin match Util.find_map quals (function DefaultEffect n -> n | _ -> None) with
         | None -> env
         | Some e -> {env with default_effects=(e, l)::env.default_effects}
@@ -487,6 +503,8 @@ let push_sigelt env s = build_lattice ({env with gamma=Binding_sig s::env.gamma}
 
 let push_local_binding env b = {env with gamma=b::env.gamma}
 
+let push_binders env (bs:binders) = 
+    List.fold_left (fun env (x, _) -> push_local_binding env (Binding_var(x, ([], x.sort)))) env bs
 
 let push_module env (m:modul) =
     add_sigelts env m.exports;

@@ -439,9 +439,16 @@ let rec norm : cfg -> env -> stack -> term -> term =
                  rebuild cfg env stack t
           
           | Tm_ascribed(t1, t2, l) -> 
-            let t1 = norm cfg env [] t1 in 
-            let t2 = norm cfg env [] t2 in
-            rebuild cfg env stack (mk (Tm_ascribed(t1, t2, l)) t.pos)
+            begin match stack with 
+                | Match _::_
+                | Arg _::_
+                | MemoLazy _ :: _ ->  //ascriptions should not block reduction
+                  norm cfg env stack t1
+                | _ -> 
+                let t1 = norm cfg env [] t1 in 
+                let t2 = norm cfg env [] t2 in
+                rebuild cfg env stack (mk (Tm_ascribed(t1, t2, l)) t.pos)
+            end
 
           | Tm_match(head, branches) -> 
             let stack = Match(env, branches, t.pos)::stack in 

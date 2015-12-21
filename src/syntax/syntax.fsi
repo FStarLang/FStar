@@ -217,11 +217,11 @@ type sub_eff = {
  }
 
 type eff_decl = {
+    qualifiers  :list<qualifier>;
     mname       :lident;
     univs       :univ_names;
     binders     :binders;
-    qualifiers  :list<qualifier>;
-    signature   :tscheme;
+    signature   :term;
     ret         :tscheme;
     bind_wp     :tscheme;
     bind_wlp    :tscheme;
@@ -278,9 +278,9 @@ and sigelt =
                        * list<qualifier> 
                        * Range.range
   | Sig_new_effect     of eff_decl * Range.range
-  | Sig_sub_effect     of sub_eff * Range.range
-  | Sig_effect_abbrev  of lident * binders * comp * list<qualifier> * Range.range
-  | Sig_pragma         of pragma * Range.range
+  | Sig_sub_effect     of sub_eff  * Range.range
+  | Sig_effect_abbrev  of lident   * univ_names * binders * comp * list<qualifier> * Range.range
+  | Sig_pragma         of pragma   * Range.range
 type sigelts = list<sigelt>
 
 type modul = {

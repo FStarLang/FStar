@@ -362,7 +362,7 @@ let rec lids_of_sigelt se = match se with
   | Sig_let(_, _, lids, _)
   | Sig_bundle(_, _, lids, _) -> lids
   | Sig_inductive_typ (lid, _, _,  _, _, _, _, _)
-  | Sig_effect_abbrev(lid, _, _,  _, _)
+  | Sig_effect_abbrev(lid, _, _, _,  _, _)
   | Sig_datacon (lid, _, _, _, _, _, _, _)
   | Sig_declare_typ (lid, _, _, _, _)
   | Sig_assume (lid, _, _, _) -> [lid]
@@ -378,7 +378,7 @@ let lid_of_sigelt se : option<lident> = match lids_of_sigelt se with
 let range_of_sigelt x = match x with
   | Sig_bundle(_, _, _, r)
   | Sig_inductive_typ (_, _, _,  _, _, _, _, r)
-  | Sig_effect_abbrev  (_, _, _, _, r)
+  | Sig_effect_abbrev  (_, _, _, _, _, r)
   | Sig_datacon (_, _, _, _, _, _, _, r)
   | Sig_declare_typ (_, _, _, _, r)
   | Sig_assume (_, _, _, r)
@@ -465,6 +465,18 @@ let letbinding lbname univ_vars typ eff def =
      lbeff=eff;
      lbdef=def}
 
+
+let open_univ_vars_binders_and_comp uvs binders c = 
+    match binders with 
+        | [] -> 
+          let uvs, c = Subst.open_univ_vars_comp uvs c in
+          uvs, [], c
+        | _ -> 
+          let t' = arrow binders c in
+          let uvs, t' = Subst.open_univ_vars uvs t' in 
+          match (Subst.compress t').n with
+            | Tm_arrow(binders, c) -> uvs, binders, c
+            | _ -> failwith "Impossible"
 
 (********************************************************************************)
 (*********************** Various tests on constants  ****************************)

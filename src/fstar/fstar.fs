@@ -70,10 +70,11 @@ let u_tc_prims () =
 let test_universes filenames = 
     try
         let prims_mod, dsenv, env = u_tc_prims() in
-        List.fold_left (fun (dsenv, fmods) fn ->
+        List.fold_left (fun (dsenv, fmods, env) fn ->
            Util.fprint1 "Parsing file %s\n" fn; 
            let dsenv, mods = u_parse dsenv fn in
-           dsenv, mods@fmods) (dsenv, []) filenames 
+           let _, env = TypeChecker.Tc.check_module env (List.hd mods) in
+           dsenv, mods@fmods, env) (dsenv, [], env) filenames 
     with 
         | Syntax.Syntax.Error(msg, r) when not (!Options.trace_error) -> 
           Util.print_string (Util.format2 "Error : %s\n%s\n" (Range.string_of_range r) msg);

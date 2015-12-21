@@ -419,13 +419,21 @@ let close_branch (p, wopt, e) =
     let e = subst closing e in
     (p, wopt, e)
 
-let open_univ_vars  (us:univ_names) (t:term)  : univ_names * term = 
+let univ_var_opening (us:univ_names) = 
     let n = List.length us - 1 in
     let s, us' = us |> List.mapi (fun i u -> 
         let u' = Syntax.new_univ_name (Some u.idRange) in
         UN(n - i, U_name u'), u') |> List.unzip in
+    s, us'
+
+let open_univ_vars  (us:univ_names) (t:term)  : univ_names * term = 
+    let s, us' = univ_var_opening us in 
     let t = subst s t in
     us', t
+
+let open_univ_vars_comp (us:univ_names) (c:comp) : univ_names * comp = 
+    let s, us' = univ_var_opening us in 
+    us', subst_comp s c
 
 let close_univ_vars (us:univ_names) (t:term) : term = 
     let n = List.length us - 1 in
@@ -448,3 +456,16 @@ let mk_subst_binders args =
 let subst_binders (bs:binders) (args:args) t = subst (mk_subst_binders args) t
 let subst_binders_comp (bs:binders) (args:args) t = subst_comp (mk_subst_binders args) t
  
+
+let close_tscheme (binders:binders) ((us, t) : tscheme) = 
+    let n = List.length binders - 1 in
+    let k = List.length us in 
+    let s = List.mapi (fun i (x, _) -> NM(x, k + (n - i))) binders in
+    let t = subst s t in 
+    (us, t)
+
+let close_univ_vars_tscheme (us:univ_names) ((us', t):tscheme) = 
+   let n  = List.length us - 1 in
+   let k = List.length us' in
+   let s = List.mapi (fun i x -> UD(x, k + (n - i))) us in
+   (us', subst s t)

@@ -788,7 +788,9 @@ and desugar_comp r default_ok env t =
              //we have an explicit effect annotation ... no need to add anything
              Ident.set_lid_range Const.effect_Tot_lid head.range, args
             
-            | Name l when (l.ident.idText="Type" && default_ok) -> 
+            | Name l when ((l.ident.idText="Type" 
+                            || l.ident.idText="Effect")
+                           && default_ok) -> 
               //the default effect for Type is always Tot
               Ident.set_lid_range Const.effect_Tot_lid head.range, [t, Nothing]
              
@@ -995,7 +997,6 @@ let mk_indexed_projectors fvq refine_domain env tc lid tps (fields:list<S.binder
 let mk_data_projectors env = function
   | Sig_datacon(lid, _, t, l, n, quals, _, _) when (//(not env.iface || env.admitted_iface) &&
                                                 not (lid_equals lid C.lexcons_lid)) ->
-    Printf.printf "Data projector for %s\n" lid.str;
     let refine_domain =
         if (quals |> Util.for_some (function RecordConstructor _ -> true | _ -> false))
         then false
@@ -1111,7 +1112,9 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
         let se =
             if quals |> List.contains S.Effect
             then let c = desugar_comp t.range false env' t in
-                 Sig_effect_abbrev(qualify env id, typars, c, quals |> List.filter (function S.Effect -> false | _ -> true), rng)
+                 let typars = Subst.close_binders typars in
+                 let c = Subst.close_comp typars c in
+                 Sig_effect_abbrev(qualify env id, [], typars, c, quals |> List.filter (function S.Effect -> false | _ -> true), rng)
             else let t = desugar_term env' t in
                  let nm = qualify env id in
                  mk_typ_abbrev nm [] typars k t [nm] quals rng in
@@ -1279,13 +1282,13 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
           | _ -> raise (Error("Effect " ^AST.term_to_string head^ " not found", d.drange)) in
         ed, desugar_args env args in
     let subst = Util.subst_of_list ed.binders args in
-    let sub x = [], Subst.subst subst (snd x) in
+    let sub x = [], Subst.close binders (Subst.subst subst (snd x)) in
     let ed = {
             mname=qualify env0 eff_name;
             qualifiers  =List.map trans_qual quals;
             univs       =[];
             binders     =binders;
-            signature   =sub ed.signature;
+            signature   =Subst.close binders ed.signature;
             ret         =sub ed.ret;
             bind_wp     =sub ed.bind_wp;
             bind_wlp    =sub ed.bind_wlp;
@@ -1308,7 +1311,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
     let env0 = env in
     let env = Env.enter_monad_scope env eff_name in
     let env, binders = desugar_binders env eff_binders in
-    let eff_k = desugar_term env eff_kind in
+    let eff_k = desugar_term (Env.default_total env) eff_kind in
     let env, decls = eff_decls |> List.fold_left (fun (env, out) decl ->
         let env, ses = desugar_decl env decl in
         env, List.hd ses::out) (env, []) in
@@ -1321,7 +1324,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
          qualifiers  =List.map trans_qual quals;
          univs       =[];
          binders     =binders;
-         signature   =[],eff_k;
+         signature   =eff_k;
          ret         =lookup "return";
          bind_wp     =lookup "bind_wp";
          bind_wlp    =lookup "bind_wlp";

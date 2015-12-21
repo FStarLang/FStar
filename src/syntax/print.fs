@@ -328,9 +328,9 @@ let rec sigelt_to_string x = match x with
   | Sig_let(lbs, _, _, b) -> lbs_to_string lbs
   | Sig_main(e, _) -> Util.format1 "let _ = %s" (term_to_string e)
   | Sig_bundle(ses, _, _, _) -> List.map sigelt_to_string ses |> String.concat "\n"
-  | Sig_new_effect _ -> "new_effect { ... }"
+  | Sig_new_effect(ed, _) -> Util.format3 "new_effect { %s %s : %s ... }" (lid_to_string ed.mname) (binders_to_string " " ed.binders) (term_to_string ed.signature)
   | Sig_sub_effect _ -> "sub_effect ..."
-  | Sig_effect_abbrev(l, tps, c, _, _) -> Util.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
+  | Sig_effect_abbrev(l, _, tps, c, _, _) -> Util.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
 
 let format_error r msg = format2 "%s: %s\n" (Range.string_of_range r) msg
 

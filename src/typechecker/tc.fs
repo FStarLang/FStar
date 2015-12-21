@@ -1416,6 +1416,7 @@ let tc_tparams env (tps:binders) : (binders * Env.env * universes) =
 
 let monad_signature env m s = 
  let fail () = raise (Error(Errors.unexpected_signature_for_monad env m s, range_of_lid m)) in
+ let s = SS.compress s in
  match s.n with
   | Tm_arrow(bs, c) -> 
     let bs = SS.open_binders bs in 
@@ -1426,26 +1427,73 @@ let monad_signature env m s =
   | _ -> fail()
 
 let destruct_eff_decl env (m:eff_decl) = 
-    let fail () = raise (Error(Errors.unexpected_signature_for_monad env m.mname (snd m.signature), range_of_lid m.mname)) in
-    let msig = Env.uinst env m.signature in 
+    let msig = Env.uinst env (m.univs, m.signature) in 
     monad_signature env m.mname msig
+
+let open_univ_vars uvs binders c = 
+    match binders with 
+        | [] -> 
+          let uvs, c = SS.open_univ_vars_comp uvs c in
+          uvs, [], c
+        | _ -> 
+          let t' = Util.arrow binders c in
+          let uvs, t' = SS.open_univ_vars uvs t' in 
+          match (SS.compress t').n with
+            | Tm_arrow(binders, c) -> uvs, binders, c
+            | _ -> failwith "Impossible"
+
+let open_effect_decl env ed = 
+   let fail t = raise (Error(Errors.unexpected_signature_for_monad env ed.mname t, range_of_lid ed.mname)) in
+   let univs, binders, c = Util.open_univ_vars_binders_and_comp ed.univs ed.binders (S.mk_Total ed.signature) in
+   let t = Util.comp_result c in
+   let env = Env.push_univ_vars env univs in
+   let env = Env.push_binders env binders in 
+   let a, wp = match (SS.compress t).n with
+      | Tm_arrow(bs, c) -> 
+        let bs = SS.open_binders bs in 
+        begin match bs with 
+            | [(a, _);(wp, _); (_wlp, _)] -> a, wp.sort
+            | _ -> fail t
+        end
+      | _ -> fail t in
+   env, univs, binders, a, wp
 
 let tc_eff_decl env0 (m:Syntax.eff_decl)  =
   assert (m.univs = []); //no explicit universe variables in the source; Q: But what about re-type-checking a program?
-  assert (fst m.signature = []); //no explicit universe variables in the signature either
   let binders, env, us = tc_tparams env0 m.binders in
-  let msig, _    = tc_trivial_guard env (snd m.signature) in
-  let msig = TcUtil.generalize_universes env msig in 
-  let m = {m with signature=msig} in
+  let msig, _    = tc_trivial_guard env m.signature in
+  let msig = Util.arrow binders (S.mk_Total msig) in 
+  let (uvs, msig) = TcUtil.generalize_universes env0 msig in 
+  let binders, msig = 
+    match binders with 
+        | [] -> [], msig 
+        | _ -> 
+        match (SS.compress msig).n with 
+            | Tm_arrow(binders, c) -> binders, Util.comp_result c 
+            | _ -> failwith "Impossible" in
 
+  let m = {m with univs=uvs;
+                  binders=binders; 
+                  signature=msig} in
+
+  let env, univs, binders, a, wp_a = open_effect_decl env0 m in
+
+  let check_and_gen env t k = 
+    let ts = check_and_gen env t k in 
+    let ts = SS.close_tscheme binders ts in
+    SS.close_univ_vars_tscheme univs ts in
+
+  if Env.debug env0 Options.Low
+  then Util.fprint3 "Checked effect signature: %s %s : %s" 
+                        (Print.lid_to_string m.mname)
+                        (Print.binders_to_string " " binders)
+                        (Print.term_to_string msig);
   
   let ret =
-    let a, kwp_a = destruct_eff_decl env m in
-    let expected_k = Util.arrow [S.mk_binder a; S.null_binder (S.bv_to_name a)] (S.mk_Total kwp_a) in
+    let expected_k = Util.arrow [S.mk_binder a; S.null_binder (S.bv_to_name a)] (S.mk_Total wp_a) in
     check_and_gen env m.ret expected_k in
 
   let bind_wp =
-    let a, wp_a = destruct_eff_decl env m in
     let wlp_a = wp_a in
     let b = S.new_bv (Some (range_of_lid m.mname)) (TcUtil.type_u() |> fst) in
     let wp_b = SS.subst [NT(a, S.bv_to_name b)] wp_a in
@@ -1458,7 +1506,7 @@ let tc_eff_decl env0 (m:Syntax.eff_decl)  =
     check_and_gen env m.bind_wp expected_k in
 
   let bind_wlp =
-    let a, wlp_a = destruct_eff_decl env m in
+    let wlp_a = wp_a in
     let b = S.new_bv (Some (range_of_lid m.mname)) (TcUtil.type_u() |> fst) in
     let wlp_b = SS.subst [NT(a, S.bv_to_name b)] wlp_a in
     let a_wlp_b = Util.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wlp_b) in
@@ -1469,7 +1517,6 @@ let tc_eff_decl env0 (m:Syntax.eff_decl)  =
     check_and_gen env m.bind_wlp expected_k in
 
   let if_then_else =
-    let a, wp_a = destruct_eff_decl env m in
     let p = S.new_bv (Some (range_of_lid m.mname)) (TcUtil.type_u() |> fst) in
     let expected_k = Util.arrow [S.mk_binder a; S.mk_binder p; 
                                  S.null_binder wp_a;
@@ -1478,7 +1525,6 @@ let tc_eff_decl env0 (m:Syntax.eff_decl)  =
     check_and_gen env m.if_then_else expected_k in
 
   let ite_wp =
-    let a, wp_a = destruct_eff_decl env m in
     let wlp_a = wp_a in
     let expected_k = Util.arrow [S.mk_binder a; 
                                  S.null_binder wlp_a;
@@ -1487,7 +1533,6 @@ let tc_eff_decl env0 (m:Syntax.eff_decl)  =
     check_and_gen env m.ite_wp expected_k in
 
   let ite_wlp =
-    let a, wp_a = destruct_eff_decl env m in
     let wlp_a = wp_a in
     let expected_k = Util.arrow [S.mk_binder a;
                                  S.null_binder wlp_a]
@@ -1495,7 +1540,6 @@ let tc_eff_decl env0 (m:Syntax.eff_decl)  =
     check_and_gen env m.ite_wlp expected_k in
 
   let wp_binop =
-    let a, wp_a = destruct_eff_decl env m in    
     let bin_op = 
         let t1, u1 = TcUtil.type_u() in
         let t2, u2 = TcUtil.type_u() in 
@@ -1509,7 +1553,6 @@ let tc_eff_decl env0 (m:Syntax.eff_decl)  =
     check_and_gen env m.wp_binop expected_k in
 
   let wp_as_type =
-    let a, wp_a = destruct_eff_decl env m in    
     let t, _ = TcUtil.type_u() in
     let expected_k = Util.arrow [S.mk_binder a;
                                  S.null_binder wp_a]
@@ -1517,7 +1560,6 @@ let tc_eff_decl env0 (m:Syntax.eff_decl)  =
     check_and_gen env m.wp_as_type expected_k in
 
   let close_wp =
-    let a, wp_a = destruct_eff_decl env m in
     let b = S.new_bv (Some (range_of_lid m.mname)) (TcUtil.type_u() |> fst) in
     let wp_b = SS.subst [NT(a, S.bv_to_name b)] wp_a in
     let a_wp_b = Util.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wp_b) in
@@ -1526,7 +1568,6 @@ let tc_eff_decl env0 (m:Syntax.eff_decl)  =
     check_and_gen env m.close_wp expected_k in
 
   let assert_p =
-    let a, wp_a = destruct_eff_decl env m in
     let expected_k = Util.arrow [S.mk_binder a;
                                  S.null_binder (TcUtil.type_u() |> fst);
                                  S.null_binder wp_a] 
@@ -1534,7 +1575,6 @@ let tc_eff_decl env0 (m:Syntax.eff_decl)  =
     check_and_gen env m.assert_p expected_k in
 
   let assume_p =
-    let a, wp_a = destruct_eff_decl env m in
     let expected_k = Util.arrow [S.mk_binder a;
                                  S.null_binder (TcUtil.type_u() |> fst);
                                  S.null_binder wp_a] 
@@ -1542,29 +1582,17 @@ let tc_eff_decl env0 (m:Syntax.eff_decl)  =
     check_and_gen env m.assume_p expected_k in
 
   let null_wp =
-    let a, wp_a = destruct_eff_decl env m in
     let expected_k = Util.arrow [S.mk_binder a] 
                                 (S.mk_Total wp_a) in
     check_and_gen env m.null_wp expected_k in
 
   let trivial_wp =
-    let a, wp_a = destruct_eff_decl env m in
     let expected_k = Util.arrow [S.mk_binder a] 
                                 (S.mk_Total wp_a) in
     check_and_gen env m.trivial expected_k in
 
-  let univs = 
-    let t0 = mk (Tm_type(S.U_zero)) None (Env.get_range env0) in
-    let t = Util.arrow binders (S.mk_Total t0) in
-    let (univs, _) = TcUtil.generalize_universes env0 t in 
-    univs in
-
     {
-        mname=m.mname;
-        qualifiers=m.qualifiers;
-        univs=univs;
-        binders=binders;
-        signature=m.signature;
+        m with
         ret=ret;
         bind_wp=bind_wp;
         bind_wlp=bind_wlp;
@@ -1721,10 +1749,11 @@ let tc_inductive env ses quals lids =
             | Sig_datacon(_, _, t, _, _, _, _, _) -> S.null_binder t 
             | _ -> failwith "Impossible") in
         let t = Util.arrow (binders@binders') (S.mk_Total Recheck.t_unit) in
-        Printf.printf "@@@@@@Trying to generalize universes in %s\n" (N.term_to_string env t);
+        if Env.debug env Options.Low then Util.fprint1 "@@@@@@Trying to generalize universes in %s\n" (N.term_to_string env t);
         let (uvs, t) = TcUtil.generalize_universes env t in
-        Printf.printf "@@@@@@Generalized to (%s, %s)\n" (uvs |> List.map (fun u -> u.idText) |> String.concat ", ")
-                                                        (Print.term_to_string t);
+        if Env.debug env Options.Low then Util.fprint2 "@@@@@@Generalized to (%s, %s)\n" 
+                                (uvs |> List.map (fun u -> u.idText) |> String.concat ", ")
+                                (Print.term_to_string t);
         let uvs, t = SS.open_univ_vars uvs t in
         let args, _ = Util.arrow_formals t in
         let tc_types, data_types = Util.first_N (List.length binders) args in
@@ -1812,7 +1841,8 @@ let rec tc_decl env se = match se with
       let env = Env.push_sigelt env se in
       se, env
     
-    | Sig_effect_abbrev(lid, tps, c, tags, r) ->
+    | Sig_effect_abbrev(lid, uvs, tps, c, tags, r) ->
+      assert (uvs = []);
       let env0 = env in
       let env = Env.set_range env r in
       let tps, c = SS.open_comp tps c in
@@ -1823,8 +1853,10 @@ let rec tc_decl env se = match se with
           let c' = Normalize.unfold_effect_abbrev env c in
           DefaultEffect (c'.effect_name |> Some)
         | t -> t) in
+      let tps = SS.close_binders tps in
       let c = SS.close_comp tps c in
-      let se = Sig_effect_abbrev(lid, tps, c, tags, r) in
+      let uvs, _ = Util.generalize_universes env0 (mk (Tm_arrow(tps, c)) None r) in
+      let se = Sig_effect_abbrev(lid, uvs, tps, c, tags, r) in
       let env = Env.push_sigelt env0 se in
       se, env
 

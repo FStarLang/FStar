@@ -446,9 +446,10 @@ let norm_eff_name =
 let join_effects env l1 l2 =
   let m, _, _ = Env.join env (norm_eff_name env l1) (norm_eff_name env l2) in
   m
+
 let join_lcomp env c1 c2 =
-  if lid_equals c1.eff_name Const.effect_Tot_lid
-  && lid_equals c2.eff_name Const.effect_Tot_lid
+  if Util.is_total_lcomp c1
+  && Util.is_total_lcomp c2
   then Const.effect_Tot_lid
   else join_effects env c1.eff_name c2.eff_name
 
@@ -494,7 +495,7 @@ let is_function t = match (compress t).n with
 
 let return_value env t v =
 //  if is_function t then failwith (Util.format1 "(%s): Returning a function!" (Range.string_of_range (Env.get_range env)));
-  let c = match Env.effect_decl_opt env Const.effect_PURE_lid with
+  let c = match Env.effect_decl_opt env Const.effect_Tot_lid with //if Tot isn't fully defined in prims yet, then just return (Total t)
     | None -> mk_Total t
     | Some m ->
        let a, kwp = Env.wp_signature env Const.effect_PURE_lid in
@@ -937,7 +938,6 @@ let gen_univs env (x:Util.set<universe_uvar>) : list<univ_name> =
 
 let generalize_universes (env:env) (t:term) : tscheme = 
     let univs = Free.univs t in 
-    Printf.printf "Free univs = %A\n" (Util.set_elements univs |> List.map (fun u -> Unionfind.uvar_id u |> string_of_int));
     let gen = gen_univs env univs in
     let ts = SS.close_univ_vars gen t in 
     (gen, ts)

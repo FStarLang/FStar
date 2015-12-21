@@ -50,7 +50,6 @@ opaque type l_not (p:Type) = p ==> False
 
 logic type XOR (p:Type) (q:Type) = (p \/ q) /\ ~(p /\ q)
 
-(* if/then/else in concrete syntax *)
 opaque type ITE (p:Type) (q:Type) (r:Type) = (p ==> q) /\ (~p ==> r) 
 
 (* infix binary '<<'; a built-in well-founded partial order over all terms *)
@@ -69,107 +68,103 @@ type DTuple2 (a:Type)
 (* exists (x:a). p x *)
 opaque type Exists (#a:Type) (p:a -> Type) = x:a & p x          
 
-(* (\* PURE effect *\) *)
-(* kind PurePre = Type *)
-(* kind PurePost (a:Type) = a -> Type *)
-(* kind PureWP   (a:Type) = PurePost a -> PurePre *)
-(* type pure_return (a:Type) (x:a) (p:PurePost a) = *)
-(*      p x *)
-(* type pure_bind_wlp (a:Type) (b:Type) *)
-(*                    (wlp1:PureWP a) (wlp2:(a -> PureWP b)) *)
-(*                    (p:PurePost b) = *)
-(*      wlp1 (fun (x:a) -> wlp2 x p) *)
-(* type pure_bind_wp  (a:Type) (b:Type) *)
-(*                    (wp1:PureWP a) (wlp1:PureWP a) *)
-(*                    (wp2: (a -> PureWP b)) (wlp2: (a -> PureWP b)) = *)
-(*      pure_bind_wlp a b wp1 wp2 *)
-(* type pure_if_then_else (a:Type) (p:Type) (wp_then:PureWP a) (wp_else:PureWP a) (post:PurePost a) = *)
-(*      (if p *)
-(*       then wp_then post *)
-(*       else wp_else post) *)
-(* type pure_ite_wlp (a:Type) (wlp_cases:PureWP a) (post:PurePost a) = *)
-(*      (forall (x:a). wlp_cases (fun (x':a) -> ~(Eq2 #a #a x x')) \/ post x) *)
-(* type pure_ite_wp (a:Type) (wlp_cases:PureWP a) (wp_cases:PureWP a) (post:PurePost a) = *)
-(*      pure_ite_wlp a wlp_cases post *)
-(*     /\ wp_cases (fun (x:a) -> True) *)
-(* type pure_wp_binop (a:Type) (wp1:PureWP a) (op:(Type -> Type -> Type)) (wp2:PureWP a) (p:PurePost a) = *)
-(*      op (wp1 p) (wp2 p) *)
-(* type pure_wp_as_type (a:Type) (wp:PureWP a) = (forall (p:PurePost a). wp p) *)
-(* type pure_close_wp (a:Type) (b:Type) (wp:(b -> PureWP a)) (p:PurePost a) = (forall (b:b). wp b p) *)
-(* type pure_close_wp_t (a:Type) (wp:(Type -> PureWP a)) (p:PurePost a) = (forall (b:Type). wp b p) *)
-(* type pure_assert_p (a:Type) (q:Type) (wp:PureWP a) (p:PurePost a) = (q /\ wp p) *)
-(* type pure_assume_p (a:Type) (q:Type) (wp:PureWP a) (p:PurePost a) = (q ==> wp p) *)
-(* type pure_null_wp (a:Type) (p:PurePost a) = (forall (x:a). p x) *)
-(* type pure_trivial (a:Type) (wp:PureWP a) = wp (fun (x:a) -> True) *)
+(* PURE effect *)
+type PurePre = Type
+type PurePost (a:Type) = a -> Type
+type PureWP   (a:Type) = PurePost a -> Tot PurePre
+type pure_return (a:Type) (x:a) (p:PurePost a) =
+     p x
+type pure_bind_wlp (a:Type) (b:Type)
+                   (wlp1:PureWP a) (wlp2:(a -> Tot (PureWP b)))
+                   (p:PurePost b) =
+     wlp1 (fun (x:a) -> wlp2 x p)
+type pure_bind_wp  (a:Type) (b:Type)
+                   (wp1:PureWP a) (wlp1:PureWP a)
+                   (wp2: (a -> Tot (PureWP b))) (wlp2: (a -> Tot (PureWP b))) =
+     pure_bind_wlp a b wp1 wp2
+type pure_if_then_else (a:Type) (p:Type) (wp_then:PureWP a) (wp_else:PureWP a) (post:PurePost a) =
+     ITE p (wp_then post) (wp_else post)
+type pure_ite_wlp (a:Type) (wlp_cases:PureWP a) (post:PurePost a) =
+     (forall (x:a). wlp_cases (fun (x':a) -> ~(Eq2 #a #a x x')) \/ post x)
+type pure_ite_wp (a:Type) (wlp_cases:PureWP a) (wp_cases:PureWP a) (post:PurePost a) =
+     pure_ite_wlp a wlp_cases post
+    /\ wp_cases (fun (x:a) -> True)
+type pure_wp_binop (a:Type) (wp1:PureWP a) (op:(Type -> Type -> Type)) (wp2:PureWP a) (p:PurePost a) =
+     op (wp1 p) (wp2 p)
+type pure_wp_as_type (a:Type) (wp:PureWP a) = (forall (p:PurePost a). wp p)
+type pure_close_wp (a:Type) (b:Type) (wp:(b -> Tot (PureWP a))) (p:PurePost a) = (forall (b:b). wp b p)
+type pure_assert_p (a:Type) (q:Type) (wp:PureWP a) (p:PurePost a) = (q /\ wp p)
+type pure_assume_p (a:Type) (q:Type) (wp:PureWP a) (p:PurePost a) = (q ==> wp p)
+type pure_null_wp (a:Type) (p:PurePost a) = (forall (x:a). p x)
+type pure_trivial (a:Type) (wp:PureWP a) = wp (fun (x:a) -> True)
 
-(* total new_effect { (\* The definition of the PURE effect is fixed; no user should ever change this *\) *)
-(*   PURE : a:Type -> wp:PureWP a -> wlp:PureWP a -> Effect *)
-(*   with return       = pure_return *)
-(*      ; bind_wlp     = pure_bind_wlp *)
-(*      ; bind_wp      = pure_bind_wp *)
-(*      ; if_then_else = pure_if_then_else *)
-(*      ; ite_wlp      = pure_ite_wlp *)
-(*      ; ite_wp       = pure_ite_wp *)
-(*      ; wp_binop     = pure_wp_binop *)
-(*      ; wp_as_type   = pure_wp_as_type *)
-(*      ; close_wp     = pure_close_wp *)
-(*      ; close_wp_t   = pure_close_wp_t *)
-(*      ; assert_p     = pure_assert_p *)
-(*      ; assume_p     = pure_assume_p *)
-(*      ; null_wp      = pure_null_wp *)
-(*      ; trivial      = pure_trivial *)
-(* } *)
-(* effect Pure (a:Type) (pre:PurePre) (post:PurePost a) = *)
-(*         PURE a *)
-(*              (fun (p:PurePost a) -> pre /\ (forall (x:a). post x ==> p x)) (\* PureWP *\) *)
-(*              (fun (p:PurePost a) -> forall (x:a). pre /\ post x ==> p x)   (\* WLP *\) *)
-(* effect Admit (a:Type) = PURE a (fun (p:PurePost a) -> True) (fun (p:PurePost a) -> True) *)
-(* default effect Tot (a:Type) = PURE a (pure_null_wp a) (pure_null_wp a) *)
+total new_effect { (* The definition of the PURE effect is fixed; no user should ever change this *)
+  PURE : a:Type -> wp:PureWP a -> wlp:PureWP a -> Effect
+  with return       = pure_return
+     ; bind_wlp     = pure_bind_wlp
+     ; bind_wp      = pure_bind_wp
+     ; if_then_else = pure_if_then_else
+     ; ite_wlp      = pure_ite_wlp
+     ; ite_wp       = pure_ite_wp
+     ; wp_binop     = pure_wp_binop
+     ; wp_as_type   = pure_wp_as_type
+     ; close_wp     = pure_close_wp
+     ; assert_p     = pure_assert_p
+     ; assume_p     = pure_assume_p
+     ; null_wp      = pure_null_wp
+     ; trivial      = pure_trivial
+}
 
-(* total new_effect GHOST = PURE *)
-(* sub_effect *)
-(*   PURE ~> GHOST = fun (a:Type) (wp:PureWP a) -> wp *)
-(* default effect GTot (a:Type) = GHOST a (pure_null_wp a) (pure_null_wp a) *)
-(* effect Ghost (a:Type) (pre:Type) (post:PurePost a) = *)
-(*        GHOST a *)
-(*            (fun (p:PurePost a) -> pre /\ (forall (x:a). post x ==> p x)) *)
-(*            (fun (p:PurePost a) -> forall (x:a). pre /\ post x ==> p x) *)
+effect Pure (a:Type) (pre:PurePre) (post:PurePost a) =
+        PURE a
+             (fun (p:PurePost a) -> pre /\ (forall (x:a). post x ==> p x)) (* PureWP *)
+             (fun (p:PurePost a) -> forall (x:a). pre /\ post x ==> p x)   (* WLP *)
+effect Admit (a:Type) = PURE a (fun (p:PurePost a) -> True) (fun (p:PurePost a) -> True)
+default effect Tot (a:Type) = PURE a (pure_null_wp a) (pure_null_wp a)
 
-(* type unit *)
-(* type int *)
-(* assume logic val op_AmpAmp             : bool -> bool -> Tot bool *)
-(* assume logic val op_BarBar             : bool -> bool -> Tot bool *)
-(* assume logic val op_Negation           : bool -> Tot bool *)
-(* assume logic val op_Multiply           : int -> int -> Tot int *)
-(* assume logic val op_Subtraction        : int -> int -> Tot int *)
-(* assume logic val op_Addition           : int -> int -> Tot int *)
-(* assume logic val op_Minus              : int -> Tot int *)
-(* assume logic val op_LessThanOrEqual    : int -> int -> Tot bool *)
-(* assume logic val op_GreaterThan        : int -> int -> Tot bool *)
-(* assume logic val op_GreaterThanOrEqual : int -> int -> Tot bool *)
-(* assume logic val op_LessThan           : int -> int -> Tot bool *)
-(* (\* Primitive (structural) equality. *)
-(*    What about for function types? *\) *)
-(* assume val op_Equality :    #a:Type -> a -> a -> Tot bool *)
-(* assume val op_disEquality : #a:Type -> a -> a -> Tot bool *)
+total new_effect GHOST = PURE
+sub_effect
+  PURE ~> GHOST = fun (a:Type) (wp:PureWP a) -> wp
+default effect GTot (a:Type) = GHOST a (pure_null_wp a) (pure_null_wp a)
+effect Ghost (a:Type) (pre:Type) (post:PurePost a) =
+       GHOST a
+           (fun (p:PurePost a) -> pre /\ (forall (x:a). post x ==> p x))
+           (fun (p:PurePost a) -> forall (x:a). pre /\ post x ==> p x)
 
-(* type int16 = i:int{i > -32769  /\ 32768 > i} *)
-(* type int32 = int *)
-(* type int64 *)
-(* type uint8 *)
-(* type uint16 *)
-(* type uint32 *)
-(* type uint64 *)
-(* type char *)
-(* type float *)
-(* type string *)
-(* type array : Type -> Type *)
-(* assume val strcat : string -> string -> Tot string *)
-(* assume logic type LBL : string -> Type -> Type *)
-(* type exn *)
-(* type HashMultiMap : Type -> Type -> Type //needed for bootstrapping *)
-(* type byte = uint8 *)
-(* type double = float *)
+type unit
+type int
+assume val op_AmpAmp             : bool -> bool -> Tot bool
+assume val op_BarBar             : bool -> bool -> Tot bool
+assume val op_Negation           : bool -> Tot bool
+assume val op_Multiply           : int -> int -> Tot int
+assume val op_Subtraction        : int -> int -> Tot int
+assume val op_Addition           : int -> int -> Tot int
+assume val op_Minus              : int -> Tot int
+assume val op_LessThanOrEqual    : int -> int -> Tot bool
+assume val op_GreaterThan        : int -> int -> Tot bool
+assume val op_GreaterThanOrEqual : int -> int -> Tot bool
+assume val op_LessThan           : int -> int -> Tot bool
+(* Primitive (structural) equality.
+   What about for function types? *)
+assume val op_Equality :    #a:Type -> a -> a -> Tot bool
+assume val op_disEquality : #a:Type -> a -> a -> Tot bool
+
+(* type int16 = i:int{i > -32769 /\ 32768 > i} *)
+type int32 = int
+type int64
+type uint8
+type uint16
+type uint32
+type uint64
+type char
+type float
+type string
+type array : Type -> Type
+assume val strcat : string -> string -> Tot string
+type exn
+type HashMultiMap : Type -> Type -> Type //needed for bootstrapping
+type byte = uint8
+type double = float
 
 (* type list (a:Type) = *)
 (*   | Nil  : list a *)

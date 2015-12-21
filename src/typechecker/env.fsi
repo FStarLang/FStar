@@ -108,6 +108,7 @@ val uinst                  : env -> tscheme -> term
 (* Introducing identifiers and updating the environment *)
 val push_sigelt        : env -> sigelt -> env
 val push_local_binding : env -> binding -> env
+val push_binders       : env -> binders -> env
 val push_module        : env -> modul -> env
 val push_univ_vars     : env -> univ_names -> env
 val set_expected_typ   : env -> typ -> env

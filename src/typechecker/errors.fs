@@ -63,7 +63,7 @@ let report r msg =
 let get_err_count () = !num_errs
 
 let unexpected_signature_for_monad env m k =
-  format2 "Unexpected signature for monad \"%s\". Expected a kind of the form ('a:Type => WP 'a => WP 'a => Type);\ngot %s"
+  format2 "Unexpected signature for monad \"%s\". Expected a signature of the form (a:Type => WP a => WP a => Effect);\ngot %s"
     m.str (N.term_to_string env k)
 
 let expected_a_term_of_type_t_got_a_function env msg t e =

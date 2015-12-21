@@ -152,7 +152,7 @@ let rec read_build_config_from_string (filename:string) (use_filename:bool) (con
     else
       // todo: this is going to have the unfortunate side-effect of searching for common files in the current directory. i don't know if this
       // is desirable. we may want to consider the ability to search for files only within `get_fstar_home ()` and children.
-      let common_files = [(find_file "." "set.fsi"); (find_file "." "heap.fst"); (find_file "." "st.fst"); (find_file "." "all.fst")] in
+      let common_files = [] in //[(find_file "." "set.fsi"); (find_file "." "heap.fst"); (find_file "." "st.fst"); (find_file "." "all.fst")] in
       let files = if use_filename then common_files@[filename] else common_files
       in
       (Options.admit_fsi := "FStar.Set"::!Options.admit_fsi; files)

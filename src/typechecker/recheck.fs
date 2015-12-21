@@ -52,6 +52,7 @@ let typing_const r (s:sconst) = match s with
   | Const_float _ -> t_float
   | Const_char _ -> t_char
   | Const_uint8 _ -> t_uint8
+  | Const_effect -> Util.ktype0 //NS: really?
   | _ -> raise (Error("Unsupported constant", r))
 
 //this is only supposed return a type that faithfully captures the arity of the term
