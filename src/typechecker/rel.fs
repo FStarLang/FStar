@@ -1884,33 +1884,69 @@ let solve_universe_inequalities env ineqs =
                                                                 (Print.univ_to_string u2) 
                                                                 msg, 
                                                           (Env.get_range env))) in
-    match ineqs with 
-        | [] -> ()
-        | _ -> 
-          let wl = {empty_worklist env with defer_ok=true} in
-          ineqs |> List.iter (fun (u1, u2) -> 
-            let u1 = N.normalize_universe u1 in
-            let u2 = N.normalize_universe u2 in 
-            match u1 with 
-                | U_zero -> ()
-                | _ -> match solve_universe_eq wl u1 u2 with 
-                        | UDeferred
-                        | UFailed _    -> 
-                          let us1 = match u1 with 
-                            | U_max us1 -> us1
-                            | _ -> [u1] in
-                          let us2 = match u2 with 
-                            | U_max us2 -> us2
-                            | _ -> [u2] in
-                          Printf.printf "Comparing %A   <=    %A\n" (List.map Print.univ_to_string us1) (List.map Print.univ_to_string us2);
-                          if us1 |> Util.for_all (function
-                            | U_zero -> true
-                            | u -> us2 |> Util.for_some (fun u' -> U.eq_univs u u'))
-                          then ()
-                          else fail None u1 u2
+
+   let rec insert uv u1 groups = match groups with 
+      | [] -> [(uv, [u1])]
+      | hd::tl -> 
+        let (uv', lower_bounds) = hd in
+        if Unionfind.equivalent uv uv'
+        then (uv', u1::lower_bounds)::tl
+        else hd :: insert uv u1 tl in
+    
+   let rec group_by out ineqs = match ineqs with 
+    | [] -> Some out
+    | (u1, u2)::rest -> 
+      let u2 = N.normalize_universe u2 in
+      match u2 with 
+        | U_unif uv -> 
+          group_by (insert uv u1 out) rest
+        | _ -> None in
+
+
+    let ad_hoc_fallback () = 
+        match ineqs with 
+            | [] -> ()
+            | _ -> 
+              let wl = {empty_worklist env with defer_ok=true} in
+              ineqs |> List.iter (fun (u1, u2) -> 
+                let u1 = N.normalize_universe u1 in
+                let u2 = N.normalize_universe u2 in 
+                match u1 with 
+                    | U_zero -> ()
+                    | _ -> match solve_universe_eq wl u1 u2 with 
+                            | UDeferred
+                            | UFailed _    -> 
+                              let us1 = match u1 with 
+                                | U_max us1 -> us1
+                                | _ -> [u1] in
+                              let us2 = match u2 with 
+                                | U_max us2 -> us2
+                                | _ -> [u2] in
+                              Printf.printf "Comparing %A   <=    %A\n" (List.map Print.univ_to_string us1) (List.map Print.univ_to_string us2);
+                              if us1 |> Util.for_all (function
+                                | U_zero -> true
+                                | u -> us2 |> Util.for_some (fun u' -> U.eq_univs u u'))
+                              then ()
+                              else fail None u1 u2
                         
-                        | USolved uvis -> commit env uvis |> ignore);
-          Errors.warn Range.dummyRange "Universe inequality check not fully implemented"
+                            | USolved uvis -> commit env uvis |> ignore);
+              Errors.warn Range.dummyRange "Universe inequality check not fully implemented" in
+
+
+    begin match group_by [] ineqs with 
+        | Some groups -> 
+          let wl = {empty_worklist env with defer_ok=false} in
+          let rec solve_all_groups wl groups = match groups with
+            | [] -> commit env wl.subst |> ignore
+            | (u, lower_bounds)::groups -> 
+              begin match solve_universe_eq wl (U_max lower_bounds) (U_unif u) with 
+                | USolved uvis -> 
+                    solve_all_groups ({wl with subst=uvis@wl.subst}) groups
+                | _ -> ad_hoc_fallback()
+              end in
+          solve_all_groups wl groups
+        | None -> ad_hoc_fallback ()
+    end
 
 let solve_deferred_constraints env (g:guard_t) =
    let fail (d,s) =

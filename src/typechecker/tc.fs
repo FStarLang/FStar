@@ -1109,7 +1109,7 @@ and check_top_level_let env e =
 
        (* Maybe generalize its type *)
        let _, e1, univ_vars, c1 = 
-            if annotated
+            if annotated && not env.generalize
             then lb.lbname, e1, univ_vars, c1
             else List.hd <| TcUtil.generalize env [lb.lbname, e1, c1]  in
 
@@ -1274,11 +1274,11 @@ and check_let_recs env lbs =
 (* Several utility functions follow                                           *)
 (******************************************************************************)
 and check_let_bound_def top_level env lb 
-                               : term      (* checked lbdef                   *)
+                               : term       (* checked lbdef                   *)
                                * univ_names (* univ_vars, if any               *)
-                               * lcomp     (* type of lbdef                   *)
-                               * guard_t   (* well-formedness of lbtyp        *)
-                               * bool      (* true iff lbtyp was annotated    *)
+                               * lcomp      (* type of lbdef                   *)
+                               * guard_t    (* well-formedness of lbtyp        *)
+                               * bool       (* true iff lbtyp was annotated    *)
                                = 
     let env1, _ = Env.clear_expected_typ env in
     let e1 = lb.lbdef in
@@ -1302,10 +1302,10 @@ and check_let_bound_def top_level env lb
 
 
 (* Extracting the type of non-recursive let binding *)
-and check_lbtyp top_level env lb : option<typ> (* checked version of lb.lbtyp, if it was not Tm_unknown *)
-                                 * guard_t     (* well-formedness condition for that type               *)
+and check_lbtyp top_level env lb : option<typ>  (* checked version of lb.lbtyp, if it was not Tm_unknown *)
+                                 * guard_t      (* well-formedness condition for that type               *)
                                  * univ_names   (* explicit universe variables, if any                   *)
-                                 * Env.env     (* env extended with univ_vars                           *)
+                                 * Env.env      (* env extended with univ_vars                           *)
                                  = 
     let t = SS.compress lb.lbtyp in
     match t.n with
@@ -1318,7 +1318,7 @@ and check_lbtyp top_level env lb : option<typ> (* checked version of lb.lbtyp, i
           let env1 = Env.push_univ_vars env univ_vars in
           if top_level 
           && not (env.generalize) //clearly, x has an annotated type ... could env.generalize ever be true here?
-                                  //perhaps. x may not have a val declaration, only an inline annotation
+                                  //yes. x may not have a val declaration, only an inline annotation
                                   //so, not (env.generalize) signals that x has been declared as val x : t, and t has already been checked
           then Some t, Rel.trivial_guard, univ_vars, Env.set_expected_typ env t //t has already been kind-checked
           else //we have an inline annotation
@@ -1583,9 +1583,7 @@ let tc_inductive env ses quals lids =
 
          (1). We elaborate the type of T to 
                 T :  a:Type(ua) -> b:Type(ub) -> Type(u)
-              and emit constraints (ua <= u /\ ub < u)
-              In other words u = max(ua, ub + 1, u')
-
+              
          (2). In a context
               G = a:Type(ua), T: (a':Type(ua){a=a'} -> b:Type(ub) -> Type(u))
               we elaborate the type of 
@@ -1633,7 +1631,6 @@ let tc_inductive env ses quals lids =
     *)
     (* 1. Checking each tycon *)
     let tc_tycon env (s:sigelt) : env            (* environment extended with a refined type for the type-constructor *)
-                                * guard_t        (* well-formedness guard, mainly universe constraints *)      
                                 * sigelt         (* the typed version of s, with universe variables still TBD *)
                                 * universe       (* universe of the constructed type *)
                                 = match s with
@@ -1648,8 +1645,6 @@ let tc_inductive env ses quals lids =
          let k = Util.arrow indices (S.mk_Total t) in
          let t_type, u = TcUtil.type_u() in 
          Rel.discharge_guard env' (Rel.teq env' t t_type); 
-         let g  = Rel.universe_inequality (S.U_max us) u in
-         let g' = Rel.universe_inequality (S.U_max (List.map S.U_succ us')) u in
          
          let refined_tps = tps |> List.map (fun (x, imp) -> 
             let y = S.freshen_bv x in
@@ -1658,7 +1653,6 @@ let tc_inductive env ses quals lids =
 
 (*close*)let t_tc = Util.arrow (refined_tps@indices) (S.mk_Total t) in
          Env.push_local_binding env_tps (Env.Binding_lid(tc, ([], t_tc))), 
-         Rel.conj_guard g g',
          Sig_inductive_typ(tc, [], tps, k, mutuals, data, quals, r), 
          u
 
@@ -1698,12 +1692,9 @@ let tc_inductive env ses quals lids =
          let _ = match (SS.compress head).n with 
             | Tm_fvar (fv, _) when lid_equals fv.v tc_lid -> ()
             | _ -> raise (Error(Util.format1 "Expected a constructor of type %s" (Print.lid_to_string tc_lid), r)) in
-         let fvs = Free.names result in
          let g =List.fold_left2 (fun g (x, _) u_x -> 
                 positive_if_pure x.sort tc_lid;
-                if Util.set_mem x fvs 
-                then g
-                else Rel.conj_guard g (Rel.universe_inequality (S.U_succ u_x) u_tc))
+                Rel.conj_guard g (Rel.universe_inequality u_x u_tc))
             Rel.trivial_guard
             arguments
             us in
@@ -1724,27 +1715,31 @@ let tc_inductive env ses quals lids =
             | Sig_datacon(_, _, t, _, _, _, _, _) -> S.null_binder t 
             | _ -> failwith "Impossible") in
         let t = Util.arrow (binders@binders') (S.mk_Total Recheck.t_unit) in
-        Printf.printf "Trying to generalize universes in %s\n" (N.term_to_string env t);
+        Printf.printf "@@@@@@Trying to generalize universes in %s\n" (N.term_to_string env t);
         let (uvs, t) = TcUtil.generalize_universes env t in
+        Printf.printf "@@@@@@Generalized to (%s, %s)\n" (uvs |> List.map (fun u -> u.idText) |> String.concat ", ")
+                                                        (Print.term_to_string t);
         let uvs, t = SS.open_univ_vars uvs t in
         let args, _ = Util.arrow_formals t in
         let tc_types, data_types = Util.first_N (List.length binders) args in
         let tcs = List.map2 (fun (x, _) se -> match se with
             | Sig_inductive_typ(tc, _, tps, _, mutuals, datas, quals, r) -> 
-              let tps, t = match (SS.compress x.sort).n with 
+              let ty = SS.close_univ_vars uvs x.sort in
+              let tps, t = match (SS.compress ty).n with 
                 | Tm_arrow(binders, c) -> 
                   let tps, rest = Util.first_N (List.length tps) binders in 
                   let t = match rest with 
                     | [] -> Util.comp_result c
                     | _ -> mk (Tm_arrow(rest, c)) !x.sort.tk x.sort.pos in
                   tps, t
-                | _ -> [], x.sort in
+                | _ -> [], ty in
                Sig_inductive_typ(tc, uvs, tps, t, mutuals, datas, quals, r)
             | _ -> failwith "Impossible") 
             tc_types tcs in
         let datas = List.map2 (fun (t, _) -> function
             | Sig_datacon(l, _, _, tc, ntps, quals, mutuals, r) -> 
-              Sig_datacon(l, uvs, t.sort, tc, ntps, quals, mutuals, r)
+              let ty = SS.close_univ_vars uvs t.sort in
+              Sig_datacon(l, uvs, ty, tc, ntps, quals, mutuals, r)
             | _ -> failwith "Impossible") data_types datas in
         tcs, datas in
 
@@ -1754,7 +1749,8 @@ let tc_inductive env ses quals lids =
 
     (* Check each tycon *)
     let env, tcs, g = List.fold_right (fun tc (env, all_tcs, g)  -> 
-            let env, g', tc, tc_u = tc_tycon env tc in 
+            let env, tc, tc_u = tc_tycon env tc in 
+            let g' = Rel.universe_inequality S.U_zero tc_u in
             env, (tc, tc_u)::all_tcs, Rel.conj_guard g g') 
         tys
         (env, [], Rel.trivial_guard) in

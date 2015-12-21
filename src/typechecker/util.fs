@@ -943,9 +943,6 @@ let generalize_universes (env:env) (t:term) : tscheme =
     (gen, ts)
 
 let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * comp)>> =
-  let is_type t = match (compress t).n with 
-    | Tm_type _ -> true
-    | _ -> false in
   if not <| (Util.for_all (fun (_, c) -> Util.is_pure_or_ghost_comp c) ecs) //No value restriction in F*---generalize the types of pure computations
   then None
   else
@@ -960,29 +957,19 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
          c in
      let env_uvars = Env.uvars_in_env env in
      let gen_uvars uvs = Util.set_difference uvs env_uvars |> Util.set_elements in
-     let should_gen t = match t.n with
-        | Tm_arrow(bs, _) ->
-            if bs |> Util.for_some (fun (x, _) -> is_type x.sort)
-            then false (* contains an explicit type abstraction; don't generalize further *)
-            else true
-        | _ -> true in
-
      let univs, uvars = ecs |> List.map (fun (e, c) ->
           let t = Util.comp_result c |> SS.compress in
-          if not <| should_gen t
-          then S.no_universe_uvars, ([], e, c)
-          else let c = norm c in
-               let ct = U.comp_to_comp_typ c in
-               let t = ct.result_typ in
-               let uvt = Free.uvars t in
-               let univs = Free.univs t in
-               let uvs = gen_uvars uvt in
-               univs, (uvs, e, c)) |> List.unzip in
+          let c = norm c in
+          let ct = U.comp_to_comp_typ c in
+          let t = ct.result_typ in
+          let uvt = Free.uvars t in
+          let univs = Free.univs t in
+          let uvs = gen_uvars uvt in
+         univs, (uvs, e, c)) |> List.unzip in
   
      let univs = List.fold_left Util.set_union S.no_universe_uvars univs in
      let gen_univs = gen_univs env univs in
-     if debug env Options.Medium 
-     then gen_univs |> List.iter (fun x -> Util.fprint1 "Generalizing uvar %s\n" x.idText);
+     if debug env Options.Medium then gen_univs |> List.iter (fun x -> Util.fprint1 "Generalizing uvar %s\n" x.idText);
      let ecs = uvars |> List.map (fun (uvs, e, c) ->
           let tvars = uvs |> List.map (fun (u, k) ->
             match Unionfind.find u with

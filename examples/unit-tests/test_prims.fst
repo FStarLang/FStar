@@ -14,28 +14,28 @@
    limitations under the License.
 *)
 module Prims
+(* Primitive logical connectives *)
+type False = 
+type True =
+  | T
 kind un_op  = Type -> Type
 kind bin_op = Type -> Type -> Type
 type Eq2 : #a:Type -> #b:Type -> a -> b -> Type  (* infix binary '==' *)
 type bool
 opaque type b2t (b:bool) = (b == true)
-(* We assume the Tot effect here; its definition appears a few lines below *)
-(* Primitive logical connectives *)
-type True =
-  | T
-logic type False
+(* NB: The Tot effect is primitive; it is explained in terms of PURE a few lines below *)
 opaque type l_imp (p:Type) (q:Type) = p -> Tot q                 (* infix binary '==>' *)
 type l_and  (p:Type) (q:Type) =
   | And   : p -> q -> (p /\ q)                                      (* infix binary '/\' *)
-// type l_or   (p:Type) (q:Type) =                                  (* infix binary '\/' *)
-//   | Left  : p -> (p \/ q)
-//   | Right : q -> (p \/ q)
-// opaque type l_iff (p:Type) (q:Type) = (p ==> q) /\ (q ==> p)       (* infix binary '<==>' *)
-// opaque type l_not (p:Type) = p ==> False                             (* prefix unary '~' *)
-// logic type XOR (p:Type) (q:Type) = (p \/ q) /\ ~(p /\ q)
-// opaque type ITE (p:Type) (q:Type) (r:Type) = (p ==> q) /\ (~p ==> r) (* if/then/else in concrete syntax *)
-// logic type Precedes : #a:Type -> #b:Type -> a -> b -> Type            (* a built-in well-founded partial order over all terms *)
-// opaque type Forall (#a:Type) (p:a -> Type) = x:a -> Tot (p x)      (* forall (x:a). p x *)
+type l_or   (p:Type) (q:Type) =                                  (* infix binary '\/' *)
+  | Left  : p -> (p \/ q)
+  | Right : q -> (p \/ q)
+opaque type l_iff (p:Type) (q:Type) = (p ==> q) /\ (q ==> p)        (* infix binary '<==>' *)
+opaque type l_not (p:Type) = p ==> False                              (* prefix unary '~' *)
+logic type XOR (p:Type) (q:Type) = (p \/ q) /\ ~(p /\ q)
+opaque type ITE (p:Type) (q:Type) (r:Type) = (p ==> q) /\ (~p ==> r) (* if/then/else in concrete syntax *)
+type Precedes : #a:Type -> #b:Type -> a -> b -> Type                (* a built-in well-founded partial order over all terms *)
+opaque type Forall (#a:Type) (p:a -> Type) = x:a -> Tot (p x)      (* forall (x:a). p x *)
 // type DTuple2: a:Type
 //            ->  b:(a -> Type)
 //            -> Type =

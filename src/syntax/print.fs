@@ -208,6 +208,8 @@ let rec term_to_string x =
                         (p |> pat_to_string)
                         (match wopt with | None -> "" | Some w -> Util.format1 "when %s" (w |> term_to_string))
                         (e |> term_to_string))))
+  | Tm_ascribed(e, t, _) ->
+    Util.format2 "(%s : %s)" (term_to_string e) (term_to_string t)
   | _ -> tag_of_term x
 
 and  pat_to_string x = match x.v with
@@ -222,8 +224,9 @@ and  pat_to_string x = match x.v with
 and lbs_to_string lbs =
     Util.format2 "let %s %s"
     (if fst lbs then "rec" else "")
-    (Util.concat_l "\n and " (snd lbs |> List.map (fun lb -> Util.format2 "%s = %s" 
+    (Util.concat_l "\n and " (snd lbs |> List.map (fun lb -> Util.format3 "%s : %s = %s" 
                                                             (lbname_to_string lb.lbname) 
+                                                            (term_to_string lb.lbtyp)
                                                             (lb.lbdef |> term_to_string))))
 
 and lcomp_to_string lc =
