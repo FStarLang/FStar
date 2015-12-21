@@ -27,26 +27,24 @@ logic type False
 opaque type l_imp (p:Type) (q:Type) = p -> Tot q                 (* infix binary '==>' *)
 type l_and  (p:Type) (q:Type) =
   | And   : p -> q -> (p /\ q)                                      (* infix binary '/\' *)
-type l_or   (p:Type) (q:Type) =                                  (* infix binary '\/' *)
-  | Left  : p -> (p \/ q)
-  | Right : q -> (p \/ q)
-// opaque type l_iff (p:Type) (q:Type) = (p ==> q) /\ (q ==> p)      (* infix binary '<==>' *)
+// type l_or   (p:Type) (q:Type) =                                  (* infix binary '\/' *)
+//   | Left  : p -> (p \/ q)
+//   | Right : q -> (p \/ q)
+// opaque type l_iff (p:Type) (q:Type) = (p ==> q) /\ (q ==> p)       (* infix binary '<==>' *)
 // opaque type l_not (p:Type) = p ==> False                             (* prefix unary '~' *)
+// logic type XOR (p:Type) (q:Type) = (p \/ q) /\ ~(p /\ q)
+// opaque type ITE (p:Type) (q:Type) (r:Type) = (p ==> q) /\ (~p ==> r) (* if/then/else in concrete syntax *)
+// logic type Precedes : #a:Type -> #b:Type -> a -> b -> Type            (* a built-in well-founded partial order over all terms *)
 // opaque type Forall (#a:Type) (p:a -> Type) = x:a -> Tot (p x)      (* forall (x:a). p x *)
-(* type DTuple2: a:Type *)
-(*           ->  b:(a -> Type) *)
-(*           -> Type = *)
-(*   | MkDTuple2: #a:Type *)
-(*            ->  #b:(a -> Type) *)
-(*            -> _1:a *)
-(*            -> _2:b _1 *)
-(*            -> DTuple2 a b *)
+// type DTuple2: a:Type
+//            ->  b:(a -> Type)
+//            -> Type =
+//   | MkDTuple2: #a:Type
+//            ->  #b:(a -> Type)
+//            -> _1:a
+//            -> _2:b _1
+//            -> DTuple2 a b
 (* opaque type Exists (#a:Type) (p:a -> Type) = x:a & p x          (\* exists (x:a). p x *\) *)
-(* logic type XOR (p:Type) (q:Type) = (p \/ q) /\ ~(p /\ q) *)
-(* opaque type ITE (p:Type) (q:Type) (r:Type) = (p ==> q) /\ (~p ==> r) (\* if/then/else in concrete syntax *\) *)
-(* logic type ForallTyp : (Type -> Type) -> Type (\* Handled specially to support quantification over types of arbitrary kinds *\) *)
-(* logic type ExistsTyp : (Type -> Type) -> Type (\* Handled specially to support quantification over types of arbitrary kinds *\) *)
-(* logic type Precedes : #a:Type -> #b:Type -> a -> b -> Type  (\* a built-in well-founded partial order over all terms *\) *)
 
 (* (\* PURE effect *\) *)
 (* kind PurePre = Type *)

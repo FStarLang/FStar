@@ -873,7 +873,9 @@ and check_short_circuit_args env head chead g_head args : term * lcomp * Rel.gua
                 let e, c, g = tc_check_tot_or_gtot_term env e b.sort in //NS: this forbids stuff like !x && y, maybe that's ok
                 let short = TcUtil.short_circuit head seen in 
                 let g = Rel.imp_guard (Rel.guard_of_guard_formula short) g in
-                let ghost = ghost || not (TcUtil.is_pure_effect env c.eff_name) in
+                let ghost = ghost 
+                          || (not (Util.is_total_lcomp c)
+                              && not (TcUtil.is_pure_effect env c.eff_name)) in
                 seen@[arg e], Rel.conj_guard guard g, ghost) ([], g_head, false) args bs in
           let e = mk_Tm_app head args (Some res_t.n) r  in
           let c = if ghost then Util.gtotal_comp res_t |> Util.lcomp_of_comp else Util.lcomp_of_comp c in
@@ -1722,6 +1724,7 @@ let tc_inductive env ses quals lids =
             | Sig_datacon(_, _, t, _, _, _, _, _) -> S.null_binder t 
             | _ -> failwith "Impossible") in
         let t = Util.arrow (binders@binders') (S.mk_Total Recheck.t_unit) in
+        Printf.printf "Trying to generalize universes in %s\n" (N.term_to_string env t);
         let (uvs, t) = TcUtil.generalize_universes env t in
         let uvs, t = SS.open_univ_vars uvs t in
         let args, _ = Util.arrow_formals t in
@@ -1763,7 +1766,7 @@ let tc_inductive env ses quals lids =
         datas 
         ([], g) in
 
-    let tcs, datas = generalize_universes env g (List.map fst tcs) datas in 
+    let tcs, datas = generalize_universes env0 g (List.map fst tcs) datas in 
     Sig_bundle(tcs@datas, quals, lids, Env.get_range env0)
       
 let rec tc_decl env se = match se with

@@ -937,6 +937,7 @@ let gen_univs env (x:Util.set<universe_uvar>) : list<univ_name> =
 
 let generalize_universes (env:env) (t:term) : tscheme = 
     let univs = Free.univs t in 
+    Printf.printf "Free univs = %A\n" (Util.set_elements univs |> List.map (fun u -> Unionfind.uvar_id u |> string_of_int));
     let gen = gen_univs env univs in
     let ts = SS.close_univ_vars gen t in 
     (gen, ts)

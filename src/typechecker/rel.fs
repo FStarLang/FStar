@@ -832,6 +832,69 @@ let next_prob wl : option<prob>  //the first problem that is at most a flex_rigi
 
 let is_flex_rigid rank = flex_refine_inner <= rank && rank <= flex_rigid
 
+type univ_eq_sol = 
+  | UDeferred 
+  | USolved   of list<uvi>
+  | UFailed   of string
+   
+let rec solve_universe_eq wl u1 u2 = 
+    let u1 = compress_univ wl u1 |> N.normalize_universe in
+    let u2 = compress_univ wl u2 |> N.normalize_universe in
+    let occurs_univ v1 u = match u with 
+        | U_max us -> 
+          us |> Util.for_some (fun u -> 
+            let k, _ = U.univ_kernel u in 
+            match k with 
+                | U_unif v2 -> Unionfind.equivalent v1 v2
+                | _ -> false)
+        | _ -> false in
+    match u1, u2 with
+        | U_bvar _, _
+        | U_unknown, _
+        | _, U_bvar _ 
+        | _, U_unknown -> failwith "Impossible: locally nameless"
+
+        | U_unif v1, U_unif v2 -> 
+          if Unionfind.equivalent v1 v2 
+          then USolved []
+          else USolved [UNIV(v1, u2)]
+
+        | U_unif v1, u
+        | u, U_unif v1 ->
+          let u = norm_univ wl u in
+          if occurs_univ v1 u
+          then UFailed "Failed occurs check"
+          else USolved [UNIV(v1, u)] 
+
+        | U_zero, U_zero -> 
+          USolved []
+
+        | U_succ u1, U_succ u2 -> 
+          solve_universe_eq wl u1 u2
+
+        | U_succ _, _
+        | U_zero _, _
+        | _, U_succ _ 
+        | _, U_zero -> 
+          UFailed "Incompatible universes" 
+        
+        | U_name x, U_name y when x.idText=y.idText ->
+          USolved []
+          
+        | U_name _, _
+        | _, U_name _ -> 
+          UFailed "Incompatible universes" 
+       
+        | U_max _, _
+        | _, U_max _ -> 
+          if wl.defer_ok
+          then UDeferred
+          else let u1 = norm_univ wl u1 in
+               let u2 = norm_univ wl u2 in
+               if U.eq_univs u1 u2
+               then USolved []
+               else UFailed "Unable to unify universes"
+
 (******************************************************************************************************)
 (* Main solving algorithm begins here *)
 (******************************************************************************************************)
@@ -868,65 +931,16 @@ let rec solve (env:Env.env) (probs:worklist) : solution =
                  | _ -> 
                    solve env ({probs with attempting=attempt |> List.map (fun (_, _, y) -> y); wl_deferred=rest})
 
-and solve_universes env orig u1 u2 wl = 
-    let u1 = compress_univ wl u1 |> N.normalize_universe in
-    let u2 = compress_univ wl u2 |> N.normalize_universe in
-    let occurs_univ v1 u = match u with 
-        | U_max us -> 
-          us |> Util.for_some (fun u -> 
-            let k, _ = U.univ_kernel u in 
-            match k with 
-                | U_unif v2 -> Unionfind.equivalent v1 v2
-                | _ -> false)
-        | _ -> false in
-    match u1, u2 with
-        | U_bvar _, _
-        | U_unknown, _
-        | _, U_bvar _ 
-        | _, U_unknown -> failwith "Impossible: locally nameless"
+and solve_universes env orig u1 u2 (wl:worklist) = 
+    match solve_universe_eq wl u1 u2 with 
+        | USolved sol -> 
+          solve env (solve_prob orig None sol wl)
 
-        | U_unif v1, U_unif v2 -> 
-          if Unionfind.equivalent v1 v2 
-          then solve env (solve_prob orig None [] wl)  
-          else solve env (solve_prob orig None [UNIV(v1, u2)] wl)
-
-        | U_unif v1, u
-        | u, U_unif v1 ->
-          let u = norm_univ wl u in
-          if occurs_univ v1 u
-          then giveup env "Failed occurs check" orig
-          else solve env (solve_prob orig None [UNIV(v1, u)] wl)
-
-        | U_zero, U_zero -> 
-          solve env (solve_prob orig None [] wl)  
+        | UFailed msg -> 
+          giveup env msg orig
           
-        | U_succ u1, U_succ u2 -> 
-          solve_universes env orig u1 u2 wl
-
-        | U_succ _, _
-        | U_zero _, _
-        | _, U_succ _ 
-        | _, U_zero -> 
-          giveup env "Incompatible universes" orig
-        
-        | U_name x, U_name y -> 
-          if x.idText=y.idText
-          then solve env (solve_prob orig None [] wl)  
-          else giveup env "Incompatible universes" orig
-        
-        | U_name _, _
-        | _, U_name _ -> 
-          giveup env "Incompatible universes" orig
-       
-        | U_max _, _
-        | _, U_max _ -> 
-          if wl.defer_ok
-          then solve env (defer "" orig wl)
-          else let u1 = norm_univ wl u1 in
-               let u2 = norm_univ wl u2 in
-               if U.eq_univs u1 u2
-               then solve env (solve_prob orig None [] wl)
-               else giveup env "Unable to unify universes" orig
+        | UDeferred ->   
+          solve env (defer "" orig wl)
 
 and giveup_or_defer env orig wl msg =
     if wl.defer_ok
@@ -1860,10 +1874,43 @@ let sub_comp env c1 c2 =
   let prob = CProb <| new_problem env c1 rel c2 None (Env.get_range env) "sub_comp" in
   with_guard env prob <| solve_and_commit env (singleton env prob)  (fun _ -> None)
 
-let solve_universe_inequalities ineqs = 
+let solve_universe_inequalities env ineqs = 
+    let fail msg u1 u2 = 
+        let msg = match msg with 
+            | None -> ""
+            | Some s -> ": " ^ s in
+        raise (Error (Util.format3 "Universe %s and %s are incompatible%s" 
+                                                                (Print.univ_to_string u1) 
+                                                                (Print.univ_to_string u2) 
+                                                                msg, 
+                                                          (Env.get_range env))) in
     match ineqs with 
         | [] -> ()
-        | _ -> Errors.warn Range.dummyRange "Universe inequality check unimplemented"
+        | _ -> 
+          let wl = {empty_worklist env with defer_ok=true} in
+          ineqs |> List.iter (fun (u1, u2) -> 
+            let u1 = N.normalize_universe u1 in
+            let u2 = N.normalize_universe u2 in 
+            match u1 with 
+                | U_zero -> ()
+                | _ -> match solve_universe_eq wl u1 u2 with 
+                        | UDeferred
+                        | UFailed _    -> 
+                          let us1 = match u1 with 
+                            | U_max us1 -> us1
+                            | _ -> [u1] in
+                          let us2 = match u2 with 
+                            | U_max us2 -> us2
+                            | _ -> [u2] in
+                          Printf.printf "Comparing %A   <=    %A\n" (List.map Print.univ_to_string us1) (List.map Print.univ_to_string us2);
+                          if us1 |> Util.for_all (function
+                            | U_zero -> true
+                            | u -> us2 |> Util.for_some (fun u' -> U.eq_univs u u'))
+                          then ()
+                          else fail None u1 u2
+                        
+                        | USolved uvis -> commit env uvis |> ignore);
+          Errors.warn Range.dummyRange "Universe inequality check not fully implemented"
 
 let solve_deferred_constraints env (g:guard_t) =
    let fail (d,s) =
@@ -1882,8 +1929,9 @@ let solve_deferred_constraints env (g:guard_t) =
                         (N.term_to_string env (p_guard x |> fst))) 
        |> String.concat "\n")
    end;
+   
    let gopt = solve_and_commit env (wl_of_guard env g.deferred) fail in
-   solve_universe_inequalities g.univ_ineqs;
+   solve_universe_inequalities env g.univ_ineqs;
    match gopt with
     | Some _ -> {g with deferred=[]}
     | _ -> failwith "impossible"
@@ -1905,4 +1953,5 @@ let discharge_guard env (g:guard_t) =
         end
 
 let universe_inequality (u1:universe) (u2:universe) : guard_t =
+    Printf.printf "Universe inequality %s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2);
     {trivial_guard with univ_ineqs=[u1,u2]}
