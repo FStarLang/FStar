@@ -1,7 +1,7 @@
 VERFILES=unit1.fst unit2.fst testset.fst short-circuit.fst first-proofs.fst
 include ../Makefile.include
 NEGFILES=negative-tests.fst
-NEGTESTS=36
+NEGTESTS=35
 
 all: all-pos all-neg
 
