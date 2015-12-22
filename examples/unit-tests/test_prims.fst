@@ -171,7 +171,7 @@ type list (a:Type) =
   | Cons : hd:a -> tl:list a -> list a
 
 type pattern =
-  // | SMTPat   : #a:Type -> a -> pattern
+  | SMTPat   : #a:Type -> a -> pattern
   | SMTPatT  : a:Type -> pattern
   | SMTPatOr : list (list pattern) -> pattern
 
@@ -422,7 +422,7 @@ sub_effect
 
 type lex_t =
   | LexTop  : lex_t
-  // | LexCons : #a:Type -> a -> lex_t -> lex_t
+  | LexCons : #a:Type -> a -> lex_t -> lex_t
 
 type Tuple2 'a 'b =
   | MkTuple2: _1:'a
@@ -490,20 +490,15 @@ type Tuple8 'a 'b 'c 'd 'e 'f 'g 'h =
 //              -> _3:c _1 _2
 //              -> DTuple3 a b c
 
-(* type DTuple4: a:Type *)
-(*            -> b:(x:a -> Type) *)
-(*            -> c:(x:a -> b x -> Type) *)
-(*            -> d:(x:a -> y:b x -> z:c x y -> Type) *)
-(*            -> Type = *)
-(*  | MkDTuple4: #a:Type *)
-(*            -> #b:(a -> Type) *)
-(*            -> #c:(x:a -> b x -> Type) *)
-(*            -> #d:(x:a -> y:b x -> z:c x y -> Type) *)
-(*            -> _1:a *)
-(*            -> _2:b _1 *)
-(*            -> _3:c _1 _2 *)
-(*            -> _4:d _1 _2 _3 *)
-(*            -> DTuple4 a b c d *)
+// type DTuple4 (a:Type)
+//              (b:(x:a -> Type))
+//              (c:(x:a -> b x -> Type))
+//              (d:(x:a -> y:b x -> z:c x y -> Type)) =
+//  | MkDTuple4:_1:a
+//            -> _2:b _1
+//            -> _3:c _1 _2
+//            -> _4:d _1 _2 _3
+//            -> DTuple4 a b c d
 
 
 type as_requires (#a:Type) (wp:PureWP a)  = wp (fun x -> True)

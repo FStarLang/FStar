@@ -845,14 +845,14 @@ type univ_eq_sol =
 let rec solve_universe_eq wl u1 u2 = 
     let u1 = compress_univ wl u1 |> N.normalize_universe in
     let u2 = compress_univ wl u2 |> N.normalize_universe in
-    let occurs_univ v1 u = match u with 
+    let rec occurs_univ v1 u = match u with 
         | U_max us -> 
           us |> Util.for_some (fun u -> 
             let k, _ = U.univ_kernel u in 
             match k with 
                 | U_unif v2 -> Unionfind.equivalent v1 v2
                 | _ -> false)
-        | _ -> false in
+        | _ -> occurs_univ v1 (U_max [u]) in
     match u1, u2 with
         | U_bvar _, _
         | U_unknown, _
@@ -1915,7 +1915,10 @@ let solve_universe_inequalities env ineqs =
       let u2 = N.normalize_universe u2 in
       match u2 with 
         | U_unif uv -> 
-          group_by (insert uv u1 out) rest
+          let u1 = N.normalize_universe u1 in
+          if U.eq_univs u1 u2 
+          then group_by out rest
+          else group_by (insert uv u1 out) rest
         | _ -> None in
 
 
@@ -1923,6 +1926,8 @@ let solve_universe_inequalities env ineqs =
         match ineqs with 
             | [] -> ()
             | _ -> 
+              Printf.printf "Universe inequalities:\n";
+              ineqs |> List.iter (fun (u1, u2) -> Printf.printf "\t%s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2));
               let wl = {empty_worklist env with defer_ok=true} in
               ineqs |> List.iter (fun (u1, u2) -> 
                 let u1 = N.normalize_universe u1 in
@@ -1941,11 +1946,17 @@ let solve_universe_inequalities env ineqs =
                               Printf.printf "Comparing %A   <=    %A\n" (List.map Print.univ_to_string us1) (List.map Print.univ_to_string us2);
                               if us1 |> Util.for_all (function
                                 | U_zero -> true
-                                | u -> us2 |> Util.for_some (fun u' -> U.eq_univs u u'))
+                                | u -> 
+                                  let k_u, n = U.univ_kernel u in
+                                  us2 |> Util.for_some (fun u' -> 
+                                  let k_u', n' = U.univ_kernel u' in                              
+                                  U.eq_univs k_u k_u' && n <= n'))
                               then ()
                               else fail None u1 u2
                         
-                            | USolved uvis -> commit env uvis |> ignore);
+                            | USolved uvis -> 
+                              Printf.printf "Solved %s\n" (uvis |> List.map (uvi_to_string env) |> String.concat ", ");
+                              commit env uvis |> ignore);
               Errors.warn Range.dummyRange "Universe inequality check not fully implemented" in
 
 

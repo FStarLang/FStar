@@ -26,7 +26,7 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>--prims test_prims.fst --universes --log_types --dump_module Prims --print_implicits --trace_error --debug Prims --debug_level Extreme --debug_level Rel</StartArguments>
+    <StartArguments>--universes --prims test_prims.fst test.fst --debug TEST --debug_level Low</StartArguments>
     <StartAction>Project</StartAction>
     <StartWorkingDirectory>C:\Users\nswamy\workspace\universes\FStar\examples\unit-tests\</StartWorkingDirectory>
   </PropertyGroup>
