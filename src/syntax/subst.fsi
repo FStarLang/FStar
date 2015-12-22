@@ -43,7 +43,7 @@ val open_branch:        branch -> branch
 val open_let_rec:       list<letbinding> -> term -> list<letbinding> * term
 val open_univ_vars:     univ_names -> term -> univ_names * term
 val open_univ_vars_comp:univ_names -> comp -> univ_names * comp
-
+val opening_of_binders: binders -> subst
 val subst_binders:      binders -> args -> term -> term
 val subst_binders_comp: binders -> args -> comp -> comp
 

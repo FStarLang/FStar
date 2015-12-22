@@ -324,7 +324,6 @@ let open_term (bs:binders) t =
 let open_comp (bs:binders) t = 
    let bs', opening = open_binders' bs in
    bs', subst_comp opening t
-
 let open_pat (p:pat) : pat * subst = 
     let rec aux sub p = match p.v with 
        | Pat_disj [] -> failwith "Impossible: empty disjunction"
@@ -469,3 +468,7 @@ let close_univ_vars_tscheme (us:univ_names) ((us', t):tscheme) =
    let k = List.length us' in
    let s = List.mapi (fun i x -> UD(x, k + (n - i))) us in
    (us', subst s t)
+
+let opening_of_binders (bs:binders) = 
+  let n = List.length bs - 1 in
+  bs |> List.mapi (fun i (x, _) -> DB(n - i, bv_to_name x))

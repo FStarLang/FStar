@@ -973,14 +973,14 @@ let mk_indexed_projectors fvq refine_domain env tc lid tps (fields:list<S.binder
             || fvq<>Data_ctor
             || Options.dont_gen_projectors (Env.current_module env).str
             then []
-            else let projection = S.new_bv None tun in 
+            else let projection = S.gen_bv x.ppname.idText None tun in
                  let as_imp = function
                     | Some S.Implicit -> true
                     | _ -> false in
                  let arg_pats = all_params |> List.mapi (fun j (x,imp) -> 
                         if i+ntps=j  //this is the one to project
                         then pos (Pat_var projection), as_imp imp
-                        else pos (Pat_wild (S.new_bv None tun)), as_imp imp) in
+                        else pos (Pat_wild (S.gen_bv x.ppname.idText None tun)), as_imp imp) in
                 let pat = (S.Pat_cons(S.fv lid (Some fvq), arg_pats) |> pos, None, S.bv_to_name projection) in
                 let body = mk (Tm_match(arg_exp, [U.branch pat])) None p in
                 let imp = U.abs binders body in
@@ -1083,8 +1083,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
            | Sig_inductive_typ(l, _, typars, k, [], [], quals, rng) -> 
              let quals = if quals |> List.contains S.Assumption
                          then quals
-                         else (TypeChecker.Errors.warn (Ident.range_of_lid l)
-                                                       "Adding an implicit 'assume fresh' qualifier";
+                         else (Util.fprint1 "%s (Warning): Adding an implicit 'assume fresh' qualifier\n" (Range.string_of_range rng);          
                                S.Assumption::S.Fresh::quals) in
              let t = match typars with 
                 | [] -> k
@@ -1281,6 +1280,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
           | Name l -> fail_or (Env.try_lookup_effect_defn env) l
           | _ -> raise (Error("Effect " ^AST.term_to_string head^ " not found", d.drange)) in
         ed, desugar_args env args in
+    let binders = Subst.close_binders binders in
     let subst = Util.subst_of_list ed.binders args in
     let sub x = [], Subst.close binders (Subst.subst subst (snd x)) in
     let ed = {
@@ -1316,9 +1316,11 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
         let env, ses = desugar_decl env decl in
         env, List.hd ses::out) (env, []) in
     let decls = List.rev decls in
+    let binders = Subst.close_binders binders in
+    let eff_k = Subst.close binders eff_k in
     let lookup s = 
         let l = Env.qualify env (mk_ident(s, d.drange)) in
-        [], fail_or (try_lookup_definition env) l in
+        [], Subst.close binders <| fail_or (try_lookup_definition env) l in
     let ed = {
          mname       =qualify env0 eff_name;
          qualifiers  =List.map trans_qual quals;

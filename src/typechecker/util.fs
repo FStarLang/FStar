@@ -173,23 +173,18 @@ let pat_as_exps (allow_implicits:bool(*fishy ... not used *)) env p
              ([], [], [], env, e, p)
 
            | Pat_dot_term(x, _) ->
-             let x = Syntax.freshen_bv x in
              let t = new_uvar env (Util.ktype0) in
              let e, u = Rel.new_uvar p.p (Env.binders env) t in //TODO: why empty vars?
              let p = {p with v=Pat_dot_term(x, e)} in
              ([], [], [], env, e, p)
 
            | Pat_wild x ->
-             let x = Syntax.freshen_bv x in
-             let p = {p with v=Pat_wild x} in
              let w = Env.Binding_var(x, ([], new_uvar env Util.ktype0)) in
              let env = if allow_wc_dependence then Env.push_local_binding env w else env in
              let e = mk (Tm_name x) None p.p in
              ([w], [], [w], env, e, p)
 
            | Pat_var x ->
-             let x = Syntax.freshen_bv x in
-             let p = {p with v=Pat_var x} in
              let b = Env.Binding_var(x, ([], new_uvar env Util.ktype0)) in
              let env = Env.push_local_binding env b in
              let e = mk (Tm_name x) None p.p in
@@ -503,7 +498,7 @@ let return_value env t v =
        let wp = N.normalize [N.Beta] env (mk_Tm_app (Env.uinst env m.ret) [S.arg t; S.arg v] (Some k.n) v.pos) in
        let wlp = wp in
        mk_comp m t wp wlp [RETURN] in
-  if debug env Options.High
+  if debug env <| Options.Other "Return"
   then Util.fprint3 "(%s) returning %s at comp type %s\n" 
                     (Range.string_of_range v.pos)  (P.term_to_string v) (N.comp_to_string env c);
   c
@@ -651,7 +646,7 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:term) (lc:l
                     if Util.is_pure_or_ghost_comp c
                     && not (is_function (Util.comp_result c))
                     && not (Util.is_partial_return c)
-                    then let x = S.new_bv None (Util.comp_result c) in
+                    then let x = S.gen_bv "strengthen_pre_x" None (Util.comp_result c) in
                          let xret = return_value env x.sort (S.bv_to_name x) in
                          let xbinding = Env.Binding_var(x, ([],x.sort)) in
                          let lc = bind env (Some e) (lcomp_of_comp c) (Some xbinding, lcomp_of_comp xret) in
@@ -937,7 +932,12 @@ let gen_univs env (x:Util.set<universe_uvar>) : list<univ_name> =
          u_names 
 
 let generalize_universes (env:env) (t:term) : tscheme = 
+    if Env.debug env <| Options.Other "Gen" then Printf.printf "Before generalization %s\n" (Print.term_to_string t);
     let univs = Free.univs t in 
+    if Env.debug env <| Options.Other "Gen" 
+    then Printf.printf "univs to gen : %s\n" 
+                (Util.set_elements univs 
+                |> List.map (fun u -> Unionfind.uvar_id u |> string_of_int) |> String.concat ", ");
     let gen = gen_univs env univs in
     let ts = SS.close_univ_vars gen t in 
     (gen, ts)
@@ -1029,21 +1029,21 @@ let check_and_ascribe env (e:term) (t1:typ) (t2:typ) : term * guard_t =
     else match Rel.try_subtype env t1 t2 with
             | None -> None
             | Some f -> Some <| apply_guard f e in
-  if env.is_pattern && false
-  then match Rel.try_teq env t1 t2 with
-        | None -> raise (Error(Errors.expected_pattern_of_type env t2 e t1, Env.get_range env))
-        | Some g -> e, g
-  else match check env t1 t2 with
-        | None ->
-          raise (Error(Errors.expected_expression_of_type env t2 e t1, Env.get_range env))
-        | Some g ->
-           if debug env <| Options.Other "Rel"
-           then Util.fprint1 "Applied guard is %s\n" <| guard_to_string env g;
-           let e = compress e in
-           let e = match e.n with
-               | Tm_name x -> mk (Tm_name ({x with sort=t2})) (Some t2.n) e.pos
-               | _ -> {e with tk=Util.mk_ref (Some t2.n)} in
-           e, g
+  let is_var e = match (SS.compress e).n with
+    | Tm_name _ -> true
+    | _ -> false in
+  let decorate e t = 
+    let e = compress e in
+    match e.n with
+        | Tm_name x -> mk (Tm_name ({x with sort=t2})) (Some t2.n) e.pos
+        | _ -> {e with tk=Util.mk_ref (Some t2.n)} in 
+  let env = {env with use_eq=env.use_eq || (env.is_pattern && is_var e)} in
+  match check env t1 t2 with
+    | None -> raise (Error(Errors.expected_expression_of_type env t2 e t1, Env.get_range env))
+    | Some g ->
+        if debug env <| Options.Other "Rel"
+        then Util.fprint1 "Applied guard is %s\n" <| guard_to_string env g;
+        decorate e t2, g
 
 let check_top_level env g lc : (bool * comp) =
   let unresolved u = match Unionfind.find u with

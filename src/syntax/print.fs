@@ -319,17 +319,27 @@ let qual_to_string = function
     | _ -> "other"
 let quals_to_string quals = quals |> List.map qual_to_string |> String.concat " "
 
+let effect_decl_to_string ed = 
+    Util.format4 "new_effect { %s %s : %s \n\tret=%s\n ... }" 
+        (lid_to_string ed.mname) (binders_to_string " " ed.binders) (term_to_string ed.signature)
+        (term_to_string (snd ed.ret))
+
 let rec sigelt_to_string x = match x with
   | Sig_pragma(ResetOptions, _) -> "#reset-options"
   | Sig_pragma(SetOptions s, _) -> Util.format1 "#set-options \"%s\"" s
   | Sig_inductive_typ(lid, _, tps, k, _, _, quals, _) -> Util.format4 "%s type %s %s : %s" (quals_to_string quals) lid.str (binders_to_string " " tps) (term_to_string k)
   | Sig_datacon(lid, _, t, _, _, _, _, _) -> Util.format2 "datacon %s : %s" lid.str (term_to_string t)
-  | Sig_declare_typ(lid, _, t, quals, _) -> Util.format3 "%s val %s : %s" (quals_to_string quals) lid.str (term_to_string t)
+  | Sig_declare_typ(lid, univs, t, quals, _) -> 
+    Util.format4 "%s val %s %s : %s" (quals_to_string quals) lid.str 
+        (if !Options.print_implicits 
+         then Util.format1 "<%s>" (univs |> List.map (fun x -> x.idText) |> String.concat ", ")
+         else "")
+        (term_to_string t)
   | Sig_assume(lid, f, _, _) -> Util.format2 "val %s : %s" lid.str (term_to_string f)
   | Sig_let(lbs, _, _, b) -> lbs_to_string lbs
   | Sig_main(e, _) -> Util.format1 "let _ = %s" (term_to_string e)
   | Sig_bundle(ses, _, _, _) -> List.map sigelt_to_string ses |> String.concat "\n"
-  | Sig_new_effect(ed, _) -> Util.format3 "new_effect { %s %s : %s ... }" (lid_to_string ed.mname) (binders_to_string " " ed.binders) (term_to_string ed.signature)
+  | Sig_new_effect(ed, _) -> effect_decl_to_string ed
   | Sig_sub_effect _ -> "sub_effect ..."
   | Sig_effect_abbrev(l, _, tps, c, _, _) -> Util.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
 

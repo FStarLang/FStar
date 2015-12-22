@@ -291,7 +291,11 @@ let giveup env reason prob =
 (* <uvi ops> Instantiating unification variables   *)
 (* ------------------------------------------------*)
 let commit env uvis = uvis |> List.iter (function
-    | UNIV(u, t)      -> Unionfind.change u (Some t)
+    | UNIV(u, t)      -> 
+      begin match t with
+        | U_unif u' -> Unionfind.union u u'
+        | _ -> Unionfind.change u (Some t)
+      end
     | TERM((u, _), t) -> Util.unchecked_unify u t)
 
 let find_term_uvar uv s = Util.find_map s (function 
@@ -457,9 +461,9 @@ let occurs_and_freevars_check env wl uk fvs t =
     (occurs_ok, Util.set_is_subset_of fvs_t fvs, (msg, fvs, fvs_t))
 
 let intersect_vars v1 v2 =
-    let fvs1 = Free.names_of_binders v1 in
-    let fvs2 = Free.names_of_binders v2 in
-    Util.set_intersect fvs1 fvs2 |> Util.set_elements |> List.map mk_binder
+    let as_set v = 
+        v |> List.fold_left (fun out x -> Util.set_add (fst x) out) S.no_names in
+    Util.set_intersect (as_set v1) (as_set v2) |> Util.set_elements |> List.map mk_binder
 
 let binders_eq v1 v2 =
   List.length v1 = List.length v2
@@ -750,7 +754,7 @@ let rec eq_tm (t1:typ) (t2:typ) =
 
 and eq_args (a1:args) (a2:args) : bool =
     List.length a1 = List.length a2
-    && List.forall2 (fun (a1, _) (a2, _) -> eq_tm a1 a1) a1 a2
+    && List.forall2 (fun (a1, _) (a2, _) -> eq_tm a1 a2) a1 a2
     
 (* ----------------------------------------------------- *)
 (* Ranking problems for the order in which to solve them *)
@@ -1316,6 +1320,9 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 let xs = sn_binders env xs in
                 let ys = sn_binders env ys in
                 let zs = intersect_vars xs ys in
+                if Env.debug env <| Options.Other "Rel"
+                then Util.fprint3 "Flex-flex patterns: intersected %s and %s; got %s\n"
+                        (Print.binders_to_string ", " xs) (Print.binders_to_string ", " ys) (Print.binders_to_string ", " zs);
                 let u_zs, _ = new_uvar r zs k in
                 let sub1 = U.abs xs u_zs in
                 let occurs_ok, msg = occurs_check env wl (u1,k1) sub1 in
@@ -1574,7 +1581,11 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                             (args_to_string args'))
                             orig
                 else if nargs=0 || eq_args args args'
-                then solve env (solve_prob orig None [] wl)  //special case works well for easily proving things like nat <: nat, or greater_than i <: greater_than i etc.
+                then (if debug env <| Options.Other "Rel" 
+                      then Printf.printf "nargs=%d; args=%s\n\targs'=%s\n" nargs 
+                                (args |> List.map (fun (x, _) -> Print.term_to_string x) |> String.concat ", ")
+                                (args' |> List.map (fun (x, _) -> Print.term_to_string x) |> String.concat ", ");
+                      solve env (solve_prob orig None [] wl))  //special case works well for easily proving things like nat <: nat, or greater_than i <: greater_than i etc.
                 else //Given T t1 ..tn REL T s1..sn
                      //  if T expands to a refinement, then normalize it and recurse
                      //  This allows us to prove things like
@@ -1717,14 +1728,17 @@ type guard_t = {
 }
 
 let guard_to_string (env:env) g =
-  let form = match g.guard_f with
-      | Trivial -> "trivial"
-      | NonTrivial f ->
-          if debug env <| Options.Other "Rel"
-          then N.term_to_string env f
-          else "non-trivial" in
-  let carry = List.map (fun (_, x) -> prob_to_string env x) g.deferred |> String.concat ",\n" in
-  Util.format2 "\n\t{guard_f=%s;\n\t deferred={\n%s};}\n" form carry
+  match g.guard_f, g.deferred with
+    | Trivial, [] -> "{}"
+    | _ ->
+      let form = match g.guard_f with
+          | Trivial -> "trivial"
+          | NonTrivial f ->
+              if debug env <| Options.Other "Rel"
+              then N.term_to_string env f
+              else "non-trivial" in
+      let carry = List.map (fun (_, x) -> prob_to_string env x) g.deferred |> String.concat ",\n" in
+      Util.format2 "\n\t{guard_f=%s;\n\t deferred={\n%s};}\n" form carry
 
 (* ------------------------------------------------*)
 (* <guard_formula ops> Operations on guard_formula *)
@@ -1817,9 +1831,9 @@ let solve_and_commit env probs err =
 let simplify_guard env g = match g.guard_f with
     | Trivial -> g
     | NonTrivial f ->
-      if Env.debug env Options.High then Util.fprint1 "Simplifying guard %s\n" (Print.term_to_string f);
+      if Env.debug env <| Options.Other "Simplification" then Util.fprint1 "Simplifying guard %s\n" (Print.term_to_string f);
       let f = N.normalize [N.Beta; N.Simplify] env f in
-      if Env.debug env Options.High then Util.fprint1 "Simplified guard to %s\n" (Print.term_to_string f);
+      if Env.debug env <| Options.Other "Simplification" then Util.fprint1 "Simplified guard to %s\n" (Print.term_to_string f);
       let f = match f.n with
         | Tm_fvar (fv, _) when lid_equals fv.v Const.true_lid -> Trivial
         | _ -> NonTrivial f in

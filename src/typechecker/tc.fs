@@ -364,6 +364,7 @@ let rec tc_term env (e:term) : term                  (* type-checked and elabora
     e, cres, Rel.conj_guard g1 g_branches
 
   | Tm_let ((false, [{lbname=Inr _}]), _) -> 
+    if Env.debug env Options.Low then Printf.printf "%s\n" (Print.term_to_string top);
     check_top_level_let env top
 
   | Tm_let ((false, _), _) -> 
@@ -475,6 +476,7 @@ and tc_comp env c : comp                                      (* checked version
 
     | Comp c ->
       let kc =  Env.lookup_effect_lid env c.effect_name in
+      if Env.debug env Options.Low then Printf.printf "Type of effect %s is %s\n" (Print.lid_to_string c.effect_name) (Print.term_to_string kc);
       let head = S.fvar None c.effect_name (range_of_lid c.effect_name) in
       let tc = mk_Tm_app head ((arg c.result_typ)::c.effect_args) None c.result_typ.pos in
       let tc, _, f = tc_check_tot_or_gtot_term env tc S.teff in
@@ -855,7 +857,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                         tc_args (subst, outargs, arg_rets, (None, cres)::comps, g, fvs) bs (TcUtil.lcomp_of_comp cres') args
                     | _ when (not norm) ->
                         aux true (whnf env tres)
-                    | _ -> raise (Error(Util.format2 "Too many arguments to function of type %s; got %d arguments" 
+                    | _ -> raise (Error(Util.format2 "Too many arguments to function of type %s; got %s arguments" 
                                             (N.term_to_string env tf) (Util.string_of_int n_args), argpos arg)) in
                 aux false cres.res_typ in
 
@@ -911,6 +913,7 @@ and tc_eqn scrutinee env branch
         * lcomp                                                                   (* computation type of the branch *) 
         * guard_t =                                                                    (* well-formedness condition *)
   let pattern, when_clause, branch_exp = SS.open_branch branch in
+  let cpat, _, cbr = branch in
   
   (*<tc_pat>*)
   let tc_pat (allow_implicits:bool) (pat_t:typ) p0 : 
@@ -930,7 +933,7 @@ and tc_eqn scrutinee env branch
         then Util.fprint2 "Checking pattern expression %s against expected type %s\n" (Print.term_to_string e) (Print.term_to_string pat_t);
 
         let e, lc, g =  tc_term env1 e in //only keep the unification/subtyping constraints; discard the logical guard for patterns
-
+                                          //Q: where is it being discarded?
         if Env.debug env Options.High
         then Util.fprint2 "Pre-checked pattern expression %s at type %s\n" (N.term_to_string env e) (N.term_to_string env lc.res_typ);
 
@@ -1049,7 +1052,7 @@ and tc_eqn scrutinee env branch
             let disc = mk_Tm_app disc [arg scrutinee_tm] None scrutinee_tm.pos in
             Util.mk_eq Util.t_bool Util.t_bool disc Const.exp_true_bool in
 
-        let pat_exp = SS.compress pat_exp in
+        let pat_exp = SS.compress pat_exp |> Util.unmeta in
         match pat_exp.n with
             | Tm_uvar _
             | Tm_app({n=Tm_uvar _}, _)
@@ -1064,7 +1067,10 @@ and tc_eqn scrutinee env branch
                     let sub_term = mk_Tm_app (S.fvar None projector f.p) [arg scrutinee_tm] None f.p in
                     [build_branch_guard sub_term ei]) |> List.flatten in
                 Util.mk_conj_l (head::sub_term_guards)
-            | _ -> failwith (Util.format2 "tc_eqn: Impossible (%s) %s" (Range.string_of_range pat_exp.pos) (Print.term_to_string pat_exp)) in
+            | _ -> failwith (Util.format3 "tc_eqn: Impossible (%s) %s (%s)" 
+                                    (Range.string_of_range pat_exp.pos) 
+                                    (Print.term_to_string pat_exp)
+                                    (Print.tag_of_term pat_exp)) in
 
       (* 6 (b) *)
       let build_and_check_branch_guard scrutinee_tm pat =
@@ -1104,7 +1110,7 @@ and check_top_level_let env e =
    let env = instantiate_both env in
    match e.n with
      | Tm_let((false, [lb]), e2) ->
-       let e1, univ_vars, c1, g1, annotated = check_let_bound_def false env lb in
+       let e1, univ_vars, c1, g1, annotated = check_let_bound_def true env lb in
 
        (* Check that it doesn't have a top-level effect; warn if it does *)
        let e2, c1 =
@@ -1445,57 +1451,85 @@ let open_univ_vars uvs binders c =
 let open_effect_decl env ed = 
    let fail t = raise (Error(Errors.unexpected_signature_for_monad env ed.mname t, range_of_lid ed.mname)) in
    let univs, binders, c = Util.open_univ_vars_binders_and_comp ed.univs ed.binders (S.mk_Total ed.signature) in
-   let t = Util.comp_result c in
+   let binders, c = SS.open_comp binders c in
+   let signature = Util.comp_result c in
    let env = Env.push_univ_vars env univs in
    let env = Env.push_binders env binders in 
-   let a, wp = match (SS.compress t).n with
+   let a, wp = match (SS.compress signature).n with
       | Tm_arrow(bs, c) -> 
         let bs = SS.open_binders bs in 
         begin match bs with 
             | [(a, _);(wp, _); (_wlp, _)] -> a, wp.sort
-            | _ -> fail t
+            | _ -> fail signature
         end
-      | _ -> fail t in
-   env, univs, binders, a, wp
+      | _ -> fail signature in
+   let opening = SS.opening_of_binders binders in
+   let op ts = assert (fst ts = []); 
+    let t0 = snd ts in 
+    let t1 = SS.subst opening (snd ts) in
+    ([], t1) in
+   let ed = match binders with 
+    | [] -> ed
+    | _ -> 
+        { ed with 
+           binders     =   binders
+         ; univs       =   univs
+         ; signature   =   signature
+         ; ret         =op ed.ret
+         ; bind_wp     =op ed.bind_wp
+         ; bind_wlp    =op ed.bind_wlp
+         ; if_then_else=op ed.if_then_else
+         ; ite_wp      =op ed.ite_wp
+         ; ite_wlp     =op ed.ite_wlp
+         ; wp_binop    =op ed.wp_binop
+         ; wp_as_type  =op ed.wp_as_type
+         ; close_wp    =op ed.close_wp
+         ; assert_p    =op ed.assert_p
+         ; assume_p    =op ed.assume_p
+         ; null_wp     =op ed.null_wp
+         ; trivial     =op ed.trivial } in
+   env, ed, a, wp
 
-let tc_eff_decl env0 (m:Syntax.eff_decl)  =
-  assert (m.univs = []); //no explicit universe variables in the source; Q: But what about re-type-checking a program?
-  let binders, env, us = tc_tparams env0 m.binders in
-  let msig, _    = tc_trivial_guard env m.signature in
-  let msig = Util.arrow binders (S.mk_Total msig) in 
-  let (uvs, msig) = TcUtil.generalize_universes env0 msig in 
-  let binders, msig = 
-    match binders with 
-        | [] -> [], msig 
+let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
+  assert (ed.univs = []); //no explicit universe variables in the source; Q: But what about re-type-checking a program?
+  let binders, signature = SS.open_term ed.binders ed.signature in
+  let binders, env, us = tc_tparams env0 binders in
+  let signature, _    = tc_trivial_guard env signature in
+  let uvs, binders, signature = 
+     let b_sig = Util.arrow binders (S.mk_Total signature) in 
+     let (uvs, b_sig) = TcUtil.generalize_universes env0 b_sig in 
+     match binders with 
+        | [] -> uvs, [], b_sig
         | _ -> 
-        match (SS.compress msig).n with 
-            | Tm_arrow(binders, c) -> binders, Util.comp_result c 
+        match (SS.compress b_sig).n with 
+            | Tm_arrow(binders, c) -> uvs, binders, Util.comp_result c 
             | _ -> failwith "Impossible" in
 
-  let m = {m with univs=uvs;
-                  binders=binders; 
-                  signature=msig} in
+  if Env.debug env0 Options.Low
+  then Util.fprint3 "Checked effect signature: %s %s : %s\n" 
+                        (Print.lid_to_string ed.mname)
+                        (Print.binders_to_string " " binders)
+                        (Print.term_to_string signature);
 
-  let env, univs, binders, a, wp_a = open_effect_decl env0 m in
+  let ed_closed = {ed with univs=uvs;
+                           binders=binders; 
+                           signature=signature} in
 
+  let env, ed, a, wp_a = open_effect_decl env0 ed_closed in
+  
   let check_and_gen env t k = 
     let ts = check_and_gen env t k in 
-    let ts = SS.close_tscheme binders ts in
-    SS.close_univ_vars_tscheme univs ts in
+    let ts = SS.close_tscheme ed.binders ts in
+    SS.close_univ_vars_tscheme ed.univs ts in
 
-  if Env.debug env0 Options.Low
-  then Util.fprint3 "Checked effect signature: %s %s : %s" 
-                        (Print.lid_to_string m.mname)
-                        (Print.binders_to_string " " binders)
-                        (Print.term_to_string msig);
   
   let ret =
     let expected_k = Util.arrow [S.mk_binder a; S.null_binder (S.bv_to_name a)] (S.mk_Total wp_a) in
-    check_and_gen env m.ret expected_k in
+    check_and_gen env ed.ret expected_k in
 
   let bind_wp =
     let wlp_a = wp_a in
-    let b = S.new_bv (Some (range_of_lid m.mname)) (TcUtil.type_u() |> fst) in
+    let b = S.new_bv (Some (range_of_lid ed.mname)) (TcUtil.type_u() |> fst) in
     let wp_b = SS.subst [NT(a, S.bv_to_name b)] wp_a in
     let a_wp_b = Util.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wp_b) in
     let a_wlp_b = a_wp_b in
@@ -1503,26 +1537,26 @@ let tc_eff_decl env0 (m:Syntax.eff_decl)  =
                                  S.null_binder wp_a;   S.null_binder wlp_a;
                                  S.null_binder a_wp_b; S.null_binder a_wlp_b]
                                  (S.mk_Total wp_b) in
-    check_and_gen env m.bind_wp expected_k in
+    check_and_gen env ed.bind_wp expected_k in
 
   let bind_wlp =
     let wlp_a = wp_a in
-    let b = S.new_bv (Some (range_of_lid m.mname)) (TcUtil.type_u() |> fst) in
+    let b = S.new_bv (Some (range_of_lid ed.mname)) (TcUtil.type_u() |> fst) in
     let wlp_b = SS.subst [NT(a, S.bv_to_name b)] wlp_a in
     let a_wlp_b = Util.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wlp_b) in
     let expected_k = Util.arrow [S.mk_binder a; S.mk_binder b; 
                                  S.null_binder wlp_a;
                                  S.null_binder a_wlp_b]
                                  (S.mk_Total wlp_b) in
-    check_and_gen env m.bind_wlp expected_k in
+    check_and_gen env ed.bind_wlp expected_k in
 
   let if_then_else =
-    let p = S.new_bv (Some (range_of_lid m.mname)) (TcUtil.type_u() |> fst) in
+    let p = S.new_bv (Some (range_of_lid ed.mname)) (TcUtil.type_u() |> fst) in
     let expected_k = Util.arrow [S.mk_binder a; S.mk_binder p; 
                                  S.null_binder wp_a;
                                  S.null_binder wp_a]
                                  (S.mk_Total wp_a) in
-    check_and_gen env m.if_then_else expected_k in
+    check_and_gen env ed.if_then_else expected_k in
 
   let ite_wp =
     let wlp_a = wp_a in
@@ -1530,14 +1564,14 @@ let tc_eff_decl env0 (m:Syntax.eff_decl)  =
                                  S.null_binder wlp_a;
                                  S.null_binder wp_a]
                                  (S.mk_Total wp_a) in
-    check_and_gen env m.ite_wp expected_k in
+    check_and_gen env ed.ite_wp expected_k in
 
   let ite_wlp =
     let wlp_a = wp_a in
     let expected_k = Util.arrow [S.mk_binder a;
                                  S.null_binder wlp_a]
                                 (S.mk_Total wlp_a) in
-    check_and_gen env m.ite_wlp expected_k in
+    check_and_gen env ed.ite_wlp expected_k in
 
   let wp_binop =
     let bin_op = 
@@ -1550,63 +1584,63 @@ let tc_eff_decl env0 (m:Syntax.eff_decl)  =
                                  S.null_binder bin_op;
                                  S.null_binder wp_a]
                                  (S.mk_Total wp_a) in
-    check_and_gen env m.wp_binop expected_k in
+    check_and_gen env ed.wp_binop expected_k in
 
   let wp_as_type =
     let t, _ = TcUtil.type_u() in
     let expected_k = Util.arrow [S.mk_binder a;
                                  S.null_binder wp_a]
                                 (S.mk_Total t) in
-    check_and_gen env m.wp_as_type expected_k in
+    check_and_gen env ed.wp_as_type expected_k in
 
   let close_wp =
-    let b = S.new_bv (Some (range_of_lid m.mname)) (TcUtil.type_u() |> fst) in
+    let b = S.new_bv (Some (range_of_lid ed.mname)) (TcUtil.type_u() |> fst) in
     let wp_b = SS.subst [NT(a, S.bv_to_name b)] wp_a in
     let a_wp_b = Util.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wp_b) in
     let expected_k = Util.arrow [S.mk_binder b; S.mk_binder a; S.null_binder a_wp_b]
                                 (S.mk_Total wp_b) in
-    check_and_gen env m.close_wp expected_k in
+    check_and_gen env ed.close_wp expected_k in
 
   let assert_p =
     let expected_k = Util.arrow [S.mk_binder a;
                                  S.null_binder (TcUtil.type_u() |> fst);
                                  S.null_binder wp_a] 
                                  (S.mk_Total wp_a) in
-    check_and_gen env m.assert_p expected_k in
+    check_and_gen env ed.assert_p expected_k in
 
   let assume_p =
     let expected_k = Util.arrow [S.mk_binder a;
                                  S.null_binder (TcUtil.type_u() |> fst);
                                  S.null_binder wp_a] 
                                  (S.mk_Total wp_a) in
-    check_and_gen env m.assume_p expected_k in
+    check_and_gen env ed.assume_p expected_k in
 
   let null_wp =
     let expected_k = Util.arrow [S.mk_binder a] 
                                 (S.mk_Total wp_a) in
-    check_and_gen env m.null_wp expected_k in
+    check_and_gen env ed.null_wp expected_k in
 
   let trivial_wp =
-    let expected_k = Util.arrow [S.mk_binder a] 
-                                (S.mk_Total wp_a) in
-    check_and_gen env m.trivial expected_k in
+    let t, _ = Util.type_u() in
+    let expected_k = Util.arrow [S.mk_binder a;
+                                 S.null_binder wp_a]
+                                (S.mk_Total t) in
+    check_and_gen env ed.trivial expected_k in
 
-    {
-        m with
-        ret=ret;
-        bind_wp=bind_wp;
-        bind_wlp=bind_wlp;
-        if_then_else=if_then_else;
-        ite_wp=ite_wp;
-        ite_wlp=ite_wlp;
-        wp_binop=wp_binop;
-        wp_as_type=wp_as_type;
-        close_wp=close_wp;
-        assert_p=assert_p;
-        assume_p=assume_p;
-        null_wp=null_wp;
-        trivial=trivial_wp
-    }
+    { ed_closed with
+        ret         = ret
+      ; bind_wp     = bind_wp
+      ; bind_wlp    = bind_wlp
+      ; if_then_else= if_then_else
+      ; ite_wp      = ite_wp
+      ; ite_wlp     = ite_wlp
+      ; wp_binop    = wp_binop
+      ; wp_as_type  = wp_as_type
+      ; close_wp    = close_wp
+      ; assert_p    = assert_p
+      ; assume_p    = assume_p
+      ; null_wp     = null_wp
+      ; trivial     = trivial_wp }
 
 let tc_inductive env ses quals lids = 
     (*  Consider this illustrative example:
@@ -1688,15 +1722,16 @@ let tc_inductive env ses quals lids =
 (*close*)let t_tc = Util.arrow (refined_tps@indices) (S.mk_Total t) in
          let tps = SS.close_binders tps in
          let k = SS.close tps k in
-         Printf.printf ">>>>>>>%s   %s : %s" (Print.lid_to_string tc) (Print.binders_to_string " " tps) (Print.term_to_string k);
          Env.push_local_binding env_tps (Env.Binding_lid(tc, ([], t_tc))), 
          Sig_inductive_typ(tc, [], tps, k, mutuals, data, quals, r), 
          u
 
         | _ -> failwith "impossible" in
     
-    let positive_if_pure (_:term) (l:lid) = 
-        Errors.warn (Ident.range_of_lid l) "Positivity check is not yet implemented" in
+    let positive_if_pure (_:term) (l:lid) = () in
+
+    let warn_positivity r = 
+        Errors.warn r "Positivity check is not yet implemented" in
 
     (* 2. Checking each datacon *)
     let tc_data env tcs = function
@@ -1707,7 +1742,8 @@ let tc_inductive env ses quals lids =
             Util.find_map tcs (fun (se, u_tc) -> 
                 if lid_equals tc_lid (must (Util.lid_of_sigelt se))
                 then let tps = match se with 
-                        | Sig_inductive_typ(_, _, tps, _, _, _, _, _) -> tps
+                        | Sig_inductive_typ(_, _, tps, _, _, _, _, _) -> 
+                          tps |> List.map (fun (x, _) -> (x, Some Implicit))
                         | _ -> failwith "Impossible" in
                      Some (tps, u_tc)
                 else None) |> Util.must in 
@@ -1730,7 +1766,6 @@ let tc_inductive env ses quals lids =
          
 
          let arguments, env', us = tc_tparams env arguments in 
-         Printf.printf "About to check result type : %s\n" (Print.term_to_string result);
          let result, _ = tc_trivial_guard env' result in 
          let head, _ = Util.head_and_args result in
          let _ = match (SS.compress head).n with 
@@ -1796,6 +1831,7 @@ let tc_inductive env ses quals lids =
     let env, tcs, g = List.fold_right (fun tc (env, all_tcs, g)  -> 
             let env, tc, tc_u = tc_tycon env tc in 
             let g' = Rel.universe_inequality S.U_zero tc_u in
+            warn_positivity (Util.range_of_sigelt tc);
             if Env.debug env Options.Low 
             then Util.fprint1 "Checked inductive: %s\n" (Print.sigelt_to_string tc);
             env, (tc, tc_u)::all_tcs, Rel.conj_guard g g') 
@@ -1867,7 +1903,11 @@ let rec tc_decl env se = match se with
         | t -> t) in
       let tps = SS.close_binders tps in
       let c = SS.close_comp tps c in
-      let uvs, _ = Util.generalize_universes env0 (mk (Tm_arrow(tps, c)) None r) in
+      let uvs, t = Util.generalize_universes env0 (mk (Tm_arrow(tps, c)) None r) in
+      let tps, c = match tps, (SS.compress t).n with 
+        | [], Tm_arrow(_, c) -> [], c
+        | _,  Tm_arrow(tps, c) -> tps, c 
+        | _ -> failwith "Impossible" in
       let se = Sig_effect_abbrev(lid, uvs, tps, c, tags, r) in
       let env = Env.push_sigelt env0 se in
       se, env
@@ -1879,7 +1919,6 @@ let rec tc_decl env se = match se with
       let uvs, t = check_and_gen env ([],t) k in
       let se = Sig_declare_typ(lid, uvs, t, quals, r) in
       let env = Env.push_sigelt env se in
-      if log env then Util.print_string <| Util.format2 "val %s : %s\n" lid.str (N.term_to_string env t);
       se, env
 
     | Sig_assume(lid, phi, quals, r) ->
