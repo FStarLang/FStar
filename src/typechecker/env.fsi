@@ -104,6 +104,7 @@ val is_projector           : env -> lident -> bool
 val is_datacon             : env -> lident -> bool
 val is_record              : env -> lident -> bool
 val fresh_uinst            : env -> tscheme -> term
+val inst_tscheme           : tscheme -> universes * term 
 
 (* Introducing identifiers and updating the environment *)
 val push_sigelt        : env -> sigelt -> env

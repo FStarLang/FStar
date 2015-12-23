@@ -402,7 +402,7 @@ type lcomp_with_binder = option<bv> * lcomp
 
 let inst_effect_fun env (ed:eff_decl) (us, t) = 
     match ed.binders with 
-        | [] -> Env.fresh_uinst env (ed.univs@us, t)
+        | [] -> snd (inst_tscheme (ed.univs@us, t))
         | _  -> failwith (Util.format1 "Unexpected use of an uninstantiated effect: %s\n" (Print.lid_to_string ed.mname))
 
 let destruct_comp c : (typ * typ * typ) =
@@ -928,7 +928,7 @@ let gen_univs env (x:Util.set<universe_uvar>) : list<univ_name> =
 
 let generalize_universes (env:env) (t:term) : tscheme = 
     if Env.debug env <| Options.Other "Gen" then Printf.printf "Before generalization %s\n" (Print.term_to_string t);
-//    let t = N.normalize [N.Beta] env t in
+    let t = N.normalize [N.Beta] env t in
     let univs = Free.univs t in 
     if Env.debug env <| Options.Other "Gen" 
     then Printf.printf "univs to gen : %s\n" 

@@ -180,6 +180,8 @@ let rec univ_to_string u = match Subst.compress_univ u with
 
 let univs_to_string us = List.map univ_to_string us |> String.concat ", "
 
+let univ_names_to_string us = List.map (fun x -> x.idText) us |> String.concat ", "
+
 (* This function prints the type it gets as argument verbatim.
    For already type-checked types use the typ_norm_to_string
    function in normalize.fs instead, since elaboration
@@ -231,8 +233,11 @@ and  pat_to_string x = match x.v with
 and lbs_to_string lbs =
     Util.format2 "let %s %s"
     (if fst lbs then "rec" else "")
-    (Util.concat_l "\n and " (snd lbs |> List.map (fun lb -> Util.format3 "%s : %s = %s" 
+    (Util.concat_l "\n and " (snd lbs |> List.map (fun lb -> Util.format4 "%s %s : %s = %s" 
                                                             (lbname_to_string lb.lbname) 
+                                                            (if !Options.print_implicits 
+                                                             then "<"^univ_names_to_string lb.lbunivs^">"
+                                                             else "")
                                                             (term_to_string lb.lbtyp)
                                                             (lb.lbdef |> term_to_string))))
 
@@ -324,10 +329,40 @@ let qual_to_string = function
     | _ -> "other"
 let quals_to_string quals = quals |> List.map qual_to_string |> String.concat " "
 
-let effect_decl_to_string ed = 
-    Util.format4 "new_effect { %s %s : %s \n\tret=%s\n ... }" 
-        (lid_to_string ed.mname) (binders_to_string " " ed.binders) (term_to_string ed.signature)
-        (term_to_string (snd ed.ret))
+let tscheme_to_string (us, t) = Util.format2 "<%s> %s" (univ_names_to_string us) (term_to_string t)
+
+let eff_decl_to_string ed = 
+    Util.format "new_effect { %s<%s> %s : %s \n\t\
+        ret         = %s\n\
+      ; bind_wp     = %s\n\
+      ; bind_wlp    = %s\n\
+      ; if_then_else= %s\n\
+      ; ite_wp      = %s\n\
+      ; ite_wlp     = %s\n\
+      ; wp_binop    = %s\n\
+      ; wp_as_type  = %s\n\
+      ; close_wp    = %s\n\
+      ; assert_p    = %s\n\
+      ; assume_p    = %s\n\
+      ; null_wp     = %s\n\
+      ; trivial     = %s}\n" 
+        [lid_to_string ed.mname;
+         univ_names_to_string ed.univs;
+         binders_to_string " " ed.binders;
+         term_to_string ed.signature;
+         tscheme_to_string ed.ret;
+         tscheme_to_string ed.bind_wp;
+         tscheme_to_string ed.bind_wlp;
+         tscheme_to_string ed.if_then_else;
+         tscheme_to_string ed.ite_wp;
+         tscheme_to_string ed.ite_wlp;
+         tscheme_to_string ed.wp_binop;
+         tscheme_to_string ed.wp_as_type;
+         tscheme_to_string ed.close_wp;
+         tscheme_to_string ed.assert_p;
+         tscheme_to_string ed.assume_p;
+         tscheme_to_string ed.null_wp;
+         tscheme_to_string ed.trivial]
 
 let rec sigelt_to_string x = match x with
   | Sig_pragma(ResetOptions, _) -> "#reset-options"
@@ -344,7 +379,7 @@ let rec sigelt_to_string x = match x with
   | Sig_let(lbs, _, _, b) -> lbs_to_string lbs
   | Sig_main(e, _) -> Util.format1 "let _ = %s" (term_to_string e)
   | Sig_bundle(ses, _, _, _) -> List.map sigelt_to_string ses |> String.concat "\n"
-  | Sig_new_effect(ed, _) -> effect_decl_to_string ed
+  | Sig_new_effect(ed, _) -> eff_decl_to_string ed
   | Sig_sub_effect _ -> "sub_effect ..."
   | Sig_effect_abbrev(l, _, tps, c, _, _) -> Util.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
 

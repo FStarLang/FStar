@@ -156,7 +156,7 @@ let variable_not_found v =
 let new_u_univ _ = U_unif (Unionfind.fresh None)
 
 //Instantiate the universe variables in a type scheme with new unification variables
-let inst_tscheme = function 
+let inst_tscheme : tscheme -> universes * term = function 
     | [], t -> [], t
     | us, t -> 
       let n = List.length us - 1 in 

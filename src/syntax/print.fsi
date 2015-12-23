@@ -32,3 +32,4 @@ val lcomp_to_string  : lcomp -> string
 val univ_to_string   : universe -> string
 val sigelt_to_string : sigelt -> string
 val binders_to_string: string -> binders ->string
+val eff_decl_to_string: eff_decl -> string
