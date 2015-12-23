@@ -148,6 +148,7 @@ let keywords =
     ALWAYS, "finally"    ,FINALLY;
     ALWAYS, "for"        ,FOR;
     ALWAYS, "forall"     ,FORALL;
+    ALWAYS, "fresh"      ,FRESH;
     ALWAYS, "fun"        ,FUN;
     ALWAYS, "function"   ,FUNCTION;
     ALWAYS, "if"         ,IF;

@@ -76,7 +76,8 @@ type branches = list<(pat * option<term> * term)>
 type subst_t = list<subst_elt>
 
 type stack_elt = 
- | Arg      of closure * aqual * Range.range
+ | Arg      of closure * aqual * Range.range 
+ | UnivArgs of list<universe> * Range.range
  | MemoLazy of memo<(env * term)>
  | Match    of env * branches * Range.range
  | Abs      of env * binders  * Range.range
@@ -115,6 +116,61 @@ let lookup_bvar env x =
     try List.nth env x.index
     with _ -> failwith (Printf.sprintf "Failed to find %s\n" (Print.bv_to_string x))
 
+(********************************************************************************************************************)
+(* Normal form of a universe u is                                                                                   *)
+(*  either u, where u <> U_max                                                                                      *)
+(*  or     U_max [k;                        //constant                                                              *)
+(*               S^n1 u1 ; ...; S^nm um;    //offsets of distinct names, in order of the names                      *)
+(*               S^p1 ?v1; ...; S^pq ?vq]   //offsets of distinct unification variables, in order of the variables  *)
+(*          where the size of the list is at least 2                                                                *)
+(********************************************************************************************************************)
+let norm_universe env u =
+    let norm_univs us = 
+        let us = Util.sort_with U.compare_univs us in 
+        (* us is in sorted order;                                                               *)
+        (* so, for each sub-sequence in us with a common kernel, just retain the largest one    *)
+        (* e.g., normalize [Z; S Z; S S Z; u1; S u1; u2; S u2; S S u2; ?v1; S ?v1; ?v2]         *)
+        (*            to  [        S S Z;     S u1;           S S u2;      S ?v1; ?v2]          *)
+        let _, u, out = 
+            List.fold_left (fun (cur_kernel, cur_max, out) u -> 
+                let k_u, n = U.univ_kernel u in 
+                if U.eq_univs cur_kernel k_u //streak continues 
+                then (cur_kernel, u, out)    //take u as the current max of the streak
+                else (k_u, u, cur_max::out)) //streak ends; include cur_max in the output and start a new streak
+            (U_zero, U_zero, []) us in
+        List.rev (u::out) in
+
+    (* normalize u by                                                  *)
+    (*   1. flattening all max nodes                                   *)
+    (*   2. pushing all S nodes under a single top-level max node      *)
+    (*   3. sorting the terms in a max node, and partially evaluate it *)
+    let rec aux u = 
+        let u = Subst.compress_univ u in
+        match u with
+          | U_bvar x -> 
+            begin 
+                try match List.nth env x with 
+                      | Univ u -> [u]
+                      | _ -> failwith "Impossible: universe variable bound to a term"
+                with _ -> failwith "Universe variable not found"
+            end
+          | U_zero
+          | U_unif _ 
+          | U_name _ 
+          | U_unknown -> [u]
+          | U_max []  -> [U_zero]
+          | U_max us ->  List.collect aux us |> norm_univs
+          | U_succ u ->  List.map U_succ (aux u) in
+
+    match aux u with 
+        | [] 
+        | [U_zero] -> U_zero
+        | [U_zero; u] -> u
+        | U_zero::us -> U_max us
+        | [u] -> u
+        | us -> U_max us
+           
+
 (*******************************************************************)
 (* closure_as_term env t --- t is a closure with environment env   *)
 (* closure_as_term env t                                           *)
@@ -132,13 +188,18 @@ let rec closure_as_term env t =
               failwith "Impossible"
 
             | Tm_unknown _
-            | Tm_uvar _ 
             | Tm_constant _
             | Tm_name _
-            | Tm_fvar _
-            | Tm_type _  (* universe terms are never closures *)
-            | Tm_uinst _ (* head symbol must be an fvar *) -> 
-              t
+            | Tm_fvar _ -> t
+
+            | Tm_uvar(u, t') -> 
+              mk (Tm_uvar(u, closure_as_term_delayed env t')) t.pos 
+
+            | Tm_type u -> 
+              mk (Tm_type (norm_universe env u)) t.pos
+
+            | Tm_uinst(t, us) -> (* head symbol must be an fvar *) 
+              mk_Tm_uinst t (List.map (norm_universe env) us)
          
             | Tm_bvar x -> 
               begin match lookup_bvar env x with
@@ -268,70 +329,14 @@ let maybe_simplify steps tm =
             | _ -> tm
 
 
-(********************************************************************************************************************)
-(* Normal form of a universe u is                                                                                   *)
-(*  either u, where u <> U_max                                                                                      *)
-(*  or     U_max [k;                        //constant                                                              *)
-(*               S^n1 u1 ; ...; S^nm um;    //offsets of distinct names, in order of the names                      *)
-(*               S^p1 ?v1; ...; S^pq ?vq]   //offsets of distinct unification variables, in order of the variables  *)
-(*          where the size of the list is at least 2                                                                *)
-(********************************************************************************************************************)
-let norm_universe env u =
-    let norm_univs us = 
-        let us = Util.sort_with U.compare_univs us in 
-        //us is in sorted order;
-        // so, for each sub-sequence in us with a common kernel, just retain the largest one
-        // e.g., normalize [Z; S Z; S S Z; u1; S u1; u2; S u2; S S u2; ?v1; S ?v1; ?v2] 
-        //             to  [        S S Z;     S u1;           S S u2;      S ?v1; ?v2]
-        let _, u, out = 
-            List.fold_left (fun (cur_kernel, cur_max, out) u -> 
-                let k_u, n = U.univ_kernel u in 
-                if U.eq_univs cur_kernel k_u //streak continues 
-                then (cur_kernel, u, out)    //take u as the current max of the streak
-                else (k_u, u, cur_max::out)) //streak ends; include cur_max in the output and start a new streak
-            (U_zero, U_zero, []) us in
-        List.rev (u::out) in
-
-    //normalize u by
-    //   1. flattening all max nodes 
-    //   2. pushing all S nodes under a single top-level max node
-    //   3. sorting the terms in a max node, and partially evaluate it
-    let rec aux u = 
-        let u = Subst.compress_univ u in
-        match u with
-          | U_bvar x -> 
-            begin 
-                try match List.nth env x with 
-                      | Univ u -> [u]
-                      | _ -> failwith "Impossible: universe variable bound to a term"
-                with _ -> failwith "Universe variable not found"
-            end
-          | U_zero
-          | U_unif _ 
-          | U_name _ 
-          | U_unknown -> [u]
-          | U_max []  -> [U_zero]
-          | U_max us ->  List.collect aux us |> norm_univs
-          | U_succ u ->  List.map U_succ (aux u) in
-
-    match aux u with 
-        | [] 
-        | [U_zero] -> U_zero
-        | [U_zero; u] -> u
-        | U_zero::us -> U_max us
-        | [u] -> u
-        | us -> U_max us
-           
 
 (********************************************************************************************************************)
 (* Main normalization function of the abstract machine                                                              *)
 (********************************************************************************************************************)
 let rec norm : cfg -> env -> stack -> term -> term = 
     fun cfg env stack t -> 
-        log cfg  (fun () -> Printf.printf ">>> %s\n" (Print.tag_of_term t));
         let t = compress t in
-//        log cfg  (fun () -> Printf.printf "Norm %s\n\t\tEnv=%s\n\t\tStack=%s\n" (Print.term_to_string t) (env_to_string env) (stack_to_string stack));
-        log cfg  (fun () -> Printf.printf "Norm %s\n" (Print.term_to_string t));
+        log cfg  (fun () -> Printf.printf ">>> %s\nNorm %s\n" (Print.tag_of_term t) (Print.term_to_string t));
         match t.n with 
           | Tm_delayed _ -> 
             failwith "Impossible"
@@ -347,10 +352,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let u = norm_universe env u in
             rebuild cfg env stack (mk (Tm_type u) t.pos)
          
-          | Tm_uinst(t, us) -> 
-            let us = us |> List.map (fun u -> Arg(Univ (norm_universe env u), None, t.pos)) in
-            let stack = us@stack in
-            norm cfg env stack t
+          | Tm_uinst(t', us) -> 
+            let us = UnivArgs(List.map (norm_universe env) us, t.pos) in
+            let stack = us::stack in
+            norm cfg env stack t'
      
           | Tm_name x -> 
             rebuild cfg env stack t
@@ -361,7 +366,15 @@ let rec norm : cfg -> env -> stack -> term -> term =
 //            then 
             begin match Env.lookup_definition cfg.tcenv f.v with 
                     | None -> rebuild cfg env stack t
-                    | Some t -> norm cfg env stack t 
+                    | Some (us, t) -> 
+                      let n = List.length us in 
+                      if n > 0 
+                      then match stack with //universe beta reduction
+                             | UnivArgs(us', _)::stack -> 
+                               let env = us' |> List.fold_left (fun env u -> Univ u::env) env in 
+                               norm cfg env stack t 
+                             | _ -> failwith (Util.format1 "Impossible: missing universe instantiation on %s" (Print.lid_to_string f.v))
+                      else norm cfg env stack t                     
             end
 
           | Tm_bvar x -> 
@@ -384,7 +397,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
             
           | Tm_abs(bs, body) -> 
             begin match stack with 
-                | Match _::_ -> 
+                | UnivArgs _::_ ->
+                  failwith "Ill-typed term: universes cannot be applied to term abstraction"
+
+               | Match _::_ -> 
                   failwith "Ill-typed term: cannot pattern match an abstraction"
 
                 | Arg(c, _, _)::stack -> 
@@ -447,6 +463,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   norm cfg env stack t1
                 | _ -> 
                 let t1 = norm cfg env [] t1 in 
+                log cfg  (fun () -> Printf.printf "+++ Normalizing ascription \n");
                 let t2 = norm cfg env [] t2 in
                 rebuild cfg env stack (mk (Tm_ascribed(t1, t2, l)) t.pos)
             end
@@ -532,17 +549,11 @@ and rebuild : cfg -> env -> stack -> term -> term =
               let bs = norm_binders cfg env' bs in
               rebuild cfg env stack ({abs bs t with pos=r})
 
+            | Arg (Univ _,  _, _)::_
             | Arg (Dummy,  _, _)::_ -> failwith "Impossible"
 
-            | Arg (Univ u, _, r)::stack -> 
-              let rec aux s = match stack with
-                 | Arg (Univ u, _, _)::stack ->
-                   let us, rest = aux stack in
-                   u::us, rest
-                 | _ -> [], stack in
-              let us, rest = aux stack in
-              let us = u::us in 
-              let t = mk (Tm_uinst(t, us)) r in
+            | UnivArgs(us, r)::stack -> 
+              let t = mk_Tm_uinst t us in
               rebuild cfg env stack t
 
             | Arg (Clos(env, tm, m), aq, r) :: stack ->

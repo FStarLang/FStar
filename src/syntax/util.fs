@@ -138,7 +138,7 @@ let rec compare_univs u1 u2 = match u1, u2 with
     | U_bvar _, _
     | _, U_bvar _ 
     | U_unknown, _
-    | _, U_unknown -> failwith "Impossible"
+    | _, U_unknown -> failwith (Printf.sprintf "Impossible: %A, %A" u1 u2)
 
     | U_zero, U_zero -> 0
         
@@ -165,6 +165,10 @@ let rec compare_univs u1 u2 = match u1, u2 with
             | Some c -> c
            end
 
+    | U_max _, _ -> -1
+
+    | _, U_max _ -> 1
+     
     | _ -> 
         let k1, n1 = univ_kernel u1 in
         let k2, n2 = univ_kernel u2 in 
@@ -574,6 +578,11 @@ let is_interpreted l =
 
 let ktype  : term = mk (Tm_type(U_unknown)) None dummyRange
 let ktype0 : term = mk (Tm_type(U_zero)) None dummyRange
+
+//Type(u), where u is a new universe unification variable
+let type_u () : typ * universe = 
+    let u = U_unif <| Unionfind.fresh None in
+    mk (Tm_type u) None Range.dummyRange, u
 
 let kt_kt = Const.kunary ktype0 ktype0
 let kt_kt_kt = Const.kbin ktype0 ktype0 ktype0

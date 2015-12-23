@@ -19,7 +19,7 @@ open FStar.Syntax.Syntax
 open FStar.Ident
 
 type binding =
-  | Binding_var of bv     * tscheme
+  | Binding_var of bv
   | Binding_lid of lident * tscheme
   | Binding_sig of sigelt
   | Binding_univ of univ_name
@@ -88,13 +88,13 @@ val get_range : env -> Range.range
 
 (* Querying identifiers *)
 val lookup_bv              : env -> bv -> typ
-val lookup_lid             : env -> lident -> typ
+val lookup_lid             : env -> lident -> (universes * typ)
 val lookup_univ            : env -> univ_name -> bool
 val try_lookup_val_decl    : env -> lident -> option<(tscheme * list<qualifier>)>
-val lookup_val_decl        : env -> lident -> typ
-val lookup_datacon         : env -> lident -> typ
-val lookup_datacons_of_typ : env -> lident -> option<list<(lident * typ)>>
-val lookup_definition      : env -> lident -> option<term>
+val lookup_val_decl        : env -> lident -> (universes * typ)
+val lookup_datacon         : env -> lident -> universes * typ
+val lookup_definition      : env -> lident -> option<(univ_names * term)>
+
 val try_lookup_effect_lid  : env -> lident -> option<term>
 val lookup_effect_lid      : env -> lident -> term
 val lookup_effect_abbrev   : env -> lident -> option<(binders * comp)>
@@ -103,11 +103,12 @@ val current_module         : env -> lident
 val is_projector           : env -> lident -> bool
 val is_datacon             : env -> lident -> bool
 val is_record              : env -> lident -> bool
-val uinst                  : env -> tscheme -> term
+val fresh_uinst            : env -> tscheme -> term
 
 (* Introducing identifiers and updating the environment *)
 val push_sigelt        : env -> sigelt -> env
-val push_local_binding : env -> binding -> env
+val push_bv            : env -> bv -> env
+val push_let_binding   : env -> lbname -> tscheme -> env
 val push_binders       : env -> binders -> env
 val push_module        : env -> modul -> env
 val push_univ_vars     : env -> univ_names -> env

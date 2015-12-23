@@ -344,6 +344,13 @@ let mk_Tm_app (t1:typ) (args:list<arg>) : mk_t = fun k p ->
     match args with
     | [] -> t1
     | _ -> mk (Tm_app (t1, args)) k p
+let mk_Tm_uinst (t:term) = function
+    | [] -> t
+    | us ->
+      match t.n with 
+        | Tm_fvar _ ->  mk (Tm_uinst(t, us)) None t.pos
+        | _ -> failwith (Printf.sprintf "Unexpected universe instantiation: %A" t)
+
 let extend_app t arg kopt r = match t.n with 
     | Tm_app(head, args) -> mk_Tm_app head (args@[arg]) kopt r
     | _ -> mk_Tm_app t [arg] kopt r

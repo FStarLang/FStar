@@ -178,6 +178,8 @@ let rec univ_to_string u = match Subst.compress_univ u with
     | U_max us -> Util.format1 "(max %s)" (List.map univ_to_string us |> String.concat ", ")
     | U_unknown -> "unknown"
 
+let univs_to_string us = List.map univ_to_string us |> String.concat ", "
+
 (* This function prints the type it gets as argument verbatim.
    For already type-checked types use the typ_norm_to_string
    function in normalize.fs instead, since elaboration
@@ -211,7 +213,10 @@ let rec term_to_string x =
                         (p |> pat_to_string)
                         (match wopt with | None -> "" | Some w -> Util.format1 "when %s" (w |> term_to_string))
                         (e |> term_to_string))))
-  | Tm_uinst(t, _) -> term_to_string t
+  | Tm_uinst(t, us) -> 
+    if !Options.print_implicits
+    then Util.format2 "%s<%s>" (term_to_string t) (univs_to_string us)
+    else term_to_string t
   | _ -> tag_of_term x
 
 and  pat_to_string x = match x.v with

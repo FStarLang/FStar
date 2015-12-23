@@ -42,6 +42,8 @@ let t_string = tconst C.string_lid
 let t_float  = tconst C.float_lid 
 let t_char   = tconst C.char_lid  
 
+let norm t = Normalize.normalize [Normalize.Beta] Env.dummy t
+
 let typing_const r (s:sconst) = match s with
   | Const_unit -> t_unit
   | Const_bool _ -> t_bool
@@ -79,9 +81,13 @@ let rec check t =
                                 || lid_equals tc.v C.exTyp_lid) -> ktype0
             | _ ->
               let x = mk in
-              let t1 = check head in
+              let t1 = check head |> norm in
               let bs, c = U.arrow_formals t1 in
-              let bs, rest = Util.first_N (List.length args) bs in
+              let n_args = List.length args in
+              let bs, rest = 
+                if n_args <= List.length bs
+                then Util.first_N (List.length args) bs 
+                else failwith (Util.format2 "Rechecking %s\n head type is %s\n" (Print.term_to_string t) (Print.term_to_string t1)) in
               let res_typ = match rest with 
                 | [] -> c 
                 | _ -> S.mk (Tm_arrow(rest, mk_Total c)) None c.pos in

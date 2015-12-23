@@ -235,18 +235,11 @@ let push_subst s t =
         | Tm_bvar _ 
         | Tm_name _  -> subst' s t
 
-        | Tm_uinst(t', us) -> //t must be a variable
-          let t' = subst' s t' in
-          begin match t'.n with
-            | Tm_bvar _
-            | Tm_name _
-            | Tm_fvar _ -> //it remains a variable
-              mk (Tm_uinst(t, us)) None t'.pos
-            | _ -> 
-              //no longer a variable; this can only happend as we're reducing a let binding
-              //universe instantiation is discarded as we reduce
-              t'
-          end
+        | Tm_uinst(t', us) -> 
+          //t' must be an fvar---it cannot be substituted
+          //but the universes may be substituted
+          let us = List.map (subst_univ s) us in
+          mk_Tm_uinst t' us
 
         | Tm_app(t0, args) -> mk (Tm_app(subst' s t0, subst_args' s args)) None t.pos
         | Tm_ascribed(t0, t1, lopt) -> mk (Tm_ascribed(subst' s t0, subst' s t1, lopt)) None t.pos

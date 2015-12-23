@@ -44,6 +44,7 @@ let trans_qual = function
   | AST.TotalEffect ->   S.TotalEffect
   | AST.DefaultEffect -> S.DefaultEffect None
   | AST.Effect ->        S.Effect
+  | AST.Fresh  ->        S.Fresh
 
 let trans_pragma = function
   | AST.SetOptions s -> S.SetOptions s
@@ -465,6 +466,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
           mk (Tm_app(op, args))
       end
 
+    | Name {str="Type0"}  -> mk (Tm_type U_zero)
     | Name {str="Type"}   -> mk (Tm_type U_unknown)
     | Name {str="Effect"} -> mk (Tm_constant Const_effect)
    
@@ -789,6 +791,7 @@ and desugar_comp r default_ok env t =
              Ident.set_lid_range Const.effect_Tot_lid head.range, args
             
             | Name l when ((l.ident.idText="Type" 
+                            || l.ident.idText="Type0"
                             || l.ident.idText="Effect")
                            && default_ok) -> 
               //the default effect for Type is always Tot
@@ -932,9 +935,8 @@ let mk_data_discriminators quals env t tps k datas =
 let mk_indexed_projectors fvq refine_domain env tc lid tps (fields:list<S.binder>) t =
     let p = range_of_lid lid in
     let pos q = Syntax.withinfo q tun.n p in
-    let projectee = S.gen_bv "projectee" (Some p) tun in
-    let arg_exp = S.bv_to_name projectee in
-    
+    let projectee ptyp = S.gen_bv "projectee" (Some p) ptyp in
+
     let arg_binder, indices =
         let head, args = Util.head_and_args t in
         let _, args = Util.first_N (List.length tps) args in
@@ -943,13 +945,14 @@ let mk_indexed_projectors fvq refine_domain env tc lid tps (fields:list<S.binder
                                   (tps@indices |> List.map (fun (x, _) -> arg (S.bv_to_name x))) None p in
         let arg_binder = 
             if not refine_domain
-            then S.mk_binder projectee //records have only one constructor; no point refining the domain
+            then S.mk_binder (projectee arg_typ) //records have only one constructor; no point refining the domain
             else let disc_name = Util.mk_discriminator lid in
                  let x = S.new_bv (Some p) arg_typ in
-                 S.mk_binder ({projectee with sort=refine x (Util.b2t(S.mk_Tm_app(S.fvar None disc_name p) 
+                 S.mk_binder ({projectee arg_typ with sort=refine x (Util.b2t(S.mk_Tm_app(S.fvar None disc_name p) 
                                                                                  [arg <| S.bv_to_name x] None p))}) in
         arg_binder, indices in
 
+    let arg_exp = S.bv_to_name (fst arg_binder) in
     let imp_binders = tps@indices |> List.map (fun (x, _) -> x, Some S.Implicit) in
     let binders = imp_binders@[arg_binder] in
 
@@ -1083,7 +1086,8 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
            | Sig_inductive_typ(l, _, typars, k, [], [], quals, rng) -> 
              let quals = if quals |> List.contains S.Assumption
                          then quals
-                         else (Util.fprint1 "%s (Warning): Adding an implicit 'assume fresh' qualifier\n" (Range.string_of_range rng);          
+                         else (Util.fprint2 "%s (Warning): Adding an implicit 'assume fresh' qualifier on %s\n" 
+                                                (Range.string_of_range rng) (Print.lid_to_string l);          
                                S.Assumption::S.Fresh::quals) in
              let t = match typars with 
                 | [] -> k

@@ -83,8 +83,9 @@ let rec free_names_and_uvs' tm : free_vars =
       | Tm_unknown -> 
         no_free_vars
         
-      | Tm_uinst(t, _) -> 
-        free_names_and_uvars t
+      | Tm_uinst(t, us) -> 
+        let f = free_names_and_uvars t in
+        List.fold_left (fun out u -> union out (free_univs u)) f us
 
       | Tm_abs(bs, t) -> 
         aux_binders bs (free_names_and_uvars t)

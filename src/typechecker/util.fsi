@@ -37,16 +37,13 @@ val as_uvar  : typ -> uvar
 val new_implicit_var : env -> typ -> (typ * (uvar * Range.range))
 val check_uvars: Range.range -> typ -> unit
 
-//Type(u), where u is a new universe unification variable
-val type_u   : unit -> typ * universe
-
 //extracting annotations from a term
 val force_sort: syntax<'a,'b> -> 'b
 val sorts_of_args: args -> list<(term' * aqual)>
 val extract_let_rec_annotation: env -> letbinding -> (univ_names * typ * bool)
 
 //pattern utilities
-val pat_as_exps: bool -> env -> pat -> (list<Env.binding> * list<term> * pat)
+val pat_as_exps: bool -> env -> pat -> (list<bv> * list<term> * pat)
 val decorate_pattern: env -> pat -> list<term> -> pat
 val decorated_pattern_as_term: pat -> list<bv> * term
 
@@ -57,7 +54,7 @@ val generalize_universes: env -> term -> tscheme
 
 //operations on computation types
 (* most operations on computations are lazy *)
-type lcomp_with_binder = option<Env.binding> * lcomp
+type lcomp_with_binder = option<bv> * lcomp
 val lcomp_of_comp: comp -> lcomp
 val subst_lcomp: subst -> lcomp -> lcomp
 val is_pure_effect: env -> lident -> bool
@@ -71,7 +68,7 @@ val strengthen_precondition: option<(unit -> string)> -> env -> term -> lcomp ->
 val weaken_guard: guard_formula -> guard_formula -> guard_formula
 val weaken_precondition: env -> lcomp -> guard_formula -> lcomp
 val maybe_assume_result_eq_pure_term: env -> term -> lcomp -> lcomp
-val close_comp: env -> list<binding> -> lcomp -> lcomp
+val close_comp: env -> list<bv> -> lcomp -> lcomp
 val refresh_comp_label: env -> bool -> lcomp -> lcomp
 val pure_or_ghost_pre_and_post: env -> comp -> (option<typ> * typ)
 val check_comp: env -> term -> comp -> comp -> term * comp * guard_t
