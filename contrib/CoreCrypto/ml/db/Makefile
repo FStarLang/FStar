@@ -1,4 +1,4 @@
-OCAMLC=ocamlfind ocamlc -thread -package batteries -linkpkg -g
+OCAMLC=ocamlfind ocamlc -thread -package batteries,fileutils,sqlite3 -linkpkg -g
 OCAMLOPT=ocamlfind ocamlopt -thread -package batteries,fileutils,sqlite3 -linkpkg -g
 OCAMLDEP=ocamldep
 INCLUDES=-I +fileutils # all relevant -I options here

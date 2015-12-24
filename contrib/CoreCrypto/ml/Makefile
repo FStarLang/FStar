@@ -47,6 +47,10 @@ DLL_OBJ = $(PLATFORM)/platform.cmx CoreCrypto.cmx openssl_stub.o
 corecrypto.cmxa: $(DLL_OBJ)
 	$(OCAMLMKLIB) -lcrypto -o corecrypto $^
 
+DLL_DEBUG = $(PLATFORM)/platform.cmo CoreCrypto.cmo openssl_stub.o
+corecrypto.cma: $(DLL_DEBUG)
+	$(OCAMLMKLIB) -lcrypto -o corecrypto $^
+
 %.cmi: %.mli
 	$(OCAMLC) -I $(PLATFORM) -c $<
 

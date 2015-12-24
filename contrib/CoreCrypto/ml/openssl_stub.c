@@ -63,6 +63,7 @@ static struct custom_operations evp_md_ops = {
 EVP_MD_GEN(md_null);
 EVP_MD_GEN(md5);
 EVP_MD_GEN(sha1);
+EVP_MD_GEN(sha224);
 EVP_MD_GEN(sha256);
 EVP_MD_GEN(sha384);
 EVP_MD_GEN(sha512);
