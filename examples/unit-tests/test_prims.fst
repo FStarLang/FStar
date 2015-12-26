@@ -164,23 +164,15 @@ assume val op_LessThan           : int -> int -> Tot bool
    But, still allows functions ... TODO: disallow functions *)
 assume val op_Equality :    #a:Type0 -> a -> a -> Tot bool
 assume val op_disEquality : #a:Type0 -> a -> a -> Tot bool
-
-// // (* type int16 = i:int{i > -32769 /\ 32768 > i} *)
-type int32 = int
-assume fresh type int64 : Type0
-assume fresh type uint8 : Type0
-assume fresh type uint16 : Type0
-assume fresh type uint32 : Type0
-assume fresh type uint64 : Type0
 assume fresh type char   : Type0
 assume fresh type float  : Type0
 assume fresh type string : Type0
-// ??type array : Type -> Type 
-assume val strcat : string -> string -> Tot string
 assume fresh type exn : Type0
-type HashMultiMap : Type0 -> Type0 -> Type0 //needed for bootstrapping
-type byte = uint8
 type double = float
+
+assume val strcat : string -> string -> Tot string
+assume fresh type uint8 : Type0
+type byte = uint8 
 
 type list (a:Type) =
   | Nil  : list a
