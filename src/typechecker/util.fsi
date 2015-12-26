@@ -76,6 +76,7 @@ val check_comp: env -> term -> comp -> comp -> term * comp * guard_t
 //checking that e:t is convertible to t'
 val check_and_ascribe : env -> term -> typ -> typ -> term * Rel.guard_t
 val check_top_level: env -> guard_t -> lcomp -> bool*comp
+val maybe_coerce_bool_to_type: env -> term -> lcomp -> typ -> term * lcomp
 
 //misc.
 val label: string -> Range.range -> typ -> typ

@@ -781,6 +781,21 @@ let check_comp env (e:term) (c:comp) (c':comp) : term * comp * guard_t =
     | None -> raise (Error(Errors.computed_computation_type_does_not_match_annotation env e c c', Env.get_range env))
     | Some g -> e, c', g
 
+let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp = 
+    match (SS.compress t).n with 
+        | Tm_type _ -> 
+          begin match (SS.compress lc.res_typ).n with 
+            | Tm_fvar(fv, _) when lid_equals fv.v Const.bool_lid -> 
+              let _ = Env.lookup_lid env Const.b2t_lid in  //check that we have Prims.b2t in the context
+              let b2t = S.fvar None Const.b2t_lid e.pos in
+              let lc = bind env (Some e) lc (None, lcomp_of_comp <| S.mk_Total (Util.ktype0)) in
+              let e = mk_Tm_app b2t [S.arg e] (Some Util.ktype0.n) e.pos in
+              e, lc
+            | _ -> e, lc
+          end
+
+        | _ -> e, lc
+
 let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
   let gopt = if env.use_eq
              then Rel.try_teq env lc.res_typ t, false

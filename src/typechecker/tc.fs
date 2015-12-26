@@ -109,6 +109,7 @@ let value_check_expected_typ env e tlc guard : term * lcomp * Rel.guard_t =
    | Some t' ->
      if debug env Options.High
      then Util.fprint2 "Computed return type %s; expected type %s\n" (Print.term_to_string t) (Print.term_to_string t');
+     let e, lc = Util.maybe_coerce_bool_to_type env e lc t' in //add a b2t coercion is e:bool and t'=Type
      let e, g = TcUtil.check_and_ascribe env e t t' in
      let g = Rel.conj_guard g guard in
      let lc, g = TcUtil.strengthen_precondition (Some <| Errors.subtyping_failed env t t') env e lc g in
@@ -120,7 +121,9 @@ let value_check_expected_typ env e tlc guard : term * lcomp * Rel.guard_t =
 let comp_check_expected_typ env e lc : term * lcomp * Rel.guard_t =
   match Env.expected_typ env with
    | None -> e, lc, Rel.trivial_guard
-   | Some t -> TcUtil.weaken_result_typ env e lc t
+   | Some t -> 
+     let e, lc = Util.maybe_coerce_bool_to_type env e lc t in //Add a b2t coercion if e:bool and t=Type
+     TcUtil.weaken_result_typ env e lc t
 
 let check_expected_effect env (copt:option<comp>) (e, c) : term * comp * Rel.guard_t =
   let expected_c_opt = match copt with
@@ -264,13 +267,8 @@ let rec tc_term env (e:term) : term                  (* type-checked and elabora
   | Tm_abs _
   | Tm_arrow _
   | Tm_refine _
-  | Tm_type _  -> tc_value env e
-
-  | Tm_unknown -> //only occurs where type annotations are missing in source programs
-    let t, u = U.type_u () in
-    let e = TcUtil.new_uvar env t in
-    let c = Util.gtotal_comp t |> Util.lcomp_of_comp in
-    e, c, Rel.trivial_guard
+  | Tm_type _  
+  | Tm_unknown -> tc_value env e
 
   | Tm_meta(e, Meta_pattern pats) -> 
     let t, u = U.type_u () in
@@ -396,11 +394,16 @@ and tc_value env (e:term) : term
   let env = Env.set_range env e.pos in
   let top = SS.compress e in
   match top.n with
+  | Tm_bvar x ->
+    failwith "Impossible: Violation of locally nameless convention"
+
   | Tm_uvar(_, t1) -> //the type of a uvar is given directly with it; we do not recheck the type
     value_check_expected_typ env e (Inl t1) Rel.trivial_guard
 
-  | Tm_bvar x ->
-    failwith "Impossible: Violation of locally nameless convention"
+  | Tm_unknown -> //only occurs where type annotations are missing in source programs
+    let t, u = U.type_u () in
+    let e = TcUtil.new_uvar env t in
+    value_check_expected_typ env e (Inl t) Rel.trivial_guard
 
   | Tm_name x ->
     let t = Env.lookup_bv env x in //should instantiate universe variables, if any
