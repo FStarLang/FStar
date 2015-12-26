@@ -148,7 +148,6 @@ let keywords =
     ALWAYS, "finally"    ,FINALLY;
     ALWAYS, "for"        ,FOR;
     ALWAYS, "forall"     ,FORALL;
-    ALWAYS, "fresh"      ,FRESH;
     ALWAYS, "fun"        ,FUN;
     ALWAYS, "function"   ,FUNCTION;
     ALWAYS, "if"         ,IF;
@@ -159,6 +158,7 @@ let keywords =
     ALWAYS, "logic"      ,LOGIC;
     ALWAYS, "match"      ,MATCH;
     ALWAYS, "module"     ,MODULE;
+    ALWAYS, "new"        ,NEW;
     ALWAYS, "new_effect" ,NEW_EFFECT;
     ALWAYS, "of"         ,OF;
     ALWAYS, "open"       ,OPEN;

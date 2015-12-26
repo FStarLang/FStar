@@ -189,7 +189,7 @@ type formulae = list<typ>
 type qualifier =
   | Private
   | Assumption
-  | Fresh
+  | New
   | Opaque
   | Logic
   | Discriminator of lident                          (* discriminator for a datacon l *)

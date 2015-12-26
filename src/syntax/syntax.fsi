@@ -191,7 +191,7 @@ val new_universe_uvar_set: unit -> set<universe_uvar>
 type qualifier =
   | Private
   | Assumption
-  | Fresh
+  | New
   | Opaque
   | Logic
   | Discriminator of lident                          (* discriminator for a datacon l *)

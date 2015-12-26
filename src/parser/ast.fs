@@ -114,7 +114,7 @@ type qualifier =
   | DefaultEffect
   | TotalEffect
   | Effect
-  | Fresh
+  | New
 
 type qualifiers = list<qualifier>
 

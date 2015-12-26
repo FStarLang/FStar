@@ -23,7 +23,7 @@ type True =
 
 (* another singleton type, with its only inhabitant written '()'
    we assume it is primitive, for convenient interop with other languages *)
-assume fresh type unit : Type0
+assume new type unit : Type0
 
 (* 
    infix binary '=='; 
@@ -34,7 +34,7 @@ assume type Eq2 : #a:Type -> #b:Type -> a -> b -> Type0
 
 (* bool is a two element type with elements {'true', 'false'}
    we assume it is primitive, for convenient interop with other languages *)
-assume fresh type bool : Type0
+assume new type bool : Type0
 
 (* bool-to-type coercion *)
 opaque type b2t (b:bool) = (b == true) 
@@ -147,7 +147,7 @@ effect Ghost (a:Type) (pre:Type) (post:PurePost a) =
            (fun (p:PurePost a) -> pre /\ (forall (x:a). post x ==> p x))
            (fun (p:PurePost a) -> forall (x:a). pre /\ post x ==> p x)
 
-assume fresh type int : Type0
+assume new type int : Type0
 assume val op_AmpAmp             : bool -> bool -> Tot bool
 assume val op_BarBar             : bool -> bool -> Tot bool
 assume val op_Negation           : bool -> Tot bool
@@ -164,14 +164,14 @@ assume val op_LessThan           : int -> int -> Tot bool
    But, still allows functions ... TODO: disallow functions *)
 assume val op_Equality :    #a:Type0 -> a -> a -> Tot bool
 assume val op_disEquality : #a:Type0 -> a -> a -> Tot bool
-assume fresh type char   : Type0
-assume fresh type float  : Type0
-assume fresh type string : Type0
-assume fresh type exn : Type0
+assume new type char   : Type0
+assume new type float  : Type0
+assume new type string : Type0
+assume new type exn : Type0
 type double = float
 
 assume val strcat : string -> string -> Tot string
-assume fresh type uint8 : Type0
+assume new type uint8 : Type0
 type byte = uint8 
 
 type list (a:Type) =

@@ -44,7 +44,7 @@ let trans_qual = function
   | AST.TotalEffect ->   S.TotalEffect
   | AST.DefaultEffect -> S.DefaultEffect None
   | AST.Effect ->        S.Effect
-  | AST.Fresh  ->        S.Fresh
+  | AST.New  ->        S.New
 
 let trans_pragma = function
   | AST.SetOptions s -> S.SetOptions s
@@ -1102,9 +1102,9 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
            | Sig_inductive_typ(l, _, typars, k, [], [], quals, rng) -> 
              let quals = if quals |> List.contains S.Assumption
                          then quals
-                         else (Util.fprint2 "%s (Warning): Adding an implicit 'assume fresh' qualifier on %s\n" 
+                         else (Util.fprint2 "%s (Warning): Adding an implicit 'assume new' qualifier on %s\n" 
                                                 (Range.string_of_range rng) (Print.lid_to_string l);          
-                               S.Assumption::S.Fresh::quals) in
+                               S.Assumption::S.New::quals) in
              let t = match typars with 
                 | [] -> k
                 | _ -> mk (Tm_arrow(typars, mk_Total k)) None rng in
