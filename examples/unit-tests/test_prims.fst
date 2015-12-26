@@ -520,12 +520,10 @@ type DTuple4 (a:Type)
 type as_requires (#a:Type) (wp:PureWP a)  = wp (fun x -> True)
 type as_ensures  (#a:Type) (wlp:PureWP a) (x:a) = ~ (wlp (fun y -> (y=!=x)))
 
-// val fst : ('a * 'b) -> Tot 'a // TODO: overloading of '*' is not yet implemented
-val fst : Tuple2 'a 'b -> Tot 'a
+val fst : ('a * 'b) -> Tot 'a
 let fst #a #b x = MkTuple2._1 x
 
-// val snd : ('a * 'b) -> Tot 'b // TODO: overloading of '*' is not yet implemented
-val snd : Tuple2 'a 'b -> Tot 'b
+val snd : ('a * 'b) -> Tot 'b
 let snd #a #b x = MkTuple2._2 x
 
 val dfst : #a:Type -> #b:(a -> Type) -> DTuple2 a b -> Tot a

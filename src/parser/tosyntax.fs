@@ -431,7 +431,13 @@ and desugar_match_pat_maybe_top _ env pat =
 
 and desugar_match_pat env p = desugar_match_pat_maybe_top false env p
 
-and desugar_term env e : S.term = desugar_term_maybe_top false env e
+and desugar_term env e : S.term = 
+    let env = {env with expect_typ=false} in
+    desugar_term_maybe_top false env e
+
+and desugar_typ env e : S.term = 
+    let env = {env with expect_typ=true} in
+    desugar_term_maybe_top false env e
 
 and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
   let mk e = S.mk e None top.range in
@@ -453,6 +459,16 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
 
     | Op("=!=", args) ->
       desugar_term env (mk_term(Op("~", [mk_term (Op("==", args)) top.range top.level])) top.range top.level)
+
+    | Op("*", [_;_]) when env.expect_typ -> 
+      let rec flatten t = match t.tm with
+            | Op("*", [t1;t2]) ->
+              let rest = flatten t2 in
+              t1::rest
+            | _ -> [t] in
+      let targs = flatten (unparen top) |> List.map (fun t -> arg (desugar_typ env t)) in
+      let tup = fail_or (Env.try_lookup_lid env) (Util.mk_tuple_lid (List.length targs) top.range) in
+      mk (Tm_app(tup, targs))
 
     | Tvar a ->
       setpos <| fail_or2 (try_lookup_id env) a
@@ -694,7 +710,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       mk <| Tm_match(desugar_term env e, List.map desugar_branch branches)
 
     | Ascribed(e, t) ->
-      mk <| Tm_ascribed(desugar_term env e, desugar_term env t, None)
+      mk <| Tm_ascribed(desugar_term env e, desugar_typ env t, None)
 
     | Record(_, []) ->
       raise (Error("Unexpected empty record", top.range))
@@ -914,10 +930,10 @@ and typars_of_binders env bs =
 
 and desugar_binder env b : option<ident> * S.term = match b.b with
   | TAnnotated(x, t)
-  | Annotated(x, t) -> Some x, desugar_term env t
-  | TVariable x -> Some x, mk (Tm_type U_unknown) None x.idRange
-  | NoName t -> None, desugar_term env t
-  | Variable x -> Some x, tun
+  | Annotated(x, t) -> Some x, desugar_typ env t
+  | TVariable x     -> Some x, mk (Tm_type U_unknown) None x.idRange
+  | NoName t        -> None, desugar_typ env t
+  | Variable x      -> Some x, tun
 
 let mk_data_discriminators quals env t tps k datas =
 //    if env.iface && not env.admitted_iface then [] else
@@ -1118,7 +1134,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
                  let typars = Subst.close_binders typars in
                  let c = Subst.close_comp typars c in
                  Sig_effect_abbrev(qualify env id, [], typars, c, quals |> List.filter (function S.Effect -> false | _ -> true), rng)
-            else let t = desugar_term env' t in
+            else let t = desugar_typ env' t in
                  let nm = qualify env id in
                  mk_typ_abbrev nm [] typars k t [nm] quals rng in
                   

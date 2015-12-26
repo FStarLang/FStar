@@ -32,16 +32,17 @@ module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 
 type env = {
-  curmodule: option<lident>;
-  modules:list<(lident * modul)>;           (* previously desugared modules *)
-  open_namespaces: list<lident>;            (* fully qualified names, in order of precedence *)
-  sigaccum:sigelts;                         (* top-level declarations being accumulated for the current module *)
-  localbindings:list<(ident * bv)>;         (* local name bindings for name resolution, paired with an env-generated unique name *)
-  recbindings:list<(ident * lident)>;       (* names bound by recursive type and top-level let-bindings definitions only *)
-  sigmap: list<Util.smap<(sigelt * bool)>>; (* bool indicates that this was declared in an interface file *)
-  default_result_effect:lident;
-  iface:bool;
-  admitted_iface:bool
+  curmodule:            option<lident>;                   (* name of the module being desugared *)
+  modules:              list<(lident * modul)>;           (* previously desugared modules *)
+  open_namespaces:      list<lident>;                     (* fully qualified names, in order of precedence *)
+  sigaccum:             sigelts;                          (* type declarations being accumulated for the current module *)
+  localbindings:        list<(ident * bv)>;               (* local name bindings for name resolution, paired with an env-generated unique name *)
+  recbindings:          list<(ident * lident)>;           (* names bound by recursive type and top-level let-bindings definitions only *)
+  sigmap:               list<Util.smap<(sigelt * bool)>>; (* bool indicates that this was declared in an interface file *)
+  default_result_effect:lident;                           (* either Tot or ML, depending on the what kind of term we're desugaring *)
+  iface:                bool;                             (* remove? whether or not we're desugaring an interface; different scoping rules apply *)
+  admitted_iface:       bool;                             (* is it an admitted interface; different scoping rules apply *)
+  expect_typ:           bool;                             (* syntatically, expect a type at this position in the term *)
 }
 
 let open_modules e = e.modules
@@ -63,7 +64,8 @@ let empty_env () = {curmodule=None;
                     sigmap=[new_sigmap()];
                     default_result_effect=Const.effect_ML_lid;
                     iface=false;
-                    admitted_iface=false}
+                    admitted_iface=false;
+                    expect_typ=false}
 let sigmap env = List.hd env.sigmap
 let default_total env = {env with default_result_effect=Const.effect_Tot_lid}
 let default_ml env = {env with default_result_effect=Const.effect_ML_lid}

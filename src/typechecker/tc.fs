@@ -311,6 +311,8 @@ let rec tc_term env (e:term) : term                  (* type-checked and elabora
     let env0 = env in
     let env = Env.clear_expected_typ env |> fst |> instantiate_both in
     if debug env Options.High then Util.fprint2 "(%s) Checking app %s\n" (Range.string_of_range top.pos) (Print.term_to_string top);
+        
+
     //Don't instantiate head; instantiations will be computed below, accounting for implicits/explicits
     let head, chead, g_head = tc_term (no_inst env) head in 
     let e, c, g = if TcUtil.short_circuit_head head 
