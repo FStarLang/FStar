@@ -30,7 +30,7 @@ let lid_to_string (l:lid) = l.str
 
 let fv_to_string fv = lid_to_string (fst fv).v
 
-let bv_to_string bv = bv.ppname.idText ^ string_of_int bv.index
+let bv_to_string bv = bv.ppname.idText ^ "#" ^ string_of_int bv.index
    
 let nm_to_string bv = 
     if !Options.print_real_names
@@ -202,7 +202,7 @@ let rec term_to_string x =
   | Tm_type u ->        Util.format1 "Type(%s)" (univ_to_string u)
   | Tm_arrow(bs, c) ->  Util.format2 "(%s -> %s)"  (binders_to_string " -> " bs) (comp_to_string c)
   | Tm_abs(bs, t2) ->   Util.format2 "(fun %s -> %s)" (binders_to_string " " bs) (term_to_string t2)
-  | Tm_refine(xt, f) -> Util.format3 "%s:%s{%s}" (bv_to_string xt) (xt.sort |> term_to_string) (f |> formula_to_string)
+  | Tm_refine(xt, f) -> Util.format3 "(%s:%s{%s})" (bv_to_string xt) (xt.sort |> term_to_string) (f |> formula_to_string)
   | Tm_app(t, args) ->  Util.format2 "(%s %s)" (term_to_string t) (args_to_string args)
   | Tm_let(lbs, e) ->   Util.format2 "%s\nin\n%s" (lbs_to_string lbs) (term_to_string e)
   | Tm_ascribed(e,t,_) ->
@@ -226,14 +226,15 @@ and  pat_to_string x = match x.v with
     | Pat_dot_term (x, _) -> Util.format1 ".%s" (bv_to_string x)
     | Pat_var x -> bv_to_string x
     | Pat_constant c -> const_to_string c
-    | Pat_wild _ -> "_"
+    | Pat_wild x -> if !Options.print_real_names then "Pat_wild " ^ (bv_to_string x) else "_"
     | Pat_disj ps ->  Util.concat_l " | " (List.map pat_to_string ps) 
  
 
 and lbs_to_string lbs =
     Util.format2 "let %s %s"
     (if fst lbs then "rec" else "")
-    (Util.concat_l "\n and " (snd lbs |> List.map (fun lb -> Util.format4 "%s %s : %s = %s" 
+    (Util.concat_l "\n and " (snd lbs |> List.map (fun lb -> 
+                                                    Util.format4 "%s %s : %s = %s" 
                                                             (lbname_to_string lb.lbname) 
                                                             (if !Options.print_implicits 
                                                              then "<"^univ_names_to_string lb.lbunivs^">"
@@ -370,6 +371,7 @@ let rec sigelt_to_string x = match x with
   | Sig_inductive_typ(lid, _, tps, k, _, _, quals, _) -> Util.format4 "%s type %s %s : %s" (quals_to_string quals) lid.str (binders_to_string " " tps) (term_to_string k)
   | Sig_datacon(lid, _, t, _, _, _, _, _) -> Util.format2 "datacon %s : %s" lid.str (term_to_string t)
   | Sig_declare_typ(lid, univs, t, quals, _) -> 
+    let univs, t = Subst.open_univ_vars univs t in
     Util.format4 "%s val %s %s : %s" (quals_to_string quals) lid.str 
         (if !Options.print_implicits 
          then Util.format1 "<%s>" (univs |> List.map (fun x -> x.idText) |> String.concat ", ")

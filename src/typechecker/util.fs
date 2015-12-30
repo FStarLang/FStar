@@ -44,11 +44,12 @@ let discharge_guard env (g:guard_t) = Rel.discharge_guard env g
 (************************************************************************)
 (* Unification variables *)
 (************************************************************************)
+let is_type t = match (compress t).n with 
+    | Tm_type _ -> true
+    | _ -> false
+                
 let t_binders env = 
-    Env.binders env |> List.filter (fun (x, _) -> 
-                        match (compress x.sort).n with 
-                            | Tm_type _ -> true
-                            | _ -> false) 
+    Env.binders env |> List.filter (fun (x, _) -> is_type x.sort)
 
 //new unification variable
 let new_uvar_aux env k = 
@@ -87,12 +88,11 @@ let check_uvars r t =
 (************************************************************************)
 (* Extracting annotations from a term *)
 (************************************************************************)
-let force_sort s = match !s.tk with
-    | None -> failwith (Util.format1 "Impossible: Forced tk not present (%s)" (Range.string_of_range s.pos))
+let force_sort' s = match !s.tk with
+    | None -> failwith (Util.format2 "(%s) Impossible: Forced tk not present on %s" (Range.string_of_range s.pos) (Print.term_to_string s))
     | Some tk -> tk
-
-let sorts_of_args (args:args) =
-    args |> List.map (fun (t, imp) -> force_sort t, imp)
+    
+let force_sort s = mk (force_sort' s) None s.pos
 
 let extract_let_rec_annotation env {lbunivs=univ_vars; lbtyp=t; lbdef=e} = 
   match t.n with
@@ -131,7 +131,9 @@ let extract_let_rec_annotation env {lbunivs=univ_vars; lbtyp=t; lbdef=e} =
      let t, b = aux (t_binders env)  e in 
      [], t, b
 
-  | _ -> univ_vars, t, false
+  | _ -> 
+    let univ_vars, t = open_univ_vars univ_vars t in 
+    univ_vars, t, false
 
 (************************************************************************)
 (* Utilities on patterns  *)
@@ -276,8 +278,10 @@ let decorate_pattern env p exps =
         let pkg q t = withinfo q t p.p in
         let e = Util.unmeta e in
         match p.v, e.n with
+            | _, Tm_uinst(e, _) -> aux p e
+
             | Pat_constant _, Tm_constant _ -> 
-              pkg p.v (force_sort e)
+              pkg p.v (force_sort' e)
 
             | Pat_var x, Tm_name y ->
               if not (bv_eq x y)
@@ -286,7 +290,7 @@ let decorate_pattern env p exps =
               then Util.fprint2 "Pattern variable %s introduced at type %s\n" (Print.bv_to_string x) (Normalize.term_to_string env y.sort);
               let s = Normalize.normalize [Normalize.Beta] env y.sort in
               let x = {x with sort=s} in
-              pkg (Pat_var x) (force_sort e)
+              pkg (Pat_var x) s.n
 
             | Pat_wild x, Tm_name y ->
               if bv_eq x y |> not
@@ -296,26 +300,28 @@ let decorate_pattern env p exps =
               pkg (Pat_wild x) s.n
 
             | Pat_dot_term(x, _), _ ->
-              let s = mk (force_sort e) None e.pos in
+              let s = force_sort e in
               let x = {x with sort=s} in
               pkg (Pat_dot_term(x, e)) s.n
 
             | Pat_cons(fv, []), Tm_fvar fv' ->
               if not (Syntax.fv_eq fv fv')
               then failwith (Util.format2 "Expected pattern constructor %s; got %s" (fst fv).v.str (fst fv').v.str);
-              pkg (Pat_cons(fv', [])) (force_sort e)
+              pkg (Pat_cons(fv', [])) (force_sort' e)
 
-            | Pat_cons(fv, argpats), Tm_app({n=Tm_fvar(fv')}, args) ->
+            | Pat_cons(fv, argpats), Tm_app({n=Tm_fvar(fv')}, args) 
+            | Pat_cons(fv, argpats), Tm_app({n=Tm_uinst({n=Tm_fvar(fv')}, _)}, args) ->
+
               if fv_eq fv fv' |> not
               then failwith (Util.format2 "Expected pattern constructor %s; got %s" (fst fv).v.str (fst fv').v.str);
 
               let fv = fv' in
               let rec match_args matched_pats args argpats = match args, argpats with
-                | [], [] -> pkg (Pat_cons(fv, List.rev matched_pats)) (force_sort e)
+                | [], [] -> pkg (Pat_cons(fv, List.rev matched_pats)) (force_sort' e)
                 | arg::args, (argpat, _)::argpats ->
                   begin match arg, argpat.v with
                         | (e, Some Implicit), Pat_dot_term _ -> (* implicit value argument *)
-                          let x = Syntax.new_bv (Some p.p) (mk (force_sort e) None p.p) in
+                          let x = Syntax.new_bv (Some p.p) (force_sort e) in
                           let q = withinfo (Pat_dot_term(x, e)) x.sort.n p.p in
                           match_args ((q, true)::matched_pats) args argpats
  
@@ -937,6 +943,8 @@ let gen_univs env (x:Util.set<universe_uvar>) : list<univ_name> =
          let r = Some (Env.get_range env) in
          let u_names = s |> List.map (fun u -> 
             let u_name = Syntax.new_univ_name r in
+            if Env.debug env <| Options.Other "Gen" 
+            then Printf.printf "Setting ?%d (%s) to %s\n" (Unionfind.uvar_id u) (Print.univ_to_string (U_unif u)) (Print.univ_to_string (U_name u_name));
             Unionfind.change u (Some (U_name u_name));
             u_name) in
          u_names 
@@ -950,6 +958,8 @@ let generalize_universes (env:env) (t:term) : tscheme =
                 (Util.set_elements univs 
                 |> List.map (fun u -> Unionfind.uvar_id u |> string_of_int) |> String.concat ", ");
     let gen = gen_univs env univs in
+    if Env.debug env <| Options.Other "Gen" 
+    then Printf.printf "After generealization: %s\n"  (Print.term_to_string t);
     let ts = SS.close_univ_vars gen t in 
     (gen, ts)
 
@@ -1031,7 +1041,7 @@ let generalize env (lecs:list<(lbname*term*comp)>) : (list<(lbname*term*univ_nam
 (************************************************************************)
 //check_and_ascribe env e t1 t2 
 //checks is e:t1 is convertible to t2, subject to some guard.
-//e is ascribed the type t2 and the guard is returned
+//e is ascribed the type t2 and the guard is returned'
 let check_and_ascribe env (e:term) (t1:typ) (t2:typ) : term * guard_t =
   let env = Env.set_range env e.pos in
   let check env t1 t2 =
@@ -1054,8 +1064,14 @@ let check_and_ascribe env (e:term) (t1:typ) (t2:typ) : term * guard_t =
     | Some g ->
         if debug env <| Options.Other "Rel"
         then Util.fprint1 "Applied guard is %s\n" <| guard_to_string env g;
+//        let g0 = 
+//            if //Ident.lid_equals env.curmodule Const.prims_lid || 
+//            is_type t1 && is_type t2
+//            then Rel.trivial_guard 
+//            else Rel.teq env (force_sort t1) (force_sort t2) in //check that their universes are equal
         decorate e t2, g
 
+/////////////////////////////////////////////////////////////////////////////////
 let check_top_level env g lc : (bool * comp) =
   let unresolved u = match Unionfind.find u with
     | Uvar -> true
@@ -1063,7 +1079,7 @@ let check_top_level env g lc : (bool * comp) =
   let discharge g =
     discharge_guard env g;
     begin match g.implicits |> List.tryFind (fun (u, _) -> unresolved u) with
-        | Some (_, r) -> raise (Error("Unresolved implicit argument", r))
+        | Some (u, r) -> raise (Error(Util.format1 "Unresolved implicit argument: %s" (Print.uvar_to_string u), r))
         | _ -> ()
     end;
     Util.is_pure_lcomp lc in
@@ -1127,3 +1143,32 @@ let short_circuit_head l =
                     Const.imp_lid;
                     Const.ite_lid]
         | _ -> false
+
+
+        
+(************************************************************************)
+(* maybe_add_implicit_binders (env:env) (bs:binders)                    *)
+(* Adding implicit binders for ticked variables                         *)
+(* in case the expected type is of the form #'a1 -> ... -> #'an -> t    *)
+(* and bs does not begin with any implicit binders                      *)
+(* add #'a1 ... #'an to bs                                              *)
+(************************************************************************)
+let maybe_add_implicit_binders (env:env) (bs:binders)  : binders = 
+    match bs with 
+        | (_, Some Implicit)::_ -> bs //bs begins with an implicit binder; don't add any
+        | _ -> 
+          match Env.expected_typ env with 
+            | None -> bs
+            | Some t -> 
+                match (SS.compress t).n with 
+                    | Tm_arrow(bs', _) -> 
+                      begin match Util.prefix_until (function (_, Some Implicit) -> false | _ -> true) bs' with 
+                        | None -> bs
+                        | Some ([], _, _) -> bs //no implicits
+                        | Some (imps, _,  _) -> 
+                          if imps |> Util.for_all (fun (x, _) -> Util.starts_with x.ppname.idText "'")
+                          then imps@bs //we have a prefix of ticked variables
+                          else bs
+                      end
+
+                    | _ -> bs

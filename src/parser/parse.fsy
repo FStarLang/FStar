@@ -346,7 +346,7 @@ nonTvarPattern2:
   | UNDERSCORE { PatWild }
   | constant { PatConst $1 }
   | HASH ident { PatVar($2, true) }
-  | ident { PatVar($1, false) }
+  | ident { PatVar($1, false)  }
   | qname { PatName $1 }
   | LBRACK patternListSemiColon RBRACK { PatList $2 }
   | LPAREN ascriptionOrPattern RPAREN { $2 } 

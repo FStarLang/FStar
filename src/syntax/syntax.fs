@@ -338,8 +338,8 @@ let mk (t:'a) : mk_t_a<'a,'b> = fun topt r -> {
     tk=Util.mk_ref topt;
     vars=Util.mk_ref None;
 }
-let bv_to_tm   bv :term = mk (Tm_bvar bv) None (range_of_bv bv)
-let bv_to_name bv :term = mk (Tm_name bv) None (range_of_bv bv)
+let bv_to_tm   bv :term = mk (Tm_bvar bv) (Some bv.sort.n) (range_of_bv bv)
+let bv_to_name bv :term = mk (Tm_name bv) (Some bv.sort.n) (range_of_bv bv)
 let mk_Tm_app (t1:typ) (args:list<arg>) : mk_t = fun k p ->
     match args with
     | [] -> t1

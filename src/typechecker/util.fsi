@@ -38,8 +38,6 @@ val new_implicit_var : env -> typ -> (typ * (uvar * Range.range))
 val check_uvars: Range.range -> typ -> unit
 
 //extracting annotations from a term
-val force_sort: syntax<'a,'b> -> 'b
-val sorts_of_args: args -> list<(term' * aqual)>
 val extract_let_rec_annotation: env -> letbinding -> (univ_names * typ * bool)
 
 //pattern utilities
@@ -84,4 +82,4 @@ val label_guard: string -> Range.range -> guard_formula -> guard_formula
 val short_circuit: term -> args -> guard_formula
 val short_circuit_head: term -> bool
 val mk_basic_dtuple_type: env -> int -> typ
-
+val maybe_add_implicit_binders: env -> binders -> binders

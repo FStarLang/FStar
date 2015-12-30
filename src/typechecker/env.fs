@@ -318,8 +318,6 @@ let lookup_definition env lid =
       end
     | _ -> None
 
-
-
 let lookup_effect_lid env (ftv:lident) : typ =
   match try_lookup_effect_lid env ftv with
     | None -> raise (Error(name_not_found ftv, range_of_lid ftv))
@@ -350,9 +348,18 @@ let lookup_effect_abbrev env lid =
            Some (binders, c)
     | _ -> None
 
+let datacons_of_typ env lid = 
+  match lookup_qname env lid with
+    | Some (Inr(Sig_inductive_typ(_, _, _, _, _, dcs, _, _))) -> dcs
+    | _ -> []
+
+let typ_of_datacon env lid = 
+  match lookup_qname env lid with
+    | Some (Inr (Sig_datacon (_, _, _, l, _, _, _, _))) -> l
+    | _ -> failwith "Not a datacon"
+
 let is_datacon env lid =
   match lookup_qname env lid with
-    | Some (Inr(Sig_declare_typ(_, _, _, quals, _))) -> quals |> Util.for_some (function Assumption -> true | _ -> false)
     | Some (Inr (Sig_datacon (_, _, _, _, _, _, _, _))) -> true
     | _ -> false
 

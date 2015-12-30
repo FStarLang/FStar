@@ -212,7 +212,7 @@ let subst_pat' s pat : (pat * int) =
       | Pat_wild x -> 
         let s = shift_subst' n s in 
         let x = {x with sort=subst' s x.sort} in
-        {pat with v=Pat_var x}, n + 1 //these may be in scope in the inferred types of other terms, so shift the index
+        {pat with v=Pat_wild x}, n + 1 //these may be in scope in the inferred types of other terms, so shift the index
 
       | Pat_dot_term(x, t0) -> 
         let s = shift_subst' n s in
@@ -437,8 +437,17 @@ let close_univ_vars_comp (us:univ_names) (c:comp) : comp =
     let s = us |> List.mapi (fun i u -> UD(u, n - i)) in
     subst_comp s c
 
-let open_let_rec:   list<letbinding> -> term -> list<letbinding> * term = fun _ _ -> failwith "NYI: open_let_rec"
-let close_let_rec:   list<letbinding> -> term -> list<letbinding> * term = fun _ _ -> failwith "NYI: close_let_rec"
+let is_top_level = function 
+    | {lbname=Inr _}::_ -> true 
+    | _ -> false
+
+let open_let_rec lbs (t:term) =
+    if is_top_level lbs then lbs, t //top-level let recs are not opened
+    else failwith "NYI: open_let_rec"
+
+let close_let_rec lbs (t:term) = 
+    if is_top_level lbs then lbs, t //top-level let recs do not have to be closed
+    else failwith "NYI: close_let_rec"
 
 //requires: length bs = length args
 let mk_subst_binders args = 

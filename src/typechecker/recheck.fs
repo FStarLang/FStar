@@ -25,13 +25,14 @@ open FStar.Util
 open FStar.Range
 open FStar.Ident
 open FStar.Const
+open FStar.TypeChecker.Env
 
 module U = FStar.Syntax.Util
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module C = FStar.Syntax.Const
 
-let tconst l = S.fvar None l dummyRange
+let tconst l = mk (Tm_fvar(fv (set_lid_range l Range.dummyRange) None)) (Some Util.ktype0.n) Range.dummyRange
 let t_unit   = tconst C.unit_lid
 let t_bool   = tconst C.bool_lid 
 let t_uint8  = tconst C.uint8_lid 
@@ -56,6 +57,45 @@ let typing_const r (s:sconst) = match s with
   | Const_uint8 _ -> t_uint8
   | Const_effect -> Util.ktype0 //NS: really?
   | _ -> raise (Error("Unsupported constant", r))
+
+////this is only supposed return a type that faithfully captures the arity of the term
+//let rec universe_of_type env t = match t.n with
+//        | Tm_delayed _    -> universe_of env (SS.compress t)
+//        
+//        | Tm_name a       -> U_zero
+//        | Tm_fvar (fv, _) -> U_zero
+//        | Tm_uinst(t, us) -> U_zero
+//
+//        | Tm_type u       -> U_succ u
+//        | Tm_arrow(bs, c) -> 
+//          U_max (universe_of env (Util.comp_result c) :: List.map (fun (b, _) -> universe_of env b.sort) bs)
+//                      
+//        | Tm_refine(x, _)       -> universe_of env x.sort
+//        | Tm_ascribed (x, _, _) -> universe_of env x
+//
+//        | Tm_uvar(_, k)  -> universe_of env k
+//        | Tm_meta(t, _)  -> universe_of env t
+//
+//        | Tm_abs(binders, body) -> U_zero
+//
+//        | Tm_app(head, args) -> failwith ""
+//
+//        | Tm_let(_, e) -> universe_of env e
+//
+//        | Tm_match _ -> failwith "Expect match nodes to be ascribed"
+//        | Tm_unknown -> failwith "Unknown term in universe computation" in
+//
+//and universe_of_term env t = match (SS.compress t).n with
+//    | Tm_constant s   -> U_zero
+//    | Tm_name a       -> U_zero
+//    | Tm_fvar (fv, _) -> U_zero
+//    
+//        
+//
+//    match !t.tk with
+//        | Some k -> mk k None t.pos
+//        | None -> let k = recompute t in t.tk := Some k.n; k
+
 
 //this is only supposed return a type that faithfully captures the arity of the term
 let rec check t =

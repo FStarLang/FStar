@@ -42,13 +42,13 @@ let new_uvar r binders k =
   let uv = Unionfind.fresh Uvar in
   match binders with
     | [] ->
-      let uv = mk (Tm_uvar(uv,k)) None r in
+      let uv = mk (Tm_uvar(uv,k)) (Some k.n) r in
       uv, uv
     | _ ->
       let args = Util.args_of_non_null_binders binders in
       let k' = U.arrow binders (mk_Total k) in
       let uv = mk (Tm_uvar(uv,k')) None r in
-      mk (Tm_app(uv, args)) None r, uv
+      mk (Tm_app(uv, args)) (Some k.n) r, uv
 (* --------------------------------------------------------- *)
 (* </new_uvar>                                               *)
 (* --------------------------------------------------------- *)

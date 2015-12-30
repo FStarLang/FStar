@@ -69,12 +69,12 @@ type XOR (p:Type) (q:Type) = (p \/ q) /\ ~(p /\ q)
 opaque type ITE (p:Type) (q:Type) (r:Type) = (p ==> q) /\ (~p ==> r) 
 
 (* infix binary '<<'; a built-in well-founded partial order over all terms *)
-assume type Precedes : #a:Type -> #b:Type -> a -> b -> Type0                
+assume type precedes : #a:Type -> #b:Type -> a -> b -> Type0                
 
 (* forall (x:a). p x : specialized to Type#0 *)
 opaque type Forall (#a:Type) (p:a -> Type0) = x:a -> Tot (p x)      
 
-(* dependent pairs, aka strong sums *)
+(* dependent pairs DTuple2 in concrete syntax is '(x:a & b x)' *)
 type DTuple2 (a:Type)
              (b:(a -> Type)) = 
   | MkDTuple2: _1:a
@@ -433,17 +433,20 @@ type lex_t =
   | LexTop  : lex_t
   | LexCons : #a:Type -> a -> lex_t -> lex_t
 
+(* 'a * 'b *)
 type Tuple2 'a 'b =
   | MkTuple2: _1:'a
            -> _2:'b
            -> Tuple2 'a 'b
 
+(* 'a * 'b * 'c *)
 type Tuple3 'a 'b 'c =
   | MkTuple3: _1:'a
            -> _2:'b
            -> _3:'c
           -> Tuple3 'a 'b 'c
 
+(* 'a * 'b * 'c * 'd *)
 type Tuple4 'a 'b 'c 'd =
   | MkTuple4: _1:'a
            -> _2:'b
@@ -451,6 +454,7 @@ type Tuple4 'a 'b 'c 'd =
            -> _4:'d
            -> Tuple4 'a 'b 'c 'd
 
+(* 'a * 'b * 'c * 'd * 'e *)
 type Tuple5 'a 'b 'c 'd 'e =
   | MkTuple5: _1:'a
            -> _2:'b
@@ -459,6 +463,7 @@ type Tuple5 'a 'b 'c 'd 'e =
            -> _5:'e
            -> Tuple5 'a 'b 'c 'd 'e
 
+(* 'a * 'b * 'c * 'd * 'e * 'f *) 
 type Tuple6 'a 'b 'c 'd 'e 'f =
   | MkTuple6: _1:'a
            -> _2:'b
@@ -469,6 +474,7 @@ type Tuple6 'a 'b 'c 'd 'e 'f =
            -> Tuple6 'a 'b 'c 'd 'e 'f
 
 
+(* 'a * 'b * 'c * 'd * 'e * 'f * 'g *) 
 type Tuple7 'a 'b 'c 'd 'e 'f 'g =
   | MkTuple7: _1:'a
            -> _2:'b
@@ -479,7 +485,7 @@ type Tuple7 'a 'b 'c 'd 'e 'f 'g =
            -> _7:'g
            -> Tuple7 'a 'b 'c 'd 'e 'f 'g
 
-
+(* 'a * 'b * 'c * 'd * 'e * 'f * 'g * 'h *) 
 type Tuple8 'a 'b 'c 'd 'e 'f 'g 'h =
   | MkTuple8: _1:'a
            -> _2:'b
@@ -491,6 +497,7 @@ type Tuple8 'a 'b 'c 'd 'e 'f 'g 'h =
            -> _8:'h
            -> Tuple8 'a 'b 'c 'd 'e 'f 'g 'h
 
+(* Concrete syntax (x:a & y:b x & c x y) *)
 type DTuple3 (a:Type)
              (b:(a -> Type))
              (c:(x:a -> b x -> Type)) =
@@ -499,6 +506,7 @@ type DTuple3 (a:Type)
              -> _3:c _1 _2
              -> DTuple3 a b c
 
+(* Concrete syntax (x:a & y:b x & z:c x y & d x y z) *)
 type DTuple4 (a:Type)
              (b:(x:a -> Type))
              (c:(x:a -> b x -> Type))
@@ -513,15 +521,15 @@ type as_requires (#a:Type) (wp:PureWP a)  = wp (fun x -> True)
 type as_ensures  (#a:Type) (wlp:PureWP a) (x:a) = ~ (wlp (fun y -> (y=!=x)))
 
 val fst : ('a * 'b) -> Tot 'a
-let fst #a #b x = MkTuple2._1 x
+let fst x = MkTuple2._1 x
 
 val snd : ('a * 'b) -> Tot 'b
-let snd #a #b x = MkTuple2._2 x
+let snd x = MkTuple2._2 x
 
-val dfst : #a:Type -> #b:(a -> Type) -> DTuple2 a b -> Tot a
+val dfst : #a:Type -> #b:(a -> Type) -> (x:a & b x) -> Tot a
 let dfst #a #b t = MkDTuple2._1 t
 
-val dsnd : #a:Type -> #b:(a -> Type) -> t:(DTuple2 a b) -> Tot (b (MkDTuple2._1 t))
+val dsnd : #a:Type -> #b:(a -> Type) -> t:(x:a & b x) -> Tot (b (MkDTuple2._1 t))
 let dsnd #a #b t = MkDTuple2._2 t
 
 type Let (#a:Type) (x:a) (body:(a -> Type)) = body x

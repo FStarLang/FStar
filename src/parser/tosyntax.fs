@@ -333,7 +333,6 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
 
       | PatWild ->
         let x = S.new_bv (Some p.prange) tun in
-        let y = S.new_bv (Some p.prange) tun in
         loc, env, LocalBinder(x, None), pos <| Pat_wild x, false
 
       | PatConst c ->
@@ -819,42 +818,41 @@ and desugar_comp r default_ok env t =
             | _ -> 
              fail (Util.format1 "%s is not an effect" (AST.term_to_string t)) in
     let eff, args = pre_process_comp_typ t in
-    let args = desugar_args env args in
-    match args with
-        | (result_typ, _)::rest ->
-          let dec, rest = rest |> List.partition (fun (t, _) -> 
-                    begin match t.n with
-                        | Tm_app({n=Tm_fvar(fv, _)}, [_]) -> lid_equals fv.v C.decreases_lid
-                        | _ -> false
-                    end) in
+    if List.length args = 0 
+    then fail (Util.format1 "Not enough args to effect %s" (Print.lid_to_string eff));
+    let result_arg, rest = List.hd args, List.tl args in
+    let result_typ = desugar_typ env (fst result_arg) in
+    let rest = desugar_args env rest in
+    let dec, rest = rest |> List.partition (fun (t, _) -> 
+            begin match t.n with
+                | Tm_app({n=Tm_fvar(fv, _)}, [_]) -> lid_equals fv.v C.decreases_lid
+                | _ -> false
+            end) in
 
-          let decreases_clause = dec |> List.map (fun (t, _) -> 
-                      match t.n with
-                        | Tm_app(_, [(arg, _)]) -> DECREASES arg
-                        | _ -> failwith "impos") in
-          if lid_equals eff C.effect_Tot_lid && List.length decreases_clause=0
-          then mk_Total result_typ
-          else let flags =
-                    if      lid_equals eff C.effect_Lemma_lid then [LEMMA]
-                    else if lid_equals eff C.effect_Tot_lid   then [TOTAL]
-                    else if lid_equals eff C.effect_ML_lid    then [MLEFFECT]
-                    else [] in
-               let rest = 
-                    if lid_equals eff C.effect_Lemma_lid
-                    then match rest with 
-                            | [req;ens;(pat, aq)] -> 
-                                [req; ens;
-                                (S.mk (Tm_meta(pat, Meta_desugared Meta_smt_pat)) None pat.pos, aq)]
-                            | _ -> rest 
-                    else rest in
-                mk_Comp ({effect_name=eff;
-                            result_typ=result_typ;
-                            effect_args=rest;
-                            flags=flags@decreases_clause})
+    let decreases_clause = dec |> List.map (fun (t, _) -> 
+                match t.n with
+                | Tm_app(_, [(arg, _)]) -> DECREASES arg
+                | _ -> failwith "impos") in
+    if lid_equals eff C.effect_Tot_lid && List.length decreases_clause=0
+    then mk_Total result_typ
+    else let flags =
+            if      lid_equals eff C.effect_Lemma_lid then [LEMMA]
+            else if lid_equals eff C.effect_Tot_lid   then [TOTAL]
+            else if lid_equals eff C.effect_ML_lid    then [MLEFFECT]
+            else [] in
+        let rest = 
+            if lid_equals eff C.effect_Lemma_lid
+            then match rest with 
+                    | [req;ens;(pat, aq)] -> 
+                        [req; ens;
+                        (S.mk (Tm_meta(pat, Meta_desugared Meta_smt_pat)) None pat.pos, aq)]
+                    | _ -> rest 
+            else rest in
+        mk_Comp ({effect_name=eff;
+                    result_typ=result_typ;
+                    effect_args=rest;
+                    flags=flags@decreases_clause})
            
-       | _  ->
-         fail (Util.format1 "Not enough args to effect %s" (Print.lid_to_string eff))
-
 and desugar_formula env (f:term) : S.term =
   let connective s = match s with
     | "/\\"  -> Some C.and_lid
