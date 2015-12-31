@@ -38,24 +38,25 @@ type effects = {
 }
 
 type env = {
-  solver         :solver_t;                (* interface to the SMT solver *)
-  range          :Range.range;             (* the source location of the term being checked *)
-  curmodule      :lident;                  (* Name of this module *)
-  gamma          :list<binding>;           (* Local typing environment and signature elements *)
-  modules        :list<modul>;             (* already fully type checked modules *)
-  expected_typ   :option<typ>;             (* type expected by the context *)
-  sigtab         :list<Util.smap<sigelt>>; (* a dictionary of long-names to sigelts *)
-  is_pattern     :bool;                    (* is the current term being checked a pattern? *)
-  instantiate_imp:bool;                    (* instantiate implicit arguments? default=true *)
-  effects        :effects;                 (* monad lattice *)
-  generalize     :bool;                    (* should we generalize let bindings? *)
-  letrecs        :list<(lbname * typ)>;    (* mutually recursive names and their types (for termination checking) *)
-  top_level      :bool;                    (* is this a top-level term? if so, then discharge guards *)
-  check_uvars    :bool;                    (* paranoid: re-typecheck unification variables *)
-  use_eq         :bool;                    (* generate an equality constraint, rather than subtyping/subkinding *)
-  is_iface       :bool;                    (* is the module we're currently checking an interface? *)
-  admit          :bool;                    (* admit VCs in the current module *)
-  default_effects:list<(lident*lident)>;   (* [(x,y)] ... y is the default effect of x *)
+  solver         :solver_t;                     (* interface to the SMT solver *)
+  range          :Range.range;                  (* the source location of the term being checked *)
+  curmodule      :lident;                       (* Name of this module *)
+  gamma          :list<binding>;                (* Local typing environment and signature elements *)
+  modules        :list<modul>;                  (* already fully type checked modules *)
+  expected_typ   :option<typ>;                  (* type expected by the context *)
+  sigtab         :list<Util.smap<sigelt>>;      (* a dictionary of long-names to sigelts *)
+  is_pattern     :bool;                         (* is the current term being checked a pattern? *)
+  instantiate_imp:bool;                         (* instantiate implicit arguments? default=true *)
+  effects        :effects;                      (* monad lattice *)
+  generalize     :bool;                         (* should we generalize let bindings? *)
+  letrecs        :list<(lbname * typ)>;         (* mutually recursive names and their types (for termination checking) *)
+  top_level      :bool;                         (* is this a top-level term? if so, then discharge guards *)
+  check_uvars    :bool;                         (* paranoid: re-typecheck unification variables *)
+  use_eq         :bool;                         (* generate an equality constraint, rather than subtyping/subkinding *)
+  is_iface       :bool;                         (* is the module we're currently checking an interface? *)
+  admit          :bool;                         (* admit VCs in the current module *)
+  default_effects:list<(lident*lident)>;        (* [(x,y)] ... y is the default effect of x *)
+  tc             :env -> term -> typ -> unit;   (* a callback to the type-checker; check_term g e t ==> g |- e : Tot t *)
 }
 and solver_t = {
     init         :env -> unit;
@@ -72,7 +73,7 @@ and solver_t = {
     refresh      :unit -> unit;
 }
 
-val initial_env : solver_t -> lident -> env
+val initial_env : (env -> term -> typ -> unit) -> solver_t -> lident -> env
 
 (* Marking and resetting the environment, for the interactive mode *)
 val push        : env -> string -> env
@@ -143,3 +144,4 @@ val binders_of_bindings : list<binding> -> binders
 
 (* TODO: REMOVE *)
 val dummy:env
+val no_solver_env: (env -> term -> typ -> unit) -> env

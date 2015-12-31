@@ -74,6 +74,7 @@
     <Compile Include="rel.fs" />
     <Compile Include="util.fsi" />
     <Compile Include="util.fs" />
+    <Compile Include="tc.fsi" />
     <Compile Include="tc.fs" />
   </ItemGroup>
   <PropertyGroup>

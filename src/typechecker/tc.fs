@@ -2196,11 +2196,18 @@ let add_modul_to_tcenv (en: env) (m: modul) :env =
   in
   let en = Env.set_current_module en m.name in
   Env.finish_module (List.fold_left do_sigelt en m.exports) m
+  
+let check_term env e t = 
+    let t, c, g = tc_check_tot_or_gtot_term env e t in
+    if Util.is_total_lcomp c
+    then Rel.discharge_guard env g
+    else raise (Error("Expected a total term; got a ghost term", e.pos))
 
 let check_module env m =
     if List.length !Options.debug <> 0
     then Util.fprint2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.lid_to_string m.name);
     let m, env = tc_modul env m in
     if Options.should_dump m.name.str then Util.fprint1 "%s\n" (Print.modul_to_string m);
-    [m], env
+    m, env
 
+        

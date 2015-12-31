@@ -46,24 +46,25 @@ type effects = {
 }
 
 type env = {
-  solver         :solver_t;                (* interface to the SMT solver *)
-  range          :Range.range;             (* the source location of the term being checked *)
-  curmodule      :lident;                  (* Name of this module *)
-  gamma          :list<binding>;           (* Local typing environment and signature elements *)
-  modules        :list<modul>;             (* already fully type checked modules *)
-  expected_typ   :option<typ>;             (* type expected by the context *)
-  sigtab         :list<Util.smap<sigelt>>; (* a dictionary of long-names to sigelts *)
-  is_pattern     :bool;                    (* is the current term being checked a pattern? *)
-  instantiate_imp:bool;                    (* instantiate implicit arguments? default=true *)
-  effects        :effects;                 (* monad lattice *)
-  generalize     :bool;                    (* should we generalize let bindings? *)
-  letrecs        :list<(lbname * typ)>;    (* mutually recursive names and their types (for termination checking) *)
-  top_level      :bool;                    (* is this a top-level term? if so, then discharge guards *)
-  check_uvars    :bool;                    (* paranoid: re-typecheck unification variables *)
-  use_eq         :bool;                    (* generate an equality constraint, rather than subtyping/subkinding *)
-  is_iface       :bool;                    (* is the module we're currently checking an interface? *)
-  admit          :bool;                    (* admit VCs in the current module *)
-  default_effects:list<(lident*lident)>;   (* [(x,y)] ... y is the default effect of x *)
+  solver         :solver_t;                     (* interface to the SMT solver *)
+  range          :Range.range;                  (* the source location of the term being checked *)
+  curmodule      :lident;                       (* Name of this module *)
+  gamma          :list<binding>;                (* Local typing environment and signature elements *)
+  modules        :list<modul>;                  (* already fully type checked modules *)
+  expected_typ   :option<typ>;                  (* type expected by the context *)
+  sigtab         :list<Util.smap<sigelt>>;      (* a dictionary of long-names to sigelts *)
+  is_pattern     :bool;                         (* is the current term being checked a pattern? *)
+  instantiate_imp:bool;                         (* instantiate implicit arguments? default=true *)
+  effects        :effects;                      (* monad lattice *)
+  generalize     :bool;                         (* should we generalize let bindings? *)
+  letrecs        :list<(lbname * typ)>;         (* mutually recursive names and their types (for termination checking) *)
+  top_level      :bool;                         (* is this a top-level term? if so, then discharge guards *)
+  check_uvars    :bool;                         (* paranoid: re-typecheck unification variables *)
+  use_eq         :bool;                         (* generate an equality constraint, rather than subtyping/subkinding *)
+  is_iface       :bool;                         (* is the module we're currently checking an interface? *)
+  admit          :bool;                         (* admit VCs in the current module *)
+  default_effects:list<(lident*lident)>;        (* [(x,y)] ... y is the default effect of x *)
+  tc             :env -> term -> typ -> unit;   (* a callback to the type-checker; check_term g e t ==> g |- e : Tot t *)
 }
 and solver_t = {
     init         :env -> unit;
@@ -83,7 +84,7 @@ type sigtable = Util.smap<sigelt>
 let default_table_size = 200
 let new_sigtab () = Util.smap_create default_table_size
 
-let initial_env solver module_lid =
+let initial_env tc solver module_lid =
   { solver=solver;
     range=dummyRange;
     curmodule=module_lid;
@@ -102,6 +103,7 @@ let initial_env solver module_lid =
     is_iface=false;
     admit=false;
     default_effects=[];
+    tc=tc;
   }
 
 (* Marking and resetting the environment, for the interactive mode *)
@@ -625,5 +627,6 @@ let dummy_solver = {
     finish=(fun () -> ());
     refresh=(fun () -> ());
 }
-let dummy = initial_env dummy_solver (lid_of_path ["dummy"] dummyRange)
+let dummy = initial_env (fun _ _ _ -> ()) dummy_solver (lid_of_path ["dummy"] dummyRange)
+let no_solver_env tc = initial_env tc dummy_solver (lid_of_path ["dummy"] dummyRange)
 (* </Move> *)
