@@ -26,6 +26,7 @@ open FStar.TypeChecker.Rel
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Syntax.Subst
+open FStar.TypeChecker.Common
 
 module SS = FStar.Syntax.Subst
 module S = FStar.Syntax.Syntax
@@ -37,9 +38,6 @@ module P = FStar.Syntax.Print
 let report env errs =
     Errors.report (Env.get_range env)
                   (Errors.failed_to_prove_specification errs)
-
-//Calling the solver
-let discharge_guard env (g:guard_t) = Rel.discharge_guard env g
 
 (************************************************************************)
 (* Unification variables *)
@@ -606,21 +604,21 @@ let label_opt env reason r f = match reason with
         else label (reason()) r f
 
 let label_guard reason r g = match g with
-    | Rel.Trivial -> g
-    | Rel.NonTrivial f -> Rel.NonTrivial (label reason r f)
+    | Trivial -> g
+    | NonTrivial f -> NonTrivial (label reason r f)
 
 let weaken_guard g1 g2 = match g1, g2 with
-    | Rel.NonTrivial f1, Rel.NonTrivial f2 ->
+    | NonTrivial f1, NonTrivial f2 ->
       let g = (Util.mk_imp f1 f2) in
-      Rel.NonTrivial g
+      NonTrivial g
     | _ -> g2
 
 let weaken_precondition env lc (f:guard_formula) : lcomp =
   let weaken () =
       let c = lc.comp () in
       match f with
-      | Rel.Trivial -> c
-      | Rel.NonTrivial f ->
+      | Trivial -> c
+      | NonTrivial f ->
         if Util.is_ml_comp c
         then c
         else let c = Normalize.unfold_effect_abbrev env c in
@@ -644,8 +642,8 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:term) (lc:l
             let c = lc.comp () in
             let g0 = Rel.simplify_guard env g0 in
             match guard_form g0 with
-                | Rel.Trivial -> c
-                | Rel.NonTrivial f ->
+                | Trivial -> c
+                | NonTrivial f ->
                 let c =
                     if Util.is_pure_or_ghost_comp c
                     && not (is_function (Util.comp_result c))
@@ -677,7 +675,7 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:term) (lc:l
        {lc with eff_name=norm_eff_name env lc.eff_name;
                 cflags=(if Util.is_pure_lcomp lc && not <| Util.is_function_typ lc.res_typ then flags else []);
                 comp=strengthen},
-       {g0 with Rel.guard_f=Rel.Trivial}
+       {g0 with guard_f=Trivial}
 
 let add_equality_to_post_condition env (comp:comp) (res_t:typ) =
     let md_pure = Env.get_effect_decl env Const.effect_PURE_lid in
@@ -771,7 +769,7 @@ let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
            let x = S.new_bv (Some t.pos) t in 
            let xexp = S.bv_to_name x in
            let ret = lcomp_of_comp <| return_value env t xexp in
-           let eq_ret = weaken_precondition env ret (Rel.NonTrivial (Util.mk_eq t t xexp e)) in
+           let eq_ret = weaken_precondition env ret (NonTrivial (Util.mk_eq t t xexp e)) in
            U.comp_set_flags ((bind env None (lcomp_of_comp c) (Some x, eq_ret)).comp()) (PARTIAL_RETURN::U.comp_flags c) in
   let flags =
     if not (Util.is_function_typ lc.res_typ)
@@ -810,12 +808,12 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
     | None, _ -> subtype_fail env lc.res_typ t
     | Some g, apply_guard ->
       match guard_form g with 
-        | Rel.Trivial -> 
+        | Trivial -> 
           let lc = {lc with res_typ = t} in
           (e, lc, g)
         
-        | Rel.NonTrivial f ->
-          let g = {g with Rel.guard_f=Rel.Trivial} in
+        | NonTrivial f ->
+          let g = {g with guard_f=Trivial} in
           let strengthen () = 
                 //try to normalize one more time, since more unification variables may be resolved now
                 let f = N.normalize [N.Simplify] env f in
@@ -846,7 +844,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                         let eq_ret, _trivial_so_ok_to_discard =
                             strengthen_precondition (Some <| Errors.subtyping_failed env lc.res_typ t) 
                                                     (Env.set_range env e.pos) e cret
-                                                    (guard_of_guard_formula <| Rel.NonTrivial guard) in
+                                                    (guard_of_guard_formula <| NonTrivial guard) in
                         let x = {x with sort=lc.res_typ} in
                         let c = bind env (Some e) (lcomp_of_comp <| mk_Comp ct) (Some x, eq_ret) in
                         let c = c.comp () in
@@ -855,7 +853,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                         c in
               let flags = lc.cflags |> List.collect (function RETURN | PARTIAL_RETURN -> [PARTIAL_RETURN] | _ -> []) in
           let lc = {lc with res_typ=t; comp=strengthen; cflags=flags; eff_name=norm_eff_name env lc.eff_name} in
-          let g = {g with Rel.guard_f=Rel.Trivial} in
+          let g = {g with guard_f=Trivial} in
           (e, lc, g)
 
 let pure_or_ghost_pre_and_post env comp =
@@ -1092,7 +1090,7 @@ let check_top_level env g lc : (bool * comp) =
        let md = Env.get_effect_decl env c.effect_name in
        let t, wp, _ = destruct_comp c in
        let vc = mk_Tm_app (inst_effect_fun env md md.trivial) [S.arg t; S.arg wp] (Some U.ktype0.n) (Env.get_range env) in
-       let g = Rel.conj_guard g (Rel.guard_of_guard_formula <| Rel.NonTrivial vc) in
+       let g = Rel.conj_guard g (Rel.guard_of_guard_formula <| NonTrivial vc) in
        discharge g, mk_Comp c
 
 (* Having already seen_args to head (from right to left),
@@ -1100,20 +1098,20 @@ let check_top_level env g lc : (bool * comp) =
    if head is a short-circuiting operator *)
 let short_circuit (head:term) (seen_args:args) : guard_formula =
     let short_bin_op f : args -> guard_formula = function
-        | [] -> (* no args seen yet *) Rel.Trivial
+        | [] -> (* no args seen yet *) Trivial
         | [(fst, _)] -> f fst
         | _ -> failwith "Unexpexted args to binary operator" in
 
-    let op_and_e e = U.b2t e   |> Rel.NonTrivial in
-    let op_or_e e  = U.mk_neg (U.b2t e) |> Rel.NonTrivial in
-    let op_and_t t = unlabel t |> Rel.NonTrivial in
-    let op_or_t t  = unlabel t |> Util.mk_neg |> Rel.NonTrivial in
-    let op_imp_t t = unlabel t |> Rel.NonTrivial in
+    let op_and_e e = U.b2t e   |> NonTrivial in
+    let op_or_e e  = U.mk_neg (U.b2t e) |> NonTrivial in
+    let op_and_t t = unlabel t |> NonTrivial in
+    let op_or_t t  = unlabel t |> Util.mk_neg |> NonTrivial in
+    let op_imp_t t = unlabel t |> NonTrivial in
 
     let short_op_ite : args -> guard_formula = function
-        | [] -> Rel.Trivial
-        | [(guard, _)] -> Rel.NonTrivial guard
-        | [_then;(guard, _)] -> Util.mk_neg guard |> Rel.NonTrivial
+        | [] -> Trivial
+        | [(guard, _)] -> NonTrivial guard
+        | [_then;(guard, _)] -> Util.mk_neg guard |> NonTrivial
         | _ -> failwith "Unexpected args to ITE" in
     let table =
         [(Const.op_And,  short_bin_op op_and_e);
@@ -1127,10 +1125,10 @@ let short_circuit (head:term) (seen_args:args) : guard_formula =
         | Tm_fvar (fv, _) ->
           let lid = fv.v in
           begin match Util.find_map table (fun (x, mk) -> if lid_equals x lid then Some (mk seen_args) else None) with
-            | None ->   Rel.Trivial
+            | None ->   Trivial
             | Some g -> g
           end
-        | _ -> Rel.Trivial
+        | _ -> Trivial
 
 let short_circuit_head l = 
     match (SS.compress l).n with 

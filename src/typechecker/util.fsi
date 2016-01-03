@@ -21,15 +21,12 @@ open FStar
 open FStar.TypeChecker
 open FStar.Syntax
 open FStar.TypeChecker.Env
-open FStar.TypeChecker.Rel
 open FStar.Syntax.Syntax
 open FStar.Ident
+open FStar.TypeChecker.Common
 
 //error report
 val report: env -> list<string> -> unit
-
-//calling the SMT solver
-val discharge_guard: env -> guard_t -> unit
 
 //unification variables
 val new_uvar : env -> typ -> typ
@@ -72,7 +69,7 @@ val pure_or_ghost_pre_and_post: env -> comp -> (option<typ> * typ)
 val check_comp: env -> term -> comp -> comp -> term * comp * guard_t
 
 //checking that e:t is convertible to t'
-val check_and_ascribe : env -> term -> typ -> typ -> term * Rel.guard_t
+val check_and_ascribe : env -> term -> typ -> typ -> term * guard_t
 val check_top_level: env -> guard_t -> lcomp -> bool*comp
 val maybe_coerce_bool_to_type: env -> term -> lcomp -> typ -> term * lcomp
 

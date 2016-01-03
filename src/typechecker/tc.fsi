@@ -17,5 +17,7 @@
 module FStar.TypeChecker.Tc
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
-val check_term: env -> term -> typ -> unit
+open FStar.TypeChecker.Common
+
+val type_of: env -> term -> typ * guard_t
 val check_module: env -> modul -> modul * env

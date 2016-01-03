@@ -63,6 +63,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="common.fs" />
     <Compile Include="env.fsi" />
     <Compile Include="env.fs" />
     <Compile Include="normalize.fsi" />

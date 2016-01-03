@@ -500,16 +500,6 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
     let t1, f2 = tc_typ_check env t1 k1 in
     w k1 <| mk_Typ_ascribed'(t1, k1), k1, Rel.conj_guard f1 f2
 
-  | Typ_uvar(u, k1) when (env.check_uvars) ->
-    let s = compress_typ t in
-    (match s.n with
-        | Typ_uvar(u,k1) ->
-          let k1, g = tc_kind env k1 in
-          let _, u' = Tc.Rel.new_tvar s.pos [] k1 in
-          Util.unchecked_unify u u'; //replace all occurrences of this unchecked uvar with its checked variant
-          u', k1, g
-        | _ -> tc_typ env s)
-
   | Typ_uvar(_, k1) ->
     let s = compress_typ t in
     (match s.n with

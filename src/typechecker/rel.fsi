@@ -22,45 +22,7 @@ open FStar.TypeChecker
 open FStar.Syntax
 open FStar.TypeChecker.Env
 open FStar.Syntax.Syntax
-
-(* relations on types, kinds, etc. *)
-type rel =
-  | EQ
-  | SUB
-  | SUBINV  (* sub-typing/sub-kinding, inverted *)
-
-type problem<'a,'b> = {               //Try to prove: lhs rel rhs ~> guard
-    lhs:'a;
-    relation:rel;
-    rhs:'a;
-    element:option<'b>;               //where, guard is a predicate on this term (which appears free in/is a subterm of the guard)
-    logical_guard:(term * term);      //the condition under which this problem is solveable; (uv x1 ... xn, uv)
-    scope:binders;                    //the set of names permissible in the guard of this formula
-    reason: list<string>;             //why we generated this problem, for error reporting
-    loc: Range.range;                 //and the source location where this arose
-    rank: option<int>;
-}
-
-type prob =
-  | TProb of problem<typ,term>
-  | CProb of problem<comp,unit>
-
-type probs = list<prob>
-
-type guard_formula =
-  | Trivial
-  | NonTrivial of formula
-
-type deferred = list<(string * prob)>
-
-type implicits = list<(uvar * Range.range)>
-type univ_ineq = universe * universe
-type guard_t = {
-  guard_f:    guard_formula;
-  deferred:   deferred;
-  univ_ineqs: list<univ_ineq>;
-  implicits:  implicits;
-}
+open FStar.TypeChecker.Common
 
 val new_uvar: Range.range -> binders -> typ -> typ * typ
 

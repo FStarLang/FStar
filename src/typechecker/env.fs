@@ -25,6 +25,7 @@ open FStar.Syntax.Util
 open FStar.Util
 open FStar.Ident
 open FStar.Range
+open FStar.TypeChecker.Common
 
 type binding =
   | Binding_var  of bv
@@ -64,7 +65,8 @@ type env = {
   is_iface       :bool;                         (* is the module we're currently checking an interface? *)
   admit          :bool;                         (* admit VCs in the current module *)
   default_effects:list<(lident*lident)>;        (* [(x,y)] ... y is the default effect of x *)
-  tc             :env -> term -> typ -> unit;   (* a callback to the type-checker; check_term g e t ==> g |- e : Tot t *)
+  type_of        :env -> term -> typ*guard_t;   (* a callback to the type-checker; check_term g e t ==> g |- e : Tot t *)
+  defer_all      :bool;                         (* defer all subtyping and unification problems *)
 }
 and solver_t = {
     init         :env -> unit;
@@ -103,7 +105,8 @@ let initial_env tc solver module_lid =
     is_iface=false;
     admit=false;
     default_effects=[];
-    tc=tc;
+    type_of=tc;
+    defer_all=false;
   }
 
 (* Marking and resetting the environment, for the interactive mode *)
@@ -627,6 +630,6 @@ let dummy_solver = {
     finish=(fun () -> ());
     refresh=(fun () -> ());
 }
-let dummy = initial_env (fun _ _ _ -> ()) dummy_solver (lid_of_path ["dummy"] dummyRange)
+
 let no_solver_env tc = initial_env tc dummy_solver (lid_of_path ["dummy"] dummyRange)
 (* </Move> *)

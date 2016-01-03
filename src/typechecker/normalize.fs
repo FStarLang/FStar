@@ -635,10 +635,10 @@ let normalize_universe u = norm_universe [] u
 let term_to_string env t = Print.term_to_string (normalize [] env t)
 let comp_to_string env c = Print.comp_to_string (norm_comp (config [] env) [] c)
 
-let whnf (env:Env.env) (t:term) : term = normalize [Beta; WHNF] env t
+let whnf (env:Env.env) (t:term) : term = normalize [Beta; WHNF; Delta] env t
 
 let normalize_refinement steps env t0 =
-   let t = normalize (steps@[Beta; WHNF; DeltaHard]) env t0 in
+   let t = normalize (steps@[Beta; WHNF; Delta]) env t0 in
    let rec aux t =
     let t = compress t in
     match t.n with

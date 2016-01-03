@@ -17,6 +17,7 @@ module FStar.TypeChecker.Env
 open FStar
 open FStar.Syntax.Syntax
 open FStar.Ident
+open FStar.TypeChecker.Common
 
 type binding =
   | Binding_var of bv
@@ -56,7 +57,8 @@ type env = {
   is_iface       :bool;                         (* is the module we're currently checking an interface? *)
   admit          :bool;                         (* admit VCs in the current module *)
   default_effects:list<(lident*lident)>;        (* [(x,y)] ... y is the default effect of x *)
-  tc             :env -> term -> typ -> unit;   (* a callback to the type-checker; check_term g e t ==> g |- e : Tot t *)
+  type_of        :env -> term -> typ*guard_t;   (* a callback to the type-checker; check_term g e = t ==> g |- e : Tot t *)
+  defer_all      :bool;                         (* defer all subtyping and unification problems *)
 }
 and solver_t = {
     init         :env -> unit;
@@ -73,7 +75,7 @@ and solver_t = {
     refresh      :unit -> unit;
 }
 
-val initial_env : (env -> term -> typ -> unit) -> solver_t -> lident -> env
+val initial_env : (env -> term -> typ*guard_t) -> solver_t -> lident -> env
 
 (* Marking and resetting the environment, for the interactive mode *)
 val push        : env -> string -> env
@@ -143,5 +145,4 @@ val wp_signature    : env -> lident -> (bv * term)
 val binders_of_bindings : list<binding> -> binders
 
 (* TODO: REMOVE *)
-val dummy:env
-val no_solver_env: (env -> term -> typ -> unit) -> env
+val no_solver_env: (env -> term -> typ*guard_t) -> env

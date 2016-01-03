@@ -30,3 +30,7 @@ val change : uvar<'a> -> 'a -> unit
 val equivalent : uvar<'a> -> uvar<'a> -> bool
 val union : uvar<'a> -> uvar<'a> -> unit
 
+type tx = int //don't rely on representation
+val new_transaction: (unit -> tx)
+val rollback: tx -> unit
+val commit: tx -> unit
