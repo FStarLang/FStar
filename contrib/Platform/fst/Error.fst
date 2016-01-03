@@ -15,10 +15,10 @@ assume val correct: #a:Type -> a -> Tot (optResult 'b a)
    this matters e.g. when dynamic errors are security-critical *)
 
 (*@ assume val unexpected: string -> 'a {false} @*)
-assume val unexpected: string -> 'a
+assume val unexpected: string -> St 'a
 
 (*@ assume val unreachable: string {false} -> 'a @*)
-assume val unreachable: string -> 'a
+assume val unreachable: string -> St 'a
 
 
 assume val if_ideal: (unit -> 'a) -> 'a -> 'a 

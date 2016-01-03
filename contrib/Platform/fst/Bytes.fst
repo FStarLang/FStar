@@ -96,9 +96,9 @@ assume val equalBytes : b1:bytes -> b2:bytes -> Tot (b:bool{b = (b1=b2)})
 (*@ assume val xor : (bytes -> (bytes -> (nb:nat -> (b3:bytes){Length (b3) = nb}))) @*)
 assume val xor : bytes -> bytes -> nat -> Tot bytes
 
-val split: b:bytes -> n:nat{n <= Seq.length b} -> Tot (x:(bytes * bytes) {Seq.length (fst (x))= n /\ Seq.length (snd (x)) == (Seq.length b) - n }) //(lbytes n * lbytes (length b - n))
-let split b n =
-  SeqProperties.split b n
+//val split: b:bytes -> n:nat{n <= Seq.length b} -> 
+//  Tot (x:(bytes * bytes) {Seq.length (fst (x))= n /\ Seq.length (snd (x)) == (Seq.length b) - n }) //(lbytes n * lbytes (length b - n))
+let split b (n:nat { n <= Seq.length b}) = SeqProperties.split b n
 
 val lemma_split : s:bytes -> i:nat{(0 <= i /\ i <= length s)} -> Lemma
   (ensures ((fst (split s i)) @| (snd (split s i)) = s))
