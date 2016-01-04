@@ -1,11 +1,11 @@
 (*--build-config
     options:--admit_fsi FStar.Seq --admit_fsi FStar.Matrix2 --admit_fsi Matrix --admit_fsi FStar.Set --z3timeout 10;
-    other-files:set.fsi seq.fsi matrix2.fsti matrix.fsti
+    other-files:set.fsi seq.fsi matrix2.fsti matrix.fsti traces.fst
   --*)
 module Matrix
 open FStar
 open FStar.Matrix2
-
+open Traces
 type all_iters a b = iter a b (Seq.length a) (Seq.length b)
 open FStar.Set
 type seq 'a = Seq.seq 'a
@@ -52,6 +52,8 @@ val lemma_complete_aux: a:seq int -> b:seq int -> i:ix a -> j:ix b -> s:isect a 
 			   ==> (mem (Seq.index a i') (union (singleton (Seq.index a i')) s)))
 let lemma_complete_aux a b i j s i' j' = cut (witness_row i'); cut (witness_col j')
 
+//TODO: 3 .. get rid of this admit, either by staring more at the triggers
+///      or, moving to squash proofs        
 val lemma_complete: a:seq int -> b:seq int -> i:ix a -> j:ix b -> s:isect a b i j -> 
 		    Lemma (requires (Seq.index a i = Seq.index b j))
 		          (ensures (complete a b i (j + 1) (union (singleton (Seq.index a i)) s)))
@@ -75,4 +77,10 @@ let rec intersect a b p i j s =
   else if index p i j = NotEqual then intersect a b p i (j + 1) s
   else (assert (index p i j = Elim);
         intersect a b p i (j + 1) s)
+
+//TODO 4. build_matrix : la:nat -> lb:bat -> list (list bool) -> mat la lb entry
+///    5. Lemma: build_matrix la lb (for_alice a b) = make_sparse (full a b)
+//     6. intersect' a b bools = intersect a b (make_sparse (full a b)) 0 0 emp
+//     7. for_alice_is_correct: a:seq Z -> b:seq Z -> Lemma (intersect' a b (for_alice (as_list a) (as_list b)) = full_isect a b)
+//     
 

@@ -907,6 +907,10 @@ let rec as_list_init_b a b i =
 //
 // We'd like the ensures clause to be:
 // for_alice la lb = rows_from' (length la) (length lb) (make_sparse (full a b) (init' (length la) (length lb)) 0 0) 0
+// 1. rows_from to be changes to rows_from'  (so that it depends only on the lengths, not on the seqs themselves)
+// 2. to make use of the fast_is_sparse_full lemma to prove that
+//    all_iterations sa sb = (make_sparse (full a b) (init' (length la) (length lb)) 0 0)
+//  Maybe need to use extensional equality? 
 val thm : sa:Seq.seq int -> sb:Seq.seq int -> la:list int -> lb:list int -> Lemma 
     (requires (la = as_list sa 0 /\ lb = as_list sb 0))
     (ensures (for_alice la lb = rows_from (all_iterations sa sb) 0))
