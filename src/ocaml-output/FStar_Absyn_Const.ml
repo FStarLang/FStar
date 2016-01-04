@@ -52,26 +52,26 @@ let int31_lid = (p2l (("FStar")::("Int31")::("int31")::[]))
 
 let heap_lid = (p2l (("FStar")::("Heap")::("heap")::[]))
 
-let kunary = (fun k k' -> (let _89_11 = (let _89_10 = (let _89_9 = (FStar_Absyn_Syntax.null_t_binder k)
-in (_89_9)::[])
-in (_89_10, k'))
-in (FStar_Absyn_Syntax.mk_Kind_arrow _89_11 FStar_Absyn_Syntax.dummyRange)))
+let kunary = (fun k k' -> (let _90_11 = (let _90_10 = (let _90_9 = (FStar_Absyn_Syntax.null_t_binder k)
+in (_90_9)::[])
+in (_90_10, k'))
+in (FStar_Absyn_Syntax.mk_Kind_arrow _90_11 FStar_Absyn_Syntax.dummyRange)))
 
-let kbin = (fun k1 k2 k' -> (let _89_22 = (let _89_21 = (let _89_20 = (FStar_Absyn_Syntax.null_t_binder k1)
-in (let _89_19 = (let _89_18 = (FStar_Absyn_Syntax.null_t_binder k2)
-in (_89_18)::[])
-in (_89_20)::_89_19))
-in (_89_21, k'))
-in (FStar_Absyn_Syntax.mk_Kind_arrow _89_22 FStar_Absyn_Syntax.dummyRange)))
+let kbin = (fun k1 k2 k' -> (let _90_22 = (let _90_21 = (let _90_20 = (FStar_Absyn_Syntax.null_t_binder k1)
+in (let _90_19 = (let _90_18 = (FStar_Absyn_Syntax.null_t_binder k2)
+in (_90_18)::[])
+in (_90_20)::_90_19))
+in (_90_21, k'))
+in (FStar_Absyn_Syntax.mk_Kind_arrow _90_22 FStar_Absyn_Syntax.dummyRange)))
 
-let ktern = (fun k1 k2 k3 k' -> (let _89_37 = (let _89_36 = (let _89_35 = (FStar_Absyn_Syntax.null_t_binder k1)
-in (let _89_34 = (let _89_33 = (FStar_Absyn_Syntax.null_t_binder k2)
-in (let _89_32 = (let _89_31 = (FStar_Absyn_Syntax.null_t_binder k3)
-in (_89_31)::[])
-in (_89_33)::_89_32))
-in (_89_35)::_89_34))
-in (_89_36, k'))
-in (FStar_Absyn_Syntax.mk_Kind_arrow _89_37 FStar_Absyn_Syntax.dummyRange)))
+let ktern = (fun k1 k2 k3 k' -> (let _90_37 = (let _90_36 = (let _90_35 = (FStar_Absyn_Syntax.null_t_binder k1)
+in (let _90_34 = (let _90_33 = (FStar_Absyn_Syntax.null_t_binder k2)
+in (let _90_32 = (let _90_31 = (FStar_Absyn_Syntax.null_t_binder k3)
+in (_90_31)::[])
+in (_90_33)::_90_32))
+in (_90_35)::_90_34))
+in (_90_36, k'))
+in (FStar_Absyn_Syntax.mk_Kind_arrow _90_37 FStar_Absyn_Syntax.dummyRange)))
 
 let true_lid = (pconst "True")
 
@@ -186,6 +186,8 @@ let op_ColonEq = (p2l (("FStar")::("ST")::("op_Colon_Equals")::[]))
 let ref_lid = (p2l (("FStar")::("Heap")::("ref")::[]))
 
 let heap_ref = (p2l (("FStar")::("Heap")::("Ref")::[]))
+
+let set_lid = (p2l (("FStar")::("Set")::[]))
 
 let set_empty = (p2l (("FStar")::("Set")::("empty")::[]))
 

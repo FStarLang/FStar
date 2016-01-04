@@ -315,7 +315,7 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
       let doc = doc_of_expr currentModule (min_op_prec, NonAssoc) e in
       if Util.codegen_fsharp()
       then parens (reduce [text "Prims.checked_cast"; doc])
-      else parens (reduce [text "Obj.magic "; doc])
+      else parens (reduce [text "Obj.magic "; parens doc])
 
     | MLE_Seq es ->
         let docs = List.map (doc_of_expr currentModule (min_op_prec, NonAssoc)) es in

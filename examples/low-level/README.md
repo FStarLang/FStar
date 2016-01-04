@@ -7,7 +7,7 @@ Helpers:
 
 Base files:
 - located.fst: base definitions for the `located` type
-- lref.fst: a bunch of lemmas ported from heap.fst so that they quantify over
+- lref.fst: a bunch of lemmas ported from FStar.Heap.fst so that they quantify over
   our new located (ref a) type
 - regions.fst: an axiomatization of our stack of regions, along with a series of
   lemmas

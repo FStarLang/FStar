@@ -164,7 +164,7 @@ clean:
 # --------------------------------------------------------------------
 
 STDFILESEXP=system.fst
-STDFILES=system.fsi system.io.fsi system.text.fsi system.diagnostics.fsi system.collections.generic.fsi collections.fsi set.fsi allboot.fsti stboot.fsi list.fsi option.fsi
+STDFILES=system.fsi system.io.fsi system.text.fsi system.diagnostics.fsi system.collections.generic.fsi collections.fsi FStar.Set.fsi allboot.fsti stboot.fsi list.fsi option.fsi
 STDLIB=$(addprefix ../lib/, $(STDFILES))
 STDLIBEXP=$(addprefix ../lib/, $(STDFILES))
 

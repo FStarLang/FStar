@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi Set --z3timeout 10;
-    other-files:ext.fst set.fsi heap.fst st.fst list.fst  stack.fst listset.fst
+    other-files:ext.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst list.fst  stack.fst listset.fst
     ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst rstWhile.fst seq.fsi seq.fst word.fst
   --*)
 

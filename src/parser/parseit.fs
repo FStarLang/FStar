@@ -57,7 +57,7 @@ let find_file (context:string) (filename:string) : string =
 
 let read_file (filename:string) =
   if !Options.debug <> []
-  then Util.fprint1 "Opening file: %s\n" filename;
+  then Util.print1 "Opening file: %s\n" filename;
   let fs = new System.IO.StreamReader(filename) in
   fs.ReadToEnd()
 
@@ -152,7 +152,7 @@ let rec read_build_config_from_string (filename:string) (use_filename:bool) (con
     else
       // todo: this is going to have the unfortunate side-effect of searching for common files in the current directory. i don't know if this
       // is desirable. we may want to consider the ability to search for files only within `get_fstar_home ()` and children.
-      let common_files = [] in //[(find_file "." "set.fsi"); (find_file "." "heap.fst"); (find_file "." "st.fst"); (find_file "." "all.fst")] in
+      let common_files = [(find_file "." "FStar.Set.fsi"); (find_file "." "FStar.Heap.fst"); (find_file "." "FStar.ST.fst"); (find_file "." "FStar.All.fst")] in
       let files = if use_filename then common_files@[filename] else common_files
       in
       (Options.admit_fsi := "FStar.Set"::!Options.admit_fsi; files)

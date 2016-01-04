@@ -51,3 +51,12 @@ dump
 /VS/
 
 tags
+
+*~
+*.swp
+
+/.nubuild
+/nucache/
+/nuobj/
+nubuild.log
+nubuild.progress

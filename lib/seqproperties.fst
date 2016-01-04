@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set --admit_fsi FStar.Seq;
-    other-files:classical.fst ext.fst set.fsi seq.fsi
+    other-files:classical.fst ext.fst FStar.Set.fsi seq.fsi
   --*)
 
 (*

@@ -1,6 +1,6 @@
 (*--build-config
     options:--z3timeout 10 --admit_fsi FStar.Seq --admit_fsi FStar.Set --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
-    other-files:set.fsi heap.fst st.fst all.fst string.fst list.fst
+    other-files:FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst string.fst list.fst
             ext.fst classical.fst
             seq.fsi seqproperties.fst
   --*)

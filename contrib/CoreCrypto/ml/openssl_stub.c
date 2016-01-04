@@ -63,6 +63,7 @@ static struct custom_operations evp_md_ops = {
 EVP_MD_GEN(md_null);
 EVP_MD_GEN(md5);
 EVP_MD_GEN(sha1);
+EVP_MD_GEN(sha224);
 EVP_MD_GEN(sha256);
 EVP_MD_GEN(sha384);
 EVP_MD_GEN(sha512);
@@ -364,7 +365,7 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_set_iv(value mlctx, value iv) {
         CAMLreturn(Val_unit);
     }
 
-    if(EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_IVLEN, caml_string_length(iv), NULL) != 1) {
+    if(EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, caml_string_length(iv), NULL) != 1) {
         caml_failwith("cannot set CIPHER_CTX_iv_length");
         CAMLreturn(Val_unit);
     }
@@ -395,7 +396,7 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_set_tag(value mlctx, value tag) {
     // support other ciphers
     tlen = 16;
 
-    if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG, tlen, String_val(tag)) != 1) {
+    if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, tlen, String_val(tag)) != 1) {
        caml_failwith("failed to set AEAD tag");
        CAMLreturn(Val_unit);
     }
@@ -438,7 +439,7 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_get_tag(value mlctx) {
     tlen = 16;
     tag  = caml_alloc_string(tlen);
 
-    if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_GET_TAG, tlen, (uint8_t*) tag) != 1) {
+    if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, tlen, (uint8_t*) tag) != 1) {
        caml_failwith("failed to get AEAD tag");
        CAMLreturn(Val_unit);
     }
