@@ -801,7 +801,7 @@ and encode_exp (e:exp) (env:env_t) : (term
                                 | Some s -> Util.subst_typ s (Util.comp_result c)
                                 | _ -> failwith "Impossible" in
                              let e = mk_Exp_abs(bs0, mk_Exp_abs(rest, body) (Some res_t) body.pos) (Some tfun) e0.pos in
-                             //Util.fprint1 "Explicitly currying %s\n" (Print.exp_to_string e);
+                             //Util.print1 "Explicitly currying %s\n" (Print.exp_to_string e);
                              encode_exp e env
 
                         else //much like the encoding of Typ_lam

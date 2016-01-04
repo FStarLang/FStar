@@ -1877,7 +1877,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                     | Failed _ -> fallback()
                     | Success (subst, _) ->
 //                      if Tc.Env.debug env <| Options.Other "RefEq"
-//                      then Util.fprint1 "Got guard %s\n" (Normalize.formula_norm_to_string env <| (fst <| p_guard ref_prob));
+//                      then Util.print1 "Got guard %s\n" (Normalize.formula_norm_to_string env <| (fst <| p_guard ref_prob));
                       let guard = Util.mk_conj (p_guard base_prob |> fst) (p_guard ref_prob |> fst |> guard_on_element problem x1) in
                       let wl = solve_prob orig (Some guard) [] wl in
                       let wl = {wl with subst=subst; ctr=wl.ctr+1} in
@@ -2509,7 +2509,7 @@ let subkind env k1 k2 : guard_t =
  let res = Util.must (with_guard env prob <| solve_and_commit env (singleton env prob) (fun _ ->
     raise (Error(Tc.Errors.incompatible_kinds env k1 k2, Tc.Env.get_range env)))) in
 // if debug env <| Other "Rel"
-// then Util.fprint4 "(%s) subkind of %s and %s solved with %s\n"
+// then Util.print4 "(%s) subkind of %s and %s solved with %s\n"
 //    (Range.string_of_range <| Env.get_range env) (Print.kind_to_string k1) (Print.kind_to_string k2) (guard_to_string env res);
  res
 

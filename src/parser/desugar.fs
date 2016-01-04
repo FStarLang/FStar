@@ -1211,7 +1211,7 @@ let mk_data_discriminators quals env t tps k datas =
     let disc_type = mk_Typ_fun(binders, Util.total_comp (Util.ftv Const.bool_lid ktype) p) None p in
     datas |> List.map (fun d ->
         let disc_name = Util.mk_discriminator d in
-        //Util.fprint1 "Making discriminator %s\n" disc_name.str;
+        //Util.print1 "Making discriminator %s\n" disc_name.str;
         Sig_val_decl(disc_name, disc_type, quals [Logic; Discriminator d], range_of_lid disc_name))
 
 let mk_indexed_projectors fvq refine_domain env (tc, tps, k) lid (formals:list<binder>) t =

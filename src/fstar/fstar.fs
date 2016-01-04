@@ -42,7 +42,7 @@ let u_parse env fn =
                 Parser.ToSyntax.desugar_file env ast
 
             | Inl (Inr _) ->
-                Util.fprint1 "%s: Expected a module\n" fn;
+                Util.print1 "%s: Expected a module\n" fn;
                 exit 1
 
             | Inr (msg, r) ->
@@ -71,7 +71,7 @@ let test_universes filenames =
     try
         let prims_mod, dsenv, env = u_tc_prims() in
         List.fold_left (fun (dsenv, fmods, env) fn ->
-           Util.fprint1 "Parsing file %s\n" fn; 
+           Util.print1 "Parsing file %s\n" fn; 
            let dsenv, mods = u_parse dsenv fn in
            let _, env = TypeChecker.Tc.check_module env (List.hd mods) in
            dsenv, mods@fmods, env) (dsenv, [], env) filenames 

@@ -943,7 +943,7 @@ let mk_data_discriminators quals env t tps k datas =
     let disc_type = U.arrow binders (S.mk_Total (S.fv_to_tm (S.fv C.bool_lid None))) in
     datas |> List.map (fun d ->
         let disc_name = Util.mk_discriminator d in
-        //Util.fprint1 "Making discriminator %s\n" disc_name.str;
+        //Util.print1 "Making discriminator %s\n" disc_name.str;
         Sig_declare_typ(disc_name, [], disc_type, quals [S.Logic; S.Discriminator d], range_of_lid disc_name))
 
 let mk_indexed_projectors fvq refine_domain env tc lid tps (fields:list<S.binder>) t =
@@ -1100,7 +1100,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
            | Sig_inductive_typ(l, _, typars, k, [], [], quals, rng) -> 
              let quals = if quals |> List.contains S.Assumption
                          then quals
-                         else (Util.fprint2 "%s (Warning): Adding an implicit 'assume new' qualifier on %s\n" 
+                         else (Util.print2 "%s (Warning): Adding an implicit 'assume new' qualifier on %s\n" 
                                                 (Range.string_of_range rng) (Print.lid_to_string l);          
                                S.Assumption::S.New::quals) in
              let t = match typars with 
@@ -1423,7 +1423,7 @@ let desugar_modul env (m:AST.modul) : env_t * Syntax.modul =
   let env, modul, pop_when_done = desugar_modul_common None env m in
   let env = Env.finish_module_or_interface env modul in
   if Options.should_dump modul.name.str 
-  then Util.fprint1 "%s\n" (Print.modul_to_string modul);
+  then Util.print1 "%s\n" (Print.modul_to_string modul);
   (if pop_when_done then export_interface modul.name env else env), modul
 
 let desugar_file (env:env_t) (f:file) =
