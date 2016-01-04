@@ -52,7 +52,7 @@ type guard_formula =
 
 type deferred = list<(string * prob)>
 
-type implicits = list<(uvar * Range.range)>
+type implicits = list<(uvar * term * typ * Range.range)>
 type univ_ineq = universe * universe
 type guard_t = {
   guard_f:    guard_formula;

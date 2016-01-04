@@ -74,7 +74,9 @@ let run_all debug =
    try
        if debug 
        then (Options.debug := ["dummy"];
-             Options.debug_level := [Options.Other "Rel"]);
+             Options.debug_level := [Options.Other "Rel"; Options.Other "RelCheck"];
+             Options.print_implicits := true;
+             Options.print_real_names := true);
        let id  = pars "fun x -> x" in
        let id' = pars "fun y -> y" in
 
@@ -133,6 +135,18 @@ let run_all debug =
                 Trivial;
 //             (NonTrivial (pars "True /\ (forall x. True)"));
        assert (term_eq (norm (List.hd us))
-                       (norm (pars "fun x y -> x + y")))
+                       (norm (pars "fun x y -> x + y")));
+
+      
+       let tm1 = pars ("x:int -> y:int{Eq2 y x} -> bool") in
+       let tm2 = pars ("x:int -> y:int -> bool") in
+       unify 11 tm1 tm2
+                (NonTrivial (pars "forall (x:int). (forall (y:int). Eq2 y x <==> True)"));
+
+       let tm1 = pars ("a:Type0 -> b:(a -> Type0) -> x:a -> y:b x -> Tot Type0") in
+       let tm2 = pars ("a:Type0 -> b:(a -> Type0) -> x:a -> y:b x -> Tot Type0") in
+       unify 12 tm1 tm2
+                Trivial;
+
 
    with Error(msg, r) -> print_string msg; print_newline()

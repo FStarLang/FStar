@@ -43,7 +43,6 @@ val unrefine   : env -> typ -> typ
 val try_teq    : env -> typ -> typ -> option<guard_t>
 val teq        : env -> typ -> typ -> guard_t
 val try_subtype: env -> typ -> typ -> option<guard_t>
-val subtype    : env -> typ -> typ -> guard_t
 val sub_comp   : env -> comp -> comp -> option<guard_t>
 
 val universe_inequality : universe -> universe -> guard_t

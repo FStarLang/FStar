@@ -398,7 +398,13 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
     let _ = match (Subst.compress uv).n with
         | Tm_uvar(uvar, k) ->
           let bs = p_scope prob in 
+          let bs = bs |> List.filter (fun x -> is_null_binder x |> not) in
           let phi = U.abs bs phi in
+          if Env.debug wl.tcenv <| Options.Other "Rel"
+          then Util.print3 "Solving %s (%s) with formula %s\n" 
+                            (string_of_int (p_pid prob))
+                            (Print.term_to_string uv)
+                            (Print.term_to_string phi);
           Util.unchecked_unify uvar phi
         | _ -> if not resolve_ok then failwith "Impossible: this instance has already been assigned a solution" in
     commit uvis;
@@ -424,25 +430,25 @@ let solve_prob prob logical_guard uvis wl =
         | Some t, NonTrivial f -> Some (Util.mk_conj t f) in
     if Env.debug wl.tcenv <| Options.Other "RelCheck"
     then Util.print2 "Solving %s: with %s\n" (string_of_int <| p_pid prob) (List.map (uvi_to_string wl.tcenv) uvis |> String.concat ", ");
-    let uvis, sub_probs, logical_guard = uvis |> List.fold_left (fun (uvis, sub_probs, guard) uvi -> 
-        match uvi with 
-        | TERM((u, t), e) -> 
-          let e = N.normalize [N.Beta] wl.tcenv e in
-          let t', g = wl.tcenv.type_of ({wl.tcenv with defer_all=true}) e in
-          if Env.debug wl.tcenv <| Options.Other "RelCheck"
-          then Printf.printf "Checked term %s at type %s ... expected %s\n" (Print.term_to_string e) (Print.term_to_string t') (Print.term_to_string t);
-          let prob = TProb <| new_problem wl.tcenv t' SUB t (Some e) t.pos "sort checking" in
-          let gprobs = List.map snd g.deferred in
-          TERM((u,t), e)::uvis,  prob::gprobs@sub_probs, conj_guard guard g.guard_f
-        | x -> x::uvis, sub_probs, guard) 
-        ([], [], logical_guard) in
-    let wl = attempt sub_probs wl in
+//    let uvis, sub_probs, logical_guard = uvis |> List.fold_left (fun (uvis, sub_probs, guard) uvi -> 
+//        match uvi with 
+//        | TERM((u, t), e) -> 
+//          let e = N.normalize [N.Beta] wl.tcenv e in
+//          let t', g = wl.tcenv.type_of ({wl.tcenv with defer_all=true}) e in
+//          if Env.debug wl.tcenv <| Options.Other "RelCheck"
+//          then Printf.printf "Checked term %s at type %s ... expected %s\n" (Print.term_to_string e) (Print.term_to_string t') (Print.term_to_string t);
+//          let prob = TProb <| new_problem wl.tcenv t' SUB t (Some e) t.pos "sort checking" in
+//          let gprobs = List.map snd g.deferred in
+//          TERM((u,t), e)::uvis,  prob::gprobs@sub_probs, conj_guard guard g.guard_f
+//        | x -> x::uvis, sub_probs, guard) 
+//        ([], [], logical_guard) in
+//    let wl = attempt sub_probs wl in
 //    if Env.debug wl.tcenv <| Options.Other "RelCheck"
 //    then Util.print1 "After solve_prob:\n\t%s\n" (wl_to_string wl);
     solve_prob' false prob logical_guard uvis wl
 
 let type_of wl e = 
-    let t, g = wl.tcenv.type_of ({wl.tcenv with defer_all=true}) e in
+    let t, g = wl.tcenv.type_of ({wl.tcenv with use_bv_sorts=true}) e in
     let gprobs = List.map snd g.deferred in
     let wl = attempt gprobs wl in
     wl, t
@@ -1157,7 +1163,7 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
             | (hd1, imp)::xs, (hd2, imp')::ys when imp=imp' ->
                let hd1 = {hd1 with sort=Subst.subst subst hd1.sort} in //open both binders
                let hd2 = {hd2 with sort=Subst.subst subst hd2.sort} in 
-               let prob = TProb <| mk_problem ((hd1,imp)::scope) orig hd1.sort (invert_rel <| p_rel orig) hd2.sort None "Formal parameter" in
+               let prob = TProb <| mk_problem scope orig hd1.sort (invert_rel <| p_rel orig) hd2.sort None "Formal parameter" in
                let hd1 = freshen_bv hd1 in
                let subst = DB(0, S.bv_to_name hd1)::SS.shift_subst 1 subst in  //extend the substitution
                let env = Env.push_bv env hd1 in
@@ -1173,7 +1179,7 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
 
            | _ -> Inr "arity mismatch" in
 
-   let scope = Env.bound_vars env |> List.map S.mk_binder in
+   let scope = p_scope orig in //Env.bound_vars env |> List.map S.mk_binder in
    match aux scope env [] bs1 bs2 with
     | Inr msg -> giveup env msg orig
     | Inl (sub_probs, phi) ->
@@ -1808,6 +1814,7 @@ let guard_to_string (env:env) g =
           | Trivial -> "trivial"
           | NonTrivial f ->
               if debug env <| Options.Other "Rel"
+              || debug env <| Options.Other "Implicits"
               then N.term_to_string env f
               else "non-trivial" in
       let carry = List.map (fun (_, x) -> prob_to_string env x) g.deferred |> String.concat ",\n" in
@@ -1889,21 +1896,14 @@ let new_t_prob env t1 rel t2 =
 
 let solve_and_commit env probs err =
   let probs = if !Options.eager_inference then {probs with defer_ok=false} else probs in
-  let sol, tx = if env.defer_all 
-                then Success(probs.attempting |> List.map (fun x -> "", x)), None
-                else let tx = Unionfind.new_transaction () in solve env probs, Some tx in
-  let commit = function
-    | None -> ()
-    | Some tx -> Unionfind.commit tx in 
-  let rollback = function
-    | None -> ()
-    | Some tx -> Unionfind.rollback tx in
+  let tx = Unionfind.new_transaction () in
+  let sol=  solve env probs in
   match sol with
     | Success (deferred) ->
-      commit tx;
+      Unionfind.commit tx;
       Some deferred
     | Failed (d,s) ->
-      rollback tx;
+      Unionfind.rollback tx;
       if Env.debug env <| Options.Other "ExplainRel"
       then Util.print_string <| explain env d s;
       err (d,s)
@@ -1958,10 +1958,6 @@ let try_subtype env t1 t2 =
 let subtype_fail env t1 t2 =
     raise (Error(Errors.basic_type_error env None t2 t1, Env.get_range env))
 
-let subtype env t1 t2 : guard_t =
-  match try_subtype env t1 t2 with
-    | Some f -> f
-    | None -> subtype_fail env t1 t2
 
 let sub_comp env c1 c2 =
   if debug env <| Options.Other "Rel"
@@ -2060,7 +2056,7 @@ let solve_universe_inequalities env ineqs =
     solve_universe_inequalities' tx env ineqs;
     Unionfind.commit tx
 
-let solve_deferred_constraints env (g:guard_t) =
+let rec solve_deferred_constraints env (g:guard_t) =
    let fail (d,s) =
       let msg = explain env d s in
       raise (Error(msg, p_loc d)) in
@@ -2069,13 +2065,35 @@ let solve_deferred_constraints env (g:guard_t) =
    && List.length g.deferred <> 0
    then Util.print1 "Trying to solve carried problems: begin\n\t%s\nend\n"  (wl_to_string wl);
    let gopt = solve_and_commit env wl fail in
+   resolve_all_implicits env g;
    solve_universe_inequalities env g.univ_ineqs;
    match gopt with
     | Some d -> {g with deferred=d}
     | _ -> failwith "impossible"
 
+and resolve_all_implicits env g = 
+   let unresolved u = match Unionfind.find u with
+    | Uvar -> true
+    | _ -> false in
+   g.implicits |> List.iter (fun (u, tm, k, r) -> 
+            if unresolved u 
+            then raise (Error(Util.format1 "Unresolved implicit argument: %s" (Print.uvar_to_string u), r));
+            let env = Env.set_expected_typ env k in
+            let tm = N.normalize [N.Beta] env tm in
+            if Env.debug env <| Options.Other "RelCheck"
+            then Util.print3 "Checking uvar %s resolved to %s at type %s\n" 
+                             (Print.uvar_to_string u) (Print.term_to_string tm) (Print.term_to_string k);
+            let _, g = env.type_of ({env with use_bv_sorts=true}) tm in 
+            let g' = solve_deferred_constraints env g |> simplify_guard env in
+            if not (is_trivial g')
+            then raise (Error(Util.format3 "Inferred implicit argument %s to be %s; \
+                                            but it has a non-trivial verification condition:\n%s" 
+                                            (Print.uvar_to_string u)
+                                            (Print.term_to_string tm) 
+                                            (guard_to_string env g'), r)))
+
+
 let discharge_guard env (g:guard_t) =
-   if env.defer_all then failwith "Discharging guard when it should be deferred!\n";
    let g = solve_deferred_constraints env g in
    if not (Options.should_verify env.curmodule.str) then ()
    else match g.guard_f with

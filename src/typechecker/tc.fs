@@ -113,6 +113,8 @@ let value_check_expected_typ env e tlc guard : term * lcomp * guard_t =
      let e, lc = Util.maybe_coerce_bool_to_type env e lc t' in //add a b2t coercion is e:bool and t'=Type
      let t = lc.res_typ in
      let e, g = TcUtil.check_and_ascribe env e t t' in
+     if debug env Options.High
+     then Util.print1 "check_and_ascribe: guard is %s\n" (Rel.guard_to_string env g);
      let g = Rel.conj_guard g guard in
      let lc, g = TcUtil.strengthen_precondition (Some <| Errors.subtyping_failed env t t') env e lc g in
      e, set_lcomp_result lc t', g in
@@ -396,7 +398,7 @@ and tc_value env (e:term) : term
         | _ -> false in
     if is_data_ctor dc && not(Env.is_datacon env v.v)
     then raise (Error(Util.format1 "Expected a data constructor; got %s" v.v.str, Env.get_range env))
-    else with_implicits implicits <| value_check_expected_typ env e tc Rel.trivial_guard in
+    else value_check_expected_typ env e tc implicits in
 
   //As a general naming convention, we use e for the term being analyzed and its subterms as e1, e2, etc.
   //We use t and its variants for the type of the term being analyzed  
@@ -415,11 +417,11 @@ and tc_value env (e:term) : term
     value_check_expected_typ env e (Inl t) Rel.trivial_guard
 
   | Tm_name x ->
-    let t = if env.defer_all then x.sort else Env.lookup_bv env x in //should instantiate universe variables, if any
+    let t = if env.use_bv_sorts then x.sort else Env.lookup_bv env x in
     let e = S.bv_to_name ({x with sort=t}) in 
     let e, t, implicits = TcUtil.maybe_instantiate env e t in
     let tc = if Options.should_verify env.curmodule.str then Inl t else Inr (TcUtil.lcomp_of_comp <| mk_Total t) in
-    with_implicits implicits <| value_check_expected_typ env e tc Rel.trivial_guard
+    value_check_expected_typ env e tc implicits
 
   | Tm_uinst({n=Tm_fvar(v, dc)}, us) -> 
     let us = List.map (tc_universe env) us in
@@ -531,7 +533,7 @@ and tc_universe env u : universe =
         | U_zero    -> u
         | U_succ u  -> U_succ (aux u)
         | U_max us  -> U_max (List.map aux us)
-        | U_name x  -> if Env.lookup_univ env x 
+        | U_name x  -> if env.use_bv_sorts || Env.lookup_univ env x 
                        then u 
                        else raise (Error (Util.format1 "Universe variable '%s' not found" x.idText, Env.get_range env)) in
     match u with 
@@ -762,13 +764,9 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                     | Tm_type _ -> fun t r -> S.mk_Total t 
                     | _ -> ml_or_tot in
             let cres = ml_or_tot (TcUtil.new_uvar env (U.type_u () |> fst)) r in
-            let garr = Rel.teq env tf (Util.arrow bs cres) in
-            let garr =     
-                if env.defer_all
-                then garr 
-                else (Rel.discharge_guard env garr; Rel.trivial_guard) in
+            Rel.discharge_guard env <| Rel.teq env tf (Util.arrow bs cres);
             let comp = List.fold_right (fun c out -> TcUtil.bind env None c (None, out)) (chead::comps) (TcUtil.lcomp_of_comp <| cres) in
-            mk_Tm_app head args (Some comp.res_typ.n) r, comp, Rel.conj_guard (Rel.conj_guard ghead garr) g_args
+            mk_Tm_app head args (Some comp.res_typ.n) r, comp, Rel.conj_guard ghead g_args
 
         | Tm_arrow(bs, c) ->
             let bs, c = SS.open_comp bs c in
@@ -786,10 +784,10 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             | (x, Some Implicit)::rest, (_, None)::_ -> (* instantiate an implicit arg *)
                 let t = SS.subst subst x.sort in
                 fxv_check head env t fvs;
-                let varg, u = TcUtil.new_implicit_var env t in //new_uvar env t in
+                let varg, u, implicits = TcUtil.new_implicit_var env t in //new_uvar env t in
                 let subst = NT(x, varg)::subst in
                 let arg = varg, as_implicit true in
-                tc_args (subst, arg::outargs, arg::arg_rets, comps, add_implicit u g, fvs) rest cres args
+                tc_args (subst, arg::outargs, arg::arg_rets, comps, Rel.conj_guard implicits g, fvs) rest cres args
 
             | (x, aqual)::rest, (e, aq)::rest' -> (* a concrete argument *)
                 let _ = match aqual, aq with 
@@ -2205,7 +2203,7 @@ let add_modul_to_tcenv (en: env) (m: modul) :env =
   
 let type_of env e = 
     if Env.debug env <| Options.Other "RelCheck" then Printf.printf "Checking term %s\n" (Print.term_to_string e);
-    let env, _ = Env.clear_expected_typ env in
+    //let env, _ = Env.clear_expected_typ env in
     let env = {env with top_level=false} in
     let t, c, g = tc_tot_or_gtot_term env e in
     if Util.is_total_lcomp c

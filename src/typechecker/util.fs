@@ -64,7 +64,8 @@ let as_uvar : typ -> uvar = function
 
 let new_implicit_var env k =
     let t, u = new_uvar_aux env k in
-    t, (as_uvar u, u.pos)
+    let g = {Rel.trivial_guard with implicits=[(as_uvar u, t, k, u.pos)]} in
+    t, (as_uvar u, u.pos), g
 
 let check_uvars r t =
   let uvs = Free.uvars t in
@@ -897,27 +898,28 @@ let pure_or_ghost_pre_and_post env comp =
 (*********************************************************************************************)
 let maybe_instantiate (env:Env.env) e t =
   let torig = SS.compress t in
-  if not env.instantiate_imp then e, torig, [] else
-  match torig.n with
+  if not env.instantiate_imp 
+  then e, torig, Rel.trivial_guard 
+  else match torig.n with
     | Tm_arrow(bs, c) ->
       let bs, c = SS.open_comp bs c in
       let rec aux subst = function
         | (x, Some Implicit)::rest ->
           let t = SS.subst subst x.sort in
-          let v, u = new_implicit_var env t in
+          let v, u, g = new_implicit_var env t in
           let subst = NT(x, v)::subst in
-          let args, bs, subst, us = aux subst rest in
-          (v, Some Implicit)::args, bs, subst, u::us
-        | bs -> [], bs, subst, [] in
+          let args, bs, subst, g' = aux subst rest in
+          (v, Some Implicit)::args, bs, subst, Rel.conj_guard g g'
+        | bs -> [], bs, subst, Rel.trivial_guard in
 
-     let args, bs, subst, implicits = aux [] bs in
+     let args, bs, subst, guard = aux [] bs in
      begin match args, bs with 
         | [], _ -> //no implicits were instantiated
-          e, torig, []
+          e, torig, guard
         
         | _, [] when not (Util.is_total_comp c) -> 
           //don't instantiate implicitly, if it has an effect
-          e, torig, []
+          e, torig, Rel.trivial_guard
 
         | _ ->
 
@@ -926,10 +928,10 @@ let maybe_instantiate (env:Env.env) e t =
             | _ -> U.arrow bs c in
           let t = SS.subst subst t in 
           let e = S.mk_Tm_app e args (Some t.n) e.pos in
-          e, t, implicits
+          e, t, guard
       end
       
-  | _ -> e, t, []
+  | _ -> e, t, Rel.trivial_guard
 
 
 (**************************************************************************************)
@@ -1071,15 +1073,8 @@ let check_and_ascribe env (e:term) (t1:typ) (t2:typ) : term * guard_t =
 
 /////////////////////////////////////////////////////////////////////////////////
 let check_top_level env g lc : (bool * comp) =
-  let unresolved u = match Unionfind.find u with
-    | Uvar -> true
-    | _ -> false in
   let discharge g =
     discharge_guard env g;
-    begin match g.implicits |> List.tryFind (fun (u, _) -> unresolved u) with
-        | Some (u, r) -> raise (Error(Util.format1 "Unresolved implicit argument: %s" (Print.uvar_to_string u), r))
-        | _ -> ()
-    end;
     Util.is_pure_lcomp lc in
   let g = Rel.solve_deferred_constraints env g in
   if Util.is_total_lcomp lc

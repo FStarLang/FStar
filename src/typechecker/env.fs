@@ -66,7 +66,7 @@ type env = {
   admit          :bool;                         (* admit VCs in the current module *)
   default_effects:list<(lident*lident)>;        (* [(x,y)] ... y is the default effect of x *)
   type_of        :env -> term -> typ*guard_t;   (* a callback to the type-checker; check_term g e t ==> g |- e : Tot t *)
-  defer_all      :bool;                         (* defer all subtyping and unification problems *)
+  use_bv_sorts      :bool;                      (* use bv.sort for a bound-variable's type rather than consulting gamma *)
 }
 and solver_t = {
     init         :env -> unit;
@@ -106,7 +106,7 @@ let initial_env tc solver module_lid =
     admit=false;
     default_effects=[];
     type_of=tc;
-    defer_all=false;
+    use_bv_sorts=false;
   }
 
 (* Marking and resetting the environment, for the interactive mode *)

@@ -285,6 +285,7 @@ let maybe_simplify steps tm =
     if not <| List.contains Simplify steps
     then tm
     else match tm.n with
+            | Tm_app({n=Tm_uinst({n=Tm_fvar(fv, _)}, _)}, args)
             | Tm_app({n=Tm_fvar(fv, _)}, args) -> 
               if I.lid_equals fv.v Const.and_lid
               then match args |> List.map simplify with

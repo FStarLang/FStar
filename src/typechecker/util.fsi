@@ -31,7 +31,7 @@ val report: env -> list<string> -> unit
 //unification variables
 val new_uvar : env -> typ -> typ
 val as_uvar  : typ -> uvar
-val new_implicit_var : env -> typ -> (typ * (uvar * Range.range))
+val new_implicit_var : env -> typ -> (term * (uvar * Range.range) * guard_t)
 val check_uvars: Range.range -> typ -> unit
 
 //extracting annotations from a term
@@ -43,7 +43,7 @@ val decorate_pattern: env -> pat -> list<term> -> pat
 val decorated_pattern_as_term: pat -> list<bv> * term
 
 //instantiation and generalization
-val maybe_instantiate : env -> term -> typ -> (term * typ * implicits)
+val maybe_instantiate : env -> term -> typ -> (term * typ * guard_t)
 val generalize: env -> list<(lbname*term*comp)> -> list<(lbname*term*univ_names*comp)>
 val generalize_universes: env -> term -> tscheme
 
