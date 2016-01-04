@@ -63,7 +63,13 @@ let commit tx =
           then log := rest
           else aux rest in
     aux !log
-                            
+            
+let update_in_tx r v = 
+    let old = !r in
+    let undo () = r := old in
+    log_undo undo;
+    r := v
+                    
 let counter = ref 0
 
 let fresh x = counter := !counter + 1; {contents = Data ([x], !counter) }

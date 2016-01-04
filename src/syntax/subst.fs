@@ -293,7 +293,8 @@ let rec compress (t:term) =
     match t.n with
         | Tm_delayed(Inl(t, s), memo) -> 
           let t' = compress (push_subst s t) in
-          memo := Some t';
+          Unionfind.update_in_tx memo (Some t');
+//          memo := Some t';
           t'
         | _ -> t
             

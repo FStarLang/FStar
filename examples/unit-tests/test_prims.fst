@@ -14,6 +14,23 @@
    limitations under the License.
 *)
 module Prims
+
+// (* dependent pairs DTuple2 in concrete syntax is '(x:a & b x)' *)
+// type DTuple2 (a:Type)
+//              (b:(a -> Type)) = 
+//   | MkDTuple2: _1:a
+//             -> _2:b _1
+//             -> DTuple2 a b
+
+// (* Concrete syntax (x:a & y:b x & c x y) *)
+// type DTuple3 (a:Type)
+//              (b:(a -> Type))
+//              (c:(x:a -> b x -> Type)) =
+//    | MkDTuple3:_1:a
+//              -> _2:b _1
+//              -> _3:c _1 _2
+//              -> DTuple3 a b c
+
 (* False is the empty inductive type *)
 type False =  
 
@@ -497,75 +514,75 @@ type Tuple8 'a 'b 'c 'd 'e 'f 'g 'h =
            -> _8:'h
            -> Tuple8 'a 'b 'c 'd 'e 'f 'g 'h
 
-(* Concrete syntax (x:a & y:b x & c x y) *)
-type DTuple3 (a:Type)
-             (b:(a -> Type))
-             (c:(x:a -> b x -> Type)) =
-   | MkDTuple3:_1:a
-             -> _2:b _1
-             -> _3:c _1 _2
-             -> DTuple3 a b c
+// (* Concrete syntax (x:a & y:b x & c x y) *)
+// type DTuple3 (a:Type)
+//              (b:(a -> Type))
+//              (c:(x:a -> b x -> Type)) =
+//    | MkDTuple3:_1:a
+//              -> _2:b _1
+//              -> _3:c _1 _2
+//              -> DTuple3 a b c
 
-(* Concrete syntax (x:a & y:b x & z:c x y & d x y z) *)
-type DTuple4 (a:Type)
-             (b:(x:a -> Type))
-             (c:(x:a -> b x -> Type))
-             (d:(x:a -> y:b x -> z:c x y -> Type)) =
- | MkDTuple4:_1:a
-           -> _2:b _1
-           -> _3:c _1 _2
-           -> _4:d _1 _2 _3
-           -> DTuple4 a b c d
+// (* Concrete syntax (x:a & y:b x & z:c x y & d x y z) *)
+// type DTuple4 (a:Type)
+//              (b:(x:a -> Type))
+//              (c:(x:a -> b x -> Type))
+//              (d:(x:a -> y:b x -> z:c x y -> Type)) =
+//  | MkDTuple4:_1:a
+//            -> _2:b _1
+//            -> _3:c _1 _2
+//            -> _4:d _1 _2 _3
+//            -> DTuple4 a b c d
 
-type as_requires (#a:Type) (wp:PureWP a)  = wp (fun x -> True)
-type as_ensures  (#a:Type) (wlp:PureWP a) (x:a) = ~ (wlp (fun y -> (y=!=x)))
+// type as_requires (#a:Type) (wp:PureWP a)  = wp (fun x -> True)
+// type as_ensures  (#a:Type) (wlp:PureWP a) (x:a) = ~ (wlp (fun y -> (y=!=x)))
 
-val fst : ('a * 'b) -> Tot 'a
-let fst x = MkTuple2._1 x
+// val fst : ('a * 'b) -> Tot 'a
+// let fst x = MkTuple2._1 x
 
-val snd : ('a * 'b) -> Tot 'b
-let snd x = MkTuple2._2 x
+// val snd : ('a * 'b) -> Tot 'b
+// let snd x = MkTuple2._2 x
 
-val dfst : #a:Type -> #b:(a -> Type) -> (x:a & b x) -> Tot a
-let dfst #a #b t = MkDTuple2._1 t
+// val dfst : #a:Type -> #b:(a -> Type) -> (x:a & b x) -> Tot a
+// let dfst #a #b t = MkDTuple2._1 t
 
-val dsnd : #a:Type -> #b:(a -> Type) -> t:(x:a & b x) -> Tot (b (MkDTuple2._1 t))
-let dsnd #a #b t = MkDTuple2._2 t
+// val dsnd : #a:Type -> #b:(a -> Type) -> t:(x:a & b x) -> Tot (b (MkDTuple2._1 t))
+// let dsnd #a #b t = MkDTuple2._2 t
 
-type Let (#a:Type) (x:a) (body:(a -> Type)) = body x
-logic type InductionHyp : #a:Type -> a -> Type -> Type
-assume val by_induction_on: #a:Type -> #p:Type -> induction_on:a -> proving:p -> Lemma (ensures (InductionHyp induction_on p))
-logic type Using : #a:Type -> Type -> a -> Type
-assume val using: #a:Type -> #p:Type -> proving:p -> pat:a -> Lemma (ensures (Using p pat))
-assume val _assume : p:Type -> unit -> Pure unit (requires (True)) (ensures (fun x -> p))
-assume val admit   : #a:Type -> unit -> Admit a
-assume val magic   : #a:Type -> unit -> Tot a
-assume val admitP  : p:Type -> Pure unit True (fun x -> p)
-assume val _assert : p:Type -> unit -> Pure unit (requires $"assertion failed" p) (ensures (fun x -> True))
-assume val cut     : p:Type -> Pure unit (requires $"assertion failed" p) (fun x -> p)
-assume val qintro  : #a:Type -> #p:(a -> Type) -> =f:(x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
-assume val ghost_lemma: #a:Type -> #p:(a -> Type) -> #q:(a -> unit -> Type) -> =f:(x:a -> Ghost unit (p x) (q x)) -> Lemma (forall (x:a). p x ==> q x ())
-assume val raise: exn -> Ex 'a       (* TODO: refine with the Exn monad *)
-val ignore: #a:Type -> a -> Tot unit
-let ignore #a x = ()
+// type Let (#a:Type) (x:a) (body:(a -> Type)) = body x
+// logic type InductionHyp : #a:Type -> a -> Type -> Type
+// assume val by_induction_on: #a:Type -> #p:Type -> induction_on:a -> proving:p -> Lemma (ensures (InductionHyp induction_on p))
+// logic type Using : #a:Type -> Type -> a -> Type
+// assume val using: #a:Type -> #p:Type -> proving:p -> pat:a -> Lemma (ensures (Using p pat))
+// assume val _assume : p:Type -> unit -> Pure unit (requires (True)) (ensures (fun x -> p))
+// assume val admit   : #a:Type -> unit -> Admit a
+// assume val magic   : #a:Type -> unit -> Tot a
+// assume val admitP  : p:Type -> Pure unit True (fun x -> p)
+// assume val _assert : p:Type -> unit -> Pure unit (requires $"assertion failed" p) (ensures (fun x -> True))
+// assume val cut     : p:Type -> Pure unit (requires $"assertion failed" p) (fun x -> p)
+// assume val qintro  : #a:Type -> #p:(a -> Type) -> =f:(x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
+// assume val ghost_lemma: #a:Type -> #p:(a -> Type) -> #q:(a -> unit -> Type) -> =f:(x:a -> Ghost unit (p x) (q x)) -> Lemma (forall (x:a). p x ==> q x ())
+// assume val raise: exn -> Ex 'a       (* TODO: refine with the Exn monad *)
+// val ignore: #a:Type -> a -> Tot unit
+// let ignore #a x = ()
 
-type nat = i:int{i >= 0} 
-type pos = i:int{i > 0}
-type nonzero = i:int{i<>0}
+// type nat = i:int{i >= 0} 
+// type pos = i:int{i > 0}
+// type nonzero = i:int{i<>0}
 
-(*    For the moment we require not just that the divisor is non-zero, *)
-(*    but also that the dividend is natural. This works around a *)
-(*    mismatch between the semantics of integer division in SMT-LIB and *)
-(*    in F#/OCaml. For SMT-LIB ints the modulus is always positive (as in *)
-(*    math Euclidian division), while for F#/OCaml ints the modulus has *)
-(*    the same sign as the dividend. Our arbitrary precision ints don't *)
-(*    quite correspond to finite precision F#/OCaml ints though, but to *)
-(*    OCaml's big_ints (for which the modulus is always positive).  So *)
-(*    we'll need to return to this point anyway, when we discuss how to *)
-(*    soundly map F* ints to something in F#/OCaml.  *)
+// (*    For the moment we require not just that the divisor is non-zero, *)
+// (*    but also that the dividend is natural. This works around a *)
+// (*    mismatch between the semantics of integer division in SMT-LIB and *)
+// (*    in F#/OCaml. For SMT-LIB ints the modulus is always positive (as in *)
+// (*    math Euclidian division), while for F#/OCaml ints the modulus has *)
+// (*    the same sign as the dividend. Our arbitrary precision ints don't *)
+// (*    quite correspond to finite precision F#/OCaml ints though, but to *)
+// (*    OCaml's big_ints (for which the modulus is always positive).  So *)
+// (*    we'll need to return to this point anyway, when we discuss how to *)
+// (*    soundly map F* ints to something in F#/OCaml.  *)
 
-assume val op_Modulus            : int -> nonzero -> Tot int
-assume val op_Division           : nat -> nonzero -> Tot int
+// assume val op_Modulus            : int -> nonzero -> Tot int
+// assume val op_Division           : nat -> nonzero -> Tot int
 
-assume val string_of_bool: bool -> Tot string
-assume val string_of_int: int -> Tot string
+// assume val string_of_bool: bool -> Tot string
+// assume val string_of_int: int -> Tot string

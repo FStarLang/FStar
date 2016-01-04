@@ -721,10 +721,6 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
 
         | None -> ascribe e tfun_computed, tfun_computed, guard in
 
-    if Env.debug env Options.Low
-    then Util.fprint3 "!!!!!!!!!!!!!!!Annotating lambda with type %s (%s)\nGuard is %s\n" 
-            (Print.term_to_string tfun) (Print.term_to_string tfun) (guard_to_string env guard);
-
     let c = if env.top_level then mk_Total tfun else TcUtil.return_value env tfun e in
     let c, g = TcUtil.strengthen_precondition None env e (TcUtil.lcomp_of_comp c) guard in
     e, c, g
@@ -810,7 +806,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                 if debug env Options.High then  Util.fprint3 "Checking arg (%s) %s at type %s\n" (Print.tag_of_term e) (Print.term_to_string e) (Print.term_to_string targ);
                 let e, c, g_e = tc_term env e in
                 let g = Rel.conj_guard g g_e in
-                if debug env Options.High then Util.fprint2 "Guard on this arg is %s;\naccumulated guard is %s\n" (guard_to_string env g_e) (guard_to_string env g);
+//                if debug env Options.High then Util.fprint2 "Guard on this arg is %s;\naccumulated guard is %s\n" (guard_to_string env g_e) (guard_to_string env g);
                 let arg = e, aq in
                 if Util.is_tot_or_gtot_lcomp c //e is Tot or GTot; we can just substitute it
                 then let subst = maybe_extend_subst subst (List.hd bs) e in

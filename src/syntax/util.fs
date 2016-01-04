@@ -428,7 +428,7 @@ let mk_field_projector_name lid (x:bv) i =
 
 let unchecked_unify uv t =
   match Unionfind.find uv with
-    | Fixed _ -> failwith (Util.format1 "Changing a fixed uvar! U%s\n" (Util.string_of_int <| Unionfind.uvar_id uv))
+    | Fixed _ -> failwith (Util.format1 "Changing a fixed uvar! ?%s\n" (Util.string_of_int <| Unionfind.uvar_id uv))
     | _ -> Unionfind.change uv (Fixed t) (* used to be an alpha-convert t here; but we now have an invariant that t is closed *)
 
 

@@ -600,7 +600,7 @@ let bound_vars_of_bindings bs =
         | Binding_sig _ 
         | Binding_univ _ -> [])
 
-let binders_of_bindings bs = bound_vars_of_bindings bs |> List.map Syntax.mk_binder
+let binders_of_bindings bs = bound_vars_of_bindings bs |> List.map Syntax.mk_binder |> List.rev
 
 let bound_vars env = bound_vars_of_bindings env.gamma
 

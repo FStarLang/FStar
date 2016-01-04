@@ -34,3 +34,4 @@ type tx = int //don't rely on representation
 val new_transaction: (unit -> tx)
 val rollback: tx -> unit
 val commit: tx -> unit
+val update_in_tx: ref<'a> -> 'a -> unit
