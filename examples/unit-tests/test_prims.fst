@@ -14,23 +14,6 @@
    limitations under the License.
 *)
 module Prims
-
-// (* dependent pairs DTuple2 in concrete syntax is '(x:a & b x)' *)
-// type DTuple2 (a:Type)
-//              (b:(a -> Type)) = 
-//   | MkDTuple2: _1:a
-//             -> _2:b _1
-//             -> DTuple2 a b
-
-(* (\* Concrete syntax (x:a & y:b x & c x y) *\) *)
-(* type DTuple3 (a:Type) *)
-(*              (b:(a -> Type)) *)
-(*              (c:(x:a -> b x -> Type)) = *)
-(*    | MkDTuple3:_1:a *)
-(*              -> _2:b _1 *)
-(*              -> _3:c _1 _2 *)
-(*              -> DTuple3 a b c *)
-
 (* False is the empty inductive type *)
 type False =
 
@@ -88,8 +71,11 @@ opaque type ITE (p:Type) (q:Type) (r:Type) = (p ==> q) /\ (~p ==> r)
 (* infix binary '<<'; a built-in well-founded partial order over all terms *)
 assume type precedes : #a:Type -> #b:Type -> a -> b -> Type0
 
+(* A coercion down to universe 0 *)
+type squash (p:Type) = u:unit{p}
+
 (* forall (x:a). p x : specialized to Type#0 *)
-opaque type Forall (#a:Type) (p:a -> Type0) = x:a -> Tot (p x)
+opaque type Forall (#a:Type) (p:a -> Type0) = squash (x:a -> Tot (p x))
 
 (* dependent pairs DTuple2 in concrete syntax is '(x:a & b x)' *)
 type DTuple2 (a:Type)
@@ -99,7 +85,7 @@ type DTuple2 (a:Type)
             -> DTuple2 a b
 
 (* exists (x:a). p x : specialized to Type#0 *)
-opaque type Exists (#a:Type) (p:a -> Type0) = x:a & p x
+opaque type Exists (#a:Type) (p:a -> Type0) = squash (x:a & p x)
 
 (* PURE effect *)
 type PurePre = Type0
