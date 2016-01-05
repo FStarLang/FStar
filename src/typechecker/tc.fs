@@ -41,7 +41,7 @@ let no_inst env = {env with Env.instantiate_imp=false}
 let mk_lex_list vs =
     List.fold_right (fun v tl ->
         let r = if tl.pos = Range.dummyRange then v.pos else Range.union_ranges v.pos tl.pos in
-        mk_Tm_app lex_pair [(Recheck.check v, Some Implicit); arg v; arg tl] (Some lex_t.n) r) 
+        mk_Tm_app lex_pair [arg v; arg tl] (Some lex_t.n) r) 
     vs lex_top
 let is_eq = function
     | Some Equality -> true
@@ -1199,7 +1199,7 @@ and check_inner_let env e =
    let env = instantiate_both env in
    match e.n with
      | Tm_let((false, [lb]), e2) ->
-       let e1, _, c1, g1, annotated = check_let_bound_def false env lb in
+       let e1, _, c1, g1, annotated = check_let_bound_def false (Env.clear_expected_typ env |> fst) lb in
        let lb = Util.letbinding lb.lbname [] c1.res_typ c1.eff_name e1 in
        let x = {Util.left lb.lbname with sort=c1.res_typ} in
        let xb, e2 = SS.open_term [S.mk_binder x] e2 in
@@ -1323,7 +1323,7 @@ and check_let_recs env lbs =
         let e, c, g = tc_tot_or_gtot_term (Env.set_expected_typ env lb.lbtyp) lb.lbdef in
         if not (Util.is_total_lcomp c)
         then raise (Error ("Expected let rec to be a Tot term; got effect GTot", e.pos));
-        let lb = Util.letbinding lb.lbname lb.lbunivs lb.lbtyp Const.effect_Tot_lid lb.lbdef in
+        let lb = Util.letbinding lb.lbname lb.lbunivs lb.lbtyp Const.effect_Tot_lid e in
         lb, g) |> List.unzip in
     let g_lbs = List.fold_right Rel.conj_guard gs Rel.trivial_guard in
     lbs, g_lbs
