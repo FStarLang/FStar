@@ -989,33 +989,37 @@ let mk_indexed_projectors fvq refine_domain env tc lid tps (fields:list<S.binder
     fields |> List.mapi (fun i (x, _) -> 
         let field_name, _ = Util.mk_field_projector_name lid x i in
         let t = U.arrow binders (S.mk_Total (Subst.subst subst x.sort)) in
-        let quals q = if not env.iface || env.admitted_iface then S.Assumption::q else q in
-        let quals = quals [S.Logic; S.Projector(lid, x.ppname)] in
-        let impl =
-            if lid_equals C.prims_lid  (Env.current_module env)
+        let only_decl = 
+            lid_equals C.prims_lid  (Env.current_module env)
             || fvq<>Data_ctor
-            || Options.dont_gen_projectors (Env.current_module env).str
-            then []
-            else let projection = S.gen_bv x.ppname.idText None tun in
-                 let as_imp = function
-                    | Some S.Implicit -> true
-                    | _ -> false in
-                 let arg_pats = all_params |> List.mapi (fun j (x,imp) -> 
-                        if i+ntps=j  //this is the one to project
-                        then pos (Pat_var projection), as_imp imp
-                        else pos (Pat_wild (S.gen_bv x.ppname.idText None tun)), as_imp imp) in
-                let pat = (S.Pat_cons(S.fv lid (Some fvq), arg_pats) |> pos, None, S.bv_to_name projection) in
-                let body = mk (Tm_match(arg_exp, [U.branch pat])) None p in
-                let imp = U.abs binders body in
-                let lb = {
-                    lbname=Inr field_name;
-                    lbunivs=[];
-                    lbtyp=tun;
-                    lbeff=C.effect_Tot_lid;
-                    lbdef=imp;
-                } 
-                in [Sig_let((false, [lb]), p, [], quals)] in
-        Sig_declare_typ(field_name, [], t, quals, range_of_lid field_name)::impl) |> List.flatten
+            || Options.dont_gen_projectors (Env.current_module env).str in
+        let quals q = if only_decl then S.Assumption::q else q in
+        let quals = quals [S.Logic; S.Projector(lid, x.ppname)] in
+        let decl = Sig_declare_typ(field_name, [], t, quals, range_of_lid field_name) in
+        if only_decl
+        then [decl] //only the signature
+        else let projection = S.gen_bv x.ppname.idText None tun in
+                let as_imp = function
+                | Some S.Implicit -> true
+                | _ -> false in
+                let arg_pats = all_params |> List.mapi (fun j (x,imp) -> 
+                    if i+ntps=j  //this is the one to project
+                    then pos (Pat_var projection), as_imp imp
+                    else let b = as_imp imp in 
+                         if b && j < ntps
+                         then pos (Pat_dot_term (S.gen_bv x.ppname.idText None tun, tun)), b 
+                         else pos (Pat_wild (S.gen_bv x.ppname.idText None tun)), b) in
+            let pat = (S.Pat_cons(S.fv lid (Some fvq), arg_pats) |> pos, None, S.bv_to_name projection) in
+            let body = mk (Tm_match(arg_exp, [U.branch pat])) None p in
+            let imp = U.abs binders body in
+            let lb = {
+                lbname=Inr field_name;
+                lbunivs=[];
+                lbtyp=tun;
+                lbeff=C.effect_Tot_lid;
+                lbdef=imp;
+            } 
+            in [decl; Sig_let((false, [lb]), p, [lb.lbname |> right], quals)]) |> List.flatten
 
 let mk_data_projectors env = function
   | Sig_datacon(lid, _, t, l, n, quals, _, _) when (//(not env.iface || env.admitted_iface) &&
@@ -1236,9 +1240,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
   | ToplevelLet(isrec, lets) ->
     begin match (Subst.compress <| desugar_term_maybe_top true env (mk_term (Let(isrec, lets, mk_term (Const Const_unit) d.drange Expr)) d.drange Expr)).n with
         | Tm_let(lbs, _) ->
-          let lids = snd lbs |> List.map (fun lb -> match lb.lbname with
-            | Inr l -> l
-            | _ -> failwith "impossible") in
+          let lids = snd lbs |> List.map (fun lb -> right lb.lbname) in
           let quals = snd lbs |> List.collect
             (function | {lbname=Inl _} -> []
                       | {lbname=Inr l} -> Env.lookup_letbinding_quals env l) in

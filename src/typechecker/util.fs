@@ -958,7 +958,7 @@ let generalize_universes (env:env) (t:term) : tscheme =
     let ts = SS.close_univ_vars gen t in 
     (gen, ts)
 
-let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * comp)>> =
+let gen only_universes env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * comp)>> =
   if not <| (Util.for_all (fun (_, c) -> Util.is_pure_or_ghost_comp c) ecs) //No value restriction in F*---generalize the types of pure computations
   then None
   else
@@ -986,8 +986,12 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
      let univs = List.fold_left Util.set_union S.no_universe_uvars univs in
      let gen_univs = gen_univs env univs in
      if debug env Options.Medium then gen_univs |> List.iter (fun x -> Util.print1 "Generalizing uvar %s\n" x.idText);
+
      let ecs = uvars |> List.map (fun (uvs, e, c) ->
-          let tvars = uvs |> List.map (fun (u, k) ->
+          let tvars = 
+            if only_universes
+            then []
+            else uvs |> List.map (fun (u, k) ->
             match Unionfind.find u with
               | Fixed ({n=Tm_name a})
               | Fixed ({n=Tm_abs(_, {n=Tm_name a})}) -> a, Some Implicit
@@ -1016,11 +1020,11 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
           (gen_univs, SS.close_univ_vars gen_univs e, SS.close_univ_vars_comp gen_univs c)) in
      Some ecs
 
-let generalize env (lecs:list<(lbname*term*comp)>) : (list<(lbname*term*univ_names*comp)>) =
+let generalize only_universes env (lecs:list<(lbname*term*comp)>) : (list<(lbname*term*univ_names*comp)>) =
   if debug env Options.Low 
   then Util.print1 "Generalizing: %s\n"
        (List.map (fun (lb, _, _) -> Print.lbname_to_string lb) lecs |> String.concat ", ");
-  match gen env (lecs |> List.map (fun (_, e, c) -> (e, c))) with
+  match gen only_universes env (lecs |> List.map (fun (_, e, c) -> (e, c))) with
     | None -> lecs |> List.map (fun (l,t,c) -> l,t,[],c)
     | Some ecs ->
       List.map2 (fun (l, _, _) (us, e, c) ->

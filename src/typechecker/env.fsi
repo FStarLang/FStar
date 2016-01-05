@@ -20,10 +20,11 @@ open FStar.Ident
 open FStar.TypeChecker.Common
 
 type binding =
-  | Binding_var of bv
-  | Binding_lid of lident * tscheme
-  | Binding_sig of sigelt
-  | Binding_univ of univ_name
+  | Binding_var      of bv
+  | Binding_lid      of lident * tscheme
+  | Binding_sig      of sigelt
+  | Binding_univ     of univ_name
+  | Binding_sig_inst of sigelt * universes //the firs component should always be a Sig_inductive
 
 type mlift = typ -> typ -> typ
 
@@ -114,6 +115,7 @@ val inst_effect_fun        : env -> eff_decl -> tscheme -> term
 
 (* Introducing identifiers and updating the environment *)
 val push_sigelt        : env -> sigelt -> env
+val push_sigelt_inst   : env -> sigelt -> universes -> env
 val push_bv            : env -> bv -> env
 val push_let_binding   : env -> lbname -> tscheme -> env
 val push_binders       : env -> binders -> env

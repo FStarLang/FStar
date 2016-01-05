@@ -1158,11 +1158,11 @@ and check_top_level_let env e =
 
        (* Maybe generalize its type *)
        let _, e1, univ_vars, c1 = 
-            if annotated && not env.generalize
-            then lb.lbname, e1, univ_vars, c1
-            else let _, e1, univs, c1 = List.hd (TcUtil.generalize env [lb.lbname, e1, c1.comp()]) in
-                 lb.lbname, e1, univs, Util.lcomp_of_comp c1 in
-
+            let gen_only_universes = annotated && not env.generalize in
+            assert (not gen_only_universes || univ_vars=[]);
+            let _, e1, univs, c1 = List.hd (TcUtil.generalize gen_only_universes env [lb.lbname, e1, c1.comp()]) in
+            lb.lbname, e1, univs, Util.lcomp_of_comp c1 in
+                              
        (* Check that it doesn't have a top-level effect; warn if it does *)
        let e2, c1 =
             if Options.should_verify env.curmodule.str
@@ -1181,7 +1181,8 @@ and check_top_level_let env e =
        let cres = TcUtil.lcomp_of_comp <| Util.ml_comp Recheck.t_unit e.pos in
        e2.tk := Some (Recheck.t_unit.n);
 
-       mk (Tm_let((false, [Util.letbinding lb.lbname univ_vars (Util.comp_result c1) (Util.comp_effect_name c1) e1]), e2)) 
+       let lb = Util.letbinding false lb.lbname univ_vars (Util.comp_result c1) (Util.comp_effect_name c1) e1 in
+       mk (Tm_let((false, [lb]), e2)) 
           (Some (Recheck.t_unit.n))
           e.pos,
        cres,
@@ -1201,7 +1202,7 @@ and check_inner_let env e =
    match e.n with
      | Tm_let((false, [lb]), e2) ->
        let e1, _, c1, g1, annotated = check_let_bound_def false (Env.clear_expected_typ env |> fst) lb in
-       let lb = Util.letbinding lb.lbname [] c1.res_typ c1.eff_name e1 in
+       let lb = Util.letbinding true lb.lbname [] c1.res_typ c1.eff_name e1 in
        let x = {Util.left lb.lbname with sort=c1.res_typ} in
        let xb, e2 = SS.open_term [S.mk_binder x] e2 in
        let xbinder = List.hd xb in
@@ -1236,14 +1237,11 @@ and check_top_level_let_rec env top =
            Rel.discharge_guard env g_lbs;
          
            let lbs = 
-              if env.generalize
-              then begin
-                 let ecs = TcUtil.generalize env 
-                    (lbs |> List.map (fun lb -> lb.lbname, lb.lbdef, Util.total_comp lb.lbtyp (range_of_lbname lb.lbname))) in
-                 ecs |> List.map (fun (x, e, uvs, c) -> 
-                    Util.letbinding x uvs (Util.comp_result c) (Util.comp_effect_name c) e)
-              end
-             else lbs in
+              let gen_only_universes = not env.generalize in
+              let ecs = TcUtil.generalize gen_only_universes env 
+                      (lbs |> List.map (fun lb -> lb.lbname, lb.lbdef, Util.total_comp lb.lbtyp (range_of_lbname lb.lbname))) in
+                   ecs |> List.map (fun (x, e, uvs, c) -> 
+                      Util.letbinding false x uvs (Util.comp_result c) (Util.comp_effect_name c) e) in
 
           let cres = TcUtil.lcomp_of_comp <| Util.total_comp Recheck.t_unit top.pos in
           let _ = Rel.discharge_guard env g_lbs in //may need to solve all carried unification constraints, in case not generalized
@@ -1324,7 +1322,7 @@ and check_let_recs env lbs =
         let e, c, g = tc_tot_or_gtot_term (Env.set_expected_typ env lb.lbtyp) lb.lbdef in
         if not (Util.is_total_lcomp c)
         then raise (Error ("Expected let rec to be a Tot term; got effect GTot", e.pos));
-        let lb = Util.letbinding lb.lbname lb.lbunivs lb.lbtyp Const.effect_Tot_lid e in
+        let lb = Util.letbinding true lb.lbname lb.lbunivs lb.lbtyp Const.effect_Tot_lid e in
         lb, g) |> List.unzip in
     let g_lbs = List.fold_right Rel.conj_guard gs Rel.trivial_guard in
     lbs, g_lbs
@@ -1459,6 +1457,10 @@ let tc_check_trivial_guard env t k =
 
 let check_and_gen env t k = 
     TcUtil.generalize_universes env (tc_check_trivial_guard env t k) 
+
+let check_nogen env t k = 
+    let t = tc_check_trivial_guard env t k in
+    [], N.normalize [N.Beta] env t
 
 let tc_tparams env (tps:binders) : (binders * Env.env * universes) =
     let tps, env, g, us = tc_binders env tps in
@@ -1718,7 +1720,7 @@ let tc_inductive env ses quals lids =
               For each constructor i, we check 
 
                  - G, [xs:ts_i]_j |- ts_i_j : Type(u_i_j)
-                 - x_i_j not in FV t ==> u_i_j <= u
+                 - u_i_j <= u
                  - G, [xs:ts_i]   |- ti : Type _
                  - ti is an instance of T a
 
@@ -1726,29 +1728,37 @@ let tc_inductive env ses quals lids =
          (3). We jointly generalize the term 
 
                 (a:Type(ua) -> b:Type(ub) -> Type u)
-                -> t1
-                -> t2 
+                -> (xs:ts_1 -> t1)
+                -> (xs:ts_2 -> t2)  
                 -> unit
 
              computing
 
                 (uvs,            (a:Type(ua') -> b:Type(ub') -> Type u')
-                                -> t1'
-                                -> t2'
+                                -> (xs:ts_1' -> t1')
+                                -> (xs:ts_2' -> t2')
                                 -> unit)
 
              The inductive is generalized to
 
-             type T uvs => (a:Type(ua')) : b:Type(ub') -> Type u' =
-                | C1 : uvs => a:Type(ua') -> t1'
-                | C2 : uvs => a:Type(ua') -> t2'
-                ...
+                T<uvs> (a:Type(ua')) : b:Type(ub') -> Type u' 
+
+
+         (4). We re-typecheck and elaborate the type of each constructor to 
+              capture the proper instantiations of T
+              
+              i.e., we check 
+
+                G, T<uvs> : a:Type(ua') -> b:Type(ub') -> Type u', uvs |-
+                       xs:ts_i' -> t_i'
+                  ~>   xs:ts_i'' -> t_i''
+
 
              What we get, in effect, is
 
-             type T (ua, ub, uw) => (a:Type(ua)) : Type(ub) -> Type (max ua (ub + 1) (uw + 1)) = 
-                | C1 : (ua, ub, uw) => a:Type(ua) -> y:Type(ub) -> T a y
-                | C2 : (ua, ub, uw) => a:Type(ua) -> z:Type(ub) -> w:Type(uw) -> T a z
+             type T<ua, ub, uw> (a:Type(ua)) : Type(ub) -> Type (max ua (ub + 1) (uw + 1)) = 
+                | C1 : (ua, ub, uw) => a:Type(ua) -> y:Type(ub) -> T<ua,ub,uw> a y
+                | C2 : (ua, ub, uw) => a:Type(ua) -> z:Type(ub) -> w:Type(uw) -> T<ua,ub,uw> a z
     *)
     let warn_positivity l r = 
         Errors.warn r (Util.format1 "Positivity check is not yet implemented (%s)" (Print.lid_to_string l)) in
@@ -1838,8 +1848,8 @@ let tc_inductive env ses quals lids =
 
       | _ -> failwith "impossible" in
 
-    (* 3. Generalizing universes *)
-    let generalize_universes env g tcs datas = 
+    (* 3. Generalizing universes and 4. recheck datacons *)
+    let generalize_and_recheck env g tcs datas = 
         Rel.discharge_guard env g;
         let binders = tcs |> List.map (function 
             | Sig_inductive_typ(_, _, tps, k, _, _, _, _) -> S.null_binder (Util.arrow tps <| mk_Total k)
@@ -1871,11 +1881,12 @@ let tc_inductive env ses quals lids =
             | _ -> failwith "Impossible") 
             tc_types tcs in
 
-        //Need to recheck each datacon after generalization, 
+        //4. Need to recheck each datacon after generalization, 
         //so that it correctly instantiates all the universes of the inductives it mentions
         //Note, so far, the datacons have only been checked w.r.t monomorphic variants of the inductives
-        let env_data = List.fold_left Env.push_sigelt env tcs in
-        let env_data = Env.push_univ_vars env_data uvs in
+        let env_data = Env.push_univ_vars env uvs in
+        let uvs_universes = uvs |> List.map U_name in
+        let env_data = List.fold_left (fun env tc -> Env.push_sigelt_inst env tc uvs_universes) env_data tcs  in
         let datas = List.map2 (fun (t, _) -> function
             | Sig_datacon(l, _, _, tc, ntps, quals, mutuals, r) -> 
               let ty = match uvs with 
@@ -1912,7 +1923,7 @@ let tc_inductive env ses quals lids =
         datas 
         ([], g) in
 
-    let tcs, datas = generalize_universes env0 g (List.map fst tcs) datas in 
+    let tcs, datas = generalize_and_recheck env0 g (List.map fst tcs) datas in 
     Sig_bundle(tcs@datas, quals, lids, Env.get_range env0)
       
 let rec tc_decl env se = match se with
@@ -1983,7 +1994,10 @@ let rec tc_decl env se = match se with
       let env = Env.set_range env r in
       assert (uvs = []);
       let k = fst (U.type_u()) in
-      let uvs, t = check_and_gen env t k in
+      let uvs, t = 
+        if quals |> List.contains Assumption
+        then check_and_gen env t k
+        else check_nogen env t k in
       let se = Sig_declare_typ(lid, uvs, t, quals, r) in
       let env = Env.push_sigelt env se in
       se, env

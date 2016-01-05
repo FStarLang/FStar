@@ -1,21 +1,22 @@
 (*--build-config
-options:--admit_fsi FStar.Set;
-other-files: FStar.Set.fsi;
---*)
+    options:--admit_fsi FStar.Set;
+    other-files: FStar.Set.fsi;
+  --*)
 module FStar.Heap
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
 open FStar.Set
 type heap
-type ref : Type -> Type
+(* abstract *) type ref (a:Type) = 
+  | MkRef of a //this implementation of ref is not realistic; it's just to get the universes right
 type aref =
   | Ref : #a:Type -> r:ref a -> aref
-assume logic val sel :       #a:Type -> heap -> ref a -> Tot a
-assume logic val upd :       #a:Type -> heap -> ref a -> a -> Tot heap
-assume logic val emp :       heap
-assume logic val contains :  #a:Type -> heap -> ref a -> Tot bool
-assume logic val equal:      heap -> heap -> Tot bool
-assume logic val restrict:   heap -> set aref -> Tot heap
-assume logic val concat:     heap -> heap -> Tot heap
+assume val sel :       #a:Type -> heap -> ref a -> Tot a
+assume val upd :       #a:Type -> heap -> ref a -> a -> Tot heap
+assume val emp :       heap
+assume val contains :  #a:Type -> heap -> ref a -> Tot bool
+assume val equal:      heap -> heap -> Tot bool
+assume val restrict:   heap -> set aref -> Tot heap
+assume val concat:     heap -> heap -> Tot heap
 
 assume SelUpd1:       forall (a:Type) (h:heap) (r:ref a) (v:a).            {:pattern (sel (upd h r v) r)}
                       sel (upd h r v) r == v
