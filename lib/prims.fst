@@ -163,10 +163,9 @@ assume val op_GreaterThan        : int -> int -> Tot bool
 assume val op_GreaterThanOrEqual : int -> int -> Tot bool
 assume val op_LessThan           : int -> int -> Tot bool
 (* Primitive (structural) equality.
-   Restricted to small types.
-   But, still allows functions ... TODO: disallow functions *)
-assume val op_Equality :    #a:Type0 -> a -> a -> Tot bool
-assume val op_disEquality : #a:Type0 -> a -> a -> Tot bool
+   This still allows functions ... TODO: disallow functions *)
+assume val op_Equality :    'a -> 'a -> Tot bool
+assume val op_disEquality : 'a -> 'a -> Tot bool
 assume new type char   : Type0
 assume new type float  : Type0
 assume new type string : Type0

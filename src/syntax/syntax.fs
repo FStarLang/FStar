@@ -308,6 +308,7 @@ let range_of_lbname (l:lbname) = match l with
     | Inl x -> x.ppname.idRange
     | Inr l -> range_of_lid l
 let range_of_bv x = x.ppname.idRange
+let set_range_of_bv x r = {x with ppname=Ident.mk_ident(x.ppname.idText, r)}
 
 (*********************************************************************************)
 (* Syntax builders *)

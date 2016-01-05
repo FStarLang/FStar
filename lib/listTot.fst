@@ -40,8 +40,8 @@ let rec nth l n = match l with
   | []     -> None
   | hd::tl -> if n = 0 then Some hd else nth tl (n - 1)
 
-val count: #a:Type0 -> a -> list a -> Tot nat //built-in equality only available at Type0
-let rec count #a x = function
+val count: 'a -> list 'a -> Tot nat
+let rec count x = function
   | [] -> 0
   | hd::tl -> if x=hd then 1 + count x tl else count x tl
 
@@ -101,8 +101,8 @@ let rec fold_right f l x = match l with
 
 (** List searching **)
 
-val mem: #a:Type0 -> a -> list a -> Tot bool
-let rec mem #a x = function
+val mem: 'a -> list 'a -> Tot bool
+let rec mem x = function
   | [] -> false
   | hd::tl -> if hd = x then true else mem x tl
 let contains = mem
@@ -170,21 +170,21 @@ let rec partition f = function
 
 (** [subset la lb] is true if and only if all the elements from [la]
     are also in [lb]. *)
-val subset: #a:Type0 -> list a -> list a -> Tot bool
-let rec subset #a la lb =
+val subset: list 'a -> list 'a -> Tot bool
+let rec subset la lb =
   match la with
   | [] -> true
   | h :: tl ->  mem h lb && subset tl lb
 
-val noRepeats : #a:Type0 -> list a -> Tot bool
-let rec noRepeats #a la =
+val noRepeats : list 'a -> Tot bool
+let rec noRepeats la =
   match la with
   | [] -> true
   | h :: tl -> not(mem h tl) && noRepeats tl
 
 (** List of tuples **)
-val assoc: #a:Type0 -> #b:Type -> a -> list (Tuple2 a b) -> Tot (option b)
-let rec assoc #a #b (x:a) = function
+val assoc: 'a -> list (Tuple2 'a 'b) -> Tot (option 'b)
+let rec assoc x = function
   | [] -> None
   | (x', y)::tl -> if x=x' then Some y else assoc x tl
 

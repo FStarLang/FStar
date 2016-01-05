@@ -314,6 +314,7 @@ val bv_eq:           bv -> bv -> Tot<bool>
 val order_bv:        bv -> bv -> Tot<int>
 val range_of_lbname: lbname -> range
 val range_of_bv:     bv -> range
+val set_range_of_bv: bv -> range -> bv
 
 val tun:      term
 val teff:     term

@@ -1144,6 +1144,9 @@ let short_circuit_head l =
 (* add #'a1 ... #'an to bs                                              *)
 (************************************************************************)
 let maybe_add_implicit_binders (env:env) (bs:binders)  : binders = 
+    let pos bs = match bs with 
+        | (hd, _)::_ -> S.range_of_bv hd
+        | _ -> Env.get_range env in
     match bs with 
         | (_, Some Implicit)::_ -> bs //bs begins with an implicit binder; don't add any
         | _ -> 
@@ -1157,7 +1160,9 @@ let maybe_add_implicit_binders (env:env) (bs:binders)  : binders =
                         | Some ([], _, _) -> bs //no implicits
                         | Some (imps, _,  _) -> 
                           if imps |> Util.for_all (fun (x, _) -> Util.starts_with x.ppname.idText "'")
-                          then imps@bs //we have a prefix of ticked variables
+                          then let r = pos bs in 
+                               let imps = imps |> List.map (fun (x, i) -> (S.set_range_of_bv x r, i)) in
+                               imps@bs //we have a prefix of ticked variables
                           else bs
                       end
 
