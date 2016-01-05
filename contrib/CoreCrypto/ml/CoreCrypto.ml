@@ -5,7 +5,7 @@ let bytes_of_string s = Platform.Bytes.abytes s
 
 (* SUPPORTED ALGORITHMS (subset of OpenSSL) *)
 
-type hash_alg = MD5 | SHA1 | SHA256 | SHA384 | SHA512
+type hash_alg = MD5 | SHA1 | SHA224 | SHA256 | SHA384 | SHA512
 type sig_alg = RSASIG | DSA | ECDSA | RSAPSS
 type block_cipher = AES_128_CBC | AES_256_CBC | TDES_EDE_CBC
 type aead_cipher = AES_128_GCM | AES_256_GCM
@@ -15,6 +15,7 @@ type rsa_padding = Pad_none | Pad_PKCS1
 let string_of_hash_alg = function
   | MD5 -> "MD5"
   | SHA1 -> "SHA1"
+  | SHA224 -> "SHA224"
   | SHA256 -> "SHA256"
   | SHA384 -> "SHA384"
   | SHA512 -> "SHA512"
@@ -39,6 +40,7 @@ let aeadTagSize = function
 let hashSize = function
   | MD5    -> 16
   | SHA1   -> 20
+  | SHA224 -> 28
   | SHA256 -> 32
   | SHA384 -> 48
   | SHA512 -> 64
@@ -76,6 +78,7 @@ type md
 type md_ctx
 external ocaml_EVP_MD_md5 : unit -> md = "ocaml_EVP_MD_md5"
 external ocaml_EVP_MD_sha1  : unit -> md = "ocaml_EVP_MD_sha1"
+external ocaml_EVP_MD_sha224 : unit -> md = "ocaml_EVP_MD_sha224"
 external ocaml_EVP_MD_sha256 : unit -> md = "ocaml_EVP_MD_sha256"
 external ocaml_EVP_MD_sha384 : unit -> md = "ocaml_EVP_MD_sha384"
 external ocaml_EVP_MD_sha512 : unit -> md = "ocaml_EVP_MD_sha512"
@@ -89,6 +92,7 @@ external ocaml_EVP_MD_CTX_final  : md_ctx -> string = "ocaml_EVP_MD_CTX_final"
 let md_of_hash_alg h = match h with
 	| MD5 -> ocaml_EVP_MD_md5()
 	| SHA1 -> ocaml_EVP_MD_sha1()
+	| SHA224 -> ocaml_EVP_MD_sha224()
 	| SHA256 -> ocaml_EVP_MD_sha256()
 	| SHA384 -> ocaml_EVP_MD_sha384()
 	| SHA512 -> ocaml_EVP_MD_sha512()

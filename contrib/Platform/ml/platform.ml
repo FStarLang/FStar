@@ -180,6 +180,15 @@ let split2 (b:bytes) i j : bytes * bytes * bytes =
 let utf8 (x:string) : bytes = abytes x (* TODO: use Camomile *)
 let iutf8 (x:bytes) : string = get_cbytes x (* TODO: use Camomile *)
 let iutf8_opt (x:bytes) : string option = Some (get_cbytes x)
+
+let print_bytes (x:bytes) : string =
+  let s = get_cbytes x in
+  let res = ref "" in
+  for i = 0 to String.length s - 1 do
+    res := !res ^ (Printf.sprintf "%x " (int_of_char s.[i]));
+  done;
+  !res
+  
 (*
 let utf8 (x:string) : bytes = abytes (System.Text.Encoding.UTF8.GetBytes x)
 let iutf8 (x:bytes) : string = System.Text.Encoding.UTF8.GetString (cbytes x)

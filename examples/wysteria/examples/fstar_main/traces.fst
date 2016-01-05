@@ -336,7 +336,7 @@ val fast_is_sparse_full: a:Seq.seq int -> b:Seq.seq int -> p:prod a b entry -> q
                       -> i:bound a -> j:bound b -> Lemma
   (requires (Matrix2.Eq p q
             /\ prod_invariant p i j))
-  (ensures (Matrix2.Eq (prod_until p (Seq.length a) (Seq.length b) i j)
+  (ensures (Matrix2.Eq (prod_until p (Seq.length a) (Seq.length b) i oj)
                        (make_sparse (full a b) q i j)))
   (decreases %[(Seq.length a - i); (Seq.length b - j)])                     
 let rec fast_is_sparse_full a b p q i j = 
@@ -747,7 +747,7 @@ let rec as_list s i =
   if i = Seq.length s then []
   else Seq.index s i :: as_list s (i + 1)
 
-val rows_from : #a:seq int -> #b:seq int -> prod a b entry -> i:bound a -> Tot (list (list bool))
+val rows_from : #la:seq int -> #b:seq int -> prod a b entry -> i:bound a -> Tot (list (list bool))
   (decreases (Seq.length a - i))
 let rec rows_from #a #b p i = 
   if i = Seq.length a then []
@@ -900,6 +900,17 @@ let rec as_list_init_b a b i =
     if i = Seq.length b then ()
     else as_list_init_b a b (i + 1)
 
+//TODO: change rows_from's first two arguments to be nats corresponding to
+// the lengths of the sequences, rather than the sequences themselves.
+// that makes it evident that we can compute the (for_alice la lb) trace from
+// the public parameters only.
+//
+// We'd like the ensures clause to be:
+// for_alice la lb = rows_from' (length la) (length lb) (make_sparse (full a b) (init' (length la) (length lb)) 0 0) 0
+// 1. rows_from to be changes to rows_from'  (so that it depends only on the lengths, not on the seqs themselves)
+// 2. to make use of the fast_is_sparse_full lemma to prove that
+//    all_iterations sa sb = (make_sparse (full a b) (init' (length la) (length lb)) 0 0)
+//  Maybe need to use extensional equality? 
 val thm : sa:Seq.seq int -> sb:Seq.seq int -> la:list int -> lb:list int -> Lemma 
     (requires (la = as_list sa 0 /\ lb = as_list sb 0))
     (ensures (for_alice la lb = rows_from (all_iterations sa sb) 0))
