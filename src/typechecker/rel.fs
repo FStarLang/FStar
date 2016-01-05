@@ -1809,12 +1809,12 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                                        then let _ = if debug env <| Options.Other "Rel" then Util.print_string "Using trivial wp ... \n" in
                                             mk (Tm_app(inst_effect_fun env c2_decl c2_decl.trivial, [arg c1.result_typ; arg <| edge.mlift c1.result_typ wpc1])) 
                                                (Some U.ktype0.n) r
-                                       else let wp2_imp_wp1 = mk (Tm_app(Env.fresh_uinst env c2_decl.wp_binop,
+                                       else let wp2_imp_wp1 = mk (Tm_app(inst_effect_fun env c2_decl c2_decl.wp_binop,
                                                                             [arg c2.result_typ;
                                                                              arg wpc2;
                                                                              arg <| S.fvar None Const.imp_lid r;
                                                                              arg <| edge.mlift c1.result_typ wpc1])) None r in
-                                                mk (Tm_app(Env.fresh_uinst env c2_decl.wp_as_type, [arg c2.result_typ; arg wp2_imp_wp1])) (Some U.ktype0.n) r  in
+                                                mk (Tm_app(inst_effect_fun env c2_decl c2_decl.wp_as_type, [arg c2.result_typ; arg wp2_imp_wp1])) (Some U.ktype0.n) r  in
                                        let base_prob = TProb <| sub_prob c1.result_typ problem.relation c2.result_typ "result type" in
                                        let wl = solve_prob orig (Some <| Util.mk_conj (p_guard base_prob |> fst) g) [] wl in
                                        solve env (attempt [base_prob] wl)

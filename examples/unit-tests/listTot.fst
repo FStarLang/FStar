@@ -123,11 +123,10 @@ let rec find #a f l = match l with
   | [] -> None #(x:a{f x}) //These type annotations are only present because it makes bootstrapping go much faster
   | hd::tl -> if f hd then Some #(x:a{f x}) hd else find f tl
 
-// //TODO
-// val filter: f:('a -> Tot bool) -> list 'a -> Tot (m:list 'a{forall x. mem x m ==> f x})
-// let rec filter f = function
-//   | [] -> []
-//   | hd::tl -> if f hd then hd::filter f tl else filter f tl
+val filter: f:('a -> Tot bool) -> list 'a -> Tot (m:list 'a{forall x. mem x m ==> f x})
+let rec filter f = function
+  | [] -> []
+  | hd::tl -> if f hd then hd::filter f tl else filter f tl
 
 val for_all: ('a -> Tot bool) -> list 'a -> Tot bool
 let rec for_all f l = match l with
@@ -181,8 +180,7 @@ val noRepeats : #a:Type0 -> list a -> Tot bool
 let rec noRepeats #a la =
   match la with
   | [] -> true
-  | h :: tl ->  not(mem h tl) && 
-	      noRepeats #a tl //TODO: why is #a needed explicitly?
+  | h :: tl -> not(mem h tl) && noRepeats tl
 
 (** List of tuples **)
 val assoc: #a:Type0 -> #b:Type -> a -> list (Tuple2 a b) -> Tot (option b)
@@ -205,15 +203,15 @@ let rec unzip3 l = match l with
        let (tl1,tl2,tl3) = unzip3 tl in
        (hd1::tl1,hd2::tl2,hd3::tl3)
 
-// (** Sorting (implemented as quicksort) **)
-// val partition_length: f:('a -> Tot bool)
-//                     -> l:list 'a
-//                     -> Lemma (requires True)
-//                             (ensures (length (fst (partition f l))
-//                                       + length (snd (partition f l)) = length l))
-// let rec partition_length f l = match l with
-//   | [] -> ()
-//   | hd::tl -> partition_length f tl
+(** Sorting (implemented as quicksort) **)
+val partition_length: f:('a -> Tot bool)
+                    -> l:list 'a
+                    -> Lemma (requires True)
+                            (ensures (length (fst (partition f l))
+                                      + length (snd (partition f l)) = length l))
+let rec partition_length f l = match l with
+  | [] -> ()
+  | hd::tl -> partition_length f tl
 
 val bool_of_compare : ('a -> 'a -> Tot int) -> 'a -> 'a -> Tot bool
 let bool_of_compare f x y = f x y >= 0
@@ -223,5 +221,5 @@ let rec sortWith f = function
   | [] -> []
   | pivot::tl ->
      let hi, lo  = partition (bool_of_compare f pivot) tl in
-     (* partition_length (bool_of_compare f pivot) tl; *)
+     partition_length (bool_of_compare f pivot) tl;
      append (sortWith f lo) (pivot::sortWith f hi)

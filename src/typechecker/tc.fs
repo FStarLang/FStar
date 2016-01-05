@@ -654,6 +654,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
 
                  let mk_letrec_env envbody bs c = 
                      let letrecs = guard_letrecs envbody bs c in
+                     let envbody = {envbody with letrecs=[]} in
                      letrecs |> List.fold_left (fun (env, letrec_binders) (l,t) -> 
                         let t, _, _ = tc_term (Env.clear_expected_typ env |> fst) t in
                         let env = Env.push_let_binding env l ([], t) in
