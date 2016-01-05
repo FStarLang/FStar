@@ -25,9 +25,7 @@ Troubleshooting:
   `x86_64-w64-mingw32-pkg-config` is installed.
 - it looks like only Cygwin64 is supported, unfortunately.
 
-Temporary: right now (01/05/2015), the sqlite3 OCaml library needs a patch to
-work properly on Windows. If running `make redux-gen` in `mitls-fstar/src/tls`
-fails with this:
+If running `make redux-gen` in `mitls-fstar/src/tls` fails with this:
 
 ```
 ** Cannot resolve symbols for C:/cygwin/home/protz/.opam/system/lib/sqlite3\libsqlite3_stubs.a(sqlite3_stubs.o):
@@ -37,7 +35,7 @@ fails with this:
 Then, you need to do:
 
 ```
-opam repository add jonathan https://github.com/msprotz/opam-repository-mingw
+opam update
 opam remove sqlite3
 opam install sqlite3
 ```
