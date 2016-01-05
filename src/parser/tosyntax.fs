@@ -703,9 +703,9 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
         let bs = S.pat_bvs pat |> List.map S.mk_binder in
         let wopt = match wopt with
           | None -> None
-          | Some e -> Some (Subst.close bs <| desugar_term env e) in
-        let b = Subst.close bs <| desugar_term env b in
-        (pat, wopt, b) in
+          | Some e -> Some (desugar_term env e) in
+        let b = desugar_term env b in
+        Util.branch (pat, wopt, b) in
       mk <| Tm_match(desugar_term env e, List.map desugar_branch branches)
 
     | Ascribed(e, t) ->
@@ -844,6 +844,12 @@ and desugar_comp r default_ok env t =
             if lid_equals eff C.effect_Lemma_lid
             then match rest with 
                     | [req;ens;(pat, aq)] -> 
+                      let pat = match pat.n with 
+                        | Tm_fvar (fv, _) when lid_equals fv.v Const.nil_lid -> //we really want the empty pattern to be in universe S 0 rather than generalizing it 
+                          let nil = S.mk_Tm_uinst pat [U_succ U_zero] in
+                          let pattern = S.mk_Tm_uinst (S.fvar None Const.pattern_lid pat.pos) [U_zero;U_zero] in 
+                          S.mk_Tm_app nil [(pattern, Some S.Implicit)] None pat.pos 
+                        | _ -> pat in
                         [req; ens;
                         (S.mk (Tm_meta(pat, Meta_desugared Meta_smt_pat)) None pat.pos, aq)]
                     | _ -> rest 
@@ -1333,7 +1339,6 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
     let env, decls = eff_decls |> List.fold_left (fun (env, out) decl ->
         let env, ses = desugar_decl env decl in
         env, List.hd ses::out) (env, []) in
-    let decls = List.rev decls in
     let binders = Subst.close_binders binders in
     let eff_k = Subst.close binders eff_k in
     let lookup s = 

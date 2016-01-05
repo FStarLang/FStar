@@ -447,12 +447,6 @@ let solve_prob prob logical_guard uvis wl =
 //    then Util.print1 "After solve_prob:\n\t%s\n" (wl_to_string wl);
     solve_prob' false prob logical_guard uvis wl
 
-let type_of wl e = 
-    let t, g = wl.tcenv.type_of ({wl.tcenv with use_bv_sorts=true}) e in
-    let gprobs = List.map snd g.deferred in
-    let wl = attempt gprobs wl in
-    wl, t
-
 (* ------------------------------------------------ *)
 (* </solving problems>                              *)
 (* ------------------------------------------------ *)
@@ -484,7 +478,19 @@ let occurs_and_freevars_check env wl uk fvs t =
 let intersect_vars v1 v2 =
     let as_set v = 
         v |> List.fold_left (fun out x -> Util.set_add (fst x) out) S.no_names in
-    Util.set_intersect (as_set v1) (as_set v2) |> Util.set_elements |> List.map mk_binder
+    let v1_set = as_set v1 in 
+    let isect, _ = 
+        v2 |> List.fold_left (fun (isect, isect_set) (x, imp) -> 
+            if not <| Util.set_mem x v1_set 
+            then //definitely not in the intersection
+                 isect, isect_set
+            else //maybe in the intersect, if its type is only dependent on prior elements in the telescope
+                 let fvs = Free.names x.sort in
+                 if Util.set_is_subset_of fvs isect_set 
+                 then (x, imp)::isect, Util.set_add x isect_set
+                 else isect, isect_set)
+        ([], S.no_names) in
+    List.rev isect
 
 let binders_eq v1 v2 =
   List.length v1 = List.length v2
@@ -1358,48 +1364,57 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
    let flex_flex orig (lhs:flex_t) (rhs:flex_t) : solution =
         if wl.defer_ok && p_rel orig <> EQ then solve env (defer "flex-flex deferred" orig wl) else
 
-        let force_quasi_pattern wl xs_opt (t, u, k, args) =
+        let force_quasi_pattern xs_opt (t, u, k, args) =
             (* A quasi pattern is a U x1...xn, where not all the xi are distinct
             *)
-            let rec aux wl binders ys args = match args with
-                | [] ->
-                    let ys = List.rev ys in
-                    let binders = List.rev binders in
+           let all_formals, _ = Util.arrow_formals k in 
+           assert (List.length all_formals = List.length args);
+
+            let rec aux pat_args              (* pattern arguments, so far *)
+                        pattern_vars          (* corresponding formals *)
+                        pattern_var_set       (* formals a set of bvs *)
+                        formals               (* remaining formals to examine *)
+                        args                  (* remaining actuals, same number as formals *)
+                        : uvi * flex_t = 
+              match formals, args with
+                | [], [] ->
+                    let pat_args = List.rev pat_args |> List.map (fun (x, imp) -> (S.bv_to_name x, imp)) in
+                    let pattern_vars = List.rev pattern_vars in
                     let kk = 
                         let t, _ = U.type_u() in
-                        fst (new_uvar t.pos ys t) in
-                    let t', _ = new_uvar t.pos ys kk in
-                    let u1_ys, u1, k1, _ = destruct_flex_t t' in
-                    let sol = TERM((u,k), U.abs binders u1_ys) in
-                    wl, sol, (t', u, k1, ys)
+                        fst (new_uvar t.pos pattern_vars t) in
+                    let t', tm_u1 = new_uvar t.pos pattern_vars kk in
+                    let _, u1, k1, _ = destruct_flex_t t' in
+                    let sol = TERM((u,k), U.abs all_formals t') in
+                    let t_app = S.mk_Tm_app tm_u1 pat_args None t.pos  in
+                    sol, (t_app, u1, k1, pat_args)
 
-                | hd::tl ->
-                  let new_binder (hd, _) = 
-                    let wl, t = type_of wl hd in
-                    wl, t |> S.gen_bv "x" (Some hd.pos) |> S.mk_binder in
+                | formal::formals, hd::tl ->
+                  begin match pat_var_opt env pat_args hd with
+                    | None -> //hd is not a pattern var
+                      aux pat_args pattern_vars pattern_var_set formals tl
 
-                  let wl, binder, ys = match pat_var_opt env ys hd with
-                    | None -> 
-                      let wl, t = new_binder hd in
-                      wl, t, ys
+                    | Some y -> //hd=y and does not occur in pat_args
+                      let maybe_pat = match xs_opt with 
+                        | None -> true 
+                        | Some xs -> xs |> Util.for_some (fun (x, _) -> S.bv_eq x (fst y)) in //it's in the intersection
 
-                    | Some y ->
-                      begin match xs_opt with
-                        | None -> wl, y, y::ys
-                        | Some xs ->
-                          if xs |> Util.for_some (fun (x, _) -> S.bv_eq x (fst y))
-                          then wl, y, y::ys  //this is a variable in the intersection with xs
-                          else let wl, t = new_binder hd in wl, t, ys
+                      if not maybe_pat
+                      then aux pat_args pattern_vars pattern_var_set formals tl
+                      else //for y to be a pattern var, the type of formal has to be dependent (at most) on the other pattern_vars
+                          let fvs = Free.names (fst y).sort in
+                          if not (Util.set_is_subset_of fvs pattern_var_set)
+                          then //y can't be a pattern variable ... its type is dependent on a non-pattern variable
+                               aux pat_args pattern_vars pattern_var_set formals tl
+                          else aux (y::pat_args) (formal::pattern_vars) (Util.set_add (fst formal) pattern_var_set) formals tl
+                  end
 
-                      end in
+                 | _ -> failwith "Impossible" in
+
+           aux [] [] (S.new_bv_set()) all_formals args in
 
 
-                    aux wl (binder::binders) ys tl in
-
-           aux wl [] [] args in
-
-
-        let solve_both_pats wl (u1, k1, xs) (u2, k2, ys) k r =
+        let solve_both_pats wl (u1, k1, xs) (u2, k2, ys) r =
             if Unionfind.equivalent u1 u2 
             && binders_eq xs ys
             then solve env (solve_prob orig None [] wl)
@@ -1413,7 +1428,10 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                 if Env.debug env <| Options.Other "Rel"
                 then Util.print3 "Flex-flex patterns: intersected %s and %s; got %s\n"
                         (Print.binders_to_string ", " xs) (Print.binders_to_string ", " ys) (Print.binders_to_string ", " zs);
-                let u_zs, _ = new_uvar r zs k in
+                let u_zs, _ = 
+                    let t, _ = Util.type_u() in
+                    let k, _ = new_uvar r zs t in
+                    new_uvar r zs k in
                 let sub1 = U.abs xs u_zs in
                 let occurs_ok, msg = occurs_check env wl (u1,k1) sub1 in
                 if not occurs_ok
@@ -1452,7 +1470,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                           let wl = solve_prob orig None [sol] wl in
                           solve env wl
                      else if occurs_ok && not <| wl.defer_ok
-                     then let wl, sol, (_, u2, k2, ys) = force_quasi_pattern wl (Some xs) (t2, u2, k2, args2) in
+                     then let sol, (_, u2, k2, ys) = force_quasi_pattern (Some xs) (t2, u2, k2, args2) in
                           let wl = extend_solution (p_pid orig) [sol] wl in
                           let _ = if Env.debug env <| Options.Other "QuasiPattern" 
                                   then Util.print1 "flex-flex quasi pattern (2): %s\n" (uvi_to_string env sol) in
@@ -1469,14 +1487,13 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let r = t2.pos in
         match maybe_pat_vars1, maybe_pat_vars2 with
             | Some xs, Some ys -> 
-              let wl, type_of_t2 = type_of wl t2 in 
-              solve_both_pats wl (u1, k1, xs) (u2, k2, ys) type_of_t2 t2.pos
+              solve_both_pats wl (u1, k1, xs) (u2, k2, ys) t2.pos
             | Some xs, None -> solve_one_pat (t1, u1, k1, xs) rhs
             | None, Some ys -> solve_one_pat (t2, u2, k2, ys) lhs
             | _ ->
               if wl.defer_ok
               then giveup_or_defer orig "flex-flex: neither side is a pattern"
-              else let wl, sol, _ = force_quasi_pattern wl None (t1, u1, k1, args1) in
+              else let sol, _ = force_quasi_pattern None (t1, u1, k1, args1) in
                    let wl = extend_solution (p_pid orig) [sol] wl in
                    let _ = if Env.debug env <| Options.Other "QuasiPattern" 
                            then Util.print1 "flex-flex quasi pattern (1): %s\n" (uvi_to_string env sol) in
@@ -1790,7 +1807,7 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                                        let g =
                                        if is_null_wp_2
                                        then let _ = if debug env <| Options.Other "Rel" then Util.print_string "Using trivial wp ... \n" in
-                                            mk (Tm_app(Env.fresh_uinst env c2_decl.trivial, [arg c1.result_typ; arg <| edge.mlift c1.result_typ wpc1])) 
+                                            mk (Tm_app(inst_effect_fun env c2_decl c2_decl.trivial, [arg c1.result_typ; arg <| edge.mlift c1.result_typ wpc1])) 
                                                (Some U.ktype0.n) r
                                        else let wp2_imp_wp1 = mk (Tm_app(Env.fresh_uinst env c2_decl.wp_binop,
                                                                             [arg c2.result_typ;

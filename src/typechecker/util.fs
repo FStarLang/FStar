@@ -405,11 +405,6 @@ let mk_basic_dtuple_type env n =
 (*********************************************************************************************)
 type lcomp_with_binder = option<bv> * lcomp
 
-let inst_effect_fun env (ed:eff_decl) (us, t) = 
-    match ed.binders with 
-        | [] -> snd (inst_tscheme (ed.univs@us, t))
-        | _  -> failwith (Util.format1 "Unexpected use of an uninstantiated effect: %s\n" (Print.lid_to_string ed.mname))
-
 let destruct_comp c : (typ * typ * typ) =
   let wp, wlp = match c.effect_args with
     | [(wp, _); (wlp, _)] -> wp, wlp
@@ -1078,13 +1073,15 @@ let check_top_level env g lc : (bool * comp) =
     Util.is_pure_lcomp lc in
   let g = Rel.solve_deferred_constraints env g in
   if Util.is_total_lcomp lc
-  then discharge g, lc.comp()
+  then discharge g, lc.comp()   
   else let c = lc.comp() in
        let steps = [Normalize.Beta; Normalize.SNComp; Normalize.DeltaComp] in
        let c = Normalize.normalize_comp steps env c |> Util.comp_to_comp_typ in
        let md = Env.get_effect_decl env c.effect_name in
        let t, wp, _ = destruct_comp c in
        let vc = mk_Tm_app (inst_effect_fun env md md.trivial) [S.arg t; S.arg wp] (Some U.ktype0.n) (Env.get_range env) in
+       if Env.debug env <| Options.Other "Simplification"
+       then Util.print1 "top-level VC: %s\n" (Print.term_to_string vc);
        let g = Rel.conj_guard g (Rel.guard_of_guard_formula <| NonTrivial vc) in
        discharge g, mk_Comp c
 

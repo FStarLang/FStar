@@ -362,10 +362,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
             rebuild cfg env stack t
            
           | Tm_fvar (f, _) -> 
-//            if List.contains DeltaHard cfg.steps
-//            || (List.contains Delta cfg.steps && not (is_empty stack)) //delta only if reduction is blocked
-//            then 
-            begin match Env.lookup_definition cfg.tcenv f.v with 
+            if List.contains DeltaHard cfg.steps
+            || List.contains Delta cfg.steps 
+            then match Env.lookup_definition cfg.tcenv f.v with 
                     | None -> rebuild cfg env stack t
                     | Some (us, t) -> 
                       let n = List.length us in 
@@ -375,8 +374,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                let env = us' |> List.fold_left (fun env u -> Univ u::env) env in 
                                norm cfg env stack t 
                              | _ -> failwith (Util.format1 "Impossible: missing universe instantiation on %s" (Print.lid_to_string f.v))
-                      else norm cfg env stack t                     
-            end
+                      else norm cfg env stack t             
+            else rebuild cfg env stack t
 
           | Tm_bvar x -> 
             begin match lookup_bvar env x with 

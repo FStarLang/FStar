@@ -169,6 +169,11 @@ let inst_tscheme : tscheme -> universes * term = function
       let us' = vs |> List.map (function UN(_, u') -> u' | _ -> failwith "Impossible") in
       us', Subst.subst vs t
 
+let inst_effect_fun (env:env) (ed:eff_decl) (us, t) = 
+    match ed.binders with 
+        | [] -> snd (inst_tscheme (ed.univs@us, t))
+        | _  -> failwith (Util.format1 "Unexpected use of an uninstantiated effect: %s\n" (Print.lid_to_string ed.mname))
+
 let in_cur_mod env (l:lident) = (* TODO: need a more efficient namespace check! *)
     let cur = current_module env in
     if l.nsstr = cur.str then true (* fast case; works for everything except records *)
