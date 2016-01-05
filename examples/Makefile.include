@@ -25,7 +25,7 @@ STDCACHE=Prims.cache List.cache String.cache ST.cache Set.cache Map.cache Heap.c
 FSTARC=../../bin/fstar.exe $(STDCACHE) $(OTHERFLAGS)
 
 ifdef USE_NUBUILD
-VV=$(NUBUILD) --no-cloudcache --quiet FStarVerify 
+VV=$(NUBUILD) --quiet FStarVerify 
 else
 VV=$(FSTAR)
 endif
