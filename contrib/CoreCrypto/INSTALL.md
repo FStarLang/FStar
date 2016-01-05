@@ -12,7 +12,17 @@ and put it into the parent directory of FStar.
 opam init
 opam install depext depext-cygwinports
 opam depext ssl
+opam depext sqlite3
+opam install sqlite3
 ```
+
+Troubleshooting:
+- make sure your OCaml executable is the right one (`which ocaml`)
+- make sure `OCAMLLIB` is properly set
+- check the output of `ocamlopt -config` (should contain
+  `native_c_compiler: x86_64-w64-mingw32-gcc -O -mms-bitfields -Wall -Wno-unused`)
+- please double-check that the Cygwin package called
+  `x86_64-w64-mingw32-pkg-config` is installed.
 
 #### On other platforms
 
