@@ -26,7 +26,7 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>--universes --prims test_prims.fst test.fst</StartArguments>
+    <StartArguments>--universes --prims test_prims.fst listTot.fst</StartArguments>
     <StartAction>Project</StartAction>
     <StartWorkingDirectory>d:\workspace\universes\FStar\examples\unit-tests\</StartWorkingDirectory>
   </PropertyGroup>

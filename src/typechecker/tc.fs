@@ -1074,11 +1074,14 @@ and tc_eqn scrutinee env branch
   (* (d) Strengthen 6 (c) with the when condition, if there is one                                      *)
   let branch_guard = 
       (* 6 (a) *)
-      let rec build_branch_guard scrutinee_tm pat_exp : typ =
+      let rec build_branch_guard scrutinee_tm pat_exp : list<typ> =
         let discriminate scrutinee_tm f =
-            let disc = S.fvar None (Util.mk_discriminator f.v) (range_of_lid f.v) in
-            let disc = mk_Tm_app disc [arg scrutinee_tm] None scrutinee_tm.pos in
-            Util.mk_eq Util.t_bool Util.t_bool disc Const.exp_true_bool in
+            if List.length (Env.datacons_of_typ env (Env.typ_of_datacon env f.v)) > 1
+            then 
+                let disc = S.fvar None (Util.mk_discriminator f.v) (range_of_lid f.v) in
+                let disc = mk_Tm_app disc [arg scrutinee_tm] None scrutinee_tm.pos in
+                [Util.mk_eq Util.t_bool Util.t_bool disc Const.exp_true_bool]
+            else [] in
 
         let fail () =
             failwith (Util.format3 "tc_eqn: Impossible (%s) %s (%s)" 
@@ -1098,29 +1101,26 @@ and tc_eqn scrutinee env branch
               raise (Error("An implicit variable could not be resolved in this pattern", pat_exp.pos))
 
             | Tm_name _
-            | Tm_constant Const_unit -> S.fvar None Const.true_lid scrutinee_tm.pos
-            | Tm_constant _ -> mk_Tm_app Util.teq [arg scrutinee_tm; arg pat_exp] None scrutinee_tm.pos
+            | Tm_constant Const_unit -> []
+            | Tm_constant _ -> [mk_Tm_app Util.teq [arg scrutinee_tm; arg pat_exp] None scrutinee_tm.pos]
             | Tm_uinst _
             | Tm_fvar _ -> discriminate scrutinee_tm (head_constructor pat_exp)
             | Tm_app(head, args) -> 
                 let f = head_constructor head in
                 if not (Env.is_datacon env f.v) //A non-pattern sub-term of pat_exp
-                then S.fvar None Const.true_lid scrutinee_tm.pos
+                then [] 
                 else let sub_term_guards = args |> List.mapi (fun i (ei, _) -> 
                         let projector = Env.lookup_projector env f.v i in //NS: TODO ... should this be a marked as a record projector? But it doesn't matter for extraction
                         let sub_term = mk_Tm_app (S.fvar None projector f.p) [arg scrutinee_tm] None f.p in
-                        [build_branch_guard sub_term ei]) |> List.flatten in
-                     if List.length (Env.datacons_of_typ env (Env.typ_of_datacon env f.v)) > 1
-                     then let head = discriminate scrutinee_tm f in
-                          Util.mk_conj_l (head::sub_term_guards)
-                     else Util.mk_conj_l sub_term_guards 
+                        build_branch_guard sub_term ei) |> List.flatten in
+                     discriminate scrutinee_tm f @ sub_term_guards
             | _ -> fail () in
 
       (* 6 (b) *)
       let build_and_check_branch_guard scrutinee_tm pat =
          if not (Options.should_verify env.curmodule.str)
          then S.fvar None Const.true_lid scrutinee_tm.pos //if we're not verifying, then don't even bother building it
-         else let t = build_branch_guard scrutinee_tm pat in
+         else let t = Util.mk_conj_l <| build_branch_guard scrutinee_tm pat in
               let k, _ = U.type_u() in
               let t, _, _ = tc_check_tot_or_gtot_term scrutinee_env t k in
               t in

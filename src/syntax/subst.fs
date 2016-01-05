@@ -23,39 +23,29 @@ open FStar.Syntax.Syntax
 open FStar.Util
 
 (*
-    force_uvar (pos:bool) (t:term) 
+    force_uvar (t:term) 
         replaces any unification variable at the head of t
         with the term that it has been fixed to, if any.
-
-        when pos is true, it also removes any ascriptions 
-        or Meta_named constructors at the head of t 
 *)
-let rec force_uvar_aux pos t = match t.n with
+let rec force_uvar t = match t.n with
   | Tm_uvar (uv,_) ->
       begin
         match Unionfind.find uv with
-          | Fixed t' -> force_uvar_aux pos t'
+          | Fixed t' -> force_uvar t'
           | _ -> t
       end
+  | _ -> t
+
+let rec force_delayed_thunk t = match t.n with
   | Tm_delayed(f, m) ->
     (match !m with
       | None -> 
         begin match f with 
-            | Inr c -> let t' = force_uvar_aux pos (c()) in m := Some t'; t'
+            | Inr c -> let t' = force_delayed_thunk (c()) in m := Some t'; t'
             | _ -> t
         end
-      | Some t' -> let t' = force_uvar_aux pos t' in m := Some t'; t')
-  | Tm_ascribed(t, _, _)
-  | Tm_meta(t, Meta_named _) when pos -> force_uvar_aux pos t
-  | Tm_app({n=Tm_uvar(uv, _)}, args) ->
-       begin
-          match Unionfind.find uv with
-            | Fixed t' -> force_uvar_aux pos (mk (Tm_app(t', args)) None t.pos)
-            | _ -> t
-       end
+      | Some t' -> let t' = force_delayed_thunk t' in m := Some t'; t')
   | _ -> t
-let force_uvar_and_ascriptions = force_uvar_aux true
-let force_uvar = force_uvar_aux false 
 
 let rec compress_univ u = match u with 
     | U_unif u' -> 
@@ -120,10 +110,14 @@ let rec subst_univ s u =
 
 let rec subst' (s:subst_t) t = match s with
   | [] 
-  | [[]] -> force_uvar t
+  | [[]] -> t //force_uvar t
   | _ ->
-    let t0 = force_uvar t in
+    let t0 = force_delayed_thunk t in 
     match t0.n with
+        | Tm_constant _   //a constant cannot be substituted
+        | Tm_fvar _       //fvar are never subject to substitution
+        | Tm_uvar _ -> t0 //a uvar is always resolved to a closed term; so no subsitution to perform
+
         | Tm_delayed(Inl(t', s'), m) ->
             //s' is the subsitution already associated with this node;
             //s is the new subsitution to add to it
@@ -132,7 +126,7 @@ let rec subst' (s:subst_t) t = match s with
           mk_Tm_delayed (Inl (t', s'@s)) t.pos
 
         | Tm_delayed(Inr _, _) -> 
-          failwith "Impossible: Visit.force_uvar removes lazy delayed nodes"
+          failwith "Impossible: force_delayed_thunk removes lazy delayed nodes"
 
         | Tm_bvar a ->
           apply_until_some_then_map (subst_bv a) s subst' t0
@@ -143,10 +137,6 @@ let rec subst' (s:subst_t) t = match s with
         | Tm_type u -> 
           mk (Tm_type (subst_univ s u)) None t0.pos 
           
-        | Tm_constant _
-        | Tm_uvar _
-        | Tm_fvar _ -> t0
-
         | _ -> mk_Tm_delayed (Inl(t0, s))  t.pos
 
 and subst_flags' s flags =
@@ -222,7 +212,6 @@ let subst_pat' s pat : (pat * int) =
   in aux 0 pat
 
 let push_subst s t = 
-    let t = force_uvar t in 
     match t.n with 
         | Tm_delayed _ -> failwith "Impossible"
 
@@ -289,15 +278,16 @@ let push_subst s t =
           mk (Tm_meta(subst' s t,  m)) None t.pos 
 
 let rec compress (t:term) = 
-    let t = force_uvar t in 
+    let t = force_delayed_thunk t in
     match t.n with
         | Tm_delayed(Inl(t, s), memo) -> 
           let t' = compress (push_subst s t) in
           Unionfind.update_in_tx memo (Some t');
 //          memo := Some t';
           t'
-        | _ -> t
+        | _ -> force_uvar t
             
+
 let subst s t = subst' [s] t
 let subst_comp s t = subst_comp' [s] t
 let closing_subst bs = 
