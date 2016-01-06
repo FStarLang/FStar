@@ -31,7 +31,7 @@ kind STWP (a:Type) = STWP_h heap a
 new_effect STATE = STATE_h heap
 effect State (a:Type) (wp:STWP a) =
        STATE a wp wp
-effect ST (a:Type) (pre:STPre) (post: (heap -> STPost a)) =
+effect ST (a:Type) (pre:STPre) (post: (heap -> Tot (STPost a))) =
        STATE a
              (fun (p:STPost a) (h:heap) -> pre h /\ (forall a h1. (pre h /\ post h a h1) ==> p a h1)) (* WP *)
              (fun (p:STPost a) (h:heap) -> (forall a h1. (pre h /\ post h a h1) ==> p a h1))          (* WLP *)

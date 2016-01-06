@@ -5,7 +5,7 @@
 module FStar.Heap
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
 open FStar.Set
-type heap
+assume new type heap : Type0
 (* abstract *) type ref (a:Type) = 
   | MkRef of a //this implementation of ref is not realistic; it's just to get the universes right
 type aref =

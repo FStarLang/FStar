@@ -114,9 +114,15 @@ let rec subst' (s:subst_t) t = match s with
   | _ ->
     let t0 = force_delayed_thunk t in 
     match t0.n with
-        | Tm_constant _   //a constant cannot be substituted
-        | Tm_fvar _       //fvar are never subject to substitution
-        | Tm_uvar _ -> t0 //a uvar is always resolved to a closed term; so no subsitution to perform
+        | Tm_constant _      //a constant cannot be substituted
+        | Tm_fvar _  -> t0   //fvar are never subject to substitution
+        | Tm_uvar _ -> 
+          let t0 = force_uvar t0 in
+          begin match t0.n with
+            | Tm_uvar _ -> t0            //unresolved uvar; nothing to substitute
+            | Tm_name _ -> subst' s t0   //when a type is implicitly generalized, a uvar maybe resolved to a name
+            | _ -> t0                    //otherwise, a uvar is always resolved to a closed term; so no substitution to do
+          end
 
         | Tm_delayed(Inl(t', s'), m) ->
             //s' is the subsitution already associated with this node;
