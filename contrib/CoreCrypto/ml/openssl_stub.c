@@ -21,6 +21,9 @@
 #include <openssl/dsa.h>
 #include <openssl/dh.h>
 #include <openssl/pem.h>
+#include <openssl/ec.h>
+#include <openssl/objects.h>
+#include <openssl/obj_mac.h>
 
 /* -------------------------------------------------------------------- */
 static value Val_some(value mlvalue) {
@@ -1546,4 +1549,98 @@ CAMLprim value ocaml_dh_compute(value mldh, value mlopub) {
 
     CAMLreturn(Val_unit);
 
+}
+
+/* -------------------------------------------------------------------- */
+#define EC_METHOD_val(v) (*((const EC_METHOD**) Data_custom_val(v)))
+
+static struct custom_operations method_ops = {
+  .identifier  = "ocaml_ec_method",
+  .finalize    = custom_finalize_default,
+  .compare     = custom_compare_default,
+  .hash        = custom_hash_default,
+  .serialize   = custom_serialize_default,
+  .deserialize = custom_deserialize_default,
+};
+
+#define EC_METHOD_GEN(X) \
+  CAMLprim value ocaml_##X##_method(value unit) { \
+      CAMLparam1(unit);                         \
+      CAMLlocal1(aout);                         \
+                                                \
+      aout = caml_alloc_custom(&method_ops, sizeof(EC_METHOD*), 0, 1); \
+      EC_METHOD_val(aout) = EC_##X##_method();                 \
+                                                \
+      CAMLreturn(aout);                         \
+  }
+
+/* EC_METHOD_GEN(GFp_nistp521) */
+/* EC_METHOD_GEN(GFp_nistp256) */
+EC_METHOD_GEN(GFp_simple)
+EC_METHOD_GEN(GFp_mont)
+EC_METHOD_GEN(GFp_nist)
+
+
+/* -------------------------------------------------------------------- */
+#define EC_GROUP_val(v) (*((EC_GROUP**) Data_custom_val(v)))
+
+static void ocaml_ec_group_finalize(value mlgroup) {
+    EC_GROUP *group = EC_GROUP_val(mlgroup);
+
+    if (group != NULL)
+        EC_GROUP_free(group);
+}
+
+static struct custom_operations group_ops = {
+  .identifier  = "ocaml_ec_group",
+  .finalize    = ocaml_ec_group_finalize,
+  .compare     = custom_compare_default,
+  .hash        = custom_hash_default,
+  .serialize   = custom_serialize_default,
+  .deserialize = custom_deserialize_default,
+};
+
+CAMLprim value ocaml_ec_group_new_by_curve_name(value mlname) {
+    CAMLparam1(mlname);
+    CAMLlocal1(aout);
+
+    int nid = OBJ_txt2nid(String_val(mlname));
+    if (nid == NID_undef)
+      caml_failwith("ocaml_ec_group_new_by_curve_name: invalid name");
+
+    aout = caml_alloc_custom(&group_ops, sizeof(EC_GROUP*), 0, 1);
+    EC_GROUP_val(aout) = EC_GROUP_new_by_curve_name(nid);
+
+    CAMLreturn(aout);
+}
+
+/* -------------------------------------------------------------------- */
+#define EC_POINT_val(v) (*((EC_POINT**) Data_custom_val(v)))
+
+static void ocaml_ec_point_finalize(value mlpoint) {
+    EC_POINT *point = EC_POINT_val(mlpoint);
+
+    if (point != NULL)
+        EC_POINT_free(point);
+}
+
+static struct custom_operations point_ops = {
+  .identifier  = "ocaml_ec_point",
+  .finalize    = ocaml_ec_point_finalize,
+  .compare     = custom_compare_default,
+  .hash        = custom_hash_default,
+  .serialize   = custom_serialize_default,
+  .deserialize = custom_deserialize_default,
+};
+
+CAMLprim value ocaml_ec_point_new(value mlgroup) {
+    CAMLparam1(mlgroup);
+    CAMLlocal1(aout);
+
+    EC_GROUP* group = EC_GROUP_val(mlgroup);
+
+    aout = caml_alloc_custom(&point_ops, sizeof(EC_POINT*), 0, 1);
+    EC_POINT_val(aout) = EC_POINT_new(group);
+
+    CAMLreturn(aout);
 }

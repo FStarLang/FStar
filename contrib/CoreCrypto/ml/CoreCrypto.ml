@@ -367,10 +367,35 @@ type ec_key = {
      ec_priv : bytes option;
 }
 
+(* Types prefixed with [ssl_] are wrappers around raw C pointers and are not
+ * intended for outside use. *)
+
+type ssl_ec_method
+
+external ocaml_gfp_simple_method: unit -> ssl_ec_method = "ocaml_GFp_simple_method"
+external ocaml_gfp_nist_method: unit -> ssl_ec_method = "ocaml_GFp_nist_method"
+external ocaml_gfp_mont_method: unit -> ssl_ec_method = "ocaml_GFp_mont_method"
+
+type ssl_ec_group
+
+external ocaml_ec_group_new_by_curve_name: string -> ssl_ec_group =
+  "ocaml_ec_group_new_by_curve_name"
+
+let ec_group_new = function
+  | ECC_P256 -> ocaml_ec_group_new_by_curve_name "prime256v1"
+  | ECC_P384 -> ocaml_ec_group_new_by_curve_name "secp384r1"
+  | ECC_P521 -> ocaml_ec_group_new_by_curve_name "secp521r1"
+
+type ssl_ec_point
+
+external ocaml_ec_point_new: ssl_ec_group -> ssl_ec_point = "ocaml_ec_point_new"
+
 let ec_point_serialize ecp =
   failwith "Not implemented"
 
 let ec_is_on_curve params point =
+  let g = ec_group_new params.curve in
+  let p = ocaml_ec_point_new g in
   failwith "Not implemented"
 
 let ecdh_agreement key point =
