@@ -132,7 +132,8 @@ type compatibilityMode =
     | FSHARP  (* keyword, but an identifier under --ml-compatibility mode *)
 
 let keywords =
-  [ ALWAYS, "and"        ,AND;
+  [ ALWAYS, "abstract"   ,ABSTRACT;
+    ALWAYS, "and"        ,AND;
     ALWAYS, "as"         ,AS;
     ALWAYS, "assert"     ,ASSERT;
     ALWAYS, "assume"     ,ASSUME;

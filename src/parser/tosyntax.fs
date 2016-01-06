@@ -44,7 +44,8 @@ let trans_qual = function
   | AST.TotalEffect ->   S.TotalEffect
   | AST.DefaultEffect -> S.DefaultEffect None
   | AST.Effect ->        S.Effect
-  | AST.New  ->        S.New
+  | AST.New  ->          S.New
+  | AST.Abstract ->      S.Abstract
 
 let trans_pragma = function
   | AST.SetOptions s -> S.SetOptions s

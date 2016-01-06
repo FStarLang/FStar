@@ -115,6 +115,7 @@ type qualifier =
   | TotalEffect
   | Effect
   | New
+  | Abstract
 
 type qualifiers = list<qualifier>
 

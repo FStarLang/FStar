@@ -192,6 +192,7 @@ type qualifier =
   | New
   | Opaque
   | Logic
+  | Abstract
   | Discriminator of lident                          (* discriminator for a datacon l *)
   | Projector of lident * ident                      (* projector for datacon l's argument x *)
   | RecordType of list<fieldname>                    (* unmangled field names *)

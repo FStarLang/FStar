@@ -25,7 +25,7 @@ kind AllPre = AllPre_h heap
 kind AllPost (a:Type) = AllPost_h heap a
 kind AllWP (a:Type) = AllWP_h heap a
 new_effect ALL = ALL_h heap
-effect All (a:Type) (pre:AllPre) (post: (heap -> AllPost a)) =
+effect All (a:Type) (pre:AllPre) (post: (heap -> Tot (AllPost a))) =
        ALL a
            (fun (p:AllPost a) (h:heap) -> pre h /\ (forall ra h1. post h ra h1 ==> p ra h1)) (* AllWP *)
            (fun (p:AllPost a) (h:heap) -> forall ra h1. (pre h /\ post h ra h1) ==> p ra h1) (* WLP *)
