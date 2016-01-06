@@ -43,7 +43,7 @@ assume RestrictIn:    forall (a:Type) (h:heap) (r:set aref) (a:ref a).     {:pat
                       contains (restrict h r) a == (mem (Ref a) r && contains h a)
 
 assume SelConcat:     forall (a:Type) (h1:heap) (h2:heap) (a:ref a).       {:pattern sel (concat h1 h2) a}
-                      if b2t (contains h2 a) then sel (concat h1 h2) a==sel h2 a else sel (concat h1 h2) a == sel h1 a
+                      if contains h2 a then sel (concat h1 h2) a=sel h2 a else sel (concat h1 h2) a=sel h1 a
 
 assume ContainsConcat:forall (a:Type) (h1:heap) (h2:heap) (a:ref a).       {:pattern contains (concat h1 h2) a}
                       contains (concat h1 h2) a == (contains h1 a || contains h2 a)
@@ -56,11 +56,11 @@ opaque logic type modifies (mods:set aref) (h:heap) (h':heap) =
 
 let only x = Set.singleton (Ref x)
 
-val op_Hat_Plus_Plus : #a:Type -> r:ref a -> set aref -> Tot (set aref)
+(* val op_Hat_Plus_Plus<u> : #a:Type(u) -> r:ref a -> set (aref<u>) -> Tot (set (aref<u>)) *)
 let op_Hat_Plus_Plus (#a:Type) r s = Set.union (Set.singleton (Ref r)) s
 
-val op_Plus_Plus_Hat : #a:Type -> set aref -> r:ref a -> Tot (set aref)
+(* val op_Plus_Plus_Hat<u> : #a:Type(u) -> set (aref<u>) -> r:ref a -> Tot (set (aref<u>)) *)
 let op_Plus_Plus_Hat (#a:Type) s r = Set.union s (Set.singleton (Ref r))
 
-val op_Hat_Plus_Hat : #a:Type -> #b:Type -> ref a -> ref b -> Tot (set aref)
+(* val op_Hat_Plus_Hat<u> : #a:Type(u) -> #b:Type(u) -> ref a -> ref b -> Tot (set (aref<u>)) *)
 let op_Hat_Plus_Hat (#a:Type) (#b:Type) r1 r2 = Set.union (Set.singleton (Ref r1)) (Set.singleton (Ref r2))

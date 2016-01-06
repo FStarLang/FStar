@@ -246,6 +246,10 @@ regressions:
 	make -C ../examples/crypto clean rpc-test cnt-test
 	#make -C ../examples/wysteria a.out distclean  //AR: cannot compile Crypto.ml, as it uses assume type
 
+test_universes:
+	(cd ../lib; ../bin/fstar listTot.fst --universes)
+	(cd ../lib; ../bin/fstar ext.fst FStar.Set.fst FStar.Heap.fst --universes)
+
 test.net: clean $(BIN)/fstar.exe boot
 	make -C ../examples
 

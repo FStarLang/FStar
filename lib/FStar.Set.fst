@@ -21,8 +21,8 @@ module FStar.Set
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 open FStar.FunctionalExtensionality
 
-(* abstract *) type set (a:Type0) = a -> Tot bool
-(* abstract *) type Equal (#a:Type0) (s1:set a) (s2:set a) = FEq s1 s2
+(* abstract *) type set a = a -> Tot bool
+(* abstract *) type Equal (#a:Type) (s1:set a) (s2:set a) = FEq s1 s2
 
 (* destructors *)
 

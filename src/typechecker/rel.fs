@@ -1723,14 +1723,18 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     end
           end
 
+      | Tm_ascribed(t1, _, _), _ -> 
+        solve_t' env ({problem with lhs=t1}) wl
+
+      | _, Tm_ascribed(t2, _, _)-> 
+        solve_t' env ({problem with rhs=t2}) wl
+
       | Tm_let _, _
-      | Tm_ascribed _ , _
       | Tm_meta _, _
       | Tm_delayed _, _
-      | _, Tm_ascribed _
       | _, Tm_meta _
       | _, Tm_delayed _
-      | _, Tm_let _ -> failwith "Impossible"
+      | _, Tm_let _ -> failwith (Util.format2 "Impossible: %s and %s" (Print.tag_of_term t1) (Print.tag_of_term t2))
 
       | _ -> giveup env "head mismatch" orig
 
@@ -1914,7 +1918,7 @@ let new_t_prob env t1 rel t2 =
 let solve_and_commit env probs err =
   let probs = if !Options.eager_inference then {probs with defer_ok=false} else probs in
   let tx = Unionfind.new_transaction () in
-  let sol=  solve env probs in
+  let sol = solve env probs in
   match sol with
     | Success (deferred) ->
       Unionfind.commit tx;
