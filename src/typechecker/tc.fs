@@ -1701,6 +1701,54 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
     then Util.print_string (Print.eff_decl_to_string ed);
     ed
 
+let tc_lex_t env ses quals lids = 
+    (* We specifically type lex_t as:
+     
+          type lex_t<u> : Type(u) =
+          datacon LexTop<utop>  : lex_t<utop>
+          datacon LexCons<ucons1, ucons2> : #a:Type(ucons1) -> hd:a -> tl:lex_t<ucons2> -> lex_t<max ucons1 ucons2>
+    *)
+    assert (quals = []);
+    begin match lids with 
+        | [lex_t; lex_top; lex_cons] when 
+            lid_equals lex_t Const.lex_t_lid 
+            && lid_equals lex_top Const.lextop_lid 
+            && lid_equals lex_cons Const.lexcons_lid -> ()
+        | _ -> assert false
+    end;
+    begin match ses with 
+      | [Sig_inductive_typ(lex_t, [], [], t, _, _, [], r);
+         Sig_datacon(lex_top, [], _t_top, _lex_t_top, 0, [], _, r1);
+         Sig_datacon(lex_cons, [], _t_cons, _lex_t_cons, 0, [], _, r2)]
+         when (lid_equals lex_t Const.lex_t_lid
+            && lid_equals lex_top Const.lextop_lid
+            && lid_equals lex_cons Const.lexcons_lid) ->
+
+        let u = S.new_univ_name (Some r) in 
+        let t = mk (Tm_type(U_name u)) None r in
+        let t = Subst.close_univ_vars [u] t in
+        let tc = Sig_inductive_typ(lex_t, [u], [], t, [], [Const.lextop_lid; Const.lexcons_lid], [], r) in
+
+        let utop = S.new_univ_name (Some r1) in 
+        let lex_top_t = mk (Tm_uinst(S.fvar None Const.lex_t_lid r1, [U_name utop])) None r1 in
+        let lex_top_t = Subst.close_univ_vars [utop] lex_top_t in
+        let dc_lextop = Sig_datacon(lex_top, [utop], lex_top_t, Const.lex_t_lid, 0, [], [], r1) in
+       
+        let ucons1 = S.new_univ_name (Some r2) in 
+        let ucons2 = S.new_univ_name (Some r2) in 
+        let lex_cons_t = 
+            let a = S.new_bv (Some r2) (mk (Tm_type(U_name ucons1)) None r2) in
+            let hd = S.new_bv (Some r2) (S.bv_to_name a) in
+            let tl = S.new_bv (Some r2) (mk (Tm_uinst(S.fvar None Const.lex_t_lid r2, [U_name ucons2])) None r2) in
+            let res = mk (Tm_uinst(S.fvar None Const.lex_t_lid r2, [U_max [U_name ucons1; U_name ucons2]])) None r2 in
+            Util.arrow [(a, Some Implicit); (hd, None); (tl, None)] (S.mk_Total res) in
+        let lex_cons_t = Subst.close_univ_vars [ucons1;ucons2]  lex_cons_t in
+        let dc_lexcons = Sig_datacon(lex_cons, [ucons1;ucons2], lex_cons_t, Const.lex_t_lid, 0, [], [], r2) in
+        Sig_bundle([tc; dc_lextop; dc_lexcons], [], lids, Env.get_range env)
+      | _ -> 
+        failwith (Util.format1 "Unexpected lex_t: %s\n" (Print.sigelt_to_string (Sig_bundle(ses, [], lids, Range.dummyRange))))
+    end
+
 let tc_inductive env ses quals lids = 
     (*  Consider this illustrative example:
          
@@ -1935,6 +1983,18 @@ let rec tc_decl env se = match se with
     | Sig_datacon _ -> 
       failwith "Impossible bare data-constructor"
     
+    | Sig_bundle(ses, quals, lids, r) when lids |> Util.for_some (lid_equals Const.lex_t_lid) ->
+      //lex_t is very special; it uses a more expressive form of universe polymorphism than is allowed elsewhere
+      //Instead of this special treatment, we could make use of explicit lifts, but LexCons is used pervasively
+      (* 
+          type lex_t<u> =
+           | LexTop<u>  : lex_t<u>
+           | LexCons<u1, u2> : #a:Type(u1) -> a -> lex_t<u2> -> lex_t<max u1 u2>
+      *)
+      let env = Env.set_range env r in
+      let se = tc_lex_t env ses quals lids  in 
+      se, Env.push_sigelt env se
+
     | Sig_bundle(ses, quals, lids, r) ->
       let env = Env.set_range env r in
       let se = tc_inductive env ses quals lids  in 

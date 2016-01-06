@@ -252,7 +252,7 @@ and sigelt =
    i.e., all the tycons and typ_abbrevs first; then all the data which may refer to the tycons/abbrevs *)
   | Sig_bundle         of list<sigelt>              //the set of mutually defined type and data constructors 
                        * list<qualifier> 
-                       * list<lident> 
+                       * list<lident>               //all the inductive types and data constructor names in this bundle
                        * Range.range
   | Sig_datacon        of lident 
                        * univ_names                 //universe variables

@@ -234,8 +234,8 @@ type eff_decl = {
     trivial     :tscheme;
 }
 and sigelt =
-  | Sig_inductive_typ          of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t 
-                       * univ_names                 //u1..un
+  | Sig_inductive_typ  of lident                   //type l forall u1..un. (x1:t1) ... (xn:tn) : t 
+                       * univ_names                //u1..un
                        * binders                   //(x1:t1) ... (xn:tn)
                        * typ                       //t
                        * list<lident>              //mutually defined types
@@ -249,10 +249,10 @@ and sigelt =
    i.e., all the tycons and typ_abbrevs first; then all the data which may refer to the tycons/abbrevs *)
   | Sig_bundle         of list<sigelt>              //the set of mutually defined type and data constructors 
                        * list<qualifier> 
-                       * list<lident> 
+                       * list<lident>               //all the inductive types and data constructor names in this bundle
                        * Range.range
   | Sig_datacon        of lident 
-                       * univ_names                  //universe variables
+                       * univ_names                 //universe variables
                        * typ 
                        * lident                     //the inductive type of the value this constructs
                        * int                        //and the number of parameters of the inductive

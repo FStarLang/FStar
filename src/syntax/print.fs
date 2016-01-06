@@ -368,13 +368,22 @@ let eff_decl_to_string ed =
 let rec sigelt_to_string x = match x with
   | Sig_pragma(ResetOptions, _) -> "#reset-options"
   | Sig_pragma(SetOptions s, _) -> Util.format1 "#set-options \"%s\"" s
-  | Sig_inductive_typ(lid, _, tps, k, _, _, quals, _) -> Util.format4 "%s type %s %s : %s" (quals_to_string quals) lid.str (binders_to_string " " tps) (term_to_string k)
-  | Sig_datacon(lid, _, t, _, _, _, _, _) -> Util.format2 "datacon %s : %s" lid.str (term_to_string t)
+  | Sig_inductive_typ(lid, univs, tps, k, _, _, quals, _) -> 
+    Util.format4 "%s type %s %s : %s" 
+             (quals_to_string quals) 
+             lid.str
+             (binders_to_string " " tps) 
+             (term_to_string k)
+  | Sig_datacon(lid, univs, t, _, _, _, _, _) -> 
+    if !Options.print_implicits 
+    then let univs, t = Subst.open_univ_vars univs t in
+         Util.format3 "datacon<%s> %s : %s" (univ_names_to_string univs) lid.str (term_to_string t)
+    else Util.format2 "datacon %s : %s" lid.str (term_to_string t)
   | Sig_declare_typ(lid, univs, t, quals, _) -> 
     let univs, t = Subst.open_univ_vars univs t in
     Util.format4 "%s val %s %s : %s" (quals_to_string quals) lid.str 
         (if !Options.print_implicits 
-         then Util.format1 "<%s>" (univs |> List.map (fun x -> x.idText) |> String.concat ", ")
+         then Util.format1 "<%s>" (univ_names_to_string univs)
          else "")
         (term_to_string t)
   | Sig_assume(lid, f, _, _) -> Util.format2 "val %s : %s" lid.str (term_to_string f)
