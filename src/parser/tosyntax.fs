@@ -780,6 +780,15 @@ and desugar_args env args =
           
 and desugar_comp r default_ok env t =
     let fail msg = raise (Error(msg, r)) in
+    let is_requires (t, _) = match (unparen t).tm with 
+        | Requires _ -> true
+        | _ -> false in
+    let is_ensures (t, _) = match (unparen t).tm with 
+        | Ensures _ -> true
+        | _ -> false in
+    let is_app head (t, _) = match (unparen t).tm with 
+       | App({tm=Var d}, _, _) -> d.ident.idText = head
+       | _ -> false in
     let pre_process_comp_typ (t:AST.term) =
         let head, args = head_and_args t in
         match head.tm with
@@ -791,7 +800,8 @@ and desugar_comp r default_ok env t =
                     | [ens] -> (* a single ensures clause *)
                       let req_true = mk_term (Requires (mk_term (Name C.true_lid) t.range Formula, None)) t.range Type, Nothing in
                       [unit_tm;req_true;ens;nil_pat]
-                    | [req;ens] -> [unit_tm;req;ens;nil_pat]
+                    | [req;ens] when (is_requires req && is_ensures ens) -> [unit_tm;req;ens;nil_pat]
+                    | [req;ens;dec] when (is_requires req && is_ensures ens && is_app "decreases" dec) -> [unit_tm;req;ens;nil_pat;dec]
                     | more -> unit_tm::more in      
               let head = fail_or (Env.try_lookup_effect_name env) lemma in
               head, args

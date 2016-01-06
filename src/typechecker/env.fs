@@ -83,6 +83,15 @@ and solver_t = {
     finish       :unit -> unit;
     refresh      :unit -> unit;
 }
+and guard_t = {
+  guard_f:    guard_formula;
+  deferred:   deferred;
+  univ_ineqs: list<univ_ineq>;
+  implicits:  list<(env * uvar * term * typ * Range.range)>;
+}
+
+type implicits = list<(env * uvar * term * typ * Range.range)>
+
 type sigtable = Util.smap<sigelt>
 let default_table_size = 200
 let new_sigtab () = Util.smap_create default_table_size

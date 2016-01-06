@@ -47,7 +47,7 @@ val lemma_append_inj: #a:Type -> s1:seq a -> s2:seq a -> t1:seq a -> t2:seq a {l
            (ensures (Eq s1 t1 /\ Eq s2 t2))
 let lemma_append_inj #a s1 s2 t1 t2 =
   lemma_append_len_disj s1 s2 t1 t2;
-  Classical.forall_intro (lemma_append_inj_l s1 s2 t1 t2);
+  Classical.forall_intro #a #(fun i -> index s1 i == index s1 i) (lemma_append_inj_l s1 s2 t1 t2);
   Classical.forall_intro (lemma_append_inj_r s1 s2 t1 t2)
 
 val head: #a:Type -> s:seq a{length s > 0} -> Tot a
@@ -332,7 +332,7 @@ val lemma_seq_frame_hi: #a:Type -> s1:seq a -> s2:seq a{length s1 = length s2} -
   -> Lemma
   (requires (s1 == (splice s2 i s1 j)))
   (ensures  ((slice s1 m n == slice s2 m n) /\ (index s1 m == index s2 m)))
-let lemma_seq_frame_hi s1 s2 i j m n =
+let lemma_seq_frame_hi #a s1 s2 i j m n =
   cut (Eq (slice s1 m n) (slice s2 m n))
 
 val lemma_seq_frame_lo: #a:Type -> s1:seq a -> s2:seq a{length s1 = length s2} -> i:nat -> j:nat{i <= j} -> m:nat{j < m} -> n:nat{m <= n && n <= length s1}
@@ -403,18 +403,17 @@ let lemma_trans_perm #a s1 s2 s3 i j = ()
 val snoc : #a:Type -> seq a -> a -> Tot (seq a)
 let snoc #a s x = Seq.append s (Seq.create 1 x)
 
-opaque logic type found (i:nat) = True
+opaque type found (i:nat) = True
 
 val seq_find_aux : #a:Type -> f:(a -> Tot bool) -> l:seq a
                    -> ctr:nat{ctr <= Seq.length l}
                    -> Pure (option a)
                       (requires (forall (i:nat{ i < Seq.length l /\ i >= ctr}).
                                         not (f (Seq.index l i) )))
-                      (ensures (fun o -> (is_None o ==> (forall (i:nat{i < Seq.length l}).
-                                                         not (f (Seq.index l i))))
-                                      /\ (is_Some o ==> (f (Some.v o)
-                                                        /\ (exists (i:nat{i < Seq.length l}). //{:pattern (found i)}
-                                                            o = Some (Seq.index l i))))))
+                      (ensures (function 
+                                  | None -> forall (i:nat{i < Seq.length l}).  not (f (Seq.index l i))
+                                  | Some x -> f x /\  (exists (i:nat{i < Seq.length l}). //{:pattern (found i)}
+                                                            x = Seq.index l i)))
 
 let rec seq_find_aux #a f l ctr =
   match ctr with
@@ -429,11 +428,10 @@ let rec seq_find_aux #a f l ctr =
 val seq_find: #a:Type -> f:(a -> Tot bool) -> l:seq a ->
                      Pure (option a)
                           (requires True)
-                          (ensures (fun o -> (is_None o ==> (forall (i:nat{i < Seq.length l}). not (f (Seq.index l i))))
-                                          /\ (is_Some o
-                                              ==> (f (Some.v o)
-                                                   /\ (exists (i:nat{i < Seq.length l}).{:pattern (found i)}
-                                                       found i /\ o = Some (Seq.index l i))))))
+                          (ensures (function
+                                      | None -> forall (i:nat{i < Seq.length l}). not (f (Seq.index l i))
+                                      | Some x -> f x /\ (exists (i:nat{i < Seq.length l}).{:pattern (found i)}
+                                                          found i /\ x = Seq.index l i)))
 
 let seq_find #a f l =
   admit ();

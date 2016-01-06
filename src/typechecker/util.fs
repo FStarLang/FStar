@@ -64,7 +64,7 @@ let as_uvar : typ -> uvar = function
 
 let new_implicit_var env k =
     let t, u = new_uvar_aux env k in
-    let g = {Rel.trivial_guard with implicits=[(as_uvar u, t, k, u.pos)]} in
+    let g = {Rel.trivial_guard with implicits=[(env, as_uvar u, t, k, u.pos)]} in
     t, (as_uvar u, u.pos), g
 
 let check_uvars r t =

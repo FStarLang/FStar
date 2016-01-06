@@ -51,13 +51,6 @@ type guard_formula =
   | NonTrivial of formula
 
 type deferred = list<(string * prob)>
-
-type implicits = list<(uvar * term * typ * Range.range)>
 type univ_ineq = universe * universe
-type guard_t = {
-  guard_f:    guard_formula;
-  deferred:   deferred;
-  univ_ineqs: list<univ_ineq>;
-  implicits:  implicits;
-}
+
 

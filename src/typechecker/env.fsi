@@ -75,6 +75,14 @@ and solver_t = {
     finish       :unit -> unit;
     refresh      :unit -> unit;
 }
+and guard_t = {
+  guard_f:    guard_formula;
+  deferred:   deferred;
+  univ_ineqs: list<univ_ineq>;
+  implicits:  list<(env * uvar * term * typ * Range.range)>;
+}
+
+type implicits = list<(env * uvar * term * typ * Range.range)>
 
 val initial_env : (env -> term -> typ*guard_t) -> solver_t -> lident -> env
 

@@ -2089,14 +2089,14 @@ let rec solve_deferred_constraints env (g:guard_t) =
    resolve_all_implicits env g;
    solve_universe_inequalities env g.univ_ineqs;
    match gopt with
-    | Some d -> {g with deferred=d}
-    | _ -> failwith "impossible"
+    | Some [] -> {g with deferred=[]}
+    | _ -> failwith "impossible: Unexpected deferred constraints remain"
 
 and resolve_all_implicits env g = 
-   let unresolved u = match Unionfind.find u with
+  let unresolved u = match Unionfind.find u with
     | Uvar -> true
     | _ -> false in
-   g.implicits |> List.iter (fun (u, tm, k, r) -> 
+   g.implicits |> List.iter (fun (env, u, tm, k, r) -> 
             if unresolved u 
             then raise (Error(Util.format1 "Unresolved implicit argument: %s" (Print.uvar_to_string u), r));
             let env = Env.set_expected_typ env k in
@@ -2106,13 +2106,14 @@ and resolve_all_implicits env g =
                              (Print.uvar_to_string u) (Print.term_to_string tm) (Print.term_to_string k);
             let _, g = env.type_of ({env with use_bv_sorts=true}) tm in 
             let g' = solve_deferred_constraints env g |> simplify_guard env in
-            if not (is_trivial g')
-            then raise (Error(Util.format3 "Inferred implicit argument %s to be %s; \
-                                            but it has a non-trivial verification condition:\n%s" 
-                                            (Print.uvar_to_string u)
-                                            (Print.term_to_string tm) 
-                                            (guard_to_string env g'), r)))
-
+            match g.guard_f with 
+                | Trivial -> ()
+                | NonTrivial vc -> env.solver.solve env vc)
+//            raise (Error(Util.format3 "Inferred implicit argument %s to be %s; \
+//                                            but it has a non-trivial verification condition:\n%s" 
+//                                            (Print.uvar_to_string u)
+//                                            (Print.term_to_string tm) 
+//                                            (guard_to_string env g'), r)))
 
 let discharge_guard env (g:guard_t) =
    let g = solve_deferred_constraints env g in

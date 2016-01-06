@@ -812,9 +812,9 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                     tc_args (subst, arg::outargs, arg::arg_rets, comps, g, fvs) rest cres rest'
                 else if TcUtil.is_pure_or_ghost_effect env c.eff_name //its conditionally pure; can substitute, but must check its WP
                 then let subst = maybe_extend_subst subst (List.hd bs) e in
-                    let comps, guard =
+                     let comps, guard =
                         (Some x, c)::comps, g in
-                    tc_args (subst, arg::outargs, arg::arg_rets, comps, guard, fvs) rest cres rest'
+                     tc_args (subst, arg::outargs, arg::arg_rets, comps, guard, fvs) rest cres rest'
                 else if is_null_binder (List.hd bs) //it's not pure, but the function isn't dependent; just check its WP
                 then let newx = S.new_bv (Some e.pos) c.res_typ in 
                      let arg' = S.arg <| S.bv_to_name newx in
@@ -1097,9 +1097,7 @@ and tc_eqn scrutinee env branch
         let pat_exp = SS.compress pat_exp |> Util.unmeta in
         match pat_exp.n with
             | Tm_uvar _
-            | Tm_app({n=Tm_uvar _}, _) -> 
-              raise (Error("An implicit variable could not be resolved in this pattern", pat_exp.pos))
-
+            | Tm_app({n=Tm_uvar _}, _) 
             | Tm_name _
             | Tm_constant Const_unit -> []
             | Tm_constant _ -> [mk_Tm_app Util.teq [arg scrutinee_tm; arg pat_exp] None scrutinee_tm.pos]

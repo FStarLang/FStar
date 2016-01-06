@@ -592,8 +592,8 @@ and rebuild : cfg -> env -> stack -> term -> term =
                     let t = compress t in 
                     match p.v with 
                     | Pat_disj ps -> FStar.Util.find_map ps (matches_pat t)
-                    | Pat_var _ -> Some [t]
-                    | Pat_wild _
+                    | Pat_var _ 
+                    | Pat_wild _ -> Some [t]
                     | Pat_dot_term _ -> Some []
                     | Pat_constant s -> 
                       begin match t.n with 
