@@ -1644,3 +1644,38 @@ CAMLprim value ocaml_ec_point_new(value mlgroup) {
 
     CAMLreturn(aout);
 }
+
+CAMLprim value ocaml_ec_group_set_point_conversion_form(value mlgroup, value mlcomp) {
+  CAMLparam2(mlgroup, mlcomp);
+
+  EC_GROUP* group = EC_GROUP_val(mlgroup);
+  int compression = Val_int(mlcomp);
+  if (compression)
+    EC_GROUP_set_point_conversion_form(group, POINT_CONVERSION_COMPRESSED);
+  else
+    EC_GROUP_set_point_conversion_form(group, POINT_CONVERSION_UNCOMPRESSED);
+
+  CAMLreturn(Val_unit);
+}
+
+CAMLprim value ocaml_ec_point_set_affine_coordinates_GFp(value mlgroup, value mlpoint, value mlx, value mly) {
+  CAMLparam4(mlgroup, mlpoint, mlx, mly);
+
+  EC_GROUP* group = EC_GROUP_val(mlgroup);
+  EC_POINT* point = EC_POINT_val(mlpoint);
+  BIGNUM* x = BN_bin2bn((uint8_t*) String_val(mlx), caml_string_length(mlx), NULL);
+  BIGNUM* y = BN_bin2bn((uint8_t*) String_val(mly), caml_string_length(mly), NULL);
+
+  EC_POINT_set_affine_coordinates_GFp(group, point, x, y, NULL);
+
+  CAMLreturn(Val_unit);
+}
+
+CAMLprim value ocaml_ec_point_is_on_curve(value mlgroup, value mlpoint) {
+  CAMLparam2(mlgroup, mlpoint);
+
+  EC_GROUP* group = EC_GROUP_val(mlgroup);
+  EC_POINT* point = EC_POINT_val(mlpoint);
+
+  CAMLreturn(Val_int(EC_POINT_is_on_curve(group, point, NULL)));
+}

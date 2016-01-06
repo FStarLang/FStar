@@ -380,6 +380,8 @@ type ssl_ec_group
 
 external ocaml_ec_group_new_by_curve_name: string -> ssl_ec_group =
   "ocaml_ec_group_new_by_curve_name"
+external ocaml_ec_group_set_point_conversion_form: ssl_ec_group -> bool -> unit =
+  "ocaml_ec_group_set_point_conversion_form"
 
 let ec_group_new = function
   | ECC_P256 -> ocaml_ec_group_new_by_curve_name "prime256v1"
@@ -389,14 +391,21 @@ let ec_group_new = function
 type ssl_ec_point
 
 external ocaml_ec_point_new: ssl_ec_group -> ssl_ec_point = "ocaml_ec_point_new"
+external ocaml_ec_point_set_affine_coordinates_GFp:
+  ssl_ec_group -> ssl_ec_point -> bytes -> bytes -> unit =
+  "ocaml_ec_point_set_affine_coordinates_GFp"
+external ocaml_ec_point_is_on_curve: ssl_ec_group -> ssl_ec_point -> bool =
+  "ocaml_ec_point_is_on_curve"
 
 let ec_point_serialize ecp =
   failwith "Not implemented"
 
-let ec_is_on_curve params point =
+let ec_is_on_curve params { ecx; ecy } =
   let g = ec_group_new params.curve in
+  ocaml_ec_group_set_point_conversion_form g params.point_compression;
   let p = ocaml_ec_point_new g in
-  failwith "Not implemented"
+  ocaml_ec_point_set_affine_coordinates_GFp g p ecx ecy;
+  ocaml_ec_point_is_on_curve g p
 
 let ecdh_agreement key point =
   failwith "Not implemented"
