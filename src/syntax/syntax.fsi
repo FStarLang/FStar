@@ -319,6 +319,7 @@ val set_range_of_bv: bv -> range -> bv
 val tun:      term
 val teff:     term
 val is_teff:  term -> bool
+val is_type:  term -> bool
 
 val no_names:          freenames
 val no_uvs:            uvars

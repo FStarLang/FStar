@@ -993,6 +993,7 @@ let mk_indexed_projectors fvq refine_domain env tc lid tps (fields:list<S.binder
             lid_equals C.prims_lid  (Env.current_module env)
             || fvq<>Data_ctor
             || Options.dont_gen_projectors (Env.current_module env).str in
+        let no_decl = Syntax.is_type x.sort in
         let quals q = if only_decl then S.Assumption::q else q in
         let quals = quals [S.Logic; S.Projector(lid, x.ppname)] in
         let decl = Sig_declare_typ(field_name, [], t, quals, range_of_lid field_name) in
@@ -1012,14 +1013,13 @@ let mk_indexed_projectors fvq refine_domain env tc lid tps (fields:list<S.binder
             let pat = (S.Pat_cons(S.fv lid (Some fvq), arg_pats) |> pos, None, S.bv_to_name projection) in
             let body = mk (Tm_match(arg_exp, [U.branch pat])) None p in
             let imp = U.abs binders body in
-            let lb = {
-                lbname=Inr field_name;
-                lbunivs=[];
-                lbtyp=tun;
-                lbeff=C.effect_Tot_lid;
-                lbdef=imp;
-            } 
-            in [decl; Sig_let((false, [lb]), p, [lb.lbname |> right], quals)]) |> List.flatten
+            let lb = {  lbname=Inr field_name;
+                        lbunivs=[];
+                        lbtyp=tun;
+                        lbeff=C.effect_Tot_lid;
+                        lbdef=imp } in
+            let impl = Sig_let((false, [lb]), p, [lb.lbname |> right], quals) in
+            if no_decl then [impl] else [decl;impl]) |> List.flatten
 
 let mk_data_projectors env = function
   | Sig_datacon(lid, _, t, l, n, quals, _, _) when (//(not env.iface || env.admitted_iface) &&

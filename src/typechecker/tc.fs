@@ -1157,11 +1157,11 @@ and check_top_level_let env e =
        let e1, univ_vars, c1, g1, annotated = check_let_bound_def true env lb in
 
        (* Maybe generalize its type *)
-       let _, e1, univ_vars, c1 = 
-            let gen_only_universes = annotated && not env.generalize in
-            assert (not gen_only_universes || univ_vars=[]);
-            let _, e1, univs, c1 = List.hd (TcUtil.generalize gen_only_universes env [lb.lbname, e1, c1.comp()]) in
-            lb.lbname, e1, univs, Util.lcomp_of_comp c1 in
+       let e1, univ_vars, c1 = 
+            if annotated && not env.generalize 
+            then SS.close_univ_vars univ_vars e1, univ_vars, Util.lcomp_of_comp <| SS.close_univ_vars_comp univ_vars (c1.comp())
+            else let _, e1, univs, c1 = List.hd (TcUtil.generalize false env [lb.lbname, e1, c1.comp()]) in
+                 e1, univs, Util.lcomp_of_comp c1 in
                               
        (* Check that it doesn't have a top-level effect; warn if it does *)
        let e2, c1 =
@@ -1237,8 +1237,12 @@ and check_top_level_let_rec env top =
            Rel.discharge_guard env g_lbs;
          
            let lbs = 
-              let gen_only_universes = not env.generalize in
-              let ecs = TcUtil.generalize gen_only_universes env 
+              if not env.generalize
+              then lbs |> List.map (fun lb -> 
+                    if lb.lbunivs = [] 
+                    then lb  
+                    else Util.letbinding true lb.lbname lb.lbunivs lb.lbtyp lb.lbeff lb.lbdef)
+              else let ecs = TcUtil.generalize false env 
                       (lbs |> List.map (fun lb -> lb.lbname, lb.lbdef, Util.total_comp lb.lbtyp (range_of_lbname lb.lbname))) in
                    ecs |> List.map (fun (x, e, uvs, c) -> 
                       Util.letbinding false x uvs (Util.comp_result c) (Util.comp_effect_name c) e) in
@@ -1994,10 +1998,7 @@ let rec tc_decl env se = match se with
       let env = Env.set_range env r in
       assert (uvs = []);
       let k = fst (U.type_u()) in
-      let uvs, t = 
-        if quals |> List.contains Assumption
-        then check_and_gen env t k
-        else check_nogen env t k in
+      let uvs, t = check_and_gen env t k in
       let se = Sig_declare_typ(lid, uvs, t, quals, r) in
       let env = Env.push_sigelt env se in
       se, env
