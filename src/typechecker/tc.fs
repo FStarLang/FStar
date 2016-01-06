@@ -2085,22 +2085,37 @@ let rec tc_decl env se = match se with
 
     | Sig_let(lbs, r, lids, quals) ->
       let env = Env.set_range env r in
+      let check_quals_eq l qopt q = match qopt with 
+        | None -> Some q
+        | Some q' -> 
+          if List.length q = List.length q' 
+          && List.forall2 Util.qualifier_equal q q'
+          then Some q
+          else raise (Error(Util.format1 "Inconsistent qualifier annotations on %s" (Print.lid_to_string l), r)) in
+
       (* 1. (a) Annotate each lb in lbs with a type from the corresponding val decl, if there is one
             (b) Generalize the type of lb only if none of the lbs have val decls
        *)
-      let should_generalize, lbs' = snd lbs |> List.fold_left (fun (gen, lbs) lb ->
+      let should_generalize, lbs', quals_opt = snd lbs |> List.fold_left (fun (gen, lbs, quals_opt) lb ->
             let lbname = right lb.lbname in //this is definitely not a local let binding
-            let gen, lb = match Env.try_lookup_val_decl env lbname with
-              | None -> gen, lb //no annotation found; use whatever was in the let binding
+            let gen, lb, quals_opt = match Env.try_lookup_val_decl env lbname with
+              | None -> gen, lb, quals_opt //no annotation found; use whatever was in the let binding
 
               | Some ((uvs,tval), quals) ->
+                let quals_opt = check_quals_eq lbname quals_opt quals in
                 let _ = match lb.lbtyp.n with
                   | Tm_unknown -> ()
                   | _ -> Errors.warn r "Annotation from val declaration overrides inline type annotation" in
                 false, //explicit annotation provided; do not generalize
-                mk_lb (Inr lbname, uvs, Const.effect_ALL_lid, tval, lb.lbdef)  in
+                mk_lb (Inr lbname, uvs, Const.effect_ALL_lid, tval, lb.lbdef), 
+                quals_opt  in
 
-             gen, lb::lbs) (true, []) in
+             gen, lb::lbs, quals_opt) (true, [], if quals=[] then None else Some quals) in
+
+      let quals = match quals_opt with 
+        | None -> []
+        | Some q -> q in
+
       let lbs' = List.rev lbs' in
 
       (* 2. Turn the top-level lb into a Tm_let with a unit body *)
@@ -2130,77 +2145,71 @@ let rec tc_decl env se = match se with
       se, env
 
 
-let non_private env se : list<sigelt> =
-   let is_private quals = List.contains Private quals in
+let for_export se : list<sigelt> =
+   (* Exporting symbols based on whether they have been marked 'private' or 'abstract'
+      At this level, there is no distinction between 'private' and 'abstract'.
+
+        -- Symbols marked 'private' are further restricted by the visibility rules enforced during desugaring.
+           i.e., if a module A marks symbol x as private, then a module B simply cannot refer to A.x
+           OTOH, if A marks x as abstract, B can refer to A.x, but cannot see its definition.
+
+      Here, if a symbol is private or abstract, we only export its declaration, not its definition. 
+      The reason we export the declaration of private symbols is to account for cases like this:
+
+        module A 
+           private let x = 0
+           let y = x
+
+        When encoding A to the SMT solver, we need to encode the definition of y.
+        If we simply eliminated x altogether when exporting it, the body of y would no longer be well formed.
+        So, instead, in effect, we export A as
+
+        module A
+            assume val x : int
+            let y = x
+
+       The same behavior occurs is x were marked 'abstract'
+    *)
+   let private_or_abstract quals = quals |> Util.for_some (fun x -> x=Private || x=Abstract) in
    match se with
+    | Sig_pragma         _ -> []
+
+    | Sig_inductive_typ _ 
+    | Sig_datacon _ -> failwith "Impossible"
+
     | Sig_bundle(ses, quals, _, _) ->
-      [se]
+      if private_or_abstract quals
+      then ses |> List.filter (function Sig_inductive_typ _ -> true | _ -> false)
+      else [se]
 
-   | Sig_inductive_typ(_, _, _, _, _, _, quals, r) ->
-     if is_private quals
-     then []
-     else [se]
+    | Sig_assume(_, _, quals, _) ->
+      if private_or_abstract quals
+      then []
+      else [se]
 
-   | Sig_assume(_, _, quals, _) ->
-     if is_private quals
-     then []
-     else [se]
+    | Sig_declare_typ(_, _, _, quals, _) -> 
+      //declarations vanish, unless they are assumed
+      //they will be replaced by the definitions that must follow
+      if List.contains Assumption quals 
+      then [se]
+      else []
 
-   | Sig_declare_typ(_, _, _, quals, _) ->
-     if is_private quals
-     then []
-     else [se]
+    | Sig_main  _ -> []
 
-   | Sig_main  _ -> []
+    | Sig_new_effect     _
+    | Sig_sub_effect     _
+    | Sig_effect_abbrev  _ -> [se]
 
-   | Sig_new_effect     _
-   | Sig_sub_effect     _
-   | Sig_effect_abbrev  _
-   | Sig_pragma         _ -> [se]
+   
+    | Sig_let(lbs, r, l, quals) ->
+      if private_or_abstract quals
+      then snd lbs |> List.map (fun lb -> 
+           Sig_declare_typ(right lb.lbname, lb.lbunivs, lb.lbtyp, Assumption::quals, r))
+      else [se]
 
-   | Sig_datacon _ -> failwith "Impossible"
-
-   | Sig_let(lbs, r, l, _) ->
-     let check_priv lbs =
-        let is_priv = function
-            | {lbname=Inr l} ->
-            begin match Env.try_lookup_val_decl env l with
-                    | Some (_, qs) -> List.contains Private qs
-                    | _ -> false
-            end
-            | _ -> false in
-        let some_priv = lbs |> Util.for_some is_priv in
-        if some_priv
-        then if lbs |> Util.for_some (fun x -> is_priv x |> not)
-             then raise (Error("Some but not all functions in this mutually recursive nest are marked private", r))
-             else true
-        else false in
-
-
-     let pure_funs, rest = snd lbs |> List.partition (fun lb -> Util.is_pure_or_ghost_function lb.lbtyp && not <| Util.is_lemma lb.lbtyp) in
-     begin match pure_funs, rest with
-        | _::_, _::_ ->
-          raise (Error("Pure functions cannot be mutually recursive with impure functions", r))
-
-        | _::_, [] ->
-          if check_priv pure_funs
-          then []
-          else [se]
-
-        | [], _::_ ->
-          if check_priv rest
-          then []
-          else rest |> List.collect (fun lb -> match lb.lbname with
-                | Inl _ -> failwith "impossible"
-                | Inr l -> [Sig_declare_typ(l, lb.lbunivs, lb.lbtyp, [Assumption], range_of_lid l)])
-
-
-        | [], [] -> failwith "Impossible"
-     end
-
-let tc_decls for_export env ses =
- let ses, all_non_private, env =
-  ses |> List.fold_left (fun (ses, all_non_private, (env:Env.env)) se ->
+let tc_decls env ses =
+ let ses, exports, env =
+  ses |> List.fold_left (fun (ses, exports, (env:Env.env)) se ->
           if Env.debug env Options.Low
           then Util.print1 ">>>>>>>>>>>>>>Checking top-level decl %s\n" (Print.sigelt_to_string se);
           
@@ -2211,29 +2220,9 @@ let tc_decls for_export env ses =
 
           env.solver.encode_sig env se;
 
-          let non_private_decls =
-            if for_export
-            then non_private env se
-            else [] in
-
-          se::ses, non_private_decls::all_non_private, env)
+          se::ses, for_export se::exports, env)
   ([], [], env) in
-  List.rev ses, List.rev all_non_private |> List.flatten, env
-
-let get_exports env modul non_private_decls =
-    let assume_vals decls =
-        decls |> List.map (function
-            | Sig_declare_typ(lid, uvs, t, quals, r) -> Sig_declare_typ(lid, uvs, t, Assumption::quals, r)
-            | s -> s) in
-    if modul.is_interface
-    then non_private_decls
-    else let exports = Util.find_map (Env.modules env) (fun m ->
-            if (m.is_interface && lid_equals modul.name m.name)
-            then Some (m.exports |> assume_vals)
-            else None) in
-         match exports with
-            | None -> non_private_decls
-            | Some e -> e
+  List.rev ses, List.rev exports |> List.flatten, env
 
 let tc_partial_modul env modul =
   let name = Util.format2 "%s %s"  (if modul.is_interface then "interface" else "module") modul.name.str in
@@ -2241,16 +2230,15 @@ let tc_partial_modul env modul =
   let env = {env with Env.is_iface=modul.is_interface; admit=not (Options.should_verify modul.name.str)} in
   if not (lid_equals modul.name Const.prims_lid) then env.solver.push msg;
   let env = Env.set_current_module env modul.name in
-  let ses, non_private_decls, env = tc_decls true env modul.declarations in
-  {modul with declarations=ses}, non_private_decls, env
+  let ses, exports, env = tc_decls env modul.declarations in
+  {modul with declarations=ses}, exports, env
 
 let tc_more_partial_modul env modul decls =
-  let ses, non_private_decls, env = tc_decls true env decls in
+  let ses, exports, env = tc_decls env decls in
   let modul = {modul with declarations=modul.declarations@ses} in
-  modul, non_private_decls, env
+  modul, exports, env
 
-let finish_partial_modul env modul npds =
-  let exports = get_exports env modul npds in
+let finish_partial_modul env modul exports =
   let modul = {modul with exports=exports; is_interface=modul.is_interface} in
   let env = Env.finish_module env modul in
   if not (lid_equals modul.name Const.prims_lid)

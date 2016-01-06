@@ -431,8 +431,14 @@ let unchecked_unify uv t =
     | Fixed _ -> failwith (Util.format1 "Changing a fixed uvar! ?%s\n" (Util.string_of_int <| Unionfind.uvar_id uv))
     | _ -> Unionfind.change uv (Fixed t) (* used to be an alpha-convert t here; but we now have an invariant that t is closed *)
 
-
-
+let qualifier_equal q1 q2 = match q1, q2 with 
+  | Discriminator l1, Discriminator l2 -> lid_equals l1 l2
+  | Projector (l1a, l1b), Projector (l2a, l2b) -> lid_equals l1a l2a && l1b.idText=l2b.idText
+  | RecordType f1, RecordType f2 
+  | RecordConstructor f1, RecordConstructor f2 -> List.length f1 = List.length f2 && List.forall2 lid_equals f1 f2
+  | DefaultEffect (Some l1), DefaultEffect (Some l2) -> lid_equals l1 l2
+  | _ -> q1=q2
+  
 
 (***********************************************************************************************)
 (* closing types and terms *)
