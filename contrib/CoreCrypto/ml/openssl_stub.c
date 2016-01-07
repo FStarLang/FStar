@@ -1691,7 +1691,37 @@ CAMLprim value ocaml_ec_point_set_affine_coordinates_GFp(value mlgroup, value ml
 
   EC_POINT_set_affine_coordinates_GFp(group, point, x, y, NULL);
 
+  BN_free(x);
+  BN_free(y);
+
   CAMLreturn(Val_unit);
+}
+
+CAMLprim value ocaml_ec_point_get_affine_coordinates_GFp(value mlgroup, value mlpoint) {
+  CAMLparam2(mlgroup, mlpoint);
+
+  EC_GROUP* group = EC_GROUP_val(mlgroup);
+  EC_POINT* point = EC_POINT_val(mlpoint);
+  BIGNUM* x = BN_new();
+  BIGNUM* y = BN_new();
+  if (x == NULL || y == NULL)
+    caml_failwith("ocaml_ec_point_get_affine_coordinates_GFp: BN_new failed");
+
+  EC_POINT_get_affine_coordinates_GFp(group, point, x, y, NULL);
+
+  value mlx = caml_alloc_string(BN_num_bytes(x));
+  value mly = caml_alloc_string(BN_num_bytes(y));
+  value mlret = caml_alloc_tuple(2);
+
+  (void) BN_bn2bin(x, (uint8_t*) String_val(mlx));
+  (void) BN_bn2bin(y, (uint8_t*) String_val(mly));
+  Field(mlret, 0) = mlx;
+  Field(mlret, 1) = mly;
+
+  BN_free(x);
+  BN_free(y);
+
+  CAMLreturn(mlret);
 }
 
 CAMLprim value ocaml_ec_point_is_on_curve(value mlgroup, value mlpoint) {
@@ -1701,4 +1731,71 @@ CAMLprim value ocaml_ec_point_is_on_curve(value mlgroup, value mlpoint) {
   EC_POINT* point = EC_POINT_val(mlpoint);
 
   CAMLreturn(Val_int(EC_POINT_is_on_curve(group, point, NULL)));
+}
+
+/* -------------------------------------------------------------------- */
+#define EC_KEY_val(v) (*((EC_KEY**) Data_custom_val(v)))
+
+static void ocaml_ec_key_finalize(value mlkey) {
+    EC_KEY *key = EC_KEY_val(mlkey);
+
+    if (key != NULL)
+        EC_KEY_free(key);
+}
+
+static struct custom_operations key_ops = {
+  .identifier  = "ocaml_ec_key",
+  .finalize    = ocaml_ec_key_finalize,
+  .compare     = custom_compare_default,
+  .hash        = custom_hash_default,
+  .serialize   = custom_serialize_default,
+  .deserialize = custom_deserialize_default,
+};
+
+CAMLprim value ocaml_ec_key_new_by_curve_name(value mlname) {
+    CAMLparam1(mlname);
+    CAMLlocal1(aout);
+
+    int nid = OBJ_txt2nid(String_val(mlname));
+    if (nid == NID_undef)
+      caml_failwith("ocaml_ec_key_new_by_curve_name: invalid name");
+
+    aout = caml_alloc_custom(&key_ops, sizeof(EC_KEY*), 0, 1);
+    EC_KEY_val(aout) = EC_KEY_new_by_curve_name(nid);
+
+    CAMLreturn(aout);
+}
+
+CAMLprim value ocaml_ec_key_generate(value mlkey) {
+  CAMLparam1(mlkey);
+
+  if (EC_KEY_generate_key(EC_KEY_val(mlkey)) != 1)
+    caml_failwith("ocaml_ec_key_generate: EC_KEY_generate_key failed");
+
+  CAMLreturn(Val_unit);
+}
+
+CAMLprim value ocaml_ec_key_get0_public_key(value mlkey) {
+  CAMLparam1(mlkey);
+  CAMLlocal1(aout);
+  EC_KEY* k = EC_KEY_val(mlkey);
+  const EC_POINT* p = EC_KEY_get0_public_key(k);
+  const EC_GROUP* g = EC_KEY_get0_group(k);
+
+  // [p] is a pointer without ownership -- copy it in our data structure.
+  aout = caml_alloc_custom(&point_ops, sizeof(EC_POINT*), 0, 1);
+  EC_POINT_val(aout) = EC_POINT_dup(p, g);
+
+  CAMLreturn(aout);
+}
+
+CAMLprim value ocaml_ec_key_get0_private_key(value mlkey) {
+  CAMLparam1(mlkey);
+  EC_KEY* key = EC_KEY_val(mlkey);
+  const BIGNUM* n = EC_KEY_get0_private_key(key);
+
+  value mln = caml_alloc_string(BN_num_bytes(n));
+  (void) BN_bn2bin(n, (uint8_t*) String_val(mln));
+
+  CAMLreturn(mln);
 }

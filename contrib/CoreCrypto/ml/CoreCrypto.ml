@@ -357,7 +357,7 @@ let dh_agreement (mypriv:dh_key) (opub:bytes) =
   ocaml_dh_fini dh;
   bytes_of_string a
 
-(* EC curves not implemented *)
+(* -------------------------------------------------------------------- *)
 
 type ec_curve =
      | ECC_P256
@@ -381,6 +381,7 @@ external ocaml_gfp_simple_method: unit -> ssl_ec_method = "ocaml_GFp_simple_meth
 external ocaml_gfp_nist_method: unit -> ssl_ec_method = "ocaml_GFp_nist_method"
 external ocaml_gfp_mont_method: unit -> ssl_ec_method = "ocaml_GFp_mont_method"
 
+
 type ssl_ec_group
 
 external ocaml_ec_group_new_by_curve_name: string -> ssl_ec_group =
@@ -388,10 +389,14 @@ external ocaml_ec_group_new_by_curve_name: string -> ssl_ec_group =
 external ocaml_ec_group_set_point_conversion_form: ssl_ec_group -> bool -> unit =
   "ocaml_ec_group_set_point_conversion_form"
 
-let ec_group_new = function
-  | ECC_P256 -> ocaml_ec_group_new_by_curve_name "prime256v1"
-  | ECC_P384 -> ocaml_ec_group_new_by_curve_name "secp384r1"
-  | ECC_P521 -> ocaml_ec_group_new_by_curve_name "secp521r1"
+let ssl_name_of_curve = function
+  | ECC_P256 -> "prime256v1"
+  | ECC_P384 -> "secp384r1"
+  | ECC_P521 -> "secp521r1"
+
+let ec_group_new curve =
+  ocaml_ec_group_new_by_curve_name (ssl_name_of_curve curve)
+
 
 type ssl_ec_point
 
@@ -399,6 +404,9 @@ external ocaml_ec_point_new: ssl_ec_group -> ssl_ec_point = "ocaml_ec_point_new"
 external ocaml_ec_point_set_affine_coordinates_GFp:
   ssl_ec_group -> ssl_ec_point -> string -> string -> unit =
   "ocaml_ec_point_set_affine_coordinates_GFp"
+external ocaml_ec_point_get_affine_coordinates_GFp:
+  ssl_ec_group -> ssl_ec_point -> string * string =
+  "ocaml_ec_point_get_affine_coordinates_GFp"
 external ocaml_ec_point_is_on_curve: ssl_ec_group -> ssl_ec_point -> bool =
   "ocaml_ec_point_is_on_curve"
 
@@ -421,5 +429,29 @@ let ecdsa_sign ha key bytes =
 let ecdsa_verify ha key b1 b2 =
   failwith "Not implemented"
 
+
+type ssl_ec_key
+
+external ocaml_ec_key_new_by_curve_name: string -> ssl_ec_key =
+  "ocaml_ec_key_new_by_curve_name"
+external ocaml_ec_key_generate: ssl_ec_key -> unit =
+  "ocaml_ec_key_generate"
+external ocaml_ec_key_get0_public_key: ssl_ec_key -> ssl_ec_point =
+  "ocaml_ec_key_get0_public_key"
+external ocaml_ec_key_get0_private_key: ssl_ec_key -> string =
+  "ocaml_ec_key_get0_private_key"
+
+let ec_key_new curve =
+  ocaml_ec_key_new_by_curve_name (ssl_name_of_curve curve)
+
 let ec_gen_key params =
-  failwith "Not implemented"
+  let k = ec_key_new params.curve in
+  let g = ec_group_new params.curve in
+  ocaml_ec_key_generate k;
+  let pub_point = ocaml_ec_key_get0_public_key k in
+  let ecx, ecy = ocaml_ec_point_get_affine_coordinates_GFp g pub_point in
+  let priv = ocaml_ec_key_get0_private_key k in {
+    ec_params = params;
+    ec_point = { ecx = bytes_of_string ecx; ecy = bytes_of_string ecy };
+    ec_priv = Some (bytes_of_string priv)
+  }
