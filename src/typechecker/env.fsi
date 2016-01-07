@@ -26,6 +26,14 @@ type binding =
   | Binding_univ     of univ_name
   | Binding_sig_inst of sigelt * universes //the firs component should always be a Sig_inductive
 
+type delta_level = 
+  | NoDelta
+  | OnlyInline
+  | Unfold
+
+(* greatest lower bound of two delta_levels *)
+val glb_delta : delta_level -> delta_level -> delta_level
+
 type mlift = typ -> typ -> typ
 
 type edge = {
@@ -107,7 +115,7 @@ val lookup_val_decl        : env -> lident -> (universes * typ)
 val lookup_datacon         : env -> lident -> universes * typ
 val datacons_of_typ        : env -> lident -> list<lident>
 val typ_of_datacon         : env -> lident -> lident
-val lookup_definition      : env -> lident -> option<(univ_names * term)>
+val lookup_definition      : delta_level -> env -> lident -> option<(univ_names * term)>
 
 val try_lookup_effect_lid  : env -> lident -> option<term>
 val lookup_effect_lid      : env -> lident -> term

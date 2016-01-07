@@ -812,7 +812,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
           let g = {g with guard_f=Trivial} in
           let strengthen () = 
                 //try to normalize one more time, since more unification variables may be resolved now
-                let f = N.normalize [N.Simplify] env f in
+                let f = N.normalize [N.Beta; N.Inline; N.Simplify] env f in
                 match (SS.compress f).n with 
                     | Tm_abs(_, {n=Tm_fvar (fv, _)}) when lid_equals fv.v Const.true_lid -> 
                       //it's trivial
@@ -856,7 +856,7 @@ let pure_or_ghost_pre_and_post env comp =
     let mk_post_type res_t ens =
         let x = S.new_bv None res_t in 
         U.refine x (S.mk_Tm_app ens [S.arg (S.bv_to_tm x)] (Some U.ktype0.n) res_t.pos) in// (Some mk_Kind_type) res_t.pos in
-    let norm t = Normalize.normalize [N.Beta;N.Delta;N.Unlabel] env t in
+    let norm t = Normalize.normalize [N.Beta;N.Inline;N.Unlabel] env t in
     if Util.is_tot_or_gtot_comp comp
     then None, Util.comp_result comp
     else begin match comp.n with
@@ -869,11 +869,8 @@ let pure_or_ghost_pre_and_post env comp =
                          Some (norm req), (norm <| mk_post_type ct.result_typ ens)
                       | _ -> failwith "Impossible"
                    end
-              else let comp = Normalize.normalize_comp [N.DeltaComp] env comp in
-                   begin match comp.n with
-                    | Total _ -> failwith "Impossible"
-                    | Comp ct ->
-                        begin match ct.effect_args with
+              else let ct = Normalize.unfold_effect_abbrev env comp in
+                   begin match ct.effect_args with
                             | (wp, _)::(wlp, _)::_ ->
                               let us_r, _ = Env.lookup_lid env Const.as_requires in
                               let us_e, _ = Env.lookup_lid env Const.as_ensures in
@@ -884,8 +881,8 @@ let pure_or_ghost_pre_and_post env comp =
                               let ens = mk_Tm_app as_ens [(ct.result_typ, Some Implicit); S.arg wlp] None ct.result_typ.pos in
                               Some (norm req), norm (mk_post_type ct.result_typ ens)
                             | _ -> failwith "Impossible"
-                        end
-                    end
+                  end
+                   
          end
 
 (*********************************************************************************************)
@@ -965,10 +962,9 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
      let norm c =
         if debug env Options.Medium 
         then Util.print1 "Normalizing before generalizing:\n\t %s\n" (Print.comp_to_string c);
-         let steps = [N.Eta;N.Delta;N.Beta;N.SNComp] in
          let c = if Options.should_verify env.curmodule.str
-                 then Normalize.normalize_comp steps env c
-                 else Normalize.normalize_comp [N.Beta; N.Delta] env c in
+                 then Normalize.normalize_comp [N.Beta; N.Inline; N.SNComp; N.Eta] env c
+                 else Normalize.normalize_comp [N.Beta] env c in
          if debug env Options.Medium then Util.print1 "Normalized to:\n\t %s\n" (Print.comp_to_string c);
          c in
      let env_uvars = Env.uvars_in_env env in

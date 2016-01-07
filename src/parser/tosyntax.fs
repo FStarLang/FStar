@@ -39,13 +39,16 @@ let trans_aqual = function
 let trans_qual = function
   | AST.Private ->       S.Private
   | AST.Assumption ->    S.Assumption
-  | AST.Opaque ->        S.Opaque
+  | AST.Inline ->        S.Inline
+  | AST.Unfoldable ->    S.Unfoldable
+  | AST.Irreducible ->   S.Irreducible
   | AST.Logic ->         S.Logic
   | AST.TotalEffect ->   S.TotalEffect
   | AST.DefaultEffect -> S.DefaultEffect None
   | AST.Effect ->        S.Effect
   | AST.New  ->          S.New
   | AST.Abstract ->      S.Abstract
+  | AST.Opaque ->        failwith "Impossible"
 
 let trans_pragma = function
   | AST.SetOptions s -> S.SetOptions s

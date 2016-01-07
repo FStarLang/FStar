@@ -189,21 +189,24 @@ val new_uv_set: unit -> uvars
 val new_universe_uvar_set: unit -> set<universe_uvar>
 
 type qualifier =
-  | Private
-  | Assumption
-  | New
-  | Opaque
-  | Logic
-  | Abstract
-  | Discriminator of lident                          (* discriminator for a datacon l *)
-  | Projector of lident * ident                      (* projector for datacon l's argument x *)
-  | RecordType of list<fieldname>                    (* unmangled field names *)
-  | RecordConstructor of list<fieldname>             (* unmangled field names *)
-  | ExceptionConstructor
-  | DefaultEffect of option<lident>
-  | TotalEffect
-  | HasMaskedEffect
-  | Effect
+  | Assumption                             //no definition provided, just a declaration 
+  | New                                    //a fresh type constant, distinct from all prior type constructors
+  | Private                                //name is invisible outside the module
+  | Inline                                 //a definition that *should* always be unfolded by the normalizer
+  | Unfoldable                             //a definition that may be unfolded by the normalizer, but only if necessary (default)
+  | Irreducible                            //a definition that can never be unfolded by the normalizer
+  | Abstract                               //a symbol whose definition is only visible within the defining module
+  | Logic                                  //a symbol whose intended usage is in the refinement logic only (TODO: remove this)
+  | DefaultEffect of option<lident>        //an effect M may have a default Some N
+  | TotalEffect                            //an effect that forbis non-termination
+  //the remaining qualifiers are internal: the programmer cannot write them
+  | Discriminator of lident                //discriminator for a datacon l 
+  | Projector of lident * ident            //projector for datacon l's argument x
+  | RecordType of list<fieldname>          //record type whose unmangled field names are ...
+  | RecordConstructor of list<fieldname>   //record constructor whose unmangled field names are ...
+  | ExceptionConstructor                   //a constructor of Prims.exn 
+  | HasMaskedEffect                        //a let binding that may have a top-level effect
+  | Effect                                 //qualifier on a name that corresponds to an effect constructor
 
 type tycon = lident * binders * typ                   (* I (x1:t1) ... (xn:tn) : t *)
 type monad_abbrev = {

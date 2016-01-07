@@ -34,6 +34,25 @@ type binding =
   | Binding_univ     of univ_name
   | Binding_sig_inst of sigelt * universes //the first component should always be a Sig_inductive
 
+type delta_level = 
+  | NoDelta
+  | OnlyInline
+  | Unfold
+
+let visible_at d q = match d, q with 
+  | NoDelta,    _         
+  | OnlyInline, Inline 
+  | Unfold,     Inline 
+  | Unfold,     Unfoldable -> true
+  | _ -> false 
+
+let glb_delta d1 d2 = match d1, d2 with 
+    | NoDelta, _
+    | _, NoDelta -> NoDelta
+    | OnlyInline, _
+    | _, OnlyInline -> OnlyInline
+    | Unfold, Unfold -> Unfold
+
 type mlift = typ -> typ -> typ
 
 type edge = {
@@ -341,11 +360,11 @@ let lookup_datacon env lid =
     | Some (Inr (Sig_datacon (_, uvs, t, _, _, _, _, _), None)) -> inst_tscheme (uvs, t) 
     | _ -> raise (Error(name_not_found lid, range_of_lid lid))
 
-let lookup_definition env lid = 
+let lookup_definition delta_level env lid = 
   match lookup_qname env lid with
     | Some (Inr (se, None)) -> 
       begin match se with 
-        | Sig_let((_, lbs), _, _, quals) when not (List.contains Opaque quals) ->
+        | Sig_let((_, lbs), _, _, quals) when Util.for_some (visible_at delta_level) quals ->
             Util.find_map lbs (fun lb -> 
                 let lid' = right lb.lbname in
                 if lid_equals lid lid'
@@ -379,7 +398,7 @@ let try_lookup_val_decl env lid =
 let lookup_effect_abbrev env lid =
   match lookup_qname env lid with
     | Some (Inr (Sig_effect_abbrev (lid, univs, binders, c, quals, _), None)) ->
-      if quals |> Util.for_some (function Opaque -> true | _ -> false)
+      if quals |> Util.for_some (function Irreducible -> true | _ -> false)
       then None
       else let _, binders, c = Util.open_univ_vars_binders_and_comp univs binders c in 
            Some (binders, c)

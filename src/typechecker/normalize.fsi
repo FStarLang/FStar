@@ -23,19 +23,18 @@ open FStar.TypeChecker.Env
 open FStar.Syntax.Syntax
 
 type step =
-  | WHNF         (* reduce to weak head normal form only -- CH: adding this removes behaviors, quite unintuitive; NS: Not sure what this comment means. *)
-                 (* without WHNF, all the strategies reduce under lambdas *)
-  | Eta          (* eta expansion (of type functions) *)
-  | EtaArgs      (* eta expand arguments of functions also *)
-  | Delta        (* expand type abbreviations only if reduction is blocked *)
-  | DeltaHard    (* expand all type abbreviations *)
-  | Beta         (* beta reduction -- CH: currently adding this changes nothing, seems that Beta always performed *)
-  | DeltaComp    (* expand computation-type abbreviations *)
-  | Simplify     (* simplify formulas while reducing -- experimental -- CH: actually unused *)
-  | SNComp       (* normalize computation types also *)
-  | Unmeta       (* remove Metas other than Meta_named -- CH: at the moment Meta_named causes failwith; why? *)
-  | Unlabel      (* remove only Meta_labeled *)
-
+  | WHNF            //Only produce a weak head normal form
+  | Inline
+  | Unfold
+  | Beta            //remove? Always do beta
+  | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
+  //remove the rest?
+  | DeltaComp       
+  | SNComp
+  | Eta             
+  | EtaArgs         
+  | Unmeta
+  | Unlabel
 and steps = list<step>
 
 val eta_expand:           env -> term -> term
@@ -45,7 +44,6 @@ val normalize_universe:   universe -> universe
 val normalize_comp:       steps -> env -> comp -> comp
 val normalize_sigelt:     steps -> env -> sigelt -> sigelt
 val normalize_refinement: steps -> env -> typ -> typ
-val whnf:                 env -> term -> term
 
 val term_to_string:  env -> term -> string
 val comp_to_string:  env -> comp -> string

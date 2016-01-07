@@ -47,10 +47,10 @@ let is_eq = function
     | Some Equality -> true
     | _ -> false
 let steps env =
-    if Options.should_verify env.curmodule.str then
-    [N.Beta; N.SNComp]
-    else [N.Beta]
-let whnf   env t = N.normalize [N.WHNF; N.DeltaHard; N.Beta] env t
+    if Options.should_verify env.curmodule.str 
+    then [N.Beta; N.Inline; N.SNComp]
+    else [N.Beta; N.Inline]
+let unfold_whnf env t = N.normalize [N.WHNF; N.Unfold; N.Beta] env t
 let norm   env t = N.normalize (steps env) env t
 let norm_c env c = N.normalize_comp (steps env) env c
 let fxv_check head env kt fvs = //NS: nearly a duplicate of check_no_escape
@@ -213,7 +213,7 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ)> =
           //exclude types and function-typed arguments from the decreases clause
           let filter_types_and_functions (bs:binders)  =
             bs |> List.collect (fun (b, _) -> 
-                    let t = whnf env (Util.unrefine b.sort) in 
+                    let t = unfold_whnf env (Util.unrefine b.sort) in 
                     match t.n with 
                         | Tm_type _ 
                         | Tm_arrow _ -> []
@@ -642,7 +642,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                           let c = SS.subst_comp subst c_expected in
                           (* the expected type is explicitly curried *)
                           if Util.is_total_comp c
-                          then let t = whnf env (Util.comp_result c) in
+                          then let t = unfold_whnf env (Util.comp_result c) in
                                match t.n with 
                                 | Tm_arrow(bs_expected, c_expected) ->  
                                   let (env, bs', more, guard', subst) = check_binders env more_bs bs_expected in
@@ -673,7 +673,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                           try normalizing it first;
                           otherwise synthesize a type and check it against the given type *)
                   if not norm
-                  then as_function_typ true (whnf env t)
+                  then as_function_typ true (unfold_whnf env t)
                   else let _, bs, _, c_opt, envbody, g = expected_function_typ env None in
                        Some (t, false), bs, [], c_opt, envbody, g in
            as_function_typ false t in
@@ -882,7 +882,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                             (Range.string_of_range tres.pos);
                         tc_args (subst, outargs, arg_rets, (None, cres)::comps, g, fvs) bs (TcUtil.lcomp_of_comp cres') args
                     | _ when (not norm) ->
-                        aux true (whnf env tres)
+                        aux true (unfold_whnf env tres)
                     | _ -> raise (Error(Util.format2 "Too many arguments to function of type %s; got %s arguments" 
                                             (N.term_to_string env tf) (Util.string_of_int n_args), argpos arg)) in
                 aux false cres.res_typ in
@@ -891,7 +891,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
 
         | _ ->
             if not norm
-            then check_function_app true (whnf env tf)
+            then check_function_app true (unfold_whnf env tf)
             else raise (Error(Errors.expected_function_typ env tf, head.pos)) in
 
     check_function_app false (Util.unrefine thead) 
@@ -2116,8 +2116,11 @@ let rec tc_decl env se = match se with
              gen, lb::lbs, quals_opt) (true, [], if quals=[] then None else Some quals) in
 
       let quals = match quals_opt with 
-        | None -> []
-        | Some q -> q in
+        | None -> [Unfoldable]
+        | Some q ->
+          if q |> Util.for_some (function Irreducible | Unfoldable | Inline -> true | _ -> false)
+          then q
+          else Unfoldable::q in //the default visibility for a let binding is Unfoldable
 
       let lbs' = List.rev lbs' in
 

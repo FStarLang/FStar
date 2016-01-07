@@ -154,6 +154,8 @@ let keywords =
     ALWAYS, "if"         ,IF;
     ALWAYS, "kind"       ,KIND;
     ALWAYS, "in"         ,IN;
+    ALWAYS, "inline"     ,INLINE;
+    ALWAYS, "irreducible",IRREDUCIBLE;
     ALWAYS, "lazy"       ,LAZY;
     ALWAYS, "let"        ,LET(false);
     ALWAYS, "logic"      ,LOGIC;
@@ -176,6 +178,7 @@ let keywords =
     ALWAYS, "true"       ,TRUE;
     ALWAYS, "try"        ,TRY;
     ALWAYS, "type"       ,TYPE;
+    ALWAYS, "unfoldable" ,UNFOLDABLE;
     ALWAYS, "val"        ,VAL;
     ALWAYS, "when"       ,WHEN;
     ALWAYS, "with"       ,WITH;

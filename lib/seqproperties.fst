@@ -154,7 +154,7 @@ let lemma_count_slice #a s i =
   cut (Eq s (append (slice s 0 i) (slice s i (length s))));
   lemma_append_count (slice s 0 i) (slice s i (length s))
 
-opaque logic type total_order (a:Type) (f: (a -> a -> Tot bool)) =
+type total_order (a:Type) (f: (a -> a -> Tot bool)) =
     (forall a. f a a)                                           (* reflexivity   *)
     /\ (forall a1 a2. (f a1 a2 /\ a1<>a2)  <==> not (f a2 a1))  (* anti-symmetry *)
     /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)        (* transitivity  *)
@@ -178,7 +178,7 @@ let rec sorted_concat_lemma #a f lo pivot hi =
         lemma_tl (head lo) (append (tail lo) (cons pivot hi)))
 
 #set-options "--max_fuel 1 --initial_fuel 1 --z3timeout 20"
-opaque val split_5 : #a:Type -> s:seq a -> i:nat -> j:nat{i < j && j < length s} -> Pure (seq (seq a))
+val split_5 : #a:Type -> s:seq a -> i:nat -> j:nat{i < j && j < length s} -> Pure (seq (seq a))
   (requires True)
   (ensures (fun x ->
             ((length x = 5)
@@ -244,7 +244,7 @@ let lemma_swap_permutes_aux #a s i j x =
   end
 
 #set-options "--max_fuel 0 --initial_fuel 0 --z3timeout 5"
-opaque type permutation (a:Type) (s1:seq a) (s2:seq a) =
+type permutation (a:Type) (s1:seq a) (s2:seq a) =
        (forall i. count i s1 = count i s2)
 val lemma_swap_permutes: #a:Type -> s:seq a -> i:nat{i<length s} -> j:nat{i <= j && j<length s} -> Lemma
   (permutation a s (swap s i j))
@@ -403,7 +403,7 @@ let lemma_trans_perm #a s1 s2 s3 i j = ()
 val snoc : #a:Type -> seq a -> a -> Tot (seq a)
 let snoc #a s x = Seq.append s (Seq.create 1 x)
 
-opaque type found (i:nat) = True
+type found (i:nat) = True
 
 val seq_find_aux : #a:Type -> f:(a -> Tot bool) -> l:seq a
                    -> ctr:nat{ctr <= Seq.length l}

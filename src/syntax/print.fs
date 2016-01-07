@@ -182,6 +182,29 @@ let univs_to_string us = List.map univ_to_string us |> String.concat ", "
 
 let univ_names_to_string us = List.map (fun x -> x.idText) us |> String.concat ", "
 
+let qual_to_string = function
+  | Assumption            -> "assume"
+  | New                   -> "new"             
+  | Private               -> "private"
+  | Inline                -> "inline"
+  | Unfoldable            -> "unfoldable"
+  | Irreducible           -> "irreducible"
+  | Abstract              -> "abstract"
+  | Logic                 -> "logic"
+  | TotalEffect           -> "total"
+  | DefaultEffect None    -> "no default"
+  | DefaultEffect(Some l) -> Util.format1 "default %s" (lid_to_string l)
+  | Discriminator l       -> Util.format1 "(Discriminator %s)" (lid_to_string l) 
+  | Projector (l, x)      -> Util.format2 "(Projector %s %s)" (lid_to_string l) x.idText
+  | RecordType        fns -> Util.format1 "(RecordType %s)" (fns |> List.map lid_to_string |> String.concat ", ")
+  | RecordConstructor fns -> Util.format1 "(RecordConstructor %s)" (fns |> List.map lid_to_string |> String.concat ", ")
+  | ExceptionConstructor  -> "ExceptionConstructor"
+  | HasMaskedEffect       -> "HasMaskedEffect"
+  | Effect                -> "Effect"
+let quals_to_string quals = match quals with 
+    | [] -> ""
+    | _ -> (quals |> List.map qual_to_string |> String.concat " ") ^ " "
+
 (* This function prints the type it gets as argument verbatim.
    For already type-checked types use the typ_norm_to_string
    function in normalize.fs instead, since elaboration
@@ -204,7 +227,7 @@ let rec term_to_string x =
   | Tm_abs(bs, t2) ->   Util.format2 "(fun %s -> %s)" (binders_to_string " " bs) (term_to_string t2)
   | Tm_refine(xt, f) -> Util.format3 "(%s:%s{%s})" (bv_to_string xt) (xt.sort |> term_to_string) (f |> formula_to_string)
   | Tm_app(t, args) ->  Util.format2 "(%s %s)" (term_to_string t) (args_to_string args)
-  | Tm_let(lbs, e) ->   Util.format2 "%s\nin\n%s" (lbs_to_string lbs) (term_to_string e)
+  | Tm_let(lbs, e) ->   Util.format2 "%s\nin\n%s" (lbs_to_string [] lbs) (term_to_string e)
   | Tm_ascribed(e,t,_) ->
                         Util.format2 "(%s : %s)" (term_to_string e) (term_to_string t)
   | Tm_match(head, branches) ->
@@ -230,8 +253,9 @@ and  pat_to_string x = match x.v with
     | Pat_disj ps ->  Util.concat_l " | " (List.map pat_to_string ps) 
  
 
-and lbs_to_string lbs =
-    Util.format2 "let %s %s"
+and lbs_to_string quals lbs =
+    Util.format3 "%slet %s %s"
+    (quals_to_string quals)
     (if fst lbs then "rec" else "")
     (Util.concat_l "\n and " (snd lbs |> List.map (fun lb -> 
                                                     Util.format4 "%s %s : %s = %s" 
@@ -320,15 +344,7 @@ and formula_to_string phi = term_to_string phi
 //    let f (l:set<bvar<'a,'b>>) = l |> Util.set_elements |> List.map (fun t -> strBvd t.v) |> String.concat ", " in
 //    Util.format2 "ftvs={%s}, fxvs={%s}" (f fvs.ftvs) (f fvs.fxvs)
 
-let qual_to_string = function
-    | Logic -> "logic"
-    | Opaque -> "opaque"
-    | Discriminator _ -> "discriminator"
-    | Projector _ -> "projector"
-    | Assumption -> "assume"
-    | RecordType ids -> Util.format1 "record(%s)" (ids |> List.map (fun lid -> lid.ident.idText) |> String.concat ", ")
-    | _ -> "other"
-let quals_to_string quals = quals |> List.map qual_to_string |> String.concat " "
+
 
 let tscheme_to_string (us, t) = Util.format2 "<%s> %s" (univ_names_to_string us) (term_to_string t)
 
@@ -387,7 +403,7 @@ let rec sigelt_to_string x = match x with
          else "")
         (term_to_string t)
   | Sig_assume(lid, f, _, _) -> Util.format2 "val %s : %s" lid.str (term_to_string f)
-  | Sig_let(lbs, _, _, b) -> lbs_to_string lbs
+  | Sig_let(lbs, _, _, qs) -> lbs_to_string qs lbs
   | Sig_main(e, _) -> Util.format1 "let _ = %s" (term_to_string e)
   | Sig_bundle(ses, _, _, _) -> List.map sigelt_to_string ses |> String.concat "\n"
   | Sig_new_effect(ed, _) -> eff_decl_to_string ed

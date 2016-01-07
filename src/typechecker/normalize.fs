@@ -40,14 +40,15 @@ module I  = FStar.Ident
 
 type step =
   | WHNF            //Only produce a weak head normal form
-  | Eta             //remove?
-  | EtaArgs         //remove?
-  | Delta           //Unfold definitions
-  | DeltaHard       
+  | Inline
+  | Unfold
   | Beta            //remove? Always do beta
-  | DeltaComp       
   | Simplify        //Simplifies some basic log cfg ical tautolog cfg ies: not part of definitional equality!
+  //remove the rest?
+  | DeltaComp       
   | SNComp
+  | Eta             
+  | EtaArgs         
   | Unmeta
   | Unlabel
 and steps = list<step>
@@ -65,7 +66,8 @@ let closure_to_string = function
 
 type cfg = {
     steps: steps;
-    tcenv: Env.env
+    tcenv: Env.env;
+    delta_level: Env.delta_level;
 }
 
 type branches = list<(pat * option<term> * term)> 
@@ -359,9 +361,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
             rebuild cfg env stack t
            
           | Tm_fvar (f, _) -> 
-            if List.contains DeltaHard cfg.steps
-            || List.contains Delta cfg.steps 
-            then match Env.lookup_definition cfg.tcenv f.v with 
+            if cfg.delta_level = NoDelta
+            then rebuild cfg env stack t
+            else begin match Env.lookup_definition cfg.delta_level cfg.tcenv f.v with 
                     | None -> rebuild cfg env stack t
                     | Some (us, t) -> 
                       let n = List.length us in 
@@ -372,7 +374,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                norm cfg env stack t 
                              | _ -> failwith (Util.format1 "Impossible: missing universe instantiation on %s" (Print.lid_to_string f.v))
                       else norm cfg env stack t             
-            else rebuild cfg env stack t
+                 end
 
           | Tm_bvar x -> 
             begin match lookup_bvar env x with 
@@ -577,7 +579,7 @@ and rebuild : cfg -> env -> stack -> term -> term =
             | Match(env, branches, r) :: stack -> 
               let norm_and_rebuild_match () =
                 let whnf = List.contains WHNF cfg.steps in
-                let cfg = {cfg with steps=cfg.steps |> List.filter (function Delta | DeltaHard -> false | _ -> true)} in
+                let cfg = {cfg with delta_level=glb_delta cfg.delta_level OnlyInline} in
                 let norm_or_whnf env t =
                     if whnf
                     then closure_as_term env t
@@ -657,30 +659,27 @@ and rebuild : cfg -> env -> stack -> term -> term =
                 | (p, wopt, b)::rest -> 
                    match matches_pat t p with
                     | Inr false -> //definite mismatch; safe to consider the remaining patterns
-//                      Printf.printf "Term %s definitely does not matches pattern %s\n"
-//                        (Print.term_to_string t)
-//                        (Print.pat_to_string p);
                       matches t rest 
 
                     | Inr true -> //may match this pattern but t is an open term; block reduction
-//                      Printf.printf "Term %s maybe matches pattern %s ... reduction is blocked .. rebuilding\n"
-//                        (Print.term_to_string t)
-//                        (Print.pat_to_string p);
                       norm_and_rebuild_match ()
 
                     | Inl s ->
                       //the elements of s are sub-terms of t 
                       //the have no free de Bruijn indices; so their env=[]; see pre-condition at the top of rebuild
-//                      Printf.printf "Term %s matched pattern %s with bindings [%s]\n"
-//                        (Print.term_to_string t)
-//                        (Print.pat_to_string p)
-//                        (List.map Print.term_to_string s |> String.concat "; ");
                       let env = List.fold_right (fun t env -> Clos([], t, Util.mk_ref (Some ([], t)))::env) s env in
                       norm cfg env stack (guard_when_clause wopt b rest) in
               
               matches t branches
 
-let config s e = {tcenv=e; steps=s}
+let config s e = 
+    let d = if List.contains Unfold s 
+            then Env.Unfold
+            else if List.contains Inline s
+            then Env.OnlyInline
+            else Env.NoDelta in
+    {tcenv=e; steps=s; delta_level=d}
+
 let normalize s e t = norm (config s e) [] [] t
 let normalize_comp s e t = norm_comp (config s e) [] t
 let normalize_universe u = norm_universe [] u
@@ -688,10 +687,8 @@ let normalize_universe u = norm_universe [] u
 let term_to_string env t = Print.term_to_string (normalize [] env t)
 let comp_to_string env c = Print.comp_to_string (norm_comp (config [] env) [] c)
 
-let whnf (env:Env.env) (t:term) : term = normalize [Beta; WHNF] env t
-
 let normalize_refinement steps env t0 =
-   let t = normalize (steps@[Beta; WHNF; DeltaHard]) env t0 in
+   let t = normalize (steps@[Beta; WHNF]) env t0 in
    let rec aux t =
     let t = compress t in
     match t.n with

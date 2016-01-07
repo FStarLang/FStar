@@ -108,15 +108,21 @@ type tycon =
 
 type qualifier =
   | Private
+  | Abstract
   | Assumption
-  | Opaque
-  | Logic
   | DefaultEffect
   | TotalEffect
   | Effect
   | New
-  | Abstract
+  | Inline                                 //a definition that *should* always be unfolded by the normalizer
+  | Unfoldable                             //a definition that may be unfolded by the normalizer, but only if necessary (default)
+  | Irreducible                            //a definition that can never be unfolded by the normalizer
+  //old qualifiers
+  | Opaque
+  | Logic
 
+ 
+ 
 type qualifiers = list<qualifier>
 
 type lift = {

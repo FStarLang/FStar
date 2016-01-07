@@ -275,11 +275,11 @@ let find_univ_uvar u s = Util.find_map s (function
 (* ------------------------------------------------*)
 (* <normalization>                                *)
 (* ------------------------------------------------*)
-let norm_arg env t = N.normalize [N.Beta] env (fst t), snd t
-let whnf env t = SS.compress (N.whnf env (Util.unmeta t))
-let sn env t = SS.compress (N.normalize [N.Beta; N.Eta] env t)
+let whnf env t     = SS.compress (N.normalize [N.Beta; N.WHNF] env (Util.unmeta t))
+let sn env t       = SS.compress (N.normalize [N.Beta] env t)
+let norm_arg env t = sn env (fst t), snd t
 let sn_binders env (binders:binders) =
-    binders |> List.map (fun (x, imp) -> {x with sort=N.normalize [N.Beta] env x.sort}, imp)
+    binders |> List.map (fun (x, imp) -> {x with sort=sn env x.sort}, imp)
 
 (*  norm_univ wl u
         Replace all unification variables in u with their solution in wl, if any
@@ -298,7 +298,7 @@ let norm_univ wl u =
             | _ -> u in 
     N.normalize_universe (aux u)
 
-let normalize_refinement env wl t0 = N.normalize_refinement [] env (whnf env t0)
+let normalize_refinement steps env wl t0 = N.normalize_refinement steps env (whnf env t0)
 
 let base_and_refinement env wl t1 =
    let rec aux norm t1 =
@@ -306,7 +306,7 @@ let base_and_refinement env wl t1 =
         | Tm_refine(x, phi) ->
             if norm
             then (x.sort, Some(x, phi))
-            else begin match normalize_refinement env wl t1 with
+            else begin match normalize_refinement [] env wl t1 with
                 | {n=Tm_refine(x, phi)} -> (x.sort, Some(x, phi))
                 | tt -> failwith (Util.format2 "impossible: Got %s ... %s\n" (Print.term_to_string tt) (Print.tag_of_term tt))
             end
@@ -316,7 +316,7 @@ let base_and_refinement env wl t1 =
         | Tm_app _ ->
             if norm
             then (t1, None)
-            else let t2', refinement = aux true (normalize_refinement env wl t1) in
+            else let t2', refinement = aux true (normalize_refinement [] env wl t1) in
                  begin match refinement with
                     | None -> t1, None (* no refinement found ... so revert to the original type, without expanding defs *)
                     | _ -> t2', refinement
@@ -630,17 +630,21 @@ let rec head_matches t1 t2 : match_result =
 
 (* Does t1 match t2, after some delta steps? *)
 let head_matches_delta env wl t1 t2 : (match_result * option<(typ*typ)>) =
-    let success d r t1 t2 = (r, (if d then Some(t1, t2) else None)) in
+    let success d r t1 t2 = (r, (if d>0 then Some(t1, t2) else None)) in
     let fail () = (MisMatch, None) in
     let rec aux d t1 t2 =
         match head_matches t1 t2 with
             | MisMatch ->
-                if d then fail() //already delta normal
-                else let t1 = normalize_refinement env wl t1 in
-                     let t2 = normalize_refinement env wl t2 in
-                     aux true t1 t2
+                if d=2 then fail() //already delta normal
+                else if d=1 then 
+                     let t1' = normalize_refinement [N.Unfold] env wl t1 in
+                     let t2' = normalize_refinement [N.Unfold] env wl t2 in
+                     aux 2 t1' t2'
+                else let t1 = normalize_refinement [N.Inline] env wl t1 in
+                     let t2 = normalize_refinement [N.Inline] env wl t2 in
+                     aux (d+1) t1 t2
             | r -> success d r t1 t2 in
-    aux false t1 t2
+    aux 0 t1 t2
 
 type tc =
  | T of term
@@ -1933,7 +1937,7 @@ let simplify_guard env g = match g.guard_f with
     | Trivial -> g
     | NonTrivial f ->
       if Env.debug env <| Options.Other "Simplification" then Util.print1 "Simplifying guard %s\n" (Print.term_to_string f);
-      let f = N.normalize [N.Beta; N.Delta; N.Simplify] env f in
+      let f = N.normalize [N.Beta; N.Inline; N.Simplify] env f in
       if Env.debug env <| Options.Other "Simplification" then Util.print1 "Simplified guard to %s\n" (Print.term_to_string f);
       let f = match f.n with
         | Tm_fvar (fv, _) when lid_equals fv.v Const.true_lid -> Trivial
@@ -2121,7 +2125,7 @@ let discharge_guard env (g:guard_t) =
    else match g.guard_f with
     | Trivial -> ()
     | NonTrivial vc ->
-        let vc = N.normalize [N.Delta; N.Beta; N.Eta; N.Simplify] env vc in
+        let vc = N.normalize [N.Inline; N.Beta; N.Eta; N.Simplify] env vc in
         begin match check_trivial vc with
             | Trivial -> ()
             | NonTrivial vc ->
