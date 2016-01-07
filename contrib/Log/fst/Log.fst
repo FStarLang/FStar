@@ -19,6 +19,7 @@ type facility = {
   name: string;
   level: loglevel;
   length: nat;
+  entries: list string;
 }
 
 (* Create a log facility *)
@@ -30,7 +31,7 @@ assume val delete: facility -> unit
 (* Retrieve an existing facility *)
 assume val retrieve: string -> facility
 
-(* Retreive info about a facility *)
+(* Retrieve info about a facility *)
 assume val info: facility -> string * loglevel * nat
 
 (* Remove all the data from the facility *)
@@ -39,8 +40,8 @@ assume val clear: facility -> unit
 (* Remove the N last entries of the log *)
 assume val trim: facility -> nat -> unit
 
-(* Log a string at the required *)
+(* Log a string at the required facility *)
 assume val write: facility -> string -> bool -> unit
 
-(* Get the Nth entry of the log *)
+(* Get the Nth entry of the log of a facility *)
 assume val get: facility -> nat -> string
