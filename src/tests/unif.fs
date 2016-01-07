@@ -72,6 +72,7 @@ let inst n tm =
 
 let run_all debug = 
    try
+       Printf.printf "Testing the unifier\n";
        if debug 
        then (Options.debug := ["dummy"];
              Options.debug_level := [Options.Other "Rel"; Options.Other "RelCheck"];
@@ -148,5 +149,6 @@ let run_all debug =
        unify 12 tm1 tm2
                 Trivial;
 
+       Printf.printf "Unifier ok\n";
 
    with Error(msg, r) -> print_string msg; print_newline()

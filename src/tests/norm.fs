@@ -40,8 +40,8 @@ let mk_let x e e' : term =
                            None dummyRange
 
 let lid x = lid_of_path [x] dummyRange                           
-let znat_l = S.fv (lid "Z") None
-let snat_l = S.fv (lid "S") None
+let znat_l = S.fv (lid "Z") (Some Data_ctor)
+let snat_l = S.fv (lid "S") (Some Data_ctor)
 let tm_fv fv = mk (Tm_fvar fv) None dummyRange
 let znat : term = tm_fv znat_l
 let snat s      = mk (Tm_app(tm_fv snat_l, [arg s])) None dummyRange
@@ -78,42 +78,49 @@ let encode_nat n =
 
 let dummy = TypeChecker.Env.no_solver_env TypeChecker.Tc.type_of
 
-let run r expected = 
+let run i r expected = 
 //    force_term r;
-//    Printf.printf "redex = %s\n" (P.term_to_string r);
+    Printf.printf "%d: ... \n" i;
     let x = FStar.TypeChecker.Normalize.normalize [] dummy r in
-    Printf.printf "result = %s\n" (P.term_to_string x);
-    Printf.printf "expected = %s\n\n" (P.term_to_string expected);
+//    Printf.printf "result = %s\n" (P.term_to_string x);
+//    Printf.printf "expected = %s\n\n" (P.term_to_string expected);
     assert (Util.term_eq x expected)
     
 let run_all debug = 
-    if debug then TypeChecker.Normalize.debug();
-    run (app apply [one; id; nm n]) (nm n);
-    run (app apply [tt; nm n; nm m]) (nm n);
-    run (app apply [ff; nm n; nm m]) (nm m);
-    run (app apply [apply; apply; apply; apply; apply; ff; nm n; nm m]) (nm m);
-    run (app twice [apply; ff; nm n; nm m]) (nm m);
-    run (minus one z) one;
-    run (app pred [one]) z;
-    run (minus one one) z;
-    run (app mul [one; one]) one;
-    run (app mul [two; one]) two;
-    run (app mul [app succ [one]; one]) two;
-    run (minus (encode 10) (encode 10)) z;
-    run (minus (encode 100) (encode 100)) z;
-    run (let_ x (encode 1000) (minus (nm x) (nm x))) z;
-    run (let_ x (app succ [one])
-        (let_ y (app mul [nm x; nm x])
-            (let_ h (app mul [nm y; nm y]) 
-                    (minus (nm h) (nm h))))) z;
-    run (mk_let x (app succ [one])
-        (mk_let y (app mul [nm x; nm x])
-            (mk_let h (app mul [nm y; nm y]) 
-                      (minus (nm h) (nm h))))) z;
-    run (pred_nat (snat (snat znat))) (snat znat);
-    run (minus_nat (snat (snat znat)) (snat znat)) (snat znat);
-    run (minus_nat (encode_nat 100) (encode_nat 100)) znat;
-    run (minus_nat (encode_nat 10000) (encode_nat 10000)) znat;
-    run (minus_nat (encode_nat 10) (encode_nat 10)) znat
-//    run (minus_nat (encode_nat 1000000) (encode_nat 1000000)) znat
+    if debug 
+    then (Options.debug := ["dummy"];
+          Options.debug_level := [Options.Other "Norm"];
+          Options.print_implicits := true;
+          Options.print_real_names := true);
+    Printf.printf "Testing the normalizer\n";
+    run 0 (app apply [one; id; nm n]) (nm n);
+    run 1 (app apply [tt; nm n; nm m]) (nm n);
+    run 2 (app apply [ff; nm n; nm m]) (nm m);
+    run 3 (app apply [apply; apply; apply; apply; apply; ff; nm n; nm m]) (nm m);
+    run 4 (app twice [apply; ff; nm n; nm m]) (nm m);
+    run 5 (minus one z) one;
+    run 6 (app pred [one]) z;
+    run 7 (minus one one) z;
+    run 8 (app mul [one; one]) one;
+    run 9 (app mul [two; one]) two;
+    run 10 (app mul [app succ [one]; one]) two;
+    run 11 (minus (encode 10) (encode 10)) z;
+    run 12 (minus (encode 100) (encode 100)) z;
+    run 13 (let_ x (encode 1000) (minus (nm x) (nm x))) z;
+    run 14 (let_ x (app succ [one])
+            (let_ y (app mul [nm x; nm x])
+                (let_ h (app mul [nm y; nm y]) 
+                        (minus (nm h) (nm h))))) z;
+    run 15 (mk_let x (app succ [one])
+            (mk_let y (app mul [nm x; nm x])
+                (mk_let h (app mul [nm y; nm y]) 
+                          (minus (nm h) (nm h))))) z;
+    run 16 (pred_nat (snat (snat znat))) (snat znat);
+    run 17 (minus_nat (snat (snat znat)) (snat znat)) (snat znat);
+    run 18 (minus_nat (encode_nat 100) (encode_nat 100)) znat;
+    run 19 (minus_nat (encode_nat 10000) (encode_nat 10000)) znat;
+    run 20 (minus_nat (encode_nat 10) (encode_nat 10)) znat;
+//    run 21 (minus_nat (encode_nat 1000000) (encode_nat 1000000)) znat; //this one takes about 30 sec and ~3.5GB of memory
+    Printf.printf "Normalizer ok\n"
+ 
     

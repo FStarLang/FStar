@@ -93,11 +93,11 @@ and pat' =
   | Pat_wild     of bv                                           (* need stable names for even the wild patterns *)
   | Pat_dot_term of bv * term                                    (* dot patterns: determined by other elements in the pattern and type *)
 and letbinding = {  //let f : forall u1..un. M t = e 
-    lbname :lbname;         //f
+    lbname :lbname;          //f
     lbunivs:list<univ_name>; //u1..un
-    lbtyp  :typ;            //t
-    lbeff  :lident;         //M
-    lbdef  :term            //e
+    lbtyp  :typ;             //t
+    lbeff  :lident;          //M
+    lbdef  :term             //e
 }
 and comp_typ = {
   effect_name:lident;
@@ -148,11 +148,11 @@ and lbname = either<bv, lident>
 and letbindings = bool * list<letbinding>       (* let recs may have more than one element; top-level lets have lidents *)
 and subst_t = list<list<subst_elt>>
 and subst_elt = 
-   | DB of int * term                          (* DB i t: replace a bound variable with index i with term t *)
-   | NM of bv  * int                           (* NM x i: replace a local name with a bound variable i *)
-   | NT of bv  * term                          (* NT x t: replace a local name with a term t *)
-   | UN of int * universe                      (* UN u v: replace universes variable u with universe term v *)
-   | UD of univ_name * int                     (* UD x i: replace universe name x with de Bruijn index i *)
+   | DB of int * term                          (* DB i t: replace a bound variable with index i with term t                  *)
+   | NM of bv  * int                           (* NM x i: replace a local name with a bound variable i                       *)
+   | NT of bv  * term                          (* NT x t: replace a local name with a term t                                 *)
+   | UN of int * universe                      (* UN u v: replace universes variable u with universe term v                  *)
+   | UD of univ_name * int                     (* UD x i: replace universe name x with de Bruijn index i                     *)
 and freenames = set<bv>
 and uvars     = set<(uvar*typ)>
 and syntax<'a,'b> = {

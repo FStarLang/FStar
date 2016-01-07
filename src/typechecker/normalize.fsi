@@ -49,5 +49,3 @@ val whnf:                 env -> term -> term
 
 val term_to_string:  env -> term -> string
 val comp_to_string:  env -> comp -> string
-
-val debug: unit -> unit

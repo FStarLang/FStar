@@ -1151,18 +1151,18 @@ and tc_eqn scrutinee env branch
 and check_top_level_let env e = 
    let env = instantiate_both env in
    match e.n with
-     | Tm_let((false, [lb]), e2) ->
-       let e1, univ_vars, c1, g1, annotated = check_let_bound_def true env lb in
+      | Tm_let((false, [lb]), e2) ->
+(*open*) let e1, univ_vars, c1, g1, annotated = check_let_bound_def true env lb in
 
-       (* Maybe generalize its type *)
-       let e1, univ_vars, c1 = 
+         (* Maybe generalize its type *)
+         let e1, univ_vars, c1 = 
             if annotated && not env.generalize 
-            then SS.close_univ_vars univ_vars e1, univ_vars, Util.lcomp_of_comp <| SS.close_univ_vars_comp univ_vars (c1.comp())
-            else let _, e1, univs, c1 = List.hd (TcUtil.generalize false env [lb.lbname, e1, c1.comp()]) in
+            then e1, univ_vars, c1
+            else let _, univs, e1, c1 = List.hd (TcUtil.generalize env [lb.lbname, e1, c1.comp()]) in
                  e1, univs, Util.lcomp_of_comp c1 in
                               
-       (* Check that it doesn't have a top-level effect; warn if it does *)
-       let e2, c1 =
+         (* Check that it doesn't have a top-level effect; warn if it does *)
+         let e2, c1 =
             if Options.should_verify env.curmodule.str
             then let ok, c1 = TcUtil.check_top_level env g1 c1 in //check that it has no effect and a trivial pre-condition
                  if ok
@@ -1175,18 +1175,18 @@ and check_top_level_let env e =
                   e2, c1.comp()) in
 
 
-       (* the result always has type ML unit *)
-       let cres = TcUtil.lcomp_of_comp <| Util.ml_comp Recheck.t_unit e.pos in
-       e2.tk := Some (Recheck.t_unit.n);
+         (* the result always has type ML unit *)
+         let cres = TcUtil.lcomp_of_comp <| Util.ml_comp Recheck.t_unit e.pos in
+         e2.tk := Some (Recheck.t_unit.n);
 
-       let lb = Util.letbinding false lb.lbname univ_vars (Util.comp_result c1) (Util.comp_effect_name c1) e1 in
-       mk (Tm_let((false, [lb]), e2)) 
-          (Some (Recheck.t_unit.n))
-          e.pos,
-       cres,
-       Rel.trivial_guard
+(*close*)let lb = Util.close_univs_and_mk_letbinding None lb.lbname univ_vars (Util.comp_result c1) (Util.comp_effect_name c1) e1 in
+         mk (Tm_let((false, [lb]), e2)) 
+           (Some (Recheck.t_unit.n))
+           e.pos,
+         cres,
+         Rel.trivial_guard
 
-     | _ -> failwith "Impossible"
+       | _ -> failwith "Impossible"
    
 (******************************************************************************)
 (* Checking an inner non-recursive let-binding:                               *)
@@ -1200,7 +1200,7 @@ and check_inner_let env e =
    match e.n with
      | Tm_let((false, [lb]), e2) ->
        let e1, _, c1, g1, annotated = check_let_bound_def false (Env.clear_expected_typ env |> fst) lb in
-       let lb = Util.letbinding true lb.lbname [] c1.res_typ c1.eff_name e1 in
+       let lb = Util.mk_letbinding lb.lbname [] c1.res_typ c1.eff_name e1 in
        let x = {Util.left lb.lbname with sort=c1.res_typ} in
        let xb, e2 = SS.open_term [S.mk_binder x] e2 in
        let xbinder = List.hd xb in
@@ -1234,16 +1234,21 @@ and check_top_level_let_rec env top =
            let lbs, g_lbs = check_let_recs rec_env lbs in 
            Rel.discharge_guard env g_lbs;
          
+           let all_lb_names = lbs |> List.map (fun lb -> right lb.lbname) |> Some in
+
            let lbs = 
               if not env.generalize
               then lbs |> List.map (fun lb -> 
                     if lb.lbunivs = [] 
                     then lb  
-                    else Util.letbinding true lb.lbname lb.lbunivs lb.lbtyp lb.lbeff lb.lbdef)
-              else let ecs = TcUtil.generalize false env 
-                      (lbs |> List.map (fun lb -> lb.lbname, lb.lbdef, Util.total_comp lb.lbtyp (range_of_lbname lb.lbname))) in
-                   ecs |> List.map (fun (x, e, uvs, c) -> 
-                      Util.letbinding false x uvs (Util.comp_result c) (Util.comp_effect_name c) e) in
+                    else Util.close_univs_and_mk_letbinding all_lb_names lb.lbname lb.lbunivs lb.lbtyp lb.lbeff lb.lbdef)
+              else let ecs = TcUtil.generalize env (lbs |> List.map (fun lb -> 
+                                lb.lbname, 
+                                lb.lbdef, 
+                                Util.total_comp 
+                                lb.lbtyp (range_of_lbname lb.lbname))) in
+                   ecs |> List.map (fun (x, uvs, e, c) -> 
+                      Util.close_univs_and_mk_letbinding all_lb_names x uvs (Util.comp_result c) (Util.comp_effect_name c) e) in
 
           let cres = TcUtil.lcomp_of_comp <| Util.total_comp Recheck.t_unit top.pos in
           let _ = Rel.discharge_guard env g_lbs in //may need to solve all carried unification constraints, in case not generalized
@@ -1324,7 +1329,7 @@ and check_let_recs env lbs =
         let e, c, g = tc_tot_or_gtot_term (Env.set_expected_typ env lb.lbtyp) lb.lbdef in
         if not (Util.is_total_lcomp c)
         then raise (Error ("Expected let rec to be a Tot term; got effect GTot", e.pos));
-        let lb = Util.letbinding true lb.lbname lb.lbunivs lb.lbtyp Const.effect_Tot_lid e in
+        let lb = Util.mk_letbinding lb.lbname lb.lbunivs lb.lbtyp Const.effect_Tot_lid e in
         lb, g) |> List.unzip in
     let g_lbs = List.fold_right Rel.conj_guard gs Rel.trivial_guard in
     lbs, g_lbs

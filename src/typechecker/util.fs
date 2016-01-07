@@ -166,7 +166,7 @@ let pat_as_exps allow_implicits env p
              let k, _ = Util.type_u () in
              let t = new_uvar env k in
              let x = {x with sort=t} in
-             let e, u = Rel.new_uvar p.p (Env.binders env) t in //TODO: why empty vars?
+             let e, u = Rel.new_uvar p.p (Env.binders env) t in
              let p = {p with v=Pat_dot_term(x, e)} in
              ([], [], [], env, e, p)
 
@@ -958,7 +958,7 @@ let generalize_universes (env:env) (t:term) : tscheme =
     let ts = SS.close_univ_vars gen t in 
     (gen, ts)
 
-let gen only_universes env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * comp)>> =
+let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * comp)>> =
   if not <| (Util.for_all (fun (_, c) -> Util.is_pure_or_ghost_comp c) ecs) //No value restriction in F*---generalize the types of pure computations
   then None
   else
@@ -988,10 +988,7 @@ let gen only_universes env (ecs:list<(term * comp)>) : option<list<(list<univ_na
      if debug env Options.Medium then gen_univs |> List.iter (fun x -> Util.print1 "Generalizing uvar %s\n" x.idText);
 
      let ecs = uvars |> List.map (fun (uvs, e, c) ->
-          let tvars = 
-            if only_universes
-            then []
-            else uvs |> List.map (fun (u, k) ->
+          let tvars = uvs |> List.map (fun (u, k) ->
             match Unionfind.find u with
               | Fixed ({n=Tm_name a})
               | Fixed ({n=Tm_abs(_, {n=Tm_name a})}) -> a, Some Implicit
@@ -1017,15 +1014,15 @@ let gen only_universes env (ecs:list<(term * comp)>) : option<list<(list<univ_na
                       U.arrow tvars c in
               let e = U.abs tvars e in
               e, S.mk_Total t in
-          (gen_univs, SS.close_univ_vars gen_univs e, SS.close_univ_vars_comp gen_univs c)) in
+          (gen_univs, e, c)) in
      Some ecs
 
-let generalize only_universes env (lecs:list<(lbname*term*comp)>) : (list<(lbname*term*univ_names*comp)>) =
+let generalize env (lecs:list<(lbname*term*comp)>) : (list<(lbname*univ_names*term*comp)>) =
   if debug env Options.Low 
   then Util.print1 "Generalizing: %s\n"
        (List.map (fun (lb, _, _) -> Print.lbname_to_string lb) lecs |> String.concat ", ");
-  match gen only_universes env (lecs |> List.map (fun (_, e, c) -> (e, c))) with
-    | None -> lecs |> List.map (fun (l,t,c) -> l,t,[],c)
+  match gen env (lecs |> List.map (fun (_, e, c) -> (e, c))) with
+    | None -> lecs |> List.map (fun (l,t,c) -> l,[],t,c)
     | Some ecs ->
       List.map2 (fun (l, _, _) (us, e, c) ->
          if debug env Options.Medium 
@@ -1033,7 +1030,7 @@ let generalize only_universes env (lecs:list<(lbname*term*comp)>) : (list<(lbnam
                     (Range.string_of_range e.pos) 
                     (Print.lbname_to_string l) 
                     (Print.term_to_string (Util.comp_result c));
-      (l, e, us, c)) lecs ecs
+      (l, us, e, c)) lecs ecs
 
 (************************************************************************)
 (* Convertibility *)

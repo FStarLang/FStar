@@ -297,6 +297,24 @@ let label_conjuncts tag polarity label_opt f =
 let mk_lb (n, t, e) = {lbname=n; lbunivs=[]; lbeff=C.effect_ALL_lid; lbtyp=t; lbdef=e}
 
 let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
+  let check_linear_pattern_variables (p:Syntax.pat) = 
+    let rec pat_vars (p:Syntax.pat) = match p.v with 
+      | Pat_dot_term _
+      | Pat_wild _
+      | Pat_constant _ -> S.no_names
+      | Pat_var x -> Util.set_add x S.no_names
+      | Pat_cons(_, pats) -> 
+        pats |> List.fold_left (fun out (p, _) -> Util.set_union out (pat_vars p)) S.no_names
+      | Pat_disj [] -> failwith "Impossible"
+      | Pat_disj (hd::tl) ->
+        let xs = pat_vars hd in
+        if not (Util.for_all (fun p -> let ys = pat_vars p in 
+                              Util.set_is_subset_of xs ys 
+                              && Util.set_is_subset_of ys xs) tl)
+        then raise (Error ("Disjunctive pattern binds different variables in each case", p.p))
+        else xs in
+    pat_vars p in
+
   let resolvex (l:lenv_t) e x =
     match l |> Util.find_opt (fun y -> y.ppname.idText=x.idText) with
       | Some y -> l, e, y
@@ -320,7 +338,6 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
           let loc, env, _, p, _ = aux loc env p in
           loc, env, p::ps) (loc, env, []) ps in
         let pat = pos <| Pat_disj (p::List.rev ps) in
-        ignore (S.pat_bvs pat); //checks that the pattern variables are linear and that the disjunction binds the same variables
         loc, env, var, pat, false
 
       | PatAscribed(p, t) ->
@@ -406,6 +423,7 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
         env, e, b, p, false in
 
   let _, env, b, p, _ = aux [] env p in
+  ignore <| check_linear_pattern_variables p;
   env, b, p
 
 and desugar_binding_pat_maybe_top top env p : (env_t * bnd * option<pat>) =
@@ -701,7 +719,6 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
     | Match(e, branches) ->
       let desugar_branch (pat, wopt, b) =
         let env, pat = desugar_match_pat env pat in
-        let bs = S.pat_bvs pat |> List.map S.mk_binder in
         let wopt = match wopt with
           | None -> None
           | Some e -> Some (desugar_term env e) in

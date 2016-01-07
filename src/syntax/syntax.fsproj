@@ -57,6 +57,8 @@
     <Compile Include="subst.fs" />
     <Compile Include="free.fsi" />
     <Compile Include="free.fs" />
+    <Compile Include="instfv.fsi" />
+    <Compile Include="instfv.fs" />
     <Compile Include="util.fs" />
     <Compile Include="print.fsi" />
     <Compile Include="print.fs" />

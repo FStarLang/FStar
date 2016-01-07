@@ -466,15 +466,24 @@ let abs bs t = match bs with
 let arrow bs c = match bs with [] -> comp_result c | _ -> mk (Tm_arrow(close_binders bs, Subst.close_comp bs c)) None c.pos
 let refine b t = mk (Tm_refine(b, Subst.close [mk_binder b] t)) !b.sort.tk (Range.union_ranges (range_of_bv b) t.pos)
 let branch b = Subst.close_branch b
-let letbinding should_close lbname univ_vars typ eff def = 
-    let typ = if should_close then Subst.close_univ_vars univ_vars typ else typ in 
-    let def = if should_close then Subst.close_univ_vars univ_vars def else def in 
+
+let mk_letbinding lbname univ_vars typ eff def =
     {lbname=lbname; 
      lbunivs=univ_vars;
      lbtyp=typ;
      lbeff=eff;
      lbdef=def}
 
+let close_univs_and_mk_letbinding recs lbname univ_vars typ eff def =
+    let def = match recs with 
+        | None -> def
+        | Some lids -> 
+          let universes = univ_vars |> List.map U_name in
+          let inst = lids |> List.map (fun l -> l, universes) in
+          FStar.Syntax.InstFV.inst inst def in
+    let typ = Subst.close_univ_vars univ_vars typ in
+    let def = Subst.close_univ_vars univ_vars def in
+    mk_letbinding lbname univ_vars typ eff def
 
 let open_univ_vars_binders_and_comp uvs binders c = 
     match binders with 

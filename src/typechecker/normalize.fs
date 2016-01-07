@@ -29,9 +29,6 @@ module SS = FStar.Syntax.Subst
 module U  = FStar.Syntax.Util
 module I  = FStar.Ident
 
-let debug_flag = ref false
-let debug () = debug_flag := true
-
 (**********************************************************************************************
  * Reduction of types via the Krivine Abstract Machine (KN), with lazy
  * reduction and strong reduction (under binders), as described in:
@@ -536,8 +533,8 @@ and norm_binders : cfg -> env -> binders -> binders =
 
 and rebuild : cfg -> env -> stack -> term -> term = 
     fun cfg env stack t ->
-    (* Pre-condition: t is in strong normal form w.r.t env;
-                      It has no free de Bruijn indices *)
+    (* Pre-condition: t is in either weak or strong normal form w.r.t env, depending on whether cfg.steps constains WHNF
+                      In either case, it has no free de Bruijn indices *)
         match stack with 
             | [] -> t
 
@@ -578,7 +575,31 @@ and rebuild : cfg -> env -> stack -> term -> term =
               rebuild cfg env stack (maybe_simplify cfg.steps t)
 
             | Match(env, branches, r) :: stack -> 
-              let rebuild () = rebuild cfg env stack (mk (Tm_match(t, branches)) r) in
+              let norm_and_rebuild_match () =
+                let whnf = List.contains WHNF cfg.steps in
+                let cfg = {cfg with steps=cfg.steps |> List.filter (function Delta | DeltaHard -> false | _ -> true)} in
+                let norm_or_whnf env t =
+                    if whnf
+                    then closure_as_term env t
+                    else norm cfg env [] t in
+                let branches = branches |> List.map (fun branch -> 
+                     //Q: What about normalizing the sorts of each of bound variables in p?
+                     let p, wopt, e = SS.open_branch branch in
+                     let env = S.pat_bvs p |> List.fold_left (fun env x -> 
+                        Dummy::env) env in
+                     let wopt = match wopt with 
+                        | None -> None
+                        | Some w -> Some (norm_or_whnf env w) in
+                     let e = norm_or_whnf env e in
+                     Util.branch (p, wopt, e)) in
+                rebuild cfg env stack (mk (Tm_match(t, branches)) r) in
+
+              let rec is_cons head = match head.n with 
+                | Tm_uinst(h, _) -> is_cons h
+                | Tm_constant _ 
+                | Tm_fvar(_, Some Data_ctor)
+                | Tm_fvar(_, Some (Record_ctor _)) -> true
+                | _ -> false in
 
               let guard_when_clause wopt b rest = 
                   match wopt with 
@@ -588,43 +609,75 @@ and rebuild : cfg -> env -> stack -> term -> term =
                      let else_branch = mk (Tm_match(t, rest)) r in 
                      Util.if_then_else w then_branch else_branch in
                 
-              let rec matches_pat (t:term) (p:pat) :  option<list<term>> = 
-                    let t = compress t in 
-                    match p.v with 
-                    | Pat_disj ps -> FStar.Util.find_map ps (matches_pat t)
-                    | Pat_var _ 
-                    | Pat_wild _ -> Some [t]
-                    | Pat_dot_term _ -> Some []
-                    | Pat_constant s -> 
-                      begin match t.n with 
-                        | Tm_constant s' when s=s' -> Some []
-                        | _ -> None
-                      end
-                    | Pat_cons(fv, arg_pats) -> 
-                      let head, args = Util.head_and_args t in 
-                      match head.n with 
-                        | Tm_fvar fv' when fv_eq fv fv' -> 
-                          matches_args [] args arg_pats
-                        | _ -> None
 
-              and matches_args out (a:args) (p:list<(pat * bool)>) = match a, p with 
-                | [], [] -> Some out
+              let rec matches_pat (t:term) (p:pat)  
+                :  either<list<term>, bool> //Inl ts: p matches t and ts are bindings for the branch
+                =                           //Inr false: p definitely does not match t
+                                            //Inr true: p may match t, but p is an open term and we cannot decide for sure 
+                    let t = compress t in 
+                    let head, args = Util.head_and_args t in 
+                    match p.v with 
+                        | Pat_disj ps -> 
+                          let mopt = Util.find_map ps (fun p -> 
+                            let m = matches_pat t p in
+                            match m with 
+                             | Inl _ -> Some m //definite match
+                             | Inr true -> Some m //maybe match; stop considering other cases
+                             | Inr false -> None (*definite mismatch*)) in
+                          begin match mopt with 
+                            | None -> Inr false //all cases definitely do not match
+                            | Some m -> m
+                          end
+                        | Pat_var _ 
+                        | Pat_wild _ -> Inl [t]
+                        | Pat_dot_term _ -> Inl []
+                        | Pat_constant s -> 
+                          begin match t.n with 
+                            | Tm_constant s' when s=s' -> Inl []
+                            | _ -> Inr (not (is_cons head)) //if it's not a constant, it may match
+                          end
+                        | Pat_cons(fv, arg_pats) -> 
+                          begin match head.n with 
+                            | Tm_fvar fv' when fv_eq fv fv' -> 
+                              matches_args [] args arg_pats
+                            | _ -> Inr (not (is_cons head)) //if it's not a constant, it may match
+                          end
+
+              and matches_args out (a:args) (p:list<(pat * bool)>) : either<list<term>, bool> = match a, p with 
+                | [], [] -> Inl out
                 | (t, _)::rest_a, (p, _)::rest_p -> 
                     begin match matches_pat t p with 
-                    | None -> None
-                    | Some x -> matches_args (out@x) rest_a rest_p 
+                        | Inl s -> matches_args (out@s) rest_a rest_p 
+                        | m -> m
                     end 
-                | _ -> None in
+                | _ -> Inr false in
             
               let rec matches t p = match p with 
-                | [] -> rebuild ()
+                | [] -> norm_and_rebuild_match ()
                 | (p, wopt, b)::rest -> 
                    match matches_pat t p with
-                    | None -> matches t rest 
-                    | Some s ->
-                      let env = List.fold_right (fun t env -> Clos([], t, Util.mk_ref (Some ([], t)))::env) s env in //the sub-terms should be fully normalized; so their environment is []
-                      norm cfg env stack (guard_when_clause wopt b rest) in
+                    | Inr false -> //definite mismatch; safe to consider the remaining patterns
+//                      Printf.printf "Term %s definitely does not matches pattern %s\n"
+//                        (Print.term_to_string t)
+//                        (Print.pat_to_string p);
+                      matches t rest 
 
+                    | Inr true -> //may match this pattern but t is an open term; block reduction
+//                      Printf.printf "Term %s maybe matches pattern %s ... reduction is blocked .. rebuilding\n"
+//                        (Print.term_to_string t)
+//                        (Print.pat_to_string p);
+                      norm_and_rebuild_match ()
+
+                    | Inl s ->
+                      //the elements of s are sub-terms of t 
+                      //the have no free de Bruijn indices; so their env=[]; see pre-condition at the top of rebuild
+//                      Printf.printf "Term %s matched pattern %s with bindings [%s]\n"
+//                        (Print.term_to_string t)
+//                        (Print.pat_to_string p)
+//                        (List.map Print.term_to_string s |> String.concat "; ");
+                      let env = List.fold_right (fun t env -> Clos([], t, Util.mk_ref (Some ([], t)))::env) s env in
+                      norm cfg env stack (guard_when_clause wopt b rest) in
+              
               matches t branches
 
 let config s e = {tcenv=e; steps=s}
