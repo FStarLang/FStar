@@ -1,5 +1,10 @@
-(* To be redirected to Platform.bytes *)
+(** Bytes, as modeled on the F* side, are a record with various fields in it
+ * (see [Platform]). *)
 type bytes = Platform.Bytes.bytes
+
+(** C bindings, however, will want most of the time to have a chunk of memory
+ * containing data, that is, actual bytes. For this, we use the type [string],
+ * also called [cbytes] in [Platform.Bytes]. *)
 let string_of_bytes b = Platform.Bytes.get_cbytes b
 let bytes_of_string s = Platform.Bytes.abytes s
 
@@ -392,7 +397,7 @@ type ssl_ec_point
 
 external ocaml_ec_point_new: ssl_ec_group -> ssl_ec_point = "ocaml_ec_point_new"
 external ocaml_ec_point_set_affine_coordinates_GFp:
-  ssl_ec_group -> ssl_ec_point -> bytes -> bytes -> unit =
+  ssl_ec_group -> ssl_ec_point -> string -> string -> unit =
   "ocaml_ec_point_set_affine_coordinates_GFp"
 external ocaml_ec_point_is_on_curve: ssl_ec_group -> ssl_ec_point -> bool =
   "ocaml_ec_point_is_on_curve"
@@ -404,7 +409,7 @@ let ec_is_on_curve params { ecx; ecy } =
   let g = ec_group_new params.curve in
   ocaml_ec_group_set_point_conversion_form g params.point_compression;
   let p = ocaml_ec_point_new g in
-  ocaml_ec_point_set_affine_coordinates_GFp g p ecx ecy;
+  ocaml_ec_point_set_affine_coordinates_GFp g p (string_of_bytes ecx) (string_of_bytes ecy);
   ocaml_ec_point_is_on_curve g p
 
 let ecdh_agreement key point =

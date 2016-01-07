@@ -591,6 +591,43 @@ module TestHash = struct
     Bytes.equalBytes output (bytes_of_hex t.output)
 end
 
+module TestEcc = struct
+  type test = {
+    params: ec_params;
+    point: ec_point;
+  }
+
+  let x = bytes_of_hex
+
+  let tests = [{
+    params = {
+      curve = ECC_P256;
+      point_compression = false
+    };
+    point = {
+      ecx = x"6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296";
+      ecy = x"4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5"
+    }
+  }; {
+    params = {
+      curve = ECC_P384;
+      point_compression = false
+    };
+    point = {
+      ecx = x"aa87ca22be8b05378eb1c71ef320ad746e1d3b628ba79b9859f741e082542a385502f25dbf55296c3a545e3872760ab7";
+      ecy = x"3617de4a96262c6f5d9e98bf9292dc29f8f41dbd289a147ce9da3113b5f0b8c00a60b1ce1d7e819d7a431d7c90ea0e5f"
+    }
+  }]
+
+  let test { params; point } =
+    ec_is_on_curve params point
+
+  let print_test { point = { ecx; ecy }; _ } =
+    Printf.printf "Point at coordinates %s,%s should be on curve but isn't\n"
+      (hex_of_bytes ecx) (hex_of_bytes ecy)
+
+end
+
 let run_test test_vectors print_test_vector test_vector =
   let passed = ref 0 in
   let total  = ref 0 in
@@ -609,5 +646,6 @@ let run_test test_vectors print_test_vector test_vector =
 let _ =
   TestAead.(run_test test_vectors print_test_vector test);
   TestHmac.(run_test test_cases print_test_case test);
-  TestHash.(run_test tests print_test test)
+  TestHash.(run_test tests print_test test);
+  TestEcc.(run_test tests print_test test)
 

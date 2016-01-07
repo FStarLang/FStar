@@ -640,6 +640,7 @@ CAMLprim value ocaml_rsa_new(value unit) {
  bailout:
     if (rsa != NULL)
         RSA_free(rsa);
+    // FIXME
     CAMLreturn(Val_unit);
 }
 
@@ -678,6 +679,7 @@ CAMLprim value ocaml_rsa_gen_key(value mlsz, value mlexp) {
     e = caml_alloc_string(BN_num_bytes(rsa->e));
     d = caml_alloc_string(BN_num_bytes(rsa->d));
 
+    // FIXME this doesn't build a value of type [Platform.Bytes.bytes]
     (void) BN_bn2bin(rsa->n, (uint8_t*) String_val(n));
     (void) BN_bn2bin(rsa->e, (uint8_t*) String_val(e));
     (void) BN_bn2bin(rsa->d, (uint8_t*) String_val(d));
@@ -716,6 +718,8 @@ CAMLprim value ocaml_rsa_set_key(value mlrsa, value mlkey) {
     mlpub = RSAKey_pub_exp(mlkey);
     mlprv = RSAKey_pvr_exp(mlkey);
 
+    // JP: this is wrong. [mlmod] is *not* a string, it's a record of type
+    // [Platform.Bytes.bytes], so there's no way [String_val] works here. FIXME
     mod = BN_bin2bn((uint8_t*) String_val(mlmod), caml_string_length(mlmod), NULL);
     pub = BN_bin2bn((uint8_t*) String_val(mlpub), caml_string_length(mlpub), NULL);
 
@@ -723,6 +727,7 @@ CAMLprim value ocaml_rsa_set_key(value mlrsa, value mlkey) {
         CAMLlocal1(prvdata);
 
         prvdata = Field(mlprv, 0);
+        // FIXME
         prv = BN_bin2bn((uint8_t*) String_val(prvdata), caml_string_length(prvdata), NULL);
     }
 
@@ -1001,6 +1006,7 @@ CAMLprim value ocaml_dsa_new(value unit) {
  bailout:
     if (dsa != NULL)
         DSA_free(dsa);
+    // FIXME
     CAMLreturn(Val_unit);
 }
 
@@ -1036,6 +1042,7 @@ CAMLprim value ocaml_dsa_gen_params(value size) {
     (void) BN_bn2bin(dsa->q, (uint8_t*) String_val(q));
     (void) BN_bn2bin(dsa->g, (uint8_t*) String_val(g));
 
+    // FIXME this does not build proper values of type [Platform.Bytes.bytes]
     mlparams = DSAParamsAlloc();
     DSAParams_set_p(mlparams, p);
     DSAParams_set_q(mlparams, q);
@@ -1083,6 +1090,7 @@ CAMLprim value ocaml_dsa_gen_key(value mlparams) {
     (void) BN_bn2bin(dsa->pub_key , (uint8_t*) String_val(mlpub));
     (void) BN_bn2bin(dsa->priv_key, (uint8_t*) String_val(mlprv));
 
+    // FIXME this does not build proper values of type [Platform.Bytes.bytes]
     mlkey = DSAKeyAlloc();
     DSAKey_set_params(mlkey, mlparams);
     DSAKey_set_pub   (mlkey, mlpub);
@@ -1125,6 +1133,8 @@ CAMLprim value ocaml_dsa_set_key(value mldsa, value mlkey) {
     mlpub = DSAKey_pub(mlkey);
     mlprv = DSAKey_prv(mlkey);
 
+    // FIXME these are not [string]s but [Platform.Bytes.bytes]s, so the use of
+    // [String_val] is incorrect
     p = BN_bin2bn((uint8_t*) String_val(mlp), caml_string_length(mlp), NULL);
     q = BN_bin2bn((uint8_t*) String_val(mlq), caml_string_length(mlq), NULL);
     g = BN_bin2bn((uint8_t*) String_val(mlg), caml_string_length(mlg), NULL);
@@ -1312,6 +1322,7 @@ CAMLprim value ocaml_dh_new(value unit) {
  bailout:
     if (dh != NULL)
         DH_free(dh);
+    // FIXME
     CAMLreturn(Val_unit);
 }
 
@@ -1345,6 +1356,7 @@ CAMLprim value ocaml_dh_gen_params(value size, value gen) {
     (void) BN_bn2bin(dh->p, (uint8_t*) String_val(p));
     (void) BN_bn2bin(dh->g, (uint8_t*) String_val(g));
 
+    // FIXME p, g not proper values of type [Platform.Bytes.bytes]
     mlparams = DHParamsAlloc();
     DHParams_set_p(mlparams, p);
     DHParams_set_g(mlparams, g);
@@ -1380,6 +1392,8 @@ CAMLprim value ocaml_dh_params_of_string(value pem) {
     (void) BN_bn2bin(dh->p, (uint8_t*) String_val(mlp));
     (void) BN_bn2bin(dh->g, (uint8_t*) String_val(mlg));
 
+    // FIXME: [mlp], [mlg] do not have type [Platform.Bytes.bytes]; the fields [dh_q]
+    // and [safe_prime] of the [mlparams] are not set.
     mlparams = DHParamsAlloc();
     DHParams_set_p(mlparams, mlp);
     DHParams_set_g(mlparams, mlg);
@@ -1391,6 +1405,7 @@ CAMLprim value ocaml_dh_params_of_string(value pem) {
  bailout:
     //    if (bio != NULL)
     //        BIO_free(bio);
+    // FIXME
     CAMLreturn(Val_unit);
 }
 
@@ -1410,6 +1425,8 @@ CAMLprim value ocaml_dh_gen_key(value mlparams) {
     mlp = DHParams_p(mlparams);
     mlg = DHParams_g(mlparams);
 
+    // FIXME [mlp] is not a [string] but a [Platform.Bytes.bytes]; same for
+    // [mlg].
     dh->p = BN_bin2bn((uint8_t*) String_val(mlp), caml_string_length(mlp), NULL);
     dh->g = BN_bin2bn((uint8_t*) String_val(mlg), caml_string_length(mlg), NULL);
 
@@ -1429,6 +1446,8 @@ CAMLprim value ocaml_dh_gen_key(value mlparams) {
     (void) BN_bn2bin(dh->pub_key , (uint8_t*) String_val(mlpub));
     (void) BN_bn2bin(dh->priv_key, (uint8_t*) String_val(mlprv));
 
+    // FIXME [mlpub] and [mlprv] are not proper values of type
+    // [Platform.Bytes.bytes]
     mlkey = DHKeyAlloc();
     DHKey_set_params(mlkey, mlparams);
     DHKey_set_pub   (mlkey, mlpub);
@@ -1439,6 +1458,7 @@ CAMLprim value ocaml_dh_gen_key(value mlparams) {
  bailout:
     if (dh != NULL)
         DH_free(dh);
+    // FIXME
     CAMLreturn(Val_unit);
 }
 
@@ -1468,15 +1488,18 @@ CAMLprim value ocaml_dh_set_key(value mldh, value mlkey) {
     mlpub = DHKey_pub(mlkey);
     mlprv = DHKey_prv(mlkey);
 
+    // FIXME [mlp] and [mlg] do not have type [string]
     p = BN_bin2bn((uint8_t*) String_val(mlp), caml_string_length(mlp), NULL);
     g = BN_bin2bn((uint8_t*) String_val(mlg), caml_string_length(mlg), NULL);
 
+    // FIXME [mlpub] does not have type string
     pub = BN_bin2bn((uint8_t*) String_val(mlpub), caml_string_length(mlpub), NULL);
 
     if (Is_block(mlprv)) {
         CAMLlocal1(prvdata);
 
         prvdata = Field(mlprv, 0);
+        // FIXME: [prvdata] does not have type [string]
         prv = BN_bin2bn((uint8_t*) String_val(prvdata), caml_string_length(prvdata), NULL);
     }
 
