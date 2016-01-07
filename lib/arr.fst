@@ -72,7 +72,7 @@ val swap: #a:Type -> x:array a -> i:nat -> j:nat{i <= j}
                                       (j < Seq.length (sel h0 x))
                                       /\ contains h1 x
                                       /\ (h1==Heap.upd h0 x (SeqProperties.swap (sel h0 x) i j))))
-let swap x i j =
+let swap #a x i j =
   let h0 = get () in
   let tmpi = index x i in
   let tmpj = index x j in
@@ -93,7 +93,7 @@ val copy_aux:
 	(ensures (fun h0 u h1 -> (contains h1 s /\ contains h1 cpy /\ s <> cpy )
 			      /\ (modifies !{cpy} h0 h1)
 			      /\ (Seq.Eq (sel h1 cpy) (sel h1 s))))
-let rec copy_aux s cpy ctr =
+let rec copy_aux #a s cpy ctr =
   match Array.length cpy - ctr with
   | 0 -> ()
   | _ -> Array.upd cpy ctr (Array.index s ctr);
@@ -108,7 +108,7 @@ val copy:
 				     /\ not(contains h0 r)
 				     /\ (contains h1 r)
 				     /\ (Seq.Eq (sel h1 r) (sel h0 s))))
-let copy s =
+let copy #a s =
   let cpy = Array.create (Array.length s) (Array.index s 0) in
   copy_aux s cpy 0;
   cpy
@@ -135,7 +135,7 @@ val blit_aux:
 	       /\ (forall (i:nat).
 		   (i < Seq.length (sel h1 t) /\ (i < t_idx \/ i >= t_idx + len)) ==>
 		     Seq.index (sel h1 t) i = Seq.index (sel h0 t) i) ))
-let rec blit_aux s s_idx t t_idx len ctr =
+let rec blit_aux #a s s_idx t t_idx len ctr =
   match len - ctr with
   | 0 -> ()
   | _ -> Array.upd t (t_idx + ctr) (Array.index s (s_idx + ctr));
@@ -162,7 +162,7 @@ val blit:
 	       /\ (forall (i:nat).
 		   (i < Seq.length (sel h1 t) /\ (i < t_idx \/ i >= t_idx + len)) ==>
 		     (Seq.index (sel h1 t) i = Seq.index (sel h0 t) i)) ))
-let rec blit s s_idx t t_idx len =
+let rec blit #a s s_idx t t_idx len =
   blit_aux s s_idx t t_idx len 0
 
 val sub :
@@ -180,7 +180,7 @@ val sub :
       /\ (Seq.length (sel h0 s) > 0)
       /\ (idx + len <= Seq.length (sel h0 s))
       /\ (Seq.Eq (Seq.slice (sel h0 s) idx (idx+len)) (sel h1 t))))
-let sub s idx len =
+let sub #a s idx len =
   let t = Array.create len (index s 0) in
   Array.blit s idx t 0 len;
   t
