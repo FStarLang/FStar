@@ -248,7 +248,8 @@ regressions:
 
 test_universes: 
 	../bin/tests #all the unit tests
-	(cd ../lib; ../bin/fstar --universes $(FSTAROPTS) listTot.fst ext.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.Seq.fst classical.fst seqproperties.fst arr.fst)
+	(cd ../lib; ../bin/fstar --universes $(FSTAROPTS) FStar.List.Tot.fst FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.Seq.fst FStar.Classical.fst FStar.SeqProperties.fst FStar.Array.fst)
+
 test.net: clean $(BIN)/fstar.exe boot
 	make -C ../examples
 
