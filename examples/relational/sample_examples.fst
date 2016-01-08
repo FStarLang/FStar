@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set;
-    other-files:FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst st2.fst bytes.fst sample.fst xor.fst
+    other-files:FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Relational.fst FStar.Bytes.fst sample.fst xor.fst
   --*)
 
 (* Simple example for Nik's proposal of sequencing (Email from 04/29/2015) *)

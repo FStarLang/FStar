@@ -1,6 +1,6 @@
 (*--build-config
    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi Prins;
-   other-files:ordset.fsi ordmap.fsi ghost.fst prins.fsi ast.fst
+   other-files:ordset.fsi ordmap.fsi FStar.Ghost.fst prins.fsi ast.fst
 --*)
 
 module Ffibridge

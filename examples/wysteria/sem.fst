@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi Prins --admit_fsi Ffibridge;
-    other-files:ghost.fst listTot.fst ordset.fsi ordmap.fsi classical.fst prins.fsi ast.fst ffibridge.fsi
+    other-files:FStar.Ghost.fst FStar.List.Tot.fst ordset.fsi ordmap.fsi FStar.Classical.fst prins.fsi ast.fst ffibridge.fsi
  --*)
 
 module Semantics

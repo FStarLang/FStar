@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set;
-    other-files:FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst ../../lib/int32.fst
+    other-files:FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst ../../lib/FStar.Int32.fst
  --*)
 (*
    Copyright 2008-2015 Nikhil Swamy and Microsoft Research

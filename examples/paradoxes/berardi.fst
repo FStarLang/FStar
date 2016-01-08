@@ -1,5 +1,5 @@
 (*--build-config
-    other-files:constr.fst classical.fst
+    other-files:FStar.Constructive.fst FStar.Classical.fst
   --*)
 module Berardi
 

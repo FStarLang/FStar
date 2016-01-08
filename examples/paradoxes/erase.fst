@@ -1,5 +1,5 @@
 (*--build-config
-    other-files: ghost.fst constr.fst;
+    other-files: FStar.Ghost.fst FStar.Constructive.fst;
   --*)
 module Erase
 

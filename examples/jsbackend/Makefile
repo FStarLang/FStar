@@ -1,4 +1,4 @@
-FSLIBFILES=FStar.ST.fst string.fst js.fst list.fsi
+FSLIBFILES=FStar.ST.fst FStar.String.fst js.fst list.fsi
 FSLIB=$(addprefix ../../lib/, $(FSLIBFILES))
 include ../Makefile.include
 

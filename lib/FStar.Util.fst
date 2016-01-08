@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set --admit_fsi FStar.HyperHeap;
-    other-files:ext.fst FStar.Set.fsi FStar.Heap.fst map.fsi hyperHeap.fsi
+    other-files:FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst map.fsi hyperHeap.fsi
   --*)
 module FStar.Util
 

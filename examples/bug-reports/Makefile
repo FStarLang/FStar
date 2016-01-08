@@ -14,10 +14,10 @@ include ../Makefile.include
 all: .all.ver
 
 bug194: bug194.fst
-	../../bin/fstar.exe ../../lib/classical.fst ../../lib/ext.fst ../../lib/constr.fst ../metatheory/stlc_strong_db_parsubst.fst bug194.fst
+	../../bin/fstar.exe ../../lib/FStar.Classical.fst ../../lib/FStar.FunctionalExtensionality.fst ../../lib/FStar.Constructive.fst ../metatheory/stlc_strong_db_parsubst.fst bug194.fst
 
 bug244: bug244.fst
-	../../bin/fstar.exe  ../../lib/string.fst bug244.fst
+	../../bin/fstar.exe  ../../lib/FStar.String.fst bug244.fst
 
 insertionsortcmp: insertionsortcmp.fst
 	../../bin/fstar.exe insertionsortcmp.fst

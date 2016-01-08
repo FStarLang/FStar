@@ -1,5 +1,5 @@
 (*--build-config
-    other-files:../../lib/int64.fst
+    other-files:../../lib/FStar.Int64.fst
  --*)
 
 module TestInt64

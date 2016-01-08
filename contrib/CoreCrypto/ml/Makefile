@@ -1,5 +1,5 @@
-OCAMLC = ocamlfind c -g
-OCAMLOPT = ocamlfind opt -g
+OCAMLC = ocamlfind c -g -annot
+OCAMLOPT = ocamlfind opt -g -annot
 OCAMLMKLIB = ocamlfind mklib
 OCAMLDEP = ocamlfind dep
 

@@ -21,6 +21,9 @@
 #include <openssl/dsa.h>
 #include <openssl/dh.h>
 #include <openssl/pem.h>
+#include <openssl/ec.h>
+#include <openssl/objects.h>
+#include <openssl/obj_mac.h>
 
 /* -------------------------------------------------------------------- */
 static value Val_some(value mlvalue) {
@@ -637,6 +640,7 @@ CAMLprim value ocaml_rsa_new(value unit) {
  bailout:
     if (rsa != NULL)
         RSA_free(rsa);
+    // FIXME
     CAMLreturn(Val_unit);
 }
 
@@ -675,6 +679,7 @@ CAMLprim value ocaml_rsa_gen_key(value mlsz, value mlexp) {
     e = caml_alloc_string(BN_num_bytes(rsa->e));
     d = caml_alloc_string(BN_num_bytes(rsa->d));
 
+    // FIXME this doesn't build a value of type [Platform.Bytes.bytes]
     (void) BN_bn2bin(rsa->n, (uint8_t*) String_val(n));
     (void) BN_bn2bin(rsa->e, (uint8_t*) String_val(e));
     (void) BN_bn2bin(rsa->d, (uint8_t*) String_val(d));
@@ -713,6 +718,8 @@ CAMLprim value ocaml_rsa_set_key(value mlrsa, value mlkey) {
     mlpub = RSAKey_pub_exp(mlkey);
     mlprv = RSAKey_pvr_exp(mlkey);
 
+    // JP: this is wrong. [mlmod] is *not* a string, it's a record of type
+    // [Platform.Bytes.bytes], so there's no way [String_val] works here. FIXME
     mod = BN_bin2bn((uint8_t*) String_val(mlmod), caml_string_length(mlmod), NULL);
     pub = BN_bin2bn((uint8_t*) String_val(mlpub), caml_string_length(mlpub), NULL);
 
@@ -720,6 +727,7 @@ CAMLprim value ocaml_rsa_set_key(value mlrsa, value mlkey) {
         CAMLlocal1(prvdata);
 
         prvdata = Field(mlprv, 0);
+        // FIXME
         prv = BN_bin2bn((uint8_t*) String_val(prvdata), caml_string_length(prvdata), NULL);
     }
 
@@ -998,6 +1006,7 @@ CAMLprim value ocaml_dsa_new(value unit) {
  bailout:
     if (dsa != NULL)
         DSA_free(dsa);
+    // FIXME
     CAMLreturn(Val_unit);
 }
 
@@ -1033,6 +1042,7 @@ CAMLprim value ocaml_dsa_gen_params(value size) {
     (void) BN_bn2bin(dsa->q, (uint8_t*) String_val(q));
     (void) BN_bn2bin(dsa->g, (uint8_t*) String_val(g));
 
+    // FIXME this does not build proper values of type [Platform.Bytes.bytes]
     mlparams = DSAParamsAlloc();
     DSAParams_set_p(mlparams, p);
     DSAParams_set_q(mlparams, q);
@@ -1080,6 +1090,7 @@ CAMLprim value ocaml_dsa_gen_key(value mlparams) {
     (void) BN_bn2bin(dsa->pub_key , (uint8_t*) String_val(mlpub));
     (void) BN_bn2bin(dsa->priv_key, (uint8_t*) String_val(mlprv));
 
+    // FIXME this does not build proper values of type [Platform.Bytes.bytes]
     mlkey = DSAKeyAlloc();
     DSAKey_set_params(mlkey, mlparams);
     DSAKey_set_pub   (mlkey, mlpub);
@@ -1122,6 +1133,8 @@ CAMLprim value ocaml_dsa_set_key(value mldsa, value mlkey) {
     mlpub = DSAKey_pub(mlkey);
     mlprv = DSAKey_prv(mlkey);
 
+    // FIXME these are not [string]s but [Platform.Bytes.bytes]s, so the use of
+    // [String_val] is incorrect
     p = BN_bin2bn((uint8_t*) String_val(mlp), caml_string_length(mlp), NULL);
     q = BN_bin2bn((uint8_t*) String_val(mlq), caml_string_length(mlq), NULL);
     g = BN_bin2bn((uint8_t*) String_val(mlg), caml_string_length(mlg), NULL);
@@ -1309,6 +1322,7 @@ CAMLprim value ocaml_dh_new(value unit) {
  bailout:
     if (dh != NULL)
         DH_free(dh);
+    // FIXME
     CAMLreturn(Val_unit);
 }
 
@@ -1342,6 +1356,7 @@ CAMLprim value ocaml_dh_gen_params(value size, value gen) {
     (void) BN_bn2bin(dh->p, (uint8_t*) String_val(p));
     (void) BN_bn2bin(dh->g, (uint8_t*) String_val(g));
 
+    // FIXME p, g not proper values of type [Platform.Bytes.bytes]
     mlparams = DHParamsAlloc();
     DHParams_set_p(mlparams, p);
     DHParams_set_g(mlparams, g);
@@ -1377,6 +1392,8 @@ CAMLprim value ocaml_dh_params_of_string(value pem) {
     (void) BN_bn2bin(dh->p, (uint8_t*) String_val(mlp));
     (void) BN_bn2bin(dh->g, (uint8_t*) String_val(mlg));
 
+    // FIXME: [mlp], [mlg] do not have type [Platform.Bytes.bytes]; the fields [dh_q]
+    // and [safe_prime] of the [mlparams] are not set.
     mlparams = DHParamsAlloc();
     DHParams_set_p(mlparams, mlp);
     DHParams_set_g(mlparams, mlg);
@@ -1388,6 +1405,7 @@ CAMLprim value ocaml_dh_params_of_string(value pem) {
  bailout:
     //    if (bio != NULL)
     //        BIO_free(bio);
+    // FIXME
     CAMLreturn(Val_unit);
 }
 
@@ -1407,6 +1425,8 @@ CAMLprim value ocaml_dh_gen_key(value mlparams) {
     mlp = DHParams_p(mlparams);
     mlg = DHParams_g(mlparams);
 
+    // FIXME [mlp] is not a [string] but a [Platform.Bytes.bytes]; same for
+    // [mlg].
     dh->p = BN_bin2bn((uint8_t*) String_val(mlp), caml_string_length(mlp), NULL);
     dh->g = BN_bin2bn((uint8_t*) String_val(mlg), caml_string_length(mlg), NULL);
 
@@ -1426,6 +1446,8 @@ CAMLprim value ocaml_dh_gen_key(value mlparams) {
     (void) BN_bn2bin(dh->pub_key , (uint8_t*) String_val(mlpub));
     (void) BN_bn2bin(dh->priv_key, (uint8_t*) String_val(mlprv));
 
+    // FIXME [mlpub] and [mlprv] are not proper values of type
+    // [Platform.Bytes.bytes]
     mlkey = DHKeyAlloc();
     DHKey_set_params(mlkey, mlparams);
     DHKey_set_pub   (mlkey, mlpub);
@@ -1436,6 +1458,7 @@ CAMLprim value ocaml_dh_gen_key(value mlparams) {
  bailout:
     if (dh != NULL)
         DH_free(dh);
+    // FIXME
     CAMLreturn(Val_unit);
 }
 
@@ -1465,15 +1488,18 @@ CAMLprim value ocaml_dh_set_key(value mldh, value mlkey) {
     mlpub = DHKey_pub(mlkey);
     mlprv = DHKey_prv(mlkey);
 
+    // FIXME [mlp] and [mlg] do not have type [string]
     p = BN_bin2bn((uint8_t*) String_val(mlp), caml_string_length(mlp), NULL);
     g = BN_bin2bn((uint8_t*) String_val(mlg), caml_string_length(mlg), NULL);
 
+    // FIXME [mlpub] does not have type string
     pub = BN_bin2bn((uint8_t*) String_val(mlpub), caml_string_length(mlpub), NULL);
 
     if (Is_block(mlprv)) {
         CAMLlocal1(prvdata);
 
         prvdata = Field(mlprv, 0);
+        // FIXME: [prvdata] does not have type [string]
         prv = BN_bin2bn((uint8_t*) String_val(prvdata), caml_string_length(prvdata), NULL);
     }
 
@@ -1546,4 +1572,230 @@ CAMLprim value ocaml_dh_compute(value mldh, value mlopub) {
 
     CAMLreturn(Val_unit);
 
+}
+
+/* -------------------------------------------------------------------- */
+#define EC_METHOD_val(v) (*((const EC_METHOD**) Data_custom_val(v)))
+
+static struct custom_operations method_ops = {
+  .identifier  = "ocaml_ec_method",
+  .finalize    = custom_finalize_default,
+  .compare     = custom_compare_default,
+  .hash        = custom_hash_default,
+  .serialize   = custom_serialize_default,
+  .deserialize = custom_deserialize_default,
+};
+
+#define EC_METHOD_GEN(X) \
+  CAMLprim value ocaml_##X##_method(value unit) { \
+      CAMLparam1(unit);                         \
+      CAMLlocal1(aout);                         \
+                                                \
+      aout = caml_alloc_custom(&method_ops, sizeof(EC_METHOD*), 0, 1); \
+      EC_METHOD_val(aout) = EC_##X##_method();                 \
+                                                \
+      CAMLreturn(aout);                         \
+  }
+
+/* EC_METHOD_GEN(GFp_nistp521) */
+/* EC_METHOD_GEN(GFp_nistp256) */
+EC_METHOD_GEN(GFp_simple)
+EC_METHOD_GEN(GFp_mont)
+EC_METHOD_GEN(GFp_nist)
+
+
+/* -------------------------------------------------------------------- */
+#define EC_GROUP_val(v) (*((EC_GROUP**) Data_custom_val(v)))
+
+static void ocaml_ec_group_finalize(value mlgroup) {
+    EC_GROUP *group = EC_GROUP_val(mlgroup);
+
+    if (group != NULL)
+        EC_GROUP_free(group);
+}
+
+static struct custom_operations group_ops = {
+  .identifier  = "ocaml_ec_group",
+  .finalize    = ocaml_ec_group_finalize,
+  .compare     = custom_compare_default,
+  .hash        = custom_hash_default,
+  .serialize   = custom_serialize_default,
+  .deserialize = custom_deserialize_default,
+};
+
+CAMLprim value ocaml_ec_group_new_by_curve_name(value mlname) {
+    CAMLparam1(mlname);
+    CAMLlocal1(aout);
+
+    int nid = OBJ_txt2nid(String_val(mlname));
+    if (nid == NID_undef)
+      caml_failwith("ocaml_ec_group_new_by_curve_name: invalid name");
+
+    aout = caml_alloc_custom(&group_ops, sizeof(EC_GROUP*), 0, 1);
+    EC_GROUP_val(aout) = EC_GROUP_new_by_curve_name(nid);
+
+    CAMLreturn(aout);
+}
+
+/* -------------------------------------------------------------------- */
+#define EC_POINT_val(v) (*((EC_POINT**) Data_custom_val(v)))
+
+static void ocaml_ec_point_finalize(value mlpoint) {
+    EC_POINT *point = EC_POINT_val(mlpoint);
+
+    if (point != NULL)
+        EC_POINT_free(point);
+}
+
+static struct custom_operations point_ops = {
+  .identifier  = "ocaml_ec_point",
+  .finalize    = ocaml_ec_point_finalize,
+  .compare     = custom_compare_default,
+  .hash        = custom_hash_default,
+  .serialize   = custom_serialize_default,
+  .deserialize = custom_deserialize_default,
+};
+
+CAMLprim value ocaml_ec_point_new(value mlgroup) {
+    CAMLparam1(mlgroup);
+    CAMLlocal1(aout);
+
+    EC_GROUP* group = EC_GROUP_val(mlgroup);
+
+    aout = caml_alloc_custom(&point_ops, sizeof(EC_POINT*), 0, 1);
+    EC_POINT_val(aout) = EC_POINT_new(group);
+
+    CAMLreturn(aout);
+}
+
+CAMLprim value ocaml_ec_group_set_point_conversion_form(value mlgroup, value mlcomp) {
+  CAMLparam2(mlgroup, mlcomp);
+
+  EC_GROUP* group = EC_GROUP_val(mlgroup);
+  int compression = Val_int(mlcomp);
+  if (compression)
+    EC_GROUP_set_point_conversion_form(group, POINT_CONVERSION_COMPRESSED);
+  else
+    EC_GROUP_set_point_conversion_form(group, POINT_CONVERSION_UNCOMPRESSED);
+
+  CAMLreturn(Val_unit);
+}
+
+CAMLprim value ocaml_ec_point_set_affine_coordinates_GFp(value mlgroup, value mlpoint, value mlx, value mly) {
+  CAMLparam4(mlgroup, mlpoint, mlx, mly);
+
+  EC_GROUP* group = EC_GROUP_val(mlgroup);
+  EC_POINT* point = EC_POINT_val(mlpoint);
+  BIGNUM* x = BN_bin2bn((uint8_t*) String_val(mlx), caml_string_length(mlx), NULL);
+  BIGNUM* y = BN_bin2bn((uint8_t*) String_val(mly), caml_string_length(mly), NULL);
+
+  EC_POINT_set_affine_coordinates_GFp(group, point, x, y, NULL);
+
+  BN_free(x);
+  BN_free(y);
+
+  CAMLreturn(Val_unit);
+}
+
+CAMLprim value ocaml_ec_point_get_affine_coordinates_GFp(value mlgroup, value mlpoint) {
+  CAMLparam2(mlgroup, mlpoint);
+
+  EC_GROUP* group = EC_GROUP_val(mlgroup);
+  EC_POINT* point = EC_POINT_val(mlpoint);
+  BIGNUM* x = BN_new();
+  BIGNUM* y = BN_new();
+  if (x == NULL || y == NULL)
+    caml_failwith("ocaml_ec_point_get_affine_coordinates_GFp: BN_new failed");
+
+  EC_POINT_get_affine_coordinates_GFp(group, point, x, y, NULL);
+
+  value mlx = caml_alloc_string(BN_num_bytes(x));
+  value mly = caml_alloc_string(BN_num_bytes(y));
+  value mlret = caml_alloc_tuple(2);
+
+  (void) BN_bn2bin(x, (uint8_t*) String_val(mlx));
+  (void) BN_bn2bin(y, (uint8_t*) String_val(mly));
+  Field(mlret, 0) = mlx;
+  Field(mlret, 1) = mly;
+
+  BN_free(x);
+  BN_free(y);
+
+  CAMLreturn(mlret);
+}
+
+CAMLprim value ocaml_ec_point_is_on_curve(value mlgroup, value mlpoint) {
+  CAMLparam2(mlgroup, mlpoint);
+
+  EC_GROUP* group = EC_GROUP_val(mlgroup);
+  EC_POINT* point = EC_POINT_val(mlpoint);
+
+  CAMLreturn(Val_int(EC_POINT_is_on_curve(group, point, NULL)));
+}
+
+/* -------------------------------------------------------------------- */
+#define EC_KEY_val(v) (*((EC_KEY**) Data_custom_val(v)))
+
+static void ocaml_ec_key_finalize(value mlkey) {
+    EC_KEY *key = EC_KEY_val(mlkey);
+
+    if (key != NULL)
+        EC_KEY_free(key);
+}
+
+static struct custom_operations key_ops = {
+  .identifier  = "ocaml_ec_key",
+  .finalize    = ocaml_ec_key_finalize,
+  .compare     = custom_compare_default,
+  .hash        = custom_hash_default,
+  .serialize   = custom_serialize_default,
+  .deserialize = custom_deserialize_default,
+};
+
+CAMLprim value ocaml_ec_key_new_by_curve_name(value mlname) {
+    CAMLparam1(mlname);
+    CAMLlocal1(aout);
+
+    int nid = OBJ_txt2nid(String_val(mlname));
+    if (nid == NID_undef)
+      caml_failwith("ocaml_ec_key_new_by_curve_name: invalid name");
+
+    aout = caml_alloc_custom(&key_ops, sizeof(EC_KEY*), 0, 1);
+    EC_KEY_val(aout) = EC_KEY_new_by_curve_name(nid);
+
+    CAMLreturn(aout);
+}
+
+CAMLprim value ocaml_ec_key_generate(value mlkey) {
+  CAMLparam1(mlkey);
+
+  if (EC_KEY_generate_key(EC_KEY_val(mlkey)) != 1)
+    caml_failwith("ocaml_ec_key_generate: EC_KEY_generate_key failed");
+
+  CAMLreturn(Val_unit);
+}
+
+CAMLprim value ocaml_ec_key_get0_public_key(value mlkey) {
+  CAMLparam1(mlkey);
+  CAMLlocal1(aout);
+  EC_KEY* k = EC_KEY_val(mlkey);
+  const EC_POINT* p = EC_KEY_get0_public_key(k);
+  const EC_GROUP* g = EC_KEY_get0_group(k);
+
+  // [p] is a pointer without ownership -- copy it in our data structure.
+  aout = caml_alloc_custom(&point_ops, sizeof(EC_POINT*), 0, 1);
+  EC_POINT_val(aout) = EC_POINT_dup(p, g);
+
+  CAMLreturn(aout);
+}
+
+CAMLprim value ocaml_ec_key_get0_private_key(value mlkey) {
+  CAMLparam1(mlkey);
+  EC_KEY* key = EC_KEY_val(mlkey);
+  const BIGNUM* n = EC_KEY_get0_private_key(key);
+
+  value mln = caml_alloc_string(BN_num_bytes(n));
+  (void) BN_bn2bin(n, (uint8_t*) String_val(mln));
+
+  CAMLreturn(mln);
 }
