@@ -1486,10 +1486,6 @@ let monad_signature env m s =
     end
   | _ -> fail()
 
-let destruct_eff_decl env (m:eff_decl) = 
-    let msig = Env.fresh_uinst env (m.univs, m.signature) in 
-    monad_signature env m.mname msig
-
 let open_univ_vars uvs binders c = 
     match binders with 
         | [] -> 
@@ -1543,17 +1539,6 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
   let binders, signature = SS.open_term ed.binders ed.signature in
   let binders, env, _ = tc_tparams env0 binders in
   let signature, _    = tc_trivial_guard env signature in
-
-//  let uvs, binders, signature = 
-//     let b_sig = Util.arrow binders (S.mk_Total signature) in 
-//     let (uvs, b_sig) = TcUtil.generalize_universes env0 b_sig in 
-//     match binders with 
-//        | [] -> uvs, [], b_sig
-//        | _ -> 
-//        match (SS.compress b_sig).n with 
-//            | Tm_arrow(binders, c) -> uvs, binders, Util.comp_result c 
-//            | _ -> failwith "Impossible" in
-
   let ed = {ed with binders=binders; 
                     signature=signature} in
 

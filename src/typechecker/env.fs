@@ -431,13 +431,6 @@ let is_projector env (l:lident) : bool =
           Util.for_some (function Projector _ -> true | _ -> false) quals
         | _ -> false
 
-let uinst_aux r ((us, t):tscheme) : term = 
-    let us = us |> List.map (fun _ -> new_u_univ()) in
-    mk_Tm_uinst t us
-
-let fresh_uinst env ts : term = 
-    uinst_aux (get_range env) ts
-
 ////////////////////////////////////////////////////////////
 // Operations on the monad lattice                        //
 ////////////////////////////////////////////////////////////
@@ -492,7 +485,7 @@ let build_lattice env se = match se with
         mlift=(fun r wp1 -> e2.mlift r (e1.mlift r wp1))} in
 
     let mk_lift lift_t r wp1 = 
-        let lift_t = fresh_uinst env lift_t in
+        let _, lift_t = inst_tscheme lift_t in
         mk (Tm_app(lift_t, [arg r; arg wp1])) None wp1.pos in
 
     let edge =

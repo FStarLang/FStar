@@ -29,6 +29,9 @@ kind STPre = STPre_h heap
 kind STPost (a:Type) = STPost_h heap a
 kind STWP (a:Type) = STWP_h heap a
 new_effect STATE = STATE_h heap
+let lift_div_state (a:Type) (wp:PureWP a) (p:STPost a) (h:heap) = wp (fun a -> p a h)
+sub_effect DIV ~> STATE = lift_div_state
+
 effect State (a:Type) (wp:STWP a) =
        STATE a wp wp
 effect ST (a:Type) (pre:STPre) (post: (heap -> Tot (STPost a))) =
@@ -37,8 +40,6 @@ effect ST (a:Type) (pre:STPre) (post: (heap -> Tot (STPost a))) =
              (fun (p:STPost a) (h:heap) -> (forall a h1. (pre h /\ post h a h1) ==> p a h1))          (* WLP *)
 effect St (a:Type) =
        ST a (fun h -> True) (fun h0 r h1 -> True)
-sub_effect
-  DIV   ~> STATE = fun (a:Type) (wp:PureWP a) (p:STPost a) (h:heap) -> wp (fun a -> p a h)
 
 (* signatures WITHOUT permissions *)
 assume val recall: #a:Type -> r:ref a -> STATE unit

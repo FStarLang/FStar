@@ -142,8 +142,12 @@ effect Admit (a:Type) = PURE a (fun (p:PurePost a) -> True) (fun (p:PurePost a) 
 default effect Tot (a:Type) = PURE a (pure_null_wp a) (pure_null_wp a)
 
 total new_effect GHOST = PURE
+
+let purewp_id (a:Type) (wp:PureWP a) = wp
+
 sub_effect
-  PURE ~> GHOST = fun (a:Type) (wp:PureWP a) -> wp
+  PURE ~> GHOST = purewp_id
+
 default effect GTot (a:Type) = GHOST a (pure_null_wp a) (pure_null_wp a)
 effect Ghost (a:Type) (pre:Type) (post:PurePost a) =
        GHOST a
@@ -211,6 +215,8 @@ type result (a:Type) =
   | Err : msg:string -> result a
 
 new_effect DIV = PURE
+sub_effect PURE ~> DIV  = purewp_id
+
 effect Div (a:Type) (pre:PurePre) (post:PurePost a) =
        DIV a
            (fun (p:PurePost a) -> pre /\ (forall a. post a ==> p a)) (* WP *)
@@ -219,6 +225,7 @@ effect Div (a:Type) (pre:PurePre) (post:PurePost a) =
 default effect Dv (a:Type) =
      DIV a (fun (p:PurePost a) -> (forall (x:a). p x))
            (fun (p:PurePost a) -> (forall (x:a). p x))
+
 
 type STPre_h  (heap:Type)          = heap -> Type0
 type STPost_h (heap:Type) (a:Type) = a -> heap -> Type0
@@ -352,6 +359,8 @@ effect Exn (a:Type) (pre:ExPre) (post:ExPost a) =
        EXN a
          (fun (p:ExPost a) -> pre /\ (forall (r:result a). (pre /\ post r) ==> p r)) (* WP *)
          (fun (p:ExPost a) -> (forall (r:result a). (pre /\ post r) ==> p r))       (* WLP *)
+let lift_div_exn (a:Type) (wp:PureWP a) (p:ExPost a) = wp (fun a -> p (V a))
+sub_effect DIV ~> EXN = lift_div_exn
 default effect Ex (a:Type) = Exn a True (fun v -> True)
 
 type AllPre_h  (h:Type)           = h -> Type
@@ -426,10 +435,9 @@ new_effect {
   ; trivial      = all_trivial      heap
 }
 
-sub_effect
-  PURE  ~> DIV   = fun (a:Type) (wp:PureWP a) (p:PurePost a) -> wp (fun a -> p a)
-sub_effect
-  DIV   ~> EXN   = fun (a:Type) (wp:PureWP a) (p:ExPost a) -> wp (fun a -> p (V a))
+
+
+
 
 type lex_t =
   | LexTop  : lex_t

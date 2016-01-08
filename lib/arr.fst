@@ -23,7 +23,7 @@ module FStar.Array
 #set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 open FStar.Seq
 open FStar.Heap
-(* private *) type array (t:Type) = ref (seq t)
+(* abstract *) type array (t:Type) = ref (seq t)
 
 assume val op_At_Bar: #a:Type -> array a -> array a -> St (array a)
 
