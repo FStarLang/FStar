@@ -126,7 +126,11 @@ let rec free_names_and_uvs' tm : free_vars =
 and free_names_and_uvars t = 
     let t = Subst.compress t in 
     match !t.vars with 
-        | Some n -> n 
+        | Some n -> 
+          if should_invalidate_cache n
+          then //invalidate the cache
+              (t.vars := None; free_names_and_uvars t)
+          else n
         | _ -> 
           let n = free_names_and_uvs' t in
           t.vars := Some n;
@@ -140,7 +144,10 @@ and free_names_and_uvars_binders bs acc =
               
 and free_names_and_uvars_comp c = 
     match !c.vars with 
-        | Some n -> n
+        | Some n -> 
+          if should_invalidate_cache n
+          then (c.vars := None; free_names_and_uvars_comp c)
+          else n
         | _ -> 
          let n = match c.n with 
             | Total t -> 
@@ -149,7 +156,16 @@ and free_names_and_uvars_comp c =
               free_names_and_uvars_args ct.effect_args (free_names_and_uvars ct.result_typ) in
          c.vars := Some n;
          n
-         
+
+and should_invalidate_cache n = 
+    n.uvars |> Util.set_elements |> List.exists (fun (u, _) -> match Unionfind.find u with
+        | Fixed _ -> true
+        | _ -> false)
+    || n.univs |> Util.set_elements |> List.exists (fun u -> match Unionfind.find u with 
+        | Some _ -> true
+        | None -> false)      
+
+        
 let names t = (free_names_and_uvars t).names
 let uvars t = (free_names_and_uvars t).uvars
 let univs t = (free_names_and_uvars t).univs

@@ -94,7 +94,8 @@ val iter: ('a -> unit) -> list 'a -> unit
 let rec iter f x = match x with
   | [] -> ()
   | a::tl -> let _ = f a in iter f tl
-
+  
+val iteri_aux: int -> (int -> 'a -> unit) -> list 'a -> unit
 let rec iteri_aux i f x = match x with
   | [] -> ()
   | a::tl -> f i a; iteri_aux (i+1) f tl
@@ -198,11 +199,10 @@ let memT = mem
 let contains = mem
 let containsT = memT
 
-val existsb: #a:Type
-       -> f:(a -> Tot bool)
-       -> list a
+val existsb: f:('a -> Tot bool)
+       -> list 'a
        -> Tot bool
-let rec existsb (a:Type) f l = match l with
+let rec existsb f l = match l with
  | [] -> false
  | hd::tl -> if f hd then true else existsb f tl
 
@@ -211,7 +211,7 @@ val find: #a:Type
         -> f:(a -> Tot bool)
         -> list a
         -> Tot (option (x:a{f x}))
-let rec find (a:Type) f l = match l with
+let rec find #a f l = match l with
   | [] -> None #(x:a{f x}) //These type annotations are only present because it makes bootstrapping go much faster
   | hd::tl -> if f hd then Some #(x:a{f x}) hd else find f tl
 let findT = find
@@ -314,13 +314,13 @@ let rec partitionT f = function
 
 (** List of tuples **)
 
-val assoc: 'a -> list ('a*'b) -> Tot (option 'b)
+val assoc: 'a -> list (Tuple2 'a 'b) -> Tot (option 'b)
 let rec assoc a x = match x with
   | [] -> None
   | (a', b)::tl -> if a=a' then Some b else assoc a tl
 let assocT = assoc
 
-val split: list ('a * 'b) -> Tot (list 'a * list 'b)
+val split: list (Tuple2 'a 'b) -> Tot (list 'a * list 'b)
 let rec split l = match l with
     | [] -> ([],[])
     | (hd1,hd2)::tl ->
@@ -330,7 +330,7 @@ let splitT = split
 let unzip = split
 let unzipT = splitT
 
-val unzip3: list ('a * 'b * 'c) -> Tot (list 'a * list 'b * list 'c)
+val unzip3: list (Tuple3 'a 'b 'c) -> Tot (list 'a * list 'b * list 'c)
 let rec unzip3 l = match l with
     | [] -> ([],[],[])
     | (hd1,hd2,hd3)::tl ->
@@ -338,13 +338,13 @@ let rec unzip3 l = match l with
        (hd1::tl1,hd2::tl2,hd3::tl3)
 let unzip3T = unzip3
 
-val zip: list 'a -> list 'b -> list ('a * 'b)
+val zip: list 'a -> list 'b -> list (Tuple2 'a 'b)
 let rec zip l1 l2 = match l1,l2 with
     | [], [] -> []
     | hd1::tl1, hd2::tl2 -> (hd1,hd2)::(zip tl1 tl2)
     | _, _ -> failwith "The lists do not have the same length"
 
-val zip3: list 'a -> list 'b -> list 'c -> list ('a * 'b * 'c)
+val zip3: list 'a -> list 'b -> list 'c -> list (Tuple3 'a 'b 'c)
 let rec zip3 l1 l2 l3 = match l1, l2, l3 with
     | [], [], [] -> []
     | hd1::tl1, hd2::tl2, hd3::tl3 -> (hd1,hd2,hd3)::(zip3 tl1 tl2 tl3)

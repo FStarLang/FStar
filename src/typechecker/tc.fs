@@ -970,8 +970,11 @@ and tc_eqn scrutinee env branch
         ignore <| Rel.solve_deferred_constraints env g;
         let e' = N.normalize [N.Beta] env e in
         if not <| Util.set_is_subset_of (Free.uvars e') (Free.uvars expected_pat_t)
-        then raise (Error(Util.format2 "Implicit pattern variables in %s could not be resolved against expected type %s; please bind them explicitly" 
-                                    (Print.term_to_string e') (Print.term_to_string expected_pat_t), p.p));
+        then (let unresolved = Util.set_difference (Free.uvars e') (Free.uvars expected_pat_t) |> Util.set_elements in
+              raise (Error(Util.format3 "Implicit pattern variables in %s could not be resolved against expected type %s; Variables {%s} were unresolved;\ please bind them explicitly" 
+                                    (N.term_to_string env e') 
+                                    (unresolved |> List.map (fun (u, _) -> Print.uvar_to_string u) |> String.concat ", ")
+                                    (N.term_to_string env expected_pat_t), p.p)));
 
         if Env.debug env Options.High
         then Util.print1 "Done checking pattern expression %s\n" (N.term_to_string env e);
