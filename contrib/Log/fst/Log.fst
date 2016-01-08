@@ -45,6 +45,3 @@ assume val write: facility -> loglevel -> (name:string) -> (value:string) -> uni
 
 (* Log a string at the required facility and to the dedicated std stream *)
 assume val writeout: facility -> loglevel -> (name:string) -> (value:string) -> unit
-
-(* Get the Nth entry of the log of a facility *)
-assume val get: facility -> nat -> string
