@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set --admit_fsi FStar.Seq;
-    other-files: classical.fst ext.fst set.fsi heap.fst st.fst all.fst seq.fsi seqproperties.fst
+    other-files: FStar.Classical.fst FStar.FunctionalExtensionality.fst set.fsi heap.fst st.fst all.fst seq.fsi FStar.SeqProperties.fst
   --*)
 
 module Platform.Bytes

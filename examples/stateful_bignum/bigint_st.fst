@@ -1,6 +1,6 @@
 (*--build-config
   options:--admit_fsi FStar.Seq --admit_fsi FStar.Set --verify_module Bigint;
-  other-files:classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi seq.fsi seqproperties.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst arr.fst ghost.fst axiomatic.fst intlib.fst limb.fst;
+  other-files:FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi seq.fsi FStar.SeqProperties.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Array.fst FStar.Ghost.fst axiomatic.fst intlib.fst limb.fst;
   --*)
 
 module Bigint

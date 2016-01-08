@@ -1,6 +1,6 @@
 (*--build-config
     options:--warn_top_level_effects;
-    other-files:squash.fsti;
+    other-files:FStar.Squash.fsti;
 --*)
 module FStar.Squash
 

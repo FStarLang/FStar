@@ -1,6 +1,6 @@
 (*--build-config
     options:--warn_top_level_effects --admit_fsi FStar.Squash --admit_fsi FStar.Set --print_implicits;
-    other-files:constr.fst squash.fsti FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst;
+    other-files:FStar.Constructive.fst FStar.Squash.fsti FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst;
 --*)
 module FStar.SquashProperties
 

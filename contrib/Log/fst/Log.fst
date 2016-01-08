@@ -1,7 +1,7 @@
 (*--build-config
   variables: LIB=../../../lib;
   options:--admit_fsi FStar.Set --admit_fsi FStar.Seq;
-  other-files: $LIB/classical.fst $LIB/ext.fst $LIB/FStar.Set.fsi $LIB/FStar.Heap.fst $LIB/FStar.ST.fst $LIB/FStar.All.fst
+  other-files: $LIB/FStar.Classical.fst $LIB/FStar.FunctionalExtensionality.fst $LIB/FStar.Set.fsi $LIB/FStar.Heap.fst $LIB/FStar.ST.fst $LIB/FStar.All.fst
 --*)
 module Log
 

@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set;
-    other-files:FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst list.fst listproperties.fst ordset.fsi
+    other-files:FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst FStar.ListProperties.fst ordset.fsi
  --*)
 
 module FStar.OrdSet

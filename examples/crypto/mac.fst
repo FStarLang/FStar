@@ -2,11 +2,11 @@
     options:--z3timeout 10 --verify_module MAC --admit_fsi FStar.Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 --admit_fsi FStar.IO;
     variables:CONTRIB=../../contrib;
     other-files:
-            FStar.FunctionalExtensionality.fst classical.fst
+            FStar.FunctionalExtensionality.fst FStar.Classical.fst
             FStar.Set.fsi FStar.Set.fst
             FStar.Heap.fst FStar.ST.fst FStar.All.fst
-            string.fst list.fst
-            seq.fsi seqproperties.fst
+            FStar.String.fst FStar.List.fst
+            seq.fsi FStar.SeqProperties.fst
             FStar.IO.fsti
             $CONTRIB/Platform/fst/Bytes.fst
             $CONTRIB/CoreCrypto/fst/CoreCrypto.fst
