@@ -1,5 +1,5 @@
 (*--build-config
-    other-files: constr.fst classical.fst ext.fst
+    other-files: constr.fst classical.fst FStar.FunctionalExtensionality.fst
   --*)
 (*
    Copyright 2014-2015

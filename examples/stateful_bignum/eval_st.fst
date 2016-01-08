@@ -1,6 +1,6 @@
 (*--build-config
   options:--admit_fsi FStar.Seq --admit_fsi FStar.Set --verify_module Eval --z3timeout 10 --use_eq_at_higher_order;
-  other-files:classical.fst ext.fst FStar.Set.fsi seq.fsi seqproperties.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst arr.fst ghost.fst axiomatic.fst intlib.fst limb.fst bigint_st.fst;
+  other-files:classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi seq.fsi seqproperties.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst arr.fst ghost.fst axiomatic.fst intlib.fst limb.fst bigint_st.fst;
   --*)
 
 (* 

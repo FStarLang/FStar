@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set --verify_module Bug;
-    other-files:classical.fst ext.fst FStar.Set.fsi FStar.Heap.fst
+    other-files:classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst
   --*)
 
 module Bug

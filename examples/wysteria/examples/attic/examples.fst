@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi OrdSet --admit_fsi OrdMap --admit_fsi Set --admit_fsi Wysteria;
-    other-files:ghost.fst ext.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst ordset.fsi ordmap.fsi list.fst wysteria.fsi lib.fst
+    other-files:ghost.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst ordset.fsi ordmap.fsi list.fst wysteria.fsi lib.fst
  --*)
 
 module Examples

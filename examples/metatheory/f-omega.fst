@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set --max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1;
-    other-files:constr.fst classical.fst ext.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst
+    other-files:constr.fst classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst
  --*)
 (*
    Copyright 2008-2015 Catalin Hritcu (Inria), Aseem Rastogi (UMD), and

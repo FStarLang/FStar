@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set;
-    other-files:classical.fst ext.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst
+    other-files:classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst
  --*)
 module Hashtable
 

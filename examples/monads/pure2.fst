@@ -27,7 +27,7 @@ val right_identity : a:Type -> m:(PureWP a) ->
   p:(a->Type) -> Lemma (EqTyp (pure_bind_wlp a a m (pure_return a) p) (m p))
 let right_identity (a:Type) (m:(PureWP a)) (p:(a->Type)) = ()
 (*
-../../bin/fstar.exe ../../lib/ext.fst pure.fst
+../../bin/fstar.exe ../../lib/FStar.FunctionalExtensionality.fst pure.fst
 pure.fst(28,0-28,61): Unknown assertion failed
 Error: 1 errors were reported (see above)
  *)

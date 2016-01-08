@@ -2,7 +2,7 @@
     options:--z3timeout 10 --verify_module Cap --admit_fsi FStar.Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
     variables:CONTRIB=../../contrib;
     other-files:
-            ext.fst classical.fst
+            FStar.FunctionalExtensionality.fst classical.fst
             FStar.Set.fsi FStar.Set.fst
             FStar.Heap.fst FStar.ST.fst FStar.All.fst
             string.fst list.fst

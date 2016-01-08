@@ -16,7 +16,7 @@ all-neg: $(NEGFILES)
 
 
 inverse:
-	$(FSTAR) --admit_fsi FStar.Seq classical.fst ext.fst seq.fsi inverse.fst --max_fuel 0 --max_ifuel 3 --initial_ifuel 3 --initial_fuel 0
+	$(FSTAR) --admit_fsi FStar.Seq classical.fst FStar.FunctionalExtensionality.fst seq.fsi inverse.fst --max_fuel 0 --max_ifuel 3 --initial_ifuel 3 --initial_fuel 0
 
 testghost:
 	$(FSTAR) testghost.fst

@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi Set --z3timeout 50;
-    other-files:ext.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst list.fst  stack.fst listset.fst
+    other-files:FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst list.fst  stack.fst listset.fst
     ghost.fst seq.fst located.fst lref.fst stackAndHeap.fst sst.fst rstWhile.fst constr.fst word.fst mvector.fsi mvector.fst MD5Common.fst
   --*)
 
