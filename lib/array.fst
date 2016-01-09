@@ -43,7 +43,7 @@ assume LengthUpdate: forall (a:Type) (s:seq a) (i:int) (v:a). {:pattern (length 
 
 assume IndexUpdate:  forall (a:Type) (s:seq a) (i:int) (v:a) (n:int). {:pattern (index (update s i v) n)} 
                      (0 <= n /\ n <= length s)
-                     ==>  (if i==n
+                     ==>  (if i=n
                            then index (update s i v) n == v 
                            else index (update s i v) n == index s n)
 
@@ -59,7 +59,7 @@ assume LengthAppend: forall (a:Type) (s1:seq a) (s2:seq a). {:pattern (length (a
                      length (append s1 s2) == length s1 + length s2
 
 assume IndexAppend:  forall (a:Type) (s1:seq a) (s2:seq a) (i:int). {:pattern (index (append s1 s2) i)}
-                     if (0 <= i /\ i < length s1) 
+                     if (0 <= i && i < length s1) 
                      then index (append s1 s2) i == index s1 i
                      else index (append s1 s2) i == index s2 (i - length s1)
 

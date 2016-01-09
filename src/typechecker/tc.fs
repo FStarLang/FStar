@@ -281,7 +281,9 @@ let rec tc_term env (e:term) : term                  (* type-checked and elabora
   | Tm_meta(e, Meta_pattern pats) -> 
     let t, u = U.type_u () in
     let e, c, g = tc_check_tot_or_gtot_term env e t in
-    let pats, g' = tc_pats env pats in
+    let pats, g' = 
+        let env, _ = Env.clear_expected_typ env in 
+        tc_pats env pats in
     let g' = {g' with guard_f=Trivial} in //The pattern may have some VCs associated with it, but these are irrelevant.
     mk (Tm_meta(e, Meta_pattern pats)) (Some t.n) top.pos, 
     c,

@@ -983,17 +983,30 @@ let mk_data_discriminators quals env t tps k datas =
         //Util.print1 "Making discriminator %s\n" disc_name.str;
         Sig_declare_typ(disc_name, [], disc_type, quals [S.Logic; S.Discriminator d], range_of_lid disc_name))
 
-let mk_indexed_projectors fvq refine_domain env tc lid tps (fields:list<S.binder>) t =
+let mk_indexed_projectors fvq refine_domain env tc lid (inductive_tps:binders) imp_tps (fields:list<S.binder>) t =
     let p = range_of_lid lid in
     let pos q = Syntax.withinfo q tun.n p in
     let projectee ptyp = S.gen_bv "projectee" (Some p) ptyp in
-
+    let tps = List.map2 (fun (_, imp) (x, _) -> (x, imp)) inductive_tps imp_tps in
     let arg_binder, indices =
-        let head, args = Util.head_and_args t in
-        let _, args = Util.first_N (List.length tps) args in
+        let head, args0 = Util.head_and_args t in
+        let args = 
+            let rec arguments tps args = match tps, args with 
+                | [], _ -> args
+                | _, [] -> raise (Error("Not enough arguments to type", Ident.range_of_lid lid))
+                | (_, Some S.Implicit)::tps', (_, Some S.Implicit)::args' -> arguments tps' args'
+                | (_, Some S.Implicit)::tps', (_, _)::_ -> arguments tps' args
+                | (_, _)::_, (a, Some S.Implicit)::_ ->
+                  raise (Error("Unexpected implicit annotation on argument", a.pos))
+                | (_, _)::tps', (_, _)::args' -> arguments tps' args' in
+            arguments inductive_tps args0 in
+//        let expected = Util.first_N (List.length tps) args0 |> snd in
+//        if List.length args <> List.length expected 
+//        then failwith (Printf.sprintf "For %s, Expected %d parameters got %d\n" 
+//                (Print.lid_to_string lid) (List.length expected) (List.length args));
         let indices = args |> List.map (fun _ -> S.new_bv (Some p) tun |> S.mk_binder) in
         let arg_typ = S.mk_Tm_app (S.fv_to_tm (S.fv tc None)) 
-                                  (tps@indices |> List.map (fun (x, _) -> arg (S.bv_to_name x))) None p in
+                                  (tps@indices |> List.map (fun (x, imp) -> S.bv_to_name x,imp)) None p in
         let arg_binder = 
             if not refine_domain
             then S.mk_binder (projectee arg_typ) //records have only one constructor; no point refining the domain
@@ -1004,7 +1017,7 @@ let mk_indexed_projectors fvq refine_domain env tc lid tps (fields:list<S.binder
         arg_binder, indices in
 
     let arg_exp = S.bv_to_name (fst arg_binder) in
-    let imp_binders = tps@indices |> List.map (fun (x, _) -> x, Some S.Implicit) in
+    let imp_binders = imp_tps @ (indices |> List.map (fun (x, _) -> x, Some S.Implicit)) in
     let binders = imp_binders@[arg_binder] in
 
     let arg = Util.arg_of_non_null_binder arg_binder in
@@ -1015,7 +1028,7 @@ let mk_indexed_projectors fvq refine_domain env tc lid tps (fields:list<S.binder
             NT(a, proj)) in
 
     let ntps = List.length tps in
-    let all_params = tps@fields in
+    let all_params = imp_tps@fields in
 
     fields |> List.mapi (fun i (x, _) -> 
         let field_name, _ = Util.mk_field_projector_name lid x i in
@@ -1052,7 +1065,7 @@ let mk_indexed_projectors fvq refine_domain env tc lid tps (fields:list<S.binder
             let impl = Sig_let((false, [lb]), p, [lb.lbname |> right], quals) in
             if no_decl then [impl] else [decl;impl]) |> List.flatten
 
-let mk_data_projectors env = function
+let mk_data_projectors env (inductive_tps, se) = match se with 
   | Sig_datacon(lid, _, t, l, n, quals, _, _) when (//(not env.iface || env.admitted_iface) &&
                                                 not (lid_equals lid C.lexcons_lid)) ->
     let refine_domain =
@@ -1069,7 +1082,7 @@ let mk_data_projectors env = function
                 | None -> Data_ctor
                 | Some q -> q in
               let tps, rest = Util.first_N n formals in
-              mk_indexed_projectors qual refine_domain env l lid tps rest cod
+              mk_indexed_projectors qual refine_domain env l lid inductive_tps tps rest cod
         end
 
   | _ -> []
@@ -1204,11 +1217,11 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
           | _ -> failwith "Unrecognized mutual type definition" in
       let env, tcs = List.fold_left (collect_tcs quals) (env, []) tcs in
       let tcs = List.rev tcs in
-      let sigelts = tcs |> List.collect (function
+      let tps_sigelts = tcs |> List.collect (function
         | Inr(Sig_inductive_typ(id, uvs, tpars, k, _, _, _, _), t, quals) -> //should be impossible
           let env_tps, _ = push_tparams env tpars in
           let t = desugar_term env_tps t in
-          [mk_typ_abbrev id uvs tpars k t [id] quals rng]
+          [[], mk_typ_abbrev id uvs tpars k t [id] quals rng]
 
         | Inl (Sig_inductive_typ(tname, univs, tpars, k, mutuals, _, tags, _), constrs, tconstr, quals) ->
           let tycon = (tname, tpars, k) in
@@ -1230,12 +1243,14 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
                     | RecordType fns -> [RecordConstructor fns]
                     | _ -> []) in
                 let ntps = List.length data_tpars in
-                (name, Sig_datacon(name, univs, Util.arrow data_tpars (mk_Total (t |> Util.name_function_binders)), tname, ntps, quals, mutuals, rng)))) in
-              Sig_inductive_typ(tname, univs, tpars, k, mutuals, constrNames, tags, rng)::constrs
+                (name, (tps, Sig_datacon(name, univs, Util.arrow data_tpars (mk_Total (t |> Util.name_function_binders)), 
+                                         tname, ntps, quals, mutuals, rng))))) in
+              ([], Sig_inductive_typ(tname, univs, tpars, k, mutuals, constrNames, tags, rng))::constrs
         | _ -> failwith "impossible") in
+      let sigelts = tps_sigelts |> List.map snd in
       let bundle = Sig_bundle(sigelts, quals, List.collect Util.lids_of_sigelt sigelts, rng) in
       let env = push_sigelt env0 bundle in
-      let data_ops = sigelts |> List.collect (mk_data_projectors env) in
+      let data_ops = tps_sigelts |> List.collect (mk_data_projectors env) in
       let discs = sigelts |> List.collect (function
         | Sig_inductive_typ(tname, _, tps, k, _, constrs, quals, _) when List.length constrs > 1->
           mk_data_discriminators quals env tname tps k constrs
@@ -1303,7 +1318,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
     let se = Sig_datacon(l, [], t, C.exn_lid, 0, [ExceptionConstructor], [C.exn_lid], d.drange) in
     let se' = Sig_bundle([se], [ExceptionConstructor], [l], d.drange) in
     let env = push_sigelt env se' in
-    let data_ops = mk_data_projectors env se in
+    let data_ops = mk_data_projectors env ([], se) in
     let discs = mk_data_discriminators [] env C.exn_lid [] tun [l] in
     let env = List.fold_left push_sigelt env (discs@data_ops) in
     env, se'::discs@data_ops
@@ -1315,7 +1330,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
     let se = Sig_datacon(l, [], t, C.exn_lid, 0, [ExceptionConstructor], [C.exn_lid], d.drange) in
     let se' = Sig_bundle([se], [ExceptionConstructor], [l], d.drange) in
     let env = push_sigelt env se' in
-    let data_ops = mk_data_projectors env se in
+    let data_ops = mk_data_projectors env ([], se) in
     let discs = mk_data_discriminators [] env C.exn_lid [] tun [l] in
     let env = List.fold_left push_sigelt env (discs@data_ops) in
     env, se'::discs@data_ops

@@ -703,9 +703,7 @@ let ite env (guard:formula) lcomp_then lcomp_else =
      comp=comp}
 
 let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
-    let eff = match lcases with
-        | [] -> failwith "Empty cases!"
-        | hd::tl -> List.fold_left (fun eff (_, lc) -> join_effects env eff lc.eff_name) (snd hd).eff_name tl in
+    let eff = List.fold_left (fun eff (_, lc) -> join_effects env eff lc.eff_name) Const.effect_PURE_lid lcases in
     let bind_cases () =
         let ifthenelse md res_t g wp_t wp_e = 
             mk_Tm_app (inst_effect_fun env md md.if_then_else) [S.arg res_t; S.arg g; S.arg wp_t; S.arg wp_e] None (Range.union_ranges wp_t.pos wp_e.pos) in

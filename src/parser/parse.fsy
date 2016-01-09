@@ -564,10 +564,10 @@ noSeqTerm:
          mk_term (TryWith($2, branches)) (rhs2 parseState 1 5) Expr
       }
 
-  | MATCH term WITH firstPatternBranch patternBranches 
+  | MATCH term WITH patternBranches 
       {	
-		let branches = focusBranches ($4::$5) (rhs2 parseState 1 5) in
-	    mk_term (Match($2, branches)) (rhs2 parseState 1 5) Expr
+		let branches = focusBranches $4 (rhs2 parseState 1 4) in
+	    mk_term (Match($2, branches)) (rhs2 parseState 1 4) Expr
       }
 
   | LET recopt letbinding letbindings IN term
