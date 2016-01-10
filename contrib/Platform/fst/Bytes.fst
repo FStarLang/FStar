@@ -133,7 +133,9 @@ assume val split2 : b:bytes -> n1:nat{n1 <= Seq.length b} -> n2:nat{n1 + n2 <= S
 
 assume val bytes_of_int : l:nat -> n:nat{repr_bytes n <= l} -> Tot (lbytes l)
 assume val int_of_bytes : b:bytes -> 
-    Tot (n:nat{repr_bytes n <= Seq.length b /\ b=bytes_of_int (Seq.length b) n})
+    Tot (n:nat{repr_bytes n <= Seq.length b /\ 
+             (Seq.length b = 1 ==> n < 256) /\ 
+             b=bytes_of_int (Seq.length b) n})
 
 assume val int_of_bytes_of_int : l:nat -> n:nat{repr_bytes n <= l} -> 
     Lemma (n = int_of_bytes (bytes_of_int l n))
