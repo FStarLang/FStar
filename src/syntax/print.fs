@@ -222,7 +222,7 @@ let rec term_to_string x =
   | Tm_fvar f ->        fv_to_string f
   | Tm_uvar (u, _) ->   uvar_to_string u
   | Tm_constant c ->    const_to_string c
-  | Tm_type u ->        Util.format1 "Type(%s)" (univ_to_string u)
+  | Tm_type u ->        if !Options.print_universes then Util.format1 "Type(%s)" (univ_to_string u) else "Type"
   | Tm_arrow(bs, c) ->  Util.format2 "(%s -> %s)"  (binders_to_string " -> " bs) (comp_to_string c)
   | Tm_abs(bs, t2) ->   Util.format2 "(fun %s -> %s)" (binders_to_string " " bs) (term_to_string t2)
   | Tm_refine(xt, f) -> Util.format3 "(%s:%s{%s})" (bv_to_string xt) (xt.sort |> term_to_string) (f |> formula_to_string)
@@ -239,7 +239,7 @@ let rec term_to_string x =
                         (match wopt with | None -> "" | Some w -> Util.format1 "when %s" (w |> term_to_string))
                         (e |> term_to_string))))
   | Tm_uinst(t, us) -> 
-    if !Options.print_implicits
+    if !Options.print_universes
     then Util.format2 "%s<%s>" (term_to_string t) (univs_to_string us)
     else term_to_string t
   | _ -> tag_of_term x
@@ -260,7 +260,7 @@ and lbs_to_string quals lbs =
     (Util.concat_l "\n and " (snd lbs |> List.map (fun lb -> 
                                                     Util.format4 "%s %s : %s = %s" 
                                                             (lbname_to_string lb.lbname) 
-                                                            (if !Options.print_implicits 
+                                                            (if !Options.print_universes 
                                                              then "<"^univ_names_to_string lb.lbunivs^">"
                                                              else "")
                                                             (term_to_string lb.lbtyp)
@@ -286,7 +286,7 @@ and binder_to_string' is_arrow b =
     let (a, imp) = b in
     if is_null_binder b 
     then term_to_string a.sort
-    else if not is_arrow && not (!Options.print_implicits) then imp_to_string (nm_to_string a) imp
+    else if not is_arrow && not (!Options.print_bound_var_types) then imp_to_string (nm_to_string a) imp
     else imp_to_string (nm_to_string a ^ ":" ^ term_to_string a.sort) imp
     
 and binder_to_string b =  binder_to_string' false b
@@ -391,14 +391,14 @@ let rec sigelt_to_string x = match x with
              (binders_to_string " " tps) 
              (term_to_string k)
   | Sig_datacon(lid, univs, t, _, _, _, _, _) -> 
-    if !Options.print_implicits 
+    if !Options.print_universes 
     then let univs, t = Subst.open_univ_vars univs t in
          Util.format3 "datacon<%s> %s : %s" (univ_names_to_string univs) lid.str (term_to_string t)
     else Util.format2 "datacon %s : %s" lid.str (term_to_string t)
   | Sig_declare_typ(lid, univs, t, quals, _) -> 
     let univs, t = Subst.open_univ_vars univs t in
     Util.format4 "%s val %s %s : %s" (quals_to_string quals) lid.str 
-        (if !Options.print_implicits 
+        (if !Options.print_universes
          then Util.format1 "<%s>" (univ_names_to_string univs)
          else "")
         (term_to_string t)

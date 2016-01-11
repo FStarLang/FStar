@@ -971,12 +971,16 @@ and tc_eqn scrutinee env branch
         let g = Rel.conj_guard g g' in
         ignore <| Rel.solve_deferred_constraints env g;
         let e' = N.normalize [N.Beta] env e in
-        if not <| Util.set_is_subset_of (Free.uvars e') (Free.uvars expected_pat_t)
-        then (let unresolved = Util.set_difference (Free.uvars e') (Free.uvars expected_pat_t) |> Util.set_elements in
-              raise (Error(Util.format3 "Implicit pattern variables in %s could not be resolved against expected type %s; Variables {%s} were unresolved;\ please bind them explicitly" 
+        let uvars_to_string uvs = uvs |> Util.set_elements |> List.map (fun (u, _) -> Print.uvar_to_string u) |> String.concat ", " in
+        let uvs1 = Free.uvars e' in
+        let uvs2 = Free.uvars expected_pat_t in
+        if not <| Util.set_is_subset_of uvs1 uvs2
+        then (let unresolved = Util.set_difference uvs1 uvs2 |> Util.set_elements in
+              raise (Error(Util.format3 "Implicit pattern variables in %s could not be resolved against expected type %s;\
+                                         Variables {%s} were unresolved; please bind them explicitly" 
                                     (N.term_to_string env e') 
-                                    (unresolved |> List.map (fun (u, _) -> Print.uvar_to_string u) |> String.concat ", ")
-                                    (N.term_to_string env expected_pat_t), p.p)));
+                                    (N.term_to_string env expected_pat_t)
+                                    (unresolved |> List.map (fun (u, _) -> Print.uvar_to_string u) |> String.concat ", "), p.p)));
 
         if Env.debug env Options.High
         then Util.print1 "Done checking pattern expression %s\n" (N.term_to_string env e);
@@ -1117,7 +1121,7 @@ and tc_eqn scrutinee env branch
                         let sub_term = mk_Tm_app (S.fvar None projector f.p) [arg scrutinee_tm] None f.p in
                         build_branch_guard sub_term ei) |> List.flatten in
                      discriminate scrutinee_tm f @ sub_term_guards
-            | _ -> fail () in
+            | _ -> [] in //a non-pattern sub-term: must be from a dot pattern
 
       (* 6 (b) *)
       let build_and_check_branch_guard scrutinee_tm pat =

@@ -623,8 +623,8 @@ let rec head_matches t1 t2 : match_result =
     | Tm_app(head, _), _ -> head_matches head t2
     | _, Tm_app(head, _) -> head_matches t1 head
 
-    | Tm_abs _, _
-    | _, Tm_abs _ -> HeadMatch
+//    | Tm_abs _, _
+//    | _, Tm_abs _ -> MisHeadMatch
 
     | _ -> MisMatch
 
@@ -1654,6 +1654,13 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         let t1 = force_refinement <| base_and_refinement env wl t1 in
         solve_t env ({problem with lhs=t1}) wl
 
+      | Tm_abs _, _
+      | _, Tm_abs _ ->
+        let maybe_eta t = match t.n with 
+            | Tm_abs _ -> t
+            | _ -> N.eta_expand wl.tcenv t in
+        solve_t env ({problem with lhs=maybe_eta t1; rhs=maybe_eta t2}) wl
+
       | Tm_uinst _, _
       | Tm_name _, _
       | Tm_constant _, _
@@ -1682,7 +1689,9 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
 
             | (_, None) -> //head matches head'
                 if debug env <| Options.Other "Rel" 
-                then Util.print2 "Head matches: %s and %s\n" (Print.term_to_string t1) (Print.term_to_string t2);
+                then Util.print4 "Head matches: %s (%s) and %s (%s)\n" 
+                    (Print.term_to_string t1) (Print.tag_of_term t1)
+                    (Print.term_to_string t2) (Print.tag_of_term t2);
                 let head, args = Util.head_and_args t1 in
                 let head', args' = Util.head_and_args t2 in
                 let nargs = List.length args in

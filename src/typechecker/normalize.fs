@@ -714,4 +714,15 @@ let rec unfold_effect_abbrev env comp =
       unfold_effect_abbrev env c
 
 let normalize_sigelt (_:steps) (_:Env.env) (_:sigelt) : sigelt = failwith "NYI: normalize_sigelt"
-let eta_expand (_:Env.env) (_:typ) : typ = failwith "NYI: eta_expand"
+let eta_expand (_:Env.env) (t:typ) : typ =
+    match t.n with 
+        | Tm_name x -> 
+          let binders, args = Util.arrow_formals x.sort in
+          begin match binders with 
+            | [] -> t
+            | _ -> 
+              let binders, args = binders |> Util.args_of_binders in
+              Util.abs binders (mk_Tm_app t args None t.pos)
+          end
+        | _ -> 
+          failwith (Printf.sprintf "NYI: eta_expand(%s) %s" (Print.tag_of_term t) (Print.term_to_string t))

@@ -48,7 +48,7 @@ all_univs:
 	$(UFSTAR) $(STDLIB) FStar.Seq.fst FStar.Classical.fst FStar.SeqProperties.fst FStar.Array.fst
 	$(UFSTAR) $(STDLIB) array.fst FStar.Char.fst
 	$(UFSTAR) $(STDLIB) FStar.Bytes.fst FStar.Crypto.fst
-	$(UFSTAR) FStar.Constructive.fst --__temp_no_proj FStar.Constructive
+	$(UFSTAR) FStar.Constructive.fst 
 # 	$(UFSTAR) FStar.Ghost.fst FStar.ErasedLogic.fst
 # 	$(UFSTAR) FStar.HyperHeap.fst
 # 	$(UFSTAR) $(STDLIB) FStar.Int8.fst FStar.Int16.fst FStar.Int31.fst FStar.Int32.fst int63.fst FStar.Int64.fst
