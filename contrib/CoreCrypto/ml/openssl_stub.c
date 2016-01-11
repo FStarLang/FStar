@@ -143,10 +143,8 @@ CAMLprim value ocaml_EVP_MD_CTX_update(value mlctx, value mldata) {
 
     CAMLparam2(mlctx, mldata);
 
-    if ((ctx = MD_CTX_val(mlctx)) == NULL) {
+    if ((ctx = MD_CTX_val(mlctx)) == NULL)
         caml_invalid_argument("MD_CTX has been disposed");
-        CAMLreturn(Val_unit);
-    }
 
     EVP_DigestUpdate(ctx, String_val(mldata), caml_string_length(mldata));
 
@@ -160,10 +158,8 @@ CAMLprim value ocaml_EVP_MD_CTX_final(value mlctx) {
     CAMLparam1(mlctx);
     CAMLlocal1(aout);
 
-    if ((ctx = MD_CTX_val(mlctx)) == NULL) {
+    if ((ctx = MD_CTX_val(mlctx)) == NULL)
         caml_invalid_argument("MD_CTX has been disposed");
-        CAMLreturn(Val_unit);
-    }
 
     aout = caml_alloc_string(EVP_MD_CTX_size(ctx));
     (void) EVP_DigestFinal_ex(ctx, (uint8_t*) String_val(aout), NULL);
@@ -281,7 +277,6 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_block_size(value mlctx) {
     CAMLparam1(mlctx);
 
     if ((ctx = CIPHER_CTX_val(mlctx)) == NULL)
-      // JP: how is that supposed to happen?
       caml_failwith("CIPHER_CTX has been disposed");
 
     CAMLreturn(Val_int(EVP_CIPHER_CTX_block_size(ctx)));
@@ -294,7 +289,6 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_key_length(value mlctx) {
     CAMLparam1(mlctx);
 
     if ((ctx = CIPHER_CTX_val(mlctx)) == NULL)
-        // JP: how is that supposed to happen?
         caml_failwith("CIPHER_CTX has been disposed");
 
     CAMLreturn(Val_int(EVP_CIPHER_CTX_key_length(ctx)));
@@ -307,7 +301,6 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_iv_length(value mlctx) {
     CAMLparam1(mlctx);
 
     if ((ctx = CIPHER_CTX_val(mlctx)) == NULL)
-        // JP: how is that supposed to happen?
         caml_failwith("CIPHER_CTX has been disposed");
 
     CAMLreturn(Val_int(EVP_CIPHER_CTX_iv_length(ctx)));
@@ -573,6 +566,7 @@ CAMLprim value ocaml_rsa_new(value unit) {
 }
 
 /* -------------------------------------------------------------------- */
+
 CAMLprim value ocaml_rsa_fini(value mlrsa) {
     CAMLparam1(mlrsa);
 
@@ -596,8 +590,13 @@ CAMLprim value ocaml_rsa_gen_key(value mlsz, value mlexp) {
       caml_failwith("RSA:genkey failed");
 
     BN_set_word(bn_mlexp, mlexp);
-    if (RSA_generate_key_ex(rsa, mlsz, bn_mlexp, NULL) != 1)
+    // FIXME the [rsa] structure has not been allocated at this stage and from
+    // the man page I understand that [RSA_generate_key_ex] expects an allocated
+    // data structure in [rsa]
+    if (RSA_generate_key_ex(rsa, mlsz, bn_mlexp, NULL) != 1) {
+      BN_free(bn_mlexp);
       caml_failwith("RSA:genkey failed");
+    }
 
     n = caml_alloc_string(BN_num_bytes(rsa->n));
     e = caml_alloc_string(BN_num_bytes(rsa->e));
@@ -897,6 +896,7 @@ CAMLprim value ocaml_dsa_gen_params(value size) {
     CAMLparam1(size);
     CAMLlocal4(p, q, g, mlparams);
 
+    // FIXME: [dsa] does not pointo a valid [DSA] structure at this stage
     if (DSA_generate_parameters_ex(dsa, Int_val(size), NULL, 0, NULL, NULL, NULL) != 1)
         caml_failwith("DSA:genparams failed");
 
@@ -934,6 +934,7 @@ CAMLprim value ocaml_dsa_gen_key(value mlparams) {
     mlq = DSAParams_q(mlparams);
     mlg = DSAParams_g(mlparams);
 
+    // FIXME
     dsa->p = BN_bin2bn((uint8_t*) String_val(mlp), caml_string_length(mlp), NULL);
     dsa->q = BN_bin2bn((uint8_t*) String_val(mlq), caml_string_length(mlq), NULL);
     dsa->g = BN_bin2bn((uint8_t*) String_val(mlg), caml_string_length(mlg), NULL);
@@ -1173,6 +1174,7 @@ CAMLprim value ocaml_dh_gen_params(value size, value gen) {
     CAMLparam1(size);
     CAMLlocal3(p, g, mlparams);
 
+    // FIXME: [dh] is not a valid [DH] struct
     if (DH_generate_parameters_ex(dh, Int_val(size), Int_val(gen), NULL) != 1)
         caml_failwith("DH:genparams failed");
 

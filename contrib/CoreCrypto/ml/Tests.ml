@@ -637,6 +637,10 @@ module TestEcc = struct
 
 end
 
+module TestRsa = struct
+
+end
+
 let run_test test_vectors print_test_vector test_vector =
   let passed = ref 0 in
   let total  = ref 0 in
