@@ -639,6 +639,13 @@ end
 
 module TestRsa = struct
 
+  let test () =
+    let k = rsa_gen_key 2048 in
+    let original_text = bytes_of_string "coucou" in
+    let cipher_text = rsa_encrypt k Pad_none original_text in
+    let plain_text = rsa_decrypt k Pad_none cipher_text in
+    assert (Some original_text = plain_text)
+
 end
 
 let run_test test_vectors print_test_vector test_vector =
@@ -660,5 +667,6 @@ let _ =
   TestAead.(run_test test_vectors print_test_vector test);
   TestHmac.(run_test test_cases print_test_case test);
   TestHash.(run_test tests print_test test);
-  TestEcc.(run_test tests print_test test)
+  TestEcc.(run_test tests print_test test);
+  TestRsa.test ()
 

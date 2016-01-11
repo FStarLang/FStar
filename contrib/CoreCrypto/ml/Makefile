@@ -42,6 +42,9 @@ all: corecrypto.cmxa
 %.o: %.c
 	$(OCAMLOPT) $(CC) $(CCOPTS) $(EXTRA_OPTS) -c $<
 
+$(PLATFORM)/platform.cmx: $(PLATFORM)/platform.ml
+	$(MAKE) -C $(PLATFORM)
+
 DLL_OBJ = $(PLATFORM)/platform.cmx CoreCrypto.cmx openssl_stub.o
 
 corecrypto.cmxa: $(DLL_OBJ)

@@ -335,3 +335,9 @@ module Date = struct
   let addTimeSpan (DT(a)) (TS(b)) = DT (a +. b)
   let greaterDateTime (DT(a)) (DT(b)) = a > b
 end
+
+module Option = struct
+  let map f = function
+    | Some x -> Some (f x)
+    | None -> None
+end

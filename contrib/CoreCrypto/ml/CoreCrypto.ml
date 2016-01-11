@@ -1,3 +1,5 @@
+module Option = Platform.Option
+
 (** Bytes, as modeled on the F* side, are a record with various fields in it
  * (see [Platform]). *)
 type bytes = Platform.Bytes.bytes
@@ -244,7 +246,7 @@ type rsa
 external ocaml_rsa_new : unit -> rsa = "ocaml_rsa_new"
 external ocaml_rsa_fini   : rsa -> unit = "ocaml_rsa_fini"
 
-external ocaml_rsa_gen_key : size:int -> exp:int -> rsa_key = "ocaml_rsa_gen_key"
+external ocaml_rsa_gen_key : size:int -> exp:int -> string * string * string = "ocaml_rsa_gen_key"
 external ocaml_rsa_set_key : rsa -> rsa_key -> unit = "ocaml_rsa_set_key"
 
 external ocaml_rsa_encrypt : rsa -> prv:bool -> rsa_padding -> string -> string = "ocaml_rsa_encrypt"
@@ -254,11 +256,11 @@ external ocaml_rsa_sign : rsa -> hash_alg option -> string -> string = "ocaml_rs
 external ocaml_rsa_verify : rsa -> hash_alg option -> data:string -> sig_:string -> bool = "ocaml_rsa_verify"
 
 let rsa_gen_key (i:int) =
-  let k = ocaml_rsa_gen_key i 65537 in
-  match k.rsa_prv_exp with
-  | Some sk -> k
-  | None -> failwith "rsa_gen_key returned an empty private key"
-
+  let rsa_mod, rsa_pub_exp, rsa_prv_exp = ocaml_rsa_gen_key i 65537 in {
+    rsa_mod = bytes_of_string rsa_mod;
+    rsa_pub_exp = bytes_of_string rsa_pub_exp;
+    rsa_prv_exp = Some (bytes_of_string rsa_prv_exp)
+  }
 
 let rsa_encrypt (pk:rsa_key) (p:rsa_padding) (d:bytes) =
   let r = ocaml_rsa_new() in

@@ -61,6 +61,7 @@ val random : int -> bytes
 
 val rsa_gen_key : int -> rsa_key
 val rsa_encrypt : rsa_key -> rsa_padding -> bytes -> bytes
+val rsa_decrypt : rsa_key -> rsa_padding -> bytes -> bytes option
 val rsa_sign : hash_alg option -> rsa_key -> bytes -> bytes
 val rsa_verify : hash_alg option -> rsa_key -> bytes -> bytes -> bool
 

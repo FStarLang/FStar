@@ -580,42 +580,39 @@ CAMLprim value ocaml_rsa_fini(value mlrsa) {
 
 /* -------------------------------------------------------------------- */
 CAMLprim value ocaml_rsa_gen_key(value mlsz, value mlexp) {
-    RSA *rsa = NULL;
-    BIGNUM *bn_mlexp = NULL;
+    RSA *rsa = RSA_new();
+    BIGNUM *bn_mlexp = BN_new();
 
     CAMLparam2(mlsz, mlexp);
-    CAMLlocal4(e, n, d, mlkey);
 
-    if ((bn_mlexp = BN_new()) == NULL)
+    if (rsa == NULL || bn_mlexp == NULL)
       caml_failwith("RSA:genkey failed");
 
     BN_set_word(bn_mlexp, mlexp);
-    // FIXME the [rsa] structure has not been allocated at this stage and from
-    // the man page I understand that [RSA_generate_key_ex] expects an allocated
-    // data structure in [rsa]
     if (RSA_generate_key_ex(rsa, mlsz, bn_mlexp, NULL) != 1) {
+      RSA_free(rsa);
       BN_free(bn_mlexp);
       caml_failwith("RSA:genkey failed");
     }
 
+    CAMLlocal3(e, n, d);
     n = caml_alloc_string(BN_num_bytes(rsa->n));
     e = caml_alloc_string(BN_num_bytes(rsa->e));
     d = caml_alloc_string(BN_num_bytes(rsa->d));
 
-    // FIXME this doesn't build a value of type [Platform.Bytes.bytes]
     (void) BN_bn2bin(rsa->n, (uint8_t*) String_val(n));
     (void) BN_bn2bin(rsa->e, (uint8_t*) String_val(e));
     (void) BN_bn2bin(rsa->d, (uint8_t*) String_val(d));
 
-    mlkey = RSAKeyAlloc();
-    RSAKey_set_mod    (mlkey, n);
-    RSAKey_set_pub_exp(mlkey, e);
-    RSAKey_set_prv_exp(mlkey, Val_some(d));
-
     BN_free(bn_mlexp);
     RSA_free(rsa);
 
-    CAMLreturn(mlkey);
+    CAMLlocal1(ret);
+    ret = caml_alloc_tuple(3);
+    Field(ret, 0) = n;
+    Field(ret, 1) = e;
+    Field(ret, 2) = d;
+    CAMLreturn(ret);
 }
 
 /* -------------------------------------------------------------------- */
