@@ -682,15 +682,11 @@ CAMLprim value ocaml_rsa_encrypt(value mlrsa, value mlprv, value mlpadding, valu
     CAMLparam4(mlrsa, mlprv, mlpadding, data);
     CAMLlocal1(output);
 
-    if ((rsa = RSA_val(mlrsa)) == NULL) {
+    if ((rsa = RSA_val(mlrsa)) == NULL)
         caml_failwith("RSA has been disposed");
-        goto bailout;
-    }
 
-    if (rsa->e == NULL || (Bool_val(mlprv) && rsa->d == NULL)) {
+    if (rsa->e == NULL || (Bool_val(mlprv) && rsa->d == NULL))
         caml_failwith("RSA:encrypt: missing key");
-        goto bailout;
-    }
 
     padding = RSAPadding_val(mlpadding);
     rsasz   = RSA_size(rsa);
@@ -703,10 +699,8 @@ CAMLprim value ocaml_rsa_encrypt(value mlrsa, value mlprv, value mlpadding, valu
         abort();
     }
 
-    if (caml_string_length(data) > (rsasz - pdsz)) {
+    if (caml_string_length(data) > (rsasz - pdsz))
         caml_failwith("RSA:encrypt: invalid data length");
-        goto bailout;
-    }
 
     output = caml_alloc_string(rsasz);
 
@@ -716,15 +710,9 @@ CAMLprim value ocaml_rsa_encrypt(value mlrsa, value mlprv, value mlpadding, valu
             (uint8_t*) String_val(data),
             (uint8_t*) String_val(output),
             rsa, padding) < 0)
-    {
-        caml_failwith("RSA:encrypt: encryption failed");
-        goto bailout;
-    }
+      caml_failwith("RSA:encrypt: encryption failed");
 
     CAMLreturn(output);
-
-bailout:
-    CAMLreturn(Val_unit);
 }
 
 /* -------------------------------------------------------------------- */
@@ -739,23 +727,17 @@ CAMLprim value ocaml_rsa_decrypt(value mlrsa, value mlprv, value mlpadding, valu
     CAMLparam4(mlrsa, mlprv, mlpadding, data);
     CAMLlocal2(buffer, output);
 
-    if ((rsa = RSA_val(mlrsa)) == NULL) {
+    if ((rsa = RSA_val(mlrsa)) == NULL)
         caml_failwith("RSA has been disposed");
-        goto bailout;
-    }
 
-    if (rsa->e == NULL || (Bool_val(mlprv) && rsa->d == NULL)) {
+    if (rsa->e == NULL || (Bool_val(mlprv) && rsa->d == NULL))
         caml_failwith("RSA:decrypt: missing key");
-        goto bailout;
-    }
 
     padding = RSAPadding_val(mlpadding);
     rsasz   = RSA_size(rsa);
 
-    if (caml_string_length(data) != rsasz) {
+    if (caml_string_length(data) != rsasz)
         caml_failwith("RSA:decrypt: invalid data length");
-        goto bailout;
-    }
 
     buffer = caml_alloc_string(rsasz);
 
@@ -765,18 +747,12 @@ CAMLprim value ocaml_rsa_decrypt(value mlrsa, value mlprv, value mlpadding, valu
                   (uint8_t*) String_val(data),
                   (uint8_t*) String_val(buffer),
                   rsa, padding)) < 0)
-    {
         caml_failwith("RSA:decrypt: decryption failed");
-        goto bailout;
-    }
 
     output = caml_alloc_string(rr);
     memcpy(String_val(output), String_val(buffer), rr);
 
     CAMLreturn(output);
-
-bailout:
-    CAMLreturn(Val_unit);
 }
 
 /* -------------------------------------------------------------------- */
@@ -787,15 +763,11 @@ CAMLprim value ocaml_rsa_sign(value mlrsa, value mldigest, value data) {
     CAMLparam3(mlrsa, mldigest, data);
     CAMLlocal1(output);
 
-    if ((rsa = RSA_val(mlrsa)) == NULL) {
+    if ((rsa = RSA_val(mlrsa)) == NULL)
         caml_failwith("RSA has been disposed");
-        goto bailout;
-    }
 
-    if (rsa->e == NULL || rsa->d == NULL) {
+    if (rsa->e == NULL || rsa->d == NULL)
         caml_failwith("RSA:sign: missing key");
-        goto bailout;
-    }
 
     int dig = 0;
     if (mldigest == Val_none) dig = NID_md5_sha1;
@@ -809,10 +781,7 @@ CAMLprim value ocaml_rsa_sign(value mlrsa, value mldigest, value data) {
                  caml_string_length(data),
                  (uint8_t*) String_val(output),
                  (unsigned*) &olen, rsa) == 0)
-    {
         caml_failwith("RSA:sign: RSA_sign failed");
-        goto bailout;
-    }
 
     if (olen != caml_string_length(output)) {
         CAMLlocal1(sig);
@@ -823,9 +792,6 @@ CAMLprim value ocaml_rsa_sign(value mlrsa, value mldigest, value data) {
     }
 
     CAMLreturn(output);
-
- bailout:
-    CAMLreturn(Val_unit);
 }
 
 /* -------------------------------------------------------------------- */
@@ -835,15 +801,11 @@ CAMLprim value ocaml_rsa_verify(value mlrsa, value mldigest, value data, value s
 
     CAMLparam4(mlrsa, mldigest, data, sig);
 
-    if ((rsa = RSA_val(mlrsa)) == NULL) {
+    if ((rsa = RSA_val(mlrsa)) == NULL)
         caml_failwith("RSA has been disposed");
-        goto bailout;
-    }
 
-    if (rsa->e == NULL) {
+    if (rsa->e == NULL)
         caml_failwith("RSA:sign: missing key");
-        goto bailout;
-    }
 
     int dig = 0;
     if (mldigest == Val_none) dig = NID_md5_sha1;
@@ -857,9 +819,6 @@ CAMLprim value ocaml_rsa_verify(value mlrsa, value mldigest, value data, value s
                     rsa);
 
     CAMLreturn((rr > 0) ? Val_true : Val_false);
-
- bailout:
-    CAMLreturn(Val_unit);
 }
 
 /* -------------------------------------------------------------------- */
@@ -912,19 +871,11 @@ CAMLprim value ocaml_dsa_new(value unit) {
 
     mldsa = caml_alloc_custom(&evp_dsa_ops, sizeof(DSA*), 0, 1);
 
-    if ((dsa = DSA_new()) == NULL) {
+    if ((dsa = DSA_new()) == NULL)
         caml_failwith("cannot allocated DSA structure");
-        goto bailout;
-    }
 
     DSA_val(mldsa) = dsa;
     CAMLreturn(mldsa);
-
- bailout:
-    if (dsa != NULL)
-        DSA_free(dsa);
-    // FIXME
-    CAMLreturn(Val_unit);
 }
 
 /* -------------------------------------------------------------------- */
@@ -946,10 +897,8 @@ CAMLprim value ocaml_dsa_gen_params(value size) {
     CAMLparam1(size);
     CAMLlocal4(p, q, g, mlparams);
 
-    if (DSA_generate_parameters_ex(dsa, Int_val(size), NULL, 0, NULL, NULL, NULL) != 1) {
+    if (DSA_generate_parameters_ex(dsa, Int_val(size), NULL, 0, NULL, NULL, NULL) != 1)
         caml_failwith("DSA:genparams failed");
-        CAMLreturn(Val_unit);
-    }
 
     p = caml_alloc_string(BN_num_bytes(dsa->p));
     q = caml_alloc_string(BN_num_bytes(dsa->q));
@@ -978,10 +927,8 @@ CAMLprim value ocaml_dsa_gen_key(value mlparams) {
     CAMLlocal3(mlp, mlq, mlg);
     CAMLlocal3(mlpub, mlprv, mlkey);
 
-    if ((dsa = DSA_new()) == NULL) {
+    if ((dsa = DSA_new()) == NULL)
         caml_failwith("DSA:genkey: failed to create a DSA structure");
-        goto bailout;
-    }
 
     mlp = DSAParams_p(mlparams);
     mlq = DSAParams_q(mlparams);
@@ -992,13 +939,13 @@ CAMLprim value ocaml_dsa_gen_key(value mlparams) {
     dsa->g = BN_bin2bn((uint8_t*) String_val(mlg), caml_string_length(mlg), NULL);
 
     if (dsa->p == NULL || dsa->q == NULL || dsa->g == NULL) {
+        DSA_free(dsa);
         caml_failwith("DSA:genkey: failed dup DSA parameters");
-        goto bailout;
     }
 
     if (DSA_generate_key(dsa) == 0) {
+        DSA_free(dsa);
         caml_failwith("DSA:genkey: DSA_generate_key failed");
-        goto bailout;
     }
 
     mlpub = caml_alloc_string(BN_num_bytes(dsa->pub_key));
@@ -1014,11 +961,6 @@ CAMLprim value ocaml_dsa_gen_key(value mlparams) {
     DSAKey_set_prv   (mlkey, Val_some(mlprv));
 
     CAMLreturn(mlkey);
-
- bailout:
-    if (dsa != NULL)
-        DSA_free(dsa);
-    CAMLreturn(Val_unit);
 }
 
 /* -------------------------------------------------------------------- */
@@ -1035,7 +977,6 @@ CAMLprim value ocaml_dsa_set_key(value mldsa, value mlkey) {
 
     if ((dsa = DSA_val(mldsa)) == NULL) {
         caml_failwith("DSA has been disposed");
-        goto bailout;
     }
 
     if (dsa->p        != NULL) BN_clear_free(dsa->p);
@@ -1065,16 +1006,11 @@ CAMLprim value ocaml_dsa_set_key(value mldsa, value mlkey) {
         prv = BN_bin2bn((uint8_t*) String_val(prvdata), caml_string_length(prvdata), NULL);
     }
 
-    if (p == NULL || q == NULL || g == NULL) {
-        caml_failwith("cannot allocate internal structure for parameters");
+    if (p == NULL || q == NULL || g == NULL)
         goto bailout;
 
-    }
-
-    if (pub == NULL || (Is_block(mlprv) && prv == NULL)) {
-        caml_failwith("cannot allocate internal structure for keys");
+    if (pub == NULL || (Is_block(mlprv) && prv == NULL))
         goto bailout;
-    }
 
     dsa->p = p;
     dsa->q = q;
@@ -1091,7 +1027,7 @@ CAMLprim value ocaml_dsa_set_key(value mldsa, value mlkey) {
     if (pub != NULL) BN_clear_free(pub);
     if (prv != NULL) BN_clear_free(prv);
 
-    CAMLreturn(Val_unit);
+    caml_failwith("cannot allocate internal structure for parameters/keys");
 }
 
 /* -------------------------------------------------------------------- */
@@ -1103,15 +1039,11 @@ CAMLprim value ocaml_dsa_sign(value mldsa, value data) {
     CAMLparam2(mldsa, data);
     CAMLlocal1(output);
 
-    if ((dsa = DSA_val(mldsa)) == NULL) {
+    if ((dsa = DSA_val(mldsa)) == NULL)
         caml_failwith("DSA has been disposed");
-        goto bailout;
-    }
 
-    if (dsa->pub_key == NULL) {
+    if (dsa->pub_key == NULL)
         caml_failwith("DSA keys not set");
-        goto bailout;
-    }
 
     output = caml_alloc_string(DSA_size(dsa));
     olen = caml_string_length(output);
@@ -1121,10 +1053,7 @@ CAMLprim value ocaml_dsa_sign(value mldsa, value data) {
                  caml_string_length(data),
                  (uint8_t*) String_val(output),
                  (unsigned*) &olen, dsa) == 0)
-    {
         caml_failwith("DSA:sign: DSA_sign failure");
-        goto bailout;
-    }
 
     if (olen != caml_string_length(output)) {
         CAMLlocal1(sig);
@@ -1135,9 +1064,6 @@ CAMLprim value ocaml_dsa_sign(value mldsa, value data) {
     }
 
     CAMLreturn(output);
-
- bailout:
-    CAMLreturn(Val_unit);
 }
 
 /* -------------------------------------------------------------------- */
@@ -1147,15 +1073,11 @@ CAMLprim value ocaml_dsa_verify(value mldsa, value data, value sig) {
 
     CAMLparam3(mldsa, data, sig);
 
-    if ((dsa = DSA_val(mldsa)) == NULL) {
+    if ((dsa = DSA_val(mldsa)) == NULL)
         caml_failwith("DSA has been disposed");
-        goto bailout;
-    }
 
-    if (dsa->pub_key == NULL) {
+    if (dsa->pub_key == NULL)
         caml_failwith("DSA:verify: DSA (private) keys not set");
-        goto bailout;
-    }
 
     rr = DSA_verify(0, /* ignored */
                     (uint8_t*) String_val(data),
@@ -1172,9 +1094,6 @@ CAMLprim value ocaml_dsa_verify(value mldsa, value data, value sig) {
 #endif
 
     CAMLreturn((rr > 0) ? Val_true : Val_false);
-
- bailout:
-    CAMLreturn(Val_unit);
 }
 
 
@@ -1228,19 +1147,11 @@ CAMLprim value ocaml_dh_new(value unit) {
 
     mldh = caml_alloc_custom(&evp_dh_ops, sizeof(DH*), 0, 1);
 
-    if ((dh = DH_new()) == NULL) {
-        caml_failwith("cannot allocated DH structure");
-        goto bailout;
-    }
+    if ((dh = DH_new()) == NULL)
+      caml_failwith("cannot allocate DH structure");
 
     DH_val(mldh) = dh;
     CAMLreturn(mldh);
-
- bailout:
-    if (dh != NULL)
-        DH_free(dh);
-    // FIXME
-    CAMLreturn(Val_unit);
 }
 
 /* -------------------------------------------------------------------- */
@@ -1262,10 +1173,8 @@ CAMLprim value ocaml_dh_gen_params(value size, value gen) {
     CAMLparam1(size);
     CAMLlocal3(p, g, mlparams);
 
-    if (DH_generate_parameters_ex(dh, Int_val(size), Int_val(gen), NULL) != 1) {
+    if (DH_generate_parameters_ex(dh, Int_val(size), Int_val(gen), NULL) != 1)
         caml_failwith("DH:genparams failed");
-        CAMLreturn(Val_unit);
-    }
 
     p = caml_alloc_string(BN_num_bytes(dh->p));
     g = caml_alloc_string(BN_num_bytes(dh->g));
@@ -1293,15 +1202,11 @@ CAMLprim value ocaml_dh_params_of_string(value pem) {
     CAMLparam1(pem);
     CAMLlocal3(mlp, mlg, mlparams);
 
-    if ((bio = BIO_new_mem_buf(String_val(pem), caml_string_length(pem))) == NULL) {
+    if ((bio = BIO_new_mem_buf(String_val(pem), caml_string_length(pem))) == NULL)
         caml_failwith("DH:params_of_string");
-        goto bailout;
-    }
 
-    if ((dh = PEM_read_bio_DHparams(bio, NULL, NULL, NULL)) == NULL) {
+    if ((dh = PEM_read_bio_DHparams(bio, NULL, NULL, NULL)) == NULL)
         caml_failwith("DH:params_of_string");
-        goto bailout;
-    }
 
     mlp = caml_alloc_string(BN_num_bytes(dh->p));
     mlg = caml_alloc_string(BN_num_bytes(dh->g));
@@ -1316,14 +1221,9 @@ CAMLprim value ocaml_dh_params_of_string(value pem) {
     DHParams_set_g(mlparams, mlg);
 
     DH_free(dh);
+    BIO_free(bio);
 
     CAMLreturn(mlparams);
-
- bailout:
-    //    if (bio != NULL)
-    //        BIO_free(bio);
-    // FIXME
-    CAMLreturn(Val_unit);
 }
 
 /* -------------------------------------------------------------------- */
@@ -1334,10 +1234,8 @@ CAMLprim value ocaml_dh_gen_key(value mlparams) {
     CAMLlocal2(mlp, mlg);
     CAMLlocal3(mlpub, mlprv, mlkey);
 
-    if ((dh = DH_new()) == NULL) {
+    if ((dh = DH_new()) == NULL)
         caml_failwith("DH:genkey: failed to create a DH structure");
-        goto bailout;
-    }
 
     mlp = DHParams_p(mlparams);
     mlg = DHParams_g(mlparams);
@@ -1348,13 +1246,13 @@ CAMLprim value ocaml_dh_gen_key(value mlparams) {
     dh->g = BN_bin2bn((uint8_t*) String_val(mlg), caml_string_length(mlg), NULL);
 
     if (dh->p == NULL || dh->g == NULL) {
+        DH_free(dh);
         caml_failwith("DH:genkey: failed dup DH parameters");
-        goto bailout;
     }
 
     if (DH_generate_key(dh) == 0) {
+        DH_free(dh);
         caml_failwith("DH:genkey: DH_generate_key failed");
-        goto bailout;
     }
 
     mlpub = caml_alloc_string(BN_num_bytes(dh->pub_key));
@@ -1370,13 +1268,9 @@ CAMLprim value ocaml_dh_gen_key(value mlparams) {
     DHKey_set_pub   (mlkey, mlpub);
     DHKey_set_prv   (mlkey, Val_some(mlprv));
 
-    CAMLreturn(mlkey);
+    DH_free(dh);
 
- bailout:
-    if (dh != NULL)
-        DH_free(dh);
-    // FIXME
-    CAMLreturn(Val_unit);
+    CAMLreturn(mlkey);
 }
 
 /* -------------------------------------------------------------------- */
@@ -1390,10 +1284,8 @@ CAMLprim value ocaml_dh_set_key(value mldh, value mlkey) {
     CAMLparam2(mldh, mlkey);
     CAMLlocal4(mlp, mlg, mlpub, mlprv);
 
-    if ((dh = DH_val(mldh)) == NULL) {
+    if ((dh = DH_val(mldh)) == NULL)
         caml_failwith("DH has been disposed");
-        goto bailout;
-    }
 
     if (dh->p        != NULL) BN_clear_free(dh->p);
     if (dh->g        != NULL) BN_clear_free(dh->g);
@@ -1420,16 +1312,11 @@ CAMLprim value ocaml_dh_set_key(value mldh, value mlkey) {
         prv = BN_bin2bn((uint8_t*) String_val(prvdata), caml_string_length(prvdata), NULL);
     }
 
-    if (p == NULL || g == NULL) {
-        caml_failwith("cannot allocate internal structure for parameters");
+    if (p == NULL || g == NULL)
         goto bailout;
 
-    }
-
-    if (pub == NULL || (Is_block(mlprv) && prv == NULL)) {
-        caml_failwith("cannot allocate internal structure for keys");
+    if (pub == NULL || (Is_block(mlprv) && prv == NULL))
         goto bailout;
-    }
 
     dh->p = p;
     dh->g = g;
@@ -1444,7 +1331,7 @@ CAMLprim value ocaml_dh_set_key(value mldh, value mlkey) {
     if (pub != NULL) BN_clear_free(pub);
     if (prv != NULL) BN_clear_free(prv);
 
-    CAMLreturn(Val_unit);
+    caml_failwith("cannot allocate internal structure for parameters/keys");
 }
 
 /* -------------------------------------------------------------------- */
@@ -1455,40 +1342,27 @@ CAMLprim value ocaml_dh_compute(value mldh, value mlopub) {
     CAMLparam2(mldh, mlopub);
     CAMLlocal1(output);
 
-    if ((dh = DH_val(mldh)) == NULL) {
+    if ((dh = DH_val(mldh)) == NULL)
         caml_failwith("DH has been disposed");
-        goto bailout;
-    }
 
-    if (dh->priv_key == NULL) {
+    if (dh->priv_key == NULL)
         caml_failwith("DH:compute_key: missing keys");
-        goto bailout;
-    }
 
     opub = BN_bin2bn((uint8_t*) String_val(mlopub), caml_string_length(mlopub), NULL);
 
-    if (opub == NULL) {
+    if (opub == NULL)
         caml_failwith("DH:compute_key: cannot allocate structure for public key");
-        goto bailout;
-    }
 
     output = caml_alloc_string(DH_size(dh));
 
     if (DH_compute_key((uint8_t*) String_val(output), opub, dh) < 0) {
+        BN_free(opub);
         caml_failwith("DH:compute_key: DH_compute_key failed");
-        goto bailout;
     }
 
     BN_free(opub);
 
     CAMLreturn(output);
-
- bailout:
-    if (opub != NULL)
-        BN_free(opub);
-
-    CAMLreturn(Val_unit);
-
 }
 
 /* -------------------------------------------------------------------- */
