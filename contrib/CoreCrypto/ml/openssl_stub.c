@@ -66,7 +66,7 @@ static uint8_t* buffer_of_platform_bytes(value mlbytes, size_t* out_length) {
 
     if (i <= start && start < i + head_len) {
       size_t length_to_copy = i + head_len - start;
-      assert (j + length_to_copy <= length);
+      assert(j + length_to_copy <= length);
       memcpy(buf + j, String_val(head) + start - i, length_to_copy);
       j += length_to_copy;
       start = i + head_len;
@@ -594,9 +594,10 @@ static int RSADigest_val(value digest) {
     switch (Int_val(digest)) {
     case 0: return NID_md5;
     case 1: return NID_sha1;
-    case 2: return NID_sha256;
-    case 3: return NID_sha384;
-    case 4: return NID_sha512;
+    case 2: return NID_sha224;
+    case 3: return NID_sha256;
+    case 4: return NID_sha384;
+    case 5: return NID_sha512;
     }
 
     abort();
@@ -800,12 +801,9 @@ CAMLprim value ocaml_rsa_encrypt(value mlrsa, value mlprv, value mlpadding, valu
             (uint8_t*) String_val(data),
             (uint8_t*) String_val(output),
             rsa, padding) < 0) {
-#     ifdef DEBUG
-        unsigned long err = ERR_get_error();
-        char* err_string = ERR_error_string(err, NULL);
-        printf("ocaml_rsa_encrypt: err=%lu, err_string=%s\n", err, err_string);
-#     endif
-      caml_failwith("RSA:encrypt: encryption failed");
+      unsigned long err = ERR_get_error();
+      char* err_string = ERR_error_string(err, NULL);
+      caml_failwith(err_string);
     }
 
     CAMLreturn(output);
@@ -843,13 +841,9 @@ CAMLprim value ocaml_rsa_decrypt(value mlrsa, value mlprv, value mlpadding, valu
                   (uint8_t*) String_val(data),
                   (uint8_t*) String_val(buffer),
                   rsa, padding)) < 0) {
-#       ifdef DEBUG
-            unsigned long err = ERR_get_error();
-            char* err_string = ERR_error_string(err, NULL);
-            printf("ocaml_rsa_decrypt: err=%lu, err_string=%s\n", err, err_string);
-            printf("caml_string_length(data)=%zu\n", caml_string_length(data));
-#       endif
-        caml_failwith("RSA:decrypt: decryption failed");
+      unsigned long err = ERR_get_error();
+      char* err_string = ERR_error_string(err, NULL);
+      caml_failwith(err_string);
     }
 
     output = caml_alloc_string(rr);
@@ -873,8 +867,11 @@ CAMLprim value ocaml_rsa_sign(value mlrsa, value mldigest, value data) {
         caml_failwith("RSA:sign: missing key");
 
     int dig = 0;
-    if (mldigest == Val_none) dig = NID_md5_sha1;
-    else dig = RSADigest_val(Some_val(mldigest));
+    if (mldigest == Val_none) {
+      dig = NID_md5_sha1;
+    } else {
+      dig = RSADigest_val(Some_val(mldigest));
+    }
 
     output = caml_alloc_string(RSA_size(rsa));
     olen = caml_string_length(output);
@@ -883,8 +880,15 @@ CAMLprim value ocaml_rsa_sign(value mlrsa, value mldigest, value data) {
                  (uint8_t*) String_val(data),
                  caml_string_length(data),
                  (uint8_t*) String_val(output),
-                 (unsigned*) &olen, rsa) == 0)
-        caml_failwith("RSA:sign: RSA_sign failed");
+                 (unsigned*) &olen, rsa) != 1) {
+#     ifdef DEBUG
+          printf("ocaml_rsa_sign: caml_string_length(data)=%zu, RSA_size(rsa)=%u\n",
+            caml_string_length(data), RSA_size(rsa));
+#     endif
+      unsigned long err = ERR_get_error();
+      char* err_string = ERR_error_string(err, NULL);
+      caml_failwith(err_string);
+    }
 
     if (olen != caml_string_length(output)) {
         CAMLlocal1(sig);
@@ -911,8 +915,10 @@ CAMLprim value ocaml_rsa_verify(value mlrsa, value mldigest, value data, value s
         caml_failwith("RSA:sign: missing key");
 
     int dig = 0;
-    if (mldigest == Val_none) dig = NID_md5_sha1;
-    else dig = RSADigest_val(Some_val(mldigest));
+    if (mldigest == Val_none)
+      dig = NID_md5_sha1;
+    else
+      dig = RSADigest_val(Some_val(mldigest));
 
     rr = RSA_verify(dig,
                     (uint8_t*) String_val(data),
@@ -920,8 +926,17 @@ CAMLprim value ocaml_rsa_verify(value mlrsa, value mldigest, value data, value s
                     (uint8_t*) String_val(sig),
                     caml_string_length(sig),
                     rsa);
+#   ifdef DEBUG
+      printf("ocaml_rsa_verify: caml_string_length(data)=%zu, RSA_size(rsa)=%u, dig=%d\n",
+        caml_string_length(data), RSA_size(rsa), dig);
+      if (rr != 1) {
+        unsigned long err = ERR_get_error();
+        char* err_string = ERR_error_string(err, NULL);
+        printf("ocaml_rsa_verify: %s\n", err_string);
+      }
+#   endif
 
-    CAMLreturn((rr > 0) ? Val_true : Val_false);
+    CAMLreturn((rr == 1) ? Val_true : Val_false);
 }
 
 /* -------------------------------------------------------------------- */

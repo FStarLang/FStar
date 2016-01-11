@@ -651,17 +651,23 @@ module TestRsa = struct
         exit 255
     | None ->
         Printf.printf "rsa_encrypt/decrypt: got no bytes\n";
-        exit 254
+        exit 254; ;
+    let sig_bytes = rsa_sign (Some SHA512) k original_bytes in
+    if not (rsa_verify (Some SHA512) k original_bytes sig_bytes) then begin
+      Printf.printf "rsa_sign/rsa_verify: check failed\n";
+      exit 253
+    end
 
   let test () =
-    roundtrip (bytes_of_string "coucou");
-
     let chunk1 = bytes_of_string "Lorem ipsum dolor sit amet, consectetur adipiscing elit.  Integer vitae tincidunt enim. Pellentesque luctus, turpis sed lobortis ullamcorper, orci nisi commodo sem, ut sagittis augue elit vel ipsum. Aenean aliquam eros est, sed molestie ex aliquet sed. Vest" in
     let chunk2 = bytes_of_string "bulum in massa mauris. Phasellus non arcu pulvinar, elementum sapien eu, congue dolor. Fusce malesuada nisl enim, non accumsan mi gravida aliquam. Sed ornare augue eget quam pretium, vitae sodales urna hendrerit.  Curabitur mi ante, fermentum eget lacus ut," in
     let chunk = Platform.Bytes.(chunk1 @| chunk2) in
     let _, chunk = Platform.Bytes.split chunk 128 in
     let chunk, _ = Platform.Bytes.split chunk (256 - 11) in
-    roundtrip chunk
+    roundtrip chunk;
+    roundtrip (bytes_of_string "012345678901234567890123456789012345");
+    roundtrip (bytes_of_string "coucou")
+
 
 end
 

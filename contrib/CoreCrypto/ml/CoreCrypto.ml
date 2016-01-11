@@ -276,21 +276,23 @@ let rsa_decrypt (sk:rsa_key) (p:rsa_padding) (e:bytes) =
   ocaml_rsa_fini r;
   Some (bytes_of_string d)
 
+(* Note: if [h = None], then [t] is understood to be an SHA1+MD5 "SSL
+ * signature", meaning its length must be 36 bytes exactly. *)
 let rsa_sign (h:hash_alg option) (sk:rsa_key) (t:bytes) =
   let r = ocaml_rsa_new() in
   ocaml_rsa_set_key r sk;
   let d = match h with None -> t | Some a -> hash a t in
-  let s = ocaml_rsa_sign r None (string_of_bytes d) in
+  let s = ocaml_rsa_sign r h (string_of_bytes d) in
   ocaml_rsa_fini r;
   bytes_of_string s
 
-let rsa_verify (h:hash_alg option) (sk:rsa_key) (t:bytes) (s:bytes) =
-  let r = ocaml_rsa_new() in
-  ocaml_rsa_set_key r sk;
-  let d = match h with None -> t | Some a -> hash a t in
-  let b = ocaml_rsa_verify r h (string_of_bytes t) (string_of_bytes d) in
-  ocaml_rsa_fini r;
-  b
+let rsa_verify (h:hash_alg option) (sk:rsa_key) (data:bytes) (sign:bytes) =
+  let rsa = ocaml_rsa_new() in
+  ocaml_rsa_set_key rsa sk;
+  let data = match h with None -> data | Some h -> hash h data in
+  let ret = ocaml_rsa_verify rsa h (string_of_bytes data) (string_of_bytes sign) in
+  ocaml_rsa_fini rsa;
+  ret
 
 (* -------------------------------------------------------------------- *)
 type dsa
