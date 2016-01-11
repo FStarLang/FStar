@@ -111,23 +111,16 @@ CAMLprim value ocaml_EVP_MD_CTX_create(value md) {
 
     mlctx = caml_alloc_custom(&evp_md_ctx_ops, sizeof(EVP_MD_CTX*), 0, 1);
 
-    if ((ctx = EVP_MD_CTX_create()) == NULL) {
+    if ((ctx = EVP_MD_CTX_create()) == NULL)
         caml_failwith("cannot alloc EVP_MD_CTX structure");
-        goto bailout;
-    }
 
     if (EVP_DigestInit_ex(ctx, MD_val(md), NULL) == 0) {
+        EVP_MD_CTX_destroy(ctx);
         caml_failwith("cannot initialize EVP_MD_CTX structure");
-        goto bailout;
     }
 
     MD_CTX_val(mlctx) = ctx;
     CAMLreturn(mlctx);
-
- bailout:
-    if (ctx != NULL)
-        EVP_MD_CTX_destroy(ctx);
-    CAMLreturn(Val_unit);
 }
 
 /* -------------------------------------------------------------------- */
@@ -244,10 +237,8 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_create(value cipher, value forenc) {
 
     mlctx = caml_alloc_custom(&evp_cipher_ctx_ops, sizeof(EVP_CIPHER_CTX*), 0, 1);
 
-    if ((ctx = EVP_CIPHER_CTX_new()) == NULL) {
+    if ((ctx = EVP_CIPHER_CTX_new()) == NULL)
         caml_failwith("cannot alloc EVP_CIPHER_CTX structure");
-        goto bailout;
-    }
 
     EVP_CIPHER_CTX_init(ctx);
 
@@ -255,8 +246,9 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_create(value cipher, value forenc) {
     // Give remaining parameters in subsequent calls (e.g. EVP_CIPHER_set_key),
     // all of which have cipher type set to NULL
     if (EVP_CipherInit_ex(ctx, CIPHER_val(cipher), NULL, NULL, NULL, Bool_val(forenc)) == 0) {
+        EVP_CIPHER_CTX_cleanup(ctx);
+        EVP_CIPHER_CTX_free(ctx);
         caml_failwith("cannot initialize cipher context");
-        goto bailout;
     }
 
     // Disable padding: total amount of data encrypted or decrypted must be a
@@ -265,15 +257,6 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_create(value cipher, value forenc) {
 
     CIPHER_CTX_val(mlctx) = ctx;
     CAMLreturn(mlctx);
-
- bailout:
-
-    if (ctx != NULL) {
-        EVP_CIPHER_CTX_cleanup(ctx);
-        EVP_CIPHER_CTX_free(ctx);
-    }
-
-    CAMLreturn(Val_unit);
 }
 
 /* -------------------------------------------------------------------- */
@@ -297,10 +280,9 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_block_size(value mlctx) {
 
     CAMLparam1(mlctx);
 
-    if ((ctx = CIPHER_CTX_val(mlctx)) == NULL) {
-        caml_failwith("CIPHER_CTX has been disposed");
-        CAMLreturn(Val_unit);
-    }
+    if ((ctx = CIPHER_CTX_val(mlctx)) == NULL)
+      // JP: how is that supposed to happen?
+      caml_failwith("CIPHER_CTX has been disposed");
 
     CAMLreturn(Val_int(EVP_CIPHER_CTX_block_size(ctx)));
 }
@@ -311,10 +293,9 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_key_length(value mlctx) {
 
     CAMLparam1(mlctx);
 
-    if ((ctx = CIPHER_CTX_val(mlctx)) == NULL) {
+    if ((ctx = CIPHER_CTX_val(mlctx)) == NULL)
+        // JP: how is that supposed to happen?
         caml_failwith("CIPHER_CTX has been disposed");
-        CAMLreturn(Val_unit);
-    }
 
     CAMLreturn(Val_int(EVP_CIPHER_CTX_key_length(ctx)));
 }
@@ -325,10 +306,9 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_iv_length(value mlctx) {
 
     CAMLparam1(mlctx);
 
-    if ((ctx = CIPHER_CTX_val(mlctx)) == NULL) {
+    if ((ctx = CIPHER_CTX_val(mlctx)) == NULL)
+        // JP: how is that supposed to happen?
         caml_failwith("CIPHER_CTX has been disposed");
-        CAMLreturn(Val_unit);
-    }
 
     CAMLreturn(Val_int(EVP_CIPHER_CTX_iv_length(ctx)));
 }
@@ -339,20 +319,14 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_set_key(value mlctx, value key) {
 
     CAMLparam2(mlctx, key);
 
-    if ((ctx = CIPHER_CTX_val(mlctx)) == NULL) {
+    if ((ctx = CIPHER_CTX_val(mlctx)) == NULL)
         caml_failwith("CIPHER_CTX has been disposed");
-        CAMLreturn(Val_unit);
-    }
 
-    if (EVP_CIPHER_CTX_set_key_length(ctx, caml_string_length(key)) == 0) {
+    if (EVP_CIPHER_CTX_set_key_length(ctx, caml_string_length(key)) == 0)
         caml_failwith("cannot set CIPHER_CTX key (set_key_length)");
-        CAMLreturn(Val_unit);
-    }
 
-    if (EVP_CipherInit_ex(ctx, NULL, NULL, (uint8_t*) String_val(key), NULL, -1) == 0) {
+    if (EVP_CipherInit_ex(ctx, NULL, NULL, (uint8_t*) String_val(key), NULL, -1) == 0)
         caml_failwith("cannot set CIPHER_CTX_key");
-        CAMLreturn(Val_unit);
-    }
 
     CAMLreturn(Val_unit);
 }
@@ -363,20 +337,14 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_set_iv(value mlctx, value iv) {
 
     CAMLparam2(mlctx, iv);
 
-    if ((ctx = CIPHER_CTX_val(mlctx)) == NULL) {
+    if ((ctx = CIPHER_CTX_val(mlctx)) == NULL)
         caml_failwith("CIPHER_CTX has been disposed");
-        CAMLreturn(Val_unit);
-    }
 
-    if(EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, caml_string_length(iv), NULL) != 1) {
+    if(EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, caml_string_length(iv), NULL) != 1)
         caml_failwith("cannot set CIPHER_CTX_iv_length");
-        CAMLreturn(Val_unit);
-    }
 
-    if (EVP_CipherInit_ex(ctx, NULL, NULL, NULL, (uint8_t*) String_val(iv), -1) == 0) {
+    if (EVP_CipherInit_ex(ctx, NULL, NULL, NULL, (uint8_t*) String_val(iv), -1) == 0)
         caml_failwith("cannot set CIPHER_CTX_iv");
-        CAMLreturn(Val_unit);
-    }
 
     CAMLreturn(Val_unit);
 }
@@ -390,27 +358,21 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_set_tag(value mlctx, value tag) {
     CAMLparam2(mlctx, tag);
     CAMLlocal1(output);
 
-    if ((ctx = CIPHER_CTX_val(mlctx)) == NULL) {
+    if ((ctx = CIPHER_CTX_val(mlctx)) == NULL)
         caml_failwith("CIPHER_CTX has been disposed");
-        CAMLreturn(Val_unit);
-    }
 
     // Hardcoded tag length for AES-{128,256}-GCM, may need to be revised to
     // support other ciphers
     tlen = 16;
 
-    if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, tlen, String_val(tag)) != 1) {
+    if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, tlen, String_val(tag)) != 1)
        caml_failwith("failed to set AEAD tag");
-       CAMLreturn(Val_unit);
-    }
 
     olen   = EVP_MAX_BLOCK_LENGTH;
     output = caml_alloc_string(olen);
 
-    if ((EVP_DecryptFinal_ex(ctx, (uint8_t*) output, &olen) != 1) || (olen != 0)) {
+    if ((EVP_DecryptFinal_ex(ctx, (uint8_t*) output, &olen) != 1) || (olen != 0))
         caml_failwith("ciphertext and/or additional data authentication failed");
-        CAMLreturn(Val_unit);
-    }
 
     CAMLreturn(Val_unit);
 }
@@ -424,28 +386,22 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_get_tag(value mlctx) {
     CAMLparam1(mlctx);
     CAMLlocal2(output, tag);
 
-    if ((ctx = CIPHER_CTX_val(mlctx)) == NULL) {
+    if ((ctx = CIPHER_CTX_val(mlctx)) == NULL)
         caml_failwith("CIPHER_CTX has been disposed");
-        CAMLreturn(Val_unit);
-    }
 
     olen   = EVP_MAX_BLOCK_LENGTH;
     output = caml_alloc_string(olen);
 
-    if ((EVP_EncryptFinal_ex(ctx, (uint8_t*) output, &olen) != 1) || (olen != 0)) {
+    if ((EVP_EncryptFinal_ex(ctx, (uint8_t*) output, &olen) != 1) || (olen != 0))
         caml_failwith("final encryption failed");
-        CAMLreturn(Val_unit);
-    }
 
     // Hardcoded tag length for AES-{128,256}-GCM, may need to be revised to
     // support other ciphers
     tlen = 16;
     tag  = caml_alloc_string(tlen);
 
-    if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, tlen, (uint8_t*) tag) != 1) {
+    if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, tlen, (uint8_t*) tag) != 1)
        caml_failwith("failed to get AEAD tag");
-       CAMLreturn(Val_unit);
-    }
 
     CAMLreturn(tag);
 }
@@ -458,28 +414,20 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_process(value mlctx, value data) {
     CAMLparam2(mlctx, data);
     CAMLlocal1(output);
 
-    if ((ctx = CIPHER_CTX_val(mlctx)) == NULL) {
+    if ((ctx = CIPHER_CTX_val(mlctx)) == NULL)
         caml_failwith("CIPHER_CTX has been disposed");
-        CAMLreturn(Val_unit);
-    }
 
-    if (caml_string_length(data) % EVP_CIPHER_CTX_block_size(ctx) != 0) {
+    if (caml_string_length(data) % EVP_CIPHER_CTX_block_size(ctx) != 0)
         caml_failwith("partial block encryption/decryption not supported");
-        CAMLreturn(Val_unit);
-    }
 
     olen   = caml_string_length(data);
     output = caml_alloc_string(olen);
 
-    if (EVP_CipherUpdate(ctx, (uint8_t*) output, &olen, (uint8_t*) String_val(data), olen) == 0) {
+    if (EVP_CipherUpdate(ctx, (uint8_t*) output, &olen, (uint8_t*) String_val(data), olen) == 0)
         caml_failwith("encryption/decryption failed");
-        CAMLreturn(Val_unit);
-    }
 
-    if ((size_t) olen != caml_string_length(data)) {
+    if ((size_t) olen != caml_string_length(data))
         caml_failwith("EVP_CIPHER_CTX_process(): internal error");
-        CAMLreturn(Val_unit);
-    }
 
     CAMLreturn(output);
 }
@@ -491,23 +439,17 @@ CAMLprim value ocaml_EVP_CIPHER_CTX_set_additional_data(value mlctx, value data)
     CAMLparam2(mlctx, data);
     CAMLlocal1(output);
 
-    if ((ctx = CIPHER_CTX_val(mlctx)) == NULL) {
+    if ((ctx = CIPHER_CTX_val(mlctx)) == NULL)
         caml_failwith("CIPHER_CTX has been disposed");
-        CAMLreturn(Val_unit);
-    }
 
     olen   = caml_string_length(data);
     output = caml_alloc_string(olen);
 
-    if (EVP_CipherUpdate(ctx, NULL, &olen, (uint8_t*) String_val(data), olen) == 0) {
+    if (EVP_CipherUpdate(ctx, NULL, &olen, (uint8_t*) String_val(data), olen) == 0)
         caml_failwith("failed to set additional data");
-        CAMLreturn(Val_unit);
-    }
 
-    if ((size_t) olen != caml_string_length(data)) {
+    if ((size_t) olen != caml_string_length(data))
         caml_failwith("EVP_CIPHER_CTX_process(): internal error");
-        CAMLreturn(Val_unit);
-    }
 
     CAMLreturn(output);
 }
@@ -529,15 +471,10 @@ CAMLprim value ocaml_EVP_HMAC(value md, value key, value data) {
              (uint8_t*) String_val(key   ), klen,
              (uint8_t*) String_val(data  ), caml_string_length(data),
              (uint8_t*) String_val(output), &olen) == NULL)
-      {
-          caml_failwith("EVP_HMAC failed");
-          CAMLreturn(Val_unit);
-      }
+      caml_failwith("EVP_HMAC failed");
 
-    if (olen != (unsigned) EVP_MD_size(MD_val(md))) {
-        caml_failwith("ocaml_EVP_HMAC(): internal error");
-        CAMLreturn(Val_unit);
-    }
+    if (olen != (unsigned) EVP_MD_size(MD_val(md)))
+      caml_failwith("ocaml_EVP_HMAC(): internal error");
 
     CAMLreturn(output);
 }
@@ -549,10 +486,8 @@ CAMLprim value ocaml_rand_bytes(value length) {
 
     output = caml_alloc_string(Int_val(length));
 
-    if (RAND_bytes((uint8_t*) String_val(output), Int_val(length)) == 0) {
-        caml_failwith("RAND_bytes failed");
-        CAMLreturn(Val_unit);
-    }
+    if (RAND_bytes((uint8_t*) String_val(output), Int_val(length)) == 0)
+      caml_failwith("RAND_bytes failed");
 
     CAMLreturn(output);
 }
@@ -628,20 +563,13 @@ CAMLprim value ocaml_rsa_new(value unit) {
 
     mlrsa = caml_alloc_custom(&evp_rsa_ops, sizeof(RSA*), 0, 1);
 
-    if ((rsa = RSA_new()) == NULL) {
-        caml_failwith("cannot allocated RSA structure");
-        goto bailout;
-    }
+    if ((rsa = RSA_new()) == NULL)
+      caml_failwith("cannot allocate RSA structure");
+
     (void) RSA_set_method(rsa, RSA_PKCS1_SSLeay());
 
     RSA_val(mlrsa) = rsa;
     CAMLreturn(mlrsa);
-
- bailout:
-    if (rsa != NULL)
-        RSA_free(rsa);
-    // FIXME
-    CAMLreturn(Val_unit);
 }
 
 /* -------------------------------------------------------------------- */
@@ -664,16 +592,12 @@ CAMLprim value ocaml_rsa_gen_key(value mlsz, value mlexp) {
     CAMLparam2(mlsz, mlexp);
     CAMLlocal4(e, n, d, mlkey);
 
-    if ((bn_mlexp = BN_new()) == NULL) {
+    if ((bn_mlexp = BN_new()) == NULL)
       caml_failwith("RSA:genkey failed");
-      CAMLreturn(Val_unit);
-    }
 
     BN_set_word(bn_mlexp, mlexp);
-    if (RSA_generate_key_ex(rsa, mlsz, bn_mlexp, NULL) != 1) {
-        caml_failwith("RSA:genkey failed");
-        CAMLreturn(Val_unit);
-    }
+    if (RSA_generate_key_ex(rsa, mlsz, bn_mlexp, NULL) != 1)
+      caml_failwith("RSA:genkey failed");
 
     n = caml_alloc_string(BN_num_bytes(rsa->n));
     e = caml_alloc_string(BN_num_bytes(rsa->e));
@@ -705,10 +629,8 @@ CAMLprim value ocaml_rsa_set_key(value mlrsa, value mlkey) {
     CAMLparam2(mlrsa, mlkey);
     CAMLlocal3(mlmod, mlpub, mlprv);
 
-    if ((rsa = RSA_val(mlrsa)) == NULL) {
-        caml_failwith("RSA has been disposed");
-        goto bailout;
-    }
+    if ((rsa = RSA_val(mlrsa)) == NULL)
+      caml_failwith("RSA has been disposed");
 
     if (rsa->e != NULL) BN_clear_free(rsa->e);
     if (rsa->n != NULL) BN_clear_free(rsa->n);
@@ -732,20 +654,15 @@ CAMLprim value ocaml_rsa_set_key(value mlrsa, value mlkey) {
     }
 
     if (mod == NULL || pub == NULL || (prv == NULL && Is_block(mlprv))) {
+        if (mod != NULL) BN_clear_free(mod);
+        if (pub != NULL) BN_clear_free(pub);
+        if (prv != NULL) BN_clear_free(prv);
         caml_failwith("cannot allocate internal structure for keys");
-        goto bailout;
     }
 
     rsa->n = mod;
     rsa->e = pub;
     rsa->d = prv;
-
-    CAMLreturn(Val_unit);
-
- bailout:
-    if (mod != NULL) BN_clear_free(mod);
-    if (pub != NULL) BN_clear_free(pub);
-    if (prv != NULL) BN_clear_free(prv);
 
     CAMLreturn(Val_unit);
 }
