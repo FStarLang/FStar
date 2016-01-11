@@ -39,6 +39,61 @@ static value Val_some(value mlvalue) {
 #define Val_none Val_int(0)
 #define Some_val(v) Field(v,0)
 
+// This function takes an ML value of type [Platform.Bytes.bytes]; if the value
+// is well-formed, then the function allocates and returns a C-style buffer
+// containing the sequence of bytes describes by [mlbytes], whose length is
+// [out_length]. If [mlbytes] is ill-formed, the function returns [NULL] and
+// [out_length] is unspecified.
+static uint8_t* buffer_of_platform_bytes(value mlbytes, size_t* out_length) {
+  CAMLparam1(mlbytes);
+  CAMLlocal1(mllist);
+  mllist = Field(mlbytes, 0);
+
+  size_t i, j, start, length;
+  // The index at which [Field(mllist, 0)] starts in the complete sequence.
+  i = 0;
+  // Number of bytes copied into [buf] so far.
+  j = 0;
+  start = Int_val(Field(mlbytes, 3));
+  length = Int_val(Field(mlbytes, 2));
+
+  uint8_t* buf = malloc(length+1);
+
+  while (mllist != Val_emptylist) {
+    CAMLlocal1(head);
+    head = Field(mllist, 0);
+    size_t head_len = caml_string_length(head);
+
+    if (i <= start && start < i + head_len) {
+      size_t length_to_copy = i + head_len - start;
+      assert (j + length_to_copy <= length);
+      memcpy(buf + j, String_val(head) + start - i, length_to_copy);
+      j += length_to_copy;
+      start = i + head_len;
+    }
+
+    i += head_len;
+    mllist = Field(mllist, 1);
+  }
+  buf[length] = '\0';
+
+  if (j != length) {
+    free(buf);
+    return NULL;
+  }
+
+  *out_length = length;
+  return buf;
+}
+
+/* -------------------------------------------------------------------- */
+
+CAMLprim value ocaml_err_load_crypto_strings(value unit) {
+  CAMLparam1(unit);
+  ERR_load_crypto_strings();
+  CAMLreturn(Val_unit);
+}
+
 /* -------------------------------------------------------------------- */
 #define MD_val(v) (*((const EVP_MD**) Data_custom_val(v)))
 
@@ -588,8 +643,12 @@ CAMLprim value ocaml_rsa_gen_key(value mlsz, value mlexp) {
     if (rsa == NULL || bn_mlexp == NULL)
       caml_failwith("RSA:genkey failed");
 
-    BN_set_word(bn_mlexp, mlexp);
-    if (RSA_generate_key_ex(rsa, mlsz, bn_mlexp, NULL) != 1) {
+#   ifdef DEBUG
+      printf("ocaml_rsa_gen_key: modulus size will be of %d bits (%d bytes)\n", Int_val(mlsz), Int_val(mlsz)/8);
+#   endif
+
+    BN_set_word(bn_mlexp, Int_val(mlexp));
+    if (RSA_generate_key_ex(rsa, Int_val(mlsz), bn_mlexp, NULL) != 1) {
       RSA_free(rsa);
       BN_free(bn_mlexp);
       caml_failwith("RSA:genkey failed");
@@ -606,6 +665,11 @@ CAMLprim value ocaml_rsa_gen_key(value mlsz, value mlexp) {
 
     BN_free(bn_mlexp);
     RSA_free(rsa);
+
+#   ifdef DEBUG
+      printf("ocaml_rsa_gen_key: length(n)=%zd, length(e)=%zd, length(d)=%zd\n",
+          caml_string_length(n), caml_string_length(e), caml_string_length(d));
+#   endif
 
     CAMLlocal1(ret);
     ret = caml_alloc_tuple(3);
@@ -625,6 +689,8 @@ CAMLprim value ocaml_rsa_set_key(value mlrsa, value mlkey) {
     CAMLparam2(mlrsa, mlkey);
     CAMLlocal3(mlmod, mlpub, mlprv);
 
+    const char* failure = "";
+
     if ((rsa = RSA_val(mlrsa)) == NULL)
       caml_failwith("RSA has been disposed");
 
@@ -636,24 +702,40 @@ CAMLprim value ocaml_rsa_set_key(value mlrsa, value mlkey) {
     mlpub = RSAKey_pub_exp(mlkey);
     mlprv = RSAKey_pvr_exp(mlkey);
 
-    // JP: this is wrong. [mlmod] is *not* a string, it's a record of type
-    // [Platform.Bytes.bytes], so there's no way [String_val] works here. FIXME
-    mod = BN_bin2bn((uint8_t*) String_val(mlmod), caml_string_length(mlmod), NULL);
-    pub = BN_bin2bn((uint8_t*) String_val(mlpub), caml_string_length(mlpub), NULL);
+    size_t modbuf_length, pubbuf_length;
+    uint8_t* modbuf = buffer_of_platform_bytes(mlmod, &modbuf_length);
+    uint8_t* pubbuf = buffer_of_platform_bytes(mlpub, &pubbuf_length);
+    uint8_t* prvbuf = NULL;
+    if (modbuf == NULL || pubbuf == NULL) {
+      failure = "ocaml_rsa_set_key: invalid bytes for key parameters";
+      goto bailout;
+    }
+    mod = BN_bin2bn(modbuf, modbuf_length, NULL);
+    pub = BN_bin2bn(pubbuf, pubbuf_length, NULL);
+#   ifdef DEBUG
+      printf("ocaml_rsa_set_key: modbuf_length=%zu, pubbuf_length=%zu\n", modbuf_length, pubbuf_length);
+#   endif
+
 
     if (Is_block(mlprv)) {
         CAMLlocal1(prvdata);
 
         prvdata = Field(mlprv, 0);
-        // FIXME
-        prv = BN_bin2bn((uint8_t*) String_val(prvdata), caml_string_length(prvdata), NULL);
+        size_t prvbuf_length;
+        prvbuf = buffer_of_platform_bytes(prvdata, &prvbuf_length);
+        if (prvbuf == NULL) {
+          failure = "ocaml_rsa_set_key: invalid bytes for private key";
+          goto bailout;
+        }
+        prv = BN_bin2bn(prvbuf, prvbuf_length, NULL);
+#       ifdef DEBUG
+          printf("ocaml_rsa_set_key: prvbuf_length=%zu\n", prvbuf_length);
+#       endif
     }
 
     if (mod == NULL || pub == NULL || (prv == NULL && Is_block(mlprv))) {
-        if (mod != NULL) BN_clear_free(mod);
-        if (pub != NULL) BN_clear_free(pub);
-        if (prv != NULL) BN_clear_free(prv);
-        caml_failwith("cannot allocate internal structure for keys");
+      failure = "ocaml_rsa_set_key: cannot allocate internal structure for keys";
+      goto bailout;
     }
 
     rsa->n = mod;
@@ -661,6 +743,15 @@ CAMLprim value ocaml_rsa_set_key(value mlrsa, value mlkey) {
     rsa->d = prv;
 
     CAMLreturn(Val_unit);
+
+bailout:
+    if (mod != NULL) BN_clear_free(mod);
+    if (pub != NULL) BN_clear_free(pub);
+    if (prv != NULL) BN_clear_free(prv);
+    if (modbuf != NULL) free(modbuf);
+    if (pubbuf != NULL) free(pubbuf);
+    if (prvbuf != NULL) free(prvbuf);
+    caml_failwith(failure);
 }
 
 /* -------------------------------------------------------------------- */
@@ -695,6 +786,9 @@ CAMLprim value ocaml_rsa_encrypt(value mlrsa, value mlprv, value mlpadding, valu
         abort();
     }
 
+#   ifdef DEBUG
+        printf("caml_string_length(data)=%zu, RSA_size(rsa)=%u\n", caml_string_length(data), RSA_size(rsa));
+#   endif
     if (caml_string_length(data) > (rsasz - pdsz))
         caml_failwith("RSA:encrypt: invalid data length");
 
@@ -705,8 +799,14 @@ CAMLprim value ocaml_rsa_encrypt(value mlrsa, value mlprv, value mlpadding, valu
     if (enc(caml_string_length(data),
             (uint8_t*) String_val(data),
             (uint8_t*) String_val(output),
-            rsa, padding) < 0)
+            rsa, padding) < 0) {
+#     ifdef DEBUG
+        unsigned long err = ERR_get_error();
+        char* err_string = ERR_error_string(err, NULL);
+        printf("ocaml_rsa_encrypt: err=%lu, err_string=%s\n", err, err_string);
+#     endif
       caml_failwith("RSA:encrypt: encryption failed");
+    }
 
     CAMLreturn(output);
 }
@@ -742,8 +842,15 @@ CAMLprim value ocaml_rsa_decrypt(value mlrsa, value mlprv, value mlpadding, valu
     if ((rr = dec(rsasz,
                   (uint8_t*) String_val(data),
                   (uint8_t*) String_val(buffer),
-                  rsa, padding)) < 0)
+                  rsa, padding)) < 0) {
+#       ifdef DEBUG
+            unsigned long err = ERR_get_error();
+            char* err_string = ERR_error_string(err, NULL);
+            printf("ocaml_rsa_decrypt: err=%lu, err_string=%s\n", err, err_string);
+            printf("caml_string_length(data)=%zu\n", caml_string_length(data));
+#       endif
         caml_failwith("RSA:decrypt: decryption failed");
+    }
 
     output = caml_alloc_string(rr);
     memcpy(String_val(output), String_val(buffer), rr);

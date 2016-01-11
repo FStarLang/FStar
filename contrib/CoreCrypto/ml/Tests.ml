@@ -639,12 +639,29 @@ end
 
 module TestRsa = struct
 
-  let test () =
+  let roundtrip original_bytes =
     let k = rsa_gen_key 2048 in
-    let original_text = bytes_of_string "coucou" in
-    let cipher_text = rsa_encrypt k Pad_none original_text in
-    let plain_text = rsa_decrypt k Pad_none cipher_text in
-    assert (Some original_text = plain_text)
+    let cipher_bytes = rsa_encrypt k Pad_PKCS1 original_bytes in
+    let plain_bytes = rsa_decrypt k Pad_PKCS1 cipher_bytes in
+    match plain_bytes with
+    | Some bytes when string_of_bytes bytes = string_of_bytes original_bytes ->
+        ()
+    | Some bytes ->
+        Printf.printf "rsa_encrypt/decrypt: got %s\n" (string_of_bytes bytes);
+        exit 255
+    | None ->
+        Printf.printf "rsa_encrypt/decrypt: got no bytes\n";
+        exit 254
+
+  let test () =
+    roundtrip (bytes_of_string "coucou");
+
+    let chunk1 = bytes_of_string "Lorem ipsum dolor sit amet, consectetur adipiscing elit.  Integer vitae tincidunt enim. Pellentesque luctus, turpis sed lobortis ullamcorper, orci nisi commodo sem, ut sagittis augue elit vel ipsum. Aenean aliquam eros est, sed molestie ex aliquet sed. Vest" in
+    let chunk2 = bytes_of_string "bulum in massa mauris. Phasellus non arcu pulvinar, elementum sapien eu, congue dolor. Fusce malesuada nisl enim, non accumsan mi gravida aliquam. Sed ornare augue eget quam pretium, vitae sodales urna hendrerit.  Curabitur mi ante, fermentum eget lacus ut," in
+    let chunk = Platform.Bytes.(chunk1 @| chunk2) in
+    let _, chunk = Platform.Bytes.split chunk 128 in
+    let chunk, _ = Platform.Bytes.split chunk (256 - 11) in
+    roundtrip chunk
 
 end
 

@@ -272,11 +272,9 @@ let rsa_encrypt (pk:rsa_key) (p:rsa_padding) (d:bytes) =
 let rsa_decrypt (sk:rsa_key) (p:rsa_padding) (e:bytes) =
   let r = ocaml_rsa_new() in
   ocaml_rsa_set_key r sk;
-  try (
-    let d = ocaml_rsa_decrypt r true p (string_of_bytes e) in
-    ocaml_rsa_fini r;
-    Some (bytes_of_string d))
-  with _ -> None
+  let d = ocaml_rsa_decrypt r true p (string_of_bytes e) in
+  ocaml_rsa_fini r;
+  Some (bytes_of_string d)
 
 let rsa_sign (h:hash_alg option) (sk:rsa_key) (t:bytes) =
   let r = ocaml_rsa_new() in
@@ -457,3 +455,8 @@ let ec_gen_key params =
     ec_point = { ecx = bytes_of_string ecx; ecy = bytes_of_string ecy };
     ec_priv = Some (bytes_of_string priv)
   }
+
+external ocaml_err_load_crypto_strings: unit -> unit = "ocaml_err_load_crypto_strings"
+
+let _ =
+  ocaml_err_load_crypto_strings ()

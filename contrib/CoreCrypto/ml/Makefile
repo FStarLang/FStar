@@ -6,7 +6,7 @@ OCAMLDEP = ocamlfind dep
 FSTAR_HOME = ../../..
 PLATFORM = $(FSTAR_HOME)/contrib/Platform/ml
 
-CCOPTS = -ccopt -Wall # -ccopt -O0
+CCOPTS = $(addprefix -ccopt ,-Wall -DDEBUG -std=c11 -D__USE_MINGW_ANSI_STDIO)
 
 ifeq ($(OS),Windows_NT)
     # On cygwin + cygwinports, DLLs are searched in the PATH, which is not
