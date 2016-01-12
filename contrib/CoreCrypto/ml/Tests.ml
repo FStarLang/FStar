@@ -696,6 +696,24 @@ module TestDsa = struct
   let print_test = TestRsa.print_test
 end
 
+module TestEcdsa = struct
+
+  let tests = TestRsa.tests
+
+  let check original_bytes =
+    let params = { curve = ECC_P521; point_compression = false } in
+    let private_key = ec_gen_key params in
+    let public_key = { private_key with ec_priv = None } in
+    let sig_bytes = ecdsa_sign None private_key original_bytes in
+    if not (ecdsa_verify None public_key original_bytes sig_bytes) then begin
+      Printf.printf "ecdsa_sign/ecdsa_verify: check failed\n";
+      false
+    end else
+      true
+
+  let print_test = TestRsa.print_test
+end
+
 
 module TestDhke = struct
   let test () =
@@ -731,13 +749,13 @@ let run_test section test_vectors print_test_vector test_vector =
     )
   in
   List.iter doit test_vectors;
-  Printf.printf "%s: %d/%d tests passed\n" section !passed !total
+  Printf.printf "%s: %d/%d tests passed\n%!" section !passed !total
 
 let simple_test name f =
   if f () then
-    Printf.printf "%s: OK\n" name
+    Printf.printf "%s: OK\n%!" name
   else
-    Printf.printf "%s: FAIL\n" name
+    Printf.printf "%s: FAIL\n%!" name
 
 let _ =
   TestAead.(run_test "AEAD" test_vectors print_test_vector test);
@@ -746,5 +764,6 @@ let _ =
   TestEcc.(run_test "ECC" tests print_test test);
   TestRsa.(run_test "RSA" tests print_test roundtrip);
   TestDsa.(run_test "DSA" tests print_test check);
+  TestEcdsa.(run_test "ECDSA" tests print_test check);
   simple_test "DH key exchange" TestDhke.test;
   simple_test "ECDH key exchange" TestEcdhke.test

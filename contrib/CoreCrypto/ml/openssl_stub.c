@@ -1825,3 +1825,63 @@ CAMLprim value ocaml_ecdh_agreement(value mlkey, value mlgroup, value mlpoint) {
 
   CAMLreturn(mlshared_secret);
 }
+
+CAMLprim value ocaml_ecdsa_sign(value mlkey, value data) {
+    CAMLparam2(mlkey, data);
+    CAMLlocal1(output);
+
+    EC_KEY *key = NULL;
+
+    if ((key = EC_KEY_val(mlkey)) == NULL)
+        caml_failwith("EC_KEY has been disposed");
+
+    size_t olen = 0;
+
+    output = caml_alloc_string(ECDSA_size(key));
+    olen = caml_string_length(output);
+
+    if (ECDSA_sign(0,             /* ignored */
+                 (uint8_t*) String_val(data),
+                 caml_string_length(data),
+                 (uint8_t*) String_val(output),
+                 (unsigned*) &olen, key) == 0) {
+      unsigned long err = ERR_get_error();
+      char* err_string = ERR_error_string(err, NULL);
+      caml_failwith(err_string);
+    }
+
+    if (olen != caml_string_length(output)) {
+        CAMLlocal1(sig);
+
+        sig = caml_alloc_string(olen);
+        memcpy(String_val(sig), String_val(output), olen);
+        CAMLreturn(sig);
+    }
+
+    CAMLreturn(output);
+}
+
+CAMLprim value ocaml_ecdsa_verify(value mlkey, value data, value sig) {
+    CAMLparam3(mlkey, data, sig);
+
+    EC_KEY *key = NULL;
+    int rr = -1;
+
+    if ((key = EC_KEY_val(mlkey)) == NULL)
+        caml_failwith("key has been disposed");
+
+    rr = ECDSA_verify(0, /* ignored */
+                    (uint8_t*) String_val(data),
+                    caml_string_length(data),
+                    (uint8_t*) String_val(sig),
+                    caml_string_length(sig),
+                    key);
+
+    if (rr == -1) {
+      unsigned long err = ERR_get_error();
+      char* err_string = ERR_error_string(err, NULL);
+      caml_failwith(err_string);
+    }
+
+    CAMLreturn((rr > 0) ? Val_true : Val_false);
+}

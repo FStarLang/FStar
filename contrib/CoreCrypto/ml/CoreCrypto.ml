@@ -394,7 +394,15 @@ type ec_key = {
 }
 
 (* Types prefixed with [ssl_] are wrappers around raw C pointers and are not
- * intended for outside use. *)
+ * intended for outside use. The bindings for the various EC_* functions adopt a
+ * style where the OCaml side does as much as possible, and the C side does as
+ * little as possible. This means that constructing structures such as EC_KEY
+ * and EC_GROUP is done by binding various EC_KEY_set* functions.
+ *
+ * Note: these bindings seem very inefficient, because we're re-creating the
+ * EC_*$ data structures every time. We would be better off having them stashed
+ * somewhere inside the record (and export the record as private in the
+ * interface so that clients can't misuse it). *)
 
 type ssl_ec_method
 
@@ -450,12 +458,6 @@ let ec_is_on_curve params point =
 let ec_point_serialize ecp =
   failwith "Not implemented"
 
-let ecdsa_sign ha key bytes =
-  failwith "Not implemented"
-
-let ecdsa_verify ha key b1 b2 =
-  failwith "Not implemented"
-
 
 type ssl_ec_key
 
@@ -471,6 +473,12 @@ external ocaml_ec_key_set_public_key: ssl_ec_key -> ssl_ec_point -> unit =
   "ocaml_ec_key_set_public_key"
 external ocaml_ec_key_set_private_key: ssl_ec_key -> string -> unit =
   "ocaml_ec_key_set_private_key"
+external ocaml_ecdh_agreement: ssl_ec_key -> ssl_ec_group -> ssl_ec_point -> string =
+  "ocaml_ecdh_agreement"
+external ocaml_ecdsa_sign: ssl_ec_key -> string -> string =
+  "ocaml_ecdsa_sign"
+external ocaml_ecdsa_verify: ssl_ec_key -> string -> string -> bool =
+  "ocaml_ecdsa_verify"
 
 let ec_key_new curve =
   ocaml_ec_key_new_by_curve_name (ssl_name_of_curve curve)
@@ -494,15 +502,28 @@ let ec_gen_key (params: ec_params): ec_key =
     ec_priv = Some (bytes_of_string priv)
   }
 
-
-external ocaml_ecdh_agreement: ssl_ec_key -> ssl_ec_group -> ssl_ec_point -> string =
-  "ocaml_ecdh_agreement"
-
 let ecdh_agreement (key: ec_key) (point: ec_point) =
   let ssl_key = ssl_key_of_key key in
   let ssl_point = ssl_point_of_point key.ec_params point in
   let ssl_group = ssl_group_of_params key.ec_params in
   bytes_of_string (ocaml_ecdh_agreement ssl_key ssl_group ssl_point)
+
+let ecdsa_sign hash_alg key input =
+  let input = match hash_alg with
+    | Some hash_alg -> hash hash_alg input
+    | None -> input
+  in
+  let key = ssl_key_of_key key in
+  let output = ocaml_ecdsa_sign key (string_of_bytes input) in
+  bytes_of_string output
+
+let ecdsa_verify hash_alg key input signature =
+  let input = match hash_alg with
+    | Some hash_alg -> hash hash_alg input
+    | None -> input
+  in
+  let key = ssl_key_of_key key in
+  ocaml_ecdsa_verify key (string_of_bytes input) (string_of_bytes signature)
 
 
 (* -------------------------------------------------------------------------- *)
