@@ -1489,13 +1489,15 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
   | Tycon(qual, tcs) ->
     desugar_tycon env d.drange (trans_quals qual) tcs
 
-  | ToplevelLet(isrec, lets) ->
+  | ToplevelLet(quals, isrec, lets) ->
     begin match (compress_exp <| desugar_exp_maybe_top true env (mk_term (Let(isrec, lets, mk_term (Const Const_unit) d.drange Expr)) d.drange Expr)).n with
         | Exp_let(lbs, _) ->
           let lids = snd lbs |> List.map (fun lb -> match lb.lbname with
             | Inr l -> l
             | _ -> failwith "impossible") in
-          let quals = snd lbs |> List.collect
+          let quals = match quals with 
+            | _::_ -> trans_quals quals
+            | _ -> snd lbs |> List.collect
             (function | {lbname=Inl _} -> []
                       | {lbname=Inr l} -> DesugarEnv.lookup_letbinding_quals env l) in
           let s = Sig_let(lbs, d.drange, lids, quals) in

@@ -86,7 +86,7 @@ type env = {
   admit          :bool;                         (* admit VCs in the current module *)
   default_effects:list<(lident*lident)>;        (* [(x,y)] ... y is the default effect of x *)
   type_of        :env -> term -> typ*guard_t;   (* a callback to the type-checker; check_term g e t ==> g |- e : Tot t *)
-  use_bv_sorts      :bool;                      (* use bv.sort for a bound-variable's type rather than consulting gamma *)
+  use_bv_sorts   :bool;                         (* use bv.sort for a bound-variable's type rather than consulting gamma *)
 }
 and solver_t = {
     init         :env -> unit;
@@ -412,7 +412,7 @@ let datacons_of_typ env lid =
 let typ_of_datacon env lid = 
   match lookup_qname env lid with
     | Some (Inr (Sig_datacon (_, _, _, l, _, _, _, _), _)) -> l
-    | _ -> failwith "Not a datacon"
+    | _ -> failwith (Util.format1 "Not a datacon: %s" (Print.lid_to_string lid))
 
 let is_datacon env lid =
   match lookup_qname env lid with
@@ -445,12 +445,16 @@ let get_effect_decl env l =
 let join env l1 l2 : (lident * (typ -> typ -> typ) * (typ -> typ -> typ)) =
   if lid_equals l1 l2
   then l1, (fun t wp -> wp), (fun t wp -> wp)
+  else if lid_equals l1 Const.effect_GTot_lid && lid_equals l2 Const.effect_Tot_lid
+       || lid_equals l2 Const.effect_GTot_lid && lid_equals l1 Const.effect_Tot_lid
+  then Const.effect_GTot_lid, (fun t wp -> wp), (fun t wp -> wp)
   else match env.effects.joins |> Util.find_opt (fun (m1, m2, _, _, _) -> lid_equals l1 m1 && lid_equals l2 m2) with
         | None -> raise (Error(Util.format2 "Effects %s and %s cannot be composed" (Print.lid_to_string l1) (Print.lid_to_string l2), env.range))
         | Some (_, _, m3, j1, j2) -> m3, j1, j2
 
 let monad_leq env l1 l2 : option<edge> =
   if lid_equals l1 l2
+  || (lid_equals l1 Const.effect_Tot_lid && lid_equals l2 Const.effect_GTot_lid)
   then Some ({msource=l1; mtarget=l2; mlift=(fun t wp -> wp)})
   else env.effects.order |> Util.find_opt (fun e -> lid_equals l1 e.msource && lid_equals l2 e.mtarget)
 

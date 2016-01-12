@@ -164,6 +164,7 @@ and subst_comp' s t = match s with
   | _ ->
     match t.n with
       | Total t -> mk_Total (subst' s t)
+      | GTotal t -> mk_GTotal (subst' s t)
       | Comp ct -> mk_Comp(subst_comp_typ' s ct)
 
 and compose_subst (s1:subst_t) (s2:subst_t) = s1@s2

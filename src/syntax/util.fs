@@ -189,32 +189,36 @@ let ml_comp t r =
          effect_args=[];
          flags=[MLEFFECT]})
 
-let total_comp t r = mk_Total t
+//let total_comp t r = mk_Total t
 
-let gtotal_comp t =
-    mk_Comp ({
-        effect_name=Const.effect_GTot_lid;
-        result_typ=t;
-        effect_args=[];
-        flags=[SOMETRIVIAL]
-   })
+//let gtotal_comp t =
+//    mk_Comp ({
+//        effect_name=Const.effect_GTot_lid;
+//        result_typ=t;
+//        effect_args=[];
+//        flags=[SOMETRIVIAL]
+//   })
 
 let comp_set_flags (c:comp) f = match c.n with
-  | Total _ -> c
+  | Total _ 
+  | GTotal _ -> c
   | Comp ct -> {c with n=Comp ({ct with flags=f})}
 
 let comp_flags c = match c.n with
   | Total _ -> [TOTAL]
+  | GTotal _ -> [SOMETRIVIAL]
   | Comp ct -> ct.flags
 
 let comp_effect_name c = match c.n with
     | Comp c  -> c.effect_name
     | Total _ -> Const.effect_Tot_lid
+    | GTotal _ -> Const.effect_GTot_lid
 
 let comp_to_comp_typ (c:comp) : comp_typ =
     match c.n with
     | Comp c -> c
     | Total t -> {effect_name=Const.effect_Tot_lid; result_typ=t; effect_args=[]; flags=[TOTAL]}
+    | GTotal t -> {effect_name=Const.effect_GTot_lid; result_typ=t; effect_args=[]; flags=[SOMETRIVIAL]}
 
 let is_total_comp c =
     comp_flags c |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
@@ -235,13 +239,14 @@ let is_tot_or_gtot_comp c =
 
 let is_pure_comp c = match c.n with
     | Total _ -> true
-    | Comp ct -> is_tot_or_gtot_comp c
+    | GTotal _ -> false
+    | Comp ct -> is_total_comp c
                  || lid_equals ct.effect_name Const.effect_PURE_lid
                  || lid_equals ct.effect_name Const.effect_Pure_lid
                  || ct.flags |> Util.for_some (function LEMMA -> true | _ -> false)
 
 let is_ghost_effect l =
-     lid_equals Const.effect_GTot_lid l
+       lid_equals Const.effect_GTot_lid l
     || lid_equals Const.effect_GHOST_lid l
     || lid_equals Const.effect_Ghost_lid l
 
@@ -291,11 +296,13 @@ let is_ml_comp c = match c.n with
   | _ -> false
 
 let comp_result c = match c.n with
-  | Total t -> t
+  | Total t  
+  | GTotal t -> t
   | Comp ct -> ct.result_typ
 
 let set_result_typ c t = match c.n with
   | Total _ -> mk_Total t
+  | GTotal _ -> mk_GTotal t
   | Comp ct -> mk_Comp({ct with result_typ=t})
 
 let is_trivial_wp c =

@@ -51,7 +51,7 @@ let cfalse_elim #a f = match f with
 val false_elim2 : #a:Type -> cfalse -> Tot a
 let rec false_elim2 #a x = false_elim2 x
 
-val false_elim3 : #a:Type -> u:unit{false} -> Tot a
-let rec false_elim3 #a () = false_elim3 ()
+val false_elim : #a:Type -> u:unit{false} -> Tot a
+let rec false_elim #a () = false_elim ()
 
 type cnot (p:Type) = cimp p cfalse

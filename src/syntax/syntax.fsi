@@ -106,8 +106,9 @@ and comp_typ = {
   flags:list<cflags>
 }
 and comp' =
-  | Total of typ
-  | Comp of comp_typ
+  | Total  of typ 
+  | GTotal of typ
+  | Comp   of comp_typ
 and term = syntax<term',term'>
 and typ = term                                                   (* sometimes we use typ to emphasize that a term is a type *)
 and pat = withinfo_t<pat',term'>
@@ -310,6 +311,7 @@ val mk_Tm_uinst:    term -> universes -> term
 val extend_app:     term -> arg -> mk_t
 val mk_Tm_delayed:  either<(term * subst_t), (unit -> term)> -> Range.range -> term
 val mk_Total:       typ -> comp
+val mk_GTotal:      typ -> comp
 val mk_Comp:        comp_typ -> comp
 val bv_to_tm:       bv -> term
 val bv_to_name:     bv -> term

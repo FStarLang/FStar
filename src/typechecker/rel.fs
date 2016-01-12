@@ -736,7 +736,13 @@ let imitation_sub_probs orig env scope (ps:args) (qs:list<(option<binder> * vari
                             | _ -> failwith "impossible"
                        end
 
-                    |_, _, C ({n=Comp c}) ->
+                     | bopt, variance, C ({n=GTotal ti}) ->
+                       begin match sub_prob scope args (bopt, variance, T ti) with
+                            | T gi_xs, prob -> C <| mk_GTotal gi_xs, [prob]
+                            | _ -> failwith "impossible"
+                       end
+
+                     |_, _, C ({n=Comp c}) ->
                        let components = c.effect_args |> List.map (fun t -> (None, INVARIANT, T (fst t))) in
                        let components = (None, COVARIANT, T c.result_typ)::components in
                        let tcs, sub_probs = List.map (sub_prob scope args) components |> List.unzip in
@@ -1776,11 +1782,19 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
          let r = Env.get_range env in
          let c1_0, c2_0 = c1, c2 in
          match c1.n, c2.n with
-               | Total t1, Total t2 -> //rigid-rigid 1
+               | GTotal _, Total _ ->
+                 giveup env "incompatible monad ordering: GTot </: Tot"  orig
+
+               | Total t1, Total t2 
+               | GTotal t1, GTotal t2
+               | Total t1, GTotal t2 -> //rigid-rigid 1
                  solve_t env (problem_using_guard orig t1 problem.relation t2 None "result type") wl
 
+               | GTotal _, Comp _
                | Total _,  Comp _ ->
                  solve_c env ({problem with lhs=mk_Comp <| U.comp_to_comp_typ c1}) wl
+
+               | Comp _, GTotal _ 
                | Comp _, Total _ ->
                  solve_c env ({problem with rhs=mk_Comp <| U.comp_to_comp_typ c2}) wl
 

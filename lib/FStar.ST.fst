@@ -25,19 +25,19 @@ type ref (a:Type) = Heap.ref a
 type modifies (mods:set aref) (h:heap) (h':heap) =
     b2t (Heap.equal h' (concat h' (restrict h (complement mods))))
 
-kind STPre = STPre_h heap
-kind STPost (a:Type) = STPost_h heap a
-kind STWP (a:Type) = STWP_h heap a
+let st_pre = st_pre_h heap
+let st_post a = st_post_h heap a
+let st_wp a = st_wp_h heap a
 new_effect STATE = STATE_h heap
-let lift_div_state (a:Type) (wp:PureWP a) (p:STPost a) (h:heap) = wp (fun a -> p a h)
+let lift_div_state (a:Type) (wp:pure_wp a) (p:st_post a) (h:heap) = wp (fun a -> p a h)
 sub_effect DIV ~> STATE = lift_div_state
 
-effect State (a:Type) (wp:STWP a) =
+effect State (a:Type) (wp:st_wp a) =
        STATE a wp wp
-effect ST (a:Type) (pre:STPre) (post: (heap -> Tot (STPost a))) =
+effect ST (a:Type) (pre:st_pre) (post: (heap -> Tot (st_post a))) =
        STATE a
-             (fun (p:STPost a) (h:heap) -> pre h /\ (forall a h1. (pre h /\ post h a h1) ==> p a h1)) (* WP *)
-             (fun (p:STPost a) (h:heap) -> (forall a h1. (pre h /\ post h a h1) ==> p a h1))          (* WLP *)
+             (fun (p:st_post a) (h:heap) -> pre h /\ (forall a h1. (pre h /\ post h a h1) ==> p a h1)) (* WP *)
+             (fun (p:st_post a) (h:heap) -> (forall a h1. (pre h /\ post h a h1) ==> p a h1))          (* WLP *)
 effect St (a:Type) =
        ST a (fun h -> True) (fun h0 r h1 -> True)
 

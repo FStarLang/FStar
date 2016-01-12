@@ -208,7 +208,7 @@ let collect_one (original_map: smap<string>) (filename: string): list<string> =
   and collect_decl = function
     | Open lid ->
         record_open lid
-    | ToplevelLet (_, patterms) ->
+    | ToplevelLet (_, _, patterms) ->
         List.iter (fun (_, t) -> collect_term t) patterms
     | KindAbbrev (_, binders, t) ->
         collect_term t;

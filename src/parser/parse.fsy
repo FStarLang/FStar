@@ -165,11 +165,11 @@ decl2:
       { $1 }
   | tycon 
       { $1 }
-  | LET recopt letbinding letbindings
+  | qualifiers LET recopt letbinding letbindings
       { 
-		let r, focus = $2 in
-		let lbs = focusLetBindings ((focus, $3)::$4) (rhs2 parseState 1 4) in
-		ToplevelLet(r, lbs)
+		let r, focus = $3 in
+		let lbs = focusLetBindings ((focus, $4)::$5) (rhs2 parseState 1 5) in
+		ToplevelLet($1, r, lbs)
 	  }
   | qualifiers VAL ident COLON typ
       { Val($1, $3, $5) }

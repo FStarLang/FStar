@@ -40,9 +40,9 @@ assume val exists_proj1 : #a:Type -> #p:(a->Type) -> (exists x.p x) -> Tot a
 assume val mkexists : #a:Type -> #p:(a->Type) -> x:a -> (p x) -> Tot (exists x.p x)
 
 
-val ex_proj1 : #a:Type -> #p:(a->Type) -> (ex a p) -> Tot (erased a)
-let ex_proj1 e = (elift1 exists_proj1) e
+val ex_proj1 : #a:Type -> #p:(a->Type) -> ex a p -> Tot (erased a)
+let ex_proj1 #a #p e = (elift1 exists_proj1) e
 
 
 val gex_proj1 : #a:Type -> #p:(a->Type) -> (ex a p) -> GTot a
-let gex_proj1 e = (reveal (ex_proj1 e))
+let gex_proj1 #a #p e = (reveal (ex_proj1 e))

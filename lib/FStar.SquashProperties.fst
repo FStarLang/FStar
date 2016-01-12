@@ -1,6 +1,6 @@
 (*--build-config
-    options:--warn_top_level_effects --admit_fsi FStar.Squash --admit_fsi FStar.Set --print_implicits;
-    other-files:FStar.Constructive.fst FStar.Squash.fsti FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst;
+    options:--warn_top_level_effects --print_implicits;
+    other-files:FStar.FunctionalExtensionality.fst FStar.Constructive.fst FStar.Squash.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst;
 --*)
 module FStar.SquashProperties
 
@@ -9,16 +9,16 @@ open FStar.Constructive
 open FStar.Squash
 
 val join_squash : #a:Type -> squash (squash a) -> Tot (squash a)
-let join_squash (a:Type) s = bind_squash #(squash a) #a s (fun x -> x)
+let join_squash #a s = bind_squash #(squash a) #a s (fun x -> x)
 
 val squash_arrow : #a:Type -> #p:(a -> Type) ->
   =f:(x:a -> Tot (squash (p x))) -> Tot (squash (x:a -> Tot (p x)))
-let squash_arrow (a:Type) (p:(a->Type)) f =
+let squash_arrow #a #p f =
   squash_double_arrow (return_squash (fun x -> f x))
 
 val forall_intro : #a:Type -> #p:(a -> Type) ->
   =f:(x:a -> Lemma (p x)) -> Lemma (x:a -> Tot (p x))(* (forall (x:a). p x) *)
-let forall_intro (a:Type) (p:(a->Type)) f =
+let forall_intro #a #p f =
   let ff : (x:a -> Tot (squash (p x))) = (fun x -> f x; get_proof (p x)) in
   give_proof #(x:a -> Tot (p x)) (squash_arrow #a #p ff)
 
@@ -41,7 +41,7 @@ let forall_intro (a:Type) (p:(a->Type)) f =
 
 val bool_of_or : #p:Type -> #q:Type -> (p \/ q) -> 
   Tot (b:bool{(b ==> p) /\ (not(b) ==> q)})
-let bool_of_or (p:Type) (q:Type) (t:p \/ q) = 
+let bool_of_or #p #q (t:p \/ q) = 
   match t with
   | Left  _ -> true
   | Right _ -> false
@@ -49,19 +49,19 @@ let bool_of_or (p:Type) (q:Type) (t:p \/ q) =
 val excluded_middle : p:Type -> Tot (squash (b:bool{b <==> p}))
 let excluded_middle (p:Type) = map_squash (get_proof (p \/ ~p)) bool_of_or 
 
-val excluded_middle_squash : p:Type -> Tot (squash (cor p (cnot p)))
-let excluded_middle_squash (p:Type) =
+val excluded_middle_squash : p:Type0 -> Tot (squash (cor p (cnot p)))
+let excluded_middle_squash p =
   bind_squash (excluded_middle p) (fun x ->
   if x then
     map_squash (get_proof p) IntroL
   else
-    return_squash (IntroR (fun (h:p) -> give_proof (return_squash h); false_elim ())))
+    return_squash (IntroR (fun (h:p) -> give_proof (return_squash h); false_elim #cfalse ())))
 
 (* we thought we might prove proof irrelevance by Berardi ... but didn't manage *)
 
 (* Conditional on any Type -- unused below *)
-val ifProp: #p:Type -> b:Type -> (e1:squash p) -> (e2:squash p) -> Tot (squash p)
-let ifProp (#p:Type) (b:Type) e1 e2 =
+val ifProp: #p:Type0 -> b:Type0 -> (e1:squash p) -> (e2:squash p) -> Tot (squash p)
+let ifProp #p b e1 e2 =
    bind_squash (excluded_middle_squash b) (fun x ->
    match x with
    | IntroL _ -> e1
@@ -88,7 +88,7 @@ val ac: r:retract_cond 'a 'b -> retract 'a 'b -> x:'a ->
 let ac (MkC _ _ inv2) = inv2
 
 
-val l1: (a:Type) -> (b:Type) -> Tot (squash (retract_cond (pow a) (pow b)))
+val l1: (a:Type0) -> (b:Type0) -> Tot (squash (retract_cond (pow a) (pow b)))
 let l1 (a:Type) (b:Type) = 
    map_squash (excluded_middle_squash (retract (pow a) (pow b))) (fun x ->
    match x with
@@ -101,25 +101,27 @@ let l1 (a:Type) (b:Type) =
 (* The paradoxical set *)
 type U = p:Type -> Tot (squash (pow p))
 
-(* Bijection between U and (pow U) *)
-val f : U -> Tot (squash (pow U))
-let f u = u U
+(* NS: FAILS TO CHECK BEYOND HERE ... TODO, revisit *)
 
-val g : squash (pow U) -> Tot U
-let g sh = fun (x:Type) -> 
-  let (slX:squash (pow U -> Tot (pow x))) = map_squash (l1 x U) MkC.j2 in 
-  let (srU:squash (pow U -> Tot (pow U))) = map_squash (l1 U U) MkC.i2 in 
-  bind_squash srU (fun rU ->
-  bind_squash slX (fun lX ->
-  bind_squash sh (fun h ->
-  return_squash (lX (rU h)))))
+// (* Bijection between U and (pow U) *)
+// val f : U -> Tot (squash (pow U))
+// let f u = u U
 
-(* This only works if importing FStar.All.fst, which is nonsense *)
-val r : U
-let r =
-  let ff : (U -> Tot (squash bool)) =
-      (fun (u:U) -> map_squash (u U) (fun uu -> not (uu u))) in
-  g (squash_arrow ff)
+// val g : squash (pow U) -> Tot U
+// let g sh = fun (x:Type) -> 
+//   let (slX:squash (pow U -> Tot (pow x))) = map_squash (l1 x U) MkC.j2 in 
+//   let (srU:squash (pow U -> Tot (pow U))) = map_squash (l1 U U) MkC.i2 in 
+//   bind_squash srU (fun rU ->
+//   bind_squash slX (fun lX ->
+//   bind_squash sh (fun h ->
+//   return_squash (lX (rU h)))))
+
+// (* This only works if importing FStar.All.fst, which is nonsense *)
+// val r : U
+// let r =
+//   let ff : (U -> Tot (squash bool)) =
+//       (fun (u:U) -> map_squash (u U) (fun uu -> not (uu u))) in
+//   g (squash_arrow ff)
 
 (* CH: stopped here *)
 (* val not_has_fixpoint : squash (ceq (r U r) (not (r U r))) *)
@@ -133,8 +135,8 @@ let r =
 (* val not_provable : unit -> *)
 (*   Tot (squash (cnot (ceq (return_squash true) (return_squash false)))) *)
 
-type cheq (#a:Type) (x:a) : #b:Type -> b -> Type =
-  | HRefl : cheq #a x #a x
+// type cheq (#a:Type) (x:a) : #b:Type -> b -> Type =
+//   | HRefl : cheq #a x #a x
 
 (* val not_provable : unit -> *)
 (*   Tot (cimp (cheq (return_squash #(b:bool{b=true})  true) *)

@@ -835,7 +835,12 @@ and desugar_comp r default_ok env t =
                                && l.ident.idText = "Tot") ->
              //we have an explicit effect annotation ... no need to add anything
              Ident.set_lid_range Const.effect_Tot_lid head.range, args
-            
+
+            | Name l when (lid_equals (Env.current_module env) C.prims_lid //we're right at the beginning of Prims, when GTot isn't yet fully defined           
+                               && l.ident.idText = "GTot") ->
+             //we have an explicit effect annotation ... no need to add anything
+             Ident.set_lid_range Const.effect_GTot_lid head.range, args
+       
             | Name l when ((l.ident.idText="Type" 
                             || l.ident.idText="Type0"
                             || l.ident.idText="Effect")
@@ -866,10 +871,13 @@ and desugar_comp r default_ok env t =
                 | _ -> failwith "impos") in
     if lid_equals eff C.effect_Tot_lid && List.length decreases_clause=0
     then mk_Total result_typ
+    else if lid_equals eff C.effect_GTot_lid && List.length decreases_clause=0
+    then mk_GTotal result_typ
     else let flags =
             if      lid_equals eff C.effect_Lemma_lid then [LEMMA]
             else if lid_equals eff C.effect_Tot_lid   then [TOTAL]
             else if lid_equals eff C.effect_ML_lid    then [MLEFFECT]
+            else if lid_equals eff C.effect_GTot_lid  then [SOMETRIVIAL]
             else [] in
         let rest = 
             if lid_equals eff C.effect_Lemma_lid
@@ -1283,11 +1291,13 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
   | Tycon(qual, tcs) ->
     desugar_tycon env d.drange (List.map trans_qual qual) tcs
 
-  | ToplevelLet(isrec, lets) ->
+  | ToplevelLet(quals, isrec, lets) ->
     begin match (Subst.compress <| desugar_term_maybe_top true env (mk_term (Let(isrec, lets, mk_term (Const Const_unit) d.drange Expr)) d.drange Expr)).n with
         | Tm_let(lbs, _) ->
           let lids = snd lbs |> List.map (fun lb -> right lb.lbname) in
-          let quals = snd lbs |> List.collect
+          let quals = match quals with 
+            | _::_ -> List.map trans_qual quals 
+            | _ -> snd lbs |> List.collect
             (function | {lbname=Inl _} -> []
                       | {lbname=Inr l} -> Env.lookup_letbinding_quals env l) in
           let s = Sig_let(lbs, d.drange, lids, quals) in

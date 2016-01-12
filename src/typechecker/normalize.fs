@@ -259,6 +259,7 @@ and close_comp env c =
         | _ -> 
         match c.n with 
             | Total t -> mk_Total (closure_as_term_delayed env t)
+            | GTotal t -> mk_GTotal (closure_as_term_delayed env t)
             | Comp c -> 
               let rt = closure_as_term_delayed env c.result_typ in
               let args = closures_as_args_delayed env c.effect_args in 
@@ -515,6 +516,9 @@ and norm_comp : cfg -> env -> comp -> comp =
         match comp.n with 
             | Total t -> 
               {comp with n=Total (norm cfg env [] t)}
+
+            | GTotal t -> 
+              {comp with n=GTotal (norm cfg env [] t)}
 
             | Comp ct -> 
               let norm_args args = args |> List.map (fun (a, i) -> (norm cfg env [] a, i)) in

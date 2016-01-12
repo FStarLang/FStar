@@ -133,7 +133,7 @@ let check_expected_effect env (copt:option<comp>) (e, c) : term * comp * guard_t
   let expected_c_opt = match copt with
     | Some _ -> copt
     | None ->
-        if Util.is_total_comp c
+        if Util.is_tot_or_gtot_comp c //these are already the defaults for their particular effects
         then None
         else let c1 = N.unfold_effect_abbrev env c in
              let md = Env.get_effect_decl env c1.effect_name in
@@ -502,6 +502,11 @@ and tc_comp env c : comp                                      (* checked version
       let t, _, g = tc_check_tot_or_gtot_term env t k in
       mk_Total t, u, g
 
+    | GTotal t ->
+      let k, u = U.type_u () in
+      let t, _, g = tc_check_tot_or_gtot_term env t k in
+      mk_GTotal t, u, g
+
     | Comp c ->
       let kc =  Env.lookup_effect_lid env c.effect_name in
       if Env.debug env Options.Low then Printf.printf "Type of effect %s is %s\n" (Print.lid_to_string c.effect_name) (Print.term_to_string kc);
@@ -567,8 +572,13 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
             | [], [] -> env, List.rev out, None, g, subst
 
             | (hd, imp)::bs, (hd_expected, imp')::bs_expected -> 
-               if imp<>imp' then raise (Error(Util.format1 "Inconsistent implicit argument annotation on argument %s" (Print.bv_to_string hd), 
-                                              S.range_of_bv hd));
+               begin match imp, imp' with 
+                    | None, Some Implicit
+                    | Some Implicit, None -> 
+                      raise (Error(Util.format1 "Inconsistent implicit argument annotation on argument %s" (Print.bv_to_string hd), 
+                                                  S.range_of_bv hd))
+                    | _ -> ()
+               end;
                let expected_t = SS.subst subst hd_expected.sort in
                let t, g = match (Util.unmeta hd.sort).n with
                     | Tm_unknown -> expected_t, g
@@ -752,9 +762,9 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             (* Infer: t1 -> ... -> tn -> C ('u x1...xm),
                     where ti are the result types of each arg
                     and   xi are the free type/term variables in the environment
-               where C = Tot, if the expected result type is Type(u)
-                              or if the ML monad is not in scope
-               else  C = ML *)
+               where C = GTot, if the expected result type is Type(u)
+                else C = Tot,  if the ML monad is not in scope
+                else C = ML,   otherwise *)
             let args, comps, g_args = tc_args env args in
             let bs = null_binders_of_tks (comps |> List.map (fun c -> c.res_typ, None)) in
             let ml_or_tot = match Env.try_lookup_effect_lid env Const.effect_ML_lid with 
@@ -764,10 +774,17 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                 | None -> ml_or_tot
                 | Some t -> 
                   match (SS.compress t).n with 
-                    | Tm_type _ -> fun t r -> S.mk_Total t 
+                    | Tm_type _ -> fun t r -> S.mk_GTotal t 
                     | _ -> ml_or_tot in
+            
             let cres = ml_or_tot (TcUtil.new_uvar env (U.type_u () |> fst)) r in
-            Rel.discharge_guard env <| Rel.teq env tf (Util.arrow bs cres);
+            let bs_cres = Util.arrow bs cres in
+            if Env.debug env <| Options.Extreme
+            then Util.print3 "Forcing the type of %s from %s to %s\n" 
+                            (Print.term_to_string head)
+                            (Print.term_to_string tf)
+                            (Print.term_to_string bs_cres);
+            Rel.discharge_guard env <| Rel.teq env tf bs_cres;
             let comp = List.fold_right (fun c out -> TcUtil.bind env None c (None, out)) (chead::comps) (TcUtil.lcomp_of_comp <| cres) in
             mk_Tm_app head args (Some comp.res_typ.n) r, comp, Rel.conj_guard ghead g_args
 
@@ -896,7 +913,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
             then check_function_app true (unfold_whnf env tf)
             else raise (Error(Errors.expected_function_typ env tf, head.pos)) in
 
-    check_function_app false (Util.unrefine thead) 
+    check_function_app false (N.normalize [N.Beta;N.WHNF] env (Util.unrefine thead)) 
 
 (******************************************************************************)
 (* SPECIAL CASE OF CHECKING APPLICATIONS:                                     *)
@@ -920,7 +937,7 @@ and check_short_circuit_args env head chead g_head args expected_topt : term * l
                               && not (TcUtil.is_pure_effect env c.eff_name)) in
                 seen@[arg e], Rel.conj_guard guard g, ghost) ([], g_head, false) args bs in
           let e = mk_Tm_app head args (Some res_t.n) r  in
-          let c = if ghost then Util.gtotal_comp res_t |> Util.lcomp_of_comp else Util.lcomp_of_comp c in
+          let c = if ghost then S.mk_GTotal res_t |> Util.lcomp_of_comp else Util.lcomp_of_comp c in
           e, c, guard
         
         | _ -> //fallback
@@ -1254,12 +1271,11 @@ and check_top_level_let_rec env top =
               else let ecs = TcUtil.generalize env (lbs |> List.map (fun lb -> 
                                 lb.lbname, 
                                 lb.lbdef, 
-                                Util.total_comp 
-                                lb.lbtyp (range_of_lbname lb.lbname))) in
+                                S.mk_Total lb.lbtyp)) in
                    ecs |> List.map (fun (x, uvs, e, c) -> 
                       Util.close_univs_and_mk_letbinding all_lb_names x uvs (Util.comp_result c) (Util.comp_effect_name c) e) in
 
-          let cres = TcUtil.lcomp_of_comp <| Util.total_comp Recheck.t_unit top.pos in
+          let cres = TcUtil.lcomp_of_comp <| S.mk_Total Recheck.t_unit in
           let _ = Rel.discharge_guard env g_lbs in //may need to solve all carried unification constraints, in case not generalized
           let _ = e2.tk := Some Recheck.t_unit.n in
          
@@ -1446,7 +1462,7 @@ and tc_tot_or_gtot_term env e : term
        let target_comp, allow_ghost = 
             if TcUtil.is_pure_effect env (Util.comp_effect_name c)
             then S.mk_Total (Util.comp_result c), false
-            else Util.gtotal_comp (Util.comp_result c), true in
+            else S.mk_GTotal (Util.comp_result c), true in
        match Rel.sub_comp env c target_comp with
         | Some g' -> e, Util.lcomp_of_comp target_comp, Rel.conj_guard g g'
         | _ -> 
@@ -1565,7 +1581,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
   let check_and_gen' env (_,t) k = check_and_gen env t k in
 
   let ret =
-    let expected_k = Util.arrow [S.mk_binder a; S.null_binder (S.bv_to_name a)] (S.mk_Total wp_a) in
+    let expected_k = Util.arrow [S.mk_binder a; S.null_binder (S.bv_to_name a)] (S.mk_GTotal wp_a) in
     check_and_gen' env ed.ret expected_k in
 
   let bind_wp =
@@ -1665,7 +1681,7 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
     let t, _ = Util.type_u() in
     let expected_k = Util.arrow [S.mk_binder a;
                                  S.null_binder wp_a]
-                                (S.mk_Total t) in
+                                (S.mk_GTotal t) in
     check_and_gen' env ed.trivial expected_k in
 
    //generalize and close

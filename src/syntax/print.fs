@@ -313,6 +313,11 @@ and comp_to_string c =
         | Tm_type _ when not !Options.print_implicits -> term_to_string t 
         | _ -> Util.format1 "Tot %s" (term_to_string t)
       end
+    | GTotal t -> 
+      begin match (compress t).n with 
+        | Tm_type _ when not !Options.print_implicits -> term_to_string t 
+        | _ -> Util.format1 "GTot %s" (term_to_string t)
+      end
     | Comp c ->
       let basic =
           if c.flags |> Util.for_some (function TOTAL -> true | _ -> false) && not !Options.print_effect_args

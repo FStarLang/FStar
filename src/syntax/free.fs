@@ -150,6 +150,7 @@ and free_names_and_uvars_comp c =
           else n
         | _ -> 
          let n = match c.n with 
+            | GTotal t
             | Total t -> 
               free_names_and_uvars t
             | Comp ct -> 
