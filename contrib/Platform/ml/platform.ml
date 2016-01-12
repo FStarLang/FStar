@@ -345,4 +345,8 @@ module Option = struct
   let map f = function
     | Some x -> Some (f x)
     | None -> None
+
+  let must = function
+    | Some x -> x
+    | None -> invalid_arg "Option.must"
 end

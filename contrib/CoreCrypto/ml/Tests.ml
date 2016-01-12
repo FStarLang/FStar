@@ -697,6 +697,17 @@ module TestDsa = struct
 end
 
 
+module TestDhke = struct
+  let test () =
+    let params = dh_gen_params 2048 in
+    let alice = dh_gen_key params in
+    let bob = dh_gen_key params in
+    let shared1 = dh_agreement alice bob.dh_public in
+    let shared2 = dh_agreement bob alice.dh_public in
+    string_of_bytes shared1 = string_of_bytes shared2
+end
+
+
 let run_test section test_vectors print_test_vector test_vector =
   let passed = ref 0 in
   let total  = ref 0 in
@@ -718,4 +729,5 @@ let _ =
   TestHash.(run_test "HASH" tests print_test test);
   TestEcc.(run_test "ECC" tests print_test test);
   TestRsa.(run_test "RSA" tests print_test roundtrip);
-  TestDsa.(run_test "DSA" tests print_test check)
+  TestDsa.(run_test "DSA" tests print_test check);
+  TestDhke.test ()
