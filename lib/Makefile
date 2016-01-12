@@ -44,7 +44,7 @@ STDLIB=FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.
 UFSTAR=$(FSTAR) --universes
 
 all_univs:
-	$(UFSTAR) FStar.List.Tot.fst $(STDLIB) FStar.List.fst FStar.ListProperties.fst
+	$(UFSTAR) FStar.List.Tot.fst FStar.ListProperties.fst $(STDLIB) FStar.List.fst 
 	$(UFSTAR) $(STDLIB) FStar.Seq.fst FStar.Classical.fst FStar.SeqProperties.fst FStar.Array.fst
 	$(UFSTAR) $(STDLIB) array.fst FStar.Char.fst
 	$(UFSTAR) $(STDLIB) FStar.Bytes.fst FStar.Crypto.fst
@@ -55,10 +55,10 @@ all_univs:
 	$(UFSTAR) FStar.Int8.fst FStar.Int16.fst FStar.Int31.fst FStar.Int32.fst FStar.Int63.fst FStar.Int64.fst
 	$(UFSTAR) FStar.HyperHeap.fst
 	$(UFSTAR) FStar.MRef.fst
-# 	$(UFSTAR) FStar.Option.fst 
-# 	$(UFSTAR) FStar.OrdMap.fst
+	$(UFSTAR) FStar.OrdSet.fst
+	# $(UFSTAR) FStar.OrdMap.fst
 # #	$(UFSTAR) FStar.OrdMapProps.fst -- problem filed as #359
-# 	$(UFSTAR) FStar.OrdSet.fst
+#	# $(UFSTAR) FStar.Option.fst 
 # 	$(UFSTAR) FStar.OrdSetProps.fst
 # 	$(UFSTAR) FStar.PredicateExtensionality.fst
 # #	$(UFSTAR) stboot.fsi stboot.fst   -- Name "FStar.All.ML" not found

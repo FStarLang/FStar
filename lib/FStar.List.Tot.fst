@@ -58,6 +58,8 @@ let rec append x y = match x with
   | [] -> y
   | a::tl -> a::append tl y
 
+let op_At x y = append x y
+
 val flatten: list (list 'a) -> Tot (list 'a)
 let rec flatten l = match l with
     | [] -> []

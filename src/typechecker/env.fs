@@ -211,23 +211,28 @@ let inst_effect_fun (env:env) (ed:eff_decl) (us, t) =
         | [] -> snd (inst_tscheme (ed.univs@us, t))
         | _  -> failwith (Util.format1 "Unexpected use of an uninstantiated effect: %s\n" (Print.lid_to_string ed.mname))
 
-let in_cur_mod env (l:lident) = (* TODO: need a more efficient namespace check! *)
+type tri = 
+    | Yes
+    | No 
+    | Maybe
+
+let in_cur_mod env (l:lident) : tri = (* TODO: need a more efficient namespace check! *)
     let cur = current_module env in
-    if l.nsstr = cur.str then true (* fast case; works for everything except records *)
+    if l.nsstr = cur.str then Yes (* fast case; works for everything except records *)
     else if Util.starts_with l.nsstr cur.str
     then let lns = l.ns@[l.ident] in
-        let cur = cur.ns@[cur.ident] in
-        let rec aux c l = match c, l with
-        | [], _ -> true
-        | _, [] -> false
-        | hd::tl, hd'::tl' when (hd.idText=hd'.idText) -> aux tl tl'
-        | _ -> false in
-        aux cur lns
-    else false 
+         let cur = cur.ns@[cur.ident] in
+         let rec aux c l = match c, l with
+            | [], _ -> Maybe
+            | _, [] -> No
+            | hd::tl, hd'::tl' when (hd.idText=hd'.idText) -> aux tl tl'
+            | _ -> No in
+         aux cur lns
+    else No 
 
 let lookup_qname env (lid:lident) : option<either<(universes * typ), (sigelt * option<universes>)>>  =
   let cur_mod = in_cur_mod env lid in
-  let found = if cur_mod
+  let found = if cur_mod<>No
               then Util.find_map env.gamma (function
                 | Binding_lid(l,t) -> if lid_equals lid l then Some (Inl (inst_tscheme t)) else None
                 | Binding_sig (Sig_bundle(ses, _, _, _)) ->
@@ -245,7 +250,7 @@ let lookup_qname env (lid:lident) : option<either<(universes * typ), (sigelt * o
                else None in
   if is_some found
   then found
-  else if not (cur_mod) || has_interface env env.curmodule
+  else if cur_mod <> Yes || has_interface env env.curmodule
   then match find_in_sigtab env lid with
         | Some se -> Some (Inr (se, None))
         | None -> None
@@ -323,7 +328,7 @@ let lookup_lid env lid =
       Some (inst_tscheme (uvs, t))
  
     | Inr (Sig_declare_typ (l, uvs, t, qs, _), None) -> 
-      if in_cur_mod env l
+      if in_cur_mod env l = Yes
       then if qs |> List.contains Assumption || env.is_iface
            then Some (inst_tscheme (uvs, t))
            else None
