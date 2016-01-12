@@ -651,31 +651,37 @@ let bytes1, bytes2, bytes3 =
 
 module TestRsa = struct
 
+  let tests = [bytes1; bytes2; bytes3]
+
   let roundtrip original_bytes =
     let k = rsa_gen_key 2048 in
     let cipher_bytes = rsa_encrypt k Pad_PKCS1 original_bytes in
     let plain_bytes = rsa_decrypt k Pad_PKCS1 cipher_bytes in
-    match plain_bytes with
-    | Some bytes when string_of_bytes bytes = string_of_bytes original_bytes ->
-        ()
-    | Some bytes ->
-        Printf.printf "rsa_encrypt/decrypt: got %s\n" (string_of_bytes bytes);
-        exit 255
-    | None ->
-        Printf.printf "rsa_encrypt/decrypt: got no bytes\n";
-        exit 254; ;
-    let sig_bytes = rsa_sign (Some SHA512) k original_bytes in
-    if not (rsa_verify (Some SHA512) k original_bytes sig_bytes) then begin
-      Printf.printf "rsa_sign/rsa_verify: check failed\n";
-      exit 253
-    end
+    try match plain_bytes with
+      | Some bytes when string_of_bytes bytes = string_of_bytes original_bytes ->
+          ()
+      | Some bytes ->
+          Printf.printf "rsa_encrypt/decrypt: got %s\n" (string_of_bytes bytes);
+          raise Exit
+      | None ->
+          Printf.printf "rsa_encrypt/decrypt: got no bytes\n";
+          raise Exit; ;
+      let sig_bytes = rsa_sign (Some SHA512) k original_bytes in
+      if not (rsa_verify (Some SHA512) k original_bytes sig_bytes) then begin
+        Printf.printf "rsa_sign/rsa_verify: check failed\n";
+        raise Exit
+      end;
+      true
+    with Exit ->
+      false
 
-  let test () =
-    List.iter roundtrip [bytes1; bytes2; bytes3]
+  let print_test x = print_string (hex_of_bytes x)
 
 end
 
 module TestDsa = struct
+
+  let tests = TestRsa.tests
 
   let check original_bytes =
     let private_key = dsa_gen_key 2048 in
@@ -683,16 +689,15 @@ module TestDsa = struct
     let sig_bytes = dsa_sign private_key original_bytes in
     if not (dsa_verify public_key original_bytes sig_bytes) then begin
       Printf.printf "dsa_sign/dsa_verify: check failed\n";
-      exit 253
-    end
+      false
+    end else
+      true
 
-  let test () =
-    List.iter check [bytes3; bytes2; bytes1]
-
+  let print_test = TestRsa.print_test
 end
 
 
-let run_test test_vectors print_test_vector test_vector =
+let run_test section test_vectors print_test_vector test_vector =
   let passed = ref 0 in
   let total  = ref 0 in
   let doit v =
@@ -705,12 +710,12 @@ let run_test test_vectors print_test_vector test_vector =
     )
   in
   List.iter doit test_vectors;
-  Printf.printf "%d/%d tests passed\n" !passed !total
+  Printf.printf "%s: %d/%d tests passed\n" section !passed !total
 
 let _ =
-  TestAead.(run_test test_vectors print_test_vector test);
-  TestHmac.(run_test test_cases print_test_case test);
-  TestHash.(run_test tests print_test test);
-  TestEcc.(run_test tests print_test test);
-  TestRsa.test ();
-  TestDsa.test ()
+  TestAead.(run_test "AEAD" test_vectors print_test_vector test);
+  TestHmac.(run_test "HMAC" test_cases print_test_case test);
+  TestHash.(run_test "HASH" tests print_test test);
+  TestEcc.(run_test "ECC" tests print_test test);
+  TestRsa.(run_test "RSA" tests print_test roundtrip);
+  TestDsa.(run_test "DSA" tests print_test check)

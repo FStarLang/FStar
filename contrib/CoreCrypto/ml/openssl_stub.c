@@ -1249,7 +1249,7 @@ CAMLprim value ocaml_dsa_verify(value mldsa, value data, value sig) {
         caml_failwith("DSA has been disposed");
 
     if (dsa->pub_key == NULL)
-        caml_failwith("DSA:verify: DSA (private) keys not set");
+        caml_failwith("DSA:verify: DSA (public) keys not set");
 
     rr = DSA_verify(0, /* ignored */
                     (uint8_t*) String_val(data),
