@@ -346,22 +346,30 @@ type dh_key = {
 external ocaml_dh_new : unit -> dh = "ocaml_dh_new"
 external ocaml_dh_fini   : dh -> unit = "ocaml_dh_fini"
 
-external ocaml_dh_gen_params : size:int -> gen:int -> dh_params = "ocaml_dh_gen_params"
-external ocaml_dh_gen_key : dh_params -> dh_key = "ocaml_dh_gen_key"
+external ocaml_dh_gen_params : size:int -> gen:int -> string * string = "ocaml_dh_gen_params"
+external ocaml_dh_params_of_string : string -> string * string = "ocaml_dh_params_of_string"
 
-external ocaml_dh_params_of_string : string -> dh_params = "ocaml_dh_params_of_string"
-
+external ocaml_dh_gen_key : dh_params -> string * string = "ocaml_dh_gen_key"
 external ocaml_dh_set_key : dh -> dh_key -> unit = "ocaml_dh_set_key"
 
 external ocaml_dh_compute : dh -> string -> string = "ocaml_dh_compute"
 
-let dh_gen_params (size:int) = ocaml_dh_gen_params size 2
+let dh_gen_params (size:int) =
+  let p, g = ocaml_dh_gen_params size 2 in
+  {
+    dh_p = bytes_of_string p;
+    dh_g = bytes_of_string g;
+    dh_q = None;
+    safe_prime = true
+  }
 
 let dh_gen_key (dh:dh_params)=
-  let dk = ocaml_dh_gen_key dh in
-  match dk.dh_private with
-  | Some sk -> dk
-  | None -> failwith "dh_gen_key returned an empty private key"
+  let pub, priv = ocaml_dh_gen_key dh in
+  {
+    dh_params = dh;
+    dh_public = bytes_of_string pub;
+    dh_private = Some (bytes_of_string priv)
+  }
 
 let dh_agreement (mypriv:dh_key) (opub:bytes) =
   let dh = ocaml_dh_new() in

@@ -674,7 +674,7 @@ CAMLprim value ocaml_rsa_gen_key(value mlsz, value mlexp) {
     RSA_free(rsa);
 
 #   ifdef DEBUG
-      printf("ocaml_rsa_gen_key: length(n)=%zd, length(e)=%zd, length(d)=%zd\n",
+      printf("ocaml_rsa_gen_key: length(n)=%zu, length(e)=%zu, length(d)=%zu\n",
           caml_string_length(n), caml_string_length(e), caml_string_length(d));
 #   endif
 
@@ -1339,12 +1339,11 @@ CAMLprim value ocaml_dh_fini(value mldh) {
 
 /* -------------------------------------------------------------------- */
 CAMLprim value ocaml_dh_gen_params(value size, value gen) {
-    DH *dh = NULL;
+    DH *dh = DH_new();
 
     CAMLparam1(size);
-    CAMLlocal3(p, g, mlparams);
+    CAMLlocal2(p, g);
 
-    // FIXME: [dh] is not a valid [DH] struct
     if (DH_generate_parameters_ex(dh, Int_val(size), Int_val(gen), NULL) != 1)
         caml_failwith("DH:genparams failed");
 
@@ -1354,25 +1353,23 @@ CAMLprim value ocaml_dh_gen_params(value size, value gen) {
     (void) BN_bn2bin(dh->p, (uint8_t*) String_val(p));
     (void) BN_bn2bin(dh->g, (uint8_t*) String_val(g));
 
-    // FIXME p, g not proper values of type [Platform.Bytes.bytes]
-    mlparams = DHParamsAlloc();
-    DHParams_set_p(mlparams, p);
-    DHParams_set_g(mlparams, g);
-    DHParams_set_q(mlparams, Val_none);
-    DHParams_set_safe(mlparams, Val_true);
+    CAMLlocal1(ret);
+    ret = caml_alloc_tuple(2);
+    Field(ret, 0) = p;
+    Field(ret, 1) = g;
 
     DH_free(dh);
 
-    CAMLreturn(mlparams);
+    CAMLreturn(ret);
 }
 
 /* -------------------------------------------------------------------- */
 CAMLprim value ocaml_dh_params_of_string(value pem) {
+    CAMLparam1(pem);
+    CAMLlocal2(mlp, mlg);
+
     BIO *bio = NULL;
     DH  *dh  = NULL;
-
-    CAMLparam1(pem);
-    CAMLlocal3(mlp, mlg, mlparams);
 
     if ((bio = BIO_new_mem_buf(String_val(pem), caml_string_length(pem))) == NULL)
         caml_failwith("DH:params_of_string");
@@ -1386,16 +1383,14 @@ CAMLprim value ocaml_dh_params_of_string(value pem) {
     (void) BN_bn2bin(dh->p, (uint8_t*) String_val(mlp));
     (void) BN_bn2bin(dh->g, (uint8_t*) String_val(mlg));
 
-    // FIXME: [mlp], [mlg] do not have type [Platform.Bytes.bytes]; the fields [dh_q]
-    // and [safe_prime] of the [mlparams] are not set.
-    mlparams = DHParamsAlloc();
-    DHParams_set_p(mlparams, mlp);
-    DHParams_set_g(mlparams, mlg);
-
     DH_free(dh);
     BIO_free(bio);
 
-    CAMLreturn(mlparams);
+    CAMLlocal1(ret);
+    ret = caml_alloc_tuple(2);
+    Field(ret, 0) = mlp;
+    Field(ret, 1) = mlg;
+    CAMLreturn(ret);
 }
 
 /* -------------------------------------------------------------------- */
@@ -1404,7 +1399,7 @@ CAMLprim value ocaml_dh_gen_key(value mlparams) {
 
     CAMLparam1(mlparams);
     CAMLlocal2(mlp, mlg);
-    CAMLlocal3(mlpub, mlprv, mlkey);
+    CAMLlocal2(mlpub, mlprv);
 
     if ((dh = DH_new()) == NULL)
         caml_failwith("DH:genkey: failed to create a DH structure");
@@ -1412,10 +1407,16 @@ CAMLprim value ocaml_dh_gen_key(value mlparams) {
     mlp = DHParams_p(mlparams);
     mlg = DHParams_g(mlparams);
 
-    // FIXME [mlp] is not a [string] but a [Platform.Bytes.bytes]; same for
-    // [mlg].
-    dh->p = BN_bin2bn((uint8_t*) String_val(mlp), caml_string_length(mlp), NULL);
-    dh->g = BN_bin2bn((uint8_t*) String_val(mlg), caml_string_length(mlg), NULL);
+    size_t mlp_len, mlg_len;
+    uint8_t* mlp_buf = buffer_of_platform_bytes(mlp, &mlp_len);
+    uint8_t* mlg_buf = buffer_of_platform_bytes(mlg, &mlg_len);
+    if (mlp_buf == NULL || mlg_buf == NULL) {
+      DH_free(dh);
+      caml_failwith("ocaml_dh_gen_key: invalid bytes");
+    }
+
+    dh->p = BN_bin2bn(mlp_buf, mlp_len, NULL);
+    dh->g = BN_bin2bn(mlg_buf, mlg_len, NULL);
 
     if (dh->p == NULL || dh->g == NULL) {
         DH_free(dh);
@@ -1433,28 +1434,26 @@ CAMLprim value ocaml_dh_gen_key(value mlparams) {
     (void) BN_bn2bin(dh->pub_key , (uint8_t*) String_val(mlpub));
     (void) BN_bn2bin(dh->priv_key, (uint8_t*) String_val(mlprv));
 
-    // FIXME [mlpub] and [mlprv] are not proper values of type
-    // [Platform.Bytes.bytes]
-    mlkey = DHKeyAlloc();
-    DHKey_set_params(mlkey, mlparams);
-    DHKey_set_pub   (mlkey, mlpub);
-    DHKey_set_prv   (mlkey, Val_some(mlprv));
-
     DH_free(dh);
 
-    CAMLreturn(mlkey);
+    CAMLlocal1(ret);
+    ret = caml_alloc_tuple(2);
+    Field(ret, 0) = mlpub;
+    Field(ret, 1) = mlprv;
+    CAMLreturn(ret);
 }
 
 /* -------------------------------------------------------------------- */
 CAMLprim value ocaml_dh_set_key(value mldh, value mlkey) {
+    CAMLparam2(mldh, mlkey);
+    CAMLlocal4(mlp, mlg, mlpub, mlprv);
+
     DH *dh = NULL;
     BIGNUM *p = NULL;
     BIGNUM *g = NULL;
     BIGNUM *pub = NULL;
     BIGNUM *prv = NULL;
-
-    CAMLparam2(mldh, mlkey);
-    CAMLlocal4(mlp, mlg, mlpub, mlprv);
+    const char* failure = "";
 
     if ((dh = DH_val(mldh)) == NULL)
         caml_failwith("DH has been disposed");
@@ -1469,26 +1468,41 @@ CAMLprim value ocaml_dh_set_key(value mldh, value mlkey) {
     mlpub = DHKey_pub(mlkey);
     mlprv = DHKey_prv(mlkey);
 
-    // FIXME [mlp] and [mlg] do not have type [string]
-    p = BN_bin2bn((uint8_t*) String_val(mlp), caml_string_length(mlp), NULL);
-    g = BN_bin2bn((uint8_t*) String_val(mlg), caml_string_length(mlg), NULL);
+    size_t mlp_len, mlg_len, mlpub_len, mlprv_len;
+    uint8_t* mlp_buf = buffer_of_platform_bytes(mlp, &mlp_len);
+    uint8_t* mlg_buf = buffer_of_platform_bytes(mlg, &mlg_len);
+    uint8_t* mlpub_buf = buffer_of_platform_bytes(mlpub, &mlpub_len);
+    uint8_t* mlprv_buf = NULL;
+    if (mlp_buf == NULL || mlg_buf == NULL || mlpub_buf == NULL) {
+      failure = "ocaml_dh_set_key: malformed bytes";
+      goto bailout;
+    }
 
-    // FIXME [mlpub] does not have type string
-    pub = BN_bin2bn((uint8_t*) String_val(mlpub), caml_string_length(mlpub), NULL);
+    p = BN_bin2bn(mlp_buf, mlp_len, NULL);
+    g = BN_bin2bn(mlg_buf, mlg_len, NULL);
+    pub = BN_bin2bn(mlpub_buf, mlpub_len, NULL);
 
     if (Is_block(mlprv)) {
         CAMLlocal1(prvdata);
 
         prvdata = Field(mlprv, 0);
-        // FIXME: [prvdata] does not have type [string]
-        prv = BN_bin2bn((uint8_t*) String_val(prvdata), caml_string_length(prvdata), NULL);
+        mlprv_buf = buffer_of_platform_bytes(prvdata, &mlprv_len);
+        if (mlprv_buf == NULL) {
+          failure = "ocaml_dh_set_key: malformed bytes";
+          goto bailout;
+        }
+        prv = BN_bin2bn(mlprv_buf, mlprv_len, NULL);
     }
 
-    if (p == NULL || g == NULL)
-        goto bailout;
+    if (p == NULL || g == NULL) {
+      failure = "cannot allocate internal structure for parameters";
+      goto bailout;
+    }
 
-    if (pub == NULL || (Is_block(mlprv) && prv == NULL))
-        goto bailout;
+    if (pub == NULL || (Is_block(mlprv) && prv == NULL)) {
+      failure = "cannot allocate internal structure for keys";
+      goto bailout;
+    }
 
     dh->p = p;
     dh->g = g;
@@ -1502,8 +1516,12 @@ CAMLprim value ocaml_dh_set_key(value mldh, value mlkey) {
     if (g   != NULL) BN_clear_free(g);
     if (pub != NULL) BN_clear_free(pub);
     if (prv != NULL) BN_clear_free(prv);
+    if (mlp_buf != NULL) free(mlp_buf);
+    if (mlg_buf != NULL) free(mlg_buf);
+    if (mlpub_buf != NULL) free(mlpub_buf);
+    if (mlprv_buf != NULL) free(mlprv_buf);
 
-    caml_failwith("cannot allocate internal structure for parameters/keys");
+    caml_failwith(failure);
 }
 
 /* -------------------------------------------------------------------- */
