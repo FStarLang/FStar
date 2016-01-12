@@ -14,7 +14,7 @@ let within_int16 (i:int) =
     min_value_int <= i
     && i <= max_value_int
 
-private type int16 =
+abstract type int16 =
   | Int16 : i:int{within_int16 i} -> int16
 
 val min_value : int16
@@ -29,8 +29,8 @@ let as_int (Int16 i) = i
 type nat16 = x:int16{Prims.op_GreaterThanOrEqual (as_int x) 0}
 
 //a ?+ b may overflow
-//must be marked opaque because the body has an intentional admit
-opaque val op_Question_Plus: i:int16
+//must be marked abstract because the body has an intentional admit
+abstract val op_Question_Plus: i:int16
               -> j:int16
               -> Tot (k:int16{within_int16 (as_int i + as_int j) ==> as_int k = as_int i + as_int j})
 let op_Question_Plus (Int16 i) (Int16 j) =
@@ -44,8 +44,8 @@ val op_Plus: i:int16
 let op_Plus (Int16 i) (Int16 j) = Int16 (i + j)
 
 //a ?- b may overflow
-//must be marked opaque because the body has an intentional admit
-opaque val op_Question_Subtraction: i:int16
+//must be marked abstract because the body has an intentional admit
+abstract val op_Question_Subtraction: i:int16
               -> j:int16
               -> Tot (k:int16{within_int16 (as_int i - as_int j) ==> as_int k = as_int i - as_int j})
 let op_Question_Subtraction (Int16 i) (Int16 j) =
@@ -59,8 +59,8 @@ val op_Subtraction: i:int16
 let op_Subtraction (Int16 i) (Int16 j) = Int16 (i - j)
 
 //a ?* b may overflow
-//must be marked opaque because the body has an intentional admit
-opaque val op_Question_Star:
+//must be marked abstract because the body has an intentional admit
+abstract val op_Question_Star:
                  i:int16
               -> j:int16
               -> Tot (k:int16{within_int16 (as_int i * as_int j) ==> as_int k = as_int i * as_int j})
@@ -75,8 +75,8 @@ val op_Star: i:int16
 let op_Star (Int16 i) (Int16 j) = Int16 (i * j)
 
 //When the dividend is negative, the semantics is platform dependent
-//must be marked opaque because the body has an intentional admit
-opaque val op_Question_Slash: i:int16
+//must be marked abstract because the body has an intentional admit
+abstract val op_Question_Slash: i:int16
                            -> j:int16{as_int j <> 0}
                            -> Tot (k:int16{as_int i >= 0 ==> as_int k = as_int i / as_int j})
 let op_Question_Slash (Int16 i) (Int16 j) =
@@ -91,8 +91,8 @@ val op_Slash: i:int16{as_int i >= 0}
 let op_Slash (Int16 i) (Int16 j) = Int16 (i / j)
 
 //a ?% b can overflow
-//must be marked opaque because the body has an intentional admit
-opaque val op_Question_Percent:
+//must be marked abstract because the body has an intentional admit
+abstract val op_Question_Percent:
                 i:int16
              -> j:int16{as_int j <> 0}
              -> Tot (k:int16{not(as_int i = min_value_int && as_int j = -1)
@@ -112,8 +112,8 @@ val op_Percent: i:int16
 let op_Percent (Int16 i) (Int16 j) = Int16 (i % j)
 
 //?- a    can overflow
-//must be marked opaque because the body has an intentional admit
-opaque val op_Question_Minus: i:int16
+//must be marked abstract because the body has an intentional admit
+abstract val op_Question_Minus: i:int16
                    -> Tot int16
 let op_Question_Minus (Int16 i) =
   if i = min_value_int

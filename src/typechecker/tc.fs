@@ -1128,7 +1128,11 @@ and tc_eqn scrutinee env branch
             | Tm_constant Const_unit -> []
             | Tm_constant _ -> [mk_Tm_app Util.teq [arg scrutinee_tm; arg pat_exp] None scrutinee_tm.pos]
             | Tm_uinst _
-            | Tm_fvar _ -> discriminate scrutinee_tm (head_constructor pat_exp)
+            | Tm_fvar _ -> 
+              let f = head_constructor pat_exp in
+              if not (Env.is_datacon env f.v)
+              then [] //A non-pattern sub-term, typically a type constructor unified via a dot-pattern
+              else discriminate scrutinee_tm (head_constructor pat_exp)
             | Tm_app(head, args) -> 
                 let f = head_constructor head in
                 if not (Env.is_datacon env f.v) //A non-pattern sub-term of pat_exp

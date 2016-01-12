@@ -1,8 +1,7 @@
-(*--build-config
-  options: --admit_fsi FStar.Set;
-  other-files: FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst
-  --*)
-
+(* (\*--build-config *)
+(*   options: --admit_fsi FStar.Set; *)
+(*   other-files: FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst *)
+(*   --*\) *)
 module FStar.Int8
 val min_value_int : int
 let min_value_int = -128
@@ -14,7 +13,7 @@ let within_int8 (i:int) =
     min_value_int <= i
     && i <= max_value_int
 
-private type int8 =
+abstract type int8 =
   | Int8 : i:int{within_int8 i} -> int8
 
 val min_value : int8
