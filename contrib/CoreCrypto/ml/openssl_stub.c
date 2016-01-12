@@ -42,8 +42,8 @@ static value Val_some(value mlvalue) {
 // This function takes an ML value of type [Platform.Bytes.bytes]; if the value
 // is well-formed, then the function allocates and returns a C-style buffer
 // containing the sequence of bytes describes by [mlbytes], whose length is
-// [out_length]. If [mlbytes] is ill-formed, the function returns [NULL] and
-// [out_length] is unspecified.
+// written into [out_length]. If [mlbytes] is ill-formed, the function returns
+// [NULL] and [out_length] is unspecified.
 static uint8_t* buffer_of_platform_bytes(value mlbytes, size_t* out_length) {
   CAMLparam1(mlbytes);
   CAMLlocal1(mllist);
@@ -87,6 +87,12 @@ static uint8_t* buffer_of_platform_bytes(value mlbytes, size_t* out_length) {
 }
 
 /* -------------------------------------------------------------------- */
+
+CAMLprim value ocaml_rand_poll(value unit) {
+  CAMLparam1(unit);
+  RAND_poll();
+  CAMLreturn(Val_unit);
+}
 
 CAMLprim value ocaml_err_load_crypto_strings(value unit) {
   CAMLparam1(unit);
@@ -1010,12 +1016,11 @@ CAMLprim value ocaml_dsa_fini(value mldsa) {
 
 /* -------------------------------------------------------------------- */
 CAMLprim value ocaml_dsa_gen_params(value size) {
-    DSA *dsa = NULL;
+    DSA* dsa = DSA_new();
 
     CAMLparam1(size);
-    CAMLlocal4(p, q, g, mlparams);
+    CAMLlocal3(p, q, g);
 
-    // FIXME: [dsa] does not pointo a valid [DSA] structure at this stage
     if (DSA_generate_parameters_ex(dsa, Int_val(size), NULL, 0, NULL, NULL, NULL) != 1)
         caml_failwith("DSA:genparams failed");
 
@@ -1027,15 +1032,15 @@ CAMLprim value ocaml_dsa_gen_params(value size) {
     (void) BN_bn2bin(dsa->q, (uint8_t*) String_val(q));
     (void) BN_bn2bin(dsa->g, (uint8_t*) String_val(g));
 
-    // FIXME this does not build proper values of type [Platform.Bytes.bytes]
-    mlparams = DSAParamsAlloc();
-    DSAParams_set_p(mlparams, p);
-    DSAParams_set_q(mlparams, q);
-    DSAParams_set_g(mlparams, g);
+    CAMLlocal1(ret);
+    ret = caml_alloc_tuple(3);
+    Field(ret, 0) = p;
+    Field(ret, 1) = q;
+    Field(ret, 2) = g;
 
     DSA_free(dsa);
 
-    CAMLreturn(mlparams);
+    CAMLreturn(ret);
 }
 
 /* -------------------------------------------------------------------- */
@@ -1044,7 +1049,9 @@ CAMLprim value ocaml_dsa_gen_key(value mlparams) {
 
     CAMLparam1(mlparams);
     CAMLlocal3(mlp, mlq, mlg);
-    CAMLlocal3(mlpub, mlprv, mlkey);
+    CAMLlocal2(mlpub, mlprv);
+
+    const char* failure = "";
 
     if ((dsa = DSA_new()) == NULL)
         caml_failwith("DSA:genkey: failed to create a DSA structure");
@@ -1053,19 +1060,27 @@ CAMLprim value ocaml_dsa_gen_key(value mlparams) {
     mlq = DSAParams_q(mlparams);
     mlg = DSAParams_g(mlparams);
 
-    // FIXME
-    dsa->p = BN_bin2bn((uint8_t*) String_val(mlp), caml_string_length(mlp), NULL);
-    dsa->q = BN_bin2bn((uint8_t*) String_val(mlq), caml_string_length(mlq), NULL);
-    dsa->g = BN_bin2bn((uint8_t*) String_val(mlg), caml_string_length(mlg), NULL);
+    size_t mlp_len = 0, mlq_len = 0, mlg_len = 0;
+    uint8_t* mlp_buf = buffer_of_platform_bytes(mlp, &mlp_len);
+    uint8_t* mlq_buf = buffer_of_platform_bytes(mlq, &mlq_len);
+    uint8_t* mlg_buf = buffer_of_platform_bytes(mlg, &mlg_len);
+    if (mlp_buf == NULL || mlq_buf == NULL || mlg_buf == NULL) {
+      failure = "ocaml_dsa_gen_key: invalid Platform.Bytes.bytes";
+      goto bailout;
+    }
+
+    dsa->p = BN_bin2bn(mlp_buf, mlp_len, NULL);
+    dsa->q = BN_bin2bn(mlq_buf, mlq_len, NULL);
+    dsa->g = BN_bin2bn(mlg_buf, mlg_len, NULL);
 
     if (dsa->p == NULL || dsa->q == NULL || dsa->g == NULL) {
-        DSA_free(dsa);
-        caml_failwith("DSA:genkey: failed dup DSA parameters");
+      failure = "DSA:genkey: failed dup DSA parameters";
+      goto bailout;
     }
 
     if (DSA_generate_key(dsa) == 0) {
-        DSA_free(dsa);
-        caml_failwith("DSA:genkey: DSA_generate_key failed");
+      failure = "DSA:genkey: DSA_generate_key failed";
+      goto bailout;
     }
 
     mlpub = caml_alloc_string(BN_num_bytes(dsa->pub_key));
@@ -1074,13 +1089,21 @@ CAMLprim value ocaml_dsa_gen_key(value mlparams) {
     (void) BN_bn2bin(dsa->pub_key , (uint8_t*) String_val(mlpub));
     (void) BN_bn2bin(dsa->priv_key, (uint8_t*) String_val(mlprv));
 
-    // FIXME this does not build proper values of type [Platform.Bytes.bytes]
-    mlkey = DSAKeyAlloc();
-    DSAKey_set_params(mlkey, mlparams);
-    DSAKey_set_pub   (mlkey, mlpub);
-    DSAKey_set_prv   (mlkey, Val_some(mlprv));
+    CAMLlocal1(ret);
+    ret = caml_alloc_tuple(2);
+    Field(ret, 0) = mlpub;
+    Field(ret, 1) = mlprv;
 
-    CAMLreturn(mlkey);
+    CAMLreturn(ret);
+
+bailout:
+    if (mlp_buf != NULL) free(mlp_buf);
+    if (mlq_buf != NULL) free(mlq_buf);
+    if (mlg_buf != NULL) free(mlg_buf);
+    // Free the [dsa] structure _and its components_ (the BIGNUM's).
+    DSA_free(dsa);
+
+    caml_failwith(failure);
 }
 
 /* -------------------------------------------------------------------- */
@@ -1095,9 +1118,10 @@ CAMLprim value ocaml_dsa_set_key(value mldsa, value mlkey) {
     CAMLparam2(mldsa, mlkey);
     CAMLlocal5(mlp, mlq, mlg, mlpub, mlprv);
 
-    if ((dsa = DSA_val(mldsa)) == NULL) {
+    const char* failure = "";
+
+    if ((dsa = DSA_val(mldsa)) == NULL)
         caml_failwith("DSA has been disposed");
-    }
 
     if (dsa->p        != NULL) BN_clear_free(dsa->p);
     if (dsa->q        != NULL) BN_clear_free(dsa->q);
@@ -1111,26 +1135,46 @@ CAMLprim value ocaml_dsa_set_key(value mldsa, value mlkey) {
     mlpub = DSAKey_pub(mlkey);
     mlprv = DSAKey_prv(mlkey);
 
-    // FIXME these are not [string]s but [Platform.Bytes.bytes]s, so the use of
-    // [String_val] is incorrect
-    p = BN_bin2bn((uint8_t*) String_val(mlp), caml_string_length(mlp), NULL);
-    q = BN_bin2bn((uint8_t*) String_val(mlq), caml_string_length(mlq), NULL);
-    g = BN_bin2bn((uint8_t*) String_val(mlg), caml_string_length(mlg), NULL);
+    size_t mlp_len = 0, mlq_len = 0, mlg_len = 0, mlpub_len = 0, mlprv_len = 0;
+    uint8_t* mlp_buf = buffer_of_platform_bytes(mlp, &mlp_len);
+    uint8_t* mlq_buf = buffer_of_platform_bytes(mlq, &mlq_len);
+    uint8_t* mlg_buf = buffer_of_platform_bytes(mlg, &mlg_len);
+    uint8_t* mlpub_buf = buffer_of_platform_bytes(mlpub, &mlpub_len);
+    uint8_t* mlprv_buf = NULL;
+    if (mlp_buf == NULL || mlq_buf == NULL || mlg_buf == NULL || mlpub_buf == NULL) {
+      failure = "ocaml_dsa_set_key: invalid Platform.Bytes.byte";
+      goto bailout;
+    }
 
-    pub = BN_bin2bn((uint8_t*) String_val(mlpub), caml_string_length(mlpub), NULL);
+    p = BN_bin2bn(mlp_buf, mlp_len, NULL);
+    q = BN_bin2bn(mlq_buf, mlq_len, NULL);
+    g = BN_bin2bn(mlg_buf, mlg_len, NULL);
+    pub = BN_bin2bn(mlpub_buf, mlpub_len, NULL);
 
     if (Is_block(mlprv)) {
+#       ifdef DEBUG
+          printf("ocaml_dsa_set_key: got a private key\n");
+#       endif
         CAMLlocal1(prvdata);
 
         prvdata = Field(mlprv, 0);
-        prv = BN_bin2bn((uint8_t*) String_val(prvdata), caml_string_length(prvdata), NULL);
+        mlprv_buf = buffer_of_platform_bytes(prvdata, &mlprv_len);
+        if (mlprv_buf == NULL) {
+          failure = "ocaml_dsa_set_key: invalid Platform.Bytes.byte";
+          goto bailout;
+        }
+        prv = BN_bin2bn(mlprv_buf, mlprv_len, NULL);
     }
 
-    if (p == NULL || q == NULL || g == NULL)
+    if (p == NULL || q == NULL || g == NULL) {
+        failure = "ocaml_dsa_set_key: cannot allocate internal structure for parameters";
         goto bailout;
+    }
 
-    if (pub == NULL || (Is_block(mlprv) && prv == NULL))
+    if (pub == NULL || (Is_block(mlprv) && prv == NULL)) {
+        failure = "ocaml_dsa_set_key: cannot allocate internal structure for keys";
         goto bailout;
+    }
 
     dsa->p = p;
     dsa->q = q;
@@ -1146,8 +1190,14 @@ CAMLprim value ocaml_dsa_set_key(value mldsa, value mlkey) {
     if (g   != NULL) BN_clear_free(g);
     if (pub != NULL) BN_clear_free(pub);
     if (prv != NULL) BN_clear_free(prv);
+    if (mlp_buf != NULL) free(mlp_buf);
+    if (mlq_buf != NULL) free(mlq_buf);
+    if (mlg_buf != NULL) free(mlg_buf);
+    if (mlpub_buf != NULL) free(mlpub_buf);
+    if (mlprv_buf != NULL) free(mlprv_buf);
+    DSA_free(dsa);
 
-    caml_failwith("cannot allocate internal structure for parameters/keys");
+    caml_failwith(failure);
 }
 
 /* -------------------------------------------------------------------- */
@@ -1155,14 +1205,13 @@ CAMLprim value ocaml_dsa_sign(value mldsa, value data) {
     DSA *dsa = NULL;
     size_t olen = 0;
 
-
     CAMLparam2(mldsa, data);
     CAMLlocal1(output);
 
     if ((dsa = DSA_val(mldsa)) == NULL)
         caml_failwith("DSA has been disposed");
 
-    if (dsa->pub_key == NULL)
+    if (dsa->pub_key == NULL || dsa->priv_key == NULL)
         caml_failwith("DSA keys not set");
 
     output = caml_alloc_string(DSA_size(dsa));
@@ -1172,8 +1221,11 @@ CAMLprim value ocaml_dsa_sign(value mldsa, value data) {
                  (uint8_t*) String_val(data),
                  caml_string_length(data),
                  (uint8_t*) String_val(output),
-                 (unsigned*) &olen, dsa) == 0)
-        caml_failwith("DSA:sign: DSA_sign failure");
+                 (unsigned*) &olen, dsa) == 0) {
+      unsigned long err = ERR_get_error();
+      char* err_string = ERR_error_string(err, NULL);
+      caml_failwith(err_string);
+    }
 
     if (olen != caml_string_length(output)) {
         CAMLlocal1(sig);
@@ -1206,12 +1258,11 @@ CAMLprim value ocaml_dsa_verify(value mldsa, value data, value sig) {
                     caml_string_length(sig),
                     dsa);
 
-#if 0                          /* Will failed on invalid ASN.1 data */
-    if (rr < 0) {
-        caml_failwith("DSA:verify: DSA_verify failed");
-        goto bailout;
+    if (rr == -1) {
+      unsigned long err = ERR_get_error();
+      char* err_string = ERR_error_string(err, NULL);
+      caml_failwith(err_string);
     }
-#endif
 
     CAMLreturn((rr > 0) ? Val_true : Val_false);
 }

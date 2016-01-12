@@ -1,3 +1,7 @@
+(* The original "Bytes" module from OCaml. *)
+module B = Bytes
+
+(* Things brings in [Platform.Bytes] into scope... *)
 open CoreCrypto
 open Platform
 
@@ -33,11 +37,11 @@ let hex_to_string s =
   if n mod 2 <> 0 then
     failwith "hex_to_string: invalid length"
   else
-    let res = String.create (n/2) in
+    let res = B.create (n/2) in
     let rec aux i =
       if i >= n then ()
       else (
-        String.set res (i/2) (hex_to_char s.[i] s.[i+1]);
+        B.set res (i/2) (hex_to_char s.[i] s.[i+1]);
         aux (i+2)
       )
     in
@@ -637,6 +641,14 @@ module TestEcc = struct
 
 end
 
+let bytes1, bytes2, bytes3 =
+  let chunk1 = bytes_of_string "Lorem ipsum dolor sit amet, consectetur adipiscing elit.  Integer vitae tincidunt enim. Pellentesque luctus, turpis sed lobortis ullamcorper, orci nisi commodo sem, ut sagittis augue elit vel ipsum. Aenean aliquam eros est, sed molestie ex aliquet sed. Vest" in
+  let chunk2 = bytes_of_string "bulum in massa mauris. Phasellus non arcu pulvinar, elementum sapien eu, congue dolor. Fusce malesuada nisl enim, non accumsan mi gravida aliquam. Sed ornare augue eget quam pretium, vitae sodales urna hendrerit.  Curabitur mi ante, fermentum eget lacus ut," in
+  let chunk = Platform.Bytes.(chunk1 @| chunk2) in
+  let _, chunk = Platform.Bytes.split chunk 128 in
+  let chunk, _ = Platform.Bytes.split chunk (256 - 11) in
+  chunk, bytes_of_string "012345678901234567890123456789012345", bytes_of_string "coucou"
+
 module TestRsa = struct
 
   let roundtrip original_bytes =
@@ -659,17 +671,26 @@ module TestRsa = struct
     end
 
   let test () =
-    let chunk1 = bytes_of_string "Lorem ipsum dolor sit amet, consectetur adipiscing elit.  Integer vitae tincidunt enim. Pellentesque luctus, turpis sed lobortis ullamcorper, orci nisi commodo sem, ut sagittis augue elit vel ipsum. Aenean aliquam eros est, sed molestie ex aliquet sed. Vest" in
-    let chunk2 = bytes_of_string "bulum in massa mauris. Phasellus non arcu pulvinar, elementum sapien eu, congue dolor. Fusce malesuada nisl enim, non accumsan mi gravida aliquam. Sed ornare augue eget quam pretium, vitae sodales urna hendrerit.  Curabitur mi ante, fermentum eget lacus ut," in
-    let chunk = Platform.Bytes.(chunk1 @| chunk2) in
-    let _, chunk = Platform.Bytes.split chunk 128 in
-    let chunk, _ = Platform.Bytes.split chunk (256 - 11) in
-    roundtrip chunk;
-    roundtrip (bytes_of_string "012345678901234567890123456789012345");
-    roundtrip (bytes_of_string "coucou")
-
+    List.iter roundtrip [bytes1; bytes2; bytes3]
 
 end
+
+module TestDsa = struct
+
+  let check original_bytes =
+    let private_key = dsa_gen_key 2048 in
+    let public_key = { private_key with dsa_private = None } in
+    let sig_bytes = dsa_sign private_key original_bytes in
+    if not (dsa_verify public_key original_bytes sig_bytes) then begin
+      Printf.printf "dsa_sign/dsa_verify: check failed\n";
+      exit 253
+    end
+
+  let test () =
+    List.iter check [bytes3; bytes2; bytes1]
+
+end
+
 
 let run_test test_vectors print_test_vector test_vector =
   let passed = ref 0 in
@@ -691,5 +712,5 @@ let _ =
   TestHmac.(run_test test_cases print_test_case test);
   TestHash.(run_test tests print_test test);
   TestEcc.(run_test tests print_test test);
-  TestRsa.test ()
-
+  TestRsa.test ();
+  TestDsa.test ()

@@ -10,8 +10,14 @@ type bytes = Platform.Bytes.bytes
 let string_of_bytes b = Platform.Bytes.get_cbytes b
 let bytes_of_string s = Platform.Bytes.abytes s
 
-(* SUPPORTED ALGORITHMS (subset of OpenSSL) *)
 
+(* -------------------------------------------------------------------- *)
+
+(** Hashing *)
+
+(** We support a subset of the algorithms from OpenSSL. Note: when changing
+ * these types, please only append new constructors *at the end* (otherwise, C
+ * functions such as [RSADigest_val] will most likely break). *)
 type hash_alg = MD5 | SHA1 | SHA224 | SHA256 | SHA384 | SHA512
 type sig_alg = RSASIG | DSA | ECDSA | RSAPSS
 type block_cipher = AES_128_CBC | AES_256_CBC | TDES_EDE_CBC
@@ -52,35 +58,6 @@ let hashSize = function
   | SHA384 -> 48
   | SHA512 -> 64
 
-type rsa_key = {
-  rsa_mod     : bytes;
-  rsa_pub_exp : bytes;
-  rsa_prv_exp : bytes option;
-}
-type dsa_params = {
-  dsa_p : bytes;
-  dsa_q : bytes;
-  dsa_g : bytes;
-}
-type dsa_key = {
-  dsa_params  : dsa_params;
-  dsa_public  : bytes;
-  dsa_private : bytes option;
-}
-type dh_params = {
-  dh_p : bytes;
-  dh_g : bytes;
-  dh_q : bytes option;
-  safe_prime : bool;
-}
-type dh_key = {
-  dh_params  : dh_params;
-  dh_public  : bytes;
-  dh_private : bytes option;
-}
-
-(* -------------------------------------------------------------------- *)
-(* HASHING *)
 type md
 type md_ctx
 external ocaml_EVP_MD_md5 : unit -> md = "ocaml_EVP_MD_md5"
@@ -97,29 +74,29 @@ external ocaml_EVP_MD_CTX_update : md_ctx -> string -> unit = "ocaml_EVP_MD_CTX_
 external ocaml_EVP_MD_CTX_final  : md_ctx -> string = "ocaml_EVP_MD_CTX_final"
 
 let md_of_hash_alg h = match h with
-	| MD5 -> ocaml_EVP_MD_md5()
-	| SHA1 -> ocaml_EVP_MD_sha1()
-	| SHA224 -> ocaml_EVP_MD_sha224()
-	| SHA256 -> ocaml_EVP_MD_sha256()
-	| SHA384 -> ocaml_EVP_MD_sha384()
-	| SHA512 -> ocaml_EVP_MD_sha512()
+  | MD5 -> ocaml_EVP_MD_md5()
+  | SHA1 -> ocaml_EVP_MD_sha1()
+  | SHA224 -> ocaml_EVP_MD_sha224()
+  | SHA256 -> ocaml_EVP_MD_sha256()
+  | SHA384 -> ocaml_EVP_MD_sha384()
+  | SHA512 -> ocaml_EVP_MD_sha512()
 
 let hash (h:hash_alg) (b:bytes) =
-	let md = md_of_hash_alg h in
-	let ctx = ocaml_EVP_MD_CTX_create(md) in
-	ocaml_EVP_MD_CTX_update ctx (string_of_bytes b);
-	let h = ocaml_EVP_MD_CTX_final(ctx) in
-	ocaml_EVP_MD_CTX_fini(ctx);
-	bytes_of_string h
+  let md = md_of_hash_alg h in
+  let ctx = ocaml_EVP_MD_CTX_create(md) in
+  ocaml_EVP_MD_CTX_update ctx (string_of_bytes b);
+  let h = ocaml_EVP_MD_CTX_final(ctx) in
+  ocaml_EVP_MD_CTX_fini(ctx);
+  bytes_of_string h
 
 (* -------------------------------------------------------------------- *)
 (* HMAC *)
 external ocaml_EVP_HMAC : md -> key:string -> data:string -> string = "ocaml_EVP_HMAC"
 
 let hmac (h:hash_alg) (k:bytes) (d:bytes) =
-	let md = md_of_hash_alg h in
-	let h = ocaml_EVP_HMAC md (string_of_bytes k) (string_of_bytes d) in
-	bytes_of_string h
+  let md = md_of_hash_alg h in
+  let h = ocaml_EVP_HMAC md (string_of_bytes k) (string_of_bytes d) in
+  bytes_of_string h
 
 (* -------------------------------------------------------------------- *)
 type cipher
@@ -155,27 +132,27 @@ external ocaml_EVP_CIPHER_CTX_set_tag : cipher_ctx -> string -> unit = "ocaml_EV
 external ocaml_EVP_CIPHER_CTX_get_tag : cipher_ctx -> string = "ocaml_EVP_CIPHER_CTX_get_tag"
 
 let cipher_of_block_cipher (c:block_cipher) = match c with
-	| AES_128_CBC -> ocaml_EVP_CIPHER_aes_128_cbc()
-	| AES_256_CBC -> ocaml_EVP_CIPHER_aes_256_cbc()
-	| TDES_EDE_CBC -> ocaml_EVP_CIPHER_des_ede3_cbc()
+  | AES_128_CBC -> ocaml_EVP_CIPHER_aes_128_cbc()
+  | AES_256_CBC -> ocaml_EVP_CIPHER_aes_256_cbc()
+  | TDES_EDE_CBC -> ocaml_EVP_CIPHER_des_ede3_cbc()
 
 let cipher_of_stream_cipher (c:stream_cipher) = match c with
-	| RC4_128 -> ocaml_EVP_CIPHER_rc4()
+  | RC4_128 -> ocaml_EVP_CIPHER_rc4()
 
 let cipher_of_aead_cipher (c:aead_cipher) = match c with
-	| AES_128_GCM ->
-            ocaml_EVP_CIPHER_aes_128_gcm()
-	| AES_256_GCM ->
-            ocaml_EVP_CIPHER_aes_256_gcm()
+  | AES_128_GCM ->
+      ocaml_EVP_CIPHER_aes_128_gcm()
+  | AES_256_GCM ->
+      ocaml_EVP_CIPHER_aes_256_gcm()
 
 let block_encrypt (c:block_cipher) (k:bytes) (iv:bytes) (d:bytes) =
-	let c = cipher_of_block_cipher c in
-	let ctx = ocaml_EVP_CIPHER_CTX_create c true in
-	ocaml_EVP_CIPHER_CTX_set_key ctx (string_of_bytes k);
-	ocaml_EVP_CIPHER_CTX_set_iv ctx (string_of_bytes iv);
-	let e = ocaml_EVP_CIPHER_CTX_process ctx (string_of_bytes d) in
-	ocaml_EVP_CIPHER_CTX_fini ctx;
-	bytes_of_string e
+  let c = cipher_of_block_cipher c in
+  let ctx = ocaml_EVP_CIPHER_CTX_create c true in
+  ocaml_EVP_CIPHER_CTX_set_key ctx (string_of_bytes k);
+  ocaml_EVP_CIPHER_CTX_set_iv ctx (string_of_bytes iv);
+  let e = ocaml_EVP_CIPHER_CTX_process ctx (string_of_bytes d) in
+  ocaml_EVP_CIPHER_CTX_fini ctx;
+  bytes_of_string e
 
 let block_decrypt (c:block_cipher) (k:bytes) (iv:bytes) (d:bytes) =
   let c = cipher_of_block_cipher c in
@@ -206,11 +183,8 @@ let aead_decrypt (c:aead_cipher) (k:bytes) (iv:bytes) (ad:bytes) (d:bytes) =
   ocaml_EVP_CIPHER_CTX_set_additional_data ctx (string_of_bytes ad);
   let e = ocaml_EVP_CIPHER_CTX_process ctx (string_of_bytes d) in
   ocaml_EVP_CIPHER_CTX_set_tag ctx (string_of_bytes t);
-  try (
-    ocaml_EVP_CIPHER_CTX_fini ctx;
-    Some (bytes_of_string e)
-  )
-  with _ -> None
+  ocaml_EVP_CIPHER_CTX_fini ctx;
+  Some (bytes_of_string e)
 
 let stream_encryptor (c:stream_cipher) (k:bytes) =
   let c = cipher_of_stream_cipher c in
@@ -242,6 +216,12 @@ let random i =
 
 (* -------------------------------------------------------------------- *)
 type rsa
+
+type rsa_key = {
+  rsa_mod     : bytes;
+  rsa_pub_exp : bytes;
+  rsa_prv_exp : bytes option;
+}
 
 external ocaml_rsa_new : unit -> rsa = "ocaml_rsa_new"
 external ocaml_rsa_fini   : rsa -> unit = "ocaml_rsa_fini"
@@ -297,11 +277,22 @@ let rsa_verify (h:hash_alg option) (sk:rsa_key) (data:bytes) (sign:bytes) =
 (* -------------------------------------------------------------------- *)
 type dsa
 
+type dsa_params = {
+  dsa_p : bytes;
+  dsa_q : bytes;
+  dsa_g : bytes;
+}
+type dsa_key = {
+  dsa_params  : dsa_params;
+  dsa_public  : bytes;
+  dsa_private : bytes option;
+}
+
 external ocaml_dsa_new : unit -> dsa = "ocaml_dsa_new"
 external ocaml_dsa_fini   : dsa -> unit = "ocaml_dsa_fini"
 
-external ocaml_dsa_gen_params : int -> dsa_params = "ocaml_dsa_gen_params"
-external ocaml_dsa_gen_key : dsa_params -> dsa_key = "ocaml_dsa_gen_key"
+external ocaml_dsa_gen_params : int -> string * string * string = "ocaml_dsa_gen_params"
+external ocaml_dsa_gen_key : dsa_params -> string * string = "ocaml_dsa_gen_key"
 
 external ocaml_dsa_set_key : dsa -> dsa_key -> unit = "ocaml_dsa_set_key"
 
@@ -309,11 +300,18 @@ external ocaml_dsa_sign : dsa -> string -> string = "ocaml_dsa_sign"
 external ocaml_dsa_verify : dsa -> data:string -> sig_:string -> bool = "ocaml_dsa_verify"
 
 let dsa_gen_key (n:int) =
-  let dp = ocaml_dsa_gen_params n in
-  let dk = ocaml_dsa_gen_key dp in
-  match dk.dsa_private with
-  | Some sk -> dk
-  | None -> failwith "dsa_gen_key returned an empty private key"
+  let p, q, g = ocaml_dsa_gen_params n in
+  let dp = {
+    dsa_p = bytes_of_string p;
+    dsa_q = bytes_of_string q;
+    dsa_g = bytes_of_string g
+  } in
+  let dsa_public, dsa_private = ocaml_dsa_gen_key dp in
+  {
+    dsa_params = dp;
+    dsa_public = bytes_of_string dsa_public;
+    dsa_private = Some (bytes_of_string dsa_private)
+  }
 
 let dsa_sign (k:dsa_key) (d:bytes) =
   let dsa = ocaml_dsa_new() in
@@ -331,6 +329,19 @@ let dsa_verify (k:dsa_key) (d:bytes) (s:bytes) =
 
 (* -------------------------------------------------------------------- *)
 type dh
+
+type dh_params = {
+  dh_p : bytes;
+  dh_g : bytes;
+  dh_q : bytes option;
+  safe_prime : bool;
+}
+
+type dh_key = {
+  dh_params  : dh_params;
+  dh_public  : bytes;
+  dh_private : bytes option;
+}
 
 external ocaml_dh_new : unit -> dh = "ocaml_dh_new"
 external ocaml_dh_fini   : dh -> unit = "ocaml_dh_fini"
@@ -459,6 +470,8 @@ let ec_gen_key params =
   }
 
 external ocaml_err_load_crypto_strings: unit -> unit = "ocaml_err_load_crypto_strings"
+external ocaml_rand_poll: unit -> unit = "ocaml_rand_poll"
 
 let _ =
+  ocaml_rand_poll ();
   ocaml_err_load_crypto_strings ()
