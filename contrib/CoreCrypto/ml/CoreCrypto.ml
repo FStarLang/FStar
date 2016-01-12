@@ -389,7 +389,7 @@ type ec_point = { ecx : bytes; ecy : bytes; }
 
 type ec_key = {
      ec_params : ec_params;
-     ec_point : ec_point;
+     ec_point : ec_point; (* a.k.a. the public key *)
      ec_priv : bytes option;
 }
 
@@ -418,6 +418,11 @@ let ssl_name_of_curve = function
 let ec_group_new curve =
   ocaml_ec_group_new_by_curve_name (ssl_name_of_curve curve)
 
+let ssl_group_of_params params =
+  let g = ec_group_new params.curve in
+  ocaml_ec_group_set_point_conversion_form g params.point_compression;
+  g
+
 
 type ssl_ec_point
 
@@ -431,17 +436,18 @@ external ocaml_ec_point_get_affine_coordinates_GFp:
 external ocaml_ec_point_is_on_curve: ssl_ec_group -> ssl_ec_point -> bool =
   "ocaml_ec_point_is_on_curve"
 
-let ec_point_serialize ecp =
-  failwith "Not implemented"
-
-let ec_is_on_curve params { ecx; ecy } =
-  let g = ec_group_new params.curve in
-  ocaml_ec_group_set_point_conversion_form g params.point_compression;
+let ssl_point_of_point params { ecx; ecy } =
+  let g = ssl_group_of_params params in
   let p = ocaml_ec_point_new g in
   ocaml_ec_point_set_affine_coordinates_GFp g p (string_of_bytes ecx) (string_of_bytes ecy);
+  p
+
+let ec_is_on_curve params point =
+  let g = ssl_group_of_params params in
+  let p = ssl_point_of_point params point in
   ocaml_ec_point_is_on_curve g p
 
-let ecdh_agreement key point =
+let ec_point_serialize ecp =
   failwith "Not implemented"
 
 let ecdsa_sign ha key bytes =
@@ -461,13 +467,24 @@ external ocaml_ec_key_get0_public_key: ssl_ec_key -> ssl_ec_point =
   "ocaml_ec_key_get0_public_key"
 external ocaml_ec_key_get0_private_key: ssl_ec_key -> string =
   "ocaml_ec_key_get0_private_key"
+external ocaml_ec_key_set_public_key: ssl_ec_key -> ssl_ec_point -> unit =
+  "ocaml_ec_key_set_public_key"
+external ocaml_ec_key_set_private_key: ssl_ec_key -> string -> unit =
+  "ocaml_ec_key_set_private_key"
 
 let ec_key_new curve =
   ocaml_ec_key_new_by_curve_name (ssl_name_of_curve curve)
 
-let ec_gen_key params =
+let ssl_key_of_key key =
+  let ssl_key = ec_key_new key.ec_params.curve in
+  ocaml_ec_key_set_public_key ssl_key (ssl_point_of_point key.ec_params key.ec_point);
+  if key.ec_priv <> None then
+    ocaml_ec_key_set_private_key ssl_key (string_of_bytes (Option.must key.ec_priv));
+  ssl_key
+
+let ec_gen_key (params: ec_params): ec_key =
   let k = ec_key_new params.curve in
-  let g = ec_group_new params.curve in
+  let g = ssl_group_of_params params in
   ocaml_ec_key_generate k;
   let pub_point = ocaml_ec_key_get0_public_key k in
   let ecx, ecy = ocaml_ec_point_get_affine_coordinates_GFp g pub_point in
@@ -476,6 +493,19 @@ let ec_gen_key params =
     ec_point = { ecx = bytes_of_string ecx; ecy = bytes_of_string ecy };
     ec_priv = Some (bytes_of_string priv)
   }
+
+
+external ocaml_ecdh_agreement: ssl_ec_key -> ssl_ec_group -> ssl_ec_point -> string =
+  "ocaml_ecdh_agreement"
+
+let ecdh_agreement (key: ec_key) (point: ec_point) =
+  let ssl_key = ssl_key_of_key key in
+  let ssl_point = ssl_point_of_point key.ec_params point in
+  let ssl_group = ssl_group_of_params key.ec_params in
+  bytes_of_string (ocaml_ecdh_agreement ssl_key ssl_group ssl_point)
+
+
+(* -------------------------------------------------------------------------- *)
 
 external ocaml_err_load_crypto_strings: unit -> unit = "ocaml_err_load_crypto_strings"
 external ocaml_rand_poll: unit -> unit = "ocaml_rand_poll"

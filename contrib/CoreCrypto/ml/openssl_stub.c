@@ -1780,3 +1780,48 @@ CAMLprim value ocaml_ec_key_get0_private_key(value mlkey) {
 
   CAMLreturn(mln);
 }
+
+CAMLprim value ocaml_ec_key_set_private_key(value mlkey, value mlpriv) {
+  CAMLparam2(mlkey, mlpriv);
+  EC_KEY* key = EC_KEY_val(mlkey);
+  BIGNUM* priv = BN_bin2bn((uint8_t*) String_val(mlpriv), caml_string_length(mlpriv), NULL);
+
+  EC_KEY_set_private_key(key, priv);
+  BN_free(priv);
+
+  CAMLreturn(Val_unit);
+}
+
+CAMLprim value ocaml_ec_key_set_public_key(value mlkey, value mlpoint) {
+  CAMLparam2(mlkey, mlpoint);
+  EC_KEY* key = EC_KEY_val(mlkey);
+  EC_POINT* point = EC_POINT_val(mlpoint);
+  EC_KEY_set_public_key(key, point);
+  CAMLreturn(Val_unit);
+}
+
+
+CAMLprim value ocaml_ecdh_agreement(value mlkey, value mlgroup, value mlpoint) {
+  CAMLparam2(mlkey, mlpoint);
+
+  EC_KEY* my_key = EC_KEY_val(mlkey);
+  EC_POINT* peer_point = EC_POINT_val(mlpoint);
+  EC_GROUP* group = EC_GROUP_val(mlgroup);
+
+  size_t field_size = EC_GROUP_get_degree(group);
+  size_t shared_secret_len = (field_size + 7) / 8;
+
+  CAMLlocal1(mlshared_secret);
+  mlshared_secret = caml_alloc_string(shared_secret_len);
+
+  size_t olen = ECDH_compute_key((uint8_t*) String_val(mlshared_secret), shared_secret_len, peer_point, my_key, NULL);
+
+  if (olen != caml_string_length(mlshared_secret)) {
+      CAMLlocal1(mlresized_secret);
+      mlresized_secret = caml_alloc_string(olen);
+      memcpy(String_val(mlresized_secret), String_val(mlshared_secret), olen);
+      CAMLreturn(mlresized_secret);
+  }
+
+  CAMLreturn(mlshared_secret);
+}

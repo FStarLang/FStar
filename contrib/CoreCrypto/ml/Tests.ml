@@ -707,6 +707,16 @@ module TestDhke = struct
     string_of_bytes shared1 = string_of_bytes shared2
 end
 
+module TestEcdhke = struct
+  let test () =
+    let params = { curve = ECC_P521; point_compression = false } in
+    let alice = ec_gen_key params in
+    let bob = ec_gen_key params in
+    let shared1 = ecdh_agreement alice bob.ec_point in
+    let shared2 = ecdh_agreement bob alice.ec_point in
+    string_of_bytes shared1 = string_of_bytes shared2
+end
+
 
 let run_test section test_vectors print_test_vector test_vector =
   let passed = ref 0 in
@@ -723,6 +733,12 @@ let run_test section test_vectors print_test_vector test_vector =
   List.iter doit test_vectors;
   Printf.printf "%s: %d/%d tests passed\n" section !passed !total
 
+let simple_test name f =
+  if f () then
+    Printf.printf "%s: OK\n" name
+  else
+    Printf.printf "%s: FAIL\n" name
+
 let _ =
   TestAead.(run_test "AEAD" test_vectors print_test_vector test);
   TestHmac.(run_test "HMAC" test_cases print_test_case test);
@@ -730,4 +746,5 @@ let _ =
   TestEcc.(run_test "ECC" tests print_test test);
   TestRsa.(run_test "RSA" tests print_test roundtrip);
   TestDsa.(run_test "DSA" tests print_test check);
-  TestDhke.test ()
+  simple_test "DH key exchange" TestDhke.test;
+  simple_test "ECDH key exchange" TestEcdhke.test
