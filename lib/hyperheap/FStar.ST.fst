@@ -19,10 +19,10 @@
 *)
 module FStar.ST
 open FStar.HyperHeap
-type ref (t:Type) = rref root t
-kind st_pre = st_pre_h t
-kind st_post (a:Type) = st_post_h t a
-kind st_wp (a:Type) = st_wp_h t a
+let ref (t:Type) = rref root t
+let st_pre = st_pre_h t
+let st_post (a:Type) = st_post_h t a
+let st_wp (a:Type) = st_wp_h t a
 new_effect STATE = STATE_h t
 effect State (a:Type) (wp:st_wp a) =
        STATE a wp wp
@@ -51,7 +51,7 @@ assume val ralloc: #a:Type -> i:rid -> init:a -> ST (rref i a)
     (requires (fun m -> True))
     (ensures (ralloc_post i init))
 
-let alloc_post (#a:Type) (init:a) m0 x m1 = 
+let alloc_post (#a:Type) (init:a) m0 (x:ref a) m1 = 
   (let region_i = Map.sel m0 root in
     not (Heap.contains region_i (as_ref x))
    /\ m1=Map.upd m0 root (Heap.upd region_i (as_ref x) init))
@@ -60,7 +60,7 @@ assume val alloc: #a:Type -> init:a -> ST (ref a)
     (requires (fun m -> True))
     (ensures (alloc_post init))
 
-let assign_post (#a:Type) (#i:rid) (r:rref i a) (v:a) m0 _u m1 = 
+let assign_post (#a:Type) (#i:rid) (r:rref i a) (v:a) m0 (_u:unit) m1 : Type = 
   m1=Map.upd m0 i (Heap.upd (Map.sel m0 i) (as_ref r) v)
 
 assume val op_Colon_Equals: #a:Type -> #i:rid -> r:rref i a -> v:a -> ST unit
