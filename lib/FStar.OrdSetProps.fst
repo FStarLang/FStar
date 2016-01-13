@@ -1,6 +1,6 @@
 (*--build-config
-    options:--admit_fsi FStar.OrdSet;
-    other-files:ordset.fsi
+    options:;
+    other-files:FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.List.Tot.fst FStar.ListProperties.fst FStar.OrdSet.fst
  --*)
 module FStar.OrdSetProps
  

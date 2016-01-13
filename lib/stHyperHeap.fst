@@ -20,20 +20,20 @@
 module FStar.ST
 open FStar.HyperHeap
 type ref (t:Type) = rref root t
-kind STPre = STPre_h t
-kind STPost (a:Type) = STPost_h t a
-kind STWP (a:Type) = STWP_h t a
+kind st_pre = st_pre_h t
+kind st_post (a:Type) = st_post_h t a
+kind st_wp (a:Type) = st_wp_h t a
 new_effect STATE = STATE_h t
-effect State (a:Type) (wp:STWP a) =
+effect State (a:Type) (wp:st_wp a) =
        STATE a wp wp
-effect ST (a:Type) (pre:STPre) (post: (t -> STPost a)) =
+effect ST (a:Type) (pre:st_pre) (post: (t -> Tot (st_post a))) =
        STATE a
-             (fun (p:STPost a) (h:t) -> pre h /\ (forall a h1. post h a h1 ==> p a h1)) (* WP *)
-             (fun (p:STPost a) (h:t) -> (forall a h1. (pre h /\ post h a h1) ==> p a h1))          (* WLP *)
+             (fun (p:st_post a) (h:t) -> pre h /\ (forall a h1. post h a h1 ==> p a h1)) (* WP *)
+             (fun (p:st_post a) (h:t) -> (forall a h1. (pre h /\ post h a h1) ==> p a h1))          (* WLP *)
 effect St (a:Type) =
        ST a (fun h -> True) (fun h0 r h1 -> True)
 sub_effect
-  DIV   ~> STATE = fun (a:Type) (wp:PureWP a) (p:STPost a) (h:t) -> wp (fun a -> p a h)
+  DIV   ~> STATE = fun (a:Type) (wp:pure_wp a) (p:st_post a) (h:t) -> wp (fun a -> p a h)
 
 assume val new_region: r0:rid -> ST rid
       (requires (fun m -> True))
@@ -42,7 +42,7 @@ assume val new_region: r0:rid -> ST rid
                         /\ fresh_region r1 m0 m1
                         /\ m1=Map.upd m0 r1 Heap.emp))
  
-type ralloc_post (#a:Type) (i:rid) (init:a) (m0:t) (x:rref i a) (m1:t) = 
+let ralloc_post (#a:Type) (i:rid) (init:a) (m0:t) (x:rref i a) (m1:t) = 
      (let region_i = Map.sel m0 i in
        not (Heap.contains region_i (as_ref x))
            /\ m1=Map.upd m0 i (Heap.upd region_i (as_ref x) init))
@@ -51,7 +51,7 @@ assume val ralloc: #a:Type -> i:rid -> init:a -> ST (rref i a)
     (requires (fun m -> True))
     (ensures (ralloc_post i init))
 
-type alloc_post (#a:Type) (init:a) m0 x m1 = 
+let alloc_post (#a:Type) (init:a) m0 x m1 = 
   (let region_i = Map.sel m0 root in
     not (Heap.contains region_i (as_ref x))
    /\ m1=Map.upd m0 root (Heap.upd region_i (as_ref x) init))
@@ -60,14 +60,14 @@ assume val alloc: #a:Type -> init:a -> ST (ref a)
     (requires (fun m -> True))
     (ensures (alloc_post init))
 
-type assign_post (#a:Type) (#i:rid) (r:rref i a) (v:a) m0 _u m1 = 
+let assign_post (#a:Type) (#i:rid) (r:rref i a) (v:a) m0 _u m1 = 
   m1=Map.upd m0 i (Heap.upd (Map.sel m0 i) (as_ref r) v)
 
 assume val op_Colon_Equals: #a:Type -> #i:rid -> r:rref i a -> v:a -> ST unit
   (requires (fun m -> True))
   (ensures (assign_post r v))
 
-type deref_post (#a:Type) (#i:rid) (r:rref i a) m0 x m1 =
+let deref_post (#a:Type) (#i:rid) (r:rref i a) m0 x m1 =
   m1=m0 /\ x=Heap.sel (Map.sel m0 i) (as_ref r)
 
 assume val op_Bang: #a:Type -> #i:rid -> r:rref i a -> ST a

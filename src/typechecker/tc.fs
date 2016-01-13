@@ -882,7 +882,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                     TcUtil.refresh_comp_label env false cres, g
 
                 | _ ->  (* partial app *)
-                    let g = Rel.conj_guard ghead g |> Rel.solve_deferred_constraints env in
+                    let g = Rel.conj_guard ghead g |> Rel.solve_deferred_constraints env in //TODO: fix this; it forces eta expansions (cf. FSTar.Relational.fst: 43 and 43)
                     TcUtil.lcomp_of_comp <| mk_Total  (SS.subst subst <| Util.arrow bs (cres.comp())), g in
 
                 if debug env Options.Low then Util.print1 "\t Type of result cres is %s\n" (Print.lcomp_to_string cres);

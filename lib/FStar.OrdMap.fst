@@ -1,6 +1,6 @@
 (*--build-config
     options:;
-    other-files:FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.List.Tot.fst FStar.OrdSet.fst
+    other-files:FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.List.Tot.fst FStar.OrdSet.fst FStar.OrdSetProps.fst
  --*)
 module FStar.OrdMap
 
