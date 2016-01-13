@@ -55,8 +55,7 @@ all_univs:
 	$(UFSTAR) FStar.Int8.fst FStar.Int16.fst FStar.Int31.fst FStar.Int32.fst FStar.Int63.fst FStar.Int64.fst
 	$(UFSTAR) FStar.HyperHeap.fst
 	$(UFSTAR) FStar.MRef.fst
-	$(UFSTAR) FStar.OrdSet.fst
-	# $(UFSTAR) FStar.OrdMap.fst
+	$(UFSTAR) FStar.OrdMap.fst
 # #	$(UFSTAR) FStar.OrdMapProps.fst -- problem filed as #359
 #	# $(UFSTAR) FStar.Option.fst 
 # 	$(UFSTAR) FStar.OrdSetProps.fst

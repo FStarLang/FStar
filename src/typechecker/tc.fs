@@ -693,14 +693,18 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     let use_eq = env.use_eq in
     let env, topt = Env.clear_expected_typ env in
     if Env.debug env Options.High
-    then Util.print1 "!!!!!!!!!!!!!!!Expected type is %s\n"
-          (match topt with None -> "None" | Some t -> Print.term_to_string t);
+    then Util.print2 "!!!!!!!!!!!!!!!Expected type is %s, top_level=%s\n"
+          (match topt with None -> "None" | Some t -> Print.term_to_string t)
+          (if env.top_level then "true" else "false");
     let tfun_opt, bs, letrec_binders, c_opt, envbody, g = expected_function_typ env topt in
     let body, cbody, guard_body = tc_term ({envbody with top_level=false; use_eq=use_eq}) body in
     if Env.debug env Options.Medium
     then Util.print3 "!!!!!!!!!!!!!!!body %s has type %s\nguard is %s\n" 
           (Print.term_to_string body) (Print.lcomp_to_string cbody) (guard_to_string env guard_body);
-    let guard_body = Rel.solve_deferred_constraints envbody guard_body in
+    let guard_body =  //we don't abstract over subtyping constraints; so solve them now
+        let imps = guard_body.implicits in 
+        let g = Rel.solve_deferred_constraints envbody ({guard_body with implicits=[]}) in
+        {g with implicits=imps} in
     if Env.debug env <| Options.Other "Implicits"
     then Util.print1 "Introduced %s implicits in body of abstraction\n" (string_of_int <| List.length guard_body.implicits);
     let body, cbody, guard = check_expected_effect ({envbody with use_eq=use_eq}) c_opt (body, cbody.comp()) in
@@ -1384,7 +1388,7 @@ and check_let_bound_def top_level env lb
     then raise (Error("Inner let-bound definitions cannot be universe polymorphic", e1.pos));
 
     (* 2. type-check e1 *)
-    let e1, c1, g1 = tc_term ({env1 with top_level=true}) e1 in
+    let e1, c1, g1 = tc_term ({env1 with top_level=top_level}) e1 in
        
     (* and strengthen its VC with and well-formedness condition on its annotated type *)
     let c1, guard_f = TcUtil.strengthen_precondition 

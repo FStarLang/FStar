@@ -2136,11 +2136,6 @@ and resolve_all_implicits env g =
             match g.guard_f with 
                 | Trivial -> ()
                 | NonTrivial vc -> env.solver.solve env vc)
-//            raise (Error(Util.format3 "Inferred implicit argument %s to be %s; \
-//                                            but it has a non-trivial verification condition:\n%s" 
-//                                            (Print.uvar_to_string u)
-//                                            (Print.term_to_string tm) 
-//                                            (guard_to_string env g'), r)))
 
 let discharge_guard env (g:guard_t) =
    let g = solve_deferred_constraints env g in
