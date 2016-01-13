@@ -433,10 +433,10 @@ let mk_field_projector_name lid (x:bv) i =
     let y = {x with ppname=nm} in
     lid_of_ids (ids_of_lid lid @ [unmangle_field_name nm]), y
 
-let unchecked_unify uv t =
+let set_uvar uv t =
   match Unionfind.find uv with
     | Fixed _ -> failwith (Util.format1 "Changing a fixed uvar! ?%s\n" (Util.string_of_int <| Unionfind.uvar_id uv))
-    | _ -> Unionfind.change uv (Fixed t) (* used to be an alpha-convert t here; but we now have an invariant that t is closed *)
+    | _ -> Unionfind.change uv (Fixed t) 
 
 let qualifier_equal q1 q2 = match q1, q2 with 
   | Discriminator l1, Discriminator l2 -> lid_equals l1 l2

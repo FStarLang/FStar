@@ -128,7 +128,7 @@ let initial_env tc solver module_lid =
     effects={decls=[]; order=[]; joins=[]};
     generalize=true;
     letrecs=[];
-    top_level=true;
+    top_level=false;
     check_uvars=false;
     use_eq=false;
     is_iface=false;

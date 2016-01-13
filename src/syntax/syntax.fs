@@ -135,7 +135,7 @@ and metadata =
   | Meta_desugared     of meta_source_info                       (* Node tagged with some information about source term before desugaring *)
 and uvar_basis<'a> =
   | Uvar
-  | Fixed of 'a
+  | Fixed of 'a * bool                                           (* The flag is set if the first component is not a closed term (only due to implicit let polymorphism) *)
 and meta_source_info =
   | Data_app
   | Sequence

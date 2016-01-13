@@ -85,7 +85,9 @@ let check_no_escape env bs t =
 
 let maybe_push_binding env b =
   if is_null_binder b then env
-  else Env.push_bv env (fst b)
+  else (if Env.debug env Options.High
+        then Printf.printf "Pushing binder %s at type %s\n" (Print.bv_to_string (fst b)) (Print.term_to_string (fst b).sort);
+        Env.push_bv env (fst b))
 
 let maybe_make_subst = function
   | Inr(Some x, e) -> [NT(x,e)]
@@ -257,9 +259,11 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ)> =
 (************************************************************************************************************)
 (* Main type-checker begins here                                                                            *)
 (************************************************************************************************************)
-let rec tc_term env (e:term) : term                  (* type-checked and elaborated version of e            *)
-                             * lcomp                 (* computation type where the WPs are lazily evaluated *)
-                             * guard_t =         (* well-formedness condition                           *)
+let rec tc_term env e = tc_maybe_toplevel_term ({env with top_level=false}) e
+
+and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked and elaborated version of e            *)
+                                        * lcomp                 (* computation type where the WPs are lazily evaluated *)
+                                        * guard_t =             (* well-formedness condition                           *)
   let env = if e.pos=Range.dummyRange then env else Env.set_range env e.pos in
   if debug env Options.Low then Util.print2 "%s (%s)\n" (Range.string_of_range <| Env.get_range env) (Print.tag_of_term e);
   let top = e in
@@ -1233,6 +1237,7 @@ and check_inner_let env e =
    let env = instantiate_both env in
    match e.n with
      | Tm_let((false, [lb]), e2) ->
+       let env = {env with top_level=false} in
        let e1, _, c1, g1, annotated = check_let_bound_def false (Env.clear_expected_typ env |> fst) lb in
        let lb = Util.mk_letbinding lb.lbname [] c1.res_typ c1.eff_name e1 in
        let x = {Util.left lb.lbname with sort=c1.res_typ} in
@@ -1388,7 +1393,7 @@ and check_let_bound_def top_level env lb
     then raise (Error("Inner let-bound definitions cannot be universe polymorphic", e1.pos));
 
     (* 2. type-check e1 *)
-    let e1, c1, g1 = tc_term ({env1 with top_level=top_level}) e1 in
+    let e1, c1, g1 = tc_maybe_toplevel_term ({env1 with top_level=top_level}) e1 in
        
     (* and strengthen its VC with and well-formedness condition on its annotated type *)
     let c1, guard_f = TcUtil.strengthen_precondition 

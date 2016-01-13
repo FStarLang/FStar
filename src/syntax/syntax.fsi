@@ -134,7 +134,7 @@ and metadata =
   | Meta_desugared     of meta_source_info                       (* Node tagged with some information about source term before desugaring *)
 and uvar_basis<'a> =
   | Uvar
-  | Fixed of 'a
+  | Fixed of 'a * bool                                           (* The flag is set if the first component is not a closed term (only due to implicit let polymorphism) *)
 and meta_source_info =
   | Data_app
   | Sequence
@@ -147,7 +147,7 @@ and fv_qual =
   | Record_ctor of lident * list<fieldname>     (* the type of the record being constructed and its (unmangled) fields in order *)
 and lbname = either<bv, lident>
 and letbindings = bool * list<letbinding>       (* let recs may have more than one element; top-level lets have lidents *)
-and subst_t = list<list<subst_elt>>
+and subst_t = list<list<subst_elt>>             (* A composition of parallel substitutions *)
 and subst_elt = 
    | DB of int * term                          (* DB i t: replace a bound variable with index i with term t                  *)
    | NM of bv  * int                           (* NM x i: replace a local name with a bound variable i                       *)

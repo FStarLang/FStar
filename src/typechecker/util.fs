@@ -959,7 +959,7 @@ let generalize_universes (env:env) (t:term) : tscheme =
                 |> List.map (fun u -> Unionfind.uvar_id u |> string_of_int) |> String.concat ", ");
     let gen = gen_univs env univs in
     if Env.debug env <| Options.Other "Gen" 
-    then Printf.printf "After generealization: %s\n"  (Print.term_to_string t);
+    then Printf.printf "After generalization: %s\n"  (Print.term_to_string t);
     let ts = SS.close_univ_vars gen t in 
     (gen, ts)
 
@@ -994,14 +994,14 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
      let ecs = uvars |> List.map (fun (uvs, e, c) ->
           let tvars = uvs |> List.map (fun (u, k) ->
             match Unionfind.find u with
-              | Fixed ({n=Tm_name a})
-              | Fixed ({n=Tm_abs(_, {n=Tm_name a})}) -> a, Some Implicit
+              | Fixed ({n=Tm_name a}, _)
+              | Fixed ({n=Tm_abs(_, {n=Tm_name a})}, _) -> a, Some Implicit
               | Fixed _ -> failwith "Unexpected instantiation of mutually recursive uvar"
               | _ ->
                   let bs, kres = Util.arrow_formals k in 
                   let a = S.new_bv (Some <| Env.get_range env) kres in 
                   let t = U.abs bs (S.bv_to_name a) in
-                  U.unchecked_unify u t;
+                  U.set_uvar u (t,true);//t may have free variables, as indicated by the flag
                   a, Some Implicit) in
 
           let e, c = match tvars with 

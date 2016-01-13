@@ -31,10 +31,10 @@ let rec force_uvar t = match t.n with
   | Tm_uvar (uv,_) ->
       begin
         match Unionfind.find uv with
-          | Fixed t' -> force_uvar t'
-          | _ -> t
+          | Fixed (t', b) -> let t', b' = force_uvar t' in t', b||b'
+          | _ -> t, false
       end
-  | _ -> t
+  | _ -> t, false
 
 let rec force_delayed_thunk t = match t.n with
   | Tm_delayed(f, m) ->
@@ -117,12 +117,10 @@ let rec subst' (s:subst_t) t = match s with
         | Tm_constant _      //a constant cannot be substituted
         | Tm_fvar _  -> t0   //fvar are never subject to substitution
         | Tm_uvar _ -> 
-          let t0 = force_uvar t0 in
-          begin match t0.n with
-            | Tm_uvar _ -> t0            //unresolved uvar; nothing to substitute
-            | Tm_name _ -> subst' s t0   //when a type is implicitly generalized, a uvar maybe resolved to a name
-            | _ -> t0                    //otherwise, a uvar is always resolved to a closed term; so no substitution to do
-          end
+          let t0, has_free_vars = force_uvar t0 in
+          if has_free_vars
+          then subst' s t0  //when a type is implicitly generalized, a uvar maybe resolved to a name
+          else t0 //otherwise, a uvar is almost always resolved to a closed term; so no substitution to do
 
         | Tm_delayed(Inl(t', s'), m) ->
             //s' is the subsitution already associated with this node;
@@ -292,7 +290,7 @@ let rec compress (t:term) =
           Unionfind.update_in_tx memo (Some t');
 //          memo := Some t';
           t'
-        | _ -> force_uvar t
+        | _ -> fst (force_uvar t)
             
 
 let subst s t = subst' [s] t
