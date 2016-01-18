@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set --admit_fsi FStar.Seq --admit_fsi FStar.Map --max_ifuel 1 --initial_ifuel 1 --initial_fuel 0 --max_fuel 0 --z3timeout 20;
-    other-files:../../lib/ext.fst ../../lib/set.fsi ../../lib/heap.fst ../../lib/st.fst ../../lib/all.fst ../../lib/map.fsi ../../lib/twoLevelHeap.fst ../../lib/seq.fsi
+    other-files:../../lib/FStar.FunctionalExtensionality.fst ../../lib/FStar.Set.fsi ../../lib/FStar.Heap.fst ../../lib/FStar.ST.fst ../../lib/FStar.All.fst ../../lib/map.fsi ../../lib/FStar.TwoLevelHeap.fst ../../lib/seq.fsi
   --*)
 (* A standalone experiment corresponding to building a stateful encryption on
    top of a stateless one ... along the lines of StatefulLHAE on top of AEAD_GCM *)

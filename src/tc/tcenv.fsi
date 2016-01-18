@@ -109,6 +109,7 @@ val is_datacon : env -> lident -> bool
 val is_record : env -> lident -> bool
 val lookup_datacons_of_typ : env -> lident -> option<list<(lident * typ)>>
 val lookup_typ_abbrev : env -> lident -> option<typ>
+val lookup_opaque_typ_abbrev: env -> lident -> option<typ>
 val lookup_effect_abbrev : env -> lident -> option<(binders * comp)>
 val lookup_btvar : env -> btvar -> knd
 val lookup_typ_lid : env -> lident -> knd

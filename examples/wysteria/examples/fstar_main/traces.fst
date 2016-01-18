@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Seq --admit_fsi FStar.Matrix2 --z3timeout 10;
-    other-files:seq.fsi matrix2.fsti
+    other-files:seq.fsi FStar.Matrix2.fsti
   --*)
 module Traces
 open FStar
@@ -900,6 +900,17 @@ let rec as_list_init_b a b i =
     if i = Seq.length b then ()
     else as_list_init_b a b (i + 1)
 
+//TODO: change rows_from's first two arguments to be nats corresponding to
+// the lengths of the sequences, rather than the sequences themselves.
+// that makes it evident that we can compute the (for_alice la lb) trace from
+// the public parameters only.
+//
+// We'd like the ensures clause to be:
+// for_alice la lb = rows_from' (length la) (length lb) (make_sparse (full a b) (init' (length la) (length lb)) 0 0) 0
+// 1. rows_from to be changes to rows_from'  (so that it depends only on the lengths, not on the seqs themselves)
+// 2. to make use of the fast_is_sparse_full lemma to prove that
+//    all_iterations sa sb = (make_sparse (full a b) (init' (length la) (length lb)) 0 0)
+//  Maybe need to use extensional equality? 
 val thm : sa:Seq.seq int -> sb:Seq.seq int -> la:list int -> lb:list int -> Lemma 
     (requires (la = as_list sa 0 /\ lb = as_list sb 0))
     (ensures (for_alice la lb = rows_from (all_iterations sa sb) 0))

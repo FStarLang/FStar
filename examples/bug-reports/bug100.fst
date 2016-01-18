@@ -1,6 +1,6 @@
 module Bug100
 
-(* run this with ../../bin/fstar.exe ../../lib/list.fst bug100.fst  *)
+(* run this with ../../bin/fstar.exe ../../lib/FStar.List.fst bug100.fst  *)
 
 open List
 

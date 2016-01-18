@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi Set --z3timeout 100;
-    other-files:ext.fst set.fsi heap.fst st.fst all.fst list.fst  stack.fst listset.fst
-    ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst rstWhile.fst constr.fst word.fst seq.fsi seq.fst array.fsi array.fst
+    other-files:FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst  stack.fst listset.fst
+    FStar.Ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst rstWhile.fst FStar.Constructive.fst word.fst seq.fsi FStar.Seq.fst array.fsi array.fst
   --*)
 
 module ArrayAlgos

@@ -91,17 +91,20 @@ let verify_module = Util.mk_ref []
 let __temp_no_proj = Util.mk_ref []
 let use_build_config = Util.mk_ref false
 let interactive = Util.mk_ref false
+let interactive_context = Util.mk_ref None
 let split_cases = Util.mk_ref 0
 let _include_path = Util.mk_ref []
 let interactive_fsi = Util.mk_ref false
 let print_fuels = Util.mk_ref false
 let cardinality = Util.mk_ref "off"
-let warn_cardinality () = match !cardinality with 
+let timing = Util.mk_ref false
+let warn_cardinality () = match !cardinality with
     | "warn" -> true
     | _ -> false
-let check_cardinality () = match !cardinality with 
+let check_cardinality () = match !cardinality with
     | "check" -> true
     | _ -> false
+let dep = ref None
 let auto_deps = Util.mk_ref false
 let find_deps = Util.mk_ref false
 let init_options () = 
@@ -153,7 +156,9 @@ let init_options () =
     print_fuels := false;
     use_native_int := false;
     auto_deps := false;
-    find_deps := false
+    find_deps := false;
+    dep := None;
+    timing := false
 
 let set_fstar_home () =
   let fh = match !fstar_home_opt with
@@ -169,17 +174,17 @@ let get_fstar_home () = match !fstar_home_opt with
     | None -> ignore <| set_fstar_home(); !_fstar_home
     | Some x -> x
 
-let get_include_path (dirname:string) = 
+let get_include_path (dirname:string) =
   (* Allows running fstar either from the source repository, or after
    * installation (into /usr/local for instance) *)
-  List.map 
+  List.map
     (fun p ->
       if Util.is_path_absolute p then
         Util.normalize_file_path p
       else
         Util.join_paths dirname p)
-      (let h = get_fstar_home () in
-      !_include_path@["."; h ^ "/lib"; h ^ "/lib/fstar"])
+    (let h = get_fstar_home () in
+    !_include_path@["."; h ^ "/lib"; h ^ "/lib/fstar"])
 
 let prims () = match !prims_ref with
   | None -> Util.format1 "%s/lib/prims.fst" (get_fstar_home ())
@@ -211,14 +216,17 @@ let display_usage specs =
 let rec specs () : list<Getopt.opt> =
   let specs =
     [( noshort, "admit_fsi", OneArg ((fun x -> admit_fsi := x::!admit_fsi), "module name"), "Treat .fsi as a .fst");
+     ( noshort, "auto_deps", ZeroArgs (fun () -> auto_deps := true), "automatically treat files discovered by --find_deps as dependencies.");
      ( noshort, "admit_smt_queries", OneArg ((fun s -> admit_smt_queries := (if s="true" then true else if s="false" then false else failwith("Invalid argument to --admit_smt_queries"))), "true|false"), "Admit SMT queries (UNSAFE! But, useful during development); default: 'false'");
      ( noshort, "cardinality", OneArg ((fun x -> cardinality := validate_cardinality x), "off|warn|check"), "Check cardinality constraints on inductive data types(default 'off')");
      ( noshort, "codegen", OneArg ((fun s -> codegen := parse_codegen s), "OCaml|FSharp"), "Generate code for execution");
      ( noshort, "codegen-lib", OneArg ((fun s -> codegen_libs := (Util.split s ".")::!codegen_libs), "namespace"), "External runtime library library");
      ( noshort, "debug", OneArg ((fun x -> debug := x::!debug), "module name"), "Print LOTS of debugging information while checking module [arg]");
      ( noshort, "debug_level", OneArg ((fun x -> debug_level := dlevel x::!debug_level), "Low|Medium|High|Extreme"), "Control the verbosity of debugging info");
+     ( noshort, "dep", OneArg ((fun x -> dep := Some x), "make|nubuild"), "Output the transitive closure of the dependency graph in a format suitable for the given tool");
      ( noshort, "dump_module", OneArg ((fun x -> dump_module := Some x), "module name"), "");
      ( noshort, "eager_inference", ZeroArgs (fun () -> eager_inference := true), "Solve all type-inference constraints eagerly; more efficient but at the cost of generality");
+     ( noshort, "find_deps", ZeroArgs (fun () -> find_deps := true; auto_deps := true), "find transitive dependencies given build-config other-files specifications.");
      ( noshort, "fs_typ_app", ZeroArgs (fun () -> fs_typ_app := true), "Allow the use of t<t1,...,tn> syntax for type applications; brittle since it clashes with the integer less-than operator");
      ( noshort, "fsi", ZeroArgs (fun () -> set_interactive_fsi ()), "fsi flag; A flag to indicate if type checking a fsi in the interactive mode");
      ( noshort, "fstar_home", OneArg ((fun x -> fstar_home_opt := Some x), "dir"), "Set the FSTAR_HOME variable to dir");
@@ -226,6 +234,7 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "hide_genident_nums", ZeroArgs(fun () -> hide_genident_nums := true), "Don't print generated identifier numbers");
      ( noshort, "hide_uvar_nums", ZeroArgs(fun () -> hide_uvar_nums := true), "Don't print unification variable numbers");
      ( noshort, "in", ZeroArgs (fun () -> interactive := true), "Interactive mode; reads input from stdin");
+     ( noshort, "in_context", OneArg ((fun s -> interactive := true; interactive_context := Some s), "name"), "Specify the context of an interactive session; needed for --auto_deps to work with interactive mode.");
      ( noshort, "include", OneArg ((fun s -> _include_path := !_include_path @ [s]), "path"), "A directory in which to search for files included on the command line");
      ( noshort, "initial_fuel", OneArg((fun x -> initial_fuel := int_of_string x), "non-negative integer"), "Number of unrolling of recursive functions to try initially (default 2)");
      ( noshort, "initial_ifuel", OneArg((fun x -> initial_ifuel := int_of_string x), "non-negative integer"), "Number of unrolling of inductive datatypes to try at first (default 1)");
@@ -251,6 +260,7 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "silent", ZeroArgs (fun () -> silent := true), "");
      ( noshort, "smt", OneArg ((fun x -> z3_exe := x), "path"), "Path to the SMT solver (usually Z3, but could be any SMT2-compatible solver)");
      ( noshort, "split_cases", OneArg ((fun n -> split_cases := int_of_string n), "t"), "Partition VC of a match into groups of n cases");
+     ( noshort, "timing", ZeroArgs (fun () -> timing := true), "Print the time it takes to verify each top-level definition");
      ( noshort, "trace_error", ZeroArgs (fun () -> trace_error := true), "Don't print an error message; show an exception trace instead");
      ( noshort, "unthrottle_inductives", ZeroArgs (fun () -> unthrottle_inductives := true), "Let the SMT solver unfold inductive types to arbitrary depths (may affect verifier performance)");
      ( noshort, "use_build_config", ZeroArgs (fun () -> use_build_config := true), "Expect just a single file on the command line and no options; will read the 'build-config' prelude from the file");
@@ -261,8 +271,6 @@ let rec specs () : list<Getopt.opt> =
      ( 'v',     "version", ZeroArgs (fun _ -> display_version(); exit 0), "Display version number");
      ( noshort, "warn_top_level_effects", ZeroArgs (fun () -> warn_top_level_effects := true), "Top-level effects are ignored, by default; turn this flag on to be warned when this happens");
      ( noshort, "z3timeout", OneArg ((fun s -> z3timeout := int_of_string s), "t"), "Set the Z3 per-query (soft) timeout to t seconds (default 5)");
-     ( noshort, "auto_deps", ZeroArgs (fun () -> auto_deps := true), "automatically treat files discovered by --find_deps as dependencies.");
-     ( noshort, "find_deps", ZeroArgs (fun () -> find_deps := true; auto_deps := true), "find transitive dependencies given build-config other-files specifications.");
   ] in
      ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs
 and parse_codegen s =

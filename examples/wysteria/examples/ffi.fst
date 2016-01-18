@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set --admit_fsi FStar.OrdSet --admit_fsi Prins --admit_fsi FStar.String --admit_fsi FStar.IO;
-    other-files:set.fsi heap.fst st.fst all.fst list.fst listTot.fst string.fsi ordset.fsi ../prins.fsi io.fsti;
+    other-files:FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst FStar.List.Tot.fst string.fsi ordset.fsi ../prins.fsi FStar.IO.fsti;
  --*)
 
 module FFI

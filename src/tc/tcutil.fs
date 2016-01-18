@@ -68,7 +68,7 @@ let check_and_ascribe env (e:exp) (t1:typ) (t2:typ) : exp * guard_t =
           raise (Error(Tc.Errors.expected_expression_of_type env t2 e t1, Tc.Env.get_range env))
         | Some g ->
            if debug env <| Options.Other "Rel"
-           then Util.fprint1 "Applied guard is %s\n" <| guard_to_string env g;
+           then Util.print1 "Applied guard is %s\n" <| guard_to_string env g;
            let e = Util.compress_exp e in
            let e = match e.n with
                | Exp_bvar x -> mk_Exp_bvar (Util.bvd_to_bvar_s x.v t2) (Some t2) e.pos
@@ -343,7 +343,7 @@ let decorate_pattern env p exps =
               if Util.bvar_eq x y |> not
               then failwith (Util.format2 "Expected pattern variable %s; got %s" (Print.strBvd x.v) (Print.strBvd y.v));
               if Env.debug env <| Options.Other "Pat"
-              then Util.fprint2 "Pattern variable %s introduced at type %s\n" (Print.strBvd x.v) (Normalize.typ_norm_to_string env y.sort);
+              then Util.print2 "Pattern variable %s introduced at type %s\n" (Print.strBvd x.v) (Normalize.typ_norm_to_string env y.sort);
               let s = Normalize.norm_typ [Normalize.Beta] env y.sort in
               let x = {x with sort=s} in
               pkg (Pat_var x) (force_tk e)
@@ -556,7 +556,7 @@ let extract_lb_annotation env t e = match t.n with
         let body, res, check_res = aux scope body in
         let c = Util.ml_comp res r in
         let t = mk_Typ_fun(bs, c) (Some ktype) e.pos in
-        if debug env Options.High then Util.fprint2 "(%s) Using type %s\n" (Range.string_of_range r) (Print.typ_to_string t);
+        if debug env Options.High then Util.print2 "(%s) Using type %s\n" (Range.string_of_range r) (Print.typ_to_string t);
         let e = mk_Exp_abs(bs, body) None e.pos in
         e, t, check_res || check
 
@@ -667,7 +667,7 @@ let return_value env t v =
        let wlp = wp in
        mk_comp m t wp wlp [RETURN] in
   if debug env Options.High
-  then Util.fprint3 "(%s) returning %s at comp type %s\n" (Range.string_of_range v.pos)  (Print.exp_to_string v) (Normalize.comp_typ_norm_to_string env c);
+  then Util.print3 "(%s) returning %s at comp type %s\n" (Range.string_of_range v.pos)  (Print.exp_to_string v) (Normalize.comp_typ_norm_to_string env c);
   c
 
 let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
@@ -677,7 +677,7 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
       | None -> "none"
       | Some (Env.Binding_var(x, _)) -> Print.strBvd x
       | _ -> "??" in
-    Util.fprint3 "Before lift: Making bind c1=%s\nb=%s\t\tc2=%s\n" (Print.lcomp_typ_to_string lc1) bstr (Print.lcomp_typ_to_string lc2));
+    Util.print3 "Before lift: Making bind c1=%s\nb=%s\t\tc2=%s\n" (Print.lcomp_typ_to_string lc1) bstr (Print.lcomp_typ_to_string lc2));
   let bind_it () =
       let c1 = lc1.comp () in
       let c2 = lc2.comp () in
@@ -704,7 +704,7 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
       match try_simplify () with
         | Some c ->
           if Tc.Env.debug env <| Options.Other "bind"
-          then Util.fprint4 "bind (%s) %s and %s simplified to %s\n"
+          then Util.print4 "bind (%s) %s and %s simplified to %s\n"
               (match b with
                  | None -> "None"
                  | Some (Env.Binding_var(x, _)) -> Print.strBvd x
@@ -750,10 +750,10 @@ let refresh_comp_label env (b:bool) lc =
         | Total _ -> c
         | Comp ct ->
           if Tc.Env.debug env Options.Low
-          then (Util.fprint1 "Refreshing label at %s\n" (Range.string_of_range <| Env.get_range env));
+          then (Util.print1 "Refreshing label at %s\n" (Range.string_of_range <| Env.get_range env));
           let c' = Tc.Normalize.weak_norm_comp env c in
           if not <| lid_equals ct.effect_name c'.effect_name && Tc.Env.debug env Options.Low
-          then Util.fprint2 "To refresh, normalized\n\t%s\nto\n\t%s\n" (Print.comp_typ_to_string c) (Print.comp_typ_to_string <| mk_Comp c');
+          then Util.print2 "To refresh, normalized\n\t%s\nto\n\t%s\n" (Print.comp_typ_to_string c) (Print.comp_typ_to_string <| mk_Comp c');
           let t, wp, wlp = destruct_comp c' in
           let wp = mk_Typ_meta(Meta_refresh_label(wp, Some b, Env.get_range env)) in
           let wlp = mk_Typ_meta(Meta_refresh_label(wlp, Some b, Env.get_range env)) in
@@ -1030,7 +1030,7 @@ let weaken_result_typ env (e:exp) (lc:lcomp) (t:typ) : exp * lcomp * guard_t =
             let c = lc.comp() in
 
             if Tc.Env.debug env <| Options.Extreme
-            then Util.fprint2 "Strengthening %s with guard %s\n" (Normalize.comp_typ_norm_to_string env c) (Normalize.typ_norm_to_string env f);
+            then Util.print2 "Strengthening %s with guard %s\n" (Normalize.comp_typ_norm_to_string env c) (Normalize.typ_norm_to_string env f);
 
             let ct = Tc.Normalize.weak_norm_comp env c in
             let a, kwp = Env.wp_signature env Const.effect_PURE_lid in
@@ -1051,7 +1051,7 @@ let weaken_result_typ env (e:exp) (lc:lcomp) (t:typ) : exp * lcomp * guard_t =
             let c = bind env (Some e) (lcomp_of_comp <| mk_Comp ct) (Some(Env.Binding_var(x, lc.res_typ)), eq_ret) in
             let c = c.comp () in
             if Tc.Env.debug env <| Options.Extreme
-            then Util.fprint1 "Strengthened to %s\n" (Normalize.comp_typ_norm_to_string env c);
+            then Util.print1 "Strengthened to %s\n" (Normalize.comp_typ_norm_to_string env c);
             c in
           let flags = lc.cflags |> List.collect (function RETURN | PARTIAL_RETURN -> [PARTIAL_RETURN] | _ -> []) in
           let lc = {lc with res_typ=t; comp=strengthen; cflags=flags; eff_name=norm_eff_name env lc.eff_name} in
@@ -1087,13 +1087,13 @@ let gen verify env (ecs:list<(exp * comp)>) : option<list<(exp * comp)>> =
   then None
   else
      let norm c =
-        if debug env Options.Medium then Util.fprint1 "Normalizing before generalizing:\n\t %s" (Print.comp_typ_to_string c);
+        if debug env Options.Medium then Util.print1 "Normalizing before generalizing:\n\t %s" (Print.comp_typ_to_string c);
          let steps = [Eta;Delta;Beta;SNComp] in
          let c = if Options.should_verify env.curmodule.str
                  then Normalize.norm_comp steps env c
                  else Normalize.norm_comp [Beta; Delta] env c
          in
-        if debug env Options.Medium then Util.fprint1 "Normalized to:\n\t %s" (Print.comp_typ_to_string c);
+        if debug env Options.Medium then Util.print1 "Normalized to:\n\t %s" (Print.comp_typ_to_string c);
         c in
      let env_uvars = Env.uvars_in_env env in
      let gen_uvars uvs = Util.set_difference uvs env_uvars.uvars_t |> Util.set_elements in
@@ -1150,12 +1150,12 @@ let gen verify env (ecs:list<(exp * comp)>) : option<list<(exp * comp)>> =
      Some ecs
 
 let generalize verify env (lecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*comp)>) =
-  if debug env Options.Low then Util.fprint1 "Generalizing: %s" (List.map (fun (lb, _, _) -> Print.lbname_to_string lb) lecs |> String.concat ", ");
+  if debug env Options.Low then Util.print1 "Generalizing: %s" (List.map (fun (lb, _, _) -> Print.lbname_to_string lb) lecs |> String.concat ", ");
   match gen verify env (lecs |> List.map (fun (_, e, c) -> (e, c))) with
     | None -> lecs
     | Some ecs ->
       List.map2 (fun (l, _, _) (e, c) ->
-         if debug env Options.Medium then Util.fprint3 "(%s) Generalized %s to %s" (Range.string_of_range e.pos) (Print.lbname_to_string l) (Print.typ_to_string (Util.comp_result c));
+         if debug env Options.Medium then Util.print3 "(%s) Generalized %s to %s" (Range.string_of_range e.pos) (Print.lbname_to_string l) (Print.typ_to_string (Util.comp_result c));
       (l, e, c)) lecs ecs
 
 let unresolved u = match Unionfind.find u with

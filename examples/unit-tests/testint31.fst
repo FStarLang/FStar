@@ -1,5 +1,5 @@
 (*--build-config
-    other-files:../../lib/int31.fst
+    other-files:../../lib/FStar.Int31.fst
  --*)
 
 module TestInt31

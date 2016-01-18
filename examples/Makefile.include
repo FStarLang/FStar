@@ -6,11 +6,11 @@ MSBUILD = xbuild
 endif
 
 FSTAR_HOME = ../..
-LIB_FILES=set.fsi heap.fst st.fst all.fst list.fst string.fst
+LIB_FILES=FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst FStar.String.fst
 STDLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES))
-OLDLIB = $(addprefix $(FSTAR_HOME)/lib/, list.fst string.fst partialmap.fst st.fst)
+OLDLIB = $(addprefix $(FSTAR_HOME)/lib/, FStar.List.fst FStar.String.fst partialmap.fst FStar.ST.fst)
 
-FULL_LIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) listproperties.fst)
+FULL_LIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) FStar.ListProperties.fst)
 STDLIB_CACHE = Prims.cache List.cache Set.cache Map.cache Heap.cache Array.cache String.cache ST.cache
 FULL_LIB_CACHE = $(STDLIB_CACHE) ListProperties.cache
 PERMLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) stperm.fst)
@@ -44,7 +44,7 @@ FSTARC=../../bin/fstar.exe $(STDCACHE) $(OTHERFLAGS)
 
 .cache: $(STDLIB)
 	mkdir -p $(FSTAR_HOME)/cache
-	$(FSTAR) --serialize_mods $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) st.fst)
+	$(FSTAR) --serialize_mods $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) FStar.ST.fst)
 
 .ccache:
 	rm -f $(addprefix $(FSTAR_HOME)/cache/, $(STDCACHE))

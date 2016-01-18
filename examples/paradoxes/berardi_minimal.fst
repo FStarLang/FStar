@@ -1,6 +1,6 @@
 (*--build-config
     options:--warn_top_level_effects --admit_fsi FStar.Set --admit_fsi FStar.Map --verify_module Berardi;
-    other-files:constr.fst ext.fst classical.fst set.fsi heap.fst map.fsi st.fst all.fst;
+    other-files:FStar.Constructive.fst FStar.FunctionalExtensionality.fst FStar.Classical.fst FStar.Set.fsi FStar.Heap.fst map.fsi FStar.ST.fst FStar.All.fst;
 --*)
 module Berardi
 

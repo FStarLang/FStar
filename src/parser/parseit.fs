@@ -39,16 +39,16 @@ let find_file (context:string) (filename:string) : string =
           else
             None
         else
-          let cwd = System.IO.Path.GetDirectoryName(context) in
-          let search_path = Options.get_include_path(cwd) in
-          Util.find_map 
-              search_path 
-                  (fun p -> 
-                  let path = System.IO.Path.Combine(p, filename) in
-                      if System.IO.File.Exists(path) then 
-                          Some path
-                      else 
-                          None)
+          let cwd = System.IO.Path.GetDirectoryName context in
+          let search_path = Options.get_include_path cwd in
+          Util.find_map
+            search_path
+            (fun p ->
+              let path = System.IO.Path.Combine(p, filename) in
+              if System.IO.File.Exists(path) then
+                Some path
+              else
+                None)
       in
       match result with
       | Some p -> Util.normalize_file_path p
@@ -57,7 +57,7 @@ let find_file (context:string) (filename:string) : string =
 
 let read_file (filename:string) =
   if !Options.debug <> []
-  then Util.fprint1 "Opening file: %s\n" filename;
+  then Util.print1 "Opening file: %s\n" filename;
   let fs = new System.IO.StreamReader(filename) in
   fs.ReadToEnd()
 
@@ -109,24 +109,28 @@ let rec read_build_config_from_string (filename:string) (use_filename:bool) (con
                              else set_variable (xv.(0).Trim(), xv.(1).Trim()))
                     | _ -> fail ("unexpected config option: " ^ name));
 
-        begin match !options with
-            | None -> ()
-            | Some v ->
-              begin match Options.set_options v with
-                    | Getopt.GoOn ->
-                      Options.reset_options_string := Some v
-                    | Getopt.Help  -> fail ("Invalid options: " ^ v)
-                    | Getopt.Die s -> fail ("Invalid options : " ^ s)
-              end
+        begin 
+          if is_root then
+            match !options with
+              | None -> ()
+              | Some v ->
+                begin match Options.set_options v with
+                      | Getopt.GoOn ->
+                        Options.reset_options_string := Some v
+                      | Getopt.Help  -> fail ("Invalid options: " ^ v)
+                      | Getopt.Die s -> fail ("Invalid options : " ^ s)
+                end
+          else
+            ()
         end;
         match !filenames with
             | None -> if use_filename then [filename] else []
             | Some other_files ->
-              if not !Options.auto_deps || not use_filename then
+              if not !Options.auto_deps || filename == "" then
                 let files = if use_filename then other_files@[filename] else other_files in
         List.map substitute_variables files
               else
-                // use_filename && auto_deps
+                // auto_deps
                 let included_files =
                   (List.collect 
                       (fun include_spec ->
@@ -134,16 +138,21 @@ let rec read_build_config_from_string (filename:string) (use_filename:bool) (con
                         let contents = read_file found_filen  in
                         read_build_config_from_string found_filen true contents false)
                       other_files) in
+                let included_files = 
+                  if use_filename then
+                    included_files@[normalize_file_path filename]
+                  else
+                    included_files in
                 // the semantics of FStar.List.unique preserve the final occurance of a repeated term, so we need to do a double-reverse
                 // in order to preserve the dependency order. this isn't terribly efficient but this isn't a critical path and fewer code
                 // modifications seems more prudent at the moment.
-                FStar.List.rev (FStar.List.unique (FStar.List.rev (included_files@[normalize_file_path filename])))
+                FStar.List.rev (FStar.List.unique (FStar.List.rev included_files))
     else if !Options.use_build_config && is_root //the user claimed that the build config exists
     then fail ""
     else
       // todo: this is going to have the unfortunate side-effect of searching for common files in the current directory. i don't know if this
       // is desirable. we may want to consider the ability to search for files only within `get_fstar_home ()` and children.
-      let common_files = [(find_file "." "set.fsi"); (find_file "." "heap.fst"); (find_file "." "st.fst"); (find_file "." "all.fst")] in
+      let common_files = [(find_file "." "FStar.Set.fsi"); (find_file "." "FStar.Heap.fst"); (find_file "." "FStar.ST.fst"); (find_file "." "FStar.All.fst")] in
       let files = if use_filename then common_files@[filename] else common_files
       in
       (Options.admit_fsi := "FStar.Set"::!Options.admit_fsi; files)

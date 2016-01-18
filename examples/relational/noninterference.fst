@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set --z3timeout 15 --eager_inference;
-    other-files:set.fsi heap.fst st.fst all.fst st2.fst distinct.fst
+    other-files:FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Relational.fst distinct.fst
   --*)
 
 module NonInterference

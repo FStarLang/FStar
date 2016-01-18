@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set --verify_module Unit1;
-    other-files:ext.fst set.fsi heap.fst st.fst all.fst list.fst string.fst
+    other-files:FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst FStar.String.fst
 --*)
 module Unit1
 

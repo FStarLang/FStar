@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi Set --admit_fsi Map --admit_fsi HyperHeap;
-    other-files:set.fsi heap.fst map.fsi listTot.fst hyperHeap.fsi stHyperHeap.fst
+    other-files:FStar.Set.fsi FStar.Heap.fst map.fsi FStar.List.Tot.fst hyperHeap.fsi stHyperHeap.fst
  --*)
  (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research

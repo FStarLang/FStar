@@ -1,6 +1,6 @@
 (*--build-config
   options:--__temp_no_proj InjectiveTypeFormers;
-  other-files: constr.fst
+  other-files: FStar.Constructive.fst
   --*)
 module InjectiveTypeFormers
 // We need the --__temp_no_proj flag to workaround an F* bug related to generating code for projectors

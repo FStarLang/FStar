@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set --admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.IO --admit_fsi FStar.String;
-    other-files:set.fsi heap.fst st.fst all.fst io.fsti string.fsi ghost.fst ordset.fsi ordmap.fsi prins.fst ast.fst
+    other-files:FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.IO.fsti string.fsi FStar.Ghost.fst ordset.fsi ordmap.fsi prins.fst ast.fst
  --*)
 
 module Print

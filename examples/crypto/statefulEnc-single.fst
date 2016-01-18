@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi FStar.Set --admit_fsi FStar.Seq;
-    other-files:../../lib/ext.fst ../../lib/set.fsi
-    ../../lib/heap.fst ../../lib/st.fst ../../lib/all.fst
+    other-files:../../lib/FStar.FunctionalExtensionality.fst ../../lib/FStar.Set.fsi
+    ../../lib/FStar.Heap.fst ../../lib/FStar.ST.fst ../../lib/FStar.All.fst
     ../../lib/seq.fsi
   --*)
 module StatefulEncryption.SingleInstance

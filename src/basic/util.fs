@@ -25,6 +25,11 @@ open System.IO.Compression
 
 let return_all x = x
 
+type time = System.DateTime
+let now () = System.DateTime.Now
+let time_diff (t1:time) (t2:time) : float = 
+    let ts = t2 - t1 in ts.TotalSeconds
+
 exception Impos
 exception NYI of string
 exception Failure of string
@@ -291,12 +296,20 @@ let format5 f a b c d e = format f [a;b;c;d;e]
 let format6 f a b c d e g = format f [a;b;c;d;e;g]
 
 
-let fprint1 a b = print_string <| format1 a b
-let fprint2 a b c = print_string <| format2 a b c
-let fprint3 a b c d = print_string <| format3 a b c d
-let fprint4 a b c d e = print_string <| format4 a b c d e
-let fprint5 a b c d e f = print_string <| format5 a b c d e f
-let fprint6 a b c d e f g = print_string <| format6 a b c d e f g
+let print1 a b = print_string <| format1 a b
+let print2 a b c = print_string <| format2 a b c
+let print3 a b c d = print_string <| format3 a b c d
+let print4 a b c d e = print_string <| format4 a b c d e
+let print5 a b c d e f = print_string <| format5 a b c d e f
+let print6 a b c d e f g = print_string <| format6 a b c d e f g
+
+let print s args = print_string <| format s args
+
+type out_channel = TextWriter
+let stderr: out_channel = stderr
+let stdout: out_channel = stdout
+
+let fprint f s args = Printf.fprintf f "%s" (format s args)
 
 type either<'a,'b> =
   | Inl of 'a
@@ -369,6 +382,11 @@ let map_opt opt f =
     match opt with
       | None -> None
       | Some x -> Some (f x)
+
+let iter_opt opt f =
+  match opt with
+  | None -> ()
+  | Some x -> f x
 
 let try_find_i f l =
     let rec aux i = function
@@ -516,7 +534,7 @@ let expand_environment_variable s =
   System.Environment.ExpandEnvironmentVariables ("%"^s^"%")
 
 let physical_equality (x:'a) (y:'a) = LanguagePrimitives.PhysicalEquality (box x) (box y)
-let check_sharing a b msg = if physical_equality a b then fprint1 "Sharing OK: %s\n" msg else fprint1 "Sharing broken in %s\n" msg
+let check_sharing a b msg = if physical_equality a b then print1 "Sharing OK: %s\n" msg else print1 "Sharing broken in %s\n" msg
 
 let is_letter_or_digit = Char.IsLetterOrDigit
 let is_punctuation = Char.IsPunctuation
@@ -582,3 +600,18 @@ let get_oreader (file:string) : oReader =
         close = r.Close
     }
 
+
+let getcwd () =
+  System.Environment.CurrentDirectory
+
+let readdir d =
+  List.ofArray (System.IO.Directory.GetFiles d)
+
+let file_exists f =
+  System.IO.File.Exists f || System.IO.Directory.Exists f
+
+let basename f =
+  System.IO.Path.GetFileName f
+
+let print_endline x =
+  print_endline x

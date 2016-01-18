@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set --admit_fsi FStar.OrdSet --admit_fsi FStar.OrdSetProps;
-    other-files:ext.fst set.fsi heap.fst st.fst all.fst listTot.fst ordset.fsi ordsetproperties.fst
+    other-files:FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.Tot.fst ordset.fsi FStar.OrdSetProps.fst
   --*)
 (*
    Copyright 2008-2015 Nikhil Swamy and Microsoft Research

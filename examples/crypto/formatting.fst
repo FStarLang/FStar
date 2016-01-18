@@ -2,10 +2,10 @@
     options:--z3timeout 10 --verify_module Formatting --admit_fsi FStar.Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
     variables:MITLS=../../../mitls-fstar/libs/fst/;
     other-files:
-            ext.fst classical.fst
-            set.fsi set.fst
-            heap.fst st.fst all.fst string.fst list.fst
-            seq.fsi seqproperties.fst
+            FStar.FunctionalExtensionality.fst FStar.Classical.fst
+            FStar.Set.fsi FStar.Set.fst
+            FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.String.fst FStar.List.fst
+            seq.fsi FStar.SeqProperties.fst
             ../../contrib/Platform/fst/Bytes.fst
   --*)
 

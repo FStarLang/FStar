@@ -21,6 +21,7 @@ val concat:  string -> list string -> Tot string
 val compare: string -> string -> Tot int
 val strlen:  string -> Tot nat
 val length:  string -> Tot nat
+val lowercase: string -> Tot string
 
 (* may fail with index out of bounds *)
 val substring: string -> int -> int -> string

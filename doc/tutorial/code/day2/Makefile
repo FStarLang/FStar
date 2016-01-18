@@ -6,8 +6,8 @@ MSBUILD = xbuild
 endif
 
 FSTAR_HOME = ../..
-LIB_FILES= string.fst set.fst map.fst heap.fst array.fst st.fst array-realized.fst
-STDLIB = list.fst $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES))
+LIB_FILES= FStar.String.fst FStar.Set.fst FStar.Map.fst FStar.Heap.fst array.fst FStar.ST.fst array-realized.fst
+STDLIB = FStar.List.fst $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES))
 #FSTAR      = ../../bin/fstar.exe --codegen OCaml --odir ocaml-gen  $(STDLIB) $(OTHERFLAGS)
 
 #Use the following to test the bootstrapped ocaml version: fstarml
@@ -23,13 +23,13 @@ all: all-lax all-ver
 
 VERFILES=unit1.fst testset.fst millionaires.fst listlemmas.fst intlist-insertionsort.fst insertionsort.fst insertionsort-lemma.fst sf-basic.fst sf-lists.fst termination.fst termination-bugs.fst cca2.fst sf-poly.fst format.fst mac.fst sig.fst stlc.fst qs.fst cca2.fst bug22.fst bug19.fst bug29.fst bug26.fst bug15.fst bug25.fst bug24.fst bug28.fst bug35.fst bug52.fst bug23.fst bug21.fst
 
-acls2: list.fst $(addprefix $(FSTAR_HOME)/lib/, string.fst partialmap.fst st.fst) acls2.fst
+acls2: FStar.List.fst $(addprefix $(FSTAR_HOME)/lib/, FStar.String.fst partialmap.fst FStar.ST.fst) acls2.fst
 	../../bin/fstar.exe  $^ --verify
 
-counters: list.fst $(addprefix $(FSTAR_HOME)/lib/, string.fst partialmap.fst stperm.fst) ../sep/counters.fst
+counters: FStar.List.fst $(addprefix $(FSTAR_HOME)/lib/, FStar.String.fst partialmap.fst stperm.fst) ../sep/counters.fst
 	../../bin/fstar.exe  $^ --verify
 
-test: $(addprefix $(FSTAR_HOME)/lib/, partialmap.fst st.fst) test.fst
+test: $(addprefix $(FSTAR_HOME)/lib/, partialmap.fst FStar.ST.fst) test.fst
 	../../bin/fstar.exe  $^ --verify $(OTHERFLAGS)
 
 cache: $(STDLIB)
@@ -64,7 +64,7 @@ all-ver: $(VERFILES)
 all-lax: rec.fst pat.fst mac.fst bug16.fst
 	$(FSTAR) --lax $^
 
-%.vv: list.fst %.fst
+%.vv: FStar.List.fst %.fst
 	../../bin/fstar.exe $(OTHERFLAGS)  $^ --verify
 
 stlc:
@@ -74,7 +74,7 @@ format: format.fst
 	../../bin/fstar.exe $(OTHERFLAGS)  $(FSTAR_HOME)/lib/array-realized.fst format.fst --verify
 
 mac: mac.fst
-	../../bin/fstar.exe $(OTHERFLAGS)  $(FSTAR_HOME)/lib/list.fst $(FSTAR_HOME)/lib/array-realized.fst mac.fst --verify
+	../../bin/fstar.exe $(OTHERFLAGS)  $(FSTAR_HOME)/lib/FStar.List.fst $(FSTAR_HOME)/lib/array-realized.fst mac.fst --verify
 
 vector: vectors.fst
 	$(FSTAR) --verify --full_context_dependency vectors.fst

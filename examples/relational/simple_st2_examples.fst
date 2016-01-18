@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set;
-    other-files:ext.fst set.fsi heap.fst st.fst st2.fst all.fst
+    other-files:FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.Relational.fst FStar.All.fst
   --*)
 
 module Samples

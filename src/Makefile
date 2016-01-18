@@ -13,9 +13,9 @@ FORMAT_SRC=$(addprefix format/, $(FORMAT))
 EXTRACTION=ml-syntax.fs env.fs util.fs codegen.fsi codegen.fs extracttyp.fs extractexp.fs extractmod.fs
 EXTRACTION_SRC=$(addprefix extraction/, $(EXTRACTION))
 
-PARSER=ast.fs parseutil.fs parse.fs lexhelp.fs lex.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs parseit.fsi parseit.fs driver.fs
+PARSER=ast.fs parseutil.fs parse.fs lexhelp.fs lex.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs parseit.fsi parseit.fs driver.fs dep.fs
 PARSER_SRC=$(addprefix parser/, $(PARSER))
-PARSER_NOGEN=ast.fs parseutil.fs parse.fsy lexhelp.fs lex.fsl dsenv.fs desugar.fs parseit.fsi parseit.fs driver.fs
+PARSER_NOGEN=ast.fs parseutil.fs parse.fsy lexhelp.fs lex.fsl dsenv.fs desugar.fs parseit.fsi parseit.fs driver.fs dep.fs
 PARSER_NOGEN_SRC=$(addprefix parser/, $(PARSER_NOGEN))
 
 TOSMT=term.fsi term.fs z3.fs splitcases.fs encode.fs
@@ -164,7 +164,7 @@ clean:
 # --------------------------------------------------------------------
 
 STDFILESEXP=system.fst
-STDFILES=system.fsi system.io.fsi system.text.fsi system.diagnostics.fsi system.collections.generic.fsi collections.fsi set.fsi allboot.fsti stboot.fsi list.fsi option.fsi
+STDFILES=system.fsi system.io.fsi system.text.fsi system.diagnostics.fsi system.collections.generic.fsi collections.fsi FStar.Set.fsi allboot.fsti stboot.fsi list.fsi option.fsi
 STDLIB=$(addprefix ../lib/, $(STDFILES))
 STDLIBEXP=$(addprefix ../lib/, $(STDFILES))
 
@@ -172,7 +172,7 @@ BOOT_BASICFILES=char.fsi string.fsi bytes.fsti platform.fsi util.fsi getoptsimpl
 BOOT_BASIC=$(addprefix basic/, $(BOOT_BASICFILES))
 BOOT_SYNTAXFILES=syntax.fsi syntax.fs const.fs visit.fs util.fs print.fs ssyntax.fs
 BOOT_SYNTAX=$(addprefix absyn/, $(BOOT_SYNTAXFILES))
-BOOT_PARSERFILES=ast.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs parse.fsti lexhelp.fs parseit.fsi driver.fs
+BOOT_PARSERFILES=ast.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs parse.fsti lexhelp.fs parseit.fsi driver.fs dep.fs
 BOOT_PARSER=$(addprefix parser/, $(BOOT_PARSERFILES))
 BOOT_TCFILES=tcenv.fsi tcenv.fs recheck.fs normalize.fsi normalize.fs errors.fs rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs
 BOOT_TC=$(addprefix tc/, $(BOOT_TCFILES))

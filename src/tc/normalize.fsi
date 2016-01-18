@@ -28,6 +28,7 @@ type step =
   | EtaArgs      (* eta expand arguments of functions also *)
   | Delta        (* expand type abbreviations only if reduction is blocked *)
   | DeltaHard    (* expand all type abbreviations *)
+  | UnfoldOpaque (* unfold opaque type abberviations *)
   | Beta         (* beta reduction -- CH: currently adding this changes nothing, seems that Beta always performed *)
   | DeltaComp    (* expand computation-type abbreviations *)
   | Simplify     (* simplify formulas while reducing -- experimental -- CH: actually unused *)
@@ -48,7 +49,7 @@ val norm_kind: steps -> Env.env -> knd -> knd
 val norm_typ:  steps -> Env.env -> typ -> typ
 val norm_exp:  steps -> Env.env -> exp -> exp
 val norm_sigelt: Env.env -> sigelt -> sigelt
-val normalize_refinement: Env.env -> typ -> typ
+val normalize_refinement: steps -> Env.env -> typ -> typ
 val whnf: Env.env -> typ -> typ
 val exp_norm_to_string: Env.env -> exp -> string
 val typ_norm_to_string : Env.env -> typ -> string

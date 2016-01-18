@@ -1,6 +1,6 @@
 (*--build-config
   options:--admit_fsi FStar.Seq --admit_fsi FStar.Set --verify_module Limb;
-  other-files:classical.fst seq.fsi seqproperties.fst set.fsi heap.fst st.fst all.fst ghost.fst axiomatic.fst intlib.fst;
+  other-files:FStar.Classical.fst seq.fsi FStar.SeqProperties.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Ghost.fst axiomatic.fst intlib.fst;
   --*)
 
 (* 

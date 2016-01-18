@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set --admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi Prins --admit_fsi Ffibridge --z3timeout 10 --__temp_no_proj PSemantics --__temp_no_proj Metatheory;
-    other-files:ghost.fst listTot.fst set.fsi ordset.fsi ordmap.fsi constr.fst ext.fst classical.fst prins.fsi ast.fst ffibridge.fsi sem.fst psem.fst
+    other-files:FStar.Ghost.fst FStar.List.Tot.fst FStar.Set.fsi ordset.fsi ordmap.fsi FStar.Constructive.fst FStar.FunctionalExtensionality.fst FStar.Classical.fst prins.fsi ast.fst ffibridge.fsi sem.fst psem.fst
  --*)
 
 module Metatheory

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -10,6 +10,7 @@
     <RootNamespace>parser</RootNamespace>
     <AssemblyName>parser</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
     <Name>parser</Name>
     <TargetFrameworkProfile />
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\VS\</SolutionDir>
@@ -89,6 +90,7 @@
     <Compile Include="parseit.fs" />
     <Compile Include="driver.fs" />
     <Content Include="packages.config" />
+    <Compile Include="dep.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\tc\tc.fsproj">
@@ -110,6 +112,9 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
+    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <Private>True</Private>
+    </Reference>
     <ProjectReference Include="..\absyn\absyn.fsproj">
       <Name>absyn</Name>
       <Project>{13e8984e-188d-447b-b7b7-9f7441050565}</Project>

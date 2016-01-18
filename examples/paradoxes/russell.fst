@@ -1,5 +1,5 @@
 (*--build-config
-    other-files: constr.fst;
+    other-files: FStar.Constructive.fst;
   --*)
 module Russell
 open FStar.Constructive

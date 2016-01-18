@@ -1,14 +1,14 @@
 VERFILES=unit1.fst unit2.fst testset.fst short-circuit.fst first-proofs.fst
 include ../Makefile.include
 NEGFILES=negative-tests.fst
-NEGTESTS=36
+NEGTESTS=35
 
 all: all-pos all-neg
 
 all-pos: basictests testint32.vv testmref.vv testTwoLevelHeap.vv mac2.vv testghost inverse testghost
 
 basictests: $(VERFILES)
-		$(FSTAR) --admit_fsi FStar.Set $(STDLIB) int32.fst $^
+		$(FSTAR) --admit_fsi FStar.Set $(STDLIB) FStar.Int32.fst $^
 
 all-neg: $(NEGFILES)
 	-$(FSTAR) --admit_fsi FStar.Set $(STDLIB) --split_cases 1 $^ | tee fstar_log
@@ -16,7 +16,7 @@ all-neg: $(NEGFILES)
 
 
 inverse:
-	$(FSTAR) --admit_fsi FStar.Seq classical.fst ext.fst seq.fsi inverse.fst --max_fuel 0 --max_ifuel 3 --initial_ifuel 3 --initial_fuel 0
+	$(FSTAR) --admit_fsi FStar.Seq FStar.Classical.fst FStar.FunctionalExtensionality.fst seq.fsi inverse.fst --max_fuel 0 --max_ifuel 3 --initial_ifuel 3 --initial_fuel 0
 
 testghost:
 	$(FSTAR) testghost.fst
