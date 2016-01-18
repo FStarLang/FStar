@@ -37,6 +37,7 @@ val guard_form                : guard_t -> guard_formula
 val guard_to_string           : env -> guard_t -> string
 val simplify_guard            : env -> guard_t -> guard_t
 val solve_deferred_constraints: env -> guard_t -> guard_t
+val solve_deferred_constraints_and_implicits: env -> guard_t -> guard_t
 val discharge_guard       : env -> guard_t -> unit 
 
 val unrefine   : env -> typ -> typ

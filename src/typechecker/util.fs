@@ -1076,7 +1076,7 @@ let check_top_level env g lc : (bool * comp) =
   let discharge g =
     discharge_guard env g;
     Util.is_pure_lcomp lc in
-  let g = Rel.solve_deferred_constraints env g in
+  let g = Rel.solve_deferred_constraints_and_implicits env g in
   if Util.is_total_lcomp lc
   then discharge g, lc.comp()   
   else let c = lc.comp() in

@@ -344,7 +344,13 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
             (Print.term_to_string c.res_typ)
             (Env.expected_typ env0 |> (fun x -> match x with None -> "None" | Some t -> Print.term_to_string t));
     let e, c, g' = comp_check_expected_typ env0 e c in
-    e, c, Rel.conj_guard g g'
+    let gimp = 
+        match (SS.compress head).n with 
+            | Tm_uvar(u, _) ->
+              let imp = (env0, u, e, c.res_typ, e.pos) in
+              {Rel.trivial_guard with implicits=[imp]} 
+            | _ -> Rel.trivial_guard in
+    e, c, Rel.conj_guard g (Rel.conj_guard g' gimp)
     
   | Tm_match(e1, eqns) ->
     let env1, topt = Env.clear_expected_typ env in
@@ -414,8 +420,13 @@ and tc_value env (e:term) : term
   | Tm_bvar x ->
     failwith "Impossible: Violation of locally nameless convention"
 
-  | Tm_uvar(_, t1) -> //the type of a uvar is given directly with it; we do not recheck the type
-    value_check_expected_typ env e (Inl t1) Rel.trivial_guard
+  | Tm_uvar(u, t1) -> //the type of a uvar is given directly with it; we do not recheck the type
+//    let g = match (SS.compress t1).n with 
+//        | Tm_arrow _ -> Rel.trivial_guard
+//        | _ -> let imp = (env, u, top, t1, top.pos) in
+//               {Rel.trivial_guard with implicits=[imp]} in
+    let g = Rel.trivial_guard in
+    value_check_expected_typ env e (Inl t1) g
 
   | Tm_unknown -> //only occurs where type annotations are missing in source programs
     let t, u = U.type_u () in
@@ -706,9 +717,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     then Util.print3 "!!!!!!!!!!!!!!!body %s has type %s\nguard is %s\n" 
           (Print.term_to_string body) (Print.lcomp_to_string cbody) (guard_to_string env guard_body);
     let guard_body =  //we don't abstract over subtyping constraints; so solve them now
-        let imps = guard_body.implicits in 
-        let g = Rel.solve_deferred_constraints envbody ({guard_body with implicits=[]}) in
-        {g with implicits=imps} in
+        Rel.solve_deferred_constraints envbody ({guard_body with implicits=[]}) in
     if Env.debug env <| Options.Other "Implicits"
     then Util.print1 "Introduced %s implicits in body of abstraction\n" (string_of_int <| List.length guard_body.implicits);
     let body, cbody, guard = check_expected_effect ({envbody with use_eq=use_eq}) c_opt (body, cbody.comp()) in
@@ -994,7 +1003,7 @@ and tc_eqn scrutinee env branch
 
         let g' = Rel.teq env lc.res_typ expected_pat_t in
         let g = Rel.conj_guard g g' in
-        ignore <| Rel.solve_deferred_constraints env g;
+        ignore <| Rel.solve_deferred_constraints_and_implicits env g;
         let e' = N.normalize [N.Beta] env e in
         let uvars_to_string uvs = uvs |> Util.set_elements |> List.map (fun (u, _) -> Print.uvar_to_string u) |> String.concat ", " in
         let uvs1 = Free.uvars e' in
@@ -1193,11 +1202,12 @@ and check_top_level_let env e =
 (*open*) let e1, univ_vars, c1, g1, annotated = check_let_bound_def true env lb in
 
          (* Maybe generalize its type *)
-         let e1, univ_vars, c1 = 
+         let g1, e1, univ_vars, c1 = 
             if annotated && not env.generalize 
-            then e1, univ_vars, c1
-            else let _, univs, e1, c1 = List.hd (TcUtil.generalize env [lb.lbname, e1, c1.comp()]) in
-                 e1, univs, Util.lcomp_of_comp c1 in
+            then g1, e1, univ_vars, c1
+            else let g1 = Rel.solve_deferred_constraints env g1 in 
+                 let _, univs, e1, c1 = List.hd (TcUtil.generalize env [lb.lbname, e1, c1.comp()]) in
+                 g1, e1, univs, Util.lcomp_of_comp c1 in
                               
          (* Check that it doesn't have a top-level effect; warn if it does *)
          let e2, c1 =
@@ -2102,7 +2112,7 @@ let rec tc_decl env se = match se with
       let env = Env.set_range env r in
       let env = Env.set_expected_typ env Recheck.t_unit in
       let e, c, g1 = tc_term env e in
-      let g1 = Rel.solve_deferred_constraints env g1 in
+      let g1 = Rel.solve_deferred_constraints_and_implicits env g1 in
       let e, _, g = check_expected_effect env (Some (Util.ml_comp Recheck.t_unit r)) (e, c.comp()) in
       Rel.discharge_guard env (Rel.conj_guard g1 g);
       let se = Sig_main(e, r) in
