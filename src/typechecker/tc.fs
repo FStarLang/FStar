@@ -116,7 +116,7 @@ let value_check_expected_typ env e tlc guard : term * lcomp * guard_t =
      let t = lc.res_typ in
      let e, g = TcUtil.check_and_ascribe env e t t' in
      if debug env Options.High
-     then Util.print1 "check_and_ascribe: guard is %s\n" (Rel.guard_to_string env g);
+     then Util.print2 "check_and_ascribe: type is %s\n\tguard is %s\n" (Print.term_to_string t) (Rel.guard_to_string env g);
      let g = Rel.conj_guard g guard in
      let lc, g = TcUtil.strengthen_precondition (Some <| Errors.subtyping_failed env t t') env e lc g in
      e, set_lcomp_result lc t', g in
@@ -1680,10 +1680,9 @@ let tc_eff_decl env0 (ed:Syntax.eff_decl)  =
 
   let close_wp =
     let b = S.new_bv (Some (range_of_lid ed.mname)) (U.type_u() |> fst) in
-    let wp_b = SS.subst [NT(a, S.bv_to_name b)] wp_a in
-    let a_wp_b = Util.arrow [S.null_binder (S.bv_to_name a)] (S.mk_Total wp_b) in
-    let expected_k = Util.arrow [S.mk_binder b; S.mk_binder a; S.null_binder a_wp_b]
-                                (S.mk_Total wp_b) in
+    let b_wp_a = Util.arrow [S.null_binder (S.bv_to_name b)] (S.mk_Total wp_a) in
+    let expected_k = Util.arrow [S.mk_binder a; S.mk_binder b; S.null_binder b_wp_a]
+                                (S.mk_Total wp_a) in
     check_and_gen' env ed.close_wp expected_k in
 
   let assert_p =
