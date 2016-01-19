@@ -37,8 +37,9 @@ val guard_form                : guard_t -> guard_formula
 val guard_to_string           : env -> guard_t -> string
 val simplify_guard            : env -> guard_t -> guard_t
 val solve_deferred_constraints: env -> guard_t -> guard_t
-val solve_deferred_constraints_and_implicits: env -> guard_t -> guard_t
-val discharge_guard       : env -> guard_t -> unit 
+val discharge_guard           : env -> guard_t -> guard_t 
+val force_trivial_guard       : env -> guard_t -> unit
+val resolve_implicits         : guard_t -> guard_t
 
 val unrefine   : env -> typ -> typ
 val try_teq    : env -> typ -> typ -> option<guard_t>
@@ -49,3 +50,4 @@ val sub_comp   : env -> comp -> comp -> option<guard_t>
 val universe_inequality : universe -> universe -> guard_t
 
 val subtype_fail: env -> typ -> typ -> 'a
+val print_pending_implicits: guard_t -> string

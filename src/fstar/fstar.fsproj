@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -26,9 +26,9 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>--universes --prims test_prims.fst listTot.fst</StartArguments>
+    <StartArguments>--universes test.fst test2.fst --debug TEST2 --debug_level Extreme --debug_level Gen --print_universes --print_implicits --debug_level LogTypes --print_bound_var_types --debug_level RelCheck</StartArguments>
     <StartAction>Project</StartAction>
-    <StartWorkingDirectory>d:\workspace\universes\FStar\examples\unit-tests\</StartWorkingDirectory>
+    <StartWorkingDirectory>C:\Users\nswamy\workspace\universes\FStar\lib</StartWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>

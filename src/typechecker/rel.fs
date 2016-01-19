@@ -1854,6 +1854,8 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
 (* -------------------------------------------------------- *)
 (* top-level interface                                      *)
 (* -------------------------------------------------------- *)
+let print_pending_implicits g = g.implicits |> List.map (fun (_, u, _, _, _) -> Print.uvar_to_string u) |> String.concat ", "
+
 let guard_to_string (env:env) g =
   match g.guard_f, g.deferred with
     | Trivial, [] -> "{}"
@@ -1866,7 +1868,8 @@ let guard_to_string (env:env) g =
               then N.term_to_string env f
               else "non-trivial" in
       let carry = List.map (fun (_, x) -> prob_to_string env x) g.deferred |> String.concat ",\n" in
-      Util.format2 "\n\t{guard_f=%s;\n\t deferred={\n%s};}\n" form carry
+      let imps = print_pending_implicits g in 
+      Util.format3 "\n\t{guard_f=%s;\n\t deferred={\n%s};\n\t implicits={%s}}\n" form carry imps
 
 (* ------------------------------------------------*)
 (* <guard_formula ops> Operations on guard_formula *)
@@ -2104,51 +2107,23 @@ let solve_universe_inequalities env ineqs =
     solve_universe_inequalities' tx env ineqs;
     Unionfind.commit tx
 
-let rec solve_deferred_constraints_aux must_resolve_imps env (g:guard_t) =
+let rec solve_deferred_constraints env (g:guard_t) =
    let fail (d,s) =
       let msg = explain env d s in
       raise (Error(msg, p_loc d)) in
    let wl = wl_of_guard env g.deferred in
    if Env.debug env <| Options.Other "RelCheck"
-   && List.length g.deferred <> 0
-   then Util.print1 "Trying to solve carried problems: begin\n\t%s\nend\n"  (wl_to_string wl);
+   then Util.print2 "Trying to solve carried problems: begin\n\t%s\nend\n and %s implicits\n"  (wl_to_string wl) (string_of_int (List.length g.implicits));
    let g = match solve_and_commit env wl fail with 
     | Some [] -> {g with deferred=[]}
     | _ -> failwith "impossible: Unexpected deferred constraints remain" in
-   let g = resolve_all_implicits must_resolve_imps env g in
    solve_universe_inequalities env g.univ_ineqs;
    {g with univ_ineqs=[]}
 
-and resolve_all_implicits must_resolve env g = 
-  let unresolved u = match Unionfind.find u with
-    | Uvar -> true
-    | _ -> false in
-  let imps = g.implicits |> List.collect (fun (env, u, tm, k, r) -> 
-            if unresolved u && must_resolve
-            then raise (Error(Util.format1 "Unresolved implicit argument: %s" (Print.uvar_to_string u), r))
-            else if unresolved u && not must_resolve 
-            then [(env, u, tm, k, r)]
-            else
-                let env = Env.set_expected_typ env k in
-                let tm = N.normalize [N.Beta] env tm in
-                if Env.debug env <| Options.Other "RelCheck"
-                then Util.print3 "Checking uvar %s resolved to %s at type %s\n" 
-                                 (Print.uvar_to_string u) (Print.term_to_string tm) (Print.term_to_string k);
-                let _, g = env.type_of ({env with use_bv_sorts=true}) tm in 
-                let g' = solve_deferred_constraints_aux must_resolve env g |> simplify_guard env in
-                (match g.guard_f with 
-                    | Trivial -> ()
-                    | NonTrivial vc -> env.solver.solve env vc);
-                g'.implicits) in
- {g with implicits=imps}
-
-let solve_deferred_constraints env g = solve_deferred_constraints_aux false env g 
-let solve_deferred_constraints_and_implicits env g = solve_deferred_constraints_aux true env g 
-
-let discharge_guard env (g:guard_t) =
-   let g = solve_deferred_constraints_and_implicits env g in
-   if not (Options.should_verify env.curmodule.str) then ()
-   else match g.guard_f with
+let discharge_guard env (g:guard_t) : guard_t =
+   let g = solve_deferred_constraints env g in
+   (if not (Options.should_verify env.curmodule.str) then ()
+    else match g.guard_f with
     | Trivial -> ()
     | NonTrivial vc ->
         let vc = N.normalize [N.Inline; N.Beta; N.Eta; N.Simplify] env vc in
@@ -2159,7 +2134,35 @@ let discharge_guard env (g:guard_t) =
                 then Errors.diag (Env.get_range env) 
                                  (Util.format1 "Checking VC=\n%s\n" (Print.term_to_string vc));
                 env.solver.solve env vc
-        end
+        end);
+  {g with guard_f=Trivial}
+
+let resolve_implicits g = 
+  let unresolved u = match Unionfind.find u with
+    | Uvar -> true
+    | _ -> false in
+  let rec until_fixpoint (out, changed) implicits = 
+    match implicits with 
+        | [] -> if not changed then out else until_fixpoint ([], false) out
+        | hd::tl -> 
+          let (env, u, tm, k, r) = hd in 
+          if unresolved u
+          then until_fixpoint (hd::out, changed) tl
+          else let env = Env.set_expected_typ env k in
+               let tm = N.normalize [N.Beta] env tm in
+               if Env.debug env <| Options.Other "RelCheck"
+               then Util.print3 "Checking uvar %s resolved to %s at type %s\n" 
+                                 (Print.uvar_to_string u) (Print.term_to_string tm) (Print.term_to_string k);
+               let _, g = env.type_of ({env with use_bv_sorts=true}) tm in 
+               let g' = discharge_guard env g in
+               until_fixpoint (g'.implicits@out, true) tl in
+  {g with implicits=until_fixpoint ([], false) g.implicits}
+
+let force_trivial_guard env g = 
+    let g = solve_deferred_constraints env g |> resolve_implicits in
+    match g.implicits with 
+        | [] -> ignore <| discharge_guard env g
+        | (_,_,_,_,r)::_ -> raise (Error("Failed to resolve implicit argument", r))
 
 let universe_inequality (u1:universe) (u2:universe) : guard_t =
     //Printf.printf "Universe inequality %s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2);

@@ -973,7 +973,8 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
          let c = if Options.should_verify env.curmodule.str
                  then Normalize.normalize_comp [N.Beta; N.Inline; N.SNComp; N.Eta] env c
                  else Normalize.normalize_comp [N.Beta] env c in
-         if debug env Options.Medium then Util.print1 "Normalized to:\n\t %s\n" (Print.comp_to_string c);
+         if debug env Options.Medium then 
+            Util.print1 "Normalized to:\n\t %s\n" (Print.comp_to_string c);
          c in
      let env_uvars = Env.uvars_in_env env in
      let gen_uvars uvs = Util.set_difference uvs env_uvars |> Util.set_elements in
@@ -982,8 +983,8 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
           let c = norm c in
           let ct = U.comp_to_comp_typ c in
           let t = ct.result_typ in
-          let uvt = Free.uvars t in
           let univs = Free.univs t in
+          let uvt = Free.uvars t in
           let uvs = gen_uvars uvt in
          univs, (uvs, e, c)) |> List.unzip in
   
@@ -1064,19 +1065,14 @@ let check_and_ascribe env (e:term) (t1:typ) (t2:typ) : term * guard_t =
     | Some g ->
         if debug env <| Options.Other "Rel"
         then Util.print1 "Applied guard is %s\n" <| guard_to_string env g;
-//        let g0 = 
-//            if //Ident.lid_equals env.curmodule Const.prims_lid || 
-//            is_type t1 && is_type t2
-//            then Rel.trivial_guard 
-//            else Rel.teq env (force_sort t1) (force_sort t2) in //check that their universes are equal
         decorate e t2, g
 
 /////////////////////////////////////////////////////////////////////////////////
 let check_top_level env g lc : (bool * comp) =
   let discharge g =
-    discharge_guard env g;
+    force_trivial_guard env g;
     Util.is_pure_lcomp lc in
-  let g = Rel.solve_deferred_constraints_and_implicits env g in
+  let g = Rel.solve_deferred_constraints env g in
   if Util.is_total_lcomp lc
   then discharge g, lc.comp()   
   else let c = lc.comp() in

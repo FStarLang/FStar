@@ -40,9 +40,9 @@ let cons_rel (R x y) (R xs ys) = R (x::xs) (y::ys)
 (* Some convenient tuple functions *)
 let pair_rel (R a b) (R c d) = R (a,c) (b,d)
 let triple_rel (R a b) (R c d) (R e f) = R (a,c,e) (b,d,f)
-let fst_rel x = rel_map1T fst x //TODO: fix the eta expansion
-let snd_rel x = rel_map1T snd x
-
+let fst_rel = rel_map1T fst 
+let snd_rel = rel_map1T snd 
+ 
 (* Some convenient boolean functions *)
 let and_rel = rel_map2T (fun x y -> x && y)
 let or_rel = rel_map2T (fun x y -> x || y)
