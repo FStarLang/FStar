@@ -1,10 +1,10 @@
 (*--build-config
     options:--z3timeout 10 --verify_module Bug --codegen OCaml --admit_fsi FStar.IO;
     other-files:
-            ext.fst classical.fst
+            FStar.FunctionalExtensionality.fst FStar.Classical.fst
             FStar.Set.fsi FStar.Set.fst
             FStar.Heap.fst FStar.ST.fst FStar.All.fst
-            string.fst list.fst
+            FStar.String.fst FStar.List.fst
             FStar.IO.fsti
   --*)
 

@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Seq --admit_fsi FStar.Matrix2 --z3timeout 10;
-    other-files:seq.fsi matrix2.fsti
+    other-files:seq.fsi FStar.Matrix2.fsti
   --*)
 module Traces
 open FStar
@@ -336,7 +336,7 @@ val fast_is_sparse_full: a:Seq.seq int -> b:Seq.seq int -> p:prod a b entry -> q
                       -> i:bound a -> j:bound b -> Lemma
   (requires (Matrix2.Eq p q
             /\ prod_invariant p i j))
-  (ensures (Matrix2.Eq (prod_until p (Seq.length a) (Seq.length b) i oj)
+  (ensures (Matrix2.Eq (prod_until p (Seq.length a) (Seq.length b) i j)
                        (make_sparse (full a b) q i j)))
   (decreases %[(Seq.length a - i); (Seq.length b - j)])                     
 let rec fast_is_sparse_full a b p q i j = 
@@ -747,7 +747,7 @@ let rec as_list s i =
   if i = Seq.length s then []
   else Seq.index s i :: as_list s (i + 1)
 
-val rows_from : #la:seq int -> #b:seq int -> prod a b entry -> i:bound a -> Tot (list (list bool))
+val rows_from : #a:seq int -> #b:seq int -> prod a b entry -> i:bound a -> Tot (list (list bool))
   (decreases (Seq.length a - i))
 let rec rows_from #a #b p i = 
   if i = Seq.length a then []

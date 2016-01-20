@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set --admit_fsi FStar.Map --logQueries;
-    other-files:../../lib/FStar.Set.fsi ../../lib/FStar.Heap.fst ../../lib/FStar.ST.fst ../../lib/FStar.All.fst ../../lib/map.fsi ../../lib/twoLevelHeap.fst
+    other-files:../../lib/FStar.Set.fsi ../../lib/FStar.Heap.fst ../../lib/FStar.ST.fst ../../lib/FStar.All.fst ../../lib/map.fsi ../../lib/FStar.TwoLevelHeap.fst
  --*)
 
 module TestTwoLevelHeap

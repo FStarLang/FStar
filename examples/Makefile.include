@@ -11,12 +11,12 @@ MSBUILD = xbuild
 endif
 
 FSTAR_HOME = ../..
-LIB_FILES=FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst list.fst string.fst
+LIB_FILES=FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst FStar.String.fst
 add_stdlib_prefix=$(addprefix $(FSTAR_HOME)/lib/,$(1))
-STDLIB=$(call add_stdlib_prefix,$(LIB_FILES))
-OLDLIB=$(call add_stdlib_prefix,list.fst string.fst partialmap.fst FStar.ST.fst)
+STDLIB=$(call add_stdlib_prefix, $(LIB_FILES))
+OLDLIB=$(call add_stdlib_prefix, FStar.List.fst FStar.String.fst partialmap.fst FStar.ST.fst)
 
-FULL_LIB=$(call add_stdlib_prefix,$(LIB_FILES) listproperties.fst)
+FULL_LIB=$(call add_stdlib_prefix, $(LIB_FILES) FStar.ListProperties.fst)
 STDLIB_CACHE = Prims.cache List.cache Set.cache Map.cache Heap.cache Array.cache String.cache ST.cache
 FULL_LIB_CACHE = $(STDLIB_CACHE) ListProperties.cache
 PERMLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) stperm.fst)

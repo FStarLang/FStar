@@ -1,5 +1,5 @@
 (*--build-config
-    other-files:../../lib/int16.fst
+    other-files:../../lib/FStar.Int16.fst
  --*)
 
 module TestInt16

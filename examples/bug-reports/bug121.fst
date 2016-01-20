@@ -1,5 +1,5 @@
 (*--build-config
-    other-files:ext.fst
+    other-files:FStar.FunctionalExtensionality.fst
   --*)
 module Bug121FunctionNotEqualToItsDefinition
 

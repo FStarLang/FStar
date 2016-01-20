@@ -1,5 +1,5 @@
 (*--build-config
-    other-files:list.fst
+    other-files:FStar.List.fst
 --*)
 
 module Bug254

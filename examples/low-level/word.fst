@@ -1,5 +1,5 @@
 (*--build-config
-    other-files:ext.fst FStar.Set.fsi
+    other-files:FStar.FunctionalExtensionality.fst FStar.Set.fsi
   --*)
 module MachineWord
 

@@ -30,7 +30,7 @@ ocaml: out hello.fst
 
 testseq: out testseq.fst
 	$(FSTAR) --use_native_int --odir out --codegen OCaml testseq.fst
-	$(FSTAR) --use_native_int --odir out --codegen OCaml $(LIB)/seq.fst
+	$(FSTAR) --use_native_int --odir out --codegen OCaml $(LIB)/FStar.Seq.fst
 	cp $(LIB)/ml/native_int/prims.ml $(LIB)/ml/FStar_IO.ml out
 	(cd out; ocamlc -o testseq.exe nums.cma prims.ml FStar_IO.ml FStar_Seq.ml TestSeq.ml)
 	./out/TestSeq.exe

@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set;
-    other-files:ext.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst
+    other-files:FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst
  --*)
 module FStar.MRef
 open FStar.Heap

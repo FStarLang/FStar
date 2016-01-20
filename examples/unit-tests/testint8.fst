@@ -1,5 +1,5 @@
 (*--build-config
-    other-files:int8.fst
+    other-files:FStar.Int8.fst
  --*)
 
 module TestInt8

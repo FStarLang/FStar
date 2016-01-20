@@ -1,11 +1,11 @@
 (*--build-config
     options:--z3timeout 10 --verify_module CntFormat --admit_fsi FStar.Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
     other-files:
-            ext.fst classical.fst
+            FStar.FunctionalExtensionality.fst FStar.Classical.fst
             FStar.Set.fsi FStar.Set.fst
             FStar.Heap.fst FStar.ST.fst FStar.All.fst
-            string.fst list.fst
-            seq.fsi seqproperties.fst
+            FStar.String.fst FStar.List.fst
+            seq.fsi FStar.SeqProperties.fst
             ../../contrib/Platform/fst/Bytes.fst
             FStar.IO.fsti
   --*)
