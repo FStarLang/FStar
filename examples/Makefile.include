@@ -25,9 +25,9 @@ STDCACHE=Prims.cache List.cache String.cache ST.cache Set.cache Map.cache Heap.c
 FSTARC=../../bin/fstar.exe $(STDCACHE) $(OTHERFLAGS)
 
 ifdef USE_NUBUILD
-VV=$(NUBUILD) --quiet FStarVerify 
+FSTAR_OR_NUBUILD=$(NUBUILD) --quiet FStarVerify 
 else
-VV=$(FSTAR)
+FSTAR_OR_NUBUILD=$(FSTAR)
 endif
 
 %.ver: %.fst
@@ -43,7 +43,7 @@ endif
 	$(FSTAR) --admit_fsi FStar.Set $(FULL_LIB) $^
 
 %.vv: %.fst
-	$(VV) $^
+	$(FSTAR_OR_NUBUILD) $^
 
 %.lax: %.fst
 	$(FSTAR) $(STDLIB) --lax $^
