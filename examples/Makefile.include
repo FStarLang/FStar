@@ -12,11 +12,11 @@ endif
 
 FSTAR_HOME = ../..
 LIB_FILES=FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst list.fst string.fst
-from_stdlib=$(addprefix $(FSTAR_HOME)/lib/,$(1))
-STDLIB=$(call from_stdlib,$(LIB_FILES))
-OLDLIB=$(call from_stdlib,list.fst string.fst partialmap.fst FStar.ST.fst)
+add_stdlib_prefix=$(addprefix $(FSTAR_HOME)/lib/,$(1))
+STDLIB=$(call add_stdlib_prefix,$(LIB_FILES))
+OLDLIB=$(call add_stdlib_prefix,list.fst string.fst partialmap.fst FStar.ST.fst)
 
-FULL_LIB=$(call from_stdlib,$(LIB_FILES) listproperties.fst)
+FULL_LIB=$(call add_stdlib_prefix,$(LIB_FILES) listproperties.fst)
 STDLIB_CACHE = Prims.cache List.cache Set.cache Map.cache Heap.cache Array.cache String.cache ST.cache
 FULL_LIB_CACHE = $(STDLIB_CACHE) ListProperties.cache
 PERMLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) stperm.fst)
