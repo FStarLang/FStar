@@ -16,29 +16,14 @@ let get_bc_start_string (_:unit) = bc_start
 module Path = BatPathGen.OfString
 
 let find_file (context:string) (filename:string) : string =
-    try
-      let result =
-        if FStar_Util.is_path_absolute filename then
-          if Sys.file_exists filename then
-            Some filename
-          else
-            None
-        else
-            let cwd = Path.to_string (Path.parent (Path.of_string context)) in
-            let search_path = FStar_Options.get_include_path(cwd) in
-            find_map 
-                search_path 
-                    (fun p -> 
-                    let path = FStar_Util.join_paths p filename in
-                        if Sys.file_exists path then 
-                            Some path
-                        else 
-                            None)
-        in
-      match result with
-        | None -> raise (Err "")
-      | Some p -> FStar_Util.normalize_file_path p
-    with e -> raise(Err (FStar_Util.format1 "Unable to open file: %s\n" filename))
+    let dirname = Path.to_string (Path.parent (Path.of_string context)) in
+    let search_path = FStar_Options.get_include_path dirname in
+    let found = FStar_Util.find_file filename search_path in
+    match found with
+      | Some s ->
+        s
+      | None -> 
+        raise(Err (FStar_Util.format1 "Unable to open file: %s\n" filename))
 
 let read_file (filename:string) =
   try

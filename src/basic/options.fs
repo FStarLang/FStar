@@ -187,7 +187,15 @@ let get_include_path (dirname:string) =
     !_include_path@["."; h ^ "/lib"; h ^ "/lib/fstar"])
 
 let prims () = match !prims_ref with
-  | None -> Util.format1 "%s/lib/prims.fst" (get_fstar_home ())
+  | None -> 
+    (let filen = "prims.fst" in
+    match find_file filen (get_include_path ".") with
+    | Some result ->
+      result
+    | None ->
+      (* todo: at this point, it seems certain that F* will fail to open `prims.fst`. there's no other attempts to raise an 
+       * exception in this module so it is unclear what a better course of action would be to notify the user. *)
+      filen)
   | Some x -> x
 
 let prependOutputDir fname = match !outputDir with
