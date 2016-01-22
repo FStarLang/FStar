@@ -615,3 +615,24 @@ let basename f =
 
 let print_endline x =
   print_endline x
+
+let find_file filename search_path =
+    try
+      Option.map
+        normalize_file_path
+        (if is_path_absolute filename then
+          if System.IO.File.Exists(filename) then
+            Some filename
+          else
+            None
+        else
+          find_map
+            search_path
+            (fun p ->
+              let path = System.IO.Path.Combine(p, filename) in
+              if System.IO.File.Exists(path) then
+                Some path
+              else
+                None))
+    with _ -> 
+      None
