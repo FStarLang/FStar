@@ -39,8 +39,8 @@ let deserialize_option = (fun reader f -> (let n = (reader.FStar_Util.read_char 
 in if (n = 'n') then begin
 None
 end else begin
-(let _94_21 = (f reader)
-in Some (_94_21))
+(let _95_21 = (f reader)
+in Some (_95_21))
 end))
 
 let serialize_list = (fun writer f l -> (let _28_22 = (writer.FStar_Util.write_int (FStar_List.length l))
@@ -50,26 +50,26 @@ let deserialize_list = (fun reader f -> (let n = (reader.FStar_Util.read_int ())
 in (let rec helper = (fun accum n -> if (n = 0) then begin
 accum
 end else begin
-(let _94_42 = (let _94_41 = (f reader)
-in (_94_41)::accum)
-in (helper _94_42 (n - 1)))
+(let _95_42 = (let _95_41 = (f reader)
+in (_95_41)::accum)
+in (helper _95_42 (n - 1)))
 end)
 in (helper [] n))))
 
 let serialize_ident = (fun writer ast -> (writer.FStar_Util.write_string ast.FStar_Absyn_Syntax.idText))
 
-let deserialize_ident = (fun reader -> (let _94_50 = (let _94_49 = (reader.FStar_Util.read_string ())
-in (_94_49, FStar_Absyn_Syntax.dummyRange))
-in (FStar_Absyn_Syntax.mk_ident _94_50)))
+let deserialize_ident = (fun reader -> (let _95_50 = (let _95_49 = (reader.FStar_Util.read_string ())
+in (_95_49, FStar_Absyn_Syntax.dummyRange))
+in (FStar_Absyn_Syntax.mk_ident _95_50)))
 
 let serialize_LongIdent = (fun writer ast -> (let _28_37 = (serialize_list writer serialize_ident ast.FStar_Absyn_Syntax.ns)
 in (serialize_ident writer ast.FStar_Absyn_Syntax.ident)))
 
-let deserialize_LongIdent = (fun reader -> (let _94_60 = (let _94_59 = (deserialize_list reader deserialize_ident)
-in (let _94_58 = (let _94_57 = (deserialize_ident reader)
-in (_94_57)::[])
-in (FStar_List.append _94_59 _94_58)))
-in (FStar_Absyn_Syntax.lid_of_ids _94_60)))
+let deserialize_LongIdent = (fun reader -> (let _95_60 = (let _95_59 = (deserialize_list reader deserialize_ident)
+in (let _95_58 = (let _95_57 = (deserialize_ident reader)
+in (_95_57)::[])
+in (FStar_List.append _95_59 _95_58)))
+in (FStar_Absyn_Syntax.lid_of_ids _95_60)))
 
 let serialize_lident = serialize_LongIdent
 
@@ -78,9 +78,9 @@ let deserialize_lident = deserialize_LongIdent
 let serialize_withinfo_t = (fun writer s_v s_sort ast -> (let _28_46 = (s_v writer ast.FStar_Absyn_Syntax.v)
 in (s_sort writer ast.FStar_Absyn_Syntax.sort)))
 
-let deserialize_withinfo_t = (fun reader ds_v ds_sort -> (let _94_90 = (ds_v reader)
-in (let _94_89 = (ds_sort reader)
-in {FStar_Absyn_Syntax.v = _94_90; FStar_Absyn_Syntax.sort = _94_89; FStar_Absyn_Syntax.p = FStar_Absyn_Syntax.dummyRange})))
+let deserialize_withinfo_t = (fun reader ds_v ds_sort -> (let _95_90 = (ds_v reader)
+in (let _95_89 = (ds_sort reader)
+in {FStar_Absyn_Syntax.v = _95_90; FStar_Absyn_Syntax.sort = _95_89; FStar_Absyn_Syntax.p = FStar_Absyn_Syntax.dummyRange})))
 
 let serialize_var = (fun writer s_sort ast -> (serialize_withinfo_t writer serialize_lident s_sort ast))
 
@@ -89,9 +89,9 @@ let deserialize_var = (fun reader ds_sort -> (deserialize_withinfo_t reader dese
 let serialize_bvdef = (fun writer ast -> (let _28_63 = (serialize_ident writer ast.FStar_Absyn_Syntax.ppname)
 in (serialize_ident writer ast.FStar_Absyn_Syntax.realname)))
 
-let deserialize_bvdef = (fun ghost reader -> (let _94_110 = (deserialize_ident reader)
-in (let _94_109 = (deserialize_ident reader)
-in {FStar_Absyn_Syntax.ppname = _94_110; FStar_Absyn_Syntax.realname = _94_109})))
+let deserialize_bvdef = (fun ghost reader -> (let _95_110 = (deserialize_ident reader)
+in (let _95_109 = (deserialize_ident reader)
+in {FStar_Absyn_Syntax.ppname = _95_110; FStar_Absyn_Syntax.realname = _95_109})))
 
 let serialize_bvar = (fun writer s_sort ast -> (serialize_withinfo_t writer serialize_bvdef s_sort ast))
 
@@ -143,42 +143,42 @@ let deserialize_sconst = (fun reader -> (match ((reader.FStar_Util.read_char ())
 FStar_Absyn_Syntax.Const_unit
 end
 | 'b' -> begin
-(let _94_132 = (reader.FStar_Util.read_byte ())
-in FStar_Absyn_Syntax.Const_uint8 (_94_132))
+(let _95_132 = (reader.FStar_Util.read_byte ())
+in FStar_Absyn_Syntax.Const_uint8 (_95_132))
 end
 | 'c' -> begin
-(let _94_133 = (reader.FStar_Util.read_bool ())
-in FStar_Absyn_Syntax.Const_bool (_94_133))
+(let _95_133 = (reader.FStar_Util.read_bool ())
+in FStar_Absyn_Syntax.Const_bool (_95_133))
 end
 | 'd' -> begin
-(let _94_134 = (reader.FStar_Util.read_int32 ())
-in FStar_Absyn_Syntax.Const_int32 (_94_134))
+(let _95_134 = (reader.FStar_Util.read_int32 ())
+in FStar_Absyn_Syntax.Const_int32 (_95_134))
 end
 | 'e' -> begin
-(let _94_135 = (reader.FStar_Util.read_int64 ())
-in FStar_Absyn_Syntax.Const_int64 (_94_135))
+(let _95_135 = (reader.FStar_Util.read_int64 ())
+in FStar_Absyn_Syntax.Const_int64 (_95_135))
 end
 | 'f' -> begin
-(let _94_136 = (reader.FStar_Util.read_char ())
-in FStar_Absyn_Syntax.Const_char (_94_136))
+(let _95_136 = (reader.FStar_Util.read_char ())
+in FStar_Absyn_Syntax.Const_char (_95_136))
 end
 | 'g' -> begin
-(let _94_137 = (reader.FStar_Util.read_double ())
-in FStar_Absyn_Syntax.Const_float (_94_137))
+(let _95_137 = (reader.FStar_Util.read_double ())
+in FStar_Absyn_Syntax.Const_float (_95_137))
 end
 | 'h' -> begin
-(let _94_139 = (let _94_138 = (reader.FStar_Util.read_bytearray ())
-in (_94_138, FStar_Absyn_Syntax.dummyRange))
-in FStar_Absyn_Syntax.Const_bytearray (_94_139))
+(let _95_139 = (let _95_138 = (reader.FStar_Util.read_bytearray ())
+in (_95_138, FStar_Absyn_Syntax.dummyRange))
+in FStar_Absyn_Syntax.Const_bytearray (_95_139))
 end
 | 'i' -> begin
-(let _94_141 = (let _94_140 = (reader.FStar_Util.read_bytearray ())
-in (_94_140, FStar_Absyn_Syntax.dummyRange))
-in FStar_Absyn_Syntax.Const_string (_94_141))
+(let _95_141 = (let _95_140 = (reader.FStar_Util.read_bytearray ())
+in (_95_140, FStar_Absyn_Syntax.dummyRange))
+in FStar_Absyn_Syntax.Const_string (_95_141))
 end
 | 'j' -> begin
-(let _94_142 = (reader.FStar_Util.read_string ())
-in FStar_Absyn_Syntax.Const_int (_94_142))
+(let _95_142 = (reader.FStar_Util.read_string ())
+in FStar_Absyn_Syntax.Const_int (_95_142))
 end
 | _28_135 -> begin
 (parse_error ())
@@ -196,12 +196,12 @@ end))
 
 let deserialize_either = (fun reader ds_l ds_r -> (match ((reader.FStar_Util.read_char ())) with
 | 'a' -> begin
-(let _94_168 = (ds_l reader)
-in FStar_Util.Inl (_94_168))
+(let _95_168 = (ds_l reader)
+in FStar_Util.Inl (_95_168))
 end
 | 'b' -> begin
-(let _94_169 = (ds_r reader)
-in FStar_Util.Inr (_94_169))
+(let _95_169 = (ds_r reader)
+in FStar_Util.Inr (_95_169))
 end
 | _28_158 -> begin
 (parse_error ())
@@ -209,11 +209,11 @@ end))
 
 let serialize_syntax = (fun writer s_a ast -> (s_a writer ast.FStar_Absyn_Syntax.n))
 
-let deserialize_syntax = (fun reader ds_a ds_b -> (let _94_188 = (ds_a reader)
-in (let _94_187 = (FStar_Util.mk_ref None)
-in (let _94_186 = (FStar_Util.mk_ref None)
-in (let _94_185 = (FStar_Util.mk_ref None)
-in {FStar_Absyn_Syntax.n = _94_188; FStar_Absyn_Syntax.tk = _94_187; FStar_Absyn_Syntax.pos = FStar_Absyn_Syntax.dummyRange; FStar_Absyn_Syntax.fvs = _94_186; FStar_Absyn_Syntax.uvs = _94_185})))))
+let deserialize_syntax = (fun reader ds_a ds_b -> (let _95_188 = (ds_a reader)
+in (let _95_187 = (FStar_Util.mk_ref None)
+in (let _95_186 = (FStar_Util.mk_ref None)
+in (let _95_185 = (FStar_Util.mk_ref None)
+in {FStar_Absyn_Syntax.n = _95_188; FStar_Absyn_Syntax.tk = _95_187; FStar_Absyn_Syntax.pos = FStar_Absyn_Syntax.dummyRange; FStar_Absyn_Syntax.fvs = _95_186; FStar_Absyn_Syntax.uvs = _95_185})))))
 
 let rec serialize_typ' = (fun writer ast -> (match (ast) with
 | FStar_Absyn_Syntax.Typ_btvar (v) -> begin
@@ -294,15 +294,15 @@ end
 (Prims.raise (Err ("unimplemented meta_t")))
 end))
 and serialize_arg = (fun writer ast -> (let _28_282 = (serialize_either writer serialize_typ serialize_exp (Prims.fst ast))
-in (let _94_257 = (FStar_All.pipe_left FStar_Absyn_Syntax.is_implicit (Prims.snd ast))
-in (writer.FStar_Util.write_bool _94_257))))
+in (let _95_257 = (FStar_All.pipe_left FStar_Absyn_Syntax.is_implicit (Prims.snd ast))
+in (writer.FStar_Util.write_bool _95_257))))
 and serialize_args = (fun writer ast -> (serialize_list writer serialize_arg ast))
 and serialize_binder = (fun writer ast -> (let _28_288 = (serialize_either writer serialize_btvar serialize_bvvar (Prims.fst ast))
-in (let _94_262 = (FStar_All.pipe_left FStar_Absyn_Syntax.is_implicit (Prims.snd ast))
-in (writer.FStar_Util.write_bool _94_262))))
+in (let _95_262 = (FStar_All.pipe_left FStar_Absyn_Syntax.is_implicit (Prims.snd ast))
+in (writer.FStar_Util.write_bool _95_262))))
 and serialize_binders = (fun writer ast -> (serialize_list writer serialize_binder ast))
-and serialize_typ = (fun writer ast -> (let _94_267 = (FStar_Absyn_Util.compress_typ ast)
-in (serialize_syntax writer serialize_typ' _94_267)))
+and serialize_typ = (fun writer ast -> (let _95_267 = (FStar_Absyn_Util.compress_typ ast)
+in (serialize_syntax writer serialize_typ' _95_267)))
 and serialize_comp_typ = (fun writer ast -> (let _28_296 = (serialize_lident writer ast.FStar_Absyn_Syntax.effect_name)
 in (let _28_298 = (serialize_typ writer ast.FStar_Absyn_Syntax.result_typ)
 in (let _28_300 = (serialize_args writer ast.FStar_Absyn_Syntax.effect_args)
@@ -423,8 +423,8 @@ end
 | FStar_Absyn_Syntax.Meta_smt_pat -> begin
 (writer.FStar_Util.write_char 'e')
 end))
-and serialize_exp = (fun writer ast -> (let _94_292 = (FStar_Absyn_Util.compress_exp ast)
-in (serialize_syntax writer serialize_exp' _94_292)))
+and serialize_exp = (fun writer ast -> (let _95_292 = (FStar_Absyn_Util.compress_exp ast)
+in (serialize_syntax writer serialize_exp' _95_292)))
 and serialize_btvdef = (fun writer ast -> (serialize_bvdef writer ast))
 and serialize_bvvdef = (fun writer ast -> (serialize_bvdef writer ast))
 and serialize_pat' = (fun writer ast -> (match (ast) with
@@ -503,8 +503,8 @@ end
 | FStar_Absyn_Syntax.Kind_delayed (_28_530, _28_532, _28_534) -> begin
 (Prims.raise (Err ("knd\' serialization unimplemented:2")))
 end))
-and serialize_knd = (fun writer ast -> (let _94_309 = (FStar_Absyn_Util.compress_kind ast)
-in (serialize_syntax writer serialize_knd' _94_309)))
+and serialize_knd = (fun writer ast -> (let _95_309 = (FStar_Absyn_Util.compress_kind ast)
+in (serialize_syntax writer serialize_knd' _95_309)))
 and serialize_kabbrev = (fun writer ast -> (let _28_541 = (serialize_lident writer (Prims.fst ast))
 in (serialize_args writer (Prims.snd ast))))
 and serialize_lbname = (fun writer ast -> (serialize_either writer serialize_bvvdef serialize_lident ast))
@@ -522,46 +522,46 @@ and serialize_fvvar = (fun writer ast -> (serialize_var writer serialize_typ ast
 
 let rec deserialize_typ' = (fun reader -> (match ((reader.FStar_Util.read_char ())) with
 | 'a' -> begin
-(let _94_360 = (deserialize_btvar reader)
-in FStar_Absyn_Syntax.Typ_btvar (_94_360))
+(let _95_360 = (deserialize_btvar reader)
+in FStar_Absyn_Syntax.Typ_btvar (_95_360))
 end
 | 'b' -> begin
-(let _94_361 = (deserialize_ftvar reader)
-in FStar_Absyn_Syntax.Typ_const (_94_361))
+(let _95_361 = (deserialize_ftvar reader)
+in FStar_Absyn_Syntax.Typ_const (_95_361))
 end
 | 'c' -> begin
-(let _94_364 = (let _94_363 = (deserialize_binders reader)
-in (let _94_362 = (deserialize_comp reader)
-in (_94_363, _94_362)))
-in FStar_Absyn_Syntax.Typ_fun (_94_364))
+(let _95_364 = (let _95_363 = (deserialize_binders reader)
+in (let _95_362 = (deserialize_comp reader)
+in (_95_363, _95_362)))
+in FStar_Absyn_Syntax.Typ_fun (_95_364))
 end
 | 'd' -> begin
-(let _94_367 = (let _94_366 = (deserialize_bvvar reader)
-in (let _94_365 = (deserialize_typ reader)
-in (_94_366, _94_365)))
-in FStar_Absyn_Syntax.Typ_refine (_94_367))
+(let _95_367 = (let _95_366 = (deserialize_bvvar reader)
+in (let _95_365 = (deserialize_typ reader)
+in (_95_366, _95_365)))
+in FStar_Absyn_Syntax.Typ_refine (_95_367))
 end
 | 'e' -> begin
-(let _94_370 = (let _94_369 = (deserialize_typ reader)
-in (let _94_368 = (deserialize_args reader)
-in (_94_369, _94_368)))
-in FStar_Absyn_Syntax.Typ_app (_94_370))
+(let _95_370 = (let _95_369 = (deserialize_typ reader)
+in (let _95_368 = (deserialize_args reader)
+in (_95_369, _95_368)))
+in FStar_Absyn_Syntax.Typ_app (_95_370))
 end
 | 'f' -> begin
-(let _94_373 = (let _94_372 = (deserialize_binders reader)
-in (let _94_371 = (deserialize_typ reader)
-in (_94_372, _94_371)))
-in FStar_Absyn_Syntax.Typ_lam (_94_373))
+(let _95_373 = (let _95_372 = (deserialize_binders reader)
+in (let _95_371 = (deserialize_typ reader)
+in (_95_372, _95_371)))
+in FStar_Absyn_Syntax.Typ_lam (_95_373))
 end
 | 'g' -> begin
-(let _94_376 = (let _94_375 = (deserialize_typ reader)
-in (let _94_374 = (deserialize_knd reader)
-in (_94_375, _94_374)))
-in FStar_Absyn_Syntax.Typ_ascribed (_94_376))
+(let _95_376 = (let _95_375 = (deserialize_typ reader)
+in (let _95_374 = (deserialize_knd reader)
+in (_95_375, _95_374)))
+in FStar_Absyn_Syntax.Typ_ascribed (_95_376))
 end
 | 'h' -> begin
-(let _94_377 = (deserialize_meta_t reader)
-in FStar_Absyn_Syntax.Typ_meta (_94_377))
+(let _95_377 = (deserialize_meta_t reader)
+in FStar_Absyn_Syntax.Typ_meta (_95_377))
 end
 | 'i' -> begin
 FStar_Absyn_Syntax.Typ_unknown
@@ -571,51 +571,51 @@ end
 end))
 and deserialize_meta_t = (fun reader -> (match ((reader.FStar_Util.read_char ())) with
 | 'a' -> begin
-(let _94_382 = (let _94_381 = (deserialize_typ reader)
-in (let _94_380 = (deserialize_list reader (fun r -> (deserialize_list r deserialize_arg)))
-in (_94_381, _94_380)))
-in FStar_Absyn_Syntax.Meta_pattern (_94_382))
+(let _95_382 = (let _95_381 = (deserialize_typ reader)
+in (let _95_380 = (deserialize_list reader (fun r -> (deserialize_list r deserialize_arg)))
+in (_95_381, _95_380)))
+in FStar_Absyn_Syntax.Meta_pattern (_95_382))
 end
 | 'b' -> begin
-(let _94_385 = (let _94_384 = (deserialize_typ reader)
-in (let _94_383 = (deserialize_lident reader)
-in (_94_384, _94_383)))
-in FStar_Absyn_Syntax.Meta_named (_94_385))
+(let _95_385 = (let _95_384 = (deserialize_typ reader)
+in (let _95_383 = (deserialize_lident reader)
+in (_95_384, _95_383)))
+in FStar_Absyn_Syntax.Meta_named (_95_385))
 end
 | 'c' -> begin
-(let _94_389 = (let _94_388 = (deserialize_typ reader)
-in (let _94_387 = (reader.FStar_Util.read_string ())
-in (let _94_386 = (reader.FStar_Util.read_bool ())
-in (_94_388, _94_387, FStar_Absyn_Syntax.dummyRange, _94_386))))
-in FStar_Absyn_Syntax.Meta_labeled (_94_389))
+(let _95_389 = (let _95_388 = (deserialize_typ reader)
+in (let _95_387 = (reader.FStar_Util.read_string ())
+in (let _95_386 = (reader.FStar_Util.read_bool ())
+in (_95_388, _95_387, FStar_Absyn_Syntax.dummyRange, _95_386))))
+in FStar_Absyn_Syntax.Meta_labeled (_95_389))
 end
 | _28_586 -> begin
 (parse_error ())
 end))
-and deserialize_arg = (fun reader -> (let _94_393 = (deserialize_either reader deserialize_typ deserialize_exp)
-in (let _94_392 = (let _94_391 = (reader.FStar_Util.read_bool ())
-in (FStar_All.pipe_left FStar_Absyn_Syntax.as_implicit _94_391))
-in (_94_393, _94_392))))
+and deserialize_arg = (fun reader -> (let _95_393 = (deserialize_either reader deserialize_typ deserialize_exp)
+in (let _95_392 = (let _95_391 = (reader.FStar_Util.read_bool ())
+in (FStar_All.pipe_left FStar_Absyn_Syntax.as_implicit _95_391))
+in (_95_393, _95_392))))
 and deserialize_args = (fun reader -> (deserialize_list reader deserialize_arg))
-and deserialize_binder = (fun reader -> (let _94_398 = (deserialize_either reader deserialize_btvar deserialize_bvvar)
-in (let _94_397 = (let _94_396 = (reader.FStar_Util.read_bool ())
-in (FStar_All.pipe_left FStar_Absyn_Syntax.as_implicit _94_396))
-in (_94_398, _94_397))))
+and deserialize_binder = (fun reader -> (let _95_398 = (deserialize_either reader deserialize_btvar deserialize_bvvar)
+in (let _95_397 = (let _95_396 = (reader.FStar_Util.read_bool ())
+in (FStar_All.pipe_left FStar_Absyn_Syntax.as_implicit _95_396))
+in (_95_398, _95_397))))
 and deserialize_binders = (fun reader -> (deserialize_list reader deserialize_binder))
 and deserialize_typ = (fun reader -> (deserialize_syntax reader deserialize_typ' FStar_Absyn_Syntax.mk_Kind_unknown))
-and deserialize_comp_typ = (fun reader -> (let _94_405 = (deserialize_lident reader)
-in (let _94_404 = (deserialize_typ reader)
-in (let _94_403 = (deserialize_args reader)
-in (let _94_402 = (deserialize_list reader deserialize_cflags)
-in {FStar_Absyn_Syntax.effect_name = _94_405; FStar_Absyn_Syntax.result_typ = _94_404; FStar_Absyn_Syntax.effect_args = _94_403; FStar_Absyn_Syntax.flags = _94_402})))))
+and deserialize_comp_typ = (fun reader -> (let _95_405 = (deserialize_lident reader)
+in (let _95_404 = (deserialize_typ reader)
+in (let _95_403 = (deserialize_args reader)
+in (let _95_402 = (deserialize_list reader deserialize_cflags)
+in {FStar_Absyn_Syntax.effect_name = _95_405; FStar_Absyn_Syntax.result_typ = _95_404; FStar_Absyn_Syntax.effect_args = _95_403; FStar_Absyn_Syntax.flags = _95_402})))))
 and deserialize_comp' = (fun reader -> (match ((reader.FStar_Util.read_char ())) with
 | 'a' -> begin
-(let _94_407 = (deserialize_typ reader)
-in FStar_Absyn_Syntax.Total (_94_407))
+(let _95_407 = (deserialize_typ reader)
+in FStar_Absyn_Syntax.Total (_95_407))
 end
 | 'b' -> begin
-(let _94_408 = (deserialize_comp_typ reader)
-in FStar_Absyn_Syntax.Comp (_94_408))
+(let _95_408 = (deserialize_comp_typ reader)
+in FStar_Absyn_Syntax.Comp (_95_408))
 end
 | _28_597 -> begin
 (parse_error ())
@@ -641,46 +641,46 @@ end
 FStar_Absyn_Syntax.LEMMA
 end
 | 'g' -> begin
-(let _94_411 = (deserialize_exp reader)
-in FStar_Absyn_Syntax.DECREASES (_94_411))
+(let _95_411 = (deserialize_exp reader)
+in FStar_Absyn_Syntax.DECREASES (_95_411))
 end
 | _28_608 -> begin
 (parse_error ())
 end))
 and deserialize_exp' = (fun reader -> (match ((reader.FStar_Util.read_char ())) with
 | 'a' -> begin
-(let _94_413 = (deserialize_bvvar reader)
-in FStar_Absyn_Syntax.Exp_bvar (_94_413))
+(let _95_413 = (deserialize_bvvar reader)
+in FStar_Absyn_Syntax.Exp_bvar (_95_413))
 end
 | 'b' -> begin
-(let _94_417 = (let _94_416 = (deserialize_fvvar reader)
-in (let _94_415 = (let _28_612 = (let _94_414 = (reader.FStar_Util.read_bool ())
-in (FStar_All.pipe_left Prims.ignore _94_414))
+(let _95_417 = (let _95_416 = (deserialize_fvvar reader)
+in (let _95_415 = (let _28_612 = (let _95_414 = (reader.FStar_Util.read_bool ())
+in (FStar_All.pipe_left Prims.ignore _95_414))
 in None)
-in (_94_416, _94_415)))
-in FStar_Absyn_Syntax.Exp_fvar (_94_417))
+in (_95_416, _95_415)))
+in FStar_Absyn_Syntax.Exp_fvar (_95_417))
 end
 | 'c' -> begin
-(let _94_418 = (deserialize_sconst reader)
-in FStar_Absyn_Syntax.Exp_constant (_94_418))
+(let _95_418 = (deserialize_sconst reader)
+in FStar_Absyn_Syntax.Exp_constant (_95_418))
 end
 | 'd' -> begin
-(let _94_421 = (let _94_420 = (deserialize_binders reader)
-in (let _94_419 = (deserialize_exp reader)
-in (_94_420, _94_419)))
-in FStar_Absyn_Syntax.Exp_abs (_94_421))
+(let _95_421 = (let _95_420 = (deserialize_binders reader)
+in (let _95_419 = (deserialize_exp reader)
+in (_95_420, _95_419)))
+in FStar_Absyn_Syntax.Exp_abs (_95_421))
 end
 | 'e' -> begin
-(let _94_424 = (let _94_423 = (deserialize_exp reader)
-in (let _94_422 = (deserialize_args reader)
-in (_94_423, _94_422)))
-in FStar_Absyn_Syntax.Exp_app (_94_424))
+(let _95_424 = (let _95_423 = (deserialize_exp reader)
+in (let _95_422 = (deserialize_args reader)
+in (_95_423, _95_422)))
+in FStar_Absyn_Syntax.Exp_app (_95_424))
 end
 | 'f' -> begin
 (let g = (fun reader -> (match ((reader.FStar_Util.read_char ())) with
 | 'a' -> begin
-(let _94_427 = (deserialize_exp reader)
-in Some (_94_427))
+(let _95_427 = (deserialize_exp reader)
+in Some (_95_427))
 end
 | 'b' -> begin
 None
@@ -688,41 +688,41 @@ end
 | _28_623 -> begin
 (parse_error ())
 end))
-in (let f = (fun reader -> (let _94_432 = (deserialize_pat reader)
-in (let _94_431 = (g reader)
-in (let _94_430 = (deserialize_exp reader)
-in (_94_432, _94_431, _94_430)))))
-in (let _94_435 = (let _94_434 = (deserialize_exp reader)
-in (let _94_433 = (deserialize_list reader f)
-in (_94_434, _94_433)))
-in FStar_Absyn_Syntax.Exp_match (_94_435))))
+in (let f = (fun reader -> (let _95_432 = (deserialize_pat reader)
+in (let _95_431 = (g reader)
+in (let _95_430 = (deserialize_exp reader)
+in (_95_432, _95_431, _95_430)))))
+in (let _95_435 = (let _95_434 = (deserialize_exp reader)
+in (let _95_433 = (deserialize_list reader f)
+in (_95_434, _95_433)))
+in FStar_Absyn_Syntax.Exp_match (_95_435))))
 end
 | 'g' -> begin
-(let _94_439 = (let _94_438 = (deserialize_exp reader)
-in (let _94_437 = (deserialize_typ reader)
-in (let _94_436 = (deserialize_option reader deserialize_lident)
-in (_94_438, _94_437, _94_436))))
-in FStar_Absyn_Syntax.Exp_ascribed (_94_439))
+(let _95_439 = (let _95_438 = (deserialize_exp reader)
+in (let _95_437 = (deserialize_typ reader)
+in (let _95_436 = (deserialize_option reader deserialize_lident)
+in (_95_438, _95_437, _95_436))))
+in FStar_Absyn_Syntax.Exp_ascribed (_95_439))
 end
 | 'h' -> begin
-(let _94_442 = (let _94_441 = (deserialize_letbindings reader)
-in (let _94_440 = (deserialize_exp reader)
-in (_94_441, _94_440)))
-in FStar_Absyn_Syntax.Exp_let (_94_442))
+(let _95_442 = (let _95_441 = (deserialize_letbindings reader)
+in (let _95_440 = (deserialize_exp reader)
+in (_95_441, _95_440)))
+in FStar_Absyn_Syntax.Exp_let (_95_442))
 end
 | 'i' -> begin
-(let _94_443 = (deserialize_meta_e reader)
-in FStar_Absyn_Syntax.Exp_meta (_94_443))
+(let _95_443 = (deserialize_meta_e reader)
+in FStar_Absyn_Syntax.Exp_meta (_95_443))
 end
 | _28_630 -> begin
 (parse_error ())
 end))
 and deserialize_meta_e = (fun reader -> (match ((reader.FStar_Util.read_char ())) with
 | 'a' -> begin
-(let _94_447 = (let _94_446 = (deserialize_exp reader)
-in (let _94_445 = (deserialize_meta_source_info reader)
-in (_94_446, _94_445)))
-in FStar_Absyn_Syntax.Meta_desugared (_94_447))
+(let _95_447 = (let _95_446 = (deserialize_exp reader)
+in (let _95_445 = (deserialize_meta_source_info reader)
+in (_95_446, _95_445)))
+in FStar_Absyn_Syntax.Meta_desugared (_95_447))
 end
 | _28_634 -> begin
 (parse_error ())
@@ -748,48 +748,48 @@ and deserialize_btvdef = (fun reader -> (deserialize_bvdef None reader))
 and deserialize_bvvdef = (fun reader -> (deserialize_bvdef None reader))
 and deserialize_pat' = (fun reader -> (match ((reader.FStar_Util.read_char ())) with
 | 'a' -> begin
-(let _94_453 = (deserialize_list reader deserialize_pat)
-in FStar_Absyn_Syntax.Pat_disj (_94_453))
+(let _95_453 = (deserialize_list reader deserialize_pat)
+in FStar_Absyn_Syntax.Pat_disj (_95_453))
 end
 | 'b' -> begin
-(let _94_454 = (deserialize_sconst reader)
-in FStar_Absyn_Syntax.Pat_constant (_94_454))
+(let _95_454 = (deserialize_sconst reader)
+in FStar_Absyn_Syntax.Pat_constant (_95_454))
 end
 | 'c' -> begin
-(let _94_460 = (let _94_459 = (deserialize_fvvar reader)
-in (let _94_458 = (deserialize_list reader (fun r -> (let _94_457 = (deserialize_pat r)
-in (let _94_456 = (r.FStar_Util.read_bool ())
-in (_94_457, _94_456)))))
-in (_94_459, None, _94_458)))
-in FStar_Absyn_Syntax.Pat_cons (_94_460))
+(let _95_460 = (let _95_459 = (deserialize_fvvar reader)
+in (let _95_458 = (deserialize_list reader (fun r -> (let _95_457 = (deserialize_pat r)
+in (let _95_456 = (r.FStar_Util.read_bool ())
+in (_95_457, _95_456)))))
+in (_95_459, None, _95_458)))
+in FStar_Absyn_Syntax.Pat_cons (_95_460))
 end
 | 'd' -> begin
-(let _94_461 = (deserialize_bvvar reader)
-in FStar_Absyn_Syntax.Pat_var (_94_461))
+(let _95_461 = (deserialize_bvvar reader)
+in FStar_Absyn_Syntax.Pat_var (_95_461))
 end
 | 'e' -> begin
-(let _94_462 = (deserialize_btvar reader)
-in FStar_Absyn_Syntax.Pat_tvar (_94_462))
+(let _95_462 = (deserialize_btvar reader)
+in FStar_Absyn_Syntax.Pat_tvar (_95_462))
 end
 | 'f' -> begin
-(let _94_463 = (deserialize_bvvar reader)
-in FStar_Absyn_Syntax.Pat_wild (_94_463))
+(let _95_463 = (deserialize_bvvar reader)
+in FStar_Absyn_Syntax.Pat_wild (_95_463))
 end
 | 'g' -> begin
-(let _94_464 = (deserialize_btvar reader)
-in FStar_Absyn_Syntax.Pat_twild (_94_464))
+(let _95_464 = (deserialize_btvar reader)
+in FStar_Absyn_Syntax.Pat_twild (_95_464))
 end
 | 'h' -> begin
-(let _94_467 = (let _94_466 = (deserialize_bvvar reader)
-in (let _94_465 = (deserialize_exp reader)
-in (_94_466, _94_465)))
-in FStar_Absyn_Syntax.Pat_dot_term (_94_467))
+(let _95_467 = (let _95_466 = (deserialize_bvvar reader)
+in (let _95_465 = (deserialize_exp reader)
+in (_95_466, _95_465)))
+in FStar_Absyn_Syntax.Pat_dot_term (_95_467))
 end
 | 'i' -> begin
-(let _94_470 = (let _94_469 = (deserialize_btvar reader)
-in (let _94_468 = (deserialize_typ reader)
-in (_94_469, _94_468)))
-in FStar_Absyn_Syntax.Pat_dot_typ (_94_470))
+(let _95_470 = (let _95_469 = (deserialize_btvar reader)
+in (let _95_468 = (deserialize_typ reader)
+in (_95_469, _95_468)))
+in FStar_Absyn_Syntax.Pat_dot_typ (_95_470))
 end
 | _28_657 -> begin
 (parse_error ())
@@ -803,22 +803,22 @@ end
 FStar_Absyn_Syntax.Kind_effect
 end
 | 'c' -> begin
-(let _94_476 = (let _94_475 = (deserialize_kabbrev reader)
-in (let _94_474 = (deserialize_knd reader)
-in (_94_475, _94_474)))
-in FStar_Absyn_Syntax.Kind_abbrev (_94_476))
+(let _95_476 = (let _95_475 = (deserialize_kabbrev reader)
+in (let _95_474 = (deserialize_knd reader)
+in (_95_475, _95_474)))
+in FStar_Absyn_Syntax.Kind_abbrev (_95_476))
 end
 | 'd' -> begin
-(let _94_479 = (let _94_478 = (deserialize_binders reader)
-in (let _94_477 = (deserialize_knd reader)
-in (_94_478, _94_477)))
-in FStar_Absyn_Syntax.Kind_arrow (_94_479))
+(let _95_479 = (let _95_478 = (deserialize_binders reader)
+in (let _95_477 = (deserialize_knd reader)
+in (_95_478, _95_477)))
+in FStar_Absyn_Syntax.Kind_arrow (_95_479))
 end
 | 'e' -> begin
-(let _94_482 = (let _94_481 = (deserialize_binders reader)
-in (let _94_480 = (deserialize_knd reader)
-in (_94_481, _94_480)))
-in FStar_Absyn_Syntax.Kind_lam (_94_482))
+(let _95_482 = (let _95_481 = (deserialize_binders reader)
+in (let _95_480 = (deserialize_knd reader)
+in (_95_481, _95_480)))
+in FStar_Absyn_Syntax.Kind_lam (_95_482))
 end
 | 'f' -> begin
 FStar_Absyn_Syntax.Kind_unknown
@@ -827,18 +827,18 @@ end
 (parse_error ())
 end))
 and deserialize_knd = (fun reader -> (deserialize_syntax reader deserialize_knd' ()))
-and deserialize_kabbrev = (fun reader -> (let _94_486 = (deserialize_lident reader)
-in (let _94_485 = (deserialize_args reader)
-in (_94_486, _94_485))))
+and deserialize_kabbrev = (fun reader -> (let _95_486 = (deserialize_lident reader)
+in (let _95_485 = (deserialize_args reader)
+in (_95_486, _95_485))))
 and deserialize_lbname = (fun reader -> (deserialize_either reader deserialize_bvvdef deserialize_lident))
-and deserialize_letbindings = (fun reader -> (let f = (fun reader -> (let _94_494 = (deserialize_lbname reader)
-in (let _94_493 = (deserialize_typ reader)
-in (let _94_492 = (deserialize_lident reader)
-in (let _94_491 = (deserialize_exp reader)
-in {FStar_Absyn_Syntax.lbname = _94_494; FStar_Absyn_Syntax.lbtyp = _94_493; FStar_Absyn_Syntax.lbeff = _94_492; FStar_Absyn_Syntax.lbdef = _94_491})))))
-in (let _94_496 = (reader.FStar_Util.read_bool ())
-in (let _94_495 = (deserialize_list reader f)
-in (_94_496, _94_495)))))
+and deserialize_letbindings = (fun reader -> (let f = (fun reader -> (let _95_494 = (deserialize_lbname reader)
+in (let _95_493 = (deserialize_typ reader)
+in (let _95_492 = (deserialize_lident reader)
+in (let _95_491 = (deserialize_exp reader)
+in {FStar_Absyn_Syntax.lbname = _95_494; FStar_Absyn_Syntax.lbtyp = _95_493; FStar_Absyn_Syntax.lbeff = _95_492; FStar_Absyn_Syntax.lbdef = _95_491})))))
+in (let _95_496 = (reader.FStar_Util.read_bool ())
+in (let _95_495 = (deserialize_list reader f)
+in (_95_496, _95_495)))))
 and deserialize_fvar = (fun reader -> (deserialize_either reader deserialize_btvdef deserialize_bvvdef))
 and deserialize_btvar = (fun reader -> (deserialize_bvar None reader deserialize_knd))
 and deserialize_bvvar = (fun reader -> (deserialize_bvar None reader deserialize_typ))
@@ -910,22 +910,22 @@ end
 FStar_Absyn_Syntax.Opaque
 end
 | 'i' -> begin
-(let _94_511 = (deserialize_lident reader)
-in FStar_Absyn_Syntax.Discriminator (_94_511))
+(let _95_511 = (deserialize_lident reader)
+in FStar_Absyn_Syntax.Discriminator (_95_511))
 end
 | 'j' -> begin
-(let _94_514 = (let _94_513 = (deserialize_lident reader)
-in (let _94_512 = (deserialize_either reader deserialize_btvdef deserialize_bvvdef)
-in (_94_513, _94_512)))
-in FStar_Absyn_Syntax.Projector (_94_514))
+(let _95_514 = (let _95_513 = (deserialize_lident reader)
+in (let _95_512 = (deserialize_either reader deserialize_btvdef deserialize_bvvdef)
+in (_95_513, _95_512)))
+in FStar_Absyn_Syntax.Projector (_95_514))
 end
 | 'k' -> begin
-(let _94_515 = (deserialize_list reader deserialize_lident)
-in FStar_Absyn_Syntax.RecordType (_94_515))
+(let _95_515 = (deserialize_list reader deserialize_lident)
+in FStar_Absyn_Syntax.RecordType (_95_515))
 end
 | 'l' -> begin
-(let _94_516 = (deserialize_list reader deserialize_lident)
-in FStar_Absyn_Syntax.RecordConstructor (_94_516))
+(let _95_516 = (deserialize_list reader deserialize_lident)
+in FStar_Absyn_Syntax.RecordConstructor (_95_516))
 end
 | 'm' -> begin
 FStar_Absyn_Syntax.ExceptionConstructor
@@ -934,8 +934,8 @@ end
 FStar_Absyn_Syntax.HasMaskedEffect
 end
 | 'p' -> begin
-(let _94_518 = (deserialize_option reader deserialize_lident)
-in (FStar_All.pipe_right _94_518 (fun _94_517 -> FStar_Absyn_Syntax.DefaultEffect (_94_517))))
+(let _95_518 = (deserialize_option reader deserialize_lident)
+in (FStar_All.pipe_right _95_518 (fun _95_517 -> FStar_Absyn_Syntax.DefaultEffect (_95_517))))
 end
 | 'q' -> begin
 FStar_Absyn_Syntax.TotalEffect
@@ -951,28 +951,28 @@ in (let _28_737 = (serialize_binders writer bs)
 in (serialize_knd writer k)))
 end))
 
-let deserialize_tycon = (fun reader -> (let _94_527 = (deserialize_lident reader)
-in (let _94_526 = (deserialize_binders reader)
-in (let _94_525 = (deserialize_knd reader)
-in (_94_527, _94_526, _94_525)))))
+let deserialize_tycon = (fun reader -> (let _95_527 = (deserialize_lident reader)
+in (let _95_526 = (deserialize_binders reader)
+in (let _95_525 = (deserialize_knd reader)
+in (_95_527, _95_526, _95_525)))))
 
 let serialize_monad_abbrev = (fun writer ast -> (let _28_742 = (serialize_lident writer ast.FStar_Absyn_Syntax.mabbrev)
 in (let _28_744 = (serialize_binders writer ast.FStar_Absyn_Syntax.parms)
 in (serialize_typ writer ast.FStar_Absyn_Syntax.def))))
 
-let deserialize_monad_abbrev = (fun reader -> (let _94_536 = (deserialize_lident reader)
-in (let _94_535 = (deserialize_binders reader)
-in (let _94_534 = (deserialize_typ reader)
-in {FStar_Absyn_Syntax.mabbrev = _94_536; FStar_Absyn_Syntax.parms = _94_535; FStar_Absyn_Syntax.def = _94_534}))))
+let deserialize_monad_abbrev = (fun reader -> (let _95_536 = (deserialize_lident reader)
+in (let _95_535 = (deserialize_binders reader)
+in (let _95_534 = (deserialize_typ reader)
+in {FStar_Absyn_Syntax.mabbrev = _95_536; FStar_Absyn_Syntax.parms = _95_535; FStar_Absyn_Syntax.def = _95_534}))))
 
 let serialize_sub_effect = (fun writer ast -> (let _28_749 = (serialize_lident writer ast.FStar_Absyn_Syntax.source)
 in (let _28_751 = (serialize_lident writer ast.FStar_Absyn_Syntax.target)
 in (serialize_typ writer ast.FStar_Absyn_Syntax.lift))))
 
-let deserialize_sub_effect = (fun reader -> (let _94_545 = (deserialize_lident reader)
-in (let _94_544 = (deserialize_lident reader)
-in (let _94_543 = (deserialize_typ reader)
-in {FStar_Absyn_Syntax.source = _94_545; FStar_Absyn_Syntax.target = _94_544; FStar_Absyn_Syntax.lift = _94_543}))))
+let deserialize_sub_effect = (fun reader -> (let _95_545 = (deserialize_lident reader)
+in (let _95_544 = (deserialize_lident reader)
+in (let _95_543 = (deserialize_typ reader)
+in {FStar_Absyn_Syntax.source = _95_545; FStar_Absyn_Syntax.target = _95_544; FStar_Absyn_Syntax.lift = _95_543}))))
 
 let rec serialize_new_effect = (fun writer ast -> (let _28_756 = (serialize_lident writer ast.FStar_Absyn_Syntax.mname)
 in (let _28_758 = (serialize_list writer serialize_binder ast.FStar_Absyn_Syntax.binders)
@@ -1016,9 +1016,9 @@ end
 | FStar_Absyn_Syntax.Sig_datacon (lid1, t, tyc, qs, mutuals, _28_842) -> begin
 (let t' = (match ((FStar_Absyn_Util.function_formals t)) with
 | Some (f, c) -> begin
-(let _94_555 = (let _94_554 = (FStar_Absyn_Syntax.mk_Total (FStar_Absyn_Util.comp_result c))
-in (f, _94_554))
-in (FStar_Absyn_Syntax.mk_Typ_fun _94_555 None FStar_Absyn_Syntax.dummyRange))
+(let _95_555 = (let _95_554 = (FStar_Absyn_Syntax.mk_Total (FStar_Absyn_Util.comp_result c))
+in (f, _95_554))
+in (FStar_Absyn_Syntax.mk_Typ_fun _95_555 None FStar_Absyn_Syntax.dummyRange))
 end
 | None -> begin
 t
@@ -1046,14 +1046,14 @@ end
 (let _28_894 = (writer.FStar_Util.write_char 'f')
 in (let _28_896 = (serialize_letbindings writer lbs)
 in (let _28_898 = (serialize_list writer serialize_lident l)
-in (let _94_557 = (FStar_All.pipe_right quals (FStar_Util.for_some (fun _28_1 -> (match (_28_1) with
+in (let _95_557 = (FStar_All.pipe_right quals (FStar_Util.for_some (fun _28_1 -> (match (_28_1) with
 | FStar_Absyn_Syntax.HasMaskedEffect -> begin
 true
 end
 | _28_903 -> begin
 false
 end))))
-in (writer.FStar_Util.write_bool _94_557)))))
+in (writer.FStar_Util.write_bool _95_557)))))
 end
 | FStar_Absyn_Syntax.Sig_main (e, _28_906) -> begin
 (let _28_909 = (writer.FStar_Util.write_char 'g')
@@ -1087,95 +1087,95 @@ in (let _28_964 = (serialize_list writer serialize_binder binders)
 in (serialize_knd writer k))))
 end))
 
-let rec deserialize_new_effect = (fun reader -> (let _94_578 = (deserialize_lident reader)
-in (let _94_577 = (deserialize_list reader deserialize_binder)
-in (let _94_576 = (deserialize_list reader deserialize_qualifier)
-in (let _94_575 = (deserialize_knd reader)
-in (let _94_574 = (deserialize_typ reader)
-in (let _94_573 = (deserialize_typ reader)
-in (let _94_572 = (deserialize_typ reader)
-in (let _94_571 = (deserialize_typ reader)
-in (let _94_570 = (deserialize_typ reader)
-in (let _94_569 = (deserialize_typ reader)
-in (let _94_568 = (deserialize_typ reader)
-in (let _94_567 = (deserialize_typ reader)
-in (let _94_566 = (deserialize_typ reader)
-in (let _94_565 = (deserialize_typ reader)
-in (let _94_564 = (deserialize_typ reader)
-in (let _94_563 = (deserialize_typ reader)
-in (let _94_562 = (deserialize_typ reader)
-in (let _94_561 = (deserialize_typ reader)
-in {FStar_Absyn_Syntax.mname = _94_578; FStar_Absyn_Syntax.binders = _94_577; FStar_Absyn_Syntax.qualifiers = _94_576; FStar_Absyn_Syntax.signature = _94_575; FStar_Absyn_Syntax.ret = _94_574; FStar_Absyn_Syntax.bind_wp = _94_573; FStar_Absyn_Syntax.bind_wlp = _94_572; FStar_Absyn_Syntax.if_then_else = _94_571; FStar_Absyn_Syntax.ite_wp = _94_570; FStar_Absyn_Syntax.ite_wlp = _94_569; FStar_Absyn_Syntax.wp_binop = _94_568; FStar_Absyn_Syntax.wp_as_type = _94_567; FStar_Absyn_Syntax.close_wp = _94_566; FStar_Absyn_Syntax.close_wp_t = _94_565; FStar_Absyn_Syntax.assert_p = _94_564; FStar_Absyn_Syntax.assume_p = _94_563; FStar_Absyn_Syntax.null_wp = _94_562; FStar_Absyn_Syntax.trivial = _94_561})))))))))))))))))))
+let rec deserialize_new_effect = (fun reader -> (let _95_578 = (deserialize_lident reader)
+in (let _95_577 = (deserialize_list reader deserialize_binder)
+in (let _95_576 = (deserialize_list reader deserialize_qualifier)
+in (let _95_575 = (deserialize_knd reader)
+in (let _95_574 = (deserialize_typ reader)
+in (let _95_573 = (deserialize_typ reader)
+in (let _95_572 = (deserialize_typ reader)
+in (let _95_571 = (deserialize_typ reader)
+in (let _95_570 = (deserialize_typ reader)
+in (let _95_569 = (deserialize_typ reader)
+in (let _95_568 = (deserialize_typ reader)
+in (let _95_567 = (deserialize_typ reader)
+in (let _95_566 = (deserialize_typ reader)
+in (let _95_565 = (deserialize_typ reader)
+in (let _95_564 = (deserialize_typ reader)
+in (let _95_563 = (deserialize_typ reader)
+in (let _95_562 = (deserialize_typ reader)
+in (let _95_561 = (deserialize_typ reader)
+in {FStar_Absyn_Syntax.mname = _95_578; FStar_Absyn_Syntax.binders = _95_577; FStar_Absyn_Syntax.qualifiers = _95_576; FStar_Absyn_Syntax.signature = _95_575; FStar_Absyn_Syntax.ret = _95_574; FStar_Absyn_Syntax.bind_wp = _95_573; FStar_Absyn_Syntax.bind_wlp = _95_572; FStar_Absyn_Syntax.if_then_else = _95_571; FStar_Absyn_Syntax.ite_wp = _95_570; FStar_Absyn_Syntax.ite_wlp = _95_569; FStar_Absyn_Syntax.wp_binop = _95_568; FStar_Absyn_Syntax.wp_as_type = _95_567; FStar_Absyn_Syntax.close_wp = _95_566; FStar_Absyn_Syntax.close_wp_t = _95_565; FStar_Absyn_Syntax.assert_p = _95_564; FStar_Absyn_Syntax.assume_p = _95_563; FStar_Absyn_Syntax.null_wp = _95_562; FStar_Absyn_Syntax.trivial = _95_561})))))))))))))))))))
 and deserialize_sigelt = (fun reader -> (match ((reader.FStar_Util.read_char ())) with
 | 'a' -> begin
-(let _94_586 = (let _94_585 = (deserialize_lident reader)
-in (let _94_584 = (deserialize_binders reader)
-in (let _94_583 = (deserialize_knd reader)
-in (let _94_582 = (deserialize_list reader deserialize_lident)
-in (let _94_581 = (deserialize_list reader deserialize_lident)
-in (let _94_580 = (deserialize_list reader deserialize_qualifier)
-in (_94_585, _94_584, _94_583, _94_582, _94_581, _94_580, FStar_Absyn_Syntax.dummyRange)))))))
-in FStar_Absyn_Syntax.Sig_tycon (_94_586))
+(let _95_586 = (let _95_585 = (deserialize_lident reader)
+in (let _95_584 = (deserialize_binders reader)
+in (let _95_583 = (deserialize_knd reader)
+in (let _95_582 = (deserialize_list reader deserialize_lident)
+in (let _95_581 = (deserialize_list reader deserialize_lident)
+in (let _95_580 = (deserialize_list reader deserialize_qualifier)
+in (_95_585, _95_584, _95_583, _95_582, _95_581, _95_580, FStar_Absyn_Syntax.dummyRange)))))))
+in FStar_Absyn_Syntax.Sig_tycon (_95_586))
 end
 | 'b' -> begin
-(let _94_592 = (let _94_591 = (deserialize_lident reader)
-in (let _94_590 = (deserialize_binders reader)
-in (let _94_589 = (deserialize_knd reader)
-in (let _94_588 = (deserialize_typ reader)
-in (let _94_587 = (deserialize_list reader deserialize_qualifier)
-in (_94_591, _94_590, _94_589, _94_588, _94_587, FStar_Absyn_Syntax.dummyRange))))))
-in FStar_Absyn_Syntax.Sig_typ_abbrev (_94_592))
+(let _95_592 = (let _95_591 = (deserialize_lident reader)
+in (let _95_590 = (deserialize_binders reader)
+in (let _95_589 = (deserialize_knd reader)
+in (let _95_588 = (deserialize_typ reader)
+in (let _95_587 = (deserialize_list reader deserialize_qualifier)
+in (_95_591, _95_590, _95_589, _95_588, _95_587, FStar_Absyn_Syntax.dummyRange))))))
+in FStar_Absyn_Syntax.Sig_typ_abbrev (_95_592))
 end
 | 'c' -> begin
-(let _94_598 = (let _94_597 = (deserialize_lident reader)
-in (let _94_596 = (deserialize_typ reader)
-in (let _94_595 = (deserialize_tycon reader)
-in (let _94_594 = (deserialize_list reader deserialize_qualifier)
-in (let _94_593 = (deserialize_list reader deserialize_lident)
-in (_94_597, _94_596, _94_595, _94_594, _94_593, FStar_Absyn_Syntax.dummyRange))))))
-in FStar_Absyn_Syntax.Sig_datacon (_94_598))
+(let _95_598 = (let _95_597 = (deserialize_lident reader)
+in (let _95_596 = (deserialize_typ reader)
+in (let _95_595 = (deserialize_tycon reader)
+in (let _95_594 = (deserialize_list reader deserialize_qualifier)
+in (let _95_593 = (deserialize_list reader deserialize_lident)
+in (_95_597, _95_596, _95_595, _95_594, _95_593, FStar_Absyn_Syntax.dummyRange))))))
+in FStar_Absyn_Syntax.Sig_datacon (_95_598))
 end
 | 'd' -> begin
-(let _94_602 = (let _94_601 = (deserialize_lident reader)
-in (let _94_600 = (deserialize_typ reader)
-in (let _94_599 = (deserialize_list reader deserialize_qualifier)
-in (_94_601, _94_600, _94_599, FStar_Absyn_Syntax.dummyRange))))
-in FStar_Absyn_Syntax.Sig_val_decl (_94_602))
+(let _95_602 = (let _95_601 = (deserialize_lident reader)
+in (let _95_600 = (deserialize_typ reader)
+in (let _95_599 = (deserialize_list reader deserialize_qualifier)
+in (_95_601, _95_600, _95_599, FStar_Absyn_Syntax.dummyRange))))
+in FStar_Absyn_Syntax.Sig_val_decl (_95_602))
 end
 | 'e' -> begin
-(let _94_606 = (let _94_605 = (deserialize_lident reader)
-in (let _94_604 = (deserialize_formula reader)
-in (let _94_603 = (deserialize_list reader deserialize_qualifier)
-in (_94_605, _94_604, _94_603, FStar_Absyn_Syntax.dummyRange))))
-in FStar_Absyn_Syntax.Sig_assume (_94_606))
+(let _95_606 = (let _95_605 = (deserialize_lident reader)
+in (let _95_604 = (deserialize_formula reader)
+in (let _95_603 = (deserialize_list reader deserialize_qualifier)
+in (_95_605, _95_604, _95_603, FStar_Absyn_Syntax.dummyRange))))
+in FStar_Absyn_Syntax.Sig_assume (_95_606))
 end
 | 'f' -> begin
-(let _94_610 = (let _94_609 = (deserialize_letbindings reader)
-in (let _94_608 = (deserialize_list reader deserialize_lident)
-in (let _94_607 = if (reader.FStar_Util.read_bool ()) then begin
+(let _95_610 = (let _95_609 = (deserialize_letbindings reader)
+in (let _95_608 = (deserialize_list reader deserialize_lident)
+in (let _95_607 = if (reader.FStar_Util.read_bool ()) then begin
 (FStar_Absyn_Syntax.HasMaskedEffect)::[]
 end else begin
 []
 end
-in (_94_609, FStar_Absyn_Syntax.dummyRange, _94_608, _94_607))))
-in FStar_Absyn_Syntax.Sig_let (_94_610))
+in (_95_609, FStar_Absyn_Syntax.dummyRange, _95_608, _95_607))))
+in FStar_Absyn_Syntax.Sig_let (_95_610))
 end
 | 'g' -> begin
-(let _94_612 = (let _94_611 = (deserialize_exp reader)
-in (_94_611, FStar_Absyn_Syntax.dummyRange))
-in FStar_Absyn_Syntax.Sig_main (_94_612))
+(let _95_612 = (let _95_611 = (deserialize_exp reader)
+in (_95_611, FStar_Absyn_Syntax.dummyRange))
+in FStar_Absyn_Syntax.Sig_main (_95_612))
 end
 | 'h' -> begin
-(let _94_616 = (let _94_615 = (deserialize_list reader deserialize_sigelt)
-in (let _94_614 = (deserialize_list reader deserialize_qualifier)
-in (let _94_613 = (deserialize_list reader deserialize_lident)
-in (_94_615, _94_614, _94_613, FStar_Absyn_Syntax.dummyRange))))
-in FStar_Absyn_Syntax.Sig_bundle (_94_616))
+(let _95_616 = (let _95_615 = (deserialize_list reader deserialize_sigelt)
+in (let _95_614 = (deserialize_list reader deserialize_qualifier)
+in (let _95_613 = (deserialize_list reader deserialize_lident)
+in (_95_615, _95_614, _95_613, FStar_Absyn_Syntax.dummyRange))))
+in FStar_Absyn_Syntax.Sig_bundle (_95_616))
 end
 | 'i' -> begin
-(let _94_618 = (let _94_617 = (deserialize_new_effect reader)
-in (_94_617, FStar_Absyn_Syntax.dummyRange))
-in FStar_Absyn_Syntax.Sig_new_effect (_94_618))
+(let _95_618 = (let _95_617 = (deserialize_new_effect reader)
+in (_95_617, FStar_Absyn_Syntax.dummyRange))
+in FStar_Absyn_Syntax.Sig_new_effect (_95_618))
 end
 | ('j') | ('k') | ('l') -> begin
 (FStar_All.failwith "TODO")
@@ -1193,11 +1193,11 @@ in (let _28_989 = (serialize_sigelts writer [])
 in (let _28_991 = (serialize_sigelts writer ast.FStar_Absyn_Syntax.exports)
 in (writer.FStar_Util.write_bool ast.FStar_Absyn_Syntax.is_interface)))))
 
-let deserialize_modul = (fun reader -> (let m = (let _94_634 = (deserialize_lident reader)
-in (let _94_633 = (deserialize_sigelts reader)
-in (let _94_632 = (deserialize_sigelts reader)
-in (let _94_631 = (reader.FStar_Util.read_bool ())
-in {FStar_Absyn_Syntax.name = _94_634; FStar_Absyn_Syntax.declarations = _94_633; FStar_Absyn_Syntax.exports = _94_632; FStar_Absyn_Syntax.is_interface = _94_631; FStar_Absyn_Syntax.is_deserialized = true}))))
+let deserialize_modul = (fun reader -> (let m = (let _95_634 = (deserialize_lident reader)
+in (let _95_633 = (deserialize_sigelts reader)
+in (let _95_632 = (deserialize_sigelts reader)
+in (let _95_631 = (reader.FStar_Util.read_bool ())
+in {FStar_Absyn_Syntax.name = _95_634; FStar_Absyn_Syntax.declarations = _95_633; FStar_Absyn_Syntax.exports = _95_632; FStar_Absyn_Syntax.is_interface = _95_631; FStar_Absyn_Syntax.is_deserialized = true}))))
 in (let _28_995 = m
 in {FStar_Absyn_Syntax.name = _28_995.FStar_Absyn_Syntax.name; FStar_Absyn_Syntax.declarations = m.FStar_Absyn_Syntax.exports; FStar_Absyn_Syntax.exports = _28_995.FStar_Absyn_Syntax.exports; FStar_Absyn_Syntax.is_interface = _28_995.FStar_Absyn_Syntax.is_interface; FStar_Absyn_Syntax.is_deserialized = _28_995.FStar_Absyn_Syntax.is_deserialized})))
 

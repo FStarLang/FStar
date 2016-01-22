@@ -2,43 +2,43 @@
 FSTAR = ../bin/fstar.exe $(OTHERFLAGS)
 
 all:
-	$(FSTAR) --admit_fsi FStar.Set set.fsi heap.fst st.fst all.fst
-	$(FSTAR) --admit_fsi FStar.Set ext.fst set.fsi seq.fsi seq.fst
-	$(FSTAR) --admit_fsi FStar.Set --admit_fsi FStar.Seq set.fsi heap.fst st.fst seq.fsi classical.fst seqproperties.fst arr.fst
+	$(FSTAR) --admit_fsi FStar.Set FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst
+	$(FSTAR) --admit_fsi FStar.Set FStar.FunctionalExtensionality.fst FStar.Set.fsi seq.fsi FStar.Seq.fst
+	$(FSTAR) --admit_fsi FStar.Set --admit_fsi FStar.Seq FStar.Set.fsi FStar.Heap.fst FStar.ST.fst seq.fsi FStar.Classical.fst FStar.SeqProperties.fst FStar.Array.fst
 	$(FSTAR) array.fst
-	$(FSTAR) char.fst
-	$(FSTAR) classical.fst
-	$(FSTAR) constr.fst
-	$(FSTAR) --admit_fsi FStar.Set set.fsi heap.fst st.fst all.fst bytes.fst crypto.fst
-	$(FSTAR) ghost.fst elogic.fst
-	$(FSTAR) ext.fst
-	$(FSTAR) hyperHeap.fst
-	$(FSTAR) --admit_fsi FStar.Set set.fsi heap.fst st.fst all.fst int8.fst
-	$(FSTAR) --admit_fsi FStar.Set set.fsi heap.fst st.fst all.fst int16.fst
-	$(FSTAR) --admit_fsi FStar.Set set.fsi heap.fst st.fst all.fst int31.fst
-	$(FSTAR) --admit_fsi FStar.Set set.fsi heap.fst st.fst all.fst int32.fst
-	$(FSTAR) --admit_fsi FStar.Set set.fsi heap.fst st.fst all.fst int63.fst
-	$(FSTAR) --admit_fsi FStar.Set set.fsi heap.fst st.fst all.fst int64.fst
+	$(FSTAR) FStar.Char.fst
+	$(FSTAR) FStar.Classical.fst
+	$(FSTAR) FStar.Constructive.fst
+	$(FSTAR) --admit_fsi FStar.Set FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Bytes.fst FStar.Crypto.fst
+	$(FSTAR) FStar.Ghost.fst FStar.ErasedLogic.fst
+	$(FSTAR) FStar.FunctionalExtensionality.fst
+	$(FSTAR) FStar.HyperHeap.fst
+	$(FSTAR) --admit_fsi FStar.Set FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Int8.fst
+	$(FSTAR) --admit_fsi FStar.Set FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Int16.fst
+	$(FSTAR) --admit_fsi FStar.Set FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Int31.fst
+	$(FSTAR) --admit_fsi FStar.Set FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Int32.fst
+	$(FSTAR) --admit_fsi FStar.Set FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst int63.fst
+	$(FSTAR) --admit_fsi FStar.Set FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Int64.fst
 	$(FSTAR) js.fst
-	$(FSTAR) --admit_fsi FStar.Set set.fsi heap.fst st.fst all.fst list.fst listproperties.fst
-	$(FSTAR) listTot.fst
-	$(FSTAR) --admit_fsi FStar.Set set.fsi ext.fst map.fsi map.fst
-	$(FSTAR) mref.fst
-	$(FSTAR) option.fst
-	$(FSTAR) ordmap.fst
-#	$(FSTAR) ordmapproperties.fst -- problem filed as #359
-	$(FSTAR) ordset.fst
-	$(FSTAR) ordsetproperties.fst
-	$(FSTAR) pext.fst
-	$(FSTAR) ext.fst set.fsi set.fst
+	$(FSTAR) --admit_fsi FStar.Set FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst FStar.ListProperties.fst
+	$(FSTAR) FStar.List.Tot.fst
+	$(FSTAR) --admit_fsi FStar.Set FStar.Set.fsi FStar.FunctionalExtensionality.fst map.fsi FStar.Map.fst
+	$(FSTAR) FStar.MRef.fst
+	$(FSTAR) FStar.Option.fst
+	$(FSTAR) FStar.OrdMap.fst
+#	$(FSTAR) FStar.OrdMapProps.fst -- problem filed as #359
+	$(FSTAR) FStar.OrdSet.fst
+	$(FSTAR) FStar.OrdSetProps.fst
+	$(FSTAR) FStar.PredicateExtensionality.fst
+	$(FSTAR) FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Set.fst
 #	$(FSTAR) stboot.fsi stboot.fst   -- Name "FStar.All.ML" not found
-	$(FSTAR) st2.fst
-	$(FSTAR) --admit_fsi FStar.Set --admit_fsi FStar.Map ext.fst set.fsi heap.fst map.fsi listTot.fst hyperHeap.fst stHyperHeap.fst
-	$(FSTAR) --admit_fsi FStar.Set set.fsi heap.fst st.fst all.fst bytes.fst tcp.fst
-	$(FSTAR) --admit_fsi FStar.Set --admit_fsi FStar.Map set.fsi heap.fst map.fsi twoLevelHeap.fst
-#	$(FSTAR) util.fst    -- problem filed as #359
-	$(FSTAR) squash.fst
-	$(FSTAR) squashproperties.fst
+	$(FSTAR) FStar.Relational.fst
+	$(FSTAR) --admit_fsi FStar.Set --admit_fsi FStar.Map FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst map.fsi FStar.List.Tot.fst FStar.HyperHeap.fst stHyperHeap.fst
+	$(FSTAR) --admit_fsi FStar.Set FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Bytes.fst FStar.Tcp.fst
+	$(FSTAR) --admit_fsi FStar.Set --admit_fsi FStar.Map FStar.Set.fsi FStar.Heap.fst map.fsi FStar.TwoLevelHeap.fst
+#	$(FSTAR) FStar.Util.fst    -- problem filed as #359
+	$(FSTAR) FStar.Squash.fst
+	$(FSTAR) FStar.SquashProperties.fst
 
 wc:
 	sloccount .

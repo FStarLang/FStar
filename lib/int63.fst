@@ -1,6 +1,6 @@
 (*--build-config
   options: --admit_fsi FStar.Set;
-  other-files: set.fsi heap.fst st.fst all.fst
+  other-files: FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst
   --*)
 
 module FStar.Int63

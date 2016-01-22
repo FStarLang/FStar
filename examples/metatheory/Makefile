@@ -2,7 +2,7 @@ VERFILES=stlc_cbv_db_pntsubst_nolists.fst stlc_cbv_named.fst db_subst.fst hs.fst
 include ../Makefile.include
 all: .all.ver pars stlc_cbv_db_parsubst lambda_omega f-omega micro-fstar hoare_wp
 
-_STDLIB_=constr.fst classical.fst ext.fst set.fsi heap.fst st.fst all.fst --admit_fsi FStar.Set
+_STDLIB_=FStar.Constructive.fst FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst --admit_fsi FStar.Set
 
 pars:
 	$(FSTAR) $(_STDLIB_) pars.fst --max_fuel 1 --max_ifuel 1

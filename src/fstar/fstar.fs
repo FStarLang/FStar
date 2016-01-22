@@ -51,7 +51,7 @@ let report_errors nopt =
         | Some n -> n in
     if errs>0
     then begin
-        fprint1 "Error: %s errors were reported (see above)\n" (string_of_int errs);
+        print1 "Error: %s errors were reported (see above)\n" (string_of_int errs);
         exit 1
     end
 
@@ -66,7 +66,7 @@ let tc_one_fragment curmod dsenv env frag =
     try
         match Parser.Driver.parse_fragment curmod dsenv frag with
             | Parser.Driver.Empty -> 
-              Some (None, dsenv, env)
+              Some (curmod, dsenv, env)
 
             | Parser.Driver.Modul (dsenv, modul) ->
               let env = match curmod with
@@ -122,7 +122,7 @@ let batch_mode_tc filenames =
     let prims_mod, dsenv, env = tc_prims () in
 
     let all_mods, dsenv, env = batch_mode_tc_no_prims dsenv env filenames in
-   prims_mod@all_mods, dsenv, env
+    prims_mod@all_mods, dsenv, env
 
 let finished_message fmods =
     if not !Options.silent
@@ -214,7 +214,7 @@ let interactive_mode dsenv env =
                 let fail curmod dsenv_mark env_mark =
                     Tc.Errors.report_all() |> ignore;
                     Tc.Errors.num_errs := 0;
-                    Util.fprint1 "%s\n" fail;
+                    Util.print1 "%s\n" fail;
                     let dsenv, env = reset_mark dsenv_mark env_mark in
                     go stack curmod dsenv env in
               
@@ -222,7 +222,12 @@ let interactive_mode dsenv env =
                 if !should_read_build_config then
                   if Util.starts_with text (Parser.ParseIt.get_bc_start_string ()) then
                     begin
-                      let filenames = Parser.ParseIt.read_build_config_from_string "" false text true in
+                      let filenames = 
+                        match !Options.interactive_context with
+                          | Some s ->
+                            Parser.ParseIt.read_build_config_from_string s false text true
+                          | None ->
+                            Parser.ParseIt.read_build_config_from_string "" false text true in
                       let _, dsenv, env = batch_mode_tc_no_prims dsenv env filenames in
                       should_read_build_config := false;
                       dsenv, env
@@ -241,7 +246,7 @@ let interactive_mode dsenv env =
                 | Some (curmod, dsenv, env) ->
                   if !Tc.Errors.num_errs=0
                   then begin
-                     Util.fprint1 "\n%s\n" ok;
+                     Util.print1 "\n%s\n" ok;
                      let dsenv, env = commit_mark dsenv env in
                      go stack curmod dsenv env
                   end
@@ -275,31 +280,39 @@ let codegen fmods env=
 
 (* Main function *)
 let go _ =
-  let (res, filenames) = process_args () in
+  let res, filenames = process_args () in
   match res with
     | Help ->
       Options.display_usage (Options.specs())
     | Die msg ->
       Util.print_string msg
     | GoOn ->
-             let filenames = if !Options.use_build_config  //if the user explicitly requested it
-                             || (not !Options.interactive && List.length filenames = 1)  //or, if there is only a single file on the command line
-                             then match filenames with
-                                    | [f] -> Parser.Driver.read_build_config f //then, try to read a build config from the header of the file
-                                    | _ -> Util.print_string "--use_build_config expects just a single file on the command line and no other arguments"; exit 1
-                             else filenames in
-             if !Options.find_deps then
-               Util.print_string (Util.format1 "%s\n" (Util.concat_l "\n" filenames))
-             else
-               (let fmods, dsenv, env = batch_mode_tc filenames in
-               report_errors None;
-               if !Options.interactive
-               then interactive_mode dsenv env
-               else begin
-                codegen fmods env;
-                finished_message fmods
-               end)
-
+      let filenames = if !Options.use_build_config  //if the user explicitly requested it
+                      || (not !Options.interactive && List.length filenames = 1)  //or, if there is only a single file on the command line
+                      then match filenames with
+                             | [f] -> Parser.Driver.read_build_config f //then, try to read a build config from the header of the file
+                             | _ -> Util.print_string "--use_build_config expects just a single file on the command line and no other arguments"; exit 1
+                      else filenames in
+      if !Options.find_deps then
+        (* Dump the filenames found in the build-config special comment.
+           `filenames` won't be normalized in cases that
+           `Parser.Driver.read_build_config` is never invoked, so we must do it
+           here to ensure output can be relied upon to produce normalized path
+           names. *)
+        Util.print_string (Util.format1 "%s\n" (Util.concat_l "\n" (List.map Util.normalize_file_path filenames)))
+      else if !Options.dep <> None then
+        (* This is the fstardep tool *)
+        Parser.Dep.print (Parser.Dep.collect filenames)
+      else
+        (* Normal mode of operations *)
+        (let fmods, dsenv, env = batch_mode_tc filenames in
+        report_errors None;
+        if !Options.interactive
+        then interactive_mode dsenv env
+        else begin
+         codegen fmods env;
+         finished_message fmods
+        end)
 
 let main () =
     try
@@ -310,8 +323,8 @@ let main () =
     | e ->
         if Util.handleable e then Util.handle_err false () e;
         if !Options.trace_error
-        then Util.fprint2 "\nUnexpected error\n%s\n%s\n" (Util.message_of_exn e) (Util.trace_of_exn e)
+        then Util.print2 "\nUnexpected error\n%s\n%s\n" (Util.message_of_exn e) (Util.trace_of_exn e)
         else if not (Util.handleable e)
-        then Util.fprint1 "\nUnexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e);
+        then Util.print1 "\nUnexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e);
         cleanup ();
         exit 1

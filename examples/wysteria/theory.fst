@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set --admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi Prins --admit_fsi Ffibridge --z3timeout 10 --__temp_no_proj PSemantics --__temp_no_proj Metatheory;
-    other-files:ghost.fst listTot.fst set.fsi ordset.fsi ordmap.fsi constr.fst ext.fst classical.fst prins.fsi ast.fst ffibridge.fsi sem.fst psem.fst
+    other-files:FStar.Ghost.fst FStar.List.Tot.fst FStar.Set.fsi ordset.fsi ordmap.fsi FStar.Constructive.fst FStar.FunctionalExtensionality.fst FStar.Classical.fst prins.fsi ast.fst ffibridge.fsi sem.fst psem.fst
  --*)
 
 module Metatheory
@@ -221,7 +221,8 @@ val slice_concat_lemma_sps:
           (ensures (slice_tr_sps ps (concat_traces tr1 tr2) = concat_traces (slice_tr_sps ps tr1) (slice_tr_sps ps tr2)))
     [SMTPat (slice_tr_sps ps (concat_traces tr1 tr2))]
 let slice_concat_lemma_sps ps tr1 tr2 = admit()
-(* CH: this fails on my laptop with Unknown assertion failed
+(* CH: this times out on my laptop with Unknown assertion failed
+   AR: works for me
   slice_h_append_lemma_forall_sps ();
   let _ = assert (slice_tr_sps_h ps (append (reveal tr1) (reveal tr2)) = append (slice_tr_sps_h ps (reveal tr1)) (slice_tr_sps_h ps (reveal tr2))) in
   ()
@@ -793,6 +794,7 @@ val slice_concat_lemma:
     [SMTPat (slice_tr p (concat_traces tr1 tr2))]
 let slice_concat_lemma p tr1 tr2 = admit()
 (* CH: this fails on my laptop with Unknown assertion failed
+   AR: works for me
   slice_h_append_lemma_forall ();
   let _ = assert (slice_tr_h p (append (reveal tr1) (reveal tr2)) = append (slice_tr_h p (reveal tr1)) (slice_tr_h p (reveal tr2))) in
   ()
@@ -2529,6 +2531,14 @@ let rec p_terminating_run_implies_p_terminates_in #ps #pi #pi' #n h = match h wi
 	    p_terminating_run_implies_p_terminates_in #ps #pi_2 #pi' #m h''
     in
     PTerm_step #ps #pi #pi' #m hmp f
+
+opaque val s_terminating_run_implies_p_terminates_in:
+  #c:sconfig -> #c':sconfig -> ht:s_terminating_run c c' -> ps:prins{ps = all_prins ()}
+  -> Tot (n:nat & (p_terminates_in #ps (slice_c_ps ps c) (slice_c_ps ps c') n))
+let s_terminating_run_implies_p_terminates_in #c #c' ht ps =
+  let (| n, h_ptrun |) = s_terminating_run_gives_p_terminating_run #c #c' ht ps in
+  let h_pt = p_terminating_run_implies_p_terminates_in #ps #(slice_c_ps ps c) #(slice_c_ps ps c') #n h_ptrun in
+  (| n, h_pt |)
 
 // val pterminates_confluence:
 //   #ps:prins -> pi:protocol ps

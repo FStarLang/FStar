@@ -13,7 +13,7 @@ INCLUDES=$(addprefix -I $(SUPPORTDIR)/, Support)
 OCAMLFLAGS=$(INCLUDES)    # add other options for ocamlc here
 OCAMLOPTFLAGS=$(INCLUDES) # add other options for ocamlopt here
 
-STDLIB=$(addprefix $(FSTAR_HOME)/lib/, classical.fst ext.fst set.fsi heap.fst st.fst all.fst seq.fsi seqproperties.fst arr.fst)
+STDLIB=$(addprefix $(FSTAR_HOME)/lib/, FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst seq.fsi FStar.SeqProperties.fst FStar.Array.fst)
 ADMITS=FStar.Set FStar.Seq
 
 FSTAR_FILES=axiomatic.p.fst intlib.p.fst limb.fst eval.p.fst addition.p.fst scalar_multiplication.p.fst shift_array.p.fst multiplication.p.fst

@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.List --admit_fsi FStar.Set;
-    other-files:set.fsi ext.fst ghost.fst FStar.Regions.Located.fst
+    other-files:FStar.Set.fsi FStar.FunctionalExtensionality.fst FStar.Ghost.fst FStar.Regions.Located.fst
   --*)
 
 module FStar.Regions.Heap

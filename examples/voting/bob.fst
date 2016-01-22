@@ -19,7 +19,7 @@
 
 
 module Bob
-open Bytes
+open FStar.Bytes
 open Crypto_interface
 open Assumptions
 

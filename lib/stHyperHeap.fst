@@ -1,6 +1,6 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Map --admit_fsi HyperHeap;
-    other-files:set.fsi heap.fst map.fsi listTot.fst hyperHeap.fsi
+    options:--admit_fsi FStar.Set --admit_fsi FStar.Map --admit_fsi FStar.HyperHeap;
+    other-files:FStar.Set.fsi FStar.Heap.fst map.fsi FStar.List.Tot.fst hyperHeap.fsi
  --*)
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
@@ -41,33 +41,47 @@ assume val new_region: r0:rid -> ST rid
                            extends r1 r0
                         /\ fresh_region r1 m0 m1
                         /\ m1=Map.upd m0 r1 Heap.emp))
+ 
+type ralloc_post (#a:Type) (i:rid) (init:a) (m0:t) (x:rref i a) (m1:t) = 
+     (let region_i = Map.sel m0 i in
+       not (Heap.contains region_i (as_ref x))
+           /\ m1=Map.upd m0 i (Heap.upd region_i (as_ref x) init))
 
 assume val ralloc: #a:Type -> i:rid -> init:a -> ST (rref i a)
     (requires (fun m -> True))
-    (ensures (fun m0 x m1 ->
-                    Let (Map.sel m0 i) (fun region_i ->
-                    not (Heap.contains region_i (as_ref x))
-                    /\ m1=Map.upd m0 i (Heap.upd region_i (as_ref x) init))))
+    (ensures (ralloc_post i init))
+
+type alloc_post (#a:Type) (init:a) m0 x m1 = 
+  (let region_i = Map.sel m0 root in
+    not (Heap.contains region_i (as_ref x))
+   /\ m1=Map.upd m0 root (Heap.upd region_i (as_ref x) init))
 
 assume val alloc: #a:Type -> init:a -> ST (ref a)
     (requires (fun m -> True))
-    (ensures (fun m0 x m1 ->
-                    Let (Map.sel m0 root) (fun region_i ->
-                    not (Heap.contains region_i (as_ref x))
-                    /\ m1=Map.upd m0 root (Heap.upd region_i (as_ref x) init))))
+    (ensures (alloc_post init))
+
+type assign_post (#a:Type) (#i:rid) (r:rref i a) (v:a) m0 _u m1 = 
+  m1=Map.upd m0 i (Heap.upd (Map.sel m0 i) (as_ref r) v)
 
 assume val op_Colon_Equals: #a:Type -> #i:rid -> r:rref i a -> v:a -> ST unit
   (requires (fun m -> True))
-  (ensures (fun m0 _u m1 -> m1=Map.upd m0 i (Heap.upd (Map.sel m0 i) (as_ref r) v)))
+  (ensures (assign_post r v))
 
-assume val op_Bang:#a:Type -> #i:rid -> r:rref i a -> ST a
+type deref_post (#a:Type) (#i:rid) (r:rref i a) m0 x m1 =
+  m1=m0 /\ x=Heap.sel (Map.sel m0 i) (as_ref r)
+
+assume val op_Bang: #a:Type -> #i:rid -> r:rref i a -> ST a
   (requires (fun m -> True))
-  (ensures (fun m0 x m1 -> m1=m0 /\ x=Heap.sel (Map.sel m0 i) (as_ref r)))
+  (ensures (deref_post r))
 
 assume val get: unit -> ST t
   (requires (fun m -> True))
-  (ensures (fun m0 x m1 -> m0=x /\ m1=m0))
+  (ensures (fun m0 x m1 -> m0=x /\ m1=m0 /\ map_invariant m1))
 
 assume val recall: #a:Type -> #i:rid -> r:rref i a -> STATE unit
    (fun 'p m0 -> Map.contains m0 i /\ Heap.contains (Map.sel m0 i) (as_ref r) ==> 'p () m0)
    (fun 'p m0 -> Map.contains m0 i /\ Heap.contains (Map.sel m0 i) (as_ref r) ==> 'p () m0)
+
+assume val recall_region: i:rid -> STATE unit
+   (fun 'p m0 -> Map.contains m0 i /\ map_invariant m0  ==> 'p () m0)
+   (fun 'p m0 -> Map.contains m0 i /\ map_invariant m0  ==> 'p () m0)

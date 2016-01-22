@@ -1,5 +1,5 @@
 (*--build-config
-    other-files:ghost.fst
+    other-files:FStar.Ghost.fst
  --*)
 module TestGhost
 

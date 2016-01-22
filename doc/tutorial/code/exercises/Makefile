@@ -1,10 +1,10 @@
 include ../Makefile.include
 
 verify-ex8a-acls:  ex8a-acls.fst 
-	$(FSTAR) $(addprefix $(FSTAR_HOME)/lib/, string.fst partialmap.fst st.fst list.fst ) $^
+	$(FSTAR) $(addprefix $(FSTAR_HOME)/lib/, FStar.String.fst partialmap.fst FStar.ST.fst FStar.List.fst ) $^
 
 verify-ex9a-acls-cap: ../solutions/ex9a-mac.fst ../solutions/ex9a-acls2.fst ex9a-acls-cap.fst
-	$(FSTAR) $(addprefix $(FSTAR_HOME)/lib/, string.fst partialmap.fst st.fst array-realized.fst ) ../../../examples/unit-tests/list.fst $^
+	$(FSTAR) $(addprefix $(FSTAR_HOME)/lib/, FStar.String.fst partialmap.fst FStar.ST.fst array-realized.fst ) ../../../examples/unit-tests/FStar.List.fst $^
 
 verify-ex9b-format: ex9b-format.fst
 	$(FSTAR) $(SECLIB) $^
@@ -25,7 +25,7 @@ verify-ex9g-padding: ex9g-padding.fst
 	$(FSTAR) $(SECLIB) $^
 
 verify-ex10a-acls: ex10a-acls.fst
-	$(FSTAR) $(addprefix $(FSTAR_HOME)/lib/, set.fsi heap.fst st.fst all.fst list.fst) --admit_fsi FStar.Set $^
+	$(FSTAR) $(addprefix $(FSTAR_HOME)/lib/, FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst) --admit_fsi FStar.Set $^
 
 verify-%: __force__
 	$(FSTAR) $*.fst

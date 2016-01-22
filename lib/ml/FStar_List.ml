@@ -19,6 +19,7 @@ let rec map3 f l1 l2 l3 =
   | x::xs, y::ys, z::zs -> (f x y z)::(map3 f xs ys zs)
   | _, _, _ -> failwith "The lists do not have the same length"
 let iter = BatList.iter
+let iteri = BatList.iteri
 let partition = BatList.partition
 let append = BatList.append
 let rev_append = BatList.rev_append
@@ -42,7 +43,7 @@ let tryPick f l = try f (BatList.find (fun x -> f x <> None) l) with | Not_found
 let flatten = BatList.flatten
 let split = unzip
 let choose = BatList.filter_map
-let exists_ f l = BatList.exists f l
+let existsb f l = BatList.exists f l
 let contains x l = BatList.exists (fun y -> x = y) l
 let zip = BatList.combine
 let rec zip3 l1 l2 l3 =

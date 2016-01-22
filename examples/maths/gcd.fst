@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set;
-    other-files:constr.fst set.fsi heap.fst st.fst all.fst list.fst string.fst
+    other-files:FStar.Constructive.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst FStar.String.fst
   --*)
 module Gcd
 open FStar.List

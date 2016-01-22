@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi Set --admit_fsi Seq --verify_module Source;
-    other-files:classical.fst ext.fst set.fsi seq.fsi heap.fst st.fst all.fst seqproperties.fst
+    other-files:FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi seq.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.SeqProperties.fst
   --*)
 
 

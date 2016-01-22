@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set --z3timeout 20;
-    other-files:set.fsi heap.fst st.fst all.fst list.fst
+    other-files:FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst
   --*)
 module QuickSort
 open FStar.List

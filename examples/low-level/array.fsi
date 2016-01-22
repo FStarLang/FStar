@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi FStar.Set --admit_fsi FStar.Seq --z3timeout 10;
-    other-files:ext.fst set.fsi heap.fst st.fst all.fst list.fst  stack.fst listset.fst
-      ghost.fst located.fst lref.fst regions.fst rst.fst rstWhile.fst constr.fst word.fst seq.fsi
+    other-files:FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst  stack.fst listset.fst
+      FStar.Ghost.fst located.fst lref.fst regions.fst rst.fst rstWhile.fst FStar.Constructive.fst word.fst seq.fsi
   --*)
 
 

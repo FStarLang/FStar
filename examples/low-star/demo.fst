@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi FStar.Set --admit_fsi FStar.Seq --verify_module Demo --z3timeout 30 --codegen OCaml;
     variables:PLATFORM=../../contrib/Platform/fst SST=../low-level/lib;
-  other-files:classical.fst ext.fst set.fsi seq.fsi heap.fst st.fst all.fst seqproperties.fst list.fst listTot.fst listproperties.fst $SST/FStar.Stack.fst ghost.fst $SST/FStar.Regions.Located.fst $SST/FStar.Regions.Heap.fst $SST/FStar.Regions.Regions.fst $SST/Fstar.Regions.RST.fst $SST/FStar.Regions.RSTWhile.fst $SST/array.fsi $SST/array.fst buffer.fst system.fst;
+  other-files:FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi seq.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.SeqProperties.fst FStar.List.fst FStar.List.Tot.fst FStar.ListProperties.fst $SST/FStar.Stack.fst FStar.Ghost.fst $SST/FStar.Regions.Located.fst $SST/FStar.Regions.Heap.fst $SST/FStar.Regions.Regions.fst $SST/Fstar.Regions.RST.fst $SST/FStar.Regions.RSTWhile.fst $SST/array.fsi $SST/array.fst buffer.fst system.fst;
   --*)
 
 module Demo

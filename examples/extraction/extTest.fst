@@ -1,5 +1,5 @@
 (*--build-config
-  other-files: ext.fst set.fsi set.fst heap.fst st.fst all.fst list.fst
+  other-files: FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst
   --*)
 
 

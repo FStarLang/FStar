@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi FStar.Set --z3timeout 10;
-    other-files:ext.fst set.fsi heap.fst st.fst all.fst list.fst  stack.fst listset.fst constr.fst word.fst seq.fsi seq.fst  ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst rstWhile.fst array.fsi
+    other-files:FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst  stack.fst listset.fst FStar.Constructive.fst word.fst seq.fsi FStar.Seq.fst  FStar.Ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst rstWhile.fst array.fsi
   --*)
 
 (*rename mvector to vector. The word sstarray is used for memory-stored vectors *)

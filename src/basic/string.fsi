@@ -15,14 +15,18 @@
 *)
 module FStar.String
 open Prims
+(* The name of this file is misleading: most string functions are to be found in
+   util.fsi *)
 val split:   list<char> -> string -> Tot<list<string>>
 val strcat:  string -> string -> Tot<string>
 val concat:  string -> list<string> -> Tot<string>
 val compare: string -> string -> Tot<int>
 val strlen:  string -> Tot<nat>
 val length:  string -> Tot<nat>
+val lowercase: string -> Tot<string>
 
 (* may fail with index out of bounds *)
+(* Second argument is a length, not an index. *)
 val substring: string -> int -> int -> string
 val get: string -> int -> char
 val collect: (char -> string) -> string -> string

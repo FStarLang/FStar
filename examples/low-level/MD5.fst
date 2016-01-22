@@ -1,6 +1,6 @@
 (*--build-config
-    other-files:ext.fst set.fsi set.fst heap.fst st.fst all.fst list.fst  stack.fst listset.fst
-    ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst rstWhile.fst constr.fst word.fst seq.fsi seq.fst array.fsi
+    other-files:FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst  stack.fst listset.fst
+    FStar.Ghost.fst located.fst lref.fst stackAndHeap.fst sst.fst rstWhile.fst FStar.Constructive.fst word.fst seq.fsi FStar.Seq.fst array.fsi
      array.fst MD5Common.fst arrayAlgos.fst
   --*)
 

@@ -407,8 +407,8 @@ let extract_smc_exports (g:env) :string =
                     let s0 = "let " ^ fn_name ^ " ps p x = \n" in
                     let s1 = "let e1 = mk_const (C_eprins ps) in\n" in
                     let s2 = "let e2 = mk_mkwire (mk_const (C_eprins (singleton p))) (mk_box (mk_const (C_eprins (singleton p))) (mk_const (" ^ arg_inj ^ "))) in\n" in
-                    let s3 = "let dv = Interpreteriface.run p \"" ^ fn_name ^ "\" " ^ (mlty_to_typ (snd t)) ^ " [e1; e2] in\n"
-                    let s4 = "Obj.magic (Interpreteriface.project_value_content dv)\n"
+                    let s3 = "let dv = Interpreteriface.run p \"" ^ fn_name ^ "\" " ^ (mlty_to_typ (snd t)) ^ " [e1; e2] in\n" in
+                    let s4 = "Obj.magic (Interpreteriface.project_value_content dv)\n" in
                     s ^ (s0 ^ s1 ^ s2 ^ s3 ^ s4) ^ "\n\n"
                     // let wire_arg = "mk_mkwire (mk_const (C_prin p)) (mk_box (mk_const (C_prins (singleton p))) ((" ^ arg_inj ^ ") x))" in
                     // let s' = "let " ^ fn_name ^ " ps p x = project_value_content (Interpreter.run p \"" ^ fn_name ^ "\" " ^

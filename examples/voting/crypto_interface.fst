@@ -19,8 +19,8 @@
 
 
 module Crypto_interface
-open Comp
-open Bytes
+open FStar.Comp
+open FStar.Bytes
 
 
 (* -------------- Programming Assumptions and TODO List -------------- *)

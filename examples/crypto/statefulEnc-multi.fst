@@ -1,6 +1,6 @@
 (*--build-config
     options:--admit_fsi Set --admit_fsi Seq;
-    other-files:../../lib/ext.fst ../../lib/set.fsi ../../lib/heap.fst ../../lib/st.fst ../../lib/seq.fsi
+    other-files:../../lib/FStar.FunctionalExtensionality.fst ../../lib/FStar.Set.fsi ../../lib/FStar.Heap.fst ../../lib/FStar.ST.fst ../../lib/seq.fsi
   --*)
 (* A standalone experiment corresponding to building a stateful encryption on
    top of a stateless one ... along the lines of StatefulLHAE on top of AEAD_GCM *)

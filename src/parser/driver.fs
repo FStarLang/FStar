@@ -37,7 +37,7 @@ type fragment =
 
 let parse_fragment curmod env frag : fragment =
     match ParseIt.parse (Inr frag) with
-    | Inl (Inl []) -> 
+    | Inl (Inl []) ->
       Empty
 
     | Inl (Inl [modul]) -> //interactive mode: module
@@ -53,24 +53,30 @@ let parse_fragment curmod env frag : fragment =
     | Inr (msg,r) ->
       raise (Absyn.Syntax.Error(msg, r))
 
+(* Returns a non-desugared AST (as in [parser/ast.fs]) or aborts. *)
+let parse_file_raw fn =
+  match ParseIt.parse (Inl fn) with
+  | Inl (Inl ast) ->
+    ast
+
+  | Inl (Inr _) ->
+    Util.print1 "%s: Expected a module\n" fn;
+    exit 1
+
+  | Inr (msg, r) ->
+    Util.print_string <| Print.format_error r msg;
+    exit 1
+
+
+(* Returns a desugared AST; may read it as a (deprecated) binary file for
+   verified modules. *)
 let parse_file env fn =
   if is_cache_file fn then
     let full_name = Options.get_fstar_home () ^ "/" ^ Options.cache_dir ^ "/" ^ fn in
     let m = SSyntax.deserialize_modul (get_oreader full_name) in
     Desugar.add_modul_to_env m env, [m]
   else
-    match ParseIt.parse (Inl fn) with
-    | Inl (Inl ast) ->
-      Desugar.desugar_file env ast
+    Desugar.desugar_file env (parse_file_raw fn)
 
-    | Inl (Inr _) ->
-      Util.fprint1 "%s: Expected a module\n" fn;
-      exit 1
-
-    | Inr (msg, r) ->
-      Util.print_string <| Print.format_error r msg;
-      exit 1
-
-let read_build_config file = 
+let read_build_config file =
   ParseIt.read_build_config file true
-  

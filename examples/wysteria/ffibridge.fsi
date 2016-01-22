@@ -1,6 +1,6 @@
 (*--build-config
    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi Prins;
-   other-files:ordset.fsi ordmap.fsi ghost.fst prins.fsi ast.fst
+   other-files:ordset.fsi ordmap.fsi FStar.Ghost.fst prins.fsi ast.fst
 --*)
 
 module Ffibridge
@@ -24,3 +24,5 @@ val compose_v_opaques: #m1:v_meta -> #m2:v_meta
 val nat_of_c_opaque: const -> Tot nat
 
 val nat_of_v_opaque: #meta:v_meta -> value meta -> Tot nat
+
+val int_list_of_v_opaque: #meta:v_meta -> value meta -> Tot (list nat)

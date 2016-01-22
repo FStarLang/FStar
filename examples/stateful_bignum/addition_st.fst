@@ -1,6 +1,6 @@
 (*--build-config
   options:--admit_fsi FStar.Seq --admit_fsi FStar.Set --verify_module Addition --z3timeout 150;
-  other-files:classical.fst ext.fst set.fsi seq.fsi seqproperties.fst heap.fst st.fst all.fst arr.fst ghost.fst axiomatic.fst intlib.fst limb.fst bigint_st.fst eval_st.fst;
+  other-files:FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi seq.fsi FStar.SeqProperties.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Array.fst FStar.Ghost.fst axiomatic.fst intlib.fst limb.fst bigint_st.fst eval_st.fst;
   --*)
 
 module Addition

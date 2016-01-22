@@ -1,7 +1,7 @@
 (*--build-config
   options:--z3timeout 20;
-  other-files:classical.fst ext.fst set.fsi set.fst heap.fst
-              stperm.fst seq.fsi seq.fst seqproperties.fst arr.fst
+  other-files:FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Set.fst FStar.Heap.fst
+              stperm.fst seq.fsi FStar.Seq.fst FStar.SeqProperties.fst FStar.Array.fst
               qs_seq.fst qsort_arr.fst
 --*)
 module Downgrade

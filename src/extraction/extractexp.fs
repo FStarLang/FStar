@@ -94,7 +94,7 @@ let erasable (g:env)  (f:e_tag) (t:mlty) =
 
 let erase (g:env) (e:mlexpr) (f:e_tag) (t:mlty) : mlexpr * e_tag * mlty =
     if erasable g f t
-    then (debug g (fun () -> Util.fprint2 "Erasing %s at type %s\n" (ML.Code.string_of_mlexpr g e) (ML.Code.string_of_mlty g t));
+    then (debug g (fun () -> Util.print2 "Erasing %s at type %s\n" (ML.Code.string_of_mlexpr g e) (ML.Code.string_of_mlty g t));
           let e_val = if type_leq g t ml_unit_ty then ml_unit else with_ty t <| MLE_Coerce(ml_unit, ml_unit_ty, t) in
           e_val, f, t) 
     else e, f, t
@@ -552,7 +552,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
 
 
       | Exp_match(e, pats) ->
-        failwith "Matches must be checked; missing a compiler-provided annotation" //matches must be checked, not synth'd
+        fail e.pos "Matches must be checked; missing a compiler-provided annotation" //matches must be checked, not synth'd
 
       | Exp_meta(Meta_desugared(e, _)) -> synth_exp g e //TODO: handle the re-sugaring
 

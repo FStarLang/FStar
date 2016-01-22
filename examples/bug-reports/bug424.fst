@@ -1,6 +1,6 @@
 (*--build-config
     options:--initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1 --admit_fsi FStar.Set --verify_module Bug;
-    other-files:classical.fst ext.fst set.fsi heap.fst st.fst all.fst
+    other-files:FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst
 --*)
 
 module Bug

@@ -49,3 +49,14 @@ dump
 *.cmxa
 *.so
 /VS/
+
+tags
+
+*~
+*.swp
+
+/.nubuild
+/nucache/
+/nuobj/
+nubuild.log
+nubuild.progress

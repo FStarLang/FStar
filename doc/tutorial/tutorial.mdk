@@ -159,31 +159,29 @@ machine.  F\* is open source and cross-platform, and you can get
 [binary packages] for Windows, Linux, and MacOS X or compile F\* from
 the [source code on github] using these [instructions].
 
-[binary packages]: http://fstar-lang.org
+[binary packages]: https://github.com/FStarLang/FStar/releases
 [source code on github]: http://github.com/FStarLang/FStar
 [instructions]: https://github.com/FStarLang/FStar/blob/master/INSTALL.md
 
-You can [edit F\* code] using your favourite text editor, but the [Atom editor]
-has currently the best support for F\*. It supports
-syntax highlighting via [atom-fstar] and (Proof General style)
-interactive development via [fstar-interactive].
-[VimFStar] is a Vim plugin for F\* that also supports interactive development.
-Finally, the [Tuareg Emacs Mode] for OCaml works quite well for F\* too.
+You can edit F\* code using your favourite text editor, but [Emacs],
+[Atom], and [Vim] have extensions that add special support for F\*,
+including syntax highlighting and interactive development. More
+details on [editor support] on the [F\* wiki].
 
-[edit F\* code]: https://github.com/FStarLang/FStar#editing-f-code
-[Atom editor]: https://atom.io/
-[atom-fstar]: https://github.com/FStarLang/atom-fstar
-[fstar-interactive]: https://github.com/FStarLang/fstar-interactive
-[VimFStar]: https://github.com/FStarLang/VimFStar
-[Tuareg Emacs Mode]: https://github.com/ocaml/tuareg
+[Emacs]: https://github.com/FStarLang/fstar-mode.el
+[Atom]: https://github.com/FStarLang/fstar-interactive
+[Vim]: https://github.com/FStarLang/VimFStar
+[editor support]: https://github.com/FStarLang/FStar/wiki/Editor-support-for-F*
+[F\* wiki]: https://github.com/FStarLang/FStar/wiki
 
 By default F\* only verifies the input code, **it does not execute it**.
 To execute F\* code one needs to extract it to OCaml or F# and then
 compile it using the OCaml or F# compiler. More details on
-[executing F\* code] in the F\* [README.md] file.
+[executing F\* code] on the [F\* wiki].
 
-[executing F\* code]: https://github.com/FStarLang/FStar#executing-f-code
-[README.md]: https://github.com/FStarLang/FStar/blob/master/README.md
+[executing F\* code]: https://github.com/FStarLang/FStar/wiki/Executing-F*-code
+
+<!-- CH: TODO: add a chapter on extraction to tutorial -->
 
 <!-- CH: this is just distraction
 **A note on compatibility with F\#**: The syntax of F\* and F\#
@@ -827,8 +825,9 @@ on `x`. The basic concept here is that by programming total functions, we
 can write proofs about other pure expressions. We'll discuss such proofs
 in detail in the remainder of this section.
 
-~ Remark
-In F\* an expression being ghost (computationally irrelevant) is an effect.
+~ Remark 
+In F\* an expression being ghost (computationally irrelevant) is an effect. The
+effect `GTot` in the type of `factorial_is_positive` indicates that it is a ghost, total function.
 ~
 
 ### Dependent function types
@@ -1369,9 +1368,9 @@ Is it better to do this intrinsically or extrinsically? Do it both ways.
 ~Exercise
 Define the `fold_left` function on lists, so that
 
-    fold_left f a [b1; ...; bn] = f (... (f (f a b1) b2) ...) bn
+    fold_left f [b1; ...; bn] a = f (bn, ... (f b2 (f b1 a)))
 
-Prove that `(fold_left Cons [] l = reverse l)`.
+Prove that `(fold_left Cons l [] = reverse l)`.
 (The proof is a level harder from what we've done so far)
 ~~ ExerciseFragment {exname=ex4f-fold-left}
 val fold_left_cons_is_reverse: l:list 'a -> l':list 'a ->

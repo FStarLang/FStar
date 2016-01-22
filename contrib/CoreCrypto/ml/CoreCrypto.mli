@@ -2,12 +2,14 @@ type bytes = Platform.Bytes.bytes
 val string_of_bytes : bytes -> string
 val bytes_of_string : string -> bytes
 
-type hash_alg = MD5 | SHA1 | SHA256 | SHA384 | SHA512
-type sig_alg = RSASIG | DSA | ECDSA
+type hash_alg = MD5 | SHA1 | SHA224 | SHA256 | SHA384 | SHA512
+type sig_alg = RSASIG | DSA | ECDSA | RSAPSS
 type block_cipher = AES_128_CBC | AES_256_CBC | TDES_EDE_CBC
 type aead_cipher = AES_128_GCM | AES_256_GCM
 type stream_cipher = RC4_128
 type rsa_padding = Pad_none | Pad_PKCS1
+
+val string_of_hash_alg: hash_alg -> string
 
 val blockSize : block_cipher -> int
 val aeadKeySize : aead_cipher -> int
@@ -59,6 +61,7 @@ val random : int -> bytes
 
 val rsa_gen_key : int -> rsa_key
 val rsa_encrypt : rsa_key -> rsa_padding -> bytes -> bytes
+val rsa_decrypt : rsa_key -> rsa_padding -> bytes -> bytes option
 val rsa_sign : hash_alg option -> rsa_key -> bytes -> bytes
 val rsa_verify : hash_alg option -> rsa_key -> bytes -> bytes -> bool
 

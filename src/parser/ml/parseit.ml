@@ -16,29 +16,14 @@ let get_bc_start_string (_:unit) = bc_start
 module Path = BatPathGen.OfString
 
 let find_file (context:string) (filename:string) : string =
-    try
-      let result =
-        if FStar_Util.is_path_absolute filename then
-          if Sys.file_exists filename then
-            Some filename
-          else
-            None
-        else
-            let cwd = Path.to_string (Path.parent (Path.of_string context)) in
-            let search_path = FStar_Options.get_include_path(cwd) in
-            find_map 
-                search_path 
-                    (fun p -> 
-                    let path = FStar_Util.join_paths p filename in
-                        if Sys.file_exists path then 
-                            Some path
-                        else 
-                            None)
-        in
-      match result with
-        | None -> raise (Err "")
-      | Some p -> FStar_Util.normalize_file_path p
-    with e -> raise(Err (FStar_Util.format1 "Unable to open file: %s\n" filename))
+    let dirname = Path.to_string (Path.parent (Path.of_string context)) in
+    let search_path = FStar_Options.get_include_path dirname in
+    let found = FStar_Util.find_file filename search_path in
+    match found with
+      | Some s ->
+        s
+      | None -> 
+        raise(Err (FStar_Util.format1 "Unable to open file: %s\n" filename))
 
 let read_file (filename:string) =
   try
@@ -97,24 +82,28 @@ let rec read_build_config_from_string (filename:string) (use_filename:bool) (con
                              set_variable (FStar_Util.trim_string x, FStar_Util.trim_string v))
                   | _ -> fail ("unexpected config option: " ^ name));
 
-        begin match !options with
-            | None -> ()
-            | Some v ->
-              begin match FStar_Options.set_options v with
-                    | FStar_Getopt.GoOn ->
-                      FStar_Options.reset_options_string := Some v
-                    | FStar_Getopt.Help  -> fail ("Invalid options: " ^ v)
-                    | FStar_Getopt.Die s -> fail ("Invalid options : " ^ s)
-              end
+        begin 
+          if is_root then
+            match !options with
+              | None -> ()
+              | Some v ->
+                begin match FStar_Options.set_options v with
+                      | FStar_Getopt.GoOn ->
+                        FStar_Options.reset_options_string := Some v
+                      | FStar_Getopt.Help  -> fail ("Invalid options: " ^ v)
+                      | FStar_Getopt.Die s -> fail ("Invalid options : " ^ s)
+                end
+          else
+            ()
         end;
         match !filenames with
             | None -> if use_filename then [filename] else []
             | Some other_files ->
-              if not !FStar_Options.auto_deps || not use_filename then
+              if not !FStar_Options.auto_deps || filename == "" then
                 let files = if use_filename then other_files@[filename] else other_files in
               FStar_List.map substitute_variables files
               else
-                (* use_filename && auto_deps *)
+                (* auto_deps *)
                 let included_files =
                   (FStar_List.collect 
                       (fun include_spec ->
@@ -122,13 +111,21 @@ let rec read_build_config_from_string (filename:string) (use_filename:bool) (con
                         let contents = read_file found_filen in
                         read_build_config_from_string found_filen true contents false)
                       other_files) in
-                FStar_List.rev (FStar_List.unique (FStar_List.rev (included_files@[normalize_file_path filename])))
+                let included_files = 
+                  if use_filename then
+                    included_files@[normalize_file_path filename]
+                  else
+                    included_files in
+                (* the semantics of FStar.List.unique preserve the final occurance of a repeated term, so we need to do a double-reverse
+                 * in order to preserve the dependency order. this isn't terribly efficient but this isn't a critical path and fewer code
+                 * modifications seems more prudent at the moment. *)
+                FStar_List.rev (FStar_List.unique (FStar_List.rev included_files))
     else if !FStar_Options.use_build_config && is_root (* the user claimed that the build config exists *)
     then fail ""
     else (let stdlib = ["FStar.Set"; "FStar.Heap"; "FStar.ST"; "FStar.All"; "FStar.IO"] in
           let admit_string = FStar_List.map (fun x -> "--admit_fsi " ^ x) stdlib in
           let admit_string = FStar_String.concat " " admit_string in
-	  let common_files = [(find_file "." "set.fsi"); (find_file "." "heap.fst"); (find_file "." "st.fst"); (find_file "." "all.fst"); (find_file "." "io.fsti")] in
+	  let common_files = [(find_file "." "FStar.Set.fsi"); (find_file "." "FStar.Heap.fst"); (find_file "." "FStar.ST.fst"); (find_file "." "FStar.All.fst"); (find_file "." "FStar.IO.fsti")] in
 	  let files = if use_filename then common_files@[filename] else common_files
 	  in
           FStar_Options.admit_fsi := stdlib @ (!FStar_Options.admit_fsi);

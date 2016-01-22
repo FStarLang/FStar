@@ -449,11 +449,13 @@ let rec extractSigElt (c:context) (s:sigelt) : context * list<mlmodule1> =
         let c, tyAbDecls = Util.fold_map extractTypeAbbrev c abbs in
         (c, [MLM_Ty (indDecls@tyAbDecls)])
 
-    | Sig_tycon (_, _, _, _, _, quals, _) ->
+    | Sig_tycon (l, bs, k, _, _, quals, r) ->
         //Util.print_string ((Print.sigelt_to_string s)^"\n");
          if quals |> List.contains Assumption  &&
          not (quals |> Util.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
-         then extractSigElt c (Sig_bundle([s], [Assumption], [], Util.range_of_sigelt s))
+         then let kbs, _ = Util.kind_formals k in 
+              let se = Sig_typ_abbrev(l, bs@kbs, mk_Kind_type, Tc.Recheck.t_unit, quals, r) in
+              extractSigElt c se 
          else c,[]
 
     | _ -> c, []
