@@ -552,7 +552,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
 
 
       | Exp_match(e, pats) ->
-        failwith "Matches must be checked; missing a compiler-provided annotation" //matches must be checked, not synth'd
+        fail e.pos "Matches must be checked; missing a compiler-provided annotation" //matches must be checked, not synth'd
 
       | Exp_meta(Meta_desugared(e, _)) -> synth_exp g e //TODO: handle the re-sugaring
 

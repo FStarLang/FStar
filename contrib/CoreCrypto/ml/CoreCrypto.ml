@@ -90,7 +90,9 @@ let hash (h:hash_alg) (b:bytes) =
   bytes_of_string h
 
 (* -------------------------------------------------------------------- *)
-(* HMAC *)
+
+(** HMAC *)
+
 external ocaml_EVP_HMAC : md -> key:string -> data:string -> string = "ocaml_EVP_HMAC"
 
 let hmac (h:hash_alg) (k:bytes) (d:bytes) =
@@ -99,6 +101,9 @@ let hmac (h:hash_alg) (k:bytes) (d:bytes) =
   bytes_of_string h
 
 (* -------------------------------------------------------------------- *)
+
+(** Stream ciphers and AEAD *)
+
 type cipher
 type cipher_ctx
 type cipher_stream = cipher_ctx
@@ -400,7 +405,7 @@ type ec_key = {
  * and EC_GROUP is done by binding various EC_KEY_set* functions.
  *
  * Note: these bindings seem very inefficient, because we're re-creating the
- * EC_*$ data structures every time. We would be better off having them stashed
+ * EC_* data structures every time. We would be better off having them stashed
  * somewhere inside the record (and export the record as private in the
  * interface so that clients can't misuse it). *)
 
