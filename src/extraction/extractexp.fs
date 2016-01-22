@@ -524,14 +524,21 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
       | Exp_match(scrutinee, pats) ->
         let e, f_e, t_e = synth_exp g scrutinee in
         let b, then_e, else_e = check_pats_for_ite pats in
+        let no_lift : mlexpr -> mlty -> mlexpr = fun x t -> x in
         if b then
             match then_e, else_e with
                 | Some then_e, Some else_e ->
                     let then_mle, f_then, t_then = synth_exp g then_e in
                     let else_mle, f_else, t_else = synth_exp g else_e in
-                    with_ty t_then <| MLE_If (e, then_mle, Some (maybe_coerce g else_mle t_else t_then)), 
+                    let t_branch, maybe_lift = 
+                        if type_leq g t_then t_else  //the types agree except for effect labels
+                        then t_else, no_lift 
+                        else if type_leq g t_else t_then 
+                        then t_then, no_lift
+                        else MLTY_Top, apply_obj_repr in
+                    with_ty t_branch <| MLE_If (e, maybe_lift then_mle t_then, Some (maybe_lift else_mle t_else)), 
                     join f_then f_else,
-                    t_then
+                    t_branch
                 | _ -> failwith "ITE pats matched but then and else expressions not found?"
         else
             let mlbranches = pats |> List.collect (fun (pat, when_opt, branch) ->
@@ -554,19 +561,37 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                     E_PURE,
                     ml_unit_ty
 
-                | (p, (w_opt, f_w), (branch, f_branch, t_branch))::rest -> 
-                    let branches, f_branches = rest |> List.map (fun (p, (w_opt, f_w), (bi, fi, ti)) -> 
-                    //we just use the environment g here, since it is only needed for delta unfolding
-                    //which is invariant across the branches
-                    //WARNING WARNING WARNING
-                    //We're explicitly excluding the effect of the when clause in the net effect computation
-                    //fix this when we handle when clauses fully!
-                    //WARNING WARNING WARNING
-                    (p, w_opt, maybe_coerce g bi ti t_branch), [(* f_w; *) fi]) |> List.unzip in
-                    let all_branches = (p, w_opt, branch)::branches in
-                    with_ty t_branch <| MLE_Match(e, all_branches),
-                    join_l ((* f_w:: *)f_branch::List.flatten f_branches), 
-                    t_branch
+               
+                | (_, _, (_, f_first, t_first))::rest -> 
+                   let topt, f_match = List.fold_left (fun (topt, f) (_, _, (_, f_branch, t_branch)) -> 
+                        //WARNING WARNING WARNING
+                        //We're explicitly excluding the effect of the when clause in the net effect computation
+                        //TODO: fix this when we handle when clauses fully!
+                        let f = join f f_branch in 
+                        let topt = match topt with 
+                            | None -> None
+                            | Some t -> 
+                              //we just use the environment g here, since it is only needed for delta unfolding
+                              //which is invariant across the branches
+                              if type_leq g t t_branch 
+                              then Some t_branch 
+                              else if type_leq g t_branch t
+                              then Some t
+                              else None in
+                        topt, f)
+                     (Some t_first, f_first)
+                     rest in
+                   let mlbranches = mlbranches |> List.map (fun (p, (wopt, _), (b, _, t)) ->
+                        let b = match topt with 
+                            | None -> apply_obj_repr b t
+                            | Some _ -> b in
+                        (p, wopt, b)) in
+                   let t_match = match topt with 
+                        | None -> MLTY_Top
+                        | Some t -> t in
+                   with_ty t_match <| MLE_Match(e, mlbranches),
+                   f_match, 
+                   t_match
             end
 
       | Exp_meta(Meta_desugared(e, _)) -> synth_exp g e //TODO: handle the re-sugaring
