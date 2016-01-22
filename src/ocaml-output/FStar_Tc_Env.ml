@@ -231,7 +231,7 @@ end))
 let join = (fun env l1 l2 -> if (FStar_Absyn_Syntax.lid_equals l1 l2) then begin
 (l1, (fun t wp -> wp), (fun t wp -> wp))
 end else begin
-(match ((FStar_All.pipe_right env.effects.joins (FStar_Util.find_opt (fun _30_181 -> (match (_30_181) with
+(Obj.magic ((match ((FStar_All.pipe_right env.effects.joins (FStar_Util.find_opt (fun _30_181 -> (match (_30_181) with
 | (m1, m2, _30_176, _30_178, _30_180) -> begin
 ((FStar_Absyn_Syntax.lid_equals l1 m1) && (FStar_Absyn_Syntax.lid_equals l2 m2))
 end))))) with
@@ -245,7 +245,7 @@ in (Prims.raise _96_412))
 end
 | Some (_30_184, _30_186, m3, j1, j2) -> begin
 (m3, j1, j2)
-end)
+end)))
 end)
 
 let monad_leq = (fun env l1 l2 -> if (FStar_Absyn_Syntax.lid_equals l1 l2) then begin
