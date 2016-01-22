@@ -5,7 +5,7 @@ all:
 	make theory
 	(cd examples/fstar_main; ../../$(FSTAR) traces.fst)
 	make codegen SMCIF=examples/fstar_main/psipaperiface.fsi SMCMAIN=examples/fstar_main/psipapermain.fst
-	make distclean
+	#make distclean
 
 EXAMPLES_DIR=./examples
 
