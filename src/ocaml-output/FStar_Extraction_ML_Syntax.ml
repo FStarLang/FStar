@@ -791,6 +791,8 @@ let ml_bool_ty = MLTY_Named (([], (("Prims")::[], "bool")))
 
 let ml_int_ty = MLTY_Named (([], (("Prims")::[], "int")))
 
+let ml_string_ty = MLTY_Named (([], (("Prims")::[], "string")))
+
 let ml_unit = (FStar_All.pipe_left (with_ty ml_unit_ty) (MLE_Const (MLC_Unit)))
 
 let mlp_lalloc = (("SST")::[], "lalloc")
