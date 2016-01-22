@@ -156,7 +156,7 @@ end))
 
 let join_l = (fun fs -> (FStar_List.fold_left join FStar_Extraction_ML_Syntax.E_PURE fs))
 
-let mk_ty_fun = (fun _66_95 -> (FStar_List.fold_right (fun _59_134 t -> (match (_59_134) with
+let mk_ty_fun = (fun _0_5 -> (FStar_List.fold_right (fun _59_134 t -> (match (_59_134) with
 | (_59_132, t0) -> begin
 FStar_Extraction_ML_Syntax.MLTY_Fun ((t0, FStar_Extraction_ML_Syntax.E_PURE, t))
 end))))
