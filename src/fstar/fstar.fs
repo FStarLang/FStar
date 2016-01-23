@@ -58,8 +58,11 @@ let u_parse env fn =
         exit 1 
 
 let u_tc_prims () =
-    let solver = if !Options.verify then ToSMT.Encode.solver else ToSMT.Encode.dummy in
-    let env = FStar.TypeChecker.Env.no_solver_env FStar.TypeChecker.Tc.type_of in
+    let solver = if !Options.verify then SMTEncoding.Encode.solver else SMTEncoding.Encode.dummy in
+    let env = FStar.TypeChecker.Env.initial_env
+         FStar.TypeChecker.Tc.type_of 
+         solver 
+         Const.prims_lid in
     env.solver.init env;
     let p = Options.prims () in
     let dsenv, prims_mod = u_parse (Parser.Env.empty_env()) p in
