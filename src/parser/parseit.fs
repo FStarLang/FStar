@@ -31,29 +31,14 @@ let bc_end   = "--*)"
 let get_bc_start_string (_:unit) = bc_start
 
 let find_file (context:string) (filename:string) : string =
-    try
-      let result =
-        if Util.is_path_absolute filename then
-          if System.IO.File.Exists(filename) then
-            Some filename
-          else
-            None
-        else
-          let cwd = System.IO.Path.GetDirectoryName context in
-          let search_path = Options.get_include_path cwd in
-          Util.find_map
-            search_path
-            (fun p ->
-              let path = System.IO.Path.Combine(p, filename) in
-              if System.IO.File.Exists(path) then
-                Some path
-              else
-                None)
-      in
-      match result with
-      | Some p -> Util.normalize_file_path p
-      | _ -> raise (Absyn.Syntax.Err(Util.format1 "unable to find file: %s" filename))
-    with e -> raise (Absyn.Syntax.Err (Util.format2 "Unable to open file: %s\n%s\n" filename (e.ToString())))
+  let dirname = System.IO.Path.GetDirectoryName context in
+  let search_path = Options.get_include_path dirname in
+  let found = Util.find_file filename search_path in
+  match found with
+    | Some s ->
+      s
+    | None ->
+      raise (Absyn.Syntax.Err(Util.format1 "unable to find file: %s" filename))
 
 let read_file (filename:string) =
   if !Options.debug <> []

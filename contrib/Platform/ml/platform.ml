@@ -46,13 +46,17 @@ module Bytes = struct
                then String.sub h i n
                else (String.sub h i curr) ^ (getBytes t 0 (n-curr))
 
-  type bytes =
-      {
+  (* This type represents a subset of a sequence of bytes; the sequence of bytes
+   * is represented as a list of strings. *)
+  type bytes = {
+      (*  A series of strings whose total concatenated length is [max]. *)
       bl: cbytes list;
-      max:int;
+      max: int;
+      (* The length of the subset. *)
       length: int;
+      (* The start index of the subset. *)
       index: int;
-      }
+  }
 
   let lemma_repr_bytes_values n = ()
 
@@ -88,6 +92,7 @@ module Bytes = struct
       String.set s 1 ba2;
       {bl = [s]; length = 2; index = 0; max = 2}
 
+  (* JP: this makes the operator right-associative; is that desired? *)
   let (@|) (a:bytes) (b:bytes) =
       if a.length + a.index = a.max && b.index = 0 then
         {bl = (a.bl @ b.bl);
@@ -112,7 +117,7 @@ module Bytes = struct
        length = b.length - i;
        index = b.index + i;
        max = b.max}
-       
+
   let split_eq = split
 
   let length (d:bytes) = d.length
@@ -334,4 +339,14 @@ module Date = struct
   let newTimeSpan d h m s = TS (((((float_of_int d) *. 24.0) +. (float_of_int h)) *. 60.0 +. (float_of_int m)) *. 60.0 +. (float_of_int s))
   let addTimeSpan (DT(a)) (TS(b)) = DT (a +. b)
   let greaterDateTime (DT(a)) (DT(b)) = a > b
+end
+
+module Option = struct
+  let map f = function
+    | Some x -> Some (f x)
+    | None -> None
+
+  let must = function
+    | Some x -> x
+    | None -> invalid_arg "Option.must"
 end

@@ -139,5 +139,9 @@ type mllib =
 let ml_unit_ty = MLTY_Named ([], (["Prims"], "unit"))
 let ml_bool_ty = MLTY_Named ([], (["Prims"], "bool"))
 let ml_int_ty  = MLTY_Named ([], (["Prims"], "int"))
+let ml_string_ty  = MLTY_Named ([], (["Prims"], "string"))
 let ml_unit    = with_ty ml_unit_ty <| MLE_Const MLC_Unit
 let mlp_lalloc = (["SST"], "lalloc")
+let apply_obj_repr x t = 
+    let obj_repr = with_ty  (MLTY_Fun(t, E_PURE, MLTY_Top)) <| MLE_Name(["Obj"], "repr") in
+    with_ty MLTY_Top <| MLE_App(obj_repr, [x])

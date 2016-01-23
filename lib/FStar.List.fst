@@ -1,3 +1,7 @@
+(*--build-config
+  options: --admit_fsi FStar.Set;
+  other-files: FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst
+  --*)
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 

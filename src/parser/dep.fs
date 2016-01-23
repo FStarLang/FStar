@@ -77,9 +77,9 @@ let build_map (): map =
             begin match smap_try_find map key with
             | Some existing_file ->
                 if String.lowercase existing_file = String.lowercase f then
-                  raise (Err (Util.format1 "I'm case insensitive, and I found the same file twice (%s)" f));
+                  raise (Err (Util.format1 "I'm case insensitive, and I found the same file twice (%s)\n" f));
                 if is_interface existing_file = is_interface f then
-                  raise (Err (Util.format1 "Found both a .fs and a .fst (or both a .fsi and a .fsti) (%s)" f));
+                  raise (Err (Util.format1 "Found both a .fs and a .fst (or both a .fsi and a .fsti) (%s)\n" f));
                 (* Note: we always record a dependency against the interface, if found. *)
                 if not (is_interface existing_file) then
                   smap_add map key (join_paths d f)

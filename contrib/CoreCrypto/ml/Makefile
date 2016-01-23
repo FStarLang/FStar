@@ -6,7 +6,7 @@ OCAMLDEP = ocamlfind dep
 FSTAR_HOME = ../../..
 PLATFORM = $(FSTAR_HOME)/contrib/Platform/ml
 
-CCOPTS = # -ccopt -O0
+CCOPTS = $(addprefix -ccopt ,-Wall -DDEBUG -std=c11 -D__USE_MINGW_ANSI_STDIO)
 
 ifeq ($(OS),Windows_NT)
     # On cygwin + cygwinports, DLLs are searched in the PATH, which is not
@@ -41,6 +41,9 @@ all: corecrypto.cmxa
 
 %.o: %.c
 	$(OCAMLOPT) $(CC) $(CCOPTS) $(EXTRA_OPTS) -c $<
+
+$(PLATFORM)/platform.cmx: $(PLATFORM)/platform.ml
+	$(MAKE) -C $(PLATFORM)
 
 DLL_OBJ = $(PLATFORM)/platform.cmx CoreCrypto.cmx openssl_stub.o
 

@@ -19,7 +19,7 @@
 
 
 module Alice
-open Bytes
+open FStar.Bytes
 open Crypto_interface
 open Assumptions
 

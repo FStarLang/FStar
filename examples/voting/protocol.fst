@@ -19,7 +19,7 @@
 
 
 module Protocol
-open Bytes
+open FStar.Bytes
 open Crypto_interface
 open Assumptions
 open Alice

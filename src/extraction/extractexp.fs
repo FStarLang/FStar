@@ -101,7 +101,7 @@ let erase (g:env) (e:mlexpr) (f:e_tag) (t:mlty) : mlexpr * e_tag * mlty =
           e_val, f, t) 
     else e, f, t
 
-let maybe_coerce (g:env) (e:mlexpr) (tInferred:mlty) (etag : e_tag) (tExpected:mlty) : mlexpr =
+let maybe_coerce (g:env) (e:mlexpr) (tInferred:mlty) (tExpected:mlty) : mlexpr =
     // let tExpected = eraseTypeDeep g tExpected in 
     // is this needed? see translate_typ. Even if we coerce here, there is no way to change the type of the generate expression
     match type_leq_c g (Some e) tInferred tExpected with 
@@ -299,39 +299,10 @@ let rec check_exp (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr =
     e
 
 and check_exp' (g:env) (e:exp) (f:e_tag) (t:mlty) : mlexpr =
-    match (Util.compress_exp e).n with
-      | Exp_match(scrutinee, pats) ->
-        let e, f_e, t_e = synth_exp g scrutinee in
-        let b, then_e, else_e = check_pats_for_ite pats in
-        let e' =
-            if b then
-                match then_e, else_e with
-                    | Some then_e, Some else_e ->
-                        let then_mle = check_exp g then_e f t in
-                        let else_mle = check_exp g else_e f t in
-                        MLE_If (e, then_mle, Some else_mle)
-                    | _ -> failwith "ITE pats matched but then and else expressions not found?"
-            else
-                let mlbranches = pats |> List.collect (fun (pat, when_opt, branch) ->
-                let env, p = extract_pat g pat in
-                let when_opt = match when_opt with
-                    | None -> None
-                    | Some w -> Some (check_exp env w E_IMPURE ml_bool_ty) in //when clauses used to be Pure in F*; they no longer are required to be pure
-                let branch = check_exp env branch f t in
-                p |> List.map (fun (p, wopt) -> 
-                    let when_clause = conjoin_opt wopt when_opt in
-                    p, when_clause, branch))
-                in
-                MLE_Match(e, mlbranches)
-        in
-        if eff_leq f_e f
-        then with_ty t <| e'
-        else err_unexpected_eff scrutinee f f_e
-     | _ ->
-       let e0, f0, t0 = synth_exp g e in
-       if eff_leq f0 f
-       then maybe_coerce g e0 t0 f t
-       else err_unexpected_eff e f f0
+    let e0, f0, t0 = synth_exp g e in
+    if eff_leq f0 f
+    then maybe_coerce g e0 t0 t
+    else err_unexpected_eff e f f0
 
 and synth_exp (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
     let e, f, t = synth_exp' g e in
@@ -398,7 +369,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
 
                 | (Inr e0, _)::rest, MLTY_Fun(tExpected, f', t) ->
                   let e0, f0, tInferred = synth_exp g e0 in
-                  let e0 = maybe_coerce g e0 tInferred f' tExpected in // coerce the arguments of application, if they dont match up
+                  let e0 = maybe_coerce g e0 tInferred tExpected in // coerce the arguments of application, if they dont match up
                   synth_app is_data (mlhead, (e0, f0)::mlargs_f) (join_l [f;f';f0], t) rest
 
                 | _ ->
@@ -552,9 +523,78 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
 
           with_ty t' <| MLE_Let((is_rec, List.map snd lbs), e'), f, t'
 
+      | Exp_match(scrutinee, pats) ->
+        let e, f_e, t_e = synth_exp g scrutinee in
+        let b, then_e, else_e = check_pats_for_ite pats in
+        let no_lift : mlexpr -> mlty -> mlexpr = fun x t -> x in
+        if b then
+            match then_e, else_e with
+                | Some then_e, Some else_e ->
+                    let then_mle, f_then, t_then = synth_exp g then_e in
+                    let else_mle, f_else, t_else = synth_exp g else_e in
+                    let t_branch, maybe_lift = 
+                        if type_leq g t_then t_else  //the types agree except for effect labels
+                        then t_else, no_lift 
+                        else if type_leq g t_else t_then 
+                        then t_then, no_lift
+                        else MLTY_Top, apply_obj_repr in
+                    with_ty t_branch <| MLE_If (e, maybe_lift then_mle t_then, Some (maybe_lift else_mle t_else)), 
+                    join f_then f_else,
+                    t_branch
+                | _ -> failwith "ITE pats matched but then and else expressions not found?"
+        else
+            let mlbranches = pats |> List.collect (fun (pat, when_opt, branch) ->
+                let env, p = extract_pat g pat in
+                let when_opt, f_when = match when_opt with
+                    | None -> None, E_PURE
+                    | Some w -> 
+                        let w, f_w, t_w = synth_exp env w in
+                        let w = maybe_coerce env w t_w ml_bool_ty in
+                        Some w, f_w in
+                let branch, f_branch, t_branch = synth_exp env branch in
+                p |> List.map (fun (p, wopt) -> 
+                    let when_clause = conjoin_opt wopt when_opt in
+                    p, (when_clause, f_when), (branch, f_branch, t_branch)))
+            in
+            begin match mlbranches with
+                | [] -> 
+                    let fw, _ = lookup_fv g (Util.fv Const.failwith_lid) in
+                    with_ty ml_unit_ty <| MLE_App(fw, [with_ty ml_string_ty <| MLE_Const (MLC_String "unreachable")]), 
+                    E_PURE,
+                    ml_unit_ty
 
-      | Exp_match(e, pats) ->
-        failwith "Matches must be checked; missing a compiler-provided annotation" //matches must be checked, not synth'd
+               
+                | (_, _, (_, f_first, t_first))::rest -> 
+                   let topt, f_match = List.fold_left (fun (topt, f) (_, _, (_, f_branch, t_branch)) -> 
+                        //WARNING WARNING WARNING
+                        //We're explicitly excluding the effect of the when clause in the net effect computation
+                        //TODO: fix this when we handle when clauses fully!
+                        let f = join f f_branch in 
+                        let topt = match topt with 
+                            | None -> None
+                            | Some t -> 
+                              //we just use the environment g here, since it is only needed for delta unfolding
+                              //which is invariant across the branches
+                              if type_leq g t t_branch 
+                              then Some t_branch 
+                              else if type_leq g t_branch t
+                              then Some t
+                              else None in
+                        topt, f)
+                     (Some t_first, f_first)
+                     rest in
+                   let mlbranches = mlbranches |> List.map (fun (p, (wopt, _), (b, _, t)) ->
+                        let b = match topt with 
+                            | None -> apply_obj_repr b t
+                            | Some _ -> b in
+                        (p, wopt, b)) in
+                   let t_match = match topt with 
+                        | None -> MLTY_Top
+                        | Some t -> t in
+                   with_ty t_match <| MLE_Match(e, mlbranches),
+                   f_match, 
+                   t_match
+            end
 
       | Exp_meta(Meta_desugared(e, _)) -> synth_exp g e //TODO: handle the re-sugaring
 
