@@ -318,8 +318,7 @@ let try_lookup_effect_lid env (ftv:lident) : option<typ> =
       end
     | _ -> None
 
-let lookup_lid env lid =
-  let not_found () = raise (Error(name_not_found lid, range_of_lid lid)) in
+let try_lookup_lid env lid =
   let mapper = function
     | Inl t -> 
       Some t
@@ -352,8 +351,13 @@ let lookup_lid env lid =
     | Inr se -> effect_signature (fst se)
   in
     match Util.bind_opt (lookup_qname env lid) mapper with
-      | Some (us, t) -> us, {t with pos=range_of_lid lid}
-      | None -> not_found ()
+      | Some (us, t) -> Some (us, {t with pos=range_of_lid lid})
+      | None -> None
+      
+let lookup_lid env l = 
+    match try_lookup_lid env l with 
+        | None -> raise (Error(name_not_found l, range_of_lid l))
+        | Some x -> x
 
 let lookup_val_decl env lid =
   match lookup_qname env lid with

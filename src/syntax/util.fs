@@ -450,16 +450,20 @@ let qualifier_equal q1 q2 = match q1, q2 with
 (***********************************************************************************************)
 (* closing types and terms *)
 (***********************************************************************************************)
-let rec arrow_formals k =
+let rec arrow_formals_comp k =
     let k = Subst.compress k in
     match k.n with
         | Tm_arrow(bs, c) ->
             let bs, c = Subst.open_comp bs c in
             if is_tot_or_gtot_comp c
-            then let bs', k = arrow_formals (comp_result c) in
+            then let bs', k = arrow_formals_comp (comp_result c) in
                  bs@bs', k
-            else bs, comp_result c
-        | _ -> [], k
+            else bs, c
+        | _ -> [], Syntax.mk_Total k
+
+let rec arrow_formals k =
+    let bs, c = arrow_formals_comp k in 
+    bs, comp_result c
 
 let abs bs t = match bs with 
     | [] -> t

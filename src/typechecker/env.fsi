@@ -24,7 +24,7 @@ type binding =
   | Binding_lid      of lident * tscheme
   | Binding_sig      of sigelt
   | Binding_univ     of univ_name
-  | Binding_sig_inst of sigelt * universes //the firs component should always be a Sig_inductive
+  | Binding_sig_inst of sigelt * universes //the first component should always be a Sig_inductive
 
 type delta_level = 
   | NoDelta
@@ -110,6 +110,7 @@ val get_range : env -> Range.range
 val lookup_bv              : env -> bv -> typ
 val lookup_lid             : env -> lident -> (universes * typ)
 val lookup_univ            : env -> univ_name -> bool
+val try_lookup_lid         : env -> lident -> option<(universes * typ)>
 val try_lookup_val_decl    : env -> lident -> option<(tscheme * list<qualifier>)>
 val lookup_val_decl        : env -> lident -> (universes * typ)
 val lookup_datacon         : env -> lident -> universes * typ

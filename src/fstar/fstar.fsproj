@@ -73,6 +73,11 @@
       <Project>{55398b56-03cf-4e11-adb0-a4274b7dbb35}</Project>
       <Private>True</Private>
     </ProjectReference>
+    <ProjectReference Include="..\smtencoding\smtencoding.fsproj">
+      <Name>smtencoding</Name>
+      <Project>{f6879027-a97f-4857-8f52-cc5641455652}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\syntax\syntax.fsproj">
       <Name>syntax</Name>
       <Project>{d008f256-80aa-4f9c-9c10-dc743d772940}</Project>
