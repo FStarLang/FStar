@@ -1,6 +1,7 @@
 (*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi Prins --admit_fsi Ffibridge --__temp_no_proj PSemantics --verify_module PSemantics;
-    other-files:FStar.Ghost.fst FStar.List.Tot.fst ordset.fsi ordmap.fsi FStar.Classical.fst prins.fsi ast.fst ffibridge.fsi sem.fst
+    options:--admit_fsi FStar.Set --admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi Prins --admit_fsi FStar.Seq --admit_fsi Ffibridge --z3timeout 10 --__temp_no_proj PSemantics;
+    variables:CONTRIB=../../contrib;
+    other-files:FStar.Classical.fst FStar.Ghost.fst FStar.List.Tot.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst seq.fsi FStar.SeqProperties.fst ordset.fsi ordmap.fsi FStar.Constructive.fst FStar.FunctionalExtensionality.fst prins.fsi $CONTRIB/Platform/fst/Bytes.fst ast.fst ffibridge.fsi sem.fst
  --*)
 
 module PSemantics
@@ -9,7 +10,6 @@ open FStar.OrdMap
 open FStar.OrdSet
 
 open FStar.Ghost
-
 
 open Prins
 open AST

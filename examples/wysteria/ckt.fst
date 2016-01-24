@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi Ffibridge --admit_fsi FStar.Set --admit_fsi FStar.String --admit_fsi FStar.IO --admit_fsi Runtime --admit_fsi FStar.Seq --admit_fsi Hashtable --verify_module Circuit;
     variables:CONTRIB=../../contrib;
-    other-files:FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst seq.fsi FStar.SeqProperties.fst FStar.Ghost.fst FStar.List.Tot.fst ordset.fsi ordmap.fsi FStar.List.fst FStar.IO.fsti string.fsi prins.fst ast.fst ffibridge.fsi sem.fst $CONTRIB/Platform/fst/Bytes.fst runtime.fsi print.fst hashtable.fsi
+    other-files:FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst seq.fsi FStar.SeqProperties.fst FStar.Ghost.fst FStar.List.Tot.fst ordset.fsi ordmap.fsi FStar.List.fst FStar.IO.fsti string.fsi prins.fst $CONTRIB/Platform/fst/Bytes.fst ast.fst ffibridge.fsi sem.fst runtime.fsi print.fst hashtable.fsi
  --*)
 
 module Circuit
@@ -781,6 +781,7 @@ let rec typ_to_string t = match t with
   | T_box t' -> strcat "T_box " (typ_to_string t')
   | T_wire t' -> strcat "T_wire " (typ_to_string t')
   | T_fun t1 t2 -> strcat "T_fun " (strcat (typ_to_string t1) (strcat " " (typ_to_string t2)))
+  | T_sh -> "T_sh"
   | T_unknown -> "T_unknown"
 
 and typ_l_to_string l = fold_left (fun s t -> strcat s (strcat "; " (typ_to_string t))) "" l
