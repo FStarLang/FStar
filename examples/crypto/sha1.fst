@@ -39,8 +39,8 @@ let hmac_sha1 k t =
   let x36 = byte_of_int 54 in
   let opad = createBytes blocksize x5c in
   let ipad = createBytes blocksize x36 in
-  let xor_key_opad = xor k opad (length k) in
-  let xor_key_ipad = xor k ipad (length k) in
+  let xor_key_opad = xor (length k) k opad in
+  let xor_key_ipad = xor (length k) k ipad in
   sha1 ( xor_key_opad @|
                 (sha1 (xor_key_ipad @| t))
        )
