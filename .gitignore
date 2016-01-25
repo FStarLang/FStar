@@ -48,6 +48,7 @@ dump
 *.a
 *.cmxa
 *.so
+*.annot
 /VS/
 
 tags

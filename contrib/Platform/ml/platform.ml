@@ -166,7 +166,7 @@ module Bytes = struct
   let xor len s1 s2 =
       let s1 = get_cbytes s1 in
       let s2 = get_cbytes s2 in
-      let res = String.make nb (char_of_int 0) in
+      let res = String.make len (char_of_int 0) in
       for i=0 to len-1 do
         String.set res i (char_of_int ((int_of_char s1.[i]) lxor (int_of_char s2.[i])))
       done;
