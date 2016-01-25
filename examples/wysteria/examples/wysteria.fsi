@@ -201,6 +201,7 @@ type Sh: Type -> Type
 type can_sh: Type -> Type
 
 assume Cansh_nat : can_sh nat
+assume Cansh_int : can_sh int
 
 val v_of_sh: #a:Type -> sh:Sh a -> GTot a
 val ps_of_sh: #a:Type -> sh:Sh a -> GTot prins
