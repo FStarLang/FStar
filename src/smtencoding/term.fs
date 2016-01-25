@@ -457,15 +457,15 @@ and mkPrelude z3options =
                      (! (iff (Valid (Precedes t1 t2)) \n\
                              (< (Rank t1) (Rank t2)))\n\
                         :pattern ((Precedes t1 t2)))))\n\
-                (define-fun Prims.Precedes ((a Term) (b Term) (t1 Term) (t2 Term)) Type\n\
+                (define-fun Prims.Precedes ((a Term) (b Term) (t1 Term) (t2 Term)) Term\n\
                          (Precedes t1 t2))\n" in
    let constrs : constructors = [("String_const", ["String_const_proj_0", Int_sort], String_sort, 0);
-                                 ("Term_type",  [], Term_sort, 0);
-                                 ("Term_arrow", [("Term_arrow_id", Int_sort)],  Term_sort, 1);
-                                 ("Term_app",   [("Term_app_fst",  Term_sort);
-                                                 ("Term_app_snd",  Term_sort)], Term_sort, 2);
-                                 ("Term_uvar",  [("Term_uvar_fst", Int_sort)],  Term_sort, 4);
-                                 ("Term_unit",  [], Term_sort, 0);
+                                 ("Tm_type",  [], Term_sort, 0);
+                                 ("Tm_arrow", [("Tm_arrow_id", Int_sort)],  Term_sort, 1);
+                                 ("Tm_app",   [("Tm_app_fst",  Term_sort);
+                                               ("Tm_app_snd",  Term_sort)], Term_sort, 2);
+                                 ("Tm_uvar",  [("Tm_uvar_fst", Int_sort)],  Term_sort, 4);
+                                 ("Tm_unit",  [], Term_sort, 0);
                                  ("BoxInt",     ["BoxInt_proj_0",  Int_sort],   Term_sort, 1);
                                  ("BoxBool",    ["BoxBool_proj_0", Bool_sort],  Term_sort, 2);
                                  ("BoxString",  ["BoxString_proj_0", String_sort], Term_sort, 3);
@@ -482,10 +482,10 @@ and mkPrelude z3options =
                                                   (Valid (Precedes x2 y2)))))))\n" in
    basic ^ bcons ^ lex_ordering
 
-let mk_Term_type        = mkApp("Term_type", [])
-let mk_Term_app t1 t2   = mkApp("Term_app", [t1;t2])
-let mk_Term_uvar i      = mkApp("Term_uvar", [mkInteger' i])
-let mk_Term_unit        = mkApp("Term_unit", [])
+let mk_Term_type        = mkApp("Tm_type", [])
+let mk_Term_app t1 t2   = mkApp("Tm_app", [t1;t2])
+let mk_Term_uvar i      = mkApp("Tm_uvar", [mkInteger' i])
+let mk_Term_unit        = mkApp("Tm_unit", [])
 let boxInt t            = mkApp("BoxInt", [t])
 let unboxInt t          = mkApp("BoxInt_proj_0", [t])
 let boxBool t           = mkApp("BoxBool", [t])

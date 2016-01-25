@@ -91,6 +91,7 @@ type Exists (#a:Type) (p:a -> GTot Type0) = squash (x:a & p x)
 let pure_pre = Type0
 let pure_post (a:Type) = a -> GTot Type0
 let pure_wp   (a:Type) = pure_post a -> GTot pure_pre
+
 inline let pure_return (a:Type) (x:a) (p:pure_post a) =
      p x
 inline let pure_bind_wlp (a:Type) (b:Type)

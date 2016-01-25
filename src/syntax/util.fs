@@ -747,13 +747,13 @@ let destruct_typ_as_formula f : option<connective> =
                 when (is_qlid tc.v) ->
               aux (Some (is_forall tc.v)) (b::out) t2
 
-            | Some true, _ ->
+            | Some b, _ ->
+              let bs = List.rev out in 
+              let bs, t = Subst.open_term bs t in
               let pats, body = patterns t in
-              Some (QAll(List.rev out, pats, body))
-
-            | Some false, _ ->
-              let pats, body = patterns t in
-              Some(QEx(List.rev out, pats, body))
+              if b 
+              then Some (QAll(bs, pats, body))
+              else Some  (QEx(bs, pats, body))
 
             | _ -> None in
         aux None [] t in

@@ -28,6 +28,7 @@ type step =
   | Unfold
   | Beta            //remove? Always do beta
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
+  | EraseUniverses
   //remove the rest?
   | DeltaComp       
   | SNComp
@@ -40,7 +41,7 @@ and steps = list<step>
 val eta_expand:           env -> term -> term
 val unfold_effect_abbrev:       env -> comp -> comp_typ
 val normalize:            steps -> env -> term -> term
-val normalize_universe:   universe -> universe
+val normalize_universe:   env -> universe -> universe
 val normalize_comp:       steps -> env -> comp -> comp
 val normalize_sigelt:     steps -> env -> sigelt -> sigelt
 val normalize_refinement: steps -> env -> typ -> typ

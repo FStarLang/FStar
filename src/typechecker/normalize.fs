@@ -44,6 +44,7 @@ type step =
   | Unfold
   | Beta            //remove? Always do beta
   | Simplify        //Simplifies some basic log cfg ical tautolog cfg ies: not part of definitional equality!
+  | EraseUniverses
   //remove the rest?
   | DeltaComp       
   | SNComp
@@ -123,7 +124,7 @@ let lookup_bvar env x =
 (*               S^p1 ?v1; ...; S^pq ?vq]   //offsets of distinct unification variables, in order of the variables  *)
 (*          where the size of the list is at least 2                                                                *)
 (********************************************************************************************************************)
-let norm_universe env u =
+let norm_universe cfg env u =
     let norm_univs us = 
         let us = Util.sort_with U.compare_univs us in 
         (* us is in sorted order;                                                               *)
@@ -161,7 +162,9 @@ let norm_universe env u =
           | U_max us ->  List.collect aux us |> norm_univs
           | U_succ u ->  List.map U_succ (aux u) in
 
-    match aux u with 
+    if cfg.steps |> List.contains EraseUniverses
+    then U_unknown
+    else match aux u with 
         | [] 
         | [U_zero] -> U_zero
         | [U_zero; u] -> u
@@ -177,7 +180,7 @@ let norm_universe env u =
 (*      subsituted with their closures in env (recursively closed) *)
 (* This is used when computing WHNFs                               *)
 (*******************************************************************)
-let rec closure_as_term env t =
+let rec closure_as_term cfg env t =
     match env with
         | [] -> t
         | _ -> 
@@ -192,79 +195,79 @@ let rec closure_as_term env t =
             | Tm_fvar _ -> t
 
             | Tm_uvar(u, t') -> 
-              mk (Tm_uvar(u, closure_as_term_delayed env t')) t.pos 
+              mk (Tm_uvar(u, closure_as_term_delayed  cfg env t')) t.pos 
 
             | Tm_type u -> 
-              mk (Tm_type (norm_universe env u)) t.pos
+              mk (Tm_type (norm_universe cfg env u)) t.pos
 
             | Tm_uinst(t, us) -> (* head symbol must be an fvar *) 
-              mk_Tm_uinst t (List.map (norm_universe env) us)
+              mk_Tm_uinst t (List.map (norm_universe cfg env) us)
          
             | Tm_bvar x -> 
               begin match lookup_bvar env x with
                     | Univ _ -> failwith "Impossible: term variable is bound to a universe"
                     | Dummy _ -> t
-                    | Clos(env, t0, r) -> closure_as_term env t0
+                    | Clos(env, t0, r) -> closure_as_term cfg env t0
               end
 
            | Tm_app(head, args) -> 
-             let head = closure_as_term_delayed env head in 
-             let args = closures_as_args_delayed env args in
+             let head = closure_as_term_delayed cfg env head in 
+             let args = closures_as_args_delayed cfg env args in
              mk (Tm_app(head, args)) t.pos
         
            | Tm_abs(bs, body) -> 
-             let bs, env = closures_as_binders_delayed env bs in 
-             let body = closure_as_term_delayed env body in
+             let bs, env = closures_as_binders_delayed cfg env bs in 
+             let body = closure_as_term_delayed cfg env body in
               mk (Tm_abs(List.rev bs, body)) t.pos
 
            | Tm_arrow(bs, c) -> 
-             let bs, env = closures_as_binders_delayed env bs in 
-             let c = close_comp env c in 
+             let bs, env = closures_as_binders_delayed cfg env bs in 
+             let c = close_comp cfg env c in 
              mk (Tm_arrow(bs, c)) t.pos
 
            | Tm_refine(x, phi) -> 
-             let x, env = closures_as_binders_delayed env [mk_binder x] in 
-             let phi = closure_as_term_delayed env phi in 
+             let x, env = closures_as_binders_delayed cfg env [mk_binder x] in 
+             let phi = closure_as_term_delayed cfg env phi in 
              mk (Tm_refine(List.hd x |> fst, phi)) t.pos
 
            | Tm_ascribed(t1, t2, lopt) -> 
-             mk (Tm_ascribed(closure_as_term_delayed env t1, closure_as_term_delayed env t2, lopt)) t.pos
+             mk (Tm_ascribed(closure_as_term_delayed cfg env t1, closure_as_term_delayed cfg env t2, lopt)) t.pos
 
            | Tm_meta(t', m) -> 
-             mk (Tm_meta(closure_as_term_delayed env t', m)) t.pos
+             mk (Tm_meta(closure_as_term_delayed cfg env t', m)) t.pos
        
            | Tm_match  _ -> failwith "NYI"
            | Tm_let _    -> failwith "NYI"
        
-and closure_as_term_delayed env t = 
+and closure_as_term_delayed cfg env t = 
     match env with 
         | [] -> t
-        | _ -> mk_Tm_delayed (Inr (fun () -> closure_as_term env t)) t.pos  
+        | _ -> mk_Tm_delayed (Inr (fun () -> closure_as_term cfg env t)) t.pos  
  
-and closures_as_args_delayed env args =
+and closures_as_args_delayed cfg env args =
     match env with 
         | [] -> args
-        | _ ->  List.map (fun (x, imp) -> closure_as_term_delayed env x, imp) args 
+        | _ ->  List.map (fun (x, imp) -> closure_as_term_delayed cfg env x, imp) args 
 
-and closures_as_binders_delayed env bs = 
+and closures_as_binders_delayed cfg env bs = 
     let env, bs = bs |> List.fold_left (fun (env, out) (b, imp) -> 
-            let b = {b with sort = closure_as_term_delayed env b.sort} in
+            let b = {b with sort = closure_as_term_delayed cfg env b.sort} in
             let env = Dummy::env in
             env, ((b,imp)::out)) (env, []) in
     List.rev bs, env
 
-and close_comp env c = 
+and close_comp cfg env c = 
     match env with
         | [] -> c
         | _ -> 
         match c.n with 
-            | Total t -> mk_Total (closure_as_term_delayed env t)
-            | GTotal t -> mk_GTotal (closure_as_term_delayed env t)
+            | Total t -> mk_Total (closure_as_term_delayed cfg env t)
+            | GTotal t -> mk_GTotal (closure_as_term_delayed cfg env t)
             | Comp c -> 
-              let rt = closure_as_term_delayed env c.result_typ in
-              let args = closures_as_args_delayed env c.effect_args in 
+              let rt = closure_as_term_delayed cfg env c.result_typ in
+              let args = closures_as_args_delayed cfg env c.effect_args in 
               let flags = c.flags |> List.map (function 
-                | DECREASES t -> DECREASES (closure_as_term_delayed env t)
+                | DECREASES t -> DECREASES (closure_as_term_delayed cfg env t)
                 | f -> f) in
               mk_Comp ({c with result_typ=rt;
                                effect_args=args;
@@ -350,11 +353,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
             rebuild cfg env stack t
      
           | Tm_type u -> 
-            let u = norm_universe env u in
+            let u = norm_universe cfg env u in
             rebuild cfg env stack (mk (Tm_type u) t.pos)
          
           | Tm_uinst(t', us) -> 
-            let us = UnivArgs(List.map (norm_universe env) us, t.pos) in
+            let us = UnivArgs(List.map (norm_universe cfg env) us, t.pos) in
             let stack = us::stack in
             norm cfg env stack t'
      
@@ -426,7 +429,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 | Abs _ :: _
                 | [] -> 
                   if List.contains WHNF cfg.steps //don't descend beneath a lambda if we're just doing WHNF   
-                  then rebuild cfg env stack (closure_as_term env t) //But, if the environment is non-empty, we need to substitute within the term
+                  then rebuild cfg env stack (closure_as_term cfg env t) //But, if the environment is non-empty, we need to substitute within the term
                   else let bs, body = open_term bs body in 
                        let env' = bs |> List.fold_left (fun env _ -> Dummy::env) env in
                        log cfg  (fun () -> Printf.printf "\tShifted %d dummies\n" (List.length bs));
@@ -440,7 +443,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                             
           | Tm_refine(x, f) -> //non tail-recursive; the alternative is to keep marks on the stack to rebuild the term ... but that's very heavy
             if List.contains WHNF cfg.steps
-            then rebuild cfg env stack (closure_as_term env t)
+            then rebuild cfg env stack (closure_as_term cfg env t)
             else let t_x = norm cfg env [] x.sort in 
                  let closing, f = open_term [(x, None)] f in
                  let f = norm cfg (Dummy::env) [] f in 
@@ -449,7 +452,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
           | Tm_arrow(bs, c) -> 
             if List.contains WHNF cfg.steps
-            then rebuild cfg env stack (closure_as_term env t)
+            then rebuild cfg env stack (closure_as_term cfg env t)
             else let bs, c = open_comp bs c in 
                  let c = norm_comp cfg (bs |> List.fold_left (fun env _ -> Dummy::env) env) c in
                  let t = arrow (norm_binders cfg env bs) c in
@@ -565,7 +568,7 @@ and rebuild : cfg -> env -> stack -> term -> term =
               begin match !m with 
                 | None -> 
                   if List.contains WHNF cfg.steps
-                  then let arg = closure_as_term env tm in 
+                  then let arg = closure_as_term cfg env tm in 
                        let t = extend_app t (arg, aq) None r in 
                        rebuild cfg env stack t
                   else let stack = MemoLazy m::App(t, aq, r)::stack in 
@@ -586,7 +589,7 @@ and rebuild : cfg -> env -> stack -> term -> term =
                 let cfg = {cfg with delta_level=glb_delta cfg.delta_level OnlyInline} in
                 let norm_or_whnf env t =
                     if whnf
-                    then closure_as_term env t
+                    then closure_as_term cfg env t
                     else norm cfg env [] t in
                 let branches = branches |> List.map (fun branch -> 
                      //Q: What about normalizing the sorts of each of bound variables in p?
@@ -686,10 +689,10 @@ let config s e =
 
 let normalize s e t = norm (config s e) [] [] t
 let normalize_comp s e t = norm_comp (config s e) [] t
-let normalize_universe u = norm_universe [] u
+let normalize_universe env u = norm_universe (config [] env) [] u
 
-let term_to_string env t = Print.term_to_string (normalize [] env t)
-let comp_to_string env c = Print.comp_to_string (norm_comp (config [] env) [] c)
+let term_to_string env t = Print.term_to_string (normalize [EraseUniverses] env t)
+let comp_to_string env c = Print.comp_to_string (norm_comp (config [EraseUniverses] env) [] c)
 
 let normalize_refinement steps env t0 =
    let t = normalize (steps@[Beta; WHNF]) env t0 in

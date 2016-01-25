@@ -296,7 +296,7 @@ let norm_univ wl u =
               U_max (List.map aux us)
 
             | _ -> u in 
-    N.normalize_universe (aux u)
+    N.normalize_universe wl.tcenv (aux u)
 
 let normalize_refinement steps env wl t0 = N.normalize_refinement steps env (whnf env t0)
 
@@ -882,8 +882,8 @@ type univ_eq_sol =
   | UFailed   of string
    
 let rec solve_universe_eq orig wl u1 u2 = 
-    let u1 = N.normalize_universe u1 in
-    let u2 = N.normalize_universe u2 in
+    let u1 = N.normalize_universe wl.tcenv u1 in
+    let u2 = N.normalize_universe wl.tcenv u2 in
     let rec occurs_univ v1 u = match u with 
         | U_max us -> 
           us |> Util.for_some (fun u -> 
@@ -2041,10 +2041,10 @@ let solve_universe_inequalities' tx env ineqs =
    let rec group_by out ineqs = match ineqs with 
     | [] -> Some out
     | (u1, u2)::rest -> 
-      let u2 = N.normalize_universe u2 in
+      let u2 = N.normalize_universe env u2 in
       match u2 with 
         | U_unif uv -> 
-          let u1 = N.normalize_universe u1 in
+          let u1 = N.normalize_universe env u1 in
           if U.eq_univs u1 u2 
           then group_by out rest
           else group_by (insert uv u1 out) rest
@@ -2059,8 +2059,8 @@ let solve_universe_inequalities' tx env ineqs =
               ineqs |> List.iter (fun (u1, u2) -> Printf.printf "\t%s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2));
               let wl = {empty_worklist env with defer_ok=true} in
               ineqs |> List.iter (fun (u1, u2) -> 
-                let u1 = N.normalize_universe u1 in
-                let u2 = N.normalize_universe u2 in 
+                let u1 = N.normalize_universe env u1 in
+                let u2 = N.normalize_universe env u2 in 
                 match u1 with 
                     | U_zero -> ()
                     | _ -> match solve_universe_eq -1 wl u1 u2 with 
