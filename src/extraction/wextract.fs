@@ -54,6 +54,8 @@ let initialize (_:unit) :unit =
     Util.smap_add wys_lib_args_map "projwire_p" (to_wys_lib_fn "projwire_p" 1 2 "mk_projwire");
     Util.smap_add wys_lib_args_map "projwire_s" (to_wys_lib_fn "projwire_s" 1 2 "mk_projwire");
     Util.smap_add wys_lib_args_map "concat_wire" (to_wys_lib_fn "concat_wire" 2 2 "mk_concatwire");
+    Util.smap_add wys_lib_args_map "mk_sh" (to_wys_lib_fn "mk_sh" 0 1 "mk_mksh");
+    Util.smap_add wys_lib_args_map "comb_sh" (to_wys_lib_fn "comb_sh" 0 1 "mk_combsh");
 
     Util.smap_add prims_trans_map "Prims.op_Multiply" "Prims.( * )";
     Util.smap_add prims_trans_map "Prims.op_Subtraction" "Prims.(-)";
@@ -127,6 +129,11 @@ let is_wire (t:mlty) =
         | MLTY_Named (_, p) -> string_of_mlpath p = "Wysteria.Wire"
         | _ -> false
 
+let is_share (t:mlty) =
+    match t with
+        | MLTY_Named (_, p) -> string_of_mlpath p = "Wysteria.Sh"
+        | _ -> false
+
 let box_content_type (t:mlty) :mlty =
     match t with
         | MLTY_Named (l, p) ->
@@ -141,7 +148,7 @@ let wire_content_type (t:mlty) :mlty =
             else failwith "Cannot get content for non wire named type"
         | _ -> failwith "Cannot get content for non-named type"
 
-let is_wysteria_type (t:mlty) = is_prin t || is_prins t || is_eprins t || is_box t || is_wire t
+let is_wysteria_type (t:mlty) = is_prin t || is_prins t || is_eprins t || is_box t || is_wire t || is_share t
 
 let slice_value = "Semantics.slice_v_ffi"
 let slice_value_sps = "Semantics.slice_v_sps_ffi"
@@ -149,7 +156,7 @@ let compose_values = "Semantics.compose_vals_ffi"
 
 let rec get_opaque_fns (t:mlty) :(wexp * wexp * wexp) =
     if is_bool t || is_unit t || is_prin t || is_prins t || is_eprins t then slice_id, compose_ids, slice_id_sps
-    else if is_box t || is_wire t then slice_value, compose_values, slice_value_sps
+    else if is_box t || is_wire t || is_share t then slice_value, compose_values, slice_value_sps
     else
         match t with
             | MLTY_Named ([], p)   -> lookup_ffi_map (string_of_mlpath p)
@@ -171,7 +178,7 @@ let get_injection (t:mlty) :string =
         else if is_unit t then "D_v (const_meta, V_unit)"
         else if is_prin t then "D_v (const_meta, V_prin x)"
         else if is_prins t || is_eprins t then "D_v (const_meta, V_eprins x)"
-        else if is_box t || is_wire t then "x"
+        else if is_box t || is_wire t || is_share t then "x"
         else
             let s1, s2, s3 = get_opaque_fns t in
             "mk_v_opaque x " ^ s1 ^ " " ^ s2 ^ " " ^ s3
@@ -194,6 +201,7 @@ let rec mlty_to_typ (t:mlty) :string =
     else if is_prins t then "T_eprins"
     else if is_box t then "T_box (" ^ (mlty_to_typ (box_content_type t)) ^ ")"
     else if is_wire t then "T_wire (" ^ (mlty_to_typ (wire_content_type t)) ^ ")"
+    else if is_share t then "T_sh"
     else
         match t with
             | MLTY_Named (l, p) ->
@@ -421,7 +429,8 @@ let extract_smc_exports (g:env) :string =
 let extract (l:list<modul>) (en:FStar.Tc.Env.env) :unit =
     initialize ();
     let c, mllibs = Util.fold_map Extraction.ML.ExtractMod.extract (Extraction.ML.Env.mkContext en) l in
-    let s_exports = extract_smc_exports c in
+    // AR: TODO: Uncomment this, disabled temporarily for deal code
+    // let s_exports = extract_smc_exports c in
     let mllibs = List.flatten mllibs in
     let m_opt = find_smc_module mllibs in
     let s_smc =
@@ -431,13 +440,14 @@ let extract (l:list<modul>) (en:FStar.Tc.Env.env) :unit =
                 List.fold_left (fun s (Mk_tlet (n, t, b)) -> s ^ "(" ^ name_to_string n ^ ", (" ^ t ^ "), (" ^ b ^ "));\n") "" l
             | _ -> "")
     in
-    let smciface = Util.open_file_for_writing (Options.prependOutputDir "smciface.ml") in
-    Util.append_to_file smciface "open Ffibridge";
-    Util.append_to_file smciface "open FFI";
-    Util.append_to_file smciface "open AST";
-    Util.append_to_file smciface "\n";
-    Util.append_to_file smciface s_exports;
-    Util.close_file smciface;
+    // AR: TODO: Uncomment this, disabled temporarily for deal code
+    // let smciface = Util.open_file_for_writing (Options.prependOutputDir "smciface.ml") in
+    // Util.append_to_file smciface "open Ffibridge";
+    // Util.append_to_file smciface "open FFI";
+    // Util.append_to_file smciface "open AST";
+    // Util.append_to_file smciface "\n";
+    // Util.append_to_file smciface s_exports;
+    // Util.close_file smciface;
 
     let prog = Util.open_file_for_writing (Options.prependOutputDir "prog.ml") in
     Util.append_to_file prog "open AST";
