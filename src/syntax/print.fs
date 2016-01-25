@@ -60,8 +60,7 @@ let infix_prim_ops = [
     (Const.imp_lid     , "==>");
     (Const.iff_lid     , "<==>");
     (Const.precedes_lid, "<<");
-    (Const.eq2_lid     , "==");
-    (Const.eqT_lid     , "==");
+    (Const.eq2_lid     , "==")
 ]
 
 let unary_prim_ops = [
@@ -83,9 +82,7 @@ let is_unary_prim_op (e:term) = is_prim_op (fst (List.split unary_prim_ops)) e
 
 let quants = [
   (Const.forall_lid, "forall");
-  (Const.exists_lid, "exists");
-  (Const.allTyp_lid, "forall");
-  (Const.exTyp_lid , "exists");
+  (Const.exists_lid, "exists")
 ]
 type exp = term
 

@@ -146,7 +146,7 @@ default effect Tot (a:Type) = PURE a (pure_null_wp a) (pure_null_wp a)
 
 total new_effect GHOST = PURE
 
-let purewp_id (a:Type) (wp:pure_wp a) = wp
+inline let purewp_id (a:Type) (wp:pure_wp a) = wp
 
 sub_effect
   PURE ~> GHOST = purewp_id
@@ -364,7 +364,7 @@ effect Exn (a:Type) (pre:ex_pre) (post:ex_post a) =
        EXN a
          (fun (p:ex_post a) -> pre /\ (forall (r:result a). (pre /\ post r) ==> p r)) (* WP *)
          (fun (p:ex_post a) -> (forall (r:result a). (pre /\ post r) ==> p r))       (* WLP *)
-let lift_div_exn (a:Type) (wp:pure_wp a) (p:ex_post a) = wp (fun a -> p (V a))
+inline let lift_div_exn (a:Type) (wp:pure_wp a) (p:ex_post a) = wp (fun a -> p (V a))
 sub_effect DIV ~> EXN = lift_div_exn
 default effect Ex (a:Type) = Exn a True (fun v -> True)
 

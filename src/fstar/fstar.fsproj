@@ -26,7 +26,7 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>--universes test.fst test2.fst --debug TEST2 --debug_level Extreme --debug_level Gen --print_universes --print_implicits --debug_level LogTypes --print_bound_var_types --debug_level RelCheck</StartArguments>
+    <StartArguments>--universes --prims prims.fst</StartArguments>
     <StartAction>Project</StartAction>
     <StartWorkingDirectory>C:\Users\nswamy\workspace\universes\FStar\lib</StartWorkingDirectory>
   </PropertyGroup>

@@ -68,18 +68,13 @@ let iff_lid    = pconst "l_iff"
 let ite_lid    = pconst "ITE"
 let exists_lid = pconst "Exists"
 let forall_lid = pconst "Forall"
-let exTyp_lid  = pconst "ExistsTyp"
-let allTyp_lid = pconst "ForallTyp"
 let b2t_lid    = pconst "b2t" (* coercion from boolean to type *)
 let using_IH   = pconst "InductionHyp"
-let using_lem  = pconst "Using"
 let admit_lid  = pconst "admit"
 let magic_lid  = pconst "magic"
 
 (* Various equality predicates *)
-let eq_lid     = pconst  "Eq"
 let eq2_lid    = pconst  "Eq2"
-let eqT_lid    = pconst  "EqTyp"
 let neq_lid    = pconst  "neq"
 let neq2_lid   = pconst  "neq2"
 

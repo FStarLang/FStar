@@ -357,9 +357,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
             rebuild cfg env stack (mk (Tm_type u) t.pos)
          
           | Tm_uinst(t', us) -> 
-            let us = UnivArgs(List.map (norm_universe cfg env) us, t.pos) in
-            let stack = us::stack in
-            norm cfg env stack t'
+            if cfg.steps |> List.contains EraseUniverses
+            then norm cfg env stack t'
+            else let us = UnivArgs(List.map (norm_universe cfg env) us, t.pos) in
+                 let stack = us::stack in
+                 norm cfg env stack t'
      
           | Tm_name x -> 
             rebuild cfg env stack t
@@ -505,14 +507,24 @@ let rec norm : cfg -> env -> stack -> term -> term =
             norm cfg body_env stack body
 
           | Tm_meta (head, m) -> 
-            let head = norm cfg env [] head in
-            let m = match m with 
-                | Meta_pattern args -> 
-                  let args = args |> List.map (List.map (fun (a, imp) -> norm cfg env [] a, imp)) in 
-                  Meta_pattern args 
-                | _ -> m in
-            let t = mk (Tm_meta(head, m)) t.pos in
-            rebuild cfg env stack t
+            begin match stack with 
+                | _::_ ->
+                  begin match m with 
+                    | Meta_labeled _ -> 
+                      mk (Tm_meta(norm cfg env stack head, m)) t.pos //meta doesn't block reduction, but we need to put the label back
+                    | _ -> 
+                      norm cfg env stack head //meta doesn't block reduction
+                  end  
+                | _ -> 
+                let head = norm cfg env [] head in
+                let m = match m with 
+                    | Meta_pattern args -> 
+                      let args = args |> List.map (List.map (fun (a, imp) -> norm cfg env [] a, imp)) in 
+                      Meta_pattern args 
+                    | _ -> m in
+                let t = mk (Tm_meta(head, m)) t.pos in
+                rebuild cfg env stack t
+            end
 
 and norm_comp : cfg -> env -> comp -> comp = 
     fun cfg env comp -> 

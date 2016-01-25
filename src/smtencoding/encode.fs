@@ -172,7 +172,6 @@ let lookup_term_var env a =
 let new_term_constant_and_tok_from_lid (env:env_t) (x:lident) =
     let fname = varops.new_fvar x in
     let ftok = fname^"@tok" in
-    Printf.printf "Pushing %s \n" (Print.lid_to_string x);
     fname, ftok, {env with bindings=Binding_fvar(x, fname, Some <| mkApp(ftok,[]), None)::env.bindings}
 let try_lookup_lid env a =
     lookup_binding env (function Binding_fvar(b, t1, t2, t3) when lid_equals b a -> Some (t1, t2, t3) | _ -> None)
@@ -340,7 +339,7 @@ let encode_const = function
     | Const_int i  -> boxInt (mkInteger i)
     | Const_int32 i -> Term.mkApp("FStar.Int32.Int32", [boxInt (mkInteger32 i)])
     | Const_string(bytes, _) -> varops.string_const (Util.string_of_bytes <| bytes)
-    | c -> failwith "Unhandled constant"
+    | c -> failwith (Printf.sprintf "Unhandled constant: %A" c)
 
 let as_function_typ env t0 =
     let rec aux norm t =
@@ -400,7 +399,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_bvar _ -> 
         failwith "Impossible: locally nameless"
 
-      | Tm_ascribed(t, _, _) ->
+      | Tm_ascribed(t, k, _) ->
+        t.tk := Some k.n;
         encode_term t env
 
       | Tm_meta(t, _) ->
@@ -489,7 +489,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              t, [tdecl; t_kinding; t_interp] (* TODO: At least preserve alpha-equivalence of non-pure function types *)
 
       | Tm_refine _ ->
-        let x, f = match N.normalize_refinement [] env.tcenv t0 with
+        let x, f = match N.normalize_refinement [N.EraseUniverses] env.tcenv t0 with
             | {n=Tm_refine(x, f)} -> 
                let b, f = SS.open_term [x, None] f in
                fst (List.hd b), f
@@ -582,13 +582,14 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             | Tm_ascribed(_, t, _) -> t
             | _ -> failwith (Util.format2 "Unexpected head of application is: %s, %s" (Print.tag_of_term head) (Print.term_to_string head)) in
 
-        let head_type = Util.unrefine <| N.normalize_refinement [N.WHNF] env.tcenv head_type in
+        let head_type = Util.unrefine <| N.normalize_refinement [N.WHNF; N.EraseUniverses] env.tcenv head_type in
 
                 if Env.debug env.tcenv <| Options.Other "Encoding"
                 then Util.print3 "Recomputed type of head %s (%s) to be %s\n" (Print.term_to_string head) (Print.tag_of_term head) (Print.term_to_string head_type);
 
         let formals, c = Util.arrow_formals_comp head_type in
         begin match head.n with
+            | Tm_uinst({n=Tm_fvar(fv, _)}, _)
             | Tm_fvar (fv, _) when (List.length formals = List.length args) -> encode_full_app fv
             | _ ->
                 if List.length formals > List.length args
@@ -892,7 +893,6 @@ and encode_formula_with_labels (phi:typ) (env:env_t) : (term * labels * decls_t)
         (Const.iff_lid,   enc_prop_c <| bin_op mkIff);
         (Const.ite_lid,   mk_ite);
         (Const.not_lid,   enc_prop_c <| un_op mkNot);
-        (Const.eqT_lid,   enc <| bin_op mkEq);
         (Const.eq2_lid,   eq_op);
         (Const.true_lid,  const_op mkTrue);
         (Const.false_lid, const_op mkFalse);
@@ -1160,10 +1160,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
     let encode_top_level_val env lid t quals = 
         let tt = whnf env t in
-        Printf.printf "Encoding top-level val %s : %s\nWHNF is %s\n" 
-            (Print.lid_to_string lid) 
-            (Print.term_to_string t)
-            (Print.term_to_string tt);
+//        Printf.printf "Encoding top-level val %s : %s\nWHNF is %s\n" 
+//            (Print.lid_to_string lid) 
+//            (Print.term_to_string t)
+//            (Print.term_to_string tt);
         let decls, env = encode_free_var env lid t tt quals in
         if Util.is_smt_lemma t
         then decls@encode_smt_lemma env lid t, env
@@ -1217,7 +1217,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                 Some "b2t def")] in
        decls, env
 
-    | Sig_let(_, _, _, quals) when (quals |> Util.for_some (function Projector _ | Discriminator _ -> true | _ -> false)) ->
+    | Sig_let(_, _, _, quals) when (quals |> Util.for_some (function Projector _ | Discriminator _  | Inline -> true | _ -> false)) ->
       [], env
 
     | Sig_let((is_rec, bindings), _, _, quals) ->
@@ -1229,11 +1229,11 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             let body = Syntax.mk_Tm_app body (snd <| Util.args_of_binders extra_formals) (Some <| (SS.subst subst t).n) body.pos in
             binders@extra_formals, body in
 
-        let destruct_bound_function flid t_norm e = match e.n with
-            | Tm_ascribed({n=Tm_abs(binders, body)}, _, _)
+        let rec destruct_bound_function flid t_norm e = 
+           match (Util.unascribe e).n with
             | Tm_abs(binders, body) ->
                 let binders, body = SS.open_term binders body in
-                begin match t_norm.n with
+                begin match (SS.compress t_norm).n with
                  | Tm_arrow(formals, c) ->
                     let formals, c = SS.open_comp formals c in
                     let nformals = List.length formals in
@@ -1255,7 +1255,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                               flid.str (Print.term_to_string e) (Print.term_to_string t_norm))
                 end
             | _ ->
-                begin match t_norm.n with
+                begin match (SS.compress t_norm).n with
                     | Tm_arrow(formals, c) ->
                         let formals, c = SS.open_comp formals c in
                         let tres = Util.comp_result c in
@@ -1282,10 +1282,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                       else if not is_rec
                       then match bindings, typs, toks with //Encoding non-recursive definitions
                             | [{lbdef=e}], [t_norm], [(flid, (f, ftok))] ->
-                              Printf.printf "Encoding %s = %s at type %s\n" 
-                                flid.str 
-                                (Print.term_to_string e)
-                                (Print.term_to_string t_norm);
+                              let e = SS.compress e in
                               let binders, body, _, _ = destruct_bound_function flid t_norm e in
                               let vars, guards, env', binder_decls, _ = encode_binders None binders env in
                               let app = match vars with [] -> Term.mkFreeV(f, Term_sort) | _ -> Term.mkApp(f, List.map mkFreeV vars) in
@@ -1473,6 +1470,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let encode_elim () =
             let head, args = Util.head_and_args t_res in
             match (SS.compress head).n with
+                | Tm_uinst({n=Tm_fvar(fv, _)}, _)
                 | Tm_fvar (fv, _) ->
                   let encoded_head = lookup_free_var_name env' fv in
                   let encoded_args, arg_decls = encode_args args env' in
@@ -1643,7 +1641,7 @@ let encode_env_bindings (env:env_t) (bindings:list<Env.binding>) : (decls_t * en
         
         | Env.Binding_var x -> 
             let xxsym, xx, env' = new_term_constant env x in
-            let t1 = N.normalize [N.Beta; N.Inline; N.Simplify] env.tcenv x.sort in
+            let t1 = N.normalize [N.Beta; N.Inline; N.Simplify; N.EraseUniverses] env.tcenv x.sort in
             if Env.debug env.tcenv <| Options.Other "Encoding"
             then (Util.print3 "Normalized %s : %s to %s\n" (Print.bv_to_string x) (Print.term_to_string x.sort) (Print.term_to_string t1));
             let t, decls' = encode_term_pred None t1 env xx in
@@ -1762,7 +1760,7 @@ let solve tcenv q : unit =
             let rec aux bindings = match bindings with 
                 | Env.Binding_var x::rest -> 
                   let out, rest = aux rest in 
-                  let t = N.normalize [N.Inline; N.Beta; N.Simplify] env.tcenv x.sort in
+                  let t = N.normalize [N.Inline; N.Beta; N.Simplify; N.EraseUniverses] env.tcenv x.sort in
                   Syntax.mk_binder ({x with sort=t})::out, rest 
                 | _ -> [], bindings in
             let closing, bindings = aux bindings in 

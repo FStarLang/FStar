@@ -332,9 +332,11 @@ let is_primop f = match f.n with
   | Tm_fvar(fv,_) -> primops |> Util.for_some (lid_equals fv.v)
   | _ -> false
 
-let rec unascribe e = match e.n with
-  | Tm_ascribed (e, _, _) -> unascribe e
-  | _ -> e
+let rec unascribe e = 
+    let e = Subst.compress e in
+    match e.n with
+      | Tm_ascribed (e, _, _) -> unascribe e
+      | _ -> e
 
 let rec ascribe t k = match t.n with
   | Tm_ascribed (t', _, _) -> ascribe t' k
@@ -538,13 +540,10 @@ let mk_dtuple_data_lid n r =
   let t = Util.format1 "MkDTuple%s" (Util.string_of_int n) in
   set_lid_range (Const.pconst t) r
 
-let is_lid_equality x =
-    lid_equals x Const.eq_lid  ||
-    lid_equals x Const.eq2_lid ||
-    lid_equals x Const.eqT_lid
+let is_lid_equality x = lid_equals x Const.eq2_lid
 
-let is_forall lid = lid_equals lid Const.forall_lid || lid_equals lid Const.allTyp_lid
-let is_exists lid = lid_equals lid Const.exists_lid || lid_equals lid Const.exTyp_lid
+let is_forall lid = lid_equals lid Const.forall_lid 
+let is_exists lid = lid_equals lid Const.exists_lid
 let is_qlid lid   = is_forall lid || is_exists lid
 let is_equality x = is_lid_equality x.v
 
@@ -660,8 +659,6 @@ let eq_pred_t : term =
 let teq = fvar None Const.eq2_lid dummyRange
 
 let mk_eq t1 t2 e1 e2 = mk (Tm_app(teq, [arg e1; arg e2])) None (Range.union_ranges e1.pos e2.pos)
-let eq_typ = fvar None Const.eqT_lid dummyRange
-let mk_eq_typ t1 t2 = mk (Tm_app(eq_typ, [arg t1; arg t2])) None (Range.union_ranges t1.pos t2.pos)
 
 let lex_t :term = fvar None Const.lex_t_lid dummyRange
 let lex_top : term = fvar (Some Data_ctor) Const.lextop_lid dummyRange
@@ -704,6 +701,9 @@ type connective =
     | BaseConn of lident * args
 
 let destruct_typ_as_formula f : option<connective> =
+    let un_uinst t = match (Subst.compress t).n with 
+        | Tm_uinst(t, _) -> t
+        | _ -> t in 
     let destruct_base_conn f =
         let connectives = [ (Const.true_lid,  0);
                             (Const.false_lid, 0);
@@ -713,14 +713,14 @@ let destruct_typ_as_formula f : option<connective> =
                             (Const.iff_lid, 2);
                             (Const.ite_lid, 3);
                             (Const.not_lid, 1);
-                            (Const.eqT_lid, 2);
-                            (Const.eq2_lid, 2);
                             (Const.eq2_lid, 4);
+                            (Const.eq2_lid, 2)
                         ] in
         let rec aux f (lid, arity) =
             let t, args = head_and_args f in
+            let t = un_uinst t in
             if is_constructor t lid
-                && List.length args = arity
+            && List.length args = arity
             then Some (BaseConn(lid, args))
             else None in
         Util.find_map connectives (aux f) in
@@ -735,7 +735,7 @@ let destruct_typ_as_formula f : option<connective> =
         let is_q : bool -> lident -> Tot<bool> = fun fa l -> if fa then is_forall l else is_exists l in
         let flat t =
             let t, args = head_and_args t in
-            t, args |> List.map (fun (t, imp) -> compress t, imp) in
+            un_uinst t, args |> List.map (fun (t, imp) -> compress t, imp) in
         let rec aux qopt out t = match qopt, flat t with
             | Some fa, ({n=Tm_fvar (tc, _)}, [{n=Tm_abs([b], t2)}, _])
             | Some fa, ({n=Tm_fvar (tc, _)}, [_; ({n=Tm_abs([b], t2)}, _)])
