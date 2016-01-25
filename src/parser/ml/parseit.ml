@@ -18,7 +18,7 @@ module Path = BatPathGen.OfString
 let find_file (context:string) (filename:string) : string =
     let dirname = Path.to_string (Path.parent (Path.of_string context)) in
     let search_path = FStar_Options.get_include_path dirname in
-    let found = FStar_Util.find_file filename search_path in
+    let found = FStar_Options.find_file filename search_path in
     match found with
       | Some s ->
         s

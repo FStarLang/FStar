@@ -601,23 +601,5 @@ let file_exists = Sys.file_exists
 let basename = Filename.basename
 let print_endline = print_endline
 
-let find_file filename search_path =
-    try
-      BatOption.map
-        normalize_file_path
-        (if is_path_absolute filename then
-          if file_exists filename then
-            Some filename
-          else
-            None
-        else
-          find_map 
-            search_path 
-              (fun p -> 
-                let path = join_paths p filename in
-                if file_exists path then 
-                  Some path
-                else 
-                  None))
-    with _ -> 
-      None
+let map_option f opt = BatOption.map f opt
+

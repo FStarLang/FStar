@@ -185,6 +185,27 @@ let get_include_path (dirname:string) =
         Util.join_paths dirname p)
     (let h = get_fstar_home () in
     !_include_path@["."; h ^ "/lib"; h ^ "/lib/fstar"])
+    
+let find_file filename search_path =
+    try
+      Util.map_option
+        Util.normalize_file_path
+        (if Util.is_path_absolute filename then
+          if Util.file_exists(filename) then
+            Some filename
+          else
+            None
+        else
+          Util.find_map
+            search_path
+            (fun p ->
+              let path = Util.join_paths p filename in
+              if Util.file_exists path then
+                Some path
+              else
+                None))
+    with _ -> 
+      None
 
 let prims () = match !prims_ref with
   | None -> 
@@ -193,9 +214,7 @@ let prims () = match !prims_ref with
     | Some result ->
       result
     | None ->
-      (* todo: at this point, it seems certain that F* will fail to open `prims.fst`. there's no other attempts to raise an 
-       * exception in this module so it is unclear what a better course of action would be to notify the user. *)
-      filen)
+      raise (Util.Failure (Util.format1 "unable to find required file %s in search path." filen)))
   | Some x -> x
 
 let prependOutputDir fname = match !outputDir with
