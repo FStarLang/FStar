@@ -67,8 +67,8 @@ type dh_key = {
 assume val hash : alg:hash_alg -> bytes -> Tot (h:bytes{length h = hashSize alg})
 assume val hmac : alg:hash_alg -> bytes -> bytes -> Tot (h:bytes{length h = hashSize alg})
 
-assume val block_encrypt : block_cipher -> bytes -> bytes -> bytes -> bytes
-assume val block_decrypt : block_cipher -> bytes -> bytes -> bytes -> bytes
+assume val block_encrypt : block_cipher -> bytes -> bytes -> bytes -> Tot bytes
+assume val block_decrypt : block_cipher -> bytes -> bytes -> bytes -> Tot bytes
 assume val aead_encrypt : (a:aead_cipher) -> (k:bytes)
   -> (iv:bytes) -> (ad:bytes) -> (p:bytes) -> EXT (lbytes (length p + aeadTagSize a))
 assume val aead_decrypt : (a:aead_cipher) -> (k:bytes) 
@@ -76,22 +76,22 @@ assume val aead_decrypt : (a:aead_cipher) -> (k:bytes)
   -> EXT (option (lbytes (length c - aeadTagSize a)))
 
 type cipher_stream
-assume val stream_encryptor : stream_cipher -> bytes -> cipher_stream
-assume val stream_decryptor : stream_cipher -> bytes -> cipher_stream
-assume val stream_process : cipher_stream -> bytes -> bytes
-assume val stream_fini : cipher_stream -> unit
+assume val stream_encryptor : stream_cipher -> bytes -> EXT cipher_stream
+assume val stream_decryptor : stream_cipher -> bytes -> EXT cipher_stream
+assume val stream_process : cipher_stream -> bytes -> EXT bytes
+assume val stream_fini : cipher_stream -> EXT unit
 
 assume val random : l:nat -> EXT (lbytes l)
 
-assume val rsa_gen_key : int -> rsa_key
-assume val rsa_encrypt : rsa_key -> rsa_padding -> bytes -> bytes
-assume val rsa_decrypt : rsa_key -> rsa_padding -> bytes -> option bytes
-assume val rsa_sign : option hash_alg -> rsa_key -> bytes -> bytes
-assume val rsa_verify : option hash_alg -> rsa_key -> bytes -> bytes -> bool
+assume val rsa_gen_key : int -> EXT rsa_key
+assume val rsa_encrypt : rsa_key -> rsa_padding -> bytes -> EXT bytes
+assume val rsa_decrypt : rsa_key -> rsa_padding -> bytes -> Tot (option bytes)
+assume val rsa_sign : option hash_alg -> rsa_key -> bytes -> EXT bytes
+assume val rsa_verify : option hash_alg -> rsa_key -> bytes -> bytes -> Tot bool
 
-assume val dsa_gen_key : int -> dsa_key
-assume val dsa_sign : dsa_key -> bytes -> bytes
-assume val dsa_verify : dsa_key -> bytes -> bytes -> bool
+assume val dsa_gen_key : int -> EXT dsa_key
+assume val dsa_sign : dsa_key -> bytes -> EXT bytes
+assume val dsa_verify : dsa_key -> bytes -> bytes -> Tot bool
 
 assume val dh_gen_params : int -> dh_params
 assume val dh_gen_key : dh_params -> dh_key

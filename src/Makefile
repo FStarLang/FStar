@@ -244,7 +244,7 @@ regressions:
 	make -C ../contrib/Platform/ml/
 	make -C ../contrib/CoreCrypto/ml/ all test
 	make -C ../examples/crypto clean rpc-test cnt-test
-	#make -C ../examples/wysteria a.out distclean  //AR: cannot compile Crypto.ml, as it uses assume type
+	make -C ../examples/wysteria a.out distclean
 
 test.net: clean $(BIN)/fstar.exe boot
 	make -C ../examples

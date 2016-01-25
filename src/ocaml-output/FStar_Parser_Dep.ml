@@ -42,14 +42,14 @@ in (match ((check_and_strip_suffix f)) with
 in (match ((FStar_Util.smap_try_find map key)) with
 | Some (existing_file) -> begin
 (let _49_38 = if ((FStar_String.lowercase existing_file) = (FStar_String.lowercase f)) then begin
-(let _115_20 = (let _115_19 = (FStar_Util.format1 "I\'m case insensitive, and I found the same file twice (%s)" f)
+(let _115_20 = (let _115_19 = (FStar_Util.format1 "I\'m case insensitive, and I found the same file twice (%s)\n" f)
 in FStar_Absyn_Syntax.Err (_115_19))
 in (Prims.raise _115_20))
 end else begin
 ()
 end
 in (let _49_40 = if ((is_interface existing_file) = (is_interface f)) then begin
-(let _115_22 = (let _115_21 = (FStar_Util.format1 "Found both a .fs and a .fst (or both a .fsi and a .fsti) (%s)" f)
+(let _115_22 = (let _115_21 = (FStar_Util.format1 "Found both a .fs and a .fst (or both a .fsi and a .fsti) (%s)\n" f)
 in FStar_Absyn_Syntax.Err (_115_21))
 in (Prims.raise _115_22))
 end else begin
