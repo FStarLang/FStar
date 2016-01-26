@@ -4,7 +4,9 @@ all:
 	make api
 	make theory
 	(cd examples/fstar_main; ../../$(FSTAR) traces.fst)
-	make codegen SMCIF=examples/fstar_main/psipaperiface.fsi SMCMAIN=examples/fstar_main/psipapermain.fst
+	$(FSTAR) crypto.fst
+	$(FSTAR) sec_server.fst
+	make codegen SMCIF=examples/fstar_main/dealface.fsi SMCMAIN=examples/fstar_main/dealmain.fst
 	#make distclean
 
 EXAMPLES_DIR=./examples
