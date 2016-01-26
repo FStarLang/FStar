@@ -155,8 +155,9 @@ let check_expected_effect env (copt:option<comp>) (e, c) : term * comp * guard_t
   match expected_c_opt with
     | None -> e, norm_c env c, Rel.trivial_guard
     | Some expected_c -> //expected effects should already be normalized
-       if debug env Options.Low then Util.print3 "(%s) About to check\n\t%s\nagainst expected effect\n\t%s\n"
-                                  (Range.string_of_range e.pos) (Print.comp_to_string c) (Print.comp_to_string expected_c);
+       if debug env Options.Low 
+       then Util.print3 "(%s) About to check\n\t%s\nagainst expected effect\n\t%s\n"
+               (Print.term_to_string e) (Print.comp_to_string c) (Print.comp_to_string expected_c);
        let c = norm_c env c in
        let expected_c' = TcUtil.refresh_comp_label env true (TcUtil.lcomp_of_comp <| expected_c) in
        let e, _, g = TcUtil.check_comp env e c <| expected_c'.comp() in
@@ -339,11 +340,16 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
             && Util.is_pure_or_ghost_lcomp c //ADD_EQ_REFINEMENT for pure applications
             then TcUtil.maybe_assume_result_eq_pure_term env e c
             else c in
-    if debug env Options.Extreme
-    then Util.print3 "(%s) About to check %s against expected typ %s\n" (Range.string_of_range e.pos)
-            (Print.term_to_string c.res_typ)
+    if debug env Options.Low
+    then Util.print3 "(%s) About to check %s against expected typ %s\n" 
+            (Print.term_to_string e)
+            (Print.comp_to_string <| c.comp())
             (Env.expected_typ env0 |> (fun x -> match x with None -> "None" | Some t -> Print.term_to_string t));
     let e, c, g' = comp_check_expected_typ env0 e c in
+    if debug env Options.Low
+    then Util.print2 "(%s) checked ... got %s\n" 
+            (Print.term_to_string e)
+            (Print.comp_to_string <| c.comp());
     let gimp = 
         match (SS.compress head).n with 
             | Tm_uvar(u, _) ->
@@ -716,19 +722,21 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
           (if env.top_level then "true" else "false");
     let tfun_opt, bs, letrec_binders, c_opt, envbody, g = expected_function_typ env topt in
     let body, cbody, guard_body = tc_term ({envbody with top_level=false; use_eq=use_eq}) body in
-    if Env.debug env Options.Medium
-    then Util.print3 "!!!!!!!!!!!!!!!body %s has type %s\nguard is %s\n" 
-          (Print.term_to_string body) (Print.lcomp_to_string cbody) (guard_to_string env guard_body);
+    if Env.debug env Options.Low
+    then Util.print4 "!!!!!!!!!!!!!!!body %s has type %s\nguard is %s\nAgain cbody=%s\n" 
+          (Print.term_to_string body) (Print.comp_to_string <| cbody.comp()) 
+          (guard_to_string env guard_body) (Print.comp_to_string <| cbody.comp());
     let guard_body =  //we don't abstract over subtyping constraints; so solve them now
         Rel.solve_deferred_constraints envbody guard_body in
     if Env.debug env <| Options.Other "Implicits"
-    then Util.print1 "Introduced %s implicits in body of abstraction\n" (string_of_int <| List.length guard_body.implicits);
+    then Util.print2 "Introduced %s implicits in body of abstraction\nAfter solving constraints, cbody is %s\n" 
+        (string_of_int <| List.length guard_body.implicits)
+        (Print.comp_to_string <| cbody.comp());
     let body, cbody, guard = check_expected_effect ({envbody with use_eq=use_eq}) c_opt (body, cbody.comp()) in
     let guard = Rel.conj_guard guard_body guard in
     let guard = if env.top_level || not(Options.should_verify env.curmodule.str)
                 then Rel.discharge_guard envbody (Rel.conj_guard g guard)
-                else (Printf.printf "NOT A TOP LEVEL ABSTRACTION\n";
-                      let guard = Rel.close_guard (bs@letrec_binders) guard in 
+                else (let guard = Rel.close_guard (bs@letrec_binders) guard in 
                       Rel.conj_guard g guard) in
 
     let tfun_computed = Util.arrow bs cbody in 

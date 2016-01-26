@@ -73,11 +73,13 @@ let u_tc_prims () =
 let test_universes filenames = 
     try
         let prims_mod, dsenv, env = u_tc_prims() in
-        List.fold_left (fun (dsenv, fmods, env) fn ->
+        let dsenv, mods, env = List.fold_left (fun (dsenv, fmods, env) fn ->
            Util.print1 "Parsing file %s\n" fn; 
            let dsenv, mods = u_parse dsenv fn in
            let _, env = TypeChecker.Tc.check_module env (List.hd mods) in
-           dsenv, mods@fmods, env) (dsenv, [], env) filenames 
+           dsenv, mods@fmods, env) (dsenv, [], env) filenames in
+        env.solver.finish();
+        dsenv, mods, env
     with 
         | Syntax.Syntax.Error(msg, r) when not (!Options.trace_error) -> 
           Util.print_string (Util.format2 "Error : %s\n%s\n" (Range.string_of_range r) msg);
@@ -98,6 +100,16 @@ let tc_prims () =
 let report_errors nopt =
     let errs = match nopt with
         | None -> Tc.Errors.get_err_count ()
+        | Some n -> n in
+    if errs>0
+    then begin
+        print1 "Error: %s errors were reported (see above)\n" (string_of_int errs);
+        exit 1
+    end
+
+let report_universes_errors nopt =
+    let errs = match nopt with
+        | None -> TypeChecker.Errors.get_err_count ()
         | Some n -> n in
     if errs>0
     then begin
@@ -348,7 +360,8 @@ let go _ =
         (* This is the fstardep tool *)
         Parser.Dep.print (Parser.Dep.collect filenames)
       else if !Options.universes
-      then test_universes filenames |> ignore
+      then (test_universes filenames |> ignore;
+            report_universes_errors None)
       else
         (* Normal mode of operations *)
         (let fmods, dsenv, env = batch_mode_tc filenames in

@@ -493,9 +493,10 @@ let is_function t = match (compress t).n with
 
 let return_value env t v =
 //  if is_function t then failwith (Util.format1 "(%s): Returning a function!" (Range.string_of_range (Env.get_range env)));
-  let c = match Env.effect_decl_opt env Const.effect_Tot_lid with //if Tot isn't fully defined in prims yet, then just return (Total t)
-    | None -> mk_Total t
-    | Some m ->
+  let c = match Env.lookup_effect_abbrev env Const.effect_GTot_lid with 
+    | None -> mk_Total t //we're still in prims, not yet having fully defined the primitive effects
+    | _ -> 
+       let m = must (Env.effect_decl_opt env Const.effect_PURE_lid) in //if Tot isn't fully defined in prims yet, then just return (Total t)
        let a, kwp = Env.wp_signature env Const.effect_PURE_lid in
        let k = SS.subst [NT(a, t)] kwp in
        let wp = N.normalize [N.Beta] env (mk_Tm_app (inst_effect_fun env m m.ret) [S.arg t; S.arg v] (Some k.n) v.pos) in
@@ -512,10 +513,18 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
     (let bstr = match b with
       | None -> "none"
       | Some x -> Print.bv_to_string x in
-    Util.print3 "Before lift: Making bind c1=%s\nb=%s\t\tc2=%s\n" (Print.lcomp_to_string lc1) bstr (Print.lcomp_to_string lc2));
+    Util.print4 "Before lift: Making bind (e1=%s)@c1=%s\nb=%s\t\tc2=%s\n" 
+        (match e1opt with None -> "None" | Some e -> Print.term_to_string e)
+        (Print.lcomp_to_string lc1) bstr (Print.lcomp_to_string lc2));
   let bind_it () =
       let c1 = lc1.comp () in
       let c2 = lc2.comp () in
+      if debug env Options.Extreme
+      then Util.print4 "Evaluated %s to %s\n And %s to %s\n"
+            (Print.lcomp_to_string lc1)
+            (Print.comp_to_string c1)
+            (Print.lcomp_to_string lc2)
+            (Print.comp_to_string c2);
       let try_simplify () =
         let aux () =
             if Util.is_trivial_wp c1
@@ -648,9 +657,10 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:term) (lc:l
                 | Trivial -> c
                 | NonTrivial f ->
                 let c =
-                    if Util.is_pure_or_ghost_comp c
+                    if true 
+                    || (Util.is_pure_or_ghost_comp c
                     && not (is_function (Util.comp_result c))
-                    && not (Util.is_partial_return c)
+                    && not (Util.is_partial_return c))
                     then let x = S.gen_bv "strengthen_pre_x" None (Util.comp_result c) in
                          let xret = return_value env x.sort (S.bv_to_name x) in
                          let lc = bind env (Some e) (lcomp_of_comp c) (Some x, lcomp_of_comp xret) in
@@ -773,6 +783,7 @@ let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
            let xexp = S.bv_to_name x in
            let ret = lcomp_of_comp <| return_value env t xexp in
            let eq_ret = weaken_precondition env ret (NonTrivial (Util.mk_eq t t xexp e)) in
+
            U.comp_set_flags ((bind env None (lcomp_of_comp c) (Some x, eq_ret)).comp()) (PARTIAL_RETURN::U.comp_flags c) in
   let flags =
     if not (Util.is_function_typ lc.res_typ)
@@ -849,6 +860,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                                                     (Env.set_range env e.pos) e cret
                                                     (guard_of_guard_formula <| NonTrivial guard) in
                         let x = {x with sort=lc.res_typ} in
+                        Printf.printf "Binding in weaken_result_typ ... \n";
                         let c = bind env (Some e) (lcomp_of_comp <| mk_Comp ct) (Some x, eq_ret) in
                         let c = c.comp () in
                         if Env.debug env <| Options.Extreme

@@ -457,7 +457,7 @@ and mkPrelude z3options =
                      (! (iff (Valid (Precedes t1 t2)) \n\
                              (< (Rank t1) (Rank t2)))\n\
                         :pattern ((Precedes t1 t2)))))\n\
-                (define-fun Prims.Precedes ((a Term) (b Term) (t1 Term) (t2 Term)) Term\n\
+                (define-fun Prims.precedes ((a Term) (b Term) (t1 Term) (t2 Term)) Term\n\
                          (Precedes t1 t2))\n" in
    let constrs : constructors = [("String_const", ["String_const_proj_0", Int_sort], String_sort, 0);
                                  ("Tm_type",  [], Term_sort, 0);

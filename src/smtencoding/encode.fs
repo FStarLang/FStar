@@ -172,7 +172,7 @@ let lookup_term_var env a =
 let new_term_constant_and_tok_from_lid (env:env_t) (x:lident) =
     let fname = varops.new_fvar x in
     let ftok = fname^"@tok" in
-    Printf.printf "Pushing %A @ %A, %A\n" x fname ftok;
+//    Printf.printf "Pushing %A @ %A, %A\n" x fname ftok;
     fname, ftok, {env with bindings=Binding_fvar(x, fname, Some <| mkApp(ftok,[]), None)::env.bindings}
 let try_lookup_lid env a =
     lookup_binding env (function Binding_fvar(b, t1, t2, t3) when lid_equals b a -> Some (t1, t2, t3) | _ -> None)
@@ -181,7 +181,7 @@ let lookup_lid env a =
     | None -> failwith (format1 "Name not found: %s" (Print.lid_to_string a))
     | Some s -> s
 let push_free_var env (x:lident) fname ftok =
-    Printf.printf "Pushing %A @ %A, %A\n" x fname ftok;
+//    Printf.printf "Pushing %A @ %A, %A\n" x fname ftok;
     {env with bindings=Binding_fvar(x, fname, ftok, None)::env.bindings}
 let push_zfuel_name env (x:lident) f =
     let t1, t2, _ = lookup_lid env x in
@@ -541,64 +541,66 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         let d = Term.Assume(t_has_k, None) in
         ttm, d::decls
 
-      | Tm_app({n=Tm_fvar(l, _)}, [_; (v1, _); (v2, _)]) when (lid_equals l.v Const.lexcons_lid) ->
-        let v1, decls1 = encode_term v1 env in
-        let v2, decls2 = encode_term v2 env in
-        Term.mk_LexCons v1 v2, decls1@decls2
-
-      | Tm_app({n=Tm_abs _}, _) ->
-        encode_term (whnf env t) env
-
       | Tm_app _ ->
         let head, args_e = Util.head_and_args t0 in
-        
-        let args, decls = encode_args args_e env in
+        begin match (SS.compress head).n, args_e with 
+            | Tm_abs _, _ -> encode_term (whnf env t) env
 
-        let encode_partial_app ht_opt =
-            let head, decls' = encode_term head env in
-            let app_tm = mk_Apply_args head args in
-            begin match ht_opt with
-                | None -> app_tm, decls@decls'
-                | Some (formals, c) ->
-                  let formals, rest = Util.first_N (List.length args_e) formals in
-                  let subst = List.map2 (fun (bv, _) (a, _) -> Syntax.NT(bv, a)) formals args_e in
-                  let ty = Util.arrow rest c |> SS.subst subst in
-                  let has_type, decls'' = encode_term_pred None ty env app_tm in
-                  let cvars = Term.free_variables has_type in
-                  let e_typing = Term.Assume(Term.mkForall([[has_type]], cvars, has_type), None) in
-                  app_tm, decls@decls'@decls''@[e_typing]
-            end in
+            | Tm_uinst({n=Tm_fvar(l, _)}, _), [_; (v1, _); (v2, _)]
+            | Tm_fvar(l, _),  [_; (v1, _); (v2, _)] when lid_equals l.v Const.lexcons_lid ->
+              let v1, decls1 = encode_term v1 env in
+              let v2, decls2 = encode_term v2 env in
+              Term.mk_LexCons v1 v2, decls1@decls2
 
-        let encode_full_app fv =
-            let fname, fuel_args = lookup_free_var_sym env fv in
-            let tm = Term.mkApp'(fname, fuel_args@args) in
-            tm, decls in
+            | _ -> 
+            let args, decls = encode_args args_e env in
 
-        let head = SS.compress head in
+            let encode_partial_app ht_opt =
+                let head, decls' = encode_term head env in
+                let app_tm = mk_Apply_args head args in
+                begin match ht_opt with
+                    | None -> app_tm, decls@decls'
+                    | Some (formals, c) ->
+                        let formals, rest = Util.first_N (List.length args_e) formals in
+                        let subst = List.map2 (fun (bv, _) (a, _) -> Syntax.NT(bv, a)) formals args_e in
+                        let ty = Util.arrow rest c |> SS.subst subst in
+                        let has_type, decls'' = encode_term_pred None ty env app_tm in
+                        let cvars = Term.free_variables has_type in
+                        let e_typing = Term.Assume(Term.mkForall([[has_type]], cvars, has_type), None) in
+                        app_tm, decls@decls'@decls''@[e_typing]
+                end in
 
-        let head_type = match head.n with 
-            | Tm_uinst({n=Tm_name x}, _)
-            | Tm_name x -> x.sort
-            | Tm_uinst({n=Tm_fvar(fv, _)}, _)
-            | Tm_fvar (fv, _) -> Env.lookup_lid env.tcenv fv.v |> snd 
-            | Tm_ascribed(_, t, _) -> t
-            | _ -> failwith (Util.format2 "Unexpected head of application is: %s, %s" (Print.tag_of_term head) (Print.term_to_string head)) in
+            let encode_full_app fv =
+                let fname, fuel_args = lookup_free_var_sym env fv in
+                let tm = Term.mkApp'(fname, fuel_args@args) in
+                tm, decls in
 
-        let head_type = Util.unrefine <| N.normalize_refinement [N.WHNF; N.EraseUniverses] env.tcenv head_type in
+            let head = SS.compress head in
 
-                if Env.debug env.tcenv <| Options.Other "Encoding"
-                then Util.print3 "Recomputed type of head %s (%s) to be %s\n" (Print.term_to_string head) (Print.tag_of_term head) (Print.term_to_string head_type);
+            let head_type = match head.n with 
+                | Tm_uinst({n=Tm_name x}, _)
+                | Tm_name x -> x.sort
+                | Tm_uinst({n=Tm_fvar(fv, _)}, _)
+                | Tm_fvar (fv, _) -> Env.lookup_lid env.tcenv fv.v |> snd 
+                | Tm_ascribed(_, t, _) -> t
+                | _ -> failwith (Util.format2 "Unexpected head of application is: %s, %s" (Print.tag_of_term head) (Print.term_to_string head)) in
 
-        let formals, c = Util.arrow_formals_comp head_type in
-        begin match head.n with
-            | Tm_uinst({n=Tm_fvar(fv, _)}, _)
-            | Tm_fvar (fv, _) when (List.length formals = List.length args) -> encode_full_app fv
-            | _ ->
-                if List.length formals > List.length args
-                then encode_partial_app (Some (formals, c))
-                else encode_partial_app None
+            let head_type = Util.unrefine <| N.normalize_refinement [N.WHNF; N.EraseUniverses] env.tcenv head_type in
 
-        end
+                    if Env.debug env.tcenv <| Options.Other "Encoding"
+                    then Util.print3 "Recomputed type of head %s (%s) to be %s\n" (Print.term_to_string head) (Print.tag_of_term head) (Print.term_to_string head_type);
+
+            let formals, c = Util.arrow_formals_comp head_type in
+            begin match head.n with
+                | Tm_uinst({n=Tm_fvar(fv, _)}, _)
+                | Tm_fvar (fv, _) when (List.length formals = List.length args) -> encode_full_app fv
+                | _ ->
+                    if List.length formals > List.length args
+                    then encode_partial_app (Some (formals, c))
+                    else encode_partial_app None
+
+            end
+      end
 
       | Tm_abs(bs, body) ->
           let bs, body = SS.open_term bs body in 
@@ -1190,15 +1192,14 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let tname, ttok, env = new_term_constant_and_tok_from_lid env lid in
         [], env
 
-     | Sig_declare_typ(t, _, _, _, _) when (lid_equals t Const.char_lid || lid_equals t Const.uint8_lid) ->
-        let tname = t.str in
-        let tsym = mkFreeV(tname, Term_sort) in
-        let decl = Term.DeclFun(tname, [], Term_sort, None) in
-        decl::primitive_type_axioms t tname tsym, push_free_var env t tname (Some tsym)
-
      | Sig_declare_typ(lid, _, t, quals, _) ->
         if quals |> List.contains Assumption || env.tcenv.is_iface
-        then encode_top_level_val env lid t quals 
+        then let decls, env = encode_top_level_val env lid t quals in
+             let tname = lid.str in
+             let tsym = mkFreeV(tname, Term_sort) in
+             decls
+             @ primitive_type_axioms lid tname tsym,
+             env
         else [], env
 
      | Sig_assume(l, f, _, _) ->
@@ -1433,7 +1434,6 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             decls@karr@[Term.Assume(mkForall([[tapp]], vars, mkImp(guard, k)), Some "kinding")] in
         let aux =
             kindingAx
-            @(primitive_type_axioms t tname tapp)
             @(inversion_axioms tapp vars)
             @(pretype_axioms tapp vars) in
 
@@ -1659,7 +1659,7 @@ let encode_env_bindings (env:env_t) (bindings:list<Env.binding>) : (decls_t * en
 
         | Env.Binding_lid(x, (_, t)) ->
             let t_norm = whnf env t in
-            Printf.printf "Encoding %s at type %s\n" (Print.lid_to_string x) (Print.term_to_string t);
+//            Printf.printf "Encoding %s at type %s\n" (Print.lid_to_string x) (Print.term_to_string t);
             let g, env' = encode_free_var env x t t_norm [] in
             decls@g, env'
         
