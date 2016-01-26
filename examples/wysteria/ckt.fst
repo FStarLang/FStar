@@ -19,7 +19,7 @@ open FStar.OrdSet
 
 type wrange = int * int
 
-type binop = | Gt | Eq
+type binop = | Gt | Eq | Add | Sub
 
 type celt =
   | Input     : prin -> wrange -> celt
@@ -250,6 +250,8 @@ val is_ffi_bin_op: string -> (bool * binop * typ)
 let is_ffi_bin_op s =
   if s = "Prims.(>)" then true, Gt, T_bool
   else if s = "Prims.op_Equality" then true, Eq, T_bool
+  else if s = "Prims.(+)" then true, Add, T_cons "Prims.int" []
+  else if s = "Prims.(-)" then true, Sub, T_cons "Prims.int" []
   else false, Gt, T_bool
 
 val unbox_t: typ -> typ
@@ -388,8 +390,10 @@ let rec exp_to_ckt cen e = match e with
 
 val op_to_string : binop -> Tot string
 let op_to_string = function
-  | Gt -> "Gt"
-  | Eq -> "Eq"
+  | Gt  -> "Gt"
+  | Eq  -> "Eq"
+  | Add -> "Add"
+  | Sub -> "Sub"
 
 val celt_to_string: celt -> string
 let celt_to_string = function
@@ -549,6 +553,61 @@ let celt_to_booleancelt celt = match celt with
       in
       let (rbckt, c) = fold_left2 f ([], 1) l1 l2 in
       rev_append ((copy (fst r3) c)::rbckt) []
+    else if op = Add then
+      let l1 = flatten_range r1 in
+      let l2 = flatten_range r2 in
+      let l3 = flatten_range r3 in
+
+      let f (ckt, out, c) b1 b2 =
+	let (t1, _) = alloc_wires 1 in
+        let g1 = XOR t1 b1 c in
+        let (t2, _) = alloc_wires 1 in
+        let g2 = XOR t2 b2 c in
+        let (t3, _) = alloc_wires 1 in
+        let g3 = AND t3 t1 t2 in
+        let (c1, _) = alloc_wires 1 in
+        let g4 = XOR c1 t3 c in
+        let (t4, _) = alloc_wires 1 in
+        let g5 = XOR t4 b1 b2 in
+        let (s, _) = alloc_wires 1 in
+        let g6 = XOR s t4 c in
+        g6::g5::g4::g3::g2::g1::ckt, s::out, c1
+      in
+
+      let (rbckt, rout, _) = fold_left2 f ([], [], 0) l1 l2 in	
+      let (bckt, out) = rev_append rbckt [], rev_append rout [] in
+    
+      let f ckt b1 b2 = (copy b1 b2)::ckt in
+      let l = rev_append (fold_left2 f bckt l3 out) [] in
+      l
+    else if op = Sub then
+      let l1 = flatten_range r1 in
+      let l2 = flatten_range r2 in
+      let l3 = flatten_range r3 in
+
+      let f (ckt, out, c) b1 b2 =
+	let (t1, _) = alloc_wires 1 in
+	let g1 = XOR t1 b1 c in
+	let (t2, _) = alloc_wires 1 in
+	let g2 = XOR t2 b2 c in
+	let (t3, _) = alloc_wires 1 in
+	let g3 = AND t3 t1 t2 in
+	let (c1, _) = alloc_wires 1 in
+	let g4 = XOR c1 t3 b1 in
+	let (t4, _) = alloc_wires 1 in
+	let g5 = XOR t4 b1 b2 in
+	let (t5, _) = alloc_wires 1 in
+	let g6 = XOR t5 t4 c in
+	let (s, _) = alloc_wires 1 in
+	let g7 = XOR s t5 1 in
+	g7::g6::g5::g4::g3::g2::g1::ckt, s::out, c1
+      in
+
+      let (rbckt, rout, _) = fold_left2 f ([], [], 1) l1 l2 in
+      let bckt, out = rev_append rbckt [], rev_append rout [] in
+
+      let f ckt b1 b2 = (copy b1 b2)::ckt in
+      rev_append (fold_left2 f bckt l3 out) []
     else []
   | Const_nat r n ->
     let l1 = flatten_range r in
