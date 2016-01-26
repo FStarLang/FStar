@@ -26,13 +26,13 @@ else
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Darwin)
         CC = -cc gcc-5
-	EXTRA_OPTS = -ccopt -L. -I /usr/local/opt/openssl/include #-I/opt/openssl/include
-	EXTRA_LIBS = -L/usr/local/opt/openssl/lib #-L/opt/openssl/lib
-	ARCH = osx
+		EXTRA_OPTS = -ccopt -L. -I /usr/local/opt/openssl/include -I /opt/local/include/openssl
+		EXTRA_LIBS = -L /usr/local/opt/openssl/lib -L /opt/local/lib
+		ARCH = osx
     else
         CC = -cc gcc
         EXTRA_OPTS = -ccopt -fPIC -ccopt -L.
-	ARCH = x86_64
+		ARCH = x86_64
     endif
 endif
 
