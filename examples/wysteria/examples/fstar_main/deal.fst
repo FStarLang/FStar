@@ -18,7 +18,6 @@ let bc = union bob_s charlie_s
 let ac = union alice_s charlie_s
 let abc = union ab charlie_s
 
-
 type pre  (m:mode)  = fun m0 -> b2t (m0 = m)
 type post (#a:Type) = fun (m:mode) (x:a) (t:trace) -> True
 
@@ -26,7 +25,8 @@ type pre_with (m:mode) (t:Type) = fun m0 -> m0 = m /\ t
 
 val check_fresh:
   l:list (Sh int){forall s. FStar.List.mem s l ==> ps_of_sh s = abc} -> s:Sh int{ps_of_sh s = abc}
-  -> Wys bool (pre (Mode Par abc)) post
+  -> Wys bool (pre (Mode Par abc))
+    (fun _ r _ -> r <==> (forall s'. FStar.List.mem s' l ==> not (v_of_sh s' = v_of_sh s)))
 let rec check_fresh l s =
   if l = mk_nil () then true
   else
@@ -39,7 +39,7 @@ let rec check_fresh l s =
     let t2 = as_par bob_s (get_tmp bob) in
     let t3 = as_par charlie_s (get_tmp charlie) in
 
-    let check_one: unit -> Wys bool (pre (Mode Sec abc)) post =
+    let check_one: unit -> Wys bool (pre (Mode Sec abc)) (fun _ r _ -> r <==> v_of_sh x = v_of_sh s) =
       fun _ ->
       let t1' = unbox_s t1 in
       let t2' = unbox_s t2 in

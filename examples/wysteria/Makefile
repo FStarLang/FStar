@@ -6,7 +6,7 @@ all:
 	(cd examples/fstar_main; ../../$(FSTAR) traces.fst)
 	$(FSTAR) crypto.fst
 	$(FSTAR) sec_server.fst
-	make codegen SMCIF=examples/fstar_main/dealface.fsi SMCMAIN=examples/fstar_main/dealmain.fst
+	make codegen SMCIF=examples/fstar_main/dealiface.fsi SMCMAIN=examples/fstar_main/dealmain.fst
 	#make distclean
 
 EXAMPLES_DIR=./examples
