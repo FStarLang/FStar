@@ -26,7 +26,8 @@ else
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Darwin)
         CC = -cc gcc-5
-	EXTRA_OPTS = -ccopt -L.
+	EXTRA_OPTS = -ccopt -L. -I /usr/local/opt/openssl/include #-I/opt/openssl/include
+	EXTRA_LIBS = -L/usr/local/opt/openssl/lib #-L/opt/openssl/lib
 	ARCH = osx
     else
         CC = -cc gcc
@@ -48,11 +49,11 @@ $(PLATFORM)/platform.cmx: $(PLATFORM)/platform.ml
 DLL_OBJ = $(PLATFORM)/platform.cmx CoreCrypto.cmx openssl_stub.o
 
 corecrypto.cmxa: $(DLL_OBJ)
-	$(OCAMLMKLIB) -lcrypto -o corecrypto $^
+	$(OCAMLMKLIB) -lcrypto  $(EXTRA_LIBS) -o corecrypto $^
 
 DLL_DEBUG = $(PLATFORM)/platform.cmo CoreCrypto.cmo openssl_stub.o
 corecrypto.cma: $(DLL_DEBUG)
-	$(OCAMLMKLIB) -lcrypto -o corecrypto $^
+	$(OCAMLMKLIB) -lcrypto  $(EXTRA_LIBS) -o corecrypto $^
 
 %.cmi: %.mli
 	$(OCAMLC) -I $(PLATFORM) -c $<
