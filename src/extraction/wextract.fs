@@ -415,7 +415,7 @@ let extract_smc_exports (g:env) :string =
                     let s0 = "let " ^ fn_name ^ " ps p x = \n" in
                     let s1 = "let e1 = mk_const (C_eprins ps) in\n" in
                     let s2 = "let e2 = mk_mkwire (mk_const (C_eprins (singleton p))) (mk_box (mk_const (C_eprins (singleton p))) (mk_const (" ^ arg_inj ^ "))) in\n" in
-                    let s3 = "let dv = Interpreteriface.run p \"" ^ fn_name ^ "\" " ^ (mlty_to_typ (snd t)) ^ " [e1; e2] in\n" in
+                    let s3 = "let dv = Interpreteriface.run p \"" ^ fn_name ^ "\" " ^ (mlty_to_typ (snd t)) ^ " [e1; e2] true in\n" in
                     let s4 = "Obj.magic (Interpreteriface.project_value_content dv)\n" in
                     s ^ (s0 ^ s1 ^ s2 ^ s3 ^ s4) ^ "\n\n"
                     // let wire_arg = "mk_mkwire (mk_const (C_prin p)) (mk_box (mk_const (C_prins (singleton p))) ((" ^ arg_inj ^ ") x))" in
@@ -430,7 +430,7 @@ let extract (l:list<modul>) (en:FStar.Tc.Env.env) :unit =
     initialize ();
     let c, mllibs = Util.fold_map Extraction.ML.ExtractMod.extract (Extraction.ML.Env.mkContext en) l in
     // AR: TODO: Uncomment this, disabled temporarily for deal code
-    // let s_exports = extract_smc_exports c in
+    let s_exports = extract_smc_exports c in
     let mllibs = List.flatten mllibs in
     let m_opt = find_smc_module mllibs in
     let s_smc =
@@ -441,13 +441,13 @@ let extract (l:list<modul>) (en:FStar.Tc.Env.env) :unit =
             | _ -> "")
     in
     // AR: TODO: Uncomment this, disabled temporarily for deal code
-    // let smciface = Util.open_file_for_writing (Options.prependOutputDir "smciface.ml") in
-    // Util.append_to_file smciface "open Ffibridge";
-    // Util.append_to_file smciface "open FFI";
-    // Util.append_to_file smciface "open AST";
-    // Util.append_to_file smciface "\n";
-    // Util.append_to_file smciface s_exports;
-    // Util.close_file smciface;
+    let smciface = Util.open_file_for_writing (Options.prependOutputDir "smciface.ml") in
+    Util.append_to_file smciface "open Ffibridge";
+    Util.append_to_file smciface "open FFI";
+    Util.append_to_file smciface "open AST";
+    Util.append_to_file smciface "\n";
+    Util.append_to_file smciface s_exports;
+    Util.close_file smciface;
 
     let prog = Util.open_file_for_writing (Options.prependOutputDir "prog.ml") in
     Util.append_to_file prog "open AST";
