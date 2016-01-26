@@ -33,7 +33,7 @@ let get_bc_start_string (_:unit) = bc_start
 let find_file (context:string) (filename:string) : string =
   let dirname = System.IO.Path.GetDirectoryName context in
   let search_path = Options.get_include_path dirname in
-  let found = Util.find_file filename search_path in
+  let found = Options.find_file filename search_path in
   match found with
     | Some s ->
       s
