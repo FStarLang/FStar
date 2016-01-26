@@ -24,7 +24,6 @@ type post (#a:Type) = fun (m:mode) (x:a) (t:trace) -> True
 
 type pre_with (m:mode) (t:Type) = fun m0 -> m0 = m /\ t
 
-
 val check_fresh:
   l:list (Sh int){forall s. FStar.List.mem s l ==> ps_of_sh s = abc} -> s:Sh int{ps_of_sh s = abc}
   -> Wys bool (pre (Mode Par abc)) post
@@ -32,8 +31,22 @@ let rec check_fresh l s =
   if l = mk_nil () then true
   else
     let x = hd_of_cons l in
+
+    let get_tmp: p:prin -> unit -> Wys int (pre (Mode Par (singleton p))) post =
+      fun _ _ -> 2
+    in
+    let t1 = as_par alice_s (get_tmp alice) in
+    let t2 = as_par bob_s (get_tmp bob) in
+    let t3 = as_par charlie_s (get_tmp charlie) in
+
     let check_one: unit -> Wys bool (pre (Mode Sec abc)) post =
       fun _ ->
+      let t1' = unbox_s t1 in
+      let t2' = unbox_s t2 in
+      let t3' = unbox_s t3 in
+      let t4' = t1' > t2' in
+      let t5' = t3' = t1' in
+ 
       let c1 = comb_sh x in
       let c2 = comb_sh s in
       c1 = c2
@@ -46,8 +59,7 @@ val deal:
   ps:prins{ps = abc}
   -> shares:list (Sh int){forall x. FStar.List.mem x shares ==> ps_of_sh x = abc}
   -> rands:Wire int ps -> deal_to:prin
-//  -> Wys (list (Sh int) * int) (pre (Mode Par abc)) post
-  -> Wys int (pre (Mode Par abc)) post
+  -> Wys (list (Sh int) * int) (pre (Mode Par abc)) post
 let deal ps shares rands deal_to =
   let proj: p:prin{FStar.OrdSet.mem p abc} -> unit
 	    -> Wys int (pre (Mode Par (singleton p))) post =
@@ -63,28 +75,77 @@ let deal ps shares rands deal_to =
     let r1' = unbox_s r1 in
     let r2' = unbox_s r2 in
     let r3' = unbox_s r3 in
-    let t1 = r1' > r2' in
-    let t2 = r3' = r1' in
-    mk_sh r1'
-    (* let t1 = r1' + r2' in *)
-    (* let t2 = r3' + t1 in *)
-    (* mk_sh t2 *)
+    let t1 = r1' + r2' in
+    let t2 = t1 + r3' in
+    mk_sh t2
   in
 
+  (* shares of new card *)
   let new_sh = as_sec abc add in
+  let fresh = check_fresh shares new_sh in
 
-  let card: unit -> Wys int (pre (Mode Sec abc)) post =
-    fun _ ->
-    let r1' = unbox_s r1 in
-    let r2' = unbox_s r2 in
-    let r3' = unbox_s r3 in
-    let t1 = r1' > r2' in
-    let t2 = r3' = r1' in
-    comb_sh new_sh
-  in
+  if fresh then  
+    let card: unit -> Wys int (pre (Mode Sec abc)) post =
+      fun _ ->
+      let r1' = unbox_s r1 in
+      let r2' = unbox_s r2 in
+      let r3' = unbox_s r3 in
+      let t1 = r1' > r2' in
+      let t2 = r3' = r1' in
+      comb_sh new_sh
+    in
+    let c = as_sec abc card in
+    mk_tuple (mk_cons new_sh shares) c
+  else
+    let x = 52 in
+    mk_tuple shares 52
 
-  let c = as_sec abc card in
-  c
+  
+
+  (* let c = as_sec abc card in *)
+
+  
+  
+  (* (mk_tuple (mk_cons new_sh shares)  *)
+
+  (* let get_tmp: p:prin -> unit -> Wys int (pre (Mode Par (singleton p))) post = *)
+  (*   fun _ _ -> 2 *)
+  (* in *)
+
+  (* let t1 = as_par alice_s (get_tmp alice) in *)
+  (* let t2 = as_par bob_s (get_tmp bob) in *)
+  (* let t3 = as_par charlie_s (get_tmp charlie) in *)
+
+  (* let tmp: unit -> Wys (Sh int) (pre (Mode Sec abc)) (fun _ r _ -> b2t (ps_of_sh r = abc)) = *)
+  (*   fun _ -> *)
+  (*   let r1' = unbox_s r1 in *)
+  (*   let r2' = unbox_s r2 in *)
+  (*   let r3' = unbox_s r3 in *)
+  (*   let _ = r1' > r2' in *)
+  (*   let _ = r3' = r1' in *)
+  (*   let t3 = unbox_s t1 in *)
+  (*   mk_sh t3 *)
+  (* in *)
+
+  (* let new_sh' = as_sec abc tmp in *)
+
+  (* let check_eq: unit -> Wys int (pre (Mode Sec abc)) post = *)
+  (*   fun _ -> *)
+  (*   let r1' = unbox_s r1 in *)
+  (*   let r2' = unbox_s r2 in *)
+  (*   let r3' = unbox_s r3 in *)
+  (*   let t1 = r1' > r2' in *)
+  (*   let t2 = r3' = r1' in *)
+  (*   let t3 = comb_sh new_sh in *)
+  (*   let t4 = comb_sh new_sh' in *)
+  (*   t3 - t4 *)
+  (* in *)
+  (* let b = as_sec abc check_eq in *)
+  (* b *)
+
+  
+
+  (* c *)
   (* let fresh = check_fresh shares new_sh in *)
 
   (* if fresh then mk_tuple (mk_cons new_sh shares) c *)
