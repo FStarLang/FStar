@@ -36,11 +36,12 @@ let p = FStar.IO.input_line () in
 let x = FStar.IO.input_int () in
 
 if p = "alice" then
-  let _ = deal (union (union (singleton Alice) (singleton Bob)) (singleton Charlie)) Alice [] 1 Alice in
+  let x = deal (union (union (singleton Alice) (singleton Bob)) (singleton Charlie)) Alice [] 1 Alice in
+  let _ = print_string (string_of_int x) in
   print_string "done!" 
 else if p = "bob" then
   let _ = deal (union (union (singleton Alice) (singleton Bob)) (singleton Charlie)) Bob [] 1 Alice in
-  ()
+  print_string "done!" 
 else
   let _ = deal (union (union (singleton Alice) (singleton Bob)) (singleton Charlie)) Charlie [] 1 Alice in
-  ()
+  print_string "done!" 

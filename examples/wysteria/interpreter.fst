@@ -211,15 +211,16 @@ type tstep_config (p:prin) = c:config{Conf.l c = Target /\
 
 opaque type witness_client_config (#a:Type) (x:a) = True
 
-let client_key:client_key =
-  let k = Platform.Bytes.createBytes SHA1.keysize 0uy in
-  assume (client_key_prop k == client_prop_t);
-  k
+(* AR: commenting the sec server related code *)
+(* let client_key:client_key = *)
+(*   let k = Platform.Bytes.createBytes SHA1.keysize 0uy in *)
+(*   assume (client_key_prop k == client_prop_t); *)
+(*   k *)
 
-let server_key:server_key =
-  let k = Platform.Bytes.createBytes SHA1.keysize 0uy in
-  assume (server_key_prop k == server_prop_t);
-  k
+(* let server_key:server_key = *)
+(*   let k = Platform.Bytes.createBytes SHA1.keysize 0uy in *)
+(*   assume (server_key_prop k == server_prop_t); *)
+(*   k *)
 
 val do_sec_comp:
   p:prin -> c:tstep_config p{is_T_red (Conf.t c) /\ is_R_assec (T_red.r (Conf.t c))}

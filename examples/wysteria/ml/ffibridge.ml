@@ -15,6 +15,7 @@ let project_value_content (dv:dvalue) :Obj.t =
       | V_opaque (_, v, _, _, _, _) -> cast v
       | V_box _ -> cast dv
       | V_wire _ -> cast dv
+      | V_sh (_, _, _) -> cast dv
       | _ -> raise (FFI_error ("FFI fn input not an expected value"))
   in
   content
