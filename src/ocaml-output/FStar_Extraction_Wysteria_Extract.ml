@@ -802,40 +802,31 @@ in (let _65_536 = (let _132_237 = (FStar_Extraction_ML_Env.mkContext en)
 in (FStar_Util.fold_map FStar_Extraction_ML_ExtractMod.extract _132_237 l))
 in (match (_65_536) with
 | (c, mllibs) -> begin
-(let s_exports = (extract_smc_exports c)
-in (let mllibs = (FStar_List.flatten mllibs)
+(let mllibs = (FStar_List.flatten mllibs)
 in (let m_opt = (find_smc_module mllibs)
 in (let s_smc = (match (m_opt) with
 | Some (m) -> begin
-(let _65_544 = (extract_mlmodule m)
-in (match (_65_544) with
+(let _65_543 = (extract_mlmodule m)
+in (match (_65_543) with
 | (l, m_opt) -> begin
-(FStar_List.fold_left (fun s _65_550 -> (match (_65_550) with
+(FStar_List.fold_left (fun s _65_549 -> (match (_65_549) with
 | Mk_tlet (n, t, b) -> begin
 (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat s "(") (name_to_string n)) ", (") t) "), (") b) "));\n")
 end)) "" l)
 end))
 end
-| _65_552 -> begin
+| _65_551 -> begin
 ""
 end)
-in (let smciface = (let _132_240 = (FStar_Options.prependOutputDir "smciface.ml")
+in (let prog = (let _132_240 = (FStar_Options.prependOutputDir "prog.ml")
 in (FStar_Util.open_file_for_writing _132_240))
-in (let _65_555 = (FStar_Util.append_to_file smciface "open Ffibridge")
-in (let _65_557 = (FStar_Util.append_to_file smciface "open FFI")
-in (let _65_559 = (FStar_Util.append_to_file smciface "open AST")
-in (let _65_561 = (FStar_Util.append_to_file smciface "\n")
-in (let _65_563 = (FStar_Util.append_to_file smciface s_exports)
-in (let _65_565 = (FStar_Util.close_file smciface)
-in (let prog = (let _132_241 = (FStar_Options.prependOutputDir "prog.ml")
-in (FStar_Util.open_file_for_writing _132_241))
-in (let _65_568 = (FStar_Util.append_to_file prog "open AST")
-in (let _65_570 = (FStar_Util.append_to_file prog "open FFI")
-in (let _65_572 = (FStar_Util.append_to_file prog "\n")
-in (let _65_574 = (FStar_Util.append_to_file prog "let const_meta = Meta ([], Can_b, [], Can_w)")
-in (let _65_576 = (FStar_Util.append_to_file prog "\n")
-in (let _65_578 = (FStar_Util.append_to_file prog (Prims.strcat (Prims.strcat "let program = [\n" s_smc) "]"))
-in (FStar_Util.close_file prog)))))))))))))))))))
+in (let _65_554 = (FStar_Util.append_to_file prog "open AST")
+in (let _65_556 = (FStar_Util.append_to_file prog "open FFI")
+in (let _65_558 = (FStar_Util.append_to_file prog "\n")
+in (let _65_560 = (FStar_Util.append_to_file prog "let const_meta = Meta ([], Can_b, [], Can_w)")
+in (let _65_562 = (FStar_Util.append_to_file prog "\n")
+in (let _65_564 = (FStar_Util.append_to_file prog (Prims.strcat (Prims.strcat "let program = [\n" s_smc) "]"))
+in (FStar_Util.close_file prog)))))))))))
 end))))
 
 

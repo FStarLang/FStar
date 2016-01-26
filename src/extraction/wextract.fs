@@ -430,7 +430,7 @@ let extract (l:list<modul>) (en:FStar.Tc.Env.env) :unit =
     initialize ();
     let c, mllibs = Util.fold_map Extraction.ML.ExtractMod.extract (Extraction.ML.Env.mkContext en) l in
     // AR: TODO: Uncomment this, disabled temporarily for deal code
-    let s_exports = extract_smc_exports c in
+    // let s_exports = extract_smc_exports c in
     let mllibs = List.flatten mllibs in
     let m_opt = find_smc_module mllibs in
     let s_smc =
@@ -441,13 +441,13 @@ let extract (l:list<modul>) (en:FStar.Tc.Env.env) :unit =
             | _ -> "")
     in
     // AR: TODO: Uncomment this, disabled temporarily for deal code
-    let smciface = Util.open_file_for_writing (Options.prependOutputDir "smciface.ml") in
-    Util.append_to_file smciface "open Ffibridge";
-    Util.append_to_file smciface "open FFI";
-    Util.append_to_file smciface "open AST";
-    Util.append_to_file smciface "\n";
-    Util.append_to_file smciface s_exports;
-    Util.close_file smciface;
+    // let smciface = Util.open_file_for_writing (Options.prependOutputDir "smciface.ml") in
+    // Util.append_to_file smciface "open Ffibridge";
+    // Util.append_to_file smciface "open FFI";
+    // Util.append_to_file smciface "open AST";
+    // Util.append_to_file smciface "\n";
+    // Util.append_to_file smciface s_exports;
+    // Util.close_file smciface;
 
     let prog = Util.open_file_for_writing (Options.prependOutputDir "prog.ml") in
     Util.append_to_file prog "open AST";
