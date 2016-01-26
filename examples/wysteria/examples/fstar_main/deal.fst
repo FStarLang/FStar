@@ -82,6 +82,27 @@ let deal ps shares rands deal_to =
 
   (* shares of new card *)
   let new_sh = as_sec abc add in
+
+  // compute % 52
+  let max = 52 in
+  let conditional_sub: s:Sh int{ps_of_sh s = abc} -> unit -> Wys (Sh int) (pre (Mode Sec abc)) (fun _ r _ -> b2t (ps_of_sh r = abc)) =
+    fun c _ ->
+    let r1' = unbox_s r1 in
+    let r2' = unbox_s r2 in
+    let r3' = unbox_s r3 in
+    let t1 = r1' > r2' in
+    let t2 = r3' = r1' in
+
+    //actual computation
+    let c' = comb_sh c in
+    let mod_c = if c' > max then c' - max else c' in
+    mk_sh mod_c
+  in
+
+  let new_sh = as_sec abc (conditional_sub new_sh) in
+  let new_sh = as_sec abc (conditional_sub new_sh) in
+  let new_sh = as_sec abc (conditional_sub new_sh) in
+
   let fresh = check_fresh shares new_sh in
 
   if fresh then  
@@ -92,13 +113,14 @@ let deal ps shares rands deal_to =
       let r3' = unbox_s r3 in
       let t1 = r1' > r2' in
       let t2 = r3' = r1' in
+
+      //actual computation
       comb_sh new_sh
     in
     let c = as_sec abc card in
     mk_tuple (mk_cons new_sh shares) c
   else
-    let x = 52 in
-    mk_tuple shares 52
+    mk_tuple shares max
 
   
 

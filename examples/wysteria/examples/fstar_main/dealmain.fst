@@ -25,8 +25,15 @@ let bar x =
 
 val loop: ps:prins{ps = union (union (singleton Alice) (singleton Bob)) (singleton Charlie)} -> p:prin{mem p ps} -> list sh -> unit
 let rec loop ps p l =
-  print_string "Enter a random seed:\n";
-  let x = FStar.IO.input_int () in
+  let rec get_inp (x:unit) =
+    print_string "Enter a random seed [0-51]:\n";    
+    let x = FStar.IO.input_int () in
+    if x >= 0 && x <= 51 then x
+    else
+      let _ = print_string "Incorrect input, try again\n" in
+      get_inp ()
+  in
+  let x = get_inp () in
   let (l', c) = deal ps p l x Alice in
   let _ =
     if c = 52 then print_string "Card had already been dealt\n"
