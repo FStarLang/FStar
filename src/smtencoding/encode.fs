@@ -172,6 +172,7 @@ let lookup_term_var env a =
 let new_term_constant_and_tok_from_lid (env:env_t) (x:lident) =
     let fname = varops.new_fvar x in
     let ftok = fname^"@tok" in
+    Printf.printf "Pushing %A @ %A, %A\n" x fname ftok;
     fname, ftok, {env with bindings=Binding_fvar(x, fname, Some <| mkApp(ftok,[]), None)::env.bindings}
 let try_lookup_lid env a =
     lookup_binding env (function Binding_fvar(b, t1, t2, t3) when lid_equals b a -> Some (t1, t2, t3) | _ -> None)
@@ -180,6 +181,7 @@ let lookup_lid env a =
     | None -> failwith (format1 "Name not found: %s" (Print.lid_to_string a))
     | Some s -> s
 let push_free_var env (x:lident) fname ftok =
+    Printf.printf "Pushing %A @ %A, %A\n" x fname ftok;
     {env with bindings=Binding_fvar(x, fname, ftok, None)::env.bindings}
 let push_zfuel_name env (x:lident) f =
     let t1, t2, _ = lookup_lid env x in
@@ -484,7 +486,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              let f_has_t = mk_HasType f t in
              let t_interp = Term.Assume(mkForall_fuel([[f_has_t]], [fsym],
                                                       mkImp(f_has_t,
-                                                            mk_tester "Typ_fun" (mk_PreType f))), Some "pre-typing") in
+                                                            mk_tester "Tm_arrow" (mk_PreType f))), Some "pre-typing") in
 
              t, [tdecl; t_kinding; t_interp] (* TODO: At least preserve alpha-equivalence of non-pure function types *)
 
@@ -694,7 +696,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
       | Tm_match(e, pats) ->
         let scr, decls = encode_term e env in
-        let match_tm, decls = List.fold_right (fun (p, w, br) (else_case, decls) ->
+        let match_tm, decls = List.fold_right (fun b (else_case, decls) ->
+            let p, w, br = SS.open_branch b in
             let patterns = encode_pat env p in
             List.fold_right (fun (env0, pattern) (else_case, decls) ->
                 let guard = pattern.guard scr in
@@ -1656,6 +1659,7 @@ let encode_env_bindings (env:env_t) (bindings:list<Env.binding>) : (decls_t * en
 
         | Env.Binding_lid(x, (_, t)) ->
             let t_norm = whnf env t in
+            Printf.printf "Encoding %s at type %s\n" (Print.lid_to_string x) (Print.term_to_string t);
             let g, env' = encode_free_var env x t t_norm [] in
             decls@g, env'
         

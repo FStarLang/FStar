@@ -727,7 +727,9 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     let guard = Rel.conj_guard guard_body guard in
     let guard = if env.top_level || not(Options.should_verify env.curmodule.str)
                 then Rel.discharge_guard envbody (Rel.conj_guard g guard)
-                else let guard = Rel.close_guard (bs@letrec_binders) guard in Rel.conj_guard g guard in
+                else (Printf.printf "NOT A TOP LEVEL ABSTRACTION\n";
+                      let guard = Rel.close_guard (bs@letrec_binders) guard in 
+                      Rel.conj_guard g guard) in
 
     let tfun_computed = Util.arrow bs cbody in 
     let e = Util.abs bs body in
@@ -1480,7 +1482,7 @@ and tc_pats env pats =
 and tc_tot_or_gtot_term env e : term           
                                 * lcomp 
                                 * guard_t =
-  let e, c, g = tc_term env e in
+  let e, c, g = tc_maybe_toplevel_term env e in
   if Util.is_tot_or_gtot_lcomp c
   then e, c, g
   else let g = Rel.solve_deferred_constraints env g in
@@ -2164,7 +2166,7 @@ let rec tc_decl env se = match se with
       let e = mk (Tm_let((fst lbs, lbs'), mk (Tm_constant (Const_unit)) None r)) None r in
 
       (* 3. Type-check the Tm_let and then convert it back to a Sig_let *)
-      let se, lbs = match tc_term ({env with generalize=should_generalize}) e with
+      let se, lbs = match tc_maybe_toplevel_term ({env with top_level=true; generalize=should_generalize}) e with
          | {n=Tm_let(lbs, e)}, _, g when Rel.is_trivial g ->
             //propagate the MaskedEffect tag to the qualifiers
             let quals = match e.n with
