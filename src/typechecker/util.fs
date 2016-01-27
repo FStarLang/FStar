@@ -1015,6 +1015,8 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
      let gen_univs = gen_univs env univs in
      if debug env Options.Medium then gen_univs |> List.iter (fun x -> Util.print1 "Generalizing uvar %s\n" x.idText);
 
+     uvars |> List.iter (fun (_, e, _) -> Printf.printf "Before generalization e = %s\n" (Print.term_to_string e));
+
      let ecs = uvars |> List.map (fun (uvs, e, c) ->
           let tvars = uvs |> List.map (fun (u, k) ->
             match Unionfind.find u with
@@ -1040,8 +1042,9 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
 
                     | _ -> 
                       U.arrow tvars c in
-              let e = U.abs tvars e in
-              e, S.mk_Total t in
+              let e' = U.abs tvars e in
+              Printf.printf "Generalized %s to %s\n" (Print.term_to_string e) (Print.term_to_string e');
+              e', S.mk_Total t in
           (gen_univs, e, c)) in
      Some ecs
 

@@ -746,7 +746,10 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     let tfun_computed = Util.arrow bs cbody in 
     let e = Util.abs bs body in
     //Important to ascribe, since the SMT encoding requires the type of every abstraction
-    let ascribe e t = mk (Tm_ascribed (e, t, Some Const.effect_Tot_lid)) None top.pos  in
+    let ascribe e t = 
+        if env.top_level 
+        then e
+        else mk (Tm_ascribed (e, t, Some Const.effect_Tot_lid)) None top.pos  in
 
     let e, tfun, guard = match tfun_opt with
         | Some (t, use_teq) ->

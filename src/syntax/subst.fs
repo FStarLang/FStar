@@ -116,12 +116,16 @@ let rec subst' (s:subst_t) t = match s with
     match t0.n with
         | Tm_constant _      //a constant cannot be substituted
         | Tm_fvar _  -> t0   //fvar are never subject to substitution
-        | Tm_uvar _ -> 
+        | Tm_uvar (u, _) -> 
           let t0, has_free_vars = force_uvar t0 in
           if has_free_vars
-          then subst' s t0  //when a type is implicitly generalized, a uvar maybe resolved to a name
-          else t0 //otherwise, a uvar is almost always resolved to a closed term; so no substitution to do
-
+          then (let tt = subst' s t0 in
+                Printf.printf "Uvar %d has free vars...resolved to %A\n" (Unionfind.uvar_id u) tt;
+                tt
+                )  //when a type is implicitly generalized, a uvar maybe resolved to a name
+          else (Printf.printf "Uvar %d resolved to close term\n" (Unionfind.uvar_id u);
+                  t0 //otherwise, a uvar is always resolved to a closed term; so no substitution to do
+                )
         | Tm_delayed(Inl(t', s'), m) ->
             //s' is the subsitution already associated with this node;
             //s is the new subsitution to add to it
@@ -220,10 +224,13 @@ let push_subst s t =
     match t.n with 
         | Tm_delayed _ -> failwith "Impossible"
 
-        | Tm_uvar _ 
         | Tm_constant _
         | Tm_fvar _
         | Tm_unknown -> t
+
+        | Tm_uvar(u, _) -> 
+          Printf.printf "Pushing subst under uvar %d\n" (Unionfind.uvar_id u);
+          subst' s t
 
         | Tm_type _
         | Tm_bvar _ 

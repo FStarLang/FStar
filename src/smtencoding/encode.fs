@@ -613,7 +613,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              
           begin match !t0.tk with
             | None ->
-              Errors.warn t0.pos ("Losing precision when encoding a function literal");
+              Errors.warn t0.pos (Util.format1 "Losing precision when encoding a function literal: %s" (Print.term_to_string t0));
               fallback ()
 
             | Some tfun ->
