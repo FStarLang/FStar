@@ -1273,11 +1273,11 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 end in
 
         begin try
-                 if bindings |> Util.for_all (fun lb -> Util.is_smt_lemma lb.lbtyp)
+                 if bindings |> Util.for_all (fun lb -> Util.is_lemma lb.lbtyp)
                  then encode_top_level_vals env bindings quals 
                  else let toks, typs, decls, env =
                         bindings |> List.fold_left (fun (toks, typs, decls, env) lb ->
-                            if Util.is_smt_lemma lb.lbtyp then raise Let_rec_unencodeable; //some, but not all are SMT lemmas; impossible
+                            if Util.is_lemma lb.lbtyp then raise Let_rec_unencodeable; //some, but not all are lemmas; impossible
                             let t_norm = whnf env lb.lbtyp in
                             let tok, decl, env = declare_top_level_let env (right lb.lbname) lb.lbtyp t_norm in
                             (right lb.lbname, tok)::toks, t_norm::typs, decl::decls, env) ([], [], [], env) in
@@ -1285,7 +1285,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                       let decls = List.rev decls |> List.flatten in
                       let typs = List.rev typs in
                       if quals |> Util.for_some (function HasMaskedEffect -> true | _ -> false)
-                      || typs  |> Util.for_some (fun t -> Util.is_lemma t || not <| Util.is_pure_or_ghost_function t)
+                      || typs  |> Util.for_some (fun t -> not <| Util.is_pure_or_ghost_function t)
                       then decls, env
                       else if not is_rec
                       then match bindings, typs, toks with //Encoding non-recursive definitions
@@ -1544,7 +1544,7 @@ and encode_smt_lemma env lid t =
 and encode_free_var env lid tt t_norm quals =
     if not <| Util.is_pure_or_ghost_function t_norm || Util.is_lemma t_norm
     then let vname, vtok, env = new_term_constant_and_tok_from_lid env lid in
-         let arg_sorts = match t_norm.n with
+         let arg_sorts = match (SS.compress t_norm).n with
             | Tm_arrow(binders, _) -> binders |> List.map (fun _ -> Term_sort) 
             | _ -> [] in
          let d = Term.DeclFun(vname, arg_sorts, Term_sort, Some "Uninterpreted function symbol for impure function") in
