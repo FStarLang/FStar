@@ -356,9 +356,10 @@ let mk_Tm_uinst (t:term) = function
         | Tm_fvar _ ->  mk (Tm_uinst(t, us)) None t.pos
         | _ -> failwith (Printf.sprintf "Unexpected universe instantiation: %A" t)
 
-let extend_app t arg kopt r = match t.n with 
-    | Tm_app(head, args) -> mk_Tm_app head (args@[arg]) kopt r
-    | _ -> mk_Tm_app t [arg] kopt r
+let extend_app_n t args' kopt r = match t.n with 
+    | Tm_app(head, args) -> mk_Tm_app head (args@args') kopt r
+    | _ -> mk_Tm_app t args' kopt r
+let extend_app t arg kopt r = extend_app_n t [arg] kopt r
 let mk_Tm_delayed lr pos : term = mk (Tm_delayed(lr, Util.mk_ref None)) None pos
 let mk_Total t : comp  = mk (Total t) None t.pos
 let mk_GTotal t : comp = mk (GTotal t) None t.pos

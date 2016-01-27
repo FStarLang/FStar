@@ -398,8 +398,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
       | Tm_delayed  _
       | Tm_unknown    -> failwith (format4 "(%s) Impossible: %s\n%s\n%s\n" (Range.string_of_range <| t.pos) (Print.tag_of_term t0) (Print.term_to_string t0) (Print.term_to_string t))
 
-      | Tm_bvar _ -> 
-        failwith "Impossible: locally nameless"
+      | Tm_bvar x -> 
+        failwith (Util.format1 "Impossible: locally nameless; got %s" (Print.bv_to_string x))
 
       | Tm_ascribed(t, k, _) ->
         t.tk := Some k.n;
@@ -583,7 +583,9 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 | Tm_uinst({n=Tm_fvar(fv, _)}, _)
                 | Tm_fvar (fv, _) -> Env.lookup_lid env.tcenv fv.v |> snd 
                 | Tm_ascribed(_, t, _) -> t
-                | _ -> failwith (Util.format2 "Unexpected head of application is: %s, %s" (Print.tag_of_term head) (Print.term_to_string head)) in
+                | _ -> failwith (Util.format3 "Unexpected head of application %s is: %s, %s" 
+                                 (Print.term_to_string t0)
+                                 (Print.tag_of_term head) (Print.term_to_string head)) in
 
             let head_type = Util.unrefine <| N.normalize_refinement [N.WHNF; N.EraseUniverses] env.tcenv head_type in
 
@@ -686,6 +688,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
       | Tm_let((false, [{lbname=Inl x; lbtyp=t1; lbdef=e1}]), e2) ->
         let ee1, decls1 = encode_term e1 env in
+        let xs, e2 = SS.open_term [(x, None)] e2 in
+        let x, _ = List.hd xs in
         let env' = push_term_var env x ee1 in
         let ee2, decls2 = encode_term e2 env' in
         ee2, decls1@decls2
@@ -1230,8 +1234,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             let formals, extra_formals = Util.first_N nbinders formals in
             let subst = List.map2 (fun (formal, _) (binder, _) -> NT(formal, S.bv_to_name binder)) formals binders in
             let extra_formals = extra_formals |> List.map (fun (x, i) -> {x with sort=SS.subst subst x.sort}, i) |> Util.name_binders in
-            let body = Syntax.mk_Tm_app body (snd <| Util.args_of_binders extra_formals) (Some <| (SS.subst subst t).n) body.pos in
-            binders@extra_formals, body in
+            let body = Syntax.extend_app_n (SS.compress body) (snd <| Util.args_of_binders extra_formals) (Some <| (SS.subst subst t).n) body.pos in
+            binders@extra_formals, body in 
 
         let rec destruct_bound_function flid t_norm e = 
            match (Util.unascribe e).n with

@@ -156,9 +156,13 @@ let check_expected_effect env (copt:option<comp>) (e, c) : term * comp * guard_t
     | None -> e, norm_c env c, Rel.trivial_guard
     | Some expected_c -> //expected effects should already be normalized
        if debug env Options.Low 
-       then Util.print3 "(%s) About to check\n\t%s\nagainst expected effect\n\t%s\n"
+       then Util.print3 "\n\n(%s) About to check\n\t%s\nagainst expected effect\n\t%s\n"
                (Print.term_to_string e) (Print.comp_to_string c) (Print.comp_to_string expected_c);
        let c = norm_c env c in
+       if debug env Options.Low 
+       then Util.print3 "\n\nAfter normalization (%s) About to check\n\t%s\nagainst expected effect\n\t%s\n"
+               (Print.term_to_string e) (Print.comp_to_string c) (Print.comp_to_string expected_c);
+       
        let expected_c' = TcUtil.refresh_comp_label env true (TcUtil.lcomp_of_comp <| expected_c) in
        let e, _, g = TcUtil.check_comp env e c <| expected_c'.comp() in
        if debug env Options.Low then Util.print2 "(%s) DONE check_expected_effect; guard is: %s\n" (Range.string_of_range e.pos) (guard_to_string env g);
@@ -372,20 +376,20 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         let res_t = TcUtil.new_uvar env k in
         Env.set_expected_typ env res_t, res_t in
  
-    let guard_x = S.new_bv (Some e1.pos) c1.res_typ in
+    let guard_x = S.gen_bv "scrutinee" (Some e1.pos) c1.res_typ in
     let t_eqns = eqns |> List.map (tc_eqn guard_x env_branches) in
     let c_branches, g_branches =
       let cases, g = List.fold_right (fun (_, f, c, g) (caccum, gaccum) ->
         (f, c)::caccum, Rel.conj_guard g gaccum) t_eqns ([], Rel.trivial_guard) in
       TcUtil.bind_cases env res_t cases, g in (* bind_cases adds an exhaustiveness check *)
    
-    if debug env Options.Extreme
-    then Util.print4 "(%s) comp\n\tscrutinee: %s\n\tbranches: %s\nguard = %s\n"
-                      (Range.string_of_range top.pos) (Print.lcomp_to_string c1) (Print.lcomp_to_string c_branches) (guard_to_string env g_branches);
-   
     let cres = TcUtil.bind env (Some e1) c1 (Some guard_x, c_branches) in
     let e = mk (Tm_match(e1, List.map (fun (f, _, _, _) -> f) t_eqns)) (Some cres.res_typ.n) top.pos in
     let e = mk (Tm_ascribed(e, cres.res_typ, Some cres.eff_name)) None e.pos in  //important to ascribe, for recomputing types
+    if debug env Options.Extreme
+    then Util.print2 "(%s) comp type = %s\n"
+                      (Range.string_of_range top.pos) (Print.comp_to_string <| cres.comp());
+   
     e, cres, Rel.conj_guard g1 g_branches
 
   | Tm_let ((false, [{lbname=Inr _}]), _) -> 
@@ -968,7 +972,8 @@ and check_short_circuit_args env head chead g_head args expected_topt : term * l
                 seen@[arg e], Rel.conj_guard guard g, ghost) ([], g_head, false) args bs in
           let e = mk_Tm_app head args (Some res_t.n) r  in
           let c = if ghost then S.mk_GTotal res_t |> Util.lcomp_of_comp else Util.lcomp_of_comp c in
-          e, c, guard
+          let c, g = TcUtil.strengthen_precondition None env e c guard in
+          e, c, g
         
         | _ -> //fallback
           check_application_args env head chead g_head args expected_topt

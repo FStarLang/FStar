@@ -520,7 +520,10 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
       let c1 = lc1.comp () in
       let c2 = lc2.comp () in
       if debug env Options.Extreme
-      then Util.print4 "Evaluated %s to %s\n And %s to %s\n"
+      then Util.print5 "b=%s,Evaluated %s to %s\n And %s to %s\n"
+            (match b with
+              | None -> "none"
+              | Some x -> Print.bv_to_string x)
             (Print.lcomp_to_string lc1)
             (Print.comp_to_string c1)
             (Print.lcomp_to_string lc2)
@@ -529,30 +532,31 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
         let aux () =
             if Util.is_trivial_wp c1
             then match b with
-                    | None -> Some c2
+                    | None -> Some (c2, "trivial no binder")
                     | Some _ -> 
                         if Util.is_ml_comp c2 //|| not (Util.is_free [Inr x] (Util.freevars_comp c2))
-                        then Some c2
+                        then Some (c2, "trivial ml")
                         else None
             else if Util.is_ml_comp c1 && Util.is_ml_comp c2
-            then Some c2
+            then Some (c2, "both ml")
             else None in
         if Util.is_total_comp c1
         && Util.is_total_comp c2
-        then Some c2
+        then Some (c2, "both total")
         else if Util.is_tot_or_gtot_comp c1
              && Util.is_tot_or_gtot_comp c2
-        then Some (S.mk_GTotal (Util.comp_result c2))
+        then Some (S.mk_GTotal (Util.comp_result c2), "both gtot")
         else match e1opt, b with
             | Some e, Some x ->
                 if Util.is_total_comp c1 && not (Syntax.is_null_bv x)
-                then Some <| SS.subst_comp [NT(x, e)] c2
+                then Some (SS.subst_comp [NT(x, e)] c2, "substituted e")
                 else aux ()
             | _ -> aux () in
       match try_simplify () with
-        | Some c ->
+        | Some (c, reason) ->
           if Env.debug env <| Options.Other "bind"
-          then Util.print4 "bind (%s) %s and %s simplified to %s\n"
+          then Printf.printf "%s, %A, %A: bind (%s) %s and %s simplified to %s\n"
+               reason (Util.comp_flags c1) (Util.comp_flags c2)
               (match b with
                  | None -> "None"
                  | Some x -> Print.bv_to_string x)
@@ -570,6 +574,11 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
           let wp = mk_Tm_app  (inst_effect_fun env md md.bind_wp)  wp_args None t2.pos in
           let wlp = mk_Tm_app (inst_effect_fun env md md.bind_wlp) wlp_args None t2.pos in
           let c = mk_comp md t2 wp wlp [] in
+          if Env.debug env <| Options.Other "bind"
+          then Printf.printf "unsimplified bind %s and %s\n\tproduced %s\n"
+              (Print.comp_to_string c1) 
+              (Print.comp_to_string c2) 
+              (Print.comp_to_string c);
           c in
     {eff_name=join_lcomp env lc1 lc2;
      res_typ=lc2.res_typ;
@@ -662,7 +671,7 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:term) (lc:l
                     && not (is_function (Util.comp_result c))
                     && not (Util.is_partial_return c))
                     then let x = S.gen_bv "strengthen_pre_x" None (Util.comp_result c) in
-                         let xret = return_value env x.sort (S.bv_to_name x) in
+                         let xret = Util.comp_set_flags (return_value env x.sort (S.bv_to_name x)) [PARTIAL_RETURN] in
                          let lc = bind env (Some e) (lcomp_of_comp c) (Some x, lcomp_of_comp xret) in
                          lc.comp()
                     else c in
@@ -698,7 +707,7 @@ let add_equality_to_post_condition env (comp:comp) (res_t:typ) =
     let yret = mk_Tm_app (inst_effect_fun env md_pure md_pure.ret) [S.arg res_t; S.arg yexp] None res_t.pos in
     let x_eq_y_yret = mk_Tm_app (inst_effect_fun env md_pure md_pure.assume_p) [S.arg res_t; S.arg <| Util.mk_eq res_t res_t xexp yexp; S.arg <| yret] None res_t.pos in
     let forall_y_x_eq_y_yret = mk_Tm_app (inst_effect_fun env md_pure md_pure.close_wp) [S.arg res_t; S.arg res_t; S.arg <| U.abs [mk_binder y] x_eq_y_yret] None res_t.pos in
-    let lc2 = mk_comp md_pure res_t forall_y_x_eq_y_yret forall_y_x_eq_y_yret [RETURN] in
+    let lc2 = mk_comp md_pure res_t forall_y_x_eq_y_yret forall_y_x_eq_y_yret [PARTIAL_RETURN] in
     let lc = bind env None (lcomp_of_comp comp) (Some x, lcomp_of_comp lc2) in
     lc.comp()
 
@@ -781,10 +790,13 @@ let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
            let c = mk_Comp c in
            let x = S.new_bv (Some t.pos) t in 
            let xexp = S.bv_to_name x in
-           let ret = lcomp_of_comp <| return_value env t xexp in
-           let eq_ret = weaken_precondition env ret (NonTrivial (Util.mk_eq t t xexp e)) in
+           let ret = lcomp_of_comp <| (Util.comp_set_flags (return_value env t xexp) [PARTIAL_RETURN]) in
+           let eq = (Util.mk_eq t t xexp e) in
+           let eq_ret = weaken_precondition env ret (NonTrivial eq) in
 
-           U.comp_set_flags ((bind env None (lcomp_of_comp c) (Some x, eq_ret)).comp()) (PARTIAL_RETURN::U.comp_flags c) in
+           let c = U.comp_set_flags ((bind env None (lcomp_of_comp c) (Some x, eq_ret)).comp()) (PARTIAL_RETURN::U.comp_flags c) in
+           c in
+
   let flags =
     if not (Util.is_function_typ lc.res_typ)
     && Util.is_pure_or_ghost_lcomp lc
@@ -860,7 +872,6 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                                                     (Env.set_range env e.pos) e cret
                                                     (guard_of_guard_formula <| NonTrivial guard) in
                         let x = {x with sort=lc.res_typ} in
-                        Printf.printf "Binding in weaken_result_typ ... \n";
                         let c = bind env (Some e) (lcomp_of_comp <| mk_Comp ct) (Some x, eq_ret) in
                         let c = c.comp () in
                         if Env.debug env <| Options.Extreme

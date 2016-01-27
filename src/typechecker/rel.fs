@@ -410,13 +410,6 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
     commit uvis;
     {wl with ctr=wl.ctr + 1}
 
-//    match uvis with
-//        | [] -> wl
-//        | _ ->
-//        if Env.debug wl.tcenv <| Options.Other "Rel"
-//        then Util.print1 "Extending solution: %s\n" (List.map (uvi_to_string wl.tcenv) uvis |> String.concat ", ");
-//        {wl with subst=uvis@wl.subst; ctr=wl.ctr + 1}
-
 let extend_solution pid sol wl = 
     if Env.debug wl.tcenv <| Options.Other "RelCheck"
     then Util.print2 "Solving %s: with %s\n" (string_of_int pid) (List.map (uvi_to_string wl.tcenv) sol |> String.concat ", ");
@@ -430,21 +423,6 @@ let solve_prob prob logical_guard uvis wl =
         | Some t, NonTrivial f -> Some (Util.mk_conj t f) in
     if Env.debug wl.tcenv <| Options.Other "RelCheck"
     then Util.print2 "Solving %s: with %s\n" (string_of_int <| p_pid prob) (List.map (uvi_to_string wl.tcenv) uvis |> String.concat ", ");
-//    let uvis, sub_probs, logical_guard = uvis |> List.fold_left (fun (uvis, sub_probs, guard) uvi -> 
-//        match uvi with 
-//        | TERM((u, t), e) -> 
-//          let e = N.normalize [N.Beta] wl.tcenv e in
-//          let t', g = wl.tcenv.type_of ({wl.tcenv with defer_all=true}) e in
-//          if Env.debug wl.tcenv <| Options.Other "RelCheck"
-//          then Printf.printf "Checked term %s at type %s ... expected %s\n" (Print.term_to_string e) (Print.term_to_string t') (Print.term_to_string t);
-//          let prob = TProb <| new_problem wl.tcenv t' SUB t (Some e) t.pos "sort checking" in
-//          let gprobs = List.map snd g.deferred in
-//          TERM((u,t), e)::uvis,  prob::gprobs@sub_probs, conj_guard guard g.guard_f
-//        | x -> x::uvis, sub_probs, guard) 
-//        ([], [], logical_guard) in
-//    let wl = attempt sub_probs wl in
-//    if Env.debug wl.tcenv <| Options.Other "RelCheck"
-//    then Util.print1 "After solve_prob:\n\t%s\n" (wl_to_string wl);
     solve_prob' false prob logical_guard uvis wl
 
 (* ------------------------------------------------ *)
