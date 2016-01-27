@@ -1,7 +1,13 @@
 VERFILES=unit1.fst unit2.fst testset.fst short-circuit.fst first-proofs.fst
 include ../Makefile.include
 NEGFILES=negative-tests.fst
+
+# if the `--lax` flag is used, negative tests will report a single error.
+ifeq ($(filter $(OTHERFLAGS),--lax),)
 NEGTESTS=35
+else
+NEGTESTS=1
+endif
 
 all: all-pos all-neg
 
