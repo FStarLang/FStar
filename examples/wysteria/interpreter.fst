@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi FStar.OrdSet --admit_fsi FStar.Seq --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Ffibridge --admit_fsi Runtime --admit_fsi FStar.IO --admit_fsi FStar.String --admit_fsi Hashtable --__temp_no_proj PSemantics --verify_module Interpreter;
     variables:CONTRIB=../../contrib;
-    other-files:FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst seq.fsi FStar.SeqProperties.fst FStar.Ghost.fst FStar.List.Tot.fst ordset.fsi ordmap.fsi FStar.List.fst FStar.IO.fsti FStar.String.fst prins.fst ast.fst ffibridge.fsi sem.fst psem.fst $CONTRIB/Platform/fst/Bytes.fst runtime.fsi print.fst hashtable.fsi ckt.fst $CONTRIB/CoreCrypto/fst/CoreCrypto.fst ../crypto/sha1.fst FStar.Crypto.fst
+    other-files:FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst seq.fsi FStar.SeqProperties.fst FStar.Ghost.fst FStar.List.Tot.fst ordset.fsi ordmap.fsi FStar.List.fst FStar.IO.fsti FStar.String.fst prins.fst $CONTRIB/Platform/fst/Bytes.fst ast.fst ffibridge.fsi sem.fst psem.fst runtime.fsi print.fst hashtable.fsi ckt.fst $CONTRIB/CoreCrypto/fst/CoreCrypto.fst ../crypto/sha1.fst crypto.fst
  --*)
 
 module Interpreter
@@ -84,6 +84,14 @@ let step c =
   else if not (pre_assec c = NA) then Some (step_assec c)
   else if is_value c && is_sframe c is_F_assec_ret then Some (step_assec_ret c)
 
+  else if pre_emksh c then Some (step_mksh_e c)
+  else if is_value c && is_sframe c is_F_mksh then Some (step_mksh_red c)
+  else if not (pre_mksh c = NA) then Some (step_mksh c)
+
+  else if pre_ecombsh c then Some (step_combsh_e c)
+  else if is_value c && is_sframe c is_F_combsh then Some (step_combsh_red c)
+  else if not (pre_combsh c = NA) then Some (step_combsh c)
+
   else None
 
 val step_correctness: c:config{is_Some (step c)} -> Tot (sstep c (Some.v (step c)))
@@ -151,7 +159,15 @@ let step_correctness c =
   else if is_value_ps c && is_sframe c is_F_assec_ps then C_assec_e c c'
   else if is_value c && is_sframe c is_F_assec_e then C_assec_red c c'
   else if not (pre_assec c = NA) then C_assec_beta c c'
-  else C_assec_ret c c'
+  else if is_value c && is_sframe c is_F_assec_ret then C_assec_ret c c'
+
+  else if pre_emksh c then C_mksh c c'
+  else if is_value c && is_sframe c is_F_mksh then C_mksh_red c c'
+  else if not (pre_mksh c = NA) then C_mksh_beta c c'
+
+  else if pre_ecombsh c then C_combsh c c'
+  else if is_value c && is_sframe c is_F_combsh then C_combsh_red c c'
+  else C_combsh_beta c c'
 
 val step_completeness: c:config -> c':config -> h:sstep c c' -> Lemma (requires (True)) (ensures (is_Some (step c)))
 let step_completeness c c' h = ()
@@ -195,15 +211,16 @@ type tstep_config (p:prin) = c:config{Conf.l c = Target /\
 
 opaque type witness_client_config (#a:Type) (x:a) = True
 
-let client_key:client_key =
-  let k = Platform.Bytes.createBytes SHA1.keysize 0uy in
-  assume (client_key_prop k == client_prop_t);
-  k
+(* AR: commenting the sec server related code *)
+(* let client_key:client_key = *)
+(*   let k = Platform.Bytes.createBytes SHA1.keysize 0uy in *)
+(*   assume (client_key_prop k == client_prop_t); *)
+(*   k *)
 
-let server_key:server_key =
-  let k = Platform.Bytes.createBytes SHA1.keysize 0uy in
-  assume (server_key_prop k == server_prop_t);
-  k
+(* let server_key:server_key = *)
+(*   let k = Platform.Bytes.createBytes SHA1.keysize 0uy in *)
+(*   assume (server_key_prop k == server_prop_t); *)
+(*   k *)
 
 val do_sec_comp:
   p:prin -> c:tstep_config p{is_T_red (Conf.t c) /\ is_R_assec (T_red.r (Conf.t c))}

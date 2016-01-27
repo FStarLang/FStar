@@ -98,6 +98,7 @@ let interactive_fsi = Util.mk_ref false
 let print_fuels = Util.mk_ref false
 let cardinality = Util.mk_ref "off"
 let timing = Util.mk_ref false
+let inline_arith = Util.mk_ref false
 let warn_cardinality () = match !cardinality with
     | "warn" -> true
     | _ -> false
@@ -158,7 +159,8 @@ let init_options () =
     auto_deps := false;
     find_deps := false;
     dep := None;
-    timing := false
+    timing := false;
+    inline_arith := false
 
 let set_fstar_home () =
   let fh = match !fstar_home_opt with
@@ -185,9 +187,36 @@ let get_include_path (dirname:string) =
         Util.join_paths dirname p)
     (let h = get_fstar_home () in
     !_include_path@["."; h ^ "/lib"; h ^ "/lib/fstar"])
+    
+let find_file filename search_path =
+    try
+      Util.map_option
+        Util.normalize_file_path
+        (if Util.is_path_absolute filename then
+          if Util.file_exists(filename) then
+            Some filename
+          else
+            None
+        else
+          Util.find_map
+            search_path
+            (fun p ->
+              let path = Util.join_paths p filename in
+              if Util.file_exists path then
+                Some path
+              else
+                None))
+    with _ -> 
+      None
 
 let prims () = match !prims_ref with
-  | None -> Util.format1 "%s/lib/prims.fst" (get_fstar_home ())
+  | None -> 
+    (let filen = "prims.fst" in
+    match find_file filen (get_include_path ".") with
+    | Some result ->
+      result
+    | None ->
+      raise (Util.Failure (Util.format1 "unable to find required file %s in search path." filen)))
   | Some x -> x
 
 let prependOutputDir fname = match !outputDir with
@@ -238,6 +267,7 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "include", OneArg ((fun s -> _include_path := !_include_path @ [s]), "path"), "A directory in which to search for files included on the command line");
      ( noshort, "initial_fuel", OneArg((fun x -> initial_fuel := int_of_string x), "non-negative integer"), "Number of unrolling of recursive functions to try initially (default 2)");
      ( noshort, "initial_ifuel", OneArg((fun x -> initial_ifuel := int_of_string x), "non-negative integer"), "Number of unrolling of inductive datatypes to try at first (default 1)");
+     ( noshort, "inline_arith", ZeroArgs(fun () -> inline_arith := true), "Inline definitions of arithmetic functions in the SMT encoding");
      ( noshort, "lax", ZeroArgs (fun () -> pretype := true; verify := false), "Run the lax-type checker only (admit all verification conditions)");
      ( noshort, "log_types", ZeroArgs (fun () -> log_types := true), "Print types computed for data/val/let-bindings");
      ( noshort, "logQueries", ZeroArgs (fun () -> logQueries := true), "Log the Z3 queries in queries.smt2");

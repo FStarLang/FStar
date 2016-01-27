@@ -1229,31 +1229,36 @@ let prims =
     let asym, a = fresh_fvar "a" Type_sort in
     let xsym, x = fresh_fvar "x" Term_sort in
     let ysym, y = fresh_fvar "y" Term_sort in
-    let deffun vars body x = [Term.DefineFun(x, vars, Term_sort, body, None)] in
+    let deffun vars body x = 
+        [Term.DefineFun(x, vars |> List.map snd, Term_sort, Term.abstr vars body, None)] in
     let quant vars body : string -> list<decl> = fun x ->
         let t1 = Term.mkApp(x, List.map Term.mkFreeV vars) in
         let vname_decl = Term.DeclFun(x, vars |> List.map snd, Term_sort, None) in
         [vname_decl;
          Term.Assume(mkForall([[t1]], vars, mkEq(t1, body)), None)] in
+    let def_or_quant vars body x = 
+        if !Options.inline_arith
+        then deffun vars body x
+        else quant vars body x in
     let axy = [(asym, Type_sort); (xsym, Term_sort); (ysym, Term_sort)] in
     let xy = [(xsym, Term_sort); (ysym, Term_sort)] in
     let qx = [(xsym, Term_sort)] in
     let prims = [
-        (Const.op_Eq,          (quant axy (boxBool <| mkEq(x,y))));
-        (Const.op_notEq,       (quant axy (boxBool <| mkNot(mkEq(x,y)))));
-        (Const.op_LT,          (quant xy  (boxBool <| mkLT(unboxInt x, unboxInt y))));
-        (Const.op_LTE,         (quant xy  (boxBool <| mkLTE(unboxInt x, unboxInt y))));
-        (Const.op_GT,          (quant xy  (boxBool <| mkGT(unboxInt x, unboxInt y))));
-        (Const.op_GTE,         (quant xy  (boxBool <| mkGTE(unboxInt x, unboxInt y))));
-        (Const.op_Subtraction, (quant xy  (boxInt  <| mkSub(unboxInt x, unboxInt y))));
-        (Const.op_Minus,       (quant qx   (boxInt  <| mkMinus(unboxInt x))));
-        (Const.op_Addition,    (quant xy  (boxInt  <| mkAdd(unboxInt x, unboxInt y))));
-        (Const.op_Multiply,    (quant xy  (boxInt  <| mkMul(unboxInt x, unboxInt y))));
-        (Const.op_Division,    (quant xy  (boxInt  <| mkDiv(unboxInt x, unboxInt y))));
-        (Const.op_Modulus,     (quant xy  (boxInt  <| mkMod(unboxInt x, unboxInt y))));
-        (Const.op_And,         (quant xy (boxBool <| mkAnd(unboxBool x, unboxBool y))));
-        (Const.op_Or,          (quant xy (boxBool <| mkOr(unboxBool x, unboxBool y))));
-        (Const.op_Negation,    (quant qx  (boxBool <| mkNot(unboxBool x))));
+        (Const.op_Eq,          (def_or_quant axy (boxBool <| mkEq(x,y))));
+        (Const.op_notEq,       (def_or_quant axy (boxBool <| mkNot(mkEq(x,y)))));
+        (Const.op_LT,          (def_or_quant xy  (boxBool <| mkLT(unboxInt x, unboxInt y))));
+        (Const.op_LTE,         (def_or_quant xy  (boxBool <| mkLTE(unboxInt x, unboxInt y))));
+        (Const.op_GT,          (def_or_quant xy  (boxBool <| mkGT(unboxInt x, unboxInt y))));
+        (Const.op_GTE,         (def_or_quant xy  (boxBool <| mkGTE(unboxInt x, unboxInt y))));
+        (Const.op_Subtraction, (def_or_quant xy  (boxInt  <| mkSub(unboxInt x, unboxInt y))));
+        (Const.op_Minus,       (def_or_quant qx   (boxInt  <| mkMinus(unboxInt x))));
+        (Const.op_Addition,    (def_or_quant xy  (boxInt  <| mkAdd(unboxInt x, unboxInt y))));
+        (Const.op_Multiply,    (def_or_quant xy  (boxInt  <| mkMul(unboxInt x, unboxInt y))));
+        (Const.op_Division,    (def_or_quant xy  (boxInt  <| mkDiv(unboxInt x, unboxInt y))));
+        (Const.op_Modulus,     (def_or_quant xy  (boxInt  <| mkMod(unboxInt x, unboxInt y))));
+        (Const.op_And,         (def_or_quant xy (boxBool <| mkAnd(unboxBool x, unboxBool y))));
+        (Const.op_Or,          (def_or_quant xy (boxBool <| mkOr(unboxBool x, unboxBool y))));
+        (Const.op_Negation,    (def_or_quant qx  (boxBool <| mkNot(unboxBool x))));
         ] in
     let mk : lident -> string -> list<decl> =
         fun l v -> prims |> List.filter (fun (l', _) -> lid_equals l l') |> List.collect (fun (_, b) -> b v) in

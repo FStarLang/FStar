@@ -17,7 +17,7 @@ all:
 	$(FSTAR) --admit_fsi FStar.Set FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Int16.fst
 	$(FSTAR) --admit_fsi FStar.Set FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Int31.fst
 	$(FSTAR) --admit_fsi FStar.Set FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Int32.fst
-	$(FSTAR) --admit_fsi FStar.Set FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst int63.fst
+	$(FSTAR) --admit_fsi FStar.Set FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Int63.fst
 	$(FSTAR) --admit_fsi FStar.Set FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Int64.fst
 	$(FSTAR) js.fst
 	$(FSTAR) --admit_fsi FStar.Set FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst FStar.ListProperties.fst

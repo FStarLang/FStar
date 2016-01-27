@@ -19,7 +19,7 @@
 
 
 module Ballot_box
-open Bytes
+open FStar.Bytes
 open Crypto_interface
 open Assumptions
 

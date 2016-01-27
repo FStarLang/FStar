@@ -615,3 +615,5 @@ let basename f =
 
 let print_endline x =
   print_endline x
+
+let map_option f opt = Option.map f opt

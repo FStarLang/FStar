@@ -76,9 +76,9 @@ let build_map (): map =
             begin match smap_try_find map key with
             | Some existing_file ->
                 if String.lowercase existing_file = String.lowercase f then
-                  raise (Err (Util.format1 "I'm case insensitive, and I found the same file twice (%s)" f));
+                  raise (Err (Util.format1 "I'm case insensitive, and I found the same file twice (%s)\n" f));
                 if is_interface existing_file = is_interface f then
-                  raise (Err (Util.format1 "Found both a .fs and a .fst (or both a .fsi and a .fsti) (%s)" f));
+                  raise (Err (Util.format1 "Found both a .fs and a .fst (or both a .fsi and a .fsti) (%s)\n" f));
                 (* Note: we always record a dependency against the interface, if found. *)
                 if not (is_interface existing_file) then
                   smap_add map key (join_paths d f)
@@ -378,14 +378,10 @@ let collect_one (original_map: smap<string>) (filename: string): list<string> =
   collect_file ast;
   !deps
 
-
-(** A list of filenames along with the direct dependencies for each file. *)
-type t = list<(string * list<string>)>
-
 type color = | White | Gray | Black
 
 (** Collect the dependencies for a list of given files. *)
-let collect (filenames: list<string>): t =
+let collect (filenames: list<string>): _ =
   (* The dependency graph; keys are filenames, values = list of filenames this
    * file depends on. *)
   let graph = smap_create 41 in
@@ -412,6 +408,8 @@ let collect (filenames: list<string>): t =
     ) (List.unique (smap_keys graph))
   in
 
+  let topologically_sorted = ref [] in
+
   (* Compute the transitive closure. *)
   let rec discover f =
     let short = basename f in
@@ -433,31 +431,36 @@ let collect (filenames: list<string>): t =
         let all_deps = List.unique (List.flatten (List.map (fun dep ->
           dep :: discover dep
         ) direct_deps)) in
+        (* Mutate the graph (it now remembers transitive dependencies). *)
         smap_add graph short (all_deps, Black);
+        (* Also build the topological sort (Tarjan's algorithm). *)
+        topologically_sorted := f :: !topologically_sorted;
+        (* Returns transitive dependencies *)
         all_deps
   in
 
-  List.map (fun f -> f, List.rev (discover f)) filenames
+  let by_target = List.map (fun f -> f, List.rev (discover f)) filenames in
+
+  by_target, !topologically_sorted
 
 
 (** Print the dependencies as returned by [collect] in a Makefile-compatible
     format. *)
-let print_make (deps: t): unit =
+let print_make (deps: list<(string * list<string>)>): unit =
   List.iter (fun (f, deps) ->
     let deps = List.map (fun s -> replace_string s " " "\\ " |> basename) deps in
     Util.print2 "%s: %s\n" f (String.concat " " deps)
   ) deps
 
-let print_nubuild (deps: t): unit =
-  let f, deps = List.hd (List.rev deps) in
-  List.iter print_endline deps
+let print_nubuild (l: list<string>): unit =
+  List.iter print_endline (List.rev l)
 
-let print (deps: t): unit =
+let print (deps: _): unit =
   match !Options.dep with
   | Some "nubuild" ->
-      print_nubuild deps
+      print_nubuild (snd deps)
   | Some "make" ->
-      print_make deps
+      print_make (fst deps)
   | Some _ ->
       failwith "Unknown tool for --dep"
   | None ->

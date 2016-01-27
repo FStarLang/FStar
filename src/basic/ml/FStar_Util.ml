@@ -600,3 +600,6 @@ let readdir dir =
 let file_exists = Sys.file_exists
 let basename = Filename.basename
 let print_endline = print_endline
+
+let map_option f opt = BatOption.map f opt
+

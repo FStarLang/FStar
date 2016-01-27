@@ -274,3 +274,5 @@ val sleep: int -> unit
 val atomically: (unit -> 'a) -> 'a
 val spawn: (unit -> unit) -> unit
 val print_endline: string -> unit
+
+val map_option: ('a -> 'b) -> option<'a> -> option<'b>

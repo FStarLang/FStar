@@ -67,7 +67,7 @@ exception GMWError of string
 let gmwsock = ref Unix.stdin
 let gmwsockset = ref false
 
-let rungmw (conf_fname:string) (out_fname:string) (port:int) :string list =
+let rungmw (conf_fname:string) (out_fname:string) (shout_fname:string) (port:int) :(string list * bytes) =
   begin
     if not (!gmwsockset) then
       let s = Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0 in
@@ -85,20 +85,34 @@ let rungmw (conf_fname:string) (out_fname:string) (port:int) :string list =
     let statusn = Unix.read !gmwsock statusstr 0 4 in
     assert(statusn = 4);
     let inc = open_in out_fname in
-    let rec helper l =
+    let rec read_out l =
       try
 	let c = input_char inc in
 	if c = '0' then
-	  helper (l @ ["0"])
+	  read_out (l @ ["0"])
 	else if c = '1' then
-	  helper (l @ ["1"])
+	  read_out (l @ ["1"])
 	else
-	  helper l
+	  read_out l
 	with
 	  | End_of_file -> close_in inc; l
-      in
-      helper []
+    in
+    let out = read_out [] in
 
+    let inc = open_in shout_fname in
+    let rec read_shout i f =
+      try
+	let c = input_char inc in
+	read_shout (i + 1) (fun x -> if x = i then c else f x)
+      with
+	| End_of_file -> close_in inc; String.init i f
+    in
+
+    let shout = bytes_of_string (read_shout 0 (fun _ -> '0')) in
+    print_string ("rungmw bytes length: " ^ (string_of_int (Platform.Bytes.length shout)) ^ "\n");
+
+    (out, shout)
+      
 let list_to_int l =
   let l' = List.rev_append l [] in
   let s = String.concat "" l' in

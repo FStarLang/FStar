@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi Ffibridge --admit_fsi FStar.Set --admit_fsi FStar.String --admit_fsi FStar.IO --admit_fsi Runtime --admit_fsi FStar.Seq --admit_fsi Hashtable --verify_module Circuit;
     variables:CONTRIB=../../contrib;
-    other-files:FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst seq.fsi FStar.SeqProperties.fst FStar.Ghost.fst FStar.List.Tot.fst ordset.fsi ordmap.fsi FStar.List.fst FStar.IO.fsti string.fsi prins.fst ast.fst ffibridge.fsi sem.fst $CONTRIB/Platform/fst/Bytes.fst runtime.fsi print.fst hashtable.fsi
+    other-files:FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst seq.fsi FStar.SeqProperties.fst FStar.Ghost.fst FStar.List.Tot.fst ordset.fsi ordmap.fsi FStar.List.fst FStar.IO.fsti string.fsi prins.fst $CONTRIB/Platform/fst/Bytes.fst ast.fst ffibridge.fsi sem.fst runtime.fsi print.fst hashtable.fsi
  --*)
 
 module Circuit
@@ -19,7 +19,7 @@ open FStar.OrdSet
 
 type wrange = int * int
 
-type binop = | Gt | Eq
+type binop = | Gt | Eq | Add | Sub
 
 type celt =
   | Input     : prin -> wrange -> celt
@@ -30,6 +30,9 @@ type celt =
   | Mux       : wrange -> wrange -> wrange -> wrange -> celt  //result range, else branch range, then branch range, condition range
   | Copy      : wrange -> wrange -> celt
 
+  | ShInput   : wrange -> celt
+  | ShOutput  : wrange -> celt
+  
 type ckt = list celt
 
 val string_cmp: string -> string -> Tot bool
@@ -53,6 +56,8 @@ let rec fvs e = match e with
   | E_let x e1 e2          -> union (fvs e1) (remove x (fvs e2))
   | E_ffi 'a 'b _ _ _ args _ -> fvs_l args
   | E_cond e e1 e2         -> union (fvs e) (union (fvs e1) (fvs e2))
+  | E_mksh e'              -> fvs e'
+  | E_combsh e'            -> fvs e'
   | _                      -> failwith "Expression form not supported"
 
 and fvs_l = function
@@ -94,7 +99,10 @@ let supported_input_type t = match t with
   | T_box t'   -> supported_box_content t'
   | _ -> false
 
-val assign_prin: prins -> varname -> env -> prin
+val is_share_var: varname -> Tot bool
+let is_share_var (Var _ t) = is_T_sh t
+
+val assign_prin: prins -> v:varname{not (is_share_var v)} -> env -> prin
 let assign_prin ps v en =
   let Var s t = v in
   if supported_input_type t then
@@ -125,14 +133,18 @@ let rec assign_inps ps fvars en =
   else
     let Some v = choose fvars in
     let fvars' = remove v fvars in
-    let p = assign_prin ps v en in
-    //print_string "Assigned "; print_string (Print.prin_to_string p); print_string " to "; print_string (name_of_var v); print_string "\n";
+
     let m = assign_inps ps fvars' en in
-    if contains p m then
-      let s = Some.v (select p m) in
-      update p (union s (singleton v)) m
-    else
-      update p (singleton v) m
+
+    if not (is_share_var v) then
+      let p = assign_prin ps v en in
+      //print_string "Assigned "; print_string (Print.prin_to_string p); print_string " to "; print_string (name_of_var v); print_string "\n";
+      if contains p m then
+	let s = Some.v (select p m) in
+	update p (union s (singleton v)) m
+      else
+	update p (singleton v) m
+    else m
 
 (* Counter for generating free wire ids *)
 let ctr :ref int = alloc 1
@@ -205,6 +217,23 @@ let rec alloc_input_wires eps m cs cen =
     else
       alloc_input_wires eps' m cs cen
 
+val alloc_shinput_wires: int -> int -> varset -> ckt -> cktenv -> (ckt * cktenv)
+let rec alloc_shinput_wires rbegin rend fvs cs cen =
+  if fvs = empty then
+    if rbegin = rend then cs, cen
+    else
+      FStar.List.Tot.append cs [ ShInput (rbegin, rend) ], cen
+  else
+    let Some v = choose fvs in
+    let fvs' = remove v fvs in
+    let Var s t = v in
+    if is_T_sh t then
+      let r = alloc_wires natsize in
+      let rbegin = if rbegin = 0 then fst r else rbegin in
+      alloc_shinput_wires rbegin (snd r) fvs' cs (fun s' -> if s' = s then Some r else cen s')
+    else
+      alloc_shinput_wires rbegin rend fvs' cs cen
+
 val const_to_ckt: const -> (ckt * wrange * typ)
 let const_to_ckt c = match c with
   | C_bool b       ->
@@ -221,6 +250,8 @@ val is_ffi_bin_op: string -> (bool * binop * typ)
 let is_ffi_bin_op s =
   if s = "Prims.(>)" then true, Gt, T_bool
   else if s = "Prims.op_Equality" then true, Eq, T_bool
+  else if s = "Prims.(+)" then true, Add, T_cons "Prims.int" []
+  else if s = "Prims.(-)" then true, Sub, T_cons "Prims.int" []
   else false, Gt, T_bool
 
 val unbox_t: typ -> typ
@@ -347,12 +378,22 @@ let rec exp_to_ckt cen e = match e with
     let r = alloc_wires (snd r2 - fst r2 + 1) in
     cs1 @ cs2 @ cs3 @ [Mux r r3 r2 r1], r, t2
 
+  | E_mksh e' ->
+    let cs, r, t = exp_to_ckt cen e' in
+    cs, r, T_sh
+
+  | E_combsh e' ->
+    let cs, r, t = exp_to_ckt cen e' in
+    cs, r, T_cons "Prims.int" []
+
   | _ -> failwith "Expression to circuit not supported"
 
 val op_to_string : binop -> Tot string
 let op_to_string = function
-  | Gt -> "Gt"
-  | Eq -> "Eq"
+  | Gt  -> "Gt"
+  | Eq  -> "Eq"
+  | Add -> "Add"
+  | Sub -> "Sub"
 
 val celt_to_string: celt -> string
 let celt_to_string = function
@@ -371,6 +412,11 @@ let celt_to_string = function
   | Copy r1 r2 ->
     strcat "Copy " (strcat (range_to_string r1) (strcat " " (range_to_string r2)))
 
+  | ShInput r ->
+    strcat "ShInput " (range_to_string r)
+  | ShOutput r ->
+    strcat "ShOutput " (range_to_string r)
+
 val ckt_to_string: ckt -> string
 let ckt_to_string l =
   List.fold_left (fun s celt -> strcat s (strcat "\n" (celt_to_string celt))) "" l
@@ -380,6 +426,9 @@ type booleancelt =
   | XOR: int -> int -> int -> booleancelt
   | INPUT: prin -> wrange -> booleancelt
   | OUTPUT: prin -> wrange -> booleancelt
+
+  | SHINPUT: wrange -> booleancelt
+  | SHOUTPUT: wrange -> booleancelt
 
 type bckt = list booleancelt
 
@@ -393,6 +442,11 @@ let booleancelt_to_string = function
     strcat "INPUT " (strcat (Print.prin_to_string p) (strcat " " (range_to_string r)))
   | OUTPUT p r ->
     strcat "OUTPUT " (strcat (Print.prin_to_string p) (strcat " " (range_to_string r)))
+
+  | SHINPUT r ->
+    strcat "SHINPUT " (range_to_string r)
+  | SHOUTPUT r ->
+    strcat "SHOUTPUT " (range_to_string r)
 
 val bckt_to_string: bckt -> string
 let bckt_to_string l =
@@ -499,6 +553,61 @@ let celt_to_booleancelt celt = match celt with
       in
       let (rbckt, c) = fold_left2 f ([], 1) l1 l2 in
       rev_append ((copy (fst r3) c)::rbckt) []
+    else if op = Add then
+      let l1 = flatten_range r1 in
+      let l2 = flatten_range r2 in
+      let l3 = flatten_range r3 in
+
+      let f (ckt, out, c) b1 b2 =
+	let (t1, _) = alloc_wires 1 in
+        let g1 = XOR t1 b1 c in
+        let (t2, _) = alloc_wires 1 in
+        let g2 = XOR t2 b2 c in
+        let (t3, _) = alloc_wires 1 in
+        let g3 = AND t3 t1 t2 in
+        let (c1, _) = alloc_wires 1 in
+        let g4 = XOR c1 t3 c in
+        let (t4, _) = alloc_wires 1 in
+        let g5 = XOR t4 b1 b2 in
+        let (s, _) = alloc_wires 1 in
+        let g6 = XOR s t4 c in
+        g6::g5::g4::g3::g2::g1::ckt, s::out, c1
+      in
+
+      let (rbckt, rout, _) = fold_left2 f ([], [], 0) l1 l2 in	
+      let (bckt, out) = rev_append rbckt [], rev_append rout [] in
+    
+      let f ckt b1 b2 = (copy b1 b2)::ckt in
+      let l = rev_append (fold_left2 f bckt l3 out) [] in
+      l
+    else if op = Sub then
+      let l1 = flatten_range r1 in
+      let l2 = flatten_range r2 in
+      let l3 = flatten_range r3 in
+
+      let f (ckt, out, c) b1 b2 =
+	let (t1, _) = alloc_wires 1 in
+	let g1 = XOR t1 b1 c in
+	let (t2, _) = alloc_wires 1 in
+	let g2 = XOR t2 b2 c in
+	let (t3, _) = alloc_wires 1 in
+	let g3 = AND t3 t1 t2 in
+	let (c1, _) = alloc_wires 1 in
+	let g4 = XOR c1 t3 b1 in
+	let (t4, _) = alloc_wires 1 in
+	let g5 = XOR t4 b1 b2 in
+	let (t5, _) = alloc_wires 1 in
+	let g6 = XOR t5 t4 c in
+	let (s, _) = alloc_wires 1 in
+	let g7 = XOR s t5 1 in
+	g7::g6::g5::g4::g3::g2::g1::ckt, s::out, c1
+      in
+
+      let (rbckt, rout, _) = fold_left2 f ([], [], 1) l1 l2 in
+      let bckt, out = rev_append rbckt [], rev_append rout [] in
+
+      let f ckt b1 b2 = (copy b1 b2)::ckt in
+      rev_append (fold_left2 f bckt l3 out) []
     else []
   | Const_nat r n ->
     let l1 = flatten_range r in
@@ -514,15 +623,20 @@ let celt_to_booleancelt celt = match celt with
       (*List.fold_left2 (fun c i1 i2 -> c @ [copy i1 i2]) [] l1 l2*)
     List.rev_append (List.fold_left2 (fun c i1 i2 -> (copy i1 i2)::c) [] l1 l2) []
 
-val assign_out: eprins -> wrange -> ckt
-let rec assign_out eps r =
-  if r = nil_range then []
+  | ShInput r -> [ SHINPUT r ]
+  | ShOutput r -> [ SHOUTPUT r ]
+
+val assign_out: eprins -> wrange -> typ -> ckt
+let rec assign_out eps r t =
+  if t = T_sh then [ ShOutput r ]
   else
-    if eps = empty then []
+    if r = nil_range then []
     else
-      let Some p = choose eps in
-      let eps' = remove p eps in
-      (Output p r)::(assign_out eps' r)
+      if eps = empty then []
+      else
+	let Some p = choose eps in
+	let eps' = remove p eps in
+	(Output p r)::(assign_out eps' r t)
 
 val prin_to_id: prin -> nat
 let prin_to_id p = match p with
@@ -561,9 +675,9 @@ let dump_gmw prs bckt fd =
   let ps s = write_string fd s in
   let psi i = write_string fd (string_of_int i) in
 
-  let inps = filter (fun bcelt -> is_INPUT bcelt) bckt in
+  let inps = filter (fun bcelt -> is_INPUT bcelt || is_SHINPUT bcelt) bckt in
   //print_string "done1";
-  let outs = filter (fun bcelt -> is_OUTPUT bcelt) bckt in
+  let outs = filter (fun bcelt -> is_OUTPUT bcelt || is_SHOUTPUT bcelt) bckt in
   //print_string "done2";
   let ands = filter (fun bcelt -> is_AND bcelt) bckt in
   //print_string "done3";
@@ -574,6 +688,7 @@ let dump_gmw prs bckt fd =
   let last_inp_id = List.fold_left (fun id belt ->
     match belt with
       | INPUT _ (_, j) -> if id < j then j else id
+      | SHINPUT (_, j) -> if id < j then j else id
       | _ -> failwith "Ah, wish it was refined to not have this case"
   ) 0 inps in
   //print_string "done5";
@@ -585,6 +700,9 @@ let dump_gmw prs bckt fd =
     match belt with
       | INPUT p (i, j) ->
 	ps "i "; psi (prin_to_id p); ps " "; psi i; ps " "; psi j; ps "\n"
+
+      | SHINPUT (i, j) ->
+	ps "s "; psi i; ps " "; psi j; ps "\n"
       | _ -> failwith "Ah, wish it was refined to not have this case"
   ) inps;
   //print_string "done6";
@@ -592,6 +710,9 @@ let dump_gmw prs bckt fd =
     match belt with
       | OUTPUT p (i, j) ->
 	ps "o "; psi (prin_to_id p); ps " "; psi i; ps " "; psi j; ps "\n"
+
+      | SHOUTPUT (i, j) ->
+	ps "t "; psi i; ps " "; psi j; ps "\n"
       | _ -> failwith "Ah, wish it was refined to not have this case"
   ) outs;
   // this is mysterious, why ?
@@ -599,6 +720,7 @@ let dump_gmw prs bckt fd =
     match belt with
       | INPUT p _ ->
 	ps "v "; psi (prin_to_id p); ps " 1"; ps "\n"
+      | SHINPUT _ -> ()
       | _ -> failwith "Ah, wish it was refined to not have this case"
   ) inps;
 
@@ -618,6 +740,14 @@ let dump_gmw prs bckt fd =
     //let _ = print_string "elt" in
     match belt with
       | INPUT _ r ->
+	let l = flatten_range r in
+	List.iter (fun i ->
+	  ps "g "; psi i; ps " 0 -1 -1 ";
+	  let l' = if Hashtable.mem aux i then Hashtable.find aux i else [] in
+	  psi (List.length l');
+	  List.iter (fun i' -> ps " "; psi i') l'; ps "\n"
+	) l
+      | SHINPUT r ->
 	let l = flatten_range r in
 	List.iter (fun i ->
 	  ps "g "; psi i; ps " 0 -1 -1 ";
@@ -666,14 +796,41 @@ let rec dump_inps vars en fd =
     let Some v = choose vars in
     let vars' = remove v vars in
     let Var _ t = v in
-    if supported_input_type t then
+    if is_T_sh t then dump_inps vars' en fd
+    else
+      if supported_input_type t then
+	let dv_opt = en v in
+	if is_None dv_opt then failwith "Input is not mapped in the env"
+	else
+	  let Some (D_v _ v) = dv_opt in
+	  dump_val v t fd;
+	  dump_inps vars' en fd
+      else failwith "Dumpinps input type not supported"
+
+val is_v_sh: #meta:v_meta -> v:value meta -> Tot bool
+let is_v_sh #meta v = match v with
+  | V_sh _ _ _ -> true
+  | _          -> false
+
+val dump_shinps: varset -> env -> fd_write -> unit
+let rec dump_shinps vars en fd =
+  if vars = empty then ()
+  else
+    let Some v = choose vars in
+    let vars' = remove v vars in
+    let Var _ t = v in
+    if not (is_T_sh t) then dump_shinps vars' en fd
+    else
       let dv_opt = en v in
-      if is_None dv_opt then failwith "Input is not mapped in the env"
+      if is_None dv_opt then failwith "Sh input not mapped in the env"
       else
 	let Some (D_v _ v) = dv_opt in
-	dump_val v t fd;
-	dump_inps vars' en fd
-    else failwith "Dumpinps input type not supported"
+	if is_v_sh v then
+	  let V_sh _ _ b = v in
+	  let s = Runtime.string_of_bytes b in
+	  write_string fd s;
+	  dump_shinps vars' en fd
+	else failwith "Sh input mapped to non V_sh"
 
 (* GMW lib needs total input size for the party *)
 val get_inp_size: prin -> bckt -> int
@@ -705,6 +862,18 @@ let out_fname p =
   let s' = FStar.String.substring s 0 1 in
   strcat "output_" (strcat s' ".txt")
 
+val shinp_fname: prin -> string
+let shinp_fname p =
+  let s = Print.prin_to_string p in
+  let s' = FStar.String.substring s 0 1 in
+  strcat "shinput_" (strcat s' ".txt")
+
+val shout_fname: prin -> string
+let shout_fname p =
+  let s = Print.prin_to_string p in
+  let s' = FStar.String.substring s 0 1 in
+  strcat "shoutput_" (strcat s' ".txt")
+
 val conf_fname: prin -> string
 let conf_fname p =
   let s = Print.prin_to_string p in
@@ -717,8 +886,8 @@ let dump_conf p n fd =
   ps "load-circuit "; ps (ckt_fname p); ps "\n";
   ps "input "; ps (inp_fname p); ps "\n";
   ps "output "; ps (out_fname p); ps "\n";
-  ps "shinput foo.txt\n";  // TODO: Fix GMW lib so that these args are not mandatory
-  ps "shoutput bar.txt\n";
+  ps "shinput "; ps (shinp_fname p); ps "\n";
+  ps "shoutput "; ps (shout_fname p); ps "\n";
   ps "num_input "; ps (string_of_int n); ps "\n"
 
 val prin_to_gmwport: prin -> int
@@ -732,6 +901,7 @@ val supported_output_type: typ -> Tot bool
 let supported_output_type t = match t with
   | T_bool     -> true
   | T_cons _ _ -> is_nat t || is_int_list t
+  | T_sh       -> true
   | _          -> false
 
 let const_meta (u:unit) = Meta empty Can_b empty Can_w
@@ -751,8 +921,10 @@ let rec parse_int_list (l:list string) =
     let n = parse_int l' in
     n::(parse_int_list l'')
 
-val parse_output: list string -> typ -> dvalue
-let parse_output l t = match t with
+open Platform.Bytes
+
+val parse_output: list string -> bytes -> typ -> prins -> dvalue
+let parse_output l b t ps = match t with
   | T_bool     ->
     if l = ["0"] then D_v (const_meta ()) (V_bool false)
     else if l = ["1"] then D_v (const_meta ()) (V_bool true)
@@ -768,6 +940,8 @@ let parse_output l t = match t with
 
     else failwith "Unsupported output cons (should have been checked earlier)"
 
+  | T_sh -> D_v (Meta empty Can_b empty Cannot_w) (V_sh ps V_emp b)
+
   | _ -> failwith "Unsupported output type (should have been checked earlier)"
 
 val typ_to_string: typ -> string
@@ -781,6 +955,7 @@ let rec typ_to_string t = match t with
   | T_box t' -> strcat "T_box " (typ_to_string t')
   | T_wire t' -> strcat "T_wire " (typ_to_string t')
   | T_fun t1 t2 -> strcat "T_fun " (strcat (typ_to_string t1) (strcat " " (typ_to_string t2)))
+  | T_sh -> "T_sh"
   | T_unknown -> "T_unknown"
 
 and typ_l_to_string l = fold_left (fun s t -> strcat s (strcat "; " (typ_to_string t))) "" l
@@ -789,10 +964,13 @@ val rungmw: prin -> prins -> env -> cktenv -> exp -> dvalue
 let rungmw p ps en cen e =
   init_ctr ();
 
-  let m = assign_inps ps (fvs e) en in
+  let freevs = fvs e in
+  let m = assign_inps ps freevs en in
   let cs_inp, cen = alloc_input_wires ps m [] cen in
+  let cs_shinps, cen = alloc_shinput_wires 0 0 freevs [] cen in
+
   let cs_e, r, t = exp_to_ckt cen e in
-  let cs_out = assign_out ps r in
+  let cs_out = assign_out ps r t in
 
   let _ =
     if supported_output_type t then ()
@@ -800,7 +978,7 @@ let rungmw p ps en cen e =
       failwith (strcat "Output type not supported: " (typ_to_string t))
   in
 
-  let final_ckt = cs_inp @ cs_e @ cs_out in
+  let final_ckt = cs_inp @ cs_shinps @ cs_e @ cs_out in
   //print_string (ckt_to_string final_ckt);
   (*print_string "created high level circuit";*)
   //print_string "\n";
@@ -812,6 +990,7 @@ let rungmw p ps en cen e =
   let conf_fname = conf_fname p in
   let ckt_fname = ckt_fname p in
   let inp_fname = inp_fname p in
+  let shinp_fname = shinp_fname p in
 
   (*print_string "Dumping GMW:\n";*)
   let fd = open_write_file ckt_fname in
@@ -826,11 +1005,15 @@ let rungmw p ps en cen e =
   in
   close_write_file fd;
 
+  let fd = open_write_file shinp_fname in
+  dump_shinps freevs en fd;
+  close_write_file fd;
+
   (*print_string "Dumping config:\n";*)
   let fd = open_write_file conf_fname in
   dump_conf p (get_inp_size p bckt) fd;
   close_write_file fd;
 
   let port = prin_to_gmwport p in
-  let out_l = Runtime.rungmw conf_fname (out_fname p) port in
-  parse_output out_l t
+  let (out_l, sh_bytes) = Runtime.rungmw conf_fname (out_fname p) (shout_fname p) port in
+  parse_output out_l sh_bytes t ps

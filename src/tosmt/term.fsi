@@ -103,6 +103,7 @@ val mkMul:   ((term * term) -> term)
 val mkMod:   ((term * term) -> term)
 val mkITE: (term * term * term) -> term
 val mkCases : list<term> -> term
+val abstr: fvs -> term -> term
 val mkForall: (list<list<pat>> * fvs * term) -> term
 val mkForall': (list<list<pat>> * option<int> * fvs * term) -> term
 val mkForall'': (list<list<pat>> * option<int> * list<sort> * term) -> term

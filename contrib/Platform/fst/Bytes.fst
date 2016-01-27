@@ -94,7 +94,8 @@ let createBytes l b = Seq.create l b
 (*@ assume val equalBytes : (b0:bytes -> (b1:bytes -> (r:bool){r = True /\ B (b0) = B (b1) \/ r = False /\ B (b0) <> B (b1)})) @*)
 assume val equalBytes : b1:bytes -> b2:bytes -> Tot (b:bool{b = (b1=b2)})
 (*@ assume val xor : (bytes -> (bytes -> (nb:nat -> (b3:bytes){Length (b3) = nb}))) @*)
-assume val xor : bytes -> bytes -> nat -> Tot bytes
+
+assume val xor: l:nat -> lbytes l -> lbytes l -> Tot (lbytes l)
 
 //val split: b:bytes -> n:nat{n <= Seq.length b} -> 
 //  Tot (x:(bytes * bytes) {Seq.length (fst (x))= n /\ Seq.length (snd (x)) == (Seq.length b) - n }) //(lbytes n * lbytes (length b - n))

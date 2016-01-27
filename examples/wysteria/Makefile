@@ -4,8 +4,10 @@ all:
 	make api
 	make theory
 	(cd examples/fstar_main; ../../$(FSTAR) traces.fst)
-	make codegen SMCIF=examples/fstar_main/psipaperiface.fsi SMCMAIN=examples/fstar_main/psipapermain.fst
-	make distclean
+	$(FSTAR) crypto.fst
+	$(FSTAR) sec_server.fst
+	make codegen SMCIF=examples/fstar_main/dealiface.fsi SMCMAIN=examples/fstar_main/dealmain.fst
+	#make distclean
 
 EXAMPLES_DIR=./examples
 
@@ -26,9 +28,13 @@ CODEGEN_FLAGS=--admit_fsi FStar.Set --admit_fsi FStar.String --admit_fsi FStar.S
 FSTAR_LIB_FILES=FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst seq.fsi FStar.SeqProperties.fst FStar.Ghost.fst FStar.Squash.fsti\
                 FStar.List.Tot.fst FStar.List.fst FStar.ListProperties.fst ordset.fsi FStar.OrdSet.fst ordmap.fsi FStar.OrdMap.fst FStar.IO.fsti string.fsi hashtable.fsi\
 
-INTERPRETER_FILES=prins.fst ast.fst ffibridge.fsi sem.fst psem.fst rtheory.fst $(CONTRIB)/Platform/fst/Bytes.fst\
-                  runtime.fsi print.fst ckt.fst $(CONTRIB)/CoreCrypto/fst/CoreCrypto.fst ../crypto/sha1.fst crypto.fst\
-                  interpreter.fst sec_server.fst examples/ffi.fst prog.fsi
+# removed sha1, CoreCrypto, crypto, and sec_server
+INTERPRETER_FILES=prins.fst $(CONTRIB)/Platform/fst/Bytes.fst ast.fst ffibridge.fsi sem.fst psem.fst rtheory.fst \
+                  runtime.fsi print.fst ckt.fst\
+                  interpreter.fst examples/ffi.fst prog.fsi
+# INTERPRETER_FILES=prins.fst $(CONTRIB)/Platform/fst/Bytes.fst ast.fst ffibridge.fsi sem.fst psem.fst rtheory.fst \
+#                   runtime.fsi print.fst ckt.fst $(CONTRIB)/CoreCrypto/fst/CoreCrypto.fst ../crypto/sha1.fst crypto.fst\
+#                   interpreter.fst sec_server.fst examples/ffi.fst prog.fsi
 
 #SMCIF and SMCMain are set from command line invocation of make
 codegen:
