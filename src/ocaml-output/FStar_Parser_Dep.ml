@@ -411,9 +411,6 @@ in (let ast = (FStar_Parser_Driver.parse_file_raw filename)
 in (let _49_498 = (collect_file ast)
 in (FStar_ST.read deps)))))))))))
 
-type t =
-(Prims.string * Prims.string Prims.list) Prims.list
-
 type color =
 | White
 | Gray
@@ -464,56 +461,58 @@ in (Prims.fst _115_141))
 in (FStar_String.concat " " _115_142))
 in (FStar_Util.print2 "%s: %s\n" k _115_143))) _115_145))
 end))
+in (let topologically_sorted = (FStar_ST.alloc [])
 in (let rec discover = (fun f -> (let short = (FStar_Util.basename f)
-in (let _49_519 = (let _115_148 = (FStar_Util.smap_try_find graph short)
+in (let _49_520 = (let _115_148 = (FStar_Util.smap_try_find graph short)
 in (FStar_Util.must _115_148))
-in (match (_49_519) with
+in (match (_49_520) with
 | (direct_deps, color) -> begin
 (match (color) with
 | Gray -> begin
-(let _49_521 = (FStar_Util.print1 "Recursive dependency on file %s\n" f)
-in (let _49_523 = (FStar_Util.print_string "Here\'s the (non-transitive) dependency graph:\n")
-in (let _49_525 = (print_graph ())
-in (let _49_527 = (FStar_Util.print_string "\n")
+(let _49_522 = (FStar_Util.print1 "Recursive dependency on file %s\n" f)
+in (let _49_524 = (FStar_Util.print_string "Here\'s the (non-transitive) dependency graph:\n")
+in (let _49_526 = (print_graph ())
+in (let _49_528 = (FStar_Util.print_string "\n")
 in (FStar_All.exit 1)))))
 end
 | Black -> begin
 direct_deps
 end
 | White -> begin
-(let _49_531 = (FStar_Util.smap_add graph short (direct_deps, Gray))
+(let _49_532 = (FStar_Util.smap_add graph short (direct_deps, Gray))
 in (let all_deps = (let _115_152 = (let _115_151 = (FStar_List.map (fun dep -> (let _115_150 = (discover dep)
 in (dep)::_115_150)) direct_deps)
 in (FStar_List.flatten _115_151))
 in (FStar_List.unique _115_152))
-in (let _49_535 = (FStar_Util.smap_add graph short (all_deps, Black))
-in all_deps)))
+in (let _49_536 = (FStar_Util.smap_add graph short (all_deps, Black))
+in (let _49_538 = (let _115_154 = (let _115_153 = (FStar_ST.read topologically_sorted)
+in (f)::_115_153)
+in (FStar_ST.op_Colon_Equals topologically_sorted _115_154))
+in all_deps))))
 end)
 end))))
-in (FStar_List.map (fun f -> (let _115_155 = (let _115_154 = (discover f)
-in (FStar_List.rev _115_154))
-in (f, _115_155))) filenames))))))))
+in (let by_target = (FStar_List.map (fun f -> (let _115_157 = (let _115_156 = (discover f)
+in (FStar_List.rev _115_156))
+in (f, _115_157))) filenames)
+in (let _115_158 = (FStar_ST.read topologically_sorted)
+in (by_target, _115_158)))))))))))
 
-let print_make = (fun deps -> (FStar_List.iter (fun _49_541 -> (match (_49_541) with
+let print_make = (fun deps -> (FStar_List.iter (fun _49_545 -> (match (_49_545) with
 | (f, deps) -> begin
 (let deps = (FStar_List.map (fun s -> (FStar_All.pipe_right (FStar_Util.replace_string s " " "\\ ") FStar_Util.basename)) deps)
 in (FStar_Util.print2 "%s: %s\n" f (FStar_String.concat " " deps)))
 end)) deps))
 
-let print_nubuild = (fun deps -> (let _49_547 = (FStar_List.hd (FStar_List.rev deps))
-in (match (_49_547) with
-| (f, deps) -> begin
-(FStar_List.iter FStar_Util.print_endline deps)
-end)))
+let print_nubuild = (fun l -> (FStar_List.iter FStar_Util.print_endline (FStar_List.rev l)))
 
 let print = (fun deps -> (match ((FStar_ST.read FStar_Options.dep)) with
 | Some ("nubuild") -> begin
-(print_nubuild deps)
+(print_nubuild (Prims.snd deps))
 end
 | Some ("make") -> begin
-(print_make deps)
+(print_make (Prims.fst deps))
 end
-| Some (_49_554) -> begin
+| Some (_49_555) -> begin
 (FStar_All.failwith "Unknown tool for --dep")
 end
 | None -> begin
