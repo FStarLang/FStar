@@ -63,7 +63,7 @@ let print_map (m: map): unit =
     names (e.g. a.b) to absolute filenames (/path/to/A.B.fst). Long names are all
     normalized to lowercase. *)
 let build_map (): map =
-  let include_directories = Options.get_include_path (getcwd ()) in
+  let include_directories = Options.get_include_path () in
   let map = smap_create 41 in
   List.iter (fun d ->
     if file_exists d then

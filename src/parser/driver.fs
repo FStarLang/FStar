@@ -77,6 +77,3 @@ let parse_file env fn =
     Desugar.add_modul_to_env m env, [m]
   else
     Desugar.desugar_file env (parse_file_raw fn)
-
-let read_build_config file =
-  ParseIt.read_build_config file true

@@ -89,7 +89,6 @@ let fs_typ_app = Util.mk_ref false
 let n_cores = Util.mk_ref 1
 let verify_module = Util.mk_ref []
 let __temp_no_proj = Util.mk_ref []
-let use_build_config = Util.mk_ref false
 let interactive = Util.mk_ref false
 let interactive_context = Util.mk_ref None
 let split_cases = Util.mk_ref 0
@@ -174,19 +173,14 @@ let get_fstar_home () = match !fstar_home_opt with
     | None -> ignore <| set_fstar_home(); !_fstar_home
     | Some x -> x
 
-let get_include_path (dirname:string) =
+let get_include_path () =
   (* Allows running fstar either from the source repository, or after
    * installation (into /usr/local for instance) *)
-  List.map
-    (fun p ->
-      if Util.is_path_absolute p then
-        Util.normalize_file_path p
-      else
-        Util.join_paths dirname p)
-    (let h = get_fstar_home () in
-    !_include_path@["."; h ^ "/lib"; h ^ "/lib/fstar"])
+  let h = get_fstar_home () in
+  !_include_path@["."; h ^ "/lib"; h ^ "/lib/fstar"]
     
-let find_file filename search_path =
+let find_file filename =
+    let search_path = get_include_path () in
     try
       Util.map_option
         Util.normalize_file_path
@@ -210,7 +204,7 @@ let find_file filename search_path =
 let prims () = match !prims_ref with
   | None -> 
     (let filen = "prims.fst" in
-    match find_file filen (get_include_path ".") with
+    match find_file filen with
     | Some result ->
       result
     | None ->
@@ -290,7 +284,6 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "timing", ZeroArgs (fun () -> timing := true), "Print the time it takes to verify each top-level definition");
      ( noshort, "trace_error", ZeroArgs (fun () -> trace_error := true), "Don't print an error message; show an exception trace instead");
      ( noshort, "unthrottle_inductives", ZeroArgs (fun () -> unthrottle_inductives := true), "Let the SMT solver unfold inductive types to arbitrary depths (may affect verifier performance)");
-     ( noshort, "use_build_config", ZeroArgs (fun () -> use_build_config := true), "Expect just a single file on the command line and no options; will read the 'build-config' prelude from the file");
      ( noshort, "use_eq_at_higher_order", ZeroArgs (fun () -> use_eq_at_higher_order := true), "Use equality constraints when comparing higher-order types; temporary");
      ( noshort, "use_native_int", ZeroArgs (fun () -> use_native_int := true), "Extract the 'int' type to platform-specific native int; you will need to link the generated code with the appropriate version of the prims library");
      ( noshort, "verify_module", OneArg ((fun x -> verify_module := x::!verify_module), "string"), "Name of the module to verify");

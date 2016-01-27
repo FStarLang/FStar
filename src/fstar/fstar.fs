@@ -163,7 +163,6 @@ let finished_message fmods =
     end
 
 let interactive_mode dsenv env =
-    let should_read_build_config = ref true in
     let should_log = !Options.debug <> [] in
     let log =
         if should_log
@@ -242,7 +241,7 @@ let interactive_mode dsenv env =
                     let dsenv, env = reset_mark dsenv_mark env_mark in
                     go stack curmod dsenv env in
               
-                let dsenv, env =
+                (*let dsenv, env =
                 if !should_read_build_config then
                   if Util.starts_with text (Parser.ParseIt.get_bc_start_string ()) then
                     begin
@@ -261,7 +260,7 @@ let interactive_mode dsenv env =
                     dsenv, env
                   end
                 else
-                  dsenv, env in
+                  dsenv, env in*)
 
               let dsenv_mark, env_mark = mark dsenv env in
               let res = tc_one_fragment curmod dsenv_mark env_mark text in
@@ -305,12 +304,6 @@ let go _ =
     | Die msg ->
       Util.print_string msg
     | GoOn ->
-      let filenames = if !Options.use_build_config  //if the user explicitly requested it
-                      || (not !Options.interactive && List.length filenames = 1)  //or, if there is only a single file on the command line
-                      then match filenames with
-                             | [f] -> Parser.Driver.read_build_config f //then, try to read a build config from the header of the file
-                             | _ -> Util.print_string "--use_build_config expects just a single file on the command line and no other arguments"; exit 1
-                      else filenames in
       if !Options.dep <> None then
         (* This is the fstardep tool *)
         Parser.Dep.print (Parser.Dep.collect filenames)
