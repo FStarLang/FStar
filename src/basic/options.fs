@@ -106,8 +106,7 @@ let check_cardinality () = match !cardinality with
     | "check" -> true
     | _ -> false
 let dep = ref None
-let auto_deps = Util.mk_ref false
-let find_deps = Util.mk_ref false
+let explicit_deps = Util.mk_ref false
 let init_options () = 
     show_signatures := [];
     norm_then_print := true;
@@ -156,8 +155,7 @@ let init_options () =
     _include_path := [];
     print_fuels := false;
     use_native_int := false;
-    auto_deps := false;
-    find_deps := false;
+    explicit_deps := false;
     dep := None;
     timing := false;
     inline_arith := false
@@ -245,7 +243,6 @@ let display_usage specs =
 let rec specs () : list<Getopt.opt> =
   let specs =
     [( noshort, "admit_fsi", OneArg ((fun x -> admit_fsi := x::!admit_fsi), "module name"), "Treat .fsi as a .fst");
-     ( noshort, "auto_deps", ZeroArgs (fun () -> auto_deps := true), "automatically treat files discovered by --find_deps as dependencies.");
      ( noshort, "admit_smt_queries", OneArg ((fun s -> admit_smt_queries := (if s="true" then true else if s="false" then false else failwith("Invalid argument to --admit_smt_queries"))), "true|false"), "Admit SMT queries (UNSAFE! But, useful during development); default: 'false'");
      ( noshort, "cardinality", OneArg ((fun x -> cardinality := validate_cardinality x), "off|warn|check"), "Check cardinality constraints on inductive data types(default 'off')");
      ( noshort, "codegen", OneArg ((fun s -> codegen := parse_codegen s), "OCaml|FSharp"), "Generate code for execution");
@@ -255,7 +252,7 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "dep", OneArg ((fun x -> dep := Some x), "make|nubuild"), "Output the transitive closure of the dependency graph in a format suitable for the given tool");
      ( noshort, "dump_module", OneArg ((fun x -> dump_module := Some x), "module name"), "");
      ( noshort, "eager_inference", ZeroArgs (fun () -> eager_inference := true), "Solve all type-inference constraints eagerly; more efficient but at the cost of generality");
-     ( noshort, "find_deps", ZeroArgs (fun () -> find_deps := true; auto_deps := true), "find transitive dependencies given build-config other-files specifications.");
+     ( noshort, "explicit_deps", ZeroArgs (fun () -> explicit_deps := true), "tell FStar to not find dependencies automatically because the user provides them on the command-line, along with the right --admit-fsi options");
      ( noshort, "fs_typ_app", ZeroArgs (fun () -> fs_typ_app := true), "Allow the use of t<t1,...,tn> syntax for type applications; brittle since it clashes with the integer less-than operator");
      ( noshort, "fsi", ZeroArgs (fun () -> set_interactive_fsi ()), "fsi flag; A flag to indicate if type checking a fsi in the interactive mode");
      ( noshort, "fstar_home", OneArg ((fun x -> fstar_home_opt := Some x), "dir"), "Set the FSTAR_HOME variable to dir");

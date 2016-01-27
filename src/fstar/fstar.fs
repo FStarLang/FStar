@@ -118,11 +118,35 @@ let batch_mode_tc_no_prims dsenv env filenames =
     else env.solver.finish();
     all_mods, dsenv, env
 
+let find_deps_if_needed files =
+    if !Options.explicit_deps then
+      files
+    else
+      let _, deps = Parser.Dep.collect files in
+      (* Use just the file name: it's in one of the include directories, after
+       * all; furthermore, the dependency check enforce the "no duplicate
+       * filenames" policy. *)
+      let deps = List.map basename deps in
+      let deps = List.rev deps in
+      List.iter print_endline deps;
+      let deps = match deps with
+        | "prims.fst" :: deps -> deps
+        | _ -> failwith "dependency analysis did not find prims.fst?!"
+      in
+      List.iter (fun d ->
+        if get_file_extension d = ".fsti" then
+          Options.admit_fsi := substring d 0 (String.length d - 5) :: !Options.admit_fsi
+        else if get_file_extension d = ".fsi" then
+          Options.admit_fsi := substring d 0 (String.length d - 4) :: !Options.admit_fsi
+      ) deps;
+      deps
+
 let batch_mode_tc filenames =
     let prims_mod, dsenv, env = tc_prims () in
 
+    let filenames = find_deps_if_needed filenames in
     let all_mods, dsenv, env = batch_mode_tc_no_prims dsenv env filenames in
-    prims_mod@all_mods, dsenv, env
+    prims_mod @ all_mods, dsenv, env
 
 let finished_message fmods =
     if not !Options.silent
@@ -287,14 +311,7 @@ let go _ =
                              | [f] -> Parser.Driver.read_build_config f //then, try to read a build config from the header of the file
                              | _ -> Util.print_string "--use_build_config expects just a single file on the command line and no other arguments"; exit 1
                       else filenames in
-      if !Options.find_deps then
-        (* Dump the filenames found in the build-config special comment.
-           `filenames` won't be normalized in cases that
-           `Parser.Driver.read_build_config` is never invoked, so we must do it
-           here to ensure output can be relied upon to produce normalized path
-           names. *)
-        Util.print_string (Util.format1 "%s\n" (Util.concat_l "\n" (List.map Util.normalize_file_path filenames)))
-      else if !Options.dep <> None then
+      if !Options.dep <> None then
         (* This is the fstardep tool *)
         Parser.Dep.print (Parser.Dep.collect filenames)
       else

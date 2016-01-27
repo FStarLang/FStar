@@ -111,9 +111,9 @@ let rec read_build_config_from_string (filename:string) (use_filename:bool) (con
         match !filenames with
             | None -> if use_filename then [filename] else []
             | Some other_files ->
-              if not !Options.auto_deps || filename == "" then
+              if filename == "" then
                 let files = if use_filename then other_files@[filename] else other_files in
-        List.map substitute_variables files
+                List.map substitute_variables files
               else
                 // auto_deps
                 let included_files =
