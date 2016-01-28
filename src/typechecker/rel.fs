@@ -257,7 +257,7 @@ let commit uvis = uvis |> List.iter (function
         | U_unif u' -> Unionfind.union u u'
         | _ -> Unionfind.change u (Some t)
       end
-    | TERM((u, _), t) -> Util.set_uvar u (t, false))
+    | TERM((u, _), t) -> Util.set_uvar u t)
 
 let find_term_uvar uv s = Util.find_map s (function 
     | UNIV _ -> None 
@@ -405,7 +405,7 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
                             (string_of_int (p_pid prob))
                             (Print.term_to_string uv)
                             (Print.term_to_string phi);
-          Util.set_uvar uvar (phi, false)
+          Util.set_uvar uvar phi
         | _ -> if not resolve_ok then failwith "Impossible: this instance has already been assigned a solution" in
     commit uvis;
     {wl with ctr=wl.ctr + 1}

@@ -31,10 +31,10 @@ let rec force_uvar t = match t.n with
   | Tm_uvar (uv,_) ->
       begin
         match Unionfind.find uv with
-          | Fixed (t', b) -> let t', b' = force_uvar t' in t', b||b'
-          | _ -> t, false
+          | Fixed t' -> force_uvar t'
+          | _ -> t
       end
-  | _ -> t, false
+  | _ -> t
 
 let rec force_delayed_thunk t = match t.n with
   | Tm_delayed(f, m) ->
@@ -115,17 +115,9 @@ let rec subst' (s:subst_t) t = match s with
     let t0 = force_delayed_thunk t in 
     match t0.n with
         | Tm_constant _      //a constant cannot be substituted
-        | Tm_fvar _  -> t0   //fvar are never subject to substitution
-        | Tm_uvar (u, _) -> 
-          let t0, has_free_vars = force_uvar t0 in
-          if has_free_vars
-          then (let tt = subst' s t0 in
-                Printf.printf "Uvar %d has free vars...resolved to %A\n" (Unionfind.uvar_id u) tt;
-                tt
-                )  //when a type is implicitly generalized, a uvar maybe resolved to a name
-          else (Printf.printf "Uvar %d resolved to close term\n" (Unionfind.uvar_id u);
-                  t0 //otherwise, a uvar is always resolved to a closed term; so no substitution to do
-                )
+        | Tm_fvar _          //fvars are never subject to substitution
+        | Tm_uvar _ -> t0    //uvars are always resolved to closed terms
+
         | Tm_delayed(Inl(t', s'), m) ->
             //s' is the subsitution already associated with this node;
             //s is the new subsitution to add to it
@@ -176,7 +168,7 @@ let shift n s = match s with
     | UN(i, t) -> UN(i+n, t)
     | NM(x, i) -> NM(x, i+n)
     | UD(x, i) -> UD(x, i+n)
-    | NT _     -> s
+    | NT _  -> s
 let shift_subst n s = List.map (shift n) s
 let shift_subst' n s = s |> List.map (shift_subst n)
 let subst_binder' s (x:bv, imp) = {x with sort=subst' s x.sort}, imp
@@ -226,11 +218,8 @@ let push_subst s t =
 
         | Tm_constant _
         | Tm_fvar _
-        | Tm_unknown -> t
-
-        | Tm_uvar(u, _) -> 
-          Printf.printf "Pushing subst under uvar %d\n" (Unionfind.uvar_id u);
-          subst' s t
+        | Tm_unknown 
+        | Tm_uvar _ -> t
 
         | Tm_type _
         | Tm_bvar _ 
@@ -297,7 +286,7 @@ let rec compress (t:term) =
           Unionfind.update_in_tx memo (Some t');
 //          memo := Some t';
           t'
-        | _ -> fst (force_uvar t)
+        | _ -> force_uvar t
             
 
 let subst s t = subst' [s] t
