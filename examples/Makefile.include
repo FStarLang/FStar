@@ -1,22 +1,34 @@
 # --------------------------------------------------------------------
 ifeq ($(OS),Windows_NT)
 MSBUILD = msbuild
+# note: paths appear to be specified related to a subdirectory of the directory in 
+# which this makefile resides. see definition of $FSTAR_HOME as evidence supporting
+# this assumption.
+NUBUILD_DIR=../../.nubuild
+NUBUILD=$(NUBUILD_DIR)/bin/NuBuild.exe
 else
 MSBUILD = xbuild
 endif
 
 FSTAR_HOME = ../..
 LIB_FILES=FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst FStar.String.fst
-STDLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES))
-OLDLIB = $(addprefix $(FSTAR_HOME)/lib/, FStar.List.fst FStar.String.fst partialmap.fst FStar.ST.fst)
+add_stdlib_prefix=$(addprefix $(FSTAR_HOME)/lib/,$(1))
+STDLIB=$(call add_stdlib_prefix, $(LIB_FILES))
+OLDLIB=$(call add_stdlib_prefix, FStar.List.fst FStar.String.fst partialmap.fst FStar.ST.fst)
 
-FULL_LIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) FStar.ListProperties.fst)
+FULL_LIB=$(call add_stdlib_prefix, $(LIB_FILES) FStar.ListProperties.fst)
 STDLIB_CACHE = Prims.cache List.cache Set.cache Map.cache Heap.cache Array.cache String.cache ST.cache
 FULL_LIB_CACHE = $(STDLIB_CACHE) ListProperties.cache
 PERMLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) stperm.fst)
 FSTAR = ../../bin/fstar.exe $(OTHERFLAGS)
 STDCACHE=Prims.cache List.cache String.cache ST.cache Set.cache Map.cache Heap.cache Array.cache
 FSTARC=../../bin/fstar.exe $(STDCACHE) $(OTHERFLAGS)
+
+ifdef USE_NUBUILD
+FSTAR_OR_NUBUILD=$(NUBUILD) --quiet FStarVerify 
+else
+FSTAR_OR_NUBUILD=$(FSTAR)
+endif
 
 %.ver: %.fst
 	$(FSTAR) --admit_fsi FStar.Set $(STDLIB) $^
@@ -31,7 +43,7 @@ FSTARC=../../bin/fstar.exe $(STDCACHE) $(OTHERFLAGS)
 	$(FSTAR) --admit_fsi FStar.Set $(FULL_LIB) $^
 
 %.vv: %.fst
-	$(FSTAR) $^
+	$(FSTAR_OR_NUBUILD) $^
 
 %.lax: %.fst
 	$(FSTAR) $(STDLIB) --lax $^
