@@ -93,6 +93,7 @@ let interactive = Util.mk_ref false
 let interactive_context = Util.mk_ref None
 let split_cases = Util.mk_ref 0
 let _include_path = Util.mk_ref []
+let no_default_includes = Util.mk_ref false
 let interactive_fsi = Util.mk_ref false
 let print_fuels = Util.mk_ref false
 let cardinality = Util.mk_ref "off"
@@ -152,6 +153,7 @@ let init_options () =
     verify_module := [];
     __temp_no_proj := [];
     _include_path := [];
+    no_default_includes := false;
     print_fuels := false;
     use_native_int := false;
     explicit_deps := false;
@@ -176,8 +178,11 @@ let get_fstar_home () = match !fstar_home_opt with
 let get_include_path () =
   (* Allows running fstar either from the source repository, or after
    * installation (into /usr/local for instance) *)
-  let h = get_fstar_home () in
-  !_include_path@["."; h ^ "/lib"; h ^ "/lib/fstar"]
+  if !no_default_includes then
+    !_include_path
+  else
+    let h = get_fstar_home () in
+    !_include_path@["."; h ^ "/lib"; h ^ "/lib/fstar"]
     
 let find_file filename =
     let search_path = get_include_path () in
@@ -253,6 +258,7 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "full_context_dependency", ZeroArgs(fun () -> full_context_dependency := true), "Introduce unification variables that are dependent on the entire context (possibly expensive, but better for type inference (on, by default)");
      ( noshort, "hide_genident_nums", ZeroArgs(fun () -> hide_genident_nums := true), "Don't print generated identifier numbers");
      ( noshort, "hide_uvar_nums", ZeroArgs(fun () -> hide_uvar_nums := true), "Don't print unification variable numbers");
+     ( noshort, "no_default_includes", ZeroArgs (fun () -> no_default_includes := true), "Ignore the default module search paths");
      ( noshort, "in", ZeroArgs (fun () -> interactive := true), "Interactive mode; reads input from stdin");
      ( noshort, "in_context", OneArg ((fun s -> interactive := true; interactive_context := Some s), "name"), "Specify the context of an interactive session; needed for --auto_deps to work with interactive mode.");
      ( noshort, "include", OneArg ((fun s -> _include_path := !_include_path @ [s]), "path"), "A directory in which to search for files included on the command line");
