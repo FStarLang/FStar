@@ -26,6 +26,8 @@ open FStar.Profiling
 
 let handle_err warning ret e =
   match e with
+    | Failure s ->
+        Util.print_string (Util.format1 "Fatal: %s" s)
     | Error(msg, r) ->
         Util.print_string (Util.format3 "%s : %s\n%s\n" (Range.string_of_range r) (if warning then "Warning" else "Error") msg);
         ret
@@ -37,6 +39,7 @@ let handle_err warning ret e =
     | _ -> raise e
 
 let handleable = function
+  | Failure _
   | Error _
   | NYI _
   | Err _ -> true

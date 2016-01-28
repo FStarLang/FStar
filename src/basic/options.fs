@@ -216,7 +216,7 @@ let prims () = match !prims_ref with
     | Some result ->
       result
     | None ->
-      raise (Util.Failure (Util.format1 "unable to find required file %s in search path." filen)))
+      raise (Util.Failure (Util.format1 "unable to find required file \"%s\" in the module search path." filen)))
   | Some x -> x
 
 let prependOutputDir fname = match !outputDir with
