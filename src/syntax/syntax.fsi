@@ -196,10 +196,10 @@ type qualifier =
   | Unfoldable                             //a definition that may be unfolded by the normalizer, but only if necessary (default)
   | Irreducible                            //a definition that can never be unfolded by the normalizer
   | Abstract                               //a symbol whose definition is only visible within the defining module
-  | Logic                                  //a symbol whose intended usage is in the refinement logic only (TODO: remove this)
   | DefaultEffect of option<lident>        //an effect M may have a default Some N
   | TotalEffect                            //an effect that forbis non-termination
   //the remaining qualifiers are internal: the programmer cannot write them
+  | Logic                                  //a symbol whose intended usage is in the refinement logic
   | Discriminator of lident                //discriminator for a datacon l 
   | Projector of lident * ident            //projector for datacon l's argument x
   | RecordType of list<fieldname>          //record type whose unmangled field names are ...

@@ -318,7 +318,7 @@ type total_order (#a:Type) (f: (a -> a -> Tot bool)) =
     /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)        (* transitivity  *)
     /\ (forall a1 a2. f a1 a2 \/ f a2 a1)                       (* totality *)
 
-assume val append_sorted: #a:Type
+val append_sorted: #a:Type
                ->  f:(a -> a -> Tot bool)
                ->  l1:list a{sorted f l1}
                ->  l2:list a{sorted f l2}
@@ -328,9 +328,9 @@ assume val append_sorted: #a:Type
                                     /\ (forall y. mem y l2 ==> f pivot y)))
                         (ensures (sorted f (l1@(pivot::l2))))
                         [SMTPat (sorted f (l1@(pivot::l2)))]
-(* let rec append_sorted #a f l1 l2 pivot = match l1 with *)
-(*   | [] -> () *)
-(*   | hd::tl -> append_sorted f tl l2 pivot *)
+let rec append_sorted #a f l1 l2 pivot = match l1 with
+  | [] -> ()
+  | hd::tl -> append_sorted f tl l2 pivot
 
 val sortWith_sorted: #a:Type -> f:(a -> a -> Tot int) -> l:list a ->
   Lemma (requires (total_order #a (bool_of_compare f)))
