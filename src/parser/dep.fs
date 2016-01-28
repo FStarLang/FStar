@@ -64,6 +64,8 @@ let print_map (m: map): unit =
     normalized to lowercase. *)
 let build_map (): map =
   let include_directories = Options.get_include_path () in
+  let include_directories = List.map normalize_file_path include_directories in
+  let include_directories = List.unique include_directories in
   let map = smap_create 41 in
   List.iter (fun d ->
     if file_exists d then
@@ -439,7 +441,8 @@ let collect (filenames: list<string>): _ =
         all_deps
   in
 
-  let by_target = List.map (fun f -> f, List.rev (discover f)) filenames in
+  let all_filenames = List.unique (smap_keys graph) in
+  let by_target = List.map (fun f -> f, List.rev (discover f)) all_filenames in
 
   by_target, !topologically_sorted
 
