@@ -135,7 +135,7 @@ type env_t = {
     cache:Util.smap<(string * list<sort> * list<decl>)>;
     nolabels:bool;
     use_zfuel_name:bool;
-    encode_non_total_function_typ:bool;
+    encode_non_total_function_typ:bool
 }
 let print_env e =
     e.bindings |> List.map (function
@@ -691,12 +691,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         failwith "Impossible: already handled by encoding of Sig_let"
 
       | Tm_let((false, [{lbname=Inl x; lbtyp=t1; lbdef=e1}]), e2) ->
-        let ee1, decls1 = encode_term e1 env in
-        let xs, e2 = SS.open_term [(x, None)] e2 in
-        let x, _ = List.hd xs in
-        let env' = push_term_var env x ee1 in
-        let ee2, decls2 = encode_term e2 env' in
-        ee2, decls1@decls2
+        encode_let x t1 e1 e2 env encode_term
 
       | Tm_let _ ->
         Errors.warn t0.pos "Non-top-level recursive functions are not yet fully encoded to the SMT solver; you may not be able to prove some facts";
@@ -705,25 +700,37 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         Term.mkFreeV(e, Term_sort), [decl_e]
 
       | Tm_match(e, pats) ->
-        let scr, decls = encode_term e env in
-        let match_tm, decls = List.fold_right (fun b (else_case, decls) ->
-            let p, w, br = SS.open_branch b in
-            let patterns = encode_pat env p in
-            List.fold_right (fun (env0, pattern) (else_case, decls) ->
-                let guard = pattern.guard scr in
-                let projections = pattern.projections scr in
-                let env = projections |> List.fold_left (fun env (x, t) -> push_term_var env x t) env in
-                let guard, decls2 = match w with
-                    | None -> guard, []
-                    | Some w ->
-                        let w, decls2 = encode_term w env in
-                        Term.mkAnd(guard, Term.mkEq(w, Term.boxBool Term.mkTrue)), decls2 in
-                let br, decls3 = encode_term br env in
-                mkITE(guard, br, else_case), decls@decls2@decls3)
-            patterns (else_case, decls))
-            pats
-            (Term.mk_Term_unit(* default; should be unreachable *), decls) in
-        match_tm, decls
+        encode_match e pats Term.mk_Term_unit env encode_term
+
+and encode_let x t1 e1 e2 env (encode_body:S.term -> env_t -> (term * decls_t)) : term * decls_t = 
+    let ee1, decls1 = encode_term e1 env in
+    let xs, e2 = SS.open_term [(x, None)] e2 in
+    let x, _ = List.hd xs in
+    let env' = push_term_var env x ee1 in
+    let ee2, decls2 = encode_term e2 env' in
+    ee2, decls1@decls2
+
+and encode_match e pats default_case env (encode_br:S.term -> env_t -> (term * decls_t)) : term * decls_t = 
+    let scr, decls = encode_term e env in
+    let match_tm, decls = List.fold_right (fun b (else_case, decls) ->
+        let p, w, br = SS.open_branch b in
+        let patterns = encode_pat env p in
+        List.fold_right (fun (env0, pattern) (else_case, decls) ->
+            let guard = pattern.guard scr in
+            let projections = pattern.projections scr in
+            let env = projections |> List.fold_left (fun env (x, t) -> push_term_var env x t) env in
+            let guard, decls2 = match w with
+                | None -> guard, []
+                | Some w ->
+                    let w, decls2 = encode_term w env in
+                    Term.mkAnd(guard, Term.mkEq(w, Term.boxBool Term.mkTrue)), decls2 in
+            let br, decls3 = encode_br br env in
+            mkITE(guard, br, else_case), decls@decls2@decls3)
+        patterns (else_case, decls))
+        pats
+        (default_case (* default; should be unreachable *), decls) in
+    match_tm, decls
+
 
 and encode_pat env (pat:Syntax.pat) : list<(env_t * pattern)>  (* one for each disjunct *) =
     match pat.v with
@@ -920,6 +927,14 @@ and encode_formula_with_labels (phi:typ) (env:env_t) : (term * labels * decls_t)
                let lterm = Term.mkFreeV lvar in
                let lphi = Term.mkOr(lterm, phi) in
                (lphi, (lvar, msg, r)::labs, decls)
+
+        | Tm_match(e, pats) -> 
+           let t, decls = encode_match e pats Term.mkFalse env encode_formula in
+           t, [], decls
+
+        | Tm_let((false, [{lbname=Inl x; lbtyp=t1; lbdef=e1}]), e2) -> 
+           let t, decls = encode_let x t1 e1 e2 env encode_formula in
+           t, [], decls
 
         | _ ->
             let tt, decls = encode_term phi env in

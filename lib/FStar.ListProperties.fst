@@ -241,10 +241,8 @@ val partition_mem: f:('a -> Tot bool)
                   -> l:list 'a
                   -> x:'a
                   -> Lemma (requires True)
-                           (ensures ((fun l1 l2 ->
-                                     (mem x l = (mem x l1 || mem x l2)))
-                                        (fst (partition f l))
-                                        (snd (partition f l))))
+                          (ensures (let l1, l2 = partition f l in
+			            mem x l = (mem x l1 || mem x l2)))
 let rec partition_mem f l x = match l with
   | [] -> ()
   | hd::tl -> partition_mem f tl x
@@ -252,10 +250,8 @@ let rec partition_mem f l x = match l with
 val partition_mem_forall: f:('a -> Tot bool)
                   -> l:list 'a
                   -> Lemma (requires True)
-                           (ensures ((fun l1 l2 ->
-                                     (forall x. mem x l = (mem x l1 || mem x l2)))
-                                        (fst (partition f l))
-                                        (snd (partition f l))))
+                          (ensures (let l1, l2 = partition f l in
+                                    (forall x. mem x l = (mem x l1 || mem x l2))))
 let rec partition_mem_forall f l = match l with
   | [] -> ()
   | hd::tl -> partition_mem_forall f tl
@@ -263,10 +259,8 @@ let rec partition_mem_forall f l = match l with
 val partition_mem_p_forall: p:('a -> Tot bool)
                   -> l:list 'a
                   -> Lemma (requires True)
-                           (ensures ((fun l1 l2 ->
-                                     ((forall x. mem x l1 ==> p x) /\ (forall x. mem x l2 ==> not (p x))))
-                                        (fst (partition p l))
-                                        (snd (partition p l))))
+                          (ensures (let l1, l2 = partition p l in 
+                                    (forall x. mem x l1 ==> p x) /\ (forall x. mem x l2 ==> not (p x))))
 let rec partition_mem_p_forall p l = match l with
   | [] -> ()
   | hd::tl -> partition_mem_p_forall p tl
