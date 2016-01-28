@@ -196,14 +196,50 @@ end
 in (all_mods, dsenv, env))
 end)))
 
-let batch_mode_tc = (fun filenames -> (let _65_127 = (tc_prims ())
+let find_deps_if_needed = (fun files -> if (FStar_ST.read FStar_Options.explicit_deps) then begin
+files
+end else begin
+(let _65_127 = (FStar_Parser_Dep.collect files)
 in (match (_65_127) with
+| (_65_125, deps) -> begin
+(let deps = (FStar_List.map FStar_Util.basename deps)
+in (let deps = (FStar_List.rev deps)
+in (let _65_130 = (FStar_List.iter FStar_Util.print_endline deps)
+in (let deps = (match (deps) with
+| "prims.fst"::deps -> begin
+deps
+end
+| _65_136 -> begin
+(FStar_All.failwith "dependency analysis did not find prims.fst?!")
+end)
+in (let _65_139 = (FStar_List.iter (fun d -> if ((FStar_Util.get_file_extension d) = ".fsti") then begin
+(let _131_93 = (let _131_92 = (FStar_Util.substring d 0 ((FStar_String.length d) - 5))
+in (let _131_91 = (FStar_ST.read FStar_Options.admit_fsi)
+in (_131_92)::_131_91))
+in (FStar_ST.op_Colon_Equals FStar_Options.admit_fsi _131_93))
+end else begin
+if ((FStar_Util.get_file_extension d) = ".fsi") then begin
+(let _131_96 = (let _131_95 = (FStar_Util.substring d 0 ((FStar_String.length d) - 4))
+in (let _131_94 = (FStar_ST.read FStar_Options.admit_fsi)
+in (_131_95)::_131_94))
+in (FStar_ST.op_Colon_Equals FStar_Options.admit_fsi _131_96))
+end else begin
+()
+end
+end) deps)
+in deps)))))
+end))
+end)
+
+let batch_mode_tc = (fun filenames -> (let _65_145 = (tc_prims ())
+in (match (_65_145) with
 | (prims_mod, dsenv, env) -> begin
-(let _65_131 = (batch_mode_tc_no_prims dsenv env filenames)
-in (match (_65_131) with
+(let filenames = (find_deps_if_needed filenames)
+in (let _65_150 = (batch_mode_tc_no_prims dsenv env filenames)
+in (match (_65_150) with
 | (all_mods, dsenv, env) -> begin
 ((FStar_List.append prims_mod all_mods), dsenv, env)
-end))
+end)))
 end)))
 
 let finished_message = (fun fmods -> if (not ((FStar_ST.read FStar_Options.silent))) then begin
@@ -216,15 +252,15 @@ end else begin
 "Parsed and desugared"
 end
 end
-in (let _65_136 = (FStar_All.pipe_right fmods (FStar_List.iter (fun m -> (let tag = if m.FStar_Absyn_Syntax.is_interface then begin
+in (let _65_155 = (FStar_All.pipe_right fmods (FStar_List.iter (fun m -> (let tag = if m.FStar_Absyn_Syntax.is_interface then begin
 "i\'face"
 end else begin
 "module"
 end
 in if (FStar_Options.should_print_message m.FStar_Absyn_Syntax.name.FStar_Absyn_Syntax.str) then begin
-(let _131_94 = (let _131_93 = (FStar_Absyn_Syntax.text_of_lid m.FStar_Absyn_Syntax.name)
-in (FStar_Util.format3 "%s %s: %s\n" msg tag _131_93))
-in (FStar_Util.print_string _131_94))
+(let _131_103 = (let _131_102 = (FStar_Absyn_Syntax.text_of_lid m.FStar_Absyn_Syntax.name)
+in (FStar_Util.format3 "%s %s: %s\n" msg tag _131_102))
+in (FStar_Util.print_string _131_103))
 end else begin
 ()
 end))))
@@ -233,24 +269,23 @@ end else begin
 ()
 end)
 
-let interactive_mode = (fun dsenv env -> (let should_read_build_config = (FStar_ST.alloc true)
-in (let should_log = ((FStar_ST.read FStar_Options.debug) <> [])
+let interactive_mode = (fun dsenv env -> (let should_log = ((FStar_ST.read FStar_Options.debug) <> [])
 in (let log = if should_log then begin
 (let transcript = (FStar_Util.open_file_for_writing "transcript")
-in (fun line -> (let _65_144 = (FStar_Util.append_to_file transcript line)
+in (fun line -> (let _65_162 = (FStar_Util.append_to_file transcript line)
 in (FStar_Util.flush_file transcript))))
 end else begin
 (fun line -> ())
 end
-in (let _65_148 = if (let _131_102 = (FStar_ST.read FStar_Options.codegen)
-in (FStar_Option.isSome _131_102)) then begin
+in (let _65_166 = if (let _131_111 = (FStar_ST.read FStar_Options.codegen)
+in (FStar_Option.isSome _131_111)) then begin
 (FStar_Util.print_string "Warning: Code-generation is not supported in interactive mode, ignoring the codegen flag")
 end else begin
 ()
 end
 in (let chunk = (FStar_Util.new_string_builder ())
 in (let stdin = (FStar_Util.open_stdin ())
-in (let rec fill_chunk = (fun _65_153 -> (match (()) with
+in (let rec fill_chunk = (fun _65_171 -> (match (()) with
 | () -> begin
 (let line = (match ((FStar_Util.read_line stdin)) with
 | None -> begin
@@ -259,33 +294,33 @@ end
 | Some (l) -> begin
 l
 end)
-in (let _65_158 = (log line)
+in (let _65_176 = (log line)
 in (let l = (FStar_Util.trim_string line)
 in if (FStar_Util.starts_with l "#end") then begin
 (let responses = (match ((FStar_Util.split l " ")) with
-| _65_164::ok::fail::[] -> begin
+| _65_182::ok::fail::[] -> begin
 (ok, fail)
 end
-| _65_167 -> begin
+| _65_185 -> begin
 ("ok", "fail")
 end)
 in (let str = (FStar_Util.string_of_string_builder chunk)
-in (let _65_170 = (FStar_Util.clear_string_builder chunk)
+in (let _65_188 = (FStar_Util.clear_string_builder chunk)
 in Code ((str, responses)))))
 end else begin
 if (FStar_Util.starts_with l "#pop") then begin
-(let _65_172 = (FStar_Util.clear_string_builder chunk)
+(let _65_190 = (FStar_Util.clear_string_builder chunk)
 in Pop (l))
 end else begin
 if (FStar_Util.starts_with l "#push") then begin
-(let _65_174 = (FStar_Util.clear_string_builder chunk)
+(let _65_192 = (FStar_Util.clear_string_builder chunk)
 in Push (l))
 end else begin
 if (l = "#finish") then begin
 (FStar_All.exit 0)
 end else begin
-(let _65_176 = (FStar_Util.string_builder_append chunk line)
-in (let _65_178 = (FStar_Util.string_builder_append chunk "\n")
+(let _65_194 = (FStar_Util.string_builder_append chunk line)
+in (let _65_196 = (FStar_Util.string_builder_append chunk "\n")
 in (fill_chunk ())))
 end
 end
@@ -294,21 +329,21 @@ end)))
 end))
 in (let rec go = (fun stack curmod dsenv env -> (match ((fill_chunk ())) with
 | Pop (msg) -> begin
-(let _65_187 = (let _131_113 = (FStar_Parser_DesugarEnv.pop dsenv)
-in (FStar_All.pipe_right _131_113 Prims.ignore))
-in (let _65_189 = (let _131_114 = (FStar_Tc_Env.pop env msg)
-in (FStar_All.pipe_right _131_114 Prims.ignore))
-in (let _65_191 = (env.FStar_Tc_Env.solver.FStar_Tc_Env.refresh ())
-in (let _65_193 = (let _131_115 = (FStar_Options.reset_options ())
-in (FStar_All.pipe_right _131_115 Prims.ignore))
-in (let _65_204 = (match (stack) with
+(let _65_205 = (let _131_122 = (FStar_Parser_DesugarEnv.pop dsenv)
+in (FStar_All.pipe_right _131_122 Prims.ignore))
+in (let _65_207 = (let _131_123 = (FStar_Tc_Env.pop env msg)
+in (FStar_All.pipe_right _131_123 Prims.ignore))
+in (let _65_209 = (env.FStar_Tc_Env.solver.FStar_Tc_Env.refresh ())
+in (let _65_211 = (let _131_124 = (FStar_Options.reset_options ())
+in (FStar_All.pipe_right _131_124 Prims.ignore))
+in (let _65_222 = (match (stack) with
 | [] -> begin
 (FStar_All.failwith "Too many pops")
 end
 | hd::tl -> begin
 (hd, tl)
 end)
-in (match (_65_204) with
+in (match (_65_222) with
 | ((curmod, dsenv, env), stack) -> begin
 (go stack curmod dsenv env)
 end))))))
@@ -329,50 +364,25 @@ in (dsenv, env))))
 in (let commit_mark = (fun dsenv env -> (let dsenv = (FStar_Parser_DesugarEnv.commit_mark dsenv)
 in (let env = (FStar_Tc_Env.commit_mark env)
 in (dsenv, env))))
-in (let fail = (fun curmod dsenv_mark env_mark -> (let _65_235 = (let _131_134 = (FStar_Tc_Errors.report_all ())
-in (FStar_All.pipe_right _131_134 Prims.ignore))
-in (let _65_237 = (FStar_ST.op_Colon_Equals FStar_Tc_Errors.num_errs 0)
-in (let _65_239 = (FStar_Util.print1 "%s\n" fail)
-in (let _65_243 = (reset_mark dsenv_mark env_mark)
-in (match (_65_243) with
+in (let fail = (fun curmod dsenv_mark env_mark -> (let _65_253 = (let _131_143 = (FStar_Tc_Errors.report_all ())
+in (FStar_All.pipe_right _131_143 Prims.ignore))
+in (let _65_255 = (FStar_ST.op_Colon_Equals FStar_Tc_Errors.num_errs 0)
+in (let _65_257 = (FStar_Util.print1 "%s\n" fail)
+in (let _65_261 = (reset_mark dsenv_mark env_mark)
+in (match (_65_261) with
 | (dsenv, env) -> begin
 (go stack curmod dsenv env)
 end))))))
-in (let _65_259 = if (FStar_ST.read should_read_build_config) then begin
-if (let _131_135 = (FStar_Parser_ParseIt.get_bc_start_string ())
-in (FStar_Util.starts_with text _131_135)) then begin
-(let filenames = (match ((FStar_ST.read FStar_Options.interactive_context)) with
-| Some (s) -> begin
-(FStar_Parser_ParseIt.read_build_config_from_string s false text true)
-end
-| None -> begin
-(FStar_Parser_ParseIt.read_build_config_from_string "" false text true)
-end)
-in (let _65_252 = (batch_mode_tc_no_prims dsenv env filenames)
-in (match (_65_252) with
-| (_65_249, dsenv, env) -> begin
-(let _65_253 = (FStar_ST.op_Colon_Equals should_read_build_config false)
-in (dsenv, env))
-end)))
-end else begin
-(let _65_255 = (FStar_ST.op_Colon_Equals should_read_build_config false)
-in (dsenv, env))
-end
-end else begin
-(dsenv, env)
-end
-in (match (_65_259) with
-| (dsenv, env) -> begin
-(let _65_262 = (mark dsenv env)
-in (match (_65_262) with
+in (let _65_264 = (mark dsenv env)
+in (match (_65_264) with
 | (dsenv_mark, env_mark) -> begin
 (let res = (tc_one_fragment curmod dsenv_mark env_mark text)
 in (match (res) with
 | Some (curmod, dsenv, env) -> begin
 if ((FStar_ST.read FStar_Tc_Errors.num_errs) = 0) then begin
-(let _65_269 = (FStar_Util.print1 "\n%s\n" ok)
-in (let _65_273 = (commit_mark dsenv env)
-in (match (_65_273) with
+(let _65_271 = (FStar_Util.print1 "\n%s\n" ok)
+in (let _65_275 = (commit_mark dsenv env)
+in (match (_65_275) with
 | (dsenv, env) -> begin
 (go stack curmod dsenv env)
 end)))
@@ -380,18 +390,17 @@ end else begin
 (fail curmod dsenv_mark env_mark)
 end
 end
-| _65_275 -> begin
+| _65_277 -> begin
 (fail curmod dsenv_mark env_mark)
-end))
 end))
 end))))))
 end))
-in (go [] None dsenv env))))))))))
+in (go [] None dsenv env)))))))))
 
 let codegen = (fun fmods env -> if (((FStar_ST.read FStar_Options.codegen) = Some ("OCaml")) || ((FStar_ST.read FStar_Options.codegen) = Some ("FSharp"))) then begin
-(let _65_280 = (let _131_140 = (FStar_Extraction_ML_Env.mkContext env)
-in (FStar_Util.fold_map FStar_Extraction_ML_ExtractMod.extract _131_140 fmods))
-in (match (_65_280) with
+(let _65_282 = (let _131_148 = (FStar_Extraction_ML_Env.mkContext env)
+in (FStar_Util.fold_map FStar_Extraction_ML_ExtractMod.extract _131_148 fmods))
+in (match (_65_282) with
 | (c, mllibs) -> begin
 (let mllibs = (FStar_List.flatten mllibs)
 in (let ext = if ((FStar_ST.read FStar_Options.codegen) = Some ("FSharp")) then begin
@@ -400,94 +409,75 @@ end else begin
 ".ml"
 end
 in (let newDocs = (FStar_List.collect FStar_Extraction_ML_Code.doc_of_mllib mllibs)
-in (FStar_List.iter (fun _65_286 -> (match (_65_286) with
+in (FStar_List.iter (fun _65_288 -> (match (_65_288) with
 | (n, d) -> begin
-(let _131_143 = (FStar_Options.prependOutputDir (Prims.strcat n ext))
-in (let _131_142 = (FSharp_Format.pretty 120 d)
-in (FStar_Util.write_file _131_143 _131_142)))
+(let _131_151 = (FStar_Options.prependOutputDir (Prims.strcat n ext))
+in (let _131_150 = (FSharp_Format.pretty 120 d)
+in (FStar_Util.write_file _131_151 _131_150)))
 end)) newDocs))))
 end))
 end else begin
 ()
 end)
 
-let go = (fun _65_287 -> (let _65_291 = (process_args ())
-in (match (_65_291) with
+let go = (fun _65_289 -> (let _65_293 = (process_args ())
+in (match (_65_293) with
 | (res, filenames) -> begin
 (match (res) with
 | FStar_Getopt.Help -> begin
-(let _131_145 = (FStar_Options.specs ())
-in (FStar_Options.display_usage _131_145))
+(let _131_153 = (FStar_Options.specs ())
+in (FStar_Options.display_usage _131_153))
 end
 | FStar_Getopt.Die (msg) -> begin
 (FStar_Util.print_string msg)
 end
 | FStar_Getopt.GoOn -> begin
-(let filenames = if ((FStar_ST.read FStar_Options.use_build_config) || ((not ((FStar_ST.read FStar_Options.interactive))) && ((FStar_List.length filenames) = 1))) then begin
-(match (filenames) with
-| f::[] -> begin
-(FStar_Parser_Driver.read_build_config f)
-end
-| _65_299 -> begin
-(let _65_300 = (FStar_Util.print_string "--use_build_config expects just a single file on the command line and no other arguments")
-in (FStar_All.exit 1))
-end)
-end else begin
-filenames
-end
-in if (FStar_ST.read FStar_Options.find_deps) then begin
-(let _131_148 = (let _131_147 = (let _131_146 = (FStar_List.map FStar_Util.normalize_file_path filenames)
-in (FStar_Util.concat_l "\n" _131_146))
-in (FStar_Util.format1 "%s\n" _131_147))
-in (FStar_Util.print_string _131_148))
-end else begin
 if ((FStar_ST.read FStar_Options.dep) <> None) then begin
-(let _131_149 = (FStar_Parser_Dep.collect filenames)
-in (FStar_Parser_Dep.print _131_149))
+(let _131_154 = (FStar_Parser_Dep.collect filenames)
+in (FStar_Parser_Dep.print _131_154))
 end else begin
-(let _65_306 = (batch_mode_tc filenames)
-in (match (_65_306) with
+(let _65_301 = (batch_mode_tc filenames)
+in (match (_65_301) with
 | (fmods, dsenv, env) -> begin
-(let _65_307 = (report_errors None)
+(let _65_302 = (report_errors None)
 in if (FStar_ST.read FStar_Options.interactive) then begin
 (interactive_mode dsenv env)
 end else begin
-(let _65_309 = (codegen fmods env)
+(let _65_304 = (codegen fmods env)
 in (finished_message fmods))
 end)
 end))
 end
 end)
-end)
 end)))
 
-let main = (fun _65_311 -> (match (()) with
+let main = (fun _65_306 -> (match (()) with
 | () -> begin
-(FStar_All.try_with (fun _65_313 -> (match (()) with
+(FStar_All.try_with (fun _65_308 -> (match (()) with
 | () -> begin
-(let _65_324 = (go ())
-in (let _65_326 = (cleanup ())
+(let _65_319 = (go ())
+in (let _65_321 = (cleanup ())
 in (FStar_All.exit 0)))
-end)) (fun _65_312 -> (match (_65_312) with
+end)) (fun _65_307 -> (match (_65_307) with
 | e -> begin
-(let _65_316 = if (FStar_Absyn_Util.handleable e) then begin
+(let _65_311 = if (FStar_Absyn_Util.handleable e) then begin
 (FStar_Absyn_Util.handle_err false () e)
 end else begin
 ()
 end
-in (let _65_318 = if (FStar_ST.read FStar_Options.trace_error) then begin
-(let _131_154 = (FStar_Util.message_of_exn e)
-in (let _131_153 = (FStar_Util.trace_of_exn e)
-in (FStar_Util.print2 "\nUnexpected error\n%s\n%s\n" _131_154 _131_153)))
+in (let _65_313 = if (FStar_ST.read FStar_Options.trace_error) then begin
+(let _131_159 = (FStar_Util.message_of_exn e)
+in (let _131_158 = (FStar_Util.trace_of_exn e)
+in (FStar_Util.print2 "\nUnexpected error\n%s\n%s\n" _131_159 _131_158)))
 end else begin
 if (not ((FStar_Absyn_Util.handleable e))) then begin
-(let _131_155 = (FStar_Util.message_of_exn e)
-in (FStar_Util.print1 "\nUnexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" _131_155))
+(let _131_160 = (FStar_Util.message_of_exn e)
+in (FStar_Util.print1 "\nUnexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" _131_160))
 end else begin
 ()
 end
 end
-in (let _65_320 = (cleanup ())
+in (let _65_315 = (cleanup ())
 in (FStar_All.exit 1))))
 end)))
 end))
