@@ -22,9 +22,9 @@ open FStar.TypeChecker.Common
 type binding =
   | Binding_var      of bv
   | Binding_lid      of lident * tscheme
-  | Binding_sig      of sigelt
+  | Binding_sig      of list<lident> * sigelt
   | Binding_univ     of univ_name
-  | Binding_sig_inst of sigelt * universes //the first component should always be a Sig_inductive
+  | Binding_sig_inst of list<lident> * sigelt * universes //the first component should always be a Sig_inductive
 
 type delta_level = 
   | NoDelta
@@ -46,12 +46,13 @@ type effects = {
   order :list<edge>;                                       (* transitive closure of the order in the signature *)
   joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
 }
-
+type cached_elt = Util.either<(universes * typ), (sigelt * option<universes>)>
 type env = {
   solver         :solver_t;                     (* interface to the SMT solver *)
   range          :Range.range;                  (* the source location of the term being checked *)
   curmodule      :lident;                       (* Name of this module *)
   gamma          :list<binding>;                (* Local typing environment and signature elements *)
+  gamma_cache    :Util.smap<cached_elt>;
   modules        :list<modul>;                  (* already fully type checked modules *)
   expected_typ   :option<typ>;                  (* type expected by the context *)
   sigtab         :list<Util.smap<sigelt>>;      (* a dictionary of long-names to sigelts *)

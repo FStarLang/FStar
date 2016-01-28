@@ -7,6 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		Performance1.psess = Performance1.psess
 		Performance2.psess = Performance2.psess
+		Performance3.psess = Performance3.psess
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{8D74F56B-3B0F-4931-9AF8-A26215B25559}"
@@ -47,6 +48,9 @@ EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "smtencoding", "..\smtencoding\smtencoding.fsproj", "{F6879027-A97F-4857-8F52-CC5641455652}"
 EndProject
 Global
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU

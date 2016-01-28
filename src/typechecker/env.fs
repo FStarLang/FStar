@@ -30,9 +30,9 @@ open FStar.TypeChecker.Common
 type binding =
   | Binding_var      of bv
   | Binding_lid      of lident * tscheme
-  | Binding_sig      of sigelt
+  | Binding_sig      of list<lident> * sigelt
   | Binding_univ     of univ_name
-  | Binding_sig_inst of sigelt * universes //the first component should always be a Sig_inductive
+  | Binding_sig_inst of list<lident> * sigelt * universes //the first component should always be a Sig_inductive
 
 type delta_level = 
   | NoDelta
@@ -65,12 +65,13 @@ type effects = {
   order :list<edge>;                                       (* transitive closure of the order in the signature *)
   joins :list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
 }
-
+type cached_elt = either<(universes * typ), (sigelt * option<universes>)>
 type env = {
   solver         :solver_t;                     (* interface to the SMT solver *)
   range          :Range.range;                  (* the source location of the term being checked *)
   curmodule      :lident;                       (* Name of this module *)
   gamma          :list<binding>;                (* Local typing environment and signature elements *)
+  gamma_cache    :Util.smap<cached_elt>;
   modules        :list<modul>;                  (* already fully type checked modules *)
   expected_typ   :option<typ>;                  (* type expected by the context *)
   sigtab         :list<Util.smap<sigelt>>;      (* a dictionary of long-names to sigelts *)
@@ -120,6 +121,7 @@ let initial_env tc solver module_lid =
     range=dummyRange;
     curmodule=module_lid;
     gamma= [];
+    gamma_cache=Util.smap_create 100;
     modules= [];
     expected_typ=None;
     sigtab=[new_sigtab()];
@@ -232,21 +234,26 @@ let in_cur_mod env (l:lident) : tri = (* TODO: need a more efficient namespace c
 
 let lookup_qname env (lid:lident) : option<either<(universes * typ), (sigelt * option<universes>)>>  =
   let cur_mod = in_cur_mod env lid in
+  let cache t = Util.smap_add env.gamma_cache lid.str t; Some t in
   let found = if cur_mod<>No
-              then Util.find_map env.gamma (function
-                | Binding_lid(l,t) -> if lid_equals lid l then Some (Inl (inst_tscheme t)) else None
-                | Binding_sig (Sig_bundle(ses, _, _, _)) ->
-                    Util.find_map ses (fun se ->
-                        if lids_of_sigelt se |> Util.for_some (lid_equals lid)
-                        then Some (Inr (se, None))
-                        else None)
-                | Binding_sig s ->
-                  let lids = lids_of_sigelt s in
-                  if lids |> Util.for_some (lid_equals lid) then Some (Inr (s, None)) else None
-                | Binding_sig_inst (s, us) ->
-                  let lids = lids_of_sigelt s in
-                  if lids |> Util.for_some (lid_equals lid) then Some (Inr (s, Some us)) else None
-                | _ -> None)
+              then match Util.smap_try_find env.gamma_cache lid.str with 
+                    | None -> 
+                      Util.find_map env.gamma (function
+                        | Binding_lid(l,t) -> if lid_equals lid l then Some (Inl (inst_tscheme t)) else None
+                        | Binding_sig (_, Sig_bundle(ses, _, _, _)) ->
+                            Util.find_map ses (fun se ->
+                                if lids_of_sigelt se |> Util.for_some (lid_equals lid)
+                                then cache (Inr (se, None))
+                                else None)
+                        | Binding_sig (lids, s) ->
+                          let maybe_cache t = match s with 
+                            | Sig_declare_typ _ -> Some t
+                            | _ -> cache t in
+                          if lids |> Util.for_some (lid_equals lid) then maybe_cache (Inr (s, None)) else None
+                        | Binding_sig_inst (lids, s, us) ->
+                          if lids |> Util.for_some (lid_equals lid) then Some (Inr (s, Some us)) else None
+                        | _ -> None)
+                    | se -> se
                else None in
   if is_some found
   then found
@@ -570,9 +577,9 @@ let build_lattice env se = match se with
 ////////////////////////////////////////////////////////////
 // Introducing identifiers and updating the environment   //
 ////////////////////////////////////////////////////////////    
-let push_sigelt env s = build_lattice ({env with gamma=Binding_sig s::env.gamma}) s
+let push_sigelt env s = build_lattice ({env with gamma=Binding_sig(lids_of_sigelt s, s)::env.gamma}) s
 
-let push_sigelt_inst env s us = build_lattice ({env with gamma=Binding_sig_inst(s,us)::env.gamma}) s
+let push_sigelt_inst env s us = build_lattice ({env with gamma=Binding_sig_inst(lids_of_sigelt s,s,us)::env.gamma}) s
 
 let push_local_binding env b = {env with gamma=b::env.gamma}
 
@@ -617,10 +624,11 @@ let finish_module =
       let sigs =
         if lid_equals m.name Const.prims_lid
         then env.gamma |> List.collect (function
-                | Binding_sig se -> [se]
+                | Binding_sig (_, se) -> [se]
                 | _ -> [])
         else m.exports  in
       add_sigelts env sigs;
+      Util.smap_clear env.gamma_cache;
       {env with
         curmodule=empty_lid;
         gamma=[];
@@ -671,7 +679,7 @@ let fold_env env f a = List.fold_right (fun e a -> f a e) env.gamma a
 
 let lidents env : list<lident> =
   let keys = List.fold_left (fun keys -> function
-    | Binding_sig s -> Util.lids_of_sigelt s@keys
+    | Binding_sig(lids, _) -> lids@keys
     | _ -> keys) [] env.gamma in
   Util.smap_fold (sigtab env) (fun _ v keys -> Util.lids_of_sigelt v@keys) keys
 
