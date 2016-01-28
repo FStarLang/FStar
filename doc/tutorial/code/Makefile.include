@@ -3,6 +3,8 @@
 # This will be called from subdirs
 FSTAR_HOME = ../../../..
 
+OTHERFLAGS=--explicit_deps
+
 STDLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES))
 SECLIB = $(addprefix $(FSTAR_HOME)/lib/, FStar.String.fst partialmap.fst FStar.List.fst FStar.ST.fst array-realized.fst )
 FSTAR  = $(FSTAR_HOME)/bin/fstar.exe $(STDLIB) $(OTHERFLAGS)

@@ -5,6 +5,8 @@ else
 MSBUILD = xbuild
 endif
 
+OTHERFLAGS=--explicit_deps
+
 FSTAR_HOME = ../..
 LIB_FILES=FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst FStar.String.fst
 STDLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES))
