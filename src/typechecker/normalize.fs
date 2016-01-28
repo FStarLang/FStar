@@ -462,15 +462,16 @@ let rec norm : cfg -> env -> stack -> term -> term =
           
           | Tm_ascribed(t1, t2, l) -> 
             begin match stack with 
-                | Match _::_
-                | Arg _::_
-                | MemoLazy _ :: _ ->  //ascriptions should not block reduction
-                  norm cfg env stack t1
+                | Match _ :: _
+                | Arg _ :: _ 
+                | MemoLazy _ :: _ -> norm cfg env stack t1 //ascriptions should not block reduction                
                 | _ -> 
                 let t1 = norm cfg env [] t1 in 
                 log cfg  (fun () -> Printf.printf "+++ Normalizing ascription \n");
                 let t2 = norm cfg env [] t2 in
                 rebuild cfg env stack (mk (Tm_ascribed(t1, t2, l)) t.pos)
+
+                
             end
 
           | Tm_match(head, branches) -> 

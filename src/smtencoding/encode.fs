@@ -347,7 +347,7 @@ let as_function_typ env t0 =
     let rec aux norm t =
         let t = SS.compress t in
         match t.n with
-            | Tm_abs _ -> t
+            | Tm_arrow _ -> t
             | Tm_refine _ -> aux true (Util.unrefine t)
             | _ -> if norm
                    then aux false (whnf env t)
@@ -393,7 +393,10 @@ and encode_term_pred' (fuel_opt:option<term>) (t:typ) (env:env_t) (e:term) : ter
 
 and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t to be in normal form already *)
                                      * decls_t)     (* top-level declarations to be emitted (for shared representations of existentially bound terms *) =
+                                        
     let t0 = SS.compress t in
+    if Env.debug env.tcenv <| Options.Other "SMTEncoding"
+    then Printf.printf "(%s) (%s)   %s\n" (Print.tag_of_term t) (Print.tag_of_term t0) (Print.term_to_string t0);
     match t0.n with
       | Tm_delayed  _
       | Tm_unknown    -> failwith (format4 "(%s) Impossible: %s\n%s\n%s\n" (Range.string_of_range <| t.pos) (Print.tag_of_term t0) (Print.term_to_string t0) (Print.term_to_string t))
@@ -402,6 +405,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         failwith (Util.format1 "Impossible: locally nameless; got %s" (Print.bv_to_string x))
 
       | Tm_ascribed(t, k, _) ->
+        let t = SS.compress t in
         t.tk := Some k.n;
         encode_term t env
 
@@ -641,15 +645,14 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                              //Util.print1 "Explicitly currying %s\n" (Print.exp_to_string e);
                            encode_term e env
 
-                      else //much like the encoding of Typ_lam
-                             let vars, guards, envbody, decls, _ = encode_binders None bs env in
-                             let body, decls' = encode_term body envbody in
+                      else let vars, guards, envbody, decls, _ = encode_binders None bs env in
+                           let body, decls' = encode_term body envbody in
 
-                             let key_body = mkForall([], vars, mkImp(mk_and_l guards, body)) in
-                             let cvars = Term.free_variables key_body in
-                             let tkey = mkForall([], cvars, key_body) in
+                           let key_body = mkForall([], vars, mkImp(mk_and_l guards, body)) in
+                           let cvars = Term.free_variables key_body in
+                           let tkey = mkForall([], cvars, key_body) in
 
-                             begin match Util.smap_try_find env.cache tkey.hash with
+                           begin match Util.smap_try_find env.cache tkey.hash with
                                 | Some (t, _, _) ->
                                   Term.mkApp(t, List.map mkFreeV cvars), []
 

@@ -735,7 +735,7 @@ let destruct_typ_as_formula f : option<connective> =
         let is_q : bool -> lident -> Tot<bool> = fun fa l -> if fa then is_forall l else is_exists l in
         let flat t =
             let t, args = head_and_args t in
-            un_uinst t, args |> List.map (fun (t, imp) -> compress t, imp) in
+            un_uinst t, args |> List.map (fun (t, imp) -> unascribe t, imp) in
         let rec aux qopt out t = match qopt, flat t with
             | Some fa, ({n=Tm_fvar (tc, _)}, [{n=Tm_abs([b], t2)}, _])
             | Some fa, ({n=Tm_fvar (tc, _)}, [_; ({n=Tm_abs([b], t2)}, _)])

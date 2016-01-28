@@ -312,38 +312,38 @@ let rec sorted f = function
   | [_] -> true
   | x::y::tl -> f x y && sorted f (y::tl)
 
-// type total_order (#a:Type) (f: (a -> a -> Tot bool)) =
-//     (forall a. f a a)                                           (* reflexivity   *)
-//     /\ (forall a1 a2. f a1 a2 /\ f a2 a1  ==> a1 = a2)          (* anti-symmetry *)
-//     /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)        (* transitivity  *)
-//     /\ (forall a1 a2. f a1 a2 \/ f a2 a1)                       (* totality *)
+type total_order (#a:Type) (f: (a -> a -> Tot bool)) =
+    (forall a. f a a)                                           (* reflexivity   *)
+    /\ (forall a1 a2. f a1 a2 /\ f a2 a1  ==> a1 = a2)          (* anti-symmetry *)
+    /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)        (* transitivity  *)
+    /\ (forall a1 a2. f a1 a2 \/ f a2 a1)                       (* totality *)
 
-// val append_sorted: #a:Type
-//                ->  f:(a -> a -> Tot bool)
-//                ->  l1:list a{sorted f l1}
-//                ->  l2:list a{sorted f l2}
-//                ->  pivot:a
-//                ->  Lemma (requires (total_order #a f
-//                                     /\ (forall y. mem y l1 ==> not(f pivot y))
-//                                     /\ (forall y. mem y l2 ==> f pivot y))
-// )                         (ensures (sorted f (l1@(pivot::l2))))
-//                           [SMTPat (sorted f (l1@(pivot::l2)))]
+assume val append_sorted: #a:Type
+               ->  f:(a -> a -> Tot bool)
+               ->  l1:list a{sorted f l1}
+               ->  l2:list a{sorted f l2}
+               ->  pivot:a
+               ->  Lemma (requires (total_order #a f
+                                    /\ (forall y. mem y l1 ==> not(f pivot y))
+                                    /\ (forall y. mem y l2 ==> f pivot y))
+)                         (ensures (sorted f (l1@(pivot::l2))))
+                          [SMTPat (sorted f (l1@(pivot::l2)))]
 // let rec append_sorted #a f l1 l2 pivot = match l1 with
-//   | [] -> ()
-//   | hd::tl -> append_sorted f tl l2 pivot
+  // | [] -> ()
+  // | hd::tl -> append_sorted f tl l2 pivot
 
-// val sortWith_sorted: #a:Type -> f:(a -> a -> Tot int) -> l:list a ->
-//   Lemma (requires (total_order #a (bool_of_compare f)))
-//         (ensures ((sorted (bool_of_compare f) (sortWith f l)) /\ (forall x. mem x l = mem x (sortWith f l))))
-//         (decreases (length l))
-// let rec sortWith_sorted #a f l = match l with
-//     | [] -> ()
-//     | pivot::tl ->
-//        let hi, lo  = partition (bool_of_compare f pivot) tl in
-//        partition_length (bool_of_compare f pivot) tl;
-//        partition_mem_forall (bool_of_compare f pivot) tl;
-//        partition_mem_p_forall (bool_of_compare f pivot) tl;
-//        sortWith_sorted f lo;
-//        sortWith_sorted f hi;
-//        append_mem_forall (sortWith f lo) (pivot::sortWith f hi);
-//        append_sorted (bool_of_compare f) (sortWith f lo) (sortWith f hi) pivot
+val sortWith_sorted: #a:Type -> f:(a -> a -> Tot int) -> l:list a ->
+  Lemma (requires (total_order #a (bool_of_compare f)))
+        (ensures ((sorted (bool_of_compare f) (sortWith f l)) /\ (forall x. mem x l = mem x (sortWith f l))))
+        (decreases (length l))
+let rec sortWith_sorted #a f l = match l with
+    | [] -> ()
+    | pivot::tl ->
+       let hi, lo  = partition (bool_of_compare f pivot) tl in
+       partition_length (bool_of_compare f pivot) tl;
+       partition_mem_forall (bool_of_compare f pivot) tl;
+       partition_mem_p_forall (bool_of_compare f pivot) tl;
+       sortWith_sorted f lo;
+       sortWith_sorted f hi;
+       append_mem_forall (sortWith f lo) (pivot::sortWith f hi);
+       append_sorted (bool_of_compare f) (sortWith f lo) (sortWith f hi) pivot
