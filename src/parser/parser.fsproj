@@ -30,6 +30,8 @@
     <OtherFlags>--mlcompatibility</OtherFlags>
     <NoWarn>
     </NoWarn>
+    <StartWorkingDirectory>C:\cygwin64\tmp\t\</StartWorkingDirectory>
+    <StartArguments>../examples/algorithms/counters.fst</StartArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>

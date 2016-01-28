@@ -126,13 +126,16 @@ let find_deps_if_needed files =
       (* Use just the file name: it's in one of the include directories, after
        * all; furthermore, the dependency check enforce the "no duplicate
        * filenames" policy. *)
-      let deps = List.map basename deps in
       let deps = List.rev deps in
-      let deps = match deps with
-        | "prims.fst" :: deps -> deps
-        | _ -> failwith "dependency analysis did not find prims.fst?!"
+      List.iter print_endline deps;
+      let deps =
+        if basename (List.hd deps) = "prims.fst" then
+          List.tl deps
+        else
+          failwith "dependency analysis did not find prims.fst?!"
       in
       List.iter (fun d ->
+        let d = basename d in
         if get_file_extension d = ".fsti" then
           Options.admit_fsi := substring d 0 (String.length d - 5) :: !Options.admit_fsi
         else if get_file_extension d = ".fsi" then
