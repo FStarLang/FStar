@@ -17,6 +17,7 @@ opam install sqlite3
 ```
 
 Troubleshooting:
+- make sure `~/.opam/system/bin is` in your path
 - make sure your OCaml executable is the right one (`which ocaml`)
 - make sure `OCAMLLIB` is properly set
 - check the output of `ocamlopt -config` (should contain

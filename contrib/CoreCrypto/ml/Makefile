@@ -38,7 +38,7 @@ endif
 
 .PHONY: test dep
 
-all: corecrypto.cmxa
+all: CoreCrypto.cmxa
 
 %.o: %.c
 	$(OCAMLOPT) $(CC) $(CCOPTS) $(EXTRA_OPTS) -c $<
@@ -48,12 +48,12 @@ $(PLATFORM)/platform.cmx: $(PLATFORM)/platform.ml
 
 DLL_OBJ = $(PLATFORM)/platform.cmx CoreCrypto.cmx openssl_stub.o
 
-corecrypto.cmxa: $(DLL_OBJ)
-	$(OCAMLMKLIB) -lcrypto  $(EXTRA_LIBS) -o corecrypto $^
+CoreCrypto.cmxa: $(DLL_OBJ)
+	$(OCAMLMKLIB) -lcrypto  $(EXTRA_LIBS) -o CoreCrypto $^
 
 DLL_DEBUG = $(PLATFORM)/platform.cmo CoreCrypto.cmo openssl_stub.o
-corecrypto.cma: $(DLL_DEBUG)
-	$(OCAMLMKLIB) -lcrypto  $(EXTRA_LIBS) -o corecrypto $^
+CoreCrypto.cma: $(DLL_DEBUG)
+	$(OCAMLMKLIB) -lcrypto  $(EXTRA_LIBS) -o CoreCrypto $^
 
 %.cmi: %.mli
 	$(OCAMLC) -I $(PLATFORM) -c $<
@@ -66,9 +66,9 @@ corecrypto.cma: $(DLL_DEBUG)
 
 TEST_CMX = Tests.cmx
 
-Tests$(EXE): $(TEST_CMX) corecrypto.cmxa
+Tests$(EXE): $(TEST_CMX) CoreCrypto.cmxa
 	$(OCAMLOPT) $(EXTRA_OPTS) -I $(PLATFORM) -package batteries -linkpkg -o $@ \
-	corecrypto.cmxa $(TEST_CMX)
+	CoreCrypto.cmxa $(TEST_CMX)
 
 test: Tests$(EXE)
 	@$(EXTRA_PATH) ./Tests$(EXE)
