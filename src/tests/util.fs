@@ -43,7 +43,7 @@ let rec term_eq' t1 t2 =
       | Tm_uinst (t, _), Tm_uinst(s, _) -> term_eq t s
       | Tm_constant c1, Tm_constant c2 -> c1=c2
       | Tm_type u, Tm_type v -> u=v
-      | Tm_abs(xs, t), Tm_abs(ys, u) -> binders_eq xs ys && term_eq t u
+      | Tm_abs(xs, t, _), Tm_abs(ys, u, _) -> binders_eq xs ys && term_eq t u
       | Tm_arrow(xs, c), Tm_arrow(ys, d) -> binders_eq xs ys && comp_eq c d
       | Tm_refine(x, t), Tm_refine(y, u) -> term_eq x.sort y.sort && term_eq t u
       | Tm_app(t, args), Tm_app(s, args') -> term_eq t s && args_eq args args'

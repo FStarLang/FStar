@@ -221,7 +221,7 @@ let rec term_to_string x =
   | Tm_constant c ->    const_to_string c
   | Tm_type u ->        if !Options.print_universes then Util.format1 "Type(%s)" (univ_to_string u) else "Type"
   | Tm_arrow(bs, c) ->  Util.format2 "(%s -> %s)"  (binders_to_string " -> " bs) (comp_to_string c)
-  | Tm_abs(bs, t2) ->   Util.format2 "(fun %s -> %s)" (binders_to_string " " bs) (term_to_string t2)
+  | Tm_abs(bs, t2, _) ->   Util.format2 "(fun %s -> %s)" (binders_to_string " " bs) (term_to_string t2)
   | Tm_refine(xt, f) -> Util.format3 "(%s:%s{%s})" (bv_to_string xt) (xt.sort |> term_to_string) (f |> formula_to_string)
   | Tm_app(t, args) ->  Util.format2 "(%s %s)" (term_to_string t) (args_to_string args)
   | Tm_let(lbs, e) ->   Util.format2 "%s\nin\n%s" (lbs_to_string [] lbs) (term_to_string e)

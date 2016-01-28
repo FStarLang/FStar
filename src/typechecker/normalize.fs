@@ -80,7 +80,7 @@ type stack_elt =
  | UnivArgs of list<universe> * Range.range
  | MemoLazy of memo<(env * term)>
  | Match    of env * branches * Range.range
- | Abs      of env * binders  * Range.range
+ | Abs      of env * binders * env * option<lcomp> * Range.range
  | App      of term * aqual * Range.range
 
 type stack = list<stack_elt>
@@ -97,7 +97,7 @@ let env_to_string env =
 let stack_elt_to_string = function 
     | Arg (c, _, _) -> closure_to_string c
     | MemoLazy _ -> "MemoLazy"
-    | Abs (_, bs, _) -> Printf.sprintf "Abs %d" (List.length bs)
+    | Abs (_, bs, _, _, _) -> Printf.sprintf "Abs %d" (List.length bs)
     | _ -> "Match"
 
 let stack_to_string s = 
@@ -215,10 +215,10 @@ let rec closure_as_term cfg env t =
              let args = closures_as_args_delayed cfg env args in
              mk (Tm_app(head, args)) t.pos
         
-           | Tm_abs(bs, body) -> 
+           | Tm_abs(bs, body, lopt) -> 
              let bs, env = closures_as_binders_delayed cfg env bs in 
              let body = closure_as_term_delayed cfg env body in
-              mk (Tm_abs(List.rev bs, body)) t.pos
+             mk (Tm_abs(List.rev bs, body, close_lcomp_opt cfg env lopt)) t.pos
 
            | Tm_arrow(bs, c) -> 
              let bs, env = closures_as_binders_delayed cfg env bs in 
@@ -273,6 +273,10 @@ and close_comp cfg env c =
                                effect_args=args;
                                flags=flags})  
 
+and close_lcomp_opt cfg env = function 
+    | None -> None
+    | Some lc -> Some ({lc with res_typ=closure_as_term_delayed cfg env lc.res_typ;
+                                comp=(fun () -> close_comp cfg env (lc.comp()))})
 
 (*******************************************************************)
 (* Simplification steps are not part of definitional equality      *)
@@ -321,7 +325,7 @@ let maybe_simplify steps tm =
                      | [(t, _)]
                      | [(_, Some Implicit); (t, _)] ->
                        begin match (SS.compress t).n with
-                                | Tm_abs([_], body) ->
+                                | Tm_abs([_], body, _) ->
                                    (match simp_t body with
                                         | Some true ->  w Util.t_true
                                         | Some false -> w Util.t_false
@@ -400,7 +404,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                    end
             end
             
-          | Tm_abs(bs, body) -> 
+          | Tm_abs(bs, body, lopt) -> 
             begin match stack with 
                 | UnivArgs _::_ ->
                   failwith "Ill-typed term: universes cannot be applied to term abstraction"
@@ -417,7 +421,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                       let body = match bs with 
                         | [] -> failwith "Impossible"
                         | [_] -> body
-                        | _::tl -> mk (Tm_abs(tl, body)) t.pos in
+                        | _::tl -> mk (Tm_abs(tl, body, None)) t.pos in
                       log cfg  (fun () -> Printf.printf "\tShifted %s\n" (closure_to_string c));
                       norm cfg (c :: env) stack body 
                   end
@@ -435,7 +439,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   else let bs, body = open_term bs body in 
                        let env' = bs |> List.fold_left (fun env _ -> Dummy::env) env in
                        log cfg  (fun () -> Printf.printf "\tShifted %d dummies\n" (List.length bs));
-                       norm cfg env' (Abs(env, bs, t.pos)::stack) body
+                       norm cfg env' (Abs(env, bs, env', lopt, t.pos)::stack) body
             end
 
           | Tm_app(head, args) -> 
@@ -564,9 +568,10 @@ and rebuild : cfg -> env -> stack -> term -> term =
               set_memo r (env, t);
               rebuild cfg env stack t
 
-            | Abs (env', bs, r)::stack ->
+            | Abs (env', bs, env'', lopt, r)::stack ->
               let bs = norm_binders cfg env' bs in
-              rebuild cfg env stack ({abs bs t with pos=r})
+              let lopt = close_lcomp_opt cfg env'' lopt in
+              rebuild cfg env stack ({abs bs t lopt with pos=r})
 
             | Arg (Univ _,  _, _)::_
             | Arg (Dummy,  _, _)::_ -> failwith "Impossible"
@@ -737,12 +742,12 @@ let normalize_sigelt (_:steps) (_:Env.env) (_:sigelt) : sigelt = failwith "NYI: 
 let eta_expand (_:Env.env) (t:typ) : typ =
     match t.n with 
         | Tm_name x -> 
-          let binders, args = Util.arrow_formals x.sort in
+          let binders, c = Util.arrow_formals_comp x.sort in
           begin match binders with 
             | [] -> t
             | _ -> 
               let binders, args = binders |> Util.args_of_binders in
-              Util.abs binders (mk_Tm_app t args None t.pos)
+              Util.abs binders (mk_Tm_app t args None t.pos) (Util.lcomp_of_comp c |> Some)
           end
         | _ -> 
           failwith (Printf.sprintf "NYI: eta_expand(%s) %s" (Print.tag_of_term t) (Print.term_to_string t))

@@ -467,14 +467,18 @@ let rec arrow_formals k =
     let bs, c = arrow_formals_comp k in 
     bs, comp_result c
 
-let abs bs t = match bs with 
+let abs bs t lopt = match bs with 
     | [] -> t
     | _ -> 
     let body = compress (Subst.close bs t) in
-    match body.n with 
-        | Tm_abs(bs', t) -> 
-            mk (Tm_abs(close_binders bs@bs', t)) None t.pos
-        | _ -> mk (Tm_abs(close_binders bs, body)) None t.pos 
+    match body.n, lopt with 
+        | Tm_abs(bs', t, lopt'), None -> 
+          mk (Tm_abs(close_binders bs@bs', t, lopt)) None t.pos
+        | _ -> 
+          let lopt = match lopt with 
+            | None -> None
+            | Some lc -> Some (close_lcomp bs lc) in
+          mk (Tm_abs(close_binders bs, body, lopt)) None t.pos 
 
 let arrow bs c = match bs with [] -> comp_result c | _ -> mk (Tm_arrow(close_binders bs, Subst.close_comp bs c)) None c.pos
 let refine b t = mk (Tm_refine(b, Subst.close [mk_binder b] t)) !b.sort.tk (Range.union_ranges (range_of_bv b) t.pos)
@@ -669,8 +673,15 @@ let forall_t : term =
     arrow [(a, Some Implicit); null_binder atyp] (mk_Total ktype0)
 let tforall = fvar None Const.forall_lid dummyRange
 
+let lcomp_of_comp c0 =
+    let c = comp_to_comp_typ c0 in
+    {eff_name = c.effect_name;
+     res_typ = c.result_typ;
+     cflags = c.flags;
+     comp = fun() -> c0}
+
 let mk_forall (x:bv) (body:typ) : typ =
-  mk (Tm_app(tforall, [arg (abs [mk_binder x] body)])) None dummyRange
+  mk (Tm_app(tforall, [arg (abs [mk_binder x] body (Some (lcomp_of_comp <| mk_Total ktype0)))])) None dummyRange
 
 let rec close_forall bs f =
   List.fold_right (fun b f -> if Syntax.is_null_binder b then f else mk_forall (fst b) f) bs f
@@ -737,13 +748,13 @@ let destruct_typ_as_formula f : option<connective> =
             let t, args = head_and_args t in
             un_uinst t, args |> List.map (fun (t, imp) -> unascribe t, imp) in
         let rec aux qopt out t = match qopt, flat t with
-            | Some fa, ({n=Tm_fvar (tc, _)}, [{n=Tm_abs([b], t2)}, _])
-            | Some fa, ({n=Tm_fvar (tc, _)}, [_; ({n=Tm_abs([b], t2)}, _)])
+            | Some fa, ({n=Tm_fvar (tc, _)}, [{n=Tm_abs([b], t2, _)}, _])
+            | Some fa, ({n=Tm_fvar (tc, _)}, [_; ({n=Tm_abs([b], t2, _)}, _)])
                 when (is_q fa tc.v) ->
               aux qopt (b::out) t2
 
-            | None, ({n=Tm_fvar(tc, _)}, [({n=Tm_abs([b], t2)}, _)])
-            | None, ({n=Tm_fvar(tc, _)}, [_; ({n=Tm_abs([b], t2)}, _)])
+            | None, ({n=Tm_fvar(tc, _)}, [({n=Tm_abs([b], t2, _)}, _)])
+            | None, ({n=Tm_fvar(tc, _)}, [_; ({n=Tm_abs([b], t2, _)}, _)])
                 when (is_qlid tc.v) ->
               aux (Some (is_forall tc.v)) (b::out) t2
 

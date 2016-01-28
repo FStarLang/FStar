@@ -267,6 +267,7 @@ let norm env t = N.normalize [N.Beta; N.Inline; N.EraseUniverses] env.tcenv t
 let trivial_post t : Syntax.term = 
     Util.abs [null_binder t]
              (Syntax.fvar None Const.true_lid Range.dummyRange)
+             None
 
 let mk_Apply e vars =
     vars |> List.fold_left (fun out var -> match snd var with
@@ -405,8 +406,6 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         failwith (Util.format1 "Impossible: locally nameless; got %s" (Print.bv_to_string x))
 
       | Tm_ascribed(t, k, _) ->
-        let t = SS.compress t in
-        t.tk := Some k.n;
         encode_term t env
 
       | Tm_meta(t, _) ->
@@ -608,44 +607,48 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             end
       end
 
-      | Tm_abs(bs, body) ->
-          let bs, body = SS.open_term bs body in 
+      | Tm_abs(bs, body, lopt) ->
+          let bs, body, opening = SS.open_term' bs body in 
           let fallback () =
             let f = varops.fresh "Tm_abs" in
             let decl = Term.DeclFun(f, [], Term_sort, None) in
             Term.mkFreeV(f, Term_sort), [decl] in
              
-          begin match !t0.tk with
+          begin match lopt with
             | None ->
               Errors.warn t0.pos (Util.format1 "Losing precision when encoding a function literal: %s" (Print.term_to_string t0));
               fallback ()
 
-            | Some tfun ->
-              let tfun = as_function_typ env <| Syntax.mk tfun None t0.pos in 
-              if not <| Util.is_pure_or_ghost_function tfun
+            | Some lc ->
+//              let tfun = as_function_typ env <| Syntax.mk tfun None t0.pos in 
+              if not <| Util.is_pure_or_ghost_lcomp lc 
               then fallback ()
-              else begin match tfun.n with
-                    | Tm_arrow(bs', c) ->
-                      let bs', c = SS.open_comp bs' c in
-
-                      let nformals = List.length bs' in
-                      if nformals < List.length bs 
-                      && Util.is_total_comp c (* explicit currying *)
-                      then let bs0, rest = Util.first_N nformals bs in
-                           let res_t = 
-                            let subst = List.map2 (fun (b, _) (x, _) -> NT(b, S.bv_to_tm x)) bs' bs0 in
-                            SS.subst subst (Util.comp_result c) in
-                           let e = mk (Util.abs bs0 
-                                           (mk (Tm_ascribed(Util.abs rest body, 
-                                                              res_t, 
-                                                              Some Const.effect_Tot_lid))
-                                                None body.pos)).n
-                                     (Some tfun.n) 
-                                     t0.pos in
-                             //Util.print1 "Explicitly currying %s\n" (Print.exp_to_string e);
-                           encode_term e env
-
-                      else let vars, guards, envbody, decls, _ = encode_binders None bs env in
+              else let c = SS.subst_comp opening (lc.comp()) in
+//                    
+//                     in begin match tfun.n with
+//                    | Tm_arrow(bs', c) ->
+//                      let bs', c = SS.open_comp bs' c in
+//
+//                      let nformals = List.length bs' in
+//                      if nformals < List.length bs 
+//                      && Util.is_total_comp c (* explicit currying *)
+//                      then let bs0, rest = Util.first_N nformals bs in
+//                           let res_t = 
+//                            let subst = List.map2 (fun (b, _) (x, _) -> NT(b, S.bv_to_tm x)) bs' bs0 in
+//                            SS.subst subst (Util.comp_result c) in
+//                           let e = mk (Util.abs bs0 
+//                                           (mk (Tm_ascribed(Util.abs rest body, 
+//                                                              res_t, 
+//                                                              Some Const.effect_Tot_lid))
+//                                                None body.pos)).n
+//                                     (Some tfun.n) 
+//                                     t0.pos in
+//                             //Util.print1 "Explicitly currying %s\n" (Print.exp_to_string e);
+//                           encode_term e env
+//
+//                      else 
+//                      
+                      let vars, guards, envbody, decls, _ = encode_binders None bs env in
                            let body, decls' = encode_term body envbody in
 
                            let key_body = mkForall([], vars, mkImp(mk_and_l guards, body)) in
@@ -666,7 +669,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                                       let fdecl = Term.DeclFun(fsym, cvar_sorts, Term_sort, None) in
                                       let f = Term.mkApp(fsym, List.map mkFreeV cvars) in
                                       let app = mk_Apply f vars in
-
+                                      let tfun = Util.arrow bs c in
                                       let f_has_t, decls'' = encode_term_pred None tfun env f in
                                       let typing_f = Term.Assume(Term.mkForall([[f]], cvars, f_has_t),
                                                                 Some (fsym ^ " typing")) in
@@ -681,10 +684,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                                       f, f_decls
                                 end
                             end
-
-                  | _ -> failwith "Impossible"
                 end
-            end
+//            end
 
       | Tm_let((_, {lbname=Inr _}::_), _) -> 
         failwith "Impossible: already handled by encoding of Sig_let"
@@ -1242,7 +1243,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
         let rec destruct_bound_function flid t_norm e = 
            match (Util.unascribe e).n with
-            | Tm_abs(binders, body) ->
+            | Tm_abs(binders, body, _) ->
                 let binders, body = SS.open_term binders body in
                 begin match (SS.compress t_norm).n with
                  | Tm_arrow(formals, c) ->
@@ -1252,11 +1253,11 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                     let tres = Util.comp_result c in
                     if nformals < nbinders && Util.is_total_comp c (* explicit currying *)
                     then let bs0, rest = Util.first_N nformals binders in
-                         let tres =
+                         let c =
                             let subst = List.map2 (fun (b, _) (x, _) -> NT(b, S.bv_to_name x)) bs0 formals in
-                            SS.subst subst tres in
-                         let body = mk (Util.abs rest body).n (Some tres.n) body.pos in
-                         bs0, body, bs0, tres
+                            SS.subst_comp subst c in
+                         let body = Util.abs rest body (Some (Util.lcomp_of_comp c)) in
+                         bs0, body, bs0, Util.comp_result c
                     else if nformals > nbinders (* eta-expand before translating it *)
                     then let binders, body = eta_expand binders formals body tres in
                          binders, body, formals, tres

@@ -30,6 +30,7 @@ val compress_univ:      universe -> universe
 
 val close:                binders -> term -> term
 val close_comp:           binders -> comp -> comp
+val close_lcomp:          binders -> lcomp -> lcomp
 val close_binders:        binders -> binders
 val close_branch:         branch -> branch
 val close_univ_vars:      univ_names -> term -> term
@@ -38,6 +39,7 @@ val close_let_rec:        list<letbinding> -> term -> list<letbinding> * term
 
 val open_binders:       binders -> binders 
 val open_term:          binders -> term -> binders * term
+val open_term':         binders -> term -> binders * term * subst
 val open_comp:          binders -> comp -> binders * comp
 val open_branch:        branch -> branch
 val open_let_rec:       list<letbinding> -> term -> list<letbinding> * term

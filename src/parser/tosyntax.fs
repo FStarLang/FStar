@@ -298,6 +298,7 @@ let label_conjuncts tag polarity label_opt f =
   aux f
 
 let mk_lb (n, t, e) = {lbname=n; lbunivs=[]; lbeff=C.effect_ALL_lid; lbtyp=t; lbdef=e}
+let no_annot_abs bs t = U.abs bs t None 
 
 let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
   let check_linear_pattern_variables (p:Syntax.pat) = 
@@ -534,7 +535,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                     match xopt with
                     | None -> env, S.new_bv (Some top.range) tun
                     | Some x -> push_bv env x in
-                (env, tparams@[{x with sort=t}, None], typs@[arg <| U.abs tparams t]))
+                (env, tparams@[{x with sort=t}, None], typs@[arg <| no_annot_abs tparams t]))
         (env, [], []) 
         (binders@[mk_binder (NoName t) t.range Type None]) in
       let tup = fail_or  (try_lookup_lid env) (Util.mk_dtuple_lid (List.length targs) top.range) in
@@ -587,7 +588,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                   let body = Subst.close (S.pat_bvs pat |> List.map S.mk_binder) body in
                   S.mk (Tm_match(sc, [(pat, None, body)])) None body.pos
                 | None -> body in
-              setpos (U.abs (List.rev bs) body)
+              setpos (no_annot_abs (List.rev bs) body)
 
             | p::rest ->
               let env, b, pat = desugar_binding_pat env p in
@@ -921,7 +922,7 @@ and desugar_formula env (f:term) : S.term =
         let body = match pats with
           | [] -> body
           | _ -> mk (Tm_meta (body, Meta_pattern pats)) in
-        let body = setpos <| U.abs [S.mk_binder a] body in
+        let body = setpos <| no_annot_abs [S.mk_binder a] body in
         mk <| Tm_app (S.fvar None (set_lid_range q b.brange) b.brange, [arg body])
 
       | _ -> failwith "impossible" in
@@ -1064,7 +1065,7 @@ let mk_indexed_projectors fvq refine_domain env tc lid (inductive_tps:binders) i
                          else pos (Pat_wild (S.gen_bv x.ppname.idText None tun)), b) in
             let pat = (S.Pat_cons(S.fv lid (Some fvq), arg_pats) |> pos, None, S.bv_to_name projection) in
             let body = mk (Tm_match(arg_exp, [U.branch pat])) None p in
-            let imp = U.abs binders body in
+            let imp = no_annot_abs binders body in
             let lb = {  lbname=Inr field_name;
                         lbunivs=[];
                         lbtyp=tun;
@@ -1099,7 +1100,7 @@ let mk_typ_abbrev lid uvs typars k t lids quals rng =
     let lb = {    
     lbname=Inr lid;
     lbunivs=uvs;
-    lbdef=U.abs typars t;
+    lbdef=no_annot_abs typars t;
     lbtyp=U.arrow typars (S.mk_Total k);
     lbeff=C.effect_Tot_lid;
     } in

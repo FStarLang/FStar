@@ -325,12 +325,12 @@ assume val append_sorted: #a:Type
                ->  pivot:a
                ->  Lemma (requires (total_order #a f
                                     /\ (forall y. mem y l1 ==> not(f pivot y))
-                                    /\ (forall y. mem y l2 ==> f pivot y))
-)                         (ensures (sorted f (l1@(pivot::l2))))
-                          [SMTPat (sorted f (l1@(pivot::l2)))]
-// let rec append_sorted #a f l1 l2 pivot = match l1 with
-  // | [] -> ()
-  // | hd::tl -> append_sorted f tl l2 pivot
+                                    /\ (forall y. mem y l2 ==> f pivot y)))
+                        (ensures (sorted f (l1@(pivot::l2))))
+                        [SMTPat (sorted f (l1@(pivot::l2)))]
+(* let rec append_sorted #a f l1 l2 pivot = match l1 with *)
+(*   | [] -> () *)
+(*   | hd::tl -> append_sorted f tl l2 pivot *)
 
 val sortWith_sorted: #a:Type -> f:(a -> a -> Tot int) -> l:list a ->
   Lemma (requires (total_order #a (bool_of_compare f)))

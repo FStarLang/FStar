@@ -44,10 +44,10 @@ let rec inst (s:inst_t) t =
             | Some (_, us) -> mk (Tm_uinst(t, us))
         end
 
-      | Tm_abs(bs, body) -> 
+      | Tm_abs(bs, body, lopt) -> 
         let bs = bs |> List.map (fun (x, imp) -> {x with sort=inst s x.sort}, imp) in
         let body = inst s body in
-        mk (Tm_abs(bs, body))
+        mk (Tm_abs(bs, body, inst_lcomp_opt s lopt))
 
       | Tm_arrow (bs, c) -> 
         let bs = bs |> List.map (fun (x, imp) -> {x with sort=inst s x.sort}, imp) in
@@ -96,3 +96,9 @@ and inst_comp s c = match c.n with
                                         | f -> f)} in
                  S.mk_Comp ct
 
+
+and inst_lcomp_opt s (l:option<lcomp>) = match l with 
+    | None -> None
+    | Some lc -> 
+       Some ({lc with res_typ=inst s lc.res_typ;
+                      comp=(fun () -> inst_comp s (lc.comp()))})

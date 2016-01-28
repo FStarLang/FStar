@@ -102,7 +102,7 @@ let set_lcomp_result lc t =
 
 let value_check_expected_typ env e tlc guard : term * lcomp * guard_t =
   let lc = match tlc with
-    | Inl t -> TcUtil.lcomp_of_comp (if not (Util.is_pure_or_ghost_function t)
+    | Inl t -> U.lcomp_of_comp (if not (Util.is_pure_or_ghost_function t)
                                       then mk_Total t
                                       else TcUtil.return_value env t e)
     | Inr lc -> lc in
@@ -163,7 +163,7 @@ let check_expected_effect env (copt:option<comp>) (e, c) : term * comp * guard_t
        then Util.print3 "\n\nAfter normalization (%s) About to check\n\t%s\nagainst expected effect\n\t%s\n"
                (Print.term_to_string e) (Print.comp_to_string c) (Print.comp_to_string expected_c);
        
-       let expected_c' = TcUtil.refresh_comp_label env true (TcUtil.lcomp_of_comp <| expected_c) in
+       let expected_c' = TcUtil.refresh_comp_label env true (U.lcomp_of_comp <| expected_c) in
        let e, _, g = TcUtil.check_comp env e c <| expected_c'.comp() in
        if debug env Options.Low then Util.print2 "(%s) DONE check_expected_effect; guard is: %s\n" (Range.string_of_range e.pos) (guard_to_string env g);
        e, expected_c, g
@@ -416,7 +416,7 @@ and tc_value env (e:term) : term
   let check_instantiated_fvar env v dc e t = 
     let e, t, implicits = TcUtil.maybe_instantiate env e t in
     //printfn "Instantiated type of %s to %s\n" (Print.term_to_string e) (Print.term_to_string t);
-    let tc = if Options.should_verify env.curmodule.str then Inl t else Inr (TcUtil.lcomp_of_comp <| mk_Total t) in
+    let tc = if Options.should_verify env.curmodule.str then Inl t else Inr (U.lcomp_of_comp <| mk_Total t) in
     let is_data_ctor = function
         | Some Data_ctor
         | Some (Record_ctor _) -> true
@@ -450,7 +450,7 @@ and tc_value env (e:term) : term
     let t = if env.use_bv_sorts then x.sort else Env.lookup_bv env x in
     let e = S.bv_to_name ({x with sort=t}) in 
     let e, t, implicits = TcUtil.maybe_instantiate env e t in
-    let tc = if Options.should_verify env.curmodule.str then Inl t else Inr (TcUtil.lcomp_of_comp <| mk_Total t) in
+    let tc = if Options.should_verify env.curmodule.str then Inl t else Inr (U.lcomp_of_comp <| mk_Total t) in
     value_check_expected_typ env e tc implicits
 
   | Tm_uinst({n=Tm_fvar(v, dc)}, us) -> 
@@ -508,10 +508,10 @@ and tc_value env (e:term) : term
     let g = Rel.conj_guard f1 (Rel.close_guard [x] f2) in
     value_check_expected_typ env0 e (Inl t) g
 
-  | Tm_abs(bs, body) ->  
+  | Tm_abs(bs, body, _) ->  
     let bs = Util.maybe_add_implicit_binders env bs in
     if Env.debug env Options.Low
-    then Printf.printf "Abstraction is: %s\n" (Print.term_to_string ({top with n=Tm_abs(bs, body)}));
+    then Printf.printf "Abstraction is: %s\n" (Print.term_to_string ({top with n=Tm_abs(bs, body, None)}));
     let bs, body = SS.open_term bs body in
     tc_abs env top bs body
 
@@ -744,13 +744,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                       Rel.conj_guard g guard) in
 
     let tfun_computed = Util.arrow bs cbody in 
-    let e = Util.abs bs body in
-    //Important to ascribe, since the SMT encoding requires the type of every abstraction
-    let ascribe e t = 
-        if env.top_level 
-        then e
-        else mk (Tm_ascribed (e, t, Some Const.effect_Tot_lid)) None top.pos  in
-
+    let e = Util.abs bs body (Some (Util.lcomp_of_comp cbody)) in
     let e, tfun, guard = match tfun_opt with
         | Some (t, use_teq) ->
            let t = SS.compress t in
@@ -758,11 +752,10 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                 | Tm_arrow _ ->
                     //we already checked the body to have the expected type; so, no need to check again
                     //just repackage the expression with this type; t is guaranteed to be alpha equivalent to tfun_computed
-                    ascribe e t,
+                    e,
                     t,
                     guard
                 | _ ->
-                    let e = ascribe e tfun_computed in
                     let e, guard' =
                         if use_teq
                         then e, Rel.teq env t tfun_computed
@@ -771,10 +764,10 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                     t,  
                     Rel.conj_guard guard guard')
 
-        | None -> ascribe e tfun_computed, tfun_computed, guard in
+        | None -> e, tfun_computed, guard in
 
     let c = if env.top_level then mk_Total tfun else TcUtil.return_value env tfun e in
-    let c, g = TcUtil.strengthen_precondition None env e (TcUtil.lcomp_of_comp c) guard in
+    let c, g = TcUtil.strengthen_precondition None env e (U.lcomp_of_comp c) guard in
     e, c, g
 
 (******************************************************************************)
@@ -822,7 +815,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                             (Print.term_to_string tf)
                             (Print.term_to_string bs_cres);
             Rel.force_trivial_guard env <| Rel.teq env tf bs_cres;
-            let comp = List.fold_right (fun c out -> TcUtil.bind env None c (None, out)) (chead::comps) (TcUtil.lcomp_of_comp <| cres) in
+            let comp = List.fold_right (fun c out -> TcUtil.bind env None c (None, out)) (chead::comps) (U.lcomp_of_comp <| cres) in
             mk_Tm_app head args (Some comp.res_typ.n) r, comp, Rel.conj_guard ghead g_args
 
         | Tm_arrow(bs, c) ->
@@ -916,7 +909,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
 
                 | _ ->  (* partial app *)
                     let g = Rel.conj_guard ghead g |> Rel.solve_deferred_constraints env in //TODO: fix this; it forces eta expansions (cf. FSTar.Relational.fst: 43 and 43)
-                    TcUtil.lcomp_of_comp <| mk_Total  (SS.subst subst <| Util.arrow bs (cres.comp())), g in
+                    U.lcomp_of_comp <| mk_Total  (SS.subst subst <| Util.arrow bs (cres.comp())), g in
 
                 if debug env Options.Low then Util.print1 "\t Type of result cres is %s\n" (Print.lcomp_to_string cres);
                 let comp = List.fold_left (fun out c -> TcUtil.bind env None (snd c) (fst c, out)) cres comps in
@@ -936,14 +929,14 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                         if debug env Options.Low 
                         then Util.print1 "%s: Warning: Potentially redundant explicit currying of a function type \n" 
                             (Range.string_of_range tres.pos);
-                        tc_args (subst, outargs, arg_rets, (None, cres)::comps, g, fvs) bs (TcUtil.lcomp_of_comp cres') args
+                        tc_args (subst, outargs, arg_rets, (None, cres)::comps, g, fvs) bs (U.lcomp_of_comp cres') args
                     | _ when (not norm) ->
                         aux true (unfold_whnf env tres)
                     | _ -> raise (Error(Util.format2 "Too many arguments to function of type %s; got %s arguments" 
                                             (N.term_to_string env tf) (Util.string_of_int n_args), argpos arg)) in
                 aux false cres.res_typ in
 
-            tc_args ([], [], [], [], Rel.trivial_guard, S.new_bv_set()) bs (TcUtil.lcomp_of_comp c) args
+            tc_args ([], [], [], [], Rel.trivial_guard, S.new_bv_set()) bs (U.lcomp_of_comp c) args
 
         | _ ->
             if not norm
@@ -1245,7 +1238,7 @@ and check_top_level_let env e =
 
 
          (* the result always has type ML unit *)
-         let cres = TcUtil.lcomp_of_comp <| Util.ml_comp Recheck.t_unit e.pos in
+         let cres = U.lcomp_of_comp <| Util.ml_comp Recheck.t_unit e.pos in
          e2.tk := Some (Recheck.t_unit.n);
 
 (*close*)let lb = Util.close_univs_and_mk_letbinding None lb.lbname univ_vars (Util.comp_result c1) (Util.comp_effect_name c1) e1 in
@@ -1319,7 +1312,7 @@ and check_top_level_let_rec env top =
                    ecs |> List.map (fun (x, uvs, e, c) -> 
                       Util.close_univs_and_mk_letbinding all_lb_names x uvs (Util.comp_result c) (Util.comp_effect_name c) e) in
 
-          let cres = TcUtil.lcomp_of_comp <| S.mk_Total Recheck.t_unit in
+          let cres = U.lcomp_of_comp <| S.mk_Total Recheck.t_unit in
           let _ = e2.tk := Some Recheck.t_unit.n in
          
 (*close*) let lbs, e2 = SS.close_let_rec lbs e2 in

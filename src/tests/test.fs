@@ -20,12 +20,12 @@ let main argv =
     let uv2 = S.mk (S.Tm_uvar(uvar2, S.tun)) None r in
     let list_uv1 = S.mk_Tm_app (S.fvar None (Ident.lid_of_path ["Prims"; "list"] r) r) [uv1, None] None r in
     let x = S.new_bv None uv2 in
-    let abs = U.abs [x, None] S.tun in
+    let abs = U.abs [x, None] S.tun None in
     Printf.printf "Abstraction is %s\n" (Print.term_to_string abs);
     let y = S.new_bv None S.tun in
     Unionfind.change uvar2 (S.Fixed (list_uv1));
     Unionfind.change uvar1 (S.Fixed(S.bv_to_name y));
-    let abs' = U.abs [y, None] abs in
+    let abs' = U.abs [y, None] abs None in
     Printf.printf "Closed abstraction is %s\n" (Print.term_to_string abs');
     0
      

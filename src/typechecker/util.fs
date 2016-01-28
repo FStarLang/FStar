@@ -110,7 +110,7 @@ let extract_let_rec_annotation env {lbunivs=univ_vars; lbtyp=t; lbdef=e} =
       | Tm_meta(e, _) -> aux vars e
       | Tm_ascribed(e, t, _) -> t, true
 
-      | Tm_abs(bs, body) ->
+      | Tm_abs(bs, body, _) ->
         let scope, bs, check = bs |> List.fold_left (fun (scope, bs, check) (a, imp) -> 
               let tb, c = mk_binder scope a in
               let b = (tb, imp) in
@@ -372,33 +372,6 @@ let decorate_pattern env p exps =
         | Pat_dot_term(x, e) ->
             [], e
 
-//DTuple u1 (\_:u1. u2) (\_:u1 u2. u3) ...
-// where ui:Type(i)?
-let mk_basic_dtuple_type env n =
-  let r = Env.get_range env in
-  let l = Util.mk_dtuple_lid n r in
-  let us, k = Env.lookup_lid env l in
-  let t = Syntax.mk_Tm_uinst (Syntax.fvar None l r) us in
-  let vars = Env.binders env in
- 
-  match k.n with
-    | Tm_arrow(bs, c) -> 
-        let bs, _ = Subst.open_comp bs c in 
-        let args, _ = bs |> List.fold_left (fun (out, subst) (a, _) ->
-          let k = Subst.subst subst a.sort in
-          let arg = match k.n with
-            | Tm_type _ -> 
-              Rel.new_uvar r vars k |> fst
-
-            | Tm_arrow(bs, {n=Total k}) ->
-              Util.abs bs (Rel.new_uvar r vars Util.ktype0 |> fst)  //NS: Which universe to pick?
-
-            | _ -> failwith "Impossible" in
-          let subst = NT(a, arg)::subst in
-          (S.arg arg::out, subst)) ([], []) in
-      mk_Tm_app t (List.rev args) None r
-
-    | _ -> failwith "Impossible"
 
 (*********************************************************************************************)
 (* Utils related to monadic computations *)
@@ -475,13 +448,6 @@ let mk_comp md result wp wlp flags =
              result_typ=result;
              effect_args=[S.arg wp; S.arg wlp];
              flags=flags})
-
-let lcomp_of_comp c0 =
-    let c = Util.comp_to_comp_typ c0 in
-    {eff_name = c.effect_name;
-     res_typ = c.result_typ;
-     cflags = c.flags;
-     comp = fun() -> c0}
 
 let subst_lcomp subst lc =
     {lc with res_typ=SS.subst subst lc.res_typ;
@@ -567,7 +533,7 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
           let bs = match b with
             | None -> [null_binder t1]
             | Some x -> [S.mk_binder x] in
-          let mk_lam wp = U.abs bs wp in
+          let mk_lam wp = U.abs bs wp None in
           let wp_args = [S.arg t1; S.arg t2; S.arg wp1; S.arg wlp1; S.arg (mk_lam wp2); S.arg (mk_lam wlp2)] in
           let wlp_args = [S.arg t1; S.arg t2; S.arg wlp1; S.arg (mk_lam wlp2)] in
           let k = SS.subst [NT(a, t2)] kwp in
@@ -672,7 +638,7 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:term) (lc:l
                     && not (Util.is_partial_return c))
                     then let x = S.gen_bv "strengthen_pre_x" None (Util.comp_result c) in
                          let xret = Util.comp_set_flags (return_value env x.sort (S.bv_to_name x)) [PARTIAL_RETURN] in
-                         let lc = bind env (Some e) (lcomp_of_comp c) (Some x, lcomp_of_comp xret) in
+                         let lc = bind env (Some e) (Util.lcomp_of_comp c) (Some x, Util.lcomp_of_comp xret) in
                          lc.comp()
                     else c in
 
@@ -706,9 +672,9 @@ let add_equality_to_post_condition env (comp:comp) (res_t:typ) =
     let xexp, yexp = S.bv_to_name x, S.bv_to_name y in
     let yret = mk_Tm_app (inst_effect_fun env md_pure md_pure.ret) [S.arg res_t; S.arg yexp] None res_t.pos in
     let x_eq_y_yret = mk_Tm_app (inst_effect_fun env md_pure md_pure.assume_p) [S.arg res_t; S.arg <| Util.mk_eq res_t res_t xexp yexp; S.arg <| yret] None res_t.pos in
-    let forall_y_x_eq_y_yret = mk_Tm_app (inst_effect_fun env md_pure md_pure.close_wp) [S.arg res_t; S.arg res_t; S.arg <| U.abs [mk_binder y] x_eq_y_yret] None res_t.pos in
+    let forall_y_x_eq_y_yret = mk_Tm_app (inst_effect_fun env md_pure md_pure.close_wp) [S.arg res_t; S.arg res_t; S.arg <| U.abs [mk_binder y] x_eq_y_yret None] None res_t.pos in
     let lc2 = mk_comp md_pure res_t forall_y_x_eq_y_yret forall_y_x_eq_y_yret [PARTIAL_RETURN] in
-    let lc = bind env None (lcomp_of_comp comp) (Some x, lcomp_of_comp lc2) in
+    let lc = bind env None (Util.lcomp_of_comp comp) (Some x, Util.lcomp_of_comp lc2) in
     lc.comp()
 
 let ite env (guard:formula) lcomp_then lcomp_else =
@@ -737,8 +703,8 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
             let post_k = U.arrow [null_binder res_t] (S.mk_Total U.ktype0) in
             let kwp    = U.arrow [null_binder post_k] (S.mk_Total U.ktype0) in
             let post   = S.new_bv None post_k in
-            let wp     = U.abs [mk_binder post] (label Errors.exhaustiveness_check (Env.get_range env) <| S.fvar None Const.false_lid (Env.get_range env)) in 
-            let wlp    = U.abs [mk_binder post] (S.fvar None Const.true_lid (Env.get_range env)) in
+            let wp     = U.abs [mk_binder post] (label Errors.exhaustiveness_check (Env.get_range env) <| S.fvar None Const.false_lid (Env.get_range env)) None in 
+            let wlp    = U.abs [mk_binder post] (S.fvar None Const.true_lid (Env.get_range env)) None in
             let md     = Env.get_effect_decl env Const.effect_PURE_lid in
             mk_comp md res_t wp wlp [] in
         let comp = List.fold_right (fun (g, cthen) celse ->
@@ -765,7 +731,7 @@ let close_comp env bvs (lc:lcomp) =
         let close_wp md res_t bvs wp0 =
           List.fold_right (fun x wp -> 
               let bs = [mk_binder x] in
-              let wp = U.abs bs wp in
+              let wp = U.abs bs wp None in
               mk_Tm_app (inst_effect_fun env md md.close_wp) [S.arg res_t; S.arg x.sort; S.arg wp] None wp0.pos)
           bvs wp0 in 
         let c = Normalize.unfold_effect_abbrev env c in
@@ -790,11 +756,11 @@ let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
            let c = mk_Comp c in
            let x = S.new_bv (Some t.pos) t in 
            let xexp = S.bv_to_name x in
-           let ret = lcomp_of_comp <| (Util.comp_set_flags (return_value env t xexp) [PARTIAL_RETURN]) in
+           let ret = Util.lcomp_of_comp <| (Util.comp_set_flags (return_value env t xexp) [PARTIAL_RETURN]) in
            let eq = (Util.mk_eq t t xexp e) in
            let eq_ret = weaken_precondition env ret (NonTrivial eq) in
 
-           let c = U.comp_set_flags ((bind env None (lcomp_of_comp c) (Some x, eq_ret)).comp()) (PARTIAL_RETURN::U.comp_flags c) in
+           let c = U.comp_set_flags ((bind env None (Util.lcomp_of_comp c) (Some x, eq_ret)).comp()) (PARTIAL_RETURN::U.comp_flags c) in
            c in
 
   let flags =
@@ -818,7 +784,7 @@ let maybe_coerce_bool_to_type env (e:term) (lc:lcomp) (t:term) : term * lcomp =
             | Tm_fvar(fv, _) when lid_equals fv.v Const.bool_lid -> 
               let _ = Env.lookup_lid env Const.b2t_lid in  //check that we have Prims.b2t in the context
               let b2t = S.fvar None Const.b2t_lid e.pos in
-              let lc = bind env (Some e) lc (None, lcomp_of_comp <| S.mk_Total (Util.ktype0)) in
+              let lc = bind env (Some e) lc (None, Util.lcomp_of_comp <| S.mk_Total (Util.ktype0)) in
               let e = mk_Tm_app b2t [S.arg e] (Some Util.ktype0.n) e.pos in
               e, lc
             | _ -> e, lc
@@ -844,7 +810,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                 //try to normalize one more time, since more unification variables may be resolved now
                 let f = N.normalize [N.Beta; N.Inline; N.Simplify] env f in
                 match (SS.compress f).n with 
-                    | Tm_abs(_, {n=Tm_fvar (fv, _)}) when lid_equals fv.v Const.true_lid -> 
+                    | Tm_abs(_, {n=Tm_fvar (fv, _)}, _) when lid_equals fv.v Const.true_lid -> 
                       //it's trivial
                       let lc = {lc with res_typ=t} in
                       lc.comp()
@@ -865,14 +831,14 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
                         let x = S.new_bv (Some t.pos) t in
                         let xexp = S.bv_to_name x in
                         let wp = mk_Tm_app (inst_effect_fun env md md.ret) [S.arg t; S.arg xexp] (Some k.n) xexp.pos in
-                        let cret = lcomp_of_comp <| mk_comp md t wp wp [RETURN] in
+                        let cret = Util.lcomp_of_comp <| mk_comp md t wp wp [RETURN] in
                         let guard = if apply_guard then mk_Tm_app f [S.arg xexp] (Some U.ktype0.n) f.pos else f in
                         let eq_ret, _trivial_so_ok_to_discard =
                             strengthen_precondition (Some <| Errors.subtyping_failed env lc.res_typ t) 
                                                     (Env.set_range env e.pos) e cret
                                                     (guard_of_guard_formula <| NonTrivial guard) in
                         let x = {x with sort=lc.res_typ} in
-                        let c = bind env (Some e) (lcomp_of_comp <| mk_Comp ct) (Some x, eq_ret) in
+                        let c = bind env (Some e) (Util.lcomp_of_comp <| mk_Comp ct) (Some x, eq_ret) in
                         let c = c.comp () in
                         if Env.debug env <| Options.Extreme
                         then Util.print1 "Strengthened to %s\n" (Normalize.comp_to_string env c);
@@ -1020,12 +986,12 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
           let tvars = uvs |> List.map (fun (u, k) ->
             match Unionfind.find u with
               | Fixed ({n=Tm_name a})
-              | Fixed ({n=Tm_abs(_, {n=Tm_name a})}) -> a, Some Implicit
+              | Fixed ({n=Tm_abs(_, {n=Tm_name a}, _)}) -> a, Some Implicit
               | Fixed _ -> failwith "Unexpected instantiation of mutually recursive uvar"
               | _ ->
                   let bs, kres = Util.arrow_formals k in 
                   let a = S.new_bv (Some <| Env.get_range env) kres in 
-                  let t = U.abs bs (S.bv_to_name a) in
+                  let t = U.abs bs (S.bv_to_name a) (Some (Util.lcomp_of_comp (S.mk_Total kres))) in
                   U.set_uvar u t;//t clearly has a free variable; this is the one place we break the invariant of a uvar always being resolved to a closed term ... need to be careful, see below
                   a, Some Implicit) in
 
@@ -1045,7 +1011,7 @@ let gen env (ecs:list<(term * comp)>) : option<list<(list<univ_name> * term * co
 
                     | _ -> 
                       U.arrow tvars c in
-              let e' = U.abs tvars e in
+              let e' = U.abs tvars e None in
               e', S.mk_Total t in
           (gen_univs, e, c)) in
      Some ecs

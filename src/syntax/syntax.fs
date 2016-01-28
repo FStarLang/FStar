@@ -73,7 +73,7 @@ type term' =
   | Tm_uinst      of term * universes  //universe instantiation; the first argument must be one of the three constructors above
   | Tm_constant   of sconst 
   | Tm_type       of universe       
-  | Tm_abs        of binders * term                              (* fun (xi:ti) -> t *)
+  | Tm_abs        of binders * term * option<lcomp>              (* fun (xi:ti) -> t : M t' wp *)
   | Tm_arrow      of binders * comp                              (* (xi:ti) -> M t' wp *)
   | Tm_refine     of bv * term                                   (* x:t{phi} *)
   | Tm_app        of term * args                                 (* h tau_1 ... tau_n, args in order from left to right *)
@@ -174,15 +174,15 @@ and free_vars = {
     uvars:set<(uvar * typ)>;
     univs:set<universe_uvar>;
 }
-
-type tscheme = list<univ_name> * typ
-
-type lcomp = {
+and lcomp = {
     eff_name: lident;
     res_typ: typ;
     cflags: list<cflags>;
     comp: unit -> comp //a lazy computation
 }
+
+type tscheme = list<univ_name> * typ
+
 type freenames_l = list<bv>
 type formula = typ
 type formulae = list<typ>

@@ -212,6 +212,12 @@ let subst_pat' s pat : (pat * int) =
         {pat with v=Pat_dot_term(x, t0)}, n //these are not in scope, so don't shift the index
   in aux 0 pat
 
+let push_subst_lcomp s lopt = match lopt with 
+    | None -> None
+    | Some l -> 
+      Some ({l with res_typ=subst' s l.res_typ;
+                    comp=(fun () -> subst_comp' s (l.comp()))})
+
 let push_subst s t = 
     match t.n with 
         | Tm_delayed _ -> failwith "Impossible"
@@ -235,9 +241,10 @@ let push_subst s t =
         | Tm_ascribed(t0, t1, lopt) -> mk (Tm_ascribed(subst' s t0, subst' s t1, lopt)) None t.pos
          
 
-        | Tm_abs(bs, body) -> 
+        | Tm_abs(bs, body, lopt) -> 
           let n = List.length bs in 
-          mk (Tm_abs(subst_binders' s bs, subst' (shift_subst' n s) body)) None t.pos   
+          let s' = shift_subst' n s in
+          mk (Tm_abs(subst_binders' s bs, subst' s' body, push_subst_lcomp s' lopt)) None t.pos   
           
         | Tm_arrow(bs, comp) -> 
           let n = List.length bs in 
@@ -303,9 +310,12 @@ let open_binders' bs =
           (x',imp)::bs', o in
    aux bs [] 
 let open_binders (bs:binders) = fst (open_binders' bs)
-let open_term (bs:binders) t = 
+let open_term' (bs:binders) t = 
    let bs', opening = open_binders' bs in
-   bs', subst opening t
+   bs', subst opening t, opening
+let open_term (bs:binders) t = 
+   let b, t, _ = open_term' bs t in 
+   b, t
 let open_comp (bs:binders) t = 
    let bs', opening = open_binders' bs in
    bs', subst_comp opening t
@@ -361,6 +371,11 @@ let close_binders (bs:binders) : binders =
           let s' = NM(x, 0)::shift_subst 1 s in
           (x, imp)::aux s' tl in
     aux [] bs
+
+let close_lcomp (bs:binders) lc = 
+    let s = closing_subst bs in 
+    {lc with res_typ=subst s lc.res_typ;
+             comp=(fun () -> subst_comp s (lc.comp())); }
 
 let close_pat p = 
     let rec aux sub p = match p.v with

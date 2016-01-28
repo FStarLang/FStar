@@ -50,7 +50,6 @@ val generalize_universes: env -> term -> tscheme
 //operations on computation types
 (* most operations on computations are lazy *)
 type lcomp_with_binder = option<bv> * lcomp
-val lcomp_of_comp: comp -> lcomp
 val subst_lcomp: subst -> lcomp -> lcomp
 val is_pure_effect: env -> lident -> bool
 val is_pure_or_ghost_effect: env -> lident -> bool
@@ -78,5 +77,4 @@ val label: string -> Range.range -> typ -> typ
 val label_guard: string -> Range.range -> guard_formula -> guard_formula
 val short_circuit: term -> args -> guard_formula
 val short_circuit_head: term -> bool
-val mk_basic_dtuple_type: env -> int -> typ
 val maybe_add_implicit_binders: env -> binders -> binders

@@ -56,7 +56,7 @@ let typing_const r (s:sconst) = match s with
   | Const_effect -> Util.ktype0 //NS: really?
   | _ -> raise (Error("Unsupported constant", r))
 
-
+  //TODO: REMOVE THIS
 //this is only supposed return a type that faithfully captures the arity of the term
 let rec check t =
     let recompute t = match t.n with
@@ -72,8 +72,8 @@ let rec check t =
         | Tm_ascribed (_, k, _) 
         | Tm_uvar(_, k) -> k
         | Tm_meta(t, _) -> check t
-        | Tm_abs(binders, body) -> arrow binders (mk_Total (check body)) //total?
         | Tm_let(_, e) -> check e 
+        | Tm_abs(binders, body, _) -> arrow binders (mk_Total (check body)) //total?
         | Tm_app _   -> failwith (Util.format1 "Refusing to recheck app node: %s" (Print.term_to_string t))
         | Tm_match _ -> failwith "Expect match nodes to be annotated already"
         | Tm_unknown -> t in

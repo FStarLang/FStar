@@ -389,6 +389,7 @@ let wl_to_string wl =
 (* ------------------------------------------------ *)
 (* <solving problems>                               *)
 (* ------------------------------------------------ *)
+let u_abs x y = U.abs x y None
 
 let solve_prob' resolve_ok prob logical_guard uvis wl =
     let phi = match logical_guard with
@@ -399,7 +400,7 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
         | Tm_uvar(uvar, k) ->
           let bs = p_scope prob in 
           let bs = bs |> List.filter (fun x -> is_null_binder x |> not) in
-          let phi = U.abs bs phi in
+          let phi = u_abs bs phi in
           if Env.debug wl.tcenv <| Options.Other "Rel"
           then Util.print3 "Solving %s (%s) with formula %s\n" 
                             (string_of_int (p_pid prob))
@@ -1196,7 +1197,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         //sub-problems: Gi(p1..pn) REL' qi, where REL' = vary_rel REL (variance h i)
         let r = Env.get_range env in
         let sub_probs, gs_xs, formula = imitation_sub_probs orig env xs ps qs in
-        let im = U.abs xs (h gs_xs) in
+        let im = u_abs xs (h gs_xs) in
         if Env.debug env <| Options.Other "Rel"
         then Util.print4 "Imitating %s (%s)\nsub_probs = %s\nformula=%s\n"
             (Print.term_to_string im) (Print.tag_of_term im)
@@ -1234,7 +1235,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
         then None
         else let g_xs, _ = gs xi.sort in
              let xi = S.bv_to_name xi in
-             let proj = U.abs xs (S.mk_Tm_app xi g_xs None r) in
+             let proj = u_abs xs (S.mk_Tm_app xi g_xs None r) in
              let sub = TProb <| mk_problem (p_scope orig) orig (S.mk_Tm_app proj ps None r) (p_rel orig) (h <| List.map (fun (_, _, y) -> y) qs) None "projection" in
              if debug env <| Options.Other "Rel" then Util.print2 "Projecting %s\n\tsubprob=%s\n" (Print.term_to_string proj) (prob_to_string env sub);
              let wl = solve_prob orig (Some (fst <| p_guard sub)) [TERM(u, proj)] wl in
@@ -1305,7 +1306,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                                     (names_to_string fvs2) in
                     let sol = match vars with
                         | [] -> t2
-                        | _ -> U.abs (sn_binders env vars) t2 in
+                        | _ -> u_abs (sn_binders env vars) t2 in
                     let wl = solve_prob orig None [TERM((uv,k), sol)] wl in
                     solve env wl)
             else if wl.defer_ok
@@ -1373,7 +1374,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                         fst (new_uvar t.pos pattern_vars t) in
                     let t', tm_u1 = new_uvar t.pos pattern_vars kk in
                     let _, u1, k1, _ = destruct_flex_t t' in
-                    let sol = TERM((u,k), U.abs all_formals t') in
+                    let sol = TERM((u,k), u_abs all_formals t') in
                     let t_app = S.mk_Tm_app tm_u1 pat_args None t.pos  in
                     sol, (t_app, u1, k1, pat_args)
 
@@ -1420,7 +1421,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     let t, _ = Util.type_u() in
                     let k, _ = new_uvar r zs t in
                     new_uvar r zs k in
-                let sub1 = U.abs xs u_zs in
+                let sub1 = u_abs xs u_zs in
                 let occurs_ok, msg = occurs_check env wl (u1,k1) sub1 in
                 if not occurs_ok
                 then giveup_or_defer orig "flex-flex: failed occcurs check"
@@ -1428,7 +1429,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                      if Unionfind.equivalent u1 u2
                      then let wl = solve_prob orig None [sol1] wl in
                           solve env wl
-                     else let sub2 = U.abs ys u_zs in
+                     else let sub2 = u_abs ys u_zs in
                           let occurs_ok, msg = occurs_check env wl (u2,k2) sub2 in
                           if not occurs_ok
                           then giveup_or_defer orig "flex-flex: failed occurs check"
@@ -1454,7 +1455,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                      let lhs_vars = Free.names_of_binders xs in
                      if occurs_ok 
                      && Util.set_is_subset_of rhs_vars lhs_vars
-                     then let sol = TERM((u1, k1), U.abs xs t2) in
+                     then let sol = TERM((u1, k1), u_abs xs t2) in
                           let wl = solve_prob orig None [sol] wl in
                           solve env wl
                      else if occurs_ok && not <| wl.defer_ok
@@ -1539,10 +1540,10 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             let rel = if !Options.use_eq_at_higher_order then EQ else problem.relation in
             CProb <| mk_problem scope orig c1 rel c2 None "function co-domain")
 
-      | Tm_abs(bs1, tbody1), Tm_abs(bs2, tbody2) ->
+      | Tm_abs(bs1, tbody1, _), Tm_abs(bs2, tbody2, _) ->
         let mk_t t = function
             | [] -> t
-            | bs -> mk (Tm_abs(bs, t)) None t.pos in
+            | bs -> mk (Tm_abs(bs, t, None)) None t.pos in
         let (bs1, tbody1), (bs2, tbody2) =
             match_num_binders (bs1, mk_t tbody1) (bs2, mk_t tbody2) in
         solve_binders env bs1 bs2 orig wl
@@ -1869,7 +1870,7 @@ let abstract_guard x g = match g with
       let f = match g.guard_f with
         | NonTrivial f -> f
         | _ -> failwith "impossible" in
-      Some ({g with guard_f=NonTrivial <| U.abs [mk_binder x] f})
+      Some ({g with guard_f=NonTrivial <| u_abs [mk_binder x] f})
 
 let apply_guard g e = match g.guard_f with
   | Trivial -> g

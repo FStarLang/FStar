@@ -33,7 +33,7 @@ let rec encode n =
     if n = 0 then z
     else app succ [encode (n - 1)]
 let minus m n = app n [pred; m]
-let let_ x e e' : term = app (U.abs [b x] e') [e]
+let let_ x e e' : term = app (U.abs [b x] e' None) [e]
 let mk_let x e e' : term = 
     let e' = FStar.Syntax.Subst.subst [NM(x, 0)] e' in
     mk (Tm_let((false, [{lbname=Inl x; lbunivs=[]; lbtyp=tun; lbdef=e; lbeff=lid_of_path ["Pure"] dummyRange}]), e')) 
@@ -68,7 +68,7 @@ let minus_nat t1 t2 =
                   None, 
                   app (nm minus) [pred_nat (nm x); nm n] in
     let lb = {lbname=Inl minus; lbeff=lid_of_path ["Pure"] dummyRange; lbunivs=[]; lbtyp=tun; 
-              lbdef=subst [NM(minus, 0)] (U.abs [b x; b y] (mk_match (nm y) [zbranch; sbranch]))} in
+              lbdef=subst [NM(minus, 0)] (U.abs [b x; b y] (mk_match (nm y) [zbranch; sbranch]) None)} in
     mk (Tm_let((true, [lb]), subst [NM(minus, 0)] (app (nm minus) [t1; t2]))) None dummyRange
 let encode_nat n = 
     let rec aux out n = 
