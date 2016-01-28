@@ -128,7 +128,6 @@ let find_deps_if_needed files =
        * filenames" policy. *)
       let deps = List.map basename deps in
       let deps = List.rev deps in
-      List.iter print_endline deps;
       let deps = match deps with
         | "prims.fst" :: deps -> deps
         | _ -> failwith "dependency analysis did not find prims.fst?!"
