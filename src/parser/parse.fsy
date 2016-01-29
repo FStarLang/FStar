@@ -236,6 +236,8 @@ qualifier:
   | PRIVATE      { Private }
   | ABSTRACT     { Abstract }
   | NEW          { New }
+  | LOGIC        { Logic }
+  | OPAQUE       { Opaque }
 
 qualifiers:
   |                      { [] }

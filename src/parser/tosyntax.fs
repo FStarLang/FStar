@@ -1048,7 +1048,7 @@ let mk_indexed_projectors fvq refine_domain env tc lid (inductive_tps:binders) i
             || Options.dont_gen_projectors (Env.current_module env).str in
         let no_decl = Syntax.is_type x.sort in
         let quals q = if only_decl then S.Assumption::q else q in
-        let quals = quals [S.Logic; S.Projector(lid, x.ppname)] in
+        let quals = quals [S.Projector(lid, x.ppname)] in
         let decl = Sig_declare_typ(field_name, [], t, quals, range_of_lid field_name) in
         if only_decl
         then [decl] //only the signature

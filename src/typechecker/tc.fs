@@ -2198,7 +2198,7 @@ let rec tc_decl env se = match se with
       se, env
 
 
-let for_export se : list<sigelt> =
+let for_export hidden se : list<sigelt> * list<lident> =
    (* Exporting symbols based on whether they have been marked 'private' or 'abstract'
       At this level, there is no distinction between 'private' and 'abstract'.
 
@@ -2224,45 +2224,68 @@ let for_export se : list<sigelt> =
        The same behavior occurs is x were marked 'abstract'
     *)
    let private_or_abstract quals = quals |> Util.for_some (fun x -> x=Private || x=Abstract) in
+   let is_hidden_proj_or_disc q = match q with 
+        | Projector(l, _) 
+        | Discriminator l -> hidden |> Util.for_some (lid_equals l) 
+        | _ -> false in
    match se with
-    | Sig_pragma         _ -> []
+    | Sig_pragma         _ -> [], hidden
 
     | Sig_inductive_typ _ 
     | Sig_datacon _ -> failwith "Impossible"
 
     | Sig_bundle(ses, quals, _, _) ->
       if private_or_abstract quals
-      then ses |> List.filter (function Sig_inductive_typ _ -> true | _ -> false)
-      else [se]
+      then List.fold_right (fun se (out, hidden) -> match se with 
+            | Sig_inductive_typ(l, us, bs, t, _, _, quals, r) -> 
+              let dec = Sig_declare_typ(l, us, mk (Tm_arrow(bs, S.mk_Total t)) None r, Assumption::quals, r) in
+              dec::out, hidden
+            | Sig_datacon(l, us, t, _, _, _, _, r) -> //logically, each constructor just becomes an uninterpreted function
+              let dec = Sig_declare_typ(l, us, t, [Assumption], r) in
+              dec::out, l::hidden
+            | _ -> 
+              out, hidden) ses ([], hidden)
+      else [se], hidden
 
     | Sig_assume(_, _, quals, _) ->
       if private_or_abstract quals
-      then []
-      else [se]
+      then [], hidden
+      else [se], hidden
 
-    | Sig_declare_typ(_, _, _, quals, _) -> 
-      //declarations vanish, unless they are assumed
-      //they will be replaced by the definitions that must follow
-      if List.contains Assumption quals 
-      then [se]
-      else []
+    | Sig_declare_typ(l, us, t, quals, r) -> 
+      if quals |> Util.for_some is_hidden_proj_or_disc //hidden projectors/discriminators become uninterpreted
+      then [Sig_declare_typ(l, us, t, [Assumption], r)], l::hidden
+      else if quals |> Util.for_some (function 
+        | Assumption
+        | Projector _
+        | Discriminator _ -> true
+        | _ -> false)
+      then [se], hidden //Assumptions, Intepreted proj/disc are retained
+      else [], hidden   //other declarations vanish
+                        //they will be replaced by the definitions that must follow
 
-    | Sig_main  _ -> []
+    | Sig_main  _ -> [], hidden
 
     | Sig_new_effect     _
     | Sig_sub_effect     _
-    | Sig_effect_abbrev  _ -> [se]
+    | Sig_effect_abbrev  _ -> [se], hidden
 
-   
+    | Sig_let((false, [lb]), _, _, quals) when quals |> Util.for_some is_hidden_proj_or_disc -> 
+      let lid = right lb.lbname in
+      if hidden |> Util.for_some (lid_equals lid)
+      then [], hidden //this projector definition already has a declare_typ
+      else let dec = Sig_declare_typ(lid, lb.lbunivs, lb.lbtyp, [Assumption], Ident.range_of_lid lid) in
+           [dec], lid::hidden
+  
     | Sig_let(lbs, r, l, quals) ->
       if private_or_abstract quals
       then snd lbs |> List.map (fun lb -> 
-           Sig_declare_typ(right lb.lbname, lb.lbunivs, lb.lbtyp, Assumption::quals, r))
-      else [se]
+           Sig_declare_typ(right lb.lbname, lb.lbunivs, lb.lbtyp, Assumption::quals, r)), hidden
+      else [se], hidden
 
 let tc_decls env ses =
- let ses, exports, env =
-  ses |> List.fold_left (fun (ses, exports, (env:Env.env)) se ->
+ let ses, exports, env, _ =
+  ses |> List.fold_left (fun (ses, exports, env, hidden) se ->
           if Env.debug env Options.Low
           then Util.print1 ">>>>>>>>>>>>>>Checking top-level decl %s\n" (Print.sigelt_to_string se);
           
@@ -2272,9 +2295,10 @@ let tc_decls env ses =
           then Util.print1 "Checked: %s\n" (Print.sigelt_to_string se);
 
           env.solver.encode_sig env se;
-
-          se::ses, for_export se::exports, env)
-  ([], [], env) in
+          
+          let exported, hidden = for_export hidden se in 
+          se::ses, exported::exports, env, hidden)
+  ([], [], env, []) in
   List.rev ses, List.rev exports |> List.flatten, env
 
 let tc_partial_modul env modul =

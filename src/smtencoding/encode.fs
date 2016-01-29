@@ -183,27 +183,32 @@ let lookup_lid env a =
     | None -> failwith (format1 "Name not found: %s" (Print.lid_to_string a))
     | Some s -> s
 let push_free_var env (x:lident) fname ftok =
-//    Printf.printf "Pushing %A @ %A, %A\n" x fname ftok;
     {env with bindings=Binding_fvar(x, fname, ftok, None)::env.bindings}
 let push_zfuel_name env (x:lident) f =
     let t1, t2, _ = lookup_lid env x in
     let t3 = Term.mkApp(f, [Term.mkApp("ZFuel", [])]) in
     {env with bindings=Binding_fvar(x, t1, t2, Some t3)::env.bindings}
+let try_lookup_free_var env l =
+    match try_lookup_lid env l with
+        | None -> None
+        | Some (name, sym, zf_opt) ->
+            match zf_opt with
+                | Some f when (env.use_zfuel_name) -> Some f
+                | _ ->
+                  match sym with
+                    | Some t ->
+                        begin match t.tm with
+                            | App(_, [fuel]) ->
+                                if (Util.starts_with (Term.fv_of_term fuel |> fst) "fuel")
+                                then Some <| Term.mk_ApplyTF(Term.mkFreeV (name, Term_sort)) fuel
+                                else Some t
+                            | _ -> Some t
+                        end
+                    | _ -> None
 let lookup_free_var env a =
-    let name, sym, zf_opt = lookup_lid env a.v in
-    match zf_opt with
-        | Some f when (env.use_zfuel_name) -> f
-        | _ ->
-          match sym with
-            | Some t ->
-                begin match t.tm with
-                    | App(_, [fuel]) ->
-                        if (Util.starts_with (Term.fv_of_term fuel |> fst) "fuel")
-                        then Term.mk_ApplyTF(Term.mkFreeV (name, Term_sort)) fuel
-                        else t
-                    | _ -> t
-                end
-            | _ -> failwith (format1 "Name not found: %s" (Print.lid_to_string a.v))
+    match try_lookup_free_var env a.v with 
+        | Some t -> t
+        | None -> failwith (format1 "Name not found: %s" (Print.lid_to_string a.v))
 let lookup_free_var_name env a = let x, _, _ = lookup_lid env a.v in x
 let lookup_free_var_sym env a =
     let name, sym, zf_opt = lookup_lid env a.v in
@@ -1188,7 +1193,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         [], env
 
      | Sig_declare_typ(lid, _, t, quals, _) ->
-        if quals |> List.contains Assumption || env.tcenv.is_iface
+        if quals |> Util.for_some (function Assumption | Projector _ | Discriminator _ -> true | _ -> false) || env.tcenv.is_iface
         then let decls, env = encode_top_level_val env lid t quals in
              let tname = lid.str in
              let tsym = mkFreeV(tname, Term_sort) in
@@ -1216,8 +1221,23 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                 Some "b2t def")] in
        decls, env
 
-    | Sig_let(_, _, _, quals) when (quals |> Util.for_some (function Projector _ | Discriminator _  | Inline -> true | _ -> false)) ->
+    | Sig_let(_, _, _, quals) when (quals |> Util.for_some (function Discriminator _ | Inline -> true | _ -> false)) ->
+      //inline lets are never encoded as definitions --- since they will be inlined
+      //Discriminators are encoded directly via (our encoding of) theory of datatypes
       [], env
+
+    | Sig_let((false, [lb]), _, _, quals) when (quals |> Util.for_some (function Projector _ -> true | _ -> false)) ->
+     //Projectors are also are encoded directly via (our encoding of) theory of datatypes
+     //Except in some cases where the front-end does not emit a declare_typ for some projector, because it doesn't know how to compute it
+     let l = right lb.lbname in
+     begin match try_lookup_free_var env l with
+        | Some _ -> 
+          [], env //already encoded
+        | None -> 
+          let se = Sig_declare_typ(l, lb.lbunivs, lb.lbtyp, quals, Ident.range_of_lid l) in
+          encode_sigelt env se
+     end
+      
 
     | Sig_let((is_rec, bindings), _, _, quals) ->
         let eta_expand binders formals body t =
@@ -1740,7 +1760,7 @@ let encode_sig tcenv se =
 let encode_modul tcenv modul =
     let name = Util.format2 "%s %s" (if modul.is_interface then "interface" else "module")  modul.name.str in
     if Env.debug tcenv Options.Low
-    then Util.print2 "Encoding externals for %s ... %s exports\n" name (List.length modul.exports |> string_of_int);
+    then Util.print2 "+++++++++++Encoding externals for %s ... %s exports\n" name (List.length modul.exports |> string_of_int);
     let env = get_env tcenv in
     let decls, env = encode_signature ({env with warn=false}) modul.exports in
     let caption decls =

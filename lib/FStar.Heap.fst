@@ -8,6 +8,7 @@ open FStar.Set
 assume new type heap : Type0
 abstract type ref (a:Type) = 
   | MkRef of a //this implementation of ref is not realistic; it's just to get the universes right
+#reset-options
 type aref =
   | Ref : #a:Type -> r:ref a -> aref
 assume val sel :       #a:Type -> heap -> ref a -> Tot a

@@ -168,7 +168,7 @@ let pop env msg = match env.sigtab with
 // Checking the per-module debug level and position info  //
 ////////////////////////////////////////////////////////////
 let debug env (l:Options.debug_level_t) =
-       !Options.debug |> Util.for_some (fun x -> env.curmodule.str = x)
+       !Options.debug |> Util.for_some (fun x -> env.curmodule.str="" || env.curmodule.str = x)
     && Options.debug_level_geq l
 let set_range e r = if r=dummyRange then e else {e with range=r}
 let get_range e = e.range
