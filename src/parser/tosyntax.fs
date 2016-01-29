@@ -73,10 +73,6 @@ let contains_binder binders =
 let rec unparen t = match t.tm with
   | Paren t -> unparen t
   | _ -> t
-let rec unlabel t = match t.tm with
-  | Paren t -> unlabel t
-  | Labeled(t, _, _) -> unlabel t
-  | _ -> t
 
 let tm_type r = mk_term (Name (lid_of_path ["Type"] r)) r Kind
 
@@ -163,6 +159,8 @@ let rec free_type_vars_b env binder = match binder.b with
   | NoName t ->
     (env, free_type_vars env t)
 and free_type_vars env t = match (unparen t).tm with
+  | Labeled _ -> failwith "Impossible --- labeled source term"
+
   | Tvar a ->
     (match Env.try_lookup_id env a with
       | None -> [a]
@@ -175,7 +173,6 @@ and free_type_vars env t = match (unparen t).tm with
 
   | Requires (t, _)
   | Ensures (t, _)
-  | Labeled(t, _, _)
   | NamedTyp(_, t)
   | Paren t
   | Ascribed(t, _) -> free_type_vars env t
@@ -230,7 +227,7 @@ let close_fun env t =
   if List.length ftv = 0
   then t
   else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, tm_type x.idRange)) x.idRange Type (Some Implicit)) in
-       let t = match (unlabel t).tm with
+       let t = match (unparen t).tm with
         | Product _ -> t
         | _ -> mk_term (App(mk_term (Name C.effect_Tot_lid) t.range t.level, t, Nothing)) t.range t.level in
        let result = mk_term (Product(binders, t)) t.range t.level in
@@ -270,32 +267,6 @@ let as_binder env imp = function
 
 type env_t = Env.env
 type lenv_t = list<bv>
-
-let label_conjuncts tag polarity label_opt f =
-  let label f =
-    let msg = match label_opt with
-        | Some l -> l
-        | _ ->
-          Util.format2 "%s at %s" tag (Range.string_of_range f.range) in
-    mk_term (Labeled(f, msg, polarity)) f.range f.level  in
-
-  let rec aux f = match f.tm with
-    | Paren g ->
-      mk_term (Paren(aux g)) f.range f.level
-
-    | Op("/\\", [f1;f2]) ->
-      mk_term (Op("/\\", [aux f1; aux f2])) f.range f.level
-
-    | If(f1, f2, f3) ->
-      mk_term (If(f1, aux f2, aux f3)) f.range f.level
-
-    | Abs(binders, g) ->
-      mk_term (Abs(binders, aux g)) f.range f.level
-
-    | _ ->
-      label f in
-
-  aux f
 
 let mk_lb (n, t, e) = {lbname=n; lbunivs=[]; lbeff=C.effect_ALL_lid; lbtyp=t; lbdef=e}
 let no_annot_abs bs t = U.abs bs t None 
@@ -470,11 +441,9 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
     | Labeled _ -> desugar_formula env top
    
     | Requires (t, lopt) ->
-      let t = label_conjuncts "pre-condition" true lopt t in
       desugar_formula env t
 
     | Ensures (t, lopt) ->
-      let t = label_conjuncts "post-condition" false lopt t in
       desugar_formula env t
 
     | Const c -> mk (Tm_constant c)

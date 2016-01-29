@@ -66,6 +66,7 @@ type term' =
   | FreeV      of fv
   | App        of op  * list<term>
   | Quant      of qop * list<list<pat>> * option<int> * list<sort> * term
+  | Labeled    of term * string * Range.range
 and pat  = term
 and term = {tm:term'; hash:string; freevars:Syntax.memo<fvs>}
 and fv = string * sort

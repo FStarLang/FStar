@@ -82,6 +82,7 @@ type term' =
                   * option<int>      //an optional weight; seldom used
                   * list<sort>       //sorts of each bound variable
                   * term             //body
+  | Labeled    of term * string * Range.range
 and pat  = term
 and term = {tm:term'; hash:string; freevars:Syntax.memo<fvs>}
 and fv = string * sort
@@ -103,7 +104,8 @@ let rec freevars t = match t.tm with
   | BoundV _ -> []
   | FreeV fv -> [fv]
   | App(_, tms) -> List.collect freevars tms
-  | Quant(_, _, _, _, t) -> freevars t
+  | Quant(_, _, _, _, t) 
+  | Labeled(t, _, _) -> freevars t
 
 //memo-ized
 let free_variables t = match !t.freevars with
@@ -146,11 +148,12 @@ let weightToSmt = function
     | None -> ""
     | Some i -> Util.format1 ":weight %s\n" (string_of_int i)
 
-let rec hash_of_term' t = match t with
+let hash_of_term' t = match t with
     | Integer i ->  i
     | BoundV i  -> "@"^string_of_int i
     | FreeV x   -> fst x ^ ":" ^ strSort (snd x) //Question: Why is the sort part of the hash?
     | App(op, tms) -> "("^(op_to_string op)^(List.map (fun t -> t.hash) tms |> String.concat " ")^")"
+    | Labeled(t, r1, r2) -> t.hash ^ r1 ^ (Range.string_of_range r2)
     | Quant(qop, pats, wopt, sorts, body) ->
         Util.format5 "(%s (%s)(! %s %s %s))"
             (qop_to_string qop)
@@ -258,6 +261,7 @@ let abstr fvs t = //fvs is a subset of the free vars of t; the result closes ove
                     | Some i -> mkBoundV (i + ix)
                   end
                 | App(op, tms) -> mkApp'(op, List.map (aux ix) tms)
+                | Labeled(t, r1, r2) -> mk (Labeled(aux ix t, r1, r2))
                 | Quant(qop, pats, wopt, vars, body) ->
                   let n = List.length vars in
                   mkQuant(qop, pats |> List.map (List.map (aux (ix + n))), wopt, vars, aux (ix + n) body)
@@ -274,6 +278,7 @@ let inst tms t =
           then List.nth tms (i - shift)
           else t
         | App(op, tms) -> mkApp'(op, List.map (aux shift) tms)
+        | Labeled(t, r1, r2) -> mk (Labeled(aux shift t, r1, r2))
         | Quant(qop, pats, wopt, vars, body) ->
           let m = List.length vars in
           let shift = shift + m in
@@ -368,6 +373,7 @@ let termToSmt t =
       | FreeV x -> fst x
       | App(op, []) -> op_to_string op
       | App(op, tms) -> Util.format2 "(%s %s)" (op_to_string op) (List.map (aux n names) tms |> String.concat "\n")
+      | Labeled(t, _, _) -> aux n names t
       | Quant(qop, pats, wopt, sorts, body) ->
         let names, binders, n = name_binders_inner names n sorts in
         let binders = binders |> String.concat " " in
@@ -567,6 +573,7 @@ let rec print_smt_term (t:term) :string = match t.tm with
   | BoundV  n               -> Util.format1 "BoundV %s" (Util.string_of_int n)
   | FreeV  fv               -> Util.format1 "FreeV %s" (fst fv)
   | App (op, l)             -> Util.format2 "App %s [ %s ]" (op_to_string op) (print_smt_term_list l)
+  | Labeled(t, r1, r2)      -> Util.format3 "Labeled %s %s %s" (print_smt_term t) r1 (Range.string_of_range r2)
   | Quant (qop, l, _, _, t) -> Util.format3 "Quant %s %s %s" (qop_to_string qop) (print_smt_term_list_list l) (print_smt_term t)
 
 and print_smt_term_list (l:list<term>) :string = List.fold_left (fun s t -> (s ^ "; " ^ (print_smt_term t))) "" l

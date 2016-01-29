@@ -59,11 +59,11 @@ val bind_cases: env -> typ -> list<(typ * lcomp)> -> lcomp
 val ite: env -> formula -> lcomp -> lcomp -> lcomp
 val weaken_result_typ: env -> term -> lcomp -> typ -> term * lcomp * guard_t
 val strengthen_precondition: option<(unit -> string)> -> env -> term -> lcomp -> guard_t -> lcomp*guard_t
+val record_application_site: env -> term -> lcomp -> lcomp
 val weaken_guard: guard_formula -> guard_formula -> guard_formula
 val weaken_precondition: env -> lcomp -> guard_formula -> lcomp
 val maybe_assume_result_eq_pure_term: env -> term -> lcomp -> lcomp
 val close_comp: env -> list<bv> -> lcomp -> lcomp
-val refresh_comp_label: env -> bool -> lcomp -> lcomp
 val pure_or_ghost_pre_and_post: env -> comp -> (option<typ> * typ)
 val check_comp: env -> term -> comp -> comp -> term * comp * guard_t
 
@@ -74,7 +74,7 @@ val maybe_coerce_bool_to_type: env -> term -> lcomp -> typ -> term * lcomp
 
 //misc.
 val label: string -> Range.range -> typ -> typ
-val label_guard: string -> Range.range -> guard_formula -> guard_formula
+val label_guard: Range.range -> string -> guard_t -> guard_t
 val short_circuit: term -> args -> guard_formula
 val short_circuit_head: term -> bool
 val maybe_add_implicit_binders: env -> binders -> binders

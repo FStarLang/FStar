@@ -559,29 +559,8 @@ let lift_formula env t mk_wp mk_wlp f =
   let wlp = mk_Tm_app mk_wlp [S.arg t; S.arg f] (Some k.n) f.pos in
   mk_comp md_pure Recheck.t_unit wp wlp [] 
 
-let unlabel t = mk (Tm_meta(t, Meta_refresh_label (None, t.pos))) None t.pos 
-
-let refresh_comp_label env (b:bool) lc =
-    let refresh () =
-        let c = lc.comp () in
-        if Util.is_ml_comp c then c
-        else match c.n with
-        | Total _ 
-        | GTotal _ -> c
-        | Comp ct ->
-          if Env.debug env Options.Low
-          then (Util.print1 "Refreshing label at %s\n" (Range.string_of_range <| Env.get_range env));
-          let c' = Normalize.unfold_effect_abbrev env c in
-          if not <| lid_equals ct.effect_name c'.effect_name && Env.debug env Options.Low
-          then Util.print2 "To refresh, normalized\n\t%s\nto\n\t%s\n" (Print.comp_to_string c) (Print.comp_to_string <| mk_Comp c');
-          let t, wp, wlp = destruct_comp c' in
-          let wp = mk (Tm_meta(wp, Meta_refresh_label(Some b, Env.get_range env))) None wp.pos in
-          let wlp = mk (Tm_meta(wlp, Meta_refresh_label(Some b, Env.get_range env))) None wlp.pos in
-          Syntax.mk_Comp ({c' with effect_args=[S.arg wp; S.arg wlp]; flags=c'.flags}) in
-    {lc with comp=refresh}
-
 let label reason r f : term =
-    mk (Tm_meta(f, Meta_labeled(reason, r, true))) None f.pos
+    mk (Tm_meta(f, Meta_labeled(reason, r, false))) None f.pos
 
 let label_opt env reason r f = match reason with
     | None -> f
@@ -590,9 +569,9 @@ let label_opt env reason r f = match reason with
         then f
         else label (reason()) r f
 
-let label_guard reason r g = match g with
+let label_guard r reason (g:guard_t) = match g.guard_f with 
     | Trivial -> g
-    | NonTrivial f -> NonTrivial (label reason r f)
+    | NonTrivial f -> {g with guard_f=NonTrivial (label reason r f)}
 
 let weaken_guard g1 g2 = match g1, g2 with
     | NonTrivial f1, NonTrivial f2 ->
@@ -664,6 +643,17 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:term) (lc:l
                 cflags=(if Util.is_pure_lcomp lc && not <| Util.is_function_typ lc.res_typ then flags else []);
                 comp=strengthen},
        {g0 with guard_f=Trivial}
+
+let record_application_site env e lc = 
+    let comp () = 
+        let c = lc.comp() in 
+        if Util.is_trivial_wp c
+        then c
+        else let g = label "pre-condition" e.pos Util.t_true in 
+             let g = Rel.guard_of_guard_formula (NonTrivial g) in
+             let c, _ = strengthen_precondition (Some (fun () -> "pre-condition")) env e (Util.lcomp_of_comp c) g in
+             c.comp() in
+    {lc with comp=comp}
 
 let add_equality_to_post_condition env (comp:comp) (res_t:typ) =
     let md_pure = Env.get_effect_decl env Const.effect_PURE_lid in
@@ -851,7 +841,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) : term * lcomp * guard_t =
 let pure_or_ghost_pre_and_post env comp =
     let mk_post_type res_t ens =
         let x = S.new_bv None res_t in 
-        U.refine x (S.mk_Tm_app ens [S.arg (S.bv_to_tm x)] (Some U.ktype0.n) res_t.pos) in// (Some mk_Kind_type) res_t.pos in
+        U.refine x (S.mk_Tm_app ens [S.arg (S.bv_to_name x)] None res_t.pos) in
     let norm t = Normalize.normalize [N.Beta;N.Inline;N.Unlabel] env t in
     if Util.is_tot_or_gtot_comp comp
     then None, Util.comp_result comp
@@ -1091,9 +1081,9 @@ let short_circuit (head:term) (seen_args:args) : guard_formula =
 
     let op_and_e e = U.b2t e   |> NonTrivial in
     let op_or_e e  = U.mk_neg (U.b2t e) |> NonTrivial in
-    let op_and_t t = unlabel t |> NonTrivial in
-    let op_or_t t  = unlabel t |> Util.mk_neg |> NonTrivial in
-    let op_imp_t t = unlabel t |> NonTrivial in
+    let op_and_t t = t |> NonTrivial in
+    let op_or_t t  = t |> Util.mk_neg |> NonTrivial in
+    let op_imp_t t = t |> NonTrivial in
 
     let short_op_ite : args -> guard_formula = function
         | [] -> Trivial

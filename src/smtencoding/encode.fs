@@ -558,6 +558,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
             | Tm_uinst({n=Tm_fvar(l, _)}, _), [_; (v1, _); (v2, _)]
             | Tm_fvar(l, _),  [_; (v1, _); (v2, _)] when lid_equals l.v Const.lexcons_lid ->
+              //lex tuples are primitive
               let v1, decls1 = encode_term v1 env in
               let v2, decls2 = encode_term v2 env in
               Term.mk_LexCons v1 v2, decls1@decls2
@@ -844,6 +845,12 @@ and encode_formula_with_labels (phi:typ) (env:env_t) : (term * labels * decls_t)
         let decls, args = Util.fold_map (fun decls x -> let t, decls' = encode_term (fst x) env in decls@decls', t) [] l in
         (f args, [], decls) in
 
+    let const_op f _ = (f, [], []) in
+    let un_op f l = f <| List.hd l in
+    let bin_op : ((term * term) -> term) -> list<term> -> term = fun f -> function
+        | [t1;t2] -> f(t1,t2)
+        | _ -> failwith "Impossible" in
+
     let enc_prop_c f : args -> (term * labels * decls_t) = fun l ->
         let phis, labs, decls =
             List.fold_right (fun (t, _) (phis, labs, decls) ->
@@ -852,11 +859,6 @@ and encode_formula_with_labels (phi:typ) (env:env_t) : (term * labels * decls_t)
             l ([], [], []) in
         (f phis, labs, decls) in
 
-    let const_op f _ = (f, [], []) in
-    let un_op f l = f <| List.hd l in
-    let bin_op : ((term * term) -> term) -> list<term> -> term = fun f -> function
-        | [t1;t2] -> f(t1,t2)
-        | _ -> failwith "Impossible" in
     let eq_op : args -> (term * labels * decls_t) = function
         | [_;_;e1;e2] -> enc (bin_op mkEq) [e1;e2]
         | l ->  enc (bin_op mkEq) l in
@@ -898,12 +900,7 @@ and encode_formula_with_labels (phi:typ) (env:env_t) : (term * labels * decls_t)
     let fallback phi =  match phi.n with
         | Tm_meta(phi', Meta_labeled(msg, r, b)) ->
           let phi, labs, decls = encode_formula_with_labels phi' env in
-          (phi, [], decls)
-//
-//          else let lvar = varops.fresh "label", Bool_sort in
-//               let lterm = Term.mkFreeV lvar in
-//               let lphi = Term.mkOr(lterm, phi) in
-//               (lphi, (lvar, msg, r)::labs, decls)
+          mk (Term.Labeled(phi, msg, r)), [], decls
 
         | Tm_match(e, pats) -> 
            let t, decls = encode_match e pats Term.mkFalse env encode_formula in
@@ -1791,7 +1788,7 @@ let solve tcenv q : unit =
         let env_decls, env = encode_env_bindings env (List.filter (function Binding_sig _ -> false | _ -> true) bindings) in
         if debug tcenv Options.Low then Util.print1 "Encoding query formula: %s\n" (Print.term_to_string q);
         let phi, qdecls = encode_formula q env in
-        let phi, labels = ErrorReporting.label_goals phi [] in
+        let phi, labels = ErrorReporting.label_goals None phi [] in
         let label_prefix, label_suffix = encode_labels labels in
         let query_prelude =
             env_decls

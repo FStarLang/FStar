@@ -163,8 +163,9 @@ let check_expected_effect env (copt:option<comp>) (e, c) : term * comp * guard_t
        then Util.print3 "\n\nAfter normalization (%s) About to check\n\t%s\nagainst expected effect\n\t%s\n"
                (Print.term_to_string e) (Print.comp_to_string c) (Print.comp_to_string expected_c);
        
-       let expected_c' = TcUtil.refresh_comp_label env true (U.lcomp_of_comp <| expected_c) in
-       let e, _, g = TcUtil.check_comp env e c <| expected_c'.comp() in
+       //let expected_c' = TcUtil.refresh_comp_label env true (U.lcomp_of_comp <| expected_c) in
+       let e, _, g = TcUtil.check_comp env e c expected_c in
+       let g = TcUtil.label_guard (Env.get_range env) "could not prove post-condition" g in
        if debug env Options.Low then Util.print2 "(%s) DONE check_expected_effect; guard is: %s\n" (Range.string_of_range e.pos) (guard_to_string env g);
        e, expected_c, g
 
@@ -876,45 +877,47 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
 
             | _, [] -> (* no more args; full or partial application *)
                 fxv_check head env cres.res_typ fvs;
-                let cres, g = match bs with
-                | [] -> (* full app *)
-                    let cres = TcUtil.subst_lcomp subst cres in
-                    (* If we have f e1 e2
-                        where e1 or e2 is impure but f is a pure function,
-                        then refine the result to be equal to f x1 x2,
-                        where xi is the result of ei. (See the last two tests in examples/unit-tests/unit1.fst)
-                    *)
-                    let g = Rel.conj_guard ghead g in
+                let cres, g = 
+                  match bs with
+                    | [] -> (* full app *)
+                        let cres = TcUtil.subst_lcomp subst cres in
+                        (* If we have f e1 e2
+                            where e1 or e2 is impure but f is a pure function,
+                            then refine the result to be equal to f x1 x2,
+                            where xi is the result of ei. (See the last two tests in examples/unit-tests/unit1.fst)
+                        *)
+                        let g = Rel.conj_guard ghead g in
 
-                    let refine_with_equality =
-                        //if the function is pure, but its arguments are not, then add an equality refinement here
-                        //OW, for pure applications we always add an equality at the end; see ADD_EQ_REFINEMENT below
-                        Util.is_pure_or_ghost_lcomp cres
-                        && comps |> Util.for_some (fun (_, c) -> not (Util.is_pure_or_ghost_lcomp c)) in 
-                        (* if the guard is trivial, then strengthen_precondition below will not add an equality; so add it here *)
+                        let refine_with_equality =
+                            //if the function is pure, but its arguments are not, then add an equality refinement here
+                            //OW, for pure applications we always add an equality at the end; see ADD_EQ_REFINEMENT below
+                            Util.is_pure_or_ghost_lcomp cres
+                            && comps |> Util.for_some (fun (_, c) -> not (Util.is_pure_or_ghost_lcomp c)) in 
+                            (* if the guard is trivial, then strengthen_precondition below will not add an equality; so add it here *)
 
-                    let cres = //NS: Choosing when to add an equality refinement is VERY important for performance. 
-                                //Adding it unconditionally impacts run time by >5x
-                        if refine_with_equality
-                        then Util.maybe_assume_result_eq_pure_term env 
-                                (mk_Tm_app head (List.rev arg_rets) (Some cres.res_typ.n) r) 
-                                cres
-                        else (if Env.debug env Options.Low
-                                then Util.print3 "Not refining result: f=%s; cres=%s; guard=%s\n" 
-                                    (Print.term_to_string head) (Print.lcomp_to_string cres) (guard_to_string env g);
-                                cres) in
+                        let cres = //NS: Choosing when to add an equality refinement is VERY important for performance. 
+                                    //Adding it unconditionally impacts run time by >5x
+                            if refine_with_equality
+                            then Util.maybe_assume_result_eq_pure_term env 
+                                    (mk_Tm_app head (List.rev arg_rets) (Some cres.res_typ.n) r) 
+                                    cres
+                            else (if Env.debug env Options.Low
+                                    then Util.print3 "Not refining result: f=%s; cres=%s; guard=%s\n" 
+                                        (Print.term_to_string head) (Print.lcomp_to_string cres) (guard_to_string env g);
+                                    cres) in
 
-                    (* relabeling the labeled sub-terms in cres to report failing pre-conditions at this call-site *)
-                    TcUtil.refresh_comp_label env false cres, g
+                        (* TODO: relabeling the labeled sub-terms in cres to report failing pre-conditions at this call-site *)
+                        cres, g
 
-                | _ ->  (* partial app *)
-                    let g = Rel.conj_guard ghead g |> Rel.solve_deferred_constraints env in //TODO: fix this; it forces eta expansions (cf. FSTar.Relational.fst: 43 and 43)
-                    U.lcomp_of_comp <| mk_Total  (SS.subst subst <| Util.arrow bs (cres.comp())), g in
+                    | _ ->  (* partial app *)
+                        let g = Rel.conj_guard ghead g |> Rel.solve_deferred_constraints env in 
+                        U.lcomp_of_comp <| mk_Total  (SS.subst subst <| Util.arrow bs (cres.comp())), g in
 
                 if debug env Options.Low then Util.print1 "\t Type of result cres is %s\n" (Print.lcomp_to_string cres);
                 let comp = List.fold_left (fun out c -> TcUtil.bind env None (snd c) (fst c, out)) cres comps in
                 let comp = TcUtil.bind env None chead (None, comp) in
                 let app =  mk_Tm_app head (List.rev outargs) (Some comp.res_typ.n) r in
+//                let comp = TcUtil.record_application_site env app comp in
                 let comp, g = TcUtil.strengthen_precondition None env app comp g in //Each conjunct in g is already labeled
                 if debug env Options.Low 
                 then Util.print2 "\t Type of app term %s is %s\n" (N.term_to_string env app) (Print.comp_to_string (comp.comp()));
