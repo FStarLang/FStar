@@ -65,6 +65,7 @@
     <Compile Include="term.fsi" />
     <Compile Include="term.fs" />
     <Compile Include="splitcases.fs" />
+    <Compile Include="errorReporting.fs" />
     <Compile Include="z3.fs" />
     <Compile Include="encode.fs" />
   </ItemGroup>

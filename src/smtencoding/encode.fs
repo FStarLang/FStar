@@ -898,12 +898,12 @@ and encode_formula_with_labels (phi:typ) (env:env_t) : (term * labels * decls_t)
     let fallback phi =  match phi.n with
         | Tm_meta(phi', Meta_labeled(msg, r, b)) ->
           let phi, labs, decls = encode_formula_with_labels phi' env in
-          if env.nolabels
-          then (phi, [], decls)
-          else let lvar = varops.fresh "label", Bool_sort in
-               let lterm = Term.mkFreeV lvar in
-               let lphi = Term.mkOr(lterm, phi) in
-               (lphi, (lvar, msg, r)::labs, decls)
+          (phi, [], decls)
+//
+//          else let lvar = varops.fresh "label", Bool_sort in
+//               let lterm = Term.mkFreeV lvar in
+//               let lphi = Term.mkOr(lterm, phi) in
+//               (lphi, (lvar, msg, r)::labs, decls)
 
         | Tm_match(e, pats) -> 
            let t, decls = encode_match e pats Term.mkFalse env encode_formula in
@@ -1790,7 +1790,8 @@ let solve tcenv q : unit =
             Util.close_forall (List.rev closing) q, bindings in 
         let env_decls, env = encode_env_bindings env (List.filter (function Binding_sig _ -> false | _ -> true) bindings) in
         if debug tcenv Options.Low then Util.print1 "Encoding query formula: %s\n" (Print.term_to_string q);
-        let phi, labels, qdecls = encode_formula_with_labels q env in
+        let phi, qdecls = encode_formula q env in
+        let phi, labels = ErrorReporting.label_goals phi [] in
         let label_prefix, label_suffix = encode_labels labels in
         let query_prelude =
             env_decls
