@@ -760,7 +760,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                         if use_teq
                         then e, Rel.teq env t tfun_computed
                         else TcUtil.check_and_ascribe env e tfun_computed t in
-                    ascribe e t, 
+                    e, 
                     t,  
                     Rel.conj_guard guard guard')
 

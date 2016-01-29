@@ -221,7 +221,13 @@ let rec term_to_string x =
   | Tm_constant c ->    const_to_string c
   | Tm_type u ->        if !Options.print_universes then Util.format1 "Type(%s)" (univ_to_string u) else "Type"
   | Tm_arrow(bs, c) ->  Util.format2 "(%s -> %s)"  (binders_to_string " -> " bs) (comp_to_string c)
-  | Tm_abs(bs, t2, _) ->   Util.format2 "(fun %s -> %s)" (binders_to_string " " bs) (term_to_string t2)
+  | Tm_abs(bs, t2, lc) ->  
+    begin match lc with 
+        | Some l when !Options.print_implicits -> 
+          Util.format3 "(fun %s -> (%s $$ %s))" (binders_to_string " " bs) (term_to_string t2) (comp_to_string <| l.comp())
+        | _ -> 
+         Util.format2 "(fun %s -> %s)" (binders_to_string " " bs) (term_to_string t2)
+    end
   | Tm_refine(xt, f) -> Util.format3 "(%s:%s{%s})" (bv_to_string xt) (xt.sort |> term_to_string) (f |> formula_to_string)
   | Tm_app(t, args) ->  Util.format2 "(%s %s)" (term_to_string t) (args_to_string args)
   | Tm_let(lbs, e) ->   Util.format2 "%s\nin\n%s" (lbs_to_string [] lbs) (term_to_string e)
@@ -424,3 +430,12 @@ let rec sigelt_to_string_short x = match x with
 
 let rec modul_to_string (m:modul) =
   Util.format2 "module %s\n%s" (sli m.name) (List.map sigelt_to_string m.declarations |> String.concat "\n")
+
+let subst_elt_to_string = function
+   | DB(i, t) -> Util.format2 "DB (%s, %s)" (string_of_int i) (term_to_string t)
+   | NM(x, i) -> Util.format2 "NM (%s, %s)" (bv_to_string x) (string_of_int i)
+   | NT(x, t) -> Util.format2 "DB (%s, %s)" (bv_to_string x) (term_to_string t) 
+   | UN(i, u) -> Util.format2 "UN (%s, %s)" (string_of_int i) (univ_to_string u)
+   | UD(u, i) -> Util.format2 "UD (%s, %s)" u.idText (string_of_int i) 
+
+ let subst_to_string s = s |> List.map subst_elt_to_string |> String.concat "; " 

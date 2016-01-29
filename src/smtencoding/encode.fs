@@ -34,7 +34,9 @@ module N = FStar.TypeChecker.Normalize
 let add_fuel x tl = if !Options.unthrottle_inductives then tl else x::tl
 let withenv c (a, b) = (a,b,c)
 let vargs args = List.filter (function (Inl _, _) -> false | _ -> true) args
-
+let subst_lcomp_opt s l = match l with 
+    | None -> None
+    | Some l -> Some (Util.lcomp_of_comp <| SS.subst_comp s (l.comp()))
 (* ------------------------------------ *)
 (* Some operations on constants *)
 let escape (s:string) = Util.replace_char s '\'' '_'
@@ -620,72 +622,42 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
               fallback ()
 
             | Some lc ->
-//              let tfun = as_function_typ env <| Syntax.mk tfun None t0.pos in 
               if not <| Util.is_pure_or_ghost_lcomp lc 
               then fallback ()
-              else let c = SS.subst_comp opening (lc.comp()) in
-//                    
-//                     in begin match tfun.n with
-//                    | Tm_arrow(bs', c) ->
-//                      let bs', c = SS.open_comp bs' c in
-//
-//                      let nformals = List.length bs' in
-//                      if nformals < List.length bs 
-//                      && Util.is_total_comp c (* explicit currying *)
-//                      then let bs0, rest = Util.first_N nformals bs in
-//                           let res_t = 
-//                            let subst = List.map2 (fun (b, _) (x, _) -> NT(b, S.bv_to_tm x)) bs' bs0 in
-//                            SS.subst subst (Util.comp_result c) in
-//                           let e = mk (Util.abs bs0 
-//                                           (mk (Tm_ascribed(Util.abs rest body, 
-//                                                              res_t, 
-//                                                              Some Const.effect_Tot_lid))
-//                                                None body.pos)).n
-//                                     (Some tfun.n) 
-//                                     t0.pos in
-//                             //Util.print1 "Explicitly currying %s\n" (Print.exp_to_string e);
-//                           encode_term e env
-//
-//                      else 
-//                      
-                      let vars, guards, envbody, decls, _ = encode_binders None bs env in
-                           let body, decls' = encode_term body envbody in
+              else  let c0 = lc.comp() in
+                    let c = SS.subst_comp opening c0 in
+//                    Printf.printf "Printf.printf body comp type is %s\n\topened to %s\n\topening is %s\n\tbody=%s\n" 
+//                            (Print.comp_to_string c0) (Print.comp_to_string c) (opening |> Print.subst_to_string) (Print.term_to_string body);
+                    let vars, guards, envbody, decls, _ = encode_binders None bs env in
+                        let body, decls' = encode_term body envbody in
+                        let key_body = mkForall([], vars, mkImp(mk_and_l guards, body)) in
+                        let cvars = Term.free_variables key_body in
+                        let tkey = mkForall([], cvars, key_body) in
 
-                           let key_body = mkForall([], vars, mkImp(mk_and_l guards, body)) in
-                           let cvars = Term.free_variables key_body in
-                           let tkey = mkForall([], cvars, key_body) in
-
-                           begin match Util.smap_try_find env.cache tkey.hash with
-                                | Some (t, _, _) ->
-                                  Term.mkApp(t, List.map mkFreeV cvars), []
-
-                                | None ->
-                                  begin match is_eta env vars body with
+                        begin match Util.smap_try_find env.cache tkey.hash with
+                            | Some (t, _, _) -> Term.mkApp(t, List.map mkFreeV cvars), []
+                            | None ->
+                                begin match is_eta env vars body with
                                     | Some t ->
-                                      t, []
+                                        t, []
                                     | None ->
-                                      let cvar_sorts = List.map snd cvars in
-                                      let fsym = varops.fresh "Exp_abs" in
-                                      let fdecl = Term.DeclFun(fsym, cvar_sorts, Term_sort, None) in
-                                      let f = Term.mkApp(fsym, List.map mkFreeV cvars) in
-                                      let app = mk_Apply f vars in
-                                      let tfun = Util.arrow bs c in
-                                      let f_has_t, decls'' = encode_term_pred None tfun env f in
-                                      let typing_f = Term.Assume(Term.mkForall([[f]], cvars, f_has_t),
+                                        let cvar_sorts = List.map snd cvars in
+                                        let fsym = varops.fresh "Exp_abs" in
+                                        let fdecl = Term.DeclFun(fsym, cvar_sorts, Term_sort, None) in
+                                        let f = Term.mkApp(fsym, List.map mkFreeV cvars) in
+                                        let app = mk_Apply f vars in
+                                        let tfun = Util.arrow bs c in
+                                        let f_has_t, decls'' = encode_term_pred None tfun env f in
+                                        let typing_f = Term.Assume(Term.mkForall([[f]], cvars, f_has_t),
                                                                 Some (fsym ^ " typing")) in
-
-                                      let interp_f = Term.Assume(Term.mkForall([[app]], vars@cvars, mkImp(Term.mk_IsTyped app, mkEq(app, body))),
+                                        let interp_f = Term.Assume(Term.mkForall([[app]], vars@cvars, mkImp(Term.mk_IsTyped app, mkEq(app, body))),
                                                                 Some (fsym ^ " interpretation")) in
-
-                                      let f_decls = decls@decls'@(fdecl::decls'')@[typing_f;interp_f] in
-
-                                      Util.smap_add env.cache tkey.hash (fsym, cvar_sorts, f_decls);
-
-                                      f, f_decls
+                                        let f_decls = decls@decls'@(fdecl::decls'')@[typing_f;interp_f] in
+                                        Util.smap_add env.cache tkey.hash (fsym, cvar_sorts, f_decls);
+                                        f, f_decls
                                 end
-                            end
-                end
-//            end
+                        end
+         end
 
       | Tm_let((_, {lbname=Inr _}::_), _) -> 
         failwith "Impossible: already handled by encoding of Sig_let"
@@ -1258,8 +1230,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
         let rec destruct_bound_function flid t_norm e = 
            match (Util.unascribe e).n with
-            | Tm_abs(binders, body, _) ->
-                let binders, body = SS.open_term binders body in
+            | Tm_abs(binders, body, lopt) ->
+                let binders, body, opening = SS.open_term' binders body in
                 begin match (SS.compress t_norm).n with
                  | Tm_arrow(formals, c) ->
                     let formals, c = SS.open_comp formals c in
@@ -1267,11 +1239,12 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                     let nbinders = List.length binders in
                     let tres = Util.comp_result c in
                     if nformals < nbinders && Util.is_total_comp c (* explicit currying *)
-                    then let bs0, rest = Util.first_N nformals binders in
+                    then let lopt = subst_lcomp_opt opening lopt in
+                         let bs0, rest = Util.first_N nformals binders in
                          let c =
                             let subst = List.map2 (fun (b, _) (x, _) -> NT(b, S.bv_to_name x)) bs0 formals in
                             SS.subst_comp subst c in
-                         let body = Util.abs rest body (Some (Util.lcomp_of_comp c)) in
+                         let body = Util.abs rest body lopt in
                          bs0, body, bs0, Util.comp_result c
                     else if nformals > nbinders (* eta-expand before translating it *)
                     then let binders, body = eta_expand binders formals body tres in
