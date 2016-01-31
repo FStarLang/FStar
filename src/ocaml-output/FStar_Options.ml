@@ -360,7 +360,7 @@ in (find_file filen _87_59))) with
 result
 end
 | None -> begin
-(let _87_61 = (let _87_60 = (FStar_Util.format1 "unable to find required file %s in search path." filen)
+(let _87_61 = (let _87_60 = (FStar_Util.format1 "unable to find required file \"%s\" in the module search path." filen)
 in FStar_Util.Failure (_87_60))
 in (Prims.raise _87_61))
 end))
