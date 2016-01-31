@@ -51,6 +51,13 @@ following commands. (On Windows this requires Cygwin and `make`)
 
         $ make -C examples
 
+### OPAM package for all platforms ###
+
+If the OCaml package manager is present on your platform, you can install F\*
+and all required dependencies using the opam package:
+
+        $ opam install fstar
+
 ### Homebrew formula for Mac OS X ###
 
 On Macs you can also build and install the latest F\* release using Homebrew:
@@ -72,10 +79,10 @@ special flag. Therefore, the standard build process of F* is as follows:
 
   1. build F* from sources using the F# compiler
      (obtaining a .NET binary for F\*);
-  
+
   2. extract the sources of F* itself to OCaml
      using the F* binary produced at step 1;
-  
+
   3. re-build F* using the OCaml compiler from the code generated at step 2
      (obtaining a faster native binary for F\*).
 
