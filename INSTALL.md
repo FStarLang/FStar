@@ -76,15 +76,16 @@ If you have a serious interest in F\* or want to report bugs then we
 recommend that you build F\* from the sources on GitHub (the master branch).
 
 F\* is written in a subset of F# that F\* itself can also parse with a
-special flag. Therefore, the standard build process of F* is as follows:
+special flag. Therefore, the standard build process of F* involves the following
+three steps:
 
-  1. build F* from sources using the F# compiler
+  Step 1. build F* from sources using the F# compiler
      (obtaining a .NET binary for F\*);
 
-  2. extract the sources of F* itself to OCaml
+  Step 2. extract the sources of F* itself to OCaml
      using the F* binary produced at step 1;
 
-  3. re-build F* using the OCaml compiler from the code generated at step 2
+  Step 3. re-build F* using the OCaml compiler from the code generated at step 2
      (obtaining a faster native binary for F\*).
 
 **Note:** If you build F* from sources you will also need to get a Z3
@@ -99,7 +100,7 @@ convenience, we keep a (possibly outdated) snapshot of the F\* sources
 extracted to OCaml (the result of step 2) in the repo.  This allows
 you to skip directly to step 3 and build F* with just an OCaml compiler.
 
-### 1. Building F* from sources using the F# compiler ###
+### Step 1. Building F* from sources using the F# compiler ###
 
 #### On Windows 7/8/10 using Visual Studio 2015 ####
 
@@ -179,7 +180,7 @@ you to skip directly to step 3 and build F* with just an OCaml compiler.
     issuing `ulimit -s unlimited` in the terminal beforehand.
 
 
-### 3. Building F* using the OCaml snapshot ###
+### Step 3. Building F* using the OCaml snapshot ###
 
 The current version of F* requires OCaml 4.02.x.
 
@@ -225,7 +226,7 @@ special `flexlink` technology for this. See `contrib/CoreCrypto/ml` and
         $ make -C src/ocaml-output
 
 
-### 2. Extracting the sources of F* itself to OCaml ###
+### Step 2. Extracting the sources of F* itself to OCaml ###
 
 0. Get an F* binary, either using the F#/.NET build process (step 1
    above), or the OCaml build process (step 3 above). Make sure you
