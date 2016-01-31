@@ -178,7 +178,7 @@ you to skip directly to step 3 and build F* with just an OCaml compiler.
     issuing `ulimit -s unlimited` in the terminal beforehand.
 
 
-### 3. Building F* using the OCaml snapshot ###
+### 2. Building F* using the OCaml snapshot ###
 
 The current version of F* requires OCaml 4.02.x.
 
@@ -224,7 +224,7 @@ special `flexlink` technology for this. See `contrib/CoreCrypto/ml` and
         $ make -C src/ocaml-output
 
 
-### 2. Extracting the sources of F* itself to OCaml ###
+### Extracting the sources of F* itself to OCaml ###
 
 0. Get an F* binary, either using the F#/.NET build process (step 1
    above), or the OCaml build process (step 3 above). Make sure you
