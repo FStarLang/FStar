@@ -244,7 +244,7 @@ ocaml, opam, z3, make, git, Madoko, LaTeX, and zip installed.
 
 **Note**: no cross-platform compilation supported at the moment
 
-0. Build F* using the OCaml snapshot (step 3 above)
+0. Build F\* using the OCaml snapshot (step 3 above)
 
 1. Make sure you have the Z3 4.4.1 binary in your `$PATH` or
    in the `$FSTAR_HOME/bin` directory.
@@ -258,7 +258,7 @@ ocaml, opam, z3, make, git, Madoko, LaTeX, and zip installed.
 
 3. Run the testing of binary packages (described above)
 
-** Note**: At the end of a release, please remember to update the
+**Note**: At the end of a release, please remember to update the
 links at: https://www.fstar-lang.org/#download and the
 version on https://en.wikipedia.org/wiki/F*_(programming_language)
 and https://en.wikipedia.org/wiki/Proof_assistant
