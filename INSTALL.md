@@ -79,14 +79,14 @@ F\* is written in a subset of F# that F\* itself can also parse with a
 special flag. Therefore, the standard build process of F* involves the following
 three steps:
 
-  Step 1. build F* from sources using the F# compiler
+  **Step 1.** build F* from sources using the F# compiler
      (obtaining a .NET binary for F\*);
 
-  Step 2. extract the sources of F* itself to OCaml
+  **Step 2.** extract the sources of F* itself to OCaml
      using the F* binary produced at step 1;
 
-  Step 3. re-build F* using the OCaml compiler from the code generated at step 2
-     (obtaining a faster native binary for F\*).
+  **Step 3.** re-build F* using the OCaml compiler from the code
+     generated at step 2 (obtaining a faster native binary for F\*).
 
 **Note:** If you build F* from sources you will also need to get a Z3
 binary. This is further explained towards the end of this document.
