@@ -83,7 +83,7 @@ three steps:
      (obtaining a .NET binary for F\*);
 
   **Step 2.** extract the sources of F* itself to OCaml
-     using the F* binary produced at step 1;
+     using the F* binary produced at step 1 (or even a previous step 3);
 
   **Step 3.** re-build F* using the OCaml compiler from the code
      generated at step 2 (obtaining a faster native binary for F\*).
@@ -179,10 +179,9 @@ you to skip directly to step 3 and build F* with just an OCaml compiler.
   - If `make test.net` (`make boot` in fact) causes a stack overflow try
     issuing `ulimit -s unlimited` in the terminal beforehand.
 
+### Prerequisite for steps 2 and 3: Working OCaml setup  ###
 
-### Step 3. Building F* using the OCaml snapshot ###
-
-The current version of F* requires OCaml 4.02.x.
+Steps 2 and 3 below require a working OCaml (4.02.x) setup.
 
 #### Instructions for Windows ####
 
@@ -190,17 +189,6 @@ The current version of F* requires OCaml 4.02.x.
    Windows](http://protz.github.io/ocaml-installer/). Make sure you ask it to
    install Cygwin -- it will just launch Cygwin's setup.exe with the right set
    of packages pre-checked, to make sure you have everything you need.
-
-1. `make -C src/ocaml-output`
-
-**Note:** This procedure generates a native F* binary, that is, a binary that
-does *not* depend on `cygwin1.dll`, since the installer above uses a
-*native* Windows port of OCaml.  Cygwin is just there to provide `make` and
-other utilities required for the build.
-This also means that when linking C libraries with OCaml compiled objects one
-needs to use the *correct* mingw libraries and *not* the Cygwin ones. OCaml uses
-special `flexlink` technology for this. See `contrib/CoreCrypto/ml` and
-`examples/crypto` for examples.
 
 #### Instructions for Linux and Mac OS X ####
 
@@ -221,21 +209,33 @@ special `flexlink` technology for this. See `contrib/CoreCrypto/ml` and
 
         $ opam install ocamlfind batteries
 
-3. Then run the following command:
-
-        $ make -C src/ocaml-output
-
-
 ### Step 2. Extracting the sources of F* itself to OCaml ###
 
 0. Get an F* binary, either using the F#/.NET build process (step 1
-   above), or the OCaml build process (step 3 above). Make sure you
-   follow the instructions above to get a working OCaml setup.
+   above), or the OCaml build process (step 3 above).
 
-1. Once you satisfy the prerequisites for your platform,
+1. Make sure you follow the instructions above to get a working OCaml setup.
+
+2. Once you satisfy the prerequisites for your platform,
    translate the F* sources from F# to OCaml using F* by running:
 
         $ make ocaml -C src
+
+### Step 3. Building F* from the OCaml snapshot ###
+
+Once you have a working OCaml setup (see above)
+just run the following command:
+
+        $ make -C src/ocaml-output
+
+**Note:** On Windows this generates a native F* binary, that is, a binary that
+does *not* depend on `cygwin1.dll`, since the installer above uses a
+*native* Windows port of OCaml.  Cygwin is just there to provide `make` and
+other utilities required for the build.
+This also means that when linking C libraries with OCaml compiled objects one
+needs to use the *correct* mingw libraries and *not* the Cygwin ones. OCaml uses
+special `flexlink` technology for this. See `contrib/CoreCrypto/ml` and
+`examples/crypto` for examples.
 
 
 ## Runtime dependency: Z3 SMT solver ##
