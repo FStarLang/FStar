@@ -51,17 +51,17 @@ following commands. (On Windows this requires Cygwin and `make`)
 
         $ make -C examples
 
-### OPAM package for all platforms ###
+### OPAM package ###
 
 If the OCaml package manager is present on your platform, you can install F\*
-and required dependencies (except for z3) using the opam package:
+and required dependencies (except for Z3) using the opam package:
 
         $ opam install fstar
 
 ### Homebrew formula for Mac OS X ###
 
 On Macs you can also build and install the latest F\* release using Homebrew
-This will install the compiler and all required dependencies (including z3):
+This will install F\* and all required dependencies (including Z3):
 
         $ brew install fstar
 
