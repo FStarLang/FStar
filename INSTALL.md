@@ -239,9 +239,12 @@ https://github.com/Z3Prover/z3/releases/tag/z3-4.4.1
 
 ## Creating binary packages for your platform ##
 
-(no cross-platform compilation supported at the moment)
+**Note**: to create the package successfully you will need tools like
+ocaml, opam, z3, make, git, Madoko, LaTeX, and zip installed.
 
-0. Bootstrap the compiler in OCaml using the instructions above
+**Note**: no cross-platform compilation supported at the moment
+
+0. Build F* using the OCaml snapshot (step 3 above)
 
 1. Make sure you have the Z3 4.4.1 binary in your `$PATH` or
    in the `$FSTAR_HOME/bin` directory.
@@ -255,10 +258,7 @@ https://github.com/Z3Prover/z3/releases/tag/z3-4.4.1
 
 3. Run the testing of binary packages (described above)
 
-4. At the end of the release, please remember to update the
-   links at: https://www.fstar-lang.org/#download and the
-   version on https://en.wikipedia.org/wiki/F*_(programming_language)
-   and https://en.wikipedia.org/wiki/Proof_assistant
-
-**Note**: to create the package successfully you will need tools like
-make, git, Madoko, latex, zip, etc installed.
+** Note**: At the end of a release, please remember to update the
+links at: https://www.fstar-lang.org/#download and the
+version on https://en.wikipedia.org/wiki/F*_(programming_language)
+and https://en.wikipedia.org/wiki/Proof_assistant
