@@ -120,13 +120,13 @@ package: all
 	$(call fexport,lib)
 	$(call fexport,examples)
 	$(call fexport,contrib)
+	$(call fexport,doc/tutorial)
 ifeq ($(MADOKO),Madoko)
         # Build the tutorial
-	$(MAKE) -C ../../doc/tutorial
+	$(MAKE) -C fstar/doc/tutorial
 else
 	@echo " ********** WARNING: You don't have Madoko installed. Binary package will not include tutorial in html form."
 endif
-	$(call fexport,doc/tutorial)
         # Documentation and licenses
 	cp ../../README.md ../../INSTALL.md ../../LICENSE ../../LICENSE-fsharp.txt ../../setenv.sh $(PREFIX)
 	wget https://raw.githubusercontent.com/Z3Prover/z3/master/LICENSE.txt -O fstar/LICENSE-z3.txt
