@@ -19,6 +19,21 @@ PREFIX=$(shell pwd)/fstar
 # The string "Madoko" if madoko is installed, something else otherwise.
 MADOKO = $(shell madoko --version 2>/dev/null | cut -c -6)
 
+# Detect the GNU utilities
+INSTALL_EXEC := $(shell ginstall --version 2>/dev/null | cut -c -8 | head -n 1)
+DATE_EXEC := $(shell gdate --version 2>/dev/null | cut -c -4 | head -n 1)
+ifdef INSTALL_EXEC
+   INSTALL_EXEC := ginstall
+else
+   INSTALL_EXEC := install
+endif
+
+ifdef DATE_EXEC
+   DATE_EXEC := gdate
+else
+   DATE_EXEC := date
+endif
+
 # FIXME this target is always rebuilt, regardless of whether the sources have
 # changed or not
 all:
@@ -65,7 +80,7 @@ else
      PLATFORM=$(shell echo `uname`_`uname -m`)
 endif
 COMPILER = OCaml $(shell ocamlc -version)
-DATE = $(shell date -Iseconds)
+DATE = $(shell $(DATE_EXEC) -Iseconds)
 COMMIT = $(shell git log --pretty=format:'%h' -n 1)
 FStar_Version.ml:__force__
 	echo 'let version = "$(VERSION)"' > FStar_Version.ml
@@ -84,12 +99,12 @@ FStar_Version.ml:__force__
 # permissions and creating directories on the fly as needed.
 # (JP: the package version of this command is based on git but for OPAM
 #  installs we cannot assume the user has git installed.)
-install_dir = cd ../../$(1) && find . -type f -exec install -m 644 -D {} $(PREFIX)/$(2)/{} \;
+install_dir = cd ../../$(1) && find . -type f -exec $(INSTALL_EXEC) -m 644 -D {} $(PREFIX)/$(2)/{} \;
 
 # Install FStar into $(PREFIX) using the standard Unix directory structure.
 install: all
         # Install the binary
-	install -m 755 -D -T fstar.exe $(PREFIX)/bin/fstar.exe
+	$(INSTALL_EXEC) -m 755 -D -T fstar.exe $(PREFIX)/bin/fstar.exe
         # Then the rest of the static files.
 	$(call install_dir,lib,lib/fstar)
 	$(call install_dir,examples,share/fstar/examples)
@@ -115,7 +130,7 @@ package: all
 	if [ -d "$(PREFIX)" ]; then rm -dfr fstar; fi
         # Install the F* binary
 	mkdir -p $(PREFIX)/bin/
-	install -m 755 fstar.exe $(PREFIX)/bin/fstar.exe
+	$(INSTALL_EXEC) -m 755 fstar.exe $(PREFIX)/bin/fstar.exe
         # Then the rest of the static files.
 	$(call fexport,lib)
 	$(call fexport,examples)
