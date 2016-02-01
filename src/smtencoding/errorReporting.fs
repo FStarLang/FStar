@@ -25,19 +25,21 @@ type label = (fv * string * Range.range)
 type labels = list<label>
 
 type msg = string * Range.range
+type ranges = list<option<string> * Range.range>
 
-let fresh_label : option<msg> -> term -> labels -> term * labels = 
+let fresh_label : ranges -> term -> labels -> term * labels * ranges = 
     let ctr = ref 0 in 
-    fun mopt t labs -> 
+    fun rs t labs -> 
         let l = incr ctr; format1 "label_%s" (string_of_int !ctr) in
         let lvar = l, Bool_sort in
-        let message, range = match mopt with 
-            | None -> t.hash, Range.dummyRange
-            | Some (r, r') -> r, r' in
+        let message, range = match rs with 
+            | [] -> t.hash, Range.dummyRange
+            | (Some reason, r)::_ -> reason, r
+            | (None, r)::_ -> "failed to prove a pre-condition", r in
         let label = (lvar, message, range) in
         let lterm = Term.mkFreeV lvar in
         let lt = Term.mkOr(lterm, t) in
-        lt, label::labs
+        lt, label::labs, rs
 
 (*
    label_goals query : term * labels
@@ -46,34 +48,47 @@ let fresh_label : option<msg> -> term -> labels -> term * labels =
 
       Returns the labeled query and the label terms that were added
 *)
-let rec label_goals (msg:option<msg>) (q:term) labs : term * labels = 
+let rec label_goals rs (q:term) labs : term * labels * ranges = 
     match q.tm with
         | BoundV _ 
         | Integer _ -> 
-          q, labs
+          q, labs, rs
 
-        | Labeled(arg, reason, range) -> 
-          label_goals (Some(reason, range)) arg labs
+        | Labeled(_, "push", r) -> 
+//          Printf.printf "Pushing %s\n" (Range.string_of_range r);
+          Term.mkTrue, labs, (None, r)::rs
+
+        | Labeled(_, "pop", r) ->
+//          Printf.printf "Popping %s\n" (Range.string_of_range r);
+          Term.mkTrue, labs, List.tl rs
+
+        | Labeled(arg, reason, r) -> 
+//          Printf.printf "Pushing %s\n" (Range.string_of_range r);
+          let tm, labs, rs = label_goals ((Some reason, r)::rs) arg labs in
+//          Printf.printf "Popping %s\n" (Range.string_of_range r);
+          tm, labs, List.tl rs
 
         | App(Imp, [lhs;rhs]) -> 
-          let rhs, labs = label_goals msg rhs labs in
-          mk (App(Imp, [lhs; rhs])), labs
+          let rhs, labs, rs = label_goals rs rhs labs in
+          mk (App(Imp, [lhs; rhs])), labs, rs
 
         | App(And, conjuncts) -> 
-          let conjuncts, labs = List.fold_right (fun c (cs, labs) -> 
-            let c, labs = label_goals msg c labs in
-            c::cs, labs) conjuncts ([], labs) in
-          mk (App(And, conjuncts)), labs
+          let rs, conjuncts, labs = List.fold_left (fun (rs, cs, labs) c -> 
+            let c, labs, rs = label_goals rs c labs in
+            rs, c::cs, labs) 
+            (rs, [], labs)
+            conjuncts in
+          mk (App(And, List.rev conjuncts)), labs, rs
        
         | App(ITE, [hd; q1; q2]) -> 
-          let q1, labs = label_goals msg q1 labs in
-          let q2, labs = label_goals msg q2 labs in
-          mk (App(ITE, [hd; q1; q2])), labs
+          let q1, labs, _ = label_goals rs q1 labs in
+          let q2, labs, _ = label_goals rs q2 labs in
+          mk (App(ITE, [hd; q1; q2])), labs, rs
 
         | Quant(Exists, _, _, _, _)
         | App(Iff, _)
         | App(Or, _) -> //non-atomic, but can't case split 
-          fresh_label msg q labs
+          fresh_label rs q labs
 
         | FreeV _ 
         | App(True, _)
@@ -85,7 +100,7 @@ let rec label_goals (msg:option<msg>) (q:term) labs : term * labels =
         | App(GT, _)
         | App(GTE, _)
         | App(Var _, _) -> //atomic goals
-          fresh_label msg q labs
+          fresh_label rs q labs
 
         | App(Add, _)
         | App(Sub, _)
@@ -100,8 +115,8 @@ let rec label_goals (msg:option<msg>) (q:term) labs : term * labels =
           failwith "Impossible: arity mismatch"
        
         | Quant(Forall, pats, iopt, sorts, body) -> 
-          let body, labs = label_goals msg body labs in 
-          mk (Quant(Forall, pats, iopt, sorts, body)), labs
+          let body, labs, rs = label_goals rs body labs in 
+          mk (Quant(Forall, pats, iopt, sorts, body)), labs, rs
 
 
 

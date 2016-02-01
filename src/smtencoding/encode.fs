@@ -1788,7 +1788,9 @@ let solve tcenv q : unit =
         let env_decls, env = encode_env_bindings env (List.filter (function Binding_sig _ -> false | _ -> true) bindings) in
         if debug tcenv Options.Low then Util.print1 "Encoding query formula: %s\n" (Print.term_to_string q);
         let phi, qdecls = encode_formula q env in
-        let phi, labels = ErrorReporting.label_goals None phi [] in
+//        if not (lid_equals (Env.current_module tcenv) Const.prims_lid)
+//        then Util.print1 "About to label goals in %s\n" (Term.print_smt_term phi);
+        let phi, labels, _ = ErrorReporting.label_goals [] phi [] in
         let label_prefix, label_suffix = encode_labels labels in
         let query_prelude =
             env_decls

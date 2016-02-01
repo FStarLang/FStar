@@ -349,6 +349,7 @@ val is_implicit:    aqual -> bool
 val as_implicit:    bool -> aqual
 
 (* gensym *)
+val next_id:        (unit -> int)
 val reset_gensym:   (unit -> unit)
 val freshen_bv:     bv -> bv
 val gen_bv:         string -> option<Range.range> -> typ -> bv 

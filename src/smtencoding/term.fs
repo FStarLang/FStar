@@ -569,14 +569,14 @@ let mk_or_l l = match l with
 
 
 let rec print_smt_term (t:term) :string = match t.tm with
-  | Integer n               -> Util.format1 "Integer %s" n
-  | BoundV  n               -> Util.format1 "BoundV %s" (Util.string_of_int n)
-  | FreeV  fv               -> Util.format1 "FreeV %s" (fst fv)
-  | App (op, l)             -> Util.format2 "App %s [ %s ]" (op_to_string op) (print_smt_term_list l)
-  | Labeled(t, r1, r2)      -> Util.format3 "Labeled %s %s %s" (print_smt_term t) r1 (Range.string_of_range r2)
-  | Quant (qop, l, _, _, t) -> Util.format3 "Quant %s %s %s" (qop_to_string qop) (print_smt_term_list_list l) (print_smt_term t)
+  | Integer n               -> Util.format1 "(Integer %s)" n
+  | BoundV  n               -> Util.format1 "(BoundV %s)" (Util.string_of_int n)
+  | FreeV  fv               -> Util.format1 "(FreeV %s)" (fst fv)
+  | App (op, l)             -> Util.format2 "(%s %s)" (op_to_string op) (print_smt_term_list l)
+  | Labeled(t, r1, r2)      -> Util.format2 "(Labeled '%s' %s)" r1 (print_smt_term t) //r1 (Range.string_of_range r2)
+  | Quant (qop, l, _, _, t) -> Util.format3 "(%s %s %s)" (qop_to_string qop) (print_smt_term_list_list l) (print_smt_term t)
 
-and print_smt_term_list (l:list<term>) :string = List.fold_left (fun s t -> (s ^ "; " ^ (print_smt_term t))) "" l
+and print_smt_term_list (l:list<term>) :string = List.map print_smt_term l |> String.concat " "
 
 and print_smt_term_list_list (l:list<list<term>>) :string =
     List.fold_left (fun s l -> (s ^ "; [ " ^ (print_smt_term_list l) ^ " ] ")) "" l

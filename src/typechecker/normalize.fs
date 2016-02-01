@@ -82,6 +82,7 @@ type stack_elt =
  | Match    of env * branches * Range.range
  | Abs      of env * binders * env * option<lcomp> * Range.range
  | App      of term * aqual * Range.range
+ | Label    of string * Range.range
 
 type stack = list<stack_elt>
 
@@ -406,6 +407,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
             
           | Tm_abs(bs, body, lopt) -> 
             begin match stack with 
+                | Label _ :: _ -> 
+                  failwith "Labeled abstraction"
+
                 | UnivArgs _::_ ->
                   failwith "Ill-typed term: universes cannot be applied to term abstraction"
 
@@ -515,8 +519,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
             begin match stack with 
                 | _::_ ->
                   begin match m with 
-                    | Meta_labeled _ -> 
-                      mk (Tm_meta(norm cfg env stack head, m)) t.pos //meta doesn't block reduction, but we need to put the label back
+                    | Meta_labeled(l, r, _) -> 
+                      norm cfg env (Label(l, r)::stack) head //meta doesn't block reduction, but we need to put the label back
                     | _ -> 
                       norm cfg env stack head //meta doesn't block reduction
                   end  
@@ -563,6 +567,10 @@ and rebuild : cfg -> env -> stack -> term -> term =
                       In either case, it has no free de Bruijn indices *)
         match stack with 
             | [] -> t
+
+            | Label(r, r')::stack -> 
+             let t = mk (Tm_meta(t, Meta_labeled(r, r', false))) r' in
+             rebuild cfg env stack t
 
             | MemoLazy r::stack -> 
               set_memo r (env, t);

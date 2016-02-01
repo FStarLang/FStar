@@ -917,7 +917,7 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                 let comp = List.fold_left (fun out c -> TcUtil.bind env None (snd c) (fst c, out)) cres comps in
                 let comp = TcUtil.bind env None chead (None, comp) in
                 let app =  mk_Tm_app head (List.rev outargs) (Some comp.res_typ.n) r in
-//                let comp = TcUtil.record_application_site env app comp in
+                let comp = TcUtil.record_application_site env app comp in
                 let comp, g = TcUtil.strengthen_precondition None env app comp g in //Each conjunct in g is already labeled
                 if debug env Options.Low 
                 then Util.print2 "\t Type of app term %s is %s\n" (N.term_to_string env app) (Print.comp_to_string (comp.comp()));
