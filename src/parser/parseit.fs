@@ -38,13 +38,15 @@ let find_file (context:string) (filename:string) : string =
     | Some s ->
       s
     | None ->
-      raise (Absyn.Syntax.Err(Util.format1 "unable to find file: %s" filename))
+      raise (Absyn.Syntax.Err(Util.format1 "Unable to find file: %s\n" filename))
 
 let read_file (filename:string) =
   if !Options.debug <> []
   then Util.print1 "Opening file: %s\n" filename;
-  let fs = new System.IO.StreamReader(filename) in
-  fs.ReadToEnd()
+  try
+    let fs = new System.IO.StreamReader(filename) in
+    fs.ReadToEnd()
+  with _ -> Util.format1 "Unable to open file: %s" filename
 
 let rec read_build_config_from_string (filename:string) (use_filename:bool) (contents:string) (is_root:bool) =
     let fail msg = raise (Absyn.Syntax.Err(Util.format2 "Could not parse a valid build configuration from %s; %s\n" filename msg)) in
