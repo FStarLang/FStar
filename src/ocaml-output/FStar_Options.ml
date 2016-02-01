@@ -386,7 +386,7 @@ let display_version = (fun _21_182 -> (match (()) with
 in (FStar_Util.print_string _87_66))
 end))
 
-let display_usage = (fun specs -> (let _21_184 = (FStar_Util.print_string "fstar [option] infile...")
+let display_usage = (fun specs -> (let _21_184 = (FStar_Util.print_string "fstar [option] file...\n")
 in (FStar_List.iter (fun _21_191 -> (match (_21_191) with
 | (_21_187, flag, p, doc) -> begin
 (match (p) with

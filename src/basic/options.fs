@@ -230,7 +230,7 @@ let display_version () =
                                   version platform compiler date commit)
 
 let display_usage specs =
-  Util.print_string "fstar [option] infile...";
+  Util.print_string "fstar [option] file...\n";
   List.iter
     (fun (_, flag, p, doc) ->
        match p with
