@@ -104,7 +104,7 @@ let build_map (filenames: list<string>): map =
   (* All the files we've been given on the command-line must be valid FStar
    files. *)
   List.iter (fun f ->
-    smap_add map (lowercase_module_name f) f;
+    smap_add map (lowercase_module_name f) f
   ) filenames;
   map
 

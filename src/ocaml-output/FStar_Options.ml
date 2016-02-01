@@ -353,9 +353,9 @@ in (match ((find_file filen)) with
 result
 end
 | None -> begin
-(let _87_61 = (let _87_60 = (FStar_Util.format1 "unable to find required file \"%s\" in the module search path." filen)
-in FStar_Util.Failure (_87_60))
-in (Prims.raise _87_61))
+(let _87_56 = (let _87_55 = (FStar_Util.format1 "unable to find required file \"%s\" in the module search path." filen)
+in FStar_Util.Failure (_87_55))
+in (Prims.raise _87_56))
 end))
 end
 | Some (x) -> begin
@@ -379,9 +379,9 @@ let display_version = (fun _21_179 -> (match (()) with
 in (FStar_Util.print_string _87_61))
 end))
 
-let display_usage = (fun specs -> (let _21_184 = (FStar_Util.print_string "fstar [option] file...\n")
-in (FStar_List.iter (fun _21_191 -> (match (_21_191) with
-| (_21_187, flag, p, doc) -> begin
+let display_usage = (fun specs -> (let _21_181 = (FStar_Util.print_string "fstar [option] file...\n")
+in (FStar_List.iter (fun _21_188 -> (match (_21_188) with
+| (_21_184, flag, p, doc) -> begin
 (match (p) with
 | FStar_Getopt.ZeroArgs (ig) -> begin
 if (doc = "") then begin
@@ -416,15 +416,15 @@ end else begin
 (FStar_All.failwith "Invalid argument to --admit_smt_queries")
 end
 end
-in (FStar_ST.op_Colon_Equals admit_smt_queries _87_89))), "true|false")), "Admit SMT queries (UNSAFE! But, useful during development); default: \'false\'"))::((FStar_Getopt.noshort, "cardinality", FStar_Getopt.OneArg (((fun x -> (let _87_93 = (validate_cardinality x)
-in (FStar_ST.op_Colon_Equals cardinality _87_93))), "off|warn|check")), "Check cardinality constraints on inductive data types (default \'off\')"))::((FStar_Getopt.noshort, "codegen", FStar_Getopt.OneArg (((fun s -> (let _87_97 = (parse_codegen s)
-in (FStar_ST.op_Colon_Equals codegen _87_97))), "OCaml|FSharp")), "Generate code for execution"))::((FStar_Getopt.noshort, "codegen-lib", FStar_Getopt.OneArg (((fun s -> (let _87_102 = (let _87_101 = (FStar_ST.read codegen_libs)
-in ((FStar_Util.split s "."))::_87_101)
-in (FStar_ST.op_Colon_Equals codegen_libs _87_102))), "namespace")), "External runtime library library"))::((FStar_Getopt.noshort, "debug", FStar_Getopt.OneArg (((fun x -> (let _87_107 = (let _87_106 = (FStar_ST.read debug)
-in (x)::_87_106)
-in (FStar_ST.op_Colon_Equals debug _87_107))), "module name")), "Print LOTS of debugging information while checking module [arg]"))::((FStar_Getopt.noshort, "debug_level", FStar_Getopt.OneArg (((fun x -> (let _87_112 = (let _87_111 = (FStar_ST.read debug_level)
-in ((dlevel x))::_87_111)
-in (FStar_ST.op_Colon_Equals debug_level _87_112))), "Low|Medium|High|Extreme")), "Control the verbosity of debugging info"))::((FStar_Getopt.noshort, "dep", FStar_Getopt.OneArg (((fun x -> (FStar_ST.op_Colon_Equals dep (Some (x)))), "make|nubuild")), "Output the transitive closure of the dependency graph in a format suitable for the given tool"))::((FStar_Getopt.noshort, "dump_module", FStar_Getopt.OneArg (((fun x -> (FStar_ST.op_Colon_Equals dump_module (Some (x)))), "module name")), ""))::((FStar_Getopt.noshort, "eager_inference", FStar_Getopt.ZeroArgs ((fun _21_210 -> (match (()) with
+in (FStar_ST.op_Colon_Equals admit_smt_queries _87_83))), "true|false")), "Admit SMT queries (UNSAFE! But, useful during development); default: \'false\'"))::((FStar_Getopt.noshort, "cardinality", FStar_Getopt.OneArg (((fun x -> (let _87_87 = (validate_cardinality x)
+in (FStar_ST.op_Colon_Equals cardinality _87_87))), "off|warn|check")), "Check cardinality constraints on inductive data types (default \'off\')"))::((FStar_Getopt.noshort, "codegen", FStar_Getopt.OneArg (((fun s -> (let _87_91 = (parse_codegen s)
+in (FStar_ST.op_Colon_Equals codegen _87_91))), "OCaml|FSharp")), "Generate code for execution"))::((FStar_Getopt.noshort, "codegen-lib", FStar_Getopt.OneArg (((fun s -> (let _87_96 = (let _87_95 = (FStar_ST.read codegen_libs)
+in ((FStar_Util.split s "."))::_87_95)
+in (FStar_ST.op_Colon_Equals codegen_libs _87_96))), "namespace")), "External runtime library library"))::((FStar_Getopt.noshort, "debug", FStar_Getopt.OneArg (((fun x -> (let _87_101 = (let _87_100 = (FStar_ST.read debug)
+in (x)::_87_100)
+in (FStar_ST.op_Colon_Equals debug _87_101))), "module name")), "Print LOTS of debugging information while checking module [arg]"))::((FStar_Getopt.noshort, "debug_level", FStar_Getopt.OneArg (((fun x -> (let _87_106 = (let _87_105 = (FStar_ST.read debug_level)
+in ((dlevel x))::_87_105)
+in (FStar_ST.op_Colon_Equals debug_level _87_106))), "Low|Medium|High|Extreme")), "Control the verbosity of debugging info"))::((FStar_Getopt.noshort, "dep", FStar_Getopt.OneArg (((fun x -> (FStar_ST.op_Colon_Equals dep (Some (x)))), "make|nubuild")), "Output the transitive closure of the dependency graph in a format suitable for the given tool"))::((FStar_Getopt.noshort, "dump_module", FStar_Getopt.OneArg (((fun x -> (FStar_ST.op_Colon_Equals dump_module (Some (x)))), "module name")), ""))::((FStar_Getopt.noshort, "eager_inference", FStar_Getopt.ZeroArgs ((fun _21_206 -> (match (()) with
 | () -> begin
 (FStar_ST.op_Colon_Equals eager_inference true)
 end))), "Solve all type-inference constraints eagerly; more efficient but at the cost of generality"))::((FStar_Getopt.noshort, "explicit_deps", FStar_Getopt.ZeroArgs ((fun _21_207 -> (match (()) with
@@ -502,8 +502,8 @@ in (x)::_87_178)
 in (FStar_ST.op_Colon_Equals show_signatures _87_179))), "module name")), "Show the checked signatures for all top-level symbols in the module"))::((FStar_Getopt.noshort, "silent", FStar_Getopt.ZeroArgs ((fun _21_243 -> (match (()) with
 | () -> begin
 (FStar_ST.op_Colon_Equals silent true)
-end))), " "))::((FStar_Getopt.noshort, "smt", FStar_Getopt.OneArg (((fun x -> (FStar_ST.op_Colon_Equals z3_exe x)), "path")), "Path to the SMT solver (usually Z3, but could be any SMT2-compatible solver)"))::((FStar_Getopt.noshort, "split_cases", FStar_Getopt.OneArg (((fun n -> (let _87_193 = (FStar_Util.int_of_string n)
-in (FStar_ST.op_Colon_Equals split_cases _87_193))), "t")), "Partition VC of a match into groups of n cases"))::((FStar_Getopt.noshort, "timing", FStar_Getopt.ZeroArgs ((fun _21_252 -> (match (()) with
+end))), " "))::((FStar_Getopt.noshort, "smt", FStar_Getopt.OneArg (((fun x -> (FStar_ST.op_Colon_Equals z3_exe x)), "path")), "Path to the SMT solver (usually Z3, but could be any SMT2-compatible solver)"))::((FStar_Getopt.noshort, "split_cases", FStar_Getopt.OneArg (((fun n -> (let _87_187 = (FStar_Util.int_of_string n)
+in (FStar_ST.op_Colon_Equals split_cases _87_187))), "t")), "Partition VC of a match into groups of n cases"))::((FStar_Getopt.noshort, "timing", FStar_Getopt.ZeroArgs ((fun _21_246 -> (match (()) with
 | () -> begin
 (FStar_ST.op_Colon_Equals timing true)
 end))), "Print the time it takes to verify each top-level definition"))::((FStar_Getopt.noshort, "trace_error", FStar_Getopt.ZeroArgs ((fun _21_247 -> (match (()) with
