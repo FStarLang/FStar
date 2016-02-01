@@ -1,9 +1,3 @@
-* Obtain the OpenSSL sourcecode, e.g. using
-
-  `git clone https://github.com/openssl/openssl.git`,
-
-and put it into the parent directory of FStar.
-
 ## On Windows
 
 * If you already use [Cygwin](http://cygwin.com/), make sure it's the the 64-bit version.
@@ -57,17 +51,18 @@ opam remove sqlite3
 opam install sqlite3
 ```
 
-## On other platforms
+## On Linux
 
-* Run `./config && make` in the `openssl` folder.
+* On recent Ubuntus and Debians, installing `openssl-dev` should be enough and work out of the box. (JP: OpenSSL 1.0.2d 9 Jul 2015 worked for me).
 
-## Alternatively
+If you get errors about missing `EVP_AES_GCM`, then you need to obtain the OpenSSL sourcecode, e.g. using
 
-You can try your luck installing `openssl` and `openssl-dev` using
-your favorite package manager.
+    git clone https://github.com/openssl/openssl.git
 
-This might not work on Mac OS X, where there is an outdated
-system-wide `openssl` library that could interfere with the build process.
+Then, compile and install into a local directory (e.g. `/opt`), then tweak the `Makefile` so that it has the proper `-L` and `-I` flags.
 
-On Linux x64 OpenSSL 1.0.2d 9 Jul 2015 does not work, but the current
-git version (1f003251) works fine.
+## On OSX
+
+The outdated, system-wide `openssl` library does not work. However, the `Makefile` is setup so that recent versions of `openssl` installed via either Homebrew or MacPorts are found.
+
+
