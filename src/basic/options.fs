@@ -247,7 +247,7 @@ let rec specs () : list<Getopt.opt> =
     [( noshort, "admit_fsi", OneArg ((fun x -> admit_fsi := x::!admit_fsi), "module name"), "Treat .fsi as a .fst");
      ( noshort, "auto_deps", ZeroArgs (fun () -> auto_deps := true), "automatically treat files discovered by --find_deps as dependencies.");
      ( noshort, "admit_smt_queries", OneArg ((fun s -> admit_smt_queries := (if s="true" then true else if s="false" then false else failwith("Invalid argument to --admit_smt_queries"))), "true|false"), "Admit SMT queries (UNSAFE! But, useful during development); default: 'false'");
-     ( noshort, "cardinality", OneArg ((fun x -> cardinality := validate_cardinality x), "off|warn|check"), "Check cardinality constraints on inductive data types(default 'off')");
+     ( noshort, "cardinality", OneArg ((fun x -> cardinality := validate_cardinality x), "off|warn|check"), "Check cardinality constraints on inductive data types (default 'off')");
      ( noshort, "codegen", OneArg ((fun s -> codegen := parse_codegen s), "OCaml|FSharp"), "Generate code for execution");
      ( noshort, "codegen-lib", OneArg ((fun s -> codegen_libs := (Util.split s ".")::!codegen_libs), "namespace"), "External runtime library library");
      ( noshort, "debug", OneArg ((fun x -> debug := x::!debug), "module name"), "Print LOTS of debugging information while checking module [arg]");
@@ -287,7 +287,7 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "prn", ZeroArgs (fun () -> print_real_names := true), "Print real names---you may want to use this in conjunction with logQueries");
      ( noshort, "serialize_mods", ZeroArgs (fun () -> serialize_mods := true), "Serialize compiled modules");
      ( noshort, "show_signatures", OneArg((fun x -> show_signatures := x::!show_signatures), "module name"), "Show the checked signatures for all top-level symbols in the module");
-     ( noshort, "silent", ZeroArgs (fun () -> silent := true), "");
+     ( noshort, "silent", ZeroArgs (fun () -> silent := true), " ");
      ( noshort, "smt", OneArg ((fun x -> z3_exe := x), "path"), "Path to the SMT solver (usually Z3, but could be any SMT2-compatible solver)");
      ( noshort, "split_cases", OneArg ((fun n -> split_cases := int_of_string n), "t"), "Partition VC of a match into groups of n cases");
      ( noshort, "timing", ZeroArgs (fun () -> timing := true), "Print the time it takes to verify each top-level definition");

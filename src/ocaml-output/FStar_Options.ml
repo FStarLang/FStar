@@ -427,7 +427,7 @@ end else begin
 end
 end
 in (FStar_ST.op_Colon_Equals admit_smt_queries _87_89))), "true|false")), "Admit SMT queries (UNSAFE! But, useful during development); default: \'false\'"))::((FStar_Getopt.noshort, "cardinality", FStar_Getopt.OneArg (((fun x -> (let _87_93 = (validate_cardinality x)
-in (FStar_ST.op_Colon_Equals cardinality _87_93))), "off|warn|check")), "Check cardinality constraints on inductive data types(default \'off\')"))::((FStar_Getopt.noshort, "codegen", FStar_Getopt.OneArg (((fun s -> (let _87_97 = (parse_codegen s)
+in (FStar_ST.op_Colon_Equals cardinality _87_93))), "off|warn|check")), "Check cardinality constraints on inductive data types (default \'off\')"))::((FStar_Getopt.noshort, "codegen", FStar_Getopt.OneArg (((fun s -> (let _87_97 = (parse_codegen s)
 in (FStar_ST.op_Colon_Equals codegen _87_97))), "OCaml|FSharp")), "Generate code for execution"))::((FStar_Getopt.noshort, "codegen-lib", FStar_Getopt.OneArg (((fun s -> (let _87_102 = (let _87_101 = (FStar_ST.read codegen_libs)
 in ((FStar_Util.split s "."))::_87_101)
 in (FStar_ST.op_Colon_Equals codegen_libs _87_102))), "namespace")), "External runtime library library"))::((FStar_Getopt.noshort, "debug", FStar_Getopt.OneArg (((fun x -> (let _87_107 = (let _87_106 = (FStar_ST.read debug)
@@ -513,7 +513,7 @@ in (x)::_87_184)
 in (FStar_ST.op_Colon_Equals show_signatures _87_185))), "module name")), "Show the checked signatures for all top-level symbols in the module"))::((FStar_Getopt.noshort, "silent", FStar_Getopt.ZeroArgs ((fun _21_249 -> (match (()) with
 | () -> begin
 (FStar_ST.op_Colon_Equals silent true)
-end))), ""))::((FStar_Getopt.noshort, "smt", FStar_Getopt.OneArg (((fun x -> (FStar_ST.op_Colon_Equals z3_exe x)), "path")), "Path to the SMT solver (usually Z3, but could be any SMT2-compatible solver)"))::((FStar_Getopt.noshort, "split_cases", FStar_Getopt.OneArg (((fun n -> (let _87_193 = (FStar_Util.int_of_string n)
+end))), " "))::((FStar_Getopt.noshort, "smt", FStar_Getopt.OneArg (((fun x -> (FStar_ST.op_Colon_Equals z3_exe x)), "path")), "Path to the SMT solver (usually Z3, but could be any SMT2-compatible solver)"))::((FStar_Getopt.noshort, "split_cases", FStar_Getopt.OneArg (((fun n -> (let _87_193 = (FStar_Util.int_of_string n)
 in (FStar_ST.op_Colon_Equals split_cases _87_193))), "t")), "Partition VC of a match into groups of n cases"))::((FStar_Getopt.noshort, "timing", FStar_Getopt.ZeroArgs ((fun _21_252 -> (match (()) with
 | () -> begin
 (FStar_ST.op_Colon_Equals timing true)
