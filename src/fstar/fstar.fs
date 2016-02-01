@@ -311,6 +311,7 @@ let go _ =
         Parser.Dep.print (Parser.Dep.collect filenames)
       else
         (* Normal mode of operations *)
+        if List.length filenames >= 1 then
         (let fmods, dsenv, env = batch_mode_tc filenames in
         report_errors None;
         if !Options.interactive
@@ -319,6 +320,7 @@ let go _ =
          codegen fmods env;
          finished_message fmods
         end)
+        else Util.print_string "No file provided\n"
 
 let main () =
     try

@@ -30,13 +30,15 @@ let find_file filename =
     | Some s ->
       s
     | None ->
-      raise (Absyn.Syntax.Err(Util.format1 "unable to find file: %s" filename))
+      raise (Absyn.Syntax.Err(Util.format1 "Unable to find file: %s\n" filename))
 
 let read_file (filename:string) =
   if !Options.debug <> []
   then Util.print1 "Opening file: %s\n" filename;
+  try
   let fs = new System.IO.StreamReader(filename) in
   fs.ReadToEnd()
+  with _ -> Util.format1 "Unable to open file: %s" filename
 
 let parse fn =
   Parser.Util.warningHandler := (function

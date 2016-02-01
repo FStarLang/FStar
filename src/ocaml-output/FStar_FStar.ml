@@ -436,8 +436,9 @@ if ((FStar_ST.read FStar_Options.dep) <> None) then begin
 (let _131_154 = (FStar_Parser_Dep.collect filenames)
 in (FStar_Parser_Dep.print _131_154))
 end else begin
-(let _65_301 = (batch_mode_tc filenames)
-in (match (_65_301) with
+if ((FStar_List.length filenames) >= 1) then begin
+(let _65_306 = (batch_mode_tc filenames)
+in (match (_65_306) with
 | (fmods, dsenv, env) -> begin
 (let _65_302 = (report_errors None)
 in if (FStar_ST.read FStar_Options.interactive) then begin
@@ -447,6 +448,9 @@ end else begin
 in (finished_message fmods))
 end)
 end))
+end else begin
+(FStar_Util.print_string "No file provided\n")
+end
 end
 end)
 end)))
