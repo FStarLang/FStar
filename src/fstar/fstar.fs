@@ -65,7 +65,7 @@ let tc_one_file dsenv env fn =
 let tc_one_fragment curmod dsenv env frag =
     try
         match Parser.Driver.parse_fragment curmod dsenv frag with
-            | Parser.Driver.Empty -> 
+            | Parser.Driver.Empty ->
               Some (curmod, dsenv, env)
 
             | Parser.Driver.Modul (dsenv, modul) ->
@@ -217,12 +217,12 @@ let interactive_mode dsenv env =
                     Util.print1 "%s\n" fail;
                     let dsenv, env = reset_mark dsenv_mark env_mark in
                     go stack curmod dsenv env in
-              
+
                 let dsenv, env =
                 if !should_read_build_config then
                   if Util.starts_with text (Parser.ParseIt.get_bc_start_string ()) then
                     begin
-                      let filenames = 
+                      let filenames =
                         match !Options.interactive_context with
                           | Some s ->
                             Parser.ParseIt.read_build_config_from_string s false text true

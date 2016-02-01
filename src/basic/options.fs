@@ -108,7 +108,7 @@ let check_cardinality () = match !cardinality with
 let dep = ref None
 let auto_deps = Util.mk_ref false
 let find_deps = Util.mk_ref false
-let init_options () = 
+let init_options () =
     show_signatures := [];
     norm_then_print := true;
     z3_exe := Platform.exe "z3";
@@ -187,7 +187,7 @@ let get_include_path (dirname:string) =
         Util.join_paths dirname p)
     (let h = get_fstar_home () in
     !_include_path@["."; h ^ "/lib"; h ^ "/lib/fstar"])
-    
+
 let find_file filename search_path =
     try
       Util.map_option
@@ -206,11 +206,11 @@ let find_file filename search_path =
                 Some path
               else
                 None))
-    with _ -> 
+    with _ ->
       None
 
 let prims () = match !prims_ref with
-  | None -> 
+  | None ->
     (let filen = "prims.fst" in
     match find_file filen (get_include_path ".") with
     | Some result ->
@@ -311,7 +311,7 @@ and parse_codegen s =
      (Util.print_string "Wrong argument to codegen flag\n";
       display_usage (specs ()); exit 1)
 and validate_cardinality x = match x with
-    | "warn" 
+    | "warn"
     | "check"
     | "off" -> x
     | _ ->   (Util.print_string "Wrong argument to cardinality flag\n";
@@ -330,12 +330,12 @@ let should_verify m =
 
 let dont_gen_projectors m = List.contains m (!__temp_no_proj)
 
-let should_print_message m = 
-    should_verify m 
-    && not (List.contains m !admit_fsi) 
+let should_print_message m =
+    should_verify m
+    && not (List.contains m !admit_fsi)
     && m <> "Prims"
 
-let set_options = 
+let set_options =
     //The smt option is a security concern
     //only allow it to be set from the command line, not from the build-config
     let no_smt_specs = specs() |> List.filter (fun (_, name, _, _) -> name <> "smt") in
