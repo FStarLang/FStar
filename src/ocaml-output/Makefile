@@ -75,7 +75,11 @@ fstar.exe: $(FSTAR_OBJS) main.ml
 # always bump version for a release
 VERSION=$(shell head -n 1 ../../version.txt)
 ifeq ($(OS),Windows_NT)
+  ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
      PLATFORM=Windows_x64
+  else
+     PLATFORM=Windows_x86
+  endif
 else
      PLATFORM=$(shell echo `uname`_`uname -m`)
 endif
