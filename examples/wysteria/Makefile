@@ -2,7 +2,7 @@ include ../Makefile.include
 
 all:
 	make api
-ifneq ($(shell fstar.exe --version | grep platform= | cut -c10-),"Windows_x86")
+ifneq ($(shell fstar.exe --version | grep platform= | cut -c10-),Windows_x86)
 # This runs out of memory with 32bit Windows binaries
 	make theory
 endif
