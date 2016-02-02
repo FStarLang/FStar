@@ -320,7 +320,7 @@ end))
 
 let get_include_path = (fun dirname -> (let _87_48 = (let h = (get_fstar_home ())
 in (let _87_47 = (FStar_ST.read _include_path)
-in (FStar_List.append _87_47 ((".")::((Prims.strcat h "/lib"))::((Prims.strcat h "/lib/fstar"))::[]))))
+in (FStar_List.append _87_47 ((".")::((Prims.strcat h "/lib"))::((Prims.strcat h "/stdlib"))::((Prims.strcat h "/lib/fstar"))::((Prims.strcat h "/stdlib/fstar"))::[]))))
 in (FStar_List.map (fun p -> if (FStar_Util.is_path_absolute p) then begin
 (FStar_Util.normalize_file_path p)
 end else begin

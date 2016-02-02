@@ -186,7 +186,7 @@ let get_include_path (dirname:string) =
       else
         Util.join_paths dirname p)
     (let h = get_fstar_home () in
-    !_include_path@["."; h ^ "/lib"; h ^ "/lib/fstar"])
+    !_include_path@["."; h ^ "/lib"; h ^ "/stdlib"; h ^ "/lib/fstar"; h ^ "/stdlib/fstar"])
 
 let find_file filename search_path =
     try
