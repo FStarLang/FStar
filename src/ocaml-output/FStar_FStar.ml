@@ -445,7 +445,7 @@ if ((FStar_ST.read FStar_Options.dep) <> None) then begin
 (let _131_149 = (FStar_Parser_Dep.collect filenames)
 in (FStar_Parser_Dep.print _131_149))
 end else begin
-if ((FStar_List.length filenames) >= 1) then begin
+if (((FStar_List.length filenames) >= 1) || (FStar_ST.read FStar_Options.interactive)) then begin
 (let _65_306 = (batch_mode_tc filenames)
 in (match (_65_306) with
 | (fmods, dsenv, env) -> begin

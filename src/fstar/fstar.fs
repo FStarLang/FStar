@@ -299,7 +299,7 @@ let go _ =
         Parser.Dep.print (Parser.Dep.collect filenames)
       else
         (* Normal mode of operations *)
-        if List.length filenames >= 1 then
+        if List.length filenames >= 1 || !Options.interactive then
           (let fmods, dsenv, env = batch_mode_tc filenames in
           report_errors None;
           if !Options.interactive
