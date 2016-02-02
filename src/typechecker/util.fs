@@ -646,20 +646,20 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:term) (lc:l
 let record_application_site env e lc = 
     let comp () = 
         let c = lc.comp() in 
-        if Util.is_trivial_wp c || lid_equals (Env.current_module env) Const.prims_lid
+        let res_t = Util.comp_result c in          
+        if Util.is_trivial_wp c 
+        || lid_equals (Env.current_module env) Const.prims_lid
+        || S.is_teff res_t
         then c
-        else let res_t = Util.comp_result c in          
-             let g = Rel.guard_of_guard_formula (NonTrivial Recheck.t_unit) in
+        else let g = Rel.guard_of_guard_formula (NonTrivial Recheck.t_unit) in
              let c, _ = strengthen_precondition (Some (fun () -> "push")) env e (Util.lcomp_of_comp c) g in
-             if S.is_teff res_t
-             then c.comp()
-             else let md_pure = Env.get_effect_decl env Const.effect_PURE_lid in
-                  let x = S.new_bv None res_t in
-                  let xexp = S.bv_to_name x in
-                  let xret = mk_Tm_app (inst_effect_fun env md_pure md_pure.ret) [S.arg res_t; S.arg xexp] None res_t.pos in
-                  let xret_comp = Util.lcomp_of_comp <| mk_comp md_pure res_t xret xret [PARTIAL_RETURN] in
-                  let lc = bind env None c (Some x, fst <| strengthen_precondition (Some (fun () -> "pop")) env xexp xret_comp g) in
-                  lc.comp() in
+             let md_pure = Env.get_effect_decl env Const.effect_PURE_lid in
+             let x = S.new_bv None res_t in
+             let xexp = S.bv_to_name x in
+             let xret = mk_Tm_app (inst_effect_fun env md_pure md_pure.ret) [S.arg res_t; S.arg xexp] None res_t.pos in
+             let xret_comp = Util.lcomp_of_comp <| mk_comp md_pure res_t xret xret [PARTIAL_RETURN] in
+             let lc = bind env None c (Some x, fst <| strengthen_precondition (Some (fun () -> "pop")) env xexp xret_comp g) in
+             lc.comp() in
     {lc with comp=comp}
 
 let add_equality_to_post_condition env (comp:comp) (res_t:typ) =

@@ -1,11 +1,14 @@
 # -*- Makefile -*-
 
 # --------------------------------------------------------------------
-BASIC=prims-fake.fs profiling.fs char.fsi char.fs string.fsi string.fs list.fsi list.fs util.fsi util.fs bytes.fsi bytes.fs range.fsi range.fs getoptsimple.fsi getoptsimple.fs platform.fsi platform.fs version.fsi version.fs options.fs unionfind.fsi unionfind.fs
+BASIC=prims-fake.fs profiling.fs char.fsi char.fs string.fsi string.fs list.fsi list.fs util.fsi util.fs bytes.fsi bytes.fs range.fsi range.fs getoptsimple.fsi getoptsimple.fs platform.fsi platform.fs version.fsi version.fs options.fs unionfind.fsi unionfind.fs ident.fs const.fs
 BASIC_SRC=$(addprefix basic/, $(BASIC))
 
 ABSYN=syntax.fs const.fs visit.fs util.fs print.fs ssyntax.fs
 ABSYN_SRC=$(addprefix absyn/, $(ABSYN))
+
+SYNTAX=syntax.fsi syntax.fs const.fs subst.fsi subst.fs free.fsi free.fs instfv.fsi instfv.fs util.fs print.fsi print.fs
+SYNTAX_SRC=$(addprefix syntax/, $(SYNTAX))
 
 FORMAT=format.fsi format.fs
 FORMAT_SRC=$(addprefix format/, $(FORMAT))
@@ -13,16 +16,23 @@ FORMAT_SRC=$(addprefix format/, $(FORMAT))
 EXTRACTION=ml-syntax.fs env.fs util.fs codegen.fsi codegen.fs extracttyp.fs extractexp.fs extractmod.fs
 EXTRACTION_SRC=$(addprefix extraction/, $(EXTRACTION))
 
-PARSER=ast.fs parseutil.fs parse.fs lexhelp.fs lex.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs parseit.fsi parseit.fs driver.fs dep.fs
+PARSER=ast.fs parseutil.fs parse.fs lexhelp.fs lex.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs env.fsi env.fs tosyntax.fsi tosyntax.fs parseit.fsi parseit.fs driver.fs dep.fs
 PARSER_SRC=$(addprefix parser/, $(PARSER))
-PARSER_NOGEN=ast.fs parseutil.fs parse.fsy lexhelp.fs lex.fsl dsenv.fs desugar.fs parseit.fsi parseit.fs driver.fs dep.fs
+
+PARSER_NOGEN=ast.fs parseutil.fs parse.fsy lexhelp.fs lex.fsl dsenv.fs desugar.fs env.fs tosyntax.fs parseit.fsi parseit.fs driver.fs dep.fs
 PARSER_NOGEN_SRC=$(addprefix parser/, $(PARSER_NOGEN))
 
 TOSMT=term.fsi term.fs z3.fs splitcases.fs encode.fs
 TOSMT_SRC=$(addprefix tosmt/, $(TOSMT))
 
+SMTENCODING=term.fsi term.fs splitcases.fs errorReporting.fs z3.fs encode.fs
+SMTENCODING_SRC=$(addprefix smtencoding/, $(SMTENCODING))
+
 TC=tcenv.fsi tcenv.fs recheck.fs normalize.fsi normalize.fs errors.fs rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs
 TC_SRC=$(addprefix tc/, $(TC))
+
+TYPECHECKER=common.fs env.fsi env.fs normalize.fsi normalize.fs recheck.fsi recheck.fs errors.fs rel.fsi rel.fs util.fsi util.fs tc.fsi tc.fs
+TYPECHECKER_SRC=$(addprefix typechecker/, $(TYPECHECKER))
 
 # --------------------------------------------------------------------
 LIB=../lib
@@ -35,7 +45,7 @@ BUILD_VERSION  =
 OTHERFLAGS    := --optimize+ --debug:full --nologo -g -O
 OTHERFLAGS    += --mlcompatibility $(addprefix --define:, $(BUILD_VERSION))
 
-ALL_DLLS    = basic.dll format.dll absyn.dll extraction.dll parser.dll tc.dll tosmt.dll
+ALL_DLLS    = basic.dll format.dll absyn.dll extraction.dll parser.dll tc.dll tosmt.dll syntax.dll smtencoding.dll typechecker.dll
 FSHARP_LIBS = System.Runtime.Serialization.dll System.Xml.dll $(BIN)/FSharp.PowerPack.dll $(BIN)/FSharp.PowerPack.Compatibility.dll $(BIN)/FSharp.PPrint.dll
 OTHER_DLLS  =
 BASELIBS    = $(addprefix -r , $(FSHARP_LIBS) $(OTHER_DLLS))
@@ -117,7 +127,10 @@ ABSYN_DEPS=$(addprefix $(BIN)/, basic.dll)
 $(BIN)/absyn.dll: $(ABSYN_DEPS) $(ABSYN_SRC)
 	$(FSC)  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(ABSYN_DEPS)) $(ABSYN_SRC)
 
-ABSYN_DEPS=$(addprefix $(BIN)/, basic.dll)
+SYNTAX_DEPS=$(addprefix $(BIN)/, basic.dll)
+$(BIN)/syntax.dll: $(SYNTAX_DEPS) $(SYNTAX_SRC)
+	$(FSC)  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(SYNTAX_DEPS)) $(SYNTAX_SRC)
+
 $(BIN)/testAbsyn.exe: $(ABSYN_DEPS) $(ABSYN_SRC) absyn/test.fs
 	$(FSC)  $(OTHERFLAGS) --define:TEST --define:DEBUG -o $@ $(BASELIBS) $(addprefix -r , $(ABSYN_DEPS)) $(ABSYN_SRC) absyn/test.fs
 
@@ -129,7 +142,7 @@ EXTRACTION_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll format.dll tc.dll)
 $(BIN)/extraction.dll: $(EXTRACTION_DEPS) $(EXTRACTION_SRC)
 	$(FSC) $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(EXTRACTION_DEPS)) $(EXTRACTION_SRC)
 
-PARSER_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll tc.dll)
+PARSER_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll tc.dll syntax.dll)
 $(BIN)/parser.dll: $(PARSER_DEPS) $(PARSER_SRC)
 	$(FSC)  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(PARSER_DEPS)) $(PARSER_SRC)
 
@@ -137,9 +150,17 @@ TOSMT_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll tc.dll)
 $(BIN)/tosmt.dll: $(TOSMT_DEPS) $(TOSMT_SRC)
 	$(FSC)  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(TOSMT_DEPS)) $(TOSMT_SRC)
 
+SMTENCODING_DEPS=$(addprefix $(BIN)/, basic.dll syntax.dll typechecker.dll)
+$(BIN)/smtencoding.dll: $(SMTENCODING_DEPS) $(SMTENCODING_SRC)
+	$(FSC)  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(SMTENCODING_DEPS)) $(SMTENCODING_SRC)
+
 TC_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll)
 $(BIN)/tc.dll: $(TC_DEPS) $(TC_SRC)
 	$(FSC)  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(TC_DEPS)) $(TC_SRC)
+
+TYPECHECKER_DEPS=$(addprefix $(BIN)/, basic.dll syntax.dll)
+$(BIN)/typechecker.dll: $(TYPECHECKER_DEPS) $(TYPECHECKER_SRC)
+	$(FSC)  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(TYPECHECKER_DEPS)) $(TYPECHECKER_SRC)
 
 FSTAR_DEPS=$(addprefix $(BIN)/, $(ALL_DLLS))
 $(BIN)/fstar.exe: $(FSTAR_DEPS) fstar/fstar.fs fstar/main.fs $(BIN)/fstar-mono.sh
