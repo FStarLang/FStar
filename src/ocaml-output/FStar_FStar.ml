@@ -228,7 +228,7 @@ in (FStar_Util.print_string _131_94))
 end else begin
 ()
 end))))
-in (FStar_Util.print_string "All verification conditions discharged successfully\n")))
+in (FStar_Util.print_string "\x1b[0;1mAll verification conditions discharged successfully\x1b[0m\n")))
 end else begin
 ()
 end)
