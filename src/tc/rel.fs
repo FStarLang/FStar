@@ -2529,8 +2529,18 @@ let teq env t1 t2 : guard_t =
       g
 
 let try_subtype env t1 t2 =
+ let kopt = function
+    | None ->"None"
+    | Some t -> Print.kind_to_string t in
+ let k t1 = match (Util.compress_typ t1).n with 
+    | Typ_const x -> (Print.kind_to_string x.sort) ^ " ... " ^ kopt !t1.tk 
+    | _ -> kopt !t1.tk in
  if debug env <| Other "Rel"
- then Util.print2 "try_subtype of %s and %s\n" (Normalize.typ_norm_to_string env t1) (Normalize.typ_norm_to_string env t2);
+ then Util.print4 "try_subtype of %s : %s and %s : %s\n" 
+        (Normalize.typ_norm_to_string env t1) 
+        (k t1)
+        (Normalize.typ_norm_to_string env t2)
+        (k t2);
  let prob, x = new_t_prob env t1 SUB t2 in
  let g = with_guard env prob <| solve_and_commit env (singleton env prob) (fun _ -> None) in
  if debug env <| Options.Other "Rel"

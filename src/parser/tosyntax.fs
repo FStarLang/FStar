@@ -271,7 +271,7 @@ type lenv_t = list<bv>
 let mk_lb (n, t, e) = {lbname=n; lbunivs=[]; lbeff=C.effect_ALL_lid; lbtyp=t; lbdef=e}
 let no_annot_abs bs t = U.abs bs t None 
 
-let rec desugar_data_pat env p  = //: (env_t * bnd * Syntax.pat) =
+let rec desugar_data_pat env p : (env_t * bnd * Syntax.pat) =
   let check_linear_pattern_variables (p:Syntax.pat) = 
     let rec pat_vars (p:Syntax.pat) = match p.v with 
       | Pat_dot_term _
@@ -401,7 +401,7 @@ let rec desugar_data_pat env p  = //: (env_t * bnd * Syntax.pat) =
   ignore <| check_linear_pattern_variables p;
   env, b, p
 
-and desugar_binding_pat_maybe_top top env p = //: (env_t * bnd * option<pat>) =
+and desugar_binding_pat_maybe_top top env p : (env_t * bnd * option<pat>) =
   if top
   then match p.pat with
     | PatVar (x, _) -> (env, LetBinder(qualify env x, tun), None)
@@ -769,7 +769,7 @@ and desugar_args env args =
     args |> List.map (fun (a, imp) -> arg_withimp_e imp (desugar_term env a))
           
 and desugar_comp r default_ok env t =
-    let fail msg = raise (Error(msg, r)) in
+    let fail : string -> 'a = fun msg -> raise (Error(msg, r)) in
     let is_requires (t, _) = match (unparen t).tm with 
         | Requires _ -> true
         | _ -> false in

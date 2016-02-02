@@ -23,6 +23,7 @@ open FStar.Const
 open FStar.Extraction.ML.Syntax
 open FStar.Extraction.ML.Env
 open FStar.Extraction.ML.Util
+open FStar.Ident
 
 (*This approach assumes that failwith already exists in scope. This might be problematic, see below.*)
 let fail_exp (lid:lident) (t:typ) = mk_Exp_app(Util.fvar None Const.failwith_lid dummyRange,

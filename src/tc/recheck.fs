@@ -54,7 +54,11 @@ let rec recompute_kind t =
     let recompute t = match t.n with
         | Typ_delayed _ -> recompute_kind (Util.compress_typ t)
         | Typ_btvar a -> a.sort
-        | Typ_const tc -> tc.sort 
+        | Typ_const tc -> 
+          begin match tc.sort.n with 
+            | Kind_unknown -> failwith (Util.format1 "UNKNOWN KIND FOR %s" (Print.typ_to_string t))
+            | _ -> tc.sort
+          end
         | Typ_fun _
         | Typ_refine _ -> ktype
         | Typ_ascribed (_, k)

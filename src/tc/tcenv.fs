@@ -546,7 +546,10 @@ let push_module env (m:modul) =
       expected_typ=None}
 
 let set_expected_typ env t =
-  {env with expected_typ = Some t; use_eq=false}
+    match t with 
+        | {n=Typ_const ({sort={n=Kind_unknown}})} -> failwith (Util.format1 "Setting expected type to %s with kind unknown" (Print.typ_to_string t))
+        | _ -> {env with expected_typ = Some t; use_eq=false}
+
 let expected_typ env = match env.expected_typ with
   | None -> None
   | Some t -> Some t

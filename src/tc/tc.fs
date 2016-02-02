@@ -1163,13 +1163,21 @@ and tc_exp env e : exp * lcomp * guard_t =
     (* build an environment with recursively bound names. refining the types of those names with decreases clauses is done in Exp_abs *)
     let lbs, env' = lbs |> List.fold_left (fun (xts, env) ({lbname=x; lbtyp=t; lbdef=e}) ->
       let _, t, check_t = Tc.Util.extract_lb_annotation env t e in
+//      Printf.printf "Extracted lb annotation for %s to be %s ... check is %A" (Print.exp_to_string e) (Print.typ_to_string t) check_t;
       let e = Util.unascribe e in
       let t =
         if not check_t
         then t
-        else if not (is_inner_let) && not(env.generalize)
-        then (if Env.debug env <| Options.High then Util.print1 "Type %s is marked as no-generalize\n" (Print.typ_to_string t);
-              t) (* t is already checked *)
+        //NS: This used to be an optimization, but it isn't quite right
+        //Consider what happens in
+        //  val test: bool -> Tot bool
+        //  let rec test x = test2 false 
+        //  and test2 (x:bool) : bool = false
+        //here, env.generalize is false, but the type of test2 has not yet been checked
+//UNSOUND OPTIMIZATION REMOVED
+//        else if not (is_inner_let) && not(env.generalize)
+//        then (if Env.debug env <| Options.High then Util.print1 "Type %s is marked as no-generalize\n" (Print.typ_to_string t);
+//              t) (* t is already checked *)
         else tc_typ_check_trivial ({env0 with check_uvars=true}) t ktype |> norm_t env in
       let env = if Util.is_pure_or_ghost_function t
                 && Options.should_verify env.curmodule.str (* store the let rec names separately for termination checks *)

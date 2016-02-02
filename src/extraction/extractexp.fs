@@ -24,7 +24,7 @@ open FStar.Extraction
 open FStar.Extraction.ML.Syntax
 open FStar.Extraction.ML.Env
 open FStar.Extraction.ML.Util
-
+open FStar.Ident
 
 let fail r msg =
     Util.print_string <| Print.format_error r msg;
@@ -467,7 +467,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                                 | [] -> not (is_value_or_type_app body) //if it's a pure type app, then it will be extracted to a value in ML; so don't add a unit
                                 | _ -> false in
                              let rest_args = if add_unit then (unit_binder::rest_args) else rest_args in
-                             let body = match rest_args with [] -> body | _ -> mk_Exp_abs(rest_args, body) None e.pos in
+                             let body = match rest_args with | [] -> body | _ -> mk_Exp_abs(rest_args, body) None e.pos in
                              (lbname, f_e, (t, (targs, polytype)), add_unit, body)
 
                         else (* fails to handle:

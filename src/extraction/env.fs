@@ -22,6 +22,7 @@ open FStar.Absyn.Syntax
 open FStar.Extraction.ML.Syntax
 open FStar.Extraction.ML
 open FStar.Tc
+open FStar.Ident
 
 type binding =
     | Ty  of btvar * mlident * mlty           //a, 'a, ('a | Top)
