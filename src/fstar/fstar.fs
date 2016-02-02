@@ -330,6 +330,23 @@ let find_initial_module_name () =
   with Found n ->
     Some n
 
+let detect_dependencies_with_first_interactive_chunk () =
+  match find_initial_module_name () with
+  | None ->
+      Util.print_string "No initial module directive found\n";
+      exit 1
+  | Some module_name ->
+      let file_of_module_name = Parser.Dep.build_map [] in
+      let filename = smap_try_find file_of_module_name (String.lowercase module_name) in
+      match filename with
+      | None ->
+          Util.print2 "I found a \"module %s\" directive, but there is no %s.fst\n" module_name module_name;
+          exit 1
+      | Some filename ->
+          let _, all_filenames = Parser.Dep.collect [ filename ] in
+          List.rev (List.tl all_filenames)
+
+
 (* Main function *)
 let go _ =
   let res, filenames = process_args () in
@@ -343,20 +360,19 @@ let go _ =
         (* This is the fstardep tool *)
         Parser.Dep.print (Parser.Dep.collect filenames)
       else if !Options.interactive then
-        (* Interactive mode *)
-        match find_initial_module_name () with
-        | None ->
-            Util.print_string "No initial module directive found\n";
-        | Some module_name ->
-            let file_of_module_name = Parser.Dep.build_map [] in
-            let filename = smap_try_find file_of_module_name (String.lowercase module_name) in
-            match filename with
-            | None ->
-                Util.print2 "I found a \"module %s\" directive, but there is no %s.fst\n" module_name module_name
-            | Some filename ->
-                let _, all_filenames = Parser.Dep.collect [ filename ] in
-                let fmods, dsenv, env = batch_mode_tc (List.rev (List.tl all_filenames)) in
-                interactive_mode dsenv env
+        let filenames =
+          if !Options.explicit_deps then begin
+            if List.length filenames = 0 then
+              print_endline "--explicit_deps was provided without a file list!";
+            filenames
+          end else begin
+            if List.length filenames > 0 then
+              print_endline "ignoring the file list (no --explicit_deps)";
+            detect_dependencies_with_first_interactive_chunk ()
+          end
+        in
+        let fmods, dsenv, env = batch_mode_tc filenames in
+        interactive_mode dsenv env
       else if List.length filenames >= 1 then
         (* Normal mode of operations *)
         (let fmods, dsenv, env = batch_mode_tc filenames in
