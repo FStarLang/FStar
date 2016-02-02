@@ -177,7 +177,7 @@ let get_include_path () =
   (* Allows running fstar either from the source repository, or after
    * installation (into /usr/local for instance) *)
   let h = get_fstar_home () in
-  !_include_path@["."; h ^ "/lib"; h ^ "/lib/fstar"]
+  !_include_path @ ["."; h ^ "/lib"; h ^ "/lib/fstar"; h ^ "/stdlib" ; h ^ "/stdlib/fstar"]
     
 let find_file filename =
     let search_path = get_include_path () in
@@ -208,7 +208,7 @@ let prims () = match !prims_ref with
     | Some result ->
       result
     | None ->
-      raise (Util.Failure (Util.format1 "unable to find required file \"%s\" in the module search path." filen)))
+      raise (Util.Failure (Util.format1 "unable to find required file \"%s\" in the module search path.\n" filen)))
   | Some x -> x
 
 let prependOutputDir fname = match !outputDir with

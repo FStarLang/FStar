@@ -6,7 +6,7 @@ ocaml, opam, z3, make, git, Madoko, LaTeX, and zip installed.
 
 **Note**: no cross-platform compilation supported at the moment
 
-0. Build F\* using the OCaml snapshot (step 3 in INSTALL.md)
+0. Make sure you have installed all the dependences to build F\* using the OCaml snapshot (cf. step 3 in INSTALL.md)
 
 1. Make sure you have the Z3 4.4.1 binary in your `$PATH` or
    in the `$FSTAR_HOME/bin` directory.

@@ -263,7 +263,7 @@ in (FStar_Util.print_string _131_104))
 end else begin
 ()
 end))))
-in (FStar_Util.print_string "All verification conditions discharged successfully\n")))
+in (FStar_Util.print_string "\x1b[0;1mAll verification conditions discharged successfully\x1b[0m\n")))
 end else begin
 ()
 end)
@@ -435,45 +435,40 @@ if ((FStar_ST.read FStar_Options.dep) <> None) then begin
 (let _131_155 = (FStar_Parser_Dep.collect filenames)
 in (FStar_Parser_Dep.print _131_155))
 end else begin
-(let filenames = if ((FStar_List.length filenames) >= 1) then begin
-filenames
-end else begin
-("prims.fst")::[]
-end
-in if ((FStar_List.length filenames) >= 1) then begin
-(let _65_297 = (batch_mode_tc filenames)
-in (match (_65_297) with
+if (((FStar_List.length filenames) >= 1) || (FStar_ST.read FStar_Options.interactive)) then begin
+(let _65_296 = (batch_mode_tc filenames)
+in (match (_65_296) with
 | (fmods, dsenv, env) -> begin
-(let _65_298 = (report_errors None)
+(let _65_297 = (report_errors None)
 in if (FStar_ST.read FStar_Options.interactive) then begin
 (interactive_mode dsenv env)
 end else begin
-(let _65_300 = (codegen fmods env)
+(let _65_299 = (codegen fmods env)
 in (finished_message fmods))
 end)
 end))
 end else begin
 (FStar_Util.print_string "No file provided\n")
-end)
+end
 end
 end)
 end)))
 
-let main = (fun _65_302 -> (match (()) with
+let main = (fun _65_301 -> (match (()) with
 | () -> begin
-(FStar_All.try_with (fun _65_304 -> (match (()) with
+(FStar_All.try_with (fun _65_303 -> (match (()) with
 | () -> begin
-(let _65_315 = (go ())
-in (let _65_317 = (cleanup ())
+(let _65_314 = (go ())
+in (let _65_316 = (cleanup ())
 in (FStar_All.exit 0)))
-end)) (fun _65_303 -> (match (_65_303) with
+end)) (fun _65_302 -> (match (_65_302) with
 | e -> begin
-(let _65_307 = if (FStar_Absyn_Util.handleable e) then begin
+(let _65_306 = if (FStar_Absyn_Util.handleable e) then begin
 (FStar_Absyn_Util.handle_err false () e)
 end else begin
 ()
 end
-in (let _65_309 = if (FStar_ST.read FStar_Options.trace_error) then begin
+in (let _65_308 = if (FStar_ST.read FStar_Options.trace_error) then begin
 (let _131_160 = (FStar_Util.message_of_exn e)
 in (let _131_159 = (FStar_Util.trace_of_exn e)
 in (FStar_Util.print2 "\nUnexpected error\n%s\n%s\n" _131_160 _131_159)))
@@ -485,7 +480,7 @@ end else begin
 ()
 end
 end
-in (let _65_311 = (cleanup ())
+in (let _65_310 = (cleanup ())
 in (FStar_All.exit 1))))
 end)))
 end))

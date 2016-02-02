@@ -161,7 +161,7 @@ let finished_message fmods =
             let tag = if m.is_interface then "i'face" else "module" in
             if Options.should_print_message m.name.str
             then Util.print_string (Util.format3 "%s %s: %s\n" msg tag (Syntax.text_of_lid m.name)));
-         print_string "All verification conditions discharged successfully\n"
+         print_string "\x1b[0;1mAll verification conditions discharged successfully\x1b[0m\n"
     end
 
 let interactive_mode dsenv env =
@@ -290,7 +290,7 @@ let go _ =
         Parser.Dep.print (Parser.Dep.collect filenames)
       else
         (* Normal mode of operations *)
-        if List.length filenames >= 1 then
+        if List.length filenames >= 1 || !Options.interactive then
         (let fmods, dsenv, env = batch_mode_tc filenames in
         report_errors None;
         if !Options.interactive
