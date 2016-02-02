@@ -164,7 +164,19 @@ let finished_message fmods =
          print_string "\x1b[0;1mAll verification conditions discharged successfully\x1b[0m\n"
     end
 
-let interactive_mode dsenv env =
+type interactive_state = {
+  chunk: string_builder;
+  stdin: ref<option<stream_reader>>; // Initialized once.
+  buffer: ref<option<input_chunks>>; // The buffer has at most size one.
+}
+
+let interactive_state = {
+  chunk = Util.new_string_builder ();
+  stdin = ref None;
+  buffer = ref None
+}
+
+let rec read_chunk () =
     let should_log = !Options.debug <> [] in
     let log =
         if should_log
@@ -172,38 +184,66 @@ let interactive_mode dsenv env =
              (fun line -> Util.append_to_file transcript line;
                           Util.flush_file transcript)
         else (fun line -> ()) in
+
+    let s = interactive_state in
+    let stdin =
+      match !s.stdin with
+      | Some i ->
+          i
+      | None ->
+          let i = Util.open_stdin () in
+          s.stdin := Some i;
+          i
+    in
+    let line = match Util.read_line stdin with
+        | None -> exit 0
+        | Some l -> l in
+    log line;
+
+    let l = Util.trim_string line in
+    if Util.starts_with l "#end"
+    then begin
+        let responses = match Util.split l " " with
+            | [_; ok; fail] -> (ok, fail)
+            | _ -> ("ok", "fail") in
+        let str = Util.string_of_string_builder s.chunk in
+        Util.clear_string_builder s.chunk; Code (str, responses)
+    end
+    else if Util.starts_with l "#pop"
+    then (Util.clear_string_builder s.chunk; Pop l)
+    else if Util.starts_with l "#push"
+    then (Util.clear_string_builder s.chunk; Push l)
+    else if l = "#finish"
+    then exit 0
+    else (Util.string_builder_append s.chunk line;
+          Util.string_builder_append s.chunk "\n";
+          read_chunk())
+
+let shift_chunk () =
+  let s = interactive_state in
+  match !s.buffer with
+  | None ->
+      read_chunk ()
+  | Some c ->
+      s.buffer := None;
+      c
+
+let peek_chunk () =
+  let s = interactive_state in
+  match !s.buffer with
+  | Some c ->
+      c
+  | None ->
+      let c = read_chunk () in
+      s.buffer := Some c;
+      c
+
+let interactive_mode dsenv env =
     if Option.isSome !Options.codegen
     then (Util.print_string "Warning: Code-generation is not supported in interactive mode, ignoring the codegen flag");
-    let chunk = Util.new_string_builder () in
-    let stdin = Util.open_stdin () in
-    let rec fill_chunk ()=
-        let line = match Util.read_line stdin with
-            | None -> exit 0
-            | Some l -> l in
-        log line;
-//        Printf.printf "Read line <%s>\n" line;
-        let l = Util.trim_string line in
-        if Util.starts_with l "#end"
-        then begin
-            let responses = match Util.split l " " with
-                | [_; ok; fail] -> (ok, fail)
-                | _ -> ("ok", "fail") in
-            let str = Util.string_of_string_builder chunk in
-            Util.clear_string_builder chunk; Code (str, responses)
-        end
-        else if Util.starts_with l "#pop"
-        then (Util.clear_string_builder chunk; Pop l)
-        else if Util.starts_with l "#push"
-        then (Util.clear_string_builder chunk; Push l)
-        else if l = "#finish"
-        then exit 0
-        else (Util.string_builder_append chunk line;
-              Util.string_builder_append chunk "\n";
-              fill_chunk()) in
-
 
     let rec go (stack:stack) curmod dsenv env =
-        begin match fill_chunk () with
+        begin match shift_chunk () with
             | Pop msg ->
               Parser.DesugarEnv.pop dsenv |> ignore;
               Tc.Env.pop env msg |> ignore;
