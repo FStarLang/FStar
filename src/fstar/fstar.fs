@@ -167,13 +167,13 @@ let finished_message fmods =
 type interactive_state = {
   chunk: string_builder;
   stdin: ref<option<stream_reader>>; // Initialized once.
-  buffer: ref<option<input_chunks>>; // The buffer has at most size one.
+  buffer: ref<list<input_chunks>>; // The buffer has at most size one.
 }
 
 let interactive_state = {
   chunk = Util.new_string_builder ();
   stdin = ref None;
-  buffer = ref None
+  buffer = ref []
 }
 
 let rec read_chunk () =
@@ -222,21 +222,15 @@ let rec read_chunk () =
 let shift_chunk () =
   let s = interactive_state in
   match !s.buffer with
-  | None ->
+  | [] ->
       read_chunk ()
-  | Some c ->
-      s.buffer := None;
-      c
+  | chunk :: chunks ->
+      s.buffer := chunks;
+      chunk
 
-let peek_chunk () =
+let fill_buffer () =
   let s = interactive_state in
-  match !s.buffer with
-  | Some c ->
-      c
-  | None ->
-      let c = read_chunk () in
-      s.buffer := Some c;
-      c
+  s.buffer := !s.buffer @ [ read_chunk () ]
 
 let interactive_mode dsenv env =
     if Option.isSome !Options.codegen
@@ -316,6 +310,26 @@ let codegen fmods env=
         List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^ext)) (FSharp.Format.pretty 120 d)) newDocs
     end
 
+exception Found of string
+
+let find_initial_module_name () =
+  fill_buffer (); fill_buffer ();
+  try begin match !interactive_state.buffer with
+    | [Push _; Code (code, _)] ->
+        let lines = Util.split code "\n" in
+        List.iter (fun line ->
+          let line = trim_string line in
+          if String.length line > 7 && substring line 0 6 = "module" then
+            let module_name = substring line 7 (String.length line - 7) in
+            raise (Found module_name)
+        ) lines
+    | _ ->
+        ()
+    end;
+    None
+  with Found n ->
+    Some n
+
 (* Main function *)
 let go _ =
   let res, filenames = process_args () in
@@ -328,18 +342,29 @@ let go _ =
       if !Options.dep <> None then
         (* This is the fstardep tool *)
         Parser.Dep.print (Parser.Dep.collect filenames)
-      else
+      else if !Options.interactive then
+        (* Interactive mode *)
+        match find_initial_module_name () with
+        | None ->
+            Util.print_string "No initial module directive found\n";
+        | Some module_name ->
+            let file_of_module_name = Parser.Dep.build_map [] in
+            let filename = smap_try_find file_of_module_name (String.lowercase module_name) in
+            match filename with
+            | None ->
+                Util.print2 "I found a \"module %s\" directive, but there is no %s.fst\n" module_name module_name
+            | Some filename ->
+                let _, all_filenames = Parser.Dep.collect [ filename ] in
+                let fmods, dsenv, env = batch_mode_tc (List.rev (List.tl all_filenames)) in
+                interactive_mode dsenv env
+      else if List.length filenames >= 1 then
         (* Normal mode of operations *)
-        if List.length filenames >= 1 || !Options.interactive then
         (let fmods, dsenv, env = batch_mode_tc filenames in
         report_errors None;
-        if !Options.interactive
-        then interactive_mode dsenv env
-        else begin
-         codegen fmods env;
-         finished_message fmods
-        end)
-        else Util.print_string "No file provided\n"
+        codegen fmods env;
+        finished_message fmods)
+      else
+        Util.print_string "No file provided\n"
 
 let main () =
     try
