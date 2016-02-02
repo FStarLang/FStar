@@ -27,6 +27,7 @@ open FStar.Tc.Env
 open FStar.Tc.Normalize
 open FStar.Tc.Rel
 open FStar.Absyn.Syntax
+open FStar.Ident
 
 (**************************************************************************************)
 (* Calling the solver *)
@@ -1141,7 +1142,7 @@ let gen verify env (ecs:list<(exp * comp)>) : option<list<(exp * comp)>> =
 
           let t = match Util.comp_result c |> Util.function_formals with
             | Some (bs, cod) -> mk_Typ_fun(tvars@bs, cod) (Some ktype) c.pos
-            | None -> match tvars with [] -> Util.comp_result c | _ -> mk_Typ_fun(tvars, c) (Some ktype) c.pos in
+            | None -> match tvars with | [] -> Util.comp_result c | _ -> mk_Typ_fun(tvars, c) (Some ktype) c.pos in
 
           let e = match tvars with
             | [] -> e

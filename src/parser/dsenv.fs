@@ -92,7 +92,7 @@ let try_lookup_typ_var env (id:ident) =
       Some (bvd_to_typ (set_bvd_range bvd id.idRange) kun)
     | _ -> None
 
-let resolve_in_open_namespaces env lid (finder:lident -> option<'a>) : option<'a> =
+let resolve_in_open_namespaces' env lid (finder:lident -> option<'a>) : option<'a> =
   let aux (namespaces:list<lident>) : option<'a> =
     match finder lid with
         | Some r -> Some r
@@ -112,6 +112,9 @@ let expand_module_abbrevs env lid =
                   Ident.lid_of_ids (Ident.ids_of_lid lid' @ [lid.ident])
           end
         | _ -> lid
+
+let resolve_in_open_namespaces env lid (finder:lident -> option<'a>) : option<'a> =
+    resolve_in_open_namespaces' env (expand_module_abbrevs env lid) finder 
 
 let unmangleMap = [("op_ColonColon", "Cons");
                    ("not", "op_Negation")]
@@ -210,9 +213,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
  
   match found_id with
     | Some _ -> found_id
-    | _ -> 
-        let lid = expand_module_abbrevs env lid in
-        resolve_in_open_namespaces env lid find_in_sig
+    | _ -> resolve_in_open_namespaces env lid find_in_sig
 
 let try_lookup_typ_name' exclude_interf env (lid:lident) : option<typ> =
   match try_lookup_name true exclude_interf env lid with

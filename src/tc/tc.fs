@@ -25,6 +25,7 @@ open FStar.Absyn.Util
 open FStar.Tc.Rel
 open FStar.Absyn.Syntax
 open FStar.Const
+open FStar.Ident
 
 let syn' env k = syn (Tc.Env.get_range env) (Some k)
 let log env = !Options.log_types && not(lid_equals Const.prims_lid (Env.current_module env))
@@ -371,7 +372,10 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
 
   | Typ_refine(x, phi) ->
     let x, env, f1 = tc_vbinder env x in
-    if debug env Options.High then Util.print3 "(%s) Checking refinement formula %s; env expects type %s\n"  (Range.string_of_range top.pos) (Print.typ_to_string phi) (match Env.expected_typ env with None -> "None" | Some t -> Print.typ_to_string t);
+    if debug env Options.High
+    then Util.print3 "(%s) Checking refinement formula %s; env expects type %s\n"
+    	 (Range.string_of_range top.pos) (Print.typ_to_string phi)
+	 (match Env.expected_typ env with | None -> "None" | Some t -> Print.typ_to_string t);
 
     let phi, f2 = tc_typ_check env phi ktype in
     w ktype <| mk_Typ_refine(x, phi), ktype, Rel.conj_guard f1 (Rel.close_guard [v_binder x] f2)
@@ -589,7 +593,7 @@ and tc_value env e : exp * lcomp * guard_t =
                                             * guard_t) =   (* accumulated guard from checking the binders *)
        match t0 with
         | None -> (* no expected type; just build a function type from the binders in the term *)
-            let _ = match env.letrecs with [] -> () | _ -> failwith "Impossible" in
+            let _ = match env.letrecs with | [] -> () | _ -> failwith "Impossible" in
             let bs, envbody, g = tc_binders env bs in
             None, bs, [], None, envbody, g
 
@@ -599,7 +603,7 @@ and tc_value env e : exp * lcomp * guard_t =
                match (Util.compress_typ t).n with
                 | Typ_uvar _
                 | Typ_app({n=Typ_uvar _}, _) -> (* expected a uvar; build a function type from the term and unify with it *)
-                  let _ = match env.letrecs with [] -> () | _ -> failwith "Impossible" in
+                  let _ = match env.letrecs with | [] -> () | _ -> failwith "Impossible" in
                   let bs, envbody, g = tc_binders env bs in
                   let envbody, _ = Env.clear_expected_typ envbody in
                   Some (t, true), bs, [], None, envbody, g
@@ -1059,7 +1063,7 @@ and tc_exp env e : exp * lcomp * guard_t =
         if debug env Options.Extreme
         then Util.print3 "(%s) About to check %s against expected typ %s\n" (Range.string_of_range e.pos)
               (Print.typ_to_string c.res_typ)
-              (Env.expected_typ env0 |> (fun x -> match x with None -> "None" | Some t -> Print.typ_to_string t));
+              (Env.expected_typ env0 |> (fun x -> match x with | None -> "None" | Some t -> Print.typ_to_string t));
         let e, c, g' = comp_check_expected_typ env0 e c in
         e, c, Rel.conj_guard g g'
 
@@ -1091,7 +1095,7 @@ and tc_exp env e : exp * lcomp * guard_t =
     let env = instantiate_both env in
     let env0 = env in
     let topt = Env.expected_typ env in
-    let top_level = match x with Inr _ -> true | _ -> false in
+    let top_level = match x with | Inr _ -> true | _ -> false in
     let env1, _ = Env.clear_expected_typ env in
     let f, env1 = match t.n with
         | Typ_unknown ->

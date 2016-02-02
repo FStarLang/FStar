@@ -26,6 +26,7 @@ open FStar.Absyn.Util
 open FStar.Util
 open FStar.Tc.Env
 open FStar.Const
+open FStar.Ident
 
 (**********************************************************************************************
  * Reduction of types via the Krivine Abstract Machine (KN), with lazy
@@ -435,7 +436,7 @@ and sn tcenv (cfg:config<typ>) : config<typ> =
                   if unmeta config then
                     sn tcenv ({config with code=t})
                   else
-                   let sfx = match b with Some false -> r | _ -> dummyRange in
+                   let sfx = match b with | Some false -> r | _ -> dummyRange in
                    let config = {config with code=t; environment={config.environment with label_suffix=(b, sfx)::config.environment.label_suffix}} in
                    sn tcenv config
 

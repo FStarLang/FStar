@@ -162,7 +162,7 @@ let tag_of_term (t:term) = match t.n with
         | Some _ -> "Tm_delayed-resolved"
     end
   | Tm_meta _ -> "Tm_meta"
-  | Tm_unknown _ -> "Tm_unknown"
+  | Tm_unknown -> "Tm_unknown"
 
 let uvar_to_string u = if !Options.hide_uvar_nums then "?" else "?" ^ (Unionfind.uvar_id u |> string_of_int) 
  

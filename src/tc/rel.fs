@@ -31,6 +31,7 @@ open FStar.Tc.Env
 open FStar.Tc.Normalize
 open FStar.Absyn.Syntax
 open FStar.Const
+open FStar.Ident
 
 (* --------------------------------------------------------- *)
 (* <new_uvar> Generating new unification variables/patterns  *)
@@ -686,7 +687,7 @@ let decompose_binder (bs:binders) v_ktec (rebuild_base:binders -> ktec -> 'a) : 
             let b_ktec = match fst hd with
                 | Inl a -> (bopt, CONTRAVARIANT, K a.sort)
                 | Inr x -> (bopt, CONTRAVARIANT, T (x.sort, Some ktype)) in
-            let binders' = match bopt with None -> binders | Some hd -> binders@[hd] in
+            let binders' = match bopt with | None -> binders | Some hd -> binders@[hd] in
             mk_b_ktecs (binders', b_ktec::b_ktecs) rest in
 
     rebuild, mk_b_ktecs ([], []) bs

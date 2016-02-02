@@ -26,6 +26,7 @@ let rev_append = BatList.rev_append
 let fold_left = BatList.fold_left
 let fold_right = BatList.fold_right
 let fold_left2 = BatList.fold_left2
+let fold_right2 = BatList.fold_right2
 let collect f l = BatList.flatten (BatList.map f l)
 let unzip = BatList.split
 let rec unzip3 = function

@@ -119,7 +119,7 @@ let rec univ_kernel u = match u with
     | U_unknown
     | U_name _
     | U_unif _
-    | U_zero _ -> u, 0
+    | U_zero -> u, 0
     | U_succ u -> let k, n = univ_kernel u in k, n+1
     | U_max _
     | U_bvar _ -> failwith "Imposible" 
@@ -138,7 +138,7 @@ let rec compare_univs u1 u2 = match u1, u2 with
     | U_bvar _, _
     | _, U_bvar _ 
     | U_unknown, _
-    | _, U_unknown -> failwith (Printf.sprintf "Impossible: %A, %A" u1 u2)
+    | _, U_unknown -> failwith "Impossible: compare_univs"
 
     | U_zero, U_zero -> 0
         

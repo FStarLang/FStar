@@ -271,7 +271,7 @@ type lenv_t = list<bv>
 let mk_lb (n, t, e) = {lbname=n; lbunivs=[]; lbeff=C.effect_ALL_lid; lbtyp=t; lbdef=e}
 let no_annot_abs bs t = U.abs bs t None 
 
-let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
+let rec desugar_data_pat env p  = //: (env_t * bnd * Syntax.pat) =
   let check_linear_pattern_variables (p:Syntax.pat) = 
     let rec pat_vars (p:Syntax.pat) = match p.v with 
       | Pat_dot_term _
@@ -401,7 +401,7 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
   ignore <| check_linear_pattern_variables p;
   env, b, p
 
-and desugar_binding_pat_maybe_top top env p : (env_t * bnd * option<pat>) =
+and desugar_binding_pat_maybe_top top env p = //: (env_t * bnd * option<pat>) =
   if top
   then match p.pat with
     | PatVar (x, _) -> (env, LetBinder(qualify env x, tun), None)
@@ -1230,7 +1230,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
       let env = push_sigelt env0 bundle in
       let data_ops = tps_sigelts |> List.collect (mk_data_projectors env) in
       let discs = sigelts |> List.collect (function
-        | Sig_inductive_typ(tname, _, tps, k, _, constrs, quals, _) when List.length constrs > 1->
+        | Sig_inductive_typ(tname, _, tps, k, _, constrs, quals, _) when (List.length constrs > 1)->
           mk_data_discriminators quals env tname tps k constrs
         | _ -> []) in
       let ops = discs@data_ops in
