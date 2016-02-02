@@ -21,6 +21,7 @@ open FStar
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Util
+open FStar.Ident
 
 (*
     force_uvar (t:term) 
@@ -62,16 +63,16 @@ let rec compress_univ u = match u with
 let subst_to_string s = s |> List.map (fun (b, _) -> b.ppname.idText) |> String.concat ", "
 
 //Lookup a bound var or a name in a parallel substitution
-let subst_bv a s = Util.find_map s (function DB (i, t) when i=a.index -> Some t | _ -> None)
+let subst_bv a s = Util.find_map s (function DB (i, t) when (i=a.index) -> Some t | _ -> None)
 let subst_nm a s = Util.find_map s (function  
     | NM (x, i) when bv_eq a x -> Some (bv_to_tm ({x with index=i})) 
     | NT (x, t) when bv_eq a x -> Some t
     | _ -> None)
 let subst_univ_bv x s = Util.find_map s (function 
-    | UN(y, t) when x=y -> Some t
+    | UN(y, t) when (x=y) -> Some t
     | _ -> None)
 let subst_univ_nm (x:univ_name) s = Util.find_map s (function 
-    | UD(y, i) when x.idText=y.idText -> Some (U_bvar i)
+    | UD(y, i) when (x.idText=y.idText) -> Some (U_bvar i)
     | _ -> None)
 
 (* apply_until_some f s 
@@ -108,7 +109,7 @@ let rec subst_univ s u =
       | U_max us -> U_max (List.map (subst_univ s) us)
 
 
-let rec subst' (s:subst_t) t = match s with
+let rec subst' (s:subst_ts) t = match s with
   | [] 
   | [[]] -> t //force_uvar t
   | _ ->
@@ -161,7 +162,7 @@ and subst_comp' s t = match s with
       | GTotal t -> mk_GTotal (subst' s t)
       | Comp ct -> mk_Comp(subst_comp_typ' s ct)
 
-and compose_subst (s1:subst_t) (s2:subst_t) = s1@s2
+and compose_subst (s1:subst_ts) (s2:subst_ts) = s1@s2
 
 let shift n s = match s with 
     | DB(i, t) -> DB(i+n, t)
@@ -171,46 +172,46 @@ let shift n s = match s with
     | NT _  -> s
 let shift_subst n s = List.map (shift n) s
 let shift_subst' n s = s |> List.map (shift_subst n)
-let subst_binder' s (x:bv, imp) = {x with sort=subst' s x.sort}, imp
+let subst_binder' s (x, imp) = {x with sort=subst' s x.sort}, imp
 let subst_binders' s bs = 
     bs |> List.mapi (fun i b -> 
         if i=0 then subst_binder' s b
         else subst_binder' (shift_subst' i s) b)
 let subst_arg' s (t, imp) = (subst' s t, imp)
 let subst_args' s = List.map (subst_arg' s)
-let subst_pat' s pat : (pat * int) = 
-    let rec aux n pat : (pat * int) = match pat.v with 
+let subst_pat' s p : (pat * int) = 
+    let rec aux n p : (pat * int) = match p.v with 
       | Pat_disj [] -> failwith "Impossible: empty disjunction"
      
-      | Pat_constant _ -> pat, n
+      | Pat_constant _ -> p, n
 
       | Pat_disj(p::ps) -> 
         let p, m = aux n p in
         let ps = List.map (fun p -> fst (aux n p)) ps in
-        {pat with v=Pat_disj(p::ps)}, m
+        {p with v=Pat_disj(p::ps)}, m
 
       | Pat_cons(fv, pats) ->
         let pats, n = pats |> List.fold_left (fun (pats, n) (p, imp) -> 
             let p, m = aux n p in
             ((p,imp)::pats, m)) ([], n) in
-        {pat with v=Pat_cons(fv, List.rev pats)}, n
+        {p with v=Pat_cons(fv, List.rev pats)}, n
 
       | Pat_var x ->
         let s = shift_subst' n s in 
         let x = {x with sort=subst' s x.sort} in
-        {pat with v=Pat_var x}, n + 1
+        {p with v=Pat_var x}, n + 1
 
       | Pat_wild x -> 
         let s = shift_subst' n s in 
         let x = {x with sort=subst' s x.sort} in
-        {pat with v=Pat_wild x}, n + 1 //these may be in scope in the inferred types of other terms, so shift the index
+        {p with v=Pat_wild x}, n + 1 //these may be in scope in the inferred types of other terms, so shift the index
 
       | Pat_dot_term(x, t0) -> 
         let s = shift_subst' n s in
         let x = {x with sort=subst' s x.sort} in
         let t0 = subst' s t0 in 
-        {pat with v=Pat_dot_term(x, t0)}, n //these are not in scope, so don't shift the index
-  in aux 0 pat
+        {p with v=Pat_dot_term(x, t0)}, n //these are not in scope, so don't shift the index
+  in aux 0 p
 
 let push_subst_lcomp s lopt = match lopt with 
     | None -> None
@@ -319,7 +320,7 @@ let open_term (bs:binders) t =
 let open_comp (bs:binders) t = 
    let bs', opening = open_binders' bs in
    bs', subst_comp opening t
-let open_pat (p:pat) : pat * subst = 
+let open_pat (p:pat) : pat * subst_t = 
     let rec aux sub p = match p.v with 
        | Pat_disj [] -> failwith "Impossible: empty disjunction"
      

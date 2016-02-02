@@ -81,7 +81,7 @@ type term' =
   | Tm_ascribed   of term * term * option<lident>                (* an effect label is the third arg, filled in by the type-checker *)
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Tm_uvar       of uvar * term                                 (* the 2nd arg is the type at which this uvar is introduced *)
-  | Tm_delayed    of either<(term * subst_t), unit -> term> 
+  | Tm_delayed    of either<(term * subst_ts), (unit -> term)> 
                    * memo<term>                                  (* A delayed substitution --- always force it; never inspect it directly *)
   | Tm_meta       of term * metadata                             (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
   | Tm_unknown                                                   (* only present initially while desugaring a term *)
@@ -147,7 +147,7 @@ and fv_qual =
   | Record_ctor of lident * list<fieldname>     (* the type of the record being constructed and its (unmangled) fields in order *)
 and lbname = either<bv, lident>
 and letbindings = bool * list<letbinding>       (* let recs may have more than one element; top-level lets have lidents *)
-and subst_t = list<list<subst_elt>>
+and subst_ts = list<list<subst_elt>>
 and subst_elt = 
    | DB of int * term                          (* DB i t: replace a bound variable with index i with term t                  *)
    | NM of bv  * int                           (* NM x i: replace a local name with a bound variable i                       *)
@@ -169,9 +169,9 @@ and bv = {
 }
 and fv = var<term> * option<fv_qual>
 and free_vars = {
-    names:set<bv>;
-    uvars:set<(uvar * typ)>;
-    univs:set<universe_uvar>;
+    free_names:set<bv>;
+    free_uvars:set<(uvar * typ)>;
+    free_univs:set<universe_uvar>;
 }
 and lcomp = {
     eff_name: lident;
@@ -290,7 +290,7 @@ type modul = {
   is_interface:bool
 }
 type path = list<string>
-type subst = list<subst_elt>
+type subst_t = list<subst_elt>
 type mk_t_a<'a,'b> = option<'b> -> range -> syntax<'a, 'b>
 type mk_t = mk_t_a<term',term'>
 
@@ -336,7 +336,7 @@ let freenames_of_list l = List.fold_right Util.set_add l no_names
 let list_of_freenames (fvs:freenames) = Util.set_elements fvs
 
 (* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
-let mk (t:'a) : mk_t_a<'a,'b> = fun topt r -> {
+let mk (t:'a) = fun (topt:option<'b>) r -> {
     n=t;
     pos=r;
     tk=Util.mk_ref topt;
@@ -353,7 +353,7 @@ let mk_Tm_uinst (t:term) = function
     | us ->
       match t.n with 
         | Tm_fvar _ ->  mk (Tm_uinst(t, us)) None t.pos
-        | _ -> failwith (Printf.sprintf "Unexpected universe instantiation: %A" t)
+        | _ -> failwith "Unexpected universe instantiation"
 
 let extend_app_n t args' kopt r = match t.n with 
     | Tm_app(head, args) -> mk_Tm_app head (args@args') kopt r
@@ -364,8 +364,8 @@ let mk_Total t : comp  = mk (Total t) None t.pos
 let mk_GTotal t : comp = mk (GTotal t) None t.pos
 let mk_Comp (ct:comp_typ) : comp  = mk (Comp ct) None ct.result_typ.pos
 let mk_lb (x, univs, eff, t, e) = {lbname=x; lbunivs=univs; lbeff=eff; lbtyp=t; lbdef=e}
-let mk_subst (s:subst)   = s
-let extend_subst x s : subst = x::s
+let mk_subst (s:subst_t)   = s
+let extend_subst x s : subst_t = x::s
 let argpos (x:arg) = (fst x).pos
 
 let tun : term = mk (Tm_unknown) None dummyRange
@@ -381,7 +381,7 @@ let null_bv k = {ppname=null_id; index=0; sort=k}
 let mk_binder (a:bv) : binder = a, None
 let null_binder t : binder = null_bv t, None
 let iarg t : arg = t, Some Implicit
-let arg t : arg = t, None
+let as_arg t : arg = t, None
 let is_null_bv (b:bv) = b.ppname.idText = null_id.idText
 let is_null_binder (b:binder) = is_null_bv (fst b)
 
@@ -430,6 +430,6 @@ let lbname_eq l1 l2 = match l1, l2 with
   | _ -> false
 let fv_eq ((fv1, _):fv) ((fv2, _):fv)  = lid_equals fv1.v fv2.v
 let set_bv_range bv r = {bv with ppname=mk_ident(bv.ppname.idText, r)}
-let fv l dc : fv = withinfo l tun (range_of_lid l), dc
+let lid_as_fv l dc : fv = withinfo l tun (range_of_lid l), dc
 let fv_to_tm (fv:fv) : term = mk (Tm_fvar fv) None (range_of_lid (fst fv).v)
-let fvar dc l r : term = mk (Tm_fvar(fv (set_lid_range l r) dc)) None r
+let fvar dc l r : term = mk (Tm_fvar(lid_as_fv (set_lid_range l r) dc)) None r

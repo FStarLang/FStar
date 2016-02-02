@@ -6,6 +6,7 @@ open FStar.Absyn
 open FStar.Absyn.Syntax
 open FStar.Absyn.Util
 open FStar.Const
+open FStar.Ident
 
 exception Err of string
 

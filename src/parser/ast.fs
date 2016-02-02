@@ -137,6 +137,7 @@ type pragma =
 
 type decl' =
   | Open of lid
+  | ModuleAbbrev of ident * lid
   | KindAbbrev of ident * list<binder> * knd
   | ToplevelLet of qualifiers * bool * list<(pattern * term)>
   | Main of term

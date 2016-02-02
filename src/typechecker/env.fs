@@ -506,7 +506,7 @@ let build_lattice env se = match se with
 
     let mk_lift lift_t r wp1 = 
         let _, lift_t = inst_tscheme lift_t in
-        mk (Tm_app(lift_t, [arg r; arg wp1])) None wp1.pos in
+        mk (Tm_app(lift_t, [as_arg r; as_arg wp1])) None wp1.pos in
 
     let edge =
       {msource=sub.source;
@@ -518,8 +518,8 @@ let build_lattice env se = match se with
        mlift=(fun t wp -> wp)
     } in
     let print_mlift l =
-        let arg = fv (lid_of_path ["ARG"] dummyRange) None in
-        let wp = fv (lid_of_path  ["WP"]  dummyRange) None in
+        let arg = lid_as_fv (lid_of_path ["ARG"] dummyRange) None in
+        let wp = lid_as_fv (lid_of_path  ["WP"]  dummyRange) None in
         Print.term_to_string (l arg wp) in
     let order = edge::env.effects.order in
 

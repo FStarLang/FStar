@@ -41,7 +41,7 @@ let no_inst env = {env with Env.instantiate_imp=false}
 let mk_lex_list vs =
     List.fold_right (fun v tl ->
         let r = if tl.pos = Range.dummyRange then v.pos else Range.union_ranges v.pos tl.pos in
-        mk_Tm_app lex_pair [arg v; arg tl] (Some lex_t.n) r) 
+        mk_Tm_app lex_pair [as_arg v; as_arg tl] (Some lex_t.n) r) 
     vs lex_top
 let is_eq = function
     | Some Equality -> true
@@ -93,7 +93,7 @@ let maybe_make_subst = function
   | Inr(Some x, e) -> [NT(x,e)]
   | _ -> []
 
-let maybe_extend_subst s b v : subst =
+let maybe_extend_subst s b v : subst_t =
     if is_null_binder b then s
     else NT(fst b, v)::s
 
@@ -248,7 +248,7 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ)> =
                   let formals = formals |> List.map (fun (x, imp) -> if S.is_null_bv x then (S.new_bv (Some (S.range_of_bv x)) x.sort, imp) else x,imp) in
         (*open*)  let formals, c = SS.open_comp formals c in
                   let dec = decreases_clause formals c in
-                  let precedes = mk_Tm_app precedes [arg dec; arg previous_dec] None r in
+                  let precedes = mk_Tm_app precedes [as_arg dec; as_arg previous_dec] None r in
                   let bs, (last, imp) = Util.prefix formals in
                   let last = {last with sort=Util.refine last precedes} in
                   let refined_formals = bs@[(last,imp)] in
@@ -540,7 +540,7 @@ and tc_comp env c : comp                                      (* checked version
       let kc =  Env.lookup_effect_lid env c.effect_name in
       if Env.debug env Options.Low then Printf.printf "Type of effect %s is %s\n" (Print.lid_to_string c.effect_name) (Print.term_to_string kc);
       let head = S.fvar None c.effect_name (range_of_lid c.effect_name) in
-      let tc = mk_Tm_app head ((arg c.result_typ)::c.effect_args) None c.result_typ.pos in
+      let tc = mk_Tm_app head ((as_arg c.result_typ)::c.effect_args) None c.result_typ.pos in
       let tc, _, f = tc_check_tot_or_gtot_term env tc S.teff in
       let _, args = Util.head_and_args tc in
       let res, args = List.hd args, List.tl args in
@@ -596,7 +596,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                                             * binders                         (* a type-checked prefix of bs       *)
                                             * option<either<binders,binders>> (* suffix of either bs or bs_expected*)
                                             * guard_t                         (* accumulated logical guard         *)
-                                            * subst =                         (* alpha conv. of bs_expected to bs  *)
+                                            * subst_t =                         (* alpha conv. of bs_expected to bs  *)
         let rec aux (env, out, g, subst) (bs:binders) (bs_expected:binders) = match bs, bs_expected with 
             | [], [] -> env, List.rev out, None, g, subst
 
@@ -867,12 +867,12 @@ and check_application_args env head chead ghead args expected_topt : term * lcom
                      tc_args (subst, arg::outargs, arg::arg_rets, comps, guard, fvs) rest cres rest'
                 else if is_null_binder (List.hd bs) //it's not pure, but the function isn't dependent; just check its WP
                 then let newx = S.new_bv (Some e.pos) c.res_typ in 
-                     let arg' = S.arg <| S.bv_to_name newx in
+                     let arg' = S.as_arg <| S.bv_to_name newx in
                      tc_args (subst, arg::outargs, arg'::arg_rets, (Some newx, c)::comps, g, fvs) rest cres rest'
                 else //e is impure and the function may be dependent... 
                      //need to check that the variable does not occur free in the rest of the function type
                      //by adding x to fvs
-                     tc_args (subst, arg::outargs, S.arg (S.bv_to_name x)::arg_rets, 
+                     tc_args (subst, arg::outargs, S.as_arg (S.bv_to_name x)::arg_rets, 
                              (Some x, c)::comps, g, Util.set_add x fvs) rest cres rest'
 
             | _, [] -> (* no more args; full or partial application *)
@@ -968,7 +968,7 @@ and check_short_circuit_args env head chead g_head args expected_topt : term * l
                 let ghost = ghost 
                           || (not (Util.is_total_lcomp c)
                               && not (TcUtil.is_pure_effect env c.eff_name)) in
-                seen@[arg e], Rel.conj_guard guard g, ghost) ([], g_head, false) args bs in
+                seen@[as_arg e], Rel.conj_guard guard g, ghost) ([], g_head, false) args bs in
           let e = mk_Tm_app head args (Some res_t.n) r  in
           let c = if ghost then S.mk_GTotal res_t |> Util.lcomp_of_comp else Util.lcomp_of_comp c in
           let c, g = TcUtil.strengthen_precondition None env e c guard in
@@ -1139,7 +1139,7 @@ and tc_eqn scrutinee env branch
             if List.length (Env.datacons_of_typ env (Env.typ_of_datacon env f.v)) > 1
             then 
                 let disc = S.fvar None (Util.mk_discriminator f.v) (range_of_lid f.v) in
-                let disc = mk_Tm_app disc [arg scrutinee_tm] None scrutinee_tm.pos in
+                let disc = mk_Tm_app disc [as_arg scrutinee_tm] None scrutinee_tm.pos in
                 [Util.mk_eq Util.t_bool Util.t_bool disc Const.exp_true_bool]
             else [] in
 
@@ -1160,7 +1160,7 @@ and tc_eqn scrutinee env branch
             | Tm_app({n=Tm_uvar _}, _) 
             | Tm_name _
             | Tm_constant Const_unit -> []
-            | Tm_constant _ -> [mk_Tm_app Util.teq [arg scrutinee_tm; arg pat_exp] None scrutinee_tm.pos]
+            | Tm_constant _ -> [mk_Tm_app Util.teq [as_arg scrutinee_tm; as_arg pat_exp] None scrutinee_tm.pos]
             | Tm_uinst _
             | Tm_fvar _ -> 
               let f = head_constructor pat_exp in
@@ -1173,7 +1173,7 @@ and tc_eqn scrutinee env branch
                 then [] 
                 else let sub_term_guards = args |> List.mapi (fun i (ei, _) -> 
                         let projector = Env.lookup_projector env f.v i in //NS: TODO ... should this be a marked as a record projector? But it doesn't matter for extraction
-                        let sub_term = mk_Tm_app (S.fvar None projector f.p) [arg scrutinee_tm] None f.p in
+                        let sub_term = mk_Tm_app (S.fvar None projector f.p) [as_arg scrutinee_tm] None f.p in
                         build_branch_guard sub_term ei) |> List.flatten in
                      discriminate scrutinee_tm f @ sub_term_guards
             | _ -> [] in //a non-pattern sub-term: must be from a dot pattern

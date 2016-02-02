@@ -37,13 +37,14 @@ type binding =
 type kind_abbrev = lident * list<either<btvdef, bvvdef>> * Syntax.knd
 type env = {
   curmodule: option<lident>;
-  modules:list<(lident * modul)>;  (* previously desugared modules *)
-  open_namespaces: list<lident>; (* fully qualified names, in order of precedence *)
-  sigaccum:sigelts;              (* type declarations being accumulated for the current module *)
+  modules:list<(lident * modul)>;                         (* previously desugared modules *)
+  open_namespaces: list<lident>;                          (* fully qualified names, in order of precedence *)
+  modul_abbrevs:   list<(ident * lident)>;                (* module X = A.B.C *)
+  sigaccum:sigelts;                                       (* type declarations being accumulated for the current module *)
   localbindings:list<(either<btvdef,bvvdef> * binding)>;  (* local name bindings for name resolution, paired with an env-generated unique name *)
-  recbindings:list<binding>;     (* names bound by recursive type and top-level let-bindings definitions only *)
+  recbindings:list<binding>;                              (* names bound by recursive type and top-level let-bindings definitions only *)
   phase:AST.level;
-  sigmap: list<Util.smap<(sigelt * bool)>>; (* bool indicates that this was declared in an interface file *)
+  sigmap: list<Util.smap<(sigelt * bool)>>;               (* bool indicates that this was declared in an interface file *)
   default_result_effect:typ -> Range.range -> comp;
   iface:bool;
   admitted_iface:bool;
@@ -62,6 +63,7 @@ let new_sigmap () = Util.smap_create 100
 let empty_env () = {curmodule=None;
                     modules=[];
                     open_namespaces=[];
+                    modul_abbrevs=[];
                     sigaccum=[];
                     localbindings=[];
                     recbindings=[];
@@ -100,6 +102,16 @@ let resolve_in_open_namespaces env lid (finder:lident -> option<'a>) : option<'a
                 let full_name = lid_of_ids (ids_of_lid ns @ ids) in
                 finder full_name) in
   aux (current_module env::env.open_namespaces)
+
+let expand_module_abbrevs env lid = 
+    match lid.ns with 
+        | [id] ->
+          begin match env.modul_abbrevs |> List.tryFind (fun (id', _) -> id.idText = id'.idText) with 
+                | None -> lid
+                | Some (_, lid') -> 
+                  Ident.lid_of_ids (Ident.ids_of_lid lid' @ [lid.ident])
+          end
+        | _ -> lid
 
 let unmangleMap = [("op_ColonColon", "Cons");
                    ("not", "op_Negation")]
@@ -156,9 +168,12 @@ let fv_qual_of_se = function
 
 let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> =
   (* Resolve using, in order,
-     1. rec bindings
-     2. sig bindings in current module
-     3. each open namespace, in reverse order *)
+     For unqualified names, start with:
+         1. rec bindings
+         2. sig bindings in current module
+     Then, continuing for possibly qualified names: 
+         3. expand any module abbreviation 
+         4. each open namespace, in reverse order of opening *)
   let find_in_sig lid  =
     match Util.smap_try_find (sigmap env) lid.str with
       | Some (_, true) when exclude_interf -> None
@@ -192,9 +207,12 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
       end
     | _ -> None in
 
+ 
   match found_id with
     | Some _ -> found_id
-    | _ -> resolve_in_open_namespaces env lid find_in_sig
+    | _ -> 
+        let lid = expand_module_abbrevs env lid in
+        resolve_in_open_namespaces env lid find_in_sig
 
 let try_lookup_typ_name' exclude_interf env (lid:lident) : option<typ> =
   match try_lookup_name true exclude_interf env lid with
@@ -485,6 +503,11 @@ let push_sigelt env s =
 let push_namespace env lid =
   {env with open_namespaces = lid::env.open_namespaces}
 
+let push_module_abbrev env x l = 
+  if env.modul_abbrevs |> Util.for_some (fun (y, _) -> x.idText=y.idText)
+  then raise (Error(Util.format1 "Module %s is already defined" x.idText, x.idRange))
+  else {env with modul_abbrevs=(x,l)::env.modul_abbrevs}
+
 let is_type_lid env lid =
   let aux () = match try_lookup_typ_name' false env lid with
     | Some _ -> true
@@ -523,6 +546,7 @@ let finish env modul =
     curmodule=None;
     modules=(modul.name, modul)::env.modules;
     open_namespaces=[];
+    modul_abbrevs=[];
     sigaccum=[];
     localbindings=[];
     recbindings=[];

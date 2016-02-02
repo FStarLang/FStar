@@ -1486,6 +1486,9 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
     let env = DesugarEnv.push_namespace env lid in
     env, []
 
+  | ModuleAbbrev(x, l) -> 
+    DesugarEnv.push_module_abbrev env x l, []
+
   | Tycon(qual, tcs) ->
     desugar_tycon env d.drange (trans_quals qual) tcs
 

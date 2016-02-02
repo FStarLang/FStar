@@ -27,29 +27,29 @@ open FStar.Syntax.Syntax
 (************************* Free names and unif variables ************************)
 (********************************************************************************)
 let no_free_vars = {
-    names=no_names;
-    uvars=no_uvs;
-    univs=no_universe_uvars;
+    free_names=no_names;
+    free_uvars=no_uvs;
+    free_univs=no_universe_uvars;
 }
 let singleton_bv x   = {
-    names=Util.set_add x (new_bv_set());
-    uvars=no_uvs;
-    univs=no_universe_uvars;
+    free_names=Util.set_add x (new_bv_set());
+    free_uvars=no_uvs;
+    free_univs=no_universe_uvars;
 }
 let singleton_uv x   = {
-    names=no_names;
-    uvars=Util.set_add x (new_uv_set());
-    univs=no_universe_uvars;
+    free_names=no_names;
+    free_uvars=Util.set_add x (new_uv_set());
+    free_univs=no_universe_uvars;
 }
 let singleton_univ x = {
-    names=no_names;
-    uvars=no_uvs;
-    univs= Util.set_add x (new_universe_uvar_set());
+    free_names=no_names;
+    free_uvars=no_uvs;
+    free_univs= Util.set_add x (new_universe_uvar_set());
 }
 let union f1 f2 = {
-    names=Util.set_union f1.names f2.names;
-    uvars=Util.set_union f1.uvars f2.uvars;
-    univs=Util.set_union f1.univs f2.univs;
+    free_names=Util.set_union f1.free_names f2.free_names;
+    free_uvars=Util.set_union f1.free_uvars f2.free_uvars;
+    free_univs=Util.set_union f1.free_univs f2.free_univs;
 }
 
 let rec free_univs u = match Subst.compress_univ u with
@@ -159,15 +159,14 @@ and free_names_and_uvars_comp c =
          n
 
 and should_invalidate_cache n = 
-    n.uvars |> Util.set_elements |> List.exists (fun (u, _) -> match Unionfind.find u with
+    n.free_uvars |> Util.set_elements |> Util.for_some (fun (u, _) -> match Unionfind.find u with
         | Fixed _ -> true
         | _ -> false)
-    || n.univs |> Util.set_elements |> List.exists (fun u -> match Unionfind.find u with 
-        | Some _ -> true
-        | None -> false)      
+    || n.free_univs |> Util.set_elements |> Util.for_some (fun u -> match Unionfind.find u with 
+         | Some _ -> true
+         | None -> false)  
 
-        
-let names t = (free_names_and_uvars t).names
-let uvars t = (free_names_and_uvars t).uvars
-let univs t = (free_names_and_uvars t).univs
-let names_of_binders (bs:binders) = (free_names_and_uvars_binders bs no_free_vars).names
+let names t = (free_names_and_uvars t).free_names
+let uvars t = (free_names_and_uvars t).free_uvars
+let univs t = (free_names_and_uvars t).free_univs
+let names_of_binders (bs:binders) = (free_names_and_uvars_binders bs no_free_vars).free_names

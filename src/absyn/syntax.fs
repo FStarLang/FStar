@@ -361,7 +361,9 @@ let mk_Kind_arrow ((bs:binders),(k:knd)) p : knd = {
 let mk_Kind_arrow' ((bs:binders), (k:knd)) p : knd =
     match bs with
         | [] -> k
-        | _ ->  match k.n with Kind_arrow(bs', k') -> mk_Kind_arrow(bs@bs', k') p | _ -> mk_Kind_arrow(bs, k) p
+        | _ ->  match k.n with
+	    	  | Kind_arrow(bs', k') -> mk_Kind_arrow(bs@bs', k') p
+		  | _ -> mk_Kind_arrow(bs, k) p
 
 let mk_Kind_uvar (uv:uvar_k_app) p : knd = {
     n=Kind_uvar uv;
@@ -468,7 +470,7 @@ let mk_Typ_uvar'     ((u:uvar_t),(k:knd)) (k':option<knd>) (p:range) = {
 }
 let mk_Typ_uvar (u, k) p = mk_Typ_uvar' (u, k) (Some k) p
 let mk_Typ_delayed  ((t:typ),(s:subst_t),(m:memo<typ>)) (k:option<knd>) (p:range) = {
-    n=(match t.n with Typ_delayed _ -> failwith "NESTED DELAYED TYPES!" | _ -> Typ_delayed(Inl(t, s), m));
+    n=(match t.n with | Typ_delayed _ -> failwith "NESTED DELAYED TYPES!" | _ -> Typ_delayed(Inl(t, s), m));
     tk=Util.mk_ref k;
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();

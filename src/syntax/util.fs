@@ -94,7 +94,7 @@ let binders_of_freevars fvs = Util.set_elements fvs |> List.map mk_binder
 let mk_subst s = [s]
 
 let subst_formal (f:binder) (a:arg) = DB(0, fst a)
-let subst_of_list (formals:binders) (actuals:args) : subst =
+let subst_of_list (formals:binders) (actuals:args) : subst_t =
     if (List.length formals = List.length actuals)
     then List.fold_right2 (fun f a (n, out) -> (n + 1, DB(n, fst a)::out)) formals actuals (0, [])
          |> snd
@@ -480,7 +480,9 @@ let abs bs t lopt = match bs with
             | Some lc -> Some (close_lcomp bs lc) in
           mk (Tm_abs(close_binders bs, body, lopt)) None t.pos 
 
-let arrow bs c = match bs with [] -> comp_result c | _ -> mk (Tm_arrow(close_binders bs, Subst.close_comp bs c)) None c.pos
+let arrow bs c = match bs with 
+  | [] -> comp_result c 
+  | _ -> mk (Tm_arrow(close_binders bs, Subst.close_comp bs c)) None c.pos
 let refine b t = mk (Tm_refine(b, Subst.close [mk_binder b] t)) !b.sort.tk (Range.union_ranges (range_of_bv b) t.pos)
 let branch b = Subst.close_branch b
 
@@ -628,9 +630,9 @@ let t_not   = fvar None Const.not_lid dummyRange
 
 let mk_conj_opt phi1 phi2 = match phi1 with
   | None -> Some phi2
-  | Some phi1 -> Some (mk (Tm_app(tand, [arg phi1; arg phi2])) None (Range.union_ranges phi1.pos phi2.pos))
-let mk_binop op_t phi1 phi2 = mk (Tm_app(op_t, [arg phi1; arg phi2])) None (Range.union_ranges phi1.pos phi2.pos)
-let mk_neg phi = mk (Tm_app(t_not, [arg phi])) None phi.pos
+  | Some phi1 -> Some (mk (Tm_app(tand, [as_arg phi1; as_arg phi2])) None (Range.union_ranges phi1.pos phi2.pos))
+let mk_binop op_t phi1 phi2 = mk (Tm_app(op_t, [as_arg phi1; as_arg phi2])) None (Range.union_ranges phi1.pos phi2.pos)
+let mk_neg phi = mk (Tm_app(t_not, [as_arg phi])) None phi.pos
 let mk_conj phi1 phi2 = mk_binop tand phi1 phi2
 let mk_conj_l phi = match phi with
     | [] -> fvar None Const.true_lid dummyRange
@@ -650,7 +652,7 @@ let mk_imp phi1 phi2  =
                 | _ -> mk_binop timp phi1 phi2
             end
 let mk_iff phi1 phi2  = mk_binop tiff phi1 phi2
-let b2t e = mk (Tm_app(b2t_v, [arg e])) None e.pos//implicitly coerce a boolean to a type
+let b2t e = mk (Tm_app(b2t_v, [as_arg e])) None e.pos//implicitly coerce a boolean to a type
 
 let eq_pred_t : term =
     let a = new_bv None ktype0 in
@@ -662,7 +664,7 @@ let eq_pred_t : term =
 
 let teq = fvar None Const.eq2_lid dummyRange
 
-let mk_eq t1 t2 e1 e2 = mk (Tm_app(teq, [arg e1; arg e2])) None (Range.union_ranges e1.pos e2.pos)
+let mk_eq t1 t2 e1 e2 = mk (Tm_app(teq, [as_arg e1; as_arg e2])) None (Range.union_ranges e1.pos e2.pos)
 
 let lex_t :term = fvar None Const.lex_t_lid dummyRange
 let lex_top : term = fvar (Some Data_ctor) Const.lextop_lid dummyRange
@@ -681,7 +683,7 @@ let lcomp_of_comp c0 =
      comp = fun() -> c0}
 
 let mk_forall (x:bv) (body:typ) : typ =
-  mk (Tm_app(tforall, [arg (abs [mk_binder x] body (Some (lcomp_of_comp <| mk_Total ktype0)))])) None dummyRange
+  mk (Tm_app(tforall, [as_arg (abs [mk_binder x] body (Some (lcomp_of_comp <| mk_Total ktype0)))])) None dummyRange
 
 let rec close_forall bs f =
   List.fold_right (fun b f -> if Syntax.is_null_binder b then f else mk_forall (fst b) f) bs f
@@ -748,7 +750,7 @@ let destruct_typ_as_formula f : option<connective> =
             let t, args = head_and_args t in
             un_uinst t, args |> List.map (fun (t, imp) -> unascribe t, imp) in
         let rec aux qopt out t = match qopt, flat t with
-            | Some fa, ({n=Tm_fvar (tc, _)}, [{n=Tm_abs([b], t2, _)}, _])
+            | Some fa, ({n=Tm_fvar (tc, _)}, [({n=Tm_abs([b], t2, _)}, _)])
             | Some fa, ({n=Tm_fvar (tc, _)}, [_; ({n=Tm_abs([b], t2, _)}, _)])
                 when (is_q fa tc.v) ->
               aux qopt (b::out) t2

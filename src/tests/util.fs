@@ -19,7 +19,7 @@ let h = gen_bv "h" None S.tun
 let m = gen_bv "m" None S.tun
 let tm t = mk t None dummyRange
 let nm x = bv_to_name x
-let app x ts = mk (Tm_app(x, List.map arg ts)) None dummyRange
+let app x ts = mk (Tm_app(x, List.map as_arg ts)) None dummyRange
 
 let rec term_eq' t1 t2 = 
     let t1 = SS.compress t1 in 

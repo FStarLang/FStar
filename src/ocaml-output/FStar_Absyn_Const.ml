@@ -52,26 +52,11 @@ let int31_lid = (p2l (("FStar")::("Int31")::("int31")::[]))
 
 let heap_lid = (p2l (("FStar")::("Heap")::("heap")::[]))
 
-let kunary = (fun k k' -> (let _90_11 = (let _90_10 = (let _90_9 = (FStar_Absyn_Syntax.null_t_binder k)
-in (_90_9)::[])
-in (_90_10, k'))
-in (FStar_Absyn_Syntax.mk_Kind_arrow _90_11 FStar_Absyn_Syntax.dummyRange)))
+let kunary = (fun k k' -> (FStar_Absyn_Syntax.mk_Kind_arrow (((FStar_Absyn_Syntax.null_t_binder k))::[], k') FStar_Absyn_Syntax.dummyRange))
 
-let kbin = (fun k1 k2 k' -> (let _90_22 = (let _90_21 = (let _90_20 = (FStar_Absyn_Syntax.null_t_binder k1)
-in (let _90_19 = (let _90_18 = (FStar_Absyn_Syntax.null_t_binder k2)
-in (_90_18)::[])
-in (_90_20)::_90_19))
-in (_90_21, k'))
-in (FStar_Absyn_Syntax.mk_Kind_arrow _90_22 FStar_Absyn_Syntax.dummyRange)))
+let kbin = (fun k1 k2 k' -> (FStar_Absyn_Syntax.mk_Kind_arrow (((FStar_Absyn_Syntax.null_t_binder k1))::((FStar_Absyn_Syntax.null_t_binder k2))::[], k') FStar_Absyn_Syntax.dummyRange))
 
-let ktern = (fun k1 k2 k3 k' -> (let _90_37 = (let _90_36 = (let _90_35 = (FStar_Absyn_Syntax.null_t_binder k1)
-in (let _90_34 = (let _90_33 = (FStar_Absyn_Syntax.null_t_binder k2)
-in (let _90_32 = (let _90_31 = (FStar_Absyn_Syntax.null_t_binder k3)
-in (_90_31)::[])
-in (_90_33)::_90_32))
-in (_90_35)::_90_34))
-in (_90_36, k'))
-in (FStar_Absyn_Syntax.mk_Kind_arrow _90_37 FStar_Absyn_Syntax.dummyRange)))
+let ktern = (fun k1 k2 k3 k' -> (FStar_Absyn_Syntax.mk_Kind_arrow (((FStar_Absyn_Syntax.null_t_binder k1))::((FStar_Absyn_Syntax.null_t_binder k2))::((FStar_Absyn_Syntax.null_t_binder k3))::[], k') FStar_Absyn_Syntax.dummyRange))
 
 let true_lid = (pconst "True")
 
@@ -119,11 +104,11 @@ let neq_lid = (pconst "neq")
 
 let neq2_lid = (pconst "neq2")
 
-let exp_true_bool = (FStar_Absyn_Syntax.mk_Exp_constant (FStar_Absyn_Syntax.Const_bool (true)) None FStar_Absyn_Syntax.dummyRange)
+let exp_true_bool = (FStar_Absyn_Syntax.mk_Exp_constant (FStar_Const.Const_bool (true)) None FStar_Absyn_Syntax.dummyRange)
 
-let exp_false_bool = (FStar_Absyn_Syntax.mk_Exp_constant (FStar_Absyn_Syntax.Const_bool (false)) None FStar_Absyn_Syntax.dummyRange)
+let exp_false_bool = (FStar_Absyn_Syntax.mk_Exp_constant (FStar_Const.Const_bool (false)) None FStar_Absyn_Syntax.dummyRange)
 
-let exp_unit = (FStar_Absyn_Syntax.mk_Exp_constant FStar_Absyn_Syntax.Const_unit None FStar_Absyn_Syntax.dummyRange)
+let exp_unit = (FStar_Absyn_Syntax.mk_Exp_constant FStar_Const.Const_unit None FStar_Absyn_Syntax.dummyRange)
 
 let cons_lid = (pconst "Cons")
 

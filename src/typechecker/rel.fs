@@ -679,7 +679,7 @@ let un_T = function
     | _ -> failwith "Impossible"
 
 let arg_of_tc = function
-    | T t -> arg t
+    | T t -> as_arg t
     | _ -> failwith "Impossible"
 
 let imitation_sub_probs orig env scope (ps:args) (qs:list<(option<binder> * variance * tc)>) =
@@ -1228,7 +1228,7 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
                     let gi_ps = mk_Tm_app gi ps (Some k_a.n) r in
                     let subst = if S.is_null_bv a then subst else NT(a, gi_xs)::subst in
                     let gi_xs', gi_ps' = aux subst tl in
-                    arg gi_xs::gi_xs', arg gi_ps::gi_ps' in
+                    as_arg gi_xs::gi_xs', as_arg gi_ps::gi_ps' in
               aux [] bs in
 
         if not <| matches pi
@@ -1801,7 +1801,7 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                                   let c1 = {
                                     effect_name=c2.effect_name;
                                     result_typ=c1.result_typ;
-                                    effect_args=[arg (edge.mlift c1.result_typ wp); arg (edge.mlift c1.result_typ wlp)];
+                                    effect_args=[as_arg (edge.mlift c1.result_typ wp); as_arg (edge.mlift c1.result_typ wlp)];
                                     flags=c1.flags
                                   } in
                                   solve_eq c1 c2
@@ -1817,14 +1817,14 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                                        let g =
                                        if is_null_wp_2
                                        then let _ = if debug env <| Options.Other "Rel" then Util.print_string "Using trivial wp ... \n" in
-                                            mk (Tm_app(inst_effect_fun env c2_decl c2_decl.trivial, [arg c1.result_typ; arg <| edge.mlift c1.result_typ wpc1])) 
+                                            mk (Tm_app(inst_effect_fun env c2_decl c2_decl.trivial, [as_arg c1.result_typ; as_arg <| edge.mlift c1.result_typ wpc1])) 
                                                (Some U.ktype0.n) r
                                        else let wp2_imp_wp1 = mk (Tm_app(inst_effect_fun env c2_decl c2_decl.wp_binop,
-                                                                            [arg c2.result_typ;
-                                                                             arg wpc2;
-                                                                             arg <| S.fvar None Const.imp_lid r;
-                                                                             arg <| edge.mlift c1.result_typ wpc1])) None r in
-                                                mk (Tm_app(inst_effect_fun env c2_decl c2_decl.wp_as_type, [arg c2.result_typ; arg wp2_imp_wp1])) (Some U.ktype0.n) r  in
+                                                                            [as_arg c2.result_typ;
+                                                                             as_arg wpc2;
+                                                                             as_arg <| S.fvar None Const.imp_lid r;
+                                                                             as_arg <| edge.mlift c1.result_typ wpc1])) None r in
+                                                mk (Tm_app(inst_effect_fun env c2_decl c2_decl.wp_as_type, [as_arg c2.result_typ; as_arg wp2_imp_wp1])) (Some U.ktype0.n) r  in
                                        let base_prob = TProb <| sub_prob c1.result_typ problem.relation c2.result_typ "result type" in
                                        let wl = solve_prob orig (Some <| Util.mk_conj (p_guard base_prob |> fst) g) [] wl in
                                        solve env (attempt [base_prob] wl)
@@ -1874,7 +1874,7 @@ let abstract_guard x g = match g with
 
 let apply_guard g e = match g.guard_f with
   | Trivial -> g
-  | NonTrivial f -> {g with guard_f=NonTrivial <| mk (Tm_app(f, [arg e])) (Some U.ktype0.n) f.pos}
+  | NonTrivial f -> {g with guard_f=NonTrivial <| mk (Tm_app(f, [as_arg e])) (Some U.ktype0.n) f.pos}
 
 let trivial t = match t with
   | Trivial -> ()

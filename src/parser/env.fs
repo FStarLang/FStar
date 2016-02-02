@@ -225,9 +225,9 @@ let try_lookup_datacon env (lid:lident) =
     match Util.smap_try_find (sigmap env) lid.str with
       | Some (Sig_declare_typ(_, _, _, quals, _), _) ->
         if quals |> Util.for_some (function Assumption -> true | _ -> false)
-        then Some (fv lid None)
+        then Some (lid_as_fv lid None)
         else None
-      | Some (Sig_datacon _, _) -> Some (fv lid (Some Data_ctor))
+      | Some (Sig_datacon _, _) -> Some (lid_as_fv lid (Some Data_ctor))
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig
 

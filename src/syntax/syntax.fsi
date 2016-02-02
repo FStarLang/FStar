@@ -80,7 +80,7 @@ type term' =
   | Tm_ascribed   of term * term * option<lident>                (* an effect label is the third arg, filled in by the type-checker *)
   | Tm_let        of letbindings * term                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Tm_uvar       of uvar * term                                 (* the 2nd arg is the type at which this uvar is introduced *)
-  | Tm_delayed    of either<(term * subst_t), unit -> term> 
+  | Tm_delayed    of either<(term * subst_ts), (unit -> term)> 
                    * memo<term>                                  (* A delayed substitution --- always force it; never inspect it directly *)
   | Tm_meta       of term * metadata                             (* Some terms carry metadata, for better code generation, SMT encoding etc. *)
   | Tm_unknown                                                   (* only present initially while desugaring a term *)
@@ -146,7 +146,7 @@ and fv_qual =
   | Record_ctor of lident * list<fieldname>     (* the type of the record being constructed and its (unmangled) fields in order *)
 and lbname = either<bv, lident>
 and letbindings = bool * list<letbinding>       (* let recs may have more than one element; top-level lets have lidents *)
-and subst_t = list<list<subst_elt>>             (* A composition of parallel substitutions *)
+and subst_ts = list<list<subst_elt>>            (* A composition of parallel substitutions *)
 and subst_elt = 
    | DB of int * term                          (* DB i t: replace a bound variable with index i with term t                  *)
    | NM of bv  * int                           (* NM x i: replace a local name with a bound variable i                       *)
@@ -168,9 +168,9 @@ and bv = {
 }
 and fv = var<term> * option<fv_qual>
 and free_vars = {
-    names:set<bv>;
-    uvars:set<(uvar * typ)>;
-    univs:set<universe_uvar>;
+    free_names:set<bv>;
+    free_uvars:set<(uvar * typ)>;
+    free_univs:set<universe_uvar>;
 }
 and lcomp = {
     eff_name: lident;
@@ -293,7 +293,7 @@ type modul = {
   is_interface:bool;
 }
 type path = list<string>
-type subst = list<subst_elt>
+type subst_t = list<subst_elt>
 type mk_t_a<'a,'b> = option<'b> -> range -> syntax<'a, 'b>
 type mk_t = mk_t_a<term',term'>
 
@@ -301,14 +301,14 @@ val withsort: 'a -> 'b -> withinfo_t<'a,'b>
 val withinfo: 'a -> 'b -> Range.range -> withinfo_t<'a,'b>
 
 (* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
-val mk: 'a -> mk_t_a<'a,'b>
+val mk: 'a -> Tot<mk_t_a<'a,'b>>
 
 val mk_lb :         (lbname * list<univ_name> * lident * typ * term) -> letbinding
-val mk_Tm_app:      term -> args -> mk_t
+val mk_Tm_app:      term -> args -> Tot<mk_t>
 val mk_Tm_uinst:    term -> universes -> term
-val extend_app:     term -> arg -> mk_t
-val extend_app_n:   term -> args -> mk_t
-val mk_Tm_delayed:  either<(term * subst_t), (unit -> term)> -> Range.range -> term
+val extend_app:     term -> arg -> Tot<mk_t>
+val extend_app_n:   term -> args -> Tot<mk_t>
+val mk_Tm_delayed:  either<(term * subst_ts), (unit -> term)> -> Range.range -> term
 val mk_Total:       typ -> comp
 val mk_GTotal:      typ -> comp
 val mk_Comp:        comp_typ -> comp
@@ -339,7 +339,7 @@ val binders_of_list:      list<bv> -> binders
 val null_bv:        term -> bv
 val mk_binder:      bv -> binder
 val null_binder:    term -> binder
-val arg:            term -> arg
+val as_arg:         term -> arg
 val iarg:           term -> arg
 val is_null_bv:     bv -> bool
 val is_null_binder: binder -> bool
@@ -355,7 +355,7 @@ val freshen_bv:     bv -> bv
 val gen_bv:         string -> option<Range.range> -> typ -> bv 
 val new_bv:         option<range> -> typ -> bv
 val new_univ_name:  option<range> -> univ_name
-val fv:             lident -> option<fv_qual> -> fv 
+val lid_as_fv:      lident -> option<fv_qual> -> fv 
 val fv_to_tm:       fv -> term
 val fvar:           option<fv_qual> -> lident -> range -> term
 val fv_eq:          fv -> fv -> bool

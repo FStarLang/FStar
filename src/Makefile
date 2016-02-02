@@ -42,7 +42,7 @@ BIN=../bin
 PLATFORM       =
 RELEASE       ?= Debug
 BUILD_VERSION  =
-OTHERFLAGS    := --optimize+ --debug:full --nologo -g -O
+OTHERFLAGS    := --optimize+ --debug:full --nologo --crossoptimize+
 OTHERFLAGS    += --mlcompatibility $(addprefix --define:, $(BUILD_VERSION))
 
 ALL_DLLS    = basic.dll format.dll absyn.dll extraction.dll parser.dll tc.dll tosmt.dll syntax.dll smtencoding.dll typechecker.dll
@@ -189,21 +189,23 @@ STDFILES=system.fsi system.io.fsi system.text.fsi system.diagnostics.fsi system.
 STDLIB=$(addprefix ../lib/, $(STDFILES))
 STDLIBEXP=$(addprefix ../lib/, $(STDFILES))
 
-BOOT_BASICFILES=char.fsi string.fsi bytes.fsti platform.fsi util.fsi getoptsimple.fsti range.fsti unionfind.fsti version.fsi options.fs
+BOOT_BASICFILES=char.fsi string.fsi bytes.fsti platform.fsi util.fsi getoptsimple.fsti version.fsi options.fs range.fsti unionfind.fsti version.fsi ident.fs const.fs 
+
 BOOT_BASIC=$(addprefix basic/, $(BOOT_BASICFILES))
-BOOT_SYNTAXFILES=syntax.fsi syntax.fs const.fs visit.fs util.fs print.fs ssyntax.fs
-BOOT_SYNTAX=$(addprefix absyn/, $(BOOT_SYNTAXFILES))
-BOOT_PARSERFILES=ast.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs parse.fsti lexhelp.fs parseit.fsi driver.fs dep.fs
+# BOOT_ABSYNFILES=syntax.fsi syntax.fs const.fs visit.fs util.fs print.fs ssyntax.fs
+# BOOT_ABSYN=$(addprefix absyn/, $(BOOT_ABSYNFILES))
+BOOT_PARSERFILES=ast.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs env.fsi env.fs tosyntax.fsi tosyntax.fs parse.fsti lexhelp.fs parseit.fsi driver.fs dep.fs
 BOOT_PARSER=$(addprefix parser/, $(BOOT_PARSERFILES))
-BOOT_TCFILES=tcenv.fsi tcenv.fs recheck.fs normalize.fsi normalize.fs errors.fs rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs
-BOOT_TC=$(addprefix tc/, $(BOOT_TCFILES))
+# BOOT_TCFILES=tcenv.fsi tcenv.fs recheck.fs normalize.fsi normalize.fs errors.fs rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs
+# BOOT_TC=$(addprefix tc/, $(BOOT_TCFILES))
 BOOT_FORMATFILES=format.fsi formatml.fs
 BOOT_FORMAT=$(addprefix format/, $(BOOT_FORMATFILES))
-BOOT_EXTRACTIONFILES=ml-syntax.fs env.fs util.fs codegen.fsi codegen.fs extracttyp.fs extractexp.fs extractmod.fs
-BOOT_EXTRACTION=$(addprefix extraction/, $(BOOT_EXTRACTIONFILES))
+# BOOT_EXTRACTIONFILES=ml-syntax.fs env.fs util.fs codegen.fsi codegen.fs extracttyp.fs extractexp.fs extractmod.fs
+# BOOT_EXTRACTION=$(addprefix extraction/, $(BOOT_EXTRACTIONFILES))
+
 
 BOOT_MAIN=fstar/fstar.fs
-BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_TC) $(BOOT_PARSER) $(TOSMT_SRC) $(BOOT_FORMAT) $(BOOT_EXTRACTION) $(BOOT_MAIN)
+BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(ABSYN_SRC) $(SYNTAX_SRC) #$(TC_SRC) $(TYPECHECKER_SRC) $(BOOT_PARSER) $(SMT_SRC) $(SMTENCODING_SRC) $(BOOT_FORMAT) $(EXTRACTION_SRC) $(BOOT_MAIN) 
 
 ADMITTED_MODULES=System System.IO System.Text System.Diagnostics System.Collections.Generic Collections FStar.Set FStar.Heap FStar.ST FStar.All FStar.List FStar.Option FStar.Char FStar.String FStar.List FStar.Bytes FStar.Platform FStar.Util FStar.Version FStar.Getopt FStar.Range FStar.Unionfind FStar.Parser.ParseIt FStar.Parser.Parse 
 ADMITS=$(addprefix --admit_fsi , $(ADMITTED_MODULES))

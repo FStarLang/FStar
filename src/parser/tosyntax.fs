@@ -359,8 +359,8 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
           loc, env, pat::pats) pats (loc, env, []) in
         let pat = List.fold_right (fun hd tl ->
             let r = Range.union_ranges hd.p tl.p in
-            pos_r r <| Pat_cons(S.fv C.cons_lid (Some Data_ctor), [(hd, false);(tl, false)])) pats
-                        (pos_r (Range.end_range p.prange) <| Pat_cons(S.fv C.nil_lid (Some Data_ctor), [])) in
+            pos_r r <| Pat_cons(S.lid_as_fv C.cons_lid (Some Data_ctor), [(hd, false);(tl, false)])) pats
+                        (pos_r (Range.end_range p.prange) <| Pat_cons(S.lid_as_fv C.nil_lid (Some Data_ctor), [])) in
         let x = S.new_bv (Some p.prange) tun in
         loc, env, LocalBinder(x, None), pat, false
 
@@ -457,7 +457,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
               let rest = flatten t2 in
               t1::rest
             | _ -> [t] in
-      let targs = flatten (unparen top) |> List.map (fun t -> arg (desugar_typ env t)) in
+      let targs = flatten (unparen top) |> List.map (fun t -> as_arg (desugar_typ env t)) in
       let tup = fail_or (Env.try_lookup_lid env) (Util.mk_tuple_lid (List.length targs) top.range) in
       mk (Tm_app(tup, targs))
 
@@ -504,7 +504,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                     match xopt with
                     | None -> env, S.new_bv (Some top.range) tun
                     | Some x -> push_bv env x in
-                (env, tparams@[{x with sort=t}, None], typs@[arg <| no_annot_abs tparams t]))
+                (env, tparams@[{x with sort=t}, None], typs@[as_arg <| no_annot_abs tparams t]))
         (env, [], []) 
         (binders@[mk_binder (NoName t) t.range Type None]) in
       let tup = fail_or  (try_lookup_lid env) (Util.mk_dtuple_lid (List.length targs) top.range) in
@@ -570,13 +570,13 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                         | Some p, Some (sc, p') ->
                              begin match sc.n, p'.v with
                                 | Tm_name _, _ ->
-                                  let tup2 = S.fv (Util.mk_tuple_data_lid 2 top.range) (Some Data_ctor) in
-                                  let sc = S.mk (Tm_app(mk (Tm_fvar tup2), [arg sc; arg <| S.bv_to_name x])) None top.range in
+                                  let tup2 = S.lid_as_fv (Util.mk_tuple_data_lid 2 top.range) (Some Data_ctor) in
+                                  let sc = S.mk (Tm_app(mk (Tm_fvar tup2), [as_arg sc; as_arg <| S.bv_to_name x])) None top.range in
                                   let p = withinfo (Pat_cons(tup2, [(p', false);(p, false)])) tun.n (Range.union_ranges p'.p p.p) in
                                   Some(sc, p)
                                 | Tm_app(_, args), Pat_cons(_, pats) ->
-                                  let tupn = S.fv (Util.mk_tuple_data_lid (1 + List.length args) top.range) (Some Data_ctor) in
-                                  let sc = mk (Tm_app(mk (Tm_fvar tupn), args@[arg <| S.bv_to_name x])) in
+                                  let tupn = S.lid_as_fv (Util.mk_tuple_data_lid (1 + List.length args) top.range) (Some Data_ctor) in
+                                  let sc = mk (Tm_app(mk (Tm_fvar tupn), args@[as_arg <| S.bv_to_name x])) in
                                   let p = withinfo (Pat_cons(tupn, pats@[(p, false)])) tun.n (Range.union_ranges p'.p p.p) in
                                   Some(sc, p)
                                 | _ -> failwith "Impossible"
@@ -590,8 +590,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
                                    || lid_equals a C.assume_lid) ->
       let phi = desugar_formula env phi in
       mk (Tm_app(fvar None a (range_of_lid a),
-                 [arg phi;
-                  arg <| mk (Tm_constant(Const_unit))]))
+                 [as_arg phi;
+                  as_arg <| mk (Tm_constant(Const_unit))]))
 
     | App _ ->
       let rec aux args e = match (unparen e).tm with
@@ -753,7 +753,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
         let ns, _ = Util.prefix fieldname.ns in
         lid_of_ids (ns@[f.ident]) in
       let qual = if is_rec then Some (Record_projector fn) else None in
-      mk <| Tm_app(S.fvar (Some (Record_projector fn)) fieldname (range_of_lid f), [arg e])
+      mk <| Tm_app(S.fvar (Some (Record_projector fn)) fieldname (range_of_lid f), [as_arg e])
 
     | NamedTyp(_, e)
     | Paren e ->
@@ -892,7 +892,7 @@ and desugar_formula env (f:term) : S.term =
           | [] -> body
           | _ -> mk (Tm_meta (body, Meta_pattern pats)) in
         let body = setpos <| no_annot_abs [S.mk_binder a] body in
-        mk <| Tm_app (S.fvar None (set_lid_range q b.brange) b.brange, [arg body])
+        mk <| Tm_app (S.fvar None (set_lid_range q b.brange) b.brange, [as_arg body])
 
       | _ -> failwith "impossible" in
 
@@ -954,8 +954,8 @@ let mk_data_discriminators quals env t tps k datas =
     let binders = tps @ fst (U.arrow_formals k) in
     let p = range_of_lid t in
     let imp_binders = binders |> List.map (fun (x, _) -> x, Some S.Implicit) in
-    let binders = imp_binders@[S.null_binder <| (S.mk_Tm_app(S.fv_to_tm (S.fv t None)) (Util.args_of_non_null_binders binders) None p)] in
-    let disc_type = U.arrow binders (S.mk_Total (S.fv_to_tm (S.fv C.bool_lid None))) in
+    let binders = imp_binders@[S.null_binder <| (S.mk_Tm_app(S.fv_to_tm (S.lid_as_fv t None)) (Util.args_of_non_null_binders binders) None p)] in
+    let disc_type = U.arrow binders (S.mk_Total (S.fv_to_tm (S.lid_as_fv C.bool_lid None))) in
     datas |> List.map (fun d ->
         let disc_name = Util.mk_discriminator d in
         //Util.print1 "Making discriminator %s\n" disc_name.str;
@@ -983,7 +983,7 @@ let mk_indexed_projectors fvq refine_domain env tc lid (inductive_tps:binders) i
 //        then failwith (Printf.sprintf "For %s, Expected %d parameters got %d\n" 
 //                (Print.lid_to_string lid) (List.length expected) (List.length args));
         let indices = args |> List.map (fun _ -> S.new_bv (Some p) tun |> S.mk_binder) in
-        let arg_typ = S.mk_Tm_app (S.fv_to_tm (S.fv tc None)) 
+        let arg_typ = S.mk_Tm_app (S.fv_to_tm (S.lid_as_fv tc None)) 
                                   (tps@indices |> List.map (fun (x, imp) -> S.bv_to_name x,imp)) None p in
         let arg_binder = 
             if not refine_domain
@@ -991,7 +991,7 @@ let mk_indexed_projectors fvq refine_domain env tc lid (inductive_tps:binders) i
             else let disc_name = Util.mk_discriminator lid in
                  let x = S.new_bv (Some p) arg_typ in
                  S.mk_binder ({projectee arg_typ with sort=refine x (Util.b2t(S.mk_Tm_app(S.fvar None disc_name p) 
-                                                                                 [arg <| S.bv_to_name x] None p))}) in
+                                                                                 [as_arg <| S.bv_to_name x] None p))}) in
         arg_binder, indices in
 
     let arg_exp = S.bv_to_name (fst arg_binder) in
@@ -1002,7 +1002,7 @@ let mk_indexed_projectors fvq refine_domain env tc lid (inductive_tps:binders) i
 
     let subst = fields |> List.mapi (fun i (a, _) -> 
             let field_name, _ = Util.mk_field_projector_name lid a i in
-            let proj = mk_Tm_app (S.fv_to_tm (S.fv field_name None)) [arg] None p in
+            let proj = mk_Tm_app (S.fv_to_tm (S.lid_as_fv field_name None)) [arg] None p in
             NT(a, proj)) in
 
     let ntps = List.length tps in
@@ -1032,7 +1032,7 @@ let mk_indexed_projectors fvq refine_domain env tc lid (inductive_tps:binders) i
                          if b && j < ntps
                          then pos (Pat_dot_term (S.gen_bv x.ppname.idText None tun, tun)), b 
                          else pos (Pat_wild (S.gen_bv x.ppname.idText None tun)), b) in
-            let pat = (S.Pat_cons(S.fv lid (Some fvq), arg_pats) |> pos, None, S.bv_to_name projection) in
+            let pat = (S.Pat_cons(S.lid_as_fv lid (Some fvq), arg_pats) |> pos, None, S.bv_to_name projection) in
             let body = mk (Tm_match(arg_exp, [U.branch pat])) None p in
             let imp = no_annot_abs binders body in
             let lb = {  lbname=Inr field_name;

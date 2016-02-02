@@ -38,6 +38,7 @@ type env = {
   curmodule: option<lident>;
   modules:list<(lident * modul)>;  (* previously desugared modules *)
   open_namespaces: list<lident>; (* fully qualified names, in order of precedence *)
+  modul_abbrevs:list<(ident * lident)>;
   sigaccum:sigelts;              (* type declarations being accumulated for the current module *)
   localbindings:list<(either<btvdef,bvvdef> * binding)>;  (* local name bindings for name resolution, paired with an env-generated unique name *)
   recbindings:list<binding>;     (* names bound by recursive type and top-level let-bindings definitions only *)
@@ -100,6 +101,7 @@ val push_local_tbinding: env -> ident -> env * btvdef
 val push_rec_binding: env -> binding -> env
 val push_sigelt: env -> sigelt -> env
 val push_namespace: env -> lident -> env
+val push_module_abbrev : env -> ident -> lident -> env
 val is_type_lid: env -> lident -> bool
 val find_all_datacons: env -> lident -> option<list<lident>>
 val lookup_letbinding_quals: env -> lident -> list<qualifier>

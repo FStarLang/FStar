@@ -97,7 +97,7 @@ and inst_comp s c = match c.n with
                  S.mk_Comp ct
 
 
-and inst_lcomp_opt s (l:option<lcomp>) = match l with 
+and inst_lcomp_opt s l = match l with 
     | None -> None
     | Some lc -> 
        Some ({lc with res_typ=inst s lc.res_typ;

@@ -741,7 +741,7 @@ let rec unfold_effect_abbrev env comp =
     | None -> c
     | Some (binders, cdef) ->
       let binders, cdef = SS.open_comp binders cdef in 
-      let inst = List.map2 (fun (x, _) (t, _) -> NT(x, t)) binders (arg c.result_typ::c.effect_args) in
+      let inst = List.map2 (fun (x, _) (t, _) -> NT(x, t)) binders (as_arg c.result_typ::c.effect_args) in
       let c1 = SS.subst_comp inst cdef in
       let c = {Util.comp_to_comp_typ c1 with flags=c.flags} |> mk_Comp in
       unfold_effect_abbrev env c

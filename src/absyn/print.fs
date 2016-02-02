@@ -23,6 +23,7 @@ open FStar.Util
 open FStar.Absyn.Syntax
 open FStar.Absyn.Util
 open FStar.Const
+open FStar.Ident
 
 (* CH: This should later be shared with ocaml-codegen.fs and util.fs (is_primop and destruct_typ_as_formula) *)
 let infix_prim_ops = [

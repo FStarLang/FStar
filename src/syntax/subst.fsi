@@ -22,7 +22,7 @@ open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Util
 
-val shift_subst:        int -> subst -> subst
+val shift_subst:        int -> subst_t -> subst_t
 val subst:              list<subst_elt> -> term -> term
 val subst_comp:         list<subst_elt> -> comp -> comp
 val compress:           term -> term
@@ -39,13 +39,13 @@ val close_let_rec:        list<letbinding> -> term -> list<letbinding> * term
 
 val open_binders:       binders -> binders 
 val open_term:          binders -> term -> binders * term
-val open_term':         binders -> term -> binders * term * subst
+val open_term':         binders -> term -> binders * term * subst_t
 val open_comp:          binders -> comp -> binders * comp
 val open_branch:        branch -> branch
 val open_let_rec:       list<letbinding> -> term -> list<letbinding> * term
 val open_univ_vars:     univ_names -> term -> univ_names * term
 val open_univ_vars_comp:univ_names -> comp -> univ_names * comp
-val opening_of_binders: binders -> subst
+val opening_of_binders: binders -> subst_t
 val subst_binders:      binders -> args -> term -> term
 val subst_binders_comp: binders -> args -> comp -> comp
 
