@@ -163,25 +163,37 @@ let finished_message fmods =
 type interactive_state = {
   chunk: string_builder;
   stdin: ref<option<stream_reader>>; // Initialized once.
-  buffer: ref<list<input_chunks>>; // The buffer has at most size one.
+  buffer: ref<list<input_chunks>>;
+  log: ref<option<file_handle>>;
 }
 
 let interactive_state = {
   chunk = Util.new_string_builder ();
   stdin = ref None;
-  buffer = ref []
+  buffer = ref [];
+  log = ref None
 }
 
 let rec read_chunk () =
-    let should_log = !Options.debug <> [] in
-    let log =
-        if should_log
-        then let transcript = Util.open_file_for_writing "transcript" in
-             (fun line -> Util.append_to_file transcript line;
-                          Util.flush_file transcript)
-        else (fun line -> ()) in
-
     let s = interactive_state in
+    let log =
+      if !Options.debug <> [] then
+        let transcript = match !s.log with
+          | Some transcript ->
+              transcript
+          | None ->
+              let transcript = Util.open_file_for_writing "transcript" in
+              s.log := Some transcript;
+              transcript
+        in
+        fun line ->
+          Util.append_to_file transcript line;
+          Util.flush_file transcript
+      else
+        fun _ ->
+          ()
+    in
+
     let stdin =
       match !s.stdin with
       | Some i ->
