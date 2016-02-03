@@ -2,7 +2,7 @@
 CPP=cpp -ffreestanding
 
 FSTAR_HOME=../..
-FSTAR=$(FSTAR_HOME)/bin/fstar.exe
+FSTAR=$(FSTAR_HOME)/bin/fstar.exe --explicit_deps
 FSTAR_OPTIONS=--z3timeout 30
 
 OCAMLC=ocamlfind ocamlc -thread -package batteries -linkpkg -g

@@ -18,6 +18,8 @@ endif
 include ../Makefile.include
 all: .all.crypto.ver merkle_tree mac padding mac3 rpc cnt-protocol acls-cap statefulEnc
 
+PLATFORM = $(addprefix --include ,../../contrib/Platform/fst ../../contrib/CoreCrypto/fst)
+
 
 STDLIB_ADMITS=--admit_fsi FStar.Seq --admit_fsi FStar.Set --admit_fsi FStar.SeqProperties
 STDLIB=$(addprefix $(FSTAR_HOME)/lib/, FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi \
@@ -25,10 +27,10 @@ STDLIB=$(addprefix $(FSTAR_HOME)/lib/, FStar.Classical.fst FStar.FunctionalExten
        $(STDLIB_ADMITS)
 
 .all.crypto.ver: $(VERFILES)
-	$(FSTAR) --z3timeout 20 $(STDLIB) $^
+	$(FSTAR) --explicit_deps --z3timeout 20 $(STDLIB) $^
 
 mac: sha1.fst mac.fst
-	$(FSTAR) mac.fst
+	$(FSTAR) $(PLATFORM) mac.fst
 
 sig: sig.fst
 	$(FSTAR) $^
@@ -40,10 +42,10 @@ mac3: mac3.fst
 	$(FSTAR) $^
 
 merkle_tree:
-	$(FSTAR) --verify_module MerkleTree $(STDLIB) $(FSTAR_HOME)/lib/FStar.Constructive.fst merkle_tree.fst
+	$(FSTAR) --explicit_deps --verify_module MerkleTree $(STDLIB) $(FSTAR_HOME)/lib/FStar.Constructive.fst merkle_tree.fst
 
 acls-cap: sha1.fst mac.fst ../security/acls2.fst acls-cap.fst
-	$(FSTAR) --z3timeout 10 --admit_fsi FStar.Seq \
+	$(FSTAR) --explicit_deps --z3timeout 10 --admit_fsi FStar.Seq \
 	--verify_module Platform.Bytes --verify_module CoreCrypto --verify_module ACLs2 --verify_module Cap \
 	$(addprefix $(FSTAR_HOME)/lib/, \
 	FStar.FunctionalExtensionality.fst FStar.Classical.fst \
@@ -56,7 +58,7 @@ acls-cap: sha1.fst mac.fst ../security/acls2.fst acls-cap.fst
 
 
 rpc: formatting.fst sha1.fst mac.fst rpc.fst
-	$(FSTAR) --z3timeout 10 --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC --admit_fsi FStar.Seq --admit_fsi FStar.IO  \
+	$(FSTAR) --explicit_deps --z3timeout 10 --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC --admit_fsi FStar.Seq --admit_fsi FStar.IO  \
           $(addprefix $(FSTAR_HOME)/lib/, FStar.FunctionalExtensionality.fst FStar.Classical.fst \
 					FStar.Set.fsi FStar.Set.fst \
 					FStar.Heap.fst FStar.ST.fst FStar.All.fst \

@@ -10,8 +10,6 @@ else
 MSBUILD = xbuild
 endif
 
-OTHERFLAGS=--explicit_deps
-
 FSTAR_HOME = ../..
 LIB_FILES=FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst FStar.String.fst
 add_stdlib_prefix=$(addprefix $(FSTAR_HOME)/lib/,$(1))
@@ -64,7 +62,7 @@ endif
 	rm -f $(addprefix $(FSTAR_HOME)/cache/, $(STDCACHE))
 
 .all.ver: $(VERFILES)
-	$(FSTAR) --admit_fsi FStar.Set $(STDLIB) $^
+	$(FSTAR) --explicit_deps --admit_fsi FStar.Set $(STDLIB) $^
 
 .all.oldlib.ver: $(VERFILES)
 	$(FSTAR) --admit_fsi FStar.Set $(OLDLIB) $^

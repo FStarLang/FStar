@@ -208,8 +208,9 @@ let collect_one (original_map: smap<string>) (filename: string): list<string> =
   and collect_file = function
     | [ modul ] ->
         collect_module modul
-    | _ ->
-        raise (Err (Util.format1 "File %s does not respect the one module per file convention" filename))
+    | modules ->
+        Util.fprint stderr "Warning: file %s does not respect the one module per file convention\n" [ filename ];
+        List.iter collect_module modules
 
   and collect_module = function
     | Module (lid, decls)
