@@ -63,7 +63,7 @@ let rec check t =
         | Tm_delayed _ -> check (SS.compress t)
         | Tm_bvar a
         | Tm_name a -> a.sort
-        | Tm_fvar (fv, _) -> fv.sort
+        | Tm_fvar (fv, _) -> fv.ty
         | Tm_uinst(t, us) -> check t //inaccurate
         | Tm_type u -> mk (Tm_type (U_succ u)) None t.pos
         | Tm_constant s -> typing_const t.pos s

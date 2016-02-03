@@ -1,8 +1,8 @@
 
 open Prims
-let print_error = (fun msg r -> (let _144_6 = (let _144_5 = (FStar_Range.string_of_range r)
-in (FStar_Util.format2 "ERROR %s: %s\n" _144_5 msg))
-in (FStar_Util.print_string _144_6)))
+let print_error = (fun msg r -> (let _158_6 = (let _158_5 = (FStar_Range.string_of_range r)
+in (FStar_Util.format2 "ERROR %s: %s\n" _158_5 msg))
+in (FStar_Util.print_string _158_6)))
 
 let is_cache_file = (fun fn -> ((FStar_Util.get_file_extension fn) = ".cache"))
 
@@ -57,8 +57,8 @@ Modul ((env, modul))
 end))
 end
 | FStar_Util.Inl (FStar_Util.Inr (decls)) -> begin
-(let _144_41 = (FStar_Parser_Desugar.desugar_decls env decls)
-in Decls (_144_41))
+(let _158_41 = (FStar_Parser_Desugar.desugar_decls env decls)
+in Decls (_158_41))
 end
 | FStar_Util.Inl (FStar_Util.Inl (_67_27)) -> begin
 (Prims.raise (FStar_Absyn_Syntax.Err ("Refusing to check more than one module at a time incrementally")))
@@ -76,24 +76,24 @@ end
 in (FStar_All.exit 1))
 end
 | FStar_Util.Inr (msg, r) -> begin
-(let _67_48 = (let _144_44 = (FStar_Absyn_Print.format_error r msg)
-in (FStar_All.pipe_left FStar_Util.print_string _144_44))
+(let _67_48 = (let _158_44 = (FStar_Absyn_Print.format_error r msg)
+in (FStar_All.pipe_left FStar_Util.print_string _158_44))
 in (FStar_All.exit 1))
 end))
 
 let parse_file = (fun env fn -> if (is_cache_file fn) then begin
-(let full_name = (let _144_52 = (let _144_51 = (let _144_50 = (let _144_49 = (FStar_Options.get_fstar_home ())
-in (Prims.strcat _144_49 "/"))
-in (Prims.strcat _144_50 FStar_Options.cache_dir))
-in (Prims.strcat _144_51 "/"))
-in (Prims.strcat _144_52 fn))
-in (let m = (let _144_53 = (FStar_Util.get_oreader full_name)
-in (FStar_Absyn_SSyntax.deserialize_modul _144_53))
-in (let _144_54 = (FStar_Parser_Desugar.add_modul_to_env m env)
-in (_144_54, (m)::[]))))
+(let full_name = (let _158_52 = (let _158_51 = (let _158_50 = (let _158_49 = (FStar_Options.get_fstar_home ())
+in (Prims.strcat _158_49 "/"))
+in (Prims.strcat _158_50 FStar_Options.cache_dir))
+in (Prims.strcat _158_51 "/"))
+in (Prims.strcat _158_52 fn))
+in (let m = (let _158_53 = (FStar_Util.get_oreader full_name)
+in (FStar_Absyn_SSyntax.deserialize_modul _158_53))
+in (let _158_54 = (FStar_Parser_Desugar.add_modul_to_env m env)
+in (_158_54, (m)::[]))))
 end else begin
-(let _144_55 = (parse_file_raw fn)
-in (FStar_Parser_Desugar.desugar_file env _144_55))
+(let _158_55 = (parse_file_raw fn)
+in (FStar_Parser_Desugar.desugar_file env _158_55))
 end)
 
 let read_build_config = (fun file -> (FStar_Parser_ParseIt.read_build_config file true))

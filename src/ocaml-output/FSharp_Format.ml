@@ -35,23 +35,23 @@ end))
 
 let brackets = (fun _25_12 -> (match (_25_12) with
 | Doc (d) -> begin
-(let _102_20 = (text "[")
-in (let _102_19 = (text "]")
-in (enclose _102_20 _102_19 (Doc (d)))))
+(let _116_20 = (text "[")
+in (let _116_19 = (text "]")
+in (enclose _116_20 _116_19 (Doc (d)))))
 end))
 
 let cbrackets = (fun _25_14 -> (match (_25_14) with
 | Doc (d) -> begin
-(let _102_24 = (text "{")
-in (let _102_23 = (text "}")
-in (enclose _102_24 _102_23 (Doc (d)))))
+(let _116_24 = (text "{")
+in (let _116_23 = (text "}")
+in (enclose _116_24 _116_23 (Doc (d)))))
 end))
 
 let parens = (fun _25_16 -> (match (_25_16) with
 | Doc (d) -> begin
-(let _102_28 = (text "(")
-in (let _102_27 = (text ")")
-in (enclose _102_28 _102_27 (Doc (d)))))
+(let _116_28 = (text "(")
+in (let _116_27 = (text ")")
+in (enclose _116_28 _116_27 (Doc (d)))))
 end))
 
 let cat = (fun _25_18 _25_20 -> (match ((_25_18, _25_20)) with
@@ -66,8 +66,8 @@ let group = (fun _25_23 -> (match (_25_23) with
 Doc (d)
 end))
 
-let groups = (fun docs -> (let _102_39 = (reduce docs)
-in (group _102_39)))
+let groups = (fun docs -> (let _116_39 = (reduce docs)
+in (group _116_39)))
 
 let combine = (fun _25_26 docs -> (match (_25_26) with
 | Doc (sep) -> begin

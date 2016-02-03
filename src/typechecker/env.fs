@@ -109,7 +109,7 @@ and guard_t = {
   univ_ineqs: list<univ_ineq>;
   implicits:  list<(env * uvar * term * typ * Range.range)>;
 }
-
+type env_t = env
 type implicits = list<(env * uvar * term * typ * Range.range)>
 
 type sigtable = Util.smap<sigelt>
@@ -340,9 +340,6 @@ let try_lookup_lid env lid =
            else None
       else Some (inst_tscheme (uvs, t))
 
-    | Inr (Sig_let _ as se, None) -> 
-      lookup_type_of_let se lid
-
     | Inr (Sig_inductive_typ (lid, uvs, tps, k, _, _, _, _), None) ->
       begin match tps with 
         | [] -> Some <| inst_tscheme (uvs, k)
@@ -355,7 +352,12 @@ let try_lookup_lid env lid =
         | _ ->  Some <| inst_tscheme_with (uvs, Util.arrow tps (mk_Total k)) us
       end
 
-    | Inr se -> effect_signature (fst se)
+    | Inr se -> 
+      begin match se with 
+        | Sig_let _, None -> 
+          lookup_type_of_let (fst se) lid
+        | _ -> effect_signature (fst se)
+      end
   in
     match Util.bind_opt (lookup_qname env lid) mapper with
       | Some (us, t) -> Some (us, {t with pos=range_of_lid lid})
@@ -605,7 +607,7 @@ let push_module env (m:modul) =
       gamma=[];
       expected_typ=None}
 
-let push_univ_vars (env:env) (xs:univ_names) : env = 
+let push_univ_vars (env:env_t) (xs:univ_names) : env_t = 
     List.fold_left (fun env x -> push_local_binding env (Binding_univ x)) env xs
 
 let set_expected_typ env t =
@@ -673,7 +675,7 @@ let binders_of_bindings bs = bound_vars_of_bindings bs |> List.map Syntax.mk_bin
 
 let bound_vars env = bound_vars_of_bindings env.gamma
 
-let binders env = binders_of_bindings env.gamma
+let all_binders env = binders_of_bindings env.gamma
 
 let fold_env env f a = List.fold_right (fun e a -> f a e) env.gamma a
 

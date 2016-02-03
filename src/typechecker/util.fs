@@ -47,12 +47,12 @@ let is_type t = match (compress t).n with
     | _ -> false
                 
 let t_binders env = 
-    Env.binders env |> List.filter (fun (x, _) -> is_type x.sort)
+    Env.all_binders env |> List.filter (fun (x, _) -> is_type x.sort)
 
 //new unification variable
 let new_uvar_aux env k = 
     let bs = if !Options.full_context_dependency
-             then Env.binders env 
+             then Env.all_binders env 
              else t_binders env in
     Rel.new_uvar (Env.get_range env) bs k
 
@@ -166,7 +166,7 @@ let pat_as_exps allow_implicits env p
              let k, _ = Util.type_u () in
              let t = new_uvar env k in
              let x = {x with sort=t} in
-             let e, u = Rel.new_uvar p.p (Env.binders env) t in
+             let e, u = Rel.new_uvar p.p (Env.all_binders env) t in
              let p = {p with v=Pat_dot_term(x, e)} in
              ([], [], [], env, e, p)
 
@@ -347,7 +347,7 @@ let decorate_pattern env p exps =
         | _ -> failwith "Unexpected number of patterns"
 
  let rec decorated_pattern_as_term (pat:pat) : list<bv> * term =
-    let topt = Some pat.sort in
+    let topt = Some pat.ty in
     let mk f : term = mk f topt pat.p in
 
     let pat_as_arg (p, i) =
@@ -480,7 +480,7 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
       | None -> "none"
       | Some x -> Print.bv_to_string x in
     Util.print4 "Before lift: Making bind (e1=%s)@c1=%s\nb=%s\t\tc2=%s\n" 
-        (match e1opt with None -> "None" | Some e -> Print.term_to_string e)
+        (match e1opt with | None -> "None" | Some e -> Print.term_to_string e)
         (Print.lcomp_to_string lc1) bstr (Print.lcomp_to_string lc2));
   let bind_it () =
       let c1 = lc1.comp () in
@@ -520,13 +520,6 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             | _ -> aux () in
       match try_simplify () with
         | Some (c, reason) ->
-          if Env.debug env <| Options.Other "bind"
-          then Printf.printf "%s, %A, %A: bind (%s) %s and %s simplified to %s\n"
-               reason (Util.comp_flags c1) (Util.comp_flags c2)
-              (match b with
-                 | None -> "None"
-                 | Some x -> Print.bv_to_string x)
-            (Print.comp_to_string c1) (Print.comp_to_string c2) (Print.comp_to_string c);
           c
         | None ->
           let (md, a, kwp), (t1, wp1, wlp1), (t2, wp2, wlp2) = lift_and_destruct env c1 c2 in
@@ -540,11 +533,6 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
           let wp = mk_Tm_app  (inst_effect_fun env md md.bind_wp)  wp_args None t2.pos in
           let wlp = mk_Tm_app (inst_effect_fun env md md.bind_wlp) wlp_args None t2.pos in
           let c = mk_comp md t2 wp wlp [] in
-          if Env.debug env <| Options.Other "bind"
-          then Printf.printf "unsimplified bind %s and %s\n\tproduced %s\n"
-              (Print.comp_to_string c1) 
-              (Print.comp_to_string c2) 
-              (Print.comp_to_string c);
           c in
     {eff_name=join_lcomp env lc1 lc2;
      res_typ=lc2.res_typ;
@@ -746,7 +734,7 @@ let maybe_assume_result_eq_pure_term env (e:term) (lc:lcomp) : lcomp =
       then c
       else if Util.is_partial_return c then c
       else if Util.is_tot_or_gtot_comp c && Option.isNone <| Env.lookup_effect_abbrev env Const.effect_GTot_lid
-      then failwith (Printf.sprintf "%s: %s\n" (Range.string_of_range e.pos) (Print.term_to_string e))
+      then failwith (Util.format2 "%s: %s\n" (Range.string_of_range e.pos) (Print.term_to_string e))
       else
            let c = Normalize.unfold_effect_abbrev env c in
            let t = c.result_typ in
@@ -930,22 +918,21 @@ let gen_univs env (x:Util.set<universe_uvar>) : list<univ_name> =
          let u_names = s |> List.map (fun u -> 
             let u_name = Syntax.new_univ_name r in
             if Env.debug env <| Options.Other "Gen" 
-            then Printf.printf "Setting ?%d (%s) to %s\n" (Unionfind.uvar_id u) (Print.univ_to_string (U_unif u)) (Print.univ_to_string (U_name u_name));
+            then Util.print3 "Setting ?%s (%s) to %s\n" (string_of_int <| Unionfind.uvar_id u) (Print.univ_to_string (U_unif u)) (Print.univ_to_string (U_name u_name));
             Unionfind.change u (Some (U_name u_name));
             u_name) in
          u_names 
 
 let generalize_universes (env:env) (t:term) : tscheme = 
-    if Env.debug env <| Options.Other "Gen" then Printf.printf "Before generalization %s\n" (Print.term_to_string t);
     let t = N.normalize [N.Beta] env t in
     let univs = Free.univs t in 
     if Env.debug env <| Options.Other "Gen" 
-    then Printf.printf "univs to gen : %s\n" 
+    then Util.print1 "univs to gen : %s\n" 
                 (Util.set_elements univs 
                 |> List.map (fun u -> Unionfind.uvar_id u |> string_of_int) |> String.concat ", ");
     let gen = gen_univs env univs in
     if Env.debug env <| Options.Other "Gen" 
-    then Printf.printf "After generalization: %s\n"  (Print.term_to_string t);
+    then Util.print1 "After generalization: %s\n"  (Print.term_to_string t);
     let ts = SS.close_univ_vars gen t in 
     (gen, ts)
 

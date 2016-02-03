@@ -46,7 +46,7 @@ _33_10
 end))
 
 type ('a, 't) withinfo_t =
-{v : 'a; sort : 't; p : FStar_Range.range}
+{v : 'a; ty : 't; p : FStar_Range.range}
 
 let is_Mkwithinfo_t = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkwithinfo_t"))))
 
@@ -1320,7 +1320,7 @@ type ('a, 'b) mk_t_a =
 type mk_t =
 (term', term') mk_t_a
 
-let withinfo = (fun v s r -> {v = v; sort = s; p = r})
+let withinfo = (fun v s r -> {v = v; ty = s; p = r})
 
 let withsort = (fun v s -> (withinfo v s FStar_Range.dummyRange))
 
@@ -1393,15 +1393,15 @@ let freenames_of_list = (fun l -> (FStar_List.fold_right FStar_Util.set_add l no
 
 let list_of_freenames = (fun fvs -> (FStar_Util.set_elements fvs))
 
-let mk = (fun t topt r -> (let _110_1153 = (FStar_Util.mk_ref topt)
-in (let _110_1152 = (FStar_Util.mk_ref None)
-in {n = t; tk = _110_1153; pos = r; vars = _110_1152})))
+let mk = (fun t topt r -> (let _124_1153 = (FStar_Util.mk_ref topt)
+in (let _124_1152 = (FStar_Util.mk_ref None)
+in {n = t; tk = _124_1153; pos = r; vars = _124_1152})))
 
-let bv_to_tm = (fun bv -> (let _110_1156 = (range_of_bv bv)
-in (mk (Tm_bvar (bv)) (Some (bv.sort.n)) _110_1156)))
+let bv_to_tm = (fun bv -> (let _124_1156 = (range_of_bv bv)
+in (mk (Tm_bvar (bv)) (Some (bv.sort.n)) _124_1156)))
 
-let bv_to_name = (fun bv -> (let _110_1159 = (range_of_bv bv)
-in (mk (Tm_name (bv)) (Some (bv.sort.n)) _110_1159)))
+let bv_to_name = (fun bv -> (let _124_1159 = (range_of_bv bv)
+in (mk (Tm_name (bv)) (Some (bv.sort.n)) _124_1159)))
 
 let mk_Tm_app = (fun t1 args k p -> (match (args) with
 | [] -> begin
@@ -1435,10 +1435,10 @@ end))
 
 let extend_app = (fun t arg kopt r -> (extend_app_n t ((arg)::[]) kopt r))
 
-let mk_Tm_delayed = (fun lr pos -> (let _110_1194 = (let _110_1193 = (let _110_1192 = (FStar_Util.mk_ref None)
-in (lr, _110_1192))
-in Tm_delayed (_110_1193))
-in (mk _110_1194 None pos)))
+let mk_Tm_delayed = (fun lr pos -> (let _124_1194 = (let _124_1193 = (let _124_1192 = (FStar_Util.mk_ref None)
+in (lr, _124_1192))
+in Tm_delayed (_124_1193))
+in (mk _124_1194 None pos)))
 
 let mk_Total = (fun t -> (mk (Total (t)) None t.pos))
 
@@ -1483,8 +1483,8 @@ let null_bv = (fun k -> {ppname = null_id; index = 0; sort = k})
 
 let mk_binder = (fun a -> (a, None))
 
-let null_binder = (fun t -> (let _110_1221 = (null_bv t)
-in (_110_1221, None)))
+let null_binder = (fun t -> (let _124_1221 = (null_bv t)
+in (_124_1221, None)))
 
 let iarg = (fun t -> (t, Some (Implicit)))
 
@@ -1501,8 +1501,8 @@ end)) bs no_names))
 
 let binders_of_list = (fun fvs -> (FStar_All.pipe_right fvs (FStar_List.map (fun t -> (t, None)))))
 
-let binders_of_freenames = (fun fvs -> (let _110_1239 = (FStar_Util.set_elements fvs)
-in (FStar_All.pipe_right _110_1239 binders_of_list)))
+let binders_of_freenames = (fun fvs -> (let _124_1239 = (FStar_Util.set_elements fvs)
+in (FStar_All.pipe_right _124_1239 binders_of_list)))
 
 let is_implicit = (fun _33_2 -> (match (_33_2) with
 | Some (Implicit) -> begin
@@ -1558,8 +1558,8 @@ let next_id = (Prims.fst gen_reset)
 let reset_gensym = (Prims.snd gen_reset)
 
 let freshen_bv = (fun bv -> (let _33_437 = bv
-in (let _110_1270 = (next_id ())
-in {ppname = _33_437.ppname; index = _110_1270; sort = _33_437.sort})))
+in (let _124_1270 = (next_id ())
+in {ppname = _33_437.ppname; index = _124_1270; sort = _33_437.sort})))
 
 let range_of_ropt = (fun _33_4 -> (match (_33_4) with
 | None -> begin
@@ -1570,15 +1570,15 @@ r
 end))
 
 let gen_bv = (fun s r t -> (let id = (FStar_Ident.mk_ident (s, (range_of_ropt r)))
-in (let _110_1279 = (next_id ())
-in {ppname = id; index = _110_1279; sort = t})))
+in (let _124_1279 = (next_id ())
+in {ppname = id; index = _124_1279; sort = t})))
 
 let new_bv = (fun ropt t -> (gen_bv "x" ropt t))
 
 let new_univ_name = (fun ropt -> (let id = (next_id ())
-in (let _110_1287 = (let _110_1286 = (FStar_Util.string_of_int id)
-in (_110_1286, (range_of_ropt ropt)))
-in (FStar_Ident.mk_ident _110_1287))))
+in (let _124_1287 = (let _124_1286 = (FStar_Util.string_of_int id)
+in (_124_1286, (range_of_ropt ropt)))
+in (FStar_Ident.mk_ident _124_1287))))
 
 let mkbv = (fun x y t -> {ppname = x; index = y; sort = t})
 
@@ -1601,15 +1601,15 @@ end))
 let set_bv_range = (fun bv r -> (let _33_478 = bv
 in {ppname = (FStar_Ident.mk_ident (bv.ppname.FStar_Ident.idText, r)); index = _33_478.index; sort = _33_478.sort}))
 
-let lid_as_fv = (fun l dc -> (let _110_1310 = (withinfo l tun (FStar_Ident.range_of_lid l))
-in (_110_1310, dc)))
+let lid_as_fv = (fun l dc -> (let _124_1310 = (withinfo l tun (FStar_Ident.range_of_lid l))
+in (_124_1310, dc)))
 
 let fv_to_tm = (fun fv -> (mk (Tm_fvar (fv)) None (FStar_Ident.range_of_lid (Prims.fst fv).v)))
 
-let fvar = (fun dc l r -> (let _110_1321 = (let _110_1320 = (let _110_1319 = (FStar_Ident.set_lid_range l r)
-in (lid_as_fv _110_1319 dc))
-in Tm_fvar (_110_1320))
-in (mk _110_1321 None r)))
+let fvar = (fun dc l r -> (let _124_1321 = (let _124_1320 = (let _124_1319 = (FStar_Ident.set_lid_range l r)
+in (lid_as_fv _124_1319 dc))
+in Tm_fvar (_124_1320))
+in (mk _124_1321 None r)))
 
 
 

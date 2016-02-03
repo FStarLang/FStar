@@ -86,7 +86,7 @@ let check_no_escape env bs t =
 let maybe_push_binding env b =
   if is_null_binder b then env
   else (if Env.debug env Options.High
-        then Printf.printf "Pushing binder %s at type %s\n" (Print.bv_to_string (fst b)) (Print.term_to_string (fst b).sort);
+        then Util.print2 "Pushing binder %s at type %s\n" (Print.bv_to_string (fst b)) (Print.term_to_string (fst b).sort);
         Env.push_bv env (fst b))
 
 let maybe_make_subst = function
@@ -239,7 +239,7 @@ let guard_letrecs env actuals expected_c : list<(lbname*typ)> =
                     match xs with
                         | [x] -> x //NS: why no promotion here?
                         | _ -> mk_lex_list xs in
-
+                            
         let previous_dec = decreases_clause actuals expected_c in
         let guard_one_letrec (l, t) = 
             match (SS.compress t).n with
@@ -349,7 +349,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     then Util.print3 "(%s) About to check %s against expected typ %s\n" 
             (Print.term_to_string e)
             (Print.comp_to_string <| c.comp())
-            (Env.expected_typ env0 |> (fun x -> match x with None -> "None" | Some t -> Print.term_to_string t));
+            (Env.expected_typ env0 |> (fun x -> match x with | None -> "None" | Some t -> Print.term_to_string t));
     let e, c, g' = comp_check_expected_typ env0 e c in
     if debug env Options.Low
     then Util.print2 "(%s) checked ... got %s\n" 
@@ -394,14 +394,14 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     e, cres, Rel.conj_guard g1 g_branches
 
   | Tm_let ((false, [{lbname=Inr _}]), _) -> 
-    if Env.debug env Options.Low then Printf.printf "%s\n" (Print.term_to_string top);
+    if Env.debug env Options.Low then Util.print1 "%s\n" (Print.term_to_string top);
     check_top_level_let env top
 
   | Tm_let ((false, _), _) -> 
     check_inner_let env top
 
   | Tm_let ((true, {lbname=Inr _}::_), _) -> 
-    if Env.debug env Options.Low then Printf.printf "%s\n" (Print.term_to_string top);
+    if Env.debug env Options.Low then Util.print1 "%s\n" (Print.term_to_string top);
     check_top_level_let_rec env top
 
   | Tm_let ((true, _), _) -> 
@@ -462,12 +462,12 @@ and tc_value env (e:term) : term
     else List.iter2 (fun u' u -> match u' with 
             | U_unif u'' -> Unionfind.change u'' (Some u)
             | _ -> failwith "Impossible") us' us;
-    let e = S.mk_Tm_uinst (mk (Tm_fvar({v with sort=t}, dc)) (Some t.n) e.pos) us in
+    let e = S.mk_Tm_uinst (mk (Tm_fvar({v with ty=t}, dc)) (Some t.n) e.pos) us in
     check_instantiated_fvar env v dc e t
 
   | Tm_fvar (v, dc) ->
     let us, t = Env.lookup_lid env v.v in
-    let e = S.mk_Tm_uinst (mk (Tm_fvar({v with sort=t}, dc)) (Some t.n) e.pos) us in
+    let e = S.mk_Tm_uinst (mk (Tm_fvar({v with ty=t}, dc)) (Some t.n) e.pos) us in
     check_instantiated_fvar env v dc e t 
 
   | Tm_constant c ->
@@ -512,7 +512,7 @@ and tc_value env (e:term) : term
   | Tm_abs(bs, body, _) ->  
     let bs = Util.maybe_add_implicit_binders env bs in
     if Env.debug env Options.Low
-    then Printf.printf "Abstraction is: %s\n" (Print.term_to_string ({top with n=Tm_abs(bs, body, None)}));
+    then Util.print1 "Abstraction is: %s\n" (Print.term_to_string ({top with n=Tm_abs(bs, body, None)}));
     let bs, body = SS.open_term bs body in
     tc_abs env top bs body
 
@@ -538,7 +538,7 @@ and tc_comp env c : comp                                      (* checked version
 
     | Comp c ->
       let kc =  Env.lookup_effect_lid env c.effect_name in
-      if Env.debug env Options.Low then Printf.printf "Type of effect %s is %s\n" (Print.lid_to_string c.effect_name) (Print.term_to_string kc);
+      if Env.debug env Options.Low then Util.print2 "Type of effect %s is %s\n" (Print.lid_to_string c.effect_name) (Print.term_to_string kc);
       let head = S.fvar None c.effect_name (range_of_lid c.effect_name) in
       let tc = mk_Tm_app head ((as_arg c.result_typ)::c.effect_args) None c.result_typ.pos in
       let tc, _, f = tc_check_tot_or_gtot_term env tc S.teff in
@@ -641,7 +641,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
         =
        match t0 with
         | None -> (* no expected type; just build a function type from the binders in the term *)
-            let _ = match env.letrecs with [] -> () | _ -> failwith "Impossible: Can't have a let rec annotation but no expected type" in
+            let _ = match env.letrecs with | [] -> () | _ -> failwith "Impossible: Can't have a let rec annotation but no expected type" in
             let bs, envbody, g, _ = tc_binders env bs in
             None, bs, [], None, envbody, g
 
@@ -651,7 +651,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                match (SS.compress t).n with
                 | Tm_uvar _
                 | Tm_app({n=Tm_uvar _}, _) -> (* expected a uvar; build a function type from the term and unify with it *)
-                  let _ = match env.letrecs with [] -> () | _ -> failwith "Impossible" in
+                  let _ = match env.letrecs with | [] -> () | _ -> failwith "Impossible" in
                   let bs, envbody, g, _ = tc_binders env bs in
                   let envbody, _ = Env.clear_expected_typ envbody in
                   Some (t, true), bs, [], None, envbody, g
@@ -723,7 +723,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     let env, topt = Env.clear_expected_typ env in
     if Env.debug env Options.High
     then Util.print2 "!!!!!!!!!!!!!!!Expected type is %s, top_level=%s\n"
-          (match topt with None -> "None" | Some t -> Print.term_to_string t)
+          (match topt with | None -> "None" | Some t -> Print.term_to_string t)
           (if env.top_level then "true" else "false");
     let tfun_opt, bs, letrec_binders, c_opt, envbody, g = expected_function_typ env topt in
     let body, cbody, guard_body = tc_term ({envbody with top_level=false; use_eq=use_eq}) body in
@@ -958,7 +958,7 @@ and check_short_circuit_args env head chead g_head args expected_topt : term * l
     let r = Env.get_range env in
     let tf = SS.compress chead.res_typ in
     match tf.n with 
-        | Tm_arrow(bs, c) when Util.is_total_comp c && List.length bs=List.length args -> 
+        | Tm_arrow(bs, c) when (Util.is_total_comp c && List.length bs=List.length args) -> 
           let res_t = Util.comp_result c in
           let args, guard, ghost = List.fold_left2 (fun (seen, guard, ghost) (e, aq) (b, aq') ->
                 if aq<>aq' then raise (Error("Inconsistent implicit qualifiers", e.pos)); 
@@ -1364,7 +1364,7 @@ and check_inner_let_rec env top =
 (* build an environment with recursively bound names.                         *)
 (* refining the types of those names with decreases clauses is done in tc_abs *)
 (******************************************************************************)
-and build_let_rec_env top_level env lbs : list<letbinding> * env = 
+and build_let_rec_env top_level env lbs : list<letbinding> * env_t = 
    let env0 = env in
    let lbs, env = List.fold_left (fun (lbs, env) lb -> //{lbname=x; lbtyp=t; lbdef=e}) ->
         let univ_vars, t, check_t = TcUtil.extract_let_rec_annotation env lb in
@@ -1428,7 +1428,7 @@ and check_let_bound_def top_level env lb
     let g1 = Rel.conj_guard g1 guard_f in
        
     if Env.debug env Options.Extreme
-    then Printf.printf "checked top-level def, guard is %s\n" (Rel.guard_to_string env g1);
+    then Util.print1 "checked top-level def, guard is %s\n" (Rel.guard_to_string env g1);
 
     e1, univ_vars, c1, g1, Option.isSome topt
 
@@ -1464,12 +1464,12 @@ and check_lbtyp top_level env lb : option<typ>  (* checked version of lb.lbtyp, 
                Some t, g, univ_vars, Env.set_expected_typ env1 t
 
 
-and tc_binder env (x:bv, imp) =
+and tc_binder env (x, imp) =
     let tu, u = U.type_u () in
     let t, _, g = tc_check_tot_or_gtot_term env x.sort tu in //ghost effect ok in the types of binders
     let x = {x with sort=t}, imp in
     if Env.debug env Options.High
-    then Printf.printf "Pushing binder %s at type %s\n" (Print.bv_to_string (fst x)) (Print.term_to_string t);
+    then Util.print2 "Pushing binder %s at type %s\n" (Print.bv_to_string (fst x)) (Print.term_to_string t);
     x, maybe_push_binding env x, g, u
 
 and tc_binders env bs =
@@ -1499,7 +1499,7 @@ and tc_tot_or_gtot_term env e : term
   then e, c, g
   else let g = Rel.solve_deferred_constraints env g in
        let c = c.comp() in
-       let _ = if Env.debug env Options.High then Printf.printf "About to normalize %s\n" (Print.comp_to_string c) in
+       let _ = if Env.debug env Options.High then Util.print1 "About to normalize %s\n" (Print.comp_to_string c) in
        let c = norm_c env c in
        let target_comp, allow_ghost = 
             if TcUtil.is_pure_effect env (Util.comp_effect_name c)
@@ -1765,9 +1765,9 @@ let tc_lex_t env ses quals lids =
     assert (quals = []);
     begin match lids with 
         | [lex_t; lex_top; lex_cons] when 
-            lid_equals lex_t Const.lex_t_lid 
-            && lid_equals lex_top Const.lextop_lid 
-            && lid_equals lex_cons Const.lexcons_lid -> ()
+            (lid_equals lex_t Const.lex_t_lid 
+             && lid_equals lex_top Const.lextop_lid 
+             && lid_equals lex_cons Const.lexcons_lid) -> ()
         | _ -> assert false
     end;
     begin match ses with 
@@ -1871,7 +1871,7 @@ let tc_inductive env ses quals lids =
     let env0 = env in
 
     (* 1. Checking each tycon *)
-    let tc_tycon env (s:sigelt) : env            (* environment extended with a refined type for the type-constructor *)
+    let tc_tycon env (s:sigelt) : env_t          (* environment extended with a refined type for the type-constructor *)
                                 * sigelt         (* the typed version of s, with universe variables still TBD *)
                                 * universe       (* universe of the constructed type *)
                                 = match s with
@@ -2037,7 +2037,7 @@ let rec tc_decl env se = match se with
     | Sig_datacon _ -> 
       failwith "Impossible bare data-constructor"
     
-    | Sig_bundle(ses, quals, lids, r) when lids |> Util.for_some (lid_equals Const.lex_t_lid) ->
+    | Sig_bundle(ses, quals, lids, r) when (lids |> Util.for_some (lid_equals Const.lex_t_lid)) ->
       //lex_t is very special; it uses a more expressive form of universe polymorphism than is allowed elsewhere
       //Instead of this special treatment, we could make use of explicit lifts, but LexCons is used pervasively
       (* 
@@ -2163,7 +2163,7 @@ let rec tc_decl env se = match se with
                 mk_lb (Inr lbname, uvs, Const.effect_ALL_lid, tval, lb.lbdef), 
                 quals_opt  in
 
-             gen, lb::lbs, quals_opt) (true, [], if quals=[] then None else Some quals) in
+             gen, lb::lbs, quals_opt) (true, [], (if quals=[] then None else Some quals)) in
 
       let quals = match quals_opt with 
         | None -> [Unfoldable]
@@ -2273,7 +2273,7 @@ let for_export hidden se : list<sigelt> * list<lident> =
     | Sig_sub_effect     _
     | Sig_effect_abbrev  _ -> [se], hidden
 
-    | Sig_let((false, [lb]), _, _, quals) when quals |> Util.for_some is_hidden_proj_or_disc -> 
+    | Sig_let((false, [lb]), _, _, quals) when (quals |> Util.for_some is_hidden_proj_or_disc) -> 
       let lid = right lb.lbname in
       if hidden |> Util.for_some (lid_equals lid)
       then [], hidden //this projector definition already has a declare_typ
@@ -2346,7 +2346,7 @@ let add_modul_to_tcenv (en: env) (m: modul) :env =
   Env.finish_module (List.fold_left do_sigelt en m.exports) m
   
 let type_of env e = 
-    if Env.debug env <| Options.Other "RelCheck" then Printf.printf "Checking term %s\n" (Print.term_to_string e);
+    if Env.debug env <| Options.Other "RelCheck" then Util.print1 "Checking term %s\n" (Print.term_to_string e);
     //let env, _ = Env.clear_expected_typ env in
     let env = {env with top_level=false} in
     let t, c, g = tc_tot_or_gtot_term env e in

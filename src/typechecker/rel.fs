@@ -208,7 +208,7 @@ let mk_problem scope orig lhs rel rhs elt reason = {
      scope=scope;
 }
 let new_problem env lhs rel rhs elt loc reason =
-  let scope = Env.binders env in 
+  let scope = Env.all_binders env in 
    {
     pid=next_pid();
     lhs=lhs;
@@ -794,10 +794,10 @@ let compress_prob wl p = match p with
     | CProb _ -> p
 
 
-let rank wl prob : int    //the rank
+let rank wl pr : int    //the rank
                  * prob   //the input problem, pre-processed a bit (the wl is needed for the pre-processing)
                  =
-   let prob = compress_prob wl prob |> maybe_invert_p in
+   let prob = compress_prob wl pr |> maybe_invert_p in
    match prob with
     | TProb tp ->
       let lh, _ = Util.head_and_args tp.lhs in
@@ -918,12 +918,12 @@ let rec solve_universe_eq orig wl u1 u2 =
           solve_universe_eq orig wl u1 u2
 
         | U_succ _, _
-        | U_zero _, _
+        | U_zero, _
         | _, U_succ _ 
         | _, U_zero -> 
           UFailed "Incompatible universes" 
         
-        | U_name x, U_name y when x.idText=y.idText ->
+        | U_name x, U_name y when (x.idText=y.idText) ->
           USolved wl
        
         | U_max _, _
@@ -1006,7 +1006,8 @@ and solve_maybe_uinsts env orig t1 t2 (wl:worklist) =
 
     match (whnf env t1).n, (whnf env t2).n with 
         | Tm_uinst({n=Tm_fvar f}, us1), Tm_uinst({n=Tm_fvar g}, us2) -> 
-            assert (S.fv_eq f g);
+            let b = S.fv_eq f g in
+            assert b;
             aux wl us1 us2
           
         | Tm_uinst _, _
@@ -1155,7 +1156,7 @@ and solve_binders (env:Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:work
               let formula = p_guard rhs_prob |> fst in
               Inl ([rhs_prob], formula)
 
-            | (hd1, imp)::xs, (hd2, imp')::ys when imp=imp' ->
+            | (hd1, imp)::xs, (hd2, imp')::ys when (imp=imp') ->
                let hd1 = {hd1 with sort=Subst.subst subst hd1.sort} in //open both binders
                let hd2 = {hd2 with sort=Subst.subst subst hd2.sort} in 
                let prob = TProb <| mk_problem scope orig hd1.sort (invert_rel <| p_rel orig) hd2.sort None "Formal parameter" in
@@ -2034,15 +2035,14 @@ let solve_universe_inequalities' tx env ineqs =
         match ineqs with 
             | [] -> ()
             | _ -> 
-              Printf.printf "Universe inequalities:\n";
-              ineqs |> List.iter (fun (u1, u2) -> Printf.printf "\t%s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2));
+//              ineqs |> List.iter (fun (u1, u2) -> Printf.printf "\t%s <= %s\n" (Print.univ_to_string u1) (Print.univ_to_string u2));
               let wl = {empty_worklist env with defer_ok=true} in
               ineqs |> List.iter (fun (u1, u2) -> 
                 let u1 = N.normalize_universe env u1 in
                 let u2 = N.normalize_universe env u2 in 
                 match u1 with 
                     | U_zero -> ()
-                    | _ -> match solve_universe_eq -1 wl u1 u2 with 
+                    | _ -> match solve_universe_eq (-1) wl u1 u2 with 
                             | UDeferred _
                             | UFailed _    -> 
                               let us1 = match u1 with 
@@ -2051,7 +2051,6 @@ let solve_universe_inequalities' tx env ineqs =
                               let us2 = match u2 with 
                                 | U_max us2 -> us2
                                 | _ -> [u2] in
-                              Printf.printf "Comparing %A   <=    %A\n" (List.map Print.univ_to_string us1) (List.map Print.univ_to_string us2);
                               if us1 |> Util.for_all (function
                                 | U_zero -> true
                                 | u -> 
@@ -2072,7 +2071,7 @@ let solve_universe_inequalities' tx env ineqs =
           let rec solve_all_groups wl groups = match groups with
             | [] -> ()
             | (u, lower_bounds)::groups -> 
-              begin match solve_universe_eq -1 wl (U_max lower_bounds) (U_unif u) with 
+              begin match solve_universe_eq (-1) wl (U_max lower_bounds) (U_unif u) with 
                 | USolved wl -> 
                     solve_all_groups wl groups
                 | _ -> ad_hoc_fallback()

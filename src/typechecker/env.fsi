@@ -92,7 +92,7 @@ and guard_t = {
 }
 
 type implicits = list<(env * uvar * term * typ * Range.range)>
-
+type env_t = env
 val initial_env : (env -> term -> typ*guard_t) -> solver_t -> lident -> env
 
 (* Marking and resetting the environment, for the interactive mode *)
@@ -146,7 +146,7 @@ val finish_module      : (env -> modul -> env)
 
 (* Collective state of the environment *)
 val bound_vars   : env -> list<bv>
-val binders      : env -> binders
+val all_binders  : env -> binders
 val modules      : env -> list<modul>
 val uvars_in_env : env -> uvars
 val univ_vars    : env -> Util.set<universe_uvar>

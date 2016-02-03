@@ -31,7 +31,7 @@ exception Warning of string * Range.range
 (* Objects with metadata *)
 type withinfo_t<'a,'t> = {
   v: 'a;
-  sort: 't;
+  ty: 't;
   p: Range.range;
 }
 

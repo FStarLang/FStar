@@ -19,8 +19,8 @@ let string_of_mlpath = (fun _69_7 -> (match (_69_7) with
 (FStar_String.concat "." (FStar_List.append p ((s)::[])))
 end))
 
-let mlpath_of_lident = (fun x -> (let _146_8 = (FStar_List.map (fun x -> x.FStar_Ident.idText) x.FStar_Ident.ns)
-in (_146_8, x.FStar_Ident.ident.FStar_Ident.idText)))
+let mlpath_of_lident = (fun x -> (let _160_8 = (FStar_List.map (fun x -> x.FStar_Ident.idText) x.FStar_Ident.ns)
+in (_160_8, x.FStar_Ident.ident.FStar_Ident.idText)))
 
 let as_mlident = (fun x -> (x.FStar_Absyn_Syntax.ppname.FStar_Ident.idText, 0))
 

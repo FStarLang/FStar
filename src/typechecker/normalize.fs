@@ -56,9 +56,9 @@ and steps = list<step>
 
 
 type closure = 
-  | Clos of env * term * memo<env * term> //memo for lazy evaluation
-  | Univ of universe                      //universe terms do not have free variables
-  | Dummy                                 //Dummy is a placeholder for a binder when doing strong reduction
+  | Clos of env * term * memo<(env * term)> //memo for lazy evaluation
+  | Univ of universe                        //universe terms do not have free variables
+  | Dummy                                   //Dummy is a placeholder for a binder when doing strong reduction
 and env = list<closure>
 
 let closure_to_string = function 
@@ -98,7 +98,7 @@ let env_to_string env =
 let stack_elt_to_string = function 
     | Arg (c, _, _) -> closure_to_string c
     | MemoLazy _ -> "MemoLazy"
-    | Abs (_, bs, _, _, _) -> Printf.sprintf "Abs %d" (List.length bs)
+    | Abs (_, bs, _, _, _) -> Util.format1 "Abs %s" (string_of_int <| List.length bs)
     | _ -> "Match"
 
 let stack_to_string s = 
@@ -115,7 +115,7 @@ let is_empty = function
 
 let lookup_bvar env x = 
     try List.nth env x.index
-    with _ -> failwith (Printf.sprintf "Failed to find %s\n" (Print.bv_to_string x))
+    with _ -> failwith (Util.format1 "Failed to find %s\n" (Print.bv_to_string x))
 
 (********************************************************************************************************************)
 (* Normal form of a universe u is                                                                                   *)
@@ -190,7 +190,7 @@ let rec closure_as_term cfg env t =
             | Tm_delayed _ -> 
               failwith "Impossible"
 
-            | Tm_unknown _
+            | Tm_unknown
             | Tm_constant _
             | Tm_name _
             | Tm_fvar _ -> t
@@ -207,7 +207,7 @@ let rec closure_as_term cfg env t =
             | Tm_bvar x -> 
               begin match lookup_bvar env x with
                     | Univ _ -> failwith "Impossible: term variable is bound to a universe"
-                    | Dummy _ -> t
+                    | Dummy -> t
                     | Clos(env, t0, r) -> closure_as_term cfg env t0
               end
 
@@ -345,12 +345,12 @@ let maybe_simplify steps tm =
 let rec norm : cfg -> env -> stack -> term -> term = 
     fun cfg env stack t -> 
         let t = compress t in
-        log cfg  (fun () -> Printf.printf ">>> %s\nNorm %s\n" (Print.tag_of_term t) (Print.term_to_string t));
+        log cfg  (fun () -> Util.print2 ">>> %s\nNorm %s\n" (Print.tag_of_term t) (Print.term_to_string t));
         match t.n with 
           | Tm_delayed _ -> 
             failwith "Impossible"
 
-          | Tm_unknown _
+          | Tm_unknown
           | Tm_uvar _ 
           | Tm_constant _
           | Tm_fvar(_, Some Data_ctor)
@@ -390,11 +390,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
           | Tm_bvar x -> 
             begin match lookup_bvar env x with 
                 | Univ _ -> failwith "Impossible: term variable is bound to a universe"
-                | Dummy _ -> failwith "Term variable not found"
+                | Dummy -> failwith "Term variable not found"
                 | Clos(env, t0, r) ->  
                    begin match !r with 
                         | Some (env, t') -> 
-                            log cfg  (fun () -> Printf.printf "Lazy hit: %s cached to %s\n" (Print.term_to_string t) (Print.term_to_string t'));
+                            log cfg  (fun () -> Util.print2 "Lazy hit: %s cached to %s\n" (Print.term_to_string t) (Print.term_to_string t'));
                             begin match (compress t').n with
                                 | Tm_abs _  ->  
                                     norm cfg env stack t'
@@ -426,13 +426,13 @@ let rec norm : cfg -> env -> stack -> term -> term =
                         | [] -> failwith "Impossible"
                         | [_] -> body
                         | _::tl -> mk (Tm_abs(tl, body, None)) t.pos in
-                      log cfg  (fun () -> Printf.printf "\tShifted %s\n" (closure_to_string c));
+                      log cfg  (fun () -> Util.print1 "\tShifted %s\n" (closure_to_string c));
                       norm cfg (c :: env) stack body 
                   end
 
                 | MemoLazy r :: stack -> 
                   set_memo r (env, t); //We intentionally do not memoize the strng normal form; only the WHNF
-                  log cfg  (fun () -> Printf.printf "\tSet memo\n");
+                  log cfg  (fun () -> Util.print_string "\tSet memo\n");
                   norm cfg env stack t
 
                 | App _ :: _ 
@@ -442,13 +442,13 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   then rebuild cfg env stack (closure_as_term cfg env t) //But, if the environment is non-empty, we need to substitute within the term
                   else let bs, body = open_term bs body in 
                        let env' = bs |> List.fold_left (fun env _ -> Dummy::env) env in
-                       log cfg  (fun () -> Printf.printf "\tShifted %d dummies\n" (List.length bs));
+                       log cfg  (fun () -> Util.print1 "\tShifted %s dummies\n" (string_of_int <| List.length bs));
                        norm cfg env' (Abs(env, bs, env', lopt, t.pos)::stack) body
             end
 
           | Tm_app(head, args) -> 
             let stack = stack |> List.fold_right (fun (a, aq) stack -> Arg (Clos(env, a, Util.mk_ref None),aq,t.pos)::stack) args in
-            log cfg  (fun () -> Printf.printf "\tPushed %d arguments\n" (List.length args));
+            log cfg  (fun () -> Util.print1 "\tPushed %s arguments\n" (string_of_int <| List.length args));
             norm cfg env stack head
                             
           | Tm_refine(x, f) -> //non tail-recursive; the alternative is to keep marks on the stack to rebuild the term ... but that's very heavy
@@ -475,7 +475,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 | MemoLazy _ :: _ -> norm cfg env stack t1 //ascriptions should not block reduction                
                 | _ -> 
                 let t1 = norm cfg env [] t1 in 
-                log cfg  (fun () -> Printf.printf "+++ Normalizing ascription \n");
+                log cfg  (fun () -> Util.print_string "+++ Normalizing ascription \n");
                 let t2 = norm cfg env [] t2 in
                 rebuild cfg env stack (mk (Tm_ascribed(t1, t2, l)) t.pos)
 
@@ -546,8 +546,8 @@ and norm_comp : cfg -> env -> comp -> comp =
 
             | Comp ct -> 
               let norm_args args = args |> List.map (fun (a, i) -> (norm cfg env [] a, i)) in
-              {comp with n=Comp {ct with result_typ=norm cfg env [] ct.result_typ;
-                                         effect_args=norm_args ct.effect_args}}
+              {comp with n=Comp ({ct with result_typ=norm cfg env [] ct.result_typ;
+                                         effect_args=norm_args ct.effect_args})}
     
 and norm_binder : cfg -> env -> binder -> binder = 
     fun cfg env (x, imp) -> {x with sort=norm cfg env [] x.sort}, imp
@@ -589,7 +589,7 @@ and rebuild : cfg -> env -> stack -> term -> term =
               rebuild cfg env stack t
 
             | Arg (Clos(env, tm, m), aq, r) :: stack ->
-              log cfg  (fun () -> Printf.printf "Rebuilding with arg %s\n" (Print.term_to_string tm));
+              log cfg  (fun () -> Util.print1 "Rebuilding with arg %s\n" (Print.term_to_string tm));
               //this needs to be tail recursive for reducing large terms
               begin match !m with 
                 | None -> 
@@ -668,7 +668,7 @@ and rebuild : cfg -> env -> stack -> term -> term =
                         | Pat_dot_term _ -> Inl []
                         | Pat_constant s -> 
                           begin match t.n with 
-                            | Tm_constant s' when s=s' -> Inl []
+                            | Tm_constant s' when (s=s') -> Inl []
                             | _ -> Inr (not (is_cons head)) //if it's not a constant, it may match
                           end
                         | Pat_cons(fv, arg_pats) -> 
@@ -758,4 +758,4 @@ let eta_expand (_:Env.env) (t:typ) : typ =
               Util.abs binders (mk_Tm_app t args None t.pos) (Util.lcomp_of_comp c |> Some)
           end
         | _ -> 
-          failwith (Printf.sprintf "NYI: eta_expand(%s) %s" (Print.tag_of_term t) (Print.term_to_string t))
+          failwith (Util.format2 "NYI: eta_expand(%s) %s" (Print.tag_of_term t) (Print.term_to_string t))

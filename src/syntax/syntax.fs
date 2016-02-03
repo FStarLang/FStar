@@ -31,8 +31,8 @@ exception Warning of string * Range.range
 
 (* Objects with metadata *)
 type withinfo_t<'a,'t> = {
-  v: 'a;
-  sort: 't;
+  v:  'a;
+  ty: 't;
   p: Range.range;
 }
 
@@ -297,7 +297,7 @@ type mk_t = mk_t_a<term',term'>
 (*********************************************************************************)
 (* Identifiers to/from strings *)
 (*********************************************************************************)
-let withinfo v s r = {v=v; sort=s; p=r}
+let withinfo v s r = {v=v; ty=s; p=r}
 let withsort v s = withinfo v s dummyRange
 
 let bv_eq (bv1:bv) (bv2:bv) = bv1.ppname.idText=bv2.ppname.idText && bv1.index=bv2.index
