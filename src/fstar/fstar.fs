@@ -123,11 +123,7 @@ let find_deps_if_needed files =
       files
     else
       let _, deps = Parser.Dep.collect files in
-      (* Use just the file name: it's in one of the include directories, after
-       * all; furthermore, the dependency check enforce the "no duplicate
-       * filenames" policy. *)
       let deps = List.rev deps in
-      List.iter print_endline deps;
       let deps =
         if basename (List.hd deps) = "prims.fst" then
           List.tl deps
@@ -333,15 +329,14 @@ let find_initial_module_name () =
 let detect_dependencies_with_first_interactive_chunk () =
   match find_initial_module_name () with
   | None ->
-      Util.print_string "No initial module directive found\n";
-      exit 1
+      raise (Err "No initial module directive found\n")
   | Some module_name ->
       let file_of_module_name = Parser.Dep.build_map [] in
       let filename = smap_try_find file_of_module_name (String.lowercase module_name) in
       match filename with
       | None ->
-          Util.print2 "I found a \"module %s\" directive, but there is no %s.fst\n" module_name module_name;
-          exit 1
+          raise (Err (Util.format2 "I found a \"module %s\" directive, but there \
+            is no %s.fst\n" module_name module_name))
       | Some filename ->
           let _, all_filenames = Parser.Dep.collect [ filename ] in
           List.rev (List.tl all_filenames)
@@ -357,7 +352,6 @@ let go _ =
       Util.print_string msg
     | GoOn ->
       if !Options.dep <> None then
-        (* This is the fstardep tool *)
         Parser.Dep.print (Parser.Dep.collect filenames)
       else if !Options.interactive then
         let filenames =
@@ -374,7 +368,6 @@ let go _ =
         let fmods, dsenv, env = batch_mode_tc filenames in
         interactive_mode dsenv env
       else if List.length filenames >= 1 then
-        (* Normal mode of operations *)
         (let fmods, dsenv, env = batch_mode_tc filenames in
         report_errors None;
         codegen fmods env;
