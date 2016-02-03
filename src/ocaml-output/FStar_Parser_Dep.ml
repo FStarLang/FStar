@@ -314,7 +314,7 @@ in (match ((FStar_Util.smap_try_find working_map key)) with
 in (add_dep _115_126))
 end
 | None -> begin
-if ((FStar_List.length lid.FStar_Absyn_Syntax.ns) > 0) then begin
+if (((FStar_List.length lid.FStar_Absyn_Syntax.ns) > 0) && ((FStar_ST.read FStar_Options.debug) <> [])) then begin
 (let _115_128 = (let _115_127 = (string_of_lid lid false)
 in (_115_127)::[])
 in (FStar_Util.fprint FStar_Util.stderr "Warning: unbound module reference %s\n" _115_128))

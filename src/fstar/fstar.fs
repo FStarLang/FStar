@@ -167,7 +167,7 @@ type interactive_state = {
   log: ref<option<file_handle>>;
 }
 
-let interactive_state = {
+let the_interactive_state = {
   chunk = Util.new_string_builder ();
   stdin = ref None;
   buffer = ref [];
@@ -175,7 +175,7 @@ let interactive_state = {
 }
 
 let rec read_chunk () =
-    let s = interactive_state in
+    let s = the_interactive_state in
     let log =
       if !Options.debug <> [] then
         let transcript = match !s.log with
@@ -228,7 +228,7 @@ let rec read_chunk () =
           read_chunk())
 
 let shift_chunk () =
-  let s = interactive_state in
+  let s = the_interactive_state in
   match !s.buffer with
   | [] ->
       read_chunk ()
@@ -237,7 +237,7 @@ let shift_chunk () =
       chunk
 
 let fill_buffer () =
-  let s = interactive_state in
+  let s = the_interactive_state in
   s.buffer := !s.buffer @ [ read_chunk () ]
 
 let interactive_mode dsenv env =
@@ -322,7 +322,7 @@ exception Found of string
 
 let find_initial_module_name () =
   fill_buffer (); fill_buffer ();
-  try begin match !interactive_state.buffer with
+  try begin match !the_interactive_state.buffer with
     | [Push _; Code (code, _)] ->
         let lines = Util.split code "\n" in
         List.iter (fun line ->
