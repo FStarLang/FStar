@@ -317,7 +317,7 @@ let get_include_path = (fun _21_154 -> (match (()) with
 | () -> begin
 (let h = (get_fstar_home ())
 in (let _87_46 = (FStar_ST.read _include_path)
-in (FStar_List.append _87_46 ((".")::((Prims.strcat h "/lib"))::((Prims.strcat h "/lib/fstar"))::[]))))
+in (FStar_List.append _87_46 ((".")::((Prims.strcat h "/lib"))::((Prims.strcat h "/lib/fstar"))::((Prims.strcat h "/stdlib"))::((Prims.strcat h "/stdlib/fstar"))::[]))))
 end))
 
 let find_file = (fun filename -> (let search_path = (get_include_path ())
@@ -353,7 +353,7 @@ in (match ((find_file filen)) with
 result
 end
 | None -> begin
-(let _87_56 = (let _87_55 = (FStar_Util.format1 "unable to find required file \"%s\" in the module search path." filen)
+(let _87_56 = (let _87_55 = (FStar_Util.format1 "unable to find required file \"%s\" in the module search path.\n" filen)
 in FStar_Util.Failure (_87_55))
 in (Prims.raise _87_56))
 end))

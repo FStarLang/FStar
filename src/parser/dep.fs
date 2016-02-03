@@ -68,7 +68,7 @@ let lowercase_module_name f =
       raise (Err (Util.format1 "not a valid FStar file: %s\n" f))
 
 (** List the contents of all include directories, then build a map from long
-    names (e.g. a.b) to absolute filenames (/path/to/A.B.fst). Long names are all
+    names (e.g. a.b) to filenames (/path/to/A.B.fst). Long names are all
     normalized to lowercase. *)
 let build_map (filenames: list<string>): map =
   let include_directories = Options.get_include_path () in
@@ -101,8 +101,7 @@ let build_map (filenames: list<string>): map =
             ()
     ) files
   ) include_directories;
-  (* All the files we've been given on the command-line must be valid FStar
-   files. *)
+  (* All the files we've been given on the command-line must be valid FStar files. *)
   List.iter (fun f ->
     smap_add map (lowercase_module_name f) f
   ) filenames;
@@ -166,7 +165,7 @@ let collect_one (original_map: smap<string>) (filename: string): list<string> =
         let r = enter_namespace original_map working_map key in
         if not r then
           Util.fprint stderr "Warning: no modules in namespace %s and no file with \
-          that name either\n" [string_of_lid lid true]
+            that name either\n" [string_of_lid lid true]
     end
   in
 
@@ -299,7 +298,7 @@ let collect_one (original_map: smap<string>) (filename: string): list<string> =
         | Some filename ->
             add_dep (lowercase_module_name filename)
         | None ->
-            if List.length lid.ns > 0 then
+            if List.length lid.ns > 0 && !Options.debug <> [] then
               Util.fprint stderr "Warning: unbound module reference %s\n" [string_of_lid lid false]
         end
 

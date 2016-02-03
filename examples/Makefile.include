@@ -22,7 +22,7 @@ FULL_LIB=$(call add_stdlib_prefix, $(LIB_FILES) FStar.ListProperties.fst)
 STDLIB_CACHE = Prims.cache List.cache Set.cache Map.cache Heap.cache Array.cache String.cache ST.cache
 FULL_LIB_CACHE = $(STDLIB_CACHE) ListProperties.cache
 PERMLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) stperm.fst)
-FSTAR = ../../bin/fstar.exe $(OTHERFLAGS)
+FSTAR = ../../bin/fstar.exe
 STDCACHE=Prims.cache List.cache String.cache ST.cache Set.cache Map.cache Heap.cache Array.cache
 FSTARC=../../bin/fstar.exe $(STDCACHE) $(OTHERFLAGS)
 

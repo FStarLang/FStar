@@ -123,11 +123,7 @@ let find_deps_if_needed files =
       files
     else
       let _, deps = Parser.Dep.collect files in
-      (* Use just the file name: it's in one of the include directories, after
-       * all; furthermore, the dependency check enforce the "no duplicate
-       * filenames" policy. *)
       let deps = List.rev deps in
-      List.iter print_endline deps;
       let deps =
         if basename (List.hd deps) = "prims.fst" then
           List.tl deps
@@ -136,10 +132,11 @@ let find_deps_if_needed files =
       in
       List.iter (fun d ->
         let d = basename d in
-        if get_file_extension d = ".fsti" then
+        if get_file_extension d = "fsti" then
           Options.admit_fsi := substring d 0 (String.length d - 5) :: !Options.admit_fsi
-        else if get_file_extension d = ".fsi" then
+        else if get_file_extension d = "fsi" then begin
           Options.admit_fsi := substring d 0 (String.length d - 4) :: !Options.admit_fsi
+        end
       ) deps;
       deps
 
@@ -161,49 +158,95 @@ let finished_message fmods =
             let tag = if m.is_interface then "i'face" else "module" in
             if Options.should_print_message m.name.str
             then Util.print_string (Util.format3 "%s %s: %s\n" msg tag (Syntax.text_of_lid m.name)));
-         print_string "All verification conditions discharged successfully\n"
+         print_string "\x1b[0;1mAll verification conditions discharged successfully\x1b[0m\n"
     end
 
-let interactive_mode dsenv env =
-    let should_log = !Options.debug <> [] in
+type interactive_state = {
+  chunk: string_builder;
+  stdin: ref<option<stream_reader>>; // Initialized once.
+  buffer: ref<list<input_chunks>>;
+  log: ref<option<file_handle>>;
+}
+
+let the_interactive_state = {
+  chunk = Util.new_string_builder ();
+  stdin = ref None;
+  buffer = ref [];
+  log = ref None
+}
+
+let rec read_chunk () =
+    let s = the_interactive_state in
     let log =
-        if should_log
-        then let transcript = Util.open_file_for_writing "transcript" in
-             (fun line -> Util.append_to_file transcript line;
-                          Util.flush_file transcript)
-        else (fun line -> ()) in
+      if !Options.debug <> [] then
+        let transcript = match !s.log with
+          | Some transcript ->
+              transcript
+          | None ->
+              let transcript = Util.open_file_for_writing "transcript" in
+              s.log := Some transcript;
+              transcript
+        in
+        fun line ->
+          Util.append_to_file transcript line;
+          Util.flush_file transcript
+      else
+        fun _ ->
+          ()
+    in
+
+    let stdin =
+      match !s.stdin with
+      | Some i ->
+          i
+      | None ->
+          let i = Util.open_stdin () in
+          s.stdin := Some i;
+          i
+    in
+    let line = match Util.read_line stdin with
+        | None -> exit 0
+        | Some l -> l in
+    log line;
+
+    let l = Util.trim_string line in
+    if Util.starts_with l "#end"
+    then begin
+        let responses = match Util.split l " " with
+            | [_; ok; fail] -> (ok, fail)
+            | _ -> ("ok", "fail") in
+        let str = Util.string_of_string_builder s.chunk in
+        Util.clear_string_builder s.chunk; Code (str, responses)
+    end
+    else if Util.starts_with l "#pop"
+    then (Util.clear_string_builder s.chunk; Pop l)
+    else if Util.starts_with l "#push"
+    then (Util.clear_string_builder s.chunk; Push l)
+    else if l = "#finish"
+    then exit 0
+    else (Util.string_builder_append s.chunk line;
+          Util.string_builder_append s.chunk "\n";
+          read_chunk())
+
+let shift_chunk () =
+  let s = the_interactive_state in
+  match !s.buffer with
+  | [] ->
+      read_chunk ()
+  | chunk :: chunks ->
+      s.buffer := chunks;
+      chunk
+
+let fill_buffer () =
+  let s = the_interactive_state in
+  s.buffer := !s.buffer @ [ read_chunk () ]
+
+let interactive_mode dsenv env =
     if Option.isSome !Options.codegen
     then (Util.print_string "Warning: Code-generation is not supported in interactive mode, ignoring the codegen flag");
-    let chunk = Util.new_string_builder () in
-    let stdin = Util.open_stdin () in
-    let rec fill_chunk ()=
-        let line = match Util.read_line stdin with
-            | None -> exit 0
-            | Some l -> l in
-        log line;
-//        Printf.printf "Read line <%s>\n" line;
-        let l = Util.trim_string line in
-        if Util.starts_with l "#end"
-        then begin
-            let responses = match Util.split l " " with
-                | [_; ok; fail] -> (ok, fail)
-                | _ -> ("ok", "fail") in
-            let str = Util.string_of_string_builder chunk in
-            Util.clear_string_builder chunk; Code (str, responses)
-        end
-        else if Util.starts_with l "#pop"
-        then (Util.clear_string_builder chunk; Pop l)
-        else if Util.starts_with l "#push"
-        then (Util.clear_string_builder chunk; Push l)
-        else if l = "#finish"
-        then exit 0
-        else (Util.string_builder_append chunk line;
-              Util.string_builder_append chunk "\n";
-              fill_chunk()) in
-
 
     let rec go (stack:stack) curmod dsenv env =
-        begin match fill_chunk () with
+        begin match shift_chunk () with
             | Pop msg ->
               Parser.DesugarEnv.pop dsenv |> ignore;
               Tc.Env.pop env msg |> ignore;
@@ -242,27 +285,6 @@ let interactive_mode dsenv env =
                     Util.print1 "%s\n" fail;
                     let dsenv, env = reset_mark dsenv_mark env_mark in
                     go stack curmod dsenv env in
-              
-                (*let dsenv, env =
-                if !should_read_build_config then
-                  if Util.starts_with text (Parser.ParseIt.get_bc_start_string ()) then
-                    begin
-                      let filenames = 
-                        match !Options.interactive_context with
-                          | Some s ->
-                            Parser.ParseIt.read_build_config_from_string s false text true
-                          | None ->
-                            Parser.ParseIt.read_build_config_from_string "" false text true in
-                      let _, dsenv, env = batch_mode_tc_no_prims dsenv env filenames in
-                      should_read_build_config := false;
-                      dsenv, env
-                    end
-                  else begin
-                    should_read_build_config := false;
-                    dsenv, env
-                  end
-                else
-                  dsenv, env in*)
 
               let dsenv_mark, env_mark = mark dsenv env in
               let res = tc_one_fragment curmod dsenv_mark env_mark text in
@@ -297,6 +319,42 @@ let codegen fmods env=
         List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^ext)) (FSharp.Format.pretty 120 d)) newDocs
     end
 
+exception Found of string
+
+let find_initial_module_name () =
+  fill_buffer (); fill_buffer ();
+  try begin match !the_interactive_state.buffer with
+    | [Push _; Code (code, _)] ->
+        let lines = Util.split code "\n" in
+        List.iter (fun line ->
+          let line = trim_string line in
+          if String.length line > 7 && substring line 0 6 = "module" then
+            let module_name = substring line 7 (String.length line - 7) in
+            raise (Found module_name)
+        ) lines
+    | _ ->
+        ()
+    end;
+    None
+  with Found n ->
+    Some n
+
+let detect_dependencies_with_first_interactive_chunk () =
+  match find_initial_module_name () with
+  | None ->
+      raise (Err "No initial module directive found\n")
+  | Some module_name ->
+      let file_of_module_name = Parser.Dep.build_map [] in
+      let filename = smap_try_find file_of_module_name (String.lowercase module_name) in
+      match filename with
+      | None ->
+          raise (Err (Util.format2 "I found a \"module %s\" directive, but there \
+            is no %s.fst\n" module_name module_name))
+      | Some filename ->
+          let _, all_filenames = Parser.Dep.collect [ filename ] in
+          List.rev (List.tl all_filenames)
+
+
 (* Main function *)
 let go _ =
   let res, filenames = process_args () in
@@ -307,20 +365,28 @@ let go _ =
       Util.print_string msg
     | GoOn ->
       if !Options.dep <> None then
-        (* This is the fstardep tool *)
         Parser.Dep.print (Parser.Dep.collect filenames)
-      else
-        (* Normal mode of operations *)
-        if List.length filenames >= 1 then
+      else if !Options.interactive then
+        let filenames =
+          if !Options.explicit_deps then begin
+            if List.length filenames = 0 then
+              print_endline "--explicit_deps was provided without a file list!";
+            filenames
+          end else begin
+            if List.length filenames > 0 then
+              print_endline "ignoring the file list (no --explicit_deps)";
+            detect_dependencies_with_first_interactive_chunk ()
+          end
+        in
+        let fmods, dsenv, env = batch_mode_tc filenames in
+        interactive_mode dsenv env
+      else if List.length filenames >= 1 then
         (let fmods, dsenv, env = batch_mode_tc filenames in
         report_errors None;
-        if !Options.interactive
-        then interactive_mode dsenv env
-        else begin
-         codegen fmods env;
-         finished_message fmods
-        end)
-        else Util.print_string "No file provided\n"
+        codegen fmods env;
+        finished_message fmods)
+      else
+        Util.print_string "No file provided\n"
 
 let main () =
     try
