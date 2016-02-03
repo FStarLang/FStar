@@ -132,10 +132,11 @@ let find_deps_if_needed files =
       in
       List.iter (fun d ->
         let d = basename d in
-        if get_file_extension d = ".fsti" then
+        if get_file_extension d = "fsti" then
           Options.admit_fsi := substring d 0 (String.length d - 5) :: !Options.admit_fsi
-        else if get_file_extension d = ".fsi" then
+        else if get_file_extension d = "fsi" then begin
           Options.admit_fsi := substring d 0 (String.length d - 4) :: !Options.admit_fsi
+        end
       ) deps;
       deps
 

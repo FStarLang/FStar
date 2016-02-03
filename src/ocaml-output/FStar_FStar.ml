@@ -210,13 +210,13 @@ end else begin
 (FStar_All.failwith "dependency analysis did not find prims.fst?!")
 end
 in (let _65_132 = (FStar_List.iter (fun d -> (let d = (FStar_Util.basename d)
-in if ((FStar_Util.get_file_extension d) = ".fsti") then begin
+in if ((FStar_Util.get_file_extension d) = "fsti") then begin
 (let _131_94 = (let _131_93 = (FStar_Util.substring d 0 ((FStar_String.length d) - 5))
 in (let _131_92 = (FStar_ST.read FStar_Options.admit_fsi)
 in (_131_93)::_131_92))
 in (FStar_ST.op_Colon_Equals FStar_Options.admit_fsi _131_94))
 end else begin
-if ((FStar_Util.get_file_extension d) = ".fsi") then begin
+if ((FStar_Util.get_file_extension d) = "fsi") then begin
 (let _131_97 = (let _131_96 = (FStar_Util.substring d 0 ((FStar_String.length d) - 4))
 in (let _131_95 = (FStar_ST.read FStar_Options.admit_fsi)
 in (_131_96)::_131_95))
