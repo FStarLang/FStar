@@ -170,7 +170,7 @@ and bv = {
 and fv = var<term> * option<fv_qual>
 and free_vars = {
     free_names:set<bv>;
-    free_uvars:set<(uvar * typ)>;
+    free_uvars:uvars;
     free_univs:set<universe_uvar>;
 }
 and lcomp = {
@@ -330,6 +330,11 @@ let new_universe_uvar_set () : set<universe_uvar> =
 let no_names  = new_bv_set()
 let no_uvs : uvars = new_uv_set()
 let no_universe_uvars = new_universe_uvar_set()
+let empty_free_vars = {
+        free_names=no_names;
+        free_uvars=no_uvs;
+        free_univs=no_universe_uvars;
+    }
 let memo_no_uvs = Util.mk_ref (Some no_uvs)
 let memo_no_names = Util.mk_ref (Some no_names)
 let freenames_of_list l = List.fold_right Util.set_add l no_names
@@ -369,7 +374,7 @@ let extend_subst x s : subst_t = x::s
 let argpos (x:arg) = (fst x).pos
 
 let tun : term = mk (Tm_unknown) None dummyRange
-let teff : term = mk (Tm_constant Const_effect) None dummyRange
+let teff : term = mk (Tm_constant Const_effect) (Some Tm_unknown) dummyRange
 let is_teff (t:term) = match t.n with 
     | Tm_constant Const_effect -> true
     | _ -> false

@@ -21,7 +21,7 @@ open FStar.Absyn.Syntax
 open FStar.Util
 open FStar.Getopt
 open FStar.Tc.Util
-open FStar.Tc.Env
+open FStar.Ident
 
 let process_args () =
   let file_list = Util.mk_ref [] in
@@ -35,6 +35,7 @@ let cleanup () = Util.kill_all ()
 
 let has_prims_cache (l: list<string>) :bool = List.mem "Prims.cache" l
 
+open FStar.TypeChecker.Env
 let u_parse env fn = 
     try 
         match Parser.ParseIt.parse (Inl fn) with
@@ -85,8 +86,7 @@ let test_universes filenames =
           Util.print_string (Util.format2 "Error : %s\n%s\n" (Range.string_of_range r) msg);
           exit 1
        
-               
- 
+open FStar.Tc.Env 
 let tc_prims () =
     let solver = if !Options.verify then ToSMT.Encode.solver else ToSMT.Encode.dummy in
     let env = Tc.Env.initial_env solver Const.prims_lid in

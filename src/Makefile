@@ -189,7 +189,7 @@ STDFILES=system.fsi system.io.fsi system.text.fsi system.diagnostics.fsi system.
 STDLIB=$(addprefix ../lib/, $(STDFILES))
 STDLIBEXP=$(addprefix ../lib/, $(STDFILES))
 
-BOOT_BASICFILES=char.fsi string.fsi bytes.fsti platform.fsi util.fsi getoptsimple.fsti version.fsi options.fs range.fsti unionfind.fsti version.fsi ident.fs const.fs 
+BOOT_BASICFILES=char.fsi string.fsi bytes.fsti platform.fsi util.fsti getoptsimple.fsti version.fsi options.fs range.fsti unionfind.fsti version.fsi ident.fs const.fs 
 
 BOOT_BASIC=$(addprefix basic/, $(BOOT_BASICFILES))
 # BOOT_ABSYNFILES=syntax.fsi syntax.fs const.fs visit.fs util.fs print.fs ssyntax.fs
@@ -205,10 +205,13 @@ BOOT_FORMAT=$(addprefix format/, $(BOOT_FORMATFILES))
 
 
 BOOT_MAIN=fstar/fstar.fs
-BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_FORMAT) $(ABSYN_SRC) $(SYNTAX_SRC) $(TC_SRC) $(SMT_SRC) $(BOOT_PARSER) $(EXTRACTION_SRC) $(TYPECHECKER_SRC) #$(SMTENCODING_SRC) $(BOOT_MAIN) 
+BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_FORMAT) $(ABSYN_SRC) $(SYNTAX_SRC) $(TC_SRC) $(TOSMT_SRC) $(BOOT_PARSER) $(EXTRACTION_SRC) $(TYPECHECKER_SRC) $(SMTENCODING_SRC) $(BOOT_MAIN) 
 
 ADMITTED_MODULES=System System.IO System.Text System.Diagnostics System.Collections.Generic Collections FStar.Set FStar.Heap FStar.ST FStar.All FStar.List FStar.Option FStar.Char FStar.String FStar.List FStar.Bytes FStar.Platform FStar.Util FStar.Version FStar.Getopt FStar.Range FStar.Unionfind FStar.Parser.ParseIt FStar.Parser.Parse 
 ADMITS=$(addprefix --admit_fsi , $(ADMITTED_MODULES))
+
+basic/util.fsti: basic/util.fsi
+	cat basic/util.fsi | sed 's/type smap/opaque type smap/g' | sed 's/type out_channel/opaque type out_channel/g' | sed 's/type file_handle/opaque type file_handle/g' | sed 's/type string_builder/opaque type string_builder/g' | sed 's/type proc/opaque type proc/g' > basic/util.fsti
 
 ocaml: $(BOOT_ALL)
 	../bin/fstar.exe --use_native_int --eager_inference --MLish --lax --fs_typ_app --odir ocaml-output $(FSTAROPTS) --codegen OCaml $(ADMITS) $^

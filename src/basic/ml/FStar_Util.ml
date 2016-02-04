@@ -288,6 +288,14 @@ type ('a,'b) either =
   | Inl of 'a
   | Inr of 'b
 
+let is_left = function 
+  | Inl _ -> true
+  | _ -> false
+
+let is_right = function 
+  | Inr _ -> true
+  | _ -> false
+
 let left = function
   | Inl x -> x
   | _ -> failwith "Not in left"

@@ -25,7 +25,7 @@ type label = (fv * string * Range.range)
 type labels = list<label>
 
 type msg = string * Range.range
-type ranges = list<option<string> * Range.range>
+type ranges = list<(option<string> * Range.range)>
 
 let fresh_label : ranges -> term -> labels -> term * labels * ranges = 
     let ctr = ref 0 in 

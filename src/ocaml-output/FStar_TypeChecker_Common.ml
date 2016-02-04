@@ -5,7 +5,7 @@ type rel =
 | SUB
 | SUBINV
 
-let is_EQ = (fun _discr_ -> (match (_discr_) with
+let is_EQ : rel  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
 | EQ -> begin
 true
 end
@@ -13,7 +13,7 @@ end
 false
 end))
 
-let is_SUB = (fun _discr_ -> (match (_discr_) with
+let is_SUB : rel  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
 | SUB -> begin
 true
 end
@@ -21,7 +21,7 @@ end
 false
 end))
 
-let is_SUBINV = (fun _discr_ -> (match (_discr_) with
+let is_SUBINV : rel  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
 | SUBINV -> begin
 true
 end
@@ -38,7 +38,7 @@ type prob =
 | TProb of (FStar_Syntax_Syntax.typ, FStar_Syntax_Syntax.term) problem
 | CProb of (FStar_Syntax_Syntax.comp, Prims.unit) problem
 
-let is_TProb = (fun _discr_ -> (match (_discr_) with
+let is_TProb : prob  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
 | TProb (_) -> begin
 true
 end
@@ -46,7 +46,7 @@ end
 false
 end))
 
-let is_CProb = (fun _discr_ -> (match (_discr_) with
+let is_CProb : prob  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
 | CProb (_) -> begin
 true
 end
@@ -54,14 +54,14 @@ end
 false
 end))
 
-let ___TProb____0 = (fun projectee -> (match (projectee) with
-| TProb (_77_16) -> begin
-_77_16
+let ___TProb____0 : prob  ->  (FStar_Syntax_Syntax.typ, FStar_Syntax_Syntax.term) problem = (fun projectee -> (match (projectee) with
+| TProb (_82_16) -> begin
+_82_16
 end))
 
-let ___CProb____0 = (fun projectee -> (match (projectee) with
-| CProb (_77_19) -> begin
-_77_19
+let ___CProb____0 : prob  ->  (FStar_Syntax_Syntax.comp, Prims.unit) problem = (fun projectee -> (match (projectee) with
+| CProb (_82_19) -> begin
+_82_19
 end))
 
 type probs =
@@ -71,7 +71,7 @@ type guard_formula =
 | Trivial
 | NonTrivial of FStar_Syntax_Syntax.formula
 
-let is_Trivial = (fun _discr_ -> (match (_discr_) with
+let is_Trivial : guard_formula  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
 | Trivial -> begin
 true
 end
@@ -79,7 +79,7 @@ end
 false
 end))
 
-let is_NonTrivial = (fun _discr_ -> (match (_discr_) with
+let is_NonTrivial : guard_formula  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
 | NonTrivial (_) -> begin
 true
 end
@@ -87,9 +87,9 @@ end
 false
 end))
 
-let ___NonTrivial____0 = (fun projectee -> (match (projectee) with
-| NonTrivial (_77_22) -> begin
-_77_22
+let ___NonTrivial____0 : guard_formula  ->  FStar_Syntax_Syntax.formula = (fun projectee -> (match (projectee) with
+| NonTrivial (_82_22) -> begin
+_82_22
 end))
 
 type deferred =

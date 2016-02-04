@@ -349,7 +349,7 @@ let encode_const = function
     | Const_int i  -> boxInt (mkInteger i)
     | Const_int32 i -> Term.mkApp("FStar.Int32.Int32", [boxInt (mkInteger32 i)])
     | Const_string(bytes, _) -> varops.string_const (Util.string_of_bytes <| bytes)
-    | c -> failwith (Printf.sprintf "Unhandled constant: %A" c)
+    | c -> failwith (Util.format1 "Unhandled constant: %s" (Print.const_to_string c))
 
 let as_function_typ env t0 =
     let rec aux norm t =
@@ -404,7 +404,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                                         
     let t0 = SS.compress t in
     if Env.debug env.tcenv <| Options.Other "SMTEncoding"
-    then Printf.printf "(%s) (%s)   %s\n" (Print.tag_of_term t) (Print.tag_of_term t0) (Print.term_to_string t0);
+    then Util.print3 "(%s) (%s)   %s\n" (Print.tag_of_term t) (Print.tag_of_term t0) (Print.term_to_string t0);
     match t0.n with
       | Tm_delayed  _
       | Tm_unknown    -> failwith (format4 "(%s) Impossible: %s\n%s\n%s\n" (Range.string_of_range <| t.pos) (Print.tag_of_term t0) (Print.term_to_string t0) (Print.term_to_string t))
@@ -1204,7 +1204,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let g = [Term.Assume(f, Some (format1 "Assumption: %s" (Print.lid_to_string l)))] in
         decls@g, env
 
-     | Sig_let(lbs, r, _, _) when snd lbs |> Util.for_some (fun lb -> should_skip (right lb.lbname)) -> 
+     | Sig_let(lbs, r, _, _) when (snd lbs |> Util.for_some (fun lb -> should_skip (right lb.lbname))) -> 
        [], env
 
      | Sig_let((_, [{lbname=Inr b2t}]), _, _, _) when lid_equals b2t Const.b2t_lid ->
@@ -1302,7 +1302,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                               let e = SS.compress e in
                               let binders, body, _, _ = destruct_bound_function flid t_norm e in
                               let vars, guards, env', binder_decls, _ = encode_binders None binders env in
-                              let app = match vars with [] -> Term.mkFreeV(f, Term_sort) | _ -> Term.mkApp(f, List.map mkFreeV vars) in
+                              let app = match vars with | [] -> Term.mkFreeV(f, Term_sort) | _ -> Term.mkApp(f, List.map mkFreeV vars) in
                               let app, (body, decls2) =
                                  if quals |> List.contains Logic
                                  then mk_Valid app, encode_formula body env'
@@ -1692,7 +1692,6 @@ let encode_labels labs =
     prefix, suffix
 
 (* caching encodings of the environment and the top-level API to the encoding *)
-open FStar.TypeChecker.Env
 let last_env : ref<list<env_t>> = Util.mk_ref []
 let init_env tcenv = last_env := [{bindings=[]; tcenv=tcenv; warn=true; depth=0;
                                    cache=Util.smap_create 100; nolabels=false; use_zfuel_name=false;

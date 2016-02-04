@@ -169,7 +169,7 @@ and bv = {
 and fv = var<term> * option<fv_qual>
 and free_vars = {
     free_names:set<bv>;
-    free_uvars:set<(uvar * typ)>;
+    free_uvars:uvars;
     free_univs:set<universe_uvar>;
 }
 and lcomp = {

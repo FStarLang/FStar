@@ -18,6 +18,7 @@
 module FStar.Syntax.Print
 open FStar.Syntax.Syntax
 open FStar.Ident
+open FStar.Const
 
 val bv_to_string     : bv -> string
 val lid_to_string    : lid -> string
@@ -34,3 +35,4 @@ val sigelt_to_string : sigelt -> string
 val binders_to_string: string -> binders ->string
 val eff_decl_to_string: eff_decl -> string
 val subst_to_string  : subst_t -> string
+val const_to_string  : sconst -> string

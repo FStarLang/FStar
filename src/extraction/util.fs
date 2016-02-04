@@ -217,6 +217,7 @@ let is_xtuple (ns, n) =
         | "MkTuple5" -> Some 5
         | "MkTuple6" -> Some 6
         | "MkTuple7" -> Some 7
+        | "MkTuple8" -> Some 8
         | _ -> None
     else None
 
@@ -259,6 +260,7 @@ let is_xtuple_ty (ns, n) =
         | "Tuple5" -> Some 5
         | "Tuple6" -> Some 6
         | "Tuple7" -> Some 7
+        | "Tuple8" -> Some 8
         | _ -> None
     else None
 

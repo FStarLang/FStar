@@ -103,7 +103,7 @@ open FStar.Ident
 %start inputFragment
 %start term
 %type <inputFragment> inputFragment
-%type <AST.term> term
+%type <term> term
 
 %%
 inputFragment:

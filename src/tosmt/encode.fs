@@ -1815,7 +1815,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                             | [{lbdef=e}], [t_norm], [(flid, (f, ftok))] ->
                               let binders, body, formals, tres = destruct_bound_function flid t_norm e in
                               let vars, guards, env', binder_decls, _ = encode_binders None binders env in
-                              let app = match vars with [] -> Term.mkFreeV(f, Term_sort) | _ -> Term.mkApp(f, List.map mkFreeV vars) in
+                              let app = match vars with | [] -> Term.mkFreeV(f, Term_sort) | _ -> Term.mkApp(f, List.map mkFreeV vars) in
                               let body, decls2 = encode_exp body env' in
                               let eqn = Term.Assume(mkForall([[app]], vars, mkImp(mk_and_l guards, mkEq(app, body))), Some (Util.format1 "Equation for %s" flid.str)) in
                               decls@binder_decls@decls2@[eqn], env

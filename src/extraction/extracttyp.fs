@@ -92,7 +92,7 @@ let extendContextWithRepAsTyVar (b : either<btvar,bvvar> * either<btvar,bvvar>) 
                    //printfn "mapping from %A\n" btr.v.realname;
                    //printfn "to %A\n" bt.v.realname;
            extend_ty c btr (Some ((MLTY_Var (btvar_as_mltyvar bt))))
-        | (Inr bv, Inr _ ) -> extend_bv c bv ([], erasedContent) false false
+        | (Inr bv, Inr _ ) -> extend_bv c bv ([], erasedContent) false false false
         | _ -> failwith "Impossible case"
 
 
@@ -103,7 +103,7 @@ let extendContextAsTyvar (availableInML : bool) (b : either<btvar,bvvar>) (c:con
     match b with
         | (Inl bt) -> extend_ty c bt (Some (if availableInML then (MLTY_Var (btvar_as_mltyvar bt)) else unknownType))
         //if availableInML then (extend_ty c bt (Some ( (MLTY_Var (btvar2mlident bt))))) else (extend_hidden_ty c bt unknownType)
-        | (Inr bv) -> extend_bv c bv ([], erasedContent) false false
+        | (Inr bv) -> extend_bv c bv ([], erasedContent) false false false
 
 let extendContext (c:context) (tyVars : list<either<btvar,bvvar>>) : context =
    List.fold_right (extendContextAsTyvar true) (tyVars) c (*TODO: is the fold in the right direction? check *)
@@ -353,7 +353,7 @@ let extractCtor (tyBinders : list<binder>) (c:context) (ctor: inductiveConstruct
              //fprint1 "(* extracting the type of constructor %s\n" (lident2mlsymbol ctor.cname);
             // fprint1 "%s\n" (typ_to_string ctor.ctype);
              // printfn "%A *)\n" (tys);
-        (extend_fv c fvv tys false, (lident2mlsymbol ctor.cname, argTypes mlt)))
+        (extend_fv c fvv tys false false, (lident2mlsymbol ctor.cname, argTypes mlt)))
 
 (*indices get collapsed to unit, so all we need is the number of index arguments.
   We will use dummy type variables for these in the dectaration of the inductive type.
@@ -427,7 +427,7 @@ let extractExn (c:context) (exnConstr : inductiveConstructor) : (context * mlmod
     let tys = [], mlt in //NS: Why are the arguments always empty?
     let fvv = mkFvvar exnConstr.cname exnConstr.ctype in
     let ex_decl  : mlmodule1 = MLM_Exn (lident2mlsymbol exnConstr.cname, argTypes mlt) in
-    extend_fv c fvv tys false, ex_decl //this might need to be translated to OCaml exceptions
+    extend_fv c fvv tys false false, ex_decl //this might need to be translated to OCaml exceptions
 
 (*similar to the definition of the second part of \hat{\epsilon} in page 110*)
 (* \pi_1 of returned value is the exported constant*)
