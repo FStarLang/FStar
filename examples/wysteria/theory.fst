@@ -1,9 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set --admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi Prins --admit_fsi FStar.Seq --admit_fsi Ffibridge --z3timeout 10 --__temp_no_proj PSemantics --__temp_no_proj Metatheory;
-    variables:CONTRIB=../../contrib;
-    other-files:FStar.Classical.fst FStar.Ghost.fst FStar.List.Tot.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst seq.fsi FStar.SeqProperties.fst ordset.fsi ordmap.fsi FStar.Constructive.fst FStar.FunctionalExtensionality.fst prins.fsi $CONTRIB/Platform/fst/Bytes.fst ast.fst ffibridge.fsi sem.fst psem.fst
- --*)
-
 module Metatheory
 
 open FStar.Ghost

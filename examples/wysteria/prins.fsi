@@ -1,8 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.OrdSet;
-    other-files:ordset.fsi
- --*)
-
 module Prins
 
 open FStar.OrdSet
