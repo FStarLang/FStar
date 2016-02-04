@@ -1,7 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set --logQueries --verify_module TestMRef --max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1;
-    other-files:FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.MRef.fst
---*)
 module TestMRef
 open FStar.Heap
 open FStar.ST

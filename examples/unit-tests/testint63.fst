@@ -1,7 +1,3 @@
-(*--build-config
-    other-files:../../lib/int63.fst
- --*)
-
 module TestInt63
 open Int63
 let f0 (x:nat63) : int63 = x - 1l
