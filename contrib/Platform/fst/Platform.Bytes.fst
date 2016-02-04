@@ -1,8 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set --admit_fsi FStar.Seq;
-    other-files: FStar.Classical.fst FStar.FunctionalExtensionality.fst set.fsi heap.fst st.fst all.fst seq.fsi FStar.SeqProperties.fst
-  --*)
-
 module Platform.Bytes
 
 assume val repr_bytes : nat -> GTot nat

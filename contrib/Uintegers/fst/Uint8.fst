@@ -1,10 +1,3 @@
-(*--build-config
-  --*)
-
-(*
- * Uint8
- *)
-
 module Uint8
 
 
