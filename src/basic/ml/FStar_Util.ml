@@ -603,3 +603,4 @@ let print_endline = print_endline
 
 let map_option f opt = BatOption.map f opt
 
+let stdout_isatty () = Some (Unix.isatty Unix.stdout)

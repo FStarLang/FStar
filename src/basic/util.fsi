@@ -276,3 +276,5 @@ val spawn: (unit -> unit) -> unit
 val print_endline: string -> unit
 
 val map_option: ('a -> 'b) -> option<'a> -> option<'b>
+
+val stdout_isatty: unit -> option<bool>

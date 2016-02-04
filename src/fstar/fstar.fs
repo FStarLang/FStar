@@ -158,7 +158,20 @@ let finished_message fmods =
             let tag = if m.is_interface then "i'face" else "module" in
             if Options.should_print_message m.name.str
             then Util.print_string (Util.format3 "%s %s: %s\n" msg tag (Syntax.text_of_lid m.name)));
-         print_string "\x1b[0;1mAll verification conditions discharged successfully\x1b[0m\n"
+         let fmt_msg s =
+            let colorize =
+               match Util.stdout_isatty () with
+                  | Some true ->
+                    true
+                  | _ ->
+                    false
+            in
+            if colorize then
+              Util.format1 "\x1b[0;1m%s\x1b[0m" s
+            else
+              s
+         in
+         print_string (Util.format1 "%s\n" (fmt_msg "All verification conditions discharged successfully"))
     end
 
 type interactive_state = {
