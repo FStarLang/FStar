@@ -270,7 +270,7 @@ end
 false
 end)
 in if colorize then begin
-(FStar_Util.format1 "\x1b[0;1m%s\x1b[0m" s)
+(FStar_Util.format1 "\\x1b[0;1m%s\\x1b[0m" s)
 end else begin
 s
 end))

@@ -930,7 +930,7 @@ end
 (synth_exp g e)
 end
 | (FStar_Absyn_Syntax.Exp_uvar (_)) | (FStar_Absyn_Syntax.Exp_delayed (_)) -> begin
-(FStar_All.failwith "Unexpected expression")
+(fail e.FStar_Absyn_Syntax.pos "Unexpected expression")
 end)))
 
 let fresh = (let c = (FStar_Util.mk_ref 0)
