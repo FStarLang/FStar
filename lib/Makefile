@@ -3,8 +3,8 @@ FSTAR = ../bin/fstar.exe $(OTHERFLAGS)
 
 all:
 	$(FSTAR) --admit_fsi FStar.Set FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst
-	$(FSTAR) --admit_fsi FStar.Set FStar.FunctionalExtensionality.fst FStar.Set.fsi seq.fsi FStar.Seq.fst
-	$(FSTAR) --admit_fsi FStar.Set --admit_fsi FStar.Seq FStar.Set.fsi FStar.Heap.fst FStar.ST.fst seq.fsi FStar.Classical.fst FStar.SeqProperties.fst FStar.Array.fst
+	$(FSTAR) --admit_fsi FStar.Set FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Seq.fst
+	$(FSTAR) --admit_fsi FStar.Set FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.Classical.fst FStar.SeqProperties.fst FStar.Array.fst
 	$(FSTAR) array.fst
 	$(FSTAR) FStar.Char.fst
 	$(FSTAR) FStar.Classical.fst
