@@ -1,4 +1,3 @@
-
 module Stlc
 open Prims.PURE
 
