@@ -108,6 +108,7 @@ let admit () = ()
 let _assume () = ()
 let _assert x = ()
 let magic () = failwith "no magic"
+let unsafe_coerce x = x
 let op_Negation x = not x
 
 let (+)       = Big_int.add_big_int

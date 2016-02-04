@@ -159,3 +159,9 @@ let byte_of_int n =
   lemma_repr_bytes_values n;
   Seq.index (bytes_of_int 1 n) 0
 
+// No definition for these: they're only meant to be used to write tests within
+// F*.
+assume val bytes_of_hex: string -> Tot bytes
+assume val hex_of_bytes: bytes -> Tot string
+assume val string_of_hex: string -> Tot string
+assume val hex_of_string: string -> Tot string
