@@ -209,7 +209,7 @@ and collect_file = (fun _49_2 -> (match (_49_2) with
 (collect_module modul)
 end
 | modules -> begin
-(let _49_146 = (FStar_Util.fprint FStar_Util.stderr "File %s does not respect the one module per file convention\n" ((filename)::[]))
+(let _49_146 = (FStar_Util.fprint FStar_Util.stderr "Warning: file %s does not respect the one module per file convention\n" ((filename)::[]))
 in (FStar_List.iter collect_module modules))
 end))
 and collect_module = (fun _49_3 -> (match (_49_3) with
