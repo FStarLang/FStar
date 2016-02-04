@@ -3,7 +3,7 @@ OTHERFLAGS=
 include ../Makefile.include
 all: .all.ver downgrade binary_search qsc gc unification
 
-ARR_LIB=$(addprefix $(FSTAR_HOME)/lib/, FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Set.fst FStar.Heap.fst stperm.fst seq.fsi FStar.Seq.fst FStar.SeqProperties.fst FStar.Array.fst)
+ARR_LIB=$(addprefix $(FSTAR_HOME)/lib/, FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Set.fst FStar.Heap.fst stperm.fst FStar.Seq.fst FStar.SeqProperties.fst FStar.Array.fst)
 
 qs_seq: $(ARR_LIB) qs_seq.fst
 	$(FSTAR) --explicit_deps --z3timeout 20 $^
@@ -14,8 +14,8 @@ qsort_arr: $(ARR_LIB) qsort_arr.fst
 downgrade: $(ARR_LIB) qs_seq.fst qsort_arr.fst downgrade.fst
 	$(FSTAR) --explicit_deps --z3timeout 20 $^
 
-binary_search: $(FSTAR_HOME)/lib/seq.fsi binary_search.fst
-	$(FSTAR) --explicit_deps --admit_fsi FStar.Seq $^
+binary_search: $(FSTAR_HOME)/lib/FStar.Seq.fst binary_search.fst
+	$(FSTAR) --explicit_deps $^
 
 qsc:
 	$(FSTAR) qsc.fst
