@@ -1,7 +1,3 @@
-(*--build-config
-  options: --admit_fsi FStar.Set;
-  other-files: FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst
-  --*)
 module FStar.Bytes
 
 assume type bytes

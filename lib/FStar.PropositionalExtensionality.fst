@@ -1,6 +1,3 @@
-(*--build-config
-  other-files: FStar.Constructive.fst
-  --*)
 module FStar.PropositionalExtensionality
 
 open FStar.Constructive

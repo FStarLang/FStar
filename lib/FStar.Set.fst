@@ -1,6 +1,3 @@
-(*--build-config
-    other-files:FStar.FunctionalExtensionality.fst FStar.Set.fsi
-  --*)
 (*
    Copyright 2008-2014 Nikhil Swamy, Aseem Rastogi,
                        Microsoft Research, University of Maryland

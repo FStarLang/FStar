@@ -1,8 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set;
-    other-files:FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst FStar.ListProperties.fst ordset.fsi
- --*)
-
 module FStar.OrdSet
 
 opaque type total_order (a:Type) (f: (a -> a -> Tot bool)) =

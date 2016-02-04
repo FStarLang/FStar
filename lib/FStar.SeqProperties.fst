@@ -1,8 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set --admit_fsi FStar.Seq;
-    other-files:FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi seq.fsi
-  --*)
-
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 

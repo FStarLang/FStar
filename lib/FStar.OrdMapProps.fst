@@ -1,7 +1,3 @@
-(*--build-config
-    options:--admit_fsi OrdSet --admit_fsi OrdMap;
-    other-files:ordset.fsi ordmap.fsi
- --*)
 module FStar.OrdMapProps
  
 open FStar.OrdMap

@@ -1,7 +1,3 @@
-(*--build-config
-    other-files: FStar.Ghost.fst
- --*)
-
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 

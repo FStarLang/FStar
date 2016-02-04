@@ -1,7 +1,3 @@
-(*--build-config
-  options:--admit_fsi OrdSet;
-  other-files:ordset.fsi
- --*)
 module FStar.OrdMap
 
 open FStar.OrdSet
