@@ -1,7 +1,3 @@
-(*--build-config
-    options:--z3timeout 20 --max_fuel 4 --max_ifuel 2 --initial_fuel 1 --initial_ifuel 1;
-    other-files:FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Constructive.fst
-  --*)
 module MicroFStar
 
 (* Formalization of micro-fstar proofs of progress and preservation

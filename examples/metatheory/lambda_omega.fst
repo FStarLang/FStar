@@ -1,7 +1,3 @@
-(*--build-config
-    options: --admit_fsi FStar.Set --max_fuel 1 --max_ifuel 1 --initial_fuel 1;
-    other-files: FStar.Constructive.fst FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst
-  --*)
 (*
    Copyright 2015
      Simon Forest - Inria and ENS Paris

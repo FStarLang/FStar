@@ -1,6 +1,3 @@
-(*--build-config
-    other-files: FStar.Constructive.fst FStar.Classical.fst FStar.FunctionalExtensionality.fst stlc_strong_db_parsubst.fst
-  --*)
 (*
    Copyright 2008-2014 Catalin Hritcu, Nikhil Swamy, Microsoft Research and Inria
 
