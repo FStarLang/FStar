@@ -1,6 +1,3 @@
-(*--build-config
-    other-files: FStar.Ghost.fst FStar.Constructive.fst;
-  --*)
 module Erase
 
 open FStar.Ghost
