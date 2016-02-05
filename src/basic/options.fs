@@ -227,11 +227,11 @@ let display_usage specs =
     (fun (_, flag, p, doc) ->
        match p with
          | ZeroArgs ig ->
-             if doc = "" then Util.print_string (Util.format1 "  --%s\n" flag)
-             else Util.print_string (Util.format2 "  --%s  %s\n" flag doc)
+             if doc = "" then Util.print_string (Util.format1 "  --%s\n" (Util.colorize_bold flag))
+             else Util.print_string (Util.format2 "  --%s  %s\n" (Util.colorize_bold flag) doc)
          | OneArg (_, argname) ->
-             if doc = "" then Util.print_string (Util.format2 "  --%s %s\n" flag argname)
-             else Util.print_string (Util.format3 "  --%s %s  %s\n" flag argname doc))
+             if doc = "" then Util.print_string (Util.format2 "  --%s %s\n" (Util.colorize_bold flag) (Util.colorize_bold argname))
+             else Util.print_string (Util.format3 "  --%s %s  %s\n" (Util.colorize_bold flag) (Util.colorize_bold argname) doc))
     specs
 
 let rec specs () : list<Getopt.opt> =
