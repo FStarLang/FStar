@@ -4,7 +4,7 @@ NEGFILES=negative-tests.fst
 
 # if the `--lax` flag is used, negative tests will report a single error.
 ifeq ($(filter $(OTHERFLAGS),--lax),)
-NEGTESTS=35
+NEGTESTS=36
 else
 NEGTESTS=1
 endif
