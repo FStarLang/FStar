@@ -27,7 +27,7 @@ let return_all x = x
 
 type time = System.DateTime
 let now () = System.DateTime.Now
-let time_diff (t1:time) (t2:time) : float = 
+let time_diff (t1:time) (t2:time) : float =
     let ts = t2 - t1 in ts.TotalSeconds
 
 exception Impos
@@ -214,8 +214,8 @@ let smap_of_list<'value> (l:list<string*'value>) =
     List.iter (fun (x,y) -> smap_add s x y) l;
     s
 let smap_try_find (m:smap<'value>) k = m.TryFind(k)
-let smap_fold (m:smap<'value>) f a = 
-    let out = ref a in 
+let smap_fold (m:smap<'value>) f a =
+    let out = ref a in
     for entry in m do
         out := f entry.Key entry.Value !out;
     !out
@@ -619,3 +619,9 @@ let print_endline x =
 let map_option f opt = Option.map f opt
 
 let stdout_isatty () = None:option<bool>
+
+// These functions have no effect
+let colorize (s:string) (colors:(string * string)) = s
+let colorize_bold (s:string) = s
+let colorize_red (s:string) = s
+let colorize_cyan (s:string) = s
