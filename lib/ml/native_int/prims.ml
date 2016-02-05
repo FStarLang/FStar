@@ -109,6 +109,7 @@ let admit () = ()
 let _assume () = ()
 let _assert x = ()
 let magic () = failwith "no magic"
+let unsafe_coerce x = Obj.magic x
 let op_Negation x = not x
 
 let (+)   x y  = x + y

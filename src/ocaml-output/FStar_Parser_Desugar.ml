@@ -1511,7 +1511,7 @@ end else begin
 None
 end
 in (let _110_570 = (let _110_569 = (let _110_568 = (let _110_565 = (FStar_Absyn_Syntax.range_of_lid f)
-in (FStar_Absyn_Util.fvar (Some (FStar_Absyn_Syntax.Record_projector (fn))) fieldname _110_565))
+in (FStar_Absyn_Util.fvar qual fieldname _110_565))
 in (let _110_567 = (let _110_566 = (FStar_Absyn_Syntax.varg e)
 in (_110_566)::[])
 in (_110_568, _110_567)))
