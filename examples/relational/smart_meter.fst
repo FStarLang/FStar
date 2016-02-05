@@ -1,8 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set;
-    other-files:FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.Relational.fst FStar.All.fst FStar.Bytes.fst FStar.List.fst
-  --*)
-
 module SmartMeter
 open FStar.Bytes
 open FStar.List

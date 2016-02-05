@@ -1,8 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set --z3timeout 15  --print_implicits;
-    other-files:FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Relational.fst FStar.Bytes.fst FStar.List.fst sample.fst xor.fst
-  --*)
-
 module Ro
 
 open FStar.Comp

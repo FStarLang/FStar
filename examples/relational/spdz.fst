@@ -1,8 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set --z3timeout 5;
-    other-files:FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Relational.fst sample.fst
-  --*)
-
 module Fp
 open FStar.Relational
 
