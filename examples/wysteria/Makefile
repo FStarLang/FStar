@@ -44,18 +44,18 @@ OUTPUT_DIR=./ocaml-output
 
 CONTRIB=$(FSTAR_HOME)/contrib
 
-CODEGEN_FLAGS=--admit_fsi FStar.Set --admit_fsi FStar.String --admit_fsi Ffibridge --admit_fsi Runtime --admit_fsi Prog --admit_fsi FStar.IO\
+CODEGEN_FLAGS=--admit_fsi FStar.OrdSet --admit_fsi FStar.Set --admit_fsi FStar.String --admit_fsi Ffibridge --admit_fsi Runtime --admit_fsi Prog --admit_fsi FStar.IO\
               --admit_fsi FStar.Squash --admit_fsi Smciface --admit_fsi Hashtable --codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml --odir $(OUTPUT_DIR)\
               --use_native_int --__temp_no_proj PSemantics --__temp_no_proj SecServer
 
 FSTAR_LIB_FILES=FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Seq.fst FStar.SeqProperties.fst FStar.Ghost.fst FStar.Squash.fsti\
-                FStar.List.Tot.fst FStar.List.fst FStar.ListProperties.fst ordset.fsi FStar.OrdSet.fst ordmap.fsi FStar.OrdMap.fst FStar.IO.fsti string.fsi hashtable.fsi\
+                FStar.List.Tot.fst FStar.List.fst FStar.ListProperties.fst ordset.fsi  ordmap.fsi FStar.OrdMap.fst FStar.IO.fsti string.fsi hashtable.fsi\
 
 # removed sha1, CoreCrypto, crypto, and sec_server
-INTERPRETER_FILES=prins.fst $(CONTRIB)/Platform/fst/Bytes.fst ast.fst ffibridge.fsi sem.fst psem.fst rtheory.fst \
+INTERPRETER_FILES=prins.fst $(CONTRIB)/Platform/fst/Platform.Bytes.fst ast.fst ffibridge.fsi sem.fst psem.fst rtheory.fst \
                   runtime.fsi print.fst ckt.fst\
                   interpreter.fst examples/ffi.fst prog.fsi
-# INTERPRETER_FILES=prins.fst $(CONTRIB)/Platform/fst/Bytes.fst ast.fst ffibridge.fsi sem.fst psem.fst rtheory.fst \
+# INTERPRETER_FILES=prins.fst $(CONTRIB)/Platform/fst/Platform.Bytes.fst ast.fst ffibridge.fsi sem.fst psem.fst rtheory.fst \
 #                   runtime.fsi print.fst ckt.fst $(CONTRIB)/CoreCrypto/fst/CoreCrypto.fst ../crypto/sha1.fst crypto.fst\
 #                   interpreter.fst sec_server.fst examples/ffi.fst prog.fsi
 
@@ -70,7 +70,7 @@ codegen:
 #                  --codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml --odir $(OUTPUT_DIR) --use_native_int --__temp_no_proj PSemantics --__temp_no_proj SecServer\
 #                  FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Seq.fst FStar.SeqProperties.fst FStar.Ghost.fst FStar.Squash.fsti\
 #                  FStar.List.Tot.fst FStar.List.fst FStar.ListProperties.fst ordset.fsi FStar.OrdSet.fst ordmap.fsi FStar.OrdMap.fst FStar.IO.fsti string.fsi\
-#                  prins.fst ast.fst ffibridge.fsi sem.fst psem.fst rtheory.fst $(CONTRIB)/Platform/fst/Bytes.fst runtime.fsi print.fst ckt.fst $(CONTRIB)/CoreCrypto/fst/CoreCrypto.fst ../crypto/sha1.fst crypto.fst interpreter.fst sec_server.fst examples/ffi.fst prog.fsi main.fst 
+#                  prins.fst ast.fst ffibridge.fsi sem.fst psem.fst rtheory.fst $(CONTRIB)/Platform/fst/Platform.Bytes.fst runtime.fsi print.fst ckt.fst $(CONTRIB)/CoreCrypto/fst/CoreCrypto.fst ../crypto/sha1.fst crypto.fst interpreter.fst sec_server.fst examples/ffi.fst prog.fsi main.fst 
 
 a.out:
 	make -C $(OUTPUT_DIR) a.out
