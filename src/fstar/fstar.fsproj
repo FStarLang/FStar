@@ -25,9 +25,9 @@
     </DocumentationFile>
     <Prefer32Bit>true</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>../examples/algorithms/counters.fst</StartArguments>
+    <StartArguments>--codegen OCaml test.fst</StartArguments>
     <StartAction>Project</StartAction>
-    <StartWorkingDirectory>C:\cygwin64\tmp\t\</StartWorkingDirectory>
+    <StartWorkingDirectory>d:\cygwin64\tmp\</StartWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>

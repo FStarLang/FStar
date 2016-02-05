@@ -108,7 +108,7 @@ let admit () = ()
 let _assume () = ()
 let _assert x = ()
 let magic () = failwith "no magic"
-let unsafe_coerce x = x
+let unsafe_coerce x = Obj.magic x
 let op_Negation x = not x
 
 let (+)       = Big_int.add_big_int
@@ -161,11 +161,11 @@ let ___Inr___v x = match x with
 let string_of_bool = string_of_bool
 let string_of_int = string_of_int
 
-type ('a, 'b) dTuple2 =
+type ('a, 'b) l__DTuple2 =
   | MkDTuple2 of unit * unit * 'a * 'b
 
-type ('a, 'b, 'c) dTuple3 =
+type ('a, 'b, 'c) l__DTuple3 =
   | MkDTuple3 of unit * unit * unit * 'a * 'b * 'c
 
-type ('a, 'b, 'c, 'd) dTuple4 =
+type ('a, 'b, 'c, 'd) l__DTuple4 =
   | MkDTuple4 of unit * unit * unit * unit * 'a * 'b * 'c * 'd
