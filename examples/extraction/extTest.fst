@@ -1,9 +1,3 @@
-(*--build-config
-  other-files: FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst
-  --*)
-
-
-
 (*
 fstar extTest.fst --codegen OCaml > Test.ml ; sed -i '$d;/kdhvljkdshalfkhclklkdnfsnydufnysdkyfnklsnykweyacklnyrecynrncrewanyu/d' Test.ml ; ocamlc Test.ml
 *)
