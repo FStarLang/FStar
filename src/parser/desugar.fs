@@ -781,7 +781,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
         let ns, _ = Util.prefix fieldname.ns in
         lid_of_ids (ns@[f.ident]) in
       let qual = if is_rec then Some (Record_projector fn) else None in
-      pos <| mk_Exp_app(Util.fvar (Some (Record_projector fn)) fieldname (range_of_lid f), [varg e])
+      pos <| mk_Exp_app(Util.fvar qual fieldname (range_of_lid f), [varg e])
 
     | Paren e ->
       desugar_exp env e
