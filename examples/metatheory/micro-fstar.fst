@@ -1,5 +1,7 @@
 module MicroFStar
 
+#set-options "--z3timeout 10"
+
 (* Formalization of micro-fstar proofs of progress and preservation
    for the PURE effect. The definitions cover most of micro-fstar, the
    only exceptions are 3 more recently introduced features:
