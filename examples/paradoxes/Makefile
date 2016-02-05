@@ -1,5 +1,6 @@
 include ../Makefile.include
-all:
+all: russell berardi 
+#value-restriction
 
 russell:
 	$(FSTAR) russell.fst
