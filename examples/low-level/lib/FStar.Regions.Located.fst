@@ -1,7 +1,3 @@
-(*--build-config
-    other-files:FStar.Ghost.fst
-  --*)
-
 module FStar.Regions.Located
 
 open FStar.Ghost
