@@ -1,7 +1,3 @@
-(*--build-config
-    options:;
-    other-files:FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.List.Tot.fst FStar.ListProperties.fst FStar.OrdSet.fst
- --*)
 module FStar.OrdSetProps
  
 open FStar.OrdSet

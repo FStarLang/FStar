@@ -1,7 +1,3 @@
-(* (\*--build-config *)
-(*   options: --admit_fsi FStar.Set; *)
-(*   other-files: FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst *)
-(*   --*\) *)
 module FStar.Int8
 val min_value_int : int
 let min_value_int = -128
@@ -13,7 +9,7 @@ let within_int8 (i:int) =
     min_value_int <= i
     && i <= max_value_int
 
-abstract type int8 =
+private type int8 =
   | Int8 : i:int{within_int8 i} -> int8
 
 val min_value : int8
@@ -29,7 +25,7 @@ type nat8 = x:int8{Prims.op_GreaterThanOrEqual (as_int x) 0}
 
 //a ?+ b may overflow
 //must be marked opaque because the body has an intentional admit
-abstract val op_Question_Plus: i:int8
+opaque val op_Question_Plus: i:int8
               -> j:int8
               -> Tot (k:int8{within_int8 (as_int i + as_int j) ==> as_int k = as_int i + as_int j})
 let op_Question_Plus (Int8 i) (Int8 j) =
@@ -44,7 +40,7 @@ let op_Plus (Int8 i) (Int8 j) = Int8 (i + j)
 
 //a ?- b may overflow
 //must be marked opaque because the body has an intentional admit
-abstract val op_Question_Subtraction: i:int8
+opaque val op_Question_Subtraction: i:int8
               -> j:int8
               -> Tot (k:int8{within_int8 (as_int i - as_int j) ==> as_int k = as_int i - as_int j})
 let op_Question_Subtraction (Int8 i) (Int8 j) =
@@ -59,7 +55,7 @@ let op_Subtraction (Int8 i) (Int8 j) = Int8 (i - j)
 
 //a ?* b may overflow
 //must be marked opaque because the body has an intentional admit
-abstract val op_Question_Star:
+opaque val op_Question_Star:
                  i:int8
               -> j:int8
               -> Tot (k:int8{within_int8 (as_int i * as_int j) ==> as_int k = as_int i * as_int j})
@@ -75,7 +71,7 @@ let op_Star (Int8 i) (Int8 j) = Int8 (i * j)
 
 //When the dividend is negative, the semantics is platform dependent
 //must be marked opaque because the body has an intentional admit
-abstract val op_Question_Slash: i:int8
+opaque val op_Question_Slash: i:int8
                            -> j:int8{as_int j <> 0}
                            -> Tot (k:int8{as_int i >= 0 ==> as_int k = as_int i / as_int j})
 let op_Question_Slash (Int8 i) (Int8 j) =
@@ -91,7 +87,7 @@ let op_Slash (Int8 i) (Int8 j) = Int8 (i / j)
 
 //a ?% b can overflow
 //must be marked opaque because the body has an intentional admit
-abstract val op_Question_Percent:
+opaque val op_Question_Percent:
                 i:int8
              -> j:int8{as_int j <> 0}
              -> Tot (k:int8{not(as_int i = min_value_int && as_int j = -1)
@@ -112,7 +108,7 @@ let op_Percent (Int8 i) (Int8 j) = Int8 (i % j)
 
 //?- a    can overflow
 //must be marked opaque because the body has an intentional admit
-abstract val op_Question_Minus: i:int8
+opaque val op_Question_Minus: i:int8
                    -> Tot int8
 let op_Question_Minus (Int8 i) =
   if i = min_value_int

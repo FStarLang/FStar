@@ -1,23 +1,17 @@
-(*--build-config
-    options:--admit_fsi FStar.Set;
-    other-files: FStar.Set.fsi;
-  --*)
 module FStar.Heap
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
 open FStar.Set
-assume new type heap : Type0
-abstract type ref (a:Type) = 
-  | MkRef of a //this implementation of ref is not realistic; it's just to get the universes right
-#reset-options
+type heap
+type ref : Type -> Type
 type aref =
   | Ref : #a:Type -> r:ref a -> aref
-assume val sel :       #a:Type -> heap -> ref a -> Tot a
-assume val upd :       #a:Type -> heap -> ref a -> a -> Tot heap
-assume val emp :       heap
-assume val contains :  #a:Type -> heap -> ref a -> Tot bool
-assume val equal:      heap -> heap -> Tot bool
-assume val restrict:   heap -> set aref -> Tot heap
-assume val concat:     heap -> heap -> Tot heap
+assume logic val sel :       #a:Type -> heap -> ref a -> Tot a
+assume logic val upd :       #a:Type -> heap -> ref a -> a -> Tot heap
+assume logic val emp :       heap
+assume logic val contains :  #a:Type -> heap -> ref a -> Tot bool
+assume logic val equal:      heap -> heap -> Tot bool
+assume logic val restrict:   heap -> set aref -> Tot heap
+assume logic val concat:     heap -> heap -> Tot heap
 
 assume SelUpd1:       forall (a:Type) (h:heap) (r:ref a) (v:a).            {:pattern (sel (upd h r v) r)}
                       sel (upd h r v) r == v
@@ -44,24 +38,24 @@ assume RestrictIn:    forall (a:Type) (h:heap) (r:set aref) (a:ref a).     {:pat
                       contains (restrict h r) a == (mem (Ref a) r && contains h a)
 
 assume SelConcat:     forall (a:Type) (h1:heap) (h2:heap) (a:ref a).       {:pattern sel (concat h1 h2) a}
-                      if contains h2 a then sel (concat h1 h2) a=sel h2 a else sel (concat h1 h2) a=sel h1 a
+                      if b2t (contains h2 a) then sel (concat h1 h2) a==sel h2 a else sel (concat h1 h2) a == sel h1 a
 
 assume ContainsConcat:forall (a:Type) (h1:heap) (h2:heap) (a:ref a).       {:pattern contains (concat h1 h2) a}
                       contains (concat h1 h2) a == (contains h1 a || contains h2 a)
 
 type On (r:set aref) (p:(heap -> Type)) (h:heap) = p (restrict h r)
-type fresh (refs:set aref) (h0:heap) (h1:heap) =
+opaque type fresh (refs:set aref) (h0:heap) (h1:heap) =
   (forall (a:Type) (a:ref a).{:pattern (contains h0 a)} mem (Ref a) refs ==> not(contains h0 a) /\ contains h1 a)
-type modifies (mods:set aref) (h:heap) (h':heap) =
+opaque logic type modifies (mods:set aref) (h:heap) (h':heap) =
     b2t (equal h' (concat h' (restrict h (complement mods))))
 
 let only x = Set.singleton (Ref x)
 
-(* val op_Hat_Plus_Plus<u> : #a:Type(u) -> r:ref a -> set (aref<u>) -> Tot (set (aref<u>)) *)
+val op_Hat_Plus_Plus : #a:Type -> r:ref a -> set aref -> Tot (set aref)
 let op_Hat_Plus_Plus (#a:Type) r s = Set.union (Set.singleton (Ref r)) s
 
-(* val op_Plus_Plus_Hat<u> : #a:Type(u) -> set (aref<u>) -> r:ref a -> Tot (set (aref<u>)) *)
+val op_Plus_Plus_Hat : #a:Type -> set aref -> r:ref a -> Tot (set aref)
 let op_Plus_Plus_Hat (#a:Type) s r = Set.union s (Set.singleton (Ref r))
 
-(* val op_Hat_Plus_Hat<u> : #a:Type(u) -> #b:Type(u) -> ref a -> ref b -> Tot (set (aref<u>)) *)
+val op_Hat_Plus_Hat : #a:Type -> #b:Type -> ref a -> ref b -> Tot (set aref)
 let op_Hat_Plus_Hat (#a:Type) (#b:Type) r1 r2 = Set.union (Set.singleton (Ref r1)) (Set.singleton (Ref r2))

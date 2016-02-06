@@ -1,8 +1,3 @@
-(*--build-config
-  options: --admit_fsi FStar.Set;
-  other-files: FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst
-  --*)
-
 module FStar.Int63
 val min_value_int : int
 let min_value_int = -4611686018427387904
@@ -14,7 +9,7 @@ let within_int63 (i:int) =
     min_value_int <= i
     && i <= max_value_int
 
-abstract type int63 =
+private type int63 =
   | Int63 : i:int{within_int63 i} -> int63
 
 val min_value : int63
@@ -29,8 +24,8 @@ let as_int (Int63 i) = i
 type nat63 = x:int63{Prims.op_GreaterThanOrEqual (as_int x) 0}
 
 //a ?+ b may overflow
-//must be marked abstract because the body has an intentional admit
-abstract val op_Question_Plus: i:int63
+//must be marked opaque because the body has an intentional admit
+opaque val op_Question_Plus: i:int63
               -> j:int63
               -> Tot (k:int63{within_int63 (as_int i + as_int j) ==> as_int k = as_int i + as_int j})
 let op_Question_Plus (Int63 i) (Int63 j) =
@@ -44,8 +39,8 @@ val op_Plus: i:int63
 let op_Plus (Int63 i) (Int63 j) = Int63 (i + j)
 
 //a ?- b may overflow
-//must be marked abstract because the body has an intentional admit
-abstract val op_Question_Subtraction: i:int63
+//must be marked opaque because the body has an intentional admit
+opaque val op_Question_Subtraction: i:int63
               -> j:int63
               -> Tot (k:int63{within_int63 (as_int i - as_int j) ==> as_int k = as_int i - as_int j})
 let op_Question_Subtraction (Int63 i) (Int63 j) =
@@ -59,8 +54,8 @@ val op_Subtraction: i:int63
 let op_Subtraction (Int63 i) (Int63 j) = Int63 (i - j)
 
 //a ?* b may overflow
-//must be marked abstract because the body has an intentional admit
-abstract val op_Question_Star:
+//must be marked opaque because the body has an intentional admit
+opaque val op_Question_Star:
                  i:int63
               -> j:int63
               -> Tot (k:int63{within_int63 (as_int i * as_int j) ==> as_int k = as_int i * as_int j})
@@ -75,8 +70,8 @@ val op_Star: i:int63
 let op_Star (Int63 i) (Int63 j) = Int63 (i * j)
 
 //When the dividend is negative, the semantics is platform dependent
-//must be marked abstract because the body has an intentional admit
-abstract val op_Question_Slash: i:int63
+//must be marked opaque because the body has an intentional admit
+opaque val op_Question_Slash: i:int63
                            -> j:int63{as_int j <> 0}
                            -> Tot (k:int63{as_int i >= 0 ==> as_int k = as_int i / as_int j})
 let op_Question_Slash (Int63 i) (Int63 j) =
@@ -91,8 +86,8 @@ val op_Slash: i:int63{as_int i >= 0}
 let op_Slash (Int63 i) (Int63 j) = Int63 (i / j)
 
 //a ?% b can overflow
-//must be marked abstract because the body has an intentional admit
-abstract val op_Question_Percent:
+//must be marked opaque because the body has an intentional admit
+opaque val op_Question_Percent:
                 i:int63
              -> j:int63{as_int j <> 0}
              -> Tot (k:int63{not(as_int i = min_value_int && as_int j = -1)
@@ -112,8 +107,8 @@ val op_Percent: i:int63
 let op_Percent (Int63 i) (Int63 j) = Int63 (i % j)
 
 //?- a    can overflow
-//must be marked abstract because the body has an intentional admit
-abstract val op_Question_Minus: i:int63
+//must be marked opaque because the body has an intentional admit
+opaque val op_Question_Minus: i:int63
                    -> Tot int63
 let op_Question_Minus (Int63 i) =
   if i = min_value_int

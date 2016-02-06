@@ -81,6 +81,7 @@ module Prims
   let _assume () = ()
   let _assert x = ()
   let magic () = failwith "no magic"
+  let unsafe_coerce x = Obj.magic x
   let min x y = if x < y then x else y
   let strcat x y = x ^ y
   let op_Negation x = not x

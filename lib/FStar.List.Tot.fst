@@ -18,9 +18,7 @@ module FStar.List.Tot
 (** Base operations **)
 
 val isEmpty: list 'a -> Tot bool
-let isEmpty l = match l with
-  | [] -> true
-  | _ -> false
+let isEmpty l = match l with | [] -> true | _ -> false
 
 val hd: l:list 'a{is_Cons l} -> Tot 'a
 let hd = function
@@ -43,7 +41,7 @@ let rec nth l n = match l with
 val count: 'a -> list 'a -> Tot nat
 let rec count x = function
   | [] -> 0
-  | hd::tl -> if x=hd then 1 + count x tl else count x tl
+  | hd::tl -> if x=hd then 1 + (count x tl) else count x tl
 
 val rev_acc: list 'a -> list 'a -> Tot (list 'a)
 let rec rev_acc l acc = match l with
@@ -57,8 +55,6 @@ val append: list 'a -> list 'a -> Tot (list 'a)
 let rec append x y = match x with
   | [] -> y
   | a::tl -> a::append tl y
-
-let op_At x y = append x y
 
 val flatten: list (list 'a) -> Tot (list 'a)
 let rec flatten l = match l with
@@ -103,7 +99,7 @@ let rec fold_right f l x = match l with
 
 (** List searching **)
 
-val mem: 'a -> list 'a -> Tot bool
+val mem: 'a -> list 'a -> Tot bool //x:'a -> l:list 'a -> b:bool{b==true <==> In x l}
 let rec mem x = function
   | [] -> false
   | hd::tl -> if hd = x then true else mem x tl
@@ -113,7 +109,7 @@ val existsb: #a:Type
        -> f:(a -> Tot bool)
        -> list a
        -> Tot bool
-let rec existsb #a f l = match l with
+let rec existsb (a:Type) f l = match l with
  | [] -> false
  | hd::tl -> if f hd then true else existsb f tl
 
@@ -121,7 +117,7 @@ val find: #a:Type
         -> f:(a -> Tot bool)
         -> list a
         -> Tot (option (x:a{f x}))
-let rec find #a f l = match l with
+let rec find (a:Type) f l = match l with
   | [] -> None #(x:a{f x}) //These type annotations are only present because it makes bootstrapping go much faster
   | hd::tl -> if f hd then Some #(x:a{f x}) hd else find f tl
 
@@ -172,25 +168,27 @@ let rec partition f = function
 
 (** [subset la lb] is true if and only if all the elements from [la]
     are also in [lb]. *)
-val subset: list 'a -> list 'a -> Tot bool
+val subset: #a:Type -> list a -> list a -> Tot bool
 let rec subset la lb =
   match la with
   | [] -> true
   | h :: tl ->  mem h lb && subset tl lb
 
-val noRepeats : list 'a -> Tot bool
+val noRepeats : #a:Type -> list a -> Tot bool
 let rec noRepeats la =
   match la with
   | [] -> true
-  | h :: tl -> not(mem h tl) && noRepeats tl
+  | h :: tl ->  not(mem h tl) && noRepeats tl
+
 
 (** List of tuples **)
-val assoc: 'a -> list (Tuple2 'a 'b) -> Tot (option 'b)
-let rec assoc x = function
-  | [] -> None
-  | (x', y)::tl -> if x=x' then Some y else assoc x tl
 
-val split: list (Tuple2 'a 'b) -> Tot (list 'a * list 'b)
+val assoc: 'a -> list ('a*'b) -> Tot (option 'b)
+let rec assoc a x = match x with
+  | [] -> None
+  | (a', b)::tl -> if a=a' then Some b else assoc a tl
+
+val split: list ('a * 'b) -> Tot (list 'a * list 'b)
 let rec split l = match l with
     | [] -> ([],[])
     | (hd1,hd2)::tl ->
@@ -198,7 +196,7 @@ let rec split l = match l with
        (hd1::tl1,hd2::tl2)
 let unzip = split
 
-val unzip3: list (Tuple3 'a 'b 'c) -> Tot (list 'a * list 'b * list 'c)
+val unzip3: list ('a * 'b * 'c) -> Tot (list 'a * list 'b * list 'c)
 let rec unzip3 l = match l with
     | [] -> ([],[],[])
     | (hd1,hd2,hd3)::tl ->
@@ -207,10 +205,9 @@ let rec unzip3 l = match l with
 
 (** Sorting (implemented as quicksort) **)
 val partition_length: f:('a -> Tot bool)
-                    -> l:list 'a
-                    -> Lemma (requires True)
-                            (ensures (length (fst (partition f l))
-                                      + length (snd (partition f l)) = length l))
+                  -> l:list 'a
+                  -> Lemma (requires True)
+                           (ensures (length (fst (partition f l)) + length (snd (partition f l)) = length l))
 let rec partition_length f l = match l with
   | [] -> ()
   | hd::tl -> partition_length f tl
