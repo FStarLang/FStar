@@ -1,7 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set --verify_module Unit1;
-    other-files:FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst FStar.String.fst
---*)
 module Unit1
 
 type t =

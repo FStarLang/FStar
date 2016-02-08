@@ -1,6 +1,7 @@
 module FStar.Relational
 open FStar.Heap
 
+
 (* Relational Type constructor (Equivalent to pairs) *)
 type rel (a:Type) (b:Type) : Type =
   | R : l:a -> r:b -> rel a b

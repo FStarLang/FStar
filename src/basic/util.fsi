@@ -125,7 +125,6 @@ val get_file_extension: string -> string
 val is_path_absolute: string -> bool
 val join_paths: string -> string -> string
 val normalize_file_path: string -> string
-val find_file: string -> list<string> -> option<string>
 val basename: string -> string
 val getcwd: unit -> string
 val readdir: string -> list<string>
@@ -277,3 +276,14 @@ val sleep: int -> unit
 val atomically: (unit -> 'a) -> 'a
 val spawn: (unit -> unit) -> unit
 val print_endline: string -> unit
+
+val map_option: ('a -> 'b) -> option<'a> -> option<'b>
+
+val stdout_isatty: unit -> option<bool>
+
+// These functions have no effect
+val colorize: string -> (string * string) -> string
+val colorize_bold: string -> string
+val colorize_red: string -> string
+val colorize_cyan: string -> string
+

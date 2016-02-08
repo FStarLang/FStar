@@ -1,8 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi Prins --admit_fsi Ffibridge;
-    other-files:FStar.Ghost.fst FStar.List.Tot.fst ordset.fsi ordmap.fsi FStar.Classical.fst prins.fsi ast.fst ffibridge.fsi
- --*)
-
 module Semantics
 
 open FStar.Ghost
@@ -622,6 +617,59 @@ let step_assec_ret (Conf l _ ((Frame m en F_assec_ret tr)::s) _ t tr') =
 
 //----- assec e1 e2 -----//
 
+//----- mksh e -----//
+
+let pre_emksh (c:config) =
+  is_T_exp (t_of_conf c) && is_E_mksh (e_of_t_exp (t_of_conf c)) && is_sec c
+
+val step_mksh_e: c:config{pre_emksh c} -> Tot config
+let step_mksh_e (Conf l m s en (T_exp (E_mksh e)) tr) =
+  Conf l m ((Frame m en F_mksh tr)::s) en (T_exp e) (hide [])
+
+val step_mksh_red: c:config{is_value c /\ is_sframe c is_F_mksh} -> Tot config
+let step_mksh_red (Conf l _ ((Frame m en F_mksh tr)::s) _ (T_val v) tr') =
+  Conf l m s en (T_red (R_mksh v)) (concat_traces tr tr')
+
+val pre_mksh: config -> Tot comp
+let pre_mksh c = match c with
+  | Conf _ (Mode Sec _) _ _ (T_red (R_mksh #meta _)) _ ->
+    if is_meta_wireable meta then Do else NA
+  | _ -> NA
+
+val step_mksh: c:config{pre_mksh c = Do} -> Tot config
+let step_mksh c = match c with
+  | Conf l m s en (T_red (R_mksh v)) tr ->
+    let Mode Sec ps = m in
+    Conf l m s en (T_val (V_sh ps v (Platform.Bytes.empty_bytes))) tr
+
+//----- mksh e -----//
+
+//----- combsh e -----//
+
+let pre_ecombsh (c:config) =
+  is_T_exp (t_of_conf c) && is_E_combsh (e_of_t_exp (t_of_conf c)) && is_sec c
+
+val step_combsh_e: c:config{pre_ecombsh c} -> Tot config
+let step_combsh_e (Conf l m s en (T_exp (E_combsh e)) tr) =
+  Conf l m ((Frame m en F_combsh tr)::s) en (T_exp e) (hide [])
+
+val step_combsh_red: c:config{is_value c /\ is_sframe c is_F_combsh} -> Tot config
+let step_combsh_red (Conf l _ ((Frame m en F_combsh tr)::s) _ (T_val v) tr') =
+  Conf l m s en (T_red (R_combsh v)) (concat_traces tr tr')
+
+val pre_combsh: config -> Tot comp
+let pre_combsh c = match c with
+  | Conf l (Mode Sec ps) _ _ (T_red (R_combsh (V_sh ps' _ _))) _ ->
+    if ps = ps' then Do else NA
+  | _ -> NA
+
+val step_combsh: c:config{pre_combsh c = Do} -> Tot config
+let step_combsh c = match c with
+  | Conf l m s en (T_red (R_combsh (V_sh _ v _))) tr ->
+    Conf l m s en (T_val v) tr
+
+//----- combsh e -----//
+
 type sstep: config -> config -> Type =
   | C_aspar_ps:
     c:config{pre_easpar c} -> c':config{c' = step_aspar_e1 c}
@@ -822,6 +870,30 @@ type sstep: config -> config -> Type =
     -> c':config{c' = step_assec_ret c}
     -> sstep c c'
 
+  | C_mksh:
+    c:config{pre_emksh c} -> c':config{c' = step_mksh_e c} -> sstep c c'
+
+  | C_mksh_red:
+    c:config{is_value c /\ is_sframe c is_F_mksh}
+    -> c':config{c' = step_mksh_red c}
+    -> sstep c c'
+
+  | C_mksh_beta:
+    c:config{pre_mksh c = Do} -> c':config{c' = step_mksh c}
+    -> sstep c c'
+
+  | C_combsh:
+    c:config{pre_ecombsh c} -> c':config{c' = step_combsh_e c} -> sstep c c'
+
+  | C_combsh_red:
+    c:config{is_value c /\ is_sframe c is_F_combsh}
+    -> c':config{c' = step_combsh_red c}
+    -> sstep c c'
+
+  | C_combsh_beta:
+    c:config{pre_combsh c = Do} -> c':config{c' = step_combsh c}
+    -> sstep c c'
+
 type sstep_star: config -> config -> Type =
   | SS_refl: c:config -> sstep_star c c
   | SS_tran:
@@ -874,6 +946,8 @@ let rec slice_v #meta p v =
     | V_fix_clos en f x e       -> D_v meta (V_fix_clos (slice_en p en) f x e)
 
     | V_emp_clos _ _            -> def
+
+    | V_sh ps v' b              -> D_v meta (V_sh ps (D_v.v (slice_v p v')) b)
 
     | V_emp                     -> emp
 
@@ -940,6 +1014,11 @@ let is_v_emp_clos #meta v = match v with
   | V_emp_clos _ _ -> true
   | _              -> false
 
+val is_v_sh: #meta:v_meta -> v:value meta -> Tot bool
+let is_v_sh #meta v = match v with
+  | V_sh _ _ _ -> true
+  | _          -> false
+
 val compose_vals: #m1:v_meta -> #m2:v_meta -> v1:value m1 -> v2:value m2
                  -> Tot (r:dvalue{compose_v_meta_inv m1 m2 (D_v.meta r)})
                     (decreases %[v1])
@@ -992,6 +1071,22 @@ let rec compose_vals #m1 #m2 v1 v2 =
      | V_emp_clos x1 e1 ->
        if is_v_emp_clos v2 then
          D_v m1 (V_emp_clos x1 e1)
+       else emp
+
+     | V_sh ps1 v1 b1 ->
+       if is_v_sh v2 then
+	 let V_sh ps2 v2 b2 = v2 in
+	 if ps1 = ps2 && b1 = b2 then
+	   let D_v meta v = compose_vals v1 v2 in
+	   let _ = admitP (forall (ps:prins). subset ps empty ==> ps = empty) in
+	   let _ = cut (b2t (meta.cb = Can_b)) in
+	   let _ = cut (b2t (meta.cw = Can_w)) in
+	   let _ = cut (b2t (subset meta.bps empty)) in
+	   let _ = cut (b2t (meta.bps = empty)) in
+	   let _ = cut (b2t (subset meta.wps empty)) in
+	   let _ = cut (b2t (meta.wps = empty)) in
+	   D_v (Meta empty Can_b empty Cannot_w) (V_sh ps1 v b1)
+	 else emp
        else emp
 
 and compose_envs en1 en2 =
@@ -1091,6 +1186,8 @@ let rec slice_v_sps #meta ps v =
 
    | V_emp_clos _ _      -> def
 
+   | V_sh ps' v' b       -> D_v meta (V_sh ps' (D_v.v (slice_v_sps ps v')) b)
+   
    | V_emp               -> emp
 
 and slice_en_sps ps en =

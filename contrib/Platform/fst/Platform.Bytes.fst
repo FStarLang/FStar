@@ -1,8 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set --admit_fsi FStar.Seq;
-    other-files: FStar.Classical.fst FStar.FunctionalExtensionality.fst set.fsi heap.fst st.fst all.fst seq.fsi FStar.SeqProperties.fst
-  --*)
-
 module Platform.Bytes
 
 assume val repr_bytes : nat -> GTot nat
@@ -94,7 +89,8 @@ let createBytes l b = Seq.create l b
 (*@ assume val equalBytes : (b0:bytes -> (b1:bytes -> (r:bool){r = True /\ B (b0) = B (b1) \/ r = False /\ B (b0) <> B (b1)})) @*)
 assume val equalBytes : b1:bytes -> b2:bytes -> Tot (b:bool{b = (b1=b2)})
 (*@ assume val xor : (bytes -> (bytes -> (nb:nat -> (b3:bytes){Length (b3) = nb}))) @*)
-assume val xor : bytes -> bytes -> nat -> Tot bytes
+
+assume val xor: l:nat -> lbytes l -> lbytes l -> Tot (lbytes l)
 
 //val split: b:bytes -> n:nat{n <= Seq.length b} -> 
 //  Tot (x:(bytes * bytes) {Seq.length (fst (x))= n /\ Seq.length (snd (x)) == (Seq.length b) - n }) //(lbytes n * lbytes (length b - n))
@@ -163,3 +159,9 @@ let byte_of_int n =
   lemma_repr_bytes_values n;
   Seq.index (bytes_of_int 1 n) 0
 
+// No definition for these: they're only meant to be used to write tests within
+// F*.
+assume val bytes_of_hex: string -> Tot bytes
+assume val hex_of_bytes: bytes -> Tot string
+assume val string_of_hex: string -> Tot string
+assume val hex_of_string: string -> Tot string

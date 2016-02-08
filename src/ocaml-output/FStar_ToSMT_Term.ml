@@ -802,7 +802,7 @@ end)
 end
 end))
 
-let abstr : fv Prims.list  ->  term  ->  term = (fun fvs t -> (let nvars = (FStar_List.length fvs)
+let abstr : fvs  ->  term  ->  term = (fun fvs t -> (let nvars = (FStar_List.length fvs)
 in (let index_of = (fun fv -> (match ((FStar_Util.try_find_index (fv_eq fv) fvs)) with
 | None -> begin
 None
@@ -870,7 +870,7 @@ in (mkQuant _159_301))))
 end))
 in (aux 0 t))))
 
-let mkQuant' : (qop * term Prims.list Prims.list * Prims.int Prims.option * fv Prims.list * term)  ->  term = (fun _56_484 -> (match (_56_484) with
+let mkQuant' : (qop * term Prims.list Prims.list * Prims.int Prims.option * fvs * term)  ->  term = (fun _56_484 -> (match (_56_484) with
 | (qop, pats, wopt, vars, body) -> begin
 (let _159_307 = (let _159_306 = (FStar_All.pipe_right pats (FStar_List.map (FStar_List.map (abstr vars))))
 in (let _159_305 = (FStar_List.map fv_sort vars)

@@ -1,9 +1,6 @@
-(*--build-config
-    other-files:../../lib/FStar.Int16.fst
- --*)
-
 module TestInt16
 open Int16
+
 let f0 (x:nat16) : int16 = x - 1s
 let f1 (x:nat16) (y:nat16{y <= x}) : nat16 = x - y
 let f2 (x:nat16{x < (Int16.max_value / 2s)}) = x * 2s

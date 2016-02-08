@@ -1,7 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set;
-    other-files:FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Relational.fst while.fst
---*)
 module IFC
 
 (* We model a simple IFC Type system *)

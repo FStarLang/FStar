@@ -20,6 +20,7 @@ module FStar.Matrix2
 type matrix2 : nat -> nat -> Type -> Type
 open FStar.Seq
 
+
 (* Destructors *)
 val index:  #a:Type -> #m:nat -> #n:nat -> matrix2 m n a -> i:nat{i < m} -> j:nat{j < n} -> Tot a
 val row:    #a:Type -> #m:nat -> #n:nat -> matrix2 m n a -> i:nat{i<m} -> Tot (seq a)
@@ -102,5 +103,3 @@ val lemma_eq_elim: #a:Type -> #m:nat -> #n:nat -> x1:matrix2 m n a -> x2:matrix2
      (requires (Eq x1 x2))
      (ensures (x1=x2))
      [SMTPatT (Eq x1 x2)]
-
-

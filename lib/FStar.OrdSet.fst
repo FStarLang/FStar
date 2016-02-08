@@ -1,5 +1,6 @@
 module FStar.OrdSet
 
+
 opaque type total_order (a:Type) (f: (a -> a -> Tot bool)) =
     (forall a1 a2. (f a1 a2 /\ f a2 a1)  ==> a1 = a2)  (* anti-symmetry *)
  /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)   (* transitivity  *)
@@ -189,5 +190,3 @@ let rec subset_size (#a:Type) #f x y = match x, y with
   | hd::tl, hd'::tl' ->
     if f hd hd' && hd = hd' then subset_size #a #f tl tl'
     else subset_size #a #f x tl'
-
-(* (\**********\) *)

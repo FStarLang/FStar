@@ -787,7 +787,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
         let ns, _ = Util.prefix fieldname.ns in
         lid_of_ids (ns@[f.ident]) in
       let qual = if is_rec then Some (Record_projector fn) else None in
-      pos <| mk_Exp_app(Util.fvar (Some (Record_projector fn)) fieldname (range_of_lid f), [varg e])
+      pos <| mk_Exp_app(Util.fvar qual fieldname (range_of_lid f), [varg e])
 
     | Paren e ->
       desugar_exp env e
@@ -1481,6 +1481,9 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
   | Pragma p ->
     let se = Sig_pragma(trans_pragma p, d.drange) in
     env, [se]
+
+  | TopLevelModule _ -> 
+    raise (Error("Multiple modules in a file are no longer supported", d.drange))
 
   | Open lid ->
     let env = DesugarEnv.push_namespace env lid in

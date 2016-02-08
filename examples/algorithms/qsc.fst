@@ -1,7 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set --z3timeout 20;
-    other-files:FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst
-  --*)
 module QuickSort
 open FStar.List
 #set-options "--initial_ifuel 2 --initial_fuel 1 --max_ifuel 2 --max_fuel 1"

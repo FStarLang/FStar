@@ -1,6 +1,3 @@
-(*--build-config
---*)
-
 module Ast
 
 type value =

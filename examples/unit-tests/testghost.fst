@@ -1,6 +1,3 @@
-(*--build-config
-    other-files:FStar.Ghost.fst
- --*)
 module TestGhost
 
 open FStar.Ghost

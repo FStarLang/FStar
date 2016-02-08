@@ -1,6 +1,3 @@
-(*--build-config
-    options:--max_ifuel 1 --initial_ifuel 1 --max_fuel 1 --initial_fuel 1;
-  --*)
 (* Copyright Microsoft Research 2015
 
    This module is an adaptation of Chris Hawblitzel and Erez Petrank's

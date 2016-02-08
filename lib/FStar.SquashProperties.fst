@@ -1,8 +1,7 @@
 module FStar.SquashProperties
-
 open FStar.Constructive
-
 open FStar.Squash
+
 
 val join_squash : #a:Type -> squash (squash a) -> Tot (squash a)
 let join_squash (a:Type) s = bind_squash #(squash a) #a s (fun x -> x)

@@ -32,8 +32,8 @@ examples/*/*.ml
 
 _build/
 
-*.native*
-*.byte*
+*.native
+*.byte
 
 queries*.smt2
 transcript
@@ -48,6 +48,7 @@ dump
 *.a
 *.cmxa
 *.so
+*.annot
 /VS/
 
 tags

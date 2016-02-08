@@ -1,6 +1,6 @@
 module FStar.OrdMap
-
 open FStar.OrdSet
+
 
 opaque type total_order (a:Type) (f: (a -> a -> Tot bool)) =
     (forall a1 a2. (f a1 a2 /\ f a2 a1)  ==> a1 = a2) (* anti-symmetry *)

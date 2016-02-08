@@ -1,7 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set --z3timeout 15;
-    other-files:FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Bytes.fst FStar.List.fst xor.fst
-  --*)
 module Ro_Single
 open FStar.List
 open FStar.Bytes

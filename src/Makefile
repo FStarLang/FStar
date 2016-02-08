@@ -213,6 +213,9 @@ ADMITS=$(addprefix --admit_fsi , $(ADMITTED_MODULES))
 basic/util.fsti: basic/util.fsi
 	cat basic/util.fsi | sed 's/type smap/opaque type smap/g' | sed 's/type out_channel/opaque type out_channel/g' | sed 's/type file_handle/opaque type file_handle/g' | sed 's/type string_builder/opaque type string_builder/g' | sed 's/type proc/opaque type proc/g' > basic/util.fsti
 
+FSTAROPTS=--explicit_deps
+
+
 ocaml: $(BOOT_ALL)
 	../bin/fstar.exe --use_native_int --eager_inference --MLish --lax --fs_typ_app --odir ocaml-output $(FSTAROPTS) --codegen OCaml $(ADMITS) $^
 

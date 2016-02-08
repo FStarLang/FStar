@@ -1,10 +1,3 @@
-(*--build-config
-  --*)
-
-(*
- * Uint16
- *)
-
 module Uint16
 
 

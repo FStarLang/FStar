@@ -1,6 +1,3 @@
-(*--build-config
-  other-files:;
-  --*)
 module Bug311
 
 // this works

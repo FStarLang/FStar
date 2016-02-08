@@ -1,8 +1,3 @@
-(*--build-config
- other-files: FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Ghost.fst FStar.List.fst
-  --*)
-
-
 module GhostTest
 
 open Ghost

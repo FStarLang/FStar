@@ -1,10 +1,3 @@
-(*--build-config
-  --*)
-
-(*
- * Uint32
- *)
-
 module Uint32
 
 

@@ -1,8 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set --z3timeout 15;
-    other-files:FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Relational.fst distinct.fst ifc_ts.fst
-  --*)
-
 module Compiler
 
 open IFC

@@ -1,5 +1,6 @@
 module FStar.Squash
 
+
 (* Interface for squash types; somehow inspired by:
 Quotient Types: A Modular Approach. Aleksey Nogin, TPHOLs 2002.
 http://www.nuprl.org/documents/Nogin/QuotientTypes_02.pdf
@@ -28,4 +29,3 @@ val bind_squash : #a:Type -> #b:Type -> squash a -> (a -> Tot (squash b)) ->
 
 val map_squash : #a:Type -> #b:Type -> squash a -> (a -> Tot b) ->
   Tot (squash b)
-

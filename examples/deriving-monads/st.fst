@@ -1,7 +1,3 @@
-(*--build-config
-    options:--max_fuel 1 --initial_fuel 1 --max_ifuel 1 --initial_ifuel 1;
-    other-files:
-  --*)
 (*
    Copyright 2008-2015 Nikhil Swamy and Microsoft Research
 

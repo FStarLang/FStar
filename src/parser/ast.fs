@@ -136,6 +136,7 @@ type pragma =
   | ResetOptions
 
 type decl' =
+  | TopLevelModule of lid
   | Open of lid
   | ModuleAbbrev of ident * lid
   | KindAbbrev of ident * list<binder> * knd

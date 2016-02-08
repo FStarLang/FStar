@@ -1,6 +1,3 @@
-(*--build-config
-  --*)
-
 module Test2
 
 open Test1

@@ -26,15 +26,15 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>--use_native_int --eager_inference --MLish --lax --fs_typ_app --odir ocaml-output  --codegen OCaml --admit_fsi System --admit_fsi System.IO --admit_fsi System.Text --admit_fsi System.Diagnostics --admit_fsi System.Collections.Generic --admit_fsi Collections --admit_fsi FStar.Set --admit_fsi FStar.Heap --admit_fsi FStar.ST --admit_fsi FStar.All --admit_fsi FStar.List --admit_fsi FStar.Option --admit_fsi FStar.Char --admit_fsi FStar.String --admit_fsi FStar.List --admit_fsi FStar.Bytes --admit_fsi FStar.Platform --admit_fsi FStar.Util --admit_fsi FStar.Version --admit_fsi FStar.Getopt --admit_fsi FStar.Range --admit_fsi FStar.Unionfind --admit_fsi FStar.Parser.ParseIt --admit_fsi FStar.Parser.Parse ../lib/system.fsi ../lib/system.io.fsi ../lib/system.text.fsi ../lib/system.diagnostics.fsi ../lib/system.collections.generic.fsi ../lib/collections.fsi ../lib/FStar.Set.fsi ../lib/allboot.fsti ../lib/stboot.fsi ../lib/list.fsi ../lib/option.fsi basic/char.fsi basic/string.fsi basic/bytes.fsti basic/platform.fsi basic/util.fsi basic/getoptsimple.fsti basic/range.fsti basic/unionfind.fsti basic/version.fsi basic/options.fs basic/ident.fs basic/const.fs absyn/syntax.fs absyn/const.fs absyn/visit.fs absyn/util.fs absyn/print.fs absyn/ssyntax.fs syntax/syntax.fsi syntax/syntax.fs syntax/const.fs syntax/subst.fsi syntax/subst.fs syntax/free.fsi syntax/free.fs syntax/instfv.fsi syntax/instfv.fs syntax/util.fs syntax/print.fsi syntax/print.fs tc/tcenv.fsi tc/tcenv.fs tc/recheck.fs tc/normalize.fsi tc/normalize.fs tc/errors.fs tc/rel.fsi tc/rel.fs tc/tcutil.fsi tc/tcutil.fs tc/tc.fs typechecker/common.fs typechecker/env.fsi typechecker/env.fs typechecker/normalize.fsi typechecker/normalize.fs typechecker/recheck.fsi typechecker/recheck.fs typechecker/errors.fs typechecker/rel.fsi typechecker/rel.fs typechecker/util.fsi typechecker/util.fs typechecker/tc.fsi typechecker/tc.fs parser/ast.fs parser/dsenv.fsi parser/dsenv.fs parser/desugar.fsi parser/desugar.fs parser/env.fsi parser/env.fs parser/tosyntax.fsi parser/tosyntax.fs parser/parse.fsti parser/lexhelp.fs parser/parseit.fsi parser/driver.fs parser/dep.fs smtencoding/term.fsi smtencoding/term.fs smtencoding/splitcases.fs smtencoding/errorReporting.fs smtencoding/z3.fs smtencoding/encode.fs format/format.fsi format/formatml.fs extraction/ml-syntax.fs extraction/env.fs extraction/util.fs extraction/codegen.fsi extraction/codegen.fs extraction/extracttyp.fs extraction/extractexp.fs extraction/extractmod.fs fstar/fstar.fs</StartArguments>
+    <StartArguments>--codegen OCaml test.fst</StartArguments>
     <StartAction>Project</StartAction>
-    <StartWorkingDirectory>C:\Users\nswamy\workspace\universes\FStar\src</StartWorkingDirectory>
+    <StartWorkingDirectory>d:\cygwin64\tmp\</StartWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
-    <OutputPath>bin\</OutputPath>
+    <OutputPath>..\..\bin</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
     <PlatformTarget>AnyCPU</PlatformTarget>

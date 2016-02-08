@@ -96,8 +96,6 @@ end else begin
 in (FStar_Parser_Desugar.desugar_file env _175_55))
 end)
 
-let read_build_config : Prims.string  ->  Prims.string Prims.list = (fun file -> (FStar_Parser_ParseIt.read_build_config file true))
-
 
 
 

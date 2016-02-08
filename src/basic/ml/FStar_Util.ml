@@ -107,12 +107,12 @@ let run_proc (name:string) (args:string) (stdin:string) : bool * string * string
   (true, res, "")
 
 let get_file_extension (fn:string) : string = snd (BatString.rsplit fn ".")
-let is_path_absolute path_str = 
+let is_path_absolute path_str =
   let open Batteries.Incubator in
   let open BatPathGen.OfString in
   let path_str' = of_string path_str in
   is_absolute path_str'
-let join_paths path_str0 path_str1 = 
+let join_paths path_str0 path_str1 =
   let open Batteries.Incubator in
   let open BatPathGen.OfString in
   let open BatPathGen.OfString.Operators in
@@ -122,7 +122,7 @@ let normalize_file_path (path_str:string) =
   let open Batteries.Incubator in
   let open BatPathGen.OfString in
   let open BatPathGen.OfString.Operators in
-  to_string 
+  to_string
     (normalize_in_tree
        (let path = of_string path_str in
          if is_absolute path then
@@ -609,23 +609,28 @@ let file_exists = Sys.file_exists
 let basename = Filename.basename
 let print_endline = print_endline
 
-let find_file filename search_path =
-    try
-      BatOption.map
-        normalize_file_path
-        (if is_path_absolute filename then
-          if file_exists filename then
-            Some filename
-          else
-            None
-        else
-          find_map 
-            search_path 
-              (fun p -> 
-                let path = join_paths p filename in
-                if file_exists path then 
-                  Some path
-                else 
-                  None))
-    with _ -> 
-      None
+let map_option f opt = BatOption.map f opt
+
+let stdout_isatty () = Some (Unix.isatty Unix.stdout)
+
+let colorize s colors =
+  match colors with
+  | (c1,c2) ->
+     match stdout_isatty () with
+     | Some true -> format3 "%s%s%s" c1 s c2
+     | _ -> s
+
+let colorize_bold s =
+  match stdout_isatty () with
+  | Some true -> format3 "%s%s%s" "\x1b[39;1m" s "\x1b[0m"
+  | _ -> s
+
+let colorize_red s =
+  match stdout_isatty () with
+  | Some true -> format3 "%s%s%s" "\x1b[31;1m" s "\x1b[0m"
+  | _ -> s
+
+let colorize_cyan s =
+  match stdout_isatty () with
+  | Some true -> format3 "%s%s%s" "\x1b[36;1m" s "\x1b[0m"
+  | _ -> s

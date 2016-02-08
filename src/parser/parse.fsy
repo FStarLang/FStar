@@ -107,23 +107,11 @@ open FStar.Ident
 
 %%
 inputFragment:
-  | file
-	  { Inl $1 }
-/*  | decl decls EOF
-	  { Inr ($1::$2) }
-*/	    
-file: 
-  | maybe_pragma_light modul EOF
-      { [$2] }
-
-      
-modul:    
-  | MODULE qname decls endopt
-        { Module($2, $3) }
-
-endopt:
-  | END  {} 
-  |      {}
+  | maybe_pragma_light decl decls EOF
+    { match $2.d with
+        | TopLevelModule n -> Inl [Module (n, $3)]
+	| _ -> Inr ($2::$3)
+    }
 
 maybe_pragma_light:
   |     {}
@@ -150,13 +138,15 @@ decls:
       { ($1::$2) }
 	   
 decl:
-  | decl2 { mk_decl $1 (rhs parseState 1) }
+  | decl2 { mk_decl $1 (rhs parseState 1) } 
 
 decl2:
   | OPEN qname
       { Open $2 }
-  | MODULE name EQUALS qname
-	  { ModuleAbbrev($2, $4) } 
+  | MODULE name EQUALS qname 
+      {  ModuleAbbrev($2, $4) }
+  | MODULE qname
+	  {  TopLevelModule $2  }
   | kind_abbrev 
       { $1 }
   | tycon 

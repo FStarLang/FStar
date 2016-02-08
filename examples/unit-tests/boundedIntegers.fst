@@ -1,6 +1,3 @@
-(*--build-config
-    options:--logQueries;
- --*)
 module FStar.BoundedIntegers
 
 val int32_min_value : int

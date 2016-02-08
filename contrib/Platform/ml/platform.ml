@@ -163,14 +163,11 @@ module Bytes = struct
          !ok
       else false
 
-  let xor s1 s2 nb =
-    if length s1 < nb || length s2 < nb then
-      Error.unexpected "[xor] arrays too short"
-    else
+  let xor len s1 s2 =
       let s1 = get_cbytes s1 in
       let s2 = get_cbytes s2 in
-      let res = String.make nb (char_of_int 0) in
-      for i=0 to nb-1 do
+      let res = String.make len (char_of_int 0) in
+      for i=0 to len-1 do
         String.set res i (char_of_int ((int_of_char s1.[i]) lxor (int_of_char s2.[i])))
       done;
       abytes res
@@ -201,6 +198,54 @@ module Bytes = struct
 
   let byte_of_int i =
     char_of_int i
+
+  (* Some helpers to deal with the conversation from hex literals to bytes and
+   * conversely. Mostly for tests. *)
+
+  let digit_to_int c = match c with
+    | '0'..'9' -> Char.code c - Char.code '0'
+    | 'a'..'f' -> 10 + Char.code c - Char.code 'a'
+    | _ -> failwith "hex_to_char: invalid hex digit"
+
+  let hex_to_char a b =
+    Char.chr ((digit_to_int a) lsl 4 + digit_to_int b)
+
+  let char_to_hex c =
+    let n = Char.code c in
+    let digits = "0123456789abcdef" in
+    digits.[n lsr 4], digits.[n land 0x0f]
+
+  let hex_of_string s =
+    let n = String.length s in
+    let buf = Buffer.create n in
+    for i = 0 to n - 1 do
+      let d1,d2 = char_to_hex s.[i] in
+      Buffer.add_char buf d1;
+      Buffer.add_char buf d2;
+    done;
+    Buffer.contents buf
+
+  let string_of_hex s =
+    let n = String.length s in
+    if n mod 2 <> 0 then
+      failwith "string_of_hex: invalid length"
+    else
+      let res = Bytes.create (n/2) in
+      let rec aux i =
+        if i >= n then ()
+        else (
+          Bytes.set res (i/2) (hex_to_char s.[i] s.[i+1]);
+          aux (i+2)
+        )
+      in
+      aux 0;
+      res
+
+  let string_of_bytes b = get_cbytes b
+  let bytes_of_string s = abytes s
+
+  let bytes_of_hex s = bytes_of_string (string_of_hex s)
+  let hex_of_bytes b = hex_of_string (string_of_bytes b)
 
 end
 

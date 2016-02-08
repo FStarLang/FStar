@@ -1,4 +1,3 @@
-(*--build-config--*)
 module BinarySearchTree
 
 type tree =

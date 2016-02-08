@@ -27,7 +27,7 @@ let return_all x = x
 
 type time = System.DateTime
 let now () = System.DateTime.Now
-let time_diff (t1:time) (t2:time) : float = 
+let time_diff (t1:time) (t2:time) : float =
     let ts = t2 - t1 in ts.TotalSeconds
 
 exception Impos
@@ -152,7 +152,7 @@ let run_proc (name:string) (args:string) (stdin:string) : bool * string * string
   let stderr = proc.StandardError.ReadToEnd() in
   result, stdout, stderr
 
-let get_file_extension (fn: string) :string = Path.GetExtension fn
+let get_file_extension (fn: string) :string = (Path.GetExtension fn).[1..]
 let is_path_absolute p = System.IO.Path.IsPathRooted(p)
 let join_paths p0 p1 = System.IO.Path.Combine(p0, p1)
 let normalize_file_path (path:string) = System.IO.Path.GetFullPath(path)
@@ -214,8 +214,8 @@ let smap_of_list<'value> (l:list<string*'value>) =
     List.iter (fun (x,y) -> smap_add s x y) l;
     s
 let smap_try_find (m:smap<'value>) k = m.TryFind(k)
-let smap_fold (m:smap<'value>) f a = 
-    let out = ref a in 
+let smap_fold (m:smap<'value>) f a =
+    let out = ref a in
     for entry in m do
         out := f entry.Key entry.Value !out;
     !out
@@ -622,23 +622,12 @@ let basename f =
 let print_endline x =
   print_endline x
 
-let find_file filename search_path =
-    try
-      Option.map
-        normalize_file_path
-        (if is_path_absolute filename then
-          if System.IO.File.Exists(filename) then
-            Some filename
-          else
-            None
-        else
-          find_map
-            search_path
-            (fun p ->
-              let path = System.IO.Path.Combine(p, filename) in
-              if System.IO.File.Exists(path) then
-                Some path
-              else
-                None))
-    with _ -> 
-      None
+let map_option f opt = Option.map f opt
+
+let stdout_isatty () = None:option<bool>
+
+// These functions have no effect
+let colorize (s:string) (colors:(string * string)) = s
+let colorize_bold (s:string) = s
+let colorize_red (s:string) = s
+let colorize_cyan (s:string) = s

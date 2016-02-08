@@ -1,10 +1,3 @@
-(*--build-config
-  --*)
-
-(*
- * Uint64
- *)
-
 module Uint64
 
 
