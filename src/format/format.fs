@@ -15,6 +15,7 @@ let hardline = Doc Engine.hardline
 
 (* -------------------------------------------------------------------- *)
 let text (s : string) = Doc (Engine.string s)
+let num (i : int) = Doc (Engine.string (string_of_int i))
 
 (* -------------------------------------------------------------------- *)
 let break_ (i : int   ) = Doc (Engine.break_ i)
