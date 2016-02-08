@@ -19,7 +19,7 @@ include ../Makefile.include
 all: .all.crypto.ver merkle_tree mac padding mac3 rpc cnt-protocol acls-cap statefulEnc
 
 STDLIB_ADMITS= --admit_fsi FStar.Set --admit_fsi FStar.SeqProperties
-STDLIB=$(addprefix $(FSTAR_HOME)/lib/, FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi \
+STDLIB=$(addprefix $(FSTAR_HOME)/lib/, FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fst \
        FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.String.fst FStar.List.fst FStar.Seq.fst FStar.SeqProperties.fst) \
        $(STDLIB_ADMITS)
 
@@ -31,7 +31,7 @@ export CONTRIB=../../contrib
 mac: sha1.fst mac.fst
 	$(FSTAR) --explicit_deps --z3timeout 10 --verify_module MAC --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 --admit_fsi FStar.IO \
 	  FStar.FunctionalExtensionality.fst FStar.Classical.fst \
-	  FStar.Set.fsi FStar.Set.fst \
+	  FStar.Set.fst \
 	  FStar.Heap.fst FStar.ST.fst FStar.All.fst \
 	  FStar.String.fst FStar.List.fst \
 	  FStar.Seq.fst FStar.SeqProperties.fst \
@@ -43,18 +43,16 @@ mac: sha1.fst mac.fst
 sig: sig.fst
 	$(FSTAR) $^
 
-padding: padding.fst
+padding: Padding.Pad.fst Padding.BMAC.fst Padding.MAC2.fst Padding.TMAC.fst
 	$(FSTAR) --explicit_deps  --z3timeout 10 --verify_module Pad --admit_fsi FStar.Set --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
-	    FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst \
-            FStar.String.fst FStar.List.fst \
-            FStar.FunctionalExtensionality.fst FStar.Classical.fst \
+	    FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst \
+            FStar.String.fst FStar.List.fst FStar.Classical.fst \
             FStar.Seq.fst FStar.SeqProperties.fst $^
 
 mac3: mac3.fst
 	$(FSTAR) --explicit_deps --z3timeout 10 --admit_fsi FStar.Set --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
-	    FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.String.fst FStar.List.fst \
-            FStar.FunctionalExtensionality.fst FStar.Classical.fst \
-            FStar.Seq.fst FStar.SeqProperties.fst $^
+            FStar.FunctionalExtensionality.fst  FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.String.fst FStar.List.fst \
+	    FStar.Classical.fst FStar.Seq.fst FStar.SeqProperties.fst $^
 
 merkle_tree:
 	$(FSTAR) --explicit_deps --verify_module MerkleTree $(STDLIB) $(FSTAR_HOME)/lib/FStar.Constructive.fst merkle_tree.fst
@@ -64,7 +62,7 @@ acls-cap: sha1.fst mac.fst ../security/acls2.fst acls-cap.fst
 	--verify_module Platform.Bytes --verify_module CoreCrypto --verify_module ACLs2 --verify_module Cap \
 	$(addprefix $(FSTAR_HOME)/lib/, \
 	FStar.FunctionalExtensionality.fst FStar.Classical.fst \
-	FStar.Set.fsi FStar.Set.fst \
+	FStar.Set.fst \
 	FStar.Heap.fst FStar.ST.fst FStar.All.fst \
 	FStar.String.fst FStar.List.fst \
 	FStar.Seq.fst FStar.SeqProperties.fst ) \
@@ -75,7 +73,7 @@ acls-cap: sha1.fst mac.fst ../security/acls2.fst acls-cap.fst
 rpc: formatting.fst sha1.fst mac.fst rpc.fst
 	$(FSTAR) --explicit_deps --z3timeout 10 --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC --admit_fsi FStar.IO  \
           $(addprefix $(FSTAR_HOME)/lib/, FStar.FunctionalExtensionality.fst FStar.Classical.fst \
-					FStar.Set.fsi FStar.Set.fst \
+					FStar.Set.fst \
 					FStar.Heap.fst FStar.ST.fst FStar.All.fst \
 					FStar.String.fst FStar.IO.fsti FStar.List.fst \
 					FStar.Seq.fst FStar.SeqProperties.fst )  \
@@ -95,7 +93,7 @@ mllibs:
 RPC.ml: sha1.fst mac.fst formatting.fst rpc.fst
 	$(FSTAR) --z3timeout 10 --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC --admit_fsi FStar.IO  \
           $(addprefix $(FSTAR_HOME)/lib/, FStar.FunctionalExtensionality.fst FStar.Classical.fst \
-					FStar.Set.fsi FStar.Set.fst \
+					FStar.Set.fst \
 					FStar.Heap.fst FStar.ST.fst FStar.All.fst \
 					FStar.String.fst FStar.IO.fsti FStar.List.fst \
 					FStar.Seq.fst FStar.SeqProperties.fst ) \
@@ -121,7 +119,7 @@ cnt-protocol: cnt-format.fst mac.fst sha1.fst cnt-protocol.fst
 	$(FSTAR) --explicit_deps --z3timeout 10 --admit_fsi FStar.IO --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
 	  --verify_module CntFormat --verify_module SHA1 --verify_module MAC --verify_module CntProtocol \
           $(addprefix $(FSTAR_HOME)/lib/, FStar.FunctionalExtensionality.fst FStar.Classical.fst \
-					FStar.Set.fsi FStar.Set.fst \
+					FStar.Set.fst \
 					FStar.Heap.fst FStar.ST.fst FStar.All.fst \
 					FStar.String.fst FStar.List.fst \
 					FStar.Seq.fst FStar.SeqProperties.fst FStar.IO.fsti ) \

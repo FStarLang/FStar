@@ -6,4 +6,5 @@ type refl' (x:int) (y:int) = refl int x y
 
 val foo : e:int -> e':int -> s: refl' e e' -> Tot unit
 let foo e e' s =
-  match s with Refl _ -> ()
+  match s with 
+    | Refl _ -> ()

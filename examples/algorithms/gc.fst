@@ -190,8 +190,8 @@ let rec mark ptr =
        /\ (i < ptr /\ st.color i = White ==> old.color i = Black)
      )
 
-let test1 old new = assert (sweep_aux_inv old mem_hi new
-                           ==> mutator_inv new)
+let test1 old n = assert (sweep_aux_inv old mem_hi n
+                           ==> mutator_inv n)
 
 let test2 old = assert (gc_inv old /\ (forall i. old.color i <> Gray) ==> sweep_aux_inv old mem_lo old)
 

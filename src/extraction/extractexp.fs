@@ -28,10 +28,13 @@ open FStar.Ident
 
 let fail r msg =
     Util.print_string <| Print.format_error r msg;
-    exit 1
+    failwith msg
 
-let err_uninst e =
-    fail e.pos (Util.format1 "Variable %s has a polymorphic type; expected it to be fully instantiated" (Print.exp_to_string e))
+let err_uninst env e (vars, t) =
+    fail e.pos (Util.format3 "Variable %s has a polymorphic type (forall %s. %s); expected it to be fully instantiated" 
+                    (Print.exp_to_string e) 
+                    (vars |> List.map fst |> String.concat ", ")
+                    (ML.Code.string_of_mlty env t))
 
 let err_ill_typed_application (e : exp) args (t : mlty) =
     fail e.pos (Util.format2 "Ill-typed application: application is %s \n remaining args are %s\n"
@@ -334,7 +337,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
           //let _ = printfn "\n (*looked up tyscheme of \n %A \n as \n %A *) \n" x s in
           begin match mltys with
             | ([], t) -> maybe_lalloc_eta_data g qual t x, E_PURE, t
-            | _ -> err_uninst e
+            | _ -> err_uninst g e mltys
           end
 
         | Exp_app(head, args) ->
@@ -399,8 +402,6 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                   let n = List.length vars in 
                   if n <= List.length args
                   then let prefix, rest = Util.first_N n args in
-                       if prefix |> Util.for_some (function (Inr _, _) -> true | _ -> false) //some non-type argument
-                       then err_uninst head;
 //                       let _ = (if n=1 then printfn "\n (*prefix was  \n %A \n  *) \n" prefix) in
                        let prefixAsMLTypes = List.map (translate_typ_of_arg g) prefix in
 //                        let _ = printfn "\n (*about to instantiate  \n %A \n with \n %A \n \n *) \n" (vars,t) prefixAsMLTypes in
@@ -411,7 +412,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
                          | MLE_App(head, [{expr=MLE_Const MLC_Unit}]) -> MLE_App({head with ty=MLTY_Fun(ml_unit_ty, E_PURE, t)}, [ml_unit]) |> with_ty t
                          | _ -> failwith "Impossible" in
                        head, t, rest
-                  else err_uninst head in
+                  else err_uninst g head (vars, t) in
                 //debug g (fun () -> printfn "\n (*instantiating  \n %A \n with \n %A \n produced \n %A \n *) \n" (vars,t0) prefixAsMLTypes t);
                begin match args with
                     | [] -> maybe_lalloc_eta_data g qual head_t head_ml, E_PURE, head_t

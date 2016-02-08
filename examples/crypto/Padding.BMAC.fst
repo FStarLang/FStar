@@ -1,5 +1,5 @@
 module Padding.BMAC
-open PaddingPad
+open Padding.Pad
 
 let keysize = 16 (* these are the sizes for SHA1 *)
 let macsize = 20

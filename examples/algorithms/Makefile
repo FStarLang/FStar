@@ -3,7 +3,7 @@ OTHERFLAGS=
 include ../Makefile.include
 all: .all.ver downgrade binary_search qsc gc unification
 
-ARR_LIB=$(addprefix $(FSTAR_HOME)/lib/, FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Set.fst FStar.Heap.fst stperm.fst FStar.Seq.fst FStar.SeqProperties.fst FStar.Array.fst)
+ARR_LIB=$(addprefix $(FSTAR_HOME)/lib/, FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst stperm.fst FStar.Seq.fst FStar.SeqProperties.fst FStar.Array.fst)
 
 qs_seq: $(ARR_LIB) qs_seq.fst
 	$(FSTAR) --explicit_deps --z3timeout 20 $^
@@ -25,4 +25,4 @@ gc: gc.fst
 
 unification: unification.fst
 	$(FSTAR) --explicit_deps $(addprefix --admit_fsi , FStar.Set FStar.OrdSet FStar.OrdSetProps) \
-	 $(addprefix $(FSTAR_HOME)/lib/, FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.Tot.fst ordset.fsi FStar.OrdSetProps.fst) $^
+	 $(addprefix $(FSTAR_HOME)/lib/, FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.Tot.fst ordset.fsi FStar.OrdSetProps.fst) $^
