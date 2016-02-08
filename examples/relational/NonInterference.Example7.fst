@@ -54,4 +54,3 @@ let test_ni _ =
   match (eq_rel (read_rel1 f) (R 0 0)) with
   | R true true   -> assign_rel1 f (read_rel1 e)
   | R false false -> assign_rel1 f (read_rel1 a)
-*)

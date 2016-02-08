@@ -1,5 +1,5 @@
 module HoareWeakestPrecondition
-open Classical
+open FStar.Classical
 
 (*We define :
   * types for boolean and arithmetic expressions 'aexp' and 'bexp'

@@ -1,6 +1,6 @@
-module Compiler
+module IFC.Compiler
 
-open IFC
+open IFC.IFC
 open FStar.Comp
 open FStar.Relational
 open FStar.Heap

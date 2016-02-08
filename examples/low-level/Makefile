@@ -3,7 +3,7 @@ EXE=.exe
 else
 EXE=
 endif
-FSTAR=fstar.exe $(OTHERFLAGS)
+include ../Makefile.include
 
 ALLOCATOR_DIR = ../../runtime/allocator
 ALLOCATOR_FILES = $(ALLOCATOR_DIR)/camlstack.o $(ALLOCATOR_DIR)/stack.o $(ALLOCATOR_DIR)/bitmask.o $(ALLOCATOR_DIR)/camlstack.mli
@@ -11,7 +11,7 @@ ALLOCATOR_FILES = $(ALLOCATOR_DIR)/camlstack.o $(ALLOCATOR_DIR)/stack.o $(ALLOCA
 OCAML = ocamlfind ocamlopt -g -package batteries -linkpkg -thread -I ../../src/ocaml-output/ -I $(ALLOCATOR_DIR) $(ALLOCATOR_FILES) ../../src/ocaml-output/support.ml
 
 all:
-	(cd lib; $(FSTAR) FStar.Regions.RST.fst)
+	$(FSTAR) --include lib FStar.Regions.RST.fst
 
 Factorial.ml: factorial.fst
 	$(FSTAR) --codegen OCaml $^

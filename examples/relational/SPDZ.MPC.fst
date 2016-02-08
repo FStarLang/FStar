@@ -1,9 +1,9 @@
-module MPC
-open Fp
+module SPDZ.MPC
+open SPDZ.Fp
 open Sample
 open FStar.Relational
-open Sharing
-open Triples
+open SPDZ.Sharing
+open SPDZ.Triples
 open FStar.Comp
 
 

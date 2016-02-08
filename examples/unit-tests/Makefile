@@ -1,6 +1,17 @@
-VERFILES=unit1.fst unit2.fst testset.fst short-circuit.fst first-proofs.fst
+VERFILES=Unit1.Basic.fst        Unit1.Projectors2.fst          Unit1.WPsAndTriples.fst \
+	 Unit1.Parser.fst       Unit1.RefinementInference.fst  Unit1.WPsAndTriples_ST.fst \
+	 Unit1.Projectors1.fst  Unit1.UnificationTests.fst     unit2.fst \
+	 testset.fst 		testheap.fst 		       short-circuit.fst \
+	 first-proofs.fst 	testint32.fst 		       testmref.fst \
+	 testTwoLevelHeap.fst   mac2.fst 		       testghost.fst \
+	 inverse.fst
+
 include ../Makefile.include
-NEGFILES=negative-tests.fst
+
+NEGFILES=NegativeTests.BST.fst     NegativeTests.Heap.fst  NegativeTests.ShortCircuiting.fst \
+	 NegativeTests.Bug260.fst  NegativeTests.Neg.fst   NegativeTests.Termination.fst \
+	 NegativeTests.False.fst   NegativeTests.Set.fst
+
 
 # if the `--lax` flag is used, negative tests will report a single error.
 ifeq ($(filter $(OTHERFLAGS),--lax),)
@@ -11,7 +22,8 @@ endif
 
 all: all-pos all-neg
 
-all-pos: basictests testint32.vv testmref.vv testTwoLevelHeap.vv mac2 testghost inverse testghost
+all-pos: 
+	$(FSTAR_OR_NUBUILD) $(VERFILES)
 
 basictests: $(VERFILES)
 	$(FSTAR_OR_NUBUILD) --explicit_deps --admit_fsi FStar.Set $(STDLIB) $(call add_stdlib_prefix, FStar.Int32.fst) $^
@@ -28,3 +40,5 @@ inverse:
 
 testghost:
 	$(FSTAR_OR_NUBUILD) testghost.fst
+
+

@@ -6,7 +6,7 @@
     ordering on call stacks **)
 module CPS.DoubleDefun
 
-open Expr
+open CPS.Expr
 
 type cont =
   | C0 : cont

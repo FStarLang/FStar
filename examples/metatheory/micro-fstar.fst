@@ -3755,7 +3755,8 @@ let g1ext = eextend t1 g1 in
 let g2ext = eextend (tsubst s t1) g2 in
 let hs'' : subst_typing sub_einc g2 (eextend (tsubst s t1) g2) =
 hs_sub_einc g2 (tsubst s t1) in
-(match hs with SubstTyping s' g1' g2' ef tf ->
+(match hs with 
+  | SubstTyping s' g1' g2' ef tf ->
     SubstTyping (sub_elam s) g1ext g2ext
       (fun x -> match x with
 		| 0 -> (*TyVar 0 hwg2ext -> typing g2ext (EVar 0) (tot (tesh (tsubst s t1)))

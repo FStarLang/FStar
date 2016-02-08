@@ -81,8 +81,8 @@ rpc: formatting.fst sha1.fst mac.fst rpc.fst
 					sha1.fst mac.fst formatting.fst rpc.fst
 
 statefulEnc: statefulEnc-single.fst statefulEnc-twoLevelHeap.fst
-	$(FSTAR) --explicit_deps --admit_fsi FStar.Set ../../lib/FStar.FunctionalExtensionality.fst ../../lib/FStar.Set.fsi ../../lib/FStar.Heap.fst ../../lib/FStar.ST.fst ../../lib/FStar.All.fst ../../lib/FStar.Seq.fst statefulEnc-single.fst
-	$(FSTAR) --explicit_deps --admit_fsi FStar.Set --admit_fsi FStar.Map --max_ifuel 1 --initial_ifuel 1 --initial_fuel 0 --max_fuel 0 --z3timeout 20 ../../lib/FStar.FunctionalExtensionality.fst ../../lib/FStar.Set.fsi ../../lib/FStar.Heap.fst ../../lib/FStar.ST.fst ../../lib/FStar.All.fst ../../lib/map.fsi ../../lib/FStar.TwoLevelHeap.fst ../../lib/FStar.Seq.fst statefulEnc-twoLevelHeap.fst
+	$(FSTAR) --explicit_deps ../../lib/FStar.FunctionalExtensionality.fst ../../lib/FStar.Set.fst ../../lib/FStar.Heap.fst ../../lib/FStar.ST.fst ../../lib/FStar.All.fst ../../lib/FStar.Seq.fst statefulEnc-single.fst
+	$(FSTAR) --explicit_deps --max_ifuel 1 --initial_ifuel 1 --initial_fuel 0 --max_fuel 0 --z3timeout 20 ../../lib/FStar.FunctionalExtensionality.fst ../../lib/FStar.Set.fst ../../lib/FStar.Heap.fst ../../lib/FStar.ST.fst ../../lib/FStar.All.fst ../../lib/FStar.Map.fst ../../lib/FStar.TwoLevelHeap.fst ../../lib/FStar.Seq.fst statefulEnc-twoLevelHeap.fst
 
 .PHONY: mllibs
 
