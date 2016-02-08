@@ -17,6 +17,7 @@
 module FStar.FunctionalExtensionality
 #set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
+
 type efun (a:Type) (b:Type) = a -> Tot b
 
 opaque type FEq (#a:Type) (#b:Type) (f:efun a b) (g:efun a b) =

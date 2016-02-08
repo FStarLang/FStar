@@ -1,6 +1,7 @@
 module FStar.Classical
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
+
 (* one variant of excluded middle is provable by SMT *)
 val excluded_middle' : p:Type -> Lemma (requires (True))
                                        (ensures (p \/ ~p))

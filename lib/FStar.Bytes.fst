@@ -1,5 +1,6 @@
 module FStar.Bytes
 
+
 assume type bytes
 assume val length : bytes -> Tot int
 assume val get : b:bytes -> pos:nat{pos < length b} -> Tot byte
@@ -12,4 +13,3 @@ assume val utf8_bytes_as_string : bytes -> string
 assume val unicode_bytes_as_string : bytes -> string
 assume val string_as_utf8_bytes : string -> bytes
 assume val append : bytes -> bytes -> bytes
-

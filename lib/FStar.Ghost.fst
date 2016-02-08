@@ -19,8 +19,9 @@
 
   It relies on the GHOST effect defined in Prims
 *)
-
 module FStar.Ghost
+
+
 private type erased (a:Type) = a
 val reveal: #a:Type -> erased a -> GTot a
 let reveal x = x

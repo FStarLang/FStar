@@ -13,11 +13,10 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-
-
 (* A logical theory of sequences indexed by natural numbers in [0, n) *)
 module FStar.Seq
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
+
 
 (* Representation hidden from clients *)
 // type seq : Type -> Type

@@ -3,11 +3,11 @@ open Prims.PURE
 open FStar.Set
 open FStar.FunctionalExtensionality
 
+
 type t (key:Type) (value:Type) = {
   mappings: key -> Tot value;
   domain:   key -> Tot bool
 }
-
 
 let sel m k = m.mappings k
 let upd m k v = {
