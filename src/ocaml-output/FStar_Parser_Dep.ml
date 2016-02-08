@@ -487,7 +487,7 @@ in (match (_49_531) with
 | (direct_deps, color) -> begin
 (match (color) with
 | Gray -> begin
-(let _49_533 = (FStar_Util.print1 "Recursive dependency on module %s\n" key)
+(let _49_533 = (FStar_Util.print1 "Warning: recursive dependency on module %s\n" key)
 in (let _49_535 = (FStar_Util.print_string "Here\'s the (non-transitive) dependency graph:\n")
 in (let _49_537 = (print_graph ())
 in (let _49_539 = (FStar_Util.print_string "\n")

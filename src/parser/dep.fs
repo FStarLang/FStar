@@ -400,7 +400,7 @@ type color = | White | Gray | Black
 (** Collect the dependencies for a list of given files. *)
 let collect (filenames: list<string>): _ =
   (* The dependency graph; keys are lowercased module names, values = list of
-   * lowercased modulen names this file depends on. *)
+   * lowercased module names this file depends on. *)
   let graph = smap_create 41 in
 
   (* A map from lowercase module names (e.g. [a.b.c]) to the corresponding
@@ -432,7 +432,7 @@ let collect (filenames: list<string>): _ =
     let direct_deps, color = must (smap_try_find graph key) in
     match color with
     | Gray ->
-        Util.print1 "Recursive dependency on module %s\n" key;
+        Util.print1 "Warning: recursive dependency on module %s\n" key;
         print_string "Here's the (non-transitive) dependency graph:\n";
         print_graph ();
         print_string "\n";
