@@ -55,13 +55,13 @@ false
 end))
 
 let ___TProb____0 : prob  ->  (FStar_Syntax_Syntax.typ, FStar_Syntax_Syntax.term) problem = (fun projectee -> (match (projectee) with
-| TProb (_82_16) -> begin
-_82_16
+| TProb (_81_16) -> begin
+_81_16
 end))
 
 let ___CProb____0 : prob  ->  (FStar_Syntax_Syntax.comp, Prims.unit) problem = (fun projectee -> (match (projectee) with
-| CProb (_82_19) -> begin
-_82_19
+| CProb (_81_19) -> begin
+_81_19
 end))
 
 type probs =
@@ -88,8 +88,8 @@ false
 end))
 
 let ___NonTrivial____0 : guard_formula  ->  FStar_Syntax_Syntax.formula = (fun projectee -> (match (projectee) with
-| NonTrivial (_82_22) -> begin
-_82_22
+| NonTrivial (_81_22) -> begin
+_81_22
 end))
 
 type deferred =
