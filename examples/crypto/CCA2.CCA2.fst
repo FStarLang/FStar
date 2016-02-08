@@ -7,41 +7,7 @@
    I think this would require coding "events" as membership of
    increasing mutable lists, possibly too advanced for a tutorial *)
 
-module RSA
-
-assume type pkey
-assume type skey
-type bytes = list byte
-type nbytes (n:nat) = b:bytes{List.length b == n}
-assume val plainsize  : nat
-assume val ciphersize : nat
-type plain   = nbytes plainsize
-type cipher  = nbytes ciphersize
-
-type keypair = pkey * skey
-assume val generated : keypair -> Tot bool
-
-assume val gen: unit -> x:keypair{generated x}
-assume val dec: skey -> cipher -> Tot (option plain)  (* this function is pure *)
-assume val enc: pk:pkey -> t:plain -> c:cipher { forall sk. generated (pk, sk) ==> dec sk c=Some t }  (* functional correctness *)
-assume val pkbytes: pkey -> bytes
-assume val dummy: plain
-
-
-module Plain
-
-(* private  *)type t = RSA.plain
-type r = RSA.plain
-
-(* two pure functions, never called when ideal *)
-val repr:    t -> Tot r
-let repr t = t       (* a pure function from t to RSA.plain *)
-
-val plain: x:r -> Tot (option (y:t{repr y = x}))
-let plain t = Some t (* a partial function from RSA.plain to t *)
-
-
-module CCA2  (* intuitively, parameterized by both Plain and RSA *)
+module CCA2.CCA2  (* intuitively, parameterized by both Plain and RSA *)
 open List
 
 type cipher = RSA.cipher

@@ -1,4 +1,4 @@
-VERFILES=cca2.fst # encrypt3.fst formatting.fst rpc.fst
+VERFILES=CCA2.RSA.fst CCA2.Plain.fst CCA2.CCA2.fst # encrypt3.fst formatting.fst rpc.fst
 
 LIB = ../../contrib/CoreCrypto/ml
 
