@@ -34,9 +34,9 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>..\..\bin\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
-    <WarningLevel>3</WarningLevel>
+    <WarningLevel>5</WarningLevel>
     <OtherFlags>--mlcompatibility</OtherFlags>
     <DocumentationFile>bin\Release\parser.XML</DocumentationFile>
   </PropertyGroup>
