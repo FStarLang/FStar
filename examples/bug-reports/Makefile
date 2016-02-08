@@ -35,3 +35,9 @@ extraction-error1:
 	        $(FSTAR_HOME)/src/ocaml-output/ \
 					$(FSTAR_HOME)/src/ocaml-output/support.ml \
 			    Bug.ml
+
+extraction-error2:
+	../../bin/fstar --admit_fsi FStar.Set --admit_fsi FStar.Map --admit_fsi FStar.HyperHeap --codegen OCaml FStar.Set.fsi FStar.Heap.fst map.fsi FStar.List.Tot.fst FStar.HyperHeap.fsi stHyperHeap.fst bug.fst
+	cp ../../lib/ml/native_int/prims.ml .
+	cp ../../lib/ml/hyperheap/*ml .
+	ocamlc prims.ml FStar_HyperHeap.ml FStar_ST.ml TEST.ml
