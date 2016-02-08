@@ -485,6 +485,6 @@ let print (deps: _): unit =
   | Some "make" ->
       print_make (fst deps)
   | Some _ ->
-      failwith "Unknown tool for --dep"
+      raise (Err "unknown tool for --dep\n")
   | None ->
       assert false

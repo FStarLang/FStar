@@ -537,7 +537,7 @@ end
 (print_make (Prims.fst deps))
 end
 | Some (_49_570) -> begin
-(FStar_All.failwith "Unknown tool for --dep")
+(Prims.raise (FStar_Absyn_Syntax.Err ("unknown tool for --dep\n")))
 end
 | None -> begin
 ()
