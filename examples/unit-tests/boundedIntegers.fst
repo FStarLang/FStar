@@ -94,25 +94,3 @@ val uint32_op: op:(int -> int -> Tot int)
   [SMTPatT (UInt32 (op i j))]
 let uint32_op op i j = ()*)
 
-module Test
-open BoundedIntegers
-let x : int32 = 1l
-let y : int32 = 2l
-
-let g (x:int32) : int32 = if x < BoundedIntegers.int32_max_value then x + 1l else x
-let f (x:int32{0 <= x}) (y:int32{0 <= y /\ y <= x}) : int32 = x - ((x - y) / 2l)
-let h (x:int32{0 <= x}) (y:int32{0 <= y /\ y <= x}) : int32 = (x + y) / 2l
-
-(*
-Int32 is an immutable value type that represents signed integers with values
-that range from negative 2,147,483,648 (which is represented by the
-Int32.MinValue constant) through positive 2,147,483,647 (which is represented by
-the Int32.MaxValue constant.
-
-The .NET Framework also includes an unsigned 32-bit
-integer value type, UInt32, which represents values that range from 0 to
-4,294,967,295.
-*)
-
-
-type int32 =
