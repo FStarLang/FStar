@@ -22,56 +22,58 @@ let hardline : doc = Doc ("\n")
 
 let text : Prims.string  ->  doc = (fun s -> Doc (s))
 
+let num : Prims.int  ->  doc = (fun i -> Doc ((Prims.string_of_int i)))
+
 let break_ : Prims.int  ->  doc = (fun i -> Doc (""))
 
 let break0 : doc = (break_ 0)
 
 let break1 : doc = (text " ")
 
-let enclose : doc  ->  doc  ->  doc  ->  doc = (fun _24_6 _24_8 _24_10 -> (match ((_24_6, _24_8, _24_10)) with
+let enclose : doc  ->  doc  ->  doc  ->  doc = (fun _24_7 _24_9 _24_11 -> (match ((_24_7, _24_9, _24_11)) with
 | (Doc (l), Doc (r), Doc (x)) -> begin
 Doc ((Prims.strcat (Prims.strcat l x) r))
 end))
 
-let brackets : doc  ->  doc = (fun _24_12 -> (match (_24_12) with
+let brackets : doc  ->  doc = (fun _24_13 -> (match (_24_13) with
 | Doc (d) -> begin
-(let _126_20 = (text "[")
-in (let _126_19 = (text "]")
-in (enclose _126_20 _126_19 (Doc (d)))))
+(let _126_22 = (text "[")
+in (let _126_21 = (text "]")
+in (enclose _126_22 _126_21 (Doc (d)))))
 end))
 
-let cbrackets : doc  ->  doc = (fun _24_14 -> (match (_24_14) with
+let cbrackets : doc  ->  doc = (fun _24_15 -> (match (_24_15) with
 | Doc (d) -> begin
-(let _126_24 = (text "{")
-in (let _126_23 = (text "}")
-in (enclose _126_24 _126_23 (Doc (d)))))
+(let _126_26 = (text "{")
+in (let _126_25 = (text "}")
+in (enclose _126_26 _126_25 (Doc (d)))))
 end))
 
-let parens : doc  ->  doc = (fun _24_16 -> (match (_24_16) with
+let parens : doc  ->  doc = (fun _24_17 -> (match (_24_17) with
 | Doc (d) -> begin
-(let _126_28 = (text "(")
-in (let _126_27 = (text ")")
-in (enclose _126_28 _126_27 (Doc (d)))))
+(let _126_30 = (text "(")
+in (let _126_29 = (text ")")
+in (enclose _126_30 _126_29 (Doc (d)))))
 end))
 
-let cat : doc  ->  doc  ->  doc = (fun _24_18 _24_20 -> (match ((_24_18, _24_20)) with
+let cat : doc  ->  doc  ->  doc = (fun _24_19 _24_21 -> (match ((_24_19, _24_21)) with
 | (Doc (d1), Doc (d2)) -> begin
 Doc ((Prims.strcat d1 d2))
 end))
 
 let reduce : doc Prims.list  ->  doc = (fun docs -> (FStar_List.fold_left cat empty docs))
 
-let group : doc  ->  doc = (fun _24_23 -> (match (_24_23) with
+let group : doc  ->  doc = (fun _24_24 -> (match (_24_24) with
 | Doc (d) -> begin
 Doc (d)
 end))
 
-let groups : doc Prims.list  ->  doc = (fun docs -> (let _126_39 = (reduce docs)
-in (group _126_39)))
+let groups : doc Prims.list  ->  doc = (fun docs -> (let _126_41 = (reduce docs)
+in (group _126_41)))
 
-let combine : doc  ->  doc Prims.list  ->  doc = (fun _24_26 docs -> (match (_24_26) with
+let combine : doc  ->  doc Prims.list  ->  doc = (fun _24_27 docs -> (match (_24_27) with
 | Doc (sep) -> begin
-(let select = (fun _24_30 -> (match (_24_30) with
+(let select = (fun _24_31 -> (match (_24_31) with
 | Doc (d) -> begin
 if (d = "") then begin
 None
@@ -87,20 +89,20 @@ let cat1 : doc  ->  doc  ->  doc = (fun d1 d2 -> (reduce ((d1)::(break1)::(d2)::
 
 let reduce1 : doc Prims.list  ->  doc = (fun docs -> (combine break1 docs))
 
-let nest : Prims.int  ->  doc  ->  doc = (fun i _24_37 -> (match (_24_37) with
+let nest : Prims.int  ->  doc  ->  doc = (fun i _24_38 -> (match (_24_38) with
 | Doc (d) -> begin
 Doc (d)
 end))
 
-let align : doc Prims.list  ->  doc = (fun docs -> (let _24_40 = (combine hardline docs)
-in (match (_24_40) with
+let align : doc Prims.list  ->  doc = (fun docs -> (let _24_41 = (combine hardline docs)
+in (match (_24_41) with
 | Doc (doc) -> begin
 Doc (doc)
 end)))
 
 let hbox : doc  ->  doc = (fun d -> d)
 
-let pretty : Prims.int  ->  doc  ->  Prims.string = (fun sz _24_44 -> (match (_24_44) with
+let pretty : Prims.int  ->  doc  ->  Prims.string = (fun sz _24_45 -> (match (_24_45) with
 | Doc (doc) -> begin
 doc
 end))

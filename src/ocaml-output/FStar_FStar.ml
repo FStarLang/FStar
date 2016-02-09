@@ -273,18 +273,21 @@ type stack_elt =
 type stack =
 stack_elt Prims.list
 
-let batch_mode_tc_no_prims : FStar_Parser_DesugarEnv.env  ->  FStar_Tc_Env.env  ->  Prims.string Prims.list  ->  (FStar_Absyn_Syntax.modul Prims.list * FStar_Parser_DesugarEnv.env * FStar_Tc_Env.env) = (fun dsenv env filenames -> (let _101_203 = (FStar_All.pipe_right filenames (FStar_List.fold_left (fun _101_192 f -> (match (_101_192) with
+let batch_mode_tc_no_prims : FStar_Parser_DesugarEnv.env  ->  FStar_Tc_Env.env  ->  Prims.string Prims.list  ->  Prims.string Prims.list  ->  (FStar_Absyn_Syntax.modul Prims.list * FStar_Parser_DesugarEnv.env * FStar_Tc_Env.env) = (fun dsenv env filenames admit_fsi -> (let _101_206 = (FStar_All.pipe_right filenames (FStar_List.fold_left (fun _101_193 f -> (match (_101_193) with
 | (all_mods, dsenv, env) -> begin
-(let _101_194 = (FStar_Absyn_Util.reset_gensym ())
-in (let _101_199 = (tc_one_file dsenv env f)
-in (match (_101_199) with
+(let _101_195 = (FStar_Absyn_Util.reset_gensym ())
+in (let _101_197 = (let _203_114 = (let _203_113 = (FStar_ST.read FStar_Options.admit_fsi)
+in (FStar_List.append admit_fsi _203_113))
+in (FStar_ST.op_Colon_Equals FStar_Options.admit_fsi _203_114))
+in (let _101_202 = (tc_one_file dsenv env f)
+in (match (_101_202) with
 | (dsenv, env, ms) -> begin
 ((FStar_List.append all_mods ms), dsenv, env)
-end)))
+end))))
 end)) ([], dsenv, env)))
-in (match (_101_203) with
+in (match (_101_206) with
 | (all_mods, dsenv, env) -> begin
-(let _101_204 = if ((FStar_ST.read FStar_Options.interactive) && ((FStar_Tc_Errors.get_err_count ()) = 0)) then begin
+(let _101_207 = if ((FStar_ST.read FStar_Options.interactive) && ((FStar_Tc_Errors.get_err_count ()) = 0)) then begin
 (env.FStar_Tc_Env.solver.FStar_Tc_Env.refresh ())
 end else begin
 (env.FStar_Tc_Env.solver.FStar_Tc_Env.finish ())
@@ -292,48 +295,53 @@ end
 in (all_mods, dsenv, env))
 end)))
 
-let find_deps_if_needed : Prims.string Prims.list  ->  Prims.string Prims.list = (fun files -> if (FStar_ST.read FStar_Options.explicit_deps) then begin
-files
+let find_deps_if_needed : Prims.string Prims.list  ->  (Prims.string Prims.list * Prims.string Prims.list) = (fun files -> if (FStar_ST.read FStar_Options.explicit_deps) then begin
+(files, [])
 end else begin
-(let _101_210 = (FStar_Parser_Dep.collect files)
-in (match (_101_210) with
-| (_101_208, deps) -> begin
+(let _101_213 = (FStar_Parser_Dep.collect files)
+in (match (_101_213) with
+| (_101_211, deps) -> begin
 (let deps = (FStar_List.rev deps)
-in (let deps = if ((let _203_113 = (FStar_List.hd deps)
-in (FStar_Util.basename _203_113)) = "prims.fst") then begin
+in (let deps = if ((let _203_117 = (FStar_List.hd deps)
+in (FStar_Util.basename _203_117)) = "prims.fst") then begin
 (FStar_List.tl deps)
 end else begin
 (FStar_All.failwith "dependency analysis did not find prims.fst?!")
 end
-in (let _101_215 = (FStar_List.iter (fun d -> (let d = (FStar_Util.basename d)
+in (let admit_fsi = (FStar_ST.alloc [])
+in (let _101_219 = (FStar_List.iter (fun d -> (let d = (FStar_Util.basename d)
 in if ((FStar_Util.get_file_extension d) = "fsti") then begin
-(let _203_117 = (let _203_116 = (FStar_Util.substring d 0 ((FStar_String.length d) - 5))
-in (let _203_115 = (FStar_ST.read FStar_Options.admit_fsi)
-in (_203_116)::_203_115))
-in (FStar_ST.op_Colon_Equals FStar_Options.admit_fsi _203_117))
+(let _203_121 = (let _203_120 = (FStar_Util.substring d 0 ((FStar_String.length d) - 5))
+in (let _203_119 = (FStar_ST.read admit_fsi)
+in (_203_120)::_203_119))
+in (FStar_ST.op_Colon_Equals admit_fsi _203_121))
 end else begin
 if ((FStar_Util.get_file_extension d) = "fsi") then begin
-(let _203_120 = (let _203_119 = (FStar_Util.substring d 0 ((FStar_String.length d) - 4))
-in (let _203_118 = (FStar_ST.read FStar_Options.admit_fsi)
-in (_203_119)::_203_118))
-in (FStar_ST.op_Colon_Equals FStar_Options.admit_fsi _203_120))
+(let _203_124 = (let _203_123 = (FStar_Util.substring d 0 ((FStar_String.length d) - 4))
+in (let _203_122 = (FStar_ST.read admit_fsi)
+in (_203_123)::_203_122))
+in (FStar_ST.op_Colon_Equals admit_fsi _203_124))
 end else begin
 ()
 end
 end)) deps)
-in deps)))
+in (let _203_125 = (FStar_ST.read admit_fsi)
+in (deps, _203_125))))))
 end))
 end)
 
-let batch_mode_tc : Prims.string Prims.list  ->  (FStar_Absyn_Syntax.modul Prims.list * FStar_Parser_DesugarEnv.env * FStar_Tc_Env.env) = (fun filenames -> (let _101_221 = (tc_prims ())
-in (match (_101_221) with
+let batch_mode_tc : Prims.string Prims.list  ->  (FStar_Absyn_Syntax.modul Prims.list * FStar_Parser_DesugarEnv.env * FStar_Tc_Env.env) = (fun filenames -> (let _101_225 = (tc_prims ())
+in (match (_101_225) with
 | (prims_mod, dsenv, env) -> begin
-(let filenames = (find_deps_if_needed filenames)
-in (let _101_226 = (batch_mode_tc_no_prims dsenv env filenames)
-in (match (_101_226) with
+(let _101_228 = (find_deps_if_needed filenames)
+in (match (_101_228) with
+| (filenames, admit_fsi) -> begin
+(let _101_232 = (batch_mode_tc_no_prims dsenv env filenames admit_fsi)
+in (match (_101_232) with
 | (all_mods, dsenv, env) -> begin
 ((FStar_List.append prims_mod all_mods), dsenv, env)
-end)))
+end))
+end))
 end)))
 
 let finished_message : FStar_Absyn_Syntax.modul Prims.list  ->  Prims.unit = (fun fmods -> if (not ((FStar_ST.read FStar_Options.silent))) then begin
@@ -346,20 +354,20 @@ end else begin
 "Parsed and desugared"
 end
 end
-in (let _101_231 = (FStar_All.pipe_right fmods (FStar_List.iter (fun m -> (let tag = if m.FStar_Absyn_Syntax.is_interface then begin
+in (let _101_237 = (FStar_All.pipe_right fmods (FStar_List.iter (fun m -> (let tag = if m.FStar_Absyn_Syntax.is_interface then begin
 "i\'face"
 end else begin
 "module"
 end
 in if (FStar_Options.should_print_message m.FStar_Absyn_Syntax.name.FStar_Ident.str) then begin
-(let _203_126 = (FStar_Util.format3 "%s %s: %s\n" msg tag (FStar_Absyn_Syntax.text_of_lid m.FStar_Absyn_Syntax.name))
-in (FStar_Util.print_string _203_126))
+(let _203_131 = (FStar_Util.format3 "%s %s: %s\n" msg tag (FStar_Absyn_Syntax.text_of_lid m.FStar_Absyn_Syntax.name))
+in (FStar_Util.print_string _203_131))
 end else begin
 ()
 end))))
-in (let _203_128 = (let _203_127 = (FStar_Util.colorize_bold "All verification conditions discharged successfully")
-in (FStar_Util.format1 "%s\n" _203_127))
-in (FStar_Util.print_string _203_128))))
+in (let _203_133 = (let _203_132 = (FStar_Util.colorize_bold "All verification conditions discharged successfully")
+in (FStar_Util.format1 "%s\n" _203_132))
+in (FStar_Util.print_string _203_133))))
 end else begin
 ()
 end)
@@ -369,13 +377,13 @@ type interactive_state =
 
 let is_Mkinteractive_state : interactive_state  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkinteractive_state"))))
 
-let the_interactive_state : interactive_state = (let _203_145 = (FStar_Util.new_string_builder ())
-in (let _203_144 = (FStar_ST.alloc None)
-in (let _203_143 = (FStar_ST.alloc [])
-in (let _203_142 = (FStar_ST.alloc None)
-in {chunk = _203_145; stdin = _203_144; buffer = _203_143; log = _203_142}))))
+let the_interactive_state : interactive_state = (let _203_150 = (FStar_Util.new_string_builder ())
+in (let _203_149 = (FStar_ST.alloc None)
+in (let _203_148 = (FStar_ST.alloc [])
+in (let _203_147 = (FStar_ST.alloc None)
+in {chunk = _203_150; stdin = _203_149; buffer = _203_148; log = _203_147}))))
 
-let rec read_chunk : Prims.unit  ->  input_chunks = (fun _101_238 -> (match (()) with
+let rec read_chunk : Prims.unit  ->  input_chunks = (fun _101_244 -> (match (()) with
 | () -> begin
 (let s = the_interactive_state
 in (let log = if ((FStar_ST.read FStar_Options.debug) <> []) then begin
@@ -385,13 +393,13 @@ transcript
 end
 | None -> begin
 (let transcript = (FStar_Util.open_file_for_writing "transcript")
-in (let _101_244 = (FStar_ST.op_Colon_Equals s.log (Some (transcript)))
+in (let _101_250 = (FStar_ST.op_Colon_Equals s.log (Some (transcript)))
 in transcript))
 end)
-in (fun line -> (let _101_248 = (FStar_Util.append_to_file transcript line)
+in (fun line -> (let _101_254 = (FStar_Util.append_to_file transcript line)
 in (FStar_Util.flush_file transcript))))
 end else begin
-(fun _101_250 -> ())
+(fun _101_256 -> ())
 end
 in (let stdin = (match ((FStar_ST.read s.stdin)) with
 | Some (i) -> begin
@@ -399,7 +407,7 @@ i
 end
 | None -> begin
 (let i = (FStar_Util.open_stdin ())
-in (let _101_257 = (FStar_ST.op_Colon_Equals s.stdin (Some (i)))
+in (let _101_263 = (FStar_ST.op_Colon_Equals s.stdin (Some (i)))
 in i))
 end)
 in (let line = (match ((FStar_Util.read_line stdin)) with
@@ -409,33 +417,33 @@ end
 | Some (l) -> begin
 l
 end)
-in (let _101_264 = (log line)
+in (let _101_270 = (log line)
 in (let l = (FStar_Util.trim_string line)
 in if (FStar_Util.starts_with l "#end") then begin
 (let responses = (match ((FStar_Util.split l " ")) with
-| _101_270::ok::fail::[] -> begin
+| _101_276::ok::fail::[] -> begin
 (ok, fail)
 end
-| _101_273 -> begin
+| _101_279 -> begin
 ("ok", "fail")
 end)
 in (let str = (FStar_Util.string_of_string_builder s.chunk)
-in (let _101_276 = (FStar_Util.clear_string_builder s.chunk)
+in (let _101_282 = (FStar_Util.clear_string_builder s.chunk)
 in Code ((str, responses)))))
 end else begin
 if (FStar_Util.starts_with l "#pop") then begin
-(let _101_278 = (FStar_Util.clear_string_builder s.chunk)
+(let _101_284 = (FStar_Util.clear_string_builder s.chunk)
 in Pop (l))
 end else begin
 if (FStar_Util.starts_with l "#push") then begin
-(let _101_280 = (FStar_Util.clear_string_builder s.chunk)
+(let _101_286 = (FStar_Util.clear_string_builder s.chunk)
 in Push (l))
 end else begin
 if (l = "#finish") then begin
 (FStar_All.exit 0)
 end else begin
-(let _101_282 = (FStar_Util.string_builder_append s.chunk line)
-in (let _101_284 = (FStar_Util.string_builder_append s.chunk "\n")
+(let _101_288 = (FStar_Util.string_builder_append s.chunk line)
+in (let _101_290 = (FStar_Util.string_builder_append s.chunk "\n")
 in (read_chunk ())))
 end
 end
@@ -443,7 +451,7 @@ end
 end))))))
 end))
 
-let shift_chunk : Prims.unit  ->  input_chunks = (fun _101_286 -> (match (()) with
+let shift_chunk : Prims.unit  ->  input_chunks = (fun _101_292 -> (match (()) with
 | () -> begin
 (let s = the_interactive_state
 in (match ((FStar_ST.read s.buffer)) with
@@ -451,44 +459,44 @@ in (match ((FStar_ST.read s.buffer)) with
 (read_chunk ())
 end
 | chunk::chunks -> begin
-(let _101_292 = (FStar_ST.op_Colon_Equals s.buffer chunks)
+(let _101_298 = (FStar_ST.op_Colon_Equals s.buffer chunks)
 in chunk)
 end))
 end))
 
-let fill_buffer : Prims.unit  ->  Prims.unit = (fun _101_294 -> (match (()) with
+let fill_buffer : Prims.unit  ->  Prims.unit = (fun _101_300 -> (match (()) with
 | () -> begin
 (let s = the_interactive_state
-in (let _203_160 = (let _203_159 = (FStar_ST.read s.buffer)
-in (let _203_158 = (let _203_157 = (read_chunk ())
-in (_203_157)::[])
-in (FStar_List.append _203_159 _203_158)))
-in (FStar_ST.op_Colon_Equals s.buffer _203_160)))
+in (let _203_165 = (let _203_164 = (FStar_ST.read s.buffer)
+in (let _203_163 = (let _203_162 = (read_chunk ())
+in (_203_162)::[])
+in (FStar_List.append _203_164 _203_163)))
+in (FStar_ST.op_Colon_Equals s.buffer _203_165)))
 end))
 
-let interactive_mode = (fun dsenv env -> (let _101_298 = if (let _203_163 = (FStar_ST.read FStar_Options.codegen)
-in (FStar_Option.isSome _203_163)) then begin
+let interactive_mode = (fun dsenv env -> (let _101_304 = if (let _203_168 = (FStar_ST.read FStar_Options.codegen)
+in (FStar_Option.isSome _203_168)) then begin
 (FStar_Util.print_string "Warning: Code-generation is not supported in interactive mode, ignoring the codegen flag")
 end else begin
 ()
 end
 in (let rec go = (fun stack curmod dsenv env -> (match ((shift_chunk ())) with
 | Pop (msg) -> begin
-(let _101_307 = (let _203_172 = (FStar_Parser_DesugarEnv.pop dsenv)
-in (FStar_All.pipe_right _203_172 Prims.ignore))
-in (let _101_309 = (let _203_173 = (FStar_Tc_Env.pop env msg)
-in (FStar_All.pipe_right _203_173 Prims.ignore))
-in (let _101_311 = (env.FStar_Tc_Env.solver.FStar_Tc_Env.refresh ())
-in (let _101_313 = (let _203_174 = (FStar_Options.reset_options ())
-in (FStar_All.pipe_right _203_174 Prims.ignore))
-in (let _101_324 = (match (stack) with
+(let _101_313 = (let _203_177 = (FStar_Parser_DesugarEnv.pop dsenv)
+in (FStar_All.pipe_right _203_177 Prims.ignore))
+in (let _101_315 = (let _203_178 = (FStar_Tc_Env.pop env msg)
+in (FStar_All.pipe_right _203_178 Prims.ignore))
+in (let _101_317 = (env.FStar_Tc_Env.solver.FStar_Tc_Env.refresh ())
+in (let _101_319 = (let _203_179 = (FStar_Options.reset_options ())
+in (FStar_All.pipe_right _203_179 Prims.ignore))
+in (let _101_330 = (match (stack) with
 | [] -> begin
 (FStar_All.failwith "Too many pops")
 end
 | hd::tl -> begin
 (hd, tl)
 end)
-in (match (_101_324) with
+in (match (_101_330) with
 | ((curmod, dsenv, env), stack) -> begin
 (go stack curmod dsenv env)
 end))))))
@@ -509,25 +517,25 @@ in (dsenv, env))))
 in (let commit_mark = (fun dsenv env -> (let dsenv = (FStar_Parser_DesugarEnv.commit_mark dsenv)
 in (let env = (FStar_Tc_Env.commit_mark env)
 in (dsenv, env))))
-in (let fail = (fun curmod dsenv_mark env_mark -> (let _101_355 = (let _203_193 = (FStar_Tc_Errors.report_all ())
-in (FStar_All.pipe_right _203_193 Prims.ignore))
-in (let _101_357 = (FStar_ST.op_Colon_Equals FStar_Tc_Errors.num_errs 0)
-in (let _101_359 = (FStar_Util.print1 "%s\n" fail)
-in (let _101_363 = (reset_mark dsenv_mark env_mark)
-in (match (_101_363) with
+in (let fail = (fun curmod dsenv_mark env_mark -> (let _101_361 = (let _203_198 = (FStar_Tc_Errors.report_all ())
+in (FStar_All.pipe_right _203_198 Prims.ignore))
+in (let _101_363 = (FStar_ST.op_Colon_Equals FStar_Tc_Errors.num_errs 0)
+in (let _101_365 = (FStar_Util.print1 "%s\n" fail)
+in (let _101_369 = (reset_mark dsenv_mark env_mark)
+in (match (_101_369) with
 | (dsenv, env) -> begin
 (go stack curmod dsenv env)
 end))))))
-in (let _101_366 = (mark dsenv env)
-in (match (_101_366) with
+in (let _101_372 = (mark dsenv env)
+in (match (_101_372) with
 | (dsenv_mark, env_mark) -> begin
 (let res = (tc_one_fragment curmod dsenv_mark env_mark text)
 in (match (res) with
 | Some (curmod, dsenv, env) -> begin
 if ((FStar_ST.read FStar_Tc_Errors.num_errs) = 0) then begin
-(let _101_373 = (FStar_Util.print1 "\n%s\n" ok)
-in (let _101_377 = (commit_mark dsenv env)
-in (match (_101_377) with
+(let _101_379 = (FStar_Util.print1 "\n%s\n" ok)
+in (let _101_383 = (commit_mark dsenv env)
+in (match (_101_383) with
 | (dsenv, env) -> begin
 (go stack curmod dsenv env)
 end)))
@@ -535,7 +543,7 @@ end else begin
 (fail curmod dsenv_mark env_mark)
 end
 end
-| _101_379 -> begin
+| _101_385 -> begin
 (fail curmod dsenv_mark env_mark)
 end))
 end))))))
@@ -543,9 +551,9 @@ end))
 in (go [] None dsenv env))))
 
 let codegen : FStar_Absyn_Syntax.modul Prims.list  ->  FStar_Tc_Env.env  ->  Prims.unit = (fun fmods env -> if (((FStar_ST.read FStar_Options.codegen) = Some ("OCaml")) || ((FStar_ST.read FStar_Options.codegen) = Some ("FSharp"))) then begin
-(let _101_384 = (let _203_198 = (FStar_Extraction_ML_Env.mkContext env)
-in (FStar_Util.fold_map FStar_Extraction_ML_ExtractMod.extract _203_198 fmods))
-in (match (_101_384) with
+(let _101_390 = (let _203_203 = (FStar_Extraction_ML_Env.mkContext env)
+in (FStar_Util.fold_map FStar_Extraction_ML_ExtractMod.extract _203_203 fmods))
+in (match (_101_390) with
 | (c, mllibs) -> begin
 (let mllibs = (FStar_List.flatten mllibs)
 in (let ext = if ((FStar_ST.read FStar_Options.codegen) = Some ("FSharp")) then begin
@@ -554,11 +562,11 @@ end else begin
 ".ml"
 end
 in (let newDocs = (FStar_List.collect FStar_Extraction_ML_Code.doc_of_mllib mllibs)
-in (FStar_List.iter (fun _101_390 -> (match (_101_390) with
+in (FStar_List.iter (fun _101_396 -> (match (_101_396) with
 | (n, d) -> begin
-(let _203_201 = (FStar_Options.prependOutputDir (Prims.strcat n ext))
-in (let _203_200 = (FSharp_Format.pretty 120 d)
-in (FStar_Util.write_file _203_201 _203_200)))
+(let _203_206 = (FStar_Options.prependOutputDir (Prims.strcat n ext))
+in (let _203_205 = (FSharp_Format.pretty 120 d)
+in (FStar_Util.write_file _203_206 _203_205)))
 end)) newDocs))))
 end))
 end else begin
@@ -576,18 +584,18 @@ false
 end))
 
 let ___Found____0 : Prims.exn  ->  Prims.string = (fun projectee -> (match (projectee) with
-| Found (_101_392) -> begin
-_101_392
+| Found (_101_398) -> begin
+_101_398
 end))
 
-let find_initial_module_name : Prims.unit  ->  Prims.string Prims.option = (fun _101_393 -> (match (()) with
+let find_initial_module_name : Prims.unit  ->  Prims.string Prims.option = (fun _101_399 -> (match (()) with
 | () -> begin
-(let _101_394 = (fill_buffer ())
-in (let _101_396 = (fill_buffer ())
-in (FStar_All.try_with (fun _101_399 -> (match (()) with
+(let _101_400 = (fill_buffer ())
+in (let _101_402 = (fill_buffer ())
+in (FStar_All.try_with (fun _101_405 -> (match (()) with
 | () -> begin
-(let _101_420 = (match ((FStar_ST.read the_interactive_state.buffer)) with
-| Push (_101_411)::Code (code, _101_407)::[] -> begin
+(let _101_426 = (match ((FStar_ST.read the_interactive_state.buffer)) with
+| Push (_101_417)::Code (code, _101_413)::[] -> begin
 (let lines = (FStar_Util.split code "\n")
 in (FStar_List.iter (fun line -> (let line = (FStar_Util.trim_string line)
 in if (((FStar_String.length line) > 7) && ((FStar_Util.substring line 0 6) = "module")) then begin
@@ -597,17 +605,17 @@ end else begin
 ()
 end)) lines))
 end
-| _101_419 -> begin
+| _101_425 -> begin
 ()
 end)
 in None)
-end)) (fun _101_398 -> (match (_101_398) with
+end)) (fun _101_404 -> (match (_101_404) with
 | Found (n) -> begin
 Some (n)
 end)))))
 end))
 
-let detect_dependencies_with_first_interactive_chunk : Prims.unit  ->  Prims.string Prims.list = (fun _101_422 -> (match (()) with
+let detect_dependencies_with_first_interactive_chunk : Prims.unit  ->  Prims.string Prims.list = (fun _101_428 -> (match (()) with
 | () -> begin
 (match ((find_initial_module_name ())) with
 | None -> begin
@@ -618,70 +626,70 @@ end
 in (let filename = (FStar_Util.smap_try_find file_of_module_name (FStar_String.lowercase module_name))
 in (match (filename) with
 | None -> begin
-(let _203_215 = (let _203_214 = (FStar_Util.format2 "I found a \"module %s\" directive, but there is no %s.fst\n" module_name module_name)
-in FStar_Absyn_Syntax.Err (_203_214))
-in (Prims.raise _203_215))
+(let _203_220 = (let _203_219 = (FStar_Util.format2 "I found a \"module %s\" directive, but there is no %s.fst\n" module_name module_name)
+in FStar_Absyn_Syntax.Err (_203_219))
+in (Prims.raise _203_220))
 end
 | Some (filename) -> begin
-(let _101_434 = (FStar_Parser_Dep.collect ((filename)::[]))
-in (match (_101_434) with
-| (_101_432, all_filenames) -> begin
-(let _203_216 = (FStar_List.tl all_filenames)
-in (FStar_List.rev _203_216))
+(let _101_440 = (FStar_Parser_Dep.collect ((filename)::[]))
+in (match (_101_440) with
+| (_101_438, all_filenames) -> begin
+(let _203_221 = (FStar_List.tl all_filenames)
+in (FStar_List.rev _203_221))
 end))
 end)))
 end)
 end))
 
-let go = (fun _101_435 -> (let _101_439 = (process_args ())
-in (match (_101_439) with
+let go = (fun _101_441 -> (let _101_445 = (process_args ())
+in (match (_101_445) with
 | (res, filenames) -> begin
 (match (res) with
 | FStar_Getopt.Help -> begin
-(let _203_218 = (FStar_Options.specs ())
-in (FStar_Options.display_usage _203_218))
+(let _203_223 = (FStar_Options.specs ())
+in (FStar_Options.display_usage _203_223))
 end
 | FStar_Getopt.Die (msg) -> begin
 (FStar_Util.print_string msg)
 end
 | FStar_Getopt.GoOn -> begin
 if ((FStar_ST.read FStar_Options.dep) <> None) then begin
-(let _203_219 = (FStar_Parser_Dep.collect filenames)
-in (FStar_Parser_Dep.print _203_219))
+(let _203_224 = (FStar_Parser_Dep.collect filenames)
+in (FStar_Parser_Dep.print _203_224))
 end else begin
 if (FStar_ST.read FStar_Options.universes) then begin
-(let _101_444 = (let _203_220 = (test_universes filenames)
-in (FStar_All.pipe_right _203_220 Prims.ignore))
+(let _101_450 = (let _203_225 = (test_universes filenames)
+in (FStar_All.pipe_right _203_225 Prims.ignore))
 in (report_universes_errors None))
 end else begin
 if (FStar_ST.read FStar_Options.interactive) then begin
 (let filenames = if (FStar_ST.read FStar_Options.explicit_deps) then begin
-(let _101_446 = if ((FStar_List.length filenames) = 0) then begin
+(let _101_452 = if ((FStar_List.length filenames) = 0) then begin
 (FStar_Util.print_endline "--explicit_deps was provided without a file list!")
 end else begin
 ()
 end
 in filenames)
 end else begin
-(let _101_448 = if ((FStar_List.length filenames) > 0) then begin
+(let _101_454 = if ((FStar_List.length filenames) > 0) then begin
 (FStar_Util.print_endline "ignoring the file list (no --explicit_deps)")
 end else begin
 ()
 end
 in (detect_dependencies_with_first_interactive_chunk ()))
 end
-in (let _101_454 = (batch_mode_tc filenames)
-in (match (_101_454) with
+in (let _101_460 = (batch_mode_tc filenames)
+in (match (_101_460) with
 | (fmods, dsenv, env) -> begin
 (interactive_mode dsenv env)
 end)))
 end else begin
 if ((FStar_List.length filenames) >= 1) then begin
-(let _101_458 = (batch_mode_tc filenames)
-in (match (_101_458) with
+(let _101_464 = (batch_mode_tc filenames)
+in (match (_101_464) with
 | (fmods, dsenv, env) -> begin
-(let _101_459 = (report_errors None)
-in (let _101_461 = (codegen fmods env)
+(let _101_465 = (report_errors None)
+in (let _101_467 = (codegen fmods env)
 in (finished_message fmods)))
 end))
 end else begin
@@ -693,33 +701,33 @@ end
 end)
 end)))
 
-let main = (fun _101_463 -> (match (()) with
+let main = (fun _101_469 -> (match (()) with
 | () -> begin
-(FStar_All.try_with (fun _101_465 -> (match (()) with
+(FStar_All.try_with (fun _101_471 -> (match (()) with
 | () -> begin
-(let _101_476 = (go ())
-in (let _101_478 = (cleanup ())
+(let _101_482 = (go ())
+in (let _101_484 = (cleanup ())
 in (FStar_All.exit 0)))
-end)) (fun _101_464 -> (match (_101_464) with
+end)) (fun _101_470 -> (match (_101_470) with
 | e -> begin
-(let _101_468 = if (FStar_Absyn_Util.handleable e) then begin
+(let _101_474 = if (FStar_Absyn_Util.handleable e) then begin
 (FStar_Absyn_Util.handle_err false () e)
 end else begin
 ()
 end
-in (let _101_470 = if (FStar_ST.read FStar_Options.trace_error) then begin
-(let _203_225 = (FStar_Util.message_of_exn e)
-in (let _203_224 = (FStar_Util.trace_of_exn e)
-in (FStar_Util.print2 "\nUnexpected error\n%s\n%s\n" _203_225 _203_224)))
+in (let _101_476 = if (FStar_ST.read FStar_Options.trace_error) then begin
+(let _203_230 = (FStar_Util.message_of_exn e)
+in (let _203_229 = (FStar_Util.trace_of_exn e)
+in (FStar_Util.print2 "\nUnexpected error\n%s\n%s\n" _203_230 _203_229)))
 end else begin
 if (not ((FStar_Absyn_Util.handleable e))) then begin
-(let _203_226 = (FStar_Util.message_of_exn e)
-in (FStar_Util.print1 "\nUnexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" _203_226))
+(let _203_231 = (FStar_Util.message_of_exn e)
+in (FStar_Util.print1 "\nUnexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" _203_231))
 end else begin
 ()
 end
 end
-in (let _101_472 = (cleanup ())
+in (let _101_478 = (cleanup ())
 in (FStar_All.exit 1))))
 end)))
 end))
