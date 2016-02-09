@@ -201,7 +201,7 @@ let find_deps_if_needed files =
           admit_fsi := substring d 0 (String.length d - 5) :: !admit_fsi
         else if get_file_extension d = "fsi" then begin
           admit_fsi := substring d 0 (String.length d - 4) :: !admit_fsi
-        end;
+        end
       ) deps;
       deps, !admit_fsi
 
