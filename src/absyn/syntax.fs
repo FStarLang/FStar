@@ -50,7 +50,7 @@ type pragma =
   | ResetOptions
 type memo<'a> = ref<option<'a>>
 type arg_qualifier =
-    | Implicit
+    | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor 
     | Equality
 type aqual = option<arg_qualifier>
 type typ' =
@@ -645,8 +645,8 @@ let t_binder (a:btvar) : binder = Inl a, None
 let v_binder (a:bvvar) : binder = Inr a, None
 let null_t_binder t : binder = Inl (null_bvar t), None
 let null_v_binder t : binder = Inr (null_bvar t), None
-let itarg t : arg = Inl t, Some Implicit
-let ivarg v : arg = Inr v, Some Implicit
+let itarg t : arg = Inl t, Some (Implicit false)
+let ivarg v : arg = Inr v, Some (Implicit false)
 let targ t : arg = Inl t, None
 let varg v : arg = Inr v, None
 let is_null_pp (b:bvdef<'a>) = b.ppname.idText = null_id.idText
@@ -664,5 +664,5 @@ let freevars_of_binders (bs:binders) : freevars =
 let binders_of_list fvs : binders = (fvs |> List.map (fun t -> t, None))
 let binders_of_freevars fvs =
    (Util.set_elements fvs.ftvs |> List.map t_binder)@(Util.set_elements fvs.fxvs |> List.map v_binder)
-let is_implicit = function Some Implicit -> true | _ -> false
-let as_implicit = function true -> Some Implicit | _ -> None
+let is_implicit = function Some (Implicit _) -> true | _ -> false
+let as_implicit = function true -> Some (Implicit false) | _ -> None

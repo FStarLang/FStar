@@ -17,10 +17,10 @@ lambda_omega:
 	$(FSTAR) $(_STDLIB_) lambda_omega.fst --max_fuel 1 --max_ifuel 1 --initial_fuel 1
 
 f-omega:
-	$(FSTAR) f-omega.fst
+	$(FSTAR) FOmega.fst
 
 micro-fstar:
-	$(FSTAR) micro-fstar.fst
+	$(FSTAR) MicroFStar.fst
 
 hoare_wp:
 	$(FSTAR) $(_STDLIB_) HoareWeakestPrecondition.fst --max_fuel 1 --max_ifuel 1

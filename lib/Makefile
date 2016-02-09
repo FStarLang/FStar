@@ -22,9 +22,9 @@ all:
 	$(FSTAR) FStar.Map.fst
 	$(FSTAR) FStar.MRef.fst
 	$(FSTAR) FStar.Option.fst
-#	$(FSTAR) FStar.OrdMap.fst
+	# $(FSTAR) FStar.OrdSet.fst
+	# $(FSTAR) FStar.OrdMap.fst
 #	$(FSTAR) FStar.OrdMapProps.fst -- problem filed as #359
-#	$(FSTAR) FStar.OrdSet.fst
 #	$(FSTAR) FStar.OrdSetProps.fst
 	$(FSTAR) FStar.PredicateExtensionality.fst
 	$(FSTAR) FStar.Set.fst

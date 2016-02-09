@@ -22,7 +22,7 @@
 module FStar.Ghost
 
 
-private type erased (a:Type) = a
+abstract type erased (a:Type) = a
 val reveal: #a:Type -> erased a -> GTot a
 let reveal x = x
 

@@ -1,4 +1,4 @@
-module Unit1
+module Unit1.Basic
 
 type t =
   | A

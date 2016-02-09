@@ -1,7 +1,7 @@
 include ../Makefile.include
 
 all:
-	make api
+# make api
 ifneq ($(shell fstar.exe --version | grep platform= | cut -c10-),Windows_x86)
 # This runs out of memory with 32bit Windows binaries
 	make theory
@@ -9,8 +9,8 @@ endif
 	make traces
 	make crypto
 	make secserver
-	make codegen SMCIF=examples/fstar_main/dealiface.fsi SMCMAIN=examples/fstar_main/dealmain.fst
-	#make distclean
+# make codegen SMCIF=examples/fstar_main/dealiface.fsi SMCMAIN=examples/fstar_main/dealmain.fst
+# make distclean
 
 EXAMPLES_DIR=./examples
 

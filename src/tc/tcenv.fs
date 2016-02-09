@@ -370,7 +370,7 @@ let lookup_qname env (lid:lident) : option<either<typ, sigelt>>  =
 let lookup_datacon env lid =
   match lookup_qname env lid with
     | Some (Inr (Sig_datacon (_, t, (_, tps, _), _, _, _))) -> 
-      close_typ (List.map (fun (x, _) -> (x, Some Implicit)) tps) t 
+      close_typ (List.map (fun (x, _) -> (x, Some (Implicit true))) tps) t 
     | _ -> raise (Error(name_not_found lid, range_of_lid lid))
 
 let lookup_kind_abbrev env lid =
@@ -408,7 +408,7 @@ let lookup_lid env lid =
     raise (Error(name_not_found lid, range_of_lid lid)) in
   let mapper = function
     | Inr (Sig_datacon(_, t, (_, tps, _), _,_, _)) -> 
-      Some (close_typ (List.map (fun (x, _) -> (x, Some Implicit)) tps) t)
+      Some (close_typ (List.map (fun (x, _) -> (x, Some (Implicit true))) tps) t)
     | Inl t -> Some t
 
     | Inr (Sig_val_decl (l, t, qs, _)) -> 

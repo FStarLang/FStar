@@ -58,7 +58,7 @@ type pragma =
   | ResetOptions
 type memo<'a> = ref<option<'a>>
 type arg_qualifier =
-    | Implicit
+    | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor 
     | Equality
 type aqual = option<arg_qualifier>
 type typ' =

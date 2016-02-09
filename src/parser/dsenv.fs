@@ -351,7 +351,7 @@ let extract_record (e:env) = function
                 let fields = formals |> List.collect (fun b -> match b with
                     | Inr x, q ->
                         if is_null_binder b  
-                        || (is_rec && q = Some Implicit)
+                        || (is_rec && (match q with | Some (Implicit _) -> true | _ -> false))
                         then []
                         else [(qual constrname (if is_rec then Util.unmangle_field_name x.v.ppname else x.v.ppname), x.sort)]
                     | _ -> []) in

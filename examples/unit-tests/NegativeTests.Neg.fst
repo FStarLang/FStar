@@ -1,6 +1,6 @@
 (* EXPECT 32 FAILURES *)
 (* ******************************************************************************** *)
-module Neg
+module NegativeTests.Neg
 
 assume val g : 'a -> Tot 'b
 assume val h : a:Type -> b:Type -> a:'a -> Tot (b:'b{b == g a})

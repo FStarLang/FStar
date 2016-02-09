@@ -104,7 +104,7 @@ let tks_of_args (args:args) =
         | Inl t, imp -> Inl (force_tk t), imp
         | Inr v, imp -> Inr (force_tk v), imp)
 
-let is_implicit = function Some Implicit -> true | _ -> false
+let is_implicit = function Some (Implicit _) -> true | _ -> false
 let destruct_arrow_kind env tt k (args:args) : (Syntax.args * binders * knd) =
     let ktop = compress_kind k |> Normalize.norm_kind [WHNF; Beta; Eta] env in
     let r = Env.get_range env in
@@ -145,7 +145,7 @@ let destruct_arrow_kind env tt k (args:args) : (Syntax.args * binders * knd) =
     aux ktop
 
 let as_imp = function
-    | Some Implicit -> true
+    | Some (Implicit _) -> true
     | _ -> false
 (*
     Turns a disjunctive pattern p into a quadruple:
@@ -254,7 +254,7 @@ let pat_as_exps allow_implicits env p
                               then withinfo (Pat_dot_typ (a, tun)) None  (Syntax.range_of_lid fv.v), as_imp imp
                               else withinfo (Pat_tvar a) None (Syntax.range_of_lid fv.v), as_imp imp
 
-                            | Inr _, Some Implicit ->
+                            | Inr _, Some (Implicit _) ->
                               let a = Util.gen_bvar tun in
                               withinfo (Pat_var a) None (*Inr tun*) (Syntax.range_of_lid fv.v), true
 
@@ -275,9 +275,9 @@ let pat_as_exps allow_implicits env p
                                         | Pat_dot_typ _ -> pats'
                                         | _ -> pats in
                                     (p1, as_imp imp)::aux formals' pats'
-                                | (Inr _, Some Implicit), _ when p_imp ->
+                                | (Inr _, Some (Implicit _)), _ when p_imp ->
                                     (p, true)::aux formals' pats'
-                                | (Inr _, Some Implicit), _ ->
+                                | (Inr _, Some (Implicit _)), _ ->
                                     let a = Util.gen_bvar tun in
                                     let p = withinfo (Pat_var a) None (Syntax.range_of_lid fv.v) in
                                     (p, true)::aux formals' pats
@@ -373,12 +373,12 @@ let decorate_pattern env p exps =
                 | [], [] -> pkg (Pat_cons(fv, q, List.rev matched_pats)) (force_tk e)
                 | arg::args, (argpat, _)::argpats ->
                   begin match arg, argpat.v with
-                        | (Inl t, Some Implicit), Pat_dot_typ _ -> (* implicit type argument *)
+                        | (Inl t, Some (Implicit _)), Pat_dot_typ _ -> (* implicit type argument *)
                           let x = Util.gen_bvar_p p.p (force_tk t) in
                           let q = withinfo (Pat_dot_typ(x, t)) (Some<| Inl x.sort) p.p in
                           match_args ((q, true)::matched_pats) args argpats
 
-                        | (Inr e, Some Implicit), Pat_dot_term _ -> (* implicit value argument *)
+                        | (Inr e, Some (Implicit _)), Pat_dot_term _ -> (* implicit value argument *)
                           let x = Util.gen_bvar_p p.p (force_tk e) in
                           let q = withinfo (Pat_dot_term(x, e)) (Some <| Inr x.sort) p.p in
                           match_args ((q, true)::matched_pats) args argpats
@@ -952,19 +952,19 @@ let maybe_instantiate_typ env t k =
   match k.n with
     | Kind_arrow(bs, k) ->
       let rec aux subst = function
-        | (Inl a, Some Implicit)::rest ->
+        | (Inl a, Some (Implicit _))::rest ->
           let k = Util.subst_kind subst a.sort in
           let t, u = new_implicit_tvar env k in
           let subst = (Inl(a.v, t))::subst in
           let args, bs, subst, us = aux subst rest in
-          (Inl t, Some Implicit)::args, bs, subst, Inl u::us
+          (Inl t, Some <| Implicit false)::args, bs, subst, Inl u::us
 
-        | (Inr x, Some Implicit)::rest ->
+        | (Inr x, Some (Implicit _))::rest ->
           let t = Util.subst_typ subst x.sort in
           let v, u = new_implicit_evar env t in
           let subst = (Inr(x.v, v))::subst in
           let args, bs, subst, us = aux subst rest in
-          (Inr v, Some Implicit)::args, bs, subst, Inr u::us
+          (Inr v, Some <| Implicit false)::args, bs, subst, Inr u::us
 
         | bs -> [], bs, subst, [] in
      let args, bs, subst, implicits = aux [] bs in
@@ -985,14 +985,14 @@ let maybe_instantiate env e t =
           let t, u = new_implicit_tvar env k in
           let subst = (Inl(a.v, t))::subst in
           let args, bs, subst, us = aux subst rest in
-          (Inl t, Some Implicit)::args, bs, subst, Inl u::us
+          (Inl t, Some <| Implicit false)::args, bs, subst, Inl u::us
 
-        | (Inr x, Some Implicit)::rest ->
+        | (Inr x, Some (Implicit _))::rest ->
           let t = Util.subst_typ subst x.sort in
           let v, u = new_implicit_evar env t in
           let subst = (Inr(x.v, v))::subst in
           let args, bs, subst, us = aux subst rest in
-          (Inr v, Some Implicit)::args, bs, subst, Inr u::us
+          (Inr v, Some <| Implicit false)::args, bs, subst, Inr u::us
 
         | bs -> [], bs, subst, [] in
      let args, bs, subst, implicits = aux [] bs in
@@ -1138,7 +1138,7 @@ let gen verify env (ecs:list<(exp * comp)>) : option<list<(exp * comp)>> =
                   //let t = Util.bvd_to_typ a k in
                   unchecked_unify u t;
                   Util.bvd_to_bvar_s a ktype in
-            Inl a, Some Implicit) in
+            Inl a, Some <| Implicit false) in
 
           let t = match Util.comp_result c |> Util.function_formals with
             | Some (bs, cod) -> mk_Typ_fun(tvars@bs, cod) (Some ktype) c.pos
@@ -1271,8 +1271,8 @@ let pure_or_ghost_pre_and_post env comp =
                               let as_req, as_ens = match Tc.Env.lookup_typ_abbrev env Const.as_requires, Tc.Env.lookup_typ_abbrev env Const.as_ensures with
                                 | Some x, Some y -> x, y
                                 | _ -> failwith "Impossible" in
-                              let req = mk_Typ_app(as_req, [(Inl ct.result_typ, Some Implicit); targ wp]) (Some mk_Kind_type) ct.result_typ.pos in
-                              let ens = mk_Typ_app(as_ens, [(Inl ct.result_typ, Some Implicit); targ wlp]) None ct.result_typ.pos in
+                              let req = mk_Typ_app(as_req, [(Inl ct.result_typ, Some <| Implicit false); targ wp]) (Some mk_Kind_type) ct.result_typ.pos in
+                              let ens = mk_Typ_app(as_ens, [(Inl ct.result_typ, Some <| Implicit false); targ wlp]) None ct.result_typ.pos in
                               Some (norm req), norm (mk_post_type ct.result_typ ens)
                             | _ -> failwith "Impossible"
                         end

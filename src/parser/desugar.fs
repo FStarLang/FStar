@@ -27,15 +27,16 @@ open FStar.Util
 open FStar.Ident
 open FStar.Const
 
+let imp_tag = Implicit false
 let as_imp = function
     | Hash
-    | FsTypApp -> Some Implicit
+    | FsTypApp -> Some imp_tag
     | _ -> None
 let arg_withimp_e imp t =
     t, as_imp imp
 let arg_withimp_t imp t =
     match imp with
-        | Hash -> t, Some Implicit
+        | Hash -> t, Some imp_tag
         | _ -> t, None
 
 let contains_binder binders =
@@ -340,7 +341,7 @@ let binder_of_bnd = function
   | VBinder (x, t, aq) -> Inr (Util.bvd_to_bvar_s x t), aq
   | _ -> failwith "Impossible"
 let trans_aqual = function
-  | Some AST.Implicit -> Some Implicit
+  | Some AST.Implicit -> Some imp_tag
   | Some AST.Equality -> Some Equality
   | _ -> None
 let as_binder env imp = function
@@ -428,7 +429,7 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
         loc, env', binder, p, imp
 
       | PatTvar (a, imp) ->
-        let aq = if imp then Some Implicit else None in
+        let aq = if imp then Some imp_tag else None in
         if a.idText = "'_"
         then let a = new_bvd <| Some p.prange in
              loc, env, TBinder(a, kun, aq), pos <| Pat_twild (bvd_to_bvar_s a kun), imp
@@ -445,7 +446,7 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
         loc, env, VBinder(x, tun, None), pos <| Pat_constant c, false
 
       | PatVar (x, imp) ->
-        let aq = if imp then Some Implicit else None in
+        let aq = if imp then Some imp_tag else None in
         let loc, env, xbvd = resolvex loc env x in
         loc, env, VBinder(xbvd, tun, aq), pos <| Pat_var (bvd_to_bvar_s xbvd tun), imp
 
@@ -1051,7 +1052,7 @@ and desugar_kind env k : knd =
         | None -> error "Unexpected term where kind was expected" k k.range
         | Some l ->
           let args = List.map (fun (t, b) ->
-            let qual = if b=Hash then Some Implicit else None in
+            let qual = if b=Hash then Some imp_tag else None in
             desugar_typ_or_exp env t, qual) args in
           pos <| mk_Kind_abbrev((l, args), mk_Kind_unknown)
       end
@@ -1206,7 +1207,7 @@ let mk_data_discriminators quals env t tps k datas =
     let quals q = if not <| env.iface || env.admitted_iface then Assumption::q@quals else q@quals in
     let binders = gather_tc_binders tps k in
     let p = range_of_lid t in
-    let imp_binders = binders |> List.map (fun (x, _) -> x, Some Implicit) in
+    let imp_binders = binders |> List.map (fun (x, _) -> x, Some imp_tag) in
     let binders = imp_binders@[null_v_binder <| mk_Typ_app'(Util.ftv t kun, Util.args_of_non_null_binders binders) None p] in
     let disc_type = mk_Typ_fun(binders, Util.total_comp (Util.ftv Const.bool_lid ktype) p) None p in
     datas |> List.map (fun d ->
@@ -1228,7 +1229,7 @@ let mk_indexed_projectors fvq refine_domain env (tc, tps, k) lid (formals:list<b
         else let disc_name = Util.mk_discriminator lid in
              let x = Util.gen_bvar arg_typ in
              v_binder <| (Util.bvd_to_bvar_s projectee <| mk_Typ_refine(x, Util.b2t(mk_Exp_app(Util.fvar None disc_name p, [varg <| Util.bvar_to_exp x]) None p)) None p) in
-    let imp_binders = binders |> List.map (fun (x, _) -> x, Some Implicit) in
+    let imp_binders = binders |> List.map (fun (x, _) -> x, Some imp_tag) in
     let binders = imp_binders@[arg_binder] in
     let arg = Util.arg_of_non_null_binder arg_binder in
     let subst = formals |> List.mapi (fun i f -> match fst f with
@@ -1243,7 +1244,7 @@ let mk_indexed_projectors fvq refine_domain env (tc, tps, k) lid (formals:list<b
             [Inr (x.v, proj)]) |> List.flatten in
 
     let ntps = List.length tps in
-    let all_params = (tps |> List.map (fun (b, _) -> (b, Some Implicit)))@formals in
+    let all_params = (tps |> List.map (fun (b, _) -> (b, Some imp_tag)))@formals in
 //    let pattern_fields = Util.nth_tail ntps formals in
     formals |> List.mapi (fun i ax -> match fst ax with
         | Inl a ->
@@ -1263,7 +1264,7 @@ let mk_indexed_projectors fvq refine_domain env (tc, tps, k) lid (formals:list<b
                 then []
                 else let projection = Util.gen_bvar tun in
                      let as_imp = function
-                        | Some Implicit -> true
+                        | Some (Implicit _) -> true
                         | _ -> false in
                      let arg_pats = all_params |> List.mapi (fun j by -> match by with
                         | Inl _, imp ->
@@ -1462,7 +1463,7 @@ let desugar_binders env binders =
       | _ -> raise (Error("Missing name in binder", b.brange))) (env, []) binders in
     env, List.rev binders
 
-let trans_qual = function
+let trans_qual r = function
   | AST.Private -> Private
   | AST.Assumption -> Assumption
   | AST.Opaque -> Opaque
@@ -1471,14 +1472,20 @@ let trans_qual = function
   | AST.TotalEffect -> TotalEffect
   | AST.DefaultEffect -> DefaultEffect None
   | AST.Effect -> Effect
+  | AST.Inline 
+  | AST.Irreducible 
+  | AST.New 
+  | AST.Unfoldable -> raise (Error("This qualifier is supported only with the --universes option", r))
 
 let trans_pragma = function
   | AST.SetOptions s -> SetOptions s
   | AST.ResetOptions -> ResetOptions
 
-let trans_quals = List.map trans_qual
+let trans_quals r = List.map (trans_qual r)
 
-let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
+let rec desugar_decl env (d:decl) : (env_t * sigelts) =
+  let trans_quals = trans_quals d.drange in 
+  match d.d with
   | Pragma p ->
     let se = Sig_pragma(trans_pragma p, d.drange) in
     env, [se]
@@ -1657,7 +1664,7 @@ let open_prims_all =
 (* Most important function: from AST to a module
    Keeps track of the name of variables and so on (in the context)
  *)
-let desugar_modul_common curmod env (m:AST.modul) : env_t * Syntax.modul * bool =
+let desugar_modul_common (curmod:option<modul>) env (m:AST.modul) : env_t * Syntax.modul * bool =
   let open_ns (mname:lident) d =
     let d = if List.length mname.ns <> 0
             then (AST.mk_decl (AST.Open (Syntax.lid_of_ids mname.ns)) (Syntax.range_of_lid mname))  :: d
@@ -1665,7 +1672,7 @@ let desugar_modul_common curmod env (m:AST.modul) : env_t * Syntax.modul * bool 
     d in
   let env = match curmod with
     | None -> env
-    | Some(prev_mod, _) ->  DesugarEnv.finish_module_or_interface env prev_mod in
+    | Some prev_mod ->  DesugarEnv.finish_module_or_interface env prev_mod in
   let (env, pop_when_done), mname, decls, intf = match m with
     | Interface(mname, decls, admitted) ->
       DesugarEnv.prepare_module_or_interface true admitted env mname, mname, open_ns mname decls, true

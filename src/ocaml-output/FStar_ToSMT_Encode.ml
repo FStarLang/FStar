@@ -1,15 +1,21 @@
 
 open Prims
+# 31 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let add_fuel = (fun x tl -> if (FStar_ST.read FStar_Options.unthrottle_inductives) then begin
 tl
 end else begin
 (x)::tl
 end)
 
+# 32 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let withenv = (fun c _58_39 -> (match (_58_39) with
 | (a, b) -> begin
 (a, b, c)
 end))
+
+# 33 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let vargs = (fun args -> (FStar_List.filter (fun _58_1 -> (match (_58_1) with
 | (FStar_Util.Inl (_58_43), _58_46) -> begin
@@ -19,7 +25,11 @@ end
 true
 end)) args))
 
+# 37 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let escape : Prims.string  ->  Prims.string = (fun s -> (FStar_Util.replace_char s '\'' '_'))
+
+# 38 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let escape_null_name = (fun a -> if (a.FStar_Absyn_Syntax.ppname.FStar_Ident.idText = "_") then begin
 (Prims.strcat a.FStar_Absyn_Syntax.ppname.FStar_Ident.idText a.FStar_Absyn_Syntax.realname.FStar_Ident.idText)
@@ -27,13 +37,19 @@ end else begin
 a.FStar_Absyn_Syntax.ppname.FStar_Ident.idText
 end)
 
+# 43 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let mk_typ_projector_name : FStar_Ident.lident  ->  FStar_Absyn_Syntax.btvdef  ->  Prims.string = (fun lid a -> (let _160_14 = (FStar_Util.format2 "%s_%s" lid.FStar_Ident.str (escape_null_name a))
 in (FStar_All.pipe_left escape _160_14)))
+
+# 45 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let mk_term_projector_name : FStar_Ident.lident  ->  FStar_Absyn_Syntax.bvvdef  ->  Prims.string = (fun lid a -> (let a = (let _160_19 = (FStar_Absyn_Util.unmangle_field_name a.FStar_Absyn_Syntax.ppname)
 in {FStar_Absyn_Syntax.ppname = _160_19; FStar_Absyn_Syntax.realname = a.FStar_Absyn_Syntax.realname})
 in (let _160_20 = (FStar_Util.format2 "%s_%s" lid.FStar_Ident.str (escape_null_name a))
 in (FStar_All.pipe_left escape _160_20))))
+
+# 48 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let primitive_projector_by_pos : FStar_Tc_Env.env  ->  FStar_Ident.lident  ->  Prims.int  ->  Prims.string = (fun env lid i -> (let fail = (fun _58_61 -> (match (()) with
 | () -> begin
@@ -62,28 +78,44 @@ end
 (fail ())
 end))))
 
+# 61 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let mk_term_projector_name_by_pos : FStar_Ident.lident  ->  Prims.int  ->  Prims.string = (fun lid i -> (let _160_37 = (let _160_36 = (FStar_Util.string_of_int i)
 in (FStar_Util.format2 "%s_%s" lid.FStar_Ident.str _160_36))
 in (FStar_All.pipe_left escape _160_37)))
+
+# 62 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let mk_typ_projector : FStar_Ident.lident  ->  FStar_Absyn_Syntax.btvdef  ->  FStar_ToSMT_Term.term = (fun lid a -> (let _160_43 = (let _160_42 = (mk_typ_projector_name lid a)
 in (_160_42, FStar_ToSMT_Term.Arrow ((FStar_ToSMT_Term.Term_sort, FStar_ToSMT_Term.Type_sort))))
 in (FStar_ToSMT_Term.mkFreeV _160_43)))
 
+# 64 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let mk_term_projector : FStar_Ident.lident  ->  FStar_Absyn_Syntax.bvvdef  ->  FStar_ToSMT_Term.term = (fun lid a -> (let _160_49 = (let _160_48 = (mk_term_projector_name lid a)
 in (_160_48, FStar_ToSMT_Term.Arrow ((FStar_ToSMT_Term.Term_sort, FStar_ToSMT_Term.Term_sort))))
 in (FStar_ToSMT_Term.mkFreeV _160_49)))
+
+# 66 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let mk_term_projector_by_pos : FStar_Ident.lident  ->  Prims.int  ->  FStar_ToSMT_Term.term = (fun lid i -> (let _160_55 = (let _160_54 = (mk_term_projector_name_by_pos lid i)
 in (_160_54, FStar_ToSMT_Term.Arrow ((FStar_ToSMT_Term.Term_sort, FStar_ToSMT_Term.Term_sort))))
 in (FStar_ToSMT_Term.mkFreeV _160_55)))
 
+# 68 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let mk_data_tester = (fun env l x -> (FStar_ToSMT_Term.mk_tester (escape l.FStar_Ident.str) x))
+
+# 71 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 type varops_t =
 {push : Prims.unit  ->  Prims.unit; pop : Prims.unit  ->  Prims.unit; mark : Prims.unit  ->  Prims.unit; reset_mark : Prims.unit  ->  Prims.unit; commit_mark : Prims.unit  ->  Prims.unit; new_var : FStar_Ident.ident  ->  FStar_Ident.ident  ->  Prims.string; new_fvar : FStar_Ident.lident  ->  Prims.string; fresh : Prims.string  ->  Prims.string; string_const : Prims.string  ->  FStar_ToSMT_Term.term; next_id : Prims.unit  ->  Prims.int}
 
+# 71 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let is_Mkvarops_t : varops_t  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkvarops_t"))))
+
+# 83 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let varops : varops_t = (let initial_ctr = 10
 in (let ctr = (FStar_Util.mk_ref initial_ctr)
@@ -181,16 +213,22 @@ end)
 end))
 in {push = push; pop = pop; mark = mark; reset_mark = reset_mark; commit_mark = commit_mark; new_var = new_var; new_fvar = new_fvar; fresh = fresh; string_const = string_const; next_id = next_id})))))))))))))))
 
+# 128 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let unmangle = (fun x -> (let _160_215 = (let _160_214 = (FStar_Absyn_Util.unmangle_field_name x.FStar_Absyn_Syntax.ppname)
 in (let _160_213 = (FStar_Absyn_Util.unmangle_field_name x.FStar_Absyn_Syntax.realname)
 in (_160_214, _160_213)))
 in (FStar_Absyn_Util.mkbvd _160_215)))
+
+# 132 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 type binding =
 | Binding_var of (FStar_Absyn_Syntax.bvvdef * FStar_ToSMT_Term.term)
 | Binding_tvar of (FStar_Absyn_Syntax.btvdef * FStar_ToSMT_Term.term)
 | Binding_fvar of (FStar_Ident.lident * Prims.string * FStar_ToSMT_Term.term Prims.option * FStar_ToSMT_Term.term Prims.option)
 | Binding_ftvar of (FStar_Ident.lident * Prims.string * FStar_ToSMT_Term.term Prims.option)
+
+# 133 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let is_Binding_var : binding  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
 | Binding_var (_) -> begin
@@ -200,6 +238,8 @@ end
 false
 end))
 
+# 134 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let is_Binding_tvar : binding  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
 | Binding_tvar (_) -> begin
 true
@@ -207,6 +247,8 @@ end
 | _ -> begin
 false
 end))
+
+# 135 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let is_Binding_fvar : binding  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
 | Binding_fvar (_) -> begin
@@ -216,6 +258,8 @@ end
 false
 end))
 
+# 136 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let is_Binding_ftvar : binding  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
 | Binding_ftvar (_) -> begin
 true
@@ -224,32 +268,48 @@ end
 false
 end))
 
+# 133 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let ___Binding_var____0 : binding  ->  (FStar_Absyn_Syntax.bvvdef * FStar_ToSMT_Term.term) = (fun projectee -> (match (projectee) with
 | Binding_var (_58_179) -> begin
 _58_179
 end))
+
+# 134 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let ___Binding_tvar____0 : binding  ->  (FStar_Absyn_Syntax.btvdef * FStar_ToSMT_Term.term) = (fun projectee -> (match (projectee) with
 | Binding_tvar (_58_182) -> begin
 _58_182
 end))
 
+# 135 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let ___Binding_fvar____0 : binding  ->  (FStar_Ident.lident * Prims.string * FStar_ToSMT_Term.term Prims.option * FStar_ToSMT_Term.term Prims.option) = (fun projectee -> (match (projectee) with
 | Binding_fvar (_58_185) -> begin
 _58_185
 end))
+
+# 136 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let ___Binding_ftvar____0 : binding  ->  (FStar_Ident.lident * Prims.string * FStar_ToSMT_Term.term Prims.option) = (fun projectee -> (match (projectee) with
 | Binding_ftvar (_58_188) -> begin
 _58_188
 end))
 
+# 138 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let binder_of_eithervar = (fun v -> (v, None))
+
+# 139 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 type env_t =
 {bindings : binding Prims.list; depth : Prims.int; tcenv : FStar_Tc_Env.env; warn : Prims.bool; cache : (Prims.string * FStar_ToSMT_Term.sort Prims.list * FStar_ToSMT_Term.decl Prims.list) FStar_Util.smap; nolabels : Prims.bool; use_zfuel_name : Prims.bool; encode_non_total_function_typ : Prims.bool}
 
+# 139 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let is_Mkenv_t : env_t  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkenv_t"))))
+
+# 149 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let print_env : env_t  ->  Prims.string = (fun e -> (let _160_301 = (FStar_All.pipe_right e.bindings (FStar_List.map (fun _58_2 -> (match (_58_2) with
 | Binding_var (x, t) -> begin
@@ -266,7 +326,11 @@ end
 end))))
 in (FStar_All.pipe_right _160_301 (FStar_String.concat ", "))))
 
+# 156 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let lookup_binding = (fun env f -> (FStar_Util.find_map env.bindings f))
+
+# 158 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let caption_t : env_t  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  Prims.string Prims.option = (fun env t -> if (FStar_Tc_Env.debug env.tcenv FStar_Options.Low) then begin
 (let _160_311 = (FStar_Absyn_Print.typ_to_string t)
@@ -275,9 +339,13 @@ end else begin
 None
 end)
 
+# 163 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let fresh_fvar : Prims.string  ->  FStar_ToSMT_Term.sort  ->  (Prims.string * FStar_ToSMT_Term.term) = (fun x s -> (let xsym = (varops.fresh x)
 in (let _160_316 = (FStar_ToSMT_Term.mkFreeV (xsym, s))
 in (xsym, _160_316))))
+
+# 167 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let gen_term_var : env_t  ->  FStar_Absyn_Syntax.bvvdef  ->  (Prims.string * FStar_ToSMT_Term.term * env_t) = (fun env x -> (let ysym = (let _160_321 = (FStar_Util.string_of_int env.depth)
 in (Prims.strcat "@x" _160_321))
@@ -285,13 +353,19 @@ in (let y = (FStar_ToSMT_Term.mkFreeV (ysym, FStar_ToSMT_Term.Term_sort))
 in (ysym, y, (let _58_232 = env
 in {bindings = (Binding_var ((x, y)))::env.bindings; depth = (env.depth + 1); tcenv = _58_232.tcenv; warn = _58_232.warn; cache = _58_232.cache; nolabels = _58_232.nolabels; use_zfuel_name = _58_232.use_zfuel_name; encode_non_total_function_typ = _58_232.encode_non_total_function_typ})))))
 
+# 171 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let new_term_constant : env_t  ->  FStar_Absyn_Syntax.bvvdef  ->  (Prims.string * FStar_ToSMT_Term.term * env_t) = (fun env x -> (let ysym = (varops.new_var x.FStar_Absyn_Syntax.ppname x.FStar_Absyn_Syntax.realname)
 in (let y = (FStar_ToSMT_Term.mkApp (ysym, []))
 in (ysym, y, (let _58_238 = env
 in {bindings = (Binding_var ((x, y)))::env.bindings; depth = _58_238.depth; tcenv = _58_238.tcenv; warn = _58_238.warn; cache = _58_238.cache; nolabels = _58_238.nolabels; use_zfuel_name = _58_238.use_zfuel_name; encode_non_total_function_typ = _58_238.encode_non_total_function_typ})))))
 
+# 175 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let push_term_var : env_t  ->  FStar_Absyn_Syntax.bvvdef  ->  FStar_ToSMT_Term.term  ->  env_t = (fun env x t -> (let _58_243 = env
 in {bindings = (Binding_var ((x, t)))::env.bindings; depth = _58_243.depth; tcenv = _58_243.tcenv; warn = _58_243.warn; cache = _58_243.cache; nolabels = _58_243.nolabels; use_zfuel_name = _58_243.use_zfuel_name; encode_non_total_function_typ = _58_243.encode_non_total_function_typ}))
+
+# 177 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let lookup_term_var = (fun env a -> (match ((lookup_binding env (fun _58_3 -> (match (_58_3) with
 | Binding_var (b, t) when (FStar_Absyn_Util.bvd_eq b a.FStar_Absyn_Syntax.v) -> begin
@@ -309,19 +383,27 @@ end
 t
 end))
 
+# 183 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let gen_typ_var : env_t  ->  FStar_Absyn_Syntax.btvdef  ->  (Prims.string * FStar_ToSMT_Term.term * env_t) = (fun env x -> (let ysym = (let _160_341 = (FStar_Util.string_of_int env.depth)
 in (Prims.strcat "@a" _160_341))
 in (let y = (FStar_ToSMT_Term.mkFreeV (ysym, FStar_ToSMT_Term.Type_sort))
 in (ysym, y, (let _58_263 = env
 in {bindings = (Binding_tvar ((x, y)))::env.bindings; depth = (env.depth + 1); tcenv = _58_263.tcenv; warn = _58_263.warn; cache = _58_263.cache; nolabels = _58_263.nolabels; use_zfuel_name = _58_263.use_zfuel_name; encode_non_total_function_typ = _58_263.encode_non_total_function_typ})))))
 
+# 187 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let new_typ_constant : env_t  ->  FStar_Absyn_Syntax.btvdef  ->  (Prims.string * FStar_ToSMT_Term.term * env_t) = (fun env x -> (let ysym = (varops.new_var x.FStar_Absyn_Syntax.ppname x.FStar_Absyn_Syntax.realname)
 in (let y = (FStar_ToSMT_Term.mkApp (ysym, []))
 in (ysym, y, (let _58_269 = env
 in {bindings = (Binding_tvar ((x, y)))::env.bindings; depth = _58_269.depth; tcenv = _58_269.tcenv; warn = _58_269.warn; cache = _58_269.cache; nolabels = _58_269.nolabels; use_zfuel_name = _58_269.use_zfuel_name; encode_non_total_function_typ = _58_269.encode_non_total_function_typ})))))
 
+# 191 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let push_typ_var : env_t  ->  FStar_Absyn_Syntax.btvdef  ->  FStar_ToSMT_Term.term  ->  env_t = (fun env x t -> (let _58_274 = env
 in {bindings = (Binding_tvar ((x, t)))::env.bindings; depth = _58_274.depth; tcenv = _58_274.tcenv; warn = _58_274.warn; cache = _58_274.cache; nolabels = _58_274.nolabels; use_zfuel_name = _58_274.use_zfuel_name; encode_non_total_function_typ = _58_274.encode_non_total_function_typ}))
+
+# 193 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let lookup_typ_var = (fun env a -> (match ((lookup_binding env (fun _58_4 -> (match (_58_4) with
 | Binding_tvar (b, t) when (FStar_Absyn_Util.bvd_eq b a.FStar_Absyn_Syntax.v) -> begin
@@ -339,6 +421,8 @@ end
 t
 end))
 
+# 199 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let new_term_constant_and_tok_from_lid : env_t  ->  FStar_Ident.lident  ->  (Prims.string * Prims.string * env_t) = (fun env x -> (let fname = (varops.new_fvar x)
 in (let ftok = (Prims.strcat fname "@tok")
 in (let _160_367 = (let _58_294 = env
@@ -350,6 +434,8 @@ in (_160_365)::env.bindings)
 in {bindings = _160_366; depth = _58_294.depth; tcenv = _58_294.tcenv; warn = _58_294.warn; cache = _58_294.cache; nolabels = _58_294.nolabels; use_zfuel_name = _58_294.use_zfuel_name; encode_non_total_function_typ = _58_294.encode_non_total_function_typ}))
 in (fname, ftok, _160_367)))))
 
+# 203 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let try_lookup_lid : env_t  ->  FStar_Ident.lident  ->  (Prims.string * FStar_ToSMT_Term.term Prims.option * FStar_ToSMT_Term.term Prims.option) Prims.option = (fun env a -> (lookup_binding env (fun _58_5 -> (match (_58_5) with
 | Binding_fvar (b, t1, t2, t3) when (FStar_Ident.lid_equals b a) -> begin
 Some ((t1, t2, t3))
@@ -357,6 +443,8 @@ end
 | _58_306 -> begin
 None
 end))))
+
+# 205 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let lookup_lid : env_t  ->  FStar_Ident.lident  ->  (Prims.string * FStar_ToSMT_Term.term Prims.option * FStar_ToSMT_Term.term Prims.option) = (fun env a -> (match ((try_lookup_lid env a)) with
 | None -> begin
@@ -368,8 +456,12 @@ end
 s
 end))
 
+# 209 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let push_free_var : env_t  ->  FStar_Ident.lident  ->  Prims.string  ->  FStar_ToSMT_Term.term Prims.option  ->  env_t = (fun env x fname ftok -> (let _58_316 = env
 in {bindings = (Binding_fvar ((x, fname, ftok, None)))::env.bindings; depth = _58_316.depth; tcenv = _58_316.tcenv; warn = _58_316.warn; cache = _58_316.cache; nolabels = _58_316.nolabels; use_zfuel_name = _58_316.use_zfuel_name; encode_non_total_function_typ = _58_316.encode_non_total_function_typ}))
+
+# 211 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let push_zfuel_name : env_t  ->  FStar_Ident.lident  ->  Prims.string  ->  env_t = (fun env x f -> (let _58_325 = (lookup_lid env x)
 in (match (_58_325) with
@@ -381,6 +473,8 @@ in (FStar_ToSMT_Term.mkApp _160_395))
 in (let _58_327 = env
 in {bindings = (Binding_fvar ((x, t1, t2, Some (t3))))::env.bindings; depth = _58_327.depth; tcenv = _58_327.tcenv; warn = _58_327.warn; cache = _58_327.cache; nolabels = _58_327.nolabels; use_zfuel_name = _58_327.use_zfuel_name; encode_non_total_function_typ = _58_327.encode_non_total_function_typ}))
 end)))
+
+# 215 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let lookup_free_var = (fun env a -> (let _58_334 = (lookup_lid env a.FStar_Absyn_Syntax.v)
 in (match (_58_334) with
@@ -415,11 +509,15 @@ end)
 end)
 end)))
 
+# 230 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let lookup_free_var_name = (fun env a -> (let _58_358 = (lookup_lid env a.FStar_Absyn_Syntax.v)
 in (match (_58_358) with
 | (x, _58_355, _58_357) -> begin
 x
 end)))
+
+# 231 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let lookup_free_var_sym = (fun env a -> (let _58_364 = (lookup_lid env a.FStar_Absyn_Syntax.v)
 in (match (_58_364) with
@@ -445,6 +543,8 @@ end)
 end)
 end)))
 
+# 244 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let new_typ_constant_and_tok_from_lid : env_t  ->  FStar_Ident.lident  ->  (Prims.string * Prims.string * env_t) = (fun env x -> (let fname = (varops.new_fvar x)
 in (let ftok = (Prims.strcat fname "@tok")
 in (let _160_417 = (let _58_391 = env
@@ -455,6 +555,8 @@ in Binding_ftvar (_160_414))
 in (_160_415)::env.bindings)
 in {bindings = _160_416; depth = _58_391.depth; tcenv = _58_391.tcenv; warn = _58_391.warn; cache = _58_391.cache; nolabels = _58_391.nolabels; use_zfuel_name = _58_391.use_zfuel_name; encode_non_total_function_typ = _58_391.encode_non_total_function_typ}))
 in (fname, ftok, _160_417)))))
+
+# 248 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let lookup_tlid : env_t  ->  FStar_Ident.lident  ->  (Prims.string * FStar_ToSMT_Term.term Prims.option) = (fun env a -> (match ((lookup_binding env (fun _58_6 -> (match (_58_6) with
 | Binding_ftvar (b, t1, t2) when (FStar_Ident.lid_equals b a) -> begin
@@ -472,8 +574,12 @@ end
 s
 end))
 
+# 252 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let push_free_tvar : env_t  ->  FStar_Ident.lident  ->  Prims.string  ->  FStar_ToSMT_Term.term Prims.option  ->  env_t = (fun env x fname ftok -> (let _58_410 = env
 in {bindings = (Binding_ftvar ((x, fname, ftok)))::env.bindings; depth = _58_410.depth; tcenv = _58_410.tcenv; warn = _58_410.warn; cache = _58_410.cache; nolabels = _58_410.nolabels; use_zfuel_name = _58_410.use_zfuel_name; encode_non_total_function_typ = _58_410.encode_non_total_function_typ}))
+
+# 254 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let lookup_free_tvar = (fun env a -> (match ((let _160_435 = (lookup_tlid env a.FStar_Absyn_Syntax.v)
 in (FStar_All.pipe_right _160_435 Prims.snd))) with
@@ -486,8 +592,12 @@ end
 t
 end))
 
+# 258 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let lookup_free_tvar_name = (fun env a -> (let _160_440 = (lookup_tlid env a.FStar_Absyn_Syntax.v)
 in (FStar_All.pipe_right _160_440 Prims.fst)))
+
+# 260 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let tok_of_name : env_t  ->  Prims.string  ->  FStar_ToSMT_Term.term Prims.option = (fun env nm -> (FStar_Util.find_map env.bindings (fun _58_7 -> (match (_58_7) with
 | (Binding_fvar (_, nm', tok, _)) | (Binding_ftvar (_, nm', tok)) when (nm = nm') -> begin
@@ -496,6 +606,8 @@ end
 | _58_435 -> begin
 None
 end))))
+
+# 270 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let mkForall_fuel' = (fun n _58_440 -> (match (_58_440) with
 | (pats, vars, body) -> begin
@@ -539,7 +651,11 @@ end))
 end)
 end))
 
-let mkForall_fuel : (FStar_ToSMT_Term.pat Prims.list Prims.list * FStar_ToSMT_Term.fvs * FStar_ToSMT_Term.term)  ->  FStar_ToSMT_Term.term = (mkForall_fuel' 1)
+# 290 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
+let mkForall_fuel : (FStar_ToSMT_Term.term Prims.list Prims.list * FStar_ToSMT_Term.fv Prims.list * FStar_ToSMT_Term.term)  ->  FStar_ToSMT_Term.term = (mkForall_fuel' 1)
+
+# 292 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let head_normal : env_t  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  Prims.bool = (fun env t -> (let t = (FStar_Absyn_Util.unmeta_typ t)
 in (match (t.FStar_Absyn_Syntax.n) with
@@ -554,21 +670,33 @@ end
 false
 end)))
 
+# 304 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let whnf : env_t  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (fun env t -> if (head_normal env t) then begin
 t
 end else begin
 (FStar_Tc_Normalize.norm_typ ((FStar_Tc_Normalize.Beta)::(FStar_Tc_Normalize.WHNF)::(FStar_Tc_Normalize.DeltaHard)::[]) env.tcenv t)
 end)
 
+# 307 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let whnf_e : env_t  ->  FStar_Absyn_Syntax.exp  ->  FStar_Absyn_Syntax.exp = (fun env e -> (FStar_Tc_Normalize.norm_exp ((FStar_Tc_Normalize.Beta)::(FStar_Tc_Normalize.WHNF)::[]) env.tcenv e))
+
+# 308 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let norm_t : env_t  ->  FStar_Absyn_Syntax.typ  ->  FStar_Absyn_Syntax.typ = (fun env t -> (FStar_Tc_Normalize.norm_typ ((FStar_Tc_Normalize.Beta)::[]) env.tcenv t))
 
-let norm_k : env_t  ->  FStar_Absyn_Syntax.knd  ->  FStar_Absyn_Syntax.knd = (fun env k -> (FStar_Tc_Normalize.normalize_kind env.tcenv k))
+# 309 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
+let norm_k : env_t  ->  FStar_Absyn_Syntax.knd  ->  (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax = (fun env k -> (FStar_Tc_Normalize.normalize_kind env.tcenv k))
+
+# 310 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let trivial_post : (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  FStar_Absyn_Syntax.typ = (fun t -> (let _160_480 = (let _160_479 = (FStar_Absyn_Util.ftv FStar_Absyn_Const.true_lid FStar_Absyn_Syntax.ktype)
 in (((FStar_Absyn_Syntax.null_v_binder t))::[], _160_479))
 in (FStar_Absyn_Syntax.mk_Typ_lam _160_480 None t.FStar_Absyn_Syntax.pos)))
+
+# 313 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let mk_ApplyE : FStar_ToSMT_Term.term  ->  (Prims.string * FStar_ToSMT_Term.sort) Prims.list  ->  FStar_ToSMT_Term.term = (fun e vars -> (FStar_All.pipe_right vars (FStar_List.fold_left (fun out var -> (match ((Prims.snd var)) with
 | FStar_ToSMT_Term.Type_sort -> begin
@@ -584,6 +712,8 @@ end
 in (FStar_ToSMT_Term.mk_ApplyEE out _160_489))
 end)) e)))
 
+# 318 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let mk_ApplyE_args : FStar_ToSMT_Term.term  ->  (FStar_ToSMT_Term.term, FStar_ToSMT_Term.term) FStar_Util.either Prims.list  ->  FStar_ToSMT_Term.term = (fun e args -> (FStar_All.pipe_right args (FStar_List.fold_left (fun out arg -> (match (arg) with
 | FStar_Util.Inl (t) -> begin
 (FStar_ToSMT_Term.mk_ApplyET out t)
@@ -591,6 +721,8 @@ end
 | FStar_Util.Inr (e) -> begin
 (FStar_ToSMT_Term.mk_ApplyEE out e)
 end)) e)))
+
+# 323 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let mk_ApplyT : FStar_ToSMT_Term.term  ->  (Prims.string * FStar_ToSMT_Term.sort) Prims.list  ->  FStar_ToSMT_Term.term = (fun t vars -> (FStar_All.pipe_right vars (FStar_List.fold_left (fun out var -> (match ((Prims.snd var)) with
 | FStar_ToSMT_Term.Type_sort -> begin
@@ -602,6 +734,8 @@ end
 in (FStar_ToSMT_Term.mk_ApplyTE out _160_503))
 end)) t)))
 
+# 327 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let mk_ApplyT_args : FStar_ToSMT_Term.term  ->  (FStar_ToSMT_Term.term, FStar_ToSMT_Term.term) FStar_Util.either Prims.list  ->  FStar_ToSMT_Term.term = (fun t args -> (FStar_All.pipe_right args (FStar_List.fold_left (fun out arg -> (match (arg) with
 | FStar_Util.Inl (t) -> begin
 (FStar_ToSMT_Term.mk_ApplyTT out t)
@@ -610,6 +744,8 @@ end
 (FStar_ToSMT_Term.mk_ApplyTE out e)
 end)) t)))
 
+# 331 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let is_app : FStar_ToSMT_Term.op  ->  Prims.bool = (fun _58_8 -> (match (_58_8) with
 | (FStar_ToSMT_Term.Var ("ApplyTT")) | (FStar_ToSMT_Term.Var ("ApplyTE")) | (FStar_ToSMT_Term.Var ("ApplyET")) | (FStar_ToSMT_Term.Var ("ApplyEE")) -> begin
 true
@@ -617,6 +753,8 @@ end
 | _58_560 -> begin
 false
 end))
+
+# 338 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let is_eta : env_t  ->  FStar_ToSMT_Term.fv Prims.list  ->  FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term Prims.option = (fun env vars t -> (let rec aux = (fun t xs -> (match ((t.FStar_ToSMT_Term.tm, xs)) with
 | (FStar_ToSMT_Term.App (app, f::{FStar_ToSMT_Term.tm = FStar_ToSMT_Term.FreeV (y); FStar_ToSMT_Term.hash = _58_571; FStar_ToSMT_Term.freevars = _58_569}::[]), x::xs) when ((is_app app) && (FStar_ToSMT_Term.fv_eq x y)) -> begin
@@ -648,18 +786,30 @@ None
 end))
 in (aux t (FStar_List.rev vars))))
 
+# 383 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 type label =
 (FStar_ToSMT_Term.fv * Prims.string * FStar_Range.range)
+
+# 384 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 type labels =
 label Prims.list
 
+# 385 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 type pattern =
 {pat_vars : (FStar_Absyn_Syntax.either_var * FStar_ToSMT_Term.fv) Prims.list; pat_term : Prims.unit  ->  (FStar_ToSMT_Term.term * FStar_ToSMT_Term.decls_t); guard : FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term; projections : FStar_ToSMT_Term.term  ->  (FStar_Absyn_Syntax.either_var * FStar_ToSMT_Term.term) Prims.list}
 
+# 385 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let is_Mkpattern : pattern  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkpattern"))))
 
+# 391 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 exception Let_rec_unencodeable
+
+# 391 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let is_Let_rec_unencodeable : Prims.exn  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
 | Let_rec_unencodeable -> begin
@@ -668,6 +818,8 @@ end
 | _ -> begin
 false
 end))
+
+# 393 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let encode_const : FStar_Const.sconst  ->  FStar_ToSMT_Term.term = (fun _58_9 -> (match (_58_9) with
 | FStar_Const.Const_unit -> begin
@@ -708,6 +860,8 @@ in (FStar_Util.format1 "Unhandled constant: %s\n" _160_567))
 in (FStar_All.failwith _160_568))
 end))
 
+# 404 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let as_function_typ : env_t  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (fun env t0 -> (let rec aux = (fun norm t -> (let t = (FStar_Absyn_Util.compress_typ t)
 in (match (t.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Typ_fun (_58_637) -> begin
@@ -729,6 +883,8 @@ in (FStar_All.failwith _160_581))
 end
 end)))
 in (aux true t0)))
+
+# 415 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let rec encode_knd_term : FStar_Absyn_Syntax.knd  ->  env_t  ->  (FStar_ToSMT_Term.term * FStar_ToSMT_Term.decls_t) = (fun k env -> (match ((let _160_618 = (FStar_Absyn_Util.compress_kind k)
 in _160_618.FStar_Absyn_Syntax.n)) with
@@ -2069,10 +2225,16 @@ in (_160_1090, labs, decls))
 end))
 end))))))))))))))))
 
+# 1223 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 type prims_t =
 {mk : FStar_Ident.lident  ->  Prims.string  ->  FStar_ToSMT_Term.decl Prims.list; is : FStar_Ident.lident  ->  Prims.bool}
 
+# 1223 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let is_Mkprims_t : prims_t  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkprims_t"))))
+
+# 1229 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let prims : prims_t = (let _58_2061 = (fresh_fvar "a" FStar_ToSMT_Term.Type_sort)
 in (match (_58_2061) with
@@ -2236,6 +2398,8 @@ in {mk = mk; is = is})))))))))
 end))
 end))
 end))
+
+# 1271 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let primitive_type_axioms : FStar_Ident.lident  ->  Prims.string  ->  FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.decl Prims.list = (let xx = ("x", FStar_ToSMT_Term.Term_sort)
 in (let x = (FStar_ToSMT_Term.mkFreeV xx)
@@ -2619,6 +2783,8 @@ end
 | Some (_58_2266, f) -> begin
 (f s tt)
 end)))))))))))))))))))))))
+
+# 1441 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let rec encode_sigelt : env_t  ->  FStar_Absyn_Syntax.sigelt  ->  (FStar_ToSMT_Term.decls_t * env_t) = (fun env se -> (let _58_2272 = if (FStar_Tc_Env.debug env.tcenv FStar_Options.Low) then begin
 (let _160_1826 = (FStar_Absyn_Print.sigelt_to_string se)
@@ -3114,7 +3280,7 @@ end
 | FStar_Absyn_Syntax.Sig_datacon (d, t, (_58_2660, tps, _58_2663), quals, _58_2667, drange) -> begin
 (let t = (let _160_2025 = (FStar_List.map (fun _58_2674 -> (match (_58_2674) with
 | (x, _58_2673) -> begin
-(x, Some (FStar_Absyn_Syntax.Implicit))
+(x, Some (FStar_Absyn_Syntax.Implicit (true)))
 end)) tps)
 in (FStar_Absyn_Util.close_typ _160_2025 t))
 in (let _58_2679 = (new_term_constant_and_tok_from_lid env d)
@@ -3877,6 +4043,8 @@ in (match (_58_3311) with
 end))
 end)) ([], env))))
 
+# 1973 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let encode_env_bindings : env_t  ->  FStar_Tc_Env.binding Prims.list  ->  (FStar_ToSMT_Term.decl Prims.list * env_t) = (fun env bindings -> (let encode_binding = (fun b _58_3318 -> (match (_58_3318) with
 | (decls, env) -> begin
 (match (b) with
@@ -3946,6 +4114,8 @@ end)
 end))
 in (FStar_List.fold_right encode_binding bindings ([], env))))
 
+# 2029 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let encode_labels = (fun labs -> (let prefix = (FStar_All.pipe_right labs (FStar_List.map (fun _58_3366 -> (match (_58_3366) with
 | (l, _58_3363, _58_3365) -> begin
 FStar_ToSMT_Term.DeclFun (((Prims.fst l), [], FStar_ToSMT_Term.Bool_sort, None))
@@ -3960,12 +4130,18 @@ in (_160_2317)::_160_2316))
 end))))
 in (prefix, suffix))))
 
+# 2036 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let last_env : env_t Prims.list FStar_ST.ref = (FStar_Util.mk_ref [])
+
+# 2037 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let init_env : FStar_Tc_Env.env  ->  Prims.unit = (fun tcenv -> (let _160_2322 = (let _160_2321 = (let _160_2320 = (FStar_Util.smap_create 100)
 in {bindings = []; depth = 0; tcenv = tcenv; warn = true; cache = _160_2320; nolabels = false; use_zfuel_name = false; encode_non_total_function_typ = true})
 in (_160_2321)::[])
 in (FStar_ST.op_Colon_Equals last_env _160_2322)))
+
+# 2040 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let get_env : FStar_Tc_Env.env  ->  env_t = (fun tcenv -> (match ((FStar_ST.read last_env)) with
 | [] -> begin
@@ -3976,6 +4152,8 @@ end
 in {bindings = _58_3382.bindings; depth = _58_3382.depth; tcenv = tcenv; warn = _58_3382.warn; cache = _58_3382.cache; nolabels = _58_3382.nolabels; use_zfuel_name = _58_3382.use_zfuel_name; encode_non_total_function_typ = _58_3382.encode_non_total_function_typ})
 end))
 
+# 2043 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let set_env : env_t  ->  Prims.unit = (fun env -> (match ((FStar_ST.read last_env)) with
 | [] -> begin
 (FStar_All.failwith "Empty env stack")
@@ -3983,6 +4161,8 @@ end
 | _58_3388::tl -> begin
 (FStar_ST.op_Colon_Equals last_env ((env)::tl))
 end))
+
+# 2046 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let push_env : Prims.unit  ->  Prims.unit = (fun _58_3390 -> (match (()) with
 | () -> begin
@@ -3998,6 +4178,8 @@ in (FStar_ST.op_Colon_Equals last_env ((top)::(hd)::tl))))
 end)
 end))
 
+# 2052 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let pop_env : Prims.unit  ->  Prims.unit = (fun _58_3399 -> (match (()) with
 | () -> begin
 (match ((FStar_ST.read last_env)) with
@@ -4009,15 +4191,21 @@ end
 end)
 end))
 
+# 2055 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let mark_env : Prims.unit  ->  Prims.unit = (fun _58_3405 -> (match (()) with
 | () -> begin
 (push_env ())
 end))
 
+# 2056 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let reset_mark_env : Prims.unit  ->  Prims.unit = (fun _58_3406 -> (match (()) with
 | () -> begin
 (pop_env ())
 end))
+
+# 2057 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let commit_mark_env : Prims.unit  ->  Prims.unit = (fun _58_3407 -> (match (()) with
 | () -> begin
@@ -4030,30 +4218,44 @@ end
 end)
 end))
 
+# 2063 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let init : FStar_Tc_Env.env  ->  Prims.unit = (fun tcenv -> (let _58_3417 = (init_env tcenv)
 in (let _58_3419 = (FStar_ToSMT_Z3.init ())
 in (FStar_ToSMT_Z3.giveZ3 ((FStar_ToSMT_Term.DefPrelude)::[])))))
 
+# 2067 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let push : Prims.string  ->  Prims.unit = (fun msg -> (let _58_3422 = (push_env ())
 in (let _58_3424 = (varops.push ())
 in (FStar_ToSMT_Z3.push msg))))
+
+# 2071 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let pop : Prims.string  ->  Prims.unit = (fun msg -> (let _58_3427 = (let _160_2343 = (pop_env ())
 in (FStar_All.pipe_left Prims.ignore _160_2343))
 in (let _58_3429 = (varops.pop ())
 in (FStar_ToSMT_Z3.pop msg))))
 
+# 2075 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let mark : Prims.string  ->  Prims.unit = (fun msg -> (let _58_3432 = (mark_env ())
 in (let _58_3434 = (varops.mark ())
 in (FStar_ToSMT_Z3.mark msg))))
+
+# 2079 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let reset_mark : Prims.string  ->  Prims.unit = (fun msg -> (let _58_3437 = (reset_mark_env ())
 in (let _58_3439 = (varops.reset_mark ())
 in (FStar_ToSMT_Z3.reset_mark msg))))
 
+# 2083 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let commit_mark = (fun msg -> (let _58_3442 = (commit_mark_env ())
 in (let _58_3444 = (varops.commit_mark ())
 in (FStar_ToSMT_Z3.commit_mark msg))))
+
+# 2087 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let encode_sig : FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.sigelt  ->  Prims.unit = (fun tcenv se -> (let caption = (fun decls -> if (FStar_ST.read FStar_Options.logQueries) then begin
 (let _160_2357 = (let _160_2356 = (let _160_2355 = (FStar_Absyn_Print.sigelt_to_string_short se)
@@ -4071,6 +4273,8 @@ in (match (_58_3453) with
 in (let _160_2358 = (caption decls)
 in (FStar_ToSMT_Z3.giveZ3 _160_2358)))
 end)))))
+
+# 2097 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let encode_modul : FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.modul  ->  Prims.unit = (fun tcenv modul -> (let name = (FStar_Util.format2 "%s %s" (if modul.FStar_Absyn_Syntax.is_interface then begin
 "interface"
@@ -4105,16 +4309,16 @@ in (let decls = (caption decls)
 in (FStar_ToSMT_Z3.giveZ3 decls)))))
 end))))))
 
-let solve : FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.typ  ->  Prims.unit = (fun tcenv q -> (let _58_3479 = (let _160_2372 = (let _160_2371 = (let _160_2370 = (FStar_Tc_Env.get_range tcenv)
-in (FStar_All.pipe_left FStar_Range.string_of_range _160_2370))
-in (FStar_Util.format1 "Starting query at %s" _160_2371))
-in (push _160_2372))
+# 2113 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
+let solve : FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.typ  ->  Prims.unit = (fun tcenv q -> (let _58_3479 = (let _160_2371 = (let _160_2370 = (FStar_All.pipe_left FStar_Range.string_of_range (FStar_Tc_Env.get_range tcenv))
+in (FStar_Util.format1 "Starting query at %s" _160_2370))
+in (push _160_2371))
 in (let pop = (fun _58_3482 -> (match (()) with
 | () -> begin
-(let _160_2377 = (let _160_2376 = (let _160_2375 = (FStar_Tc_Env.get_range tcenv)
-in (FStar_All.pipe_left FStar_Range.string_of_range _160_2375))
-in (FStar_Util.format1 "Ending query at %s" _160_2376))
-in (pop _160_2377))
+(let _160_2375 = (let _160_2374 = (FStar_All.pipe_left FStar_Range.string_of_range (FStar_Tc_Env.get_range tcenv))
+in (FStar_Util.format1 "Ending query at %s" _160_2374))
+in (pop _160_2375))
 end))
 in (let _58_3541 = (let env = (get_env tcenv)
 in (let bindings = (FStar_Tc_Env.fold_env tcenv (fun bs b -> (b)::bs) [])
@@ -4140,24 +4344,24 @@ end))
 in (let _58_3512 = (aux bindings)
 in (match (_58_3512) with
 | (closing, bindings) -> begin
-(let _160_2382 = (FStar_Absyn_Util.close_forall (FStar_List.rev closing) q)
-in (_160_2382, bindings))
+(let _160_2380 = (FStar_Absyn_Util.close_forall (FStar_List.rev closing) q)
+in (_160_2380, bindings))
 end)))
 in (match (_58_3515) with
 | (q, bindings) -> begin
-(let _58_3524 = (let _160_2384 = (FStar_List.filter (fun _58_32 -> (match (_58_32) with
+(let _58_3524 = (let _160_2382 = (FStar_List.filter (fun _58_32 -> (match (_58_32) with
 | FStar_Tc_Env.Binding_sig (_58_3518) -> begin
 false
 end
 | _58_3521 -> begin
 true
 end)) bindings)
-in (encode_env_bindings env _160_2384))
+in (encode_env_bindings env _160_2382))
 in (match (_58_3524) with
 | (env_decls, env) -> begin
 (let _58_3525 = if (FStar_Tc_Env.debug tcenv FStar_Options.Low) then begin
-(let _160_2385 = (FStar_Absyn_Print.formula_to_string q)
-in (FStar_Util.print1 "Encoding query formula: %s\n" _160_2385))
+(let _160_2383 = (FStar_Absyn_Print.formula_to_string q)
+in (FStar_Util.print1 "Encoding query formula: %s\n" _160_2383))
 end else begin
 ()
 end
@@ -4168,9 +4372,9 @@ in (match (_58_3530) with
 in (match (_58_3533) with
 | (label_prefix, label_suffix) -> begin
 (let query_prelude = (FStar_List.append (FStar_List.append env_decls label_prefix) qdecls)
-in (let qry = (let _160_2387 = (let _160_2386 = (FStar_ToSMT_Term.mkNot phi)
-in (_160_2386, Some ("query")))
-in FStar_ToSMT_Term.Assume (_160_2387))
+in (let qry = (let _160_2385 = (let _160_2384 = (FStar_ToSMT_Term.mkNot phi)
+in (_160_2384, Some ("query")))
+in FStar_ToSMT_Term.Assume (_160_2385))
 in (let suffix = (FStar_List.append label_suffix ((FStar_ToSMT_Term.Echo ("Done!"))::[]))
 in (query_prelude, labels, qry, suffix))))
 end))
@@ -4193,66 +4397,66 @@ end
 in (let _58_3568 = (FStar_ToSMT_Z3.giveZ3 prefix)
 in (let with_fuel = (fun p _58_3574 -> (match (_58_3574) with
 | (n, i) -> begin
-(let _160_2410 = (let _160_2409 = (let _160_2394 = (let _160_2393 = (FStar_Util.string_of_int n)
-in (let _160_2392 = (FStar_Util.string_of_int i)
-in (FStar_Util.format2 "<fuel=\'%s\' ifuel=\'%s\'>" _160_2393 _160_2392)))
-in FStar_ToSMT_Term.Caption (_160_2394))
-in (let _160_2408 = (let _160_2407 = (let _160_2399 = (let _160_2398 = (let _160_2397 = (let _160_2396 = (FStar_ToSMT_Term.mkApp ("MaxFuel", []))
-in (let _160_2395 = (FStar_ToSMT_Term.n_fuel n)
-in (_160_2396, _160_2395)))
-in (FStar_ToSMT_Term.mkEq _160_2397))
-in (_160_2398, None))
-in FStar_ToSMT_Term.Assume (_160_2399))
-in (let _160_2406 = (let _160_2405 = (let _160_2404 = (let _160_2403 = (let _160_2402 = (let _160_2401 = (FStar_ToSMT_Term.mkApp ("MaxIFuel", []))
-in (let _160_2400 = (FStar_ToSMT_Term.n_fuel i)
-in (_160_2401, _160_2400)))
-in (FStar_ToSMT_Term.mkEq _160_2402))
-in (_160_2403, None))
-in FStar_ToSMT_Term.Assume (_160_2404))
-in (_160_2405)::(p)::(FStar_ToSMT_Term.CheckSat)::[])
+(let _160_2408 = (let _160_2407 = (let _160_2392 = (let _160_2391 = (FStar_Util.string_of_int n)
+in (let _160_2390 = (FStar_Util.string_of_int i)
+in (FStar_Util.format2 "<fuel=\'%s\' ifuel=\'%s\'>" _160_2391 _160_2390)))
+in FStar_ToSMT_Term.Caption (_160_2392))
+in (let _160_2406 = (let _160_2405 = (let _160_2397 = (let _160_2396 = (let _160_2395 = (let _160_2394 = (FStar_ToSMT_Term.mkApp ("MaxFuel", []))
+in (let _160_2393 = (FStar_ToSMT_Term.n_fuel n)
+in (_160_2394, _160_2393)))
+in (FStar_ToSMT_Term.mkEq _160_2395))
+in (_160_2396, None))
+in FStar_ToSMT_Term.Assume (_160_2397))
+in (let _160_2404 = (let _160_2403 = (let _160_2402 = (let _160_2401 = (let _160_2400 = (let _160_2399 = (FStar_ToSMT_Term.mkApp ("MaxIFuel", []))
+in (let _160_2398 = (FStar_ToSMT_Term.n_fuel i)
+in (_160_2399, _160_2398)))
+in (FStar_ToSMT_Term.mkEq _160_2400))
+in (_160_2401, None))
+in FStar_ToSMT_Term.Assume (_160_2402))
+in (_160_2403)::(p)::(FStar_ToSMT_Term.CheckSat)::[])
+in (_160_2405)::_160_2404))
 in (_160_2407)::_160_2406))
-in (_160_2409)::_160_2408))
-in (FStar_List.append _160_2410 suffix))
+in (FStar_List.append _160_2408 suffix))
 end))
-in (let check = (fun p -> (let initial_config = (let _160_2414 = (FStar_ST.read FStar_Options.initial_fuel)
-in (let _160_2413 = (FStar_ST.read FStar_Options.initial_ifuel)
+in (let check = (fun p -> (let initial_config = (let _160_2412 = (FStar_ST.read FStar_Options.initial_fuel)
+in (let _160_2411 = (FStar_ST.read FStar_Options.initial_ifuel)
+in (_160_2412, _160_2411)))
+in (let alt_configs = (let _160_2431 = (let _160_2430 = if ((FStar_ST.read FStar_Options.max_ifuel) > (FStar_ST.read FStar_Options.initial_ifuel)) then begin
+(let _160_2415 = (let _160_2414 = (FStar_ST.read FStar_Options.initial_fuel)
+in (let _160_2413 = (FStar_ST.read FStar_Options.max_ifuel)
 in (_160_2414, _160_2413)))
-in (let alt_configs = (let _160_2433 = (let _160_2432 = if ((FStar_ST.read FStar_Options.max_ifuel) > (FStar_ST.read FStar_Options.initial_ifuel)) then begin
-(let _160_2417 = (let _160_2416 = (FStar_ST.read FStar_Options.initial_fuel)
-in (let _160_2415 = (FStar_ST.read FStar_Options.max_ifuel)
-in (_160_2416, _160_2415)))
-in (_160_2417)::[])
+in (_160_2415)::[])
 end else begin
 []
 end
-in (let _160_2431 = (let _160_2430 = if (((FStar_ST.read FStar_Options.max_fuel) / 2) > (FStar_ST.read FStar_Options.initial_fuel)) then begin
-(let _160_2420 = (let _160_2419 = ((FStar_ST.read FStar_Options.max_fuel) / 2)
-in (let _160_2418 = (FStar_ST.read FStar_Options.max_ifuel)
-in (_160_2419, _160_2418)))
-in (_160_2420)::[])
+in (let _160_2429 = (let _160_2428 = if (((FStar_ST.read FStar_Options.max_fuel) / 2) > (FStar_ST.read FStar_Options.initial_fuel)) then begin
+(let _160_2418 = (let _160_2417 = ((FStar_ST.read FStar_Options.max_fuel) / 2)
+in (let _160_2416 = (FStar_ST.read FStar_Options.max_ifuel)
+in (_160_2417, _160_2416)))
+in (_160_2418)::[])
 end else begin
 []
 end
-in (let _160_2429 = (let _160_2428 = if (((FStar_ST.read FStar_Options.max_fuel) > (FStar_ST.read FStar_Options.initial_fuel)) && ((FStar_ST.read FStar_Options.max_ifuel) > (FStar_ST.read FStar_Options.initial_ifuel))) then begin
-(let _160_2423 = (let _160_2422 = (FStar_ST.read FStar_Options.max_fuel)
-in (let _160_2421 = (FStar_ST.read FStar_Options.max_ifuel)
-in (_160_2422, _160_2421)))
+in (let _160_2427 = (let _160_2426 = if (((FStar_ST.read FStar_Options.max_fuel) > (FStar_ST.read FStar_Options.initial_fuel)) && ((FStar_ST.read FStar_Options.max_ifuel) > (FStar_ST.read FStar_Options.initial_ifuel))) then begin
+(let _160_2421 = (let _160_2420 = (FStar_ST.read FStar_Options.max_fuel)
+in (let _160_2419 = (FStar_ST.read FStar_Options.max_ifuel)
+in (_160_2420, _160_2419)))
+in (_160_2421)::[])
+end else begin
+[]
+end
+in (let _160_2425 = (let _160_2424 = if ((FStar_ST.read FStar_Options.min_fuel) < (FStar_ST.read FStar_Options.initial_fuel)) then begin
+(let _160_2423 = (let _160_2422 = (FStar_ST.read FStar_Options.min_fuel)
+in (_160_2422, 1))
 in (_160_2423)::[])
 end else begin
 []
 end
-in (let _160_2427 = (let _160_2426 = if ((FStar_ST.read FStar_Options.min_fuel) < (FStar_ST.read FStar_Options.initial_fuel)) then begin
-(let _160_2425 = (let _160_2424 = (FStar_ST.read FStar_Options.min_fuel)
-in (_160_2424, 1))
-in (_160_2425)::[])
-end else begin
-[]
-end
-in (_160_2426)::[])
+in (_160_2424)::[])
+in (_160_2426)::_160_2425))
 in (_160_2428)::_160_2427))
 in (_160_2430)::_160_2429))
-in (_160_2432)::_160_2431))
-in (FStar_List.flatten _160_2433))
+in (FStar_List.flatten _160_2431))
 in (let report = (fun errs -> (let errs = (match (errs) with
 | [] -> begin
 (("Unknown assertion failed", FStar_Absyn_Syntax.dummyRange))::[]
@@ -4261,13 +4465,12 @@ end
 errs
 end)
 in (let _58_3585 = if (FStar_ST.read FStar_Options.print_fuels) then begin
-(let _160_2441 = (let _160_2436 = (FStar_Tc_Env.get_range tcenv)
-in (FStar_Range.string_of_range _160_2436))
-in (let _160_2440 = (let _160_2437 = (FStar_ST.read FStar_Options.max_fuel)
-in (FStar_All.pipe_right _160_2437 FStar_Util.string_of_int))
-in (let _160_2439 = (let _160_2438 = (FStar_ST.read FStar_Options.max_ifuel)
-in (FStar_All.pipe_right _160_2438 FStar_Util.string_of_int))
-in (FStar_Util.print3 "(%s) Query failed with maximum fuel %s and ifuel %s\n" _160_2441 _160_2440 _160_2439))))
+(let _160_2438 = (FStar_Range.string_of_range (FStar_Tc_Env.get_range tcenv))
+in (let _160_2437 = (let _160_2434 = (FStar_ST.read FStar_Options.max_fuel)
+in (FStar_All.pipe_right _160_2434 FStar_Util.string_of_int))
+in (let _160_2436 = (let _160_2435 = (FStar_ST.read FStar_Options.max_ifuel)
+in (FStar_All.pipe_right _160_2435 FStar_Util.string_of_int))
+in (FStar_Util.print3 "(%s) Query failed with maximum fuel %s and ifuel %s\n" _160_2438 _160_2437 _160_2436))))
 end else begin
 ()
 end
@@ -4279,16 +4482,16 @@ end
 | mi::[] -> begin
 (match (errs) with
 | [] -> begin
-(let _160_2452 = (with_fuel p mi)
-in (FStar_ToSMT_Z3.ask fresh labels _160_2452 (cb mi p [])))
+(let _160_2449 = (with_fuel p mi)
+in (FStar_ToSMT_Z3.ask fresh labels _160_2449 (cb mi p [])))
 end
 | _58_3597 -> begin
 (report errs)
 end)
 end
 | mi::tl -> begin
-(let _160_2454 = (with_fuel p mi)
-in (FStar_ToSMT_Z3.ask fresh labels _160_2454 (fun _58_3603 -> (match (_58_3603) with
+(let _160_2451 = (with_fuel p mi)
+in (FStar_ToSMT_Z3.ask fresh labels _160_2451 (fun _58_3603 -> (match (_58_3603) with
 | (ok, errs') -> begin
 (match (errs) with
 | [] -> begin
@@ -4303,11 +4506,10 @@ and cb = (fun _58_3609 p alt _58_3614 -> (match ((_58_3609, _58_3614)) with
 | ((prev_fuel, prev_ifuel), (ok, errs)) -> begin
 if ok then begin
 if (FStar_ST.read FStar_Options.print_fuels) then begin
-(let _160_2462 = (let _160_2459 = (FStar_Tc_Env.get_range tcenv)
-in (FStar_Range.string_of_range _160_2459))
-in (let _160_2461 = (FStar_Util.string_of_int prev_fuel)
-in (let _160_2460 = (FStar_Util.string_of_int prev_ifuel)
-in (FStar_Util.print3 "(%s) Query succeeded with fuel %s and ifuel %s\n" _160_2462 _160_2461 _160_2460))))
+(let _160_2458 = (FStar_Range.string_of_range (FStar_Tc_Env.get_range tcenv))
+in (let _160_2457 = (FStar_Util.string_of_int prev_fuel)
+in (let _160_2456 = (FStar_Util.string_of_int prev_ifuel)
+in (FStar_Util.print3 "(%s) Query succeeded with fuel %s and ifuel %s\n" _160_2458 _160_2457 _160_2456))))
 end else begin
 ()
 end
@@ -4315,11 +4517,11 @@ end else begin
 (try_alt_configs p errs alt)
 end
 end))
-in (let _160_2463 = (with_fuel p initial_config)
-in (FStar_ToSMT_Z3.ask fresh labels _160_2463 (cb initial_config p alt_configs))))))))
+in (let _160_2459 = (with_fuel p initial_config)
+in (FStar_ToSMT_Z3.ask fresh labels _160_2459 (cb initial_config p alt_configs))))))))
 in (let process_query = (fun q -> if ((FStar_ST.read FStar_Options.split_cases) > 0) then begin
-(let _58_3619 = (let _160_2469 = (FStar_ST.read FStar_Options.split_cases)
-in (FStar_ToSMT_SplitQueryCases.can_handle_query _160_2469 q))
+(let _58_3619 = (let _160_2465 = (FStar_ST.read FStar_Options.split_cases)
+in (FStar_ToSMT_SplitQueryCases.can_handle_query _160_2465 q))
 in (match (_58_3619) with
 | (b, cb) -> begin
 if b then begin
@@ -4340,6 +4542,8 @@ in (pop ())))))))
 end)
 end)))))
 
+# 2210 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let is_trivial : FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.typ  ->  Prims.bool = (fun tcenv q -> (let env = (get_env tcenv)
 in (let _58_3625 = (push "query")
 in (let _58_3632 = (encode_formula_with_labels q env)
@@ -4355,7 +4559,11 @@ false
 end))
 end)))))
 
+# 2219 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
+
 let solver : FStar_Tc_Env.solver_t = {FStar_Tc_Env.init = init; FStar_Tc_Env.push = push; FStar_Tc_Env.pop = pop; FStar_Tc_Env.mark = mark; FStar_Tc_Env.reset_mark = reset_mark; FStar_Tc_Env.commit_mark = commit_mark; FStar_Tc_Env.encode_modul = encode_modul; FStar_Tc_Env.encode_sig = encode_sig; FStar_Tc_Env.solve = solve; FStar_Tc_Env.is_trivial = is_trivial; FStar_Tc_Env.finish = FStar_ToSMT_Z3.finish; FStar_Tc_Env.refresh = FStar_ToSMT_Z3.refresh}
+
+# 2233 "D:\\workspace\\universes\\FStar\\src\\tosmt\\encode.fs"
 
 let dummy : FStar_Tc_Env.solver_t = {FStar_Tc_Env.init = (fun _58_3642 -> ()); FStar_Tc_Env.push = (fun _58_3644 -> ()); FStar_Tc_Env.pop = (fun _58_3646 -> ()); FStar_Tc_Env.mark = (fun _58_3648 -> ()); FStar_Tc_Env.reset_mark = (fun _58_3650 -> ()); FStar_Tc_Env.commit_mark = (fun _58_3652 -> ()); FStar_Tc_Env.encode_modul = (fun _58_3654 _58_3656 -> ()); FStar_Tc_Env.encode_sig = (fun _58_3658 _58_3660 -> ()); FStar_Tc_Env.solve = (fun _58_3662 _58_3664 -> ()); FStar_Tc_Env.is_trivial = (fun _58_3666 _58_3668 -> false); FStar_Tc_Env.finish = (fun _58_3670 -> ()); FStar_Tc_Env.refresh = (fun _58_3671 -> ())}
 

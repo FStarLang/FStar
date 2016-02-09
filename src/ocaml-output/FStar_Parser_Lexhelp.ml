@@ -1,5 +1,7 @@
 
 open Prims
+# 39 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
+
 let intern_string : Prims.string  ->  Prims.string = (let strings = (FStar_Util.smap_create 100)
 in (fun s -> (match ((FStar_Util.smap_try_find strings s)) with
 | Some (res) -> begin
@@ -10,24 +12,40 @@ end
 in s)
 end)))
 
+# 46 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
+
 let default_string_finish = (fun endm b s -> FStar_Parser_Parse.STRING (s))
+
+# 48 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
 
 let call_string_finish = (fun fin buf endm b -> (let _171_19 = (FStar_Bytes.close buf)
 in (fin endm b _171_19)))
 
+# 50 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
+
 let add_string : FStar_Bytes.bytebuf  ->  Prims.string  ->  Prims.unit = (fun buf x -> (let _171_24 = (FStar_Bytes.string_as_unicode_bytes x)
 in (FStar_Bytes.emit_bytes buf _171_24)))
+
+# 52 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
 
 let add_int_char : FStar_Bytes.bytebuf  ->  Prims.int  ->  Prims.unit = (fun buf c -> (let _69_19 = (FStar_Bytes.emit_int_as_byte buf (c % 256))
 in (FStar_Bytes.emit_int_as_byte buf (c / 256))))
 
+# 56 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
+
 let add_unichar : FStar_Bytes.bytebuf  ->  Prims.int  ->  Prims.unit = (fun buf c -> (add_int_char buf c))
 
+# 57 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
+
 let add_byte_char : FStar_Bytes.bytebuf  ->  Prims.char  ->  Prims.unit = (fun buf c -> (add_int_char buf ((FStar_Util.int_of_char c) % 256)))
+
+# 64 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
 
 let stringbuf_as_bytes : FStar_Bytes.bytebuf  ->  FStar_Bytes.bytes = (fun buf -> (let bytes = (FStar_Bytes.close buf)
 in (let _171_40 = ((FStar_Bytes.length bytes) / 2)
 in (FStar_Bytes.make (fun i -> (FStar_Bytes.get bytes (i * 2))) _171_40))))
+
+# 69 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
 
 let stringbuf_is_bytes : FStar_Bytes.bytebuf  ->  Prims.bool = (fun buf -> (let bytes = (FStar_Bytes.close buf)
 in (let ok = (FStar_Util.mk_ref true)
@@ -39,8 +57,12 @@ end else begin
 end)))
 in (FStar_ST.read ok)))))
 
+# 78 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
+
 let trigraph : Prims.char  ->  Prims.char  ->  Prims.char  ->  Prims.char = (fun c1 c2 c3 -> (let digit = (fun c -> ((FStar_Util.int_of_char c) - (FStar_Util.int_of_char '0')))
 in (FStar_Util.char_of_int (((digit c1) * 100) + (((digit c2) * 10) + (digit c3))))))
+
+# 82 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
 
 let digit : Prims.char  ->  Prims.int = (fun d -> (let dd = (FStar_Util.int_of_char d)
 in if ((dd >= (FStar_Util.int_of_char '0')) && (dd <= (FStar_Util.int_of_char '9'))) then begin
@@ -48,6 +70,8 @@ in if ((dd >= (FStar_Util.int_of_char '0')) && (dd <= (FStar_Util.int_of_char '9
 end else begin
 (FStar_All.failwith "digit")
 end))
+
+# 87 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
 
 let hexdigit : Prims.char  ->  Prims.int = (fun d -> (let dd = (FStar_Util.int_of_char d)
 in if ((dd >= (FStar_Util.int_of_char '0')) && (dd <= (FStar_Util.int_of_char '9'))) then begin
@@ -64,6 +88,8 @@ end
 end
 end))
 
+# 94 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
+
 let unicodegraph_short : Prims.string  ->  Prims.uint16 = (fun s -> if ((FStar_String.length s) <> 4) then begin
 (FStar_All.failwith "unicodegraph")
 end else begin
@@ -75,6 +101,8 @@ in (hexdigit _171_62)))))
 in (FStar_Util.uint16_of_int _171_63))
 end)
 
+# 99 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
+
 let hexgraph_short : Prims.string  ->  Prims.uint16 = (fun s -> if ((FStar_String.length s) <> 2) then begin
 (FStar_All.failwith "hexgraph")
 end else begin
@@ -83,6 +111,8 @@ in (hexdigit _171_66)) * 16) + (let _171_67 = (FStar_Util.char_at s 1)
 in (hexdigit _171_67)))
 in (FStar_Util.uint16_of_int _171_68))
 end)
+
+# 104 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
 
 let unicodegraph_long : Prims.string  ->  (Prims.uint16 Prims.option * Prims.uint16) = (fun s -> if ((FStar_String.length s) <> 8) then begin
 (FStar_All.failwith "unicodegraph_long")
@@ -103,6 +133,8 @@ end else begin
 (Some ((FStar_Util.uint16_of_int (0xD800 + (((high * 0x10000) + (low - 0x10000)) / 0x400)))), (FStar_Util.uint16_of_int (0xDF30 + (((high * 0x10000) + (low - 0x10000)) % 0x400))))
 end))
 end)
+
+# 116 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
 
 let escape : Prims.char  ->  Prims.char = (fun c -> (match (c) with
 | '\\' -> begin
@@ -127,9 +159,13 @@ end
 c
 end))
 
+# 130 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
+
 type compatibilityMode =
 | ALWAYS
 | FSHARP
+
+# 131 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
 
 let is_ALWAYS : compatibilityMode  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
 | ALWAYS -> begin
@@ -139,6 +175,8 @@ end
 false
 end))
 
+# 132 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
+
 let is_FSHARP : compatibilityMode  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
 | FSHARP -> begin
 true
@@ -147,13 +185,19 @@ end
 false
 end))
 
+# 134 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
+
 let keywords : (compatibilityMode * Prims.string * FStar_Parser_Parse.token) Prims.list = (let _171_84 = (FStar_List.map (fun s -> (FSHARP, s, FStar_Parser_Parse.RESERVED)) (("atomic")::("break")::("checked")::("component")::("constraint")::("constructor")::("continue")::("eager")::("fixed")::("functor")::("global")::("include")::("mixin")::("parallel")::("process")::("protected")::("pure")::("sealed")::("trait")::("tailcall")::("volatile")::[]))
 in (FStar_List.append (((ALWAYS, "abstract", FStar_Parser_Parse.ABSTRACT))::((ALWAYS, "and", FStar_Parser_Parse.AND))::((ALWAYS, "as", FStar_Parser_Parse.AS))::((ALWAYS, "assert", FStar_Parser_Parse.ASSERT))::((ALWAYS, "assume", FStar_Parser_Parse.ASSUME))::((ALWAYS, "begin", FStar_Parser_Parse.BEGIN))::((FSHARP, "default", FStar_Parser_Parse.DEFAULT))::((ALWAYS, "effect", FStar_Parser_Parse.EFFECT))::((ALWAYS, "else", FStar_Parser_Parse.ELSE))::((ALWAYS, "end", FStar_Parser_Parse.END))::((ALWAYS, "ensures", FStar_Parser_Parse.ENSURES))::((ALWAYS, "exception", FStar_Parser_Parse.EXCEPTION))::((ALWAYS, "exists", FStar_Parser_Parse.EXISTS))::((ALWAYS, "false", FStar_Parser_Parse.FALSE))::((ALWAYS, "finally", FStar_Parser_Parse.FINALLY))::((ALWAYS, "for", FStar_Parser_Parse.FOR))::((ALWAYS, "forall", FStar_Parser_Parse.FORALL))::((ALWAYS, "fun", FStar_Parser_Parse.FUN))::((ALWAYS, "function", FStar_Parser_Parse.FUNCTION))::((ALWAYS, "if", FStar_Parser_Parse.IF))::((ALWAYS, "kind", FStar_Parser_Parse.KIND))::((ALWAYS, "in", FStar_Parser_Parse.IN))::((ALWAYS, "inline", FStar_Parser_Parse.INLINE))::((ALWAYS, "irreducible", FStar_Parser_Parse.IRREDUCIBLE))::((ALWAYS, "lazy", FStar_Parser_Parse.LAZY))::((ALWAYS, "let", FStar_Parser_Parse.LET (false)))::((ALWAYS, "logic", FStar_Parser_Parse.LOGIC))::((ALWAYS, "match", FStar_Parser_Parse.MATCH))::((ALWAYS, "module", FStar_Parser_Parse.MODULE))::((ALWAYS, "new", FStar_Parser_Parse.NEW))::((ALWAYS, "new_effect", FStar_Parser_Parse.NEW_EFFECT))::((ALWAYS, "of", FStar_Parser_Parse.OF))::((ALWAYS, "open", FStar_Parser_Parse.OPEN))::((ALWAYS, "or", FStar_Parser_Parse.OR))::((ALWAYS, "opaque", FStar_Parser_Parse.OPAQUE))::((ALWAYS, "private", FStar_Parser_Parse.PRIVATE))::((FSHARP, "public", FStar_Parser_Parse.PUBLIC))::((ALWAYS, "rec", FStar_Parser_Parse.REC))::((ALWAYS, "requires", FStar_Parser_Parse.REQUIRES))::((ALWAYS, "sub_effect", FStar_Parser_Parse.SUB_EFFECT))::((ALWAYS, "then", FStar_Parser_Parse.THEN))::((ALWAYS, "to", FStar_Parser_Parse.TO))::((ALWAYS, "total", FStar_Parser_Parse.TOTAL))::((ALWAYS, "true", FStar_Parser_Parse.TRUE))::((ALWAYS, "try", FStar_Parser_Parse.TRY))::((ALWAYS, "type", FStar_Parser_Parse.TYPE))::((ALWAYS, "unfoldable", FStar_Parser_Parse.UNFOLDABLE))::((ALWAYS, "val", FStar_Parser_Parse.VAL))::((ALWAYS, "when", FStar_Parser_Parse.WHEN))::((ALWAYS, "with", FStar_Parser_Parse.WITH))::((ALWAYS, "_", FStar_Parser_Parse.UNDERSCORE))::[]) _171_84))
+
+# 199 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
 
 let stringKeywords : Prims.string Prims.list = (FStar_List.map (fun _69_62 -> (match (_69_62) with
 | (_69_58, w, _69_61) -> begin
 w
 end)) keywords)
+
+# 205 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
 
 let unreserve_words : Prims.string Prims.list = (FStar_List.choose (fun _69_67 -> (match (_69_67) with
 | (mode, keyword, _69_66) -> begin
@@ -164,6 +208,8 @@ None
 end
 end)) keywords)
 
+# 208 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
+
 let kwd_table : FStar_Parser_Parse.token FStar_Util.smap = (let tab = (FStar_Util.smap_create 1000)
 in (let _69_73 = (FStar_List.iter (fun _69_72 -> (match (_69_72) with
 | (mode, keyword, token) -> begin
@@ -171,9 +217,15 @@ in (let _69_73 = (FStar_List.iter (fun _69_72 -> (match (_69_72) with
 end)) keywords)
 in tab))
 
+# 212 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
+
 let kwd : Prims.string  ->  FStar_Parser_Parse.token Prims.option = (fun s -> (FStar_Util.smap_try_find kwd_table s))
 
+# 213 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
+
 exception ReservedKeyword of ((Prims.string * FStar_Range.range))
+
+# 213 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
 
 let is_ReservedKeyword : Prims.exn  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
 | ReservedKeyword (_) -> begin
@@ -183,12 +235,18 @@ end
 false
 end))
 
+# 213 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
+
 let ___ReservedKeyword____0 : Prims.exn  ->  (Prims.string * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | ReservedKeyword (_69_77) -> begin
 _69_77
 end))
 
+# 214 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
+
 exception IndentationProblem of ((Prims.string * FStar_Range.range))
+
+# 214 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
 
 let is_IndentationProblem : Prims.exn  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
 | IndentationProblem (_) -> begin
@@ -198,20 +256,30 @@ end
 false
 end))
 
+# 214 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
+
 let ___IndentationProblem____0 : Prims.exn  ->  (Prims.string * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | IndentationProblem (_69_79) -> begin
 _69_79
 end))
 
+# 216 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
+
 type lexargs =
 {getSourceDirectory : Prims.unit  ->  Prims.string; contents : Prims.string}
 
+# 216 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
+
 let is_Mklexargs : lexargs  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mklexargs"))))
+
+# 221 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
 
 let mkLexargs = (fun _69_86 -> (match (_69_86) with
 | (srcdir, filename, contents) -> begin
 {getSourceDirectory = srcdir; contents = contents}
 end))
+
+# 226 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
 
 let kwd_or_id : lexargs  ->  FStar_Range.range  ->  Prims.string  ->  FStar_Parser_Parse.token = (fun args r s -> (match ((kwd s)) with
 | Some (v) -> begin

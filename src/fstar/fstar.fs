@@ -135,15 +135,15 @@ let tc_one_fragment curmod dsenv env frag =
                 | None -> env
                 | Some _ ->
                   raise (Absyn.Syntax.Err("Interactive mode only supports a single module at the top-level")) in
-              let modul, npds, env = Tc.Tc.tc_partial_modul env modul in
-              Some (Some (modul, npds), dsenv, env)
+              let modul, env = Tc.Tc.tc_partial_modul env modul in
+              Some (Some modul, dsenv, env)
 
             | Parser.Driver.Decls (dsenv, decls) ->
               begin match curmod with
                 | None -> failwith "Fragment without an enclosing module"
-                | Some (modul,npds) ->
-                  let modul, npds', env  = Tc.Tc.tc_more_partial_modul env modul decls in
-                  Some (Some (modul, npds@npds'), dsenv, env)
+                | Some modul ->
+                  let modul, env  = Tc.Tc.tc_more_partial_modul env modul decls in
+                  Some (Some modul, dsenv, env)
               end
     with
         | Absyn.Syntax.Error(msg, r) ->
@@ -162,7 +162,7 @@ type input_chunks =
     | Code of string * (string * string)
 
 type stack_elt =
-    (option<(modul * list<sigelt>)>
+    (option<modul>
      * Parser.DesugarEnv.env
      * Tc.Env.env)
 type stack = list<stack_elt>
@@ -310,7 +310,7 @@ let interactive_mode dsenv env =
     if Option.isSome !Options.codegen
     then (Util.print_string "Warning: Code-generation is not supported in interactive mode, ignoring the codegen flag");
 
-    let rec go (stack:stack) curmod dsenv env =
+    let rec go (stack:stack) (curmod:option<modul>) dsenv env =
         begin match shift_chunk () with
             | Pop msg ->
               Parser.DesugarEnv.pop dsenv |> ignore;

@@ -259,7 +259,7 @@ let lookupDataConType (c:context) (sigb : sigelts) (l:lident)(*this sigbundle co
                     match s with
                     | Sig_datacon (l',t,(_, tps, _),quals,lids,_) -> 
                        if l=l' 
-                       then let t = Absyn.Util.close_typ (List.map (fun (x, _) -> (x, Some Implicit)) tps) t in
+                       then let t = Absyn.Util.close_typ (List.map (fun (x, _) -> (x, Some <| Implicit true)) tps) t in
                             Some t 
                        else None
                     | _ -> None
