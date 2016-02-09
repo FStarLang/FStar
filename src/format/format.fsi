@@ -9,6 +9,7 @@ type doc
 (* -------------------------------------------------------------------- *)
 val empty  : doc
 val text   : string -> doc
+val num    : int -> doc
 val cat    : doc -> doc -> doc
 val nest   : int -> doc -> doc
 val group  : doc -> doc

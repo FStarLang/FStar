@@ -493,33 +493,42 @@ in FStar_Extraction_ML_Syntax.MLM_Exn (_180_258))
 in (let _180_259 = (FStar_Extraction_ML_Env.extend_fv c fvv tys false false)
 in (_180_259, ex_decl))))))))
 
+let mlloc_of_range : FStar_Range.range  ->  FStar_Extraction_ML_Syntax.mlmodule1 = (fun r -> (let pos = (FStar_Range.start_of_range r)
+in (let line = (FStar_Range.line_of_pos pos)
+in (let _180_263 = (let _180_262 = (FStar_Range.file_of_range r)
+in (line, _180_262))
+in FStar_Extraction_ML_Syntax.MLM_Loc (_180_263)))))
+
 let rec extractSigElt : context  ->  FStar_Absyn_Syntax.sigelt  ->  (context * FStar_Extraction_ML_Syntax.mlmodule1 Prims.list) = (fun c s -> (match (s) with
-| FStar_Absyn_Syntax.Sig_typ_abbrev (l, bs, _78_502, t, quals, _78_506) -> begin
-(let _78_511 = (extractTypeAbbrev c {abTyName = l; abTyBinders = bs; abBody = t})
-in (match (_78_511) with
+| FStar_Absyn_Syntax.Sig_typ_abbrev (l, bs, _78_505, t, quals, range) -> begin
+(let _78_513 = (extractTypeAbbrev c {abTyName = l; abTyBinders = bs; abBody = t})
+in (match (_78_513) with
 | (c, tds) -> begin
-(let _180_264 = if (FStar_All.pipe_right quals (FStar_List.contains FStar_Absyn_Syntax.Logic)) then begin
+(let _180_269 = if (FStar_All.pipe_right quals (FStar_List.contains FStar_Absyn_Syntax.Logic)) then begin
 []
 end else begin
-(FStar_Extraction_ML_Syntax.MLM_Ty ((tds)::[]))::[]
+(let _180_268 = (mlloc_of_range range)
+in (_180_268)::(FStar_Extraction_ML_Syntax.MLM_Ty ((tds)::[]))::[])
 end
-in (c, _180_264))
+in (c, _180_269))
 end))
 end
-| FStar_Absyn_Syntax.Sig_bundle (sigs, FStar_Absyn_Syntax.ExceptionConstructor::[], _78_516, _78_518) -> begin
-(let _78_526 = (parseInductiveTypesFromSigBundle c sigs)
-in (match (_78_526) with
-| (_78_522, _78_524, exConstrs) -> begin
-(let _78_527 = ()
-in (let _78_531 = (let _180_265 = (FStar_List.hd exConstrs)
-in (extractExn c _180_265))
-in (match (_78_531) with
+| FStar_Absyn_Syntax.Sig_bundle (sigs, FStar_Absyn_Syntax.ExceptionConstructor::[], _78_518, range) -> begin
+(let _78_527 = (parseInductiveTypesFromSigBundle c sigs)
+in (match (_78_527) with
+| (_78_523, _78_525, exConstrs) -> begin
+(let _78_528 = ()
+in (let _78_532 = (let _180_270 = (FStar_List.hd exConstrs)
+in (extractExn c _180_270))
+in (match (_78_532) with
 | (c, exDecl) -> begin
-(c, (exDecl)::[])
+(let _180_272 = (let _180_271 = (mlloc_of_range range)
+in (_180_271)::(exDecl)::[])
+in (c, _180_272))
 end)))
 end))
 end
-| FStar_Absyn_Syntax.Sig_bundle (sigs, _78_534, _78_536, _78_538) -> begin
+| FStar_Absyn_Syntax.Sig_bundle (sigs, _78_535, _78_537, range) -> begin
 (let _78_545 = (parseInductiveTypesFromSigBundle c sigs)
 in (match (_78_545) with
 | (inds, abbs, _78_544) -> begin
@@ -529,7 +538,9 @@ in (match (_78_548) with
 (let _78_551 = (FStar_Util.fold_map extractTypeAbbrev c abbs)
 in (match (_78_551) with
 | (c, tyAbDecls) -> begin
-(c, (FStar_Extraction_ML_Syntax.MLM_Ty ((FStar_List.append indDecls tyAbDecls)))::[])
+(let _180_274 = (let _180_273 = (mlloc_of_range range)
+in (_180_273)::(FStar_Extraction_ML_Syntax.MLM_Ty ((FStar_List.append indDecls tyAbDecls)))::[])
+in (c, _180_274))
 end))
 end))
 end))

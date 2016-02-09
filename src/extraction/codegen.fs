@@ -648,6 +648,13 @@ and doc_of_sig (currentModule : mlsymbol) (s : mlsig) =
     let docs = List.map (fun x -> reduce [x; hardline; hardline]) docs in
     reduce docs
 
+
+let doc_of_loc lineno file =
+    if Util.codegen_fsharp () then
+        empty
+    else
+        reduce1 [ text "#"; num lineno; text ("\"" ^ Util.replace_string file "\\" "\\\\" ^ "\"") ]
+
 (* -------------------------------------------------------------------- *)
 let doc_of_mod1 (currentModule : mlsymbol) (m : mlmodule1) =
     match m with
@@ -670,6 +677,9 @@ let doc_of_mod1 (currentModule : mlsymbol) (m : mlmodule1) =
             text "let"; text "_"; text "=";
             doc_of_expr currentModule  (min_op_prec, NonAssoc) e
         ]
+
+    | MLM_Loc (lineno, file) ->
+        doc_of_loc lineno file
 
 (* -------------------------------------------------------------------- *)
 let doc_of_mod (currentModule : mlsymbol) (m : mlmodule) =

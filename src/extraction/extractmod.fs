@@ -61,7 +61,7 @@ let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> =
                     else fst <| Env.extend_lb env lbname t ml_lb.mllb_tysc ml_lb.mllb_add_unit false, ml_lb in
                  g, ml_lb::ml_lbs)
               (g, []) (snd ml_lbs) (snd lbs) in
-              g, [MLM_Let (fst ml_lbs, List.rev ml_lbs')]
+              g, [ExtractTyp.mlloc_of_range r; MLM_Let (fst ml_lbs, List.rev ml_lbs')]
 
             | _ -> //printfn "%A\n" ml_let;
                 failwith "impossible"
@@ -77,7 +77,7 @@ let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> =
               let g, mlm = extract_sig g se in
               let is_record = Util.for_some (function RecordType _ -> true | _ -> false) quals in
               match Util.find_map quals (function Discriminator l -> Some l |  _ -> None) with
-                  | Some l when (not is_record) -> g, [ExtractExp.ind_discriminator_body g lid l] //records are single constructor types; there should be no discriminators for them
+                  | Some l when (not is_record) -> g, [ExtractTyp.mlloc_of_range r; ExtractExp.ind_discriminator_body g lid l] //records are single constructor types; there should be no discriminators for them
                   | _ ->
                     begin match Util.find_map quals (function  Projector (l,_)  -> Some l |  _ -> None) with
                         | Some _ -> g, [] //records are extracted as ML records; no projectors for them
@@ -85,9 +85,9 @@ let rec extract_sig (g:env) (se:sigelt) : env * list<mlmodule1> =
                     end
          else g, []
 
-       | Sig_main(e, _) ->
+       | Sig_main(e, r) ->
          let ml_main, _, _ = ExtractExp.synth_exp g e in
-         g, [MLM_Top ml_main]
+         g, [ExtractTyp.mlloc_of_range r; MLM_Top ml_main]
 
 
        | Sig_kind_abbrev _ //not needed; we expand kind abbreviations while translating types

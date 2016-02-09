@@ -429,26 +429,31 @@ let extractExn (c:context) (exnConstr : inductiveConstructor) : (context * mlmod
     let ex_decl  : mlmodule1 = MLM_Exn (lident2mlsymbol exnConstr.cname, argTypes mlt) in
     extend_fv c fvv tys false false, ex_decl //this might need to be translated to OCaml exceptions
 
+let mlloc_of_range (r: Range.range) =
+    let pos = Range.start_of_range r in
+    let line = Range.line_of_pos pos in
+    MLM_Loc (line, Range.file_of_range r)
+
 (*similar to the definition of the second part of \hat{\epsilon} in page 110*)
 (* \pi_1 of returned value is the exported constant*)
 let rec extractSigElt (c:context) (s:sigelt) : context * list<mlmodule1> =
     match s with
-    | Sig_typ_abbrev (l,bs,_,t,quals,_) ->
+    | Sig_typ_abbrev (l,bs,_,t,quals, range) ->
         let c, tds = extractTypeAbbrev c ({abTyName=l; abTyBinders=bs; abBody=t}) in
-        (c, (if quals |> List.contains Logic then [] else [MLM_Ty [tds]]))
+        (c, (if quals |> List.contains Logic then [] else [mlloc_of_range range; MLM_Ty [tds]]))
 
-    | Sig_bundle(sigs, [ExceptionConstructor], _, _) ->
+    | Sig_bundle(sigs, [ExceptionConstructor], _, range) ->
         let _, _, exConstrs = parseInductiveTypesFromSigBundle c sigs in
         assert (List.length exConstrs = 1);
         let c, exDecl = extractExn c (List.hd exConstrs) in
-        (c, [exDecl])
+        (c, [mlloc_of_range range; exDecl])
 
-    | Sig_bundle (sigs, _, _ ,_) ->
+    | Sig_bundle (sigs, _, _ , range) ->
         //let xxxx = List.map (fun se -> fprint1 "%s\n" (Util.format1 "sig bundle: : %s\n" (Print.sigelt_to_string se))) sigs in
         let inds, abbs, _ = parseInductiveTypesFromSigBundle c sigs in
         let c, indDecls = Util.fold_map extractInductive c inds in
         let c, tyAbDecls = Util.fold_map extractTypeAbbrev c abbs in
-        (c, [MLM_Ty (indDecls@tyAbDecls)])
+        (c, [mlloc_of_range range; MLM_Ty (indDecls@tyAbDecls)])
 
     | Sig_tycon (l, bs, k, _, _, quals, r) ->
         //Util.print_string ((Print.sigelt_to_string s)^"\n");

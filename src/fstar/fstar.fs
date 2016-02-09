@@ -168,9 +168,11 @@ type stack_elt =
 type stack = list<stack_elt>
 
 
-let batch_mode_tc_no_prims dsenv env filenames =
+let batch_mode_tc_no_prims dsenv env filenames admit_fsi =
     let all_mods, dsenv, env = filenames |> List.fold_left (fun (all_mods, dsenv, env) f ->
         Util.reset_gensym();
+        // This is reset at after every call to [tc_one_file] terminates... so we're overriding it here.
+        Options.admit_fsi := admit_fsi @ !Options.admit_fsi;
         let dsenv, env, ms = tc_one_file dsenv env f in
         all_mods@ms, dsenv, env)
         ([], dsenv, env) in
@@ -182,7 +184,7 @@ let batch_mode_tc_no_prims dsenv env filenames =
 
 let find_deps_if_needed files =
     if !Options.explicit_deps then
-      files
+      files, []
     else
       let _, deps = Parser.Dep.collect files in
       let deps = List.rev deps in
@@ -192,21 +194,22 @@ let find_deps_if_needed files =
         else
           failwith "dependency analysis did not find prims.fst?!"
       in
+      let admit_fsi = ref [] in
       List.iter (fun d ->
         let d = basename d in
         if get_file_extension d = "fsti" then
-          Options.admit_fsi := substring d 0 (String.length d - 5) :: !Options.admit_fsi
+          admit_fsi := substring d 0 (String.length d - 5) :: !admit_fsi
         else if get_file_extension d = "fsi" then begin
-          Options.admit_fsi := substring d 0 (String.length d - 4) :: !Options.admit_fsi
+          admit_fsi := substring d 0 (String.length d - 4) :: !admit_fsi
         end
       ) deps;
-      deps
+      deps, !admit_fsi
 
 let batch_mode_tc filenames =
     let prims_mod, dsenv, env = tc_prims () in
 
-    let filenames = find_deps_if_needed filenames in
-    let all_mods, dsenv, env = batch_mode_tc_no_prims dsenv env filenames in
+    let filenames, admit_fsi = find_deps_if_needed filenames in
+    let all_mods, dsenv, env = batch_mode_tc_no_prims dsenv env filenames admit_fsi in
     prims_mod @ all_mods, dsenv, env
 
 let finished_message fmods =

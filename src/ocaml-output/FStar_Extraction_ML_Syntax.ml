@@ -651,6 +651,7 @@ type mlmodule1 =
 | MLM_Let of mlletbinding
 | MLM_Exn of (mlsymbol * mlty Prims.list)
 | MLM_Top of mlexpr
+| MLM_Loc of (Prims.int * Prims.string)
 
 let is_MLM_Ty : mlmodule1  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
 | MLM_Ty (_) -> begin
@@ -684,6 +685,14 @@ end
 false
 end))
 
+let is_MLM_Loc : mlmodule1  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+| MLM_Loc (_) -> begin
+true
+end
+| _ -> begin
+false
+end))
+
 let ___MLM_Ty____0 : mlmodule1  ->  mltydecl = (fun projectee -> (match (projectee) with
 | MLM_Ty (_73_136) -> begin
 _73_136
@@ -702,6 +711,11 @@ end))
 let ___MLM_Top____0 : mlmodule1  ->  mlexpr = (fun projectee -> (match (projectee) with
 | MLM_Top (_73_145) -> begin
 _73_145
+end))
+
+let ___MLM_Loc____0 : mlmodule1  ->  (Prims.int * Prims.string) = (fun projectee -> (match (projectee) with
+| MLM_Loc (_73_148) -> begin
+_73_148
 end))
 
 type mlmodule =
@@ -748,23 +762,23 @@ false
 end))
 
 let ___MLS_Mod____0 : mlsig1  ->  (mlsymbol * mlsig) = (fun projectee -> (match (projectee) with
-| MLS_Mod (_73_148) -> begin
-_73_148
-end))
-
-let ___MLS_Ty____0 : mlsig1  ->  mltydecl = (fun projectee -> (match (projectee) with
-| MLS_Ty (_73_151) -> begin
+| MLS_Mod (_73_151) -> begin
 _73_151
 end))
 
-let ___MLS_Val____0 : mlsig1  ->  (mlsymbol * mltyscheme) = (fun projectee -> (match (projectee) with
-| MLS_Val (_73_154) -> begin
+let ___MLS_Ty____0 : mlsig1  ->  mltydecl = (fun projectee -> (match (projectee) with
+| MLS_Ty (_73_154) -> begin
 _73_154
 end))
 
-let ___MLS_Exn____0 : mlsig1  ->  (mlsymbol * mlty Prims.list) = (fun projectee -> (match (projectee) with
-| MLS_Exn (_73_157) -> begin
+let ___MLS_Val____0 : mlsig1  ->  (mlsymbol * mltyscheme) = (fun projectee -> (match (projectee) with
+| MLS_Val (_73_157) -> begin
 _73_157
+end))
+
+let ___MLS_Exn____0 : mlsig1  ->  (mlsymbol * mlty Prims.list) = (fun projectee -> (match (projectee) with
+| MLS_Exn (_73_160) -> begin
+_73_160
 end))
 
 let with_ty : mlty  ->  mlexpr'  ->  mlexpr = (fun t e -> {expr = e; ty = t})
@@ -781,8 +795,8 @@ false
 end))
 
 let ___MLLib____0 : mllib  ->  (mlsymbol * (mlsig * mlmodule) Prims.option * mllib) Prims.list = (fun projectee -> (match (projectee) with
-| MLLib (_73_161) -> begin
-_73_161
+| MLLib (_73_164) -> begin
+_73_164
 end))
 
 let ml_unit_ty : mlty = MLTY_Named (([], (("Prims")::[], "unit")))
