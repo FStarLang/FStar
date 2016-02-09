@@ -9,8 +9,8 @@ type rel =
 
 # 26 "D:\\workspace\\universes\\FStar\\src\\typechecker\\common.fs"
 
-let is_EQ : rel  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| EQ -> begin
+let is_EQ = (fun _discr_ -> (match (_discr_) with
+| EQ (_) -> begin
 true
 end
 | _ -> begin
@@ -19,8 +19,8 @@ end))
 
 # 27 "D:\\workspace\\universes\\FStar\\src\\typechecker\\common.fs"
 
-let is_SUB : rel  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| SUB -> begin
+let is_SUB = (fun _discr_ -> (match (_discr_) with
+| SUB (_) -> begin
 true
 end
 | _ -> begin
@@ -29,8 +29,8 @@ end))
 
 # 28 "D:\\workspace\\universes\\FStar\\src\\typechecker\\common.fs"
 
-let is_SUBINV : rel  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| SUBINV -> begin
+let is_SUBINV = (fun _discr_ -> (match (_discr_) with
+| SUBINV (_) -> begin
 true
 end
 | _ -> begin
@@ -54,7 +54,7 @@ type prob =
 
 # 44 "D:\\workspace\\universes\\FStar\\src\\typechecker\\common.fs"
 
-let is_TProb : prob  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_TProb = (fun _discr_ -> (match (_discr_) with
 | TProb (_) -> begin
 true
 end
@@ -64,7 +64,7 @@ end))
 
 # 45 "D:\\workspace\\universes\\FStar\\src\\typechecker\\common.fs"
 
-let is_CProb : prob  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_CProb = (fun _discr_ -> (match (_discr_) with
 | CProb (_) -> begin
 true
 end
@@ -99,8 +99,8 @@ type guard_formula =
 
 # 50 "D:\\workspace\\universes\\FStar\\src\\typechecker\\common.fs"
 
-let is_Trivial : guard_formula  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Trivial -> begin
+let is_Trivial = (fun _discr_ -> (match (_discr_) with
+| Trivial (_) -> begin
 true
 end
 | _ -> begin
@@ -109,7 +109,7 @@ end))
 
 # 51 "D:\\workspace\\universes\\FStar\\src\\typechecker\\common.fs"
 
-let is_NonTrivial : guard_formula  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_NonTrivial = (fun _discr_ -> (match (_discr_) with
 | NonTrivial (_) -> begin
 true
 end

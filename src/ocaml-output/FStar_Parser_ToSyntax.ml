@@ -500,7 +500,7 @@ type bnd =
 
 # 257 "D:\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
 
-let is_LocalBinder : bnd  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_LocalBinder = (fun _discr_ -> (match (_discr_) with
 | LocalBinder (_) -> begin
 true
 end
@@ -510,7 +510,7 @@ end))
 
 # 258 "D:\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
 
-let is_LetBinder : bnd  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_LetBinder = (fun _discr_ -> (match (_discr_) with
 | LetBinder (_) -> begin
 true
 end

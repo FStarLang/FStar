@@ -254,7 +254,7 @@ type input_chunks =
 
 # 160 "D:\\workspace\\universes\\FStar\\src\\fstar\\fstar.fs"
 
-let is_Push : input_chunks  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Push = (fun _discr_ -> (match (_discr_) with
 | Push (_) -> begin
 true
 end
@@ -264,7 +264,7 @@ end))
 
 # 161 "D:\\workspace\\universes\\FStar\\src\\fstar\\fstar.fs"
 
-let is_Pop : input_chunks  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Pop = (fun _discr_ -> (match (_discr_) with
 | Pop (_) -> begin
 true
 end
@@ -274,7 +274,7 @@ end))
 
 # 162 "D:\\workspace\\universes\\FStar\\src\\fstar\\fstar.fs"
 
-let is_Code : input_chunks  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Code = (fun _discr_ -> (match (_discr_) with
 | Code (_) -> begin
 true
 end
@@ -642,7 +642,7 @@ exception Found of (Prims.string)
 
 # 387 "D:\\workspace\\universes\\FStar\\src\\fstar\\fstar.fs"
 
-let is_Found : Prims.exn  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Found = (fun _discr_ -> (match (_discr_) with
 | Found (_) -> begin
 true
 end

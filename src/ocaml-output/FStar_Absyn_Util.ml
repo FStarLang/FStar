@@ -2056,7 +2056,7 @@ type syntax_sum =
 
 # 1050 "D:\\workspace\\universes\\FStar\\src\\absyn\\util.fs"
 
-let is_SynSumKind : syntax_sum  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_SynSumKind = (fun _discr_ -> (match (_discr_) with
 | SynSumKind (_) -> begin
 true
 end
@@ -2066,7 +2066,7 @@ end))
 
 # 1051 "D:\\workspace\\universes\\FStar\\src\\absyn\\util.fs"
 
-let is_SynSumType : syntax_sum  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_SynSumType = (fun _discr_ -> (match (_discr_) with
 | SynSumType (_) -> begin
 true
 end
@@ -2076,7 +2076,7 @@ end))
 
 # 1052 "D:\\workspace\\universes\\FStar\\src\\absyn\\util.fs"
 
-let is_SynSumExp : syntax_sum  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_SynSumExp = (fun _discr_ -> (match (_discr_) with
 | SynSumExp (_) -> begin
 true
 end
@@ -2086,7 +2086,7 @@ end))
 
 # 1053 "D:\\workspace\\universes\\FStar\\src\\absyn\\util.fs"
 
-let is_SynSumComp : syntax_sum  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_SynSumComp = (fun _discr_ -> (match (_discr_) with
 | SynSumComp (_) -> begin
 true
 end
@@ -2760,7 +2760,7 @@ type connective =
 
 # 1372 "D:\\workspace\\universes\\FStar\\src\\absyn\\util.fs"
 
-let is_QAll : connective  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_QAll = (fun _discr_ -> (match (_discr_) with
 | QAll (_) -> begin
 true
 end
@@ -2770,7 +2770,7 @@ end))
 
 # 1373 "D:\\workspace\\universes\\FStar\\src\\absyn\\util.fs"
 
-let is_QEx : connective  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_QEx = (fun _discr_ -> (match (_discr_) with
 | QEx (_) -> begin
 true
 end
@@ -2780,7 +2780,7 @@ end))
 
 # 1374 "D:\\workspace\\universes\\FStar\\src\\absyn\\util.fs"
 
-let is_BaseConn : connective  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_BaseConn = (fun _discr_ -> (match (_discr_) with
 | BaseConn (_) -> begin
 true
 end

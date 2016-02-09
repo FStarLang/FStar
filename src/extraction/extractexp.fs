@@ -628,9 +628,9 @@ let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1
     let fstar_disc_type: typ = Tc.Env.lookup_lid env.tcenv discName in
     let wildcards = match fstar_disc_type.n with
         | Typ_fun (binders, _) ->
-            binders |> List.filter (fun (_, qual) ->
-                qual = Some Implicit
-            ) |> List.map (fun _ -> fresh "_", MLTY_Top)
+            binders 
+            |> List.filter (function (_, (Some (Implicit _))) -> true | _ -> false)
+            |> List.map (fun _ -> fresh "_", MLTY_Top)
         | _ ->
             failwith "Discriminator must be a function"
     in

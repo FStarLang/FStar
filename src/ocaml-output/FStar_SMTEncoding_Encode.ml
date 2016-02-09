@@ -224,7 +224,7 @@ type binding =
 
 # 127 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\encode.fs"
 
-let is_Binding_var : binding  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Binding_var = (fun _discr_ -> (match (_discr_) with
 | Binding_var (_) -> begin
 true
 end
@@ -234,7 +234,7 @@ end))
 
 # 128 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\encode.fs"
 
-let is_Binding_fvar : binding  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Binding_fvar = (fun _discr_ -> (match (_discr_) with
 | Binding_fvar (_) -> begin
 true
 end
@@ -644,8 +644,8 @@ exception Let_rec_unencodeable
 
 # 341 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\encode.fs"
 
-let is_Let_rec_unencodeable : Prims.exn  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Let_rec_unencodeable -> begin
+let is_Let_rec_unencodeable = (fun _discr_ -> (match (_discr_) with
+| Let_rec_unencodeable (_) -> begin
 true
 end
 | _ -> begin

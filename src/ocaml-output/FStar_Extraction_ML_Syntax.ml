@@ -57,8 +57,8 @@ type e_tag =
 
 # 33 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_E_PURE : e_tag  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| E_PURE -> begin
+let is_E_PURE = (fun _discr_ -> (match (_discr_) with
+| E_PURE (_) -> begin
 true
 end
 | _ -> begin
@@ -67,8 +67,8 @@ end))
 
 # 34 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_E_GHOST : e_tag  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| E_GHOST -> begin
+let is_E_GHOST = (fun _discr_ -> (match (_discr_) with
+| E_GHOST (_) -> begin
 true
 end
 | _ -> begin
@@ -77,8 +77,8 @@ end))
 
 # 35 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_E_IMPURE : e_tag  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| E_IMPURE -> begin
+let is_E_IMPURE = (fun _discr_ -> (match (_discr_) with
+| E_IMPURE (_) -> begin
 true
 end
 | _ -> begin
@@ -96,7 +96,7 @@ type mlty =
 
 # 38 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLTY_Var : mlty  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLTY_Var = (fun _discr_ -> (match (_discr_) with
 | MLTY_Var (_) -> begin
 true
 end
@@ -106,7 +106,7 @@ end))
 
 # 39 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLTY_Fun : mlty  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLTY_Fun = (fun _discr_ -> (match (_discr_) with
 | MLTY_Fun (_) -> begin
 true
 end
@@ -116,7 +116,7 @@ end))
 
 # 40 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLTY_Named : mlty  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLTY_Named = (fun _discr_ -> (match (_discr_) with
 | MLTY_Named (_) -> begin
 true
 end
@@ -126,7 +126,7 @@ end))
 
 # 41 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLTY_Tuple : mlty  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLTY_Tuple = (fun _discr_ -> (match (_discr_) with
 | MLTY_Tuple (_) -> begin
 true
 end
@@ -136,8 +136,8 @@ end))
 
 # 42 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLTY_Top : mlty  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| MLTY_Top -> begin
+let is_MLTY_Top = (fun _discr_ -> (match (_discr_) with
+| MLTY_Top (_) -> begin
 true
 end
 | _ -> begin
@@ -193,8 +193,8 @@ type mlconstant =
 
 # 47 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLC_Unit : mlconstant  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| MLC_Unit -> begin
+let is_MLC_Unit = (fun _discr_ -> (match (_discr_) with
+| MLC_Unit (_) -> begin
 true
 end
 | _ -> begin
@@ -203,7 +203,7 @@ end))
 
 # 48 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLC_Bool : mlconstant  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLC_Bool = (fun _discr_ -> (match (_discr_) with
 | MLC_Bool (_) -> begin
 true
 end
@@ -213,7 +213,7 @@ end))
 
 # 49 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLC_Byte : mlconstant  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLC_Byte = (fun _discr_ -> (match (_discr_) with
 | MLC_Byte (_) -> begin
 true
 end
@@ -223,7 +223,7 @@ end))
 
 # 50 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLC_Int32 : mlconstant  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLC_Int32 = (fun _discr_ -> (match (_discr_) with
 | MLC_Int32 (_) -> begin
 true
 end
@@ -233,7 +233,7 @@ end))
 
 # 51 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLC_Int64 : mlconstant  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLC_Int64 = (fun _discr_ -> (match (_discr_) with
 | MLC_Int64 (_) -> begin
 true
 end
@@ -243,7 +243,7 @@ end))
 
 # 52 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLC_Int : mlconstant  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLC_Int = (fun _discr_ -> (match (_discr_) with
 | MLC_Int (_) -> begin
 true
 end
@@ -253,7 +253,7 @@ end))
 
 # 53 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLC_Float : mlconstant  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLC_Float = (fun _discr_ -> (match (_discr_) with
 | MLC_Float (_) -> begin
 true
 end
@@ -263,7 +263,7 @@ end))
 
 # 54 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLC_Char : mlconstant  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLC_Char = (fun _discr_ -> (match (_discr_) with
 | MLC_Char (_) -> begin
 true
 end
@@ -273,7 +273,7 @@ end))
 
 # 55 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLC_String : mlconstant  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLC_String = (fun _discr_ -> (match (_discr_) with
 | MLC_String (_) -> begin
 true
 end
@@ -283,7 +283,7 @@ end))
 
 # 56 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLC_Bytes : mlconstant  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLC_Bytes = (fun _discr_ -> (match (_discr_) with
 | MLC_Bytes (_) -> begin
 true
 end
@@ -367,8 +367,8 @@ type mlpattern =
 
 # 59 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLP_Wild : mlpattern  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| MLP_Wild -> begin
+let is_MLP_Wild = (fun _discr_ -> (match (_discr_) with
+| MLP_Wild (_) -> begin
 true
 end
 | _ -> begin
@@ -377,7 +377,7 @@ end))
 
 # 60 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLP_Const : mlpattern  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLP_Const = (fun _discr_ -> (match (_discr_) with
 | MLP_Const (_) -> begin
 true
 end
@@ -387,7 +387,7 @@ end))
 
 # 61 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLP_Var : mlpattern  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLP_Var = (fun _discr_ -> (match (_discr_) with
 | MLP_Var (_) -> begin
 true
 end
@@ -397,7 +397,7 @@ end))
 
 # 62 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLP_CTor : mlpattern  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLP_CTor = (fun _discr_ -> (match (_discr_) with
 | MLP_CTor (_) -> begin
 true
 end
@@ -407,7 +407,7 @@ end))
 
 # 63 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLP_Branch : mlpattern  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLP_Branch = (fun _discr_ -> (match (_discr_) with
 | MLP_Branch (_) -> begin
 true
 end
@@ -417,7 +417,7 @@ end))
 
 # 65 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLP_Record : mlpattern  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLP_Record = (fun _discr_ -> (match (_discr_) with
 | MLP_Record (_) -> begin
 true
 end
@@ -427,7 +427,7 @@ end))
 
 # 66 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLP_Tuple : mlpattern  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLP_Tuple = (fun _discr_ -> (match (_discr_) with
 | MLP_Tuple (_) -> begin
 true
 end
@@ -507,7 +507,7 @@ type mlexpr' =
 
 # 69 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLE_Const : mlexpr'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLE_Const = (fun _discr_ -> (match (_discr_) with
 | MLE_Const (_) -> begin
 true
 end
@@ -517,7 +517,7 @@ end))
 
 # 70 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLE_Var : mlexpr'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLE_Var = (fun _discr_ -> (match (_discr_) with
 | MLE_Var (_) -> begin
 true
 end
@@ -527,7 +527,7 @@ end))
 
 # 71 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLE_Name : mlexpr'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLE_Name = (fun _discr_ -> (match (_discr_) with
 | MLE_Name (_) -> begin
 true
 end
@@ -537,7 +537,7 @@ end))
 
 # 72 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLE_Let : mlexpr'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLE_Let = (fun _discr_ -> (match (_discr_) with
 | MLE_Let (_) -> begin
 true
 end
@@ -547,7 +547,7 @@ end))
 
 # 73 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLE_App : mlexpr'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLE_App = (fun _discr_ -> (match (_discr_) with
 | MLE_App (_) -> begin
 true
 end
@@ -557,7 +557,7 @@ end))
 
 # 74 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLE_Fun : mlexpr'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLE_Fun = (fun _discr_ -> (match (_discr_) with
 | MLE_Fun (_) -> begin
 true
 end
@@ -567,7 +567,7 @@ end))
 
 # 75 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLE_Match : mlexpr'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLE_Match = (fun _discr_ -> (match (_discr_) with
 | MLE_Match (_) -> begin
 true
 end
@@ -577,7 +577,7 @@ end))
 
 # 76 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLE_Coerce : mlexpr'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLE_Coerce = (fun _discr_ -> (match (_discr_) with
 | MLE_Coerce (_) -> begin
 true
 end
@@ -587,7 +587,7 @@ end))
 
 # 78 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLE_CTor : mlexpr'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLE_CTor = (fun _discr_ -> (match (_discr_) with
 | MLE_CTor (_) -> begin
 true
 end
@@ -597,7 +597,7 @@ end))
 
 # 79 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLE_Seq : mlexpr'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLE_Seq = (fun _discr_ -> (match (_discr_) with
 | MLE_Seq (_) -> begin
 true
 end
@@ -607,7 +607,7 @@ end))
 
 # 80 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLE_Tuple : mlexpr'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLE_Tuple = (fun _discr_ -> (match (_discr_) with
 | MLE_Tuple (_) -> begin
 true
 end
@@ -617,7 +617,7 @@ end))
 
 # 81 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLE_Record : mlexpr'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLE_Record = (fun _discr_ -> (match (_discr_) with
 | MLE_Record (_) -> begin
 true
 end
@@ -627,7 +627,7 @@ end))
 
 # 82 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLE_Proj : mlexpr'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLE_Proj = (fun _discr_ -> (match (_discr_) with
 | MLE_Proj (_) -> begin
 true
 end
@@ -637,7 +637,7 @@ end))
 
 # 83 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLE_If : mlexpr'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLE_If = (fun _discr_ -> (match (_discr_) with
 | MLE_If (_) -> begin
 true
 end
@@ -647,7 +647,7 @@ end))
 
 # 84 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLE_Raise : mlexpr'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLE_Raise = (fun _discr_ -> (match (_discr_) with
 | MLE_Raise (_) -> begin
 true
 end
@@ -657,7 +657,7 @@ end))
 
 # 85 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLE_Try : mlexpr'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLE_Try = (fun _discr_ -> (match (_discr_) with
 | MLE_Try (_) -> begin
 true
 end
@@ -794,7 +794,7 @@ type mltybody =
 
 # 104 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLTD_Abbrev : mltybody  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLTD_Abbrev = (fun _discr_ -> (match (_discr_) with
 | MLTD_Abbrev (_) -> begin
 true
 end
@@ -804,7 +804,7 @@ end))
 
 # 105 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLTD_Record : mltybody  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLTD_Record = (fun _discr_ -> (match (_discr_) with
 | MLTD_Record (_) -> begin
 true
 end
@@ -814,7 +814,7 @@ end))
 
 # 106 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLTD_DType : mltybody  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLTD_DType = (fun _discr_ -> (match (_discr_) with
 | MLTD_DType (_) -> begin
 true
 end
@@ -859,7 +859,7 @@ type mlmodule1 =
 
 # 114 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLM_Ty : mlmodule1  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLM_Ty = (fun _discr_ -> (match (_discr_) with
 | MLM_Ty (_) -> begin
 true
 end
@@ -869,7 +869,7 @@ end))
 
 # 115 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLM_Let : mlmodule1  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLM_Let = (fun _discr_ -> (match (_discr_) with
 | MLM_Let (_) -> begin
 true
 end
@@ -879,7 +879,7 @@ end))
 
 # 116 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLM_Exn : mlmodule1  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLM_Exn = (fun _discr_ -> (match (_discr_) with
 | MLM_Exn (_) -> begin
 true
 end
@@ -889,7 +889,7 @@ end))
 
 # 117 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLM_Top : mlmodule1  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLM_Top = (fun _discr_ -> (match (_discr_) with
 | MLM_Top (_) -> begin
 true
 end
@@ -899,7 +899,7 @@ end))
 
 # 118 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLM_Loc : mlmodule1  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLM_Loc = (fun _discr_ -> (match (_discr_) with
 | MLM_Loc (_) -> begin
 true
 end
@@ -959,7 +959,7 @@ mlsig1 Prims.list
 
 # 123 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLS_Mod : mlsig1  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLS_Mod = (fun _discr_ -> (match (_discr_) with
 | MLS_Mod (_) -> begin
 true
 end
@@ -969,7 +969,7 @@ end))
 
 # 124 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLS_Ty : mlsig1  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLS_Ty = (fun _discr_ -> (match (_discr_) with
 | MLS_Ty (_) -> begin
 true
 end
@@ -979,7 +979,7 @@ end))
 
 # 127 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLS_Val : mlsig1  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLS_Val = (fun _discr_ -> (match (_discr_) with
 | MLS_Val (_) -> begin
 true
 end
@@ -989,7 +989,7 @@ end))
 
 # 128 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLS_Exn : mlsig1  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLS_Exn = (fun _discr_ -> (match (_discr_) with
 | MLS_Exn (_) -> begin
 true
 end
@@ -1036,7 +1036,7 @@ type mllib =
 
 # 136 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
 
-let is_MLLib : mllib  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MLLib = (fun _discr_ -> (match (_discr_) with
 | MLLib (_) -> begin
 true
 end

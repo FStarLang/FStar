@@ -1272,7 +1272,7 @@ type connective =
 
 # 712 "D:\\workspace\\universes\\FStar\\src\\syntax\\util.fs"
 
-let is_QAll : connective  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_QAll = (fun _discr_ -> (match (_discr_) with
 | QAll (_) -> begin
 true
 end
@@ -1282,7 +1282,7 @@ end))
 
 # 713 "D:\\workspace\\universes\\FStar\\src\\syntax\\util.fs"
 
-let is_QEx : connective  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_QEx = (fun _discr_ -> (match (_discr_) with
 | QEx (_) -> begin
 true
 end
@@ -1292,7 +1292,7 @@ end))
 
 # 714 "D:\\workspace\\universes\\FStar\\src\\syntax\\util.fs"
 
-let is_BaseConn : connective  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_BaseConn = (fun _discr_ -> (match (_discr_) with
 | BaseConn (_) -> begin
 true
 end

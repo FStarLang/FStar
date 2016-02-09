@@ -17,8 +17,8 @@ type sconst =
 
 # 4 "D:\\workspace\\universes\\FStar\\src\\basic\\const.fs"
 
-let is_Const_effect : sconst  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Const_effect -> begin
+let is_Const_effect = (fun _discr_ -> (match (_discr_) with
+| Const_effect (_) -> begin
 true
 end
 | _ -> begin
@@ -27,8 +27,8 @@ end))
 
 # 5 "D:\\workspace\\universes\\FStar\\src\\basic\\const.fs"
 
-let is_Const_unit : sconst  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Const_unit -> begin
+let is_Const_unit = (fun _discr_ -> (match (_discr_) with
+| Const_unit (_) -> begin
 true
 end
 | _ -> begin
@@ -37,7 +37,7 @@ end))
 
 # 6 "D:\\workspace\\universes\\FStar\\src\\basic\\const.fs"
 
-let is_Const_uint8 : sconst  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Const_uint8 = (fun _discr_ -> (match (_discr_) with
 | Const_uint8 (_) -> begin
 true
 end
@@ -47,7 +47,7 @@ end))
 
 # 7 "D:\\workspace\\universes\\FStar\\src\\basic\\const.fs"
 
-let is_Const_bool : sconst  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Const_bool = (fun _discr_ -> (match (_discr_) with
 | Const_bool (_) -> begin
 true
 end
@@ -57,7 +57,7 @@ end))
 
 # 8 "D:\\workspace\\universes\\FStar\\src\\basic\\const.fs"
 
-let is_Const_int32 : sconst  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Const_int32 = (fun _discr_ -> (match (_discr_) with
 | Const_int32 (_) -> begin
 true
 end
@@ -67,7 +67,7 @@ end))
 
 # 9 "D:\\workspace\\universes\\FStar\\src\\basic\\const.fs"
 
-let is_Const_int64 : sconst  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Const_int64 = (fun _discr_ -> (match (_discr_) with
 | Const_int64 (_) -> begin
 true
 end
@@ -77,7 +77,7 @@ end))
 
 # 10 "D:\\workspace\\universes\\FStar\\src\\basic\\const.fs"
 
-let is_Const_int : sconst  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Const_int = (fun _discr_ -> (match (_discr_) with
 | Const_int (_) -> begin
 true
 end
@@ -87,7 +87,7 @@ end))
 
 # 11 "D:\\workspace\\universes\\FStar\\src\\basic\\const.fs"
 
-let is_Const_char : sconst  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Const_char = (fun _discr_ -> (match (_discr_) with
 | Const_char (_) -> begin
 true
 end
@@ -97,7 +97,7 @@ end))
 
 # 12 "D:\\workspace\\universes\\FStar\\src\\basic\\const.fs"
 
-let is_Const_float : sconst  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Const_float = (fun _discr_ -> (match (_discr_) with
 | Const_float (_) -> begin
 true
 end
@@ -107,7 +107,7 @@ end))
 
 # 13 "D:\\workspace\\universes\\FStar\\src\\basic\\const.fs"
 
-let is_Const_bytearray : sconst  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Const_bytearray = (fun _discr_ -> (match (_discr_) with
 | Const_bytearray (_) -> begin
 true
 end
@@ -117,7 +117,7 @@ end))
 
 # 14 "D:\\workspace\\universes\\FStar\\src\\basic\\const.fs"
 
-let is_Const_string : sconst  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Const_string = (fun _discr_ -> (match (_discr_) with
 | Const_string (_) -> begin
 true
 end

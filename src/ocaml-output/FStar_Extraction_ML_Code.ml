@@ -11,8 +11,8 @@ type assoc =
 
 # 30 "D:\\workspace\\universes\\FStar\\src\\extraction\\codegen.fs"
 
-let is_ILeft : assoc  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| ILeft -> begin
+let is_ILeft = (fun _discr_ -> (match (_discr_) with
+| ILeft (_) -> begin
 true
 end
 | _ -> begin
@@ -21,8 +21,8 @@ end))
 
 # 30 "D:\\workspace\\universes\\FStar\\src\\extraction\\codegen.fs"
 
-let is_IRight : assoc  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| IRight -> begin
+let is_IRight = (fun _discr_ -> (match (_discr_) with
+| IRight (_) -> begin
 true
 end
 | _ -> begin
@@ -31,8 +31,8 @@ end))
 
 # 30 "D:\\workspace\\universes\\FStar\\src\\extraction\\codegen.fs"
 
-let is_Left : assoc  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Left -> begin
+let is_Left = (fun _discr_ -> (match (_discr_) with
+| Left (_) -> begin
 true
 end
 | _ -> begin
@@ -41,8 +41,8 @@ end))
 
 # 30 "D:\\workspace\\universes\\FStar\\src\\extraction\\codegen.fs"
 
-let is_Right : assoc  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Right -> begin
+let is_Right = (fun _discr_ -> (match (_discr_) with
+| Right (_) -> begin
 true
 end
 | _ -> begin
@@ -51,8 +51,8 @@ end))
 
 # 30 "D:\\workspace\\universes\\FStar\\src\\extraction\\codegen.fs"
 
-let is_NonAssoc : assoc  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| NonAssoc -> begin
+let is_NonAssoc = (fun _discr_ -> (match (_discr_) with
+| NonAssoc (_) -> begin
 true
 end
 | _ -> begin
@@ -68,8 +68,8 @@ type fixity =
 
 # 31 "D:\\workspace\\universes\\FStar\\src\\extraction\\codegen.fs"
 
-let is_Prefix : fixity  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Prefix -> begin
+let is_Prefix = (fun _discr_ -> (match (_discr_) with
+| Prefix (_) -> begin
 true
 end
 | _ -> begin
@@ -78,8 +78,8 @@ end))
 
 # 31 "D:\\workspace\\universes\\FStar\\src\\extraction\\codegen.fs"
 
-let is_Postfix : fixity  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Postfix -> begin
+let is_Postfix = (fun _discr_ -> (match (_discr_) with
+| Postfix (_) -> begin
 true
 end
 | _ -> begin
@@ -88,7 +88,7 @@ end))
 
 # 31 "D:\\workspace\\universes\\FStar\\src\\extraction\\codegen.fs"
 
-let is_Infix : fixity  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Infix = (fun _discr_ -> (match (_discr_) with
 | Infix (_) -> begin
 true
 end

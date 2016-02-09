@@ -15,8 +15,8 @@ type sort =
 
 # 27 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_Bool_sort : sort  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Bool_sort -> begin
+let is_Bool_sort = (fun _discr_ -> (match (_discr_) with
+| Bool_sort (_) -> begin
 true
 end
 | _ -> begin
@@ -25,8 +25,8 @@ end))
 
 # 28 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_Int_sort : sort  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Int_sort -> begin
+let is_Int_sort = (fun _discr_ -> (match (_discr_) with
+| Int_sort (_) -> begin
 true
 end
 | _ -> begin
@@ -35,8 +35,8 @@ end))
 
 # 29 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_String_sort : sort  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| String_sort -> begin
+let is_String_sort = (fun _discr_ -> (match (_discr_) with
+| String_sort (_) -> begin
 true
 end
 | _ -> begin
@@ -45,8 +45,8 @@ end))
 
 # 30 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_Ref_sort : sort  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Ref_sort -> begin
+let is_Ref_sort = (fun _discr_ -> (match (_discr_) with
+| Ref_sort (_) -> begin
 true
 end
 | _ -> begin
@@ -55,8 +55,8 @@ end))
 
 # 31 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_Term_sort : sort  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Term_sort -> begin
+let is_Term_sort = (fun _discr_ -> (match (_discr_) with
+| Term_sort (_) -> begin
 true
 end
 | _ -> begin
@@ -65,8 +65,8 @@ end))
 
 # 32 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_Fuel_sort : sort  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Fuel_sort -> begin
+let is_Fuel_sort = (fun _discr_ -> (match (_discr_) with
+| Fuel_sort (_) -> begin
 true
 end
 | _ -> begin
@@ -75,7 +75,7 @@ end))
 
 # 33 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_Array : sort  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Array = (fun _discr_ -> (match (_discr_) with
 | Array (_) -> begin
 true
 end
@@ -85,7 +85,7 @@ end))
 
 # 34 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_Arrow : sort  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Arrow = (fun _discr_ -> (match (_discr_) with
 | Arrow (_) -> begin
 true
 end
@@ -95,7 +95,7 @@ end))
 
 # 35 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_Sort : sort  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Sort = (fun _discr_ -> (match (_discr_) with
 | Sort (_) -> begin
 true
 end
@@ -185,8 +185,8 @@ type op =
 
 # 49 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_True : op  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| True -> begin
+let is_True = (fun _discr_ -> (match (_discr_) with
+| True (_) -> begin
 true
 end
 | _ -> begin
@@ -195,8 +195,8 @@ end))
 
 # 50 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_False : op  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| False -> begin
+let is_False = (fun _discr_ -> (match (_discr_) with
+| False (_) -> begin
 true
 end
 | _ -> begin
@@ -205,8 +205,8 @@ end))
 
 # 51 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_Not : op  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Not -> begin
+let is_Not = (fun _discr_ -> (match (_discr_) with
+| Not (_) -> begin
 true
 end
 | _ -> begin
@@ -215,8 +215,8 @@ end))
 
 # 52 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_And : op  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| And -> begin
+let is_And = (fun _discr_ -> (match (_discr_) with
+| And (_) -> begin
 true
 end
 | _ -> begin
@@ -225,8 +225,8 @@ end))
 
 # 53 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_Or : op  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Or -> begin
+let is_Or = (fun _discr_ -> (match (_discr_) with
+| Or (_) -> begin
 true
 end
 | _ -> begin
@@ -235,8 +235,8 @@ end))
 
 # 54 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_Imp : op  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Imp -> begin
+let is_Imp = (fun _discr_ -> (match (_discr_) with
+| Imp (_) -> begin
 true
 end
 | _ -> begin
@@ -245,8 +245,8 @@ end))
 
 # 55 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_Iff : op  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Iff -> begin
+let is_Iff = (fun _discr_ -> (match (_discr_) with
+| Iff (_) -> begin
 true
 end
 | _ -> begin
@@ -255,8 +255,8 @@ end))
 
 # 56 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_Eq : op  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Eq -> begin
+let is_Eq = (fun _discr_ -> (match (_discr_) with
+| Eq (_) -> begin
 true
 end
 | _ -> begin
@@ -265,8 +265,8 @@ end))
 
 # 57 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_LT : op  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| LT -> begin
+let is_LT = (fun _discr_ -> (match (_discr_) with
+| LT (_) -> begin
 true
 end
 | _ -> begin
@@ -275,8 +275,8 @@ end))
 
 # 58 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_LTE : op  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| LTE -> begin
+let is_LTE = (fun _discr_ -> (match (_discr_) with
+| LTE (_) -> begin
 true
 end
 | _ -> begin
@@ -285,8 +285,8 @@ end))
 
 # 59 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_GT : op  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| GT -> begin
+let is_GT = (fun _discr_ -> (match (_discr_) with
+| GT (_) -> begin
 true
 end
 | _ -> begin
@@ -295,8 +295,8 @@ end))
 
 # 60 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_GTE : op  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| GTE -> begin
+let is_GTE = (fun _discr_ -> (match (_discr_) with
+| GTE (_) -> begin
 true
 end
 | _ -> begin
@@ -305,8 +305,8 @@ end))
 
 # 61 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_Add : op  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Add -> begin
+let is_Add = (fun _discr_ -> (match (_discr_) with
+| Add (_) -> begin
 true
 end
 | _ -> begin
@@ -315,8 +315,8 @@ end))
 
 # 62 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_Sub : op  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Sub -> begin
+let is_Sub = (fun _discr_ -> (match (_discr_) with
+| Sub (_) -> begin
 true
 end
 | _ -> begin
@@ -325,8 +325,8 @@ end))
 
 # 63 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_Div : op  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Div -> begin
+let is_Div = (fun _discr_ -> (match (_discr_) with
+| Div (_) -> begin
 true
 end
 | _ -> begin
@@ -335,8 +335,8 @@ end))
 
 # 64 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_Mul : op  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Mul -> begin
+let is_Mul = (fun _discr_ -> (match (_discr_) with
+| Mul (_) -> begin
 true
 end
 | _ -> begin
@@ -345,8 +345,8 @@ end))
 
 # 65 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_Minus : op  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Minus -> begin
+let is_Minus = (fun _discr_ -> (match (_discr_) with
+| Minus (_) -> begin
 true
 end
 | _ -> begin
@@ -355,8 +355,8 @@ end))
 
 # 66 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_Mod : op  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Mod -> begin
+let is_Mod = (fun _discr_ -> (match (_discr_) with
+| Mod (_) -> begin
 true
 end
 | _ -> begin
@@ -365,8 +365,8 @@ end))
 
 # 67 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_ITE : op  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| ITE -> begin
+let is_ITE = (fun _discr_ -> (match (_discr_) with
+| ITE (_) -> begin
 true
 end
 | _ -> begin
@@ -375,7 +375,7 @@ end))
 
 # 68 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_Var : op  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Var = (fun _discr_ -> (match (_discr_) with
 | Var (_) -> begin
 true
 end
@@ -398,8 +398,8 @@ type qop =
 
 # 71 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_Forall : qop  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Forall -> begin
+let is_Forall = (fun _discr_ -> (match (_discr_) with
+| Forall (_) -> begin
 true
 end
 | _ -> begin
@@ -408,8 +408,8 @@ end))
 
 # 72 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_Exists : qop  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Exists -> begin
+let is_Exists = (fun _discr_ -> (match (_discr_) with
+| Exists (_) -> begin
 true
 end
 | _ -> begin
@@ -436,7 +436,7 @@ fv Prims.list
 
 # 76 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_Integer : term'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Integer = (fun _discr_ -> (match (_discr_) with
 | Integer (_) -> begin
 true
 end
@@ -446,7 +446,7 @@ end))
 
 # 77 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_BoundV : term'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_BoundV = (fun _discr_ -> (match (_discr_) with
 | BoundV (_) -> begin
 true
 end
@@ -456,7 +456,7 @@ end))
 
 # 78 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_FreeV : term'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_FreeV = (fun _discr_ -> (match (_discr_) with
 | FreeV (_) -> begin
 true
 end
@@ -466,7 +466,7 @@ end))
 
 # 79 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_App : term'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_App = (fun _discr_ -> (match (_discr_) with
 | App (_) -> begin
 true
 end
@@ -476,7 +476,7 @@ end))
 
 # 80 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_Quant : term'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Quant = (fun _discr_ -> (match (_discr_) with
 | Quant (_) -> begin
 true
 end
@@ -486,7 +486,7 @@ end))
 
 # 85 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_Labeled : term'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Labeled = (fun _discr_ -> (match (_discr_) with
 | Labeled (_) -> begin
 true
 end
@@ -1152,8 +1152,8 @@ type decl =
 
 # 303 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_DefPrelude : decl  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| DefPrelude -> begin
+let is_DefPrelude = (fun _discr_ -> (match (_discr_) with
+| DefPrelude (_) -> begin
 true
 end
 | _ -> begin
@@ -1162,7 +1162,7 @@ end))
 
 # 304 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_DeclFun : decl  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_DeclFun = (fun _discr_ -> (match (_discr_) with
 | DeclFun (_) -> begin
 true
 end
@@ -1172,7 +1172,7 @@ end))
 
 # 305 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_DefineFun : decl  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_DefineFun = (fun _discr_ -> (match (_discr_) with
 | DefineFun (_) -> begin
 true
 end
@@ -1182,7 +1182,7 @@ end))
 
 # 306 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_Assume : decl  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Assume = (fun _discr_ -> (match (_discr_) with
 | Assume (_) -> begin
 true
 end
@@ -1192,7 +1192,7 @@ end))
 
 # 307 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_Caption : decl  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Caption = (fun _discr_ -> (match (_discr_) with
 | Caption (_) -> begin
 true
 end
@@ -1202,7 +1202,7 @@ end))
 
 # 308 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_Eval : decl  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Eval = (fun _discr_ -> (match (_discr_) with
 | Eval (_) -> begin
 true
 end
@@ -1212,7 +1212,7 @@ end))
 
 # 309 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_Echo : decl  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Echo = (fun _discr_ -> (match (_discr_) with
 | Echo (_) -> begin
 true
 end
@@ -1222,8 +1222,8 @@ end))
 
 # 310 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_Push : decl  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Push -> begin
+let is_Push = (fun _discr_ -> (match (_discr_) with
+| Push (_) -> begin
 true
 end
 | _ -> begin
@@ -1232,8 +1232,8 @@ end))
 
 # 311 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_Pop : decl  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Pop -> begin
+let is_Pop = (fun _discr_ -> (match (_discr_) with
+| Pop (_) -> begin
 true
 end
 | _ -> begin
@@ -1242,8 +1242,8 @@ end))
 
 # 312 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
 
-let is_CheckSat : decl  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| CheckSat -> begin
+let is_CheckSat = (fun _discr_ -> (match (_discr_) with
+| CheckSat (_) -> begin
 true
 end
 | _ -> begin

@@ -137,7 +137,7 @@ type foundname =
 
 # 109 "D:\\workspace\\universes\\FStar\\src\\parser\\env.fs"
 
-let is_Term_name : foundname  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Term_name = (fun _discr_ -> (match (_discr_) with
 | Term_name (_) -> begin
 true
 end
@@ -147,7 +147,7 @@ end))
 
 # 110 "D:\\workspace\\universes\\FStar\\src\\parser\\env.fs"
 
-let is_Eff_name : foundname  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Eff_name = (fun _discr_ -> (match (_discr_) with
 | Eff_name (_) -> begin
 true
 end

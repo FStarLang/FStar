@@ -20,8 +20,8 @@ step Prims.list
 
 # 42 "D:\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
 
-let is_WHNF : step  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| WHNF -> begin
+let is_WHNF = (fun _discr_ -> (match (_discr_) with
+| WHNF (_) -> begin
 true
 end
 | _ -> begin
@@ -30,8 +30,8 @@ end))
 
 # 43 "D:\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
 
-let is_Inline : step  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Inline -> begin
+let is_Inline = (fun _discr_ -> (match (_discr_) with
+| Inline (_) -> begin
 true
 end
 | _ -> begin
@@ -40,8 +40,8 @@ end))
 
 # 44 "D:\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
 
-let is_Unfold : step  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Unfold -> begin
+let is_Unfold = (fun _discr_ -> (match (_discr_) with
+| Unfold (_) -> begin
 true
 end
 | _ -> begin
@@ -50,8 +50,8 @@ end))
 
 # 45 "D:\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
 
-let is_Beta : step  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Beta -> begin
+let is_Beta = (fun _discr_ -> (match (_discr_) with
+| Beta (_) -> begin
 true
 end
 | _ -> begin
@@ -60,8 +60,8 @@ end))
 
 # 46 "D:\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
 
-let is_Simplify : step  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Simplify -> begin
+let is_Simplify = (fun _discr_ -> (match (_discr_) with
+| Simplify (_) -> begin
 true
 end
 | _ -> begin
@@ -70,8 +70,8 @@ end))
 
 # 47 "D:\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
 
-let is_EraseUniverses : step  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| EraseUniverses -> begin
+let is_EraseUniverses = (fun _discr_ -> (match (_discr_) with
+| EraseUniverses (_) -> begin
 true
 end
 | _ -> begin
@@ -80,8 +80,8 @@ end))
 
 # 49 "D:\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
 
-let is_DeltaComp : step  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| DeltaComp -> begin
+let is_DeltaComp = (fun _discr_ -> (match (_discr_) with
+| DeltaComp (_) -> begin
 true
 end
 | _ -> begin
@@ -90,8 +90,8 @@ end))
 
 # 50 "D:\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
 
-let is_SNComp : step  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| SNComp -> begin
+let is_SNComp = (fun _discr_ -> (match (_discr_) with
+| SNComp (_) -> begin
 true
 end
 | _ -> begin
@@ -100,8 +100,8 @@ end))
 
 # 51 "D:\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
 
-let is_Eta : step  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Eta -> begin
+let is_Eta = (fun _discr_ -> (match (_discr_) with
+| Eta (_) -> begin
 true
 end
 | _ -> begin
@@ -110,8 +110,8 @@ end))
 
 # 52 "D:\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
 
-let is_EtaArgs : step  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| EtaArgs -> begin
+let is_EtaArgs = (fun _discr_ -> (match (_discr_) with
+| EtaArgs (_) -> begin
 true
 end
 | _ -> begin
@@ -120,8 +120,8 @@ end))
 
 # 53 "D:\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
 
-let is_Unmeta : step  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Unmeta -> begin
+let is_Unmeta = (fun _discr_ -> (match (_discr_) with
+| Unmeta (_) -> begin
 true
 end
 | _ -> begin
@@ -130,8 +130,8 @@ end))
 
 # 54 "D:\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
 
-let is_Unlabel : step  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Unlabel -> begin
+let is_Unlabel = (fun _discr_ -> (match (_discr_) with
+| Unlabel (_) -> begin
 true
 end
 | _ -> begin
@@ -149,7 +149,7 @@ closure Prims.list
 
 # 59 "D:\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
 
-let is_Clos : closure  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Clos = (fun _discr_ -> (match (_discr_) with
 | Clos (_) -> begin
 true
 end
@@ -159,7 +159,7 @@ end))
 
 # 60 "D:\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
 
-let is_Univ : closure  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Univ = (fun _discr_ -> (match (_discr_) with
 | Univ (_) -> begin
 true
 end
@@ -169,8 +169,8 @@ end))
 
 # 61 "D:\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
 
-let is_Dummy : closure  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Dummy -> begin
+let is_Dummy = (fun _discr_ -> (match (_discr_) with
+| Dummy (_) -> begin
 true
 end
 | _ -> begin
@@ -233,7 +233,7 @@ type stack_elt =
 
 # 79 "D:\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
 
-let is_Arg : stack_elt  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Arg = (fun _discr_ -> (match (_discr_) with
 | Arg (_) -> begin
 true
 end
@@ -243,7 +243,7 @@ end))
 
 # 80 "D:\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
 
-let is_UnivArgs : stack_elt  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_UnivArgs = (fun _discr_ -> (match (_discr_) with
 | UnivArgs (_) -> begin
 true
 end
@@ -253,7 +253,7 @@ end))
 
 # 81 "D:\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
 
-let is_MemoLazy : stack_elt  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_MemoLazy = (fun _discr_ -> (match (_discr_) with
 | MemoLazy (_) -> begin
 true
 end
@@ -263,7 +263,7 @@ end))
 
 # 82 "D:\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
 
-let is_Match : stack_elt  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Match = (fun _discr_ -> (match (_discr_) with
 | Match (_) -> begin
 true
 end
@@ -273,7 +273,7 @@ end))
 
 # 83 "D:\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
 
-let is_Abs : stack_elt  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Abs = (fun _discr_ -> (match (_discr_) with
 | Abs (_) -> begin
 true
 end
@@ -283,7 +283,7 @@ end))
 
 # 84 "D:\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
 
-let is_App : stack_elt  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_App = (fun _discr_ -> (match (_discr_) with
 | App (_) -> begin
 true
 end
@@ -293,7 +293,7 @@ end))
 
 # 85 "D:\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
 
-let is_Label : stack_elt  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Label = (fun _discr_ -> (match (_discr_) with
 | Label (_) -> begin
 true
 end

@@ -11,7 +11,7 @@ type binding =
 
 # 31 "D:\\workspace\\universes\\FStar\\src\\typechecker\\env.fs"
 
-let is_Binding_var : binding  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Binding_var = (fun _discr_ -> (match (_discr_) with
 | Binding_var (_) -> begin
 true
 end
@@ -21,7 +21,7 @@ end))
 
 # 32 "D:\\workspace\\universes\\FStar\\src\\typechecker\\env.fs"
 
-let is_Binding_lid : binding  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Binding_lid = (fun _discr_ -> (match (_discr_) with
 | Binding_lid (_) -> begin
 true
 end
@@ -31,7 +31,7 @@ end))
 
 # 33 "D:\\workspace\\universes\\FStar\\src\\typechecker\\env.fs"
 
-let is_Binding_sig : binding  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Binding_sig = (fun _discr_ -> (match (_discr_) with
 | Binding_sig (_) -> begin
 true
 end
@@ -41,7 +41,7 @@ end))
 
 # 34 "D:\\workspace\\universes\\FStar\\src\\typechecker\\env.fs"
 
-let is_Binding_univ : binding  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Binding_univ = (fun _discr_ -> (match (_discr_) with
 | Binding_univ (_) -> begin
 true
 end
@@ -51,7 +51,7 @@ end))
 
 # 35 "D:\\workspace\\universes\\FStar\\src\\typechecker\\env.fs"
 
-let is_Binding_sig_inst : binding  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Binding_sig_inst = (fun _discr_ -> (match (_discr_) with
 | Binding_sig_inst (_) -> begin
 true
 end
@@ -103,8 +103,8 @@ type delta_level =
 
 # 38 "D:\\workspace\\universes\\FStar\\src\\typechecker\\env.fs"
 
-let is_NoDelta : delta_level  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| NoDelta -> begin
+let is_NoDelta = (fun _discr_ -> (match (_discr_) with
+| NoDelta (_) -> begin
 true
 end
 | _ -> begin
@@ -113,8 +113,8 @@ end))
 
 # 39 "D:\\workspace\\universes\\FStar\\src\\typechecker\\env.fs"
 
-let is_OnlyInline : delta_level  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| OnlyInline -> begin
+let is_OnlyInline = (fun _discr_ -> (match (_discr_) with
+| OnlyInline (_) -> begin
 true
 end
 | _ -> begin
@@ -123,8 +123,8 @@ end))
 
 # 40 "D:\\workspace\\universes\\FStar\\src\\typechecker\\env.fs"
 
-let is_Unfold : delta_level  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Unfold -> begin
+let is_Unfold = (fun _discr_ -> (match (_discr_) with
+| Unfold (_) -> begin
 true
 end
 | _ -> begin
@@ -393,8 +393,8 @@ type tri =
 
 # 217 "D:\\workspace\\universes\\FStar\\src\\typechecker\\env.fs"
 
-let is_Yes : tri  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Yes -> begin
+let is_Yes = (fun _discr_ -> (match (_discr_) with
+| Yes (_) -> begin
 true
 end
 | _ -> begin
@@ -403,8 +403,8 @@ end))
 
 # 218 "D:\\workspace\\universes\\FStar\\src\\typechecker\\env.fs"
 
-let is_No : tri  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| No -> begin
+let is_No = (fun _discr_ -> (match (_discr_) with
+| No (_) -> begin
 true
 end
 | _ -> begin
@@ -413,8 +413,8 @@ end))
 
 # 219 "D:\\workspace\\universes\\FStar\\src\\typechecker\\env.fs"
 
-let is_Maybe : tri  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Maybe -> begin
+let is_Maybe = (fun _discr_ -> (match (_discr_) with
+| Maybe (_) -> begin
 true
 end
 | _ -> begin

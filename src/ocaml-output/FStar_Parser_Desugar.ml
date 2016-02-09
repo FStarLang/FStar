@@ -625,7 +625,7 @@ type bnd =
 
 # 336 "D:\\workspace\\universes\\FStar\\src\\parser\\desugar.fs"
 
-let is_TBinder : bnd  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_TBinder = (fun _discr_ -> (match (_discr_) with
 | TBinder (_) -> begin
 true
 end
@@ -635,7 +635,7 @@ end))
 
 # 337 "D:\\workspace\\universes\\FStar\\src\\parser\\desugar.fs"
 
-let is_VBinder : bnd  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_VBinder = (fun _discr_ -> (match (_discr_) with
 | VBinder (_) -> begin
 true
 end
@@ -645,7 +645,7 @@ end))
 
 # 338 "D:\\workspace\\universes\\FStar\\src\\parser\\desugar.fs"
 
-let is_LetBinder : bnd  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_LetBinder = (fun _discr_ -> (match (_discr_) with
 | LetBinder (_) -> begin
 true
 end

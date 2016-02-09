@@ -7,7 +7,7 @@ type doc =
 
 # 8 "D:\\workspace\\universes\\FStar\\src\\format\\formatml.fs"
 
-let is_Doc : doc  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Doc = (fun _discr_ -> (match (_discr_) with
 | Doc (_) -> begin
 true
 end

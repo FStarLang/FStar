@@ -9,7 +9,7 @@ type binding =
 
 # 28 "D:\\workspace\\universes\\FStar\\src\\extraction\\env.fs"
 
-let is_Ty : binding  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Ty = (fun _discr_ -> (match (_discr_) with
 | Ty (_) -> begin
 true
 end
@@ -19,7 +19,7 @@ end))
 
 # 29 "D:\\workspace\\universes\\FStar\\src\\extraction\\env.fs"
 
-let is_Bv : binding  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Bv = (fun _discr_ -> (match (_discr_) with
 | Bv (_) -> begin
 true
 end
@@ -29,7 +29,7 @@ end))
 
 # 30 "D:\\workspace\\universes\\FStar\\src\\extraction\\env.fs"
 
-let is_Fv : binding  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Fv = (fun _discr_ -> (match (_discr_) with
 | Fv (_) -> begin
 true
 end

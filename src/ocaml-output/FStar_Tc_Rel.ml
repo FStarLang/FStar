@@ -59,8 +59,8 @@ type rel =
 
 # 79 "D:\\workspace\\universes\\FStar\\src\\tc\\rel.fs"
 
-let is_EQ : rel  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| EQ -> begin
+let is_EQ = (fun _discr_ -> (match (_discr_) with
+| EQ (_) -> begin
 true
 end
 | _ -> begin
@@ -69,8 +69,8 @@ end))
 
 # 80 "D:\\workspace\\universes\\FStar\\src\\tc\\rel.fs"
 
-let is_SUB : rel  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| SUB -> begin
+let is_SUB = (fun _discr_ -> (match (_discr_) with
+| SUB (_) -> begin
 true
 end
 | _ -> begin
@@ -79,8 +79,8 @@ end))
 
 # 81 "D:\\workspace\\universes\\FStar\\src\\tc\\rel.fs"
 
-let is_SUBINV : rel  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| SUBINV -> begin
+let is_SUBINV = (fun _discr_ -> (match (_discr_) with
+| SUBINV (_) -> begin
 true
 end
 | _ -> begin
@@ -96,8 +96,8 @@ type variance =
 
 # 84 "D:\\workspace\\universes\\FStar\\src\\tc\\rel.fs"
 
-let is_COVARIANT : variance  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| COVARIANT -> begin
+let is_COVARIANT = (fun _discr_ -> (match (_discr_) with
+| COVARIANT (_) -> begin
 true
 end
 | _ -> begin
@@ -106,8 +106,8 @@ end))
 
 # 85 "D:\\workspace\\universes\\FStar\\src\\tc\\rel.fs"
 
-let is_CONTRAVARIANT : variance  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| CONTRAVARIANT -> begin
+let is_CONTRAVARIANT = (fun _discr_ -> (match (_discr_) with
+| CONTRAVARIANT (_) -> begin
 true
 end
 | _ -> begin
@@ -116,8 +116,8 @@ end))
 
 # 86 "D:\\workspace\\universes\\FStar\\src\\tc\\rel.fs"
 
-let is_INVARIANT : variance  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| INVARIANT -> begin
+let is_INVARIANT = (fun _discr_ -> (match (_discr_) with
+| INVARIANT (_) -> begin
 true
 end
 | _ -> begin
@@ -148,7 +148,7 @@ type prob =
 
 # 102 "D:\\workspace\\universes\\FStar\\src\\tc\\rel.fs"
 
-let is_KProb : prob  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_KProb = (fun _discr_ -> (match (_discr_) with
 | KProb (_) -> begin
 true
 end
@@ -158,7 +158,7 @@ end))
 
 # 103 "D:\\workspace\\universes\\FStar\\src\\tc\\rel.fs"
 
-let is_TProb : prob  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_TProb = (fun _discr_ -> (match (_discr_) with
 | TProb (_) -> begin
 true
 end
@@ -168,7 +168,7 @@ end))
 
 # 104 "D:\\workspace\\universes\\FStar\\src\\tc\\rel.fs"
 
-let is_EProb : prob  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_EProb = (fun _discr_ -> (match (_discr_) with
 | EProb (_) -> begin
 true
 end
@@ -178,7 +178,7 @@ end))
 
 # 105 "D:\\workspace\\universes\\FStar\\src\\tc\\rel.fs"
 
-let is_CProb : prob  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_CProb = (fun _discr_ -> (match (_discr_) with
 | CProb (_) -> begin
 true
 end
@@ -228,7 +228,7 @@ type uvi =
 
 # 111 "D:\\workspace\\universes\\FStar\\src\\tc\\rel.fs"
 
-let is_UK : uvi  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_UK = (fun _discr_ -> (match (_discr_) with
 | UK (_) -> begin
 true
 end
@@ -238,7 +238,7 @@ end))
 
 # 112 "D:\\workspace\\universes\\FStar\\src\\tc\\rel.fs"
 
-let is_UT : uvi  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_UT = (fun _discr_ -> (match (_discr_) with
 | UT (_) -> begin
 true
 end
@@ -248,7 +248,7 @@ end))
 
 # 113 "D:\\workspace\\universes\\FStar\\src\\tc\\rel.fs"
 
-let is_UE : uvi  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_UE = (fun _discr_ -> (match (_discr_) with
 | UE (_) -> begin
 true
 end
@@ -307,7 +307,7 @@ type solution =
 
 # 137 "D:\\workspace\\universes\\FStar\\src\\tc\\rel.fs"
 
-let is_Success : solution  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Success = (fun _discr_ -> (match (_discr_) with
 | Success (_) -> begin
 true
 end
@@ -317,7 +317,7 @@ end))
 
 # 138 "D:\\workspace\\universes\\FStar\\src\\tc\\rel.fs"
 
-let is_Failed : solution  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Failed = (fun _discr_ -> (match (_discr_) with
 | Failed (_) -> begin
 true
 end
@@ -1194,8 +1194,8 @@ type match_result =
 
 # 621 "D:\\workspace\\universes\\FStar\\src\\tc\\rel.fs"
 
-let is_MisMatch : match_result  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| MisMatch -> begin
+let is_MisMatch = (fun _discr_ -> (match (_discr_) with
+| MisMatch (_) -> begin
 true
 end
 | _ -> begin
@@ -1204,8 +1204,8 @@ end))
 
 # 622 "D:\\workspace\\universes\\FStar\\src\\tc\\rel.fs"
 
-let is_HeadMatch : match_result  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| HeadMatch -> begin
+let is_HeadMatch = (fun _discr_ -> (match (_discr_) with
+| HeadMatch (_) -> begin
 true
 end
 | _ -> begin
@@ -1214,8 +1214,8 @@ end))
 
 # 623 "D:\\workspace\\universes\\FStar\\src\\tc\\rel.fs"
 
-let is_FullMatch : match_result  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| FullMatch -> begin
+let is_FullMatch = (fun _discr_ -> (match (_discr_) with
+| FullMatch (_) -> begin
 true
 end
 | _ -> begin
@@ -3932,8 +3932,8 @@ type guard_formula =
 
 # 2356 "D:\\workspace\\universes\\FStar\\src\\tc\\rel.fs"
 
-let is_Trivial : guard_formula  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Trivial -> begin
+let is_Trivial = (fun _discr_ -> (match (_discr_) with
+| Trivial (_) -> begin
 true
 end
 | _ -> begin
@@ -3942,7 +3942,7 @@ end))
 
 # 2357 "D:\\workspace\\universes\\FStar\\src\\tc\\rel.fs"
 
-let is_NonTrivial : guard_formula  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_NonTrivial = (fun _discr_ -> (match (_discr_) with
 | NonTrivial (_) -> begin
 true
 end

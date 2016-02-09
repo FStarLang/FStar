@@ -167,8 +167,8 @@ type compatibilityMode =
 
 # 131 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
 
-let is_ALWAYS : compatibilityMode  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| ALWAYS -> begin
+let is_ALWAYS = (fun _discr_ -> (match (_discr_) with
+| ALWAYS (_) -> begin
 true
 end
 | _ -> begin
@@ -177,8 +177,8 @@ end))
 
 # 132 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
 
-let is_FSHARP : compatibilityMode  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| FSHARP -> begin
+let is_FSHARP = (fun _discr_ -> (match (_discr_) with
+| FSHARP (_) -> begin
 true
 end
 | _ -> begin
@@ -227,7 +227,7 @@ exception ReservedKeyword of ((Prims.string * FStar_Range.range))
 
 # 213 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
 
-let is_ReservedKeyword : Prims.exn  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_ReservedKeyword = (fun _discr_ -> (match (_discr_) with
 | ReservedKeyword (_) -> begin
 true
 end
@@ -248,7 +248,7 @@ exception IndentationProblem of ((Prims.string * FStar_Range.range))
 
 # 214 "D:\\workspace\\universes\\FStar\\src\\parser\\lexhelp.fs"
 
-let is_IndentationProblem : Prims.exn  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_IndentationProblem = (fun _discr_ -> (match (_discr_) with
 | IndentationProblem (_) -> begin
 true
 end

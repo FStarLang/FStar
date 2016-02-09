@@ -20,8 +20,8 @@ step Prims.list
 
 # 41 "D:\\workspace\\universes\\FStar\\src\\tc\\normalize.fs"
 
-let is_WHNF : step  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| WHNF -> begin
+let is_WHNF = (fun _discr_ -> (match (_discr_) with
+| WHNF (_) -> begin
 true
 end
 | _ -> begin
@@ -30,8 +30,8 @@ end))
 
 # 42 "D:\\workspace\\universes\\FStar\\src\\tc\\normalize.fs"
 
-let is_Eta : step  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Eta -> begin
+let is_Eta = (fun _discr_ -> (match (_discr_) with
+| Eta (_) -> begin
 true
 end
 | _ -> begin
@@ -40,8 +40,8 @@ end))
 
 # 43 "D:\\workspace\\universes\\FStar\\src\\tc\\normalize.fs"
 
-let is_EtaArgs : step  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| EtaArgs -> begin
+let is_EtaArgs = (fun _discr_ -> (match (_discr_) with
+| EtaArgs (_) -> begin
 true
 end
 | _ -> begin
@@ -50,8 +50,8 @@ end))
 
 # 44 "D:\\workspace\\universes\\FStar\\src\\tc\\normalize.fs"
 
-let is_Delta : step  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Delta -> begin
+let is_Delta = (fun _discr_ -> (match (_discr_) with
+| Delta (_) -> begin
 true
 end
 | _ -> begin
@@ -60,8 +60,8 @@ end))
 
 # 45 "D:\\workspace\\universes\\FStar\\src\\tc\\normalize.fs"
 
-let is_DeltaHard : step  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| DeltaHard -> begin
+let is_DeltaHard = (fun _discr_ -> (match (_discr_) with
+| DeltaHard (_) -> begin
 true
 end
 | _ -> begin
@@ -70,8 +70,8 @@ end))
 
 # 46 "D:\\workspace\\universes\\FStar\\src\\tc\\normalize.fs"
 
-let is_UnfoldOpaque : step  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| UnfoldOpaque -> begin
+let is_UnfoldOpaque = (fun _discr_ -> (match (_discr_) with
+| UnfoldOpaque (_) -> begin
 true
 end
 | _ -> begin
@@ -80,8 +80,8 @@ end))
 
 # 47 "D:\\workspace\\universes\\FStar\\src\\tc\\normalize.fs"
 
-let is_Beta : step  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Beta -> begin
+let is_Beta = (fun _discr_ -> (match (_discr_) with
+| Beta (_) -> begin
 true
 end
 | _ -> begin
@@ -90,8 +90,8 @@ end))
 
 # 48 "D:\\workspace\\universes\\FStar\\src\\tc\\normalize.fs"
 
-let is_DeltaComp : step  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| DeltaComp -> begin
+let is_DeltaComp = (fun _discr_ -> (match (_discr_) with
+| DeltaComp (_) -> begin
 true
 end
 | _ -> begin
@@ -100,8 +100,8 @@ end))
 
 # 49 "D:\\workspace\\universes\\FStar\\src\\tc\\normalize.fs"
 
-let is_Simplify : step  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Simplify -> begin
+let is_Simplify = (fun _discr_ -> (match (_discr_) with
+| Simplify (_) -> begin
 true
 end
 | _ -> begin
@@ -110,8 +110,8 @@ end))
 
 # 50 "D:\\workspace\\universes\\FStar\\src\\tc\\normalize.fs"
 
-let is_SNComp : step  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| SNComp -> begin
+let is_SNComp = (fun _discr_ -> (match (_discr_) with
+| SNComp (_) -> begin
 true
 end
 | _ -> begin
@@ -120,8 +120,8 @@ end))
 
 # 51 "D:\\workspace\\universes\\FStar\\src\\tc\\normalize.fs"
 
-let is_Unmeta : step  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Unmeta -> begin
+let is_Unmeta = (fun _discr_ -> (match (_discr_) with
+| Unmeta (_) -> begin
 true
 end
 | _ -> begin
@@ -130,8 +130,8 @@ end))
 
 # 52 "D:\\workspace\\universes\\FStar\\src\\tc\\normalize.fs"
 
-let is_Unlabel : step  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Unlabel -> begin
+let is_Unlabel = (fun _discr_ -> (match (_discr_) with
+| Unlabel (_) -> begin
 true
 end
 | _ -> begin
@@ -170,7 +170,7 @@ let is_Mkstack : stack  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwi
 
 # 68 "D:\\workspace\\universes\\FStar\\src\\tc\\normalize.fs"
 
-let is_T : env_entry  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_T = (fun _discr_ -> (match (_discr_) with
 | T (_) -> begin
 true
 end
@@ -180,7 +180,7 @@ end))
 
 # 69 "D:\\workspace\\universes\\FStar\\src\\tc\\normalize.fs"
 
-let is_V : env_entry  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_V = (fun _discr_ -> (match (_discr_) with
 | V (_) -> begin
 true
 end

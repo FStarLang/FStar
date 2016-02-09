@@ -157,8 +157,8 @@ exception Exit
 
 # 148 "D:\\workspace\\universes\\FStar\\src\\parser\\dep.fs"
 
-let is_Exit : Prims.exn  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Exit -> begin
+let is_Exit = (fun _discr_ -> (match (_discr_) with
+| Exit (_) -> begin
 true
 end
 | _ -> begin
@@ -463,8 +463,8 @@ type color =
 
 # 399 "D:\\workspace\\universes\\FStar\\src\\parser\\dep.fs"
 
-let is_White : color  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| White -> begin
+let is_White = (fun _discr_ -> (match (_discr_) with
+| White (_) -> begin
 true
 end
 | _ -> begin
@@ -473,8 +473,8 @@ end))
 
 # 399 "D:\\workspace\\universes\\FStar\\src\\parser\\dep.fs"
 
-let is_Gray : color  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Gray -> begin
+let is_Gray = (fun _discr_ -> (match (_discr_) with
+| Gray (_) -> begin
 true
 end
 | _ -> begin
@@ -483,8 +483,8 @@ end))
 
 # 399 "D:\\workspace\\universes\\FStar\\src\\parser\\dep.fs"
 
-let is_Black : color  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Black -> begin
+let is_Black = (fun _discr_ -> (match (_discr_) with
+| Black (_) -> begin
 true
 end
 | _ -> begin

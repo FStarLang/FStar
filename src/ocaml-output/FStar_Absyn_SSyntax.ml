@@ -6,7 +6,7 @@ exception Err of (Prims.string)
 
 # 11 "D:\\workspace\\universes\\FStar\\src\\absyn\\ssyntax.fs"
 
-let is_Err : Prims.exn  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Err = (fun _discr_ -> (match (_discr_) with
 | Err (_) -> begin
 true
 end

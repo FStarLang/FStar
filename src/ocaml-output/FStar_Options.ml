@@ -11,8 +11,8 @@ type debug_level_t =
 
 # 26 "D:\\workspace\\universes\\FStar\\src\\basic\\options.fs"
 
-let is_Low : debug_level_t  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Low -> begin
+let is_Low = (fun _discr_ -> (match (_discr_) with
+| Low (_) -> begin
 true
 end
 | _ -> begin
@@ -21,8 +21,8 @@ end))
 
 # 27 "D:\\workspace\\universes\\FStar\\src\\basic\\options.fs"
 
-let is_Medium : debug_level_t  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Medium -> begin
+let is_Medium = (fun _discr_ -> (match (_discr_) with
+| Medium (_) -> begin
 true
 end
 | _ -> begin
@@ -31,8 +31,8 @@ end))
 
 # 28 "D:\\workspace\\universes\\FStar\\src\\basic\\options.fs"
 
-let is_High : debug_level_t  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| High -> begin
+let is_High = (fun _discr_ -> (match (_discr_) with
+| High (_) -> begin
 true
 end
 | _ -> begin
@@ -41,8 +41,8 @@ end))
 
 # 29 "D:\\workspace\\universes\\FStar\\src\\basic\\options.fs"
 
-let is_Extreme : debug_level_t  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Extreme -> begin
+let is_Extreme = (fun _discr_ -> (match (_discr_) with
+| Extreme (_) -> begin
 true
 end
 | _ -> begin
@@ -51,7 +51,7 @@ end))
 
 # 30 "D:\\workspace\\universes\\FStar\\src\\basic\\options.fs"
 
-let is_Other : debug_level_t  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Other = (fun _discr_ -> (match (_discr_) with
 | Other (_) -> begin
 true
 end

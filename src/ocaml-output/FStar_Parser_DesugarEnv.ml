@@ -10,7 +10,7 @@ type binding =
 
 # 32 "D:\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
-let is_Binding_typ_var : binding  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Binding_typ_var = (fun _discr_ -> (match (_discr_) with
 | Binding_typ_var (_) -> begin
 true
 end
@@ -20,7 +20,7 @@ end))
 
 # 33 "D:\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
-let is_Binding_var : binding  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Binding_var = (fun _discr_ -> (match (_discr_) with
 | Binding_var (_) -> begin
 true
 end
@@ -30,7 +30,7 @@ end))
 
 # 34 "D:\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
-let is_Binding_let : binding  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Binding_let = (fun _discr_ -> (match (_discr_) with
 | Binding_let (_) -> begin
 true
 end
@@ -40,7 +40,7 @@ end))
 
 # 35 "D:\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
-let is_Binding_tycon : binding  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Binding_tycon = (fun _discr_ -> (match (_discr_) with
 | Binding_tycon (_) -> begin
 true
 end
@@ -287,7 +287,7 @@ type occurrence =
 
 # 145 "D:\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
-let is_OSig : occurrence  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_OSig = (fun _discr_ -> (match (_discr_) with
 | OSig (_) -> begin
 true
 end
@@ -297,7 +297,7 @@ end))
 
 # 146 "D:\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
-let is_OLet : occurrence  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_OLet = (fun _discr_ -> (match (_discr_) with
 | OLet (_) -> begin
 true
 end
@@ -307,7 +307,7 @@ end))
 
 # 147 "D:\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
-let is_ORec : occurrence  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_ORec = (fun _discr_ -> (match (_discr_) with
 | ORec (_) -> begin
 true
 end
@@ -356,7 +356,7 @@ type foundname =
 
 # 154 "D:\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
-let is_Exp_name : foundname  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Exp_name = (fun _discr_ -> (match (_discr_) with
 | Exp_name (_) -> begin
 true
 end
@@ -366,7 +366,7 @@ end))
 
 # 155 "D:\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
-let is_Typ_name : foundname  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Typ_name = (fun _discr_ -> (match (_discr_) with
 | Typ_name (_) -> begin
 true
 end
@@ -376,7 +376,7 @@ end))
 
 # 156 "D:\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
-let is_Eff_name : foundname  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Eff_name = (fun _discr_ -> (match (_discr_) with
 | Eff_name (_) -> begin
 true
 end
@@ -386,7 +386,7 @@ end))
 
 # 157 "D:\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
-let is_Knd_name : foundname  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Knd_name = (fun _discr_ -> (match (_discr_) with
 | Knd_name (_) -> begin
 true
 end

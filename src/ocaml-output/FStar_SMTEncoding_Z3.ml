@@ -8,8 +8,8 @@ type z3version =
 
 # 27 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
 
-let is_Z3V_Unknown : z3version  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Z3V_Unknown -> begin
+let is_Z3V_Unknown = (fun _discr_ -> (match (_discr_) with
+| Z3V_Unknown (_) -> begin
 true
 end
 | _ -> begin
@@ -18,7 +18,7 @@ end))
 
 # 28 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
 
-let is_Z3V : z3version  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Z3V = (fun _discr_ -> (match (_discr_) with
 | Z3V (_) -> begin
 true
 end
@@ -141,8 +141,8 @@ type z3status =
 
 # 85 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
 
-let is_SAT : z3status  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| SAT -> begin
+let is_SAT = (fun _discr_ -> (match (_discr_) with
+| SAT (_) -> begin
 true
 end
 | _ -> begin
@@ -151,8 +151,8 @@ end))
 
 # 86 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
 
-let is_UNSAT : z3status  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| UNSAT -> begin
+let is_UNSAT = (fun _discr_ -> (match (_discr_) with
+| UNSAT (_) -> begin
 true
 end
 | _ -> begin
@@ -161,8 +161,8 @@ end))
 
 # 87 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
 
-let is_UNKNOWN : z3status  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| UNKNOWN -> begin
+let is_UNKNOWN = (fun _discr_ -> (match (_discr_) with
+| UNKNOWN (_) -> begin
 true
 end
 | _ -> begin
@@ -171,8 +171,8 @@ end))
 
 # 88 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
 
-let is_TIMEOUT : z3status  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| TIMEOUT -> begin
+let is_TIMEOUT = (fun _discr_ -> (match (_discr_) with
+| TIMEOUT (_) -> begin
 true
 end
 | _ -> begin

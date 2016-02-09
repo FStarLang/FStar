@@ -19,8 +19,8 @@ type fragment =
 
 # 34 "D:\\workspace\\universes\\FStar\\src\\parser\\driver.fs"
 
-let is_Empty : fragment  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Empty -> begin
+let is_Empty = (fun _discr_ -> (match (_discr_) with
+| Empty (_) -> begin
 true
 end
 | _ -> begin
@@ -29,7 +29,7 @@ end))
 
 # 35 "D:\\workspace\\universes\\FStar\\src\\parser\\driver.fs"
 
-let is_Modul : fragment  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Modul = (fun _discr_ -> (match (_discr_) with
 | Modul (_) -> begin
 true
 end
@@ -39,7 +39,7 @@ end))
 
 # 36 "D:\\workspace\\universes\\FStar\\src\\parser\\driver.fs"
 
-let is_Decls : fragment  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Decls = (fun _discr_ -> (match (_discr_) with
 | Decls (_) -> begin
 true
 end

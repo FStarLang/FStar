@@ -21,7 +21,7 @@ exception Err of (Prims.string)
 
 # 29 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Err : Prims.exn  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Err = (fun _discr_ -> (match (_discr_) with
 | Err (_) -> begin
 true
 end
@@ -42,7 +42,7 @@ exception Error of ((Prims.string * FStar_Range.range))
 
 # 30 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Error : Prims.exn  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Error = (fun _discr_ -> (match (_discr_) with
 | Error (_) -> begin
 true
 end
@@ -63,7 +63,7 @@ exception Warning of ((Prims.string * FStar_Range.range))
 
 # 31 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Warning : Prims.exn  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Warning = (fun _discr_ -> (match (_discr_) with
 | Warning (_) -> begin
 true
 end
@@ -124,7 +124,7 @@ type pragma =
 
 # 49 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_SetOptions : pragma  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_SetOptions = (fun _discr_ -> (match (_discr_) with
 | SetOptions (_) -> begin
 true
 end
@@ -134,8 +134,8 @@ end))
 
 # 50 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_ResetOptions : pragma  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| ResetOptions -> begin
+let is_ResetOptions = (fun _discr_ -> (match (_discr_) with
+| ResetOptions (_) -> begin
 true
 end
 | _ -> begin
@@ -162,7 +162,7 @@ type arg_qualifier =
 
 # 53 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Implicit : arg_qualifier  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Implicit = (fun _discr_ -> (match (_discr_) with
 | Implicit (_) -> begin
 true
 end
@@ -172,8 +172,8 @@ end))
 
 # 54 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Equality : arg_qualifier  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Equality -> begin
+let is_Equality = (fun _discr_ -> (match (_discr_) with
+| Equality (_) -> begin
 true
 end
 | _ -> begin
@@ -334,7 +334,7 @@ typ var
 
 # 57 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Typ_btvar : typ'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Typ_btvar = (fun _discr_ -> (match (_discr_) with
 | Typ_btvar (_) -> begin
 true
 end
@@ -344,7 +344,7 @@ end))
 
 # 58 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Typ_const : typ'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Typ_const = (fun _discr_ -> (match (_discr_) with
 | Typ_const (_) -> begin
 true
 end
@@ -354,7 +354,7 @@ end))
 
 # 59 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Typ_fun : typ'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Typ_fun = (fun _discr_ -> (match (_discr_) with
 | Typ_fun (_) -> begin
 true
 end
@@ -364,7 +364,7 @@ end))
 
 # 60 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Typ_refine : typ'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Typ_refine = (fun _discr_ -> (match (_discr_) with
 | Typ_refine (_) -> begin
 true
 end
@@ -374,7 +374,7 @@ end))
 
 # 61 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Typ_app : typ'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Typ_app = (fun _discr_ -> (match (_discr_) with
 | Typ_app (_) -> begin
 true
 end
@@ -384,7 +384,7 @@ end))
 
 # 62 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Typ_lam : typ'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Typ_lam = (fun _discr_ -> (match (_discr_) with
 | Typ_lam (_) -> begin
 true
 end
@@ -394,7 +394,7 @@ end))
 
 # 63 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Typ_ascribed : typ'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Typ_ascribed = (fun _discr_ -> (match (_discr_) with
 | Typ_ascribed (_) -> begin
 true
 end
@@ -404,7 +404,7 @@ end))
 
 # 64 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Typ_meta : typ'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Typ_meta = (fun _discr_ -> (match (_discr_) with
 | Typ_meta (_) -> begin
 true
 end
@@ -414,7 +414,7 @@ end))
 
 # 65 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Typ_uvar : typ'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Typ_uvar = (fun _discr_ -> (match (_discr_) with
 | Typ_uvar (_) -> begin
 true
 end
@@ -424,7 +424,7 @@ end))
 
 # 66 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Typ_delayed : typ'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Typ_delayed = (fun _discr_ -> (match (_discr_) with
 | Typ_delayed (_) -> begin
 true
 end
@@ -434,8 +434,8 @@ end))
 
 # 67 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Typ_unknown : typ'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Typ_unknown -> begin
+let is_Typ_unknown = (fun _discr_ -> (match (_discr_) with
+| Typ_unknown (_) -> begin
 true
 end
 | _ -> begin
@@ -448,7 +448,7 @@ let is_Mkcomp_typ : comp_typ  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.
 
 # 80 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Total : comp'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Total = (fun _discr_ -> (match (_discr_) with
 | Total (_) -> begin
 true
 end
@@ -458,7 +458,7 @@ end))
 
 # 81 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Comp : comp'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Comp = (fun _discr_ -> (match (_discr_) with
 | Comp (_) -> begin
 true
 end
@@ -468,8 +468,8 @@ end))
 
 # 84 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_TOTAL : cflags  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| TOTAL -> begin
+let is_TOTAL = (fun _discr_ -> (match (_discr_) with
+| TOTAL (_) -> begin
 true
 end
 | _ -> begin
@@ -478,8 +478,8 @@ end))
 
 # 85 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_MLEFFECT : cflags  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| MLEFFECT -> begin
+let is_MLEFFECT = (fun _discr_ -> (match (_discr_) with
+| MLEFFECT (_) -> begin
 true
 end
 | _ -> begin
@@ -488,8 +488,8 @@ end))
 
 # 86 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_RETURN : cflags  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| RETURN -> begin
+let is_RETURN = (fun _discr_ -> (match (_discr_) with
+| RETURN (_) -> begin
 true
 end
 | _ -> begin
@@ -498,8 +498,8 @@ end))
 
 # 87 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_PARTIAL_RETURN : cflags  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| PARTIAL_RETURN -> begin
+let is_PARTIAL_RETURN = (fun _discr_ -> (match (_discr_) with
+| PARTIAL_RETURN (_) -> begin
 true
 end
 | _ -> begin
@@ -508,8 +508,8 @@ end))
 
 # 88 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_SOMETRIVIAL : cflags  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| SOMETRIVIAL -> begin
+let is_SOMETRIVIAL = (fun _discr_ -> (match (_discr_) with
+| SOMETRIVIAL (_) -> begin
 true
 end
 | _ -> begin
@@ -518,8 +518,8 @@ end))
 
 # 89 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_LEMMA : cflags  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| LEMMA -> begin
+let is_LEMMA = (fun _discr_ -> (match (_discr_) with
+| LEMMA (_) -> begin
 true
 end
 | _ -> begin
@@ -528,7 +528,7 @@ end))
 
 # 90 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_DECREASES : cflags  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_DECREASES = (fun _discr_ -> (match (_discr_) with
 | DECREASES (_) -> begin
 true
 end
@@ -538,7 +538,7 @@ end))
 
 # 93 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Meta_pattern : meta_t  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Meta_pattern = (fun _discr_ -> (match (_discr_) with
 | Meta_pattern (_) -> begin
 true
 end
@@ -548,7 +548,7 @@ end))
 
 # 94 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Meta_named : meta_t  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Meta_named = (fun _discr_ -> (match (_discr_) with
 | Meta_named (_) -> begin
 true
 end
@@ -558,7 +558,7 @@ end))
 
 # 95 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Meta_labeled : meta_t  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Meta_labeled = (fun _discr_ -> (match (_discr_) with
 | Meta_labeled (_) -> begin
 true
 end
@@ -568,7 +568,7 @@ end))
 
 # 96 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Meta_refresh_label : meta_t  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Meta_refresh_label = (fun _discr_ -> (match (_discr_) with
 | Meta_refresh_label (_) -> begin
 true
 end
@@ -578,7 +578,7 @@ end))
 
 # 97 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Meta_slack_formula : meta_t  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Meta_slack_formula = (fun _discr_ -> (match (_discr_) with
 | Meta_slack_formula (_) -> begin
 true
 end
@@ -588,8 +588,8 @@ end))
 
 # 99 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Uvar = (fun _discr_ -> (match (_discr_) with
-| Uvar -> begin
+let is_Uvar = (fun _ _discr_ -> (match (_discr_) with
+| Uvar (_) -> begin
 true
 end
 | _ -> begin
@@ -598,7 +598,7 @@ end))
 
 # 100 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Fixed = (fun _discr_ -> (match (_discr_) with
+let is_Fixed = (fun _ _discr_ -> (match (_discr_) with
 | Fixed (_) -> begin
 true
 end
@@ -608,7 +608,7 @@ end))
 
 # 102 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Exp_bvar : exp'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Exp_bvar = (fun _discr_ -> (match (_discr_) with
 | Exp_bvar (_) -> begin
 true
 end
@@ -618,7 +618,7 @@ end))
 
 # 103 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Exp_fvar : exp'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Exp_fvar = (fun _discr_ -> (match (_discr_) with
 | Exp_fvar (_) -> begin
 true
 end
@@ -628,7 +628,7 @@ end))
 
 # 104 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Exp_constant : exp'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Exp_constant = (fun _discr_ -> (match (_discr_) with
 | Exp_constant (_) -> begin
 true
 end
@@ -638,7 +638,7 @@ end))
 
 # 105 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Exp_abs : exp'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Exp_abs = (fun _discr_ -> (match (_discr_) with
 | Exp_abs (_) -> begin
 true
 end
@@ -648,7 +648,7 @@ end))
 
 # 106 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Exp_app : exp'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Exp_app = (fun _discr_ -> (match (_discr_) with
 | Exp_app (_) -> begin
 true
 end
@@ -658,7 +658,7 @@ end))
 
 # 107 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Exp_match : exp'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Exp_match = (fun _discr_ -> (match (_discr_) with
 | Exp_match (_) -> begin
 true
 end
@@ -668,7 +668,7 @@ end))
 
 # 108 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Exp_ascribed : exp'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Exp_ascribed = (fun _discr_ -> (match (_discr_) with
 | Exp_ascribed (_) -> begin
 true
 end
@@ -678,7 +678,7 @@ end))
 
 # 109 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Exp_let : exp'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Exp_let = (fun _discr_ -> (match (_discr_) with
 | Exp_let (_) -> begin
 true
 end
@@ -688,7 +688,7 @@ end))
 
 # 110 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Exp_uvar : exp'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Exp_uvar = (fun _discr_ -> (match (_discr_) with
 | Exp_uvar (_) -> begin
 true
 end
@@ -698,7 +698,7 @@ end))
 
 # 111 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Exp_delayed : exp'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Exp_delayed = (fun _discr_ -> (match (_discr_) with
 | Exp_delayed (_) -> begin
 true
 end
@@ -708,7 +708,7 @@ end))
 
 # 112 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Exp_meta : exp'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Exp_meta = (fun _discr_ -> (match (_discr_) with
 | Exp_meta (_) -> begin
 true
 end
@@ -718,7 +718,7 @@ end))
 
 # 115 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Meta_desugared : meta_e  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Meta_desugared = (fun _discr_ -> (match (_discr_) with
 | Meta_desugared (_) -> begin
 true
 end
@@ -728,8 +728,8 @@ end))
 
 # 117 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Data_app : meta_source_info  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Data_app -> begin
+let is_Data_app = (fun _discr_ -> (match (_discr_) with
+| Data_app (_) -> begin
 true
 end
 | _ -> begin
@@ -738,8 +738,8 @@ end))
 
 # 118 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Sequence : meta_source_info  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Sequence -> begin
+let is_Sequence = (fun _discr_ -> (match (_discr_) with
+| Sequence (_) -> begin
 true
 end
 | _ -> begin
@@ -748,8 +748,8 @@ end))
 
 # 119 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Primop : meta_source_info  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Primop -> begin
+let is_Primop = (fun _discr_ -> (match (_discr_) with
+| Primop (_) -> begin
 true
 end
 | _ -> begin
@@ -758,8 +758,8 @@ end))
 
 # 120 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Masked_effect : meta_source_info  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Masked_effect -> begin
+let is_Masked_effect = (fun _discr_ -> (match (_discr_) with
+| Masked_effect (_) -> begin
 true
 end
 | _ -> begin
@@ -768,8 +768,8 @@ end))
 
 # 121 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Meta_smt_pat : meta_source_info  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Meta_smt_pat -> begin
+let is_Meta_smt_pat = (fun _discr_ -> (match (_discr_) with
+| Meta_smt_pat (_) -> begin
 true
 end
 | _ -> begin
@@ -778,8 +778,8 @@ end))
 
 # 123 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Data_ctor : fv_qual  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Data_ctor -> begin
+let is_Data_ctor = (fun _discr_ -> (match (_discr_) with
+| Data_ctor (_) -> begin
 true
 end
 | _ -> begin
@@ -788,7 +788,7 @@ end))
 
 # 124 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Record_projector : fv_qual  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Record_projector = (fun _discr_ -> (match (_discr_) with
 | Record_projector (_) -> begin
 true
 end
@@ -798,7 +798,7 @@ end))
 
 # 125 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Record_ctor : fv_qual  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Record_ctor = (fun _discr_ -> (match (_discr_) with
 | Record_ctor (_) -> begin
 true
 end
@@ -808,7 +808,7 @@ end))
 
 # 130 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Pat_disj : pat'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Pat_disj = (fun _discr_ -> (match (_discr_) with
 | Pat_disj (_) -> begin
 true
 end
@@ -818,7 +818,7 @@ end))
 
 # 131 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Pat_constant : pat'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Pat_constant = (fun _discr_ -> (match (_discr_) with
 | Pat_constant (_) -> begin
 true
 end
@@ -828,7 +828,7 @@ end))
 
 # 132 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Pat_cons : pat'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Pat_cons = (fun _discr_ -> (match (_discr_) with
 | Pat_cons (_) -> begin
 true
 end
@@ -838,7 +838,7 @@ end))
 
 # 133 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Pat_var : pat'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Pat_var = (fun _discr_ -> (match (_discr_) with
 | Pat_var (_) -> begin
 true
 end
@@ -848,7 +848,7 @@ end))
 
 # 134 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Pat_tvar : pat'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Pat_tvar = (fun _discr_ -> (match (_discr_) with
 | Pat_tvar (_) -> begin
 true
 end
@@ -858,7 +858,7 @@ end))
 
 # 135 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Pat_wild : pat'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Pat_wild = (fun _discr_ -> (match (_discr_) with
 | Pat_wild (_) -> begin
 true
 end
@@ -868,7 +868,7 @@ end))
 
 # 136 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Pat_twild : pat'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Pat_twild = (fun _discr_ -> (match (_discr_) with
 | Pat_twild (_) -> begin
 true
 end
@@ -878,7 +878,7 @@ end))
 
 # 137 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Pat_dot_term : pat'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Pat_dot_term = (fun _discr_ -> (match (_discr_) with
 | Pat_dot_term (_) -> begin
 true
 end
@@ -888,7 +888,7 @@ end))
 
 # 138 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Pat_dot_typ : pat'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Pat_dot_typ = (fun _discr_ -> (match (_discr_) with
 | Pat_dot_typ (_) -> begin
 true
 end
@@ -898,8 +898,8 @@ end))
 
 # 141 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Kind_type : knd'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Kind_type -> begin
+let is_Kind_type = (fun _discr_ -> (match (_discr_) with
+| Kind_type (_) -> begin
 true
 end
 | _ -> begin
@@ -908,8 +908,8 @@ end))
 
 # 142 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Kind_effect : knd'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Kind_effect -> begin
+let is_Kind_effect = (fun _discr_ -> (match (_discr_) with
+| Kind_effect (_) -> begin
 true
 end
 | _ -> begin
@@ -918,7 +918,7 @@ end))
 
 # 143 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Kind_abbrev : knd'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Kind_abbrev = (fun _discr_ -> (match (_discr_) with
 | Kind_abbrev (_) -> begin
 true
 end
@@ -928,7 +928,7 @@ end))
 
 # 144 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Kind_arrow : knd'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Kind_arrow = (fun _discr_ -> (match (_discr_) with
 | Kind_arrow (_) -> begin
 true
 end
@@ -938,7 +938,7 @@ end))
 
 # 145 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Kind_uvar : knd'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Kind_uvar = (fun _discr_ -> (match (_discr_) with
 | Kind_uvar (_) -> begin
 true
 end
@@ -948,7 +948,7 @@ end))
 
 # 146 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Kind_lam : knd'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Kind_lam = (fun _discr_ -> (match (_discr_) with
 | Kind_lam (_) -> begin
 true
 end
@@ -958,7 +958,7 @@ end))
 
 # 147 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Kind_delayed : knd'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Kind_delayed = (fun _discr_ -> (match (_discr_) with
 | Kind_delayed (_) -> begin
 true
 end
@@ -968,8 +968,8 @@ end))
 
 # 148 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Kind_unknown : knd'  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Kind_unknown -> begin
+let is_Kind_unknown = (fun _discr_ -> (match (_discr_) with
+| Kind_unknown (_) -> begin
 true
 end
 | _ -> begin
@@ -1366,8 +1366,8 @@ type qualifier =
 
 # 192 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Private : qualifier  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Private -> begin
+let is_Private = (fun _discr_ -> (match (_discr_) with
+| Private (_) -> begin
 true
 end
 | _ -> begin
@@ -1376,8 +1376,8 @@ end))
 
 # 193 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Assumption : qualifier  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Assumption -> begin
+let is_Assumption = (fun _discr_ -> (match (_discr_) with
+| Assumption (_) -> begin
 true
 end
 | _ -> begin
@@ -1386,8 +1386,8 @@ end))
 
 # 194 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Opaque : qualifier  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Opaque -> begin
+let is_Opaque = (fun _discr_ -> (match (_discr_) with
+| Opaque (_) -> begin
 true
 end
 | _ -> begin
@@ -1396,8 +1396,8 @@ end))
 
 # 195 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Logic : qualifier  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Logic -> begin
+let is_Logic = (fun _discr_ -> (match (_discr_) with
+| Logic (_) -> begin
 true
 end
 | _ -> begin
@@ -1406,8 +1406,8 @@ end))
 
 # 196 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Abstract : qualifier  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Abstract -> begin
+let is_Abstract = (fun _discr_ -> (match (_discr_) with
+| Abstract (_) -> begin
 true
 end
 | _ -> begin
@@ -1416,7 +1416,7 @@ end))
 
 # 197 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Discriminator : qualifier  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Discriminator = (fun _discr_ -> (match (_discr_) with
 | Discriminator (_) -> begin
 true
 end
@@ -1426,7 +1426,7 @@ end))
 
 # 198 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Projector : qualifier  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Projector = (fun _discr_ -> (match (_discr_) with
 | Projector (_) -> begin
 true
 end
@@ -1436,7 +1436,7 @@ end))
 
 # 199 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_RecordType : qualifier  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_RecordType = (fun _discr_ -> (match (_discr_) with
 | RecordType (_) -> begin
 true
 end
@@ -1446,7 +1446,7 @@ end))
 
 # 200 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_RecordConstructor : qualifier  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_RecordConstructor = (fun _discr_ -> (match (_discr_) with
 | RecordConstructor (_) -> begin
 true
 end
@@ -1456,8 +1456,8 @@ end))
 
 # 201 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_ExceptionConstructor : qualifier  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| ExceptionConstructor -> begin
+let is_ExceptionConstructor = (fun _discr_ -> (match (_discr_) with
+| ExceptionConstructor (_) -> begin
 true
 end
 | _ -> begin
@@ -1466,7 +1466,7 @@ end))
 
 # 202 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_DefaultEffect : qualifier  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_DefaultEffect = (fun _discr_ -> (match (_discr_) with
 | DefaultEffect (_) -> begin
 true
 end
@@ -1476,8 +1476,8 @@ end))
 
 # 203 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_TotalEffect : qualifier  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| TotalEffect -> begin
+let is_TotalEffect = (fun _discr_ -> (match (_discr_) with
+| TotalEffect (_) -> begin
 true
 end
 | _ -> begin
@@ -1486,8 +1486,8 @@ end))
 
 # 204 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_HasMaskedEffect : qualifier  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| HasMaskedEffect -> begin
+let is_HasMaskedEffect = (fun _discr_ -> (match (_discr_) with
+| HasMaskedEffect (_) -> begin
 true
 end
 | _ -> begin
@@ -1496,8 +1496,8 @@ end))
 
 # 205 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Effect : qualifier  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Effect -> begin
+let is_Effect = (fun _discr_ -> (match (_discr_) with
+| Effect (_) -> begin
 true
 end
 | _ -> begin
@@ -1587,7 +1587,7 @@ let is_Mkeff_decl : eff_decl  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.
 
 # 239 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Sig_tycon : sigelt  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Sig_tycon = (fun _discr_ -> (match (_discr_) with
 | Sig_tycon (_) -> begin
 true
 end
@@ -1597,7 +1597,7 @@ end))
 
 # 240 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Sig_kind_abbrev : sigelt  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Sig_kind_abbrev = (fun _discr_ -> (match (_discr_) with
 | Sig_kind_abbrev (_) -> begin
 true
 end
@@ -1607,7 +1607,7 @@ end))
 
 # 241 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Sig_typ_abbrev : sigelt  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Sig_typ_abbrev = (fun _discr_ -> (match (_discr_) with
 | Sig_typ_abbrev (_) -> begin
 true
 end
@@ -1617,7 +1617,7 @@ end))
 
 # 242 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Sig_datacon : sigelt  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Sig_datacon = (fun _discr_ -> (match (_discr_) with
 | Sig_datacon (_) -> begin
 true
 end
@@ -1627,7 +1627,7 @@ end))
 
 # 243 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Sig_val_decl : sigelt  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Sig_val_decl = (fun _discr_ -> (match (_discr_) with
 | Sig_val_decl (_) -> begin
 true
 end
@@ -1637,7 +1637,7 @@ end))
 
 # 244 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Sig_assume : sigelt  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Sig_assume = (fun _discr_ -> (match (_discr_) with
 | Sig_assume (_) -> begin
 true
 end
@@ -1647,7 +1647,7 @@ end))
 
 # 245 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Sig_let : sigelt  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Sig_let = (fun _discr_ -> (match (_discr_) with
 | Sig_let (_) -> begin
 true
 end
@@ -1657,7 +1657,7 @@ end))
 
 # 246 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Sig_main : sigelt  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Sig_main = (fun _discr_ -> (match (_discr_) with
 | Sig_main (_) -> begin
 true
 end
@@ -1667,7 +1667,7 @@ end))
 
 # 247 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Sig_bundle : sigelt  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Sig_bundle = (fun _discr_ -> (match (_discr_) with
 | Sig_bundle (_) -> begin
 true
 end
@@ -1677,7 +1677,7 @@ end))
 
 # 248 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Sig_new_effect : sigelt  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Sig_new_effect = (fun _discr_ -> (match (_discr_) with
 | Sig_new_effect (_) -> begin
 true
 end
@@ -1687,7 +1687,7 @@ end))
 
 # 249 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Sig_sub_effect : sigelt  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Sig_sub_effect = (fun _discr_ -> (match (_discr_) with
 | Sig_sub_effect (_) -> begin
 true
 end
@@ -1697,7 +1697,7 @@ end))
 
 # 250 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Sig_effect_abbrev : sigelt  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Sig_effect_abbrev = (fun _discr_ -> (match (_discr_) with
 | Sig_effect_abbrev (_) -> begin
 true
 end
@@ -1707,7 +1707,7 @@ end))
 
 # 251 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_Sig_pragma : sigelt  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Sig_pragma = (fun _discr_ -> (match (_discr_) with
 | Sig_pragma (_) -> begin
 true
 end
@@ -1830,7 +1830,7 @@ type ktec =
 
 # 263 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_K : ktec  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_K = (fun _discr_ -> (match (_discr_) with
 | K (_) -> begin
 true
 end
@@ -1840,7 +1840,7 @@ end))
 
 # 264 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_T : ktec  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_T = (fun _discr_ -> (match (_discr_) with
 | T (_) -> begin
 true
 end
@@ -1850,7 +1850,7 @@ end))
 
 # 265 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_E : ktec  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_E = (fun _discr_ -> (match (_discr_) with
 | E (_) -> begin
 true
 end
@@ -1860,7 +1860,7 @@ end))
 
 # 266 "D:\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
 
-let is_C : ktec  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_C = (fun _discr_ -> (match (_discr_) with
 | C (_) -> begin
 true
 end

@@ -10,7 +10,7 @@ type binding =
 
 # 29 "D:\\workspace\\universes\\FStar\\src\\tc\\tcenv.fs"
 
-let is_Binding_var : binding  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Binding_var = (fun _discr_ -> (match (_discr_) with
 | Binding_var (_) -> begin
 true
 end
@@ -20,7 +20,7 @@ end))
 
 # 30 "D:\\workspace\\universes\\FStar\\src\\tc\\tcenv.fs"
 
-let is_Binding_typ : binding  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Binding_typ = (fun _discr_ -> (match (_discr_) with
 | Binding_typ (_) -> begin
 true
 end
@@ -30,7 +30,7 @@ end))
 
 # 31 "D:\\workspace\\universes\\FStar\\src\\tc\\tcenv.fs"
 
-let is_Binding_lid : binding  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Binding_lid = (fun _discr_ -> (match (_discr_) with
 | Binding_lid (_) -> begin
 true
 end
@@ -40,7 +40,7 @@ end))
 
 # 32 "D:\\workspace\\universes\\FStar\\src\\tc\\tcenv.fs"
 
-let is_Binding_sig : binding  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Binding_sig = (fun _discr_ -> (match (_discr_) with
 | Binding_sig (_) -> begin
 true
 end
@@ -119,8 +119,8 @@ type level =
 
 # 50 "D:\\workspace\\universes\\FStar\\src\\tc\\tcenv.fs"
 
-let is_Expr : level  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Expr -> begin
+let is_Expr = (fun _discr_ -> (match (_discr_) with
+| Expr (_) -> begin
 true
 end
 | _ -> begin
@@ -129,8 +129,8 @@ end))
 
 # 51 "D:\\workspace\\universes\\FStar\\src\\tc\\tcenv.fs"
 
-let is_Type : level  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Type -> begin
+let is_Type = (fun _discr_ -> (match (_discr_) with
+| Type (_) -> begin
 true
 end
 | _ -> begin
@@ -139,8 +139,8 @@ end))
 
 # 52 "D:\\workspace\\universes\\FStar\\src\\tc\\tcenv.fs"
 
-let is_Kind : level  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| Kind -> begin
+let is_Kind = (fun _discr_ -> (match (_discr_) with
+| Kind (_) -> begin
 true
 end
 | _ -> begin

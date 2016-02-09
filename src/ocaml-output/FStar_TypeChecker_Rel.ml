@@ -26,7 +26,7 @@ type uvi =
 
 # 59 "D:\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
 
-let is_TERM : uvi  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_TERM = (fun _discr_ -> (match (_discr_) with
 | TERM (_) -> begin
 true
 end
@@ -36,7 +36,7 @@ end))
 
 # 60 "D:\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
 
-let is_UNIV : uvi  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_UNIV = (fun _discr_ -> (match (_discr_) with
 | UNIV (_) -> begin
 true
 end
@@ -75,7 +75,7 @@ type solution =
 
 # 74 "D:\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
 
-let is_Success : solution  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Success = (fun _discr_ -> (match (_discr_) with
 | Success (_) -> begin
 true
 end
@@ -85,7 +85,7 @@ end))
 
 # 75 "D:\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
 
-let is_Failed : solution  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_Failed = (fun _discr_ -> (match (_discr_) with
 | Failed (_) -> begin
 true
 end
@@ -116,8 +116,8 @@ type variance =
 
 # 78 "D:\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
 
-let is_COVARIANT : variance  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| COVARIANT -> begin
+let is_COVARIANT = (fun _discr_ -> (match (_discr_) with
+| COVARIANT (_) -> begin
 true
 end
 | _ -> begin
@@ -126,8 +126,8 @@ end))
 
 # 79 "D:\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
 
-let is_CONTRAVARIANT : variance  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| CONTRAVARIANT -> begin
+let is_CONTRAVARIANT = (fun _discr_ -> (match (_discr_) with
+| CONTRAVARIANT (_) -> begin
 true
 end
 | _ -> begin
@@ -136,8 +136,8 @@ end))
 
 # 80 "D:\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
 
-let is_INVARIANT : variance  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| INVARIANT -> begin
+let is_INVARIANT = (fun _discr_ -> (match (_discr_) with
+| INVARIANT (_) -> begin
 true
 end
 | _ -> begin
@@ -879,8 +879,8 @@ type match_result =
 
 # 577 "D:\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
 
-let is_MisMatch : match_result  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| MisMatch -> begin
+let is_MisMatch = (fun _discr_ -> (match (_discr_) with
+| MisMatch (_) -> begin
 true
 end
 | _ -> begin
@@ -889,8 +889,8 @@ end))
 
 # 578 "D:\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
 
-let is_HeadMatch : match_result  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| HeadMatch -> begin
+let is_HeadMatch = (fun _discr_ -> (match (_discr_) with
+| HeadMatch (_) -> begin
 true
 end
 | _ -> begin
@@ -899,8 +899,8 @@ end))
 
 # 579 "D:\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
 
-let is_FullMatch : match_result  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
-| FullMatch -> begin
+let is_FullMatch = (fun _discr_ -> (match (_discr_) with
+| FullMatch (_) -> begin
 true
 end
 | _ -> begin
@@ -1024,7 +1024,7 @@ type tc =
 
 # 629 "D:\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
 
-let is_T : tc  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_T = (fun _discr_ -> (match (_discr_) with
 | T (_) -> begin
 true
 end
@@ -1034,7 +1034,7 @@ end))
 
 # 630 "D:\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
 
-let is_C : tc  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_C = (fun _discr_ -> (match (_discr_) with
 | C (_) -> begin
 true
 end
@@ -1477,7 +1477,7 @@ type univ_eq_sol =
 
 # 859 "D:\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
 
-let is_UDeferred : univ_eq_sol  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_UDeferred = (fun _discr_ -> (match (_discr_) with
 | UDeferred (_) -> begin
 true
 end
@@ -1487,7 +1487,7 @@ end))
 
 # 860 "D:\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
 
-let is_USolved : univ_eq_sol  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_USolved = (fun _discr_ -> (match (_discr_) with
 | USolved (_) -> begin
 true
 end
@@ -1497,7 +1497,7 @@ end))
 
 # 861 "D:\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
 
-let is_UFailed : univ_eq_sol  ->  Prims.bool = (fun _discr_ -> (match (_discr_) with
+let is_UFailed = (fun _discr_ -> (match (_discr_) with
 | UFailed (_) -> begin
 true
 end
