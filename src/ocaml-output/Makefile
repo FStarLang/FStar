@@ -57,6 +57,8 @@ parser:
 	echo "open FStar_Absyn_Util" >> FStar_Parser_Parse.ml
 	echo "open FStar_Parser_AST" >> FStar_Parser_Parse.ml
 	echo "open FStar_Parser_Util" >> FStar_Parser_Parse.ml
+	echo "open FStar_Const" >> FStar_Parser_Parse.ml
+	echo "open FStar_Ident" >> FStar_Parser_Parse.ml
 	cat parse.ml >> FStar_Parser_Parse.ml
 	ocamllex ../parser/ml/lex.mll -o FStar_Parser_LexFStar.ml
 	cp ../parser/ml/parseit.ml FStar_Parser_ParseIt.ml

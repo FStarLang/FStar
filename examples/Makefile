@@ -10,7 +10,7 @@ all:
 	make -C security
 	make -C termination
 	make -C software_foundations
-	# make -C ../doc/tutorial/code/solutions
+	make -C ../doc/tutorial/code/solutions
 	make -C relational
 	make -C voting
 	make -C low-level
