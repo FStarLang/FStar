@@ -624,19 +624,30 @@ let fresh = let c = mk_ref 0 in
             fun x -> (incr c; (x, !c))
 
 let ind_discriminator_body env (discName:lident) (constrName:lident) : mlmodule1 =
+    // First, lookup the original (F*) type to figure out how many implicit arguments there are.
+    let fstar_disc_type: typ = Tc.Env.lookup_lid env.tcenv discName in
+    let wildcards = match fstar_disc_type.n with
+        | Typ_fun (binders, _) ->
+            binders |> List.filter (fun (_, qual) ->
+                qual = Some Implicit
+            ) |> List.map (fun _ -> fresh "_", MLTY_Top)
+        | _ ->
+            failwith "Discriminator must be a function"
+    in
+    // Unfortunately, looking up the constructor name in the environment would give us a _curried_ type.
+    // So, we don't bother popping arrows until we find the return type of the constructor.
+    // We just use Top. 
     let mlid = fresh "_discr_" in
-    let _, ts, _ = Env.lookup_fv env (Util.fv constrName) in
-    let arg_pat, ts = match snd ts with
-        | MLTY_Fun(_, _, t) -> [MLP_Wild], (fst ts, t)
-        | _ -> [], ts in
-    let rid = constrName in
-    let targ = snd ts in
-    let disc_ty = MLTY_Fun(targ, E_PURE, ml_bool_ty) in
+    let targ = MLTY_Top in
+    // Ugly hack: we don't know what to put in there, so we just write a dummy
+    // polymorphic value to make sure that the type is not printed.
+    let disc_ty = MLTY_Top in
     let discrBody =
         with_ty disc_ty <|
-            MLE_Fun([(mlid, targ)],
+            MLE_Fun(wildcards @ [(mlid, targ)],
                     with_ty ml_bool_ty <| 
                         (MLE_Match(with_ty targ <| MLE_Name([], idsym mlid), 
-                                   [MLP_CTor(mlpath_of_lident rid, arg_pat), None, with_ty ml_bool_ty <| MLE_Const(MLC_Bool true);
+                                    // Note: it is legal in OCaml to write [Foo _] for a constructor with zero arguments, so don't bother.
+                                   [MLP_CTor(mlpath_of_lident constrName, [MLP_Wild]), None, with_ty ml_bool_ty <| MLE_Const(MLC_Bool true);
                                     MLP_Wild, None, with_ty ml_bool_ty <| MLE_Const(MLC_Bool false)]))) in
-    MLM_Let (false,[{mllb_name=convIdent discName.ident; mllb_tysc=(fst ts, disc_ty); mllb_add_unit=false; mllb_def=discrBody}] )
+    MLM_Let (false,[{mllb_name=convIdent discName.ident; mllb_tysc=([fresh "dummy_ensures_is_polymorphic_hence_not_printed"], disc_ty); mllb_add_unit=false; mllb_def=discrBody}] )
