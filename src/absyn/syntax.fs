@@ -193,6 +193,7 @@ type qualifier =
   | Assumption
   | Opaque
   | Logic
+  | Abstract
   | Discriminator of lident                          (* discriminator for a datacon l *)
   | Projector of lident * either<btvdef, bvvdef>     (* projector for datacon l's argument 'a or x *)
   | RecordType of list<fieldname>                    (* unmangled field names *)

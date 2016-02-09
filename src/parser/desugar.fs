@@ -1467,6 +1467,7 @@ let trans_qual = function
   | AST.Assumption -> Assumption
   | AST.Opaque -> Opaque
   | AST.Logic -> Logic
+  | AST.Abstract -> Abstract
   | AST.TotalEffect -> TotalEffect
   | AST.DefaultEffect -> DefaultEffect None
   | AST.Effect -> Effect
