@@ -5,6 +5,8 @@ open FStar.Util
 open FStar.Absyn
 open FStar.Absyn.Syntax
 open FStar.Absyn.Util
+open FStar.Const
+open FStar.Ident
 
 exception Err of string
 
@@ -85,6 +87,7 @@ let deserialize_bvar (ghost:option<'a>) (reader:Reader) (ds_sort:Reader -> 't) :
 
 let serialize_sconst (writer:Writer) (ast:sconst) :unit =
     match ast with
+    | Const_effect -> writer.write_char '_'
     | Const_unit -> writer.write_char 'a'
     | Const_uint8(v) -> writer.write_char 'b'; writer.write_byte v
     | Const_bool(v) -> writer.write_char 'c'; writer.write_bool v
@@ -98,6 +101,7 @@ let serialize_sconst (writer:Writer) (ast:sconst) :unit =
 
 let deserialize_sconst (reader:Reader) :sconst =
     match (reader.read_char()) with
+    | '_' -> Const_effect
     | 'a' -> Const_unit
     | 'b' -> Const_uint8(reader.read_byte ())
     | 'c' -> Const_bool(reader.read_bool ())

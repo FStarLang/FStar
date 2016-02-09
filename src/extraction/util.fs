@@ -20,6 +20,8 @@ open FStar.Util
 open FStar.Absyn
 open FStar.Absyn.Syntax
 open FStar.Extraction.ML.Syntax
+open FStar.Const
+open FStar.Ident
 
 let pruneNones (l : list<option<'a>>) : list<'a> =
     List.fold_right (fun  x ll -> match x with
@@ -29,6 +31,7 @@ let pruneNones (l : list<option<'a>>) : list<'a> =
 
 let mlconst_of_const (sctt : sconst) =
   match sctt with
+  | Const_effect       -> failwith "Unsupported constant"
   | Const_unit         -> MLC_Unit
   | Const_char   c     -> MLC_Char  c
   | Const_uint8  c     -> MLC_Byte  c
@@ -214,6 +217,7 @@ let is_xtuple (ns, n) =
         | "MkTuple5" -> Some 5
         | "MkTuple6" -> Some 6
         | "MkTuple7" -> Some 7
+        | "MkTuple8" -> Some 8
         | _ -> None
     else None
 
@@ -256,6 +260,7 @@ let is_xtuple_ty (ns, n) =
         | "Tuple5" -> Some 5
         | "Tuple6" -> Some 6
         | "Tuple7" -> Some 7
+        | "Tuple8" -> Some 8
         | _ -> None
     else None
 

@@ -1,7 +1,11 @@
 
 open Prims
+# 8 "D:\\workspace\\universes\\FStar\\src\\format\\formatml.fs"
+
 type doc =
 | Doc of Prims.string
+
+# 8 "D:\\workspace\\universes\\FStar\\src\\format\\formatml.fs"
 
 let is_Doc = (fun _discr_ -> (match (_discr_) with
 | Doc (_) -> begin
@@ -11,67 +15,97 @@ end
 false
 end))
 
-let ___Doc____0 = (fun projectee -> (match (projectee) with
-| Doc (_56_2) -> begin
-_56_2
+# 8 "D:\\workspace\\universes\\FStar\\src\\format\\formatml.fs"
+
+let ___Doc____0 : doc  ->  Prims.string = (fun projectee -> (match (projectee) with
+| Doc (_24_2) -> begin
+_24_2
 end))
 
-let empty = Doc ("")
+# 11 "D:\\workspace\\universes\\FStar\\src\\format\\formatml.fs"
 
-let hardline = Doc ("\n")
+let empty : doc = Doc ("")
 
-let text = (fun s -> Doc (s))
+# 12 "D:\\workspace\\universes\\FStar\\src\\format\\formatml.fs"
 
-let break_ = (fun i -> Doc (""))
+let hardline : doc = Doc ("\n")
 
-let break0 = (break_ 0)
+# 15 "D:\\workspace\\universes\\FStar\\src\\format\\formatml.fs"
 
-let break1 = (text " ")
+let text : Prims.string  ->  doc = (fun s -> Doc (s))
 
-let enclose = (fun _56_6 _56_8 _56_10 -> (match ((_56_6, _56_8, _56_10)) with
+# 16 "D:\\workspace\\universes\\FStar\\src\\format\\formatml.fs"
+
+let num : Prims.int  ->  doc = (fun i -> Doc ((Prims.string_of_int i)))
+
+# 19 "D:\\workspace\\universes\\FStar\\src\\format\\formatml.fs"
+
+let break_ : Prims.int  ->  doc = (fun i -> Doc (""))
+
+# 21 "D:\\workspace\\universes\\FStar\\src\\format\\formatml.fs"
+
+let break0 : doc = (break_ 0)
+
+# 22 "D:\\workspace\\universes\\FStar\\src\\format\\formatml.fs"
+
+let break1 : doc = (text " ")
+
+# 25 "D:\\workspace\\universes\\FStar\\src\\format\\formatml.fs"
+
+let enclose : doc  ->  doc  ->  doc  ->  doc = (fun _24_7 _24_9 _24_11 -> (match ((_24_7, _24_9, _24_11)) with
 | (Doc (l), Doc (r), Doc (x)) -> begin
 Doc ((Prims.strcat (Prims.strcat l x) r))
 end))
 
-let brackets = (fun _56_12 -> (match (_56_12) with
+# 28 "D:\\workspace\\universes\\FStar\\src\\format\\formatml.fs"
+
+let brackets : doc  ->  doc = (fun _24_13 -> (match (_24_13) with
 | Doc (d) -> begin
-(let _122_20 = (text "[")
-in (let _122_19 = (text "]")
-in (enclose _122_20 _122_19 (Doc (d)))))
+(enclose (text "[") (text "]") (Doc (d)))
 end))
 
-let cbrackets = (fun _56_14 -> (match (_56_14) with
+# 29 "D:\\workspace\\universes\\FStar\\src\\format\\formatml.fs"
+
+let cbrackets : doc  ->  doc = (fun _24_15 -> (match (_24_15) with
 | Doc (d) -> begin
-(let _122_24 = (text "{")
-in (let _122_23 = (text "}")
-in (enclose _122_24 _122_23 (Doc (d)))))
+(enclose (text "{") (text "}") (Doc (d)))
 end))
 
-let parens = (fun _56_16 -> (match (_56_16) with
+# 30 "D:\\workspace\\universes\\FStar\\src\\format\\formatml.fs"
+
+let parens : doc  ->  doc = (fun _24_17 -> (match (_24_17) with
 | Doc (d) -> begin
-(let _122_28 = (text "(")
-in (let _122_27 = (text ")")
-in (enclose _122_28 _122_27 (Doc (d)))))
+(enclose (text "(") (text ")") (Doc (d)))
 end))
 
-let cat = (fun _56_18 _56_20 -> (match ((_56_18, _56_20)) with
+# 33 "D:\\workspace\\universes\\FStar\\src\\format\\formatml.fs"
+
+let cat : doc  ->  doc  ->  doc = (fun _24_19 _24_21 -> (match ((_24_19, _24_21)) with
 | (Doc (d1), Doc (d2)) -> begin
 Doc ((Prims.strcat d1 d2))
 end))
 
-let reduce = (fun docs -> (FStar_List.fold_left cat empty docs))
+# 36 "D:\\workspace\\universes\\FStar\\src\\format\\formatml.fs"
 
-let group = (fun _56_23 -> (match (_56_23) with
+let reduce : doc Prims.list  ->  doc = (fun docs -> (FStar_List.fold_left cat empty docs))
+
+# 40 "D:\\workspace\\universes\\FStar\\src\\format\\formatml.fs"
+
+let group : doc  ->  doc = (fun _24_24 -> (match (_24_24) with
 | Doc (d) -> begin
 Doc (d)
 end))
 
-let groups = (fun docs -> (let _122_39 = (reduce docs)
-in (group _122_39)))
+# 43 "D:\\workspace\\universes\\FStar\\src\\format\\formatml.fs"
 
-let combine = (fun _56_26 docs -> (match (_56_26) with
+let groups : doc Prims.list  ->  doc = (fun docs -> (let _126_35 = (reduce docs)
+in (group _126_35)))
+
+# 47 "D:\\workspace\\universes\\FStar\\src\\format\\formatml.fs"
+
+let combine : doc  ->  doc Prims.list  ->  doc = (fun _24_27 docs -> (match (_24_27) with
 | Doc (sep) -> begin
-(let select = (fun _56_30 -> (match (_56_30) with
+(let select = (fun _24_31 -> (match (_24_31) with
 | Doc (d) -> begin
 if (d = "") then begin
 None
@@ -83,24 +117,36 @@ in (let docs = (FStar_List.choose select docs)
 in Doc ((FStar_String.concat sep docs))))
 end))
 
-let cat1 = (fun d1 d2 -> (reduce ((d1)::(break1)::(d2)::[])))
+# 53 "D:\\workspace\\universes\\FStar\\src\\format\\formatml.fs"
 
-let reduce1 = (fun docs -> (combine break1 docs))
+let cat1 : doc  ->  doc  ->  doc = (fun d1 d2 -> (reduce ((d1)::(break1)::(d2)::[])))
 
-let nest = (fun i _56_37 -> (match (_56_37) with
+# 57 "D:\\workspace\\universes\\FStar\\src\\format\\formatml.fs"
+
+let reduce1 : doc Prims.list  ->  doc = (fun docs -> (combine break1 docs))
+
+# 61 "D:\\workspace\\universes\\FStar\\src\\format\\formatml.fs"
+
+let nest : Prims.int  ->  doc  ->  doc = (fun i _24_38 -> (match (_24_38) with
 | Doc (d) -> begin
 Doc (d)
 end))
 
-let align = (fun docs -> (let _56_40 = (combine hardline docs)
-in (match (_56_40) with
+# 65 "D:\\workspace\\universes\\FStar\\src\\format\\formatml.fs"
+
+let align : doc Prims.list  ->  doc = (fun docs -> (let _24_41 = (combine hardline docs)
+in (match (_24_41) with
 | Doc (doc) -> begin
 Doc (doc)
 end)))
 
-let hbox = (fun d -> d)
+# 70 "D:\\workspace\\universes\\FStar\\src\\format\\formatml.fs"
 
-let pretty = (fun sz _56_44 -> (match (_56_44) with
+let hbox : doc  ->  doc = (fun d -> d)
+
+# 73 "D:\\workspace\\universes\\FStar\\src\\format\\formatml.fs"
+
+let pretty : Prims.int  ->  doc  ->  Prims.string = (fun sz _24_45 -> (match (_24_45) with
 | Doc (doc) -> begin
 doc
 end))

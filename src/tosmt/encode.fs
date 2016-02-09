@@ -24,7 +24,8 @@ open FStar.Absyn
 open FStar.Absyn.Syntax
 open FStar.Tc
 open FStar.ToSMT.Term
-
+open FStar.Ident
+open FStar.Const
 open FStar.ToSMT.SplitQueryCases
 
 let add_fuel x tl = if !Options.unthrottle_inductives then tl else x::tl
@@ -800,7 +801,7 @@ and encode_exp (e:exp) (env:env_t) : (term
                                 | Some s -> Util.subst_typ s (Util.comp_result c)
                                 | _ -> failwith "Impossible" in
                              let e = mk_Exp_abs(bs0, mk_Exp_abs(rest, body) (Some res_t) body.pos) (Some tfun) e0.pos in
-                             //Util.fprint1 "Explicitly currying %s\n" (Print.exp_to_string e);
+                             //Util.print1 "Explicitly currying %s\n" (Print.exp_to_string e);
                              encode_exp e env
 
                         else //much like the encoding of Typ_lam
@@ -1651,7 +1652,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
     | Sig_datacon(d, _, _, _, _, _) when (lid_equals d Const.lexcons_lid) -> [], env
 
     | Sig_datacon(d, t, (_, tps, _), quals, _, drange) ->
-        let t = Util.close_typ (List.map (fun (x, _) -> (x, Some Implicit)) tps) t  in
+        let t = Util.close_typ (List.map (fun (x, _) -> (x, Some (Implicit true))) tps) t  in
         let ddconstrsym, ddtok, env = new_term_constant_and_tok_from_lid env d in
         let ddtok_tm = mkApp(ddtok, []) in
         let formals, t_res = match Util.function_formals t with
@@ -1819,7 +1820,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                             | [{lbdef=e}], [t_norm], [(flid, (f, ftok))] ->
                               let binders, body, formals, tres = destruct_bound_function flid t_norm e in
                               let vars, guards, env', binder_decls, _ = encode_binders None binders env in
-                              let app = match vars with [] -> Term.mkFreeV(f, Term_sort) | _ -> Term.mkApp(f, List.map mkFreeV vars) in
+                              let app = match vars with | [] -> Term.mkFreeV(f, Term_sort) | _ -> Term.mkApp(f, List.map mkFreeV vars) in
                               let body, decls2 = encode_exp body env' in
                               let eqn = Term.Assume(mkForall([[app]], vars, mkImp(mk_and_l guards, mkEq(app, body))), Some (Util.format1 "Equation for %s" flid.str)) in
                               decls@binder_decls@decls2@[eqn], env

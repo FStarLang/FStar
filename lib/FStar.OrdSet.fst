@@ -1,9 +1,5 @@
-(*--build-config
-    options:--admit_fsi FStar.Set;
-    other-files:FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst FStar.ListProperties.fst ordset.fsi
- --*)
-
 module FStar.OrdSet
+
 
 opaque type total_order (a:Type) (f: (a -> a -> Tot bool)) =
     (forall a1 a2. (f a1 a2 /\ f a2 a1)  ==> a1 = a2)  (* anti-symmetry *)
@@ -194,5 +190,3 @@ let rec subset_size (#a:Type) #f x y = match x, y with
   | hd::tl, hd'::tl' ->
     if f hd hd' && hd = hd' then subset_size #a #f tl tl'
     else subset_size #a #f x tl'
-
-(* (\**********\) *)

@@ -1,6 +1,3 @@
-(*--build-config
-    options:--codegen OCaml;
-  --*)
 module Bug086
 
 let x = 0

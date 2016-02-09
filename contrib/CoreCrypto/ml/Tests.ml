@@ -1,55 +1,13 @@
 (* The original "Bytes" module from OCaml. *)
 module B = Bytes
 
-(* Things brings in [Platform.Bytes] into scope... *)
+(* This brings [Platform.Bytes] into scope. *)
 open CoreCrypto
 open Platform
 
 let _ =
   print_endline "Tests started"
 ;;
-
-let digit_to_int c = match c with
-  | '0'..'9' -> Char.code c - Char.code '0'
-  | 'a'..'f' -> 10 + Char.code c - Char.code 'a'
-  | _ -> failwith "hex_to_char: invalid hex digit"
-
-let hex_to_char a b =
-  Char.chr ((digit_to_int a) lsl 4 + digit_to_int b)
-
-let char_to_hex c =
-  let n = Char.code c in
-  let digits = "0123456789abcdef" in
-  digits.[n lsr 4], digits.[n land 0x0f]
-
-let string_to_hex s =
-  let n = String.length s in
-  let buf = Buffer.create n in
-  for i = 0 to n - 1 do
-    let d1,d2 = char_to_hex s.[i] in
-    Buffer.add_char buf d1;
-    Buffer.add_char buf d2;
-  done;
-  Buffer.contents buf
-
-let hex_to_string s =
-  let n = String.length s in
-  if n mod 2 <> 0 then
-    failwith "hex_to_string: invalid length"
-  else
-    let res = B.create (n/2) in
-    let rec aux i =
-      if i >= n then ()
-      else (
-        B.set res (i/2) (hex_to_char s.[i] s.[i+1]);
-        aux (i+2)
-      )
-    in
-    aux 0;
-    res
-
-let hex_to_bytes s = bytes_of_string (hex_to_string s)
-let bytes_to_hex b = string_to_hex (string_of_bytes b)
 
 module TestAead = struct
 
@@ -68,13 +26,13 @@ module TestAead = struct
       v.key v.iv v.aad v.tag v.plaintext v.ciphertext
 
   let test v =
-    let key = hex_to_bytes v.key in
-    let iv  = hex_to_bytes v.iv  in
-    let aad = hex_to_bytes v.aad in
-    let plaintext = hex_to_bytes v.plaintext in
+    let key = Bytes.bytes_of_hex v.key in
+    let iv  = Bytes.bytes_of_hex v.iv  in
+    let aad = Bytes.bytes_of_hex v.aad in
+    let plaintext = Bytes.bytes_of_hex v.plaintext in
     let c = aead_encrypt v.cipher key iv aad plaintext in
     let c',t = Bytes.split c (Bytes.length c - 16) in
-    if not(bytes_to_hex c' = v.ciphertext && bytes_to_hex t = v.tag) then
+    if not(Bytes.hex_of_bytes c' = v.ciphertext && Bytes.hex_of_bytes t = v.tag) then
       false
     else
       let p = aead_decrypt v.cipher key iv aad c in
@@ -255,10 +213,6 @@ module TestAead = struct
   ]
 end
 
-let bytes_of_hex = hex_to_bytes
-let hex_of_bytes = bytes_to_hex
-let string_of_hex = hex_to_string
-let hex_of_string = string_to_hex
 
 module TestHmac = struct
 
@@ -270,146 +224,146 @@ module TestHmac = struct
   }
 
   let test_cases = [{
-      key =           bytes_of_hex "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b";
+      key =           Bytes.bytes_of_hex "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b";
       data =          bytes_of_string "Hi There";
-      digests =       [ bytes_of_hex "9294727a3638bb1c13f48ef8158bfc9d", MD5 ];
+      digests =       [ Bytes.bytes_of_hex "9294727a3638bb1c13f48ef8158bfc9d", MD5 ];
       truncation = None
     }; {
       key =           bytes_of_string "Jefe";
       data =          bytes_of_string "what do ya want for nothing?";
-      digests =       [ bytes_of_hex "750c783e6ab0b503eaa86e310a5db738", MD5 ];
+      digests =       [ Bytes.bytes_of_hex "750c783e6ab0b503eaa86e310a5db738", MD5 ];
       truncation = None
     }; {
-      key =           bytes_of_hex "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-      data =          bytes_of_hex "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd";
-      digests =       [ bytes_of_hex "56be34521d144c88dbb8c733f0e8b3f6", MD5 ];
+      key =           Bytes.bytes_of_hex "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+      data =          Bytes.bytes_of_hex "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd";
+      digests =       [ Bytes.bytes_of_hex "56be34521d144c88dbb8c733f0e8b3f6", MD5 ];
       truncation = None
     }; {
-      key =           bytes_of_hex "0102030405060708090a0b0c0d0e0f10111213141516171819";
-      data =          bytes_of_hex "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd";
-      digests =       [ bytes_of_hex "697eaf0aca3a3aea3a75164746ffaa79", MD5 ];
+      key =           Bytes.bytes_of_hex "0102030405060708090a0b0c0d0e0f10111213141516171819";
+      data =          Bytes.bytes_of_hex "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd";
+      digests =       [ Bytes.bytes_of_hex "697eaf0aca3a3aea3a75164746ffaa79", MD5 ];
       truncation = None
     }; {
-      key =           bytes_of_hex "0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c";
+      key =           Bytes.bytes_of_hex "0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c";
       data =          bytes_of_string "Test With Truncation";
-      digests =       [ bytes_of_hex "56461ef2342edc00f9bab995690efd4c", MD5 ];
+      digests =       [ Bytes.bytes_of_hex "56461ef2342edc00f9bab995690efd4c", MD5 ];
       truncation = None
     }; {
-      key =           bytes_of_hex "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+      key =           Bytes.bytes_of_hex "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
       data =          bytes_of_string "Test Using Larger Than Block-Size Key - Hash Key First";
-      digests =       [ bytes_of_hex "6b1ab7fe4bd7bf8f0b62e6ce61b9d0cd", MD5 ];
+      digests =       [ Bytes.bytes_of_hex "6b1ab7fe4bd7bf8f0b62e6ce61b9d0cd", MD5 ];
       truncation = None
     }; {
-      key =           bytes_of_hex "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+      key =           Bytes.bytes_of_hex "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
       data =          bytes_of_string "Test Using Larger Than Block-Size Key and Larger Than One Block-Size Data";
-      digests =       [ bytes_of_hex "6f630fad67cda0ee1fb1f562db3aa53e", MD5 ];
+      digests =       [ Bytes.bytes_of_hex "6f630fad67cda0ee1fb1f562db3aa53e", MD5 ];
       truncation = None
     }; {
-      key =           bytes_of_hex "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b";
+      key =           Bytes.bytes_of_hex "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b";
       data =          bytes_of_string "Hi There";
-      digests =       [ bytes_of_hex "b617318655057264e28bc0b6fb378c8ef146be00", SHA1 ];
+      digests =       [ Bytes.bytes_of_hex "b617318655057264e28bc0b6fb378c8ef146be00", SHA1 ];
       truncation = None
     }; {
       key =           bytes_of_string "Jefe";
       data =          bytes_of_string "what do ya want for nothing?";
-      digests =       [ bytes_of_hex "effcdf6ae5eb2fa2d27416d5f184df9c259a7c79", SHA1 ];
+      digests =       [ Bytes.bytes_of_hex "effcdf6ae5eb2fa2d27416d5f184df9c259a7c79", SHA1 ];
       truncation = None
     }; {
-      key =           bytes_of_hex "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-      data =          bytes_of_hex "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd";
-      digests =       [ bytes_of_hex "125d7342b9ac11cd91a39af48aa17b4f63f175d3", SHA1 ];
+      key =           Bytes.bytes_of_hex "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+      data =          Bytes.bytes_of_hex "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd";
+      digests =       [ Bytes.bytes_of_hex "125d7342b9ac11cd91a39af48aa17b4f63f175d3", SHA1 ];
       truncation = None
     }; {
-      key =           bytes_of_hex "0102030405060708090a0b0c0d0e0f10111213141516171819";
-      data =          bytes_of_hex "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd";
-      digests =       [ bytes_of_hex "4c9007f4026250c6bc8414f9bf50c86c2d7235da", SHA1 ];
+      key =           Bytes.bytes_of_hex "0102030405060708090a0b0c0d0e0f10111213141516171819";
+      data =          Bytes.bytes_of_hex "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd";
+      digests =       [ Bytes.bytes_of_hex "4c9007f4026250c6bc8414f9bf50c86c2d7235da", SHA1 ];
       truncation = None
     }; {
-      key =           bytes_of_hex "0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c";
+      key =           Bytes.bytes_of_hex "0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c";
       data =          bytes_of_string "Test With Truncation";
-      digests =       [ bytes_of_hex "4c1a03424b55e07fe7f27be1d58bb9324a9a5a04", SHA1 ];
+      digests =       [ Bytes.bytes_of_hex "4c1a03424b55e07fe7f27be1d58bb9324a9a5a04", SHA1 ];
       truncation = None
     }; {
-      key =           bytes_of_hex "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+      key =           Bytes.bytes_of_hex "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
       data =          bytes_of_string "Test Using Larger Than Block-Size Key - Hash Key First";
-      digests =       [ bytes_of_hex "aa4ae5e15272d00e95705637ce8a3b55ed402112", SHA1 ];
+      digests =       [ Bytes.bytes_of_hex "aa4ae5e15272d00e95705637ce8a3b55ed402112", SHA1 ];
       truncation = None
     }; {
-      key =           bytes_of_hex "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+      key =           Bytes.bytes_of_hex "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
       data =          bytes_of_string "Test Using Larger Than Block-Size Key and Larger Than One Block-Size Data";
-      digests =       [ bytes_of_hex "e8e99d0f45237d786d6bbaa7965c7808bbff1a91", SHA1 ];
+      digests =       [ Bytes.bytes_of_hex "e8e99d0f45237d786d6bbaa7965c7808bbff1a91", SHA1 ];
       truncation = None
     }; {
-      key =           bytes_of_hex "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+      key =           Bytes.bytes_of_hex "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
       data =          bytes_of_string "Test Using Larger Than Block-Size Key - Hash Key First";
-      digests =       [ bytes_of_hex "aa4ae5e15272d00e95705637ce8a3b55ed402112", SHA1 ];
+      digests =       [ Bytes.bytes_of_hex "aa4ae5e15272d00e95705637ce8a3b55ed402112", SHA1 ];
       truncation = None
     }; {
-      key =           bytes_of_hex "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+      key =           Bytes.bytes_of_hex "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
       data =          bytes_of_string "Test Using Larger Than Block-Size Key and Larger Than One Block-Size Data";
-      digests =       [ bytes_of_hex "e8e99d0f45237d786d6bbaa7965c7808bbff1a91", SHA1 ];
+      digests =       [ Bytes.bytes_of_hex "e8e99d0f45237d786d6bbaa7965c7808bbff1a91", SHA1 ];
       truncation = None
     }; {
-      key =           bytes_of_hex "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b";
-      data =          bytes_of_hex "4869205468657265";
+      key =           Bytes.bytes_of_hex "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b";
+      data =          Bytes.bytes_of_hex "4869205468657265";
       digests =       [
-        bytes_of_hex "b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7", SHA256;
-        bytes_of_hex "afd03944d84895626b0825f4ab46907f15f9dadbe4101ec682aa034c7cebc59cfaea9ea9076ede7f4af152e8b2fa9cb6", SHA384;
-        bytes_of_hex "87aa7cdea5ef619d4ff0b4241a1d6cb02379f4e2ce4ec2787ad0b30545e17cdedaa833b7d6b8a702038b274eaea3f4e4be9d914eeb61f1702e696c203a126854", SHA512
+        Bytes.bytes_of_hex "b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7", SHA256;
+        Bytes.bytes_of_hex "afd03944d84895626b0825f4ab46907f15f9dadbe4101ec682aa034c7cebc59cfaea9ea9076ede7f4af152e8b2fa9cb6", SHA384;
+        Bytes.bytes_of_hex "87aa7cdea5ef619d4ff0b4241a1d6cb02379f4e2ce4ec2787ad0b30545e17cdedaa833b7d6b8a702038b274eaea3f4e4be9d914eeb61f1702e696c203a126854", SHA512
       ];
       truncation = None
     }; {
-      key =           bytes_of_hex "4a656665";
-      data =          bytes_of_hex "7768617420646f2079612077616e7420666f72206e6f7468696e673f";
+      key =           Bytes.bytes_of_hex "4a656665";
+      data =          Bytes.bytes_of_hex "7768617420646f2079612077616e7420666f72206e6f7468696e673f";
       digests =       [
-        bytes_of_hex "5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843", SHA256;
-        bytes_of_hex "af45d2e376484031617f78d2b58a6b1b9c7ef464f5a01b47e42ec3736322445e8e2240ca5e69e2c78b3239ecfab21649", SHA384;
-        bytes_of_hex "164b7a7bfcf819e2e395fbe73b56e0a387bd64222e831fd610270cd7ea2505549758bf75c05a994a6d034f65f8f0e6fdcaeab1a34d4a6b4b636e070a38bce737", SHA512
+        Bytes.bytes_of_hex "5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843", SHA256;
+        Bytes.bytes_of_hex "af45d2e376484031617f78d2b58a6b1b9c7ef464f5a01b47e42ec3736322445e8e2240ca5e69e2c78b3239ecfab21649", SHA384;
+        Bytes.bytes_of_hex "164b7a7bfcf819e2e395fbe73b56e0a387bd64222e831fd610270cd7ea2505549758bf75c05a994a6d034f65f8f0e6fdcaeab1a34d4a6b4b636e070a38bce737", SHA512
       ];
       truncation = None
     }; {
-      key =           bytes_of_hex "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-      data =          bytes_of_hex "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd";
+      key =           Bytes.bytes_of_hex "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+      data =          Bytes.bytes_of_hex "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd";
       digests =       [
-        bytes_of_hex "773ea91e36800e46854db8ebd09181a72959098b3ef8c122d9635514ced565fe", SHA256;
-        bytes_of_hex "88062608d3e6ad8a0aa2ace014c8a86f0aa635d947ac9febe83ef4e55966144b2a5ab39dc13814b94e3ab6e101a34f27", SHA384;
-        bytes_of_hex "fa73b0089d56a284efb0f0756c890be9b1b5dbdd8ee81a3655f83e33b2279d39bf3e848279a722c806b485a47e67c807b946a337bee8942674278859e13292fb", SHA512
+        Bytes.bytes_of_hex "773ea91e36800e46854db8ebd09181a72959098b3ef8c122d9635514ced565fe", SHA256;
+        Bytes.bytes_of_hex "88062608d3e6ad8a0aa2ace014c8a86f0aa635d947ac9febe83ef4e55966144b2a5ab39dc13814b94e3ab6e101a34f27", SHA384;
+        Bytes.bytes_of_hex "fa73b0089d56a284efb0f0756c890be9b1b5dbdd8ee81a3655f83e33b2279d39bf3e848279a722c806b485a47e67c807b946a337bee8942674278859e13292fb", SHA512
       ];
       truncation = None
     }; {
-      key =           bytes_of_hex "0102030405060708090a0b0c0d0e0f10111213141516171819";
-      data =          bytes_of_hex "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd";
+      key =           Bytes.bytes_of_hex "0102030405060708090a0b0c0d0e0f10111213141516171819";
+      data =          Bytes.bytes_of_hex "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd";
       digests =       [
-        bytes_of_hex "82558a389a443c0ea4cc819899f2083a85f0faa3e578f8077a2e3ff46729665b", SHA256;
-        bytes_of_hex "3e8a69b7783c25851933ab6290af6ca77a9981480850009cc5577c6e1f573b4e6801dd23c4a7d679ccf8a386c674cffb", SHA384;
-        bytes_of_hex "b0ba465637458c6990e5a8c5f61d4af7e576d97ff94b872de76f8050361ee3dba91ca5c11aa25eb4d679275cc5788063a5f19741120c4f2de2adebeb10a298dd", SHA512
+        Bytes.bytes_of_hex "82558a389a443c0ea4cc819899f2083a85f0faa3e578f8077a2e3ff46729665b", SHA256;
+        Bytes.bytes_of_hex "3e8a69b7783c25851933ab6290af6ca77a9981480850009cc5577c6e1f573b4e6801dd23c4a7d679ccf8a386c674cffb", SHA384;
+        Bytes.bytes_of_hex "b0ba465637458c6990e5a8c5f61d4af7e576d97ff94b872de76f8050361ee3dba91ca5c11aa25eb4d679275cc5788063a5f19741120c4f2de2adebeb10a298dd", SHA512
       ];
       truncation = None
     }; {
-      key =           bytes_of_hex "0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c";
-      data =          bytes_of_hex "546573742057697468205472756e636174696f6e";
+      key =           Bytes.bytes_of_hex "0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c";
+      data =          Bytes.bytes_of_hex "546573742057697468205472756e636174696f6e";
       digests =       [
-        bytes_of_hex "a3b6167473100ee06e0c796c2955552b", SHA256;
-        bytes_of_hex "3abf34c3503b2a23a46efc619baef897", SHA384;
-        bytes_of_hex "415fad6271580a531d4179bc891d87a6", SHA512
+        Bytes.bytes_of_hex "a3b6167473100ee06e0c796c2955552b", SHA256;
+        Bytes.bytes_of_hex "3abf34c3503b2a23a46efc619baef897", SHA384;
+        Bytes.bytes_of_hex "415fad6271580a531d4179bc891d87a6", SHA512
       ];
       truncation = Some 16
     }; {
-      key =           bytes_of_hex "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-      data =          bytes_of_hex "54657374205573696e67204c6172676572205468616e20426c6f636b2d53697a65204b6579202d2048617368204b6579204669727374";
+      key =           Bytes.bytes_of_hex "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+      data =          Bytes.bytes_of_hex "54657374205573696e67204c6172676572205468616e20426c6f636b2d53697a65204b6579202d2048617368204b6579204669727374";
       digests =       [
-        bytes_of_hex "60e431591ee0b67f0d8a26aacbf5b77f8e0bc6213728c5140546040f0ee37f54", SHA256;
-        bytes_of_hex "4ece084485813e9088d2c63a041bc5b44f9ef1012a2b588f3cd11f05033ac4c60c2ef6ab4030fe8296248df163f44952", SHA384;
-        bytes_of_hex "80b24263c7c1a3ebb71493c1dd7be8b49b46d1f41b4aeec1121b013783f8f3526b56d037e05f2598bd0fd2215d6a1e5295e64f73f63f0aec8b915a985d786598", SHA512
+        Bytes.bytes_of_hex "60e431591ee0b67f0d8a26aacbf5b77f8e0bc6213728c5140546040f0ee37f54", SHA256;
+        Bytes.bytes_of_hex "4ece084485813e9088d2c63a041bc5b44f9ef1012a2b588f3cd11f05033ac4c60c2ef6ab4030fe8296248df163f44952", SHA384;
+        Bytes.bytes_of_hex "80b24263c7c1a3ebb71493c1dd7be8b49b46d1f41b4aeec1121b013783f8f3526b56d037e05f2598bd0fd2215d6a1e5295e64f73f63f0aec8b915a985d786598", SHA512
       ];
       truncation = None
     }; {
-      key =           bytes_of_hex "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-      data =          bytes_of_hex "5468697320697320612074657374207573696e672061206c6172676572207468616e20626c6f636b2d73697a65206b657920616e642061206c6172676572207468616e20626c6f636b2d73697a6520646174612e20546865206b6579206e6565647320746f20626520686173686564206265666f7265206265696e6720757365642062792074686520484d414320616c676f726974686d2e";
+      key =           Bytes.bytes_of_hex "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+      data =          Bytes.bytes_of_hex "5468697320697320612074657374207573696e672061206c6172676572207468616e20626c6f636b2d73697a65206b657920616e642061206c6172676572207468616e20626c6f636b2d73697a6520646174612e20546865206b6579206e6565647320746f20626520686173686564206265666f7265206265696e6720757365642062792074686520484d414320616c676f726974686d2e";
       digests =       [
-        bytes_of_hex "9b09ffa71b942fcb27635fbcd5b0e944bfdc63644f0713938a7f51535c3a35e2", SHA256;
-        bytes_of_hex "6617178e941f020d351e2f254e8fd32c602420feb0b8fb9adccebb82461e99c5a678cc31e799176d3860e6110c46523e", SHA384;
-        bytes_of_hex "e37b6a775dc87dbaa4dfa9f96e5e3ffddebd71f8867289865df5a32d20cdc944b6022cac3c4982b10d5eeb55c3e4de15134676fb6de0446065c97440fa8c6a58", SHA512
+        Bytes.bytes_of_hex "9b09ffa71b942fcb27635fbcd5b0e944bfdc63644f0713938a7f51535c3a35e2", SHA256;
+        Bytes.bytes_of_hex "6617178e941f020d351e2f254e8fd32c602420feb0b8fb9adccebb82461e99c5a678cc31e799176d3860e6110c46523e", SHA384;
+        Bytes.bytes_of_hex "e37b6a775dc87dbaa4dfa9f96e5e3ffddebd71f8867289865df5a32d20cdc944b6022cac3c4982b10d5eeb55c3e4de15134676fb6de0446065c97440fa8c6a58", SHA512
       ];
       truncation = None
     }]
@@ -417,8 +371,8 @@ module TestHmac = struct
   let print_test_case v =
     List.iter (fun (digests, hash_alg) ->
       Printf.printf "key: %s\ndata: %s\ndigests: %s (%s)\n"
-        (hex_of_bytes v.key) (hex_of_bytes v.data)
-        (hex_of_bytes digests) (string_of_hash_alg hash_alg)
+        (Bytes.hex_of_bytes v.key) (Bytes.hex_of_bytes v.data)
+        (Bytes.hex_of_bytes digests) (string_of_hash_alg hash_alg)
     ) v.digests
 
   let test v =
@@ -576,8 +530,8 @@ module TestHash = struct
 
   let print_test t =
     Printf.printf "%s(%s) = %s (got: %s)\n"
-      (string_of_hash_alg t.hash_alg) (hex_of_string t.input) t.output
-      (hex_of_bytes (hash t.hash_alg (bytes_of_string t.input)))
+      (string_of_hash_alg t.hash_alg) (Bytes.hex_of_string t.input) t.output
+      (Bytes.hex_of_bytes (hash t.hash_alg (bytes_of_string t.input)))
 
   let test t =
     let input =
@@ -592,7 +546,7 @@ module TestHash = struct
         bytes_of_string s
     in
     let output = hash t.hash_alg input in
-    Bytes.equalBytes output (bytes_of_hex t.output)
+    Bytes.equalBytes output (Bytes.bytes_of_hex t.output)
 end
 
 module TestEcc = struct
@@ -601,7 +555,7 @@ module TestEcc = struct
     point: ec_point;
   }
 
-  let x = bytes_of_hex
+  let x = Bytes.bytes_of_hex
 
   let tests = [{
     params = {
@@ -637,7 +591,7 @@ module TestEcc = struct
 
   let print_test { point = { ecx; ecy }; _ } =
     Printf.printf "Point at coordinates %s,%s should be on curve but isn't\n"
-      (hex_of_bytes ecx) (hex_of_bytes ecy)
+      (Bytes.hex_of_bytes ecx) (Bytes.hex_of_bytes ecy)
 
 end
 
@@ -675,7 +629,7 @@ module TestRsa = struct
     with Exit ->
       false
 
-  let print_test x = print_string (hex_of_bytes x)
+  let print_test x = print_string (Bytes.hex_of_bytes x)
 
 end
 

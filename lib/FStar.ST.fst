@@ -1,7 +1,3 @@
-(*--build-config
-    options:--admit_fsi Set;
-    other-files:FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst
---*)
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
@@ -20,6 +16,8 @@
 module FStar.ST
 open FStar.Set
 open FStar.Heap
+
+
 type ref (a:Type) = Heap.ref a
 // this intentionally does not preclude h' extending h with fresh refs
 opaque logic type modifies (mods:set aref) (h:heap) (h':heap) =

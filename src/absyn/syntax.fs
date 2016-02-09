@@ -19,18 +19,17 @@ module FStar.Absyn.Syntax
 
 open FStar
 open FStar.Util
+open FStar.Ident
+open FStar.Range
+open FStar.Const
 
+type ident = FStar.Ident.ident
+type lident = FStar.Ident.lid
+type LongIdent = lident
 exception Err of string
 exception Error of string * Range.range
 exception Warning of string * Range.range
 
-type ident = {idText:string;
-              idRange:Range.range}
-type LongIdent = {ns:list<ident>;
-                  ident:ident;
-                  nsstr:string;
-                  str:string}
-type lident = LongIdent
 type withinfo_t<'a,'t> = {
   v: 'a;
   sort: 't;
@@ -45,23 +44,13 @@ type bvar<'a,'t> = withinfo_t<bvdef<'a>,'t>
    Only the latter is used during type checking.  *)
 
 (* Term language *)
-type sconst =
-  | Const_unit
-  | Const_uint8       of byte
-  | Const_bool        of bool
-  | Const_int32       of int32
-  | Const_int64       of int64
-  | Const_int         of string                               //arbitrary length integer constants
-  | Const_char        of char
-  | Const_float       of double
-  | Const_bytearray   of array<byte> * Range.range
-  | Const_string      of array<byte> * Range.range           (* unicode encoded, F#/Caml independent *)
+type sconst = FStar.Const.sconst
 type pragma =
   | SetOptions of string
   | ResetOptions
 type memo<'a> = ref<option<'a>>
 type arg_qualifier =
-    | Implicit
+    | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor 
     | Equality
 type aqual = option<arg_qualifier>
 type typ' =
@@ -204,6 +193,7 @@ type qualifier =
   | Assumption
   | Opaque
   | Logic
+  | Abstract
   | Discriminator of lident                          (* discriminator for a datacon l *)
   | Projector of lident * either<btvdef, bvvdef>     (* projector for datacon l's argument 'a or x *)
   | RecordType of list<fieldname>                    (* unmangled field names *)
@@ -315,10 +305,10 @@ let order_bvd x y = match x, y with
   | Inl x, Inl y -> String.compare x.realname.idText y.realname.idText
   | Inr x, Inr y -> String.compare x.realname.idText y.realname.idText
 
-let lid_with_range (lid:LongIdent) (r:Range.range) =
+let lid_with_range (lid:lid) (r:Range.range) =
     let id = {lid.ident with idRange=r} in
     {lid with ident=id}
-let range_of_lid (lid:LongIdent) = lid.ident.idRange
+let range_of_lid (lid:lid) = lid.ident.idRange
 let range_of_lbname (l:lbname) = match l with
     | Inl x -> x.ppname.idRange
     | Inr l -> range_of_lid l
@@ -372,7 +362,9 @@ let mk_Kind_arrow ((bs:binders),(k:knd)) p : knd = {
 let mk_Kind_arrow' ((bs:binders), (k:knd)) p : knd =
     match bs with
         | [] -> k
-        | _ ->  match k.n with Kind_arrow(bs', k') -> mk_Kind_arrow(bs@bs', k') p | _ -> mk_Kind_arrow(bs, k) p
+        | _ ->  match k.n with
+	    	  | Kind_arrow(bs', k') -> mk_Kind_arrow(bs@bs', k') p
+		  | _ -> mk_Kind_arrow(bs, k) p
 
 let mk_Kind_uvar (uv:uvar_k_app) p : knd = {
     n=Kind_uvar uv;
@@ -479,7 +471,7 @@ let mk_Typ_uvar'     ((u:uvar_t),(k:knd)) (k':option<knd>) (p:range) = {
 }
 let mk_Typ_uvar (u, k) p = mk_Typ_uvar' (u, k) (Some k) p
 let mk_Typ_delayed  ((t:typ),(s:subst_t),(m:memo<typ>)) (k:option<knd>) (p:range) = {
-    n=(match t.n with Typ_delayed _ -> failwith "NESTED DELAYED TYPES!" | _ -> Typ_delayed(Inl(t, s), m));
+    n=(match t.n with | Typ_delayed _ -> failwith "NESTED DELAYED TYPES!" | _ -> Typ_delayed(Inl(t, s), m));
     tk=Util.mk_ref k;
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();
@@ -653,8 +645,8 @@ let t_binder (a:btvar) : binder = Inl a, None
 let v_binder (a:bvvar) : binder = Inr a, None
 let null_t_binder t : binder = Inl (null_bvar t), None
 let null_v_binder t : binder = Inr (null_bvar t), None
-let itarg t : arg = Inl t, Some Implicit
-let ivarg v : arg = Inr v, Some Implicit
+let itarg t : arg = Inl t, Some (Implicit false)
+let ivarg v : arg = Inr v, Some (Implicit false)
 let targ t : arg = Inl t, None
 let varg v : arg = Inr v, None
 let is_null_pp (b:bvdef<'a>) = b.ppname.idText = null_id.idText
@@ -672,5 +664,5 @@ let freevars_of_binders (bs:binders) : freevars =
 let binders_of_list fvs : binders = (fvs |> List.map (fun t -> t, None))
 let binders_of_freevars fvs =
    (Util.set_elements fvs.ftvs |> List.map t_binder)@(Util.set_elements fvs.fxvs |> List.map v_binder)
-let is_implicit = function Some Implicit -> true | _ -> false
-let as_implicit = function true -> Some Implicit | _ -> None
+let is_implicit = function Some (Implicit _) -> true | _ -> false
+let as_implicit = function true -> Some (Implicit false) | _ -> None

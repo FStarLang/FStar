@@ -1,12 +1,7 @@
-(*--build-config
-    options:--warn_top_level_effects --admit_fsi FStar.Squash --admit_fsi FStar.Set --print_implicits;
-    other-files:FStar.Constructive.fst FStar.Squash.fsti FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst;
---*)
 module FStar.SquashProperties
-
 open FStar.Constructive
-
 open FStar.Squash
+
 
 val join_squash : #a:Type -> squash (squash a) -> Tot (squash a)
 let join_squash (a:Type) s = bind_squash #(squash a) #a s (fun x -> x)

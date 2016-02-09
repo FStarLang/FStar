@@ -1,10 +1,8 @@
-(*--build-config
-options:--admit_fsi FStar.Set;
-other-files: FStar.Set.fsi;
---*)
 module FStar.Heap
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 1 --max_ifuel 1"
 open FStar.Set
+
+
 type heap
 type ref : Type -> Type
 type aref =

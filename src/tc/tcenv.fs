@@ -23,6 +23,7 @@ open FStar.Absyn.Syntax
 open FStar.Absyn.Util
 open FStar.Util
 open FStar.Absyn.Util
+open FStar.Ident
 
 type binding =
   | Binding_var of bvvdef * typ
@@ -369,7 +370,7 @@ let lookup_qname env (lid:lident) : option<either<typ, sigelt>>  =
 let lookup_datacon env lid =
   match lookup_qname env lid with
     | Some (Inr (Sig_datacon (_, t, (_, tps, _), _, _, _))) -> 
-      close_typ (List.map (fun (x, _) -> (x, Some Implicit)) tps) t 
+      close_typ (List.map (fun (x, _) -> (x, Some (Implicit true))) tps) t 
     | _ -> raise (Error(name_not_found lid, range_of_lid lid))
 
 let lookup_kind_abbrev env lid =
@@ -407,7 +408,7 @@ let lookup_lid env lid =
     raise (Error(name_not_found lid, range_of_lid lid)) in
   let mapper = function
     | Inr (Sig_datacon(_, t, (_, tps, _), _,_, _)) -> 
-      Some (close_typ (List.map (fun (x, _) -> (x, Some Implicit)) tps) t)
+      Some (close_typ (List.map (fun (x, _) -> (x, Some (Implicit true))) tps) t)
     | Inl t -> Some t
 
     | Inr (Sig_val_decl (l, t, qs, _)) -> 
@@ -545,7 +546,10 @@ let push_module env (m:modul) =
       expected_typ=None}
 
 let set_expected_typ env t =
-  {env with expected_typ = Some t; use_eq=false}
+    match t with 
+        | {n=Typ_const ({sort={n=Kind_unknown}})} -> failwith (Util.format1 "Setting expected type to %s with kind unknown" (Print.typ_to_string t))
+        | _ -> {env with expected_typ = Some t; use_eq=false}
+
 let expected_typ env = match env.expected_typ with
   | None -> None
   | Some t -> Some t

@@ -1,10 +1,5 @@
-(*--build-config
-  other-files: FStar.Constructive.fst
-  --*)
 module FStar.PropositionalExtensionality
-
 open FStar.Constructive
-
 assume val propositionalExtensionalityConstr :
   p:Type -> q:Type -> h:(ciff p q) -> Tot (ceq_type p q)
 

@@ -1,21 +1,3 @@
-(*--build-config
-    options:--z3timeout 10 --verify_module CntProtocol --admit_fsi FStar.Seq --admit_fsi FStar.IO;
-    variables:CONTRIB=../../contrib;
-    other-files:
-            FStar.FunctionalExtensionality.fst FStar.Classical.fst
-            FStar.Set.fsi FStar.Set.fst
-            FStar.Heap.fst FStar.ST.fst FStar.All.fst
-            FStar.String.fst FStar.List.fst
-            seq.fsi FStar.SeqProperties.fst
-            FStar.IO.fsti
-            $CONTRIB/Platform/fst/Bytes.fst
-            $CONTRIB/CoreCrypto/fst/CoreCrypto.fst
-            cnt-format.fst
-            sha1.fst
-            mac.fst
-  --*)
-
-
 (* Copyright (c) Microsoft Corporation.  All rights reserved.  *)
 
 module CntProtocol

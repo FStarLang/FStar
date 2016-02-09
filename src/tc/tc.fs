@@ -24,6 +24,8 @@ open FStar.Absyn
 open FStar.Absyn.Util
 open FStar.Tc.Rel
 open FStar.Absyn.Syntax
+open FStar.Const
+open FStar.Ident
 
 let syn' env k = syn (Tc.Env.get_range env) (Some k)
 let log env = !Options.log_types && not(lid_equals Const.prims_lid (Env.current_module env))
@@ -33,7 +35,7 @@ let no_inst env = {env with Env.instantiate_targs=false; Env.instantiate_vargs=f
 let mk_lex_list vs =
     List.fold_right (fun v tl ->
         let r = if tl.pos = dummyRange then v.pos else Range.union_ranges v.pos tl.pos in
-        mk_Exp_app(lex_pair, [(Inl <| Recheck.recompute_typ v, Some Implicit); varg v; varg tl]) (Some lex_t) r) vs lex_top
+        mk_Exp_app(lex_pair, [(Inl <| Recheck.recompute_typ v, Some (Implicit false)); varg v; varg tl]) (Some lex_t) r) vs lex_top
 let is_eq = function
     | Some Equality -> true
     | _ -> false
@@ -370,7 +372,10 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
 
   | Typ_refine(x, phi) ->
     let x, env, f1 = tc_vbinder env x in
-    if debug env Options.High then Util.print3 "(%s) Checking refinement formula %s; env expects type %s\n"  (Range.string_of_range top.pos) (Print.typ_to_string phi) (match Env.expected_typ env with None -> "None" | Some t -> Print.typ_to_string t);
+    if debug env Options.High
+    then Util.print3 "(%s) Checking refinement formula %s; env expects type %s\n"
+    	 (Range.string_of_range top.pos) (Print.typ_to_string phi)
+	 (match Env.expected_typ env with | None -> "None" | Some t -> Print.typ_to_string t);
 
     let phi, f2 = tc_typ_check env phi ktype in
     w ktype <| mk_Typ_refine(x, phi), ktype, Rel.conj_guard f1 (Rel.close_guard [v_binder x] f2)
@@ -405,23 +410,23 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
            let rec check_args outargs subst g formals args = match formals, args with
               | [], [] -> Util.subst_kind subst kres, List.rev outargs, g
 
-              | (_, None)::_, (_, Some Implicit)::_
-              | (_, Some Equality)::_, (_, Some Implicit)::_  -> raise (Error("Argument is marked as instantiating an implicit parameter; although the expected parameter is explicit", Util.range_of_arg (List.hd args)))
+              | (_, None)::_, (_, Some (Implicit _))::_
+              | (_, Some Equality)::_, (_, Some (Implicit _))::_  -> raise (Error("Argument is marked as instantiating an implicit parameter; although the expected parameter is explicit", Util.range_of_arg (List.hd args)))
 
-              | (Inl a, Some Implicit)::rest, (_, None)::_
-              | (Inl a, Some Implicit)::rest, [] ->  (* Instantiate an implicit type argument *)
+              | (Inl a, Some (Implicit _))::rest, (_, None)::_
+              | (Inl a, Some (Implicit _))::rest, [] ->  (* Instantiate an implicit type argument *)
                  let formal = List.hd formals in
                  let t, u = Tc.Util.new_implicit_tvar env (Util.subst_kind subst a.sort) in
-                 let targ = (Inl t, Some Implicit) in
+                 let targ = (Inl t, Some <| Implicit false) in
                  let g = add_implicit (Inl u) g in
                  let subst = maybe_extend_subst subst formal targ in
                  check_args (targ::outargs) subst g rest args
 
-              | (Inr x, Some Implicit)::rest, (_, None)::_
-              | (Inr x, Some Implicit)::rest, [] ->  (* instantiate an implicit expression argument *)
+              | (Inr x, Some (Implicit _))::rest, (_, None)::_
+              | (Inr x, Some (Implicit _))::rest, [] ->  (* instantiate an implicit expression argument *)
                  let formal = List.hd formals in
                  let e, u = Tc.Util.new_implicit_evar env (Util.subst_typ subst x.sort) in
-                 let varg = (Inr e, Some Implicit) in
+                 let varg = (Inr e, Some <| Implicit false) in
                  let g = add_implicit (Inr u) g in
                  let subst = maybe_extend_subst subst formal varg in
                  check_args (varg::outargs) subst g rest args
@@ -469,7 +474,7 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
               | _, [] -> Util.subst_kind subst (mk_Kind_arrow(formals, kres) kres.pos), List.rev outargs, g //partial app
 
               | [], _ -> raise (Error(Util.format2 "Too many arguments to type; expected %s arguments but got %s"
-                                        (List.length (outargs |> List.filter (function (_, Some Implicit) -> false | _ -> true)) |> Util.string_of_int)
+                                        (List.length (outargs |> List.filter (function (_, Some (Implicit _)) -> false | _ -> true)) |> Util.string_of_int)
                                         (List.length args0 |> Util.string_of_int),
                                       top.pos)) in
 
@@ -498,16 +503,6 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
     let k1, f1 = tc_kind env k1 in
     let t1, f2 = tc_typ_check env t1 k1 in
     w k1 <| mk_Typ_ascribed'(t1, k1), k1, Rel.conj_guard f1 f2
-
-  | Typ_uvar(u, k1) when (env.check_uvars) ->
-    let s = compress_typ t in
-    (match s.n with
-        | Typ_uvar(u,k1) ->
-          let k1, g = tc_kind env k1 in
-          let _, u' = Tc.Rel.new_tvar s.pos [] k1 in
-          Util.unchecked_unify u u'; //replace all occurrences of this unchecked uvar with its checked variant
-          u', k1, g
-        | _ -> tc_typ env s)
 
   | Typ_uvar(_, k1) ->
     let s = compress_typ t in
@@ -598,7 +593,7 @@ and tc_value env e : exp * lcomp * guard_t =
                                             * guard_t) =   (* accumulated guard from checking the binders *)
        match t0 with
         | None -> (* no expected type; just build a function type from the binders in the term *)
-            let _ = match env.letrecs with [] -> () | _ -> failwith "Impossible" in
+            let _ = match env.letrecs with | [] -> () | _ -> failwith "Impossible" in
             let bs, envbody, g = tc_binders env bs in
             None, bs, [], None, envbody, g
 
@@ -608,7 +603,7 @@ and tc_value env e : exp * lcomp * guard_t =
                match (Util.compress_typ t).n with
                 | Typ_uvar _
                 | Typ_app({n=Typ_uvar _}, _) -> (* expected a uvar; build a function type from the term and unify with it *)
-                  let _ = match env.letrecs with [] -> () | _ -> failwith "Impossible" in
+                  let _ = match env.letrecs with | [] -> () | _ -> failwith "Impossible" in
                   let bs, envbody, g = tc_binders env bs in
                   let envbody, _ = Env.clear_expected_typ envbody in
                   Some (t, true), bs, [], None, envbody, g
@@ -934,7 +929,7 @@ and tc_exp env e : exp * lcomp * guard_t =
                                    cres     (* function result comp *)
                                    args     (* actual arguments  *) : (exp * lcomp * guard_t) =
                    match bs, args with
-                    | (Inl a, Some Implicit)::rest, (_, None)::_ -> (* instantiate an implicit type argument *)
+                    | (Inl a, Some (Implicit _))::rest, (_, None)::_ -> (* instantiate an implicit type argument *)
                       let k = Util.subst_kind subst a.sort in
                       fxv_check head env (Inl k) fvs;
                       let targ, u = Tc.Rel.new_tvar (Util.range_of_arg (List.hd args)) vars k in
@@ -943,7 +938,7 @@ and tc_exp env e : exp * lcomp * guard_t =
                       let arg = Inl targ, as_implicit true in
                       tc_args (subst, arg::outargs, arg::arg_rets, comps, add_implicit (Inl (Tc.Util.as_uvar_t u, u.pos)) g, fvs) rest cres args
 
-                    | (Inr x, Some Implicit)::rest, (_, None)::_ -> (* instantiate an implicit value arg *)
+                    | (Inr x, Some (Implicit _))::rest, (_, None)::_ -> (* instantiate an implicit value arg *)
                       let t = Util.subst_typ subst x.sort in
                       fxv_check head env (Inr t) fvs;
                       let varg, u = Tc.Util.new_implicit_evar env t in
@@ -1068,7 +1063,7 @@ and tc_exp env e : exp * lcomp * guard_t =
         if debug env Options.Extreme
         then Util.print3 "(%s) About to check %s against expected typ %s\n" (Range.string_of_range e.pos)
               (Print.typ_to_string c.res_typ)
-              (Env.expected_typ env0 |> (fun x -> match x with None -> "None" | Some t -> Print.typ_to_string t));
+              (Env.expected_typ env0 |> (fun x -> match x with | None -> "None" | Some t -> Print.typ_to_string t));
         let e, c, g' = comp_check_expected_typ env0 e c in
         e, c, Rel.conj_guard g g'
 
@@ -1100,7 +1095,7 @@ and tc_exp env e : exp * lcomp * guard_t =
     let env = instantiate_both env in
     let env0 = env in
     let topt = Env.expected_typ env in
-    let top_level = match x with Inr _ -> true | _ -> false in
+    let top_level = match x with | Inr _ -> true | _ -> false in
     let env1, _ = Env.clear_expected_typ env in
     let f, env1 = match t.n with
         | Typ_unknown ->
@@ -1168,13 +1163,21 @@ and tc_exp env e : exp * lcomp * guard_t =
     (* build an environment with recursively bound names. refining the types of those names with decreases clauses is done in Exp_abs *)
     let lbs, env' = lbs |> List.fold_left (fun (xts, env) ({lbname=x; lbtyp=t; lbdef=e}) ->
       let _, t, check_t = Tc.Util.extract_lb_annotation env t e in
+//      Printf.printf "Extracted lb annotation for %s to be %s ... check is %A" (Print.exp_to_string e) (Print.typ_to_string t) check_t;
       let e = Util.unascribe e in
       let t =
         if not check_t
         then t
-        else if not (is_inner_let) && not(env.generalize)
-        then (if Env.debug env <| Options.High then Util.print1 "Type %s is marked as no-generalize\n" (Print.typ_to_string t);
-              t) (* t is already checked *)
+        //NS: This used to be an optimization, but it isn't quite right
+        //Consider what happens in
+        //  val test: bool -> Tot bool
+        //  let rec test x = test2 false 
+        //  and test2 (x:bool) : bool = false
+        //here, env.generalize is false, but the type of test2 has not yet been checked
+//UNSOUND OPTIMIZATION REMOVED
+//        else if not (is_inner_let) && not(env.generalize)
+//        then (if Env.debug env <| Options.High then Util.print1 "Type %s is marked as no-generalize\n" (Print.typ_to_string t);
+//              t) (* t is already checked *)
         else tc_typ_check_trivial ({env0 with check_uvars=true}) t ktype |> norm_t env in
       let env = if Util.is_pure_or_ghost_function t
                 && Options.should_verify env.curmodule.str (* store the let rec names separately for termination checks *)
@@ -1693,7 +1696,7 @@ and tc_decl env se deserialized = match se with
              gen, lb in
         gen, lb::lbs) (true, []) in
       let lbs' = List.rev lbs' in
-      let e = mk_Exp_let((fst lbs, lbs'), syn' env Recheck.t_unit <| mk_Exp_constant(Syntax.Const_unit)) None r in
+      let e = mk_Exp_let((fst lbs, lbs'), syn' env Recheck.t_unit <| mk_Exp_constant(Const_unit)) None r in
       let se, lbs = match tc_exp ({env with generalize=generalize}) e with
         | {n=Exp_let(lbs, e)}, _, g when Rel.is_trivial g ->
             let quals = match e.n with
@@ -1739,10 +1742,10 @@ and tc_decl env se deserialized = match se with
                 then Util.format1 "Recursive bindings: %s" (Print.sigelt_to_string_short se)
                 else "" in
       env.solver.push msg; //Push a context in the solver to check the recursively bound definitions
-      let tycons, _, _ = tc_decls false env tycons deserialized in
-      let recs, _, _ = tc_decls false env recs deserialized in
+      let tycons, _ = tc_decls env tycons deserialized in
+      let recs, _ = tc_decls env recs deserialized in
       let env1 = Tc.Env.push_sigelt env (Sig_bundle(tycons@recs, quals, lids, r)) in
-      let rest, _, _ = tc_decls false env1 rest deserialized in
+      let rest, _ = tc_decls env1 rest deserialized in
       let abbrevs = List.map2 (fun se t -> match se with
         | Sig_tycon(lid, tps, k, [], [], [], r) ->
           let tt = Util.close_with_lam tps (mk_Typ_ascribed(t, k) t.pos) in
@@ -1758,7 +1761,7 @@ and tc_decl env se deserialized = match se with
       let env = Tc.Env.push_sigelt env se in
       se, env
 
-and tc_decls for_export env ses deserialized =
+and tc_decls env ses deserialized =
  let time_tc_decl env se ds = 
     let start = FStar.Util.now() in
     let res = tc_decl env se ds in
@@ -1767,8 +1770,8 @@ and tc_decls for_export env ses deserialized =
     Util.print2 "Time %ss : %s\n" (Util.string_of_float diff) (Print.sigelt_to_string_short se);
     res in
 
-  let ses, all_non_private, env =
-  ses |> List.fold_left (fun (ses, all_non_private, (env:Tc.Env.env)) se ->
+  let ses, env =
+  ses |> List.fold_left (fun (ses, env) se ->
           if debug env Options.Low then Util.print_string (Util.format1 "Checking sigelt\t%s\n" (Print.sigelt_to_string se));
 
           let se, env =
@@ -1777,111 +1780,188 @@ and tc_decls for_export env ses deserialized =
             else tc_decl env se deserialized in
           env.solver.encode_sig env se;
 
-          let non_private_decls =
-            if for_export
-            then non_private env se
-            else [] in
+          se::ses, env)
+  ([], env) in
+  List.rev ses, env
 
-          se::ses, non_private_decls::all_non_private, env)
-  ([], [], env) in
-  List.rev ses, List.rev all_non_private |> List.flatten, env
+let rec for_export env hidden se : list<sigelt> * list<lident> =
+   (* Exporting symbols based on whether they have been marked 'abstract'
 
-and non_private env se : list<sigelt> =
-   let is_private quals = List.contains Private quals in
+        -- NB> Symbols marked 'private' are restricted by the visibility rules enforced during desugaring.
+           i.e., if a module A marks symbol x as private, then a module B simply cannot refer to A.x
+           OTOH, if A marks x as abstract, B can refer to A.x, but cannot see its definition.
+
+      Here, if a symbol is abstract, we only export its declaration, not its definition. 
+      The reason we export the declaration of private symbols is to account for cases like this:
+
+        module A 
+           abstract let x = 0
+           let y = x
+
+        When encoding A to the SMT solver, we need to encode the definition of y.
+        If we simply eliminated x altogether when exporting it, the body of y would no longer be well formed.
+        So, instead, in effect, we export A as
+
+        module A
+            assume val x : int
+            let y = x
+    *)
+   let is_abstract quals = quals |> Util.for_some (function Abstract -> true | _ -> false) in
+   let is_hidden_proj_or_disc q = match q with 
+        | Projector(l, _) 
+        | Discriminator l -> hidden |> Util.for_some (lid_equals l) 
+        | _ -> false in
+
    match se with
+    | Sig_pragma         _ -> [], hidden
+    | Sig_datacon _ -> failwith "Impossible"
+
+    | Sig_kind_abbrev _ 
+    | Sig_tycon _ -> [se], hidden
+ 
+    | Sig_typ_abbrev(lid, binders, knd, def, quals, r) -> 
+      if is_abstract quals
+      then let se = Sig_tycon(lid, binders, knd, [], [], Assumption::quals, r) in
+           [se], hidden
+      else [se], hidden
+
     | Sig_bundle(ses, quals, _, _) ->
-//      if is_private quals
-//      then let ses = ses |> List.filter (function
-//                | Sig_datacon _ -> false
-//                | _ -> true) in
-//           ses |> List.map (function
-//            | Sig_tycon(lid, bs, k, mutuals, datas, quals, r) -> Sig_tycon(lid, bs, k, [], [], Assumption::quals, r)
-//            | se -> se)
-//      else
-      [se]
+      if is_abstract quals
+      then List.fold_right (fun se (out, hidden) -> match se with 
+            | Sig_tycon(l, bs, t, _, _, quals, r) -> 
+              let dec = Sig_tycon(l, bs, t, [], [], quals, r) in
+              dec::out, hidden
+            | Sig_datacon(l, t, _tc, quals, _mutuals, r) -> //logically, each constructor just becomes an uninterpreted function
+              let t = Env.lookup_datacon env l in
+              let dec = Sig_val_decl(l, t, [Assumption], r) in
+              dec::out, l::hidden
+            | se -> for_export env hidden se) 
+            ses ([], hidden)
+      else [se], hidden
 
-   | Sig_tycon(_, _, _, _, _, quals, r) ->
-     if is_private quals
-     then []
-     else [se]
+    | Sig_assume(_, _, quals, _) ->
+      if is_abstract quals
+      then [], hidden
+      else [se], hidden
 
-   | Sig_typ_abbrev(l, bs, k, t, quals, r) ->
-     if is_private quals
-     then [Sig_tycon(l, bs, k, [], [], Assumption::quals, r)]
-     else [se]
+    | Sig_val_decl(l, t, quals, r) -> 
+      if quals |> Util.for_some is_hidden_proj_or_disc //hidden projectors/discriminators become uninterpreted
+      then [Sig_val_decl(l, t, [Assumption], r)], l::hidden
+      else if quals |> Util.for_some (function 
+        | Assumption
+        | Projector _
+        | Discriminator _ -> true
+        | _ -> false)
+      then [se], hidden //Assumptions, Intepreted proj/disc are retained
+      else [], hidden   //other declarations vanish
+                        //they will be replaced by the definitions that must follow
 
-   | Sig_assume(_, _, quals, _) ->
-     if is_private quals
-     then []
-     else [se]
+    | Sig_main  _ -> [], hidden
 
-   | Sig_val_decl(_, _, quals, _) ->
-     if is_private quals
-     then []
-     else [se]
+    | Sig_new_effect     _
+    | Sig_sub_effect     _
+    | Sig_effect_abbrev  _ -> [se], hidden
 
-   | Sig_main  _ -> []
+    | Sig_let((false, [lb]), _, _, quals) when (quals |> Util.for_some is_hidden_proj_or_disc) -> 
+      let lid = right lb.lbname in
+      if hidden |> Util.for_some (lid_equals lid)
+      then [], hidden //this projector definition already has a declare_typ
+      else let dec = Sig_val_decl(lid, lb.lbtyp, [Assumption], Ident.range_of_lid lid) in
+           [dec], lid::hidden
+  
+    | Sig_let(lbs, r, l, quals) ->
+      if is_abstract quals
+      then snd lbs |> List.map (fun lb -> 
+           Sig_val_decl(right lb.lbname, lb.lbtyp, Assumption::quals, r)), hidden
+      else [se], hidden
 
-   | Sig_new_effect     _
-   | Sig_sub_effect     _
-   | Sig_effect_abbrev  _
-   | Sig_pragma         _
-   | Sig_kind_abbrev    _ -> [se]
+//let non_private env se : list<sigelt> =
+//   let is_private quals = List.contains Private quals in
+//   match se with
+//    | Sig_bundle(ses, quals, _, _) ->
+////      if is_private quals
+////      then let ses = ses |> List.filter (function
+////                | Sig_datacon _ -> false
+////                | _ -> true) in
+////           ses |> List.map (function
+////            | Sig_tycon(lid, bs, k, mutuals, datas, quals, r) -> Sig_tycon(lid, bs, k, [], [], Assumption::quals, r)
+////            | se -> se)
+////      else
+//      [se]
+//
+//   | Sig_tycon(_, _, _, _, _, quals, r) ->
+//     if is_private quals
+//     then []
+//     else [se]
+//
+//   | Sig_typ_abbrev(l, bs, k, t, quals, r) ->
+//     if is_private quals
+//     then [Sig_tycon(l, bs, k, [], [], Assumption::quals, r)]
+//     else [se]
+//
+//   | Sig_assume(_, _, quals, _) ->
+//     if is_private quals
+//     then []
+//     else [se]
+//
+//   | Sig_val_decl(_, _, quals, _) ->
+//     if is_private quals
+//     then []
+//     else [se]
+//
+//   | Sig_main  _ -> []
+//
+//   | Sig_new_effect     _
+//   | Sig_sub_effect     _
+//   | Sig_effect_abbrev  _
+//   | Sig_pragma         _
+//   | Sig_kind_abbrev    _ -> [se]
+//
+//   | Sig_datacon _ -> failwith "Impossible"
+//
+//   | Sig_let(lbs, r, l, _) ->
+//     let check_priv lbs =
+//        let is_priv = function
+//            | {lbname=Inr l} ->
+//            begin match Tc.Env.try_lookup_val_decl env l with
+//                    | Some (_, qs) -> List.contains Private qs
+//                    | _ -> false
+//            end
+//            | _ -> false in
+//        let some_priv = lbs |> Util.for_some is_priv in
+//        if some_priv
+//        then if lbs |> Util.for_some (fun x -> is_priv x |> not)
+//             then raise (Error("Some but not all functions in this mutually recursive nest are marked private", r))
+//             else true
+//        else false in
+//
+//
+//     let pure_funs, rest = snd lbs |> List.partition (fun lb -> Util.is_pure_or_ghost_function lb.lbtyp && not <| Util.is_lemma lb.lbtyp) in
+//     begin match pure_funs, rest with
+//        | _::_, _::_ ->
+//          raise (Error("Pure functions cannot be mutually recursive with impure functions", r))
+//
+//        | _::_, [] ->
+//          if check_priv pure_funs
+//          then []
+//          else [se]
+//
+//        | [], _::_ ->
+//          if check_priv rest
+//          then []
+//          else rest |> List.collect (fun lb -> match lb.lbname with
+//                | Inl _ -> failwith "impossible"
+//                | Inr l -> [Sig_val_decl(l, lb.lbtyp, [Assumption], range_of_lid l)])
+//
+//
+//        | [], [] -> failwith "Impossible"
+//     end
 
-   | Sig_datacon _ -> failwith "Impossible"
-
-   | Sig_let(lbs, r, l, _) ->
-     let check_priv lbs =
-        let is_priv = function
-            | {lbname=Inr l} ->
-            begin match Tc.Env.try_lookup_val_decl env l with
-                    | Some (_, qs) -> List.contains Private qs
-                    | _ -> false
-            end
-            | _ -> false in
-        let some_priv = lbs |> Util.for_some is_priv in
-        if some_priv
-        then if lbs |> Util.for_some (fun x -> is_priv x |> not)
-             then raise (Error("Some but not all functions in this mutually recursive nest are marked private", r))
-             else true
-        else false in
-
-
-     let pure_funs, rest = snd lbs |> List.partition (fun lb -> Util.is_pure_or_ghost_function lb.lbtyp && not <| Util.is_lemma lb.lbtyp) in
-     begin match pure_funs, rest with
-        | _::_, _::_ ->
-          raise (Error("Pure functions cannot be mutually recursive with impure functions", r))
-
-        | _::_, [] ->
-          if check_priv pure_funs
-          then []
-          else [se]
-
-        | [], _::_ ->
-          if check_priv rest
-          then []
-          else rest |> List.collect (fun lb -> match lb.lbname with
-                | Inl _ -> failwith "impossible"
-                | Inr l -> [Sig_val_decl(l, lb.lbtyp, [Assumption], range_of_lid l)])
-
-
-        | [], [] -> failwith "Impossible"
-     end
-
-let get_exports env modul non_private_decls =
-    let assume_vals decls =
-        decls |> List.map (function
-            | Sig_val_decl(lid, t, quals, r) -> Sig_val_decl(lid, t, Assumption::quals, r)
-            | s -> s) in
-    if modul.is_interface
-    then non_private_decls
-    else let exports = Util.find_map (Tc.Env.modules env) (fun m ->
-            if (m.is_interface && Syntax.lid_equals modul.name m.name)
-            then Some (m.exports |> assume_vals)
-            else None) in
-         match exports with
-            | None -> non_private_decls
-            | Some e -> e
+let get_exports env modul =
+    let exports, _ = modul.declarations |> List.fold_left (fun (exports, hidden) se -> 
+            let exports', hidden = for_export env hidden se in
+            exports'::exports, hidden) ([], []) in
+    List.rev exports |> List.flatten 
 
 let tc_partial_modul env modul =
   let name = Util.format2 "%s %s"  (if modul.is_interface then "interface" else "module") modul.name.str in
@@ -1889,16 +1969,16 @@ let tc_partial_modul env modul =
   let env = {env with Env.is_iface=modul.is_interface; admit=not (Options.should_verify modul.name.str)} in
   if not (lid_equals modul.name Const.prims_lid) then env.solver.push msg;
   let env = Tc.Env.set_current_module env modul.name in
-  let ses, non_private_decls, env = tc_decls true env modul.declarations modul.is_deserialized in
-  {modul with declarations=ses}, non_private_decls, env
+  let ses, env = tc_decls env modul.declarations modul.is_deserialized in
+  {modul with declarations=ses}, env
 
 let tc_more_partial_modul env modul decls =
-  let ses, non_private_decls, env = tc_decls true env decls false in
+  let ses, env = tc_decls env decls false in
   let modul = {modul with declarations=modul.declarations@ses} in
-  modul, non_private_decls, env
+  modul, env
 
-let finish_partial_modul env modul npds =
-  let exports = get_exports env modul npds in
+let finish_partial_modul env modul =
+  let exports = get_exports env modul in
   let modul = {modul with exports=exports; is_interface=modul.is_interface; is_deserialized=modul.is_deserialized} in
   let env = Tc.Env.finish_module env modul in
   if not (lid_equals modul.name Const.prims_lid)
@@ -1913,8 +1993,8 @@ let finish_partial_modul env modul npds =
   modul, env
 
 let tc_modul env modul =
-  let modul, non_private_decls, env = tc_partial_modul env modul in
-  finish_partial_modul env modul non_private_decls
+  let modul, env = tc_partial_modul env modul in
+  finish_partial_modul env modul
 
 let add_modul_to_tcenv (en: env) (m: modul) :env =
   let do_sigelt (en: env) (elt: sigelt) :env =

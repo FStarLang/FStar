@@ -1,7 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.Set --admit_fsi FStar.Map;
-    other-files:FStar.Set.fsi FStar.Heap.fst map.fsi FStar.List.Tot.fst
- --*)
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
@@ -20,6 +16,8 @@
 module FStar.HyperHeap
 open FStar.Map
 open FStar.Heap
+
+
 type rid
 type t = Map.t rid heap
 val root : rid

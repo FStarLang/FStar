@@ -22,18 +22,16 @@ open Prims
 open FStar
 open FStar.Util
 open FStar.Range
+open FStar.Ident
+open FStar.Const
+
+type ident = FStar.Ident.ident
+type lident = FStar.Ident.lid
+type LongIdent = lident
 
 exception Err of string
 exception Error of string * Range.range
 exception Warning of string * Range.range
-
-type ident = {idText:string;
-              idRange:Range.range}
-type LongIdent = {ns:list<ident>; //["Microsoft"; "FStar"; "Absyn"; "Syntax"]
-                  ident:ident;    //"LongIdent"
-                  nsstr:string;
-                  str:string}
-type lident = LongIdent
 
 (* Objects with metadata *)
 type withinfo_t<'a,'t> = {
@@ -54,23 +52,13 @@ type bvar<'a,'t> = withinfo_t<bvdef<'a>,'t>
    Only the latter is used during type checking.  *)
 
 (* Term language *)
-type sconst =
-  | Const_unit
-  | Const_uint8       of byte
-  | Const_bool        of bool
-  | Const_int32       of int32
-  | Const_int64       of int64
-  | Const_int         of string
-  | Const_char        of char
-  | Const_float       of double
-  | Const_bytearray   of array<byte> * Range.range
-  | Const_string      of array<byte> * Range.range           (* unicode encoded, F#/Caml independent *)
+type sconst = FStar.Const.sconst
 type pragma =
   | SetOptions of string
   | ResetOptions
 type memo<'a> = ref<option<'a>>
 type arg_qualifier =
-    | Implicit
+    | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor 
     | Equality
 type aqual = option<arg_qualifier>
 type typ' =
@@ -228,6 +216,7 @@ type qualifier =
   | Assumption
   | Opaque
   | Logic
+  | Abstract
   | Discriminator of lident                          (* discriminator for a datacon l *)
   | Projector of lident * either<btvdef, bvvdef>     (* projector for datacon l's argument 'a or x *)
   | RecordType of list<fieldname>                    (* unmangled field names *)

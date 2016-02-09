@@ -23,6 +23,7 @@ open FStar.Util
 open FStar.Absyn
 open FStar.Absyn.Syntax
 open FStar.Profiling
+open FStar.Ident
 
 let handle_err warning ret e =
   match e with
@@ -1270,7 +1271,7 @@ let eq_k =
     let atyp = btvar_to_typ a in
     let b = bvd_to_bvar_s (new_bvd None) ktype in
     let btyp = btvar_to_typ b in
-    mk_Kind_arrow([(Inl a, Some Implicit); (Inl b, Some Implicit); null_v_binder atyp; null_v_binder btyp],
+    mk_Kind_arrow([(Inl a, Some (Implicit false)); (Inl b, Some (Implicit false)); null_v_binder atyp; null_v_binder btyp],
                   ktype) dummyRange
 
 let teq = ftv Const.eq2_lid eq_k
@@ -1294,7 +1295,7 @@ let lex_pair =
 let forall_kind =
   let a = bvd_to_bvar_s (new_bvd None) ktype in
   let atyp = btvar_to_typ a in
-  mk_Kind_arrow([(Inl a, Some Implicit);
+  mk_Kind_arrow([(Inl a, Some (Implicit false));
                  null_t_binder <| mk_Kind_arrow([null_v_binder atyp], ktype) dummyRange],
                 ktype)
                 dummyRange
@@ -1319,7 +1320,7 @@ let rec close_forall bs f =
     else let body = mk_Typ_lam([b], f) None f.pos in
          match fst b with
            | Inl a -> mk_Typ_app(tforall_typ a.sort, [targ body]) None f.pos
-           | Inr x -> mk_Typ_app(tforall, [(Inl x.sort, Some Implicit); targ body]) None f.pos) bs f
+           | Inr x -> mk_Typ_app(tforall, [(Inl x.sort, Some (Implicit false)); targ body]) None f.pos) bs f
 
 let rec is_wild_pat p =
     match p.v with

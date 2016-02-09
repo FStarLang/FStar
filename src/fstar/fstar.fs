@@ -21,7 +21,7 @@ open FStar.Absyn.Syntax
 open FStar.Util
 open FStar.Getopt
 open FStar.Tc.Util
-open FStar.Tc.Env
+open FStar.Ident
 
 let process_args () =
   let file_list = Util.mk_ref [] in
@@ -35,6 +35,58 @@ let cleanup () = Util.kill_all ()
 
 let has_prims_cache (l: list<string>) :bool = List.mem "Prims.cache" l
 
+open FStar.TypeChecker.Env
+let u_parse env fn = 
+    try 
+        match Parser.ParseIt.parse (Inl fn) with
+            | Inl (Inl ast) ->
+                Parser.ToSyntax.desugar_file env ast
+
+            | Inl (Inr _) ->
+                Util.print1 "%s: Expected a module\n" fn;
+                exit 1
+
+            | Inr (msg, r) ->
+                Util.print_string <| Print.format_error r msg;
+                exit 1
+    with e when (!Options.trace_error 
+                    && FStar.Syntax.Util.handleable e 
+                    && (FStar.Syntax.Util.handle_err false () e; false)) -> 
+                    failwith "Impossible" 
+
+        | e when (not !Options.trace_error && FStar.Syntax.Util.handleable e) ->
+        FStar.Syntax.Util.handle_err false () e; 
+        exit 1 
+
+let u_tc_prims () =
+    let solver = if !Options.verify then SMTEncoding.Encode.solver else SMTEncoding.Encode.dummy in
+    let env = FStar.TypeChecker.Env.initial_env
+         FStar.TypeChecker.Tc.type_of 
+         solver 
+         Const.prims_lid in
+    env.solver.init env;
+    let p = Options.prims () in
+    let dsenv, prims_mod = u_parse (Parser.Env.empty_env()) p in
+    let prims_mod, env = FStar.TypeChecker.Tc.check_module env (List.hd prims_mod) in
+    prims_mod, dsenv, env
+
+
+let test_universes filenames = 
+    try
+        let prims_mod, dsenv, env = u_tc_prims() in
+        let dsenv, mods, env = List.fold_left (fun (dsenv, fmods, env) fn ->
+           Util.print1 "Parsing file %s\n" fn; 
+           let dsenv, mods = u_parse dsenv fn in
+           let _, env = TypeChecker.Tc.check_module env (List.hd mods) in
+           dsenv, mods@fmods, env) (dsenv, [], env) filenames in
+        env.solver.finish();
+        dsenv, mods, env
+    with 
+        | Syntax.Syntax.Error(msg, r) when not (!Options.trace_error) -> 
+          Util.print_string (Util.format2 "Error : %s\n%s\n" (Range.string_of_range r) msg);
+          exit 1
+       
+open FStar.Tc.Env 
 let tc_prims () =
     let solver = if !Options.verify then ToSMT.Encode.solver else ToSMT.Encode.dummy in
     let env = Tc.Env.initial_env solver Const.prims_lid in
@@ -48,6 +100,16 @@ let tc_prims () =
 let report_errors nopt =
     let errs = match nopt with
         | None -> Tc.Errors.get_err_count ()
+        | Some n -> n in
+    if errs>0
+    then begin
+        print1 "Error: %s errors were reported (see above)\n" (string_of_int errs);
+        exit 1
+    end
+
+let report_universes_errors nopt =
+    let errs = match nopt with
+        | None -> TypeChecker.Errors.get_err_count ()
         | Some n -> n in
     if errs>0
     then begin
@@ -73,15 +135,15 @@ let tc_one_fragment curmod dsenv env frag =
                 | None -> env
                 | Some _ ->
                   raise (Absyn.Syntax.Err("Interactive mode only supports a single module at the top-level")) in
-              let modul, npds, env = Tc.Tc.tc_partial_modul env modul in
-              Some (Some (modul, npds), dsenv, env)
+              let modul, env = Tc.Tc.tc_partial_modul env modul in
+              Some (Some modul, dsenv, env)
 
             | Parser.Driver.Decls (dsenv, decls) ->
               begin match curmod with
                 | None -> failwith "Fragment without an enclosing module"
-                | Some (modul,npds) ->
-                  let modul, npds', env  = Tc.Tc.tc_more_partial_modul env modul decls in
-                  Some (Some (modul, npds@npds'), dsenv, env)
+                | Some modul ->
+                  let modul, env  = Tc.Tc.tc_more_partial_modul env modul decls in
+                  Some (Some modul, dsenv, env)
               end
     with
         | Absyn.Syntax.Error(msg, r) ->
@@ -100,15 +162,17 @@ type input_chunks =
     | Code of string * (string * string)
 
 type stack_elt =
-    (option<(modul * list<sigelt>)>
+    (option<modul>
      * Parser.DesugarEnv.env
      * Tc.Env.env)
 type stack = list<stack_elt>
 
 
-let batch_mode_tc_no_prims dsenv env filenames =
+let batch_mode_tc_no_prims dsenv env filenames admit_fsi =
     let all_mods, dsenv, env = filenames |> List.fold_left (fun (all_mods, dsenv, env) f ->
         Util.reset_gensym();
+        // This is reset at after every call to [tc_one_file] terminates... so we're overriding it here.
+        Options.admit_fsi := admit_fsi @ !Options.admit_fsi;
         let dsenv, env, ms = tc_one_file dsenv env f in
         all_mods@ms, dsenv, env)
         ([], dsenv, env) in
@@ -120,7 +184,7 @@ let batch_mode_tc_no_prims dsenv env filenames =
 
 let find_deps_if_needed files =
     if !Options.explicit_deps then
-      files
+      files, []
     else
       let _, deps = Parser.Dep.collect files in
       let deps = List.rev deps in
@@ -130,21 +194,22 @@ let find_deps_if_needed files =
         else
           failwith "dependency analysis did not find prims.fst?!"
       in
+      let admit_fsi = ref [] in
       List.iter (fun d ->
         let d = basename d in
         if get_file_extension d = "fsti" then
-          Options.admit_fsi := substring d 0 (String.length d - 5) :: !Options.admit_fsi
+          admit_fsi := substring d 0 (String.length d - 5) :: !admit_fsi
         else if get_file_extension d = "fsi" then begin
-          Options.admit_fsi := substring d 0 (String.length d - 4) :: !Options.admit_fsi
+          admit_fsi := substring d 0 (String.length d - 4) :: !admit_fsi
         end
       ) deps;
-      deps
+      deps, !admit_fsi
 
 let batch_mode_tc filenames =
     let prims_mod, dsenv, env = tc_prims () in
 
-    let filenames = find_deps_if_needed filenames in
-    let all_mods, dsenv, env = batch_mode_tc_no_prims dsenv env filenames in
+    let filenames, admit_fsi = find_deps_if_needed filenames in
+    let all_mods, dsenv, env = batch_mode_tc_no_prims dsenv env filenames admit_fsi in
     prims_mod @ all_mods, dsenv, env
 
 let finished_message fmods =
@@ -158,7 +223,7 @@ let finished_message fmods =
             let tag = if m.is_interface then "i'face" else "module" in
             if Options.should_print_message m.name.str
             then Util.print_string (Util.format3 "%s %s: %s\n" msg tag (Syntax.text_of_lid m.name)));
-         print_string "\x1b[0;1mAll verification conditions discharged successfully\x1b[0m\n"
+         print_string (Util.format1 "%s\n" (Util.colorize_bold "All verification conditions discharged successfully"))
     end
 
 type interactive_state = {
@@ -245,7 +310,7 @@ let interactive_mode dsenv env =
     if Option.isSome !Options.codegen
     then (Util.print_string "Warning: Code-generation is not supported in interactive mode, ignoring the codegen flag");
 
-    let rec go (stack:stack) curmod dsenv env =
+    let rec go (stack:stack) (curmod:option<modul>) dsenv env =
         begin match shift_chunk () with
             | Pop msg ->
               Parser.DesugarEnv.pop dsenv |> ignore;
@@ -366,6 +431,10 @@ let go _ =
     | GoOn ->
       if !Options.dep <> None then
         Parser.Dep.print (Parser.Dep.collect filenames)
+      else if !Options.universes
+      then (test_universes filenames |> ignore;
+            report_universes_errors None)
+        (* Normal mode of operations *)
       else if !Options.interactive then
         let filenames =
           if !Options.explicit_deps then begin

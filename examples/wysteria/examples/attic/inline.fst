@@ -1,8 +1,3 @@
-(*--build-config
-    options:--admit_fsi FStar.OrdSet --admit_fsi FStar.OrdMap --admit_fsi FStar.Set --admit_fsi Ffibridge --admit_fsi Runtime --admit_fsi FStar.IO --admit_fsi FStar.String;
-    other-files:FStar.Ghost.fst FStar.List.Tot.fst FStar.Set.fsi ordset.fsi ordmap.fsi FStar.Classical.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.IO.fsti FStar.String.fst prins.fst ast.fst ffibridge.fsi sem.fst runtime.fsi print.fst
- --*)
-
 module Inliner
 
 open AST

@@ -1,7 +1,3 @@
-(*--build-config
-  options: --admit_fsi FStar.Set;
-  other-files: FStar.Set.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst
-  --*)
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
@@ -18,6 +14,7 @@
    limitations under the License.
 *)
 module FStar.Option
+
 
 assume val isNone: option 'a -> bool
 assume val isSome: option 'a -> bool

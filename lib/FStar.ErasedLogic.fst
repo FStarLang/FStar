@@ -1,7 +1,3 @@
-(*--build-config
-    other-files: FStar.Ghost.fst
- --*)
-
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
@@ -18,6 +14,7 @@
    limitations under the License.
 *)
 module FStar.ErasedLogic
+
 
 (*F* 's exists should be thought of Coq's sigT. It is totally unerased *)
 (*Coq has 2 more versions, with increading degree of erasure*)

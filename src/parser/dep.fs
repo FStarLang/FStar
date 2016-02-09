@@ -31,6 +31,7 @@ open FStar.Util
 
 open FStar.Absyn
 open FStar.Absyn.Syntax
+open FStar.Ident
 
 type map = smap<string>
 
@@ -186,7 +187,7 @@ let collect_one (original_map: smap<string>) (filename: string): list<string> =
         !found
     in
     (* All the dependencies of FStar.All.fst, in order. *)
-    let ordered = [ "fstar"; "prims"; "fstar.set"; "fstar.heap"; "fstar.st"; "fstar.all" ] in
+    let ordered = [ "fstar"; "prims"; "fstar.functionalextensionality"; "fstar.set"; "fstar.heap"; "fstar.st"; "fstar.all" ] in
     (* The [open] statements that we wish to prepend. *)
     let desired_opens = [ Const.fstar_ns_lid; Const.prims_lid; Const.st_lid; Const.all_lid ] in
     let me = String.lowercase (must (check_and_strip_suffix (basename filename))) in
@@ -208,8 +209,9 @@ let collect_one (original_map: smap<string>) (filename: string): list<string> =
   and collect_file = function
     | [ modul ] ->
         collect_module modul
-    | _ ->
-        raise (Err (Util.format1 "File %s does not respect the one module per file convention" filename))
+    | modules ->
+        Util.fprint stderr "Warning: file %s does not respect the one module per file convention\n" [ filename ];
+        List.iter collect_module modules
 
   and collect_module = function
     | Module (lid, decls)
@@ -223,7 +225,7 @@ let collect_one (original_map: smap<string>) (filename: string): list<string> =
   and collect_decl = function
     | Open lid ->
         record_open lid
-    | ToplevelLet (_, patterms) ->
+    | ToplevelLet (_, _, patterms) ->
         List.iter (fun (_, t) -> collect_term t) patterms
     | KindAbbrev (_, binders, t) ->
         collect_term t;
@@ -399,7 +401,7 @@ type color = | White | Gray | Black
 (** Collect the dependencies for a list of given files. *)
 let collect (filenames: list<string>): _ =
   (* The dependency graph; keys are lowercased module names, values = list of
-   * lowercased modulen names this file depends on. *)
+   * lowercased module names this file depends on. *)
   let graph = smap_create 41 in
 
   (* A map from lowercase module names (e.g. [a.b.c]) to the corresponding
@@ -431,7 +433,7 @@ let collect (filenames: list<string>): _ =
     let direct_deps, color = must (smap_try_find graph key) in
     match color with
     | Gray ->
-        Util.print1 "Recursive dependency on module %s\n" key;
+        Util.print1 "Warning: recursive dependency on module %s\n" key;
         print_string "Here's the (non-transitive) dependency graph:\n";
         print_graph ();
         print_string "\n";
@@ -484,6 +486,6 @@ let print (deps: _): unit =
   | Some "make" ->
       print_make (fst deps)
   | Some _ ->
-      failwith "Unknown tool for --dep"
+      raise (Err "unknown tool for --dep\n")
   | None ->
       assert false

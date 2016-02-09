@@ -2,6 +2,7 @@
 module FStar.Extraction.ML.Syntax
 open FStar
 open FStar.Absyn.Syntax
+open FStar.Ident
 
 (* -------------------------------------------------------------------- *)
 type mlsymbol = string
@@ -114,6 +115,7 @@ type mlmodule1 =
 | MLM_Let of mlletbinding
 | MLM_Exn of mlsymbol * list<mlty>
 | MLM_Top of mlexpr
+| MLM_Loc of int * string // Location information; line number + file; only for the OCaml backend
 
 type mlmodule = list<mlmodule1>
 

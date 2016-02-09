@@ -1,6 +1,3 @@
-(*--Build-config
-
- --*)
 module FStar.OrdSet
 
 opaque type total_order (a:Type) (f: (a -> a -> Tot bool)) =

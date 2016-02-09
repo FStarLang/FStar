@@ -23,6 +23,7 @@ type token =
   | PRINT
   | PRIVATE
   | INTERNAL
+  | IRREDUCIBLE
   | LBRACE_COLON_PATTERN
   | LBRACE_TILDE
   | TILDE_RBRACE
@@ -184,3 +185,4 @@ type token =
   | INT32 of (int32 * bool)
   | INT of (string * bool)
   | YIELD of (bool)
+  | UNFOLDABLE

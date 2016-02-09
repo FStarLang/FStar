@@ -1,7 +1,3 @@
-(*--build-config
-  other-files: FStar.List.Tot.fst
-  --*)
-
 module Bug463b
 
 open FStar.List.Tot

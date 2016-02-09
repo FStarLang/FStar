@@ -1,4 +1,3 @@
-
 module SquashEffect
 
 total new_effect SQUASH = PURE

@@ -1,6 +1,3 @@
-(*--build-config
-    options:--logQueries;
-  --*)
 module Test
 type s : nat -> Type
 

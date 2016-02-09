@@ -1,10 +1,6 @@
-(*--build-config
-    options:--admit_fsi FStar.OrdSet;
-    other-files:ordset.fsi
- --*)
 module FStar.OrdSetProps
- 
 open FStar.OrdSet
+
  
 val fold: #a:Type -> #b:Type -> #f:cmp a -> (a -> b -> Tot b) -> s:ordset a f -> b
           -> Tot b (decreases (size s))
@@ -37,4 +33,3 @@ val union_lemma': #a:Type -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
 let union_lemma' (#a:Type) #f s1 s2 =
   union_lemma s1 s2;
   eq_lemma (union s1 s2) (union' s1 s2)
-

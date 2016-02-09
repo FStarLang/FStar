@@ -1,11 +1,8 @@
-(*--build-config
-    options:--admit_fsi FStar.Set --admit_fsi FStar.Map --admit_fsi FStar.HyperHeap;
-    other-files:FStar.Set.fsi FStar.Heap.fst map.fsi FStar.List.Tot.fst FStar.HyperHeap.fsi stHyperHeap.fst
- --*)
 module FStar.Monotonic.RRef
 open FStar
 open FStar.ST
 open FStar.HyperHeap
+
 
 kind Reln (a:Type) = a -> a -> Type
 

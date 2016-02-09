@@ -1,8 +1,3 @@
-(*--build-config
-    options:--split_cases 1;
-    other-files:
-  --*)
-
 module Deriving.Exn
 
 effect P (a:Type) (wp:PureWP a) = PURE a wp wp

@@ -97,7 +97,7 @@ let tid () = Util.current_tid() |> Util.string_of_int
 let new_z3proc id =
    let cond pid (s:string) =
     (let x = Util.trim_string s = "Done!" in
-//     Util.fprint5 "On thread %s, Z3 %s (%s) says: %s\n\t%s\n" (tid()) id pid s (if x then "finished" else "waiting for more output");
+//     Util.print5 "On thread %s, Z3 %s (%s) says: %s\n\t%s\n" (tid()) id pid s (if x then "finished" else "waiting for more output");
      x) in
    Util.start_process id (!Options.z3_exe) (ini_params()) cond
 
@@ -250,7 +250,7 @@ let init () =
     aux n_runners
 
 let enqueue fresh j =
- //   Util.fprint1 "Enqueue fresh is %s\n" (if fresh then "true" else "false");
+ //   Util.print1 "Enqueue fresh is %s\n" (if fresh then "true" else "false");
     if not fresh
     then run_job j
     else begin

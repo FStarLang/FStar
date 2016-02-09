@@ -1,9 +1,3 @@
-(*--build-config
-    options:--admit_fsi Set --admit_fsi Seq --verify_module Target;
-  other-files:FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fsi seq.fsi FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.SeqProperties.fst
-  --*)
-
-
 module Target
 
 open Seq

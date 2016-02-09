@@ -1,4 +1,3 @@
-
 module F
 
 type T : unit -> Type

@@ -1,5 +1,3 @@
-(*--build-config
-  --*)
 module Test
 
 val append: list 'a -> list 'a -> Tot (list 'a)

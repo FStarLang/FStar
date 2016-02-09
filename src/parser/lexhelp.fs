@@ -132,7 +132,8 @@ type compatibilityMode =
     | FSHARP  (* keyword, but an identifier under --ml-compatibility mode *)
 
 let keywords =
-  [ ALWAYS, "and"        ,AND;
+  [ ALWAYS, "abstract"   ,ABSTRACT;
+    ALWAYS, "and"        ,AND;
     ALWAYS, "as"         ,AS;
     ALWAYS, "assert"     ,ASSERT;
     ALWAYS, "assume"     ,ASSUME;
@@ -153,11 +154,14 @@ let keywords =
     ALWAYS, "if"         ,IF;
     ALWAYS, "kind"       ,KIND;
     ALWAYS, "in"         ,IN;
+    ALWAYS, "inline"     ,INLINE;
+    ALWAYS, "irreducible",IRREDUCIBLE;
     ALWAYS, "lazy"       ,LAZY;
     ALWAYS, "let"        ,LET(false);
     ALWAYS, "logic"      ,LOGIC;
     ALWAYS, "match"      ,MATCH;
     ALWAYS, "module"     ,MODULE;
+    ALWAYS, "new"        ,NEW;
     ALWAYS, "new_effect" ,NEW_EFFECT;
     ALWAYS, "of"         ,OF;
     ALWAYS, "open"       ,OPEN;
@@ -174,6 +178,7 @@ let keywords =
     ALWAYS, "true"       ,TRUE;
     ALWAYS, "try"        ,TRY;
     ALWAYS, "type"       ,TYPE;
+    ALWAYS, "unfoldable" ,UNFOLDABLE;
     ALWAYS, "val"        ,VAL;
     ALWAYS, "when"       ,WHEN;
     ALWAYS, "with"       ,WITH;

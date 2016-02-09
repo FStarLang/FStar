@@ -22,6 +22,8 @@ open FStar.Absyn
 open FStar.Util
 open FStar.Absyn.Syntax
 open FStar.Absyn.Util
+open FStar.Const
+open FStar.Ident
 
 (* CH: This should later be shared with ocaml-codegen.fs and util.fs (is_primop and destruct_typ_as_formula) *)
 let infix_prim_ops = [
@@ -98,7 +100,10 @@ let is_inr = function Inl _ -> false | Inr _ -> true
 let rec reconstruct_lex (e:exp) =
   match (compress_exp e).n with
   | Exp_app (f, args) ->
-      let args = List.filter (fun (a:arg) ->  snd a <> Some Implicit && is_inr (fst a)) args in
+      let args = List.filter (fun (a:arg) ->  match a with 
+                               | (Inl _, _)
+                               | (Inr _, Some (Implicit _)) -> false
+                               | _ -> true) args in
       let exps = List.map (function Inl _, _ -> failwith "impossible" | Inr x, _ -> x) args in
       if is_lex_cons f && List.length exps = 2 then
         match reconstruct_lex (List.nth exps 1) with
@@ -137,8 +142,9 @@ let strBvd bvd =
             with _ -> bvd.ppname.idText
         else bvd.ppname.idText
 
-let filter_imp a = a |> List.filter (function (_, Some Implicit) -> false | _ -> true)
+let filter_imp a = a |> List.filter (function (_, Some (Implicit _)) -> false | _ -> true)
 let const_to_string x = match x with
+  | Const_effect -> "eff"
   | Const_unit -> "()"
   | Const_bool b -> if b then "true" else "false"
   | Const_int32 x ->      Util.string_of_int32 x
@@ -213,7 +219,7 @@ and typ_to_string x =
         | Inr e -> Util.format1 "(<Expected a type!>%s)" (exp_to_string e) in
       let qbinder_to_string = q_to_string (fun x -> binder_to_string (fst x)) in
       let qbody_to_string = q_to_string (fun x -> typ_to_string (snd x)) in
-      let args' = if !Options.print_implicits && not (is_quant t) then args else List.filter (function (_, Some Implicit) -> false | _ -> true) args in (* drop implicit arguments for type operators *)
+      let args' = if !Options.print_implicits && not (is_quant t) then args else filter_imp args in (* drop implicit arguments for type operators *)
       if is_ite t && List.length args = 3 then
         format3 "if %s then %s else %s" (arg_to_string (List.nth args 0)) (arg_to_string (List.nth args 1)) (arg_to_string (List.nth args 2))
       else if is_b2t t && List.length args = 1 then List.nth args 0 |> arg_to_string
@@ -245,7 +251,7 @@ and uvar_t_to_string (uv, k) =
    else Util.format1 "U%s"  (if !Options.hide_uvar_nums then "?" else Util.string_of_int (Unionfind.uvar_id uv))
 
 and imp_to_string s = function
-  | Some Implicit -> "#" ^ s
+  | Some (Implicit _) -> "#" ^ s
   | Some Equality -> "=" ^ s
   | _ -> s
 

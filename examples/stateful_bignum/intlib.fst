@@ -1,8 +1,3 @@
-(*--build-config
-  options:--verify_module IntLib;
-  other-files:axiomatic.fst
-  --*)
-
 (*
   This library file contains definitions for standard math functions.
   They should be extended with anything necessary and the associated lemmas.

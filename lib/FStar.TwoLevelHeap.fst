@@ -1,7 +1,3 @@
-(*--build-config
-    options:--admit_fsi Set --admit_fsi Map;
-    other-files:FStar.Set.fsi FStar.Heap.fst map.fsi
- --*)
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
@@ -20,6 +16,8 @@
 module FStar.TwoLevelHeap
 open FStar.Map
 open FStar.Heap
+
+
 type rid = int  //region id
 type t = Map.t rid heap
 

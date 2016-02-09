@@ -30,7 +30,8 @@ open FStar.Util
 open FStar.Tc.Env
 open FStar.Tc.Normalize
 open FStar.Absyn.Syntax
-
+open FStar.Const
+open FStar.Ident
 
 (* --------------------------------------------------------- *)
 (* <new_uvar> Generating new unification variables/patterns  *)
@@ -686,7 +687,7 @@ let decompose_binder (bs:binders) v_ktec (rebuild_base:binders -> ktec -> 'a) : 
             let b_ktec = match fst hd with
                 | Inl a -> (bopt, CONTRAVARIANT, K a.sort)
                 | Inr x -> (bopt, CONTRAVARIANT, T (x.sort, Some ktype)) in
-            let binders' = match bopt with None -> binders | Some hd -> binders@[hd] in
+            let binders' = match bopt with | None -> binders | Some hd -> binders@[hd] in
             mk_b_ktecs (binders', b_ktec::b_ktecs) rest in
 
     rebuild, mk_b_ktecs ([], []) bs
@@ -1877,7 +1878,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                     | Failed _ -> fallback()
                     | Success (subst, _) ->
 //                      if Tc.Env.debug env <| Options.Other "RefEq"
-//                      then Util.fprint1 "Got guard %s\n" (Normalize.formula_norm_to_string env <| (fst <| p_guard ref_prob));
+//                      then Util.print1 "Got guard %s\n" (Normalize.formula_norm_to_string env <| (fst <| p_guard ref_prob));
                       let guard = Util.mk_conj (p_guard base_prob |> fst) (p_guard ref_prob |> fst |> guard_on_element problem x1) in
                       let wl = solve_prob orig (Some guard) [] wl in
                       let wl = {wl with subst=subst; ctr=wl.ctr+1} in
@@ -2509,7 +2510,7 @@ let subkind env k1 k2 : guard_t =
  let res = Util.must (with_guard env prob <| solve_and_commit env (singleton env prob) (fun _ ->
     raise (Error(Tc.Errors.incompatible_kinds env k1 k2, Tc.Env.get_range env)))) in
 // if debug env <| Other "Rel"
-// then Util.fprint4 "(%s) subkind of %s and %s solved with %s\n"
+// then Util.print4 "(%s) subkind of %s and %s solved with %s\n"
 //    (Range.string_of_range <| Env.get_range env) (Print.kind_to_string k1) (Print.kind_to_string k2) (guard_to_string env res);
  res
 
@@ -2528,8 +2529,18 @@ let teq env t1 t2 : guard_t =
       g
 
 let try_subtype env t1 t2 =
+ let kopt = function
+    | None ->"None"
+    | Some t -> Print.kind_to_string t in
+ let k t1 = match (Util.compress_typ t1).n with 
+    | Typ_const x -> (Print.kind_to_string x.sort) ^ " ... " ^ kopt !t1.tk 
+    | _ -> kopt !t1.tk in
  if debug env <| Other "Rel"
- then Util.print2 "try_subtype of %s and %s\n" (Normalize.typ_norm_to_string env t1) (Normalize.typ_norm_to_string env t2);
+ then Util.print4 "try_subtype of %s : %s and %s : %s\n" 
+        (Normalize.typ_norm_to_string env t1) 
+        (k t1)
+        (Normalize.typ_norm_to_string env t2)
+        (k t2);
  let prob, x = new_t_prob env t1 SUB t2 in
  let g = with_guard env prob <| solve_and_commit env (singleton env prob) (fun _ -> None) in
  if debug env <| Options.Other "Rel"

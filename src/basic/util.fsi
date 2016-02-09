@@ -170,6 +170,8 @@ type either<'a,'b> =
   | Inl of 'a
   | Inr of 'b
 
+val is_left: either<'a,'b> -> bool
+val is_right: either<'a,'b> -> bool
 val left: either<'a,'b> -> 'a
 val right: either<'a,'b> -> 'b
 val find_dup: ('a -> 'a -> bool) -> list<'a> -> option<'a>
@@ -276,3 +278,12 @@ val spawn: (unit -> unit) -> unit
 val print_endline: string -> unit
 
 val map_option: ('a -> 'b) -> option<'a> -> option<'b>
+
+val stdout_isatty: unit -> option<bool>
+
+// These functions have no effect
+val colorize: string -> (string * string) -> string
+val colorize_bold: string -> string
+val colorize_red: string -> string
+val colorize_cyan: string -> string
+
