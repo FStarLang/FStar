@@ -1,7 +1,9 @@
 .PHONY: all __force__
 
-OCAMLC=ocamlfind ocamlc -thread -package batteries -linkpkg -g
-OCAMLOPT=ocamlfind ocamlopt -thread -package batteries -linkpkg -g
+OPTIONS=-thread -package batteries -linkpkg -g -w "-28"
+
+OCAMLC=ocamlfind ocamlc $(OPTIONS)
+OCAMLOPT=ocamlfind ocamlopt $(OPTIONS)
 OCAMLDEP=ocamldep
 INCLUDES=                 # all relevant -I options here
 OCAMLFLAGS=$(INCLUDES)    -w -8 # add other options for ocamlc here
