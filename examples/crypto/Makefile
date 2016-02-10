@@ -131,7 +131,7 @@ CntProtocol.ml: cnt-format.fst mac.fst sha1.fst cnt-protocol.fst
 	$(FSTAR) --explicit_deps --z3timeout 10 --admit_fsi FStar.IO --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
 	  --verify_module CntFormat --verify_module SHA1 --verify_module MAC --verify_module CntProtocol \
           $(addprefix $(FSTAR_HOME)/lib/, FStar.FunctionalExtensionality.fst FStar.Classical.fst \
-					FStar.Set.fsi FStar.Set.fst \
+					FStar.Set.fst \
 					FStar.Heap.fst FStar.ST.fst FStar.All.fst \
 					FStar.String.fst FStar.List.fst \
 					FStar.Seq.fst FStar.SeqProperties.fst FStar.IO.fsti ) \

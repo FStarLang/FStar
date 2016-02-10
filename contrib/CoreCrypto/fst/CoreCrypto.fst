@@ -1,7 +1,7 @@
 module CoreCrypto
 
 open Platform.Bytes
-open FStar.HyperHeap
+open FStar.Heap
 
 effect EXT (a:Type) = ST a
   (requires (fun _ -> True)) 
