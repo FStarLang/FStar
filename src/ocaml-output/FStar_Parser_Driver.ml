@@ -1,23 +1,23 @@
 
 open Prims
-# 28 "D:\\workspace\\universes\\FStar\\src\\parser\\driver.fs"
+# 26 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\driver.fs"
 
 let print_error : Prims.string  ->  FStar_Range.range  ->  Prims.unit = (fun msg r -> (let _173_6 = (let _173_5 = (FStar_Range.string_of_range r)
 in (FStar_Util.format2 "ERROR %s: %s\n" _173_5 msg))
 in (FStar_Util.print_string _173_6)))
 
-# 31 "D:\\workspace\\universes\\FStar\\src\\parser\\driver.fs"
+# 29 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\driver.fs"
 
 let is_cache_file : Prims.string  ->  Prims.bool = (fun fn -> ((FStar_Util.get_file_extension fn) = ".cache"))
 
-# 33 "D:\\workspace\\universes\\FStar\\src\\parser\\driver.fs"
+# 31 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\driver.fs"
 
 type fragment =
 | Empty
 | Modul of (FStar_Parser_DesugarEnv.env * FStar_Absyn_Syntax.modul)
 | Decls of (FStar_Parser_DesugarEnv.env * FStar_Absyn_Syntax.sigelts)
 
-# 34 "D:\\workspace\\universes\\FStar\\src\\parser\\driver.fs"
+# 34 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\driver.fs"
 
 let is_Empty = (fun _discr_ -> (match (_discr_) with
 | Empty (_) -> begin
@@ -27,7 +27,7 @@ end
 false
 end))
 
-# 35 "D:\\workspace\\universes\\FStar\\src\\parser\\driver.fs"
+# 35 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\driver.fs"
 
 let is_Modul = (fun _discr_ -> (match (_discr_) with
 | Modul (_) -> begin
@@ -37,7 +37,7 @@ end
 false
 end))
 
-# 36 "D:\\workspace\\universes\\FStar\\src\\parser\\driver.fs"
+# 36 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\driver.fs"
 
 let is_Decls = (fun _discr_ -> (match (_discr_) with
 | Decls (_) -> begin
@@ -47,21 +47,21 @@ end
 false
 end))
 
-# 35 "D:\\workspace\\universes\\FStar\\src\\parser\\driver.fs"
+# 35 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\driver.fs"
 
 let ___Modul____0 : fragment  ->  (FStar_Parser_DesugarEnv.env * FStar_Absyn_Syntax.modul) = (fun projectee -> (match (projectee) with
 | Modul (_71_6) -> begin
 _71_6
 end))
 
-# 36 "D:\\workspace\\universes\\FStar\\src\\parser\\driver.fs"
+# 36 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\driver.fs"
 
 let ___Decls____0 : fragment  ->  (FStar_Parser_DesugarEnv.env * FStar_Absyn_Syntax.sigelts) = (fun projectee -> (match (projectee) with
 | Decls (_71_9) -> begin
 _71_9
 end))
 
-# 38 "D:\\workspace\\universes\\FStar\\src\\parser\\driver.fs"
+# 36 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\driver.fs"
 
 let parse_fragment : FStar_Absyn_Syntax.modul Prims.option  ->  FStar_Parser_DesugarEnv.env  ->  Prims.string  ->  fragment = (fun curmod env frag -> (match ((FStar_Parser_ParseIt.parse (FStar_Util.Inr (frag)))) with
 | FStar_Util.Inl (FStar_Util.Inl ([])) -> begin
@@ -85,7 +85,7 @@ end
 (Prims.raise (FStar_Absyn_Syntax.Error ((msg, r))))
 end))
 
-# 57 "D:\\workspace\\universes\\FStar\\src\\parser\\driver.fs"
+# 54 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\driver.fs"
 
 let parse_file_raw : Prims.string  ->  FStar_Parser_AST.modul Prims.list = (fun fn -> (match ((FStar_Parser_ParseIt.parse (FStar_Util.Inl (fn)))) with
 | FStar_Util.Inl (FStar_Util.Inl (ast)) -> begin
@@ -101,7 +101,7 @@ in (FStar_All.pipe_left FStar_Util.print_string _173_47))
 in (FStar_All.exit 1))
 end))
 
-# 73 "D:\\workspace\\universes\\FStar\\src\\parser\\driver.fs"
+# 68 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\driver.fs"
 
 let parse_file : FStar_Parser_DesugarEnv.env  ->  Prims.string  ->  (FStar_Parser_DesugarEnv.env * FStar_Absyn_Syntax.modul Prims.list) = (fun env fn -> if (is_cache_file fn) then begin
 (let full_name = (let _173_55 = (let _173_54 = (let _173_53 = (let _173_52 = (FStar_Options.get_fstar_home ())

@@ -1,6 +1,6 @@
 
 open Prims
-# 26 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 24 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 type sort =
 | Bool_sort
@@ -13,7 +13,7 @@ type sort =
 | Arrow of (sort * sort)
 | Sort of Prims.string
 
-# 27 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 27 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_Bool_sort = (fun _discr_ -> (match (_discr_) with
 | Bool_sort (_) -> begin
@@ -23,7 +23,7 @@ end
 false
 end))
 
-# 28 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 28 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_Int_sort = (fun _discr_ -> (match (_discr_) with
 | Int_sort (_) -> begin
@@ -33,7 +33,7 @@ end
 false
 end))
 
-# 29 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 29 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_String_sort = (fun _discr_ -> (match (_discr_) with
 | String_sort (_) -> begin
@@ -43,7 +43,7 @@ end
 false
 end))
 
-# 30 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 30 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_Ref_sort = (fun _discr_ -> (match (_discr_) with
 | Ref_sort (_) -> begin
@@ -53,7 +53,7 @@ end
 false
 end))
 
-# 31 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 31 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_Term_sort = (fun _discr_ -> (match (_discr_) with
 | Term_sort (_) -> begin
@@ -63,7 +63,7 @@ end
 false
 end))
 
-# 32 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 32 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_Fuel_sort = (fun _discr_ -> (match (_discr_) with
 | Fuel_sort (_) -> begin
@@ -73,7 +73,7 @@ end
 false
 end))
 
-# 33 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 33 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_Array = (fun _discr_ -> (match (_discr_) with
 | Array (_) -> begin
@@ -83,7 +83,7 @@ end
 false
 end))
 
-# 34 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 34 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_Arrow = (fun _discr_ -> (match (_discr_) with
 | Arrow (_) -> begin
@@ -93,7 +93,7 @@ end
 false
 end))
 
-# 35 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 35 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_Sort = (fun _discr_ -> (match (_discr_) with
 | Sort (_) -> begin
@@ -103,28 +103,28 @@ end
 false
 end))
 
-# 33 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 33 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let ___Array____0 : sort  ->  (sort * sort) = (fun projectee -> (match (projectee) with
 | Array (_96_10) -> begin
 _96_10
 end))
 
-# 34 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 34 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let ___Arrow____0 : sort  ->  (sort * sort) = (fun projectee -> (match (projectee) with
 | Arrow (_96_13) -> begin
 _96_13
 end))
 
-# 35 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 35 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let ___Sort____0 : sort  ->  Prims.string = (fun projectee -> (match (projectee) with
 | Sort (_96_16) -> begin
 _96_16
 end))
 
-# 37 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 35 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let rec strSort : sort  ->  Prims.string = (fun x -> (match (x) with
 | Bool_sort -> begin
@@ -159,7 +159,7 @@ end
 s
 end))
 
-# 48 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 46 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 type op =
 | True
@@ -183,7 +183,7 @@ type op =
 | ITE
 | Var of Prims.string
 
-# 49 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 49 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_True = (fun _discr_ -> (match (_discr_) with
 | True (_) -> begin
@@ -193,7 +193,7 @@ end
 false
 end))
 
-# 50 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 50 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_False = (fun _discr_ -> (match (_discr_) with
 | False (_) -> begin
@@ -203,7 +203,7 @@ end
 false
 end))
 
-# 51 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 51 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_Not = (fun _discr_ -> (match (_discr_) with
 | Not (_) -> begin
@@ -213,7 +213,7 @@ end
 false
 end))
 
-# 52 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 52 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_And = (fun _discr_ -> (match (_discr_) with
 | And (_) -> begin
@@ -223,7 +223,7 @@ end
 false
 end))
 
-# 53 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 53 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_Or = (fun _discr_ -> (match (_discr_) with
 | Or (_) -> begin
@@ -233,7 +233,7 @@ end
 false
 end))
 
-# 54 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 54 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_Imp = (fun _discr_ -> (match (_discr_) with
 | Imp (_) -> begin
@@ -243,7 +243,7 @@ end
 false
 end))
 
-# 55 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 55 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_Iff = (fun _discr_ -> (match (_discr_) with
 | Iff (_) -> begin
@@ -253,7 +253,7 @@ end
 false
 end))
 
-# 56 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 56 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_Eq = (fun _discr_ -> (match (_discr_) with
 | Eq (_) -> begin
@@ -263,7 +263,7 @@ end
 false
 end))
 
-# 57 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 57 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_LT = (fun _discr_ -> (match (_discr_) with
 | LT (_) -> begin
@@ -273,7 +273,7 @@ end
 false
 end))
 
-# 58 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 58 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_LTE = (fun _discr_ -> (match (_discr_) with
 | LTE (_) -> begin
@@ -283,7 +283,7 @@ end
 false
 end))
 
-# 59 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 59 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_GT = (fun _discr_ -> (match (_discr_) with
 | GT (_) -> begin
@@ -293,7 +293,7 @@ end
 false
 end))
 
-# 60 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 60 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_GTE = (fun _discr_ -> (match (_discr_) with
 | GTE (_) -> begin
@@ -303,7 +303,7 @@ end
 false
 end))
 
-# 61 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 61 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_Add = (fun _discr_ -> (match (_discr_) with
 | Add (_) -> begin
@@ -313,7 +313,7 @@ end
 false
 end))
 
-# 62 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 62 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_Sub = (fun _discr_ -> (match (_discr_) with
 | Sub (_) -> begin
@@ -323,7 +323,7 @@ end
 false
 end))
 
-# 63 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 63 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_Div = (fun _discr_ -> (match (_discr_) with
 | Div (_) -> begin
@@ -333,7 +333,7 @@ end
 false
 end))
 
-# 64 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 64 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_Mul = (fun _discr_ -> (match (_discr_) with
 | Mul (_) -> begin
@@ -343,7 +343,7 @@ end
 false
 end))
 
-# 65 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 65 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_Minus = (fun _discr_ -> (match (_discr_) with
 | Minus (_) -> begin
@@ -353,7 +353,7 @@ end
 false
 end))
 
-# 66 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 66 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_Mod = (fun _discr_ -> (match (_discr_) with
 | Mod (_) -> begin
@@ -363,7 +363,7 @@ end
 false
 end))
 
-# 67 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 67 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_ITE = (fun _discr_ -> (match (_discr_) with
 | ITE (_) -> begin
@@ -373,7 +373,7 @@ end
 false
 end))
 
-# 68 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 68 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_Var = (fun _discr_ -> (match (_discr_) with
 | Var (_) -> begin
@@ -383,20 +383,20 @@ end
 false
 end))
 
-# 68 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 68 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let ___Var____0 : op  ->  Prims.string = (fun projectee -> (match (projectee) with
 | Var (_96_36) -> begin
 _96_36
 end))
 
-# 70 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 68 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 type qop =
 | Forall
 | Exists
 
-# 71 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 71 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_Forall = (fun _discr_ -> (match (_discr_) with
 | Forall (_) -> begin
@@ -406,7 +406,7 @@ end
 false
 end))
 
-# 72 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 72 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_Exists = (fun _discr_ -> (match (_discr_) with
 | Exists (_) -> begin
@@ -416,7 +416,7 @@ end
 false
 end))
 
-# 75 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 72 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 type term' =
 | Integer of Prims.string
@@ -434,7 +434,7 @@ term
  and fvs =
 fv Prims.list
 
-# 76 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 76 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_Integer = (fun _discr_ -> (match (_discr_) with
 | Integer (_) -> begin
@@ -444,7 +444,7 @@ end
 false
 end))
 
-# 77 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 77 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_BoundV = (fun _discr_ -> (match (_discr_) with
 | BoundV (_) -> begin
@@ -454,7 +454,7 @@ end
 false
 end))
 
-# 78 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 78 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_FreeV = (fun _discr_ -> (match (_discr_) with
 | FreeV (_) -> begin
@@ -464,7 +464,7 @@ end
 false
 end))
 
-# 79 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 79 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_App = (fun _discr_ -> (match (_discr_) with
 | App (_) -> begin
@@ -474,7 +474,7 @@ end
 false
 end))
 
-# 80 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 80 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_Quant = (fun _discr_ -> (match (_discr_) with
 | Quant (_) -> begin
@@ -484,7 +484,7 @@ end
 false
 end))
 
-# 85 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 85 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_Labeled = (fun _discr_ -> (match (_discr_) with
 | Labeled (_) -> begin
@@ -494,61 +494,61 @@ end
 false
 end))
 
-# 87 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 87 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_Mkterm : term  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkterm"))))
 
-# 76 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 76 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let ___Integer____0 : term'  ->  Prims.string = (fun projectee -> (match (projectee) with
 | Integer (_96_42) -> begin
 _96_42
 end))
 
-# 77 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 77 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let ___BoundV____0 : term'  ->  Prims.int = (fun projectee -> (match (projectee) with
 | BoundV (_96_45) -> begin
 _96_45
 end))
 
-# 78 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 78 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let ___FreeV____0 : term'  ->  fv = (fun projectee -> (match (projectee) with
 | FreeV (_96_48) -> begin
 _96_48
 end))
 
-# 79 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 79 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let ___App____0 : term'  ->  (op * term Prims.list) = (fun projectee -> (match (projectee) with
 | App (_96_51) -> begin
 _96_51
 end))
 
-# 80 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 80 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let ___Quant____0 : term'  ->  (qop * pat Prims.list Prims.list * Prims.int Prims.option * sort Prims.list * term) = (fun projectee -> (match (projectee) with
 | Quant (_96_54) -> begin
 _96_54
 end))
 
-# 85 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 85 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let ___Labeled____0 : term'  ->  (term * Prims.string * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Labeled (_96_57) -> begin
 _96_57
 end))
 
-# 91 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 89 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let fv_eq : fv  ->  fv  ->  Prims.bool = (fun x y -> ((Prims.fst x) = (Prims.fst y)))
 
-# 92 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 91 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let fv_sort = (fun x -> (Prims.snd x))
 
-# 93 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 92 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let freevar_eq : term  ->  term  ->  Prims.bool = (fun x y -> (match ((x.tm, y.tm)) with
 | (FreeV (x), FreeV (y)) -> begin
@@ -558,7 +558,7 @@ end
 false
 end))
 
-# 96 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 95 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let freevar_sort : term  ->  sort = (fun _96_1 -> (match (_96_1) with
 | {tm = FreeV (x); hash = _96_75; freevars = _96_73} -> begin
@@ -568,7 +568,7 @@ end
 (FStar_All.failwith "impossible")
 end))
 
-# 99 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 98 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let fv_of_term : term  ->  fv = (fun _96_2 -> (match (_96_2) with
 | {tm = FreeV (fv); hash = _96_85; freevars = _96_83} -> begin
@@ -578,7 +578,7 @@ end
 (FStar_All.failwith "impossible")
 end))
 
-# 102 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 101 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let rec freevars : term  ->  fv Prims.list = (fun t -> (match (t.tm) with
 | (Integer (_)) | (BoundV (_)) -> begin
@@ -594,7 +594,7 @@ end
 (freevars t)
 end))
 
-# 111 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 108 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let free_variables : term  ->  (Prims.string * sort) Prims.list = (fun t -> (match ((FStar_ST.read t.freevars)) with
 | Some (b) -> begin
@@ -607,7 +607,7 @@ in (let _96_127 = (FStar_ST.op_Colon_Equals t.freevars (Some (fvs)))
 in fvs))
 end))
 
-# 121 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 116 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let qop_to_string : qop  ->  Prims.string = (fun _96_3 -> (match (_96_3) with
 | Forall -> begin
@@ -617,7 +617,7 @@ end
 "exists"
 end))
 
-# 125 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 123 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let op_to_string : op  ->  Prims.string = (fun _96_4 -> (match (_96_4) with
 | True -> begin
@@ -681,7 +681,7 @@ end
 s
 end))
 
-# 147 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 145 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let weightToSmt : Prims.int Prims.option  ->  Prims.string = (fun _96_5 -> (match (_96_5) with
 | None -> begin
@@ -692,7 +692,7 @@ end
 in (FStar_Util.format1 ":weight %s\n" _198_208))
 end))
 
-# 151 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 149 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let hash_of_term' : term'  ->  Prims.string = (fun t -> (match (t) with
 | Integer (i) -> begin
@@ -726,19 +726,19 @@ in (FStar_All.pipe_right _198_222 (FStar_String.concat "; ")))
 in (FStar_Util.format5 "(%s (%s)(! %s %s %s))" (qop_to_string qop) _198_225 body.hash _198_224 _198_223))))
 end))
 
-# 166 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 163 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let __all_terms : term FStar_Util.smap FStar_ST.ref = (let _198_226 = (FStar_Util.smap_create 10000)
 in (FStar_ST.alloc _198_226))
 
-# 167 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 166 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let all_terms : Prims.unit  ->  term FStar_Util.smap = (fun _96_184 -> (match (()) with
 | () -> begin
 (FStar_ST.read __all_terms)
 end))
 
-# 168 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 167 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mk : term'  ->  term = (fun t -> (let key = (hash_of_term' t)
 in (match ((let _198_231 = (all_terms ())
@@ -754,47 +754,47 @@ in (FStar_Util.smap_add _198_233 key tm))
 in tm))
 end)))
 
-# 177 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 175 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkTrue : term = (mk (App ((True, []))))
 
-# 178 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 177 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkFalse : term = (mk (App ((False, []))))
 
-# 179 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 178 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkInteger : Prims.string  ->  term = (fun i -> (mk (Integer (i))))
 
-# 180 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 179 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkInteger32 : Prims.int32  ->  term = (fun i -> (mkInteger (FStar_Util.string_of_int32 i)))
 
-# 181 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 180 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkInteger' : Prims.int  ->  term = (fun i -> (let _198_240 = (FStar_Util.string_of_int i)
 in (mkInteger _198_240)))
 
-# 182 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 181 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkBoundV : Prims.int  ->  term = (fun i -> (mk (BoundV (i))))
 
-# 183 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 182 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkFreeV : fv  ->  term = (fun x -> (mk (FreeV (x))))
 
-# 184 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 183 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkApp' : (op * term Prims.list)  ->  term = (fun f -> (mk (App (f))))
 
-# 185 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 184 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkApp : (Prims.string * term Prims.list)  ->  term = (fun _96_201 -> (match (_96_201) with
 | (s, args) -> begin
 (mk (App ((Var (s), args))))
 end))
 
-# 186 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 185 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkNot : term  ->  term = (fun t -> (match (t.tm) with
 | App (True, _96_205) -> begin
@@ -807,7 +807,7 @@ end
 (mkApp' (Not, (t)::[]))
 end))
 
-# 190 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 189 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkAnd : (term * term)  ->  term = (fun _96_217 -> (match (_96_217) with
 | (t1, t2) -> begin
@@ -835,7 +835,7 @@ end
 end)
 end))
 
-# 199 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 198 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkOr : (term * term)  ->  term = (fun _96_277 -> (match (_96_277) with
 | (t1, t2) -> begin
@@ -863,7 +863,7 @@ end
 end)
 end))
 
-# 208 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 207 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkImp : (term * term)  ->  term = (fun _96_337 -> (match (_96_337) with
 | (t1, t2) -> begin
@@ -885,62 +885,62 @@ end
 end)
 end))
 
-# 214 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 212 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mk_bin_op : op  ->  (term * term)  ->  term = (fun op _96_368 -> (match (_96_368) with
 | (t1, t2) -> begin
 (mkApp' (op, (t1)::(t2)::[]))
 end))
 
-# 215 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 214 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkMinus : term  ->  term = (fun t -> (mkApp' (Minus, (t)::[])))
 
-# 216 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 215 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkIff : (term * term)  ->  term = (mk_bin_op Iff)
 
-# 217 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 216 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkEq : (term * term)  ->  term = (mk_bin_op Eq)
 
-# 218 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 217 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkLT : (term * term)  ->  term = (mk_bin_op LT)
 
-# 219 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 218 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkLTE : (term * term)  ->  term = (mk_bin_op LTE)
 
-# 220 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 219 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkGT : (term * term)  ->  term = (mk_bin_op GT)
 
-# 221 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 220 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkGTE : (term * term)  ->  term = (mk_bin_op GTE)
 
-# 222 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 221 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkAdd : (term * term)  ->  term = (mk_bin_op Add)
 
-# 223 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 222 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkSub : (term * term)  ->  term = (mk_bin_op Sub)
 
-# 224 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 223 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkDiv : (term * term)  ->  term = (mk_bin_op Div)
 
-# 225 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 224 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkMul : (term * term)  ->  term = (mk_bin_op Mul)
 
-# 226 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 225 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkMod : (term * term)  ->  term = (mk_bin_op Mod)
 
-# 227 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 226 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkITE : (term * term * term)  ->  term = (fun _96_373 -> (match (_96_373) with
 | (t1, t2, t3) -> begin
@@ -961,7 +961,7 @@ end
 end)
 end))
 
-# 233 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 232 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkCases : term Prims.list  ->  term = (fun t -> (match (t) with
 | [] -> begin
@@ -971,7 +971,7 @@ end
 (FStar_List.fold_left (fun out t -> (mkAnd (out, t))) hd tl)
 end))
 
-# 237 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 235 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkQuant : (qop * pat Prims.list Prims.list * Prims.int Prims.option * sort Prims.list * term)  ->  term = (fun _96_418 -> (match (_96_418) with
 | (qop, pats, wopt, vars, body) -> begin
@@ -988,7 +988,7 @@ end)
 end
 end))
 
-# 246 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 241 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let abstr : fv Prims.list  ->  term  ->  term = (fun fvs t -> (let nvars = (FStar_List.length fvs)
 in (let index_of = (fun fv -> (match ((FStar_Util.try_find_index (fv_eq fv) fvs)) with
@@ -1037,7 +1037,7 @@ end)
 end))
 in (aux 0 t)))))
 
-# 271 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 269 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let inst : term Prims.list  ->  term  ->  term = (fun tms t -> (let n = (FStar_List.length tms)
 in (let rec aux = (fun shift t -> (match (t.tm) with
@@ -1072,7 +1072,7 @@ in (mkQuant _198_320))))
 end))
 in (aux 0 t))))
 
-# 288 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 286 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkQuant' : (qop * term Prims.list Prims.list * Prims.int Prims.option * fv Prims.list * term)  ->  term = (fun _96_506 -> (match (_96_506) with
 | (qop, pats, wopt, vars, body) -> begin
@@ -1083,60 +1083,60 @@ in (qop, _198_325, wopt, _198_324, _198_323))))
 in (mkQuant _198_326))
 end))
 
-# 289 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 288 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkForall'' : (pat Prims.list Prims.list * Prims.int Prims.option * sort Prims.list * term)  ->  term = (fun _96_511 -> (match (_96_511) with
 | (pats, wopt, sorts, body) -> begin
 (mkQuant (Forall, pats, wopt, sorts, body))
 end))
 
-# 290 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 289 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkForall' : (term Prims.list Prims.list * Prims.int Prims.option * fv Prims.list * term)  ->  term = (fun _96_516 -> (match (_96_516) with
 | (pats, wopt, vars, body) -> begin
 (mkQuant' (Forall, pats, wopt, vars, body))
 end))
 
-# 293 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 290 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkForall : (term Prims.list Prims.list * fv Prims.list * term)  ->  term = (fun _96_520 -> (match (_96_520) with
 | (pats, vars, body) -> begin
 (mkQuant' (Forall, pats, None, vars, body))
 end))
 
-# 294 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 293 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkExists : (term Prims.list Prims.list * fv Prims.list * term)  ->  term = (fun _96_524 -> (match (_96_524) with
 | (pats, vars, body) -> begin
 (mkQuant' (Exists, pats, None, vars, body))
 end))
 
-# 297 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 294 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 type caption =
 Prims.string Prims.option
 
-# 298 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 297 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 type binders =
 (Prims.string * sort) Prims.list
 
-# 299 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 298 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 type projector =
 (Prims.string * sort)
 
-# 300 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 299 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 type constructor_t =
 (Prims.string * projector Prims.list * sort * Prims.int)
 
-# 301 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 300 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 type constructors =
 constructor_t Prims.list
 
-# 302 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 301 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 type decl =
 | DefPrelude
@@ -1150,7 +1150,7 @@ type decl =
 | Pop
 | CheckSat
 
-# 303 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 303 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_DefPrelude = (fun _discr_ -> (match (_discr_) with
 | DefPrelude (_) -> begin
@@ -1160,7 +1160,7 @@ end
 false
 end))
 
-# 304 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 304 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_DeclFun = (fun _discr_ -> (match (_discr_) with
 | DeclFun (_) -> begin
@@ -1170,7 +1170,7 @@ end
 false
 end))
 
-# 305 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 305 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_DefineFun = (fun _discr_ -> (match (_discr_) with
 | DefineFun (_) -> begin
@@ -1180,7 +1180,7 @@ end
 false
 end))
 
-# 306 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 306 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_Assume = (fun _discr_ -> (match (_discr_) with
 | Assume (_) -> begin
@@ -1190,7 +1190,7 @@ end
 false
 end))
 
-# 307 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 307 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_Caption = (fun _discr_ -> (match (_discr_) with
 | Caption (_) -> begin
@@ -1200,7 +1200,7 @@ end
 false
 end))
 
-# 308 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 308 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_Eval = (fun _discr_ -> (match (_discr_) with
 | Eval (_) -> begin
@@ -1210,7 +1210,7 @@ end
 false
 end))
 
-# 309 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 309 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_Echo = (fun _discr_ -> (match (_discr_) with
 | Echo (_) -> begin
@@ -1220,7 +1220,7 @@ end
 false
 end))
 
-# 310 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 310 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_Push = (fun _discr_ -> (match (_discr_) with
 | Push (_) -> begin
@@ -1230,7 +1230,7 @@ end
 false
 end))
 
-# 311 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 311 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_Pop = (fun _discr_ -> (match (_discr_) with
 | Pop (_) -> begin
@@ -1240,7 +1240,7 @@ end
 false
 end))
 
-# 312 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 312 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let is_CheckSat = (fun _discr_ -> (match (_discr_) with
 | CheckSat (_) -> begin
@@ -1250,54 +1250,54 @@ end
 false
 end))
 
-# 304 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 304 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let ___DeclFun____0 : decl  ->  (Prims.string * sort Prims.list * sort * caption) = (fun projectee -> (match (projectee) with
 | DeclFun (_96_527) -> begin
 _96_527
 end))
 
-# 305 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 305 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let ___DefineFun____0 : decl  ->  (Prims.string * sort Prims.list * sort * term * caption) = (fun projectee -> (match (projectee) with
 | DefineFun (_96_530) -> begin
 _96_530
 end))
 
-# 306 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 306 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let ___Assume____0 : decl  ->  (term * caption) = (fun projectee -> (match (projectee) with
 | Assume (_96_533) -> begin
 _96_533
 end))
 
-# 307 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 307 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let ___Caption____0 : decl  ->  Prims.string = (fun projectee -> (match (projectee) with
 | Caption (_96_536) -> begin
 _96_536
 end))
 
-# 308 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 308 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let ___Eval____0 : decl  ->  term = (fun projectee -> (match (projectee) with
 | Eval (_96_539) -> begin
 _96_539
 end))
 
-# 309 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 309 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let ___Echo____0 : decl  ->  Prims.string = (fun projectee -> (match (projectee) with
 | Echo (_96_542) -> begin
 _96_542
 end))
 
-# 313 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 312 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 type decls_t =
 decl Prims.list
 
-# 315 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 313 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mkDefineFun : (Prims.string * (Prims.string * sort) Prims.list * sort * term * caption)  ->  decl = (fun _96_548 -> (match (_96_548) with
 | (nm, vars, s, tm, c) -> begin
@@ -1307,12 +1307,12 @@ in (nm, _198_426, s, _198_425, c)))
 in DefineFun (_198_427))
 end))
 
-# 316 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 315 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let constr_id_of_sort : sort  ->  Prims.string = (fun sort -> (let _198_430 = (strSort sort)
 in (FStar_Util.format1 "%s_constr_id" _198_430)))
 
-# 317 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 316 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let fresh_token : (Prims.string * sort)  ->  Prims.int  ->  decl = (fun _96_552 id -> (match (_96_552) with
 | (tok_name, sort) -> begin
@@ -1328,7 +1328,7 @@ in (_198_442, Some ("fresh token")))
 in Assume (_198_443))
 end))
 
-# 320 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 318 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let constructor_to_decl : (Prims.string * (Prims.string * sort) Prims.list * sort * Prims.int)  ->  decl Prims.list = (fun _96_558 -> (match (_96_558) with
 | (name, projectors, sort, id) -> begin
@@ -1401,7 +1401,7 @@ in (_198_492)::[])
 in (FStar_List.append _198_494 _198_493)))))))))))))))))))))))
 end))
 
-# 352 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 346 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let name_binders_inner : (Prims.string * sort) Prims.list  ->  Prims.int  ->  sort Prims.list  ->  ((Prims.string * sort) Prims.list * Prims.string Prims.list * Prims.int) = (fun outer_names start sorts -> (let _96_614 = (FStar_All.pipe_right sorts (FStar_List.fold_left (fun _96_602 s -> (match (_96_602) with
 | (names, binders, n) -> begin
@@ -1424,7 +1424,7 @@ in (match (_96_614) with
 (names, (FStar_List.rev binders), n)
 end)))
 
-# 364 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 362 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let name_binders : sort Prims.list  ->  ((Prims.string * sort) Prims.list * Prims.string Prims.list) = (fun sorts -> (let _96_619 = (name_binders_inner [] 0 sorts)
 in (match (_96_619) with
@@ -1432,7 +1432,7 @@ in (match (_96_619) with
 ((FStar_List.rev names), binders)
 end)))
 
-# 368 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 366 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let termToSmt : term  ->  Prims.string = (fun t -> (let rec aux = (fun n names t -> (match (t.tm) with
 | Integer (i) -> begin
@@ -1486,7 +1486,7 @@ end))
 end))
 in (aux 0 [] t)))
 
-# 392 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 389 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let caption_to_string : Prims.string Prims.option  ->  Prims.string = (fun _96_6 -> (match (_96_6) with
 | None -> begin
@@ -1509,7 +1509,7 @@ in (match (_96_688) with
 end))
 end))
 
-# 401 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 399 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let rec declToSmt : Prims.string  ->  decl  ->  Prims.string = (fun z3options decl -> (match (decl) with
 | DefPrelude -> begin
@@ -1572,58 +1572,58 @@ in (FStar_All.pipe_right _198_547 (FStar_String.concat "\n")))
 in (let lex_ordering = "\n(define-fun is-Prims.LexCons ((t Term)) Bool \n(is-LexCons t))\n(assert (forall ((x1 Term) (x2 Term) (y1 Term) (y2 Term))\n(iff (Valid (Precedes (LexCons x1 x2) (LexCons y1 y2)))\n(or (Valid (Precedes x1 y1))\n(and (= x1 y1)\n(Valid (Precedes x2 y2)))))))\n"
 in (Prims.strcat (Prims.strcat basic bcons) lex_ordering))))))
 
-# 491 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 489 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mk_Term_type : term = (mkApp ("Tm_type", []))
 
-# 492 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 491 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mk_Term_app : term  ->  term  ->  term = (fun t1 t2 -> (mkApp ("Tm_app", (t1)::(t2)::[])))
 
-# 493 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 492 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mk_Term_uvar : Prims.int  ->  term = (fun i -> (let _198_556 = (let _198_555 = (let _198_554 = (mkInteger' i)
 in (_198_554)::[])
 in ("Tm_uvar", _198_555))
 in (mkApp _198_556)))
 
-# 494 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 493 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mk_Term_unit : term = (mkApp ("Tm_unit", []))
 
-# 495 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 494 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let boxInt : term  ->  term = (fun t -> (mkApp ("BoxInt", (t)::[])))
 
-# 496 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 495 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let unboxInt : term  ->  term = (fun t -> (mkApp ("BoxInt_proj_0", (t)::[])))
 
-# 497 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 496 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let boxBool : term  ->  term = (fun t -> (mkApp ("BoxBool", (t)::[])))
 
-# 498 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 497 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let unboxBool : term  ->  term = (fun t -> (mkApp ("BoxBool_proj_0", (t)::[])))
 
-# 499 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 498 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let boxString : term  ->  term = (fun t -> (mkApp ("BoxString", (t)::[])))
 
-# 500 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 499 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let unboxString : term  ->  term = (fun t -> (mkApp ("BoxString_proj_0", (t)::[])))
 
-# 501 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 500 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let boxRef : term  ->  term = (fun t -> (mkApp ("BoxRef", (t)::[])))
 
-# 502 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 501 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let unboxRef : term  ->  term = (fun t -> (mkApp ("BoxRef_proj_0", (t)::[])))
 
-# 503 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 502 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let boxTerm : sort  ->  term  ->  term = (fun sort t -> (match (sort) with
 | Int_sort -> begin
@@ -1642,7 +1642,7 @@ end
 (Prims.raise FStar_Util.Impos)
 end))
 
-# 509 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 508 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let unboxTerm : sort  ->  term  ->  term = (fun sort t -> (match (sort) with
 | Int_sort -> begin
@@ -1661,11 +1661,11 @@ end
 (Prims.raise FStar_Util.Impos)
 end))
 
-# 516 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 514 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mk_PreType : term  ->  term = (fun t -> (mkApp ("PreType", (t)::[])))
 
-# 517 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 516 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mk_Valid : term  ->  term = (fun t -> (match (t.tm) with
 | App (Var ("Prims.b2t"), {tm = App (Var ("Prims.op_Equality"), _96_773::t1::t2::[]); hash = _96_767; freevars = _96_765}::[]) -> begin
@@ -1722,19 +1722,19 @@ end
 (mkApp ("Valid", (t)::[]))
 end))
 
-# 529 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 528 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mk_HasType : term  ->  term  ->  term = (fun v t -> (mkApp ("HasType", (v)::(t)::[])))
 
-# 530 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 529 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mk_HasTypeZ : term  ->  term  ->  term = (fun v t -> (mkApp ("HasTypeZ", (v)::(t)::[])))
 
-# 531 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 530 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mk_IsTyped : term  ->  term = (fun v -> (mkApp ("IsTyped", (v)::[])))
 
-# 532 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 531 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mk_HasTypeFuel : term  ->  term  ->  term  ->  term = (fun f v t -> if (FStar_ST.read FStar_Options.unthrottle_inductives) then begin
 (mk_HasType v t)
@@ -1742,7 +1742,7 @@ end else begin
 (mkApp ("HasTypeFuel", (f)::(v)::(t)::[]))
 end)
 
-# 536 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 535 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mk_HasTypeWithFuel : term Prims.option  ->  term  ->  term  ->  term = (fun f v t -> (match (f) with
 | None -> begin
@@ -1752,43 +1752,43 @@ end
 (mk_HasTypeFuel f v t)
 end))
 
-# 539 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 538 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mk_Destruct : term  ->  term = (fun v -> (mkApp ("Destruct", (v)::[])))
 
-# 540 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 539 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mk_Rank : term  ->  term = (fun x -> (mkApp ("Rank", (x)::[])))
 
-# 541 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 540 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mk_tester : Prims.string  ->  term  ->  term = (fun n t -> (mkApp ((Prims.strcat "is-" n), (t)::[])))
 
-# 542 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 541 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mk_ApplyTF : term  ->  term  ->  term = (fun t t' -> (mkApp ("ApplyTF", (t)::(t')::[])))
 
-# 543 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 542 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mk_ApplyTT : term  ->  term  ->  term = (fun t t' -> (mkApp ("ApplyTT", (t)::(t')::[])))
 
-# 544 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 543 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mk_String_const : Prims.int  ->  term = (fun i -> (let _198_647 = (let _198_646 = (let _198_645 = (mkInteger' i)
 in (_198_645)::[])
 in ("String_const", _198_646))
 in (mkApp _198_647)))
 
-# 545 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 544 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mk_Precedes : term  ->  term  ->  term = (fun x1 x2 -> (let _198_652 = (mkApp ("Precedes", (x1)::(x2)::[]))
 in (FStar_All.pipe_right _198_652 mk_Valid)))
 
-# 546 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 545 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mk_LexCons : term  ->  term  ->  term = (fun x1 x2 -> (mkApp ("LexCons", (x1)::(x2)::[])))
 
-# 547 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 546 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let rec n_fuel : Prims.int  ->  term = (fun n -> if (n = 0) then begin
 (mkApp ("ZFuel", []))
@@ -1799,15 +1799,15 @@ in ("SFuel", _198_660))
 in (mkApp _198_661))
 end)
 
-# 550 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 549 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let fuel_2 : term = (n_fuel 2)
 
-# 551 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 550 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let fuel_100 : term = (n_fuel 100)
 
-# 553 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 551 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mk_and_opt : term Prims.option  ->  term Prims.option  ->  term Prims.option = (fun p1 p2 -> (match ((p1, p2)) with
 | (Some (p1), Some (p2)) -> begin
@@ -1821,11 +1821,11 @@ end
 None
 end))
 
-# 559 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 557 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mk_and_opt_l : term Prims.option Prims.list  ->  term Prims.option = (fun pl -> (FStar_List.fold_left (fun out p -> (mk_and_opt p out)) None pl))
 
-# 562 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 560 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mk_and_l : term Prims.list  ->  term = (fun l -> (match (l) with
 | [] -> begin
@@ -1835,7 +1835,7 @@ end
 (FStar_List.fold_left (fun p1 p2 -> (mkAnd (p1, p2))) hd tl)
 end))
 
-# 566 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 564 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let mk_or_l : term Prims.list  ->  term = (fun l -> (match (l) with
 | [] -> begin
@@ -1845,7 +1845,7 @@ end
 (FStar_List.fold_left (fun p1 p2 -> (mkOr (p1, p2))) hd tl)
 end))
 
-# 571 "D:\\workspace\\universes\\FStar\\src\\smtencoding\\term.fs"
+# 568 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\term.fs"
 
 let rec print_smt_term : term  ->  Prims.string = (fun t -> (match (t.tm) with
 | Integer (n) -> begin

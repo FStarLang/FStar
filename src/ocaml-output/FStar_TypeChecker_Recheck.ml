@@ -1,49 +1,49 @@
 
 open Prims
-# 35 "D:\\workspace\\universes\\FStar\\src\\typechecker\\recheck.fs"
+# 33 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\typechecker\\recheck.fs"
 
 let tconst : FStar_Ident.lident  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun l -> (let _189_5 = (let _189_4 = (let _189_3 = (FStar_Ident.set_lid_range l FStar_Range.dummyRange)
 in (FStar_Syntax_Syntax.lid_as_fv _189_3 None))
 in FStar_Syntax_Syntax.Tm_fvar (_189_4))
 in (FStar_Syntax_Syntax.mk _189_5 (Some (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n)) FStar_Range.dummyRange)))
 
-# 36 "D:\\workspace\\universes\\FStar\\src\\typechecker\\recheck.fs"
+# 35 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\typechecker\\recheck.fs"
 
 let t_unit : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.unit_lid)
 
-# 37 "D:\\workspace\\universes\\FStar\\src\\typechecker\\recheck.fs"
+# 36 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\typechecker\\recheck.fs"
 
 let t_bool : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.bool_lid)
 
-# 38 "D:\\workspace\\universes\\FStar\\src\\typechecker\\recheck.fs"
+# 37 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\typechecker\\recheck.fs"
 
 let t_uint8 : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.uint8_lid)
 
-# 39 "D:\\workspace\\universes\\FStar\\src\\typechecker\\recheck.fs"
+# 38 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\typechecker\\recheck.fs"
 
 let t_int : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.int_lid)
 
-# 40 "D:\\workspace\\universes\\FStar\\src\\typechecker\\recheck.fs"
+# 39 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\typechecker\\recheck.fs"
 
 let t_int32 : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.int32_lid)
 
-# 41 "D:\\workspace\\universes\\FStar\\src\\typechecker\\recheck.fs"
+# 40 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\typechecker\\recheck.fs"
 
 let t_int64 : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.int64_lid)
 
-# 42 "D:\\workspace\\universes\\FStar\\src\\typechecker\\recheck.fs"
+# 41 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\typechecker\\recheck.fs"
 
 let t_string : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.string_lid)
 
-# 43 "D:\\workspace\\universes\\FStar\\src\\typechecker\\recheck.fs"
+# 42 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\typechecker\\recheck.fs"
 
 let t_float : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.float_lid)
 
-# 44 "D:\\workspace\\universes\\FStar\\src\\typechecker\\recheck.fs"
+# 43 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\typechecker\\recheck.fs"
 
 let t_char : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.char_lid)
 
-# 46 "D:\\workspace\\universes\\FStar\\src\\typechecker\\recheck.fs"
+# 44 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\typechecker\\recheck.fs"
 
 let typing_const : FStar_Range.range  ->  FStar_Const.sconst  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun r s -> (match (s) with
 | FStar_Const.Const_unit -> begin
@@ -80,7 +80,7 @@ end
 (Prims.raise (FStar_Syntax_Syntax.Error (("Unsupported constant", r))))
 end))
 
-# 61 "D:\\workspace\\universes\\FStar\\src\\typechecker\\recheck.fs"
+# 57 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\typechecker\\recheck.fs"
 
 let rec check : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax  ->  FStar_Syntax_Syntax.term = (fun t -> (let recompute = (fun t -> (match (t.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Tm_delayed (_87_36) -> begin

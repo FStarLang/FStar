@@ -271,6 +271,7 @@ type lcomp = {
     cflags: list<cflags>;
     comp: unit -> comp //a lazy computation
     }
+// VALS_HACK_HERE
 (*********************************************************************************)
 (* Identifiers to/from strings *)
 (*********************************************************************************)
