@@ -38,7 +38,7 @@ assume val lemma_repr_bytes_values: n:nat ->
 
 type byte = uint8
 type cbytes = string
-type bytes = Seq.seq byte
+opaque type bytes = Seq.seq byte
 
 let op_At_Bar (b1:bytes) (b2:bytes) = Seq.append b1 b2
 
