@@ -1,10 +1,12 @@
-OCAMLC = ocamlfind c -g -annot
-OCAMLOPT = ocamlfind opt -g -annot
-OCAMLMKLIB = ocamlfind mklib
-OCAMLDEP = ocamlfind dep
-
 FSTAR_HOME = ../../..
 PLATFORM = $(FSTAR_HOME)/contrib/Platform/ml
+DB=db
+INCLUDE=-I $(PLATFORM) -I $(DB)
+
+OCAMLC = ocamlfind c $(INCLUDE) -g -annot
+OCAMLOPT = ocamlfind opt $(INCLUDE) -g -annot
+OCAMLMKLIB = ocamlfind mklib $(INCLUDE)
+OCAMLDEP = ocamlfind dep
 
 CCOPTS = $(addprefix -ccopt ,-Wall -DDEBUG -std=c11 -D__USE_MINGW_ANSI_STDIO)
 
@@ -26,13 +28,13 @@ else
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Darwin)
         CC = -cc gcc-5
-		EXTRA_OPTS = -ccopt -L. -I /usr/local/opt/openssl/include -I /opt/local/include/openssl
-		EXTRA_LIBS = -L /usr/local/opt/openssl/lib -L /opt/local/lib
-		ARCH = osx
+        EXTRA_OPTS = -ccopt -L. -I /usr/local/opt/openssl/include -I /opt/local/include/openssl
+        EXTRA_LIBS = -L /usr/local/opt/openssl/lib -L /opt/local/lib
+        ARCH = osx
     else
         CC = -cc gcc
         EXTRA_OPTS = -ccopt -fPIC -ccopt -L.
-		ARCH = x86_64
+        ARCH = x86_64
     endif
 endif
 
@@ -43,29 +45,27 @@ all: CoreCrypto.cmxa
 %.o: %.c
 	$(OCAMLOPT) $(CC) $(CCOPTS) $(EXTRA_OPTS) -c $<
 
+%.cmi: %.mli
+	$(OCAMLC) -c $<
+
+%.cmo: %.ml
+	$(OCAMLC) -c $<
+
+%.cmx: %.ml
+	$(OCAMLOPT) -c $<
+
 $(PLATFORM)/platform.cmx: $(PLATFORM)/platform.ml
 	$(MAKE) -C $(PLATFORM)
 
-DLL_OBJ = $(PLATFORM)/platform.cmx CoreCrypto.cmx openssl_stub.o
-
+DLL_OBJ = $(PLATFORM)/platform.cmx CoreCrypto.cmx openssl_stub.o DHDB.cmx $(DB)/DB.cmx
 CoreCrypto.cmxa: $(DLL_OBJ)
 	$(OCAMLMKLIB) -lcrypto  $(EXTRA_LIBS) -o CoreCrypto $^
 
-DLL_DEBUG = $(PLATFORM)/platform.cmo CoreCrypto.cmo openssl_stub.o
-CoreCrypto.cma: $(DLL_DEBUG)
+DLL_BYTE = $(PLATFORM)/platform.cmo CoreCrypto.cmo openssl_stub.o DHDB.cmo $(DB)/DB.cmo
+CoreCrypto.cma: $(DLL_BYTE)
 	$(OCAMLMKLIB) -lcrypto  $(EXTRA_LIBS) -o CoreCrypto $^
 
-%.cmi: %.mli
-	$(OCAMLC) -I $(PLATFORM) -c $<
-
-%.cmo: %.ml
-	$(OCAMLC) -I $(PLATFORM) -c $<
-
-%.cmx: %.ml
-	$(OCAMLOPT) -I $(PLATFORM) -c $<
-
 TEST_CMX = Tests.cmx
-
 Tests$(EXE): $(TEST_CMX) CoreCrypto.cmxa
 	$(OCAMLOPT) $(EXTRA_OPTS) -I $(PLATFORM) -package batteries -linkpkg -o $@ \
 	CoreCrypto.cmxa $(TEST_CMX)
