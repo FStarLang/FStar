@@ -277,10 +277,8 @@ let pat_as_exps allow_implicits env p
                                         | Pat_dot_typ _ -> pats'
                                         | _ -> pats in
                                     (p1, as_imp imp)::aux formals' pats'
-                                | (Inr _, Some (Implicit dot)), _ when p_imp ->
-                                    if dot 
-                                    then raise (Error("This pattern is inaccessible and will be implicitly bound; do not write it explicitly", p.p))
-                                    else (p, true)::aux formals' pats'
+                                | (Inr _, Some (Implicit false)), _ when p_imp ->
+                                    (p, true)::aux formals' pats'
                                 | (Inr _, Some (Implicit dot)), _ ->
                                     let a = Util.gen_bvar tun in
                                     let p = 
