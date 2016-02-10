@@ -1272,6 +1272,8 @@ let mk_indexed_projectors fvq refine_domain env (tc, tps, k) lid (formals:list<b
                         | Inr _, imp ->
                             if i+ntps=j  //this is the one to project
                             then [pos (Pat_var projection), as_imp imp]
+                            else if j < ntps
+                            then [] //this is an inaccessible pattern 
                             else [pos (Pat_wild (Util.gen_bvar tun)), as_imp imp]) |> List.flatten in
                      let pat = (Syntax.Pat_cons(Util.fv lid, Some fvq, arg_pats) |> pos, None, Util.bvar_to_exp projection) in
                      let body = mk_Exp_match(arg_exp, [pat]) None p in
