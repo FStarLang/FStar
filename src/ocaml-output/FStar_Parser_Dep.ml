@@ -1,11 +1,11 @@
 
 open Prims
-# 34 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dep.fs"
+# 36 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dep.fs"
 
 type map =
 Prims.string FStar_Util.smap
 
-# 36 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dep.fs"
+# 38 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dep.fs"
 
 let check_and_strip_suffix : Prims.string  ->  Prims.string Prims.option = (fun f -> (let suffixes = (".fsti")::(".fst")::(".fsi")::(".fs")::[]
 in (let matches = (FStar_List.map (fun ext -> (let lext = (FStar_String.length ext)
@@ -24,11 +24,11 @@ end
 None
 end))))
 
-# 52 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dep.fs"
+# 55 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dep.fs"
 
 let is_interface : Prims.string  ->  Prims.bool = (fun f -> ((FStar_String.get f ((FStar_String.length f) - 1)) = 'i'))
 
-# 56 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dep.fs"
+# 58 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dep.fs"
 
 let print_map : map  ->  Prims.unit = (fun m -> (let _174_13 = (let _174_12 = (FStar_Util.smap_keys m)
 in (FStar_List.unique _174_12))
@@ -36,7 +36,7 @@ in (FStar_List.iter (fun k -> (let _174_11 = (let _174_10 = (FStar_Util.smap_try
 in (FStar_Util.must _174_10))
 in (FStar_Util.print2 "%s: %s\n" k _174_11))) _174_13)))
 
-# 61 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dep.fs"
+# 64 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dep.fs"
 
 let lowercase_module_name : Prims.string  ->  Prims.string = (fun f -> (match ((let _174_16 = (FStar_Util.basename f)
 in (check_and_strip_suffix _174_16))) with
@@ -49,7 +49,7 @@ in FStar_Absyn_Syntax.Err (_174_17))
 in (Prims.raise _174_18))
 end))
 
-# 69 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dep.fs"
+# 74 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dep.fs"
 
 let build_map : Prims.string Prims.list  ->  map = (fun filenames -> (let include_directories = (FStar_Options.get_include_path ())
 in (let include_directories = (FStar_List.map FStar_Util.normalize_file_path include_directories)
@@ -104,7 +104,7 @@ in (let _72_55 = (FStar_List.iter (fun f -> (let _174_29 = (lowercase_module_nam
 in (FStar_Util.smap_add map _174_29 f))) filenames)
 in map))))))))
 
-# 109 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dep.fs"
+# 115 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dep.fs"
 
 let enter_namespace : map  ->  map  ->  Prims.string  ->  Prims.bool = (fun original_map working_map prefix -> (let found = (FStar_ST.alloc false)
 in (let prefix = (Prims.strcat prefix ".")
@@ -121,7 +121,7 @@ end else begin
 end) _174_39))
 in (FStar_ST.read found)))))
 
-# 127 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dep.fs"
+# 130 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dep.fs"
 
 let string_of_lid : FStar_Ident.lident  ->  Prims.bool  ->  Prims.string = (fun l last -> (let suffix = if last then begin
 (l.FStar_Ident.ident.FStar_Ident.idText)::[]
@@ -132,12 +132,12 @@ in (let names = (let _174_45 = (FStar_List.map (fun x -> x.FStar_Ident.idText) l
 in (FStar_List.append _174_45 suffix))
 in (FStar_String.concat "." names))))
 
-# 133 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dep.fs"
+# 137 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dep.fs"
 
 let lowercase_join_longident : FStar_Ident.lident  ->  Prims.bool  ->  Prims.string = (fun l last -> (let _174_50 = (string_of_lid l last)
 in (FStar_String.lowercase _174_50)))
 
-# 138 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dep.fs"
+# 141 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dep.fs"
 
 let check_module_declaration_against_filename : FStar_Ident.lident  ->  Prims.string  ->  Prims.unit = (fun lid filename -> (let k' = (lowercase_join_longident lid true)
 in if ((let _174_57 = (let _174_56 = (let _174_55 = (FStar_Util.basename filename)
@@ -151,11 +151,11 @@ end else begin
 ()
 end))
 
-# 148 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dep.fs"
+# 148 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dep.fs"
 
 exception Exit
 
-# 148 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dep.fs"
+# 148 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dep.fs"
 
 let is_Exit = (fun _discr_ -> (match (_discr_) with
 | Exit (_) -> begin
@@ -165,7 +165,7 @@ end
 false
 end))
 
-# 148 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dep.fs"
+# 152 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dep.fs"
 
 let collect_one : Prims.string FStar_Util.smap  ->  Prims.string  ->  Prims.string Prims.list = (fun original_map filename -> (let deps = (FStar_ST.alloc [])
 in (let add_dep = (fun d -> if (not ((let _174_68 = (FStar_ST.read deps)
@@ -454,14 +454,14 @@ in (let ast = (FStar_Parser_Driver.parse_file_raw filename)
 in (let _72_512 = (collect_file ast)
 in (FStar_ST.read deps)))))))))))
 
-# 397 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dep.fs"
+# 399 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dep.fs"
 
 type color =
 | White
 | Gray
 | Black
 
-# 399 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dep.fs"
+# 399 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dep.fs"
 
 let is_White = (fun _discr_ -> (match (_discr_) with
 | White (_) -> begin
@@ -471,7 +471,7 @@ end
 false
 end))
 
-# 399 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dep.fs"
+# 399 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dep.fs"
 
 let is_Gray = (fun _discr_ -> (match (_discr_) with
 | Gray (_) -> begin
@@ -481,7 +481,7 @@ end
 false
 end))
 
-# 399 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dep.fs"
+# 399 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dep.fs"
 
 let is_Black = (fun _discr_ -> (match (_discr_) with
 | Black (_) -> begin
@@ -491,7 +491,7 @@ end
 false
 end))
 
-# 399 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dep.fs"
+# 402 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dep.fs"
 
 let collect : Prims.string Prims.list  ->  ((Prims.string * Prims.string Prims.list) Prims.list * Prims.string Prims.list) = (fun filenames -> (let graph = (FStar_Util.smap_create 41)
 in (let m = (build_map filenames)
@@ -557,7 +557,7 @@ in (let topologically_sorted = (let _174_170 = (FStar_ST.read topologically_sort
 in (FStar_List.map must_find _174_170))
 in (by_target, topologically_sorted))))))))))))
 
-# 468 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dep.fs"
+# 473 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dep.fs"
 
 let print_make : (Prims.string * Prims.string Prims.list) Prims.list  ->  Prims.unit = (fun deps -> (FStar_List.iter (fun _72_562 -> (match (_72_562) with
 | (f, deps) -> begin
@@ -565,11 +565,11 @@ let print_make : (Prims.string * Prims.string Prims.list) Prims.list  ->  Prims.
 in (FStar_Util.print2 "%s: %s\n" f (FStar_String.concat " " deps)))
 end)) deps))
 
-# 477 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dep.fs"
+# 479 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dep.fs"
 
 let print_nubuild : Prims.string Prims.list  ->  Prims.unit = (fun l -> (FStar_List.iter FStar_Util.print_endline (FStar_List.rev l)))
 
-# 480 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dep.fs"
+# 482 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dep.fs"
 
 let print : ((Prims.string * Prims.string Prims.list) Prims.list * Prims.string Prims.list)  ->  Prims.unit = (fun deps -> (match ((FStar_ST.read FStar_Options.dep)) with
 | Some ("nubuild") -> begin

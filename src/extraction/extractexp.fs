@@ -153,14 +153,12 @@ let extract_pat (g:env) p : (env * list<(mlpattern * option<mlexpr>)>) =
             let g = Env.extend_bv g x ([], mlty) false false imp in
             g, (if imp then None else Some (MLP_Var (as_mlident x.v), []))
 
-          | Pat_dot_term _ ->
-            g, Some (MLP_Wild, [])
-
           | Pat_tvar a ->
             let mlty = MLTY_Top in
             let g = Env.extend_ty g a (Some mlty) in
             g, (if imp then None else Some (MLP_Wild, []))
 
+          | Pat_dot_term _
           | Pat_dot_typ _
           | Pat_twild _ ->
             g, None in

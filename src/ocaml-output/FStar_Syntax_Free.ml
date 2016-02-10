@@ -1,35 +1,35 @@
 
 open Prims
-# 24 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\syntax\\free.fs"
+# 29 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\syntax\\free.fs"
 
 let no_free_vars : FStar_Syntax_Syntax.free_vars = {FStar_Syntax_Syntax.free_names = FStar_Syntax_Syntax.no_names; FStar_Syntax_Syntax.free_uvars = FStar_Syntax_Syntax.no_uvs; FStar_Syntax_Syntax.free_univs = FStar_Syntax_Syntax.no_universe_uvars}
 
-# 33 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\syntax\\free.fs"
+# 34 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\syntax\\free.fs"
 
 let singleton_bv : FStar_Syntax_Syntax.bv  ->  FStar_Syntax_Syntax.free_vars = (fun x -> (let _139_4 = (let _139_3 = (FStar_Syntax_Syntax.new_bv_set ())
 in (FStar_Util.set_add x _139_3))
 in {FStar_Syntax_Syntax.free_names = _139_4; FStar_Syntax_Syntax.free_uvars = FStar_Syntax_Syntax.no_uvs; FStar_Syntax_Syntax.free_univs = FStar_Syntax_Syntax.no_universe_uvars}))
 
-# 38 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\syntax\\free.fs"
+# 39 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\syntax\\free.fs"
 
 let singleton_uv : ((FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax FStar_Syntax_Syntax.uvar_basis FStar_Unionfind.uvar * (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax)  ->  FStar_Syntax_Syntax.free_vars = (fun x -> (let _139_8 = (let _139_7 = (FStar_Syntax_Syntax.new_uv_set ())
 in (FStar_Util.set_add x _139_7))
 in {FStar_Syntax_Syntax.free_names = FStar_Syntax_Syntax.no_names; FStar_Syntax_Syntax.free_uvars = _139_8; FStar_Syntax_Syntax.free_univs = FStar_Syntax_Syntax.no_universe_uvars}))
 
-# 43 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\syntax\\free.fs"
+# 44 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\syntax\\free.fs"
 
 let singleton_univ : FStar_Syntax_Syntax.universe Prims.option FStar_Unionfind.uvar  ->  FStar_Syntax_Syntax.free_vars = (fun x -> (let _139_12 = (let _139_11 = (FStar_Syntax_Syntax.new_universe_uvar_set ())
 in (FStar_Util.set_add x _139_11))
 in {FStar_Syntax_Syntax.free_names = FStar_Syntax_Syntax.no_names; FStar_Syntax_Syntax.free_uvars = FStar_Syntax_Syntax.no_uvs; FStar_Syntax_Syntax.free_univs = _139_12}))
 
-# 48 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\syntax\\free.fs"
+# 49 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\syntax\\free.fs"
 
 let union : FStar_Syntax_Syntax.free_vars  ->  FStar_Syntax_Syntax.free_vars  ->  FStar_Syntax_Syntax.free_vars = (fun f1 f2 -> (let _139_19 = (FStar_Util.set_union f1.FStar_Syntax_Syntax.free_names f2.FStar_Syntax_Syntax.free_names)
 in (let _139_18 = (FStar_Util.set_union f1.FStar_Syntax_Syntax.free_uvars f2.FStar_Syntax_Syntax.free_uvars)
 in (let _139_17 = (FStar_Util.set_union f1.FStar_Syntax_Syntax.free_univs f2.FStar_Syntax_Syntax.free_univs)
 in {FStar_Syntax_Syntax.free_names = _139_19; FStar_Syntax_Syntax.free_uvars = _139_18; FStar_Syntax_Syntax.free_univs = _139_17}))))
 
-# 53 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\syntax\\free.fs"
+# 55 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\syntax\\free.fs"
 
 let rec free_univs : FStar_Syntax_Syntax.universe  ->  FStar_Syntax_Syntax.free_vars = (fun u -> (match ((FStar_Syntax_Subst.compress_univ u)) with
 | (FStar_Syntax_Syntax.U_zero) | (FStar_Syntax_Syntax.U_bvar (_)) | (FStar_Syntax_Syntax.U_name (_)) | (FStar_Syntax_Syntax.U_unknown) -> begin
@@ -50,7 +50,7 @@ end else begin
 end
 end))
 
-# 62 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\syntax\\free.fs"
+# 64 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\syntax\\free.fs"
 
 let rec free_names_and_uvs' : FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.free_vars = (fun tm -> (let aux_binders = (fun bs acc -> (FStar_All.pipe_right bs (FStar_List.fold_left (fun n _37_31 -> (match (_37_31) with
 | (x, _37_30) -> begin
@@ -200,22 +200,22 @@ end
 false
 end)))))))
 
-# 167 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\syntax\\free.fs"
+# 169 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\syntax\\free.fs"
 
 let names : FStar_Syntax_Syntax.term  ->  (FStar_Syntax_Syntax.bv Prims.list * (FStar_Syntax_Syntax.bv  ->  FStar_Syntax_Syntax.bv  ->  Prims.bool)) = (fun t -> (let _139_94 = (free_names_and_uvars t)
 in _139_94.FStar_Syntax_Syntax.free_names))
 
-# 169 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\syntax\\free.fs"
+# 170 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\syntax\\free.fs"
 
 let uvars : FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.uvars = (fun t -> (let _139_97 = (free_names_and_uvars t)
 in _139_97.FStar_Syntax_Syntax.free_uvars))
 
-# 170 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\syntax\\free.fs"
+# 171 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\syntax\\free.fs"
 
 let univs : FStar_Syntax_Syntax.term  ->  (FStar_Syntax_Syntax.universe_uvar Prims.list * (FStar_Syntax_Syntax.universe_uvar  ->  FStar_Syntax_Syntax.universe_uvar  ->  Prims.bool)) = (fun t -> (let _139_106 = (free_names_and_uvars t)
 in _139_106.FStar_Syntax_Syntax.free_univs))
 
-# 171 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\syntax\\free.fs"
+# 172 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\syntax\\free.fs"
 
 let names_of_binders : FStar_Syntax_Syntax.binders  ->  (FStar_Syntax_Syntax.bv Prims.list * (FStar_Syntax_Syntax.bv  ->  FStar_Syntax_Syntax.bv  ->  Prims.bool)) = (fun bs -> (let _139_115 = (free_names_and_uvars_binders bs no_free_vars)
 in _139_115.FStar_Syntax_Syntax.free_names))

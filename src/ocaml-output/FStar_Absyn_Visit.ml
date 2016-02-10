@@ -1,10 +1,10 @@
 
 open Prims
-# 24 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\absyn\\visit.fs"
+# 26 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\visit.fs"
 
 let log = (fun s -> ())
 
-# 26 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\absyn\\visit.fs"
+# 30 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\visit.fs"
 
 let rec compress_typ_aux : Prims.bool  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (fun pos typ -> (match (typ.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Typ_uvar (uv, k) -> begin
@@ -44,15 +44,15 @@ end
 typ
 end))
 
-# 49 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\absyn\\visit.fs"
+# 50 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\visit.fs"
 
 let compress_typ : (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (fun typ -> (compress_typ_aux true typ))
 
-# 50 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\absyn\\visit.fs"
+# 51 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\visit.fs"
 
 let compress_typ_uvars : (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (fun typ -> (compress_typ_aux false typ))
 
-# 51 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\absyn\\visit.fs"
+# 53 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\visit.fs"
 
 let rec compress_exp_aux : Prims.bool  ->  (FStar_Absyn_Syntax.exp', (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  (FStar_Absyn_Syntax.exp', (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (fun meta exp -> (match (exp.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Exp_uvar (uv, _27_64) -> begin
@@ -91,15 +91,15 @@ end
 exp
 end))
 
-# 71 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\absyn\\visit.fs"
+# 72 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\visit.fs"
 
 let compress_exp : (FStar_Absyn_Syntax.exp', (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  (FStar_Absyn_Syntax.exp', (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (fun e -> (compress_exp_aux true e))
 
-# 72 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\absyn\\visit.fs"
+# 73 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\visit.fs"
 
 let compress_exp_uvars : (FStar_Absyn_Syntax.exp', (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  (FStar_Absyn_Syntax.exp', (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (fun e -> (compress_exp_aux false e))
 
-# 73 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\absyn\\visit.fs"
+# 75 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\visit.fs"
 
 let rec compress_kind : (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax  ->  (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax = (fun knd -> (match (knd.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Kind_delayed (_27_117, _27_119, m) -> begin
@@ -117,7 +117,7 @@ end
 knd
 end))
 
-# 80 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\absyn\\visit.fs"
+# 82 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\visit.fs"
 
 let left = (fun ext benv btv -> (match ((ext benv (FStar_Util.Inl (btv)))) with
 | (benv, FStar_Util.Inl (bvd)) -> begin
@@ -127,7 +127,7 @@ end
 (FStar_All.failwith "impossible")
 end))
 
-# 84 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\absyn\\visit.fs"
+# 85 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\visit.fs"
 
 let right = (fun ext benv bvv -> (match ((ext benv (FStar_Util.Inr (bvv)))) with
 | (benv, FStar_Util.Inr (bvd)) -> begin
@@ -137,27 +137,27 @@ end
 (FStar_All.failwith "impossible")
 end))
 
-# 87 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\absyn\\visit.fs"
+# 92 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\visit.fs"
 
 type boundvar =
 (FStar_Absyn_Syntax.btvdef, FStar_Absyn_Syntax.bvvdef) FStar_Util.either
 
-# 92 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\absyn\\visit.fs"
+# 93 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\visit.fs"
 
 type boundvars =
 boundvar Prims.list
 
-# 93 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\absyn\\visit.fs"
+# 94 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\visit.fs"
 
 type ('env, 'm) imap =
 'env  ->  boundvars  ->  'm  ->  ('m * 'env)
 
-# 94 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\absyn\\visit.fs"
+# 95 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\visit.fs"
 
 type ('env, 'm, 'n) mapper =
 ('env, FStar_Absyn_Syntax.knd) imap  ->  ('env, FStar_Absyn_Syntax.typ) imap  ->  ('env, FStar_Absyn_Syntax.exp) imap  ->  'env  ->  boundvars  ->  'm  ->  ('n * 'env)
 
-# 99 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\absyn\\visit.fs"
+# 101 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\visit.fs"
 
 let push_tbinder = (fun binders _27_1 -> (match (_27_1) with
 | None -> begin
@@ -167,7 +167,7 @@ end
 (FStar_Util.Inl (a))::binders
 end))
 
-# 103 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\absyn\\visit.fs"
+# 104 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\visit.fs"
 
 let push_vbinder = (fun binders _27_2 -> (match (_27_2) with
 | None -> begin
@@ -177,11 +177,11 @@ end
 (FStar_Util.Inr (a))::binders
 end))
 
-# 106 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\absyn\\visit.fs"
+# 107 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\visit.fs"
 
 let bvd_to_bvar_s = (fun bvd sort -> {FStar_Absyn_Syntax.v = bvd; FStar_Absyn_Syntax.sort = sort; FStar_Absyn_Syntax.p = bvd.FStar_Absyn_Syntax.ppname.FStar_Ident.idRange})
 
-# 107 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\absyn\\visit.fs"
+# 108 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\visit.fs"
 
 let tbinder_opt = (fun aopt k -> (match (aopt) with
 | None -> begin
@@ -191,7 +191,7 @@ end
 (FStar_Util.Inl ((bvd_to_bvar_s a k)))::[]
 end))
 
-# 110 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\absyn\\visit.fs"
+# 111 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\visit.fs"
 
 let vbinder_opt = (fun aopt t -> (match (aopt) with
 | None -> begin
@@ -201,36 +201,36 @@ end
 (FStar_Util.Inr ((bvd_to_bvar_s a t)))::[]
 end))
 
-# 113 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\absyn\\visit.fs"
+# 116 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\visit.fs"
 
 type knd_components =
 (FStar_Absyn_Syntax.binders * FStar_Absyn_Syntax.knd Prims.list * FStar_Absyn_Syntax.typ Prims.list * FStar_Absyn_Syntax.arg Prims.list)
 
-# 116 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\absyn\\visit.fs"
+# 117 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\visit.fs"
 
 type typ_components =
 (FStar_Absyn_Syntax.binders * FStar_Absyn_Syntax.knd Prims.list * FStar_Absyn_Syntax.typ Prims.list * FStar_Absyn_Syntax.comp Prims.list * FStar_Absyn_Syntax.arg Prims.list Prims.list)
 
-# 117 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\absyn\\visit.fs"
+# 118 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\visit.fs"
 
 type exp_components =
 (FStar_Absyn_Syntax.binders * FStar_Absyn_Syntax.knd Prims.list * FStar_Absyn_Syntax.typ Prims.list * FStar_Absyn_Syntax.exp Prims.list * FStar_Absyn_Syntax.arg Prims.list)
 
-# 118 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\absyn\\visit.fs"
+# 119 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\visit.fs"
 
 let leaf_k = (fun _27_176 -> (match (()) with
 | () -> begin
 ([], [], [], [])
 end))
 
-# 119 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\absyn\\visit.fs"
+# 120 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\visit.fs"
 
 let leaf_te = (fun _27_177 -> (match (()) with
 | () -> begin
 ([], [], [], [], [])
 end))
 
-# 120 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\absyn\\visit.fs"
+# 122 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\visit.fs"
 
 let rec reduce_kind = (fun map_kind' map_typ' map_exp' combine_kind combine_typ combine_exp env binders k -> (let rec visit_kind = (fun env binders k -> (let k = (compress_kind k)
 in (let _27_236 = (match (k.FStar_Absyn_Syntax.n) with
@@ -676,7 +676,7 @@ in (match (_27_746) with
 end))))
 in (map_exp env binders e)))
 
-# 370 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\absyn\\visit.fs"
+# 372 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\visit.fs"
 
 let combine_kind = (fun k kc env -> (let k' = (match ((k.FStar_Absyn_Syntax.n, kc)) with
 | ((FStar_Absyn_Syntax.Kind_lam (_), _)) | ((FStar_Absyn_Syntax.Kind_type, _)) | ((FStar_Absyn_Syntax.Kind_effect, _)) | ((FStar_Absyn_Syntax.Kind_unknown, _)) -> begin
@@ -697,7 +697,7 @@ end)
 in (let _129_388 = (k' k.FStar_Absyn_Syntax.pos)
 in (_129_388, env))))
 
-# 382 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\absyn\\visit.fs"
+# 384 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\visit.fs"
 
 let combine_typ = (fun t tc env -> (let t = (compress_typ t)
 in (let w = (fun f -> (f None t.FStar_Absyn_Syntax.pos))
@@ -747,7 +747,7 @@ end
 end)
 in (t', env)))))
 
-# 403 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\absyn\\visit.fs"
+# 405 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\visit.fs"
 
 let combine_exp = (fun e ec env -> (let e = (compress_exp e)
 in (let w = (fun f -> (f None e.FStar_Absyn_Syntax.pos))
@@ -807,7 +807,7 @@ end
 end)
 in (e', env)))))
 
-# 433 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\absyn\\visit.fs"
+# 435 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\visit.fs"
 
 let collect_from_typ = (fun f env t -> (let _129_589 = (reduce_typ (fun _27_1260 _27_1262 _27_1264 env _27_1267 k -> (k, env)) (fun _27_1242 vt _27_1245 env bvs t -> (let env = (f env t)
 in (match ((let _129_546 = (compress_typ t)

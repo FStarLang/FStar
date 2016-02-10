@@ -1,26 +1,26 @@
 
 open Prims
-# 21 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\errorReporting.fs"
+# 24 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\errorReporting.fs"
 
 type label =
 (FStar_SMTEncoding_Term.fv * Prims.string * FStar_Range.range)
 
-# 24 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\errorReporting.fs"
+# 25 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\errorReporting.fs"
 
 type labels =
 label Prims.list
 
-# 25 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\errorReporting.fs"
+# 27 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\errorReporting.fs"
 
 type msg =
 (Prims.string * FStar_Range.range)
 
-# 27 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\errorReporting.fs"
+# 28 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\errorReporting.fs"
 
 type ranges =
 (Prims.string Prims.option * FStar_Range.range) Prims.list
 
-# 28 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\errorReporting.fs"
+# 30 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\errorReporting.fs"
 
 let fresh_label : ranges  ->  FStar_SMTEncoding_Term.term  ->  labels  ->  (FStar_SMTEncoding_Term.term * labels * ranges) = (let ctr = (FStar_ST.alloc 0)
 in (fun rs t labs -> (let l = (let _98_5 = (FStar_Util.incr ctr)
@@ -46,7 +46,7 @@ in (let lt = (FStar_SMTEncoding_Term.mkOr (lterm, t))
 in (lt, (label)::labs, rs))))
 end))))))
 
-# 42 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\smtencoding\\errorReporting.fs"
+# 51 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\errorReporting.fs"
 
 let rec label_goals : ranges  ->  FStar_SMTEncoding_Term.term  ->  labels  ->  (FStar_SMTEncoding_Term.term * labels * ranges) = (fun rs q labs -> (match (q.FStar_SMTEncoding_Term.tm) with
 | (FStar_SMTEncoding_Term.BoundV (_)) | (FStar_SMTEncoding_Term.Integer (_)) -> begin

@@ -176,7 +176,7 @@ let pat_as_exps allow_implicits env p
         match p.v with
            | Pat_dot_term(x, _) ->
              let t = new_tvar env ktype in
-             let e, u = Rel.new_evar p.p [] t in //TODO: why empty vars?
+             let e, u = Rel.new_evar p.p (Env.binders env) t in
              let p = {p with v=Pat_dot_term(x, e)} in
              ([], [], [], env, Inr e, p)
 
@@ -254,9 +254,11 @@ let pat_as_exps allow_implicits env p
                               then withinfo (Pat_dot_typ (a, tun)) None  (Syntax.range_of_lid fv.v), as_imp imp
                               else withinfo (Pat_tvar a) None (Syntax.range_of_lid fv.v), as_imp imp
 
-                            | Inr _, Some (Implicit _) ->
+                            | Inr _, Some (Implicit dot) ->
                               let a = Util.gen_bvar tun in
-                              withinfo (Pat_var a) None (*Inr tun*) (Syntax.range_of_lid fv.v), true
+                              if allow_implicits && dot
+                              then withinfo (Pat_dot_term (a, Util.bvar_to_exp a)) None  (Syntax.range_of_lid fv.v), true
+                              else withinfo (Pat_var a) None (*Inr tun*) (Syntax.range_of_lid fv.v), true
 
                             | _ -> raise (Error(Util.format1 "Insufficient pattern arguments (%s)" (Print.pat_to_string p), range_of_lid fv.v)))
 
@@ -277,9 +279,12 @@ let pat_as_exps allow_implicits env p
                                     (p1, as_imp imp)::aux formals' pats'
                                 | (Inr _, Some (Implicit _)), _ when p_imp ->
                                     (p, true)::aux formals' pats'
-                                | (Inr _, Some (Implicit _)), _ ->
+                                | (Inr _, Some (Implicit dot)), _ ->
                                     let a = Util.gen_bvar tun in
-                                    let p = withinfo (Pat_var a) None (Syntax.range_of_lid fv.v) in
+                                    let p = 
+                                       if allow_implicits && dot
+                                       then withinfo (Pat_dot_term (a, Util.bvar_to_exp a)) None  (Syntax.range_of_lid fv.v)
+                                       else withinfo (Pat_var a) None (Syntax.range_of_lid fv.v) in
                                     (p, true)::aux formals' pats
                                 | (Inr _, imp), _ ->
                                   (p, as_imp imp)::aux formals' pats'

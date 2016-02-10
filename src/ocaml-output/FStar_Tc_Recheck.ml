@@ -1,46 +1,46 @@
 
 open Prims
-# 27 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\tc\\recheck.fs"
+# 29 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tc\\recheck.fs"
 
 let oktype : (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax Prims.option = Some (FStar_Absyn_Syntax.ktype)
 
-# 29 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\tc\\recheck.fs"
+# 30 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tc\\recheck.fs"
 
 let t_unit : (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (FStar_All.pipe_left (FStar_Absyn_Syntax.syn FStar_Absyn_Syntax.dummyRange oktype) (FStar_Absyn_Syntax.mk_Typ_const (FStar_Absyn_Util.withsort FStar_Absyn_Const.unit_lid FStar_Absyn_Syntax.ktype)))
 
-# 30 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\tc\\recheck.fs"
+# 31 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tc\\recheck.fs"
 
 let t_bool : (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (FStar_All.pipe_left (FStar_Absyn_Syntax.syn FStar_Absyn_Syntax.dummyRange oktype) (FStar_Absyn_Syntax.mk_Typ_const (FStar_Absyn_Util.withsort FStar_Absyn_Const.bool_lid FStar_Absyn_Syntax.ktype)))
 
-# 31 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\tc\\recheck.fs"
+# 32 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tc\\recheck.fs"
 
 let t_uint8 : (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (FStar_All.pipe_left (FStar_Absyn_Syntax.syn FStar_Absyn_Syntax.dummyRange oktype) (FStar_Absyn_Syntax.mk_Typ_const (FStar_Absyn_Util.withsort FStar_Absyn_Const.uint8_lid FStar_Absyn_Syntax.ktype)))
 
-# 32 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\tc\\recheck.fs"
+# 33 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tc\\recheck.fs"
 
 let t_int : (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (FStar_All.pipe_left (FStar_Absyn_Syntax.syn FStar_Absyn_Syntax.dummyRange oktype) (FStar_Absyn_Syntax.mk_Typ_const (FStar_Absyn_Util.withsort FStar_Absyn_Const.int_lid FStar_Absyn_Syntax.ktype)))
 
-# 33 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\tc\\recheck.fs"
+# 34 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tc\\recheck.fs"
 
 let t_int32 : (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (FStar_All.pipe_left (FStar_Absyn_Syntax.syn FStar_Absyn_Syntax.dummyRange oktype) (FStar_Absyn_Syntax.mk_Typ_const (FStar_Absyn_Util.withsort FStar_Absyn_Const.int32_lid FStar_Absyn_Syntax.ktype)))
 
-# 34 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\tc\\recheck.fs"
+# 35 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tc\\recheck.fs"
 
 let t_int64 : (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (FStar_All.pipe_left (FStar_Absyn_Syntax.syn FStar_Absyn_Syntax.dummyRange oktype) (FStar_Absyn_Syntax.mk_Typ_const (FStar_Absyn_Util.withsort FStar_Absyn_Const.int64_lid FStar_Absyn_Syntax.ktype)))
 
-# 35 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\tc\\recheck.fs"
+# 36 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tc\\recheck.fs"
 
 let t_string : (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (FStar_All.pipe_left (FStar_Absyn_Syntax.syn FStar_Absyn_Syntax.dummyRange oktype) (FStar_Absyn_Syntax.mk_Typ_const (FStar_Absyn_Util.withsort FStar_Absyn_Const.string_lid FStar_Absyn_Syntax.ktype)))
 
-# 36 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\tc\\recheck.fs"
+# 37 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tc\\recheck.fs"
 
 let t_float : (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (FStar_All.pipe_left (FStar_Absyn_Syntax.syn FStar_Absyn_Syntax.dummyRange oktype) (FStar_Absyn_Syntax.mk_Typ_const (FStar_Absyn_Util.withsort FStar_Absyn_Const.float_lid FStar_Absyn_Syntax.ktype)))
 
-# 37 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\tc\\recheck.fs"
+# 38 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tc\\recheck.fs"
 
 let t_char : (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (FStar_All.pipe_left (FStar_Absyn_Syntax.syn FStar_Absyn_Syntax.dummyRange oktype) (FStar_Absyn_Syntax.mk_Typ_const (FStar_Absyn_Util.withsort FStar_Absyn_Const.char_lid FStar_Absyn_Syntax.ktype)))
 
-# 38 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\tc\\recheck.fs"
+# 40 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tc\\recheck.fs"
 
 let typing_const : FStar_Range.range  ->  FStar_Const.sconst  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (fun r s -> (match (s) with
 | FStar_Const.Const_unit -> begin
@@ -74,7 +74,7 @@ end
 (Prims.raise (FStar_Absyn_Syntax.Error (("Unsupported constant", r))))
 end))
 
-# 50 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\tc\\recheck.fs"
+# 53 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tc\\recheck.fs"
 
 let rec recompute_kind : (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax = (fun t -> (let recompute = (fun t -> (match (t.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Typ_delayed (_45_34) -> begin
@@ -164,7 +164,7 @@ in (let _45_126 = (FStar_ST.op_Colon_Equals t.FStar_Absyn_Syntax.tk (Some (k)))
 in k))
 end)))
 
-# 95 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\tc\\recheck.fs"
+# 97 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tc\\recheck.fs"
 
 let rec recompute_typ : FStar_Absyn_Syntax.exp  ->  FStar_Absyn_Syntax.typ = (fun e -> (let recompute = (fun e -> (match (e.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Exp_delayed (_45_132) -> begin

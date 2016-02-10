@@ -1,6 +1,6 @@
 
 open Prims
-# 29 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 31 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 type binding =
 | Binding_typ_var of FStar_Ident.ident
@@ -8,7 +8,7 @@ type binding =
 | Binding_let of FStar_Ident.lident
 | Binding_tycon of FStar_Ident.lident
 
-# 32 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 32 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let is_Binding_typ_var = (fun _discr_ -> (match (_discr_) with
 | Binding_typ_var (_) -> begin
@@ -18,7 +18,7 @@ end
 false
 end))
 
-# 33 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 33 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let is_Binding_var = (fun _discr_ -> (match (_discr_) with
 | Binding_var (_) -> begin
@@ -28,7 +28,7 @@ end
 false
 end))
 
-# 34 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 34 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let is_Binding_let = (fun _discr_ -> (match (_discr_) with
 | Binding_let (_) -> begin
@@ -38,7 +38,7 @@ end
 false
 end))
 
-# 35 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 35 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let is_Binding_tycon = (fun _discr_ -> (match (_discr_) with
 | Binding_tycon (_) -> begin
@@ -48,53 +48,53 @@ end
 false
 end))
 
-# 32 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 32 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let ___Binding_typ_var____0 : binding  ->  FStar_Ident.ident = (fun projectee -> (match (projectee) with
 | Binding_typ_var (_61_18) -> begin
 _61_18
 end))
 
-# 33 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 33 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let ___Binding_var____0 : binding  ->  FStar_Ident.ident = (fun projectee -> (match (projectee) with
 | Binding_var (_61_21) -> begin
 _61_21
 end))
 
-# 34 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 34 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let ___Binding_let____0 : binding  ->  FStar_Ident.lident = (fun projectee -> (match (projectee) with
 | Binding_let (_61_24) -> begin
 _61_24
 end))
 
-# 35 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 35 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let ___Binding_tycon____0 : binding  ->  FStar_Ident.lident = (fun projectee -> (match (projectee) with
 | Binding_tycon (_61_27) -> begin
 _61_27
 end))
 
-# 35 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 37 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 type kind_abbrev =
 (FStar_Ident.lident * (FStar_Absyn_Syntax.btvdef, FStar_Absyn_Syntax.bvvdef) FStar_Util.either Prims.list * FStar_Absyn_Syntax.knd)
 
-# 37 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 38 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 type env =
 {curmodule : FStar_Ident.lident Prims.option; modules : (FStar_Ident.lident * FStar_Absyn_Syntax.modul) Prims.list; open_namespaces : FStar_Ident.lident Prims.list; modul_abbrevs : (FStar_Ident.ident * FStar_Ident.lident) Prims.list; sigaccum : FStar_Absyn_Syntax.sigelts; localbindings : ((FStar_Absyn_Syntax.btvdef, FStar_Absyn_Syntax.bvvdef) FStar_Util.either * binding) Prims.list; recbindings : binding Prims.list; phase : FStar_Parser_AST.level; sigmap : (FStar_Absyn_Syntax.sigelt * Prims.bool) FStar_Util.smap Prims.list; default_result_effect : FStar_Absyn_Syntax.typ  ->  FStar_Range.range  ->  FStar_Absyn_Syntax.comp; iface : Prims.bool; admitted_iface : Prims.bool}
 
-# 38 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 38 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let is_Mkenv : env  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkenv"))))
 
-# 51 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 53 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let open_modules : env  ->  (FStar_Ident.lident * FStar_Absyn_Syntax.modul) Prims.list = (fun e -> e.modules)
 
-# 53 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 54 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let current_module : env  ->  FStar_Ident.lident = (fun env -> (match (env.curmodule) with
 | None -> begin
@@ -104,30 +104,30 @@ end
 m
 end))
 
-# 56 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 57 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let qual : FStar_Ident.lident  ->  FStar_Ident.ident  ->  FStar_Ident.lident = (fun lid id -> (let _163_114 = (FStar_Ident.lid_of_ids (FStar_List.append lid.FStar_Ident.ns ((lid.FStar_Ident.ident)::(id)::[])))
 in (FStar_Ident.set_lid_range _163_114 id.FStar_Ident.idRange)))
 
-# 57 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 58 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let qualify : env  ->  FStar_Ident.ident  ->  FStar_Ident.lident = (fun env id -> (let _163_119 = (current_module env)
 in (qual _163_119 id)))
 
-# 58 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 59 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let qualify_lid : env  ->  FStar_Ident.lident  ->  FStar_Ident.lident = (fun env lid -> (let cur = (current_module env)
 in (let _163_124 = (FStar_Ident.lid_of_ids (FStar_List.append (FStar_List.append (FStar_List.append cur.FStar_Ident.ns ((cur.FStar_Ident.ident)::[])) lid.FStar_Ident.ns) ((lid.FStar_Ident.ident)::[])))
 in (FStar_Ident.set_lid_range _163_124 (FStar_Ident.range_of_lid lid)))))
 
-# 61 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 62 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let new_sigmap = (fun _61_53 -> (match (()) with
 | () -> begin
 (FStar_Util.smap_create 100)
 end))
 
-# 62 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 63 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let empty_env : Prims.unit  ->  env = (fun _61_54 -> (match (()) with
 | () -> begin
@@ -136,21 +136,21 @@ in (_163_128)::[])
 in {curmodule = None; modules = []; open_namespaces = []; modul_abbrevs = []; sigaccum = []; localbindings = []; recbindings = []; phase = FStar_Parser_AST.Un; sigmap = _163_129; default_result_effect = FStar_Absyn_Util.ml_comp; iface = false; admitted_iface = false})
 end))
 
-# 74 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 75 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let sigmap : env  ->  (FStar_Absyn_Syntax.sigelt * Prims.bool) FStar_Util.smap = (fun env -> (FStar_List.hd env.sigmap))
 
-# 75 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 76 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let default_total : env  ->  env = (fun env -> (let _61_57 = env
 in {curmodule = _61_57.curmodule; modules = _61_57.modules; open_namespaces = _61_57.open_namespaces; modul_abbrevs = _61_57.modul_abbrevs; sigaccum = _61_57.sigaccum; localbindings = _61_57.localbindings; recbindings = _61_57.recbindings; phase = _61_57.phase; sigmap = _61_57.sigmap; default_result_effect = (fun t _61_60 -> (FStar_Absyn_Syntax.mk_Total t)); iface = _61_57.iface; admitted_iface = _61_57.admitted_iface}))
 
-# 76 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 77 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let default_ml : env  ->  env = (fun env -> (let _61_63 = env
 in {curmodule = _61_63.curmodule; modules = _61_63.modules; open_namespaces = _61_63.open_namespaces; modul_abbrevs = _61_63.modul_abbrevs; sigaccum = _61_63.sigaccum; localbindings = _61_63.localbindings; recbindings = _61_63.recbindings; phase = _61_63.phase; sigmap = _61_63.sigmap; default_result_effect = FStar_Absyn_Util.ml_comp; iface = _61_63.iface; admitted_iface = _61_63.admitted_iface}))
 
-# 77 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 79 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let range_of_binding : binding  ->  FStar_Range.range = (fun _61_1 -> (match (_61_1) with
 | (Binding_typ_var (id)) | (Binding_var (id)) -> begin
@@ -160,7 +160,7 @@ end
 (FStar_Ident.range_of_lid lid)
 end))
 
-# 83 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 85 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let try_lookup_typ_var : env  ->  FStar_Ident.ident  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax Prims.option = (fun env id -> (let fopt = (FStar_List.tryFind (fun _61_77 -> (match (_61_77) with
 | (_61_75, b) -> begin
@@ -181,7 +181,7 @@ end
 None
 end)))
 
-# 93 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 95 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let resolve_in_open_namespaces' = (fun env lid finder -> (let aux = (fun namespaces -> (match ((finder lid)) with
 | Some (r) -> begin
@@ -196,7 +196,7 @@ in (let _163_156 = (let _163_155 = (current_module env)
 in (_163_155)::env.open_namespaces)
 in (aux _163_156))))
 
-# 104 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 106 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let expand_module_abbrevs : env  ->  FStar_Ident.lident  ->  FStar_Ident.lident = (fun env lid -> (match (lid.FStar_Ident.ns) with
 | id::[] -> begin
@@ -215,16 +215,16 @@ end
 lid
 end))
 
-# 114 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 116 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let resolve_in_open_namespaces = (fun env lid finder -> (let _163_168 = (expand_module_abbrevs env lid)
 in (resolve_in_open_namespaces' env _163_168 finder)))
 
-# 117 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 119 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let unmangleMap : (Prims.string * Prims.string) Prims.list = (("op_ColonColon", "Cons"))::(("not", "op_Negation"))::[]
 
-# 120 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 122 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let unmangleOpName : FStar_Ident.ident  ->  FStar_Ident.lident Prims.option = (fun id -> (FStar_Util.find_map unmangleMap (fun _61_129 -> (match (_61_129) with
 | (x, y) -> begin
@@ -236,7 +236,7 @@ None
 end
 end))))
 
-# 125 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 127 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let try_lookup_id' : env  ->  FStar_Ident.ident  ->  (FStar_Ident.lident * (FStar_Absyn_Syntax.exp', (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) Prims.option = (fun env id -> (match ((unmangleOpName id)) with
 | Some (l) -> begin
@@ -268,7 +268,7 @@ None
 end))
 end))
 
-# 137 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 139 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let try_lookup_id : env  ->  FStar_Ident.ident  ->  (FStar_Absyn_Syntax.exp', (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax Prims.option = (fun env id -> (match ((try_lookup_id' env id)) with
 | Some (_61_159, e) -> begin
@@ -278,14 +278,14 @@ end
 None
 end))
 
-# 142 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 144 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 type occurrence =
 | OSig of FStar_Absyn_Syntax.sigelt
 | OLet of FStar_Ident.lident
 | ORec of FStar_Ident.lident
 
-# 145 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 145 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let is_OSig = (fun _discr_ -> (match (_discr_) with
 | OSig (_) -> begin
@@ -295,7 +295,7 @@ end
 false
 end))
 
-# 146 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 146 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let is_OLet = (fun _discr_ -> (match (_discr_) with
 | OLet (_) -> begin
@@ -305,7 +305,7 @@ end
 false
 end))
 
-# 147 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 147 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let is_ORec = (fun _discr_ -> (match (_discr_) with
 | ORec (_) -> begin
@@ -315,28 +315,28 @@ end
 false
 end))
 
-# 145 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 145 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let ___OSig____0 : occurrence  ->  FStar_Absyn_Syntax.sigelt = (fun projectee -> (match (projectee) with
 | OSig (_61_166) -> begin
 _61_166
 end))
 
-# 146 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 146 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let ___OLet____0 : occurrence  ->  FStar_Ident.lident = (fun projectee -> (match (projectee) with
 | OLet (_61_169) -> begin
 _61_169
 end))
 
-# 147 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 147 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let ___ORec____0 : occurrence  ->  FStar_Ident.lident = (fun projectee -> (match (projectee) with
 | ORec (_61_172) -> begin
 _61_172
 end))
 
-# 147 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 148 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let range_of_occurrence : occurrence  ->  FStar_Range.range = (fun _61_3 -> (match (_61_3) with
 | (OLet (l)) | (ORec (l)) -> begin
@@ -346,7 +346,7 @@ end
 (FStar_Absyn_Util.range_of_sigelt se)
 end))
 
-# 151 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 153 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 type foundname =
 | Exp_name of (occurrence * FStar_Absyn_Syntax.exp)
@@ -354,7 +354,7 @@ type foundname =
 | Eff_name of (occurrence * FStar_Ident.lident)
 | Knd_name of (occurrence * FStar_Ident.lident)
 
-# 154 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 154 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let is_Exp_name = (fun _discr_ -> (match (_discr_) with
 | Exp_name (_) -> begin
@@ -364,7 +364,7 @@ end
 false
 end))
 
-# 155 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 155 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let is_Typ_name = (fun _discr_ -> (match (_discr_) with
 | Typ_name (_) -> begin
@@ -374,7 +374,7 @@ end
 false
 end))
 
-# 156 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 156 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let is_Eff_name = (fun _discr_ -> (match (_discr_) with
 | Eff_name (_) -> begin
@@ -384,7 +384,7 @@ end
 false
 end))
 
-# 157 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 157 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let is_Knd_name = (fun _discr_ -> (match (_discr_) with
 | Knd_name (_) -> begin
@@ -394,35 +394,35 @@ end
 false
 end))
 
-# 154 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 154 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let ___Exp_name____0 : foundname  ->  (occurrence * FStar_Absyn_Syntax.exp) = (fun projectee -> (match (projectee) with
 | Exp_name (_61_181) -> begin
 _61_181
 end))
 
-# 155 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 155 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let ___Typ_name____0 : foundname  ->  (occurrence * FStar_Absyn_Syntax.typ) = (fun projectee -> (match (projectee) with
 | Typ_name (_61_184) -> begin
 _61_184
 end))
 
-# 156 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 156 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let ___Eff_name____0 : foundname  ->  (occurrence * FStar_Ident.lident) = (fun projectee -> (match (projectee) with
 | Eff_name (_61_187) -> begin
 _61_187
 end))
 
-# 157 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 157 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let ___Knd_name____0 : foundname  ->  (occurrence * FStar_Ident.lident) = (fun projectee -> (match (projectee) with
 | Knd_name (_61_190) -> begin
 _61_190
 end))
 
-# 157 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 159 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let fv_qual_of_se : FStar_Absyn_Syntax.sigelt  ->  FStar_Absyn_Syntax.fv_qual Prims.option = (fun _61_5 -> (match (_61_5) with
 | FStar_Absyn_Syntax.Sig_datacon (_61_193, _61_195, (l, _61_198, _61_200), quals, _61_204, _61_206) -> begin
@@ -448,7 +448,7 @@ end
 None
 end))
 
-# 170 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 172 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let try_lookup_name : Prims.bool  ->  Prims.bool  ->  env  ->  FStar_Ident.lident  ->  foundname Prims.option = (fun any_val exclude_interf env lid -> (let find_in_sig = (fun lid -> (match ((let _163_301 = (sigmap env)
 in (FStar_Util.smap_try_find _163_301 lid.FStar_Ident.str))) with
@@ -549,7 +549,7 @@ end
 (resolve_in_open_namespaces env lid find_in_sig)
 end))))
 
-# 216 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 218 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let try_lookup_typ_name' : Prims.bool  ->  env  ->  FStar_Ident.lident  ->  FStar_Absyn_Syntax.typ Prims.option = (fun exclude_interf env lid -> (match ((try_lookup_name true exclude_interf env lid)) with
 | Some (Typ_name (_61_309, t)) -> begin
@@ -563,11 +563,11 @@ end
 None
 end))
 
-# 222 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 223 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let try_lookup_typ_name : env  ->  FStar_Ident.lident  ->  FStar_Absyn_Syntax.typ Prims.option = (fun env l -> (try_lookup_typ_name' (not (env.iface)) env l))
 
-# 223 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 225 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let try_lookup_effect_name' : Prims.bool  ->  env  ->  FStar_Ident.lident  ->  (occurrence * FStar_Ident.lident) Prims.option = (fun exclude_interf env lid -> (match ((try_lookup_name true exclude_interf env lid)) with
 | Some (Eff_name (o, l)) -> begin
@@ -577,7 +577,7 @@ end
 None
 end))
 
-# 228 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 229 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let try_lookup_effect_name : env  ->  FStar_Ident.lident  ->  FStar_Ident.lident Prims.option = (fun env l -> (match ((try_lookup_effect_name' (not (env.iface)) env l)) with
 | Some (o, l) -> begin
@@ -587,7 +587,7 @@ end
 None
 end))
 
-# 232 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 233 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let try_lookup_effect_defn : env  ->  FStar_Ident.lident  ->  FStar_Absyn_Syntax.eff_decl Prims.option = (fun env l -> (match ((try_lookup_effect_name' (not (env.iface)) env l)) with
 | Some (OSig (FStar_Absyn_Syntax.Sig_new_effect (ne, _61_346)), _61_351) -> begin
@@ -597,7 +597,7 @@ end
 None
 end))
 
-# 236 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 237 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let is_effect_name : env  ->  FStar_Ident.lident  ->  Prims.bool = (fun env lid -> (match ((try_lookup_effect_name env lid)) with
 | None -> begin
@@ -607,7 +607,7 @@ end
 true
 end))
 
-# 240 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 242 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let try_resolve_typ_abbrev : env  ->  FStar_Ident.lident  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax Prims.option = (fun env lid -> (let find_in_sig = (fun lid -> (match ((let _163_362 = (sigmap env)
 in (FStar_Util.smap_try_find _163_362 lid.FStar_Ident.str))) with
@@ -623,7 +623,7 @@ None
 end))
 in (resolve_in_open_namespaces env lid find_in_sig)))
 
-# 249 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 251 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let lookup_letbinding_quals : env  ->  FStar_Ident.lident  ->  FStar_Absyn_Syntax.qualifier Prims.list = (fun env lid -> (let find_in_sig = (fun lid -> (match ((let _163_372 = (sigmap env)
 in (FStar_Util.smap_try_find _163_372 lid.FStar_Ident.str))) with
@@ -641,7 +641,7 @@ end
 []
 end)))
 
-# 258 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 260 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let try_lookup_module : env  ->  Prims.string Prims.list  ->  FStar_Absyn_Syntax.modul Prims.option = (fun env path -> (match ((FStar_List.tryFind (fun _61_409 -> (match (_61_409) with
 | (mlid, modul) -> begin
@@ -654,7 +654,7 @@ end
 None
 end))
 
-# 263 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 265 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let try_lookup_let : env  ->  FStar_Ident.lident  ->  (FStar_Absyn_Syntax.exp', (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax Prims.option = (fun env lid -> (let find_in_sig = (fun lid -> (match ((let _163_384 = (sigmap env)
 in (FStar_Util.smap_try_find _163_384 lid.FStar_Ident.str))) with
@@ -667,7 +667,7 @@ None
 end))
 in (resolve_in_open_namespaces env lid find_in_sig)))
 
-# 270 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 272 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let try_lookup_lid' : Prims.bool  ->  Prims.bool  ->  env  ->  FStar_Ident.lident  ->  FStar_Absyn_Syntax.exp Prims.option = (fun any_val exclude_interf env lid -> (match ((try_lookup_name any_val exclude_interf env lid)) with
 | Some (Exp_name (_61_434, e)) -> begin
@@ -677,11 +677,11 @@ end
 None
 end))
 
-# 275 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 276 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let try_lookup_lid : env  ->  FStar_Ident.lident  ->  FStar_Absyn_Syntax.exp Prims.option = (fun env l -> (try_lookup_lid' env.iface false env l))
 
-# 276 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 278 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let try_lookup_datacon : env  ->  FStar_Ident.lident  ->  (FStar_Ident.lid, (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.withinfo_t Prims.option = (fun env lid -> (let find_in_sig = (fun lid -> (match ((let _163_404 = (sigmap env)
 in (FStar_Util.smap_try_find _163_404 lid.FStar_Ident.str))) with
@@ -706,7 +706,7 @@ None
 end))
 in (resolve_in_open_namespaces env lid find_in_sig)))
 
-# 287 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 289 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let find_all_datacons : env  ->  FStar_Ident.lident  ->  FStar_Absyn_Syntax.lident Prims.list Prims.option = (fun env lid -> (let find_in_sig = (fun lid -> (match ((let _163_412 = (sigmap env)
 in (FStar_Util.smap_try_find _163_412 lid.FStar_Ident.str))) with
@@ -718,16 +718,16 @@ None
 end))
 in (resolve_in_open_namespaces env lid find_in_sig)))
 
-# 294 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 296 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 type record_or_dc =
 {typename : FStar_Ident.lident; constrname : FStar_Ident.lident; parms : FStar_Absyn_Syntax.binders; fields : (FStar_Absyn_Syntax.fieldname * FStar_Absyn_Syntax.typ) Prims.list; is_record : Prims.bool}
 
-# 296 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 296 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let is_Mkrecord_or_dc : record_or_dc  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkrecord_or_dc"))))
 
-# 302 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 305 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let record_cache_aux : ((Prims.unit  ->  Prims.unit) * (Prims.unit  ->  Prims.unit) * (Prims.unit  ->  record_or_dc Prims.list) * (record_or_dc  ->  Prims.unit)) = (let record_cache = (FStar_Util.mk_ref (([])::[]))
 in (let push = (fun _61_506 -> (match (()) with
@@ -757,7 +757,7 @@ in (_163_455)::_163_454))
 in (FStar_ST.op_Colon_Equals record_cache _163_456)))
 in (push, pop, peek, insert))))))
 
-# 313 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 315 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let push_record_cache : Prims.unit  ->  Prims.unit = (let _61_520 = record_cache_aux
 in (match (_61_520) with
@@ -765,7 +765,7 @@ in (match (_61_520) with
 push
 end))
 
-# 317 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 319 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let pop_record_cache : Prims.unit  ->  Prims.unit = (let _61_528 = record_cache_aux
 in (match (_61_528) with
@@ -773,7 +773,7 @@ in (match (_61_528) with
 pop
 end))
 
-# 321 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 323 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let peek_record_cache : Prims.unit  ->  record_or_dc Prims.list = (let _61_536 = record_cache_aux
 in (match (_61_536) with
@@ -781,7 +781,7 @@ in (match (_61_536) with
 peek
 end))
 
-# 325 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 327 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let insert_record_cache : record_or_dc  ->  Prims.unit = (let _61_544 = record_cache_aux
 in (match (_61_544) with
@@ -789,7 +789,7 @@ in (match (_61_544) with
 insert
 end))
 
-# 329 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 331 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let extract_record : env  ->  FStar_Absyn_Syntax.sigelt  ->  Prims.unit = (fun e _61_12 -> (match (_61_12) with
 | FStar_Absyn_Syntax.Sig_bundle (sigs, _61_549, _61_551, _61_553) -> begin
@@ -859,7 +859,7 @@ end
 ()
 end))
 
-# 368 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 370 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let try_lookup_record_or_dc_by_field_name : env  ->  FStar_Ident.lident  ->  (record_or_dc * FStar_Ident.lident) Prims.option = (fun env fieldname -> (let maybe_add_constrname = (fun ns c -> (let rec aux = (fun ns -> (match (ns) with
 | [] -> begin
@@ -895,7 +895,7 @@ end)))))))))
 end)))
 in (resolve_in_open_namespaces env fieldname find_in_cache))))
 
-# 388 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 390 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let try_lookup_record_by_field_name : env  ->  FStar_Ident.lident  ->  (record_or_dc * FStar_Ident.lident) Prims.option = (fun env fieldname -> (match ((try_lookup_record_or_dc_by_field_name env fieldname)) with
 | Some (r, f) when r.is_record -> begin
@@ -905,7 +905,7 @@ end
 None
 end))
 
-# 393 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 395 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let try_lookup_projector_by_field_name : env  ->  FStar_Ident.lident  ->  (FStar_Ident.lident * Prims.bool) Prims.option = (fun env fieldname -> (match ((try_lookup_record_or_dc_by_field_name env fieldname)) with
 | Some (r, f) -> begin
@@ -915,7 +915,7 @@ end
 None
 end))
 
-# 398 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 400 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let qualify_field_to_record : env  ->  record_or_dc  ->  FStar_Ident.lident  ->  FStar_Ident.lident Prims.option = (fun env recd f -> (let qualify = (fun fieldname -> (let _61_689 = (fieldname.FStar_Ident.ns, fieldname.FStar_Ident.ident)
 in (match (_61_689) with
@@ -933,7 +933,7 @@ end)))))
 end)))
 in (resolve_in_open_namespaces env f qualify)))
 
-# 409 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 411 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let find_kind_abbrev : env  ->  FStar_Ident.lident  ->  FStar_Ident.lident Prims.option = (fun env l -> (match ((try_lookup_name true (not (env.iface)) env l)) with
 | Some (Knd_name (_61_699, l)) -> begin
@@ -943,7 +943,7 @@ end
 None
 end))
 
-# 414 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 416 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let is_kind_abbrev : env  ->  FStar_Ident.lident  ->  Prims.bool = (fun env l -> (match ((find_kind_abbrev env l)) with
 | None -> begin
@@ -953,7 +953,7 @@ end
 true
 end))
 
-# 419 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 421 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let unique_name : Prims.bool  ->  Prims.bool  ->  env  ->  FStar_Ident.lident  ->  Prims.bool = (fun any_val exclude_if env lid -> (match ((try_lookup_lid' any_val exclude_if env lid)) with
 | None -> begin
@@ -969,7 +969,7 @@ end
 false
 end))
 
-# 428 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 430 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let unique_typ_name : env  ->  FStar_Ident.lident  ->  Prims.bool = (fun env lid -> (match ((try_lookup_typ_name' true env lid)) with
 | None -> begin
@@ -979,13 +979,13 @@ end
 false
 end))
 
-# 433 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 435 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let unique : Prims.bool  ->  Prims.bool  ->  env  ->  FStar_Ident.lident  ->  Prims.bool = (fun any_val exclude_if env lid -> (let this_env = (let _61_733 = env
 in {curmodule = _61_733.curmodule; modules = _61_733.modules; open_namespaces = []; modul_abbrevs = _61_733.modul_abbrevs; sigaccum = _61_733.sigaccum; localbindings = _61_733.localbindings; recbindings = _61_733.recbindings; phase = _61_733.phase; sigmap = _61_733.sigmap; default_result_effect = _61_733.default_result_effect; iface = _61_733.iface; admitted_iface = _61_733.admitted_iface})
 in ((unique_name any_val exclude_if this_env lid) && (unique_typ_name this_env lid))))
 
-# 437 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 439 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let gen_bvd = (fun _61_13 -> (match (_61_13) with
 | Binding_typ_var (id) -> begin
@@ -1004,25 +1004,25 @@ end
 (FStar_All.failwith "Tried to generate a bound variable for a type constructor")
 end))
 
-# 442 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 444 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let push_bvvdef : env  ->  (FStar_Absyn_Syntax.exp', (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax FStar_Absyn_Syntax.bvdef  ->  env = (fun env x -> (let b = Binding_var (x.FStar_Absyn_Syntax.ppname)
 in (let _61_746 = env
 in {curmodule = _61_746.curmodule; modules = _61_746.modules; open_namespaces = _61_746.open_namespaces; modul_abbrevs = _61_746.modul_abbrevs; sigaccum = _61_746.sigaccum; localbindings = ((FStar_Util.Inr (x), b))::env.localbindings; recbindings = _61_746.recbindings; phase = _61_746.phase; sigmap = _61_746.sigmap; default_result_effect = _61_746.default_result_effect; iface = _61_746.iface; admitted_iface = _61_746.admitted_iface})))
 
-# 446 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 448 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let push_btvdef : env  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax FStar_Absyn_Syntax.bvdef  ->  env = (fun env x -> (let b = Binding_typ_var (x.FStar_Absyn_Syntax.ppname)
 in (let _61_751 = env
 in {curmodule = _61_751.curmodule; modules = _61_751.modules; open_namespaces = _61_751.open_namespaces; modul_abbrevs = _61_751.modul_abbrevs; sigaccum = _61_751.sigaccum; localbindings = ((FStar_Util.Inl (x), b))::env.localbindings; recbindings = _61_751.recbindings; phase = _61_751.phase; sigmap = _61_751.sigmap; default_result_effect = _61_751.default_result_effect; iface = _61_751.iface; admitted_iface = _61_751.admitted_iface})))
 
-# 450 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 452 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let push_local_binding : env  ->  binding  ->  (env * ((FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax FStar_Absyn_Syntax.bvdef, (FStar_Absyn_Syntax.exp', (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax FStar_Absyn_Syntax.bvdef) FStar_Util.either) = (fun env b -> (let bvd = (gen_bvd b)
 in ((let _61_756 = env
 in {curmodule = _61_756.curmodule; modules = _61_756.modules; open_namespaces = _61_756.open_namespaces; modul_abbrevs = _61_756.modul_abbrevs; sigaccum = _61_756.sigaccum; localbindings = ((bvd, b))::env.localbindings; recbindings = _61_756.recbindings; phase = _61_756.phase; sigmap = _61_756.sigmap; default_result_effect = _61_756.default_result_effect; iface = _61_756.iface; admitted_iface = _61_756.admitted_iface}), bvd)))
 
-# 454 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 456 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let push_local_tbinding : env  ->  FStar_Ident.ident  ->  (env * (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax FStar_Absyn_Syntax.bvdef) = (fun env a -> (match ((push_local_binding env (Binding_typ_var (a)))) with
 | (env, FStar_Util.Inl (x)) -> begin
@@ -1032,7 +1032,7 @@ end
 (FStar_All.failwith "impossible")
 end))
 
-# 459 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 461 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let push_local_vbinding : env  ->  FStar_Ident.ident  ->  (env * (FStar_Absyn_Syntax.exp', (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax FStar_Absyn_Syntax.bvdef) = (fun env b -> (match ((push_local_binding env (Binding_var (b)))) with
 | (env, FStar_Util.Inr (x)) -> begin
@@ -1042,7 +1042,7 @@ end
 (FStar_All.failwith "impossible")
 end))
 
-# 465 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 467 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let push_rec_binding : env  ->  binding  ->  env = (fun env b -> (match (b) with
 | (Binding_let (lid)) | (Binding_tycon (lid)) -> begin
@@ -1057,7 +1057,7 @@ end
 (FStar_All.failwith "Unexpected rec_binding")
 end))
 
-# 473 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 475 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let push_sigelt : env  ->  FStar_Absyn_Syntax.sigelt  ->  env = (fun env s -> (let err = (fun l -> (let sopt = (let _163_630 = (sigmap env)
 in (FStar_Util.smap_try_find _163_630 l.FStar_Ident.str))
@@ -1128,12 +1128,12 @@ end))))
 in env)
 end)))))
 
-# 502 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 504 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let push_namespace : env  ->  FStar_Ident.lident  ->  env = (fun env lid -> (let _61_842 = env
 in {curmodule = _61_842.curmodule; modules = _61_842.modules; open_namespaces = (lid)::env.open_namespaces; modul_abbrevs = _61_842.modul_abbrevs; sigaccum = _61_842.sigaccum; localbindings = _61_842.localbindings; recbindings = _61_842.recbindings; phase = _61_842.phase; sigmap = _61_842.sigmap; default_result_effect = _61_842.default_result_effect; iface = _61_842.iface; admitted_iface = _61_842.admitted_iface}))
 
-# 505 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 507 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let push_module_abbrev : env  ->  FStar_Ident.ident  ->  FStar_Ident.lident  ->  env = (fun env x l -> if (FStar_All.pipe_right env.modul_abbrevs (FStar_Util.for_some (fun _61_850 -> (match (_61_850) with
 | (y, _61_849) -> begin
@@ -1148,7 +1148,7 @@ end else begin
 in {curmodule = _61_851.curmodule; modules = _61_851.modules; open_namespaces = _61_851.open_namespaces; modul_abbrevs = ((x, l))::env.modul_abbrevs; sigaccum = _61_851.sigaccum; localbindings = _61_851.localbindings; recbindings = _61_851.recbindings; phase = _61_851.phase; sigmap = _61_851.sigmap; default_result_effect = _61_851.default_result_effect; iface = _61_851.iface; admitted_iface = _61_851.admitted_iface})
 end)
 
-# 510 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 512 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let is_type_lid : env  ->  FStar_Ident.lident  ->  Prims.bool = (fun env lid -> (let aux = (fun _61_856 -> (match (()) with
 | () -> begin
@@ -1172,7 +1172,7 @@ end else begin
 (aux ())
 end))
 
-# 520 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 523 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let check_admits : FStar_Ident.lident  ->  env  ->  Prims.unit = (fun nm env -> (let warn = (not ((let _163_670 = (FStar_ST.read FStar_Options.admit_fsi)
 in (FStar_All.pipe_right _163_670 (FStar_Util.for_some (fun l -> (nm.FStar_Ident.str = l)))))))
@@ -1199,7 +1199,7 @@ end
 ()
 end))))))
 
-# 533 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 535 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let finish : env  ->  FStar_Absyn_Syntax.modul  ->  env = (fun env modul -> (let _61_923 = (FStar_All.pipe_right modul.FStar_Absyn_Syntax.declarations (FStar_List.iter (fun _61_15 -> (match (_61_15) with
 | FStar_Absyn_Syntax.Sig_bundle (ses, quals, _61_892, _61_894) -> begin
@@ -1230,7 +1230,7 @@ end))))
 in (let _61_925 = env
 in {curmodule = None; modules = ((modul.FStar_Absyn_Syntax.name, modul))::env.modules; open_namespaces = []; modul_abbrevs = []; sigaccum = []; localbindings = []; recbindings = []; phase = FStar_Parser_AST.Un; sigmap = _61_925.sigmap; default_result_effect = _61_925.default_result_effect; iface = _61_925.iface; admitted_iface = _61_925.admitted_iface})))
 
-# 554 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 556 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let push : env  ->  env = (fun env -> (let _61_928 = (push_record_cache ())
 in (let _61_930 = env
@@ -1239,17 +1239,17 @@ in (FStar_Util.smap_copy _163_686))
 in (_163_687)::env.sigmap)
 in {curmodule = _61_930.curmodule; modules = _61_930.modules; open_namespaces = _61_930.open_namespaces; modul_abbrevs = _61_930.modul_abbrevs; sigaccum = _61_930.sigaccum; localbindings = _61_930.localbindings; recbindings = _61_930.recbindings; phase = _61_930.phase; sigmap = _163_688; default_result_effect = _61_930.default_result_effect; iface = _61_930.iface; admitted_iface = _61_930.admitted_iface}))))
 
-# 559 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 561 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let mark : env  ->  env = (fun env -> (push env))
 
-# 561 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 562 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let reset_mark : env  ->  env = (fun env -> (let _61_934 = env
 in (let _163_693 = (FStar_List.tl env.sigmap)
 in {curmodule = _61_934.curmodule; modules = _61_934.modules; open_namespaces = _61_934.open_namespaces; modul_abbrevs = _61_934.modul_abbrevs; sigaccum = _61_934.sigaccum; localbindings = _61_934.localbindings; recbindings = _61_934.recbindings; phase = _61_934.phase; sigmap = _163_693; default_result_effect = _61_934.default_result_effect; iface = _61_934.iface; admitted_iface = _61_934.admitted_iface})))
 
-# 562 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 563 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let commit_mark : env  ->  env = (fun env -> (match (env.sigmap) with
 | hd::_61_939::tl -> begin
@@ -1260,7 +1260,7 @@ end
 (FStar_All.failwith "Impossible")
 end))
 
-# 565 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 566 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let pop : env  ->  env = (fun env -> (match (env.sigmap) with
 | _61_950::maps -> begin
@@ -1272,7 +1272,7 @@ end
 (FStar_All.failwith "No more modules to pop")
 end))
 
-# 571 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 573 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let export_interface : FStar_Ident.lident  ->  env  ->  env = (fun m env -> (let sigelt_in_m = (fun se -> (match ((FStar_Absyn_Util.lids_of_sigelt se)) with
 | l::_61_963 -> begin
@@ -1302,7 +1302,7 @@ end
 end))))
 in env)))))))
 
-# 593 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 595 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let finish_module_or_interface : env  ->  FStar_Absyn_Syntax.modul  ->  env = (fun env modul -> (let _61_994 = if (not (modul.FStar_Absyn_Syntax.is_interface)) then begin
 (check_admits modul.FStar_Absyn_Syntax.name env)
@@ -1311,7 +1311,7 @@ end else begin
 end
 in (finish env modul)))
 
-# 598 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 600 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let prepare_module_or_interface : Prims.bool  ->  Prims.bool  ->  env  ->  FStar_Ident.lident  ->  (env * Prims.bool) = (fun intf admitted env mname -> (let prep = (fun env -> (let open_ns = if (FStar_Ident.lid_equals mname FStar_Absyn_Const.prims_lid) then begin
 []
@@ -1349,19 +1349,19 @@ in (prep _163_723))
 in (_163_724, true)))
 end)))
 
-# 615 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 617 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let enter_monad_scope : env  ->  FStar_Ident.ident  ->  env = (fun env mname -> (let curmod = (current_module env)
 in (let mscope = (FStar_Ident.lid_of_ids (FStar_List.append curmod.FStar_Ident.ns ((curmod.FStar_Ident.ident)::(mname)::[])))
 in (let _61_1021 = env
 in {curmodule = Some (mscope); modules = _61_1021.modules; open_namespaces = (curmod)::env.open_namespaces; modul_abbrevs = _61_1021.modul_abbrevs; sigaccum = _61_1021.sigaccum; localbindings = _61_1021.localbindings; recbindings = _61_1021.recbindings; phase = _61_1021.phase; sigmap = _61_1021.sigmap; default_result_effect = _61_1021.default_result_effect; iface = _61_1021.iface; admitted_iface = _61_1021.admitted_iface}))))
 
-# 622 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 624 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let exit_monad_scope : env  ->  env  ->  env = (fun env0 env -> (let _61_1025 = env
 in {curmodule = env0.curmodule; modules = _61_1025.modules; open_namespaces = env0.open_namespaces; modul_abbrevs = _61_1025.modul_abbrevs; sigaccum = _61_1025.sigaccum; localbindings = _61_1025.localbindings; recbindings = _61_1025.recbindings; phase = _61_1025.phase; sigmap = _61_1025.sigmap; default_result_effect = _61_1025.default_result_effect; iface = _61_1025.iface; admitted_iface = _61_1025.admitted_iface}))
 
-# 627 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 629 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let fail_or = (fun env lookup lid -> (match ((lookup lid)) with
 | None -> begin
@@ -1389,7 +1389,7 @@ end
 r
 end))
 
-# 641 "D:\\cygwin\\home\\protz\\Code\\fstar\\src\\parser\\dsenv.fs"
+# 643 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\dsenv.fs"
 
 let fail_or2 = (fun lookup id -> (match ((lookup id)) with
 | None -> begin
