@@ -178,11 +178,18 @@ let get_fstar_home () = match !fstar_home_opt with
     | None -> ignore <| set_fstar_home(); !_fstar_home
     | Some x -> x
 
+let include_path_base_dirs = 
+  ["/lib"; "/lib/fstar"; "/stdlib" ; "/stdlib/fstar"]
+
+let universe_include_path_base_dirs = 
+  ["/ulib"]
+
 let get_include_path () =
   (* Allows running fstar either from the source repository, or after
    * installation (into /usr/local for instance) *)
   let h = get_fstar_home () in
-  !_include_path @ ["."; h ^ "/lib"; h ^ "/lib/fstar"; h ^ "/stdlib" ; h ^ "/stdlib/fstar"]
+  let defs = if !universes then universe_include_path_base_dirs else include_path_base_dirs in
+  !_include_path @ ("."::(defs |> List.map (fun x -> h ^ x)))
 
 let find_file filename =
     let search_path = get_include_path () in
