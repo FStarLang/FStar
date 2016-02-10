@@ -1,6 +1,6 @@
 
 open Prims
-# 41 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 41 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let new_uvar : FStar_Range.range  ->  FStar_Syntax_Syntax.binder Prims.list  ->  FStar_Syntax_Syntax.term  ->  ((FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax * (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax) = (fun r binders k -> (let binders = (FStar_All.pipe_right binders (FStar_List.filter (fun x -> (FStar_All.pipe_right (FStar_Syntax_Syntax.is_null_binder x) Prims.op_Negation))))
 in (let uv = (FStar_Unionfind.fresh FStar_Syntax_Syntax.Uvar)
@@ -18,13 +18,13 @@ in (let _192_9 = (FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_app ((uv, args)
 in (_192_9, uv)))))
 end))))
 
-# 58 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 58 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 type uvi =
 | TERM of ((FStar_Syntax_Syntax.uvar * FStar_Syntax_Syntax.typ) * FStar_Syntax_Syntax.term)
 | UNIV of (FStar_Syntax_Syntax.universe_uvar * FStar_Syntax_Syntax.universe)
 
-# 59 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 59 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let is_TERM = (fun _discr_ -> (match (_discr_) with
 | TERM (_) -> begin
@@ -34,7 +34,7 @@ end
 false
 end))
 
-# 60 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 60 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let is_UNIV = (fun _discr_ -> (match (_discr_) with
 | UNIV (_) -> begin
@@ -44,36 +44,36 @@ end
 false
 end))
 
-# 59 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 59 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let ___TERM____0 : uvi  ->  ((FStar_Syntax_Syntax.uvar * FStar_Syntax_Syntax.typ) * FStar_Syntax_Syntax.term) = (fun projectee -> (match (projectee) with
 | TERM (_90_43) -> begin
 _90_43
 end))
 
-# 60 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 60 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let ___UNIV____0 : uvi  ->  (FStar_Syntax_Syntax.universe_uvar * FStar_Syntax_Syntax.universe) = (fun projectee -> (match (projectee) with
 | UNIV (_90_46) -> begin
 _90_46
 end))
 
-# 63 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 63 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 type worklist =
 {attempting : FStar_TypeChecker_Common.probs; wl_deferred : (Prims.int * Prims.string * FStar_TypeChecker_Common.prob) Prims.list; ctr : Prims.int; defer_ok : Prims.bool; smt_ok : Prims.bool; tcenv : FStar_TypeChecker_Env.env}
 
-# 63 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 63 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let is_Mkworklist : worklist  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkworklist"))))
 
-# 73 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 73 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 type solution =
 | Success of FStar_TypeChecker_Common.deferred
 | Failed of (FStar_TypeChecker_Common.prob * Prims.string)
 
-# 74 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 74 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let is_Success = (fun _discr_ -> (match (_discr_) with
 | Success (_) -> begin
@@ -83,7 +83,7 @@ end
 false
 end))
 
-# 75 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 75 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let is_Failed = (fun _discr_ -> (match (_discr_) with
 | Failed (_) -> begin
@@ -93,28 +93,28 @@ end
 false
 end))
 
-# 74 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 74 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let ___Success____0 : solution  ->  FStar_TypeChecker_Common.deferred = (fun projectee -> (match (projectee) with
 | Success (_90_56) -> begin
 _90_56
 end))
 
-# 75 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 75 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let ___Failed____0 : solution  ->  (FStar_TypeChecker_Common.prob * Prims.string) = (fun projectee -> (match (projectee) with
 | Failed (_90_59) -> begin
 _90_59
 end))
 
-# 77 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 77 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 type variance =
 | COVARIANT
 | CONTRAVARIANT
 | INVARIANT
 
-# 78 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 78 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let is_COVARIANT = (fun _discr_ -> (match (_discr_) with
 | COVARIANT (_) -> begin
@@ -124,7 +124,7 @@ end
 false
 end))
 
-# 79 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 79 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let is_CONTRAVARIANT = (fun _discr_ -> (match (_discr_) with
 | CONTRAVARIANT (_) -> begin
@@ -134,7 +134,7 @@ end
 false
 end))
 
-# 80 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 80 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let is_INVARIANT = (fun _discr_ -> (match (_discr_) with
 | INVARIANT (_) -> begin
@@ -144,22 +144,22 @@ end
 false
 end))
 
-# 82 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 82 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 type tprob =
 (FStar_Syntax_Syntax.typ, FStar_Syntax_Syntax.term) FStar_TypeChecker_Common.problem
 
-# 83 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 83 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 type cprob =
 (FStar_Syntax_Syntax.comp, Prims.unit) FStar_TypeChecker_Common.problem
 
-# 84 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 84 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 type ('a, 'b) problem_t =
 ('a, 'b) FStar_TypeChecker_Common.problem
 
-# 93 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 93 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let rel_to_string : FStar_TypeChecker_Common.rel  ->  Prims.string = (fun _90_1 -> (match (_90_1) with
 | FStar_TypeChecker_Common.EQ -> begin
@@ -172,11 +172,11 @@ end
 ":>"
 end))
 
-# 98 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 98 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let term_to_string = (fun env t -> (FStar_Syntax_Print.term_to_string t))
 
-# 100 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 100 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let prob_to_string : FStar_TypeChecker_Env.env  ->  FStar_TypeChecker_Common.prob  ->  Prims.string = (fun env _90_2 -> (match (_90_2) with
 | FStar_TypeChecker_Common.TProb (p) -> begin
@@ -201,7 +201,7 @@ in (let _192_109 = (FStar_TypeChecker_Normalize.comp_to_string env p.FStar_TypeC
 in (FStar_Util.format3 "\t%s \n\t\t%s\n\t%s" _192_110 (rel_to_string p.FStar_TypeChecker_Common.relation) _192_109)))
 end))
 
-# 116 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 116 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let uvi_to_string : FStar_TypeChecker_Env.env  ->  uvi  ->  Prims.string = (fun env _90_3 -> (match (_90_3) with
 | UNIV (u, t) -> begin
@@ -225,18 +225,18 @@ in (let _192_118 = (FStar_TypeChecker_Normalize.term_to_string env t)
 in (FStar_Util.format2 "TERM %s %s" x _192_118)))
 end))
 
-# 124 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 124 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let uvis_to_string : FStar_TypeChecker_Env.env  ->  uvi Prims.list  ->  Prims.string = (fun env uvis -> (let _192_123 = (FStar_List.map (uvi_to_string env) uvis)
 in (FStar_All.pipe_right _192_123 (FStar_String.concat ", "))))
 
-# 125 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 125 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let names_to_string : (FStar_Syntax_Syntax.bv Prims.list * (FStar_Syntax_Syntax.bv  ->  FStar_Syntax_Syntax.bv  ->  Prims.bool))  ->  Prims.string = (fun nms -> (let _192_133 = (let _192_132 = (FStar_Util.set_elements nms)
 in (FStar_All.pipe_right _192_132 (FStar_List.map FStar_Syntax_Print.bv_to_string)))
 in (FStar_All.pipe_right _192_133 (FStar_String.concat ", "))))
 
-# 126 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 126 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let args_to_string = (fun args -> (let _192_136 = (FStar_All.pipe_right args (FStar_List.map (fun _90_96 -> (match (_90_96) with
 | (x, _90_95) -> begin
@@ -244,32 +244,32 @@ let args_to_string = (fun args -> (let _192_136 = (FStar_All.pipe_right args (FS
 end))))
 in (FStar_All.pipe_right _192_136 (FStar_String.concat " "))))
 
-# 135 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 135 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let empty_worklist : FStar_TypeChecker_Env.env  ->  worklist = (fun env -> {attempting = []; wl_deferred = []; ctr = 0; defer_ok = true; smt_ok = true; tcenv = env})
 
-# 143 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 143 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let singleton : FStar_TypeChecker_Env.env  ->  FStar_TypeChecker_Common.prob  ->  worklist = (fun env prob -> (let _90_100 = (empty_worklist env)
 in {attempting = (prob)::[]; wl_deferred = _90_100.wl_deferred; ctr = _90_100.ctr; defer_ok = _90_100.defer_ok; smt_ok = _90_100.smt_ok; tcenv = _90_100.tcenv}))
 
-# 144 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 144 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let wl_of_guard = (fun env g -> (let _90_104 = (empty_worklist env)
 in (let _192_145 = (FStar_List.map Prims.snd g)
 in {attempting = _192_145; wl_deferred = _90_104.wl_deferred; ctr = _90_104.ctr; defer_ok = false; smt_ok = _90_104.smt_ok; tcenv = _90_104.tcenv})))
 
-# 145 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 145 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let defer : Prims.string  ->  FStar_TypeChecker_Common.prob  ->  worklist  ->  worklist = (fun reason prob wl -> (let _90_109 = wl
 in {attempting = _90_109.attempting; wl_deferred = ((wl.ctr, reason, prob))::wl.wl_deferred; ctr = _90_109.ctr; defer_ok = _90_109.defer_ok; smt_ok = _90_109.smt_ok; tcenv = _90_109.tcenv}))
 
-# 146 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 146 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let attempt : FStar_TypeChecker_Common.prob Prims.list  ->  worklist  ->  worklist = (fun probs wl -> (let _90_113 = wl
 in {attempting = (FStar_List.append probs wl.attempting); wl_deferred = _90_113.wl_deferred; ctr = _90_113.ctr; defer_ok = _90_113.defer_ok; smt_ok = _90_113.smt_ok; tcenv = _90_113.tcenv}))
 
-# 148 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 148 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let giveup : FStar_TypeChecker_Env.env  ->  Prims.string  ->  FStar_TypeChecker_Common.prob  ->  solution = (fun env reason prob -> (let _90_118 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _192_162 = (prob_to_string env prob)
@@ -279,7 +279,7 @@ end else begin
 end
 in Failed ((prob, reason))))
 
-# 159 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 159 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let invert_rel : FStar_TypeChecker_Common.rel  ->  FStar_TypeChecker_Common.rel = (fun _90_4 -> (match (_90_4) with
 | FStar_TypeChecker_Common.EQ -> begin
@@ -292,12 +292,12 @@ end
 FStar_TypeChecker_Common.SUB
 end))
 
-# 163 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 163 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let invert = (fun p -> (let _90_125 = p
 in {FStar_TypeChecker_Common.pid = _90_125.FStar_TypeChecker_Common.pid; FStar_TypeChecker_Common.lhs = p.FStar_TypeChecker_Common.rhs; FStar_TypeChecker_Common.relation = (invert_rel p.FStar_TypeChecker_Common.relation); FStar_TypeChecker_Common.rhs = p.FStar_TypeChecker_Common.lhs; FStar_TypeChecker_Common.element = _90_125.FStar_TypeChecker_Common.element; FStar_TypeChecker_Common.logical_guard = _90_125.FStar_TypeChecker_Common.logical_guard; FStar_TypeChecker_Common.scope = _90_125.FStar_TypeChecker_Common.scope; FStar_TypeChecker_Common.reason = _90_125.FStar_TypeChecker_Common.reason; FStar_TypeChecker_Common.loc = _90_125.FStar_TypeChecker_Common.loc; FStar_TypeChecker_Common.rank = _90_125.FStar_TypeChecker_Common.rank}))
 
-# 164 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 164 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let maybe_invert = (fun p -> if (p.FStar_TypeChecker_Common.relation = FStar_TypeChecker_Common.SUBINV) then begin
 (invert p)
@@ -305,7 +305,7 @@ end else begin
 p
 end)
 
-# 165 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 165 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let maybe_invert_p : FStar_TypeChecker_Common.prob  ->  FStar_TypeChecker_Common.prob = (fun _90_5 -> (match (_90_5) with
 | FStar_TypeChecker_Common.TProb (p) -> begin
@@ -315,7 +315,7 @@ end
 (FStar_All.pipe_right (maybe_invert p) (fun _192_170 -> FStar_TypeChecker_Common.CProb (_192_170)))
 end))
 
-# 168 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 168 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let vary_rel : FStar_TypeChecker_Common.rel  ->  variance  ->  FStar_TypeChecker_Common.rel = (fun rel _90_6 -> (match (_90_6) with
 | INVARIANT -> begin
@@ -328,7 +328,7 @@ end
 rel
 end))
 
-# 172 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 172 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let p_pid : FStar_TypeChecker_Common.prob  ->  Prims.int = (fun _90_7 -> (match (_90_7) with
 | FStar_TypeChecker_Common.TProb (p) -> begin
@@ -338,7 +338,7 @@ end
 p.FStar_TypeChecker_Common.pid
 end))
 
-# 175 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 175 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let p_rel : FStar_TypeChecker_Common.prob  ->  FStar_TypeChecker_Common.rel = (fun _90_8 -> (match (_90_8) with
 | FStar_TypeChecker_Common.TProb (p) -> begin
@@ -348,7 +348,7 @@ end
 p.FStar_TypeChecker_Common.relation
 end))
 
-# 178 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 178 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let p_reason : FStar_TypeChecker_Common.prob  ->  Prims.string Prims.list = (fun _90_9 -> (match (_90_9) with
 | FStar_TypeChecker_Common.TProb (p) -> begin
@@ -358,7 +358,7 @@ end
 p.FStar_TypeChecker_Common.reason
 end))
 
-# 181 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 181 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let p_loc : FStar_TypeChecker_Common.prob  ->  FStar_Range.range = (fun _90_10 -> (match (_90_10) with
 | FStar_TypeChecker_Common.TProb (p) -> begin
@@ -368,7 +368,7 @@ end
 p.FStar_TypeChecker_Common.loc
 end))
 
-# 184 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 184 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let p_guard : FStar_TypeChecker_Common.prob  ->  (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.term) = (fun _90_11 -> (match (_90_11) with
 | FStar_TypeChecker_Common.TProb (p) -> begin
@@ -378,7 +378,7 @@ end
 p.FStar_TypeChecker_Common.logical_guard
 end))
 
-# 187 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 187 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let p_scope : FStar_TypeChecker_Common.prob  ->  FStar_Syntax_Syntax.binders = (fun _90_12 -> (match (_90_12) with
 | FStar_TypeChecker_Common.TProb (p) -> begin
@@ -388,7 +388,7 @@ end
 p.FStar_TypeChecker_Common.scope
 end))
 
-# 190 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 190 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let p_invert : FStar_TypeChecker_Common.prob  ->  FStar_TypeChecker_Common.prob = (fun _90_13 -> (match (_90_13) with
 | FStar_TypeChecker_Common.TProb (p) -> begin
@@ -398,11 +398,11 @@ end
 (FStar_All.pipe_left (fun _192_190 -> FStar_TypeChecker_Common.CProb (_192_190)) (invert p))
 end))
 
-# 193 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 193 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let is_top_level_prob : FStar_TypeChecker_Common.prob  ->  Prims.bool = (fun p -> ((FStar_All.pipe_right (p_reason p) FStar_List.length) = 1))
 
-# 194 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 194 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let next_pid : Prims.unit  ->  Prims.int = (let ctr = (FStar_ST.alloc 0)
 in (fun _90_175 -> (match (()) with
@@ -411,25 +411,25 @@ in (fun _90_175 -> (match (()) with
 in (FStar_ST.read ctr))
 end)))
 
-# 198 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 198 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let mk_problem = (fun scope orig lhs rel rhs elt reason -> (let _192_203 = (next_pid ())
 in (let _192_202 = (new_uvar (p_loc orig) scope FStar_Syntax_Util.ktype0)
 in {FStar_TypeChecker_Common.pid = _192_203; FStar_TypeChecker_Common.lhs = lhs; FStar_TypeChecker_Common.relation = rel; FStar_TypeChecker_Common.rhs = rhs; FStar_TypeChecker_Common.element = elt; FStar_TypeChecker_Common.logical_guard = _192_202; FStar_TypeChecker_Common.scope = scope; FStar_TypeChecker_Common.reason = (reason)::(p_reason orig); FStar_TypeChecker_Common.loc = (p_loc orig); FStar_TypeChecker_Common.rank = None})))
 
-# 210 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 210 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let new_problem = (fun env lhs rel rhs elt loc reason -> (let scope = (FStar_TypeChecker_Env.all_binders env)
 in (let _192_212 = (next_pid ())
 in (let _192_211 = (new_uvar (FStar_TypeChecker_Env.get_range env) scope FStar_Syntax_Util.ktype0)
 in {FStar_TypeChecker_Common.pid = _192_212; FStar_TypeChecker_Common.lhs = lhs; FStar_TypeChecker_Common.relation = rel; FStar_TypeChecker_Common.rhs = rhs; FStar_TypeChecker_Common.element = elt; FStar_TypeChecker_Common.logical_guard = _192_211; FStar_TypeChecker_Common.scope = scope; FStar_TypeChecker_Common.reason = (reason)::[]; FStar_TypeChecker_Common.loc = loc; FStar_TypeChecker_Common.rank = None}))))
 
-# 224 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 224 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let problem_using_guard = (fun orig lhs rel rhs elt reason -> (let _192_219 = (next_pid ())
 in {FStar_TypeChecker_Common.pid = _192_219; FStar_TypeChecker_Common.lhs = lhs; FStar_TypeChecker_Common.relation = rel; FStar_TypeChecker_Common.rhs = rhs; FStar_TypeChecker_Common.element = elt; FStar_TypeChecker_Common.logical_guard = (p_guard orig); FStar_TypeChecker_Common.scope = (p_scope orig); FStar_TypeChecker_Common.reason = (reason)::(p_reason orig); FStar_TypeChecker_Common.loc = (p_loc orig); FStar_TypeChecker_Common.rank = None}))
 
-# 236 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 236 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let guard_on_element = (fun problem x phi -> (match (problem.FStar_TypeChecker_Common.element) with
 | None -> begin
@@ -439,14 +439,14 @@ end
 (FStar_Syntax_Subst.subst ((FStar_Syntax_Syntax.NT ((x, e)))::[]) phi)
 end))
 
-# 240 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 240 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let explain : FStar_TypeChecker_Env.env  ->  FStar_TypeChecker_Common.prob  ->  Prims.string  ->  Prims.string = (fun env d s -> (let _192_231 = (FStar_All.pipe_left FStar_Range.string_of_range (p_loc d))
 in (let _192_230 = (prob_to_string env d)
 in (let _192_229 = (FStar_All.pipe_right (p_reason d) (FStar_String.concat "\n\t>"))
 in (FStar_Util.format4 "(%s) Failed to solve the sub-problem\n%s\nWhich arose because:\n\t%s\nFailed because:%s\n" _192_231 _192_230 _192_229 s)))))
 
-# 254 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 254 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let commit : uvi Prims.list  ->  Prims.unit = (fun uvis -> (FStar_All.pipe_right uvis (FStar_List.iter (fun _90_14 -> (match (_90_14) with
 | UNIV (u, t) -> begin
@@ -462,7 +462,7 @@ end
 (FStar_Syntax_Util.set_uvar u t)
 end)))))
 
-# 262 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 262 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let find_term_uvar : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax FStar_Syntax_Syntax.uvar_basis FStar_Unionfind.uvar  ->  uvi Prims.list  ->  FStar_Syntax_Syntax.term Prims.option = (fun uv s -> (FStar_Util.find_map s (fun _90_15 -> (match (_90_15) with
 | UNIV (_90_229) -> begin
@@ -476,7 +476,7 @@ None
 end
 end))))
 
-# 266 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 266 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let find_univ_uvar : FStar_Syntax_Syntax.universe Prims.option FStar_Unionfind.uvar  ->  uvi Prims.list  ->  FStar_Syntax_Syntax.universe Prims.option = (fun u s -> (FStar_Util.find_map s (fun _90_16 -> (match (_90_16) with
 | UNIV (u', t) -> begin
@@ -490,23 +490,23 @@ end
 None
 end))))
 
-# 278 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 278 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let whnf : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun env t -> (let _192_250 = (let _192_249 = (FStar_Syntax_Util.unmeta t)
 in (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normalize.Beta)::(FStar_TypeChecker_Normalize.WHNF)::[]) env _192_249))
 in (FStar_Syntax_Subst.compress _192_250)))
 
-# 279 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 279 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let sn : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun env t -> (let _192_255 = (FStar_TypeChecker_Normalize.normalize ((FStar_TypeChecker_Normalize.Beta)::[]) env t)
 in (FStar_Syntax_Subst.compress _192_255)))
 
-# 280 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 280 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let norm_arg = (fun env t -> (let _192_258 = (sn env (Prims.fst t))
 in (_192_258, (Prims.snd t))))
 
-# 281 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 281 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let sn_binders : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.binders  ->  (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier Prims.option) Prims.list = (fun env binders -> (FStar_All.pipe_right binders (FStar_List.map (fun _90_257 -> (match (_90_257) with
 | (x, imp) -> begin
@@ -516,7 +516,7 @@ in {FStar_Syntax_Syntax.ppname = _90_258.FStar_Syntax_Syntax.ppname; FStar_Synta
 in (_192_265, imp))
 end)))))
 
-# 288 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 288 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let norm_univ : worklist  ->  FStar_Syntax_Syntax.universe  ->  FStar_Syntax_Syntax.universe = (fun wl u -> (let rec aux = (fun u -> (let u = (FStar_Syntax_Subst.compress_univ u)
 in (match (u) with
@@ -534,12 +534,12 @@ end)))
 in (let _192_274 = (aux u)
 in (FStar_TypeChecker_Normalize.normalize_universe wl.tcenv _192_274))))
 
-# 301 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 301 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let normalize_refinement = (fun steps env wl t0 -> (let _192_279 = (whnf env t0)
 in (FStar_TypeChecker_Normalize.normalize_refinement steps env _192_279)))
 
-# 303 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 303 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let base_and_refinement = (fun env wl t1 -> (let rec aux = (fun norm t1 -> (match (t1.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Tm_refine (x, phi) -> begin
@@ -591,16 +591,16 @@ end))
 in (let _192_294 = (whnf env t1)
 in (aux false _192_294))))
 
-# 343 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 343 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let unrefine : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term = (fun env t -> (let _192_299 = (base_and_refinement env (empty_worklist env) t)
 in (FStar_All.pipe_right _192_299 Prims.fst)))
 
-# 345 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 345 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let trivial_refinement : FStar_Syntax_Syntax.term  ->  (FStar_Syntax_Syntax.bv * (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax) = (fun t -> ((FStar_Syntax_Syntax.null_bv t), FStar_Syntax_Util.t_true))
 
-# 347 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 347 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let as_refinement = (fun env wl t -> (let _90_357 = (base_and_refinement env wl t)
 in (match (_90_357) with
@@ -614,7 +614,7 @@ end
 end)
 end)))
 
-# 353 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 353 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let force_refinement = (fun _90_365 -> (match (_90_365) with
 | (t_base, refopt) -> begin
@@ -631,7 +631,7 @@ in (match (_90_373) with
 end))
 end))
 
-# 367 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 367 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let wl_prob_to_string : worklist  ->  FStar_TypeChecker_Common.prob  ->  Prims.string = (fun wl _90_17 -> (match (_90_17) with
 | FStar_TypeChecker_Common.TProb (p) -> begin
@@ -649,7 +649,7 @@ in (let _192_315 = (FStar_TypeChecker_Normalize.comp_to_string wl.tcenv p.FStar_
 in (FStar_Util.format4 "%s: %s  (%s)  %s" _192_317 _192_316 (rel_to_string p.FStar_TypeChecker_Common.relation) _192_315))))
 end))
 
-# 382 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 382 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let wl_to_string : worklist  ->  Prims.string = (fun wl -> (let _192_323 = (let _192_322 = (let _192_321 = (FStar_All.pipe_right wl.wl_deferred (FStar_List.map (fun _90_386 -> (match (_90_386) with
 | (_90_382, _90_384, x) -> begin
@@ -659,11 +659,11 @@ in (FStar_List.append wl.attempting _192_321))
 in (FStar_List.map (wl_prob_to_string wl) _192_322))
 in (FStar_All.pipe_right _192_323 (FStar_String.concat "\n\t"))))
 
-# 392 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 392 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let u_abs : (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier Prims.option) Prims.list  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun x y -> (FStar_Syntax_Util.abs x y None))
 
-# 394 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 394 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let solve_prob' : Prims.bool  ->  FStar_TypeChecker_Common.prob  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax Prims.option  ->  uvi Prims.list  ->  worklist  ->  worklist = (fun resolve_ok prob logical_guard uvis wl -> (let phi = (match (logical_guard) with
 | None -> begin
@@ -703,7 +703,7 @@ in (let _90_418 = wl
 in {attempting = _90_418.attempting; wl_deferred = _90_418.wl_deferred; ctr = (wl.ctr + 1); defer_ok = _90_418.defer_ok; smt_ok = _90_418.smt_ok; tcenv = _90_418.tcenv})))
 end))))
 
-# 414 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 414 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let extend_solution : Prims.int  ->  uvi Prims.list  ->  worklist  ->  worklist = (fun pid sol wl -> (let _90_423 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug wl.tcenv) (FStar_Options.Other ("RelCheck"))) then begin
 (let _192_351 = (FStar_Util.string_of_int pid)
@@ -717,7 +717,7 @@ in (let _90_425 = (commit sol)
 in (let _90_427 = wl
 in {attempting = _90_427.attempting; wl_deferred = _90_427.wl_deferred; ctr = (wl.ctr + 1); defer_ok = _90_427.defer_ok; smt_ok = _90_427.smt_ok; tcenv = _90_427.tcenv}))))
 
-# 420 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 420 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let solve_prob : FStar_TypeChecker_Common.prob  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax Prims.option  ->  uvi Prims.list  ->  worklist  ->  worklist = (fun prob logical_guard uvis wl -> (let conj_guard = (fun t g -> (match ((t, g)) with
 | (_90_437, FStar_TypeChecker_Common.Trivial) -> begin
@@ -740,7 +740,7 @@ end else begin
 end
 in (solve_prob' false prob logical_guard uvis wl))))
 
-# 437 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 437 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let rec occurs = (fun wl uk t -> (let _192_377 = (let _192_375 = (FStar_Syntax_Free.uvars t)
 in (FStar_All.pipe_right _192_375 FStar_Util.set_elements))
@@ -749,7 +749,7 @@ in (FStar_All.pipe_right _192_377 (FStar_Util.for_some (fun _90_458 -> (match (_
 (FStar_Unionfind.equivalent uv (Prims.fst uk))
 end))))))
 
-# 443 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 443 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let occurs_check = (fun env wl uk t -> (let occurs_ok = (not ((occurs wl uk t)))
 in (let msg = if occurs_ok then begin
@@ -762,7 +762,7 @@ in Some (_192_384))
 end
 in (occurs_ok, msg))))
 
-# 452 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 452 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let occurs_and_freevars_check = (fun env wl uk fvs t -> (let fvs_t = (FStar_Syntax_Free.names t)
 in (let _90_473 = (occurs_check env wl uk t)
@@ -772,7 +772,7 @@ in (match (_90_473) with
 in (occurs_ok, _192_438, (msg, fvs, fvs_t)))
 end))))
 
-# 457 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 457 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let intersect_vars = (fun v1 v2 -> (let as_set = (fun v -> (FStar_All.pipe_right v (FStar_List.fold_left (fun out x -> (FStar_Util.set_add (Prims.fst x) out)) FStar_Syntax_Syntax.no_names)))
 in (let v1_set = (as_set v1)
@@ -796,14 +796,14 @@ in (match (_90_491) with
 (FStar_List.rev isect)
 end)))))
 
-# 474 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 474 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let binders_eq = (fun v1 v2 -> (((FStar_List.length v1) = (FStar_List.length v2)) && (FStar_List.forall2 (fun _90_497 _90_501 -> (match ((_90_497, _90_501)) with
 | ((a, _90_496), (b, _90_500)) -> begin
 (FStar_Syntax_Syntax.bv_eq a b)
 end)) v1 v2)))
 
-# 478 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 478 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let pat_var_opt = (fun env seen arg -> (let hd = (norm_arg env arg)
 in (match ((Prims.fst hd).FStar_Syntax_Syntax.n) with
@@ -821,7 +821,7 @@ end
 None
 end)))
 
-# 488 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 488 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let rec pat_vars : FStar_TypeChecker_Env.env  ->  (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier Prims.option) Prims.list  ->  (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.arg_qualifier Prims.option) Prims.list  ->  FStar_Syntax_Syntax.binders Prims.option = (fun env seen args -> (match (args) with
 | [] -> begin
@@ -843,7 +843,7 @@ end
 end)
 end))
 
-# 496 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 496 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let destruct_flex_t = (fun t -> (match (t.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Tm_uvar (uv, k) -> begin
@@ -856,7 +856,7 @@ end
 (FStar_All.failwith "Not a flex-uvar")
 end))
 
-# 501 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 501 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let destruct_flex_pattern = (fun env t -> (let _90_553 = (destruct_flex_t t)
 in (match (_90_553) with
@@ -870,14 +870,14 @@ end
 end)
 end)))
 
-# 576 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 576 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 type match_result =
 | MisMatch
 | HeadMatch
 | FullMatch
 
-# 577 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 577 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let is_MisMatch = (fun _discr_ -> (match (_discr_) with
 | MisMatch (_) -> begin
@@ -887,7 +887,7 @@ end
 false
 end))
 
-# 578 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 578 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let is_HeadMatch = (fun _discr_ -> (match (_discr_) with
 | HeadMatch (_) -> begin
@@ -897,7 +897,7 @@ end
 false
 end))
 
-# 579 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 579 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let is_FullMatch = (fun _discr_ -> (match (_discr_) with
 | FullMatch (_) -> begin
@@ -907,7 +907,7 @@ end
 false
 end))
 
-# 581 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 581 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let head_match : match_result  ->  match_result = (fun _90_18 -> (match (_90_18) with
 | MisMatch -> begin
@@ -917,7 +917,7 @@ end
 HeadMatch
 end))
 
-# 585 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 585 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let rec head_matches : FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  match_result = (fun t1 t2 -> (match ((let _192_487 = (let _192_484 = (FStar_Syntax_Util.unmeta t1)
 in _192_484.FStar_Syntax_Syntax.n)
@@ -984,7 +984,7 @@ end
 MisMatch
 end))
 
-# 611 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 611 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let head_matches_delta = (fun env wl t1 t2 -> (let success = (fun d r t1 t2 -> (r, if (d > 0) then begin
 Some ((t1, t2))
@@ -1016,13 +1016,13 @@ end
 end))
 in (aux 0 t1 t2)))))
 
-# 628 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 628 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 type tc =
 | T of FStar_Syntax_Syntax.term
 | C of FStar_Syntax_Syntax.comp
 
-# 629 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 629 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let is_T = (fun _discr_ -> (match (_discr_) with
 | T (_) -> begin
@@ -1032,7 +1032,7 @@ end
 false
 end))
 
-# 630 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 630 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let is_C = (fun _discr_ -> (match (_discr_) with
 | C (_) -> begin
@@ -1042,26 +1042,26 @@ end
 false
 end))
 
-# 629 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 629 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let ___T____0 : tc  ->  FStar_Syntax_Syntax.term = (fun projectee -> (match (projectee) with
 | T (_90_694) -> begin
 _90_694
 end))
 
-# 630 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 630 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let ___C____0 : tc  ->  FStar_Syntax_Syntax.comp = (fun projectee -> (match (projectee) with
 | C (_90_697) -> begin
 _90_697
 end))
 
-# 631 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 631 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 type tcs =
 tc Prims.list
 
-# 633 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 633 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let rec decompose = (fun env t -> (let t = (FStar_Syntax_Util.unmeta t)
 in (let matches = (fun t' -> ((head_matches t t') <> MisMatch))
@@ -1128,7 +1128,7 @@ end))
 in (rebuild, (fun t -> true), []))
 end))))
 
-# 677 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 677 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let un_T : tc  ->  FStar_Syntax_Syntax.term = (fun _90_21 -> (match (_90_21) with
 | T (t) -> begin
@@ -1138,7 +1138,7 @@ end
 (FStar_All.failwith "Impossible")
 end))
 
-# 681 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 681 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let arg_of_tc : tc  ->  ((FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax * FStar_Syntax_Syntax.arg_qualifier Prims.option) = (fun _90_22 -> (match (_90_22) with
 | T (t) -> begin
@@ -1148,7 +1148,7 @@ end
 (FStar_All.failwith "Impossible")
 end))
 
-# 685 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 685 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let imitation_sub_probs = (fun orig env scope ps qs -> (let r = (p_loc orig)
 in (let rel = (p_rel orig)
@@ -1264,7 +1264,7 @@ end))
 end))
 in (aux scope ps qs))))))
 
-# 760 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 760 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let rec eq_tm : FStar_Syntax_Syntax.typ  ->  FStar_Syntax_Syntax.typ  ->  Prims.bool = (fun t1 t2 -> (let t1 = (FStar_Syntax_Subst.compress t1)
 in (let t2 = (FStar_Syntax_Subst.compress t2)
@@ -1292,56 +1292,56 @@ and eq_args : FStar_Syntax_Syntax.args  ->  FStar_Syntax_Syntax.args  ->  Prims.
 (eq_tm a1 a2)
 end)) a1 a2)))
 
-# 779 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 779 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 type flex_t =
 (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.uvar * FStar_Syntax_Syntax.typ * FStar_Syntax_Syntax.args)
 
-# 780 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 780 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 type im_or_proj_t =
 ((FStar_Syntax_Syntax.uvar * FStar_Syntax_Syntax.typ) * FStar_Syntax_Syntax.arg Prims.list * FStar_Syntax_Syntax.binders * ((tc Prims.list  ->  FStar_Syntax_Syntax.typ) * (FStar_Syntax_Syntax.typ  ->  Prims.bool) * (FStar_Syntax_Syntax.binder Prims.option * variance * tc) Prims.list))
 
-# 782 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 782 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let rigid_rigid : Prims.int = 0
 
-# 783 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 783 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let flex_rigid_eq : Prims.int = 1
 
-# 784 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 784 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let flex_refine_inner : Prims.int = 2
 
-# 785 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 785 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let flex_refine : Prims.int = 3
 
-# 786 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 786 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let flex_rigid : Prims.int = 4
 
-# 787 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 787 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let rigid_flex : Prims.int = 5
 
-# 788 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 788 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let refine_flex : Prims.int = 6
 
-# 789 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 789 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let flex_flex : Prims.int = 7
 
-# 790 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 790 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let compress_tprob = (fun wl p -> (let _90_975 = p
 in (let _192_660 = (whnf wl.tcenv p.FStar_TypeChecker_Common.lhs)
 in (let _192_659 = (whnf wl.tcenv p.FStar_TypeChecker_Common.rhs)
 in {FStar_TypeChecker_Common.pid = _90_975.FStar_TypeChecker_Common.pid; FStar_TypeChecker_Common.lhs = _192_660; FStar_TypeChecker_Common.relation = _90_975.FStar_TypeChecker_Common.relation; FStar_TypeChecker_Common.rhs = _192_659; FStar_TypeChecker_Common.element = _90_975.FStar_TypeChecker_Common.element; FStar_TypeChecker_Common.logical_guard = _90_975.FStar_TypeChecker_Common.logical_guard; FStar_TypeChecker_Common.scope = _90_975.FStar_TypeChecker_Common.scope; FStar_TypeChecker_Common.reason = _90_975.FStar_TypeChecker_Common.reason; FStar_TypeChecker_Common.loc = _90_975.FStar_TypeChecker_Common.loc; FStar_TypeChecker_Common.rank = _90_975.FStar_TypeChecker_Common.rank}))))
 
-# 792 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 792 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let compress_prob : worklist  ->  FStar_TypeChecker_Common.prob  ->  FStar_TypeChecker_Common.prob = (fun wl p -> (match (p) with
 | FStar_TypeChecker_Common.TProb (p) -> begin
@@ -1352,7 +1352,7 @@ end
 p
 end))
 
-# 797 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 797 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let rank : worklist  ->  FStar_TypeChecker_Common.prob  ->  (Prims.int * FStar_TypeChecker_Common.prob) = (fun wl pr -> (let prob = (let _192_671 = (compress_prob wl pr)
 in (FStar_All.pipe_right _192_671 maybe_invert_p))
@@ -1426,7 +1426,7 @@ in {FStar_TypeChecker_Common.pid = _90_1057.FStar_TypeChecker_Common.pid; FStar_
 in (rigid_rigid, _192_679))
 end)))
 
-# 836 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 836 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let next_prob : worklist  ->  (FStar_TypeChecker_Common.prob Prims.option * FStar_TypeChecker_Common.prob Prims.list * Prims.int) = (fun wl -> (let rec aux = (fun _90_1064 probs -> (match (_90_1064) with
 | (min_rank, min, out) -> begin
@@ -1464,18 +1464,18 @@ end)
 end))
 in (aux ((flex_flex + 1), None, []) wl.attempting)))
 
-# 856 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 856 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let is_flex_rigid : Prims.int  ->  Prims.bool = (fun rank -> ((flex_refine_inner <= rank) && (rank <= flex_rigid)))
 
-# 858 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 858 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 type univ_eq_sol =
 | UDeferred of worklist
 | USolved of worklist
 | UFailed of Prims.string
 
-# 859 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 859 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let is_UDeferred = (fun _discr_ -> (match (_discr_) with
 | UDeferred (_) -> begin
@@ -1485,7 +1485,7 @@ end
 false
 end))
 
-# 860 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 860 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let is_USolved = (fun _discr_ -> (match (_discr_) with
 | USolved (_) -> begin
@@ -1495,7 +1495,7 @@ end
 false
 end))
 
-# 861 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 861 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let is_UFailed = (fun _discr_ -> (match (_discr_) with
 | UFailed (_) -> begin
@@ -1505,28 +1505,28 @@ end
 false
 end))
 
-# 859 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 859 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let ___UDeferred____0 : univ_eq_sol  ->  worklist = (fun projectee -> (match (projectee) with
 | UDeferred (_90_1082) -> begin
 _90_1082
 end))
 
-# 860 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 860 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let ___USolved____0 : univ_eq_sol  ->  worklist = (fun projectee -> (match (projectee) with
 | USolved (_90_1085) -> begin
 _90_1085
 end))
 
-# 861 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 861 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let ___UFailed____0 : univ_eq_sol  ->  Prims.string = (fun projectee -> (match (projectee) with
 | UFailed (_90_1088) -> begin
 _90_1088
 end))
 
-# 863 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 863 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let rec solve_universe_eq : Prims.int  ->  worklist  ->  FStar_Syntax_Syntax.universe  ->  FStar_Syntax_Syntax.universe  ->  univ_eq_sol = (fun orig wl u1 u2 -> (let u1 = (FStar_TypeChecker_Normalize.normalize_universe wl.tcenv u1)
 in (let u2 = (FStar_TypeChecker_Normalize.normalize_universe wl.tcenv u2)
@@ -1629,7 +1629,7 @@ end
 UFailed ("Incompatible universes")
 end))))))
 
-# 946 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 946 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let rec solve : FStar_TypeChecker_Env.env  ->  worklist  ->  solution = (fun env probs -> (let _90_1234 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("RelCheck"))) then begin
 (let _192_805 = (wl_to_string probs)
@@ -3021,7 +3021,7 @@ end)
 end))))
 end))))))
 
-# 1837 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 1837 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let print_pending_implicits : FStar_TypeChecker_Env.guard_t  ->  Prims.string = (fun g -> (let _192_1337 = (FStar_All.pipe_right g.FStar_TypeChecker_Env.implicits (FStar_List.map (fun _90_2700 -> (match (_90_2700) with
 | (_90_2692, u, _90_2695, _90_2697, _90_2699) -> begin
@@ -3029,7 +3029,7 @@ let print_pending_implicits : FStar_TypeChecker_Env.guard_t  ->  Prims.string = 
 end))))
 in (FStar_All.pipe_right _192_1337 (FStar_String.concat ", "))))
 
-# 1839 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 1839 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let guard_to_string : FStar_TypeChecker_Env.env  ->  FStar_TypeChecker_Env.guard_t  ->  Prims.string = (fun env g -> (match ((g.FStar_TypeChecker_Env.guard_f, g.FStar_TypeChecker_Env.deferred)) with
 | (FStar_TypeChecker_Common.Trivial, []) -> begin
@@ -3056,15 +3056,15 @@ in (let imps = (print_pending_implicits g)
 in (FStar_Util.format3 "\n\t{guard_f=%s;\n\t deferred={\n%s};\n\t implicits={%s}}\n" form carry imps))))
 end))
 
-# 1857 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 1857 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let guard_of_guard_formula : FStar_TypeChecker_Common.guard_formula  ->  FStar_TypeChecker_Env.guard_t = (fun g -> {FStar_TypeChecker_Env.guard_f = g; FStar_TypeChecker_Env.deferred = []; FStar_TypeChecker_Env.univ_ineqs = []; FStar_TypeChecker_Env.implicits = []})
 
-# 1859 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 1859 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let guard_form : FStar_TypeChecker_Env.guard_t  ->  FStar_TypeChecker_Common.guard_formula = (fun g -> g.FStar_TypeChecker_Env.guard_f)
 
-# 1861 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 1861 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let is_trivial : FStar_TypeChecker_Env.guard_t  ->  Prims.bool = (fun g -> (match (g) with
 | {FStar_TypeChecker_Env.guard_f = FStar_TypeChecker_Common.Trivial; FStar_TypeChecker_Env.deferred = []; FStar_TypeChecker_Env.univ_ineqs = _90_2724; FStar_TypeChecker_Env.implicits = _90_2722} -> begin
@@ -3074,11 +3074,11 @@ end
 false
 end))
 
-# 1865 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 1865 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let trivial_guard : FStar_TypeChecker_Env.guard_t = {FStar_TypeChecker_Env.guard_f = FStar_TypeChecker_Common.Trivial; FStar_TypeChecker_Env.deferred = []; FStar_TypeChecker_Env.univ_ineqs = []; FStar_TypeChecker_Env.implicits = []}
 
-# 1867 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 1867 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let abstract_guard : FStar_Syntax_Syntax.bv  ->  FStar_TypeChecker_Env.guard_t Prims.option  ->  FStar_TypeChecker_Env.guard_t Prims.option = (fun x g -> (match (g) with
 | (None) | (Some ({FStar_TypeChecker_Env.guard_f = FStar_TypeChecker_Common.Trivial; FStar_TypeChecker_Env.deferred = _; FStar_TypeChecker_Env.univ_ineqs = _; FStar_TypeChecker_Env.implicits = _})) -> begin
@@ -3099,7 +3099,7 @@ in {FStar_TypeChecker_Env.guard_f = _192_1356; FStar_TypeChecker_Env.deferred = 
 in Some (_192_1357)))
 end))
 
-# 1876 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 1876 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let apply_guard : FStar_TypeChecker_Env.guard_t  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax  ->  FStar_TypeChecker_Env.guard_t = (fun g e -> (match (g.FStar_TypeChecker_Env.guard_f) with
 | FStar_TypeChecker_Common.Trivial -> begin
@@ -3112,7 +3112,7 @@ in (FStar_All.pipe_left (fun _192_1362 -> FStar_TypeChecker_Common.NonTrivial (_
 in {FStar_TypeChecker_Env.guard_f = _192_1364; FStar_TypeChecker_Env.deferred = _90_2756.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = _90_2756.FStar_TypeChecker_Env.univ_ineqs; FStar_TypeChecker_Env.implicits = _90_2756.FStar_TypeChecker_Env.implicits}))
 end))
 
-# 1880 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 1880 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let trivial : FStar_TypeChecker_Common.guard_formula  ->  Prims.unit = (fun t -> (match (t) with
 | FStar_TypeChecker_Common.Trivial -> begin
@@ -3122,7 +3122,7 @@ end
 (FStar_All.failwith "impossible")
 end))
 
-# 1884 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 1884 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let conj_guard_f : FStar_TypeChecker_Common.guard_formula  ->  FStar_TypeChecker_Common.guard_formula  ->  FStar_TypeChecker_Common.guard_formula = (fun g1 g2 -> (match ((g1, g2)) with
 | ((FStar_TypeChecker_Common.Trivial, g)) | ((g, FStar_TypeChecker_Common.Trivial)) -> begin
@@ -3133,7 +3133,7 @@ end
 in FStar_TypeChecker_Common.NonTrivial (_192_1371))
 end))
 
-# 1889 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 1889 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let check_trivial : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax  ->  FStar_TypeChecker_Common.guard_formula = (fun t -> (match (t.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Tm_fvar (tc, _90_2778) when (FStar_Ident.lid_equals tc.FStar_Syntax_Syntax.v FStar_Syntax_Const.true_lid) -> begin
@@ -3143,7 +3143,7 @@ end
 FStar_TypeChecker_Common.NonTrivial (t)
 end))
 
-# 1893 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 1893 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let imp_guard_f : FStar_TypeChecker_Common.guard_formula  ->  FStar_TypeChecker_Common.guard_formula  ->  FStar_TypeChecker_Common.guard_formula = (fun g1 g2 -> (match ((g1, g2)) with
 | (FStar_TypeChecker_Common.Trivial, g) -> begin
@@ -3157,20 +3157,20 @@ end
 in (check_trivial imp))
 end))
 
-# 1899 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 1899 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let binop_guard : (FStar_TypeChecker_Common.guard_formula  ->  FStar_TypeChecker_Common.guard_formula  ->  FStar_TypeChecker_Common.guard_formula)  ->  FStar_TypeChecker_Env.guard_t  ->  FStar_TypeChecker_Env.guard_t  ->  FStar_TypeChecker_Env.guard_t = (fun f g1 g2 -> (let _192_1394 = (f g1.FStar_TypeChecker_Env.guard_f g2.FStar_TypeChecker_Env.guard_f)
 in {FStar_TypeChecker_Env.guard_f = _192_1394; FStar_TypeChecker_Env.deferred = (FStar_List.append g1.FStar_TypeChecker_Env.deferred g2.FStar_TypeChecker_Env.deferred); FStar_TypeChecker_Env.univ_ineqs = (FStar_List.append g1.FStar_TypeChecker_Env.univ_ineqs g2.FStar_TypeChecker_Env.univ_ineqs); FStar_TypeChecker_Env.implicits = (FStar_List.append g1.FStar_TypeChecker_Env.implicits g2.FStar_TypeChecker_Env.implicits)}))
 
-# 1903 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 1903 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let conj_guard : FStar_TypeChecker_Env.guard_t  ->  FStar_TypeChecker_Env.guard_t  ->  FStar_TypeChecker_Env.guard_t = (fun g1 g2 -> (binop_guard conj_guard_f g1 g2))
 
-# 1904 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 1904 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let imp_guard : FStar_TypeChecker_Env.guard_t  ->  FStar_TypeChecker_Env.guard_t  ->  FStar_TypeChecker_Env.guard_t = (fun g1 g2 -> (binop_guard imp_guard_f g1 g2))
 
-# 1906 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 1906 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let close_guard : FStar_Syntax_Syntax.binder Prims.list  ->  FStar_TypeChecker_Env.guard_t  ->  FStar_TypeChecker_Env.guard_t = (fun binders g -> (match (g.FStar_TypeChecker_Env.guard_f) with
 | FStar_TypeChecker_Common.Trivial -> begin
@@ -3183,7 +3183,7 @@ in (FStar_All.pipe_right _192_1408 (fun _192_1407 -> FStar_TypeChecker_Common.No
 in {FStar_TypeChecker_Env.guard_f = _192_1409; FStar_TypeChecker_Env.deferred = _90_2809.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = _90_2809.FStar_TypeChecker_Env.univ_ineqs; FStar_TypeChecker_Env.implicits = _90_2809.FStar_TypeChecker_Env.implicits}))
 end))
 
-# 1913 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 1913 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let new_t_problem = (fun env lhs rel rhs elt loc -> (let reason = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("ExplainRel"))) then begin
 (let _192_1417 = (FStar_TypeChecker_Normalize.term_to_string env lhs)
@@ -3195,7 +3195,7 @@ end
 in (let p = (new_problem env lhs rel rhs elt loc reason)
 in p)))
 
-# 1922 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 1922 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let new_t_prob : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.typ  ->  FStar_TypeChecker_Common.rel  ->  FStar_Syntax_Syntax.term  ->  (FStar_TypeChecker_Common.prob * FStar_Syntax_Syntax.bv) = (fun env t1 rel t2 -> (let x = (let _192_1427 = (FStar_All.pipe_left (fun _192_1426 -> Some (_192_1426)) (FStar_TypeChecker_Env.get_range env))
 in (FStar_Syntax_Syntax.new_bv _192_1427 t1))
@@ -3205,7 +3205,7 @@ in (FStar_All.pipe_left (fun _192_1428 -> Some (_192_1428)) _192_1429))
 in (new_t_problem env t1 rel t2 _192_1430 (FStar_TypeChecker_Env.get_range env)))
 in (FStar_TypeChecker_Common.TProb (p), x)))))
 
-# 1928 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 1928 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let solve_and_commit : FStar_TypeChecker_Env.env  ->  worklist  ->  ((FStar_TypeChecker_Common.prob * Prims.string)  ->  FStar_TypeChecker_Common.deferred Prims.option)  ->  FStar_TypeChecker_Common.deferred Prims.option = (fun env probs err -> (let probs = if (FStar_ST.read FStar_Options.eager_inference) then begin
 (let _90_2829 = probs
@@ -3231,7 +3231,7 @@ end
 in (err (d, s))))
 end)))))
 
-# 1942 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 1942 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let simplify_guard : FStar_TypeChecker_Env.env  ->  FStar_TypeChecker_Env.guard_t  ->  FStar_TypeChecker_Env.guard_t = (fun env g -> (match (g.FStar_TypeChecker_Env.guard_f) with
 | FStar_TypeChecker_Common.Trivial -> begin
@@ -3263,7 +3263,7 @@ in (let _90_2864 = g
 in {FStar_TypeChecker_Env.guard_f = f; FStar_TypeChecker_Env.deferred = _90_2864.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = _90_2864.FStar_TypeChecker_Env.univ_ineqs; FStar_TypeChecker_Env.implicits = _90_2864.FStar_TypeChecker_Env.implicits})))))
 end))
 
-# 1953 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 1953 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let with_guard : FStar_TypeChecker_Env.env  ->  FStar_TypeChecker_Common.prob  ->  FStar_TypeChecker_Common.deferred Prims.option  ->  FStar_TypeChecker_Env.guard_t Prims.option = (fun env prob dopt -> (match (dopt) with
 | None -> begin
@@ -3277,7 +3277,7 @@ in (simplify_guard env _192_1460))
 in (FStar_All.pipe_left (fun _192_1456 -> Some (_192_1456)) _192_1461))
 end))
 
-# 1958 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 1958 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let try_teq : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  FStar_TypeChecker_Env.guard_t Prims.option = (fun env t1 t2 -> (let _90_2875 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _192_1469 = (FStar_Syntax_Print.term_to_string t1)
@@ -3292,7 +3292,7 @@ in (let g = (let _192_1473 = (solve_and_commit env (singleton env prob) (fun _90
 in (FStar_All.pipe_left (with_guard env prob) _192_1473))
 in g))))
 
-# 1965 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 1965 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let teq : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  FStar_TypeChecker_Env.guard_t = (fun env t1 t2 -> (match ((try_teq env t1 t2)) with
 | None -> begin
@@ -3313,7 +3313,7 @@ end
 in g)
 end))
 
-# 1976 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 1976 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let try_subtype : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term  ->  FStar_TypeChecker_Env.guard_t Prims.option = (fun env t1 t2 -> (let _90_2892 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _192_1493 = (FStar_TypeChecker_Normalize.term_to_string env t1)
@@ -3339,14 +3339,14 @@ end
 in (abstract_guard x g)))
 end))))
 
-# 1989 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 1989 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let subtype_fail = (fun env t1 t2 -> (let _192_1505 = (let _192_1504 = (let _192_1503 = (FStar_TypeChecker_Errors.basic_type_error env None t2 t1)
 in (_192_1503, (FStar_TypeChecker_Env.get_range env)))
 in FStar_Syntax_Syntax.Error (_192_1504))
 in (Prims.raise _192_1505)))
 
-# 1993 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 1993 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let sub_comp : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.comp  ->  FStar_Syntax_Syntax.comp  ->  FStar_TypeChecker_Env.guard_t Prims.option = (fun env c1 c2 -> (let _90_2908 = if (FStar_All.pipe_left (FStar_TypeChecker_Env.debug env) (FStar_Options.Other ("Rel"))) then begin
 (let _192_1513 = (FStar_Syntax_Print.comp_to_string c1)
@@ -3365,7 +3365,7 @@ in (FStar_All.pipe_left (fun _192_1514 -> FStar_TypeChecker_Common.CProb (_192_1
 in (let _192_1517 = (solve_and_commit env (singleton env prob) (fun _90_2912 -> None))
 in (FStar_All.pipe_left (with_guard env prob) _192_1517))))))
 
-# 2001 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 2001 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let solve_universe_inequalities' : FStar_Unionfind.tx  ->  FStar_TypeChecker_Env.env  ->  (FStar_Syntax_Syntax.universe * FStar_Syntax_Syntax.universe) Prims.list  ->  Prims.unit = (fun tx env ineqs -> (let fail = (fun msg u1 u2 -> (let _90_2921 = (FStar_Unionfind.rollback tx)
 in (let msg = (match (msg) with
@@ -3502,13 +3502,13 @@ end
 (ad_hoc_fallback ())
 end))))))
 
-# 2083 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 2083 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let solve_universe_inequalities : FStar_TypeChecker_Env.env  ->  (FStar_Syntax_Syntax.universe * FStar_Syntax_Syntax.universe) Prims.list  ->  Prims.unit = (fun env ineqs -> (let tx = (FStar_Unionfind.new_transaction ())
 in (let _90_3022 = (solve_universe_inequalities' tx env ineqs)
 in (FStar_Unionfind.commit tx))))
 
-# 2088 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 2088 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let rec solve_deferred_constraints : FStar_TypeChecker_Env.env  ->  FStar_TypeChecker_Env.guard_t  ->  FStar_TypeChecker_Env.guard_t = (fun env g -> (let fail = (fun _90_3029 -> (match (_90_3029) with
 | (d, s) -> begin
@@ -3535,7 +3535,7 @@ in (let _90_3041 = (solve_universe_inequalities env g.FStar_TypeChecker_Env.univ
 in (let _90_3043 = g
 in {FStar_TypeChecker_Env.guard_f = _90_3043.FStar_TypeChecker_Env.guard_f; FStar_TypeChecker_Env.deferred = _90_3043.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = []; FStar_TypeChecker_Env.implicits = _90_3043.FStar_TypeChecker_Env.implicits})))))))
 
-# 2101 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 2101 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let discharge_guard : FStar_TypeChecker_Env.env  ->  FStar_TypeChecker_Env.guard_t  ->  FStar_TypeChecker_Env.guard_t = (fun env g -> (let g = (solve_deferred_constraints env g)
 in (let _90_3057 = if (not ((FStar_Options.should_verify env.FStar_TypeChecker_Env.curmodule.FStar_Ident.str))) then begin
@@ -3566,7 +3566,7 @@ end
 in (let _90_3059 = g
 in {FStar_TypeChecker_Env.guard_f = FStar_TypeChecker_Common.Trivial; FStar_TypeChecker_Env.deferred = _90_3059.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = _90_3059.FStar_TypeChecker_Env.univ_ineqs; FStar_TypeChecker_Env.implicits = _90_3059.FStar_TypeChecker_Env.implicits}))))
 
-# 2118 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 2118 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let resolve_implicits : FStar_TypeChecker_Env.guard_t  ->  FStar_TypeChecker_Env.guard_t = (fun g -> (let unresolved = (fun u -> (match ((FStar_Unionfind.find u)) with
 | FStar_Syntax_Syntax.Uvar -> begin
@@ -3617,7 +3617,7 @@ in (let _90_3093 = g
 in (let _192_1585 = (until_fixpoint ([], false) g.FStar_TypeChecker_Env.implicits)
 in {FStar_TypeChecker_Env.guard_f = _90_3093.FStar_TypeChecker_Env.guard_f; FStar_TypeChecker_Env.deferred = _90_3093.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = _90_3093.FStar_TypeChecker_Env.univ_ineqs; FStar_TypeChecker_Env.implicits = _192_1585})))))
 
-# 2139 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 2139 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let force_trivial_guard : FStar_TypeChecker_Env.env  ->  FStar_TypeChecker_Env.guard_t  ->  Prims.unit = (fun env g -> (let g = (let _192_1590 = (solve_deferred_constraints env g)
 in (FStar_All.pipe_right _192_1590 resolve_implicits))
@@ -3630,7 +3630,7 @@ end
 (Prims.raise (FStar_Syntax_Syntax.Error (("Failed to resolve implicit argument", r))))
 end)))
 
-# 2145 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\rel.fs"
+# 2145 "D:\\workspace\\FStar\\src\\typechecker\\rel.fs"
 
 let universe_inequality : FStar_Syntax_Syntax.universe  ->  FStar_Syntax_Syntax.universe  ->  FStar_TypeChecker_Env.guard_t = (fun u1 u2 -> (let _90_3114 = trivial_guard
 in {FStar_TypeChecker_Env.guard_f = _90_3114.FStar_TypeChecker_Env.guard_f; FStar_TypeChecker_Env.deferred = _90_3114.FStar_TypeChecker_Env.deferred; FStar_TypeChecker_Env.univ_ineqs = ((u1, u2))::[]; FStar_TypeChecker_Env.implicits = _90_3114.FStar_TypeChecker_Env.implicits}))

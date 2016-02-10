@@ -1358,6 +1358,12 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
     | [TyconAbstract _] ->
         let tc = List.hd tcs in
         let _, _, se, _ = desugar_abstract_tc quals env [] tc in
+        let quals = if quals |> List.contains Assumption 
+                    || quals |> List.contains New
+                    then quals
+                    else (Util.print2 "%s (Warning): Adding an implicit 'new' qualifier on %s\n" 
+                                                (Range.string_of_range rng) (Util.lids_of_sigelt se |> List.map Print.sli |> String.concat ", ");          
+                               New::quals) in
         let env = push_sigelt env se in
         (* let _ = pr "Pushed %s\n" (text_of_lid (qualify env (tycon_id tc))) in *)
         env, [se]
@@ -1469,12 +1475,12 @@ let trans_qual r = function
   | AST.Opaque -> Opaque
   | AST.Logic -> Logic
   | AST.Abstract -> Abstract
+  | AST.New -> New
   | AST.TotalEffect -> TotalEffect
   | AST.DefaultEffect -> DefaultEffect None
   | AST.Effect -> Effect
   | AST.Inline 
   | AST.Irreducible 
-  | AST.New 
   | AST.Unfoldable -> raise (Error("This qualifier is supported only with the --universes option", r))
 
 let trans_pragma = function

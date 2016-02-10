@@ -1,12 +1,12 @@
 
 open Prims
-# 26 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 26 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 type z3version =
 | Z3V_Unknown
 | Z3V of (Prims.int * Prims.int * Prims.int)
 
-# 27 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 27 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let is_Z3V_Unknown = (fun _discr_ -> (match (_discr_) with
 | Z3V_Unknown (_) -> begin
@@ -16,7 +16,7 @@ end
 false
 end))
 
-# 28 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 28 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let is_Z3V = (fun _discr_ -> (match (_discr_) with
 | Z3V (_) -> begin
@@ -26,14 +26,14 @@ end
 false
 end))
 
-# 28 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 28 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let ___Z3V____0 : z3version  ->  (Prims.int * Prims.int * Prims.int) = (fun projectee -> (match (projectee) with
 | Z3V (_99_4) -> begin
 _99_4
 end))
 
-# 30 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 30 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let z3v_compare : z3version  ->  (Prims.int * Prims.int * Prims.int)  ->  Prims.int Prims.option = (fun known _99_9 -> (match (_99_9) with
 | (w1, w2, w3) -> begin
@@ -54,7 +54,7 @@ end)
 end)
 end))
 
-# 39 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 39 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let z3v_le : z3version  ->  (Prims.int * Prims.int * Prims.int)  ->  Prims.bool = (fun known wanted -> (match ((z3v_compare known wanted)) with
 | None -> begin
@@ -64,11 +64,11 @@ end
 (i >= 0)
 end))
 
-# 44 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 44 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let _z3version : z3version Prims.option FStar_ST.ref = (FStar_Util.mk_ref None)
 
-# 46 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 46 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let get_z3version : Prims.unit  ->  z3version = (fun _99_21 -> (match (()) with
 | () -> begin
@@ -110,7 +110,7 @@ end))
 end))
 end))
 
-# 66 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 66 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let ini_params : Prims.unit  ->  Prims.string = (fun _99_56 -> (match (()) with
 | () -> begin
@@ -131,7 +131,7 @@ end
 in (FStar_Util.format2 "-smt2 -in %s AUTO_CONFIG=false MODEL=true %s=2" timeout relevancy))))
 end))
 
-# 84 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 84 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 type z3status =
 | SAT
@@ -139,7 +139,7 @@ type z3status =
 | UNKNOWN
 | TIMEOUT
 
-# 85 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 85 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let is_SAT = (fun _discr_ -> (match (_discr_) with
 | SAT (_) -> begin
@@ -149,7 +149,7 @@ end
 false
 end))
 
-# 86 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 86 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let is_UNSAT = (fun _discr_ -> (match (_discr_) with
 | UNSAT (_) -> begin
@@ -159,7 +159,7 @@ end
 false
 end))
 
-# 87 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 87 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let is_UNKNOWN = (fun _discr_ -> (match (_discr_) with
 | UNKNOWN (_) -> begin
@@ -169,7 +169,7 @@ end
 false
 end))
 
-# 88 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 88 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let is_TIMEOUT = (fun _discr_ -> (match (_discr_) with
 | TIMEOUT (_) -> begin
@@ -179,7 +179,7 @@ end
 false
 end))
 
-# 90 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 90 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let status_to_string : z3status  ->  Prims.string = (fun _99_1 -> (match (_99_1) with
 | SAT -> begin
@@ -195,7 +195,7 @@ end
 "timeout"
 end))
 
-# 96 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 96 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let tid : Prims.unit  ->  Prims.string = (fun _99_65 -> (match (()) with
 | () -> begin
@@ -203,7 +203,7 @@ let tid : Prims.unit  ->  Prims.string = (fun _99_65 -> (match (()) with
 in (FStar_All.pipe_right _201_43 FStar_Util.string_of_int))
 end))
 
-# 97 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 97 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let new_z3proc : Prims.string  ->  FStar_Util.proc = (fun id -> (let cond = (fun pid s -> (let x = ((FStar_Util.trim_string s) = "Done!")
 in x))
@@ -211,20 +211,20 @@ in (let _201_51 = (FStar_ST.read FStar_Options.z3_exe)
 in (let _201_50 = (ini_params ())
 in (FStar_Util.start_process id _201_51 _201_50 cond)))))
 
-# 104 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 104 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 type bgproc =
 {grab : Prims.unit  ->  FStar_Util.proc; release : Prims.unit  ->  Prims.unit; refresh : Prims.unit  ->  Prims.unit}
 
-# 104 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 104 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let is_Mkbgproc : bgproc  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkbgproc"))))
 
-# 111 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 111 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let queries_dot_smt2 : FStar_Util.file_handle Prims.option FStar_ST.ref = (FStar_Util.mk_ref None)
 
-# 113 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 113 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let get_qfile : Prims.bool  ->  FStar_Util.file_handle = (let ctr = (FStar_Util.mk_ref 0)
 in (fun fresh -> if fresh then begin
@@ -245,7 +245,7 @@ fh
 end)
 end))
 
-# 123 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 123 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let log_query : Prims.bool  ->  Prims.string  ->  Prims.unit = (fun fresh i -> (let fh = (get_qfile fresh)
 in (let _99_88 = (FStar_Util.append_to_file fh i)
@@ -255,7 +255,7 @@ end else begin
 ()
 end)))
 
-# 128 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 128 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let bg_z3_proc : bgproc = (let ctr = (FStar_Util.mk_ref (- (1)))
 in (let new_proc = (fun _99_92 -> (match (()) with
@@ -300,7 +300,7 @@ in (release ())))))
 end))
 in {grab = grab; release = release; refresh = refresh})))))))
 
-# 151 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 151 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let doZ3Exe' : Prims.string  ->  FStar_Util.proc  ->  (z3status * Prims.string Prims.list) = (fun input z3proc -> (let parse = (fun z3out -> (let lines = (FStar_All.pipe_right (FStar_String.split (('\n')::[]) z3out) (FStar_List.map FStar_Util.trim_string))
 in (let rec lblnegs = (fun lines -> (match (lines) with
@@ -342,7 +342,7 @@ in (result lines)))))
 in (let stdout = (FStar_Util.ask_process z3proc input)
 in (parse (FStar_Util.trim_string stdout)))))
 
-# 169 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 169 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let doZ3Exe : Prims.bool  ->  Prims.string  ->  (z3status * Prims.string Prims.list) = (let ctr = (FStar_Util.mk_ref 0)
 in (fun fresh input -> (let z3proc = if fresh then begin
@@ -361,7 +361,7 @@ end else begin
 end
 in res)))))
 
-# 178 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 178 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let z3_options : Prims.unit  ->  Prims.string = (fun _99_169 -> (match (()) with
 | () -> begin
@@ -380,21 +380,21 @@ end
 in (Prims.strcat (Prims.strcat (Prims.strcat (Prims.strcat "(set-option :global-decls false)\n" "(set-option :") mbqi) " false)\n") model_on_timeout)))
 end))
 
-# 191 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 191 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 type 'a job =
 {job : Prims.unit  ->  'a; callback : 'a  ->  Prims.unit}
 
-# 191 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 191 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let is_Mkjob = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkjob"))))
 
-# 195 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 195 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 type z3job =
 (Prims.bool * (Prims.string * FStar_Range.range) Prims.list) job
 
-# 198 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 198 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let job_queue : z3job Prims.list FStar_ST.ref = (let x = (FStar_Util.mk_ref (({job = (fun _99_176 -> (match (()) with
 | () -> begin
@@ -406,18 +406,18 @@ end)); callback = (fun a -> ())})::[]))
 in (let _99_179 = (FStar_ST.op_Colon_Equals x [])
 in x))
 
-# 202 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 202 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let pending_jobs : Prims.int FStar_ST.ref = (FStar_Util.mk_ref 0)
 
-# 203 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 203 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let with_monitor = (fun m f -> (let _99_183 = (FStar_Util.monitor_enter m)
 in (let res = (f ())
 in (let _99_186 = (FStar_Util.monitor_exit m)
 in res))))
 
-# 209 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 209 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let z3_job = (fun fresh label_messages input _99_191 -> (match (()) with
 | () -> begin
@@ -451,7 +451,7 @@ in result)
 end))
 end))
 
-# 222 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 222 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let rec dequeue' : Prims.unit  ->  Prims.unit = (fun _99_216 -> (match (()) with
 | () -> begin
@@ -492,7 +492,7 @@ end))
 and run_job : z3job  ->  Prims.unit = (fun j -> (let _201_178 = (j.job ())
 in (FStar_All.pipe_left j.callback _201_178)))
 
-# 245 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 245 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let init : Prims.unit  ->  Prims.unit = (fun _99_246 -> (match (()) with
 | () -> begin
@@ -506,7 +506,7 @@ end)
 in (aux n_runners)))
 end))
 
-# 252 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 252 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let enqueue : Prims.bool  ->  z3job  ->  Prims.unit = (fun fresh j -> if (not (fresh)) then begin
 (run_job j)
@@ -519,7 +519,7 @@ in (let _99_258 = (FStar_Util.monitor_pulse job_queue)
 in (FStar_Util.monitor_exit job_queue))))
 end)
 
-# 263 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 263 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let finish : Prims.unit  ->  Prims.unit = (fun _99_260 -> (match (()) with
 | () -> begin
@@ -549,20 +549,20 @@ end))
 in (aux ())))))
 end))
 
-# 276 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 276 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 type scope_t =
 FStar_SMTEncoding_Term.decl Prims.list Prims.list
 
-# 277 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 277 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let fresh_scope : FStar_SMTEncoding_Term.decl Prims.list Prims.list FStar_ST.ref = (FStar_Util.mk_ref (([])::[]))
 
-# 278 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 278 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let bg_scope : FStar_SMTEncoding_Term.decl Prims.list FStar_ST.ref = (FStar_Util.mk_ref [])
 
-# 279 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 279 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let push : Prims.string  ->  Prims.unit = (fun msg -> (let _99_275 = (let _201_201 = (let _201_200 = (FStar_ST.read fresh_scope)
 in ((FStar_SMTEncoding_Term.Caption (msg))::[])::_201_200)
@@ -571,7 +571,7 @@ in (let _201_203 = (let _201_202 = (FStar_ST.read bg_scope)
 in (FStar_List.append ((FStar_SMTEncoding_Term.Caption (msg))::(FStar_SMTEncoding_Term.Push)::[]) _201_202))
 in (FStar_ST.op_Colon_Equals bg_scope _201_203))))
 
-# 282 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 282 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let pop : Prims.string  ->  Prims.unit = (fun msg -> (let _99_278 = (let _201_207 = (let _201_206 = (FStar_ST.read fresh_scope)
 in (FStar_List.tl _201_206))
@@ -580,7 +580,7 @@ in (let _201_209 = (let _201_208 = (FStar_ST.read bg_scope)
 in (FStar_List.append ((FStar_SMTEncoding_Term.Caption (msg))::(FStar_SMTEncoding_Term.Pop)::[]) _201_208))
 in (FStar_ST.op_Colon_Equals bg_scope _201_209))))
 
-# 285 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 285 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let giveZ3 : FStar_SMTEncoding_Term.decl Prims.list  ->  Prims.unit = (fun decls -> (let _99_286 = (match ((FStar_ST.read fresh_scope)) with
 | hd::tl -> begin
@@ -593,7 +593,7 @@ in (let _201_213 = (let _201_212 = (FStar_ST.read bg_scope)
 in (FStar_List.append (FStar_List.rev decls) _201_212))
 in (FStar_ST.op_Colon_Equals bg_scope _201_213))))
 
-# 290 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 290 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let bgtheory : Prims.bool  ->  FStar_SMTEncoding_Term.decl Prims.list = (fun fresh -> if fresh then begin
 (let _201_217 = (let _201_216 = (FStar_ST.read fresh_scope)
@@ -605,7 +605,7 @@ in (let _99_290 = (FStar_ST.op_Colon_Equals bg_scope [])
 in (FStar_List.rev bg)))
 end)
 
-# 296 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 296 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let refresh : Prims.unit  ->  Prims.unit = (fun _99_292 -> (match (()) with
 | () -> begin
@@ -614,16 +614,16 @@ in (let theory = (bgtheory true)
 in (FStar_ST.op_Colon_Equals bg_scope (FStar_List.rev theory))))
 end))
 
-# 300 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 300 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let mark : Prims.string  ->  Prims.unit = (fun msg -> (push msg))
 
-# 302 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 302 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let reset_mark : Prims.string  ->  Prims.unit = (fun msg -> (let _99_298 = (pop msg)
 in (refresh ())))
 
-# 305 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 305 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let commit_mark = (fun msg -> (match ((FStar_ST.read fresh_scope)) with
 | hd::s::tl -> begin
@@ -633,7 +633,7 @@ end
 (FStar_All.failwith "Impossible")
 end))
 
-# 310 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\smtencoding\\z3.fs"
+# 310 "D:\\workspace\\FStar\\src\\smtencoding\\z3.fs"
 
 let ask = (fun fresh label_messages qry cb -> (let fresh = (fresh && ((FStar_ST.read FStar_Options.n_cores) > 1))
 in (let theory = (bgtheory fresh)

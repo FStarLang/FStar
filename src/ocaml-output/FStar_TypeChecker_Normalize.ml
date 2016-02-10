@@ -1,6 +1,6 @@
 
 open Prims
-# 41 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 41 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 type step =
 | WHNF
@@ -18,7 +18,7 @@ type step =
  and steps =
 step Prims.list
 
-# 42 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 42 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let is_WHNF = (fun _discr_ -> (match (_discr_) with
 | WHNF (_) -> begin
@@ -28,7 +28,7 @@ end
 false
 end))
 
-# 43 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 43 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let is_Inline = (fun _discr_ -> (match (_discr_) with
 | Inline (_) -> begin
@@ -38,7 +38,7 @@ end
 false
 end))
 
-# 44 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 44 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let is_Unfold = (fun _discr_ -> (match (_discr_) with
 | Unfold (_) -> begin
@@ -48,7 +48,7 @@ end
 false
 end))
 
-# 45 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 45 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let is_Beta = (fun _discr_ -> (match (_discr_) with
 | Beta (_) -> begin
@@ -58,7 +58,7 @@ end
 false
 end))
 
-# 46 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 46 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let is_Simplify = (fun _discr_ -> (match (_discr_) with
 | Simplify (_) -> begin
@@ -68,7 +68,7 @@ end
 false
 end))
 
-# 47 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 47 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let is_EraseUniverses = (fun _discr_ -> (match (_discr_) with
 | EraseUniverses (_) -> begin
@@ -78,7 +78,7 @@ end
 false
 end))
 
-# 49 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 49 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let is_DeltaComp = (fun _discr_ -> (match (_discr_) with
 | DeltaComp (_) -> begin
@@ -88,7 +88,7 @@ end
 false
 end))
 
-# 50 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 50 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let is_SNComp = (fun _discr_ -> (match (_discr_) with
 | SNComp (_) -> begin
@@ -98,7 +98,7 @@ end
 false
 end))
 
-# 51 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 51 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let is_Eta = (fun _discr_ -> (match (_discr_) with
 | Eta (_) -> begin
@@ -108,7 +108,7 @@ end
 false
 end))
 
-# 52 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 52 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let is_EtaArgs = (fun _discr_ -> (match (_discr_) with
 | EtaArgs (_) -> begin
@@ -118,7 +118,7 @@ end
 false
 end))
 
-# 53 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 53 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let is_Unmeta = (fun _discr_ -> (match (_discr_) with
 | Unmeta (_) -> begin
@@ -128,7 +128,7 @@ end
 false
 end))
 
-# 54 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 54 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let is_Unlabel = (fun _discr_ -> (match (_discr_) with
 | Unlabel (_) -> begin
@@ -138,7 +138,7 @@ end
 false
 end))
 
-# 58 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 58 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 type closure =
 | Clos of (env * FStar_Syntax_Syntax.term * (env * FStar_Syntax_Syntax.term) FStar_Syntax_Syntax.memo)
@@ -147,7 +147,7 @@ type closure =
  and env =
 closure Prims.list
 
-# 59 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 59 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let is_Clos = (fun _discr_ -> (match (_discr_) with
 | Clos (_) -> begin
@@ -157,7 +157,7 @@ end
 false
 end))
 
-# 60 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 60 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let is_Univ = (fun _discr_ -> (match (_discr_) with
 | Univ (_) -> begin
@@ -167,7 +167,7 @@ end
 false
 end))
 
-# 61 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 61 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let is_Dummy = (fun _discr_ -> (match (_discr_) with
 | Dummy (_) -> begin
@@ -177,21 +177,21 @@ end
 false
 end))
 
-# 59 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 59 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let ___Clos____0 : closure  ->  (env * FStar_Syntax_Syntax.term * (env * FStar_Syntax_Syntax.term) FStar_Syntax_Syntax.memo) = (fun projectee -> (match (projectee) with
 | Clos (_85_8) -> begin
 _85_8
 end))
 
-# 60 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 60 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let ___Univ____0 : closure  ->  FStar_Syntax_Syntax.universe = (fun projectee -> (match (projectee) with
 | Univ (_85_11) -> begin
 _85_11
 end))
 
-# 64 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 64 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let closure_to_string : closure  ->  Prims.string = (fun _85_1 -> (match (_85_1) with
 | Clos (_85_14, t, _85_17) -> begin
@@ -201,26 +201,26 @@ end
 "dummy"
 end))
 
-# 68 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 68 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 type cfg =
 {steps : steps; tcenv : FStar_TypeChecker_Env.env; delta_level : FStar_TypeChecker_Env.delta_level}
 
-# 68 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 68 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let is_Mkcfg : cfg  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkcfg"))))
 
-# 74 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 74 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 type branches =
 (FStar_Syntax_Syntax.pat * FStar_Syntax_Syntax.term Prims.option * FStar_Syntax_Syntax.term) Prims.list
 
-# 76 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 76 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 type subst_t =
 FStar_Syntax_Syntax.subst_elt Prims.list
 
-# 78 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 78 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 type stack_elt =
 | Arg of (closure * FStar_Syntax_Syntax.aqual * FStar_Range.range)
@@ -231,7 +231,7 @@ type stack_elt =
 | App of (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.aqual * FStar_Range.range)
 | Label of (Prims.string * FStar_Range.range)
 
-# 79 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 79 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let is_Arg = (fun _discr_ -> (match (_discr_) with
 | Arg (_) -> begin
@@ -241,7 +241,7 @@ end
 false
 end))
 
-# 80 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 80 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let is_UnivArgs = (fun _discr_ -> (match (_discr_) with
 | UnivArgs (_) -> begin
@@ -251,7 +251,7 @@ end
 false
 end))
 
-# 81 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 81 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let is_MemoLazy = (fun _discr_ -> (match (_discr_) with
 | MemoLazy (_) -> begin
@@ -261,7 +261,7 @@ end
 false
 end))
 
-# 82 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 82 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let is_Match = (fun _discr_ -> (match (_discr_) with
 | Match (_) -> begin
@@ -271,7 +271,7 @@ end
 false
 end))
 
-# 83 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 83 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let is_Abs = (fun _discr_ -> (match (_discr_) with
 | Abs (_) -> begin
@@ -281,7 +281,7 @@ end
 false
 end))
 
-# 84 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 84 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let is_App = (fun _discr_ -> (match (_discr_) with
 | App (_) -> begin
@@ -291,7 +291,7 @@ end
 false
 end))
 
-# 85 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 85 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let is_Label = (fun _discr_ -> (match (_discr_) with
 | Label (_) -> begin
@@ -301,65 +301,65 @@ end
 false
 end))
 
-# 79 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 79 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let ___Arg____0 : stack_elt  ->  (closure * FStar_Syntax_Syntax.aqual * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Arg (_85_28) -> begin
 _85_28
 end))
 
-# 80 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 80 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let ___UnivArgs____0 : stack_elt  ->  (FStar_Syntax_Syntax.universe Prims.list * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | UnivArgs (_85_31) -> begin
 _85_31
 end))
 
-# 81 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 81 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let ___MemoLazy____0 : stack_elt  ->  (env * FStar_Syntax_Syntax.term) FStar_Syntax_Syntax.memo = (fun projectee -> (match (projectee) with
 | MemoLazy (_85_34) -> begin
 _85_34
 end))
 
-# 82 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 82 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let ___Match____0 : stack_elt  ->  (env * branches * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Match (_85_37) -> begin
 _85_37
 end))
 
-# 83 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 83 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let ___Abs____0 : stack_elt  ->  (env * FStar_Syntax_Syntax.binders * env * FStar_Syntax_Syntax.lcomp Prims.option * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Abs (_85_40) -> begin
 _85_40
 end))
 
-# 84 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 84 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let ___App____0 : stack_elt  ->  (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.aqual * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | App (_85_43) -> begin
 _85_43
 end))
 
-# 85 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 85 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let ___Label____0 : stack_elt  ->  (Prims.string * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Label (_85_46) -> begin
 _85_46
 end))
 
-# 87 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 87 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 type stack =
 stack_elt Prims.list
 
-# 89 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 89 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let mk = (fun t r -> (FStar_Syntax_Syntax.mk t None r))
 
-# 90 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 90 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let set_memo = (fun r t -> (match ((FStar_ST.read r)) with
 | Some (_85_52) -> begin
@@ -369,12 +369,12 @@ end
 (FStar_ST.op_Colon_Equals r (Some (t)))
 end))
 
-# 95 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 95 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let env_to_string : closure Prims.list  ->  Prims.string = (fun env -> (let _187_158 = (FStar_List.map closure_to_string env)
 in (FStar_All.pipe_right _187_158 (FStar_String.concat "; "))))
 
-# 98 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 98 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let stack_elt_to_string : stack_elt  ->  Prims.string = (fun _85_2 -> (match (_85_2) with
 | Arg (c, _85_59, _85_61) -> begin
@@ -391,12 +391,12 @@ end
 "Match"
 end))
 
-# 104 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 104 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let stack_to_string : stack_elt Prims.list  ->  Prims.string = (fun s -> (let _187_164 = (FStar_List.map stack_elt_to_string s)
 in (FStar_All.pipe_right _187_164 (FStar_String.concat "; "))))
 
-# 107 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 107 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let log : cfg  ->  (Prims.unit  ->  Prims.unit)  ->  Prims.unit = (fun cfg f -> if (FStar_TypeChecker_Env.debug cfg.tcenv (FStar_Options.Other ("Norm"))) then begin
 (f ())
@@ -404,7 +404,7 @@ end else begin
 ()
 end)
 
-# 112 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 112 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let is_empty = (fun _85_3 -> (match (_85_3) with
 | [] -> begin
@@ -414,7 +414,7 @@ end
 false
 end))
 
-# 116 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 116 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let lookup_bvar = (fun env x -> (FStar_All.try_with (fun _85_90 -> (match (()) with
 | () -> begin
@@ -426,7 +426,7 @@ in (FStar_Util.format1 "Failed to find %s\n" _187_179))
 in (FStar_All.failwith _187_180))
 end))))
 
-# 128 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 128 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let norm_universe : cfg  ->  closure Prims.list  ->  FStar_Syntax_Syntax.universe  ->  FStar_Syntax_Syntax.universe = (fun cfg env u -> (let norm_univs = (fun us -> (let us = (FStar_Util.sort_with FStar_Syntax_Util.compare_univs us)
 in (let _85_114 = (FStar_List.fold_left (fun _85_105 u -> (match (_85_105) with
@@ -497,7 +497,7 @@ FStar_Syntax_Syntax.U_max (us)
 end)
 end)))
 
-# 184 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 184 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let rec closure_as_term : cfg  ->  closure Prims.list  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term = (fun cfg env t -> (match (env) with
 | [] -> begin
@@ -672,7 +672,7 @@ end))}))
 in Some (_187_272))
 end))
 
-# 286 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 286 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let maybe_simplify : step Prims.list  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun steps tm -> (let w = (fun t -> (let _85_310 = t
 in {FStar_Syntax_Syntax.n = _85_310.FStar_Syntax_Syntax.n; FStar_Syntax_Syntax.tk = _85_310.FStar_Syntax_Syntax.tk; FStar_Syntax_Syntax.pos = tm.FStar_Syntax_Syntax.pos; FStar_Syntax_Syntax.vars = _85_310.FStar_Syntax_Syntax.vars}))
@@ -777,7 +777,7 @@ tm
 end)
 end))))
 
-# 345 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 345 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let rec norm : cfg  ->  env  ->  stack  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term = (fun cfg env stack t -> (let t = (FStar_Syntax_Subst.compress t)
 in (let _85_538 = (log cfg (fun _85_537 -> (match (()) with
@@ -1300,7 +1300,7 @@ end))
 in (matches t branches))))))
 end))
 
-# 708 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 708 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let config : step Prims.list  ->  FStar_TypeChecker_Env.env  ->  cfg = (fun s e -> (let d = if (FStar_List.contains Unfold s) then begin
 FStar_TypeChecker_Env.Unfold
@@ -1313,29 +1313,29 @@ end
 end
 in {steps = s; tcenv = e; delta_level = d}))
 
-# 716 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 716 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let normalize : step Prims.list  ->  FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term = (fun s e t -> (norm (config s e) [] [] t))
 
-# 717 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 717 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let normalize_comp : step Prims.list  ->  FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.comp  ->  FStar_Syntax_Syntax.comp = (fun s e t -> (norm_comp (config s e) [] t))
 
-# 718 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 718 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let normalize_universe : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.universe  ->  FStar_Syntax_Syntax.universe = (fun env u -> (norm_universe (config [] env) [] u))
 
-# 720 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 720 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let term_to_string : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  Prims.string = (fun env t -> (let _187_464 = (normalize ((EraseUniverses)::[]) env t)
 in (FStar_Syntax_Print.term_to_string _187_464)))
 
-# 721 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 721 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let comp_to_string : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.comp  ->  Prims.string = (fun env c -> (let _187_469 = (norm_comp (config ((EraseUniverses)::[]) env) [] c)
 in (FStar_Syntax_Print.comp_to_string _187_469)))
 
-# 723 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 723 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let normalize_refinement : step Prims.list  ->  FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun steps env t0 -> (let t = (normalize (FStar_List.append steps ((Beta)::(WHNF)::[])) env t0)
 in (let rec aux = (fun t -> (let t = (FStar_Syntax_Subst.compress t)
@@ -1358,7 +1358,7 @@ t
 end)))
 in (aux t))))
 
-# 738 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 738 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let rec unfold_effect_abbrev : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.comp  ->  FStar_Syntax_Syntax.comp_typ = (fun env comp -> (let c = (FStar_Syntax_Util.comp_to_comp_typ comp)
 in (match ((FStar_TypeChecker_Env.lookup_effect_abbrev env c.FStar_Syntax_Syntax.effect_name)) with
@@ -1380,11 +1380,11 @@ in (unfold_effect_abbrev env c))))
 end))
 end)))
 
-# 749 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 749 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let normalize_sigelt : steps  ->  FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.sigelt  ->  FStar_Syntax_Syntax.sigelt = (fun _85_1207 _85_1209 _85_1211 -> (FStar_All.failwith "NYI: normalize_sigelt"))
 
-# 750 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\typechecker\\normalize.fs"
+# 750 "D:\\workspace\\FStar\\src\\typechecker\\normalize.fs"
 
 let eta_expand : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.typ  ->  FStar_Syntax_Syntax.typ = (fun _85_1213 t -> (match (t.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Tm_name (x) -> begin

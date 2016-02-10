@@ -1,3 +1,3 @@
 module System.Collections.Generic
-type HashSet: Type -> Type
-type Dictionary: Type -> Type -> Type
+new type HashSet: Type -> Type
+new type Dictionary: Type -> Type -> Type

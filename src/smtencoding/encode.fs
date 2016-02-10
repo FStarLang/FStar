@@ -362,6 +362,13 @@ let as_function_typ env t0 =
                    else failwith (Util.format2 "(%s) Expected a function typ; got %s" (Range.string_of_range t0.pos) (Print.term_to_string t0))
     in aux true t0
 
+let curried_arrow_formals_comp k =
+    let k = Subst.compress k in
+    match k.n with
+        | Tm_arrow(bs, c) -> Subst.open_comp bs c
+        | _ -> [], Syntax.mk_Total k
+
+
 let rec encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) :
                             (list<fv>                       (* translated bound variables *)
                             * list<term>                    (* guards *)
@@ -603,7 +610,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                     if Env.debug env.tcenv <| Options.Other "Encoding"
                     then Util.print3 "Recomputed type of head %s (%s) to be %s\n" (Print.term_to_string head) (Print.tag_of_term head) (Print.term_to_string head_type);
 
-            let formals, c = Util.arrow_formals_comp head_type in
+            let formals, c = curried_arrow_formals_comp head_type in
             begin match head.n with
                 | Tm_uinst({n=Tm_fvar(fv, _)}, _)
                 | Tm_fvar (fv, _) when (List.length formals = List.length args) -> encode_full_app fv
@@ -1569,7 +1576,7 @@ and encode_free_var env lid tt t_norm quals =
               definition, env
          else let encode_non_total_function_typ = lid.nsstr <> "Prims" in
               let formals, (pre_opt, res_t) = 
-                let args, comp = Util.arrow_formals_comp t_norm in
+                let args, comp = curried_arrow_formals_comp t_norm in
                 if encode_non_total_function_typ
                 then args, TypeChecker.Util.pure_or_ghost_pre_and_post env.tcenv comp
                 else args, (None, Util.comp_result comp) in

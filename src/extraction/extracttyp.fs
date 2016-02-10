@@ -400,7 +400,7 @@ let rec headBinders (c:context) (t:typ) : (context * binders * typ (*residual ty
         | _ -> (c,[],t)
 
 
-let extractTypeAbbrev (c:context) (tyab:typeAbbrev) : context * (mlsymbol  * mlidents * option<mltybody>) =
+let extractTypeAbbrev quals (c:context) (tyab:typeAbbrev) : context * (mlsymbol  * mlidents * option<mltybody>) =
     let bs = tyab.abTyBinders in
     let t = tyab.abBody in
     let l = tyab.abTyName in
@@ -418,7 +418,9 @@ let extractTypeAbbrev (c:context) (tyab:typeAbbrev) : context * (mlsymbol  * mli
     let tyDecBody = MLTD_Abbrev mlt in
             //printfn "type is %A\n" (t);
     let td = (mlsymbolOfLident l, List.map mlTyIdentOfBinder bs , Some tyDecBody) in
-    let c = Env.extend_tydef c [td] in
+    let c = if quals |> Util.for_some (function Assumption | New -> true | _ -> false)
+            then c
+            else Env.extend_tydef c [td] in
     c, td
 
 let extractExn (c:context) (exnConstr : inductiveConstructor) : (context * mlmodule1) =
@@ -439,7 +441,7 @@ let mlloc_of_range (r: Range.range) =
 let rec extractSigElt (c:context) (s:sigelt) : context * list<mlmodule1> =
     match s with
     | Sig_typ_abbrev (l,bs,_,t,quals, range) ->
-        let c, tds = extractTypeAbbrev c ({abTyName=l; abTyBinders=bs; abBody=t}) in
+        let c, tds = extractTypeAbbrev quals c ({abTyName=l; abTyBinders=bs; abBody=t}) in
         (c, (if quals |> List.contains Logic then [] else [mlloc_of_range range; MLM_Ty [tds]]))
 
     | Sig_bundle(sigs, [ExceptionConstructor], _, range) ->
@@ -452,13 +454,14 @@ let rec extractSigElt (c:context) (s:sigelt) : context * list<mlmodule1> =
         //let xxxx = List.map (fun se -> fprint1 "%s\n" (Util.format1 "sig bundle: : %s\n" (Print.sigelt_to_string se))) sigs in
         let inds, abbs, _ = parseInductiveTypesFromSigBundle c sigs in
         let c, indDecls = Util.fold_map extractInductive c inds in
-        let c, tyAbDecls = Util.fold_map extractTypeAbbrev c abbs in
+        let c, tyAbDecls = Util.fold_map (extractTypeAbbrev []) c abbs in
         (c, [mlloc_of_range range; MLM_Ty (indDecls@tyAbDecls)])
 
     | Sig_tycon (l, bs, k, _, _, quals, r) ->
         //Util.print_string ((Print.sigelt_to_string s)^"\n");
-         if quals |> List.contains Assumption  &&
-         not (quals |> Util.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
+         if (quals |> List.contains Assumption
+            || quals |> List.contains New)
+         && not (quals |> Util.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
          then let kbs, _ = Util.kind_formals k in 
               let se = Sig_typ_abbrev(l, bs@kbs, mk_Kind_type, Tc.Recheck.t_unit, quals, r) in
               extractSigElt c se 

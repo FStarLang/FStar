@@ -1,3 +1,3 @@
 module System
-type Object
-type DateTime
+new type Object
+new type DateTime

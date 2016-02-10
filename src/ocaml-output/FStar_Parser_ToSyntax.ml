@@ -1,6 +1,6 @@
 
 open Prims
-# 34 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 34 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let trans_aqual : FStar_Parser_AST.arg_qualifier Prims.option  ->  FStar_Syntax_Syntax.arg_qualifier Prims.option = (fun _67_1 -> (match (_67_1) with
 | Some (FStar_Parser_AST.Implicit) -> begin
@@ -13,7 +13,7 @@ end
 None
 end))
 
-# 39 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 39 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let trans_qual : FStar_Parser_AST.qualifier  ->  FStar_Syntax_Syntax.qualifier = (fun _67_2 -> (match (_67_2) with
 | FStar_Parser_AST.Private -> begin
@@ -53,7 +53,7 @@ end
 (FStar_All.failwith "Impossible")
 end))
 
-# 53 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 53 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let trans_pragma : FStar_Parser_AST.pragma  ->  FStar_Syntax_Syntax.pragma = (fun _67_3 -> (match (_67_3) with
 | FStar_Parser_AST.SetOptions (s) -> begin
@@ -63,7 +63,7 @@ end
 FStar_Syntax_Syntax.ResetOptions
 end))
 
-# 57 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 57 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let as_imp : FStar_Parser_AST.imp  ->  FStar_Syntax_Syntax.arg_qualifier Prims.option = (fun _67_4 -> (match (_67_4) with
 | (FStar_Parser_AST.Hash) | (FStar_Parser_AST.FsTypApp) -> begin
@@ -73,11 +73,11 @@ end
 None
 end))
 
-# 61 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 61 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let arg_withimp_e = (fun imp t -> (t, (as_imp imp)))
 
-# 63 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 63 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let arg_withimp_t = (fun imp t -> (match (imp) with
 | FStar_Parser_AST.Hash -> begin
@@ -87,7 +87,7 @@ end
 (t, None)
 end))
 
-# 68 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 68 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let contains_binder : FStar_Parser_AST.binder Prims.list  ->  Prims.bool = (fun binders -> (FStar_All.pipe_right binders (FStar_Util.for_some (fun b -> (match (b.FStar_Parser_AST.b) with
 | FStar_Parser_AST.Annotated (_67_62) -> begin
@@ -97,7 +97,7 @@ end
 false
 end)))))
 
-# 73 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 73 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let rec unparen : FStar_Parser_AST.term  ->  FStar_Parser_AST.term = (fun t -> (match (t.FStar_Parser_AST.tm) with
 | FStar_Parser_AST.Paren (t) -> begin
@@ -107,13 +107,13 @@ end
 t
 end))
 
-# 77 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 77 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let tm_type : FStar_Range.range  ->  FStar_Parser_AST.term = (fun r -> (let _169_21 = (let _169_20 = (FStar_Ident.lid_of_path (("Type")::[]) r)
 in FStar_Parser_AST.Name (_169_20))
 in (FStar_Parser_AST.mk_term _169_21 r FStar_Parser_AST.Kind)))
 
-# 79 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 79 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let compile_op : Prims.int  ->  Prims.string  ->  Prims.string = (fun arity s -> (let name_of_char = (fun _67_5 -> (match (_67_5) with
 | '&' -> begin
@@ -182,7 +182,7 @@ in (let _169_34 = (let _169_33 = (aux 0)
 in (FStar_String.concat "_" _169_33))
 in (Prims.strcat "op_" _169_34)))))
 
-# 105 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 105 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let compile_op_lid : Prims.int  ->  Prims.string  ->  FStar_Range.range  ->  FStar_Ident.lident = (fun n s r -> (let _169_44 = (let _169_43 = (let _169_42 = (let _169_41 = (compile_op n s)
 in (_169_41, r))
@@ -190,7 +190,7 @@ in (FStar_Ident.mk_ident _169_42))
 in (_169_43)::[])
 in (FStar_All.pipe_right _169_44 FStar_Ident.lid_of_ids)))
 
-# 107 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 107 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let op_as_lid : FStar_Parser_Env.env  ->  Prims.int  ->  FStar_Range.range  ->  Prims.string  ->  FStar_Ident.lident Prims.option = (fun env arity rng s -> (let r = (fun l -> (let _169_55 = (FStar_Ident.set_lid_range l rng)
 in Some (_169_55)))
@@ -294,12 +294,12 @@ end
 (fallback ())
 end))))
 
-# 145 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 145 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let sort_ftv : FStar_Ident.ident Prims.list  ->  FStar_Ident.ident Prims.list = (fun ftv -> (let _169_65 = (FStar_Util.remove_dups (fun x y -> (x.FStar_Ident.idText = y.FStar_Ident.idText)) ftv)
 in (FStar_All.pipe_left (FStar_Util.sort_with (fun x y -> (FStar_String.compare x.FStar_Ident.idText y.FStar_Ident.idText))) _169_65)))
 
-# 149 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 149 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let rec free_type_vars_b : FStar_Parser_Env.env  ->  FStar_Parser_AST.binder  ->  (FStar_Parser_Env.env * FStar_Ident.ident Prims.list) = (fun env binder -> (match (binder.FStar_Parser_AST.b) with
 | FStar_Parser_AST.Variable (_67_161) -> begin
@@ -394,7 +394,7 @@ end
 (FStar_Parser_AST.error "Unexpected type in free_type_vars computation" t t.FStar_Parser_AST.range)
 end))
 
-# 210 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 210 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let head_and_args : FStar_Parser_AST.term  ->  (FStar_Parser_AST.term * (FStar_Parser_AST.term * FStar_Parser_AST.imp) Prims.list) = (fun t -> (let rec aux = (fun args t -> (match ((let _169_90 = (unparen t)
 in _169_90.FStar_Parser_AST.tm)) with
@@ -409,7 +409,7 @@ end
 end))
 in (aux [] t)))
 
-# 217 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 217 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let close : FStar_Parser_Env.env  ->  FStar_Parser_AST.term  ->  FStar_Parser_AST.term = (fun env t -> (let ftv = (let _169_95 = (free_type_vars env t)
 in (FStar_All.pipe_left sort_ftv _169_95))
@@ -424,7 +424,7 @@ in (let result = (FStar_Parser_AST.mk_term (FStar_Parser_AST.Product ((binders, 
 in result))
 end))
 
-# 225 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 225 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let close_fun : FStar_Parser_Env.env  ->  FStar_Parser_AST.term  ->  FStar_Parser_AST.term = (fun env t -> (let ftv = (let _169_104 = (free_type_vars env t)
 in (FStar_All.pipe_left sort_ftv _169_104))
@@ -447,7 +447,7 @@ in (let result = (FStar_Parser_AST.mk_term (FStar_Parser_AST.Product ((binders, 
 in result)))
 end))
 
-# 236 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 236 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let rec uncurry : FStar_Parser_AST.binder Prims.list  ->  FStar_Parser_AST.term  ->  (FStar_Parser_AST.binder Prims.list * FStar_Parser_AST.term) = (fun bs t -> (match (t.FStar_Parser_AST.tm) with
 | FStar_Parser_AST.Product (binders, t) -> begin
@@ -457,7 +457,7 @@ end
 (bs, t)
 end))
 
-# 240 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 240 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let rec is_app_pattern : FStar_Parser_AST.pattern  ->  Prims.bool = (fun p -> (match (p.FStar_Parser_AST.pat) with
 | FStar_Parser_AST.PatAscribed (p, _67_342) -> begin
@@ -470,7 +470,7 @@ end
 false
 end))
 
-# 245 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 245 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let rec destruct_app_pattern : FStar_Parser_Env.env  ->  Prims.bool  ->  FStar_Parser_AST.pattern  ->  ((FStar_Ident.ident, FStar_Ident.lident) FStar_Util.either * FStar_Parser_AST.pattern Prims.list * FStar_Parser_AST.term Prims.option) = (fun env is_top_level p -> (match (p.FStar_Parser_AST.pat) with
 | FStar_Parser_AST.PatAscribed (p, t) -> begin
@@ -492,13 +492,13 @@ end
 (FStar_All.failwith "Not an app pattern")
 end))
 
-# 256 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 256 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 type bnd =
 | LocalBinder of (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.aqual)
 | LetBinder of (FStar_Ident.lident * FStar_Syntax_Syntax.term)
 
-# 257 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 257 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let is_LocalBinder = (fun _discr_ -> (match (_discr_) with
 | LocalBinder (_) -> begin
@@ -508,7 +508,7 @@ end
 false
 end))
 
-# 258 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 258 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let is_LetBinder = (fun _discr_ -> (match (_discr_) with
 | LetBinder (_) -> begin
@@ -518,21 +518,21 @@ end
 false
 end))
 
-# 257 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 257 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let ___LocalBinder____0 : bnd  ->  (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.aqual) = (fun projectee -> (match (projectee) with
 | LocalBinder (_67_395) -> begin
 _67_395
 end))
 
-# 258 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 258 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let ___LetBinder____0 : bnd  ->  (FStar_Ident.lident * FStar_Syntax_Syntax.term) = (fun projectee -> (match (projectee) with
 | LetBinder (_67_398) -> begin
 _67_398
 end))
 
-# 259 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 259 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let binder_of_bnd : bnd  ->  (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.aqual) = (fun _67_6 -> (match (_67_6) with
 | LocalBinder (a, aq) -> begin
@@ -542,7 +542,7 @@ end
 (FStar_All.failwith "Impossible")
 end))
 
-# 262 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 262 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let as_binder : FStar_Parser_Env.env  ->  FStar_Parser_AST.arg_qualifier Prims.option  ->  (FStar_Ident.ident Prims.option * FStar_Syntax_Syntax.term)  ->  ((FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier Prims.option) * FStar_Parser_Env.env) = (fun env imp _67_7 -> (match (_67_7) with
 | (None, k) -> begin
@@ -557,28 +557,28 @@ in {FStar_Syntax_Syntax.ppname = _67_419.FStar_Syntax_Syntax.ppname; FStar_Synta
 end))
 end))
 
-# 268 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 268 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 type env_t =
 FStar_Parser_Env.env
 
-# 269 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 269 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 type lenv_t =
 FStar_Syntax_Syntax.bv Prims.list
 
-# 271 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 271 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let mk_lb : (FStar_Syntax_Syntax.lbname * FStar_Syntax_Syntax.typ * FStar_Syntax_Syntax.term)  ->  FStar_Syntax_Syntax.letbinding = (fun _67_424 -> (match (_67_424) with
 | (n, t, e) -> begin
 {FStar_Syntax_Syntax.lbname = n; FStar_Syntax_Syntax.lbunivs = []; FStar_Syntax_Syntax.lbtyp = t; FStar_Syntax_Syntax.lbeff = FStar_Syntax_Const.effect_ALL_lid; FStar_Syntax_Syntax.lbdef = e}
 end))
 
-# 272 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 272 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let no_annot_abs : (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier Prims.option) Prims.list  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun bs t -> (FStar_Syntax_Util.abs bs t None))
 
-# 274 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 274 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let rec desugar_data_pat : FStar_Parser_Env.env  ->  FStar_Parser_AST.pattern  ->  (env_t * bnd * FStar_Syntax_Syntax.pat) = (fun env p -> (let check_linear_pattern_variables = (fun p -> (let rec pat_vars = (fun p -> (match (p.FStar_Syntax_Syntax.v) with
 | (FStar_Syntax_Syntax.Pat_dot_term (_)) | (FStar_Syntax_Syntax.Pat_wild (_)) | (FStar_Syntax_Syntax.Pat_constant (_)) -> begin
@@ -1792,7 +1792,7 @@ end
 (Some (x), FStar_Syntax_Syntax.tun)
 end))
 
-# 951 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 951 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let mk_data_discriminators : FStar_Syntax_Syntax.qualifier Prims.list  ->  FStar_Parser_Env.env  ->  FStar_Ident.lid  ->  (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier Prims.option) Prims.list  ->  FStar_Syntax_Syntax.term  ->  FStar_Ident.lident Prims.list  ->  FStar_Syntax_Syntax.sigelt Prims.list = (fun quals env t tps k datas -> (let quals = (fun q -> if ((FStar_All.pipe_left Prims.op_Negation env.FStar_Parser_Env.iface) || env.FStar_Parser_Env.admitted_iface) then begin
 (FStar_List.append ((FStar_Syntax_Syntax.Assumption)::q) quals)
@@ -1821,7 +1821,7 @@ in (let _169_660 = (let _169_659 = (quals ((FStar_Syntax_Syntax.Logic)::(FStar_S
 in (disc_name, [], disc_type, _169_659, (FStar_Ident.range_of_lid disc_name)))
 in FStar_Syntax_Syntax.Sig_declare_typ (_169_660)))))))))))))
 
-# 964 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 964 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let mk_indexed_projectors : FStar_Syntax_Syntax.fv_qual  ->  Prims.bool  ->  FStar_Parser_Env.env  ->  FStar_Ident.lid  ->  FStar_Ident.lid  ->  FStar_Syntax_Syntax.binders  ->  (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier Prims.option) Prims.list  ->  FStar_Syntax_Syntax.binder Prims.list  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.sigelt Prims.list = (fun fvq refine_domain env tc lid inductive_tps imp_tps fields t -> (let p = (FStar_Ident.range_of_lid lid)
 in (let pos = (fun q -> (FStar_Syntax_Syntax.withinfo q FStar_Syntax_Syntax.tun.FStar_Syntax_Syntax.n p))
@@ -1979,7 +1979,7 @@ end))))
 in (FStar_All.pipe_right _169_738 FStar_List.flatten)))))))))
 end)))))))
 
-# 1046 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 1046 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let mk_data_projectors : FStar_Parser_Env.env  ->  (FStar_Syntax_Syntax.binders * FStar_Syntax_Syntax.sigelt)  ->  FStar_Syntax_Syntax.sigelt Prims.list = (fun env _67_1846 -> (match (_67_1846) with
 | (inductive_tps, se) -> begin
@@ -2036,7 +2036,7 @@ end
 end)
 end))
 
-# 1068 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 1068 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let mk_typ_abbrev : FStar_Ident.lident  ->  FStar_Syntax_Syntax.univ_name Prims.list  ->  (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier Prims.option) Prims.list  ->  FStar_Syntax_Syntax.typ  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax  ->  FStar_Ident.lident Prims.list  ->  FStar_Syntax_Syntax.qualifier Prims.list  ->  FStar_Range.range  ->  FStar_Syntax_Syntax.sigelt = (fun lid uvs typars k t lids quals rng -> (let lb = (let _169_763 = (let _169_761 = (FStar_Syntax_Syntax.mk_Total k)
 in (FStar_Syntax_Util.arrow typars _169_761))
@@ -2044,7 +2044,7 @@ in (let _169_762 = (no_annot_abs typars t)
 in {FStar_Syntax_Syntax.lbname = FStar_Util.Inr (lid); FStar_Syntax_Syntax.lbunivs = uvs; FStar_Syntax_Syntax.lbtyp = _169_763; FStar_Syntax_Syntax.lbeff = FStar_Syntax_Const.effect_Tot_lid; FStar_Syntax_Syntax.lbdef = _169_762}))
 in FStar_Syntax_Syntax.Sig_let (((false, (lb)::[]), rng, lids, quals))))
 
-# 1078 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 1078 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let rec desugar_tycon : FStar_Parser_Env.env  ->  FStar_Range.range  ->  FStar_Syntax_Syntax.qualifier Prims.list  ->  FStar_Parser_AST.tycon Prims.list  ->  (env_t * FStar_Syntax_Syntax.sigelts) = (fun env rng quals tcs -> (let tycon_id = (fun _67_13 -> (match (_67_13) with
 | (FStar_Parser_AST.TyconAbstract (id, _, _)) | (FStar_Parser_AST.TyconAbbrev (id, _, _, _)) | (FStar_Parser_AST.TyconRecord (id, _, _, _)) | (FStar_Parser_AST.TyconVariant (id, _, _, _)) -> begin
@@ -2365,7 +2365,7 @@ end
 (FStar_All.failwith "impossible")
 end))))))))))
 
-# 1242 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 1242 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let desugar_binders : FStar_Parser_Env.env  ->  FStar_Parser_AST.binder Prims.list  ->  (FStar_Parser_Env.env * (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier Prims.option) Prims.list) = (fun env binders -> (let _67_2278 = (FStar_List.fold_left (fun _67_2263 b -> (match (_67_2263) with
 | (env, binders) -> begin
@@ -2387,7 +2387,7 @@ in (match (_67_2278) with
 (env, (FStar_List.rev binders))
 end)))
 
-# 1252 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 1252 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let rec desugar_decl : env_t  ->  FStar_Parser_AST.decl  ->  (env_t * FStar_Syntax_Syntax.sigelts) = (fun env d -> (match (d.FStar_Parser_AST.d) with
 | FStar_Parser_AST.Pragma (p) -> begin
@@ -2610,7 +2610,7 @@ in (let se = FStar_Syntax_Syntax.Sig_sub_effect (({FStar_Syntax_Syntax.source = 
 in (env, (se)::[]))))))
 end))
 
-# 1409 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 1409 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let desugar_decls : env_t  ->  FStar_Parser_AST.decl Prims.list  ->  (env_t * FStar_Syntax_Syntax.sigelt Prims.list) = (fun env decls -> (FStar_List.fold_left (fun _67_2474 d -> (match (_67_2474) with
 | (env, sigelts) -> begin
@@ -2621,11 +2621,11 @@ in (match (_67_2478) with
 end))
 end)) (env, []) decls))
 
-# 1414 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 1414 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let open_prims_all : FStar_Parser_AST.decl Prims.list = ((FStar_Parser_AST.mk_decl (FStar_Parser_AST.Open (FStar_Syntax_Const.prims_lid)) FStar_Range.dummyRange))::((FStar_Parser_AST.mk_decl (FStar_Parser_AST.Open (FStar_Syntax_Const.all_lid)) FStar_Range.dummyRange))::[]
 
-# 1421 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 1421 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let desugar_modul_common = (fun curmod env m -> (let open_ns = (fun mname d -> (let d = if ((FStar_List.length mname.FStar_Ident.ns) <> 0) then begin
 (let _169_943 = (let _169_942 = (let _169_941 = (FStar_Ident.lid_of_ids mname.FStar_Ident.ns)
@@ -2664,7 +2664,7 @@ in (env, modul, pop_when_done))
 end))
 end)))))
 
-# 1444 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 1444 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let desugar_partial_modul = (fun curmod env m -> (let m = if (FStar_ST.read FStar_Options.interactive_fsi) then begin
 (match (m) with
@@ -2686,7 +2686,7 @@ in (match (_67_2533) with
 (x, y)
 end))))
 
-# 1455 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 1455 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let desugar_modul : FStar_Parser_Env.env  ->  FStar_Parser_AST.modul  ->  (env_t * FStar_Syntax_Syntax.modul) = (fun env m -> (let _67_2539 = (desugar_modul_common None env m)
 in (match (_67_2539) with
@@ -2706,7 +2706,7 @@ end
 in (_169_960, modul))))
 end)))
 
-# 1462 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 1462 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let desugar_file : env_t  ->  FStar_Parser_AST.file  ->  (FStar_Parser_Env.env * FStar_Syntax_Syntax.modul Prims.list) = (fun env f -> (let _67_2554 = (FStar_List.fold_left (fun _67_2547 m -> (match (_67_2547) with
 | (env, mods) -> begin
@@ -2721,7 +2721,7 @@ in (match (_67_2554) with
 (env, (FStar_List.rev mods))
 end)))
 
-# 1468 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\parser\\tosyntax.fs"
+# 1468 "D:\\workspace\\FStar\\src\\parser\\tosyntax.fs"
 
 let add_modul_to_env : FStar_Syntax_Syntax.modul  ->  FStar_Parser_Env.env  ->  FStar_Parser_Env.env = (fun m en -> (let _67_2559 = (FStar_Parser_Env.prepare_module_or_interface false false en m.FStar_Syntax_Syntax.name)
 in (match (_67_2559) with

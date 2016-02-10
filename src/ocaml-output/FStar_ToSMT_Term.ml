@@ -1,6 +1,6 @@
 
 open Prims
-# 26 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 26 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 type sort =
 | Bool_sort
@@ -15,7 +15,7 @@ type sort =
 | Arrow of (sort * sort)
 | Sort of Prims.string
 
-# 27 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 27 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Bool_sort = (fun _discr_ -> (match (_discr_) with
 | Bool_sort (_) -> begin
@@ -25,7 +25,7 @@ end
 false
 end))
 
-# 28 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 28 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Int_sort = (fun _discr_ -> (match (_discr_) with
 | Int_sort (_) -> begin
@@ -35,7 +35,7 @@ end
 false
 end))
 
-# 29 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 29 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Kind_sort = (fun _discr_ -> (match (_discr_) with
 | Kind_sort (_) -> begin
@@ -45,7 +45,7 @@ end
 false
 end))
 
-# 30 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 30 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Type_sort = (fun _discr_ -> (match (_discr_) with
 | Type_sort (_) -> begin
@@ -55,7 +55,7 @@ end
 false
 end))
 
-# 31 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 31 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Term_sort = (fun _discr_ -> (match (_discr_) with
 | Term_sort (_) -> begin
@@ -65,7 +65,7 @@ end
 false
 end))
 
-# 32 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 32 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_String_sort = (fun _discr_ -> (match (_discr_) with
 | String_sort (_) -> begin
@@ -75,7 +75,7 @@ end
 false
 end))
 
-# 33 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 33 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Ref_sort = (fun _discr_ -> (match (_discr_) with
 | Ref_sort (_) -> begin
@@ -85,7 +85,7 @@ end
 false
 end))
 
-# 34 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 34 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Fuel_sort = (fun _discr_ -> (match (_discr_) with
 | Fuel_sort (_) -> begin
@@ -95,7 +95,7 @@ end
 false
 end))
 
-# 35 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 35 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Array = (fun _discr_ -> (match (_discr_) with
 | Array (_) -> begin
@@ -105,7 +105,7 @@ end
 false
 end))
 
-# 36 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 36 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Arrow = (fun _discr_ -> (match (_discr_) with
 | Arrow (_) -> begin
@@ -115,7 +115,7 @@ end
 false
 end))
 
-# 37 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 37 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Sort = (fun _discr_ -> (match (_discr_) with
 | Sort (_) -> begin
@@ -125,28 +125,28 @@ end
 false
 end))
 
-# 35 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 35 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let ___Array____0 : sort  ->  (sort * sort) = (fun projectee -> (match (projectee) with
 | Array (_55_10) -> begin
 _55_10
 end))
 
-# 36 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 36 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let ___Arrow____0 : sort  ->  (sort * sort) = (fun projectee -> (match (projectee) with
 | Arrow (_55_13) -> begin
 _55_13
 end))
 
-# 37 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 37 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let ___Sort____0 : sort  ->  Prims.string = (fun projectee -> (match (projectee) with
 | Sort (_55_16) -> begin
 _55_16
 end))
 
-# 39 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 39 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let rec strSort : sort  ->  Prims.string = (fun x -> (match (x) with
 | Bool_sort -> begin
@@ -187,7 +187,7 @@ end
 s
 end))
 
-# 52 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 52 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 type op =
 | True
@@ -211,7 +211,7 @@ type op =
 | ITE
 | Var of Prims.string
 
-# 53 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 53 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_True = (fun _discr_ -> (match (_discr_) with
 | True (_) -> begin
@@ -221,7 +221,7 @@ end
 false
 end))
 
-# 54 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 54 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_False = (fun _discr_ -> (match (_discr_) with
 | False (_) -> begin
@@ -231,7 +231,7 @@ end
 false
 end))
 
-# 55 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 55 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Not = (fun _discr_ -> (match (_discr_) with
 | Not (_) -> begin
@@ -241,7 +241,7 @@ end
 false
 end))
 
-# 56 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 56 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_And = (fun _discr_ -> (match (_discr_) with
 | And (_) -> begin
@@ -251,7 +251,7 @@ end
 false
 end))
 
-# 57 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 57 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Or = (fun _discr_ -> (match (_discr_) with
 | Or (_) -> begin
@@ -261,7 +261,7 @@ end
 false
 end))
 
-# 58 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 58 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Imp = (fun _discr_ -> (match (_discr_) with
 | Imp (_) -> begin
@@ -271,7 +271,7 @@ end
 false
 end))
 
-# 59 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 59 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Iff = (fun _discr_ -> (match (_discr_) with
 | Iff (_) -> begin
@@ -281,7 +281,7 @@ end
 false
 end))
 
-# 60 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 60 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Eq = (fun _discr_ -> (match (_discr_) with
 | Eq (_) -> begin
@@ -291,7 +291,7 @@ end
 false
 end))
 
-# 61 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 61 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_LT = (fun _discr_ -> (match (_discr_) with
 | LT (_) -> begin
@@ -301,7 +301,7 @@ end
 false
 end))
 
-# 62 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 62 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_LTE = (fun _discr_ -> (match (_discr_) with
 | LTE (_) -> begin
@@ -311,7 +311,7 @@ end
 false
 end))
 
-# 63 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 63 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_GT = (fun _discr_ -> (match (_discr_) with
 | GT (_) -> begin
@@ -321,7 +321,7 @@ end
 false
 end))
 
-# 64 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 64 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_GTE = (fun _discr_ -> (match (_discr_) with
 | GTE (_) -> begin
@@ -331,7 +331,7 @@ end
 false
 end))
 
-# 65 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 65 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Add = (fun _discr_ -> (match (_discr_) with
 | Add (_) -> begin
@@ -341,7 +341,7 @@ end
 false
 end))
 
-# 66 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 66 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Sub = (fun _discr_ -> (match (_discr_) with
 | Sub (_) -> begin
@@ -351,7 +351,7 @@ end
 false
 end))
 
-# 67 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 67 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Div = (fun _discr_ -> (match (_discr_) with
 | Div (_) -> begin
@@ -361,7 +361,7 @@ end
 false
 end))
 
-# 68 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 68 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Mul = (fun _discr_ -> (match (_discr_) with
 | Mul (_) -> begin
@@ -371,7 +371,7 @@ end
 false
 end))
 
-# 69 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 69 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Minus = (fun _discr_ -> (match (_discr_) with
 | Minus (_) -> begin
@@ -381,7 +381,7 @@ end
 false
 end))
 
-# 70 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 70 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Mod = (fun _discr_ -> (match (_discr_) with
 | Mod (_) -> begin
@@ -391,7 +391,7 @@ end
 false
 end))
 
-# 71 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 71 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_ITE = (fun _discr_ -> (match (_discr_) with
 | ITE (_) -> begin
@@ -401,7 +401,7 @@ end
 false
 end))
 
-# 72 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 72 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Var = (fun _discr_ -> (match (_discr_) with
 | Var (_) -> begin
@@ -411,20 +411,20 @@ end
 false
 end))
 
-# 72 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 72 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let ___Var____0 : op  ->  Prims.string = (fun projectee -> (match (projectee) with
 | Var (_55_38) -> begin
 _55_38
 end))
 
-# 74 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 74 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 type qop =
 | Forall
 | Exists
 
-# 75 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 75 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Forall = (fun _discr_ -> (match (_discr_) with
 | Forall (_) -> begin
@@ -434,7 +434,7 @@ end
 false
 end))
 
-# 76 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 76 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Exists = (fun _discr_ -> (match (_discr_) with
 | Exists (_) -> begin
@@ -444,7 +444,7 @@ end
 false
 end))
 
-# 79 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 79 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 type term' =
 | Integer of Prims.string
@@ -461,7 +461,7 @@ term
  and fvs =
 fv Prims.list
 
-# 80 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 80 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Integer = (fun _discr_ -> (match (_discr_) with
 | Integer (_) -> begin
@@ -471,7 +471,7 @@ end
 false
 end))
 
-# 81 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 81 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_BoundV = (fun _discr_ -> (match (_discr_) with
 | BoundV (_) -> begin
@@ -481,7 +481,7 @@ end
 false
 end))
 
-# 82 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 82 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_FreeV = (fun _discr_ -> (match (_discr_) with
 | FreeV (_) -> begin
@@ -491,7 +491,7 @@ end
 false
 end))
 
-# 83 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 83 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_App = (fun _discr_ -> (match (_discr_) with
 | App (_) -> begin
@@ -501,7 +501,7 @@ end
 false
 end))
 
-# 84 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 84 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Quant = (fun _discr_ -> (match (_discr_) with
 | Quant (_) -> begin
@@ -511,54 +511,54 @@ end
 false
 end))
 
-# 90 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 90 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Mkterm : term  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkterm"))))
 
-# 80 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 80 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let ___Integer____0 : term'  ->  Prims.string = (fun projectee -> (match (projectee) with
 | Integer (_55_44) -> begin
 _55_44
 end))
 
-# 81 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 81 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let ___BoundV____0 : term'  ->  Prims.int = (fun projectee -> (match (projectee) with
 | BoundV (_55_47) -> begin
 _55_47
 end))
 
-# 82 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 82 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let ___FreeV____0 : term'  ->  fv = (fun projectee -> (match (projectee) with
 | FreeV (_55_50) -> begin
 _55_50
 end))
 
-# 83 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 83 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let ___App____0 : term'  ->  (op * term Prims.list) = (fun projectee -> (match (projectee) with
 | App (_55_53) -> begin
 _55_53
 end))
 
-# 84 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 84 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let ___Quant____0 : term'  ->  (qop * pat Prims.list Prims.list * Prims.int Prims.option * sort Prims.list * term) = (fun projectee -> (match (projectee) with
 | Quant (_55_56) -> begin
 _55_56
 end))
 
-# 94 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 94 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let fv_eq : fv  ->  fv  ->  Prims.bool = (fun x y -> ((Prims.fst x) = (Prims.fst y)))
 
-# 95 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 95 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let fv_sort = (fun x -> (Prims.snd x))
 
-# 96 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 96 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let freevar_eq : term  ->  term  ->  Prims.bool = (fun x y -> (match ((x.tm, y.tm)) with
 | (FreeV (x), FreeV (y)) -> begin
@@ -568,7 +568,7 @@ end
 false
 end))
 
-# 99 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 99 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let freevar_sort : term  ->  sort = (fun _55_1 -> (match (_55_1) with
 | {tm = FreeV (x); hash = _55_74; freevars = _55_72} -> begin
@@ -578,7 +578,7 @@ end
 (FStar_All.failwith "impossible")
 end))
 
-# 102 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 102 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let fv_of_term : term  ->  fv = (fun _55_2 -> (match (_55_2) with
 | {tm = FreeV (fv); hash = _55_84; freevars = _55_82} -> begin
@@ -588,7 +588,7 @@ end
 (FStar_All.failwith "impossible")
 end))
 
-# 105 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 105 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let rec freevars : term  ->  fv Prims.list = (fun t -> (match (t.tm) with
 | (Integer (_)) | (BoundV (_)) -> begin
@@ -604,7 +604,7 @@ end
 (freevars t)
 end))
 
-# 113 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 113 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let free_variables : term  ->  (Prims.string * sort) Prims.list = (fun t -> (match ((FStar_ST.read t.freevars)) with
 | Some (b) -> begin
@@ -617,7 +617,7 @@ in (let _55_120 = (FStar_ST.op_Colon_Equals t.freevars (Some (fvs)))
 in fvs))
 end))
 
-# 123 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 123 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let qop_to_string : qop  ->  Prims.string = (fun _55_3 -> (match (_55_3) with
 | Forall -> begin
@@ -627,7 +627,7 @@ end
 "exists"
 end))
 
-# 127 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 127 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let op_to_string : op  ->  Prims.string = (fun _55_4 -> (match (_55_4) with
 | True -> begin
@@ -691,7 +691,7 @@ end
 s
 end))
 
-# 149 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 149 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let weightToSmt : Prims.int Prims.option  ->  Prims.string = (fun _55_5 -> (match (_55_5) with
 | None -> begin
@@ -702,7 +702,7 @@ end
 in (FStar_Util.format1 ":weight %s\n" _157_196))
 end))
 
-# 153 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 153 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let rec hash_of_term' : term'  ->  Prims.string = (fun t -> (match (t) with
 | Integer (i) -> begin
@@ -732,19 +732,19 @@ in (FStar_All.pipe_right _157_209 (FStar_String.concat "; ")))
 in (FStar_Util.format5 "(%s (%s)(! %s %s %s))" (qop_to_string qop) _157_212 body.hash _157_211 _157_210))))
 end))
 
-# 167 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 167 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let __all_terms : term FStar_Util.smap FStar_ST.ref = (let _157_213 = (FStar_Util.smap_create 10000)
 in (FStar_ST.alloc _157_213))
 
-# 168 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 168 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let all_terms : Prims.unit  ->  term FStar_Util.smap = (fun _55_172 -> (match (()) with
 | () -> begin
 (FStar_ST.read __all_terms)
 end))
 
-# 169 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 169 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk : term'  ->  term = (fun t -> (let key = (hash_of_term' t)
 in (match ((let _157_218 = (all_terms ())
@@ -760,47 +760,47 @@ in (FStar_Util.smap_add _157_220 key tm))
 in tm))
 end)))
 
-# 178 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 178 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkTrue : term = (mk (App ((True, []))))
 
-# 179 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 179 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkFalse : term = (mk (App ((False, []))))
 
-# 180 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 180 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkInteger : Prims.string  ->  term = (fun i -> (mk (Integer (i))))
 
-# 181 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 181 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkInteger32 : Prims.int32  ->  term = (fun i -> (mkInteger (FStar_Util.string_of_int32 i)))
 
-# 182 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 182 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkInteger' : Prims.int  ->  term = (fun i -> (let _157_227 = (FStar_Util.string_of_int i)
 in (mkInteger _157_227)))
 
-# 183 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 183 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkBoundV : Prims.int  ->  term = (fun i -> (mk (BoundV (i))))
 
-# 184 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 184 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkFreeV : fv  ->  term = (fun x -> (mk (FreeV (x))))
 
-# 185 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 185 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkApp' : (op * term Prims.list)  ->  term = (fun f -> (mk (App (f))))
 
-# 186 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 186 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkApp : (Prims.string * term Prims.list)  ->  term = (fun _55_189 -> (match (_55_189) with
 | (s, args) -> begin
 (mk (App ((Var (s), args))))
 end))
 
-# 187 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 187 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkNot : term  ->  term = (fun t -> (match (t.tm) with
 | App (True, _55_193) -> begin
@@ -813,7 +813,7 @@ end
 (mkApp' (Not, (t)::[]))
 end))
 
-# 191 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 191 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkAnd : (term * term)  ->  term = (fun _55_205 -> (match (_55_205) with
 | (t1, t2) -> begin
@@ -841,7 +841,7 @@ end
 end)
 end))
 
-# 200 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 200 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkOr : (term * term)  ->  term = (fun _55_265 -> (match (_55_265) with
 | (t1, t2) -> begin
@@ -869,7 +869,7 @@ end
 end)
 end))
 
-# 209 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 209 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkImp : (term * term)  ->  term = (fun _55_325 -> (match (_55_325) with
 | (t1, t2) -> begin
@@ -891,62 +891,62 @@ end
 end)
 end))
 
-# 215 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 215 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk_bin_op : op  ->  (term * term)  ->  term = (fun op _55_356 -> (match (_55_356) with
 | (t1, t2) -> begin
 (mkApp' (op, (t1)::(t2)::[]))
 end))
 
-# 216 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 216 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkMinus : term  ->  term = (fun t -> (mkApp' (Minus, (t)::[])))
 
-# 217 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 217 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkIff : (term * term)  ->  term = (mk_bin_op Iff)
 
-# 218 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 218 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkEq : (term * term)  ->  term = (mk_bin_op Eq)
 
-# 219 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 219 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkLT : (term * term)  ->  term = (mk_bin_op LT)
 
-# 220 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 220 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkLTE : (term * term)  ->  term = (mk_bin_op LTE)
 
-# 221 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 221 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkGT : (term * term)  ->  term = (mk_bin_op GT)
 
-# 222 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 222 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkGTE : (term * term)  ->  term = (mk_bin_op GTE)
 
-# 223 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 223 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkAdd : (term * term)  ->  term = (mk_bin_op Add)
 
-# 224 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 224 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkSub : (term * term)  ->  term = (mk_bin_op Sub)
 
-# 225 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 225 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkDiv : (term * term)  ->  term = (mk_bin_op Div)
 
-# 226 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 226 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkMul : (term * term)  ->  term = (mk_bin_op Mul)
 
-# 227 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 227 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkMod : (term * term)  ->  term = (mk_bin_op Mod)
 
-# 228 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 228 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkITE : (term * term * term)  ->  term = (fun _55_361 -> (match (_55_361) with
 | (t1, t2, t3) -> begin
@@ -967,7 +967,7 @@ end
 end)
 end))
 
-# 234 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 234 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkCases : term Prims.list  ->  term = (fun t -> (match (t) with
 | [] -> begin
@@ -977,7 +977,7 @@ end
 (FStar_List.fold_left (fun out t -> (mkAnd (out, t))) hd tl)
 end))
 
-# 238 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 238 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkQuant : (qop * pat Prims.list Prims.list * Prims.int Prims.option * sort Prims.list * term)  ->  term = (fun _55_406 -> (match (_55_406) with
 | (qop, pats, wopt, vars, body) -> begin
@@ -994,7 +994,7 @@ end)
 end
 end))
 
-# 247 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 247 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let abstr : fv Prims.list  ->  term  ->  term = (fun fvs t -> (let nvars = (FStar_List.length fvs)
 in (let index_of = (fun fv -> (match ((FStar_Util.try_find_index (fv_eq fv) fvs)) with
@@ -1037,7 +1037,7 @@ end)
 end))
 in (aux 0 t)))))
 
-# 271 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 271 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let inst : term Prims.list  ->  term  ->  term = (fun tms t -> (let n = (FStar_List.length tms)
 in (let rec aux = (fun shift t -> (match (t.tm) with
@@ -1066,7 +1066,7 @@ in (mkQuant _157_301))))
 end))
 in (aux 0 t))))
 
-# 287 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 287 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkQuant' : (qop * term Prims.list Prims.list * Prims.int Prims.option * fv Prims.list * term)  ->  term = (fun _55_484 -> (match (_55_484) with
 | (qop, pats, wopt, vars, body) -> begin
@@ -1077,60 +1077,60 @@ in (qop, _157_306, wopt, _157_305, _157_304))))
 in (mkQuant _157_307))
 end))
 
-# 288 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 288 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkForall'' : (pat Prims.list Prims.list * Prims.int Prims.option * sort Prims.list * term)  ->  term = (fun _55_489 -> (match (_55_489) with
 | (pats, wopt, sorts, body) -> begin
 (mkQuant (Forall, pats, wopt, sorts, body))
 end))
 
-# 289 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 289 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkForall' : (term Prims.list Prims.list * Prims.int Prims.option * fv Prims.list * term)  ->  term = (fun _55_494 -> (match (_55_494) with
 | (pats, wopt, vars, body) -> begin
 (mkQuant' (Forall, pats, wopt, vars, body))
 end))
 
-# 292 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 292 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkForall : (term Prims.list Prims.list * fv Prims.list * term)  ->  term = (fun _55_498 -> (match (_55_498) with
 | (pats, vars, body) -> begin
 (mkQuant' (Forall, pats, None, vars, body))
 end))
 
-# 293 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 293 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkExists : (term Prims.list Prims.list * fv Prims.list * term)  ->  term = (fun _55_502 -> (match (_55_502) with
 | (pats, vars, body) -> begin
 (mkQuant' (Exists, pats, None, vars, body))
 end))
 
-# 296 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 296 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 type caption =
 Prims.string Prims.option
 
-# 297 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 297 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 type binders =
 (Prims.string * sort) Prims.list
 
-# 298 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 298 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 type projector =
 (Prims.string * sort)
 
-# 299 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 299 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 type constructor_t =
 (Prims.string * projector Prims.list * sort * Prims.int)
 
-# 300 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 300 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 type constructors =
 constructor_t Prims.list
 
-# 301 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 301 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 type decl =
 | DefPrelude
@@ -1144,7 +1144,7 @@ type decl =
 | Pop
 | CheckSat
 
-# 302 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 302 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_DefPrelude = (fun _discr_ -> (match (_discr_) with
 | DefPrelude (_) -> begin
@@ -1154,7 +1154,7 @@ end
 false
 end))
 
-# 303 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 303 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_DeclFun = (fun _discr_ -> (match (_discr_) with
 | DeclFun (_) -> begin
@@ -1164,7 +1164,7 @@ end
 false
 end))
 
-# 304 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 304 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_DefineFun = (fun _discr_ -> (match (_discr_) with
 | DefineFun (_) -> begin
@@ -1174,7 +1174,7 @@ end
 false
 end))
 
-# 305 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 305 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Assume = (fun _discr_ -> (match (_discr_) with
 | Assume (_) -> begin
@@ -1184,7 +1184,7 @@ end
 false
 end))
 
-# 306 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 306 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Caption = (fun _discr_ -> (match (_discr_) with
 | Caption (_) -> begin
@@ -1194,7 +1194,7 @@ end
 false
 end))
 
-# 307 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 307 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Eval = (fun _discr_ -> (match (_discr_) with
 | Eval (_) -> begin
@@ -1204,7 +1204,7 @@ end
 false
 end))
 
-# 308 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 308 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Echo = (fun _discr_ -> (match (_discr_) with
 | Echo (_) -> begin
@@ -1214,7 +1214,7 @@ end
 false
 end))
 
-# 309 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 309 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Push = (fun _discr_ -> (match (_discr_) with
 | Push (_) -> begin
@@ -1224,7 +1224,7 @@ end
 false
 end))
 
-# 310 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 310 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_Pop = (fun _discr_ -> (match (_discr_) with
 | Pop (_) -> begin
@@ -1234,7 +1234,7 @@ end
 false
 end))
 
-# 311 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 311 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let is_CheckSat = (fun _discr_ -> (match (_discr_) with
 | CheckSat (_) -> begin
@@ -1244,54 +1244,54 @@ end
 false
 end))
 
-# 303 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 303 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let ___DeclFun____0 : decl  ->  (Prims.string * sort Prims.list * sort * caption) = (fun projectee -> (match (projectee) with
 | DeclFun (_55_505) -> begin
 _55_505
 end))
 
-# 304 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 304 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let ___DefineFun____0 : decl  ->  (Prims.string * sort Prims.list * sort * term * caption) = (fun projectee -> (match (projectee) with
 | DefineFun (_55_508) -> begin
 _55_508
 end))
 
-# 305 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 305 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let ___Assume____0 : decl  ->  (term * caption) = (fun projectee -> (match (projectee) with
 | Assume (_55_511) -> begin
 _55_511
 end))
 
-# 306 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 306 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let ___Caption____0 : decl  ->  Prims.string = (fun projectee -> (match (projectee) with
 | Caption (_55_514) -> begin
 _55_514
 end))
 
-# 307 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 307 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let ___Eval____0 : decl  ->  term = (fun projectee -> (match (projectee) with
 | Eval (_55_517) -> begin
 _55_517
 end))
 
-# 308 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 308 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let ___Echo____0 : decl  ->  Prims.string = (fun projectee -> (match (projectee) with
 | Echo (_55_520) -> begin
 _55_520
 end))
 
-# 312 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 312 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 type decls_t =
 decl Prims.list
 
-# 314 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 314 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mkDefineFun : (Prims.string * (Prims.string * sort) Prims.list * sort * term * caption)  ->  decl = (fun _55_526 -> (match (_55_526) with
 | (nm, vars, s, tm, c) -> begin
@@ -1301,12 +1301,12 @@ in (nm, _157_407, s, _157_406, c)))
 in DefineFun (_157_408))
 end))
 
-# 315 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 315 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let constr_id_of_sort : sort  ->  Prims.string = (fun sort -> (let _157_411 = (strSort sort)
 in (FStar_Util.format1 "%s_constr_id" _157_411)))
 
-# 316 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 316 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let fresh_token : (Prims.string * sort)  ->  Prims.int  ->  decl = (fun _55_530 id -> (match (_55_530) with
 | (tok_name, sort) -> begin
@@ -1322,7 +1322,7 @@ in (_157_423, Some ("fresh token")))
 in Assume (_157_424))
 end))
 
-# 319 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 319 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let constructor_to_decl : (Prims.string * (Prims.string * sort) Prims.list * sort * Prims.int)  ->  decl Prims.list = (fun _55_536 -> (match (_55_536) with
 | (name, projectors, sort, id) -> begin
@@ -1395,7 +1395,7 @@ in (_157_473)::[])
 in (FStar_List.append _157_475 _157_474)))))))))))))))))))))))
 end))
 
-# 351 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 351 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let name_binders_inner : (Prims.string * sort) Prims.list  ->  Prims.int  ->  sort Prims.list  ->  ((Prims.string * sort) Prims.list * Prims.string Prims.list * Prims.int) = (fun outer_names start sorts -> (let _55_593 = (FStar_All.pipe_right sorts (FStar_List.fold_left (fun _55_580 s -> (match (_55_580) with
 | (names, binders, n) -> begin
@@ -1421,7 +1421,7 @@ in (match (_55_593) with
 (names, (FStar_List.rev binders), n)
 end)))
 
-# 364 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 364 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let name_binders : sort Prims.list  ->  ((Prims.string * sort) Prims.list * Prims.string Prims.list) = (fun sorts -> (let _55_598 = (name_binders_inner [] 0 sorts)
 in (match (_55_598) with
@@ -1429,7 +1429,7 @@ in (match (_55_598) with
 ((FStar_List.rev names), binders)
 end)))
 
-# 368 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 368 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let termToSmt : term  ->  Prims.string = (fun t -> (let rec aux = (fun n names t -> (match (t.tm) with
 | Integer (i) -> begin
@@ -1480,7 +1480,7 @@ end))
 end))
 in (aux 0 [] t)))
 
-# 391 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 391 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let caption_to_string : Prims.string Prims.option  ->  Prims.string = (fun _55_6 -> (match (_55_6) with
 | None -> begin
@@ -1501,7 +1501,7 @@ in (FStar_Util.format2 ";;;;;;;;;;;;;;;;%s%s\n" hd suffix))
 end))
 end))
 
-# 400 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 400 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let rec declToSmt : Prims.string  ->  decl  ->  Prims.string = (fun z3options decl -> (match (decl) with
 | DefPrelude -> begin
@@ -1564,76 +1564,76 @@ in (FStar_All.pipe_right _157_528 (FStar_String.concat "\n")))
 in (let lex_ordering = "\n(define-fun is-Prims.LexCons ((t Term)) Bool \n(is-LexCons t))\n(assert (forall ((x1 Term) (x2 Term) (y1 Term) (y2 Term))\n(iff (Valid (Precedes (LexCons x1 x2) (LexCons y1 y2)))\n(or (Valid (Precedes x1 y1))\n(and (= x1 y1)\n(Valid (Precedes x2 y2)))))))\n"
 in (Prims.strcat (Prims.strcat basic bcons) lex_ordering))))))
 
-# 506 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 506 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk_Kind_type : term = (mkApp ("Kind_type", []))
 
-# 507 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 507 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk_Kind_uvar : Prims.int  ->  term = (fun i -> (let _157_533 = (let _157_532 = (let _157_531 = (mkInteger' i)
 in (_157_531)::[])
 in ("Kind_uvar", _157_532))
 in (mkApp _157_533)))
 
-# 508 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 508 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk_Typ_app : term  ->  term  ->  term = (fun t1 t2 -> (mkApp ("Typ_app", (t1)::(t2)::[])))
 
-# 509 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 509 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk_Typ_dep : term  ->  term  ->  term = (fun t1 t2 -> (mkApp ("Typ_dep", (t1)::(t2)::[])))
 
-# 510 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 510 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk_Typ_uvar : Prims.int  ->  term = (fun i -> (let _157_546 = (let _157_545 = (let _157_544 = (mkInteger' i)
 in (_157_544)::[])
 in ("Typ_uvar", _157_545))
 in (mkApp _157_546)))
 
-# 511 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 511 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk_Exp_uvar : Prims.int  ->  term = (fun i -> (let _157_551 = (let _157_550 = (let _157_549 = (mkInteger' i)
 in (_157_549)::[])
 in ("Exp_uvar", _157_550))
 in (mkApp _157_551)))
 
-# 513 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 513 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk_Term_unit : term = (mkApp ("Term_unit", []))
 
-# 514 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 514 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let boxInt : term  ->  term = (fun t -> (mkApp ("BoxInt", (t)::[])))
 
-# 515 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 515 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let unboxInt : term  ->  term = (fun t -> (mkApp ("BoxInt_proj_0", (t)::[])))
 
-# 516 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 516 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let boxBool : term  ->  term = (fun t -> (mkApp ("BoxBool", (t)::[])))
 
-# 517 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 517 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let unboxBool : term  ->  term = (fun t -> (mkApp ("BoxBool_proj_0", (t)::[])))
 
-# 518 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 518 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let boxString : term  ->  term = (fun t -> (mkApp ("BoxString", (t)::[])))
 
-# 519 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 519 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let unboxString : term  ->  term = (fun t -> (mkApp ("BoxString_proj_0", (t)::[])))
 
-# 520 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 520 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let boxRef : term  ->  term = (fun t -> (mkApp ("BoxRef", (t)::[])))
 
-# 521 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 521 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let unboxRef : term  ->  term = (fun t -> (mkApp ("BoxRef_proj_0", (t)::[])))
 
-# 522 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 522 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let boxTerm : sort  ->  term  ->  term = (fun sort t -> (match (sort) with
 | Int_sort -> begin
@@ -1652,7 +1652,7 @@ end
 (Prims.raise FStar_Util.Impos)
 end))
 
-# 528 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 528 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let unboxTerm : sort  ->  term  ->  term = (fun sort t -> (match (sort) with
 | Int_sort -> begin
@@ -1671,15 +1671,15 @@ end
 (Prims.raise FStar_Util.Impos)
 end))
 
-# 535 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 535 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk_PreKind : term  ->  term = (fun t -> (mkApp ("PreKind", (t)::[])))
 
-# 536 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 536 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk_PreType : term  ->  term = (fun t -> (mkApp ("PreType", (t)::[])))
 
-# 537 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 537 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk_Valid : term  ->  term = (fun t -> (match (t.tm) with
 | App (Var ("Prims.b2t"), {tm = App (Var ("Prims.op_Equality"), _55_747::t1::t2::[]); hash = _55_741; freevars = _55_739}::[]) -> begin
@@ -1736,19 +1736,19 @@ end
 (mkApp ("Valid", (t)::[]))
 end))
 
-# 549 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 549 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk_HasType : term  ->  term  ->  term = (fun v t -> (mkApp ("HasType", (v)::(t)::[])))
 
-# 550 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 550 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk_HasTypeZ : term  ->  term  ->  term = (fun v t -> (mkApp ("HasTypeZ", (v)::(t)::[])))
 
-# 551 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 551 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk_IsTyped : term  ->  term = (fun v -> (mkApp ("IsTyped", (v)::[])))
 
-# 552 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 552 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk_HasTypeFuel : term  ->  term  ->  term  ->  term = (fun f v t -> if (FStar_ST.read FStar_Options.unthrottle_inductives) then begin
 (mk_HasType v t)
@@ -1756,7 +1756,7 @@ end else begin
 (mkApp ("HasTypeFuel", (f)::(v)::(t)::[]))
 end)
 
-# 556 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 556 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk_HasTypeWithFuel : term Prims.option  ->  term  ->  term  ->  term = (fun f v t -> (match (f) with
 | None -> begin
@@ -1766,59 +1766,59 @@ end
 (mk_HasTypeFuel f v t)
 end))
 
-# 559 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 559 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk_Destruct : term  ->  term = (fun v -> (mkApp ("Destruct", (v)::[])))
 
-# 560 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 560 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk_HasKind : term  ->  term  ->  term = (fun t k -> (mkApp ("HasKind", (t)::(k)::[])))
 
-# 561 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 561 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk_Rank : term  ->  term = (fun x -> (mkApp ("Rank", (x)::[])))
 
-# 562 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 562 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk_tester : Prims.string  ->  term  ->  term = (fun n t -> (mkApp ((Prims.strcat "is-" n), (t)::[])))
 
-# 563 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 563 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk_ApplyTE : term  ->  term  ->  term = (fun t e -> (mkApp ("ApplyTE", (t)::(e)::[])))
 
-# 564 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 564 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk_ApplyTT : term  ->  term  ->  term = (fun t t' -> (mkApp ("ApplyTT", (t)::(t')::[])))
 
-# 565 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 565 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk_ApplyET : term  ->  term  ->  term = (fun e t -> (mkApp ("ApplyET", (e)::(t)::[])))
 
-# 566 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 566 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk_ApplyEE : term  ->  term  ->  term = (fun e e' -> (mkApp ("ApplyEE", (e)::(e')::[])))
 
-# 567 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 567 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk_ApplyEF : term  ->  term  ->  term = (fun e f -> (mkApp ("ApplyEF", (e)::(f)::[])))
 
-# 568 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 568 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk_String_const : Prims.int  ->  term = (fun i -> (let _157_660 = (let _157_659 = (let _157_658 = (mkInteger' i)
 in (_157_658)::[])
 in ("String_const", _157_659))
 in (mkApp _157_660)))
 
-# 569 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 569 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk_Precedes : term  ->  term  ->  term = (fun x1 x2 -> (let _157_665 = (mkApp ("Precedes", (x1)::(x2)::[]))
 in (FStar_All.pipe_right _157_665 mk_Valid)))
 
-# 570 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 570 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk_LexCons : term  ->  term  ->  term = (fun x1 x2 -> (mkApp ("LexCons", (x1)::(x2)::[])))
 
-# 571 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 571 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let rec n_fuel : Prims.int  ->  term = (fun n -> if (n = 0) then begin
 (mkApp ("ZFuel", []))
@@ -1829,15 +1829,15 @@ in ("SFuel", _157_673))
 in (mkApp _157_674))
 end)
 
-# 574 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 574 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let fuel_2 : term = (n_fuel 2)
 
-# 575 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 575 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let fuel_100 : term = (n_fuel 100)
 
-# 577 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 577 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk_and_opt : term Prims.option  ->  term Prims.option  ->  term Prims.option = (fun p1 p2 -> (match ((p1, p2)) with
 | (Some (p1), Some (p2)) -> begin
@@ -1851,11 +1851,11 @@ end
 None
 end))
 
-# 583 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 583 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk_and_opt_l : term Prims.option Prims.list  ->  term Prims.option = (fun pl -> (FStar_List.fold_left (fun out p -> (mk_and_opt p out)) None pl))
 
-# 586 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 586 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk_and_l : term Prims.list  ->  term = (fun l -> (match (l) with
 | [] -> begin
@@ -1865,7 +1865,7 @@ end
 (FStar_List.fold_left (fun p1 p2 -> (mkAnd (p1, p2))) hd tl)
 end))
 
-# 590 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 590 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let mk_or_l : term Prims.list  ->  term = (fun l -> (match (l) with
 | [] -> begin
@@ -1875,7 +1875,7 @@ end
 (FStar_List.fold_left (fun p1 p2 -> (mkOr (p1, p2))) hd tl)
 end))
 
-# 595 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\tosmt\\term.fs"
+# 595 "D:\\workspace\\FStar\\src\\tosmt\\term.fs"
 
 let rec print_smt_term : term  ->  Prims.string = (fun t -> (match (t.tm) with
 | Integer (n) -> begin

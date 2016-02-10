@@ -15,6 +15,7 @@
 *)
 module FStar.ST
 open FStar.HyperHeap
+type modifies = HyperHeap.modifies
 type ref (t:Type) = rref root t
 kind STPre = STPre_h t
 kind STPost (a:Type) = STPost_h t a

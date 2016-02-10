@@ -17,7 +17,7 @@
 
 module FStar.Unionfind
 
-type uvar 'a
+new type uvar 'a
 val uvar_id: uvar 'a -> int
 val fresh : 'a -> uvar 'a
 val find : uvar 'a -> 'a
@@ -25,7 +25,7 @@ val change : uvar 'a -> 'a -> unit
 val equivalent : uvar 'a -> uvar 'a -> bool
 val union : uvar 'a -> uvar 'a -> unit
 
-type tx
+new type tx
 val new_transaction: (unit -> tx)
 val rollback: tx -> unit
 val commit: tx -> unit

@@ -1,2 +1,2 @@
 module System.Text
-type StringBuilder
+new type StringBuilder

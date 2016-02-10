@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module FStar.ST
-type ref : Type -> Type
+new type ref : Type -> Type
 val alloc: 'a -> ref 'a
 val read:  ref 'a -> 'a
 val op_Colon_Equals: ref 'a -> 'a -> unit

@@ -12,7 +12,7 @@ val append: bytes -> bytes -> bytes
 val make: (int -> int) -> int -> bytes
 val for_range: bytes -> int -> int -> (int -> unit) -> unit
 
-type bytebuf
+new type bytebuf
 val create: int -> bytebuf
 val close : bytebuf -> bytes
 val emit_int_as_byte: bytebuf -> int -> unit

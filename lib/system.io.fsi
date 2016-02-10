@@ -1,3 +1,3 @@
 module System.IO
-type TextWriter
-type StreamReader
+new type TextWriter
+new type StreamReader

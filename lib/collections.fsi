@@ -1,2 +1,2 @@
 module Collections
-type Set: Type -> Type
+new type Set: Type -> Type

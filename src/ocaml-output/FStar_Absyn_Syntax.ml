@@ -1,25 +1,25 @@
 
 open Prims
-# 26 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 26 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 type ident =
 FStar_Ident.ident
 
-# 27 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 27 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 type lident =
 FStar_Ident.lid
 
-# 28 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 28 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 type l__LongIdent =
 lident
 
-# 29 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 29 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 exception Err of (Prims.string)
 
-# 29 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 29 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Err = (fun _discr_ -> (match (_discr_) with
 | Err (_) -> begin
@@ -29,18 +29,18 @@ end
 false
 end))
 
-# 29 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 29 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Err____0 : Prims.exn  ->  Prims.string = (fun projectee -> (match (projectee) with
 | Err (_25_7) -> begin
 _25_7
 end))
 
-# 30 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 30 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 exception Error of ((Prims.string * FStar_Range.range))
 
-# 30 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 30 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Error = (fun _discr_ -> (match (_discr_) with
 | Error (_) -> begin
@@ -50,18 +50,18 @@ end
 false
 end))
 
-# 30 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 30 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Error____0 : Prims.exn  ->  (Prims.string * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Error (_25_9) -> begin
 _25_9
 end))
 
-# 31 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 31 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 exception Warning of ((Prims.string * FStar_Range.range))
 
-# 31 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 31 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Warning = (fun _discr_ -> (match (_discr_) with
 | Warning (_) -> begin
@@ -71,58 +71,58 @@ end
 false
 end))
 
-# 31 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 31 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Warning____0 : Prims.exn  ->  (Prims.string * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Warning (_25_11) -> begin
 _25_11
 end))
 
-# 33 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 33 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 type ('a, 't) withinfo_t =
 {v : 'a; sort : 't; p : FStar_Range.range}
 
-# 33 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 33 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Mkwithinfo_t = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkwithinfo_t"))))
 
-# 38 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 38 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 type 't var =
 (lident, 't) withinfo_t
 
-# 39 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 39 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 type fieldname =
 lident
 
-# 40 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 40 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 type 'a bvdef =
 {ppname : ident; realname : ident}
 
-# 40 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 40 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Mkbvdef = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkbvdef"))))
 
-# 41 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 41 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 type ('a, 't) bvar =
 ('a bvdef, 't) withinfo_t
 
-# 47 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 47 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 type sconst =
 FStar_Const.sconst
 
-# 48 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 48 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 type pragma =
 | SetOptions of Prims.string
 | ResetOptions
 
-# 49 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 49 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_SetOptions = (fun _discr_ -> (match (_discr_) with
 | SetOptions (_) -> begin
@@ -132,7 +132,7 @@ end
 false
 end))
 
-# 50 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 50 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_ResetOptions = (fun _discr_ -> (match (_discr_) with
 | ResetOptions (_) -> begin
@@ -142,25 +142,25 @@ end
 false
 end))
 
-# 49 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 49 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___SetOptions____0 : pragma  ->  Prims.string = (fun projectee -> (match (projectee) with
 | SetOptions (_25_27) -> begin
 _25_27
 end))
 
-# 51 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 51 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 type 'a memo =
 'a Prims.option FStar_ST.ref
 
-# 52 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 52 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 type arg_qualifier =
 | Implicit of Prims.bool
 | Equality
 
-# 53 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 53 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Implicit = (fun _discr_ -> (match (_discr_) with
 | Implicit (_) -> begin
@@ -170,7 +170,7 @@ end
 false
 end))
 
-# 54 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 54 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Equality = (fun _discr_ -> (match (_discr_) with
 | Equality (_) -> begin
@@ -180,19 +180,19 @@ end
 false
 end))
 
-# 53 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 53 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Implicit____0 : arg_qualifier  ->  Prims.bool = (fun projectee -> (match (projectee) with
 | Implicit (_25_31) -> begin
 _25_31
 end))
 
-# 55 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 55 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 type aqual =
 arg_qualifier Prims.option
 
-# 56 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 56 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 type typ' =
 | Typ_btvar of btvar
@@ -332,7 +332,7 @@ knd var
  and fvvar =
 typ var
 
-# 57 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 57 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Typ_btvar = (fun _discr_ -> (match (_discr_) with
 | Typ_btvar (_) -> begin
@@ -342,7 +342,7 @@ end
 false
 end))
 
-# 58 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 58 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Typ_const = (fun _discr_ -> (match (_discr_) with
 | Typ_const (_) -> begin
@@ -352,7 +352,7 @@ end
 false
 end))
 
-# 59 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 59 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Typ_fun = (fun _discr_ -> (match (_discr_) with
 | Typ_fun (_) -> begin
@@ -362,7 +362,7 @@ end
 false
 end))
 
-# 60 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 60 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Typ_refine = (fun _discr_ -> (match (_discr_) with
 | Typ_refine (_) -> begin
@@ -372,7 +372,7 @@ end
 false
 end))
 
-# 61 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 61 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Typ_app = (fun _discr_ -> (match (_discr_) with
 | Typ_app (_) -> begin
@@ -382,7 +382,7 @@ end
 false
 end))
 
-# 62 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 62 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Typ_lam = (fun _discr_ -> (match (_discr_) with
 | Typ_lam (_) -> begin
@@ -392,7 +392,7 @@ end
 false
 end))
 
-# 63 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 63 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Typ_ascribed = (fun _discr_ -> (match (_discr_) with
 | Typ_ascribed (_) -> begin
@@ -402,7 +402,7 @@ end
 false
 end))
 
-# 64 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 64 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Typ_meta = (fun _discr_ -> (match (_discr_) with
 | Typ_meta (_) -> begin
@@ -412,7 +412,7 @@ end
 false
 end))
 
-# 65 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 65 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Typ_uvar = (fun _discr_ -> (match (_discr_) with
 | Typ_uvar (_) -> begin
@@ -422,7 +422,7 @@ end
 false
 end))
 
-# 66 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 66 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Typ_delayed = (fun _discr_ -> (match (_discr_) with
 | Typ_delayed (_) -> begin
@@ -432,7 +432,7 @@ end
 false
 end))
 
-# 67 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 67 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Typ_unknown = (fun _discr_ -> (match (_discr_) with
 | Typ_unknown (_) -> begin
@@ -442,11 +442,11 @@ end
 false
 end))
 
-# 73 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 73 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Mkcomp_typ : comp_typ  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkcomp_typ"))))
 
-# 80 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 80 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Total = (fun _discr_ -> (match (_discr_) with
 | Total (_) -> begin
@@ -456,7 +456,7 @@ end
 false
 end))
 
-# 81 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 81 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Comp = (fun _discr_ -> (match (_discr_) with
 | Comp (_) -> begin
@@ -466,7 +466,7 @@ end
 false
 end))
 
-# 84 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 84 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_TOTAL = (fun _discr_ -> (match (_discr_) with
 | TOTAL (_) -> begin
@@ -476,7 +476,7 @@ end
 false
 end))
 
-# 85 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 85 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_MLEFFECT = (fun _discr_ -> (match (_discr_) with
 | MLEFFECT (_) -> begin
@@ -486,7 +486,7 @@ end
 false
 end))
 
-# 86 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 86 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_RETURN = (fun _discr_ -> (match (_discr_) with
 | RETURN (_) -> begin
@@ -496,7 +496,7 @@ end
 false
 end))
 
-# 87 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 87 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_PARTIAL_RETURN = (fun _discr_ -> (match (_discr_) with
 | PARTIAL_RETURN (_) -> begin
@@ -506,7 +506,7 @@ end
 false
 end))
 
-# 88 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 88 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_SOMETRIVIAL = (fun _discr_ -> (match (_discr_) with
 | SOMETRIVIAL (_) -> begin
@@ -516,7 +516,7 @@ end
 false
 end))
 
-# 89 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 89 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_LEMMA = (fun _discr_ -> (match (_discr_) with
 | LEMMA (_) -> begin
@@ -526,7 +526,7 @@ end
 false
 end))
 
-# 90 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 90 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_DECREASES = (fun _discr_ -> (match (_discr_) with
 | DECREASES (_) -> begin
@@ -536,7 +536,7 @@ end
 false
 end))
 
-# 93 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 93 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Meta_pattern = (fun _discr_ -> (match (_discr_) with
 | Meta_pattern (_) -> begin
@@ -546,7 +546,7 @@ end
 false
 end))
 
-# 94 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 94 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Meta_named = (fun _discr_ -> (match (_discr_) with
 | Meta_named (_) -> begin
@@ -556,7 +556,7 @@ end
 false
 end))
 
-# 95 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 95 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Meta_labeled = (fun _discr_ -> (match (_discr_) with
 | Meta_labeled (_) -> begin
@@ -566,7 +566,7 @@ end
 false
 end))
 
-# 96 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 96 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Meta_refresh_label = (fun _discr_ -> (match (_discr_) with
 | Meta_refresh_label (_) -> begin
@@ -576,7 +576,7 @@ end
 false
 end))
 
-# 97 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 97 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Meta_slack_formula = (fun _discr_ -> (match (_discr_) with
 | Meta_slack_formula (_) -> begin
@@ -586,7 +586,7 @@ end
 false
 end))
 
-# 99 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 99 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Uvar = (fun _ _discr_ -> (match (_discr_) with
 | Uvar (_) -> begin
@@ -596,7 +596,7 @@ end
 false
 end))
 
-# 100 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 100 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Fixed = (fun _ _discr_ -> (match (_discr_) with
 | Fixed (_) -> begin
@@ -606,7 +606,7 @@ end
 false
 end))
 
-# 102 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 102 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Exp_bvar = (fun _discr_ -> (match (_discr_) with
 | Exp_bvar (_) -> begin
@@ -616,7 +616,7 @@ end
 false
 end))
 
-# 103 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 103 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Exp_fvar = (fun _discr_ -> (match (_discr_) with
 | Exp_fvar (_) -> begin
@@ -626,7 +626,7 @@ end
 false
 end))
 
-# 104 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 104 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Exp_constant = (fun _discr_ -> (match (_discr_) with
 | Exp_constant (_) -> begin
@@ -636,7 +636,7 @@ end
 false
 end))
 
-# 105 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 105 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Exp_abs = (fun _discr_ -> (match (_discr_) with
 | Exp_abs (_) -> begin
@@ -646,7 +646,7 @@ end
 false
 end))
 
-# 106 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 106 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Exp_app = (fun _discr_ -> (match (_discr_) with
 | Exp_app (_) -> begin
@@ -656,7 +656,7 @@ end
 false
 end))
 
-# 107 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 107 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Exp_match = (fun _discr_ -> (match (_discr_) with
 | Exp_match (_) -> begin
@@ -666,7 +666,7 @@ end
 false
 end))
 
-# 108 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 108 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Exp_ascribed = (fun _discr_ -> (match (_discr_) with
 | Exp_ascribed (_) -> begin
@@ -676,7 +676,7 @@ end
 false
 end))
 
-# 109 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 109 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Exp_let = (fun _discr_ -> (match (_discr_) with
 | Exp_let (_) -> begin
@@ -686,7 +686,7 @@ end
 false
 end))
 
-# 110 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 110 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Exp_uvar = (fun _discr_ -> (match (_discr_) with
 | Exp_uvar (_) -> begin
@@ -696,7 +696,7 @@ end
 false
 end))
 
-# 111 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 111 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Exp_delayed = (fun _discr_ -> (match (_discr_) with
 | Exp_delayed (_) -> begin
@@ -706,7 +706,7 @@ end
 false
 end))
 
-# 112 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 112 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Exp_meta = (fun _discr_ -> (match (_discr_) with
 | Exp_meta (_) -> begin
@@ -716,7 +716,7 @@ end
 false
 end))
 
-# 115 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 115 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Meta_desugared = (fun _discr_ -> (match (_discr_) with
 | Meta_desugared (_) -> begin
@@ -726,7 +726,7 @@ end
 false
 end))
 
-# 117 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 117 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Data_app = (fun _discr_ -> (match (_discr_) with
 | Data_app (_) -> begin
@@ -736,7 +736,7 @@ end
 false
 end))
 
-# 118 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 118 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Sequence = (fun _discr_ -> (match (_discr_) with
 | Sequence (_) -> begin
@@ -746,7 +746,7 @@ end
 false
 end))
 
-# 119 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 119 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Primop = (fun _discr_ -> (match (_discr_) with
 | Primop (_) -> begin
@@ -756,7 +756,7 @@ end
 false
 end))
 
-# 120 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 120 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Masked_effect = (fun _discr_ -> (match (_discr_) with
 | Masked_effect (_) -> begin
@@ -766,7 +766,7 @@ end
 false
 end))
 
-# 121 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 121 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Meta_smt_pat = (fun _discr_ -> (match (_discr_) with
 | Meta_smt_pat (_) -> begin
@@ -776,7 +776,7 @@ end
 false
 end))
 
-# 123 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 123 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Data_ctor = (fun _discr_ -> (match (_discr_) with
 | Data_ctor (_) -> begin
@@ -786,7 +786,7 @@ end
 false
 end))
 
-# 124 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 124 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Record_projector = (fun _discr_ -> (match (_discr_) with
 | Record_projector (_) -> begin
@@ -796,7 +796,7 @@ end
 false
 end))
 
-# 125 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 125 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Record_ctor = (fun _discr_ -> (match (_discr_) with
 | Record_ctor (_) -> begin
@@ -806,7 +806,7 @@ end
 false
 end))
 
-# 130 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 130 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Pat_disj = (fun _discr_ -> (match (_discr_) with
 | Pat_disj (_) -> begin
@@ -816,7 +816,7 @@ end
 false
 end))
 
-# 131 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 131 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Pat_constant = (fun _discr_ -> (match (_discr_) with
 | Pat_constant (_) -> begin
@@ -826,7 +826,7 @@ end
 false
 end))
 
-# 132 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 132 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Pat_cons = (fun _discr_ -> (match (_discr_) with
 | Pat_cons (_) -> begin
@@ -836,7 +836,7 @@ end
 false
 end))
 
-# 133 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 133 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Pat_var = (fun _discr_ -> (match (_discr_) with
 | Pat_var (_) -> begin
@@ -846,7 +846,7 @@ end
 false
 end))
 
-# 134 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 134 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Pat_tvar = (fun _discr_ -> (match (_discr_) with
 | Pat_tvar (_) -> begin
@@ -856,7 +856,7 @@ end
 false
 end))
 
-# 135 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 135 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Pat_wild = (fun _discr_ -> (match (_discr_) with
 | Pat_wild (_) -> begin
@@ -866,7 +866,7 @@ end
 false
 end))
 
-# 136 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 136 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Pat_twild = (fun _discr_ -> (match (_discr_) with
 | Pat_twild (_) -> begin
@@ -876,7 +876,7 @@ end
 false
 end))
 
-# 137 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 137 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Pat_dot_term = (fun _discr_ -> (match (_discr_) with
 | Pat_dot_term (_) -> begin
@@ -886,7 +886,7 @@ end
 false
 end))
 
-# 138 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 138 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Pat_dot_typ = (fun _discr_ -> (match (_discr_) with
 | Pat_dot_typ (_) -> begin
@@ -896,7 +896,7 @@ end
 false
 end))
 
-# 141 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 141 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Kind_type = (fun _discr_ -> (match (_discr_) with
 | Kind_type (_) -> begin
@@ -906,7 +906,7 @@ end
 false
 end))
 
-# 142 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 142 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Kind_effect = (fun _discr_ -> (match (_discr_) with
 | Kind_effect (_) -> begin
@@ -916,7 +916,7 @@ end
 false
 end))
 
-# 143 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 143 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Kind_abbrev = (fun _discr_ -> (match (_discr_) with
 | Kind_abbrev (_) -> begin
@@ -926,7 +926,7 @@ end
 false
 end))
 
-# 144 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 144 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Kind_arrow = (fun _discr_ -> (match (_discr_) with
 | Kind_arrow (_) -> begin
@@ -936,7 +936,7 @@ end
 false
 end))
 
-# 145 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 145 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Kind_uvar = (fun _discr_ -> (match (_discr_) with
 | Kind_uvar (_) -> begin
@@ -946,7 +946,7 @@ end
 false
 end))
 
-# 146 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 146 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Kind_lam = (fun _discr_ -> (match (_discr_) with
 | Kind_lam (_) -> begin
@@ -956,7 +956,7 @@ end
 false
 end))
 
-# 147 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 147 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Kind_delayed = (fun _discr_ -> (match (_discr_) with
 | Kind_delayed (_) -> begin
@@ -966,7 +966,7 @@ end
 false
 end))
 
-# 148 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 148 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Kind_unknown = (fun _discr_ -> (match (_discr_) with
 | Kind_unknown (_) -> begin
@@ -976,377 +976,377 @@ end
 false
 end))
 
-# 154 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 154 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Mkletbinding : letbinding  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkletbinding"))))
 
-# 165 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 165 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Mkfreevars : freevars  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkfreevars"))))
 
-# 169 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 169 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Mkuvars : uvars  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkuvars"))))
 
-# 174 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 174 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Mksyntax = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mksyntax"))))
 
-# 57 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 57 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Typ_btvar____0 : typ'  ->  btvar = (fun projectee -> (match (projectee) with
 | Typ_btvar (_25_55) -> begin
 _25_55
 end))
 
-# 58 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 58 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Typ_const____0 : typ'  ->  ftvar = (fun projectee -> (match (projectee) with
 | Typ_const (_25_58) -> begin
 _25_58
 end))
 
-# 59 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 59 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Typ_fun____0 : typ'  ->  (binders * comp) = (fun projectee -> (match (projectee) with
 | Typ_fun (_25_61) -> begin
 _25_61
 end))
 
-# 60 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 60 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Typ_refine____0 : typ'  ->  (bvvar * typ) = (fun projectee -> (match (projectee) with
 | Typ_refine (_25_64) -> begin
 _25_64
 end))
 
-# 61 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 61 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Typ_app____0 : typ'  ->  (typ * args) = (fun projectee -> (match (projectee) with
 | Typ_app (_25_67) -> begin
 _25_67
 end))
 
-# 62 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 62 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Typ_lam____0 : typ'  ->  (binders * typ) = (fun projectee -> (match (projectee) with
 | Typ_lam (_25_70) -> begin
 _25_70
 end))
 
-# 63 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 63 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Typ_ascribed____0 : typ'  ->  (typ * knd) = (fun projectee -> (match (projectee) with
 | Typ_ascribed (_25_73) -> begin
 _25_73
 end))
 
-# 64 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 64 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Typ_meta____0 : typ'  ->  meta_t = (fun projectee -> (match (projectee) with
 | Typ_meta (_25_76) -> begin
 _25_76
 end))
 
-# 65 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 65 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Typ_uvar____0 : typ'  ->  (uvar_t * knd) = (fun projectee -> (match (projectee) with
 | Typ_uvar (_25_79) -> begin
 _25_79
 end))
 
-# 66 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 66 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Typ_delayed____0 : typ'  ->  (((typ * subst_t), Prims.unit  ->  typ) FStar_Util.either * typ memo) = (fun projectee -> (match (projectee) with
 | Typ_delayed (_25_82) -> begin
 _25_82
 end))
 
-# 80 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 80 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Total____0 : comp'  ->  typ = (fun projectee -> (match (projectee) with
 | Total (_25_86) -> begin
 _25_86
 end))
 
-# 81 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 81 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Comp____0 : comp'  ->  comp_typ = (fun projectee -> (match (projectee) with
 | Comp (_25_89) -> begin
 _25_89
 end))
 
-# 90 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 90 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___DECREASES____0 : cflags  ->  exp = (fun projectee -> (match (projectee) with
 | DECREASES (_25_92) -> begin
 _25_92
 end))
 
-# 93 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 93 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Meta_pattern____0 : meta_t  ->  (typ * arg Prims.list Prims.list) = (fun projectee -> (match (projectee) with
 | Meta_pattern (_25_95) -> begin
 _25_95
 end))
 
-# 94 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 94 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Meta_named____0 : meta_t  ->  (typ * lident) = (fun projectee -> (match (projectee) with
 | Meta_named (_25_98) -> begin
 _25_98
 end))
 
-# 95 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 95 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Meta_labeled____0 : meta_t  ->  (typ * Prims.string * FStar_Range.range * Prims.bool) = (fun projectee -> (match (projectee) with
 | Meta_labeled (_25_101) -> begin
 _25_101
 end))
 
-# 96 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 96 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Meta_refresh_label____0 : meta_t  ->  (typ * Prims.bool Prims.option * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Meta_refresh_label (_25_104) -> begin
 _25_104
 end))
 
-# 97 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 97 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Meta_slack_formula____0 : meta_t  ->  (typ * typ * Prims.bool FStar_ST.ref) = (fun projectee -> (match (projectee) with
 | Meta_slack_formula (_25_107) -> begin
 _25_107
 end))
 
-# 100 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 100 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Fixed____0 = (fun projectee -> (match (projectee) with
 | Fixed (_25_110) -> begin
 _25_110
 end))
 
-# 102 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 102 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Exp_bvar____0 : exp'  ->  bvvar = (fun projectee -> (match (projectee) with
 | Exp_bvar (_25_113) -> begin
 _25_113
 end))
 
-# 103 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 103 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Exp_fvar____0 : exp'  ->  (fvvar * fv_qual Prims.option) = (fun projectee -> (match (projectee) with
 | Exp_fvar (_25_116) -> begin
 _25_116
 end))
 
-# 104 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 104 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Exp_constant____0 : exp'  ->  sconst = (fun projectee -> (match (projectee) with
 | Exp_constant (_25_119) -> begin
 _25_119
 end))
 
-# 105 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 105 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Exp_abs____0 : exp'  ->  (binders * exp) = (fun projectee -> (match (projectee) with
 | Exp_abs (_25_122) -> begin
 _25_122
 end))
 
-# 106 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 106 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Exp_app____0 : exp'  ->  (exp * args) = (fun projectee -> (match (projectee) with
 | Exp_app (_25_125) -> begin
 _25_125
 end))
 
-# 107 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 107 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Exp_match____0 : exp'  ->  (exp * (pat * exp Prims.option * exp) Prims.list) = (fun projectee -> (match (projectee) with
 | Exp_match (_25_128) -> begin
 _25_128
 end))
 
-# 108 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 108 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Exp_ascribed____0 : exp'  ->  (exp * typ * lident Prims.option) = (fun projectee -> (match (projectee) with
 | Exp_ascribed (_25_131) -> begin
 _25_131
 end))
 
-# 109 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 109 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Exp_let____0 : exp'  ->  (letbindings * exp) = (fun projectee -> (match (projectee) with
 | Exp_let (_25_134) -> begin
 _25_134
 end))
 
-# 110 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 110 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Exp_uvar____0 : exp'  ->  (uvar_e * typ) = (fun projectee -> (match (projectee) with
 | Exp_uvar (_25_137) -> begin
 _25_137
 end))
 
-# 111 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 111 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Exp_delayed____0 : exp'  ->  (exp * subst_t * exp memo) = (fun projectee -> (match (projectee) with
 | Exp_delayed (_25_140) -> begin
 _25_140
 end))
 
-# 112 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 112 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Exp_meta____0 : exp'  ->  meta_e = (fun projectee -> (match (projectee) with
 | Exp_meta (_25_143) -> begin
 _25_143
 end))
 
-# 115 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 115 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Meta_desugared____0 : meta_e  ->  (exp * meta_source_info) = (fun projectee -> (match (projectee) with
 | Meta_desugared (_25_145) -> begin
 _25_145
 end))
 
-# 124 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 124 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Record_projector____0 : fv_qual  ->  lident = (fun projectee -> (match (projectee) with
 | Record_projector (_25_148) -> begin
 _25_148
 end))
 
-# 125 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 125 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Record_ctor____0 : fv_qual  ->  (lident * fieldname Prims.list) = (fun projectee -> (match (projectee) with
 | Record_ctor (_25_151) -> begin
 _25_151
 end))
 
-# 130 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 130 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Pat_disj____0 : pat'  ->  pat Prims.list = (fun projectee -> (match (projectee) with
 | Pat_disj (_25_154) -> begin
 _25_154
 end))
 
-# 131 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 131 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Pat_constant____0 : pat'  ->  sconst = (fun projectee -> (match (projectee) with
 | Pat_constant (_25_157) -> begin
 _25_157
 end))
 
-# 132 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 132 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Pat_cons____0 : pat'  ->  (fvvar * fv_qual Prims.option * (pat * Prims.bool) Prims.list) = (fun projectee -> (match (projectee) with
 | Pat_cons (_25_160) -> begin
 _25_160
 end))
 
-# 133 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 133 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Pat_var____0 : pat'  ->  bvvar = (fun projectee -> (match (projectee) with
 | Pat_var (_25_163) -> begin
 _25_163
 end))
 
-# 134 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 134 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Pat_tvar____0 : pat'  ->  btvar = (fun projectee -> (match (projectee) with
 | Pat_tvar (_25_166) -> begin
 _25_166
 end))
 
-# 135 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 135 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Pat_wild____0 : pat'  ->  bvvar = (fun projectee -> (match (projectee) with
 | Pat_wild (_25_169) -> begin
 _25_169
 end))
 
-# 136 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 136 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Pat_twild____0 : pat'  ->  btvar = (fun projectee -> (match (projectee) with
 | Pat_twild (_25_172) -> begin
 _25_172
 end))
 
-# 137 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 137 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Pat_dot_term____0 : pat'  ->  (bvvar * exp) = (fun projectee -> (match (projectee) with
 | Pat_dot_term (_25_175) -> begin
 _25_175
 end))
 
-# 138 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 138 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Pat_dot_typ____0 : pat'  ->  (btvar * typ) = (fun projectee -> (match (projectee) with
 | Pat_dot_typ (_25_178) -> begin
 _25_178
 end))
 
-# 143 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 143 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Kind_abbrev____0 : knd'  ->  (kabbrev * knd) = (fun projectee -> (match (projectee) with
 | Kind_abbrev (_25_181) -> begin
 _25_181
 end))
 
-# 144 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 144 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Kind_arrow____0 : knd'  ->  (binders * knd) = (fun projectee -> (match (projectee) with
 | Kind_arrow (_25_184) -> begin
 _25_184
 end))
 
-# 145 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 145 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Kind_uvar____0 : knd'  ->  uvar_k_app = (fun projectee -> (match (projectee) with
 | Kind_uvar (_25_187) -> begin
 _25_187
 end))
 
-# 146 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 146 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Kind_lam____0 : knd'  ->  (binders * knd) = (fun projectee -> (match (projectee) with
 | Kind_lam (_25_190) -> begin
 _25_190
 end))
 
-# 147 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 147 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Kind_delayed____0 : knd'  ->  (knd * subst_t * knd memo) = (fun projectee -> (match (projectee) with
 | Kind_delayed (_25_193) -> begin
 _25_193
 end))
 
-# 186 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 186 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 type subst =
 subst_elt Prims.list
 
-# 187 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 187 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 type either_var =
 (btvar, bvvar) FStar_Util.either
 
-# 188 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 188 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 type freevars_l =
 either_var Prims.list
 
-# 189 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 189 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 type formula =
 typ
 
-# 190 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 190 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 type formulae =
 typ Prims.list
 
-# 191 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 191 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 type qualifier =
 | Private
@@ -1354,6 +1354,7 @@ type qualifier =
 | Opaque
 | Logic
 | Abstract
+| New
 | Discriminator of lident
 | Projector of (lident * (btvdef, bvvdef) FStar_Util.either)
 | RecordType of fieldname Prims.list
@@ -1364,7 +1365,7 @@ type qualifier =
 | HasMaskedEffect
 | Effect
 
-# 192 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 192 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Private = (fun _discr_ -> (match (_discr_) with
 | Private (_) -> begin
@@ -1374,7 +1375,7 @@ end
 false
 end))
 
-# 193 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 193 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Assumption = (fun _discr_ -> (match (_discr_) with
 | Assumption (_) -> begin
@@ -1384,7 +1385,7 @@ end
 false
 end))
 
-# 194 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 194 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Opaque = (fun _discr_ -> (match (_discr_) with
 | Opaque (_) -> begin
@@ -1394,7 +1395,7 @@ end
 false
 end))
 
-# 195 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 195 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Logic = (fun _discr_ -> (match (_discr_) with
 | Logic (_) -> begin
@@ -1404,7 +1405,7 @@ end
 false
 end))
 
-# 196 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 196 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Abstract = (fun _discr_ -> (match (_discr_) with
 | Abstract (_) -> begin
@@ -1414,7 +1415,17 @@ end
 false
 end))
 
-# 197 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 197 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
+
+let is_New = (fun _discr_ -> (match (_discr_) with
+| New (_) -> begin
+true
+end
+| _ -> begin
+false
+end))
+
+# 198 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Discriminator = (fun _discr_ -> (match (_discr_) with
 | Discriminator (_) -> begin
@@ -1424,7 +1435,7 @@ end
 false
 end))
 
-# 198 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 199 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Projector = (fun _discr_ -> (match (_discr_) with
 | Projector (_) -> begin
@@ -1434,7 +1445,7 @@ end
 false
 end))
 
-# 199 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 200 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_RecordType = (fun _discr_ -> (match (_discr_) with
 | RecordType (_) -> begin
@@ -1444,7 +1455,7 @@ end
 false
 end))
 
-# 200 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 201 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_RecordConstructor = (fun _discr_ -> (match (_discr_) with
 | RecordConstructor (_) -> begin
@@ -1454,7 +1465,7 @@ end
 false
 end))
 
-# 201 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 202 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_ExceptionConstructor = (fun _discr_ -> (match (_discr_) with
 | ExceptionConstructor (_) -> begin
@@ -1464,7 +1475,7 @@ end
 false
 end))
 
-# 202 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 203 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_DefaultEffect = (fun _discr_ -> (match (_discr_) with
 | DefaultEffect (_) -> begin
@@ -1474,7 +1485,7 @@ end
 false
 end))
 
-# 203 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 204 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_TotalEffect = (fun _discr_ -> (match (_discr_) with
 | TotalEffect (_) -> begin
@@ -1484,7 +1495,7 @@ end
 false
 end))
 
-# 204 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 205 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_HasMaskedEffect = (fun _discr_ -> (match (_discr_) with
 | HasMaskedEffect (_) -> begin
@@ -1494,7 +1505,7 @@ end
 false
 end))
 
-# 205 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 206 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Effect = (fun _discr_ -> (match (_discr_) with
 | Effect (_) -> begin
@@ -1504,65 +1515,65 @@ end
 false
 end))
 
-# 197 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 198 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Discriminator____0 : qualifier  ->  lident = (fun projectee -> (match (projectee) with
 | Discriminator (_25_200) -> begin
 _25_200
 end))
 
-# 198 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 199 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Projector____0 : qualifier  ->  (lident * (btvdef, bvvdef) FStar_Util.either) = (fun projectee -> (match (projectee) with
 | Projector (_25_203) -> begin
 _25_203
 end))
 
-# 199 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 200 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___RecordType____0 : qualifier  ->  fieldname Prims.list = (fun projectee -> (match (projectee) with
 | RecordType (_25_206) -> begin
 _25_206
 end))
 
-# 200 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 201 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___RecordConstructor____0 : qualifier  ->  fieldname Prims.list = (fun projectee -> (match (projectee) with
 | RecordConstructor (_25_209) -> begin
 _25_209
 end))
 
-# 202 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 203 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___DefaultEffect____0 : qualifier  ->  lident Prims.option = (fun projectee -> (match (projectee) with
 | DefaultEffect (_25_212) -> begin
 _25_212
 end))
 
-# 207 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 208 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 type tycon =
 (lident * binders * knd)
 
-# 208 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 209 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 type monad_abbrev =
 {mabbrev : lident; parms : binders; def : typ}
 
-# 208 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 209 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Mkmonad_abbrev : monad_abbrev  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkmonad_abbrev"))))
 
-# 213 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 214 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 type sub_eff =
 {source : lident; target : lident; lift : typ}
 
-# 213 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 214 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Mksub_eff : sub_eff  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mksub_eff"))))
 
-# 218 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 219 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 type eff_decl =
 {mname : lident; binders : binders; qualifiers : qualifier Prims.list; signature : knd; ret : typ; bind_wp : typ; bind_wlp : typ; if_then_else : typ; ite_wp : typ; ite_wlp : typ; wp_binop : typ; wp_as_type : typ; close_wp : typ; close_wp_t : typ; assert_p : typ; assume_p : typ; null_wp : typ; trivial : typ} 
@@ -1581,11 +1592,11 @@ type eff_decl =
 | Sig_effect_abbrev of (lident * binders * comp * qualifier Prims.list * FStar_Range.range)
 | Sig_pragma of (pragma * FStar_Range.range)
 
-# 218 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 219 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Mkeff_decl : eff_decl  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkeff_decl"))))
 
-# 239 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 240 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Sig_tycon = (fun _discr_ -> (match (_discr_) with
 | Sig_tycon (_) -> begin
@@ -1595,7 +1606,7 @@ end
 false
 end))
 
-# 240 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 241 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Sig_kind_abbrev = (fun _discr_ -> (match (_discr_) with
 | Sig_kind_abbrev (_) -> begin
@@ -1605,7 +1616,7 @@ end
 false
 end))
 
-# 241 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 242 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Sig_typ_abbrev = (fun _discr_ -> (match (_discr_) with
 | Sig_typ_abbrev (_) -> begin
@@ -1615,7 +1626,7 @@ end
 false
 end))
 
-# 242 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 243 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Sig_datacon = (fun _discr_ -> (match (_discr_) with
 | Sig_datacon (_) -> begin
@@ -1625,7 +1636,7 @@ end
 false
 end))
 
-# 243 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 244 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Sig_val_decl = (fun _discr_ -> (match (_discr_) with
 | Sig_val_decl (_) -> begin
@@ -1635,7 +1646,7 @@ end
 false
 end))
 
-# 244 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 245 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Sig_assume = (fun _discr_ -> (match (_discr_) with
 | Sig_assume (_) -> begin
@@ -1645,7 +1656,7 @@ end
 false
 end))
 
-# 245 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 246 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Sig_let = (fun _discr_ -> (match (_discr_) with
 | Sig_let (_) -> begin
@@ -1655,7 +1666,7 @@ end
 false
 end))
 
-# 246 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 247 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Sig_main = (fun _discr_ -> (match (_discr_) with
 | Sig_main (_) -> begin
@@ -1665,7 +1676,7 @@ end
 false
 end))
 
-# 247 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 248 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Sig_bundle = (fun _discr_ -> (match (_discr_) with
 | Sig_bundle (_) -> begin
@@ -1675,7 +1686,7 @@ end
 false
 end))
 
-# 248 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 249 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Sig_new_effect = (fun _discr_ -> (match (_discr_) with
 | Sig_new_effect (_) -> begin
@@ -1685,7 +1696,7 @@ end
 false
 end))
 
-# 249 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 250 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Sig_sub_effect = (fun _discr_ -> (match (_discr_) with
 | Sig_sub_effect (_) -> begin
@@ -1695,7 +1706,7 @@ end
 false
 end))
 
-# 250 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 251 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Sig_effect_abbrev = (fun _discr_ -> (match (_discr_) with
 | Sig_effect_abbrev (_) -> begin
@@ -1705,7 +1716,7 @@ end
 false
 end))
 
-# 251 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 252 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Sig_pragma = (fun _discr_ -> (match (_discr_) with
 | Sig_pragma (_) -> begin
@@ -1715,112 +1726,112 @@ end
 false
 end))
 
-# 239 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 240 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Sig_tycon____0 : sigelt  ->  (lident * binders * knd * lident Prims.list * lident Prims.list * qualifier Prims.list * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Sig_tycon (_25_242) -> begin
 _25_242
 end))
 
-# 240 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 241 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Sig_kind_abbrev____0 : sigelt  ->  (lident * binders * knd * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Sig_kind_abbrev (_25_245) -> begin
 _25_245
 end))
 
-# 241 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 242 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Sig_typ_abbrev____0 : sigelt  ->  (lident * binders * knd * typ * qualifier Prims.list * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Sig_typ_abbrev (_25_248) -> begin
 _25_248
 end))
 
-# 242 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 243 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Sig_datacon____0 : sigelt  ->  (lident * typ * tycon * qualifier Prims.list * lident Prims.list * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Sig_datacon (_25_251) -> begin
 _25_251
 end))
 
-# 243 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 244 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Sig_val_decl____0 : sigelt  ->  (lident * typ * qualifier Prims.list * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Sig_val_decl (_25_254) -> begin
 _25_254
 end))
 
-# 244 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 245 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Sig_assume____0 : sigelt  ->  (lident * formula * qualifier Prims.list * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Sig_assume (_25_257) -> begin
 _25_257
 end))
 
-# 245 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 246 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Sig_let____0 : sigelt  ->  (letbindings * FStar_Range.range * lident Prims.list * qualifier Prims.list) = (fun projectee -> (match (projectee) with
 | Sig_let (_25_260) -> begin
 _25_260
 end))
 
-# 246 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 247 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Sig_main____0 : sigelt  ->  (exp * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Sig_main (_25_263) -> begin
 _25_263
 end))
 
-# 247 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 248 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Sig_bundle____0 : sigelt  ->  (sigelt Prims.list * qualifier Prims.list * lident Prims.list * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Sig_bundle (_25_266) -> begin
 _25_266
 end))
 
-# 248 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 249 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Sig_new_effect____0 : sigelt  ->  (eff_decl * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Sig_new_effect (_25_269) -> begin
 _25_269
 end))
 
-# 249 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 250 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Sig_sub_effect____0 : sigelt  ->  (sub_eff * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Sig_sub_effect (_25_272) -> begin
 _25_272
 end))
 
-# 250 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 251 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Sig_effect_abbrev____0 : sigelt  ->  (lident * binders * comp * qualifier Prims.list * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Sig_effect_abbrev (_25_275) -> begin
 _25_275
 end))
 
-# 251 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 252 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___Sig_pragma____0 : sigelt  ->  (pragma * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Sig_pragma (_25_278) -> begin
 _25_278
 end))
 
-# 252 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 253 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 type sigelts =
 sigelt Prims.list
 
-# 254 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 255 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 type modul =
 {name : lident; declarations : sigelts; exports : sigelts; is_interface : Prims.bool; is_deserialized : Prims.bool}
 
-# 254 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 255 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Mkmodul : modul  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkmodul"))))
 
-# 262 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 263 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 type ktec =
 | K of knd
@@ -1828,7 +1839,7 @@ type ktec =
 | E of exp
 | C of comp
 
-# 263 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 264 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_K = (fun _discr_ -> (match (_discr_) with
 | K (_) -> begin
@@ -1838,7 +1849,7 @@ end
 false
 end))
 
-# 264 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 265 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_T = (fun _discr_ -> (match (_discr_) with
 | T (_) -> begin
@@ -1848,7 +1859,7 @@ end
 false
 end))
 
-# 265 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 266 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_E = (fun _discr_ -> (match (_discr_) with
 | E (_) -> begin
@@ -1858,7 +1869,7 @@ end
 false
 end))
 
-# 266 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 267 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_C = (fun _discr_ -> (match (_discr_) with
 | C (_) -> begin
@@ -1868,102 +1879,102 @@ end
 false
 end))
 
-# 263 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 264 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___K____0 : ktec  ->  knd = (fun projectee -> (match (projectee) with
 | K (_25_287) -> begin
 _25_287
 end))
 
-# 264 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 265 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___T____0 : ktec  ->  (typ * knd Prims.option) = (fun projectee -> (match (projectee) with
 | T (_25_290) -> begin
 _25_290
 end))
 
-# 265 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 266 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___E____0 : ktec  ->  exp = (fun projectee -> (match (projectee) with
 | E (_25_293) -> begin
 _25_293
 end))
 
-# 266 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 267 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ___C____0 : ktec  ->  comp = (fun projectee -> (match (projectee) with
 | C (_25_296) -> begin
 _25_296
 end))
 
-# 268 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 269 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 type lcomp =
 {eff_name : lident; res_typ : typ; cflags : cflags Prims.list; comp : Prims.unit  ->  comp}
 
-# 268 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 269 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_Mklcomp : lcomp  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mklcomp"))))
 
-# 278 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 279 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 type path =
 Prims.string Prims.list
 
-# 279 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 280 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let dummyRange : Prims.int64 = 0L
 
-# 280 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 281 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let withinfo = (fun v s r -> {v = v; sort = s; p = r})
 
-# 281 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 282 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let withsort = (fun v s -> (withinfo v s dummyRange))
 
-# 282 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 283 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_ident : (Prims.string * FStar_Range.range)  ->  FStar_Ident.ident = (fun _25_309 -> (match (_25_309) with
 | (text, range) -> begin
 {FStar_Ident.idText = text; FStar_Ident.idRange = range}
 end))
 
-# 283 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 284 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let id_of_text : Prims.string  ->  FStar_Ident.ident = (fun str -> (mk_ident (str, dummyRange)))
 
-# 284 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 285 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let text_of_id : ident  ->  Prims.string = (fun id -> id.FStar_Ident.idText)
 
-# 285 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 286 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let text_of_path : Prims.string Prims.list  ->  Prims.string = (fun path -> (FStar_Util.concat_l "." path))
 
-# 286 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 287 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let path_of_text : Prims.string  ->  Prims.string Prims.list = (fun text -> (FStar_String.split (('.')::[]) text))
 
-# 287 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 288 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let path_of_ns : ident Prims.list  ->  Prims.string Prims.list = (fun ns -> (FStar_List.map text_of_id ns))
 
-# 288 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 289 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let path_of_lid : FStar_Ident.lident  ->  Prims.string Prims.list = (fun lid -> (FStar_List.map text_of_id (FStar_List.append lid.FStar_Ident.ns ((lid.FStar_Ident.ident)::[]))))
 
-# 289 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 290 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ids_of_lid : FStar_Ident.lident  ->  FStar_Ident.ident Prims.list = (fun lid -> (FStar_List.append lid.FStar_Ident.ns ((lid.FStar_Ident.ident)::[])))
 
-# 290 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 291 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let lid_of_ids : ident Prims.list  ->  FStar_Ident.lident = (fun ids -> (let _25_320 = (FStar_Util.prefix ids)
 in (match (_25_320) with
 | (ns, id) -> begin
-(let nsstr = (let _127_1271 = (FStar_List.map text_of_id ns)
-in (FStar_All.pipe_right _127_1271 text_of_path))
+(let nsstr = (let _127_1272 = (FStar_List.map text_of_id ns)
+in (FStar_All.pipe_right _127_1272 text_of_path))
 in {FStar_Ident.ns = ns; FStar_Ident.ident = id; FStar_Ident.nsstr = nsstr; FStar_Ident.str = if (nsstr = "") then begin
 id.FStar_Ident.idText
 end else begin
@@ -1971,24 +1982,24 @@ end else begin
 end})
 end)))
 
-# 297 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 298 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let lid_of_path : Prims.string Prims.list  ->  FStar_Range.range  ->  FStar_Ident.lident = (fun path pos -> (let ids = (FStar_List.map (fun s -> (mk_ident (s, pos))) path)
 in (lid_of_ids ids)))
 
-# 300 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 301 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let text_of_lid : FStar_Ident.lident  ->  Prims.string = (fun lid -> lid.FStar_Ident.str)
 
-# 301 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 302 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let lid_equals : FStar_Ident.lident  ->  FStar_Ident.lident  ->  Prims.bool = (fun l1 l2 -> (l1.FStar_Ident.str = l2.FStar_Ident.str))
 
-# 302 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 303 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let bvd_eq = (fun bvd1 bvd2 -> (bvd1.realname.FStar_Ident.idText = bvd2.realname.FStar_Ident.idText))
 
-# 303 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 304 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let order_bvd = (fun x y -> (match ((x, y)) with
 | (FStar_Util.Inl (_25_335), FStar_Util.Inr (_25_338)) -> begin
@@ -2004,18 +2015,18 @@ end
 (FStar_String.compare x.realname.FStar_Ident.idText y.realname.FStar_Ident.idText)
 end))
 
-# 309 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 310 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let lid_with_range : FStar_Ident.lid  ->  FStar_Range.range  ->  FStar_Ident.lident = (fun lid r -> (let id = (let _25_360 = lid.FStar_Ident.ident
 in {FStar_Ident.idText = _25_360.FStar_Ident.idText; FStar_Ident.idRange = r})
 in (let _25_363 = lid
 in {FStar_Ident.ns = _25_363.FStar_Ident.ns; FStar_Ident.ident = id; FStar_Ident.nsstr = _25_363.FStar_Ident.nsstr; FStar_Ident.str = _25_363.FStar_Ident.str})))
 
-# 312 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 313 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let range_of_lid : FStar_Ident.lid  ->  FStar_Range.range = (fun lid -> lid.FStar_Ident.ident.FStar_Ident.idRange)
 
-# 313 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 314 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let range_of_lbname : lbname  ->  FStar_Range.range = (fun l -> (match (l) with
 | FStar_Util.Inl (x) -> begin
@@ -2025,39 +2036,39 @@ end
 (range_of_lid l)
 end))
 
-# 322 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 323 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let syn = (fun p k f -> (f k p))
 
-# 323 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 324 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_fvs = (fun _25_374 -> (match (()) with
 | () -> begin
 (FStar_Util.mk_ref None)
 end))
 
-# 324 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 325 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_uvs = (fun _25_375 -> (match (()) with
 | () -> begin
 (FStar_Util.mk_ref None)
 end))
 
-# 325 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 326 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let new_ftv_set = (fun _25_376 -> (match (()) with
 | () -> begin
 (FStar_Util.new_set (fun x y -> (FStar_Util.compare x.v.realname.FStar_Ident.idText y.v.realname.FStar_Ident.idText)) (fun x -> (FStar_Util.hashcode x.v.realname.FStar_Ident.idText)))
 end))
 
-# 326 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 327 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let new_uv_set = (fun _25_380 -> (match (()) with
 | () -> begin
 (FStar_Util.new_set (fun x y -> ((FStar_Unionfind.uvar_id x) - (FStar_Unionfind.uvar_id y))) FStar_Unionfind.uvar_id)
 end))
 
-# 327 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 328 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let new_uvt_set = (fun _25_383 -> (match (()) with
 | () -> begin
@@ -2070,50 +2081,50 @@ end)) (fun _25_387 -> (match (_25_387) with
 end)))
 end))
 
-# 328 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 329 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
-let no_fvs : freevars = (let _127_1336 = (new_ftv_set ())
-in (let _127_1335 = (new_ftv_set ())
-in {ftvs = _127_1336; fxvs = _127_1335}))
+let no_fvs : freevars = (let _127_1337 = (new_ftv_set ())
+in (let _127_1336 = (new_ftv_set ())
+in {ftvs = _127_1337; fxvs = _127_1336}))
 
-# 332 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 333 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
-let no_uvs : uvars = (let _127_1339 = (new_uv_set ())
+let no_uvs : uvars = (let _127_1340 = (new_uv_set ())
+in (let _127_1339 = (new_uvt_set ())
 in (let _127_1338 = (new_uvt_set ())
-in (let _127_1337 = (new_uvt_set ())
-in {uvars_k = _127_1339; uvars_t = _127_1338; uvars_e = _127_1337})))
+in {uvars_k = _127_1340; uvars_t = _127_1339; uvars_e = _127_1338})))
 
-# 337 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 338 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let memo_no_uvs : uvars Prims.option FStar_ST.ref = (FStar_Util.mk_ref (Some (no_uvs)))
 
-# 338 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 339 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let memo_no_fvs : freevars Prims.option FStar_ST.ref = (FStar_Util.mk_ref (Some (no_fvs)))
 
-# 339 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 340 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let freevars_of_list : (btvar, bvvar) FStar_Util.either Prims.list  ->  freevars = (fun l -> (FStar_All.pipe_right l (FStar_List.fold_left (fun out _25_1 -> (match (_25_1) with
 | FStar_Util.Inl (btv) -> begin
 (let _25_401 = out
-in (let _127_1344 = (FStar_Util.set_add btv out.ftvs)
-in {ftvs = _127_1344; fxvs = _25_401.fxvs}))
+in (let _127_1345 = (FStar_Util.set_add btv out.ftvs)
+in {ftvs = _127_1345; fxvs = _25_401.fxvs}))
 end
 | FStar_Util.Inr (bxv) -> begin
 (let _25_405 = out
-in (let _127_1345 = (FStar_Util.set_add bxv out.fxvs)
-in {ftvs = _25_405.ftvs; fxvs = _127_1345}))
+in (let _127_1346 = (FStar_Util.set_add bxv out.fxvs)
+in {ftvs = _25_405.ftvs; fxvs = _127_1346}))
 end)) no_fvs)))
 
-# 343 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 344 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
-let list_of_freevars : freevars  ->  (btvar, bvvar) FStar_Util.either Prims.list = (fun fvs -> (let _127_1353 = (let _127_1349 = (FStar_Util.set_elements fvs.ftvs)
-in (FStar_All.pipe_right _127_1349 (FStar_List.map (fun x -> FStar_Util.Inl (x)))))
-in (let _127_1352 = (let _127_1351 = (FStar_Util.set_elements fvs.fxvs)
-in (FStar_All.pipe_right _127_1351 (FStar_List.map (fun x -> FStar_Util.Inr (x)))))
-in (FStar_List.append _127_1353 _127_1352))))
+let list_of_freevars : freevars  ->  (btvar, bvvar) FStar_Util.either Prims.list = (fun fvs -> (let _127_1354 = (let _127_1350 = (FStar_Util.set_elements fvs.ftvs)
+in (FStar_All.pipe_right _127_1350 (FStar_List.map (fun x -> FStar_Util.Inl (x)))))
+in (let _127_1353 = (let _127_1352 = (FStar_Util.set_elements fvs.fxvs)
+in (FStar_All.pipe_right _127_1352 (FStar_List.map (fun x -> FStar_Util.Inr (x)))))
+in (FStar_List.append _127_1354 _127_1353))))
 
-# 347 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 348 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let get_unit_ref : Prims.unit  ->  Prims.unit Prims.option FStar_ST.ref = (fun _25_410 -> (match (()) with
 | () -> begin
@@ -2122,41 +2133,41 @@ in (let _25_412 = (FStar_ST.op_Colon_Equals x None)
 in x))
 end))
 
-# 349 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 350 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
-let mk_Kind_type : (knd', Prims.unit) syntax = (let _127_1358 = (get_unit_ref ())
-in (let _127_1357 = (mk_fvs ())
-in (let _127_1356 = (mk_uvs ())
-in {n = Kind_type; tk = _127_1358; pos = dummyRange; fvs = _127_1357; uvs = _127_1356})))
+let mk_Kind_type : (knd', Prims.unit) syntax = (let _127_1359 = (get_unit_ref ())
+in (let _127_1358 = (mk_fvs ())
+in (let _127_1357 = (mk_uvs ())
+in {n = Kind_type; tk = _127_1359; pos = dummyRange; fvs = _127_1358; uvs = _127_1357})))
 
-# 350 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 351 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
-let mk_Kind_effect : (knd', Prims.unit) syntax = (let _127_1361 = (get_unit_ref ())
-in (let _127_1360 = (mk_fvs ())
-in (let _127_1359 = (mk_uvs ())
-in {n = Kind_effect; tk = _127_1361; pos = dummyRange; fvs = _127_1360; uvs = _127_1359})))
+let mk_Kind_effect : (knd', Prims.unit) syntax = (let _127_1362 = (get_unit_ref ())
+in (let _127_1361 = (mk_fvs ())
+in (let _127_1360 = (mk_uvs ())
+in {n = Kind_effect; tk = _127_1362; pos = dummyRange; fvs = _127_1361; uvs = _127_1360})))
 
-# 351 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 352 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_Kind_abbrev : (kabbrev * knd)  ->  FStar_Range.range  ->  knd = (fun _25_416 p -> (match (_25_416) with
 | (kabr, k) -> begin
-(let _127_1368 = (get_unit_ref ())
-in (let _127_1367 = (mk_fvs ())
-in (let _127_1366 = (mk_uvs ())
-in {n = Kind_abbrev ((kabr, k)); tk = _127_1368; pos = p; fvs = _127_1367; uvs = _127_1366})))
+(let _127_1369 = (get_unit_ref ())
+in (let _127_1368 = (mk_fvs ())
+in (let _127_1367 = (mk_uvs ())
+in {n = Kind_abbrev ((kabr, k)); tk = _127_1369; pos = p; fvs = _127_1368; uvs = _127_1367})))
 end))
 
-# 357 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 358 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_Kind_arrow : (binders * knd)  ->  FStar_Range.range  ->  knd = (fun _25_420 p -> (match (_25_420) with
 | (bs, k) -> begin
-(let _127_1375 = (get_unit_ref ())
-in (let _127_1374 = (mk_fvs ())
-in (let _127_1373 = (mk_uvs ())
-in {n = Kind_arrow ((bs, k)); tk = _127_1375; pos = p; fvs = _127_1374; uvs = _127_1373})))
+(let _127_1376 = (get_unit_ref ())
+in (let _127_1375 = (mk_fvs ())
+in (let _127_1374 = (mk_uvs ())
+in {n = Kind_arrow ((bs, k)); tk = _127_1376; pos = p; fvs = _127_1375; uvs = _127_1374})))
 end))
 
-# 363 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 364 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_Kind_arrow' : (((((typ', (knd', Prims.unit) syntax) syntax bvdef, (knd', Prims.unit) syntax) withinfo_t, ((exp', (typ', (knd', Prims.unit) syntax) syntax) syntax bvdef, (typ', (knd', Prims.unit) syntax) syntax) withinfo_t) FStar_Util.either * arg_qualifier Prims.option) Prims.list * knd)  ->  FStar_Range.range  ->  knd = (fun _25_424 p -> (match (_25_424) with
 | (bs, k) -> begin
@@ -2175,41 +2186,41 @@ end)
 end)
 end))
 
-# 370 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 371 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
-let mk_Kind_uvar : uvar_k_app  ->  FStar_Range.range  ->  (knd', Prims.unit) syntax = (fun uv p -> (let _127_1386 = (get_unit_ref ())
-in (let _127_1385 = (mk_fvs ())
-in (let _127_1384 = (mk_uvs ())
-in {n = Kind_uvar (uv); tk = _127_1386; pos = p; fvs = _127_1385; uvs = _127_1384}))))
+let mk_Kind_uvar : uvar_k_app  ->  FStar_Range.range  ->  (knd', Prims.unit) syntax = (fun uv p -> (let _127_1387 = (get_unit_ref ())
+in (let _127_1386 = (mk_fvs ())
+in (let _127_1385 = (mk_uvs ())
+in {n = Kind_uvar (uv); tk = _127_1387; pos = p; fvs = _127_1386; uvs = _127_1385}))))
 
-# 377 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 378 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_Kind_lam : (binders * knd)  ->  FStar_Range.range  ->  knd = (fun _25_439 p -> (match (_25_439) with
 | (vs, k) -> begin
-(let _127_1393 = (get_unit_ref ())
-in (let _127_1392 = (mk_fvs ())
-in (let _127_1391 = (mk_uvs ())
-in {n = Kind_lam ((vs, k)); tk = _127_1393; pos = p; fvs = _127_1392; uvs = _127_1391})))
+(let _127_1394 = (get_unit_ref ())
+in (let _127_1393 = (mk_fvs ())
+in (let _127_1392 = (mk_uvs ())
+in {n = Kind_lam ((vs, k)); tk = _127_1394; pos = p; fvs = _127_1393; uvs = _127_1392})))
 end))
 
-# 383 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 384 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_Kind_delayed : (knd * subst_t * knd Prims.option FStar_ST.ref)  ->  FStar_Range.range  ->  knd = (fun _25_444 p -> (match (_25_444) with
 | (k, s, m) -> begin
-(let _127_1400 = (get_unit_ref ())
-in (let _127_1399 = (mk_fvs ())
-in (let _127_1398 = (mk_uvs ())
-in {n = Kind_delayed ((k, s, m)); tk = _127_1400; pos = p; fvs = _127_1399; uvs = _127_1398})))
+(let _127_1401 = (get_unit_ref ())
+in (let _127_1400 = (mk_fvs ())
+in (let _127_1399 = (mk_uvs ())
+in {n = Kind_delayed ((k, s, m)); tk = _127_1401; pos = p; fvs = _127_1400; uvs = _127_1399})))
 end))
 
-# 390 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 391 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
-let mk_Kind_unknown : (knd', Prims.unit) syntax = (let _127_1403 = (get_unit_ref ())
-in (let _127_1402 = (mk_fvs ())
-in (let _127_1401 = (mk_uvs ())
-in {n = Kind_unknown; tk = _127_1403; pos = dummyRange; fvs = _127_1402; uvs = _127_1401})))
+let mk_Kind_unknown : (knd', Prims.unit) syntax = (let _127_1404 = (get_unit_ref ())
+in (let _127_1403 = (mk_fvs ())
+in (let _127_1402 = (mk_uvs ())
+in {n = Kind_unknown; tk = _127_1404; pos = dummyRange; fvs = _127_1403; uvs = _127_1402})))
 
-# 393 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 394 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let get_knd_nref : Prims.unit  ->  (knd', Prims.unit) syntax Prims.option FStar_ST.ref = (fun _25_446 -> (match (()) with
 | () -> begin
@@ -2218,25 +2229,25 @@ in (let _25_448 = (FStar_ST.op_Colon_Equals x None)
 in x))
 end))
 
-# 394 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 395 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let get_knd_ref : (knd', Prims.unit) syntax Prims.option  ->  (knd', Prims.unit) syntax Prims.option FStar_ST.ref = (fun k -> (let x = (FStar_Util.mk_ref (Some (mk_Kind_unknown)))
 in (let _25_452 = (FStar_ST.op_Colon_Equals x k)
 in x)))
 
-# 396 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 397 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
-let mk_Typ_btvar : btvar  ->  knd Prims.option  ->  FStar_Range.range  ->  (typ', (knd', Prims.unit) syntax) syntax = (fun x k p -> (let _127_1416 = (get_knd_ref k)
-in (let _127_1415 = (mk_fvs ())
-in (let _127_1414 = (mk_uvs ())
-in {n = Typ_btvar (x); tk = _127_1416; pos = p; fvs = _127_1415; uvs = _127_1414}))))
+let mk_Typ_btvar : btvar  ->  knd Prims.option  ->  FStar_Range.range  ->  (typ', (knd', Prims.unit) syntax) syntax = (fun x k p -> (let _127_1417 = (get_knd_ref k)
+in (let _127_1416 = (mk_fvs ())
+in (let _127_1415 = (mk_uvs ())
+in {n = Typ_btvar (x); tk = _127_1417; pos = p; fvs = _127_1416; uvs = _127_1415}))))
 
-# 397 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 398 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
-let mk_Typ_const : ftvar  ->  knd Prims.option  ->  FStar_Range.range  ->  (typ', (knd', Prims.unit) syntax) syntax = (fun x k p -> (let _127_1423 = (get_knd_ref k)
-in {n = Typ_const (x); tk = _127_1423; pos = p; fvs = memo_no_fvs; uvs = memo_no_uvs}))
+let mk_Typ_const : ftvar  ->  knd Prims.option  ->  FStar_Range.range  ->  (typ', (knd', Prims.unit) syntax) syntax = (fun x k p -> (let _127_1424 = (get_knd_ref k)
+in {n = Typ_const (x); tk = _127_1424; pos = p; fvs = memo_no_fvs; uvs = memo_no_uvs}))
 
-# 398 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 399 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let rec check_fun = (fun bs c p -> (match (bs) with
 | [] -> begin
@@ -2246,28 +2257,28 @@ end
 Typ_fun ((bs, c))
 end))
 
-# 402 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 403 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_Typ_fun : (binders * comp)  ->  knd Prims.option  ->  FStar_Range.range  ->  (typ', (knd', Prims.unit) syntax) syntax = (fun _25_468 k p -> (match (_25_468) with
 | (bs, c) -> begin
-(let _127_1436 = (check_fun bs c p)
-in (let _127_1435 = (FStar_Util.mk_ref k)
-in (let _127_1434 = (mk_fvs ())
-in (let _127_1433 = (mk_uvs ())
-in {n = _127_1436; tk = _127_1435; pos = p; fvs = _127_1434; uvs = _127_1433}))))
+(let _127_1437 = (check_fun bs c p)
+in (let _127_1436 = (FStar_Util.mk_ref k)
+in (let _127_1435 = (mk_fvs ())
+in (let _127_1434 = (mk_uvs ())
+in {n = _127_1437; tk = _127_1436; pos = p; fvs = _127_1435; uvs = _127_1434}))))
 end))
 
-# 408 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 409 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_Typ_refine : (bvvar * typ)  ->  knd Prims.option  ->  FStar_Range.range  ->  (typ', (knd', Prims.unit) syntax) syntax = (fun _25_473 k p -> (match (_25_473) with
 | (x, phi) -> begin
-(let _127_1445 = (FStar_Util.mk_ref k)
-in (let _127_1444 = (mk_fvs ())
-in (let _127_1443 = (mk_uvs ())
-in {n = Typ_refine ((x, phi)); tk = _127_1445; pos = p; fvs = _127_1444; uvs = _127_1443})))
+(let _127_1446 = (FStar_Util.mk_ref k)
+in (let _127_1445 = (mk_fvs ())
+in (let _127_1444 = (mk_uvs ())
+in {n = Typ_refine ((x, phi)); tk = _127_1446; pos = p; fvs = _127_1445; uvs = _127_1444})))
 end))
 
-# 414 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 415 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_Typ_app : (typ * (((typ', (knd', Prims.unit) syntax) syntax, (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax) FStar_Util.either * arg_qualifier Prims.option) Prims.list)  ->  knd Prims.option  ->  FStar_Range.range  ->  typ = (fun _25_478 k p -> (match (_25_478) with
 | (t1, args) -> begin
@@ -2276,14 +2287,14 @@ let mk_Typ_app : (typ * (((typ', (knd', Prims.unit) syntax) syntax, (exp', (typ'
 t1
 end
 | _25_483 -> begin
-(let _127_1454 = (FStar_Util.mk_ref k)
-in (let _127_1453 = (mk_fvs ())
-in (let _127_1452 = (mk_uvs ())
-in {n = Typ_app ((t1, args)); tk = _127_1454; pos = p; fvs = _127_1453; uvs = _127_1452})))
+(let _127_1455 = (FStar_Util.mk_ref k)
+in (let _127_1454 = (mk_fvs ())
+in (let _127_1453 = (mk_uvs ())
+in {n = Typ_app ((t1, args)); tk = _127_1455; pos = p; fvs = _127_1454; uvs = _127_1453})))
 end)
 end))
 
-# 424 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 425 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_Typ_app' : (typ * (((typ', (knd', Prims.unit) syntax) syntax, (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax) FStar_Util.either * arg_qualifier Prims.option) Prims.list)  ->  knd Prims.option  ->  FStar_Range.range  ->  typ = (fun _25_486 k p -> (match (_25_486) with
 | (t1, args) -> begin
@@ -2296,7 +2307,7 @@ end
 end)
 end))
 
-# 428 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 429 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let extend_typ_app : ((typ', (knd', Prims.unit) syntax) syntax * (((typ', (knd', Prims.unit) syntax) syntax, (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax) FStar_Util.either * arg_qualifier Prims.option))  ->  knd Prims.option  ->  FStar_Range.range  ->  typ = (fun _25_494 k p -> (match (_25_494) with
 | (t, arg) -> begin
@@ -2309,7 +2320,7 @@ end
 end)
 end))
 
-# 431 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 432 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_Typ_lam : (((((typ', (knd', Prims.unit) syntax) syntax bvdef, (knd', Prims.unit) syntax) withinfo_t, ((exp', (typ', (knd', Prims.unit) syntax) syntax) syntax bvdef, (typ', (knd', Prims.unit) syntax) syntax) withinfo_t) FStar_Util.either * arg_qualifier Prims.option) Prims.list * typ)  ->  knd Prims.option  ->  FStar_Range.range  ->  typ = (fun _25_505 k p -> (match (_25_505) with
 | (b, t) -> begin
@@ -2318,104 +2329,104 @@ let mk_Typ_lam : (((((typ', (knd', Prims.unit) syntax) syntax bvdef, (knd', Prim
 t
 end
 | _25_510 -> begin
-(let _127_1475 = (FStar_Util.mk_ref k)
-in (let _127_1474 = (mk_fvs ())
-in (let _127_1473 = (mk_uvs ())
-in {n = Typ_lam ((b, t)); tk = _127_1475; pos = p; fvs = _127_1474; uvs = _127_1473})))
+(let _127_1476 = (FStar_Util.mk_ref k)
+in (let _127_1475 = (mk_fvs ())
+in (let _127_1474 = (mk_uvs ())
+in {n = Typ_lam ((b, t)); tk = _127_1476; pos = p; fvs = _127_1475; uvs = _127_1474})))
 end)
 end))
 
-# 441 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 442 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_Typ_lam' : (((((typ', (knd', Prims.unit) syntax) syntax bvdef, (knd', Prims.unit) syntax) withinfo_t, ((exp', (typ', (knd', Prims.unit) syntax) syntax) syntax bvdef, (typ', (knd', Prims.unit) syntax) syntax) withinfo_t) FStar_Util.either * arg_qualifier Prims.option) Prims.list * typ)  ->  knd Prims.option  ->  FStar_Range.range  ->  typ = (fun _25_513 k p -> (match (_25_513) with
 | (bs, t) -> begin
 (mk_Typ_lam (bs, t) k p)
 end))
 
-# 444 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 445 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_Typ_ascribed' : (typ * knd)  ->  knd Prims.option  ->  FStar_Range.range  ->  (typ', (knd', Prims.unit) syntax) syntax = (fun _25_518 k' p -> (match (_25_518) with
 | (t, k) -> begin
-(let _127_1490 = (FStar_Util.mk_ref k')
-in (let _127_1489 = (mk_fvs ())
-in (let _127_1488 = (mk_uvs ())
-in {n = Typ_ascribed ((t, k)); tk = _127_1490; pos = p; fvs = _127_1489; uvs = _127_1488})))
+(let _127_1491 = (FStar_Util.mk_ref k')
+in (let _127_1490 = (mk_fvs ())
+in (let _127_1489 = (mk_uvs ())
+in {n = Typ_ascribed ((t, k)); tk = _127_1491; pos = p; fvs = _127_1490; uvs = _127_1489})))
 end))
 
-# 451 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 452 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_Typ_ascribed : (typ * knd)  ->  FStar_Range.range  ->  (typ', (knd', Prims.unit) syntax) syntax = (fun _25_523 p -> (match (_25_523) with
 | (t, k) -> begin
 (mk_Typ_ascribed' (t, k) (Some (k)) p)
 end))
 
-# 453 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 454 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
-let mk_Typ_meta' : meta_t  ->  knd Prims.option  ->  FStar_Range.range  ->  (typ', (knd', Prims.unit) syntax) syntax = (fun m k p -> (let _127_1503 = (FStar_Util.mk_ref k)
-in (let _127_1502 = (mk_fvs ())
-in (let _127_1501 = (mk_uvs ())
-in {n = Typ_meta (m); tk = _127_1503; pos = p; fvs = _127_1502; uvs = _127_1501}))))
+let mk_Typ_meta' : meta_t  ->  knd Prims.option  ->  FStar_Range.range  ->  (typ', (knd', Prims.unit) syntax) syntax = (fun m k p -> (let _127_1504 = (FStar_Util.mk_ref k)
+in (let _127_1503 = (mk_fvs ())
+in (let _127_1502 = (mk_uvs ())
+in {n = Typ_meta (m); tk = _127_1504; pos = p; fvs = _127_1503; uvs = _127_1502}))))
 
-# 459 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 460 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_Typ_meta : meta_t  ->  (typ', (knd', Prims.unit) syntax) syntax = (fun m -> (match (m) with
 | (Meta_pattern (t, _)) | (Meta_named (t, _)) | (Meta_labeled (t, _, _, _)) | (Meta_refresh_label (t, _, _)) | (Meta_slack_formula (t, _, _)) -> begin
-(let _127_1506 = (FStar_ST.read t.tk)
-in (mk_Typ_meta' m _127_1506 t.pos))
+(let _127_1507 = (FStar_ST.read t.tk)
+in (mk_Typ_meta' m _127_1507 t.pos))
 end))
 
-# 466 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 467 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_Typ_uvar' : (uvar_t * knd)  ->  knd Prims.option  ->  FStar_Range.range  ->  (typ', (knd', Prims.unit) syntax) syntax = (fun _25_560 k' p -> (match (_25_560) with
 | (u, k) -> begin
-(let _127_1515 = (get_knd_ref k')
-in (let _127_1514 = (mk_fvs ())
-in (let _127_1513 = (mk_uvs ())
-in {n = Typ_uvar ((u, k)); tk = _127_1515; pos = p; fvs = _127_1514; uvs = _127_1513})))
+(let _127_1516 = (get_knd_ref k')
+in (let _127_1515 = (mk_fvs ())
+in (let _127_1514 = (mk_uvs ())
+in {n = Typ_uvar ((u, k)); tk = _127_1516; pos = p; fvs = _127_1515; uvs = _127_1514})))
 end))
 
-# 473 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 474 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_Typ_uvar : (uvar_t * knd)  ->  FStar_Range.range  ->  (typ', (knd', Prims.unit) syntax) syntax = (fun _25_565 p -> (match (_25_565) with
 | (u, k) -> begin
 (mk_Typ_uvar' (u, k) (Some (k)) p)
 end))
 
-# 474 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 475 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_Typ_delayed : ((typ', (knd', Prims.unit) syntax) syntax * subst_t * typ Prims.option FStar_ST.ref)  ->  knd Prims.option  ->  FStar_Range.range  ->  (typ', (knd', Prims.unit) syntax) syntax = (fun _25_570 k p -> (match (_25_570) with
 | (t, s, m) -> begin
-(let _127_1535 = (match (t.n) with
+(let _127_1536 = (match (t.n) with
 | Typ_delayed (_25_574) -> begin
 (FStar_All.failwith "NESTED DELAYED TYPES!")
 end
 | _25_577 -> begin
 Typ_delayed ((FStar_Util.Inl ((t, s)), m))
 end)
-in (let _127_1534 = (FStar_Util.mk_ref k)
-in (let _127_1533 = (mk_fvs ())
-in (let _127_1532 = (mk_uvs ())
-in {n = _127_1535; tk = _127_1534; pos = p; fvs = _127_1533; uvs = _127_1532}))))
+in (let _127_1535 = (FStar_Util.mk_ref k)
+in (let _127_1534 = (mk_fvs ())
+in (let _127_1533 = (mk_uvs ())
+in {n = _127_1536; tk = _127_1535; pos = p; fvs = _127_1534; uvs = _127_1533}))))
 end))
 
-# 480 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 481 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
-let mk_Typ_delayed' : ((typ * subst_t), Prims.unit  ->  typ) FStar_Util.either  ->  knd Prims.option  ->  FStar_Range.range  ->  (typ', (knd', Prims.unit) syntax) syntax = (fun st k p -> (let _127_1557 = (let _127_1553 = (let _127_1552 = (FStar_Util.mk_ref None)
-in (st, _127_1552))
-in Typ_delayed (_127_1553))
-in (let _127_1556 = (FStar_Util.mk_ref k)
-in (let _127_1555 = (mk_fvs ())
-in (let _127_1554 = (mk_uvs ())
-in {n = _127_1557; tk = _127_1556; pos = p; fvs = _127_1555; uvs = _127_1554})))))
+let mk_Typ_delayed' : ((typ * subst_t), Prims.unit  ->  typ) FStar_Util.either  ->  knd Prims.option  ->  FStar_Range.range  ->  (typ', (knd', Prims.unit) syntax) syntax = (fun st k p -> (let _127_1558 = (let _127_1554 = (let _127_1553 = (FStar_Util.mk_ref None)
+in (st, _127_1553))
+in Typ_delayed (_127_1554))
+in (let _127_1557 = (FStar_Util.mk_ref k)
+in (let _127_1556 = (mk_fvs ())
+in (let _127_1555 = (mk_uvs ())
+in {n = _127_1558; tk = _127_1557; pos = p; fvs = _127_1556; uvs = _127_1555})))))
 
-# 487 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 488 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
-let mk_Typ_unknown : (typ', (knd', Prims.unit) syntax) syntax = (let _127_1560 = (get_knd_nref ())
-in (let _127_1559 = (mk_fvs ())
-in (let _127_1558 = (mk_uvs ())
-in {n = Typ_unknown; tk = _127_1560; pos = dummyRange; fvs = _127_1559; uvs = _127_1558})))
+let mk_Typ_unknown : (typ', (knd', Prims.unit) syntax) syntax = (let _127_1561 = (get_knd_nref ())
+in (let _127_1560 = (mk_fvs ())
+in (let _127_1559 = (mk_uvs ())
+in {n = Typ_unknown; tk = _127_1561; pos = dummyRange; fvs = _127_1560; uvs = _127_1559})))
 
-# 488 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 489 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let get_typ_nref : Prims.unit  ->  (typ', (knd', Prims.unit) syntax) syntax Prims.option FStar_ST.ref = (fun _25_581 -> (match (()) with
 | () -> begin
@@ -2424,51 +2435,51 @@ in (let _25_583 = (FStar_ST.op_Colon_Equals x None)
 in x))
 end))
 
-# 489 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 490 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let get_typ_ref : (typ', (knd', Prims.unit) syntax) syntax Prims.option  ->  (typ', (knd', Prims.unit) syntax) syntax Prims.option FStar_ST.ref = (fun t -> (let x = (FStar_Util.mk_ref (Some (mk_Typ_unknown)))
 in (let _25_587 = (FStar_ST.op_Colon_Equals x t)
 in x)))
 
-# 491 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 492 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
-let mk_Total : typ  ->  (comp', Prims.unit) syntax = (fun t -> (let _127_1569 = (FStar_Util.mk_ref None)
-in (let _127_1568 = (mk_fvs ())
-in (let _127_1567 = (mk_uvs ())
-in {n = Total (t); tk = _127_1569; pos = t.pos; fvs = _127_1568; uvs = _127_1567}))))
+let mk_Total : typ  ->  (comp', Prims.unit) syntax = (fun t -> (let _127_1570 = (FStar_Util.mk_ref None)
+in (let _127_1569 = (mk_fvs ())
+in (let _127_1568 = (mk_uvs ())
+in {n = Total (t); tk = _127_1570; pos = t.pos; fvs = _127_1569; uvs = _127_1568}))))
 
-# 497 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 498 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
-let mk_Comp : comp_typ  ->  (comp', Prims.unit) syntax = (fun ct -> (let _127_1574 = (FStar_Util.mk_ref None)
-in (let _127_1573 = (mk_fvs ())
-in (let _127_1572 = (mk_uvs ())
-in {n = Comp (ct); tk = _127_1574; pos = ct.result_typ.pos; fvs = _127_1573; uvs = _127_1572}))))
+let mk_Comp : comp_typ  ->  (comp', Prims.unit) syntax = (fun ct -> (let _127_1575 = (FStar_Util.mk_ref None)
+in (let _127_1574 = (mk_fvs ())
+in (let _127_1573 = (mk_uvs ())
+in {n = Comp (ct); tk = _127_1575; pos = ct.result_typ.pos; fvs = _127_1574; uvs = _127_1573}))))
 
-# 503 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 504 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
-let mk_Exp_bvar : bvvar  ->  typ Prims.option  ->  FStar_Range.range  ->  (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax = (fun x t p -> (let _127_1583 = (get_typ_ref t)
-in (let _127_1582 = (mk_fvs ())
-in (let _127_1581 = (mk_uvs ())
-in {n = Exp_bvar (x); tk = _127_1583; pos = p; fvs = _127_1582; uvs = _127_1581}))))
+let mk_Exp_bvar : bvvar  ->  typ Prims.option  ->  FStar_Range.range  ->  (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax = (fun x t p -> (let _127_1584 = (get_typ_ref t)
+in (let _127_1583 = (mk_fvs ())
+in (let _127_1582 = (mk_uvs ())
+in {n = Exp_bvar (x); tk = _127_1584; pos = p; fvs = _127_1583; uvs = _127_1582}))))
 
-# 509 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 510 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_Exp_fvar : (fvvar * fv_qual Prims.option)  ->  typ Prims.option  ->  FStar_Range.range  ->  (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax = (fun _25_596 t p -> (match (_25_596) with
 | (x, b) -> begin
-(let _127_1592 = (get_typ_ref t)
-in (let _127_1591 = (mk_fvs ())
-in (let _127_1590 = (mk_uvs ())
-in {n = Exp_fvar ((x, b)); tk = _127_1592; pos = p; fvs = _127_1591; uvs = _127_1590})))
+(let _127_1593 = (get_typ_ref t)
+in (let _127_1592 = (mk_fvs ())
+in (let _127_1591 = (mk_uvs ())
+in {n = Exp_fvar ((x, b)); tk = _127_1593; pos = p; fvs = _127_1592; uvs = _127_1591})))
 end))
 
-# 515 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 516 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
-let mk_Exp_constant : sconst  ->  typ Prims.option  ->  FStar_Range.range  ->  (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax = (fun s t p -> (let _127_1601 = (get_typ_ref t)
-in (let _127_1600 = (mk_fvs ())
-in (let _127_1599 = (mk_uvs ())
-in {n = Exp_constant (s); tk = _127_1601; pos = p; fvs = _127_1600; uvs = _127_1599}))))
+let mk_Exp_constant : sconst  ->  typ Prims.option  ->  FStar_Range.range  ->  (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax = (fun s t p -> (let _127_1602 = (get_typ_ref t)
+in (let _127_1601 = (mk_fvs ())
+in (let _127_1600 = (mk_uvs ())
+in {n = Exp_constant (s); tk = _127_1602; pos = p; fvs = _127_1601; uvs = _127_1600}))))
 
-# 521 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 522 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_Exp_abs : (((((typ', (knd', Prims.unit) syntax) syntax bvdef, (knd', Prims.unit) syntax) withinfo_t, ((exp', (typ', (knd', Prims.unit) syntax) syntax) syntax bvdef, (typ', (knd', Prims.unit) syntax) syntax) withinfo_t) FStar_Util.either * arg_qualifier Prims.option) Prims.list * exp)  ->  typ Prims.option  ->  FStar_Range.range  ->  exp = (fun _25_604 t' p -> (match (_25_604) with
 | (b, e) -> begin
@@ -2477,18 +2488,18 @@ let mk_Exp_abs : (((((typ', (knd', Prims.unit) syntax) syntax bvdef, (knd', Prim
 e
 end
 | _25_609 -> begin
-(let _127_1610 = (get_typ_ref t')
-in (let _127_1609 = (mk_fvs ())
-in (let _127_1608 = (mk_uvs ())
-in {n = Exp_abs ((b, e)); tk = _127_1610; pos = p; fvs = _127_1609; uvs = _127_1608})))
+(let _127_1611 = (get_typ_ref t')
+in (let _127_1610 = (mk_fvs ())
+in (let _127_1609 = (mk_uvs ())
+in {n = Exp_abs ((b, e)); tk = _127_1611; pos = p; fvs = _127_1610; uvs = _127_1609})))
 end)
 end))
 
-# 530 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 531 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_Exp_abs' : (((((typ', (knd', Prims.unit) syntax) syntax bvdef, (knd', Prims.unit) syntax) withinfo_t, ((exp', (typ', (knd', Prims.unit) syntax) syntax) syntax bvdef, (typ', (knd', Prims.unit) syntax) syntax) withinfo_t) FStar_Util.either * arg_qualifier Prims.option) Prims.list * (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax)  ->  typ Prims.option  ->  FStar_Range.range  ->  (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax = (fun _25_612 t' p -> (match (_25_612) with
 | (b, e) -> begin
-(let _127_1620 = (match ((b, e.n)) with
+(let _127_1621 = (match ((b, e.n)) with
 | (_25_616, Exp_abs (b0::bs, body)) -> begin
 Exp_abs (((FStar_List.append b ((b0)::bs)), body))
 end
@@ -2498,13 +2509,13 @@ end
 | _25_629 -> begin
 Exp_abs ((b, e))
 end)
-in (let _127_1619 = (get_typ_ref t')
-in (let _127_1618 = (mk_fvs ())
-in (let _127_1617 = (mk_uvs ())
-in {n = _127_1620; tk = _127_1619; pos = p; fvs = _127_1618; uvs = _127_1617}))))
+in (let _127_1620 = (get_typ_ref t')
+in (let _127_1619 = (mk_fvs ())
+in (let _127_1618 = (mk_uvs ())
+in {n = _127_1621; tk = _127_1620; pos = p; fvs = _127_1619; uvs = _127_1618}))))
 end))
 
-# 539 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 540 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_Exp_app : (exp * (((typ', (knd', Prims.unit) syntax) syntax, (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax) FStar_Util.either * arg_qualifier Prims.option) Prims.list)  ->  typ Prims.option  ->  FStar_Range.range  ->  exp = (fun _25_632 t p -> (match (_25_632) with
 | (e1, args) -> begin
@@ -2513,14 +2524,14 @@ let mk_Exp_app : (exp * (((typ', (knd', Prims.unit) syntax) syntax, (exp', (typ'
 e1
 end
 | _25_637 -> begin
-(let _127_1629 = (get_typ_ref t)
-in (let _127_1628 = (mk_fvs ())
-in (let _127_1627 = (mk_uvs ())
-in {n = Exp_app ((e1, args)); tk = _127_1629; pos = p; fvs = _127_1628; uvs = _127_1627})))
+(let _127_1630 = (get_typ_ref t)
+in (let _127_1629 = (mk_fvs ())
+in (let _127_1628 = (mk_uvs ())
+in {n = Exp_app ((e1, args)); tk = _127_1630; pos = p; fvs = _127_1629; uvs = _127_1628})))
 end)
 end))
 
-# 548 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 549 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_Exp_app_flat : ((exp', (typ', (knd', Prims.unit) syntax) syntax) syntax * (((typ', (knd', Prims.unit) syntax) syntax, (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax) FStar_Util.either * arg_qualifier Prims.option) Prims.list)  ->  typ Prims.option  ->  FStar_Range.range  ->  exp = (fun _25_640 t p -> (match (_25_640) with
 | (e1, args) -> begin
@@ -2533,7 +2544,7 @@ end
 end)
 end))
 
-# 552 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 553 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_Exp_app' : (exp * (((typ', (knd', Prims.unit) syntax) syntax, (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax) FStar_Util.either * arg_qualifier Prims.option) Prims.list)  ->  typ Prims.option  ->  FStar_Range.range  ->  exp = (fun _25_651 t p -> (match (_25_651) with
 | (e1, args) -> begin
@@ -2546,7 +2557,7 @@ end
 end)
 end))
 
-# 556 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 557 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let rec pat_vars : (pat', ((knd', Prims.unit) syntax, (typ', (knd', Prims.unit) syntax) syntax) FStar_Util.either Prims.option) withinfo_t  ->  ((typ', (knd', Prims.unit) syntax) syntax bvdef, (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax bvdef) FStar_Util.either Prims.list = (fun p -> (match (p.v) with
 | Pat_cons (_25_659, _25_661, ps) -> begin
@@ -2577,24 +2588,24 @@ end
 end
 | Pat_disj (ps) -> begin
 (let vars = (FStar_List.map pat_vars ps)
-in if (not ((let _127_1650 = (FStar_List.tl vars)
-in (let _127_1649 = (let _127_1648 = (let _127_1647 = (FStar_List.hd vars)
-in (FStar_Util.set_eq order_bvd _127_1647))
-in (FStar_Util.for_all _127_1648))
-in (FStar_All.pipe_right _127_1650 _127_1649))))) then begin
-(let vars = (let _127_1654 = (FStar_All.pipe_right vars (FStar_List.map (fun v -> (let _127_1653 = (FStar_List.map (fun _25_2 -> (match (_25_2) with
+in if (not ((let _127_1651 = (FStar_List.tl vars)
+in (let _127_1650 = (let _127_1649 = (let _127_1648 = (FStar_List.hd vars)
+in (FStar_Util.set_eq order_bvd _127_1648))
+in (FStar_Util.for_all _127_1649))
+in (FStar_All.pipe_right _127_1651 _127_1650))))) then begin
+(let vars = (let _127_1655 = (FStar_All.pipe_right vars (FStar_List.map (fun v -> (let _127_1654 = (FStar_List.map (fun _25_2 -> (match (_25_2) with
 | FStar_Util.Inr (x) -> begin
 x.ppname.FStar_Ident.idText
 end
 | FStar_Util.Inl (x) -> begin
 x.ppname.FStar_Ident.idText
 end)) v)
-in (FStar_Util.concat_l ", " _127_1653)))))
-in (FStar_Util.concat_l ";\n" _127_1654))
-in (let _127_1657 = (let _127_1656 = (let _127_1655 = (FStar_Util.format1 "Each branch of this pattern binds different variables: %s" vars)
-in (_127_1655, p.p))
-in Error (_127_1656))
-in (Prims.raise _127_1657)))
+in (FStar_Util.concat_l ", " _127_1654)))))
+in (FStar_Util.concat_l ";\n" _127_1655))
+in (let _127_1658 = (let _127_1657 = (let _127_1656 = (FStar_Util.format1 "Each branch of this pattern binds different variables: %s" vars)
+in (_127_1656, p.p))
+in Error (_127_1657))
+in (Prims.raise _127_1658)))
 end else begin
 (FStar_List.hd vars)
 end)
@@ -2603,94 +2614,94 @@ end
 []
 end))
 
-# 583 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 584 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_Exp_match : (exp * (pat * exp Prims.option * exp) Prims.list)  ->  typ Prims.option  ->  FStar_Range.range  ->  (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax = (fun _25_715 t p -> (match (_25_715) with
 | (e, pats) -> begin
-(let _127_1666 = (get_typ_ref t)
-in (let _127_1665 = (mk_fvs ())
-in (let _127_1664 = (mk_uvs ())
-in {n = Exp_match ((e, pats)); tk = _127_1666; pos = p; fvs = _127_1665; uvs = _127_1664})))
+(let _127_1667 = (get_typ_ref t)
+in (let _127_1666 = (mk_fvs ())
+in (let _127_1665 = (mk_uvs ())
+in {n = Exp_match ((e, pats)); tk = _127_1667; pos = p; fvs = _127_1666; uvs = _127_1665})))
 end))
 
-# 590 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 591 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_Exp_ascribed : (exp * typ * lident Prims.option)  ->  typ Prims.option  ->  FStar_Range.range  ->  (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax = (fun _25_721 t' p -> (match (_25_721) with
 | (e, t, l) -> begin
-(let _127_1675 = (get_typ_ref t')
-in (let _127_1674 = (mk_fvs ())
-in (let _127_1673 = (mk_uvs ())
-in {n = Exp_ascribed ((e, t, l)); tk = _127_1675; pos = p; fvs = _127_1674; uvs = _127_1673})))
+(let _127_1676 = (get_typ_ref t')
+in (let _127_1675 = (mk_fvs ())
+in (let _127_1674 = (mk_uvs ())
+in {n = Exp_ascribed ((e, t, l)); tk = _127_1676; pos = p; fvs = _127_1675; uvs = _127_1674})))
 end))
 
-# 596 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 597 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_Exp_let : (letbindings * exp)  ->  typ Prims.option  ->  FStar_Range.range  ->  (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax = (fun _25_726 t p -> (match (_25_726) with
 | (lbs, e) -> begin
-(let _127_1684 = (get_typ_ref t)
-in (let _127_1683 = (mk_fvs ())
-in (let _127_1682 = (mk_uvs ())
-in {n = Exp_let ((lbs, e)); tk = _127_1684; pos = p; fvs = _127_1683; uvs = _127_1682})))
+(let _127_1685 = (get_typ_ref t)
+in (let _127_1684 = (mk_fvs ())
+in (let _127_1683 = (mk_uvs ())
+in {n = Exp_let ((lbs, e)); tk = _127_1685; pos = p; fvs = _127_1684; uvs = _127_1683})))
 end))
 
-# 604 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 605 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_Exp_uvar' : (uvar_e * typ)  ->  typ Prims.option  ->  FStar_Range.range  ->  (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax = (fun _25_731 t' p -> (match (_25_731) with
 | (u, t) -> begin
-(let _127_1693 = (get_typ_ref t')
-in (let _127_1692 = (mk_fvs ())
-in (let _127_1691 = (mk_uvs ())
-in {n = Exp_uvar ((u, t)); tk = _127_1693; pos = p; fvs = _127_1692; uvs = _127_1691})))
+(let _127_1694 = (get_typ_ref t')
+in (let _127_1693 = (mk_fvs ())
+in (let _127_1692 = (mk_uvs ())
+in {n = Exp_uvar ((u, t)); tk = _127_1694; pos = p; fvs = _127_1693; uvs = _127_1692})))
 end))
 
-# 611 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 612 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_Exp_uvar : (uvar_e * typ)  ->  FStar_Range.range  ->  (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax = (fun _25_736 p -> (match (_25_736) with
 | (u, t) -> begin
 (mk_Exp_uvar' (u, t) (Some (t)) p)
 end))
 
-# 613 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 614 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_Exp_delayed : (exp * subst_t * exp Prims.option FStar_ST.ref)  ->  typ Prims.option  ->  FStar_Range.range  ->  (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax = (fun _25_741 t p -> (match (_25_741) with
 | (e, s, m) -> begin
-(let _127_1706 = (get_typ_ref t)
-in (let _127_1705 = (mk_fvs ())
-in (let _127_1704 = (mk_uvs ())
-in {n = Exp_delayed ((e, s, m)); tk = _127_1706; pos = p; fvs = _127_1705; uvs = _127_1704})))
+(let _127_1707 = (get_typ_ref t)
+in (let _127_1706 = (mk_fvs ())
+in (let _127_1705 = (mk_uvs ())
+in {n = Exp_delayed ((e, s, m)); tk = _127_1707; pos = p; fvs = _127_1706; uvs = _127_1705})))
 end))
 
-# 620 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 621 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
-let mk_Exp_meta' : meta_e  ->  typ Prims.option  ->  FStar_Range.range  ->  (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax = (fun m t p -> (let _127_1715 = (get_typ_ref t)
-in (let _127_1714 = (mk_fvs ())
-in (let _127_1713 = (mk_uvs ())
-in {n = Exp_meta (m); tk = _127_1715; pos = p; fvs = _127_1714; uvs = _127_1713}))))
+let mk_Exp_meta' : meta_e  ->  typ Prims.option  ->  FStar_Range.range  ->  (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax = (fun m t p -> (let _127_1716 = (get_typ_ref t)
+in (let _127_1715 = (mk_fvs ())
+in (let _127_1714 = (mk_uvs ())
+in {n = Exp_meta (m); tk = _127_1716; pos = p; fvs = _127_1715; uvs = _127_1714}))))
 
-# 627 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 628 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_Exp_meta : meta_e  ->  (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax = (fun m -> (match (m) with
 | Meta_desugared (e, _25_750) -> begin
-(let _127_1718 = (FStar_ST.read e.tk)
-in (mk_Exp_meta' m _127_1718 e.pos))
+(let _127_1719 = (FStar_ST.read e.tk)
+in (mk_Exp_meta' m _127_1719 e.pos))
 end))
 
-# 630 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 631 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_lb : (lbname * lident * typ * exp)  ->  letbinding = (fun _25_757 -> (match (_25_757) with
 | (x, eff, t, e) -> begin
 {lbname = x; lbtyp = t; lbeff = eff; lbdef = e}
 end))
 
-# 632 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 633 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let mk_subst : subst  ->  subst = (fun s -> s)
 
-# 633 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 634 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let extend_subst : (((typ', (knd', Prims.unit) syntax) syntax bvdef * (typ', (knd', Prims.unit) syntax) syntax), ((exp', (typ', (knd', Prims.unit) syntax) syntax) syntax bvdef * (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax)) FStar_Util.either  ->  (((typ', (knd', Prims.unit) syntax) syntax bvdef * (typ', (knd', Prims.unit) syntax) syntax), ((exp', (typ', (knd', Prims.unit) syntax) syntax) syntax bvdef * (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax)) FStar_Util.either Prims.list  ->  (((typ', (knd', Prims.unit) syntax) syntax bvdef * (typ', (knd', Prims.unit) syntax) syntax), ((exp', (typ', (knd', Prims.unit) syntax) syntax) syntax bvdef * (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax)) FStar_Util.either Prims.list = (fun x s -> (x)::s)
 
-# 634 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 635 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let argpos : arg  ->  FStar_Range.range = (fun x -> (match (x) with
 | (FStar_Util.Inl (t), _25_765) -> begin
@@ -2700,79 +2711,79 @@ end
 e.pos
 end))
 
-# 638 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 639 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let tun : (typ', (knd', Prims.unit) syntax) syntax = mk_Typ_unknown
 
-# 639 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 640 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let kun : (knd', Prims.unit) syntax = mk_Kind_unknown
 
-# 640 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 641 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ktype : (knd', Prims.unit) syntax = mk_Kind_type
 
-# 641 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 642 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let keffect : (knd', Prims.unit) syntax = mk_Kind_effect
 
-# 642 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 643 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let null_id : FStar_Ident.ident = (mk_ident ("_", dummyRange))
 
-# 643 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 644 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let null_bvd = {ppname = null_id; realname = null_id}
 
-# 644 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 645 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let null_bvar = (fun k -> {v = null_bvd; sort = k; p = dummyRange})
 
-# 645 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 646 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let t_binder : btvar  ->  ((btvar, ((exp', (typ', (knd', Prims.unit) syntax) syntax) syntax bvdef, (typ', (knd', Prims.unit) syntax) syntax) withinfo_t) FStar_Util.either * arg_qualifier Prims.option) = (fun a -> (FStar_Util.Inl (a), None))
 
-# 646 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 647 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let v_binder : bvvar  ->  ((((typ', (knd', Prims.unit) syntax) syntax bvdef, (knd', Prims.unit) syntax) withinfo_t, bvvar) FStar_Util.either * arg_qualifier Prims.option) = (fun a -> (FStar_Util.Inr (a), None))
 
-# 647 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 648 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let null_t_binder : (knd', Prims.unit) syntax  ->  ((((typ', (knd', Prims.unit) syntax) syntax bvdef, (knd', Prims.unit) syntax) withinfo_t, ((exp', (typ', (knd', Prims.unit) syntax) syntax) syntax bvdef, (typ', (knd', Prims.unit) syntax) syntax) withinfo_t) FStar_Util.either * arg_qualifier Prims.option) = (fun t -> (FStar_Util.Inl ((null_bvar t)), None))
 
-# 648 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 649 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let null_v_binder : (typ', (knd', Prims.unit) syntax) syntax  ->  ((((typ', (knd', Prims.unit) syntax) syntax bvdef, (knd', Prims.unit) syntax) withinfo_t, ((exp', (typ', (knd', Prims.unit) syntax) syntax) syntax bvdef, (typ', (knd', Prims.unit) syntax) syntax) withinfo_t) FStar_Util.either * arg_qualifier Prims.option) = (fun t -> (FStar_Util.Inr ((null_bvar t)), None))
 
-# 649 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 650 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let itarg : (typ', (knd', Prims.unit) syntax) syntax  ->  (((typ', (knd', Prims.unit) syntax) syntax, (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax) FStar_Util.either * arg_qualifier Prims.option) = (fun t -> (FStar_Util.Inl (t), Some (Implicit (false))))
 
-# 650 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 651 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let ivarg : (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax  ->  (((typ', (knd', Prims.unit) syntax) syntax, (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax) FStar_Util.either * arg_qualifier Prims.option) = (fun v -> (FStar_Util.Inr (v), Some (Implicit (false))))
 
-# 651 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 652 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let targ : (typ', (knd', Prims.unit) syntax) syntax  ->  (((typ', (knd', Prims.unit) syntax) syntax, (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax) FStar_Util.either * arg_qualifier Prims.option) = (fun t -> (FStar_Util.Inl (t), None))
 
-# 652 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 653 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let varg : (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax  ->  (((typ', (knd', Prims.unit) syntax) syntax, (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax) FStar_Util.either * arg_qualifier Prims.option) = (fun v -> (FStar_Util.Inr (v), None))
 
-# 653 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 654 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_null_pp = (fun b -> (b.ppname.FStar_Ident.idText = null_id.FStar_Ident.idText))
 
-# 654 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 655 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_null_bvd = (fun b -> (b.realname.FStar_Ident.idText = null_id.FStar_Ident.idText))
 
-# 655 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 656 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_null_bvar = (fun b -> (is_null_bvd b.v))
 
-# 656 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 657 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_null_binder : binder  ->  Prims.bool = (fun b -> (match (b) with
 | (FStar_Util.Inl (a), _25_792) -> begin
@@ -2782,33 +2793,33 @@ end
 (is_null_bvar x)
 end))
 
-# 660 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 661 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let freevars_of_binders : binders  ->  freevars = (fun bs -> (FStar_All.pipe_right bs (FStar_List.fold_left (fun out _25_3 -> (match (_25_3) with
 | (FStar_Util.Inl (btv), _25_805) -> begin
 (let _25_807 = out
-in (let _127_1755 = (FStar_Util.set_add btv out.ftvs)
-in {ftvs = _127_1755; fxvs = _25_807.fxvs}))
+in (let _127_1756 = (FStar_Util.set_add btv out.ftvs)
+in {ftvs = _127_1756; fxvs = _25_807.fxvs}))
 end
 | (FStar_Util.Inr (bxv), _25_812) -> begin
 (let _25_814 = out
-in (let _127_1756 = (FStar_Util.set_add bxv out.fxvs)
-in {ftvs = _25_814.ftvs; fxvs = _127_1756}))
+in (let _127_1757 = (FStar_Util.set_add bxv out.fxvs)
+in {ftvs = _25_814.ftvs; fxvs = _127_1757}))
 end)) no_fvs)))
 
-# 665 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 666 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let binders_of_list : (((typ', (knd', Prims.unit) syntax) syntax bvdef, (knd', Prims.unit) syntax) withinfo_t, ((exp', (typ', (knd', Prims.unit) syntax) syntax) syntax bvdef, (typ', (knd', Prims.unit) syntax) syntax) withinfo_t) FStar_Util.either Prims.list  ->  ((((typ', (knd', Prims.unit) syntax) syntax bvdef, (knd', Prims.unit) syntax) withinfo_t, ((exp', (typ', (knd', Prims.unit) syntax) syntax) syntax bvdef, (typ', (knd', Prims.unit) syntax) syntax) withinfo_t) FStar_Util.either * arg_qualifier Prims.option) Prims.list = (fun fvs -> (FStar_All.pipe_right fvs (FStar_List.map (fun t -> (t, None)))))
 
-# 666 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 667 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
-let binders_of_freevars : freevars  ->  ((btvar, ((exp', (typ', (knd', Prims.unit) syntax) syntax) syntax bvdef, (typ', (knd', Prims.unit) syntax) syntax) withinfo_t) FStar_Util.either * arg_qualifier Prims.option) Prims.list = (fun fvs -> (let _127_1765 = (let _127_1762 = (FStar_Util.set_elements fvs.ftvs)
-in (FStar_All.pipe_right _127_1762 (FStar_List.map t_binder)))
-in (let _127_1764 = (let _127_1763 = (FStar_Util.set_elements fvs.fxvs)
-in (FStar_All.pipe_right _127_1763 (FStar_List.map v_binder)))
-in (FStar_List.append _127_1765 _127_1764))))
+let binders_of_freevars : freevars  ->  ((btvar, ((exp', (typ', (knd', Prims.unit) syntax) syntax) syntax bvdef, (typ', (knd', Prims.unit) syntax) syntax) withinfo_t) FStar_Util.either * arg_qualifier Prims.option) Prims.list = (fun fvs -> (let _127_1766 = (let _127_1763 = (FStar_Util.set_elements fvs.ftvs)
+in (FStar_All.pipe_right _127_1763 (FStar_List.map t_binder)))
+in (let _127_1765 = (let _127_1764 = (FStar_Util.set_elements fvs.fxvs)
+in (FStar_All.pipe_right _127_1764 (FStar_List.map v_binder)))
+in (FStar_List.append _127_1766 _127_1765))))
 
-# 668 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 669 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let is_implicit : arg_qualifier Prims.option  ->  Prims.bool = (fun _25_4 -> (match (_25_4) with
 | Some (Implicit (_25_821)) -> begin
@@ -2818,7 +2829,7 @@ end
 false
 end))
 
-# 669 "C:\\Users\\nswamy\\workspace\\universes\\FStar\\src\\absyn\\syntax.fs"
+# 670 "D:\\workspace\\FStar\\src\\absyn\\syntax.fs"
 
 let as_implicit : Prims.bool  ->  arg_qualifier Prims.option = (fun _25_5 -> (match (_25_5) with
 | true -> begin

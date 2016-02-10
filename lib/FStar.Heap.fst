@@ -3,8 +3,8 @@ module FStar.Heap
 open FStar.Set
 
 
-type heap
-type ref : Type -> Type
+new type heap
+new type ref : Type -> Type
 type aref =
   | Ref : #a:Type -> r:ref a -> aref
 assume logic val sel :       #a:Type -> heap -> ref a -> Tot a
