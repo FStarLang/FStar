@@ -1164,17 +1164,18 @@ let generalize verify env (lecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*com
          if debug env Options.Medium then Util.print3 "(%s) Generalized %s to %s" (Range.string_of_range e.pos) (Print.lbname_to_string l) (Print.typ_to_string (Util.comp_result c));
       (l, e, c)) lecs ecs
 
-let unresolved u = match Unionfind.find u with
-    | Uvar -> true
-    | _ -> false
+let check_unresolved_implicits g = 
+    let unresolved u = match Unionfind.find u with
+        | Uvar -> true
+        | _ -> false in
+    match g.implicits |> List.tryFind (function Inl u -> false | Inr (u, _) -> unresolved u) with
+        | Some (Inr(_, r)) -> raise (Error("Unresolved implicit argument", r))
+        | _ -> ()
 
 let check_top_level env g lc : (bool * comp) =
   let discharge g =
     try_discharge_guard env g;
-    begin match g.implicits |> List.tryFind (function Inl u -> false | Inr (u, _) -> unresolved u) with
-        | Some (Inr(_, r)) -> raise (Error("Unresolved implicit argument", r))
-        | _ -> ()
-    end;
+    check_unresolved_implicits g;
     Util.is_pure_lcomp lc in
   let g = Rel.solve_deferred_constraints env g in
   if Util.is_total_lcomp lc

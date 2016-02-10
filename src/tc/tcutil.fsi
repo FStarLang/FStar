@@ -64,6 +64,7 @@ val maybe_assume_result_eq_pure_term: env -> exp -> lcomp -> lcomp
 val close_comp: env -> list<binding> -> lcomp -> lcomp
 val refresh_comp_label: env -> bool -> lcomp -> lcomp
 val check_top_level: env -> guard_t -> lcomp -> bool*comp
+val check_unresolved_implicits: guard_t -> unit
 
 (* Except these two, which require fully evaluated comp types *)
 val check_comp: env -> exp -> comp -> comp -> exp * comp * guard_t
