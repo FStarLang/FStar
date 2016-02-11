@@ -273,14 +273,27 @@ let is_lemma t =  match (compress t).n with
       end
     | _ -> false
 
+
+let head_and_args t =
+    let t = compress t in
+    match t.n with
+        | Tm_app(head, args) -> head, args
+        | _ -> t, []
+        
+ let un_uinst t = match (Subst.compress t).n with 
+        | Tm_uinst(t, _) -> t
+        | _ -> t 
+   
 let is_smt_lemma t = match (compress t).n with
     | Tm_arrow(_, c) -> 
       begin match c.n with
         | Comp ct when (lid_equals ct.effect_name Const.effect_Lemma_lid) ->
             begin match ct.effect_args with
                 | _req::_ens::(pats, _)::_ ->
-                  begin match (unmeta pats).n with
-                    | Tm_app({n=Tm_fvar(fv, _)}, _) -> lid_equals fv.v Const.cons_lid
+                  let pats' = unmeta pats in
+                  let head, _ = head_and_args pats' in
+                  begin match (un_uinst head).n with
+                    |Tm_fvar(fv, _) -> lid_equals fv.v Const.cons_lid
                     | _ -> false
                   end
                 | _ -> false
@@ -693,12 +706,6 @@ let rec is_wild_pat p =
     | Pat_wild _ -> true
     | _ -> false
 
-let head_and_args t =
-    let t = compress t in
-    match t.n with
-        | Tm_app(head, args) -> head, args
-        | _ -> t, []
-        
 let if_then_else b t1 t2 =
     let then_branch = (withinfo (Pat_constant (Const_bool true)) tun.n t1.pos, None, t1) in
     let else_branch = (withinfo (Pat_constant (Const_bool false)) tun.n t2.pos, None, t2) in
@@ -714,9 +721,6 @@ type connective =
     | BaseConn of lident * args
 
 let destruct_typ_as_formula f : option<connective> =
-    let un_uinst t = match (Subst.compress t).n with 
-        | Tm_uinst(t, _) -> t
-        | _ -> t in 
     let destruct_base_conn f =
         let connectives = [ (Const.true_lid,  0);
                             (Const.false_lid, 0);

@@ -268,6 +268,8 @@ test:   clean $(BIN)/fstar.exe ocaml-test regressions
 
 regressions:
 	make -C ../lib
+	make -C ../ulib working
+	make -C ../ulib all_univs OTHERFLAGS=--lax
 	make -C ../examples
 	make -C ../examples/hello ocaml
 	make -C ../contrib/Platform/ml/

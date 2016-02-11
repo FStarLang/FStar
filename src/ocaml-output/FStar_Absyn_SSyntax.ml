@@ -1,10 +1,10 @@
 
 open Prims
-# 11 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 11 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 exception Err of (Prims.string)
 
-# 11 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 11 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let is_Err = (fun _discr_ -> (match (_discr_) with
 | Err (_) -> begin
@@ -14,31 +14,31 @@ end
 false
 end))
 
-# 11 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 11 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let ___Err____0 : Prims.exn  ->  Prims.string = (fun projectee -> (match (projectee) with
 | Err (_30_3) -> begin
 _30_3
 end))
 
-# 13 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 13 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let parse_error = (fun _30_4 -> (match (()) with
 | () -> begin
 (FStar_All.failwith "Parse error: ill-formed cache")
 end))
 
-# 15 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 15 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 type l__Writer =
 FStar_Util.oWriter
 
-# 17 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 17 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 type l__Reader =
 FStar_Util.oReader
 
-# 19 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 19 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let serialize_option = (fun writer f l -> (match (l) with
 | None -> begin
@@ -49,7 +49,7 @@ end
 in (f writer l))
 end))
 
-# 24 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 24 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let deserialize_option = (fun reader f -> (let n = (reader.FStar_Util.read_char ())
 in if (n = 'n') then begin
@@ -59,12 +59,12 @@ end else begin
 in Some (_132_21))
 end))
 
-# 29 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 29 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let serialize_list = (fun writer f l -> (let _30_22 = (writer.FStar_Util.write_int (FStar_List.length l))
 in (FStar_List.iter (fun elt -> (f writer elt)) (FStar_List.rev_append l []))))
 
-# 33 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 33 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let deserialize_list = (fun reader f -> (let n = (reader.FStar_Util.read_int ())
 in (let rec helper = (fun accum n -> if (n = 0) then begin
@@ -76,22 +76,22 @@ in (helper _132_42 (n - 1)))
 end)
 in (helper [] n))))
 
-# 42 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 42 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let serialize_ident : l__Writer  ->  FStar_Ident.ident  ->  Prims.unit = (fun writer ast -> (writer.FStar_Util.write_string ast.FStar_Ident.idText))
 
-# 43 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 43 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let deserialize_ident : l__Reader  ->  FStar_Ident.ident = (fun reader -> (let _132_50 = (let _132_49 = (reader.FStar_Util.read_string ())
 in (_132_49, FStar_Absyn_Syntax.dummyRange))
 in (FStar_Ident.mk_ident _132_50)))
 
-# 45 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 45 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let serialize_LongIdent : l__Writer  ->  FStar_Absyn_Syntax.l__LongIdent  ->  Prims.unit = (fun writer ast -> (let _30_37 = (serialize_list writer serialize_ident ast.FStar_Ident.ns)
 in (serialize_ident writer ast.FStar_Ident.ident)))
 
-# 49 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 49 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let deserialize_LongIdent : l__Reader  ->  FStar_Ident.lident = (fun reader -> (let _132_60 = (let _132_59 = (deserialize_list reader deserialize_ident)
 in (let _132_58 = (let _132_57 = (deserialize_ident reader)
@@ -99,53 +99,53 @@ in (_132_57)::[])
 in (FStar_List.append _132_59 _132_58)))
 in (FStar_Ident.lid_of_ids _132_60)))
 
-# 52 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 52 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let serialize_lident : l__Writer  ->  FStar_Absyn_Syntax.l__LongIdent  ->  Prims.unit = serialize_LongIdent
 
-# 53 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 53 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let deserialize_lident : l__Reader  ->  FStar_Ident.lident = deserialize_LongIdent
 
-# 55 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 55 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let serialize_withinfo_t = (fun writer s_v s_sort ast -> (let _30_46 = (s_v writer ast.FStar_Absyn_Syntax.v)
 in (s_sort writer ast.FStar_Absyn_Syntax.sort)))
 
-# 59 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 59 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let deserialize_withinfo_t = (fun reader ds_v ds_sort -> (let _132_90 = (ds_v reader)
 in (let _132_89 = (ds_sort reader)
 in {FStar_Absyn_Syntax.v = _132_90; FStar_Absyn_Syntax.sort = _132_89; FStar_Absyn_Syntax.p = FStar_Absyn_Syntax.dummyRange})))
 
-# 64 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 64 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let serialize_var = (fun writer s_sort ast -> (serialize_withinfo_t writer serialize_lident s_sort ast))
 
-# 67 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 67 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let deserialize_var = (fun reader ds_sort -> (deserialize_withinfo_t reader deserialize_lident ds_sort))
 
-# 70 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 70 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let serialize_bvdef = (fun writer ast -> (let _30_63 = (serialize_ident writer ast.FStar_Absyn_Syntax.ppname)
 in (serialize_ident writer ast.FStar_Absyn_Syntax.realname)))
 
-# 78 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 78 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let deserialize_bvdef = (fun ghost reader -> (let _132_110 = (deserialize_ident reader)
 in (let _132_109 = (deserialize_ident reader)
 in {FStar_Absyn_Syntax.ppname = _132_110; FStar_Absyn_Syntax.realname = _132_109})))
 
-# 82 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 82 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let serialize_bvar = (fun writer s_sort ast -> (serialize_withinfo_t writer serialize_bvdef s_sort ast))
 
-# 85 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 85 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let deserialize_bvar = (fun ghost reader ds_sort -> (deserialize_withinfo_t reader (deserialize_bvdef ghost) ds_sort))
 
-# 88 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 88 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let serialize_sconst : l__Writer  ->  FStar_Const.sconst  ->  Prims.unit = (fun writer ast -> (match (ast) with
 | FStar_Const.Const_effect -> begin
@@ -191,7 +191,7 @@ end
 in (writer.FStar_Util.write_string v))
 end))
 
-# 102 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 102 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let deserialize_sconst : l__Reader  ->  FStar_Const.sconst = (fun reader -> (match ((reader.FStar_Util.read_char ())) with
 | '_' -> begin
@@ -242,7 +242,7 @@ end
 (parse_error ())
 end))
 
-# 117 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 117 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let serialize_either = (fun writer s_l s_r ast -> (match (ast) with
 | FStar_Util.Inl (v) -> begin
@@ -254,7 +254,7 @@ end
 in (s_r writer v))
 end))
 
-# 122 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 122 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let deserialize_either = (fun reader ds_l ds_r -> (match ((reader.FStar_Util.read_char ())) with
 | 'a' -> begin
@@ -269,11 +269,11 @@ end
 (parse_error ())
 end))
 
-# 128 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 128 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let serialize_syntax = (fun writer s_a ast -> (s_a writer ast.FStar_Absyn_Syntax.n))
 
-# 130 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 130 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let deserialize_syntax = (fun reader ds_a ds_b -> (let _132_188 = (ds_a reader)
 in (let _132_187 = (FStar_Util.mk_ref None)
@@ -281,7 +281,7 @@ in (let _132_186 = (FStar_Util.mk_ref None)
 in (let _132_185 = (FStar_Util.mk_ref None)
 in {FStar_Absyn_Syntax.n = _132_188; FStar_Absyn_Syntax.tk = _132_187; FStar_Absyn_Syntax.pos = FStar_Absyn_Syntax.dummyRange; FStar_Absyn_Syntax.fvs = _132_186; FStar_Absyn_Syntax.uvs = _132_185})))))
 
-# 137 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 137 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let rec serialize_typ' : l__Writer  ->  FStar_Absyn_Syntax.typ'  ->  Prims.unit = (fun writer ast -> (match (ast) with
 | FStar_Absyn_Syntax.Typ_btvar (v) -> begin
@@ -588,7 +588,7 @@ and serialize_bvvar : l__Writer  ->  FStar_Absyn_Syntax.bvvar  ->  Prims.unit = 
 and serialize_ftvar : l__Writer  ->  FStar_Absyn_Syntax.ftvar  ->  Prims.unit = (fun writer ast -> (serialize_var writer serialize_knd ast))
 and serialize_fvvar : l__Writer  ->  FStar_Absyn_Syntax.fvvar  ->  Prims.unit = (fun writer ast -> (serialize_var writer serialize_typ ast))
 
-# 282 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 282 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let rec deserialize_typ' : l__Reader  ->  FStar_Absyn_Syntax.typ' = (fun reader -> (match ((reader.FStar_Util.read_char ())) with
 | 'a' -> begin
@@ -915,15 +915,15 @@ and deserialize_bvvar : l__Reader  ->  FStar_Absyn_Syntax.bvvar = (fun reader ->
 and deserialize_ftvar : l__Reader  ->  FStar_Absyn_Syntax.ftvar = (fun reader -> (deserialize_var reader deserialize_knd))
 and deserialize_fvvar : l__Reader  ->  FStar_Absyn_Syntax.fvvar = (fun reader -> (deserialize_var reader deserialize_typ))
 
-# 427 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 427 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let serialize_formula : l__Writer  ->  FStar_Absyn_Syntax.typ  ->  Prims.unit = serialize_typ
 
-# 428 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 428 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let deserialize_formula : l__Reader  ->  FStar_Absyn_Syntax.typ = deserialize_typ
 
-# 430 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 430 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let serialize_qualifier : l__Writer  ->  FStar_Absyn_Syntax.qualifier  ->  Prims.unit = (fun writer ast -> (match (ast) with
 | FStar_Absyn_Syntax.Private -> begin
@@ -972,7 +972,7 @@ end
 (FStar_All.failwith "Unexpected qualifier")
 end))
 
-# 446 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 446 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let deserialize_qualifier : l__Reader  ->  FStar_Absyn_Syntax.qualifier = (fun reader -> (match ((reader.FStar_Util.read_char ())) with
 | 'a' -> begin
@@ -1022,7 +1022,7 @@ end
 (parse_error ())
 end))
 
-# 462 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 462 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let serialize_tycon : l__Writer  ->  FStar_Absyn_Syntax.tycon  ->  Prims.unit = (fun writer _30_736 -> (match (_30_736) with
 | (lid, bs, k) -> begin
@@ -1031,40 +1031,40 @@ in (let _30_739 = (serialize_binders writer bs)
 in (serialize_knd writer k)))
 end))
 
-# 463 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 463 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let deserialize_tycon : l__Reader  ->  (FStar_Ident.lident * FStar_Absyn_Syntax.binders * FStar_Absyn_Syntax.knd) = (fun reader -> (let _132_527 = (deserialize_lident reader)
 in (let _132_526 = (deserialize_binders reader)
 in (let _132_525 = (deserialize_knd reader)
 in (_132_527, _132_526, _132_525)))))
 
-# 465 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 465 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let serialize_monad_abbrev : l__Writer  ->  FStar_Absyn_Syntax.monad_abbrev  ->  Prims.unit = (fun writer ast -> (let _30_744 = (serialize_lident writer ast.FStar_Absyn_Syntax.mabbrev)
 in (let _30_746 = (serialize_binders writer ast.FStar_Absyn_Syntax.parms)
 in (serialize_typ writer ast.FStar_Absyn_Syntax.def))))
 
-# 470 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 470 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let deserialize_monad_abbrev : l__Reader  ->  FStar_Absyn_Syntax.monad_abbrev = (fun reader -> (let _132_536 = (deserialize_lident reader)
 in (let _132_535 = (deserialize_binders reader)
 in (let _132_534 = (deserialize_typ reader)
 in {FStar_Absyn_Syntax.mabbrev = _132_536; FStar_Absyn_Syntax.parms = _132_535; FStar_Absyn_Syntax.def = _132_534}))))
 
-# 475 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 475 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let serialize_sub_effect : l__Writer  ->  FStar_Absyn_Syntax.sub_eff  ->  Prims.unit = (fun writer ast -> (let _30_751 = (serialize_lident writer ast.FStar_Absyn_Syntax.source)
 in (let _30_753 = (serialize_lident writer ast.FStar_Absyn_Syntax.target)
 in (serialize_typ writer ast.FStar_Absyn_Syntax.lift))))
 
-# 480 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 480 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let deserialize_sub_effect : l__Reader  ->  FStar_Absyn_Syntax.sub_eff = (fun reader -> (let _132_545 = (deserialize_lident reader)
 in (let _132_544 = (deserialize_lident reader)
 in (let _132_543 = (deserialize_typ reader)
 in {FStar_Absyn_Syntax.source = _132_545; FStar_Absyn_Syntax.target = _132_544; FStar_Absyn_Syntax.lift = _132_543}))))
 
-# 485 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 485 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let rec serialize_new_effect : l__Writer  ->  FStar_Absyn_Syntax.eff_decl  ->  Prims.unit = (fun writer ast -> (let _30_758 = (serialize_lident writer ast.FStar_Absyn_Syntax.mname)
 in (let _30_760 = (serialize_list writer serialize_binder ast.FStar_Absyn_Syntax.binders)
@@ -1179,7 +1179,7 @@ in (let _30_966 = (serialize_list writer serialize_binder binders)
 in (serialize_knd writer k))))
 end))
 
-# 558 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 558 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let rec deserialize_new_effect : l__Reader  ->  FStar_Absyn_Syntax.eff_decl = (fun reader -> (let _132_578 = (deserialize_lident reader)
 in (let _132_577 = (deserialize_list reader deserialize_binder)
@@ -1278,22 +1278,22 @@ end
 (parse_error ())
 end))
 
-# 607 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 607 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let serialize_sigelts : l__Writer  ->  FStar_Absyn_Syntax.sigelts  ->  Prims.unit = (fun writer ast -> (serialize_list writer serialize_sigelt ast))
 
-# 608 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 608 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let deserialize_sigelts : l__Reader  ->  FStar_Absyn_Syntax.sigelt Prims.list = (fun reader -> (deserialize_list reader deserialize_sigelt))
 
-# 610 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 610 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let serialize_modul : l__Writer  ->  FStar_Absyn_Syntax.modul  ->  Prims.unit = (fun writer ast -> (let _30_989 = (serialize_lident writer ast.FStar_Absyn_Syntax.name)
 in (let _30_991 = (serialize_sigelts writer [])
 in (let _30_993 = (serialize_sigelts writer ast.FStar_Absyn_Syntax.exports)
 in (writer.FStar_Util.write_bool ast.FStar_Absyn_Syntax.is_interface)))))
 
-# 616 "D:\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
+# 616 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\ssyntax.fs"
 
 let deserialize_modul : l__Reader  ->  FStar_Absyn_Syntax.modul = (fun reader -> (let m = (let _132_634 = (deserialize_lident reader)
 in (let _132_633 = (deserialize_sigelts reader)

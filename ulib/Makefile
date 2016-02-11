@@ -43,17 +43,21 @@ all:
 STDLIB=FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst
 UFSTAR=$(FSTAR) --universes
 
+working:
+	$(UFSTAR) FStar.List.Tot.fst FStar.ListProperties.fst $(STDLIB) FStar.List.fst
+	$(UFSTAR) FStar.Seq.fst
+
 all_univs:
-	$(UFSTAR) FStar.List.Tot.fst FStar.ListProperties.fst $(STDLIB) FStar.List.fst 
+	$(UFSTAR) FStar.List.Tot.fst FStar.ListProperties.fst $(STDLIB) FStar.List.fst
 	$(UFSTAR) $(STDLIB) FStar.Seq.fst FStar.Classical.fst FStar.SeqProperties.fst FStar.Array.fst
 	$(UFSTAR) $(STDLIB) array.fst FStar.Char.fst FStar.Option.fst FStar.Bytes.fst FStar.Crypto.fst FStar.Tcp.fst
 	$(UFSTAR) FStar.Constructive.fst 
 	$(UFSTAR) FStar.Ghost.fst FStar.ErasedLogic.fst
 	$(UFSTAR) FStar.Squash.fst
-	$(UFSTAR) FStar.SquashProperties.fst --__temp_no_proj FStar.SquashProperties
+	$(UFSTAR) $(STDLIB) FStar.Constructive.fst FStar.Squash.fst FStar.SquashProperties.fst --__temp_no_proj FStar.SquashProperties
 	$(UFSTAR) FStar.Int8.fst FStar.Int16.fst FStar.Int31.fst FStar.Int32.fst FStar.Int63.fst FStar.Int64.fst
 	$(UFSTAR) FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.Map.fst FStar.List.Tot.fst FStar.HyperHeap.fst hyperheap/FStar.ST.fst
-	$(UFSTAR) FStar.MRef.fst
+	$(UFSTAR) $(STDLIB) FStar.MRef.fst
 	$(UFSTAR) FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.List.Tot.fst FStar.OrdSet.fst FStar.OrdSetProps.fst FStar.OrdMap.fst
 	$(UFSTAR) FStar.PredicateExtensionality.fst
 	$(UFSTAR) FStar.List.Tot.fst FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.fst FStar.Relational.fst

@@ -1,6 +1,6 @@
 
 open Prims
-# 40 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 40 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 type step =
 | WHNF
@@ -18,7 +18,7 @@ type step =
  and steps =
 step Prims.list
 
-# 41 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 41 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let is_WHNF = (fun _discr_ -> (match (_discr_) with
 | WHNF (_) -> begin
@@ -28,7 +28,7 @@ end
 false
 end))
 
-# 42 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 42 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let is_Eta = (fun _discr_ -> (match (_discr_) with
 | Eta (_) -> begin
@@ -38,7 +38,7 @@ end
 false
 end))
 
-# 43 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 43 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let is_EtaArgs = (fun _discr_ -> (match (_discr_) with
 | EtaArgs (_) -> begin
@@ -48,7 +48,7 @@ end
 false
 end))
 
-# 44 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 44 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let is_Delta = (fun _discr_ -> (match (_discr_) with
 | Delta (_) -> begin
@@ -58,7 +58,7 @@ end
 false
 end))
 
-# 45 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 45 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let is_DeltaHard = (fun _discr_ -> (match (_discr_) with
 | DeltaHard (_) -> begin
@@ -68,7 +68,7 @@ end
 false
 end))
 
-# 46 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 46 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let is_UnfoldOpaque = (fun _discr_ -> (match (_discr_) with
 | UnfoldOpaque (_) -> begin
@@ -78,7 +78,7 @@ end
 false
 end))
 
-# 47 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 47 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let is_Beta = (fun _discr_ -> (match (_discr_) with
 | Beta (_) -> begin
@@ -88,7 +88,7 @@ end
 false
 end))
 
-# 48 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 48 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let is_DeltaComp = (fun _discr_ -> (match (_discr_) with
 | DeltaComp (_) -> begin
@@ -98,7 +98,7 @@ end
 false
 end))
 
-# 49 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 49 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let is_Simplify = (fun _discr_ -> (match (_discr_) with
 | Simplify (_) -> begin
@@ -108,7 +108,7 @@ end
 false
 end))
 
-# 50 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 50 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let is_SNComp = (fun _discr_ -> (match (_discr_) with
 | SNComp (_) -> begin
@@ -118,7 +118,7 @@ end
 false
 end))
 
-# 51 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 51 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let is_Unmeta = (fun _discr_ -> (match (_discr_) with
 | Unmeta (_) -> begin
@@ -128,7 +128,7 @@ end
 false
 end))
 
-# 52 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 52 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let is_Unlabel = (fun _discr_ -> (match (_discr_) with
 | Unlabel (_) -> begin
@@ -138,7 +138,7 @@ end
 false
 end))
 
-# 55 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 55 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 type 'a config =
 {code : 'a; environment : environment; stack : stack; close : ('a  ->  'a) Prims.option; steps : step Prims.list} 
@@ -156,19 +156,19 @@ type 'a config =
  and 'a memo =
 'a Prims.option FStar_ST.ref
 
-# 55 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 55 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let is_Mkconfig = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkconfig"))))
 
-# 60 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 60 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let is_Mkenvironment : environment  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkenvironment"))))
 
-# 64 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 64 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let is_Mkstack : stack  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkstack"))))
 
-# 68 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 68 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let is_T = (fun _discr_ -> (match (_discr_) with
 | T (_) -> begin
@@ -178,7 +178,7 @@ end
 false
 end))
 
-# 69 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 69 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let is_V = (fun _discr_ -> (match (_discr_) with
 | V (_) -> begin
@@ -188,35 +188,35 @@ end
 false
 end))
 
-# 68 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 68 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let ___T____0 : env_entry  ->  (FStar_Absyn_Syntax.btvdef * tclos) = (fun projectee -> (match (projectee) with
 | T (_47_26) -> begin
 _47_26
 end))
 
-# 69 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 69 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let ___V____0 : env_entry  ->  (FStar_Absyn_Syntax.bvvdef * vclos) = (fun projectee -> (match (projectee) with
 | V (_47_29) -> begin
 _47_29
 end))
 
-# 74 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 74 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let empty_env : environment = {context = []; label_suffix = []}
 
-# 78 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 78 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let extend_env' : environment  ->  env_entry  ->  environment = (fun env b -> (let _47_32 = env
 in {context = (b)::env.context; label_suffix = _47_32.label_suffix}))
 
-# 79 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 79 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let extend_env : environment  ->  env_entry Prims.list  ->  environment = (fun env bindings -> (let _47_36 = env
 in {context = (FStar_List.append bindings env.context); label_suffix = _47_36.label_suffix}))
 
-# 80 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 80 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let lookup_env : environment  ->  Prims.string  ->  env_entry Prims.option = (fun env key -> (FStar_All.pipe_right env.context (FStar_Util.find_opt (fun _47_1 -> (match (_47_1) with
 | T (a, _47_43) -> begin
@@ -226,7 +226,7 @@ end
 (x.FStar_Absyn_Syntax.realname.FStar_Ident.idText = key)
 end)))))
 
-# 83 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 83 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let fold_env = (fun env f acc -> (FStar_List.fold_left (fun acc v -> (match (v) with
 | T (a, _47_58) -> begin
@@ -236,11 +236,11 @@ end
 (f x.FStar_Absyn_Syntax.realname.FStar_Ident.idText v acc)
 end)) acc env.context))
 
-# 87 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 87 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let empty_stack : stack = {args = []}
 
-# 92 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 92 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let rec subst_of_env' : environment  ->  (((FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax FStar_Absyn_Syntax.bvdef * (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax), ((FStar_Absyn_Syntax.exp', (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax FStar_Absyn_Syntax.bvdef * (FStar_Absyn_Syntax.exp', (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax)) FStar_Util.either Prims.list = (fun env -> (fold_env env (fun _47_67 v acc -> (match (v) with
 | T (a, (t, env')) -> begin
@@ -258,15 +258,15 @@ in FStar_Util.Inr (_149_116))
 in (_149_117)::acc)
 end)) []))
 
-# 99 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 99 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let subst_of_env = (fun tcenv env -> (subst_of_env' env))
 
-# 101 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 101 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let with_new_code = (fun c e -> {code = e; environment = c.environment; stack = empty_stack; close = None; steps = c.steps})
 
-# 109 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 109 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let rec eta_expand : FStar_Tc_Env.env  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (fun tcenv t -> (let k = (let _149_127 = (FStar_Tc_Recheck.recompute_kind t)
 in (FStar_All.pipe_right _149_127 FStar_Absyn_Util.compress_kind))
@@ -321,7 +321,7 @@ in (FStar_All.failwith _149_139))
 end))
 in (aux t k))))
 
-# 141 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 141 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let is_var : (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  Prims.bool = (fun t -> (match ((FStar_Absyn_Util.compress_typ t)) with
 | {FStar_Absyn_Syntax.n = FStar_Absyn_Syntax.Typ_btvar (_47_163); FStar_Absyn_Syntax.tk = _47_161; FStar_Absyn_Syntax.pos = _47_159; FStar_Absyn_Syntax.fvs = _47_157; FStar_Absyn_Syntax.uvs = _47_155} -> begin
@@ -331,7 +331,7 @@ end
 false
 end))
 
-# 145 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 145 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let rec eta_expand_exp : FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.exp  ->  FStar_Absyn_Syntax.exp = (fun tcenv e -> (let t = (let _149_146 = (FStar_Tc_Recheck.recompute_typ e)
 in (FStar_All.pipe_right _149_146 FStar_Absyn_Util.compress_typ))
@@ -360,7 +360,7 @@ end
 e
 end)))
 
-# 160 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 160 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let no_eta : step Prims.list  ->  step Prims.list = (fun s -> (FStar_All.pipe_right s (FStar_List.filter (fun _47_2 -> (match (_47_2) with
 | Eta -> begin
@@ -370,25 +370,25 @@ end
 true
 end)))))
 
-# 161 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 161 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let no_eta_cfg = (fun c -> (let _47_192 = c
 in (let _149_154 = (no_eta c.steps)
 in {code = _47_192.code; environment = _47_192.environment; stack = _47_192.stack; close = _47_192.close; steps = _149_154})))
 
-# 162 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 162 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let whnf_only = (fun config -> (FStar_All.pipe_right config.steps (FStar_List.contains WHNF)))
 
-# 163 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 163 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let unmeta = (fun config -> (FStar_All.pipe_right config.steps (FStar_List.contains Unmeta)))
 
-# 164 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 164 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let unlabel = (fun config -> ((unmeta config) || (FStar_All.pipe_right config.steps (FStar_List.contains Unlabel))))
 
-# 165 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 165 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let is_stack_empty = (fun config -> (match (config.stack.args) with
 | [] -> begin
@@ -398,11 +398,11 @@ end
 false
 end))
 
-# 168 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 168 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let has_eta = (fun cfg -> (FStar_All.pipe_right cfg.steps (FStar_List.contains Eta)))
 
-# 170 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 170 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let rec weak_norm_comp : FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.comp  ->  FStar_Absyn_Syntax.comp_typ = (fun env comp -> (let c = (FStar_Absyn_Util.comp_to_comp_typ comp)
 in (match ((FStar_Tc_Env.lookup_effect_abbrev env c.FStar_Absyn_Syntax.effect_name)) with
@@ -432,23 +432,23 @@ in {FStar_Absyn_Syntax.effect_name = _47_224.FStar_Absyn_Syntax.effect_name; FSt
 in (weak_norm_comp env c)))))))
 end)))
 
-# 186 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 186 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let t_config = (fun code env steps -> {code = code; environment = env; stack = empty_stack; close = None; steps = steps})
 
-# 192 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 192 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let k_config = (fun code env steps -> {code = code; environment = env; stack = empty_stack; close = None; steps = steps})
 
-# 198 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 198 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let e_config = (fun code env steps -> {code = code; environment = env; stack = empty_stack; close = None; steps = steps})
 
-# 204 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 204 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let c_config = (fun code env steps -> {code = code; environment = env; stack = empty_stack; close = None; steps = steps})
 
-# 212 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 212 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let close_with_config = (fun cfg f -> Some ((fun t -> (let t = (f t)
 in (match (cfg.close) with
@@ -459,7 +459,7 @@ end
 (g t)
 end)))))
 
-# 219 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 219 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let rec is_head_symbol : (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  Prims.bool = (fun t -> (match ((let _149_201 = (FStar_Absyn_Util.compress_typ t)
 in _149_201.FStar_Absyn_Syntax.n)) with
@@ -473,7 +473,7 @@ end
 false
 end))
 
-# 225 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 225 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let simplify_then_apply : step Prims.list  ->  FStar_Absyn_Syntax.typ  ->  (((FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax, (FStar_Absyn_Syntax.exp', (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) FStar_Util.either * FStar_Absyn_Syntax.arg_qualifier Prims.option) Prims.list  ->  FStar_Range.range  ->  FStar_Absyn_Syntax.typ = (fun steps head args pos -> (let fallback = (fun _47_268 -> (match (()) with
 | () -> begin
@@ -586,7 +586,7 @@ end
 end)
 end))))
 
-# 282 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 282 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let rec sn_delay : FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.typ config  ->  FStar_Absyn_Syntax.typ config = (fun tcenv cfg -> (let aux = (fun _47_455 -> (match (()) with
 | () -> begin
@@ -1306,22 +1306,22 @@ c
 end)
 end)))))
 
-# 711 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 711 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let norm_kind : step Prims.list  ->  FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.knd  ->  (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax = (fun steps tcenv k -> (let c = (snk tcenv (k_config k empty_env steps))
 in (FStar_Absyn_Util.compress_kind c.code)))
 
-# 715 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 715 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let norm_typ : step Prims.list  ->  FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.typ  ->  FStar_Absyn_Syntax.typ = (fun steps tcenv t -> (let c = (sn tcenv (t_config t empty_env steps))
 in c.code))
 
-# 719 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 719 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let norm_exp : step Prims.list  ->  FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.exp  ->  FStar_Absyn_Syntax.exp = (fun steps tcenv e -> (let c = (wne tcenv (e_config e empty_env steps))
 in c.code))
 
-# 723 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 723 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let norm_sigelt : FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.sigelt  ->  FStar_Absyn_Syntax.sigelt = (fun tcenv _47_10 -> (match (_47_10) with
 | FStar_Absyn_Syntax.Sig_let (lbs, r, l, b) -> begin
@@ -1341,7 +1341,7 @@ end
 s
 end))
 
-# 733 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 733 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let whnf : FStar_Tc_Env.env  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (fun tcenv t -> (let t = (FStar_Absyn_Util.compress_typ t)
 in (match (t.FStar_Absyn_Syntax.n) with
@@ -1356,51 +1356,51 @@ end
 (norm_typ ((WHNF)::(Beta)::(Eta)::[]) tcenv t)
 end)))
 
-# 746 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 746 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let norm_comp : step Prims.list  ->  FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.comp  ->  FStar_Absyn_Syntax.comp = (fun steps tcenv c -> (let c = (sncomp tcenv (c_config c empty_env steps))
 in c.code))
 
-# 750 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 750 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let normalize_kind : FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.knd  ->  (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax = (fun tcenv k -> (let steps = (Eta)::(Delta)::(Beta)::[]
 in (norm_kind steps tcenv k)))
 
-# 754 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 754 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let normalize_comp : FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.comp  ->  FStar_Absyn_Syntax.comp = (fun tcenv c -> (let steps = (Eta)::(Delta)::(Beta)::(SNComp)::(DeltaComp)::[]
 in (norm_comp steps tcenv c)))
 
-# 758 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 758 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let normalize : FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.typ  ->  FStar_Absyn_Syntax.typ = (fun tcenv t -> (norm_typ ((DeltaHard)::(Beta)::(Eta)::[]) tcenv t))
 
-# 761 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 761 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let exp_norm_to_string : FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.exp  ->  Prims.string = (fun tcenv e -> (let _149_530 = (norm_exp ((Beta)::(SNComp)::(Unmeta)::[]) tcenv e)
 in (FStar_Absyn_Print.exp_to_string _149_530)))
 
-# 764 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 764 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let typ_norm_to_string : FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.typ  ->  Prims.string = (fun tcenv t -> (let _149_535 = (norm_typ ((Beta)::(SNComp)::(Unmeta)::[]) tcenv t)
 in (FStar_Absyn_Print.typ_to_string _149_535)))
 
-# 767 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 767 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let kind_norm_to_string : FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.knd  ->  Prims.string = (fun tcenv k -> (let _149_540 = (norm_kind ((Beta)::(SNComp)::(Unmeta)::[]) tcenv k)
 in (FStar_Absyn_Print.kind_to_string _149_540)))
 
-# 770 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 770 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let formula_norm_to_string : FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.typ  ->  Prims.string = (fun tcenv f -> (let _149_545 = (norm_typ ((Beta)::(SNComp)::(Unmeta)::[]) tcenv f)
 in (FStar_Absyn_Print.formula_to_string _149_545)))
 
-# 773 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 773 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let comp_typ_norm_to_string : FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.comp  ->  Prims.string = (fun tcenv c -> (let _149_550 = (norm_comp ((Beta)::(SNComp)::(Unmeta)::[]) tcenv c)
 in (FStar_Absyn_Print.comp_typ_to_string _149_550)))
 
-# 776 "D:\\workspace\\FStar\\src\\tc\\normalize.fs"
+# 776 "C:\\Users\\nswamy\\workspace\\FStar\\src\\tc\\normalize.fs"
 
 let normalize_refinement : step Prims.list  ->  FStar_Tc_Env.env  ->  FStar_Absyn_Syntax.typ  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (fun steps env t0 -> (let t = (norm_typ (FStar_List.append ((Beta)::(WHNF)::(DeltaHard)::[]) steps) env t0)
 in (let rec aux = (fun t -> (let t = (FStar_Absyn_Util.compress_typ t)

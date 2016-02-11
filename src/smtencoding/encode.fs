@@ -785,22 +785,36 @@ and encode_formula (phi:typ) (env:env_t) : term * decls_t =
 
 (* this assumes t is a Lemma *)
 and encode_function_type_as_formula (induction_on:option<term>) (new_pats:option<S.term>) (t:typ) (env:env_t) : term * decls_t =
-    let rec list_elements (e:S.term) : list<S.term> = match (Util.unmeta e).n with 
-        | Tm_app({n=Tm_fvar(fv, _)}, _) when lid_equals fv.v Const.nil_lid -> []
-        | Tm_app({n=Tm_fvar(fv, _)}, [_; (hd, _); (tl, _)]) when lid_equals fv.v Const.cons_lid -> 
+    let rec list_elements (e:S.term) : list<S.term> = 
+        let head, args = Util.head_and_args (Util.unmeta e) in
+        match (Util.un_uinst head).n, args with
+        | Tm_fvar(fv, _), _ when lid_equals fv.v Const.nil_lid -> []
+        | Tm_fvar(fv, _), [_; (hd, _); (tl, _)] when lid_equals fv.v Const.cons_lid -> 
           hd::list_elements tl
         | _ -> Errors.warn e.pos "SMT pattern is not a list literal; ignoring the pattern"; [] in
 
-    let v_or_t_pat p = match (Util.unmeta p).n with
-        | Tm_app({n=Tm_fvar(fv, _)}, [(_, _); (e, _)]) when lid_equals fv.v Const.smtpat_lid -> (e, None)
-        | Tm_app({n=Tm_fvar(fv, _)}, [(t, _)]) when lid_equals fv.v Const.smtpatT_lid -> (t, None)
+    let v_or_t_pat p = 
+        let head, args = Util.unmeta p |> Util.head_and_args in
+        match (Util.un_uinst head).n, args with
+        | Tm_fvar(fv, _), [(_, _); (e, _)] when lid_equals fv.v Const.smtpat_lid -> (e, None)
+        | Tm_fvar(fv, _), [(t, _)] when lid_equals fv.v Const.smtpatT_lid -> (t, None)
         | _ -> failwith "Unexpected pattern term"  in
     
     let lemma_pats p = 
         let elts = list_elements p in 
+        let smt_pat_or t =
+            let head, args = Util.unmeta t |> Util.head_and_args in
+            match (Util.un_uinst head).n, args with 
+                | Tm_fvar(fv, _), [(e, _)] when lid_equals fv.v Const.smtpatOr_lid -> 
+                  Some e
+                | _ -> None in
         match elts with 
-            | [{n=Tm_app({n=Tm_fvar(fv, _)}, [(e, _)])}] when lid_equals fv.v Const.smtpatOr_lid -> 
-              list_elements e |>  List.map (fun branch -> (list_elements branch) |> List.map v_or_t_pat)
+            | [t] -> 
+             begin match smt_pat_or t with 
+                | Some e -> 
+                  list_elements e |>  List.map (fun branch -> (list_elements branch) |> List.map v_or_t_pat)
+                | _ -> [elts |> List.map v_or_t_pat]
+              end
             | _ -> [elts |> List.map v_or_t_pat] in
 
     let binders, pre, post, patterns = match (SS.compress t).n with
@@ -1561,7 +1575,8 @@ and encode_smt_lemma env lid t =
     decls@[Term.Assume(form, Some ("Lemma: " ^ lid.str))]
 
 and encode_free_var env lid tt t_norm quals =
-    if not <| Util.is_pure_or_ghost_function t_norm || Util.is_lemma t_norm
+    if not <| Util.is_pure_or_ghost_function t_norm 
+    || Util.is_lemma t_norm
     then let vname, vtok, env = new_term_constant_and_tok_from_lid env lid in
          let arg_sorts = match (SS.compress t_norm).n with
             | Tm_arrow(binders, _) -> binders |> List.map (fun _ -> Term_sort) 

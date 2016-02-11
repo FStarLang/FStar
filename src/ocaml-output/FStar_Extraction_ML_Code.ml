@@ -1,6 +1,6 @@
 
 open Prims
-# 30 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 30 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 type assoc =
 | ILeft
@@ -9,7 +9,7 @@ type assoc =
 | Right
 | NonAssoc
 
-# 30 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 30 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let is_ILeft = (fun _discr_ -> (match (_discr_) with
 | ILeft (_) -> begin
@@ -19,7 +19,7 @@ end
 false
 end))
 
-# 30 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 30 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let is_IRight = (fun _discr_ -> (match (_discr_) with
 | IRight (_) -> begin
@@ -29,7 +29,7 @@ end
 false
 end))
 
-# 30 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 30 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let is_Left = (fun _discr_ -> (match (_discr_) with
 | Left (_) -> begin
@@ -39,7 +39,7 @@ end
 false
 end))
 
-# 30 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 30 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let is_Right = (fun _discr_ -> (match (_discr_) with
 | Right (_) -> begin
@@ -49,7 +49,7 @@ end
 false
 end))
 
-# 30 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 30 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let is_NonAssoc = (fun _discr_ -> (match (_discr_) with
 | NonAssoc (_) -> begin
@@ -59,14 +59,14 @@ end
 false
 end))
 
-# 31 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 31 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 type fixity =
 | Prefix
 | Postfix
 | Infix of assoc
 
-# 31 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 31 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let is_Prefix = (fun _discr_ -> (match (_discr_) with
 | Prefix (_) -> begin
@@ -76,7 +76,7 @@ end
 false
 end))
 
-# 31 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 31 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let is_Postfix = (fun _discr_ -> (match (_discr_) with
 | Postfix (_) -> begin
@@ -86,7 +86,7 @@ end
 false
 end))
 
-# 31 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 31 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let is_Infix = (fun _discr_ -> (match (_discr_) with
 | Infix (_) -> begin
@@ -96,100 +96,100 @@ end
 false
 end))
 
-# 31 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 31 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let ___Infix____0 : fixity  ->  assoc = (fun projectee -> (match (projectee) with
 | Infix (_77_3) -> begin
 _77_3
 end))
 
-# 32 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 32 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 type opprec =
 (Prims.int * fixity)
 
-# 33 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 33 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 type level =
 (opprec * assoc)
 
-# 35 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 35 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let t_prio_fun : (Prims.int * fixity) = (10, Infix (Right))
 
-# 36 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 36 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let t_prio_tpl : (Prims.int * fixity) = (20, Infix (NonAssoc))
 
-# 37 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 37 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let t_prio_name : (Prims.int * fixity) = (30, Postfix)
 
-# 39 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 39 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let e_bin_prio_lambda : (Prims.int * fixity) = (5, Prefix)
 
-# 40 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 40 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let e_bin_prio_if : (Prims.int * fixity) = (15, Prefix)
 
-# 41 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 41 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let e_bin_prio_letin : (Prims.int * fixity) = (19, Prefix)
 
-# 42 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 42 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let e_bin_prio_or : (Prims.int * fixity) = (20, Infix (Left))
 
-# 43 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 43 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let e_bin_prio_and : (Prims.int * fixity) = (25, Infix (Left))
 
-# 44 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 44 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let e_bin_prio_eq : (Prims.int * fixity) = (27, Infix (NonAssoc))
 
-# 45 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 45 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let e_bin_prio_order : (Prims.int * fixity) = (29, Infix (NonAssoc))
 
-# 46 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 46 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let e_bin_prio_op1 : (Prims.int * fixity) = (30, Infix (Left))
 
-# 47 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 47 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let e_bin_prio_op2 : (Prims.int * fixity) = (40, Infix (Left))
 
-# 48 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 48 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let e_bin_prio_op3 : (Prims.int * fixity) = (50, Infix (Left))
 
-# 49 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 49 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let e_bin_prio_op4 : (Prims.int * fixity) = (60, Infix (Left))
 
-# 50 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 50 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let e_bin_prio_comb : (Prims.int * fixity) = (70, Infix (Left))
 
-# 51 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 51 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let e_bin_prio_seq : (Prims.int * fixity) = (100, Infix (Left))
 
-# 52 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 52 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let e_app_prio : (Prims.int * fixity) = (10000, Infix (Left))
 
-# 54 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 54 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let min_op_prec : (Prims.int * fixity) = ((- (1)), Infix (NonAssoc))
 
-# 55 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 55 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let max_op_prec : (Prims.int * fixity) = (FStar_Util.max_int, Infix (NonAssoc))
 
-# 61 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 61 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let rec in_ns = (fun x -> (match (x) with
 | ([], _77_8) -> begin
@@ -202,7 +202,7 @@ end
 false
 end))
 
-# 67 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 67 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let path_of_ns : FStar_Extraction_ML_Syntax.mlsymbol  ->  Prims.string Prims.list  ->  Prims.string Prims.list = (fun currentModule ns -> (let ns' = (FStar_Extraction_ML_Util.flatten_ns ns)
 in if (ns' = currentModule) then begin
@@ -236,7 +236,7 @@ x
 end))))
 end))
 
-# 85 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 85 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let mlpath_of_mlpath : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mlpath  ->  FStar_Extraction_ML_Syntax.mlpath = (fun currentModule x -> (match ((FStar_Extraction_ML_Syntax.string_of_mlpath x)) with
 | "Prims.Some" -> begin
@@ -254,7 +254,7 @@ in (_179_36, x))
 end))
 end))
 
-# 93 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 93 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let ptsym_of_symbol : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mlsymbol = (fun s -> if ((let _179_39 = (FStar_String.get s 0)
 in (FStar_Char.lowercase _179_39)) <> (FStar_String.get s 0)) then begin
@@ -263,7 +263,7 @@ end else begin
 s
 end)
 
-# 98 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 98 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let ptsym : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mlpath  ->  FStar_Extraction_ML_Syntax.mlsymbol = (fun currentModule mlp -> if (FStar_List.isEmpty (Prims.fst mlp)) then begin
 (ptsym_of_symbol (Prims.snd mlp))
@@ -278,7 +278,7 @@ in (FStar_String.concat "." _179_46))
 end))
 end)
 
-# 106 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 106 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let ptctor : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mlpath  ->  FStar_Extraction_ML_Syntax.mlsymbol = (fun currentModule mlp -> (let _77_55 = (mlpath_of_mlpath currentModule mlp)
 in (match (_77_55) with
@@ -292,27 +292,27 @@ end
 in (FStar_String.concat "." (FStar_List.append p ((s)::[]))))
 end)))
 
-# 112 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 112 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let infix_prim_ops : (Prims.string * (Prims.int * fixity) * Prims.string) Prims.list = (("op_Addition", e_bin_prio_op1, "+"))::(("op_Subtraction", e_bin_prio_op1, "-"))::(("op_Multiply", e_bin_prio_op1, "*"))::(("op_Division", e_bin_prio_op1, "/"))::(("op_Equality", e_bin_prio_eq, "="))::(("op_ColonEquals", e_bin_prio_eq, ":="))::(("op_disEquality", e_bin_prio_eq, "<>"))::(("op_AmpAmp", e_bin_prio_and, "&&"))::(("op_BarBar", e_bin_prio_or, "||"))::(("op_LessThanOrEqual", e_bin_prio_order, "<="))::(("op_GreaterThanOrEqual", e_bin_prio_order, ">="))::(("op_LessThan", e_bin_prio_order, "<"))::(("op_GreaterThan", e_bin_prio_order, ">"))::(("op_Modulus", e_bin_prio_order, "%"))::[]
 
-# 130 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 130 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let prim_uni_ops : (Prims.string * Prims.string) Prims.list = (("op_Negation", "not"))::(("op_Minus", "-"))::(("op_Bang", "Support.ST.read"))::[]
 
-# 137 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 137 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let prim_types = []
 
-# 140 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 140 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let prim_constructors : (Prims.string * Prims.string) Prims.list = (("Some", "Some"))::(("None", "None"))::(("Nil", "[]"))::(("Cons", "::"))::[]
 
-# 148 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 148 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let is_prims_ns : FStar_Extraction_ML_Syntax.mlsymbol Prims.list  ->  Prims.bool = (fun ns -> (ns = ("Prims")::[]))
 
-# 152 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 152 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let as_bin_op : FStar_Extraction_ML_Syntax.mlpath  ->  (Prims.string * (Prims.int * fixity) * Prims.string) Prims.option = (fun _77_60 -> (match (_77_60) with
 | (ns, x) -> begin
@@ -326,11 +326,11 @@ None
 end
 end))
 
-# 159 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 159 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let is_bin_op : FStar_Extraction_ML_Syntax.mlpath  ->  Prims.bool = (fun p -> ((as_bin_op p) <> None))
 
-# 163 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 163 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let as_uni_op : FStar_Extraction_ML_Syntax.mlpath  ->  (Prims.string * Prims.string) Prims.option = (fun _77_70 -> (match (_77_70) with
 | (ns, x) -> begin
@@ -344,11 +344,11 @@ None
 end
 end))
 
-# 170 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 170 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let is_uni_op : FStar_Extraction_ML_Syntax.mlpath  ->  Prims.bool = (fun p -> ((as_uni_op p) <> None))
 
-# 174 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 174 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let as_standard_type = (fun _77_78 -> (match (_77_78) with
 | (ns, x) -> begin
@@ -362,11 +362,11 @@ None
 end
 end))
 
-# 181 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 181 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let is_standard_type : FStar_Extraction_ML_Syntax.mlpath  ->  Prims.bool = (fun p -> ((as_standard_type p) <> None))
 
-# 185 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 185 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let as_standard_constructor : FStar_Extraction_ML_Syntax.mlpath  ->  (Prims.string * Prims.string) Prims.option = (fun _77_86 -> (match (_77_86) with
 | (ns, x) -> begin
@@ -380,11 +380,11 @@ None
 end
 end))
 
-# 192 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 192 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let is_standard_constructor : FStar_Extraction_ML_Syntax.mlpath  ->  Prims.bool = (fun p -> ((as_standard_constructor p) <> None))
 
-# 196 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 196 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let maybe_paren : ((Prims.int * fixity) * assoc)  ->  (Prims.int * fixity)  ->  FSharp_Format.doc  ->  FSharp_Format.doc = (fun _77_94 inner doc -> (match (_77_94) with
 | (outer, side) -> begin
@@ -428,7 +428,7 @@ end else begin
 end)
 end))
 
-# 215 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 215 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let ocaml_u8_codepoint : Prims.byte  ->  Prims.string = (fun i -> if ((FStar_Util.int_of_byte i) = 0) then begin
 "\\x00"
@@ -436,7 +436,7 @@ end else begin
 (Prims.strcat "\\x" (FStar_Util.hex_string_of_byte i))
 end)
 
-# 219 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 219 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let encode_char : Prims.char  ->  Prims.string = (fun c -> if ((FStar_Util.int_of_char c) > 127) then begin
 (let bytes = (FStar_Util.string_of_char c)
@@ -482,7 +482,7 @@ end
 end)
 end)
 
-# 240 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 240 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let string_of_mlconstant : FStar_Extraction_ML_Syntax.mlconstant  ->  Prims.string = (fun sctt -> (match (sctt) with
 | FStar_Extraction_ML_Syntax.MLC_Unit -> begin
@@ -527,7 +527,7 @@ end
 in (Prims.strcat (Prims.strcat "\"" chars) "\""))
 end))
 
-# 264 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 264 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let rec doc_of_mltype' : FStar_Extraction_ML_Syntax.mlsymbol  ->  level  ->  FStar_Extraction_ML_Syntax.mlty  ->  FSharp_Format.doc = (fun currentModule outer ty -> (match (ty) with
 | FStar_Extraction_ML_Syntax.MLTY_Var (x) -> begin
@@ -586,7 +586,7 @@ end
 end))
 and doc_of_mltype : FStar_Extraction_ML_Syntax.mlsymbol  ->  level  ->  FStar_Extraction_ML_Syntax.mlty  ->  FSharp_Format.doc = (fun currentModule outer ty -> (doc_of_mltype' currentModule outer (FStar_Extraction_ML_Util.resugar_mlty ty)))
 
-# 312 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 312 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let rec doc_of_expr : FStar_Extraction_ML_Syntax.mlsymbol  ->  level  ->  FStar_Extraction_ML_Syntax.mlexpr  ->  FSharp_Format.doc = (fun currentModule outer e -> (match (e.FStar_Extraction_ML_Syntax.expr) with
 | FStar_Extraction_ML_Syntax.MLE_Coerce (e, t, t') -> begin
@@ -971,7 +971,7 @@ end)::(doc)::[]))) lets)
 in (FSharp_Format.combine FSharp_Format.hardline lets)))))
 end))
 
-# 567 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 567 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let doc_of_mltydecl : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mltydecl  ->  FSharp_Format.doc = (fun currentModule decls -> (let for1 = (fun _77_519 -> (match (_77_519) with
 | (x, tparams, body) -> begin
@@ -1046,7 +1046,7 @@ end else begin
 end
 in doc))))
 
-# 622 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 622 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let rec doc_of_sig1 : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mlsig1  ->  FSharp_Format.doc = (fun currentModule s -> (match (s) with
 | FStar_Extraction_ML_Syntax.MLS_Mod (x, subsig) -> begin
@@ -1078,7 +1078,7 @@ and doc_of_sig : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Sy
 in (let docs = (FStar_List.map (fun x -> (FSharp_Format.reduce ((x)::(FSharp_Format.hardline)::(FSharp_Format.hardline)::[]))) docs)
 in (FSharp_Format.reduce docs))))
 
-# 652 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 652 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let doc_of_loc : Prims.int  ->  Prims.string  ->  FSharp_Format.doc = (fun lineno file -> if (FStar_Extraction_ML_Util.codegen_fsharp ()) then begin
 FSharp_Format.empty
@@ -1086,7 +1086,7 @@ end else begin
 (FSharp_Format.reduce1 (((FSharp_Format.text "#"))::((FSharp_Format.num lineno))::((FSharp_Format.text (Prims.strcat (Prims.strcat "\"" (FStar_Util.replace_string file "\\" "\\\\")) "\"")))::[]))
 end)
 
-# 659 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 659 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let doc_of_mod1 : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mlmodule1  ->  FSharp_Format.doc = (fun currentModule m -> (match (m) with
 | FStar_Extraction_ML_Syntax.MLM_Exn (x, []) -> begin
@@ -1116,13 +1116,13 @@ end
 (doc_of_loc lineno file)
 end))
 
-# 685 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 685 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let doc_of_mod : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mlmodule  ->  FSharp_Format.doc = (fun currentModule m -> (let docs = (FStar_List.map (doc_of_mod1 currentModule) m)
 in (let docs = (FStar_List.map (fun x -> (FSharp_Format.reduce ((x)::(FSharp_Format.hardline)::(FSharp_Format.hardline)::[]))) docs)
 in (FSharp_Format.reduce docs))))
 
-# 691 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 691 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let rec doc_of_mllib_r : FStar_Extraction_ML_Syntax.mllib  ->  (Prims.string * FSharp_Format.doc) Prims.list = (fun _77_624 -> (match (_77_624) with
 | FStar_Extraction_ML_Syntax.MLLib (mllib) -> begin
@@ -1200,17 +1200,17 @@ end)) mllib)
 in docs))
 end))
 
-# 739 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 739 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let doc_of_mllib : FStar_Extraction_ML_Syntax.mllib  ->  (Prims.string * FSharp_Format.doc) Prims.list = (fun mllib -> (doc_of_mllib_r mllib))
 
-# 743 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 743 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let string_of_mlexpr : FStar_Extraction_ML_Env.env  ->  FStar_Extraction_ML_Syntax.mlexpr  ->  Prims.string = (fun env e -> (let doc = (let _179_372 = (FStar_Extraction_ML_Util.flatten_mlpath env.FStar_Extraction_ML_Env.currentModule)
 in (doc_of_expr _179_372 (min_op_prec, NonAssoc) e))
 in (FSharp_Format.pretty 0 doc)))
 
-# 747 "D:\\workspace\\FStar\\src\\extraction\\codegen.fs"
+# 747 "C:\\Users\\nswamy\\workspace\\FStar\\src\\extraction\\codegen.fs"
 
 let string_of_mlty : FStar_Extraction_ML_Env.env  ->  FStar_Extraction_ML_Syntax.mlty  ->  Prims.string = (fun env e -> (let doc = (let _179_377 = (FStar_Extraction_ML_Util.flatten_mlpath env.FStar_Extraction_ML_Env.currentModule)
 in (doc_of_mltype _179_377 (min_op_prec, NonAssoc) e))

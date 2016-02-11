@@ -26,9 +26,9 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartArguments>--codegen OCaml --explicit_deps test.fst</StartArguments>
+    <StartArguments>--universes test1.fst test2.fst</StartArguments>
     <StartAction>Project</StartAction>
-    <StartWorkingDirectory>d:\workspace\FStar\examples\testbed</StartWorkingDirectory>
+    <StartWorkingDirectory>C:\Users\nswamy\workspace\FStar\examples\test</StartWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
