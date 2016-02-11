@@ -57,6 +57,9 @@ all: CoreCrypto.cmxa
 $(PLATFORM)/platform.cmx: $(PLATFORM)/platform.ml
 	$(MAKE) -C $(PLATFORM)
 
+$(DB)/DB.cmx: $(DB)/DB.ml
+	$(MAKE) -C $(DB)
+
 DLL_OBJ = $(PLATFORM)/platform.cmx CoreCrypto.cmx openssl_stub.o $(DB)/DB.cmx DHDB.cmx
 CoreCrypto.cmxa: $(DLL_OBJ)
 	$(OCAMLMKLIB) -lcrypto  $(EXTRA_LIBS) -o CoreCrypto $^
@@ -74,6 +77,8 @@ test: Tests$(EXE)
 	@$(EXTRA_PATH) ./Tests$(EXE)
 
 clean:
+	$(MAKE) -C $(DB) clean
+	$(MAKE) -C $(PLATFORM) clean
 	rm -f Tests$(EXE) *.[oa] *.so *.cm[ixoa] *.cmxa *.exe *.dll
 
 depend:
