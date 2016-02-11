@@ -534,7 +534,7 @@ and synth_exp' (g:env) (e:exp) : (mlexpr * e_tag * mlty) =
 
           let f = join_l (f'::List.map fst lbs) in
 
-          with_ty t' <| MLE_Let((is_rec, List.map snd lbs), e'), f, t'
+          with_ty_loc t' (MLE_Let((is_rec, List.map snd lbs), e')) (ExtractTyp.mlloc_of_range e.pos), f, t'
 
       | Exp_match(scrutinee, pats) ->
         let e, f_e, t_e = synth_exp g scrutinee in

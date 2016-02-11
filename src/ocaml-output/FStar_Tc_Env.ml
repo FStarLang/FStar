@@ -84,8 +84,14 @@ Some ((FStar_Ident.text_of_lid l))
 end))
 
 # 39 "tcenv.fs"
-let signature_to_sigtables : FStar_Absyn_Syntax.sigelt Prims.list  ->  FStar_Absyn_Syntax.sigelt FStar_Util.smap = (fun s -> (let ht = (FStar_Util.smap_create default_table_size)
-in (let _44_35 = (FStar_List.iter (fun se -> (let lids = (FStar_Absyn_Util.lids_of_sigelt se)
+let signature_to_sigtables : FStar_Absyn_Syntax.sigelt Prims.list  ->  FStar_Absyn_Syntax.sigelt FStar_Util.smap = (fun s -> (
+# 40 "tcenv.fs"
+let ht = (FStar_Util.smap_create default_table_size)
+in (
+# 41 "tcenv.fs"
+let _44_35 = (FStar_List.iter (fun se -> (
+# 42 "tcenv.fs"
+let lids = (FStar_Absyn_Util.lids_of_sigelt se)
 in (FStar_List.iter (fun l -> (FStar_Util.smap_add ht l.FStar_Ident.str se)) lids))) s)
 in ht)))
 
@@ -197,36 +203,54 @@ end))
 let sigtab : env  ->  sigtable = (fun env -> (FStar_List.hd env.sigtab))
 
 # 120 "tcenv.fs"
-let push : env  ->  Prims.string  ->  env = (fun env msg -> (let _44_112 = (env.solver.push msg)
-in (let _44_114 = env
+let push : env  ->  Prims.string  ->  env = (fun env msg -> (
+# 121 "tcenv.fs"
+let _44_112 = (env.solver.push msg)
+in (
+# 122 "tcenv.fs"
+let _44_114 = env
 in (let _146_318 = (let _146_317 = (let _146_316 = (sigtab env)
 in (FStar_Util.smap_copy _146_316))
 in (_146_317)::env.sigtab)
 in {solver = _44_114.solver; range = _44_114.range; curmodule = _44_114.curmodule; gamma = _44_114.gamma; modules = _44_114.modules; expected_typ = _44_114.expected_typ; level = _44_114.level; sigtab = _146_318; is_pattern = _44_114.is_pattern; instantiate_targs = _44_114.instantiate_targs; instantiate_vargs = _44_114.instantiate_vargs; effects = _44_114.effects; generalize = _44_114.generalize; letrecs = _44_114.letrecs; top_level = _44_114.top_level; check_uvars = _44_114.check_uvars; use_eq = _44_114.use_eq; is_iface = _44_114.is_iface; admit = _44_114.admit; default_effects = _44_114.default_effects}))))
 
 # 123 "tcenv.fs"
-let mark : env  ->  env = (fun env -> (let _44_117 = (env.solver.mark "USER MARK")
-in (let _44_119 = env
+let mark : env  ->  env = (fun env -> (
+# 124 "tcenv.fs"
+let _44_117 = (env.solver.mark "USER MARK")
+in (
+# 125 "tcenv.fs"
+let _44_119 = env
 in (let _146_323 = (let _146_322 = (let _146_321 = (sigtab env)
 in (FStar_Util.smap_copy _146_321))
 in (_146_322)::env.sigtab)
 in {solver = _44_119.solver; range = _44_119.range; curmodule = _44_119.curmodule; gamma = _44_119.gamma; modules = _44_119.modules; expected_typ = _44_119.expected_typ; level = _44_119.level; sigtab = _146_323; is_pattern = _44_119.is_pattern; instantiate_targs = _44_119.instantiate_targs; instantiate_vargs = _44_119.instantiate_vargs; effects = _44_119.effects; generalize = _44_119.generalize; letrecs = _44_119.letrecs; top_level = _44_119.top_level; check_uvars = _44_119.check_uvars; use_eq = _44_119.use_eq; is_iface = _44_119.is_iface; admit = _44_119.admit; default_effects = _44_119.default_effects}))))
 
 # 126 "tcenv.fs"
-let commit_mark : env  ->  env = (fun env -> (let _44_122 = (env.solver.commit_mark "USER MARK")
-in (let sigtab = (match (env.sigtab) with
+let commit_mark : env  ->  env = (fun env -> (
+# 127 "tcenv.fs"
+let _44_122 = (env.solver.commit_mark "USER MARK")
+in (
+# 128 "tcenv.fs"
+let sigtab = (match (env.sigtab) with
 | hd::_44_126::tl -> begin
 (hd)::tl
 end
 | _44_131 -> begin
 (FStar_All.failwith "Impossible")
 end)
-in (let _44_133 = env
+in (
+# 131 "tcenv.fs"
+let _44_133 = env
 in {solver = _44_133.solver; range = _44_133.range; curmodule = _44_133.curmodule; gamma = _44_133.gamma; modules = _44_133.modules; expected_typ = _44_133.expected_typ; level = _44_133.level; sigtab = sigtab; is_pattern = _44_133.is_pattern; instantiate_targs = _44_133.instantiate_targs; instantiate_vargs = _44_133.instantiate_vargs; effects = _44_133.effects; generalize = _44_133.generalize; letrecs = _44_133.letrecs; top_level = _44_133.top_level; check_uvars = _44_133.check_uvars; use_eq = _44_133.use_eq; is_iface = _44_133.is_iface; admit = _44_133.admit; default_effects = _44_133.default_effects}))))
 
 # 132 "tcenv.fs"
-let reset_mark : env  ->  env = (fun env -> (let _44_136 = (env.solver.reset_mark "USER MARK")
-in (let _44_138 = env
+let reset_mark : env  ->  env = (fun env -> (
+# 133 "tcenv.fs"
+let _44_136 = (env.solver.reset_mark "USER MARK")
+in (
+# 134 "tcenv.fs"
+let _44_138 = env
 in (let _146_328 = (FStar_List.tl env.sigtab)
 in {solver = _44_138.solver; range = _44_138.range; curmodule = _44_138.curmodule; gamma = _44_138.gamma; modules = _44_138.modules; expected_typ = _44_138.expected_typ; level = _44_138.level; sigtab = _146_328; is_pattern = _44_138.is_pattern; instantiate_targs = _44_138.instantiate_targs; instantiate_vargs = _44_138.instantiate_vargs; effects = _44_138.effects; generalize = _44_138.generalize; letrecs = _44_138.letrecs; top_level = _44_138.top_level; check_uvars = _44_138.check_uvars; use_eq = _44_138.use_eq; is_iface = _44_138.is_iface; admit = _44_138.admit; default_effects = _44_138.default_effects}))))
 
@@ -236,8 +260,12 @@ let pop : env  ->  Prims.string  ->  env = (fun env msg -> (match (env.sigtab) w
 (FStar_All.failwith "Too many pops")
 end
 | _44_148::tl -> begin
-(let _44_150 = (env.solver.pop msg)
-in (let _44_152 = env
+(
+# 139 "tcenv.fs"
+let _44_150 = (env.solver.pop msg)
+in (
+# 140 "tcenv.fs"
+let _44_152 = env
 in {solver = _44_152.solver; range = _44_152.range; curmodule = _44_152.curmodule; gamma = _44_152.gamma; modules = _44_152.modules; expected_typ = _44_152.expected_typ; level = _44_152.level; sigtab = tl; is_pattern = _44_152.is_pattern; instantiate_targs = _44_152.instantiate_targs; instantiate_vargs = _44_152.instantiate_vargs; effects = _44_152.effects; generalize = _44_152.generalize; letrecs = _44_152.letrecs; top_level = _44_152.top_level; check_uvars = _44_152.check_uvars; use_eq = _44_152.use_eq; is_iface = _44_152.is_iface; admit = _44_152.admit; default_effects = _44_152.default_effects}))
 end))
 
@@ -339,31 +367,59 @@ end)))) with
 env
 end
 | Some (e) -> begin
-(let _44_259 = env
+(
+# 208 "tcenv.fs"
+let _44_259 = env
 in {solver = _44_259.solver; range = _44_259.range; curmodule = _44_259.curmodule; gamma = _44_259.gamma; modules = _44_259.modules; expected_typ = _44_259.expected_typ; level = _44_259.level; sigtab = _44_259.sigtab; is_pattern = _44_259.is_pattern; instantiate_targs = _44_259.instantiate_targs; instantiate_vargs = _44_259.instantiate_vargs; effects = _44_259.effects; generalize = _44_259.generalize; letrecs = _44_259.letrecs; top_level = _44_259.top_level; check_uvars = _44_259.check_uvars; use_eq = _44_259.use_eq; is_iface = _44_259.is_iface; admit = _44_259.admit; default_effects = ((e, l))::env.default_effects})
 end)
 end
 | FStar_Absyn_Syntax.Sig_new_effect (ne, _44_263) -> begin
-(let effects = (let _44_266 = env.effects
+(
+# 211 "tcenv.fs"
+let effects = (
+# 211 "tcenv.fs"
+let _44_266 = env.effects
 in {decls = (ne)::env.effects.decls; order = _44_266.order; joins = _44_266.joins})
-in (let _44_269 = env
+in (
+# 212 "tcenv.fs"
+let _44_269 = env
 in {solver = _44_269.solver; range = _44_269.range; curmodule = _44_269.curmodule; gamma = _44_269.gamma; modules = _44_269.modules; expected_typ = _44_269.expected_typ; level = _44_269.level; sigtab = _44_269.sigtab; is_pattern = _44_269.is_pattern; instantiate_targs = _44_269.instantiate_targs; instantiate_vargs = _44_269.instantiate_vargs; effects = effects; generalize = _44_269.generalize; letrecs = _44_269.letrecs; top_level = _44_269.top_level; check_uvars = _44_269.check_uvars; use_eq = _44_269.use_eq; is_iface = _44_269.is_iface; admit = _44_269.admit; default_effects = _44_269.default_effects}))
 end
 | FStar_Absyn_Syntax.Sig_sub_effect (sub, _44_273) -> begin
-(let compose_edges = (fun e1 e2 -> {msource = e1.msource; mtarget = e2.mtarget; mlift = (fun r wp1 -> (let _146_470 = (e1.mlift r wp1)
+(
+# 215 "tcenv.fs"
+let compose_edges = (fun e1 e2 -> {msource = e1.msource; mtarget = e2.mtarget; mlift = (fun r wp1 -> (let _146_470 = (e1.mlift r wp1)
 in (e2.mlift r _146_470)))})
-in (let mk_lift = (fun lift_t r wp1 -> (FStar_Absyn_Syntax.mk_Typ_app (lift_t, ((FStar_Absyn_Syntax.targ r))::((FStar_Absyn_Syntax.targ wp1))::[]) None wp1.FStar_Absyn_Syntax.pos))
-in (let edge = {msource = sub.FStar_Absyn_Syntax.source; mtarget = sub.FStar_Absyn_Syntax.target; mlift = (mk_lift sub.FStar_Absyn_Syntax.lift)}
-in (let id_edge = (fun l -> {msource = sub.FStar_Absyn_Syntax.source; mtarget = sub.FStar_Absyn_Syntax.target; mlift = (fun t wp -> wp)})
-in (let print_mlift = (fun l -> (let arg = (let _146_493 = (FStar_Absyn_Syntax.lid_of_path (("ARG")::[]) FStar_Absyn_Syntax.dummyRange)
+in (
+# 220 "tcenv.fs"
+let mk_lift = (fun lift_t r wp1 -> (FStar_Absyn_Syntax.mk_Typ_app (lift_t, ((FStar_Absyn_Syntax.targ r))::((FStar_Absyn_Syntax.targ wp1))::[]) None wp1.FStar_Absyn_Syntax.pos))
+in (
+# 222 "tcenv.fs"
+let edge = {msource = sub.FStar_Absyn_Syntax.source; mtarget = sub.FStar_Absyn_Syntax.target; mlift = (mk_lift sub.FStar_Absyn_Syntax.lift)}
+in (
+# 226 "tcenv.fs"
+let id_edge = (fun l -> {msource = sub.FStar_Absyn_Syntax.source; mtarget = sub.FStar_Absyn_Syntax.target; mlift = (fun t wp -> wp)})
+in (
+# 231 "tcenv.fs"
+let print_mlift = (fun l -> (
+# 232 "tcenv.fs"
+let arg = (let _146_493 = (FStar_Absyn_Syntax.lid_of_path (("ARG")::[]) FStar_Absyn_Syntax.dummyRange)
 in (FStar_Absyn_Util.ftv _146_493 FStar_Absyn_Syntax.mk_Kind_type))
-in (let wp = (let _146_494 = (FStar_Absyn_Syntax.lid_of_path (("WP")::[]) FStar_Absyn_Syntax.dummyRange)
+in (
+# 233 "tcenv.fs"
+let wp = (let _146_494 = (FStar_Absyn_Syntax.lid_of_path (("WP")::[]) FStar_Absyn_Syntax.dummyRange)
 in (FStar_Absyn_Util.ftv _146_494 FStar_Absyn_Syntax.mk_Kind_unknown))
 in (let _146_495 = (l arg wp)
 in (FStar_Absyn_Print.typ_to_string _146_495)))))
-in (let order = (edge)::env.effects.order
-in (let ms = (FStar_All.pipe_right env.effects.decls (FStar_List.map (fun e -> e.FStar_Absyn_Syntax.mname)))
-in (let find_edge = (fun order _44_301 -> (match (_44_301) with
+in (
+# 235 "tcenv.fs"
+let order = (edge)::env.effects.order
+in (
+# 237 "tcenv.fs"
+let ms = (FStar_All.pipe_right env.effects.decls (FStar_List.map (fun e -> e.FStar_Absyn_Syntax.mname)))
+in (
+# 239 "tcenv.fs"
+let find_edge = (fun order _44_301 -> (match (_44_301) with
 | (i, j) -> begin
 if (FStar_Ident.lid_equals i j) then begin
 (FStar_All.pipe_right (id_edge i) (fun _146_501 -> Some (_146_501)))
@@ -371,7 +427,9 @@ end else begin
 (FStar_All.pipe_right order (FStar_Util.find_opt (fun e -> ((FStar_Ident.lid_equals e.msource i) && (FStar_Ident.lid_equals e.mtarget j)))))
 end
 end))
-in (let order = (FStar_All.pipe_right ms (FStar_List.fold_left (fun order k -> (let _146_509 = (FStar_All.pipe_right ms (FStar_List.collect (fun i -> if (FStar_Ident.lid_equals i k) then begin
+in (
+# 248 "tcenv.fs"
+let order = (FStar_All.pipe_right ms (FStar_List.fold_left (fun order k -> (let _146_509 = (FStar_All.pipe_right ms (FStar_List.collect (fun i -> if (FStar_Ident.lid_equals i k) then begin
 []
 end else begin
 (FStar_All.pipe_right ms (FStar_List.collect (fun j -> if (FStar_Ident.lid_equals j k) then begin
@@ -389,8 +447,14 @@ end)
 end)))
 end)))
 in (FStar_List.append order _146_509))) order))
-in (let order = (FStar_Util.remove_dups (fun e1 e2 -> ((FStar_Ident.lid_equals e1.msource e2.msource) && (FStar_Ident.lid_equals e1.mtarget e2.mtarget))) order)
-in (let joins = (FStar_All.pipe_right ms (FStar_List.collect (fun i -> (FStar_All.pipe_right ms (FStar_List.collect (fun j -> (let join_opt = (FStar_All.pipe_right ms (FStar_List.fold_left (fun bopt k -> (match ((let _146_517 = (find_edge order (i, k))
+in (
+# 259 "tcenv.fs"
+let order = (FStar_Util.remove_dups (fun e1 e2 -> ((FStar_Ident.lid_equals e1.msource e2.msource) && (FStar_Ident.lid_equals e1.mtarget e2.mtarget))) order)
+in (
+# 261 "tcenv.fs"
+let joins = (FStar_All.pipe_right ms (FStar_List.collect (fun i -> (FStar_All.pipe_right ms (FStar_List.collect (fun j -> (
+# 264 "tcenv.fs"
+let join_opt = (FStar_All.pipe_right ms (FStar_List.fold_left (fun bopt k -> (match ((let _146_517 = (find_edge order (i, k))
 in (let _146_516 = (find_edge order (j, k))
 in (_146_517, _146_516)))) with
 | (Some (ik), Some (jk)) -> begin
@@ -418,9 +482,15 @@ end
 | Some (k, e1, e2) -> begin
 ((i, j, k, e1.mlift, e2.mlift))::[]
 end))))))))
-in (let effects = (let _44_345 = env.effects
+in (
+# 281 "tcenv.fs"
+let effects = (
+# 281 "tcenv.fs"
+let _44_345 = env.effects
 in {decls = _44_345.decls; order = order; joins = joins})
-in (let _44_348 = env
+in (
+# 284 "tcenv.fs"
+let _44_348 = env
 in {solver = _44_348.solver; range = _44_348.range; curmodule = _44_348.curmodule; gamma = _44_348.gamma; modules = _44_348.modules; expected_typ = _44_348.expected_typ; level = _44_348.level; sigtab = _44_348.sigtab; is_pattern = _44_348.is_pattern; instantiate_targs = _44_348.instantiate_targs; instantiate_vargs = _44_348.instantiate_vargs; effects = effects; generalize = _44_348.generalize; letrecs = _44_348.letrecs; top_level = _44_348.top_level; check_uvars = _44_348.check_uvars; use_eq = _44_348.use_eq; is_iface = _44_348.is_iface; admit = _44_348.admit; default_effects = _44_348.default_effects})))))))))))))
 end
 | _44_351 -> begin
@@ -433,7 +503,9 @@ let rec add_sigelt : env  ->  FStar_Absyn_Syntax.sigelt  ->  Prims.unit = (fun e
 (add_sigelts env ses)
 end
 | _44_364 -> begin
-(let lids = (FStar_Absyn_Util.lids_of_sigelt se)
+(
+# 292 "tcenv.fs"
+let lids = (FStar_Absyn_Util.lids_of_sigelt se)
 in (FStar_List.iter (fun l -> (let _146_527 = (sigtab env)
 in (FStar_Util.smap_add _146_527 l.FStar_Ident.str se))) lids))
 end))
@@ -443,7 +515,9 @@ and add_sigelts : env  ->  FStar_Absyn_Syntax.sigelt Prims.list  ->  Prims.unit 
 let empty_lid : FStar_Ident.lident = (FStar_Absyn_Syntax.lid_of_ids (((FStar_Absyn_Syntax.id_of_text ""))::[]))
 
 # 300 "tcenv.fs"
-let finish_module : env  ->  FStar_Absyn_Syntax.modul  ->  env = (fun env m -> (let sigs = if (FStar_Ident.lid_equals m.FStar_Absyn_Syntax.name FStar_Absyn_Const.prims_lid) then begin
+let finish_module : env  ->  FStar_Absyn_Syntax.modul  ->  env = (fun env m -> (
+# 301 "tcenv.fs"
+let sigs = if (FStar_Ident.lid_equals m.FStar_Absyn_Syntax.name FStar_Absyn_Const.prims_lid) then begin
 (FStar_All.pipe_right env.gamma (FStar_List.collect (fun _44_3 -> (match (_44_3) with
 | Binding_sig (se) -> begin
 (se)::[]
@@ -454,12 +528,18 @@ end))))
 end else begin
 m.FStar_Absyn_Syntax.exports
 end
-in (let _44_377 = (add_sigelts env sigs)
-in (let _44_379 = env
+in (
+# 307 "tcenv.fs"
+let _44_377 = (add_sigelts env sigs)
+in (
+# 308 "tcenv.fs"
+let _44_379 = env
 in {solver = _44_379.solver; range = _44_379.range; curmodule = empty_lid; gamma = []; modules = (m)::env.modules; expected_typ = _44_379.expected_typ; level = _44_379.level; sigtab = _44_379.sigtab; is_pattern = _44_379.is_pattern; instantiate_targs = _44_379.instantiate_targs; instantiate_vargs = _44_379.instantiate_vargs; effects = _44_379.effects; generalize = _44_379.generalize; letrecs = _44_379.letrecs; top_level = _44_379.top_level; check_uvars = _44_379.check_uvars; use_eq = _44_379.use_eq; is_iface = _44_379.is_iface; admit = _44_379.admit; default_effects = _44_379.default_effects}))))
 
 # 314 "tcenv.fs"
-let set_level : env  ->  level  ->  env = (fun env level -> (let _44_383 = env
+let set_level : env  ->  level  ->  env = (fun env level -> (
+# 314 "tcenv.fs"
+let _44_383 = env
 in {solver = _44_383.solver; range = _44_383.range; curmodule = _44_383.curmodule; gamma = _44_383.gamma; modules = _44_383.modules; expected_typ = _44_383.expected_typ; level = level; sigtab = _44_383.sigtab; is_pattern = _44_383.is_pattern; instantiate_targs = _44_383.instantiate_targs; instantiate_vargs = _44_383.instantiate_vargs; effects = _44_383.effects; generalize = _44_383.generalize; letrecs = _44_383.letrecs; top_level = _44_383.top_level; check_uvars = _44_383.check_uvars; use_eq = _44_383.use_eq; is_iface = _44_383.is_iface; admit = _44_383.admit; default_effects = _44_383.default_effects}))
 
 # 315 "tcenv.fs"
@@ -472,14 +552,18 @@ let modules : env  ->  FStar_Absyn_Syntax.modul Prims.list = (fun env -> env.mod
 let current_module : env  ->  FStar_Ident.lident = (fun env -> env.curmodule)
 
 # 318 "tcenv.fs"
-let set_current_module : env  ->  FStar_Ident.lident  ->  env = (fun env lid -> (let _44_391 = env
+let set_current_module : env  ->  FStar_Ident.lident  ->  env = (fun env lid -> (
+# 318 "tcenv.fs"
+let _44_391 = env
 in {solver = _44_391.solver; range = _44_391.range; curmodule = lid; gamma = _44_391.gamma; modules = _44_391.modules; expected_typ = _44_391.expected_typ; level = _44_391.level; sigtab = _44_391.sigtab; is_pattern = _44_391.is_pattern; instantiate_targs = _44_391.instantiate_targs; instantiate_vargs = _44_391.instantiate_vargs; effects = _44_391.effects; generalize = _44_391.generalize; letrecs = _44_391.letrecs; top_level = _44_391.top_level; check_uvars = _44_391.check_uvars; use_eq = _44_391.use_eq; is_iface = _44_391.is_iface; admit = _44_391.admit; default_effects = _44_391.default_effects}))
 
 # 319 "tcenv.fs"
 let set_range : env  ->  Prims.int64  ->  env = (fun e r -> if (r = FStar_Absyn_Syntax.dummyRange) then begin
 e
 end else begin
-(let _44_395 = e
+(
+# 319 "tcenv.fs"
+let _44_395 = e
 in {solver = _44_395.solver; range = r; curmodule = _44_395.curmodule; gamma = _44_395.gamma; modules = _44_395.modules; expected_typ = _44_395.expected_typ; level = _44_395.level; sigtab = _44_395.sigtab; is_pattern = _44_395.is_pattern; instantiate_targs = _44_395.instantiate_targs; instantiate_vargs = _44_395.instantiate_vargs; effects = _44_395.effects; generalize = _44_395.generalize; letrecs = _44_395.letrecs; top_level = _44_395.top_level; check_uvars = _44_395.check_uvars; use_eq = _44_395.use_eq; is_iface = _44_395.is_iface; admit = _44_395.admit; default_effects = _44_395.default_effects})
 end)
 
@@ -512,14 +596,22 @@ t
 end))
 
 # 333 "tcenv.fs"
-let in_cur_mod : env  ->  FStar_Ident.lident  ->  Prims.bool = (fun env l -> (let cur = (current_module env)
+let in_cur_mod : env  ->  FStar_Ident.lident  ->  Prims.bool = (fun env l -> (
+# 334 "tcenv.fs"
+let cur = (current_module env)
 in if (l.FStar_Ident.nsstr = cur.FStar_Ident.str) then begin
 true
 end else begin
 if (FStar_Util.starts_with l.FStar_Ident.nsstr cur.FStar_Ident.str) then begin
-(let lns = (FStar_List.append l.FStar_Ident.ns ((l.FStar_Ident.ident)::[]))
-in (let cur = (FStar_List.append cur.FStar_Ident.ns ((cur.FStar_Ident.ident)::[]))
-in (let rec aux = (fun c l -> (match ((c, l)) with
+(
+# 337 "tcenv.fs"
+let lns = (FStar_List.append l.FStar_Ident.ns ((l.FStar_Ident.ident)::[]))
+in (
+# 338 "tcenv.fs"
+let cur = (FStar_List.append cur.FStar_Ident.ns ((cur.FStar_Ident.ident)::[]))
+in (
+# 339 "tcenv.fs"
+let rec aux = (fun c l -> (match ((c, l)) with
 | ([], _44_424) -> begin
 true
 end
@@ -539,8 +631,12 @@ end
 end))
 
 # 347 "tcenv.fs"
-let lookup_qname : env  ->  FStar_Ident.lident  ->  (FStar_Absyn_Syntax.typ, FStar_Absyn_Syntax.sigelt) FStar_Util.either Prims.option = (fun env lid -> (let cur_mod = (in_cur_mod env lid)
-in (let found = if cur_mod then begin
+let lookup_qname : env  ->  FStar_Ident.lident  ->  (FStar_Absyn_Syntax.typ, FStar_Absyn_Syntax.sigelt) FStar_Util.either Prims.option = (fun env lid -> (
+# 348 "tcenv.fs"
+let cur_mod = (in_cur_mod env lid)
+in (
+# 349 "tcenv.fs"
+let found = if cur_mod then begin
 (FStar_Util.find_map env.gamma (fun _44_5 -> (match (_44_5) with
 | Binding_lid (l, t) -> begin
 if (FStar_Ident.lid_equals lid l) then begin
@@ -558,7 +654,9 @@ None
 end))
 end
 | Binding_sig (s) -> begin
-(let lids = (FStar_Absyn_Util.lids_of_sigelt s)
+(
+# 358 "tcenv.fs"
+let lids = (FStar_Absyn_Util.lids_of_sigelt s)
 in if (FStar_All.pipe_right lids (FStar_Util.for_some (FStar_Ident.lid_equals lid))) then begin
 Some (FStar_Util.Inr (s))
 end else begin
@@ -616,21 +714,27 @@ in (Prims.raise _146_604))
 end))
 
 # 381 "tcenv.fs"
-let lookup_projector : env  ->  FStar_Ident.lident  ->  Prims.int  ->  FStar_Ident.lident = (fun env lid i -> (let fail = (fun _44_511 -> (match (()) with
+let lookup_projector : env  ->  FStar_Ident.lident  ->  Prims.int  ->  FStar_Ident.lident = (fun env lid i -> (
+# 382 "tcenv.fs"
+let fail = (fun _44_511 -> (match (()) with
 | () -> begin
 (let _146_615 = (let _146_614 = (FStar_Util.string_of_int i)
 in (let _146_613 = (FStar_Absyn_Print.sli lid)
 in (FStar_Util.format2 "Impossible: projecting field #%s from constructor %s is undefined" _146_614 _146_613)))
 in (FStar_All.failwith _146_615))
 end))
-in (let t = (lookup_datacon env lid)
+in (
+# 383 "tcenv.fs"
+let t = (lookup_datacon env lid)
 in (match ((let _146_616 = (FStar_Absyn_Util.compress_typ t)
 in _146_616.FStar_Absyn_Syntax.n)) with
 | FStar_Absyn_Syntax.Typ_fun (binders, _44_515) -> begin
 if ((i < 0) || (i >= (FStar_List.length binders))) then begin
 (fail ())
 end else begin
-(let b = (FStar_List.nth binders i)
+(
+# 388 "tcenv.fs"
+let b = (FStar_List.nth binders i)
 in (match ((Prims.fst b)) with
 | FStar_Util.Inl (a) -> begin
 (let _146_617 = (FStar_Absyn_Util.mk_field_projector_name lid a i)
@@ -668,14 +772,18 @@ in (Prims.raise _146_629))
 end))
 
 # 405 "tcenv.fs"
-let lookup_lid : env  ->  FStar_Absyn_Syntax.lident  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (fun env lid -> (let not_found = (fun _44_557 -> (match (()) with
+let lookup_lid : env  ->  FStar_Absyn_Syntax.lident  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (fun env lid -> (
+# 406 "tcenv.fs"
+let not_found = (fun _44_557 -> (match (()) with
 | () -> begin
 (let _146_638 = (let _146_637 = (let _146_636 = (name_not_found lid)
 in (_146_636, (FStar_Ident.range_of_lid lid)))
 in FStar_Absyn_Syntax.Error (_146_637))
 in (Prims.raise _146_638))
 end))
-in (let mapper = (fun _44_6 -> (match (_44_6) with
+in (
+# 409 "tcenv.fs"
+let mapper = (fun _44_6 -> (match (_44_6) with
 | FStar_Util.Inr (FStar_Absyn_Syntax.Sig_datacon (_44_560, t, (_44_563, tps, _44_566), _44_569, _44_571, _44_573)) -> begin
 (let _146_643 = (let _146_642 = (FStar_List.map (fun _44_580 -> (match (_44_580) with
 | (x, _44_579) -> begin
@@ -720,7 +828,9 @@ end))
 in (match ((let _146_645 = (lookup_qname env lid)
 in (FStar_Util.bind_opt _146_645 mapper))) with
 | Some (t) -> begin
-(let _44_635 = t
+(
+# 432 "tcenv.fs"
+let _44_635 = t
 in {FStar_Absyn_Syntax.n = _44_635.FStar_Absyn_Syntax.n; FStar_Absyn_Syntax.tk = _44_635.FStar_Absyn_Syntax.tk; FStar_Absyn_Syntax.pos = (FStar_Absyn_Syntax.range_of_lid lid); FStar_Absyn_Syntax.fvs = _44_635.FStar_Absyn_Syntax.fvs; FStar_Absyn_Syntax.uvs = _44_635.FStar_Absyn_Syntax.uvs})
 end
 | None -> begin
@@ -802,7 +912,9 @@ false
 end)))) then begin
 None
 end else begin
-(let t = (FStar_Absyn_Util.close_with_lam tps t)
+(
+# 466 "tcenv.fs"
+let t = (FStar_Absyn_Util.close_with_lam tps t)
 in (let _146_673 = (FStar_Absyn_Syntax.mk_Typ_meta (FStar_Absyn_Syntax.Meta_named ((t, lid))))
 in Some (_146_673)))
 end
@@ -814,7 +926,9 @@ end))
 # 470 "tcenv.fs"
 let lookup_opaque_typ_abbrev : env  ->  FStar_Ident.lident  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax Prims.option = (fun env lid -> (match ((lookup_qname env lid)) with
 | Some (FStar_Util.Inr (FStar_Absyn_Syntax.Sig_typ_abbrev (lid, tps, _44_768, t, quals, _44_772))) -> begin
-(let t = (FStar_Absyn_Util.close_with_lam tps t)
+(
+# 473 "tcenv.fs"
+let t = (FStar_Absyn_Util.close_with_lam tps t)
 in (let _146_678 = (FStar_Absyn_Syntax.mk_Typ_meta (FStar_Absyn_Syntax.Meta_named ((t, lid))))
 in Some (_146_678)))
 end
@@ -897,28 +1011,42 @@ k
 end))
 
 # 516 "tcenv.fs"
-let lookup_operator : env  ->  FStar_Ident.ident  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (fun env opname -> (let primName = (FStar_Ident.lid_of_path (("Prims")::((Prims.strcat "_dummy_" opname.FStar_Ident.idText))::[]) FStar_Absyn_Syntax.dummyRange)
+let lookup_operator : env  ->  FStar_Ident.ident  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (fun env opname -> (
+# 517 "tcenv.fs"
+let primName = (FStar_Ident.lid_of_path (("Prims")::((Prims.strcat "_dummy_" opname.FStar_Ident.idText))::[]) FStar_Absyn_Syntax.dummyRange)
 in (lookup_lid env primName)))
 
 # 520 "tcenv.fs"
-let push_sigelt : env  ->  FStar_Absyn_Syntax.sigelt  ->  env = (fun env s -> (build_lattice (let _44_893 = env
+let push_sigelt : env  ->  FStar_Absyn_Syntax.sigelt  ->  env = (fun env s -> (build_lattice (
+# 520 "tcenv.fs"
+let _44_893 = env
 in {solver = _44_893.solver; range = _44_893.range; curmodule = _44_893.curmodule; gamma = (Binding_sig (s))::env.gamma; modules = _44_893.modules; expected_typ = _44_893.expected_typ; level = _44_893.level; sigtab = _44_893.sigtab; is_pattern = _44_893.is_pattern; instantiate_targs = _44_893.instantiate_targs; instantiate_vargs = _44_893.instantiate_vargs; effects = _44_893.effects; generalize = _44_893.generalize; letrecs = _44_893.letrecs; top_level = _44_893.top_level; check_uvars = _44_893.check_uvars; use_eq = _44_893.use_eq; is_iface = _44_893.is_iface; admit = _44_893.admit; default_effects = _44_893.default_effects}) s))
 
 # 521 "tcenv.fs"
-let push_local_binding : env  ->  binding  ->  env = (fun env b -> (let _44_897 = env
+let push_local_binding : env  ->  binding  ->  env = (fun env b -> (
+# 521 "tcenv.fs"
+let _44_897 = env
 in {solver = _44_897.solver; range = _44_897.range; curmodule = _44_897.curmodule; gamma = (b)::env.gamma; modules = _44_897.modules; expected_typ = _44_897.expected_typ; level = _44_897.level; sigtab = _44_897.sigtab; is_pattern = _44_897.is_pattern; instantiate_targs = _44_897.instantiate_targs; instantiate_vargs = _44_897.instantiate_vargs; effects = _44_897.effects; generalize = _44_897.generalize; letrecs = _44_897.letrecs; top_level = _44_897.top_level; check_uvars = _44_897.check_uvars; use_eq = _44_897.use_eq; is_iface = _44_897.is_iface; admit = _44_897.admit; default_effects = _44_897.default_effects}))
 
 # 523 "tcenv.fs"
-let uvars_in_env : env  ->  FStar_Absyn_Syntax.uvars = (fun env -> (let no_uvs = (let _146_734 = (FStar_Absyn_Syntax.new_uv_set ())
+let uvars_in_env : env  ->  FStar_Absyn_Syntax.uvars = (fun env -> (
+# 524 "tcenv.fs"
+let no_uvs = (let _146_734 = (FStar_Absyn_Syntax.new_uv_set ())
 in (let _146_733 = (FStar_Absyn_Syntax.new_uvt_set ())
 in (let _146_732 = (FStar_Absyn_Syntax.new_uvt_set ())
 in {FStar_Absyn_Syntax.uvars_k = _146_734; FStar_Absyn_Syntax.uvars_t = _146_733; FStar_Absyn_Syntax.uvars_e = _146_732})))
-in (let ext = (fun out uvs -> (let _44_904 = out
+in (
+# 529 "tcenv.fs"
+let ext = (fun out uvs -> (
+# 530 "tcenv.fs"
+let _44_904 = out
 in (let _146_741 = (FStar_Util.set_union out.FStar_Absyn_Syntax.uvars_k uvs.FStar_Absyn_Syntax.uvars_k)
 in (let _146_740 = (FStar_Util.set_union out.FStar_Absyn_Syntax.uvars_t uvs.FStar_Absyn_Syntax.uvars_t)
 in (let _146_739 = (FStar_Util.set_union out.FStar_Absyn_Syntax.uvars_e uvs.FStar_Absyn_Syntax.uvars_e)
 in {FStar_Absyn_Syntax.uvars_k = _146_741; FStar_Absyn_Syntax.uvars_t = _146_740; FStar_Absyn_Syntax.uvars_e = _146_739})))))
-in (let rec aux = (fun out g -> (match (g) with
+in (
+# 533 "tcenv.fs"
+let rec aux = (fun out g -> (match (g) with
 | [] -> begin
 out
 end
@@ -938,8 +1066,12 @@ end))
 in (aux no_uvs env.gamma)))))
 
 # 541 "tcenv.fs"
-let push_module : env  ->  FStar_Absyn_Syntax.modul  ->  env = (fun env m -> (let _44_937 = (add_sigelts env m.FStar_Absyn_Syntax.exports)
-in (let _44_939 = env
+let push_module : env  ->  FStar_Absyn_Syntax.modul  ->  env = (fun env m -> (
+# 542 "tcenv.fs"
+let _44_937 = (add_sigelts env m.FStar_Absyn_Syntax.exports)
+in (
+# 543 "tcenv.fs"
+let _44_939 = env
 in {solver = _44_939.solver; range = _44_939.range; curmodule = _44_939.curmodule; gamma = []; modules = (m)::env.modules; expected_typ = None; level = _44_939.level; sigtab = _44_939.sigtab; is_pattern = _44_939.is_pattern; instantiate_targs = _44_939.instantiate_targs; instantiate_vargs = _44_939.instantiate_vargs; effects = _44_939.effects; generalize = _44_939.generalize; letrecs = _44_939.letrecs; top_level = _44_939.top_level; check_uvars = _44_939.check_uvars; use_eq = _44_939.use_eq; is_iface = _44_939.is_iface; admit = _44_939.admit; default_effects = _44_939.default_effects})))
 
 # 548 "tcenv.fs"
@@ -950,7 +1082,9 @@ in (FStar_Util.format1 "Setting expected type to %s with kind unknown" _146_758)
 in (FStar_All.failwith _146_759))
 end
 | _44_969 -> begin
-(let _44_970 = env
+(
+# 551 "tcenv.fs"
+let _44_970 = env
 in {solver = _44_970.solver; range = _44_970.range; curmodule = _44_970.curmodule; gamma = _44_970.gamma; modules = _44_970.modules; expected_typ = Some (t); level = _44_970.level; sigtab = _44_970.sigtab; is_pattern = _44_970.is_pattern; instantiate_targs = _44_970.instantiate_targs; instantiate_vargs = _44_970.instantiate_vargs; effects = _44_970.effects; generalize = _44_970.generalize; letrecs = _44_970.letrecs; top_level = _44_970.top_level; check_uvars = _44_970.check_uvars; use_eq = false; is_iface = _44_970.is_iface; admit = _44_970.admit; default_effects = _44_970.default_effects})
 end))
 
@@ -964,7 +1098,9 @@ Some (t)
 end))
 
 # 556 "tcenv.fs"
-let clear_expected_typ : env  ->  (env * FStar_Absyn_Syntax.typ Prims.option) = (fun env -> ((let _44_977 = env
+let clear_expected_typ : env  ->  (env * FStar_Absyn_Syntax.typ Prims.option) = (fun env -> ((
+# 556 "tcenv.fs"
+let _44_977 = env
 in {solver = _44_977.solver; range = _44_977.range; curmodule = _44_977.curmodule; gamma = _44_977.gamma; modules = _44_977.modules; expected_typ = None; level = _44_977.level; sigtab = _44_977.sigtab; is_pattern = _44_977.is_pattern; instantiate_targs = _44_977.instantiate_targs; instantiate_vargs = _44_977.instantiate_vargs; effects = _44_977.effects; generalize = _44_977.generalize; letrecs = _44_977.letrecs; top_level = _44_977.top_level; check_uvars = _44_977.check_uvars; use_eq = false; is_iface = _44_977.is_iface; admit = _44_977.admit; default_effects = _44_977.default_effects}), (expected_typ env)))
 
 # 558 "tcenv.fs"
@@ -1012,7 +1148,9 @@ in (FStar_All.pipe_right _146_790 (FStar_List.map Prims.fst)))
 in (FStar_Absyn_Syntax.freevars_of_list _146_791)))
 
 # 578 "tcenv.fs"
-let lidents : env  ->  FStar_Absyn_Syntax.lident Prims.list = (fun env -> (let keys = (FStar_List.fold_left (fun keys _44_13 -> (match (_44_13) with
+let lidents : env  ->  FStar_Absyn_Syntax.lident Prims.list = (fun env -> (
+# 579 "tcenv.fs"
+let keys = (FStar_List.fold_left (fun keys _44_13 -> (match (_44_13) with
 | Binding_sig (s) -> begin
 (let _146_796 = (FStar_Absyn_Util.lids_of_sigelt s)
 in (FStar_List.append _146_796 keys))

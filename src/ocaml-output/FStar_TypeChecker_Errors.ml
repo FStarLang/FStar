@@ -31,19 +31,27 @@ let num_errs : Prims.int FStar_ST.ref = (FStar_Util.mk_ref 0)
 let verification_errs : (FStar_Range.range * Prims.string) Prims.list FStar_ST.ref = (FStar_Util.mk_ref [])
 
 # 47 "errors.fs"
-let add_errors : FStar_TypeChecker_Env.env  ->  (Prims.string * FStar_Range.range) Prims.list  ->  Prims.unit = (fun env errs -> (let errs = (FStar_All.pipe_right errs (FStar_List.map (fun _88_13 -> (match (_88_13) with
+let add_errors : FStar_TypeChecker_Env.env  ->  (Prims.string * FStar_Range.range) Prims.list  ->  Prims.unit = (fun env errs -> (
+# 48 "errors.fs"
+let errs = (FStar_All.pipe_right errs (FStar_List.map (fun _88_13 -> (match (_88_13) with
 | (msg, r) -> begin
-(let r = if (r = FStar_Range.dummyRange) then begin
+(
+# 48 "errors.fs"
+let r = if (r = FStar_Range.dummyRange) then begin
 (FStar_TypeChecker_Env.get_range env)
 end else begin
 r
 end
 in (r, msg))
 end))))
-in (let n_errs = (FStar_List.length errs)
+in (
+# 49 "errors.fs"
+let n_errs = (FStar_List.length errs)
 in (FStar_Util.atomically (fun _88_17 -> (match (()) with
 | () -> begin
-(let _88_18 = (let _190_30 = (let _190_29 = (FStar_ST.read verification_errs)
+(
+# 51 "errors.fs"
+let _88_18 = (let _190_30 = (let _190_29 = (FStar_ST.read verification_errs)
 in (FStar_List.append errs _190_29))
 in (FStar_ST.op_Colon_Equals verification_errs _190_30))
 in (let _190_31 = ((FStar_ST.read num_errs) + n_errs)
@@ -53,17 +61,27 @@ end))))))
 # 53 "errors.fs"
 let report_all : Prims.unit  ->  Prims.int = (fun _88_20 -> (match (()) with
 | () -> begin
-(let all_errs = (FStar_Util.atomically (fun _88_21 -> (match (()) with
+(
+# 54 "errors.fs"
+let all_errs = (FStar_Util.atomically (fun _88_21 -> (match (()) with
 | () -> begin
-(let x = (FStar_ST.read verification_errs)
-in (let _88_23 = (FStar_ST.op_Colon_Equals verification_errs [])
+(
+# 54 "errors.fs"
+let x = (FStar_ST.read verification_errs)
+in (
+# 54 "errors.fs"
+let _88_23 = (FStar_ST.op_Colon_Equals verification_errs [])
 in x))
 end)))
-in (let all_errs = (FStar_List.sortWith (fun _88_29 _88_33 -> (match ((_88_29, _88_33)) with
+in (
+# 55 "errors.fs"
+let all_errs = (FStar_List.sortWith (fun _88_29 _88_33 -> (match ((_88_29, _88_33)) with
 | ((r1, _88_28), (r2, _88_32)) -> begin
 (FStar_Range.compare r1 r2)
 end)) all_errs)
-in (let _88_38 = (FStar_All.pipe_right all_errs (FStar_List.iter (fun _88_37 -> (match (_88_37) with
+in (
+# 56 "errors.fs"
+let _88_38 = (FStar_All.pipe_right all_errs (FStar_List.iter (fun _88_37 -> (match (_88_37) with
 | (r, msg) -> begin
 (let _190_38 = (FStar_Range.string_of_range r)
 in (FStar_Util.print2 "%s: %s\n" _190_38 msg))
@@ -72,7 +90,9 @@ in (FStar_List.length all_errs))))
 end))
 
 # 60 "errors.fs"
-let report : FStar_Range.range  ->  Prims.string  ->  Prims.unit = (fun r msg -> (let _88_42 = (FStar_Util.incr num_errs)
+let report : FStar_Range.range  ->  Prims.string  ->  Prims.unit = (fun r msg -> (
+# 61 "errors.fs"
+let _88_42 = (FStar_Util.incr num_errs)
 in (let _190_44 = (let _190_43 = (FStar_Range.string_of_range r)
 in (FStar_Util.format2 "%s: %s\n" _190_43 msg))
 in (FStar_Util.print_string _190_44))))
@@ -182,11 +202,15 @@ in (let _190_184 = (FStar_TypeChecker_Normalize.term_to_string env targ)
 in (FStar_Util.format3 "Expected a polymorphic function;\ngot an expression \"%s\" of type \"%s\" applied to a type \"%s\"" _190_186 _190_185 _190_184)))))
 
 # 141 "errors.fs"
-let nonlinear_pattern_variable : FStar_Syntax_Syntax.bv  ->  Prims.string = (fun x -> (let m = (FStar_Syntax_Print.bv_to_string x)
+let nonlinear_pattern_variable : FStar_Syntax_Syntax.bv  ->  Prims.string = (fun x -> (
+# 142 "errors.fs"
+let m = (FStar_Syntax_Print.bv_to_string x)
 in (FStar_Util.format1 "The pattern variable \"%s\" was used more than once" m)))
 
 # 145 "errors.fs"
-let disjunctive_pattern_vars : FStar_Syntax_Syntax.bv Prims.list  ->  FStar_Syntax_Syntax.bv Prims.list  ->  Prims.string = (fun v1 v2 -> (let vars = (fun v -> (let _190_195 = (FStar_All.pipe_right v (FStar_List.map FStar_Syntax_Print.bv_to_string))
+let disjunctive_pattern_vars : FStar_Syntax_Syntax.bv Prims.list  ->  FStar_Syntax_Syntax.bv Prims.list  ->  Prims.string = (fun v1 v2 -> (
+# 146 "errors.fs"
+let vars = (fun v -> (let _190_195 = (FStar_All.pipe_right v (FStar_List.map FStar_Syntax_Print.bv_to_string))
 in (FStar_All.pipe_right _190_195 (FStar_String.concat ", "))))
 in (let _190_197 = (vars v1)
 in (let _190_196 = (vars v2)
@@ -205,10 +229,14 @@ end
 end))
 
 # 157 "errors.fs"
-let computed_computation_type_does_not_match_annotation = (fun env e c c' -> (let _88_119 = (name_and_result c)
+let computed_computation_type_does_not_match_annotation = (fun env e c c' -> (
+# 158 "errors.fs"
+let _88_119 = (name_and_result c)
 in (match (_88_119) with
 | (f1, r1) -> begin
-(let _88_122 = (name_and_result c')
+(
+# 159 "errors.fs"
+let _88_122 = (name_and_result c')
 in (match (_88_122) with
 | (f2, r2) -> begin
 (let _190_204 = (FStar_TypeChecker_Normalize.term_to_string env r1)

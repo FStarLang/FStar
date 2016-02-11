@@ -34,7 +34,9 @@ in (FStar_ToSMT_Term.mkAnd _159_30))
 in (true, l, _159_31))
 end
 | _57_30 -> begin
-(let _57_36 = (get_next_n_ite n t negs (fun x -> x))
+(
+# 29 "splitcases.fs"
+let _57_36 = (get_next_n_ite n t negs (fun x -> x))
 in (match (_57_36) with
 | (b, t, negs', rest) -> begin
 if b then begin
@@ -55,13 +57,17 @@ let rec parse_query_for_split_cases : Prims.int  ->  FStar_ToSMT_Term.term  ->  
 in (f _159_61))))
 end
 | FStar_ToSMT_Term.App (FStar_ToSMT_Term.Imp, t1::t2::_57_50) -> begin
-(let r = (match (t2.FStar_ToSMT_Term.tm) with
+(
+# 41 "splitcases.fs"
+let r = (match (t2.FStar_ToSMT_Term.tm) with
 | FStar_ToSMT_Term.Quant (FStar_ToSMT_Term.Forall, _57_59, _57_61, _57_63, _57_65) -> begin
 (parse_query_for_split_cases n t2 (fun x -> (let _159_69 = (FStar_ToSMT_Term.mkImp (t1, x))
 in (f _159_69))))
 end
 | FStar_ToSMT_Term.App (FStar_ToSMT_Term.ITE, _57_71) -> begin
-(let _57_77 = (is_ite_all_the_way n t2 FStar_ToSMT_Term.mkTrue [])
+(
+# 47 "splitcases.fs"
+let _57_77 = (is_ite_all_the_way n t2 FStar_ToSMT_Term.mkTrue [])
 in (match (_57_77) with
 | (b, l, negs) -> begin
 (b, ((fun x -> (let _159_78 = (FStar_ToSMT_Term.mkImp (t1, x))
@@ -74,7 +80,9 @@ end)
 in r)
 end
 | FStar_ToSMT_Term.App (FStar_ToSMT_Term.ITE, _57_86) -> begin
-(let _57_92 = (is_ite_all_the_way n t FStar_ToSMT_Term.mkTrue [])
+(
+# 55 "splitcases.fs"
+let _57_92 = (is_ite_all_the_way n t FStar_ToSMT_Term.mkTrue [])
 in (match (_57_92) with
 | (b, l, negs) -> begin
 (b, (f, l, negs))
@@ -120,7 +128,9 @@ end))
 # 75 "splitcases.fs"
 let handle_query : ((FStar_ToSMT_Term.term  ->  FStar_ToSMT_Term.term) * FStar_ToSMT_Term.term Prims.list * FStar_ToSMT_Term.term)  ->  (FStar_ToSMT_Term.decl  ->  Prims.unit)  ->  Prims.unit = (fun _57_128 check -> (match (_57_128) with
 | (f, l, negs) -> begin
-(let l = (check_split_cases f l check)
+(
+# 76 "splitcases.fs"
+let l = (check_split_cases f l check)
 in (check_exhaustiveness f negs check))
 end))
 

@@ -34,7 +34,9 @@ in (FStar_SMTEncoding_Term.mkAnd _199_30))
 in (true, l, _199_31))
 end
 | _97_30 -> begin
-(let _97_36 = (get_next_n_ite n t negs (fun x -> x))
+(
+# 44 "splitcases.fs"
+let _97_36 = (get_next_n_ite n t negs (fun x -> x))
 in (match (_97_36) with
 | (b, t, negs', rest) -> begin
 if b then begin
@@ -55,13 +57,17 @@ let rec parse_query_for_split_cases : Prims.int  ->  FStar_SMTEncoding_Term.term
 in (f _199_61))))
 end
 | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Imp, t1::t2::_97_50) -> begin
-(let r = (match (t2.FStar_SMTEncoding_Term.tm) with
+(
+# 56 "splitcases.fs"
+let r = (match (t2.FStar_SMTEncoding_Term.tm) with
 | FStar_SMTEncoding_Term.Quant (FStar_SMTEncoding_Term.Forall, _97_59, _97_61, _97_63, _97_65) -> begin
 (parse_query_for_split_cases n t2 (fun x -> (let _199_69 = (FStar_SMTEncoding_Term.mkImp (t1, x))
 in (f _199_69))))
 end
 | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.ITE, _97_71) -> begin
-(let _97_77 = (is_ite_all_the_way n t2 FStar_SMTEncoding_Term.mkTrue [])
+(
+# 62 "splitcases.fs"
+let _97_77 = (is_ite_all_the_way n t2 FStar_SMTEncoding_Term.mkTrue [])
 in (match (_97_77) with
 | (b, l, negs) -> begin
 (b, ((fun x -> (let _199_78 = (FStar_SMTEncoding_Term.mkImp (t1, x))
@@ -74,7 +80,9 @@ end)
 in r)
 end
 | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.ITE, _97_86) -> begin
-(let _97_92 = (is_ite_all_the_way n t FStar_SMTEncoding_Term.mkTrue [])
+(
+# 70 "splitcases.fs"
+let _97_92 = (is_ite_all_the_way n t FStar_SMTEncoding_Term.mkTrue [])
 in (match (_97_92) with
 | (b, l, negs) -> begin
 (b, (f, l, negs))
@@ -120,7 +128,9 @@ end))
 # 90 "splitcases.fs"
 let handle_query : ((FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term) * FStar_SMTEncoding_Term.term Prims.list * FStar_SMTEncoding_Term.term)  ->  (FStar_SMTEncoding_Term.decl  ->  Prims.unit)  ->  Prims.unit = (fun _97_128 check -> (match (_97_128) with
 | (f, l, negs) -> begin
-(let l = (check_split_cases f l check)
+(
+# 91 "splitcases.fs"
+let l = (check_split_cases f l check)
 in (check_exhaustiveness f negs check))
 end))
 

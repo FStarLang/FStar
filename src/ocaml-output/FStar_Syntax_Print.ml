@@ -86,8 +86,12 @@ end))
 let rec reconstruct_lex : exp  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax Prims.list Prims.option = (fun e -> (match ((let _144_32 = (FStar_Syntax_Subst.compress e)
 in _144_32.FStar_Syntax_Syntax.n)) with
 | FStar_Syntax_Syntax.Tm_app (f, args) -> begin
-(let args = (FStar_List.filter (fun a -> ((Prims.snd a) <> Some (FStar_Syntax_Syntax.Implicit))) args)
-in (let exps = (FStar_List.map Prims.fst args)
+(
+# 99 "print.fs"
+let args = (FStar_List.filter (fun a -> ((Prims.snd a) <> Some (FStar_Syntax_Syntax.Implicit))) args)
+in (
+# 100 "print.fs"
+let exps = (FStar_List.map Prims.fst args)
 in if ((is_lex_cons f) && ((FStar_List.length exps) = 2)) then begin
 (match ((let _144_34 = (FStar_List.nth exps 1)
 in (reconstruct_lex _144_34))) with
@@ -385,7 +389,9 @@ in (Prims.strcat _144_96 " "))
 end))
 
 # 210 "print.fs"
-let rec term_to_string : FStar_Syntax_Syntax.term  ->  Prims.string = (fun x -> (let x = (FStar_Syntax_Subst.compress x)
+let rec term_to_string : FStar_Syntax_Syntax.term  ->  Prims.string = (fun x -> (
+# 211 "print.fs"
+let x = (FStar_Syntax_Subst.compress x)
 in (match (x.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Tm_delayed (_42_220) -> begin
 (FStar_All.failwith "impossible")
@@ -495,7 +501,9 @@ and pat_to_string : (FStar_Syntax_Syntax.pat', FStar_Syntax_Syntax.term') FStar_
 | FStar_Syntax_Syntax.Pat_cons (l, pats) -> begin
 (let _144_149 = (let _144_148 = (FStar_List.map (fun _42_302 -> (match (_42_302) with
 | (x, b) -> begin
-(let p = (pat_to_string x)
+(
+# 251 "print.fs"
+let p = (pat_to_string x)
 in if b then begin
 (Prims.strcat "#" p)
 end else begin
@@ -558,7 +566,9 @@ end
 | _42_328 -> begin
 s
 end))
-and binder_to_string' : Prims.bool  ->  (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier Prims.option)  ->  Prims.string = (fun is_arrow b -> (let _42_333 = b
+and binder_to_string' : Prims.bool  ->  (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier Prims.option)  ->  Prims.string = (fun is_arrow b -> (
+# 289 "print.fs"
+let _42_333 = b
 in (match (_42_333) with
 | (a, imp) -> begin
 if (FStar_Syntax_Syntax.is_null_binder b) then begin
@@ -578,7 +588,9 @@ end
 end)))
 and binder_to_string : (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier Prims.option)  ->  Prims.string = (fun b -> (binder_to_string' false b))
 and arrow_binder_to_string : (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier Prims.option)  ->  Prims.string = (fun b -> (binder_to_string' true b))
-and binders_to_string : Prims.string  ->  FStar_Syntax_Syntax.binders  ->  Prims.string = (fun sep bs -> (let bs = if (FStar_ST.read FStar_Options.print_implicits) then begin
+and binders_to_string : Prims.string  ->  FStar_Syntax_Syntax.binders  ->  Prims.string = (fun sep bs -> (
+# 300 "print.fs"
+let bs = if (FStar_ST.read FStar_Options.print_implicits) then begin
 bs
 end else begin
 (filter_imp bs)
@@ -595,7 +607,9 @@ and arg_to_string : (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.arg_qualifie
 (let _144_184 = (term_to_string a)
 in (imp_to_string _144_184 imp))
 end))
-and args_to_string : FStar_Syntax_Syntax.args  ->  Prims.string = (fun args -> (let args = if (FStar_ST.read FStar_Options.print_implicits) then begin
+and args_to_string : FStar_Syntax_Syntax.args  ->  Prims.string = (fun args -> (
+# 309 "print.fs"
+let args = if (FStar_ST.read FStar_Options.print_implicits) then begin
 args
 end else begin
 (filter_imp args)
@@ -626,7 +640,9 @@ in (FStar_Util.format1 "GTot %s" _144_191))
 end)
 end
 | FStar_Syntax_Syntax.Comp (c) -> begin
-(let basic = if ((FStar_All.pipe_right c.FStar_Syntax_Syntax.flags (FStar_Util.for_some (fun _42_7 -> (match (_42_7) with
+(
+# 325 "print.fs"
+let basic = if ((FStar_All.pipe_right c.FStar_Syntax_Syntax.flags (FStar_Util.for_some (fun _42_7 -> (match (_42_7) with
 | FStar_Syntax_Syntax.TOTAL -> begin
 true
 end
@@ -663,7 +679,9 @@ end
 end
 end
 end
-in (let dec = (let _144_205 = (FStar_All.pipe_right c.FStar_Syntax_Syntax.flags (FStar_List.collect (fun _42_9 -> (match (_42_9) with
+in (
+# 338 "print.fs"
+let dec = (let _144_205 = (FStar_All.pipe_right c.FStar_Syntax_Syntax.flags (FStar_List.collect (fun _42_9 -> (match (_42_9) with
 | FStar_Syntax_Syntax.DECREASES (e) -> begin
 (let _144_204 = (let _144_203 = (term_to_string e)
 in (FStar_Util.format1 " (decreases %s)" _144_203))
@@ -737,7 +755,9 @@ in (FStar_Util.format4 "%s type %s %s : %s" _144_250 lid.FStar_Ident.str _144_24
 end
 | FStar_Syntax_Syntax.Sig_datacon (lid, univs, t, _42_411, _42_413, _42_415, _42_417, _42_419) -> begin
 if (FStar_ST.read FStar_Options.print_universes) then begin
-(let _42_424 = (FStar_Syntax_Subst.open_univ_vars univs t)
+(
+# 403 "print.fs"
+let _42_424 = (FStar_Syntax_Subst.open_univ_vars univs t)
 in (match (_42_424) with
 | (univs, t) -> begin
 (let _144_252 = (univ_names_to_string univs)
@@ -750,7 +770,9 @@ in (FStar_Util.format2 "datacon %s : %s" lid.FStar_Ident.str _144_253))
 end
 end
 | FStar_Syntax_Syntax.Sig_declare_typ (lid, univs, t, quals, _42_430) -> begin
-(let _42_435 = (FStar_Syntax_Subst.open_univ_vars univs t)
+(
+# 407 "print.fs"
+let _42_435 = (FStar_Syntax_Subst.open_univ_vars univs t)
 in (match (_42_435) with
 | (univs, t) -> begin
 (let _144_257 = (quals_to_string quals)
@@ -783,7 +805,9 @@ end
 (eff_decl_to_string ed)
 end
 | FStar_Syntax_Syntax.Sig_sub_effect (se, r) -> begin
-(let _42_477 = (FStar_Syntax_Subst.open_univ_vars (Prims.fst se.FStar_Syntax_Syntax.lift) (Prims.snd se.FStar_Syntax_Syntax.lift))
+(
+# 419 "print.fs"
+let _42_477 = (FStar_Syntax_Subst.open_univ_vars (Prims.fst se.FStar_Syntax_Syntax.lift) (Prims.snd se.FStar_Syntax_Syntax.lift))
 in (match (_42_477) with
 | (us, t) -> begin
 (let _144_262 = (univ_names_to_string us)

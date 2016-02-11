@@ -366,9 +366,14 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
         docs
 
     | MLE_Let ((rec_, lets), body) ->
+        let pre =
+            if e.loc <> dummy_loc
+            then reduce [hardline; doc_of_loc e.loc]
+            else empty
+        in
         let doc  = doc_of_lets currentModule (rec_, false, lets) in
         let body = doc_of_expr  currentModule (min_op_prec, NonAssoc) body in
-        parens (combine hardline [doc; reduce1 [text "in"; body]])
+        parens (combine hardline [pre; doc; reduce1 [text "in"; body]])
 
     | MLE_App (e, args) -> begin
         match e.expr, args with
@@ -562,6 +567,14 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
         lets in
 
     combine hardline lets
+    
+
+and doc_of_loc (lineno, file) =
+    if Util.codegen_fsharp () then
+        empty
+    else
+        let file = Util.basename file in
+        reduce1 [ text "#"; num lineno; text ("\"" ^ file ^ "\"") ]
 
 (* -------------------------------------------------------------------- *)
 let doc_of_mltydecl (currentModule : mlsymbol) (decls : mltydecl) =
@@ -649,13 +662,6 @@ and doc_of_sig (currentModule : mlsymbol) (s : mlsig) =
     reduce docs
 
 
-let doc_of_loc lineno file =
-    if Util.codegen_fsharp () then
-        empty
-    else
-        let file = Util.basename file in
-        reduce1 [ text "#"; num lineno; text ("\"" ^ file ^ "\"") ]
-
 (* -------------------------------------------------------------------- *)
 let doc_of_mod1 (currentModule : mlsymbol) (m : mlmodule1) =
     match m with
@@ -679,8 +685,8 @@ let doc_of_mod1 (currentModule : mlsymbol) (m : mlmodule1) =
             doc_of_expr currentModule  (min_op_prec, NonAssoc) e
         ]
 
-    | MLM_Loc (lineno, file) ->
-        doc_of_loc lineno file
+    | MLM_Loc loc ->
+        doc_of_loc loc
 
 (* -------------------------------------------------------------------- *)
 let doc_of_mod (currentModule : mlsymbol) (m : mlmodule) =

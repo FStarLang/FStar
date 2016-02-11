@@ -86,7 +86,9 @@ in (group _126_35)))
 # 47 "formatml.fs"
 let combine : doc  ->  doc Prims.list  ->  doc = (fun _24_27 docs -> (match (_24_27) with
 | Doc (sep) -> begin
-(let select = (fun _24_31 -> (match (_24_31) with
+(
+# 48 "formatml.fs"
+let select = (fun _24_31 -> (match (_24_31) with
 | Doc (d) -> begin
 if (d = "") then begin
 None
@@ -94,7 +96,9 @@ end else begin
 Some (d)
 end
 end))
-in (let docs = (FStar_List.choose select docs)
+in (
+# 49 "formatml.fs"
+let docs = (FStar_List.choose select docs)
 in Doc ((FStar_String.concat sep docs))))
 end))
 
@@ -111,7 +115,9 @@ Doc (d)
 end))
 
 # 65 "formatml.fs"
-let align : doc Prims.list  ->  doc = (fun docs -> (let _24_41 = (combine hardline docs)
+let align : doc Prims.list  ->  doc = (fun docs -> (
+# 66 "formatml.fs"
+let _24_41 = (combine hardline docs)
 in (match (_24_41) with
 | Doc (doc) -> begin
 Doc (doc)

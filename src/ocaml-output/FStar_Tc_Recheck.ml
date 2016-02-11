@@ -64,7 +64,9 @@ end
 end))
 
 # 53 "recheck.fs"
-let rec recompute_kind : (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax = (fun t -> (let recompute = (fun t -> (match (t.FStar_Absyn_Syntax.n) with
+let rec recompute_kind : (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax = (fun t -> (
+# 54 "recheck.fs"
+let recompute = (fun t -> (match (t.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Typ_delayed (_45_34) -> begin
 (let _147_30 = (FStar_Absyn_Util.compress_typ t)
 in (recompute_kind _147_30))
@@ -109,11 +111,17 @@ end
 FStar_Absyn_Syntax.ktype
 end
 | _45_95 -> begin
-(let k1 = (recompute_kind t1)
-in (let _45_99 = (FStar_Absyn_Util.kind_formals k1)
+(
+# 79 "recheck.fs"
+let k1 = (recompute_kind t1)
+in (
+# 80 "recheck.fs"
+let _45_99 = (FStar_Absyn_Util.kind_formals k1)
 in (match (_45_99) with
 | (bs, k) -> begin
-(let rec aux = (fun subst bs args -> (match ((bs, args)) with
+(
+# 81 "recheck.fs"
+let rec aux = (fun subst bs args -> (match ((bs, args)) with
 | ([], []) -> begin
 (FStar_Absyn_Util.subst_kind subst k)
 end
@@ -122,7 +130,9 @@ end
 in (FStar_All.pipe_right _147_41 (FStar_Absyn_Util.subst_kind subst)))
 end
 | (b::bs, a::args) -> begin
-(let subst = (let _147_42 = (FStar_Absyn_Util.subst_formal b a)
+(
+# 85 "recheck.fs"
+let subst = (let _147_42 = (FStar_Absyn_Util.subst_formal b a)
 in (_147_42)::subst)
 in (aux subst bs args))
 end
@@ -147,13 +157,19 @@ in (match ((FStar_ST.read t.FStar_Absyn_Syntax.tk)) with
 k
 end
 | None -> begin
-(let k = (recompute t)
-in (let _45_126 = (FStar_ST.op_Colon_Equals t.FStar_Absyn_Syntax.tk (Some (k)))
+(
+# 95 "recheck.fs"
+let k = (recompute t)
+in (
+# 95 "recheck.fs"
+let _45_126 = (FStar_ST.op_Colon_Equals t.FStar_Absyn_Syntax.tk (Some (k)))
 in k))
 end)))
 
 # 97 "recheck.fs"
-let rec recompute_typ : FStar_Absyn_Syntax.exp  ->  FStar_Absyn_Syntax.typ = (fun e -> (let recompute = (fun e -> (match (e.FStar_Absyn_Syntax.n) with
+let rec recompute_typ : FStar_Absyn_Syntax.exp  ->  FStar_Absyn_Syntax.typ = (fun e -> (
+# 98 "recheck.fs"
+let recompute = (fun e -> (match (e.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Exp_delayed (_45_132) -> begin
 (let _147_53 = (FStar_Absyn_Util.compress_exp e)
 in (recompute_typ _147_53))
@@ -174,13 +190,17 @@ in (bs, _147_55))
 in (FStar_Absyn_Syntax.mk_Typ_fun _147_56 None e.FStar_Absyn_Syntax.pos))
 end
 | FStar_Absyn_Syntax.Exp_app (head, args) -> begin
-(let t1 = (recompute_typ head)
+(
+# 105 "recheck.fs"
+let t1 = (recompute_typ head)
 in (match ((FStar_Absyn_Util.function_formals t1)) with
 | None -> begin
 FStar_Absyn_Syntax.tun
 end
 | Some (bs, c) -> begin
-(let rec aux = (fun subst bs args -> (match ((bs, args)) with
+(
+# 109 "recheck.fs"
+let rec aux = (fun subst bs args -> (match ((bs, args)) with
 | ([], []) -> begin
 (FStar_Absyn_Util.subst_typ subst (FStar_Absyn_Util.comp_result c))
 end
@@ -189,7 +209,9 @@ end
 in (FStar_All.pipe_right _147_63 (FStar_Absyn_Util.subst_typ subst)))
 end
 | (b::bs, a::args) -> begin
-(let subst = (let _147_64 = (FStar_Absyn_Util.subst_formal b a)
+(
+# 113 "recheck.fs"
+let subst = (let _147_64 = (FStar_Absyn_Util.subst_formal b a)
 in (_147_64)::subst)
 in (aux subst bs args))
 end
@@ -219,8 +241,12 @@ in (match ((FStar_ST.read e.FStar_Absyn_Syntax.tk)) with
 t
 end
 | None -> begin
-(let t = (recompute e)
-in (let _45_208 = (FStar_ST.op_Colon_Equals e.FStar_Absyn_Syntax.tk (Some (t)))
+(
+# 127 "recheck.fs"
+let t = (recompute e)
+in (
+# 127 "recheck.fs"
+let _45_208 = (FStar_ST.op_Colon_Equals e.FStar_Absyn_Syntax.tk (Some (t)))
 in t))
 end)))
 

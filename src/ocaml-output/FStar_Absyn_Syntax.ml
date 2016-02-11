@@ -1737,10 +1737,14 @@ let path_of_lid : FStar_Ident.lident  ->  Prims.string Prims.list = (fun lid -> 
 let ids_of_lid : FStar_Ident.lident  ->  FStar_Ident.ident Prims.list = (fun lid -> (FStar_List.append lid.FStar_Ident.ns ((lid.FStar_Ident.ident)::[])))
 
 # 291 "syntax.fs"
-let lid_of_ids : ident Prims.list  ->  FStar_Ident.lident = (fun ids -> (let _25_320 = (FStar_Util.prefix ids)
+let lid_of_ids : ident Prims.list  ->  FStar_Ident.lident = (fun ids -> (
+# 292 "syntax.fs"
+let _25_320 = (FStar_Util.prefix ids)
 in (match (_25_320) with
 | (ns, id) -> begin
-(let nsstr = (let _127_1272 = (FStar_List.map text_of_id ns)
+(
+# 293 "syntax.fs"
+let nsstr = (let _127_1272 = (FStar_List.map text_of_id ns)
 in (FStar_All.pipe_right _127_1272 text_of_path))
 in {FStar_Ident.ns = ns; FStar_Ident.ident = id; FStar_Ident.nsstr = nsstr; FStar_Ident.str = if (nsstr = "") then begin
 id.FStar_Ident.idText
@@ -1750,7 +1754,9 @@ end})
 end)))
 
 # 298 "syntax.fs"
-let lid_of_path : Prims.string Prims.list  ->  FStar_Range.range  ->  FStar_Ident.lident = (fun path pos -> (let ids = (FStar_List.map (fun s -> (mk_ident (s, pos))) path)
+let lid_of_path : Prims.string Prims.list  ->  FStar_Range.range  ->  FStar_Ident.lident = (fun path pos -> (
+# 299 "syntax.fs"
+let ids = (FStar_List.map (fun s -> (mk_ident (s, pos))) path)
 in (lid_of_ids ids)))
 
 # 301 "syntax.fs"
@@ -1778,9 +1784,15 @@ end
 end))
 
 # 310 "syntax.fs"
-let lid_with_range : FStar_Ident.lid  ->  FStar_Range.range  ->  FStar_Ident.lident = (fun lid r -> (let id = (let _25_360 = lid.FStar_Ident.ident
+let lid_with_range : FStar_Ident.lid  ->  FStar_Range.range  ->  FStar_Ident.lident = (fun lid r -> (
+# 311 "syntax.fs"
+let id = (
+# 311 "syntax.fs"
+let _25_360 = lid.FStar_Ident.ident
 in {FStar_Ident.idText = _25_360.FStar_Ident.idText; FStar_Ident.idRange = r})
-in (let _25_363 = lid
+in (
+# 312 "syntax.fs"
+let _25_363 = lid
 in {FStar_Ident.ns = _25_363.FStar_Ident.ns; FStar_Ident.ident = id; FStar_Ident.nsstr = _25_363.FStar_Ident.nsstr; FStar_Ident.str = _25_363.FStar_Ident.str})))
 
 # 313 "syntax.fs"
@@ -1854,12 +1866,16 @@ let memo_no_fvs : freevars Prims.option FStar_ST.ref = (FStar_Util.mk_ref (Some 
 # 340 "syntax.fs"
 let freevars_of_list : (btvar, bvvar) FStar_Util.either Prims.list  ->  freevars = (fun l -> (FStar_All.pipe_right l (FStar_List.fold_left (fun out _25_1 -> (match (_25_1) with
 | FStar_Util.Inl (btv) -> begin
-(let _25_401 = out
+(
+# 342 "syntax.fs"
+let _25_401 = out
 in (let _127_1345 = (FStar_Util.set_add btv out.ftvs)
 in {ftvs = _127_1345; fxvs = _25_401.fxvs}))
 end
 | FStar_Util.Inr (bxv) -> begin
-(let _25_405 = out
+(
+# 343 "syntax.fs"
+let _25_405 = out
 in (let _127_1346 = (FStar_Util.set_add bxv out.fxvs)
 in {ftvs = _25_405.ftvs; fxvs = _127_1346}))
 end)) no_fvs)))
@@ -1874,8 +1890,12 @@ in (FStar_List.append _127_1354 _127_1353))))
 # 348 "syntax.fs"
 let get_unit_ref : Prims.unit  ->  Prims.unit Prims.option FStar_ST.ref = (fun _25_410 -> (match (()) with
 | () -> begin
-(let x = (FStar_Util.mk_ref (Some (())))
-in (let _25_412 = (FStar_ST.op_Colon_Equals x None)
+(
+# 348 "syntax.fs"
+let x = (FStar_Util.mk_ref (Some (())))
+in (
+# 348 "syntax.fs"
+let _25_412 = (FStar_ST.op_Colon_Equals x None)
 in x))
 end))
 
@@ -1960,14 +1980,22 @@ in {n = Kind_unknown; tk = _127_1404; pos = dummyRange; fvs = _127_1403; uvs = _
 # 394 "syntax.fs"
 let get_knd_nref : Prims.unit  ->  (knd', Prims.unit) syntax Prims.option FStar_ST.ref = (fun _25_446 -> (match (()) with
 | () -> begin
-(let x = (FStar_Util.mk_ref (Some (mk_Kind_unknown)))
-in (let _25_448 = (FStar_ST.op_Colon_Equals x None)
+(
+# 394 "syntax.fs"
+let x = (FStar_Util.mk_ref (Some (mk_Kind_unknown)))
+in (
+# 394 "syntax.fs"
+let _25_448 = (FStar_ST.op_Colon_Equals x None)
 in x))
 end))
 
 # 395 "syntax.fs"
-let get_knd_ref : (knd', Prims.unit) syntax Prims.option  ->  (knd', Prims.unit) syntax Prims.option FStar_ST.ref = (fun k -> (let x = (FStar_Util.mk_ref (Some (mk_Kind_unknown)))
-in (let _25_452 = (FStar_ST.op_Colon_Equals x k)
+let get_knd_ref : (knd', Prims.unit) syntax Prims.option  ->  (knd', Prims.unit) syntax Prims.option FStar_ST.ref = (fun k -> (
+# 395 "syntax.fs"
+let x = (FStar_Util.mk_ref (Some (mk_Kind_unknown)))
+in (
+# 395 "syntax.fs"
+let _25_452 = (FStar_ST.op_Colon_Equals x k)
 in x)))
 
 # 397 "syntax.fs"
@@ -2145,14 +2173,22 @@ in {n = Typ_unknown; tk = _127_1561; pos = dummyRange; fvs = _127_1560; uvs = _1
 # 489 "syntax.fs"
 let get_typ_nref : Prims.unit  ->  (typ', (knd', Prims.unit) syntax) syntax Prims.option FStar_ST.ref = (fun _25_581 -> (match (()) with
 | () -> begin
-(let x = (FStar_Util.mk_ref (Some (mk_Typ_unknown)))
-in (let _25_583 = (FStar_ST.op_Colon_Equals x None)
+(
+# 489 "syntax.fs"
+let x = (FStar_Util.mk_ref (Some (mk_Typ_unknown)))
+in (
+# 489 "syntax.fs"
+let _25_583 = (FStar_ST.op_Colon_Equals x None)
 in x))
 end))
 
 # 490 "syntax.fs"
-let get_typ_ref : (typ', (knd', Prims.unit) syntax) syntax Prims.option  ->  (typ', (knd', Prims.unit) syntax) syntax Prims.option FStar_ST.ref = (fun t -> (let x = (FStar_Util.mk_ref (Some (mk_Typ_unknown)))
-in (let _25_587 = (FStar_ST.op_Colon_Equals x t)
+let get_typ_ref : (typ', (knd', Prims.unit) syntax) syntax Prims.option  ->  (typ', (knd', Prims.unit) syntax) syntax Prims.option FStar_ST.ref = (fun t -> (
+# 490 "syntax.fs"
+let x = (FStar_Util.mk_ref (Some (mk_Typ_unknown)))
+in (
+# 490 "syntax.fs"
+let _25_587 = (FStar_ST.op_Colon_Equals x t)
 in x)))
 
 # 492 "syntax.fs"
@@ -2264,7 +2300,9 @@ end))
 # 557 "syntax.fs"
 let rec pat_vars : (pat', ((knd', Prims.unit) syntax, (typ', (knd', Prims.unit) syntax) syntax) FStar_Util.either Prims.option) withinfo_t  ->  ((typ', (knd', Prims.unit) syntax) syntax bvdef, (exp', (typ', (knd', Prims.unit) syntax) syntax) syntax bvdef) FStar_Util.either Prims.list = (fun p -> (match (p.v) with
 | Pat_cons (_25_659, _25_661, ps) -> begin
-(let vars = (FStar_List.collect (fun _25_668 -> (match (_25_668) with
+(
+# 559 "syntax.fs"
+let vars = (FStar_List.collect (fun _25_668 -> (match (_25_668) with
 | (x, _25_667) -> begin
 (pat_vars x)
 end)) ps)
@@ -2290,13 +2328,17 @@ end
 (FStar_Util.Inl (a.v))::[]
 end
 | Pat_disj (ps) -> begin
-(let vars = (FStar_List.map pat_vars ps)
+(
+# 569 "syntax.fs"
+let vars = (FStar_List.map pat_vars ps)
 in if (not ((let _127_1651 = (FStar_List.tl vars)
 in (let _127_1650 = (let _127_1649 = (let _127_1648 = (FStar_List.hd vars)
 in (FStar_Util.set_eq order_bvd _127_1648))
 in (FStar_Util.for_all _127_1649))
 in (FStar_All.pipe_right _127_1651 _127_1650))))) then begin
-(let vars = (let _127_1655 = (FStar_All.pipe_right vars (FStar_List.map (fun v -> (let _127_1654 = (FStar_List.map (fun _25_2 -> (match (_25_2) with
+(
+# 572 "syntax.fs"
+let vars = (let _127_1655 = (FStar_All.pipe_right vars (FStar_List.map (fun v -> (let _127_1654 = (FStar_List.map (fun _25_2 -> (match (_25_2) with
 | FStar_Util.Inr (x) -> begin
 x.ppname.FStar_Ident.idText
 end
@@ -2468,12 +2510,16 @@ end))
 # 661 "syntax.fs"
 let freevars_of_binders : binders  ->  freevars = (fun bs -> (FStar_All.pipe_right bs (FStar_List.fold_left (fun out _25_3 -> (match (_25_3) with
 | (FStar_Util.Inl (btv), _25_805) -> begin
-(let _25_807 = out
+(
+# 663 "syntax.fs"
+let _25_807 = out
 in (let _127_1756 = (FStar_Util.set_add btv out.ftvs)
 in {ftvs = _127_1756; fxvs = _25_807.fxvs}))
 end
 | (FStar_Util.Inr (bxv), _25_812) -> begin
-(let _25_814 = out
+(
+# 664 "syntax.fs"
+let _25_814 = out
 in (let _127_1757 = (FStar_Util.set_add bxv out.fxvs)
 in {ftvs = _25_814.ftvs; fxvs = _127_1757}))
 end)) no_fvs)))

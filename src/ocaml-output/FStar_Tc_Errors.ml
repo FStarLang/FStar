@@ -31,19 +31,27 @@ let num_errs : Prims.int FStar_ST.ref = (FStar_Util.mk_ref 0)
 let verification_errs : (FStar_Range.range * Prims.string) Prims.list FStar_ST.ref = (FStar_Util.mk_ref [])
 
 # 46 "errors.fs"
-let add_errors : FStar_Tc_Env.env  ->  (Prims.string * Prims.int64) Prims.list  ->  Prims.unit = (fun env errs -> (let errs = (FStar_All.pipe_right errs (FStar_List.map (fun _48_14 -> (match (_48_14) with
+let add_errors : FStar_Tc_Env.env  ->  (Prims.string * Prims.int64) Prims.list  ->  Prims.unit = (fun env errs -> (
+# 47 "errors.fs"
+let errs = (FStar_All.pipe_right errs (FStar_List.map (fun _48_14 -> (match (_48_14) with
 | (msg, r) -> begin
-(let r = if (r = FStar_Absyn_Syntax.dummyRange) then begin
+(
+# 47 "errors.fs"
+let r = if (r = FStar_Absyn_Syntax.dummyRange) then begin
 (FStar_Tc_Env.get_range env)
 end else begin
 r
 end
 in (r, msg))
 end))))
-in (let n_errs = (FStar_List.length errs)
+in (
+# 48 "errors.fs"
+let n_errs = (FStar_List.length errs)
 in (FStar_Util.atomically (fun _48_18 -> (match (()) with
 | () -> begin
-(let _48_19 = (let _150_30 = (let _150_29 = (FStar_ST.read verification_errs)
+(
+# 50 "errors.fs"
+let _48_19 = (let _150_30 = (let _150_29 = (FStar_ST.read verification_errs)
 in (FStar_List.append errs _150_29))
 in (FStar_ST.op_Colon_Equals verification_errs _150_30))
 in (let _150_31 = ((FStar_ST.read num_errs) + n_errs)
@@ -53,17 +61,27 @@ end))))))
 # 52 "errors.fs"
 let report_all : Prims.unit  ->  Prims.int = (fun _48_21 -> (match (()) with
 | () -> begin
-(let all_errs = (FStar_Util.atomically (fun _48_22 -> (match (()) with
+(
+# 53 "errors.fs"
+let all_errs = (FStar_Util.atomically (fun _48_22 -> (match (()) with
 | () -> begin
-(let x = (FStar_ST.read verification_errs)
-in (let _48_24 = (FStar_ST.op_Colon_Equals verification_errs [])
+(
+# 53 "errors.fs"
+let x = (FStar_ST.read verification_errs)
+in (
+# 53 "errors.fs"
+let _48_24 = (FStar_ST.op_Colon_Equals verification_errs [])
 in x))
 end)))
-in (let all_errs = (FStar_List.sortWith (fun _48_30 _48_34 -> (match ((_48_30, _48_34)) with
+in (
+# 54 "errors.fs"
+let all_errs = (FStar_List.sortWith (fun _48_30 _48_34 -> (match ((_48_30, _48_34)) with
 | ((r1, _48_29), (r2, _48_33)) -> begin
 (FStar_Range.compare r1 r2)
 end)) all_errs)
-in (let _48_39 = (FStar_All.pipe_right all_errs (FStar_List.iter (fun _48_38 -> (match (_48_38) with
+in (
+# 55 "errors.fs"
+let _48_39 = (FStar_All.pipe_right all_errs (FStar_List.iter (fun _48_38 -> (match (_48_38) with
 | (r, msg) -> begin
 (let _150_38 = (FStar_Range.string_of_range r)
 in (FStar_Util.print2 "%s: %s\n" _150_38 msg))
@@ -72,7 +90,9 @@ in (FStar_List.length all_errs))))
 end))
 
 # 59 "errors.fs"
-let report : FStar_Range.range  ->  Prims.string  ->  Prims.unit = (fun r msg -> (let _48_43 = (FStar_Util.incr num_errs)
+let report : FStar_Range.range  ->  Prims.string  ->  Prims.unit = (fun r msg -> (
+# 60 "errors.fs"
+let _48_43 = (FStar_Util.incr num_errs)
 in (let _150_44 = (let _150_43 = (FStar_Range.string_of_range r)
 in (FStar_Util.format2 "%s: %s\n" _150_43 msg))
 in (FStar_Util.print_string _150_44))))
@@ -184,7 +204,9 @@ in (let _150_183 = (FStar_Tc_Normalize.typ_norm_to_string env targ)
 in (FStar_Util.format3 "Expected a polymorphic function;\ngot an expression \"%s\" of type \"%s\" applied to a type \"%s\"" _150_185 _150_184 _150_183)))))
 
 # 140 "errors.fs"
-let nonlinear_pattern_variable = (fun x -> (let m = (match (x) with
+let nonlinear_pattern_variable = (fun x -> (
+# 141 "errors.fs"
+let m = (match (x) with
 | FStar_Util.Inl (x) -> begin
 (FStar_Absyn_Print.strBvd x)
 end
@@ -194,7 +216,9 @@ end)
 in (FStar_Util.format1 "The pattern variable \"%s\" was used more than once" m)))
 
 # 146 "errors.fs"
-let disjunctive_pattern_vars = (fun v1 v2 -> (let vars = (fun v -> (let _150_192 = (FStar_All.pipe_right v (FStar_List.map (fun _48_1 -> (match (_48_1) with
+let disjunctive_pattern_vars = (fun v1 v2 -> (
+# 147 "errors.fs"
+let vars = (fun v -> (let _150_192 = (FStar_All.pipe_right v (FStar_List.map (fun _48_1 -> (match (_48_1) with
 | FStar_Util.Inl (a) -> begin
 (FStar_Absyn_Print.strBvd a)
 end
@@ -217,10 +241,14 @@ in (_150_196, ct.FStar_Absyn_Syntax.result_typ))
 end))
 
 # 159 "errors.fs"
-let computed_computation_type_does_not_match_annotation = (fun env e c c' -> (let _48_127 = (name_and_result c)
+let computed_computation_type_does_not_match_annotation = (fun env e c c' -> (
+# 160 "errors.fs"
+let _48_127 = (name_and_result c)
 in (match (_48_127) with
 | (f1, r1) -> begin
-(let _48_130 = (name_and_result c')
+(
+# 161 "errors.fs"
+let _48_130 = (name_and_result c')
 in (match (_48_130) with
 | (f2, r2) -> begin
 (let _150_202 = (FStar_Tc_Normalize.typ_norm_to_string env r1)

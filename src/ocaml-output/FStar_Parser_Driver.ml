@@ -59,7 +59,9 @@ let parse_fragment : FStar_Absyn_Syntax.modul Prims.option  ->  FStar_Parser_Des
 Empty
 end
 | FStar_Util.Inl (FStar_Util.Inl (modul::[])) -> begin
-(let _71_22 = (FStar_Parser_Desugar.desugar_partial_modul curmod env modul)
+(
+# 44 "driver.fs"
+let _71_22 = (FStar_Parser_Desugar.desugar_partial_modul curmod env modul)
 in (match (_71_22) with
 | (env, modul) -> begin
 Modul ((env, modul))
@@ -82,23 +84,31 @@ let parse_file_raw : Prims.string  ->  FStar_Parser_AST.modul Prims.list = (fun 
 ast
 end
 | FStar_Util.Inl (FStar_Util.Inr (_71_39)) -> begin
-(let _71_42 = (FStar_Util.print1 "%s: Expected a module\n" fn)
+(
+# 63 "driver.fs"
+let _71_42 = (FStar_Util.print1 "%s: Expected a module\n" fn)
 in (FStar_All.exit 1))
 end
 | FStar_Util.Inr (msg, r) -> begin
-(let _71_48 = (let _173_47 = (FStar_Absyn_Print.format_error r msg)
+(
+# 67 "driver.fs"
+let _71_48 = (let _173_47 = (FStar_Absyn_Print.format_error r msg)
 in (FStar_All.pipe_left FStar_Util.print_string _173_47))
 in (FStar_All.exit 1))
 end))
 
 # 73 "driver.fs"
 let parse_file : FStar_Parser_DesugarEnv.env  ->  Prims.string  ->  (FStar_Parser_DesugarEnv.env * FStar_Absyn_Syntax.modul Prims.list) = (fun env fn -> if (is_cache_file fn) then begin
-(let full_name = (let _173_55 = (let _173_54 = (let _173_53 = (let _173_52 = (FStar_Options.get_fstar_home ())
+(
+# 75 "driver.fs"
+let full_name = (let _173_55 = (let _173_54 = (let _173_53 = (let _173_52 = (FStar_Options.get_fstar_home ())
 in (Prims.strcat _173_52 "/"))
 in (Prims.strcat _173_53 FStar_Options.cache_dir))
 in (Prims.strcat _173_54 "/"))
 in (Prims.strcat _173_55 fn))
-in (let m = (let _173_56 = (FStar_Util.get_oreader full_name)
+in (
+# 76 "driver.fs"
+let m = (let _173_56 = (FStar_Util.get_oreader full_name)
 in (FStar_Absyn_SSyntax.deserialize_modul _173_56))
 in (let _173_57 = (FStar_Parser_Desugar.add_modul_to_env m env)
 in (_173_57, (m)::[]))))

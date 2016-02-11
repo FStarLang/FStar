@@ -379,10 +379,18 @@ in (FStar_All.failwith _187_180))
 end))))
 
 # 128 "normalize.fs"
-let norm_universe : cfg  ->  closure Prims.list  ->  FStar_Syntax_Syntax.universe  ->  FStar_Syntax_Syntax.universe = (fun cfg env u -> (let norm_univs = (fun us -> (let us = (FStar_Util.sort_with FStar_Syntax_Util.compare_univs us)
-in (let _85_114 = (FStar_List.fold_left (fun _85_105 u -> (match (_85_105) with
+let norm_universe : cfg  ->  closure Prims.list  ->  FStar_Syntax_Syntax.universe  ->  FStar_Syntax_Syntax.universe = (fun cfg env u -> (
+# 129 "normalize.fs"
+let norm_univs = (fun us -> (
+# 130 "normalize.fs"
+let us = (FStar_Util.sort_with FStar_Syntax_Util.compare_univs us)
+in (
+# 135 "normalize.fs"
+let _85_114 = (FStar_List.fold_left (fun _85_105 u -> (match (_85_105) with
 | (cur_kernel, cur_max, out) -> begin
-(let _85_109 = (FStar_Syntax_Util.univ_kernel u)
+(
+# 137 "normalize.fs"
+let _85_109 = (FStar_Syntax_Util.univ_kernel u)
 in (match (_85_109) with
 | (k_u, n) -> begin
 if (FStar_Syntax_Util.eq_univs cur_kernel k_u) then begin
@@ -396,7 +404,11 @@ in (match (_85_114) with
 | (_85_111, u, out) -> begin
 (FStar_List.rev ((u)::out))
 end))))
-in (let rec aux = (fun u -> (let u = (FStar_Syntax_Subst.compress_univ u)
+in (
+# 148 "normalize.fs"
+let rec aux = (fun u -> (
+# 149 "normalize.fs"
+let u = (FStar_Syntax_Subst.compress_univ u)
 in (match (u) with
 | FStar_Syntax_Syntax.U_bvar (x) -> begin
 (FStar_All.try_with (fun _85_121 -> (match (()) with
@@ -454,7 +466,9 @@ let rec closure_as_term : cfg  ->  closure Prims.list  ->  FStar_Syntax_Syntax.t
 t
 end
 | _85_162 -> begin
-(let t = (FStar_Syntax_Subst.compress t)
+(
+# 188 "normalize.fs"
+let t = (FStar_Syntax_Subst.compress t)
 in (match (t.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Tm_delayed (_85_165) -> begin
 (FStar_All.failwith "Impossible")
@@ -490,15 +504,23 @@ end
 end)
 end
 | FStar_Syntax_Syntax.Tm_app (head, args) -> begin
-(let head = (closure_as_term_delayed cfg env head)
-in (let args = (closures_as_args_delayed cfg env args)
+(
+# 215 "normalize.fs"
+let head = (closure_as_term_delayed cfg env head)
+in (
+# 216 "normalize.fs"
+let args = (closures_as_args_delayed cfg env args)
 in (mk (FStar_Syntax_Syntax.Tm_app ((head, args))) t.FStar_Syntax_Syntax.pos)))
 end
 | FStar_Syntax_Syntax.Tm_abs (bs, body, lopt) -> begin
-(let _85_211 = (closures_as_binders_delayed cfg env bs)
+(
+# 220 "normalize.fs"
+let _85_211 = (closures_as_binders_delayed cfg env bs)
 in (match (_85_211) with
 | (bs, env) -> begin
-(let body = (closure_as_term_delayed cfg env body)
+(
+# 221 "normalize.fs"
+let body = (closure_as_term_delayed cfg env body)
 in (let _187_230 = (let _187_229 = (let _187_228 = (close_lcomp_opt cfg env lopt)
 in ((FStar_List.rev bs), body, _187_228))
 in FStar_Syntax_Syntax.Tm_abs (_187_229))
@@ -506,18 +528,26 @@ in (mk _187_230 t.FStar_Syntax_Syntax.pos)))
 end))
 end
 | FStar_Syntax_Syntax.Tm_arrow (bs, c) -> begin
-(let _85_219 = (closures_as_binders_delayed cfg env bs)
+(
+# 225 "normalize.fs"
+let _85_219 = (closures_as_binders_delayed cfg env bs)
 in (match (_85_219) with
 | (bs, env) -> begin
-(let c = (close_comp cfg env c)
+(
+# 226 "normalize.fs"
+let c = (close_comp cfg env c)
 in (mk (FStar_Syntax_Syntax.Tm_arrow ((bs, c))) t.FStar_Syntax_Syntax.pos))
 end))
 end
 | FStar_Syntax_Syntax.Tm_refine (x, phi) -> begin
-(let _85_227 = (closures_as_binders_delayed cfg env (((FStar_Syntax_Syntax.mk_binder x))::[]))
+(
+# 230 "normalize.fs"
+let _85_227 = (closures_as_binders_delayed cfg env (((FStar_Syntax_Syntax.mk_binder x))::[]))
 in (match (_85_227) with
 | (x, env) -> begin
-(let phi = (closure_as_term_delayed cfg env phi)
+(
+# 231 "normalize.fs"
+let phi = (closure_as_term_delayed cfg env phi)
 in (let _187_234 = (let _187_233 = (let _187_232 = (let _187_231 = (FStar_List.hd x)
 in (FStar_All.pipe_right _187_231 Prims.fst))
 in (_187_232, phi))
@@ -566,12 +596,20 @@ end
 in (_187_252, imp))
 end)) args)
 end))
-and closures_as_binders_delayed : cfg  ->  closure Prims.list  ->  FStar_Syntax_Syntax.binders  ->  ((FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier Prims.option) Prims.list * closure Prims.list) = (fun cfg env bs -> (let _85_275 = (FStar_All.pipe_right bs (FStar_List.fold_left (fun _85_265 _85_268 -> (match ((_85_265, _85_268)) with
+and closures_as_binders_delayed : cfg  ->  closure Prims.list  ->  FStar_Syntax_Syntax.binders  ->  ((FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.arg_qualifier Prims.option) Prims.list * closure Prims.list) = (fun cfg env bs -> (
+# 254 "normalize.fs"
+let _85_275 = (FStar_All.pipe_right bs (FStar_List.fold_left (fun _85_265 _85_268 -> (match ((_85_265, _85_268)) with
 | ((env, out), (b, imp)) -> begin
-(let b = (let _85_269 = b
+(
+# 255 "normalize.fs"
+let b = (
+# 255 "normalize.fs"
+let _85_269 = b
 in (let _187_258 = (closure_as_term_delayed cfg env b.FStar_Syntax_Syntax.sort)
 in {FStar_Syntax_Syntax.ppname = _85_269.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _85_269.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = _187_258}))
-in (let env = (Dummy)::env
+in (
+# 256 "normalize.fs"
+let env = (Dummy)::env
 in (env, ((b, imp))::out)))
 end)) (env, [])))
 in (match (_85_275) with
@@ -593,9 +631,15 @@ end
 in (FStar_Syntax_Syntax.mk_GTotal _187_263))
 end
 | FStar_Syntax_Syntax.Comp (c) -> begin
-(let rt = (closure_as_term_delayed cfg env c.FStar_Syntax_Syntax.result_typ)
-in (let args = (closures_as_args_delayed cfg env c.FStar_Syntax_Syntax.effect_args)
-in (let flags = (FStar_All.pipe_right c.FStar_Syntax_Syntax.flags (FStar_List.map (fun _85_4 -> (match (_85_4) with
+(
+# 268 "normalize.fs"
+let rt = (closure_as_term_delayed cfg env c.FStar_Syntax_Syntax.result_typ)
+in (
+# 269 "normalize.fs"
+let args = (closures_as_args_delayed cfg env c.FStar_Syntax_Syntax.effect_args)
+in (
+# 270 "normalize.fs"
+let flags = (FStar_All.pipe_right c.FStar_Syntax_Syntax.flags (FStar_List.map (fun _85_4 -> (match (_85_4) with
 | FStar_Syntax_Syntax.DECREASES (t) -> begin
 (let _187_265 = (closure_as_term_delayed cfg env t)
 in FStar_Syntax_Syntax.DECREASES (_187_265))
@@ -603,7 +647,9 @@ end
 | f -> begin
 f
 end))))
-in (FStar_Syntax_Syntax.mk_Comp (let _85_295 = c
+in (FStar_Syntax_Syntax.mk_Comp (
+# 273 "normalize.fs"
+let _85_295 = c
 in {FStar_Syntax_Syntax.effect_name = _85_295.FStar_Syntax_Syntax.effect_name; FStar_Syntax_Syntax.result_typ = rt; FStar_Syntax_Syntax.effect_args = args; FStar_Syntax_Syntax.flags = flags})))))
 end)
 end))
@@ -612,7 +658,9 @@ and close_lcomp_opt : cfg  ->  closure Prims.list  ->  FStar_Syntax_Syntax.lcomp
 None
 end
 | Some (lc) -> begin
-(let _187_272 = (let _85_303 = lc
+(let _187_272 = (
+# 279 "normalize.fs"
+let _85_303 = lc
 in (let _187_271 = (closure_as_term_delayed cfg env lc.FStar_Syntax_Syntax.res_typ)
 in {FStar_Syntax_Syntax.eff_name = _85_303.FStar_Syntax_Syntax.eff_name; FStar_Syntax_Syntax.res_typ = _187_271; FStar_Syntax_Syntax.cflags = _85_303.FStar_Syntax_Syntax.cflags; FStar_Syntax_Syntax.comp = (fun _85_305 -> (match (()) with
 | () -> begin
@@ -623,9 +671,15 @@ in Some (_187_272))
 end))
 
 # 286 "normalize.fs"
-let maybe_simplify : step Prims.list  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun steps tm -> (let w = (fun t -> (let _85_310 = t
+let maybe_simplify : step Prims.list  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun steps tm -> (
+# 287 "normalize.fs"
+let w = (fun t -> (
+# 287 "normalize.fs"
+let _85_310 = t
 in {FStar_Syntax_Syntax.n = _85_310.FStar_Syntax_Syntax.n; FStar_Syntax_Syntax.tk = _85_310.FStar_Syntax_Syntax.tk; FStar_Syntax_Syntax.pos = tm.FStar_Syntax_Syntax.pos; FStar_Syntax_Syntax.vars = _85_310.FStar_Syntax_Syntax.vars}))
-in (let simp_t = (fun t -> (match (t.FStar_Syntax_Syntax.n) with
+in (
+# 288 "normalize.fs"
+let simp_t = (fun t -> (match (t.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Tm_fvar (fv, _85_316) when (FStar_Ident.lid_equals fv.FStar_Syntax_Syntax.v FStar_Syntax_Const.true_lid) -> begin
 Some (true)
 end
@@ -635,7 +689,9 @@ end
 | _85_325 -> begin
 None
 end))
-in (let simplify = (fun arg -> ((simp_t (Prims.fst arg)), arg))
+in (
+# 292 "normalize.fs"
+let simplify = (fun arg -> ((simp_t (Prims.fst arg)), arg))
 in if (FStar_All.pipe_left Prims.op_Negation (FStar_List.contains Simplify steps)) then begin
 tm
 end else begin
@@ -727,8 +783,12 @@ end)
 end))))
 
 # 345 "normalize.fs"
-let rec norm : cfg  ->  env  ->  stack  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term = (fun cfg env stack t -> (let t = (FStar_Syntax_Subst.compress t)
-in (let _85_538 = (log cfg (fun _85_537 -> (match (()) with
+let rec norm : cfg  ->  env  ->  stack  ->  FStar_Syntax_Syntax.term  ->  FStar_Syntax_Syntax.term = (fun cfg env stack t -> (
+# 347 "normalize.fs"
+let t = (FStar_Syntax_Subst.compress t)
+in (
+# 348 "normalize.fs"
+let _85_538 = (log cfg (fun _85_537 -> (match (()) with
 | () -> begin
 (let _187_307 = (FStar_Syntax_Print.tag_of_term t)
 in (let _187_306 = (FStar_Syntax_Print.term_to_string t)
@@ -742,7 +802,9 @@ end
 (rebuild cfg env stack t)
 end
 | FStar_Syntax_Syntax.Tm_type (u) -> begin
-(let u = (norm_universe cfg env u)
+(
+# 361 "normalize.fs"
+let u = (norm_universe cfg env u)
 in (let _187_311 = (mk (FStar_Syntax_Syntax.Tm_type (u)) t.FStar_Syntax_Syntax.pos)
 in (rebuild cfg env stack _187_311)))
 end
@@ -750,10 +812,14 @@ end
 if (FStar_All.pipe_right cfg.steps (FStar_List.contains EraseUniverses)) then begin
 (norm cfg env stack t')
 end else begin
-(let us = (let _187_313 = (let _187_312 = (FStar_List.map (norm_universe cfg env) us)
+(
+# 367 "normalize.fs"
+let us = (let _187_313 = (let _187_312 = (FStar_List.map (norm_universe cfg env) us)
 in (_187_312, t.FStar_Syntax_Syntax.pos))
 in UnivArgs (_187_313))
-in (let stack = (us)::stack
+in (
+# 368 "normalize.fs"
+let stack = (us)::stack
 in (norm cfg env stack t')))
 end
 end
@@ -769,11 +835,15 @@ end else begin
 (rebuild cfg env stack t)
 end
 | Some (us, t) -> begin
-(let n = (FStar_List.length us)
+(
+# 380 "normalize.fs"
+let n = (FStar_List.length us)
 in if (n > 0) then begin
 (match (stack) with
 | UnivArgs (us', _85_589)::stack -> begin
-(let env = (FStar_All.pipe_right us' (FStar_List.fold_left (fun env u -> (Univ (u))::env) env))
+(
+# 384 "normalize.fs"
+let env = (FStar_All.pipe_right us' (FStar_List.fold_left (fun env u -> (Univ (u))::env) env))
 in (norm cfg env stack t))
 end
 | _85_597 -> begin
@@ -797,7 +867,9 @@ end
 | Clos (env, t0, r) -> begin
 (match ((FStar_ST.read r)) with
 | Some (env, t') -> begin
-(let _85_614 = (log cfg (fun _85_613 -> (match (()) with
+(
+# 397 "normalize.fs"
+let _85_614 = (log cfg (fun _85_613 -> (match (()) with
 | () -> begin
 (let _187_319 = (FStar_Syntax_Print.term_to_string t)
 in (let _187_318 = (FStar_Syntax_Print.term_to_string t')
@@ -834,7 +906,9 @@ end
 (norm cfg ((c)::env) stack t)
 end
 | _85_658 -> begin
-(let body = (match (bs) with
+(
+# 425 "normalize.fs"
+let body = (match (bs) with
 | [] -> begin
 (FStar_All.failwith "Impossible")
 end
@@ -844,7 +918,9 @@ end
 | _85_665::tl -> begin
 (mk (FStar_Syntax_Syntax.Tm_abs ((tl, body, None))) t.FStar_Syntax_Syntax.pos)
 end)
-in (let _85_669 = (log cfg (fun _85_668 -> (match (()) with
+in (
+# 429 "normalize.fs"
+let _85_669 = (log cfg (fun _85_668 -> (match (()) with
 | () -> begin
 (let _187_322 = (closure_to_string c)
 in (FStar_Util.print1 "\tShifted %s\n" _187_322))
@@ -853,8 +929,12 @@ in (norm cfg ((c)::env) stack body)))
 end)
 end
 | MemoLazy (r)::stack -> begin
-(let _85_675 = (set_memo r (env, t))
-in (let _85_678 = (log cfg (fun _85_677 -> (match (()) with
+(
+# 434 "normalize.fs"
+let _85_675 = (set_memo r (env, t))
+in (
+# 435 "normalize.fs"
+let _85_678 = (log cfg (fun _85_677 -> (match (()) with
 | () -> begin
 (FStar_Util.print_string "\tSet memo\n")
 end)))
@@ -865,11 +945,17 @@ if (FStar_List.contains WHNF cfg.steps) then begin
 (let _187_324 = (closure_as_term cfg env t)
 in (rebuild cfg env stack _187_324))
 end else begin
-(let _85_695 = (FStar_Syntax_Subst.open_term bs body)
+(
+# 443 "normalize.fs"
+let _85_695 = (FStar_Syntax_Subst.open_term bs body)
 in (match (_85_695) with
 | (bs, body) -> begin
-(let env' = (FStar_All.pipe_right bs (FStar_List.fold_left (fun env _85_697 -> (Dummy)::env) env))
-in (let _85_701 = (log cfg (fun _85_700 -> (match (()) with
+(
+# 444 "normalize.fs"
+let env' = (FStar_All.pipe_right bs (FStar_List.fold_left (fun env _85_697 -> (Dummy)::env) env))
+in (
+# 445 "normalize.fs"
+let _85_701 = (log cfg (fun _85_700 -> (match (()) with
 | () -> begin
 (let _187_328 = (FStar_All.pipe_left FStar_Util.string_of_int (FStar_List.length bs))
 in (FStar_Util.print1 "\tShifted %s dummies\n" _187_328))
@@ -880,7 +966,9 @@ end
 end)
 end
 | FStar_Syntax_Syntax.Tm_app (head, args) -> begin
-(let stack = (FStar_All.pipe_right stack (FStar_List.fold_right (fun _85_709 stack -> (match (_85_709) with
+(
+# 450 "normalize.fs"
+let stack = (FStar_All.pipe_right stack (FStar_List.fold_right (fun _85_709 stack -> (match (_85_709) with
 | (a, aq) -> begin
 (let _187_335 = (let _187_334 = (let _187_333 = (let _187_332 = (let _187_331 = (FStar_Util.mk_ref None)
 in (env, a, _187_331))
@@ -889,7 +977,9 @@ in (_187_333, aq, t.FStar_Syntax_Syntax.pos))
 in Arg (_187_334))
 in (_187_335)::stack)
 end)) args))
-in (let _85_713 = (log cfg (fun _85_712 -> (match (()) with
+in (
+# 451 "normalize.fs"
+let _85_713 = (log cfg (fun _85_712 -> (match (()) with
 | () -> begin
 (let _187_337 = (FStar_All.pipe_left FStar_Util.string_of_int (FStar_List.length args))
 in (FStar_Util.print1 "\tPushed %s arguments\n" _187_337))
@@ -901,13 +991,23 @@ if (FStar_List.contains WHNF cfg.steps) then begin
 (let _187_338 = (closure_as_term cfg env t)
 in (rebuild cfg env stack _187_338))
 end else begin
-(let t_x = (norm cfg env [] x.FStar_Syntax_Syntax.sort)
-in (let _85_722 = (FStar_Syntax_Subst.open_term (((x, None))::[]) f)
+(
+# 457 "normalize.fs"
+let t_x = (norm cfg env [] x.FStar_Syntax_Syntax.sort)
+in (
+# 458 "normalize.fs"
+let _85_722 = (FStar_Syntax_Subst.open_term (((x, None))::[]) f)
 in (match (_85_722) with
 | (closing, f) -> begin
-(let f = (norm cfg ((Dummy)::env) [] f)
-in (let t = (let _187_341 = (let _187_340 = (let _187_339 = (FStar_Syntax_Subst.close closing f)
-in ((let _85_724 = x
+(
+# 459 "normalize.fs"
+let f = (norm cfg ((Dummy)::env) [] f)
+in (
+# 460 "normalize.fs"
+let t = (let _187_341 = (let _187_340 = (let _187_339 = (FStar_Syntax_Subst.close closing f)
+in ((
+# 460 "normalize.fs"
+let _85_724 = x
 in {FStar_Syntax_Syntax.ppname = _85_724.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _85_724.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = t_x}), _187_339))
 in FStar_Syntax_Syntax.Tm_refine (_187_340))
 in (mk _187_341 t.FStar_Syntax_Syntax.pos))
@@ -920,12 +1020,18 @@ if (FStar_List.contains WHNF cfg.steps) then begin
 (let _187_342 = (closure_as_term cfg env t)
 in (rebuild cfg env stack _187_342))
 end else begin
-(let _85_733 = (FStar_Syntax_Subst.open_comp bs c)
+(
+# 466 "normalize.fs"
+let _85_733 = (FStar_Syntax_Subst.open_comp bs c)
 in (match (_85_733) with
 | (bs, c) -> begin
-(let c = (let _187_345 = (FStar_All.pipe_right bs (FStar_List.fold_left (fun env _85_735 -> (Dummy)::env) env))
+(
+# 467 "normalize.fs"
+let c = (let _187_345 = (FStar_All.pipe_right bs (FStar_List.fold_left (fun env _85_735 -> (Dummy)::env) env))
 in (norm_comp cfg _187_345 c))
-in (let t = (let _187_346 = (norm_binders cfg env bs)
+in (
+# 468 "normalize.fs"
+let t = (let _187_346 = (norm_binders cfg env bs)
 in (FStar_Syntax_Util.arrow _187_346 c))
 in (rebuild cfg env stack t)))
 end))
@@ -937,22 +1043,32 @@ end
 (norm cfg env stack t1)
 end
 | _85_763 -> begin
-(let t1 = (norm cfg env [] t1)
-in (let _85_766 = (log cfg (fun _85_765 -> (match (()) with
+(
+# 477 "normalize.fs"
+let t1 = (norm cfg env [] t1)
+in (
+# 478 "normalize.fs"
+let _85_766 = (log cfg (fun _85_765 -> (match (()) with
 | () -> begin
 (FStar_Util.print_string "+++ Normalizing ascription \n")
 end)))
-in (let t2 = (norm cfg env [] t2)
+in (
+# 479 "normalize.fs"
+let t2 = (norm cfg env [] t2)
 in (let _187_348 = (mk (FStar_Syntax_Syntax.Tm_ascribed ((t1, t2, l))) t.FStar_Syntax_Syntax.pos)
 in (rebuild cfg env stack _187_348)))))
 end)
 end
 | FStar_Syntax_Syntax.Tm_match (head, branches) -> begin
-(let stack = (Match ((env, branches, t.FStar_Syntax_Syntax.pos)))::stack
+(
+# 486 "normalize.fs"
+let stack = (Match ((env, branches, t.FStar_Syntax_Syntax.pos)))::stack
 in (norm cfg env stack head))
 end
 | FStar_Syntax_Syntax.Tm_let ((false, lb::[]), body) -> begin
-(let env = (let _187_351 = (let _187_350 = (let _187_349 = (FStar_Util.mk_ref None)
+(
+# 490 "normalize.fs"
+let env = (let _187_351 = (let _187_350 = (let _187_349 = (FStar_Util.mk_ref None)
 in (env, lb.FStar_Syntax_Syntax.lbdef, _187_349))
 in Clos (_187_350))
 in (_187_351)::env)
@@ -962,20 +1078,36 @@ end
 (rebuild cfg env stack t)
 end
 | FStar_Syntax_Syntax.Tm_let (lbs, body) -> begin
-(let _85_823 = (FStar_List.fold_right (fun lb _85_812 -> (match (_85_812) with
+(
+# 507 "normalize.fs"
+let _85_823 = (FStar_List.fold_right (fun lb _85_812 -> (match (_85_812) with
 | (rec_env, memos, i) -> begin
-(let f_i = (let _187_354 = (let _85_813 = (FStar_Util.left lb.FStar_Syntax_Syntax.lbname)
+(
+# 508 "normalize.fs"
+let f_i = (let _187_354 = (
+# 508 "normalize.fs"
+let _85_813 = (FStar_Util.left lb.FStar_Syntax_Syntax.lbname)
 in {FStar_Syntax_Syntax.ppname = _85_813.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = i; FStar_Syntax_Syntax.sort = _85_813.FStar_Syntax_Syntax.sort})
 in (FStar_Syntax_Syntax.bv_to_tm _187_354))
-in (let fix_f_i = (mk (FStar_Syntax_Syntax.Tm_let ((lbs, f_i))) t.FStar_Syntax_Syntax.pos)
-in (let memo = (FStar_Util.mk_ref None)
-in (let rec_env = (Clos ((env, fix_f_i, memo)))::rec_env
+in (
+# 509 "normalize.fs"
+let fix_f_i = (mk (FStar_Syntax_Syntax.Tm_let ((lbs, f_i))) t.FStar_Syntax_Syntax.pos)
+in (
+# 510 "normalize.fs"
+let memo = (FStar_Util.mk_ref None)
+in (
+# 511 "normalize.fs"
+let rec_env = (Clos ((env, fix_f_i, memo)))::rec_env
 in (rec_env, (memo)::memos, (i + 1))))))
 end)) (Prims.snd lbs) (env, [], 0))
 in (match (_85_823) with
 | (rec_env, memos, _85_822) -> begin
-(let _85_826 = (FStar_List.map2 (fun lb memo -> (FStar_ST.op_Colon_Equals memo (Some ((rec_env, lb.FStar_Syntax_Syntax.lbdef))))) (Prims.snd lbs) memos)
-in (let body_env = (FStar_List.fold_right (fun lb env -> (let _187_361 = (let _187_360 = (let _187_359 = (FStar_Util.mk_ref None)
+(
+# 513 "normalize.fs"
+let _85_826 = (FStar_List.map2 (fun lb memo -> (FStar_ST.op_Colon_Equals memo (Some ((rec_env, lb.FStar_Syntax_Syntax.lbdef))))) (Prims.snd lbs) memos)
+in (
+# 514 "normalize.fs"
+let body_env = (FStar_List.fold_right (fun lb env -> (let _187_361 = (let _187_360 = (let _187_359 = (FStar_Util.mk_ref None)
 in (rec_env, lb.FStar_Syntax_Syntax.lbdef, _187_359))
 in Clos (_187_360))
 in (_187_361)::env)) (Prims.snd lbs) env)
@@ -994,10 +1126,16 @@ end
 end)
 end
 | _85_849 -> begin
-(let head = (norm cfg env [] head)
-in (let m = (match (m) with
+(
+# 528 "normalize.fs"
+let head = (norm cfg env [] head)
+in (
+# 529 "normalize.fs"
+let m = (match (m) with
 | FStar_Syntax_Syntax.Meta_pattern (args) -> begin
-(let args = (FStar_All.pipe_right args (FStar_List.map (FStar_List.map (fun _85_855 -> (match (_85_855) with
+(
+# 531 "normalize.fs"
+let args = (FStar_All.pipe_right args (FStar_List.map (FStar_List.map (fun _85_855 -> (match (_85_855) with
 | (a, imp) -> begin
 (let _187_363 = (norm cfg env [] a)
 in (_187_363, imp))
@@ -1007,31 +1145,43 @@ end
 | _85_858 -> begin
 m
 end)
-in (let t = (mk (FStar_Syntax_Syntax.Tm_meta ((head, m))) t.FStar_Syntax_Syntax.pos)
+in (
+# 534 "normalize.fs"
+let t = (mk (FStar_Syntax_Syntax.Tm_meta ((head, m))) t.FStar_Syntax_Syntax.pos)
 in (rebuild cfg env stack t))))
 end)
 end))))
 and norm_comp : cfg  ->  env  ->  FStar_Syntax_Syntax.comp  ->  FStar_Syntax_Syntax.comp = (fun cfg env comp -> (match (comp.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Total (t) -> begin
-(let _85_866 = comp
+(
+# 542 "normalize.fs"
+let _85_866 = comp
 in (let _187_368 = (let _187_367 = (norm cfg env [] t)
 in FStar_Syntax_Syntax.Total (_187_367))
 in {FStar_Syntax_Syntax.n = _187_368; FStar_Syntax_Syntax.tk = _85_866.FStar_Syntax_Syntax.tk; FStar_Syntax_Syntax.pos = _85_866.FStar_Syntax_Syntax.pos; FStar_Syntax_Syntax.vars = _85_866.FStar_Syntax_Syntax.vars}))
 end
 | FStar_Syntax_Syntax.GTotal (t) -> begin
-(let _85_870 = comp
+(
+# 545 "normalize.fs"
+let _85_870 = comp
 in (let _187_370 = (let _187_369 = (norm cfg env [] t)
 in FStar_Syntax_Syntax.GTotal (_187_369))
 in {FStar_Syntax_Syntax.n = _187_370; FStar_Syntax_Syntax.tk = _85_870.FStar_Syntax_Syntax.tk; FStar_Syntax_Syntax.pos = _85_870.FStar_Syntax_Syntax.pos; FStar_Syntax_Syntax.vars = _85_870.FStar_Syntax_Syntax.vars}))
 end
 | FStar_Syntax_Syntax.Comp (ct) -> begin
-(let norm_args = (fun args -> (FStar_All.pipe_right args (FStar_List.map (fun _85_878 -> (match (_85_878) with
+(
+# 548 "normalize.fs"
+let norm_args = (fun args -> (FStar_All.pipe_right args (FStar_List.map (fun _85_878 -> (match (_85_878) with
 | (a, i) -> begin
 (let _187_374 = (norm cfg env [] a)
 in (_187_374, i))
 end)))))
-in (let _85_879 = comp
-in (let _187_378 = (let _187_377 = (let _85_881 = ct
+in (
+# 549 "normalize.fs"
+let _85_879 = comp
+in (let _187_378 = (let _187_377 = (
+# 549 "normalize.fs"
+let _85_881 = ct
 in (let _187_376 = (norm cfg env [] ct.FStar_Syntax_Syntax.result_typ)
 in (let _187_375 = (norm_args ct.FStar_Syntax_Syntax.effect_args)
 in {FStar_Syntax_Syntax.effect_name = _85_881.FStar_Syntax_Syntax.effect_name; FStar_Syntax_Syntax.result_typ = _187_376; FStar_Syntax_Syntax.effect_args = _187_375; FStar_Syntax_Syntax.flags = _85_881.FStar_Syntax_Syntax.flags})))
@@ -1040,14 +1190,20 @@ in {FStar_Syntax_Syntax.n = _187_378; FStar_Syntax_Syntax.tk = _85_879.FStar_Syn
 end))
 and norm_binder : cfg  ->  env  ->  FStar_Syntax_Syntax.binder  ->  FStar_Syntax_Syntax.binder = (fun cfg env _85_887 -> (match (_85_887) with
 | (x, imp) -> begin
-(let _187_383 = (let _85_888 = x
+(let _187_383 = (
+# 553 "normalize.fs"
+let _85_888 = x
 in (let _187_382 = (norm cfg env [] x.FStar_Syntax_Syntax.sort)
 in {FStar_Syntax_Syntax.ppname = _85_888.FStar_Syntax_Syntax.ppname; FStar_Syntax_Syntax.index = _85_888.FStar_Syntax_Syntax.index; FStar_Syntax_Syntax.sort = _187_382}))
 in (_187_383, imp))
 end))
-and norm_binders : cfg  ->  env  ->  FStar_Syntax_Syntax.binders  ->  FStar_Syntax_Syntax.binders = (fun cfg env bs -> (let _85_901 = (FStar_List.fold_left (fun _85_895 b -> (match (_85_895) with
+and norm_binders : cfg  ->  env  ->  FStar_Syntax_Syntax.binders  ->  FStar_Syntax_Syntax.binders = (fun cfg env bs -> (
+# 557 "normalize.fs"
+let _85_901 = (FStar_List.fold_left (fun _85_895 b -> (match (_85_895) with
 | (nbs', env) -> begin
-(let b = (norm_binder cfg env b)
+(
+# 558 "normalize.fs"
+let b = (norm_binder cfg env b)
 in ((b)::nbs', (Dummy)::env))
 end)) ([], env) bs)
 in (match (_85_901) with
@@ -1059,17 +1215,27 @@ and rebuild : cfg  ->  env  ->  stack  ->  FStar_Syntax_Syntax.term  ->  FStar_S
 t
 end
 | Label (r, r')::stack -> begin
-(let t = (mk (FStar_Syntax_Syntax.Tm_meta ((t, FStar_Syntax_Syntax.Meta_labeled ((r, r', false))))) r')
+(
+# 572 "normalize.fs"
+let t = (mk (FStar_Syntax_Syntax.Tm_meta ((t, FStar_Syntax_Syntax.Meta_labeled ((r, r', false))))) r')
 in (rebuild cfg env stack t))
 end
 | MemoLazy (r)::stack -> begin
-(let _85_918 = (set_memo r (env, t))
+(
+# 576 "normalize.fs"
+let _85_918 = (set_memo r (env, t))
 in (rebuild cfg env stack t))
 end
 | Abs (env', bs, env'', lopt, r)::stack -> begin
-(let bs = (norm_binders cfg env' bs)
-in (let lopt = (close_lcomp_opt cfg env'' lopt)
-in (let _187_393 = (let _85_931 = (FStar_Syntax_Util.abs bs t lopt)
+(
+# 580 "normalize.fs"
+let bs = (norm_binders cfg env' bs)
+in (
+# 581 "normalize.fs"
+let lopt = (close_lcomp_opt cfg env'' lopt)
+in (let _187_393 = (
+# 582 "normalize.fs"
+let _85_931 = (FStar_Syntax_Util.abs bs t lopt)
 in {FStar_Syntax_Syntax.n = _85_931.FStar_Syntax_Syntax.n; FStar_Syntax_Syntax.tk = _85_931.FStar_Syntax_Syntax.tk; FStar_Syntax_Syntax.pos = r; FStar_Syntax_Syntax.vars = _85_931.FStar_Syntax_Syntax.vars})
 in (rebuild cfg env stack _187_393))))
 end
@@ -1077,11 +1243,15 @@ end
 (FStar_All.failwith "Impossible")
 end
 | UnivArgs (us, r)::stack -> begin
-(let t = (FStar_Syntax_Syntax.mk_Tm_uinst t us)
+(
+# 588 "normalize.fs"
+let t = (FStar_Syntax_Syntax.mk_Tm_uinst t us)
 in (rebuild cfg env stack t))
 end
 | Arg (Clos (env, tm, m), aq, r)::stack -> begin
-(let _85_974 = (log cfg (fun _85_973 -> (match (()) with
+(
+# 592 "normalize.fs"
+let _85_974 = (log cfg (fun _85_973 -> (match (()) with
 | () -> begin
 (let _187_395 = (FStar_Syntax_Print.term_to_string tm)
 in (FStar_Util.print1 "Rebuilding with arg %s\n" _187_395))
@@ -1089,41 +1259,69 @@ end)))
 in (match ((FStar_ST.read m)) with
 | None -> begin
 if (FStar_List.contains WHNF cfg.steps) then begin
-(let arg = (closure_as_term cfg env tm)
-in (let t = (FStar_Syntax_Syntax.extend_app t (arg, aq) None r)
+(
+# 597 "normalize.fs"
+let arg = (closure_as_term cfg env tm)
+in (
+# 598 "normalize.fs"
+let t = (FStar_Syntax_Syntax.extend_app t (arg, aq) None r)
 in (rebuild cfg env stack t)))
 end else begin
-(let stack = (MemoLazy (m))::(App ((t, aq, r)))::stack
+(
+# 600 "normalize.fs"
+let stack = (MemoLazy (m))::(App ((t, aq, r)))::stack
 in (norm cfg env stack tm))
 end
 end
 | Some (_85_981, a) -> begin
-(let t = (FStar_Syntax_Syntax.extend_app t (a, aq) None r)
+(
+# 604 "normalize.fs"
+let t = (FStar_Syntax_Syntax.extend_app t (a, aq) None r)
 in (rebuild cfg env stack t))
 end))
 end
 | App (head, aq, r)::stack -> begin
-(let t = (FStar_Syntax_Syntax.extend_app head (t, aq) None r)
+(
+# 609 "normalize.fs"
+let t = (FStar_Syntax_Syntax.extend_app head (t, aq) None r)
 in (let _187_396 = (maybe_simplify cfg.steps t)
 in (rebuild cfg env stack _187_396)))
 end
 | Match (env, branches, r)::stack -> begin
-(let norm_and_rebuild_match = (fun _85_1002 -> (match (()) with
+(
+# 613 "normalize.fs"
+let norm_and_rebuild_match = (fun _85_1002 -> (match (()) with
 | () -> begin
-(let whnf = (FStar_List.contains WHNF cfg.steps)
-in (let cfg = (let _85_1004 = cfg
+(
+# 614 "normalize.fs"
+let whnf = (FStar_List.contains WHNF cfg.steps)
+in (
+# 615 "normalize.fs"
+let cfg = (
+# 615 "normalize.fs"
+let _85_1004 = cfg
 in {steps = _85_1004.steps; tcenv = _85_1004.tcenv; delta_level = (FStar_TypeChecker_Env.glb_delta cfg.delta_level FStar_TypeChecker_Env.OnlyInline)})
-in (let norm_or_whnf = (fun env t -> if whnf then begin
+in (
+# 616 "normalize.fs"
+let norm_or_whnf = (fun env t -> if whnf then begin
 (closure_as_term cfg env t)
 end else begin
 (norm cfg env [] t)
 end)
-in (let branches = (FStar_All.pipe_right branches (FStar_List.map (fun branch -> (let _85_1014 = (FStar_Syntax_Subst.open_branch branch)
+in (
+# 620 "normalize.fs"
+let branches = (FStar_All.pipe_right branches (FStar_List.map (fun branch -> (
+# 622 "normalize.fs"
+let _85_1014 = (FStar_Syntax_Subst.open_branch branch)
 in (match (_85_1014) with
 | (p, wopt, e) -> begin
-(let env = (let _187_406 = (FStar_Syntax_Syntax.pat_bvs p)
+(
+# 623 "normalize.fs"
+let env = (let _187_406 = (FStar_Syntax_Syntax.pat_bvs p)
 in (FStar_All.pipe_right _187_406 (FStar_List.fold_left (fun env x -> (Dummy)::env) env)))
-in (let wopt = (match (wopt) with
+in (
+# 625 "normalize.fs"
+let wopt = (match (wopt) with
 | None -> begin
 None
 end
@@ -1131,13 +1329,17 @@ end
 (let _187_407 = (norm_or_whnf env w)
 in Some (_187_407))
 end)
-in (let e = (norm_or_whnf env e)
+in (
+# 628 "normalize.fs"
+let e = (norm_or_whnf env e)
 in (FStar_Syntax_Util.branch (p, wopt, e)))))
 end)))))
 in (let _187_408 = (mk (FStar_Syntax_Syntax.Tm_match ((t, branches))) r)
 in (rebuild cfg env stack _187_408))))))
 end))
-in (let rec is_cons = (fun head -> (match (head.FStar_Syntax_Syntax.n) with
+in (
+# 632 "normalize.fs"
+let rec is_cons = (fun head -> (match (head.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Tm_uinst (h, _85_1028) -> begin
 (is_cons h)
 end
@@ -1147,22 +1349,38 @@ end
 | _85_1049 -> begin
 false
 end))
-in (let guard_when_clause = (fun wopt b rest -> (match (wopt) with
+in (
+# 639 "normalize.fs"
+let guard_when_clause = (fun wopt b rest -> (match (wopt) with
 | None -> begin
 b
 end
 | Some (w) -> begin
-(let then_branch = b
-in (let else_branch = (mk (FStar_Syntax_Syntax.Tm_match ((t, rest))) r)
+(
+# 643 "normalize.fs"
+let then_branch = b
+in (
+# 644 "normalize.fs"
+let else_branch = (mk (FStar_Syntax_Syntax.Tm_match ((t, rest))) r)
 in (FStar_Syntax_Util.if_then_else w then_branch else_branch)))
 end))
-in (let rec matches_pat = (fun t p -> (let t = (FStar_Syntax_Subst.compress t)
-in (let _85_1066 = (FStar_Syntax_Util.head_and_args t)
+in (
+# 648 "normalize.fs"
+let rec matches_pat = (fun t p -> (
+# 652 "normalize.fs"
+let t = (FStar_Syntax_Subst.compress t)
+in (
+# 653 "normalize.fs"
+let _85_1066 = (FStar_Syntax_Util.head_and_args t)
 in (match (_85_1066) with
 | (head, args) -> begin
 (match (p.FStar_Syntax_Syntax.v) with
 | FStar_Syntax_Syntax.Pat_disj (ps) -> begin
-(let mopt = (FStar_Util.find_map ps (fun p -> (let m = (matches_pat t p)
+(
+# 656 "normalize.fs"
+let mopt = (FStar_Util.find_map ps (fun p -> (
+# 657 "normalize.fs"
+let m = (matches_pat t p)
 in (match (m) with
 | FStar_Util.Inl (_85_1072) -> begin
 Some (m)
@@ -1224,7 +1442,9 @@ end
 | _85_1128 -> begin
 FStar_Util.Inr (false)
 end))
-in (let rec matches = (fun t p -> (match (p) with
+in (
+# 690 "normalize.fs"
+let rec matches = (fun t p -> (match (p) with
 | [] -> begin
 (norm_and_rebuild_match ())
 end
@@ -1237,7 +1457,9 @@ end
 (norm_and_rebuild_match ())
 end
 | FStar_Util.Inl (s) -> begin
-(let env = (FStar_List.fold_right (fun t env -> (let _187_438 = (let _187_437 = (let _187_436 = (FStar_Util.mk_ref (Some (([], t))))
+(
+# 703 "normalize.fs"
+let env = (FStar_List.fold_right (fun t env -> (let _187_438 = (let _187_437 = (let _187_436 = (FStar_Util.mk_ref (Some (([], t))))
 in ([], t, _187_436))
 in Clos (_187_437))
 in (_187_438)::env)) s env)
@@ -1249,7 +1471,9 @@ in (matches t branches))))))
 end))
 
 # 708 "normalize.fs"
-let config : step Prims.list  ->  FStar_TypeChecker_Env.env  ->  cfg = (fun s e -> (let d = if (FStar_List.contains Unfold s) then begin
+let config : step Prims.list  ->  FStar_TypeChecker_Env.env  ->  cfg = (fun s e -> (
+# 709 "normalize.fs"
+let d = if (FStar_List.contains Unfold s) then begin
 FStar_TypeChecker_Env.Unfold
 end else begin
 if (FStar_List.contains Inline s) then begin
@@ -1278,11 +1502,19 @@ let comp_to_string : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.comp  ->
 in (FStar_Syntax_Print.comp_to_string _187_469)))
 
 # 723 "normalize.fs"
-let normalize_refinement : step Prims.list  ->  FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun steps env t0 -> (let t = (normalize (FStar_List.append steps ((Beta)::(WHNF)::[])) env t0)
-in (let rec aux = (fun t -> (let t = (FStar_Syntax_Subst.compress t)
+let normalize_refinement : step Prims.list  ->  FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.term  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun steps env t0 -> (
+# 724 "normalize.fs"
+let t = (normalize (FStar_List.append steps ((Beta)::(WHNF)::[])) env t0)
+in (
+# 725 "normalize.fs"
+let rec aux = (fun t -> (
+# 726 "normalize.fs"
+let t = (FStar_Syntax_Subst.compress t)
 in (match (t.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Tm_refine (x, phi) -> begin
-(let t0 = (aux x.FStar_Syntax_Syntax.sort)
+(
+# 729 "normalize.fs"
+let t0 = (aux x.FStar_Syntax_Syntax.sort)
 in (match (t0.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Tm_refine (y, phi1) -> begin
 (let _187_480 = (let _187_479 = (let _187_478 = (FStar_Syntax_Util.mk_conj phi1 phi)
@@ -1300,21 +1532,33 @@ end)))
 in (aux t))))
 
 # 738 "normalize.fs"
-let rec unfold_effect_abbrev : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.comp  ->  FStar_Syntax_Syntax.comp_typ = (fun env comp -> (let c = (FStar_Syntax_Util.comp_to_comp_typ comp)
+let rec unfold_effect_abbrev : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.comp  ->  FStar_Syntax_Syntax.comp_typ = (fun env comp -> (
+# 739 "normalize.fs"
+let c = (FStar_Syntax_Util.comp_to_comp_typ comp)
 in (match ((FStar_TypeChecker_Env.lookup_effect_abbrev env c.FStar_Syntax_Syntax.effect_name)) with
 | None -> begin
 c
 end
 | Some (binders, cdef) -> begin
-(let _85_1193 = (FStar_Syntax_Subst.open_comp binders cdef)
+(
+# 743 "normalize.fs"
+let _85_1193 = (FStar_Syntax_Subst.open_comp binders cdef)
 in (match (_85_1193) with
 | (binders, cdef) -> begin
-(let inst = (FStar_List.map2 (fun _85_1197 _85_1201 -> (match ((_85_1197, _85_1201)) with
+(
+# 744 "normalize.fs"
+let inst = (FStar_List.map2 (fun _85_1197 _85_1201 -> (match ((_85_1197, _85_1201)) with
 | ((x, _85_1196), (t, _85_1200)) -> begin
 FStar_Syntax_Syntax.NT ((x, t))
 end)) binders (((FStar_Syntax_Syntax.as_arg c.FStar_Syntax_Syntax.result_typ))::c.FStar_Syntax_Syntax.effect_args))
-in (let c1 = (FStar_Syntax_Subst.subst_comp inst cdef)
-in (let c = (FStar_All.pipe_right (let _85_1204 = (FStar_Syntax_Util.comp_to_comp_typ c1)
+in (
+# 745 "normalize.fs"
+let c1 = (FStar_Syntax_Subst.subst_comp inst cdef)
+in (
+# 746 "normalize.fs"
+let c = (FStar_All.pipe_right (
+# 746 "normalize.fs"
+let _85_1204 = (FStar_Syntax_Util.comp_to_comp_typ c1)
 in {FStar_Syntax_Syntax.effect_name = _85_1204.FStar_Syntax_Syntax.effect_name; FStar_Syntax_Syntax.result_typ = _85_1204.FStar_Syntax_Syntax.result_typ; FStar_Syntax_Syntax.effect_args = _85_1204.FStar_Syntax_Syntax.effect_args; FStar_Syntax_Syntax.flags = c.FStar_Syntax_Syntax.flags}) FStar_Syntax_Syntax.mk_Comp)
 in (unfold_effect_abbrev env c))))
 end))
@@ -1326,7 +1570,9 @@ let normalize_sigelt : steps  ->  FStar_TypeChecker_Env.env  ->  FStar_Syntax_Sy
 # 750 "normalize.fs"
 let eta_expand : FStar_TypeChecker_Env.env  ->  FStar_Syntax_Syntax.typ  ->  FStar_Syntax_Syntax.typ = (fun _85_1213 t -> (match (t.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Tm_name (x) -> begin
-(let _85_1220 = (FStar_Syntax_Util.arrow_formals_comp x.FStar_Syntax_Syntax.sort)
+(
+# 753 "normalize.fs"
+let _85_1220 = (FStar_Syntax_Util.arrow_formals_comp x.FStar_Syntax_Syntax.sort)
 in (match (_85_1220) with
 | (binders, c) -> begin
 (match (binders) with
@@ -1334,7 +1580,9 @@ in (match (_85_1220) with
 t
 end
 | _85_1223 -> begin
-(let _85_1226 = (FStar_All.pipe_right binders FStar_Syntax_Util.args_of_binders)
+(
+# 757 "normalize.fs"
+let _85_1226 = (FStar_All.pipe_right binders FStar_Syntax_Util.args_of_binders)
 in (match (_85_1226) with
 | (binders, args) -> begin
 (let _187_499 = (FStar_Syntax_Syntax.mk_Tm_app t args None t.FStar_Syntax_Syntax.pos)

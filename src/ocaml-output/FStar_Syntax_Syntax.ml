@@ -1529,7 +1529,9 @@ let withsort = (fun v s -> (withinfo v s FStar_Range.dummyRange))
 let bv_eq : bv  ->  bv  ->  Prims.bool = (fun bv1 bv2 -> ((bv1.ppname.FStar_Ident.idText = bv2.ppname.FStar_Ident.idText) && (bv1.index = bv2.index)))
 
 # 304 "syntax.fs"
-let order_bv : bv  ->  bv  ->  Prims.int = (fun x y -> (let i = (FStar_String.compare x.ppname.FStar_Ident.idText y.ppname.FStar_Ident.idText)
+let order_bv : bv  ->  bv  ->  Prims.int = (fun x y -> (
+# 305 "syntax.fs"
+let i = (FStar_String.compare x.ppname.FStar_Ident.idText y.ppname.FStar_Ident.idText)
 in if (i = 0) then begin
 (x.index - y.index)
 end else begin
@@ -1549,7 +1551,9 @@ end))
 let range_of_bv : bv  ->  FStar_Range.range = (fun x -> x.ppname.FStar_Ident.idRange)
 
 # 314 "syntax.fs"
-let set_range_of_bv : bv  ->  FStar_Range.range  ->  bv = (fun x r -> (let _32_283 = x
+let set_range_of_bv : bv  ->  FStar_Range.range  ->  bv = (fun x r -> (
+# 314 "syntax.fs"
+let _32_283 = x
 in {ppname = (FStar_Ident.mk_ident (x.ppname.FStar_Ident.idText, r)); index = _32_283.index; sort = _32_283.sort}))
 
 # 321 "syntax.fs"
@@ -1772,7 +1776,9 @@ None
 end))
 
 # 401 "syntax.fs"
-let pat_bvs : pat  ->  bv Prims.list = (fun p -> (let rec aux = (fun b p -> (match (p.v) with
+let pat_bvs : pat  ->  bv Prims.list = (fun p -> (
+# 402 "syntax.fs"
+let rec aux = (fun b p -> (match (p.v) with
 | (Pat_dot_term (_)) | (Pat_constant (_)) -> begin
 b
 end
@@ -1794,13 +1800,21 @@ end))
 in (aux [] p)))
 
 # 413 "syntax.fs"
-let gen_reset : ((Prims.unit  ->  Prims.int) * (Prims.unit  ->  Prims.unit)) = (let x = (FStar_ST.alloc 0)
-in (let gen = (fun _32_431 -> (match (()) with
+let gen_reset : ((Prims.unit  ->  Prims.int) * (Prims.unit  ->  Prims.unit)) = (
+# 414 "syntax.fs"
+let x = (FStar_ST.alloc 0)
+in (
+# 415 "syntax.fs"
+let gen = (fun _32_431 -> (match (()) with
 | () -> begin
-(let _32_432 = (FStar_Util.incr x)
+(
+# 415 "syntax.fs"
+let _32_432 = (FStar_Util.incr x)
 in (FStar_ST.read x))
 end))
-in (let reset = (fun _32_435 -> (match (()) with
+in (
+# 416 "syntax.fs"
+let reset = (fun _32_435 -> (match (()) with
 | () -> begin
 (FStar_ST.op_Colon_Equals x 0)
 end))
@@ -1813,7 +1827,9 @@ let next_id : Prims.unit  ->  Prims.int = (Prims.fst gen_reset)
 let reset_gensym : Prims.unit  ->  Prims.unit = (Prims.snd gen_reset)
 
 # 420 "syntax.fs"
-let freshen_bv : bv  ->  bv = (fun bv -> (let _32_437 = bv
+let freshen_bv : bv  ->  bv = (fun bv -> (
+# 420 "syntax.fs"
+let _32_437 = bv
 in (let _134_1328 = (next_id ())
 in {ppname = _32_437.ppname; index = _134_1328; sort = _32_437.sort})))
 
@@ -1827,7 +1843,9 @@ r
 end))
 
 # 424 "syntax.fs"
-let gen_bv : Prims.string  ->  FStar_Range.range Prims.option  ->  typ  ->  bv = (fun s r t -> (let id = (FStar_Ident.mk_ident (s, (range_of_ropt r)))
+let gen_bv : Prims.string  ->  FStar_Range.range Prims.option  ->  typ  ->  bv = (fun s r t -> (
+# 425 "syntax.fs"
+let id = (FStar_Ident.mk_ident (s, (range_of_ropt r)))
 in (let _134_1337 = (next_id ())
 in {ppname = id; index = _134_1337; sort = t})))
 
@@ -1835,7 +1853,9 @@ in {ppname = id; index = _134_1337; sort = t})))
 let new_bv : FStar_Range.range Prims.option  ->  typ  ->  bv = (fun ropt t -> (gen_bv "x" ropt t))
 
 # 428 "syntax.fs"
-let new_univ_name : FStar_Range.range Prims.option  ->  FStar_Ident.ident = (fun ropt -> (let id = (next_id ())
+let new_univ_name : FStar_Range.range Prims.option  ->  FStar_Ident.ident = (fun ropt -> (
+# 429 "syntax.fs"
+let id = (next_id ())
 in (let _134_1345 = (let _134_1344 = (FStar_Util.string_of_int id)
 in (_134_1344, (range_of_ropt ropt)))
 in (FStar_Ident.mk_ident _134_1345))))
@@ -1862,7 +1882,9 @@ let fv_eq : fv  ->  fv  ->  Prims.bool = (fun _32_471 _32_475 -> (match ((_32_47
 end))
 
 # 437 "syntax.fs"
-let set_bv_range : bv  ->  FStar_Range.range  ->  bv = (fun bv r -> (let _32_478 = bv
+let set_bv_range : bv  ->  FStar_Range.range  ->  bv = (fun bv r -> (
+# 437 "syntax.fs"
+let _32_478 = bv
 in {ppname = (FStar_Ident.mk_ident (bv.ppname.FStar_Ident.idText, r)); index = _32_478.index; sort = _32_478.sort}))
 
 # 438 "syntax.fs"

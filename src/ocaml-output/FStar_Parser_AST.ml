@@ -1367,7 +1367,9 @@ Abs ((ps, body))
 end))
 
 # 171 "ast.fs"
-let mk_function : branch Prims.list  ->  FStar_Range.range  ->  FStar_Range.range  ->  term = (fun branches r1 r2 -> (let x = (FStar_Absyn_Util.genident (Some (r1)))
+let mk_function : branch Prims.list  ->  FStar_Range.range  ->  FStar_Range.range  ->  term = (fun branches r1 r2 -> (
+# 172 "ast.fs"
+let x = (FStar_Absyn_Util.genident (Some (r1)))
 in (let _161_994 = (let _161_993 = (let _161_992 = (let _161_991 = (let _161_990 = (let _161_989 = (let _161_988 = (let _161_987 = (FStar_Ident.lid_of_ids ((x)::[]))
 in Var (_161_987))
 in (mk_term _161_988 r1 Expr))
@@ -1585,7 +1587,9 @@ end
 | t -> begin
 (FStar_All.failwith "Missing case in term_to_string")
 end))
-and binder_to_string : binder  ->  Prims.string = (fun x -> (let s = (match (x.b) with
+and binder_to_string : binder  ->  Prims.string = (fun x -> (
+# 258 "ast.fs"
+let s = (match (x.b) with
 | Variable (i) -> begin
 i.FStar_Ident.idText
 end
@@ -1660,8 +1664,12 @@ in (FStar_Util.format2 "(%s:%s)" _161_1094 _161_1093)))
 end))
 
 # 285 "ast.fs"
-let error = (fun msg tm r -> (let tm = (FStar_All.pipe_right tm term_to_string)
-in (let tm = if ((FStar_String.length tm) >= 80) then begin
+let error = (fun msg tm r -> (
+# 286 "ast.fs"
+let tm = (FStar_All.pipe_right tm term_to_string)
+in (
+# 287 "ast.fs"
+let tm = if ((FStar_String.length tm) >= 80) then begin
 (let _161_1098 = (FStar_Util.substring tm 0 77)
 in (Prims.strcat _161_1098 "..."))
 end else begin
@@ -1679,11 +1687,15 @@ let consTerm : FStar_Range.range  ->  term  ->  term  ->  term = (fun r hd tl ->
 let lexConsTerm : FStar_Range.range  ->  term  ->  term  ->  term = (fun r hd tl -> (mk_term (Construct ((FStar_Absyn_Const.lexcons_lid, ((hd, Nothing))::((tl, Nothing))::[]))) r Expr))
 
 # 294 "ast.fs"
-let mkConsList : FStar_Range.range  ->  term Prims.list  ->  term = (fun r elts -> (let nil = (mk_term (Construct ((FStar_Absyn_Const.nil_lid, []))) r Expr)
+let mkConsList : FStar_Range.range  ->  term Prims.list  ->  term = (fun r elts -> (
+# 295 "ast.fs"
+let nil = (mk_term (Construct ((FStar_Absyn_Const.nil_lid, []))) r Expr)
 in (FStar_List.fold_right (fun e tl -> (consTerm r e tl)) elts nil)))
 
 # 298 "ast.fs"
-let mkLexList : FStar_Range.range  ->  term Prims.list  ->  term = (fun r elts -> (let nil = (mk_term (Construct ((FStar_Absyn_Const.lextop_lid, []))) r Expr)
+let mkLexList : FStar_Range.range  ->  term Prims.list  ->  term = (fun r elts -> (
+# 299 "ast.fs"
+let nil = (mk_term (Construct ((FStar_Absyn_Const.lextop_lid, []))) r Expr)
 in (FStar_List.fold_right (fun e tl -> (lexConsTerm r e tl)) elts nil)))
 
 # 302 "ast.fs"
@@ -1705,20 +1717,32 @@ end)
 end))
 
 # 308 "ast.fs"
-let mkRefSet : FStar_Range.range  ->  term Prims.list  ->  term = (fun r elts -> (let empty = (let _161_1142 = (let _161_1141 = (FStar_Ident.set_lid_range FStar_Absyn_Const.set_empty r)
+let mkRefSet : FStar_Range.range  ->  term Prims.list  ->  term = (fun r elts -> (
+# 309 "ast.fs"
+let empty = (let _161_1142 = (let _161_1141 = (FStar_Ident.set_lid_range FStar_Absyn_Const.set_empty r)
 in Var (_161_1141))
 in (mk_term _161_1142 r Expr))
-in (let ref_constr = (let _161_1144 = (let _161_1143 = (FStar_Ident.set_lid_range FStar_Absyn_Const.heap_ref r)
+in (
+# 310 "ast.fs"
+let ref_constr = (let _161_1144 = (let _161_1143 = (FStar_Ident.set_lid_range FStar_Absyn_Const.heap_ref r)
 in Var (_161_1143))
 in (mk_term _161_1144 r Expr))
-in (let singleton = (let _161_1146 = (let _161_1145 = (FStar_Ident.set_lid_range FStar_Absyn_Const.set_singleton r)
+in (
+# 311 "ast.fs"
+let singleton = (let _161_1146 = (let _161_1145 = (FStar_Ident.set_lid_range FStar_Absyn_Const.set_singleton r)
 in Var (_161_1145))
 in (mk_term _161_1146 r Expr))
-in (let union = (let _161_1148 = (let _161_1147 = (FStar_Ident.set_lid_range FStar_Absyn_Const.set_union r)
+in (
+# 312 "ast.fs"
+let union = (let _161_1148 = (let _161_1147 = (FStar_Ident.set_lid_range FStar_Absyn_Const.set_union r)
 in Var (_161_1147))
 in (mk_term _161_1148 r Expr))
-in (FStar_List.fold_right (fun e tl -> (let e = (mkApp ref_constr (((e, Nothing))::[]) r)
-in (let single_e = (mkApp singleton (((e, Nothing))::[]) r)
+in (FStar_List.fold_right (fun e tl -> (
+# 314 "ast.fs"
+let e = (mkApp ref_constr (((e, Nothing))::[]) r)
+in (
+# 315 "ast.fs"
+let single_e = (mkApp singleton (((e, Nothing))::[]) r)
 in (mkApp union (((single_e, Nothing))::((tl, Nothing))::[]) r)))) elts empty))))))
 
 # 318 "ast.fs"
@@ -1740,16 +1764,28 @@ end)
 end))
 
 # 324 "ast.fs"
-let mkAdmitMagic : FStar_Range.range  ->  term = (fun r -> (let unit_const = (mk_term (Const (FStar_Const.Const_unit)) r Expr)
-in (let admit = (let admit_name = (let _161_1166 = (let _161_1165 = (FStar_Ident.set_lid_range FStar_Absyn_Const.admit_lid r)
+let mkAdmitMagic : FStar_Range.range  ->  term = (fun r -> (
+# 325 "ast.fs"
+let unit_const = (mk_term (Const (FStar_Const.Const_unit)) r Expr)
+in (
+# 326 "ast.fs"
+let admit = (
+# 327 "ast.fs"
+let admit_name = (let _161_1166 = (let _161_1165 = (FStar_Ident.set_lid_range FStar_Absyn_Const.admit_lid r)
 in Var (_161_1165))
 in (mk_term _161_1166 r Expr))
 in (mkExplicitApp admit_name ((unit_const)::[]) r))
-in (let magic = (let magic_name = (let _161_1168 = (let _161_1167 = (FStar_Ident.set_lid_range FStar_Absyn_Const.magic_lid r)
+in (
+# 329 "ast.fs"
+let magic = (
+# 330 "ast.fs"
+let magic_name = (let _161_1168 = (let _161_1167 = (FStar_Ident.set_lid_range FStar_Absyn_Const.magic_lid r)
 in Var (_161_1167))
 in (mk_term _161_1168 r Expr))
 in (mkExplicitApp magic_name ((unit_const)::[]) r))
-in (let admit_magic = (mk_term (Seq ((admit, magic))) r Expr)
+in (
+# 332 "ast.fs"
+let admit_magic = (mk_term (Seq ((admit, magic))) r Expr)
 in admit_magic)))))
 
 # 335 "ast.fs"
@@ -1757,10 +1793,16 @@ let mkWildAdmitMagic = (fun r -> (let _161_1170 = (mkAdmitMagic r)
 in ((mk_pattern PatWild r), None, _161_1170)))
 
 # 337 "ast.fs"
-let focusBranches = (fun branches r -> (let should_filter = (FStar_Util.for_some Prims.fst branches)
+let focusBranches = (fun branches r -> (
+# 338 "ast.fs"
+let should_filter = (FStar_Util.for_some Prims.fst branches)
 in if should_filter then begin
-(let _59_552 = (FStar_Tc_Errors.warn r "Focusing on only some cases")
-in (let focussed = (let _161_1173 = (FStar_List.filter Prims.fst branches)
+(
+# 340 "ast.fs"
+let _59_552 = (FStar_Tc_Errors.warn r "Focusing on only some cases")
+in (
+# 341 "ast.fs"
+let focussed = (let _161_1173 = (FStar_List.filter Prims.fst branches)
 in (FStar_All.pipe_right _161_1173 (FStar_List.map Prims.snd)))
 in (let _161_1175 = (let _161_1174 = (mkWildAdmitMagic r)
 in (_161_1174)::[])
@@ -1770,9 +1812,13 @@ end else begin
 end))
 
 # 345 "ast.fs"
-let focusLetBindings = (fun lbs r -> (let should_filter = (FStar_Util.for_some Prims.fst lbs)
+let focusLetBindings = (fun lbs r -> (
+# 346 "ast.fs"
+let should_filter = (FStar_Util.for_some Prims.fst lbs)
 in if should_filter then begin
-(let _59_558 = (FStar_Tc_Errors.warn r "Focusing on only some cases in this (mutually) recursive definition")
+(
+# 348 "ast.fs"
+let _59_558 = (FStar_Tc_Errors.warn r "Focusing on only some cases in this (mutually) recursive definition")
 in (FStar_List.map (fun _59_562 -> (match (_59_562) with
 | (f, lb) -> begin
 if f then begin
@@ -1791,17 +1837,23 @@ let mkFsTypApp : term  ->  term Prims.list  ->  FStar_Range.range  ->  term = (f
 in (mkApp t _161_1187 r)))
 
 # 357 "ast.fs"
-let mkTuple : term Prims.list  ->  FStar_Range.range  ->  term = (fun args r -> (let cons = (FStar_Absyn_Util.mk_tuple_data_lid (FStar_List.length args) r)
+let mkTuple : term Prims.list  ->  FStar_Range.range  ->  term = (fun args r -> (
+# 358 "ast.fs"
+let cons = (FStar_Absyn_Util.mk_tuple_data_lid (FStar_List.length args) r)
 in (let _161_1193 = (FStar_List.map (fun x -> (x, Nothing)) args)
 in (mkApp (mk_term (Name (cons)) r Expr) _161_1193 r))))
 
 # 361 "ast.fs"
-let mkDTuple : term Prims.list  ->  FStar_Range.range  ->  term = (fun args r -> (let cons = (FStar_Absyn_Util.mk_dtuple_data_lid (FStar_List.length args) r)
+let mkDTuple : term Prims.list  ->  FStar_Range.range  ->  term = (fun args r -> (
+# 362 "ast.fs"
+let cons = (FStar_Absyn_Util.mk_dtuple_data_lid (FStar_List.length args) r)
 in (let _161_1199 = (FStar_List.map (fun x -> (x, Nothing)) args)
 in (mkApp (mk_term (Name (cons)) r Expr) _161_1199 r))))
 
 # 365 "ast.fs"
-let mkRefinedBinder : FStar_Ident.ident  ->  term  ->  term Prims.option  ->  FStar_Range.range  ->  aqual  ->  binder = (fun id t refopt m implicit -> (let b = (mk_binder (Annotated ((id, t))) m Type implicit)
+let mkRefinedBinder : FStar_Ident.ident  ->  term  ->  term Prims.option  ->  FStar_Range.range  ->  aqual  ->  binder = (fun id t refopt m implicit -> (
+# 366 "ast.fs"
+let b = (mk_binder (Annotated ((id, t))) m Type implicit)
 in (match (refopt) with
 | None -> begin
 b

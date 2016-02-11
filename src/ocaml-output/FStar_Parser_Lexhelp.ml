@@ -1,13 +1,17 @@
 
 open Prims
 # 39 "lexhelp.fs"
-let intern_string : Prims.string  ->  Prims.string = (let strings = (FStar_Util.smap_create 100)
+let intern_string : Prims.string  ->  Prims.string = (
+# 40 "lexhelp.fs"
+let strings = (FStar_Util.smap_create 100)
 in (fun s -> (match ((FStar_Util.smap_try_find strings s)) with
 | Some (res) -> begin
 res
 end
 | None -> begin
-(let _69_6 = (FStar_Util.smap_add strings s s)
+(
+# 44 "lexhelp.fs"
+let _69_6 = (FStar_Util.smap_add strings s s)
 in s)
 end)))
 
@@ -23,7 +27,9 @@ let add_string : FStar_Bytes.bytebuf  ->  Prims.string  ->  Prims.unit = (fun bu
 in (FStar_Bytes.emit_bytes buf _171_24)))
 
 # 52 "lexhelp.fs"
-let add_int_char : FStar_Bytes.bytebuf  ->  Prims.int  ->  Prims.unit = (fun buf c -> (let _69_19 = (FStar_Bytes.emit_int_as_byte buf (c % 256))
+let add_int_char : FStar_Bytes.bytebuf  ->  Prims.int  ->  Prims.unit = (fun buf c -> (
+# 53 "lexhelp.fs"
+let _69_19 = (FStar_Bytes.emit_int_as_byte buf (c % 256))
 in (FStar_Bytes.emit_int_as_byte buf (c / 256))))
 
 # 56 "lexhelp.fs"
@@ -33,14 +39,22 @@ let add_unichar : FStar_Bytes.bytebuf  ->  Prims.int  ->  Prims.unit = (fun buf 
 let add_byte_char : FStar_Bytes.bytebuf  ->  Prims.char  ->  Prims.unit = (fun buf c -> (add_int_char buf ((FStar_Util.int_of_char c) % 256)))
 
 # 64 "lexhelp.fs"
-let stringbuf_as_bytes : FStar_Bytes.bytebuf  ->  FStar_Bytes.bytes = (fun buf -> (let bytes = (FStar_Bytes.close buf)
+let stringbuf_as_bytes : FStar_Bytes.bytebuf  ->  FStar_Bytes.bytes = (fun buf -> (
+# 65 "lexhelp.fs"
+let bytes = (FStar_Bytes.close buf)
 in (let _171_40 = ((FStar_Bytes.length bytes) / 2)
 in (FStar_Bytes.make (fun i -> (FStar_Bytes.get bytes (i * 2))) _171_40))))
 
 # 69 "lexhelp.fs"
-let stringbuf_is_bytes : FStar_Bytes.bytebuf  ->  Prims.bool = (fun buf -> (let bytes = (FStar_Bytes.close buf)
-in (let ok = (FStar_Util.mk_ref true)
-in (let _69_32 = (let _171_44 = (((FStar_Bytes.length bytes) / 2) - 1)
+let stringbuf_is_bytes : FStar_Bytes.bytebuf  ->  Prims.bool = (fun buf -> (
+# 70 "lexhelp.fs"
+let bytes = (FStar_Bytes.close buf)
+in (
+# 71 "lexhelp.fs"
+let ok = (FStar_Util.mk_ref true)
+in (
+# 72 "lexhelp.fs"
+let _69_32 = (let _171_44 = (((FStar_Bytes.length bytes) / 2) - 1)
 in (FStar_Util.for_range 0 _171_44 (fun i -> if ((FStar_Bytes.get bytes ((i * 2) + 1)) <> 0) then begin
 (FStar_ST.op_Colon_Equals ok false)
 end else begin
@@ -49,11 +63,15 @@ end)))
 in (FStar_ST.read ok)))))
 
 # 78 "lexhelp.fs"
-let trigraph : Prims.char  ->  Prims.char  ->  Prims.char  ->  Prims.char = (fun c1 c2 c3 -> (let digit = (fun c -> ((FStar_Util.int_of_char c) - (FStar_Util.int_of_char '0')))
+let trigraph : Prims.char  ->  Prims.char  ->  Prims.char  ->  Prims.char = (fun c1 c2 c3 -> (
+# 79 "lexhelp.fs"
+let digit = (fun c -> ((FStar_Util.int_of_char c) - (FStar_Util.int_of_char '0')))
 in (FStar_Util.char_of_int (((digit c1) * 100) + (((digit c2) * 10) + (digit c3))))))
 
 # 82 "lexhelp.fs"
-let digit : Prims.char  ->  Prims.int = (fun d -> (let dd = (FStar_Util.int_of_char d)
+let digit : Prims.char  ->  Prims.int = (fun d -> (
+# 83 "lexhelp.fs"
+let dd = (FStar_Util.int_of_char d)
 in if ((dd >= (FStar_Util.int_of_char '0')) && (dd <= (FStar_Util.int_of_char '9'))) then begin
 ((FStar_Util.int_of_char d) - (FStar_Util.int_of_char '0'))
 end else begin
@@ -61,7 +79,9 @@ end else begin
 end))
 
 # 87 "lexhelp.fs"
-let hexdigit : Prims.char  ->  Prims.int = (fun d -> (let dd = (FStar_Util.int_of_char d)
+let hexdigit : Prims.char  ->  Prims.int = (fun d -> (
+# 88 "lexhelp.fs"
+let dd = (FStar_Util.int_of_char d)
 in if ((dd >= (FStar_Util.int_of_char '0')) && (dd <= (FStar_Util.int_of_char '9'))) then begin
 (digit d)
 end else begin
@@ -102,12 +122,16 @@ end)
 let unicodegraph_long : Prims.string  ->  (Prims.uint16 Prims.option * Prims.uint16) = (fun s -> if ((FStar_String.length s) <> 8) then begin
 (FStar_All.failwith "unicodegraph_long")
 end else begin
-(let high = (((let _171_71 = (FStar_Util.char_at s 0)
+(
+# 108 "lexhelp.fs"
+let high = (((let _171_71 = (FStar_Util.char_at s 0)
 in (hexdigit _171_71)) * 4096) + (((let _171_72 = (FStar_Util.char_at s 1)
 in (hexdigit _171_72)) * 256) + (((let _171_73 = (FStar_Util.char_at s 2)
 in (hexdigit _171_73)) * 16) + (let _171_74 = (FStar_Util.char_at s 3)
 in (hexdigit _171_74)))))
-in (let low = (((let _171_75 = (FStar_Util.char_at s 4)
+in (
+# 109 "lexhelp.fs"
+let low = (((let _171_75 = (FStar_Util.char_at s 4)
 in (hexdigit _171_75)) * 4096) + (((let _171_76 = (FStar_Util.char_at s 5)
 in (hexdigit _171_76)) * 256) + (((let _171_77 = (FStar_Util.char_at s 6)
 in (hexdigit _171_77)) * 16) + (let _171_78 = (FStar_Util.char_at s 7)
@@ -187,8 +211,12 @@ end
 end)) keywords)
 
 # 208 "lexhelp.fs"
-let kwd_table : FStar_Parser_Parse.token FStar_Util.smap = (let tab = (FStar_Util.smap_create 1000)
-in (let _69_73 = (FStar_List.iter (fun _69_72 -> (match (_69_72) with
+let kwd_table : FStar_Parser_Parse.token FStar_Util.smap = (
+# 209 "lexhelp.fs"
+let tab = (FStar_Util.smap_create 1000)
+in (
+# 210 "lexhelp.fs"
+let _69_73 = (FStar_List.iter (fun _69_72 -> (match (_69_72) with
 | (mode, keyword, token) -> begin
 (FStar_Util.smap_add tab keyword token)
 end)) keywords)
@@ -250,7 +278,9 @@ end))
 let kwd_or_id : lexargs  ->  FStar_Range.range  ->  Prims.string  ->  FStar_Parser_Parse.token = (fun args r s -> (match ((kwd s)) with
 | Some (v) -> begin
 if (v = FStar_Parser_Parse.RESERVED) then begin
-(let _69_92 = (let _171_127 = (let _171_126 = (FStar_Range.string_of_range r)
+(
+# 231 "lexhelp.fs"
+let _69_92 = (let _171_127 = (let _171_126 = (FStar_Range.string_of_range r)
 in (FStar_Util.format2 "The keyword \'%s\' is reserved for future use by F#. (%s)" s _171_126))
 in (FStar_Util.print_string _171_127))
 in (let _171_128 = (intern_string s)

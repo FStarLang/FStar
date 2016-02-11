@@ -38,12 +38,16 @@ let serialize_option = (fun writer f l -> (match (l) with
 (writer.FStar_Util.write_char 'n')
 end
 | Some (l) -> begin
-(let _30_12 = (writer.FStar_Util.write_char 's')
+(
+# 22 "ssyntax.fs"
+let _30_12 = (writer.FStar_Util.write_char 's')
 in (f writer l))
 end))
 
 # 24 "ssyntax.fs"
-let deserialize_option = (fun reader f -> (let n = (reader.FStar_Util.read_char ())
+let deserialize_option = (fun reader f -> (
+# 25 "ssyntax.fs"
+let n = (reader.FStar_Util.read_char ())
 in if (n = 'n') then begin
 None
 end else begin
@@ -52,12 +56,18 @@ in Some (_132_21))
 end))
 
 # 29 "ssyntax.fs"
-let serialize_list = (fun writer f l -> (let _30_22 = (writer.FStar_Util.write_int (FStar_List.length l))
+let serialize_list = (fun writer f l -> (
+# 30 "ssyntax.fs"
+let _30_22 = (writer.FStar_Util.write_int (FStar_List.length l))
 in (FStar_List.iter (fun elt -> (f writer elt)) (FStar_List.rev_append l []))))
 
 # 33 "ssyntax.fs"
-let deserialize_list = (fun reader f -> (let n = (reader.FStar_Util.read_int ())
-in (let rec helper = (fun accum n -> if (n = 0) then begin
+let deserialize_list = (fun reader f -> (
+# 34 "ssyntax.fs"
+let n = (reader.FStar_Util.read_int ())
+in (
+# 35 "ssyntax.fs"
+let rec helper = (fun accum n -> if (n = 0) then begin
 accum
 end else begin
 (let _132_42 = (let _132_41 = (f reader)
@@ -75,7 +85,9 @@ in (_132_49, FStar_Absyn_Syntax.dummyRange))
 in (FStar_Ident.mk_ident _132_50)))
 
 # 45 "ssyntax.fs"
-let serialize_LongIdent : l__Writer  ->  FStar_Absyn_Syntax.l__LongIdent  ->  Prims.unit = (fun writer ast -> (let _30_37 = (serialize_list writer serialize_ident ast.FStar_Ident.ns)
+let serialize_LongIdent : l__Writer  ->  FStar_Absyn_Syntax.l__LongIdent  ->  Prims.unit = (fun writer ast -> (
+# 46 "ssyntax.fs"
+let _30_37 = (serialize_list writer serialize_ident ast.FStar_Ident.ns)
 in (serialize_ident writer ast.FStar_Ident.ident)))
 
 # 49 "ssyntax.fs"
@@ -92,7 +104,9 @@ let serialize_lident : l__Writer  ->  FStar_Absyn_Syntax.l__LongIdent  ->  Prims
 let deserialize_lident : l__Reader  ->  FStar_Ident.lident = deserialize_LongIdent
 
 # 55 "ssyntax.fs"
-let serialize_withinfo_t = (fun writer s_v s_sort ast -> (let _30_46 = (s_v writer ast.FStar_Absyn_Syntax.v)
+let serialize_withinfo_t = (fun writer s_v s_sort ast -> (
+# 56 "ssyntax.fs"
+let _30_46 = (s_v writer ast.FStar_Absyn_Syntax.v)
 in (s_sort writer ast.FStar_Absyn_Syntax.sort)))
 
 # 59 "ssyntax.fs"
@@ -107,7 +121,9 @@ let serialize_var = (fun writer s_sort ast -> (serialize_withinfo_t writer seria
 let deserialize_var = (fun reader ds_sort -> (deserialize_withinfo_t reader deserialize_lident ds_sort))
 
 # 70 "ssyntax.fs"
-let serialize_bvdef = (fun writer ast -> (let _30_63 = (serialize_ident writer ast.FStar_Absyn_Syntax.ppname)
+let serialize_bvdef = (fun writer ast -> (
+# 71 "ssyntax.fs"
+let _30_63 = (serialize_ident writer ast.FStar_Absyn_Syntax.ppname)
 in (serialize_ident writer ast.FStar_Absyn_Syntax.realname)))
 
 # 78 "ssyntax.fs"
@@ -130,39 +146,57 @@ end
 (writer.FStar_Util.write_char 'a')
 end
 | FStar_Const.Const_uint8 (v) -> begin
-(let _30_84 = (writer.FStar_Util.write_char 'b')
+(
+# 92 "ssyntax.fs"
+let _30_84 = (writer.FStar_Util.write_char 'b')
 in (writer.FStar_Util.write_byte v))
 end
 | FStar_Const.Const_bool (v) -> begin
-(let _30_88 = (writer.FStar_Util.write_char 'c')
+(
+# 93 "ssyntax.fs"
+let _30_88 = (writer.FStar_Util.write_char 'c')
 in (writer.FStar_Util.write_bool v))
 end
 | FStar_Const.Const_int32 (v) -> begin
-(let _30_92 = (writer.FStar_Util.write_char 'd')
+(
+# 94 "ssyntax.fs"
+let _30_92 = (writer.FStar_Util.write_char 'd')
 in (writer.FStar_Util.write_int32 v))
 end
 | FStar_Const.Const_int64 (v) -> begin
-(let _30_96 = (writer.FStar_Util.write_char 'e')
+(
+# 95 "ssyntax.fs"
+let _30_96 = (writer.FStar_Util.write_char 'e')
 in (writer.FStar_Util.write_int64 v))
 end
 | FStar_Const.Const_char (v) -> begin
-(let _30_100 = (writer.FStar_Util.write_char 'f')
+(
+# 96 "ssyntax.fs"
+let _30_100 = (writer.FStar_Util.write_char 'f')
 in (writer.FStar_Util.write_char v))
 end
 | FStar_Const.Const_float (v) -> begin
-(let _30_104 = (writer.FStar_Util.write_char 'g')
+(
+# 97 "ssyntax.fs"
+let _30_104 = (writer.FStar_Util.write_char 'g')
 in (writer.FStar_Util.write_double v))
 end
 | FStar_Const.Const_bytearray (v, _30_108) -> begin
-(let _30_111 = (writer.FStar_Util.write_char 'h')
+(
+# 98 "ssyntax.fs"
+let _30_111 = (writer.FStar_Util.write_char 'h')
 in (writer.FStar_Util.write_bytearray v))
 end
 | FStar_Const.Const_string (v, _30_115) -> begin
-(let _30_118 = (writer.FStar_Util.write_char 'i')
+(
+# 99 "ssyntax.fs"
+let _30_118 = (writer.FStar_Util.write_char 'i')
 in (writer.FStar_Util.write_bytearray v))
 end
 | FStar_Const.Const_int (v) -> begin
-(let _30_122 = (writer.FStar_Util.write_char 'j')
+(
+# 100 "ssyntax.fs"
+let _30_122 = (writer.FStar_Util.write_char 'j')
 in (writer.FStar_Util.write_string v))
 end))
 
@@ -219,11 +253,15 @@ end))
 # 117 "ssyntax.fs"
 let serialize_either = (fun writer s_l s_r ast -> (match (ast) with
 | FStar_Util.Inl (v) -> begin
-(let _30_146 = (writer.FStar_Util.write_char 'a')
+(
+# 119 "ssyntax.fs"
+let _30_146 = (writer.FStar_Util.write_char 'a')
 in (s_l writer v))
 end
 | FStar_Util.Inr (v) -> begin
-(let _30_150 = (writer.FStar_Util.write_char 'b')
+(
+# 120 "ssyntax.fs"
+let _30_150 = (writer.FStar_Util.write_char 'b')
 in (s_r writer v))
 end))
 
@@ -254,27 +292,45 @@ in {FStar_Absyn_Syntax.n = _132_188; FStar_Absyn_Syntax.tk = _132_187; FStar_Abs
 # 137 "ssyntax.fs"
 let rec serialize_typ' : l__Writer  ->  FStar_Absyn_Syntax.typ'  ->  Prims.unit = (fun writer ast -> (match (ast) with
 | FStar_Absyn_Syntax.Typ_btvar (v) -> begin
-(let _30_175 = (writer.FStar_Util.write_char 'a')
+(
+# 139 "ssyntax.fs"
+let _30_175 = (writer.FStar_Util.write_char 'a')
 in (serialize_btvar writer v))
 end
 | FStar_Absyn_Syntax.Typ_const (v) -> begin
-(let _30_179 = (writer.FStar_Util.write_char 'b')
+(
+# 140 "ssyntax.fs"
+let _30_179 = (writer.FStar_Util.write_char 'b')
 in (serialize_ftvar writer v))
 end
 | FStar_Absyn_Syntax.Typ_fun (bs, c) -> begin
-(let _30_185 = (writer.FStar_Util.write_char 'c')
-in (let _30_187 = (serialize_binders writer bs)
+(
+# 141 "ssyntax.fs"
+let _30_185 = (writer.FStar_Util.write_char 'c')
+in (
+# 141 "ssyntax.fs"
+let _30_187 = (serialize_binders writer bs)
 in (serialize_comp writer c)))
 end
 | FStar_Absyn_Syntax.Typ_refine (v, t) -> begin
-(let _30_193 = (writer.FStar_Util.write_char 'd')
-in (let _30_195 = (serialize_bvvar writer v)
+(
+# 142 "ssyntax.fs"
+let _30_193 = (writer.FStar_Util.write_char 'd')
+in (
+# 142 "ssyntax.fs"
+let _30_195 = (serialize_bvvar writer v)
 in (serialize_typ writer t)))
 end
 | FStar_Absyn_Syntax.Typ_app (t, ars) -> begin
-(let _30_201 = (writer.FStar_Util.write_char 'e')
-in (let _30_203 = (serialize_typ writer t)
-in (let _30_205 = (serialize_args writer ars)
+(
+# 144 "ssyntax.fs"
+let _30_201 = (writer.FStar_Util.write_char 'e')
+in (
+# 144 "ssyntax.fs"
+let _30_203 = (serialize_typ writer t)
+in (
+# 144 "ssyntax.fs"
+let _30_205 = (serialize_args writer ars)
 in if ((FStar_ST.read FStar_Options.debug) <> []) then begin
 (match (t.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Typ_lam (_30_208, _30_210) -> begin
@@ -288,17 +344,27 @@ end else begin
 end)))
 end
 | FStar_Absyn_Syntax.Typ_lam (bs, t) -> begin
-(let _30_219 = (writer.FStar_Util.write_char 'f')
-in (let _30_221 = (serialize_binders writer bs)
+(
+# 150 "ssyntax.fs"
+let _30_219 = (writer.FStar_Util.write_char 'f')
+in (
+# 150 "ssyntax.fs"
+let _30_221 = (serialize_binders writer bs)
 in (serialize_typ writer t)))
 end
 | FStar_Absyn_Syntax.Typ_ascribed (t, k) -> begin
-(let _30_227 = (writer.FStar_Util.write_char 'g')
-in (let _30_229 = (serialize_typ writer t)
+(
+# 151 "ssyntax.fs"
+let _30_227 = (writer.FStar_Util.write_char 'g')
+in (
+# 151 "ssyntax.fs"
+let _30_229 = (serialize_typ writer t)
 in (serialize_knd writer k)))
 end
 | FStar_Absyn_Syntax.Typ_meta (m) -> begin
-(let _30_233 = (writer.FStar_Util.write_char 'h')
+(
+# 152 "ssyntax.fs"
+let _30_233 = (writer.FStar_Util.write_char 'h')
 in (serialize_meta_t writer m))
 end
 | FStar_Absyn_Syntax.Typ_unknown -> begin
@@ -312,45 +378,73 @@ end
 end))
 and serialize_meta_t : l__Writer  ->  FStar_Absyn_Syntax.meta_t  ->  Prims.unit = (fun writer ast -> (match (ast) with
 | FStar_Absyn_Syntax.Meta_pattern (t, l) -> begin
-(let _30_254 = (writer.FStar_Util.write_char 'a')
-in (let _30_256 = (serialize_typ writer t)
+(
+# 159 "ssyntax.fs"
+let _30_254 = (writer.FStar_Util.write_char 'a')
+in (
+# 159 "ssyntax.fs"
+let _30_256 = (serialize_typ writer t)
 in (serialize_list writer (fun w -> (serialize_list w serialize_arg)) l)))
 end
 | FStar_Absyn_Syntax.Meta_named (t, lid) -> begin
-(let _30_263 = (writer.FStar_Util.write_char 'b')
-in (let _30_265 = (serialize_typ writer t)
+(
+# 160 "ssyntax.fs"
+let _30_263 = (writer.FStar_Util.write_char 'b')
+in (
+# 160 "ssyntax.fs"
+let _30_265 = (serialize_typ writer t)
 in (serialize_lident writer lid)))
 end
 | FStar_Absyn_Syntax.Meta_labeled (t, s, _30_270, b) -> begin
-(let _30_274 = (writer.FStar_Util.write_char 'c')
-in (let _30_276 = (serialize_typ writer t)
-in (let _30_278 = (writer.FStar_Util.write_string s)
+(
+# 161 "ssyntax.fs"
+let _30_274 = (writer.FStar_Util.write_char 'c')
+in (
+# 161 "ssyntax.fs"
+let _30_276 = (serialize_typ writer t)
+in (
+# 161 "ssyntax.fs"
+let _30_278 = (writer.FStar_Util.write_string s)
 in (writer.FStar_Util.write_bool b))))
 end
 | _30_281 -> begin
 (Prims.raise (Err ("unimplemented meta_t")))
 end))
-and serialize_arg : l__Writer  ->  FStar_Absyn_Syntax.arg  ->  Prims.unit = (fun writer ast -> (let _30_284 = (serialize_either writer serialize_typ serialize_exp (Prims.fst ast))
+and serialize_arg : l__Writer  ->  FStar_Absyn_Syntax.arg  ->  Prims.unit = (fun writer ast -> (
+# 164 "ssyntax.fs"
+let _30_284 = (serialize_either writer serialize_typ serialize_exp (Prims.fst ast))
 in (let _132_257 = (FStar_All.pipe_left FStar_Absyn_Syntax.is_implicit (Prims.snd ast))
 in (writer.FStar_Util.write_bool _132_257))))
 and serialize_args : l__Writer  ->  FStar_Absyn_Syntax.args  ->  Prims.unit = (fun writer ast -> (serialize_list writer serialize_arg ast))
-and serialize_binder : l__Writer  ->  FStar_Absyn_Syntax.binder  ->  Prims.unit = (fun writer ast -> (let _30_290 = (serialize_either writer serialize_btvar serialize_bvvar (Prims.fst ast))
+and serialize_binder : l__Writer  ->  FStar_Absyn_Syntax.binder  ->  Prims.unit = (fun writer ast -> (
+# 168 "ssyntax.fs"
+let _30_290 = (serialize_either writer serialize_btvar serialize_bvvar (Prims.fst ast))
 in (let _132_262 = (FStar_All.pipe_left FStar_Absyn_Syntax.is_implicit (Prims.snd ast))
 in (writer.FStar_Util.write_bool _132_262))))
 and serialize_binders : l__Writer  ->  FStar_Absyn_Syntax.binders  ->  Prims.unit = (fun writer ast -> (serialize_list writer serialize_binder ast))
 and serialize_typ : l__Writer  ->  FStar_Absyn_Syntax.typ  ->  Prims.unit = (fun writer ast -> (let _132_267 = (FStar_Absyn_Util.compress_typ ast)
 in (serialize_syntax writer serialize_typ' _132_267)))
-and serialize_comp_typ : l__Writer  ->  FStar_Absyn_Syntax.comp_typ  ->  Prims.unit = (fun writer ast -> (let _30_298 = (serialize_lident writer ast.FStar_Absyn_Syntax.effect_name)
-in (let _30_300 = (serialize_typ writer ast.FStar_Absyn_Syntax.result_typ)
-in (let _30_302 = (serialize_args writer ast.FStar_Absyn_Syntax.effect_args)
+and serialize_comp_typ : l__Writer  ->  FStar_Absyn_Syntax.comp_typ  ->  Prims.unit = (fun writer ast -> (
+# 175 "ssyntax.fs"
+let _30_298 = (serialize_lident writer ast.FStar_Absyn_Syntax.effect_name)
+in (
+# 176 "ssyntax.fs"
+let _30_300 = (serialize_typ writer ast.FStar_Absyn_Syntax.result_typ)
+in (
+# 177 "ssyntax.fs"
+let _30_302 = (serialize_args writer ast.FStar_Absyn_Syntax.effect_args)
 in (serialize_list writer serialize_cflags ast.FStar_Absyn_Syntax.flags)))))
 and serialize_comp' : l__Writer  ->  FStar_Absyn_Syntax.comp'  ->  Prims.unit = (fun writer ast -> (match (ast) with
 | FStar_Absyn_Syntax.Total (t) -> begin
-(let _30_308 = (writer.FStar_Util.write_char 'a')
+(
+# 182 "ssyntax.fs"
+let _30_308 = (writer.FStar_Util.write_char 'a')
 in (serialize_typ writer t))
 end
 | FStar_Absyn_Syntax.Comp (c) -> begin
-(let _30_312 = (writer.FStar_Util.write_char 'b')
+(
+# 183 "ssyntax.fs"
+let _30_312 = (writer.FStar_Util.write_char 'b')
 in (serialize_comp_typ writer c))
 end))
 and serialize_comp : l__Writer  ->  FStar_Absyn_Syntax.comp  ->  Prims.unit = (fun writer ast -> (serialize_syntax writer serialize_comp' ast))
@@ -374,65 +468,109 @@ end
 (writer.FStar_Util.write_char 'f')
 end
 | FStar_Absyn_Syntax.DECREASES (e) -> begin
-(let _30_326 = (writer.FStar_Util.write_char 'g')
+(
+# 195 "ssyntax.fs"
+let _30_326 = (writer.FStar_Util.write_char 'g')
 in (serialize_exp writer e))
 end))
 and serialize_exp' : l__Writer  ->  FStar_Absyn_Syntax.exp'  ->  Prims.unit = (fun writer ast -> (match (ast) with
 | FStar_Absyn_Syntax.Exp_bvar (v) -> begin
-(let _30_332 = (writer.FStar_Util.write_char 'a')
+(
+# 199 "ssyntax.fs"
+let _30_332 = (writer.FStar_Util.write_char 'a')
 in (serialize_bvvar writer v))
 end
 | FStar_Absyn_Syntax.Exp_fvar (v, b) -> begin
-(let _30_338 = (writer.FStar_Util.write_char 'b')
-in (let _30_340 = (serialize_fvvar writer v)
+(
+# 200 "ssyntax.fs"
+let _30_338 = (writer.FStar_Util.write_char 'b')
+in (
+# 200 "ssyntax.fs"
+let _30_340 = (serialize_fvvar writer v)
 in (writer.FStar_Util.write_bool false)))
 end
 | FStar_Absyn_Syntax.Exp_constant (c) -> begin
-(let _30_344 = (writer.FStar_Util.write_char 'c')
+(
+# 201 "ssyntax.fs"
+let _30_344 = (writer.FStar_Util.write_char 'c')
 in (serialize_sconst writer c))
 end
 | FStar_Absyn_Syntax.Exp_abs (bs, e) -> begin
-(let _30_350 = (writer.FStar_Util.write_char 'd')
-in (let _30_352 = (serialize_binders writer bs)
+(
+# 202 "ssyntax.fs"
+let _30_350 = (writer.FStar_Util.write_char 'd')
+in (
+# 202 "ssyntax.fs"
+let _30_352 = (serialize_binders writer bs)
 in (serialize_exp writer e)))
 end
 | FStar_Absyn_Syntax.Exp_app (e, ars) -> begin
-(let _30_358 = (writer.FStar_Util.write_char 'e')
-in (let _30_360 = (serialize_exp writer e)
+(
+# 203 "ssyntax.fs"
+let _30_358 = (writer.FStar_Util.write_char 'e')
+in (
+# 203 "ssyntax.fs"
+let _30_360 = (serialize_exp writer e)
 in (serialize_args writer ars)))
 end
 | FStar_Absyn_Syntax.Exp_match (e, l) -> begin
-(let g = (fun writer eopt -> (match (eopt) with
+(
+# 205 "ssyntax.fs"
+let g = (fun writer eopt -> (match (eopt) with
 | Some (e1) -> begin
-(let _30_371 = (writer.FStar_Util.write_char 'a')
+(
+# 207 "ssyntax.fs"
+let _30_371 = (writer.FStar_Util.write_char 'a')
 in (serialize_exp writer e1))
 end
 | None -> begin
 (writer.FStar_Util.write_char 'b')
 end))
-in (let f = (fun writer _30_379 -> (match (_30_379) with
+in (
+# 210 "ssyntax.fs"
+let f = (fun writer _30_379 -> (match (_30_379) with
 | (p, eopt, e) -> begin
-(let _30_380 = (serialize_pat writer p)
-in (let _30_382 = (g writer eopt)
+(
+# 210 "ssyntax.fs"
+let _30_380 = (serialize_pat writer p)
+in (
+# 210 "ssyntax.fs"
+let _30_382 = (g writer eopt)
 in (serialize_exp writer e)))
 end))
-in (let _30_384 = (writer.FStar_Util.write_char 'f')
-in (let _30_386 = (serialize_exp writer e)
+in (
+# 211 "ssyntax.fs"
+let _30_384 = (writer.FStar_Util.write_char 'f')
+in (
+# 211 "ssyntax.fs"
+let _30_386 = (serialize_exp writer e)
 in (serialize_list writer f l)))))
 end
 | FStar_Absyn_Syntax.Exp_ascribed (e, t, l) -> begin
-(let _30_393 = (writer.FStar_Util.write_char 'g')
-in (let _30_395 = (serialize_exp writer e)
-in (let _30_397 = (serialize_typ writer t)
+(
+# 212 "ssyntax.fs"
+let _30_393 = (writer.FStar_Util.write_char 'g')
+in (
+# 212 "ssyntax.fs"
+let _30_395 = (serialize_exp writer e)
+in (
+# 212 "ssyntax.fs"
+let _30_397 = (serialize_typ writer t)
 in (serialize_option writer serialize_lident l))))
 end
 | FStar_Absyn_Syntax.Exp_let (lbs, e) -> begin
-(let _30_403 = (writer.FStar_Util.write_char 'h')
-in (let _30_405 = (serialize_letbindings writer lbs)
+(
+# 213 "ssyntax.fs"
+let _30_403 = (writer.FStar_Util.write_char 'h')
+in (
+# 213 "ssyntax.fs"
+let _30_405 = (serialize_letbindings writer lbs)
 in (serialize_exp writer e)))
 end
 | FStar_Absyn_Syntax.Exp_meta (m) -> begin
-(let _30_409 = (writer.FStar_Util.write_char 'i')
+(
+# 214 "ssyntax.fs"
+let _30_409 = (writer.FStar_Util.write_char 'i')
 in (serialize_meta_e writer m))
 end
 | _30_412 -> begin
@@ -440,8 +578,12 @@ end
 end))
 and serialize_meta_e : l__Writer  ->  FStar_Absyn_Syntax.meta_e  ->  Prims.unit = (fun writer ast -> (match (ast) with
 | FStar_Absyn_Syntax.Meta_desugared (e, s) -> begin
-(let _30_419 = (writer.FStar_Util.write_char 'a')
-in (let _30_421 = (serialize_exp writer e)
+(
+# 219 "ssyntax.fs"
+let _30_419 = (writer.FStar_Util.write_char 'a')
+in (
+# 219 "ssyntax.fs"
+let _30_421 = (serialize_exp writer e)
 in (serialize_meta_source_info writer s)))
 end))
 and serialize_meta_source_info : l__Writer  ->  FStar_Absyn_Syntax.meta_source_info  ->  Prims.unit = (fun writer ast -> (match (ast) with
@@ -466,46 +608,72 @@ and serialize_btvdef : l__Writer  ->  FStar_Absyn_Syntax.btvdef  ->  Prims.unit 
 and serialize_bvvdef : l__Writer  ->  FStar_Absyn_Syntax.bvvdef  ->  Prims.unit = (fun writer ast -> (serialize_bvdef writer ast))
 and serialize_pat' : l__Writer  ->  FStar_Absyn_Syntax.pat'  ->  Prims.unit = (fun writer ast -> (match (ast) with
 | FStar_Absyn_Syntax.Pat_disj (l) -> begin
-(let _30_440 = (writer.FStar_Util.write_char 'a')
+(
+# 238 "ssyntax.fs"
+let _30_440 = (writer.FStar_Util.write_char 'a')
 in (serialize_list writer serialize_pat l))
 end
 | FStar_Absyn_Syntax.Pat_constant (c) -> begin
-(let _30_444 = (writer.FStar_Util.write_char 'b')
+(
+# 239 "ssyntax.fs"
+let _30_444 = (writer.FStar_Util.write_char 'b')
 in (serialize_sconst writer c))
 end
 | FStar_Absyn_Syntax.Pat_cons (v, _30_448, l) -> begin
-(let _30_452 = (writer.FStar_Util.write_char 'c')
-in (let _30_454 = (serialize_fvvar writer v)
+(
+# 240 "ssyntax.fs"
+let _30_452 = (writer.FStar_Util.write_char 'c')
+in (
+# 240 "ssyntax.fs"
+let _30_454 = (serialize_fvvar writer v)
 in (serialize_list writer (fun w _30_459 -> (match (_30_459) with
 | (p, b) -> begin
-(let _30_460 = (serialize_pat w p)
+(
+# 240 "ssyntax.fs"
+let _30_460 = (serialize_pat w p)
 in (w.FStar_Util.write_bool b))
 end)) l)))
 end
 | FStar_Absyn_Syntax.Pat_var (v) -> begin
-(let _30_464 = (writer.FStar_Util.write_char 'd')
+(
+# 241 "ssyntax.fs"
+let _30_464 = (writer.FStar_Util.write_char 'd')
 in (serialize_bvvar writer v))
 end
 | FStar_Absyn_Syntax.Pat_tvar (v) -> begin
-(let _30_468 = (writer.FStar_Util.write_char 'e')
+(
+# 242 "ssyntax.fs"
+let _30_468 = (writer.FStar_Util.write_char 'e')
 in (serialize_btvar writer v))
 end
 | FStar_Absyn_Syntax.Pat_wild (v) -> begin
-(let _30_472 = (writer.FStar_Util.write_char 'f')
+(
+# 243 "ssyntax.fs"
+let _30_472 = (writer.FStar_Util.write_char 'f')
 in (serialize_bvvar writer v))
 end
 | FStar_Absyn_Syntax.Pat_twild (v) -> begin
-(let _30_476 = (writer.FStar_Util.write_char 'g')
+(
+# 244 "ssyntax.fs"
+let _30_476 = (writer.FStar_Util.write_char 'g')
 in (serialize_btvar writer v))
 end
 | FStar_Absyn_Syntax.Pat_dot_term (v, e) -> begin
-(let _30_482 = (writer.FStar_Util.write_char 'h')
-in (let _30_484 = (serialize_bvvar writer v)
+(
+# 245 "ssyntax.fs"
+let _30_482 = (writer.FStar_Util.write_char 'h')
+in (
+# 245 "ssyntax.fs"
+let _30_484 = (serialize_bvvar writer v)
 in (serialize_exp writer e)))
 end
 | FStar_Absyn_Syntax.Pat_dot_typ (v, t) -> begin
-(let _30_490 = (writer.FStar_Util.write_char 'i')
-in (let _30_492 = (serialize_btvar writer v)
+(
+# 246 "ssyntax.fs"
+let _30_490 = (writer.FStar_Util.write_char 'i')
+in (
+# 246 "ssyntax.fs"
+let _30_492 = (serialize_btvar writer v)
 in (serialize_typ writer t)))
 end))
 and serialize_pat : l__Writer  ->  FStar_Absyn_Syntax.pat  ->  Prims.unit = (fun writer ast -> (serialize_withinfo_t writer serialize_pat' (fun w kt -> ()) ast))
@@ -517,18 +685,30 @@ end
 (writer.FStar_Util.write_char 'b')
 end
 | FStar_Absyn_Syntax.Kind_abbrev (ka, k) -> begin
-(let _30_506 = (writer.FStar_Util.write_char 'c')
-in (let _30_508 = (serialize_kabbrev writer ka)
+(
+# 255 "ssyntax.fs"
+let _30_506 = (writer.FStar_Util.write_char 'c')
+in (
+# 255 "ssyntax.fs"
+let _30_508 = (serialize_kabbrev writer ka)
 in (serialize_knd writer k)))
 end
 | FStar_Absyn_Syntax.Kind_arrow (bs, k) -> begin
-(let _30_514 = (writer.FStar_Util.write_char 'd')
-in (let _30_516 = (serialize_binders writer bs)
+(
+# 256 "ssyntax.fs"
+let _30_514 = (writer.FStar_Util.write_char 'd')
+in (
+# 256 "ssyntax.fs"
+let _30_516 = (serialize_binders writer bs)
 in (serialize_knd writer k)))
 end
 | FStar_Absyn_Syntax.Kind_lam (bs, k) -> begin
-(let _30_522 = (writer.FStar_Util.write_char 'e')
-in (let _30_524 = (serialize_binders writer bs)
+(
+# 257 "ssyntax.fs"
+let _30_522 = (writer.FStar_Util.write_char 'e')
+in (
+# 257 "ssyntax.fs"
+let _30_524 = (serialize_binders writer bs)
 in (serialize_knd writer k)))
 end
 | FStar_Absyn_Syntax.Kind_unknown -> begin
@@ -542,14 +722,26 @@ end
 end))
 and serialize_knd : l__Writer  ->  FStar_Absyn_Syntax.knd  ->  Prims.unit = (fun writer ast -> (let _132_309 = (FStar_Absyn_Util.compress_kind ast)
 in (serialize_syntax writer serialize_knd' _132_309)))
-and serialize_kabbrev : l__Writer  ->  FStar_Absyn_Syntax.kabbrev  ->  Prims.unit = (fun writer ast -> (let _30_543 = (serialize_lident writer (Prims.fst ast))
+and serialize_kabbrev : l__Writer  ->  FStar_Absyn_Syntax.kabbrev  ->  Prims.unit = (fun writer ast -> (
+# 264 "ssyntax.fs"
+let _30_543 = (serialize_lident writer (Prims.fst ast))
 in (serialize_args writer (Prims.snd ast))))
 and serialize_lbname : l__Writer  ->  FStar_Absyn_Syntax.lbname  ->  Prims.unit = (fun writer ast -> (serialize_either writer serialize_bvvdef serialize_lident ast))
-and serialize_letbindings : l__Writer  ->  FStar_Absyn_Syntax.letbindings  ->  Prims.unit = (fun writer ast -> (let f = (fun writer lb -> (let _30_552 = (serialize_lbname writer lb.FStar_Absyn_Syntax.lbname)
-in (let _30_554 = (serialize_lident writer lb.FStar_Absyn_Syntax.lbeff)
-in (let _30_556 = (serialize_typ writer lb.FStar_Absyn_Syntax.lbtyp)
+and serialize_letbindings : l__Writer  ->  FStar_Absyn_Syntax.letbindings  ->  Prims.unit = (fun writer ast -> (
+# 269 "ssyntax.fs"
+let f = (fun writer lb -> (
+# 269 "ssyntax.fs"
+let _30_552 = (serialize_lbname writer lb.FStar_Absyn_Syntax.lbname)
+in (
+# 269 "ssyntax.fs"
+let _30_554 = (serialize_lident writer lb.FStar_Absyn_Syntax.lbeff)
+in (
+# 269 "ssyntax.fs"
+let _30_556 = (serialize_typ writer lb.FStar_Absyn_Syntax.lbtyp)
 in (serialize_exp writer lb.FStar_Absyn_Syntax.lbdef)))))
-in (let _30_558 = (writer.FStar_Util.write_bool (Prims.fst ast))
+in (
+# 270 "ssyntax.fs"
+let _30_558 = (writer.FStar_Util.write_bool (Prims.fst ast))
 in (serialize_list writer f (Prims.snd ast)))))
 and serialize_fvar : l__Writer  ->  FStar_Absyn_Syntax.fvar  ->  Prims.unit = (fun writer ast -> (serialize_either writer serialize_btvdef serialize_bvvdef ast))
 and serialize_btvar : l__Writer  ->  FStar_Absyn_Syntax.btvar  ->  Prims.unit = (fun writer ast -> (serialize_bvar writer serialize_knd ast))
@@ -692,7 +884,9 @@ in FStar_Absyn_Syntax.Exp_bvar (_132_413))
 end
 | 'b' -> begin
 (let _132_417 = (let _132_416 = (deserialize_fvvar reader)
-in (let _132_415 = (let _30_614 = (let _132_414 = (reader.FStar_Util.read_bool ())
+in (let _132_415 = (
+# 341 "ssyntax.fs"
+let _30_614 = (let _132_414 = (reader.FStar_Util.read_bool ())
 in (FStar_All.pipe_left Prims.ignore _132_414))
 in None)
 in (_132_416, _132_415)))
@@ -715,7 +909,9 @@ in (_132_423, _132_422)))
 in FStar_Absyn_Syntax.Exp_app (_132_424))
 end
 | 'f' -> begin
-(let g = (fun reader -> (match ((reader.FStar_Util.read_char ())) with
+(
+# 346 "ssyntax.fs"
+let g = (fun reader -> (match ((reader.FStar_Util.read_char ())) with
 | 'a' -> begin
 (let _132_427 = (deserialize_exp reader)
 in Some (_132_427))
@@ -726,7 +922,9 @@ end
 | _30_625 -> begin
 (parse_error ())
 end))
-in (let f = (fun reader -> (let _132_432 = (deserialize_pat reader)
+in (
+# 352 "ssyntax.fs"
+let f = (fun reader -> (let _132_432 = (deserialize_pat reader)
 in (let _132_431 = (g reader)
 in (let _132_430 = (deserialize_exp reader)
 in (_132_432, _132_431, _132_430)))))
@@ -869,7 +1067,9 @@ and deserialize_kabbrev : l__Reader  ->  FStar_Absyn_Syntax.kabbrev = (fun reade
 in (let _132_485 = (deserialize_args reader)
 in (_132_486, _132_485))))
 and deserialize_lbname : l__Reader  ->  FStar_Absyn_Syntax.lbname = (fun reader -> (deserialize_either reader deserialize_bvvdef deserialize_lident))
-and deserialize_letbindings : l__Reader  ->  FStar_Absyn_Syntax.letbindings = (fun reader -> (let f = (fun reader -> (let _132_494 = (deserialize_lbname reader)
+and deserialize_letbindings : l__Reader  ->  FStar_Absyn_Syntax.letbindings = (fun reader -> (
+# 411 "ssyntax.fs"
+let f = (fun reader -> (let _132_494 = (deserialize_lbname reader)
 in (let _132_493 = (deserialize_typ reader)
 in (let _132_492 = (deserialize_lident reader)
 in (let _132_491 = (deserialize_exp reader)
@@ -904,20 +1104,30 @@ end
 (writer.FStar_Util.write_char 'h')
 end
 | FStar_Absyn_Syntax.Discriminator (lid) -> begin
-(let _30_690 = (writer.FStar_Util.write_char 'i')
+(
+# 436 "ssyntax.fs"
+let _30_690 = (writer.FStar_Util.write_char 'i')
 in (serialize_lident writer lid))
 end
 | FStar_Absyn_Syntax.Projector (lid, v) -> begin
-(let _30_696 = (writer.FStar_Util.write_char 'j')
-in (let _30_698 = (serialize_lident writer lid)
+(
+# 437 "ssyntax.fs"
+let _30_696 = (writer.FStar_Util.write_char 'j')
+in (
+# 437 "ssyntax.fs"
+let _30_698 = (serialize_lident writer lid)
 in (serialize_either writer serialize_btvdef serialize_bvvdef v)))
 end
 | FStar_Absyn_Syntax.RecordType (l) -> begin
-(let _30_702 = (writer.FStar_Util.write_char 'k')
+(
+# 438 "ssyntax.fs"
+let _30_702 = (writer.FStar_Util.write_char 'k')
 in (serialize_list writer serialize_lident l))
 end
 | FStar_Absyn_Syntax.RecordConstructor (l) -> begin
-(let _30_706 = (writer.FStar_Util.write_char 'l')
+(
+# 439 "ssyntax.fs"
+let _30_706 = (writer.FStar_Util.write_char 'l')
 in (serialize_list writer serialize_lident l))
 end
 | FStar_Absyn_Syntax.ExceptionConstructor -> begin
@@ -927,7 +1137,9 @@ end
 (writer.FStar_Util.write_char 'o')
 end
 | FStar_Absyn_Syntax.DefaultEffect (l) -> begin
-(let _30_712 = (writer.FStar_Util.write_char 'p')
+(
+# 442 "ssyntax.fs"
+let _30_712 = (writer.FStar_Util.write_char 'p')
 in (serialize_option writer serialize_lident l))
 end
 | FStar_Absyn_Syntax.TotalEffect -> begin
@@ -989,8 +1201,12 @@ end))
 # 462 "ssyntax.fs"
 let serialize_tycon : l__Writer  ->  FStar_Absyn_Syntax.tycon  ->  Prims.unit = (fun writer _30_736 -> (match (_30_736) with
 | (lid, bs, k) -> begin
-(let _30_737 = (serialize_lident writer lid)
-in (let _30_739 = (serialize_binders writer bs)
+(
+# 462 "ssyntax.fs"
+let _30_737 = (serialize_lident writer lid)
+in (
+# 462 "ssyntax.fs"
+let _30_739 = (serialize_binders writer bs)
 in (serialize_knd writer k)))
 end))
 
@@ -1001,8 +1217,12 @@ in (let _132_525 = (deserialize_knd reader)
 in (_132_527, _132_526, _132_525)))))
 
 # 465 "ssyntax.fs"
-let serialize_monad_abbrev : l__Writer  ->  FStar_Absyn_Syntax.monad_abbrev  ->  Prims.unit = (fun writer ast -> (let _30_744 = (serialize_lident writer ast.FStar_Absyn_Syntax.mabbrev)
-in (let _30_746 = (serialize_binders writer ast.FStar_Absyn_Syntax.parms)
+let serialize_monad_abbrev : l__Writer  ->  FStar_Absyn_Syntax.monad_abbrev  ->  Prims.unit = (fun writer ast -> (
+# 466 "ssyntax.fs"
+let _30_744 = (serialize_lident writer ast.FStar_Absyn_Syntax.mabbrev)
+in (
+# 467 "ssyntax.fs"
+let _30_746 = (serialize_binders writer ast.FStar_Absyn_Syntax.parms)
 in (serialize_typ writer ast.FStar_Absyn_Syntax.def))))
 
 # 470 "ssyntax.fs"
@@ -1012,8 +1232,12 @@ in (let _132_534 = (deserialize_typ reader)
 in {FStar_Absyn_Syntax.mabbrev = _132_536; FStar_Absyn_Syntax.parms = _132_535; FStar_Absyn_Syntax.def = _132_534}))))
 
 # 475 "ssyntax.fs"
-let serialize_sub_effect : l__Writer  ->  FStar_Absyn_Syntax.sub_eff  ->  Prims.unit = (fun writer ast -> (let _30_751 = (serialize_lident writer ast.FStar_Absyn_Syntax.source)
-in (let _30_753 = (serialize_lident writer ast.FStar_Absyn_Syntax.target)
+let serialize_sub_effect : l__Writer  ->  FStar_Absyn_Syntax.sub_eff  ->  Prims.unit = (fun writer ast -> (
+# 476 "ssyntax.fs"
+let _30_751 = (serialize_lident writer ast.FStar_Absyn_Syntax.source)
+in (
+# 477 "ssyntax.fs"
+let _30_753 = (serialize_lident writer ast.FStar_Absyn_Syntax.target)
 in (serialize_typ writer ast.FStar_Absyn_Syntax.lift))))
 
 # 480 "ssyntax.fs"
@@ -1023,47 +1247,105 @@ in (let _132_543 = (deserialize_typ reader)
 in {FStar_Absyn_Syntax.source = _132_545; FStar_Absyn_Syntax.target = _132_544; FStar_Absyn_Syntax.lift = _132_543}))))
 
 # 485 "ssyntax.fs"
-let rec serialize_new_effect : l__Writer  ->  FStar_Absyn_Syntax.eff_decl  ->  Prims.unit = (fun writer ast -> (let _30_758 = (serialize_lident writer ast.FStar_Absyn_Syntax.mname)
-in (let _30_760 = (serialize_list writer serialize_binder ast.FStar_Absyn_Syntax.binders)
-in (let _30_762 = (serialize_list writer serialize_qualifier ast.FStar_Absyn_Syntax.qualifiers)
-in (let _30_764 = (serialize_knd writer ast.FStar_Absyn_Syntax.signature)
-in (let _30_766 = (serialize_typ writer ast.FStar_Absyn_Syntax.ret)
-in (let _30_768 = (serialize_typ writer ast.FStar_Absyn_Syntax.bind_wp)
-in (let _30_770 = (serialize_typ writer ast.FStar_Absyn_Syntax.bind_wlp)
-in (let _30_772 = (serialize_typ writer ast.FStar_Absyn_Syntax.if_then_else)
-in (let _30_774 = (serialize_typ writer ast.FStar_Absyn_Syntax.ite_wp)
-in (let _30_776 = (serialize_typ writer ast.FStar_Absyn_Syntax.ite_wlp)
-in (let _30_778 = (serialize_typ writer ast.FStar_Absyn_Syntax.wp_binop)
-in (let _30_780 = (serialize_typ writer ast.FStar_Absyn_Syntax.wp_as_type)
-in (let _30_782 = (serialize_typ writer ast.FStar_Absyn_Syntax.close_wp)
-in (let _30_784 = (serialize_typ writer ast.FStar_Absyn_Syntax.close_wp_t)
-in (let _30_786 = (serialize_typ writer ast.FStar_Absyn_Syntax.assert_p)
-in (let _30_788 = (serialize_typ writer ast.FStar_Absyn_Syntax.assume_p)
-in (let _30_790 = (serialize_typ writer ast.FStar_Absyn_Syntax.null_wp)
+let rec serialize_new_effect : l__Writer  ->  FStar_Absyn_Syntax.eff_decl  ->  Prims.unit = (fun writer ast -> (
+# 486 "ssyntax.fs"
+let _30_758 = (serialize_lident writer ast.FStar_Absyn_Syntax.mname)
+in (
+# 487 "ssyntax.fs"
+let _30_760 = (serialize_list writer serialize_binder ast.FStar_Absyn_Syntax.binders)
+in (
+# 488 "ssyntax.fs"
+let _30_762 = (serialize_list writer serialize_qualifier ast.FStar_Absyn_Syntax.qualifiers)
+in (
+# 489 "ssyntax.fs"
+let _30_764 = (serialize_knd writer ast.FStar_Absyn_Syntax.signature)
+in (
+# 490 "ssyntax.fs"
+let _30_766 = (serialize_typ writer ast.FStar_Absyn_Syntax.ret)
+in (
+# 491 "ssyntax.fs"
+let _30_768 = (serialize_typ writer ast.FStar_Absyn_Syntax.bind_wp)
+in (
+# 492 "ssyntax.fs"
+let _30_770 = (serialize_typ writer ast.FStar_Absyn_Syntax.bind_wlp)
+in (
+# 493 "ssyntax.fs"
+let _30_772 = (serialize_typ writer ast.FStar_Absyn_Syntax.if_then_else)
+in (
+# 494 "ssyntax.fs"
+let _30_774 = (serialize_typ writer ast.FStar_Absyn_Syntax.ite_wp)
+in (
+# 495 "ssyntax.fs"
+let _30_776 = (serialize_typ writer ast.FStar_Absyn_Syntax.ite_wlp)
+in (
+# 496 "ssyntax.fs"
+let _30_778 = (serialize_typ writer ast.FStar_Absyn_Syntax.wp_binop)
+in (
+# 497 "ssyntax.fs"
+let _30_780 = (serialize_typ writer ast.FStar_Absyn_Syntax.wp_as_type)
+in (
+# 498 "ssyntax.fs"
+let _30_782 = (serialize_typ writer ast.FStar_Absyn_Syntax.close_wp)
+in (
+# 499 "ssyntax.fs"
+let _30_784 = (serialize_typ writer ast.FStar_Absyn_Syntax.close_wp_t)
+in (
+# 500 "ssyntax.fs"
+let _30_786 = (serialize_typ writer ast.FStar_Absyn_Syntax.assert_p)
+in (
+# 501 "ssyntax.fs"
+let _30_788 = (serialize_typ writer ast.FStar_Absyn_Syntax.assume_p)
+in (
+# 502 "ssyntax.fs"
+let _30_790 = (serialize_typ writer ast.FStar_Absyn_Syntax.null_wp)
 in (serialize_typ writer ast.FStar_Absyn_Syntax.trivial)))))))))))))))))))
 and serialize_sigelt : l__Writer  ->  FStar_Absyn_Syntax.sigelt  ->  Prims.unit = (fun writer ast -> (match (ast) with
 | FStar_Absyn_Syntax.Sig_pragma (_30_795) -> begin
 (FStar_All.failwith "NYI")
 end
 | FStar_Absyn_Syntax.Sig_tycon (lid, bs, k, l1, l2, qs, _30_804) -> begin
-(let _30_807 = (writer.FStar_Util.write_char 'a')
-in (let _30_809 = (serialize_lident writer lid)
-in (let _30_811 = (serialize_binders writer bs)
-in (let _30_813 = (serialize_knd writer k)
-in (let _30_815 = (serialize_list writer serialize_lident l1)
-in (let _30_817 = (serialize_list writer serialize_lident l2)
+(
+# 509 "ssyntax.fs"
+let _30_807 = (writer.FStar_Util.write_char 'a')
+in (
+# 510 "ssyntax.fs"
+let _30_809 = (serialize_lident writer lid)
+in (
+# 510 "ssyntax.fs"
+let _30_811 = (serialize_binders writer bs)
+in (
+# 510 "ssyntax.fs"
+let _30_813 = (serialize_knd writer k)
+in (
+# 511 "ssyntax.fs"
+let _30_815 = (serialize_list writer serialize_lident l1)
+in (
+# 511 "ssyntax.fs"
+let _30_817 = (serialize_list writer serialize_lident l2)
 in (serialize_list writer serialize_qualifier qs)))))))
 end
 | FStar_Absyn_Syntax.Sig_typ_abbrev (lid, bs, k, t, qs, _30_825) -> begin
-(let _30_828 = (writer.FStar_Util.write_char 'b')
-in (let _30_830 = (serialize_lident writer lid)
-in (let _30_832 = (serialize_binders writer bs)
-in (let _30_834 = (serialize_knd writer k)
-in (let _30_836 = (serialize_typ writer t)
+(
+# 514 "ssyntax.fs"
+let _30_828 = (writer.FStar_Util.write_char 'b')
+in (
+# 515 "ssyntax.fs"
+let _30_830 = (serialize_lident writer lid)
+in (
+# 515 "ssyntax.fs"
+let _30_832 = (serialize_binders writer bs)
+in (
+# 515 "ssyntax.fs"
+let _30_834 = (serialize_knd writer k)
+in (
+# 516 "ssyntax.fs"
+let _30_836 = (serialize_typ writer t)
 in (serialize_list writer serialize_qualifier qs))))))
 end
 | FStar_Absyn_Syntax.Sig_datacon (lid1, t, tyc, qs, mutuals, _30_844) -> begin
-(let t' = (match ((FStar_Absyn_Util.function_formals t)) with
+(
+# 518 "ssyntax.fs"
+let t' = (match ((FStar_Absyn_Util.function_formals t)) with
 | Some (f, c) -> begin
 (let _132_555 = (let _132_554 = (FStar_Absyn_Syntax.mk_Total (FStar_Absyn_Util.comp_result c))
 in (f, _132_554))
@@ -1072,29 +1354,57 @@ end
 | None -> begin
 t
 end)
-in (let _30_853 = (writer.FStar_Util.write_char 'c')
-in (let _30_855 = (serialize_lident writer lid1)
-in (let _30_857 = (serialize_typ writer t')
-in (let _30_859 = (serialize_tycon writer tyc)
-in (let _30_861 = (serialize_list writer serialize_qualifier qs)
+in (
+# 523 "ssyntax.fs"
+let _30_853 = (writer.FStar_Util.write_char 'c')
+in (
+# 524 "ssyntax.fs"
+let _30_855 = (serialize_lident writer lid1)
+in (
+# 524 "ssyntax.fs"
+let _30_857 = (serialize_typ writer t')
+in (
+# 524 "ssyntax.fs"
+let _30_859 = (serialize_tycon writer tyc)
+in (
+# 525 "ssyntax.fs"
+let _30_861 = (serialize_list writer serialize_qualifier qs)
 in (serialize_list writer serialize_lident mutuals)))))))
 end
 | FStar_Absyn_Syntax.Sig_val_decl (lid, t, qs, _30_867) -> begin
-(let _30_870 = (writer.FStar_Util.write_char 'd')
-in (let _30_872 = (serialize_lident writer lid)
-in (let _30_874 = (serialize_typ writer t)
+(
+# 528 "ssyntax.fs"
+let _30_870 = (writer.FStar_Util.write_char 'd')
+in (
+# 529 "ssyntax.fs"
+let _30_872 = (serialize_lident writer lid)
+in (
+# 529 "ssyntax.fs"
+let _30_874 = (serialize_typ writer t)
 in (serialize_list writer serialize_qualifier qs))))
 end
 | FStar_Absyn_Syntax.Sig_assume (lid, fml, qs, _30_880) -> begin
-(let _30_883 = (writer.FStar_Util.write_char 'e')
-in (let _30_885 = (serialize_lident writer lid)
-in (let _30_887 = (serialize_formula writer fml)
+(
+# 531 "ssyntax.fs"
+let _30_883 = (writer.FStar_Util.write_char 'e')
+in (
+# 532 "ssyntax.fs"
+let _30_885 = (serialize_lident writer lid)
+in (
+# 532 "ssyntax.fs"
+let _30_887 = (serialize_formula writer fml)
 in (serialize_list writer serialize_qualifier qs))))
 end
 | FStar_Absyn_Syntax.Sig_let (lbs, _30_891, l, quals) -> begin
-(let _30_896 = (writer.FStar_Util.write_char 'f')
-in (let _30_898 = (serialize_letbindings writer lbs)
-in (let _30_900 = (serialize_list writer serialize_lident l)
+(
+# 534 "ssyntax.fs"
+let _30_896 = (writer.FStar_Util.write_char 'f')
+in (
+# 535 "ssyntax.fs"
+let _30_898 = (serialize_letbindings writer lbs)
+in (
+# 535 "ssyntax.fs"
+let _30_900 = (serialize_list writer serialize_lident l)
 in (let _132_557 = (FStar_All.pipe_right quals (FStar_Util.for_some (fun _30_1 -> (match (_30_1) with
 | FStar_Absyn_Syntax.HasMaskedEffect -> begin
 true
@@ -1105,34 +1415,60 @@ end))))
 in (writer.FStar_Util.write_bool _132_557)))))
 end
 | FStar_Absyn_Syntax.Sig_main (e, _30_908) -> begin
-(let _30_911 = (writer.FStar_Util.write_char 'g')
+(
+# 536 "ssyntax.fs"
+let _30_911 = (writer.FStar_Util.write_char 'g')
 in (serialize_exp writer e))
 end
 | FStar_Absyn_Syntax.Sig_bundle (l, qs, lids, _30_917) -> begin
-(let _30_920 = (writer.FStar_Util.write_char 'h')
-in (let _30_922 = (serialize_list writer serialize_sigelt l)
-in (let _30_924 = (serialize_list writer serialize_qualifier qs)
+(
+# 538 "ssyntax.fs"
+let _30_920 = (writer.FStar_Util.write_char 'h')
+in (
+# 539 "ssyntax.fs"
+let _30_922 = (serialize_list writer serialize_sigelt l)
+in (
+# 540 "ssyntax.fs"
+let _30_924 = (serialize_list writer serialize_qualifier qs)
 in (serialize_list writer serialize_lident lids))))
 end
 | FStar_Absyn_Syntax.Sig_new_effect (n, _30_928) -> begin
-(let _30_931 = (writer.FStar_Util.write_char 'i')
+(
+# 543 "ssyntax.fs"
+let _30_931 = (writer.FStar_Util.write_char 'i')
 in (serialize_new_effect writer n))
 end
 | FStar_Absyn_Syntax.Sig_effect_abbrev (lid, bs, c, qs, _30_938) -> begin
-(let _30_941 = (writer.FStar_Util.write_char 'j')
-in (let _30_943 = (serialize_lident writer lid)
-in (let _30_945 = (serialize_binders writer bs)
-in (let _30_947 = (serialize_comp writer c)
+(
+# 546 "ssyntax.fs"
+let _30_941 = (writer.FStar_Util.write_char 'j')
+in (
+# 547 "ssyntax.fs"
+let _30_943 = (serialize_lident writer lid)
+in (
+# 547 "ssyntax.fs"
+let _30_945 = (serialize_binders writer bs)
+in (
+# 548 "ssyntax.fs"
+let _30_947 = (serialize_comp writer c)
 in (serialize_list writer serialize_qualifier qs)))))
 end
 | FStar_Absyn_Syntax.Sig_sub_effect (se, r) -> begin
-(let _30_953 = (writer.FStar_Util.write_char 'k')
+(
+# 550 "ssyntax.fs"
+let _30_953 = (writer.FStar_Util.write_char 'k')
 in (serialize_sub_effect writer se))
 end
 | FStar_Absyn_Syntax.Sig_kind_abbrev (l, binders, k, _30_959) -> begin
-(let _30_962 = (writer.FStar_Util.write_char 'l')
-in (let _30_964 = (serialize_lident writer l)
-in (let _30_966 = (serialize_list writer serialize_binder binders)
+(
+# 553 "ssyntax.fs"
+let _30_962 = (writer.FStar_Util.write_char 'l')
+in (
+# 554 "ssyntax.fs"
+let _30_964 = (serialize_lident writer l)
+in (
+# 555 "ssyntax.fs"
+let _30_966 = (serialize_list writer serialize_binder binders)
 in (serialize_knd writer k))))
 end))
 
@@ -1241,18 +1577,28 @@ let serialize_sigelts : l__Writer  ->  FStar_Absyn_Syntax.sigelts  ->  Prims.uni
 let deserialize_sigelts : l__Reader  ->  FStar_Absyn_Syntax.sigelt Prims.list = (fun reader -> (deserialize_list reader deserialize_sigelt))
 
 # 610 "ssyntax.fs"
-let serialize_modul : l__Writer  ->  FStar_Absyn_Syntax.modul  ->  Prims.unit = (fun writer ast -> (let _30_989 = (serialize_lident writer ast.FStar_Absyn_Syntax.name)
-in (let _30_991 = (serialize_sigelts writer [])
-in (let _30_993 = (serialize_sigelts writer ast.FStar_Absyn_Syntax.exports)
+let serialize_modul : l__Writer  ->  FStar_Absyn_Syntax.modul  ->  Prims.unit = (fun writer ast -> (
+# 611 "ssyntax.fs"
+let _30_989 = (serialize_lident writer ast.FStar_Absyn_Syntax.name)
+in (
+# 612 "ssyntax.fs"
+let _30_991 = (serialize_sigelts writer [])
+in (
+# 613 "ssyntax.fs"
+let _30_993 = (serialize_sigelts writer ast.FStar_Absyn_Syntax.exports)
 in (writer.FStar_Util.write_bool ast.FStar_Absyn_Syntax.is_interface)))))
 
 # 616 "ssyntax.fs"
-let deserialize_modul : l__Reader  ->  FStar_Absyn_Syntax.modul = (fun reader -> (let m = (let _132_634 = (deserialize_lident reader)
+let deserialize_modul : l__Reader  ->  FStar_Absyn_Syntax.modul = (fun reader -> (
+# 617 "ssyntax.fs"
+let m = (let _132_634 = (deserialize_lident reader)
 in (let _132_633 = (deserialize_sigelts reader)
 in (let _132_632 = (deserialize_sigelts reader)
 in (let _132_631 = (reader.FStar_Util.read_bool ())
 in {FStar_Absyn_Syntax.name = _132_634; FStar_Absyn_Syntax.declarations = _132_633; FStar_Absyn_Syntax.exports = _132_632; FStar_Absyn_Syntax.is_interface = _132_631; FStar_Absyn_Syntax.is_deserialized = true}))))
-in (let _30_997 = m
+in (
+# 622 "ssyntax.fs"
+let _30_997 = m
 in {FStar_Absyn_Syntax.name = _30_997.FStar_Absyn_Syntax.name; FStar_Absyn_Syntax.declarations = m.FStar_Absyn_Syntax.exports; FStar_Absyn_Syntax.exports = _30_997.FStar_Absyn_Syntax.exports; FStar_Absyn_Syntax.is_interface = _30_997.FStar_Absyn_Syntax.is_interface; FStar_Absyn_Syntax.is_deserialized = _30_997.FStar_Absyn_Syntax.is_deserialized})))
 
 

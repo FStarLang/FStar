@@ -70,7 +70,9 @@ end
 end))
 
 # 61 "recheck.fs"
-let rec check : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax  ->  FStar_Syntax_Syntax.term = (fun t -> (let recompute = (fun t -> (match (t.FStar_Syntax_Syntax.n) with
+let rec check : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax  ->  FStar_Syntax_Syntax.term = (fun t -> (
+# 62 "recheck.fs"
+let recompute = (fun t -> (match (t.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Tm_delayed (_87_36) -> begin
 (let _189_17 = (FStar_Syntax_Subst.compress t)
 in (check _189_17))
@@ -126,8 +128,12 @@ in (match ((FStar_ST.read t.FStar_Syntax_Syntax.tk)) with
 (FStar_Syntax_Syntax.mk k None t.FStar_Syntax_Syntax.pos)
 end
 | None -> begin
-(let k = (recompute t)
-in (let _87_98 = (FStar_ST.op_Colon_Equals t.FStar_Syntax_Syntax.tk (Some (k.FStar_Syntax_Syntax.n)))
+(
+# 82 "recheck.fs"
+let k = (recompute t)
+in (
+# 82 "recheck.fs"
+let _87_98 = (FStar_ST.op_Colon_Equals t.FStar_Syntax_Syntax.tk (Some (k.FStar_Syntax_Syntax.n)))
 in k))
 end)))
 
