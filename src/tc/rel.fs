@@ -34,45 +34,6 @@ open FStar.Const
 open FStar.Ident
 
 (* --------------------------------------------------------- *)
-(* <new_uvar> Generating new unification variables/patterns  *)
-(* --------------------------------------------------------- *)
-let new_kvar r binders =
-  let u = Unionfind.fresh Uvar in
-  mk_Kind_uvar (u, Util.args_of_non_null_binders binders) r, u
-
-let new_tvar r binders k =
-  let binders = binders |> List.filter (fun x -> is_null_binder x |> not) in
-  let uv = Unionfind.fresh Uvar in
-  match binders with
-    | [] ->
-      let uv = mk_Typ_uvar'(uv,k) None r in
-      uv, uv
-    | _ ->
-      let args = Util.args_of_non_null_binders binders in
-      let k' = mk_Kind_arrow(binders, k) r in
-      let uv = mk_Typ_uvar'(uv,k') None r in
-      mk_Typ_app(uv, args) None r, uv
-
-let new_evar r binders t =
-  let binders = binders |> List.filter (fun x -> is_null_binder x |> not) in
-  let uv = Unionfind.fresh Uvar in
-  match binders with
-    | [] ->
-      let uv = mk_Exp_uvar'(uv,t) None r in
-      uv, uv
-    | _ ->
-      let args = Util.args_of_non_null_binders binders in
-      let t' = mk_Typ_fun(binders, mk_Total t) None r in
-      let uv = mk_Exp_uvar'(uv, t') None r in
-      match args with
-        | [] -> uv, uv
-        | _ -> mk_Exp_app(uv, args) None r, uv
-
-(* --------------------------------------------------------- *)
-(* </new_uvar>                                               *)
-(* --------------------------------------------------------- *)
-
-(* --------------------------------------------------------- *)
 (* <type defs> The main types of the constraint solver       *)
 (* --------------------------------------------------------- *)
 type rel =
@@ -137,8 +98,60 @@ type solution =
   | Success of list<uvi> * deferred
   | Failed  of prob * string
 
+type guard_formula =
+  | Trivial
+  | NonTrivial of formula
+
+type implicits = list<either<(uvar_t * Range.range), (uvar_e * Range.range)>>
+type guard_t = {
+  guard_f:  guard_formula;
+  deferred: deferred;
+  implicits: implicits;
+}
+
 (* --------------------------------------------------------- *)
 (* </type defs>                                              *)
+(* --------------------------------------------------------- *)
+
+// VALS HACK HERE
+
+(* --------------------------------------------------------- *)
+(* <new_uvar> Generating new unification variables/patterns  *)
+(* --------------------------------------------------------- *)
+let new_kvar r binders =
+  let u = Unionfind.fresh Uvar in
+  mk_Kind_uvar (u, Util.args_of_non_null_binders binders) r, u
+
+let new_tvar r binders k =
+  let binders = binders |> List.filter (fun x -> is_null_binder x |> not) in
+  let uv = Unionfind.fresh Uvar in
+  match binders with
+    | [] ->
+      let uv = mk_Typ_uvar'(uv,k) None r in
+      uv, uv
+    | _ ->
+      let args = Util.args_of_non_null_binders binders in
+      let k' = mk_Kind_arrow(binders, k) r in
+      let uv = mk_Typ_uvar'(uv,k') None r in
+      mk_Typ_app(uv, args) None r, uv
+
+let new_evar r binders t =
+  let binders = binders |> List.filter (fun x -> is_null_binder x |> not) in
+  let uv = Unionfind.fresh Uvar in
+  match binders with
+    | [] ->
+      let uv = mk_Exp_uvar'(uv,t) None r in
+      uv, uv
+    | _ ->
+      let args = Util.args_of_non_null_binders binders in
+      let t' = mk_Typ_fun(binders, mk_Total t) None r in
+      let uv = mk_Exp_uvar'(uv, t') None r in
+      match args with
+        | [] -> uv, uv
+        | _ -> mk_Exp_app(uv, args) None r, uv
+
+(* --------------------------------------------------------- *)
+(* </new_uvar>                                               *)
 (* --------------------------------------------------------- *)
 
 (* ------------------------------------------------*)
@@ -2352,17 +2365,6 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
 (* -------------------------------------------------------- *)
 (* top-level interface                                      *)
 (* -------------------------------------------------------- *)
-type guard_formula =
-  | Trivial
-  | NonTrivial of formula
-
-type implicits = list<either<(uvar_t * Range.range), (uvar_e * Range.range)>>
-type guard_t = {
-  guard_f:  guard_formula;
-  deferred: deferred;
-  implicits: implicits;
-}
-
 let guard_to_string (env:env) g =
   let form = match g.guard_f with
       | Trivial -> "trivial"

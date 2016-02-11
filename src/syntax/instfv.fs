@@ -23,6 +23,8 @@ module SS = FStar.Syntax.Subst
 module U = FStar.Util
 type inst_t = list<(lident * universes)>
 
+// VALS HACK HERE
+
 let rec inst (s:inst_t) t = 
     let t = SS.compress t in
     let mk s = S.mk s !t.tk t.pos in

@@ -23,6 +23,8 @@ open FStar.Syntax.Syntax
 open FStar.Util
 open FStar.Ident
 
+// VALS HACK HERE
+
 (*
     force_uvar (t:term) 
         replaces any unification variable at the head of t

@@ -26,6 +26,8 @@ open FStar.Extraction.ML
 open FStar.Extraction.ML.Syntax
 open FSharp.Format
 
+// VALS HACK HERE
+
 (* -------------------------------------------------------------------- *)
 type assoc  = | ILeft | IRight | Left | Right | NonAssoc
 type fixity = | Prefix | Postfix | Infix of assoc

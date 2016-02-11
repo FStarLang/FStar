@@ -100,6 +100,8 @@ and solver_t = {
     refresh: unit -> unit;
 }
 
+// VALS HACK HERE
+
 let bound_vars env =
     env.gamma |> List.collect (function
         | Binding_typ(a,k) -> [Inl <| Util.bvd_to_bvar_s a k]
