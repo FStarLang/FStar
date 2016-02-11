@@ -1,6 +1,6 @@
 
 open Prims
-# 26 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 26 "fstar.fs"
 
 let process_args : Prims.unit  ->  (FStar_Getopt.parse_cmdline_res * Prims.string Prims.list) = (fun _101_1 -> (match (()) with
 | () -> begin
@@ -21,18 +21,18 @@ in (let _203_8 = (FStar_ST.read file_list)
 in (res, _203_8)))))
 end))
 
-# 34 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 34 "fstar.fs"
 
 let cleanup : Prims.unit  ->  Prims.unit = (fun _101_10 -> (match (()) with
 | () -> begin
 (FStar_Util.kill_all ())
 end))
 
-# 36 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 36 "fstar.fs"
 
 let has_prims_cache : Prims.string Prims.list  ->  Prims.bool = (fun l -> (FStar_List.mem "Prims.cache" l))
 
-# 39 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 39 "fstar.fs"
 
 let u_parse : FStar_Parser_ToSyntax.env_t  ->  Prims.string  ->  (FStar_Parser_Env.env * FStar_Syntax_Syntax.modul Prims.list) = (fun env fn -> (FStar_All.try_with (fun _101_15 -> (match (()) with
 | () -> begin
@@ -59,7 +59,7 @@ end
 in (FStar_All.exit 1))
 end))))
 
-# 61 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 61 "fstar.fs"
 
 let u_tc_prims : Prims.unit  ->  (FStar_Syntax_Syntax.modul * FStar_Parser_Env.env * FStar_TypeChecker_Env.env) = (fun _101_40 -> (match (()) with
 | () -> begin
@@ -84,7 +84,7 @@ end))
 end))))))
 end))
 
-# 74 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 74 "fstar.fs"
 
 let test_universes : Prims.string Prims.list  ->  (FStar_Parser_ToSyntax.env_t * FStar_Syntax_Syntax.modul Prims.list * FStar_TypeChecker_Env.env) = (fun filenames -> (FStar_All.try_with (fun _101_54 -> (match (()) with
 | () -> begin
@@ -119,7 +119,7 @@ in (FStar_Util.print_string _203_32))
 in (FStar_All.exit 1))
 end))))
 
-# 90 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 90 "fstar.fs"
 
 let tc_prims : Prims.unit  ->  (FStar_Absyn_Syntax.modul Prims.list * FStar_Parser_DesugarEnv.env * FStar_Tc_Env.env) = (fun _101_88 -> (match (()) with
 | () -> begin
@@ -144,7 +144,7 @@ end))
 end))))))
 end))
 
-# 100 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 100 "fstar.fs"
 
 let report_errors : Prims.int Prims.option  ->  Prims.unit = (fun nopt -> (let errs = (match (nopt) with
 | None -> begin
@@ -161,7 +161,7 @@ end else begin
 ()
 end))
 
-# 110 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 110 "fstar.fs"
 
 let report_universes_errors : Prims.int Prims.option  ->  Prims.unit = (fun nopt -> (let errs = (match (nopt) with
 | None -> begin
@@ -178,7 +178,7 @@ end else begin
 ()
 end))
 
-# 120 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 120 "fstar.fs"
 
 let tc_one_file : FStar_Parser_DesugarEnv.env  ->  FStar_Tc_Env.env  ->  Prims.string  ->  (FStar_Parser_DesugarEnv.env * FStar_Tc_Env.env * FStar_Absyn_Syntax.modul Prims.list) = (fun dsenv env fn -> (let _101_119 = (FStar_Parser_Driver.parse_file dsenv fn)
 in (match (_101_119) with
@@ -197,7 +197,7 @@ in (match (_101_129) with
 end))
 end)))
 
-# 127 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 127 "fstar.fs"
 
 let tc_one_fragment : FStar_Absyn_Syntax.modul Prims.option  ->  FStar_Parser_DesugarEnv.env  ->  FStar_Tc_Env.env  ->  Prims.string  ->  (FStar_Absyn_Syntax.modul Prims.option * FStar_Parser_DesugarEnv.env * FStar_Tc_Env.env) Prims.option = (fun curmod dsenv env frag -> (FStar_All.try_with (fun _101_135 -> (match (()) with
 | () -> begin
@@ -245,14 +245,14 @@ end
 (Prims.raise e)
 end))))
 
-# 159 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 159 "fstar.fs"
 
 type input_chunks =
 | Push of Prims.string
 | Pop of Prims.string
 | Code of (Prims.string * (Prims.string * Prims.string))
 
-# 160 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 160 "fstar.fs"
 
 let is_Push = (fun _discr_ -> (match (_discr_) with
 | Push (_) -> begin
@@ -262,7 +262,7 @@ end
 false
 end))
 
-# 161 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 161 "fstar.fs"
 
 let is_Pop = (fun _discr_ -> (match (_discr_) with
 | Pop (_) -> begin
@@ -272,7 +272,7 @@ end
 false
 end))
 
-# 162 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 162 "fstar.fs"
 
 let is_Code = (fun _discr_ -> (match (_discr_) with
 | Code (_) -> begin
@@ -282,38 +282,38 @@ end
 false
 end))
 
-# 160 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 160 "fstar.fs"
 
 let ___Push____0 : input_chunks  ->  Prims.string = (fun projectee -> (match (projectee) with
 | Push (_101_175) -> begin
 _101_175
 end))
 
-# 161 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 161 "fstar.fs"
 
 let ___Pop____0 : input_chunks  ->  Prims.string = (fun projectee -> (match (projectee) with
 | Pop (_101_178) -> begin
 _101_178
 end))
 
-# 162 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 162 "fstar.fs"
 
 let ___Code____0 : input_chunks  ->  (Prims.string * (Prims.string * Prims.string)) = (fun projectee -> (match (projectee) with
 | Code (_101_181) -> begin
 _101_181
 end))
 
-# 164 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 164 "fstar.fs"
 
 type stack_elt =
 (FStar_Absyn_Syntax.modul Prims.option * FStar_Parser_DesugarEnv.env * FStar_Tc_Env.env)
 
-# 168 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 168 "fstar.fs"
 
 type stack =
 stack_elt Prims.list
 
-# 171 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 171 "fstar.fs"
 
 let batch_mode_tc_no_prims : FStar_Parser_DesugarEnv.env  ->  FStar_Tc_Env.env  ->  Prims.string Prims.list  ->  Prims.string Prims.list  ->  (FStar_Absyn_Syntax.modul Prims.list * FStar_Parser_DesugarEnv.env * FStar_Tc_Env.env) = (fun dsenv env filenames admit_fsi -> (let _101_202 = (FStar_All.pipe_right filenames (FStar_List.fold_left (fun _101_189 f -> (match (_101_189) with
 | (all_mods, dsenv, env) -> begin
@@ -337,7 +337,7 @@ end
 in (all_mods, dsenv, env))
 end)))
 
-# 185 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 185 "fstar.fs"
 
 let find_deps_if_needed : Prims.string Prims.list  ->  (Prims.string Prims.list * Prims.string Prims.list) = (fun files -> if (FStar_ST.read FStar_Options.explicit_deps) then begin
 (files, [])
@@ -374,7 +374,7 @@ in (deps, _203_125))))))
 end))
 end)
 
-# 208 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 208 "fstar.fs"
 
 let batch_mode_tc : Prims.string Prims.list  ->  (FStar_Absyn_Syntax.modul Prims.list * FStar_Parser_DesugarEnv.env * FStar_Tc_Env.env) = (fun filenames -> (let _101_221 = (tc_prims ())
 in (match (_101_221) with
@@ -390,7 +390,7 @@ end))
 end))
 end)))
 
-# 215 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 215 "fstar.fs"
 
 let finished_message : FStar_Absyn_Syntax.modul Prims.list  ->  Prims.unit = (fun fmods -> if (not ((FStar_ST.read FStar_Options.silent))) then begin
 (let msg = if (FStar_ST.read FStar_Options.verify) then begin
@@ -420,16 +420,16 @@ end else begin
 ()
 end)
 
-# 229 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 229 "fstar.fs"
 
 type interactive_state =
 {chunk : FStar_Util.string_builder; stdin : FStar_Util.stream_reader Prims.option FStar_ST.ref; buffer : input_chunks Prims.list FStar_ST.ref; log : FStar_Util.file_handle Prims.option FStar_ST.ref}
 
-# 229 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 229 "fstar.fs"
 
 let is_Mkinteractive_state : interactive_state  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkinteractive_state"))))
 
-# 236 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 236 "fstar.fs"
 
 let the_interactive_state : interactive_state = (let _203_150 = (FStar_Util.new_string_builder ())
 in (let _203_149 = (FStar_ST.alloc None)
@@ -437,7 +437,7 @@ in (let _203_148 = (FStar_ST.alloc [])
 in (let _203_147 = (FStar_ST.alloc None)
 in {chunk = _203_150; stdin = _203_149; buffer = _203_148; log = _203_147}))))
 
-# 243 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 243 "fstar.fs"
 
 let rec read_chunk : Prims.unit  ->  input_chunks = (fun _101_240 -> (match (()) with
 | () -> begin
@@ -507,7 +507,7 @@ end
 end))))))
 end))
 
-# 296 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 296 "fstar.fs"
 
 let shift_chunk : Prims.unit  ->  input_chunks = (fun _101_288 -> (match (()) with
 | () -> begin
@@ -522,7 +522,7 @@ in chunk)
 end))
 end))
 
-# 305 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 305 "fstar.fs"
 
 let fill_buffer : Prims.unit  ->  Prims.unit = (fun _101_296 -> (match (()) with
 | () -> begin
@@ -534,7 +534,7 @@ in (FStar_List.append _203_164 _203_163)))
 in (FStar_ST.op_Colon_Equals s.buffer _203_165)))
 end))
 
-# 309 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 309 "fstar.fs"
 
 let interactive_mode = (fun dsenv env -> (let _101_300 = if (let _203_168 = (FStar_ST.read FStar_Options.codegen)
 in (FStar_Option.isSome _203_168)) then begin
@@ -612,7 +612,7 @@ end))))))
 end))
 in (go [] None dsenv env))))
 
-# 375 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 375 "fstar.fs"
 
 let codegen : FStar_Absyn_Syntax.modul Prims.list  ->  FStar_Tc_Env.env  ->  Prims.unit = (fun fmods env -> if (((FStar_ST.read FStar_Options.codegen) = Some ("OCaml")) || ((FStar_ST.read FStar_Options.codegen) = Some ("FSharp"))) then begin
 (let _101_386 = (let _203_203 = (FStar_Extraction_ML_Env.mkContext env)
@@ -636,11 +636,11 @@ end else begin
 ()
 end)
 
-# 387 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 387 "fstar.fs"
 
 exception Found of (Prims.string)
 
-# 387 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 387 "fstar.fs"
 
 let is_Found = (fun _discr_ -> (match (_discr_) with
 | Found (_) -> begin
@@ -650,14 +650,14 @@ end
 false
 end))
 
-# 387 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 387 "fstar.fs"
 
 let ___Found____0 : Prims.exn  ->  Prims.string = (fun projectee -> (match (projectee) with
 | Found (_101_394) -> begin
 _101_394
 end))
 
-# 389 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 389 "fstar.fs"
 
 let find_initial_module_name : Prims.unit  ->  Prims.string Prims.option = (fun _101_395 -> (match (()) with
 | () -> begin
@@ -686,7 +686,7 @@ Some (n)
 end)))))
 end))
 
-# 407 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 407 "fstar.fs"
 
 let detect_dependencies_with_first_interactive_chunk : Prims.unit  ->  Prims.string Prims.list = (fun _101_424 -> (match (()) with
 | () -> begin
@@ -714,7 +714,7 @@ end)))
 end)
 end))
 
-# 424 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 424 "fstar.fs"
 
 let go = (fun _101_437 -> (let _101_441 = (process_args ())
 in (match (_101_441) with
@@ -776,7 +776,7 @@ end
 end)
 end)))
 
-# 460 "C:\\Users\\nswamy\\workspace\\FStar\\src\\fstar\\fstar.fs"
+# 460 "fstar.fs"
 
 let main = (fun _101_465 -> (match (()) with
 | () -> begin

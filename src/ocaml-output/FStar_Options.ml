@@ -1,6 +1,6 @@
 
 open Prims
-# 25 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 25 "options.fs"
 
 type debug_level_t =
 | Low
@@ -9,7 +9,7 @@ type debug_level_t =
 | Extreme
 | Other of Prims.string
 
-# 26 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 26 "options.fs"
 
 let is_Low = (fun _discr_ -> (match (_discr_) with
 | Low (_) -> begin
@@ -19,7 +19,7 @@ end
 false
 end))
 
-# 27 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 27 "options.fs"
 
 let is_Medium = (fun _discr_ -> (match (_discr_) with
 | Medium (_) -> begin
@@ -29,7 +29,7 @@ end
 false
 end))
 
-# 28 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 28 "options.fs"
 
 let is_High = (fun _discr_ -> (match (_discr_) with
 | High (_) -> begin
@@ -39,7 +39,7 @@ end
 false
 end))
 
-# 29 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 29 "options.fs"
 
 let is_Extreme = (fun _discr_ -> (match (_discr_) with
 | Extreme (_) -> begin
@@ -49,7 +49,7 @@ end
 false
 end))
 
-# 30 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 30 "options.fs"
 
 let is_Other = (fun _discr_ -> (match (_discr_) with
 | Other (_) -> begin
@@ -59,39 +59,39 @@ end
 false
 end))
 
-# 30 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 30 "options.fs"
 
 let ___Other____0 : debug_level_t  ->  Prims.string = (fun projectee -> (match (projectee) with
 | Other (_18_4) -> begin
 _18_4
 end))
 
-# 32 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 32 "options.fs"
 
 let show_signatures : Prims.string Prims.list FStar_ST.ref = (FStar_Util.mk_ref [])
 
-# 33 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 33 "options.fs"
 
 let norm_then_print : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref true)
 
-# 34 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 34 "options.fs"
 
 let z3_exe : Prims.string FStar_ST.ref = (let _120_19 = (FStar_Platform.exe "z3")
 in (FStar_Util.mk_ref _120_19))
 
-# 35 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 35 "options.fs"
 
 let silent : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 36 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 36 "options.fs"
 
 let debug : Prims.string Prims.list FStar_ST.ref = (FStar_Util.mk_ref [])
 
-# 37 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 37 "options.fs"
 
 let debug_level : debug_level_t Prims.list FStar_ST.ref = (FStar_Util.mk_ref [])
 
-# 38 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 38 "options.fs"
 
 let dlevel : Prims.string  ->  debug_level_t = (fun _18_1 -> (match (_18_1) with
 | "Low" -> begin
@@ -110,7 +110,7 @@ end
 Other (s)
 end))
 
-# 44 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 44 "options.fs"
 
 let one_debug_level_geq : debug_level_t  ->  debug_level_t  ->  Prims.bool = (fun l1 l2 -> (match (l1) with
 | (Other (_)) | (Low) -> begin
@@ -126,28 +126,28 @@ end
 ((((l2 = Low) || (l2 = Medium)) || (l2 = High)) || (l2 = Extreme))
 end))
 
-# 50 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 50 "options.fs"
 
 let debug_level_geq : debug_level_t  ->  Prims.bool = (fun l2 -> (let _120_29 = (FStar_ST.read debug_level)
 in (FStar_All.pipe_right _120_29 (FStar_Util.for_some (fun l1 -> (one_debug_level_geq l1 l2))))))
 
-# 51 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 51 "options.fs"
 
 let log_types : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 52 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 52 "options.fs"
 
 let print_effect_args : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 53 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 53 "options.fs"
 
 let print_real_names : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 54 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 54 "options.fs"
 
 let dump_module : Prims.string Prims.option FStar_ST.ref = (FStar_Util.mk_ref None)
 
-# 55 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 55 "options.fs"
 
 let should_dump : Prims.string  ->  Prims.bool = (fun l -> (match ((FStar_ST.read dump_module)) with
 | None -> begin
@@ -157,191 +157,191 @@ end
 (m = l)
 end))
 
-# 58 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 58 "options.fs"
 
 let logQueries : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 59 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 59 "options.fs"
 
 let z3exe : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref true)
 
-# 60 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 60 "options.fs"
 
 let outputDir : Prims.string Prims.option FStar_ST.ref = (FStar_Util.mk_ref (Some (".")))
 
-# 61 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 61 "options.fs"
 
 let fstar_home_opt : Prims.string Prims.option FStar_ST.ref = (FStar_Util.mk_ref None)
 
-# 62 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 62 "options.fs"
 
 let _fstar_home : Prims.string FStar_ST.ref = (FStar_Util.mk_ref "")
 
-# 63 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 63 "options.fs"
 
 let prims_ref : Prims.string Prims.option FStar_ST.ref = (FStar_Util.mk_ref None)
 
-# 64 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 64 "options.fs"
 
 let z3timeout : Prims.int FStar_ST.ref = (FStar_Util.mk_ref 5)
 
-# 65 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 65 "options.fs"
 
 let admit_smt_queries : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 66 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 66 "options.fs"
 
 let pretype : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref true)
 
-# 67 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 67 "options.fs"
 
 let codegen : Prims.string Prims.option FStar_ST.ref = (FStar_Util.mk_ref None)
 
-# 68 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 68 "options.fs"
 
 let admit_fsi : Prims.string Prims.list FStar_ST.ref = (FStar_Util.mk_ref [])
 
-# 69 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 69 "options.fs"
 
 let codegen_libs : Prims.string Prims.list Prims.list FStar_ST.ref = (FStar_Util.mk_ref [])
 
-# 70 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 70 "options.fs"
 
 let trace_error : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 71 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 71 "options.fs"
 
 let verify : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref true)
 
-# 72 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 72 "options.fs"
 
 let full_context_dependency : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref true)
 
-# 73 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 73 "options.fs"
 
 let print_implicits : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 74 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 74 "options.fs"
 
 let print_bound_var_types : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 75 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 75 "options.fs"
 
 let print_universes : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 76 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 76 "options.fs"
 
 let hide_uvar_nums : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 77 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 77 "options.fs"
 
 let hide_genident_nums : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 78 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 78 "options.fs"
 
 let serialize_mods : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 79 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 79 "options.fs"
 
 let initial_fuel : Prims.int FStar_ST.ref = (FStar_Util.mk_ref 2)
 
-# 80 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 80 "options.fs"
 
 let initial_ifuel : Prims.int FStar_ST.ref = (FStar_Util.mk_ref 1)
 
-# 81 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 81 "options.fs"
 
 let max_fuel : Prims.int FStar_ST.ref = (FStar_Util.mk_ref 8)
 
-# 82 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 82 "options.fs"
 
 let min_fuel : Prims.int FStar_ST.ref = (FStar_Util.mk_ref 1)
 
-# 83 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 83 "options.fs"
 
 let max_ifuel : Prims.int FStar_ST.ref = (FStar_Util.mk_ref 2)
 
-# 84 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 84 "options.fs"
 
 let warn_top_level_effects : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 85 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 85 "options.fs"
 
 let no_slack : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 86 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 86 "options.fs"
 
 let eager_inference : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 87 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 87 "options.fs"
 
 let universes : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 88 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 88 "options.fs"
 
 let unthrottle_inductives : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 89 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 89 "options.fs"
 
 let use_eq_at_higher_order : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 90 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 90 "options.fs"
 
 let use_native_int : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 91 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 91 "options.fs"
 
 let fs_typ_app : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 92 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 92 "options.fs"
 
 let n_cores : Prims.int FStar_ST.ref = (FStar_Util.mk_ref 1)
 
-# 93 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 93 "options.fs"
 
 let verify_module : Prims.string Prims.list FStar_ST.ref = (FStar_Util.mk_ref [])
 
-# 94 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 94 "options.fs"
 
 let __temp_no_proj : Prims.string Prims.list FStar_ST.ref = (FStar_Util.mk_ref [])
 
-# 95 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 95 "options.fs"
 
 let interactive : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 96 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 96 "options.fs"
 
 let interactive_context : Prims.string Prims.option FStar_ST.ref = (FStar_Util.mk_ref None)
 
-# 97 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 97 "options.fs"
 
 let split_cases : Prims.int FStar_ST.ref = (FStar_Util.mk_ref 0)
 
-# 98 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 98 "options.fs"
 
 let _include_path : Prims.string Prims.list FStar_ST.ref = (FStar_Util.mk_ref [])
 
-# 99 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 99 "options.fs"
 
 let interactive_fsi : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 100 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 100 "options.fs"
 
 let print_fuels : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 101 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 101 "options.fs"
 
 let cardinality : Prims.string FStar_ST.ref = (FStar_Util.mk_ref "off")
 
-# 102 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 102 "options.fs"
 
 let timing : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 103 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 103 "options.fs"
 
 let inline_arith : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 104 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 104 "options.fs"
 
 let warn_cardinality : Prims.unit  ->  Prims.bool = (fun _18_26 -> (match (()) with
 | () -> begin
@@ -354,7 +354,7 @@ false
 end)
 end))
 
-# 107 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 107 "options.fs"
 
 let check_cardinality : Prims.unit  ->  Prims.bool = (fun _18_30 -> (match (()) with
 | () -> begin
@@ -367,15 +367,15 @@ false
 end)
 end))
 
-# 110 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 110 "options.fs"
 
 let dep : Prims.string Prims.option FStar_ST.ref = (FStar_ST.alloc None)
 
-# 111 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 111 "options.fs"
 
 let explicit_deps : Prims.bool FStar_ST.ref = (FStar_Util.mk_ref false)
 
-# 112 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 112 "options.fs"
 
 let init_options : Prims.unit  ->  Prims.unit = (fun _18_34 -> (match (()) with
 | () -> begin
@@ -435,7 +435,7 @@ in (let _18_137 = (FStar_ST.op_Colon_Equals timing false)
 in (FStar_ST.op_Colon_Equals inline_arith false)))))))))))))))))))))))))))))))))))))))))))))))))))))
 end))
 
-# 167 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 167 "options.fs"
 
 let set_fstar_home : Prims.unit  ->  Prims.string = (fun _18_139 -> (match (()) with
 | () -> begin
@@ -454,7 +454,7 @@ end)
 in fh)
 end))
 
-# 177 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 177 "options.fs"
 
 let get_fstar_home : Prims.unit  ->  Prims.string = (fun _18_152 -> (match (()) with
 | () -> begin
@@ -469,15 +469,15 @@ x
 end)
 end))
 
-# 181 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 181 "options.fs"
 
 let include_path_base_dirs : Prims.string Prims.list = ("/lib")::("/lib/fstar")::("/stdlib")::("/stdlib/fstar")::[]
 
-# 184 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 184 "options.fs"
 
 let universe_include_path_base_dirs : Prims.string Prims.list = ("/ulib")::[]
 
-# 187 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 187 "options.fs"
 
 let get_include_path : Prims.unit  ->  Prims.string Prims.list = (fun _18_158 -> (match (()) with
 | () -> begin
@@ -493,7 +493,7 @@ in (".")::_120_47)
 in (FStar_List.append _120_49 _120_48)))))
 end))
 
-# 194 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 194 "options.fs"
 
 let find_file : Prims.string  ->  Prims.string Prims.option = (fun filename -> (let search_path = (get_include_path ())
 in (FStar_All.try_with (fun _18_165 -> (match (()) with
@@ -518,7 +518,7 @@ end)) (fun _18_164 -> (match (_18_164) with
 None
 end)))))
 
-# 216 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 216 "options.fs"
 
 let prims : Prims.unit  ->  Prims.string = (fun _18_173 -> (match (()) with
 | () -> begin
@@ -540,7 +540,7 @@ x
 end)
 end))
 
-# 226 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 226 "options.fs"
 
 let prependOutputDir : Prims.string  ->  Prims.string = (fun fname -> (match ((FStar_ST.read outputDir)) with
 | None -> begin
@@ -550,11 +550,11 @@ end
 (Prims.strcat (Prims.strcat x "/") fname)
 end))
 
-# 230 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 230 "options.fs"
 
 let cache_dir : Prims.string = "cache"
 
-# 232 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 232 "options.fs"
 
 let display_version : Prims.unit  ->  Prims.unit = (fun _18_185 -> (match (()) with
 | () -> begin
@@ -562,7 +562,7 @@ let display_version : Prims.unit  ->  Prims.unit = (fun _18_185 -> (match (()) w
 in (FStar_Util.print_string _120_64))
 end))
 
-# 236 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 236 "options.fs"
 
 let display_usage = (fun specs -> (let _18_187 = (FStar_Util.print_string "fstar [option] file...\n")
 in (FStar_List.iter (fun _18_194 -> (match (_18_194) with
@@ -594,7 +594,7 @@ end
 end)
 end)) specs)))
 
-# 249 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 249 "options.fs"
 
 let rec specs : Prims.unit  ->  FStar_Getopt.opt Prims.list = (fun _18_202 -> (match (()) with
 | () -> begin
@@ -753,7 +753,7 @@ in (display_usage _120_224))
 in (FStar_All.exit 1)))
 end)
 
-# 327 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 327 "options.fs"
 
 let should_verify : Prims.string  ->  Prims.bool = (fun m -> ((FStar_ST.read verify) && (match ((FStar_ST.read verify_module)) with
 | [] -> begin
@@ -763,17 +763,17 @@ end
 (FStar_List.contains m l)
 end)))
 
-# 333 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 333 "options.fs"
 
 let dont_gen_projectors : Prims.string  ->  Prims.bool = (fun m -> (let _120_229 = (FStar_ST.read __temp_no_proj)
 in (FStar_List.contains m _120_229)))
 
-# 335 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 335 "options.fs"
 
 let should_print_message : Prims.string  ->  Prims.bool = (fun m -> (((should_verify m) && (not ((let _120_232 = (FStar_ST.read admit_fsi)
 in (FStar_List.contains m _120_232))))) && (m <> "Prims")))
 
-# 340 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 340 "options.fs"
 
 let set_options : Prims.string  ->  FStar_Getopt.parse_cmdline_res = (let no_smt_specs = (let _120_235 = (specs ())
 in (FStar_All.pipe_right _120_235 (FStar_List.filter (fun _18_306 -> (match (_18_306) with
@@ -782,11 +782,11 @@ in (FStar_All.pipe_right _120_235 (FStar_List.filter (fun _18_306 -> (match (_18
 end)))))
 in (fun s -> (FStar_Getopt.parse_string no_smt_specs (fun _18_309 -> ()) s)))
 
-# 346 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 346 "options.fs"
 
 let reset_options_string : Prims.string Prims.option FStar_ST.ref = (FStar_ST.alloc None)
 
-# 347 "C:\\Users\\nswamy\\workspace\\FStar\\src\\basic\\options.fs"
+# 347 "options.fs"
 
 let reset_options : Prims.unit  ->  FStar_Getopt.parse_cmdline_res = (fun _18_311 -> (match (()) with
 | () -> begin

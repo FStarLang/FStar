@@ -1,6 +1,6 @@
 
 open Prims
-# 25 "C:\\Users\\nswamy\\workspace\\FStar\\src\\smtencoding\\splitcases.fs"
+# 25 "splitcases.fs"
 
 let rec get_next_n_ite : Prims.int  ->  FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term  ->  (FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term)  ->  (Prims.bool * FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.term) = (fun n t negs f -> if (n <= 0) then begin
 (let _199_14 = (f FStar_SMTEncoding_Term.mkTrue)
@@ -23,7 +23,7 @@ end
 end)
 end)
 
-# 37 "C:\\Users\\nswamy\\workspace\\FStar\\src\\smtencoding\\splitcases.fs"
+# 37 "splitcases.fs"
 
 let rec is_ite_all_the_way : Prims.int  ->  FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term Prims.list  ->  (Prims.bool * FStar_SMTEncoding_Term.term Prims.list * FStar_SMTEncoding_Term.term) = (fun n t negs l -> if (n <= 0) then begin
 (Prims.raise FStar_Util.Impos)
@@ -50,7 +50,7 @@ end))
 end)
 end)
 
-# 51 "C:\\Users\\nswamy\\workspace\\FStar\\src\\smtencoding\\splitcases.fs"
+# 51 "splitcases.fs"
 
 let rec parse_query_for_split_cases : Prims.int  ->  FStar_SMTEncoding_Term.term  ->  (FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term)  ->  (Prims.bool * ((FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term) * FStar_SMTEncoding_Term.term Prims.list * FStar_SMTEncoding_Term.term)) = (fun n t f -> (match (t.FStar_SMTEncoding_Term.tm) with
 | FStar_SMTEncoding_Term.Quant (FStar_SMTEncoding_Term.Forall, l, opt, l', t) -> begin
@@ -87,7 +87,7 @@ end
 (false, ((fun _97_95 -> FStar_SMTEncoding_Term.mkFalse), [], FStar_SMTEncoding_Term.mkFalse))
 end))
 
-# 75 "C:\\Users\\nswamy\\workspace\\FStar\\src\\smtencoding\\splitcases.fs"
+# 75 "splitcases.fs"
 
 let strip_not : FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term = (fun t -> (match (t.FStar_SMTEncoding_Term.tm) with
 | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Not, hd::_97_100) -> begin
@@ -97,7 +97,7 @@ end
 t
 end))
 
-# 79 "C:\\Users\\nswamy\\workspace\\FStar\\src\\smtencoding\\splitcases.fs"
+# 79 "splitcases.fs"
 
 let rec check_split_cases : (FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term)  ->  FStar_SMTEncoding_Term.term Prims.list  ->  (FStar_SMTEncoding_Term.decl  ->  Prims.unit)  ->  Prims.unit = (fun f l check -> (FStar_List.iter (fun t -> (let _199_117 = (let _199_116 = (let _199_115 = (let _199_114 = (f t)
 in (FStar_SMTEncoding_Term.mkNot _199_114))
@@ -105,7 +105,7 @@ in (_199_115, None))
 in FStar_SMTEncoding_Term.Assume (_199_116))
 in (check _199_117))) (FStar_List.rev l)))
 
-# 82 "C:\\Users\\nswamy\\workspace\\FStar\\src\\smtencoding\\splitcases.fs"
+# 82 "splitcases.fs"
 
 let check_exhaustiveness : (FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term)  ->  FStar_SMTEncoding_Term.term  ->  (FStar_SMTEncoding_Term.decl  ->  Prims.unit)  ->  Prims.unit = (fun f negs check -> (let _199_138 = (let _199_137 = (let _199_136 = (let _199_135 = (let _199_134 = (FStar_SMTEncoding_Term.mkNot negs)
 in (f _199_134))
@@ -114,7 +114,7 @@ in (_199_136, None))
 in FStar_SMTEncoding_Term.Assume (_199_137))
 in (check _199_138)))
 
-# 85 "C:\\Users\\nswamy\\workspace\\FStar\\src\\smtencoding\\splitcases.fs"
+# 85 "splitcases.fs"
 
 let can_handle_query : Prims.int  ->  FStar_SMTEncoding_Term.decl  ->  (Prims.bool * ((FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term) * FStar_SMTEncoding_Term.term Prims.list * FStar_SMTEncoding_Term.term)) = (fun n q -> (match (q) with
 | FStar_SMTEncoding_Term.Assume (q', _97_118) -> begin
@@ -124,7 +124,7 @@ end
 (false, ((fun x -> x), [], FStar_SMTEncoding_Term.mkFalse))
 end))
 
-# 90 "C:\\Users\\nswamy\\workspace\\FStar\\src\\smtencoding\\splitcases.fs"
+# 90 "splitcases.fs"
 
 let handle_query : ((FStar_SMTEncoding_Term.term  ->  FStar_SMTEncoding_Term.term) * FStar_SMTEncoding_Term.term Prims.list * FStar_SMTEncoding_Term.term)  ->  (FStar_SMTEncoding_Term.decl  ->  Prims.unit)  ->  Prims.unit = (fun _97_128 check -> (match (_97_128) with
 | (f, l, negs) -> begin

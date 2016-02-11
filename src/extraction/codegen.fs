@@ -653,7 +653,8 @@ let doc_of_loc lineno file =
     if Util.codegen_fsharp () then
         empty
     else
-        reduce1 [ text "#"; num lineno; text ("\"" ^ Util.replace_string file "\\" "\\\\" ^ "\"") ]
+        let file = Util.basename file in
+        reduce1 [ text "#"; num lineno; text ("\"" ^ file ^ "\"") ]
 
 (* -------------------------------------------------------------------- *)
 let doc_of_mod1 (currentModule : mlsymbol) (m : mlmodule1) =

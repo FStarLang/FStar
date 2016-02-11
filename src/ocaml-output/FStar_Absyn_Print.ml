@@ -1,22 +1,22 @@
 
 open Prims
-# 29 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 29 "print.fs"
 
 let infix_prim_ops : (FStar_Ident.lident * Prims.string) Prims.list = ((FStar_Absyn_Const.op_Addition, "+"))::((FStar_Absyn_Const.op_Subtraction, "-"))::((FStar_Absyn_Const.op_Multiply, "*"))::((FStar_Absyn_Const.op_Division, "/"))::((FStar_Absyn_Const.op_Eq, "="))::((FStar_Absyn_Const.op_ColonEq, ":="))::((FStar_Absyn_Const.op_notEq, "<>"))::((FStar_Absyn_Const.op_And, "&&"))::((FStar_Absyn_Const.op_Or, "||"))::((FStar_Absyn_Const.op_LTE, "<="))::((FStar_Absyn_Const.op_GTE, ">="))::((FStar_Absyn_Const.op_LT, "<"))::((FStar_Absyn_Const.op_GT, ">"))::((FStar_Absyn_Const.op_Modulus, "mod"))::[]
 
-# 46 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 46 "print.fs"
 
 let unary_prim_ops : (FStar_Ident.lident * Prims.string) Prims.list = ((FStar_Absyn_Const.op_Negation, "not"))::((FStar_Absyn_Const.op_Minus, "-"))::[]
 
-# 51 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 51 "print.fs"
 
 let infix_type_ops : (FStar_Ident.lident * Prims.string) Prims.list = ((FStar_Absyn_Const.and_lid, "/\\"))::((FStar_Absyn_Const.or_lid, "\\/"))::((FStar_Absyn_Const.imp_lid, "==>"))::((FStar_Absyn_Const.iff_lid, "<==>"))::((FStar_Absyn_Const.precedes_lid, "<<"))::((FStar_Absyn_Const.eq2_lid, "=="))::((FStar_Absyn_Const.eqT_lid, "=="))::[]
 
-# 61 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 61 "print.fs"
 
 let unary_type_ops : (FStar_Ident.lident * Prims.string) Prims.list = ((FStar_Absyn_Const.not_lid, "~"))::[]
 
-# 65 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 65 "print.fs"
 
 let is_prim_op = (fun ps f -> (match (f.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Exp_fvar (fv, _29_22) -> begin
@@ -26,7 +26,7 @@ end
 false
 end))
 
-# 69 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 69 "print.fs"
 
 let is_type_op = (fun ps t -> (match (t.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Typ_const (ftv) -> begin
@@ -36,7 +36,7 @@ end
 false
 end))
 
-# 73 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 73 "print.fs"
 
 let get_lid = (fun f -> (match (f.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Exp_fvar (fv, _29_36) -> begin
@@ -46,7 +46,7 @@ end
 (FStar_All.failwith "get_lid")
 end))
 
-# 77 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 77 "print.fs"
 
 let get_type_lid = (fun t -> (match (t.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Typ_const (ftv) -> begin
@@ -56,47 +56,47 @@ end
 (FStar_All.failwith "get_type_lid")
 end))
 
-# 81 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 81 "print.fs"
 
 let is_infix_prim_op : FStar_Absyn_Syntax.exp  ->  Prims.bool = (fun e -> (is_prim_op (Prims.fst (FStar_List.split infix_prim_ops)) e))
 
-# 82 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 82 "print.fs"
 
 let is_unary_prim_op : FStar_Absyn_Syntax.exp  ->  Prims.bool = (fun e -> (is_prim_op (Prims.fst (FStar_List.split unary_prim_ops)) e))
 
-# 83 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 83 "print.fs"
 
 let is_infix_type_op : FStar_Absyn_Syntax.typ  ->  Prims.bool = (fun t -> (is_type_op (Prims.fst (FStar_List.split infix_type_ops)) t))
 
-# 84 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 84 "print.fs"
 
 let is_unary_type_op : FStar_Absyn_Syntax.typ  ->  Prims.bool = (fun t -> (is_type_op (Prims.fst (FStar_List.split unary_type_ops)) t))
 
-# 86 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 86 "print.fs"
 
 let quants : (FStar_Ident.lident * Prims.string) Prims.list = ((FStar_Absyn_Const.forall_lid, "forall"))::((FStar_Absyn_Const.exists_lid, "exists"))::((FStar_Absyn_Const.allTyp_lid, "forall"))::((FStar_Absyn_Const.exTyp_lid, "exists"))::[]
 
-# 93 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 93 "print.fs"
 
 let is_b2t : FStar_Absyn_Syntax.typ  ->  Prims.bool = (fun t -> (is_type_op ((FStar_Absyn_Const.b2t_lid)::[]) t))
 
-# 94 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 94 "print.fs"
 
 let is_quant : FStar_Absyn_Syntax.typ  ->  Prims.bool = (fun t -> (is_type_op (Prims.fst (FStar_List.split quants)) t))
 
-# 95 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 95 "print.fs"
 
 let is_ite : FStar_Absyn_Syntax.typ  ->  Prims.bool = (fun t -> (is_type_op ((FStar_Absyn_Const.ite_lid)::[]) t))
 
-# 97 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 97 "print.fs"
 
 let is_lex_cons : FStar_Absyn_Syntax.exp  ->  Prims.bool = (fun f -> (is_prim_op ((FStar_Absyn_Const.lexcons_lid)::[]) f))
 
-# 98 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 98 "print.fs"
 
 let is_lex_top : FStar_Absyn_Syntax.exp  ->  Prims.bool = (fun f -> (is_prim_op ((FStar_Absyn_Const.lextop_lid)::[]) f))
 
-# 99 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 99 "print.fs"
 
 let is_inr = (fun _29_1 -> (match (_29_1) with
 | FStar_Util.Inl (_29_57) -> begin
@@ -106,7 +106,7 @@ end
 true
 end))
 
-# 100 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 100 "print.fs"
 
 let rec reconstruct_lex : FStar_Absyn_Syntax.exp  ->  (FStar_Absyn_Syntax.exp', (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax Prims.list Prims.option = (fun e -> (match ((let _131_28 = (FStar_Absyn_Util.compress_exp e)
 in _131_28.FStar_Absyn_Syntax.n)) with
@@ -148,7 +148,7 @@ None
 end
 end))
 
-# 116 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 116 "print.fs"
 
 let rec find = (fun f l -> (match (l) with
 | [] -> begin
@@ -162,37 +162,37 @@ end else begin
 end
 end))
 
-# 120 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 120 "print.fs"
 
 let find_lid : FStar_Ident.lident  ->  (FStar_Ident.lident * Prims.string) Prims.list  ->  Prims.string = (fun x xs -> (let _131_47 = (find (fun p -> (FStar_Ident.lid_equals x (Prims.fst p))) xs)
 in (Prims.snd _131_47)))
 
-# 123 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 123 "print.fs"
 
 let infix_prim_op_to_string = (fun e -> (let _131_49 = (get_lid e)
 in (find_lid _131_49 infix_prim_ops)))
 
-# 124 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 124 "print.fs"
 
 let unary_prim_op_to_string = (fun e -> (let _131_51 = (get_lid e)
 in (find_lid _131_51 unary_prim_ops)))
 
-# 125 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 125 "print.fs"
 
 let infix_type_op_to_string = (fun t -> (let _131_53 = (get_type_lid t)
 in (find_lid _131_53 infix_type_ops)))
 
-# 126 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 126 "print.fs"
 
 let unary_type_op_to_string = (fun t -> (let _131_55 = (get_type_lid t)
 in (find_lid _131_55 unary_type_ops)))
 
-# 128 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 128 "print.fs"
 
 let quant_to_string = (fun t -> (let _131_57 = (get_type_lid t)
 in (find_lid _131_57 quants)))
 
-# 130 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 130 "print.fs"
 
 let rec sli : FStar_Ident.lident  ->  Prims.string = (fun l -> if (FStar_ST.read FStar_Options.print_real_names) then begin
 l.FStar_Ident.str
@@ -200,7 +200,7 @@ end else begin
 l.FStar_Ident.ident.FStar_Ident.idText
 end)
 
-# 135 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 135 "print.fs"
 
 let strBvd = (fun bvd -> if (FStar_ST.read FStar_Options.print_real_names) then begin
 (Prims.strcat bvd.FStar_Absyn_Syntax.ppname.FStar_Ident.idText bvd.FStar_Absyn_Syntax.realname.FStar_Ident.idText)
@@ -220,7 +220,7 @@ bvd.FStar_Absyn_Syntax.ppname.FStar_Ident.idText
 end
 end)
 
-# 145 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 145 "print.fs"
 
 let filter_imp = (fun a -> (FStar_All.pipe_right a (FStar_List.filter (fun _29_3 -> (match (_29_3) with
 | (_29_132, Some (FStar_Absyn_Syntax.Implicit (_29_134))) -> begin
@@ -230,7 +230,7 @@ end
 true
 end)))))
 
-# 146 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 146 "print.fs"
 
 let const_to_string : FStar_Const.sconst  ->  Prims.string = (fun x -> (match (x) with
 | FStar_Const.Const_effect -> begin
@@ -271,7 +271,7 @@ end
 "<uint8>"
 end))
 
-# 159 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 159 "print.fs"
 
 let rec tag_of_typ : (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  Prims.string = (fun t -> (match (t.FStar_Absyn_Syntax.n) with
 | FStar_Absyn_Syntax.Typ_btvar (_29_169) -> begin
@@ -1009,7 +1009,7 @@ end
 in (FStar_Util.concat_l " | " _131_386))
 end))
 
-# 462 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 462 "print.fs"
 
 let subst_to_string = (fun subst -> (let _131_394 = (let _131_393 = (FStar_List.map (fun _29_16 -> (match (_29_16) with
 | FStar_Util.Inl (a, t) -> begin
@@ -1025,7 +1025,7 @@ end)) subst)
 in (FStar_All.pipe_right _131_393 (FStar_String.concat ", ")))
 in (FStar_All.pipe_left (FStar_Util.format1 "{%s}") _131_394)))
 
-# 467 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 467 "print.fs"
 
 let freevars_to_string : FStar_Absyn_Syntax.freevars  ->  Prims.string = (fun fvs -> (let f = (fun l -> (let _131_400 = (let _131_399 = (FStar_All.pipe_right l FStar_Util.set_elements)
 in (FStar_All.pipe_right _131_399 (FStar_List.map (fun t -> (strBvd t.FStar_Absyn_Syntax.v)))))
@@ -1034,7 +1034,7 @@ in (let _131_402 = (f fvs.FStar_Absyn_Syntax.ftvs)
 in (let _131_401 = (f fvs.FStar_Absyn_Syntax.fxvs)
 in (FStar_Util.format2 "ftvs={%s}, fxvs={%s}" _131_402 _131_401)))))
 
-# 471 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 471 "print.fs"
 
 let qual_to_string : FStar_Absyn_Syntax.qualifier  ->  Prims.string = (fun _29_17 -> (match (_29_17) with
 | FStar_Absyn_Syntax.Logic -> begin
@@ -1058,12 +1058,12 @@ end
 "other"
 end))
 
-# 478 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 478 "print.fs"
 
 let quals_to_string : FStar_Absyn_Syntax.qualifier Prims.list  ->  Prims.string = (fun quals -> (let _131_410 = (FStar_All.pipe_right quals (FStar_List.map qual_to_string))
 in (FStar_All.pipe_right _131_410 (FStar_String.concat " "))))
 
-# 479 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 479 "print.fs"
 
 let rec sigelt_to_string : FStar_Absyn_Syntax.sigelt  ->  Prims.string = (fun x -> (match (x) with
 | FStar_Absyn_Syntax.Sig_pragma (FStar_Absyn_Syntax.ResetOptions, _29_769) -> begin
@@ -1124,12 +1124,12 @@ in (let _131_425 = (comp_typ_to_string c)
 in (FStar_Util.format3 "effect %s %s = %s" _131_427 _131_426 _131_425))))
 end))
 
-# 495 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 495 "print.fs"
 
 let format_error : FStar_Range.range  ->  Prims.string  ->  Prims.string = (fun r msg -> (let _131_432 = (FStar_Range.string_of_range r)
 in (FStar_Util.format2 "%s: %s\n" _131_432 msg)))
 
-# 497 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 497 "print.fs"
 
 let rec sigelt_to_string_short : FStar_Absyn_Syntax.sigelt  ->  Prims.string = (fun x -> (match (x) with
 | FStar_Absyn_Syntax.Sig_let ((_29_871, {FStar_Absyn_Syntax.lbname = FStar_Util.Inr (l); FStar_Absyn_Syntax.lbtyp = t; FStar_Absyn_Syntax.lbeff = _29_875; FStar_Absyn_Syntax.lbdef = _29_873}::[]), _29_883, _29_885, _29_887) -> begin
@@ -1142,7 +1142,7 @@ in (FStar_All.pipe_right _131_437 (FStar_List.map (fun l -> l.FStar_Ident.str)))
 in (FStar_All.pipe_right _131_438 (FStar_String.concat ", ")))
 end))
 
-# 501 "C:\\Users\\nswamy\\workspace\\FStar\\src\\absyn\\print.fs"
+# 501 "print.fs"
 
 let rec modul_to_string : FStar_Absyn_Syntax.modul  ->  Prims.string = (fun m -> (let _131_443 = (sli m.FStar_Absyn_Syntax.name)
 in (let _131_442 = (let _131_441 = (FStar_List.map sigelt_to_string m.FStar_Absyn_Syntax.declarations)
