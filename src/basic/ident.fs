@@ -1,4 +1,5 @@
-﻿module FStar.Ident
+﻿
+module FStar.Ident
 open FStar.Range
 
 type ident = {idText:string;

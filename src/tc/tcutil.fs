@@ -28,8 +28,10 @@ open FStar.Tc.Normalize
 open FStar.Tc.Rel
 open FStar.Absyn.Syntax
 open FStar.Ident
+type lcomp_with_binder = option<Env.binding> * lcomp
 
-// VALS HACK HERE
+
+// VALS_HACK_HERE
 
 (**************************************************************************************)
 (* Calling the solver *)
@@ -577,8 +579,6 @@ let extract_lb_annotation env t e = match t.n with
 (*********************************************************************************************)
 (* Utils related to monadic computations *)
 (*********************************************************************************************)
-type lcomp_with_binder = option<Env.binding> * lcomp
-
 let destruct_comp c : (typ * typ * typ) =
   let wp, wlp = match c.effect_args with
     | [(Inl wp, _); (Inl wlp, _)] -> wp, wlp

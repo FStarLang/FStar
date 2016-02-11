@@ -23,7 +23,7 @@ open FStar.Syntax.Syntax
 open FStar.Util
 open FStar.Ident
 
-// VALS HACK HERE
+// VALS_HACK_HERE
 
 (*
     force_uvar (t:term) 

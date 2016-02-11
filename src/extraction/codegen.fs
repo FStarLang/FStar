@@ -24,9 +24,10 @@ open FStar
 open FStar.Util
 open FStar.Extraction.ML
 open FStar.Extraction.ML.Syntax
-open FSharp.Format
+open FStar.Extraction.ML.Env
+open FStar.Format
 
-// VALS HACK HERE
+// VALS_HACK_HERE
 
 (* -------------------------------------------------------------------- *)
 type assoc  = | ILeft | IRight | Left | Right | NonAssoc
@@ -752,8 +753,8 @@ let doc_of_mllib mllib =
 open FStar.Extraction.ML.Env
 let string_of_mlexpr (env:env) (e:mlexpr) =
     let doc = doc_of_expr (Util.flatten_mlpath env.currentModule) (min_op_prec, NonAssoc) e in
-    FSharp.Format.pretty 0 doc
+    FStar.Format.pretty 0 doc
 
 let string_of_mlty (env:env) (e:mlty) =
     let doc = doc_of_mltype (Util.flatten_mlpath env.currentModule) (min_op_prec, NonAssoc) e in
-    FSharp.Format.pretty 0 doc
+    FStar.Format.pretty 0 doc

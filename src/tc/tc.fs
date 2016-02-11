@@ -1986,9 +1986,7 @@ let finish_partial_modul env modul =
   if not (lid_equals modul.name Const.prims_lid)
   then begin
     env.solver.pop ("Ending modul " ^ modul.name.str);
-    if  not modul.is_interface
-    ||  List.contains modul.name.str !Options.admit_fsi
-    then env.solver.encode_modul env modul;
+    env.solver.encode_modul env modul;
     env.solver.refresh();
     Options.reset_options() |> ignore
   end;

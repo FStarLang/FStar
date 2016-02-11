@@ -113,7 +113,7 @@ type guard_t = {
 (* </type defs>                                              *)
 (* --------------------------------------------------------- *)
 
-// VALS HACK HERE
+// VALS_HACK_HERE
 
 (* --------------------------------------------------------- *)
 (* <new_uvar> Generating new unification variables/patterns  *)

@@ -39,20 +39,6 @@ type delta_level =
   | OnlyInline
   | Unfold
 
-let visible_at d q = match d, q with 
-  | NoDelta,    _         
-  | OnlyInline, Inline 
-  | Unfold,     Inline 
-  | Unfold,     Unfoldable -> true
-  | _ -> false 
-
-let glb_delta d1 d2 = match d1, d2 with 
-    | NoDelta, _
-    | _, NoDelta -> NoDelta
-    | OnlyInline, _
-    | _, OnlyInline -> OnlyInline
-    | Unfold, Unfold -> Unfold
-
 type mlift = typ -> typ -> typ
 
 type edge = {
@@ -113,6 +99,24 @@ type env_t = env
 type implicits = list<(env * uvar * term * typ * Range.range)>
 
 type sigtable = Util.smap<sigelt>
+
+// VALS_HACK_HERE
+
+let visible_at d q = match d, q with 
+  | NoDelta,    _         
+  | OnlyInline, Inline 
+  | Unfold,     Inline 
+  | Unfold,     Unfoldable -> true
+  | _ -> false 
+
+let glb_delta d1 d2 = match d1, d2 with 
+    | NoDelta, _
+    | _, NoDelta -> NoDelta
+    | OnlyInline, _
+    | _, OnlyInline -> OnlyInline
+    | Unfold, Unfold -> Unfold
+
+
 let default_table_size = 200
 let new_sigtab () = Util.smap_create default_table_size
 

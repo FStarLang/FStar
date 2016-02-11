@@ -19,7 +19,7 @@ verify-ex9defgh-padding: ex9defgh-padding.fst
 	$(FSTAR) $(SECLIB) $^
 
 verify-ex10-shift: ex10-shift.fst
-	$(FSTAR) $(addprefix $(FSTAR_HOME)/lib/, FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst) --admit_fsi FStar.Set $^
+	$(FSTAR) $(addprefix $(FSTAR_HOME)/lib/, FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst)  $^
 
 verify-robots:
 	$(FSTAR) robot.fst

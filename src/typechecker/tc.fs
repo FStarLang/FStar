@@ -34,6 +34,8 @@ module N  = FStar.TypeChecker.Normalize
 module TcUtil = FStar.TypeChecker.Util
 module U  = FStar.Syntax.Util
 
+// VALS_HACK_HERE
+
 let log env = !Options.log_types && not(lid_equals Const.prims_lid (Env.current_module env))
 let rng env = Env.get_range env
 let instantiate_both env = {env with Env.instantiate_imp=true}
@@ -2324,9 +2326,7 @@ let finish_partial_modul env modul exports =
   if not (lid_equals modul.name Const.prims_lid)
   then begin
     env.solver.pop ("Ending modul " ^ modul.name.str);
-    if  not modul.is_interface
-    ||  List.contains modul.name.str !Options.admit_fsi
-    then env.solver.encode_modul env modul;
+    env.solver.encode_modul env modul;
     env.solver.refresh();
     Options.reset_options() |> ignore
   end;

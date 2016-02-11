@@ -27,6 +27,8 @@ open FStar.Util
 open FStar.Ident
 open FStar.Const
 
+// VALS_HACK_HERE
+
 let imp_tag = Implicit false
 let as_imp = function
     | Hash
@@ -1700,7 +1702,7 @@ let desugar_partial_modul curmod env (m:AST.modul) : env_t * Syntax.modul =
   let m =
     if !Options.interactive_fsi then
         match m with
-            | Module(mname, decls) -> AST.Interface(mname, decls, Util.for_some (fun m -> m=mname.str) !Options.admit_fsi)
+            | Module(mname, decls) -> AST.Interface(mname, decls, true)
             | Interface(mname, _, _) -> failwith ("Impossible: " ^ mname.ident.idText)
     else m
   in

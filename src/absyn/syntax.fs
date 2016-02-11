@@ -272,11 +272,12 @@ type lcomp = {
     cflags: list<cflags>;
     comp: unit -> comp //a lazy computation
     }
+type path = list<string>
+
 // VALS_HACK_HERE
 (*********************************************************************************)
 (* Identifiers to/from strings *)
 (*********************************************************************************)
-type path = list<string>
 let dummyRange = 0L
 let withinfo v s r = {v=v; sort=s; p=r}
 let withsort v s = withinfo v s dummyRange

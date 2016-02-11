@@ -24,5 +24,4 @@ gc: gc.fst
 	$(FSTAR) $^
 
 unification: unification.fst
-	$(FSTAR) --explicit_deps $(addprefix --admit_fsi , FStar.Set FStar.OrdSet FStar.OrdSetProps) \
-	 $(addprefix $(FSTAR_HOME)/lib/, FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.Tot.fst ordset.fsi FStar.OrdSetProps.fst) $^
+	$(FSTAR) --explicit_deps $(addprefix $(FSTAR_HOME)/lib/, FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.List.Tot.fst ordset.fsti FStar.OrdSetProps.fst) $^

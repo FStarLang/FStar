@@ -52,6 +52,9 @@ type record_or_dc = {
   fields: list<(fieldname * typ)>;
   is_record:bool
 }
+type foundname =
+  | Term_name of term
+  | Eff_name  of sigelt * lident
 
 val fail_or:  (lident -> option<'a>) -> lident -> 'a
 val fail_or2: (ident -> option<'a>) -> ident -> 'a
@@ -63,9 +66,6 @@ val empty_env: unit -> env
 val default_total: env -> env
 val default_ml: env -> env
 
-type foundname =
-  | Term_name of term
-  | Eff_name  of sigelt * lident
 val current_module: env -> lident
 val try_lookup_id: env -> ident -> option<term>
 val try_lookup_lid: env -> lident -> option<term>
@@ -100,6 +100,6 @@ val export_interface: lident ->  env -> env
 (* private *) val try_lookup_lid': bool -> bool -> env -> lident -> option<term>
 (* private *) val extract_record: env -> sigelt -> unit
 (* private *) val unique:  bool -> bool -> env -> lident -> bool
-(* private *) val check_admits:  lident -> env -> unit
+(* private *) val check_admits: env -> unit
 (* private *) val finish:  env -> modul -> env
 (* private *) val resolve_in_open_namespaces: env -> lident -> (lident -> option<'a>) -> option<'a>

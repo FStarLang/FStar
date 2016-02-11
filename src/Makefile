@@ -184,40 +184,59 @@ clean:
 # Bootstrapping in OCaml
 # --------------------------------------------------------------------
 
-STDFILESEXP=system.fst
-STDFILES=system.fsi system.io.fsi system.text.fsi system.diagnostics.fsi system.collections.generic.fsi collections.fsi allboot.fsti stboot.fsi list.fsi option.fsi
-STDLIB=$(addprefix ../lib/, $(STDFILES))
-STDLIBEXP=$(addprefix ../lib/, $(STDFILES))
-
-BOOT_BASICFILES=char.fsi string.fsi bytes.fsti platform.fsi util.fsti getoptsimple.fsti version.fsi options.fs range.fsti unionfind.fsti version.fsi ident.fs const.fs 
-
-BOOT_BASIC=$(addprefix basic/, $(BOOT_BASICFILES))
-# BOOT_ABSYNFILES=syntax.fsi syntax.fs const.fs visit.fs util.fs print.fs ssyntax.fs
-# BOOT_ABSYN=$(addprefix absyn/, $(BOOT_ABSYNFILES))
-BOOT_PARSERFILES=ast.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs env.fsi env.fs tosyntax.fsi tosyntax.fs parse.fsti lexhelp.fs parseit.fsi driver.fs dep.fs
-BOOT_PARSER=$(addprefix parser/, $(BOOT_PARSERFILES))
-# BOOT_TCFILES=tcenv.fsi tcenv.fs recheck.fs normalize.fsi normalize.fs errors.fs rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs
-# BOOT_TC=$(addprefix tc/, $(BOOT_TCFILES))
-BOOT_FORMATFILES=format.fsi formatml.fs
-BOOT_FORMAT=$(addprefix format/, $(BOOT_FORMATFILES))
-# BOOT_EXTRACTIONFILES=ml-syntax.fs env.fs util.fs codegen.fsi codegen.fs extracttyp.fs extractexp.fs extractmod.fs
-# BOOT_EXTRACTION=$(addprefix extraction/, $(BOOT_EXTRACTIONFILES))
-
-
+STDLIB=$(addprefix ../lib/, system.fsti system.io.fsti system.text.fsti system.diagnostics.fsti system.collections.generic.fsti collections.fsti allboot.fsti stboot.fsti list.fsti option.fsti FStar.Util.fsti FStar.GetOpt.fsti FStar.Unionfind.fsti)
+BOOT_BASIC_FSTI=$(addprefix boot_fstis/, char.fsti string.fsti bytes.fsti platform.fsti version.fsti range.fsti)
+BOOT_BASIC_FS=$(addprefix basic/, options.fs ident.fs const.fs)
+BOOT_PARSER=$(addprefix parser/, ast.fs dsenv.fs desugar.fs env.fs tosyntax.fs parse.fsti lexhelp.fs parseit.fsi driver.fs dep.fs)
+BOOT_FORMAT=$(addprefix format/, formatml.fs)
 BOOT_MAIN=fstar/fstar.fs
-BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_FORMAT) $(ABSYN_SRC) $(SYNTAX_SRC) $(TC_SRC) $(TOSMT_SRC) $(BOOT_PARSER) $(EXTRACTION_SRC) $(TYPECHECKER_SRC) $(SMTENCODING_SRC) $(BOOT_MAIN) 
+BOOT_ALL=$(BOOT_BASIC_FS) $(BOOT_FORMAT) $(ABSYN_SRC) $(SYNTAX_SRC) $(TC_SRC) $(TOSMT_SRC) $(BOOT_PARSER) $(EXTRACTION_SRC) $(TYPECHECKER_SRC) $(SMTENCODING_SRC) $(BOOT_MAIN)
+
+ALL_INTERFACES=$(STDLIB) $(BOOT_BASIC_FSTI)
+ALL_SOURCES=FStar.Options.fst FStar.Ident.fst FStar.Const.fst \
+	        FStar.Format.fst \
+	    	FStar.Absyn.Syntax.fst FStar.Absyn.Const.fst FStar.Absyn.Visit.fst FStar.Absyn.Util.fst FStar.Absyn.Print.fst FStar.Absyn.SSyntax.fst \
+	    	FStar.Syntax.Syntax.fst FStar.Syntax.Const.fst FStar.Syntax.Subst.fst FStar.Syntax.Free.fst FStar.Syntax.InstFV.fst FStar.Syntax.Util.fst FStar.Syntax.Print.fst \
+	    	FStar.Tc.Env.fst FStar.Tc.Recheck.fst FStar.Tc.Normalize.fst FStar.Tc.Errors.fst FStar.Tc.Rel.fst FStar.Tc.Util.fst FStar.Tc.Tc.fst \
+	    	FStar.ToSMT.Term.fst FStar.ToSMT.Z3.fst FStar.ToSMT.SplitQueryCases.fst FStar.ToSMT.Encode.fst \
+	    	FStar.Parser.AST.fst FStar.Parser.DesugarEnv.fst FStar.Parser.Desugar.fst FStar.Parser.Env.fst FStar.Parser.ToSyntax.fst FStar.Parser.Parse.fsti FStar.Parser.Lexhelp.fst FStar.Parser.ParseIt.fsti FStar.Parser.Driver.fst FStar.Parser.Dep.fst \
+	    	FStar.Extraction.ML.Syntax.fst FStar.Extraction.ML.Env.fst FStar.Extraction.ML.Util.fst FStar.Extraction.ML.Code.fst FStar.Extraction.ML.ExtractTyp.fst FStar.Extraction.ML.ExtractExp.fst FStar.Extraction.ML.ExtractMod.fst \
+		FStar.TypeChecker.Common.fst FStar.TypeChecker.Env.fst FStar.TypeChecker.Normalize.fst FStar.TypeChecker.Recheck.fst FStar.TypeChecker.Errors.fst FStar.TypeChecker.Rel.fst FStar.TypeChecker.Util.fst FStar.TypeChecker.Tc.fst \
+	    	FStar.SMTEncoding.Term.fst FStar.SMTEncoding.SplitQueryCases.fst FStar.SMTEncoding.ErrorReporting.fst FStar.SMTEncoding.Z3.fst FStar.SMTEncoding.Encode.fst \
+	    	FStar.FStar.fst
 
 ADMITTED_MODULES=System System.IO System.Text System.Diagnostics System.Collections.Generic Collections FStar.Heap FStar.ST FStar.All FStar.List FStar.Option FStar.Char FStar.String FStar.List FStar.Bytes FStar.Platform FStar.Util FStar.Version FStar.Getopt FStar.Range FStar.Unionfind FStar.Parser.ParseIt FStar.Parser.Parse 
 ADMITS=$(addprefix --admit_fsi , $(ADMITTED_MODULES))
 
-basic/util.fsti: basic/util.fsi
-	cat basic/util.fsi | sed 's/type smap/opaque type smap/g' | sed 's/type out_channel/opaque type out_channel/g' | sed 's/type file_handle/opaque type file_handle/g' | sed 's/type string_builder/opaque type string_builder/g' | sed 's/type proc/opaque type proc/g' > basic/util.fsti
-
 FSTAROPTS=--explicit_deps
 
+all_boot_fsts:
+	cp format/format.fsi format/formatml.fsi
+	./tools/make_all_boot_fsts "$(BOOT_ALL)" 
 
-ocaml: $(BOOT_ALL)
-	../bin/fstar.exe --use_native_int --eager_inference --MLish --lax --fs_typ_app --odir ocaml-output $(FSTAROPTS) --codegen OCaml $(ADMITS) $^
+boot_fstis/%.fsti: basic/%.fsi
+	cp $^ $@
+
+boot_fsts/FStar.Parser.Parse.fsti: parser/parse.fsti
+	cp $^ $@
+
+boot_fsts/FStar.Parser.ParseIt.fsti: parser/parseit.fsi
+	cp $^ $@
+
+../lib/FStar.Util.fsti: basic/util.fsi
+	cat basic/util.fsi | sed 's/type smap/opaque type smap/g' | sed 's/type out_channel/opaque type out_channel/g' | sed 's/type file_handle/opaque type file_handle/g' | sed 's/type string_builder/opaque type string_builder/g' | sed 's/type proc/opaque type proc/g' > $@
+
+clean_ocaml_prep:
+	rm -rf boot_fsts boot_fstis
+	mkdir boot_fsts boot_fstis
+	cp basic/bytes.fsti boot_fstis/
+
+extract_ocaml_prep: all_boot_fsts
+
+extract_ocaml: $(ALL_INTERFACES) $(addprefix boot_fsts/, $(ALL_SOURCES))
+	../bin/fstar.exe --use_native_int --eager_inference --MLish --lax --fs_typ_app --odir ocaml-output $(FSTAROPTS) --codegen OCaml $^
+
+ocaml: clean_ocaml_prep extract_ocaml_prep extract_ocaml
 
 ocaml-test: ocaml boot-ocaml
 

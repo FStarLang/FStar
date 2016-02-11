@@ -26,7 +26,7 @@ open FStar.Syntax.Subst
 open FStar.Ident
 open FStar.Const
 
-// VALS HACK HERE
+// VALS_HACK_HERE
 
 let lid_to_string (l:lid) = l.str
 

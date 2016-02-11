@@ -1,8 +1,8 @@
 ﻿(* -------------------------------------------------------------------- *)
 #light "off"
 
-module FSharp.Format
-
+module FStar.Format
+open FSharp
 open FSharp.PPrint
 open Microsoft.FSharp.Compatibility
 

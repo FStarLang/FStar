@@ -23,7 +23,7 @@ open FStar.Util
 open FStar.Syntax
 open FStar.Syntax.Syntax
 
-// VALS HACK HERE
+// VALS_HACK_HERE
 
 (********************************************************************************)
 (************************* Free names and unif variables ************************)

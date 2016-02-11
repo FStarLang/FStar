@@ -73,6 +73,25 @@ and term = {tm:term'; hash:string; freevars:Syntax.memo<fvs>}
 and fv = string * sort
 and fvs = list<fv>
 
+
+type caption = option<string>
+type binders = list<(string * sort)>
+type projector = (string * sort)
+type constructor_t = (string * list<projector> * sort * int)
+type constructors  = list<constructor_t>
+type decl =
+  | DefPrelude
+  | DeclFun    of string * list<sort> * sort * caption
+  | DefineFun  of string * list<sort> * sort * term * caption
+  | Assume     of term   * caption
+  | Caption    of string
+  | Eval       of term
+  | Echo       of string
+  | Push
+  | Pop
+  | CheckSat
+type decls_t = list<decl>
+
 val fv_eq : fv -> fv -> bool
 val fv_of_term : term -> fv
 val free_variables: term -> fvs
@@ -109,23 +128,6 @@ val mkForall': (list<list<pat>> * option<int> * fvs * term) -> term
 val mkForall'': (list<list<pat>> * option<int> * list<sort> * term) -> term
 val mkExists: (list<list<pat>> * fvs * term) -> term
 
-type caption = option<string>
-type binders = list<(string * sort)>
-type projector = (string * sort)
-type constructor_t = (string * list<projector> * sort * int)
-type constructors  = list<constructor_t>
-type decl =
-  | DefPrelude
-  | DeclFun    of string * list<sort> * sort * caption
-  | DefineFun  of string * list<sort> * sort * term * caption
-  | Assume     of term   * caption
-  | Caption    of string
-  | Eval       of term
-  | Echo       of string
-  | Push
-  | Pop
-  | CheckSat
-type decls_t = list<decl>
 
 val fresh_token: (string * sort) -> int -> decl
 //val constructor_to_decl_aux: bool -> constructor_t -> decls_t

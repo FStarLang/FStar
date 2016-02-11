@@ -107,7 +107,7 @@ let rec extract (g:env) (m:modul) : env * list<mllib> =
     let g = {g with currentModule = name}  in
     if m.name.str = "Prims" 
     || m.is_interface
-    || List.contains m.name.str !Options.admit_fsi
+    || List.contains m.name.str !Options.no_extract
     then let g = extract_iface g m in
          g, [] //MLLib([Util.flatten_mlpath name, None, MLLib []])
     else let g, sigs = Util.fold_map extract_sig g m.declarations in

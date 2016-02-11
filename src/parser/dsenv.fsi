@@ -56,6 +56,15 @@ type record_or_dc = {
   fields: list<(fieldname * typ)>;
   is_record:bool
 }
+type occurrence =
+  | OSig of sigelt
+  | OLet of lident
+  | ORec of lident
+type foundname =
+  | Exp_name of occurrence * exp
+  | Typ_name of occurrence * typ
+  | Eff_name of occurrence * lident
+  | Knd_name of occurrence * lident
 
 val fail_or:  env -> (lident -> option<'a>) -> lident -> 'a
 val fail_or2: (ident -> option<'a>) -> ident -> 'a
@@ -66,15 +75,6 @@ val qualify_lid: env -> lident -> lident
 val empty_env: unit -> env
 val default_total: env -> env
 val default_ml: env -> env
-type occurrence =
-  | OSig of sigelt
-  | OLet of lident
-  | ORec of lident
-type foundname =
-  | Exp_name of occurrence * exp
-  | Typ_name of occurrence * typ
-  | Eff_name of occurrence * lident
-  | Knd_name of occurrence * lident
 val current_module: env -> lident
 val try_lookup_name : bool -> bool -> env -> lident -> option<foundname>
 val try_lookup_typ_var: env -> ident -> option<typ>

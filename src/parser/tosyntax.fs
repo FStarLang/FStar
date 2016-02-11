@@ -31,6 +31,8 @@ module C = FStar.Syntax.Const
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 
+// VALS_HACK_HERE
+
 let trans_aqual = function
   | Some AST.Implicit -> Some S.Implicit
   | Some AST.Equality -> Some S.Equality
@@ -1445,7 +1447,7 @@ let desugar_partial_modul curmod (env:env_t) (m:AST.modul) : env_t * Syntax.modu
   let m =
     if !Options.interactive_fsi then
         match m with
-            | Module(mname, decls) -> AST.Interface(mname, decls, Util.for_some (fun m -> m=mname.str) !Options.admit_fsi)
+            | Module(mname, decls) -> AST.Interface(mname, decls, true)
             | Interface(mname, _, _) -> failwith ("Impossible: " ^ mname.ident.idText)
     else m
   in

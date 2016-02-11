@@ -30,9 +30,9 @@ all:
 	$(FSTAR) FStar.Set.fst
 #	$(FSTAR) stboot.fsi stboot.fst   -- Name "FStar.All.ML" not found
 #	$(FSTAR) FStar.Relational.fst
-#	$(FSTAR) --explicit_deps --admit_fsi FStar.Set --admit_fsi FStar.Map FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst map.fsi FStar.List.Tot.fst FStar.HyperHeap.fst stHyperHeap.fst
+#	$(FSTAR) --explicit_deps   FStar.FunctionalExtensionality.fst FStar.Set.fsi FStar.Heap.fst FStar.ST.fst map.fsi FStar.List.Tot.fst FStar.HyperHeap.fst stHyperHeap.fst
 	$(FSTAR) FStar.Tcp.fst
-#	$(FSTAR) --admit_fsi FStar.Set --admit_fsi FStar.Map FStar.Set.fsi FStar.Heap.fst map.fsi FStar.TwoLevelHeap.fst
+#	$(FSTAR)   FStar.Set.fsi FStar.Heap.fst map.fsi FStar.TwoLevelHeap.fst
 #	$(FSTAR) FStar.Util.fst    -- problem filed as #359
 	$(FSTAR) FStar.Squash.fst
 #	$(FSTAR) FStar.SquashProperties.fst

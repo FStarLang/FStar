@@ -28,6 +28,10 @@ open FStar.Ident
 open FStar.Syntax.Subst
 open FStar.TypeChecker.Common
 
+type lcomp_with_binder = option<bv> * lcomp
+
+// VALS_HACK_HERE
+
 module SS = FStar.Syntax.Subst
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
@@ -376,8 +380,6 @@ let decorate_pattern env p exps =
 (*********************************************************************************************)
 (* Utils related to monadic computations *)
 (*********************************************************************************************)
-type lcomp_with_binder = option<bv> * lcomp
-
 let destruct_comp c : (typ * typ * typ) =
   let wp, wlp = match c.effect_args with
     | [(wp, _); (wlp, _)] -> wp, wlp

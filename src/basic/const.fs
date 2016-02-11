@@ -1,4 +1,5 @@
-﻿module FStar.Const
+﻿
+module FStar.Const
 
 type sconst =
   | Const_effect

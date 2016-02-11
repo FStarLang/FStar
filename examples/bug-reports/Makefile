@@ -37,7 +37,7 @@ extraction-error1:
 			    Bug.ml
 
 ExtractionBug.ver:
-	../../bin/fstar $(OTHERFLAGS) --explicit_deps --admit_fsi FStar.HyperHeap FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.Map.fst FStar.List.Tot.fst FStar.HyperHeap.fsi stHyperHeap.fst ExtractionBug.fst --dump_module ExtractionBug --print_implicits --codegen OCaml
+	../../bin/fstar $(OTHERFLAGS) --explicit_deps  FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.Map.fst FStar.List.Tot.fst FStar.HyperHeap.fsi stHyperHeap.fst ExtractionBug.fst --dump_module ExtractionBug --print_implicits --codegen OCaml
 
 ExtractionBug.out:
 	cp ../../lib/ml/native_int/prims.ml .

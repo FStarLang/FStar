@@ -171,8 +171,6 @@ type stack = list<stack_elt>
 let batch_mode_tc_no_prims dsenv env filenames admit_fsi =
     let all_mods, dsenv, env = filenames |> List.fold_left (fun (all_mods, dsenv, env) f ->
         Util.reset_gensym();
-        // This is reset at after every call to [tc_one_file] terminates... so we're overriding it here.
-        Options.admit_fsi := admit_fsi @ !Options.admit_fsi;
         let dsenv, env, ms = tc_one_file dsenv env f in
         all_mods@ms, dsenv, env)
         ([], dsenv, env) in
@@ -381,7 +379,7 @@ let codegen fmods env=
         let ext = if !Options.codegen = Some "FSharp" then ".fs" else ".ml" in
         let newDocs = List.collect Extraction.ML.Code.doc_of_mllib mllibs in
 //                           else List.collect Extraction.OCaml.Code.doc_of_mllib mllibs, ".ml" in
-        List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^ext)) (FSharp.Format.pretty 120 d)) newDocs
+        List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^ext)) (FStar.Format.pretty 120 d)) newDocs
     end
 
 exception Found of string
