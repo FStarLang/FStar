@@ -534,9 +534,9 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
         let ty_annot =
             if Util.codegen_fsharp () && (rec_ || top_level) //needed for polymorphic recursion and to overcome incompleteness of type inference in F#
             then match tys with
-                    | (_::_, _) -> //except, emitting binders for type variables in F# sometimes also requires emitting type constraints; which is not yet supported
+                    | Some (_::_, _) | None -> //except, emitting binders for type variables in F# sometimes also requires emitting type constraints; which is not yet supported
                       text ""
-                    | ([], ty) ->
+                    | Some ([], ty) ->
                       let ty = doc_of_mltype currentModule (min_op_prec, NonAssoc) ty in
                       reduce1 [text ":"; ty]
 //                      let ids = List.map (fun (x, _) -> text x) ids in
@@ -546,9 +546,9 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
 //                      end
             else if top_level
             then match tys with
-                    | _::_, _ -> text ""
-                    | [], ty ->
-                      let ty = doc_of_mltype currentModule (min_op_prec, NonAssoc) (snd tys) in
+                    | None | Some (_::_, _) -> text ""
+                    | Some ([], ty) ->
+                      let ty = doc_of_mltype currentModule (min_op_prec, NonAssoc) ty in
 //                      let vars = vars |> List.map (fun x -> doc_of_mltype currentModule (min_op_prec, NonAssoc) (MLTY_Var x)) |>  reduce1  in
                       reduce1 [text ":"; ty] 
             else text "" in

@@ -586,7 +586,7 @@ in (match (_79_578) with
 in (FStar_All.pipe_left (maybe_lalloc_eta_data g is_data t) _181_230))
 in (let l_app = (FStar_List.fold_right (fun _79_582 out -> (match (_79_582) with
 | (x, arg) -> begin
-(FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty out.FStar_Extraction_ML_Syntax.ty) (FStar_Extraction_ML_Syntax.MLE_Let (((false, ({FStar_Extraction_ML_Syntax.mllb_name = x; FStar_Extraction_ML_Syntax.mllb_tysc = ([], arg.FStar_Extraction_ML_Syntax.ty); FStar_Extraction_ML_Syntax.mllb_add_unit = false; FStar_Extraction_ML_Syntax.mllb_def = arg})::[]), out))))
+(FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty out.FStar_Extraction_ML_Syntax.ty) (FStar_Extraction_ML_Syntax.MLE_Let (((false, ({FStar_Extraction_ML_Syntax.mllb_name = x; FStar_Extraction_ML_Syntax.mllb_tysc = Some (([], arg.FStar_Extraction_ML_Syntax.ty)); FStar_Extraction_ML_Syntax.mllb_add_unit = false; FStar_Extraction_ML_Syntax.mllb_def = arg})::[]), out))))
 end)) lbs app)
 in (l_app, f, t)))
 end))
@@ -812,7 +812,7 @@ end else begin
 (Prims.snd polytype)
 end
 in (let e = (check_exp env e f expected_t)
-in (f, {FStar_Extraction_ML_Syntax.mllb_name = nm; FStar_Extraction_ML_Syntax.mllb_tysc = polytype; FStar_Extraction_ML_Syntax.mllb_add_unit = add_unit; FStar_Extraction_ML_Syntax.mllb_def = e}))))
+in (f, {FStar_Extraction_ML_Syntax.mllb_name = nm; FStar_Extraction_ML_Syntax.mllb_tysc = Some (polytype); FStar_Extraction_ML_Syntax.mllb_add_unit = add_unit; FStar_Extraction_ML_Syntax.mllb_def = e}))))
 end))
 in (let lbs = (FStar_All.pipe_right lbs (FStar_List.map maybe_generalize))
 in (let _79_854 = (FStar_List.fold_right (fun lb _79_835 -> (match (_79_835) with
@@ -1038,13 +1038,7 @@ in (FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty FStar_Extraction_ML_
 in ((FStar_List.append wildcards (((mlid, targ))::[])), _181_334))
 in FStar_Extraction_ML_Syntax.MLE_Fun (_181_335))
 in (FStar_All.pipe_left (FStar_Extraction_ML_Syntax.with_ty disc_ty) _181_336))
-in (let _181_342 = (let _181_341 = (let _181_340 = (let _181_339 = (let _181_338 = (let _181_337 = (fresh "dummy_ensures_is_polymorphic_hence_not_printed")
-in (_181_337)::[])
-in (_181_338, disc_ty))
-in {FStar_Extraction_ML_Syntax.mllb_name = (FStar_Extraction_ML_Env.convIdent discName.FStar_Ident.ident); FStar_Extraction_ML_Syntax.mllb_tysc = _181_339; FStar_Extraction_ML_Syntax.mllb_add_unit = false; FStar_Extraction_ML_Syntax.mllb_def = discrBody})
-in (_181_340)::[])
-in (false, _181_341))
-in FStar_Extraction_ML_Syntax.MLM_Let (_181_342)))))))))
+in FStar_Extraction_ML_Syntax.MLM_Let ((false, ({FStar_Extraction_ML_Syntax.mllb_name = (FStar_Extraction_ML_Env.convIdent discName.FStar_Ident.ident); FStar_Extraction_ML_Syntax.mllb_tysc = None; FStar_Extraction_ML_Syntax.mllb_add_unit = false; FStar_Extraction_ML_Syntax.mllb_def = discrBody})::[])))))))))
 
 
 

@@ -931,21 +931,21 @@ in (let ids = (FStar_List.map (fun _77_481 -> (match (_77_481) with
 end)) ids)
 in (let ty_annot = if ((FStar_Extraction_ML_Util.codegen_fsharp ()) && (rec_ || top_level)) then begin
 (match (tys) with
-| (_77_486::_77_484, _77_489) -> begin
+| (Some (_::_, _)) | (None) -> begin
 (FSharp_Format.text "")
 end
-| ([], ty) -> begin
+| Some ([], ty) -> begin
 (let ty = (doc_of_mltype currentModule (min_op_prec, NonAssoc) ty)
 in (FSharp_Format.reduce1 (((FSharp_Format.text ":"))::(ty)::[])))
 end)
 end else begin
 if top_level then begin
 (match (tys) with
-| (_77_498::_77_496, _77_501) -> begin
+| (None) | (Some (_::_, _)) -> begin
 (FSharp_Format.text "")
 end
-| ([], ty) -> begin
-(let ty = (doc_of_mltype currentModule (min_op_prec, NonAssoc) (Prims.snd tys))
+| Some ([], ty) -> begin
+(let ty = (doc_of_mltype currentModule (min_op_prec, NonAssoc) ty)
 in (FSharp_Format.reduce1 (((FSharp_Format.text ":"))::(ty)::[])))
 end)
 end else begin
@@ -973,7 +973,7 @@ end))
 
 # 567 "codegen.fs"
 
-let doc_of_mltydecl : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mltydecl  ->  FSharp_Format.doc = (fun currentModule decls -> (let for1 = (fun _77_519 -> (match (_77_519) with
+let doc_of_mltydecl : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mltydecl  ->  FSharp_Format.doc = (fun currentModule decls -> (let for1 = (fun _77_525 -> (match (_77_525) with
 | (x, tparams, body) -> begin
 (let tparams = (match (tparams) with
 | [] -> begin
@@ -982,7 +982,7 @@ end
 | x::[] -> begin
 (FSharp_Format.text (FStar_Extraction_ML_Syntax.idsym x))
 end
-| _77_524 -> begin
+| _77_530 -> begin
 (let doc = (FStar_List.map (fun x -> (FSharp_Format.text (FStar_Extraction_ML_Syntax.idsym x))) tparams)
 in (let _179_285 = (FSharp_Format.combine (FSharp_Format.text ", ") doc)
 in (FSharp_Format.parens _179_285)))
@@ -992,7 +992,7 @@ in (let forbody = (fun body -> (match (body) with
 (doc_of_mltype currentModule (min_op_prec, NonAssoc) ty)
 end
 | FStar_Extraction_ML_Syntax.MLTD_Record (fields) -> begin
-(let forfield = (fun _77_537 -> (match (_77_537) with
+(let forfield = (fun _77_543 -> (match (_77_543) with
 | (name, ty) -> begin
 (let name = (FSharp_Format.text name)
 in (let ty = (doc_of_mltype currentModule (min_op_prec, NonAssoc) ty)
@@ -1003,13 +1003,13 @@ in (FSharp_Format.combine (FSharp_Format.text "; ") _179_290))
 in (FSharp_Format.cbrackets _179_291)))
 end
 | FStar_Extraction_ML_Syntax.MLTD_DType (ctors) -> begin
-(let forctor = (fun _77_545 -> (match (_77_545) with
+(let forctor = (fun _77_551 -> (match (_77_551) with
 | (name, tys) -> begin
 (match (tys) with
 | [] -> begin
 (FSharp_Format.text name)
 end
-| _77_548 -> begin
+| _77_554 -> begin
 (let tys = (FStar_List.map (doc_of_mltype currentModule (t_prio_tpl, Left)) tys)
 in (let tys = (FSharp_Format.combine (FSharp_Format.text " * ") tys)
 in (FSharp_Format.reduce1 (((FSharp_Format.text name))::((FSharp_Format.text "of"))::(tys)::[]))))
@@ -1067,7 +1067,7 @@ in (let args = (let _179_316 = (FSharp_Format.combine (FSharp_Format.text " * ")
 in (FSharp_Format.parens _179_316))
 in (FSharp_Format.reduce1 (((FSharp_Format.text "exception"))::((FSharp_Format.text x))::((FSharp_Format.text "of"))::(args)::[]))))
 end
-| FStar_Extraction_ML_Syntax.MLS_Val (x, (_77_579, ty)) -> begin
+| FStar_Extraction_ML_Syntax.MLS_Val (x, (_77_585, ty)) -> begin
 (let ty = (doc_of_mltype currentModule (min_op_prec, NonAssoc) ty)
 in (FSharp_Format.reduce1 (((FSharp_Format.text "val"))::((FSharp_Format.text x))::((FSharp_Format.text ": "))::(ty)::[])))
 end
@@ -1125,14 +1125,14 @@ in (FSharp_Format.reduce docs))))
 
 # 692 "codegen.fs"
 
-let rec doc_of_mllib_r : FStar_Extraction_ML_Syntax.mllib  ->  (Prims.string * FSharp_Format.doc) Prims.list = (fun _77_625 -> (match (_77_625) with
+let rec doc_of_mllib_r : FStar_Extraction_ML_Syntax.mllib  ->  (Prims.string * FSharp_Format.doc) Prims.list = (fun _77_631 -> (match (_77_631) with
 | FStar_Extraction_ML_Syntax.MLLib (mllib) -> begin
-(let rec for1_sig = (fun _77_632 -> (match (_77_632) with
+(let rec for1_sig = (fun _77_638 -> (match (_77_638) with
 | (x, sigmod, FStar_Extraction_ML_Syntax.MLLib (sub)) -> begin
 (let head = (FSharp_Format.reduce1 (((FSharp_Format.text "module"))::((FSharp_Format.text x))::((FSharp_Format.text ":"))::((FSharp_Format.text "sig"))::[]))
 in (let tail = (FSharp_Format.reduce1 (((FSharp_Format.text "end"))::[]))
-in (let doc = (FStar_Option.map (fun _77_638 -> (match (_77_638) with
-| (s, _77_637) -> begin
+in (let doc = (FStar_Option.map (fun _77_644 -> (match (_77_644) with
+| (s, _77_643) -> begin
 (doc_of_sig x s)
 end)) sigmod)
 in (let sub = (FStar_List.map for1_sig sub)
@@ -1149,7 +1149,7 @@ end))::_179_348)
 in ((FSharp_Format.cat head FSharp_Format.hardline))::_179_349)
 in (FSharp_Format.reduce _179_350)))))))
 end))
-and for1_mod = (fun istop _77_651 -> (match (_77_651) with
+and for1_mod = (fun istop _77_657 -> (match (_77_657) with
 | (x, sigmod, FStar_Extraction_ML_Syntax.MLLib (sub)) -> begin
 (let head = (let _179_353 = if (FStar_Extraction_ML_Util.codegen_fsharp ()) then begin
 ((FSharp_Format.text "module"))::((FSharp_Format.text x))::[]
@@ -1166,8 +1166,8 @@ in (let tail = if (not (istop)) then begin
 end else begin
 (FSharp_Format.reduce1 [])
 end
-in (let doc = (FStar_Option.map (fun _77_657 -> (match (_77_657) with
-| (_77_655, m) -> begin
+in (let doc = (FStar_Option.map (fun _77_663 -> (match (_77_663) with
+| (_77_661, m) -> begin
 (doc_of_mod x m)
 end)) sigmod)
 in (let sub = (FStar_List.map (for1_mod false) sub)
@@ -1193,7 +1193,7 @@ in (head)::_179_361)
 in (FStar_List.append prefix _179_362))
 in (FStar_All.pipe_left FSharp_Format.reduce _179_363))))))))
 end))
-in (let docs = (FStar_List.map (fun _77_669 -> (match (_77_669) with
+in (let docs = (FStar_List.map (fun _77_675 -> (match (_77_675) with
 | (x, s, m) -> begin
 (let _179_365 = (for1_mod true (x, s, m))
 in (x, _179_365))

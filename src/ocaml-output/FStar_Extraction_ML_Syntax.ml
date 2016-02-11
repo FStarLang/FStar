@@ -499,7 +499,7 @@ type mlexpr' =
  and mlexpr =
 {expr : mlexpr'; ty : mlty} 
  and mllb =
-{mllb_name : mlident; mllb_tysc : mltyscheme; mllb_add_unit : Prims.bool; mllb_def : mlexpr} 
+{mllb_name : mlident; mllb_tysc : mltyscheme Prims.option; mllb_add_unit : Prims.bool; mllb_def : mlexpr} 
  and mlbranch =
 (mlpattern * mlexpr Prims.option * mlexpr) 
  and mlletbinding =

@@ -93,7 +93,7 @@ and mlbranch = mlpattern * option<mlexpr> * mlexpr
 
 and mllb = {
     mllb_name:mlident;
-    mllb_tysc:mltyscheme;
+    mllb_tysc:option<mltyscheme>; // May be None for top-level bindings only
     mllb_add_unit:bool;
     mllb_def:mlexpr;
 }
