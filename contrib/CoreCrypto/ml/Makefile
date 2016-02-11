@@ -57,7 +57,7 @@ all: CoreCrypto.cmxa
 $(PLATFORM)/platform.cmx: $(PLATFORM)/platform.ml
 	$(MAKE) -C $(PLATFORM)
 
-DLL_OBJ = $(PLATFORM)/platform.cmx CoreCrypto.cmx openssl_stub.o DHDB.cmx $(DB)/DB.cmx
+DLL_OBJ = $(PLATFORM)/platform.cmx CoreCrypto.cmx openssl_stub.o $(DB)/DB.cmx DHDB.cmx
 CoreCrypto.cmxa: $(DLL_OBJ)
 	$(OCAMLMKLIB) -lcrypto  $(EXTRA_LIBS) -o CoreCrypto $^
 

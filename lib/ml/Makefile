@@ -2,8 +2,8 @@
 # $(MAKE) -C $(FSTAR_HOME)/lib/ml hyperheap PRIMS=native_int/prims.ml INCLUDES="-I native_int/"
 PRIMS=prims.ml
 INCLUDES=
-FILES=$(PRIMS) FStar_ST.ml FStar_All.ml FStar_List.ml FStar_Option.ml FStar_Char.ml FStar_String.ml FStar_Set.ml
-HYPERHEAP=$(PRIMS) ./hyperheap/FStar_ST.ml FStar_All.ml FStar_List.ml FStar_Option.ml FStar_Char.ml FStar_String.ml FStar_Set.ml ./hyperheap/FStar_HyperHeap.ml
+FILES=$(PRIMS) FStar_ST.ml FStar_All.ml FStar_IO.ml FStar_List.ml FStar_Option.ml FStar_Char.ml FStar_String.ml FStar_Set.ml
+HYPERHEAP=$(PRIMS) ./hyperheap/FStar_ST.ml FStar_All.ml FStar_IO.ml FStar_List.ml FStar_Option.ml FStar_Char.ml FStar_String.ml FStar_Set.ml ./hyperheap/FStar_HyperHeap.ml
 
 OCAMLOPT=ocamlfind ocamlopt -thread -package batteries -linkpkg -g $(INCLUDES)
 OCAMLDEP=ocamldep
