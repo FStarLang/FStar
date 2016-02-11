@@ -1,12 +1,10 @@
 
 open Prims
 # 24 "instfv.fs"
-
 type inst_t =
 (FStar_Ident.lident * FStar_Syntax_Syntax.universes) Prims.list
 
 # 26 "instfv.fs"
-
 let rec inst : inst_t  ->  FStar_Syntax_Syntax.term  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun s t -> (let t = (FStar_Syntax_Subst.compress t)
 in (let mk = (fun s -> (let _141_13 = (FStar_ST.read t.FStar_Syntax_Syntax.tk)
 in (FStar_Syntax_Syntax.mk s _141_13 t.FStar_Syntax_Syntax.pos)))

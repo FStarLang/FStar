@@ -1,12 +1,10 @@
 
 open Prims
 # 36 "dep.fs"
-
 type map =
 Prims.string FStar_Util.smap
 
 # 38 "dep.fs"
-
 let check_and_strip_suffix : Prims.string  ->  Prims.string Prims.option = (fun f -> (let suffixes = (".fsti")::(".fst")::(".fsi")::(".fs")::[]
 in (let matches = (FStar_List.map (fun ext -> (let lext = (FStar_String.length ext)
 in (let l = (FStar_String.length f)
@@ -25,11 +23,9 @@ None
 end))))
 
 # 55 "dep.fs"
-
 let is_interface : Prims.string  ->  Prims.bool = (fun f -> ((FStar_String.get f ((FStar_String.length f) - 1)) = 'i'))
 
 # 58 "dep.fs"
-
 let print_map : map  ->  Prims.unit = (fun m -> (let _174_13 = (let _174_12 = (FStar_Util.smap_keys m)
 in (FStar_List.unique _174_12))
 in (FStar_List.iter (fun k -> (let _174_11 = (let _174_10 = (FStar_Util.smap_try_find m k)
@@ -37,7 +33,6 @@ in (FStar_Util.must _174_10))
 in (FStar_Util.print2 "%s: %s\n" k _174_11))) _174_13)))
 
 # 64 "dep.fs"
-
 let lowercase_module_name : Prims.string  ->  Prims.string = (fun f -> (match ((let _174_16 = (FStar_Util.basename f)
 in (check_and_strip_suffix _174_16))) with
 | Some (longname) -> begin
@@ -50,7 +45,6 @@ in (Prims.raise _174_18))
 end))
 
 # 74 "dep.fs"
-
 let build_map : Prims.string Prims.list  ->  map = (fun filenames -> (let include_directories = (FStar_Options.get_include_path ())
 in (let include_directories = (FStar_List.map FStar_Util.normalize_file_path include_directories)
 in (let include_directories = (FStar_List.unique include_directories)
@@ -105,7 +99,6 @@ in (FStar_Util.smap_add map _174_29 f))) filenames)
 in map))))))))
 
 # 115 "dep.fs"
-
 let enter_namespace : map  ->  map  ->  Prims.string  ->  Prims.bool = (fun original_map working_map prefix -> (let found = (FStar_ST.alloc false)
 in (let prefix = (Prims.strcat prefix ".")
 in (let _72_67 = (let _174_39 = (let _174_38 = (FStar_Util.smap_keys original_map)
@@ -122,7 +115,6 @@ end) _174_39))
 in (FStar_ST.read found)))))
 
 # 130 "dep.fs"
-
 let string_of_lid : FStar_Ident.lident  ->  Prims.bool  ->  Prims.string = (fun l last -> (let suffix = if last then begin
 (l.FStar_Ident.ident.FStar_Ident.idText)::[]
 end else begin
@@ -133,12 +125,10 @@ in (FStar_List.append _174_45 suffix))
 in (FStar_String.concat "." names))))
 
 # 137 "dep.fs"
-
 let lowercase_join_longident : FStar_Ident.lident  ->  Prims.bool  ->  Prims.string = (fun l last -> (let _174_50 = (string_of_lid l last)
 in (FStar_String.lowercase _174_50)))
 
 # 141 "dep.fs"
-
 let check_module_declaration_against_filename : FStar_Ident.lident  ->  Prims.string  ->  Prims.unit = (fun lid filename -> (let k' = (lowercase_join_longident lid true)
 in if ((let _174_57 = (let _174_56 = (let _174_55 = (FStar_Util.basename filename)
 in (check_and_strip_suffix _174_55))
@@ -152,11 +142,9 @@ end else begin
 end))
 
 # 148 "dep.fs"
-
 exception Exit
 
 # 148 "dep.fs"
-
 let is_Exit = (fun _discr_ -> (match (_discr_) with
 | Exit (_) -> begin
 true
@@ -166,7 +154,6 @@ false
 end))
 
 # 152 "dep.fs"
-
 let collect_one : Prims.string FStar_Util.smap  ->  Prims.string  ->  Prims.string Prims.list = (fun original_map filename -> (let deps = (FStar_ST.alloc [])
 in (let add_dep = (fun d -> if (not ((let _174_68 = (FStar_ST.read deps)
 in (FStar_List.existsb (fun d' -> (d' = d)) _174_68)))) then begin
@@ -455,14 +442,12 @@ in (let _72_512 = (collect_file ast)
 in (FStar_ST.read deps)))))))))))
 
 # 399 "dep.fs"
-
 type color =
 | White
 | Gray
 | Black
 
 # 399 "dep.fs"
-
 let is_White = (fun _discr_ -> (match (_discr_) with
 | White (_) -> begin
 true
@@ -472,7 +457,6 @@ false
 end))
 
 # 399 "dep.fs"
-
 let is_Gray = (fun _discr_ -> (match (_discr_) with
 | Gray (_) -> begin
 true
@@ -482,7 +466,6 @@ false
 end))
 
 # 399 "dep.fs"
-
 let is_Black = (fun _discr_ -> (match (_discr_) with
 | Black (_) -> begin
 true
@@ -492,7 +475,6 @@ false
 end))
 
 # 402 "dep.fs"
-
 let collect : Prims.string Prims.list  ->  ((Prims.string * Prims.string Prims.list) Prims.list * Prims.string Prims.list) = (fun filenames -> (let graph = (FStar_Util.smap_create 41)
 in (let m = (build_map filenames)
 in (let rec discover_one = (fun key -> if ((FStar_Util.smap_try_find graph key) = None) then begin
@@ -558,7 +540,6 @@ in (FStar_List.map must_find _174_170))
 in (by_target, topologically_sorted))))))))))))
 
 # 473 "dep.fs"
-
 let print_make : (Prims.string * Prims.string Prims.list) Prims.list  ->  Prims.unit = (fun deps -> (FStar_List.iter (fun _72_562 -> (match (_72_562) with
 | (f, deps) -> begin
 (let deps = (FStar_List.map (fun s -> (FStar_Util.replace_string s " " "\\ ")) deps)
@@ -566,11 +547,9 @@ in (FStar_Util.print2 "%s: %s\n" f (FStar_String.concat " " deps)))
 end)) deps))
 
 # 479 "dep.fs"
-
 let print_nubuild : Prims.string Prims.list  ->  Prims.unit = (fun l -> (FStar_List.iter FStar_Util.print_endline (FStar_List.rev l)))
 
 # 482 "dep.fs"
-
 let print : ((Prims.string * Prims.string Prims.list) Prims.list * Prims.string Prims.list)  ->  Prims.unit = (fun deps -> (match ((FStar_ST.read FStar_Options.dep)) with
 | Some ("nubuild") -> begin
 (print_nubuild (Prims.snd deps))

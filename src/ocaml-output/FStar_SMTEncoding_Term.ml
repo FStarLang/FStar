@@ -1,7 +1,6 @@
 
 open Prims
 # 26 "term.fs"
-
 type sort =
 | Bool_sort
 | Int_sort
@@ -14,7 +13,6 @@ type sort =
 | Sort of Prims.string
 
 # 27 "term.fs"
-
 let is_Bool_sort = (fun _discr_ -> (match (_discr_) with
 | Bool_sort (_) -> begin
 true
@@ -24,7 +22,6 @@ false
 end))
 
 # 28 "term.fs"
-
 let is_Int_sort = (fun _discr_ -> (match (_discr_) with
 | Int_sort (_) -> begin
 true
@@ -34,7 +31,6 @@ false
 end))
 
 # 29 "term.fs"
-
 let is_String_sort = (fun _discr_ -> (match (_discr_) with
 | String_sort (_) -> begin
 true
@@ -44,7 +40,6 @@ false
 end))
 
 # 30 "term.fs"
-
 let is_Ref_sort = (fun _discr_ -> (match (_discr_) with
 | Ref_sort (_) -> begin
 true
@@ -54,7 +49,6 @@ false
 end))
 
 # 31 "term.fs"
-
 let is_Term_sort = (fun _discr_ -> (match (_discr_) with
 | Term_sort (_) -> begin
 true
@@ -64,7 +58,6 @@ false
 end))
 
 # 32 "term.fs"
-
 let is_Fuel_sort = (fun _discr_ -> (match (_discr_) with
 | Fuel_sort (_) -> begin
 true
@@ -74,7 +67,6 @@ false
 end))
 
 # 33 "term.fs"
-
 let is_Array = (fun _discr_ -> (match (_discr_) with
 | Array (_) -> begin
 true
@@ -84,7 +76,6 @@ false
 end))
 
 # 34 "term.fs"
-
 let is_Arrow = (fun _discr_ -> (match (_discr_) with
 | Arrow (_) -> begin
 true
@@ -94,7 +85,6 @@ false
 end))
 
 # 35 "term.fs"
-
 let is_Sort = (fun _discr_ -> (match (_discr_) with
 | Sort (_) -> begin
 true
@@ -104,28 +94,24 @@ false
 end))
 
 # 33 "term.fs"
-
 let ___Array____0 : sort  ->  (sort * sort) = (fun projectee -> (match (projectee) with
 | Array (_96_10) -> begin
 _96_10
 end))
 
 # 34 "term.fs"
-
 let ___Arrow____0 : sort  ->  (sort * sort) = (fun projectee -> (match (projectee) with
 | Arrow (_96_13) -> begin
 _96_13
 end))
 
 # 35 "term.fs"
-
 let ___Sort____0 : sort  ->  Prims.string = (fun projectee -> (match (projectee) with
 | Sort (_96_16) -> begin
 _96_16
 end))
 
 # 37 "term.fs"
-
 let rec strSort : sort  ->  Prims.string = (fun x -> (match (x) with
 | Bool_sort -> begin
 "Bool"
@@ -160,7 +146,6 @@ s
 end))
 
 # 48 "term.fs"
-
 type op =
 | True
 | False
@@ -184,7 +169,6 @@ type op =
 | Var of Prims.string
 
 # 49 "term.fs"
-
 let is_True = (fun _discr_ -> (match (_discr_) with
 | True (_) -> begin
 true
@@ -194,7 +178,6 @@ false
 end))
 
 # 50 "term.fs"
-
 let is_False = (fun _discr_ -> (match (_discr_) with
 | False (_) -> begin
 true
@@ -204,7 +187,6 @@ false
 end))
 
 # 51 "term.fs"
-
 let is_Not = (fun _discr_ -> (match (_discr_) with
 | Not (_) -> begin
 true
@@ -214,7 +196,6 @@ false
 end))
 
 # 52 "term.fs"
-
 let is_And = (fun _discr_ -> (match (_discr_) with
 | And (_) -> begin
 true
@@ -224,7 +205,6 @@ false
 end))
 
 # 53 "term.fs"
-
 let is_Or = (fun _discr_ -> (match (_discr_) with
 | Or (_) -> begin
 true
@@ -234,7 +214,6 @@ false
 end))
 
 # 54 "term.fs"
-
 let is_Imp = (fun _discr_ -> (match (_discr_) with
 | Imp (_) -> begin
 true
@@ -244,7 +223,6 @@ false
 end))
 
 # 55 "term.fs"
-
 let is_Iff = (fun _discr_ -> (match (_discr_) with
 | Iff (_) -> begin
 true
@@ -254,7 +232,6 @@ false
 end))
 
 # 56 "term.fs"
-
 let is_Eq = (fun _discr_ -> (match (_discr_) with
 | Eq (_) -> begin
 true
@@ -264,7 +241,6 @@ false
 end))
 
 # 57 "term.fs"
-
 let is_LT = (fun _discr_ -> (match (_discr_) with
 | LT (_) -> begin
 true
@@ -274,7 +250,6 @@ false
 end))
 
 # 58 "term.fs"
-
 let is_LTE = (fun _discr_ -> (match (_discr_) with
 | LTE (_) -> begin
 true
@@ -284,7 +259,6 @@ false
 end))
 
 # 59 "term.fs"
-
 let is_GT = (fun _discr_ -> (match (_discr_) with
 | GT (_) -> begin
 true
@@ -294,7 +268,6 @@ false
 end))
 
 # 60 "term.fs"
-
 let is_GTE = (fun _discr_ -> (match (_discr_) with
 | GTE (_) -> begin
 true
@@ -304,7 +277,6 @@ false
 end))
 
 # 61 "term.fs"
-
 let is_Add = (fun _discr_ -> (match (_discr_) with
 | Add (_) -> begin
 true
@@ -314,7 +286,6 @@ false
 end))
 
 # 62 "term.fs"
-
 let is_Sub = (fun _discr_ -> (match (_discr_) with
 | Sub (_) -> begin
 true
@@ -324,7 +295,6 @@ false
 end))
 
 # 63 "term.fs"
-
 let is_Div = (fun _discr_ -> (match (_discr_) with
 | Div (_) -> begin
 true
@@ -334,7 +304,6 @@ false
 end))
 
 # 64 "term.fs"
-
 let is_Mul = (fun _discr_ -> (match (_discr_) with
 | Mul (_) -> begin
 true
@@ -344,7 +313,6 @@ false
 end))
 
 # 65 "term.fs"
-
 let is_Minus = (fun _discr_ -> (match (_discr_) with
 | Minus (_) -> begin
 true
@@ -354,7 +322,6 @@ false
 end))
 
 # 66 "term.fs"
-
 let is_Mod = (fun _discr_ -> (match (_discr_) with
 | Mod (_) -> begin
 true
@@ -364,7 +331,6 @@ false
 end))
 
 # 67 "term.fs"
-
 let is_ITE = (fun _discr_ -> (match (_discr_) with
 | ITE (_) -> begin
 true
@@ -374,7 +340,6 @@ false
 end))
 
 # 68 "term.fs"
-
 let is_Var = (fun _discr_ -> (match (_discr_) with
 | Var (_) -> begin
 true
@@ -384,20 +349,17 @@ false
 end))
 
 # 68 "term.fs"
-
 let ___Var____0 : op  ->  Prims.string = (fun projectee -> (match (projectee) with
 | Var (_96_36) -> begin
 _96_36
 end))
 
 # 70 "term.fs"
-
 type qop =
 | Forall
 | Exists
 
 # 71 "term.fs"
-
 let is_Forall = (fun _discr_ -> (match (_discr_) with
 | Forall (_) -> begin
 true
@@ -407,7 +369,6 @@ false
 end))
 
 # 72 "term.fs"
-
 let is_Exists = (fun _discr_ -> (match (_discr_) with
 | Exists (_) -> begin
 true
@@ -417,7 +378,6 @@ false
 end))
 
 # 75 "term.fs"
-
 type term' =
 | Integer of Prims.string
 | BoundV of Prims.int
@@ -435,7 +395,6 @@ term
 fv Prims.list
 
 # 76 "term.fs"
-
 let is_Integer = (fun _discr_ -> (match (_discr_) with
 | Integer (_) -> begin
 true
@@ -445,7 +404,6 @@ false
 end))
 
 # 77 "term.fs"
-
 let is_BoundV = (fun _discr_ -> (match (_discr_) with
 | BoundV (_) -> begin
 true
@@ -455,7 +413,6 @@ false
 end))
 
 # 78 "term.fs"
-
 let is_FreeV = (fun _discr_ -> (match (_discr_) with
 | FreeV (_) -> begin
 true
@@ -465,7 +422,6 @@ false
 end))
 
 # 79 "term.fs"
-
 let is_App = (fun _discr_ -> (match (_discr_) with
 | App (_) -> begin
 true
@@ -475,7 +431,6 @@ false
 end))
 
 # 80 "term.fs"
-
 let is_Quant = (fun _discr_ -> (match (_discr_) with
 | Quant (_) -> begin
 true
@@ -485,7 +440,6 @@ false
 end))
 
 # 85 "term.fs"
-
 let is_Labeled = (fun _discr_ -> (match (_discr_) with
 | Labeled (_) -> begin
 true
@@ -495,61 +449,51 @@ false
 end))
 
 # 87 "term.fs"
-
 let is_Mkterm : term  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkterm"))))
 
 # 76 "term.fs"
-
 let ___Integer____0 : term'  ->  Prims.string = (fun projectee -> (match (projectee) with
 | Integer (_96_42) -> begin
 _96_42
 end))
 
 # 77 "term.fs"
-
 let ___BoundV____0 : term'  ->  Prims.int = (fun projectee -> (match (projectee) with
 | BoundV (_96_45) -> begin
 _96_45
 end))
 
 # 78 "term.fs"
-
 let ___FreeV____0 : term'  ->  fv = (fun projectee -> (match (projectee) with
 | FreeV (_96_48) -> begin
 _96_48
 end))
 
 # 79 "term.fs"
-
 let ___App____0 : term'  ->  (op * term Prims.list) = (fun projectee -> (match (projectee) with
 | App (_96_51) -> begin
 _96_51
 end))
 
 # 80 "term.fs"
-
 let ___Quant____0 : term'  ->  (qop * pat Prims.list Prims.list * Prims.int Prims.option * sort Prims.list * term) = (fun projectee -> (match (projectee) with
 | Quant (_96_54) -> begin
 _96_54
 end))
 
 # 85 "term.fs"
-
 let ___Labeled____0 : term'  ->  (term * Prims.string * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Labeled (_96_57) -> begin
 _96_57
 end))
 
 # 91 "term.fs"
-
 let fv_eq : fv  ->  fv  ->  Prims.bool = (fun x y -> ((Prims.fst x) = (Prims.fst y)))
 
 # 92 "term.fs"
-
 let fv_sort = (fun x -> (Prims.snd x))
 
 # 93 "term.fs"
-
 let freevar_eq : term  ->  term  ->  Prims.bool = (fun x y -> (match ((x.tm, y.tm)) with
 | (FreeV (x), FreeV (y)) -> begin
 (fv_eq x y)
@@ -559,7 +503,6 @@ false
 end))
 
 # 96 "term.fs"
-
 let freevar_sort : term  ->  sort = (fun _96_1 -> (match (_96_1) with
 | {tm = FreeV (x); hash = _96_75; freevars = _96_73} -> begin
 (fv_sort x)
@@ -569,7 +512,6 @@ end
 end))
 
 # 99 "term.fs"
-
 let fv_of_term : term  ->  fv = (fun _96_2 -> (match (_96_2) with
 | {tm = FreeV (fv); hash = _96_85; freevars = _96_83} -> begin
 fv
@@ -579,7 +521,6 @@ end
 end))
 
 # 102 "term.fs"
-
 let rec freevars : term  ->  fv Prims.list = (fun t -> (match (t.tm) with
 | (Integer (_)) | (BoundV (_)) -> begin
 []
@@ -595,7 +536,6 @@ end
 end))
 
 # 111 "term.fs"
-
 let free_variables : term  ->  (Prims.string * sort) Prims.list = (fun t -> (match ((FStar_ST.read t.freevars)) with
 | Some (b) -> begin
 b
@@ -608,7 +548,6 @@ in fvs))
 end))
 
 # 121 "term.fs"
-
 let qop_to_string : qop  ->  Prims.string = (fun _96_3 -> (match (_96_3) with
 | Forall -> begin
 "forall"
@@ -618,7 +557,6 @@ end
 end))
 
 # 125 "term.fs"
-
 let op_to_string : op  ->  Prims.string = (fun _96_4 -> (match (_96_4) with
 | True -> begin
 "true"
@@ -682,7 +620,6 @@ s
 end))
 
 # 147 "term.fs"
-
 let weightToSmt : Prims.int Prims.option  ->  Prims.string = (fun _96_5 -> (match (_96_5) with
 | None -> begin
 ""
@@ -693,7 +630,6 @@ in (FStar_Util.format1 ":weight %s\n" _198_208))
 end))
 
 # 151 "term.fs"
-
 let hash_of_term' : term'  ->  Prims.string = (fun t -> (match (t) with
 | Integer (i) -> begin
 i
@@ -727,19 +663,16 @@ in (FStar_Util.format5 "(%s (%s)(! %s %s %s))" (qop_to_string qop) _198_225 body
 end))
 
 # 166 "term.fs"
-
 let __all_terms : term FStar_Util.smap FStar_ST.ref = (let _198_226 = (FStar_Util.smap_create 10000)
 in (FStar_ST.alloc _198_226))
 
 # 167 "term.fs"
-
 let all_terms : Prims.unit  ->  term FStar_Util.smap = (fun _96_184 -> (match (()) with
 | () -> begin
 (FStar_ST.read __all_terms)
 end))
 
 # 168 "term.fs"
-
 let mk : term'  ->  term = (fun t -> (let key = (hash_of_term' t)
 in (match ((let _198_231 = (all_terms ())
 in (FStar_Util.smap_try_find _198_231 key))) with
@@ -755,47 +688,37 @@ in tm))
 end)))
 
 # 177 "term.fs"
-
 let mkTrue : term = (mk (App ((True, []))))
 
 # 178 "term.fs"
-
 let mkFalse : term = (mk (App ((False, []))))
 
 # 179 "term.fs"
-
 let mkInteger : Prims.string  ->  term = (fun i -> (mk (Integer (i))))
 
 # 180 "term.fs"
-
 let mkInteger32 : Prims.int32  ->  term = (fun i -> (mkInteger (FStar_Util.string_of_int32 i)))
 
 # 181 "term.fs"
-
 let mkInteger' : Prims.int  ->  term = (fun i -> (let _198_240 = (FStar_Util.string_of_int i)
 in (mkInteger _198_240)))
 
 # 182 "term.fs"
-
 let mkBoundV : Prims.int  ->  term = (fun i -> (mk (BoundV (i))))
 
 # 183 "term.fs"
-
 let mkFreeV : fv  ->  term = (fun x -> (mk (FreeV (x))))
 
 # 184 "term.fs"
-
 let mkApp' : (op * term Prims.list)  ->  term = (fun f -> (mk (App (f))))
 
 # 185 "term.fs"
-
 let mkApp : (Prims.string * term Prims.list)  ->  term = (fun _96_201 -> (match (_96_201) with
 | (s, args) -> begin
 (mk (App ((Var (s), args))))
 end))
 
 # 186 "term.fs"
-
 let mkNot : term  ->  term = (fun t -> (match (t.tm) with
 | App (True, _96_205) -> begin
 mkFalse
@@ -808,7 +731,6 @@ end
 end))
 
 # 190 "term.fs"
-
 let mkAnd : (term * term)  ->  term = (fun _96_217 -> (match (_96_217) with
 | (t1, t2) -> begin
 (match ((t1.tm, t2.tm)) with
@@ -836,7 +758,6 @@ end)
 end))
 
 # 199 "term.fs"
-
 let mkOr : (term * term)  ->  term = (fun _96_277 -> (match (_96_277) with
 | (t1, t2) -> begin
 (match ((t1.tm, t2.tm)) with
@@ -864,7 +785,6 @@ end)
 end))
 
 # 208 "term.fs"
-
 let mkImp : (term * term)  ->  term = (fun _96_337 -> (match (_96_337) with
 | (t1, t2) -> begin
 (match ((t1.tm, t2.tm)) with
@@ -886,62 +806,48 @@ end)
 end))
 
 # 214 "term.fs"
-
 let mk_bin_op : op  ->  (term * term)  ->  term = (fun op _96_368 -> (match (_96_368) with
 | (t1, t2) -> begin
 (mkApp' (op, (t1)::(t2)::[]))
 end))
 
 # 215 "term.fs"
-
 let mkMinus : term  ->  term = (fun t -> (mkApp' (Minus, (t)::[])))
 
 # 216 "term.fs"
-
 let mkIff : (term * term)  ->  term = (mk_bin_op Iff)
 
 # 217 "term.fs"
-
 let mkEq : (term * term)  ->  term = (mk_bin_op Eq)
 
 # 218 "term.fs"
-
 let mkLT : (term * term)  ->  term = (mk_bin_op LT)
 
 # 219 "term.fs"
-
 let mkLTE : (term * term)  ->  term = (mk_bin_op LTE)
 
 # 220 "term.fs"
-
 let mkGT : (term * term)  ->  term = (mk_bin_op GT)
 
 # 221 "term.fs"
-
 let mkGTE : (term * term)  ->  term = (mk_bin_op GTE)
 
 # 222 "term.fs"
-
 let mkAdd : (term * term)  ->  term = (mk_bin_op Add)
 
 # 223 "term.fs"
-
 let mkSub : (term * term)  ->  term = (mk_bin_op Sub)
 
 # 224 "term.fs"
-
 let mkDiv : (term * term)  ->  term = (mk_bin_op Div)
 
 # 225 "term.fs"
-
 let mkMul : (term * term)  ->  term = (mk_bin_op Mul)
 
 # 226 "term.fs"
-
 let mkMod : (term * term)  ->  term = (mk_bin_op Mod)
 
 # 227 "term.fs"
-
 let mkITE : (term * term * term)  ->  term = (fun _96_373 -> (match (_96_373) with
 | (t1, t2, t3) -> begin
 (match ((t2.tm, t3.tm)) with
@@ -962,7 +868,6 @@ end)
 end))
 
 # 233 "term.fs"
-
 let mkCases : term Prims.list  ->  term = (fun t -> (match (t) with
 | [] -> begin
 (FStar_All.failwith "Impos")
@@ -972,7 +877,6 @@ end
 end))
 
 # 237 "term.fs"
-
 let mkQuant : (qop * pat Prims.list Prims.list * Prims.int Prims.option * sort Prims.list * term)  ->  term = (fun _96_418 -> (match (_96_418) with
 | (qop, pats, wopt, vars, body) -> begin
 if ((FStar_List.length vars) = 0) then begin
@@ -989,7 +893,6 @@ end
 end))
 
 # 246 "term.fs"
-
 let abstr : fv Prims.list  ->  term  ->  term = (fun fvs t -> (let nvars = (FStar_List.length fvs)
 in (let index_of = (fun fv -> (match ((FStar_Util.try_find_index (fv_eq fv) fvs)) with
 | None -> begin
@@ -1038,7 +941,6 @@ end))
 in (aux 0 t)))))
 
 # 271 "term.fs"
-
 let inst : term Prims.list  ->  term  ->  term = (fun tms t -> (let n = (FStar_List.length tms)
 in (let rec aux = (fun shift t -> (match (t.tm) with
 | (Integer (_)) | (FreeV (_)) -> begin
@@ -1073,7 +975,6 @@ end))
 in (aux 0 t))))
 
 # 288 "term.fs"
-
 let mkQuant' : (qop * term Prims.list Prims.list * Prims.int Prims.option * fv Prims.list * term)  ->  term = (fun _96_506 -> (match (_96_506) with
 | (qop, pats, wopt, vars, body) -> begin
 (let _198_326 = (let _198_325 = (FStar_All.pipe_right pats (FStar_List.map (FStar_List.map (abstr vars))))
@@ -1084,60 +985,50 @@ in (mkQuant _198_326))
 end))
 
 # 289 "term.fs"
-
 let mkForall'' : (pat Prims.list Prims.list * Prims.int Prims.option * sort Prims.list * term)  ->  term = (fun _96_511 -> (match (_96_511) with
 | (pats, wopt, sorts, body) -> begin
 (mkQuant (Forall, pats, wopt, sorts, body))
 end))
 
 # 290 "term.fs"
-
 let mkForall' : (term Prims.list Prims.list * Prims.int Prims.option * fv Prims.list * term)  ->  term = (fun _96_516 -> (match (_96_516) with
 | (pats, wopt, vars, body) -> begin
 (mkQuant' (Forall, pats, wopt, vars, body))
 end))
 
 # 293 "term.fs"
-
 let mkForall : (term Prims.list Prims.list * fv Prims.list * term)  ->  term = (fun _96_520 -> (match (_96_520) with
 | (pats, vars, body) -> begin
 (mkQuant' (Forall, pats, None, vars, body))
 end))
 
 # 294 "term.fs"
-
 let mkExists : (term Prims.list Prims.list * fv Prims.list * term)  ->  term = (fun _96_524 -> (match (_96_524) with
 | (pats, vars, body) -> begin
 (mkQuant' (Exists, pats, None, vars, body))
 end))
 
 # 297 "term.fs"
-
 type caption =
 Prims.string Prims.option
 
 # 298 "term.fs"
-
 type binders =
 (Prims.string * sort) Prims.list
 
 # 299 "term.fs"
-
 type projector =
 (Prims.string * sort)
 
 # 300 "term.fs"
-
 type constructor_t =
 (Prims.string * projector Prims.list * sort * Prims.int)
 
 # 301 "term.fs"
-
 type constructors =
 constructor_t Prims.list
 
 # 302 "term.fs"
-
 type decl =
 | DefPrelude
 | DeclFun of (Prims.string * sort Prims.list * sort * caption)
@@ -1151,7 +1042,6 @@ type decl =
 | CheckSat
 
 # 303 "term.fs"
-
 let is_DefPrelude = (fun _discr_ -> (match (_discr_) with
 | DefPrelude (_) -> begin
 true
@@ -1161,7 +1051,6 @@ false
 end))
 
 # 304 "term.fs"
-
 let is_DeclFun = (fun _discr_ -> (match (_discr_) with
 | DeclFun (_) -> begin
 true
@@ -1171,7 +1060,6 @@ false
 end))
 
 # 305 "term.fs"
-
 let is_DefineFun = (fun _discr_ -> (match (_discr_) with
 | DefineFun (_) -> begin
 true
@@ -1181,7 +1069,6 @@ false
 end))
 
 # 306 "term.fs"
-
 let is_Assume = (fun _discr_ -> (match (_discr_) with
 | Assume (_) -> begin
 true
@@ -1191,7 +1078,6 @@ false
 end))
 
 # 307 "term.fs"
-
 let is_Caption = (fun _discr_ -> (match (_discr_) with
 | Caption (_) -> begin
 true
@@ -1201,7 +1087,6 @@ false
 end))
 
 # 308 "term.fs"
-
 let is_Eval = (fun _discr_ -> (match (_discr_) with
 | Eval (_) -> begin
 true
@@ -1211,7 +1096,6 @@ false
 end))
 
 # 309 "term.fs"
-
 let is_Echo = (fun _discr_ -> (match (_discr_) with
 | Echo (_) -> begin
 true
@@ -1221,7 +1105,6 @@ false
 end))
 
 # 310 "term.fs"
-
 let is_Push = (fun _discr_ -> (match (_discr_) with
 | Push (_) -> begin
 true
@@ -1231,7 +1114,6 @@ false
 end))
 
 # 311 "term.fs"
-
 let is_Pop = (fun _discr_ -> (match (_discr_) with
 | Pop (_) -> begin
 true
@@ -1241,7 +1123,6 @@ false
 end))
 
 # 312 "term.fs"
-
 let is_CheckSat = (fun _discr_ -> (match (_discr_) with
 | CheckSat (_) -> begin
 true
@@ -1251,54 +1132,46 @@ false
 end))
 
 # 304 "term.fs"
-
 let ___DeclFun____0 : decl  ->  (Prims.string * sort Prims.list * sort * caption) = (fun projectee -> (match (projectee) with
 | DeclFun (_96_527) -> begin
 _96_527
 end))
 
 # 305 "term.fs"
-
 let ___DefineFun____0 : decl  ->  (Prims.string * sort Prims.list * sort * term * caption) = (fun projectee -> (match (projectee) with
 | DefineFun (_96_530) -> begin
 _96_530
 end))
 
 # 306 "term.fs"
-
 let ___Assume____0 : decl  ->  (term * caption) = (fun projectee -> (match (projectee) with
 | Assume (_96_533) -> begin
 _96_533
 end))
 
 # 307 "term.fs"
-
 let ___Caption____0 : decl  ->  Prims.string = (fun projectee -> (match (projectee) with
 | Caption (_96_536) -> begin
 _96_536
 end))
 
 # 308 "term.fs"
-
 let ___Eval____0 : decl  ->  term = (fun projectee -> (match (projectee) with
 | Eval (_96_539) -> begin
 _96_539
 end))
 
 # 309 "term.fs"
-
 let ___Echo____0 : decl  ->  Prims.string = (fun projectee -> (match (projectee) with
 | Echo (_96_542) -> begin
 _96_542
 end))
 
 # 313 "term.fs"
-
 type decls_t =
 decl Prims.list
 
 # 315 "term.fs"
-
 let mkDefineFun : (Prims.string * (Prims.string * sort) Prims.list * sort * term * caption)  ->  decl = (fun _96_548 -> (match (_96_548) with
 | (nm, vars, s, tm, c) -> begin
 (let _198_427 = (let _198_426 = (FStar_List.map fv_sort vars)
@@ -1308,12 +1181,10 @@ in DefineFun (_198_427))
 end))
 
 # 316 "term.fs"
-
 let constr_id_of_sort : sort  ->  Prims.string = (fun sort -> (let _198_430 = (strSort sort)
 in (FStar_Util.format1 "%s_constr_id" _198_430)))
 
 # 317 "term.fs"
-
 let fresh_token : (Prims.string * sort)  ->  Prims.int  ->  decl = (fun _96_552 id -> (match (_96_552) with
 | (tok_name, sort) -> begin
 (let _198_443 = (let _198_442 = (let _198_441 = (let _198_440 = (mkInteger' id)
@@ -1329,7 +1200,6 @@ in Assume (_198_443))
 end))
 
 # 320 "term.fs"
-
 let constructor_to_decl : (Prims.string * (Prims.string * sort) Prims.list * sort * Prims.int)  ->  decl Prims.list = (fun _96_558 -> (match (_96_558) with
 | (name, projectors, sort, id) -> begin
 (let id = (FStar_Util.string_of_int id)
@@ -1402,7 +1272,6 @@ in (FStar_List.append _198_494 _198_493)))))))))))))))))))))))
 end))
 
 # 352 "term.fs"
-
 let name_binders_inner : (Prims.string * sort) Prims.list  ->  Prims.int  ->  sort Prims.list  ->  ((Prims.string * sort) Prims.list * Prims.string Prims.list * Prims.int) = (fun outer_names start sorts -> (let _96_614 = (FStar_All.pipe_right sorts (FStar_List.fold_left (fun _96_602 s -> (match (_96_602) with
 | (names, binders, n) -> begin
 (let prefix = (match (s) with
@@ -1425,7 +1294,6 @@ in (match (_96_614) with
 end)))
 
 # 364 "term.fs"
-
 let name_binders : sort Prims.list  ->  ((Prims.string * sort) Prims.list * Prims.string Prims.list) = (fun sorts -> (let _96_619 = (name_binders_inner [] 0 sorts)
 in (match (_96_619) with
 | (names, binders, n) -> begin
@@ -1433,7 +1301,6 @@ in (match (_96_619) with
 end)))
 
 # 368 "term.fs"
-
 let termToSmt : term  ->  Prims.string = (fun t -> (let rec aux = (fun n names t -> (match (t.tm) with
 | Integer (i) -> begin
 i
@@ -1487,7 +1354,6 @@ end))
 in (aux 0 [] t)))
 
 # 392 "term.fs"
-
 let caption_to_string : Prims.string Prims.option  ->  Prims.string = (fun _96_6 -> (match (_96_6) with
 | None -> begin
 ""
@@ -1510,7 +1376,6 @@ end))
 end))
 
 # 401 "term.fs"
-
 let rec declToSmt : Prims.string  ->  decl  ->  Prims.string = (fun z3options decl -> (match (decl) with
 | DefPrelude -> begin
 (mkPrelude z3options)
@@ -1573,58 +1438,45 @@ in (let lex_ordering = "\n(define-fun is-Prims.LexCons ((t Term)) Bool \n(is-Lex
 in (Prims.strcat (Prims.strcat basic bcons) lex_ordering))))))
 
 # 491 "term.fs"
-
 let mk_Term_type : term = (mkApp ("Tm_type", []))
 
 # 492 "term.fs"
-
 let mk_Term_app : term  ->  term  ->  term = (fun t1 t2 -> (mkApp ("Tm_app", (t1)::(t2)::[])))
 
 # 493 "term.fs"
-
 let mk_Term_uvar : Prims.int  ->  term = (fun i -> (let _198_556 = (let _198_555 = (let _198_554 = (mkInteger' i)
 in (_198_554)::[])
 in ("Tm_uvar", _198_555))
 in (mkApp _198_556)))
 
 # 494 "term.fs"
-
 let mk_Term_unit : term = (mkApp ("Tm_unit", []))
 
 # 495 "term.fs"
-
 let boxInt : term  ->  term = (fun t -> (mkApp ("BoxInt", (t)::[])))
 
 # 496 "term.fs"
-
 let unboxInt : term  ->  term = (fun t -> (mkApp ("BoxInt_proj_0", (t)::[])))
 
 # 497 "term.fs"
-
 let boxBool : term  ->  term = (fun t -> (mkApp ("BoxBool", (t)::[])))
 
 # 498 "term.fs"
-
 let unboxBool : term  ->  term = (fun t -> (mkApp ("BoxBool_proj_0", (t)::[])))
 
 # 499 "term.fs"
-
 let boxString : term  ->  term = (fun t -> (mkApp ("BoxString", (t)::[])))
 
 # 500 "term.fs"
-
 let unboxString : term  ->  term = (fun t -> (mkApp ("BoxString_proj_0", (t)::[])))
 
 # 501 "term.fs"
-
 let boxRef : term  ->  term = (fun t -> (mkApp ("BoxRef", (t)::[])))
 
 # 502 "term.fs"
-
 let unboxRef : term  ->  term = (fun t -> (mkApp ("BoxRef_proj_0", (t)::[])))
 
 # 503 "term.fs"
-
 let boxTerm : sort  ->  term  ->  term = (fun sort t -> (match (sort) with
 | Int_sort -> begin
 (boxInt t)
@@ -1643,7 +1495,6 @@ end
 end))
 
 # 509 "term.fs"
-
 let unboxTerm : sort  ->  term  ->  term = (fun sort t -> (match (sort) with
 | Int_sort -> begin
 (unboxInt t)
@@ -1662,11 +1513,9 @@ end
 end))
 
 # 516 "term.fs"
-
 let mk_PreType : term  ->  term = (fun t -> (mkApp ("PreType", (t)::[])))
 
 # 517 "term.fs"
-
 let mk_Valid : term  ->  term = (fun t -> (match (t.tm) with
 | App (Var ("Prims.b2t"), {tm = App (Var ("Prims.op_Equality"), _96_773::t1::t2::[]); hash = _96_767; freevars = _96_765}::[]) -> begin
 (mkEq (t1, t2))
@@ -1723,19 +1572,15 @@ end
 end))
 
 # 529 "term.fs"
-
 let mk_HasType : term  ->  term  ->  term = (fun v t -> (mkApp ("HasType", (v)::(t)::[])))
 
 # 530 "term.fs"
-
 let mk_HasTypeZ : term  ->  term  ->  term = (fun v t -> (mkApp ("HasTypeZ", (v)::(t)::[])))
 
 # 531 "term.fs"
-
 let mk_IsTyped : term  ->  term = (fun v -> (mkApp ("IsTyped", (v)::[])))
 
 # 532 "term.fs"
-
 let mk_HasTypeFuel : term  ->  term  ->  term  ->  term = (fun f v t -> if (FStar_ST.read FStar_Options.unthrottle_inductives) then begin
 (mk_HasType v t)
 end else begin
@@ -1743,7 +1588,6 @@ end else begin
 end)
 
 # 536 "term.fs"
-
 let mk_HasTypeWithFuel : term Prims.option  ->  term  ->  term  ->  term = (fun f v t -> (match (f) with
 | None -> begin
 (mk_HasType v t)
@@ -1753,43 +1597,34 @@ end
 end))
 
 # 539 "term.fs"
-
 let mk_Destruct : term  ->  term = (fun v -> (mkApp ("Destruct", (v)::[])))
 
 # 540 "term.fs"
-
 let mk_Rank : term  ->  term = (fun x -> (mkApp ("Rank", (x)::[])))
 
 # 541 "term.fs"
-
 let mk_tester : Prims.string  ->  term  ->  term = (fun n t -> (mkApp ((Prims.strcat "is-" n), (t)::[])))
 
 # 542 "term.fs"
-
 let mk_ApplyTF : term  ->  term  ->  term = (fun t t' -> (mkApp ("ApplyTF", (t)::(t')::[])))
 
 # 543 "term.fs"
-
 let mk_ApplyTT : term  ->  term  ->  term = (fun t t' -> (mkApp ("ApplyTT", (t)::(t')::[])))
 
 # 544 "term.fs"
-
 let mk_String_const : Prims.int  ->  term = (fun i -> (let _198_647 = (let _198_646 = (let _198_645 = (mkInteger' i)
 in (_198_645)::[])
 in ("String_const", _198_646))
 in (mkApp _198_647)))
 
 # 545 "term.fs"
-
 let mk_Precedes : term  ->  term  ->  term = (fun x1 x2 -> (let _198_652 = (mkApp ("Precedes", (x1)::(x2)::[]))
 in (FStar_All.pipe_right _198_652 mk_Valid)))
 
 # 546 "term.fs"
-
 let mk_LexCons : term  ->  term  ->  term = (fun x1 x2 -> (mkApp ("LexCons", (x1)::(x2)::[])))
 
 # 547 "term.fs"
-
 let rec n_fuel : Prims.int  ->  term = (fun n -> if (n = 0) then begin
 (mkApp ("ZFuel", []))
 end else begin
@@ -1800,15 +1635,12 @@ in (mkApp _198_661))
 end)
 
 # 550 "term.fs"
-
 let fuel_2 : term = (n_fuel 2)
 
 # 551 "term.fs"
-
 let fuel_100 : term = (n_fuel 100)
 
 # 553 "term.fs"
-
 let mk_and_opt : term Prims.option  ->  term Prims.option  ->  term Prims.option = (fun p1 p2 -> (match ((p1, p2)) with
 | (Some (p1), Some (p2)) -> begin
 (let _198_666 = (mkAnd (p1, p2))
@@ -1822,11 +1654,9 @@ None
 end))
 
 # 559 "term.fs"
-
 let mk_and_opt_l : term Prims.option Prims.list  ->  term Prims.option = (fun pl -> (FStar_List.fold_left (fun out p -> (mk_and_opt p out)) None pl))
 
 # 562 "term.fs"
-
 let mk_and_l : term Prims.list  ->  term = (fun l -> (match (l) with
 | [] -> begin
 mkTrue
@@ -1836,7 +1666,6 @@ end
 end))
 
 # 566 "term.fs"
-
 let mk_or_l : term Prims.list  ->  term = (fun l -> (match (l) with
 | [] -> begin
 mkFalse
@@ -1846,7 +1675,6 @@ end
 end))
 
 # 571 "term.fs"
-
 let rec print_smt_term : term  ->  Prims.string = (fun t -> (match (t.tm) with
 | Integer (n) -> begin
 (FStar_Util.format1 "(Integer %s)" n)

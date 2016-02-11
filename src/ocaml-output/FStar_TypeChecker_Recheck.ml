@@ -1,50 +1,39 @@
 
 open Prims
 # 35 "recheck.fs"
-
 let tconst : FStar_Ident.lident  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun l -> (let _189_5 = (let _189_4 = (let _189_3 = (FStar_Ident.set_lid_range l FStar_Range.dummyRange)
 in (FStar_Syntax_Syntax.lid_as_fv _189_3 None))
 in FStar_Syntax_Syntax.Tm_fvar (_189_4))
 in (FStar_Syntax_Syntax.mk _189_5 (Some (FStar_Syntax_Util.ktype0.FStar_Syntax_Syntax.n)) FStar_Range.dummyRange)))
 
 # 36 "recheck.fs"
-
 let t_unit : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.unit_lid)
 
 # 37 "recheck.fs"
-
 let t_bool : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.bool_lid)
 
 # 38 "recheck.fs"
-
 let t_uint8 : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.uint8_lid)
 
 # 39 "recheck.fs"
-
 let t_int : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.int_lid)
 
 # 40 "recheck.fs"
-
 let t_int32 : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.int32_lid)
 
 # 41 "recheck.fs"
-
 let t_int64 : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.int64_lid)
 
 # 42 "recheck.fs"
-
 let t_string : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.string_lid)
 
 # 43 "recheck.fs"
-
 let t_float : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.float_lid)
 
 # 44 "recheck.fs"
-
 let t_char : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (tconst FStar_Syntax_Const.char_lid)
 
 # 46 "recheck.fs"
-
 let typing_const : FStar_Range.range  ->  FStar_Const.sconst  ->  (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax = (fun r s -> (match (s) with
 | FStar_Const.Const_unit -> begin
 t_unit
@@ -81,7 +70,6 @@ end
 end))
 
 # 61 "recheck.fs"
-
 let rec check : (FStar_Syntax_Syntax.term', FStar_Syntax_Syntax.term') FStar_Syntax_Syntax.syntax  ->  FStar_Syntax_Syntax.term = (fun t -> (let recompute = (fun t -> (match (t.FStar_Syntax_Syntax.n) with
 | FStar_Syntax_Syntax.Tm_delayed (_87_36) -> begin
 (let _189_17 = (FStar_Syntax_Subst.compress t)

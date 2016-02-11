@@ -1,11 +1,9 @@
 
 open Prims
 # 28 "syntax.fs"
-
 exception Err of (Prims.string)
 
 # 28 "syntax.fs"
-
 let is_Err = (fun _discr_ -> (match (_discr_) with
 | Err (_) -> begin
 true
@@ -15,18 +13,15 @@ false
 end))
 
 # 28 "syntax.fs"
-
 let ___Err____0 : Prims.exn  ->  Prims.string = (fun projectee -> (match (projectee) with
 | Err (_32_6) -> begin
 _32_6
 end))
 
 # 29 "syntax.fs"
-
 exception Error of ((Prims.string * FStar_Range.range))
 
 # 29 "syntax.fs"
-
 let is_Error = (fun _discr_ -> (match (_discr_) with
 | Error (_) -> begin
 true
@@ -36,18 +31,15 @@ false
 end))
 
 # 29 "syntax.fs"
-
 let ___Error____0 : Prims.exn  ->  (Prims.string * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Error (_32_8) -> begin
 _32_8
 end))
 
 # 30 "syntax.fs"
-
 exception Warning of ((Prims.string * FStar_Range.range))
 
 # 30 "syntax.fs"
-
 let is_Warning = (fun _discr_ -> (match (_discr_) with
 | Warning (_) -> begin
 true
@@ -57,44 +49,36 @@ false
 end))
 
 # 30 "syntax.fs"
-
 let ___Warning____0 : Prims.exn  ->  (Prims.string * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Warning (_32_10) -> begin
 _32_10
 end))
 
 # 33 "syntax.fs"
-
 type ('a, 't) withinfo_t =
 {v : 'a; ty : 't; p : FStar_Range.range}
 
 # 33 "syntax.fs"
-
 let is_Mkwithinfo_t = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkwithinfo_t"))))
 
 # 40 "syntax.fs"
-
 type 't var =
 (FStar_Ident.lident, 't) withinfo_t
 
 # 41 "syntax.fs"
-
 type fieldname =
 FStar_Ident.lident
 
 # 43 "syntax.fs"
-
 type sconst =
 FStar_Const.sconst
 
 # 45 "syntax.fs"
-
 type pragma =
 | SetOptions of Prims.string
 | ResetOptions
 
 # 46 "syntax.fs"
-
 let is_SetOptions = (fun _discr_ -> (match (_discr_) with
 | SetOptions (_) -> begin
 true
@@ -104,7 +88,6 @@ false
 end))
 
 # 47 "syntax.fs"
-
 let is_ResetOptions = (fun _discr_ -> (match (_discr_) with
 | ResetOptions (_) -> begin
 true
@@ -114,25 +97,21 @@ false
 end))
 
 # 46 "syntax.fs"
-
 let ___SetOptions____0 : pragma  ->  Prims.string = (fun projectee -> (match (projectee) with
 | SetOptions (_32_20) -> begin
 _32_20
 end))
 
 # 49 "syntax.fs"
-
 type 'a memo =
 'a Prims.option FStar_ST.ref
 
 # 51 "syntax.fs"
-
 type arg_qualifier =
 | Implicit
 | Equality
 
 # 52 "syntax.fs"
-
 let is_Implicit = (fun _discr_ -> (match (_discr_) with
 | Implicit (_) -> begin
 true
@@ -142,7 +121,6 @@ false
 end))
 
 # 53 "syntax.fs"
-
 let is_Equality = (fun _discr_ -> (match (_discr_) with
 | Equality (_) -> begin
 true
@@ -152,12 +130,10 @@ false
 end))
 
 # 54 "syntax.fs"
-
 type aqual =
 arg_qualifier Prims.option
 
 # 55 "syntax.fs"
-
 type universe =
 | U_zero
 | U_succ of universe
@@ -170,7 +146,6 @@ type universe =
 FStar_Ident.ident
 
 # 56 "syntax.fs"
-
 let is_U_zero = (fun _discr_ -> (match (_discr_) with
 | U_zero (_) -> begin
 true
@@ -180,7 +155,6 @@ false
 end))
 
 # 57 "syntax.fs"
-
 let is_U_succ = (fun _discr_ -> (match (_discr_) with
 | U_succ (_) -> begin
 true
@@ -190,7 +164,6 @@ false
 end))
 
 # 58 "syntax.fs"
-
 let is_U_max = (fun _discr_ -> (match (_discr_) with
 | U_max (_) -> begin
 true
@@ -200,7 +173,6 @@ false
 end))
 
 # 59 "syntax.fs"
-
 let is_U_bvar = (fun _discr_ -> (match (_discr_) with
 | U_bvar (_) -> begin
 true
@@ -210,7 +182,6 @@ false
 end))
 
 # 60 "syntax.fs"
-
 let is_U_name = (fun _discr_ -> (match (_discr_) with
 | U_name (_) -> begin
 true
@@ -220,7 +191,6 @@ false
 end))
 
 # 61 "syntax.fs"
-
 let is_U_unif = (fun _discr_ -> (match (_discr_) with
 | U_unif (_) -> begin
 true
@@ -230,7 +200,6 @@ false
 end))
 
 # 62 "syntax.fs"
-
 let is_U_unknown = (fun _discr_ -> (match (_discr_) with
 | U_unknown (_) -> begin
 true
@@ -240,57 +209,48 @@ false
 end))
 
 # 57 "syntax.fs"
-
 let ___U_succ____0 : universe  ->  universe = (fun projectee -> (match (projectee) with
 | U_succ (_32_24) -> begin
 _32_24
 end))
 
 # 58 "syntax.fs"
-
 let ___U_max____0 : universe  ->  universe Prims.list = (fun projectee -> (match (projectee) with
 | U_max (_32_27) -> begin
 _32_27
 end))
 
 # 59 "syntax.fs"
-
 let ___U_bvar____0 : universe  ->  Prims.int = (fun projectee -> (match (projectee) with
 | U_bvar (_32_30) -> begin
 _32_30
 end))
 
 # 60 "syntax.fs"
-
 let ___U_name____0 : universe  ->  univ_name = (fun projectee -> (match (projectee) with
 | U_name (_32_33) -> begin
 _32_33
 end))
 
 # 61 "syntax.fs"
-
 let ___U_unif____0 : universe  ->  universe Prims.option FStar_Unionfind.uvar = (fun projectee -> (match (projectee) with
 | U_unif (_32_36) -> begin
 _32_36
 end))
 
 # 65 "syntax.fs"
-
 type universe_uvar =
 universe Prims.option FStar_Unionfind.uvar
 
 # 66 "syntax.fs"
-
 type univ_names =
 univ_name Prims.list
 
 # 67 "syntax.fs"
-
 type universes =
 universe Prims.list
 
 # 69 "syntax.fs"
-
 type term' =
 | Tm_bvar of bv
 | Tm_name of bv
@@ -398,7 +358,6 @@ bv FStar_Util.set
 (term var * fv_qual Prims.option)
 
 # 70 "syntax.fs"
-
 let is_Tm_bvar = (fun _discr_ -> (match (_discr_) with
 | Tm_bvar (_) -> begin
 true
@@ -408,7 +367,6 @@ false
 end))
 
 # 71 "syntax.fs"
-
 let is_Tm_name = (fun _discr_ -> (match (_discr_) with
 | Tm_name (_) -> begin
 true
@@ -418,7 +376,6 @@ false
 end))
 
 # 72 "syntax.fs"
-
 let is_Tm_fvar = (fun _discr_ -> (match (_discr_) with
 | Tm_fvar (_) -> begin
 true
@@ -428,7 +385,6 @@ false
 end))
 
 # 73 "syntax.fs"
-
 let is_Tm_uinst = (fun _discr_ -> (match (_discr_) with
 | Tm_uinst (_) -> begin
 true
@@ -438,7 +394,6 @@ false
 end))
 
 # 74 "syntax.fs"
-
 let is_Tm_constant = (fun _discr_ -> (match (_discr_) with
 | Tm_constant (_) -> begin
 true
@@ -448,7 +403,6 @@ false
 end))
 
 # 75 "syntax.fs"
-
 let is_Tm_type = (fun _discr_ -> (match (_discr_) with
 | Tm_type (_) -> begin
 true
@@ -458,7 +412,6 @@ false
 end))
 
 # 76 "syntax.fs"
-
 let is_Tm_abs = (fun _discr_ -> (match (_discr_) with
 | Tm_abs (_) -> begin
 true
@@ -468,7 +421,6 @@ false
 end))
 
 # 77 "syntax.fs"
-
 let is_Tm_arrow = (fun _discr_ -> (match (_discr_) with
 | Tm_arrow (_) -> begin
 true
@@ -478,7 +430,6 @@ false
 end))
 
 # 78 "syntax.fs"
-
 let is_Tm_refine = (fun _discr_ -> (match (_discr_) with
 | Tm_refine (_) -> begin
 true
@@ -488,7 +439,6 @@ false
 end))
 
 # 79 "syntax.fs"
-
 let is_Tm_app = (fun _discr_ -> (match (_discr_) with
 | Tm_app (_) -> begin
 true
@@ -498,7 +448,6 @@ false
 end))
 
 # 80 "syntax.fs"
-
 let is_Tm_match = (fun _discr_ -> (match (_discr_) with
 | Tm_match (_) -> begin
 true
@@ -508,7 +457,6 @@ false
 end))
 
 # 81 "syntax.fs"
-
 let is_Tm_ascribed = (fun _discr_ -> (match (_discr_) with
 | Tm_ascribed (_) -> begin
 true
@@ -518,7 +466,6 @@ false
 end))
 
 # 82 "syntax.fs"
-
 let is_Tm_let = (fun _discr_ -> (match (_discr_) with
 | Tm_let (_) -> begin
 true
@@ -528,7 +475,6 @@ false
 end))
 
 # 83 "syntax.fs"
-
 let is_Tm_uvar = (fun _discr_ -> (match (_discr_) with
 | Tm_uvar (_) -> begin
 true
@@ -538,7 +484,6 @@ false
 end))
 
 # 84 "syntax.fs"
-
 let is_Tm_delayed = (fun _discr_ -> (match (_discr_) with
 | Tm_delayed (_) -> begin
 true
@@ -548,7 +493,6 @@ false
 end))
 
 # 86 "syntax.fs"
-
 let is_Tm_meta = (fun _discr_ -> (match (_discr_) with
 | Tm_meta (_) -> begin
 true
@@ -558,7 +502,6 @@ false
 end))
 
 # 87 "syntax.fs"
-
 let is_Tm_unknown = (fun _discr_ -> (match (_discr_) with
 | Tm_unknown (_) -> begin
 true
@@ -568,7 +511,6 @@ false
 end))
 
 # 90 "syntax.fs"
-
 let is_Pat_constant = (fun _discr_ -> (match (_discr_) with
 | Pat_constant (_) -> begin
 true
@@ -578,7 +520,6 @@ false
 end))
 
 # 91 "syntax.fs"
-
 let is_Pat_disj = (fun _discr_ -> (match (_discr_) with
 | Pat_disj (_) -> begin
 true
@@ -588,7 +529,6 @@ false
 end))
 
 # 92 "syntax.fs"
-
 let is_Pat_cons = (fun _discr_ -> (match (_discr_) with
 | Pat_cons (_) -> begin
 true
@@ -598,7 +538,6 @@ false
 end))
 
 # 93 "syntax.fs"
-
 let is_Pat_var = (fun _discr_ -> (match (_discr_) with
 | Pat_var (_) -> begin
 true
@@ -608,7 +547,6 @@ false
 end))
 
 # 94 "syntax.fs"
-
 let is_Pat_wild = (fun _discr_ -> (match (_discr_) with
 | Pat_wild (_) -> begin
 true
@@ -618,7 +556,6 @@ false
 end))
 
 # 95 "syntax.fs"
-
 let is_Pat_dot_term = (fun _discr_ -> (match (_discr_) with
 | Pat_dot_term (_) -> begin
 true
@@ -628,15 +565,12 @@ false
 end))
 
 # 96 "syntax.fs"
-
 let is_Mkletbinding : letbinding  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkletbinding"))))
 
 # 103 "syntax.fs"
-
 let is_Mkcomp_typ : comp_typ  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkcomp_typ"))))
 
 # 110 "syntax.fs"
-
 let is_Total = (fun _discr_ -> (match (_discr_) with
 | Total (_) -> begin
 true
@@ -646,7 +580,6 @@ false
 end))
 
 # 111 "syntax.fs"
-
 let is_GTotal = (fun _discr_ -> (match (_discr_) with
 | GTotal (_) -> begin
 true
@@ -656,7 +589,6 @@ false
 end))
 
 # 112 "syntax.fs"
-
 let is_Comp = (fun _discr_ -> (match (_discr_) with
 | Comp (_) -> begin
 true
@@ -666,7 +598,6 @@ false
 end))
 
 # 122 "syntax.fs"
-
 let is_TOTAL = (fun _discr_ -> (match (_discr_) with
 | TOTAL (_) -> begin
 true
@@ -676,7 +607,6 @@ false
 end))
 
 # 123 "syntax.fs"
-
 let is_MLEFFECT = (fun _discr_ -> (match (_discr_) with
 | MLEFFECT (_) -> begin
 true
@@ -686,7 +616,6 @@ false
 end))
 
 # 124 "syntax.fs"
-
 let is_RETURN = (fun _discr_ -> (match (_discr_) with
 | RETURN (_) -> begin
 true
@@ -696,7 +625,6 @@ false
 end))
 
 # 125 "syntax.fs"
-
 let is_PARTIAL_RETURN = (fun _discr_ -> (match (_discr_) with
 | PARTIAL_RETURN (_) -> begin
 true
@@ -706,7 +634,6 @@ false
 end))
 
 # 126 "syntax.fs"
-
 let is_SOMETRIVIAL = (fun _discr_ -> (match (_discr_) with
 | SOMETRIVIAL (_) -> begin
 true
@@ -716,7 +643,6 @@ false
 end))
 
 # 127 "syntax.fs"
-
 let is_LEMMA = (fun _discr_ -> (match (_discr_) with
 | LEMMA (_) -> begin
 true
@@ -726,7 +652,6 @@ false
 end))
 
 # 128 "syntax.fs"
-
 let is_DECREASES = (fun _discr_ -> (match (_discr_) with
 | DECREASES (_) -> begin
 true
@@ -736,7 +661,6 @@ false
 end))
 
 # 131 "syntax.fs"
-
 let is_Meta_pattern = (fun _discr_ -> (match (_discr_) with
 | Meta_pattern (_) -> begin
 true
@@ -746,7 +670,6 @@ false
 end))
 
 # 132 "syntax.fs"
-
 let is_Meta_named = (fun _discr_ -> (match (_discr_) with
 | Meta_named (_) -> begin
 true
@@ -756,7 +679,6 @@ false
 end))
 
 # 133 "syntax.fs"
-
 let is_Meta_labeled = (fun _discr_ -> (match (_discr_) with
 | Meta_labeled (_) -> begin
 true
@@ -766,7 +688,6 @@ false
 end))
 
 # 134 "syntax.fs"
-
 let is_Meta_desugared = (fun _discr_ -> (match (_discr_) with
 | Meta_desugared (_) -> begin
 true
@@ -776,7 +697,6 @@ false
 end))
 
 # 136 "syntax.fs"
-
 let is_Uvar = (fun _ _discr_ -> (match (_discr_) with
 | Uvar (_) -> begin
 true
@@ -786,7 +706,6 @@ false
 end))
 
 # 137 "syntax.fs"
-
 let is_Fixed = (fun _ _discr_ -> (match (_discr_) with
 | Fixed (_) -> begin
 true
@@ -796,7 +715,6 @@ false
 end))
 
 # 139 "syntax.fs"
-
 let is_Data_app = (fun _discr_ -> (match (_discr_) with
 | Data_app (_) -> begin
 true
@@ -806,7 +724,6 @@ false
 end))
 
 # 140 "syntax.fs"
-
 let is_Sequence = (fun _discr_ -> (match (_discr_) with
 | Sequence (_) -> begin
 true
@@ -816,7 +733,6 @@ false
 end))
 
 # 141 "syntax.fs"
-
 let is_Primop = (fun _discr_ -> (match (_discr_) with
 | Primop (_) -> begin
 true
@@ -826,7 +742,6 @@ false
 end))
 
 # 142 "syntax.fs"
-
 let is_Masked_effect = (fun _discr_ -> (match (_discr_) with
 | Masked_effect (_) -> begin
 true
@@ -836,7 +751,6 @@ false
 end))
 
 # 143 "syntax.fs"
-
 let is_Meta_smt_pat = (fun _discr_ -> (match (_discr_) with
 | Meta_smt_pat (_) -> begin
 true
@@ -846,7 +760,6 @@ false
 end))
 
 # 145 "syntax.fs"
-
 let is_Data_ctor = (fun _discr_ -> (match (_discr_) with
 | Data_ctor (_) -> begin
 true
@@ -856,7 +769,6 @@ false
 end))
 
 # 146 "syntax.fs"
-
 let is_Record_projector = (fun _discr_ -> (match (_discr_) with
 | Record_projector (_) -> begin
 true
@@ -866,7 +778,6 @@ false
 end))
 
 # 147 "syntax.fs"
-
 let is_Record_ctor = (fun _discr_ -> (match (_discr_) with
 | Record_ctor (_) -> begin
 true
@@ -876,7 +787,6 @@ false
 end))
 
 # 152 "syntax.fs"
-
 let is_DB = (fun _discr_ -> (match (_discr_) with
 | DB (_) -> begin
 true
@@ -886,7 +796,6 @@ false
 end))
 
 # 153 "syntax.fs"
-
 let is_NM = (fun _discr_ -> (match (_discr_) with
 | NM (_) -> begin
 true
@@ -896,7 +805,6 @@ false
 end))
 
 # 154 "syntax.fs"
-
 let is_NT = (fun _discr_ -> (match (_discr_) with
 | NT (_) -> begin
 true
@@ -906,7 +814,6 @@ false
 end))
 
 # 155 "syntax.fs"
-
 let is_UN = (fun _discr_ -> (match (_discr_) with
 | UN (_) -> begin
 true
@@ -916,7 +823,6 @@ false
 end))
 
 # 156 "syntax.fs"
-
 let is_UD = (fun _discr_ -> (match (_discr_) with
 | UD (_) -> begin
 true
@@ -926,309 +832,262 @@ false
 end))
 
 # 159 "syntax.fs"
-
 let is_Mksyntax = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mksyntax"))))
 
 # 165 "syntax.fs"
-
 let is_Mkbv : bv  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkbv"))))
 
 # 171 "syntax.fs"
-
 let is_Mkfree_vars : free_vars  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkfree_vars"))))
 
 # 176 "syntax.fs"
-
 let is_Mklcomp : lcomp  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mklcomp"))))
 
 # 70 "syntax.fs"
-
 let ___Tm_bvar____0 : term'  ->  bv = (fun projectee -> (match (projectee) with
 | Tm_bvar (_32_65) -> begin
 _32_65
 end))
 
 # 71 "syntax.fs"
-
 let ___Tm_name____0 : term'  ->  bv = (fun projectee -> (match (projectee) with
 | Tm_name (_32_68) -> begin
 _32_68
 end))
 
 # 72 "syntax.fs"
-
 let ___Tm_fvar____0 : term'  ->  fv = (fun projectee -> (match (projectee) with
 | Tm_fvar (_32_71) -> begin
 _32_71
 end))
 
 # 73 "syntax.fs"
-
 let ___Tm_uinst____0 : term'  ->  (term * universes) = (fun projectee -> (match (projectee) with
 | Tm_uinst (_32_74) -> begin
 _32_74
 end))
 
 # 74 "syntax.fs"
-
 let ___Tm_constant____0 : term'  ->  sconst = (fun projectee -> (match (projectee) with
 | Tm_constant (_32_77) -> begin
 _32_77
 end))
 
 # 75 "syntax.fs"
-
 let ___Tm_type____0 : term'  ->  universe = (fun projectee -> (match (projectee) with
 | Tm_type (_32_80) -> begin
 _32_80
 end))
 
 # 76 "syntax.fs"
-
 let ___Tm_abs____0 : term'  ->  (binders * term * lcomp Prims.option) = (fun projectee -> (match (projectee) with
 | Tm_abs (_32_83) -> begin
 _32_83
 end))
 
 # 77 "syntax.fs"
-
 let ___Tm_arrow____0 : term'  ->  (binders * comp) = (fun projectee -> (match (projectee) with
 | Tm_arrow (_32_86) -> begin
 _32_86
 end))
 
 # 78 "syntax.fs"
-
 let ___Tm_refine____0 : term'  ->  (bv * term) = (fun projectee -> (match (projectee) with
 | Tm_refine (_32_89) -> begin
 _32_89
 end))
 
 # 79 "syntax.fs"
-
 let ___Tm_app____0 : term'  ->  (term * args) = (fun projectee -> (match (projectee) with
 | Tm_app (_32_92) -> begin
 _32_92
 end))
 
 # 80 "syntax.fs"
-
 let ___Tm_match____0 : term'  ->  (term * branch Prims.list) = (fun projectee -> (match (projectee) with
 | Tm_match (_32_95) -> begin
 _32_95
 end))
 
 # 81 "syntax.fs"
-
 let ___Tm_ascribed____0 : term'  ->  (term * term * FStar_Ident.lident Prims.option) = (fun projectee -> (match (projectee) with
 | Tm_ascribed (_32_98) -> begin
 _32_98
 end))
 
 # 82 "syntax.fs"
-
 let ___Tm_let____0 : term'  ->  (letbindings * term) = (fun projectee -> (match (projectee) with
 | Tm_let (_32_101) -> begin
 _32_101
 end))
 
 # 83 "syntax.fs"
-
 let ___Tm_uvar____0 : term'  ->  (uvar * term) = (fun projectee -> (match (projectee) with
 | Tm_uvar (_32_104) -> begin
 _32_104
 end))
 
 # 84 "syntax.fs"
-
 let ___Tm_delayed____0 : term'  ->  (((term * subst_ts), Prims.unit  ->  term) FStar_Util.either * term memo) = (fun projectee -> (match (projectee) with
 | Tm_delayed (_32_107) -> begin
 _32_107
 end))
 
 # 86 "syntax.fs"
-
 let ___Tm_meta____0 : term'  ->  (term * metadata) = (fun projectee -> (match (projectee) with
 | Tm_meta (_32_110) -> begin
 _32_110
 end))
 
 # 90 "syntax.fs"
-
 let ___Pat_constant____0 : pat'  ->  sconst = (fun projectee -> (match (projectee) with
 | Pat_constant (_32_113) -> begin
 _32_113
 end))
 
 # 91 "syntax.fs"
-
 let ___Pat_disj____0 : pat'  ->  pat Prims.list = (fun projectee -> (match (projectee) with
 | Pat_disj (_32_116) -> begin
 _32_116
 end))
 
 # 92 "syntax.fs"
-
 let ___Pat_cons____0 : pat'  ->  (fv * (pat * Prims.bool) Prims.list) = (fun projectee -> (match (projectee) with
 | Pat_cons (_32_119) -> begin
 _32_119
 end))
 
 # 93 "syntax.fs"
-
 let ___Pat_var____0 : pat'  ->  bv = (fun projectee -> (match (projectee) with
 | Pat_var (_32_122) -> begin
 _32_122
 end))
 
 # 94 "syntax.fs"
-
 let ___Pat_wild____0 : pat'  ->  bv = (fun projectee -> (match (projectee) with
 | Pat_wild (_32_125) -> begin
 _32_125
 end))
 
 # 95 "syntax.fs"
-
 let ___Pat_dot_term____0 : pat'  ->  (bv * term) = (fun projectee -> (match (projectee) with
 | Pat_dot_term (_32_128) -> begin
 _32_128
 end))
 
 # 110 "syntax.fs"
-
 let ___Total____0 : comp'  ->  typ = (fun projectee -> (match (projectee) with
 | Total (_32_133) -> begin
 _32_133
 end))
 
 # 111 "syntax.fs"
-
 let ___GTotal____0 : comp'  ->  typ = (fun projectee -> (match (projectee) with
 | GTotal (_32_136) -> begin
 _32_136
 end))
 
 # 112 "syntax.fs"
-
 let ___Comp____0 : comp'  ->  comp_typ = (fun projectee -> (match (projectee) with
 | Comp (_32_139) -> begin
 _32_139
 end))
 
 # 128 "syntax.fs"
-
 let ___DECREASES____0 : cflags  ->  term = (fun projectee -> (match (projectee) with
 | DECREASES (_32_142) -> begin
 _32_142
 end))
 
 # 131 "syntax.fs"
-
 let ___Meta_pattern____0 : metadata  ->  args Prims.list = (fun projectee -> (match (projectee) with
 | Meta_pattern (_32_145) -> begin
 _32_145
 end))
 
 # 132 "syntax.fs"
-
 let ___Meta_named____0 : metadata  ->  FStar_Ident.lident = (fun projectee -> (match (projectee) with
 | Meta_named (_32_148) -> begin
 _32_148
 end))
 
 # 133 "syntax.fs"
-
 let ___Meta_labeled____0 : metadata  ->  (Prims.string * FStar_Range.range * Prims.bool) = (fun projectee -> (match (projectee) with
 | Meta_labeled (_32_151) -> begin
 _32_151
 end))
 
 # 134 "syntax.fs"
-
 let ___Meta_desugared____0 : metadata  ->  meta_source_info = (fun projectee -> (match (projectee) with
 | Meta_desugared (_32_154) -> begin
 _32_154
 end))
 
 # 137 "syntax.fs"
-
 let ___Fixed____0 = (fun projectee -> (match (projectee) with
 | Fixed (_32_157) -> begin
 _32_157
 end))
 
 # 146 "syntax.fs"
-
 let ___Record_projector____0 : fv_qual  ->  FStar_Ident.lident = (fun projectee -> (match (projectee) with
 | Record_projector (_32_160) -> begin
 _32_160
 end))
 
 # 147 "syntax.fs"
-
 let ___Record_ctor____0 : fv_qual  ->  (FStar_Ident.lident * fieldname Prims.list) = (fun projectee -> (match (projectee) with
 | Record_ctor (_32_163) -> begin
 _32_163
 end))
 
 # 152 "syntax.fs"
-
 let ___DB____0 : subst_elt  ->  (Prims.int * term) = (fun projectee -> (match (projectee) with
 | DB (_32_166) -> begin
 _32_166
 end))
 
 # 153 "syntax.fs"
-
 let ___NM____0 : subst_elt  ->  (bv * Prims.int) = (fun projectee -> (match (projectee) with
 | NM (_32_169) -> begin
 _32_169
 end))
 
 # 154 "syntax.fs"
-
 let ___NT____0 : subst_elt  ->  (bv * term) = (fun projectee -> (match (projectee) with
 | NT (_32_172) -> begin
 _32_172
 end))
 
 # 155 "syntax.fs"
-
 let ___UN____0 : subst_elt  ->  (Prims.int * universe) = (fun projectee -> (match (projectee) with
 | UN (_32_175) -> begin
 _32_175
 end))
 
 # 156 "syntax.fs"
-
 let ___UD____0 : subst_elt  ->  (univ_name * Prims.int) = (fun projectee -> (match (projectee) with
 | UD (_32_178) -> begin
 _32_178
 end))
 
 # 183 "syntax.fs"
-
 type tscheme =
 (univ_name Prims.list * typ)
 
 # 185 "syntax.fs"
-
 type freenames_l =
 bv Prims.list
 
 # 186 "syntax.fs"
-
 type formula =
 typ
 
 # 187 "syntax.fs"
-
 type formulae =
 typ Prims.list
 
 # 188 "syntax.fs"
-
 type qualifier =
 | Assumption
 | New
@@ -1249,7 +1108,6 @@ type qualifier =
 | Effect
 
 # 189 "syntax.fs"
-
 let is_Assumption = (fun _discr_ -> (match (_discr_) with
 | Assumption (_) -> begin
 true
@@ -1259,7 +1117,6 @@ false
 end))
 
 # 190 "syntax.fs"
-
 let is_New = (fun _discr_ -> (match (_discr_) with
 | New (_) -> begin
 true
@@ -1269,7 +1126,6 @@ false
 end))
 
 # 191 "syntax.fs"
-
 let is_Private = (fun _discr_ -> (match (_discr_) with
 | Private (_) -> begin
 true
@@ -1279,7 +1135,6 @@ false
 end))
 
 # 192 "syntax.fs"
-
 let is_Inline = (fun _discr_ -> (match (_discr_) with
 | Inline (_) -> begin
 true
@@ -1289,7 +1144,6 @@ false
 end))
 
 # 193 "syntax.fs"
-
 let is_Unfoldable = (fun _discr_ -> (match (_discr_) with
 | Unfoldable (_) -> begin
 true
@@ -1299,7 +1153,6 @@ false
 end))
 
 # 194 "syntax.fs"
-
 let is_Irreducible = (fun _discr_ -> (match (_discr_) with
 | Irreducible (_) -> begin
 true
@@ -1309,7 +1162,6 @@ false
 end))
 
 # 195 "syntax.fs"
-
 let is_Abstract = (fun _discr_ -> (match (_discr_) with
 | Abstract (_) -> begin
 true
@@ -1319,7 +1171,6 @@ false
 end))
 
 # 196 "syntax.fs"
-
 let is_DefaultEffect = (fun _discr_ -> (match (_discr_) with
 | DefaultEffect (_) -> begin
 true
@@ -1329,7 +1180,6 @@ false
 end))
 
 # 197 "syntax.fs"
-
 let is_TotalEffect = (fun _discr_ -> (match (_discr_) with
 | TotalEffect (_) -> begin
 true
@@ -1339,7 +1189,6 @@ false
 end))
 
 # 199 "syntax.fs"
-
 let is_Logic = (fun _discr_ -> (match (_discr_) with
 | Logic (_) -> begin
 true
@@ -1349,7 +1198,6 @@ false
 end))
 
 # 200 "syntax.fs"
-
 let is_Discriminator = (fun _discr_ -> (match (_discr_) with
 | Discriminator (_) -> begin
 true
@@ -1359,7 +1207,6 @@ false
 end))
 
 # 201 "syntax.fs"
-
 let is_Projector = (fun _discr_ -> (match (_discr_) with
 | Projector (_) -> begin
 true
@@ -1369,7 +1216,6 @@ false
 end))
 
 # 202 "syntax.fs"
-
 let is_RecordType = (fun _discr_ -> (match (_discr_) with
 | RecordType (_) -> begin
 true
@@ -1379,7 +1225,6 @@ false
 end))
 
 # 203 "syntax.fs"
-
 let is_RecordConstructor = (fun _discr_ -> (match (_discr_) with
 | RecordConstructor (_) -> begin
 true
@@ -1389,7 +1234,6 @@ false
 end))
 
 # 204 "syntax.fs"
-
 let is_ExceptionConstructor = (fun _discr_ -> (match (_discr_) with
 | ExceptionConstructor (_) -> begin
 true
@@ -1399,7 +1243,6 @@ false
 end))
 
 # 205 "syntax.fs"
-
 let is_HasMaskedEffect = (fun _discr_ -> (match (_discr_) with
 | HasMaskedEffect (_) -> begin
 true
@@ -1409,7 +1252,6 @@ false
 end))
 
 # 206 "syntax.fs"
-
 let is_Effect = (fun _discr_ -> (match (_discr_) with
 | Effect (_) -> begin
 true
@@ -1419,65 +1261,54 @@ false
 end))
 
 # 196 "syntax.fs"
-
 let ___DefaultEffect____0 : qualifier  ->  FStar_Ident.lident Prims.option = (fun projectee -> (match (projectee) with
 | DefaultEffect (_32_185) -> begin
 _32_185
 end))
 
 # 200 "syntax.fs"
-
 let ___Discriminator____0 : qualifier  ->  FStar_Ident.lident = (fun projectee -> (match (projectee) with
 | Discriminator (_32_188) -> begin
 _32_188
 end))
 
 # 201 "syntax.fs"
-
 let ___Projector____0 : qualifier  ->  (FStar_Ident.lident * FStar_Ident.ident) = (fun projectee -> (match (projectee) with
 | Projector (_32_191) -> begin
 _32_191
 end))
 
 # 202 "syntax.fs"
-
 let ___RecordType____0 : qualifier  ->  fieldname Prims.list = (fun projectee -> (match (projectee) with
 | RecordType (_32_194) -> begin
 _32_194
 end))
 
 # 203 "syntax.fs"
-
 let ___RecordConstructor____0 : qualifier  ->  fieldname Prims.list = (fun projectee -> (match (projectee) with
 | RecordConstructor (_32_197) -> begin
 _32_197
 end))
 
 # 208 "syntax.fs"
-
 type tycon =
 (FStar_Ident.lident * binders * typ)
 
 # 209 "syntax.fs"
-
 type monad_abbrev =
 {mabbrev : FStar_Ident.lident; parms : binders; def : typ}
 
 # 209 "syntax.fs"
-
 let is_Mkmonad_abbrev : monad_abbrev  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkmonad_abbrev"))))
 
 # 214 "syntax.fs"
-
 type sub_eff =
 {source : FStar_Ident.lident; target : FStar_Ident.lident; lift : tscheme}
 
 # 214 "syntax.fs"
-
 let is_Mksub_eff : sub_eff  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mksub_eff"))))
 
 # 219 "syntax.fs"
-
 type eff_decl =
 {qualifiers : qualifier Prims.list; mname : FStar_Ident.lident; univs : univ_names; binders : binders; signature : term; ret : tscheme; bind_wp : tscheme; bind_wlp : tscheme; if_then_else : tscheme; ite_wp : tscheme; ite_wlp : tscheme; wp_binop : tscheme; wp_as_type : tscheme; close_wp : tscheme; assert_p : tscheme; assume_p : tscheme; null_wp : tscheme; trivial : tscheme} 
  and sigelt =
@@ -1494,11 +1325,9 @@ type eff_decl =
 | Sig_pragma of (pragma * FStar_Range.range)
 
 # 219 "syntax.fs"
-
 let is_Mkeff_decl : eff_decl  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkeff_decl"))))
 
 # 240 "syntax.fs"
-
 let is_Sig_inductive_typ = (fun _discr_ -> (match (_discr_) with
 | Sig_inductive_typ (_) -> begin
 true
@@ -1508,7 +1337,6 @@ false
 end))
 
 # 253 "syntax.fs"
-
 let is_Sig_bundle = (fun _discr_ -> (match (_discr_) with
 | Sig_bundle (_) -> begin
 true
@@ -1518,7 +1346,6 @@ false
 end))
 
 # 257 "syntax.fs"
-
 let is_Sig_datacon = (fun _discr_ -> (match (_discr_) with
 | Sig_datacon (_) -> begin
 true
@@ -1528,7 +1355,6 @@ false
 end))
 
 # 265 "syntax.fs"
-
 let is_Sig_declare_typ = (fun _discr_ -> (match (_discr_) with
 | Sig_declare_typ (_) -> begin
 true
@@ -1538,7 +1364,6 @@ false
 end))
 
 # 270 "syntax.fs"
-
 let is_Sig_let = (fun _discr_ -> (match (_discr_) with
 | Sig_let (_) -> begin
 true
@@ -1548,7 +1373,6 @@ false
 end))
 
 # 274 "syntax.fs"
-
 let is_Sig_main = (fun _discr_ -> (match (_discr_) with
 | Sig_main (_) -> begin
 true
@@ -1558,7 +1382,6 @@ false
 end))
 
 # 276 "syntax.fs"
-
 let is_Sig_assume = (fun _discr_ -> (match (_discr_) with
 | Sig_assume (_) -> begin
 true
@@ -1568,7 +1391,6 @@ false
 end))
 
 # 280 "syntax.fs"
-
 let is_Sig_new_effect = (fun _discr_ -> (match (_discr_) with
 | Sig_new_effect (_) -> begin
 true
@@ -1578,7 +1400,6 @@ false
 end))
 
 # 281 "syntax.fs"
-
 let is_Sig_sub_effect = (fun _discr_ -> (match (_discr_) with
 | Sig_sub_effect (_) -> begin
 true
@@ -1588,7 +1409,6 @@ false
 end))
 
 # 282 "syntax.fs"
-
 let is_Sig_effect_abbrev = (fun _discr_ -> (match (_discr_) with
 | Sig_effect_abbrev (_) -> begin
 true
@@ -1598,7 +1418,6 @@ false
 end))
 
 # 283 "syntax.fs"
-
 let is_Sig_pragma = (fun _discr_ -> (match (_discr_) with
 | Sig_pragma (_) -> begin
 true
@@ -1608,130 +1427,108 @@ false
 end))
 
 # 240 "syntax.fs"
-
 let ___Sig_inductive_typ____0 : sigelt  ->  (FStar_Ident.lident * univ_names * binders * typ * FStar_Ident.lident Prims.list * FStar_Ident.lident Prims.list * qualifier Prims.list * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Sig_inductive_typ (_32_227) -> begin
 _32_227
 end))
 
 # 253 "syntax.fs"
-
 let ___Sig_bundle____0 : sigelt  ->  (sigelt Prims.list * qualifier Prims.list * FStar_Ident.lident Prims.list * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Sig_bundle (_32_230) -> begin
 _32_230
 end))
 
 # 257 "syntax.fs"
-
 let ___Sig_datacon____0 : sigelt  ->  (FStar_Ident.lident * univ_names * typ * FStar_Ident.lident * Prims.int * qualifier Prims.list * FStar_Ident.lident Prims.list * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Sig_datacon (_32_233) -> begin
 _32_233
 end))
 
 # 265 "syntax.fs"
-
 let ___Sig_declare_typ____0 : sigelt  ->  (FStar_Ident.lident * univ_names * typ * qualifier Prims.list * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Sig_declare_typ (_32_236) -> begin
 _32_236
 end))
 
 # 270 "syntax.fs"
-
 let ___Sig_let____0 : sigelt  ->  (letbindings * FStar_Range.range * FStar_Ident.lident Prims.list * qualifier Prims.list) = (fun projectee -> (match (projectee) with
 | Sig_let (_32_239) -> begin
 _32_239
 end))
 
 # 274 "syntax.fs"
-
 let ___Sig_main____0 : sigelt  ->  (term * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Sig_main (_32_242) -> begin
 _32_242
 end))
 
 # 276 "syntax.fs"
-
 let ___Sig_assume____0 : sigelt  ->  (FStar_Ident.lident * formula * qualifier Prims.list * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Sig_assume (_32_245) -> begin
 _32_245
 end))
 
 # 280 "syntax.fs"
-
 let ___Sig_new_effect____0 : sigelt  ->  (eff_decl * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Sig_new_effect (_32_248) -> begin
 _32_248
 end))
 
 # 281 "syntax.fs"
-
 let ___Sig_sub_effect____0 : sigelt  ->  (sub_eff * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Sig_sub_effect (_32_251) -> begin
 _32_251
 end))
 
 # 282 "syntax.fs"
-
 let ___Sig_effect_abbrev____0 : sigelt  ->  (FStar_Ident.lident * univ_names * binders * comp * qualifier Prims.list * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Sig_effect_abbrev (_32_254) -> begin
 _32_254
 end))
 
 # 283 "syntax.fs"
-
 let ___Sig_pragma____0 : sigelt  ->  (pragma * FStar_Range.range) = (fun projectee -> (match (projectee) with
 | Sig_pragma (_32_257) -> begin
 _32_257
 end))
 
 # 284 "syntax.fs"
-
 type sigelts =
 sigelt Prims.list
 
 # 286 "syntax.fs"
-
 type modul =
 {name : FStar_Ident.lident; declarations : sigelts; exports : sigelts; is_interface : Prims.bool}
 
 # 286 "syntax.fs"
-
 let is_Mkmodul : modul  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkmodul"))))
 
 # 292 "syntax.fs"
-
 type path =
 Prims.string Prims.list
 
 # 293 "syntax.fs"
-
 type subst_t =
 subst_elt Prims.list
 
 # 294 "syntax.fs"
-
 type ('a, 'b) mk_t_a =
 'b Prims.option  ->  FStar_Range.range  ->  ('a, 'b) syntax
 
 # 295 "syntax.fs"
-
 type mk_t =
 (term', term') mk_t_a
 
 # 300 "syntax.fs"
-
 let withinfo = (fun v s r -> {v = v; ty = s; p = r})
 
 # 301 "syntax.fs"
-
 let withsort = (fun v s -> (withinfo v s FStar_Range.dummyRange))
 
 # 303 "syntax.fs"
-
 let bv_eq : bv  ->  bv  ->  Prims.bool = (fun bv1 bv2 -> ((bv1.ppname.FStar_Ident.idText = bv2.ppname.FStar_Ident.idText) && (bv1.index = bv2.index)))
 
 # 304 "syntax.fs"
-
 let order_bv : bv  ->  bv  ->  Prims.int = (fun x y -> (let i = (FStar_String.compare x.ppname.FStar_Ident.idText y.ppname.FStar_Ident.idText)
 in if (i = 0) then begin
 (x.index - y.index)
@@ -1740,7 +1537,6 @@ i
 end))
 
 # 310 "syntax.fs"
-
 let range_of_lbname : lbname  ->  FStar_Range.range = (fun l -> (match (l) with
 | FStar_Util.Inl (x) -> begin
 x.ppname.FStar_Ident.idRange
@@ -1750,41 +1546,34 @@ end
 end))
 
 # 313 "syntax.fs"
-
 let range_of_bv : bv  ->  FStar_Range.range = (fun x -> x.ppname.FStar_Ident.idRange)
 
 # 314 "syntax.fs"
-
 let set_range_of_bv : bv  ->  FStar_Range.range  ->  bv = (fun x r -> (let _32_283 = x
 in {ppname = (FStar_Ident.mk_ident (x.ppname.FStar_Ident.idText, r)); index = _32_283.index; sort = _32_283.sort}))
 
 # 321 "syntax.fs"
-
 let syn = (fun p k f -> (f k p))
 
 # 322 "syntax.fs"
-
 let mk_fvs = (fun _32_288 -> (match (()) with
 | () -> begin
 (FStar_Util.mk_ref None)
 end))
 
 # 323 "syntax.fs"
-
 let mk_uvs = (fun _32_289 -> (match (()) with
 | () -> begin
 (FStar_Util.mk_ref None)
 end))
 
 # 324 "syntax.fs"
-
 let new_bv_set : Prims.unit  ->  (bv Prims.list * (bv  ->  bv  ->  Prims.bool)) = (fun _32_290 -> (match (()) with
 | () -> begin
 (FStar_Util.new_set order_bv (fun x -> (x.index + (FStar_Util.hashcode x.ppname.FStar_Ident.idText))))
 end))
 
 # 325 "syntax.fs"
-
 let new_uv_set : Prims.unit  ->  uvars = (fun _32_292 -> (match (()) with
 | () -> begin
 (FStar_Util.new_set (fun _32_300 _32_304 -> (match ((_32_300, _32_304)) with
@@ -1797,60 +1586,47 @@ end)))
 end))
 
 # 327 "syntax.fs"
-
 let new_universe_uvar_set : Prims.unit  ->  (universe_uvar Prims.list * (universe_uvar  ->  universe_uvar  ->  Prims.bool)) = (fun _32_305 -> (match (()) with
 | () -> begin
 (FStar_Util.new_set (fun x y -> ((FStar_Unionfind.uvar_id x) - (FStar_Unionfind.uvar_id y))) (fun x -> (FStar_Unionfind.uvar_id x)))
 end))
 
 # 330 "syntax.fs"
-
 let no_names : (bv Prims.list * (bv  ->  bv  ->  Prims.bool)) = (new_bv_set ())
 
 # 331 "syntax.fs"
-
 let no_uvs : uvars = (new_uv_set ())
 
 # 332 "syntax.fs"
-
 let no_universe_uvars : (universe_uvar Prims.list * (universe_uvar  ->  universe_uvar  ->  Prims.bool)) = (new_universe_uvar_set ())
 
 # 333 "syntax.fs"
-
 let empty_free_vars : free_vars = {free_names = no_names; free_uvars = no_uvs; free_univs = no_universe_uvars}
 
 # 338 "syntax.fs"
-
 let memo_no_uvs : uvars Prims.option FStar_ST.ref = (FStar_Util.mk_ref (Some (no_uvs)))
 
 # 339 "syntax.fs"
-
 let memo_no_names : (bv Prims.list * (bv  ->  bv  ->  Prims.bool)) Prims.option FStar_ST.ref = (FStar_Util.mk_ref (Some (no_names)))
 
 # 340 "syntax.fs"
-
 let freenames_of_list : bv Prims.list  ->  (bv Prims.list * (bv  ->  bv  ->  Prims.bool)) = (fun l -> (FStar_List.fold_right FStar_Util.set_add l no_names))
 
 # 341 "syntax.fs"
-
 let list_of_freenames : freenames  ->  bv Prims.list = (fun fvs -> (FStar_Util.set_elements fvs))
 
 # 344 "syntax.fs"
-
 let mk = (fun t topt r -> (let _134_1198 = (FStar_Util.mk_ref topt)
 in (let _134_1197 = (FStar_Util.mk_ref None)
 in {n = t; tk = _134_1198; pos = r; vars = _134_1197})))
 
 # 350 "syntax.fs"
-
 let bv_to_tm : bv  ->  (term', term') syntax = (fun bv -> (mk (Tm_bvar (bv)) (Some (bv.sort.n)) (range_of_bv bv)))
 
 # 351 "syntax.fs"
-
 let bv_to_name : bv  ->  (term', term') syntax = (fun bv -> (mk (Tm_name (bv)) (Some (bv.sort.n)) (range_of_bv bv)))
 
 # 352 "syntax.fs"
-
 let mk_Tm_app : typ  ->  arg Prims.list  ->  term' Prims.option  ->  Prims.int64  ->  (term', term') syntax = (fun t1 args k p -> (match (args) with
 | [] -> begin
 t1
@@ -1860,7 +1636,6 @@ end
 end))
 
 # 356 "syntax.fs"
-
 let mk_Tm_uinst : term  ->  universe Prims.list  ->  term = (fun t _32_1 -> (match (_32_1) with
 | [] -> begin
 t
@@ -1876,7 +1651,6 @@ end)
 end))
 
 # 363 "syntax.fs"
-
 let extend_app_n : (term', term') syntax  ->  ((term', term') syntax * arg_qualifier Prims.option) Prims.list  ->  term' Prims.option  ->  Prims.int64  ->  (term', term') syntax = (fun t args' kopt r -> (match (t.n) with
 | Tm_app (head, args) -> begin
 (mk_Tm_app head (FStar_List.append args args') kopt r)
@@ -1886,57 +1660,45 @@ end
 end))
 
 # 366 "syntax.fs"
-
 let extend_app : (term', term') syntax  ->  ((term', term') syntax * arg_qualifier Prims.option)  ->  term' Prims.option  ->  Prims.int64  ->  (term', term') syntax = (fun t arg kopt r -> (extend_app_n t ((arg)::[]) kopt r))
 
 # 367 "syntax.fs"
-
 let mk_Tm_delayed : ((term * subst_ts), Prims.unit  ->  term) FStar_Util.either  ->  FStar_Range.range  ->  (term', term') syntax = (fun lr pos -> (let _134_1253 = (let _134_1252 = (let _134_1251 = (FStar_Util.mk_ref None)
 in (lr, _134_1251))
 in Tm_delayed (_134_1252))
 in (mk _134_1253 None pos)))
 
 # 368 "syntax.fs"
-
 let mk_Total : typ  ->  (comp', Prims.unit) syntax = (fun t -> (mk (Total (t)) None t.pos))
 
 # 369 "syntax.fs"
-
 let mk_GTotal : typ  ->  (comp', Prims.unit) syntax = (fun t -> (mk (GTotal (t)) None t.pos))
 
 # 370 "syntax.fs"
-
 let mk_Comp : comp_typ  ->  (comp', Prims.unit) syntax = (fun ct -> (mk (Comp (ct)) None ct.result_typ.pos))
 
 # 371 "syntax.fs"
-
 let mk_lb : (lbname * univ_name Prims.list * FStar_Ident.lident * typ * term)  ->  letbinding = (fun _32_358 -> (match (_32_358) with
 | (x, univs, eff, t, e) -> begin
 {lbname = x; lbunivs = univs; lbtyp = t; lbeff = eff; lbdef = e}
 end))
 
 # 372 "syntax.fs"
-
 let mk_subst : subst_t  ->  subst_t = (fun s -> s)
 
 # 373 "syntax.fs"
-
 let extend_subst : subst_elt  ->  subst_elt Prims.list  ->  subst_elt Prims.list = (fun x s -> (x)::s)
 
 # 374 "syntax.fs"
-
 let argpos : arg  ->  FStar_Range.range = (fun x -> (Prims.fst x).pos)
 
 # 376 "syntax.fs"
-
 let tun : (term', term') syntax = (mk Tm_unknown None FStar_Range.dummyRange)
 
 # 377 "syntax.fs"
-
 let teff : (term', term') syntax = (mk (Tm_constant (FStar_Const.Const_effect)) (Some (Tm_unknown)) FStar_Range.dummyRange)
 
 # 378 "syntax.fs"
-
 let is_teff : term  ->  Prims.bool = (fun t -> (match (t.n) with
 | Tm_constant (FStar_Const.Const_effect) -> begin
 true
@@ -1946,7 +1708,6 @@ false
 end))
 
 # 381 "syntax.fs"
-
 let is_type : term  ->  Prims.bool = (fun t -> (match (t.n) with
 | Tm_type (_32_370) -> begin
 true
@@ -1956,55 +1717,43 @@ false
 end))
 
 # 384 "syntax.fs"
-
 let null_id : FStar_Ident.ident = (FStar_Ident.mk_ident ("_", FStar_Range.dummyRange))
 
 # 385 "syntax.fs"
-
 let null_bv : term  ->  bv = (fun k -> {ppname = null_id; index = 0; sort = k})
 
 # 386 "syntax.fs"
-
 let mk_binder : bv  ->  (bv * arg_qualifier Prims.option) = (fun a -> (a, None))
 
 # 387 "syntax.fs"
-
 let null_binder : term  ->  (bv * arg_qualifier Prims.option) = (fun t -> ((null_bv t), None))
 
 # 388 "syntax.fs"
-
 let iarg : (term', term') syntax  ->  ((term', term') syntax * arg_qualifier Prims.option) = (fun t -> (t, Some (Implicit)))
 
 # 389 "syntax.fs"
-
 let as_arg : (term', term') syntax  ->  ((term', term') syntax * arg_qualifier Prims.option) = (fun t -> (t, None))
 
 # 390 "syntax.fs"
-
 let is_null_bv : bv  ->  Prims.bool = (fun b -> (b.ppname.FStar_Ident.idText = null_id.FStar_Ident.idText))
 
 # 391 "syntax.fs"
-
 let is_null_binder : binder  ->  Prims.bool = (fun b -> (is_null_bv (Prims.fst b)))
 
 # 393 "syntax.fs"
-
 let freenames_of_binders : binders  ->  freenames = (fun bs -> (FStar_List.fold_right (fun _32_385 out -> (match (_32_385) with
 | (x, _32_384) -> begin
 (FStar_Util.set_add x out)
 end)) bs no_names))
 
 # 396 "syntax.fs"
-
 let binders_of_list : bv Prims.list  ->  (bv * arg_qualifier Prims.option) Prims.list = (fun fvs -> (FStar_All.pipe_right fvs (FStar_List.map (fun t -> (t, None)))))
 
 # 397 "syntax.fs"
-
 let binders_of_freenames : freenames  ->  (bv * arg_qualifier Prims.option) Prims.list = (fun fvs -> (let _134_1297 = (FStar_Util.set_elements fvs)
 in (FStar_All.pipe_right _134_1297 binders_of_list)))
 
 # 398 "syntax.fs"
-
 let is_implicit : arg_qualifier Prims.option  ->  Prims.bool = (fun _32_2 -> (match (_32_2) with
 | Some (Implicit) -> begin
 true
@@ -2014,7 +1763,6 @@ false
 end))
 
 # 399 "syntax.fs"
-
 let as_implicit : Prims.bool  ->  arg_qualifier Prims.option = (fun _32_3 -> (match (_32_3) with
 | true -> begin
 Some (Implicit)
@@ -2024,7 +1772,6 @@ None
 end))
 
 # 401 "syntax.fs"
-
 let pat_bvs : pat  ->  bv Prims.list = (fun p -> (let rec aux = (fun b p -> (match (p.v) with
 | (Pat_dot_term (_)) | (Pat_constant (_)) -> begin
 b
@@ -2047,7 +1794,6 @@ end))
 in (aux [] p)))
 
 # 413 "syntax.fs"
-
 let gen_reset : ((Prims.unit  ->  Prims.int) * (Prims.unit  ->  Prims.unit)) = (let x = (FStar_ST.alloc 0)
 in (let gen = (fun _32_431 -> (match (()) with
 | () -> begin
@@ -2061,21 +1807,17 @@ end))
 in (gen, reset))))
 
 # 418 "syntax.fs"
-
 let next_id : Prims.unit  ->  Prims.int = (Prims.fst gen_reset)
 
 # 419 "syntax.fs"
-
 let reset_gensym : Prims.unit  ->  Prims.unit = (Prims.snd gen_reset)
 
 # 420 "syntax.fs"
-
 let freshen_bv : bv  ->  bv = (fun bv -> (let _32_437 = bv
 in (let _134_1328 = (next_id ())
 in {ppname = _32_437.ppname; index = _134_1328; sort = _32_437.sort})))
 
 # 421 "syntax.fs"
-
 let range_of_ropt : FStar_Range.range Prims.option  ->  FStar_Range.range = (fun _32_4 -> (match (_32_4) with
 | None -> begin
 FStar_Range.dummyRange
@@ -2085,28 +1827,23 @@ r
 end))
 
 # 424 "syntax.fs"
-
 let gen_bv : Prims.string  ->  FStar_Range.range Prims.option  ->  typ  ->  bv = (fun s r t -> (let id = (FStar_Ident.mk_ident (s, (range_of_ropt r)))
 in (let _134_1337 = (next_id ())
 in {ppname = id; index = _134_1337; sort = t})))
 
 # 427 "syntax.fs"
-
 let new_bv : FStar_Range.range Prims.option  ->  typ  ->  bv = (fun ropt t -> (gen_bv "x" ropt t))
 
 # 428 "syntax.fs"
-
 let new_univ_name : FStar_Range.range Prims.option  ->  FStar_Ident.ident = (fun ropt -> (let id = (next_id ())
 in (let _134_1345 = (let _134_1344 = (FStar_Util.string_of_int id)
 in (_134_1344, (range_of_ropt ropt)))
 in (FStar_Ident.mk_ident _134_1345))))
 
 # 431 "syntax.fs"
-
 let mkbv : FStar_Ident.ident  ->  Prims.int  ->  term  ->  bv = (fun x y t -> {ppname = x; index = y; sort = t})
 
 # 432 "syntax.fs"
-
 let lbname_eq : (bv, FStar_Ident.lident) FStar_Util.either  ->  (bv, FStar_Ident.lident) FStar_Util.either  ->  Prims.bool = (fun l1 l2 -> (match ((l1, l2)) with
 | (FStar_Util.Inl (x), FStar_Util.Inl (y)) -> begin
 (bv_eq x y)
@@ -2119,27 +1856,22 @@ false
 end))
 
 # 436 "syntax.fs"
-
 let fv_eq : fv  ->  fv  ->  Prims.bool = (fun _32_471 _32_475 -> (match ((_32_471, _32_475)) with
 | ((fv1, _32_470), (fv2, _32_474)) -> begin
 (FStar_Ident.lid_equals fv1.v fv2.v)
 end))
 
 # 437 "syntax.fs"
-
 let set_bv_range : bv  ->  FStar_Range.range  ->  bv = (fun bv r -> (let _32_478 = bv
 in {ppname = (FStar_Ident.mk_ident (bv.ppname.FStar_Ident.idText, r)); index = _32_478.index; sort = _32_478.sort}))
 
 # 438 "syntax.fs"
-
 let lid_as_fv : FStar_Ident.lid  ->  fv_qual Prims.option  ->  ((FStar_Ident.lid, (term', term') syntax) withinfo_t * fv_qual Prims.option) = (fun l dc -> ((withinfo l tun (FStar_Ident.range_of_lid l)), dc))
 
 # 439 "syntax.fs"
-
 let fv_to_tm : fv  ->  (term', term') syntax = (fun fv -> (mk (Tm_fvar (fv)) None (FStar_Ident.range_of_lid (Prims.fst fv).v)))
 
 # 440 "syntax.fs"
-
 let fvar : fv_qual Prims.option  ->  FStar_Ident.lident  ->  FStar_Range.range  ->  (term', term') syntax = (fun dc l r -> (let _134_1378 = (let _134_1377 = (let _134_1376 = (FStar_Ident.set_lid_range l r)
 in (lid_as_fv _134_1376 dc))
 in Tm_fvar (_134_1377))

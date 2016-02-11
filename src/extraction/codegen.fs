@@ -684,9 +684,10 @@ let doc_of_mod1 (currentModule : mlsymbol) (m : mlmodule1) =
 
 (* -------------------------------------------------------------------- *)
 let doc_of_mod (currentModule : mlsymbol) (m : mlmodule) =
-    let docs = List.map (doc_of_mod1 currentModule) m in
-    let docs = List.map (fun x -> reduce [x; hardline; hardline]) docs in
-    reduce docs
+    let docs = List.map (fun x ->
+        let doc = doc_of_mod1 currentModule x in
+        [doc; (match x with | MLM_Loc _ -> empty | _ -> hardline); hardline]) m in
+    reduce (List.flatten docs)
 
 (* -------------------------------------------------------------------- *)
 let rec doc_of_mllib_r (MLLib mllib) =

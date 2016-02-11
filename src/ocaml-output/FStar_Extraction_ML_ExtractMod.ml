@@ -1,7 +1,6 @@
 
 open Prims
 # 29 "extractmod.fs"
-
 let fail_exp : FStar_Ident.lident  ->  FStar_Absyn_Syntax.typ  ->  FStar_Absyn_Syntax.exp = (fun lid t -> (let _182_15 = (let _182_14 = (FStar_Absyn_Util.fvar None FStar_Absyn_Const.failwith_lid FStar_Absyn_Syntax.dummyRange)
 in (let _182_13 = (let _182_12 = (let _182_11 = (let _182_10 = (let _182_9 = (let _182_8 = (let _182_7 = (let _182_6 = (let _182_5 = (FStar_Absyn_Print.sli lid)
 in (Prims.strcat "Not yet implemented:" _182_5))
@@ -16,7 +15,6 @@ in (_182_14, _182_13)))
 in (FStar_Absyn_Syntax.mk_Exp_app _182_15 None FStar_Absyn_Syntax.dummyRange)))
 
 # 33 "extractmod.fs"
-
 let mangle_projector_lid : FStar_Ident.lident  ->  FStar_Ident.lident = (fun x -> (let projecteeName = x.FStar_Ident.ident
 in (let _80_11 = (FStar_Util.prefix x.FStar_Ident.ns)
 in (match (_80_11) with
@@ -26,7 +24,6 @@ in (FStar_Ident.lid_of_ids (FStar_List.append prefix ((mangledName)::[]))))
 end))))
 
 # 39 "extractmod.fs"
-
 let rec extract_sig : FStar_Extraction_ML_Env.env  ->  FStar_Absyn_Syntax.sigelt  ->  (FStar_Extraction_ML_Env.env * FStar_Extraction_ML_Syntax.mlmodule1 Prims.list) = (fun g se -> (let _80_16 = (FStar_Extraction_ML_Env.debug g (fun u -> (let _182_24 = (let _182_23 = (FStar_Absyn_Print.sigelt_to_string se)
 in (FStar_Util.format1 "now extracting :  %s \n" _182_23))
 in (FStar_Util.print_string _182_24))))
@@ -156,12 +153,10 @@ end
 end)))
 
 # 102 "extractmod.fs"
-
 let extract_iface : FStar_Extraction_ML_Env.env  ->  FStar_Absyn_Syntax.modul  ->  FStar_Extraction_ML_Env.env = (fun g m -> (let _182_54 = (FStar_Util.fold_map extract_sig g m.FStar_Absyn_Syntax.declarations)
 in (FStar_All.pipe_right _182_54 Prims.fst)))
 
 # 104 "extractmod.fs"
-
 let rec extract : FStar_Extraction_ML_Env.env  ->  FStar_Absyn_Syntax.modul  ->  (FStar_Extraction_ML_Env.env * FStar_Extraction_ML_Syntax.mllib Prims.list) = (fun g m -> (let _80_159 = (FStar_Absyn_Util.reset_gensym ())
 in (let name = (FStar_Extraction_ML_Syntax.mlpath_of_lident m.FStar_Absyn_Syntax.name)
 in (let g = (let _80_162 = g

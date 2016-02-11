@@ -1,7 +1,6 @@
 
 open Prims
 # 28 "tcenv.fs"
-
 type binding =
 | Binding_var of (FStar_Absyn_Syntax.bvvdef * FStar_Absyn_Syntax.typ)
 | Binding_typ of (FStar_Absyn_Syntax.btvdef * FStar_Absyn_Syntax.knd)
@@ -9,7 +8,6 @@ type binding =
 | Binding_sig of FStar_Absyn_Syntax.sigelt
 
 # 29 "tcenv.fs"
-
 let is_Binding_var = (fun _discr_ -> (match (_discr_) with
 | Binding_var (_) -> begin
 true
@@ -19,7 +17,6 @@ false
 end))
 
 # 30 "tcenv.fs"
-
 let is_Binding_typ = (fun _discr_ -> (match (_discr_) with
 | Binding_typ (_) -> begin
 true
@@ -29,7 +26,6 @@ false
 end))
 
 # 31 "tcenv.fs"
-
 let is_Binding_lid = (fun _discr_ -> (match (_discr_) with
 | Binding_lid (_) -> begin
 true
@@ -39,7 +35,6 @@ false
 end))
 
 # 32 "tcenv.fs"
-
 let is_Binding_sig = (fun _discr_ -> (match (_discr_) with
 | Binding_sig (_) -> begin
 true
@@ -49,44 +44,37 @@ false
 end))
 
 # 29 "tcenv.fs"
-
 let ___Binding_var____0 : binding  ->  (FStar_Absyn_Syntax.bvvdef * FStar_Absyn_Syntax.typ) = (fun projectee -> (match (projectee) with
 | Binding_var (_44_16) -> begin
 _44_16
 end))
 
 # 30 "tcenv.fs"
-
 let ___Binding_typ____0 : binding  ->  (FStar_Absyn_Syntax.btvdef * FStar_Absyn_Syntax.knd) = (fun projectee -> (match (projectee) with
 | Binding_typ (_44_19) -> begin
 _44_19
 end))
 
 # 31 "tcenv.fs"
-
 let ___Binding_lid____0 : binding  ->  (FStar_Ident.lident * FStar_Absyn_Syntax.typ) = (fun projectee -> (match (projectee) with
 | Binding_lid (_44_22) -> begin
 _44_22
 end))
 
 # 32 "tcenv.fs"
-
 let ___Binding_sig____0 : binding  ->  FStar_Absyn_Syntax.sigelt = (fun projectee -> (match (projectee) with
 | Binding_sig (_44_25) -> begin
 _44_25
 end))
 
 # 34 "tcenv.fs"
-
 type sigtable =
 FStar_Absyn_Syntax.sigelt FStar_Util.smap
 
 # 35 "tcenv.fs"
-
 let default_table_size : Prims.int = 200
 
 # 36 "tcenv.fs"
-
 let strlid_of_sigelt : FStar_Absyn_Syntax.sigelt  ->  Prims.string Prims.option = (fun se -> (match ((FStar_Absyn_Util.lid_of_sigelt se)) with
 | None -> begin
 None
@@ -96,14 +84,12 @@ Some ((FStar_Ident.text_of_lid l))
 end))
 
 # 39 "tcenv.fs"
-
 let signature_to_sigtables : FStar_Absyn_Syntax.sigelt Prims.list  ->  FStar_Absyn_Syntax.sigelt FStar_Util.smap = (fun s -> (let ht = (FStar_Util.smap_create default_table_size)
 in (let _44_35 = (FStar_List.iter (fun se -> (let lids = (FStar_Absyn_Util.lids_of_sigelt se)
 in (FStar_List.iter (fun l -> (FStar_Util.smap_add ht l.FStar_Ident.str se)) lids))) s)
 in ht)))
 
 # 46 "tcenv.fs"
-
 let modules_to_sigtables = (fun mods -> (let _146_65 = (FStar_List.collect (fun _44_41 -> (match (_44_41) with
 | (_44_39, m) -> begin
 m.FStar_Absyn_Syntax.declarations
@@ -111,14 +97,12 @@ end)) mods)
 in (signature_to_sigtables _146_65)))
 
 # 49 "tcenv.fs"
-
 type level =
 | Expr
 | Type
 | Kind
 
 # 50 "tcenv.fs"
-
 let is_Expr = (fun _discr_ -> (match (_discr_) with
 | Expr (_) -> begin
 true
@@ -128,7 +112,6 @@ false
 end))
 
 # 51 "tcenv.fs"
-
 let is_Type = (fun _discr_ -> (match (_discr_) with
 | Type (_) -> begin
 true
@@ -138,7 +121,6 @@ false
 end))
 
 # 52 "tcenv.fs"
-
 let is_Kind = (fun _discr_ -> (match (_discr_) with
 | Kind (_) -> begin
 true
@@ -148,45 +130,36 @@ false
 end))
 
 # 54 "tcenv.fs"
-
 type mlift =
 FStar_Absyn_Syntax.typ  ->  FStar_Absyn_Syntax.typ  ->  FStar_Absyn_Syntax.typ
 
 # 55 "tcenv.fs"
-
 type edge =
 {msource : FStar_Ident.lident; mtarget : FStar_Ident.lident; mlift : mlift}
 
 # 55 "tcenv.fs"
-
 let is_Mkedge : edge  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkedge"))))
 
 # 60 "tcenv.fs"
-
 type effects =
 {decls : FStar_Absyn_Syntax.eff_decl Prims.list; order : edge Prims.list; joins : (FStar_Ident.lident * FStar_Ident.lident * FStar_Ident.lident * mlift * mlift) Prims.list}
 
 # 60 "tcenv.fs"
-
 let is_Mkeffects : effects  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkeffects"))))
 
 # 66 "tcenv.fs"
-
 type env =
 {solver : solver_t; range : FStar_Range.range; curmodule : FStar_Ident.lident; gamma : binding Prims.list; modules : FStar_Absyn_Syntax.modul Prims.list; expected_typ : FStar_Absyn_Syntax.typ Prims.option; level : level; sigtab : sigtable Prims.list; is_pattern : Prims.bool; instantiate_targs : Prims.bool; instantiate_vargs : Prims.bool; effects : effects; generalize : Prims.bool; letrecs : (FStar_Absyn_Syntax.lbname * FStar_Absyn_Syntax.typ) Prims.list; top_level : Prims.bool; check_uvars : Prims.bool; use_eq : Prims.bool; is_iface : Prims.bool; admit : Prims.bool; default_effects : (FStar_Ident.lident * FStar_Ident.lident) Prims.list} 
  and solver_t =
 {init : env  ->  Prims.unit; push : Prims.string  ->  Prims.unit; pop : Prims.string  ->  Prims.unit; mark : Prims.string  ->  Prims.unit; reset_mark : Prims.string  ->  Prims.unit; commit_mark : Prims.string  ->  Prims.unit; encode_modul : env  ->  FStar_Absyn_Syntax.modul  ->  Prims.unit; encode_sig : env  ->  FStar_Absyn_Syntax.sigelt  ->  Prims.unit; solve : env  ->  FStar_Absyn_Syntax.typ  ->  Prims.unit; is_trivial : env  ->  FStar_Absyn_Syntax.typ  ->  Prims.bool; finish : Prims.unit  ->  Prims.unit; refresh : Prims.unit  ->  Prims.unit}
 
 # 66 "tcenv.fs"
-
 let is_Mkenv : env  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkenv"))))
 
 # 88 "tcenv.fs"
-
 let is_Mksolver_t : solver_t  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mksolver_t"))))
 
 # 103 "tcenv.fs"
-
 let bound_vars : env  ->  (((FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax FStar_Absyn_Syntax.bvdef, FStar_Absyn_Syntax.knd) FStar_Absyn_Syntax.withinfo_t, ((FStar_Absyn_Syntax.exp', (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax FStar_Absyn_Syntax.bvdef, FStar_Absyn_Syntax.typ) FStar_Absyn_Syntax.withinfo_t) FStar_Util.either Prims.list = (fun env -> (FStar_All.pipe_right env.gamma (FStar_List.collect (fun _44_1 -> (match (_44_1) with
 | Binding_typ (a, k) -> begin
 (let _146_291 = (FStar_All.pipe_left (fun _146_290 -> FStar_Util.Inl (_146_290)) (FStar_Absyn_Util.bvd_to_bvar_s a k))
@@ -204,32 +177,26 @@ end
 end)))))
 
 # 110 "tcenv.fs"
-
 let has_interface : env  ->  FStar_Ident.lident  ->  Prims.bool = (fun env l -> (FStar_All.pipe_right env.modules (FStar_Util.for_some (fun m -> (m.FStar_Absyn_Syntax.is_interface && (FStar_Ident.lid_equals m.FStar_Absyn_Syntax.name l))))))
 
 # 113 "tcenv.fs"
-
 let debug : env  ->  FStar_Options.debug_level_t  ->  Prims.bool = (fun env l -> ((let _146_304 = (FStar_ST.read FStar_Options.debug)
 in (FStar_All.pipe_right _146_304 (FStar_Util.for_some (fun x -> (env.curmodule.FStar_Ident.str = x))))) && (FStar_Options.debug_level_geq l)))
 
 # 116 "tcenv.fs"
-
 let show : env  ->  Prims.bool = (fun env -> (let _146_308 = (FStar_ST.read FStar_Options.show_signatures)
 in (FStar_All.pipe_right _146_308 (FStar_Util.for_some (fun x -> (env.curmodule.FStar_Ident.str = x))))))
 
 # 118 "tcenv.fs"
-
 let new_sigtab = (fun _44_108 -> (match (()) with
 | () -> begin
 (FStar_Util.smap_create default_table_size)
 end))
 
 # 119 "tcenv.fs"
-
 let sigtab : env  ->  sigtable = (fun env -> (FStar_List.hd env.sigtab))
 
 # 120 "tcenv.fs"
-
 let push : env  ->  Prims.string  ->  env = (fun env msg -> (let _44_112 = (env.solver.push msg)
 in (let _44_114 = env
 in (let _146_318 = (let _146_317 = (let _146_316 = (sigtab env)
@@ -238,7 +205,6 @@ in (_146_317)::env.sigtab)
 in {solver = _44_114.solver; range = _44_114.range; curmodule = _44_114.curmodule; gamma = _44_114.gamma; modules = _44_114.modules; expected_typ = _44_114.expected_typ; level = _44_114.level; sigtab = _146_318; is_pattern = _44_114.is_pattern; instantiate_targs = _44_114.instantiate_targs; instantiate_vargs = _44_114.instantiate_vargs; effects = _44_114.effects; generalize = _44_114.generalize; letrecs = _44_114.letrecs; top_level = _44_114.top_level; check_uvars = _44_114.check_uvars; use_eq = _44_114.use_eq; is_iface = _44_114.is_iface; admit = _44_114.admit; default_effects = _44_114.default_effects}))))
 
 # 123 "tcenv.fs"
-
 let mark : env  ->  env = (fun env -> (let _44_117 = (env.solver.mark "USER MARK")
 in (let _44_119 = env
 in (let _146_323 = (let _146_322 = (let _146_321 = (sigtab env)
@@ -247,7 +213,6 @@ in (_146_322)::env.sigtab)
 in {solver = _44_119.solver; range = _44_119.range; curmodule = _44_119.curmodule; gamma = _44_119.gamma; modules = _44_119.modules; expected_typ = _44_119.expected_typ; level = _44_119.level; sigtab = _146_323; is_pattern = _44_119.is_pattern; instantiate_targs = _44_119.instantiate_targs; instantiate_vargs = _44_119.instantiate_vargs; effects = _44_119.effects; generalize = _44_119.generalize; letrecs = _44_119.letrecs; top_level = _44_119.top_level; check_uvars = _44_119.check_uvars; use_eq = _44_119.use_eq; is_iface = _44_119.is_iface; admit = _44_119.admit; default_effects = _44_119.default_effects}))))
 
 # 126 "tcenv.fs"
-
 let commit_mark : env  ->  env = (fun env -> (let _44_122 = (env.solver.commit_mark "USER MARK")
 in (let sigtab = (match (env.sigtab) with
 | hd::_44_126::tl -> begin
@@ -260,14 +225,12 @@ in (let _44_133 = env
 in {solver = _44_133.solver; range = _44_133.range; curmodule = _44_133.curmodule; gamma = _44_133.gamma; modules = _44_133.modules; expected_typ = _44_133.expected_typ; level = _44_133.level; sigtab = sigtab; is_pattern = _44_133.is_pattern; instantiate_targs = _44_133.instantiate_targs; instantiate_vargs = _44_133.instantiate_vargs; effects = _44_133.effects; generalize = _44_133.generalize; letrecs = _44_133.letrecs; top_level = _44_133.top_level; check_uvars = _44_133.check_uvars; use_eq = _44_133.use_eq; is_iface = _44_133.is_iface; admit = _44_133.admit; default_effects = _44_133.default_effects}))))
 
 # 132 "tcenv.fs"
-
 let reset_mark : env  ->  env = (fun env -> (let _44_136 = (env.solver.reset_mark "USER MARK")
 in (let _44_138 = env
 in (let _146_328 = (FStar_List.tl env.sigtab)
 in {solver = _44_138.solver; range = _44_138.range; curmodule = _44_138.curmodule; gamma = _44_138.gamma; modules = _44_138.modules; expected_typ = _44_138.expected_typ; level = _44_138.level; sigtab = _146_328; is_pattern = _44_138.is_pattern; instantiate_targs = _44_138.instantiate_targs; instantiate_vargs = _44_138.instantiate_vargs; effects = _44_138.effects; generalize = _44_138.generalize; letrecs = _44_138.letrecs; top_level = _44_138.top_level; check_uvars = _44_138.check_uvars; use_eq = _44_138.use_eq; is_iface = _44_138.is_iface; admit = _44_138.admit; default_effects = _44_138.default_effects}))))
 
 # 135 "tcenv.fs"
-
 let pop : env  ->  Prims.string  ->  env = (fun env msg -> (match (env.sigtab) with
 | ([]) | (_::[]) -> begin
 (FStar_All.failwith "Too many pops")
@@ -279,26 +242,21 @@ in {solver = _44_152.solver; range = _44_152.range; curmodule = _44_152.curmodul
 end))
 
 # 142 "tcenv.fs"
-
 let initial_env : solver_t  ->  FStar_Ident.lident  ->  env = (fun solver module_lid -> (let _146_338 = (let _146_337 = (new_sigtab ())
 in (_146_337)::[])
 in {solver = solver; range = FStar_Absyn_Syntax.dummyRange; curmodule = module_lid; gamma = []; modules = []; expected_typ = None; level = Expr; sigtab = _146_338; is_pattern = false; instantiate_targs = true; instantiate_vargs = true; effects = {decls = []; order = []; joins = []}; generalize = true; letrecs = []; top_level = true; check_uvars = false; use_eq = false; is_iface = false; admit = false; default_effects = []}))
 
 # 166 "tcenv.fs"
-
 let effect_decl_opt : env  ->  FStar_Ident.lident  ->  FStar_Absyn_Syntax.eff_decl Prims.option = (fun env l -> (FStar_All.pipe_right env.effects.decls (FStar_Util.find_opt (fun d -> (FStar_Ident.lid_equals d.FStar_Absyn_Syntax.mname l)))))
 
 # 169 "tcenv.fs"
-
 let name_not_found : FStar_Absyn_Syntax.lident  ->  Prims.string = (fun l -> (FStar_Util.format1 "Name \"%s\" not found" l.FStar_Ident.str))
 
 # 172 "tcenv.fs"
-
 let variable_not_found = (fun v -> (let _146_347 = (FStar_Absyn_Print.strBvd v)
 in (FStar_Util.format1 "Variable \"%s\" not found" _146_347)))
 
 # 175 "tcenv.fs"
-
 let get_effect_decl : env  ->  FStar_Ident.lident  ->  FStar_Absyn_Syntax.eff_decl = (fun env l -> (match ((effect_decl_opt env l)) with
 | None -> begin
 (let _146_354 = (let _146_353 = (let _146_352 = (name_not_found l)
@@ -311,7 +269,6 @@ md
 end))
 
 # 180 "tcenv.fs"
-
 let join : env  ->  FStar_Ident.lident  ->  FStar_Ident.lident  ->  (FStar_Ident.lident * (FStar_Absyn_Syntax.typ  ->  FStar_Absyn_Syntax.typ  ->  FStar_Absyn_Syntax.typ) * (FStar_Absyn_Syntax.typ  ->  FStar_Absyn_Syntax.typ  ->  FStar_Absyn_Syntax.typ)) = (fun env l1 l2 -> if (FStar_Ident.lid_equals l1 l2) then begin
 (l1, (fun t wp -> wp), (fun t wp -> wp))
 end else begin
@@ -333,7 +290,6 @@ end)
 end)
 
 # 187 "tcenv.fs"
-
 let monad_leq : env  ->  FStar_Ident.lident  ->  FStar_Ident.lident  ->  edge Prims.option = (fun env l1 l2 -> if (FStar_Ident.lid_equals l1 l2) then begin
 Some ({msource = l1; mtarget = l2; mlift = (fun t wp -> wp)})
 end else begin
@@ -341,7 +297,6 @@ end else begin
 end)
 
 # 192 "tcenv.fs"
-
 let wp_sig_aux : FStar_Absyn_Syntax.eff_decl Prims.list  ->  FStar_Ident.lident  ->  (((FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax FStar_Absyn_Syntax.bvdef, (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.withinfo_t * (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) = (fun decls m -> (match ((FStar_All.pipe_right decls (FStar_Util.find_opt (fun d -> (FStar_Ident.lid_equals d.FStar_Absyn_Syntax.mname m))))) with
 | None -> begin
 (let _146_449 = (FStar_Util.format1 "Impossible: declaration for monad %s not found" m.FStar_Ident.str)
@@ -358,11 +313,9 @@ end)
 end))
 
 # 200 "tcenv.fs"
-
 let wp_signature : env  ->  FStar_Ident.lident  ->  (((FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax FStar_Absyn_Syntax.bvdef, (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.withinfo_t * (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) = (fun env m -> (wp_sig_aux env.effects.decls m))
 
 # 202 "tcenv.fs"
-
 let default_effect : env  ->  FStar_Ident.lident  ->  FStar_Ident.lident Prims.option = (fun env l -> (FStar_Util.find_map env.default_effects (fun _44_240 -> (match (_44_240) with
 | (l', m) -> begin
 if (FStar_Ident.lid_equals l l') then begin
@@ -373,7 +326,6 @@ end
 end))))
 
 # 204 "tcenv.fs"
-
 let build_lattice : env  ->  FStar_Absyn_Syntax.sigelt  ->  env = (fun env se -> (match (se) with
 | FStar_Absyn_Syntax.Sig_effect_abbrev (l, _44_245, c, quals, r) -> begin
 (match ((FStar_Util.find_map quals (fun _44_2 -> (match (_44_2) with
@@ -476,7 +428,6 @@ env
 end))
 
 # 289 "tcenv.fs"
-
 let rec add_sigelt : env  ->  FStar_Absyn_Syntax.sigelt  ->  Prims.unit = (fun env se -> (match (se) with
 | FStar_Absyn_Syntax.Sig_bundle (ses, _44_356, _44_358, _44_360) -> begin
 (add_sigelts env ses)
@@ -489,11 +440,9 @@ end))
 and add_sigelts : env  ->  FStar_Absyn_Syntax.sigelt Prims.list  ->  Prims.unit = (fun env ses -> (FStar_All.pipe_right ses (FStar_List.iter (add_sigelt env))))
 
 # 298 "tcenv.fs"
-
 let empty_lid : FStar_Ident.lident = (FStar_Absyn_Syntax.lid_of_ids (((FStar_Absyn_Syntax.id_of_text ""))::[]))
 
 # 300 "tcenv.fs"
-
 let finish_module : env  ->  FStar_Absyn_Syntax.modul  ->  env = (fun env m -> (let sigs = if (FStar_Ident.lid_equals m.FStar_Absyn_Syntax.name FStar_Absyn_Const.prims_lid) then begin
 (FStar_All.pipe_right env.gamma (FStar_List.collect (fun _44_3 -> (match (_44_3) with
 | Binding_sig (se) -> begin
@@ -510,29 +459,23 @@ in (let _44_379 = env
 in {solver = _44_379.solver; range = _44_379.range; curmodule = empty_lid; gamma = []; modules = (m)::env.modules; expected_typ = _44_379.expected_typ; level = _44_379.level; sigtab = _44_379.sigtab; is_pattern = _44_379.is_pattern; instantiate_targs = _44_379.instantiate_targs; instantiate_vargs = _44_379.instantiate_vargs; effects = _44_379.effects; generalize = _44_379.generalize; letrecs = _44_379.letrecs; top_level = _44_379.top_level; check_uvars = _44_379.check_uvars; use_eq = _44_379.use_eq; is_iface = _44_379.is_iface; admit = _44_379.admit; default_effects = _44_379.default_effects}))))
 
 # 314 "tcenv.fs"
-
 let set_level : env  ->  level  ->  env = (fun env level -> (let _44_383 = env
 in {solver = _44_383.solver; range = _44_383.range; curmodule = _44_383.curmodule; gamma = _44_383.gamma; modules = _44_383.modules; expected_typ = _44_383.expected_typ; level = level; sigtab = _44_383.sigtab; is_pattern = _44_383.is_pattern; instantiate_targs = _44_383.instantiate_targs; instantiate_vargs = _44_383.instantiate_vargs; effects = _44_383.effects; generalize = _44_383.generalize; letrecs = _44_383.letrecs; top_level = _44_383.top_level; check_uvars = _44_383.check_uvars; use_eq = _44_383.use_eq; is_iface = _44_383.is_iface; admit = _44_383.admit; default_effects = _44_383.default_effects}))
 
 # 315 "tcenv.fs"
-
 let is_level : env  ->  level  ->  Prims.bool = (fun env level -> (env.level = level))
 
 # 316 "tcenv.fs"
-
 let modules : env  ->  FStar_Absyn_Syntax.modul Prims.list = (fun env -> env.modules)
 
 # 317 "tcenv.fs"
-
 let current_module : env  ->  FStar_Ident.lident = (fun env -> env.curmodule)
 
 # 318 "tcenv.fs"
-
 let set_current_module : env  ->  FStar_Ident.lident  ->  env = (fun env lid -> (let _44_391 = env
 in {solver = _44_391.solver; range = _44_391.range; curmodule = lid; gamma = _44_391.gamma; modules = _44_391.modules; expected_typ = _44_391.expected_typ; level = _44_391.level; sigtab = _44_391.sigtab; is_pattern = _44_391.is_pattern; instantiate_targs = _44_391.instantiate_targs; instantiate_vargs = _44_391.instantiate_vargs; effects = _44_391.effects; generalize = _44_391.generalize; letrecs = _44_391.letrecs; top_level = _44_391.top_level; check_uvars = _44_391.check_uvars; use_eq = _44_391.use_eq; is_iface = _44_391.is_iface; admit = _44_391.admit; default_effects = _44_391.default_effects}))
 
 # 319 "tcenv.fs"
-
 let set_range : env  ->  Prims.int64  ->  env = (fun e r -> if (r = FStar_Absyn_Syntax.dummyRange) then begin
 e
 end else begin
@@ -541,16 +484,13 @@ in {solver = _44_395.solver; range = r; curmodule = _44_395.curmodule; gamma = _
 end)
 
 # 320 "tcenv.fs"
-
 let get_range : env  ->  FStar_Range.range = (fun e -> e.range)
 
 # 321 "tcenv.fs"
-
 let find_in_sigtab : env  ->  FStar_Ident.lident  ->  FStar_Absyn_Syntax.sigelt Prims.option = (fun env lid -> (let _146_561 = (sigtab env)
 in (FStar_Util.smap_try_find _146_561 (FStar_Ident.text_of_lid lid))))
 
 # 323 "tcenv.fs"
-
 let lookup_bvvdef : env  ->  FStar_Absyn_Syntax.bvvdef  ->  FStar_Absyn_Syntax.typ Prims.option = (fun env bvvd -> (FStar_Util.find_map env.gamma (fun _44_4 -> (match (_44_4) with
 | Binding_var (id, t) when (FStar_Absyn_Util.bvd_eq id bvvd) -> begin
 Some (t)
@@ -560,7 +500,6 @@ None
 end))))
 
 # 328 "tcenv.fs"
-
 let lookup_bvar : env  ->  FStar_Absyn_Syntax.bvvar  ->  FStar_Absyn_Syntax.typ = (fun env bv -> (match ((lookup_bvvdef env bv.FStar_Absyn_Syntax.v)) with
 | None -> begin
 (let _146_573 = (let _146_572 = (let _146_571 = (variable_not_found bv.FStar_Absyn_Syntax.v)
@@ -573,7 +512,6 @@ t
 end))
 
 # 333 "tcenv.fs"
-
 let in_cur_mod : env  ->  FStar_Ident.lident  ->  Prims.bool = (fun env l -> (let cur = (current_module env)
 in if (l.FStar_Ident.nsstr = cur.FStar_Ident.str) then begin
 true
@@ -601,7 +539,6 @@ end
 end))
 
 # 347 "tcenv.fs"
-
 let lookup_qname : env  ->  FStar_Ident.lident  ->  (FStar_Absyn_Syntax.typ, FStar_Absyn_Syntax.sigelt) FStar_Util.either Prims.option = (fun env lid -> (let cur_mod = (in_cur_mod env lid)
 in (let found = if cur_mod then begin
 (FStar_Util.find_map env.gamma (fun _44_5 -> (match (_44_5) with
@@ -651,7 +588,6 @@ end
 end)))
 
 # 370 "tcenv.fs"
-
 let lookup_datacon : env  ->  FStar_Ident.lident  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (fun env lid -> (match ((lookup_qname env lid)) with
 | Some (FStar_Util.Inr (FStar_Absyn_Syntax.Sig_datacon (_44_470, t, (_44_473, tps, _44_476), _44_479, _44_481, _44_483))) -> begin
 (let _146_594 = (FStar_List.map (fun _44_491 -> (match (_44_491) with
@@ -668,7 +604,6 @@ in (Prims.raise _146_597))
 end))
 
 # 376 "tcenv.fs"
-
 let lookup_kind_abbrev : env  ->  FStar_Ident.lident  ->  (FStar_Absyn_Syntax.lident * FStar_Absyn_Syntax.binders * FStar_Absyn_Syntax.knd) = (fun env lid -> (match ((lookup_qname env lid)) with
 | Some (FStar_Util.Inr (FStar_Absyn_Syntax.Sig_kind_abbrev (l, binders, k, _44_500))) -> begin
 (l, binders, k)
@@ -681,7 +616,6 @@ in (Prims.raise _146_604))
 end))
 
 # 381 "tcenv.fs"
-
 let lookup_projector : env  ->  FStar_Ident.lident  ->  Prims.int  ->  FStar_Ident.lident = (fun env lid i -> (let fail = (fun _44_511 -> (match (()) with
 | () -> begin
 (let _146_615 = (let _146_614 = (FStar_Util.string_of_int i)
@@ -713,7 +647,6 @@ end
 end))))
 
 # 395 "tcenv.fs"
-
 let try_lookup_val_decl : env  ->  FStar_Ident.lident  ->  (FStar_Absyn_Syntax.typ * FStar_Absyn_Syntax.qualifier Prims.list) Prims.option = (fun env lid -> (match ((lookup_qname env lid)) with
 | Some (FStar_Util.Inr (FStar_Absyn_Syntax.Sig_val_decl (_44_528, t, q, _44_532))) -> begin
 Some ((t, q))
@@ -723,7 +656,6 @@ None
 end))
 
 # 400 "tcenv.fs"
-
 let lookup_val_decl : env  ->  FStar_Ident.lident  ->  FStar_Absyn_Syntax.typ = (fun env lid -> (match ((lookup_qname env lid)) with
 | Some (FStar_Util.Inr (FStar_Absyn_Syntax.Sig_val_decl (_44_542, t, _44_545, _44_547))) -> begin
 t
@@ -736,7 +668,6 @@ in (Prims.raise _146_629))
 end))
 
 # 405 "tcenv.fs"
-
 let lookup_lid : env  ->  FStar_Absyn_Syntax.lident  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (fun env lid -> (let not_found = (fun _44_557 -> (match (()) with
 | () -> begin
 (let _146_638 = (let _146_637 = (let _146_636 = (name_not_found lid)
@@ -797,7 +728,6 @@ end
 end))))
 
 # 436 "tcenv.fs"
-
 let is_datacon : env  ->  FStar_Ident.lident  ->  Prims.bool = (fun env lid -> (match ((lookup_qname env lid)) with
 | Some (FStar_Util.Inr (FStar_Absyn_Syntax.Sig_val_decl (_44_641, _44_643, quals, _44_646))) -> begin
 (FStar_All.pipe_right quals (FStar_Util.for_some (fun _44_7 -> (match (_44_7) with
@@ -816,7 +746,6 @@ false
 end))
 
 # 442 "tcenv.fs"
-
 let is_record : env  ->  FStar_Ident.lident  ->  Prims.bool = (fun env lid -> (match ((lookup_qname env lid)) with
 | Some (FStar_Util.Inr (FStar_Absyn_Syntax.Sig_tycon (_44_675, _44_677, _44_679, _44_681, _44_683, tags, _44_686))) -> begin
 (FStar_Util.for_some (fun _44_8 -> (match (_44_8) with
@@ -832,7 +761,6 @@ false
 end))
 
 # 448 "tcenv.fs"
-
 let lookup_datacons_of_typ : env  ->  FStar_Ident.lident  ->  (FStar_Absyn_Syntax.lident * (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) Prims.list Prims.option = (fun env lid -> (match ((lookup_qname env lid)) with
 | Some (FStar_Util.Inr (FStar_Absyn_Syntax.Sig_tycon (_44_705, _44_707, _44_709, _44_711, datas, _44_714, _44_716))) -> begin
 (let _146_662 = (FStar_List.map (fun l -> (let _146_661 = (lookup_lid env l)
@@ -844,7 +772,6 @@ None
 end))
 
 # 453 "tcenv.fs"
-
 let lookup_effect_abbrev : env  ->  FStar_Ident.lident  ->  (FStar_Absyn_Syntax.binders * FStar_Absyn_Syntax.comp) Prims.option = (fun env lid -> (match ((lookup_qname env lid)) with
 | Some (FStar_Util.Inr (FStar_Absyn_Syntax.Sig_effect_abbrev (lid, binders, c, quals, _44_731))) -> begin
 if (FStar_All.pipe_right quals (FStar_Util.for_some (fun _44_9 -> (match (_44_9) with
@@ -864,7 +791,6 @@ None
 end))
 
 # 461 "tcenv.fs"
-
 let lookup_typ_abbrev : env  ->  FStar_Ident.lident  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax Prims.option = (fun env lid -> (match ((lookup_qname env lid)) with
 | Some (FStar_Util.Inr (FStar_Absyn_Syntax.Sig_typ_abbrev (lid, tps, _44_747, t, quals, _44_751))) -> begin
 if (FStar_All.pipe_right quals (FStar_Util.for_some (fun _44_10 -> (match (_44_10) with
@@ -886,7 +812,6 @@ None
 end))
 
 # 470 "tcenv.fs"
-
 let lookup_opaque_typ_abbrev : env  ->  FStar_Ident.lident  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax Prims.option = (fun env lid -> (match ((lookup_qname env lid)) with
 | Some (FStar_Util.Inr (FStar_Absyn_Syntax.Sig_typ_abbrev (lid, tps, _44_768, t, quals, _44_772))) -> begin
 (let t = (FStar_Absyn_Util.close_with_lam tps t)
@@ -898,7 +823,6 @@ None
 end))
 
 # 477 "tcenv.fs"
-
 let lookup_btvdef : env  ->  FStar_Absyn_Syntax.btvdef  ->  FStar_Absyn_Syntax.knd Prims.option = (fun env btvd -> (FStar_Util.find_map env.gamma (fun _44_11 -> (match (_44_11) with
 | Binding_typ (id, k) when (FStar_Absyn_Util.bvd_eq id btvd) -> begin
 Some (k)
@@ -908,7 +832,6 @@ None
 end))))
 
 # 482 "tcenv.fs"
-
 let lookup_btvar : env  ->  FStar_Absyn_Syntax.btvar  ->  FStar_Absyn_Syntax.knd = (fun env btv -> (match ((lookup_btvdef env btv.FStar_Absyn_Syntax.v)) with
 | None -> begin
 (let _146_690 = (let _146_689 = (let _146_688 = (variable_not_found btv.FStar_Absyn_Syntax.v)
@@ -921,7 +844,6 @@ k
 end))
 
 # 487 "tcenv.fs"
-
 let lookup_typ_lid : env  ->  FStar_Ident.lident  ->  FStar_Absyn_Syntax.knd = (fun env ftv -> (match ((lookup_qname env ftv)) with
 | (Some (FStar_Util.Inr (FStar_Absyn_Syntax.Sig_tycon (lid, tps, k, _, _, _, _)))) | (Some (FStar_Util.Inr (FStar_Absyn_Syntax.Sig_typ_abbrev (lid, tps, k, _, _, _)))) -> begin
 (FStar_Absyn_Util.close_kind tps k)
@@ -934,7 +856,6 @@ in (Prims.raise _146_697))
 end))
 
 # 495 "tcenv.fs"
-
 let is_projector : env  ->  FStar_Ident.lident  ->  Prims.bool = (fun env l -> (match ((lookup_qname env l)) with
 | (Some (FStar_Util.Inr (FStar_Absyn_Syntax.Sig_tycon (_, _, _, _, _, quals, _)))) | (Some (FStar_Util.Inr (FStar_Absyn_Syntax.Sig_val_decl (_, _, quals, _)))) -> begin
 (FStar_Util.for_some (fun _44_12 -> (match (_44_12) with
@@ -950,7 +871,6 @@ false
 end))
 
 # 502 "tcenv.fs"
-
 let try_lookup_effect_lid : env  ->  FStar_Ident.lident  ->  FStar_Absyn_Syntax.knd Prims.option = (fun env ftv -> (match ((lookup_qname env ftv)) with
 | Some (FStar_Util.Inr (FStar_Absyn_Syntax.Sig_new_effect (ne, _44_864))) -> begin
 (let _146_708 = (FStar_Absyn_Util.close_kind ne.FStar_Absyn_Syntax.binders ne.FStar_Absyn_Syntax.signature)
@@ -965,7 +885,6 @@ None
 end))
 
 # 511 "tcenv.fs"
-
 let lookup_effect_lid : env  ->  FStar_Ident.lident  ->  FStar_Absyn_Syntax.knd = (fun env ftv -> (match ((try_lookup_effect_lid env ftv)) with
 | None -> begin
 (let _146_717 = (let _146_716 = (let _146_715 = (name_not_found ftv)
@@ -978,22 +897,18 @@ k
 end))
 
 # 516 "tcenv.fs"
-
 let lookup_operator : env  ->  FStar_Ident.ident  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax = (fun env opname -> (let primName = (FStar_Ident.lid_of_path (("Prims")::((Prims.strcat "_dummy_" opname.FStar_Ident.idText))::[]) FStar_Absyn_Syntax.dummyRange)
 in (lookup_lid env primName)))
 
 # 520 "tcenv.fs"
-
 let push_sigelt : env  ->  FStar_Absyn_Syntax.sigelt  ->  env = (fun env s -> (build_lattice (let _44_893 = env
 in {solver = _44_893.solver; range = _44_893.range; curmodule = _44_893.curmodule; gamma = (Binding_sig (s))::env.gamma; modules = _44_893.modules; expected_typ = _44_893.expected_typ; level = _44_893.level; sigtab = _44_893.sigtab; is_pattern = _44_893.is_pattern; instantiate_targs = _44_893.instantiate_targs; instantiate_vargs = _44_893.instantiate_vargs; effects = _44_893.effects; generalize = _44_893.generalize; letrecs = _44_893.letrecs; top_level = _44_893.top_level; check_uvars = _44_893.check_uvars; use_eq = _44_893.use_eq; is_iface = _44_893.is_iface; admit = _44_893.admit; default_effects = _44_893.default_effects}) s))
 
 # 521 "tcenv.fs"
-
 let push_local_binding : env  ->  binding  ->  env = (fun env b -> (let _44_897 = env
 in {solver = _44_897.solver; range = _44_897.range; curmodule = _44_897.curmodule; gamma = (b)::env.gamma; modules = _44_897.modules; expected_typ = _44_897.expected_typ; level = _44_897.level; sigtab = _44_897.sigtab; is_pattern = _44_897.is_pattern; instantiate_targs = _44_897.instantiate_targs; instantiate_vargs = _44_897.instantiate_vargs; effects = _44_897.effects; generalize = _44_897.generalize; letrecs = _44_897.letrecs; top_level = _44_897.top_level; check_uvars = _44_897.check_uvars; use_eq = _44_897.use_eq; is_iface = _44_897.is_iface; admit = _44_897.admit; default_effects = _44_897.default_effects}))
 
 # 523 "tcenv.fs"
-
 let uvars_in_env : env  ->  FStar_Absyn_Syntax.uvars = (fun env -> (let no_uvs = (let _146_734 = (FStar_Absyn_Syntax.new_uv_set ())
 in (let _146_733 = (FStar_Absyn_Syntax.new_uvt_set ())
 in (let _146_732 = (FStar_Absyn_Syntax.new_uvt_set ())
@@ -1023,13 +938,11 @@ end))
 in (aux no_uvs env.gamma)))))
 
 # 541 "tcenv.fs"
-
 let push_module : env  ->  FStar_Absyn_Syntax.modul  ->  env = (fun env m -> (let _44_937 = (add_sigelts env m.FStar_Absyn_Syntax.exports)
 in (let _44_939 = env
 in {solver = _44_939.solver; range = _44_939.range; curmodule = _44_939.curmodule; gamma = []; modules = (m)::env.modules; expected_typ = None; level = _44_939.level; sigtab = _44_939.sigtab; is_pattern = _44_939.is_pattern; instantiate_targs = _44_939.instantiate_targs; instantiate_vargs = _44_939.instantiate_vargs; effects = _44_939.effects; generalize = _44_939.generalize; letrecs = _44_939.letrecs; top_level = _44_939.top_level; check_uvars = _44_939.check_uvars; use_eq = _44_939.use_eq; is_iface = _44_939.is_iface; admit = _44_939.admit; default_effects = _44_939.default_effects})))
 
 # 548 "tcenv.fs"
-
 let set_expected_typ : env  ->  (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax  ->  env = (fun env t -> (match (t) with
 | {FStar_Absyn_Syntax.n = FStar_Absyn_Syntax.Typ_const ({FStar_Absyn_Syntax.v = _44_964; FStar_Absyn_Syntax.sort = {FStar_Absyn_Syntax.n = FStar_Absyn_Syntax.Kind_unknown; FStar_Absyn_Syntax.tk = _44_960; FStar_Absyn_Syntax.pos = _44_958; FStar_Absyn_Syntax.fvs = _44_956; FStar_Absyn_Syntax.uvs = _44_954}; FStar_Absyn_Syntax.p = _44_952}); FStar_Absyn_Syntax.tk = _44_950; FStar_Absyn_Syntax.pos = _44_948; FStar_Absyn_Syntax.fvs = _44_946; FStar_Absyn_Syntax.uvs = _44_944} -> begin
 (let _146_759 = (let _146_758 = (FStar_Absyn_Print.typ_to_string t)
@@ -1042,7 +955,6 @@ in {solver = _44_970.solver; range = _44_970.range; curmodule = _44_970.curmodul
 end))
 
 # 553 "tcenv.fs"
-
 let expected_typ : env  ->  FStar_Absyn_Syntax.typ Prims.option = (fun env -> (match (env.expected_typ) with
 | None -> begin
 None
@@ -1052,16 +964,13 @@ Some (t)
 end))
 
 # 556 "tcenv.fs"
-
 let clear_expected_typ : env  ->  (env * FStar_Absyn_Syntax.typ Prims.option) = (fun env -> ((let _44_977 = env
 in {solver = _44_977.solver; range = _44_977.range; curmodule = _44_977.curmodule; gamma = _44_977.gamma; modules = _44_977.modules; expected_typ = None; level = _44_977.level; sigtab = _44_977.sigtab; is_pattern = _44_977.is_pattern; instantiate_targs = _44_977.instantiate_targs; instantiate_vargs = _44_977.instantiate_vargs; effects = _44_977.effects; generalize = _44_977.generalize; letrecs = _44_977.letrecs; top_level = _44_977.top_level; check_uvars = _44_977.check_uvars; use_eq = false; is_iface = _44_977.is_iface; admit = _44_977.admit; default_effects = _44_977.default_effects}), (expected_typ env)))
 
 # 558 "tcenv.fs"
-
 let fold_env = (fun env f a -> (FStar_List.fold_right (fun e a -> (f a e)) env.gamma a))
 
 # 560 "tcenv.fs"
-
 let binding_of_binder : FStar_Absyn_Syntax.binder  ->  binding = (fun b -> (match ((Prims.fst b)) with
 | FStar_Util.Inl (a) -> begin
 Binding_typ ((a.FStar_Absyn_Syntax.v, a.FStar_Absyn_Syntax.sort))
@@ -1071,7 +980,6 @@ Binding_var ((x.FStar_Absyn_Syntax.v, x.FStar_Absyn_Syntax.sort))
 end))
 
 # 564 "tcenv.fs"
-
 let binders : env  ->  ((((FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax FStar_Absyn_Syntax.bvdef, (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.withinfo_t, FStar_Absyn_Syntax.bvvar) FStar_Util.either * FStar_Absyn_Syntax.arg_qualifier Prims.option) Prims.list = (fun env -> (FStar_List.fold_left (fun out b -> (match (b) with
 | Binding_var (x, t) -> begin
 (let _146_781 = (FStar_All.pipe_left FStar_Absyn_Syntax.v_binder (FStar_Absyn_Util.bvd_to_bvar_s x t))
@@ -1086,7 +994,6 @@ out
 end)) [] env.gamma))
 
 # 570 "tcenv.fs"
-
 let t_binders : env  ->  ((FStar_Absyn_Syntax.btvar, ((FStar_Absyn_Syntax.exp', (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax FStar_Absyn_Syntax.bvdef, (FStar_Absyn_Syntax.typ', (FStar_Absyn_Syntax.knd', Prims.unit) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.syntax) FStar_Absyn_Syntax.withinfo_t) FStar_Util.either * FStar_Absyn_Syntax.arg_qualifier Prims.option) Prims.list = (fun env -> (FStar_List.fold_left (fun out b -> (match (b) with
 | Binding_var (_44_1006) -> begin
 out
@@ -1100,13 +1007,11 @@ out
 end)) [] env.gamma))
 
 # 576 "tcenv.fs"
-
 let idents : env  ->  FStar_Absyn_Syntax.freevars = (fun env -> (let _146_791 = (let _146_790 = (binders env)
 in (FStar_All.pipe_right _146_790 (FStar_List.map Prims.fst)))
 in (FStar_Absyn_Syntax.freevars_of_list _146_791)))
 
 # 578 "tcenv.fs"
-
 let lidents : env  ->  FStar_Absyn_Syntax.lident Prims.list = (fun env -> (let keys = (FStar_List.fold_left (fun keys _44_13 -> (match (_44_13) with
 | Binding_sig (s) -> begin
 (let _146_796 = (FStar_Absyn_Util.lids_of_sigelt s)

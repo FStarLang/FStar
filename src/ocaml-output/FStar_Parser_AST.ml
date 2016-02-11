@@ -1,7 +1,6 @@
 
 open Prims
 # 34 "ast.fs"
-
 type level =
 | Un
 | Expr
@@ -10,7 +9,6 @@ type level =
 | Formula
 
 # 34 "ast.fs"
-
 let is_Un = (fun _discr_ -> (match (_discr_) with
 | Un (_) -> begin
 true
@@ -20,7 +18,6 @@ false
 end))
 
 # 34 "ast.fs"
-
 let is_Expr = (fun _discr_ -> (match (_discr_) with
 | Expr (_) -> begin
 true
@@ -30,7 +27,6 @@ false
 end))
 
 # 34 "ast.fs"
-
 let is_Type = (fun _discr_ -> (match (_discr_) with
 | Type (_) -> begin
 true
@@ -40,7 +36,6 @@ false
 end))
 
 # 34 "ast.fs"
-
 let is_Kind = (fun _discr_ -> (match (_discr_) with
 | Kind (_) -> begin
 true
@@ -50,7 +45,6 @@ false
 end))
 
 # 34 "ast.fs"
-
 let is_Formula = (fun _discr_ -> (match (_discr_) with
 | Formula (_) -> begin
 true
@@ -60,14 +54,12 @@ false
 end))
 
 # 35 "ast.fs"
-
 type imp =
 | FsTypApp
 | Hash
 | Nothing
 
 # 36 "ast.fs"
-
 let is_FsTypApp = (fun _discr_ -> (match (_discr_) with
 | FsTypApp (_) -> begin
 true
@@ -77,7 +69,6 @@ false
 end))
 
 # 37 "ast.fs"
-
 let is_Hash = (fun _discr_ -> (match (_discr_) with
 | Hash (_) -> begin
 true
@@ -87,7 +78,6 @@ false
 end))
 
 # 38 "ast.fs"
-
 let is_Nothing = (fun _discr_ -> (match (_discr_) with
 | Nothing (_) -> begin
 true
@@ -97,13 +87,11 @@ false
 end))
 
 # 39 "ast.fs"
-
 type arg_qualifier =
 | Implicit
 | Equality
 
 # 40 "ast.fs"
-
 let is_Implicit = (fun _discr_ -> (match (_discr_) with
 | Implicit (_) -> begin
 true
@@ -113,7 +101,6 @@ false
 end))
 
 # 41 "ast.fs"
-
 let is_Equality = (fun _discr_ -> (match (_discr_) with
 | Equality (_) -> begin
 true
@@ -123,12 +110,10 @@ false
 end))
 
 # 42 "ast.fs"
-
 type aqual =
 arg_qualifier Prims.option
 
 # 44 "ast.fs"
-
 type term' =
 | Wild
 | Const of FStar_Const.sconst
@@ -185,7 +170,6 @@ type term' =
 (pattern * term Prims.option * term)
 
 # 45 "ast.fs"
-
 let is_Wild = (fun _discr_ -> (match (_discr_) with
 | Wild (_) -> begin
 true
@@ -195,7 +179,6 @@ false
 end))
 
 # 46 "ast.fs"
-
 let is_Const = (fun _discr_ -> (match (_discr_) with
 | Const (_) -> begin
 true
@@ -205,7 +188,6 @@ false
 end))
 
 # 47 "ast.fs"
-
 let is_Op = (fun _discr_ -> (match (_discr_) with
 | Op (_) -> begin
 true
@@ -215,7 +197,6 @@ false
 end))
 
 # 48 "ast.fs"
-
 let is_Tvar = (fun _discr_ -> (match (_discr_) with
 | Tvar (_) -> begin
 true
@@ -225,7 +206,6 @@ false
 end))
 
 # 49 "ast.fs"
-
 let is_Var = (fun _discr_ -> (match (_discr_) with
 | Var (_) -> begin
 true
@@ -235,7 +215,6 @@ false
 end))
 
 # 50 "ast.fs"
-
 let is_Name = (fun _discr_ -> (match (_discr_) with
 | Name (_) -> begin
 true
@@ -245,7 +224,6 @@ false
 end))
 
 # 51 "ast.fs"
-
 let is_Construct = (fun _discr_ -> (match (_discr_) with
 | Construct (_) -> begin
 true
@@ -255,7 +233,6 @@ false
 end))
 
 # 52 "ast.fs"
-
 let is_Abs = (fun _discr_ -> (match (_discr_) with
 | Abs (_) -> begin
 true
@@ -265,7 +242,6 @@ false
 end))
 
 # 53 "ast.fs"
-
 let is_App = (fun _discr_ -> (match (_discr_) with
 | App (_) -> begin
 true
@@ -275,7 +251,6 @@ false
 end))
 
 # 54 "ast.fs"
-
 let is_Let = (fun _discr_ -> (match (_discr_) with
 | Let (_) -> begin
 true
@@ -285,7 +260,6 @@ false
 end))
 
 # 55 "ast.fs"
-
 let is_Seq = (fun _discr_ -> (match (_discr_) with
 | Seq (_) -> begin
 true
@@ -295,7 +269,6 @@ false
 end))
 
 # 56 "ast.fs"
-
 let is_If = (fun _discr_ -> (match (_discr_) with
 | If (_) -> begin
 true
@@ -305,7 +278,6 @@ false
 end))
 
 # 57 "ast.fs"
-
 let is_Match = (fun _discr_ -> (match (_discr_) with
 | Match (_) -> begin
 true
@@ -315,7 +287,6 @@ false
 end))
 
 # 58 "ast.fs"
-
 let is_TryWith = (fun _discr_ -> (match (_discr_) with
 | TryWith (_) -> begin
 true
@@ -325,7 +296,6 @@ false
 end))
 
 # 59 "ast.fs"
-
 let is_Ascribed = (fun _discr_ -> (match (_discr_) with
 | Ascribed (_) -> begin
 true
@@ -335,7 +305,6 @@ false
 end))
 
 # 60 "ast.fs"
-
 let is_Record = (fun _discr_ -> (match (_discr_) with
 | Record (_) -> begin
 true
@@ -345,7 +314,6 @@ false
 end))
 
 # 61 "ast.fs"
-
 let is_Project = (fun _discr_ -> (match (_discr_) with
 | Project (_) -> begin
 true
@@ -355,7 +323,6 @@ false
 end))
 
 # 62 "ast.fs"
-
 let is_Product = (fun _discr_ -> (match (_discr_) with
 | Product (_) -> begin
 true
@@ -365,7 +332,6 @@ false
 end))
 
 # 63 "ast.fs"
-
 let is_Sum = (fun _discr_ -> (match (_discr_) with
 | Sum (_) -> begin
 true
@@ -375,7 +341,6 @@ false
 end))
 
 # 64 "ast.fs"
-
 let is_QForall = (fun _discr_ -> (match (_discr_) with
 | QForall (_) -> begin
 true
@@ -385,7 +350,6 @@ false
 end))
 
 # 65 "ast.fs"
-
 let is_QExists = (fun _discr_ -> (match (_discr_) with
 | QExists (_) -> begin
 true
@@ -395,7 +359,6 @@ false
 end))
 
 # 66 "ast.fs"
-
 let is_Refine = (fun _discr_ -> (match (_discr_) with
 | Refine (_) -> begin
 true
@@ -405,7 +368,6 @@ false
 end))
 
 # 67 "ast.fs"
-
 let is_NamedTyp = (fun _discr_ -> (match (_discr_) with
 | NamedTyp (_) -> begin
 true
@@ -415,7 +377,6 @@ false
 end))
 
 # 68 "ast.fs"
-
 let is_Paren = (fun _discr_ -> (match (_discr_) with
 | Paren (_) -> begin
 true
@@ -425,7 +386,6 @@ false
 end))
 
 # 69 "ast.fs"
-
 let is_Requires = (fun _discr_ -> (match (_discr_) with
 | Requires (_) -> begin
 true
@@ -435,7 +395,6 @@ false
 end))
 
 # 70 "ast.fs"
-
 let is_Ensures = (fun _discr_ -> (match (_discr_) with
 | Ensures (_) -> begin
 true
@@ -445,7 +404,6 @@ false
 end))
 
 # 71 "ast.fs"
-
 let is_Labeled = (fun _discr_ -> (match (_discr_) with
 | Labeled (_) -> begin
 true
@@ -455,11 +413,9 @@ false
 end))
 
 # 73 "ast.fs"
-
 let is_Mkterm : term  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkterm"))))
 
 # 76 "ast.fs"
-
 let is_Variable = (fun _discr_ -> (match (_discr_) with
 | Variable (_) -> begin
 true
@@ -469,7 +425,6 @@ false
 end))
 
 # 77 "ast.fs"
-
 let is_TVariable = (fun _discr_ -> (match (_discr_) with
 | TVariable (_) -> begin
 true
@@ -479,7 +434,6 @@ false
 end))
 
 # 78 "ast.fs"
-
 let is_Annotated = (fun _discr_ -> (match (_discr_) with
 | Annotated (_) -> begin
 true
@@ -489,7 +443,6 @@ false
 end))
 
 # 79 "ast.fs"
-
 let is_TAnnotated = (fun _discr_ -> (match (_discr_) with
 | TAnnotated (_) -> begin
 true
@@ -499,7 +452,6 @@ false
 end))
 
 # 80 "ast.fs"
-
 let is_NoName = (fun _discr_ -> (match (_discr_) with
 | NoName (_) -> begin
 true
@@ -509,11 +461,9 @@ false
 end))
 
 # 81 "ast.fs"
-
 let is_Mkbinder : binder  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkbinder"))))
 
 # 84 "ast.fs"
-
 let is_PatWild = (fun _discr_ -> (match (_discr_) with
 | PatWild (_) -> begin
 true
@@ -523,7 +473,6 @@ false
 end))
 
 # 85 "ast.fs"
-
 let is_PatConst = (fun _discr_ -> (match (_discr_) with
 | PatConst (_) -> begin
 true
@@ -533,7 +482,6 @@ false
 end))
 
 # 86 "ast.fs"
-
 let is_PatApp = (fun _discr_ -> (match (_discr_) with
 | PatApp (_) -> begin
 true
@@ -543,7 +491,6 @@ false
 end))
 
 # 87 "ast.fs"
-
 let is_PatVar = (fun _discr_ -> (match (_discr_) with
 | PatVar (_) -> begin
 true
@@ -553,7 +500,6 @@ false
 end))
 
 # 88 "ast.fs"
-
 let is_PatName = (fun _discr_ -> (match (_discr_) with
 | PatName (_) -> begin
 true
@@ -563,7 +509,6 @@ false
 end))
 
 # 89 "ast.fs"
-
 let is_PatTvar = (fun _discr_ -> (match (_discr_) with
 | PatTvar (_) -> begin
 true
@@ -573,7 +518,6 @@ false
 end))
 
 # 90 "ast.fs"
-
 let is_PatList = (fun _discr_ -> (match (_discr_) with
 | PatList (_) -> begin
 true
@@ -583,7 +527,6 @@ false
 end))
 
 # 91 "ast.fs"
-
 let is_PatTuple = (fun _discr_ -> (match (_discr_) with
 | PatTuple (_) -> begin
 true
@@ -593,7 +536,6 @@ false
 end))
 
 # 92 "ast.fs"
-
 let is_PatRecord = (fun _discr_ -> (match (_discr_) with
 | PatRecord (_) -> begin
 true
@@ -603,7 +545,6 @@ false
 end))
 
 # 93 "ast.fs"
-
 let is_PatAscribed = (fun _discr_ -> (match (_discr_) with
 | PatAscribed (_) -> begin
 true
@@ -613,7 +554,6 @@ false
 end))
 
 # 94 "ast.fs"
-
 let is_PatOr = (fun _discr_ -> (match (_discr_) with
 | PatOr (_) -> begin
 true
@@ -623,313 +563,267 @@ false
 end))
 
 # 95 "ast.fs"
-
 let is_Mkpattern : pattern  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkpattern"))))
 
 # 46 "ast.fs"
-
 let ___Const____0 : term'  ->  FStar_Const.sconst = (fun projectee -> (match (projectee) with
 | Const (_59_13) -> begin
 _59_13
 end))
 
 # 47 "ast.fs"
-
 let ___Op____0 : term'  ->  (Prims.string * term Prims.list) = (fun projectee -> (match (projectee) with
 | Op (_59_16) -> begin
 _59_16
 end))
 
 # 48 "ast.fs"
-
 let ___Tvar____0 : term'  ->  FStar_Ident.ident = (fun projectee -> (match (projectee) with
 | Tvar (_59_19) -> begin
 _59_19
 end))
 
 # 49 "ast.fs"
-
 let ___Var____0 : term'  ->  FStar_Ident.lid = (fun projectee -> (match (projectee) with
 | Var (_59_22) -> begin
 _59_22
 end))
 
 # 50 "ast.fs"
-
 let ___Name____0 : term'  ->  FStar_Ident.lid = (fun projectee -> (match (projectee) with
 | Name (_59_25) -> begin
 _59_25
 end))
 
 # 51 "ast.fs"
-
 let ___Construct____0 : term'  ->  (FStar_Ident.lid * (term * imp) Prims.list) = (fun projectee -> (match (projectee) with
 | Construct (_59_28) -> begin
 _59_28
 end))
 
 # 52 "ast.fs"
-
 let ___Abs____0 : term'  ->  (pattern Prims.list * term) = (fun projectee -> (match (projectee) with
 | Abs (_59_31) -> begin
 _59_31
 end))
 
 # 53 "ast.fs"
-
 let ___App____0 : term'  ->  (term * term * imp) = (fun projectee -> (match (projectee) with
 | App (_59_34) -> begin
 _59_34
 end))
 
 # 54 "ast.fs"
-
 let ___Let____0 : term'  ->  (Prims.bool * (pattern * term) Prims.list * term) = (fun projectee -> (match (projectee) with
 | Let (_59_37) -> begin
 _59_37
 end))
 
 # 55 "ast.fs"
-
 let ___Seq____0 : term'  ->  (term * term) = (fun projectee -> (match (projectee) with
 | Seq (_59_40) -> begin
 _59_40
 end))
 
 # 56 "ast.fs"
-
 let ___If____0 : term'  ->  (term * term * term) = (fun projectee -> (match (projectee) with
 | If (_59_43) -> begin
 _59_43
 end))
 
 # 57 "ast.fs"
-
 let ___Match____0 : term'  ->  (term * branch Prims.list) = (fun projectee -> (match (projectee) with
 | Match (_59_46) -> begin
 _59_46
 end))
 
 # 58 "ast.fs"
-
 let ___TryWith____0 : term'  ->  (term * branch Prims.list) = (fun projectee -> (match (projectee) with
 | TryWith (_59_49) -> begin
 _59_49
 end))
 
 # 59 "ast.fs"
-
 let ___Ascribed____0 : term'  ->  (term * term) = (fun projectee -> (match (projectee) with
 | Ascribed (_59_52) -> begin
 _59_52
 end))
 
 # 60 "ast.fs"
-
 let ___Record____0 : term'  ->  (term Prims.option * (FStar_Ident.lid * term) Prims.list) = (fun projectee -> (match (projectee) with
 | Record (_59_55) -> begin
 _59_55
 end))
 
 # 61 "ast.fs"
-
 let ___Project____0 : term'  ->  (term * FStar_Ident.lid) = (fun projectee -> (match (projectee) with
 | Project (_59_58) -> begin
 _59_58
 end))
 
 # 62 "ast.fs"
-
 let ___Product____0 : term'  ->  (binder Prims.list * term) = (fun projectee -> (match (projectee) with
 | Product (_59_61) -> begin
 _59_61
 end))
 
 # 63 "ast.fs"
-
 let ___Sum____0 : term'  ->  (binder Prims.list * term) = (fun projectee -> (match (projectee) with
 | Sum (_59_64) -> begin
 _59_64
 end))
 
 # 64 "ast.fs"
-
 let ___QForall____0 : term'  ->  (binder Prims.list * term Prims.list Prims.list * term) = (fun projectee -> (match (projectee) with
 | QForall (_59_67) -> begin
 _59_67
 end))
 
 # 65 "ast.fs"
-
 let ___QExists____0 : term'  ->  (binder Prims.list * term Prims.list Prims.list * term) = (fun projectee -> (match (projectee) with
 | QExists (_59_70) -> begin
 _59_70
 end))
 
 # 66 "ast.fs"
-
 let ___Refine____0 : term'  ->  (binder * term) = (fun projectee -> (match (projectee) with
 | Refine (_59_73) -> begin
 _59_73
 end))
 
 # 67 "ast.fs"
-
 let ___NamedTyp____0 : term'  ->  (FStar_Ident.ident * term) = (fun projectee -> (match (projectee) with
 | NamedTyp (_59_76) -> begin
 _59_76
 end))
 
 # 68 "ast.fs"
-
 let ___Paren____0 : term'  ->  term = (fun projectee -> (match (projectee) with
 | Paren (_59_79) -> begin
 _59_79
 end))
 
 # 69 "ast.fs"
-
 let ___Requires____0 : term'  ->  (term * Prims.string Prims.option) = (fun projectee -> (match (projectee) with
 | Requires (_59_82) -> begin
 _59_82
 end))
 
 # 70 "ast.fs"
-
 let ___Ensures____0 : term'  ->  (term * Prims.string Prims.option) = (fun projectee -> (match (projectee) with
 | Ensures (_59_85) -> begin
 _59_85
 end))
 
 # 71 "ast.fs"
-
 let ___Labeled____0 : term'  ->  (term * Prims.string * Prims.bool) = (fun projectee -> (match (projectee) with
 | Labeled (_59_88) -> begin
 _59_88
 end))
 
 # 76 "ast.fs"
-
 let ___Variable____0 : binder'  ->  FStar_Ident.ident = (fun projectee -> (match (projectee) with
 | Variable (_59_92) -> begin
 _59_92
 end))
 
 # 77 "ast.fs"
-
 let ___TVariable____0 : binder'  ->  FStar_Ident.ident = (fun projectee -> (match (projectee) with
 | TVariable (_59_95) -> begin
 _59_95
 end))
 
 # 78 "ast.fs"
-
 let ___Annotated____0 : binder'  ->  (FStar_Ident.ident * term) = (fun projectee -> (match (projectee) with
 | Annotated (_59_98) -> begin
 _59_98
 end))
 
 # 79 "ast.fs"
-
 let ___TAnnotated____0 : binder'  ->  (FStar_Ident.ident * term) = (fun projectee -> (match (projectee) with
 | TAnnotated (_59_101) -> begin
 _59_101
 end))
 
 # 80 "ast.fs"
-
 let ___NoName____0 : binder'  ->  term = (fun projectee -> (match (projectee) with
 | NoName (_59_104) -> begin
 _59_104
 end))
 
 # 85 "ast.fs"
-
 let ___PatConst____0 : pattern'  ->  FStar_Const.sconst = (fun projectee -> (match (projectee) with
 | PatConst (_59_108) -> begin
 _59_108
 end))
 
 # 86 "ast.fs"
-
 let ___PatApp____0 : pattern'  ->  (pattern * pattern Prims.list) = (fun projectee -> (match (projectee) with
 | PatApp (_59_111) -> begin
 _59_111
 end))
 
 # 87 "ast.fs"
-
 let ___PatVar____0 : pattern'  ->  (FStar_Ident.ident * Prims.bool) = (fun projectee -> (match (projectee) with
 | PatVar (_59_114) -> begin
 _59_114
 end))
 
 # 88 "ast.fs"
-
 let ___PatName____0 : pattern'  ->  FStar_Ident.lid = (fun projectee -> (match (projectee) with
 | PatName (_59_117) -> begin
 _59_117
 end))
 
 # 89 "ast.fs"
-
 let ___PatTvar____0 : pattern'  ->  (FStar_Ident.ident * Prims.bool) = (fun projectee -> (match (projectee) with
 | PatTvar (_59_120) -> begin
 _59_120
 end))
 
 # 90 "ast.fs"
-
 let ___PatList____0 : pattern'  ->  pattern Prims.list = (fun projectee -> (match (projectee) with
 | PatList (_59_123) -> begin
 _59_123
 end))
 
 # 91 "ast.fs"
-
 let ___PatTuple____0 : pattern'  ->  (pattern Prims.list * Prims.bool) = (fun projectee -> (match (projectee) with
 | PatTuple (_59_126) -> begin
 _59_126
 end))
 
 # 92 "ast.fs"
-
 let ___PatRecord____0 : pattern'  ->  (FStar_Ident.lid * pattern) Prims.list = (fun projectee -> (match (projectee) with
 | PatRecord (_59_129) -> begin
 _59_129
 end))
 
 # 93 "ast.fs"
-
 let ___PatAscribed____0 : pattern'  ->  (pattern * term) = (fun projectee -> (match (projectee) with
 | PatAscribed (_59_132) -> begin
 _59_132
 end))
 
 # 94 "ast.fs"
-
 let ___PatOr____0 : pattern'  ->  pattern Prims.list = (fun projectee -> (match (projectee) with
 | PatOr (_59_135) -> begin
 _59_135
 end))
 
 # 99 "ast.fs"
-
 type knd =
 term
 
 # 100 "ast.fs"
-
 type typ =
 term
 
 # 101 "ast.fs"
-
 type expr =
 term
 
 # 103 "ast.fs"
-
 type tycon =
 | TyconAbstract of (FStar_Ident.ident * binder Prims.list * knd Prims.option)
 | TyconAbbrev of (FStar_Ident.ident * binder Prims.list * knd Prims.option * term)
@@ -937,7 +831,6 @@ type tycon =
 | TyconVariant of (FStar_Ident.ident * binder Prims.list * knd Prims.option * (FStar_Ident.ident * term Prims.option * Prims.bool) Prims.list)
 
 # 104 "ast.fs"
-
 let is_TyconAbstract = (fun _discr_ -> (match (_discr_) with
 | TyconAbstract (_) -> begin
 true
@@ -947,7 +840,6 @@ false
 end))
 
 # 105 "ast.fs"
-
 let is_TyconAbbrev = (fun _discr_ -> (match (_discr_) with
 | TyconAbbrev (_) -> begin
 true
@@ -957,7 +849,6 @@ false
 end))
 
 # 106 "ast.fs"
-
 let is_TyconRecord = (fun _discr_ -> (match (_discr_) with
 | TyconRecord (_) -> begin
 true
@@ -967,7 +858,6 @@ false
 end))
 
 # 107 "ast.fs"
-
 let is_TyconVariant = (fun _discr_ -> (match (_discr_) with
 | TyconVariant (_) -> begin
 true
@@ -977,35 +867,30 @@ false
 end))
 
 # 104 "ast.fs"
-
 let ___TyconAbstract____0 : tycon  ->  (FStar_Ident.ident * binder Prims.list * knd Prims.option) = (fun projectee -> (match (projectee) with
 | TyconAbstract (_59_139) -> begin
 _59_139
 end))
 
 # 105 "ast.fs"
-
 let ___TyconAbbrev____0 : tycon  ->  (FStar_Ident.ident * binder Prims.list * knd Prims.option * term) = (fun projectee -> (match (projectee) with
 | TyconAbbrev (_59_142) -> begin
 _59_142
 end))
 
 # 106 "ast.fs"
-
 let ___TyconRecord____0 : tycon  ->  (FStar_Ident.ident * binder Prims.list * knd Prims.option * (FStar_Ident.ident * term) Prims.list) = (fun projectee -> (match (projectee) with
 | TyconRecord (_59_145) -> begin
 _59_145
 end))
 
 # 107 "ast.fs"
-
 let ___TyconVariant____0 : tycon  ->  (FStar_Ident.ident * binder Prims.list * knd Prims.option * (FStar_Ident.ident * term Prims.option * Prims.bool) Prims.list) = (fun projectee -> (match (projectee) with
 | TyconVariant (_59_148) -> begin
 _59_148
 end))
 
 # 109 "ast.fs"
-
 type qualifier =
 | Private
 | Abstract
@@ -1021,7 +906,6 @@ type qualifier =
 | Logic
 
 # 110 "ast.fs"
-
 let is_Private = (fun _discr_ -> (match (_discr_) with
 | Private (_) -> begin
 true
@@ -1031,7 +915,6 @@ false
 end))
 
 # 111 "ast.fs"
-
 let is_Abstract = (fun _discr_ -> (match (_discr_) with
 | Abstract (_) -> begin
 true
@@ -1041,7 +924,6 @@ false
 end))
 
 # 112 "ast.fs"
-
 let is_Assumption = (fun _discr_ -> (match (_discr_) with
 | Assumption (_) -> begin
 true
@@ -1051,7 +933,6 @@ false
 end))
 
 # 113 "ast.fs"
-
 let is_DefaultEffect = (fun _discr_ -> (match (_discr_) with
 | DefaultEffect (_) -> begin
 true
@@ -1061,7 +942,6 @@ false
 end))
 
 # 114 "ast.fs"
-
 let is_TotalEffect = (fun _discr_ -> (match (_discr_) with
 | TotalEffect (_) -> begin
 true
@@ -1071,7 +951,6 @@ false
 end))
 
 # 115 "ast.fs"
-
 let is_Effect = (fun _discr_ -> (match (_discr_) with
 | Effect (_) -> begin
 true
@@ -1081,7 +960,6 @@ false
 end))
 
 # 116 "ast.fs"
-
 let is_New = (fun _discr_ -> (match (_discr_) with
 | New (_) -> begin
 true
@@ -1091,7 +969,6 @@ false
 end))
 
 # 117 "ast.fs"
-
 let is_Inline = (fun _discr_ -> (match (_discr_) with
 | Inline (_) -> begin
 true
@@ -1101,7 +978,6 @@ false
 end))
 
 # 118 "ast.fs"
-
 let is_Unfoldable = (fun _discr_ -> (match (_discr_) with
 | Unfoldable (_) -> begin
 true
@@ -1111,7 +987,6 @@ false
 end))
 
 # 119 "ast.fs"
-
 let is_Irreducible = (fun _discr_ -> (match (_discr_) with
 | Irreducible (_) -> begin
 true
@@ -1121,7 +996,6 @@ false
 end))
 
 # 121 "ast.fs"
-
 let is_Opaque = (fun _discr_ -> (match (_discr_) with
 | Opaque (_) -> begin
 true
@@ -1131,7 +1005,6 @@ false
 end))
 
 # 122 "ast.fs"
-
 let is_Logic = (fun _discr_ -> (match (_discr_) with
 | Logic (_) -> begin
 true
@@ -1141,27 +1014,22 @@ false
 end))
 
 # 126 "ast.fs"
-
 type qualifiers =
 qualifier Prims.list
 
 # 128 "ast.fs"
-
 type lift =
 {msource : FStar_Ident.lid; mdest : FStar_Ident.lid; lift_op : term}
 
 # 128 "ast.fs"
-
 let is_Mklift : lift  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mklift"))))
 
 # 134 "ast.fs"
-
 type pragma =
 | SetOptions of Prims.string
 | ResetOptions
 
 # 135 "ast.fs"
-
 let is_SetOptions = (fun _discr_ -> (match (_discr_) with
 | SetOptions (_) -> begin
 true
@@ -1171,7 +1039,6 @@ false
 end))
 
 # 136 "ast.fs"
-
 let is_ResetOptions = (fun _discr_ -> (match (_discr_) with
 | ResetOptions (_) -> begin
 true
@@ -1181,14 +1048,12 @@ false
 end))
 
 # 135 "ast.fs"
-
 let ___SetOptions____0 : pragma  ->  Prims.string = (fun projectee -> (match (projectee) with
 | SetOptions (_59_155) -> begin
 _59_155
 end))
 
 # 138 "ast.fs"
-
 type decl' =
 | TopLevelModule of FStar_Ident.lid
 | Open of FStar_Ident.lid
@@ -1210,7 +1075,6 @@ type decl' =
 | RedefineEffect of (FStar_Ident.ident * binder Prims.list * term)
 
 # 139 "ast.fs"
-
 let is_TopLevelModule = (fun _discr_ -> (match (_discr_) with
 | TopLevelModule (_) -> begin
 true
@@ -1220,7 +1084,6 @@ false
 end))
 
 # 140 "ast.fs"
-
 let is_Open = (fun _discr_ -> (match (_discr_) with
 | Open (_) -> begin
 true
@@ -1230,7 +1093,6 @@ false
 end))
 
 # 141 "ast.fs"
-
 let is_ModuleAbbrev = (fun _discr_ -> (match (_discr_) with
 | ModuleAbbrev (_) -> begin
 true
@@ -1240,7 +1102,6 @@ false
 end))
 
 # 142 "ast.fs"
-
 let is_KindAbbrev = (fun _discr_ -> (match (_discr_) with
 | KindAbbrev (_) -> begin
 true
@@ -1250,7 +1111,6 @@ false
 end))
 
 # 143 "ast.fs"
-
 let is_ToplevelLet = (fun _discr_ -> (match (_discr_) with
 | ToplevelLet (_) -> begin
 true
@@ -1260,7 +1120,6 @@ false
 end))
 
 # 144 "ast.fs"
-
 let is_Main = (fun _discr_ -> (match (_discr_) with
 | Main (_) -> begin
 true
@@ -1270,7 +1129,6 @@ false
 end))
 
 # 145 "ast.fs"
-
 let is_Assume = (fun _discr_ -> (match (_discr_) with
 | Assume (_) -> begin
 true
@@ -1280,7 +1138,6 @@ false
 end))
 
 # 146 "ast.fs"
-
 let is_Tycon = (fun _discr_ -> (match (_discr_) with
 | Tycon (_) -> begin
 true
@@ -1290,7 +1147,6 @@ false
 end))
 
 # 147 "ast.fs"
-
 let is_Val = (fun _discr_ -> (match (_discr_) with
 | Val (_) -> begin
 true
@@ -1300,7 +1156,6 @@ false
 end))
 
 # 148 "ast.fs"
-
 let is_Exception = (fun _discr_ -> (match (_discr_) with
 | Exception (_) -> begin
 true
@@ -1310,7 +1165,6 @@ false
 end))
 
 # 149 "ast.fs"
-
 let is_NewEffect = (fun _discr_ -> (match (_discr_) with
 | NewEffect (_) -> begin
 true
@@ -1320,7 +1174,6 @@ false
 end))
 
 # 150 "ast.fs"
-
 let is_SubEffect = (fun _discr_ -> (match (_discr_) with
 | SubEffect (_) -> begin
 true
@@ -1330,7 +1183,6 @@ false
 end))
 
 # 151 "ast.fs"
-
 let is_Pragma = (fun _discr_ -> (match (_discr_) with
 | Pragma (_) -> begin
 true
@@ -1340,11 +1192,9 @@ false
 end))
 
 # 152 "ast.fs"
-
 let is_Mkdecl : decl  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkdecl"))))
 
 # 154 "ast.fs"
-
 let is_DefineEffect = (fun _discr_ -> (match (_discr_) with
 | DefineEffect (_) -> begin
 true
@@ -1354,7 +1204,6 @@ false
 end))
 
 # 155 "ast.fs"
-
 let is_RedefineEffect = (fun _discr_ -> (match (_discr_) with
 | RedefineEffect (_) -> begin
 true
@@ -1364,118 +1213,101 @@ false
 end))
 
 # 139 "ast.fs"
-
 let ___TopLevelModule____0 : decl'  ->  FStar_Ident.lid = (fun projectee -> (match (projectee) with
 | TopLevelModule (_59_160) -> begin
 _59_160
 end))
 
 # 140 "ast.fs"
-
 let ___Open____0 : decl'  ->  FStar_Ident.lid = (fun projectee -> (match (projectee) with
 | Open (_59_163) -> begin
 _59_163
 end))
 
 # 141 "ast.fs"
-
 let ___ModuleAbbrev____0 : decl'  ->  (FStar_Ident.ident * FStar_Ident.lid) = (fun projectee -> (match (projectee) with
 | ModuleAbbrev (_59_166) -> begin
 _59_166
 end))
 
 # 142 "ast.fs"
-
 let ___KindAbbrev____0 : decl'  ->  (FStar_Ident.ident * binder Prims.list * knd) = (fun projectee -> (match (projectee) with
 | KindAbbrev (_59_169) -> begin
 _59_169
 end))
 
 # 143 "ast.fs"
-
 let ___ToplevelLet____0 : decl'  ->  (qualifiers * Prims.bool * (pattern * term) Prims.list) = (fun projectee -> (match (projectee) with
 | ToplevelLet (_59_172) -> begin
 _59_172
 end))
 
 # 144 "ast.fs"
-
 let ___Main____0 : decl'  ->  term = (fun projectee -> (match (projectee) with
 | Main (_59_175) -> begin
 _59_175
 end))
 
 # 145 "ast.fs"
-
 let ___Assume____0 : decl'  ->  (qualifiers * FStar_Ident.ident * term) = (fun projectee -> (match (projectee) with
 | Assume (_59_178) -> begin
 _59_178
 end))
 
 # 146 "ast.fs"
-
 let ___Tycon____0 : decl'  ->  (qualifiers * tycon Prims.list) = (fun projectee -> (match (projectee) with
 | Tycon (_59_181) -> begin
 _59_181
 end))
 
 # 147 "ast.fs"
-
 let ___Val____0 : decl'  ->  (qualifiers * FStar_Ident.ident * term) = (fun projectee -> (match (projectee) with
 | Val (_59_184) -> begin
 _59_184
 end))
 
 # 148 "ast.fs"
-
 let ___Exception____0 : decl'  ->  (FStar_Ident.ident * term Prims.option) = (fun projectee -> (match (projectee) with
 | Exception (_59_187) -> begin
 _59_187
 end))
 
 # 149 "ast.fs"
-
 let ___NewEffect____0 : decl'  ->  (qualifiers * effect_decl) = (fun projectee -> (match (projectee) with
 | NewEffect (_59_190) -> begin
 _59_190
 end))
 
 # 150 "ast.fs"
-
 let ___SubEffect____0 : decl'  ->  lift = (fun projectee -> (match (projectee) with
 | SubEffect (_59_193) -> begin
 _59_193
 end))
 
 # 151 "ast.fs"
-
 let ___Pragma____0 : decl'  ->  pragma = (fun projectee -> (match (projectee) with
 | Pragma (_59_196) -> begin
 _59_196
 end))
 
 # 154 "ast.fs"
-
 let ___DefineEffect____0 : effect_decl  ->  (FStar_Ident.ident * binder Prims.list * term * decl Prims.list) = (fun projectee -> (match (projectee) with
 | DefineEffect (_59_200) -> begin
 _59_200
 end))
 
 # 155 "ast.fs"
-
 let ___RedefineEffect____0 : effect_decl  ->  (FStar_Ident.ident * binder Prims.list * term) = (fun projectee -> (match (projectee) with
 | RedefineEffect (_59_203) -> begin
 _59_203
 end))
 
 # 157 "ast.fs"
-
 type modul =
 | Module of (FStar_Ident.lid * decl Prims.list)
 | Interface of (FStar_Ident.lid * decl Prims.list * Prims.bool)
 
 # 158 "ast.fs"
-
 let is_Module = (fun _discr_ -> (match (_discr_) with
 | Module (_) -> begin
 true
@@ -1485,7 +1317,6 @@ false
 end))
 
 # 159 "ast.fs"
-
 let is_Interface = (fun _discr_ -> (match (_discr_) with
 | Interface (_) -> begin
 true
@@ -1495,47 +1326,38 @@ false
 end))
 
 # 158 "ast.fs"
-
 let ___Module____0 : modul  ->  (FStar_Ident.lid * decl Prims.list) = (fun projectee -> (match (projectee) with
 | Module (_59_206) -> begin
 _59_206
 end))
 
 # 159 "ast.fs"
-
 let ___Interface____0 : modul  ->  (FStar_Ident.lid * decl Prims.list * Prims.bool) = (fun projectee -> (match (projectee) with
 | Interface (_59_209) -> begin
 _59_209
 end))
 
 # 160 "ast.fs"
-
 type file =
 modul Prims.list
 
 # 161 "ast.fs"
-
 type inputFragment =
 (file, decl Prims.list) FStar_Util.either
 
 # 164 "ast.fs"
-
 let mk_decl : decl'  ->  FStar_Range.range  ->  decl = (fun d r -> {d = d; drange = r})
 
 # 165 "ast.fs"
-
 let mk_binder : binder'  ->  FStar_Range.range  ->  level  ->  aqual  ->  binder = (fun b r l i -> {b = b; brange = r; blevel = l; aqual = i})
 
 # 166 "ast.fs"
-
 let mk_term : term'  ->  FStar_Range.range  ->  level  ->  term = (fun t r l -> {tm = t; range = r; level = l})
 
 # 167 "ast.fs"
-
 let mk_pattern : pattern'  ->  FStar_Range.range  ->  pattern = (fun p r -> {pat = p; prange = r})
 
 # 168 "ast.fs"
-
 let un_curry_abs : pattern Prims.list  ->  term  ->  term' = (fun ps body -> (match (body.tm) with
 | Abs (p', body') -> begin
 Abs (((FStar_List.append ps p'), body'))
@@ -1545,7 +1367,6 @@ Abs ((ps, body))
 end))
 
 # 171 "ast.fs"
-
 let mk_function : branch Prims.list  ->  FStar_Range.range  ->  FStar_Range.range  ->  term = (fun branches r1 r2 -> (let x = (FStar_Absyn_Util.genident (Some (r1)))
 in (let _161_994 = (let _161_993 = (let _161_992 = (let _161_991 = (let _161_990 = (let _161_989 = (let _161_988 = (let _161_987 = (FStar_Ident.lid_of_ids ((x)::[]))
 in Var (_161_987))
@@ -1558,7 +1379,6 @@ in Abs (_161_993))
 in (mk_term _161_994 r2 Expr))))
 
 # 176 "ast.fs"
-
 let un_function : pattern  ->  term  ->  (pattern * term) Prims.option = (fun p tm -> (match ((p.pat, tm.tm)) with
 | (PatVar (_59_236), Abs (pats, body)) -> begin
 Some (((mk_pattern (PatApp ((p, pats))) p.prange), body))
@@ -1568,17 +1388,14 @@ None
 end))
 
 # 180 "ast.fs"
-
 let lid_with_range : FStar_Ident.lident  ->  FStar_Range.range  ->  FStar_Ident.lident = (fun lid r -> (let _161_1003 = (FStar_Ident.path_of_lid lid)
 in (FStar_Ident.lid_of_path _161_1003 r)))
 
 # 182 "ast.fs"
-
 let to_string_l = (fun sep f l -> (let _161_1010 = (FStar_List.map f l)
 in (FStar_String.concat sep _161_1010)))
 
 # 184 "ast.fs"
-
 let imp_to_string : imp  ->  Prims.string = (fun _59_1 -> (match (_59_1) with
 | Hash -> begin
 "#"
@@ -1588,7 +1405,6 @@ end
 end))
 
 # 187 "ast.fs"
-
 let rec term_to_string : term  ->  Prims.string = (fun x -> (match (x.tm) with
 | Wild -> begin
 "_"
@@ -1844,7 +1660,6 @@ in (FStar_Util.format2 "(%s:%s)" _161_1094 _161_1093)))
 end))
 
 # 285 "ast.fs"
-
 let error = (fun msg tm r -> (let tm = (FStar_All.pipe_right tm term_to_string)
 in (let tm = if ((FStar_String.length tm) >= 80) then begin
 (let _161_1098 = (FStar_Util.substring tm 0 77)
@@ -1855,29 +1670,23 @@ end
 in (Prims.raise (FStar_Absyn_Syntax.Error (((Prims.strcat (Prims.strcat msg "\n") tm), r)))))))
 
 # 290 "ast.fs"
-
 let consPat : FStar_Range.range  ->  pattern  ->  pattern  ->  pattern' = (fun r hd tl -> PatApp (((mk_pattern (PatName (FStar_Absyn_Const.cons_lid)) r), (hd)::(tl)::[])))
 
 # 291 "ast.fs"
-
 let consTerm : FStar_Range.range  ->  term  ->  term  ->  term = (fun r hd tl -> (mk_term (Construct ((FStar_Absyn_Const.cons_lid, ((hd, Nothing))::((tl, Nothing))::[]))) r Expr))
 
 # 292 "ast.fs"
-
 let lexConsTerm : FStar_Range.range  ->  term  ->  term  ->  term = (fun r hd tl -> (mk_term (Construct ((FStar_Absyn_Const.lexcons_lid, ((hd, Nothing))::((tl, Nothing))::[]))) r Expr))
 
 # 294 "ast.fs"
-
 let mkConsList : FStar_Range.range  ->  term Prims.list  ->  term = (fun r elts -> (let nil = (mk_term (Construct ((FStar_Absyn_Const.nil_lid, []))) r Expr)
 in (FStar_List.fold_right (fun e tl -> (consTerm r e tl)) elts nil)))
 
 # 298 "ast.fs"
-
 let mkLexList : FStar_Range.range  ->  term Prims.list  ->  term = (fun r elts -> (let nil = (mk_term (Construct ((FStar_Absyn_Const.lextop_lid, []))) r Expr)
 in (FStar_List.fold_right (fun e tl -> (lexConsTerm r e tl)) elts nil)))
 
 # 302 "ast.fs"
-
 let mkApp : term  ->  (term * imp) Prims.list  ->  FStar_Range.range  ->  term = (fun t args r -> (match (args) with
 | [] -> begin
 t
@@ -1896,7 +1705,6 @@ end)
 end))
 
 # 308 "ast.fs"
-
 let mkRefSet : FStar_Range.range  ->  term Prims.list  ->  term = (fun r elts -> (let empty = (let _161_1142 = (let _161_1141 = (FStar_Ident.set_lid_range FStar_Absyn_Const.set_empty r)
 in Var (_161_1141))
 in (mk_term _161_1142 r Expr))
@@ -1914,7 +1722,6 @@ in (let single_e = (mkApp singleton (((e, Nothing))::[]) r)
 in (mkApp union (((single_e, Nothing))::((tl, Nothing))::[]) r)))) elts empty))))))
 
 # 318 "ast.fs"
-
 let mkExplicitApp : term  ->  term Prims.list  ->  FStar_Range.range  ->  term = (fun t args r -> (match (args) with
 | [] -> begin
 t
@@ -1933,7 +1740,6 @@ end)
 end))
 
 # 324 "ast.fs"
-
 let mkAdmitMagic : FStar_Range.range  ->  term = (fun r -> (let unit_const = (mk_term (Const (FStar_Const.Const_unit)) r Expr)
 in (let admit = (let admit_name = (let _161_1166 = (let _161_1165 = (FStar_Ident.set_lid_range FStar_Absyn_Const.admit_lid r)
 in Var (_161_1165))
@@ -1947,12 +1753,10 @@ in (let admit_magic = (mk_term (Seq ((admit, magic))) r Expr)
 in admit_magic)))))
 
 # 335 "ast.fs"
-
 let mkWildAdmitMagic = (fun r -> (let _161_1170 = (mkAdmitMagic r)
 in ((mk_pattern PatWild r), None, _161_1170)))
 
 # 337 "ast.fs"
-
 let focusBranches = (fun branches r -> (let should_filter = (FStar_Util.for_some Prims.fst branches)
 in if should_filter then begin
 (let _59_552 = (FStar_Tc_Errors.warn r "Focusing on only some cases")
@@ -1966,7 +1770,6 @@ end else begin
 end))
 
 # 345 "ast.fs"
-
 let focusLetBindings = (fun lbs r -> (let should_filter = (FStar_Util.for_some Prims.fst lbs)
 in if should_filter then begin
 (let _59_558 = (FStar_Tc_Errors.warn r "Focusing on only some cases in this (mutually) recursive definition")
@@ -1984,24 +1787,20 @@ end else begin
 end))
 
 # 354 "ast.fs"
-
 let mkFsTypApp : term  ->  term Prims.list  ->  FStar_Range.range  ->  term = (fun t args r -> (let _161_1187 = (FStar_List.map (fun a -> (a, FsTypApp)) args)
 in (mkApp t _161_1187 r)))
 
 # 357 "ast.fs"
-
 let mkTuple : term Prims.list  ->  FStar_Range.range  ->  term = (fun args r -> (let cons = (FStar_Absyn_Util.mk_tuple_data_lid (FStar_List.length args) r)
 in (let _161_1193 = (FStar_List.map (fun x -> (x, Nothing)) args)
 in (mkApp (mk_term (Name (cons)) r Expr) _161_1193 r))))
 
 # 361 "ast.fs"
-
 let mkDTuple : term Prims.list  ->  FStar_Range.range  ->  term = (fun args r -> (let cons = (FStar_Absyn_Util.mk_dtuple_data_lid (FStar_List.length args) r)
 in (let _161_1199 = (FStar_List.map (fun x -> (x, Nothing)) args)
 in (mkApp (mk_term (Name (cons)) r Expr) _161_1199 r))))
 
 # 365 "ast.fs"
-
 let mkRefinedBinder : FStar_Ident.ident  ->  term  ->  term Prims.option  ->  FStar_Range.range  ->  aqual  ->  binder = (fun id t refopt m implicit -> (let b = (mk_binder (Annotated ((id, t))) m Type implicit)
 in (match (refopt) with
 | None -> begin
@@ -2012,7 +1811,6 @@ end
 end)))
 
 # 371 "ast.fs"
-
 let rec extract_named_refinement : term  ->  (FStar_Ident.ident * term * term Prims.option) Prims.option = (fun t1 -> (match (t1.tm) with
 | NamedTyp (x, t) -> begin
 Some ((x, t, None))

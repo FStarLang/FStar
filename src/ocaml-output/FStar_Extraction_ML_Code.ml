@@ -1,7 +1,6 @@
 
 open Prims
 # 30 "codegen.fs"
-
 type assoc =
 | ILeft
 | IRight
@@ -10,7 +9,6 @@ type assoc =
 | NonAssoc
 
 # 30 "codegen.fs"
-
 let is_ILeft = (fun _discr_ -> (match (_discr_) with
 | ILeft (_) -> begin
 true
@@ -20,7 +18,6 @@ false
 end))
 
 # 30 "codegen.fs"
-
 let is_IRight = (fun _discr_ -> (match (_discr_) with
 | IRight (_) -> begin
 true
@@ -30,7 +27,6 @@ false
 end))
 
 # 30 "codegen.fs"
-
 let is_Left = (fun _discr_ -> (match (_discr_) with
 | Left (_) -> begin
 true
@@ -40,7 +36,6 @@ false
 end))
 
 # 30 "codegen.fs"
-
 let is_Right = (fun _discr_ -> (match (_discr_) with
 | Right (_) -> begin
 true
@@ -50,7 +45,6 @@ false
 end))
 
 # 30 "codegen.fs"
-
 let is_NonAssoc = (fun _discr_ -> (match (_discr_) with
 | NonAssoc (_) -> begin
 true
@@ -60,14 +54,12 @@ false
 end))
 
 # 31 "codegen.fs"
-
 type fixity =
 | Prefix
 | Postfix
 | Infix of assoc
 
 # 31 "codegen.fs"
-
 let is_Prefix = (fun _discr_ -> (match (_discr_) with
 | Prefix (_) -> begin
 true
@@ -77,7 +69,6 @@ false
 end))
 
 # 31 "codegen.fs"
-
 let is_Postfix = (fun _discr_ -> (match (_discr_) with
 | Postfix (_) -> begin
 true
@@ -87,7 +78,6 @@ false
 end))
 
 # 31 "codegen.fs"
-
 let is_Infix = (fun _discr_ -> (match (_discr_) with
 | Infix (_) -> begin
 true
@@ -97,100 +87,77 @@ false
 end))
 
 # 31 "codegen.fs"
-
 let ___Infix____0 : fixity  ->  assoc = (fun projectee -> (match (projectee) with
 | Infix (_77_3) -> begin
 _77_3
 end))
 
 # 32 "codegen.fs"
-
 type opprec =
 (Prims.int * fixity)
 
 # 33 "codegen.fs"
-
 type level =
 (opprec * assoc)
 
 # 35 "codegen.fs"
-
 let t_prio_fun : (Prims.int * fixity) = (10, Infix (Right))
 
 # 36 "codegen.fs"
-
 let t_prio_tpl : (Prims.int * fixity) = (20, Infix (NonAssoc))
 
 # 37 "codegen.fs"
-
 let t_prio_name : (Prims.int * fixity) = (30, Postfix)
 
 # 39 "codegen.fs"
-
 let e_bin_prio_lambda : (Prims.int * fixity) = (5, Prefix)
 
 # 40 "codegen.fs"
-
 let e_bin_prio_if : (Prims.int * fixity) = (15, Prefix)
 
 # 41 "codegen.fs"
-
 let e_bin_prio_letin : (Prims.int * fixity) = (19, Prefix)
 
 # 42 "codegen.fs"
-
 let e_bin_prio_or : (Prims.int * fixity) = (20, Infix (Left))
 
 # 43 "codegen.fs"
-
 let e_bin_prio_and : (Prims.int * fixity) = (25, Infix (Left))
 
 # 44 "codegen.fs"
-
 let e_bin_prio_eq : (Prims.int * fixity) = (27, Infix (NonAssoc))
 
 # 45 "codegen.fs"
-
 let e_bin_prio_order : (Prims.int * fixity) = (29, Infix (NonAssoc))
 
 # 46 "codegen.fs"
-
 let e_bin_prio_op1 : (Prims.int * fixity) = (30, Infix (Left))
 
 # 47 "codegen.fs"
-
 let e_bin_prio_op2 : (Prims.int * fixity) = (40, Infix (Left))
 
 # 48 "codegen.fs"
-
 let e_bin_prio_op3 : (Prims.int * fixity) = (50, Infix (Left))
 
 # 49 "codegen.fs"
-
 let e_bin_prio_op4 : (Prims.int * fixity) = (60, Infix (Left))
 
 # 50 "codegen.fs"
-
 let e_bin_prio_comb : (Prims.int * fixity) = (70, Infix (Left))
 
 # 51 "codegen.fs"
-
 let e_bin_prio_seq : (Prims.int * fixity) = (100, Infix (Left))
 
 # 52 "codegen.fs"
-
 let e_app_prio : (Prims.int * fixity) = (10000, Infix (Left))
 
 # 54 "codegen.fs"
-
 let min_op_prec : (Prims.int * fixity) = ((- (1)), Infix (NonAssoc))
 
 # 55 "codegen.fs"
-
 let max_op_prec : (Prims.int * fixity) = (FStar_Util.max_int, Infix (NonAssoc))
 
 # 61 "codegen.fs"
-
 let rec in_ns = (fun x -> (match (x) with
 | ([], _77_8) -> begin
 true
@@ -203,7 +170,6 @@ false
 end))
 
 # 67 "codegen.fs"
-
 let path_of_ns : FStar_Extraction_ML_Syntax.mlsymbol  ->  Prims.string Prims.list  ->  Prims.string Prims.list = (fun currentModule ns -> (let ns' = (FStar_Extraction_ML_Util.flatten_ns ns)
 in if (ns' = currentModule) then begin
 []
@@ -237,7 +203,6 @@ end))))
 end))
 
 # 85 "codegen.fs"
-
 let mlpath_of_mlpath : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mlpath  ->  FStar_Extraction_ML_Syntax.mlpath = (fun currentModule x -> (match ((FStar_Extraction_ML_Syntax.string_of_mlpath x)) with
 | "Prims.Some" -> begin
 ([], "Some")
@@ -255,7 +220,6 @@ end))
 end))
 
 # 93 "codegen.fs"
-
 let ptsym_of_symbol : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mlsymbol = (fun s -> if ((let _179_39 = (FStar_String.get s 0)
 in (FStar_Char.lowercase _179_39)) <> (FStar_String.get s 0)) then begin
 (Prims.strcat "l__" s)
@@ -264,7 +228,6 @@ s
 end)
 
 # 98 "codegen.fs"
-
 let ptsym : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mlpath  ->  FStar_Extraction_ML_Syntax.mlsymbol = (fun currentModule mlp -> if (FStar_List.isEmpty (Prims.fst mlp)) then begin
 (ptsym_of_symbol (Prims.snd mlp))
 end else begin
@@ -279,7 +242,6 @@ end))
 end)
 
 # 106 "codegen.fs"
-
 let ptctor : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mlpath  ->  FStar_Extraction_ML_Syntax.mlsymbol = (fun currentModule mlp -> (let _77_55 = (mlpath_of_mlpath currentModule mlp)
 in (match (_77_55) with
 | (p, s) -> begin
@@ -293,27 +255,21 @@ in (FStar_String.concat "." (FStar_List.append p ((s)::[]))))
 end)))
 
 # 112 "codegen.fs"
-
 let infix_prim_ops : (Prims.string * (Prims.int * fixity) * Prims.string) Prims.list = (("op_Addition", e_bin_prio_op1, "+"))::(("op_Subtraction", e_bin_prio_op1, "-"))::(("op_Multiply", e_bin_prio_op1, "*"))::(("op_Division", e_bin_prio_op1, "/"))::(("op_Equality", e_bin_prio_eq, "="))::(("op_ColonEquals", e_bin_prio_eq, ":="))::(("op_disEquality", e_bin_prio_eq, "<>"))::(("op_AmpAmp", e_bin_prio_and, "&&"))::(("op_BarBar", e_bin_prio_or, "||"))::(("op_LessThanOrEqual", e_bin_prio_order, "<="))::(("op_GreaterThanOrEqual", e_bin_prio_order, ">="))::(("op_LessThan", e_bin_prio_order, "<"))::(("op_GreaterThan", e_bin_prio_order, ">"))::(("op_Modulus", e_bin_prio_order, "%"))::[]
 
 # 130 "codegen.fs"
-
 let prim_uni_ops : (Prims.string * Prims.string) Prims.list = (("op_Negation", "not"))::(("op_Minus", "-"))::(("op_Bang", "Support.ST.read"))::[]
 
 # 137 "codegen.fs"
-
 let prim_types = []
 
 # 140 "codegen.fs"
-
 let prim_constructors : (Prims.string * Prims.string) Prims.list = (("Some", "Some"))::(("None", "None"))::(("Nil", "[]"))::(("Cons", "::"))::[]
 
 # 148 "codegen.fs"
-
 let is_prims_ns : FStar_Extraction_ML_Syntax.mlsymbol Prims.list  ->  Prims.bool = (fun ns -> (ns = ("Prims")::[]))
 
 # 152 "codegen.fs"
-
 let as_bin_op : FStar_Extraction_ML_Syntax.mlpath  ->  (Prims.string * (Prims.int * fixity) * Prims.string) Prims.option = (fun _77_60 -> (match (_77_60) with
 | (ns, x) -> begin
 if (is_prims_ns ns) then begin
@@ -327,11 +283,9 @@ end
 end))
 
 # 159 "codegen.fs"
-
 let is_bin_op : FStar_Extraction_ML_Syntax.mlpath  ->  Prims.bool = (fun p -> ((as_bin_op p) <> None))
 
 # 163 "codegen.fs"
-
 let as_uni_op : FStar_Extraction_ML_Syntax.mlpath  ->  (Prims.string * Prims.string) Prims.option = (fun _77_70 -> (match (_77_70) with
 | (ns, x) -> begin
 if (is_prims_ns ns) then begin
@@ -345,11 +299,9 @@ end
 end))
 
 # 170 "codegen.fs"
-
 let is_uni_op : FStar_Extraction_ML_Syntax.mlpath  ->  Prims.bool = (fun p -> ((as_uni_op p) <> None))
 
 # 174 "codegen.fs"
-
 let as_standard_type = (fun _77_78 -> (match (_77_78) with
 | (ns, x) -> begin
 if (is_prims_ns ns) then begin
@@ -363,11 +315,9 @@ end
 end))
 
 # 181 "codegen.fs"
-
 let is_standard_type : FStar_Extraction_ML_Syntax.mlpath  ->  Prims.bool = (fun p -> ((as_standard_type p) <> None))
 
 # 185 "codegen.fs"
-
 let as_standard_constructor : FStar_Extraction_ML_Syntax.mlpath  ->  (Prims.string * Prims.string) Prims.option = (fun _77_86 -> (match (_77_86) with
 | (ns, x) -> begin
 if (is_prims_ns ns) then begin
@@ -381,11 +331,9 @@ end
 end))
 
 # 192 "codegen.fs"
-
 let is_standard_constructor : FStar_Extraction_ML_Syntax.mlpath  ->  Prims.bool = (fun p -> ((as_standard_constructor p) <> None))
 
 # 196 "codegen.fs"
-
 let maybe_paren : ((Prims.int * fixity) * assoc)  ->  (Prims.int * fixity)  ->  FSharp_Format.doc  ->  FSharp_Format.doc = (fun _77_94 inner doc -> (match (_77_94) with
 | (outer, side) -> begin
 (let noparens = (fun _inner _outer side -> (let _77_103 = _inner
@@ -429,7 +377,6 @@ end)
 end))
 
 # 215 "codegen.fs"
-
 let ocaml_u8_codepoint : Prims.byte  ->  Prims.string = (fun i -> if ((FStar_Util.int_of_byte i) = 0) then begin
 "\\x00"
 end else begin
@@ -437,7 +384,6 @@ end else begin
 end)
 
 # 219 "codegen.fs"
-
 let encode_char : Prims.char  ->  Prims.string = (fun c -> if ((FStar_Util.int_of_char c) > 127) then begin
 (let bytes = (FStar_Util.string_of_char c)
 in (let bytes = (FStar_Util.unicode_of_string bytes)
@@ -483,7 +429,6 @@ end)
 end)
 
 # 240 "codegen.fs"
-
 let string_of_mlconstant : FStar_Extraction_ML_Syntax.mlconstant  ->  Prims.string = (fun sctt -> (match (sctt) with
 | FStar_Extraction_ML_Syntax.MLC_Unit -> begin
 "()"
@@ -528,7 +473,6 @@ in (Prims.strcat (Prims.strcat "\"" chars) "\""))
 end))
 
 # 264 "codegen.fs"
-
 let rec doc_of_mltype' : FStar_Extraction_ML_Syntax.mlsymbol  ->  level  ->  FStar_Extraction_ML_Syntax.mlty  ->  FSharp_Format.doc = (fun currentModule outer ty -> (match (ty) with
 | FStar_Extraction_ML_Syntax.MLTY_Var (x) -> begin
 (let escape_tyvar = (fun s -> if (FStar_Util.starts_with s "\'_") then begin
@@ -587,7 +531,6 @@ end))
 and doc_of_mltype : FStar_Extraction_ML_Syntax.mlsymbol  ->  level  ->  FStar_Extraction_ML_Syntax.mlty  ->  FSharp_Format.doc = (fun currentModule outer ty -> (doc_of_mltype' currentModule outer (FStar_Extraction_ML_Util.resugar_mlty ty)))
 
 # 312 "codegen.fs"
-
 let rec doc_of_expr : FStar_Extraction_ML_Syntax.mlsymbol  ->  level  ->  FStar_Extraction_ML_Syntax.mlexpr  ->  FSharp_Format.doc = (fun currentModule outer e -> (match (e.FStar_Extraction_ML_Syntax.expr) with
 | FStar_Extraction_ML_Syntax.MLE_Coerce (e, t, t') -> begin
 (let doc = (doc_of_expr currentModule (min_op_prec, NonAssoc) e)
@@ -972,7 +915,6 @@ in (FSharp_Format.combine FSharp_Format.hardline lets)))))
 end))
 
 # 567 "codegen.fs"
-
 let doc_of_mltydecl : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mltydecl  ->  FSharp_Format.doc = (fun currentModule decls -> (let for1 = (fun _77_525 -> (match (_77_525) with
 | (x, tparams, body) -> begin
 (let tparams = (match (tparams) with
@@ -1047,7 +989,6 @@ end
 in doc))))
 
 # 622 "codegen.fs"
-
 let rec doc_of_sig1 : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mlsig1  ->  FSharp_Format.doc = (fun currentModule s -> (match (s) with
 | FStar_Extraction_ML_Syntax.MLS_Mod (x, subsig) -> begin
 (let _179_315 = (let _179_314 = (FSharp_Format.reduce1 (((FSharp_Format.text "module"))::((FSharp_Format.text x))::((FSharp_Format.text "="))::[]))
@@ -1079,7 +1020,6 @@ in (let docs = (FStar_List.map (fun x -> (FSharp_Format.reduce ((x)::(FSharp_For
 in (FSharp_Format.reduce docs))))
 
 # 652 "codegen.fs"
-
 let doc_of_loc : Prims.int  ->  Prims.string  ->  FSharp_Format.doc = (fun lineno file -> if (FStar_Extraction_ML_Util.codegen_fsharp ()) then begin
 FSharp_Format.empty
 end else begin
@@ -1088,7 +1028,6 @@ in (FSharp_Format.reduce1 (((FSharp_Format.text "#"))::((FSharp_Format.num linen
 end)
 
 # 660 "codegen.fs"
-
 let doc_of_mod1 : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mlmodule1  ->  FSharp_Format.doc = (fun currentModule m -> (match (m) with
 | FStar_Extraction_ML_Syntax.MLM_Exn (x, []) -> begin
 (FSharp_Format.reduce1 (((FSharp_Format.text "exception"))::((FSharp_Format.text x))::[]))
@@ -1118,21 +1057,25 @@ end
 end))
 
 # 686 "codegen.fs"
+let doc_of_mod : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mlmodule  ->  FSharp_Format.doc = (fun currentModule m -> (let docs = (FStar_List.map (fun x -> (let doc = (doc_of_mod1 currentModule x)
+in (doc)::((match (x) with
+| FStar_Extraction_ML_Syntax.MLM_Loc (_77_630) -> begin
+FSharp_Format.empty
+end
+| _77_633 -> begin
+FSharp_Format.hardline
+end))::(FSharp_Format.hardline)::[])) m)
+in (FSharp_Format.reduce (FStar_List.flatten docs))))
 
-let doc_of_mod : FStar_Extraction_ML_Syntax.mlsymbol  ->  FStar_Extraction_ML_Syntax.mlmodule  ->  FSharp_Format.doc = (fun currentModule m -> (let docs = (FStar_List.map (doc_of_mod1 currentModule) m)
-in (let docs = (FStar_List.map (fun x -> (FSharp_Format.reduce ((x)::(FSharp_Format.hardline)::(FSharp_Format.hardline)::[]))) docs)
-in (FSharp_Format.reduce docs))))
-
-# 692 "codegen.fs"
-
-let rec doc_of_mllib_r : FStar_Extraction_ML_Syntax.mllib  ->  (Prims.string * FSharp_Format.doc) Prims.list = (fun _77_631 -> (match (_77_631) with
+# 693 "codegen.fs"
+let rec doc_of_mllib_r : FStar_Extraction_ML_Syntax.mllib  ->  (Prims.string * FSharp_Format.doc) Prims.list = (fun _77_636 -> (match (_77_636) with
 | FStar_Extraction_ML_Syntax.MLLib (mllib) -> begin
-(let rec for1_sig = (fun _77_638 -> (match (_77_638) with
+(let rec for1_sig = (fun _77_643 -> (match (_77_643) with
 | (x, sigmod, FStar_Extraction_ML_Syntax.MLLib (sub)) -> begin
 (let head = (FSharp_Format.reduce1 (((FSharp_Format.text "module"))::((FSharp_Format.text x))::((FSharp_Format.text ":"))::((FSharp_Format.text "sig"))::[]))
 in (let tail = (FSharp_Format.reduce1 (((FSharp_Format.text "end"))::[]))
-in (let doc = (FStar_Option.map (fun _77_644 -> (match (_77_644) with
-| (s, _77_643) -> begin
+in (let doc = (FStar_Option.map (fun _77_649 -> (match (_77_649) with
+| (s, _77_648) -> begin
 (doc_of_sig x s)
 end)) sigmod)
 in (let sub = (FStar_List.map for1_sig sub)
@@ -1149,7 +1092,7 @@ end))::_179_348)
 in ((FSharp_Format.cat head FSharp_Format.hardline))::_179_349)
 in (FSharp_Format.reduce _179_350)))))))
 end))
-and for1_mod = (fun istop _77_657 -> (match (_77_657) with
+and for1_mod = (fun istop _77_662 -> (match (_77_662) with
 | (x, sigmod, FStar_Extraction_ML_Syntax.MLLib (sub)) -> begin
 (let head = (let _179_353 = if (FStar_Extraction_ML_Util.codegen_fsharp ()) then begin
 ((FSharp_Format.text "module"))::((FSharp_Format.text x))::[]
@@ -1166,8 +1109,8 @@ in (let tail = if (not (istop)) then begin
 end else begin
 (FSharp_Format.reduce1 [])
 end
-in (let doc = (FStar_Option.map (fun _77_663 -> (match (_77_663) with
-| (_77_661, m) -> begin
+in (let doc = (FStar_Option.map (fun _77_668 -> (match (_77_668) with
+| (_77_666, m) -> begin
 (doc_of_mod x m)
 end)) sigmod)
 in (let sub = (FStar_List.map (for1_mod false) sub)
@@ -1193,7 +1136,7 @@ in (head)::_179_361)
 in (FStar_List.append prefix _179_362))
 in (FStar_All.pipe_left FSharp_Format.reduce _179_363))))))))
 end))
-in (let docs = (FStar_List.map (fun _77_675 -> (match (_77_675) with
+in (let docs = (FStar_List.map (fun _77_680 -> (match (_77_680) with
 | (x, s, m) -> begin
 (let _179_365 = (for1_mod true (x, s, m))
 in (x, _179_365))
@@ -1201,18 +1144,15 @@ end)) mllib)
 in docs))
 end))
 
-# 740 "codegen.fs"
-
+# 741 "codegen.fs"
 let doc_of_mllib : FStar_Extraction_ML_Syntax.mllib  ->  (Prims.string * FSharp_Format.doc) Prims.list = (fun mllib -> (doc_of_mllib_r mllib))
 
-# 744 "codegen.fs"
-
+# 745 "codegen.fs"
 let string_of_mlexpr : FStar_Extraction_ML_Env.env  ->  FStar_Extraction_ML_Syntax.mlexpr  ->  Prims.string = (fun env e -> (let doc = (let _179_372 = (FStar_Extraction_ML_Util.flatten_mlpath env.FStar_Extraction_ML_Env.currentModule)
 in (doc_of_expr _179_372 (min_op_prec, NonAssoc) e))
 in (FSharp_Format.pretty 0 doc)))
 
-# 748 "codegen.fs"
-
+# 749 "codegen.fs"
 let string_of_mlty : FStar_Extraction_ML_Env.env  ->  FStar_Extraction_ML_Syntax.mlty  ->  Prims.string = (fun env e -> (let doc = (let _179_377 = (FStar_Extraction_ML_Util.flatten_mlpath env.FStar_Extraction_ML_Env.currentModule)
 in (doc_of_mltype _179_377 (min_op_prec, NonAssoc) e))
 in (FSharp_Format.pretty 0 doc)))
