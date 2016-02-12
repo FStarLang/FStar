@@ -9,7 +9,7 @@ ALL_FST_FILES=
 for file in $1; do
     grep -q '^module FStar.' $file
     if [ $? -eq 0 ]; then #it's a FStar.*.fst
-        full_name=`grep '^module FStar.' $file | sed 's/module \([[:alnum:]\.]\+\)/\1/'`
+        full_name=`grep '^module FStar.' $file | cut -c 8- | tr -d '\r'`
         noext_file=`echo $file | sed 's/\.fs$//g'`
         echo "[make_all_boot_fsts]: full_name=$full_name, noext_file=$noext_file"
         echo $file | grep -q '.*fs$'
