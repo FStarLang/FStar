@@ -17,7 +17,7 @@ bug194: bug194.fst
 	../../bin/fstar.exe --explicit_deps ../../lib/FStar.Classical.fst ../../lib/FStar.FunctionalExtensionality.fst ../../lib/FStar.Constructive.fst ../metatheory/stlc_strong_db_parsubst.fst bug194.fst
 
 bug244: bug244.fst
-	../../bin/fstar.exe  --explicit_deps ../../lib/FStar.String.fst bug244.fst
+	../../bin/fstar.exe  --explicit_deps ../../lib/FStar.String.fsti bug244.fst
 
 insertionsortcmp: insertionsortcmp.fst
 	../../bin/fstar.exe insertionsortcmp.fst

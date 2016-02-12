@@ -20,7 +20,7 @@ all: .all.crypto.ver merkle_tree mac padding mac3 rpc cnt-protocol acls-cap stat
 
 STDLIB_ADMITS=
 STDLIB=$(addprefix $(FSTAR_HOME)/lib/, FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fst \
-       FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.String.fst FStar.List.fst FStar.Seq.fst FStar.SeqProperties.fst) \
+       FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.String.fsti FStar.List.fst FStar.Seq.fst FStar.SeqProperties.fst) \
        $(STDLIB_ADMITS)
 
 .all.crypto.ver: $(VERFILES)
@@ -33,7 +33,7 @@ mac: sha1.fst mac.fst
 	  FStar.FunctionalExtensionality.fst FStar.Classical.fst \
 	  FStar.Set.fst \
 	  FStar.Heap.fst FStar.ST.fst FStar.All.fst \
-	  FStar.String.fst FStar.List.fst \
+	  FStar.String.fsti FStar.List.fst \
 	  FStar.Seq.fst FStar.SeqProperties.fst \
 	  FStar.IO.fsti \
 	  $(CONTRIB)/Platform/fst/Platform.Bytes.fst \
@@ -46,12 +46,12 @@ sig: sig.fst
 padding: Padding.Pad.fst Padding.BMAC.fst Padding.MAC2.fst Padding.TMAC.fst
 	$(FSTAR) --explicit_deps  --z3timeout 10 --verify_module Pad  --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
 	    FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst \
-            FStar.String.fst FStar.List.fst FStar.Classical.fst \
+            FStar.String.fsti FStar.List.fst FStar.Classical.fst \
             FStar.Seq.fst FStar.SeqProperties.fst $^
 
 mac3: mac3.fst
 	$(FSTAR) --explicit_deps --z3timeout 10  --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
-            FStar.FunctionalExtensionality.fst  FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.String.fst FStar.List.fst \
+            FStar.FunctionalExtensionality.fst  FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.String.fsti FStar.List.fst \
 	    FStar.Classical.fst FStar.Seq.fst FStar.SeqProperties.fst $^
 
 merkle_tree:
@@ -64,7 +64,7 @@ acls-cap: sha1.fst mac.fst ../security/acls2.fst acls-cap.fst
 	FStar.FunctionalExtensionality.fst FStar.Classical.fst \
 	FStar.Set.fst \
 	FStar.Heap.fst FStar.ST.fst FStar.All.fst \
-	FStar.String.fst FStar.List.fst \
+	FStar.String.fsti FStar.List.fst \
 	FStar.Seq.fst FStar.SeqProperties.fst ) \
 	$(addprefix $(FSTAR_HOME)/contrib/,  Platform/fst/Platform.Bytes.fst CoreCrypto/fst/CoreCrypto.fst) \
   $^
@@ -75,7 +75,7 @@ rpc: formatting.fst sha1.fst mac.fst rpc.fst
           $(addprefix $(FSTAR_HOME)/lib/, FStar.FunctionalExtensionality.fst FStar.Classical.fst \
 					FStar.Set.fst \
 					FStar.Heap.fst FStar.ST.fst FStar.All.fst \
-					FStar.String.fst FStar.IO.fsti FStar.List.fst \
+					FStar.String.fsti FStar.IO.fsti FStar.List.fst \
 					FStar.Seq.fst FStar.SeqProperties.fst )  \
 					$(addprefix $(FSTAR_HOME)/contrib/,  Platform/fst/Platform.Bytes.fst CoreCrypto/fst/CoreCrypto.fst) \
 					sha1.fst mac.fst formatting.fst rpc.fst
@@ -95,7 +95,7 @@ RPC.ml: sha1.fst mac.fst formatting.fst rpc.fst
           $(addprefix $(FSTAR_HOME)/lib/, FStar.FunctionalExtensionality.fst FStar.Classical.fst \
 					FStar.Set.fst \
 					FStar.Heap.fst FStar.ST.fst FStar.All.fst \
-					FStar.String.fst FStar.IO.fsti FStar.List.fst \
+					FStar.String.fsti FStar.IO.fsti FStar.List.fst \
 					FStar.Seq.fst FStar.SeqProperties.fst ) \
 					$(addprefix $(FSTAR_HOME)/contrib/,  Platform/fst/Platform.Bytes.fst CoreCrypto/fst/CoreCrypto.fst) \
 					sha1.fst mac.fst formatting.fst rpc.fst  \
@@ -121,7 +121,7 @@ cnt-protocol: cnt-format.fst mac.fst sha1.fst cnt-protocol.fst
           $(addprefix $(FSTAR_HOME)/lib/, FStar.FunctionalExtensionality.fst FStar.Classical.fst \
 					FStar.Set.fst \
 					FStar.Heap.fst FStar.ST.fst FStar.All.fst \
-					FStar.String.fst FStar.List.fst \
+					FStar.String.fsti FStar.List.fst \
 					FStar.Seq.fst FStar.SeqProperties.fst FStar.IO.fsti ) \
 	  $(FSTAR_HOME)/contrib/Platform/fst/Platform.Bytes.fst \
 	  $(FSTAR_HOME)/contrib/CoreCrypto/fst/CoreCrypto.fst \
@@ -133,7 +133,7 @@ CntProtocol.ml: cnt-format.fst mac.fst sha1.fst cnt-protocol.fst
           $(addprefix $(FSTAR_HOME)/lib/, FStar.FunctionalExtensionality.fst FStar.Classical.fst \
 					FStar.Set.fst \
 					FStar.Heap.fst FStar.ST.fst FStar.All.fst \
-					FStar.String.fst FStar.List.fst \
+					FStar.String.fsti FStar.List.fst \
 					FStar.Seq.fst FStar.SeqProperties.fst FStar.IO.fsti ) \
 	  $(FSTAR_HOME)/contrib/Platform/fst/Platform.Bytes.fst \
 	  $(FSTAR_HOME)/contrib/CoreCrypto/fst/CoreCrypto.fst \

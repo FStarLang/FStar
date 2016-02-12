@@ -4,7 +4,7 @@ FSTAR = ../bin/fstar.exe $(OTHERFLAGS)
 all:
 	$(FSTAR) FStar.SeqProperties.fst FStar.Array.fst
 	$(FSTAR) FStar.Axiomatic.Array.fst
-	$(FSTAR) FStar.Char.fst
+	$(FSTAR) FStar.Char.fsti
 	$(FSTAR) FStar.Classical.fst
 	$(FSTAR) FStar.Constructive.fst
 	$(FSTAR) FStar.Crypto.fst
@@ -21,7 +21,7 @@ all:
 	$(FSTAR) FStar.List.Tot.fst
 	$(FSTAR) FStar.Map.fst
 	$(FSTAR) FStar.MRef.fst
-	$(FSTAR) FStar.Option.fst
+	$(FSTAR) FStar.Option.fsti
 	# $(FSTAR) FStar.OrdSet.fst
 	# $(FSTAR) FStar.OrdMap.fst
 #	$(FSTAR) FStar.OrdMapProps.fst -- problem filed as #359

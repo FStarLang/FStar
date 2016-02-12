@@ -34,7 +34,7 @@ crypto:
 	$(FSTAR) --explicit_deps \
 	       --__temp_no_proj PSemantics --verify_module Crypto \
 	FStar.Classical.fst FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst FStar.Seq.fst FStar.SeqProperties.fst FStar.Ghost.fst FStar.List.Tot.fst ordset.fsti ordmap.fsti FStar.List.fst \
-	FStar.IO.fsti FStar.String.fst prins.fst $(CONTRIB)/Platform/fst/Platform.Bytes.fst ast.fst ffibridge.fsi sem.fst psem.fst runtime.fsi print.fst $(CONTRIB)/CoreCrypto/fst/CoreCrypto.fst ../crypto/sha1.fst
+	FStar.IO.fsti FStar.String.fsti prins.fst $(CONTRIB)/Platform/fst/Platform.Bytes.fst ast.fst ffibridge.fsi sem.fst psem.fst runtime.fsi print.fst $(CONTRIB)/CoreCrypto/fst/CoreCrypto.fst ../crypto/sha1.fst
 
 secserver:
 	export CONTRIB=../../contrib

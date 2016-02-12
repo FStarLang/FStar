@@ -16,7 +16,7 @@
 module FStar.Option
 
 
-assume val isNone: option 'a -> bool
-assume val isSome: option 'a -> bool
-assume val map: ('a -> 'b) -> option 'a -> option 'b
-assume val get: option 'a -> 'a 
+val isNone: option 'a -> bool
+val isSome: option 'a -> bool
+val map: ('a -> 'b) -> option 'a -> option 'b
+val get: option 'a -> 'a 
