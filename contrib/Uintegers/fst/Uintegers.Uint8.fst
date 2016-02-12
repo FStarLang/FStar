@@ -1,4 +1,4 @@
-module Uint8
+module Uintegers.Uint8
 
 
 assume val zero : uint8
