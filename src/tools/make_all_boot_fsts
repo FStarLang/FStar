@@ -1,0 +1,30 @@
+#!/bin/bash
+
+BOOT_FSTS=boot_fsts
+rm -rf $BOOT_FSTS
+mkdir -p $BOOT_FSTS
+
+ALL_FST_FILES=
+
+for file in $1; do
+    grep -q '^module FStar.' $file
+    if [ $? -eq 0 ]; then #it's a FStar.*.fst
+	full_name=`grep '^module FStar.' $file | sed 's/module //g'`
+	noext_file=`echo $file | sed 's/\.fs$//g'`
+	#echo "No ext file name = $noext_file"
+	echo $file | grep -q '.*fs$'
+	if [ $? -eq 0 ]; then
+	    ./tools/mkfst $noext_file
+	    if [ $? != 0 ]; then
+		exit 1
+	    fi;
+	    mv $noext_file.fst $BOOT_FSTS/$full_name.fst
+	    ALL_FST_FILES="$ALL_FST_FILES $full_name.fst"
+	fi
+    else
+	echo "$file does not contain an FStar module";
+	exit 1
+    fi
+done
+echo $ALL_FST_FILES
+    
