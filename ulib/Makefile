@@ -45,10 +45,9 @@ UFSTAR=$(FSTAR) --universes
 
 working:
 	$(UFSTAR) FStar.List.Tot.fst FStar.ListProperties.fst $(STDLIB) FStar.List.fst
-	$(UFSTAR) FStar.Seq.fst
+	$(UFSTAR) FStar.Seq.fst FStar.Classical.fst FStar.SeqProperties.fst 
 
 all_univs:
-	$(UFSTAR) FStar.List.Tot.fst FStar.ListProperties.fst $(STDLIB) FStar.List.fst
 	$(UFSTAR) $(STDLIB) FStar.Seq.fst FStar.Classical.fst FStar.SeqProperties.fst FStar.Array.fst
 	$(UFSTAR) $(STDLIB) array.fst FStar.Char.fst FStar.Option.fst FStar.Bytes.fst FStar.Crypto.fst FStar.Tcp.fst
 	$(UFSTAR) FStar.Constructive.fst 
