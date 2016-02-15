@@ -28,7 +28,7 @@ else
   exit 0
 fi;
 
-MARKER_LINE=$(grep -Enr "^\/\/ ?VALS_HACK_HERE" $THE_FS | cut -f1 -d:)
+MARKER_LINE=$(grep -En "^\/\/ ?VALS_HACK_HERE" $THE_FS | cut -f1 -d:)
 if [[ $MARKER_LINE != "" ]]; then
   echo "Found marker for $THE_FS at line $MARKER_LINE"
 else
