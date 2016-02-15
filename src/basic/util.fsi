@@ -64,19 +64,30 @@ val smap_copy: smap<'value> -> smap<'value>
 //val weakmap_lookup: weakmap<'a> -> int -> option<list<'a>>
 
 val format: string -> list<string> -> string
-
 val format1: string -> string -> string
 val format2: string -> string -> string -> string
 val format3: string -> string -> string -> string -> string
 val format4: string -> string -> string -> string -> string -> string
 val format5: string -> string -> string -> string -> string -> string -> string
+
+val print: string -> list<string> -> unit
 val print1: string -> string -> unit
 val print2: string -> string -> string -> unit
 val print3: string -> string -> string -> string -> unit
 val print4: string -> string -> string -> string -> string -> unit
 val print5: string -> string -> string -> string -> string -> string -> unit
 val print6: string -> string -> string -> string -> string -> string -> string -> unit
-val print: string -> list<string> -> unit
+
+val print_error: string -> unit
+val print1_error: string -> string -> unit
+val print2_error: string -> string -> string -> unit
+val print3_error: string -> string -> string -> string -> unit
+
+val print_warning: string -> unit
+val print1_warning: string -> string -> unit
+val print2_warning: string -> string -> string -> unit
+val print3_warning: string -> string -> string -> string -> unit
+
 
 (* Clients of this module should *NOT* rely on this representation *)
 type out_channel = TextWriter
