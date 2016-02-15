@@ -36,8 +36,8 @@ let cleanup () = Util.kill_all ()
 let has_prims_cache (l: list<string>) :bool = List.mem "Prims.cache" l
 
 open FStar.TypeChecker.Env
-let u_parse env fn = 
-    try 
+let u_parse env fn =
+    try
         match Parser.ParseIt.parse (Inl fn) with
             | Inl (Inl ast) ->
                 Parser.ToSyntax.desugar_file env ast
@@ -49,20 +49,20 @@ let u_parse env fn =
             | Inr (msg, r) ->
                 Util.print_string <| Print.format_error r msg;
                 exit 1
-    with e when (!Options.trace_error 
-                    && FStar.Syntax.Util.handleable e 
-                    && (FStar.Syntax.Util.handle_err false () e; false)) -> 
-                    failwith "Impossible" 
+    with e when (!Options.trace_error
+                    && FStar.Syntax.Util.handleable e
+                    && (FStar.Syntax.Util.handle_err false () e; false)) ->
+                    failwith "Impossible"
 
         | e when (not !Options.trace_error && FStar.Syntax.Util.handleable e) ->
-        FStar.Syntax.Util.handle_err false () e; 
-        exit 1 
+        FStar.Syntax.Util.handle_err false () e;
+        exit 1
 
 let u_tc_prims () =
     let solver = if !Options.verify then SMTEncoding.Encode.solver else SMTEncoding.Encode.dummy in
     let env = FStar.TypeChecker.Env.initial_env
-         FStar.TypeChecker.Tc.type_of 
-         solver 
+         FStar.TypeChecker.Tc.type_of
+         solver
          Const.prims_lid in
     env.solver.init env;
     let p = Options.prims () in
@@ -71,22 +71,22 @@ let u_tc_prims () =
     prims_mod, dsenv, env
 
 
-let test_universes filenames = 
+let test_universes filenames =
     try
         let prims_mod, dsenv, env = u_tc_prims() in
         let dsenv, mods, env = List.fold_left (fun (dsenv, fmods, env) fn ->
-           Util.print1 "Parsing file %s\n" fn; 
+           Util.print1 "Parsing file %s\n" fn;
            let dsenv, mods = u_parse dsenv fn in
            let _, env = TypeChecker.Tc.check_module env (List.hd mods) in
            dsenv, mods@fmods, env) (dsenv, [], env) filenames in
         env.solver.finish();
         dsenv, mods, env
-    with 
-        | Syntax.Syntax.Error(msg, r) when not (!Options.trace_error) -> 
+    with
+        | Syntax.Syntax.Error(msg, r) when not (!Options.trace_error) ->
           Util.print_string (Util.format2 "Error : %s\n%s\n" (Range.string_of_range r) msg);
           exit 1
-       
-open FStar.Tc.Env 
+
+open FStar.Tc.Env
 let tc_prims () =
     let solver = if !Options.verify then ToSMT.Encode.solver else ToSMT.Encode.dummy in
     let env = Tc.Env.initial_env solver Const.prims_lid in
@@ -127,7 +127,7 @@ let tc_one_file dsenv env fn =
 let tc_one_fragment curmod dsenv env frag =
     try
         match Parser.Driver.parse_fragment curmod dsenv frag with
-            | Parser.Driver.Empty -> 
+            | Parser.Driver.Empty ->
               Some (curmod, dsenv, env)
 
             | Parser.Driver.Modul (dsenv, modul) ->
