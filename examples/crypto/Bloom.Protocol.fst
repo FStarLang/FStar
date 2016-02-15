@@ -1,6 +1,6 @@
 (* Copyright (c) Microsoft Corporation.  All rights reserved.  *)
 
-module BloomProtocol
+module Bloom.Protocol
 
 open FStar.All
 open FStar.String

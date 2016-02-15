@@ -1,4 +1,4 @@
-module Format
+module Bloom.Format
 
 open FStar.Seq
 open FStar.SeqProperties

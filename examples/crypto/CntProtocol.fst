@@ -118,6 +118,7 @@ logic type Signal : uint32 -> uint16 -> Type
 opaque logic type req (msg:message) =
     (exists s c.   msg = CntFormat.signal s c /\ Signal s c)
 
+val k: k:key{key_prop k == req}
 let k = keygen req
 
 val client : uint32 -> ST (option string)

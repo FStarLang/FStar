@@ -1,6 +1,7 @@
 (* to be used with mac.fst and acls2.fst *)
 
 module Cap (* capabilities *)
+
 open FStar.Seq
 open FStar.SeqProperties
 open ACLs2

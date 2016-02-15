@@ -1,4 +1,6 @@
 module Padding.TMAC
+
+open Padding
 open Padding.Pad
 
 let keysize = BMAC.keysize
