@@ -222,7 +222,7 @@ let finished_message fmods =
          fmods |> List.iter (fun m ->
             let tag = if m.is_interface then "i'face" else "module" in
             if Options.should_print_message m.name.str
-            then Util.print_error (Util.format3 "%s %s: %s\n" msg tag (Syntax.text_of_lid m.name)));
+            then Util.print_string (Util.format3 "%s %s: %s\n" msg tag (Syntax.text_of_lid m.name)));
          print_string (Util.format1 "%s\n" (Util.colorize_bold "All verification conditions discharged successfully"))
     end
 
