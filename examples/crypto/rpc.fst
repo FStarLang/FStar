@@ -45,10 +45,12 @@ logic type Response : string -> string -> Type
 
 (* the meaning of MACs, as used in RPC *)
 
-opaque logic type reqresp (msg:message) =
+type reqresp (msg:message) = 
     (exists s.   msg = Formatting.request s    /\ Request s)
- \/ (exists s t. msg = Formatting.response s t /\ Response s t)
+  \/ (exists s t. msg = Formatting.response s t /\ Response s t)
 
+(* FIXME: this type annotation is a workaround for #486 *)
+val k: k:key{key_prop k == reqresp}
 let k = print_string "generating shared key...\n";
   keygen reqresp
 

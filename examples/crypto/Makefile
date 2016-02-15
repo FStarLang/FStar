@@ -71,14 +71,9 @@ acls-cap: sha1.fst mac.fst ../security/acls2.fst acls-cap.fst
 
 
 rpc: formatting.fst sha1.fst mac.fst rpc.fst
-	$(FSTAR) --explicit_deps --z3timeout 10 --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC   \
-          $(addprefix $(FSTAR_HOME)/lib/, FStar.FunctionalExtensionality.fst FStar.Classical.fst \
-					FStar.Set.fst \
-					FStar.Heap.fst FStar.ST.fst FStar.All.fst \
-					FStar.String.fsti FStar.IO.fsti FStar.List.fst \
-					FStar.Seq.fst FStar.SeqProperties.fst )  \
-					$(addprefix $(FSTAR_HOME)/contrib/,  Platform/fst/Platform.Bytes.fst CoreCrypto/fst/CoreCrypto.fst) \
-					sha1.fst mac.fst formatting.fst rpc.fst
+	$(FSTAR) --z3timeout 10 --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC   \
+		--include $(FSTAR_HOME)/contrib/Platform/fst \
+		--include $(FSTAR_HOME)/contrib/CoreCrypto/fst rpc.fst
 
 statefulEnc: statefulEnc-single.fst statefulEnc-twoLevelHeap.fst
 	$(FSTAR) --explicit_deps ../../lib/FStar.FunctionalExtensionality.fst ../../lib/FStar.Set.fst ../../lib/FStar.Heap.fst ../../lib/FStar.ST.fst ../../lib/FStar.All.fst ../../lib/FStar.Seq.fst statefulEnc-single.fst
@@ -92,14 +87,9 @@ mllibs:
 
 RPC.ml: sha1.fst mac.fst formatting.fst rpc.fst
 	$(FSTAR) --z3timeout 10 --verify_module Formatting --verify_module SHA1 --verify_module MAC --verify_module RPC   \
-          $(addprefix $(FSTAR_HOME)/lib/, FStar.FunctionalExtensionality.fst FStar.Classical.fst \
-					FStar.Set.fst \
-					FStar.Heap.fst FStar.ST.fst FStar.All.fst \
-					FStar.String.fsti FStar.IO.fsti FStar.List.fst \
-					FStar.Seq.fst FStar.SeqProperties.fst ) \
-					$(addprefix $(FSTAR_HOME)/contrib/,  Platform/fst/Platform.Bytes.fst CoreCrypto/fst/CoreCrypto.fst) \
-					sha1.fst mac.fst formatting.fst rpc.fst  \
-					--codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml --use_native_int
+		--include $(FSTAR_HOME)/contrib/Platform/fst \
+		--include $(FSTAR_HOME)/contrib/CoreCrypto/fst rpc.fst \
+		--codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml --use_native_int
 
 OCAML_INCLUDE_PATHS=$(addprefix -I , $(FSTAR_HOME)/contrib/Platform/ml $(FSTAR_HOME)/contrib/CoreCrypto/ml $(FSTAR_HOME)/lib/ml/native_int $(FSTAR_HOME)/lib/ml)
 OCAMLC=ocamlfind ocamlopt $(CC) -ccopt -L$(LIB) -package batteries -linkpkg -g -thread
