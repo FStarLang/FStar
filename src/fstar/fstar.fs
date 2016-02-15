@@ -43,7 +43,7 @@ let u_parse env fn =
                 Parser.ToSyntax.desugar_file env ast
 
             | Inl (Inr _) ->
-                Util.print1 "%s: Expected a module\n" fn;
+                Util.print1_error "%s expected a module\n" fn;
                 exit 1
 
             | Inr (msg, r) ->
@@ -83,7 +83,7 @@ let test_universes filenames =
         dsenv, mods, env
     with
         | Syntax.Syntax.Error(msg, r) when not (!Options.trace_error) ->
-          Util.print_string (Util.format2 "Error : %s\n%s\n" (Range.string_of_range r) msg);
+          Util.print_error (Util.format2 "%s\n%s\n" (Range.string_of_range r) msg);
           exit 1
 
 open FStar.Tc.Env
@@ -103,7 +103,7 @@ let report_errors nopt =
         | Some n -> n in
     if errs>0
     then begin
-        print1 "Error: %s errors were reported (see above)\n" (string_of_int errs);
+        Util.print1_error "%s errors were reported (see above)\n" (string_of_int errs);
         exit 1
     end
 
@@ -113,7 +113,7 @@ let report_universes_errors nopt =
         | Some n -> n in
     if errs>0
     then begin
-        print1 "Error: %s errors were reported (see above)\n" (string_of_int errs);
+        Util.print1_error "%s errors were reported (see above)\n" (string_of_int errs);
         exit 1
     end
 
@@ -140,7 +140,7 @@ let tc_one_fragment curmod dsenv env frag =
 
             | Parser.Driver.Decls (dsenv, decls) ->
               begin match curmod with
-                | None -> failwith "Fragment without an enclosing module"
+                | None -> Util.print_error "fragment without an enclosing module"; exit 1
                 | Some modul ->
                   let modul, env  = Tc.Tc.tc_more_partial_modul env modul decls in
                   Some (Some modul, dsenv, env)
@@ -189,8 +189,10 @@ let find_deps_if_needed files =
       let deps =
         if basename (List.hd deps) = "prims.fst" then
           List.tl deps
-        else
-          failwith "dependency analysis did not find prims.fst?!"
+        else begin
+          Util.print_error "dependency analysis did not find prims.fst?!";
+          exit 1
+        end
       in
       let admit_fsi = ref [] in
       List.iter (fun d ->
@@ -220,7 +222,7 @@ let finished_message fmods =
          fmods |> List.iter (fun m ->
             let tag = if m.is_interface then "i'face" else "module" in
             if Options.should_print_message m.name.str
-            then Util.print_string (Util.format3 "%s %s: %s\n" msg tag (Syntax.text_of_lid m.name)));
+            then Util.print_error (Util.format3 "%s %s: %s\n" msg tag (Syntax.text_of_lid m.name)));
          print_string (Util.format1 "%s\n" (Util.colorize_bold "All verification conditions discharged successfully"))
     end
 
@@ -306,7 +308,7 @@ let fill_buffer () =
 
 let interactive_mode dsenv env =
     if Option.isSome !Options.codegen
-    then (Util.print_string "Warning: Code-generation is not supported in interactive mode, ignoring the codegen flag");
+    then (Util.print_warning "code-generation is not supported in interactive mode, ignoring the codegen flag");
 
     let rec go (stack:stack) (curmod:option<modul>) dsenv env =
         begin match shift_chunk () with
@@ -316,7 +318,7 @@ let interactive_mode dsenv env =
               env.solver.refresh();
               Options.reset_options() |> ignore;
               let (curmod, dsenv, env), stack = match stack with
-                | [] -> failwith "Too many pops"
+                | [] -> Util.print_error "too many pops"; exit 1
                 | hd::tl -> hd, tl in
               go stack curmod dsenv env
 
@@ -345,7 +347,7 @@ let interactive_mode dsenv env =
                 let fail curmod dsenv_mark env_mark =
                     Tc.Errors.report_all() |> ignore;
                     Tc.Errors.num_errs := 0;
-                    Util.print1 "%s\n" fail;
+                    Util.print1_error "%s\n" fail;
                     let dsenv, env = reset_mark dsenv_mark env_mark in
                     go stack curmod dsenv env in
 
@@ -437,11 +439,11 @@ let go _ =
         let filenames =
           if !Options.explicit_deps then begin
             if List.length filenames = 0 then
-              print_endline "--explicit_deps was provided without a file list!";
+              Util.print_error "--explicit_deps was provided without a file list!\n";
             filenames
           end else begin
             if List.length filenames > 0 then
-              print_endline "ignoring the file list (no --explicit_deps)";
+              Util.print_warning "ignoring the file list (no --explicit_deps)\n";
             detect_dependencies_with_first_interactive_chunk ()
           end
         in
@@ -453,7 +455,7 @@ let go _ =
         codegen fmods env;
         finished_message fmods)
       else
-        Util.print_string "No file provided\n"
+        Util.print_error "no file provided\n"
 
 let main () =
     try
@@ -464,8 +466,8 @@ let main () =
     | e ->
         if Util.handleable e then Util.handle_err false () e;
         if !Options.trace_error
-        then Util.print2 "\nUnexpected error\n%s\n%s\n" (Util.message_of_exn e) (Util.trace_of_exn e)
+        then Util.print2_error "Unexpected error\n%s\n%s\n" (Util.message_of_exn e) (Util.trace_of_exn e)
         else if not (Util.handleable e)
-        then Util.print1 "\nUnexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e);
+        then Util.print1_error "Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e);
         cleanup ();
         exit 1
