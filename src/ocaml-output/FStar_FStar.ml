@@ -497,7 +497,7 @@ end
 in if (FStar_Options.should_print_message m.FStar_Absyn_Syntax.name.FStar_Ident.str) then begin
 (let _157_126 = (let _157_125 = (FStar_Absyn_Syntax.text_of_lid m.FStar_Absyn_Syntax.name)
 in (FStar_Util.format3 "%s %s: %s\n" msg tag _157_125))
-in (FStar_Util.print_error _157_126))
+in (FStar_Util.print_string _157_126))
 end else begin
 ()
 end))))
