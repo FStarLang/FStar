@@ -88,6 +88,14 @@ val print1_warning: string -> string -> unit
 val print2_warning: string -> string -> string -> unit
 val print3_warning: string -> string -> string -> string -> unit
 
+val stdout_isatty: unit -> option<bool>
+
+// These functions have no effect
+val colorize: string -> (string * string) -> string
+val colorize_bold: string -> string
+val colorize_red: string -> string
+val colorize_cyan: string -> string
+
 
 (* Clients of this module should *NOT* rely on this representation *)
 type out_channel = TextWriter
@@ -289,12 +297,4 @@ val spawn: (unit -> unit) -> unit
 val print_endline: string -> unit
 
 val map_option: ('a -> 'b) -> option<'a> -> option<'b>
-
-val stdout_isatty: unit -> option<bool>
-
-// These functions have no effect
-val colorize: string -> (string * string) -> string
-val colorize_bold: string -> string
-val colorize_red: string -> string
-val colorize_cyan: string -> string
 

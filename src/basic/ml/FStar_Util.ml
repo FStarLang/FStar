@@ -279,16 +279,41 @@ let print5 a b c d e f = print_string (format5 a b c d e f)
 let print6 a b c d e f g = print_string (format6 a b c d e f g)
 let printn fmt args = print_string (format fmt args)
 
-let print_error s = pr "Error: %s" s; flush stdout
+let stdout_isatty () = Some (Unix.isatty Unix.stdout)
+
+let colorize s colors =
+  match colors with
+  | (c1,c2) ->
+     match stdout_isatty () with
+     | Some true -> format3 "%s%s%s" c1 s c2
+     | _ -> s
+
+let colorize_bold s =
+  match stdout_isatty () with
+  | Some true -> format3 "%s%s%s" "\x1b[39;1m" s "\x1b[0m"
+  | _ -> s
+
+let colorize_red s =
+  match stdout_isatty () with
+  | Some true -> format3 "%s%s%s" "\x1b[31;1m" s "\x1b[0m"
+  | _ -> s
+
+let colorize_cyan s =
+  match stdout_isatty () with
+  | Some true -> format3 "%s%s%s" "\x1b[36;1m" s "\x1b[0m"
+  | _ -> s
+
+let print_error s = pr "%s" (colorize_red ("Error: " ^ s)); flush stdout
 let print1_error a b = print_error (format1 a b)
 let print2_error a b c = print_error (format2 a b c)
 let print3_error a b c d = print_error (format3 a b c d)
 
-let print_warning s = pr "Warning: %s" s; flush stdout
+let print_warning s = pr "%s" (colorize_cyan ("Warning: " ^ s)); flush stdout
 let print1_warning a b = print_warning (format1 a b)
 let print2_warning a b c = print_warning (format2 a b c)
 let print3_warning a b c d = print_warning (format3 a b c d)
-                                   
+
+
 let stderr = stderr
 let stdout = stdout
 
@@ -298,11 +323,11 @@ type ('a,'b) either =
   | Inl of 'a
   | Inr of 'b
 
-let is_left = function 
+let is_left = function
   | Inl _ -> true
   | _ -> false
 
-let is_right = function 
+let is_right = function
   | Inr _ -> true
   | _ -> false
 
@@ -620,27 +645,3 @@ let basename = Filename.basename
 let print_endline = print_endline
 
 let map_option f opt = BatOption.map f opt
-
-let stdout_isatty () = Some (Unix.isatty Unix.stdout)
-
-let colorize s colors =
-  match colors with
-  | (c1,c2) ->
-     match stdout_isatty () with
-     | Some true -> format3 "%s%s%s" c1 s c2
-     | _ -> s
-
-let colorize_bold s =
-  match stdout_isatty () with
-  | Some true -> format3 "%s%s%s" "\x1b[39;1m" s "\x1b[0m"
-  | _ -> s
-
-let colorize_red s =
-  match stdout_isatty () with
-  | Some true -> format3 "%s%s%s" "\x1b[31;1m" s "\x1b[0m"
-  | _ -> s
-
-let colorize_cyan s =
-  match stdout_isatty () with
-  | Some true -> format3 "%s%s%s" "\x1b[36;1m" s "\x1b[0m"
-  | _ -> s
