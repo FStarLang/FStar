@@ -51,7 +51,7 @@ merkle_tree: MerkleTree.fst
 	--include $(FSTAR_HOME)/contrib/CoreCrypto/fst \
 	$^
 
-acls-cap: sha1.fst mac.fst ../security/acls2.fst cap.fst
+acls-cap: sha1.fst mac.fst ../security/acls2.fst Cap.fst
 	$(FSTAR) --z3timeout 10 \
 	--verify_module ACLs2 --verify_module Cap \
 	--include $(FSTAR_HOME)/contrib/Platform/fst \
