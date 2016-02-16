@@ -1,4 +1,4 @@
-VERFILES=CCA2.RSA.fst CCA2.Plain.fst CCA2.CCA2.fst # encrypt3.fst formatting.fst rpc.fst
+VERFILES=CCA2.RSA.fst CCA2.Plain.fst CCA2.CCA2.fst
 
 LIB = ../../contrib/CoreCrypto/ml
 
@@ -16,8 +16,8 @@ else
 endif
 
 include ../Makefile.include
-all: .all.crypto.ver merkle_tree mac padding mac3 rpc CntProtocol acls-cap statefulEnc
 
+all: .all.crypto.ver merkle_tree mac mac3 rpc CntProtocol acls-cap statefulEnc
 
 .all.crypto.ver: $(VERFILES)
 	$(FSTAR) --z3timeout 20 $^
@@ -63,9 +63,9 @@ rpc: formatting.fst sha1.fst mac.fst rpc.fst
 		--include $(FSTAR_HOME)/contrib/Platform/fst \
 		--include $(FSTAR_HOME)/contrib/CoreCrypto/fst rpc.fst
 
-statefulEnc: statefulEnc-single.fst statefulEnc-twoLevelHeap.fst
-	$(FSTAR) --verify_module StatefulEncryption.SingleInstance statefulEnc-single.fst
-	$(FSTAR) --verify_module StatefulEncryption.TwoLevelHeap statefulEnc-twoLevelHeap.fst
+statefulEnc: StatefulEncryption.SingleInstance.fst StatefulEncryption.TwoLevelHeap.fst
+	$(FSTAR) --verify_module StatefulEncryption.SingleInstance StatefulEncryption.SingleInstance.fst
+	$(FSTAR) --verify_module StatefulEncryption.TwoLevelHeap StatefulEncryption.TwoLevelHeap.fst
 
 .PHONY: mllibs
 
