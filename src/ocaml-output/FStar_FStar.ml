@@ -756,7 +756,7 @@ in (
 let _78_363 = (FStar_ST.op_Colon_Equals FStar_Tc_Errors.num_errs 0)
 in (
 # 350 "FStar.FStar.fst"
-let _78_365 = (FStar_Util.print1_error "%s\n" fail)
+let _78_365 = (FStar_Util.print1 "%s\n" fail)
 in (
 # 351 "FStar.FStar.fst"
 let _78_369 = (reset_mark dsenv_mark env_mark)

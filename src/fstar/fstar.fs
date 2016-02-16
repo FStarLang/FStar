@@ -347,7 +347,7 @@ let interactive_mode dsenv env =
                 let fail curmod dsenv_mark env_mark =
                     Tc.Errors.report_all() |> ignore;
                     Tc.Errors.num_errs := 0;
-                    Util.print1_error "%s\n" fail;
+                    Util.print1 "%s\n" fail;
                     let dsenv, env = reset_mark dsenv_mark env_mark in
                     go stack curmod dsenv env in
 
