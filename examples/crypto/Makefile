@@ -17,7 +17,7 @@ endif
 
 include ../Makefile.include
 
-all: .all.crypto.ver merkle_tree mac mac3 rpc CntProtocol acls-cap statefulEnc
+all: .all.crypto.ver merkle_tree mac mac3 rpc CntProtocol padding acls-cap statefulEnc
 
 .all.crypto.ver: $(VERFILES)
 	$(FSTAR) --z3timeout 20 $^
