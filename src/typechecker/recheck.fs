@@ -27,6 +27,8 @@ open FStar.Ident
 open FStar.Const
 open FStar.TypeChecker.Env
 
+// VALS_HACK_HERE
+
 module U = FStar.Syntax.Util
 module S = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst

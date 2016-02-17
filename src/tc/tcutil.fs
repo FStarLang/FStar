@@ -28,6 +28,10 @@ open FStar.Tc.Normalize
 open FStar.Tc.Rel
 open FStar.Absyn.Syntax
 open FStar.Ident
+type lcomp_with_binder = option<Env.binding> * lcomp
+
+
+// VALS_HACK_HERE
 
 (**************************************************************************************)
 (* Calling the solver *)
@@ -176,7 +180,7 @@ let pat_as_exps allow_implicits env p
         match p.v with
            | Pat_dot_term(x, _) ->
              let t = new_tvar env ktype in
-             let e, u = Rel.new_evar p.p [] t in //TODO: why empty vars?
+             let e, u = Rel.new_evar p.p (Env.binders env) t in
              let p = {p with v=Pat_dot_term(x, e)} in
              ([], [], [], env, Inr e, p)
 
@@ -254,9 +258,11 @@ let pat_as_exps allow_implicits env p
                               then withinfo (Pat_dot_typ (a, tun)) None  (Syntax.range_of_lid fv.v), as_imp imp
                               else withinfo (Pat_tvar a) None (Syntax.range_of_lid fv.v), as_imp imp
 
-                            | Inr _, Some (Implicit _) ->
+                            | Inr _, Some (Implicit dot) ->
                               let a = Util.gen_bvar tun in
-                              withinfo (Pat_var a) None (*Inr tun*) (Syntax.range_of_lid fv.v), true
+                              if allow_implicits && dot
+                              then withinfo (Pat_dot_term (a, Util.bvar_to_exp a)) None  (Syntax.range_of_lid fv.v), true
+                              else withinfo (Pat_var a) None (*Inr tun*) (Syntax.range_of_lid fv.v), true
 
                             | _ -> raise (Error(Util.format1 "Insufficient pattern arguments (%s)" (Print.pat_to_string p), range_of_lid fv.v)))
 
@@ -275,11 +281,14 @@ let pat_as_exps allow_implicits env p
                                         | Pat_dot_typ _ -> pats'
                                         | _ -> pats in
                                     (p1, as_imp imp)::aux formals' pats'
-                                | (Inr _, Some (Implicit _)), _ when p_imp ->
+                                | (Inr _, Some (Implicit false)), _ when p_imp ->
                                     (p, true)::aux formals' pats'
-                                | (Inr _, Some (Implicit _)), _ ->
+                                | (Inr _, Some (Implicit dot)), _ ->
                                     let a = Util.gen_bvar tun in
-                                    let p = withinfo (Pat_var a) None (Syntax.range_of_lid fv.v) in
+                                    let p = 
+                                       if allow_implicits && dot
+                                       then withinfo (Pat_dot_term (a, Util.bvar_to_exp a)) None  (Syntax.range_of_lid fv.v)
+                                       else withinfo (Pat_var a) None (Syntax.range_of_lid fv.v) in
                                     (p, true)::aux formals' pats
                                 | (Inr _, imp), _ ->
                                   (p, as_imp imp)::aux formals' pats'
@@ -570,8 +579,6 @@ let extract_lb_annotation env t e = match t.n with
 (*********************************************************************************************)
 (* Utils related to monadic computations *)
 (*********************************************************************************************)
-type lcomp_with_binder = option<Env.binding> * lcomp
-
 let destruct_comp c : (typ * typ * typ) =
   let wp, wlp = match c.effect_args with
     | [(Inl wp, _); (Inl wlp, _)] -> wp, wlp
@@ -1159,17 +1166,18 @@ let generalize verify env (lecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*com
          if debug env Options.Medium then Util.print3 "(%s) Generalized %s to %s" (Range.string_of_range e.pos) (Print.lbname_to_string l) (Print.typ_to_string (Util.comp_result c));
       (l, e, c)) lecs ecs
 
-let unresolved u = match Unionfind.find u with
-    | Uvar -> true
-    | _ -> false
+let check_unresolved_implicits g = 
+    let unresolved u = match Unionfind.find u with
+        | Uvar -> true
+        | _ -> false in
+    match g.implicits |> List.tryFind (function Inl u -> false | Inr (u, _) -> unresolved u) with
+        | Some (Inr(_, r)) -> raise (Error("Unresolved implicit argument", r))
+        | _ -> ()
 
 let check_top_level env g lc : (bool * comp) =
   let discharge g =
     try_discharge_guard env g;
-    begin match g.implicits |> List.tryFind (function Inl u -> false | Inr (u, _) -> unresolved u) with
-        | Some (Inr(_, r)) -> raise (Error("Unresolved implicit argument", r))
-        | _ -> ()
-    end;
+    check_unresolved_implicits g;
     Util.is_pure_lcomp lc in
   let g = Rel.solve_deferred_constraints env g in
   if Util.is_total_lcomp lc

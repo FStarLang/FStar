@@ -1,7 +1,3 @@
-(*--build-config
-    options:;
-    other-files:FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst
- --*)
 module FStar.MRef
 open FStar.Heap
 open FStar.ST

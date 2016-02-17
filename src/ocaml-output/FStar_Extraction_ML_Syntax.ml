@@ -1,62 +1,51 @@
 
 open Prims
-# 8 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 8 "FStar.Extraction.ML.Syntax.fst"
 type mlsymbol =
 Prims.string
 
-# 9 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 9 "FStar.Extraction.ML.Syntax.fst"
 type mlident =
 (mlsymbol * Prims.int)
 
-# 10 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 10 "FStar.Extraction.ML.Syntax.fst"
 type mlpath =
 (mlsymbol Prims.list * mlsymbol)
 
-# 13 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
-let idsym : mlident  ->  mlsymbol = (fun _73_4 -> (match (_73_4) with
-| (s, _73_3) -> begin
+# 13 "FStar.Extraction.ML.Syntax.fst"
+let idsym : mlident  ->  mlsymbol = (fun _58_4 -> (match (_58_4) with
+| (s, _58_3) -> begin
 s
 end))
 
-# 16 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
-let string_of_mlpath : mlpath  ->  mlsymbol = (fun _73_7 -> (match (_73_7) with
+# 16 "FStar.Extraction.ML.Syntax.fst"
+let string_of_mlpath : mlpath  ->  mlsymbol = (fun _58_7 -> (match (_58_7) with
 | (p, s) -> begin
 (FStar_String.concat "." (FStar_List.append p ((s)::[])))
 end))
 
-# 22 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
+# 22 "FStar.Extraction.ML.Syntax.fst"
+let mlpath_of_lident : FStar_Ident.lident  ->  (Prims.string Prims.list * Prims.string) = (fun x -> (let _137_8 = (FStar_List.map (fun x -> x.FStar_Ident.idText) x.FStar_Ident.ns)
+in (_137_8, x.FStar_Ident.ident.FStar_Ident.idText)))
 
-let mlpath_of_lident : FStar_Ident.lident  ->  (Prims.string Prims.list * Prims.string) = (fun x -> (let _175_8 = (FStar_List.map (fun x -> x.FStar_Ident.idText) x.FStar_Ident.ns)
-in (_175_8, x.FStar_Ident.ident.FStar_Ident.idText)))
-
-# 25 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 25 "FStar.Extraction.ML.Syntax.fst"
 let as_mlident = (fun x -> (x.FStar_Absyn_Syntax.ppname.FStar_Ident.idText, 0))
 
-# 28 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 28 "FStar.Extraction.ML.Syntax.fst"
 type mlidents =
 mlident Prims.list
 
-# 29 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 29 "FStar.Extraction.ML.Syntax.fst"
 type mlsymbols =
 mlsymbol Prims.list
 
-# 32 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 32 "FStar.Extraction.ML.Syntax.fst"
 type e_tag =
 | E_PURE
 | E_GHOST
 | E_IMPURE
 
-# 33 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 33 "FStar.Extraction.ML.Syntax.fst"
 let is_E_PURE = (fun _discr_ -> (match (_discr_) with
 | E_PURE (_) -> begin
 true
@@ -65,8 +54,7 @@ end
 false
 end))
 
-# 34 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 34 "FStar.Extraction.ML.Syntax.fst"
 let is_E_GHOST = (fun _discr_ -> (match (_discr_) with
 | E_GHOST (_) -> begin
 true
@@ -75,8 +63,7 @@ end
 false
 end))
 
-# 35 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 35 "FStar.Extraction.ML.Syntax.fst"
 let is_E_IMPURE = (fun _discr_ -> (match (_discr_) with
 | E_IMPURE (_) -> begin
 true
@@ -85,8 +72,14 @@ end
 false
 end))
 
-# 37 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
+# 38 "FStar.Extraction.ML.Syntax.fst"
+type mlloc =
+(Prims.int * Prims.string)
 
+# 39 "FStar.Extraction.ML.Syntax.fst"
+let dummy_loc : (Prims.int * Prims.string) = (0, "")
+
+# 41 "FStar.Extraction.ML.Syntax.fst"
 type mlty =
 | MLTY_Var of mlident
 | MLTY_Fun of (mlty * e_tag * mlty)
@@ -94,8 +87,7 @@ type mlty =
 | MLTY_Tuple of mlty Prims.list
 | MLTY_Top
 
-# 38 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 42 "FStar.Extraction.ML.Syntax.fst"
 let is_MLTY_Var = (fun _discr_ -> (match (_discr_) with
 | MLTY_Var (_) -> begin
 true
@@ -104,8 +96,7 @@ end
 false
 end))
 
-# 39 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 43 "FStar.Extraction.ML.Syntax.fst"
 let is_MLTY_Fun = (fun _discr_ -> (match (_discr_) with
 | MLTY_Fun (_) -> begin
 true
@@ -114,8 +105,7 @@ end
 false
 end))
 
-# 40 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 44 "FStar.Extraction.ML.Syntax.fst"
 let is_MLTY_Named = (fun _discr_ -> (match (_discr_) with
 | MLTY_Named (_) -> begin
 true
@@ -124,8 +114,7 @@ end
 false
 end))
 
-# 41 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 45 "FStar.Extraction.ML.Syntax.fst"
 let is_MLTY_Tuple = (fun _discr_ -> (match (_discr_) with
 | MLTY_Tuple (_) -> begin
 true
@@ -134,8 +123,7 @@ end
 false
 end))
 
-# 42 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 46 "FStar.Extraction.ML.Syntax.fst"
 let is_MLTY_Top = (fun _discr_ -> (match (_discr_) with
 | MLTY_Top (_) -> begin
 true
@@ -144,41 +132,35 @@ end
 false
 end))
 
-# 38 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 42 "FStar.Extraction.ML.Syntax.fst"
 let ___MLTY_Var____0 : mlty  ->  mlident = (fun projectee -> (match (projectee) with
-| MLTY_Var (_73_14) -> begin
-_73_14
+| MLTY_Var (_58_14) -> begin
+_58_14
 end))
 
-# 39 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 43 "FStar.Extraction.ML.Syntax.fst"
 let ___MLTY_Fun____0 : mlty  ->  (mlty * e_tag * mlty) = (fun projectee -> (match (projectee) with
-| MLTY_Fun (_73_17) -> begin
-_73_17
+| MLTY_Fun (_58_17) -> begin
+_58_17
 end))
 
-# 40 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 44 "FStar.Extraction.ML.Syntax.fst"
 let ___MLTY_Named____0 : mlty  ->  (mlty Prims.list * mlpath) = (fun projectee -> (match (projectee) with
-| MLTY_Named (_73_20) -> begin
-_73_20
+| MLTY_Named (_58_20) -> begin
+_58_20
 end))
 
-# 41 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 45 "FStar.Extraction.ML.Syntax.fst"
 let ___MLTY_Tuple____0 : mlty  ->  mlty Prims.list = (fun projectee -> (match (projectee) with
-| MLTY_Tuple (_73_23) -> begin
-_73_23
+| MLTY_Tuple (_58_23) -> begin
+_58_23
 end))
 
-# 44 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 48 "FStar.Extraction.ML.Syntax.fst"
 type mltyscheme =
 (mlidents * mlty)
 
-# 46 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 50 "FStar.Extraction.ML.Syntax.fst"
 type mlconstant =
 | MLC_Unit
 | MLC_Bool of Prims.bool
@@ -191,8 +173,7 @@ type mlconstant =
 | MLC_String of Prims.string
 | MLC_Bytes of Prims.byte Prims.array
 
-# 47 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 51 "FStar.Extraction.ML.Syntax.fst"
 let is_MLC_Unit = (fun _discr_ -> (match (_discr_) with
 | MLC_Unit (_) -> begin
 true
@@ -201,8 +182,7 @@ end
 false
 end))
 
-# 48 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 52 "FStar.Extraction.ML.Syntax.fst"
 let is_MLC_Bool = (fun _discr_ -> (match (_discr_) with
 | MLC_Bool (_) -> begin
 true
@@ -211,8 +191,7 @@ end
 false
 end))
 
-# 49 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 53 "FStar.Extraction.ML.Syntax.fst"
 let is_MLC_Byte = (fun _discr_ -> (match (_discr_) with
 | MLC_Byte (_) -> begin
 true
@@ -221,8 +200,7 @@ end
 false
 end))
 
-# 50 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 54 "FStar.Extraction.ML.Syntax.fst"
 let is_MLC_Int32 = (fun _discr_ -> (match (_discr_) with
 | MLC_Int32 (_) -> begin
 true
@@ -231,8 +209,7 @@ end
 false
 end))
 
-# 51 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 55 "FStar.Extraction.ML.Syntax.fst"
 let is_MLC_Int64 = (fun _discr_ -> (match (_discr_) with
 | MLC_Int64 (_) -> begin
 true
@@ -241,8 +218,7 @@ end
 false
 end))
 
-# 52 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 56 "FStar.Extraction.ML.Syntax.fst"
 let is_MLC_Int = (fun _discr_ -> (match (_discr_) with
 | MLC_Int (_) -> begin
 true
@@ -251,8 +227,7 @@ end
 false
 end))
 
-# 53 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 57 "FStar.Extraction.ML.Syntax.fst"
 let is_MLC_Float = (fun _discr_ -> (match (_discr_) with
 | MLC_Float (_) -> begin
 true
@@ -261,8 +236,7 @@ end
 false
 end))
 
-# 54 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 58 "FStar.Extraction.ML.Syntax.fst"
 let is_MLC_Char = (fun _discr_ -> (match (_discr_) with
 | MLC_Char (_) -> begin
 true
@@ -271,8 +245,7 @@ end
 false
 end))
 
-# 55 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 59 "FStar.Extraction.ML.Syntax.fst"
 let is_MLC_String = (fun _discr_ -> (match (_discr_) with
 | MLC_String (_) -> begin
 true
@@ -281,8 +254,7 @@ end
 false
 end))
 
-# 56 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 60 "FStar.Extraction.ML.Syntax.fst"
 let is_MLC_Bytes = (fun _discr_ -> (match (_discr_) with
 | MLC_Bytes (_) -> begin
 true
@@ -291,71 +263,61 @@ end
 false
 end))
 
-# 48 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 52 "FStar.Extraction.ML.Syntax.fst"
 let ___MLC_Bool____0 : mlconstant  ->  Prims.bool = (fun projectee -> (match (projectee) with
-| MLC_Bool (_73_26) -> begin
-_73_26
+| MLC_Bool (_58_26) -> begin
+_58_26
 end))
 
-# 49 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 53 "FStar.Extraction.ML.Syntax.fst"
 let ___MLC_Byte____0 : mlconstant  ->  Prims.byte = (fun projectee -> (match (projectee) with
-| MLC_Byte (_73_29) -> begin
-_73_29
+| MLC_Byte (_58_29) -> begin
+_58_29
 end))
 
-# 50 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 54 "FStar.Extraction.ML.Syntax.fst"
 let ___MLC_Int32____0 : mlconstant  ->  Prims.int32 = (fun projectee -> (match (projectee) with
-| MLC_Int32 (_73_32) -> begin
-_73_32
+| MLC_Int32 (_58_32) -> begin
+_58_32
 end))
 
-# 51 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 55 "FStar.Extraction.ML.Syntax.fst"
 let ___MLC_Int64____0 : mlconstant  ->  Prims.int64 = (fun projectee -> (match (projectee) with
-| MLC_Int64 (_73_35) -> begin
-_73_35
+| MLC_Int64 (_58_35) -> begin
+_58_35
 end))
 
-# 52 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 56 "FStar.Extraction.ML.Syntax.fst"
 let ___MLC_Int____0 : mlconstant  ->  Prims.string = (fun projectee -> (match (projectee) with
-| MLC_Int (_73_38) -> begin
-_73_38
+| MLC_Int (_58_38) -> begin
+_58_38
 end))
 
-# 53 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 57 "FStar.Extraction.ML.Syntax.fst"
 let ___MLC_Float____0 : mlconstant  ->  Prims.float = (fun projectee -> (match (projectee) with
-| MLC_Float (_73_41) -> begin
-_73_41
+| MLC_Float (_58_41) -> begin
+_58_41
 end))
 
-# 54 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 58 "FStar.Extraction.ML.Syntax.fst"
 let ___MLC_Char____0 : mlconstant  ->  Prims.char = (fun projectee -> (match (projectee) with
-| MLC_Char (_73_44) -> begin
-_73_44
+| MLC_Char (_58_44) -> begin
+_58_44
 end))
 
-# 55 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 59 "FStar.Extraction.ML.Syntax.fst"
 let ___MLC_String____0 : mlconstant  ->  Prims.string = (fun projectee -> (match (projectee) with
-| MLC_String (_73_47) -> begin
-_73_47
+| MLC_String (_58_47) -> begin
+_58_47
 end))
 
-# 56 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 60 "FStar.Extraction.ML.Syntax.fst"
 let ___MLC_Bytes____0 : mlconstant  ->  Prims.byte Prims.array = (fun projectee -> (match (projectee) with
-| MLC_Bytes (_73_50) -> begin
-_73_50
+| MLC_Bytes (_58_50) -> begin
+_58_50
 end))
 
-# 58 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 62 "FStar.Extraction.ML.Syntax.fst"
 type mlpattern =
 | MLP_Wild
 | MLP_Const of mlconstant
@@ -365,8 +327,7 @@ type mlpattern =
 | MLP_Record of (mlsymbol Prims.list * (mlsymbol * mlpattern) Prims.list)
 | MLP_Tuple of mlpattern Prims.list
 
-# 59 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 63 "FStar.Extraction.ML.Syntax.fst"
 let is_MLP_Wild = (fun _discr_ -> (match (_discr_) with
 | MLP_Wild (_) -> begin
 true
@@ -375,8 +336,7 @@ end
 false
 end))
 
-# 60 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 64 "FStar.Extraction.ML.Syntax.fst"
 let is_MLP_Const = (fun _discr_ -> (match (_discr_) with
 | MLP_Const (_) -> begin
 true
@@ -385,8 +345,7 @@ end
 false
 end))
 
-# 61 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 65 "FStar.Extraction.ML.Syntax.fst"
 let is_MLP_Var = (fun _discr_ -> (match (_discr_) with
 | MLP_Var (_) -> begin
 true
@@ -395,8 +354,7 @@ end
 false
 end))
 
-# 62 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 66 "FStar.Extraction.ML.Syntax.fst"
 let is_MLP_CTor = (fun _discr_ -> (match (_discr_) with
 | MLP_CTor (_) -> begin
 true
@@ -405,8 +363,7 @@ end
 false
 end))
 
-# 63 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 67 "FStar.Extraction.ML.Syntax.fst"
 let is_MLP_Branch = (fun _discr_ -> (match (_discr_) with
 | MLP_Branch (_) -> begin
 true
@@ -415,8 +372,7 @@ end
 false
 end))
 
-# 65 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 69 "FStar.Extraction.ML.Syntax.fst"
 let is_MLP_Record = (fun _discr_ -> (match (_discr_) with
 | MLP_Record (_) -> begin
 true
@@ -425,8 +381,7 @@ end
 false
 end))
 
-# 66 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 70 "FStar.Extraction.ML.Syntax.fst"
 let is_MLP_Tuple = (fun _discr_ -> (match (_discr_) with
 | MLP_Tuple (_) -> begin
 true
@@ -435,50 +390,43 @@ end
 false
 end))
 
-# 60 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 64 "FStar.Extraction.ML.Syntax.fst"
 let ___MLP_Const____0 : mlpattern  ->  mlconstant = (fun projectee -> (match (projectee) with
-| MLP_Const (_73_53) -> begin
-_73_53
+| MLP_Const (_58_53) -> begin
+_58_53
 end))
 
-# 61 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 65 "FStar.Extraction.ML.Syntax.fst"
 let ___MLP_Var____0 : mlpattern  ->  mlident = (fun projectee -> (match (projectee) with
-| MLP_Var (_73_56) -> begin
-_73_56
+| MLP_Var (_58_56) -> begin
+_58_56
 end))
 
-# 62 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 66 "FStar.Extraction.ML.Syntax.fst"
 let ___MLP_CTor____0 : mlpattern  ->  (mlpath * mlpattern Prims.list) = (fun projectee -> (match (projectee) with
-| MLP_CTor (_73_59) -> begin
-_73_59
+| MLP_CTor (_58_59) -> begin
+_58_59
 end))
 
-# 63 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 67 "FStar.Extraction.ML.Syntax.fst"
 let ___MLP_Branch____0 : mlpattern  ->  mlpattern Prims.list = (fun projectee -> (match (projectee) with
-| MLP_Branch (_73_62) -> begin
-_73_62
+| MLP_Branch (_58_62) -> begin
+_58_62
 end))
 
-# 65 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 69 "FStar.Extraction.ML.Syntax.fst"
 let ___MLP_Record____0 : mlpattern  ->  (mlsymbol Prims.list * (mlsymbol * mlpattern) Prims.list) = (fun projectee -> (match (projectee) with
-| MLP_Record (_73_65) -> begin
-_73_65
+| MLP_Record (_58_65) -> begin
+_58_65
 end))
 
-# 66 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 70 "FStar.Extraction.ML.Syntax.fst"
 let ___MLP_Tuple____0 : mlpattern  ->  mlpattern Prims.list = (fun projectee -> (match (projectee) with
-| MLP_Tuple (_73_68) -> begin
-_73_68
+| MLP_Tuple (_58_68) -> begin
+_58_68
 end))
 
-# 68 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 72 "FStar.Extraction.ML.Syntax.fst"
 type mlexpr' =
 | MLE_Const of mlconstant
 | MLE_Var of mlident
@@ -497,16 +445,15 @@ type mlexpr' =
 | MLE_Raise of (mlpath * mlexpr Prims.list)
 | MLE_Try of (mlexpr * mlbranch Prims.list) 
  and mlexpr =
-{expr : mlexpr'; ty : mlty} 
+{expr : mlexpr'; ty : mlty; loc : mlloc} 
  and mllb =
-{mllb_name : mlident; mllb_tysc : mltyscheme; mllb_add_unit : Prims.bool; mllb_def : mlexpr} 
+{mllb_name : mlident; mllb_tysc : mltyscheme Prims.option; mllb_add_unit : Prims.bool; mllb_def : mlexpr} 
  and mlbranch =
 (mlpattern * mlexpr Prims.option * mlexpr) 
  and mlletbinding =
 (Prims.bool * mllb Prims.list)
 
-# 69 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 73 "FStar.Extraction.ML.Syntax.fst"
 let is_MLE_Const = (fun _discr_ -> (match (_discr_) with
 | MLE_Const (_) -> begin
 true
@@ -515,8 +462,7 @@ end
 false
 end))
 
-# 70 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 74 "FStar.Extraction.ML.Syntax.fst"
 let is_MLE_Var = (fun _discr_ -> (match (_discr_) with
 | MLE_Var (_) -> begin
 true
@@ -525,8 +471,7 @@ end
 false
 end))
 
-# 71 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 75 "FStar.Extraction.ML.Syntax.fst"
 let is_MLE_Name = (fun _discr_ -> (match (_discr_) with
 | MLE_Name (_) -> begin
 true
@@ -535,8 +480,7 @@ end
 false
 end))
 
-# 72 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 76 "FStar.Extraction.ML.Syntax.fst"
 let is_MLE_Let = (fun _discr_ -> (match (_discr_) with
 | MLE_Let (_) -> begin
 true
@@ -545,8 +489,7 @@ end
 false
 end))
 
-# 73 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 77 "FStar.Extraction.ML.Syntax.fst"
 let is_MLE_App = (fun _discr_ -> (match (_discr_) with
 | MLE_App (_) -> begin
 true
@@ -555,8 +498,7 @@ end
 false
 end))
 
-# 74 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 78 "FStar.Extraction.ML.Syntax.fst"
 let is_MLE_Fun = (fun _discr_ -> (match (_discr_) with
 | MLE_Fun (_) -> begin
 true
@@ -565,8 +507,7 @@ end
 false
 end))
 
-# 75 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 79 "FStar.Extraction.ML.Syntax.fst"
 let is_MLE_Match = (fun _discr_ -> (match (_discr_) with
 | MLE_Match (_) -> begin
 true
@@ -575,8 +516,7 @@ end
 false
 end))
 
-# 76 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 80 "FStar.Extraction.ML.Syntax.fst"
 let is_MLE_Coerce = (fun _discr_ -> (match (_discr_) with
 | MLE_Coerce (_) -> begin
 true
@@ -585,8 +525,7 @@ end
 false
 end))
 
-# 78 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 82 "FStar.Extraction.ML.Syntax.fst"
 let is_MLE_CTor = (fun _discr_ -> (match (_discr_) with
 | MLE_CTor (_) -> begin
 true
@@ -595,8 +534,7 @@ end
 false
 end))
 
-# 79 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 83 "FStar.Extraction.ML.Syntax.fst"
 let is_MLE_Seq = (fun _discr_ -> (match (_discr_) with
 | MLE_Seq (_) -> begin
 true
@@ -605,8 +543,7 @@ end
 false
 end))
 
-# 80 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 84 "FStar.Extraction.ML.Syntax.fst"
 let is_MLE_Tuple = (fun _discr_ -> (match (_discr_) with
 | MLE_Tuple (_) -> begin
 true
@@ -615,8 +552,7 @@ end
 false
 end))
 
-# 81 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 85 "FStar.Extraction.ML.Syntax.fst"
 let is_MLE_Record = (fun _discr_ -> (match (_discr_) with
 | MLE_Record (_) -> begin
 true
@@ -625,8 +561,7 @@ end
 false
 end))
 
-# 82 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 86 "FStar.Extraction.ML.Syntax.fst"
 let is_MLE_Proj = (fun _discr_ -> (match (_discr_) with
 | MLE_Proj (_) -> begin
 true
@@ -635,8 +570,7 @@ end
 false
 end))
 
-# 83 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 87 "FStar.Extraction.ML.Syntax.fst"
 let is_MLE_If = (fun _discr_ -> (match (_discr_) with
 | MLE_If (_) -> begin
 true
@@ -645,8 +579,7 @@ end
 false
 end))
 
-# 84 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 88 "FStar.Extraction.ML.Syntax.fst"
 let is_MLE_Raise = (fun _discr_ -> (match (_discr_) with
 | MLE_Raise (_) -> begin
 true
@@ -655,8 +588,7 @@ end
 false
 end))
 
-# 85 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 89 "FStar.Extraction.ML.Syntax.fst"
 let is_MLE_Try = (fun _discr_ -> (match (_discr_) with
 | MLE_Try (_) -> begin
 true
@@ -665,135 +597,115 @@ end
 false
 end))
 
-# 87 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 91 "FStar.Extraction.ML.Syntax.fst"
 let is_Mkmlexpr : mlexpr  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkmlexpr"))))
 
-# 94 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 99 "FStar.Extraction.ML.Syntax.fst"
 let is_Mkmllb : mllb  ->  Prims.bool = (Obj.magic ((fun _ -> (FStar_All.failwith "Not yet implemented:is_Mkmllb"))))
 
-# 69 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 73 "FStar.Extraction.ML.Syntax.fst"
 let ___MLE_Const____0 : mlexpr'  ->  mlconstant = (fun projectee -> (match (projectee) with
-| MLE_Const (_73_77) -> begin
-_73_77
+| MLE_Const (_58_78) -> begin
+_58_78
 end))
 
-# 70 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 74 "FStar.Extraction.ML.Syntax.fst"
 let ___MLE_Var____0 : mlexpr'  ->  mlident = (fun projectee -> (match (projectee) with
-| MLE_Var (_73_80) -> begin
-_73_80
+| MLE_Var (_58_81) -> begin
+_58_81
 end))
 
-# 71 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 75 "FStar.Extraction.ML.Syntax.fst"
 let ___MLE_Name____0 : mlexpr'  ->  mlpath = (fun projectee -> (match (projectee) with
-| MLE_Name (_73_83) -> begin
-_73_83
+| MLE_Name (_58_84) -> begin
+_58_84
 end))
 
-# 72 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 76 "FStar.Extraction.ML.Syntax.fst"
 let ___MLE_Let____0 : mlexpr'  ->  (mlletbinding * mlexpr) = (fun projectee -> (match (projectee) with
-| MLE_Let (_73_86) -> begin
-_73_86
+| MLE_Let (_58_87) -> begin
+_58_87
 end))
 
-# 73 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 77 "FStar.Extraction.ML.Syntax.fst"
 let ___MLE_App____0 : mlexpr'  ->  (mlexpr * mlexpr Prims.list) = (fun projectee -> (match (projectee) with
-| MLE_App (_73_89) -> begin
-_73_89
+| MLE_App (_58_90) -> begin
+_58_90
 end))
 
-# 74 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 78 "FStar.Extraction.ML.Syntax.fst"
 let ___MLE_Fun____0 : mlexpr'  ->  ((mlident * mlty) Prims.list * mlexpr) = (fun projectee -> (match (projectee) with
-| MLE_Fun (_73_92) -> begin
-_73_92
+| MLE_Fun (_58_93) -> begin
+_58_93
 end))
 
-# 75 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 79 "FStar.Extraction.ML.Syntax.fst"
 let ___MLE_Match____0 : mlexpr'  ->  (mlexpr * mlbranch Prims.list) = (fun projectee -> (match (projectee) with
-| MLE_Match (_73_95) -> begin
-_73_95
+| MLE_Match (_58_96) -> begin
+_58_96
 end))
 
-# 76 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 80 "FStar.Extraction.ML.Syntax.fst"
 let ___MLE_Coerce____0 : mlexpr'  ->  (mlexpr * mlty * mlty) = (fun projectee -> (match (projectee) with
-| MLE_Coerce (_73_98) -> begin
-_73_98
+| MLE_Coerce (_58_99) -> begin
+_58_99
 end))
 
-# 78 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 82 "FStar.Extraction.ML.Syntax.fst"
 let ___MLE_CTor____0 : mlexpr'  ->  (mlpath * mlexpr Prims.list) = (fun projectee -> (match (projectee) with
-| MLE_CTor (_73_101) -> begin
-_73_101
+| MLE_CTor (_58_102) -> begin
+_58_102
 end))
 
-# 79 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 83 "FStar.Extraction.ML.Syntax.fst"
 let ___MLE_Seq____0 : mlexpr'  ->  mlexpr Prims.list = (fun projectee -> (match (projectee) with
-| MLE_Seq (_73_104) -> begin
-_73_104
+| MLE_Seq (_58_105) -> begin
+_58_105
 end))
 
-# 80 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 84 "FStar.Extraction.ML.Syntax.fst"
 let ___MLE_Tuple____0 : mlexpr'  ->  mlexpr Prims.list = (fun projectee -> (match (projectee) with
-| MLE_Tuple (_73_107) -> begin
-_73_107
+| MLE_Tuple (_58_108) -> begin
+_58_108
 end))
 
-# 81 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 85 "FStar.Extraction.ML.Syntax.fst"
 let ___MLE_Record____0 : mlexpr'  ->  (mlsymbol Prims.list * (mlsymbol * mlexpr) Prims.list) = (fun projectee -> (match (projectee) with
-| MLE_Record (_73_110) -> begin
-_73_110
+| MLE_Record (_58_111) -> begin
+_58_111
 end))
 
-# 82 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 86 "FStar.Extraction.ML.Syntax.fst"
 let ___MLE_Proj____0 : mlexpr'  ->  (mlexpr * mlpath) = (fun projectee -> (match (projectee) with
-| MLE_Proj (_73_113) -> begin
-_73_113
+| MLE_Proj (_58_114) -> begin
+_58_114
 end))
 
-# 83 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 87 "FStar.Extraction.ML.Syntax.fst"
 let ___MLE_If____0 : mlexpr'  ->  (mlexpr * mlexpr * mlexpr Prims.option) = (fun projectee -> (match (projectee) with
-| MLE_If (_73_116) -> begin
-_73_116
+| MLE_If (_58_117) -> begin
+_58_117
 end))
 
-# 84 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 88 "FStar.Extraction.ML.Syntax.fst"
 let ___MLE_Raise____0 : mlexpr'  ->  (mlpath * mlexpr Prims.list) = (fun projectee -> (match (projectee) with
-| MLE_Raise (_73_119) -> begin
-_73_119
+| MLE_Raise (_58_120) -> begin
+_58_120
 end))
 
-# 85 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 89 "FStar.Extraction.ML.Syntax.fst"
 let ___MLE_Try____0 : mlexpr'  ->  (mlexpr * mlbranch Prims.list) = (fun projectee -> (match (projectee) with
-| MLE_Try (_73_122) -> begin
-_73_122
+| MLE_Try (_58_123) -> begin
+_58_123
 end))
 
-# 103 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 108 "FStar.Extraction.ML.Syntax.fst"
 type mltybody =
 | MLTD_Abbrev of mlty
 | MLTD_Record of (mlsymbol * mlty) Prims.list
 | MLTD_DType of (mlsymbol * mlty Prims.list) Prims.list
 
-# 104 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 109 "FStar.Extraction.ML.Syntax.fst"
 let is_MLTD_Abbrev = (fun _discr_ -> (match (_discr_) with
 | MLTD_Abbrev (_) -> begin
 true
@@ -802,8 +714,7 @@ end
 false
 end))
 
-# 105 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 110 "FStar.Extraction.ML.Syntax.fst"
 let is_MLTD_Record = (fun _discr_ -> (match (_discr_) with
 | MLTD_Record (_) -> begin
 true
@@ -812,8 +723,7 @@ end
 false
 end))
 
-# 106 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 111 "FStar.Extraction.ML.Syntax.fst"
 let is_MLTD_DType = (fun _discr_ -> (match (_discr_) with
 | MLTD_DType (_) -> begin
 true
@@ -822,43 +732,37 @@ end
 false
 end))
 
-# 104 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 109 "FStar.Extraction.ML.Syntax.fst"
 let ___MLTD_Abbrev____0 : mltybody  ->  mlty = (fun projectee -> (match (projectee) with
-| MLTD_Abbrev (_73_127) -> begin
-_73_127
+| MLTD_Abbrev (_58_128) -> begin
+_58_128
 end))
 
-# 105 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 110 "FStar.Extraction.ML.Syntax.fst"
 let ___MLTD_Record____0 : mltybody  ->  (mlsymbol * mlty) Prims.list = (fun projectee -> (match (projectee) with
-| MLTD_Record (_73_130) -> begin
-_73_130
+| MLTD_Record (_58_131) -> begin
+_58_131
 end))
 
-# 106 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 111 "FStar.Extraction.ML.Syntax.fst"
 let ___MLTD_DType____0 : mltybody  ->  (mlsymbol * mlty Prims.list) Prims.list = (fun projectee -> (match (projectee) with
-| MLTD_DType (_73_133) -> begin
-_73_133
+| MLTD_DType (_58_134) -> begin
+_58_134
 end))
 
-# 111 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 116 "FStar.Extraction.ML.Syntax.fst"
 type mltydecl =
 (mlsymbol * mlidents * mltybody Prims.option) Prims.list
 
-# 113 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 118 "FStar.Extraction.ML.Syntax.fst"
 type mlmodule1 =
 | MLM_Ty of mltydecl
 | MLM_Let of mlletbinding
 | MLM_Exn of (mlsymbol * mlty Prims.list)
 | MLM_Top of mlexpr
-| MLM_Loc of (Prims.int * Prims.string)
+| MLM_Loc of mlloc
 
-# 114 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 119 "FStar.Extraction.ML.Syntax.fst"
 let is_MLM_Ty = (fun _discr_ -> (match (_discr_) with
 | MLM_Ty (_) -> begin
 true
@@ -867,8 +771,7 @@ end
 false
 end))
 
-# 115 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 120 "FStar.Extraction.ML.Syntax.fst"
 let is_MLM_Let = (fun _discr_ -> (match (_discr_) with
 | MLM_Let (_) -> begin
 true
@@ -877,8 +780,7 @@ end
 false
 end))
 
-# 116 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 121 "FStar.Extraction.ML.Syntax.fst"
 let is_MLM_Exn = (fun _discr_ -> (match (_discr_) with
 | MLM_Exn (_) -> begin
 true
@@ -887,8 +789,7 @@ end
 false
 end))
 
-# 117 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 122 "FStar.Extraction.ML.Syntax.fst"
 let is_MLM_Top = (fun _discr_ -> (match (_discr_) with
 | MLM_Top (_) -> begin
 true
@@ -897,8 +798,7 @@ end
 false
 end))
 
-# 118 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 123 "FStar.Extraction.ML.Syntax.fst"
 let is_MLM_Loc = (fun _discr_ -> (match (_discr_) with
 | MLM_Loc (_) -> begin
 true
@@ -907,48 +807,41 @@ end
 false
 end))
 
-# 114 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 119 "FStar.Extraction.ML.Syntax.fst"
 let ___MLM_Ty____0 : mlmodule1  ->  mltydecl = (fun projectee -> (match (projectee) with
-| MLM_Ty (_73_136) -> begin
-_73_136
+| MLM_Ty (_58_137) -> begin
+_58_137
 end))
 
-# 115 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 120 "FStar.Extraction.ML.Syntax.fst"
 let ___MLM_Let____0 : mlmodule1  ->  mlletbinding = (fun projectee -> (match (projectee) with
-| MLM_Let (_73_139) -> begin
-_73_139
+| MLM_Let (_58_140) -> begin
+_58_140
 end))
 
-# 116 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 121 "FStar.Extraction.ML.Syntax.fst"
 let ___MLM_Exn____0 : mlmodule1  ->  (mlsymbol * mlty Prims.list) = (fun projectee -> (match (projectee) with
-| MLM_Exn (_73_142) -> begin
-_73_142
+| MLM_Exn (_58_143) -> begin
+_58_143
 end))
 
-# 117 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 122 "FStar.Extraction.ML.Syntax.fst"
 let ___MLM_Top____0 : mlmodule1  ->  mlexpr = (fun projectee -> (match (projectee) with
-| MLM_Top (_73_145) -> begin
-_73_145
+| MLM_Top (_58_146) -> begin
+_58_146
 end))
 
-# 118 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
-let ___MLM_Loc____0 : mlmodule1  ->  (Prims.int * Prims.string) = (fun projectee -> (match (projectee) with
-| MLM_Loc (_73_148) -> begin
-_73_148
+# 123 "FStar.Extraction.ML.Syntax.fst"
+let ___MLM_Loc____0 : mlmodule1  ->  mlloc = (fun projectee -> (match (projectee) with
+| MLM_Loc (_58_149) -> begin
+_58_149
 end))
 
-# 120 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 125 "FStar.Extraction.ML.Syntax.fst"
 type mlmodule =
 mlmodule1 Prims.list
 
-# 122 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 127 "FStar.Extraction.ML.Syntax.fst"
 type mlsig1 =
 | MLS_Mod of (mlsymbol * mlsig)
 | MLS_Ty of mltydecl
@@ -957,8 +850,7 @@ type mlsig1 =
  and mlsig =
 mlsig1 Prims.list
 
-# 123 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 128 "FStar.Extraction.ML.Syntax.fst"
 let is_MLS_Mod = (fun _discr_ -> (match (_discr_) with
 | MLS_Mod (_) -> begin
 true
@@ -967,8 +859,7 @@ end
 false
 end))
 
-# 124 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 129 "FStar.Extraction.ML.Syntax.fst"
 let is_MLS_Ty = (fun _discr_ -> (match (_discr_) with
 | MLS_Ty (_) -> begin
 true
@@ -977,8 +868,7 @@ end
 false
 end))
 
-# 127 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 132 "FStar.Extraction.ML.Syntax.fst"
 let is_MLS_Val = (fun _discr_ -> (match (_discr_) with
 | MLS_Val (_) -> begin
 true
@@ -987,8 +877,7 @@ end
 false
 end))
 
-# 128 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 133 "FStar.Extraction.ML.Syntax.fst"
 let is_MLS_Exn = (fun _discr_ -> (match (_discr_) with
 | MLS_Exn (_) -> begin
 true
@@ -997,45 +886,41 @@ end
 false
 end))
 
-# 123 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 128 "FStar.Extraction.ML.Syntax.fst"
 let ___MLS_Mod____0 : mlsig1  ->  (mlsymbol * mlsig) = (fun projectee -> (match (projectee) with
-| MLS_Mod (_73_151) -> begin
-_73_151
+| MLS_Mod (_58_152) -> begin
+_58_152
 end))
 
-# 124 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 129 "FStar.Extraction.ML.Syntax.fst"
 let ___MLS_Ty____0 : mlsig1  ->  mltydecl = (fun projectee -> (match (projectee) with
-| MLS_Ty (_73_154) -> begin
-_73_154
+| MLS_Ty (_58_155) -> begin
+_58_155
 end))
 
-# 127 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 132 "FStar.Extraction.ML.Syntax.fst"
 let ___MLS_Val____0 : mlsig1  ->  (mlsymbol * mltyscheme) = (fun projectee -> (match (projectee) with
-| MLS_Val (_73_157) -> begin
-_73_157
+| MLS_Val (_58_158) -> begin
+_58_158
 end))
 
-# 128 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 133 "FStar.Extraction.ML.Syntax.fst"
 let ___MLS_Exn____0 : mlsig1  ->  (mlsymbol * mlty Prims.list) = (fun projectee -> (match (projectee) with
-| MLS_Exn (_73_160) -> begin
-_73_160
+| MLS_Exn (_58_161) -> begin
+_58_161
 end))
 
-# 132 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
+# 137 "FStar.Extraction.ML.Syntax.fst"
+let with_ty_loc : mlty  ->  mlexpr'  ->  mlloc  ->  mlexpr = (fun t e l -> {expr = e; ty = t; loc = l})
 
-let with_ty : mlty  ->  mlexpr'  ->  mlexpr = (fun t e -> {expr = e; ty = t})
+# 138 "FStar.Extraction.ML.Syntax.fst"
+let with_ty : mlty  ->  mlexpr'  ->  mlexpr = (fun t e -> (with_ty_loc t e dummy_loc))
 
-# 135 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 141 "FStar.Extraction.ML.Syntax.fst"
 type mllib =
 | MLLib of (mlsymbol * (mlsig * mlmodule) Prims.option * mllib) Prims.list
 
-# 136 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 142 "FStar.Extraction.ML.Syntax.fst"
 let is_MLLib = (fun _discr_ -> (match (_discr_) with
 | MLLib (_) -> begin
 true
@@ -1044,41 +929,35 @@ end
 false
 end))
 
-# 136 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 142 "FStar.Extraction.ML.Syntax.fst"
 let ___MLLib____0 : mllib  ->  (mlsymbol * (mlsig * mlmodule) Prims.option * mllib) Prims.list = (fun projectee -> (match (projectee) with
-| MLLib (_73_164) -> begin
-_73_164
+| MLLib (_58_168) -> begin
+_58_168
 end))
 
-# 140 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 146 "FStar.Extraction.ML.Syntax.fst"
 let ml_unit_ty : mlty = MLTY_Named (([], (("Prims")::[], "unit")))
 
-# 141 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 147 "FStar.Extraction.ML.Syntax.fst"
 let ml_bool_ty : mlty = MLTY_Named (([], (("Prims")::[], "bool")))
 
-# 142 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 148 "FStar.Extraction.ML.Syntax.fst"
 let ml_int_ty : mlty = MLTY_Named (([], (("Prims")::[], "int")))
 
-# 143 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 149 "FStar.Extraction.ML.Syntax.fst"
 let ml_string_ty : mlty = MLTY_Named (([], (("Prims")::[], "string")))
 
-# 144 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
+# 150 "FStar.Extraction.ML.Syntax.fst"
+let ml_unit : mlexpr = (with_ty ml_unit_ty (MLE_Const (MLC_Unit)))
 
-let ml_unit : mlexpr = (FStar_All.pipe_left (with_ty ml_unit_ty) (MLE_Const (MLC_Unit)))
-
-# 145 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
+# 151 "FStar.Extraction.ML.Syntax.fst"
 let mlp_lalloc : (Prims.string Prims.list * Prims.string) = (("SST")::[], "lalloc")
 
-# 146 "D:\\workspace\\universes\\FStar\\src\\extraction\\ml-syntax.fs"
-
-let apply_obj_repr : mlexpr  ->  mlty  ->  mlexpr = (fun x t -> (let obj_repr = (FStar_All.pipe_left (with_ty (MLTY_Fun ((t, E_PURE, MLTY_Top)))) (MLE_Name ((("Obj")::[], "repr"))))
-in (FStar_All.pipe_left (with_ty MLTY_Top) (MLE_App ((obj_repr, (x)::[]))))))
+# 152 "FStar.Extraction.ML.Syntax.fst"
+let apply_obj_repr : mlexpr  ->  mlty  ->  mlexpr = (fun x t -> (
+# 153 "FStar.Extraction.ML.Syntax.fst"
+let obj_repr = (with_ty (MLTY_Fun ((t, E_PURE, MLTY_Top))) (MLE_Name ((("Obj")::[], "repr"))))
+in (with_ty_loc MLTY_Top (MLE_App ((obj_repr, (x)::[]))) x.loc)))
 
 
 

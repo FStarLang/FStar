@@ -1,2 +1,2 @@
 module System.Diagnostics
-type Process
+new type Process

@@ -13,10 +13,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.Option
-
-
-assume val isNone: option 'a -> bool
-assume val isSome: option 'a -> bool
-assume val map: ('a -> 'b) -> option 'a -> option 'b
-assume val get: option 'a -> 'a 
+module FStar.ST
+new type ref : Type -> Type
+val alloc: 'a -> ref 'a
+val read:  ref 'a -> 'a
+val op_Colon_Equals: ref 'a -> 'a -> unit

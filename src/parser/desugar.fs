@@ -27,6 +27,8 @@ open FStar.Util
 open FStar.Ident
 open FStar.Const
 
+// VALS_HACK_HERE
+
 let imp_tag = Implicit false
 let as_imp = function
     | Hash
@@ -1272,6 +1274,8 @@ let mk_indexed_projectors fvq refine_domain env (tc, tps, k) lid (formals:list<b
                         | Inr _, imp ->
                             if i+ntps=j  //this is the one to project
                             then [pos (Pat_var projection), as_imp imp]
+                            else if j < ntps
+                            then [] //this is an inaccessible pattern 
                             else [pos (Pat_wild (Util.gen_bvar tun)), as_imp imp]) |> List.flatten in
                      let pat = (Syntax.Pat_cons(Util.fv lid, Some fvq, arg_pats) |> pos, None, Util.bvar_to_exp projection) in
                      let body = mk_Exp_match(arg_exp, [pat]) None p in
@@ -1358,6 +1362,12 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
     | [TyconAbstract _] ->
         let tc = List.hd tcs in
         let _, _, se, _ = desugar_abstract_tc quals env [] tc in
+        let quals = if quals |> List.contains Assumption 
+                    || quals |> List.contains New
+                    then quals
+                    else (Util.print2 "%s (Warning): Adding an implicit 'new' qualifier on %s\n" 
+                                                (Range.string_of_range rng) (Util.lids_of_sigelt se |> List.map Print.sli |> String.concat ", ");          
+                               New::quals) in
         let env = push_sigelt env se in
         (* let _ = pr "Pushed %s\n" (text_of_lid (qualify env (tycon_id tc))) in *)
         env, [se]
@@ -1469,12 +1479,12 @@ let trans_qual r = function
   | AST.Opaque -> Opaque
   | AST.Logic -> Logic
   | AST.Abstract -> Abstract
+  | AST.New -> New
   | AST.TotalEffect -> TotalEffect
   | AST.DefaultEffect -> DefaultEffect None
   | AST.Effect -> Effect
   | AST.Inline 
   | AST.Irreducible 
-  | AST.New 
   | AST.Unfoldable -> raise (Error("This qualifier is supported only with the --universes option", r))
 
 let trans_pragma = function
@@ -1692,7 +1702,7 @@ let desugar_partial_modul curmod env (m:AST.modul) : env_t * Syntax.modul =
   let m =
     if !Options.interactive_fsi then
         match m with
-            | Module(mname, decls) -> AST.Interface(mname, decls, Util.for_some (fun m -> m=mname.str) !Options.admit_fsi)
+            | Module(mname, decls) -> AST.Interface(mname, decls, true)
             | Interface(mname, _, _) -> failwith ("Impossible: " ^ mname.ident.idText)
     else m
   in

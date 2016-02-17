@@ -194,6 +194,7 @@ type qualifier =
   | Opaque
   | Logic
   | Abstract
+  | New
   | Discriminator of lident                          (* discriminator for a datacon l *)
   | Projector of lident * either<btvdef, bvvdef>     (* projector for datacon l's argument 'a or x *)
   | RecordType of list<fieldname>                    (* unmangled field names *)
@@ -271,10 +272,12 @@ type lcomp = {
     cflags: list<cflags>;
     comp: unit -> comp //a lazy computation
     }
+type path = list<string>
+
+// VALS_HACK_HERE
 (*********************************************************************************)
 (* Identifiers to/from strings *)
 (*********************************************************************************)
-type path = list<string>
 let dummyRange = 0L
 let withinfo v s r = {v=v; sort=s; p=r}
 let withsort v s = withinfo v s dummyRange

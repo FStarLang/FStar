@@ -19,18 +19,18 @@ module FStar.String
 (* The name of this file is misleading: most string functions are to be found in
    util.fsi *)
 
-assume val make: int -> char -> Tot string
+val make: int -> char -> Tot string
 
-assume val split:   list char -> string -> Tot (list string)
-assume val strcat:  string -> string -> Tot string
-assume val concat:  string -> list string -> Tot string
-assume val compare: string -> string -> Tot int
-assume val strlen:  string -> Tot nat
-assume val length:  string -> Tot nat
-assume val lowercase:  string -> Tot string
+val split:   list char -> string -> Tot (list string)
+val strcat:  string -> string -> Tot string
+val concat:  string -> list string -> Tot string
+val compare: string -> string -> Tot int
+val strlen:  string -> Tot nat
+val length:  string -> Tot nat
+val lowercase:  string -> Tot string
 
 (* may fail with index out of bounds *)
 (* Second argument is a length, not an index. *)
-assume val substring: string -> int -> int -> string
-assume val get: string -> int -> char
-assume val collect: (char -> string) -> string -> string
+val substring: string -> int -> int -> string
+val get: string -> int -> char
+val collect: (char -> string) -> string -> string

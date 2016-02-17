@@ -1,7 +1,3 @@
-(*--build-config
-    options:--warn_top_level_effects --print_implicits;
-    other-files:FStar.FunctionalExtensionality.fst FStar.Constructive.fst FStar.Squash.fst FStar.Set.fst FStar.Heap.fst FStar.ST.fst FStar.All.fst;
---*)
 module FStar.SquashProperties
 
 open FStar.Constructive

@@ -1121,7 +1121,9 @@ and tc_exp env e : exp * lcomp * guard_t =
                  else (if !Options.warn_top_level_effects
                        then Tc.Errors.warn (Tc.Env.get_range env) Tc.Errors.top_level_effect;
                        mk_Exp_meta(Meta_desugared(e2, Masked_effect)), c1)
-            else (Tc.Util.discharge_guard env (Rel.conj_guard g1 guard_f);  //still need to solve remaining unification/subtyping constraints
+            else (let g = Rel.conj_guard g1 guard_f in
+                  Tc.Util.discharge_guard env g;  //still need to solve remaining unification/subtyping constraints
+                  Tc.Util.check_unresolved_implicits g;
                   e2, c1.comp()) in
           let _, e1, c1 = if env.generalize
                           then List.hd <| Tc.Util.generalize false env1 [x, e1, c1] (* only generalize top-level lets, when there is no val decl *)
@@ -1984,9 +1986,7 @@ let finish_partial_modul env modul =
   if not (lid_equals modul.name Const.prims_lid)
   then begin
     env.solver.pop ("Ending modul " ^ modul.name.str);
-    if  not modul.is_interface
-    ||  List.contains modul.name.str !Options.admit_fsi
-    then env.solver.encode_modul env modul;
+    env.solver.encode_modul env modul;
     env.solver.refresh();
     Options.reset_options() |> ignore
   end;

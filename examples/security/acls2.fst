@@ -1,6 +1,8 @@
 module ACLs2
-open String
-open List
+
+open FStar.String
+open FStar.List
+
 type file = string
 
 let canWrite = function

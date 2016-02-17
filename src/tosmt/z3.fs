@@ -45,11 +45,12 @@ let _z3version : ref<option<z3version>> = Util.mk_ref None
 
 let get_z3version () =
     let prefix = "Z3 version " in
-
     match !_z3version with
     | Some version -> version
     | None ->
-        let _, out, _ = Util.run_proc !Options.z3_exe "-version" "" in
+        let _, out, _ =
+          try Util.run_proc !Options.z3_exe "-version" "" with _ -> Util.print_string "Error: No z3 executable was found\n"; exit 1
+        in
         let out =
             match splitlines out with
             | x :: _ when starts_with x prefix -> begin

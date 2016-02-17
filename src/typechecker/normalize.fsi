@@ -19,7 +19,6 @@
 module FStar.TypeChecker.Normalize
 
 open FStar.TypeChecker
-open FStar.TypeChecker.Env
 open FStar.Syntax.Syntax
 
 type step =
@@ -38,13 +37,13 @@ type step =
   | Unlabel
 and steps = list<step>
 
-val eta_expand:           env -> term -> term
-val unfold_effect_abbrev:       env -> comp -> comp_typ
-val normalize:            steps -> env -> term -> term
-val normalize_universe:   env -> universe -> universe
-val normalize_comp:       steps -> env -> comp -> comp
-val normalize_sigelt:     steps -> env -> sigelt -> sigelt
-val normalize_refinement: steps -> env -> typ -> typ
+val eta_expand:           Env.env -> term -> term
+val unfold_effect_abbrev: Env.env -> comp -> comp_typ
+val normalize:            steps -> Env.env -> term -> term
+val normalize_universe:   Env.env -> universe -> universe
+val normalize_comp:       steps -> Env.env -> comp -> comp
+val normalize_sigelt:     steps -> Env.env -> sigelt -> sigelt
+val normalize_refinement: steps -> Env.env -> typ -> typ
 
-val term_to_string:  env -> term -> string
-val comp_to_string:  env -> comp -> string
+val term_to_string:  Env.env -> term -> string
+val comp_to_string:  Env.env -> comp -> string

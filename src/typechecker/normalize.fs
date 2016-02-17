@@ -23,6 +23,7 @@ open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Syntax.Subst
 open FStar.Syntax.Util
+open FStar.TypeChecker
 open FStar.TypeChecker.Env
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
@@ -85,6 +86,8 @@ type stack_elt =
  | Label    of string * Range.range
 
 type stack = list<stack_elt>
+
+// VALS_HACK_HERE
 
 let mk t r = mk t None r
 let set_memo r t =

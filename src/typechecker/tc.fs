@@ -34,6 +34,8 @@ module N  = FStar.TypeChecker.Normalize
 module TcUtil = FStar.TypeChecker.Util
 module U  = FStar.Syntax.Util
 
+// VALS_HACK_HERE
+
 let log env = !Options.log_types && not(lid_equals Const.prims_lid (Env.current_module env))
 let rng env = Env.get_range env
 let instantiate_both env = {env with Env.instantiate_imp=true}
@@ -187,21 +189,11 @@ let add_implicit u g = {g with implicits=u::g.implicits}
 let check_smt_pat env t bs c = 
     if Util.is_smt_lemma t //check patterns cover the bound vars
     then match c.n with
-        | Comp ({effect_args=[(pre, _); (post, _); (pats, _)]}) ->
-            let rec extract_pats pats = match (SS.compress pats).n with 
-                | Tm_app({n=Tm_fvar (cons, _)}, [_; (hd, _); (tl, _)]) when lid_equals cons.v Const.cons_lid -> 
-                    let head, args = Util.head_and_args hd in
-                    let pat = match args with 
-                        | [_; arg]
-                        | [arg] -> [arg]
-                        | _ -> [] in
-                    pat@extract_pats tl 
-                | _ -> [] in
-            let pats = extract_pats (N.normalize [N.Beta] env pats) in
-            let fvs = List.fold_left (fun out (a, _) -> Util.set_union out (Free.names a)) (S.new_bv_set()) pats in
-            begin match bs |> Util.find_opt (fun (b, _) -> not(Util.set_mem b fvs)) with
-                    | None -> ()
-                    | Some (x,_) -> Errors.warn t.pos (Util.format1 "Pattern misses at least one bound variables: %s" (Print.bv_to_string x))
+        | Comp ({effect_args=[_pre; _post; (pats, _)]}) ->
+            let pat_vars = Free.names pats in
+            begin match bs |> Util.find_opt (fun (b, _) -> not(Util.set_mem b pat_vars)) with
+                | None -> ()
+                | Some (x,_) -> Errors.warn t.pos (Util.format1 "Pattern misses at least one bound variables: %s" (Print.bv_to_string x))
             end
         | _ -> failwith "Impossible"
     
@@ -2324,9 +2316,7 @@ let finish_partial_modul env modul exports =
   if not (lid_equals modul.name Const.prims_lid)
   then begin
     env.solver.pop ("Ending modul " ^ modul.name.str);
-    if  not modul.is_interface
-    ||  List.contains modul.name.str !Options.admit_fsi
-    then env.solver.encode_modul env modul;
+    env.solver.encode_modul env modul;
     env.solver.refresh();
     Options.reset_options() |> ignore
   end;

@@ -50,6 +50,31 @@ type env = {
   admitted_iface:bool;
 }
 
+type occurrence =
+  | OSig of sigelt
+  | OLet of lident
+  | ORec of lident
+let range_of_occurrence = function
+  | OLet l
+  | ORec l -> range_of_lid l
+  | OSig se -> Util.range_of_sigelt se
+
+type foundname =
+  | Exp_name of occurrence * exp
+  | Typ_name of occurrence * typ
+  | Eff_name of occurrence * lident
+  | Knd_name of occurrence * lident
+
+type record_or_dc = {
+  typename: lident;
+  constrname: lident;
+  parms: binders;
+  fields: list<(fieldname * typ)>;
+  is_record:bool
+}
+
+// VALS_HACK_HERE
+
 let open_modules e = e.modules
 let current_module env = match env.curmodule with
     | None -> failwith "Unset current module"
@@ -141,20 +166,6 @@ let try_lookup_id env id =
     | Some(_, e) -> Some e
     | None -> None
 
-type occurrence =
-  | OSig of sigelt
-  | OLet of lident
-  | ORec of lident
-let range_of_occurrence = function
-  | OLet l
-  | ORec l -> range_of_lid l
-  | OSig se -> Util.range_of_sigelt se
-
-type foundname =
-  | Exp_name of occurrence * exp
-  | Typ_name of occurrence * typ
-  | Eff_name of occurrence * lident
-  | Knd_name of occurrence * lident
 
 let fv_qual_of_se = function
     | Sig_datacon(_, _, (l, _, _), quals, _, _) ->
@@ -292,14 +303,6 @@ let find_all_datacons env (lid:lident) =
       | Some (Sig_tycon(_, _, _, _, datas, _, _), _) -> Some datas
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig
-
-type record_or_dc = {
-  typename: lident;
-  constrname: lident;
-  parms: binders;
-  fields: list<(fieldname * typ)>;
-  is_record:bool
-}
 
 //no top-level pattern in F*, so need to do this ugliness
 let record_cache_aux = 
@@ -520,13 +523,12 @@ let is_type_lid env lid =
   else aux ()
 
 
-let check_admits nm env =
-  let warn = not (!Options.admit_fsi |> Util.for_some (fun l -> nm.str = l)) in
+let check_admits (nm:lident) env =
   env.sigaccum |> List.iter (fun se -> match se with
     | Sig_val_decl(l, t, quals, r) ->
       begin match try_lookup_lid env l with
         | None ->
-          if warn then Util.print_string (Util.format2 "%s: Warning: Admitting %s without a definition\n" (Range.string_of_range (range_of_lid l)) (Print.sli l));
+          Util.print_string (Util.format2 "%s: Warning: Admitting %s without a definition\n" (Range.string_of_range (range_of_lid l)) (Print.sli l));
           Util.smap_add (sigmap env) l.str (Sig_val_decl(l, t, Assumption::quals, r), false)
         | Some _ -> ()
       end
@@ -608,12 +610,8 @@ let prepare_module_or_interface intf admitted env mname =
 
   match env.modules |> Util.find_opt (fun (l, _) -> lid_equals l mname) with
     | None -> prep env, false
-    | Some (_, m) ->
-      if not m.is_interface || intf
-      then raise (Error(Util.format1 "Duplicate module or interface name: %s" mname.str, range_of_lid mname));
-      //we have an interface for this module already; if we're not interactive then do not export any symbols from this module
-      prep (push env), true //push a context so that we can pop it when we're done
-
+    | Some (_, m) -> raise (Error(Util.format1 "Duplicate module or interface name: %s" mname.str, range_of_lid mname))
+      
 let enter_monad_scope env mname =
   let curmod = current_module env in
   let mscope = lid_of_ids (curmod.ns@[curmod.ident; mname]) in

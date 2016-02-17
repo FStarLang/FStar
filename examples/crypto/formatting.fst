@@ -15,7 +15,7 @@
 *)
 
 module Formatting
-open Prims.PURE
+
 open FStar.String
 open FStar.Seq
 open FStar.SeqProperties

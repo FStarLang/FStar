@@ -44,7 +44,7 @@ let parse fn =
              if FStar_Util.ends_with filename ".fsi" || FStar_Util.ends_with filename ".fsti"
              then Inl (mods |> FStar_List.map (function
                   | FStar_Parser_AST.Module(l,d) ->
-                    FStar_Parser_AST.Interface(l, d, FStar_Util.for_some (fun m -> m=l.str) !FStar_Options.admit_fsi)
+                    FStar_Parser_AST.Interface(l, d, true)
                   | _ -> failwith "Impossible"))
              else Inl mods
           | _ -> fileOrFragment in

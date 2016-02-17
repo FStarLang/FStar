@@ -24,7 +24,10 @@ open FStar
 open FStar.Util
 open FStar.Extraction.ML
 open FStar.Extraction.ML.Syntax
-open FSharp.Format
+open FStar.Extraction.ML.Env
+open FStar.Format
+
+// VALS_HACK_HERE
 
 (* -------------------------------------------------------------------- *)
 type assoc  = | ILeft | IRight | Left | Right | NonAssoc
@@ -366,9 +369,14 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
         docs
 
     | MLE_Let ((rec_, lets), body) ->
+        let pre =
+            if e.loc <> dummy_loc
+            then reduce [hardline; doc_of_loc e.loc]
+            else empty
+        in
         let doc  = doc_of_lets currentModule (rec_, false, lets) in
         let body = doc_of_expr  currentModule (min_op_prec, NonAssoc) body in
-        parens (combine hardline [doc; reduce1 [text "in"; body]])
+        parens (combine hardline [pre; doc; reduce1 [text "in"; body]])
 
     | MLE_App (e, args) -> begin
         match e.expr, args with
@@ -534,9 +542,9 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
         let ty_annot =
             if Util.codegen_fsharp () && (rec_ || top_level) //needed for polymorphic recursion and to overcome incompleteness of type inference in F#
             then match tys with
-                    | (_::_, _) -> //except, emitting binders for type variables in F# sometimes also requires emitting type constraints; which is not yet supported
+                    | Some (_::_, _) | None -> //except, emitting binders for type variables in F# sometimes also requires emitting type constraints; which is not yet supported
                       text ""
-                    | ([], ty) ->
+                    | Some ([], ty) ->
                       let ty = doc_of_mltype currentModule (min_op_prec, NonAssoc) ty in
                       reduce1 [text ":"; ty]
 //                      let ids = List.map (fun (x, _) -> text x) ids in
@@ -546,9 +554,9 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
 //                      end
             else if top_level
             then match tys with
-                    | _::_, _ -> text ""
-                    | [], ty ->
-                      let ty = doc_of_mltype currentModule (min_op_prec, NonAssoc) (snd tys) in
+                    | None | Some (_::_, _) -> text ""
+                    | Some ([], ty) ->
+                      let ty = doc_of_mltype currentModule (min_op_prec, NonAssoc) ty in
 //                      let vars = vars |> List.map (fun x -> doc_of_mltype currentModule (min_op_prec, NonAssoc) (MLTY_Var x)) |>  reduce1  in
                       reduce1 [text ":"; ty] 
             else text "" in
@@ -562,6 +570,14 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
         lets in
 
     combine hardline lets
+    
+
+and doc_of_loc (lineno, file) =
+    if Util.codegen_fsharp () then
+        empty
+    else
+        let file = Util.basename file in
+        reduce1 [ text "#"; num lineno; text ("\"" ^ file ^ "\"") ]
 
 (* -------------------------------------------------------------------- *)
 let doc_of_mltydecl (currentModule : mlsymbol) (decls : mltydecl) =
@@ -649,12 +665,6 @@ and doc_of_sig (currentModule : mlsymbol) (s : mlsig) =
     reduce docs
 
 
-let doc_of_loc lineno file =
-    if Util.codegen_fsharp () then
-        empty
-    else
-        reduce1 [ text "#"; num lineno; text ("\"" ^ Util.replace_string file "\\" "\\\\" ^ "\"") ]
-
 (* -------------------------------------------------------------------- *)
 let doc_of_mod1 (currentModule : mlsymbol) (m : mlmodule1) =
     match m with
@@ -678,14 +688,15 @@ let doc_of_mod1 (currentModule : mlsymbol) (m : mlmodule1) =
             doc_of_expr currentModule  (min_op_prec, NonAssoc) e
         ]
 
-    | MLM_Loc (lineno, file) ->
-        doc_of_loc lineno file
+    | MLM_Loc loc ->
+        doc_of_loc loc
 
 (* -------------------------------------------------------------------- *)
 let doc_of_mod (currentModule : mlsymbol) (m : mlmodule) =
-    let docs = List.map (doc_of_mod1 currentModule) m in
-    let docs = List.map (fun x -> reduce [x; hardline; hardline]) docs in
-    reduce docs
+    let docs = List.map (fun x ->
+        let doc = doc_of_mod1 currentModule x in
+        [doc; (match x with | MLM_Loc _ -> empty | _ -> hardline); hardline]) m in
+    reduce (List.flatten docs)
 
 (* -------------------------------------------------------------------- *)
 let rec doc_of_mllib_r (MLLib mllib) =
@@ -742,8 +753,8 @@ let doc_of_mllib mllib =
 open FStar.Extraction.ML.Env
 let string_of_mlexpr (env:env) (e:mlexpr) =
     let doc = doc_of_expr (Util.flatten_mlpath env.currentModule) (min_op_prec, NonAssoc) e in
-    FSharp.Format.pretty 0 doc
+    FStar.Format.pretty 0 doc
 
 let string_of_mlty (env:env) (e:mlty) =
     let doc = doc_of_mltype (Util.flatten_mlpath env.currentModule) (min_op_prec, NonAssoc) e in
-    FSharp.Format.pretty 0 doc
+    FStar.Format.pretty 0 doc

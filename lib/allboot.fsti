@@ -1,5 +1,5 @@
 module FStar.All
-type heap
+new type heap
 kind AllPre = AllPre_h heap
 kind AllPost (a:Type) = AllPost_h heap a
 kind AllWP (a:Type) = AllWP_h heap a

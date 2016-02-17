@@ -17,7 +17,7 @@ bug194: bug194.fst
 	../../bin/fstar.exe --explicit_deps ../../lib/FStar.Classical.fst ../../lib/FStar.FunctionalExtensionality.fst ../../lib/FStar.Constructive.fst ../metatheory/stlc_strong_db_parsubst.fst bug194.fst
 
 bug244: bug244.fst
-	../../bin/fstar.exe  --explicit_deps ../../lib/FStar.String.fst bug244.fst
+	../../bin/fstar.exe  --explicit_deps ../../lib/FStar.String.fsti bug244.fst
 
 insertionsortcmp: insertionsortcmp.fst
 	../../bin/fstar.exe insertionsortcmp.fst
@@ -37,7 +37,7 @@ extraction-error1:
 			    Bug.ml
 
 ExtractionBug.ver:
-	../../bin/fstar $(OTHERFLAGS) --admit_fsi FStar.Set --admit_fsi FStar.Map --admit_fsi FStar.HyperHeap FStar.Set.fsi FStar.Heap.fst map.fsi FStar.List.Tot.fst FStar.HyperHeap.fsi stHyperHeap.fst ExtractionBug.fst --dump_module ExtractionBug --print_implicits
+	../../bin/fstar $(OTHERFLAGS) --explicit_deps  FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.Map.fst FStar.List.Tot.fst FStar.HyperHeap.fsi stHyperHeap.fst ExtractionBug.fst --dump_module ExtractionBug --print_implicits --codegen OCaml
 
 ExtractionBug.out:
 	cp ../../lib/ml/native_int/prims.ml .

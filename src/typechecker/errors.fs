@@ -21,8 +21,8 @@ open FStar
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Util
-open FStar.TypeChecker.Env
 open FStar.TypeChecker.Normalize
+open FStar.TypeChecker.Env
 open FStar.Range
 open FStar.Ident
 

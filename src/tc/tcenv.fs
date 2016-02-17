@@ -100,6 +100,8 @@ and solver_t = {
     refresh: unit -> unit;
 }
 
+// VALS_HACK_HERE
+
 let bound_vars env =
     env.gamma |> List.collect (function
         | Binding_typ(a,k) -> [Inl <| Util.bvd_to_bvar_s a k]
@@ -561,7 +563,7 @@ let binding_of_binder (b:binder) = match fst b with
     | Inl a -> Binding_typ(a.v, a.sort)
     | Inr x -> Binding_var(x.v, x.sort)
 
-let binders env : binders =
+let binders env : FStar.Absyn.Syntax.binders =
   List.fold_left (fun out b -> match b with
     | Binding_var(x, t) -> (v_binder <| bvd_to_bvar_s x t)::out
     | Binding_typ(a, k) -> (t_binder <| bvd_to_bvar_s a k)::out

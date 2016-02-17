@@ -14,7 +14,10 @@ cache/
 /src/parser/parse.ml
 /src/parser/parse.mli
 /src/parser/parse.mly
-
+/src/boot_fstis
+/src/boot_fsts
+/src/format/formatml.fsi
+/lib/FStar.Util.fsti
 
 /bin/*.dll
 /bin/*.pdb

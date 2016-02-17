@@ -13,8 +13,10 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.ST
-type ref : Type -> Type
-val alloc: 'a -> ref 'a
-val read:  ref 'a -> 'a
-val op_Colon_Equals: ref 'a -> 'a -> unit
+module FStar.Option
+
+
+val isNone: option 'a -> bool
+val isSome: option 'a -> bool
+val map: ('a -> 'b) -> option 'a -> option 'b
+val get: option 'a -> 'a 

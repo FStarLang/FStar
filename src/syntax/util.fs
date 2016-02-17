@@ -273,14 +273,27 @@ let is_lemma t =  match (compress t).n with
       end
     | _ -> false
 
+
+let head_and_args t =
+    let t = compress t in
+    match t.n with
+        | Tm_app(head, args) -> head, args
+        | _ -> t, []
+        
+ let un_uinst t = match (Subst.compress t).n with 
+        | Tm_uinst(t, _) -> t
+        | _ -> t 
+   
 let is_smt_lemma t = match (compress t).n with
     | Tm_arrow(_, c) -> 
       begin match c.n with
         | Comp ct when (lid_equals ct.effect_name Const.effect_Lemma_lid) ->
             begin match ct.effect_args with
                 | _req::_ens::(pats, _)::_ ->
-                  begin match (unmeta pats).n with
-                    | Tm_app({n=Tm_fvar(fv, _)}, _) -> lid_equals fv.v Const.cons_lid
+                  let pats' = unmeta pats in
+                  let head, _ = head_and_args pats' in
+                  begin match (un_uinst head).n with
+                    |Tm_fvar(fv, _) -> lid_equals fv.v Const.cons_lid
                     | _ -> false
                   end
                 | _ -> false
@@ -288,6 +301,40 @@ let is_smt_lemma t = match (compress t).n with
         | _ -> false
       end
     | _ -> false
+
+    
+let smt_lemma_pats p = 
+  let rec list_elements (e:term) : list<term> = 
+    let head, args = head_and_args (unmeta e) in
+    match (un_uinst head).n, args with
+        | Tm_fvar(fv, _), _ when lid_equals fv.v Const.nil_lid -> []
+        | Tm_fvar(fv, _), [_; (hd, _); (tl, _)] when lid_equals fv.v Const.cons_lid -> 
+          hd::list_elements tl
+        | _ -> [] in 
+
+    let v_or_t_pat p = 
+        let head, args = unmeta p |> head_and_args in
+        match (un_uinst head).n, args with
+            | Tm_fvar(fv, _), [(_, _); (e, _)] when lid_equals fv.v Const.smtpat_lid -> e
+            | _ -> failwith "Unexpected pattern term"  in
+    
+    let elts = list_elements p in 
+    
+    let smt_pat_or t =
+        let head, args = unmeta t |> head_and_args in
+        match (un_uinst head).n, args with 
+            | Tm_fvar(fv, _), [(e, _)] when lid_equals fv.v Const.smtpatOr_lid -> 
+              Some e
+            | _ -> None in
+
+    match elts with 
+        | [t] -> 
+            begin match smt_pat_or t with 
+            | Some e -> 
+                list_elements e |>  List.map (fun branch -> (list_elements branch) |> List.map v_or_t_pat)
+            | _ -> [elts |> List.map v_or_t_pat]
+            end
+        | _ -> [elts |> List.map v_or_t_pat] 
 
 let is_ml_comp c = match c.n with
   | Comp c -> lid_equals c.effect_name Const.effect_ML_lid
@@ -693,12 +740,6 @@ let rec is_wild_pat p =
     | Pat_wild _ -> true
     | _ -> false
 
-let head_and_args t =
-    let t = compress t in
-    match t.n with
-        | Tm_app(head, args) -> head, args
-        | _ -> t, []
-        
 let if_then_else b t1 t2 =
     let then_branch = (withinfo (Pat_constant (Const_bool true)) tun.n t1.pos, None, t1) in
     let else_branch = (withinfo (Pat_constant (Const_bool false)) tun.n t2.pos, None, t2) in
@@ -714,9 +755,6 @@ type connective =
     | BaseConn of lident * args
 
 let destruct_typ_as_formula f : option<connective> =
-    let un_uinst t = match (Subst.compress t).n with 
-        | Tm_uinst(t, _) -> t
-        | _ -> t in 
     let destruct_base_conn f =
         let connectives = [ (Const.true_lid,  0);
                             (Const.false_lid, 0);

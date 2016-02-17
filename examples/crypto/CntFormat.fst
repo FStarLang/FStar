@@ -15,7 +15,7 @@
 *)
 
 module CntFormat
-open Prims.PURE
+
 open FStar.Bytes
 open FStar.String
 open FStar.Seq

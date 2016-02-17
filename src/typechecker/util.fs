@@ -28,6 +28,10 @@ open FStar.Ident
 open FStar.Syntax.Subst
 open FStar.TypeChecker.Common
 
+type lcomp_with_binder = option<bv> * lcomp
+
+// VALS_HACK_HERE
+
 module SS = FStar.Syntax.Subst
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
@@ -376,8 +380,6 @@ let decorate_pattern env p exps =
 (*********************************************************************************************)
 (* Utils related to monadic computations *)
 (*********************************************************************************************)
-type lcomp_with_binder = option<bv> * lcomp
-
 let destruct_comp c : (typ * typ * typ) =
   let wp, wlp = match c.effect_args with
     | [(wp, _); (wlp, _)] -> wp, wlp
@@ -837,7 +839,7 @@ let pure_or_ghost_pre_and_post env comp =
     let mk_post_type res_t ens =
         let x = S.new_bv None res_t in 
         U.refine x (S.mk_Tm_app ens [S.as_arg (S.bv_to_name x)] None res_t.pos) in
-    let norm t = Normalize.normalize [N.Beta;N.Inline;N.Unlabel] env t in
+    let norm t = Normalize.normalize [N.Beta;N.Inline;N.Unlabel;N.EraseUniverses] env t in
     if Util.is_tot_or_gtot_comp comp
     then None, Util.comp_result comp
     else begin match comp.n with

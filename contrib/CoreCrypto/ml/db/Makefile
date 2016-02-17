@@ -7,7 +7,7 @@ OCAMLOPTFLAGS=$(INCLUDES) # add other options for ocamlopt here
 
 .SUFFIXES: .ml .mli .cmo .cmi .cmx
 
-all: DB.cmi # DB.cmx
+all: DB.cmi DB.cmx
 
 clean:
 	rm -fr *~ *.cm* *.o

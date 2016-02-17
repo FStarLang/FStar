@@ -294,6 +294,8 @@ type subst_t = list<subst_elt>
 type mk_t_a<'a,'b> = option<'b> -> range -> syntax<'a, 'b>
 type mk_t = mk_t_a<term',term'>
 
+// VALS_HACK_HERE
+
 (*********************************************************************************)
 (* Identifiers to/from strings *)
 (*********************************************************************************)
