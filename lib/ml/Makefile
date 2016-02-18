@@ -31,7 +31,7 @@ hyperheap: $(HH_OBJS)
 	$(OCAMLOPT) $(OCAMLOPTFLAGS) -c $<
 
 depend:
-	$(OCAMLDEP) $(INCLUDES) $(FILES) > .depend
+	$(OCAMLDEP) -I native_int -I hyperheap $(FILES) $(HYPERHEAP) > .depend
 
 CLEAN=*.cmi *.cmo *.cmx *.exe *.o *.a *.cmxa *~
 
