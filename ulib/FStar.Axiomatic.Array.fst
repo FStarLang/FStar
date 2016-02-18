@@ -17,7 +17,7 @@
 (* A logical theory of integer-indexed arrays, from [0, n) *)
 module FStar.Axiomatic.Array
 
-type seq            : Type -> Type
+assume new type seq : Type -> Type
 assume val index    : #a:Type -> seq a -> int -> Tot a
 assume val update   : #a:Type -> seq a -> int -> a -> Tot (seq a)
 assume val emp      : a:Type -> Tot (seq a)
@@ -27,7 +27,7 @@ assume val length   : #a:Type -> seq a -> Tot nat
 assume val slice    : #a:Type -> seq a -> int -> int -> Tot (seq a)
 assume val append   : #a:Type -> seq a -> seq a -> Tot (seq a)
 assume val proj_some: #a:Type -> seq (option a) -> Tot (seq a)
-type Equal          : #a:Type -> seq a -> seq a -> Type
+assume type Equal          : #a:Type -> seq a -> seq a -> Type
 type array (a:Type) = ref (seq a)
 
 assume LengthConst:  forall (a:Type) (n:int) (v:a).{:pattern (length (create n v))} 
