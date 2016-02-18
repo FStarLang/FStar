@@ -1,49 +1,19 @@
-type unit'     = unit
-type unit      = unit'
-
-type bool'     = bool
-type bool      = bool'
-
-type char'     = char
-type char      = char'
-
-type string'   = string
-type string    = string'
-
-type int64'    = int64
-type int64     = int64'
-
-type 'a array' = 'a array
-type 'a array  = 'a array'
-
-type double'   = float
-type double    = double'
-
-type float'    = float
-type float     = float'
-
-type uint8'    = int
-type uint8     = uint8'
-
-type uint16'   = int
-type uint16    = uint16'
-
-type int32'    = int32
-type int32     = int32'
-
-type int       = Big_int.big_int
-
-type byte'     = char
-type byte      = byte'
-
-type exn'      = exn
-type exn       = exn'
-
-type 'a list'  = 'a list
-type 'a list   = 'a list'
-
-type 'a option' = 'a option
-type 'a option  = 'a option'
+type nonrec unit = unit
+type nonrec bool = bool
+type nonrec char = char
+type nonrec string = string
+type nonrec int64 = int64
+type nonrec 'a array = 'a array
+type nonrec float = float
+type double = float
+type uint8 = int
+type uint16 = int
+type nonrec int32 = int32
+type int = Big_int.big_int
+type byte = char
+type nonrec exn = exn
+type nonrec 'a list = 'a list
+type nonrec 'a option = 'a option
 
 type nat       = int
 type 'd b2t    = unit
