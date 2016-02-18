@@ -215,6 +215,10 @@ let rec term_to_string x =
   | Tm_delayed _ ->   failwith "impossible"
   | Tm_app(_, []) ->  failwith "Empty args!"
 
+  | Tm_meta(t, Meta_pattern ps) -> 
+    let pats = ps |> List.map (fun args -> args |> List.map (fun (t, _) -> term_to_string t) |> String.concat "; ") |> String.concat "\/" in
+    Util.format2 "{:pattern %s} %s" pats (term_to_string t)
+
   | Tm_meta(t, _) ->    term_to_string t
   | Tm_bvar x ->        db_to_string x  
   | Tm_name x ->        nm_to_string x

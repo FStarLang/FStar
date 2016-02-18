@@ -679,9 +679,10 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term =
       else ds_non_rec pat _snd body
 
     | If(t1, t2, t3) ->
+      let x = Syntax.new_bv (Some t3.range) S.tun in
       mk (Tm_match(desugar_term env t1,
                     [(withinfo (Pat_constant (Const_bool true)) tun.n t2.range, None, desugar_term env t2);
-                     (withinfo (Pat_constant (Const_bool false)) tun.n t3.range, None, desugar_term env t3)]))
+                     (withinfo (Pat_wild x) tun.n t3.range, None, desugar_term env t3)]))
 
     | TryWith(e, branches) ->
       let r = top.range in

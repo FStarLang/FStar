@@ -957,7 +957,7 @@ and encode_formula_with_labels (phi:typ) (env:env_t) : (term * labels * decls_t)
 
     if Env.debug env.tcenv Options.Low
     then Util.print1 ">>>> Destructing as formula ... %s\n" (Print.term_to_string phi);
-    let phi = SS.compress phi in
+    let phi = Util.unascribe phi in
     match Util.destruct_typ_as_formula phi with
         | None -> fallback phi
 
