@@ -1664,12 +1664,24 @@ and solve_t' (env:Env.env) (problem:tprob) (wl:worklist) : solution =
             | (MisMatch, _) -> //heads definitely do not match
               let head1 = Util.head_and_args t1 |> fst in
               let head2 = Util.head_and_args t2 |> fst in
-              let may_equate head = match head.n with
+              let may_relate head = match head.n with
                 | Tm_name _  -> true
                 | Tm_fvar (tc, _) -> Env.is_projector env tc.v
                 | _ -> false  in
-              if (may_equate head1 || may_equate head2) && wl.smt_ok
-              then solve env (solve_prob orig (Some <| Util.mk_eq tun tun t1 t2) [] wl)
+              if (may_relate head1 || may_relate head2) && wl.smt_ok
+              then let guard = 
+                       if problem.relation = EQ
+                       then Util.mk_eq tun tun t1 t2
+                       else let has_type_guard t1 t2 = 
+                                match problem.element with 
+                                  | Some t -> Util.mk_has_type t1 t t2
+                                  | None -> 
+                                    let x = S.new_bv None t1 in
+                                    Util.mk_forall x (Util.mk_has_type t1 (S.bv_to_name x) t2) in
+                            if problem.relation = SUB
+                            then has_type_guard t1 t2
+                            else has_type_guard t2 t1 in
+                    solve env (solve_prob orig (Some guard) [] wl)
               else giveup env "head mismatch" orig
 
             | (_, Some (t1, t2)) -> //heads match after some delta steps

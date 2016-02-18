@@ -931,6 +931,18 @@ and encode_formula_with_labels (phi:typ) (env:env_t) : (term * labels * decls_t)
            let t, decls = encode_let x t1 e1 e2 env encode_formula in
            t, [], decls
 
+        | Tm_app(head, [_; (x, _); (t, _)]) -> 
+          let head = Util.un_uinst head in
+          begin match head.n with 
+            | Tm_fvar (fv, _) when lid_equals fv.v Const.has_type_lid -> //interpret Prims.has_type as HasType
+              let x, decls = encode_term x env in 
+              let t, decls' = encode_term t env in
+              Term.mk_HasType x t, [], decls@decls'
+            | _ -> 
+              let tt, decls = encode_term phi env in
+              Term.mk_Valid tt, [], decls
+          end
+
         | _ ->
             let tt, decls = encode_term phi env in
             Term.mk_Valid tt, [], decls in

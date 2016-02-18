@@ -117,7 +117,7 @@ let value_check_expected_typ env e tlc guard : term * lcomp * guard_t =
      let e, lc = Util.maybe_coerce_bool_to_type env e lc t' in //add a b2t coercion is e:bool and t'=Type
      let t = lc.res_typ in
      let e, g = TcUtil.check_and_ascribe env e t t' in
-     if debug env <| Options.Other "CA"
+     if debug env Options.High
      then Util.print2 "check_and_ascribe: type is %s\n\tguard is %s\n" (Print.term_to_string t) (Rel.guard_to_string env g);
      let g = Rel.conj_guard g guard in
      let lc, g = TcUtil.strengthen_precondition (Some <| Errors.subtyping_failed env t t') env e lc g in
@@ -1080,39 +1080,37 @@ and tc_eqn scrutinee env branch
                 | Some f -> Some <| Util.mk_disj clause f) None in
 
     let c, g_branch = Util.strengthen_precondition None env branch_exp c g_branch in 
+    //g_branch is trivial, its logical content is now incorporated within c
 
     (* (b) *)
-    let c_weak, g_when_weak, g_branch_weak = 
+    let c_weak, g_when_weak =
      match eqs, when_condition with
       | None, None -> 
-        c, g_when, g_branch
+        c, g_when
       
       | Some f, None -> 
         let gf = NonTrivial f in
         let g = Rel.guard_of_guard_formula gf in
         TcUtil.weaken_precondition env c gf,
-        Rel.imp_guard g g_when, 
-        Rel.imp_guard g g_branch 
+        Rel.imp_guard g g_when 
 
       | Some f, Some w ->
         let g_f = NonTrivial f in
         let g_fw = NonTrivial (Util.mk_conj f w) in
         TcUtil.weaken_precondition env c g_fw, 
-        Rel.imp_guard (Rel.guard_of_guard_formula g_f) g_when,
-        Rel.imp_guard (Rel.guard_of_guard_formula g_fw) g_branch
+        Rel.imp_guard (Rel.guard_of_guard_formula g_f) g_when
 
       | None, Some w -> 
         let g_w = NonTrivial w in
         let g = Rel.guard_of_guard_formula g_w in
         TcUtil.weaken_precondition env c g_w, 
-        g_when, 
-        Rel.imp_guard g g_branch in
+        g_when in
     
     (* (c) *)
     let binders = List.map S.mk_binder pat_bvs in
     TcUtil.close_comp env pat_bvs c_weak, 
     Rel.close_guard binders g_when_weak, 
-    Rel.close_guard binders g_branch_weak in
+    g_branch in
 
   (* 6. Building the guard for this branch;                                                             *)
   (*        the caller assembles the guards for each branch into an exhaustiveness check.               *)

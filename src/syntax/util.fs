@@ -713,6 +713,11 @@ let teq = fvar None Const.eq2_lid dummyRange
 
 let mk_eq t1 t2 e1 e2 = mk (Tm_app(teq, [as_arg e1; as_arg e2])) None (Range.union_ranges e1.pos e2.pos)
 
+let mk_has_type t x t' =
+    let t_has_type = fvar None (Const.has_type_lid) dummyRange in //TODO: Fix the U_zeroes below!
+    let t_has_type = mk (Tm_uinst(t_has_type, [U_zero; U_zero])) None dummyRange in
+    mk (Tm_app(t_has_type, [iarg t; as_arg x; as_arg t'])) None dummyRange
+
 let lex_t :term = fvar None Const.lex_t_lid dummyRange
 let lex_top : term = fvar (Some Data_ctor) Const.lextop_lid dummyRange
 let lex_pair : term = fvar (Some Data_ctor) Const.lexcons_lid dummyRange
