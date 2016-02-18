@@ -117,7 +117,7 @@ let value_check_expected_typ env e tlc guard : term * lcomp * guard_t =
      let e, lc = Util.maybe_coerce_bool_to_type env e lc t' in //add a b2t coercion is e:bool and t'=Type
      let t = lc.res_typ in
      let e, g = TcUtil.check_and_ascribe env e t t' in
-     if debug env Options.High
+     if debug env <| Options.Other "CA"
      then Util.print2 "check_and_ascribe: type is %s\n\tguard is %s\n" (Print.term_to_string t) (Rel.guard_to_string env g);
      let g = Rel.conj_guard g guard in
      let lc, g = TcUtil.strengthen_precondition (Some <| Errors.subtyping_failed env t t') env e lc g in
@@ -990,7 +990,7 @@ and tc_eqn scrutinee env branch
   let tc_pat (allow_implicits:bool) (pat_t:typ) p0 : 
         pat                                (* the type-checked, fully decorated pattern                             *)
       * list<bv>                           (* all its bound variables, used for closing the type of the branch term *)
-      * Env.env                            (* the environment exteneded with all the binders                        *)
+      * Env.env                            (* the environment extended with all the binders                         *)
       * list<term>                         (* terms corresponding to each clause in the disjunctive pat             *)
       * list<term>                         (* the same terms in normal form                                         *)
       =
@@ -1078,6 +1078,9 @@ and tc_eqn scrutinee env branch
               match fopt with
                 | None -> Some clause
                 | Some f -> Some <| Util.mk_disj clause f) None in
+
+    let c, g_branch = Util.strengthen_precondition None env branch_exp c g_branch in 
+
     (* (b) *)
     let c_weak, g_when_weak, g_branch_weak = 
      match eqs, when_condition with

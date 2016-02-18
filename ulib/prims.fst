@@ -71,6 +71,9 @@ type ITE (p:Type) (q:Type) (r:Type) = (p ==> q) /\ (~p ==> r)
 (* infix binary '<<'; a built-in well-founded partial order over all terms *)
 assume type precedes : #a:Type -> #b:Type -> a -> b -> Type0
 
+(* internalizing the typing relation for the SMT encoding: (has_type x t) *)
+assume type has_type : #a:Type -> a -> Type -> Type0
+
 (* A coercion down to universe 0 *)
 type squash (p:Type) = u:unit{p}
 
