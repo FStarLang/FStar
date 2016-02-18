@@ -1,2 +1,4 @@
 *.fst linguist-language=FStar
 *.fsti linguist-language=FStar
+
+*.fs* eol=lf
