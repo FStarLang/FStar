@@ -2239,7 +2239,7 @@ end else begin
 end
 in (
 # 960 "FStar.SMTEncoding.Encode.fst"
-let phi = (FStar_Syntax_Subst.compress phi)
+let phi = (FStar_Syntax_Util.unascribe phi)
 in (match ((FStar_Syntax_Util.destruct_typ_as_formula phi)) with
 | None -> begin
 (fallback phi)
