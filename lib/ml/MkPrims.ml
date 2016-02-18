@@ -37,48 +37,33 @@ end) -> struct
     | Left of ' p
     | Right of ' q
 
-  let is_Left = (fun ( _discr_ ) -> (match (_discr_) with
-                                           | Left (_) -> begin
-                                                     true
-                                                   end
-                                       | _ -> begin
-                                       false
-                                       end))
+  let is_Left = function Left _ -> true | Right _ -> false
 
-  let is_Right = (fun ( _discr_ ) -> (match (_discr_) with
-                                            | Right (_) -> begin
-                                                       true
-                                                     end
-                                        | _ -> begin
-                                        false
-                                        end))
+  let is_Right = function Left _ -> false | Right _ -> true
 
   type (' p, ' q) l_and =
   | And of ' p * ' q
-    let is_And _ = true
 
-    type l__True =
-      | T
+  let is_And _ = true
+
+  type l__True =
+    | T
+
   let is_T _ = true
 
   type l__False = unit
   (*This is how Coq extracts Inductive void := . Our extraction needs to be fixed to recognize when there
          are no constructors and generate this type abbreviation*)
 
-  type (' p, ' q) l_imp =
-  ' p  ->  ' q
+  type (' p, ' q) l_imp = ' p  ->  ' q
 
-  type (' p, ' q) l_iff =
-  ((' p, ' q) l_imp, (' q, ' p) l_imp) l_and
+  type (' p, ' q) l_iff = ((' p, ' q) l_imp, (' q, ' p) l_imp) l_and
 
-  type ' p l_not =
-  (' p, l__False) l_imp
+  type ' p l_not = (' p, l__False) l_imp
 
-  type (' a, ' p) l__Forall =
-  ' a  ->  ' p
+  type (' a, ' p) l__Forall = ' a  ->  ' p
 
-  type ' f l__ForallTyp =
-  unit  ->  ' f
+  type ' f l__ForallTyp = unit  ->  ' f
 
   type (' a, ' p) l__Exists =
   | MkExists of ' a * ' p
@@ -142,5 +127,4 @@ end) -> struct
 
   type ('a, 'b, 'c, 'd) l__DTuple4 =
     | MkDTuple4 of unit * unit * unit * unit * 'a * 'b * 'c * 'd
-
 end
