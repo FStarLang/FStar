@@ -1,6 +1,6 @@
 # The two variables below can be configured from the outside. For instance:
 # $(MAKE) -C $(FSTAR_HOME)/lib/ml hyperheap PRIMS=native_int/prims.ml INCLUDES="-I native_int/"
-PRIMS=prims.ml
+PRIMS=MkPrims.ml prims.ml
 INCLUDES=
 
 COMMON=FStar_All.ml FStar_IO.ml FStar_Heap.ml FStar_List.ml FStar_Option.ml FStar_Char.ml FStar_String.ml FStar_Set.ml
