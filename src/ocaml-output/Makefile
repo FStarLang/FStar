@@ -43,7 +43,7 @@ endif
 all:
 	$(MAKE) -C $(FSTAR_HOME)/lib/ml PRIMS_DIR=native_int
 	$(MAKE) prep
-	$(MAKE) fstar.exe
+	$(MAKE) -j 8 fstar.exe
 
 prep: parser copy_lib_files depend
 
