@@ -2143,8 +2143,12 @@ let resolve_implicits g =
           else let env = Env.set_expected_typ env k in
                let tm = N.normalize [N.Beta] env tm in
                if Env.debug env <| Options.Other "RelCheck"
-               then Util.print3 "Checking uvar %s resolved to %s at type %s\n" 
+               then begin
+               Util.print3 "Checking uvar %s resolved to %s at type %s\n" 
                                  (Print.uvar_to_string u) (Print.term_to_string tm) (Print.term_to_string k);
+                let bs, c = Env.lookup_effect_abbrev env Const.effect_Tot_lid |> must in
+                Util.print1 "Definition of Tot is %s\n" (Print.comp_to_string c)                 
+               end;
                let _, g = env.type_of ({env with use_bv_sorts=true}) tm in 
                let g' = discharge_guard env g in
                until_fixpoint (g'.implicits@out, true) tl in

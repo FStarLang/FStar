@@ -10,8 +10,6 @@ let join_squash #a s = bind_squash #(squash a) #a s (fun x -> x)
 val squash_arrow : #a:Type -> #p:(a -> Type) ->
   =f:(x:a -> Tot (squash (p x))) -> Tot (squash (x:a -> Tot (p x)))
 let squash_arrow #a #p f = squash_double_arrow (return_squash f)
-  (* squash_double_arrow (return_squash (fun x -> f x)) *) //TODO, eta expansion causes a mysterious universe error
-
 
 val forall_intro : #a:Type -> #p:(a -> Type) ->
   =f:(x:a -> Lemma (p x)) -> Lemma (x:a -> Tot (p x))(* (forall (x:a). p x) *)

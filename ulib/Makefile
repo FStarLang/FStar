@@ -17,7 +17,7 @@ working:
 	$(UFSTAR) FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.Map.fst FStar.List.Tot.fst FStar.HyperHeap.fst hyperheap/FStar.ST.fst
 	$(UFSTAR) $(STDLIB) FStar.MRef.fst
 	$(UFSTAR) FStar.FunctionalExtensionality.fst FStar.Set.fst FStar.Heap.fst FStar.Map.fst FStar.TwoLevelHeap.fst
-	$(UFSTAR) $(STDLIB) FStar.Constructive.fst FStar.Squash.fst FStar.SquashProperties.fst --__temp_no_proj FStar.SquashProperties
+	$(UFSTAR) $(STDLIB) FStar.Constructive.fst FStar.Squash.fst FStar.SquashProperties.fst 
 
 test:
 

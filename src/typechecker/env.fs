@@ -422,8 +422,16 @@ let lookup_effect_abbrev env lid =
     | Some (Inr (Sig_effect_abbrev (lid, univs, binders, c, quals, _), None)) ->
       if quals |> Util.for_some (function Irreducible -> true | _ -> false)
       then None
-      else let _, binders, c = Util.open_univ_vars_binders_and_comp univs binders c in 
-           Some (binders, c)
+      else 
+        begin match binders with 
+             | [] -> failwith "Unexpected effect abbreviation with no arguments"
+             | _ -> let _, t = inst_tscheme (univs, Util.arrow binders c) in
+                    begin match (Subst.compress t).n with 
+                        | Tm_arrow(binders, c) -> 
+                          Some (binders, c)
+                        | _ -> failwith "Impossible"
+                    end
+          end
     | _ -> None
 
 let datacons_of_typ env lid = 

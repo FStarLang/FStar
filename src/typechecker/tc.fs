@@ -723,9 +723,10 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
     let tfun_opt, bs, letrec_binders, c_opt, envbody, g = expected_function_typ env topt in
     let body, cbody, guard_body = tc_term ({envbody with top_level=false; use_eq=use_eq}) body in
     if Env.debug env Options.Low
-    then Util.print4 "!!!!!!!!!!!!!!!body %s has type %s\nguard is %s\nAgain cbody=%s\n" 
-          (Print.term_to_string body) (Print.comp_to_string <| cbody.comp()) 
-          (guard_to_string env guard_body) (Print.comp_to_string <| cbody.comp());
+    then Util.print3 "!!!!!!!!!!!!!!!body %s has type %s\nguard is %s\n" 
+          (Print.term_to_string body) 
+          (Print.comp_to_string <| cbody.comp()) 
+          (guard_to_string env guard_body);
     let guard_body =  //we don't abstract over subtyping constraints; so solve them now
         Rel.solve_deferred_constraints envbody guard_body in
     if Env.debug env <| Options.Other "Implicits"
