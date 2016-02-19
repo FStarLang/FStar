@@ -606,7 +606,10 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term * lcomp * guard_t =
                     | _ ->
                       if Env.debug env Options.High then Util.print1 "Checking binder %s\n" (Print.bv_to_string hd);
                       let t, _, g1 = tc_tot_or_gtot_term env hd.sort in
-                      let g2 = Rel.teq env t expected_t in
+                      let g2 = 
+                          TcUtil.label_guard (Env.get_range env) 
+                            "Type annotation on parameter incompatible with the expected type"
+                            (Rel.teq env t expected_t) in
                       let g = Rel.conj_guard g (Rel.conj_guard g1 g2) in
                       t, g in
                 let hd = {hd with sort=t} in 
