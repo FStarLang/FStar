@@ -212,6 +212,11 @@ let inst_tscheme : tscheme -> universes * term = function
       let us' = us |> List.map (fun _ -> new_u_univ()) in
       inst_tscheme_with (us, t) us'
 
+let inst_effect_fun_with (env:env) (ed:eff_decl) (us, t) insts =
+    match ed.binders with
+        | [] -> snd (inst_tscheme_with (ed.univs@us, t) insts)
+        | _  -> failwith (Util.format1 "Unexpected use of an uninstantiated effect: %s\n" (Print.lid_to_string ed.mname))
+
 let inst_effect_fun (env:env) (ed:eff_decl) (us, t) = 
     match ed.binders with 
         | [] -> snd (inst_tscheme (ed.univs@us, t))
@@ -422,8 +427,7 @@ let lookup_effect_abbrev env lid =
     | Some (Inr (Sig_effect_abbrev (lid, univs, binders, c, quals, _), None)) ->
       if quals |> Util.for_some (function Irreducible -> true | _ -> false)
       then None
-      else 
-        begin match binders with 
+      else begin match binders with
              | [] -> failwith "Unexpected effect abbreviation with no arguments"
              | _ -> let _, t = inst_tscheme (univs, Util.arrow binders c) in
                     begin match (Subst.compress t).n with 
